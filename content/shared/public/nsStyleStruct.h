@@ -1080,7 +1080,6 @@ struct nsStyleUIReset: public nsStyleStruct {
 
   PRUnichar mKeyEquivalent;   // [reset] XXX what type should this be?
   PRUint8   mUserSelect;      // [reset] (selection-style)
-  PRUint8   mResizer;         // [reset]
   PRUint8   mForceBrokenImageIcon; // [reset]  (0 if not forcing, otherwise forcing)
 };
 

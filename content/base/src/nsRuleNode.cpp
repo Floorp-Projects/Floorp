@@ -2442,20 +2442,6 @@ nsRuleNode::ComputeUIResetData(nsStyleStruct* aStartData,
       ui->mKeyEquivalent = parentUI->mKeyEquivalent;
     }
   }
-  // resizer: auto, none, enum, inherit
-  if (eCSSUnit_Enumerated == uiData.mResizer.GetUnit()) {
-    ui->mResizer = uiData.mResizer.GetIntValue();
-  }
-  else if (eCSSUnit_Auto == uiData.mResizer.GetUnit()) {
-    ui->mResizer = NS_STYLE_RESIZER_AUTO;
-  }
-  else if (eCSSUnit_None == uiData.mResizer.GetUnit()) {
-    ui->mResizer = NS_STYLE_RESIZER_NONE;
-  }
-  else if (eCSSUnit_Inherit == uiData.mResizer.GetUnit()) {
-    inherited = PR_TRUE;
-    ui->mResizer = parentUI->mResizer;
-  }
 
   // force-broken-image-icons: integer
   if (eCSSUnit_Integer == uiData.mForceBrokenImageIcon.GetUnit()) {

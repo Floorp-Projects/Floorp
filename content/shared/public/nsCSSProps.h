@@ -156,7 +156,6 @@ public:
   static const PRInt32 kPitchKTable[];
   static const PRInt32 kPlayDuringKTable[];
   static const PRInt32 kPositionKTable[];
-  static const PRInt32 kResizerKTable[];
   static const PRInt32 kSpeakKTable[];
   static const PRInt32 kSpeakHeaderKTable[];
   static const PRInt32 kSpeakNumeralKTable[];

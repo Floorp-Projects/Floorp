@@ -4339,9 +4339,6 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
     return ParseVariant(aErrorCode, aValue, VARIANT_HN, nsnull);
   case eCSSProperty_position:
     return ParseVariant(aErrorCode, aValue, VARIANT_HK, nsCSSProps::kPositionKTable);
-  case eCSSProperty_resizer:
-    return ParseVariant(aErrorCode, aValue, VARIANT_AHK | VARIANT_NONE,
-                        nsCSSProps::kResizerKTable);
   case eCSSProperty_richness:
     return ParseVariant(aErrorCode, aValue, VARIANT_HN, nsnull);
   case eCSSProperty_speak:

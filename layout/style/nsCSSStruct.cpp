@@ -1004,7 +1004,6 @@ nsCSSUserInterface::nsCSSUserInterface(const nsCSSUserInterface& aCopy)
     mUserSelect(aCopy.mUserSelect),
     mKeyEquivalent(nsnull),
     mUserFocus(aCopy.mUserFocus),
-    mResizer(aCopy.mResizer),
     mCursor(nsnull),
     mForceBrokenImageIcon(aCopy.mForceBrokenImageIcon)
 {
@@ -1036,7 +1035,6 @@ void nsCSSUserInterface::List(FILE* out, PRInt32 aIndent) const
     keyEquiv= keyEquiv->mNext;
   }
   mUserFocus.AppendToString(buffer, eCSSProperty_user_focus);
-  mResizer.AppendToString(buffer, eCSSProperty_resizer);
   
   nsCSSValueList*  cursor = mCursor;
   while (nsnull != cursor) {
