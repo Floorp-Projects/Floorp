@@ -75,6 +75,11 @@ public:
   PRBool  Load(nsIWebShell * aPrevEntry, PRBool aIsReload);
 
   /**
+   * Compare the history object with the content Area
+   */
+  PRBool  Compare(nsIWebShell * aPrevEntry, PRBool aIsReload);
+
+  /**
    * Destroy the  historyentry
    */
   nsresult DestroyChildren();
@@ -182,9 +187,7 @@ nsHistoryEntry::nsHistoryEntry()
    mParent = nsnull;
    mURL = nsnull;
    mTitle = nsnull;
-   mHistoryState = nsnull;
-   
- 
+   mHistoryState = nsnull; 
 //  NS_INIT_REFCNT();
 }
 
@@ -373,6 +376,8 @@ nsHistoryEntry::Create(nsIWebShell * aWebShell, nsHistoryEntry * aParent, nsISes
 
    // Get the  webshell's url.
    aWebShell->GetURL(&url);
+   nsAutoString urlstr(url);
+
    // save the webshell's URL in the history entry
    SetURL(url);
 
@@ -380,7 +385,7 @@ nsHistoryEntry::Create(nsIWebShell * aWebShell, nsHistoryEntry * aParent, nsISes
    //Save the webshell id
    SetWebShell(aWebShell);
    
-   if (APP_DEBUG) printf("SessionHistory::Create Creating Historyentry %x  for webshell %x, parent entry = %x\n", (unsigned int)this, (unsigned int)aWebShell, (unsigned int) aParent);
+   if (APP_DEBUG) printf("SessionHistory::Create Creating Historyentry %x  for webshell %x, url = %s parent entry = %x\n", (unsigned int)this, (unsigned int)aWebShell, urlstr.ToNewCString(), (unsigned int) aParent);
 
    if (aParent)
      aParent->AddChild(this);
@@ -422,7 +427,6 @@ GenerateTree(nsIWebShell * aWebShell, nsHistoryEntry * aParent, nsISessionHistor
     }
   }
   return hEntry;
-
 }
 
 
@@ -485,10 +489,8 @@ nsHistoryEntry::Load(nsIWebShell * aPrevEntry, PRBool aIsReload) {
      cur->GetURL(&cURL);
      cSURL = new nsString(cURL);
    }
-
      
 //   NS_ADDREF(aPrevEntry);
-
    if (!cur || !prev) {
      return NS_ERROR_NULL_POINTER;
    }
@@ -529,12 +531,13 @@ nsHistoryEntry::Load(nsIWebShell * aPrevEntry, PRBool aIsReload) {
                */
                if (APP_DEBUG)  printf("Returning from Load(). Located a webshell with frame children\n");
                return PR_TRUE;
-            }
-
-			
+            }			
+			return PR_TRUE;
          }
          else if (!isInSHist && isLoadingDoc) {
            prev->SetURL(cURL);
+		   if (APP_DEBUG) printf("Changing URL  to %s in webshell\n", cSURL->ToNewCString());
+		   return PR_TRUE;
          }
       }
    }
@@ -542,7 +545,96 @@ nsHistoryEntry::Load(nsIWebShell * aPrevEntry, PRBool aIsReload) {
        /* Mark the changed flag to false. This is used in the end to determine
         * whether we are done with the whole loading process for this history
         */
-       if (APP_DEBUG) printf("SessionHistory::Load URLs in webshells %x & %x match \n", (unsigned int) mWS, (unsigned int) prev);
+       if (APP_DEBUG) printf("SessionHistory::Load URLs in webshells %x & %x match \n", (unsigned int) mWS, (unsigned int) prev);	   
+   }
+
+   /* Make sure the child windows are in par */
+   PRInt32  cnt=0, ccnt=0, pcnt=0;
+   ccnt = cur->GetChildCnt();
+   prev->GetChildCount(pcnt);
+
+   /* If the current entry to be loaded and the one on page don't have
+    * the same # of children, maybe the one on screen is is in the process of
+    * building. Don't compare the children.
+    */
+  cnt = ccnt;
+  if (pcnt < ccnt)
+    cnt = pcnt;
+    
+   for (i=0; i<cnt; i++){
+      nsHistoryEntry *cChild=nsnull;
+      nsIWebShell *  pChild=nsnull;
+      cur->GetChildAt(i, cChild);    // historyentry
+      prev->ChildAt(i, pChild);   //webshell
+      result = cChild->Load(pChild, PR_FALSE);
+      if (result)
+         break;
+   }
+   
+   if (ccnt != pcnt)
+     result = PR_TRUE;
+	 
+ 
+//   NS_IF_RELEASE(aPrevEntry);
+
+     return result;
+}  /* Load */
+
+
+/* Compare the history item with the content area */
+PRBool 
+nsHistoryEntry::Compare(nsIWebShell * aPrevEntry, PRBool aIsReload) {
+
+   nsHistoryEntry * cur=nsnull;
+   PRBool urlChanged = PR_FALSE;
+   int i = 0; 
+   //nsIWebShell * pWS = nsnull, *cWS=nsnull;
+   nsIWebShell *prev=nsnull;
+   PRBool result = PR_FALSE;
+   nsString*  cSURL=nsnull, * pSURL=nsnull;
+   const PRUnichar *  pURL=nsnull, * cURL=nsnull;   
+
+   cur = this;
+   prev = aPrevEntry;
+
+   if (prev) {
+     prev->GetURL(&pURL);
+     pSURL = new nsString(pURL);
+
+   }
+   if (cur) {
+     cur->GetURL(&cURL);
+     cSURL = new nsString(cURL);
+   }     
+//   NS_ADDREF(aPrevEntry);
+
+   if (!cur || !prev) {
+     return NS_ERROR_NULL_POINTER;
+   }
+
+   //Compare the URLs
+   {
+     if ((*pSURL) == cURL)
+       urlChanged = PR_FALSE;
+     else
+       urlChanged = PR_TRUE;
+   }  // compareURLs
+
+   /* The URL to be loaded in it */
+   cur->GetURL(&cURL);
+
+   if (urlChanged /*|| aIsReload*/) {
+	   if (APP_DEBUG) 
+		   printf("SessionHistory::Compare URLs in webshells %x & %x don't match \n", (unsigned int) mWS, (unsigned int) prev);
+	   return PR_TRUE;
+
+   }
+   else if (!urlChanged ) {
+       /* Mark the changed flag to false. This is used in the end to determine
+        * whether we are done with the whole loading process for this history
+        */
+       if (APP_DEBUG) printf("SessionHistory::Compare URLs in webshells %x & %x match \n", (unsigned int) mWS, (unsigned int) prev);
+	   
    }
 
    /* Make sure the child windows are in par */
@@ -562,11 +654,9 @@ nsHistoryEntry::Load(nsIWebShell * aPrevEntry, PRBool aIsReload) {
    for (i=0; i<cnt; i++){
       nsHistoryEntry *cChild=nsnull;
       nsIWebShell *  pChild=nsnull;
-
       cur->GetChildAt(i, cChild);    // historyentry
       prev->ChildAt(i, pChild);   //webshell
-
-      result = cChild->Load(pChild, PR_FALSE);
+      result = cChild->Compare(pChild, PR_FALSE);
       if (result)
          break;
    }
@@ -577,7 +667,7 @@ nsHistoryEntry::Load(nsIWebShell * aPrevEntry, PRBool aIsReload) {
 //   NS_IF_RELEASE(aPrevEntry);
 
      return result;
-}  /* Load */
+}  /* Compare */
 
 
 nsHistoryEntry *
@@ -719,6 +809,16 @@ public:
    */
 
   NS_IMETHOD SetHistoryObjectForIndex(PRInt32 aIndex, nsISupports * aState);
+
+  /** 
+   *  Clear all history load flags 
+   */
+  NS_IMETHOD  ClearLoadingFlags(void) ;
+
+  /**
+   *   Reconcile history status with the actual page load status 
+   */
+  NS_IMETHOD UpdateStatus(nsIWebShell * aWebShell, nsresult aStatus);
 protected:
 
    virtual ~nsSessionHistory();
@@ -798,11 +898,11 @@ nsSessionHistory::add(nsIWebShell * aWebShell)
    if (!parent) {
      if(mIsLoadingDoc) {
         /* We are currently loading a history entry. Pass it to
-		 * Load() to check if the URLs match. Load() will take care
-		 * of differences in URL
-		 */
+		     * Load() to check if the URLs match. Load() will take care
+		     * of differences in URL
+		     */
         
-        nsresult ret = mHistoryEntryInLoad->Load(aWebShell, PR_FALSE);
+        nsresult ret = mHistoryEntryInLoad->Compare(aWebShell, PR_FALSE);
         if (!ret) {
           /* The URL in the webshell exactly matches with the
 		       * one in history. Clear all flags and return.
@@ -828,19 +928,19 @@ nsSessionHistory::add(nsIWebShell * aWebShell)
 
       // Add the URL  to the history
       if ((mHistoryLength - (mHistoryCurrentIndex+1)) > 0) {
-      /* We are somewhere in the middle of the history and a
-       * new page was visited. Purge all entries from the current index
-       * till the end of the list and append the current page to the
-       * list
-       */
+        /* We are somewhere in the middle of the history and a
+         * new page was visited. Purge all entries from the current index
+         * till the end of the list and append the current page to the
+         * list
+         */
 
-       for(int i=mHistoryLength-1; i>mHistoryCurrentIndex; i--) {
-          nsHistoryEntry * hEntry2 = (nsHistoryEntry *)mHistoryEntries.ElementAt(i);
-          //NS_IF_RELEASE(hEntry2);
-          delete hEntry2;
-          mHistoryEntries.RemoveElementAt(i);
-          mHistoryLength--;
-       }
+         for(int i=mHistoryLength-1; i>mHistoryCurrentIndex; i--) {
+            nsHistoryEntry * hEntry2 = (nsHistoryEntry *)mHistoryEntries.ElementAt(i);
+            //NS_IF_RELEASE(hEntry2);
+            delete hEntry2;
+            mHistoryEntries.RemoveElementAt(i);
+            mHistoryLength--;
+         }
      }
 
      mHistoryEntries.AppendElement((void *)hEntry);
@@ -850,7 +950,6 @@ nsSessionHistory::add(nsIWebShell * aWebShell)
    }   // (!mParent)
 
    else { 
-
       /* This is a frame webshell. Check if it is a new frame. If so,
        * append to the existing history entry. Else, create a 
        * new tree to record the change in URL 
@@ -886,8 +985,8 @@ nsSessionHistory::add(nsIWebShell * aWebShell)
            newEntry->Create(aWebShell, parentEntry, this);
            aWebShell->SetIsInSHist(PR_TRUE);
 
-		   if (parentWS)
-			  NS_RELEASE(parentWS);
+		       if (parentWS)
+			       NS_RELEASE(parentWS);
          }  // !mIsLoadingDoc
          else {
 
@@ -912,8 +1011,8 @@ nsSessionHistory::add(nsIWebShell * aWebShell)
                mHistoryEntryInLoad = (nsHistoryEntry *)nsnull;
             }  //!ret
             aWebShell->SetIsInSHist(PR_TRUE);
-			if (root)
-			   NS_RELEASE(root);
+			      if (root)
+			         NS_RELEASE(root);
           }   
        }  // !InSHist
        else  {
@@ -950,8 +1049,8 @@ nsSessionHistory::add(nsIWebShell * aWebShell)
               mHistoryCurrentIndex++;        
               return NS_OK;
              }  //newEntry
-			 if (root)
-				NS_RELEASE(root);
+			       if (root)
+				       NS_RELEASE(root);
            }  // (!mIsLoadingDoc)
            else   {
         
@@ -986,6 +1085,102 @@ nsSessionHistory::add(nsIWebShell * aWebShell)
 
 
 NS_IMETHODIMP
+nsSessionHistory::ClearLoadingFlags()
+{
+   mIsLoadingDoc = PR_FALSE;
+   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSessionHistory::UpdateStatus(nsIWebShell * aWebShell, nsresult aStatus) {
+
+
+	if (!mIsLoadingDoc) {
+	  if (!NS_SUCCEEDED(aStatus)) {
+		 /* if this was a fresh page load and if it failed,
+	      * remove the entry for in in Session History  
+	      */
+         nsHistoryEntry * cEntry = (nsHistoryEntry *) mHistoryEntries.ElementAt(mHistoryCurrentIndex);
+		 mHistoryEntries.RemoveElementAt(mHistoryCurrentIndex);
+	     delete cEntry;
+	     mHistoryCurrentIndex--;
+		 mHistoryLength--;
+	     return NS_OK;
+	  }
+	}  // (!mIsLoadingDoc)
+	else {
+        /* We are currently in the middle of loading a history entry.
+		 * Not sure if we are done with all the subframes etc...
+		 */
+		if (!NS_SUCCEEDED(aStatus)) {
+		  /* 
+		   * But if the History page load failed for some reason,
+		   * Clear the loading flags, leave the current index as it is for now.
+		   */
+           mIsLoadingDoc= PR_FALSE;
+		   mHistoryEntryInLoad = (nsHistoryEntry *) nsnull;
+		   return NS_OK;
+		}
+        nsIWebShell * parent = nsnull;
+
+        if (!aWebShell || !mHistoryEntryInLoad) {
+           return NS_ERROR_NULL_POINTER;
+		}
+        aWebShell->GetParent(parent);
+
+        if (!parent) {
+          /* Pass the document to Load() to check if the URLs match. 
+		   * Load() will take care of differences in URL
+		   */
+        
+          nsresult ret = mHistoryEntryInLoad->Compare(aWebShell, PR_FALSE);
+          if (!ret) {
+            /* The URL in the webshell exactly matches with the
+		     * one in history. Clear all flags and return.
+             */
+   
+            mIsLoadingDoc =  PR_FALSE;      
+            mHistoryEntryInLoad = (nsHistoryEntry *)nsnull;
+		  }
+          return NS_OK;     
+		}  // (!parent)
+		else { 
+          /* This is a frame webshell */
+          PRBool inSHist = PR_TRUE;   
+          aWebShell->GetIsInSHist(inSHist);
+
+          if (inSHist) {
+            /* This page is in history. May be the frame page changed. 
+             * Send it to Load() for Comparison purposes
+             */
+              nsIWebShell * root=nsnull;
+              aWebShell->GetRootWebShell(root);
+              if (!root) {
+			      NS_ASSERTION(0,"nsSessionHistory::add Couldn't get root webshell");
+                 return NS_OK;
+			  }
+		      PRBool ret = mHistoryEntryInLoad->Compare(root, PR_FALSE);              
+              if (!ret) {
+                /* The page in webshell matches exactly with the one in history.
+                 * Clear all flags and return.
+                 */            
+                mIsLoadingDoc =  PR_FALSE;      
+                mHistoryEntryInLoad = (nsHistoryEntry *)nsnull;
+
+              }  //!ret
+			  if (root)
+				 NS_RELEASE(root);            
+		  }  //inSHist
+		} // else for (!parent)
+        if (parent)
+	      NS_RELEASE(parent);
+	} // else for (!mIsLoadingDoc)
+
+return NS_OK;
+
+}
+
+NS_IMETHODIMP
 nsSessionHistory::Goto(PRInt32 aGotoIndex, nsIWebShell * prev, PRBool aIsReload)
 {
    PRBool result = PR_FALSE;
@@ -1010,12 +1205,14 @@ nsSessionHistory::Goto(PRInt32 aGotoIndex, nsIWebShell * prev, PRBool aIsReload)
    nsString  urlString(url);
    if (APP_DEBUG) printf("nsSessionHistory::Goto, Trying to load URL %s\n", urlString.ToNewCString());
   
+    mHistoryCurrentIndex = aGotoIndex;
     if (hCurrentEntry != nsnull)
        result = hCurrentEntry->Load(prev, aIsReload);
     if (!result) {
        mIsLoadingDoc = PR_FALSE;
        mHistoryEntryInLoad = (nsHistoryEntry *) nsnull;
     }
+
 
 #if 0
   if (aIsReload) {
@@ -1030,11 +1227,7 @@ nsSessionHistory::Goto(PRInt32 aGotoIndex, nsIWebShell * prev, PRBool aIsReload)
      mIsLoadingDoc = PR_FALSE;
      mHistoryEntryInLoad = (nsHistoryEntry *) nsnull;
   }
-#endif  /* 0 */
-
-
-  
-   mHistoryCurrentIndex = aGotoIndex;
+#endif  /* 0 */ 
 
    return NS_OK;
 }

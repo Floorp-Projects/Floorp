@@ -160,6 +160,7 @@ nsBrowserAppCore::nsBrowserAppCore()
   mContentAreaDocLoader = nsnull;
   mSHistory             = nsnull;
   mIsViewSource         = PR_FALSE;
+  mIsLoadingHistory     = PR_FALSE;
   NS_INIT_REFCNT();
 }
 
@@ -315,6 +316,11 @@ nsBrowserAppCore::Stop()
 {
   mContentAreaWebShell->Stop();
 
+  if (mIsLoadingHistory) {
+	  mIsLoadingHistory = PR_FALSE;
+	  if (mSHistory)
+		  mSHistory->ClearLoadingFlags();
+  }
   nsAutoString v( "false" );
   // XXX: The throbber should be turned off when the OnStopDocumentLoad 
   //      notification is received 
@@ -949,6 +955,12 @@ nsBrowserAppCore::LoadUrl(const PRUnichar *aUrl)
 {
   nsresult rv = NS_OK;
 
+  if (mIsLoadingHistory) {
+     mIsLoadingHistory = PR_FALSE;
+	 if (mSHistory) {
+       mSHistory->ClearLoadingFlags();
+	 }
+  }
   /* Ask nsWebShell to load the URl */
   if ( mIsViewSource ) {
     // Viewing source, load with "view-source" command.
@@ -1299,6 +1311,18 @@ nsBrowserAppCore::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL, 
 
   //Disable the reload button
   setAttribute(mWebShell, "canReload", "disabled", trueStr);
+
+  PRBool result=PR_TRUE;
+  // Check with sessionHistory if you can go forward
+  canForward(result);
+  setAttribute(mWebShell, "canGoForward", "disabled", (result == PR_TRUE) ? "" : "true");
+
+
+    // Check with sessionHistory if you can go back
+  canBack(result);
+  setAttribute(mWebShell, "canGoBack", "disabled", (result == PR_TRUE) ? "" : "true");
+
+
   
 #ifdef NECKO
   nsCRT::free(url);
@@ -1381,6 +1405,16 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* chan
     }
   }
 
+  /* Inform Session History about the status of the page load */
+  if (mSHistory) {
+    mSHistory->UpdateStatus(webshell, aStatus); 
+  }
+  if (mIsLoadingHistory) {
+      if (mSHistory)
+		  mSHistory->ClearLoadingFlags();
+	  mIsLoadingHistory=PR_FALSE;
+  }
+
   /* If this is a frame, don't do any of the Global History
    * & observer thingy 
    */
@@ -1420,9 +1454,6 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* chan
         fflush(stdout);
 	  }
   } //if (!isFrame)
-  
-
-
 
 #ifdef DEBUG_warren
   char* urls;
@@ -1441,7 +1472,7 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* chan
 
   setAttribute( mWebShell, "Browser:Throbber", "busy", "false" );
   PRBool result=PR_TRUE;
-
+#if 0
   // Check with sessionHistory if you can go forward
   canForward(result);
   setAttribute(mWebShell, "canGoForward", "disabled", (result == PR_TRUE) ? "" : "true");
@@ -1450,7 +1481,7 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* chan
     // Check with sessionHistory if you can go back
   canBack(result);
   setAttribute(mWebShell, "canGoBack", "disabled", (result == PR_TRUE) ? "" : "true");
-
+#endif /* 0 */
 
     //Disable the Stop button
   setAttribute( mWebShell, "canStop", "disabled", "true" );
@@ -1627,19 +1658,31 @@ nsBrowserAppCore::OnEndURLLoad(nsIDocumentLoader* loader,
 NS_IMETHODIMP    
 nsBrowserAppCore::GoBack(nsIWebShell * aPrev)
 {
+  if (mIsLoadingHistory) {
+	  mIsLoadingHistory = PR_FALSE;
+	  if (mSHistory)
+		  mSHistory->ClearLoadingFlags();
+  }
+  mIsLoadingHistory = PR_TRUE;
   if (mSHistory) {
     mSHistory->GoBack(aPrev);
   }
-	return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
 nsBrowserAppCore::GoForward(nsIWebShell * aPrev)
 {
+  if (mIsLoadingHistory) {
+     mIsLoadingHistory = PR_FALSE;
+	 if (mSHistory)
+	   mSHistory->ClearLoadingFlags();
+  }
+  mIsLoadingHistory = PR_TRUE;
   if (mSHistory) {
     mSHistory->GoForward(aPrev);
   }
-	return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1649,9 +1692,15 @@ nsBrowserAppCore::Reload(nsIWebShell * aPrev, nsURLReloadType aType)
 nsBrowserAppCore::Reload(nsIWebShell * aPrev, nsLoadFlags aType)
 #endif // NECKO
 {
-	if (mSHistory)
-		mSHistory->Reload(aPrev, aType);
-	return NS_OK;
+  if (mIsLoadingHistory) {
+     mIsLoadingHistory = PR_FALSE;
+	 if (mSHistory)
+	   mSHistory->ClearLoadingFlags();
+  }
+  mIsLoadingHistory = PR_TRUE;
+  if (mSHistory)
+	mSHistory->Reload(aPrev, aType);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1672,6 +1721,12 @@ nsBrowserAppCore::Goto(PRInt32 aGotoIndex, nsIWebShell * aPrev, PRBool aIsReload
    return rv;
 }
 
+NS_IMETHODIMP
+nsBrowserInstance::ClearLoadingFlags()
+{
+   mIsLoadingHistory = PR_FALSE;
+   return NS_OK;
+}
 
 NS_IMETHODIMP
 nsBrowserAppCore::SetLoadingFlag(PRBool aFlag)
@@ -1679,6 +1734,10 @@ nsBrowserAppCore::SetLoadingFlag(PRBool aFlag)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsBrowserInstance::UpdateStatus(nsIWebShell * aWebShell, nsresult aStatus) {
+	return NS_OK;
+}
 
 NS_IMETHODIMP
 nsBrowserAppCore::GetLoadingFlag(PRBool &aFlag)

@@ -136,6 +136,10 @@ class nsBrowserInstance : public nsIBrowserInstance,
 
     NS_IMETHOD SetHistoryObjectForIndex(PRInt32 aIndex, nsISupports * aState);
 
+    NS_IMETHOD ClearLoadingFlags();
+
+    NS_IMETHOD UpdateStatus(nsIWebShell * aWebShell, nsresult aStatus);
+
   protected:
     NS_IMETHOD ExecuteScript(nsIScriptContext * aContext, const nsString& aScript);
     void InitializeSearch(nsIFindComponent*);
@@ -162,6 +166,7 @@ class nsBrowserInstance : public nsIBrowserInstance,
 
     nsCOMPtr<nsISupports>  mSearchContext;				// at last, something we really own
     nsInstanceCounter   mInstanceCounter;
+	PRBool              mIsLoadingHistory;
 #ifdef DEBUG_warren
     PRIntervalTime      mLoadStartTime;
 #endif
