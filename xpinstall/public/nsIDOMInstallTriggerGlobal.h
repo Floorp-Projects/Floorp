@@ -23,6 +23,7 @@
 #include "nsISupports.h"
 #include "nsString.h"
 #include "nsIScriptContext.h"
+#include "nsXPITriggerInfo.h"
 
 
 #define NS_IDOMINSTALLTRIGGERGLOBAL_IID \
@@ -42,7 +43,8 @@ public:
 
   NS_IMETHOD    UpdateEnabled(PRBool* aReturn)=0;
 
-  NS_IMETHOD    StartSoftwareUpdate(const nsString& aURL, PRInt32* aReturn)=0;
+  NS_IMETHOD    Install(nsXPITriggerInfo* aInfo, PRBool* aReturn)=0;
+
   NS_IMETHOD    StartSoftwareUpdate(const nsString& aURL, PRInt32 aFlags, PRInt32* aReturn)=0;
 
   NS_IMETHOD    ConditionalSoftwareUpdate(const nsString& aURL, const nsString& aRegName, PRInt32 aDiffLevel, const nsString& aVersion, PRInt32 aMode, PRInt32* aReturn)=0;
@@ -60,6 +62,7 @@ public:
 
 #define NS_DECL_IDOMINSTALLTRIGGERGLOBAL   \
   NS_IMETHOD    UpdateEnabled(PRBool* aReturn);  \
+  NS_IMETHOD    Install(nsXPITriggerInfo* aInfo, PRBool* aReturn); \
   NS_IMETHOD    StartSoftwareUpdate(const nsString& aURL, PRInt32 aFlags, PRInt32* aReturn);  \
   NS_IMETHOD    StartSoftwareUpdate(const nsString& aURL, PRInt32* aReturn);  \
   NS_IMETHOD    ConditionalSoftwareUpdate(const nsString& aURL, const nsString& aRegName, PRInt32 aDiffLevel, const nsString& aVersion, PRInt32 aMode, PRInt32* aReturn);  \
@@ -76,6 +79,7 @@ public:
 
 #define NS_FORWARD_IDOMINSTALLTRIGGERGLOBAL(_to)  \
   NS_IMETHOD    UpdateEnabled(PRBool* aReturn) { return _to##UpdateEnabled(aReturn); }  \
+  NS_IMETHOD    Install(nsXPITriggerInfo* aInfo, PRBool* aReturn) { return _to##Install(aInfo,aReturn); } \
   NS_IMETHOD    StartSoftwareUpdate(const nsString& aURL, PRInt32 aFlags, PRInt32* aReturn) { return _to##StartSoftwareUpdate(aURL, aFlags, aReturn); }  \
   NS_IMETHOD    StartSoftwareUpdate(const nsString& aURL, PRInt32* aReturn) { return _to##StartSoftwareUpdate(aURL, aReturn); }  \
   NS_IMETHOD    ConditionalSoftwareUpdate(const nsString& aURL, const nsString& aRegName, PRInt32 aDiffLevel, const nsString& aVersion, PRInt32 aMode, PRInt32* aReturn) { return _to##ConditionalSoftwareUpdate(aURL, aRegName, aDiffLevel, aVersion, aMode, aReturn); }  \

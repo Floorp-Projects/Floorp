@@ -48,11 +48,12 @@ CPPSRCS = \
     nsJSInstall.cpp             \
     nsJSInstallTriggerGlobal.cpp\
     nsSoftwareUpdateRun.cpp     \
-    nsSoftwareUpdateStream.cpp  \
     nsTopProgressNotifier.cpp   \
     nsLoggingProgressNotifier.cpp   \
     ScheduledTasks.cpp          \
     nsInstallFileOpItem.cpp     \
+    nsXPITriggerInfo.cpp        \
+    nsXPInstallManager.cpp      \
     $(NULL)
 
 INCLUDES += -I$(srcdir)/../public

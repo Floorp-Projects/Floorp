@@ -29,8 +29,9 @@
 #include "nsISupports.h"
 #include "nsIFactory.h"
 #include "nsString.h"
+#include "nsIFileSpec.h"
 
-#include "nsIXPInstallProgress.h"
+#include "nsIXPINotifier.h"
 
 #define NS_IXPINSTALLCOMPONENT_PROGID NS_IAPPSHELLCOMPONENT_PROGID "/xpinstall"
 #define NS_IXPINSTALLCOMPONENT_CLASSNAME "Mozilla XPInstall Component"
@@ -49,17 +50,18 @@ class nsISoftwareUpdate : public nsISupports
     public:
         	NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISOFTWAREUPDATE_IID)
             
-            NS_IMETHOD InstallJar(const nsString& fromURL,
-                                  const nsString& localFile,
-                                  long  flags) = 0; 
+            NS_IMETHOD InstallJar(nsIFileSpec* localFile,
+                                  const PRUnichar* arguments,
+                                  long  flags,
+                                  nsIXPINotifier* notifier = 0) = 0; 
             
-            NS_IMETHOD RegisterNotifier(nsIXPInstallProgress *notifier) = 0;
+            NS_IMETHOD RegisterNotifier(nsIXPINotifier *notifier) = 0;
             
-            NS_IMETHOD InstallPending(void) = 0;
+//            NS_IMETHOD InstallPending(void) = 0;
 
             /* FIX: these should be in a private interface */
             NS_IMETHOD InstallJarCallBack()                   = 0; 
-            NS_IMETHOD GetTopLevelNotifier(nsIXPInstallProgress **notifier) = 0;
+            NS_IMETHOD GetTopLevelNotifier(nsIXPINotifier **notifier) = 0;
 };
 
 

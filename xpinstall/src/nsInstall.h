@@ -38,13 +38,14 @@
 #include "nsFileSpec.h"
 #include "nsVector.h"
 #include "nsHashtable.h"
+#include "nsCOMPtr.h"
 
 #include "nsSoftwareUpdate.h"
 
 #include "nsInstallObject.h"
 #include "nsInstallVersion.h"
 
-#include "nsIXPInstallProgress.h"
+#include "nsIXPINotifier.h"
 
 #include "nsIStringBundle.h"
 #include "nsILocale.h"
@@ -58,33 +59,24 @@ class nsInstallInfo
 {
   public:
     
-    nsInstallInfo(const nsString& fromURL, const nsString& localFile, long flags);
-
-    nsInstallInfo(nsVector* fromURL, nsVector* localFiles, long flags);
-    
+    nsInstallInfo(nsIFileSpec* aFile, const PRUnichar* aArgs, long flags, nsIXPINotifier* aNotifier);
     virtual ~nsInstallInfo();
 
-    nsString& GetFromURL(PRUint32 index = 0);
-    
-    nsString& GetLocalFile(PRUint32 index = 0);
+    void GetLocalFile(char** aPath);
 
-    void GetArguments(nsString& args, PRUint32 index = 0);
+    void GetArguments(nsString& aArgs) { aArgs = mArgs; }
     
-    long GetFlags();
-    
-    PRBool    IsMultipleTrigger();
-
-    static void DeleteVector(nsVector* vector);    
+    long GetFlags() { return mFlags; }
     
   private:
     
-    
-    PRBool    mMultipleTrigger;
     nsresult  mError;
 
     long       mFlags;
-    nsVector  *mFromURLs;
-    nsVector  *mLocalFiles;
+    nsString   mArgs;
+
+    nsCOMPtr<nsIFileSpec>       mFile;
+    nsCOMPtr<nsIXPINotifier>    mNotifier;
 };
 
 
@@ -245,7 +237,7 @@ class nsInstall
         nsVector*           mInstalledFiles;        
         nsHashtable*        mPatchList;
         
-        nsIXPInstallProgress *mNotifier;
+        nsIXPINotifier      *mNotifier;
         
         PRInt32             mLastError;
 
@@ -268,8 +260,8 @@ class nsInstall
         PRInt32     ExtractDirEntries(const nsString& directory, nsVector *paths);
 
         PRInt32     ScheduleForInstall(nsInstallObject* ob);
-        
 
+        static void DeleteVector(nsVector* vector);    
 };
 
 #endif

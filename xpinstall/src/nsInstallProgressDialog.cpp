@@ -23,7 +23,7 @@
  */
 
 
-#include "nsIXPInstallProgress.h"
+#include "nsIXPINotifier.h"
 #include "nsInstallProgressDialog.h"
 
 #include "nsIAppShellComponentImpl.h"
@@ -43,66 +43,8 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID( kAppShellServiceCID, NS_APPSHELL_SERVICE_CID );
 static NS_DEFINE_IID( kNetServiceCID,      NS_NETSERVICE_CID );
 
-// Utility to set element attribute.
-static nsresult setAttribute( nsIDOMXULDocument *doc,
-                              const char *id,
-                              const char *name,
-                              const nsString &value ) {
-    nsresult rv = NS_OK;
-
-    if ( doc ) {
-        // Find specified element.
-        nsCOMPtr<nsIDOMElement> elem;
-        rv = doc->GetElementById( id, getter_AddRefs( elem ) );
-        if ( elem ) {
-            // Set the text attribute.
-            rv = elem->SetAttribute( name, value );
-            if ( NS_SUCCEEDED( rv ) ) {
-            } else {
-                 DEBUG_PRINTF( PR_STDOUT, "%s %d: SetAttribute failed, rv=0x%X\n",
-                               __FILE__, (int)__LINE__, (int)rv );
-            }
-        } else {
-            DEBUG_PRINTF( PR_STDOUT, "%s %d: GetElementById failed, rv=0x%X\n",
-                          __FILE__, (int)__LINE__, (int)rv );
-        }
-    } else {
-        rv = NS_ERROR_NULL_POINTER;
-    }
-
-    return rv;
-}
 
 
-// Utility to get element attribute.
-static nsresult getAttribute( nsIDOMXULDocument *doc,
-                              const char *id,
-                              const char *name,
-                              nsString &value ) {
-    nsresult rv = NS_OK;
-
-    if ( doc ) {
-        // Find specified element.
-        nsCOMPtr<nsIDOMElement> elem;
-        rv = doc->GetElementById( id, getter_AddRefs( elem ) );
-        if ( elem ) {
-            // Set the text attribute.
-            rv = elem->GetAttribute( name, value );
-            if ( NS_SUCCEEDED( rv ) ) {
-            } else {
-                 DEBUG_PRINTF( PR_STDOUT, "%s %d: SetAttribute failed, rv=0x%X\n",
-                               __FILE__, (int)__LINE__, (int)rv );
-            }
-        } else {
-            DEBUG_PRINTF( PR_STDOUT, "%s %d: GetElementById failed, rv=0x%X\n",
-                          __FILE__, (int)__LINE__, (int)rv );
-        }
-    } else {
-        rv = NS_ERROR_NULL_POINTER;
-    }
-
-    return rv;
-}
 
 
 nsInstallProgressDialog::nsInstallProgressDialog()
@@ -131,8 +73,13 @@ nsInstallProgressDialog::QueryInterface(REFNSIID aIID,void** aInstancePtr)
   // Always NULL result, in case of failure
   *aInstancePtr = NULL;
 
-  if (aIID.Equals(nsIXPInstallProgress::GetIID())) {
-    *aInstancePtr = (void*) ((nsInstallProgressDialog*)this);
+  if (aIID.Equals(nsIXPINotifier::GetIID())) {
+    *aInstancePtr = (void*) ((nsIXPINotifier*)this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(nsIXPIProgressDlg::GetIID())) {
+    *aInstancePtr = (void*) ((nsIXPIProgressDlg*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -142,7 +89,7 @@ nsInstallProgressDialog::QueryInterface(REFNSIID aIID,void** aInstancePtr)
     return NS_OK;
   }
   if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = (void*) (nsISupports*)((nsIXPInstallProgress*)this);
+    *aInstancePtr = (void*) (nsISupports*)((nsIXPINotifier*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -153,136 +100,47 @@ nsInstallProgressDialog::QueryInterface(REFNSIID aIID,void** aInstancePtr)
 NS_IMETHODIMP 
 nsInstallProgressDialog::BeforeJavascriptEvaluation()
 {
-    nsresult rv = NS_OK;
-
-    // Get app shell service.
-    nsIAppShellService *appShell;
-    rv = nsServiceManager::GetService( kAppShellServiceCID,
-                                       nsIAppShellService::GetIID(),
-                                       (nsISupports**)&appShell );
-
-    if ( NS_SUCCEEDED( rv ) ) 
-    {
-        // Open "progress" dialog.
-        nsIURL *url;
-        rv = NS_NewURL( &url, "resource:/res/xpinstall/progress.xul" );
-        
-        if ( NS_SUCCEEDED(rv) ) 
-        {
-        
-            nsIWebShellWindow *newWindow;
-
-            rv = appShell->CreateTopLevelWindow( nsnull,
-                                                 url,
-                                                 PR_TRUE,
-                                                 newWindow,
-                                                 nsnull,
-                                                 this,  // callbacks??
-                                                 0,
-                                                 0 );
-
-            if ( NS_SUCCEEDED( rv ) ) 
-            {
-                mWindow = newWindow;
-                NS_RELEASE( newWindow );
-
-                 if (mWindow != nsnull)
-                    mWindow->Show(PR_TRUE);
-            }
-            else 
-            {
-                DEBUG_PRINTF( PR_STDOUT, "Error creating progress dialog, rv=0x%X\n", (int)rv );
-            }
-            NS_RELEASE( url );
-        }
-        
-        nsServiceManager::ReleaseService( kAppShellServiceCID, appShell );
-    } 
-    else 
-    {
-        DEBUG_PRINTF( PR_STDOUT, "Unable to get app shell service, rv=0x%X\n", (int)rv );
-    }
-    return NS_OK;
+    return Open();
 }
 
 NS_IMETHODIMP 
 nsInstallProgressDialog::AfterJavascriptEvaluation()
 {
-    if (mWindow)
-    {
-        mWindow->Close();
-    }
-
-    return NS_OK;
+    return Close();
 }
 
 NS_IMETHODIMP 
 nsInstallProgressDialog::InstallStarted(const char *UIPackageName)
 {
-    setAttribute( mDocument, "dialog.uiPackageName", "value", nsString(UIPackageName) );
-    return NS_OK;
+    return SetHeading( nsString(UIPackageName).GetUnicode() );
 }
 
 NS_IMETHODIMP 
 nsInstallProgressDialog::ItemScheduled(const char *message)
 {
-    PRInt32 maxChars = 40;
+    nsresult rv = SetActionText( nsString(message).GetUnicode() );
 
-    nsString theMessage(message);
-    PRInt32 len = theMessage.Length();
-    if (len > maxChars)
+    if (NS_SUCCEEDED(rv))
     {
-        PRInt32 offset = (len/2) - ((len - maxChars)/2);
-        PRInt32 count  = (len - maxChars);
-        theMessage.Cut(offset, count); 
-        theMessage.Insert(nsString("..."), offset);
+        PRBool cancel;
+        rv = GetCancelStatus( &cancel );
+
+        if ( NS_SUCCEEDED(rv) && cancel)
+            return NS_ERROR_FAILURE;  // XXX: Not a COM failure! change interface to return val
     }
-    setAttribute( mDocument, "dialog.currentAction", "value", theMessage );
-    
-    nsString aValue;
-    getAttribute( mDocument, "data.canceled", "value", aValue );
-
-    if (aValue.EqualsIgnoreCase("true"))
-        return -1;
-
-    return NS_OK;
+    return rv;
 }
 
 NS_IMETHODIMP 
 nsInstallProgressDialog::InstallFinalization(const char *message, PRInt32 itemNum, PRInt32 totNum)
 {
 
-    PRInt32 maxChars = 40;
+    nsresult rv = SetActionText( nsString(message).GetUnicode() );
 
-    nsString theMessage(message);
-    PRInt32 len = theMessage.Length();
-    if (len > maxChars)
-    {
-        PRInt32 offset = (len/2) - ((len - maxChars)/2);
-        PRInt32 count  = (len - maxChars);
-        theMessage.Cut(offset, count);  
-        theMessage.Insert(nsString("..."), offset);
-    }
-
-    setAttribute( mDocument, "dialog.currentAction", "value", theMessage );
-
-    nsresult rv = NS_OK;
-    char buf[16];
+    if (NS_SUCCEEDED(rv))
+        rv = SetProgress( itemNum, totNum );
     
-    PR_snprintf( buf, sizeof buf, "%lu", totNum );
-    setAttribute( mDocument, "dialog.progress", "max", buf );
-   
-    if (totNum != 0)
-    {
-        PR_snprintf( buf, sizeof buf, "%lu", ((totNum-itemNum)/totNum) );
-    }
-    else
-    {
-        PR_snprintf( buf, sizeof buf, "%lu", 0 );
-    }
-    setAttribute( mDocument, "dialog.progress", "value", buf );
-    
-    return NS_OK;
+    return rv;
 }
 
 NS_IMETHODIMP 
@@ -337,6 +195,190 @@ nsInstallProgressDialog::ConstructBeforeJavaScript(nsIWebShell *aWebShell)
     {
         DEBUG_PRINTF( PR_STDOUT, "%s %d: GetContentViewer failed, rv=0x%X\n",
                       __FILE__, (int)__LINE__, (int)rv );
+    }
+
+    return rv;
+}
+
+
+NS_IMETHODIMP
+nsInstallProgressDialog::Open()
+{
+    nsresult rv = NS_OK;
+
+    // Get app shell service.
+    nsIAppShellService *appShell;
+    rv = nsServiceManager::GetService( kAppShellServiceCID,
+                                       nsIAppShellService::GetIID(),
+                                       (nsISupports**)&appShell );
+
+    if ( NS_SUCCEEDED( rv ) ) 
+    {
+        // Open "progress" dialog.
+        nsIURL *url;
+        rv = NS_NewURL( &url, "resource:/res/xpinstall/progress.xul" );
+        
+        if ( NS_SUCCEEDED(rv) ) 
+        {
+        
+            nsIWebShellWindow *newWindow;
+
+            rv = appShell->CreateTopLevelWindow( nsnull,
+                                                 url,
+                                                 PR_TRUE,
+                                                 newWindow,
+                                                 nsnull,
+                                                 this,  // callbacks??
+                                                 0,
+                                                 0 );
+
+            if ( NS_SUCCEEDED( rv ) ) 
+            {
+                mWindow = newWindow;
+                NS_RELEASE( newWindow );
+
+                 if (mWindow != nsnull)
+                    mWindow->Show(PR_TRUE);
+            }
+            else 
+            {
+                DEBUG_PRINTF( PR_STDOUT, "Error creating progress dialog, rv=0x%X\n", (int)rv );
+            }
+            NS_RELEASE( url );
+        }
+        
+        nsServiceManager::ReleaseService( kAppShellServiceCID, appShell );
+    } 
+    else 
+    {
+        DEBUG_PRINTF( PR_STDOUT, "Unable to get app shell service, rv=0x%X\n", (int)rv );
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsInstallProgressDialog::Close()
+{
+    if (mWindow)
+    {
+        mWindow->Close();
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsInstallProgressDialog::SetTitle(const PRUnichar * aTitle)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsInstallProgressDialog::SetHeading(const PRUnichar * aHeading)
+{
+    return setDlgAttribute( "dialog.uiPackageName", "value", nsString(aHeading) );
+}
+
+NS_IMETHODIMP
+nsInstallProgressDialog::SetActionText(const PRUnichar * aActionText)
+{
+    const PRInt32 maxChars = 40;
+
+    nsString theMessage(aActionText);
+    PRInt32 len = theMessage.Length();
+    if (len > maxChars)
+    {
+        PRInt32 offset = (len/2) - ((len - maxChars)/2);
+        PRInt32 count  = (len - maxChars);
+        theMessage.Cut(offset, count);  
+        theMessage.Insert(nsString("..."), offset);
+    }
+
+    return setDlgAttribute( "dialog.currentAction", "value", theMessage );
+}
+
+NS_IMETHODIMP
+nsInstallProgressDialog::SetProgress(PRInt32 aValue, PRInt32 aMax)
+{
+    char buf[16];
+    
+    PR_snprintf( buf, sizeof buf, "%lu", aMax );
+    nsresult rv = setDlgAttribute( "dialog.progress", "max", buf );
+   
+    if ( NS_SUCCEEDED(rv))
+    {
+        if (aMax != 0)
+            PR_snprintf( buf, sizeof buf, "%lu", ((aMax-aValue)/aMax) );
+        else
+            PR_snprintf( buf, sizeof buf, "%lu", 0 );
+
+        rv = setDlgAttribute( "dialog.progress", "value", buf );
+    }
+    return rv;
+}
+
+NS_IMETHODIMP
+nsInstallProgressDialog::GetCancelStatus(PRBool *_retval)
+{
+    *_retval = PR_FALSE;
+    return NS_OK;
+}
+
+// Utility to set element attribute.
+nsresult nsInstallProgressDialog::setDlgAttribute( const char *id,
+                                                   const char *name,
+                                                   const nsString &value )
+{
+    nsresult rv = NS_OK;
+
+    if ( mDocument ) {
+        // Find specified element.
+        nsCOMPtr<nsIDOMElement> elem;
+        rv = mDocument->GetElementById( id, getter_AddRefs( elem ) );
+        if ( elem ) {
+            // Set the text attribute.
+            rv = elem->SetAttribute( name, value );
+            if ( NS_SUCCEEDED( rv ) ) {
+            } else {
+                 DEBUG_PRINTF( PR_STDOUT, "%s %d: SetAttribute failed, rv=0x%X\n",
+                               __FILE__, (int)__LINE__, (int)rv );
+            }
+        } else {
+            DEBUG_PRINTF( PR_STDOUT, "%s %d: GetElementById failed, rv=0x%X\n",
+                          __FILE__, (int)__LINE__, (int)rv );
+        }
+    } else {
+        rv = NS_ERROR_NULL_POINTER;
+    }
+
+    return rv;
+}
+
+
+// Utility to get element attribute.
+nsresult nsInstallProgressDialog::getDlgAttribute(  const char *id,
+                                                    const char *name,
+                                                    nsString &value ) 
+{
+    nsresult rv = NS_OK;
+
+    if ( mDocument ) {
+        // Find specified element.
+        nsCOMPtr<nsIDOMElement> elem;
+        rv = mDocument->GetElementById( id, getter_AddRefs( elem ) );
+        if ( elem ) {
+            // Set the text attribute.
+            rv = elem->GetAttribute( name, value );
+            if ( NS_SUCCEEDED( rv ) ) {
+            } else {
+                 DEBUG_PRINTF( PR_STDOUT, "%s %d: GetAttribute failed, rv=0x%X\n",
+                               __FILE__, (int)__LINE__, (int)rv );
+            }
+        } else {
+            DEBUG_PRINTF( PR_STDOUT, "%s %d: GetElementById failed, rv=0x%X\n",
+                          __FILE__, (int)__LINE__, (int)rv );
+        }
+    } else {
+        rv = NS_ERROR_NULL_POINTER;
     }
 
     return rv;

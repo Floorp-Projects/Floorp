@@ -7,13 +7,13 @@
 #include "nsISupports.h"
 #include "nsIScriptObjectOwner.h"
 
-#include "nsIDOMInstallTriggerGlobal.h"
-#include "nsSoftwareUpdate.h"
-
 #include "prtypes.h"
 #include "nsHashtable.h"
 #include "nsVector.h"
 
+#include "nsIDOMInstallTriggerGlobal.h"
+#include "nsSoftwareUpdate.h"
+#include "nsXPITriggerInfo.h"
 
 
 
@@ -32,8 +32,8 @@ class nsInstallTrigger: public nsIScriptObjectOwner, public nsIDOMInstallTrigger
         NS_IMETHOD    SetScriptObject(void* aScriptObject);
 
         NS_IMETHOD    UpdateEnabled(PRBool* aReturn);
+        NS_IMETHOD    Install(nsXPITriggerInfo *aInfo, PRBool* aReturn);
         NS_IMETHOD    StartSoftwareUpdate(const nsString& aURL, PRInt32 aFlags, PRInt32* aReturn);
-        NS_IMETHOD    StartSoftwareUpdate(const nsString& aURL, PRInt32* aReturn);
         NS_IMETHOD    ConditionalSoftwareUpdate(const nsString& aURL, const nsString& aRegName, PRInt32 aDiffLevel, const nsString& aVersion, PRInt32 aMode, PRInt32* aReturn);
         NS_IMETHOD    ConditionalSoftwareUpdate(const nsString& aURL, const nsString& aRegName, PRInt32 aDiffLevel, nsIDOMInstallVersion* aVersion, PRInt32 aMode, PRInt32* aReturn);
         NS_IMETHOD    ConditionalSoftwareUpdate(const nsString& aURL, const nsString& aRegName, nsIDOMInstallVersion* aVersion, PRInt32 aMode, PRInt32* aReturn);

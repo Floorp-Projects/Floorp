@@ -10,12 +10,13 @@
 #include "nsISupports.h"
 #include "nsString.h"
 #include "nsVector.h"
+#include "prlock.h"
 
 class nsInstallInfo;
 
 #include "nsIScriptExternalNameSet.h"
 #include "nsIAppShellComponent.h"
-#include "nsIXPInstallProgress.h"
+#include "nsIXPINotifier.h"
 #include "nsTopProgressNotifier.h"
 
 class nsSoftwareUpdate:  public nsIAppShellComponent, public nsISoftwareUpdate
@@ -30,16 +31,17 @@ class nsSoftwareUpdate:  public nsIAppShellComponent, public nsISoftwareUpdate
         NS_DECL_ISUPPORTS
         NS_DECL_IAPPSHELLCOMPONENT
         
-        NS_IMETHOD InstallJar(const nsString& fromURL,
-                              const nsString& localFile, 
-                              long flags);  
+        NS_IMETHOD InstallJar( nsIFileSpec* localFile,
+                               const PRUnichar* arguments,
+                               long flags = 0,
+                               nsIXPINotifier* notifier = 0);  
 
-        NS_IMETHOD RegisterNotifier(nsIXPInstallProgress *notifier);
+        NS_IMETHOD RegisterNotifier(nsIXPINotifier *notifier);
         
-        NS_IMETHOD InstallPending(void);
+//        NS_IMETHOD InstallPending(void);
 
         NS_IMETHOD InstallJarCallBack();
-        NS_IMETHOD GetTopLevelNotifier(nsIXPInstallProgress **notifier);
+        NS_IMETHOD GetTopLevelNotifier(nsIXPINotifier **notifier);
 
 
     private:
@@ -47,6 +49,7 @@ class nsSoftwareUpdate:  public nsIAppShellComponent, public nsISoftwareUpdate
         nsresult RunNextInstall();
         nsresult DeleteScheduledNodes();
         
+        PRLock*           mLock;
         PRBool            mInstalling;
         nsVector*         mJarInstallQueue;
         nsTopProgressNotifier   *mTopLevelObserver;

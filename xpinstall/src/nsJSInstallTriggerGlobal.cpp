@@ -25,7 +25,9 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIPtr.h"
+#include "nsCRT.h"
 #include "nsString.h"
+#include "nsVector.h"
 #include "nsIDOMInstallVersion.h"
 #include "nsIDOMInstallTriggerGlobal.h"
 
@@ -174,6 +176,77 @@ InstallTriggerGlobalUpdateEnabled(JSContext *cx, JSObject *obj, uintN argc, jsva
   return JS_TRUE;
 }
 
+//
+// Native method Install
+//
+PR_STATIC_CALLBACK(JSBool)
+InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMInstallTriggerGlobal *nativeThis = (nsIDOMInstallTriggerGlobal*)JS_GetPrivate(cx, obj);
+
+  *rval = JSVAL_FALSE;
+
+  // If there's no private data this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  // parse associative array of installs
+  if ( argc >= 1 && JSVAL_IS_OBJECT(argv[0]) )
+  {
+    nsXPITriggerInfo *trigger = new nsXPITriggerInfo();
+    if (!trigger)
+      return JS_FALSE;
+
+    JSIdArray *ida = JS_Enumerate( cx, JSVAL_TO_OBJECT(argv[0]) );
+    if ( ida ) 
+    {
+      jsval v;
+      PRUnichar *name, *URL;
+
+      for (int i = 0; i < ida->length; i++ )
+      {
+        JS_IdToValue( cx, ida->vector[i], &v );
+        name = JS_GetStringChars( JS_ValueToString( cx, v ) );
+
+        JS_GetUCProperty( cx, JSVAL_TO_OBJECT(argv[0]), name, nsCRT::strlen(name), &v );
+        URL = JS_GetStringChars( JS_ValueToString( cx, v ) );
+
+        if ( name && URL )
+        {
+            nsXPITriggerItem *item = new nsXPITriggerItem( name, URL );
+            if ( item )
+                trigger->Add( item );
+            else
+                ; // XXX signal error somehow
+        }
+        else
+            ; // XXX need to signal error
+      }
+      JS_DestroyIdArray( cx, ida );
+    }
+
+    // save callback function if any (ignore bad args for now)
+    if ( argc >= 2 && JS_TypeOfValue(cx,argv[1]) == JSTYPE_FUNCTION )
+    {
+      trigger->SaveCallback( cx, argv[1] );
+    }
+
+    // pass on only if good stuff found
+    if (trigger->Size() > 0)
+    {
+        PRBool result;
+        nativeThis->Install(trigger,&result);
+        *rval = BOOLEAN_TO_JSVAL(result);
+        return JS_TRUE;
+    }
+    else
+        delete trigger;
+  }
+
+  JS_ReportError(cx, "Incorrect arguments to InstallTrigger.Install()");
+  return JS_FALSE;
+}
 
 //
 // Native method StartSoftwareUpdate
@@ -182,49 +255,31 @@ PR_STATIC_CALLBACK(JSBool)
 InstallTriggerGlobalStartSoftwareUpdate(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMInstallTriggerGlobal *nativeThis = (nsIDOMInstallTriggerGlobal*)JS_GetPrivate(cx, obj);
-  JSBool       rBool = JS_FALSE;
   PRInt32      nativeRet;
   nsAutoString b0;
-  PRInt32      b1;
+  PRInt32      b1 = 0;
 
-  *rval = JSVAL_NULL;
+  *rval = JSVAL_FALSE;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 2)
+  if ( argc >= 1 )
   {
-    //  public int StartSoftwareUpdate(String url,
-    //                                 int flag);
-
     ConvertJSValToStr(b0, cx, argv[0]);
 
-    if(!JS_ValueToInt32(cx, argv[1], (int32 *)&b1))
+    if (argc >= 2 && !JS_ValueToInt32(cx, argv[1], (int32 *)&b1))
     {
-      JS_ReportError(cx, "2nd parameter must be a number");
-      return JS_FALSE;
+        JS_ReportError(cx, "StartSoftwareUpdate() 2nd parameter must be a number");
+        return JS_FALSE;
     }
 
     if(NS_OK != nativeThis->StartSoftwareUpdate(b0, b1, &nativeRet))
     {
       return JS_FALSE;
     }
-
-    *rval = INT_TO_JSVAL(nativeRet);
-  }
-  else if(argc >= 1)
-  {
-    //  public int StartSoftwareUpdate(String url);
-
-    ConvertJSValToStr(b0, cx, argv[0]);
-
-    if(NS_OK != nativeThis->StartSoftwareUpdate(b0, &nativeRet))
-    {
-      return JS_FALSE;
-    }
-
     *rval = INT_TO_JSVAL(nativeRet);
   }
   else
@@ -529,10 +584,11 @@ static JSPropertySpec InstallTriggerGlobalProperties[] =
 //
 static JSFunctionSpec InstallTriggerGlobalMethods[] = 
 {
-  {"UpdateEnabled",          InstallTriggerGlobalUpdateEnabled,     0},
-  {"StartSoftwareUpdate",          InstallTriggerGlobalStartSoftwareUpdate,     2},
-  {"ConditionalSoftwareUpdate",          InstallTriggerGlobalConditionalSoftwareUpdate,     5},
-  {"CompareVersion",          InstallTriggerGlobalCompareVersion,     5},
+  {"UpdateEnabled",             InstallTriggerGlobalUpdateEnabled,              0},
+  {"Install",                   InstallTriggerGlobalInstall,                    2},
+  {"StartSoftwareUpdate",       InstallTriggerGlobalStartSoftwareUpdate,        2},
+  {"ConditionalSoftwareUpdate", InstallTriggerGlobalConditionalSoftwareUpdate,  5},
+  {"CompareVersion",            InstallTriggerGlobalCompareVersion,             5},
   {0}
 };
 
