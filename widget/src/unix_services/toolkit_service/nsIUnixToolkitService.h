@@ -64,7 +64,7 @@ public:
    * @param [IN] aToolkitName The name of the toolkit to use.
    *        
    */
-  NS_IMETHOD SetToolkitName(const nsString & aToolkitName) = 0;
+  NS_IMETHOD SetToolkitName(const nsCString & aToolkitName) = 0;
 
   /**
    * Set the name of the widget toolkit to use.  It is usually not required  
@@ -77,7 +77,7 @@ public:
    * @param [IN] aToolkitName The name of the widget toolkit to use.
    *        
    */
-  NS_IMETHOD SetWidgetToolkitName(const nsString & aToolkitName) = 0;
+  NS_IMETHOD SetWidgetToolkitName(const nsCString & aToolkitName) = 0;
 
   /**
    * Set the name of the gfx toolkit to use.  It is usually not required to 
@@ -90,7 +90,7 @@ public:
    * @param [IN] aToolkitName The name of the gfx toolkit to use.
    *        
    */
-  NS_IMETHOD SetGfxToolkitName(const nsString & aToolkitName) = 0;
+  NS_IMETHOD SetGfxToolkitName(const nsCString & aToolkitName) = 0;
 
   
   /**
@@ -104,7 +104,7 @@ public:
    * is valid.
    *        
    */
-  NS_IMETHOD IsValidToolkit(const nsString & aToolkitName,
+  NS_IMETHOD IsValidToolkit(const nsCString & aToolkitName,
                             PRBool *         aResultOut) = 0;
 
   /**
@@ -118,7 +118,7 @@ public:
    * is valid.
    *        
    */
-  NS_IMETHOD IsValidWidgetToolkit(const nsString & aToolkitName,
+  NS_IMETHOD IsValidWidgetToolkit(const nsCString & aToolkitName,
                                   PRBool *         aResultOut) = 0;
 
   /**
@@ -132,7 +132,7 @@ public:
    * is valid.
    *        
    */
-  NS_IMETHOD IsValidGfxToolkit(const nsString & aToolkitName,
+  NS_IMETHOD IsValidGfxToolkit(const nsCString & aToolkitName,
                                PRBool *         aResultOut) = 0;
 
   /**
@@ -142,7 +142,7 @@ public:
    * @param [OUT] aToolkitNameOut On return it holds the toolkit name.
    *
    */
-  NS_IMETHOD GetToolkitName(nsString & aToolkitNameOut) = 0;
+  NS_IMETHOD GetToolkitName(nsCString & aToolkitNameOut) = 0;
 
   /**
    * Get the name of the widget toolkit currently being used.  The toolkit 
@@ -151,7 +151,7 @@ public:
    * @param [OUT] aToolkitNameOut On return it holds the toolkit name.
    *
    */
-  NS_IMETHOD GetWidgetToolkitName(nsString & aToolkitNameOut) = 0;
+  NS_IMETHOD GetWidgetToolkitName(nsCString & aToolkitNameOut) = 0;
 
   /**
    * Get the name of the gfx toolkit currently being used.  The toolkit name
@@ -160,7 +160,7 @@ public:
    * @param [OUT] aToolkitNameOut On return it holds the toolkit name.
    *
    */
-  NS_IMETHOD GetGfxToolkitName(nsString & aToolkitNameOut) = 0;
+  NS_IMETHOD GetGfxToolkitName(nsCString & aToolkitNameOut) = 0;
 
   /**
    * Get the name of the widget dll.  The widget dll will be something like:
@@ -169,7 +169,7 @@ public:
    * @param [OUT] aWidgetDllNameOut On return it holds the widget dll name.
    *        
    */
-  NS_IMETHOD GetWidgetDllName(nsString & aWidgetDllNameOut) = 0;
+  NS_IMETHOD GetWidgetDllName(nsCString & aWidgetDllNameOut) = 0;
 
   /**
    * Get the name of the gfx dll.  The gfx dll will be something like: 
@@ -179,7 +179,7 @@ public:
    *        
    * The gfx dll will be something like: libgfx_{gtk,motif,xlib,qt}.so
    */
-  NS_IMETHOD GetGfxDllName(nsString & aGfxDllNameOut) = 0;
+  NS_IMETHOD GetGfxDllName(nsCString & aGfxDllNameOut) = 0;
 
   /**
    * Get the CID of the timer class associated with the toolkit in use.
