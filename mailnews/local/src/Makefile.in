@@ -39,6 +39,7 @@ CPPSRCS = \
 	nsLocalUtils.cpp \
 	nsLocalUndoTxn.cpp \
 	nsLocalStringBundle.cpp \
+	nsNoIncomingServer.cpp	\
 	$(NULL)
 
 EXPORTS= \
@@ -54,6 +55,7 @@ EXPORTS= \
 	nsPop3IncomingServer.h	\
 	nsLocalMessage.h \
 	nsLocalStringBundle.h \
+	nsNoIncomingServer.h	\
 	$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

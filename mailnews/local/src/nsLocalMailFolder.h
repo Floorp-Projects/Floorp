@@ -163,7 +163,7 @@ protected:
 	nsresult CopyMessageTo(nsIMessage *message, nsIMsgFolder *dstFolder,
                          PRBool isMove);
 
-	virtual const char* GetIncomingServerType() {return "pop3";}
+	virtual const char* GetIncomingServerType();
   nsresult SetTransactionManager(nsITransactionManager* txnMgr);
   nsresult InitCopyState(nsISupports* aSupport, nsISupportsArray* messages,
                          PRBool isMove, nsIMsgCopyServiceListener* listener);

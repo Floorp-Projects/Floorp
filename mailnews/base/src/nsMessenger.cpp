@@ -41,6 +41,7 @@
 #include "nsIMsgMailSession.h"
 #include "nsIMsgIncomingServer.h"
 #include "nsIPop3IncomingServer.h"
+#include "nsINoIncomingServer.h"
 #include "nsIMsgMessageService.h"
 #include "nsFileSpec.h"
 

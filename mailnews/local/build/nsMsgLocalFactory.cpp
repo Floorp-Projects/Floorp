@@ -31,6 +31,7 @@
 #include "nsParseMailbox.h"
 #include "nsPop3Service.h"
 #include "nsPop3IncomingServer.h"
+#include "nsNoIncomingServer.h"
 #include "nsCOMPtr.h"
 #include "nsLocalMessage.h"
 
@@ -43,6 +44,7 @@ static NS_DEFINE_CID(kMailboxMessageResourceCID, NS_MAILBOXMESSAGERESOURCE_CID);
 static NS_DEFINE_CID(kPop3ServiceCID, NS_POP3SERVICE_CID);
 static NS_DEFINE_CID(kPop3UrlCID, NS_POP3URL_CID);
 static NS_DEFINE_CID(kPop3IncomingServerCID, NS_POP3INCOMINGSERVER_CID);
+static NS_DEFINE_CID(kNoIncomingServerCID, NS_NOINCOMINGSERVER_CID);
 static NS_DEFINE_CID(kParseMailMsgStateCID, NS_PARSEMAILMSGSTATE_CID);
 
 ////////////////////////////////////////////////////////////
@@ -195,6 +197,8 @@ nsresult nsMsgLocalFactory::CreateInstance(nsISupports * /* aOuter */, const nsI
 		rv = NS_NewParseMailMessageState(aIID, aResult);
   else if (mClassID.Equals(kPop3IncomingServerCID))
     rv = NS_NewPop3IncomingServer(nsCOMTypeInfo<nsISupports>::GetIID(), aResult);
+  else if (mClassID.Equals(kNoIncomingServerCID))
+    rv = NS_NewNoIncomingServer(nsCOMTypeInfo<nsISupports>::GetIID(), aResult);
 	
   else
 		rv = NS_NOINTERFACE;
@@ -320,9 +324,15 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                                   "Pop3 Incoming Server",
                                   NS_POP3INCOMINGSERVER_PROGID,
                                   path, PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) finalResult = rv;
+
+  rv = compMgr->RegisterComponent(kNoIncomingServerCID,
+                                  "No Incoming Server",
+                                  NS_NOINCOMINGSERVER_PROGID,
+                                  path, PR_TRUE, PR_TRUE);
 	
   if (NS_FAILED(rv)) finalResult = rv;
-   rv = compMgr->RegisterComponent(kParseMailMsgStateCID,
+  rv = compMgr->RegisterComponent(kParseMailMsgStateCID,
                                   "Parse MailMessage State",
                                   NS_PARSEMAILMSGSTATE_PROGID,
                                   path, PR_TRUE, PR_TRUE);
@@ -364,6 +374,9 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
   if (NS_FAILED(rv)) finalResult = rv;
 
   rv = compMgr->UnregisterComponent(kPop3IncomingServerCID, path);
+  if (NS_FAILED(rv)) finalResult = rv;
+
+  rv = compMgr->UnregisterComponent(kNoIncomingServerCID, path);
   if (NS_FAILED(rv)) finalResult = rv;
 
   rv = compMgr->UnregisterComponent(kParseMailMsgStateCID, path);

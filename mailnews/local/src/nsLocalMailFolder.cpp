@@ -42,6 +42,7 @@
 #include "nsMsgUtils.h"
 #include "nsLocalUtils.h"
 #include "nsIPop3IncomingServer.h"
+#include "nsINoIncomingServer.h"
 #include "nsIPop3Service.h"
 #include "nsIMsgIncomingServer.h"
 #include "nsMsgBaseCID.h"
@@ -141,6 +142,23 @@ NS_IMETHODIMP nsMsgLocalMailFolder::QueryInterface(REFNSIID aIID, void** aInstan
 ////////////////////////////////////////////////////////////////////////////////
 
 static PRBool
+nsStringEndsWith(nsString& name, const char *ending)
+{
+  if (!ending) return PR_FALSE;
+
+  PRInt32 len = name.Length();
+  if (len == 0) return PR_FALSE;
+
+  PRInt32 endingLen = PL_strlen(ending);
+  if (len > endingLen && name.RFind(ending, PR_TRUE) == len - endingLen) {
+	return PR_TRUE;
+  }
+  else {
+	return PR_FALSE;
+  }
+}
+  
+static PRBool
 nsShouldIgnoreFile(nsString& name)
 {
   PRUnichar firstChar=name.CharAt(0);
@@ -150,21 +168,20 @@ nsShouldIgnoreFile(nsString& name)
   if (name.EqualsIgnoreCase("rules.dat"))
     return PR_TRUE;
 
-  PRInt32 len = name.Length();
 
   // don't add summary files to the list of folders;
   // don't add popstate files to the list either, or rules (sort.dat). 
-  if ((len > 4 && name.RFind(".snm", PR_TRUE) == len - 4) ||
+  if (nsStringEndsWith(name, ".snm") ||
       name.EqualsIgnoreCase("popstate.dat") ||
       name.EqualsIgnoreCase("sort.dat") ||
       name.EqualsIgnoreCase("mailfilt.log") ||
       name.EqualsIgnoreCase("filters.js") ||
-      name.RFind(".toc", PR_TRUE) == len - 4)
+      nsStringEndsWith(name, ".toc"))
     return PR_TRUE;
 
-  if ((len > 4 && name.RFind(".sbd", PR_TRUE) == len - 4) ||
-		(len > 4 && name.RFind(".msf", PR_TRUE) == len - 4))
+  if (nsStringEndsWith(name,".sbd") || nsStringEndsWith(name,".msf"))
 	  return PR_TRUE;
+
   return PR_FALSE;
 }
 
@@ -364,22 +381,35 @@ nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
       SetFlag(newFlags);
       PRBool isServer;
       rv = GetIsServer(&isServer);
+      const char *type = GetIncomingServerType();
+
       if (NS_SUCCEEDED(rv) && isServer)
       {
-        // make sure we have all the default mailbox created
-        nsFileSpec fileSpec;
-        fileSpec = path + "Inbox";
-        if (!fileSpec.Exists()) { nsOutputFileStream outStream(fileSpec); }
-        fileSpec = path + "Trash";
-        if (!fileSpec.Exists()) { nsOutputFileStream outStream(fileSpec); }
-        fileSpec = path + "Sent";
-        if (!fileSpec.Exists()) { nsOutputFileStream outStream(fileSpec); }
-        fileSpec = path + "Drafts";
-        if (!fileSpec.Exists()) { nsOutputFileStream outStream(fileSpec); }
-        fileSpec = path + "Templates";
-        if (!fileSpec.Exists()) { nsOutputFileStream outStream(fileSpec); }
-        fileSpec = path + "Unsent Messages";
-        if (!fileSpec.Exists()) { nsOutputFileStream outStream(fileSpec); }
+        // TODO:  move this into the IncomingServer
+    	if (PL_strcmp(type, "pop3") == 0) {
+		// make sure we have all the default mailbox created
+		nsFileSpec fileSpec;
+		fileSpec = path + "Inbox";
+		if (!fileSpec.Exists()) { nsOutputFileStream outStream(fileSpec); }
+		fileSpec = path + "Trash";
+		if (!fileSpec.Exists()) { nsOutputFileStream outStream(fileSpec); }
+		fileSpec = path + "Sent";
+		if (!fileSpec.Exists()) { nsOutputFileStream outStream(fileSpec); }
+		fileSpec = path + "Drafts";
+		if (!fileSpec.Exists()) { nsOutputFileStream outStream(fileSpec); }
+		fileSpec = path + "Templates";
+		if (!fileSpec.Exists()) { nsOutputFileStream outStream(fileSpec); }
+		fileSpec = path + "Unsent Messages";
+		if (!fileSpec.Exists()) { nsOutputFileStream outStream(fileSpec); }
+	}
+	else if (PL_strcmp(type, "none") == 0) {
+#ifdef DEBUG_seth
+		printf("don't create any special folders for type=none\n");
+#endif
+	}
+ 	else {
+		NS_ASSERTION(0,"error, don't know about this server type yet.\n");
+	}
       }
       rv = CreateSubFolders(path);
     }
@@ -786,8 +816,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Adopt(nsIMsgFolder *srcFolder, PRUint32 *out
 
 NS_IMETHODIMP nsMsgLocalMailFolder::GetPrettyName(PRUnichar ** prettyName)
 {
-  return nsMsgFolder::GetPrettyName(prettyName);
-
+	return nsMsgFolder::GetPrettyName(prettyName);
 }
 
 nsresult  nsMsgLocalMailFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatabase **db)
@@ -1491,23 +1520,36 @@ nsMsgLocalMailFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr,
 
 NS_IMETHODIMP nsMsgLocalMailFolder::GetNewMessages()
 {
-    nsresult rv;
+    nsresult rv = NS_OK;
     
-    NS_WITH_SERVICE(nsIPop3Service, pop3Service, kCPop3ServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+    // TODO:  move this into the IncomingServer
+    const char *type = GetIncomingServerType();
+    if (PL_strcmp(type, "pop3") == 0) {
+	    NS_WITH_SERVICE(nsIPop3Service, pop3Service, kCPop3ServiceCID, &rv);
+	    if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIMsgIncomingServer> server;
-    rv = GetServer(getter_AddRefs(server));
+	    nsCOMPtr<nsIMsgIncomingServer> server;
+	    rv = GetServer(getter_AddRefs(server));
 
-    nsCOMPtr<nsIPop3IncomingServer> popServer;
-    rv = server->QueryInterface(nsIPop3IncomingServer::GetIID(),
-                                (void **)&popServer);
-    if (NS_SUCCEEDED(rv)) {
-        rv = pop3Service->GetNewMail(nsnull,popServer,nsnull);
+	    nsCOMPtr<nsIPop3IncomingServer> popServer;
+	    rv = server->QueryInterface(nsIPop3IncomingServer::GetIID(),
+					(void **)&popServer);
+	    if (NS_SUCCEEDED(rv)) {
+		rv = pop3Service->GetNewMail(nsnull,popServer,nsnull);
+	    }
     }
-    
-
-	return rv;
+    else if (PL_strcmp(type, "none") == 0) {
+#ifdef DEBUG_seth
+	printf("none means don't do anything\n");
+#endif
+	rv = NS_OK;
+    }
+    else {
+	NS_ASSERTION(0,"ERROR: how do we get new messages for this incoming server type");
+	rv = NS_ERROR_FAILURE;
+    }
+    if (NS_FAILED(rv)) printf("GetNewMessages failed\n");
+    return rv;
 }
 
 
@@ -1782,3 +1824,29 @@ nsresult nsMsgLocalMailFolder::CopyMessageTo(nsIMessage *message,
 	return rv;
 }
 
+// TODO:  once we move certain code into the IncomingServer (search for TODO)
+// this method will go away.
+const char *
+nsMsgLocalMailFolder::GetIncomingServerType()
+{
+	nsXPIDLCString type;
+	nsCOMPtr<nsIMsgIncomingServer> server;
+	nsresult rv = nsLocalURI2Server(mURI,getter_AddRefs(server));
+	NS_ASSERTION(NS_SUCCEEDED(rv), "nsLocalURI2Server() failed");
+	if (NS_FAILED(rv)) return "";
+
+	rv = server->GetType(getter_Copies(type));
+	NS_ASSERTION(NS_SUCCEEDED(rv), "GetType() failed");
+	if (NS_FAILED(rv)) return "";
+
+	if (PL_strcmp(type, "pop3") == 0) {
+		return "pop3";
+	}
+	else if (PL_strcmp(type, "none") == 0) {
+		return "none";
+	}
+	else {
+		NS_ASSERTION(0,"server type not known yet.\n");
+		return "";
+	}
+}

@@ -21,6 +21,7 @@
 
 #include "nsFileSpec.h"
 #include "nsString.h"
+#include "nsIMsgIncomingServer.h"
 
 static const char kMailboxRootURI[] = "mailbox:/";
 static const char kMailboxMessageRootURI[] = "mailbox_message:/";
@@ -29,11 +30,17 @@ nsresult
 nsLocalURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult);
 
 nsresult
+nsLocalURI2Server(const char* uriStr, nsIMsgIncomingServer ** aResult);
+
+nsresult
 nsParseLocalMessageURI(const char* uri, nsCString& folderURI, PRUint32 *key);
 
-nsresult nsBuildLocalMessageURI(const char* baseURI, PRUint32 key, char** uri);
+nsresult 
+nsBuildLocalMessageURI(const char* baseURI, PRUint32 key, char** uri);
 
-nsresult nsGetMailboxHostName(const char *rootURI, const char *uriStr, char **hostName);
+nsresult 
+nsGetMailboxHostName(const char *rootURI, const char *uriStr, char **hostName);
+
 nsresult
 nsGetMailboxUserName(const char *rootURI, const char *uriStr, char **userName);
 

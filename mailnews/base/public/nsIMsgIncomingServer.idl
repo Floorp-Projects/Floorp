@@ -42,7 +42,7 @@ interface nsIMsgIncomingServer : nsISupports {
   /* userid to log into the server */
   attribute string username;
 
-  /* server type, i.e. "pop3", "imap", "nntp", etc */
+  /* server type, i.e. "pop3", "imap", "nntp", "none", etc */
   attribute string type;
 
   /* should we remember the password? */

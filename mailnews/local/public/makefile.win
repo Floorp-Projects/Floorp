@@ -29,6 +29,7 @@ XPIDLSRCS = \
 			.\nsIPop3URL.idl			\
 			.\nsIMailboxUrl.idl			\
 			.\nsIMsgParseMailMsgState.idl	\
+			.\nsINoIncomingServer.idl	\
 			$(NULL)
 
 EXPORTS =								\

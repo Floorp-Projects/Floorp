@@ -26,6 +26,7 @@
 #include "nsIMsgMailSession.h"
 #include "nsIMsgIncomingServer.h"
 #include "nsIPop3IncomingServer.h"
+#include "nsINoIncomingServer.h"
 #include "nsMsgBaseCID.h"
 
 #include "nsMsgUtils.h"
@@ -49,23 +50,36 @@ nsGetMailboxServer(const char *username, const char *hostname, nsIMsgIncomingSer
   rv = session->GetAccountManager(getter_AddRefs(accountManager));
   if (NS_FAILED(rv)) return rv;
 
-  // find all pop hosts matching the given hostname
-  nsCOMPtr<nsIMsgIncomingServer> server;
+  // find all local mail "no servers" matching the given hostname
+  nsCOMPtr<nsIMsgIncomingServer> none_server;
   rv = accountManager->FindServer(username,
                                   hostname,
+                                  "none",
+                                  getter_AddRefs(none_server));
+  if (NS_SUCCEEDED(rv)) {
+	 *aResult = none_server;
+	  NS_ADDREF(*aResult);
+	  return rv;
+  }
+
+  // if that fails, look for the pop hosts matching the given hostname
+  nsCOMPtr<nsIMsgIncomingServer> pop3_server;
+  if (NS_FAILED(rv)) {
+	rv = accountManager->FindServer(username,
+                                  hostname,
                                   "pop3",
-                                  getter_AddRefs(server));
+                                  getter_AddRefs(pop3_server));
+  }
+  if (NS_SUCCEEDED(rv)) {
+	 *aResult = pop3_server;
+	  NS_ADDREF(*aResult);
+	  return rv;
+  }
 
   if (NS_FAILED(rv)) return rv;
-
-  *aResult = server;
-  NS_ADDREF(*aResult);
-  
-  
-  return rv;
 }
 
-static nsresult
+nsresult
 nsLocalURI2Server(const char* uriStr,
                   nsIMsgIncomingServer ** aResult)
 {

@@ -48,6 +48,17 @@
  {0xb7, 0xfc, 0x0, 0x80, 0x5f, 0x5, 0xff, 0xa5 }}
 
 //
+// nsNoIncomingServer
+//
+#define NS_NOINCOMINGSERVER_PROGID \
+  "component://netscape/messenger/server&type=none"
+
+#define NS_NOINCOMINGSERVER_CID            	\
+{ /* {ca5ffe7e-5f47-11d3-9a51-004005263078} */	\
+  0xca5ffe7e, 0x5f47, 0x11d3, 			\
+  {0x9a, 0x51, 0x00, 0x40, 0x05, 0x26, 0x30, 0x78}}
+
+//
 // nsMailboxMessageResource
 //
 #define NS_MAILBOXMESSAGERESOURCE_PROGID \

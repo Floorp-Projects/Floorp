@@ -46,6 +46,8 @@
 #include "nsIImapIncomingServer.h"
 // this should eventually be moved to the nntp server for upgrading
 #include "nsINntpIncomingServer.h"
+// this should eventually be moved to the no server for upgrading
+#include "nsINoIncomingServer.h"
 
 #define BUF_STR_LEN 1024
 
@@ -85,6 +87,9 @@ static NS_DEFINE_CID(kCNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 #ifdef DEBUG_seth
 #define DEBUG_CLEAR_PREF 1
 #endif
+
+// TODO:  this needs to be put into a string bundle
+#define LOCAL_MAIL_FAKE_HOST_NAME "Local Mail"
 
 // use this to search for all servers with the given hostname/iid and
 // put them in "servers"
@@ -218,7 +223,9 @@ private:
   nsresult MigrateImapAccount(nsIMsgIdentity *identity, const char *hostname, PRInt32 accountNum);
   
   PRInt32 MigratePopAccounts(nsIMsgIdentity *identity);
-  
+
+  PRInt32 MigrateLocalMailAccounts(nsIMsgIdentity *identity, PRInt32 baseAccountNum);
+
   PRInt32 MigrateNewsAccounts(nsIMsgIdentity *identity, PRInt32 baseAccountNum);
   nsresult MigrateNewsAccount(nsIMsgIdentity *identity, const char *hostname, const char *newsrcfile, PRInt32 accountNum);
 
@@ -422,7 +429,7 @@ nsMsgAccountManager::GetIncomingServer(const char* key,
   const char *serverTypePref =
     PR_smprintf("mail.server.%s.type", key);
 
-  // serverType is the short server type, like "pop3", "imap", etc
+  // serverType is the short server type, like "pop3","imap","nntp","none", etc
   nsXPIDLCString serverType;
   rv = m_prefs->CopyCharPref(serverTypePref, getter_Copies(serverType));
   
@@ -1144,6 +1151,9 @@ nsMsgAccountManager::upgradePrefs()
 	}
     else if (oldMailType == 1) {  // IMAP
       numAccounts += MigrateImapAccounts(identity);
+	// if they had IMAP, they also had "Local Mail"
+	// we need to migrate that, too.  
+	numAccounts += MigrateLocalMailAccounts(identity, numAccounts); 
 	}
     else {
 #ifdef DEBUG_ACCOUNTMANAGER
@@ -1188,6 +1198,126 @@ nsMsgAccountManager::upgradePrefs()
     }
 
     return NS_OK;
+}
+
+PRInt32
+nsMsgAccountManager::MigrateLocalMailAccounts(nsIMsgIdentity *identity, PRInt32 baseAccountNum) 
+{
+  nsresult rv;
+  PRInt32 accountNum = baseAccountNum + 1;
+
+  if (baseAccountNum < 1) return NS_ERROR_FAILURE;
+  
+  //
+  // create the account
+  //
+  char accountStr[BUF_STR_LEN];
+  PR_snprintf(accountStr,BUF_STR_LEN,"account%d",accountNum);
+#ifdef DEBUG_ACCOUNTMANAGER
+  printf("account str = %s\n",accountStr);
+#endif
+  nsCOMPtr<nsIMsgAccount> account;
+  rv = createKeyedAccount(accountStr, getter_AddRefs(account));
+  if (NS_FAILED(rv)) return rv;
+
+  //
+  // create the server
+  //
+  char serverStr[BUF_STR_LEN];
+  PR_snprintf(serverStr,BUF_STR_LEN,"server%d",accountNum);
+#ifdef DEBUG_ACCOUNTMANAGER
+  printf("server str = %s\n",serverStr);
+#endif
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  rv = createKeyedServer(serverStr, "none", getter_AddRefs(server));
+  if (NS_FAILED(rv)) return rv;
+
+  //
+  // create the identity
+  //
+  char identityStr[BUF_STR_LEN];
+  PR_snprintf(identityStr,BUF_STR_LEN,"identity%d",accountNum);
+  
+  nsCOMPtr<nsIMsgIdentity> copied_identity;
+  rv = createKeyedIdentity(identityStr, getter_AddRefs(copied_identity));
+  if (NS_FAILED(rv)) return rv;
+  
+  rv = CopyIdentity(identity,copied_identity);
+  if (NS_FAILED(rv)) return rv;
+  
+  // the server needs a username, but we never plan to use it.
+  server->SetUsername("nobody");
+
+  //
+  // hook them together
+  //
+  account->SetIncomingServer(server);
+  account->AddIdentity(copied_identity);
+  
+  // now upgrade all the prefs
+  nsFileSpec profileDir;
+  
+  NS_WITH_SERVICE(nsIProfile, profile, kProfileCID, &rv);
+  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+  
+  rv = profile->GetCurrentProfileDir(&profileDir);
+  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+  
+  // some of this ought to be moved out into the NNTP implementation
+  nsCOMPtr<nsINoIncomingServer> noServer;
+  noServer = do_QueryInterface(server, &rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // create the directory structure for old 4.x "Local Mail"
+  // under <profile dir>/Mail/Local Mail
+
+  // TODO:  heed "mail.directory"?
+  // it may not always be under the profile directory
+  nsCOMPtr <nsIFileSpec> mailDir;
+  nsFileSpec dir(profileDir);
+  PRBool dirExists;
+  
+  // turn profileDir into the mail dir.
+  dir += "Mail";
+  if (!dir.Exists()) {
+    dir.CreateDir();
+    }
+  dir += LOCAL_MAIL_FAKE_HOST_NAME;
+  
+  rv = NS_NewFileSpecWithSpec(dir, getter_AddRefs(mailDir));
+  if (NS_FAILED(rv)) return 0;
+  
+  rv = mailDir->Exists(&dirExists);
+  if (NS_FAILED(rv)) return 0;
+  
+  if (!dirExists) {
+    mailDir->CreateDir();
+  }
+  
+  char *str = nsnull;
+  mailDir->GetNativePath(&str);
+  
+  if (str && *str) {
+    server->SetLocalPath(str);
+    PR_FREEIF(str);
+    str = nsnull;
+  }
+  
+  rv = mailDir->Exists(&dirExists);
+  if (NS_FAILED(rv)) return 0;
+  
+  if (!dirExists) {
+    mailDir->CreateDir();
+  }
+  
+  // "none" is the type we use for migrate Local Mail
+  server->SetType("none");	
+  server->SetHostName(LOCAL_MAIL_FAKE_HOST_NAME);
+    
+  // we only migrated one account so return 1
+  return 1;
 }
 
 PRInt32
@@ -1342,7 +1472,7 @@ nsMsgAccountManager::MigratePopAccounts(nsIMsgIdentity *identity)
     }
     
     // create the files for the special folders.
-    // this needs to be i18N.
+    // TODO:  this needs to be internationalized.
     rv = createSpecialFile(dir,"Inbox");
     if (NS_FAILED(rv)) return 0;
     
@@ -1358,7 +1488,7 @@ nsMsgAccountManager::MigratePopAccounts(nsIMsgIdentity *identity)
     rv = createSpecialFile(dir,"Templates");
     if (NS_FAILED(rv)) return 0;
     
-    rv = createSpecialFile(dir,"Unsent Message");
+    rv = createSpecialFile(dir,"Unsent Messages");
     if (NS_FAILED(rv)) return 0;
 
     rv = m_prefs->GetBoolPref(PREF_4X_MAIL_LEAVE_ON_SERVER, &oldbool);
