@@ -40,7 +40,6 @@ OBJS =                                  \
 	.\$(OBJDIR)\nsRenderingContextWin.obj         \
 	.\$(OBJDIR)\nsFontMetricsWin.obj          \
 	.\$(OBJDIR)\nsImageWin.obj          \
-	.\$(OBJDIR)\nsBlenderWin.obj				\
 	.\$(OBJDIR)\nsRegionWin.obj          \
 	.\$(OBJDIR)\nsDeviceContextSpecWin.obj          \
 	.\$(OBJDIR)\nsDeviceContextSpecFactoryW.obj          \
