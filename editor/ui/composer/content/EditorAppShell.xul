@@ -328,7 +328,6 @@
         </titledbutton>
 	      <titledbutton src="chrome://editor/skin/images/ED_Italic.gif" align="bottom" onclick="EditorApplyStyle('i')"/>
 	      <titledbutton src="chrome://editor/skin/images/ED_Underline.gif" align="bottom" onclick="EditorApplyStyle('u')"/>
-	      <titledbutton src="chrome://editor/skin/images/ED_ClearStyle.gif" align="bottom" onclick="EditorRemoveStyle('all')"/>
 	      <titledbutton src="chrome://editor/skin/images/ED_Bullets.gif" align="bottom" onclick="EditorInsertList('ul')"/>
 	      <titledbutton src="chrome://editor/skin/images/ED_Numbers.gif" align="bottom" onclick="EditorInsertList('ol')"/>
 	      <titledbutton src="chrome://editor/skin/images/ED_Outdent.gif" align="bottom" onclick="EditorIndent('outdent')"/>

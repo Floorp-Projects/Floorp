@@ -111,6 +111,8 @@ public:
   static nsIAtom *dt;        
   static nsIAtom *dd;        
   static nsIAtom *legend;    
+
+  /** properties **/
   static nsIAtom *color;     
   static nsIAtom *face;      
   static nsIAtom *size;      
