@@ -56,7 +56,7 @@
 
 #include "gtkmozembedmarshal.h"
 
-#define NEW_TOOLKIT_STRING(x) ToNewUTF8String(x)
+#define NEW_TOOLKIT_STRING(x) g_strdup(NS_ConvertUTF16toUTF8(x).get())
 #define GET_OBJECT_CLASS_TYPE(x) G_OBJECT_CLASS_TYPE(x)
 
 #endif /* MOZ_WIDGET_GTK2 */
@@ -76,7 +76,7 @@
 #define gtkmozembed_VOID__POINTER_INT_POINTER \
   gtk_marshal_NONE__POINTER_INT_POINTER
 
-#define NEW_TOOLKIT_STRING(x) ToNewCString(x)
+#define NEW_TOOLKIT_STRING(x) g_strdup(NS_LossyConvertUTF16toASCII(x).get())
 #define GET_OBJECT_CLASS_TYPE(x) (GTK_OBJECT_CLASS(x)->type)
 
 // Some "massaged" enum information for the GTK Type System
@@ -1043,18 +1043,14 @@ gtk_moz_embed_get_link_message(GtkMozEmbed *embed)
 {
   char *retval = nsnull;
   EmbedPrivate *embedPrivate;
-  nsXPIDLCString embedString;
 
   g_return_val_if_fail ((embed != NULL), (char *)NULL);
   g_return_val_if_fail (GTK_IS_MOZ_EMBED(embed), (char *)NULL);
 
   embedPrivate = (EmbedPrivate *)embed->data;
 
-  if (embedPrivate->mWindow) {
-    *getter_Copies(embedString) =
-      NEW_TOOLKIT_STRING(embedPrivate->mWindow->mLinkMessage);
-    retval = g_strdup(embedString);
-  }
+  if (embedPrivate->mWindow)
+    retval = NEW_TOOLKIT_STRING(embedPrivate->mWindow->mLinkMessage);
 
   return retval;
 }
@@ -1064,18 +1060,14 @@ gtk_moz_embed_get_js_status(GtkMozEmbed *embed)
 {
   char *retval = nsnull;
   EmbedPrivate *embedPrivate;
-  nsXPIDLCString embedString;
 
   g_return_val_if_fail ((embed != NULL), (char *)NULL);
   g_return_val_if_fail (GTK_IS_MOZ_EMBED(embed), (char *)NULL);
 
   embedPrivate = (EmbedPrivate *)embed->data;
 
-  if (embedPrivate->mWindow) {
-    *getter_Copies(embedString) =
-      NEW_TOOLKIT_STRING(embedPrivate->mWindow->mJSStatus);
-    retval = g_strdup(embedString);
-  }
+  if (embedPrivate->mWindow)
+    retval = NEW_TOOLKIT_STRING(embedPrivate->mWindow->mJSStatus);
 
   return retval;
 }
@@ -1085,18 +1077,14 @@ gtk_moz_embed_get_title(GtkMozEmbed *embed)
 {
   char *retval = nsnull;
   EmbedPrivate *embedPrivate;
-  nsXPIDLCString embedString;
 
   g_return_val_if_fail ((embed != NULL), (char *)NULL);
   g_return_val_if_fail (GTK_IS_MOZ_EMBED(embed), (char *)NULL);
 
   embedPrivate = (EmbedPrivate *)embed->data;
 
-  if (embedPrivate->mWindow) {
-    *getter_Copies(embedString) = 
-      NEW_TOOLKIT_STRING(embedPrivate->mWindow->mTitle);
-    retval = g_strdup(embedString);
-  }
+  if (embedPrivate->mWindow)
+    retval = NEW_TOOLKIT_STRING(embedPrivate->mWindow->mTitle);
 
   return retval;
 }
@@ -1106,17 +1094,14 @@ gtk_moz_embed_get_location(GtkMozEmbed *embed)
 {
   char *retval = nsnull;
   EmbedPrivate *embedPrivate;
-  nsXPIDLCString embedString;
 
   g_return_val_if_fail ((embed != NULL), (char *)NULL);
   g_return_val_if_fail (GTK_IS_MOZ_EMBED(embed), (char *)NULL);
 
   embedPrivate = (EmbedPrivate *)embed->data;
   
-  if (embedPrivate->mURI.Length()) {
-    *getter_Copies(embedString) = NEW_TOOLKIT_STRING(embedPrivate->mURI);
-    retval = g_strdup(embedString);
-  }
+  if (!embedPrivate->mURI.IsEmpty())
+    retval = NEW_TOOLKIT_STRING(embedPrivate->mURI);
 
   return retval;
 }
