@@ -434,19 +434,6 @@ NS_IMETHODIMP nsBrowserAppCore::CreateMenuItem(
 	  return NS_ERROR_FAILURE;
   }
 
-  //Set the onaction attribute
-  nsString menuitemCmd("gotoHistoryIndex(");
-  menuitemCmd.Append(aIndex);
-  menuitemCmd += ")";  
-  if (APP_DEBUG) printf("nsBrowserAppCore::CreateMenuItem Setting action handler to %s\n", menuitemCmd.ToNewCString());
-  nsString attrName("oncommand");
-  rv = menuItemElement->SetAttribute(attrName, menuitemCmd);
-  if (!NS_SUCCEEDED(rv)) {
-	  printf("nsBrowserAppCore::CreateMenuItem ERROR setting onaction handler\n");
-	  return NS_ERROR_FAILURE;
-  }
-  
-  
   // Set the hist attribute to true
   rv = menuItemElement->SetAttribute(nsString("ishist"), nsString("true"));
   if (!NS_SUCCEEDED(rv)) {
@@ -470,8 +457,20 @@ NS_IMETHODIMP nsBrowserAppCore::CreateMenuItem(
        printf("nsBrowserAppCore::CreateMenuItem ERROR appending menuitem to menu *****\n");
 	   return NS_ERROR_FAILURE;
   }
+
+  //Set the onaction attribute
+  nsString menuitemCmd("gotoHistoryIndex(");
+  menuitemCmd.Append(aIndex);
+  menuitemCmd += ")";  
+  if (APP_DEBUG) printf("nsBrowserAppCore::CreateMenuItem Setting action handler to %s\n", menuitemCmd.ToNewCString());
+  nsString attrName("oncommand");
+  rv = menuItemElement->SetAttribute(attrName, menuitemCmd);
+  if (!NS_SUCCEEDED(rv)) {
+	  printf("nsBrowserAppCore::CreateMenuItem ERROR setting onaction handler\n");
+	  return NS_ERROR_FAILURE;
+  }
   else
-	 if (APP_DEBUG) printf("nsBrowserAppCore::CreateMenuItem Successfully appended menu item to parent\n");
+       if (APP_DEBUG) printf("nsBrowserAppCore::CreateMenuItem Successfully appended menu item to parent\n");
 
 
 
