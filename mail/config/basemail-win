@@ -92,6 +92,7 @@ components\wallet.xpt
 components\nsProgressDialog.js
 components\nsHelperAppDlg.js
 components\nsDownloadProgressListener.js
+components\downloadmanager.xpt
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Base Package Files
