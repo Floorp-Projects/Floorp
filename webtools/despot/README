@@ -14,9 +14,11 @@ and the MySQL-related Perl module collection as documented there.
 You'll need a relatively new version of MySQL: 3.20.32a is known not
 work; 3.22.32 is.
 
-You'll also need to build a version of CVS with the patch in
+You'll may also need to build a version of CVS with the patch in
 cvs_user.patch applied.  I found cvs_user.patch in archives on the
-net; unfortunately I didn't keep track of where.
+net; unfortunately I didn't keep track of where.  However, the CVS 
+repository for CVS itself now has this patch applied, so if your 
+copy of CVS is new enough, this may not be necessary.  
 
 # create a database called mozusers:
 
