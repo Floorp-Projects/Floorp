@@ -1,6 +1,6 @@
 #!/usr/bin/perl5
 #############################################################################
-# $Id: lfinger.pl,v 1.1 1998/07/28 23:27:17 leif Exp $
+# $Id: lfinger.pl,v 1.2 1998/07/28 23:28:18 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -30,7 +30,7 @@ use Mozilla::LDAP::Connection;		# Main "OO" layer for LDAP
 use Mozilla::LDAP::Utils;		# LULU, utilities.
 
 
-#################################################################################
+#############################################################################
 # Constants, shouldn't have to edit these... The HIDE mechanism is a very
 # Netscape internal specific feature. We use this objectclass to mark some
 # entries to be "hidden", and some of our applications will honor this. With
@@ -46,7 +46,7 @@ $HIDE = "(objectclass=nscphidethis)";
 
 
 
-#################################################################################
+#############################################################################
 # Print a "finger" entry.
 #
 sub printIt
@@ -67,7 +67,7 @@ sub printIt
 }
 
 
-#################################################################################
+#############################################################################
 # Check arguments, and configure some parameters accordingly..
 #
 if (!getopts('nvb:h:D:p:w:P:') || !defined($ARGV[$[]))
@@ -79,7 +79,7 @@ if (!getopts('nvb:h:D:p:w:P:') || !defined($ARGV[$[]))
 $user=$ARGV[$[];
 
 
-#################################################################################
+#############################################################################
 # Instantiate an LDAP object, which also binds to the LDAP server.
 #
 $conn = new Mozilla::LDAP::Connection($ld{host}, $ld{port}, $ld{bind},
@@ -87,7 +87,7 @@ $conn = new Mozilla::LDAP::Connection($ld{host}, $ld{port}, $ld{bind},
 die "Could't connect to LDAP server $ld{host}" unless $ld{conn};
 
 
-#################################################################################
+#############################################################################
 # Ok, lets generate the filter, and do the search!
 #
 $search = "(&(|(cn=*$user*)(uid=*$user*)(telephonenumber=*$user*))(!$HIDE))";
@@ -99,7 +99,7 @@ while($entry)
 }
 
 
-#################################################################################
+#############################################################################
 # Close the connection.
 #
 $ld{conn}->close if $ld{conn};
