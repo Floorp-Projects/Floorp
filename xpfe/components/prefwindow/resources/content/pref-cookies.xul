@@ -56,7 +56,7 @@
       <html:tr>
         <html:td>
           <html:input name="cookies" type="radio" id="networkCookieBehaviour0"
-                      pref="true" preftype="int" prefindex="0" prefstring="network.cookie.cookieBehaviour"/>
+                      pref="true" preftype="int" prefindex="0" prefstring="network.cookie.cookieBehavior"/>
         </html:td>
         <html:td>
       		<html:label for="networkCookieBehaviour0" accesskey="a" tabindex="0">
@@ -67,7 +67,7 @@
       <html:tr>
         <html:td>
           <html:input type="radio" name="cookies" id="networkCookieBehaviour1"
-                      pref="true" preftype="int" prefindex="1" prefstring="network.cookie.cookieBehaviour"/>
+                      pref="true" preftype="int" prefindex="1" prefstring="network.cookie.cookieBehavior"/>
         </html:td>
         <html:td>
       		<html:label for="networkCookieBehaviour1" accesskey="o" tabindex="0">
@@ -78,7 +78,7 @@
       <html:tr>
         <html:td>
       		<html:input type="radio" name="cookies" id="networkCookieBehaviour2"
-                      pref="true" preftype="int" prefindex="2" prefstring="network.cookie.cookieBehaviour"/>
+                      pref="true" preftype="int" prefindex="2" prefstring="network.cookie.cookieBehavior"/>
         </html:td>
         <html:td>
       		<html:label for="networkCookieBehaviour2" accesskey="d" tabindex="0">	
