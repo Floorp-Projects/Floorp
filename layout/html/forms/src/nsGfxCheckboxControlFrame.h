@@ -26,7 +26,9 @@
 #include "nsIStatefulFrame.h"
 #include "nsICheckboxControlFrame.h"
 
+#ifdef ACCESSIBILITY
 class nsIAccessible;
+#endif
 
 
 #define NS_GFX_CHECKBOX_CONTROL_FRAME_FACE_CONTEXT_INDEX   0 // for additional style contexts
@@ -69,7 +71,9 @@ public:
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
 
+#ifdef ACCESSIBILITY
   NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
+#endif
 
 
    //nsICheckboxControlFrame methods

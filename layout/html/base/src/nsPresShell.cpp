@@ -5473,8 +5473,10 @@ PresShell::HandleEvent(nsIView         *aView,
     return NS_OK;
   }
 
+#ifdef ACCESSIBILITY
   if (aEvent->eventStructType == NS_ACCESSIBLE_EVENT)
     return HandleEventInternal(aEvent, aView, NS_EVENT_FLAG_INIT, aEventStatus);
+#endif
 
 
   aView->GetClientData(clientData);
@@ -5624,6 +5626,7 @@ PresShell::HandleEventWithTarget(nsEvent* aEvent, nsIFrame* aFrame, nsIContent* 
 nsresult
 PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView, PRUint32 aFlags, nsEventStatus* aStatus)
 {
+#ifdef ACCESSIBILITY
   if (aEvent->eventStructType == NS_ACCESSIBLE_EVENT)
   {
     void*     clientData;
@@ -5631,6 +5634,7 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView, PRUint32 aFlags,
     nsIFrame* frame = (nsIFrame *)clientData;
     return frame->HandleEvent(mPresContext, (nsGUIEvent*)aEvent, aStatus);
   }
+#endif
 
   nsresult rv = NS_OK;
 

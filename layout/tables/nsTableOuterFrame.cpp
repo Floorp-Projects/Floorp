@@ -36,7 +36,9 @@
 #include "nsLayoutAtoms.h"
 #include "nsHTMLParts.h"
 #include "nsIPresShell.h"
+#ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
+#endif
 #include "nsIServiceManager.h"
 #include "nsIDOMNode.h"
 #include "nsIPrintContext.h"
@@ -127,6 +129,7 @@ nsresult nsTableOuterFrame::QueryInterface(const nsIID& aIID, void** aInstancePt
   return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
 }
 
+#ifdef ACCESSIBILITY
 NS_IMETHODIMP nsTableOuterFrame::GetAccessible(nsIAccessible** aAccessible)
 {
   nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
@@ -138,6 +141,7 @@ NS_IMETHODIMP nsTableOuterFrame::GetAccessible(nsIAccessible** aAccessible)
 
   return NS_ERROR_FAILURE;
 }
+#endif
 
 NS_IMETHODIMP
 nsTableOuterFrame::IsPercentageBase(PRBool& aBase) const

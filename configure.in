@@ -2967,6 +2967,15 @@ if test "$IBMBIDI"; then
   AC_DEFINE(IBMBIDI)
 fi
 
+dnl accessibility support on by default
+ACCESSIBILITY=1
+MOZ_ARG_DISABLE_BOOL(accessibility,
+[  --disable-accessibility           Disable accessibility support],
+  ACCESSIBILITY= )
+if test "$ACCESSIBILITY"; then
+  AC_DEFINE(ACCESSIBILITY)
+fi
+
 dnl ========================================================
 dnl =
 dnl = --enable-monolithic-toolkit
@@ -4069,6 +4078,7 @@ AC_SUBST(MOZ_STATIC_COMPONENTS)
 AC_SUBST(MOZ_META_COMPONENTS)
 AC_SUBST(ENABLE_TESTS)
 AC_SUBST(IBMBIDI)
+AC_SUBST(ACCESSIBILITY)
 AC_SUBST(MOZ_USER_DIR)
 AC_SUBST(BUILD_IDLC)
 

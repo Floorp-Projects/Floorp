@@ -44,10 +44,12 @@ class nsNativeDragTarget;
 class nsIRollupListener;
 
 class nsIMenuBar;
-struct IAccessible;
 
+#ifdef ACCESSIBILITY
+struct IAccessible;
 #include "nsIAccessible.h"
 #include "nsIAccessibleEventListener.h"
+#endif
 
 #define NSRGB_2_COLOREF(color) \
             RGB(NS_GET_R(color),NS_GET_G(color),NS_GET_B(color))
@@ -294,7 +296,9 @@ public:
             WNDPROC         GetPrevWindowProc() { return mPrevWndProc; }
 
     virtual PRBool          DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint = nsnull);
+#ifdef ACCESSIBILITY
     virtual PRBool          DispatchAccessibleEvent(PRUint32 aEventType, nsIAccessible** aAccessible, nsPoint* aPoint = nsnull);
+#endif
     virtual PRBool          AutoErase();
     nsPoint*                GetLastPoint() { return &mLastPoint; }
 
@@ -467,7 +471,9 @@ protected:
     static UINT uWM_MSIME_MOUSE;     // mouse messge for MSIME
     static UINT uWM_ATOK_RECONVERT;  // reconvert messge for ATOK
 
+#ifdef ACCESSIBILITY
     IAccessible* mRootAccessible;
+#endif
 };
 
 //

@@ -281,7 +281,9 @@ public:
                                   nsIReflowCommand* aRC,
                                   PRBool            aCommandAdded);
 
+#ifdef ACCESSIBILITY
   NS_IMETHOD  GetAccessible(nsIAccessible** aAccessible);
+#endif
 
   NS_IMETHOD GetParentStyleContextProvider(nsIPresContext* aPresContext,
                                            nsIFrame** aProviderFrame, 

@@ -115,8 +115,11 @@ DIRS		+= \
 		sun-java \
 		profile \
 		themes \
-		accessible \
 		$(NULL)
+
+ifdef ACCESSIBILITY
+DIRS    += accessible
+endif
 
 # This must preceed xpfe
 ifdef MOZ_JPROF

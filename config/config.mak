@@ -137,6 +137,13 @@ CFLAGS=$(MOZ_JAVA_FLAG) $(OS_CFLAGS) $(MOZ_CFLAGS)
 IBMBIDI=1
 CFLAGS=$(CFLAGS) -DIBMBIDI
 
+!if "$(DISABLE_ACCESSIBILITY)" == "1"
+!undef ACCESSIBILITY
+!else
+ACCESSIBILITY=1
+CFLAGS=$(CFLAGS) -DACCESSIBILITY
+!endif
+
 LFLAGS=$(OS_LFLAGS) $(LLFLAGS) $(MOZ_LFLAGS)
 
 # This compiles in heap dumping utilities and other good stuff 

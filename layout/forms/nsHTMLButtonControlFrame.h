@@ -100,7 +100,9 @@ public:
                            nsIAtom*        aListName,
                            nsIFrame*       aFrameList);
 
+#ifdef ACCESSIBILITY
   NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
+#endif
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const {

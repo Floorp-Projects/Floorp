@@ -235,7 +235,9 @@ public:
   virtual nsresult RequiresWidget(PRBool &aRequiresWidget);
 
     // for accessibility purposes
+#ifdef ACCESSIBILITY
   NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
+#endif
 
     // nsHTMLContainerFrame
   virtual PRIntn GetSkipSides() const;

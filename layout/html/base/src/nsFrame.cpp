@@ -43,8 +43,10 @@
 #include "nsIPtr.h"
 #include "nsISizeOfHandler.h"
 #include "nsIFrameManager.h"
+#ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
 #include "nsIAccessible.h"
+#endif
 
 #include "nsIDOMText.h"
 #include "nsIDeviceContext.h"
@@ -821,6 +823,7 @@ nsFrame::HandleEvent(nsIPresContext* aPresContext,
       if (NS_SUCCEEDED(rv))
         HandleRelease(aPresContext, aEvent, aEventStatus);
     } break;
+#ifdef ACCESSIBILITY
   case NS_GETACCESSIBLE:
     {
       // get the accessible
@@ -837,8 +840,8 @@ nsFrame::HandleEvent(nsIPresContext* aPresContext,
            NS_STATIC_CAST(nsAccessibleEvent*, aEvent)->accessible = acc;
          }
       //}
-    }
-    break;
+    } break;
+#endif
   default:
     break;
   }//end switch
@@ -3928,11 +3931,13 @@ nsFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
 }
 
 
+#ifdef ACCESSIBILITY
 NS_IMETHODIMP
 nsFrame::GetAccessible(nsIAccessible** aAccessible)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
+#endif
 
 NS_IMETHODIMP
 nsFrame::ReflowCommandNotify(nsIPresShell*     aShell,

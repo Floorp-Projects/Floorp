@@ -60,7 +60,9 @@ class nsIView;
 class nsIWidget;
 class nsIDOMRange;
 class nsISelectionController;
+#ifdef ACCESSIBILITY
 class nsIAccessible;
+#endif
 
 struct nsPeekOffsetStruct;
 struct nsPoint;
@@ -982,7 +984,9 @@ public:
    * Note: nsAccessible must be refcountable. Do not implement directly on your frame
    * Use a mediatior of some kind.
    */
+#ifdef ACCESSIBILITY
   NS_IMETHOD GetAccessible(nsIAccessible** aAccessible) = 0;
+#endif
 
   /**
    *  Called during appending or cancelling a reflow command to give frames notice
