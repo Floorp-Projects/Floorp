@@ -1369,7 +1369,7 @@ nsScriptSecurityManager::GetRootDocShell(JSContext *cx, nsIDocShell **result)
     if (!scriptContext) return NS_ERROR_FAILURE;
     nsCOMPtr<nsIScriptGlobalObject> globalObject;
     scriptContext->GetGlobalObject(getter_AddRefs(globalObject));
-    if (!globalObject)  return NS_ERROR_FAILURE;
+    if (!globalObject) return NS_ERROR_FAILURE;
     rv = globalObject->GetDocShell(getter_AddRefs(docshell));
     if (NS_FAILED(rv)) return rv;
     nsCOMPtr<nsIDocShellTreeItem> docshellTreeItem(do_QueryInterface(docshell, &rv));
@@ -1415,15 +1415,32 @@ nsScriptSecurityManager::CanExecuteScripts(JSContext* cx,
     }
 
     //-- See if the current window allows JS execution
+    nsCOMPtr<nsIScriptContext> scriptContext = (nsIScriptContext*)JS_GetContextPrivate(cx);
+    if (!scriptContext) return NS_ERROR_FAILURE;
+    nsCOMPtr<nsIScriptGlobalObject> globalObject;
+    scriptContext->GetGlobalObject(getter_AddRefs(globalObject));
+    if (!globalObject) return NS_ERROR_FAILURE;
     nsCOMPtr<nsIDocShell> docshell;
-    rv = GetRootDocShell(cx, getter_AddRefs(docshell));
-    if (NS_SUCCEEDED(rv))
-    {
+    rv = globalObject->GetDocShell(getter_AddRefs(docshell));
+    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(docshell));
+    if (!treeItem) return NS_ERROR_UNEXPECTED;
+    nsCOMPtr<nsIDocShellTreeItem> parentItem;
+    // Walk up the docshell tree to see if any containing docshell disallows scripts
+    do {
         rv = docshell->GetAllowJavascript(result);
         if (NS_FAILED(rv)) return rv;
         if (!*result)
-            return NS_OK;
-    }
+            return NS_OK; // Do not run scripts
+        rv = treeItem->GetParent(getter_AddRefs(parentItem));
+        if (NS_FAILED(rv)) return rv;
+        if (parentItem)
+        {
+            treeItem = parentItem;
+            docshell = do_QueryInterface(treeItem, &rv);
+            if (NS_FAILED(rv)) return rv;
+        }
+    } while (parentItem);
 
     //-- See if JS is disabled globally (via prefs)
     *result = mIsJavaScriptEnabled;
