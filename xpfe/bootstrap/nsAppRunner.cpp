@@ -63,8 +63,6 @@
 #include "nsDirectoryServiceDefs.h" 
 #include "nsIHTTPProtocolHandler.h"
 #include "nsBuildID.h"
-#include "nsIPrintOptions.h"
-#include "nsGfxCIID.h"
 
 // Interfaces Needed
 #include "nsIXULWindow.h"
@@ -945,15 +943,6 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   if (rv  == NS_ERROR_INVALID_ARG) {
     PrintUsage();
     return rv;
-  }
-
-  nsIPrintOptions *thePrintOptions;
-
-  static NS_DEFINE_CID(kPrintOptionsCID,NS_PRINTOPTIONS_CID);
-     
-  rv = nsComponentManager::CreateInstance(kPrintOptionsCID,nsnull,NS_GET_IID(nsIPrintOptions),(void**)&thePrintOptions);
-  if(NS_SUCCEEDED(rv) && thePrintOptions) {
-    nsServiceManager::RegisterService(kPrintOptionsCID,thePrintOptions);
   }
 
   nsCOMPtr<nsIAppShellService> appShell = do_GetService(kAppShellServiceCID, &rv);
