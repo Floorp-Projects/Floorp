@@ -126,8 +126,7 @@ STDMETHODIMP nsDocAccessibleWrap::get_accChild(
       // If child ID from event can't be found in this window, ask parent.
       // This is especially relevant for times when a xul menu item
       // has focus, but the system thinks the content window has focus.
-      nsCOMPtr<nsIDocument> parentDoc;
-      mDocument->GetParentDocument(getter_AddRefs(parentDoc));
+      nsIDocument* parentDoc = mDocument->GetParentDocument();
       if (parentDoc) {
         nsIPresShell *parentShell = parentDoc->GetShellAt(0);
         nsCOMPtr<nsIWeakReference> weakParentShell(do_GetWeakReference(parentShell));
