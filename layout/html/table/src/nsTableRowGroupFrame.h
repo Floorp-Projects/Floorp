@@ -74,6 +74,9 @@ struct RowGroupReflowState {
 { 0xe940e7bc, 0xb534, 0x11d2,  \
   { 0x95, 0xa2, 0x0, 0x60, 0xb0, 0xc3, 0x44, 0x14 } }
 
+// use a bit from nsFrame's frame state bits to determine whether a 
+// thead or tfoot should be repeated on every printed page
+#define NS_ROWGROUP_REPEATABLE 0x80000000
 /**
  * nsTableRowGroupFrame is the frame that maps row groups 
  * (HTML tags THEAD, TFOOT, and TBODY). This class cannot be reused
@@ -332,6 +335,8 @@ public:
   virtual void GetNextFrame(nsIFrame* aFrame, nsIFrame** aResult) { aFrame->GetNextSibling(aResult); };
   virtual PRBool RowsDesireExcessSpace() { return PR_TRUE; };
   virtual PRBool RowGroupDesiresExcessSpace() { return PR_TRUE; };
+  PRBool  IsRepeatable();
+  void    SetRepeatable(PRBool aRepeatable);
 
 private:
   nsSize   mMaxElementSize;
@@ -343,5 +348,18 @@ inline void nsTableRowGroupFrame::GetMaxElementSize(nsSize& aMaxElementSize) con
   aMaxElementSize = mMaxElementSize;
 }
 
+inline PRBool nsTableRowGroupFrame::IsRepeatable()
+{
+  return (mState & NS_ROWGROUP_REPEATABLE) == NS_ROWGROUP_REPEATABLE;
+}
+
+inline void nsTableRowGroupFrame::SetRepeatable(PRBool aRepeatable)
+{
+  if (aRepeatable) {
+    mState |= NS_ROWGROUP_REPEATABLE;
+  } else {
+    mState &= ~NS_ROWGROUP_REPEATABLE;
+  }
+}
 
 #endif

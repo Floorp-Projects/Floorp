@@ -1094,6 +1094,21 @@ nsTableRowGroupFrame::Reflow(nsIPresContext*          aPresContext,
     aDesiredSize.width = aReflowState.availableWidth;
     aDesiredSize.height = state.y;
 
+    // determine if the row group is repeatable in paginated mode
+    PRBool isPaginated;
+    aPresContext->IsPaginated(&isPaginated);
+    if (isPaginated) {
+      PRBool repeatable = PR_FALSE;
+      nsCOMPtr<nsIDeviceContext> dc;
+      rv = aPresContext->GetDeviceContext(getter_AddRefs(dc));
+      if (NS_SUCCEEDED(rv) && dc) {
+        PRInt32 pageWidth, pageHeight;
+        dc->GetDeviceSurfaceDimensions(pageWidth, pageHeight);
+        // don't repeat the thead or tfoot unless it is < 25% of the page height
+        repeatable = (aDesiredSize.height < (pageHeight / 4));
+      }
+      SetRepeatable(repeatable);
+    }
     // account for scroll bars. XXX needs optimization/caching
     if (nsnull != aDesiredSize.maxElementSize) {
       nsIAtom* pseudoTag;

@@ -40,7 +40,8 @@ file:///s|/mozilla/layout/html/tests/table/bugs/bug53690-1.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug53690-2.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug5797.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug5538.html
-file:///s|/mozilla/layout/html/tests/table/bugs/bug5798.html
+file:///s|/mozilla/layout/html/tests/table/bugs/bug5538.html
+file:///s|/mozilla/layout/html/tests/table/bugs/bug57378.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug5799.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug5835.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug5838.html
