@@ -52,6 +52,11 @@
 
 const kIOServiceProgID = "@mozilla.org/network/io-service;1";
 const kObserverServiceProgID = "@mozilla.org/observer-service;1";
+const kProxyManual = ["network.proxy.ftp",
+                      "network.proxy.gopher",
+                      "network.proxy.http",
+                      "network.proxy.socks",
+                      "network.proxy.ssl"];
 
 function toggleOfflineStatus()
 {
@@ -74,6 +79,102 @@ function toggleOfflineStatus()
   ioService.offline = !ioService.offline;
 }
 
+function setNetworkStatus(networkProxyType)
+{
+  var prefService = Components.classes["@mozilla.org/preferences-service;1"];
+  prefService = prefService.getService(Components.interfaces.nsIPrefService);
+  var prefBranch = prefService.getBranch(null);
+  try {
+    prefBranch.setIntPref("network.proxy.type", networkProxyType);
+  }
+  catch (ex) {}
+}
+
+function InitProxyMenu()
+{
+  var networkProxyNo = document.getElementById("network-proxy-no");
+  var networkProxyManual = document.getElementById("network-proxy-manual");
+  var networkProxyPac = document.getElementById("network-proxy-pac");
+  if (!networkProxyNo || !networkProxyManual || !networkProxyPac)
+    return;
+
+  var networkProxyStatus = [networkProxyNo, networkProxyManual, networkProxyPac];
+  var prefService = Components.classes["@mozilla.org/preferences-service;1"];
+  prefService = prefService.getService(Components.interfaces.nsIPrefService);
+  var prefBranch = prefService.getBranch(null);
+
+  var proxyLocked = prefBranch.prefIsLocked("network.proxy.type");
+  if (proxyLocked) {
+        networkProxyNo.setAttribute("disabled", "true");
+  }
+  else {
+        networkProxyNo.removeAttribute("disabled");
+  }
+
+  // If no proxy is configured, disable the menuitems.
+  // Checking for proxy manual settings.
+  var proxyManuallyConfigured = false;
+  for (var i = 0; i < kProxyManual.length; i++) {
+    if (GetStringPref(kProxyManual[i]) != "") {
+      proxyManuallyConfigured = true;
+      break;
+    }
+  }
+
+  if (proxyManuallyConfigured && !proxyLocked) {
+    networkProxyManual.removeAttribute("disabled");
+  }
+  else {
+    networkProxyManual.setAttribute("disabled", "true");
+  }
+
+  //Checking for proxy PAC settings.
+  var proxyAutoConfigured = false;
+  if (GetStringPref("network.proxy.autoconfig_url") != "")
+    proxyAutoConfigured = true;
+
+  if (proxyAutoConfigured && !proxyLocked) {
+    networkProxyPac.removeAttribute("disabled");
+  }
+  else {
+    networkProxyPac.setAttribute("disabled", "true");
+  }
+
+  var networkProxyType;
+  try {
+    networkProxyType = prefBranch.getIntPref("network.proxy.type");
+  } catch(e) {}
+
+  networkProxyStatus[networkProxyType].setAttribute("checked", "true");
+}
+
+function setProxyTypeUI()
+{
+  var panel = document.getElementById("offline-status");
+  if (!panel)
+    return;
+
+  var prefService = Components.classes["@mozilla.org/preferences-service;1"];
+  prefService = prefService.getService(Components.interfaces.nsIPrefService);
+  var prefBranch = prefService.getBranch(null);
+
+  try {
+    var networkProxyType = prefBranch.getIntPref("network.proxy.type");
+  } catch(e) {}
+
+  var onlineTooltip = "onlineTooltip" + networkProxyType;
+  var bundle = srGetStrBundle("chrome://communicator/locale/utilityOverlay.properties");
+  panel.setAttribute("tooltiptext", bundle.GetStringFromName(onlineTooltip));
+}
+
+function GetStringPref(name)
+{
+  try {
+    return pref.getComplexValue(name, Components.interfaces.nsISupportsString).data;
+  } catch (e) {}
+  return "";
+}
+
 function setOfflineUI(offline)
 {
   var broadcaster = document.getElementById("Communicator:WorkMode");
@@ -83,9 +184,7 @@ function setOfflineUI(offline)
   //Checking for a preference "network.online", if it's locked, disabling 
   // network icon and menu item
   var prefService = Components.classes["@mozilla.org/preferences-service;1"];
-  prefService = prefService.getService();
-  prefService = prefService.QueryInterface(Components.interfaces.nsIPrefService);
-  
+  prefService = prefService.getService(Components.interfaces.nsIPrefService);
   var prefBranch = prefService.getBranch(null);
   
   var offlineLocked = prefBranch.prefIsLocked("network.online"); 
@@ -100,13 +199,19 @@ function setOfflineUI(offline)
     {
       broadcaster.setAttribute("offline", "true");
       broadcaster.setAttribute("checked", "true");
+      panel.removeAttribute("context");
       panel.setAttribute("tooltiptext", bundle.GetStringFromName("offlineTooltip"));
     }
   else
     {
       broadcaster.removeAttribute("offline");
       broadcaster.removeAttribute("checked");
-      panel.setAttribute("tooltiptext", bundle.GetStringFromName("onlineTooltip"));
+      panel.setAttribute("context", "networkProperties");
+      try {
+        var networkProxyType = prefBranch.getIntPref("network.proxy.type");
+      } catch(e) {}
+      var onlineTooltip = "onlineTooltip" + networkProxyType;
+      panel.setAttribute("tooltiptext", bundle.GetStringFromName(onlineTooltip));
     }
 }
 
@@ -382,6 +487,16 @@ var offlineObserver = {
   }
 }
 
+var proxyTypeObserver = {
+  observe: function(subject, topic, state) {
+    // sanity checks
+    var ioService = Components.classes[kIOServiceProgID]
+                              .getService(Components.interfaces.nsIIOService);
+    if (state == "network.proxy.type" && !ioService.offline)
+      setProxyTypeUI();
+  }
+}
+
 function utilityOnLoad(aEvent)
 {
   var broadcaster = document.getElementById("Communicator:WorkMode");
@@ -389,9 +504,14 @@ function utilityOnLoad(aEvent)
 
   var observerService = Components.classes[kObserverServiceProgID]
 		          .getService(Components.interfaces.nsIObserverService);
-
   observerService.addObserver(offlineObserver, "network:offline-status-changed", false);
   // make sure we remove this observer later
+  var prefService = Components.classes["@mozilla.org/preferences-service;1"];
+  prefService = prefService.getService(Components.interfaces.nsIPrefService);
+  var prefBranch = prefService.getBranch(null);
+  
+  prefBranch.addObserver("network.proxy.type", proxyTypeObserver, false);
+
   addEventListener("unload", utilityOnUnload, false);
 
   // set the initial state
@@ -405,6 +525,11 @@ function utilityOnUnload(aEvent)
   var observerService = Components.classes[kObserverServiceProgID]
 			  .getService(Components.interfaces.nsIObserverService);
   observerService.removeObserver(offlineObserver, "network:offline-status-changed");
+  var prefService = Components.classes["@mozilla.org/preferences-service;1"];
+  prefService = prefService.getService(Components.interfaces.nsIPrefService);
+  var prefBranch = prefService.getBranch(null);
+  
+  prefBranch.removeObserver("network.proxy.type", proxyTypeObserver);
 }
 
 addEventListener("load", utilityOnLoad, false);
