@@ -18,14 +18,17 @@
  * Rights Reserved.
  *
  *
- * Original Authors: Chris Waterson & David Hyatt
+ * Original Contributors:
+ *   Chris Waterson <waterson@netscape.com>
+ *   David Hyatt <hyatt@netscape.com>
  *
  * Contributor(s): 
+ *   Brendan Eich <brendan@mozilla.org>
  */
 
 /*
 
-  An implementation for an NGLayout-style content sink that knows how
+  An implementation for a Gecko-style content sink that knows how
   to build an RDF content model from XUL.
 
   For each container tag, an RDF Sequence object is created that
@@ -1495,7 +1498,8 @@ XULContentSinkImpl::OpenScript(const nsIParserNode& aNode)
             nsAutoString  params;
             SplitMimeType(type, mimeType, params);
 
-            isJavaScript = mimeType.EqualsIgnoreCase("text/javascript");
+            isJavaScript = mimeType.EqualsIgnoreCase("application/x-javascript") ||
+                           mimeType.EqualsIgnoreCase("text/javascript");
             if (isJavaScript) {
                 JSVersion jsVersion = JSVERSION_DEFAULT;
                 if (params.Find("version=", PR_TRUE) == 0) {
