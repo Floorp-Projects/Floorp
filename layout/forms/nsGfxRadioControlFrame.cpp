@@ -402,11 +402,8 @@ nsGfxRadioControlFrame::RestoreState(nsIPresContext* aPresContext, nsIPresState*
   mIsRestored = PR_TRUE;
   nsAutoString string;
   aState->GetStateProperty(NS_ConvertASCIItoUCS2("checked"), string);
-  PRBool state = (string.EqualsWithConversion(NS_STRING_TRUE)) ? PR_TRUE : PR_FALSE;
-
-  SetRadioState(aPresContext, state); // sets mChecked
+  SetProperty(aPresContext, nsHTMLAtoms::checked, string);
   mRestoredChecked = mChecked;
-
 
   return NS_OK;
 }
