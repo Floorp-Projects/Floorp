@@ -40,7 +40,6 @@
 #endif
 #include "nsSupportsArray.h"
 #include "nsSupportsPrimitives.h"
-#include "nsUnicharBuffer.h"
 #include "nsConsoleService.h"
 
 #include "nsComponentManager.h"
@@ -95,7 +94,6 @@ static NS_DEFINE_CID(kPageManagerCID, NS_PAGEMANAGER_CID);
 #endif
 static NS_DEFINE_CID(kPropertiesCID, NS_PROPERTIES_CID);
 static NS_DEFINE_CID(kSupportsArrayCID, NS_SUPPORTSARRAY_CID);
-static NS_DEFINE_CID(kUnicharBufferCID, NS_UNICHARBUFFER_CID);
 // ds/nsISupportsPrimitives
 static NS_DEFINE_CID(kSupportsIDCID, NS_SUPPORTS_ID_CID);
 static NS_DEFINE_CID(kSupportsStringCID, NS_SUPPORTS_STRING_CID);
