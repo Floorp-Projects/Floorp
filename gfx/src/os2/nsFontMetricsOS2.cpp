@@ -88,6 +88,7 @@ PLHashTable* nsFontMetricsOS2::gFamilyNames = nsnull;
 #define CHAR_BUFFER_SIZE 1024
 
 nscoord nsFontMetricsOS2::gDPI = 0;
+long    nsFontMetricsOS2::gSystemRes = 0;
 
 static nsICharsetConverterManager2* gCharSetManager = nsnull;
 static nsIPref* gPref = nsnull;
@@ -112,7 +113,7 @@ static nsCharSetInfo gCharSetInfo[eCharSet_COUNT] =
   { "ARABIC",      FM_DEFN_ARABIC,   864, "ar" },
   { "BALTIC",      0,                1257, "x-baltic" },
   { "THAI",        FM_DEFN_THAI,     874,  "th" },
-  { "SHIFTJIS",    FM_DEFN_KANA,     932,  "ja" },
+  { "SHIFTJIS",    FM_DEFN_KANA,     943,  "ja" },
   { "GB2312",      FM_DEFN_KANA,     1381, "zh-CN" },
   { "HANGEUL",     FM_DEFN_KANA,     949,  "ko" },
   { "CHINESEBIG5", FM_DEFN_KANA,     950,  "zh-TW" },
@@ -208,6 +209,12 @@ InitGlobals(void)
 
   ulSystemCodePage = WinQueryCp(HMQ_CURRENT);
 
+   // find system screen resolution. used here and in RealizeFont
+  HPS ps = ::WinGetScreenPS(HWND_DESKTOP);
+  HDC hdc = GFX (::GpiQueryDevice (ps), HDC_ERROR);
+  GFX (::DevQueryCaps(hdc, CAPS_HORIZONTAL_FONT_RES, 1, &nsFontMetricsOS2::gSystemRes), FALSE);
+  ::WinReleasePS(ps);
+
   if( !nsFontMetricsOS2::gGlobalFonts )
     if( !nsFontMetricsOS2::InitializeGlobalFonts() )
       return NS_ERROR_OUT_OF_MEMORY;
@@ -226,12 +233,7 @@ InitGlobals(void)
 
   if( prefVal == 0 )
   {
-    long res;
-    HPS ps = ::WinGetScreenPS(HWND_DESKTOP);
-    HDC hdc = GFX (::GpiQueryDevice (ps), HDC_ERROR);
-    GFX (::DevQueryCaps(hdc, CAPS_HORIZONTAL_FONT_RES, 1, &res), FALSE);
-    ::WinReleasePS(ps);
-    prefVal = res;
+    prefVal = nsFontMetricsOS2::gSystemRes;
     gPref->SetIntPref( "browser.display.screen_resolution", prefVal );
   }
 
@@ -351,7 +353,7 @@ nsFontMetricsOS2::LoadFont(HPS aPS, nsString* aName, BOOL bBold, BOOL bItalic)
 
    // always pass vector fonts to the printer
   if( !mDeviceContext->SupportsRasterFonts() &&
-      GetVectorSubstitute( familyname, bBold, bItalic, alias ))
+      GetVectorSubstitute( aPS, familyname, bBold, bItalic, alias ))
   {
     font = new FATTRS;
     memset( font, 0, sizeof(FATTRS) );
@@ -449,6 +451,8 @@ nsFontMetricsOS2::LoadFont(HPS aPS, nsString* aName, BOOL bBold, BOOL bItalic)
         }
     }
   }
+  
+  delete [] pMetrics;
 
   return font;
 }
@@ -726,12 +730,10 @@ FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
 }
 
 PRBool
-nsFontMetricsOS2::GetVectorSubstitute( const char* aFacename, PRBool aIsBold,
-                    PRBool aIsItalic, char* alias )
+nsFontMetricsOS2::GetVectorSubstitute( HPS aPS, const char* aFamilyname,
+                          PRBool aIsBold, PRBool aIsItalic, char* alias )
 {
-  PRBool rv = PR_FALSE;
-
-  if( PL_strcmp( aFacename, "Tms Rmn" ) == 0 )
+  if( PL_strcmp( aFamilyname, "Tms Rmn" ) == 0 )
   {
     if( !aIsBold && !aIsItalic )
       PL_strcpy( alias, "Times New Roman" );
@@ -743,10 +745,10 @@ nsFontMetricsOS2::GetVectorSubstitute( const char* aFacename, PRBool aIsBold,
     else
       PL_strcpy( alias, "Times New Roman Italic" );
 
-    rv = PR_TRUE;
+    return PR_TRUE;
   }
 
-  if( PL_strcmp( aFacename, "Helv" ) == 0 )
+  if( PL_strcmp( aFamilyname, "Helv" ) == 0 )
   {
     if( !aIsBold && !aIsItalic )
       PL_strcpy( alias, "Helvetica" );
@@ -758,13 +760,13 @@ nsFontMetricsOS2::GetVectorSubstitute( const char* aFacename, PRBool aIsBold,
     else
       PL_strcpy( alias, "Helvetica Italic" );
 
-    rv = PR_TRUE;
+    return PR_TRUE;
   }
 
    // When printing, substitute vector fonts for these common bitmap fonts
   if( !mDeviceContext->SupportsRasterFonts() )
   {
-    if( PL_strcmp( aFacename, "System Proportional" ) == 0 )
+    if( PL_strcmp( aFamilyname, "System Proportional" ) == 0 )
     {
       if( !aIsBold && !aIsItalic )
         PL_strcpy( alias, "Helvetica" );
@@ -776,11 +778,11 @@ nsFontMetricsOS2::GetVectorSubstitute( const char* aFacename, PRBool aIsBold,
       else
         PL_strcpy( alias, "Helvetica Italic" );
 
-      rv = PR_TRUE;
+      return PR_TRUE;
     }
 
-    if( PL_strcmp( aFacename, "System Monospaced" ) == 0 ||
-        PL_strcmp( aFacename, "System VIO" ) == 0 )
+    if( PL_strcmp( aFamilyname, "System Monospaced" ) == 0 ||
+        PL_strcmp( aFamilyname, "System VIO" ) == 0 )
     {
       if( !aIsBold && !aIsItalic )
         PL_strcpy( alias, "Courier" );
@@ -792,11 +794,34 @@ nsFontMetricsOS2::GetVectorSubstitute( const char* aFacename, PRBool aIsBold,
       else
         PL_strcpy( alias, "Courier Italic" );
 
-      rv = PR_TRUE;
+      return PR_TRUE;
     }
   }
+  
+   // Generic case:  see if this family has a vector font matching the
+   // given style
+  USHORT flags = aIsBold ? FM_SEL_BOLD : 0;
+  flags |= aIsItalic ? FM_SEL_ITALIC : 0;
 
-  return rv;
+  long lFonts = 0;
+  PFONTMETRICS pMetrics = getMetrics( lFonts, aFamilyname, aPS );
+
+  if( lFonts > 0 )
+  {
+    for( int i = 0; i < lFonts; i++ )
+    {
+      if( (pMetrics[i].fsDefn & FM_DEFN_OUTLINE)  &&
+          ((pMetrics[i].fsSelection & (FM_SEL_ITALIC | FM_SEL_BOLD)) == flags) )
+      {
+        PL_strcpy( alias, pMetrics[i].szFacename );
+        return PR_TRUE;
+      }
+    }
+  }
+  
+  delete [] pMetrics;
+
+  return PR_FALSE;
 }
 
 nsresult nsFontMetricsOS2::RealizeFont()
@@ -944,14 +969,12 @@ nsresult nsFontMetricsOS2::RealizeFont()
      // points size is less than the minimum or more than the maximum point
      // size available for Tms Rmn and Helv.
     if( gSubstituteVectorFonts &&
-        GetVectorSubstitute(fattrs->szFacename, bBold, bItalic, alias) )
+        (points > 18 || points < 8) &&
+        GetVectorSubstitute( ps, fattrs->szFacename, bBold, bItalic, alias) )
     {
-      if( points > 18 || points < 8 )
-      {
-        PL_strcpy( fattrs->szFacename, alias );
-        fattrs->fsFontUse = FATTR_FONTUSE_OUTLINE | FATTR_FONTUSE_TRANSFORMABLE;
-        fattrs->fsSelection &= ~(FM_SEL_BOLD | FM_SEL_ITALIC);
-      }
+      PL_strcpy( fattrs->szFacename, alias );
+      fattrs->fsFontUse = FATTR_FONTUSE_OUTLINE | FATTR_FONTUSE_TRANSFORMABLE;
+      fattrs->fsSelection &= ~(FM_SEL_BOLD | FM_SEL_ITALIC);
     }
 
      // If still using an image font
@@ -1005,7 +1028,7 @@ nsresult nsFontMetricsOS2::RealizeFont()
     if( fattrs->fsFontUse == 0 )    /* if image font */
       fHeight = points * gDPI / 72;
     else
-      fHeight = mFont->size * app2dev * textZoom;
+      fHeight = mFont->size * app2dev * textZoom * gDPI / nsFontMetricsOS2::gSystemRes;
   else
     fHeight = mFont->size * app2dev * textZoom;
 
@@ -1024,29 +1047,53 @@ nsresult nsFontMetricsOS2::RealizeFont()
 
   float dev2app;
   mDeviceContext->GetDevUnitsToAppUnits( dev2app);
+  
+   // Sometimes the fontmetrics for fonts don't add up as documented.
+   // Sometimes EmHeight + InternalLeading is greater than the MaxBaselineExt.
+   // This hack attempts to appease all fonts.  
+  if( fm.lMaxBaselineExt >= fm.lEmHeight + fm.lInternalLeading )
+  {
+    mMaxHeight = NSToCoordRound( fm.lMaxBaselineExt * dev2app );
+    mEmHeight = NSToCoordRound((fm.lMaxBaselineExt - fm.lInternalLeading) * dev2app );
+    mEmAscent = NSToCoordRound((fm.lMaxAscender - fm.lInternalLeading) * dev2app );
+  }
+  else
+  {
+    mMaxHeight = NSToCoordRound((fm.lEmHeight + fm.lInternalLeading) * dev2app );
+    mEmHeight = NSToCoordRound( fm.lEmHeight * dev2app);
+    mEmAscent = NSToCoordRound((fm.lEmHeight - fm.lMaxDescender) * dev2app );
+  } 
 
-   // PM includes the internal leading in the max ascender.  So the max
-   // ascender we tell raptor about should be lMaxAscent - lInternalLeading.
-   //
-   // This is probably all moot 'cos lInternalLeading is usually zero.
-   // More so 'cos layout doesn't look at the leading we give it.
-   //
-   // So let's leave it as zero to avoid confusion & change it if necessary.
+#if 0
+   // There is another problem where mozilla displays text highlighting too
+   // high for bitmap fonts other than warpsans.  So we fiddle with mMaxAscent
+   // and mMacDescent in these cases so that mozilla will properly position the
+   // highlight box.
+  if( !(fm.fsDefn & FM_DEFN_OUTLINE) &&
+      PL_strcmp("WarpSans", fm.szFamilyname) != 0 )
+  {
+    mMaxAscent  = NSToCoordRound((fm.lMaxAscender - 1) * dev2app );
+    mMaxDescent = NSToCoordRound((fm.lMaxDescender + 1) * dev2app );
+  }
+#else
+  if( PL_strcmp( "WarpSans", fm.szFamilyname ) != 0 )
+  {
+    mMaxAscent  = NSToCoordRound((fm.lMaxAscender - 1) * dev2app );
+    mMaxDescent = NSToCoordRound((fm.lMaxDescender + 1) * dev2app );
+  }
+#endif
+  else
+  {
+    mMaxAscent  = NSToCoordRound( fm.lMaxAscender * dev2app );
+    mMaxDescent = NSToCoordRound( fm.lMaxDescender * dev2app );
+  }
+  
+  mMaxAdvance = NSToCoordRound( fm.lMaxCharInc * dev2app );
+  mEmDescent  = NSToCoordRound( fm.lMaxDescender * dev2app );
+  mLeading    = NSToCoordRound( fm.lInternalLeading * dev2app );
+  mXHeight    = NSToCoordRound( fm.lXHeight * dev2app );
+
   nscoord onePixel = NSToCoordRound(1 * dev2app);
-
-  mHeight             = NSToCoordRound( fm.lMaxBaselineExt * dev2app);
-  mMaxAscent          = NSToCoordRound( fm.lMaxAscender * dev2app);
-  mMaxDescent         = NSToCoordRound( fm.lMaxDescender * dev2app);
-  mMaxAdvance         = NSToCoordRound( fm.lMaxCharInc * dev2app);
-
-  mMaxHeight          = NSToCoordRound( fm.lMaxBaselineExt * dev2app);
-  mEmHeight           = NSToCoordRound( fm.lEmHeight * dev2app);
-  // XXXXOS2TODO Not sure about these two - hs
-  mEmAscent           = NSToCoordRound((fm.lMaxAscender - fm.lInternalLeading) * dev2app);
-  mEmDescent          = NSToCoordRound( fm.lMaxDescender * dev2app);
-
-  mLeading            = NSToCoordRound( fm.lInternalLeading * dev2app);
-  mXHeight            = NSToCoordRound( fm.lXHeight * dev2app);
 
    // Not all fonts specify these two values correctly, and some not at all
   mSuperscriptYOffset = mXHeight;
@@ -1059,7 +1106,10 @@ nsresult nsFontMetricsOS2::RealizeFont()
 
    // Let there always be a minimum of one pixel space between the text
    // and the underline
-  mUnderlinePosition  = -PR_MAX(onePixel*2, NSToCoordRound( fm.lUnderscorePosition * dev2app));
+  if( fm.lEmHeight < 10 )
+    mUnderlinePosition  = -NSToCoordRound( fm.lUnderscorePosition * dev2app );
+  else
+    mUnderlinePosition  = -PR_MAX(onePixel*2, NSToCoordRound( fm.lUnderscorePosition * dev2app));
   mUnderlineSize      = PR_MAX(onePixel, NSToCoordRound(fm.lUnderscoreSize * dev2app));
 
   mAveCharWidth       = PR_MAX(1, NSToCoordRound(fm.lAveCharWidth * dev2app));
@@ -1120,7 +1170,7 @@ NS_IMETHODIMP nsFontMetricsOS2::GetUnderline(nscoord& aOffset, nscoord& aSize)
 
 NS_IMETHODIMP nsFontMetricsOS2::GetHeight( nscoord &aHeight)
 {
-   aHeight = mHeight;
+   aHeight = mMaxHeight;
    return NS_OK;
 }
 
@@ -1351,6 +1401,31 @@ nsFontMetricsOS2::InitializeGlobalFonts()
   gGlobalFonts[prevIndex].nextFamily = gGlobalFontsCount;
 
   ::WinReleasePS(aPS);
+  
+#ifdef DEBUG_pedemont
+  for( int k = 0; k < gGlobalFontsCount; k++ )
+  {
+    FONTMETRICS* fm = &(gGlobalFonts[k].fontMetrics);
+    printf( " %32s", fm->szFacename );
+    
+    if( fm->fsDefn & FM_DEFN_OUTLINE )
+      printf( " : vector" );
+    else
+      printf( " : bitmap" );
+      
+    if( fm->fsSelection & FM_SEL_BOLD )
+      printf( " : bold" );
+    else
+      printf( " :     " );
+      
+    if( fm->fsSelection & FM_SEL_ITALIC )
+      printf( " : italic" );
+    else
+      printf( " :       " );
+      
+    printf( " : %d\n", fm->sNominalPointSize );
+  }
+#endif  
 
   return gGlobalFonts;
 }
