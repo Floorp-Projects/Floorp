@@ -1234,6 +1234,7 @@ static int EndLayer(MimeObject *obj, PRBool basic, VObject* v)
  		captionLine = PR_smprintf ("document.getElementById(\"advanced%d\").style.display = \"none\";", s_unique);
 		if (captionLine)
 			status = WriteEachLineToStream (obj, captionLine);
+		PR_FREEIF (captionLine);
 		if (status < 0) return status;
     //CSS: JS
  		captionLine = PR_smprintf ("document.getElementById(\"basic%d\").style.display = \"block\";", s_unique);
