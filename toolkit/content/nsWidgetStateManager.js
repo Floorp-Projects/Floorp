@@ -232,7 +232,7 @@ nsWidgetStateManager.prototype =
     // set menulist specific properties
     if ("value" in aDataObject) {
       try {
-        element.selectedItem = aDataObject.value;
+        element.value = aDataObject.value;
       }
       catch (ex) {
         dump(aElementID + ", ex: " + ex + "\n");
