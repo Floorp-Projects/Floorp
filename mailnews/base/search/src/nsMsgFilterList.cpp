@@ -21,7 +21,7 @@
 #include "msgCore.h"
 #include "nsMsgFilterList.h"
 #include "nsMsgFilter.h"
-
+#include "nsIMsgFilterHitNotify.h"
 #include "nsFileStream.h"
 #include "nsMsgUtils.h"
 
@@ -84,10 +84,7 @@ NS_IMETHODIMP nsMsgFilterList::GetFolderForFilterList(class nsIMsgFolder **aFold
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-//static enum nsMsgRuleActionType  __cdecl nsMsgFilter::GetActionForFilingStr(class nsString2 &)" (?GetActionForFilingStr@nsMsgFilter@@SA?AW4nsMsgRuleActionType@@A
-//AVnsString2@@@Z)
-
-NS_IMETHODIMP nsMsgFilterList::IsLoggingEnabled(PRBool *aResult)
+NS_IMETHODIMP nsMsgFilterList::LoggingEnabled(PRBool *aResult)
 {
 	if (!aResult)
 		return NS_ERROR_NULL_POINTER;
@@ -102,6 +99,46 @@ NS_IMETHODIMP nsMsgFilterList::SaveToFile(nsIOFileStream *stream)
 
 	m_fileStream = stream;
 	return SaveTextFilters();
+}
+
+NS_IMETHODIMP nsMsgFilterList::ApplyFiltersToHdr(nsMsgFilterType filterType, nsIMsgDBHdr *msgHdr, nsIMsgFolder *folder, nsIMsgDatabase *db, 
+					char *headers, PRUint32 headersSize, nsIMsgFilterHitNotify *listener)
+{
+	nsIMsgFilter	*filter;
+	PRUint32		filterCount = 0;
+	nsresult		ret = NS_OK;
+
+	GetFilterCount(&filterCount);
+
+	for (PRUint32 filterIndex = 0; filterIndex < filterCount; filterIndex++)
+	{
+		if (NS_SUCCEEDED(GetFilterAt(filterIndex, &filter)))
+		{
+			PRBool isEnabled;
+			nsMsgFilterType curFilterType;
+
+			filter->IsFilterEnabled(&isEnabled);
+			if (!isEnabled)
+				continue;
+
+			filter->GetFilterType(&curFilterType);  
+			 if (curFilterType & filterType)
+			{
+				nsresult matchTermStatus = NS_OK;
+
+				matchTermStatus = filter->MatchHdr(msgHdr, folder, db, headers, headersSize);
+				if (NS_SUCCEEDED(matchTermStatus) && listener)
+				{
+					PRBool applyMore;
+
+					ret  = listener->ApplyFilterHit(filter, &applyMore);
+					if (!NS_SUCCEEDED(ret) || !applyMore)
+						break;
+				}
+			}
+		}
+	}
+	return ret;
 }
 
 #if 0
@@ -696,6 +733,7 @@ nsresult nsMsgFilterList::MoveFilterAt(PRUint32 filterIndex,
 	}
 	return NS_OK;
 }
+
 
 #ifdef DEBUG
 void nsMsgFilterList::Dump()

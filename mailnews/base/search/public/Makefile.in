@@ -28,6 +28,7 @@ EXPORTS= \
 		nsIMsgFilterService.h \
 		nsMsgFilterCore.h \
 		nsIMsgFilterList.h \
+		nsIMsgFilterHitNotify.h \
 		nsIMsgSearchSession.h \
 		nsIMsgSearchAdapter.h \
 		nsMsgSearchAdapter.h \

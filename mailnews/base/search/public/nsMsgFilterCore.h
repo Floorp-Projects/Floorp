@@ -51,6 +51,7 @@ typedef enum
 	nsMsgFilterDown
 } nsMsgFilterMotion;
 
+
 typedef PRInt32 nsMsgFilterIndex;
 
 

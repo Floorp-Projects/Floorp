@@ -38,6 +38,7 @@ class nsIOFileStream;
     { 0xa5, 0x0a, 0x0, 0x60, 0xb0, 0xfc, 0x04, 0xb7 } }
 
 class nsIMsgFilter;
+class nsIMsgFilterHitNotify;
 
 class nsIMsgFilterList : public nsISupports
 {
@@ -56,10 +57,13 @@ public:
 	NS_IMETHOD InsertFilterAt(PRUint32 filterIndex, nsIMsgFilter *filter)= 0;
 
 	NS_IMETHOD EnableLogging(PRBool enable)= 0;
-	NS_IMETHOD IsLoggingEnabled(PRBool *aResult)= 0;
+	NS_IMETHOD LoggingEnabled(PRBool *aResult)= 0;
 
 	NS_IMETHOD CreateFilter(char *name,	nsIMsgFilter **result)= 0;
 	NS_IMETHOD SaveToFile(nsIOFileStream *stream) = 0;
+
+	NS_IMETHOD ApplyFiltersToHdr(nsMsgFilterType filterType, nsIMsgDBHdr *msgHdr, nsIMsgFolder *folder, nsIMsgDatabase *db, 
+					char *headers, PRUint32 headersSize, nsIMsgFilterHitNotify *listener) = 0;
 };
 
 #endif
