@@ -344,7 +344,7 @@ oncommand="goPreferences('pref-themes.xul','chrome://communicator/content/pref/p
           <menuitem value="&ver5Cmd.label;"  oncommand="window._content.location.href='http://www.microsoft.com'"/>
           <menuitem value="&ver6Cmd.label;"  oncommand="window._content.location.href='http://www.city.net'"/>
           <menuitem value="&ver7Cmd.label;"  oncommand="window._content.location.href='http://www.mirabilis.com'"/>
-          <menuitem value="&ver8Cmd.label;"  oncommand="window._content.location.href='http://www.pathfinder.com/welcome'"/>
+          <menuitem value="&ver8Cmd.label;"  oncommand="window._content.location.href='http://www.time.com/time/index.html'"/>
           <menuitem value="&ver9Cmd.label;"  oncommand="window._content.location.href='http://www.warnerbros.com/home_moz3_day.html'"/>
           <menuitem value="&ver10Cmd.label;" oncommand="window._content.location.href='http://www.cnn.com'"/>
           <menuitem value="&ver11Cmd.label;" oncommand="window._content.location.href='http://www.usatoday.com'"/>
