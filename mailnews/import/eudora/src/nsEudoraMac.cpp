@@ -1018,7 +1018,7 @@ PRBool nsEudoraMac::IsValidMailFolderName( nsCString& name)
 		return( PR_TRUE);
 	
 	for (int i = 0; i < kNumBadFolderNames; i++) {
-		if (!name.CompareWithConversion( cBadFolderNames[i], PR_TRUE))
+		if (!name.Compare( cBadFolderNames[i], PR_TRUE))
 			return( PR_FALSE);
 	}
 	
