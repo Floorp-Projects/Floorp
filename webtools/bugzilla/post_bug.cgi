@@ -178,7 +178,21 @@ VALUES (
 ";
 
 foreach my $field (@used_fields) {
-    $query .= SqlQuote($::FORM{$field}) . ",\n";
+# fix for 42609. if there is a http:// only in bug_file_loc, strip
+# it out and send an empty value. 
+    if ($field eq 'bug_file_loc') {
+       if ($::FORM{$field} eq 'http://') {
+           $::FORM{$field} = "";
+           $query .= SqlQuote($::FORM{$field}) . ",\n";
+           next;
+       } 
+       else {
+          $query .= SqlQuote($::FORM{$field}) . ",\n";
+       }
+    }
+    else {
+       $query .= SqlQuote($::FORM{$field}) . ",\n";
+    }
 }
 
 my $comment = $::FORM{'comment'};
