@@ -32,4 +32,7 @@
 <!ENTITY filenameHeader.label  "Filename">
 <!ENTITY succeeded.label       "Succeeded">
 <!ENTITY failed.label          "Failed">
+<!ENTITY troubleshooting.label "Troubleshooting">
+<!ENTITY troubleshooting.accessKey "T">
+
 <!ENTITY keepOpen              "Keep this window open after publishing is complete.">

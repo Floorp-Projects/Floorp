@@ -39,9 +39,11 @@
 
   <!-- Methods common to all editor dialogs -->
   <script type="application/x-javascript" src="chrome://editor/content/editorUtilities.js"/>
+  <script type="application/x-javascript" src="chrome://editor/content/publishprefs.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/EditorPublishProgress.js"/>
   <script type="application/x-javascript" src="chrome://global/content/dialogOverlay.js" />
+  <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
   <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
   <broadcaster id="args" value=""/>
@@ -70,20 +72,20 @@
   </groupbox>
   <groupbox>
     <caption><label value="&fileList.label;"/></caption>
-    <vbox align="center" style="max-width:60em">
-      <label id="StatusMessage" class="bold" value="&status.label;"/>
+    <vbox align="center" style="max-width:30em">
+      <label id="FinalStatusMessage" class="bold" value="&status.label;"/>
     </vbox>
+    <description id="StatusMessage" class="wrap" style="max-width:30em; min-height: 1em"/>
     <vbox flex="1">
       <listbox id="FileList" rows="1"/>
     </vbox>
-    <hbox align="center">
-      <spacer class="bigspacer"/>
+    <hbox align="center" id="failureBox" hidden="true">
       <image class="progressitem" progress="done"/>
       <label value="&succeeded.label;"/>
       <spacer class="bigspacer"/>
-      <spacer class="bigspacer"/>
       <image class="progressitem" progress="failed"/>
       <label value="&failed.label;"/>
+      <button label="&troubleshooting.label;" accesskey="&troubleshooting.accessKey;" oncommand="doTroubleshooting();"/>
     </hbox>
   </groupbox>
   <checkbox id="KeepOpen" label="&keepOpen;" oncommand="CheckKeepOpen();" persist="checked"/>
