@@ -705,7 +705,7 @@ calStorageCalendar.prototype = {
         if (row.item_type == CAL_ITEM_TYPE_EVENT) {
             item.startDate = newDateTime(row.event_start);
             item.endDate = newDateTime(row.event_end);
-            item.stampDate = newDateTime(row.event_stamp);
+            item.stampTime = newDateTime(row.event_stamp);
             item.isAllDay = ((row.flags & CAL_ITEM_FLAG_EVENT_ALLDAY) != 0);
         } else if (row.item_type == CAL_ITEM_TYPE_TODO) {
             item.entryTime = newDateTime(row.todo_entry);
@@ -732,9 +732,9 @@ calStorageCalendar.prototype = {
     
     getAdditionalDataForItem: function (item, flags) {
         if (flags & CAL_ITEM_FLAG_HAS_ATTENDEES) {
-            this.mSelectAttendeesForItem.params.event_id = item.id;
+            this.mSelectAttendeesForItem.params.item_id = item.id;
             while (this.mSelectAttendeesForItem.step()) {
-                var attendee = this.mNewAttendeeFromRow(this.mSelectAttendeesForItem.row);
+                var attendee = this.newAttendeeFromRow(this.mSelectAttendeesForItem.row);
                 item.addAttendee(attendee);
             }
             this.mSelectAttendeesForItem.reset();
@@ -742,7 +742,11 @@ calStorageCalendar.prototype = {
 
         if (flags & CAL_ITEM_FLAG_HAS_PROPERTIES) {
             this.mSelectPropertiesForItem.params.item_id = item.id;
-            // ...
+            while (this.mSelectPropertiesForItem.step()) {
+                var row = this.mSelectPropertiesForItem.row;
+                item.setProperty (row.key, row.value);
+            }
+            this.mSelectPropertiesForItem.reset();
         }
 
         if (flags & CAL_ITEM_FLAG_HAS_RECURRENCE) {
@@ -903,7 +907,7 @@ calStorageCalendar.prototype = {
 
             ip.event_start = item.startDate.jsDate;
             ip.event_end = item.endDate.jsDate;
-            ip.event_stamp = item.stampDate.jsDate;
+            ip.event_stamp = item.stampTime.jsDate;
         } else if (item instanceof kCalITodo) {
             ip.item_type = CAL_ITEM_TYPE_TODO;
 
@@ -948,6 +952,20 @@ calStorageCalendar.prototype = {
                     this.mInsertAttendee.step();
                     this.mInsertAttendee.reset();
                 }
+            }
+            var propEnumerator = item.propertyEnumerator;
+            while (propEnumerator.hasMoreElements()) {
+                flags |= CAL_ITEM_FLAG_HAS_PROPERTIES;
+
+                var prop = propEnumerator.getNext().QueryInterface(Components.interfaces.nsIProperty);
+
+                var pp = this.mInsertProperty.params;
+                pp.item_id = item.id;
+                pp.key = prop.name;
+                pp.value = prop.value;
+
+                this.mInsertProperty.step();
+                this.mInsertProperty.reset();
             }
 
             var rec = item.recurrenceInfo;
