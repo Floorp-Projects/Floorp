@@ -25,6 +25,7 @@
 #include "nsImageGTK.h"
 #include "nsDeviceContextGTK.h"
 #include "nsRegionGTK.h"
+#include "nsScriptableRegion.h"
 #include "nsBlender.h"
 #include "nsDeviceContextSpecG.h"
 #include "nsDeviceContextSpecFactoryG.h" 
@@ -36,6 +37,7 @@ static NS_DEFINE_IID(kCRenderingContext, NS_RENDERING_CONTEXT_CID);
 static NS_DEFINE_IID(kCImage, NS_IMAGE_CID);
 static NS_DEFINE_IID(kCDeviceContext, NS_DEVICE_CONTEXT_CID);
 static NS_DEFINE_IID(kCRegion, NS_REGION_CID);
+static NS_DEFINE_IID(kCScriptableRegion, NS_SCRIPTABLE_REGION_CID);
 
 static NS_DEFINE_IID(kCBlender, NS_BLENDER_CID);
 
@@ -126,6 +128,14 @@ nsresult nsGfxFactoryGTK::CreateInstance(nsISupports *aOuter,
     nsRegionGTK* dcs;
     NS_NEWXPCOM(dcs, nsRegionGTK);
     inst = (nsISupports *)dcs;
+  }
+  else if (mClassID.Equals(kCScriptableRegion)) {
+    nsCOMPtr<nsIRegion> rgn;
+    NS_NEWXPCOM(rgn, nsRegionGTK);
+    if (rgn != nsnull) {
+      nsCOMPtr<nsIScriptableRegion> scriptableRgn = new nsScriptableRegion(rgn);
+      inst = scriptableRgn;
+    }
   }
   else if (mClassID.Equals(kCBlender)) {
     inst = (nsISupports *)new nsBlender;
