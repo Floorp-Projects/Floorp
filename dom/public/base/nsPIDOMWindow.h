@@ -19,7 +19,7 @@
  *
  * Contributor(s): 
  */
-/* AUTO-GENERATED. DO NOT EDIT!!! */
+
 
 #ifndef nsPIDOMWindow_h__
 #define nsPIDOMWindow_h__
@@ -40,6 +40,7 @@ public:
   NS_IMETHOD GetPrivateParent(nsPIDOMWindow** aResult)=0;
 
   NS_IMETHOD GetLocation(nsIDOMLocation** aLocation) = 0;
+  NS_IMETHOD GetWebShell(nsIWebShell **aWebShell) =0;// XXX This may be temporary - rods
 };
 
 #endif // nsPIDOMWindow_h__
