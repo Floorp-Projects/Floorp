@@ -153,7 +153,7 @@ morkRow::InitRow(morkEnv* ev, const mdbOid* inOid, morkRowSpace* ioSpace,
         mRow_Oid = *inOid;
 
         mRow_Length = (mork_u2) inLength;
-        mRow_Seed = (mork_u2) this; // "random" assignment
+        mRow_Seed = (mork_u2) (mork_ip) this; // "random" assignment
 
         mRow_TableUses = 0;
         mRow_Load = morkLoad_kClean;
