@@ -63,7 +63,6 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
    * were better.
    */
 
-  int idx;
   switch (aID) {
     case eColor_WindowBackground:
       aColor = NS_RGB(0xff, 0xff, 0xff); 
