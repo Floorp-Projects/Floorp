@@ -984,7 +984,7 @@ NS_IMETHODIMP GlobalWindowImpl::SetOuterWidth(PRInt32 aOuterWidth)
    NS_ENSURE_SUCCESS(treeOwnerAsWin->GetSize(nsnull, &cy),
       NS_ERROR_FAILURE);
 
-   NS_ENSURE_SUCCESS(treeOwnerAsWin->SetSize(aOuterWidth, cy, PR_FALSE), 
+   NS_ENSURE_SUCCESS(treeOwnerAsWin->SetSize(aOuterWidth, cy, PR_TRUE), 
       NS_ERROR_FAILURE);
 
    return NS_OK;
@@ -1014,7 +1014,7 @@ NS_IMETHODIMP GlobalWindowImpl::SetOuterHeight(PRInt32 aOuterHeight)
    NS_ENSURE_SUCCESS(treeOwnerAsWin->GetSize(&cx, nsnull),
       NS_ERROR_FAILURE);
 
-   NS_ENSURE_SUCCESS(treeOwnerAsWin->SetSize(cx, aOuterHeight, PR_FALSE), 
+   NS_ENSURE_SUCCESS(treeOwnerAsWin->SetSize(cx, aOuterHeight, PR_TRUE), 
       NS_ERROR_FAILURE);
 
    return NS_OK;
@@ -1400,11 +1400,7 @@ NS_IMETHODIMP GlobalWindowImpl::ResizeTo(PRInt32 aWidth, PRInt32 aHeight)
    GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
    NS_ENSURE_TRUE(treeOwnerAsWin, NS_ERROR_FAILURE);
 
-   PRInt32 cy;
-   NS_ENSURE_SUCCESS(treeOwnerAsWin->GetSize(nsnull, &cy),
-      NS_ERROR_FAILURE);
-
-   NS_ENSURE_SUCCESS(treeOwnerAsWin->SetSize(aWidth, aHeight, PR_FALSE), 
+   NS_ENSURE_SUCCESS(treeOwnerAsWin->SetSize(aWidth, aHeight, PR_TRUE), 
       NS_ERROR_FAILURE);
 
    return NS_OK;
@@ -1421,7 +1417,7 @@ NS_IMETHODIMP GlobalWindowImpl::ResizeBy(PRInt32 aWidthDif, PRInt32 aHeightDif)
       NS_ERROR_FAILURE);
 
    NS_ENSURE_SUCCESS(treeOwnerAsWin->SetSize(cx + aWidthDif, cy + aHeightDif,
-      PR_FALSE), NS_ERROR_FAILURE);
+      PR_TRUE), NS_ERROR_FAILURE);
 
    return NS_OK;
 }
