@@ -1881,7 +1881,12 @@ nsWebShell::DoLoadURL(const nsString& aUrlSpec,
             rv = presShell->GoToAnchor(nsAutoString(ref));
             return rv;
           }
-          else if (aType == nsURLReloadFromHistory) {
+#ifdef NECKO
+          else if (PR_FALSE)    // XXX Need to add support for nsURLReloadFromHistory equivalent
+#else
+          else if (aType == nsURLReloadFromHistory)
+#endif
+          {
             // Go to the top of the current document
             nsCOMPtr<nsIViewManager> viewMgr;            
             rv = presShell->GetViewManager(getter_AddRefs(viewMgr));
