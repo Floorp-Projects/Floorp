@@ -171,7 +171,7 @@ nsresult nsCollationOS2::GetSortKeyLen(const nsCollationStrength strength,
   LocaleObject locObj = NULL;
   int ret = UniCreateLocaleObject(UNI_UCS_STRING_POINTER, (UniChar *)L"", &locObj);
   if (ret != ULS_SUCCESS)
-    return NS_ERROR_FAILURE;
+    UniCreateLocaleObject(UNI_UCS_STRING_POINTER, (UniChar *)L"en_US", &locObj);
   int uLen = UniStrxfrm(locObj, NULL, NS_REINTERPRET_CAST(const UniChar *, stringNormalized.get()), 0);
   if ( uLen > 0 ) {
     uLen += 5;      // Allow for the "extra" chars UniStrxfrm() will out put
@@ -202,7 +202,7 @@ nsresult nsCollationOS2::CreateRawSortKey(const nsCollationStrength strength,
   LocaleObject locObj = NULL;
   int ret = UniCreateLocaleObject(UNI_UCS_STRING_POINTER, (UniChar *)L"", &locObj);
   if (ret != ULS_SUCCESS)
-    return NS_ERROR_FAILURE;
+    UniCreateLocaleObject(UNI_UCS_STRING_POINTER, (UniChar *)L"en_US", &locObj);
 
   res = NS_ERROR_FAILURE;               // From here on out assume failure...
   int length = UniStrxfrm(locObj, NULL, NS_REINTERPRET_CAST(const UniChar *,stringNormalized.get()),0);
