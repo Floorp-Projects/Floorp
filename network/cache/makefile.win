@@ -46,9 +46,6 @@ OBJS=   \
 	.\$(OBJDIR)\mkcache.obj		\
 	.\$(OBJDIR)\mkextcac.obj		\
 	.\$(OBJDIR)\mkmemcac.obj		\
-!ifdef NU_CACHE
-	.\$(OBJDIR)\nucacheproto.obj		\
-!endif
 	$(NULL)
 	
 
@@ -58,9 +55,6 @@ CSRCS =	\
 	mkcache.c	\
 	mkextcac.c	\
 	mkmemcac.c	\
-!ifdef NU_CACHE
-	nucacheproto.c	\
-!endif
 	$(NULL)
 
 
