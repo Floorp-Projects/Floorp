@@ -35,10 +35,6 @@
 
 #include "prcpucfg.h"
 
-#ifdef XP_BEOS
-#include <support/SupportDefs.h>
-#endif
-
 #include <stddef.h>
 
 /***********************************************************************

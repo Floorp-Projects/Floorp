@@ -26,6 +26,20 @@
 #if !defined(PROTYPES_H)
 #define PROTYPES_H
 
+typedef PRUintn uintn;
+#ifndef _XP_Core_
+typedef PRIntn intn;
+#endif
+
+/*
+ * BeOS already defines the integer types below in its standard
+ * header file SupportDefs.h.
+ */
+#ifdef XP_BEOS
+
+#include <support/SupportDefs.h>
+
+#else /* XP_BEOS */
 
 /* SVR4 typedef of uint is commonly found on UNIX machines. */
 #ifdef XP_UNIX
@@ -34,7 +48,6 @@
 typedef PRUintn uint;
 #endif
 
-typedef PRUintn uintn;
 typedef PRUint64 uint64;
 #if !defined(XP_MAC) && !defined(_WIN32) && !defined(XP_OS2)
 typedef PRUint32 uint32;
@@ -43,10 +56,6 @@ typedef unsigned long uint32;
 #endif
 typedef PRUint16 uint16;
 typedef PRUint8 uint8;
-
-#ifndef _XP_Core_
-typedef PRIntn intn;
-#endif
 
 /*
  * On AIX 4.3, sys/inttypes.h (which is included by sys/types.h, a very
@@ -74,6 +83,8 @@ typedef PRInt16 int16;
 typedef PRInt8 int8;
 #endif /* HPUX */
 #endif /* AIX4_3 */
+
+#endif /* XP_BEOS */
 
 typedef PRFloat64 float64;
 typedef PRUptrdiff uptrdiff_t;
