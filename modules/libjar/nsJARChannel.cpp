@@ -422,6 +422,10 @@ nsJARChannel::GetOwner(nsISupports **result)
         rv = cert->GetCertificateID(getter_Copies(certID));
         if (NS_FAILED(rv)) return rv;
 
+        nsXPIDLCString commonName;
+        rv = cert->GetCommonName(getter_Copies(commonName));
+        if (NS_FAILED(rv)) return rv;
+
         nsCOMPtr<nsIScriptSecurityManager> secMan = 
                  do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
         if (NS_FAILED(rv)) return rv;
@@ -430,6 +434,9 @@ nsJARChannel::GetOwner(nsISupports **result)
                                              getter_AddRefs(cert));
         if (NS_FAILED(rv)) return rv;
 
+        rv = cert->SetCommonName(commonName);
+        if (NS_FAILED(rv)) return rv;
+        
         mOwner = do_QueryInterface(cert, &rv);
         if (NS_FAILED(rv)) return rv;
 
