@@ -25,6 +25,7 @@
 
 DEPTH=..\..
 IGNORE_MANIFEST=1
+include <$(DEPTH)/config/config.mak>
 
 MAKE_OBJ_TYPE = DLL
 MODULE=xpinstall
