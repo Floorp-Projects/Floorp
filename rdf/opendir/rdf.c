@@ -58,6 +58,9 @@ int RDF_HasAssertion (RDFT db, RDF_Resource u, RDF_Resource s,
   return remoteStoreHasAssertion (db,  u,  s,  v,  type, 1);
 }
   
+RDF_Resource RDF_OnePropSource (RDFT db, RDF_Resource u, RDF_Resource s) {
+  return (RDF_Resource) getSlotValue(db, u, s, RDF_RESOURCE_TYPE, 1, 1);
+}
 
 void* RDF_OnePropValue (RDFT db, RDF_Resource u, RDF_Resource s, RDF_ValueType type) {
   return getSlotValue (db,  u,  s,  type, 0, 1);

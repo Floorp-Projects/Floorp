@@ -46,6 +46,7 @@ int RDF_Unassert (RDFT db, RDF_Resource u, RDF_Resource s,  void* v, RDF_ValueTy
 int RDF_HasAssertion (RDFT db, RDF_Resource u, RDF_Resource s, void* v, 
                       RDF_ValueType type);
 void* RDF_OnePropValue (RDFT db, RDF_Resource u, RDF_Resource s, RDF_ValueType type);
+RDF_Resource RDF_OnePropSource (RDFT db, RDF_Resource u, RDF_Resource s);
 RDF_Cursor RDF_GetTargets (RDFT db, RDF_Resource u, RDF_Resource s, RDF_ValueType type);
 RDF_Cursor RDF_GetSourcess (RDFT db, RDF_Resource u, RDF_Resource s);
 void* RDF_NextValue (RDF_Cursor c) ;
