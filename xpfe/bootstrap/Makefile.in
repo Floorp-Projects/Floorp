@@ -83,7 +83,7 @@ LIBS += -lboehm
 endif
 
 EXTRA_DEPS	= \
-		$(addprefix $(DIST)/,$(patsubst -l%,bin/lib%.$(DLL_SUFFIX),$(XP_DIST_LIBS:-l%_s=lib/lib%_s.a))) \
+		$(addprefix $(DIST)/,$(patsubst -l%,bin/lib%$(DLL_SUFFIX),$(XP_DIST_LIBS:-l%_s=lib/lib%_s.a))) \
 		$(XP_NS_UNDERBAR_CRAP) \
 		$(NULL)
 
