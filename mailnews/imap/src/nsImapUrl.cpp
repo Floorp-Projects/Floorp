@@ -425,6 +425,20 @@ NS_IMETHODIMP nsImapUrl::SetCustomCommandResult(const char *result)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsImapUrl::GetCustomAddFlags(char **aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = ToNewCString(m_customAddFlags);
+  return (*aResult) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+NS_IMETHODIMP nsImapUrl::GetCustomSubtractFlags(char **aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = ToNewCString(m_customSubtractFlags);
+  return (*aResult) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
 
 NS_IMETHODIMP nsImapUrl::GetImapPartToFetch(char **result) 
 {
@@ -781,11 +795,21 @@ void nsImapUrl::ParseImapPart(char *imapPartOfUrl)
       ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
       ParseListOfMessageIds();
     }
+    else if (m_imapAction == nsIImapUrl::nsImapMsgStoreCustomKeywords)
+    {
+      ParseUidChoice();
+      ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
+      ParseListOfMessageIds();
+    	char *flagsPtr = m_tokenPlaceHolder ? nsIMAPGenericParser::Imapstrtok_r(nsnull, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)nsnull;
+      m_customAddFlags.Assign(flagsPtr);
+      flagsPtr = m_tokenPlaceHolder ? nsIMAPGenericParser::Imapstrtok_r(nsnull, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)nsnull;
+      m_customSubtractFlags.Assign(flagsPtr);
+    }
     else
     {
       m_validUrl = PR_FALSE;	
     }
-        }
+  }
 }
 
 

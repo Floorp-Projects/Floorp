@@ -232,7 +232,7 @@ private:
   PRPackedBool    fCurrentCommandIsSingleMessageFetch;
   PRPackedBool    fGotPermanentFlags;
   imapMessageFlagsType	  fSavedFlagInfo;
-
+  nsCStringArray  fCustomFlags;
 
   PRUint16  fSupportsUserDefinedFlags;
   PRUint16  fSettablePermanentFlags;

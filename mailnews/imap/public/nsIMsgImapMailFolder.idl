@@ -84,6 +84,12 @@ interface nsIMsgImapMailFolder : nsISupports {
   // It assumes the command needs to be run in the selected state.
   nsIURI issueCommandOnMsgs(in string command, in string uids, in nsIMsgWindow aWindow);
   nsIURI fetchCustomMsgAttribute(in string msgAttribute, in string uids, in nsIMsgWindow aWindow);
+  nsIURI storeCustomKeywords(in nsIMsgWindow aMsgWindow,
+                      in string aFlagsToAdd,
+                      in string aFlagsToSubtract,
+                      out nsMsgKey aKeysToStore,
+                      in long aNumKeys);
+
   attribute boolean verifiedAsOnlineFolder;
   attribute boolean explicitlyVerify;
   attribute wchar hierarchyDelimiter;

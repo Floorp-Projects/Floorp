@@ -256,6 +256,13 @@ interface nsIImapService : nsISupports
                       in string aAttribute,
                       in string aMessageIdentifierList);
 
+  nsIURI storeCustomKeywords(in nsIEventQueue aClientEventQueue,
+                      in nsIMsgFolder aMailFolder,
+                      in nsIMsgWindow aMsgWindow,
+                      in string flagsToAdd,
+                      in string flagsToSubtract,
+                      in string aMessageIdentifierList);
+
   void getListOfFoldersOnServer(in nsIImapIncomingServer aServer, in nsIMsgWindow aMsgWindow);
   void getListOfFoldersWithPath(in nsIImapIncomingServer aServer, in nsIMsgWindow aMsgWindow, in string folderPath);
 

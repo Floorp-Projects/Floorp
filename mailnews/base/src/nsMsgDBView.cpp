@@ -2261,6 +2261,19 @@ nsMsgDBView::ApplyCommandToIndices(nsMsgViewCommandTypeValue command, nsMsgViewI
         flags = kImapMsgDeletedFlag;
         addFlags = PR_FALSE;
         break;
+      case nsMsgViewCommandType::junk:
+          return imapFolder->StoreCustomKeywords(mMsgWindow,
+                      "Junk",
+                      "NonJunk",
+                      imapUids.GetArray(), imapUids.GetSize(),
+                      nsnull);
+      case nsMsgViewCommandType::unjunk:
+          return imapFolder->StoreCustomKeywords(mMsgWindow,
+                      "NonJunk",
+                      "Junk",
+                      imapUids.GetArray(), imapUids.GetSize(),
+                      nsnull);
+
       default:
         break;
       }

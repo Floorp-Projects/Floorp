@@ -1286,7 +1286,12 @@ void nsImapServerResponseParser::msg_fetch()
 	{
 		if (CurrentResponseUID() && CurrentResponseUID() != nsMsgKey_None 
                   && fCurrentLineContainedFlagInfo && fFlagState)
+    {
 			fFlagState->AddUidFlagPair(CurrentResponseUID(), fSavedFlagInfo);
+      for (PRInt32 i = 0; i < fCustomFlags.Count(); i++)
+        fFlagState->AddUidCustomFlagPair(CurrentResponseUID(), fCustomFlags.CStringAt(i)->get());
+      fCustomFlags.Clear();
+    }
 
         if (fFetchingAllFlags)
 		  fCurrentLineContainedFlagInfo = PR_FALSE;	// do not fire if in PostProcessEndOfLine          
@@ -1520,7 +1525,7 @@ void nsImapServerResponseParser::internal_date()
 void nsImapServerResponseParser::flags()
 {
   imapMessageFlagsType messageFlags = kNoImapMsgFlag;
-  
+  fCustomFlags.Clear();
   // eat the opening '('
   fNextToken++;
   while (ContinueParse() && (*fNextToken != ')'))
@@ -1620,7 +1625,10 @@ void nsImapServerResponseParser::flags()
       if (parenIndex > 0)
         flag.Truncate(parenIndex);
       messageFlags |= kImapMsgCustomKeywordFlag;
-      fFlagState->AddUidCustomFlagPair(CurrentResponseUID(), flag.get());
+      if (CurrentResponseUID() != nsMsgKey_None)
+        fFlagState->AddUidCustomFlagPair(CurrentResponseUID(), flag.get());
+      else
+        fCustomFlags.AppendCString(flag);
     }
     if (PL_strcasestr(fNextToken, ")"))
     {

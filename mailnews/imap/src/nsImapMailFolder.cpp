@@ -3526,7 +3526,9 @@ void nsImapMailFolder::TweakHeaderFlags(nsIImapProtocol* aProtocol, nsIMsgDBHdr 
     
     PRBool foundIt = PR_FALSE;
     imapMessageFlagsType imap_flags;
-    nsresult res = aProtocol->GetFlagsForUID(m_curMsgUid, &foundIt, &imap_flags);
+
+    nsXPIDLCString customFlags;
+    nsresult res = aProtocol->GetFlagsForUID(m_curMsgUid, &foundIt, &imap_flags, getter_Copies(customFlags));
     if (NS_SUCCEEDED(res) && foundIt)
     {
       // make a mask and clear these message flags
@@ -3585,6 +3587,8 @@ void nsImapMailFolder::TweakHeaderFlags(nsIImapProtocol* aProtocol, nsIMsgDBHdr 
 
       if (newFlags)
         tweakMe->OrFlags(newFlags, &dbHdrFlags);
+      if (!customFlags.IsEmpty())
+        (void) HandleCustomFlags(m_curMsgUid, tweakMe, customFlags);
     }
   }
 }    
@@ -3941,6 +3945,28 @@ nsImapMailFolder::BeginMessageUpload()
     return NS_ERROR_FAILURE;
 }
 
+nsresult nsImapMailFolder::HandleCustomFlags(nsMsgKey uidOfMessage, nsIMsgDBHdr *dbHdr, nsXPIDLCString &keywords)
+{
+  PRBool messageClassified = PR_TRUE;
+  nsXPIDLCString::const_iterator b, e;
+  if (FindInReadable(NS_LITERAL_CSTRING("NonJunk"), keywords.BeginReading(b), keywords.EndReading(e)))
+    mDatabase->SetStringProperty(uidOfMessage, "junkscore", "0");
+  else if (FindInReadable(NS_LITERAL_CSTRING("Junk"), keywords.BeginReading(b), keywords.EndReading(e)))
+    mDatabase->SetStringProperty(uidOfMessage, "junkscore", "100");
+  else
+    messageClassified = PR_FALSE;
+  if (messageClassified)
+  {
+    // only set the junkscore origin if it wasn't set before. We assume plugin since we
+    // think that's the more common scenario.
+    nsXPIDLCString existingProperty;
+    dbHdr->GetStringProperty("junkscoreorigin", getter_Copies(existingProperty));
+    if (existingProperty.IsEmpty())
+      dbHdr->SetStringProperty("junkscoreorigin", "plugin");
+  }
+  return dbHdr->SetStringProperty("keywords", keywords);
+}
+
 // synchronize the message flags in the database with the server flags
 nsresult nsImapMailFolder::SyncFlags(nsIImapFlagAndUidState *flagState)
 {
@@ -3979,7 +4005,7 @@ nsresult nsImapMailFolder::SyncFlags(nsIImapFlagAndUidState *flagState)
       {
         if (dbHdr && NS_SUCCEEDED(rv))
         {
-          dbHdr->SetStringProperty("keywords", keywords);
+          HandleCustomFlags(uidOfMessage, dbHdr, keywords);
         }
       }
     }
@@ -7097,6 +7123,18 @@ nsImapMailFolder::SpamFilterClassifyMessages(const char **aURIArray, PRUint32 aU
   return aJunkMailPlugin->ClassifyMessages(aURICount, aURIArray, aMsgWindow, this);   
 }
 
+NS_IMETHODIMP
+nsImapMailFolder::StoreCustomKeywords(nsIMsgWindow *aMsgWindow, const char *aFlagsToAdd, 
+                                      const char *aFlagsToSubtract, nsMsgKey *aKeysToStore, PRInt32 aNumKeys, nsIURI **_retval)
+{
+  nsresult rv;
+  nsCOMPtr<nsIImapService> imapService(do_GetService(NS_IMAPSERVICE_CONTRACTID, &rv)); 
+  NS_ENSURE_SUCCESS(rv, rv); 
+  nsCAutoString msgIds;
+  AllocateUidStringFromKeys(aKeysToStore, aNumKeys, msgIds);
+  return imapService->StoreCustomKeywords(m_eventQueue, this, aMsgWindow, aFlagsToAdd, aFlagsToSubtract, msgIds.get(), _retval);
+}
+
 
 NS_IMETHODIMP
 nsImapMailFolder::OnMessageClassified(const char *aMsgURI, nsMsgJunkStatus aClassification)
@@ -7116,6 +7154,13 @@ nsImapMailFolder::OnMessageClassified(const char *aMsgURI, nsMsgJunkStatus aClas
   mDatabase->SetStringProperty(msgKey, "junkscore", (aClassification == nsIJunkMailPlugin::JUNK) ? "100" : "0");
   mDatabase->SetStringProperty(msgKey, "junkscoreorigin", "plugin");
 
+  GetMoveCoalescer();
+  if (m_moveCoalescer)
+  {
+    nsMsgKeyArray *keysToClassify = m_moveCoalescer->GetKeyBucket((aClassification == nsIJunkMailPlugin::JUNK) ? 0 : 1);
+    if (keysToClassify)
+      keysToClassify->Add(msgKey);
+  }
   if (aClassification == nsIJunkMailPlugin::JUNK)
   {
     nsCOMPtr<nsISpamSettings> spamSettings;
@@ -7172,8 +7217,18 @@ nsImapMailFolder::OnMessageClassified(const char *aMsgURI, nsMsgJunkStatus aClas
     rv = spamSettings->LogJunkHit(msgHdr, willMoveMessage);
     NS_ENSURE_SUCCESS(rv,rv);
   }
+  if (--m_numFilterClassifyRequests == 0 && m_moveCoalescer)
+  {
+    nsMsgKeyArray *junkKeysToClassify = m_moveCoalescer->GetKeyBucket(0);
+    nsMsgKeyArray *nonJunkKeysToClassify = m_moveCoalescer->GetKeyBucket(1);
 
-  if (--m_numFilterClassifyRequests == 0 && m_moveCoalescer) {
+    nsCOMPtr<nsIImapService> imapService(do_GetService(NS_IMAPSERVICE_CONTRACTID, &rv)); 
+    NS_ENSURE_SUCCESS(rv, rv); 
+
+    if (junkKeysToClassify && junkKeysToClassify->GetSize() > 0)
+      StoreCustomKeywords(m_moveCoalescer->GetMsgWindow(), "Junk", "", junkKeysToClassify->GetArray(), junkKeysToClassify->GetSize(), nsnull);
+    if (nonJunkKeysToClassify && nonJunkKeysToClassify->GetSize() > 0)
+      StoreCustomKeywords(m_moveCoalescer->GetMsgWindow(), "NonJunk", "", nonJunkKeysToClassify->GetArray(), nonJunkKeysToClassify->GetSize(), nsnull);
     m_moveCoalescer->PlaybackMoves();
   }
   return NS_OK;

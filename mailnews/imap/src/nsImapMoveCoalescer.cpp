@@ -60,6 +60,11 @@ nsImapMoveCoalescer::~nsImapMoveCoalescer()
     nsMsgKeyArray *keys = (nsMsgKeyArray *) m_sourceKeyArrays.ElementAt(i);
     delete keys;
   }
+  for (PRInt32 index = 0; index < m_keyBuckets.Count(); index++)
+  {
+    nsMsgKeyArray *keys = (nsMsgKeyArray *) m_keyBuckets.ElementAt(index);
+    delete keys;
+  }
 }
 
 nsresult nsImapMoveCoalescer::AddMove(nsIMsgFolder *folder, nsMsgKey key)
@@ -167,3 +172,18 @@ nsresult nsImapMoveCoalescer::PlaybackMoves()
   return rv;
 }
 
+nsMsgKeyArray *nsImapMoveCoalescer::GetKeyBucket(PRInt32 keyArrayIndex)
+{
+  if (m_keyBuckets.Count() < keyArrayIndex + 1)
+  {
+    for (PRInt32 i = 0; i < keyArrayIndex + 1 - m_keyBuckets.Count(); i++)
+    {
+        nsMsgKeyArray *keysToAdd = new nsMsgKeyArray;
+        if (!keysToAdd)
+          return nsnull;
+        
+        m_keyBuckets.AppendElement(keysToAdd);
+    }
+  }
+  return (nsMsgKeyArray *) m_keyBuckets.SafeElementAt(keyArrayIndex);
+}

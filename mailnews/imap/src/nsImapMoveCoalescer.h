@@ -61,12 +61,17 @@ public:
 
   nsresult AddMove(nsIMsgFolder *folder, nsMsgKey key);
   nsresult PlaybackMoves();
+  // this lets the caller store keys in an arbitrary number of buckets. If the bucket
+  // for the passed in index doesn't exist, it will get created.
+  nsMsgKeyArray *GetKeyBucket(PRInt32 keyArrayIndex);
+  nsIMsgWindow *GetMsgWindow() {return m_msgWindow;}
 protected:
-  // m_sourceKeySets and m_destFolders are parallel arrays.
+  // m_sourceKeyArrays and m_destFolders are parallel arrays.
   nsVoidArray m_sourceKeyArrays;
   nsCOMPtr <nsISupportsArray> m_destFolders;
   nsCOMPtr <nsIMsgWindow> m_msgWindow;
   nsCOMPtr <nsIMsgFolder> m_sourceFolder;
+  nsVoidArray m_keyBuckets;
 };
 
 #endif // _nsImapMoveCoalescer_H

@@ -87,6 +87,8 @@ interface nsIImapUrl : nsISupports
   attribute string customAttributeResult;
   readonly attribute string command;
   attribute string customCommandResult;
+  readonly attribute string customAddFlags;
+  readonly attribute string customSubtractFlags;
   void allocateCanonicalPath(in string aServerPath, in char aOnlineDelimiter, out string aAllocatedPath);
   void allocateServerPath(in string aCanonicalPath, in char aOnlineDelimiter, out string aAllocatedPath);
   string createServerSourceFolderPathString();
@@ -189,6 +191,7 @@ interface nsIImapUrl : nsISupports
   const long nsImapUserDefinedMsgCommand = 0x10000034;
   const long nsImapUserDefinedFetchAttribute = 0x10000035;
   const long nsImapMsgFetchPeek = 0x10000036;
+  const long nsImapMsgStoreCustomKeywords = 0x10000037;
 };
 
 %{C++

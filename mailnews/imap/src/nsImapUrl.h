@@ -115,6 +115,8 @@ protected:
   nsCString     m_msgFetchAttribute; // for fetching custom msg attributes
   nsCString     m_customAttributeResult; // for fetching custom msg attributes
   nsCString     m_customCommandResult; // custom command response
+  nsCString     m_customAddFlags;       // these two are for setting and clearing custom flags
+  nsCString     m_customSubtractFlags;
   PRPackedBool m_validUrl;
   PRPackedBool m_runningUrl;
   PRPackedBool m_idsAreUids;

@@ -2223,6 +2223,36 @@ void nsImapProtocol::ProcessSelectedStateURL()
           FetchMsgAttribute(messageIdString, attribute);
         }
         break;
+      case nsIImapUrl::nsImapMsgStoreCustomKeywords:
+        {
+          // if the server doesn't support user defined flags, don't try to set them.
+          PRUint16 userFlags;
+          GetSupportedUserFlags(&userFlags);
+          if (! (userFlags & kImapMsgSupportUserFlag))
+            break;
+          nsXPIDLCString messageIdString;
+          nsXPIDLCString addFlags;
+          nsXPIDLCString subtractFlags;
+
+          m_runningUrl->CreateListOfMessageIdsString(getter_Copies(messageIdString));
+          m_runningUrl->GetCustomAddFlags(getter_Copies(addFlags));
+          m_runningUrl->GetCustomSubtractFlags(getter_Copies(subtractFlags));
+          if (addFlags.Length() > 0)
+          {
+            nsCAutoString storeString("+FLAGS (");
+            storeString.Append(addFlags);
+            storeString.Append(")");
+            Store(messageIdString, storeString.get(), PR_TRUE);
+          }
+          if (subtractFlags.Length() > 0)
+          {
+            nsCAutoString storeString("-FLAGS (");
+            storeString.Append(addFlags);
+            storeString.Append(")");
+            Store(messageIdString, storeString.get(), PR_TRUE);
+          }
+        }
+        break;
       case nsIImapUrl::nsImapDeleteMsg:
         {
           nsXPIDLCString messageIdString;
@@ -3577,13 +3607,17 @@ NS_IMETHODIMP nsImapProtocol::NotifyBodysToDownload(PRUint32 *keys, PRUint32 key
   return NS_OK;
 }
 
-NS_IMETHODIMP nsImapProtocol::GetFlagsForUID(PRUint32 uid, PRBool *foundIt, imapMessageFlagsType *resultFlags)
+NS_IMETHODIMP nsImapProtocol::GetFlagsForUID(PRUint32 uid, PRBool *foundIt, imapMessageFlagsType *resultFlags, char **customFlags)
 {
   PRInt32 i;
 
   imapMessageFlagsType flags = m_flagState->GetMessageFlagsFromUID(uid, foundIt, &i);
   if (*foundIt)
+  {
     *resultFlags = flags;
+    if ((flags & kImapMsgCustomKeywordFlag) && customFlags)
+      m_flagState->GetCustomFlags(uid, customFlags);
+  }
   return NS_OK;
 }
 

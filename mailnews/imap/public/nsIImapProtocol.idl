@@ -86,7 +86,7 @@ interface nsIImapProtocol : nsIStreamListener {
 	void NotifyHdrsToDownload(out unsigned long keys, in unsigned long keyCount);
 	void NotifyBodysToDownload(out unsigned long keys, in unsigned long count);
 	// methods to get data from the imap parser flag state.
-	void GetFlagsForUID(in unsigned long uid, out boolean foundIt, out unsigned short flags);
+	void GetFlagsForUID(in unsigned long uid, out boolean foundIt, out unsigned short flags, out string customFlags);
 	void GetSupportedUserFlags(out unsigned short flags);
 
 	void GetRunningImapURL(out nsIImapUrl aImapUrl);
