@@ -103,21 +103,20 @@ XP_END_PROTOS
 				**	Also, the previous version was annoying (always seen in uapp.cp)
 				**	The Metrowerks Assert_ macro is much more helpful...
 				*/
+				#include <PP_Types.h>
 				#include <UException.h>
 				#define XP_ASSERT(X) Assert_(X)
 			#else
 				extern "C" void debugstr(const char* s);
 			#endif
 		#else
+			extern unsigned char* c2pstr(char*);
 			extern void debugstr(const char* s);
 		#endif
 		#ifndef XP_ASSERT
-            /* The following is wrong... because it will cause
-               the use of an XP_ASSERT within an if ... else ... 
-               construct to match incorrectly with the "last prior if" :-/
-               XXX
-            */
-			#define XP_ASSERT(X) if (!(X)) debugstr(#X)
+			// Carbon doesn't support debugstr(), so we have to do it ourselves. Also, Carbon
+			// may have read-only strings so that we need a temp buffer to use c2pstr().
+			#define XP_ASSERT(X) do {if (!(X)) {char buff[500]; strcpy(buff,#X); DebugStr(c2pstr(buff));} } while (PR_FALSE)
 		#endif
 	#else
 		#define XP_ASSERT(X)
