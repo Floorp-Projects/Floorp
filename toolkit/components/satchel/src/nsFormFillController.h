@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -45,6 +46,7 @@
 #include "nsIAutoCompletePopup.h"
 #include "nsIDOMFocusListener.h"
 #include "nsIDOMKeyListener.h"
+#include "nsIDOMFormListener.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsArray.h"
 #include "nsIDocShell.h"
@@ -56,7 +58,8 @@ class nsFormFillController : public nsIFormFillController,
                              public nsIAutoCompleteInput,
                              public nsIAutoCompleteSearch,
                              public nsIDOMFocusListener,
-                             public nsIDOMKeyListener
+                             public nsIDOMKeyListener,
+                             public nsIDOMFormListener
 {
 public:
   NS_DECL_ISUPPORTS
@@ -75,6 +78,13 @@ public:
   NS_IMETHOD KeyDown(nsIDOMEvent* aKeyEvent);
   NS_IMETHOD KeyUp(nsIDOMEvent* aKeyEvent);
   NS_IMETHOD KeyPress(nsIDOMEvent* aKeyEvent);
+
+  // nsIDOMFormListener
+  NS_IMETHOD Submit(nsIDOMEvent* aEvent);
+  NS_IMETHOD Reset(nsIDOMEvent* aEvent);
+  NS_IMETHOD Change(nsIDOMEvent* aEvent);
+  NS_IMETHOD Select(nsIDOMEvent* aEvent);
+  NS_IMETHOD Input(nsIDOMEvent* aEvent);
 
   nsFormFillController();
   virtual ~nsFormFillController();

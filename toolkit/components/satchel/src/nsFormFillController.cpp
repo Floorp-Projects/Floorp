@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -68,6 +69,7 @@ NS_INTERFACE_MAP_BEGIN(nsFormFillController)
   NS_INTERFACE_MAP_ENTRY(nsIAutoCompleteSearch)
   NS_INTERFACE_MAP_ENTRY(nsIDOMFocusListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMKeyListener)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMFormListener)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIFormFillController)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEventListener, nsIDOMFocusListener)
 NS_INTERFACE_MAP_END
@@ -515,48 +517,41 @@ nsFormFillController::KeyPress(nsIDOMEvent* aEvent)
   
   PRBool cancel = PR_FALSE;
 
-  PRUint32 c;
-  keyEvent->GetCharCode(&c);
-  
-  if (c) {
+  PRUint32 k;
+  keyEvent->GetKeyCode(&k);
+  switch (k) {
+  case nsIDOMKeyEvent::DOM_VK_BACK_SPACE:
+  case nsIDOMKeyEvent::DOM_VK_DELETE:
     mController->HandleText();
-  } else {
-    PRUint32 k;
-    keyEvent->GetKeyCode(&k);
-    switch (k) {
-      case nsIDOMKeyEvent::DOM_VK_BACK_SPACE:
-      case nsIDOMKeyEvent::DOM_VK_DELETE:
-        mController->HandleText();
-        break;
-      case nsIDOMKeyEvent::DOM_VK_UP:
-        mController->HandleKeyNavigation(nsIAutoCompleteController::KEY_UP, &cancel);
-        break;
-      case nsIDOMKeyEvent::DOM_VK_DOWN:
-        mController->HandleKeyNavigation(nsIAutoCompleteController::KEY_DOWN, &cancel);
-        break;
-      case nsIDOMKeyEvent::DOM_VK_LEFT:
-        mController->HandleKeyNavigation(nsIAutoCompleteController::KEY_LEFT, &cancel);
-        break;
-      case nsIDOMKeyEvent::DOM_VK_RIGHT:
-        mController->HandleKeyNavigation(nsIAutoCompleteController::KEY_RIGHT, &cancel);
-        break;
-      case nsIDOMKeyEvent::DOM_VK_PAGE_UP:
-        mController->HandleKeyNavigation(nsIAutoCompleteController::KEY_PAGE_UP, &cancel);
-        break;
-      case nsIDOMKeyEvent::DOM_VK_PAGE_DOWN:
-        mController->HandleKeyNavigation(nsIAutoCompleteController::KEY_PAGE_DOWN, &cancel);
-        break;
-      case nsIDOMKeyEvent::DOM_VK_ESCAPE:
-        mController->HandleEscape(&cancel);
-        break;
-      case nsIDOMKeyEvent::DOM_VK_TAB:
-        mController->HandleTab();
-        cancel = PR_FALSE;
-        break;
-      case nsIDOMKeyEvent::DOM_VK_RETURN:
-        mController->HandleEnter(&cancel);
-        break;
-    }
+    break;
+  case nsIDOMKeyEvent::DOM_VK_UP:
+    mController->HandleKeyNavigation(nsIAutoCompleteController::KEY_UP, &cancel);
+    break;
+  case nsIDOMKeyEvent::DOM_VK_DOWN:
+    mController->HandleKeyNavigation(nsIAutoCompleteController::KEY_DOWN, &cancel);
+    break;
+  case nsIDOMKeyEvent::DOM_VK_LEFT:
+    mController->HandleKeyNavigation(nsIAutoCompleteController::KEY_LEFT, &cancel);
+    break;
+  case nsIDOMKeyEvent::DOM_VK_RIGHT:
+    mController->HandleKeyNavigation(nsIAutoCompleteController::KEY_RIGHT, &cancel);
+    break;
+  case nsIDOMKeyEvent::DOM_VK_PAGE_UP:
+    mController->HandleKeyNavigation(nsIAutoCompleteController::KEY_PAGE_UP, &cancel);
+    break;
+  case nsIDOMKeyEvent::DOM_VK_PAGE_DOWN:
+    mController->HandleKeyNavigation(nsIAutoCompleteController::KEY_PAGE_DOWN, &cancel);
+    break;
+  case nsIDOMKeyEvent::DOM_VK_ESCAPE:
+    mController->HandleEscape(&cancel);
+    break;
+  case nsIDOMKeyEvent::DOM_VK_TAB:
+    mController->HandleTab();
+    cancel = PR_FALSE;
+    break;
+  case nsIDOMKeyEvent::DOM_VK_RETURN:
+    mController->HandleEnter(&cancel);
+    break;
   }
   
   if (cancel) {
@@ -566,6 +561,40 @@ nsFormFillController::KeyPress(nsIDOMEvent* aEvent)
   
   return NS_OK;
 }
+
+////////////////////////////////////////////////////////////////////////
+//// nsIDOMFormListener
+
+NS_IMETHODIMP
+nsFormFillController::Submit(nsIDOMEvent* aEvent)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormFillController::Reset(nsIDOMEvent* aEvent)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormFillController::Change(nsIDOMEvent* aEvent)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormFillController::Select(nsIDOMEvent* aEvent)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormFillController::Input(nsIDOMEvent* aEvent)
+{
+  return mController->HandleText();
+}
+
 
 ////////////////////////////////////////////////////////////////////////
 //// nsFormFillController
@@ -614,6 +643,11 @@ nsFormFillController::AddKeyListener(nsIDOMHTMLInputElement *aInput)
     mFocusedInput = aInput;
     
     nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(aInput);
+
+    target->AddEventListener(NS_LITERAL_STRING("input"),
+                             NS_STATIC_CAST(nsIDOMFormListener *, this),
+                             PR_TRUE);
+
     target->AddEventListener(NS_LITERAL_STRING("keypress"),
                              NS_STATIC_CAST(nsIDOMKeyListener *, this),
                              PR_TRUE);
@@ -624,10 +658,16 @@ void
 nsFormFillController::RemoveKeyListener()
 {
   if (mFocusedInput) {
+
     nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mFocusedInput);
+
+    target->RemoveEventListener(NS_LITERAL_STRING("input"),
+                                NS_STATIC_CAST(nsIDOMFormListener *, this),
+                                PR_TRUE);
+
     target->RemoveEventListener(NS_LITERAL_STRING("keypress"),
-                             NS_STATIC_CAST(nsIDOMKeyListener *, this),
-                             PR_TRUE);
+                                NS_STATIC_CAST(nsIDOMKeyListener *, this),
+                                PR_TRUE);
 
     mFocusedInput = nsnull;
   }
