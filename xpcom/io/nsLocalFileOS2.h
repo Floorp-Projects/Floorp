@@ -82,25 +82,19 @@ private:
 
     // this is the flag which indicates if I can used cached information about the file
     PRPackedBool mDirty;
-    PRPackedBool mLastResolution;
-    PRPackedBool mFollowSymlinks;
 
     // this string will alway be in native format!
     nsCString mWorkingPath;
     
-    // this will be the resolve path which will *NEVER* be return to the user
-    nsCString mResolvedPath;
-
     PRFileInfo64  mFileInfo64;
     
     void MakeDirty();
-    nsresult ResolveAndStat(PRBool resolveTerminal);
-    nsresult ResolvePath(const char* workingPath, PRBool resolveTerminal, char** resolvedPath);
+    nsresult Stat();
     
-    nsresult CopyMove(nsIFile *newParentDir, const nsACString &newName, PRBool followSymlinks, PRBool move);
-    nsresult CopySingleFile(nsIFile *source, nsIFile* dest, const nsACString &newName, PRBool followSymlinks, PRBool move);
+    nsresult CopyMove(nsIFile *newParentDir, const nsACString &newName, PRBool move);
+    nsresult CopySingleFile(nsIFile *source, nsIFile* dest, const nsACString &newName, PRBool move);
 
-    nsresult SetModDate(PRInt64 aLastModifiedTime, PRBool resolveTerminal);
+    nsresult SetModDate(PRInt64 aLastModifiedTime);
 };
 
 #endif
