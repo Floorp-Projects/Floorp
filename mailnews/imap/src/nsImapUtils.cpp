@@ -180,6 +180,8 @@ nsImapURI2FullName(const char* rootURI, const char* hostname, const char* uriStr
     nsAutoString uri; uri.AssignWithConversion(uriStr);
     nsAutoString fullName;
     if (uri.Find(rootURI) != 0) return NS_ERROR_FAILURE;
+    uri.Right(fullName, uri.Length() - strlen(rootURI));
+    uri = fullName;
     PRInt32 hostStart = uri.Find(hostname);
     if (hostStart <= 0) return NS_ERROR_FAILURE;
     uri.Right(fullName, uri.Length() - hostStart);
