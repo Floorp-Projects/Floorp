@@ -561,6 +561,21 @@ NS_IMETHODIMP nsImapMailFolder::Compact()
     return rv;
 }
 
+NS_IMETHODIMP nsImapMailFolder::EmptyTrash()
+{
+    nsresult rv;
+    nsCOMPtr<nsIMsgFolder> trashFolder;
+    rv = GetTrashFolder(getter_AddRefs(trashFolder));
+    if (NS_SUCCEEDED(rv))
+    {
+        NS_WITH_SERVICE (nsIImapService, imapService, kCImapService, &rv);
+        if (NS_SUCCEEDED(rv))
+            rv = imapService->DeleteAllMessages(m_eventQueue, trashFolder,
+                                                nsnull, nsnull);
+    }
+    return rv;
+}
+
 NS_IMETHODIMP nsImapMailFolder::Delete ()
 {
     nsresult rv = NS_ERROR_FAILURE;
