@@ -348,6 +348,7 @@ nsContextMenu.prototype = {
         }
         
         // Bubble out, looking for items of interest
+        const XMLNS = "http://www.w3.org/XML/1998/namespace";
         var elem = this.target;
         while ( elem ) {
             if ( elem.nodeType == Node.ELEMENT_NODE ) {
@@ -386,7 +387,8 @@ nsContextMenu.prototype = {
                            ( ( 'cite' in elem && elem.cite ) ||
                              ( 'dateTime' in elem && elem.dateTime ) ) )               ||
                          ( 'title' in elem && elem.title )                             ||
-                         ( 'lang' in elem && elem.lang ) ) {
+                         ( 'lang' in elem && elem.lang )                               ||
+                         elem.getAttributeNS(XMLNS, "lang") ) {
                         dump("On metadata item.\n");
                         this.onMetaDataItem = true;
                     }
