@@ -180,6 +180,27 @@ nsLineLayout::~nsLineLayout()
 PRBool
 nsLineLayout::InStrictMode()
 {
+// XXX For now this is always part of the build until harishd lands
+// the dtd auto-detect code...
+#if 1
+  static PRBool forceStrictMode = PR_FALSE;
+#if defined(XP_UNIX) || defined(XP_PC) || defined(XP_BEOS)
+  {
+    static int firstTime = 1;
+    if (firstTime) {
+      if (getenv("GECKO_FORCE_STRICT_MODE")) {
+        forceStrictMode = PR_TRUE;
+      }
+      firstTime = 0;
+    }
+  }
+#endif
+  if (forceStrictMode) {
+    mKnowStrictMode = PR_TRUE;
+    mInStrictMode = PR_TRUE;
+    return mInStrictMode;
+  }
+#endif
   if (!mKnowStrictMode) {
     mKnowStrictMode = PR_TRUE;
     mInStrictMode = PR_TRUE;
@@ -482,6 +503,7 @@ nsLineLayout::BeginSpan(nsIFrame* aFrame,
     psd->mLeftEdge = aLeftEdge;
     psd->mX = aLeftEdge;
     psd->mRightEdge = aRightEdge;
+    psd->mZeroEffectiveSpanBox = PR_FALSE;
 
     const nsStyleText* styleText;
     aSpanReflowState->frame->GetStyleData(eStyleStruct_Text,
@@ -508,8 +530,7 @@ nsLineLayout::BeginSpan(nsIFrame* aFrame,
 void
 nsLineLayout::EndSpan(nsIFrame* aFrame,
                       nsSize& aSizeResult,
-                      nsSize* aMaxElementSize,
-                      PRBool* aHaveAtLeastOneNonEmptyTextFrame)
+                      nsSize* aMaxElementSize)
 {
   NS_ASSERTION(mSpanDepth > 0, "end-span without begin-span");
 #ifdef NOISY_REFLOW
@@ -522,13 +543,11 @@ nsLineLayout::EndSpan(nsIFrame* aFrame,
   nscoord maxHeight = 0;
   nscoord maxElementWidth = 0;
   nscoord maxElementHeight = 0;
-  PRBool haveAtLeastOneNonEmptyTextFrame = PR_FALSE;
   if (nsnull != psd->mLastFrame) {
     width = psd->mX - psd->mLeftEdge;
     PerFrameData* pfd = psd->mFirstFrame;
     while (nsnull != pfd) {
       if (pfd->mBounds.height > maxHeight) maxHeight = pfd->mBounds.height;
-      if (pfd->mIsNonEmptyTextFrame) haveAtLeastOneNonEmptyTextFrame = PR_TRUE;
 
       // Compute max-element-size if necessary
       if (aMaxElementSize) {
@@ -559,9 +578,6 @@ nsLineLayout::EndSpan(nsIFrame* aFrame,
       aMaxElementSize->width = maxElementWidth;
       aMaxElementSize->height = maxElementHeight;
     }
-  }
-  if (aHaveAtLeastOneNonEmptyTextFrame) {
-    *aHaveAtLeastOneNonEmptyTextFrame = haveAtLeastOneNonEmptyTextFrame;
   }
 
   mSpanDepth--;
@@ -891,7 +907,8 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   // the floater.
   nsIAtom* frameType;
   aFrame->GetFrameType(&frameType);
-  pfd->mIsNonEmptyTextFrame = 0;
+  pfd->mIsTextFrame = PR_FALSE;
+  pfd->mIsNonEmptyTextFrame = PR_FALSE;
   if (frameType) {
     if (frameType == nsLayoutAtoms::placeholderFrame) {
       nsIFrame* outOfFlowFrame = ((nsPlaceholderFrame*)aFrame)->GetOutOfFlowFrame();
@@ -920,6 +937,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     }
     else if (frameType == nsLayoutAtoms::textFrame) {
       // Note non-empty text-frames for inline frame compatability hackery
+      pfd->mIsTextFrame = PR_TRUE;
       if (metrics.width) {
         pfd->mIsNonEmptyTextFrame = PR_TRUE;
       }
@@ -1295,6 +1313,9 @@ nsLineLayout::AddBulletFrame(nsIFrame* aFrame,
     pfd->mRelativePos = PR_FALSE;
     pfd->mAscent = aMetrics.ascent;
     pfd->mDescent = aMetrics.descent;
+    pfd->mIsTextFrame = PR_FALSE;
+    pfd->mIsNonEmptyTextFrame = PR_FALSE;
+
     // Note: y value will be updated during vertical alignment
     aFrame->GetRect(pfd->mBounds);
     pfd->mCombinedArea = aMetrics.mCombinedArea;
@@ -1373,18 +1394,20 @@ nsLineLayout::VerticalAlignFrames(nsRect& aLineBoxResult,
 
   // It's possible that the line-height isn't tall enough because of
   // the blocks minimum line-height.
-  if (0 != lineHeight) {
-    // If line contains nothing but empty boxes that have no height
-    // then don't apply the min-line-height.
-    //
-    // Note: This is how we hide lines that contain nothing but
-    // compressed whitespace.
-    if (lineHeight < mMinLineHeight) {
-      // Apply half of the extra space to the top of the line as top
-      // leading
-      nscoord extra = mMinLineHeight - lineHeight;
-      baselineY += extra / 2;
-      lineHeight = mMinLineHeight;
+  if (!psd->mZeroEffectiveSpanBox) {
+    if (0 != lineHeight) {
+      // If line contains nothing but empty boxes that have no height
+      // then don't apply the min-line-height.
+      //
+      // Note: This is how we hide lines that contain nothing but
+      // compressed whitespace.
+      if (lineHeight < mMinLineHeight) {
+        // Apply half of the extra space to the top of the line as top
+        // leading
+        nscoord extra = mMinLineHeight - lineHeight;
+        baselineY += extra / 2;
+        lineHeight = mMinLineHeight;
+      }
     }
   }
 
@@ -1565,9 +1588,50 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
                             (const nsStyleStruct*&)parentFont);
   nsIRenderingContext* rc = mBlockReflowState->rendContext;
   rc->SetFont(parentFont->mFont);
-  nsIFontMetrics* fm;
-  rc->GetFontMetrics(fm);
+  nsCOMPtr<nsIFontMetrics> fm;
+  rc->GetFontMetrics(*getter_AddRefs(fm));
 
+  // Compute the span's mZeroEffectiveSpanBox flag. Pre-mode shuts
+  // down most of this behavior.
+  PRBool zeroEffectiveSpanBox = PR_FALSE;
+  PRBool preMode = (mStyleText->mWhiteSpace == NS_STYLE_WHITESPACE_PRE) ||
+    (mStyleText->mWhiteSpace == NS_STYLE_WHITESPACE_MOZ_PRE_WRAP);
+  if (!preMode && !InStrictMode() &&
+      ((psd == mRootSpan) ||
+       ((0 == parentPFD->mBorderPadding.top) &&
+        (0 == parentPFD->mBorderPadding.right) &&
+        (0 == parentPFD->mBorderPadding.bottom) &&
+        (0 == parentPFD->mBorderPadding.left) &&
+        (0 == parentPFD->mMargin.top) &&
+        (0 == parentPFD->mMargin.right) &&
+        (0 == parentPFD->mMargin.bottom) &&
+        (0 == parentPFD->mMargin.left)))) {
+    // This code handles an issue with compatability with non-css
+    // conformant browsers. In particular, there are some cases
+    // where the font-size and line-height for a span must be
+    // ignored and instead the span must *act* as if it were zero
+    // sized. In general, if the span contains any non-compressed
+    // text or contains another span which contains non-compressed
+    // text, then we don't use this logic.
+    zeroEffectiveSpanBox = PR_TRUE;
+    PerFrameData* pfd = psd->mFirstFrame;
+    while (nsnull != pfd) {
+      if (pfd->mIsNonEmptyTextFrame) {
+        zeroEffectiveSpanBox = PR_FALSE;
+        break;
+      }
+      PerSpanData* frameSpan = pfd->mSpan;
+      if (frameSpan) {
+        if (!frameSpan->mZeroEffectiveSpanBox) {
+          // Propogate prescence of non-empty text outward
+          zeroEffectiveSpanBox = PR_FALSE;
+          break;
+        }
+      }
+      pfd = pfd->mNext;
+    }
+  }
+  psd->mZeroEffectiveSpanBox = zeroEffectiveSpanBox;
 
   // Setup baselineY, minY, and maxY
   nscoord baselineY, minY, maxY;
@@ -1581,61 +1645,58 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     baselineY = minY = maxY = 0;
 #ifdef NOISY_VERTICAL_ALIGN
     nsFrame::ListTag(stdout, parentFrame);
-    printf(": pass1 valign frames: topEdge=%d minLineHeight=%d\n",
-           mTopEdge, mMinLineHeight);
-#endif
-  }
-  else if (0 != parentPFD->mBounds.height) {
-    // Compute the logical height for this span. Also compute the top
-    // leading.
-    nscoord logicalHeight =
-      nsHTMLReflowState::CalcLineHeight(mPresContext, parentFrame);
-    nscoord contentHeight = parentPFD->mBounds.height -
-      parentPFD->mBorderPadding.top - parentPFD->mBorderPadding.bottom;
-    if (logicalHeight > 0) {
-      nscoord leading = logicalHeight - contentHeight;
-      psd->mTopLeading = leading / 2;
-      psd->mBottomLeading = leading - psd->mTopLeading;
-    }
-    else {
-      psd->mTopLeading = 0;
-      psd->mBottomLeading = 0;
-      logicalHeight = contentHeight;
-    }
-    psd->mLogicalHeight = logicalHeight;
-
-    // The initial values for the min and max Y values are in the spans
-    // coordinate space, and cover the logical height of the span. If
-    // there are child frames in this span that stick out of this area
-    // then the minY and maxY are updated by the amount of logical
-    // height that is outside this range.
-    minY = parentPFD->mBorderPadding.top - psd->mTopLeading;
-    maxY = minY + psd->mLogicalHeight;
-
-    // This is the distance from the top edge of the parents visual
-    // box to the baseline.
-    nscoord parentAscent;
-    fm->GetMaxAscent(parentAscent);
-    baselineY = parentAscent + parentPFD->mBorderPadding.top;
-#ifdef NOISY_VERTICAL_ALIGN
-    nsFrame::ListTag(stdout, parentFrame);
-    printf(": baseLine=%d logicalHeight=%d topLeading=%d h=%d bp=%d,%d\n",
-           baselineY, logicalHeight, psd->mTopLeading,
-           parentPFD->mBounds.height,
-           parentPFD->mBorderPadding.top, parentPFD->mBorderPadding.bottom);
+    printf(": pass1 valign frames: topEdge=%d minLineHeight=%d zeroEffectiveSpanBox=%s\n",
+           mTopEdge, mMinLineHeight,
+           zeroEffectiveSpanBox ? "yes" : "no");
 #endif
   }
   else {
-    // When a span container is zero height it means that all of its
-    // kids are zero height as well.
-    baselineY = minY = maxY = 0;
-    psd->mTopLeading = 0;
-    psd->mBottomLeading = 0;
-    psd->mLogicalHeight = 0;
+    if (zeroEffectiveSpanBox) {
+      // When the span-box is to be ignored, zero out all the initial
+      // values so that the span doesn't impact the final line
+      // height. The contents of the span can impact the final line
+      // height.
+      psd->mTopLeading = 0;
+      psd->mBottomLeading = 0;
+      psd->mLogicalHeight = 0;
+      parentPFD->mAscent = 0;
+      parentPFD->mBounds.height = 0;
+      baselineY = minY = maxY = 0;
+    }
+    else {
+      // Compute the logical height for this span. The logical height
+      // is based on the line-height value, not the font-size. Also
+      // compute the top leading.
+      nscoord logicalHeight =
+        nsHTMLReflowState::CalcLineHeight(mPresContext, rc, parentFrame);
+      nscoord contentHeight = parentPFD->mBounds.height -
+        parentPFD->mBorderPadding.top - parentPFD->mBorderPadding.bottom;
+      nscoord leading = logicalHeight - contentHeight;
+      psd->mTopLeading = leading / 2;
+      psd->mBottomLeading = leading - psd->mTopLeading;
+      psd->mLogicalHeight = logicalHeight;
+
+      // The initial values for the min and max Y values are in the spans
+      // coordinate space, and cover the logical height of the span. If
+      // there are child frames in this span that stick out of this area
+      // then the minY and maxY are updated by the amount of logical
+      // height that is outside this range.
+      minY = parentPFD->mBorderPadding.top - psd->mTopLeading;
+      maxY = minY + psd->mLogicalHeight;
+
+      // This is the distance from the top edge of the parents visual
+      // box to the baseline. The span already computed this for us,
+      // so just use it.
+      baselineY = parentPFD->mAscent;
+    }
 #ifdef NOISY_VERTICAL_ALIGN
-    printf("  ==> [empty line]\n");
+    nsFrame::ListTag(stdout, parentFrame);
+    printf(": baseLine=%d logicalHeight=%d topLeading=%d h=%d bp=%d,%d zeroEffectiveSpanBox=%s\n",
+           baselineY, psd->mLogicalHeight, psd->mTopLeading,
+           parentPFD->mBounds.height,
+           parentPFD->mBorderPadding.top, parentPFD->mBorderPadding.bottom,
+           zeroEffectiveSpanBox ? "yes" : "no");
 #endif
-//    return;
   }
 
   nscoord maxTopBoxHeight = 0;
@@ -1671,6 +1732,16 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
       nsFrame::ListTag(stdout, frame);
       printf("\n");
     }
+#ifdef NOISY_VERTICAL_ALIGN
+    printf("  ");
+    nsFrame::ListTag(stdout, frame);
+    printf(": verticalAlignUnit=%d (enum == %d)\n",
+           verticalAlignUnit,
+           ((eStyleUnit_Enumerated == verticalAlignUnit)
+            ? textStyle->mVerticalAlign.GetIntValue()
+            : -1));
+#endif
+
     PRUint8 verticalAlignEnum;
     nscoord parentAscent, parentDescent, parentXHeight;
     nscoord parentSuperscript, parentSubscript;
@@ -1821,7 +1892,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
         // Similar to a length value (eStyleUnit_Coord) except that the
         // percentage is a function of the elements line-height value.
         elementLineHeight =
-          nsHTMLReflowState::CalcLineHeight(mPresContext, frame);
+          nsHTMLReflowState::CalcLineHeight(mPresContext, rc, frame);
         percentOffset = nscoord(
           textStyle->mVerticalAlign.GetPercentValue() * elementLineHeight
           );
@@ -1837,39 +1908,84 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
         break;
     }
 
-    // Update minY/maxY for frames that we just placed
+    // Update minY/maxY for frames that we just placed. Do not factor
+    // text into the equation.
     if (pfd->mVerticalAlign == VALIGN_OTHER) {
-      nscoord yTop, yBottom;
-      if (frameSpan) {
-        // For spans that were are now placing, use their position
-        // plus their already computed min-Y and max-Y values for
-        // computing yTop and yBottom.
-        yTop = pfd->mBounds.y + frameSpan->mMinY;
-        yBottom = pfd->mBounds.y + frameSpan->mMaxY;
-      }
-      else {
-        yTop = pfd->mBounds.y - pfd->mMargin.top;
-        yBottom = yTop + logicalHeight;
-      }
-      if (yTop < minY) minY = yTop;
-      if (yBottom > maxY) maxY = yBottom;
+      // Text frames do not contribute to the min/max Y values for the
+      // line (instead their parent frame's font-size contributes).
+      if (!pfd->mIsTextFrame) {
+        nscoord yTop, yBottom;
+        if (frameSpan) {
+          // For spans that were are now placing, use their position
+          // plus their already computed min-Y and max-Y values for
+          // computing yTop and yBottom.
+          yTop = pfd->mBounds.y + frameSpan->mMinY;
+          yBottom = pfd->mBounds.y + frameSpan->mMaxY;
+        }
+        else {
+          yTop = pfd->mBounds.y - pfd->mMargin.top;
+          yBottom = yTop + logicalHeight;
+        }
+        if (yTop < minY) minY = yTop;
+        if (yBottom > maxY) maxY = yBottom;
 #ifdef NOISY_VERTICAL_ALIGN
-      printf("  ");
-      nsFrame::ListTag(stdout, frame);
-      printf(": raw: a=%d d=%d h=%d bp=%d,%d logical: h=%d leading=%d y=%d minY=%d maxY=%d\n",
-             pfd->mAscent, pfd->mDescent, pfd->mBounds.height,
-             pfd->mBorderPadding.top, pfd->mBorderPadding.bottom,
-             logicalHeight,
-             pfd->mSpan ? topLeading : 0,
-             pfd->mBounds.y, minY, maxY);
+        printf("     raw: a=%d d=%d h=%d bp=%d,%d logical: h=%d leading=%d y=%d minY=%d maxY=%d\n",
+               pfd->mAscent, pfd->mDescent, pfd->mBounds.height,
+               pfd->mBorderPadding.top, pfd->mBorderPadding.bottom,
+               logicalHeight,
+               pfd->mSpan ? topLeading : 0,
+               pfd->mBounds.y, minY, maxY);
 #endif
+      }
       if (psd != mRootSpan) {
         frame->SetRect(pfd->mBounds);
       }
     }
     pfd = pfd->mNext;
   }
-  NS_RELEASE(fm);
+
+  // Factor in the minimum line-height when handling the root-span for
+  // the block.
+  if (psd == mRootSpan) {
+    // If this span's width is non-zero then it can't possibly be a
+    // line that contains nothing but zero width items. Therefore we
+    // should factor in the block element's minimum line-height (as
+    // defined in section 10.8.1 of the css2 spec).
+    if (psd->mZeroEffectiveSpanBox) {
+      // Leave minY/maxY values untouched
+    }
+    else {
+      if ((psd->mX != psd->mLeftEdge) || preMode) {
+#ifdef NOISY_VERTICAL_ALIGN
+        printf("  ==> adjusting min/maxY: currentValues: %d,%d", minY, maxY);
+#endif
+        nscoord minimumLineHeight = mMinLineHeight;
+        nscoord fontAscent, fontHeight;
+        fm->GetMaxAscent(fontAscent);
+        fm->GetHeight(fontHeight);
+        nscoord leading = minimumLineHeight - fontHeight;
+        nscoord yTop = -fontAscent - leading/2;
+        nscoord yBottom = yTop + minimumLineHeight;
+        if (yTop < minY) minY = yTop;
+        if (yBottom > maxY) maxY = yBottom;
+#ifdef NOISY_VERTICAL_ALIGN
+        printf(" new values: %d,%d\n", minY, maxY);
+#endif
+      }
+      else {
+        // XXX issues:
+        // [1] BR's on empty lines stop working
+        // [2] May not honor css2's notion of handling empty elements
+        // [3] blank lines in a pre-section ("\n") (handled with preMode)
+#ifdef NOISY_VERTICAL_ALIGN
+        printf("  ==> zapping min/maxY: currentValues: %d,%d newValues: 0,0\n",
+               minY, maxY);
+#endif
+        minY = maxY = 0;
+      }
+    }
+  }
+
   psd->mMinY = minY;
   psd->mMaxY = maxY;
 #ifdef NOISY_VERTICAL_ALIGN
