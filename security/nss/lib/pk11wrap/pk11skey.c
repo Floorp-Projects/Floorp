@@ -4793,9 +4793,9 @@ PK11_ExportEncryptedPrivKeyInfo(
     }
     epki->arena = arena;
 
-    mechanism = PK11_AlgtagToMechanism(SECOID_FindOIDTag(&algid->algorithm));
+    mechanism = PK11_AlgtagToMechanism(algTag);
     pbe_param = PK11_ParamFromAlgid(algid);
-    if (!pbe_param) {
+    if (!pbe_param || mechanism == CKM_INVALID_MECHANISM) {
 	rv = SECFailure;
 	goto loser;
     }
