@@ -58,7 +58,6 @@ LINCS = -Icomponents \
 
 OBJS =                           \
     .\$(OBJDIR)\TestEmbed.obj     \
-#    .\$(OBJDIR)\nsIObserServ.obj     \
     .\$(OBJDIR)\BrowserFrm.obj   \
     .\$(OBJDIR)\BrowserFrameGlue.obj   \
     .\$(OBJDIR)\BrowserView.obj \
@@ -84,6 +83,7 @@ OBJS =                           \
     .\$(OBJDIR)\domwindow.obj \
     .\$(OBJDIR)\selection.obj \
     .\$(OBJDIR)\nsProfile.obj \
+    .\$(OBJDIR)\nsIClipBoardCmd.obj \
     $(NULL)
 
 LLIBS=					\

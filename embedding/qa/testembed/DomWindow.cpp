@@ -85,6 +85,12 @@ void CDomWindow::OnStartTests(UINT nMenuID)
 	case ID_INTERFACES_NSIDOMWINDOW_GETNAME :
 		//GetName();
 		break;
+	case ID_INTERFACES_NSIDOMWINDOW_GETTEXTZOOM : 
+		GetTextZoom();
+		break;
+	case ID_INTERFACES_NSIDOMWINDOW_SETTEXTZOOM : 
+		SetTextZoom();
+		break;
 	case ID_INTERFACES_NSIDOMWINDOW_GETSCSOLLX : 
 		GetScrollX();
 		break;
@@ -119,6 +125,7 @@ void CDomWindow::RunAllTests()
 	PRInt32 scrollX = 0 ;
 	PRInt32 scrollY = 0;
 	PRInt32 bVisible =0;
+	float fTextZoom = 0.0;
 
 	nsCOMPtr<nsIDOMWindow> oDomWindow;
 	//nsCOMPtr<nsIDOMWindow> oDomWindowTop;
@@ -190,6 +197,13 @@ void CDomWindow::RunAllTests()
 	//  nsIDOMBarProp's only attribute
 	//rv = oDomBarProp->GetVisible(&bVisible);
 
+
+	rv = oDomWindow->GetTextZoom(&fTextZoom);
+	    RvTestResult(rv, "nsIDOMWindow::GetTextZoom()' rv test", 1);
+
+	fTextZoom = 12.0 ;
+	rv = oDomWindow->SetTextZoom(fTextZoom);
+	    RvTestResult(rv, "nsIDOMWindow::SetTextZoom()' rv test", 1);
 
 	rv = oDomWindow->GetScrollX(&scrollX);
 	   RvTestResult(rv, "nsIDOMWindow::GetScrollX()' rv test", 1);
@@ -349,6 +363,31 @@ void CDomWindow::GetSelection()
 	}
 }
 
+void CDomWindow::GetTextZoom()
+{
+	float fTextZoom = 0.0 ;
+	nsCOMPtr<nsIDOMWindow> oDomWindow;
+	rv = qaWebBrowser->GetContentDOMWindow(getter_AddRefs(oDomWindow));
+    RvTestResult(rv, "nsIWebBrowser::GetContentDOMWindow()' rv test", 0);
+
+	if (!oDomWindow)
+	{
+		AfxMessageBox("Cannot create Dom Window Object");
+		return;
+	}
+	rv = oDomWindow->GetTextZoom(&fTextZoom);
+	RvTestResult(rv, "nsIDOMWindow::GetTextZoom()' rv test", 0);
+}
+
+void CDomWindow::SetTextZoom()
+{
+	float fTextZoom = 0.0 ;
+
+	fTextZoom = 12.0;
+	rv = GetDOMOWindowObject()->SetTextZoom(fTextZoom);
+	RvTestResult(rv, "nsIDOMWindow::SetTextZoom()' rv test", 0);
+}
+
 void CDomWindow::GetScrollX()
 {
 	PRInt32 scrollX = 0 ;
@@ -456,4 +495,15 @@ void CDomWindow::SizeToContent()
 	}
 	rv = oDomWindow->SizeToContent();
 	RvTestResult(rv, "nsIDOMWindow::SizeToContent()' rv test", 0);
+}
+
+
+nsIDOMWindow* CDomWindow::GetDOMOWindowObject()
+{
+	nsCOMPtr<nsIDOMWindow> oDomWindow;
+	rv = qaWebBrowser->GetContentDOMWindow(getter_AddRefs(oDomWindow));
+	if (!oDomWindow)
+		AfxMessageBox("Cannot create Dom Window Object");
+	return oDomWindow;
+
 }
