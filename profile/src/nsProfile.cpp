@@ -541,11 +541,11 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
         {		
             if (cmdResult) {
                 rv = MigrateProfileInfo();
-                //if (NS_FAILED(rv)) return rv;
+                if (NS_FAILED(rv)) return rv;
 
                 int num4xProfiles = 0;
                 rv = Get4xProfileCount(&num4xProfiles);
-                //if (NS_FAILED(rv)) return rv;
+                if (NS_FAILED(rv)) return rv;
                 
 				int numProfiles = 0;
 				GetProfileCount(&numProfiles);
@@ -2280,9 +2280,10 @@ NS_IMETHODIMP nsProfile::MigrateProfile(const char* profileName)
         
 	char *oldProfDirStr = nsnull;
 	char *newProfDirStr = nsnull;
-	rv = GetStringFromSpec(oldProfDir, &oldProfDirStr); 
-	if (NS_SUCCEEDED(rv)) {                             
-		rv = GetStringFromSpec(newProfDir, &newProfDirStr); 
+	
+	rv = GetStringFromSpec(newProfDir, &newProfDirStr); 
+	if (NS_SUCCEEDED(rv)) {               
+		rv = GetStringFromSpec(oldProfDir, &oldProfDirStr);               
 		if (NS_SUCCEEDED(rv)) {                             
 			rv = pPrefMigrator->ProcessPrefs(oldProfDirStr,  newProfDirStr);
 		}
@@ -2794,11 +2795,11 @@ NS_IMETHODIMP nsProfile::Get4xProfileCount(int *numProfiles)
 // Migrates all unmigrated profiles
 NS_IMETHODIMP nsProfile::MigrateAllProfiles()
 {
-
 	nsresult rv = NS_OK;
 	for (int i=0; i < g_numOldProfiles; i++)
 	{
 		rv = MigrateProfile(gOldProfiles[i]);
+		if (NS_FAILED(rv)) return rv;
 	}
 
 	return NS_OK;
