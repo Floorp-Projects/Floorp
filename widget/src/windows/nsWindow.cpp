@@ -698,8 +698,6 @@ BOOL CALLBACK nsWindow::BroadcastMsgToChildren(HWND aWnd, LPARAM aMsg)
     ::CallWindowProc(winProc, aWnd, aMsg, 0, 0);
 #endif
   }
-  // Send message to children of this window
-  ::EnumChildWindows(aWnd, nsWindow::BroadcastMsgToChildren, aMsg);
   return TRUE;
 }
 
