@@ -94,10 +94,10 @@ function cli_ibreak(e)
         }
 
         display (getMsg(MSN_BP_HEADER, console._breakpoints.length));
-        for (var b in console._breakpoints)
+        for (var i = 0; i < console._breakpoints.length; ++i)
         {
-            var bp = console._breakpoints[b];
-            display (getMsg(MSN_BP_LINE, [b, bp.fileName, bp.line, bp.length]));
+            var bp = console._breakpoints[i];
+            display (getMsg(MSN_BP_LINE, [i, bp.fileName, bp.line, bp.length]));
         }
         return true;
     }
@@ -267,6 +267,96 @@ function con_ievald (e)
         if (typeof rv != "undefined")
             display (String(rv), MT_EVAL_OUT);
     }
+    return true;
+}
+
+console.onInputFBreak =
+function cli_ifbreak(e)
+{
+    if (!e.inputData)
+    {  /* if no input data, just list the breakpoints */
+        if (console._futureBreaks.length == 0)
+        {
+            display (MSG_NO_FBREAKS_SET);
+            return true;
+        }
+
+        display (getMsg(MSN_FBP_HEADER, console._futureBreaks.length));
+        for (var i = 0; i < console._futureBreaks.length; ++i)
+        {
+            var bp = console._futureBreaks[i];
+            display (getMsg(MSN_FBP_LINE, [i, bp.filePattern, bp.line]));
+        }
+        return true;
+    }
+        
+    var ary = e.inputData.match(/([^\s\:]+)\:?\s*(\d+)\s*$/);
+    if (!ary)
+    {
+        console.displayUsageError(e.commandEntry);
+        return false;
+    }
+
+    var filePattern = ary[1];
+    var line = ary[2];
+
+    if (isFutureBreakpoint (filePattern, line))
+        display(MSN_FBP_EXISTS, [filePattern, line], MT_INFO);
+    else
+    {
+        setFutureBreakpoint (filePattern, line);
+        display (getMsg(MSN_FBP_CREATED, [filePattern, line]));
+    }
+    
+    return true;
+    
+}
+
+console.onInputFClear =
+function cli_ifclear (e)
+{
+    var ary = e.inputData.match(/(\d+)|([^\s\:]+)\:?\s*(\d+)\s*$/);
+    if (!ary)
+    {
+        console.displayUsageError(e.commandEntry);
+        return false;
+    }
+
+    if (ary[1])
+    {
+        /* disable by breakpoint number */
+        var idx = Number(ary[1]);
+        if (!console._futureBreaks[idx])
+        {
+            display (getMsg(MSN_ERR_BP_NOINDEX, idx, MT_ERROR));
+            return false;
+        }
+
+        filePattern = console._futureBreaks[idx].filePattern;
+        var line = console._futureBreaks[idx].line;
+        
+        arrayRemoveAt (console._futureBreaks, idx);
+
+        display (getMsg(MSN_FBP_DISABLED, [filePattern, line]));
+        return true;
+    }
+
+    var filePattern = ary[2];
+    var line = ary[3];
+    
+    for (var i = 0; i < console._futureBreaks.length; ++i)
+    {
+        if (console._futureBreaks[i].filePattern == filePattern &&
+            console._futureBreaks[i].line == line)
+        {
+            arrayRemoveAt(console._futureBreaks, i);
+            display (getMsg(MSN_FBP_DISABLED, [filePattern, line]));
+            return true;
+        }
+    }
+    
+    display (getMsg(MSN_ERR_BP_NODICE, [filePattern, line]), MT_ERROR);
+    
     return true;
 }
 
