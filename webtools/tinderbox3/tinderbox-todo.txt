@@ -49,6 +49,7 @@ Would be nice:
 - make Kinderbox possible (build on one machine and test on another)
 - upload installer builds
 - page showing a list of all builds for a particular time range or even forever (possibly using ShowBuilds)
+- don't upload a build unless it is binary-different from the last one you uploaded
 - allow creation of a machine without a machine connecting (this allows
   pre-configuration of branch and .mozconfig)
 - show status as text, not number ("upgraded client" instead of 302, for example)
