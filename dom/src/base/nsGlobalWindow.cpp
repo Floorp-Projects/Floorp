@@ -385,10 +385,9 @@ GlobalWindowImpl::GetOpener(nsIDOMWindow** aOpener)
 NS_IMETHODIMP
 GlobalWindowImpl::SetOpener(nsIDOMWindow* aOpener)
 {
-  if (nsnull == aOpener) {
-    NS_IF_RELEASE(mOpener);
-    mOpener = nsnull;
-  }
+  NS_IF_RELEASE(mOpener);
+  mOpener = aOpener;
+  NS_IF_ADDREF(mOpener);
   return NS_OK;
 }
 
