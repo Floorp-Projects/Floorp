@@ -47,13 +47,13 @@ DIRS =                         \
 !if defined(DIST_DIRS)
   config                       \
   include                      \
-  modules\libutil              \
   jpeg                         \
   sun-java                     \
   modules\libreg               \
   xpcom                        \
   db                           \
   dbm                          \
+  modules\libutil              \
   netwerk                      \
   widget\timer                 \
   js                           \
