@@ -1,4 +1,6 @@
 /* GENERATED FILE; DO NOT EDIT. SOURCE IS calItemBase.js.pre */
+const ICAL = Components.interfaces.calIIcalComponent;
+
 function calItemBase() { }
 
 calItemBase.prototype = {
@@ -165,27 +167,51 @@ calItemBase.prototype = {
     mapPropsFromICS: function(icalcomp, propmap) {
         for (var i = 0; i < propmap.length; i++) {
             var prop = propmap[i];
-            this[prop[0]] = icalcomp[prop[1]];
+            this[prop.cal] = icalcomp[prop.ics];
         }
     },
+
+    mapPropsToICS: function(icalcomp, propmap) {
+        for (var i = 0; i < propmap.length; i++) {
+            var prop = propmap[i];
+            icalcomp[prop.ics] = this[prop.cal];
+        }
+    },
+
+    icsBasePropMap: [
+    { cal: "mCreationDate", ics: "createdTime" },
+    { cal: "mLastModifiedTime", ics: "lastModified" },
+    { cal: "mGeneration", ics: "version" },
+    { cal: "mId", ics: "uid" },
+    { cal: "mTitle", ics: "summary" },
+    { cal: "mPriority", ics: "priority" },
+    { cal: "mMethod", ics: "method" },
+    { cal: "mStatus", ics: "status" }],
 
     setItemBaseFromICS: function (icalcomp) {
         if (this.mImmutable)
             throw Components.results.NS_ERROR_FAILURE;
-        var propmap = [["mCreationDate", "createdTime"],
-                       ["mLastModifiedTime", "lastModified"],
-                       ["mGeneration", "version"],
-                       ["mId", "uid"],
-                       ["mTitle", "summary"],
-                       ["mPriority", "priority"],
-                       ["mMethod", "method"],
-                       ["mStatus", "status"]];
-        this.mapPropsFromICS(icalcomp, propmap);
-        if (icalcomp.icalClass == Components.interfaces.calIICSService.VISIBILITY_PUBLIC)
+        this.mapPropsFromICS(icalcomp, this.icsBasePropMap);
+
+        if (icalcomp.icalClass == ICAL.VISIBILITY_PUBLIC)
             this.mIsPrivate = false;
         else
             this.mIsPrivate = true;
-    }
+    },
+
+    get icalComponent() {
+        throw Components.results.NS_NOT_IMPLEMENTED;
+    },
+
+    fillIcalComponentFromBase: function (icalcomp) {
+        this.mapPropsToICS(icalcomp, this.icsBasePropMap);
+
+        if (this.mIsPrivate)
+            icalcomp.icalClass = ICAL.VISIBILITY_PRIVATE;
+        else
+            icalcomp.icalClass = ICAL.VISIBILITY_PUBLIC;
+    },
+
 };
 
 function calItemOccurrence () {

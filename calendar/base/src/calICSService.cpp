@@ -339,7 +339,7 @@ calIcalComponent::Set##Attrname(calIDateTime *dt)                       \
     icalvalue *val = icalvalue_new_datetime(itt);                       \
     if (!val)                                                           \
         return NS_ERROR_OUT_OF_MEMORY;                                  \
-    return SetProperty(ICAL_##ICALNAME##_PROPERTY, val);                \
+    return SetPropertyValue(ICAL_##ICALNAME##_PROPERTY, val);           \
 }
 
 NS_IMPL_ISUPPORTS1(calIcalComponent, calIIcalComponent)

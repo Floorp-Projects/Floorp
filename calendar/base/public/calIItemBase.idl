@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
+ *   Mike Shaver <shaver@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -57,6 +58,8 @@ interface calIRecurrenceInfo;
 interface calIMutableRecurrenceInfo;
 
 interface calIAttendee;
+
+interface calIIcalComponent;
 
 //
 // calIItemBase
@@ -119,6 +122,11 @@ interface calIItemBase : nsISupports
   // ical interop; writing this means parsing
   // the ical string into this event
   attribute AUTF8String icalString;
+
+  // an icalComponent for this item, suitable for serialization.
+  // the icalComponent returned is not live: changes in it or this
+  // item will not be reflected in the other.
+  readonly attribute calIIcalComponent icalComponent;
 
   //
   // alarms

@@ -60,6 +60,11 @@ calEvent.prototype = {
 
 
 
+    icsEventPropMap: [
+    { cal: "mStartDate", ics: "startTime" },
+    { cal: "mEndDate", ics: "endTime" },
+    { cal: "mStampDate", ics: "stampTime" } ],
+
     set icalString(value) {
         if (this.mImmutable)
             throw Components.results.NS_ERROR_FAILURE;
@@ -70,10 +75,26 @@ calEvent.prototype = {
             throw Components.results.NS_ERROR_INVALID_ARG;
 
         this.setItemBaseFromICS(event);
-        var propmap = [["mStartDate", "startTime"],
-                       ["mEndDate", "endTime"],
-                       ["mStampDate", "stampDate"]];
-        this.mapPropsFromICS(event, propmap);
-        this.mIsAllDay = this.mStartDate.isDate;
+        this.mapPropsFromICS(event, this.icsEventPropMap);
+        this.mIsAllDay = this.mStartDate && this.mStartDate.isDate;
+    },
+
+    get icalString() {
+        const icssvc = Components.
+          classes["@mozilla.org/calendar/ics-service;1"].
+          getService(Components.interfaces.calIICSService);
+        var calcomp = icssvc.createIcalComponent(ICAL.VCALENDAR_COMPONENT);
+        calcomp.addSubcomponent(this.icalComponent);
+        return calcomp.serializeToICS();
+    },
+
+    get icalComponent() {
+        const icssvc = Components.
+          classes["@mozilla.org/calendar/ics-service;1"].
+          getService(Components.interfaces.calIICSService);
+        var icalcomp = icssvc.createIcalComponent(ICAL.VEVENT_COMPONENT);
+        this.fillIcalComponentFromBase(icalcomp);
+        this.mapPropsToICS(icalcomp, this.icsEventPropMap);
+        return icalcomp;
     },
 };
