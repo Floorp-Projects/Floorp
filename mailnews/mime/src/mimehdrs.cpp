@@ -717,11 +717,18 @@ MimeHeaders_convert_rfc1522(MimeDisplayOptions *opt,
     }
 
     PRBool useInputCharsetConverter = opt->m_inputCharsetToUnicodeDecoder && !nsCRT::strcasecmp(inputCharset, opt->charsetForCachedInputDecoder);
-	  int status =
-		opt->rfc1522_conversion_fn(input, input_length,
+	  int status;
+    if (useInputCharsetConverter)
+		  status = opt->rfc1522_conversion_fn(input, input_length,
 								   inputCharset, output_charset,  /* no input charset? */
 								   &converted, &converted_len,
-                   opt->stream_closure, (useInputCharsetConverter) ? opt->m_inputCharsetToUnicodeDecoder : nsnull, opt->m_unicodeToUTF8Encoder);
+                   opt->stream_closure, opt->m_inputCharsetToUnicodeDecoder , opt->m_unicodeToUTF8Encoder);
+    else
+		  status = opt->rfc1522_conversion_fn(input, input_length,
+								   inputCharset, output_charset,  /* no input charset? */
+								   &converted, &converted_len,
+                   opt->stream_closure, nsnull , opt->m_unicodeToUTF8Encoder);
+
 	  if (status < 0)
 		{
 		  PR_FREEIF(converted);

@@ -345,13 +345,23 @@ MimeInlineText_rotate_convert_and_parse_line(char *line, PRInt32 length,
     const char *inputCharset = !nsCRT::strcasecmp(input_charset, "us-ascii") ? "ISO-8859-1" : input_charset;
     PRBool useInputCharsetConverter = obj->options->m_inputCharsetToUnicodeDecoder && !nsCRT::strcasecmp(inputCharset, obj->options->charsetForCachedInputDecoder);
 
-	  status = obj->options->charset_conversion_fn(input_autodetect, line, length,
+    if (useInputCharsetConverter)
+	    status = obj->options->charset_conversion_fn(input_autodetect, line, length,
                            inputCharset,
 												   "UTF-8",
 												   &converted,
 												   &converted_len,
-                           obj->options->stream_closure, (useInputCharsetConverter) ? obj->options->m_inputCharsetToUnicodeDecoder : nsnull,
+                           obj->options->stream_closure, obj->options->m_inputCharsetToUnicodeDecoder,
                          obj->options->m_unicodeToUTF8Encoder);
+    else
+	    status = obj->options->charset_conversion_fn(input_autodetect, line, length,
+                           inputCharset,
+												   "UTF-8",
+												   &converted,
+												   &converted_len,
+                           obj->options->stream_closure, nsnull,
+                         obj->options->m_unicodeToUTF8Encoder);
+
 	  if (status < 0)
 		{
 		  PR_FREEIF(converted);
