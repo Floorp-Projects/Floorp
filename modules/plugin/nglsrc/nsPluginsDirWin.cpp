@@ -160,12 +160,6 @@ nsPluginsDir::nsPluginsDir(PRUint16 location)
     char szKey[512] = "Software\\Netscape\\Netscape Navigator";
 
     path[0] = 0; 
-/*
-    result = ::RegOpenKeyEx(HKEY_CURRENT_USER,
-                            "Software\\Netscape\\Netscape Navigator\\Main", 
-                            0, KEY_READ, &keyloc); 
-*/
-
     result = ::RegOpenKeyEx(HKEY_LOCAL_MACHINE, szKey, 0, KEY_READ, &keyloc); 
 
     if (result == ERROR_SUCCESS) 
@@ -181,18 +175,12 @@ nsPluginsDir::nsPluginsDir(PRUint16 location)
       PL_strcat(szKey, "\\Main");
       result = ::RegOpenKeyEx(HKEY_LOCAL_MACHINE, szKey, 0, KEY_READ, &keyloc); 
     }
-/**/
+
     if (result == ERROR_SUCCESS) 
     { 
       pathlen = sizeof(path); 
 
       result = ::RegQueryValueEx(keyloc, "Plugins Directory", NULL, &type, (LPBYTE)&path, &pathlen); 
-/*
-      if (result == ERROR_SUCCESS) 
-      { 
-        PL_strcat(path, "\\Program\\Plugins"); 
-      } 
-*/
       ::RegCloseKey(keyloc); 
     } 
 
