@@ -158,7 +158,7 @@ public:
   NS_DECL_ISUPPORTS
   
   rdfServiceWrapper();
-  ~rdfServiceWrapper();
+  virtual ~rdfServiceWrapper();
 
   NS_METHOD CreateDatabase(const char** url,
                            nsIRDFDataBase** db);
@@ -193,7 +193,8 @@ public:
 
 */
 
-NS_IMPL_ISUPPORTS( rdfDatabaseWrapper, NS_IRDFDATABASE_IID )
+static NS_DEFINE_IID(kIRDFDataBaseIID, NS_IRDFDATABASE_IID);
+NS_IMPL_ISUPPORTS( rdfDatabaseWrapper, kIRDFDataBaseIID )
 
 rdfDatabaseWrapper::rdfDatabaseWrapper(RDF r) : mRDF(r)
 {
@@ -546,8 +547,8 @@ rdfDatabaseWrapper::DeleteAllArcs(RDF_Resource resource)
 
 */
 
-
-NS_IMPL_ISUPPORTS(rdfServiceWrapper, NS_IRDFSERVICE_IID )
+static NS_DEFINE_IID(kIRDFServiceIID, NS_IRDFSERVICE_IID);
+NS_IMPL_ISUPPORTS(rdfServiceWrapper, kIRDFServiceIID )
 
 rdfServiceWrapper::rdfServiceWrapper()
 {
@@ -610,7 +611,8 @@ rdfServiceWrapper::SetBookmarkFile(const char* bookmarkFilePath) {
 
 */
 
-NS_IMPL_ISUPPORTS( rdfCursorWrapper, NS_IRDFCURSOR_IID )
+static NS_DEFINE_IID(kIRDFCursorIID, NS_IRDFCURSOR_IID);
+NS_IMPL_ISUPPORTS( rdfCursorWrapper, kIRDFCursorIID )
 
 rdfCursorWrapper::rdfCursorWrapper(RDF_Cursor c) : mCursor(c) 
 {
@@ -660,7 +662,8 @@ rdfCursorWrapper::Next(RDF_NodeStruct& next)
 
 */
 
-NS_IMPL_ISUPPORTS( rdfServiceFactory, NS_IFACTORY_IID )
+static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
+NS_IMPL_ISUPPORTS( rdfServiceFactory, kIFactoryIID )
 
 NS_METHOD
 rdfServiceFactory::CreateInstance( nsISupports *aOuter,
