@@ -175,7 +175,6 @@ messenger.jar:
     content/messenger/messengercompose/MsgComposeCommands.js                   (compose/resources/content/MsgComposeCommands.js)
     content/messenger/messengercompose/addressingWidgetOverlay.js              (compose/resources/content/addressingWidgetOverlay.js)
     content/messenger/messengercompose/addressingWidgetOverlay.xul             (compose/resources/content/addressingWidgetOverlay.xul)
-    content/messenger/messengercompose/insertMenuSmileyOverlay.xul             (compose/resources/content/insertMenuSmileyOverlay.xul)
     content/messenger/messengercompose/askSendFormat.js                        (compose/resources/content/askSendFormat.js)
     content/messenger/messengercompose/askSendFormat.xul                       (compose/resources/content/askSendFormat.xul)
     content/messenger/messengercompose/sendProgress.xul                        (compose/resources/content/sendProgress.xul)

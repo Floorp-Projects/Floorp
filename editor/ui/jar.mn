@@ -24,6 +24,7 @@ comm.jar:
 	content/editor/pref-composer.js                          (composer/content/pref-composer.js) 
 	content/editor/pref-composer.xul                         (composer/content/pref-composer.xul) 
 	content/editor/pref-publish.xul                          (composer/content/pref-publish.xul) 
+	content/editor/editorSmileyOverlay.xul                   (composer/content/editorSmileyOverlay.xul) 
 	content/editor/editorPrefsOverlay.xul                    (composer/content/editorPrefsOverlay.xul) 
 	content/editor/editorNavigatorOverlay.xul                (composer/content/editorNavigatorOverlay.xul) 
 	content/editor/editorMailOverlay.xul                     (composer/content/editorMailOverlay.xul) 
@@ -227,6 +228,7 @@ comm.jar:
 en-US.jar:
         locale/en-US/editor/editor.dtd                   (composer/locale/en-US/editor.dtd)
         locale/en-US/editor/contents.rdf                 (composer/locale/en-US/contents.rdf)
+	locale/en-US/editor/editorSmileyOverlay.dtd      (composer/locale/en-US/editorSmileyOverlay.dtd) 
 	locale/en-US/editor/editorPrefsOverlay.dtd       (composer/locale/en-US/editorPrefsOverlay.dtd) 
 	locale/en-US/editor/editorNavigatorOverlay.dtd   (composer/locale/en-US/editorNavigatorOverlay.dtd) 
 	locale/en-US/editor/pref-editing.dtd             (composer/locale/en-US/pref-editing.dtd) 

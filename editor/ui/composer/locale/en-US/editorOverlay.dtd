@@ -575,16 +575,6 @@
 -->
 <!ENTITY SourceTabDirection "ltr">
 
-<!-- Smiley Menu items -->
-<!ENTITY smiley1Cmd.label "Smile">
-<!ENTITY smiley2Cmd.label "Frown">
-<!ENTITY smiley3Cmd.label "Wink">
-<!ENTITY smiley4Cmd.label "Tongue-out">
-<!ENTITY smiley5Cmd.label "Laughing">
-<!ENTITY smiley6Cmd.label "Embarrassed">
-<!ENTITY smiley7Cmd.label "Undecided">
-<!ENTITY SmileButton.tooltip "Choose smiley face">
-
 <!-- Structure Toolbar Context Menu items -->
 <!ENTITY structSelect.label         "Select">
 <!ENTITY structSelect.accesskey     "s">

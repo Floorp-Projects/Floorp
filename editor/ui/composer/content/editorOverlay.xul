@@ -633,29 +633,6 @@
     </menupopup>
   </menu>
 
-
-  <!-- smiley menu -->
-  <toolbarbutton type="menu" id="smileButtonMenu"
-                 observes="cmd_smiley"
-                 tooltiptext="&SmileButton.tooltip;">
-       <menupopup id="smilyPopup">
-               <menuitem class="smiley insert-smile menuitem-iconic"       label="&smiley1Cmd.label;" 
-						oncommand="doStatefulCommand('cmd_smiley', ':-)'  )"  />
-               <menuitem class="smiley insert-frown menuitem-iconic"       label="&smiley2Cmd.label;"
-						oncommand="doStatefulCommand('cmd_smiley', ':-('  )" />                                              
-               <menuitem class="smiley insert-wink menuitem-iconic"        label="&smiley3Cmd.label;"
-						oncommand="doStatefulCommand('cmd_smiley', ';-)'  )"  />                       
-               <menuitem class="smiley insert-tongue menuitem-iconic"      label="&smiley4Cmd.label;"
-						oncommand="doStatefulCommand('cmd_smiley', ':-P'  )" />
-               <menuitem class="smiley insert-laughing menuitem-iconic"    label="&smiley5Cmd.label;"
-						oncommand="doStatefulCommand('cmd_smiley', ':-D'  )" />
-               <menuitem class="smiley insert-embarrassed menuitem-iconic" label="&smiley6Cmd.label;"
-						oncommand="doStatefulCommand('cmd_smiley', ':-['  )" />
-               <menuitem class="smiley insert-undecided menuitem-iconic"   label="&smiley7Cmd.label;"
-						oncommand="doStatefulCommand('cmd_smiley', ':-\\' )" />           
-       </menupopup>
-   </toolbarbutton>
-
   <!-- this is only used in messengercompose.xul -->
   <toolbarbutton type="menu" id="AlignPopupButton" observes="cmd_align"
               tooltiptext="&AlignPopupButton.tooltip;">
