@@ -2043,7 +2043,7 @@ nsTextFrame::RenderString(nsIRenderingContext& aRenderingContext,
       pendingCount = bp - runStart;
       if (0 != pendingCount) {
         // Measure previous run of characters using the previous font
-        aRenderingContext.SetColor(aTextStyle.mColor->mColor);
+        //aRenderingContext.SetColor(aTextStyle.mColor->mColor); commenting out redundat(and destructive) call to setcolor
         aRenderingContext.DrawString(runStart, pendingCount,
                                      aX, lastY, -1,
                                      spacing ? sp0 : nsnull);
