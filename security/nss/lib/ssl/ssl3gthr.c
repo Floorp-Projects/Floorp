@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3gthr.c,v 1.3 2000/12/02 00:53:59 nelsonb%netscape.com Exp $
+ * $Id: ssl3gthr.c,v 1.4 2002/02/27 04:40:15 nelsonb%netscape.com Exp $
  */
 
 #include "cert.h"
@@ -183,32 +183,31 @@ ssl3_GatherData(sslSocket *ss, sslGather *gs, int flags)
 int
 ssl3_GatherCompleteHandshake(sslSocket *ss, int flags)
 {
-    sslGather *    gs        = ss->gather;
     SSL3Ciphertext cText;
     int            rv;
 
     PORT_Assert( ssl_HaveRecvBufLock(ss) );
     do {
 	/* bring in the next sslv3 record. */
-	rv = ssl3_GatherData(ss, gs, flags);
+	rv = ssl3_GatherData(ss, &ss->gs, flags);
 	if (rv <= 0) {
 	    return rv;
 	}
 	
 	/* decipher it, and handle it if it's a handshake. 
-	 * If it's application data, gs->buf will not be empty upon return. 
+	 * If it's application data, ss->gs.buf will not be empty upon return. 
 	 */
-	cText.type    = (SSL3ContentType)gs->hdr[0];
-	cText.version = (gs->hdr[1] << 8) | gs->hdr[2];
-	cText.buf     = &gs->inbuf;
-	rv = ssl3_HandleRecord(ss, &cText, &gs->buf);
+	cText.type    = (SSL3ContentType)ss->gs.hdr[0];
+	cText.version = (ss->gs.hdr[1] << 8) | ss->gs.hdr[2];
+	cText.buf     = &ss->gs.inbuf;
+	rv = ssl3_HandleRecord(ss, &cText, &ss->gs.buf);
 	if (rv < 0) {
 	    return ss->recvdCloseNotify ? 0 : rv;
 	}
-    } while (ss->ssl3->hs.ws != idle_handshake && gs->buf.len == 0);
+    } while (ss->ssl3->hs.ws != idle_handshake && ss->gs.buf.len == 0);
 
-    gs->readOffset = 0;
-    gs->writeOffset = gs->buf.len;
+    ss->gs.readOffset = 0;
+    ss->gs.writeOffset = ss->gs.buf.len;
     return 1;
 }
 
@@ -226,13 +225,12 @@ ssl3_GatherCompleteHandshake(sslSocket *ss, int flags)
 int
 ssl3_GatherAppDataRecord(sslSocket *ss, int flags)
 {
-    sslGather *    gs       = ss->gather;
     int            rv;
 
     PORT_Assert( ssl_HaveRecvBufLock(ss) );
     do {
 	rv = ssl3_GatherCompleteHandshake(ss, flags);
-    } while (rv > 0 && gs->buf.len == 0);
+    } while (rv > 0 && ss->gs.buf.len == 0);
 
     return rv;
 }

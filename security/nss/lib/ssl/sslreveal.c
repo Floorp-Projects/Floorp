@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslreveal.c,v 1.1 2000/03/31 19:35:30 relyea%netscape.com Exp $
+ * $Id: sslreveal.c,v 1.2 2002/02/27 04:40:17 nelsonb%netscape.com Exp $
  */
 
 #include "cert.h"
@@ -54,8 +54,8 @@ SSL_RevealCert(PRFileDesc * fd)
   /* CERT_DupCertificate increases reference count and returns pointer to 
    * the same cert
    */
-  if (sslsocket && sslsocket->sec)
-    cert = CERT_DupCertificate(sslsocket->sec->peerCert);
+  if (sslsocket && sslsocket->sec.peerCert)
+    cert = CERT_DupCertificate(sslsocket->sec.peerCert);
   
   return cert;
 }

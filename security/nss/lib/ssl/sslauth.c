@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslauth.c,v 1.7 2001/11/09 05:39:36 nelsonb%netscape.com Exp $
+ * $Id: sslauth.c,v 1.8 2002/02/27 04:40:15 nelsonb%netscape.com Exp $
  */
 #include "cert.h"
 #include "secitem.h"
@@ -44,7 +44,6 @@ CERTCertificate *
 SSL_PeerCertificate(PRFileDesc *fd)
 {
     sslSocket *ss;
-    sslSecurityInfo *sec;
 
     ss = ssl_FindSocket(fd);
     if (!ss) {
@@ -52,9 +51,8 @@ SSL_PeerCertificate(PRFileDesc *fd)
 		 SSL_GETPID(), fd));
 	return 0;
     }
-    sec = ss->sec;
-    if (ss->useSecurity && sec && sec->peerCert) {
-	return CERT_DupCertificate(sec->peerCert);
+    if (ss->useSecurity && ss->sec.peerCert) {
+	return CERT_DupCertificate(ss->sec.peerCert);
     }
     return 0;
 }
@@ -64,7 +62,6 @@ CERTCertificate *
 SSL_LocalCertificate(PRFileDesc *fd)
 {
     sslSocket *ss;
-    sslSecurityInfo *sec;
 
     ss = ssl_FindSocket(fd);
     if (!ss) {
@@ -72,13 +69,12 @@ SSL_LocalCertificate(PRFileDesc *fd)
 		 SSL_GETPID(), fd));
 	return NULL;
     }
-    sec = ss->sec;
-    if (ss->useSecurity && sec ) {
-    	if (sec->localCert) {
-	    return CERT_DupCertificate(sec->localCert);
+    if (ss->useSecurity) {
+    	if (ss->sec.localCert) {
+	    return CERT_DupCertificate(ss->sec.localCert);
 	}
-	if (sec->ci.sid && sec->ci.sid->localCert) {
-	    return CERT_DupCertificate(sec->ci.sid->localCert);
+	if (ss->sec.ci.sid && ss->sec.ci.sid->localCert) {
+	    return CERT_DupCertificate(ss->sec.ci.sid->localCert);
 	}
     }
     return NULL;
@@ -92,7 +88,6 @@ SSL_SecurityStatus(PRFileDesc *fd, int *op, char **cp, int *kp0, int *kp1,
 		   char **ip, char **sp)
 {
     sslSocket *ss;
-    sslSecurityInfo *sec;
     const char *cipherName;
     PRBool isDes = PR_FALSE;
 
@@ -113,13 +108,11 @@ SSL_SecurityStatus(PRFileDesc *fd, int *op, char **cp, int *kp0, int *kp1,
     }
 
     if (ss->useSecurity && ss->firstHsDone) {
-	PORT_Assert(ss->sec != 0);
-	sec = ss->sec;
 
 	if (ss->version < SSL_LIBRARY_VERSION_3_0) {
-	    cipherName = ssl_cipherName[sec->cipherType];
+	    cipherName = ssl_cipherName[ss->sec.cipherType];
 	} else {
-	    cipherName = ssl3_cipherName[sec->cipherType];
+	    cipherName = ssl3_cipherName[ss->sec.cipherType];
 	}
 	if (cipherName && PORT_Strstr(cipherName, "DES")) isDes = PR_TRUE;
 	/* do same key stuff for fortezza */
@@ -129,17 +122,17 @@ SSL_SecurityStatus(PRFileDesc *fd, int *op, char **cp, int *kp0, int *kp1,
 	}
 
 	if (kp0) {
-	    *kp0 = sec->keyBits;
+	    *kp0 = ss->sec.keyBits;
 	    if (isDes) *kp0 = (*kp0 * 7) / 8;
 	}
 	if (kp1) {
-	    *kp1 = sec->secretKeyBits;
+	    *kp1 = ss->sec.secretKeyBits;
 	    if (isDes) *kp1 = (*kp1 * 7) / 8;
 	}
 	if (op) {
-	    if (sec->keyBits == 0) {
+	    if (ss->sec.keyBits == 0) {
 		*op = SSL_SECURITY_STATUS_OFF;
-	    } else if (sec->secretKeyBits < 90) {
+	    } else if (ss->sec.secretKeyBits < 90) {
 		*op = SSL_SECURITY_STATUS_ON_LOW;
 
 	    } else {
@@ -150,7 +143,7 @@ SSL_SecurityStatus(PRFileDesc *fd, int *op, char **cp, int *kp0, int *kp1,
 	if (ip || sp) {
 	    CERTCertificate *cert;
 
-	    cert = sec->peerCert;
+	    cert = ss->sec.peerCert;
 	    if (cert) {
 		if (ip) {
 		    *ip = CERT_NameToAscii(&cert->issuer);
@@ -188,9 +181,6 @@ SSL_AuthCertificateHook(PRFileDesc *s, SSLAuthCertificate func, void *arg)
 	return SECFailure;
     }
 
-    if ((rv = ssl_CreateSecurityInfo(ss)) != 0) {
-	return rv;
-    }
     ss->authCertificate = func;
     ss->authCertificateArg = arg;
 
@@ -212,9 +202,6 @@ SSL_GetClientAuthDataHook(PRFileDesc *s, SSLGetClientAuthData func,
 	return SECFailure;
     }
 
-    if ((rv = ssl_CreateSecurityInfo(ss)) != 0) {
-	return rv;
-    }
     ss->getClientAuthData = func;
     ss->getClientAuthDataArg = arg;
     return SECSuccess;
@@ -234,9 +221,6 @@ SSL_SetPKCS11PinArg(PRFileDesc *s, void *arg)
 	return SECFailure;
     }
 
-    if ((rv = ssl_CreateSecurityInfo(ss)) != 0) {
-	return rv;
-    }
     ss->pkcs11PinArg = arg;
     return SECSuccess;
 }
@@ -266,7 +250,7 @@ SSL_AuthCertificate(void *arg, PRFileDesc *fd, PRBool checkSig, PRBool isServer)
     /* this may seem backwards, but isn't. */
     certUsage = isServer ? certUsageSSLClient : certUsageSSLServer;
 
-    rv = CERT_VerifyCertNow(handle, ss->sec->peerCert, checkSig, certUsage,
+    rv = CERT_VerifyCertNow(handle, ss->sec.peerCert, checkSig, certUsage,
 			    ss->pkcs11PinArg);
 
     if ( rv != SECSuccess || isServer )
@@ -278,7 +262,7 @@ SSL_AuthCertificate(void *arg, PRFileDesc *fd, PRBool checkSig, PRBool isServer)
      */
     hostname = ss->url;
     if (hostname && hostname[0])
-	rv = CERT_VerifyCertName(ss->sec->peerCert, hostname);
+	rv = CERT_VerifyCertName(ss->sec.peerCert, hostname);
     else 
 	rv = SECFailure;
     if (rv != SECSuccess)

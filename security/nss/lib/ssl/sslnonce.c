@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslnonce.c,v 1.10 2002/02/22 04:23:24 wtc%netscape.com Exp $
+ * $Id: sslnonce.c,v 1.11 2002/02/27 04:40:17 nelsonb%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -209,7 +209,7 @@ ssl_LookupSID(const PRIPv6Addr *addr, PRUint16 port, const char *peerID,
 
 /*
 ** Add an sid to the cache or return a previously cached entry to the cache.
-** Although this is static, it is called via ss->sec->cache().
+** Although this is static, it is called via ss->sec.cache().
 */
 static void 
 CacheSID(sslSessionID *sid)
@@ -309,7 +309,7 @@ UncacheSID(sslSessionID *zap)
 /* If sid "zap" is in the cache,
  *    removes sid from cache, and decrements reference count.
  * Although this function is static, it is called externally via 
- *    ss->sec->uncache().
+ *    ss->sec.uncache().
  */
 static void
 LockAndUncacheSID(sslSessionID *zap)
