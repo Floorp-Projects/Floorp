@@ -39,6 +39,7 @@ import java.util.*;
 
 public class FileLocator {
 	static boolean USE_BLAME = false;
+	static boolean ASSIGN_BLAME = false;
 
 	static final String MOZILLA_BASE = "mozilla/";
 	static final String LXR_BASE = "http://lxr.mozilla.org/seamonkey/source/";
@@ -80,14 +81,17 @@ public class FileLocator {
 		if (mozillaIndex > -1) {
 			// if using blame, hilite the line number of the call, and include the revision.
 			String mozillaPath = fullPath.substring(mozillaIndex);
+			String revision = revisionTable.getRevision(fullPath);
+			String bonsaiPath = mozillaPath + "&rev=" + revision;
 			if (USE_BLAME) {
-				locationURL = BONSAI_BASE + mozillaPath	+ "&rev=" + revisionTable.getRevision(fullPath) + "&mark=" + lineNumber;
+				locationURL = BONSAI_BASE + bonsaiPath + "&mark=" + lineNumber;
 				if (lineAnchor > 10)
 					lineAnchor -= 10;
 			} else {
 				locationURL = LXR_BASE + mozillaPath.substring(MOZILLA_BASE.length());
 			}
-			blameInfo = " (" + blameTable.getBlame(mozillaPath, lineNumber) + ")";
+			if (ASSIGN_BLAME)
+				blameInfo = " (" + blameTable.getBlame(bonsaiPath, lineNumber) + ")";
 		} else {
 			locationURL = "file://" + fullPath;
 		}
