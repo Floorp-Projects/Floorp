@@ -71,6 +71,7 @@
 #include "nsIRDFRemoteDataSource.h"
 #include "nsFixedSizeAllocator.h"
 #include "nsVoidArray.h"
+#include "nsCOMArray.h"
 #include "nsXPIDLString.h"
 #include "rdf.h"
 
@@ -121,7 +122,7 @@ public:
                             PRBool tv);
 
 protected:
-	nsAutoVoidArray mObservers;
+    nsCOMArray<nsIRDFObserver> mObservers;
 
 	PRBool      mAllowNegativeAssertions;
 	PRBool      mCoalesceDuplicateArcs;
@@ -1172,8 +1173,7 @@ CompositeDataSourceImpl::AddObserver(nsIRDFObserver* aObserver)
         return NS_ERROR_NULL_POINTER;
 
     // XXX ensure uniqueness?
-    if (mObservers.AppendElement(aObserver))
-        NS_ADDREF(aObserver);
+    mObservers.AppendObject(aObserver);
 
     return NS_OK;
 }
@@ -1185,8 +1185,7 @@ CompositeDataSourceImpl::RemoveObserver(nsIRDFObserver* aObserver)
     if (! aObserver)
         return NS_ERROR_NULL_POINTER;
 
-    if (mObservers.RemoveElement(aObserver))
-        NS_RELEASE(aObserver);
+    mObservers.RemoveObject(aObserver);
 
     return NS_OK;
 }
@@ -1473,8 +1472,7 @@ CompositeDataSourceImpl::OnAssert(nsIRDFDataSource* aDataSource,
 	}
 
     for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
-        nsIRDFObserver* obs = NS_STATIC_CAST(nsIRDFObserver*, mObservers[i]);
-        obs->OnAssert(this, aSource, aProperty, aTarget);
+        mObservers[i]->OnAssert(this, aSource, aProperty, aTarget);
         // XXX ignore return value?
     }
     return NS_OK;
@@ -1506,8 +1504,7 @@ CompositeDataSourceImpl::OnUnassert(nsIRDFDataSource* aDataSource,
 	}
 
     for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
-        nsIRDFObserver* obs = NS_STATIC_CAST(nsIRDFObserver*, mObservers[i]);
-        obs->OnUnassert(this, aSource, aProperty, aTarget);
+        mObservers[i]->OnUnassert(this, aSource, aProperty, aTarget);
         // XXX ignore return value?
     }
     return NS_OK;
@@ -1528,8 +1525,8 @@ CompositeDataSourceImpl::OnChange(nsIRDFDataSource* aDataSource,
     // variety of OnAssert or OnChange notifications, which we'll
     // ignore for now :-/.
     for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
-        nsIRDFObserver* obs = NS_STATIC_CAST(nsIRDFObserver*, mObservers[i]);
-        obs->OnChange(this, aSource, aProperty, aOldTarget, aNewTarget);
+        mObservers[i]->OnChange(this, aSource, aProperty,
+                                aOldTarget, aNewTarget);
         // XXX ignore return value?
     }
     return NS_OK;
@@ -1550,8 +1547,8 @@ CompositeDataSourceImpl::OnMove(nsIRDFDataSource* aDataSource,
     // variety of OnAssert or OnMove notifications, which we'll
     // ignore for now :-/.
     for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
-        nsIRDFObserver* obs = NS_STATIC_CAST(nsIRDFObserver*, mObservers[i]);
-        obs->OnMove(this, aOldSource, aNewSource, aProperty, aTarget);
+        mObservers[i]->OnMove(this, aOldSource, aNewSource,
+                              aProperty, aTarget);
         // XXX ignore return value?
     }
     return NS_OK;
@@ -1564,8 +1561,7 @@ CompositeDataSourceImpl::BeginUpdateBatch(nsIRDFDataSource* aDataSource)
     PRInt32 nest = mUpdateBatchNest++;
     if (nest == 0) {
         for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
-            nsIRDFObserver* obs = NS_STATIC_CAST(nsIRDFObserver*, mObservers[i]);
-            obs->BeginUpdateBatch(this);
+            mObservers[i]->BeginUpdateBatch(this);
             // XXX ignore return value?
         }
     }
@@ -1584,8 +1580,7 @@ CompositeDataSourceImpl::EndUpdateBatch(nsIRDFDataSource* aDataSource)
     }
     if (nest == 0) {
         for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
-            nsIRDFObserver* obs = NS_STATIC_CAST(nsIRDFObserver*, mObservers[i]);
-            obs->EndUpdateBatch(this);
+            mObservers[i]->EndUpdateBatch(this);
             // XXX ignore return value?
         }
     }
