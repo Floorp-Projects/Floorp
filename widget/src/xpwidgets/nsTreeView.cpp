@@ -178,54 +178,7 @@ nsEventStatus nsTreeView::HandleEvent(nsGUIEvent *aEvent)
   }
   else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP)
   {
-	  if (mMouseDown)
-	  {
-		  mCachedMovePoint.x = aEvent->point.x;
-		  mCachedMovePoint.y = aEvent->point.y;
-
-		  mMouseDown = PR_FALSE; 
-		  mMouseDragging = PR_FALSE;
-
-		  if (mDraggingColumnEdge)
-		  {
-			  // Finish up.
-			  DragColumnEdge(mCachedMovePoint.x);
-
-			  RecomputeColumnPercentages();
-
-			  mDraggingColumnEdge = PR_FALSE;
-		  }
-		  
-		  if (mColumnBarRect.Contains(mCachedMovePoint.x, mCachedMovePoint.y))
-		  {
-			  int currentPosition = 0;
-			  int remainingSpace = mColumnBarRect.width;
-			  int totalSpace = mColumnBarRect.width;
-			  PRUint32 count = mDataModel->GetVisibleColumnCount();
-
-			  // The user boinked a column or a pusher.  Figure out which.
-			  for (PRUint32 n = 0; n < count; n++)
-			  {
-				  // Fetch each column.
-				  nsTreeColumn* pColumn = mDataModel->GetNthColumn(n);
-				  int pixelWidth = pColumn->GetPixelWidth();
-				  remainingSpace -= pixelWidth;
-				  currentPosition += pixelWidth;
-
-				  // TODO: See if we hit this column header
-				  if (mCachedMovePoint.x < currentPosition)
-				  {
-					  // We hit this column header.
-					  return nsEventStatus_eIgnore;
-				  }
-			  }
-			  
-			  // Must have hit a pusher
-			  if (mCachedMovePoint.x < (currentPosition + (remainingSpace / 2)))
-				  ShowColumn(); // Hit the left pusher
-			  else HideColumn(); // Hit the right pusher
-		  }
-	  }
+	  HandleMouseUp(aEvent);
   }
   return nsEventStatus_eIgnore;
 }
@@ -293,6 +246,141 @@ void nsTreeView::HandleMouseMove(nsGUIEvent* aEvent)
 	  }
 	  else aEvent->widget->SetCursor(eCursor_standard);
   }
+}
+
+void nsTreeView::HandleMouseUp(nsGUIEvent* aEvent)
+{
+  if (mMouseDown)
+  {
+	  mCachedMovePoint.x = aEvent->point.x;
+	  mCachedMovePoint.y = aEvent->point.y;
+
+	  mMouseDown = PR_FALSE; 
+	  mMouseDragging = PR_FALSE;
+
+	  if (mDraggingColumnEdge)
+	  {
+		  // Finish up.
+		  DragColumnEdge(mCachedMovePoint.x);
+
+		  RecomputeColumnPercentages();
+
+		  mDraggingColumnEdge = PR_FALSE;
+	  }
+	  
+	  if (mColumnBarRect.Contains(mCachedMovePoint.x, mCachedMovePoint.y) &&
+		  mColumnBarRect.Contains(mCachedDownPoint.x, mCachedDownPoint.y))
+	  {
+		  int currentPosition = 0;
+		  int remainingSpace = mColumnBarRect.width;
+		  int totalSpace = mColumnBarRect.width;
+		  PRUint32 count = mDataModel->GetVisibleColumnCount();
+
+		  // The user boinked a column or a pusher.  Figure out which.
+		  for (PRUint32 n = 0; n < count; n++)
+		  {
+			  // Fetch each column.
+			  nsTreeColumn* pColumn = mDataModel->GetNthColumn(n);
+			  int pixelWidth = pColumn->GetPixelWidth();
+			  remainingSpace -= pixelWidth;
+			  currentPosition += pixelWidth;
+
+			  // TODO: See if we hit this column header
+			  if (mCachedMovePoint.x < currentPosition)
+			  {
+				  // We hit this column header.
+				  return;
+			  }
+		  }
+		  
+		  // Must have hit a pusher
+		  if (mCachedMovePoint.x < (currentPosition + (remainingSpace / 2)))
+			  ShowColumn(); // Hit the left pusher
+		  else HideColumn(); // Hit the right pusher
+	  }
+	  else if (mTreeRect.Contains(mCachedMovePoint.x, mCachedMovePoint.y) &&
+			   mTreeRect.Contains(mCachedDownPoint.x, mCachedDownPoint.y))
+	  {
+		  // The user clicked on a location in the tree.
+		  // Determine the click location.  Can be one of three things:
+		  // The background of the tree view, the trigger for a node,
+		  // or the text in a specific column.
+		  PRUint32 row, column;
+		  DetermineHitLocation(mCachedMovePoint, row, column, type);
+
+		  // If the user boinked the trigger, then we need to open or close the node.
+		  if (type == eTriggerHit)
+		  {
+		  }
+		  else if (type == eContentHit)
+		  {
+			  // The user boinked content (a text or icon). Select it.
+		  }
+		  else
+		  {
+			  // The user clicked on the background. Deselect all items.
+		  }
+	  }
+  }
+}
+
+void nsTreeView::DetermineHitLocation(const nsPoint& point, 
+									  PRUint32& row, PRUint32& column, nsHitLocation& location)
+{
+	int yPosition = mTreeRect.y;
+	PRUint32 n = mDataModel->GetFirstVisibleItemIndex();
+	nsTreeItem* pItem = (nsTreeItem*)mDataModel->GetNthItem(n);
+
+	while (pItem && yPosition < mTreeRect.y + mTreeRect.height)
+	{
+		// Retrieve our cached rectangle data for the item.
+		nsRect rowRect, triggerRect;
+		pItem->GetTreeItemRectangle(rowRect);
+		pItem->GetTriggerRectangle(triggerRect);
+		
+		if (rowRect.Contains(point.x, point.y))
+		{
+			row = n;
+
+			// Determine which column we hit.
+			PRUint32 count = mDataModel->GetVisibleColumnCount();
+			int currentPosition = 0;
+			for (PRUint32 m = 0; m < count; m++)
+			{
+				// Fetch each column.
+				nsTreeColumn* pColumn = mDataModel->GetNthColumn(m);
+				if (pColumn)
+				{
+					// Retrieve the column's current pixel width.
+					int pixelWidth = pColumn->GetPixelWidth();
+					if (point.x >= currentPosition && point.x < currentPosition+pixelWidth)
+					{
+						// The user hit this column.
+						column = m;
+						
+						// Now we need to determine what the user clicked on.
+						
+						if (triggerRect.Contains(point.x, point.y))
+						{
+							location = eTriggerHit;
+						}
+						else
+						{
+							// See if we hit the text rectangle.
+							location = eBackgroundHit;
+						}
+
+						return;
+					}
+					// Augment our current position
+					currentPosition += pixelWidth;
+				}
+			}
+		}
+
+		n++;
+		pItem = (nsTreeItem*)mDataModel->GetNthItem(n);
+	}
 }
 
 void nsTreeView::PaintTitleBar(nsIRenderingContext* drawCtx, 
@@ -708,9 +796,9 @@ void nsTreeView::PaintTreeRow(nsIRenderingContext* drawCtx, nsTreeItem* pItem, i
 	PRBool leftJustifyTrigger = styleInfo.leftJustifyTrigger;
 	PRBool showIcon = styleInfo.showIcon;
 
-	if (pTriggerImage)
+	if (pTriggerImage && showTrigger)
 		triggerHeight = pTriggerImage->GetHeight();
-	if (pIconImage)
+	if (pIconImage && showIcon)
 		iconHeight = pIconImage->GetHeight();
 	
 	lineHeight = fontWithPadding + 1; 
@@ -724,6 +812,9 @@ void nsTreeView::PaintTreeRow(nsIRenderingContext* drawCtx, nsTreeItem* pItem, i
 	// Modify the position we'll be returning for future painting.
 	nsRect lineRect(0, yPosition, mColumnBarRect.width, lineHeight);
 	yPosition += lineHeight;
+
+	// Cache our line rect with the tree item to make hit testing easier.
+	pItem->SetTreeItemRectangle(lineRect);
 
 	// Fill the rect with our BGColor. TODO: Fetch properties etc.
 	drawCtx->SetColor(styleInfo.backgroundColor);
@@ -775,10 +866,20 @@ void nsTreeView::PaintTreeRow(nsIRenderingContext* drawCtx, nsTreeItem* pItem, i
 					iconStart = triggerStart + triggerWidth + cIconMargin;
 				}
 
+				// Cache our trigger rect to make hit testing easier.
+				nsRect triggerRect(0,0,0,0);
+				if (pTriggerImage && showTrigger)
+				{
+					triggerRect = nsRect(triggerStart-1, lineRect.y - 1 + (lineHeight-1-triggerHeight)/2,
+										 triggerWidth+2, triggerHeight+2);
+				}
+				pItem->SetTriggerRectangle(triggerRect);
+
+				// Paint the trigger and icon
 				if (pTriggerImage && showTrigger)
 					drawCtx->DrawImage(pTriggerImage, triggerStart,
 									   lineRect.y + (lineHeight-1-triggerHeight)/2);
-				if (pIconImage)
+				if (pIconImage && showIcon)
 					drawCtx->DrawImage(pIconImage, iconStart,
 									   lineRect.y + (lineHeight-1-iconHeight)/2);
 

@@ -64,6 +64,11 @@ public:
 
 	virtual void GetTextForColumn(nsTreeColumn* pColumn, nsString& nodeText) const;
 
+	virtual void GetTreeItemRectangle(nsRect& rect) const { rect = mRowRectangle; };
+	virtual void SetTreeItemRectangle(const nsRect& rect) { mRowRectangle = rect; };
+	virtual void GetTriggerRectangle(nsRect& rect) const { rect = mTriggerRectangle; };
+	virtual void SetTriggerRectangle(const nsRect& rect) { mTriggerRectangle = rect; };
+
 protected:
 	nsIImageRequest* RequestImage(nsString& reqUrl) const; // Helper to kick off the image load.
 	nsIImage* GetTriggerImage() const;
@@ -76,6 +81,9 @@ protected:
 	 nsIImageRequest* mClosedTriggerRequest;	// Closed trigger image
 	 nsIImageRequest* mOpenTriggerRequest;	// Open trigger image
 	 nsIImageRequest* mBackgroundRequest;	// The background image
+
+	 nsRect mRowRectangle;	// A cached copy of our position within the tree view.
+	 nsRect mTriggerRectangle;	// A cached copy of our trigger rectangle
 };
 
 #endif /* nsHTTreeItem_h___ */
