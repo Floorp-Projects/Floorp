@@ -2144,10 +2144,11 @@ void nsImapProtocol::AutoSubscribeToMailboxIfNecessary(const char *mailboxName)
 }
 
 
-void nsImapProtocol::BeginMessageDownLoad(
+nsresult nsImapProtocol::BeginMessageDownLoad(
     PRUint32 total_message_size, // for user, headers and body
     const char *content_type)
 {
+  nsresult rv = NS_OK;
   char *sizeString = PR_smprintf("OPEN Size: %ld", total_message_size);
   Log("STREAM",sizeString,"Begin Message Download Stream");
   PR_FREEIF(sizeString);
@@ -2187,7 +2188,7 @@ void nsImapProtocol::BeginMessageDownLoad(
         if (fileSpec) 
 	      {
            fileSpec->GetNativePath(getter_Copies(nativePath));
-           m_imapMessageSink->SetupMsgWriteStream(nativePath, addDummyEnvelope);
+           rv = m_imapMessageSink->SetupMsgWriteStream(nativePath, addDummyEnvelope);
 	       }
 	}
 	if (m_imapMailFolderSink)
@@ -2209,6 +2210,7 @@ void nsImapProtocol::BeginMessageDownLoad(
   }
   else
     HandleMemoryFailure();
+  return rv;
 }
 
 PRBool

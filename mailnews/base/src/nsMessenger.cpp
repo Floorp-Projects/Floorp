@@ -104,6 +104,7 @@
 #include "nsIFileWidget.h"
 #include "nsIStringBundle.h"
 #include "nsWidgetsCID.h"
+#include "nsINetSupportDialogService.h"
 
 static NS_DEFINE_CID(kIStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
@@ -112,6 +113,7 @@ static NS_DEFINE_CID(kMsgSendLaterCID, NS_MSGSENDLATER_CID);
 static NS_DEFINE_CID(kMsgCopyServiceCID,		NS_MSGCOPYSERVICE_CID);
 static NS_DEFINE_CID(kMsgPrintEngineCID,		NS_MSG_PRINTENGINE_CID);
 static NS_DEFINE_IID(kCFileWidgetCID,           NS_FILEWIDGET_CID);
+static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
 /* This is the next generation string retrieval call */
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
@@ -194,7 +196,7 @@ class nsSaveAsListener : public nsIUrlListener,
                          public nsIStreamListener
 {
 public:
-    nsSaveAsListener(nsIFileSpec* fileSpec);
+    nsSaveAsListener(nsIFileSpec* fileSpec, nsMessenger* aMessenger);
     virtual ~nsSaveAsListener();
 
     NS_DECL_ISUPPORTS
@@ -209,6 +211,7 @@ public:
     char *m_dataBuffer;
     nsCOMPtr<nsIChannel> m_channel;
     nsXPIDLCString m_templateUri;
+    nsMessenger *m_messenger; // not ref counted
 
     // rhp: For character set handling
     PRBool        m_doCharsetConversion;
@@ -410,51 +413,299 @@ NS_IMETHODIMP
 nsMessenger::OpenAttachment(const char * url, const char * displayName, 
                             const char * messageUri)
 {
-  nsresult rv = NS_ERROR_FAILURE;
+    // *** for now OpenAttachment is really a SaveAttachment
+  nsresult rv = NS_ERROR_OUT_OF_MEMORY;
   char *unescapedUrl = nsnull;
   nsIMsgMessageService * messageService = nsnull;
+  nsSaveAsListener *aListener = nsnull;
+  nsAutoString from, to;
+  nsCOMPtr<nsIFileSpec> aSpec;
+  nsCOMPtr<nsIFileSpecWithUI> fileSpec;
+  nsCOMPtr<nsISupports> channelSupport;
+  nsCOMPtr<nsIStreamListener> convertedListener;
+  nsAutoString urlString;
+  char *urlCString = nsnull;
+  char * unescapedDisplayName = nsnull;
+  nsCOMPtr<nsIURI> aURL;
+  
+  NS_WITH_SERVICE(nsIStreamConverterService,
+                  streamConverterService,  
+                  kIStreamConverterServiceCID, &rv);
+  if (NS_FAILED(rv)) goto done;
 
-	if (url)
-	{
+  rv = NS_ERROR_OUT_OF_MEMORY;
+
+  if (!url) goto done;
+
 #ifdef DEBUG_MESSENGER
-		printf("nsMessenger::OpenAttachment(%s)\n",url);
+  printf("nsMessenger::OpenAttachment(%s)\n",url);
 #endif    
-        unescapedUrl = PL_strdup(url);
-        if (unescapedUrl)
-        {
-          nsUnescape(unescapedUrl);
-          
-          nsCOMPtr<nsIFileSpec> aSpec;
-          nsCOMPtr<nsIFileSpecWithUI>
-            fileSpec(getter_AddRefs(NS_CreateFileSpecWithUI()));
-          
-          if (!fileSpec) goto done;
-          char * unescapedDisplayName = nsCRT::strdup(displayName);
-          rv = fileSpec->ChooseOutputFile("Save Attachment", nsUnescape(unescapedDisplayName),
-                                          nsIFileSpecWithUI::eAllFiles);
-          nsCRT::free(unescapedDisplayName);
-          if (NS_FAILED(rv)) goto done;
+  unescapedUrl = PL_strdup(url);
+  if (!unescapedUrl) goto done;
+
+  nsUnescape(unescapedUrl);
+  
+  fileSpec = getter_AddRefs(NS_CreateFileSpecWithUI());
+
+  if (!fileSpec) goto done;
+  unescapedDisplayName = nsCRT::strdup(displayName);
+  if (!unescapedDisplayName) goto done;
+    
+  rv = fileSpec->ChooseOutputFile("Save Attachment",
+                                  nsUnescape(unescapedDisplayName),
+                                  nsIFileSpecWithUI::eAllFiles);
+  nsCRT::free(unescapedDisplayName);
+
+  if (NS_FAILED(rv)) goto done;
             
-          aSpec = do_QueryInterface(fileSpec, &rv);
-          if (NS_FAILED(rv)) goto done;
+  aSpec = do_QueryInterface(fileSpec, &rv);
+  if (NS_FAILED(rv)) goto done;
 
-          nsSaveAsListener *aListener = new nsSaveAsListener(aSpec);
-          if (aListener)
-          {
-            NS_ADDREF(aListener);
-            nsCOMPtr<nsIURI> aURL;
+  aListener = new nsSaveAsListener(aSpec, this);
+  if (!aListener)
+  {
+      rv = NS_ERROR_OUT_OF_MEMORY;
+      goto done;
+  }
+  NS_ADDREF(aListener);
 
-            nsAutoString urlString = unescapedUrl;
-            char *urlCString = urlString.ToNewCString();
+  urlString = unescapedUrl;
+  urlCString = urlString.ToNewCString();
+
+  rv = CreateStartupUrl(urlCString, getter_AddRefs(aURL));
+  nsCRT::free(urlCString);
+
+  if (NS_FAILED(rv)) goto done;
+
+  aListener->m_channel = null_nsCOMPtr();
+  rv = NS_NewInputStreamChannel(aURL,
+                                nsnull,      // contentType
+                                -1,          // contentLength
+                                nsnull,      // inputStream
+                                nsnull,      // loadGroup
+                                nsnull,      // notificationCallbacks
+                                nsIChannel::LOAD_NORMAL,
+                                nsnull,      // originalURI
+                                0, 0, 
+                                getter_AddRefs(aListener->m_channel));
+  if (NS_FAILED(rv)) goto done;
+
+  from = MESSAGE_RFC822;
+  to = "text/xul";
+  
+  channelSupport = do_QueryInterface(aListener->m_channel);
+
+  rv = streamConverterService->AsyncConvertData(
+      from.GetUnicode(), to.GetUnicode(), aListener,
+      channelSupport, getter_AddRefs(convertedListener));
+  if (NS_FAILED(rv)) goto done;
+
+  rv = GetMessageServiceFromURI(messageUri, &messageService);
+  if (NS_FAILED(rv)) goto done;
+            
+  rv = messageService->DisplayMessage(messageUri,
+                                      convertedListener,mMsgWindow,
+                                      nsnull, nsnull); 
+
+done:
+    if (messageService)
+      ReleaseMessageServiceFromURI(unescapedUrl, messageService);
+
+    PR_FREEIF(unescapedUrl);
+
+    if (NS_FAILED(rv))
+    {
+        NS_IF_RELEASE(aListener);
+        Alert("saveAttachmentFailed");
+    }
+	return rv;
+}
+
+
+NS_IMETHODIMP
+nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity)
+{
+  	nsresult rv = NS_ERROR_FAILURE;
+    nsIMsgMessageService* messageService = nsnull;
+    nsCOMPtr<nsIFileSpec> aSpec;
+    PRInt16               saveAsFileType = 0; // 0 - raw, 1 = html, 2 = text;
+    const char            *defaultFile = "mail";
+    nsCOMPtr<nsIFileWidget>  fileWidget;
+    nsAutoString promptString;
+    nsString* titles = nsnull;
+    nsString* filters = nsnull;
+    nsString* nextTitle;
+    nsString* nextFilter;
+    nsAutoString HTMLFiles;
+    nsAutoString TextFiles;
+    nsFileSpec parentPath;
+    nsFileDlgResults dialogResult;
+    nsFileSpec    tFileSpec;
+    nsFileSpec fileSpec;
+    char *fileName = nsnull;
+    nsCString tmpFilenameString;
+    nsCString extString;
+    nsCOMPtr<nsIUrlListener> urlListener;
+    nsSaveAsListener *aListener = nsnull;
+    nsCOMPtr<nsIURI> aURL;
+    nsAutoString urlString;
+    char *urlCString = nsnull;
+    nsCOMPtr<nsISupports> channelSupport;
+    nsCOMPtr<nsIStreamListener> convertedListener;
+    PRBool needDummyHeader = PR_TRUE;
+    PRBool canonicalLineEnding = PR_FALSE;
+
+    NS_WITH_SERVICE(nsIStreamConverterService,
+                    streamConverterService,  
+                    kIStreamConverterServiceCID, &rv);
+    if (NS_FAILED(rv)) goto done;
+    
+    if (!url) {
+        rv = NS_ERROR_NULL_POINTER;
+        goto done;
+    }
+
+    rv = GetMessageServiceFromURI(url, &messageService);
+    if (NS_FAILED(rv)) goto done;
+
+    if (asFile)
+    {
+        rv = nsComponentManager::CreateInstance(kCFileWidgetCID, nsnull,
+                                                NS_GET_IID(nsIFileWidget),
+                                                getter_AddRefs(fileWidget));
+        if (NS_FAILED(rv)) goto done;
+
+        promptString = GetString(nsString("SaveMailAs").GetUnicode());
+            
+        titles = new nsString[3];
+        if (!titles)
+        {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+            goto done;
+        }
+        filters = new nsString[3];
+        if (!filters)
+        {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+            goto done;
+        }
+        nextTitle = titles;
+        nextFilter = filters;
+        // The names of the file types are localizable
+        fileWidget->SetDefaultString(nsString(defaultFile));
+
+        HTMLFiles = GetString(nsString("HTMLFiles").GetUnicode());
+        TextFiles = GetString(nsString("TextFiles").GetUnicode());
+        if (HTMLFiles.Length() == 0 || TextFiles.Length() == 0)
+            goto SkipFilters;
+        
+        *nextTitle++ = GetString(nsString("EMLFiles").GetUnicode());
+        *nextFilter++ = "*.eml";
+        *nextTitle++ = HTMLFiles;
+        *nextFilter++ = "*.htm; *.html; *.shtml";
+        *nextTitle++ = TextFiles;
+        *nextFilter++ = "*.txt";
+        fileWidget->SetFilterList(3, titles, filters);              
+            
+    SkipFilters:
+
+        dialogResult = fileWidget->PutFile(nsnull, promptString, tFileSpec);
+        delete [] titles;
+        delete [] filters;
+        
+        if (dialogResult == nsFileDlgResults_Cancel)
+            goto done;
+            
+        rv = fileWidget->GetFile(fileSpec);
+        if (NS_FAILED(rv)) goto done;
+            
+        fileName = fileSpec.GetLeafName();
+        tmpFilenameString = fileName;
+        
+        nsCRT::free(fileName);
+            
+        // First, check if they put ANY extension on the file, if not,
+        // then we should look at the type of file they have chosen and
+        // tack on the file extension for them.
+        //
+        if (tmpFilenameString.RFind(".", PR_TRUE) == -1)
+        {
+            fileWidget->GetSelectedType(saveAsFileType);
+            switch (saveAsFileType) {
+            case  2:
+                extString = ".html";
+                break;
+            case  3:
+                extString = ".txt";
+                break;
+            default:
+            case  1: 
+                extString = ".eml";
+                break;
+            }
+  
+            // Doing this since the GetSelectedType() is not zero
+            // relative
+            saveAsFileType--;
+            
+            // No append the extension and create the output stream
+            tmpFilenameString.Append(extString);
+            fileSpec.SetLeafName(tmpFilenameString.GetBuffer());
+            rv = NS_NewFileSpecWithSpec(fileSpec, getter_AddRefs(aSpec));
+        }
+        else
+        {
+            if (tmpFilenameString.RFind(".htm", PR_TRUE) != -1)
+                saveAsFileType = 1;
+            else if (tmpFilenameString.RFind(".txt", PR_TRUE) != -1)
+                saveAsFileType = 2;
+            else
+                saveAsFileType = 0;   // .eml type
+            
+            rv = NS_NewFileSpecWithSpec(fileSpec, getter_AddRefs(aSpec));
+        }
+          
+        if (NS_FAILED(rv)) goto done;
+
+        aListener = new nsSaveAsListener(aSpec, this);
+        if (!aListener) {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+            goto done;
+        }
+        
+        NS_ADDREF(aListener);
+
+        rv = aListener->QueryInterface(NS_GET_IID(nsIUrlListener),
+                                       getter_AddRefs(urlListener));
+        if (NS_FAILED(rv)) goto done;
+        
+        switch (saveAsFileType) {
+        case 0:
+        default:
+            rv = messageService->SaveMessageToDisk(url, aSpec, PR_TRUE,
+                                                   urlListener, nsnull,
+                                                   PR_FALSE);
+            break;
+        case 1:
+        case 2:
+            urlString = url;
+
+            // Setup the URL for a "Save As..." Operation...
+            // For now, if this is a save as TEXT operation, then do
+            // a "printing" operation
+            //
+            if (saveAsFileType == 1)
+                urlString += "?header=saveas";
+            else
+                urlString += "?header=print";
+            
+            urlCString = urlString.ToNewCString();
             rv = CreateStartupUrl(urlCString, getter_AddRefs(aURL));
             nsCRT::free(urlCString);
-            if (NS_FAILED(rv)) 
-            {
-              NS_RELEASE(aListener);
-              goto done;
-            }
+            if (NS_FAILED(rv)) goto done;
+
             aListener->m_channel = null_nsCOMPtr();
-            rv = NS_NewInputStreamChannel(aURL,
+            rv = NS_NewInputStreamChannel(aURL, 
                                           nsnull,      // contentType
                                           -1,          // contentLength
                                           nsnull,      // inputStream
@@ -464,309 +715,87 @@ nsMessenger::OpenAttachment(const char * url, const char * displayName,
                                           nsnull,      // originalURI
                                           0, 0, 
                                           getter_AddRefs(aListener->m_channel));
-            if (NS_FAILED(rv))
-            {
-              NS_RELEASE(aListener);
-              goto done;
-            }
-            nsAutoString from, to;
-            from = MESSAGE_RFC822;
-            to = "text/xul";
-            NS_WITH_SERVICE(nsIStreamConverterService,
-                            streamConverterService,  
-                            kIStreamConverterServiceCID, &rv);
-            nsCOMPtr<nsISupports> channelSupport =
-              do_QueryInterface(aListener->m_channel);
-            nsCOMPtr<nsIStreamListener> convertedListener;
-            rv = streamConverterService->AsyncConvertData(
-              from.GetUnicode(), to.GetUnicode(), aListener,
-              channelSupport, getter_AddRefs(convertedListener));
+            if (NS_FAILED(rv)) goto done;
 
-            rv = GetMessageServiceFromURI(messageUri, &messageService);
+            aListener->m_outputFormat = saveAsFileType == 1 ? TEXT_HTML : TEXT_PLAIN;
             
-            if (NS_SUCCEEDED(rv) && messageService)
-            {
-              rv = messageService->DisplayMessage(messageUri,
-                                                  convertedListener,mMsgWindow,
-                                                  nsnull, nsnull); 
-            }
-          }
-          else
-          {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-          }
+            // Mark the fact that we need to do charset handling/text conversion!
+            if (aListener->m_outputFormat == TEXT_PLAIN)
+                aListener->m_doCharsetConversion = PR_TRUE;
+            
+            channelSupport = do_QueryInterface(aListener->m_channel);
+            
+            rv = streamConverterService->AsyncConvertData(nsString(MESSAGE_RFC822).GetUnicode(),
+            // RICHIE - we should be able to go RFC822 to TXT, but not until
+            // Bug #1775 is fixed. aListener->m_outputFormat.GetUnicode() 
+                                                          nsString(TEXT_HTML).GetUnicode(), 
+                                                          aListener,
+                                                          channelSupport,
+                                                          getter_AddRefs(convertedListener));
+            if (NS_FAILED(rv)) goto done;
+
+            rv = messageService->DisplayMessage(url, convertedListener,mMsgWindow,
+                                                nsnull, nsnull);
+            break;
         }
-        else
-        {
-          rv =  NS_ERROR_OUT_OF_MEMORY;
-        }
-	}
-done:
-    if (messageService)
-      ReleaseMessageServiceFromURI(unescapedUrl, messageService);
-    PR_FREEIF(unescapedUrl);
-	return rv;
-}
-
-
-NS_IMETHODIMP
-nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity)
-{
-  	nsresult rv = NS_OK;
-    nsIMsgMessageService* messageService = nsnull;
-    
-    if (url)
-    {
-      rv = GetMessageServiceFromURI(url, &messageService);
-      if (NS_SUCCEEDED(rv) && messageService)
-      {
-        nsCOMPtr<nsIFileSpec> aSpec;
-        PRInt16               saveAsFileType = 0; // 0 - raw, 1 = html, 2 = text;
-        char                  *defaultFile = "mail";
-
-        if (asFile)
-        {
-          nsCOMPtr<nsIFileWidget>  fileWidget;
-          rv = nsComponentManager::CreateInstance(kCFileWidgetCID, nsnull, NS_GET_IID(nsIFileWidget), getter_AddRefs(fileWidget));
-          if (NS_SUCCEEDED(rv) && fileWidget)
-          {
-            nsAutoString  promptString = GetString(nsString("SaveMailAs").GetUnicode());
-            
-            nsString* titles = nsnull;
-            nsString* filters = nsnull;
-            nsString* nextTitle;
-            nsString* nextFilter;
-            nsAutoString HTMLFiles;
-            nsAutoString TextFiles;
-            nsFileSpec parentPath;
-            
-            titles = new nsString[3];
-            if (!titles)
-            {
-              rv = NS_ERROR_OUT_OF_MEMORY;
-              goto SkipFilters;
-            }
-            filters = new nsString[3];
-            if (!filters)
-            {
-              rv = NS_ERROR_OUT_OF_MEMORY;
-              goto SkipFilters;
-            }
-            nextTitle = titles;
-            nextFilter = filters;
-            // The names of the file types are localizable
-            HTMLFiles = GetString(nsString("HTMLFiles").GetUnicode());
-            TextFiles = GetString(nsString("TextFiles").GetUnicode());
-            if (HTMLFiles.Length() == 0 || TextFiles.Length() == 0)
-              goto SkipFilters;
-            
-            *nextTitle++ = GetString(nsString("EMLFiles").GetUnicode());
-            *nextFilter++ = "*.eml";
-            *nextTitle++ = HTMLFiles;
-            *nextFilter++ = "*.htm; *.html; *.shtml";
-            *nextTitle++ = TextFiles;
-            *nextFilter++ = "*.txt";
-            fileWidget->SetFilterList(3, titles, filters);              
-            fileWidget->SetDefaultString(nsString(defaultFile));
-            
-SkipFilters:
-            nsFileDlgResults dialogResult;
-            // 1ST PARAM SHOULD BE nsIDOMWindow*, not nsIWidget*
-            nsFileSpec    tFileSpec;
-            dialogResult = fileWidget->PutFile(nsnull, promptString, tFileSpec);
-            delete [] titles;
-            delete [] filters;
-            
-            if (dialogResult == nsFileDlgResults_Cancel)
-            {
-              goto done;
-            }
-            
-            nsFileSpec fileSpec;
-            if (NS_FAILED(fileWidget->GetFile(fileSpec)) )
-              goto done;
-            
-            char *fileName = fileSpec.GetLeafName();
-            nsCString tmpFilenameString = fileName;
-            nsCString extString;
-            nsCRT::free(fileName);
-            
-            // First, check if they put ANY extension on the file, if not,
-            // then we should look at the type of file they have chosen and
-            // tack on the file extension for them.
-            //
-            if (tmpFilenameString.RFind(".", PR_TRUE) == -1)
-            {
-              fileWidget->GetSelectedType(saveAsFileType);
-              switch (saveAsFileType) {
-              case  2:
-                extString = ".html";
-                break;
-              case  3:
-                extString = ".txt";
-                break;
-              default:
-              case  1: 
-                extString = ".eml";
-                break;
-              }
-  
-              // Doing this since the GetSelectedType() is not zero
-              // relative
-              saveAsFileType--;
-
-              // No append the extension and create the output stream
-              tmpFilenameString.Append(extString);
-              rv = NS_NewFileSpecWithSpec(nsFileSpec(tmpFilenameString.GetBuffer()), getter_AddRefs(aSpec));
-            }
-            else
-            {
-              if (tmpFilenameString.RFind(".htm", PR_TRUE) != -1)
-                saveAsFileType = 1;
-              else if (tmpFilenameString.RFind(".txt", PR_TRUE) != -1)
-                saveAsFileType = 2;
-              else
-                saveAsFileType = 0;   // .eml type
-
-              rv = NS_NewFileSpecWithSpec(fileSpec, getter_AddRefs(aSpec));
-            }
-          }
-          else
-          {
-            nsFileSpec tmpFileSpec(defaultFile);
-            rv = NS_NewFileSpecWithSpec(tmpFileSpec, getter_AddRefs(aSpec));
-          }
-        }  
-          
+    }
+    else
+    { 
+        // ** save as Template
+        fileSpec = "nsmail.tmp";
+        rv = NS_NewFileSpecWithSpec(fileSpec, getter_AddRefs(aSpec));
         if (NS_FAILED(rv)) goto done;
-        nsCOMPtr<nsIUrlListener> urlListener;
-        if (aSpec)
-        {
-          if (asFile)
-          {
-            switch (saveAsFileType) 
-            {
-              case 0:
-              default:
-                messageService->SaveMessageToDisk(url, aSpec, PR_TRUE,
-                                                  urlListener, nsnull,
-                                                  PR_FALSE);
-                break;
-              case 1:
-              case 2:
-              {
-                nsSaveAsListener *aListener = new nsSaveAsListener(aSpec);
-                if (aListener)
-                {
-                  NS_ADDREF(aListener);
-                  nsCOMPtr<nsIURI> aURL;
-                  nsAutoString urlString = url;
 
-                  // Setup the URL for a "Save As..." Operation...
-                  // For now, if this is a save as TEXT operation, then do
-                  // a "printing" operation
-                  //
-                  if (saveAsFileType == 1)
-                    urlString += "?header=saveas";
-                  else
-                    urlString += "?header=print";
-
-                  char *urlCString = urlString.ToNewCString();
-                  rv = CreateStartupUrl(urlCString, getter_AddRefs(aURL));
-                  nsCRT::free(urlCString);
-                  if (NS_FAILED(rv)) 
-                  {
-                    NS_RELEASE(aListener);
-                    goto done;
-                  }
-                  aListener->m_channel = null_nsCOMPtr();
-                  rv = NS_NewInputStreamChannel(aURL, 
-                                                nsnull,      // contentType
-                                                -1,          // contentLength
-                                                nsnull,      // inputStream
-                                                nsnull,      // loadGroup
-                                                nsnull,      // notificationCallbacks
-                                                nsIChannel::LOAD_NORMAL,
-                                                nsnull,      // originalURI
-                                                0, 0, 
-                                                getter_AddRefs(aListener->m_channel));
-                  if (NS_FAILED(rv))
-                  {
-                    NS_RELEASE(aListener);
-                    goto done;
-                  }
-                  nsAutoString from;
-                  from = MESSAGE_RFC822;
-                  aListener->m_outputFormat = saveAsFileType == 1 ? TEXT_HTML : TEXT_PLAIN;
-
-                  // Mark the fact that we need to do charset handling/text conversion!
-                  if (aListener->m_outputFormat == TEXT_PLAIN)
-                    aListener->m_doCharsetConversion = PR_TRUE;
-
-                  NS_WITH_SERVICE(nsIStreamConverterService,
-                                  streamConverterService,  
-                                  kIStreamConverterServiceCID, &rv);
-                  nsCOMPtr<nsISupports> channelSupport = do_QueryInterface(aListener->m_channel);
-                  nsCOMPtr<nsIStreamListener> convertedListener;
-                  rv = streamConverterService->AsyncConvertData(
-                                      from.GetUnicode(), 
-                                      // RICHIE - we should be able to go RFC822 to TXT, but not until
-                                      // Bug #1775 is fixed. aListener->m_outputFormat.GetUnicode() 
-                                      nsString(TEXT_HTML).GetUnicode(), 
-                                      aListener,
-                                      channelSupport, getter_AddRefs(convertedListener));
-                  if (NS_SUCCEEDED(rv))
-                    messageService->DisplayMessage(url, convertedListener,mMsgWindow,
-                                                   nsnull, nsnull);
-                }
-              }
-            }
-          }
-          else
-          { 
-              // ** save as Template
-              PRBool needDummyHeader = PR_TRUE;
-              PRBool canonicalLineEnding = PR_FALSE;
-              nsSaveAsListener *aListener = new nsSaveAsListener(aSpec);
-
-              if (aListener)
-              {
-                if (identity)
-                  rv = identity->GetStationeryFolder(
-                    getter_Copies(aListener->m_templateUri));
-                if (NS_FAILED(rv)) return rv;
-                needDummyHeader =
-                  PL_strcasestr(aListener->m_templateUri, "mailbox://") 
-                  != nsnull;
-                canonicalLineEnding =
-                  PL_strcasestr(aListener->m_templateUri, "imap://")
-                  != nsnull;
-                rv = aListener->QueryInterface(
-                  NS_GET_IID(nsIUrlListener),
-                  getter_AddRefs(urlListener));
-                if (NS_FAILED(rv))
-                {
-                  delete aListener;
-                  return rv;
-                }
-                NS_ADDREF(aListener); 
-                // nsUrlListenerManager uses nsVoidArray
-                // to keep trach of all listeners we have
-                // to manually add refs ourself
-                messageService->SaveMessageToDisk(url, aSpec, 
-                                                  needDummyHeader,
-                                                  urlListener, nsnull,
-                                                  canonicalLineEnding); 
-              }
-          }
+        aListener = new nsSaveAsListener(aSpec, this);
+        if (!aListener) {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+            goto done;
         }
-      }
+        
+        NS_ADDREF(aListener);
+
+        if (identity)
+            rv = identity->GetStationeryFolder(
+                                               getter_Copies(aListener->m_templateUri));
+        if (NS_FAILED(rv)) goto done;
+
+        needDummyHeader =
+            PL_strcasestr(aListener->m_templateUri, "mailbox://") 
+            != nsnull;
+        canonicalLineEnding =
+            PL_strcasestr(aListener->m_templateUri, "imap://")
+            != nsnull;
+        rv = aListener->QueryInterface(
+                                       NS_GET_IID(nsIUrlListener),
+                                       getter_AddRefs(urlListener));
+        if (NS_FAILED(rv)) goto done;
+
+        rv = messageService->SaveMessageToDisk(url, aSpec, 
+                                               needDummyHeader,
+                                               urlListener, nsnull,
+                                               canonicalLineEnding); 
     }
 done:
     if (messageService)
         ReleaseMessageServiceFromURI(url, messageService);
 
+    if (NS_FAILED(rv)) {
+        NS_IF_RELEASE(aListener);
+        Alert("saveMessageFailed");
+    }
 	return rv;
+}
+
+nsresult
+nsMessenger::Alert(const char *stringName)
+{
+    nsresult rv;
+    nsString errorMessage = GetString(nsString(stringName).GetUnicode());
+        
+    NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
+    if (NS_SUCCEEDED(rv))
+        rv = dialog->Alert(errorMessage.GetUnicode());
+    return rv;
 }
 
 nsresult
@@ -1418,11 +1447,12 @@ NS_IMETHODIMP nsMessenger::DoPrintPreview()
   return rv;  
 }
 
-nsSaveAsListener::nsSaveAsListener(nsIFileSpec* aSpec)
+nsSaveAsListener::nsSaveAsListener(nsIFileSpec* aSpec, nsMessenger *aMessenger)
 {
     NS_INIT_REFCNT();
     if (aSpec)
       m_fileSpec = do_QueryInterface(aSpec);
+    m_messenger = aMessenger;
     m_dataBuffer = nsnull;
 
     // rhp: for charset handling
@@ -1455,24 +1485,28 @@ NS_IMETHODIMP
 nsSaveAsListener::OnStopRunningUrl(nsIURI* url, nsresult exitCode)
 {
   nsresult rv = exitCode;
+  PRBool killSelf = PR_TRUE;
 
   if (m_fileSpec)
   {
     m_fileSpec->Flush();
     m_fileSpec->CloseStream();
     if (NS_FAILED(rv)) goto done;
-    NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
-    if (NS_FAILED(rv)) goto done;
-    nsCOMPtr<nsIRDFResource> res;
-    rv = rdf->GetResource(m_templateUri, getter_AddRefs(res));
-    if (NS_FAILED(rv)) goto done;
-    nsCOMPtr<nsIMsgFolder> templateFolder;
-    templateFolder = do_QueryInterface(res, &rv);
-    if (NS_FAILED(rv)) goto done;
-    NS_WITH_SERVICE(nsIMsgCopyService, copyService, kMsgCopyServiceCID, &rv);
-    if (NS_FAILED(rv)) goto done;
-    rv = copyService->CopyFileMessage(m_fileSpec, templateFolder, nsnull,
-                                      PR_TRUE, this, nsnull);
+    if (m_templateUri) { // ** save as template goes here
+        NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+        if (NS_FAILED(rv)) goto done;
+        nsCOMPtr<nsIRDFResource> res;
+        rv = rdf->GetResource(m_templateUri, getter_AddRefs(res));
+        if (NS_FAILED(rv)) goto done;
+        nsCOMPtr<nsIMsgFolder> templateFolder;
+        templateFolder = do_QueryInterface(res, &rv);
+        if (NS_FAILED(rv)) goto done;
+        NS_WITH_SERVICE(nsIMsgCopyService, copyService, kMsgCopyServiceCID, &rv);
+        if (NS_FAILED(rv)) goto done;
+        rv = copyService->CopyFileMessage(m_fileSpec, templateFolder, nsnull,
+                                          PR_TRUE, this, nsnull);
+        killSelf = PR_FALSE;
+    }
   }
 
 done:
@@ -1483,9 +1517,15 @@ done:
       nsFileSpec realSpec;
       m_fileSpec->GetFileSpec(&realSpec);
       realSpec.Delete(PR_FALSE);
-      Release(); // no more work to be done; kill ourself
+    }
+    if (m_messenger)
+    {
+        m_messenger->Alert("saveMessageFailed");
     }
   }
+  if (killSelf)
+      Release(); // no more work needs to be done; kill ourself
+
   return rv;
 }
 
@@ -1529,11 +1569,18 @@ nsSaveAsListener::OnStopCopy(nsresult aStatus)
 NS_IMETHODIMP
 nsSaveAsListener::OnStartRequest(nsIChannel* aChannel, nsISupports* aSupport)
 {
-  if (m_fileSpec)
-    m_fileSpec->GetOutputStream(getter_AddRefs(m_outputStream));
-  if (!m_dataBuffer)
-    m_dataBuffer = (char*) PR_CALLOC(FOUR_K+1);
-  return NS_OK;
+    nsresult rv;
+    if (m_fileSpec)
+        rv = m_fileSpec->GetOutputStream(getter_AddRefs(m_outputStream));
+    if (NS_FAILED(rv) && m_messenger)
+    {
+        m_messenger->Alert("saveAttachmentFailed");
+    }
+    else if (!m_dataBuffer)
+    {
+        m_dataBuffer = (char*) PR_CALLOC(FOUR_K+1);
+    }
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -1592,7 +1639,7 @@ nsSaveAsListener::OnDataAvailable(nsIChannel* aChannel,
                                   PRUint32 srcOffset,
                                   PRUint32 count)
 {
-  nsresult rv = NS_OK;
+  nsresult rv = NS_ERROR_FAILURE;
   if (m_dataBuffer && m_outputStream)
   {
     PRUint32 available, readCount, maxReadCount = FOUR_K;

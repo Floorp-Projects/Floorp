@@ -268,8 +268,19 @@ PRInt32 nsIMAPBodyShell::Generate(char *partNum)
 		// Setup the stream
 		if (!GetPseudoInterrupted() && !DeathSignalReceived())
 		{
-			m_protocolConnection->BeginMessageDownLoad(contentLength, MESSAGE_RFC822);
+          nsresult rv = 
+			m_protocolConnection->BeginMessageDownLoad(contentLength,
+                                                       MESSAGE_RFC822);
+          if (NS_FAILED(rv))
+          {
+            m_generatingPart = nsnull;
+            m_protocolConnection->AbortMessageDownLoad();
+            return 0;
+          }
+          else
+          {
 			streamCreated = PR_TRUE;
+          }
 		}
 
 		////// PASS 3 : GENERATE ///////

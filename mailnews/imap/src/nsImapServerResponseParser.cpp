@@ -1598,8 +1598,16 @@ void nsImapServerResponseParser::msg_fetch_content(PRBool chunk, PRInt32 origin,
 		(GetFillingInShell() ? m_shell->GetGeneratingWholeMessage() : PR_TRUE))
 	{
 		NS_ASSERTION(fSizeOfMostRecentMessage > 0, "most recent message has 0 or negative size");
-		fServerConnection.BeginMessageDownLoad(fSizeOfMostRecentMessage, 
-										   content_type);
+		nsresult rv;
+        rv = fServerConnection.BeginMessageDownLoad(fSizeOfMostRecentMessage, 
+                                                    content_type);
+        if (NS_FAILED(rv))
+        {
+            skip_to_CRLF();
+            fServerConnection.PseudoInterrupt(PR_TRUE);
+            fServerConnection.AbortMessageDownLoad();
+            return;
+        }
 	}
 
 	if (PL_strcasecmp(fNextToken, "NIL"))

@@ -44,6 +44,7 @@ public:
   
 	NS_DECL_NSIMESSENGER
     
+  nsresult Alert(const char * stringName);
 
 protected:
 	nsresult DoDelete(nsIRDFCompositeDataSource* db, nsISupportsArray *srcArray, nsISupportsArray *deletedArray);

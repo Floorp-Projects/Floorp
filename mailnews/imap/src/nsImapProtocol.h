@@ -160,7 +160,7 @@ public:
 	virtual void PipelinedFetchMessageParts(nsCString &uid, nsIMAPMessagePartIDArray *parts);
 
 	// used when streaming a message fetch
-  virtual void BeginMessageDownLoad(PRUint32 totalSize, // for user, headers and body
+  virtual nsresult BeginMessageDownLoad(PRUint32 totalSize, // for user, headers and body
                                     const char *contentType);     // some downloads are header only
   virtual void HandleMessageDownLoadLine(const char *line, PRBool chunkEnd);
   virtual void NormalMessageEndDownload();

@@ -2622,13 +2622,14 @@ NS_IMETHODIMP
 //nsImapMailFolder::SetupMsgWriteStream(nsIFileSpec * aFileSpec, PRBool addDummyEnvelope)
 nsImapMailFolder::SetupMsgWriteStream(const char * aNativeString, PRBool addDummyEnvelope)
 {
+    nsresult rv = NS_ERROR_FAILURE;
 //    if (!aFileSpec)
 //        return NS_ERROR_NULL_POINTER;
     nsFileSpec fileSpec (aNativeString);
 //    aFileSpec->GetFileSpec(&fileSpec);
 	fileSpec.Delete(PR_FALSE);
 	nsCOMPtr<nsISupports>  supports;
-	NS_NewIOFileStream(getter_AddRefs(supports), fileSpec, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 00700);
+	rv = NS_NewIOFileStream(getter_AddRefs(supports), fileSpec, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 00700);
 	m_tempMessageStream = do_QueryInterface(supports);
     if (m_tempMessageStream && addDummyEnvelope)
     {
@@ -2653,7 +2654,7 @@ nsImapMailFolder::SetupMsgWriteStream(const char * aNativeString, PRBool addDumm
         m_tempMessageStream->Write(result.GetBuffer(), result.Length(),
                                    &writeCount);
     }
-    return NS_OK;
+    return rv;
 }
 
 NS_IMETHODIMP 

@@ -340,6 +340,7 @@ PRInt32 nsMailboxProtocol::ReadMessageResponse(nsIInputStream * inputStream, PRU
 {
 	char *line = nsnull;
 	PRUint32 status = 0;
+    nsresult rv = NS_OK;
 
 	// if we are doing a move or a copy, forward the data onto the copy handler...
 	// if we want to display the message then parse the incoming data...
@@ -354,6 +355,7 @@ PRInt32 nsMailboxProtocol::ReadMessageResponse(nsIInputStream * inputStream, PRU
 		PRBool pauseForMoreData = PR_FALSE;
         PRBool canonicalLineEnding = PR_FALSE;
         nsCOMPtr<nsIMsgMessageUrl> msgurl = do_QueryInterface(m_runningUrl);
+
         if (msgurl)
             msgurl->GetCanonicalLineEnding(&canonicalLineEnding);
 		do
@@ -385,12 +387,17 @@ PRInt32 nsMailboxProtocol::ReadMessageResponse(nsIInputStream * inputStream, PRU
 				{
 					PRInt32 count = 0;
 					if (line)
-						m_tempMessageFile->Write(line, PL_strlen(line), &count);
+						rv = m_tempMessageFile->Write(line, PL_strlen(line),
+                                                      &count);
+                    if (NS_FAILED(rv)) break;
+
                     if (canonicalLineEnding)
-                        m_tempMessageFile->Write(CRLF, 2, &count);
+                        rv = m_tempMessageFile->Write(CRLF, 2, &count);
                     else
-                        m_tempMessageFile->Write(MSG_LINEBREAK,
+                        rv = m_tempMessageFile->Write(MSG_LINEBREAK,
                                                  MSG_LINEBREAK_LEN, &count);
+                    
+                    if (NS_FAILED(rv)) break;
 				}
 				else
 					SetFlag(MAILBOX_MSG_PARSE_FIRST_LINE);
@@ -400,6 +407,8 @@ PRInt32 nsMailboxProtocol::ReadMessageResponse(nsIInputStream * inputStream, PRU
 	}
 
 	SetFlag(MAILBOX_PAUSE_FOR_READ); // wait for more data to become available...
+
+    if (NS_FAILED(rv)) return -1;
 
 	return 0;
 }
@@ -436,7 +445,8 @@ nsresult nsMailboxProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * 
 			case MAILBOX_ERROR_DONE:
 				{
 					nsCOMPtr <nsIMsgMailNewsUrl> url = do_QueryInterface(m_runningUrl);
-					url->SetUrlState(PR_FALSE, NS_OK);
+					url->SetUrlState(PR_FALSE, m_nextState == MAILBOX_DONE ?
+                                     NS_OK : NS_ERROR_FAILURE);
 					m_nextState = MAILBOX_FREE;
 				}
 				break;
