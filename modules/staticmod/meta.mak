@@ -48,6 +48,7 @@ LLIBS           = $(DIST)\lib\gkgfx.lib         \
                   $(DIST)\lib\rdfutil_s.lib     \
                   $(DIST)\lib\js3250.lib        \
                   $(DIST)\lib\xpcom.lib         \
+                  $(DIST)\lib\unicharutil_s.lib \
                   $(LIBNSPR)
 
 !ifdef MOZ_GECKO_DLL

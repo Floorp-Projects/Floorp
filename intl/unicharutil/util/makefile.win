@@ -28,6 +28,13 @@ REQUIRES =	\
 			string \
 			$(NULL)
 
+# Only set this for static build, so it wouldn't break dynamic
+# build because EXPORT_LIBRARY is forcing libs to be dynamic
+# in dynamic builds, but this is a static lib.
+!ifdef MOZ_STATIC_COMPONENT_LIBS
+EXPORT_LIBRARY=1
+!endif
+
 CPP_OBJS=\
 		.\$(OBJDIR)\nsUnicharUtils.obj \
 		$(NULL)
