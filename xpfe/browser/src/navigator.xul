@@ -461,7 +461,7 @@
       <menuitem name="&goPrevnCmd.label;" onclick="BrowserBack();"/>
     </menu>
     <menu name="&bookmarksMenu.label;" onclick="OpenBookmarkURL(event.target)" 
-						   datasources="rdf:bookmarks rdf:files rdf:find" id="NC:BookmarksRoot" open="true">
+						   datasources="rdf:bookmarks rdf:files rdf:find" id="NC:BookmarksRoot">
 
 	<template>
 		<rule iscontainer="true">
