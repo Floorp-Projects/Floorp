@@ -82,7 +82,7 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryMac :: Init(void)
 NS_IMETHODIMP nsDeviceContextSpecFactoryMac :: CreateDeviceContextSpec(nsIWidget *aWidget,
                                                                        nsIPrintSettings* aPrintSettings,
                                                                        nsIDeviceContextSpec *&aNewSpec,
-                                                                       PRBool aIsPrintPreview)
+                                                                       PRBool aQuiet)
 {
 
     nsresult rv;
@@ -91,7 +91,7 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryMac :: CreateDeviceContextSpec(nsIWidget
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsIPrintingContext> printingContext = do_QueryInterface(devSpec,&rv);
       if (NS_SUCCEEDED(rv)) {
-        rv = printingContext->Init(aPrintSettings,aIsPrintPreview);
+        rv = printingContext->Init(aPrintSettings,aQuiet);
         if (NS_SUCCEEDED(rv)) {
           aNewSpec = devSpec;
           NS_ADDREF(aNewSpec);

@@ -451,7 +451,7 @@ int nsDeviceContextPh::prefChanged( const char *aPref, void *aClosure ) {
   return 0;
 	}
 
-NS_IMETHODIMP nsDeviceContextPh :: BeginDocument( PRUnichar *t, PRUnichar* aPrintToFileName, PRInt32 aStartPage, PRInt32 aEndPage ) {
+NS_IMETHODIMP nsDeviceContextPh :: BeginDocument( PRUnichar *t ) {
   PpPrintContext_t *pc = ((nsDeviceContextSpecPh *)mSpec)->GetPrintContext();
   PpStartJob(pc);
     mIsPrinting = 1;

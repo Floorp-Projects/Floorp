@@ -707,10 +707,7 @@ NS_IMETHODIMP nsDeviceContextMac::GetDeviceContextFor(nsIDeviceContextSpec *aDev
  *  See documentation in nsIDeviceContext.h
  *	@update 12/9/98 dwc
  */
-NS_IMETHODIMP nsDeviceContextMac::BeginDocument(PRUnichar * aTitle, 
-                                                PRUnichar*  aPrintToFileName,
-                                                PRInt32     aStartPage, 
-                                                PRInt32     aEndPage)
+NS_IMETHODIMP nsDeviceContextMac::BeginDocument(PRUnichar * aTitle)
 {
 #if !TARGET_CARBON
 GrafPtr	thePort;
@@ -727,7 +724,7 @@ GrafPtr	thePort;
     nsresult rv = NS_ERROR_FAILURE;
     nsCOMPtr<nsIPrintingContext> printingContext = do_QueryInterface(mSpec);
     if (printingContext)
-        rv = printingContext->BeginDocument(aStartPage, aEndPage);
+        rv = printingContext->BeginDocument();
     return rv;
 #endif
 }

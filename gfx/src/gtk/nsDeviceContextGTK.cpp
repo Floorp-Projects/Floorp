@@ -562,7 +562,7 @@ NS_IMETHODIMP nsDeviceContextGTK::GetDeviceContextFor(nsIDeviceContextSpec *aDev
   return NS_ERROR_UNEXPECTED;
 }
 
-NS_IMETHODIMP nsDeviceContextGTK::BeginDocument(PRUnichar * aTitle, PRUnichar* aPrintToFileName, PRInt32 aStartPage, PRInt32 aEndPage)
+NS_IMETHODIMP nsDeviceContextGTK::BeginDocument(PRUnichar * aTitle)
 {
   return NS_OK;
 }

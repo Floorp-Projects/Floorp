@@ -79,15 +79,15 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryBeOS :: Init(void)
  */
 NS_IMETHODIMP nsDeviceContextSpecFactoryBeOS :: CreateDeviceContextSpec(nsIWidget *aWidget,
                                                                         nsIPrintSettings* aPrintSettings,
-                                                                        nsIDeviceContextSpec *&aNewSpec,
-                                                                        PRBool aIsPrintPreview)
+                                                                       nsIDeviceContextSpec *&aNewSpec,
+                                                                       PRBool aQuiet)
 {
   nsresult rv;
   static NS_DEFINE_CID(kDeviceContextSpecCID, NS_DEVICE_CONTEXT_SPEC_CID);
   nsCOMPtr<nsIDeviceContextSpec> devSpec = do_CreateInstance(kDeviceContextSpecCID, &rv);
   if (NS_SUCCEEDED(rv))
   {
-    rv = ((nsDeviceContextSpecBeOS *)devSpec.get())->Init(aPrintSettings);
+    rv = ((nsDeviceContextSpecBeOS *)devSpec.get())->Init(aPrintSettings, aQuiet);
     if (NS_SUCCEEDED(rv))
     {
       aNewSpec = devSpec;

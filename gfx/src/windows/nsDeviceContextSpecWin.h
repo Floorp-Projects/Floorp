@@ -51,7 +51,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD Init(nsIWidget* aWidget, nsIPrintSettings* aPS, PRBool aIsPrintPreview);
+  NS_IMETHOD Init(nsIWidget* aWidget, nsIPrintSettings* aPS, PRBool aQuiet);
 
   void GetDriverName(char *&aDriverName) const   { aDriverName = mDriverName;     }
   void GetDeviceName(char *&aDeviceName) const   { aDeviceName = mDeviceName;     }
@@ -70,6 +70,12 @@ public:
                                               LPDEVMODE         aDevMode);
 
 protected:
+  nsresult ShowXPPrintDialog(PRBool aQuiet);
+  nsresult ShowNativePrintDialog(nsIWidget* aWidget, PRBool aQuiet);
+
+#ifdef MOZ_REQUIRE_CURRENT_SDK
+  nsresult ShowNativePrintDialogEx(nsIWidget* aWidget, PRBool aQuiet);
+#endif
 
   void SetDeviceName(char* aDeviceName);
   void SetDriverName(char* aDriverName);
@@ -87,6 +93,9 @@ protected:
   PRBool    mIsDEVMODEGlobalHandle;
 
   nsCOMPtr<nsIPrintSettings> mPrintSettings;
+
+  // For PrintDlgEx
+  FARPROC mUseExtendedPrintDlg;
 };
 
 

@@ -303,7 +303,7 @@ NS_IMETHODIMP nsDeviceContextXp::GetDeviceContextFor(nsIDeviceContextSpec *aDevi
 /** ---------------------------------------------------
  *  See documentation in nsIDeviceContext.h
  */
-NS_IMETHODIMP nsDeviceContextXp::BeginDocument(PRUnichar * aTitle, PRUnichar* aPrintToFileName, PRInt32 aStartPage, PRInt32 aEndPage)
+NS_IMETHODIMP nsDeviceContextXp::BeginDocument(PRUnichar * aTitle)
 {  
   PR_LOG(nsDeviceContextXpLM, PR_LOG_DEBUG, ("nsDeviceContextXp::BeginDocument()\n"));
   nsresult  rv = NS_OK;

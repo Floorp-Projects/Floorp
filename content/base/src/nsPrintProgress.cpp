@@ -72,11 +72,8 @@ nsPrintProgress::~nsPrintProgress()
 /* void openProgressDialog (in nsIDOMWindowInternal parent, in string dialogURL, in nsISupports parameters); */
 NS_IMETHODIMP nsPrintProgress::OpenProgressDialog(nsIDOMWindowInternal *parent,
                                                   const char *dialogURL,
-                                                  nsISupports *parameters, 
-                                                  nsIObserver *openDialogObserver,
-                                                  PRBool *notifyOnOpen)
+                                                  nsISupports *parameters)
 {
-  *notifyOnOpen = PR_FALSE;
   nsresult rv = NS_ERROR_FAILURE;
   
   if (m_dialog)

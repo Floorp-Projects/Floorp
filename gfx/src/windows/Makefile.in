@@ -42,6 +42,8 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  locale \
 		  necko \
+		  dom \
+		  windowwatcher \
 		  content \
 		  layout \
 		  $(NULL)

@@ -35,6 +35,7 @@ REQUIRES    = xpcom \
         widget \
         view \
         util \
+        dom \
         pref \
         js \
         uconv \
@@ -42,6 +43,7 @@ REQUIRES    = xpcom \
         unicharutil \
         gfx2 \
         mozcomps \
+        windowwatcher \
         content \
         layout \
         locale \
@@ -66,7 +68,6 @@ CPPSRCS = \
         nsScreenMac.cpp \
         nsScreenManagerMac.cpp \
         nsPrintOptionsX.cpp \
-        nsPrintSettingsX.cpp \
         nsFontUtils.cpp \
         nsNativeThemeMac.cpp \
         $(NULL)

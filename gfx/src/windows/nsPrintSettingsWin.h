@@ -32,20 +32,14 @@
 //***    nsPrintSettingsWin
 //*****************************************************************************
 class nsPrintSettingsWin : public nsPrintSettings,
-                                  public nsIPrintSettingsWin
+                           public nsIPrintSettingsWin
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIPRINTSETTINGSWIN
 
   nsPrintSettingsWin();
-  nsPrintSettingsWin(const nsPrintSettingsWin* aPS);
   virtual ~nsPrintSettingsWin();
-
-  /**
-   * Makes a new copy
-   */
-  virtual nsresult CloneObj(nsIPrintSettings **_retval);
 
 protected:
   char*     mDeviceName;

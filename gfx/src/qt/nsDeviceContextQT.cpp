@@ -376,7 +376,7 @@ nsDeviceContextQT::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
   return rv;
 }
 
-NS_IMETHODIMP nsDeviceContextQT::BeginDocument(PRUnichar * aTitle, PRUnichar* aPrintToFileName, PRInt32 aStartPage, PRInt32 aEndPage)
+NS_IMETHODIMP nsDeviceContextQT::BeginDocument(PRUnichar *aTitle)
 {
   return NS_OK;
 }

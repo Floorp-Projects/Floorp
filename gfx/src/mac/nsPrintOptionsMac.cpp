@@ -36,17 +36,42 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsCOMPtr.h"
+#include "nsIPref.h"
+#include "nsIServiceManager.h"
+
+#include "nsWatchTask.h"
 #include "nsPrintOptionsMac.h"
-#include "nsPrintSettingsMac.h"
+#include "nsGfxUtils.h"
+
+#include "plbase64.h"
+#include "prmem.h"
 
 #define MAC_OS_PAGE_SETUP_PREFNAME  "print.macos.pagesetup"
 
 /** ---------------------------------------------------
- *  See documentation in nsPrintOptionsMac.h
+ *  See documentation in nsPrintOptionsWin.h
  *	@update 6/21/00 dwc
  */
 nsPrintOptionsMac::nsPrintOptionsMac()
 {
+	// create the print style and print record
+	mPrintRecord = (THPrint)::NewHandleClear(sizeof(TPrint));
+	if (mPrintRecord)
+	{
+	  nsresult rv = ReadPageSetupFromPrefs();
+	  ::PrOpen();
+    if (::PrError() == noErr)
+    {
+  	  if (NS_FAILED(rv))
+    		::PrintDefault(mPrintRecord);
+      else
+        ::PrValidate(mPrintRecord);
+
+  		::PrClose();
+		}
+	}
+
 }
 
 /** ---------------------------------------------------
@@ -55,23 +80,10 @@ nsPrintOptionsMac::nsPrintOptionsMac()
  */
 nsPrintOptionsMac::~nsPrintOptionsMac()
 {
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsPrintOptionsImpl.h
- */
-/* nsIPrintSettings CreatePrintSettings (); */
-NS_IMETHODIMP nsPrintOptionsMac::CreatePrintSettings(nsIPrintSettings **_retval)
-{
-  nsresult rv;
-  nsPrintSettingsMac* printSettings = new nsPrintSettingsMac(); // does not initially ref count
-  if (!printSettings)
-    return NS_ERROR_OUT_OF_MEMORY;
-  rv = printSettings->Init();
-  if (NS_FAILED(rv))
-    return rv;
-    
-  return printSettings->QueryInterface(NS_GET_IID(nsIPrintSettings), (void**)_retval); // ref counts
+	// get rid of the print record
+	if (mPrintRecord) {
+		::DisposeHandle((Handle)mPrintRecord);
+	}
 }
 
 /** ---------------------------------------------------
@@ -81,51 +93,121 @@ NS_IMETHODIMP nsPrintOptionsMac::CreatePrintSettings(nsIPrintSettings **_retval)
 NS_IMETHODIMP
 nsPrintOptionsMac::ShowPrintSetupDialog(nsIPrintSettings *aThePrintSettings)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+
+  if (!mPrintRecord) return NS_ERROR_NOT_INITIALIZED;
+
+  // it doesn't really matter if this fails
+  nsresult rv = ReadPageSetupFromPrefs();
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to write page setup to prefs");
+
+  // open the printing manager
+  ::PrOpen();
+  if(::PrError() != noErr)
+    return NS_ERROR_FAILURE;
+  
+  ::PrValidate(mPrintRecord);
+  NS_ASSERTION(::PrError() == noErr, "Printing error");
+
+  nsWatchTask::GetTask().Suspend();
+  ::InitCursor();
+  Boolean   dialogOK = ::PrStlDialog(mPrintRecord);		// open up and process the style record
+  nsWatchTask::GetTask().Resume();
+  
+  OSErr err = ::PrError();
+  
+  ::PrClose();
+
+  // it doesn't really matter if this fails
+  rv = WritePageSetupToPrefs();
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to save page setup to prefs");
+
+  if (err != noErr)
+    return NS_ERROR_FAILURE;
+
+  return NS_OK;
 } 
 
 /* [noscript] voidPtr GetNativeData (in short aDataType); */
 NS_IMETHODIMP
 nsPrintOptionsMac::GetNativeData(PRInt16 aDataType, void * *_retval)
 {
+  nsresult rv = NS_OK;
+  
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = nsnull;
   
-  return NS_ERROR_NOT_IMPLEMENTED;
+  switch (aDataType)
+  {
+    case kNativeDataPrintRecord:
+      if (mPrintRecord)
+      {
+        void*   printRecord = nsMemory::Alloc(sizeof(TPrint));
+        if (!printRecord) {
+          rv = NS_ERROR_OUT_OF_MEMORY;
+          break;
+        }
+        
+        ::BlockMoveData(*mPrintRecord, printRecord, sizeof(TPrint));
+        *_retval = printRecord;
+      }
+      break;
+      
+    default:
+      rv = NS_ERROR_FAILURE;
+      break;
+  }
+
+  return rv;
 }
 
 #pragma mark -
 
 nsresult
-nsPrintOptionsMac::ReadPrefs(nsIPrintSettings* aPS, const nsString& aPrefName, PRUint32 aFlags)
+nsPrintOptionsMac::ReadPageSetupFromPrefs()
 {
   nsresult rv;
-  
-  rv = nsPrintOptions::ReadPrefs(aPS, aPrefName, aFlags);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "nsPrintOptions::ReadPrefs() failed");
-  
-  nsCOMPtr<nsIPrintSettingsMac> printSettingsMac(do_QueryInterface(aPS));
-  if (!printSettingsMac)
-    return NS_ERROR_NO_INTERFACE;
-  rv = printSettingsMac->ReadPageSetupFromPrefs();
-  NS_ASSERTION(NS_SUCCEEDED(rv), "nsIPrintSettingsMac::ReadPageFormatFromPrefs() failed");
-  
-  return NS_OK;
+  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+  if (NS_FAILED(rv))
+    return rv;
+    
+  nsXPIDLCString  encodedData;
+  rv = prefs->GetCharPref(MAC_OS_PAGE_SETUP_PREFNAME, getter_Copies(encodedData));
+  if (NS_FAILED(rv))
+    return rv;
+
+  // decode the base64
+  PRInt32   encodedDataLen = nsCRT::strlen(encodedData.get());
+  char* decodedData = ::PL_Base64Decode(encodedData.get(), encodedDataLen, nsnull);
+  if (!decodedData)
+    return NS_ERROR_FAILURE;
+
+  if (((encodedDataLen * 3) / 4) >= sizeof(TPrint))
+    ::BlockMoveData(decodedData, *mPrintRecord, sizeof(TPrint));
+  else
+    rv = NS_ERROR_FAILURE;    // the data was too small
+    
+  PR_Free(decodedData);
+  return rv;
 }
 
 nsresult
-nsPrintOptionsMac::WritePrefs(nsIPrintSettings* aPS, const nsString& aPrefName, PRUint32 aFlags)
+nsPrintOptionsMac::WritePageSetupToPrefs()
 {
+  if (!mPrintRecord)
+    return NS_ERROR_NOT_INITIALIZED;
+    
   nsresult rv;
-  
-  rv = nsPrintOptions::WritePrefs(aPS, aPrefName, aFlags);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "nsPrintOptions::WritePrefs() failed");
-  
-  nsCOMPtr<nsIPrintSettingsMac> printSettingsMac(do_QueryInterface(aPS));
-  if (!printSettingsMac)
-    return NS_ERROR_NO_INTERFACE;
-  rv = printSettingsMac->WritePageSetupToPrefs();
-  NS_ASSERTION(NS_SUCCEEDED(rv), "nsIPrintSettingsX::WritePageFormatToPrefs() failed");
-  
-  return NS_OK;
+  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+  if (NS_FAILED(rv))
+    return rv;
+
+  StHandleLocker  locker((Handle)mPrintRecord);
+
+  nsXPIDLCString  encodedData;
+  encodedData.Adopt(::PL_Base64Encode((char *)*mPrintRecord, sizeof(TPrint), nsnull));
+  if (!encodedData.get())
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  return prefs->SetCharPref(MAC_OS_PAGE_SETUP_PREFNAME, encodedData);
 }
+
