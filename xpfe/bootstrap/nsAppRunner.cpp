@@ -346,6 +346,27 @@ int main(int argc, char* argv[])
     goto done;
   }
  
+  /* 
+   * If default profile is current, launch CreateProfile Wizard. 
+   */ 
+#if defined(NS_USING_PROFILES) 
+  { 
+      int numProfiles = 0; 
+
+      profileService->GetProfileCount(&numProfiles); 
+
+      NS_ASSERTION(numProfiles > 0, "Oops, no profiles yet!"); 
+      if (numProfiles == 1)
+      {
+          char* profileName = nsnull;
+          profileService->GetCurrentProfile(&profileName);
+          if (profileName && strcmp(profileName, "default") == 0)
+              urlstr = "resource:/res/mailnews/messenger/cpw.xul"; 
+      }
+  } 
+
+#endif
+ 
   /*
    * Post an event to the shell instance to load the AppShell 
    * initialization routines...  

@@ -24,6 +24,11 @@
 #include "nsIComponentManager.h"
 #include "nsIEnumerator.h"
 #include "plstr.h"
+#include "nsFileSpec.h"
+#include "nsString.h"
+#include "nsIFileLocator.h"
+#include "nsFileLocations.h"
+#include "nsEscape.h"
 
 #ifdef XP_PC
 #include <direct.h>
@@ -46,6 +51,8 @@
 
 #define _MAX_LENGTH 256
 
+char gNewProfileData[20][256] = {'\0', '\0'};
+int g_Count = 0;
 extern "C" NS_EXPORT nsresult
 NS_RegistryGetFactory(const nsCID &cid, nsISupports* servMgr, nsIFactory** aFactory );
 
@@ -53,8 +60,10 @@ NS_RegistryGetFactory(const nsCID &cid, nsISupports* servMgr, nsIFactory** aFact
 // profile manager IID and CID
 static NS_DEFINE_IID(kIProfileIID, NS_IPROFILE_IID);
 static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
+static NS_DEFINE_IID(kIFileLocatorIID, NS_IFILELOCATOR_IID);
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
+static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 
 class nsProfile: public nsIProfile {
   NS_DECL_ISUPPORTS
@@ -68,6 +77,9 @@ public:
     virtual ~nsProfile();
     static nsProfile *GetInstance();
 
+      void     CreateUserDirectories(const nsFileSpec& profileDir);
+      void    SetDataArray(nsString data);
+      char*   GetValue(char *name);
     // Initialize/shutdown
     NS_IMETHOD Startup(char *registry);
     NS_IMETHOD Shutdown();
@@ -82,6 +94,8 @@ public:
 
     // Setters
     NS_IMETHOD SetProfileDir(const char *profileName, const nsFileSpec& profileDir);
+      // Creators
+    NS_IMETHOD CreateNewProfile(char* data);
 };
 
 nsProfile* nsProfile::mInstance = NULL;
@@ -341,7 +355,7 @@ NS_IMETHODIMP nsProfile::GetSingleProfile(char **profileName)
                         // Test that result.
                         if (NS_SUCCEEDED(rv)) {
                             // Get node name.
-                            *profileName = (char*) malloc(sizeof(char)*_MAX_LENGTH);
+                            *profileName = (char*) PR_Malloc(sizeof(char)*_MAX_LENGTH);
                             rv = node->GetName( profileName );
 
                             // Test result.
@@ -385,7 +399,7 @@ NS_IMETHODIMP nsProfile::GetCurrentProfile(char **profileName)
           rv = reg->GetSubtree(nsIRegistry::Common, "Profiles", &key);
           if (NS_SUCCEEDED(rv)) 
           {            
-                *profileName = (char*) malloc(sizeof(char)*_MAX_LENGTH);
+                *profileName = (char*) PR_Malloc(sizeof(char)*_MAX_LENGTH);
 
                  rv = reg->GetString( key, "CurrentProfile", profileName );
                 if (NS_SUCCEEDED(rv)) {
@@ -423,7 +437,7 @@ NS_IMETHODIMP nsProfile::GetCurrentProfileDir(nsFileSpec* profileDir)
 
     GetCurrentProfile(&profileName);
     nsresult rv = GetProfileDir(profileName, profileDir);
-    free(profileName);
+    PR_DELETE(profileName);
     
     return rv;
 
@@ -504,7 +518,129 @@ NS_IMETHODIMP nsProfile::SetProfileDir(const char *profileName, const nsFileSpec
 }
 
 
+// Creates a new profile
+NS_IMETHODIMP nsProfile::CreateNewProfile(char* charData)
+{
+#if defined(NS_DEBUG)
+    printf("ProfileManager : CreateNewProfile\n");
+      printf("ProfileManagerData*** : %s\n", charData);
+#endif
+      nsString data(charData);
+      SetDataArray(data);
+      char* dirName = GetValue("ProfileDir");
+      char* unescapedProfileName = GetValue("ProfileName");
+      if (!unescapedProfileName || !*unescapedProfileName)
+		  return NS_ERROR_FAILURE;
+	  char* profileName = nsEscape(unescapedProfileName, url_Path); // temp hack
+      PR_DELETE(unescapedProfileName);
+      nsFileSpec dirSpec(dirName);
+      if (!dirName || !*dirName)
+      {
+		  // They didn't type a directory path...
+		  nsIFileLocator* locator = nsnull;
+		  rv = nsServiceManager::GetService(kFileLocatorCID, kIFileLocatorIID, (nsISupports**)&locator);
+		  if (NS_FAILED(rv) || !locator)
+		      return NS_ERROR_FAILURE;
+          // Get current profile, make the new one a sibling...
+          rv = locator->GetFileLocation(nsSpecialFileSpec::App_UserProfileDirectory50, &dirSpec);
+          nsServiceManager::ReleaseService(kFileLocatorCID, locator);
+		  if (NS_FAILED(rv))
+		      return NS_ERROR_FAILURE;
+		  dirSpec.SetLeafName(profileName);
+      }
+      printf("before SetProfileDir\n");
+      rv = SetProfileDir(profileName, dirSpec);
+      printf("after SetProfileDir\n");
+      if (NS_FAILED(rv))
+        return rv;
 
+      if (dirName)
+          PR_DELETE(dirName);
+      delete [] profileName;
+      printf("SMTP  %s\n", GetValue("SMTP"));
+      printf("NNTP  %s\n", GetValue("NNTP"));
+      printf("EMAIL %s\n", GetValue("EMAIL"));
+      CreateUserDirectories(dirSpec);
+    return NS_OK;
+}
+void nsProfile::CreateUserDirectories(const nsFileSpec& profileDir)
+{
+#if defined(NS_DEBUG)
+    printf("ProfileManager : CreateUserDirectories\n");
+#endif
+      nsFileSpec tmpDir;
+      tmpDir = profileDir;
+      tmpDir += "News";
+      if (!tmpDir.Exists())
+    {
+              tmpDir.CreateDirectory();
+      }
+      tmpDir = profileDir;
+      tmpDir += "Mail";
+      if (!tmpDir.Exists())
+    {
+              tmpDir.CreateDirectory();
+      }
+      tmpDir = profileDir;
+      tmpDir += "Cache";
+      if (!tmpDir.Exists())
+    {
+              tmpDir.CreateDirectory();
+      }
+}
+
+// Set the data stream into an array
+void nsProfile::SetDataArray(nsString data)
+{
+#if defined(NS_DEBUG)
+    printf("ProfileManager : Setting new profile data\n");
+#endif
+      static int index=0;
+      int i=0;
+      char subTok[_MAX_LENGTH] = {'\0'};
+      printf("SetDataArray data : %s\n", data.ToNewCString());
+      strcpy(subTok, strtok(data.ToNewCString(), "%"));
+      printf("before while loop\n");
+      char* validTok;
+      while (subTok)
+      {
+              printf("subTok : %s\n", subTok);
+              if (subTok) {
+                      strcpy(gNewProfileData[index], subTok);
+                      index++;
+                      g_Count = index;
+              }
+              validTok = strtok(NULL, "%");
+              if (validTok) {
+                      strcpy(subTok, validTok);
+              }
+              else {
+                      break;
+              }
+      }
+      printf("after while loop\n");
+}
+
+char* nsProfile::GetValue(char *name)
+{
+    int nameLength;
+    char* value;
+    value = (char *) PR_Malloc(sizeof(char) * _MAX_LENGTH);
+    for (int i = 0; i < g_Count; i=i+1) {
+        if (gNewProfileData[i]) {
+            nameLength = strlen(name);
+            if (strncmp(name, gNewProfileData[i], nameLength) == 0) {
+                char* equalsPosition = strchr(gNewProfileData[i], '=');
+                if (equalsPosition) {
+                    strcpy(value, 1 + equalsPosition);
+                    return value;
+                }
+            }
+        }
+    }
+    printf("after for loop\n");
+    return NULL;
+} 
 
 // Factory
 class nsProfileFactory: public nsIFactory {
