@@ -240,6 +240,8 @@ nsrefcnt _class::AddRef(void)                                \
 /**
  * Macro for releasing a reference to an interface, except that this
  * macro preserves the return value from the underlying Release call.
+ * The interface pointer argument will only be NULLed if the reference count
+ * goes to zero.
  *
  * Note that when MOZ_TRACE_XPCOM_REFCNT is defined that the release will
  * be done before the trace message is logged. If the reference count
@@ -252,11 +254,12 @@ nsrefcnt _class::AddRef(void)                                \
 #define NS_RELEASE2(_ptr, _result)                                       \
  _result = ((nsrefcnt) nsTraceRefcnt::Release((_ptr), (_ptr)->Release(), \
                                               __FILE__, __LINE__));      \
- (_ptr) = NULL
+ if (0 == (_result)) (_ptr) = NULL
 #else
 #define NS_RELEASE2(_ptr, _result) \
  _result = (_ptr)->Release();      \
- (_ptr) = NULL
+ if (0 == (_result)) (_ptr) = NULL
+
 #endif
 
 /**
