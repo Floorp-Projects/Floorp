@@ -2799,14 +2799,17 @@ main
   PREF_SetDefaultCharPref("profile.directory", fe_config_dir);
   PREF_SetDefaultIntPref("profile.numprofiles", 1);
 
-  GH_InitGlobalHistory();
-
   /* SECNAV_INIT needs this defined, but build_user_agent_string cannot 
    * be called until after SECNAV_INIT, so call this simplified version.
    */
   build_simple_user_agent_string(versionLocale);
 
   fe_InstallPreferences (0);
+
+  /* This needs to be after fe_InstallPreferences() to 
+   * get the right filename.
+   */
+  GH_InitGlobalHistory();
 
   /*
   ** Initialize the security library.
