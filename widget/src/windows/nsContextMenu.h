@@ -56,7 +56,7 @@ public:
   nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent);
 
   // nsIMenu Methods
-  NS_IMETHOD Create(nsISupports * aParent);
+  NS_IMETHOD Create(nsISupports * aParent, const nsString& anAlignment);
   NS_IMETHOD GetParent(nsISupports *&aParent);
 
   NS_IMETHOD AddItem(nsISupports * aItem);

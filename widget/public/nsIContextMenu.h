@@ -48,7 +48,7 @@ class nsIContextMenu : public nsISupports {
     * Creates the context menu
     *
     */
-    NS_IMETHOD Create(nsISupports * aParent) = 0;
+    NS_IMETHOD Create(nsISupports * aParent, const nsString& anAlignment) = 0;
 
    /**
     * Get the context menu's Parent
