@@ -29,14 +29,28 @@
           ]]>
         </getter>
       </property>
+
+      <method name="setChecked">
+        <parameter name="aValue"/>
+        <body>
+        <![CDATA[
+          var change = (aValue != (this.getAttribute('checked') == 'true'));
+          if (aValue) 
+            this.setAttribute('checked', 'true');
+          else 
+            this.removeAttribute('checked');
+          if (change) {
+            var event = document.createEvent('Events');
+            event.initEvent('CheckboxStateChange', false, true);
+            this.dispatchEvent(event);
+          }
+          return aValue;
+        ]]>
+        </body>
+      </method>
       
       <!-- public implementation -->
-      <property name="checked"    onset="if (val) this.setAttribute('checked', 'true');
-                                         else this.removeAttribute('checked');
-                                         var event = document.createEvent('Events');
-                                         event.initEvent('CheckboxStateChange', false, true);
-                                         this.dispatchEvent(event);
-                                         return val;"
+      <property name="checked"    onset="return this.setChecked(val);"
                                   onget="return this.getAttribute('checked') == 'true';"/>
     </implementation>
     

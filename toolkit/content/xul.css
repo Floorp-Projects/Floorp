@@ -371,7 +371,7 @@ column {
 /******** listbox **********/
 
 listbox {
-  -moz-binding: url("chrome://global/content/bindings/listbox.xml#listbox");
+  -moz-binding: url("chrome://global/content/widgets/listbox.xml#listbox");
 }
 
 listcols, listcol {
