@@ -26,7 +26,6 @@
  *
  * Designed and implemented by Lou Montulli '98
  */
-
 #include "mkutils.h"
 #include "mkselect.h"
 #include "nslocks.h"
@@ -52,6 +51,107 @@ PRPollDesc poll_desc_array[MAX_SIMULTANIOUS_SOCKETS];
 unsigned int fd_set_size = 0;               
 PRIVATE int net_calling_all_the_time_count=0;
 PRIVATE XP_Bool net_slow_timer_on=FALSE;
+
+#if defined(NO_NETWORK_POLLING)
+#include "private/primpl.h"
+
+#if defined(XP_PC)
+#include "md/_win95.h"
+
+extern HWND gDNSWindow;
+extern UINT gMSGAsyncSelect;
+
+/*
+ * Helper routine which extracts the OS specific socket from the PRFileDesc
+ * structure...
+ */
+PRInt32
+net_GetOSFDFromFileDesc(PRFileDesc* fd)
+{
+  PRInt32 osfd = 0;
+  PRFileDesc *bottom;
+  bottom = PR_GetIdentitiesLayer(fd, PR_NSPR_IO_LAYER);
+
+  PR_ASSERT(NULL != bottom);  /* what to do about that? */
+  if ((NULL != bottom) && 
+      (_PR_FILEDESC_OPEN == bottom->secret->state)) {
+      osfd = bottom->secret->md.osfd;
+  }
+  return osfd;
+}
+
+#else /* ! XP_PC */
+
+PRInt32
+net_GetOSFDFromFileDesc(PRFileDesc* fd)
+{
+  PR_ASSERT(0); /* write me */
+  return 0;
+}
+  
+#endif /* ! XP_PC */
+
+/*
+ * Helper routine which maps the OS specific socket back to its associated
+ * PRFileDesc structure...
+ */
+PRFileDesc* 
+net_GetFileDescFromOSFD(PRInt32 osfd)
+{
+  int i;
+  PRFileDesc* fd = NULL;
+
+  /* 
+   * Make sure this function is called inside of the LIBNET lock since
+   * it modifies global data structures...
+   */
+  PR_ASSERT(LIBNET_IS_LOCKED());
+
+  for (i=0; i<fd_set_size; i++) {
+    fd = poll_desc_array[i].fd;
+    if (net_GetOSFDFromFileDesc(fd) == osfd) {
+      break;
+    }
+  }
+  return fd;
+}
+
+/*
+ * Request an asynchronous notification when data is available on the
+ * given PRFileDesc...
+ */
+void
+net_AsyncSelect(PRFileDesc* fd, long netMask)
+{
+  SOCKET osfd;
+
+  osfd = (SOCKET)net_GetOSFDFromFileDesc(fd);
+
+  if (0 != osfd) {
+#if defined(XP_PC)
+    WSAAsyncSelect(osfd, gDNSWindow, gMSGAsyncSelect, netMask);
+#else   /* ! XP_PC */
+    PR_ASSERT(0); /* write me */
+#endif  /* ! XP_PC */
+  } 
+}
+
+
+/*
+ * Force the Netlib thread to drop out of its wait state...
+ */
+void
+net_ForceSelect(void)
+{
+#if defined(XP_PC)
+  PostMessage(gDNSWindow, gMSGAsyncSelect, 0, 0L);
+#else   /* ! XP_PC */
+    PR_ASSERT(0); /* write me */
+#endif  /* ! XP_PC */
+}
+
+#endif /* NO_NETWORK_POLLING */
+
 
 /*  Add a select entry, no duplicates. */
 PRIVATE void 
@@ -100,6 +200,12 @@ net_add_select(SelectType stType, PRFileDesc *prFD)
 		poll_desc_array[index].in_flags = READ_FLAGS;
 	else
 		PR_ASSERT(0);
+
+#if defined(NO_NETWORK_POLLING)
+  /* Request a notification when data is available on the socket... */
+  net_AsyncSelect(prFD, 
+                  FD_READ | FD_WRITE | FD_ACCEPT | FD_CONNECT | FD_CLOSE | FD_OOB);
+#endif /* NO_NETWORK_POLLING */
 }
 
 /*  Remove a select if it exists. */
@@ -124,11 +230,15 @@ net_remove_select(SelectType stType, PRFileDesc *prFD)
 			   || (stType == ReadSelect && poll_desc_array[count].in_flags == READ_FLAGS))
 			{
 				/* found it collapse the list */
-
 				fd_set_size--;
-				if(count < fd_set_size)
+        if(count < fd_set_size) {
 					memmove(&poll_desc_array[count], &poll_desc_array[count+1], (fd_set_size - count) * sizeof(PRPollDesc));
+        }
 
+#if defined(NO_NETWORK_POLLING)
+        /* Cancel any outstanding notification requests for the socket... */
+        net_AsyncSelect(prFD, 0);
+#endif /* NO_NETWORK_POLLING */
 				return;
 			}
 		}
@@ -171,6 +281,13 @@ NET_PollSockets(void)
 	static PRIntervalTime interval = 0;
 	register unsigned int itmp;
 
+#if defined(NO_NETWORK_POLLING)
+  /*
+   * This routine should only be called if network polling is enabled...
+   */
+  PR_ASSERT(0);
+#endif /* NO_NETWORK_POLLING */
+
   /*
    * Enter the LIBNET lock to protect the poll_desc_array and other global
    * data structures used by NET_PollSockets(...)
@@ -188,7 +305,7 @@ NET_PollSockets(void)
 		return FALSE;
   }
 
-	itmp = PR_Poll(poll_desc_array, fd_set_size, interval);
+  itmp = PR_Poll(poll_desc_array, fd_set_size, interval);
 
   if(itmp < 1) {
     LIBNET_UNLOCK();
@@ -231,6 +348,15 @@ NET_SetCallNetlibAllTheTime(MWContext *context, char *caller)
 #endif /* USE_TIMERS_FOR_CALL_ALL_THE_TIME */
 	
 	net_calling_all_the_time_count++;
+
+#if defined(NO_NETWORK_POLLING)
+  /*
+   * Force the netlib thread to drop out of its wait state (ie. select).
+   * This is necessary, since this function can be called on multiple
+   * threads...
+   */
+  net_ForceSelect();
+#endif /* NO_NETWORK_POLLING */
 }
 
 #define SLOW_NETLIB_TIMER_INTERVAL_MILLISECONDS 10
