@@ -649,7 +649,7 @@ NS_METHOD MRJPluginInstance::Initialize(nsIPluginInstancePeer* peer)
 	return NS_OK;
 }
 
-NS_METHOD MRJPluginInstance::OnDataAvailable(nsIPluginStreamInfo* pluginInfo, nsIInputStream* input, PRUint32 length)
+NS_METHOD MRJPluginInstance::OnDataAvailable(nsIPluginStreamInfo* pluginInfo, nsIInputStream* input, PRUint32 offset, PRUint32 length)
 {
 	// hopefully all our data is available.
 	char* documentBase = new char[length + 1];
