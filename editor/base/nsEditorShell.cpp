@@ -124,21 +124,6 @@ static NS_DEFINE_IID(kISupportsIID,             NS_ISUPPORTS_IID);
 
 #define EDITOR_BUNDLE_URL "chrome://editor/locale/editor.properties"
 
-nsresult
-NS_NewEditorShell(nsIEditorShell** aEditorShell)
-{
-    NS_PRECONDITION(aEditorShell != nsnull, "null ptr");
-    if (! aEditorShell)
-        return NS_ERROR_NULL_POINTER;
-
-    *aEditorShell = new nsEditorShell();
-    if (! *aEditorShell)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF(*aEditorShell);
-    return NS_OK;
-}
-
 /////////////////////////////////////////////////////////////////////////
 // Utility to extract document from a webshell object.
 static nsresult

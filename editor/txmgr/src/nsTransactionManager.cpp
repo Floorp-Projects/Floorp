@@ -86,44 +86,13 @@ nsrefcnt nsTransactionManager::Release(void)
   return mRefCnt;
 }
 
+NS_IMPL_QUERY_INTERFACE1(nsTransactionManager, nsITransactionManager)
+
 #else
 
-NS_IMPL_ADDREF(nsTransactionManager)
-NS_IMPL_RELEASE(nsTransactionManager)
+NS_IMPL_ISUPPORTS1(nsTransactionManager, nsITransactionManager)
 
 #endif
-
-NS_IMETHODIMP
-nsTransactionManager::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (nsnull == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = (void*)(nsISupports*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kITransactionManagerIID)) {
-    *aInstancePtr = (void*)(nsITransactionManager*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  *aInstancePtr = 0;
-  return NS_NOINTERFACE;
-}
-
-nsresult
-NS_NewTransactionManager(nsITransactionManager** result)
-{
-  nsTransactionManager* transactionManager = new nsTransactionManager();
-  if (! transactionManager) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *result = transactionManager;
-  NS_ADDREF(*result);
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsTransactionManager::Do(nsITransaction *aTransaction)
