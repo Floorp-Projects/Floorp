@@ -51,32 +51,32 @@ function GetSecurityInfo()
   return smimeComposefields
 }
 
+function noEncryption()
+{
+  var smimeCompFields = GetSecurityInfo();
+  if (smimeCompFields)
+    smimeCompFields.alwaysEncryptMessage = false;
+}
+
 function encryptMessage()
 {
   var checkedNode = document.getElementById("menu_securityEncryptAlways");
-  var checked = checkedNode.getAttribute("checked");
+  var noEncryptionNode = document.getElementById("menu_securityNoEncryption");
 
   var smimeCompFields = GetSecurityInfo();
   
-  if (checked)
+  var encryptionCertName = gCurrentIdentity.getUnicharAttribute("encryption_cert_name");
+  if (!encryptionCertName) 
   {
-    var encryptionCertName = gCurrentIdentity.getUnicharAttribute("encryption_cert_name");
-    if (!encryptionCertName) 
-    {
-      alert(gComposeMsgsBundle.getString("chooseEncryptionCertMsg"));
-      checkedNode.removeAttribute("checked");
-      smimeCompFields.signMessage = false;
-      return;
-    }
+    alert(gComposeMsgsBundle.getString("chooseEncryptionCertMsg"));
+    checkedNode.removeAttribute("checked");
+    smimeCompFields.signMessage = false;
+    noEncryptionNode.setAttribute("checked");
+    return;
+  }
     
-    smimeCompFields.alwaysEncryptMessage = true;
-    checkedNode.setAttribute("checked", true);  
-  }
-  else
-  {
-    smimeCompFields.alwaysEncryptMessage = false;
-    checkedNode.removeAttribute("checked");  
-  }
+  smimeCompFields.alwaysEncryptMessage = true;
+  checkedNode.setAttribute("checked", true);
 }
 
 function signMessage()
@@ -111,5 +111,6 @@ function setSecuritySettings()
 { 
   var smimeCompFields = GetSecurityInfo();
   document.getElementById("menu_securityEncryptAlways").setAttribute("checked", smimeCompFields.alwaysEncryptMessage);
+  document.getElementById("menu_securityNoEncryption").setAttribute("checked", !smimeCompFields.alwaysEncryptMessage);
   document.getElementById("menu_securitySign").setAttribute("checked", smimeCompFields.signMessage);
 }

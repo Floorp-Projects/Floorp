@@ -1,7 +1,16 @@
 <!--LOCALIZATION NOTE msgCompSMIMEOverlay.dtd UI for s/mime hooks in message composition -->
 
 <!ENTITY securityMenu.label "Security">
-<!ENTITY menu_securityEncryptIfPossible.label "Encrypt if Possible">
-<!ENTITY menu_securityEncryptAlways.label "Always Encrypt">
-<!ENTITY menu_securitySign.label "Sign">
+<!ENTITY securityMenu.accesskey "e">
 
+<!ENTITY menu_securityEncryptIfPossible.label "Encrypt if Possible">
+<!ENTITY menu_securityEncryptIfPossible.accesskey "E">
+
+<!ENTITY menu_securityEncryptAlways.label "Always Encrypt">
+<!ENTITY menu_securityEncryptAlways.accesskey "A">
+
+<!ENTITY menu_securityNoEncryption.label "No Encryption">
+<!ENTITY menu_securityNoEncryption.accesskey "N">
+
+<!ENTITY menu_securitySign.label "Digitally Sign">
+<!ENTITY menu_securitySign.accesskey "D">

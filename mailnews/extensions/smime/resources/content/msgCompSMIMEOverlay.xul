@@ -32,11 +32,16 @@
 
   <menupopup id="optionsMenuPopup">
     <menuseparator insertafter="fccMenu"/>
-    <menu label="&securityMenu.label;">
+    <menu label="&securityMenu.label;" accesskey="&securityMenu.accesskey;">
       <menupopup onpopupshowing="setSecuritySettings()">
-        <menuitem id="menu_securityEncryptIfPossible" type="checkbox" label="&menu_securityEncryptIfPossible.label;" disabled="true"/>
-        <menuitem id="menu_securityEncryptAlways" type="checkbox" label="&menu_securityEncryptAlways.label;" oncommand="encryptMessage()"/>
-        <menuitem id="menu_securitySign" type="checkbox" label="&menu_securitySign.label;" oncommand="signMessage()"/>
+        <menuitem id="menu_securityNoEncryption" type="radio" name="encryptmessage" 
+          accesskey="&menu_securityNoEncryption.accesskey;" label="&menu_securityNoEncryption.label;" oncommand="noEncryption()"/>
+        <menuitem id="menu_securityEncryptAlways" type="radio" name="encryptmessage" 
+          accesskey="&menu_securityEncryptAlways.accesskey;" label="&menu_securityEncryptAlways.label;" oncommand="encryptMessage()"/>
+        <menuitem id="menu_securityEncryptIfPossible" type="radio" name="encryptmessage" 
+          accesskey="&menu_securityEncryptIfPossible.accesskey;" label="&menu_securityEncryptIfPossible.label;" disabled="true"/>
+        <menuseparator/>
+        <menuitem id="menu_securitySign" type="checkbox" accesskey="&menu_securitySign.accesskey;" label="&menu_securitySign.label;" oncommand="signMessage()"/>
       </menupopup>
     </menu>
   </menupopup>
