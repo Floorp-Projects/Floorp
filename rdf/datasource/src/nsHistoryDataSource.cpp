@@ -147,7 +147,7 @@ static    nsIRDFResource*    mResourceHistoryBySite;
 static    nsIRDFResource*    mResourceHistoryByDate;
 
     nsresult ReadHistory(void);
-    nsresult ReadOneHistoryFile(nsInputFileStream& aStream, const char *fileURL);
+    nsresult ReadOneHistoryFile(nsInputFileStream& aStream, nsFileSpec fileSpec);
     nsresult AddPageToGraph(const char* url, const PRUnichar* title, const char* referer, PRUint32 visitCount, PRTime date);
     nsresult AddToDateHierarchy (PRTime date, const char *url);
     nsresult getSiteOfURL(const char* url, nsIRDFResource** resource);
@@ -439,7 +439,7 @@ nsHistoryDataSource::Init(const char* uri)
     // XXX since we're not really printing an unsinged long, but
     // rather an unsigned long-long, this is sure to break at some
     // point.
-    PR_snprintf(filename, sizeof(filename), "%ul.hst", PR_Now());
+    PR_snprintf(filename, sizeof(filename), "%lu.hst", PR_Now());
 
     nsSpecialSystemDirectory historyFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
     historyFile += "res";
@@ -451,7 +451,8 @@ nsHistoryDataSource::Init(const char* uri)
 	historyFile.ResolveAlias(wasAlias);
 #endif
 
-    historyFile.SetLeafName(filename);
+//    historyFile.SetLeafName(filename);
+    historyFile += filename;
 
     mCurrentFileSpec = historyFile;
     return NS_OK;
@@ -489,8 +490,17 @@ nsHistoryDataSource::SetPageTitle (const char* aURI, const PRUnichar* aTitle)
 			PR_ExplodeTime(wr->date, PR_LocalTimeParameters, &etime);
 			PR_FormatTimeUSEnglish(timeBuffer, 256, "%a %b %d %H:%M:%S %Y", &etime);
 
-			char *buffer = PR_smprintf("%s\t%s\t%s\t%lu\t%s\n", wr->url, aTitle,
-					((wr->referer) ? wr->referer : ""), 1L, timeBuffer);
+			nsAutoString	title(aTitle);
+			char		*cTitle = title.ToNewCString();
+			char *buffer = PR_smprintf("%s\t%s\t%s\t%lu\t%s\n", wr->url,
+					((cTitle) ? cTitle:""),
+					((wr->referer) ? wr->referer : ""),
+					1L, timeBuffer);
+			if (cTitle)
+			{
+				delete [] cTitle;
+				cTitle = nsnull;
+			}
 			if (buffer)
 			{
 				nsOutputFileStream out(mCurrentFileSpec, PR_WRONLY | PR_CREATE_FILE | PR_APPEND, 0744);
@@ -547,7 +557,7 @@ nsHistoryDataSource::ReadHistory(void)
 		const nsNativeFileSpec	nativeSpec = (const nsNativeFileSpec &)i;
 		nsFilePath		filePath(nativeSpec);
 		nsFileSpec		fileSpec(filePath);
-		const char		*fileURL = (const char*) filePath;
+		const char		*fileURL = (const char*) fileSpec;
 		if (fileURL)
 		{
 			if (endsWith(".hst", fileURL))
@@ -555,7 +565,7 @@ nsHistoryDataSource::ReadHistory(void)
 				nsInputFileStream strm(fileSpec);
 				if (strm.is_open())
 				{
-					ReadOneHistoryFile(strm, fileURL);
+					ReadOneHistoryFile(strm, fileSpec);
 				}
 			}
 		}
@@ -566,7 +576,7 @@ nsHistoryDataSource::ReadHistory(void)
 
 
 nsresult
-nsHistoryDataSource::ReadOneHistoryFile(nsInputFileStream& aStream, const char *fileURL)
+nsHistoryDataSource::ReadOneHistoryFile(nsInputFileStream& aStream, nsFileSpec fileSpec)
 {
 	nsresult	rv = NS_ERROR_FAILURE;
 	nsAutoString	buffer;
@@ -575,7 +585,7 @@ nsHistoryDataSource::ReadOneHistoryFile(nsInputFileStream& aStream, const char *
 	{
 		nsresult rv = NS_OK;
 		char c = aStream.get();
-		if (c != '\r')
+		if ((c != '\r') && (c != '\n'))
 		{
 			buffer += c;
 		}
@@ -606,13 +616,12 @@ nsHistoryDataSource::ReadOneHistoryFile(nsInputFileStream& aStream, const char *
 					PR_ExplodeTime(time, PR_LocalTimeParameters, &etime);
 					if (etime.tm_yday == mSessionTime.tm_yday)
 					{
-					//	XXX rjc - commenting this out for the moment due to a Win crash
-					//	which needs investigation (will look at tomorrow)
-					//	mCurrentFileSpec = fileURL;
+						mCurrentFileSpec = fileSpec;
 					}
 				}
 
-				AddPageToGraph(url, nsAutoString(title), referer, (PRUint32) atol(visitcount), time);
+				AddPageToGraph(url, nsAutoString(title), referer,
+					(PRUint32) atol(visitcount), time);
 				delete [] aLine;
 			}
 
