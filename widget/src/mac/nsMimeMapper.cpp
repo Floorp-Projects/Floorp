@@ -30,7 +30,9 @@
 #include "nsMimeMapper.h"
 #include "nsITransferable.h"
 #include "nsString.h"
+
 #include <Drag.h>
+#include <Scrap.h>
 
 nsMimeMapperMac :: nsMimeMapperMac ( const char* inMappings )
   : mCounter(0)
