@@ -596,6 +596,7 @@ void nsTablePart::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
   {
     ParseValueOrPercent(aValue, val, eHTMLUnit_Pixel);
     nsHTMLTagContent::SetAttribute(aAttribute, val);
+    return;
   }
   else if ( aAttribute == nsHTMLAtoms::cols)
   { // it'll either be empty, or have an integer value
@@ -609,6 +610,7 @@ void nsTablePart::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
       ParseValue(aValue, 0, val, eHTMLUnit_Integer);
     }
     nsHTMLTagContent::SetAttribute(aAttribute, val);
+    return;
   }
   else if ( aAttribute == nsHTMLAtoms::border)
   {
@@ -623,6 +625,7 @@ void nsTablePart::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
       ParseValue(aValue, 0, val, eHTMLUnit_Pixel);
     }
     nsHTMLTagContent::SetAttribute(aAttribute, val);
+    return;
   }
   else if (aAttribute == nsHTMLAtoms::cellspacing ||
            aAttribute == nsHTMLAtoms::cellpadding) 
@@ -650,6 +653,9 @@ void nsTablePart::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
     nsHTMLTagContent::SetAttribute(aAttribute, val);
     return;
   }
+
+  // Use default attribute catching code
+  nsHTMLTagContent::SetAttribute(aAttribute, aValue);
 }
 
 void nsTablePart::MapAttributesInto(nsIStyleContext* aContext,
