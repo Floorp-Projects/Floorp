@@ -895,9 +895,10 @@ nsScriptSecurityManager::EnableCapability(const char *capability)
         PRUnichar *message = nsTextFormatter::smprintf(query.GetUnicode(), 
                                                        source);
         Recycle(source);
-        canEnable = CheckConfirmDialog(message, check.GetUnicode(), &remember)
-                    ? nsIPrincipal::ENABLE_GRANTED
-                    : nsIPrincipal::ENABLE_DENIED;
+        if (CheckConfirmDialog(message, check.GetUnicode(), &remember))
+	    canEnable = nsIPrincipal::ENABLE_GRANTED;
+	else
+	    canEnable = nsIPrincipal::ENABLE_DENIED;
         PR_FREEIF(message);
         if (remember) {
             if (NS_FAILED(principal->SetCanEnableCapability(capability, canEnable)))
