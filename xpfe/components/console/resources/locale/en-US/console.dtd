@@ -20,6 +20,9 @@ Contributor(s): ______________________________________. -->
 
 <!ENTITY console.title "JavaScript Console">
 
+<!ENTITY menuBar.tooltip      "Menu Bar">
+<!ENTITY modeToolbar.tooltip  "Mode Toolbar">
+<!ENTITY entryToolbar.tooltip "Javascript Entry Toolbar">
 <!ENTITY errFile.label   "Source File:">
 <!ENTITY errLine.label   "Line:">
 <!ENTITY errColumn.label "Column:">

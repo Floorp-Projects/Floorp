@@ -1,5 +1,6 @@
 <!-- extracted from ./history.xul -->
 
+<!ENTITY menuBar.tooltip            "Menu Bar">
 <!ENTITY fileMenu.label             "File">
 <!ENTITY closeCmd.label             "Close">
 <!ENTITY editMenu.label             "Edit"> 

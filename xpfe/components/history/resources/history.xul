@@ -44,7 +44,9 @@
   <stringbundle id="historyBundle"
                 src="chrome://communicator/locale/history/history.properties"/>
   <stringbundle id="sortBundle" src="chrome://global/locale/nsOutlinerSorting.properties"/>
-
+  
+  <popupset id="aTooltipSet"/>
+  
 <commandset id="tasksCommands">
   <commandset id="selectEditMenuItems"/>
   <commandset id="globalEditMenuItems"/>
@@ -87,7 +89,7 @@
 <popupset id="historyContextMenu"/>
 
 <toolbox id="history-toolbox">
-<menubar id="history-menu">
+<menubar id="history-menu" grippytooltip="aTooltip" grippytooltiptext="&menuBar.tooltip;">
   <menu id="menu_File">
     <menupopup id="menu_FilePopup">
       <menu id="menu_New">

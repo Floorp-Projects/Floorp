@@ -47,6 +47,8 @@ Contributor(s): Joe Hewitt <hewitt@netscape.com>
 <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
 <script type="application/x-javascript" src="chrome://global/content/console.js"/>
 
+<popupset id="aTooltipSet"/>
+
 <stringbundle id="ConsoleBundle" src="chrome://global/locale/console.properties"/>
 <commandset id="tasksCommands"/>
 <command id="cmd_copy"/>
@@ -98,7 +100,7 @@ Contributor(s): Joe Hewitt <hewitt@netscape.com>
 </popupset>
   
 <toolbox>
-  <menubar id="main-menubar" class="chromeclass-menubar">
+  <menubar id="main-menubar" class="chromeclass-menubar" grippytooltip="aTooltip" grippytooltiptext="&menuBar.tooltip;">
     <menu id="menu_File">
       <menupopup id="menu_FilePopup">
         <menuitem id="menu_close"/>
@@ -133,7 +135,7 @@ Contributor(s): Joe Hewitt <hewitt@netscape.com>
     <menu id="menu_Help"/>
   </menubar>
 
-  <toolbar id="ToolbarMode">
+  <toolbar id="ToolbarMode" grippytooltip="aTooltip" grippytooltiptext="&modeToolbar.tooltip;">
     <toolbarbutton observes="Console:modeAll"/>
     <toolbarbutton observes="Console:modeErrors"/>
     <toolbarbutton observes="Console:modeWarnings"/>
@@ -142,7 +144,7 @@ Contributor(s): Joe Hewitt <hewitt@netscape.com>
     <toolbarbutton observes="Console:clear"/>
   </toolbar>
   
-  <toolbar id="ToolbarEval">
+  <toolbar id="ToolbarEval" grippytooltip="aTooltip" grippytooltiptext="&entryToolbar.tooltip;">
     <textbox id="TextboxEval" class="toolbar" value="" onkeypress="onEvalKeyPress(event)" flex="1"/>
     <toolbarbutton id="ButtonEval" label="&evaluate.label;" oncommand="evaluateTypein()"/>
   </toolbar>

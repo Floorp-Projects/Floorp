@@ -22,7 +22,8 @@
   --> 
 
 <!-- extracted from ./bookmarks.xul -->
-
+<!ENTITY menuBar.tooltip               "Menu Bar">
+<!ENTITY bookmarkToolbar.tooltip       "Bookmark Toolbar">
 <!ENTITY command.newBookmark.label     "New Bookmark">
 <!ENTITY command.newBookmark.accesskey "b">
 <!ENTITY command.newFolder.label       "New Folder">
@@ -72,5 +73,5 @@
 <!ENTITY tree.header.lastmod.label      "Last Modified">
 <!ENTITY tree.header.lastvisit.label    "Last Visited">
 <!ENTITY tree.header.description.label  "Description">
-<!ENTITY bookmarksWindowTitle.label	    "Bookmarks">
+<!ENTITY bookmarksWindowTitle.label     "Bookmarks">
 
