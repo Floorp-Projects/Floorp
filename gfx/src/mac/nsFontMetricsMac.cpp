@@ -164,6 +164,9 @@ NS_IMETHODIMP nsFontMetricsMac :: Init(const nsFont& aFont, nsIDeviceContext* aC
   mFont = new nsFont(aFont);//еее
   mContext = aCX;
 
+  if (mFont != nsnull)
+    nsFontMetricsMac::SetFont(*mFont, mContext);
+
   float  dev2app;
   mContext->GetDevUnitsToAppUnits(dev2app);
 
@@ -330,6 +333,9 @@ nsFontMetricsMac :: GetWidth(const char* aString, PRUint32 aLength, nscoord& aWi
     return NS_ERROR_NULL_POINTER;
   }
 
+  if (mFont != nsnull)
+    nsFontMetricsMac::SetFont(*mFont, mContext);
+
   float  dev2app;
   mContext->GetDevUnitsToAppUnits(dev2app);
 
@@ -408,4 +414,40 @@ NS_IMETHODIMP nsFontMetricsMac :: GetFontHandle(nsFontHandle &aHandle)
   //return (nsFontHandle)mFontHandle;
   aHandle = nsnull;
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+//------------------------------------------------------------------------
+
+void nsFontMetricsMac :: SetFont(const nsFont& aFont, nsIDeviceContext* aContext)
+{
+	short fontNum;
+	nsDeviceContextMac::GetMacFontNumber(aFont.name, fontNum);
+	::TextFont(fontNum);
+
+	float  dev2app;
+	aContext->GetDevUnitsToAppUnits(dev2app);
+	::TextSize(short(float(aFont.size) / dev2app));
+
+	Style textFace = normal;
+	switch (aFont.style)
+	{
+		case NS_FONT_STYLE_NORMAL: 								break;
+		case NS_FONT_STYLE_ITALIC: 		textFace |= italic;		break;
+		case NS_FONT_STYLE_OBLIQUE: 	textFace |= italic;		break;	//XXX
+	}
+	switch (aFont.variant)
+	{
+		case NS_FONT_VARIANT_NORMAL: 							break;
+		case NS_FONT_VARIANT_SMALL_CAPS: textFace |= condense;	break;	//XXX
+	}
+	/*switch (aFont.weight)
+	{
+		case NS_FONT_WEIGHT_NORMAL: 							break;
+		case NS_FONT_WEIGHT_BOLD:		textFace |= bold;		break;
+	}*/
+	if (aFont.weight > NS_FONT_WEIGHT_NORMAL)
+		textFace |= bold;
+
+	::TextFace(textFace);
 }
