@@ -50,7 +50,7 @@ interface nsIURI;
  * asynchronous (callback-based) loading.
  */
 
-[scriptable, uuid(d347c6c0-5129-11d4-9a54-000064657374)]
+[scriptable, uuid(4f45513e-55e5-411c-a844-e899057026c1)]
 interface nsIDOMParser : nsISupports {
 
   /**
