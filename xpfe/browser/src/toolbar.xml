@@ -115,11 +115,11 @@
   <xul:menubar>
     <xul:menu name="File">
       <xul:menuitem name="New Window" cmd="nsCmd:BrowserNewWindow"/>
-      <xul:separator />
+      <xul:separator/>
       <xul:menuitem name="Print Setup" cmd="nsCmd:BrowserPrintSetup"/>
       <xul:menuitem name="Print Preview" cmd="nsCmd:BrowserPrintPreview"/>
       <xul:menuitem name="Print" cmd="nsCmd:BrowserPrint"/>
-      <xul:separator />
+      <xul:separator/>
       <xul:menuitem name="Close" cmd="nsCmd:BrowserClose"/>
       <xul:menuitem name="Exit" cmd="nsCmd:BrowserExit"/>
     </xul:menu>
@@ -137,22 +137,22 @@
   <xul:toolbox>
   
     <xul:toolbar>
-          <html:button cmd="nsCmd:BrowserBack" style="background-color:rgb(192,192,192);">
+          <html:button cmd="nsCmd:BrowserBack" style="font-size:smaller;background-color:rgb(192,192,192);">
                           <html:img src="resource:/res/toolbar/TB_Back.gif"/><html:br/>Back
           </html:button>
-          <html:button cmd="nsCmd:BrowserForward" style="background-color:rgb(192,192,192);">
+          <html:button cmd="nsCmd:BrowserForward" style="font-size:smaller;background-color:rgb(192,192,192);">
                           <html:img src="resource:/res/toolbar/TB_Forward.gif"/><html:br/>Forward
           </html:button>
-          <html:button cmd="nsCmd:BrowserReload" style="background-color:rgb(192,192,192);">
+          <html:button cmd="nsCmd:BrowserReload" style="font-size:smaller;background-color:rgb(192,192,192);">
                           <html:img src="resource:/res/toolbar/TB_Reload.gif"/><html:br/>Reload
           </html:button>
-          <html:button cmd="nsCmd:BrowserStop" style="background-color:rgb(192,192,192);">
+          <html:button cmd="nsCmd:BrowserStop" style="font-size:smaller;background-color:rgb(192,192,192);">
                           <html:img src="resource:/res/toolbar/TB_Stop.gif"/><html:br/>Stop
           </html:button>
-          <html:button cmd="nsCmd:BrowserHome" style="background-color:rgb(192,192,192);">
+          <html:button cmd="nsCmd:BrowserHome" style="font-size:smaller;background-color:rgb(192,192,192);">
                           <html:img src="resource:/res/toolbar/TB_Home.gif"/><html:br/>Home
           </html:button>
-          <html:button cmd="nsCmd:BrowserPrint" style="background-color:rgb(192,192,192);">
+          <html:button cmd="nsCmd:BrowserPrint" style="font-size:smaller;background-color:rgb(192,192,192);">
                           <html:img src="resource:/res/toolbar/TB_Print.gif"/><html:br/>Print
           </html:button>
     	   <html:button cmd="nsCmd:BrowserHome">
@@ -160,23 +160,23 @@
           </html:button>	      
     </xul:toolbar>
     <xul:toolbar style="background-color:rgb(192,192,192);">
-          <html:button cmd="nsCmd:BrowserBookmarks" style="background-color:rgb(192,192,192);">
+          <html:button cmd="nsCmd:BrowserBookmarks" style="font-size:smaller;background-color:rgb(192,192,192);">
                           <html:img src="resource:/res/toolbar/TB_Bookmarks.gif"/>Bookmarks
           </html:button>
 		      <html:input style="width:325px;"/>   
-          <html:button cmd="nsCmd:BrowserWhatsRelated" style="background-color:rgb(192,192,192);">
+          <html:button cmd="nsCmd:BrowserWhatsRelated" style="font-size:smaller;background-color:rgb(192,192,192);">
                           <html:img src="resource:/res/toolbar/TB_WhatsRelated.gif"/>What's Related
           </html:button>
     </xul:toolbar>
     
     <xul:toolbar>
-    	<html:button cmd="nsCmd:BrowserHome">
+    	<html:button cmd="nsCmd:BrowserHome" style="font-size:smaller;background-color:rgb(192,192,192);">
              <html:img src="resource:/res/toolbar/TB_Location.gif"/>Mozilla.org
       </html:button>
-    	<html:button cmd="nsCmd:BrowserHome">
+    	<html:button cmd="nsCmd:BrowserHome" style="font-size:smaller;background-color:rgb(192,192,192);">
              <html:img src="resource:/res/toolbar/TB_Location.gif"/>Mozilla.org
       </html:button>
-    	<html:button cmd="nsCmd:BrowserHome">
+    	<html:button cmd="nsCmd:BrowserHome" style="font-size:smaller;background-color:rgb(192,192,192);">
              <html:img src="resource:/res/toolbar/TB_Location.gif"/>Mozilla.org
       </html:button>
     </xul:toolbar>
