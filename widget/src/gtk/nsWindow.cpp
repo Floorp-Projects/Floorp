@@ -51,6 +51,12 @@
 
 #undef DEBUG_DND_XLATE
 
+#define CAPS_LOCK_IS_ON \
+(nsGtkUtils::gdk_keyboard_get_modifiers() & GDK_LOCK_MASK)
+
+#define WANT_PAINT_FLASHING \
+(debug_WantPaintFlashing() && CAPS_LOCK_IS_ON)
+
 gint handle_toplevel_focus_in(
     GtkWidget *      aWidget, 
     GdkEventFocus *  aGdkFocusEvent, 
@@ -506,6 +512,7 @@ nsWindow::DoPaint (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
 #endif // NS_DEBUG
   if (mEventCallback) 
   {
+
     nsPaintEvent event;
     nsRect rect(aX, aY, aWidth, aHeight);
  
@@ -533,6 +540,31 @@ nsWindow::DoPaint (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
         event.renderingContext->SetClipRect(clipRect,
                                             nsClipCombine_kReplace, rv);
       }
+
+#ifdef NS_DEBUG
+    if (WANT_PAINT_FLASHING)
+    {
+      GdkWindow *gw = GetRenderWindow(GTK_OBJECT(mSuperWin));
+      if (gw)
+      {
+        GdkRectangle   ar;
+        GdkRectangle * area = (GdkRectangle*) NULL;
+        
+        if (event.rect)
+        {
+          ar.x = event.rect->x;
+          ar.y = event.rect->y;
+          
+          ar.width = event.rect->width;
+          ar.height = event.rect->height;
+          
+          area = &ar;
+        }
+        
+        nsGtkUtils::gdk_window_flash(gw,1,100000,area);
+      }
+    }
+#endif // NS_DEBUG
       
       DispatchWindowEvent(&event);
       NS_RELEASE(event.renderingContext);
@@ -1526,7 +1558,7 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
   // set user data on the bin_window so we can find the superwin for it.
   gdk_window_set_user_data (mSuperWin->bin_window, (gpointer)mSuperWin);
 
-  gdk_window_set_back_pixmap(mSuperWin->bin_window, NULL, 0);
+  SetBackgroundColor(NS_RGB(192,192,192));
 
   // track focus in and focus out events for the shell
   if (mShell) {
@@ -1584,8 +1616,11 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
 //-------------------------------------------------------------------------
 void nsWindow::InitCallbacks(char * aName)
 {
-  gdk_superwin_set_event_funcs(mSuperWin, handle_xlib_shell_event,
-                               handle_xlib_bin_event, this, NULL);
+  gdk_superwin_set_event_funcs(mSuperWin,
+                               handle_xlib_shell_event,
+                               handle_xlib_bin_event,
+                               handle_superwin_paint,
+                               this, NULL);
 }
 
 //-------------------------------------------------------------------------
@@ -1655,16 +1690,18 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
   mScrollExposeCounter++;
 
   if (mSuperWin) {
+    // save the old backing color
+    nscolor currentColor = GetBackgroundColor();
+    // this isn't too painful to do right before a scroll.
+    // as owen says "it's just 12 bytes sent to the server."
+    // and it makes scrolling look a lot better while still
+    // preserving the gray color when you drag another window
+    // on top or when just creating a window
+    gdk_window_set_back_pixmap(mSuperWin->bin_window, NULL, 0);
+    // scroll baby, scroll!
     gdk_superwin_scroll(mSuperWin, aDx, aDy);
-    // hard process the expose events.  this will force the handling
-    // of the Expose and ConfigureNotify events that we just created
-    // by scrolling the window
-    gdk_superwin_hard_process_exposes(mSuperWin);
-    // sync the update
-    mIsUpdating = PR_FALSE;
-    Update();
-    // flush the event queue to make sure that the draw events get there.
-    XFlush(GDK_DISPLAY());
+    // reset the color
+    SetBackgroundColor(currentColor);
   }
   return NS_OK;
 }
@@ -1795,12 +1832,6 @@ nsresult nsWindow::SetIcon(GdkPixmap *pixmap,
   return NS_OK;
 }
 
-#define CAPS_LOCK_IS_ON \
-(nsGtkUtils::gdk_keyboard_get_modifiers() & GDK_LOCK_MASK)
-
-#define WANT_PAINT_FLASHING \
-(debug_WantPaintFlashing() && CAPS_LOCK_IS_ON)
-
 /**
  * Processes an Expose Event
  *
@@ -1819,6 +1850,8 @@ PRBool nsWindow::OnExpose(nsPaintEvent &event)
 
     mUpdateArea->Intersect(0, 0, mBounds.width, mBounds.height);
 
+#if 0
+
     //    NS_ADDREF(mUpdateArea);
     //    event.region = mUpdateArea;
     if (mScrollExposeCounter > 1) {
@@ -1826,6 +1859,9 @@ PRBool nsWindow::OnExpose(nsPaintEvent &event)
       mScrollExposeCounter--;
       return NS_OK;
     }
+
+#endif
+
     //    printf("mScrollExposeCounter   = 0\n");
     mScrollExposeCounter = 0;
 
@@ -1861,7 +1897,7 @@ PRBool nsWindow::OnExpose(nsPaintEvent &event)
     if (event.renderingContext)
     {
       PRBool rv;
-
+      
       event.renderingContext->SetClipRegion(NS_STATIC_CAST(const nsIRegion &, *mUpdateArea),
                                             nsClipCombine_kReplace, rv);
 
@@ -2397,6 +2433,7 @@ nsWindow::HandleXlibExposeEvent(XEvent *event)
   pevent.rect = new nsRect(event->xexpose.x, event->xexpose.y,
                            event->xexpose.width, event->xexpose.height);
 
+#if 0
   if (event->xexpose.count != 0) {
     XEvent       extra_event;
     do {
@@ -2410,6 +2447,7 @@ nsWindow::HandleXlibExposeEvent(XEvent *event)
       }
     } while (extra_event.xexpose.count > 0);
   }
+#endif
   
   pevent.message = NS_PAINT;
   pevent.widget = this;

@@ -934,6 +934,16 @@ handle_xlib_bin_event(GdkSuperWin *superwin, XEvent *event, gpointer p)
 }
 
 //==============================================================
+void
+handle_superwin_paint(gint aX, gint aY,
+                      gint aWidth, gint aHeight, gpointer aData)
+{
+  nsWindow *window = (nsWindow *)aData;
+
+  window->DoPaint(aX, aY, aWidth, aHeight, NULL);
+}
+
+//==============================================================
 gint nsGtkWidget_FSBCancel_Callback(GtkWidget *w, gpointer p)
 {
 #if 0

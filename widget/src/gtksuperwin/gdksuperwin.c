@@ -19,14 +19,32 @@
 
 static void gdk_superwin_class_init(GdkSuperWinClass *klass);
 static void gdk_superwin_init(GdkSuperWin *superwin);
+static void gdk_superwin_expose_area  (GdkSuperWin *superwin,
+                                       gint         x,
+                                       gint         y,
+                                       gint         width,
+                                       gint         height);
+
+static int  gdk_superwin_clear_rect_queue(GdkSuperWin *superwin, unsigned long serial);
+static void gdk_superwin_clear_translate_queue(GdkSuperWin *superwin, unsigned long serial);
 
 typedef struct _GdkSuperWinTranslate GdkSuperWinTranslate;
+typedef struct _GdkSuperWinRect      GdkSuperWinRect;
 
 struct _GdkSuperWinTranslate
 {
   unsigned long serial;
   gint dx;
   gint dy;
+};
+
+struct _GdkSuperWinRect
+{
+  unsigned long serial;
+  gint x;
+  gint y;
+  gint width;
+  gint height;
 };
 
 GtkType
@@ -76,11 +94,7 @@ static GdkFilterReturn  gdk_superwin_bin_filter   (GdkXEvent *gdk_xevent,
 static GdkFilterReturn  gdk_superwin_shell_filter (GdkXEvent *gdk_xevent,
                                                    GdkEvent  *event,
                                                    gpointer   data);
-static void             gdk_superwin_expose_area  (GdkSuperWin *superwin,
-                                                   gint         x,
-                                                   gint         y,
-                                                   gint         width,
-                                                   gint         height);
+
 static gboolean gravity_works;
 
 GdkSuperWin *
@@ -100,9 +114,11 @@ gdk_superwin_new (GdkWindow *parent_window,
   GdkSuperWin *superwin = gtk_type_new(GDK_TYPE_SUPERWIN);
 
   superwin->translate_queue = NULL;
+  superwin->rect_queue = NULL;
 
   superwin->shell_func = NULL;
   superwin->bin_func = NULL;
+  superwin->paint_func = NULL;
   superwin->func_data = NULL;
   superwin->notify = NULL;
 
@@ -122,7 +138,7 @@ gdk_superwin_new (GdkWindow *parent_window,
 					   &attributes, attributes_mask);
 
   /* if we failed to create a window, die a horrible death */
-  g_assert(superwin->shell_window);
+  g_assert((superwin->shell_window));
 
   /* Create the bin window for drawing */
 
@@ -168,8 +184,8 @@ void gdk_superwin_destroy(GdkSuperWin *superwin)
 
 void         
 gdk_superwin_scroll (GdkSuperWin *superwin,
-		     gint dx,
-		     gint dy)
+                     gint dx,
+                     gint dy)
 {
   GdkSuperWinTranslate *translate;
   gint width, height;
@@ -206,38 +222,47 @@ gdk_superwin_scroll (GdkSuperWin *superwin,
 			  0, 0, width, height);
 
   if (dx < 0)
-    gdk_superwin_expose_area (superwin,
-			      MAX (width + dx, 0), 0,
-			      MIN (-dx, width),    height);
-  else
-    gdk_superwin_expose_area (superwin,
-			      0,                   0,
-			      MIN (dx, width),     height);
+  {
+    gdk_superwin_expose_area(superwin,
+                             width + dx, 0,
+                             -dx, height);
+  }
+  else if (dx > 0)
+  {
+    gdk_superwin_expose_area(superwin,
+                             0, 0,
+                             dx, height);
+  }
 
   if (dy < 0)
-    gdk_superwin_expose_area (superwin, 
-			      MIN (dx, 0),              MAX (height + dy, 0),
-			      MIN (width - ABS(dx), 0), MIN (-dy, height));
-  else
-    gdk_superwin_expose_area (superwin, 
-			      MIN (dx, 0),              0,
-			      MIN (width - ABS(dx), 0), MIN (dy, height));
-  
+  {
+    gdk_superwin_expose_area(superwin,
+                             0, height + dy,
+                             width, -dy);
+  }
+  else if (dy > 0)
+  {
+    gdk_superwin_expose_area(superwin,
+                             0, 0,
+                             width, dy);
+  }
+
 }
 
 void  
-gdk_superwin_set_event_funcs (GdkSuperWin    *superwin,
-                              GdkSuperWinFunc shell_func,
-                              GdkSuperWinFunc bin_func,
-                              gpointer        func_data,
-                              GDestroyNotify  notify)
-  
+gdk_superwin_set_event_funcs (GdkSuperWin         *superwin,
+                              GdkSuperWinFunc      shell_func,
+                              GdkSuperWinFunc      bin_func,
+                              GdkSuperWinPaintFunc paint_func,
+                              gpointer             func_data,
+                              GDestroyNotify       notify)
 {
   if (superwin->notify && superwin->func_data)
     superwin->notify (superwin->func_data);
   
   superwin->shell_func = shell_func;
   superwin->bin_func = bin_func;
+  superwin->paint_func = paint_func;
   superwin->func_data = func_data;
   superwin->notify = notify;
 
@@ -258,13 +283,26 @@ gdk_superwin_expose_area  (GdkSuperWin *superwin,
                            gint         width,
                            gint         height)
 {
-  
+  GdkSuperWinRect *rect;
+  rect = g_new(GdkSuperWinRect, 1);
+  /* oh, taste the magic and hackery. */
+  rect->serial = NextRequest(GDK_DISPLAY()) - 2;
+  rect->x = x;
+  rect->y = y;
+  rect->width = width;
+  rect->height = height;
+  superwin->rect_queue = g_list_append(superwin->rect_queue, rect);
+
+  /* ok, we know the rect that we need to paint.  paint it right now. */
+
+  if (superwin->paint_func)
+    superwin->paint_func(x, y, width, height, superwin->func_data);
 }
 
 static GdkFilterReturn 
 gdk_superwin_bin_filter (GdkXEvent *gdk_xevent,
-			 GdkEvent  *event,
-			 gpointer   data)
+                         GdkEvent  *event,
+                         gpointer   data)
 {
   XEvent *xevent = (XEvent *)gdk_xevent;
   GdkSuperWin *superwin = data;
@@ -273,23 +311,29 @@ gdk_superwin_bin_filter (GdkXEvent *gdk_xevent,
   
   switch (xevent->xany.type) {
   case Expose:
-    tmp_list = superwin->translate_queue;
-    while (tmp_list) {
-      translate = tmp_list->data;
-      
-      xevent->xexpose.x += translate->dx;
-      xevent->xexpose.y += translate->dy;
-      tmp_list = tmp_list->next;
+    /* if we pulled something out of the rect queue for this
+       window it means that it was handled earlier as part of a scroll
+       so just ignore it. */
+    if (!gdk_superwin_clear_rect_queue(superwin, xevent->xany.serial))
+    {
+      /* otherwise, translate the coords for this expose normally. */
+      tmp_list = superwin->translate_queue;
+      while (tmp_list)
+      {
+        translate = tmp_list->data;
+        xevent->xexpose.x += translate->dx;
+        xevent->xexpose.y += translate->dy;
+        tmp_list = tmp_list->next;
+      }
+      /* call the function that will handle the expose */
+      if (superwin->bin_func)
+        superwin->bin_func (superwin, xevent, superwin->func_data);
     }
-    
-    if (superwin->bin_func) {
-      superwin->bin_func (superwin, xevent, superwin->func_data);
-    }
-
     return GDK_FILTER_REMOVE;
     break;
 
   case ConfigureNotify:
+    /* we got a configure notify. clear the xlate queue */
     gdk_superwin_clear_translate_queue(superwin, xevent->xany.serial);
     return GDK_FILTER_REMOVE;
     break;
@@ -360,63 +404,29 @@ gdk_superwin_clear_translate_queue(GdkSuperWin *superwin, unsigned long serial)
   }
 }
 
-/* This function is generally used after you scroll the window.  It
- * will hunt through the translation queue for this window and make
- * sure that all of the Expose and ConfigureNotify events that could
- * have been part of the translation queue get processed.
- *
- * Additionally, it makes sure that any Expose events that are still
- * in the queue get processed for good measure.  When scrolling this
- * make it look a lot smoother in Mozilla along the edges. */
-
-void gdk_superwin_hard_process_exposes(GdkSuperWin *superwin)
+int gdk_superwin_clear_rect_queue(GdkSuperWin *superwin, unsigned long serial)
 {
-  XEvent xevent;
-  
+  GdkSuperWinRect *rect;
   GList *tmp_list;
+  GList *link_to_remove = NULL;
+  int retval = 0;
 
-  GdkSuperWinTranslate *translate;
-  
-  /* wait for the window event */
-  while (superwin->translate_queue)
-  {
-    XWindowEvent(GDK_DISPLAY(),
-                 GDK_WINDOW_XWINDOW(superwin->bin_window),
-                 ( ExposureMask | SubstructureNotifyMask ),
-                 &xevent);
-    switch(xevent.xany.type) {
-    case Expose:
-      tmp_list = superwin->translate_queue;
-      while (tmp_list)
-      {
-        translate = tmp_list->data;
-        xevent.xexpose.x += translate->dx;
-        xevent.xexpose.y += translate->dy;
-        tmp_list = tmp_list->next;
+  if (superwin->rect_queue) {
+    tmp_list = superwin->rect_queue;
+    while (tmp_list) {
+      rect = tmp_list->data;
+      if (serial == rect->serial) {
+        retval = 1;
+        g_free(tmp_list->data);
+        superwin->rect_queue = g_list_remove_link(superwin->rect_queue, tmp_list);
+        link_to_remove = tmp_list;
       }
-      if (superwin->bin_func)
-        superwin->bin_func(superwin, &xevent, superwin->func_data);
-      break;
-    case ConfigureNotify:
-      gdk_superwin_clear_translate_queue(superwin, xevent.xany.serial);
-      break;
+      tmp_list = tmp_list->next;
+      if (link_to_remove) {
+        g_list_free(link_to_remove);
+        link_to_remove = NULL;
+      }
     }
   }
-  /* try to pull all the exposes out, too. */
-  while (XCheckTypedWindowEvent(GDK_DISPLAY(),
-                                GDK_WINDOW_XWINDOW(superwin->bin_window),
-                                Expose,
-                                &xevent) == True)
-  {
-   tmp_list = superwin->translate_queue;
-   while (tmp_list)
-   {
-     translate = tmp_list->data;
-     xevent.xexpose.x += translate->dx;
-     xevent.xexpose.y += translate->dy;
-     tmp_list = tmp_list->next;
-   }
-   if (superwin->bin_func)
-     superwin->bin_func(superwin, &xevent, superwin->func_data);
-  }
+  return retval;
 }

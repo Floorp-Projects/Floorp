@@ -38,6 +38,11 @@ typedef struct _GdkSuperWinClass GdkSuperWinClass;
 typedef void (*GdkSuperWinFunc) (GdkSuperWin *super_win,
                                  XEvent      *event,
                                  gpointer     data);
+
+typedef void (*GdkSuperWinPaintFunc) (gint x, gint y,
+                                      gint width, gint height,
+                                      gpointer data);
+
 struct _GdkSuperWin
 {
   GtkObject object;
@@ -45,11 +50,13 @@ struct _GdkSuperWin
   GdkWindow *bin_window;
 
   /* Private */
-  GList *translate_queue;
-  GdkSuperWinFunc shell_func;
-  GdkSuperWinFunc bin_func;
-  gpointer        func_data;
-  GDestroyNotify  notify;
+  GList               *translate_queue;
+  GList               *rect_queue;
+  GdkSuperWinFunc      shell_func;
+  GdkSuperWinFunc      bin_func;
+  GdkSuperWinPaintFunc paint_func;
+  gpointer             func_data;
+  GDestroyNotify       notify;
 
   GdkVisibilityState   visibility;
 };
@@ -68,11 +75,12 @@ GdkSuperWin *gdk_superwin_new (GdkWindow      *parent_window,
                                guint           height);
 
 void  
-gdk_superwin_set_event_funcs (GdkSuperWin    *superwin,
-                              GdkSuperWinFunc shell_func,
-                              GdkSuperWinFunc bin_func,
-                              gpointer        func_data,
-                              GDestroyNotify  notify);
+gdk_superwin_set_event_funcs (GdkSuperWin         *superwin,
+                              GdkSuperWinFunc      shell_func,
+                              GdkSuperWinFunc      bin_func,
+                              GdkSuperWinPaintFunc paint_func,
+                              gpointer             func_data,
+                              GDestroyNotify       notify);
 
 void gdk_superwin_scroll (GdkSuperWin *superwin,
                           gint         dx,
@@ -81,9 +89,6 @@ void gdk_superwin_resize (GdkSuperWin *superwin,
                           gint         width,
                           gint         height);
 void gdk_superwin_destroy(GdkSuperWin *superwin);
-void gdk_superwin_clear_translate_queue(GdkSuperWin *superwin,
-                                        unsigned long serial);
-void gdk_superwin_hard_process_exposes(GdkSuperWin *superwin);
 
 #ifdef __cplusplus
 }
