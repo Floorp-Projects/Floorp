@@ -1355,6 +1355,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
       case eHTMLTag_label:      case eHTMLTag_legend:
       case eHTMLTag_menu:       case eHTMLTag_noscript:
       case eHTMLTag_ol:         case eHTMLTag_ul:
+      case eHTMLTag_embed:      case eHTMLTag_noembed:
         result=FindTagInSet(aChild,gTagSet1,sizeof(gTagSet1)/sizeof(eHTMLTag_unknown));
         break;
 
