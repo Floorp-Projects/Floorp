@@ -3511,7 +3511,10 @@ nsHTMLEditRules::WillOutdent(nsISelection *aSelection, PRBool *aCancel, PRBool *
       // are we inside a blockquote?
       nsCOMPtr<nsIDOMNode> n = curNode;
       nsCOMPtr<nsIDOMNode> tmp;
-      while (!nsTextEditUtils::IsBody(n))
+      // keep looking up the heirarchy as long as we dont hit the body or a table element
+      // (other than an entire table)
+      while (!nsTextEditUtils::IsBody(n) &&   
+             (nsHTMLEditUtils::IsTable(n) || !nsHTMLEditUtils::IsTableElement(n)))
       {
         n->GetParentNode(getter_AddRefs(tmp));
         n = tmp;
