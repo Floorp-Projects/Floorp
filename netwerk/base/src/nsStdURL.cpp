@@ -316,8 +316,8 @@ nsStdURL::Parse(void)
                             if (!brk) // its just http://user@host
                             {
                                 ExtractString(mSpec, &mHost, 
-                                    (lastbrk+1 - mSpec), 
-                                    len - (lastbrk+1 - mSpec));
+                                    (lastbrk - mSpec), 
+                                    len - (lastbrk - mSpec));
                                 return NS_OK;
                             }
                             ExtractString(mSpec, &mHost, 
