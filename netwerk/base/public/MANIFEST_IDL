@@ -4,6 +4,7 @@
 
 nsIAuthenticator.idl
 nsIChannel.idl
+nsIDownloader.idl
 nsIFileTransportService.idl
 nsIPasswordManager.idl
 nsIPrompt.idl
@@ -16,6 +17,7 @@ nsISocketTransportService.idl
 nsIStreamIO.idl
 nsIStreamListener.idl
 nsIStreamLoader.idl
+nsIDownloader.idl
 nsIStreamObserver.idl
 nsIURI.idl
 nsIURL.idl

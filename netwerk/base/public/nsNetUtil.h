@@ -37,6 +37,7 @@
 #include "nsMemory.h"
 #include "nsCOMPtr.h"
 #include "nsIHTTPProtocolHandler.h"
+#include "nsIDownloader.h"
 #include "nsIStreamLoader.h"
 #include "nsIStreamIO.h"
 #include "nsXPIDLString.h"
@@ -311,6 +312,33 @@ NS_NewLoadGroup(nsILoadGroup* *result, nsIStreamObserver* obs)
     return NS_OK;
 }
 
+
+inline nsresult
+NS_NewDownloader(nsIDownloader* *result,
+                   nsIURI* uri,
+                   nsIDownloadObserver* observer,
+                   nsISupports* context = nsnull,
+                   nsILoadGroup* loadGroup = nsnull,
+                   nsIInterfaceRequestor* notificationCallbacks = nsnull,
+                   nsLoadFlags loadAttributes = nsIChannel::LOAD_NORMAL,
+                   PRUint32 bufferSegmentSize = 0, 
+                   PRUint32 bufferMaxSize = 0)
+{
+    nsresult rv;
+    nsCOMPtr<nsIDownloader> downloader;
+    static NS_DEFINE_CID(kDownloaderCID, NS_DOWNLOADER_CID);
+    rv = nsComponentManager::CreateInstance(kDownloaderCID,
+                                            nsnull,
+                                            NS_GET_IID(nsIDownloader),
+                                            getter_AddRefs(downloader));
+    if (NS_FAILED(rv)) return rv;
+    rv = downloader->Init(uri, observer, context, loadGroup, notificationCallbacks, loadAttributes,
+                          bufferSegmentSize, bufferMaxSize);
+    if (NS_FAILED(rv)) return rv;
+    *result = downloader;
+    NS_ADDREF(*result);
+    return rv;
+}
 
 inline nsresult
 NS_NewStreamLoader(nsIStreamLoader* *result,
