@@ -37,6 +37,17 @@ class nsIRDFNode;
 class nsIRDFDocument : public nsIXMLDocument {
 public:
   /**
+   * Initialize the document object. This will force the document to create
+   * its internal RDF database.
+   */
+  NS_IMETHOD Init(void) = 0;
+
+  /**
+   * Set the document's "root" resource.
+   */
+  NS_IMETHOD SetRootResource(nsIRDFNode* aResource) = 0;
+
+  /**
    * Retrieve the document's RDF data base.
    */
   NS_IMETHOD GetDataBase(nsIRDFDataBase*& rDataBase) = 0;
