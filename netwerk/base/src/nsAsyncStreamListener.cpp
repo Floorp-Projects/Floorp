@@ -27,8 +27,13 @@
 #include "nsIServiceManager.h"
 #include "nsIChannel.h"
 #include "nsCOMPtr.h"
+#include "prlog.h"
 
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
+
+#if defined(PR_LOGGING)
+PRLogModuleInfo* gStreamEventLog = 0;
+#endif
 
 class nsAsyncStreamObserver : public nsIStreamObserver
 {
@@ -226,6 +231,12 @@ public:
 NS_IMETHODIMP
 nsOnStartRequestEvent::HandleEvent()
 {
+#if defined(PR_LOGGING)
+  if (!gStreamEventLog)
+    gStreamEventLog = PR_NewLogModule("netlibStreamEvent");
+  PR_LOG(gStreamEventLog, PR_LOG_DEBUG,
+         ("netlibEvent: Handle Start [event=%x]", this));
+#endif
   nsIStreamObserver* receiver = (nsIStreamObserver*)mListener->GetReceiver();
   return receiver->OnStartRequest(mChannel, mContext);
 }
@@ -241,6 +252,18 @@ nsAsyncStreamObserver::OnStartRequest(nsIChannel* channel, nsISupports* context)
     if (event == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
+#if defined(PR_LOGGING)
+    PLEventQueue *equeue;
+    mEventQueue->GetPLEventQueue(&equeue);
+    char ts[80];
+    sprintf(ts, "nsAsyncStreamObserver: Start [this=%lx queue=%lx",
+            (long)this, (long)equeue);
+    if (!gStreamEventLog)
+      gStreamEventLog = PR_NewLogModule("netlibStreamEvent");
+    PR_LOG(gStreamEventLog, PR_LOG_DEBUG,
+           ("nsAsyncStreamObserver: Start [this=%x queue=%x event=%x]",
+            this, equeue, event));
+#endif
     rv = event->Fire(mEventQueue);
     if (NS_FAILED(rv)) goto failed;
     return rv;
@@ -288,6 +311,12 @@ nsOnStopRequestEvent::Init(nsresult status, const PRUnichar* aMsg)
 NS_IMETHODIMP
 nsOnStopRequestEvent::HandleEvent()
 {
+#if defined(PR_LOGGING)
+  if (!gStreamEventLog)
+    gStreamEventLog = PR_NewLogModule("netlibStreamEvent");
+  PR_LOG(gStreamEventLog, PR_LOG_DEBUG,
+         ("netlibEvent: Handle Stop [event=%x]", this));
+#endif
   nsIStreamObserver* receiver = (nsIStreamObserver*)mListener->GetReceiver();
   return receiver->OnStopRequest(mChannel, mContext, mStatus, mMessage);
 }
@@ -310,6 +339,15 @@ nsAsyncStreamObserver::OnStopRequest(nsIChannel* channel, nsISupports* context,
 
     rv = event->Init(aStatus, aMsg);
     if (NS_FAILED(rv)) goto failed;
+#if defined(PR_LOGGING)
+    PLEventQueue *equeue;
+    mEventQueue->GetPLEventQueue(&equeue);
+    if (!gStreamEventLog)
+      gStreamEventLog = PR_NewLogModule("netlibStreamEvent");
+    PR_LOG(gStreamEventLog, PR_LOG_DEBUG,
+           ("nsAsyncStreamObserver: Stop [this=%x queue=%x event=%x]",
+            this, equeue, event));
+#endif
     rv = event->Fire(mEventQueue);
     if (NS_FAILED(rv)) goto failed;
     return rv;
@@ -363,6 +401,12 @@ nsOnDataAvailableEvent::Init(nsIInputStream* aIStream, PRUint32 aSourceOffset,
 NS_IMETHODIMP
 nsOnDataAvailableEvent::HandleEvent()
 {
+#if defined(PR_LOGGING)
+  if (!gStreamEventLog)
+    gStreamEventLog = PR_NewLogModule("netlibStreamEvent");
+  PR_LOG(gStreamEventLog, PR_LOG_DEBUG,
+         ("netlibEvent: Handle Data [event=%x]", this));
+#endif
   nsIStreamListener* receiver = (nsIStreamListener*)mListener->GetReceiver();
   return receiver->OnDataAvailable(mChannel, mContext,
                                    mIStream, mSourceOffset, mLength);
@@ -384,6 +428,15 @@ nsAsyncStreamListener::OnDataAvailable(nsIChannel* channel, nsISupports* context
 
     rv = event->Init(aIStream, aSourceOffset, aLength);
     if (NS_FAILED(rv)) goto failed;
+#if defined(PR_LOGGING)
+    PLEventQueue *equeue;
+    mEventQueue->GetPLEventQueue(&equeue);
+    if (!gStreamEventLog)
+      gStreamEventLog = PR_NewLogModule("netlibStreamEvent");
+    PR_LOG(gStreamEventLog, PR_LOG_DEBUG,
+           ("nsAsyncStreamObserver: Data [this=%x queue=%x event=%x]",
+            this, equeue, event));
+#endif
     rv = event->Fire(mEventQueue);
     if (NS_FAILED(rv)) goto failed;
     return rv;
