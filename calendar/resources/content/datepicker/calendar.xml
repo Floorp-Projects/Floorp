@@ -229,7 +229,7 @@
                        // highlight the current date
                        var val = this.value;
                        if (val) {
-                           if ((val.getYear() == date.getYear()) &&
+                           if ((val.getFullYear() == date.getFullYear()) &&
                                (val.getMonth() == date.getMonth()) &&
                                (val.getDate() == date.getDate()))
                            {
@@ -250,19 +250,19 @@
         <method name="setBusyDates">
             <parameter name="arrayOfDates"/>
             <body><![CDATA[
-            /* CODE FROM monthView.js that will be useful for finding the events for the month. */
+            /* CODE FROM monthView.js for finding the events for the month. */
             /*
             document.getElementById( "lefthandcalendar" ).value = date;
 
             //get a list of events for this month.
-            var monthEventList =
+            var monthEvents =
                 this.eventSource.getEventsForMonth( this.getSelectedDate() );
 
             var arrayOfDates = new Array();
 
-            for( var eventIndex = 0; eventIndex < monthEventList.length; ++eventIndex )
+            for( var eventIndex = 0; eventIndex < monthEvents.length; ++eventIndex )
             {
-              var calendarEventDisplay = monthEventList[ eventIndex ];
+              var calendarEventDisplay = monthEvents[ eventIndex ];
               var eventDate = new Date( calendarEventDisplay.displayDate );
 
               //add them to an array
@@ -276,8 +276,7 @@
             //-------- Update the calendar
             var calbox = document.getAnonymousNodes(this)[0].childNodes[1];
 
-            // Modified because does not look correct (not verified)
-	        //var firstWeekday = aDate.getDay();
+            // weekStart day is set by preference
             var firstWeekday = (7 + aDate.getDay() - this.weekStart) % 7;
             var date = new Date(aDate.getTime());
             date.setDate(date.getDate() - firstWeekday);
@@ -294,8 +293,8 @@
                         day.removeAttribute("busy");
                     }
 
-                    //I don't think we need a new date 
-                    date.setDate(date.getDate + 1);
+                    // next date of month, may increment month
+                    date.setDate(date.getDate() + 1);
                 }
             }
             ]]></body>
@@ -357,20 +356,22 @@
             <parameter name="aDate"/>
             <body><![CDATA[
 
-            this.dateStringBundle = srGetStrBundle("chrome://calendar/locale/dateFormat.properties");
-            var monthNames= new Array(12);
-            monthNames[0] =this.dateStringBundle.GetStringFromName("month.1.name" );
-            monthNames[1] =this.dateStringBundle.GetStringFromName("month.2.name" );
-            monthNames[2] =this.dateStringBundle.GetStringFromName("month.3.name" );
-            monthNames[3] =this.dateStringBundle.GetStringFromName("month.4.name" );
-            monthNames[4] =this.dateStringBundle.GetStringFromName("month.5.name" );
-            monthNames[5] =this.dateStringBundle.GetStringFromName("month.6.name" );
-            monthNames[6] =this.dateStringBundle.GetStringFromName("month.7.name" );
-            monthNames[7] =this.dateStringBundle.GetStringFromName("month.8.name" );
-            monthNames[8] =this.dateStringBundle.GetStringFromName("month.9.name" );
-            monthNames[9] =this.dateStringBundle.GetStringFromName("month.10.name" );
-            monthNames[10]=this.dateStringBundle.GetStringFromName("month.11.name" );
-            monthNames[11]=this.dateStringBundle.GetStringFromName("month.12.name" );
+            var dateStringBundle =
+                srGetStrBundle("chrome://calendar/locale/dateFormat.properties");
+
+            var monthNames = new Array(12);
+            monthNames[0] = dateStringBundle.GetStringFromName("month.1.name");
+            monthNames[1] = dateStringBundle.GetStringFromName("month.2.name");
+            monthNames[2] = dateStringBundle.GetStringFromName("month.3.name");
+            monthNames[3] = dateStringBundle.GetStringFromName("month.4.name");
+            monthNames[4] = dateStringBundle.GetStringFromName("month.5.name");
+            monthNames[5] = dateStringBundle.GetStringFromName("month.6.name");
+            monthNames[6] = dateStringBundle.GetStringFromName("month.7.name");
+            monthNames[7] = dateStringBundle.GetStringFromName("month.8.name");
+            monthNames[8] = dateStringBundle.GetStringFromName("month.9.name");
+            monthNames[9] = dateStringBundle.GetStringFromName("month.10.name");
+            monthNames[10]= dateStringBundle.GetStringFromName("month.11.name");
+            monthNames[11]= dateStringBundle.GetStringFromName("month.12.name");
 
             var midx = aDate.getMonth();
 
@@ -389,6 +390,7 @@
     </binding>
 
     <binding id="cal-navbtn" inherits="dir">
+        <!-- ::::::::::::::::: HANDLERS ::::::::::::::::::::::::: -->
         <handlers>
             <handler event="click">
                 <![CDATA[
@@ -401,6 +403,7 @@
     </binding>
 
     <binding id="cal-day" extends="xul:text">
+        <!-- ::::::::::::::::: HANDLERS ::::::::::::::::::::::::: -->
         <handlers>
             <handler event="click" action="this.calendar.dayClicked(this)"/>
         </handlers>
