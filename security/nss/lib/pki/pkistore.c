@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pkistore.c,v $ $Revision: 1.1 $ $Date: 2001/12/14 17:32:20 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pkistore.c,v $ $Revision: 1.2 $ $Date: 2001/12/19 20:27:21 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -288,7 +288,7 @@ remove_subject_entry
 	/* Remove the cert from the subject hash */
 	nssList_Remove(subjectList, cert);
 	if (nssList_Count(subjectList) == 0) {
-	    nssHash_Remove(store->subject, subjectList);
+	    nssHash_Remove(store->subject, &cert->subject);
 	    nssList_Destroy(subjectList);
 	    /* XXX need to deref objects here in 4.0 */
 	}
