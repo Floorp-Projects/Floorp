@@ -620,6 +620,7 @@ textbox[multiline="true"] {
 
 html|*.textbox-input {
   -moz-appearance: none !important;
+  text-align: inherit;
 }
 
 html|*.textbox-textarea {
