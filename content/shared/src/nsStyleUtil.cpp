@@ -20,6 +20,7 @@
 #include "nsCRT.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
+#include "nsUnitConversion.h"
 
 #include <math.h>
 
@@ -104,16 +105,17 @@ PRInt32 nsStyleUtil::FindNextSmallerFontSize(nscoord aFontSize, PRInt32 aBasePoi
                                              float aScalingFactor)
 {
   PRInt32 index;
+  PRInt32 fontSize = NSTwipsToFloorIntPoints(aFontSize);
 
-  if (CalcFontPointSize(1, aBasePointSize, aScalingFactor) < aFontSize) {
-    if (aFontSize <= CalcFontPointSize(7, aBasePointSize, aScalingFactor)) { // in HTML table
+  if (NSTwipsToFloorIntPoints(CalcFontPointSize(1, aBasePointSize, aScalingFactor)) < fontSize) {
+    if (fontSize <= NSTwipsToFloorIntPoints(CalcFontPointSize(7, aBasePointSize, aScalingFactor))) { // in HTML table
       for (index = 7; index > 1; index--)
-        if (aFontSize > nsStyleUtil::CalcFontPointSize(index, aBasePointSize, aScalingFactor))
+        if (fontSize > NSTwipsToFloorIntPoints(CalcFontPointSize(index, aBasePointSize, aScalingFactor)))
           break;
     }
     else {  // larger than HTML table
       for (index = 8; ; index++)
-        if (aFontSize < nsStyleUtil::CalcFontPointSize(index, aBasePointSize, aScalingFactor)) {
+        if (fontSize < NSTwipsToFloorIntPoints(CalcFontPointSize(index, aBasePointSize, aScalingFactor))) {
           index--;
           break;
         }
@@ -121,7 +123,7 @@ PRInt32 nsStyleUtil::FindNextSmallerFontSize(nscoord aFontSize, PRInt32 aBasePoi
   }
   else { // smaller than HTML table
     for (index = 0; ; index--)
-      if (aFontSize > nsStyleUtil::CalcFontPointSize(index, aBasePointSize, aScalingFactor)) {
+      if (fontSize > NSTwipsToFloorIntPoints(CalcFontPointSize(index, aBasePointSize, aScalingFactor))) {
         break;
       }
   }
@@ -132,21 +134,23 @@ PRInt32 nsStyleUtil::FindNextLargerFontSize(nscoord aFontSize, PRInt32 aBasePoin
                                             float aScalingFactor)
 {
   PRInt32 index;
-  if (CalcFontPointSize(1, aBasePointSize, aScalingFactor) <= aFontSize) {
-    if (aFontSize < CalcFontPointSize(7, aBasePointSize, aScalingFactor)) { // in HTML table
+  PRInt32 fontSize = NSTwipsToFloorIntPoints(aFontSize);
+
+  if (NSTwipsToFloorIntPoints(CalcFontPointSize(1, aBasePointSize, aScalingFactor)) <= fontSize) {
+    if (fontSize < NSTwipsToFloorIntPoints(CalcFontPointSize(7, aBasePointSize, aScalingFactor))) { // in HTML table
       for (index = 1; index < 7; index++)
-        if (aFontSize < nsStyleUtil::CalcFontPointSize(index, aBasePointSize, aScalingFactor))
+        if (fontSize < NSTwipsToFloorIntPoints(CalcFontPointSize(index, aBasePointSize, aScalingFactor)))
           break;
     }
     else {  // larger than HTML table
       for (index = 8; ; index++)
-        if (aFontSize < nsStyleUtil::CalcFontPointSize(index, aBasePointSize, aScalingFactor))
+        if (fontSize < NSTwipsToFloorIntPoints(CalcFontPointSize(index, aBasePointSize, aScalingFactor)))
           break;
     }
   }
   else {  // smaller than HTML table
     for (index = 0; ; index--)
-      if (aFontSize > nsStyleUtil::CalcFontPointSize(index, aBasePointSize, aScalingFactor)) {
+      if (fontSize > NSTwipsToFloorIntPoints(CalcFontPointSize(index, aBasePointSize, aScalingFactor))) {
         index++;
         break;
       }
