@@ -487,11 +487,13 @@ XULPopupListenerImpl :: sTooltipCallback (nsITimer *aTimer, void *aClosure)
         element->GetAttribute ( NS_ConvertASCIItoUCS2("disabled"), disabledState );
         if ( !disabledState.EqualsWithConversion("true") ) {
           doc->SetTooltipNode ( element );        
+          doc->SetPopupNode ( element );        
           self->LaunchPopup (self->mMouseClientX, self->mMouseClientY+16);
         } // if node enabled
       } else {
           // Tooltip on non-element; e.g., text
           doc->SetTooltipNode ( self->mPossibleTooltipNode );        
+          doc->SetPopupNode ( self->mPossibleTooltipNode );        
           self->LaunchPopup ( self->mMouseClientX, self->mMouseClientY+16);
       }
     } // if document
