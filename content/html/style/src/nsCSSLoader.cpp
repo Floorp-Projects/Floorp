@@ -172,6 +172,7 @@ struct SheetLoadData {
 
   PRBool          mIsInline;
   PRBool          mIsAgent;
+  PRBool          mSyncLoad;
 
   nsCSSLoaderCallbackFunc mCallback;
   void*                   mCallbackData;
@@ -322,6 +323,7 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL,
     mPendingChildren(0),
     mIsInline(aIsInline),
     mIsAgent(PR_FALSE),
+    mSyncLoad(PR_FALSE),
     mCallback(nsnull),
     mCallbackData(nsnull)
 {
@@ -350,6 +352,7 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL,
     mPendingChildren(0),
     mIsInline(PR_FALSE),
     mIsAgent(PR_FALSE),
+    mSyncLoad(PR_FALSE),
     mCallback(nsnull),
     mCallbackData(nsnull)
 {
@@ -375,6 +378,7 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL,
     mPendingChildren(0),
     mIsInline(PR_FALSE),
     mIsAgent(PR_TRUE),
+    mSyncLoad(PRBool(nsnull == aCallback)),
     mCallback(aCallback),
     mCallbackData(nsnull)
 {
@@ -604,7 +608,9 @@ CSSLoaderImpl::Cleanup(URLKey& aKey, SheetLoadData* aLoadData)
     if (data->mParentData) {
       if (0 == --(data->mParentData->mPendingChildren)) {  // all children are done, handle parent
         NS_ASSERTION(data->mParentSheet, "bug");
-        SheetComplete(data->mParentSheet, data->mParentData);
+        if (! data->mSyncLoad) {
+          SheetComplete(data->mParentSheet, data->mParentData);
+        }
       }
     }
     data = data->mNext;
@@ -1016,7 +1022,42 @@ CSSLoaderImpl::LoadSheet(URLKey& aKey, SheetLoadData* aData)
     loadingData->mNext = aData;
   }
   else {  // not loading, go load it
-    if (mDocument) {  // we're still live
+    if (aData->mSyncLoad) { // handle agent sheets synchronously
+      nsIURI* urlClone;
+      result = aKey.mURL->Clone(&urlClone); // dont give key URL to netlib, it gets munged
+      if (NS_SUCCEEDED(result)) {
+        nsIInputStream* in;
+        result = NS_OpenURI(&in, urlClone);
+        NS_RELEASE(urlClone);
+        if (NS_SUCCEEDED(result)) {
+          // Translate the input using the argument character set id into unicode
+          nsIUnicharInputStream* uin;
+          result = NS_NewConverterStream(&uin, nsnull, in);
+          if (NS_SUCCEEDED(result)) {
+            mLoadingSheets.Put(&aKey, aData);
+            PRBool completed;
+            nsICSSStyleSheet* sheet;
+            result = ParseSheet(uin, aData, completed, sheet);
+            NS_ASSERTION(completed, "sync sheet load failed to complete");
+            NS_IF_RELEASE(sheet);
+            NS_RELEASE(uin);
+          }
+          else {
+            fputs("CSSLoader::LoadSheet - failed to get converter stream\n", stderr);
+          }
+          NS_RELEASE(in);
+        }
+        else {
+          // Dump an error message to the console
+          char *url;
+          aKey.mURL->GetSpec(&url);
+          cerr << "CSSLoaderImpl::LoadSheet: Load of URL '" << url 
+               << "' failed.  Error code: " << NS_ERROR_GET_CODE(result)  << "\n";
+          nsCRT::free(url);
+        }
+      }
+    }
+    else if (mDocument || aData->mIsAgent) {  // we're still live, start an async load
       nsIUnicharStreamLoader* loader;
       nsIURI* urlClone;
       result = aKey.mURL->Clone(&urlClone); // dont give key URL to netlib, it gets munged
@@ -1197,6 +1238,8 @@ CSSLoaderImpl::LoadChildSheet(nsICSSStyleSheet* aParentSheet,
         // XXX assert that last parsing == parent sheet
         SheetLoadData* parentData = (SheetLoadData*)mParsingData.ElementAt(count - 1);
         data->mParentData = parentData;
+        data->mIsAgent = parentData->mIsAgent;
+        data->mSyncLoad = parentData->mSyncLoad;
 
         // verify that sheet doesn't have new child as a parent 
         do {
