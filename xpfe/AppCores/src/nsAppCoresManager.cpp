@@ -23,6 +23,7 @@
 #include "nsAppCoresCIDs.h"
 #include "nsAppCores.h"
 #include "nsAppCoresNameSet.h"
+#include "nsIDOMBaseAppCore.h"
 
 #include "nscore.h"
 #include "nsIFactory.h"
