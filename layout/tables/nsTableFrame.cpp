@@ -3602,28 +3602,6 @@ PRBool nsTableFrame::IsNested(const nsHTMLReflowState& aReflowState, nsStylePosi
   return result;
 }
 
-static PRBool
-IsPseudoFrame(nsIFrame* aFrame)
-{
-  nsIContent* content;
-  nsIFrame*   parentFrame;
-  PRBool      result = PR_FALSE;
-
-  aFrame->GetContent(content);
-  aFrame->GetGeometricParent(parentFrame);
-  if (nsnull != parentFrame) {
-    nsIContent* parentContent;
-     
-    parentFrame->GetContent(parentContent);
-    if (parentContent == content) {
-      result = PR_TRUE;
-    }
-    NS_RELEASE(parentContent);
-  }
-
-  NS_RELEASE(content);
-  return result;
-}
 
 /* helper method for getting the width of the table's containing block */
 nscoord nsTableFrame::GetTableContainerWidth(const nsHTMLReflowState& aReflowState)
@@ -3645,22 +3623,18 @@ nscoord nsTableFrame::GetTableContainerWidth(const nsHTMLReflowState& aReflowSta
     if (NS_OK==rv) 
     { // we found a block, see if it's really a table cell (which means we're a nested table)
       PRBool skipThisBlock=PR_FALSE;
-      // XXX FIX ME...
-      if (IsPseudoFrame(block))
+      const nsReflowState* parentRS = rs->parentReflowState;
+      if (nsnull!=parentRS)
       {
-        const nsReflowState* parentRS = rs->parentReflowState;
+        parentRS = parentRS->parentReflowState;
         if (nsnull!=parentRS)
         {
-          parentRS = parentRS->parentReflowState;
-          if (nsnull!=parentRS)
-          {
-            nsIFrame* cell = nsnull;
-            rv = parentRS->frame->QueryInterface(kTableCellFrameCID, (void**) &cell);
-            if (rv == NS_OK) {
-              if (PR_TRUE==gsDebugNT)
-                printf("%p: found a block pframe %p in a cell, skipping it.\n", aReflowState.frame, block);
-              skipThisBlock = PR_TRUE;
-            }
+          nsIFrame* cell = nsnull;
+          rv = parentRS->frame->QueryInterface(kTableCellFrameCID, (void**) &cell);
+          if (rv == NS_OK) {
+            if (PR_TRUE==gsDebugNT)
+              printf("%p: found a block pframe %p in a cell, skipping it.\n", aReflowState.frame, block);
+            skipThisBlock = PR_TRUE;
           }
         }
       }

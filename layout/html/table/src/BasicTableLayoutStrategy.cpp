@@ -2035,26 +2035,19 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( const nsHTMLReflowSt
   }
   
   // second, fix up tables where column width attributes give us a table that is too wide or too narrow
-  // IFF the table is NOT (auto-width && all columns have fixed width)
-  PRInt32 numFixedColumns=0;
-  PRInt32 *fixedColumns=nsnull;
-  mTableFrame->GetColumnsByType(eStyleUnit_Coord, numFixedColumns, fixedColumns);
-  if (!((PR_TRUE==aTableIsAutoWidth) && (numFixedColumns==mNumCols)))
-  {
-    nscoord computedWidth=0;
-    for (PRInt32 i=0; i<mNumCols; i++) {
-      computedWidth += mTableFrame->GetColumnWidth(i) + colInset;
-    }
-    if (computedWidth<aMaxWidth) 
-    { // then widen the table because it's too narrow
-      // do not widen auto-width tables, they shrinkwrap to their content's width
-      if (PR_FALSE==aTableIsAutoWidth)
-        AdjustTableThatIsTooNarrow(computedWidth, aMaxWidth);
-    }
-    else if (computedWidth>aMaxWidth) 
-    { // then shrink the table width because its too wide
-      AdjustTableThatIsTooWide(computedWidth, aMaxWidth, PR_FALSE);
-    }
+  nscoord computedWidth=0;
+  for (PRInt32 i=0; i<mNumCols; i++) {
+    computedWidth += mTableFrame->GetColumnWidth(i) + colInset;
+  }
+  if (computedWidth<aMaxWidth) 
+  { // then widen the table because it's too narrow
+    // do not widen auto-width tables, they shrinkwrap to their content's width
+    if (PR_FALSE==aTableIsAutoWidth)
+      AdjustTableThatIsTooNarrow(computedWidth, aMaxWidth);
+  }
+  else if (computedWidth>aMaxWidth) 
+  { // then shrink the table width because its too wide
+    AdjustTableThatIsTooWide(computedWidth, aMaxWidth, PR_FALSE);
   }
 
 
