@@ -893,6 +893,7 @@ RunInstaller()
   char                szText[256];
   char                szTempPath[MAX_BUF];
   char                szTmp[MAX_PATH];
+  char                xpiDir[MAX_PATH];
   char                szFilename[MAX_BUF];
   char                szBuf[MAX_BUF];
 
@@ -921,9 +922,16 @@ RunInstaller()
   else
   {
     lstrcpy(szCmdLine, szSetupFile);
-    GetModuleFileName(NULL, szBuf, sizeof(szBuf));
-    ParsePath(szBuf, szFilename, sizeof(szFilename), PP_FILENAME_ONLY);
-
+    GetModuleFileName(NULL, szFilename, sizeof(szFilename));
+    ParsePath(szFilename, xpiDir, sizeof(xpiDir), PP_PATH_ONLY);
+    AppendBackSlash(xpiDir, sizeof(xpiDir));
+    lstrcat(xpiDir, "xpi");
+    if(FileExists(xpiDir))
+    {
+      GetShortPathName(xpiDir, szBuf, sizeof(szBuf));
+      lstrcat(szCmdLine, " -a ");
+      lstrcat(szCmdLine, szBuf);
+    }
     lstrcat(szCmdLine, " -n ");
     lstrcat(szCmdLine, szFilename);
   }
