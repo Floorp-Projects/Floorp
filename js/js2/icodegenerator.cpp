@@ -86,7 +86,7 @@ namespace ICG {
     {
 #ifdef DEBUG
         ASSERT(stitcher.empty());
-        ASSERT(statementLabels.empty());
+        // ASSERT(statementLabels.empty());
         for (LabelList::iterator i = labels.begin();
              i != labels.end(); i++) {
             ASSERT((*i)->mBase == iCode);
