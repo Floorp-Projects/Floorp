@@ -178,6 +178,8 @@ public:
   NS_IMETHOD GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
   NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent);
 
+  static void Shutdown();
+
 protected:
   nsresult HandleEventSubType(nsListenerStruct* aListenerStruct,
                               nsIDOMEvent* aDOMEvent,
@@ -217,6 +219,8 @@ protected:
 
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsISupports* mTarget;  //WEAK
+
+  static jsval sAddListenerID;
 };
 
 

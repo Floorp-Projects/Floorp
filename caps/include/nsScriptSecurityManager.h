@@ -20,7 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *
+ *  Norris Boyd  <nboyd@atg.com>
+ *  Mitch Stoltz <mstoltz@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -50,12 +51,13 @@
 #include "nsISecurityPref.h"
 #include "nsIJSContextStack.h"
 #include "nsIObserver.h"
-#include "nsWeakPtr.h"
+#include "pldhash.h"
 
 class nsIDocShell;
 class nsString;
 class nsIClassInfo;
 class nsSystemPrincipal;
+struct ClassPolicy;
 
 /////////////////////
 // nsIPrincipalKey //
@@ -92,15 +94,172 @@ protected:
     nsIPrincipal* mKey;
 };
 
+////////////////////
+// Policy Storage //
+////////////////////
+
+// Property Policy
+union SecurityLevel
+{
+    long     level;
+    char*    capability;
+};
+
+// Security levels
+// These values all have the low bit set (except UNDEFINED_ACCESS)
+// to distinguish them from pointer values, because no pointer
+// to allocated memory ever has the low bit set. A SecurityLevel
+// contains either one of these constants or a pointer to a string
+// representing the name of a capability.
+
+#define SCRIPT_SECURITY_UNDEFINED_ACCESS 0
+#define SCRIPT_SECURITY_ACCESS_IS_SET_BIT 1
+#define SCRIPT_SECURITY_NO_ACCESS \
+  ((1 << 0) | SCRIPT_SECURITY_ACCESS_IS_SET_BIT)
+#define SCRIPT_SECURITY_SAME_ORIGIN_ACCESS \
+  ((1 << 1) | SCRIPT_SECURITY_ACCESS_IS_SET_BIT)
+#define SCRIPT_SECURITY_ALL_ACCESS \
+  ((1 << 2) | SCRIPT_SECURITY_ACCESS_IS_SET_BIT)
+
+#define SECURITY_ACCESS_LEVEL_FLAG(_sl) \
+           ((_sl.level == 0) || \
+            (_sl.level & SCRIPT_SECURITY_ACCESS_IS_SET_BIT))
+
+
+struct PropertyPolicy : public PLDHashEntryHdr
+{
+    jsval          key;  // property name as jsval
+    SecurityLevel  mGet;
+    SecurityLevel  mSet;
+};
+
+PR_STATIC_CALLBACK(void)
+InitPropertyPolicyEntry(PLDHashTable *table,
+                     PLDHashEntryHdr *entry,
+                     const void *key)
+{
+    PropertyPolicy* pp = (PropertyPolicy*)entry;
+    pp->key = (jsval)key;
+    pp->mGet.level = SCRIPT_SECURITY_UNDEFINED_ACCESS;
+    pp->mSet.level = SCRIPT_SECURITY_UNDEFINED_ACCESS;
+}
+
+PR_STATIC_CALLBACK(void)
+ClearPropertyPolicyEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
+{
+    PropertyPolicy* pp = (PropertyPolicy*)entry;
+    pp->key = JSVAL_VOID;
+}
+
+// Class Policy
+#define NO_POLICY_FOR_CLASS (ClassPolicy*)1
+
+struct ClassPolicy : public PLDHashEntryHdr
+{
+    char*  key;
+    PLDHashTable mPolicy;
+    ClassPolicy* mDefault;
+    ClassPolicy* mWildcard;
+};
+
+PR_STATIC_CALLBACK(PRBool)
+MatchClassPolicyKey(PLDHashTable *table,
+                    const PLDHashEntryHdr *entry,
+                    const void *key)
+{
+    ClassPolicy* cp = (ClassPolicy *)entry;
+    return (cp->key == (char*)key) || (PL_strcmp(cp->key, (char*)key) == 0);
+}
+
+PR_STATIC_CALLBACK(void)
+ClearClassPolicyEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
+{
+    ClassPolicy* cp = (ClassPolicy *)entry;
+    if (cp->key)
+    {
+        PL_strfree(cp->key);
+        cp->key = nsnull;
+    }
+    PL_DHashTableFinish(&cp->mPolicy);
+}
+
+PR_STATIC_CALLBACK(void)
+InitClassPolicyEntry(PLDHashTable *table,
+                     PLDHashEntryHdr *entry,
+                     const void *key)
+{
+    static PLDHashTableOps classPolicyOps =
+    {
+        PL_DHashAllocTable,
+        PL_DHashFreeTable,
+        PL_DHashGetKeyStub,
+        PL_DHashVoidPtrKeyStub,
+        PL_DHashMatchEntryStub,
+        PL_DHashMoveEntryStub,
+        ClearPropertyPolicyEntry,
+        PL_DHashFinalizeStub,
+        InitPropertyPolicyEntry
+    };
+
+    ClassPolicy* cp = (ClassPolicy*)entry;
+    cp->key = PL_strdup((const char*)key);
+    PL_DHashTableInit(&cp->mPolicy, &classPolicyOps, nsnull,
+                      sizeof(PropertyPolicy), 16);
+}
+
+// Domain Policy
+class DomainPolicy : public PLDHashTable
+{
+public:
+    DomainPolicy() : mRefCount(0)
+    {
+        static PLDHashTableOps domainPolicyOps =
+        {
+            PL_DHashAllocTable,
+            PL_DHashFreeTable,
+            PL_DHashGetKeyStub,
+            PL_DHashStringKey,
+            MatchClassPolicyKey,
+            PL_DHashMoveEntryStub,
+            ClearClassPolicyEntry,
+            PL_DHashFinalizeStub,
+            InitClassPolicyEntry
+        };
+
+        PL_DHashTableInit(this, &domainPolicyOps, nsnull,
+                          sizeof(ClassPolicy), 16);
+    }
+
+    void Hold()
+    {
+        mRefCount++;
+    }
+
+    void Drop()
+    {
+        if (--mRefCount == 0)
+            delete this;
+    }
+
+private:
+    PRUint32 mRefCount;
+};
+
+/////////////////////////////
+// nsScriptSecurityManager //
+/////////////////////////////
 #define NS_SCRIPTSECURITYMANAGER_CID \
 { 0x7ee2a4c0, 0x4b93, 0x17d3, \
 { 0xba, 0x18, 0x00, 0x60, 0xb0, 0xf1, 0x99, 0xa2 }}
 
-class nsScriptSecurityManager : public nsIScriptSecurityManager, public nsIObserver
+class nsScriptSecurityManager : public nsIScriptSecurityManager,
+                                public nsIObserver
 {
 public:
     nsScriptSecurityManager();
     virtual ~nsScriptSecurityManager();
+
+    static void Shutdown();
     
     NS_DEFINE_STATIC_CID_ACCESSOR(NS_SCRIPTSECURITYMANAGER_CID)
         
@@ -115,11 +274,19 @@ public:
     static nsSystemPrincipal*
     SystemPrincipalSingletonConstructor();
 
-    JSContext* GetCurrentContextQuick();
+    JSContext* GetCurrentJSContext();
+
+    JSContext* GetSafeJSContext();
 
 private:
 
-    static PRBool IsDOMClass(nsIClassInfo* aClassInfo);
+    static JSBool
+    CheckJSFunctionCallerAccess(JSContext *cx, JSObject *obj,
+                                jsval id, JSAccessMode mode,
+                                jsval *vp);
+
+    static PRBool
+    IsDOMClass(nsIClassInfo* aClassInfo);
 
     nsresult
     GetBaseURIScheme(nsIURI* aURI, char** aScheme);
@@ -131,12 +298,13 @@ private:
     GetRootDocShell(JSContext* cx, nsIDocShell **result);
 
     nsresult
-    CheckPropertyAccessImpl(PRUint32 aAction, nsIXPCNativeCallContext* aCallContext,
-                            JSContext* aJSContext, JSObject* aJSObject,
+    CheckPropertyAccessImpl(PRUint32 aAction,
+                            nsIXPCNativeCallContext* aCallContext,
+                            JSContext* cx, JSObject* aJSObject,
                             nsISupports* aObj, nsIURI* aTargetURI,
                             nsIClassInfo* aClassInfo,
-                            jsval aName, const char* aClassName, 
-                            const char* aProperty, void** aPolicy);
+                            const char* aClassName, jsval aProperty,
+                            void** aCachedClassPolicy);
 
     nsresult
     CheckSameOrigin(JSContext* aCx, nsIPrincipal* aSubject, 
@@ -148,18 +316,13 @@ private:
                      const char* aClassName, const char* aProperty,
                      PRUint32 aAction, nsCString &capability, void** aPolicy);
 
-    static nsresult
-    TryToGetPref(nsISecurityPref* aSecurityPref,
-                 nsCString &aPrefName,
-                 const char* aClassName,
-                 const char* aPropertyName,
-                 PRInt32 aClassPolicy,
-                 PRUint32 aAction, char** result);
-
     nsresult
-    GetPolicy(nsIPrincipal* principal,
-              const char* aClassName, const char* aPropertyName,
-              PRInt32 aClassPolicy, PRUint32 aAction, char** result);
+    GetClassPolicy(nsIPrincipal* principal, const char* aClassName,
+                   ClassPolicy** result);
+
+    SecurityLevel
+    GetPropertyPolicy(jsval aProperty, ClassPolicy* aClassPolicy,
+                      PRUint32 aAction);
 
     nsresult
     CreateCodebasePrincipal(nsIURI* aURI, nsIPrincipal** result);
@@ -196,12 +359,24 @@ private:
     PrincipalPrefNames(const char* pref, char** grantedPref, char** deniedPref);
 
     nsresult
-    InitPolicies(PRUint32 prefCount, const char** prefNames,
-                 nsISecurityPref* securityPref);
+    InitPolicies();
+
+    nsresult
+    InitDomainPolicy(JSContext* cx,const char* aPolicyName,
+                     DomainPolicy* aDomainPolicy);
 
     nsresult
     InitPrincipals(PRUint32 prefCount, const char** prefNames,
                    nsISecurityPref* securityPref);
+
+#ifdef DEBUG_mstoltz
+    void
+    PrintPolicyDB();
+#endif
+
+    // JS strings we need to clean up on shutdown
+    static jsval sCallerID;
+    static jsval sEnabledID;
 
     inline void
     JSEnabledPrefChanged(nsISecurityPref* aSecurityPref);
@@ -210,15 +385,18 @@ private:
     static const char* sJSMailEnabledPrefName;
 
     nsObjectHashtable* mOriginToPolicyMap;
-    nsHashtable* mClassPolicies;
-    nsWeakPtr mPrefBranchWeakRef;
+    DomainPolicy* mDefaultPolicy;
+    nsObjectHashtable* mCapabilities;
+
+    nsCOMPtr<nsIPrefBranch> mPrefBranch;
+    nsCOMPtr<nsISecurityPref> mSecurityPref;
     nsIPrincipal* mSystemPrincipal;
     nsCOMPtr<nsIPrincipal> mSystemCertificate;
     nsSupportsHashtable* mPrincipals;
     PRBool mIsJavaScriptEnabled;
     PRBool mIsMailJavaScriptEnabled;
     PRBool mIsWritingPrefs;
-    nsCOMPtr<nsIJSContextStack> mThreadJSContextStack;
+    nsCOMPtr<nsIThreadJSContextStack> mJSContextStack;
     PRBool mNameSetRegistered;
 };
 

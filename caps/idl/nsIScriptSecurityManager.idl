@@ -51,7 +51,7 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
     [noscript] void checkPropertyAccess(in JSContextPtr aJSContext,
                                         in JSObjectPtr aJSObject,
                                         in string aClassName,
-                                        in string aProperty,
+                                        in JSVal aProperty,
                                         in PRUint32 aAction);
 
     /**
@@ -60,7 +60,7 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
     [noscript] void checkConnect(in JSContextPtr aJSContext,
                                  in nsIURI aTargetURI,
                                  in string aClassName,
-                                 in string aPropertyName);
+                                 in string aProperty);
 
     /**
      * Check that the script currently running in context "cx" can load "uri".
@@ -197,6 +197,12 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
      */
     [noscript] nsIPrincipal getObjectPrincipal(in JSContextPtr cx,
                                                in JSObjectPtr obj);
+
+    /**
+     * Forget all currently stored security policies and reread from prefs.
+     * This must be called after any capability.policy prefs have changed.
+     */ 
+    void reloadSecurityPolicies();
 };
 
 %{C++
