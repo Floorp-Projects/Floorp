@@ -263,15 +263,18 @@ sub getGroups {
     # return [groupID, name, [rightName]*]*
 }
 
+sub getGroupMembers {
+    my $self = shift;
+    my($app, $groupID) = @_;
+    return $self->database($app)->execute('SELECT userGroupsMapping.userID, userGroupsMapping.level
+                                           FROM userGroupsMapping
+                                           WHERE userGroupsMapping.groupID = ?', $groupID)->rows;
+}
+
 sub getGroupName {
     my $self = shift;
     my($app, $groupID) = @_;
-    my $row = $self->database($app)->execute('SELECT name FROM groups WHERE groupID = ?', $groupID)->row;
-    if (defined($row)) {
-        return $row->[0];
-    } else {
-        return undef;
-    }
+    return scalar($self->database($app)->execute('SELECT name FROM groups WHERE groupID = ?', $groupID)->row);
     # return name or undef
 }
 
@@ -500,8 +503,12 @@ sub setupInstall {
         # | groupID        K1 | auto_increment
         # | name           K2 | user defined name (can be changed)
         # +-------------------+
+        $self->database($app)->execute('INSERT INTO groups SET groupID=?, name=?', 1, 'Administrators');
     } else {
         # check its schema is up to date
+        if (not $self->database($app)->execute('SELECT groupID FROM groups WHERE groupID = ?', 1)->row) {
+            $self->database($app)->execute('INSERT INTO groups SET groupID=?, name=?', 1, 'Administrators');
+        }
     }
     if (not $helper->tableExists($app, $database, 'groupRightsMapping')) {
         $app->output->setupProgress('dataSource.user.groupRightsMapping');

@@ -129,18 +129,17 @@ sub objectInit {
         $groupsByName->{$group->[1]} = {'groupID' => $group->[0], 'level' => $group->[2], }; # name => id, level
     }
     $self->groupsByID($groupsByID); # authoritative version
-    $self->originalGroupsByID($groupsByID); # a backup used to make a comparison when saving the groups
+    $self->originalGroupsByID({%{$groupsByID}}); # a backup used to make a comparison when saving the groups
     $self->groupsByName($groupsByName); # helpful version for output purposes only
     # rights
-    my %rights = map {$_ => 1} @$rights;
-    $self->rights(\%rights); # map a list of strings into a hash for easy access
+    $self->rights({ map {$_ => 1} @$rights }); # map a list of strings into a hash for easy access
     $self->{'_DIRTY'}->{'properties'} = not(defined($userID));
 }
 
 sub hasRight {
     my $self = shift;
     my($right) = @_;
-    return defined($self->rights->{$right});
+    return (defined($self->rights->{$right}) or $self->levelInGroup(1)); # group 1 is a magical group
 }
 
 sub hasField {
@@ -317,7 +316,7 @@ sub insertField {
 sub invalidateRights {
     my $self = shift;
     my $rights = $self->app->getService('dataSource.user')->getRights($self->app, keys(%{$self->{'groupsByID'}}));
-    $self->rights(map {$_ => 1} @$rights); # map a list of strings into a hash for easy access
+    $self->rights({ map {$_ => 1} @$rights }); # map a list of strings into a hash for easy access
     # don't set a dirty flag, because rights are merely a convenient
     # cached expansion of the rights data. Changing this externally
     # makes no sense -- what rights one has is dependent on what

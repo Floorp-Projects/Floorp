@@ -43,6 +43,7 @@ sub provides {
             $service eq 'dispatcher.commands' or 
             $service eq 'dispatcher.output.generic' or 
             $service eq 'dispatcher.output' or 
+            $service eq 'setup.install' or
             $class->SUPER::provides($service));
 }
 
@@ -250,6 +251,56 @@ sub strings {
             );
 }
 
+sub setupInstall {
+    my $self = shift;
+    my($app) = @_;
+
+    # cache the data source service
+    my $dataSource = $app->getService('dataSource.user');
+
+    # look for users in group 1
+    my $users = $dataSource->getGroupMembers($app, 1);
+    if (not @$users) {
+        # no administrators, so ask for one
+        $app->output->setupProgress('user.login.administrator');
+
+        # get the contact method
+        # XXX should be a way to make sure default contact method is a particular contact method (namely, e-mail)
+        my $contact = $app->input->getArgument('user.login.administrator.contactMethod', $dataSource->getFieldNamesByCategory($app, 'contact'));
+        if (not defined($contact)) {
+            return 'user.login.administrator.contact';
+        }
+
+        # get the address of the administrator user
+        my $address = $app->input->getArgument('user.login.administrator.adddress');
+        if (not defined($address)) {
+            return 'user.login.administrator.address';
+        }
+
+        # cache the user factory
+        my $userFactory = $app->getService('user.factory');
+
+        # get the user in question
+        my $user = $userFactory->getUserByContactDetails($app, $contact, $address);
+
+        # if doesn't exist, create it
+        if (not defined($user)) {
+            $app->output->setupProgress('user.login.administrator.creating');
+            my $password;
+            ($user, $password) = $self->createUser($app, $contact, $address);
+            if (not defined($user)) {
+                return 'user.login.administrator.address';
+            }
+            $app->output($contact, $user)->loginDetails($address, $password);
+        }
+
+        # add the user to group 1 as an administrator (so he's an administrator of administrators)
+        $user->joinGroup(1, 2); # XXX HARDCODED CONSTANT ALERT
+    }
+
+    return;
+}
+
 
 # internal routines
 
@@ -264,8 +315,8 @@ sub changePassword {
 sub createUser {
     my $self = shift;
     my($app, $protocol, $address) = @_;
-    my $validator = $app->getService('protocol.'.$protocol);
-    if ((defined($validator)) and (not $validator->checkAddress($address))) {
+    my $validator = $app->getService("protocol.$protocol");
+    if ((defined($validator)) and (not $validator->checkAddress($app, $address))) {
         return (undef, undef);
     }
     my($crypt, $password) = $app->getService('service.passwords')->newPassword();

@@ -258,6 +258,13 @@ sub getGroups {
     # return [groupID, name, [rightName]*]*
 }
 
+sub getGroupMembers {
+    my $self = shift;
+    my($app, $groupID) = @_;
+    $self->notImplemented();
+    # return [userID, level]*
+}
+
 sub getGroupName {
     my $self = shift;
     my($app, $groupID) = @_;
