@@ -291,7 +291,7 @@ nsServiceManagerImpl::ReleaseService(const nsCID& aClass, nsISupports* service,
 
         if (entry) {
             rv = entry->RemoveListener(shutdownListener);
-            serviceFound == PR_TRUE;
+            serviceFound = PR_TRUE;
         }
     }
     
