@@ -218,7 +218,7 @@ Contributor(s): ______________________________________. -->
   var gBookmarkPopup = null;
 </script>
 
-  <toolbox>
+  <toolbox class="toolbox-top">
     <!-- Menu -->
     <menubar id="main-menubar"/>
   
@@ -230,7 +230,7 @@ Contributor(s): ______________________________________. -->
        	  <menupopup oncreate="BrowserBackMenu(event);"/>
     	  </menubutton>
         <menubutton class="menubutton-dual toolbar" id="forward-button" 
-                    crop="right" orient="vertical" observes="canGoForward" 
+                    crop="right" observes="canGoForward" 
                     oncommand="gotoHistoryIndex(event);" buttonaction="BrowserForward();"
                     value="&forwardButton.label;" buttontooltiptext="&forwardButton.tooltip;">  
       	  <menupopup oncreate="BrowserForwardMenu(event);"/>
@@ -375,8 +375,6 @@ Contributor(s): ______________________________________. -->
 
   </box>
 
-  <toolbox>
-    <toolbar id="taskbar" class="chromeclass-extrachrome" />
-  </toolbox>
+  <toolbox id="taskbar" class="chromeclass-extrachrome toolbox-bottom"/>
 
 </window>

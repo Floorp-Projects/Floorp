@@ -98,15 +98,17 @@
         </menupopup>
       </menu>
     
-  <toolbar id="taskbar" class="toolbar-standard chromeclass-status" persist="collapsed">
-    <box id="taskButtons">
-      <button class="button-toolbar-4 plain taskbutton" id="mini-nav" onclick="toNavigator();"/>
-      <button class="button-toolbar-4 plain taskbutton" id="mini-mail" onclick="toMessengerWindow()"/>
-      <button class="button-toolbar-4 plain taskbutton" id="mini-comp" onclick="toEditor();" />
-      <button class="button-toolbar-4 plain taskbutton" id="mini-addr" onclick="toAddressBook()"/>
-    </box>
-    <box id="taskbarMenuBox"/>
-    <box id="taskbarGotoMenuBox" align="right"/>
-  </toolbar>
-      
+  <toolbox id="taskbar">
+    <toolbar class="toolbar-standard chromeclass-status" persist="collapsed" style="min-width: 1px;">
+      <box id="taskButtons">
+        <button class="button-toolbar-4 plain taskbutton" id="mini-nav" onclick="toNavigator();"/>
+        <button class="button-toolbar-4 plain taskbutton" id="mini-mail" onclick="toMessengerWindow()"/>
+        <button class="button-toolbar-4 plain taskbutton" id="mini-comp" onclick="toEditor();" />
+        <button class="button-toolbar-4 plain taskbutton" id="mini-addr" onclick="toAddressBook()"/>
+      </box>
+      <box id="taskbarMenuBox"/>
+      <box id="taskbarGotoMenuBox" align="right"/>
+    </toolbar>
+  </toolbox>    
+
 </overlay>
