@@ -95,11 +95,15 @@ class nsWritingIterator
           return *get();
         }
 
+//#if 0
+        // An iterator really deserves this, but some compilers (notably IBM VisualAge for OS/2)
+        //  don't like this when |CharT| is a type without members.
       pointer
       operator->() const
         {
           return get();
         }
+//#endif
 
       nsWritingIterator<CharT>&
       operator++()
@@ -433,6 +437,7 @@ template <class CharT>
 void
 basic_nsAWritableString<CharT>::do_AssignFromReadable( const basic_nsAReadableString<CharT>& rhs )
   {
+    SetLength(0);
     SetLength(rhs.Length());
     copy_string(rhs.BeginReading(), rhs.EndReading(), BeginWriting());
   }
@@ -479,6 +484,7 @@ template <class CharT>
 void
 basic_nsAWritableString<CharT>::do_AssignFromIterators( const nsReadingIterator<CharT>& aStart, const nsReadingIterator<CharT>& aEnd )
   {
+    SetLength(0);
     SetLength(distance(aStart, aEnd));
     copy_string(aStart, aEnd, BeginWriting());
   }
@@ -560,7 +566,6 @@ basic_nsAWritableString<CharT>::do_AppendFromElementPtrLength( const CharT* aCha
   }
 
 template <class CharT>
-inline
 void
 basic_nsAWritableString<CharT>::do_AppendFromElement( CharT aChar )
   {
