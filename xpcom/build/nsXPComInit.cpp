@@ -40,6 +40,8 @@
 #include "nsEventQueueService.h"
 #include "nsEventQueue.h"
 
+#include "nsFileSpecImpl.h"
+
 // base
 static NS_DEFINE_CID(kAllocatorCID, NS_ALLOCATOR_CID);
 // ds
@@ -54,6 +56,7 @@ static NS_DEFINE_CID(kSupportsArrayCID, NS_SUPPORTSARRAY_CID);
 static NS_DEFINE_CID(kUnicharBufferCID, NS_UNICHARBUFFER_CID);
 // io
 static NS_DEFINE_CID(kByteBufferInputStreamCID, NS_BYTEBUFFERINPUTSTREAM_CID);
+static NS_DEFINE_CID(kFileSpecCID, NS_FILESPEC_CID);
 // components
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kGenericFactoryCID, NS_GENERICFACTORY_CID);
@@ -83,14 +86,14 @@ static NS_DEFINE_CID(kEventQueueCID, NS_EVENTQUEUE_CID);
 //
 
 nsresult
-RegisterGenericFactory(nsIComponentManager* compMgr, const nsCID& cid, const char* descr, 
-                       nsIGenericFactory::ConstructorProcPtr constr)
+RegisterGenericFactory(nsIComponentManager* compMgr, const nsCID& cid, const char* className,
+                       const char *progid, nsIGenericFactory::ConstructorProcPtr constr)
 {
     nsresult rv;
     nsIGenericFactory* fact;
     rv = NS_NewGenericFactory(&fact, constr);
     if (NS_FAILED(rv)) return rv;
-    rv = compMgr->RegisterFactory(cid, descr, NULL, fact, PR_TRUE);
+    rv = compMgr->RegisterFactory(cid, className, progid, fact, PR_TRUE);
     NS_RELEASE(fact);
     return rv;
 }
@@ -125,7 +128,7 @@ nsresult NS_InitXPCOM(nsIServiceManager* *result)
         if (compMgr == NULL)
             return NS_ERROR_OUT_OF_MEMORY;
         NS_ADDREF(compMgr);
-        nsresult rv = compMgr->Init();
+        rv = compMgr->Init();
         if (NS_FAILED(rv))
         {
             NS_RELEASE(compMgr);
@@ -147,61 +150,94 @@ nsresult NS_InitXPCOM(nsIServiceManager* *result)
 
     NS_DEFINE_CID(kRegistryCID, NS_REGISTRY_CID);
 
-    rv = compMgr->RegisterFactory(kRegistryCID, NS_REGISTRY_CLASSNAME,
-                                  NS_REGISTRY_PROGID, registryFactory,
-                                  PR_TRUE);
+    rv = compMgr->RegisterFactory(kRegistryCID,
+                                  NS_REGISTRY_CLASSNAME,
+                                  NS_REGISTRY_PROGID,
+                                  registryFactory, PR_TRUE);
     NS_RELEASE(registryFactory);
     if (NS_FAILED(rv)) return rv;
 
-    rv = RegisterGenericFactory(compMgr, kAllocatorCID, "Allocator", 
+    rv = RegisterGenericFactory(compMgr, kAllocatorCID,
+                                NS_ALLOCATOR_CLASSNAME,
+                                NS_ALLOCATOR_PROGID,
                                 nsAllocatorImpl::Create);
     if (NS_FAILED(rv)) return rv;
 
-    rv = RegisterGenericFactory(compMgr, kArenaCID, "Arena", 
+    rv = RegisterGenericFactory(compMgr, kArenaCID,
+                                NS_ARENA_CLASSNAME,
+                                NS_ARENA_PROGID,
                                 ArenaImpl::Create);
     if (NS_FAILED(rv)) return rv;
 
-    rv = RegisterGenericFactory(compMgr, kBufferCID, "Buffer", 
+    rv = RegisterGenericFactory(compMgr, kBufferCID,
+                                NS_BUFFER_CLASSNAME,
+                                NS_BUFFER_PROGID,
                                 nsBuffer::Create);
     if (NS_FAILED(rv)) return rv;
 
-    rv = RegisterGenericFactory(compMgr, kByteBufferCID, "ByteBuffer", 
+    rv = RegisterGenericFactory(compMgr, kByteBufferCID,
+                                NS_BYTEBUFFER_CLASSNAME,
+                                NS_BYTEBUFFER_PROGID,
                                 ByteBufferImpl::Create);
     if (NS_FAILED(rv)) return rv;
 
-    rv = RegisterGenericFactory(compMgr, kPageManagerCID, "PageManager", 
+    rv = RegisterGenericFactory(compMgr, kFileSpecCID,
+                                NS_FILESPEC_CLASSNAME,
+                                NS_FILESPEC_PROGID,
+                                nsFileSpecImpl::Create);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = RegisterGenericFactory(compMgr, kPageManagerCID,
+                                NS_PAGEMANAGER_CLASSNAME,
+                                NS_PAGEMANAGER_PROGID,
                                 nsPageMgr::Create);
     if (NS_FAILED(rv)) return rv;
 
-    rv = RegisterGenericFactory(compMgr, kPropertiesCID, "Properties", 
+    rv = RegisterGenericFactory(compMgr, kPropertiesCID,
+                                NS_PROPERTIES_CLASSNAME,
+                                NS_PROPERTIES_PROGID,
                                 nsProperties::Create);
     if (NS_FAILED(rv)) return rv;
 
-    rv = RegisterGenericFactory(compMgr, kPersistentPropertiesCID, "PersistentProperties", 
+    rv = RegisterGenericFactory(compMgr, kPersistentPropertiesCID,
+                                NS_PERSISTENTPROPERTIES_CLASSNAME,
+                                NS_PERSISTENTPROPERTIES_PROGID,
                                 nsPersistentProperties::Create);
     if (NS_FAILED(rv)) return rv;
 
-    rv = RegisterGenericFactory(compMgr, kSupportsArrayCID, "ISupportsArray", 
+    rv = RegisterGenericFactory(compMgr, kSupportsArrayCID,
+                                NS_SUPPORTSARRAY_CLASSNAME,
+                                NS_SUPPORTSARRAY_PROGID,
                                 nsSupportsArray::Create);
     if (NS_FAILED(rv)) return rv;
 
-    rv = RegisterGenericFactory(compMgr, kObserverCID, "Observer", 
+    rv = RegisterGenericFactory(compMgr, kObserverCID,
+                                NS_OBSERVER_CLASSNAME,
+                                NS_OBSERVER_PROGID,
                                 nsObserver::Create);
     if (NS_FAILED(rv)) return rv;
 
-    rv = RegisterGenericFactory(compMgr, kObserverServiceCID, "ObserverService", 
+    rv = RegisterGenericFactory(compMgr, kObserverServiceCID,
+                                NS_OBSERVERSERVICE_CLASSNAME,
+                                NS_OBSERVERSERVICE_PROGID,
                                 nsObserverService::Create);
     if (NS_FAILED(rv)) return rv;
 
-    rv = RegisterGenericFactory(compMgr, kGenericFactoryCID, "GenericFactory", 
+    rv = RegisterGenericFactory(compMgr, kGenericFactoryCID,
+                                NS_GENERICFACTORY_CLASSNAME,
+                                NS_GENERICFACTORY_PROGID,
                                 nsGenericFactory::Create);
     if (NS_FAILED(rv)) return rv;
 
-    rv = RegisterGenericFactory(compMgr, kEventQueueServiceCID, "EventQueueService", 
+    rv = RegisterGenericFactory(compMgr, kEventQueueServiceCID,
+                                NS_EVENTQUEUESERVICE_CLASSNAME,
+                                NS_EVENTQUEUESERVICE_PROGID,
                                 nsEventQueueServiceImpl::Create);
     if (NS_FAILED(rv)) return rv;
 
-    rv = RegisterGenericFactory(compMgr, kEventQueueCID, "EventQueue", 
+    rv = RegisterGenericFactory(compMgr, kEventQueueCID,
+                                NS_EVENTQUEUE_CLASSNAME,
+                                NS_EVENTQUEUE_PROGID,
                                 nsEventQueueImpl::Create);
     return rv;
 }
