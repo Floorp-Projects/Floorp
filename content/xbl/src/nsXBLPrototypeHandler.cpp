@@ -301,11 +301,9 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver, nsIDOMEven
 
   nsCOMPtr<nsIJSEventListener> jsListener(do_QueryInterface(eventListener));
   jsListener->SetEventName(onEventAtom);
+  
+  // Handle the event.
   eventListener->HandleEvent(aEvent);
-
-  // Now unbind it.
-  boundContext->BindCompiledEventHandler(scriptObject, onEventAtom, nsnull);
-
   return NS_OK;
 }
 
