@@ -245,7 +245,7 @@ close(HEADER_FILE);
 # Generate the source file
 open(CPP_FILE, ">$file_base.cpp");
 print CPP_FILE $copyright;
-print CPP_FILE "#include <string.h>\n";
+print CPP_FILE "#include \"nsCRT.h\"\n";
 print CPP_FILE "#include \"$file_base.h\"\n\n";
 
 # Print out table of tag names
@@ -276,7 +276,7 @@ nsHTMLTag NS_TagToEnum(const char* aTagName) {
   int high = NS_HTML_TAG_MAX - 1;
   while (low <= high) {
     int middle = (low + high) >> 1;
-    int result = strcmp(aTagName, tagTable[middle]);
+    int result = nsCRT::strcasecmp(aTagName, tagTable[middle]);
     if (result == 0)
       return (nsHTMLTag) (middle + 1);
     if (result < 0)
