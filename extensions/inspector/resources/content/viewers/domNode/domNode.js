@@ -198,6 +198,8 @@ DOMNodeViewer.prototype =
   {
     var field = document.getElementById("tx_"+aName);
     if (field) {
+      if (aName == "nodeType")
+        field.setAttribute("tooltiptext", nodeTypeToText(aText));
       field.value = aText;
     }
   }
