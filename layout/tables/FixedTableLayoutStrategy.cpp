@@ -108,7 +108,7 @@ PRBool FixedTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aComputed
   nscoord* colWidths = new PRBool[mNumCols];
   nsCRT::memset(colWidths, -1, mNumCols*sizeof(nscoord));
 
-  // for every column, determine it's specified width
+  // for every column, determine its specified width
   for (colX = 0; colX < mNumCols; colX++) { 
     // Get column information
     nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX);
@@ -157,6 +157,11 @@ PRBool FixedTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aComputed
  
   nscoord lastColAllocated = -1;
   nscoord remainingWidth = availWidth - totalColWidth;
+  if (CRAZY_WIDTH(remainingWidth)) {
+    // let's put a cap on the width so that it doesn't become insane.
+    remainingWidth = 100;
+  }
+
   if (tableIsFixedWidth && (0 < remainingWidth)) {
     if (mNumCols > specifiedCols) {
       // allocate the extra space to the columns which have no width specified
