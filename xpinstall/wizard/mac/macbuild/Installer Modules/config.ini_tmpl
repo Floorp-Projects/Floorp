@@ -1,0 +1,63 @@
+[Dialog License]
+License File=License
+
+
+[Dialog Welcome]
+Message0=                 Welcome to Netscape Communicator 5.0
+
+Message1=This is welcome message 2 from the config.ini file. This is additional gunk to test auto text wrapping. This is still more text to aid in the former effort. This is still more text to aid in the former effort. This is still more text to aid in the former effort. This is still more text to aid in the former effort.This is welcome message 2 from the config.ini file. This is additional gunk to test auto text wrapping. This is still more text to aid in the former effort. 
+
+Message2=This is welcome message 3 from the config.ini file. This is additional gunk to test auto text wrapping. This is still more text to aid in the former effort. This is still more text to aid in the former effort. This is still more text to aid in the former effort. This is still more text to aid in the former effort.This is welcome message 3 from the config.ini file. This is additional gunk to test auto text wrapping. This is still more text to aid in the former effort. 
+
+
+[Dialog Setup Type]
+
+[Setup Type0]
+Description Short=Typical Install
+Description Long=Click continue to install the following component:                                                     <#buildID> Mozilla optimized build
+C0=Component1
+C1=Component1
+
+[Setup Type1]
+Description Short=Custom Install
+Description Long=Click continue to select which component(s) to install.                              
+C0=Component0
+C1=Component1
+C2=Component2
+
+[Dialog Select Components]
+Message0=Please select the components you wish to install:
+
+[Component0]
+Description Short=XPInstall Engine
+Description Long=The "core file" with xpinstall, xpcom, nspr20, etc.
+Archive=install.xpi
+URL0=http://sweetlou.mcom.com/products/client/seamonkey/macos/8.x/ppc/<#buildID>/
+URL1=http://dolfin.mcom.com/nsinstall/mac/xpiengine/debug/
+Install Size=<#xpiengine_size>
+Attributes=SELECTED|INVISIBLE
+
+[Component1]
+Description Short= Browser component
+Description Long=Apprunner & Editor (<#buildID>)
+Archive=browser.xpi
+Install Size=<#core_size>
+URL0=ftp://sweetlou.mcom.com/products/client/seamonkey/macos/8.x/ppc/<#buildID>/
+
+[Component2]
+Description Short= Mail-News component
+Description Long=Mail & News component (<#buildID>)
+Archive=mail.xpi
+Install Size=<#mail_size>
+URL0=ftp://sweetlou.mcom.com/products/client/seamonkey/macos/8.x/ppc/<#buildID>/
+
+[Dialog Start Install]
+Message0=Click the Install button to download and install the selected components.  
+
+
+[SmartDownload-Netscape Install]
+core_file=install.xpi
+no_ads=true
+silent=false
+execution=false
+confirm_install=true
