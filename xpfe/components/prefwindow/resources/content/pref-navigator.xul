@@ -75,7 +75,7 @@
       <button class="dialog" value="&browseFile.label;" accesskey="&browseFile.accesskey;"
               oncommand="prefNavSelectFile('browserStartupHomepage', 'choosehomepage', false );"/>
   	</box>		
-    <separator/>
+    <separator class="thin"/>
     <box autostretch="never">
       <checkbox id="alwaysCheckWhenDropOnHome" 
                 value="&alwaysCheckWhenDropHome.label;"
