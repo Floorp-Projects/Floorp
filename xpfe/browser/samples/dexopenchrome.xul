@@ -11,21 +11,21 @@
     <![CDATA[
     var featureList = new Array("all",
                         "close", "titlebar", "resizable", "scrollbars",
+                        "menubar", "toolbar", "status", "location",
                         "chrome", "dialog", "modal", "dependent",
-                        "menubar", "toolbar", "status", "location");
+                        "alwaysLowered", "alwaysRaised");
 
     function OpenWindow(extension) {
       var features = CalculateFeatures();
       dump("******* begin open window\n");
-      window.open("resource:/res/samples/dexparamdialog."+extension,
-        "New", features);
+      window.open("dexparamdialog."+extension, "_blank", features);
       dump("******* end open window\n");
     }
     function OpenDialog(extension) {
       var features = CalculateFeatures();
       dump("******* begin opendialog\n");
-      window.openDialog("resource:/res/samples/dexparamdialog."+extension,
-        "New", features, {remind:true});
+      window.openDialog("dexparamdialog."+extension, "_blank", features,
+                        {remind:true});
       dump("******* end opendialog\n");
     }
     function CalculateFeatures() {
@@ -93,24 +93,12 @@
     </html:tr>
     <html:tr>
       <html:td>
-        <html:input type="checkbox" id="chrome"/>chrome
+        <html:input type="checkbox" id="alwaysRaised"/>raised
       </html:td>
     </html:tr>
     <html:tr>
       <html:td>
-        <html:input type="checkbox" id="dialog"/>dialog
-      </html:td><html:td>
-        <html:input type="checkbox" id="dialog-ex"/>explicit
-      </html:td>
-    </html:tr>
-    <html:tr>
-      <html:td>
-        <html:input type="checkbox" id="modal"/>modal
-      </html:td>
-    </html:tr>
-    <html:tr>
-      <html:td>
-        <html:input type="checkbox" id="dependent"/>dependent
+        <html:input type="checkbox" id="alwaysLowered"/>lowered
       </html:td>
     </html:tr>
     <html:tr>
@@ -131,6 +119,28 @@
     <html:tr>
       <html:td>
         <html:input type="checkbox" id="location"/>location
+      </html:td>
+    </html:tr>
+    <html:tr>
+      <html:td>
+        <html:input type="checkbox" id="chrome"/>chrome
+      </html:td>
+    </html:tr>
+    <html:tr>
+      <html:td>
+        <html:input type="checkbox" id="dialog"/>dialog
+      </html:td><html:td>
+        <html:input type="checkbox" id="dialog-ex"/>explicit
+      </html:td>
+    </html:tr>
+    <html:tr>
+      <html:td>
+        <html:input type="checkbox" id="modal"/>modal
+      </html:td>
+    </html:tr>
+    <html:tr>
+      <html:td>
+        <html:input type="checkbox" id="dependent"/>dependent
       </html:td>
     </html:tr>
   </html:table>
