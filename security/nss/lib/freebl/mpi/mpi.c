@@ -35,7 +35,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mpi.c,v 1.15 2000/08/08 03:20:35 nelsonb%netscape.com Exp $
+ *  $Id: mpi.c,v 1.16 2000/08/09 20:55:39 nelsonb%netscape.com Exp $
  */
 
 #include "mpi-priv.h"
@@ -800,7 +800,7 @@ CLEANUP:
  */
 mp_err   mp_mul(const mp_int *a, const mp_int *b, mp_int * c)
 {
-  mp_digit *pb = MP_DIGITS(b);
+  mp_digit *pb;
   mp_int   tmp;
   mp_err   res;
   mp_size  ib;
@@ -821,11 +821,18 @@ mp_err   mp_mul(const mp_int *a, const mp_int *b, mp_int * c)
     MP_DIGITS(&tmp) = 0;
   }
 
+  if (MP_USED(a) < MP_USED(b)) {
+    const mp_int *xch = b;	/* switch a and b, to do fewer outer loops */
+    b = a;
+    a = xch;
+  }
+
   /* This has the effect of left-padding with zeroes... */
   MP_USED(c) = 1; MP_DIGIT(c, 0) = 0;
   if((res = s_mp_pad(c, USED(a) + USED(b))) != MP_OKAY)
     goto CLEANUP;
 
+  pb = MP_DIGITS(b);
   /* Outer loop:  Digits of b */
   for(ib = 0; ib < USED(b); ib++) {
     mp_digit b_i    = *pb++;
@@ -2115,12 +2122,14 @@ mp_err  s_mp_fixup_reciprocal(const mp_int *c, const mp_int *p, int k, mp_int *x
   }
 
   /* make sure x is large enough */
-  MP_CHECKOK( s_mp_pad(x, MP_USED(p) + 2 + MP_USED(x)) );
+  ix = MP_HOWMANY(k, MP_DIGIT_BIT) + MP_USED(p) + 1;
+  ix = MP_MAX(ix, MP_USED(x));
+  MP_CHECKOK( s_mp_pad(x, ix) );
 
   r = 0 - s_mp_invmod_32b(MP_DIGIT(p,0));
 
   for (ix = 0; k > 0; ix++) {
-    int      j = (k > MP_DIGIT_BIT) ? MP_DIGIT_BIT : k;
+    int      j = MP_MIN(k, MP_DIGIT_BIT);
     mp_digit v = r * MP_DIGIT(x, ix);
     if (j < MP_DIGIT_BIT) {
       v &= ((mp_digit)1 << j) - 1;	/* v = v mod (2 ** j) */
@@ -2499,7 +2508,7 @@ mp_err   s_mp_grow(mp_int *mp, mp_size min)
     mp_digit   *tmp;
 
     /* Set min to next nearest default precision block size */
-    min = ((min + (s_mp_defprec - 1)) / s_mp_defprec) * s_mp_defprec;
+    min = MP_ROUNDUP(min, s_mp_defprec);
 
     if((tmp = s_mp_alloc(min, sizeof(mp_digit))) == NULL)
       return MP_MEM;
