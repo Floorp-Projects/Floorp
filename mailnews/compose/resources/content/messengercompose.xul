@@ -20,7 +20,7 @@
    - 
    - Contributor(s):
    -   Ben Goodger <ben@netscape.com> (ass'td polish fixes)
-   -   Håkan Waara <hwaara@chello.se> (ass'td polish fix)
+   -   Håkan Waara <hwaara@chello.se>
   -->
 
 <?xul-overlay href="chrome://global/content/charsetOverlay.xul"?>
@@ -265,7 +265,7 @@
         </menupopup>
       </menu>
       <menu id="menu_Edit">
-        <menupopup oncreate="EditorInitEditMenu()">
+        <menupopup>
           <menuitem id="menu_undo"/>
           <menuitem id="menu_redo"/>
           <menuseparator/>

@@ -121,7 +121,6 @@ Rights Reserved.
   </box>  
 
 
-  <statusbar id="status-bar" class="chromeclass-status"/>
-  <box id="taskbar" class="toolbox-bottom"/>
+  <statusbar id="status-bar"/>
 
 </window>
