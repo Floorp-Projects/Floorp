@@ -52,7 +52,6 @@ endif
 
 CSRCS = \
 	string.c \
-	event.c \
 	base64t.c
 
 ifeq ($(OS_ARCH), WINNT)

@@ -47,7 +47,6 @@ endif
 
 CSRCS = \
 	string.c \
-	event.c \
 	base64t.c
 
 ifeq (,$(filter-out WINNT OS2,$(OS_ARCH)))
