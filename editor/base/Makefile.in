@@ -27,7 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= editor
-LIBRARY_NAME	= ender
+LIBRARY_NAME	= editor
 IS_COMPONENT	= 1
 
 CPPSRCS		= \

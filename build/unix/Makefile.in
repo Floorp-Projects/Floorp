@@ -33,5 +33,6 @@ export::
 	chmod 755 mozilla-config
 	$(INSTALL) -m 755 mozilla-config $(DIST)/bin
 
-install:: $(srcdir)/run-mozilla.sh
-	$(INSTALL) $< $(DIST)/bin
+install:: $(srcdir)/run-mozilla.sh $(srcdir)/mozilla-readme
+	$(INSTALL) $(srcdir)/run-mozilla.sh $(DIST)/bin
+	$(INSTALL) $(srcdir)/mozilla-readme $(DIST)/bin/README
