@@ -437,6 +437,7 @@ xpidl_process_idl(char *filename, IncludePathEntry *include_path,
     int rv;
     struct input_callback_stack stack;
     gboolean ok;
+    char *fopen_mode;
 
     stack.includes = g_hash_table_new(g_str_hash, g_str_equal);
     if (!stack.includes) {
@@ -490,7 +491,8 @@ xpidl_process_idl(char *filename, IncludePathEntry *include_path,
     }
     if (strcmp(outname, "-")) {
         mode_outname = g_strdup_printf("%s.%s", outname, mode->suffix);
-        state.file = fopen(mode_outname, "w");
+        fopen_mode = mode->factory == xpidl_typelib_dispatch ? "wb" : "w";
+        state.file = fopen(mode_outname, fopen_mode);
         free(mode_outname);
         if (!state.file) {
             perror("error opening output file");
