@@ -2004,11 +2004,12 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
     // XXX pushing state to fix clipping problem, need to look into why the clip is set here
     aRenderingContext.PushState();
     PRBool  clip;
-    nsRect  clipRect;
-    clipRect = srcRect;
-    clipRect.width = x1-x0;
-    clipRect.height = y1-y0;
-    aRenderingContext.SetClipRect(clipRect, nsClipCombine_kReplace, clip);
+    //nsRect  clipRect;
+    //clipRect = srcRect;
+    //clipRect.width = x1-x0;
+    //clipRect.height = y1-y0;
+    //aRenderingContext.SetClipRect(clipRect, nsClipCombine_kReplace, clip);
+    aRenderingContext.SetClipRect(aBorderArea, nsClipCombine_kReplace, clip);
 
     // copy the initial image to our buffer
     aRenderingContext.DrawImage(image,srcRect.x,srcRect.y,tileWidth,tileHeight);
@@ -2030,7 +2031,7 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
     aRenderingContext.GetDrawingSurface(&theSurface);
     TileImage(aRenderingContext,theSurface,srcRect,x1-x0,y1-y0,flag);
 
-     // setting back the clip from the background clip push
+    // setting back the clip from the background clip push
     aRenderingContext.PopState(clip);
 
 
