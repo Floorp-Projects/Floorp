@@ -35,6 +35,7 @@ CPPSRCS		= nsURILoaderModule.cpp
 
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/liburiloaderbase_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libexthandler_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
