@@ -2172,9 +2172,9 @@ void ParseOutgoingMessage::FinishHeader()
 	{
 		if (origPosition > 0 && !m_lastBodyLineEmpty)
 		{
-			len = XP_FileWrite (LINEBREAK, LINEBREAK_LEN, m_out_file);
-			m_bytes_written += LINEBREAK_LEN;
-			m_position += LINEBREAK_LEN;
+			len = XP_FileWrite (MSG_LINEBREAK, MSG_LINEBREAK_LEN, m_out_file);
+			m_bytes_written += MSG_LINEBREAK_LEN;
+			m_position += MSG_LINEBREAK_LEN;
 		}
 	}
 	nsParseMailMessageState::FinishHeader();
@@ -2222,7 +2222,7 @@ PRInt32	ParseOutgoingMessage::ParseFolderLine(const char *line, PRUint32 lineLen
 
 			if (m_newMsgHdr)
 				m_newMsgHdr->SetStatusOffset(m_bytes_written);
-			PR_snprintf(buf, sizeof(buf), X_MOZILLA_STATUS_FORMAT LINEBREAK, (m_newMsgHdr) ? m_newMsgHdr->GetFlags() & ~MSG_FLAG_RUNTIME_ONLY : 0);
+			PR_snprintf(buf, sizeof(buf), X_MOZILLA_STATUS_FORMAT MSG_LINEBREAK, (m_newMsgHdr) ? m_newMsgHdr->GetFlags() & ~MSG_FLAG_RUNTIME_ONLY : 0);
 			len = strlen(buf);
 			res = XP_FileWrite(buf, len, m_out_file);
 			if (res < len)
@@ -2233,7 +2233,7 @@ PRInt32	ParseOutgoingMessage::ParseFolderLine(const char *line, PRUint32 lineLen
 
 			MessageDB::ConvertDBFlagsToPublicFlags(&dbFlags);
 			dbFlags &= (MSG_FLAG_MDN_REPORT_NEEDED | MSG_FLAG_MDN_REPORT_SENT | MSG_FLAG_TEMPLATE);
-			PR_snprintf(buf, sizeof(buf), X_MOZILLA_STATUS2_FORMAT LINEBREAK, dbFlags);
+			PR_snprintf(buf, sizeof(buf), X_MOZILLA_STATUS2_FORMAT MSG_LINEBREAK, dbFlags);
 			len = strlen(buf);
 			res = XP_FileWrite(buf, len, m_out_file);
 			if (res < len)

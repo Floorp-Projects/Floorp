@@ -200,20 +200,20 @@ PRInt32 nsMsgLineBuffer::ConvertAndSendBuffer()
     if (!m_convertNewlinesP)
 	{
 	}
-#if (LINEBREAK_LEN == 1)
+#if (MSG_LINEBREAK_LEN == 1)
     else if ((newline - buf) >= 2 &&
              newline[-2] == CR &&
              newline[-1] == LF)
 	{
         /* CRLF -> CR or LF */
-        buf [length - 2] = LINEBREAK[0];
+        buf [length - 2] = MSG_LINEBREAK[0];
         length--;
 	}
     else if (newline > buf + 1 &&
-             newline[-1] != LINEBREAK[0])
+             newline[-1] != MSG_LINEBREAK[0])
 	{
         /* CR -> LF or LF -> CR */
-        buf [length - 1] = LINEBREAK[0];
+        buf [length - 1] = MSG_LINEBREAK[0];
 	}
 #else
     else if (((newline - buf) >= 2 && newline[-2] != CR) ||
@@ -221,8 +221,8 @@ PRInt32 nsMsgLineBuffer::ConvertAndSendBuffer()
 	{
         /* LF -> CRLF or CR -> CRLF */
         length++;
-        buf[length - 2] = LINEBREAK[0];
-        buf[length - 1] = LINEBREAK[1];
+        buf[length - 2] = MSG_LINEBREAK[0];
+        buf[length - 1] = MSG_LINEBREAK[1];
 	}
 #endif
     

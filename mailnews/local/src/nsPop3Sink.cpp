@@ -25,24 +25,6 @@
 #include <time.h>
 #include "nsParseMailbox.h"
 
-#ifdef XP_MAC
-/* ducarroz: we should solve this redefinition problem! */
-#  undef LINEBREAK
-#  undef LINEBREAK_LEN
-#  define LINEBREAK             "\015"
-#  define LINEBREAK_LEN 1
-#else
-#  ifdef XP_WIN
-#    define LINEBREAK           "\015\012"
-#    define LINEBREAK_LEN       2
-#  else
-#    ifdef XP_UNIX
-#      define LINEBREAK         "\012"
-#      define LINEBREAK_LEN     1
-#    endif /* XP_UNIX */
-#  endif /* XP_WIN */
-#endif /* XP_MAC */
-
 NS_IMPL_ISUPPORTS(nsPop3Sink, nsIPop3Sink::GetIID());
 
 nsPop3Sink::nsPop3Sink()
@@ -229,13 +211,6 @@ nsPop3Sink::GetPopServer(nsIPop3IncomingServer* *server)
     return NS_OK;
 }
 
-#ifndef CR
-#define CR '\r'
-#define LF '\n'
-#define LINEBREAK "\r\n"
-#define LINEBREAK_LEN 2
-#endif
-
 char*
 nsPop3Sink::GetDummyEnvelope(void)
 {
@@ -253,7 +228,7 @@ nsPop3Sink::GetDummyEnvelope(void)
 	 strftime("... %c ...") is no good, because it is localized. */
   PL_strcpy(result, "From - ");
   PL_strcpy(result + 7, ct);
-  PL_strcpy(result + 7 + 24, LINEBREAK);
+  PL_strcpy(result + 7 + 24, MSG_LINEBREAK);
   return result;
 }
 
@@ -312,9 +287,9 @@ nsresult nsPop3Sink::WriteLineToMailbox(char *buffer)
 nsresult
 nsPop3Sink::IncorporateComplete(void* closure)
 {
-	WriteLineToMailbox(LINEBREAK);
+	WriteLineToMailbox(MSG_LINEBREAK);
 //    if (m_outFileStream)
-//        *m_outFileStream << LINEBREAK;
+//        *m_outFileStream << MSG_LINEBREAK;
 
 #ifdef DEBUG
     printf("Incorporate message complete.\n");
@@ -325,7 +300,7 @@ nsPop3Sink::IncorporateComplete(void* closure)
 nsresult
 nsPop3Sink::IncorporateAbort(void* closure, PRInt32 status)
 {
-	WriteLineToMailbox(LINEBREAK);
+	WriteLineToMailbox(MSG_LINEBREAK);
 
 #ifdef DEBUG
     printf("Incorporate message abort.\n");

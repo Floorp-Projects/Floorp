@@ -1151,19 +1151,19 @@ nsMsgCompose::InitializeHeaders(MWContext* old_context, const nsIMsgCompFields* 
 		if (body && *body)
 		{
 			m_fields->AppendBody((char *)body);
-			m_fields->AppendBody(LINEBREAK);
+			m_fields->AppendBody(MSG_LINEBREAK);
 			/* m_bodyEdited = PR_TRUE; */
 		}
 	}
 
 	sig = FE_UsersSignature ();
 	if (sig && *sig) {
-	    m_fields->AppendBody(LINEBREAK);
+	    m_fields->AppendBody(MSG_LINEBREAK);
 		/* If the sig doesn't begin with "--" followed by whitespace or a
 		   newline, insert "-- \n" (the pseudo-standard sig delimiter.) */
 		if (sig[0] != '-' || sig[1] != '-' ||
 			(sig[2] != ' ' && sig[2] != CR && sig[2] != LF)) {
-			m_fields->AppendBody("-- " LINEBREAK);
+			m_fields->AppendBody("-- " MSG_LINEBREAK);
 		}
 		m_fields->AppendBody((char *)sig);
 	}
@@ -1362,7 +1362,7 @@ nsMsgCompose::GetUrlDone(PrintSetup* /*pptr*/)
 	PREF_GetIntPref("mailnews.reply_with_extra_lines", &replyWithExtraLines);
 
 	PRInt32 extra = (m_markup ? 0 : 
-	               (replyWithExtraLines ? LINEBREAK_LEN * replyWithExtraLines
+	               (replyWithExtraLines ? MSG_LINEBREAK_LEN * replyWithExtraLines
 					: 0));
 
 /*JFD
@@ -1376,10 +1376,10 @@ nsMsgCompose::GetUrlDone(PrintSetup* /*pptr*/)
 
 		if (!m_markup && extra && replyOnTop == 1) {
 		  for (; replyWithExtraLines > 0; replyWithExtraLines--) {
-			PL_strcpy(curquote, LINEBREAK);
-			curquote += LINEBREAK_LEN;
+			PL_strcpy(curquote, MSG_LINEBREAK);
+			curquote += MSG_LINEBREAK_LEN;
 			if (m_quotefunc)
-				(*m_quotefunc)(m_quoteclosure, LINEBREAK);
+				(*m_quotefunc)(m_quoteclosure, MSG_LINEBREAK);
 		  }
 		}
 	}
@@ -1450,10 +1450,10 @@ nsMsgCompose::GetUrlDone(PrintSetup* /*pptr*/)
 
 			if (!m_markup && extra && replyOnTop == 0) {
 			  for (; replyWithExtraLines > 1; replyWithExtraLines--) {
-				PL_strcpy(curquote, LINEBREAK);
-				curquote += LINEBREAK_LEN;
+				PL_strcpy(curquote, MSG_LINEBREAK);
+				curquote += MSG_LINEBREAK_LEN;
 				if (m_quotefunc)
-					(*m_quotefunc)(m_quoteclosure, LINEBREAK);
+					(*m_quotefunc)(m_quoteclosure, MSG_LINEBREAK);
 			  }
 			}
 

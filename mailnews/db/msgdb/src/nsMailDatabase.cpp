@@ -290,7 +290,7 @@ void nsMailDatabase::UpdateFolderFlag(nsIMsgDBHdr *mailHdr, PRBool bSet,
 
 					// time to upate x-mozilla-status2
 					position = fileStream->tell();
-					fileStream->seek(position + LINEBREAK_LEN);
+					fileStream->seek(position + MSG_LINEBREAK_LEN);
 					if (fileStream->readline(buf, sizeof(buf))) 
 					{
 						if (strncmp(buf, X_MOZILLA_STATUS2, X_MOZILLA_STATUS2_LEN) == 0 &&
@@ -300,7 +300,7 @@ void nsMailDatabase::UpdateFolderFlag(nsIMsgDBHdr *mailHdr, PRBool bSet,
 							PRUint32 dbFlags;
                             (void)mailHdr->GetFlags(&dbFlags);
 							dbFlags &= (MSG_FLAG_MDN_REPORT_NEEDED | MSG_FLAG_MDN_REPORT_SENT | MSG_FLAG_TEMPLATE);
-							fileStream->seek(position + LINEBREAK_LEN);
+							fileStream->seek(position + MSG_LINEBREAK_LEN);
 							PR_snprintf(buf, sizeof(buf), X_MOZILLA_STATUS2_FORMAT, dbFlags);
 							fileStream->write(buf, PL_strlen(buf));
 						}

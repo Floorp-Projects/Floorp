@@ -126,7 +126,7 @@ const char *kEndTokenList = "end token list";
 mdb_err nsIMdbStore::WriteTokenList()
 {
    *m_fileStream << kStartTokenList;
-   *m_fileStream << LINEBREAK;
+   *m_fileStream << MSG_LINEBREAK;
    PRInt32 i;
 
    for (i = 0; i < m_tokenStrings.Count(); i++)
@@ -138,10 +138,10 @@ mdb_err nsIMdbStore::WriteTokenList()
 
 	   *m_fileStream << outputString;
 	   delete [] outputString;
-	   *m_fileStream << LINEBREAK;
+	   *m_fileStream << MSG_LINEBREAK;
    }
    *m_fileStream << kEndTokenList;
-   *m_fileStream << LINEBREAK;
+   *m_fileStream << MSG_LINEBREAK;
    return 0;
 }
 
@@ -178,19 +178,19 @@ const char *kEndTableList = "end table list";
 mdb_err nsIMdbStore::WriteTableList()
 {
 	*m_fileStream << kStartTableList;
-	*m_fileStream << LINEBREAK;
+	*m_fileStream << MSG_LINEBREAK;
 
 	PRInt32 i;
 
 	*m_fileStream << (long) m_tables.Count();
-	*m_fileStream << LINEBREAK;
+	*m_fileStream << MSG_LINEBREAK;
 	for (i = 0; i < m_tables.Count(); i++)
 	{
 	   nsIMdbTable *table = (nsIMdbTable *) m_tables.ElementAt(i);
 	   table->Write();
 	}
 	*m_fileStream << kEndTableList;
-	*m_fileStream << LINEBREAK;
+	*m_fileStream << MSG_LINEBREAK;
 	return 0;
 }
 
@@ -365,7 +365,7 @@ mdb_err nsIMdbTable::Write()
 	*stream << m_Oid.mOid_Scope;
 	*stream << ",";
 	*stream << (long) m_rows.Count();
-	*stream << LINEBREAK;
+	*stream << MSG_LINEBREAK;
 
 	PRInt32 i;
 
@@ -553,7 +553,7 @@ mdb_err nsIMdbRow::Write(nsIOFileStream *stream)
 	*stream << (long) m_cells.Count();
 	*stream << ",";
 	*stream << (long) m_oid.mOid_Id;
-	*stream << LINEBREAK;
+	*stream << MSG_LINEBREAK;
 
 	for (iteratePos = 0; iteratePos  < m_cells.Count(); iteratePos++)
 	{
@@ -707,7 +707,7 @@ mdb_err mdbCellImpl::Write(nsIOFileStream *stream)
 	*stream << "=";
 	if (m_cellValue)
 		*stream << m_cellValue;
-	*stream << LINEBREAK;
+	*stream << MSG_LINEBREAK;
 	return 0;
 }
 

@@ -5331,7 +5331,7 @@ mime_do_fcc_1 (MSG_Pane *pane,
 
   if (file_existed_p && st.st_size > 0)
 	{
-	  if (XP_FileWrite (LINEBREAK, LINEBREAK_LEN, out) < LINEBREAK_LEN)
+	  if (XP_FileWrite (MSG_LINEBREAK, MSG_LINEBREAK_LEN, out) < MSG_LINEBREAK_LEN)
 		{
 		  status = MK_MIME_ERROR_WRITING_FILE;
 		  goto FAIL;
@@ -5369,7 +5369,7 @@ mime_do_fcc_1 (MSG_Pane *pane,
 	  flags |= MSG_FLAG_READ;
 	  if (mode == MSG_QueueForLater )
 		flags |= MSG_FLAG_QUEUED;
-	  buf = PR_smprintf(X_MOZILLA_STATUS_FORMAT LINEBREAK, flags);
+	  buf = PR_smprintf(X_MOZILLA_STATUS_FORMAT MSG_LINEBREAK, flags);
 	  if (buf)
 	  {
 		  status = msg_do_fcc_handle_line(buf, PL_strlen(buf), outgoingParser);
@@ -5381,7 +5381,7 @@ mime_do_fcc_1 (MSG_Pane *pane,
 	  PRUint32 flags2 = 0;
 	  if (mode == MSG_SaveAsTemplate)
 		  flags2 |= MSG_FLAG_TEMPLATE;
-	  buf = PR_smprintf(X_MOZILLA_STATUS2_FORMAT LINEBREAK, flags2);
+	  buf = PR_smprintf(X_MOZILLA_STATUS2_FORMAT MSG_LINEBREAK, flags2);
 	  if (buf)
 	  {
 		  status = msg_do_fcc_handle_line(buf, PL_strlen(buf), outgoingParser);
@@ -5430,7 +5430,7 @@ mime_do_fcc_1 (MSG_Pane *pane,
 		  status = MK_OUT_OF_MEMORY;
 		  goto FAIL;
 		}
-	  PR_snprintf(buf, L-1, "FCC: %s" LINEBREAK, fcc_header);
+	  PR_snprintf(buf, L-1, "FCC: %s" MSG_LINEBREAK, fcc_header);
 	  status = msg_do_fcc_handle_line(buf, PL_strlen(buf), outgoingParser);
 	  if (status < 0)
 		goto FAIL;
@@ -5450,7 +5450,7 @@ mime_do_fcc_1 (MSG_Pane *pane,
 		  status = MK_OUT_OF_MEMORY;
 		  goto FAIL;
 		}
-	  PR_snprintf(buf, L-1, "BCC: %s" LINEBREAK, bcc_header);
+	  PR_snprintf(buf, L-1, "BCC: %s" MSG_LINEBREAK, bcc_header);
 	  status = msg_do_fcc_handle_line(buf, PL_strlen(buf), outgoingParser);
 	  if (status < 0)
 		goto FAIL;
@@ -5487,7 +5487,7 @@ mime_do_fcc_1 (MSG_Pane *pane,
 
 	  if ((host_and_port && *host_and_port) || !secure_p)
 		{
-		  char *line = PR_smprintf(X_MOZILLA_NEWSHOST ": %s%s" LINEBREAK,
+		  char *line = PR_smprintf(X_MOZILLA_NEWSHOST ": %s%s" MSG_LINEBREAK,
 								   host_and_port ? host_and_port : "",
 								   secure_p ? "/secure" : "");
 		  PR_FREEIF(orig_hap);
@@ -5548,12 +5548,12 @@ mime_do_fcc_1 (MSG_Pane *pane,
 	msg_do_fcc_handle_line (obuffer, obuffer_fp, outgoingParser);
 
   /* Terminate with a final newline. */
-  if (XP_FileWrite (LINEBREAK, LINEBREAK_LEN, out) < LINEBREAK_LEN)
+  if (XP_FileWrite (MSG_LINEBREAK, MSG_LINEBREAK_LEN, out) < MSG_LINEBREAK_LEN)
   {
 	  status = MK_MIME_ERROR_WRITING_FILE;
   }
   else
-	outgoingParser->AdvanceOutPosition(LINEBREAK_LEN);
+	outgoingParser->AdvanceOutPosition(MSG_LINEBREAK_LEN);
 
   if (mail_db != NULL && outgoingParser != NULL &&
 	  outgoingParser->m_newMsgHdr != NULL)

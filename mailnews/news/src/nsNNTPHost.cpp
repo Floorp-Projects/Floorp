@@ -653,7 +653,7 @@ nsNNTPHost::RememberLine(char* line)
 	}
 	if (!new_data) return MK_OUT_OF_MEMORY;
 	PL_strcpy(new_data, line);
-	PL_strcat(new_data, LINEBREAK);
+	PL_strcat(new_data, MSG_LINEBREAK);
 
 	m_optionLines = new_data;
 
@@ -954,7 +954,7 @@ nsNNTPHost::WriteNewsrc()
         
         PRBool isSubscribed=PR_FALSE;
         rv = newsgroup->GetSubscribed(&isSubscribed);
-        line = PR_smprintf("%s%s %s" LINEBREAK,
+        line = PR_smprintf("%s%s %s" MSG_LINEBREAK,
                                  newsgroupName, 
 								 isSubscribed ? ":" : "!", str);
 		if (!line) {
@@ -1198,22 +1198,22 @@ int
 nsNNTPHost::CreateFileHeader()
 {
 	PR_snprintf(m_block, m_blockSize,
-				"# Netscape newshost information file." LINEBREAK
-				"# This is a generated file!  Do not edit." LINEBREAK
-				"" LINEBREAK
-				"version=1" LINEBREAK
-				"newsrcname=%s" LINEBREAK
+				"# Netscape newshost information file." MSG_LINEBREAK
+				"# This is a generated file!  Do not edit." MSG_LINEBREAK
+				"" MSG_LINEBREAK
+				"version=1" MSG_LINEBREAK
+				"newsrcname=%s" MSG_LINEBREAK
 #ifdef OSF1
-				"lastgroupdate=%08x" LINEBREAK
-				"firstnewdate=%08x" LINEBREAK
-				"uniqueid=%08x" LINEBREAK
+				"lastgroupdate=%08x" MSG_LINEBREAK
+				"firstnewdate=%08x" MSG_LINEBREAK
+				"uniqueid=%08x" MSG_LINEBREAK
 #else
-				"lastgroupdate=%08lx" LINEBREAK
-				"firstnewdate=%08lx" LINEBREAK
-				"uniqueid=%08lx" LINEBREAK
+				"lastgroupdate=%08lx" MSG_LINEBREAK
+				"firstnewdate=%08lx" MSG_LINEBREAK
+				"uniqueid=%08lx" MSG_LINEBREAK
 #endif
-				"pushauth=%1x" LINEBREAK
-				"" LINEBREAK
+				"pushauth=%1x" MSG_LINEBREAK
+				"" MSG_LINEBREAK
 				"begingroups",
 				m_filename, (long) m_lastGroupUpdate, (long) m_firstnewdate, (long) m_uniqueId,
 				m_pushAuth);
@@ -1326,9 +1326,9 @@ nsNNTPHost::SaveHostInfo()
 		position += length;
 		m_fileStart = position;
 		m_groupTree->SetFileOffset(m_fileStart);
-		status = XP_FileWrite(LINEBREAK, LINEBREAK_LEN, out);
+		status = XP_FileWrite(MSG_LINEBREAK, MSG_LINEBREAK_LEN, out);
 		if (status < 0) goto FAIL;
-		position += LINEBREAK_LEN;
+		position += MSG_LINEBREAK_LEN;
 
 		blockcomma = NULL;
 		if (!m_inhaled) {
@@ -1370,9 +1370,9 @@ nsNNTPHost::SaveHostInfo()
 				status = XP_FileWrite(m_block, length, out);
 				if (status < 0) goto FAIL;
 				position += length;
-				status = XP_FileWrite(LINEBREAK, LINEBREAK_LEN, out);
+				status = XP_FileWrite(MSG_LINEBREAK, MSG_LINEBREAK_LEN, out);
 				if (status < 0) goto FAIL;
-				position += LINEBREAK_LEN;
+				position += MSG_LINEBREAK_LEN;
 				m_block[0] = '\0';
 				XP_FileReadLine(m_block, m_blockSize, in);
 				blockcomma = PL_strchr(m_block, ',');
@@ -1407,9 +1407,9 @@ nsNNTPHost::SaveHostInfo()
 				status = XP_FileWrite(m_block, length, out);
 				if (status < 0) goto FAIL;
 				position += length;
-				status = XP_FileWrite(LINEBREAK, LINEBREAK_LEN, out);
+				status = XP_FileWrite(MSG_LINEBREAK, MSG_LINEBREAK_LEN, out);
 				if (status < 0) goto FAIL;
-				position += LINEBREAK_LEN;
+				position += MSG_LINEBREAK_LEN;
 				m_block[0] = '\0';
 			} while (XP_FileReadLine(m_block, m_blockSize, in) && *m_block);
 		}
@@ -2660,8 +2660,8 @@ RESTART:
 			if (!ptr2) {
 				// What a pain.  We found the right place, but the rest of
 				// the line is off the end of the buffer.
-				if (offset > m_blockStart + LINEBREAK_LEN) {
-					m_blockStart = offset - LINEBREAK_LEN;
+				if (offset > m_blockStart + MSG_LINEBREAK_LEN) {
+					m_blockStart = offset - MSG_LINEBREAK_LEN;
 					goto RELOAD;
 				}
 				// We couldn't find it, even though we're at the beginning
@@ -2736,7 +2736,7 @@ nsNNTPHost::LoadSingleEntry(nsMsgGroupRecord* parent, char* groupname,
 
 	while (!result && comp != 0 && min < max) {
 		PRInt32 mid = (min + max) / 2;
-		m_blockStart = mid - LINEBREAK_LEN;
+		m_blockStart = mid - MSG_LINEBREAK_LEN;
 		XP_FileSeek(m_groupFile, m_blockStart, SEEK_SET);
 		int length = XP_FileRead(m_block, m_blockSize, m_groupFile);
 		if (length < 0) length = 0;

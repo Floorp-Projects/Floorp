@@ -476,7 +476,7 @@ nsMsgGroupRecord::GetSaveString()
 	if (!fullname) return NULL; {
 		long nAddTime;
 		LL_L2I(nAddTime, m_addtime);
-        result = PR_smprintf("%s,%s,%lx,%lx,%lx" LINEBREAK,
+        result = PR_smprintf("%s,%s,%lx,%lx,%lx" MSG_LINEBREAK,
 							   fullname, pretty ? pretty : "",
 							   (long) (m_flags & ~RUNTIMEFLAGS),
 							   nAddTime,

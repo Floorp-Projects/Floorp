@@ -2038,7 +2038,7 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 		   the local system will convert that to the local line
 		   terminator as it is read.
 		 */
-		PL_strcat (outputBuffer, LINEBREAK);
+		PL_strcat (outputBuffer, MSG_LINEBREAK);
 		/* Don't send content-type to mime parser if we're doing a cancel
 		  because it confuses mime parser into not parsing.
 		  */

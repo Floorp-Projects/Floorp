@@ -260,7 +260,7 @@ net_pop3_write_mapper(PLHashEntry* he, PRIntn index, void* arg)
   PR_ASSERT((he->value == ((void *) (int) KEEP)) ||
 			(he->value == ((void *) (int) DELETE_CHAR)) ||
 			(he->value == ((void *) (int) TOO_BIG)));
-	char* tmpBuffer = PR_smprintf("%c %s" LINEBREAK, (char)(long)he->value, (char*)
+	char* tmpBuffer = PR_smprintf("%c %s" MSG_LINEBREAK, (char)(long)he->value, (char*)
 																he->key);
 	PR_ASSERT(tmpBuffer);
   *file << tmpBuffer;
@@ -278,8 +278,8 @@ net_pop3_write_state(Pop3UidlHost* host, const char* mailDirectory)
 
   nsOutputFileStream outFileStream(fileSpec, PR_WRONLY | PR_CREATE_FILE |
                                    PR_TRUNCATE);
-	char* tmpBuffer = PR_smprintf("%s", "# Netscape POP3 State File" LINEBREAK
-			   "# This is a generated file!  Do not edit." LINEBREAK LINEBREAK);
+	char* tmpBuffer = PR_smprintf("%s", "# Netscape POP3 State File" MSG_LINEBREAK
+			   "# This is a generated file!  Do not edit." MSG_LINEBREAK MSG_LINEBREAK);
 	PR_ASSERT(tmpBuffer);
 
   outFileStream << tmpBuffer;
@@ -294,7 +294,7 @@ net_pop3_write_state(Pop3UidlHost* host, const char* mailDirectory)
         outFileStream << host->host;
         outFileStream << " ";
         outFileStream << host->user;
-        outFileStream << LINEBREAK;
+        outFileStream << MSG_LINEBREAK;
         PL_HashTableEnumerateEntries(host->hash, net_pop3_write_mapper, (void *)&outFileStream);
     }
   }
