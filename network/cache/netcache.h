@@ -70,6 +70,9 @@ CACHE_OpenAllSARCache();
 extern void
 NET_DisplayMemCacheInfoAsHTML(ActiveEntry * cur_entry);
 
+extern int
+NET_FindURLInMemCache(URL_Struct * URL_s, MWContext *ctxt);
+
 XP_END_PROTOS
 
 #endif /* NETCACHE_H */

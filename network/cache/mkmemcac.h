@@ -34,9 +34,6 @@ NET_MemCacheConverter (FO_Present_Types format_out,
                     URL_Struct *URL_s,
                     MWContext  *window_id);
 
-extern int
-NET_FindURLInMemCache(URL_Struct * URL_s, MWContext *ctxt);
-
 /* remove a URL from the memory cache
  */
 extern void
