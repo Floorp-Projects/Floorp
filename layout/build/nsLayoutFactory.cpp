@@ -25,6 +25,7 @@
 #include "nsICollection.h"
 #include "nsIPresShell.h"
 #include "nsISelection.h"
+#include "nsIFrameUtil.h"
 
 #include "nsHTMLAtoms.h"
 #include "nsHTMLParts.h"
@@ -51,12 +52,12 @@ static NS_DEFINE_IID(kCRangeCID,     NS_RANGE_CID);
 static NS_DEFINE_CID(kPresShellCID,  NS_PRESSHELL_CID);
 static NS_DEFINE_CID(kTextNodeCID,   NS_TEXTNODE_CID);
 static NS_DEFINE_CID(kSelectionCID,  NS_SELECTION_CID);
+static NS_DEFINE_CID(kFrameUtilCID,  NS_FRAME_UTIL_CID);
 
 
 nsresult NS_NewRangeList(nsICollection **);
 nsresult NS_NewRange(nsIDOMRange **);
-
-
+extern nsresult NS_NewFrameUtil(nsIFrameUtil** aResult);
 
 class HTMLImageElementFactory : public nsIDOMHTMLImageElementFactory {
 public:
@@ -263,6 +264,12 @@ nsresult nsLayoutFactory::CreateInstance(nsISupports *aOuter,
   else if (mClassID.Equals(kTextNodeCID)) {
     // XXX ibid
     if (NS_FAILED(res = NS_NewTextNode((nsIHTMLContent**) &inst)))
+      return res;
+    refCounted = PR_TRUE;
+  }
+  else if (mClassID.Equals(kFrameUtilCID)) {
+    // XXX ibid
+    if (NS_FAILED(res = NS_NewFrameUtil((nsIFrameUtil**) &inst)))
       return res;
     refCounted = PR_TRUE;
   }
