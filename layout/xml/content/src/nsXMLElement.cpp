@@ -49,6 +49,7 @@ NS_NewXMLElement(nsIXMLContent** aInstancePtrResult, nsIAtom* aTag)
 static nsIAtom* kLinkAtom;  // XXX these should get moved to nsXMLAtoms
 static nsIAtom* kHrefAtom;
 static nsIAtom* kShowAtom;
+static PRUint32 kElementCount;
 
 nsXMLElement::nsXMLElement(nsIAtom *aTag)
 {
@@ -56,32 +57,20 @@ nsXMLElement::nsXMLElement(nsIAtom *aTag)
   mInner.Init((nsIContent *)(nsIXMLContent *)this, aTag);
   mIsLink = PR_FALSE;
 
-  if (nsnull == kLinkAtom) {
+  if (0 == kElementCount++) {
     kLinkAtom = NS_NewAtom("link");
-  }
-  else {
-    NS_ADDREF(kLinkAtom);
-  }
-  if (nsnull == kHrefAtom) {  // need to test these individually, others may refcnt these atoms
     kHrefAtom = NS_NewAtom("href");
-  }
-  else {
-    NS_ADDREF(kHrefAtom);
-  }
-  if (nsnull == kShowAtom) {
     kShowAtom = NS_NewAtom("show");
-  }
-  else {
-    NS_ADDREF(kShowAtom);
   }
 }
  
 nsXMLElement::~nsXMLElement()
 {
-  nsrefcnt  refcnt;
-  NS_RELEASE2(kLinkAtom, refcnt);
-  NS_RELEASE2(kHrefAtom, refcnt);
-  NS_RELEASE2(kShowAtom, refcnt);
+  if (0 == --kElementCount) {
+    NS_RELEASE(kLinkAtom);
+    NS_RELEASE(kHrefAtom);
+    NS_RELEASE(kShowAtom);
+  }
 }
 
 NS_IMETHODIMP 
