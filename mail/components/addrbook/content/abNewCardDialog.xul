@@ -77,7 +77,7 @@
         <!-- Name Tab -->
         <vbox index="name" flex="1">
         <groupbox flex="1">
-          <caption label="&Name.box;"/>
+          <caption class="tab-caption" label="&Name.box;"/>
           <vbox>
 
           <!-- LOCALIZATION NOTE: 
@@ -136,7 +136,7 @@
         </groupbox>
 
         <groupbox flex="1">
-          <caption label="&Internet.box;"/>
+          <caption class="tab-caption" label="&Internet.box;"/>
           <vbox>
             <hbox>
               <spacer flex="1"/>
@@ -175,7 +175,7 @@
         </groupbox>
 
         <groupbox flex="1">
-          <caption label="&Phones.box;"/>
+          <caption class="tab-caption" label="&Phones.box;"/>
           <vbox>
             <hbox>
               <spacer flex="1"/>
@@ -219,7 +219,7 @@
       <!-- Address Tab -->
       <vbox index="address" flex="1">
         <groupbox flex="1">
-          <caption label="&Home.box;"/>
+          <caption class="tab-caption" label="&Home.box;"/>
           <vbox>
             <hbox>
               <spacer flex="1"/>
@@ -270,7 +270,7 @@
         </groupbox>
 
         <groupbox flex="1">
-          <caption label="&Work.box;"/>
+          <caption class="tab-caption" label="&Work.box;"/>
             <vbox>
               <hbox>
                 <spacer flex="1"/>
@@ -364,7 +364,7 @@
           </vbox>
 
           <groupbox flex="1">
-            <caption label="&Notes.box;"/>
+            <caption class="tab-caption" label="&Notes.box;"/>
             <vbox>
               <textbox id="Notes" multiline="true" rows="20" wrap="virtual" disableforreadonly="true"/>
             </vbox>

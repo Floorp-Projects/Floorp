@@ -1,5 +1,6 @@
 classic.jar:
 +   skin/classic/messenger/addressbook/addressbook.css          (skin/addressbook.css)
++   skin/classic/messenger/addressbook/cardDialog.css           (skin/cardDialog.css)
 
 messenger.jar:
 +   content/messenger/addressbook/abCardViewOverlay.js          (content/abCardViewOverlay.js)
