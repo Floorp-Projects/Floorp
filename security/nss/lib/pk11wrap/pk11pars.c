@@ -384,7 +384,7 @@ SECStatus SECMOD_UnloadUserModule(SECMODModule *mod)
     {
         return SECFailure;
     }
-    rv = STAN_AddModuleToDefaultTrustDomain(mod);
+    rv = STAN_RemoveModuleFromDefaultTrustDomain(mod);
     if (SECSuccess != rv)
     {
         return SECFailure;
