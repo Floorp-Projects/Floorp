@@ -69,7 +69,6 @@
 #include "nsISelectionListener.h"
 #include "nsIContentIterator.h"
 #include "nsIDocumentEncoder.h"
-#include "nsIIndependentSelection.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 
@@ -173,8 +172,7 @@ static void printRange(nsIDOMRange *aDomRange);
 
 class nsTypedSelection : public nsISelection,
                          public nsISelectionPrivate,
-                         public nsSupportsWeakReference,
-                         public nsIIndependentSelection
+                         public nsSupportsWeakReference
 {
 public:
   nsTypedSelection();
@@ -182,44 +180,8 @@ public:
   virtual ~nsTypedSelection();
   
   NS_DECL_ISUPPORTS
-  /*BEGIN nsIIndependentSelection interface implementations */
-  NS_IMETHOD    SetPresShell(nsIPresShell *aPresShell);
-
-  /*BEGIN nsISelection,Private interface implementations*/
-  NS_IMETHOD    GetAnchorNode(nsIDOMNode** aAnchorNode);
-  NS_IMETHOD    GetAnchorOffset(PRInt32* aAnchorOffset);
-  NS_IMETHOD    GetFocusNode(nsIDOMNode** aFocusNode);
-  NS_IMETHOD    GetFocusOffset(PRInt32* aFocusOffset);
-  NS_IMETHOD    GetIsCollapsed(PRBool* aIsCollapsed);
-  NS_IMETHOD    GetRangeCount(PRInt32* aRangeCount);
-  NS_IMETHOD    GetRangeAt(PRInt32 aIndex, nsIDOMRange** aReturn);
-  NS_IMETHOD    RemoveAllRanges();
-  NS_IMETHOD    GetTableSelectionType(nsIDOMRange* aRange, PRInt32* aTableSelectionType);
-  NS_IMETHOD    Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset);
-  NS_IMETHOD    CollapseToStart();
-  NS_IMETHOD    CollapseToEnd();
-  NS_IMETHOD    SelectAllChildren(nsIDOMNode* parentNode);
-  NS_IMETHOD    Extend(nsIDOMNode* aParentNode, PRInt32 aOffset);
-  NS_IMETHOD    ContainsNode(nsIDOMNode* aNode, PRBool aRecursive, PRBool* aAYes);
-  NS_IMETHOD    DeleteFromDocument();
-  NS_IMETHOD    AddRange(nsIDOMRange* aRange);
-  NS_IMETHOD    RemoveRange(nsIDOMRange* aRange);
-
-  NS_IMETHOD    StartBatchChanges();
-  NS_IMETHOD    EndBatchChanges();
-
-  NS_IMETHOD    AddSelectionListener(nsISelectionListener* aNewListener);
-  NS_IMETHOD    RemoveSelectionListener(nsISelectionListener* aListenerToRemove);
-  NS_IMETHOD    GetEnumerator(nsIEnumerator **aIterator);
-
-  NS_IMETHOD    ToString(PRUnichar **_retval);
-  NS_IMETHOD    ToStringWithFormat(const char *aFormatType, PRUint32 aFlags, PRInt32 aWrapCount, PRUnichar ** aReturn);
-
-  NS_IMETHOD    GetInterlinePosition(PRBool *aInterlinePosition);
-  NS_IMETHOD    SetInterlinePosition(PRBool aInterlinePosition);
-  NS_IMETHOD    SelectionLanguageChange(PRBool aLangRTL);
-
-/*END nsISelection interface implementations*/
+  NS_DECL_NSISELECTION
+  NS_DECL_NSISELECTIONPRIVATE
 
   // utility methods for scrolling the selection into view
   nsresult      GetPresContext(nsIPresContext **aPresContext);
@@ -4630,14 +4592,9 @@ nsSelection::GetMouseDoubleDown(PRBool *aDoubleDown)
  
 //END nsISelection interface implementations
 
-#ifdef XP_MAC
+#if 0
 #pragma mark -
 #endif
-
-
-
-
-
 
 // nsTypedSelection implementation
 
@@ -4685,7 +4642,6 @@ NS_INTERFACE_MAP_BEGIN(nsTypedSelection)
   NS_INTERFACE_MAP_ENTRY(nsISelection)
   NS_INTERFACE_MAP_ENTRY(nsISelectionPrivate)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-  NS_INTERFACE_MAP_ENTRY(nsIIndependentSelection)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISelection)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(Selection)
 NS_INTERFACE_MAP_END

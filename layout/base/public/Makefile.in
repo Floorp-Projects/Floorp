@@ -50,7 +50,6 @@ nsIFrameTraversal.h \
 nsIFrameUtil.h \
 nsIImageFrame.h \
 nsIImageMap.h \
-nsIIndependentSelection.h \
 nsILayoutDebugger.h \
 nsILayoutHistoryState.h \
 nsIMutableStyleContext.h \
