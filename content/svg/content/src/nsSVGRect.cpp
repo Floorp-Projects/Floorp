@@ -316,11 +316,14 @@ NS_INTERFACE_MAP_END
 NS_IMETHODIMP
 nsSVGRectPrototypeWrapper::SetValueString(const nsAString& aValue)
 {
+  WillModify();
   EnsureBody();
   nsCOMPtr<nsISVGValue> val = do_QueryInterface(mBody);
   NS_ASSERTION(val, "missing interface on body");
 
-  return val->SetValueString(aValue);
+  nsresult rv = val->SetValueString(aValue);
+  DidModify();
+  return rv;
 }
 
 NS_IMETHODIMP
