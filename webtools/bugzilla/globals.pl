@@ -52,7 +52,7 @@ use Date::Format;               # For time2str().
 # use Carp;                       # for confess
 
 # Contains the version string for the current running Bugzilla.
-$::param{'version'} = '2.8';
+$::param{'version'} = '2.9';
 
 $::dontchange = "--do_not_change--";
 $::chooseone = "--Choose_one:--";
