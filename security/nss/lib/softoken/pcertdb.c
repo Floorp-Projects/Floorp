@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.11 2002/01/24 00:26:29 relyea%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.12 2002/01/24 21:33:51 relyea%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -2850,7 +2850,6 @@ AddPermSubjectNode(certDBEntrySubject *entry, NSSLOWCERTCertificate *cert,
     }
     DeleteDBSubjectEntry(cert->dbhandle, &cert->derSubject);
     rv = WriteDBSubjectEntry(cert->dbhandle, entry);
-    DestroyDBEntry((certDBEntry *)entry);
     return(rv);
 }
 
