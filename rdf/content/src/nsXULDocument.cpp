@@ -1658,11 +1658,11 @@ XULDocumentImpl::AddStyleSheet(nsIStyleSheet* aSheet)
     if (aSheet == mAttrStyleSheet) {  // always first
       mStyleSheets.InsertElementAt(aSheet, 0);
     }
-    else if (aSheet == mInlineStyleSheet) {  // always last
+    else if (aSheet == (nsIHTMLCSSStyleSheet*)mInlineStyleSheet) {  // always last
       mStyleSheets.AppendElement(aSheet);
     }
     else {
-      if (mInlineStyleSheet == mStyleSheets.ElementAt(mStyleSheets.Count() - 1)) {
+      if ((nsIHTMLCSSStyleSheet*)mInlineStyleSheet == mStyleSheets.ElementAt(mStyleSheets.Count() - 1)) {
         // keep attr sheet last
         mStyleSheets.InsertElementAt(aSheet, mStyleSheets.Count() - 1);
       }
