@@ -157,41 +157,42 @@ public class Context {
      * @return a Context associated with the current thread
      */
     public static Context enter(Context cx) {
-        Thread t = Thread.currentThread();
-        Object[] listeners;
-        Context current;
-        synchronized (threadContexts) {
-            current = (Context) threadContexts.get(t);
-            if (cx != null) {
-                // Check supplied context sanity
-                Thread old = cx.currentThread;
-                if (old != null && old != t) {
+
+        Context old = getCurrentContext();
+
+        if (cx == null) {
+            if (old != null) {
+                cx = old;
+            } else {
+                cx = new Context();
+                setThreadContext(cx);
+            }
+        } else {
+            if (cx.enterCount != 0) {
+                   // The suplied context must be the context for
+                // the current thread if it is already entered
+                if (cx != old) {
                     throw new RuntimeException
                         ("Cannot enter Context active on another thread");
                 }
-                if (Context.check && old == t && cx != current)
-                    Context.codeBug();
-            }
-
-            if (current == null) {
-                if (cx == null) {
-                    cx = new Context();
+            } else {
+                if (old != null) {
+                    cx = old;
+                } else {
+                    setThreadContext(cx);
                 }
-                cx.currentThread = t;
-                threadContexts.put(t, cx);
-                current = cx;
             }
-
-            ++current.enterCount;
-            listeners = contextListeners;
         }
 
+        ++cx.enterCount;
+
+        Object[] listeners = contextListeners;
         if (listeners != null) {
             for (int i = listeners.length; i-- != 0;) {
-                ((ContextListener)listeners[i]).contextEntered(current);
+                ((ContextListener)listeners[i]).contextEntered(cx);
             }
         }
-        return current;
+        return cx;
      }
 
     /**
@@ -208,29 +209,20 @@ public class Context {
      * @see org.mozilla.javascript.Context#enter
      */
     public static void exit() {
-        Thread t = Thread.currentThread();
         boolean released = false;
-        Context cx;
-        Object[] listeners;
-        synchronized (threadContexts) {
-            cx = (Context)threadContexts.get(t);
-            if (cx == null) {
-                throw new RuntimeException
-                    ("Calling Context.exit without previous Context.enter");
-            }
-            if (Context.check && (cx.currentThread != t || cx.enterCount < 1))
-                Context.codeBug();
-
-            --cx.enterCount;
-            if (cx.enterCount == 0) {
-                released = true;
-                threadContexts.remove(t);
-                cx.currentThread = null;
-            }
-
-            listeners = contextListeners;
+        Context cx = getCurrentContext();
+        if (cx == null) {
+            throw new RuntimeException
+                ("Calling Context.exit without previous Context.enter");
+        }
+        if (Context.check && cx.enterCount < 1) Context.codeBug();
+        --cx.enterCount;
+        if (cx.enterCount == 0) {
+            released = true;
+            setThreadContext(null);
         }
 
+        Object[] listeners = contextListeners;
         if (listeners != null) {
             for (int i = listeners.length; i-- != 0;) {
                 ((ContextListener)listeners[i]).contextExited(cx);
@@ -247,7 +239,7 @@ public class Context {
      * Add a Context listener.
      */
     public static void addContextListener(ContextListener listener) {
-        synchronized (threadContexts) {
+        synchronized (contextListenersLock) {
             contextListeners = ListenerArray.add(contextListeners, listener);
         }
     }
@@ -257,7 +249,7 @@ public class Context {
      * @param listener the listener to remove.
      */
     public static void removeContextListener(ContextListener listener) {
-        synchronized (threadContexts) {
+        synchronized (contextListenersLock) {
             contextListeners = ListenerArray.remove(contextListeners, listener);
         }
     }
@@ -277,6 +269,15 @@ public class Context {
     public static Context getCurrentContext() {
         Thread t = Thread.currentThread();
         return (Context) threadContexts.get(t);
+    }
+
+    private static void setThreadContext(Context cx) {
+        Thread t = Thread.currentThread();
+        if (cx != null) {
+            threadContexts.put(t, cx);
+        } else {
+            threadContexts.remove(t);
+        }
     }
 
     /**
@@ -2191,6 +2192,8 @@ public class Context {
     static boolean isCachingEnabled = true;
 
     private static Hashtable threadContexts = new Hashtable(11);
+
+    private static final Object contextListenersLock = new Object();
     private static Object[] contextListeners;
 
     /**
@@ -2211,7 +2214,6 @@ public class Context {
     private SecurityController securityController;
     private ClassShutter classShutter;
     private ErrorReporter errorReporter;
-    private Thread currentThread;
     private RegExpProxy regExpProxy;
     private Locale locale;
     private boolean generatingDebug;
