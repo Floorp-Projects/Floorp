@@ -65,11 +65,6 @@ var queryform = "queryform"
       document.write("<p><a href='query.cgi?help=1&amp;format=advanced'>Give me some help</a> (reloads page.)</p>");
       // -->
     </script>
-    <noscript>
-      <p><a href="queryhelp.cgi">Give me help</a> with this form.</p>
-    </noscript>
-  [% ELSE %]
-      <p><a href="queryhelp.cgi">Give me help</a> with this form.</p>
   [% END %]
 [% ELSE %]
   <p>
@@ -92,10 +87,6 @@ var queryform = "queryform"
 <hr>
 
 [% PROCESS "search/boolean-charts.html.tmpl" %]
-
-<p>
-  Give me a <a href="queryhelp.cgi">clue</a> about how to use this form.
-</p>
 
 </form>
 

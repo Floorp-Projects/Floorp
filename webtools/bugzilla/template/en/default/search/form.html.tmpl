@@ -315,7 +315,7 @@ function doOnSelectProduct(selectmode) {
     <td>
       <table>
         <tr>
-          <th align="left"><a href="queryhelp.cgi#status">St<u>a</u>tus</a>:</th>
+          <th align="left">St<u>a</u>tus:</th>
         </tr>
         <tr valign="top">
           [% PROCESS select sel = { name => 'bug_status',
@@ -328,7 +328,7 @@ function doOnSelectProduct(selectmode) {
       <table>
         <tr>
           <th align="left">
-            <a href="queryhelp.cgi#resolution"><u>R</u>esolution</a>:
+            <u>R</u>esolution:
           </th>
         </tr>
         <tr valign="top">
@@ -341,7 +341,7 @@ function doOnSelectProduct(selectmode) {
     <td>
       <table>
         <tr>
-          <th align="left"><a href="queryhelp.cgi#severity">S<u>e</u>verity</a>:</th>
+          <th align="left">S<u>e</u>verity:</th>
         </tr>
         <tr valign="top">
           [% PROCESS select sel = { name => 'bug_severity',
@@ -353,7 +353,7 @@ function doOnSelectProduct(selectmode) {
     <td>
       <table>
         <tr>
-          <th align="left"><a href="queryhelp.cgi#priority">Pr<u>i</u>ority</a>:</th>
+          <th align="left">Pr<u>i</u>ority:</th>
         </tr>
         <tr valign="top">
           [% PROCESS select sel = { name => 'priority',
@@ -365,7 +365,7 @@ function doOnSelectProduct(selectmode) {
     <td>
       <table>
         <tr>
-          <th align="left"><a href="queryhelp.cgi#platform"><u>H</u>ardware</a>:</th>
+          <th align="left"><u>H</u>ardware:</th>
         </tr>
         <tr valign="top">
           [% PROCESS select sel = { name => 'rep_platform',
@@ -377,7 +377,7 @@ function doOnSelectProduct(selectmode) {
     <td>
       <table>
         <tr>
-          <th align="left"><a href="queryhelp.cgi#opsys"><u>O</u>S</a>:</th>
+          <th align="left"><u>O</u>S:</th>
         </tr>
         <tr valign="top">
           [% PROCESS select sel = { name => 'op_sys',
@@ -399,7 +399,7 @@ function doOnSelectProduct(selectmode) {
       <fieldset>
         <legend>
           <strong>
-            <a href="queryhelp.cgi#peopleinvolved">Email</a> and Numbering
+            Email and Numbering
           </strong>
         </legend>
 
@@ -541,7 +541,7 @@ function doOnSelectProduct(selectmode) {
   <dd>
     <input name="chfieldfrom" size="10" value="[% default.chfieldfrom.0 FILTER html %]">
     and <input name="chfieldto" size="10" value="[% default.chfieldto.0 FILTER html %]">
-    <br>(YYYY-MM-DD or <a href="queryhelp.cgi#changedbetween">relative dates</a>)
+    <br>(YYYY-MM-DD or relative dates)
   </dd>
   <dt>where one or more of the following changed:</dt>
   <dd>
