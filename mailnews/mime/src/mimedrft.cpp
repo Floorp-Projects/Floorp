@@ -455,15 +455,18 @@ mime_parse_stream_write ( nsMIMESession *stream, const char *buf, PRInt32 size )
 }
 
 static void
-mime_free_attach_data ( nsMsgAttachmentData *attachData, int cleanupCount)
+mime_free_attach_data ( nsMsgAttachmentData *attachData)
 {
   PRInt32     i;
-  struct nsMsgAttachmentData  *tmp = attachData;
+    struct nsMsgAttachmentData  *tmp = attachData;
 
-  for ( i=0; i < cleanupCount; i++, tmp++ ) 
+  while (tmp && tmp->real_name) 
   {
     if (tmp->url)
+    {
       delete tmp->url;
+      tmp->url = nsnull;
+    }
     PR_FREEIF(tmp->real_name);
 
     PR_FREEIF(tmp->desired_type);
@@ -472,6 +475,8 @@ mime_free_attach_data ( nsMsgAttachmentData *attachData, int cleanupCount)
     PR_FREEIF(tmp->description);
     PR_FREEIF(tmp->x_mac_type);
     PR_FREEIF(tmp->x_mac_creator);
+
+    tmp++;
   }
 }
 
@@ -507,26 +512,40 @@ mime_free_attachments ( nsMsgAttachedFile *attachments, int count )
 static nsMsgAttachmentData *
 mime_draft_process_attachments(mime_draft_data *mdd) 
 {
+  if (!mdd)
+    return nsnull;
+
   nsMsgAttachmentData         *attachData = NULL, *tmp = NULL;
   nsMsgAttachedFile           *tmpFile = NULL;
   int                         i;
-  PRInt32                     cleanupCount = 0;
 
-  NS_ASSERTION ( mdd->attachments_count && mdd->attachments, "processing attachments but there aren't any" );
+  //It's possible we must treat the message body as attachment!
+  PRBool bodyAsAttachment = PR_FALSE;
+  if (  mdd->messageBody->type && *mdd->messageBody->type &&
+        ( PL_strcasestr(mdd->messageBody->type, "text/html") == nsnull ) &&
+        ( PL_strcasestr(mdd->messageBody->type, "text/plain") == nsnull ) &&
+        ( PL_strcasecmp(mdd->messageBody->type, "text") != 0 )
+     )
+     bodyAsAttachment = PR_TRUE;
 
-  if ( !mdd->attachments || !mdd->attachments_count )
+  if ( (!mdd->attachments || !mdd->attachments_count) && !bodyAsAttachment)
     return nsnull;
 
-  attachData = (nsMsgAttachmentData *) PR_MALLOC( ( (mdd->attachments_count+1) * sizeof (nsMsgAttachmentData) ) );
+  PRInt32 totalCount = mdd->attachments_count;
+  if (bodyAsAttachment)
+    totalCount ++;
+  attachData = (nsMsgAttachmentData *) PR_CALLOC( ( (totalCount + 1) * sizeof (nsMsgAttachmentData) ) );
   if ( !attachData ) 
     return nsnull;
 
-  nsCRT::memset ( attachData, 0, (mdd->attachments_count+1) * sizeof (nsMsgAttachmentData) );
-
-  tmpFile = mdd->attachments;
+  //mdd->messageBody and mdd->attachments are the same type!
+  if (bodyAsAttachment)
+    tmpFile = mdd->messageBody;
+  else
+    tmpFile = mdd->attachments;
   tmp = attachData;
 
-  for ( i=0; i < mdd->attachments_count; i++, tmp++, tmpFile++ ) 
+  for ( i=0; i < totalCount; i++, tmp++) 
   {
     if (tmpFile->type) 
     {
@@ -538,15 +557,11 @@ mime_draft_process_attachments(mime_draft_data *mdd)
     {
       char  *tmpSpec = nsnull;
       if (NS_FAILED(tmpFile->orig_url->GetSpec(&tmpSpec)))
-      {
-        cleanupCount = i;
         goto FAIL;
-      }
 
       if (NS_FAILED(nsMimeNewURI(&(tmp->url), tmpSpec, nsnull)))
       {
         PR_FREEIF(tmpSpec);
-        cleanupCount = i;
         goto FAIL; 
       }
 
@@ -556,8 +571,8 @@ mime_draft_process_attachments(mime_draft_data *mdd)
         if (tmpFile->real_name)
           NS_MsgSACopy ( &(tmp->real_name), tmpFile->real_name );
         else
-       NS_MsgSACopy ( &(tmp->real_name), tmpSpec );
-    }
+          NS_MsgSACopy ( &(tmp->real_name), tmpSpec );
+      }
     }
 
     if ( tmpFile->type ) 
@@ -585,12 +600,17 @@ mime_draft_process_attachments(mime_draft_data *mdd)
     {
       NS_MsgSACopy ( &(tmp->x_mac_creator), tmpFile->x_mac_creator );
     }
+
+    if (bodyAsAttachment && (i == 0))
+      tmpFile = mdd->attachments;
+    else
+      tmpFile++;
   }
 
   return (attachData);
 
 FAIL:
-  mime_free_attach_data (attachData, cleanupCount);
+  mime_free_attach_data (attachData);
   PR_FREEIF(attachData);
   return nsnull;
 }
@@ -688,7 +708,9 @@ mime_insert_all_headers(char            **body,
 {
   PRBool htmlEdit = (composeFormat == nsIMsgCompFormat::HTML);
   char *newBody = NULL;
-  char *html_tag = PL_strcasestr(*body, "<HTML>");
+  char *html_tag = nsnull;
+  if (*body)
+    html_tag = PL_strcasestr(*body, "<HTML>");
   int i;
 
   if (!headers->done_p)
@@ -794,13 +816,14 @@ mime_insert_all_headers(char            **body,
     NS_MsgSACat(&newBody, MSG_LINEBREAK "<BR><BR>");
     if (html_tag)
       NS_MsgSACat(&newBody, html_tag+6);
-    else
-      NS_MsgSACat(&newBody, *body);
+    else if (*body)
+        NS_MsgSACat(&newBody, *body);
   }
   else
   {
     NS_MsgSACat(&newBody, MSG_LINEBREAK MSG_LINEBREAK);
-    NS_MsgSACat(&newBody, *body);
+    if (*body)
+      NS_MsgSACat(&newBody, *body);
   }
 
   if (newBody)
@@ -838,7 +861,9 @@ mime_insert_normal_headers(char             **body,
   char *followup_to = MimeHeaders_get(headers, HEADER_FOLLOWUP_TO, PR_FALSE,
                     PR_TRUE);
   char *references = MimeHeaders_get(headers, HEADER_REFERENCES, PR_FALSE, PR_TRUE);
-  const char *html_tag = PL_strcasestr(*body, "<HTML>");
+  const char *html_tag = nsnull;
+  if (*body)
+    html_tag = PL_strcasestr(*body, "<HTML>");
   PRBool htmlEdit = composeFormat == nsIMsgCompFormat::HTML;
   
   if (!from)
@@ -963,17 +988,18 @@ mime_insert_normal_headers(char             **body,
     NS_MsgSACat(&newBody, MSG_LINEBREAK "<BR><BR>");
     if (html_tag)
       NS_MsgSACat(&newBody, html_tag+6);
-    else
-      NS_MsgSACat(&newBody, *body);
+    else if (*body)
+        NS_MsgSACat(&newBody, *body);
   }
   else
   {
     NS_MsgSACat(&newBody, MSG_LINEBREAK MSG_LINEBREAK);
-    NS_MsgSACat(&newBody, *body);
+    if (*body)
+      NS_MsgSACat(&newBody, *body);
   }
   if (newBody)
   {
-    PR_Free(*body);
+    PR_FREEIF(*body);
     *body = newBody;
   }
   PR_FREEIF(subject);
@@ -1009,7 +1035,9 @@ mime_insert_micro_headers(char            **body,
   char *cc = MimeHeaders_get(headers, HEADER_CC, PR_FALSE, PR_TRUE);
   char *newsgroups = MimeHeaders_get(headers, HEADER_NEWSGROUPS, PR_FALSE,
                      PR_TRUE);
-  const char *html_tag = PL_strcasestr(*body, "<HTML>");
+  const char *html_tag = nsnull;
+  if (*body)
+    html_tag = PL_strcasestr(*body, "<HTML>");
   PRBool htmlEdit = composeFormat == nsIMsgCompFormat::HTML;
   
   if (!from)
@@ -1086,17 +1114,18 @@ mime_insert_micro_headers(char            **body,
     NS_MsgSACat(&newBody, MSG_LINEBREAK "<BR><BR>");
     if (html_tag)
       NS_MsgSACat(&newBody, html_tag+6);
-    else
-      NS_MsgSACat(&newBody, *body);
+    else if (*body)
+        NS_MsgSACat(&newBody, *body);
   }
   else
   {
     NS_MsgSACat(&newBody, MSG_LINEBREAK MSG_LINEBREAK);
-    NS_MsgSACat(&newBody, *body);
+    if (*body)
+      NS_MsgSACat(&newBody, *body);
   }
   if (newBody)
   {
-    PR_Free(*body);
+    PR_FREEIF(*body);
     *body = newBody;
   }
   PR_FREEIF(subject);
@@ -1115,11 +1144,14 @@ mime_insert_forwarded_message_headers(char            **body,
                                       MSG_ComposeFormat composeFormat,
                                       char            *mailcharset)
 {
-  if (body && *body && headers)
+  if (!body || !headers)
+    return;
+
+  PRInt32     show_headers = 0;
+  nsresult    res;
+  
+  if (*body)
   {
-    PRInt32     show_headers = 0;
-    nsresult    res;
-    
     // convert body from mail charset to UTF-8
     char *utf8 = NULL;
     nsAutoString ucs2;
@@ -1130,24 +1162,24 @@ mime_insert_forwarded_message_headers(char            **body,
         *body = utf8;
       }
     }
+  }
 
-    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &res)); 
-    if (NS_SUCCEEDED(res) && prefs)
-      res = prefs->GetIntPref("mail.show_headers", &show_headers);
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &res)); 
+  if (NS_SUCCEEDED(res) && prefs)
+    res = prefs->GetIntPref("mail.show_headers", &show_headers);
 
-    switch (show_headers)
-    {
-    case 0:
-      mime_insert_micro_headers(body, headers, composeFormat, mailcharset);
-      break;
-    default:
-    case 1:
-      mime_insert_normal_headers(body, headers, composeFormat, mailcharset);
-      break;
-    case 2:
-      mime_insert_all_headers(body, headers, composeFormat, mailcharset);
-      break;
-    }
+  switch (show_headers)
+  {
+  case 0:
+    mime_insert_micro_headers(body, headers, composeFormat, mailcharset);
+    break;
+  default:
+  case 1:
+    mime_insert_normal_headers(body, headers, composeFormat, mailcharset);
+    break;
+  case 2:
+    mime_insert_all_headers(body, headers, composeFormat, mailcharset);
+    break;
   }
 }
 
@@ -1182,6 +1214,7 @@ mime_parse_stream_complete (nsMIMESession *stream)
   PRBool xlate_p = PR_FALSE;  /* #### how do we determine this? */
   PRBool sign_p = PR_FALSE;   /* #### how do we determine this? */
   PRBool forward_inline = PR_FALSE;
+  PRBool bodyAsAttachment = PR_FALSE;
   
   NS_ASSERTION (mdd, "null mime draft data");
   
@@ -1231,9 +1264,7 @@ mime_parse_stream_complete (nsMIMESession *stream)
   // Now, process the attachments that we have gathered from the message
   // on disk
   //
-  nsMsgAttachmentData     *newAttachData = nsnull;
-  if (mdd && (mdd->attachments_count > 0))
-    newAttachData = mime_draft_process_attachments(mdd);
+  nsMsgAttachmentData *newAttachData = mime_draft_process_attachments(mdd);
   
   //
   // time to bring up the compose windows with all the info gathered 
@@ -1331,106 +1362,114 @@ mime_parse_stream_complete (nsMIMESession *stream)
     
     if (mdd->messageBody) 
     {
-      char *body;
-      PRUint32 bodyLen = 0;
       MSG_ComposeFormat composeFormat = nsIMsgCompFormat::Default;
-      
-      bodyLen = mdd->messageBody->file_spec->GetFileSize();
-      body = (char *)PR_MALLOC (bodyLen + 1);
-      if (body)
+      if (mdd->messageBody->type && *mdd->messageBody->type)
       {
-        nsCRT::memset (body, 0, bodyLen+1);
-        
-        nsInputFileStream inputFile(*(mdd->messageBody->file_spec));
-        if (inputFile.is_open())
-          inputFile.read(body, bodyLen);
-        
-        inputFile.close();
-        
-        if (mdd->messageBody->type && *mdd->messageBody->type)
-        {
-          if( PL_strcasestr(mdd->messageBody->type, "text/html") != NULL )
-            composeFormat = nsIMsgCompFormat::HTML;
-          else if ( ( PL_strcasestr(mdd->messageBody->type, "text/plain") != NULL ) ||
-            ( PL_strcasecmp(mdd->messageBody->type, "text") == 0 ) )
-            composeFormat = nsIMsgCompFormat::PlainText;
-        }
+        if( PL_strcasestr(mdd->messageBody->type, "text/html"))
+          composeFormat = nsIMsgCompFormat::HTML;
+        else if ( PL_strcasestr(mdd->messageBody->type, "text/plain") ||
+                  PL_strcasecmp(mdd->messageBody->type, "text") )
+          composeFormat = nsIMsgCompFormat::PlainText;
         else
         {
-          composeFormat = nsIMsgCompFormat::PlainText;
+          //We cannot use this kind of data for the message body! Therefore, move it as attachment
+          bodyAsAttachment = PR_TRUE;
         }
-        
-        // Since we have body text, then we should set the compose fields with
-        // this data.      
-        //       if (composeFormat == nsIMsgCompFormat::PlainText)
-        //         fields->SetTheForcePlainText(PR_TRUE);
-        
-        if (forward_inline)
-        {
-          if (mdd->identity)
-          {
-            PRBool bFormat;
-            mdd->identity->GetComposeHtml(&bFormat);
-            if (bFormat)
-            {
-              if (body && composeFormat == nsIMsgCompFormat::PlainText)
-              {
-                char* newbody = (char *)PR_MALLOC (bodyLen + 12); //+11 chars for <pre> & </pre> tags
-                if (newbody)
-                {
-                  *newbody = 0;
-                  PL_strcat(newbody, "<PRE>");
-                  PL_strcat(newbody, body);
-                  PL_strcat(newbody, "</PRE>");
-                  PR_Free(body);
-                  body = newbody;
-                }
+      }
+      else
+        composeFormat = nsIMsgCompFormat::PlainText;
 
-                composeFormat = nsIMsgCompFormat::HTML;
+      char *body = nsnull;
+      PRUint32 bodyLen = 0;
+      
+      if (!bodyAsAttachment)
+      {
+        bodyLen = mdd->messageBody->file_spec->GetFileSize();
+        body = (char *)PR_MALLOC (bodyLen + 1);
+        if (body)
+        {
+          nsCRT::memset (body, 0, bodyLen+1);
+        
+          nsInputFileStream inputFile(*(mdd->messageBody->file_spec));
+          if (inputFile.is_open())
+            inputFile.read(body, bodyLen);
+        
+          inputFile.close();
+        }
+      }
+
+      // Since we have body text, then we should set the compose fields with
+      // this data.      
+      //       if (composeFormat == nsIMsgCompFormat::PlainText)
+      //         fields->SetTheForcePlainText(PR_TRUE);
+      
+      if (forward_inline)
+      {
+        if (mdd->identity)
+        {
+          PRBool bFormat;
+          mdd->identity->GetComposeHtml(&bFormat);
+          if (bFormat)
+          {
+            if (body && composeFormat == nsIMsgCompFormat::PlainText)
+            {
+              char* newbody = (char *)PR_MALLOC (bodyLen + 12); //+11 chars for <pre> & </pre> tags
+              if (newbody)
+              {
+                *newbody = 0;
+                PL_strcat(newbody, "<PRE>");
+                PL_strcat(newbody, body);
+                PL_strcat(newbody, "</PRE>");
+                PR_Free(body);
+                body = newbody;
               }
             }
+            composeFormat = nsIMsgCompFormat::HTML;
           }
-          
-          mime_insert_forwarded_message_headers(&body, mdd->headers, composeFormat,
-            mdd->mailcharset);
         }
-        // setting the charset while we are creating the composition fields
-        //fields->SetCharacterSet(NS_ConvertASCIItoUCS2(mdd->mailcharset));
         
-        // Ok, if we are here, then we should look at the charset and convert
-        // to UTF-8...
-        //
-        if (!forward_inline)
+        mime_insert_forwarded_message_headers(&body, mdd->headers, composeFormat,
+          mdd->mailcharset);
+      }
+      // setting the charset while we are creating the composition fields
+      //fields->SetCharacterSet(NS_ConvertASCIItoUCS2(mdd->mailcharset));
+      
+      // Ok, if we are here, then we should look at the charset and convert
+      // to UTF-8...
+      //
+      if (!forward_inline)
+      {
+        char *bodyCharset = MimeHeaders_get_parameter (mdd->messageBody->type, "charset", NULL, NULL);
+        if (bodyCharset && body)
         {
-          char *bodyCharset = MimeHeaders_get_parameter (mdd->messageBody->type, "charset", NULL, NULL);
-          if (bodyCharset)
+          // Now do conversion to UTF-8 for output
+          nsAutoString tempUnicodeString;
+          if (NS_SUCCEEDED(ConvertToUnicode(bodyCharset, body, tempUnicodeString)))
           {
-            // Now do conversion to UTF-8 for output
-            nsAutoString tempUnicodeString;
-            if (NS_SUCCEEDED(ConvertToUnicode(bodyCharset, body, tempUnicodeString)))
+            char *utf8Str = nsCRT::strdup(NS_ConvertUCS2toUTF8(tempUnicodeString.get()).get());
+            if (utf8Str)
             {
-              char *utf8Str = nsCRT::strdup(NS_ConvertUCS2toUTF8(tempUnicodeString.get()).get());
-              if (utf8Str)
-              {
-                PR_FREEIF(body);
-                body = utf8Str;
-              }
+              PR_FREEIF(body);
+              body = utf8Str;
             }
-
-            PR_FREEIF(bodyCharset);
           }
-        }
 
-        // convert from UTF-8 to UCS2
+          PR_FREEIF(bodyCharset);
+        }
+      }
+
+      // convert from UTF-8 to UCS2
+      if (body)
+      {
         nsString ucs2;
         if (NS_SUCCEEDED(nsMsgI18NConvertToUnicode(nsCAutoString("UTF-8"), nsCAutoString(body), ucs2)))
           fields->SetBody(ucs2.get());
         else
           fields->SetBody(NS_ConvertASCIItoUCS2(body).get());
-        
-        PR_FREEIF(body);
-      } // end if (messageBody)
       
+        PR_Free(body);
+      }
+
       //
       // At this point, we need to create a message compose window or editor
       // window via XP-COM with the information that we have retrieved from 
@@ -1456,9 +1495,6 @@ mime_parse_stream_complete (nsMIMESession *stream)
           CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::Draft, composeFormat, mdd->identity);
         }
       }
-      
-      PR_FREEIF(body);
-      mime_free_attachments (mdd->messageBody, 1);
     }
     else
     {
@@ -1508,6 +1544,16 @@ mime_parse_stream_complete (nsMIMESession *stream)
   // Make sure we only cleanup the local copy of the memory and not kill 
   // files we need on disk
   //
+  if (bodyAsAttachment)
+  {
+    if ( mdd->messageBody->file_spec ) 
+    {
+      delete ( mdd->messageBody->file_spec );
+      mdd->messageBody->file_spec = nsnull;
+    }
+  }
+  mime_free_attachments (mdd->messageBody, 1);
+
   if (mdd->attachments)
   {
     int               i;
@@ -1548,7 +1594,9 @@ mime_parse_stream_complete (nsMIMESession *stream)
   PR_FREEIF(grps);
   PR_FREEIF(foll);
   PR_FREEIF(priority);
-  PR_FREEIF(draftInfo);  
+  PR_FREEIF(draftInfo);
+
+  mime_free_attach_data(newAttachData);
 }
 
 static void PR_CALLBACK
