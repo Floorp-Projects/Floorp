@@ -26,15 +26,15 @@ var msgWindowProgID		   = "component://netscape/messenger/msgwindow";
 var messenger = Components.classes['component://netscape/messenger'].createInstance();
 messenger = messenger.QueryInterface(Components.interfaces.nsIMessenger);
 //Create message window object
-var msgWindow = Components.classes[msgWindowProgID].createInstance();
-msgWindow = msgWindow.QueryInterface(Components.interfaces.nsIMsgWindow);
+//var msgWindow = Components.classes[msgWindowProgID].createInstance();
+//msgWindow = msgWindow.QueryInterface(Components.interfaces.nsIMsgWindow);
 
 function OpenAttachURL(url, displayName, messageUri)
 {
   dump("\nOpenAttachURL from XUL\n");
   dump(url);
   dump("\n");
-  messenger.SetWindow(window, msgWindow);
+  // messenger.SetWindow(window, msgWindow);
   messenger.openAttachment(url, displayName, messageUri);
 }
 
