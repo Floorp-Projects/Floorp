@@ -68,10 +68,8 @@ if (defined $login) {
     PutHeader("Account created");
     my $password = InsertNewUser($login, $realname);
     MailPassword($login, $password);
-    print "A bugzilla account for <tt>$login</tt> has been created.  The\n";
-    print "password has been e-mailed to that address.  When it is\n";
-    print "received, you may <a href=query.cgi?GoAheadAndLogIn>click\n";
-    print "here</a> and log in.";
+    print " You can also <a href=query.cgi?GoAheadAndLogIn>click\n";
+    print "here</a> to log in for the first time.";
     PutFooter();
     exit;
 }
