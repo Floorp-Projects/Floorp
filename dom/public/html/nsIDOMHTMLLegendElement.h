@@ -26,7 +26,6 @@
 #include "nsIDOMHTMLElement.h"
 
 class nsIDOMHTMLFormElement;
-class nsIDOMHTMLLegendElement;
 
 #define NS_IDOMHTMLLEGENDELEMENT_IID \
 { 0x6f76530b,  0xee43, 0x11d1, \
@@ -44,6 +43,26 @@ public:
   NS_IMETHOD    GetAlign(nsString& aAlign)=0;
   NS_IMETHOD    SetAlign(const nsString& aAlign)=0;
 };
+
+
+#define NS_DECL_IDOMHTMLLEGENDELEMENT   \
+  NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm);  \
+  NS_IMETHOD    SetForm(nsIDOMHTMLFormElement* aForm);  \
+  NS_IMETHOD    GetAccessKey(nsString& aAccessKey);  \
+  NS_IMETHOD    SetAccessKey(const nsString& aAccessKey);  \
+  NS_IMETHOD    GetAlign(nsString& aAlign);  \
+  NS_IMETHOD    SetAlign(const nsString& aAlign);  \
+
+
+
+#define NS_FORWARD_IDOMHTMLLEGENDELEMENT(superClass)  \
+  NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm) { return superClass::GetForm(aForm); } \
+  NS_IMETHOD    SetForm(nsIDOMHTMLFormElement* aForm) { return superClass::SetForm(aForm); } \
+  NS_IMETHOD    GetAccessKey(nsString& aAccessKey) { return superClass::GetAccessKey(aAccessKey); } \
+  NS_IMETHOD    SetAccessKey(const nsString& aAccessKey) { return superClass::SetAccessKey(aAccessKey); } \
+  NS_IMETHOD    GetAlign(nsString& aAlign) { return superClass::GetAlign(aAlign); } \
+  NS_IMETHOD    SetAlign(const nsString& aAlign) { return superClass::SetAlign(aAlign); } \
+
 
 extern nsresult NS_InitHTMLLegendElementClass(nsIScriptContext *aContext, void **aPrototype);
 

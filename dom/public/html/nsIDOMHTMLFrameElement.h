@@ -25,7 +25,6 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMHTMLElement.h"
 
-class nsIDOMHTMLFrameElement;
 
 #define NS_IDOMHTMLFRAMEELEMENT_IID \
 { 0x6f7652ff,  0xee43, 0x11d1, \
@@ -58,6 +57,46 @@ public:
   NS_IMETHOD    GetSrc(nsString& aSrc)=0;
   NS_IMETHOD    SetSrc(const nsString& aSrc)=0;
 };
+
+
+#define NS_DECL_IDOMHTMLFRAMEELEMENT   \
+  NS_IMETHOD    GetFrameBorder(nsString& aFrameBorder);  \
+  NS_IMETHOD    SetFrameBorder(const nsString& aFrameBorder);  \
+  NS_IMETHOD    GetLongDesc(nsString& aLongDesc);  \
+  NS_IMETHOD    SetLongDesc(const nsString& aLongDesc);  \
+  NS_IMETHOD    GetMarginHeight(nsString& aMarginHeight);  \
+  NS_IMETHOD    SetMarginHeight(const nsString& aMarginHeight);  \
+  NS_IMETHOD    GetMarginWidth(nsString& aMarginWidth);  \
+  NS_IMETHOD    SetMarginWidth(const nsString& aMarginWidth);  \
+  NS_IMETHOD    GetName(nsString& aName);  \
+  NS_IMETHOD    SetName(const nsString& aName);  \
+  NS_IMETHOD    GetNoResize(PRBool* aNoResize);  \
+  NS_IMETHOD    SetNoResize(PRBool aNoResize);  \
+  NS_IMETHOD    GetScrolling(nsString& aScrolling);  \
+  NS_IMETHOD    SetScrolling(const nsString& aScrolling);  \
+  NS_IMETHOD    GetSrc(nsString& aSrc);  \
+  NS_IMETHOD    SetSrc(const nsString& aSrc);  \
+
+
+
+#define NS_FORWARD_IDOMHTMLFRAMEELEMENT(superClass)  \
+  NS_IMETHOD    GetFrameBorder(nsString& aFrameBorder) { return superClass::GetFrameBorder(aFrameBorder); } \
+  NS_IMETHOD    SetFrameBorder(const nsString& aFrameBorder) { return superClass::SetFrameBorder(aFrameBorder); } \
+  NS_IMETHOD    GetLongDesc(nsString& aLongDesc) { return superClass::GetLongDesc(aLongDesc); } \
+  NS_IMETHOD    SetLongDesc(const nsString& aLongDesc) { return superClass::SetLongDesc(aLongDesc); } \
+  NS_IMETHOD    GetMarginHeight(nsString& aMarginHeight) { return superClass::GetMarginHeight(aMarginHeight); } \
+  NS_IMETHOD    SetMarginHeight(const nsString& aMarginHeight) { return superClass::SetMarginHeight(aMarginHeight); } \
+  NS_IMETHOD    GetMarginWidth(nsString& aMarginWidth) { return superClass::GetMarginWidth(aMarginWidth); } \
+  NS_IMETHOD    SetMarginWidth(const nsString& aMarginWidth) { return superClass::SetMarginWidth(aMarginWidth); } \
+  NS_IMETHOD    GetName(nsString& aName) { return superClass::GetName(aName); } \
+  NS_IMETHOD    SetName(const nsString& aName) { return superClass::SetName(aName); } \
+  NS_IMETHOD    GetNoResize(PRBool* aNoResize) { return superClass::GetNoResize(aNoResize); } \
+  NS_IMETHOD    SetNoResize(PRBool aNoResize) { return superClass::SetNoResize(aNoResize); } \
+  NS_IMETHOD    GetScrolling(nsString& aScrolling) { return superClass::GetScrolling(aScrolling); } \
+  NS_IMETHOD    SetScrolling(const nsString& aScrolling) { return superClass::SetScrolling(aScrolling); } \
+  NS_IMETHOD    GetSrc(nsString& aSrc) { return superClass::GetSrc(aSrc); } \
+  NS_IMETHOD    SetSrc(const nsString& aSrc) { return superClass::SetSrc(aSrc); } \
+
 
 extern nsresult NS_InitHTMLFrameElementClass(nsIScriptContext *aContext, void **aPrototype);
 

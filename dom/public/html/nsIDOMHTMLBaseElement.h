@@ -25,7 +25,6 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMHTMLElement.h"
 
-class nsIDOMHTMLBaseElement;
 
 #define NS_IDOMHTMLBASEELEMENT_IID \
 { 0x6f7652f1,  0xee43, 0x11d1, \
@@ -40,6 +39,22 @@ public:
   NS_IMETHOD    GetTarget(nsString& aTarget)=0;
   NS_IMETHOD    SetTarget(const nsString& aTarget)=0;
 };
+
+
+#define NS_DECL_IDOMHTMLBASEELEMENT   \
+  NS_IMETHOD    GetHref(nsString& aHref);  \
+  NS_IMETHOD    SetHref(const nsString& aHref);  \
+  NS_IMETHOD    GetTarget(nsString& aTarget);  \
+  NS_IMETHOD    SetTarget(const nsString& aTarget);  \
+
+
+
+#define NS_FORWARD_IDOMHTMLBASEELEMENT(superClass)  \
+  NS_IMETHOD    GetHref(nsString& aHref) { return superClass::GetHref(aHref); } \
+  NS_IMETHOD    SetHref(const nsString& aHref) { return superClass::SetHref(aHref); } \
+  NS_IMETHOD    GetTarget(nsString& aTarget) { return superClass::GetTarget(aTarget); } \
+  NS_IMETHOD    SetTarget(const nsString& aTarget) { return superClass::SetTarget(aTarget); } \
+
 
 extern nsresult NS_InitHTMLBaseElementClass(nsIScriptContext *aContext, void **aPrototype);
 

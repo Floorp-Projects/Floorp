@@ -25,7 +25,6 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMHTMLElement.h"
 
-class nsIDOMHTMLOListElement;
 
 #define NS_IDOMHTMLOLISTELEMENT_IID \
 { 0x6f765313,  0xee43, 0x11d1, \
@@ -43,6 +42,26 @@ public:
   NS_IMETHOD    GetType(nsString& aType)=0;
   NS_IMETHOD    SetType(const nsString& aType)=0;
 };
+
+
+#define NS_DECL_IDOMHTMLOLISTELEMENT   \
+  NS_IMETHOD    GetCompact(PRBool* aCompact);  \
+  NS_IMETHOD    SetCompact(PRBool aCompact);  \
+  NS_IMETHOD    GetStart(PRInt32* aStart);  \
+  NS_IMETHOD    SetStart(PRInt32 aStart);  \
+  NS_IMETHOD    GetType(nsString& aType);  \
+  NS_IMETHOD    SetType(const nsString& aType);  \
+
+
+
+#define NS_FORWARD_IDOMHTMLOLISTELEMENT(superClass)  \
+  NS_IMETHOD    GetCompact(PRBool* aCompact) { return superClass::GetCompact(aCompact); } \
+  NS_IMETHOD    SetCompact(PRBool aCompact) { return superClass::SetCompact(aCompact); } \
+  NS_IMETHOD    GetStart(PRInt32* aStart) { return superClass::GetStart(aStart); } \
+  NS_IMETHOD    SetStart(PRInt32 aStart) { return superClass::SetStart(aStart); } \
+  NS_IMETHOD    GetType(nsString& aType) { return superClass::GetType(aType); } \
+  NS_IMETHOD    SetType(const nsString& aType) { return superClass::SetType(aType); } \
+
 
 extern nsresult NS_InitHTMLOListElementClass(nsIScriptContext *aContext, void **aPrototype);
 

@@ -26,7 +26,6 @@
 #include "nsIDOMNode.h"
 
 class nsIDOMDocument;
-class nsIDOMDocumentFragment;
 
 #define NS_IDOMDOCUMENTFRAGMENT_IID \
 { 0x6f7652e5,  0xee43, 0x11d1, \
@@ -37,6 +36,16 @@ public:
 
   NS_IMETHOD    GetMasterDoc(nsIDOMDocument** aMasterDoc)=0;
 };
+
+
+#define NS_DECL_IDOMDOCUMENTFRAGMENT   \
+  NS_IMETHOD    GetMasterDoc(nsIDOMDocument** aMasterDoc);  \
+
+
+
+#define NS_FORWARD_IDOMDOCUMENTFRAGMENT(superClass)  \
+  NS_IMETHOD    GetMasterDoc(nsIDOMDocument** aMasterDoc) { return superClass::GetMasterDoc(aMasterDoc); } \
+
 
 extern nsresult NS_InitDocumentFragmentClass(nsIScriptContext *aContext, void **aPrototype);
 

@@ -25,7 +25,6 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMNode.h"
 
-class nsIDOMElement;
 class nsIDOMAttribute;
 class nsIDOMNodeList;
 
@@ -54,6 +53,32 @@ public:
 
   NS_IMETHOD    Normalize()=0;
 };
+
+
+#define NS_DECL_IDOMELEMENT   \
+  NS_IMETHOD    GetTagName(nsString& aTagName);  \
+  NS_IMETHOD    GetDOMAttribute(const nsString& aName, nsString& aReturn);  \
+  NS_IMETHOD    SetDOMAttribute(const nsString& aName, const nsString& aValue);  \
+  NS_IMETHOD    RemoveAttribute(const nsString& aName);  \
+  NS_IMETHOD    GetAttributeNode(const nsString& aName, nsIDOMAttribute** aReturn);  \
+  NS_IMETHOD    SetAttributeNode(nsIDOMAttribute* aNewAttr);  \
+  NS_IMETHOD    RemoveAttributeNode(nsIDOMAttribute* aOldAttr);  \
+  NS_IMETHOD    GetElementsByTagName(const nsString& aTagname, nsIDOMNodeList** aReturn);  \
+  NS_IMETHOD    Normalize();  \
+
+
+
+#define NS_FORWARD_IDOMELEMENT(superClass)  \
+  NS_IMETHOD    GetTagName(nsString& aTagName) { return superClass::GetTagName(aTagName); } \
+  NS_IMETHOD    GetDOMAttribute(const nsString& aName, nsString& aReturn) { return superClass::GetDOMAttribute(aName, aReturn); }  \
+  NS_IMETHOD    SetDOMAttribute(const nsString& aName, const nsString& aValue) { return superClass::SetDOMAttribute(aName, aValue); }  \
+  NS_IMETHOD    RemoveAttribute(const nsString& aName) { return superClass::RemoveAttribute(aName); }  \
+  NS_IMETHOD    GetAttributeNode(const nsString& aName, nsIDOMAttribute** aReturn) { return superClass::GetAttributeNode(aName, aReturn); }  \
+  NS_IMETHOD    SetAttributeNode(nsIDOMAttribute* aNewAttr) { return superClass::SetAttributeNode(aNewAttr); }  \
+  NS_IMETHOD    RemoveAttributeNode(nsIDOMAttribute* aOldAttr) { return superClass::RemoveAttributeNode(aOldAttr); }  \
+  NS_IMETHOD    GetElementsByTagName(const nsString& aTagname, nsIDOMNodeList** aReturn) { return superClass::GetElementsByTagName(aTagname, aReturn); }  \
+  NS_IMETHOD    Normalize() { return superClass::Normalize(); }  \
+
 
 extern nsresult NS_InitElementClass(nsIScriptContext *aContext, void **aPrototype);
 

@@ -25,7 +25,6 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMHTMLElement.h"
 
-class nsIDOMHTMLModElement;
 
 #define NS_IDOMHTMLMODELEMENT_IID \
 { 0x6f765311,  0xee43, 0x11d1, \
@@ -40,6 +39,22 @@ public:
   NS_IMETHOD    GetDateTime(nsString& aDateTime)=0;
   NS_IMETHOD    SetDateTime(const nsString& aDateTime)=0;
 };
+
+
+#define NS_DECL_IDOMHTMLMODELEMENT   \
+  NS_IMETHOD    GetCite(nsString& aCite);  \
+  NS_IMETHOD    SetCite(const nsString& aCite);  \
+  NS_IMETHOD    GetDateTime(nsString& aDateTime);  \
+  NS_IMETHOD    SetDateTime(const nsString& aDateTime);  \
+
+
+
+#define NS_FORWARD_IDOMHTMLMODELEMENT(superClass)  \
+  NS_IMETHOD    GetCite(nsString& aCite) { return superClass::GetCite(aCite); } \
+  NS_IMETHOD    SetCite(const nsString& aCite) { return superClass::SetCite(aCite); } \
+  NS_IMETHOD    GetDateTime(nsString& aDateTime) { return superClass::GetDateTime(aDateTime); } \
+  NS_IMETHOD    SetDateTime(const nsString& aDateTime) { return superClass::SetDateTime(aDateTime); } \
+
 
 extern nsresult NS_InitHTMLModElementClass(nsIScriptContext *aContext, void **aPrototype);
 

@@ -25,7 +25,6 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMHTMLElement.h"
 
-class nsIDOMHTMLDirectoryElement;
 
 #define NS_IDOMHTMLDIRECTORYELEMENT_IID \
 { 0x6f7652f8,  0xee43, 0x11d1, \
@@ -37,6 +36,18 @@ public:
   NS_IMETHOD    GetCompact(PRBool* aCompact)=0;
   NS_IMETHOD    SetCompact(PRBool aCompact)=0;
 };
+
+
+#define NS_DECL_IDOMHTMLDIRECTORYELEMENT   \
+  NS_IMETHOD    GetCompact(PRBool* aCompact);  \
+  NS_IMETHOD    SetCompact(PRBool aCompact);  \
+
+
+
+#define NS_FORWARD_IDOMHTMLDIRECTORYELEMENT(superClass)  \
+  NS_IMETHOD    GetCompact(PRBool* aCompact) { return superClass::GetCompact(aCompact); } \
+  NS_IMETHOD    SetCompact(PRBool aCompact) { return superClass::SetCompact(aCompact); } \
+
 
 extern nsresult NS_InitHTMLDirectoryElementClass(nsIScriptContext *aContext, void **aPrototype);
 

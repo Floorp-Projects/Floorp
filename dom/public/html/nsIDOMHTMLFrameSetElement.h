@@ -25,7 +25,6 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMHTMLElement.h"
 
-class nsIDOMHTMLFrameSetElement;
 
 #define NS_IDOMHTMLFRAMESETELEMENT_IID \
 { 0x6f765300,  0xee43, 0x11d1, \
@@ -40,6 +39,22 @@ public:
   NS_IMETHOD    GetRows(nsString& aRows)=0;
   NS_IMETHOD    SetRows(const nsString& aRows)=0;
 };
+
+
+#define NS_DECL_IDOMHTMLFRAMESETELEMENT   \
+  NS_IMETHOD    GetCols(nsString& aCols);  \
+  NS_IMETHOD    SetCols(const nsString& aCols);  \
+  NS_IMETHOD    GetRows(nsString& aRows);  \
+  NS_IMETHOD    SetRows(const nsString& aRows);  \
+
+
+
+#define NS_FORWARD_IDOMHTMLFRAMESETELEMENT(superClass)  \
+  NS_IMETHOD    GetCols(nsString& aCols) { return superClass::GetCols(aCols); } \
+  NS_IMETHOD    SetCols(const nsString& aCols) { return superClass::SetCols(aCols); } \
+  NS_IMETHOD    GetRows(nsString& aRows) { return superClass::GetRows(aRows); } \
+  NS_IMETHOD    SetRows(const nsString& aRows) { return superClass::SetRows(aRows); } \
+
 
 extern nsresult NS_InitHTMLFrameSetElementClass(nsIScriptContext *aContext, void **aPrototype);
 

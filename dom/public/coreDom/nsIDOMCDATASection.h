@@ -25,7 +25,6 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMText.h"
 
-class nsIDOMCDATASection;
 
 #define NS_IDOMCDATASECTION_IID \
 { 0x6f7652e1,  0xee43, 0x11d1, \
@@ -34,6 +33,14 @@ class nsIDOMCDATASection;
 class nsIDOMCDATASection : public nsIDOMText {
 public:
 };
+
+
+#define NS_DECL_IDOMCDATASECTION   \
+
+
+
+#define NS_FORWARD_IDOMCDATASECTION(superClass)  \
+
 
 extern nsresult NS_InitCDATASectionClass(nsIScriptContext *aContext, void **aPrototype);
 

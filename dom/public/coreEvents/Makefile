@@ -21,6 +21,7 @@ DEFINES = -D_IMPL_NS_DOM
 
 EXPORTS =               \
 	nsIDOMEvent.h			\
+	nsIDOMNSEvent.h			\
         nsIDOMEventListener.h		\
 	nsIDOMEventCapturer.h		\
 	nsIDOMEventReceiver.h		\

@@ -25,7 +25,6 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMHTMLElement.h"
 
-class nsIDOMHTMLFormElement;
 class nsIDOMHTMLCollection;
 
 #define NS_IDOMHTMLFORMELEMENT_IID \
@@ -36,10 +35,8 @@ class nsIDOMHTMLFormElement : public nsIDOMHTMLElement {
 public:
 
   NS_IMETHOD    GetElements(nsIDOMHTMLCollection** aElements)=0;
-  NS_IMETHOD    SetElements(nsIDOMHTMLCollection* aElements)=0;
 
   NS_IMETHOD    GetName(nsString& aName)=0;
-  NS_IMETHOD    SetName(const nsString& aName)=0;
 
   NS_IMETHOD    GetAcceptCharset(nsString& aAcceptCharset)=0;
   NS_IMETHOD    SetAcceptCharset(const nsString& aAcceptCharset)=0;
@@ -56,6 +53,38 @@ public:
   NS_IMETHOD    GetTarget(nsString& aTarget)=0;
   NS_IMETHOD    SetTarget(const nsString& aTarget)=0;
 };
+
+
+#define NS_DECL_IDOMHTMLFORMELEMENT   \
+  NS_IMETHOD    GetElements(nsIDOMHTMLCollection** aElements);  \
+  NS_IMETHOD    GetName(nsString& aName);  \
+  NS_IMETHOD    GetAcceptCharset(nsString& aAcceptCharset);  \
+  NS_IMETHOD    SetAcceptCharset(const nsString& aAcceptCharset);  \
+  NS_IMETHOD    GetAction(nsString& aAction);  \
+  NS_IMETHOD    SetAction(const nsString& aAction);  \
+  NS_IMETHOD    GetEnctype(nsString& aEnctype);  \
+  NS_IMETHOD    SetEnctype(const nsString& aEnctype);  \
+  NS_IMETHOD    GetMethod(nsString& aMethod);  \
+  NS_IMETHOD    SetMethod(const nsString& aMethod);  \
+  NS_IMETHOD    GetTarget(nsString& aTarget);  \
+  NS_IMETHOD    SetTarget(const nsString& aTarget);  \
+
+
+
+#define NS_FORWARD_IDOMHTMLFORMELEMENT(superClass)  \
+  NS_IMETHOD    GetElements(nsIDOMHTMLCollection** aElements) { return superClass::GetElements(aElements); } \
+  NS_IMETHOD    GetName(nsString& aName) { return superClass::GetName(aName); } \
+  NS_IMETHOD    GetAcceptCharset(nsString& aAcceptCharset) { return superClass::GetAcceptCharset(aAcceptCharset); } \
+  NS_IMETHOD    SetAcceptCharset(const nsString& aAcceptCharset) { return superClass::SetAcceptCharset(aAcceptCharset); } \
+  NS_IMETHOD    GetAction(nsString& aAction) { return superClass::GetAction(aAction); } \
+  NS_IMETHOD    SetAction(const nsString& aAction) { return superClass::SetAction(aAction); } \
+  NS_IMETHOD    GetEnctype(nsString& aEnctype) { return superClass::GetEnctype(aEnctype); } \
+  NS_IMETHOD    SetEnctype(const nsString& aEnctype) { return superClass::SetEnctype(aEnctype); } \
+  NS_IMETHOD    GetMethod(nsString& aMethod) { return superClass::GetMethod(aMethod); } \
+  NS_IMETHOD    SetMethod(const nsString& aMethod) { return superClass::SetMethod(aMethod); } \
+  NS_IMETHOD    GetTarget(nsString& aTarget) { return superClass::GetTarget(aTarget); } \
+  NS_IMETHOD    SetTarget(const nsString& aTarget) { return superClass::SetTarget(aTarget); } \
+
 
 extern nsresult NS_InitHTMLFormElementClass(nsIScriptContext *aContext, void **aPrototype);
 

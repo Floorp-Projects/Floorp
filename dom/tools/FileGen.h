@@ -53,11 +53,17 @@ protected:
                                         PLHashEnumerator aEnumerator,
                                         void *aArg,
                                         PRBool aOnlyPrimary);
+    void            EnumerateAllObjects(IdlInterface &aInterface,
+                                        PLHashEnumerator aEnumerator,
+                                        void *aArg);
     ofstream*       GetFile() { return mOutputFile; }
     
     void            StrUpr(char *aBuffer);
 
 private:
+    void            CollectAllInInterface(IdlInterface &aInterface,
+                                          PLHashTable *aTable);
+
     ofstream        *mOutputFile;
 };
 

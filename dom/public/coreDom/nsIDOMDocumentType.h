@@ -25,7 +25,6 @@
 #include "nsIScriptContext.h"
 
 class nsIDOMNamedNodeMap;
-class nsIDOMDocumentType;
 
 #define NS_IDOMDOCUMENTTYPE_IID \
 { 0x6f7652e6,  0xee43, 0x11d1, \
@@ -40,6 +39,22 @@ public:
   NS_IMETHOD    GetEntities(nsIDOMNamedNodeMap** aEntities)=0;
   NS_IMETHOD    SetEntities(nsIDOMNamedNodeMap* aEntities)=0;
 };
+
+
+#define NS_DECL_IDOMDOCUMENTTYPE   \
+  NS_IMETHOD    GetName(nsString& aName);  \
+  NS_IMETHOD    SetName(const nsString& aName);  \
+  NS_IMETHOD    GetEntities(nsIDOMNamedNodeMap** aEntities);  \
+  NS_IMETHOD    SetEntities(nsIDOMNamedNodeMap* aEntities);  \
+
+
+
+#define NS_FORWARD_IDOMDOCUMENTTYPE(superClass)  \
+  NS_IMETHOD    GetName(nsString& aName) { return superClass::GetName(aName); } \
+  NS_IMETHOD    SetName(const nsString& aName) { return superClass::SetName(aName); } \
+  NS_IMETHOD    GetEntities(nsIDOMNamedNodeMap** aEntities) { return superClass::GetEntities(aEntities); } \
+  NS_IMETHOD    SetEntities(nsIDOMNamedNodeMap* aEntities) { return superClass::SetEntities(aEntities); } \
+
 
 extern nsresult NS_InitDocumentTypeClass(nsIScriptContext *aContext, void **aPrototype);
 

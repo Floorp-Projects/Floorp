@@ -25,7 +25,6 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMHTMLElement.h"
 
-class nsIDOMHTMLMenuElement;
 
 #define NS_IDOMHTMLMENUELEMENT_IID \
 { 0x6f76530f,  0xee43, 0x11d1, \
@@ -37,6 +36,18 @@ public:
   NS_IMETHOD    GetCompact(PRBool* aCompact)=0;
   NS_IMETHOD    SetCompact(PRBool aCompact)=0;
 };
+
+
+#define NS_DECL_IDOMHTMLMENUELEMENT   \
+  NS_IMETHOD    GetCompact(PRBool* aCompact);  \
+  NS_IMETHOD    SetCompact(PRBool aCompact);  \
+
+
+
+#define NS_FORWARD_IDOMHTMLMENUELEMENT(superClass)  \
+  NS_IMETHOD    GetCompact(PRBool* aCompact) { return superClass::GetCompact(aCompact); } \
+  NS_IMETHOD    SetCompact(PRBool aCompact) { return superClass::SetCompact(aCompact); } \
+
 
 extern nsresult NS_InitHTMLMenuElementClass(nsIScriptContext *aContext, void **aPrototype);
 

@@ -25,7 +25,6 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMHTMLElement.h"
 
-class nsIDOMHTMLLIElement;
 
 #define NS_IDOMHTMLLIELEMENT_IID \
 { 0x6f76530c,  0xee43, 0x11d1, \
@@ -40,6 +39,22 @@ public:
   NS_IMETHOD    GetValue(PRInt32* aValue)=0;
   NS_IMETHOD    SetValue(PRInt32 aValue)=0;
 };
+
+
+#define NS_DECL_IDOMHTMLLIELEMENT   \
+  NS_IMETHOD    GetType(nsString& aType);  \
+  NS_IMETHOD    SetType(const nsString& aType);  \
+  NS_IMETHOD    GetValue(PRInt32* aValue);  \
+  NS_IMETHOD    SetValue(PRInt32 aValue);  \
+
+
+
+#define NS_FORWARD_IDOMHTMLLIELEMENT(superClass)  \
+  NS_IMETHOD    GetType(nsString& aType) { return superClass::GetType(aType); } \
+  NS_IMETHOD    SetType(const nsString& aType) { return superClass::SetType(aType); } \
+  NS_IMETHOD    GetValue(PRInt32* aValue) { return superClass::GetValue(aValue); } \
+  NS_IMETHOD    SetValue(PRInt32 aValue) { return superClass::SetValue(aValue); } \
+
 
 extern nsresult NS_InitHTMLLIElementClass(nsIScriptContext *aContext, void **aPrototype);
 

@@ -27,6 +27,7 @@
 #include "nsString.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMEvent.h"
+#include "nsIDOMNSEvent.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);

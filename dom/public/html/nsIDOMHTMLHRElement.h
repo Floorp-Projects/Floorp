@@ -25,7 +25,6 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMHTMLElement.h"
 
-class nsIDOMHTMLHRElement;
 
 #define NS_IDOMHTMLHRELEMENT_IID \
 { 0x6f765303,  0xee43, 0x11d1, \
@@ -46,6 +45,30 @@ public:
   NS_IMETHOD    GetWidth(nsString& aWidth)=0;
   NS_IMETHOD    SetWidth(const nsString& aWidth)=0;
 };
+
+
+#define NS_DECL_IDOMHTMLHRELEMENT   \
+  NS_IMETHOD    GetAlign(nsString& aAlign);  \
+  NS_IMETHOD    SetAlign(const nsString& aAlign);  \
+  NS_IMETHOD    GetNoShade(PRBool* aNoShade);  \
+  NS_IMETHOD    SetNoShade(PRBool aNoShade);  \
+  NS_IMETHOD    GetSize(nsString& aSize);  \
+  NS_IMETHOD    SetSize(const nsString& aSize);  \
+  NS_IMETHOD    GetWidth(nsString& aWidth);  \
+  NS_IMETHOD    SetWidth(const nsString& aWidth);  \
+
+
+
+#define NS_FORWARD_IDOMHTMLHRELEMENT(superClass)  \
+  NS_IMETHOD    GetAlign(nsString& aAlign) { return superClass::GetAlign(aAlign); } \
+  NS_IMETHOD    SetAlign(const nsString& aAlign) { return superClass::SetAlign(aAlign); } \
+  NS_IMETHOD    GetNoShade(PRBool* aNoShade) { return superClass::GetNoShade(aNoShade); } \
+  NS_IMETHOD    SetNoShade(PRBool aNoShade) { return superClass::SetNoShade(aNoShade); } \
+  NS_IMETHOD    GetSize(nsString& aSize) { return superClass::GetSize(aSize); } \
+  NS_IMETHOD    SetSize(const nsString& aSize) { return superClass::SetSize(aSize); } \
+  NS_IMETHOD    GetWidth(nsString& aWidth) { return superClass::GetWidth(aWidth); } \
+  NS_IMETHOD    SetWidth(const nsString& aWidth) { return superClass::SetWidth(aWidth); } \
+
 
 extern nsresult NS_InitHTMLHRElementClass(nsIScriptContext *aContext, void **aPrototype);
 

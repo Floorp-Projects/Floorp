@@ -57,6 +57,34 @@ public:
   NS_IMETHOD    SetInterval(JSContext *cx, jsval *argv, PRUint32 argc, PRInt32* aReturn)=0;
 };
 
+
+#define NS_DECL_IDOMWINDOW   \
+  NS_IMETHOD    GetWindow(nsIDOMWindow** aWindow);  \
+  NS_IMETHOD    GetSelf(nsIDOMWindow** aSelf);  \
+  NS_IMETHOD    GetDocument(nsIDOMDocument** aDocument);  \
+  NS_IMETHOD    GetNavigator(nsIDOMNavigator** aNavigator);  \
+  NS_IMETHOD    Dump(const nsString& aStr);  \
+  NS_IMETHOD    Alert(const nsString& aStr);  \
+  NS_IMETHOD    ClearTimeout(PRInt32 aTimerID);  \
+  NS_IMETHOD    ClearInterval(PRInt32 aTimerID);  \
+  NS_IMETHOD    SetTimeout(JSContext *cx, jsval *argv, PRUint32 argc, PRInt32* aReturn);  \
+  NS_IMETHOD    SetInterval(JSContext *cx, jsval *argv, PRUint32 argc, PRInt32* aReturn);  \
+
+
+
+#define NS_FORWARD_IDOMWINDOW(superClass)  \
+  NS_IMETHOD    GetWindow(nsIDOMWindow** aWindow) { return superClass::GetWindow(aWindow); } \
+  NS_IMETHOD    GetSelf(nsIDOMWindow** aSelf) { return superClass::GetSelf(aSelf); } \
+  NS_IMETHOD    GetDocument(nsIDOMDocument** aDocument) { return superClass::GetDocument(aDocument); } \
+  NS_IMETHOD    GetNavigator(nsIDOMNavigator** aNavigator) { return superClass::GetNavigator(aNavigator); } \
+  NS_IMETHOD    Dump(const nsString& aStr) { return superClass::Dump(aStr); }  \
+  NS_IMETHOD    Alert(const nsString& aStr) { return superClass::Alert(aStr); }  \
+  NS_IMETHOD    ClearTimeout(PRInt32 aTimerID) { return superClass::ClearTimeout(aTimerID); }  \
+  NS_IMETHOD    ClearInterval(PRInt32 aTimerID) { return superClass::ClearInterval(aTimerID); }  \
+  NS_IMETHOD    SetTimeout(JSContext *cx, jsval *argv, PRUint32 argc, PRInt32* aReturn) { return superClass::SetTimeout(cx, argv, argc, aReturn); }  \
+  NS_IMETHOD    SetInterval(JSContext *cx, jsval *argv, PRUint32 argc, PRInt32* aReturn) { return superClass::SetInterval(cx, argv, argc, aReturn); }  \
+
+
 extern nsresult NS_InitWindowClass(nsIScriptContext *aContext, nsIScriptGlobalObject *aGlobal);
 
 extern "C" NS_DOM nsresult NS_NewScriptWindow(nsIScriptContext *aContext, nsIDOMWindow *aSupports, nsISupports *aParent, void **aReturn);

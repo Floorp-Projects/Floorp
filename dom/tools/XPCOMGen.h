@@ -35,15 +35,17 @@ public:
                                IdlSpecification &aSpec, int aIsGlobal);
 
 protected:
-     void     GenerateIfdef(IdlSpecification &aSpec);
-     void     GenerateIncludes(IdlSpecification &aSpec);
-     void     GenerateForwardDecls(IdlSpecification &aSpec);
+     void     GenerateIfdef(IdlInterface &aInterface);
+     void     GenerateIncludes(IdlInterface &aInterface);
+     void     GenerateForwardDecls(IdlInterface &aInterface);
      void     GenerateGuid(IdlInterface &aInterface);
      void     GenerateClassDecl(IdlInterface &aInterface);
      void     GenerateEnums(IdlInterface &aInterface);
      void     GenerateMethods(IdlInterface &aInterface);
      void     GenerateEndClassDecl();
-     void     GenerateEpilog(IdlSpecification &aSpec);
+     void     GenerateEpilog(IdlInterface &aInterface, PRBool aIsPrimary);
+     void     GenerateDeclMacro(IdlInterface &aInterface);
+     void     GenerateForwardMacro(IdlInterface &aInterface);
 
      int mIsGlobal;
 };

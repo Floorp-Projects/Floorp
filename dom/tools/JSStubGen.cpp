@@ -44,12 +44,14 @@ JSStubGen::~JSStubGen()
 }
 
 void     
-JSStubGen::Generate(char *aFileName, 
+JSStubGen::Generate(char *aFileName,
                     char *aOutputDirName,
                     IdlSpecification &aSpec,
                     int aIsGlobal)
 {
-  if (!OpenFile(aFileName, aOutputDirName, kFilePrefix, kFileSuffix)) {
+  IdlInterface *iface = aSpec.GetInterfaceAt(0);
+  
+  if (!OpenFile(iface->GetName(), aOutputDirName, kFilePrefix, kFileSuffix)) {
       throw new CantOpenFileException(aFileName);
   }
 
@@ -105,7 +107,7 @@ JSStubGen::GenerateIncludes(IdlSpecification &aSpec)
 
   *file << kIncludeDefaultsStr;
   EnumerateAllObjects(aSpec, (PLHashEnumerator)IncludeEnumerator, 
-                      file, PR_TRUE);
+                      file, PR_FALSE);
   *file << "\n";
 }
 
@@ -273,6 +275,27 @@ static const char *kPropFuncEndStr =
 "  return PR_TRUE;\n"
 "}\n";
 
+static const char *kPropFuncNamedItemStr =
+"  else if (JSVAL_IS_STRING(id)) {\n"
+"    %s prop;\n"
+"    nsAutoString name;\n"
+"\n"
+"    JSString *jsstring = JS_ValueToString(cx, id);\n"
+"    if (nsnull != jsstring) {\n"
+"      name.SetString(JS_GetStringChars(jsstring));\n"
+"    }\n"
+"    else {\n"
+"      name.SetString(\"\");\n"
+"    }\n"
+"\n"
+"    if (NS_OK == a->NamedItem(name, %sprop)) {\n"
+"%s"
+"    }\n"
+"    else {\n"
+"      return JS_FALSE;\n"
+"    }\n"
+"  }\n";
+
 #define JSGEN_GENERATE_PROPFUNCBEGIN(buffer, op, className)  \
      sprintf(buffer, kPropFuncBeginStr, className, op, op, className, className, className)
 
@@ -346,18 +369,21 @@ JSStubGen::GeneratePropertyFunc(IdlSpecification &aSpec, PRBool aIsGetter)
     *file << kNoAttrStr;
   }
 
-  if (aIsGetter) {
-    int m, mcount = primary_iface->FunctionCount();
-    IdlFunction *item_func = NULL;
-    for (m = 0; m < mcount; m++) {
-      IdlFunction *func = primary_iface->GetFunctionAt(m);
-      
-      if (strcmp(func->GetName(), "item") == 0) {
-        item_func = func;
-        break;
-      }
-    }
+  IdlFunction *item_func = NULL;
+  IdlFunction *named_item_func = NULL;
+  int m, mcount = primary_iface->FunctionCount();
+  for (m = 0; m < mcount; m++) {
+    IdlFunction *func = primary_iface->GetFunctionAt(m);
     
+    if (strcmp(func->GetName(), "item") == 0) {
+      item_func = func;
+    }
+    else if (strcmp(func->GetName(), "namedItem") == 0) {
+      named_item_func = func;
+    }
+  }
+    
+  if (aIsGetter) {
     if (NULL != item_func) {
       IdlVariable *rval = item_func->GetReturnValue();
       GeneratePropGetter(file, *primary_iface, *rval, JSSTUBGEN_DEFAULT);
@@ -370,6 +396,11 @@ JSStubGen::GeneratePropertyFunc(IdlSpecification &aSpec, PRBool aIsGetter)
   else {
     JSGEN_GENERATE_PROPFUNCDEFAULT(buf, aIsGetter ? "Get" : "Set");
     *file << buf;
+  }
+
+  if (aIsGetter && (NULL != named_item_func)) {
+    IdlVariable *rval = named_item_func->GetReturnValue();
+    GeneratePropGetter(file, *primary_iface, *rval, JSSTUBGEN_NAMED_ITEM);    
   }
 
   JSGEN_GENERATE_PROPFUNCEND(buf, aIsGetter ? "Get" : "Set");
@@ -446,7 +477,7 @@ JSStubGen::GeneratePropGetter(ofstream *file,
   const char *case_str;
 
   GetVariableTypeForLocal(attr_type, aAttribute);
-  if (JSSTUBGEN_DEFAULT != aType) {
+  if ((JSSTUBGEN_PRIMARY == aType) || (JSSTUBGEN_NONPRIMARY == aType)) {
     GetCapitalizedName(attr_name, aAttribute);
   }
 
@@ -486,8 +517,13 @@ JSStubGen::GeneratePropGetter(ofstream *file,
             aAttribute.GetType() == TYPE_STRING ? "" : "&",
             case_str, aInterface.GetName());
   }
-  else {
+  else if (JSSTUBGEN_DEFAULT == aType) {
     sprintf(buf, kPropFuncDefaultItemStr, attr_type,
+            aAttribute.GetType() == TYPE_STRING ? "" : "&",
+            case_str);
+  }
+  else {
+    sprintf(buf, kPropFuncNamedItemStr, attr_type,
             aAttribute.GetType() == TYPE_STRING ? "" : "&",
             case_str);
   }

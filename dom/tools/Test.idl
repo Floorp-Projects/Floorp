@@ -15,5 +15,5 @@ interface Test2 {
  readonly attribute Node me;
  attribute boolean foo;
 
- Document getMyDocument();
+ Document getMyDocument(/* ... */);
 };

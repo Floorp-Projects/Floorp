@@ -26,7 +26,6 @@
 #include "nsIDOMHTMLElement.h"
 
 class nsIDOMHTMLElement;
-class nsIDOMHTMLTableElement;
 class nsIDOMHTMLTableCaptionElement;
 class nsIDOMHTMLTableSectionElement;
 class nsIDOMHTMLCollection;
@@ -96,6 +95,86 @@ public:
 
   NS_IMETHOD    DeleteRow(PRInt32 aIndex)=0;
 };
+
+
+#define NS_DECL_IDOMHTMLTABLEELEMENT   \
+  NS_IMETHOD    GetCaption(nsIDOMHTMLTableCaptionElement** aCaption);  \
+  NS_IMETHOD    SetCaption(nsIDOMHTMLTableCaptionElement* aCaption);  \
+  NS_IMETHOD    GetTHead(nsIDOMHTMLTableSectionElement** aTHead);  \
+  NS_IMETHOD    SetTHead(nsIDOMHTMLTableSectionElement* aTHead);  \
+  NS_IMETHOD    GetTFoot(nsIDOMHTMLTableSectionElement** aTFoot);  \
+  NS_IMETHOD    SetTFoot(nsIDOMHTMLTableSectionElement* aTFoot);  \
+  NS_IMETHOD    GetRows(nsIDOMHTMLCollection** aRows);  \
+  NS_IMETHOD    SetRows(nsIDOMHTMLCollection* aRows);  \
+  NS_IMETHOD    GetTBodies(nsIDOMHTMLCollection** aTBodies);  \
+  NS_IMETHOD    SetTBodies(nsIDOMHTMLCollection* aTBodies);  \
+  NS_IMETHOD    GetAlign(nsString& aAlign);  \
+  NS_IMETHOD    SetAlign(const nsString& aAlign);  \
+  NS_IMETHOD    GetBgColor(nsString& aBgColor);  \
+  NS_IMETHOD    SetBgColor(const nsString& aBgColor);  \
+  NS_IMETHOD    GetBorder(nsString& aBorder);  \
+  NS_IMETHOD    SetBorder(const nsString& aBorder);  \
+  NS_IMETHOD    GetCellPadding(nsString& aCellPadding);  \
+  NS_IMETHOD    SetCellPadding(const nsString& aCellPadding);  \
+  NS_IMETHOD    GetCellSpacing(nsString& aCellSpacing);  \
+  NS_IMETHOD    SetCellSpacing(const nsString& aCellSpacing);  \
+  NS_IMETHOD    GetFrame(nsString& aFrame);  \
+  NS_IMETHOD    SetFrame(const nsString& aFrame);  \
+  NS_IMETHOD    GetRules(nsString& aRules);  \
+  NS_IMETHOD    SetRules(const nsString& aRules);  \
+  NS_IMETHOD    GetSummary(nsString& aSummary);  \
+  NS_IMETHOD    SetSummary(const nsString& aSummary);  \
+  NS_IMETHOD    GetWidth(nsString& aWidth);  \
+  NS_IMETHOD    SetWidth(const nsString& aWidth);  \
+  NS_IMETHOD    CreateTHead(nsIDOMHTMLElement** aReturn);  \
+  NS_IMETHOD    DeleteTHead();  \
+  NS_IMETHOD    CreateTFoot(nsIDOMHTMLElement** aReturn);  \
+  NS_IMETHOD    DeleteTFoot();  \
+  NS_IMETHOD    CreateCaption(nsIDOMHTMLElement** aReturn);  \
+  NS_IMETHOD    DeleteCaption();  \
+  NS_IMETHOD    InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aReturn);  \
+  NS_IMETHOD    DeleteRow(PRInt32 aIndex);  \
+
+
+
+#define NS_FORWARD_IDOMHTMLTABLEELEMENT(superClass)  \
+  NS_IMETHOD    GetCaption(nsIDOMHTMLTableCaptionElement** aCaption) { return superClass::GetCaption(aCaption); } \
+  NS_IMETHOD    SetCaption(nsIDOMHTMLTableCaptionElement* aCaption) { return superClass::SetCaption(aCaption); } \
+  NS_IMETHOD    GetTHead(nsIDOMHTMLTableSectionElement** aTHead) { return superClass::GetTHead(aTHead); } \
+  NS_IMETHOD    SetTHead(nsIDOMHTMLTableSectionElement* aTHead) { return superClass::SetTHead(aTHead); } \
+  NS_IMETHOD    GetTFoot(nsIDOMHTMLTableSectionElement** aTFoot) { return superClass::GetTFoot(aTFoot); } \
+  NS_IMETHOD    SetTFoot(nsIDOMHTMLTableSectionElement* aTFoot) { return superClass::SetTFoot(aTFoot); } \
+  NS_IMETHOD    GetRows(nsIDOMHTMLCollection** aRows) { return superClass::GetRows(aRows); } \
+  NS_IMETHOD    SetRows(nsIDOMHTMLCollection* aRows) { return superClass::SetRows(aRows); } \
+  NS_IMETHOD    GetTBodies(nsIDOMHTMLCollection** aTBodies) { return superClass::GetTBodies(aTBodies); } \
+  NS_IMETHOD    SetTBodies(nsIDOMHTMLCollection* aTBodies) { return superClass::SetTBodies(aTBodies); } \
+  NS_IMETHOD    GetAlign(nsString& aAlign) { return superClass::GetAlign(aAlign); } \
+  NS_IMETHOD    SetAlign(const nsString& aAlign) { return superClass::SetAlign(aAlign); } \
+  NS_IMETHOD    GetBgColor(nsString& aBgColor) { return superClass::GetBgColor(aBgColor); } \
+  NS_IMETHOD    SetBgColor(const nsString& aBgColor) { return superClass::SetBgColor(aBgColor); } \
+  NS_IMETHOD    GetBorder(nsString& aBorder) { return superClass::GetBorder(aBorder); } \
+  NS_IMETHOD    SetBorder(const nsString& aBorder) { return superClass::SetBorder(aBorder); } \
+  NS_IMETHOD    GetCellPadding(nsString& aCellPadding) { return superClass::GetCellPadding(aCellPadding); } \
+  NS_IMETHOD    SetCellPadding(const nsString& aCellPadding) { return superClass::SetCellPadding(aCellPadding); } \
+  NS_IMETHOD    GetCellSpacing(nsString& aCellSpacing) { return superClass::GetCellSpacing(aCellSpacing); } \
+  NS_IMETHOD    SetCellSpacing(const nsString& aCellSpacing) { return superClass::SetCellSpacing(aCellSpacing); } \
+  NS_IMETHOD    GetFrame(nsString& aFrame) { return superClass::GetFrame(aFrame); } \
+  NS_IMETHOD    SetFrame(const nsString& aFrame) { return superClass::SetFrame(aFrame); } \
+  NS_IMETHOD    GetRules(nsString& aRules) { return superClass::GetRules(aRules); } \
+  NS_IMETHOD    SetRules(const nsString& aRules) { return superClass::SetRules(aRules); } \
+  NS_IMETHOD    GetSummary(nsString& aSummary) { return superClass::GetSummary(aSummary); } \
+  NS_IMETHOD    SetSummary(const nsString& aSummary) { return superClass::SetSummary(aSummary); } \
+  NS_IMETHOD    GetWidth(nsString& aWidth) { return superClass::GetWidth(aWidth); } \
+  NS_IMETHOD    SetWidth(const nsString& aWidth) { return superClass::SetWidth(aWidth); } \
+  NS_IMETHOD    CreateTHead(nsIDOMHTMLElement** aReturn) { return superClass::CreateTHead(aReturn); }  \
+  NS_IMETHOD    DeleteTHead() { return superClass::DeleteTHead(); }  \
+  NS_IMETHOD    CreateTFoot(nsIDOMHTMLElement** aReturn) { return superClass::CreateTFoot(aReturn); }  \
+  NS_IMETHOD    DeleteTFoot() { return superClass::DeleteTFoot(); }  \
+  NS_IMETHOD    CreateCaption(nsIDOMHTMLElement** aReturn) { return superClass::CreateCaption(aReturn); }  \
+  NS_IMETHOD    DeleteCaption() { return superClass::DeleteCaption(); }  \
+  NS_IMETHOD    InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aReturn) { return superClass::InsertRow(aIndex, aReturn); }  \
+  NS_IMETHOD    DeleteRow(PRInt32 aIndex) { return superClass::DeleteRow(aIndex); }  \
+
 
 extern nsresult NS_InitHTMLTableElementClass(nsIScriptContext *aContext, void **aPrototype);
 

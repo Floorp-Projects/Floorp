@@ -26,7 +26,6 @@
 #include "nsIDOMHTMLElement.h"
 
 class nsIDOMHTMLFormElement;
-class nsIDOMHTMLOptionElement;
 
 #define NS_IDOMHTMLOPTIONELEMENT_IID \
 { 0x6f765315,  0xee43, 0x11d1, \
@@ -59,6 +58,46 @@ public:
   NS_IMETHOD    GetValue(nsString& aValue)=0;
   NS_IMETHOD    SetValue(const nsString& aValue)=0;
 };
+
+
+#define NS_DECL_IDOMHTMLOPTIONELEMENT   \
+  NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm);  \
+  NS_IMETHOD    SetForm(nsIDOMHTMLFormElement* aForm);  \
+  NS_IMETHOD    GetDefaultSelected(PRBool* aDefaultSelected);  \
+  NS_IMETHOD    SetDefaultSelected(PRBool aDefaultSelected);  \
+  NS_IMETHOD    GetText(nsString& aText);  \
+  NS_IMETHOD    SetText(const nsString& aText);  \
+  NS_IMETHOD    GetIndex(PRInt32* aIndex);  \
+  NS_IMETHOD    SetIndex(PRInt32 aIndex);  \
+  NS_IMETHOD    GetDisabled(PRBool* aDisabled);  \
+  NS_IMETHOD    SetDisabled(PRBool aDisabled);  \
+  NS_IMETHOD    GetLabel(nsString& aLabel);  \
+  NS_IMETHOD    SetLabel(const nsString& aLabel);  \
+  NS_IMETHOD    GetSelected(PRBool* aSelected);  \
+  NS_IMETHOD    SetSelected(PRBool aSelected);  \
+  NS_IMETHOD    GetValue(nsString& aValue);  \
+  NS_IMETHOD    SetValue(const nsString& aValue);  \
+
+
+
+#define NS_FORWARD_IDOMHTMLOPTIONELEMENT(superClass)  \
+  NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm) { return superClass::GetForm(aForm); } \
+  NS_IMETHOD    SetForm(nsIDOMHTMLFormElement* aForm) { return superClass::SetForm(aForm); } \
+  NS_IMETHOD    GetDefaultSelected(PRBool* aDefaultSelected) { return superClass::GetDefaultSelected(aDefaultSelected); } \
+  NS_IMETHOD    SetDefaultSelected(PRBool aDefaultSelected) { return superClass::SetDefaultSelected(aDefaultSelected); } \
+  NS_IMETHOD    GetText(nsString& aText) { return superClass::GetText(aText); } \
+  NS_IMETHOD    SetText(const nsString& aText) { return superClass::SetText(aText); } \
+  NS_IMETHOD    GetIndex(PRInt32* aIndex) { return superClass::GetIndex(aIndex); } \
+  NS_IMETHOD    SetIndex(PRInt32 aIndex) { return superClass::SetIndex(aIndex); } \
+  NS_IMETHOD    GetDisabled(PRBool* aDisabled) { return superClass::GetDisabled(aDisabled); } \
+  NS_IMETHOD    SetDisabled(PRBool aDisabled) { return superClass::SetDisabled(aDisabled); } \
+  NS_IMETHOD    GetLabel(nsString& aLabel) { return superClass::GetLabel(aLabel); } \
+  NS_IMETHOD    SetLabel(const nsString& aLabel) { return superClass::SetLabel(aLabel); } \
+  NS_IMETHOD    GetSelected(PRBool* aSelected) { return superClass::GetSelected(aSelected); } \
+  NS_IMETHOD    SetSelected(PRBool aSelected) { return superClass::SetSelected(aSelected); } \
+  NS_IMETHOD    GetValue(nsString& aValue) { return superClass::GetValue(aValue); } \
+  NS_IMETHOD    SetValue(const nsString& aValue) { return superClass::SetValue(aValue); } \
+
 
 extern nsresult NS_InitHTMLOptionElementClass(nsIScriptContext *aContext, void **aPrototype);
 

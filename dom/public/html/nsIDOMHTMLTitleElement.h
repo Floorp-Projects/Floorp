@@ -25,7 +25,6 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMHTMLElement.h"
 
-class nsIDOMHTMLTitleElement;
 
 #define NS_IDOMHTMLTITLEELEMENT_IID \
 { 0x6f765327,  0xee43, 0x11d1, \
@@ -37,6 +36,18 @@ public:
   NS_IMETHOD    GetText(nsString& aText)=0;
   NS_IMETHOD    SetText(const nsString& aText)=0;
 };
+
+
+#define NS_DECL_IDOMHTMLTITLEELEMENT   \
+  NS_IMETHOD    GetText(nsString& aText);  \
+  NS_IMETHOD    SetText(const nsString& aText);  \
+
+
+
+#define NS_FORWARD_IDOMHTMLTITLEELEMENT(superClass)  \
+  NS_IMETHOD    GetText(nsString& aText) { return superClass::GetText(aText); } \
+  NS_IMETHOD    SetText(const nsString& aText) { return superClass::SetText(aText); } \
+
 
 extern nsresult NS_InitHTMLTitleElementClass(nsIScriptContext *aContext, void **aPrototype);
 

@@ -39,6 +39,18 @@ public:
   NS_IMETHOD    JoinText(nsIDOMText* aNode1, nsIDOMText* aNode2, nsIDOMText** aReturn)=0;
 };
 
+
+#define NS_DECL_IDOMTEXT   \
+  NS_IMETHOD    SplitText(PRUint32 aOffset, nsIDOMText** aReturn);  \
+  NS_IMETHOD    JoinText(nsIDOMText* aNode1, nsIDOMText* aNode2, nsIDOMText** aReturn);  \
+
+
+
+#define NS_FORWARD_IDOMTEXT(superClass)  \
+  NS_IMETHOD    SplitText(PRUint32 aOffset, nsIDOMText** aReturn) { return superClass::SplitText(aOffset, aReturn); }  \
+  NS_IMETHOD    JoinText(nsIDOMText* aNode1, nsIDOMText* aNode2, nsIDOMText** aReturn) { return superClass::JoinText(aNode1, aNode2, aReturn); }  \
+
+
 extern nsresult NS_InitTextClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptText(nsIScriptContext *aContext, nsIDOMText *aSupports, nsISupports *aParent, void **aReturn);

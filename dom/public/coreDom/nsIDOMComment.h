@@ -25,7 +25,6 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMData.h"
 
-class nsIDOMComment;
 
 #define NS_IDOMCOMMENT_IID \
 { 0x6f7652e2,  0xee43, 0x11d1, \
@@ -34,6 +33,14 @@ class nsIDOMComment;
 class nsIDOMComment : public nsIDOMData {
 public:
 };
+
+
+#define NS_DECL_IDOMCOMMENT   \
+
+
+
+#define NS_FORWARD_IDOMCOMMENT(superClass)  \
+
 
 extern nsresult NS_InitCommentClass(nsIScriptContext *aContext, void **aPrototype);
 

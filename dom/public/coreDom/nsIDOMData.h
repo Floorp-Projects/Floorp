@@ -25,7 +25,6 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMNode.h"
 
-class nsIDOMData;
 
 #define NS_IDOMDATA_IID \
 { 0x6f7652e3,  0xee43, 0x11d1, \
@@ -49,6 +48,30 @@ public:
 
   NS_IMETHOD    Replace(PRUint32 aOffset, PRUint32 aCount, const nsString& aData)=0;
 };
+
+
+#define NS_DECL_IDOMDATA   \
+  NS_IMETHOD    GetData(nsString& aData);  \
+  NS_IMETHOD    SetData(const nsString& aData);  \
+  NS_IMETHOD    GetSize(PRUint32* aSize);  \
+  NS_IMETHOD    Substring(PRUint32 aStart, PRUint32 aEnd, nsString& aReturn);  \
+  NS_IMETHOD    Append(const nsString& aData);  \
+  NS_IMETHOD    Insert(PRUint32 aOffset, const nsString& aData);  \
+  NS_IMETHOD    Remove(PRUint32 aOffset, PRUint32 aCount);  \
+  NS_IMETHOD    Replace(PRUint32 aOffset, PRUint32 aCount, const nsString& aData);  \
+
+
+
+#define NS_FORWARD_IDOMDATA(superClass)  \
+  NS_IMETHOD    GetData(nsString& aData) { return superClass::GetData(aData); } \
+  NS_IMETHOD    SetData(const nsString& aData) { return superClass::SetData(aData); } \
+  NS_IMETHOD    GetSize(PRUint32* aSize) { return superClass::GetSize(aSize); } \
+  NS_IMETHOD    Substring(PRUint32 aStart, PRUint32 aEnd, nsString& aReturn) { return superClass::Substring(aStart, aEnd, aReturn); }  \
+  NS_IMETHOD    Append(const nsString& aData) { return superClass::Append(aData); }  \
+  NS_IMETHOD    Insert(PRUint32 aOffset, const nsString& aData) { return superClass::Insert(aOffset, aData); }  \
+  NS_IMETHOD    Remove(PRUint32 aOffset, PRUint32 aCount) { return superClass::Remove(aOffset, aCount); }  \
+  NS_IMETHOD    Replace(PRUint32 aOffset, PRUint32 aCount, const nsString& aData) { return superClass::Replace(aOffset, aCount, aData); }  \
+
 
 extern nsresult NS_InitDataClass(nsIScriptContext *aContext, void **aPrototype);
 

@@ -25,7 +25,6 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMHTMLElement.h"
 
-class nsIDOMHTMLUListElement;
 
 #define NS_IDOMHTMLULISTELEMENT_IID \
 { 0x6f765328,  0xee43, 0x11d1, \
@@ -40,6 +39,22 @@ public:
   NS_IMETHOD    GetType(nsString& aType)=0;
   NS_IMETHOD    SetType(const nsString& aType)=0;
 };
+
+
+#define NS_DECL_IDOMHTMLULISTELEMENT   \
+  NS_IMETHOD    GetCompact(PRBool* aCompact);  \
+  NS_IMETHOD    SetCompact(PRBool aCompact);  \
+  NS_IMETHOD    GetType(nsString& aType);  \
+  NS_IMETHOD    SetType(const nsString& aType);  \
+
+
+
+#define NS_FORWARD_IDOMHTMLULISTELEMENT(superClass)  \
+  NS_IMETHOD    GetCompact(PRBool* aCompact) { return superClass::GetCompact(aCompact); } \
+  NS_IMETHOD    SetCompact(PRBool aCompact) { return superClass::SetCompact(aCompact); } \
+  NS_IMETHOD    GetType(nsString& aType) { return superClass::GetType(aType); } \
+  NS_IMETHOD    SetType(const nsString& aType) { return superClass::SetType(aType); } \
+
 
 extern nsresult NS_InitHTMLUListElementClass(nsIScriptContext *aContext, void **aPrototype);
 

@@ -21,7 +21,7 @@ IGNORE_MANIFEST=1
 DEFINES=-D_IMPL_NS_DOM 
 EXPORTS=nsIDOMEvent.h nsIDOMEventListener.h nsIDOMEventCapturer.h nsIDOMEventReceiver.h \
     nsIDOMFocusListener.h nsIDOMFormListener.h nsIDOMKeyListener.h nsIDOMLoadListener.h \
-    nsIDOMMouseListener.h nsIDOMMouseMotionListener.h nsIDOMDragListener.h
+    nsIDOMMouseListener.h nsIDOMMouseMotionListener.h nsIDOMDragListener.h nsIDOMNSEvent.h
 MODULE=dom 
 
 include <$(DEPTH)\config\rules.mak>
