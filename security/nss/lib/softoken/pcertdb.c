@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.26 2002/07/10 01:04:10 relyea%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.27 2002/07/13 02:45:04 relyea%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -755,7 +755,8 @@ DecodeDBCertEntry(certDBEntryCert *entry, SECItem *dbentry)
     if ( nnlen > 1 ) {
 	entry->nickname = (char *)pkcs11_copyStaticData(
 			&dbentry->data[headerlen+entry->derCert.len], nnlen,
-			entry->nicknameSpace, sizeof(entry->nicknameSpace));
+			(unsigned char *)entry->nicknameSpace, 
+			sizeof(entry->nicknameSpace));
 	if ( entry->nickname == NULL ) {
 	    PORT_SetError(SEC_ERROR_NO_MEMORY);
 	    goto loser;
@@ -3160,6 +3161,7 @@ nsslowcert_AddPermNickname(NSSLOWCERTCertDBHandle *dbhandle,
 {
     SECStatus rv = SECFailure;
     certDBEntrySubject *entry = NULL;
+    certDBEntryNickname *nicknameEntry = NULL;
     
     nsslowcert_LockDB(dbhandle);
     
@@ -3174,7 +3176,6 @@ nsslowcert_AddPermNickname(NSSLOWCERTCertDBHandle *dbhandle,
     if (entry == NULL) goto loser;
 
     if ( entry->nickname == NULL ) {
-        certDBEntryNickname *nicknameEntry = NULL;
 
 	/* no nickname for subject */
 	rv = AddNicknameToSubject(dbhandle, cert, nickname);
@@ -3200,12 +3201,30 @@ nsslowcert_AddPermNickname(NSSLOWCERTCertDBHandle *dbhandle,
 	if ( rv != SECSuccess ) {
 	    goto loser;
 	}
+	/* make sure nickname entry exists. If the database was corrupted,
+	 * we may have lost the nickname entry. Add it back now  */
+	nicknameEntry = ReadDBNicknameEntry(dbhandle, entry->nickname);
+	if (nicknameEntry == NULL ) {
+	    nicknameEntry = NewDBNicknameEntry(entry->nickname, 
+							&cert->derSubject, 0);
+	    if ( nicknameEntry == NULL ) {
+		goto loser;
+	    }
+    
+	    rv = WriteDBNicknameEntry(dbhandle, nicknameEntry);
+	    if ( rv != SECSuccess ) {
+		goto loser;
+	    }
+	}
     }
     rv = SECSuccess;
 
 loser:
     if (entry) {
 	DestroyDBEntry((certDBEntry *)entry);
+    }
+    if (nicknameEntry) {
+	DestroyDBEntry((certDBEntry *)nicknameEntry);
     }
     nsslowcert_UnlockDB(dbhandle);
     return(rv);

@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: lowcert.c,v 1.9 2002/06/24 21:54:39 relyea%netscape.com Exp $
+ * $Id: lowcert.c,v 1.10 2002/07/13 02:45:04 relyea%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -175,7 +175,7 @@ nsslowcert_GetDefaultCertDB(void)
  */ 
 static unsigned char *
 nsslowcert_dataStart(unsigned char *buf, int length, 
-				 int *data_length, PRBool includeTag) {
+			unsigned int *data_length, PRBool includeTag) {
     unsigned char tag;
     int used_length= 0;
 
@@ -228,9 +228,9 @@ nsslowcert_GetCertFields(unsigned char *cert,int cert_length,
 	SECItem *valid, SECItem *subjkey)
 {
     unsigned char *buf;
-    int buf_length;
+    unsigned int buf_length;
     unsigned char *dummy;
-    int dummylen;
+    unsigned int dummylen;
 
     /* get past the signature wrap */
     buf = nsslowcert_dataStart(cert,cert_length,&buf_length,PR_FALSE);
