@@ -1343,19 +1343,34 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
   if (!originalMsgURI || *originalMsgURI == 0)
     return rv;
   
-    /* In case of forwarding multiple messages, originalMsgURI will contains several URI separated by a comma. */
-    /* we need to extract only the first URI*/
-    nsCAutoString  firstURI(originalMsgURI);
-    PRInt32 offset = firstURI.FindChar(',');
-    if (offset >= 0)
-      firstURI.Truncate(offset);
+  // store the original message URI so we can extract it after we send the message to properly
+  // mark any disposition flags like replied or forwarded on the message.
+  mOriginalMsgURI = originalMsgURI;
 
-    // store the original message URI so we can extract it after we send the message to properly
-    // mark any disposition flags like replied or forwarded on the message.
+  char *uriList = PL_strdup(originalMsgURI);
+  if (!uriList)
+    return NS_ERROR_OUT_OF_MEMORY;
 
-    mOriginalMsgURI = firstURI;
+  nsCOMPtr<nsIMimeConverter> mimeConverter = do_GetService(kCMimeConverterCID);
+
+  nsXPIDLCString charset;
+  // use a charset of the original message
+  nsXPIDLString mailCharset;
+  PRBool charsetOverride = PR_FALSE;
+  GetTopmostMsgWindowCharacterSet(mailCharset, &mCharsetOverride);
+  if (!mailCharset.IsEmpty())
+  {
+    charset.Adopt(ToNewUTF8String(nsDependentString(mailCharset)));
+    charsetOverride = PR_TRUE;
+  }
+
+  PRBool isFirstPass = PR_TRUE;
+  char *newStr = uriList;
+  char *uri;
+  while (nsnull != (uri = nsCRT::strtok(newStr, ",", &newStr)))
+  {
     nsCOMPtr <nsIMsgDBHdr> msgHdr;
-    rv = GetMsgDBHdrFromURI(firstURI.get(), getter_AddRefs(msgHdr));
+    rv = GetMsgDBHdrFromURI(uri, getter_AddRefs(msgHdr));
     NS_ENSURE_SUCCESS(rv,rv);
 
     if (msgHdr)
@@ -1364,119 +1379,108 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
       nsCString subjectStr;
       nsXPIDLString decodedString;
       nsXPIDLCString decodedCString;
-      PRBool charsetOverride = PR_FALSE;
-      nsXPIDLCString charset;
-      nsCOMPtr<nsIMimeConverter> mimeConverter = do_GetService(kCMimeConverterCID);
-    
-      rv = msgHdr->GetCharset(getter_Copies(charset));
 
-      if (NS_FAILED(rv)) return rv;
+      if (!charsetOverride)
+      {
+        rv = msgHdr->GetCharset(getter_Copies(charset));
+        if (NS_FAILED(rv)) return rv;
+      }
+
+      // get an original charset, used for a label, UTF-8 is used for the internal processing
+      if (isFirstPass && !charset.IsEmpty())
+        m_compFields->SetCharacterSet(charset);
+
       rv = msgHdr->GetSubject(getter_Copies(subject));
       if (NS_FAILED(rv)) return rv;
-      
+
+      subjectStr.SetLength(0);
+
       switch (type)
       {
-      default: break;        
-      case nsIMsgCompType::Reply : 
-      case nsIMsgCompType::ReplyAll:
-      case nsIMsgCompType::ReplyToGroup:
-      case nsIMsgCompType::ReplyToSender:
-      case nsIMsgCompType::ReplyToSenderAndGroup:
-        {
-          mQuotingToFollow = PR_TRUE;
-
-          // use a charset of the original message
-          nsXPIDLString mailCharset;
-          GetTopmostMsgWindowCharacterSet(mailCharset, &mCharsetOverride);
-          if (mailCharset && (* (const PRUnichar *) mailCharset) )
+        default: break;
+        case nsIMsgCompType::Reply :
+        case nsIMsgCompType::ReplyAll:
+        case nsIMsgCompType::ReplyToGroup:
+        case nsIMsgCompType::ReplyToSender:
+        case nsIMsgCompType::ReplyToSenderAndGroup:
           {
-            charset.Adopt(ToNewUTF8String(nsDependentString(mailCharset)));
-            charsetOverride = PR_TRUE;
-          }
-          
-          // get an original charset, used for a label, UTF-8 is used for the internal processing
-          if (charset.get() && charset.get()[0])
-          {
-            m_compFields->SetCharacterSet(charset);
-          }
-        
-          subjectStr.Append("Re: ");
-          subjectStr.Append(subject);
-          rv = mimeConverter->DecodeMimeHeader(subjectStr.get(),
-                                               getter_Copies(decodedString),
-                                               charset, charsetOverride);
-          if (NS_SUCCEEDED(rv)) {
-            m_compFields->SetSubject(decodedString);
-          } else {
-            m_compFields->SetSubject(subjectStr.get());
-          }
+            if (!isFirstPass)       // safeguard, just in case...
+            {
+              PR_Free(uriList);
+              return rv;
+            }
+            mQuotingToFollow = PR_TRUE;
 
-          nsXPIDLCString author;
-          rv = msgHdr->GetAuthor(getter_Copies(author));    
-          if (NS_FAILED(rv)) return rv;
-          m_compFields->SetTo(author);
-
-          rv = mimeConverter->DecodeMimeHeader(author,
-                                               getter_Copies(decodedCString),
-                                               charset, charsetOverride);
-          if (NS_SUCCEEDED(rv) && decodedCString) {
-            m_compFields->SetTo(decodedCString);
-          } else {
-            m_compFields->SetTo(author);
-          }
-          
-          // Setup quoting callbacks for later...
-          mWhatHolder = 1;
-          mQuoteURI = originalMsgURI;
-          
-          break;
-        }
-      case nsIMsgCompType::ForwardAsAttachment:
-        {
-          nsAutoString decodedSubject;
-          PRUint32 flags;
-          
-          msgHdr->GetFlags(&flags);
-          if (flags & MSG_FLAG_HAS_RE)
             subjectStr.Append("Re: ");
-          subjectStr.Append(subject);
+            subjectStr.Append(subject);
+            rv = mimeConverter->DecodeMimeHeader(subjectStr.get(),
+                getter_Copies(decodedString),
+                charset, charsetOverride);
+            if (NS_SUCCEEDED(rv))
+              m_compFields->SetSubject(decodedString);
+            else
+              m_compFields->SetSubject(subjectStr.get());
 
-          // use a charset of the original message
-          nsXPIDLString mailCharset;
-          GetTopmostMsgWindowCharacterSet(mailCharset, &mCharsetOverride);
-          if (mailCharset && (* (const PRUnichar *) mailCharset) )
-          {
-            charset.Adopt(ToNewUTF8String(nsDependentString(mailCharset)));
-            charsetOverride = PR_TRUE;
+            nsXPIDLCString author;
+            rv = msgHdr->GetAuthor(getter_Copies(author));
+            if (NS_FAILED(rv))
+              return rv;
+
+            rv = mimeConverter->DecodeMimeHeader(author,
+                getter_Copies(decodedCString),
+                charset, charsetOverride);
+            if (NS_SUCCEEDED(rv) && decodedCString)
+              m_compFields->SetTo(decodedCString);
+            else
+              m_compFields->SetTo(author);
+
+            // Setup quoting callbacks for later...
+            mWhatHolder = 1;
+            mQuoteURI = originalMsgURI;
+
+            break;
           }
-
-          rv = mimeConverter->DecodeMimeHeader(subjectStr.get(), 
-                                               getter_Copies(decodedString),
-                                               charset, charsetOverride);
-          if (NS_SUCCEEDED(rv))
-            decodedSubject.Assign(decodedString);
-          else
-            decodedSubject.AssignWithConversion(subjectStr.get());
-        
-          // Setup quoting callbacks for later...
-          mQuotingToFollow = PR_FALSE;  //We don't need to quote the original message.
-          nsCOMPtr<nsIMsgAttachment> attachment = do_CreateInstance(NS_MSGATTACHMENT_CONTRACTID, &rv);
-          if (NS_SUCCEEDED(rv) && attachment)
+        case nsIMsgCompType::ForwardAsAttachment:
           {
-            attachment->SetName(decodedSubject.get());
-            attachment->SetUrl(originalMsgURI);
-            m_compFields->AddAttachment(attachment);
-          }
-        
-          decodedSubject.Insert(NS_LITERAL_STRING("[Fwd: ").get(), 0);
-          decodedSubject.Append(NS_LITERAL_STRING("]").get());
+            nsAutoString decodedSubject;
+            PRUint32 flags;
 
-          m_compFields->SetSubject(decodedSubject.get()); 
-          break;
-        }
-      }      
+            msgHdr->GetFlags(&flags);
+            if (flags & MSG_FLAG_HAS_RE)
+              subjectStr.Append("Re: ");
+            subjectStr.Append(subject);
+
+            rv = mimeConverter->DecodeMimeHeader(subjectStr.get(), 
+                getter_Copies(decodedString),
+                charset, charsetOverride);
+            if (NS_SUCCEEDED(rv))
+              decodedSubject.Assign(decodedString);
+            else
+              decodedSubject.AssignWithConversion(subjectStr.get());
+
+            // Setup quoting callbacks for later...
+            mQuotingToFollow = PR_FALSE;  //We don't need to quote the original message.
+            nsCOMPtr<nsIMsgAttachment> attachment = do_CreateInstance(NS_MSGATTACHMENT_CONTRACTID, &rv);
+            if (NS_SUCCEEDED(rv) && attachment)
+            {
+              attachment->SetName(decodedSubject.get());
+              attachment->SetUrl(uri);
+              m_compFields->AddAttachment(attachment);
+            }
+
+            if (isFirstPass)
+            {
+              decodedSubject.Insert(NS_LITERAL_STRING("[Fwd: ").get(), 0);
+              decodedSubject.Append(NS_LITERAL_STRING("]").get());
+              m_compFields->SetSubject(decodedSubject.get()); 
+            }
+            break;
+          }
+      }
     }
-
+    isFirstPass = PR_FALSE;
+  }
+  PR_Free(uriList);
   return rv;
 }
 
@@ -2208,25 +2212,35 @@ nsresult nsMsgCompose::ProcessReplyFlags()
   {
     if (!mOriginalMsgURI.IsEmpty())
     {
-      nsCOMPtr <nsIMsgDBHdr> msgHdr;
-      rv = GetMsgDBHdrFromURI(mOriginalMsgURI.get(), getter_AddRefs(msgHdr));
-      NS_ENSURE_SUCCESS(rv,rv);
-      if (msgHdr)
+      char *uriList = PL_strdup(mOriginalMsgURI.get());
+      if (!uriList)
+        return NS_ERROR_OUT_OF_MEMORY;
+      char *newStr = uriList;
+      char *uri;
+      while (nsnull != (uri = nsCRT::strtok(newStr, ",", &newStr)))
       {
-        // get the folder for the message resource
-        nsCOMPtr<nsIMsgFolder> msgFolder;
-        msgHdr->GetFolder(getter_AddRefs(msgFolder));
-        if (msgFolder)
+        nsCOMPtr <nsIMsgDBHdr> msgHdr;
+        rv = GetMsgDBHdrFromURI(uri, getter_AddRefs(msgHdr));
+        NS_ENSURE_SUCCESS(rv,rv);
+        if (msgHdr)
         {
-          nsMsgDispositionState dispositionSetting = nsIMsgFolder::nsMsgDispositionState_Replied;
-          if (mType == nsIMsgCompType::ForwardAsAttachment ||              
-              mType == nsIMsgCompType::ForwardInline)
+          // get the folder for the message resource
+          nsCOMPtr<nsIMsgFolder> msgFolder;
+          msgHdr->GetFolder(getter_AddRefs(msgFolder));
+          if (msgFolder)
+          {
+            nsMsgDispositionState dispositionSetting = nsIMsgFolder::nsMsgDispositionState_Replied;
+            if (mType == nsIMsgCompType::ForwardAsAttachment ||              
+                mType == nsIMsgCompType::ForwardInline)
               dispositionSetting = nsIMsgFolder::nsMsgDispositionState_Forwarded;
 
-          msgFolder->AddMessageDispositionState(msgHdr, dispositionSetting);
+            msgFolder->AddMessageDispositionState(msgHdr, dispositionSetting);
+            if (mType != nsIMsgCompType::ForwardAsAttachment)
+              break;         // just safeguard
+          }
         }
       }
-      
+      PR_Free(uriList);
     }
   }
 
