@@ -40,6 +40,8 @@ OPT_SLASH       = /
 LIB_PREFIX      = lib
 LIB_SUFFIX      = .a
 NSPR_LIBS       = plds21 plc21 nspr21 msgc21
+LINK_PROGRAM    = $(CC)
+XP_REG_LIB      = reg
 
 ####################################################################
 #

@@ -226,7 +226,7 @@ else
 	$(LINK_EXE) $(MAP) $(PDB) $(IMP) $(OBJS) $(OUT_NAME)$(PROGRAM) $(LDFLAGS) $(OS_LIBS) $(EXTRA_LIBS)
 endif
 else
-	$(CC) -o $@ $(CFLAGS) $(OBJS) $(LDFLAGS) $(OS_LIBS)
+	$(LINK_PROGRAM) -o $@ $(CFLAGS) $(OBJS) $(LDFLAGS) $(EXTRA_LIBS) $(OS_LIBS)
 endif
 
 $(LIBRARY): $(OBJS)

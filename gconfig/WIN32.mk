@@ -54,6 +54,7 @@ NSPR_LIBS = libplds21 libplc21 libnspr21 libmsgc21
 OPT_SLASH = /
 LIB_PREFIX      =
 LIB_SUFFIX      = .lib
+XP_REG_LIB      = libreg$(MOZ_BITS)
 
 
 ifdef BUILD_OPT

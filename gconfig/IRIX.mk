@@ -27,6 +27,7 @@ ifeq ($(USE_PTHREADS),1)
 endif
 
 DEFAULT_COMPILER = cc
+LINK_PROGRAM = $(CCC)
 
 ifdef NS_USE_GCC
 	CC		= gcc
