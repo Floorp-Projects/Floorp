@@ -49,7 +49,10 @@ interface nsIDOMLocation;
 interface nsIDOMWindowInternal : nsIDOMWindow
 {
   readonly attribute nsIDOMWindowInternal        window;
+
+  /* [replaceable] self */
   readonly attribute nsIDOMWindowInternal        self;
+
   readonly attribute nsIDOMNavigator             navigator;
   readonly attribute nsIDOMScreen                screen;
   readonly attribute nsIDOMHistory               history;

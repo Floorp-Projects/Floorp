@@ -874,6 +874,7 @@ jsval nsDOMClassInfo::sNavigator_id       = JSVAL_VOID;
 jsval nsDOMClassInfo::sDocument_id        = JSVAL_VOID;
 jsval nsDOMClassInfo::sWindow_id          = JSVAL_VOID;
 jsval nsDOMClassInfo::sFrames_id          = JSVAL_VOID;
+jsval nsDOMClassInfo::sSelf_id            = JSVAL_VOID;
 
 const JSClass *nsDOMClassInfo::sObjectClass   = nsnull;
 
@@ -972,6 +973,7 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSVAL_TO_STRING(sDocument_id,        cx, "document");
   SET_JSVAL_TO_STRING(sWindow_id,          cx, "window");
   SET_JSVAL_TO_STRING(sFrames_id,          cx, "frames");
+  SET_JSVAL_TO_STRING(sSelf_id,            cx, "self");
 
   return NS_OK;
 }
@@ -2798,6 +2800,7 @@ nsDOMClassInfo::ShutDown()
   sDocument_id        = JSVAL_VOID;
   sWindow_id          = JSVAL_VOID;
   sFrames_id          = JSVAL_VOID;
+  sSelf_id            = JSVAL_VOID;
 
   NS_IF_RELEASE(sXPConnect);
   NS_IF_RELEASE(sSecMan);
