@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="xul.css" type="text/css"?>
+<!DOCTYPE window>
+<!-- Simple sample interface for bringing up a nonmodal dialog -->
+<xul:window
+    xmlns:html="http://www.w3.org/TR/REC-html40"
+    xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    title = "Dialog creation sample">
+
+  <html:script>
+    function MakeDialog() {
+      var toolkitCore = GetToolkitCore();
+      if (toolkitCore)
+        toolkitCore.ShowWindow("resource:/res/samples/dexsimpledialog.xul",
+            window);
+    }
+    function ModalDialog() {
+      var toolkitCore = GetToolkitCore();
+      if (toolkitCore)
+        toolkitCore.ShowModalDialog("resource:/res/samples/dexsimpledialog.xul",
+            window);
+    }
+    function GetToolkitCore() {
+      var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
+      if (!toolkitCore) {
+        toolkitCore = new ToolkitCore();
+        if (toolkitCore)
+          toolkitCore.Init("ToolkitCore");
+      }
+      return toolkitCore;
+    }
+  </html:script>
+
+  <xul:toolbox> 
+    <xul:toolbar>
+      <!-- buttons temporarily have (inappropriate) images because of
+           a bug in titledbutton -->
+      <xul:titledbutton
+         src="resource:/res/toolbar/TB_Back.gif" align="bottom"
+         value="Make Dialog" onclick="MakeDialog()"
+         style="background-color:rgb(192,192,192);"/>
+      <xul:titledbutton
+         src="resource:/res/toolbar/TB_Back.gif" align="bottom"
+         value="Modal Dialog" onclick="ModalDialog()"
+         style="background-color:rgb(192,192,192);"/>
+    </xul:toolbar>
+  </xul:toolbox>
+</xul:window>
