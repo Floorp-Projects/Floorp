@@ -43,6 +43,7 @@
 #include "nsHTMLTags.h"
 #include "nsParserError.h"
 #include "nsString.h"
+#include <iostream.h>
 
 class nsScanner;
 
