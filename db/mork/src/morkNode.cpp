@@ -179,16 +179,16 @@ morkNode::OnDeleteAssert(void* ioAddress) // cannot operator delete()
 
 /*public non-poly*/ void
 morkNode::ZapOld(morkEnv* ev, nsIMdbHeap* ioHeap)
-  // relaces operator delete()
 {
   if ( this )
   {
     if ( this->IsNode() )
     {
+      mork_usage usage = mNode_Usage; // mNode_Usage before ~morkNode
       this->morkNode::~morkNode(); // first call polymorphic destructor
       if ( ioHeap ) // was this node heap allocated?
         ioHeap->Free(ev->AsMdbEnv(), this);
-      else if ( mNode_Usage == morkUsage_kPool )
+      else if ( usage == morkUsage_kPool ) // mNode_Usage before ~morkNode
       {
         morkHandle* h = (morkHandle*) this;
         if ( h->IsHandle() && h->GoodHandleTag() )
