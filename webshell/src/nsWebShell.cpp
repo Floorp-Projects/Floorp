@@ -137,7 +137,7 @@ static nsAutoString LinkCommand("linkclick");
 typedef enum {
    eCharsetReloadInit,
    eCharsetReloadRequested,
-   eCharsetReloadStopOrigional,
+   eCharsetReloadStopOrigional
 } eCharsetReloadState;
 
 class nsWebShell : public nsIWebShell,
