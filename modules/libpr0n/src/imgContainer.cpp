@@ -747,38 +747,95 @@ void imgContainer::BuildCompositeMask(gfxIImageFrame *aCompositingFrame, gfxIIma
     case gfxIFormats::RGB_A1:
     case gfxIFormats::BGR_A1:
       { 
-        
-        for(PRUint32 y=overlayYOffset, i=0; 
-            i<PRUint32(heightOverlay) && y<PRUint32(heightComposite);
-            y++, i++) {
-
-          PRInt32 offset;
+        const PRUint32 width  = PR_MIN(widthOverlay,(widthComposite-overlayXOffset));
+        const PRUint32 height = PR_MIN(heightOverlay,(heightComposite-overlayYOffset));
+        PRInt32 offset;
 
 // Windows and OS/2 have the funky bottom up data storage we need to account for
 #if defined(XP_WIN) || defined(XP_OS2)
-          offset = ((heightComposite - 1) * abprComposite) - y*abprComposite;
+        offset = ((heightComposite - 1) - overlayYOffset) * abprComposite;
 #else
-          offset = y*abprComposite;
+        offset = overlayYOffset*abprComposite;
 #endif
-          PRUint8* alphaLine = compositingAlphaData + offset;
+        PRUint8* alphaLine = compositingAlphaData + offset + (overlayXOffset>>3);
 
 // Windows and OS/2 have the funky bottom up data storage we need to account for
 #if defined(XP_WIN) || defined(XP_OS2)
-          offset = ((heightOverlay - 1) * abprOverlay) - i*abprOverlay;
+        offset = (heightOverlay - 1) * abprOverlay;
 #else
-          offset = i*abprOverlay;
+        offset = 0;
 #endif
-          PRUint8* overlayLine = overlayAlphaData + offset;
-          for (PRUint32 x=overlayXOffset, j=0; 
-               j<PRUint32(widthOverlay) && x<PRUint32(widthComposite); 
-               x++, j++) {
-              
-            if (overlayLine[j>>3] & (1<<((7-j)&0x7)))
-              alphaLine[x>>3] |= 1<<((7-x)&0x7); 
+        PRUint8* overlayLine = overlayAlphaData + offset;
+
+        /*
+          This is the number of pixels of offset between alpha and overlay
+          (the number of bits at the front of alpha to skip when starting
+          a row).
+          I.e:, for a mask_offset of 3:
+          (these are representations of bits)
+          overlay 'pixels':   76543210 hgfedcba
+          alpha:              xxx76543 210hgfed ...
+          where 'x' is data already in alpha
+          the first 5 pixels of overlay are or'd into the low 5 bits of alpha
+        */ 
+        PRUint8 mask_offset = (overlayXOffset & 0x7);
+
+        for(PRUint32 i=0; i < height; i++) {
+          PRUint8 pixels;
+          PRUint32 j;
+          // use locals to avoid keeping track of how much we need to add
+          // at the end of a line.  we don't really need this since we may
+          // be able to calculate the ending offsets, but it's simpler and
+          // cheap.
+          PRUint8 *localOverlay = overlayLine;
+          PRUint8 *localAlpha   = alphaLine;
+
+          for (j = width; j >= 8; j -= 8) {
+            // don't do in for(...) to avoid reference past end of buffer
+            pixels = *localOverlay++;
+
+            if (pixels == 0) {
+              // no bits to set - iterate and bump output pointer
+              localAlpha++;
+            }
+            else {
+              // for the last few bits of a line, we need to special-case it
+              if (mask_offset == 0) {
+                // simple case, no offset
+                *localAlpha++ |= pixels;
+              }
+              else {
+                *localAlpha++ |= (pixels >> mask_offset);
+                *localAlpha   |= (pixels << (8U-mask_offset));
+              }
+            }
           }
+          if (j != 0) {
+            // handle the end of the line, 1 to 7 pixels
+            pixels = *localOverlay++;
+            if (pixels != 0) {
+              // last few bits have to be handled more carefully if
+              // width is not a multiple of 8.
+            
+              // set bits we don't want to change to 0
+              pixels = (pixels >> (8U-j)) << (8U-j);
+              *localAlpha++ |= (pixels >> mask_offset);
+              // don't touch this byte unless we have bits for it
+              if (j > (8U - mask_offset))
+                *localAlpha |= (pixels << (8U-mask_offset));
+            }
+          }
+
+/// Windows and OS/2 have the funky bottom up data storage we need to account for
+#if defined(XP_WIN) || defined(XP_OS2)
+          alphaLine   -= abprComposite;
+          overlayLine -= abprOverlay;
+#else
+          alphaLine   += abprComposite;
+          overlayLine += abprOverlay;
+#endif
         }
       }
-
       break;
     default:
       break;
