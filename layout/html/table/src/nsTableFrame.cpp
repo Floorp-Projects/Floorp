@@ -3066,15 +3066,32 @@ nscoord nsTableFrame::GetTableContainerWidth(const nsReflowState& aReflowState)
         cell->GetStyleData(eStyleStruct_Position, ((nsStyleStruct *&)tablePosition));
         if (eStyleUnit_Coord == tablePosition->mWidth.GetUnit())
         {
-          parentWidth = tablePosition->mWidth.GetCoordValue();
-          // subtract out cell border and padding
-          cell->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
-          spacing->CalcBorderPaddingFor(cell, borderPadding);
-          parentWidth -= (borderPadding.right + borderPadding.left);
-          if (PR_TRUE==gsDebugNT)
-            printf("%p: found a cell frame %p with fixed coord width %d, returning parentWidth %d\n", 
-                   aReflowState.frame, cell, tablePosition->mWidth.GetCoordValue(), parentWidth);
-          break;
+          // first, get pointers to the table frame parents of the cell
+          nsIFrame *rowParent, *rowGroupParent;
+          nsTableFrame *tableParent;
+          cell->GetGeometricParent(rowParent);
+          rowParent->GetGeometricParent(rowGroupParent);
+          rowGroupParent->GetGeometricParent((nsIFrame *&)tableParent);
+          if (nsnull != tableParent->mColumnWidths)
+          {
+            PRInt32 colIndex = ((nsTableCellFrame *)cell)->GetColIndex();
+            parentWidth = tableParent->GetColumnWidth(colIndex);
+            break;
+          }
+          // if the column width of this cell is already computed, it overrides the attribute
+          // otherwise, use the attribute becauase the actual column width has not yet been computed
+          else
+          {
+            parentWidth = tablePosition->mWidth.GetCoordValue();
+            // subtract out cell border and padding
+            cell->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
+            spacing->CalcBorderPaddingFor(cell, borderPadding);
+            parentWidth -= (borderPadding.right + borderPadding.left);
+            if (PR_TRUE==gsDebugNT)
+              printf("%p: found a cell frame %p with fixed coord width %d, returning parentWidth %d\n", 
+                     aReflowState.frame, cell, tablePosition->mWidth.GetCoordValue(), parentWidth);
+            break;
+          }
         }
       }
       else
