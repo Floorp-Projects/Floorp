@@ -54,7 +54,6 @@ CPPSRCS =              \
 	nsDialog.cpp         \
 	nsLabel.cpp          \
 	nsToolkit.cpp        \
-	nsTimer.cpp        \
 	$(NULL)
 
 MODULE=raptor 

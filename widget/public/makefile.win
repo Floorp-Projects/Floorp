@@ -67,8 +67,6 @@ EXPORTS=nsui.h \
   nsIMenuButton.h \
   nsIImageButtonListener.h \
   nsIContentConnector.h \
-  nsITimer.h \
-  nsITimerCallback.h \
   $(NULL)
 
 
