@@ -887,7 +887,7 @@ SECStatus SEC_QuickDERDecodeItem(PRArenaPool* arena, void* dest,
         rv = SECFailure;
     }
 
-    /* temporarily copy the item until bug a new patch for 160805 is made */
+    /* temporarily copy the item until a new patch for 160805 is made */
     if (SECSuccess != SECITEM_CopyItem(arena, &newsrc, src))
     {
         rv = SECFailure;
