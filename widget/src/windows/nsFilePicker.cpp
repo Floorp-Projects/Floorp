@@ -310,6 +310,25 @@ NS_IMETHODIMP nsFilePicker::GetDefaultString(PRUnichar **aString)
 
 //-------------------------------------------------------------------------
 //
+// Set the filter index
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsFilePicker::GetFilterIndex(PRInt32 *aFilterIndex)
+{
+  // Windows' filter index is 1-based, we use a 0-based system.
+  *aFilterIndex = mSelectedType - 1;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsFilePicker::SetFilterIndex(PRInt32 aFilterIndex)
+{
+  // Windows' filter index is 1-based, we use a 0-based system.
+  mSelectedType = aFilterIndex + 1;
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
 // Set the display directory
 //
 //-------------------------------------------------------------------------

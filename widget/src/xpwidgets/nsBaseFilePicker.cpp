@@ -162,4 +162,19 @@ nsBaseFilePicker::AppendFilters(PRInt32 aFilterMask)
   return NS_OK;
 }
 
+//-------------------------------------------------------------------------
+//
+// Set the filter index
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsBaseFilePicker::GetFilterIndex(PRInt32 *aFilterIndex)
+{
+  *aFilterIndex = 0;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsBaseFilePicker::SetFilterIndex(PRInt32 aFilterIndex)
+{
+  return NS_OK;
+}
 
