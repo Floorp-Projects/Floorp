@@ -174,7 +174,7 @@ NS_IMETHODIMP nsISO2022JPToUnicode::Convert(PRUnichar * aDest,
             if (res != NS_OK) res = NS_ERROR_UNEXPECTED;
           } else {
             // find the end of this run
-            for (p=src; ((p < srcEnd) && (*p != 27)); p++);
+            for (p=src; ((p < srcEnd) && (*p != 27)); p++) {;}
             res = ConvertBuffer(&src, p, &dest, destEnd);
             if (res == NS_PARTIAL_MORE_INPUT) if (p == srcEnd) {
               mBuff[0] = *src++;
