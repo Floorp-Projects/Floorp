@@ -60,28 +60,8 @@ public:
                                nsIFrame*& aResult);
 
   virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
-  virtual nsContentAttr GetAttribute(nsIAtom* aAttribute,
-                                     nsHTMLValue& aResult) const;
-  virtual void UnsetAttribute(nsIAtom* aAttribute);
-
   virtual void MapAttributesInto(nsIStyleContext* aContext, 
                                  nsIPresContext* aPresContext);
-
-  PRBool IsMap() {
-    return mIsMap;
-  }
-
-  PRBool GetSuppress() {
-    return mSuppress;
-  }
-
-  PRPackedBool mIsMap;
-  PRUint8 mSuppress;
-  PRUint8 mAlign;
-  nsString* mAltText;
-  nsString* mSrc;
-  nsString* mLowSrc;
-  nsString* mUseMap;
 
 protected:
   virtual ~nsHTMLImage();
@@ -110,10 +90,6 @@ public:
                          nsIFrame** aFrame,
                          PRInt32& aCursor);
 
-  PRBool IsServerImageMap() {
-    return ((nsHTMLImage*)mContent)->IsMap();
-  }
-
 protected:
   virtual ~ImageFrame();
   void SizeOfWithoutThis(nsISizeOfHandler* aHandler) const;
@@ -131,6 +107,9 @@ protected:
                    const nsString& aURLSpec,
                    const nsString& aTargetSpec,
                    PRBool aClick);
+
+  PRBool IsServerImageMap();
+  PRIntn GetSuppress();
 };
 
 // Value's for mSuppress
@@ -439,8 +418,9 @@ nsIImageMap*
 ImageFrame::GetImageMap()
 {
   if (nsnull == mImageMap) {
-    nsHTMLImage* part = (nsHTMLImage*)mContent;
-    if (nsnull == part->mUseMap) {
+    nsAutoString usemap;
+    mContent->GetAttribute("usemap", usemap);
+    if (0 == usemap.Length()) {
       return nsnull;
     }
 
@@ -450,16 +430,15 @@ ImageFrame::GetImageMap()
       return nsnull;
     }
 
-    nsAutoString mapName(*part->mUseMap);
-    if (mapName.First() == '#') {
-      mapName.Cut(0, 1);
+    if (usemap.First() == '#') {
+      usemap.Cut(0, 1);
     }
     nsIHTMLDocument* hdoc;
     nsresult rv = doc->QueryInterface(kIHTMLDocumentIID, (void**)&hdoc);
     NS_RELEASE(doc);
     if (NS_OK == rv) {
       nsIImageMap* map;
-      rv = hdoc->GetImageMap(mapName, &map);
+      rv = hdoc->GetImageMap(usemap, &map);
       NS_RELEASE(hdoc);
       if (NS_OK == rv) {
         mImageMap = map;
@@ -486,6 +465,27 @@ ImageFrame::TriggerLink(nsIPresContext& aPresContext,
       handler->OnOverLink(this, aURLSpec, aTargetSpec);
     }
   }
+}
+
+PRBool
+ImageFrame::IsServerImageMap()
+{
+  nsAutoString ismap;
+  return eContentAttr_HasValue == mContent->GetAttribute("ismap", ismap);
+}
+
+PRIntn
+ImageFrame::GetSuppress()
+{
+  nsAutoString s;
+  if (eContentAttr_HasValue == mContent->GetAttribute("ismap", s)) {
+    if (s.EqualsIgnoreCase("true")) {
+      return SUPPRESS;
+    } else if (s.EqualsIgnoreCase("false")) {
+      return DONT_SUPPRESS;
+    }
+  }
+  return DEFAULT_SUPPRESS;
 }
 
 // XXX what should clicks on transparent pixels do?
@@ -538,13 +538,10 @@ ImageFrame::HandleEvent(nsIPresContext& aPresContext,
         }
       }
       else {
-        suppress = ((nsHTMLImage*)mContent)->GetSuppress();
+        suppress = GetSuppress();
         nsAutoString baseURL;/* XXX */
         nsAutoString src;
-        nsString* srcp = ((nsHTMLImage*)mContent)->mSrc;
-        if (nsnull != srcp) {
-          src.Append(*srcp);
-        }
+        mContent->GetAttribute("src", src);
         NS_MakeAbsoluteURL(docURL, baseURL, src, absURL);
 
         // Note: We don't subtract out the border/padding here to remain
@@ -611,16 +608,10 @@ ImageFrame::GetCursorAt(nsIPresContext& aPresContext,
 nsHTMLImage::nsHTMLImage(nsIAtom* aTag)
   : nsHTMLTagContent(aTag)
 {
-  mAlign = ALIGN_UNSET;
-  mSuppress = SUPPRESS_UNSET;
 }
 
 nsHTMLImage::~nsHTMLImage()
 {
-  if (nsnull != mAltText) delete mAltText;
-  if (nsnull != mSrc) delete mSrc;
-  if (nsnull != mLowSrc) delete mLowSrc;
-  if (nsnull != mUseMap) delete mUseMap;
 }
 
 NS_IMETHODIMP
@@ -636,201 +627,86 @@ nsHTMLImage::SizeOfWithoutThis(nsISizeOfHandler* aHandler) const
 {
 }
 
-void nsHTMLImage::SetAttribute(nsIAtom* aAttribute, const nsString& aString)
+void
+nsHTMLImage::SetAttribute(nsIAtom* aAttribute, const nsString& aString)
 {
+  nsHTMLValue val;
   if (aAttribute == nsHTMLAtoms::ismap) {
-    mIsMap = PR_TRUE;
-    return;
+    val.SetEmptyValue();
+    nsHTMLTagContent::SetAttribute(aAttribute, val);
   }
-  if (aAttribute == nsHTMLAtoms::usemap) {
-    nsAutoString src(aString);
-    src.StripWhitespace();
-    if (nsnull == mUseMap) {
-      mUseMap = new nsString(src);
-    } else {
-      *mUseMap = src;
-    }
-    return;
+  else if (aAttribute == nsHTMLAtoms::usemap) {
+    nsAutoString usemap(aString);
+    usemap.StripWhitespace();
+    val.SetStringValue(usemap);
+    nsHTMLTagContent::SetAttribute(aAttribute, val);
   }
-  if (aAttribute == nsHTMLAtoms::align) {
-    nsHTMLValue val;
+  else if (aAttribute == nsHTMLAtoms::align) {
     if (ParseAlignParam(aString, val)) {
-      mAlign = val.GetIntValue();
       // Reflect the attribute into the syle system
       nsHTMLTagContent::SetAttribute(aAttribute, val);
-    } else {
-      mAlign = ALIGN_UNSET;
     }
-    return;
+    else {
+      val.SetStringValue(aString);
+      nsHTMLTagContent::SetAttribute(aAttribute, val);
+    }
   }
-  if (aAttribute == nsHTMLAtoms::src) {
+  else if (aAttribute == nsHTMLAtoms::src) {
     nsAutoString src(aString);
     src.StripWhitespace();
-    if (nsnull == mSrc) {
-      mSrc = new nsString(src);
-    } else {
-      *mSrc = src;
-    }
-    return;
-  }
-  if (aAttribute == nsHTMLAtoms::lowsrc) {
-    nsAutoString src(aString);
-    src.StripWhitespace();
-    if (nsnull == mLowSrc) {
-      mLowSrc = new nsString(src);
-    } else {
-      *mLowSrc = src;
-    }
-    return;
-  }
-  if (aAttribute == nsHTMLAtoms::alt) {
-    if (nsnull == mAltText) {
-      mAltText = new nsString(aString);
-    } else {
-      *mAltText = aString;
-    }
-    return;
-  }
-  if (aAttribute == nsHTMLAtoms::suppress) {
-    if (aString.EqualsIgnoreCase("true")) {
-      mSuppress = SUPPRESS;
-    } else if (aString.EqualsIgnoreCase("false")) {
-      mSuppress = DONT_SUPPRESS;
-    } else {
-      mSuppress = DEFAULT_SUPPRESS;
-    }
-    return;
-  }
-
-  // Try other attributes
-  nsHTMLValue val;
-  if (ParseImageProperty(aAttribute, aString, val)) {
+    val.SetStringValue(src);
     nsHTMLTagContent::SetAttribute(aAttribute, val);
-    return;
-  }
-
-  // Use default attribute catching code
-  nsHTMLTagContent::SetAttribute(aAttribute, aString);
-}
-
-nsContentAttr nsHTMLImage::GetAttribute(nsIAtom* aAttribute,
-                                        nsHTMLValue& aResult) const
-{
-  nsContentAttr ca = eContentAttr_NotThere;
-  aResult.Reset();
-  if (aAttribute == nsHTMLAtoms::ismap) {
-    if (mIsMap) {
-      ca = eContentAttr_HasValue;
-    }
-  }
-  else if (aAttribute == nsHTMLAtoms::usemap) {
-    if (nsnull != mUseMap) {
-      aResult.SetStringValue(*mUseMap);
-      ca = eContentAttr_HasValue;
-    }
-  }
-  else if (aAttribute == nsHTMLAtoms::align) {
-    if (ALIGN_UNSET != mAlign) {
-      aResult.SetIntValue(mAlign, eHTMLUnit_Enumerated);
-      ca = eContentAttr_HasValue;
-    }
-  }
-  else if (aAttribute == nsHTMLAtoms::src) {
-    if (nsnull != mSrc) {
-      aResult.SetStringValue(*mSrc);
-      ca = eContentAttr_HasValue;
-    }
   }
   else if (aAttribute == nsHTMLAtoms::lowsrc) {
-    if (nsnull != mLowSrc) {
-      aResult.SetStringValue(*mLowSrc);
-      ca = eContentAttr_HasValue;
-    }
+    nsAutoString lowsrc(aString);
+    lowsrc.StripWhitespace();
+    val.SetStringValue(lowsrc);
+    nsHTMLTagContent::SetAttribute(aAttribute, val);
   }
   else if (aAttribute == nsHTMLAtoms::alt) {
-    if (nsnull != mAltText) {
-      aResult.SetStringValue(*mAltText);
-      ca = eContentAttr_HasValue;
-    }
+    val.SetStringValue(aString);
+    nsHTMLTagContent::SetAttribute(aAttribute, val);
   }
   else if (aAttribute == nsHTMLAtoms::suppress) {
-    if (SUPPRESS_UNSET != mSuppress) {
-      switch (mSuppress) {
-      case SUPPRESS:         aResult.SetIntValue(1, eHTMLUnit_Integer); break;
-      case DONT_SUPPRESS:    aResult.SetIntValue(0, eHTMLUnit_Integer); break;
-      case DEFAULT_SUPPRESS: aResult.SetEmptyValue(); break;
-      }
-      ca = eContentAttr_HasValue;
+    PRIntn suppress = DEFAULT_SUPPRESS;
+    if (aString.EqualsIgnoreCase("true")) {
+      suppress = SUPPRESS;
     }
+    else if (aString.EqualsIgnoreCase("false")) {
+      suppress = DONT_SUPPRESS;
+    }
+    val.SetIntValue(suppress, eHTMLUnit_Enumerated);
+    nsHTMLTagContent::SetAttribute(aAttribute, val);
+  }
+  else if (ParseImageProperty(aAttribute, aString, val)) {
+    nsHTMLTagContent::SetAttribute(aAttribute, val);
   }
   else {
-    ca = nsHTMLTagContent::GetAttribute(aAttribute, aResult);
-  }
-  return ca;
-}
-
-void nsHTMLImage::UnsetAttribute(nsIAtom* aAttribute)
-{
-  if (aAttribute == nsHTMLAtoms::ismap) {
-    mIsMap = PR_FALSE;
-  }
-  else if (aAttribute == nsHTMLAtoms::usemap) {
-    if (nsnull != mUseMap) {
-      delete mUseMap;
-      mUseMap = nsnull;
-    }
-  }
-  else if (aAttribute == nsHTMLAtoms::align) {
-    mAlign = ALIGN_UNSET;
-  }
-  else if (aAttribute == nsHTMLAtoms::src) {
-    if (nsnull != mSrc) {
-      delete mSrc;
-      mSrc = nsnull;
-    }
-  }
-  else if (aAttribute == nsHTMLAtoms::lowsrc) {
-    if (nsnull != mLowSrc) {
-      delete mLowSrc;
-      mSrc = nsnull;
-    }
-  }
-  else if (aAttribute == nsHTMLAtoms::alt) {
-    if (nsnull != mAltText) {
-      delete mAltText;
-      mAltText = nsnull;
-    }
-  }
-  else if (aAttribute == nsHTMLAtoms::suppress) {
-    mSuppress = SUPPRESS_UNSET;
-  }
-  else {
-    nsHTMLTagContent::UnsetAttribute(aAttribute);
+    // Use default attribute catching code
+    nsHTMLImageSuper::SetAttribute(aAttribute, aString);
   }
 }
 
-nsContentAttr nsHTMLImage::AttributeToString(nsIAtom* aAttribute,
-                                             nsHTMLValue& aValue,
-                                             nsString& aResult) const
+nsContentAttr
+nsHTMLImage::AttributeToString(nsIAtom* aAttribute,
+                               nsHTMLValue& aValue,
+                               nsString& aResult) const
 {
   nsContentAttr ca = eContentAttr_NotThere;
   if (aAttribute == nsHTMLAtoms::align) {
-    if ((eHTMLUnit_Enumerated == aValue.GetUnit()) &&
-        (ALIGN_UNSET != aValue.GetIntValue())) {
+    if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
       AlignParamToString(aValue, aResult);
       ca = eContentAttr_HasValue;
     }
   }
   else if (aAttribute == nsHTMLAtoms::suppress) {
-    if (SUPPRESS_UNSET != mSuppress) {
-      aResult.Truncate();
-      switch (mSuppress) {
-      case SUPPRESS:         aResult.Append("true"); break;
-      case DONT_SUPPRESS:    aResult.Append("false"); break;
-      case DEFAULT_SUPPRESS: break;
-      }
-      ca = eContentAttr_HasValue;
+    aResult.Truncate();
+    switch (aValue.GetIntValue()) {
+    case SUPPRESS:         aResult.Append("true"); break;
+    case DONT_SUPPRESS:    aResult.Append("false"); break;
+    case DEFAULT_SUPPRESS: break;
     }
+    ca = eContentAttr_HasValue;
   }
   else if (ImagePropertyToString(aAttribute, aValue, aResult)) {
     ca = eContentAttr_HasValue;
@@ -838,32 +714,38 @@ nsContentAttr nsHTMLImage::AttributeToString(nsIAtom* aAttribute,
   return ca;
 }
 
-void nsHTMLImage::MapAttributesInto(nsIStyleContext* aContext, 
-                                    nsIPresContext* aPresContext)
+void
+nsHTMLImage::MapAttributesInto(nsIStyleContext* aContext, 
+                               nsIPresContext* aPresContext)
 {
-  if (ALIGN_UNSET != mAlign) {
-    nsStyleDisplay* display = (nsStyleDisplay*)
-      aContext->GetMutableStyleData(eStyleStruct_Display);
-    nsStyleText* text = (nsStyleText*)
-      aContext->GetMutableStyleData(eStyleStruct_Text);
-    nsStyleSpacing* spacing = (nsStyleSpacing*)
-      aContext->GetMutableStyleData(eStyleStruct_Spacing);
-    float p2t = aPresContext->GetPixelsToTwips();
-    nsStyleCoord three(nscoord(p2t*3));
-    switch (mAlign) {
-    case NS_STYLE_TEXT_ALIGN_LEFT:
-      display->mFloats = NS_STYLE_FLOAT_LEFT;
-      spacing->mMargin.SetLeft(three);
-      spacing->mMargin.SetRight(three);
-      break;
-    case NS_STYLE_TEXT_ALIGN_RIGHT:
-      display->mFloats = NS_STYLE_FLOAT_RIGHT;
-      spacing->mMargin.SetLeft(three);
-      spacing->mMargin.SetRight(three);
-      break;
-    default:
-      text->mVerticalAlign.SetIntValue(mAlign, eStyleUnit_Enumerated);
-      break;
+  if (nsnull != mAttributes) {
+    nsHTMLValue value;
+    GetAttribute(nsHTMLAtoms::align, value);
+    if (value.GetUnit() == eHTMLUnit_Enumerated) {
+      PRUint8 align = value.GetIntValue();
+      nsStyleDisplay* display = (nsStyleDisplay*)
+        aContext->GetMutableStyleData(eStyleStruct_Display);
+      nsStyleText* text = (nsStyleText*)
+        aContext->GetMutableStyleData(eStyleStruct_Text);
+      nsStyleSpacing* spacing = (nsStyleSpacing*)
+        aContext->GetMutableStyleData(eStyleStruct_Spacing);
+      float p2t = aPresContext->GetPixelsToTwips();
+      nsStyleCoord three(nscoord(p2t*3));
+      switch (align) {
+      case NS_STYLE_TEXT_ALIGN_LEFT:
+        display->mFloats = NS_STYLE_FLOAT_LEFT;
+        spacing->mMargin.SetLeft(three);
+        spacing->mMargin.SetRight(three);
+        break;
+      case NS_STYLE_TEXT_ALIGN_RIGHT:
+        display->mFloats = NS_STYLE_FLOAT_RIGHT;
+        spacing->mMargin.SetLeft(three);
+        spacing->mMargin.SetRight(three);
+        break;
+      default:
+        text->mVerticalAlign.SetIntValue(align, eStyleUnit_Enumerated);
+        break;
+      }
     }
   }
   MapImagePropertiesInto(aContext, aPresContext);
