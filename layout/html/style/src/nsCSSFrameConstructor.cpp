@@ -4973,7 +4973,7 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsIPresShell*            aPresShell,
   // Make sure that we remain confined in the MathML world
   PRInt32 nameSpaceID;
   rv = aContent->GetNameSpaceID(nameSpaceID);
-  if (NS_FAILED(rv) || nameSpaceID != nsMathMLAtoms::nameSpaceID)
+  if (NS_FAILED(rv) || nameSpaceID != nsMathMLAtoms::nameSpaceID) 
     return NS_OK;
 
   // Initialize the new frame
@@ -4991,8 +4991,10 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsIPresShell*            aPresShell,
     isFixedPositioned = PR_TRUE;
   }
 
-       if (aTag == nsMathMLAtoms::mi_)
+  if (aTag == nsMathMLAtoms::mi_)
      rv = NS_NewMathMLmiFrame(aPresShell, &newFrame);
+  else if (aTag == nsMathMLAtoms::mn_)
+     rv = NS_NewMathMLmnFrame(aPresShell, &newFrame);
   else if (aTag == nsMathMLAtoms::mo_)
      rv = NS_NewMathMLmoFrame(aPresShell, &newFrame);
   else if (aTag == nsMathMLAtoms::mfrac_)
@@ -5027,7 +5029,6 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsIPresShell*            aPresShell,
            aTag == nsMathMLAtoms::mtext_  ||
            aTag == nsMathMLAtoms::merror_ ||
            aTag == nsMathMLAtoms::ms_     ||
-           aTag == nsMathMLAtoms::mn_     ||
            aTag == nsMathMLAtoms::none_   ||
            aTag == nsMathMLAtoms::mprescripts_ )
      rv = NS_NewMathMLmrowFrame(aPresShell, &newFrame);
