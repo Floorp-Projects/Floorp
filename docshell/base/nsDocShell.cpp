@@ -2462,7 +2462,7 @@ nsDocShell::LoadURI(const PRUnichar * aURI,
     }
     if (mURIFixup) {
         // Call the fixup object
-        rv = mURIFixup->CreateFixupURI(nsDependentString(aURI),
+        rv = mURIFixup->CreateFixupURI(NS_ConvertUCS2toUTF8(aURI),
                                        nsIURIFixup::FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP,
                                        getter_AddRefs(uri));
     }

@@ -932,7 +932,7 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
         if (doCreateAlternate)
         {
           newURI = nsnull;
-          mURIFixup->CreateFixupURI(NS_ConvertUTF8toUCS2(oldSpec),
+          mURIFixup->CreateFixupURI(oldSpec,
               nsIURIFixup::FIXUP_FLAGS_MAKE_ALTERNATE_URI, getter_AddRefs(newURI));
         }
       }

@@ -626,8 +626,7 @@ EmbedPrivate::SaveURI(char *aURI, char *fname)
 	{
 		nsIURI* uri;
 
-		nsCString   u(aURI);
-		mFixup->CreateFixupURI(ToNewUnicode(u), 0, &(uri));
+		mFixup->CreateFixupURI(nsDependentCString(aURI), 0, &(uri));
 		return (mWindow->SaveURI(uri, fname));
 	}
 #endif
