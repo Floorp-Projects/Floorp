@@ -55,7 +55,13 @@
    <script type="application/x-javascript">
       var labelLong = "&pref.dateformat.long;";      
       var labelShort = "&pref.dateformat.short;";
+      var addTitle = "&pref.categories.add.title;";
+      var editTitle = "&pref.categories.edit.title;";
+      var addPrompt = "&pref.categories.add.prompt;";
+   </script>
 
+   <script type="application/x-javascript">
+    <![CDATA[
       function calendarPrefOnLoad()
       {
          var now = new Date();
@@ -74,17 +80,83 @@
          var selectedIndex = dateFormatMenuList.selectedIndex;
          dateFormatMenuList.selectedIndex = -1;
          dateFormatMenuList.selectedIndex = selectedIndex;
-       }
-      
+      }
+
+      // An array to store the categoris in, because taking them from
+      // the listbox is unreliable. It might update too late.
+      var gCategoryList;
+
+      // not in onload, because that will be called too early
+      // if this panel is the default to open. and it is.
+      function Startup()
+      {
+        var categories = document.getElementById("categories").value;
+        gCategoryList = categories.split(",");
+        updateCategoryList();
+      }
+
+      function updateCategoryList()
+      {
+        document.getElementById("categories").value = gCategoryList.join(",");
+        var listbox = document.getElementById("catergorieslist")
+
+        listbox.clearSelection();
+        while (listbox.firstChild)
+            listbox.removeChild(listbox.firstChild);
+
+        for (var i = 0; i < gCategoryList.length; i++) {
+          listbox.appendItem(gCategoryList[i], gCategoryList[i]);
+        }
+      }
+
+      function addCategory()
+      {
+        var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                                      .getService(Components.interfaces.nsIPromptService);
+        var result = {value:null};
+        var dummy = { value: 0 };
+        if (promptService.prompt(null, addTitle, addPrompt,
+                                 result, null, dummy) &&
+            result.value.length) {
+          gCategoryList.push(result.value);
+          updateCategoryList();
+        }
+      }
+
+      function editCategory()
+      {
+        var list = document.getElementById("catergorieslist");
+        if (list.selectedIndex) {
+          var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                                        .getService(Components.interfaces.nsIPromptService);
+          var result = {value: gCategoryList[list.selectedIndex]};
+          var dummy = { value: 0 };
+
+          if (promptService.prompt(null, editTitle, addPrompt,
+                                   result, null, dummy) &&
+              result.value.length) {
+            gCategoryList.splice(list.selectedIndex, 1, result.value);
+          }
+        }
+        updateCategoryList();
+      }
+
+      function deleteCategory()
+      {
+        var list = document.getElementById("catergorieslist");
+        gCategoryList.splice(list.selectedIndex, 1);
+        updateCategoryList();
+      }
+
       /* 
       ** NOTE: 
       ** When you add a pref to this page, you have to add its ID to the following list.
       */
-       
       var _elementIDs = [
       "dateformat", "defaultlength", "defaultsnoozelength",
       "reloadonlaunch", "categories", "storeingmt"
        ];
+     ]]>
    </script>
 
    <groupbox align="start" orient="vertical">
@@ -114,10 +186,16 @@
       <checkbox id="reloadonlaunch" preftype="bool" prefstring="calendar.servers.reloadonlaunch" label="&pref.reloadonlaunch;" />
    </groupbox>
    <groupbox>
-      <caption label="&pref.categories.label;"/>
-         <vbox>
-		 <textbox id="categories" prefstring="calendar.categories.names"/>
-		 <description>&pref.categories.help.description;</description>
-      </vbox>
+     <caption label="&pref.categories.label;"/>
+     <hbox>
+       <listbox flex="1" id="catergorieslist"/>
+       <vbox>
+         <spacer flex="1"/>
+         <button label="Add" oncommand="addCategory()"/>
+         <button label="Edit" oncommand="editCategory()"/>
+         <button label="Remove" oncommand="deleteCategory()"/>
+       </vbox>
+     </hbox>
+     <textbox id="categories" prefstring="calendar.categories.names" hidden="true"/>
    </groupbox>
 </page>
