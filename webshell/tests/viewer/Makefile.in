@@ -88,7 +88,7 @@ endif
 EX_LIBS = \
 	-L$(DIST)/bin \
 	-lraptorbase    \
-	-lpng \
+	$(PNG_LIBS) \
 	-lpref \
 	-lraptorbase \
 	$(TOOLKIT_WIDGET_LIB) \
@@ -106,7 +106,7 @@ EX_LIBS = \
 	-lgophurl \
 	-lhttpurl \
 	-limg \
-	-ljpeg \
+	$(JPEG_LIBS) \
 	-ljs \
 	-ljsdom \
 	$(DIST)/lib/libjsdomcore_s.a \
@@ -128,15 +128,14 @@ EX_LIBS = \
 	-lutil \
 	-lxp \
 	-lxpcom \
-	-lzlib \
 	-lutil \
 	-lxp \
 	-lxpcom \
-	-lzlib \
+	$(ZLIB_LIBS) \
 	-lraptorplugin \
 	$(NULL)
 
-ifneq (,$(filter Linux SunOS,$(OS_ARCH)))
+ifneq (,$(filter FreeBSD Linux SunOS,$(OS_ARCH)))
 EX_LIBS += \
 	-lpwcac \
 	-ldbm \
