@@ -1174,6 +1174,59 @@ NSDocumentLoad(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
 }
 
 
+//
+// Native method GetAnonymousNodes
+//
+PR_STATIC_CALLBACK(JSBool)
+NSDocumentGetAnonymousNodes(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMDocument *privateThis = (nsIDOMDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMNSDocument> nativeThis;
+  nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kINSDocumentIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
+  nsIDOMNodeList* nativeRet;
+  nsCOMPtr<nsIDOMElement> b0;
+  // If there's no private data, this must be the prototype, so ignore
+  if (!nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSDOCUMENT_GETANONYMOUSNODES, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+    if (argc < 1) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+    }
+
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
+                                           kIElementIID,
+                                           NS_ConvertASCIItoUCS2("Element"),
+                                           cx,
+                                           argv[0])) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
+    }
+
+    result = nativeThis->GetAnonymousNodes(b0, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, obj, rval);
+  }
+
+  return JS_TRUE;
+}
+
+
 /***********************************************************************/
 //
 // class for Document
@@ -1235,6 +1288,7 @@ static JSFunctionSpec DocumentMethods[] =
   {"createElementWithNameSpace",          NSDocumentCreateElementWithNameSpace,     2},
   {"createRange",          NSDocumentCreateRange,     0},
   {"load",          NSDocumentLoad,     2},
+  {"getAnonymousNodes",          NSDocumentGetAnonymousNodes,     1},
   {0}
 };
 

@@ -43,6 +43,7 @@
 #include "nsIBindingManager.h"
 #include "nsINodeInfo.h"
 #include "nsIDOMDocumentEvent.h"
+#include "nsISupportsArray.h"
 
 class nsIEventListenerManager;
 class nsDOMStyleSheetList;
@@ -108,6 +109,19 @@ public:
 
 protected:
   nsIDocument* mDocument;
+};
+
+class nsAnonymousContentList : public nsGenericDOMNodeList 
+{
+public:
+  nsAnonymousContentList(nsISupportsArray* aElements);
+  virtual ~nsAnonymousContentList();
+
+  // nsIDOMNodeList interface
+  NS_DECL_IDOMNODELIST
+  
+private:
+  nsISupportsArray* mElements;
 };
 
 // Base class for our document implementations
@@ -366,6 +380,7 @@ public:
   NS_IMETHOD    GetWidth(PRInt32* aWidth);
   NS_IMETHOD    GetHeight(PRInt32* aHeight);
   NS_IMETHOD    Load (const nsString& aUrl, const nsString& aMimeType);
+  NS_IMETHOD    GetAnonymousNodes(nsIDOMElement* aElement, nsIDOMNodeList** aResult);
                      
   // nsIDOMNode interface
   NS_DECL_IDOMNODE

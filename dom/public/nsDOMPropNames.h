@@ -749,6 +749,7 @@
     "nsdocument.characterset", \
     "nsdocument.createelementwithnamespace", \
     "nsdocument.createrange", \
+    "nsdocument.getanonymousnodes", \
     "nsdocument.height", \
     "nsdocument.load", \
     "nsdocument.width", \

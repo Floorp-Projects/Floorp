@@ -90,6 +90,20 @@ nsRDFDOMNodeList::Create(nsRDFDOMNodeList** aResult)
     return NS_OK;
 }
 
+nsresult
+nsRDFDOMNodeList::CreateWithArray(nsISupportsArray* aArray, nsRDFDOMNodeList** aResult)
+{
+    nsRDFDOMNodeList* list = new nsRDFDOMNodeList();
+    if (! list)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    list->mElements = aArray;
+    NS_IF_ADDREF(aArray);
+
+    NS_ADDREF(list);
+    *aResult = list;
+    return NS_OK;
+}
 
 ////////////////////////////////////////////////////////////////////////
 // nsISupports interface

@@ -129,6 +129,22 @@ nsMenuFrame::nsMenuFrame(nsIPresShell* aShell):nsBoxFrame(aShell),
 } // cntr
 
 NS_IMETHODIMP
+nsMenuFrame::SetParent(const nsIFrame* aParent)
+{
+  nsresult rv = nsBoxFrame::SetParent(aParent);
+  nsIFrame* currFrame = (nsIFrame*)aParent;
+  while (!mMenuParent && currFrame) {
+    // Set our menu parent.
+    nsCOMPtr<nsIMenuParent> menuparent(do_QueryInterface(currFrame));
+    mMenuParent = menuparent.get();
+
+    currFrame->GetParent(&currFrame);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsMenuFrame::Init(nsIPresContext*  aPresContext,
                      nsIContent*      aContent,
                      nsIFrame*        aParent,

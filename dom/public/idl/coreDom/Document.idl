@@ -86,4 +86,5 @@ interface NSDocument {
 	 Range                     createRange();
 	 void                      load(in DOMString url,
 							        in DOMString mimeType);
+   NodeList getAnonymousNodes(in Element elt);
 };

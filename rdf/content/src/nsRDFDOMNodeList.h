@@ -43,6 +43,8 @@ private:
 
 public:
     static nsresult Create(nsRDFDOMNodeList** aResult);
+    static nsresult CreateWithArray(nsISupportsArray* aArray, nsRDFDOMNodeList** aResult);
+
     virtual ~nsRDFDOMNodeList(void);
 
     // nsISupports interface
