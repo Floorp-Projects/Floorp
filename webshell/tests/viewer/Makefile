@@ -86,6 +86,7 @@ EX_LIBS = \
 	$(DIST)/bin/libxpcom.so \
 	$(DIST)/bin/libzlib.so \
 	$(DIST)/bin/libnglcsslay_s.so \
+	$(DIST)/bin/libnglhtmlcon_s.so \
 	$(NULL)
 
 ifeq ($(OS_ARCH),Linux)
