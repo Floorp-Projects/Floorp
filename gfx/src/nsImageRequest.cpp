@@ -45,7 +45,7 @@ nsresult
 ImageRequestImpl::Init(IL_GroupContext *aGroupContext, 
 		       const char* aUrl, 
 		       nsIImageRequestObserver *aObserver,
-		       nscolor aBackgroundColor,
+		       nscolor* aBackgroundColor,
 		       PRUint32 aWidth, PRUint32 aHeight,
 		       PRUint32 aFlags)
 {
@@ -75,9 +75,12 @@ ImageRequestImpl::Init(IL_GroupContext *aGroupContext,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  bgcolor.red = NS_GET_R(aBackgroundColor);
-  bgcolor.green = NS_GET_G(aBackgroundColor);
-  bgcolor.blue = NS_GET_B(aBackgroundColor);
+  if (nsnull != aBackgroundColor)
+  {
+    bgcolor.red = NS_GET_R(*aBackgroundColor);
+    bgcolor.green = NS_GET_G(*aBackgroundColor);
+    bgcolor.blue = NS_GET_B(*aBackgroundColor);
+  }
   
   flags = ((aFlags & IL_HIGH_PRIORITY) ? nsImageLoadFlags_kHighPriority : 0) |
     ((aFlags & IL_STICKY) ? nsImageLoadFlags_kSticky : 0) |
@@ -92,7 +95,8 @@ ImageRequestImpl::Init(IL_GroupContext *aGroupContext,
       return result;
   }
 
-  mImageReq = IL_GetImage(aUrl, aGroupContext, mXPObserver, &bgcolor,
+  mImageReq = IL_GetImage(aUrl, aGroupContext, mXPObserver,
+                          nsnull == aBackgroundColor ? nsnull : &bgcolor,
                           aWidth, aHeight, flags, (void *)net_cx);
 			  
   if (mImageReq == nsnull) {

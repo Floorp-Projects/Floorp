@@ -962,9 +962,10 @@ void nsViewer::LoadThrobberImages()
   {
     sprintf(url, THROBBER_AT, cnt);
     ThrobObserver *observer = new ThrobObserver();
+    nscolor bgcolor = NS_RGB(0, 0, 0);
     mThrobberImages->InsertElementAt(mThrobberImageGroup->GetImage(url,
                                                                    observer,
-                                                                   NS_RGB(0, 0, 0),
+                                                                   &bgcolor,
                                                                    THROBBER_WIDTH - 2,
                                                                    THROBBER_HEIGHT - 2, 0), cnt);
   }
