@@ -15,6 +15,15 @@
 			<key>CommandClass</key>
 			<string>CHGetURLCommand</string>
 		</dict>
+		<key>OpenURL</key>
+		<dict>
+			<key>AppleEventClassCode</key>
+			<string>WWW!</string>
+			<key>AppleEventCode</key>
+			<string>OURL</string>
+			<key>CommandClass</key>
+			<string>CHGetURLCommand</string>
+		</dict>
 	</dict>
 	<key>Name</key>
 	<string>Navigator</string>
