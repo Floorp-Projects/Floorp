@@ -32,7 +32,7 @@
 #define nsLineLayout_h___
 
 #include "nsFrame.h"
-#include "nsVoidArray.h"
+#include "nsDeque.h"
 #include "nsLineBox.h"
 #include "nsBlockReflowState.h"
 
@@ -193,17 +193,17 @@ public:
   }
 
   void RecordWordFrame(nsIFrame* aWordFrame) {
-    mWordFrames.AppendElement(aWordFrame);
+    mWordFrames.Push(aWordFrame);
   }
 
   PRBool InWord() const {
-    return 0 != mWordFrames.Count();
+    return 0 != mWordFrames.GetSize();
   }
 
   void ForgetWordFrame(nsIFrame* aFrame);
 
   void ForgetWordFrames() {
-    mWordFrames.Clear();
+    mWordFrames.Empty();
   }
 
   nsIFrame* FindNextText(nsIPresContext* aPresContext, nsIFrame* aFrame);
@@ -285,7 +285,7 @@ protected:
 
   PRUint8 mPlacedFloaters;
   PRInt32 mTotalPlacedFrames;
-  nsAutoVoidArray mWordFrames;
+  nsDeque mWordFrames;
 
   nscoord mTopEdge;
   nscoord mBottomEdge;
