@@ -28,14 +28,12 @@ REQUIRES	= xpcom \
 		  widget \
 		  necko \
 		  uconv \
-		  docshell \
 		  pref \
 		  timer \
 		  dom \
 		  intl \
 		  webshell \
 		  windowwatcher \
-		  raptor \
 		  $(NULL)
 
 CPP_OBJS=                               \

@@ -35,7 +35,6 @@ REQUIRES	= xpcom \
 		  widget \
 		  necko \
 		  uconv \
-		  docshell \
 		  pref \
 		  timer \
 		  dom \

@@ -49,12 +49,11 @@
 #include "nsCRT.h"
 #include "nsFileStream.h"
 #include "nsIComponentManager.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsIDOMWindow.h"
 #include "nsIObserverService.h"
 #include "nsIRDFContainer.h"
 #include "nsIRDFContainerUtils.h"
 #include "nsIRDFService.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIServiceManager.h"
 #include "nsRDFCID.h"
 #include "nsSpecialSystemDirectory.h"
@@ -77,8 +76,6 @@
 #include "nsISound.h"
 #include "nsIPrompt.h"
 #include "nsIWindowWatcher.h"
-#include "nsAppShellCIDs.h"
-#include "nsIAppShellService.h"
 #include "nsIWebShell.h"
 #include "nsWidgetsCID.h"
 #include "nsIAppShell.h"
@@ -99,7 +96,6 @@
 #include "nsIPref.h"
 
 // Interfaces Needed
-#include "nsIDocShell.h"
 #include "nsIXULWindow.h"
 
 nsIRDFResource		*kNC_IEFavoritesRoot;
@@ -155,7 +151,6 @@ static NS_DEFINE_CID(kRDFContainerCID,            NS_RDFCONTAINER_CID);
 static NS_DEFINE_CID(kRDFContainerUtilsCID,       NS_RDFCONTAINERUTILS_CID);
 static NS_DEFINE_CID(kIOServiceCID,		  NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-static NS_DEFINE_CID(kAppShellServiceCID,         NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kPrefCID,                    NS_PREF_CID);
 static NS_DEFINE_IID(kSoundCID,                   NS_SOUND_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID,     NS_STRINGBUNDLESERVICE_CID);
@@ -2284,7 +2279,7 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
 			}
 
 			// update icon?
-			if (schedule.Find(NS_ConvertASCIItoUCS2("icon"), PR_TRUE, 0) >= 0)
+			if (schedule.Find(NS_LITERAL_STRING("icon").get(), PR_TRUE, 0) >= 0)
 			{
 				nsAutoString		statusStr;
 				statusStr.AssignWithConversion("new");
@@ -2307,7 +2302,7 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
 			}
 			
 			// play a sound?
-			if (schedule.Find(NS_ConvertASCIItoUCS2("sound"), PR_TRUE, 0) >= 0)
+			if (schedule.Find(NS_LITERAL_STRING("sound").get(), PR_TRUE, 0) >= 0)
 			{
 				nsCOMPtr<nsISound>	soundInterface;
 				rv = nsComponentManager::CreateInstance(kSoundCID,
@@ -2323,7 +2318,7 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
 			PRBool		openURLFlag = PR_FALSE;
 
 			// show an alert?
-			if (schedule.Find(NS_ConvertASCIItoUCS2("alert"), PR_TRUE, 0) >= 0)
+			if (schedule.Find(NS_LITERAL_STRING("alert").get(), PR_TRUE, 0) >= 0)
 			{
 				nsCOMPtr<nsIInterfaceRequestor> interfaces;
 				nsCOMPtr<nsIPrompt> prompter;
@@ -2400,10 +2395,8 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
 			
 			// open the URL in a new window?
 			if ((openURLFlag == PR_TRUE) ||
-				(schedule.Find(NS_ConvertASCIItoUCS2("open"), PR_TRUE, 0) >= 0))
+				(schedule.Find(NS_LITERAL_STRING("open").get(), PR_TRUE, 0) >= 0))
 			{
-				nsCOMPtr<nsIAppShellService> appShell = 
-				         do_GetService(kAppShellServiceCID, &rv);
 				if (NS_SUCCEEDED(rv))
 				{
 					nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
