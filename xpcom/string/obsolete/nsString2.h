@@ -990,6 +990,11 @@ class NS_COM NS_ConvertASCIItoUCS2
 #endif
 
 #ifdef NEW_STRING_APIS
+      operator const PRUnichar*() const
+        {
+          return GetUnicode();
+        }
+
       operator nsLiteralString() const
         {
           return nsLiteralString(mUStr, mLength);
@@ -1029,13 +1034,24 @@ class NS_COM NS_ConvertUTF8toUCS2
   {
     public:
       NS_ConvertUTF8toUCS2( const char* aCString )
-        { Init( aCString, ~PRUint32(0) /* MAXINT */ ); }
+        {
+          Init( aCString, ~PRUint32(0) /* MAXINT */ );
+        }
 
       NS_ConvertUTF8toUCS2( const char* aCString, PRUint32 aLength )
-        { Init( aCString, aLength ); }
+        {
+          Init( aCString, aLength );
+        }
 
       NS_ConvertUTF8toUCS2( char aChar )
-        { Init( &aChar, 1 ); }
+        {
+          Init( &aChar, 1 );
+        }
+
+      operator const PRUnichar*() const
+        {
+          return GetUnicode();
+        }
 
     protected:
       void Init( const char* aCString, PRUint32 aLength );
