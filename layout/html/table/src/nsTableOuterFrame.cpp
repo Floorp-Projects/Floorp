@@ -99,13 +99,13 @@ NS_IMETHODIMP nsTableOuterFrame::SetInitialChildList(nsIPresContext& aPresContex
                                                      nsIAtom*        aListName,
                                                      nsIFrame*       aChildList)
 {
-  mFirstChild = aChildList;
+  mFrames.SetFrames(aChildList);
 
   // Set our internal member data
-  mInnerTableFrame = mFirstChild;
+  mInnerTableFrame = aChildList;
   //XXX this should go through the child list looking for a displaytype==caption
-  if (2 == LengthOf(mFirstChild)) {
-    mFirstChild->GetNextSibling(mCaptionFrame);
+  if (2 == mFrames.GetLength()) {
+    aChildList->GetNextSibling(mCaptionFrame);
   }
 
   return NS_OK;
@@ -142,7 +142,7 @@ nsresult nsTableOuterFrame::RecoverState(OuterTableReflowState& aReflowState,
 #if 0
   // Get aKidFrame's previous sibling
   nsIFrame* prevKidFrame = nsnull;
-  for (nsIFrame* frame = mFirstChild; frame != aKidFrame;) {
+  for (nsIFrame* frame = mFrames.FirstChild(); frame != aKidFrame;) {
     prevKidFrame = frame;
     frame->GetNextSibling(frame);
   }
@@ -909,7 +909,7 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext& aPresContext,
     }
 
     // At this point, we must have an inner table frame, and we might have a caption
-    NS_ASSERTION(nsnull != mFirstChild, "no children");
+    NS_ASSERTION(mFrames.NotEmpty(), "no children");
     NS_ASSERTION(nsnull != mInnerTableFrame, "no mInnerTableFrame");
 
     // Compute the width to use for the table. In the case of an auto sizing
@@ -1119,7 +1119,7 @@ NS_METHOD nsTableOuterFrame::VerifyTree() const
  * @param   aChild child this child's next-in-flow
  * @return  PR_TRUE if successful and PR_FALSE otherwise
  */
-PRBool nsTableOuterFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext, nsIFrame* aChild)
+void nsTableOuterFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext, nsIFrame* aChild)
 {
   NS_PRECONDITION(IsChild(aChild), "bad geometric parent");
 
@@ -1141,24 +1141,14 @@ PRBool nsTableOuterFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext, n
     parent->DeleteChildsNextInFlow(aPresContext, nextInFlow);
   }
 
-#ifdef NS_DEBUG
-  PRInt32   childCount;
-  nsIFrame* firstChild;
-
-  nextInFlow->FirstChild(nsnull, firstChild);
-  childCount = LengthOf(firstChild);
-
-  NS_ASSERTION(childCount == 0, "deleting !empty next-in-flow");
-
-  NS_ASSERTION((0 == childCount) && (nsnull == firstChild), "deleting !empty next-in-flow");
-#endif
-
   // Disconnect the next-in-flow from the flow list
   nextInFlow->BreakFromPrevFlow();
 
   // Take the next-in-flow out of the parent's child list
-  if (parent->mFirstChild == nextInFlow) {
-    nextInFlow->GetNextSibling(parent->mFirstChild);
+  if (parent->mFrames.FirstChild() == nextInFlow) {
+    nsIFrame* nextSibling;
+    nextInFlow->GetNextSibling(nextSibling);
+    parent->mFrames.SetFrames(nextSibling);
 
   } else {
     nsIFrame* nextSibling;
@@ -1183,8 +1173,6 @@ PRBool nsTableOuterFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext, n
   aChild->GetNextInFlow(nextInFlow);
   NS_POSTCONDITION(nsnull == nextInFlow, "non null next-in-flow");
 #endif
-
-  return PR_TRUE;
 }
 
 
@@ -1235,14 +1223,15 @@ NS_METHOD nsTableOuterFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFi
     fputs("\n", out);
   }
   // Output the children
-  if (nsnull != mFirstChild) {
+  if (mFrames.NotEmpty()) {
     if (PR_TRUE==outputMe)
     {
       if (0 != mState) {
         fprintf(out, " [state=%08x]\n", mState);
       }
     }
-    for (nsIFrame* child = mFirstChild; child; child->GetNextSibling(child)) {
+    for (nsIFrame* child = mFrames.FirstChild(); child;
+         child->GetNextSibling(child)) {
       child->List(out, aIndent + 1, aFilter);
     }
   } else {

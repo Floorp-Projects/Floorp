@@ -688,7 +688,7 @@ private:
   nsCellMap*   mCellMap;            // maintains the relationships between rows, cols, and cells
   ColumnInfoCache *mColCache;       // cached information about the table columns
   nsITableLayoutStrategy * mTableLayoutStrategy; // the layout strategy for this frame
-  nsIFrame*    mColGroups;          // the list of colgroup frames
+  nsFrameList  mColGroups;          // the list of colgroup frames
   nscoord      mDefaultCellSpacingX;// the default cell spacing X for this table
   nscoord      mDefaultCellSpacingY;// the default cell spacing X for this table
   nscoord      mDefaultCellPadding; // the default cell padding for this table

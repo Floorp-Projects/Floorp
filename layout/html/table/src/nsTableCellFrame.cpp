@@ -257,7 +257,8 @@ void  nsTableCellFrame::VerticallyAlignChild()
   }
   nscoord height = mRect.height;
   nsRect kidRect;  
-  mFirstChild->GetRect(kidRect);
+  nsIFrame* firstKid = mFrames.FirstChild();
+  firstKid->GetRect(kidRect);
   nscoord childHeight = kidRect.height;
   
 
@@ -284,7 +285,7 @@ void  nsTableCellFrame::VerticallyAlignChild()
     case NS_STYLE_VERTICAL_ALIGN_MIDDLE:
       kidYTop = height/2 - childHeight/2;
   }
-  mFirstChild->MoveTo(kidRect.x, kidYTop);
+  firstKid->MoveTo(kidRect.x, kidYTop);
 }
 
 PRInt32 nsTableCellFrame::GetRowSpan()
@@ -418,16 +419,17 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
   nsHTMLReflowMetrics kidSize(pMaxElementSize);
   kidSize.width=kidSize.height=kidSize.ascent=kidSize.descent=0;
   SetPriorAvailWidth(aReflowState.availableWidth);
-  nsHTMLReflowState kidReflowState(aPresContext, mFirstChild, aReflowState,
+  nsIFrame* firstKid = mFrames.FirstChild();
+  nsHTMLReflowState kidReflowState(aPresContext, firstKid, aReflowState,
                                    availSize);
 
-  ReflowChild(mFirstChild, aPresContext, kidSize, kidReflowState, aStatus);
+  ReflowChild(firstKid, aPresContext, kidSize, kidReflowState, aStatus);
 #ifdef NS_DEBUG
   if (kidSize.width > availSize.width)
   {
     printf("WARNING: cell ");
     nsAutoString tmp;
-    mFirstChild->GetFrameName(tmp);
+    firstKid->GetFrameName(tmp);
     fputs(tmp, stdout);
     printf(" content returned desired width %d given avail width %d\n",
             kidSize.width, availSize.width);
@@ -484,7 +486,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
   //////////////////////////////// HACK //////////////////////////////
   kidSize.width = PR_MIN(kidSize.width, availSize.width);
   ///////////////////////////// END HACK /////////////////////////////
-  mFirstChild->SetRect(nsRect(leftInset, topInset,
+  firstKid->SetRect(nsRect(leftInset, topInset,
                            kidSize.width, kidSize.height));  
     
   // Return our size and our result
@@ -573,8 +575,9 @@ nsTableCellFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
   nsIFrame*         childList;
   nsIStyleContext*  kidSC;
 
-  mFirstChild->GetStyleContext(kidSC);
-  mFirstChild->CreateContinuingFrame(aPresContext, cf, kidSC, childList);
+  nsIFrame* firstKid = mFrames.FirstChild();
+  firstKid->GetStyleContext(kidSC);
+  firstKid->CreateContinuingFrame(aPresContext, cf, kidSC, childList);
   NS_RELEASE(kidSC);
   cf->SetInitialChildList(aPresContext, nsnull, childList);
   return NS_OK;
@@ -1065,14 +1068,15 @@ NS_METHOD nsTableCellFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFil
     fputs("\n", out);
   }
   // Output the children
-  if (nsnull != mFirstChild) {
+  if (mFrames.NotEmpty()) {
     if (PR_TRUE==outputMe)
     {
       if (0 != mState) {
         fprintf(out, " [state=%08x]\n", mState);
       }
     }
-    for (nsIFrame* child = mFirstChild; child; child->GetNextSibling(child)) {
+    for (nsIFrame* child = mFrames.FirstChild(); child;
+         child->GetNextSibling(child)) {
       child->List(out, aIndent + 1, aFilter);
     }
   } else {

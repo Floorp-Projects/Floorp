@@ -144,7 +144,7 @@ protected:
    * @param   aChild child this child's next-in-flow
    * @return  PR_TRUE if successful and PR_FALSE otherwise
    */
-  PRBool DeleteChildsNextInFlow(nsIPresContext& aPresContext, nsIFrame* aChild);
+  virtual void DeleteChildsNextInFlow(nsIPresContext& aPresContext, nsIFrame* aChild);
 
 // begin Incremental Reflow methods
   /** prepare aReflowState for an incremental reflow */

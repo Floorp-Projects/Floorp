@@ -356,21 +356,23 @@ nsLabelFrame::SetInitialChildList(nsIPresContext& aPresContext,
   mInline = (NS_STYLE_DISPLAY_BLOCK != styleDisplay->mDisplay);
 
   PRUint8 flags = (mInline) ? NS_BLOCK_SHRINK_WRAP : 0;
-  NS_NewAreaFrame(mFirstChild, flags);
+  nsIFrame* areaFrame;
+  NS_NewAreaFrame(areaFrame, flags);
+  mFrames.SetFrames(areaFrame);
 
   // Resolve style and initialize the frame
   nsIStyleContext* styleContext =
     aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::labelContentPseudo, mStyleContext);
-  mFirstChild->Init(aPresContext, mContent, this, styleContext);
+  mFrames.FirstChild()->Init(aPresContext, mContent, this, styleContext);
   NS_RELEASE(styleContext);                                           
 
   // Set the geometric and content parent for each of the child frames
   for (nsIFrame* frame = aChildList; nsnull != frame; frame->GetNextSibling(frame)) {
-    frame->SetParent(mFirstChild);
+    frame->SetParent(mFrames.FirstChild());
   }
 
   // Queue up the frames for the body frame
-  return mFirstChild->SetInitialChildList(aPresContext, nsnull, aChildList);
+  return mFrames.FirstChild()->SetInitialChildList(aPresContext, nsnull, aChildList);
 }
 
 NS_IMETHODIMP
@@ -426,8 +428,9 @@ nsLabelFrame::Reflow(nsIPresContext& aPresContext,
   nsSize availSize(aReflowState.availableWidth, aReflowState.availableHeight);
 
   // reflow the child
-  nsHTMLReflowState reflowState(aPresContext, mFirstChild, aReflowState, availSize);
-  ReflowChild(mFirstChild, aPresContext, aDesiredSize, reflowState, aStatus);
+  nsIFrame* firstKid = mFrames.FirstChild();
+  nsHTMLReflowState reflowState(aPresContext, firstKid, aReflowState, availSize);
+  ReflowChild(firstKid, aPresContext, aDesiredSize, reflowState, aStatus);
 
   // get border and padding
   const nsStyleSpacing* spacing =
@@ -437,7 +440,7 @@ nsLabelFrame::Reflow(nsIPresContext& aPresContext,
 
   // Place the child
   nsRect rect = nsRect(borderPadding.left, borderPadding.top, aDesiredSize.width, aDesiredSize.height);
-  mFirstChild->SetRect(rect);
+  firstKid->SetRect(rect);
 
   // add in our border and padding to the size of the child
   aDesiredSize.width  += borderPadding.left + borderPadding.right;
