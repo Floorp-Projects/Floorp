@@ -128,9 +128,12 @@ public:
     */
     NS_IMETHOD       ReleaseTransport(const char* i_Host, PRUint32 i_Port, nsIChannel* i_pTrans);
 
-    NS_IMETHOD NewEncodeStream(nsIInputStream *rawStream, nsIInputStream **_retval);
-    NS_IMETHOD NewDecodeStream(nsIInputStream *encodedStream, nsIInputStream **_retval);
-    NS_IMETHOD NewPostDataStream(PRBool isFile, const char *data, nsIInputStream **_retval);
+    NS_IMETHOD NewEncodeStream(nsIInputStream *rawStream, PRUint32 encodeFlags,
+                               nsIInputStream **_retval);
+    NS_IMETHOD NewDecodeStream(nsIInputStream *encodedStream, PRUint32 decodeFlags,
+                               nsIInputStream **_retval);
+    NS_IMETHOD NewPostDataStream(PRBool isFile, const char *data, PRUint32 encodeFlags,
+                                 nsIInputStream **_retval);
 
 protected:
     // None

@@ -305,19 +305,21 @@ nsHTTPHandler::FollowRedirects(PRBool bFollow)
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::NewEncodeStream(nsIInputStream *rawStream, nsIInputStream **result)
+nsHTTPHandler::NewEncodeStream(nsIInputStream *rawStream, PRUint32 encodeFlags,
+                               nsIInputStream **result)
 {
-    return nsHTTPEncodeStream::Create(rawStream, result);
+    return nsHTTPEncodeStream::Create(rawStream, encodeFlags, result);
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::NewDecodeStream(nsIInputStream *encodedStream, nsIInputStream **result)
+nsHTTPHandler::NewDecodeStream(nsIInputStream *encodedStream, PRUint32 decodeFlags,
+                               nsIInputStream **result)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::NewPostDataStream(PRBool isFile, const char *data,
+nsHTTPHandler::NewPostDataStream(PRBool isFile, const char *data, PRUint32 encodeFlags,
                                  nsIInputStream **result)
 {
     nsresult rv;
@@ -332,7 +334,7 @@ nsHTTPHandler::NewPostDataStream(PRBool isFile, const char *data,
         NS_RELEASE(in);
         if (NS_FAILED(rv)) return rv;
 
-        rv = NewEncodeStream(rawStream, result);
+        rv = NewEncodeStream(rawStream, nsIHTTPProtocolHandler::ENCODE_NORMAL, result);
         NS_RELEASE(rawStream);
         return rv;
     }

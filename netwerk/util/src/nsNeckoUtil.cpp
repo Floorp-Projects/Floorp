@@ -136,7 +136,7 @@ NS_NewLoadGroup(nsISupports* outer, nsIStreamObserver* observer,
 }
 
 nsresult
-NS_NewPostDataStream(PRBool isFile, const char *data,
+NS_NewPostDataStream(PRBool isFile, const char *data, PRUint32 encodeFlags,
                      nsIInputStream **result)
 {
     nsresult rv;
@@ -150,7 +150,7 @@ NS_NewPostDataStream(PRBool isFile, const char *data,
     nsCOMPtr<nsIHTTPProtocolHandler> http = do_QueryInterface(handler, &rv);
     if (NS_FAILED(rv)) return rv;
     
-    return http->NewPostDataStream(isFile, data, result);
+    return http->NewPostDataStream(isFile, data, encodeFlags, result);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -20,6 +20,8 @@
 #define nsHTTPEncodeStream_h__
 
 #include "nsIInputStream.h"
+#include "nsString.h"
+#include "nsCOMPtr.h"
 
 class nsHTTPEncodeStream : public nsIInputStream
 {
@@ -38,12 +40,18 @@ public:
     virtual ~nsHTTPEncodeStream();
 
     static NS_METHOD
-    Create(nsIInputStream *rawStream, nsIInputStream **result);
+    Create(nsIInputStream *rawStream, PRUint32 flags, 
+           nsIInputStream **result);
 
-    nsresult Init(nsIInputStream *rawStream);
+    nsresult Init(nsIInputStream *rawStream, PRUint32 flags);
+    nsresult GetData(char* buf, PRUint32 bufLen, PRUint32 *readCount);
+    nsresult PushBack(nsString& data);
 
 protected:
-    nsIInputStream*     mInput;
+    nsCOMPtr<nsIInputStream>    mInput;
+    PRUint32                    mFlags;
+    nsString                    mPushBackBuffer;
+    PRBool                      mLastLineComplete;
 };
 
 #endif // nsHTTPEncodeStream_h__
