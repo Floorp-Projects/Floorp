@@ -82,7 +82,8 @@ if (! defined $FORM{'product'}) {
 
     # We don't want people to be able to view
     # reports for products they don't have permissions for...
-    if (!CanEnterProduct($FORM{'product'})) {
+    if (($FORM{'product'} ne '-All-')
+      && (!CanEnterProduct($FORM{'product'}))) {
         ThrowUserError("report_access_denied");
     }
           
