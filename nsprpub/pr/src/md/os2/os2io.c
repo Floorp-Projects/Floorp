@@ -253,6 +253,12 @@ _PR_MD_WRITE(PRFileDesc *fd, const void *buf, PRInt32 len)
         return -1;
     }
 
+    if (len != bytes) {
+        rv = ERROR_DISK_FULL;
+        _PR_MD_MAP_WRITE_ERROR(rv);
+        return -1;
+    }
+
     return bytes;
 } /* --- end _PR_MD_WRITE() --- */
 
