@@ -89,6 +89,9 @@ public:
 
 	NS_IMETHOD PerformBiff();
 
+	NS_IMETHOD GetUnverifiedFolders(nsISupportsArray *aFolderArray, PRInt32 *aNumUnverifiedFolders);
+
+
 private:
     nsresult CreateImapConnection (nsIEventQueue* aEventQueue,
                                    nsIImapUrl* aImapUrl,
@@ -491,4 +494,22 @@ nsresult NS_NewImapIncomingServer(const nsIID& iid,
     return server->QueryInterface(iid, result);
 }
 
+
+NS_IMETHODIMP nsImapIncomingServer::GetUnverifiedFolders(nsISupportsArray *aFoldersArray, PRInt32 *aNumUnverifiedFolders)
+{
+
+	if (!aFoldersArray && !aNumUnverifiedFolders)
+		return NS_ERROR_NULL_POINTER;
+
+	nsCOMPtr<nsIFolder> rootFolder;
+	nsresult rv = GetRootFolder(getter_AddRefs(rootFolder));
+	if(NS_SUCCEEDED(rv))
+	{
+		nsCOMPtr<nsIMsgFolder> rootMsgFolder = do_QueryInterface(rootFolder);
+		if(rootMsgFolder)
+		{
+		}
+	}
+	return NS_OK;
+}
 

@@ -2994,7 +2994,7 @@ SetFolderAdminURLProxyEvent::HandleEvent()
 SetCopyResponseUidProxyEvent::SetCopyResponseUidProxyEvent(
     nsImapExtensionSinkProxy* aProxy, nsMsgKeyArray* aKeyArray,
     const char* msgIdString, nsISupports* copyState) :
-    nsImapExtensionSinkProxyEvent(aProxy), m_msgIdString(msgIdString, eOneByte)
+    nsImapExtensionSinkProxyEvent(aProxy), m_msgIdString(msgIdString)
 {
     NS_ASSERTION (aKeyArray, "Oops... a null key array");
     if (aKeyArray)

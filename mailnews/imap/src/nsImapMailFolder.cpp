@@ -87,13 +87,16 @@ static NS_DEFINE_CID(kCopyMessageStreamListenerCID, NS_COPYMESSAGESTREAMLISTENER
 #define FOUR_K 4096
 
 nsImapMailFolder::nsImapMailFolder() :
-    m_initialized(PR_FALSE),m_haveDiscoverAllFolders(PR_FALSE),
+    m_initialized(PR_FALSE),m_haveDiscoveredAllFolders(PR_FALSE),
     m_haveReadNameFromDB(PR_FALSE), 
     m_curMsgUid(0), m_nextMessageByteLength(0),
-    m_urlRunning(PR_FALSE), m_tempMessageFile(MESSAGE_PATH)
+    m_urlRunning(PR_FALSE), m_tempMessageFile(MESSAGE_PATH),
+	m_verifiedAsOnlineFolder(PR_FALSE),
+	m_explicitlyVerify(PR_FALSE) 
 {
 	m_pathName = nsnull;
-    m_appendMsgMonitor = PR_NewMonitor();
+    m_appendMsgMonitor = nsnull;	// since we're not using this (yet?) make it null.
+								// if we do start using it, it should be created lazily
 
 	nsresult rv;
 
@@ -424,15 +427,12 @@ NS_IMETHODIMP nsImapMailFolder::GetMessages(nsIEnumerator* *result)
     rv = GetIsServer(&isServer);
     if (NS_SUCCEEDED(rv) && isServer)
     {
-        if (!m_haveDiscoverAllFolders)
+        if (!m_haveDiscoveredAllFolders)
         {
-            rv = CreateSubfolder2("Inbox");
-            if (NS_FAILED(rv)) return rv;
-            m_haveDiscoverAllFolders = PR_TRUE;
-#if 0
-            rv = imapService->SelectFolder(m_eventQueue, child, this,
-                                           nsnull);
-#endif 
+            rv = CreateClientSubfolderInfo("Inbox");
+            if (NS_FAILED(rv)) 
+				return rv;
+            m_haveDiscoveredAllFolders = PR_TRUE;
         }
         selectFolder = PR_FALSE;
     }
@@ -472,7 +472,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateSubfolder(const char* folderName)
     return rv;
 }
 
-NS_IMETHODIMP nsImapMailFolder::CreateSubfolder2(const char *folderName)
+NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName)
 {
 	nsresult rv = NS_OK;
     
@@ -511,7 +511,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateSubfolder2(const char *folderName)
         if (NS_FAILED(rv)) return rv;
         parentFolder = do_QueryInterface(res, &rv);
         if (NS_FAILED(rv)) return rv;
-        return parentFolder->CreateSubfolder2(leafName.GetBuffer());
+        return parentFolder->CreateClientSubfolderInfo(leafName.GetBuffer());
     }
     
     folderNameStr = leafName;
@@ -569,6 +569,38 @@ NS_IMETHODIMP nsImapMailFolder::RemoveSubFolder (nsIMsgFolder *which)
     which->Delete();
     return nsMsgFolder::DeleteSubFolders(folders);
 }
+
+
+NS_IMETHODIMP nsImapMailFolder::GetVerifiedAsOnlineFolder(PRBool *aVerifiedAsOnlineFolder)
+{
+
+	if (!aVerifiedAsOnlineFolder)
+		return NS_ERROR_NULL_POINTER;
+
+	*aVerifiedAsOnlineFolder = m_verifiedAsOnlineFolder;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsImapMailFolder::SetVerifiedAsOnlineFolder(PRBool aVerifiedAsOnlineFolder)
+{
+	m_verifiedAsOnlineFolder = aVerifiedAsOnlineFolder;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsImapMailFolder::GetExplicitlyVerify(PRBool *aExplicitlyVerify)
+{
+	if (!aExplicitlyVerify)
+		return NS_ERROR_NULL_POINTER;
+	*aExplicitlyVerify = m_explicitlyVerify;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsImapMailFolder::SetExplicitlyVerify(PRBool aExplicitlyVerify)
+{
+	m_explicitlyVerify = aExplicitlyVerify;
+	return NS_OK;
+}
+
 
 NS_IMETHODIMP nsImapMailFolder::Compact()
 {
@@ -1169,9 +1201,6 @@ NS_IMETHODIMP nsImapMailFolder::PossibleImapMailbox(
     if(NS_FAILED(rv))
         return rv;
 
-    if (!m_haveDiscoverAllFolders)
-        m_haveDiscoverAllFolders = PR_TRUE;
-
     nsAutoString folderName = aSpec->allocatedPathName;
     nsAutoString uri ((const char *)"", eOneByte);
     uri.Append(kImapRootURI);
@@ -1221,7 +1250,7 @@ NS_IMETHODIMP nsImapMailFolder::PossibleImapMailbox(
 		found = PR_TRUE;
     if (!found)
     {
-        hostFolder->CreateSubfolder2(aSpec->allocatedPathName);
+        hostFolder->CreateClientSubfolderInfo(aSpec->allocatedPathName);
     }
     
 	return NS_OK;
@@ -1231,6 +1260,78 @@ NS_IMETHODIMP nsImapMailFolder::MailboxDiscoveryDone(
 	nsIImapProtocol* aProtocol)
 {
 	nsresult rv = NS_ERROR_FAILURE;
+	m_haveDiscoveredAllFolders = PR_TRUE;
+#if 0
+	if (currentContext->imapURLPane && (currentContext->imapURLPane->GetPaneType() == MSG_SUBSCRIBEPANE))
+	{
+		// Finished discovering folders for the subscribe pane.
+		((MSG_SubscribePane *)(currentContext->imapURLPane))->ReportIMAPFolderDiscoveryFinished();
+	}
+	else
+	{
+		// only do this if we're discovering folders for real (i.e. not subscribe UI)
+
+  
+		if (URL_s && URL_s->msg_pane && !URL_s->msg_pane->GetPreImapFolderVerifyUrlExitFunction())
+		{
+    		URL_s->msg_pane->SetPreImapFolderVerifyUrlExitFunction(URL_s->pre_exit_fn);
+    		URL_s->pre_exit_fn = DeleteNonVerifiedExitFunction;
+		}
+
+	    XP_ASSERT(currentContext->imapURLPane);
+
+		// Go through folders and find if there are still any that are left unverified.
+		// If so, manually LIST them to see if we can find out any info about them.
+		char *hostName = NET_ParseURL(URL_s->address, GET_HOST_PART);
+		if (hostName && currentContext->mailMaster && currentContext->imapURLPane)
+		{
+			MSG_FolderInfoContainer *hostContainerInfo = currentContext->mailMaster->GetImapMailFolderTreeForHost(hostName);
+			MSG_IMAPFolderInfoContainer *hostInfo = hostContainerInfo ? hostContainerInfo->GetIMAPFolderInfoContainer() : (MSG_IMAPFolderInfoContainer *)NULL;
+			if (hostInfo)
+			{
+				// for each folder
+
+				int32 numberOfUnverifiedFolders = hostInfo->GetUnverifiedFolders(NULL, 0);
+				if (numberOfUnverifiedFolders > 0)
+				{
+					MSG_IMAPFolderInfoMail **folderList = (MSG_IMAPFolderInfoMail **)XP_ALLOC(sizeof(MSG_IMAPFolderInfoMail*) * numberOfUnverifiedFolders);
+					if (folderList)
+					{
+						int32 numUsed = hostInfo->GetUnverifiedFolders(folderList, numberOfUnverifiedFolders);
+						for (int32 k = 0; k < numUsed; k++)
+						{
+							MSG_IMAPFolderInfoMail *currentFolder = folderList[k];
+							if (currentFolder->GetExplicitlyVerify() ||
+								((currentFolder->GetNumSubFolders() > 0) && !NoDescendantsAreVerified(currentFolder)))
+							{
+								// If there are no subfolders and this is unverified, we don't want to run
+								// this url.  That is, we want to undiscover the folder.
+								// If there are subfolders and no descendants are verified, we want to 
+								// undiscover all of the folders.
+								// Only if there are subfolders and at least one of them is verified do we want
+								// to refresh that folder's flags, because it won't be going away.
+								currentFolder->SetExplicitlyVerify(FALSE);
+								char *url = CreateIMAPListFolderURL(hostName, currentFolder->GetOnlineName(), currentFolder->GetOnlineHierarchySeparator());
+								if (url)
+								{
+									MSG_UrlQueue::AddUrlToPane(url, NULL, currentContext->imapURLPane);
+									XP_FREE(url);
+								}
+							}
+						}
+						XP_FREE(folderList);
+					}
+				}
+			}
+			XP_FREE(hostName);
+		}
+		else
+		{
+			XP_ASSERT(FALSE);
+		}
+	}
+
+#endif
 	return rv;
 }
 
@@ -1470,7 +1571,7 @@ NS_IMETHODIMP nsImapMailFolder::OnlineFolderRename(
             nsCOMPtr<nsIMsgImapMailFolder> imapRootFolder =
                 do_QueryInterface(rootFolder, &rv);
             if (NS_SUCCEEDED(rv))
-            rv = imapRootFolder->CreateSubfolder2(aStruct->fNewName);
+            rv = imapRootFolder->CreateClientSubfolderInfo(aStruct->fNewName);
         }
     }
 	return rv;
@@ -2708,7 +2809,7 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                                             <nsIMsgImapMailFolder>::GetIID(),
                                             getter_AddRefs(imapFolder));
                         if (NS_SUCCEEDED(rv))
-                            imapFolder->CreateSubfolder2(path);
+                            imapFolder->CreateClientSubfolderInfo(path);
                         PR_FREEIF(path);
                     }
                 }
@@ -3225,7 +3326,7 @@ nsImapMailFolder::CreateDirectoryForFolder(nsFileSpec &path) //** dup
 }
 
 nsresult
-nsImapMailFolder::CopyMessages2(nsIMsgFolder* srcFolder,
+nsImapMailFolder::CopyMessagesWithStream(nsIMsgFolder* srcFolder,
                                 nsISupportsArray* messages,
                                 PRBool isMove,
                                 nsITransactionManager* txnMsg,
@@ -3282,7 +3383,7 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
                                nsITransactionManager* txnMgr,
                                nsIMsgCopyServiceListener* listener)
 {
-    nsresult rv = NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv = NS_OK;
     char *uri = nsnull;
     char *hostname1 = nsnull, *hostname2 = nsnull, *username1 = nsnull,
         *username2 = nsnull;
@@ -3304,7 +3405,7 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
     if (NS_FAILED(rv)) goto done;
     if (!protocolType.EqualsIgnoreCase("imap"))
     {
-        rv = CopyMessages2(srcFolder, messages, isMove, txnMgr, listener);
+        rv = CopyMessagesWithStream(srcFolder, messages, isMove, txnMgr, listener);
         goto done;
     }
     rv = srcFolder->GetHostname(&hostname1);
@@ -3318,7 +3419,7 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
     if (PL_strcmp(hostname1, hostname2) || // *** different server or account
         PL_strcmp(username1, username2))   // do stream base copy
     {
-        rv = CopyMessages2(srcFolder, messages, isMove, txnMgr, listener);
+        rv = CopyMessagesWithStream(srcFolder, messages, isMove, txnMgr, listener);
         goto done;
     }
 

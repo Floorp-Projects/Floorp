@@ -417,7 +417,6 @@ private:
 	void OnRefreshACLForFolder(const char * aSourceMailbox);
 	void OnRefreshAllACLs();
 	void OnListFolder(const char * aSourceMailbox, PRBool aBool);
-	void OnUpgradeToSubscription();
 	void OnStatusForFolder(const char * sourceMailbox);
 	void OnDeleteFolder(const char * aSourceMailbox);
 	void OnRenameFolder(const char * aSourceMailbox);

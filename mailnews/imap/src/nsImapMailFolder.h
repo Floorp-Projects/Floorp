@@ -161,8 +161,7 @@ public:
     NS_IMETHOD GetPath(nsIFileSpec** aPathName);
 
     // nsIMsgImapMailFolder methods
-	NS_IMETHOD RemoveSubFolder (nsIMsgFolder *which);
-    NS_IMETHOD CreateSubfolder2 (const char* folderName);
+	NS_DECL_NSIMSGIMAPMAILFOLDER
 
     // nsIImapMailFolderSink methods
     // Tell mail master about a discovered imap mailbox
@@ -352,7 +351,7 @@ protected:
 	virtual const char *GetIncomingServerType() {return "imap";}
 
     // Uber message copy service
-    nsresult CopyMessages2(nsIMsgFolder* srcFolder,
+    nsresult CopyMessagesWithStream(nsIMsgFolder* srcFolder,
                            nsISupportsArray* messages,
                            PRBool isMove,
                            nsITransactionManager* txnMgr,
@@ -373,7 +372,7 @@ protected:
 
     nsNativeFileSpec *m_pathName;
     PRBool m_initialized;
-    PRBool m_haveDiscoverAllFolders;
+    PRBool m_haveDiscoveredAllFolders;
     PRBool m_haveReadNameFromDB;
 	nsCOMPtr<nsIMsgParseMailMsgState> m_msgParser;
 	nsCOMPtr<nsIMsgFilterList> m_filterList;
@@ -394,6 +393,9 @@ protected:
     nsCOMPtr<nsMsgTxn> m_pendingUndoTxn;
     nsCOMPtr<nsImapMailCopyState> m_copyState;
     PRMonitor *m_appendMsgMonitor;
+    PRBool	m_verifiedAsOnlineFolder;
+	PRBool	m_explicitlyVerify; // whether or not we need to explicitly verify this through LIST
+
 };
 
 #endif

@@ -38,6 +38,7 @@ class nsIURI;
 class nsIImapUrl;
 class nsIEventQueue;
 class nsIImapProtocol;
+class nsISupportsArray;
 
 class nsIImapIncomingServer : public nsISupports {
 public: 
@@ -60,6 +61,8 @@ public:
                                            nsIURI** aURL) = 0;
     NS_IMETHOD LoadNextQueuedUrl() = 0;
     NS_IMETHOD RemoveConnection(nsIImapProtocol* aImapConnection) = 0;
+
+	NS_IMETHOD GetUnverifiedFolders(nsISupportsArray *aFolderArray, PRInt32 *aNumUnverifiedFolders) = 0;
 };
 
 #endif /* __gen_nsIPop3IncomingServer_h__ */

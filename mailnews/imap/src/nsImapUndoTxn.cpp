@@ -25,7 +25,7 @@
 static NS_DEFINE_CID(kCImapService, NS_IMAPSERVICE_CID);
 
 nsImapMoveCopyMsgTxn::nsImapMoveCopyMsgTxn() :
-    m_srcMsgIdString("", eOneByte), m_dstMsgIdString("", eOneByte),
+    m_srcMsgIdString(""), m_dstMsgIdString(""),
     m_idsAreUids(PR_FALSE), m_isMove(PR_FALSE), m_srcIsPop3(PR_FALSE)
 {
 }

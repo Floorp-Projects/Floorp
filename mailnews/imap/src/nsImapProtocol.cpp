@@ -174,7 +174,7 @@ NS_IMETHODIMP nsImapProtocol::QueryInterface(const nsIID &aIID, void** aInstance
 }
 
 nsImapProtocol::nsImapProtocol() : 
-    m_currentCommand("",eOneByte),m_parser(*this), m_flagState(kImapFlagAndUidStateSize, PR_FALSE)
+    m_currentCommand(""),m_parser(*this), m_flagState(kImapFlagAndUidStateSize, PR_FALSE)
 {
 	NS_INIT_REFCNT();
 	m_flags = 0;
@@ -4569,12 +4569,6 @@ void nsImapProtocol::OnListFolder(const char * aSourceMailbox, PRBool aBool)
 #endif
 }
 
-void nsImapProtocol::OnUpgradeToSubscription()
-{
-#ifdef UNREADY_CODE
-	UpgradeToSubscription();
-#endif
-}
 
 // Returns PR_TRUE if the mailbox is a NoSelect mailbox.
 // If we don't know about it, returns PR_FALSE.
@@ -5648,9 +5642,6 @@ void nsImapProtocol::ProcessAuthenticatedStateURL()
 			sourceMailbox = OnCreateServerSourceFolderPathString();	
 			OnListFolder(sourceMailbox, PR_FALSE);
 			break;
-		case nsIImapUrl::nsImapUpgradeToSubscription:
-			OnUpgradeToSubscription();
-			break;
 		case nsIImapUrl::nsImapFolderStatus:
 			sourceMailbox = OnCreateServerSourceFolderPathString();	
 			OnStatusForFolder(sourceMailbox);
@@ -6016,7 +6007,7 @@ nsImapProtocol::GetDeleteIsMoveToTrash()
 }
 
 nsIMAPMailboxInfo::nsIMAPMailboxInfo(const char *name, char delimiter) :
-    m_mailboxName("",eOneByte,0)
+    m_mailboxName("")
 {
 	m_mailboxName = name;
 	m_delimiter = delimiter;
