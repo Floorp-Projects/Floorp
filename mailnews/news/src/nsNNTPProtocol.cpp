@@ -2499,11 +2499,14 @@ PRInt32 nsNNTPProtocol::AuthorizationResponse()
 	  }
 	else
 	{
+        /* login failed */
 		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
 		if (mailnewsurl)
 			mailnewsurl->SetErrorMessage(NET_ExplainErrorDetails(
 									MK_NNTP_AUTH_FAILED,
 									m_responseText ? m_responseText : ""));
+
+        printf("TODO: bad username for news auth, remove entry in single signon database\n");
 
         return(MK_NNTP_AUTH_FAILED);
 	  }
@@ -2553,11 +2556,14 @@ PRInt32 nsNNTPProtocol::PasswordResponse()
 	  }
 	else
 	{
+        /* login failed */
 		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
 		if (mailnewsurl)
 			mailnewsurl->SetErrorMessage(NET_ExplainErrorDetails(
 									MK_NNTP_AUTH_FAILED,
 									m_responseText ? m_responseText : ""));
+
+        printf("TODO: bad password for news auth, remove entry in single signon database\n");
 
         return(MK_NNTP_AUTH_FAILED);
 	  }
