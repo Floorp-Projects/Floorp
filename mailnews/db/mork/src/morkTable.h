@@ -209,13 +209,14 @@ public: // noting table changes
   void NoteTableMoveRow(morkEnv* ev, morkRow* ioRow, mork_pos inPos);
 
   void note_row_change(morkEnv* ev, mork_change inChange, morkRow* ioRow);
+  void note_row_move(morkEnv* ev, morkRow* ioRow, mork_pos inNewPos);
   
   void NoteTableAddRow(morkEnv* ev, morkRow* ioRow)
   { this->note_row_change(ev, morkChange_kAdd, ioRow); }
   
   void NoteTableCutRow(morkEnv* ev, morkRow* ioRow)
   { this->note_row_change(ev, morkChange_kCut, ioRow); }
-
+  
 protected: // internal row map methods
 
   morkRow* find_member_row(morkEnv* ev, morkRow* ioRow);
@@ -247,6 +248,13 @@ public: // other table methods
   mork_bool AddRow(morkEnv* ev, morkRow* ioRow); // returns ev->Good()
   mork_bool CutRow(morkEnv* ev, morkRow* ioRow); // returns ev->Good()
   mork_bool CutAllRows(morkEnv* ev); // returns ev->Good()
+  
+  mork_pos MoveRow(morkEnv* ev, morkRow* ioRow, // change row position
+    mork_pos inHintFromPos, // suggested hint regarding start position
+    mork_pos inToPos); // desired new position for row ioRow
+    // MoveRow() returns the actual position of ioRow afterwards; this
+    // position is -1 if and only if ioRow was not found as a member.     
+
 
   morkTableRowCursor* NewTableRowCursor(morkEnv* ev, mork_pos inRowPos);
 
