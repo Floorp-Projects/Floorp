@@ -89,9 +89,9 @@ nsNSSComponent::~nsNSSComponent()
 
 #ifdef XP_MAC
 #ifdef DEBUG
-#define LOADABLE_CERTS_MODULE ":Essential Files:NSSckbiDebug.shlb"
+#define LOADABLE_CERTS_MODULE "NSSckbiDebug.shlb"
 #else
-#define LOADABLE_CERTS_MODULE ":Essential Files:NSSckbi.shlb"
+#define LOADABLE_CERTS_MODULE "NSSckbi.shlb"
 #endif /*DEBUG*/ 
 #endif /*XP_MAC*/
 
@@ -166,29 +166,28 @@ nsNSSComponent::InstallLoadableRoots()
     if (!mozFile) {
       return;
     }
-    char *processDir = nsnull;
-    mozFile->GetPath(&processDir);
+    char *fullModuleName = nsnull;
 #ifdef XP_MAC
-    if (processDir == NULL) {
-      return;
-    }
-    char *fullModuleName = PR_smprintf("%s%s", processDir, 
-                                       LOADABLE_CERTS_MODULE);
     char *unixModulePath=nsnull;
-    
+    mozFile->Append("Essential Files");
+    mozFile->Append(LOADABLE_CERTS_MODULE);
+    mozFile->GetPath(&fullModuleName);
     ConvertMacPathToUnixPath(fullModuleName, &unixModulePath);
-    PR_Free(fullModuleName);
+    nsMemory::Free(fullModuleName);
     fullModuleName = unixModulePath;
 #else
-    char *fullModuleName = PR_GetLibraryName(processDir, "nssckbi");
+    char *processDir = nsnull;
+    mozFile->GetPath(&processDir);
+    fullModuleName = PR_GetLibraryName(processDir, "nssckbi");
+    nsMemory::Free(processDir);
 #endif
-    PR_FREEIF(processDir);
     /* If a module exists with the same name, delete it. */
     char *modNameCString = modName.ToNewCString();
     int modType;
     SECMOD_DeleteModule(modNameCString, &modType);
     SECMOD_AddNewModule(modNameCString, fullModuleName, 0, 0);
-    PR_Free(modNameCString);
+    nsMemory::Free(fullModuleName);
+    nsMemory::Free(modNameCString);
   }
 }
 
@@ -208,13 +207,11 @@ nsNSSComponent::InitializePIPNSSBundle()
   return rv;
 }
 
-#define SECURITY_FOLDER ":Security"
-
 nsresult
 nsNSSComponent::InitializeNSS()
 {
   nsresult rv;
-  char *profileStr;
+  nsXPIDLCString profileStr;
   nsCOMPtr<nsIFile> profilePath;
 
   if (mNSSInitialized) {
@@ -231,22 +228,21 @@ nsNSSComponent::InitializeNSS()
     PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("Unable to get profile directory\n"));
     return rv;
   }
-
-  rv = profilePath->GetPath(&profileStr);
-  if (NS_FAILED(rv)) 
-    return rv;
     
   PK11_SetPasswordFunc(PK11PasswordPrompt);
 #ifdef XP_MAC
-  size_t allocLen = PL_strlen(profileStr) + PL_strlen(SECURITY_FOLDER) + 1;
-  char *newString = (char*)nsMemory::Alloc(allocLen);
-  memcpy(newString, profileStr, PL_strlen(profileStr)+1);
-  PL_strcat(newString, SECURITY_FOLDER);
-  nsMemory::Free(profileStr);
-  profileStr = newString;
-#endif  
+  // On the Mac we place all NSS DBs in the Security
+  // Folder in the profile directory.
+  profilePath->Append("Security");
+  profilePath->Create(nsIFile::DIRECTORY_TYPE, 0); //This is for Mac, don't worry about
+                                                   //permissions.
+#endif 
+
+  rv = profilePath->GetPath(getter_Copies(profileStr));
+  if (NS_FAILED(rv)) 
+    return rv;
+     
   NSS_InitReadWrite(profileStr);
-  nsMemory::Free(profileStr);
   NSS_SetDomesticPolicy();
   //  SSL_EnableCipher(SSL_RSA_WITH_NULL_MD5, SSL_ALLOWED);
     
@@ -254,7 +250,6 @@ nsNSSComponent::InitializeNSS()
   SSL_OptionSetDefault(SSL_ENABLE_SSL2, PR_TRUE);
   SSL_OptionSetDefault(SSL_ENABLE_SSL3, PR_TRUE);
   SSL_OptionSetDefault(SSL_ENABLE_TLS, PR_TRUE);
-  InstallLoadableRoots();
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NSS Initialization done\n"));
   return NS_OK;
 }
@@ -280,7 +275,7 @@ nsNSSComponent::Init()
     PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("Unable to create pipnss bundle.\n"));
     return rv;
   }      
-
+  InstallLoadableRoots();
   return rv;
 }
 
