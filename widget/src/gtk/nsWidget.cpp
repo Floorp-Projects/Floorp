@@ -575,9 +575,8 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
       parentWidget = GTK_WIDGET(shellWidget);
   }
 
+  mBounds = aRect;
   CreateNative (parentWidget);
-
-  gtk_widget_set_app_paintable(mWidget, PR_TRUE);
 
   Resize(aRect.width, aRect.height, PR_FALSE);
   /* place the widget in its parent */
@@ -643,7 +642,52 @@ NS_METHOD nsWidget::Create(nsNativeWidget aParent,
 //-------------------------------------------------------------------------
 void nsWidget::InitCallbacks(char *aName)
 {
-    NS_NOTYETIMPLEMENTED("nsWidget::InitCallbacks");
+/* basically we are keeping the parent from getting the childs signals by
+ * doing this. */
+  gtk_signal_connect_after(GTK_OBJECT(mWidget),
+                     "button_press_event",
+		     GTK_SIGNAL_FUNC(gtk_true),
+		     NULL);
+  gtk_signal_connect(GTK_OBJECT(mWidget),
+                     "button_release_event",
+		     GTK_SIGNAL_FUNC(gtk_true),
+		     NULL);
+  gtk_signal_connect(GTK_OBJECT(mWidget),
+                     "motion_notify_event",
+		     GTK_SIGNAL_FUNC(gtk_true),
+		     NULL);
+  gtk_signal_connect(GTK_OBJECT(mWidget),
+                     "enter_notify_event",
+		     GTK_SIGNAL_FUNC(gtk_true),
+		     NULL);
+  gtk_signal_connect(GTK_OBJECT(mWidget),
+                     "leave_notify_event",
+		     GTK_SIGNAL_FUNC(gtk_true),
+		     NULL);
+  gtk_signal_connect(GTK_OBJECT(mWidget),
+                     "draw",
+		     GTK_SIGNAL_FUNC(gtk_false),
+		     NULL);
+  gtk_signal_connect(GTK_OBJECT(mWidget),
+                     "expose_event",
+		     GTK_SIGNAL_FUNC(gtk_true),
+		     NULL);
+  gtk_signal_connect(GTK_OBJECT(mWidget),
+                     "key_press_event",
+		     GTK_SIGNAL_FUNC(gtk_true),
+		     NULL);
+  gtk_signal_connect(GTK_OBJECT(mWidget),
+                     "key_release_event",
+		     GTK_SIGNAL_FUNC(gtk_true),
+		     NULL);
+  gtk_signal_connect(GTK_OBJECT(mWidget),
+                     "focus_in_event",
+		     GTK_SIGNAL_FUNC(gtk_true),
+		     NULL);
+  gtk_signal_connect(GTK_OBJECT(mWidget),
+                     "focus_out_event",
+		     GTK_SIGNAL_FUNC(gtk_true),
+		     NULL);
 }
 
 void nsWidget::ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY)

@@ -153,6 +153,7 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
 {
   mWidget = gtk_layout_new(PR_FALSE, PR_FALSE);
   GTK_WIDGET_SET_FLAGS(mWidget, GTK_CAN_FOCUS);
+  gtk_widget_set_app_paintable(mWidget, PR_TRUE);
 
   gtk_widget_set_events (mWidget,
                          GDK_BUTTON_PRESS_MASK |
