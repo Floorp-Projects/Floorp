@@ -974,6 +974,12 @@ ImportMailThread( void *stuff)
 					
 					outBox->CloseStream();
 
+          // OK, we've copied the actual folder/file over if the folder size is not 0
+          // (ie, the msg summary is no longer valid) so close the msg database so that
+          // when the folder is reopened the folder db can be reconstructed (which
+          // validates msg summary and forces folder to be reparsed).
+          newFolder->ForceDBClosed();
+
 					if (fatalError) {
 						IMPORT_LOG1( "*** ImportMailbox returned fatalError, mailbox #%d\n", (int) i);
 						pData->fatalError = PR_TRUE;
