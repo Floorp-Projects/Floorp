@@ -140,9 +140,11 @@ public:
                                            PRBool aDoCapture,
                                            PRBool aConsumeRollupEvent);
     NS_IMETHOD         GetAttention();
+    NS_IMETHOD         HideWindowChrome(PRBool aShouldHide);
 
     // utility methods
     void               LoseFocus();
+    gint               ConvertBorderStyles(nsBorderStyle aStyle);
 
     // event callbacks
     gboolean           OnExposeEvent(GtkWidget *aWidget,
