@@ -38,6 +38,11 @@
 #define SILENT                          1
 #define AUTO                            2
 
+/* PP: Parse Path */
+#define PP_FILENAME_ONLY                1
+#define PP_PATH_ONLY                    2
+#define PP_ROOT_ONLY                    3
+
 char      szTitle[MAX_BUF];
 char      szCmdLineToSetup[MAX_BUF];
 DWORD     dwMode;
@@ -332,6 +337,104 @@ HRESULT DirectoryRemove(LPSTR szDestination, BOOL bRemoveSubdirs)
   
   RemoveDirectory(szDestination);
   return(0);
+}
+
+void RemoveBackSlash(LPSTR szInput)
+{
+  int   iCounter;
+  DWORD dwInputLen;
+
+  if(szInput != NULL)
+  {
+    dwInputLen = lstrlen(szInput);
+
+    for(iCounter = dwInputLen -1; iCounter >= 0 ; iCounter--)
+    {
+      if(szInput[iCounter] == '\\')
+        szInput[iCounter] = '\0';
+      else
+        break;
+    }
+  }
+}
+
+void ParsePath(LPSTR szInput, LPSTR szOutput, DWORD dwOutputSize, DWORD dwType)
+{
+  int   iCounter;
+  DWORD dwCounter;
+  DWORD dwInputLen;
+  BOOL  bFound;
+
+  if((szInput != NULL) && (szOutput != NULL))
+  {
+    bFound        = TRUE;
+    dwInputLen    = lstrlen(szInput);
+    ZeroMemory(szOutput, dwOutputSize);
+
+    if(dwInputLen < dwOutputSize)
+    {
+      switch(dwType)
+      {
+        case PP_FILENAME_ONLY:
+          for(iCounter = dwInputLen - 1; iCounter >= 0; iCounter--)
+          {
+            if(szInput[iCounter] == '\\')
+            {
+              lstrcpy(szOutput, &szInput[iCounter + 1]);
+              bFound = TRUE;
+              break;
+            }
+          }
+          if(bFound == FALSE)
+            lstrcpy(szOutput, szInput);
+
+          break;
+
+        case PP_PATH_ONLY:
+          for(iCounter = dwInputLen - 1; iCounter >= 0; iCounter--)
+          {
+            if(szInput[iCounter] == '\\')
+            {
+              lstrcpy(szOutput, szInput);
+              szOutput[iCounter + 1] = '\0';
+              bFound = TRUE;
+              break;
+            }
+          }
+          if(bFound == FALSE)
+            lstrcpy(szOutput, szInput);
+
+          break;
+
+        case PP_ROOT_ONLY:
+          if(szInput[1] == ':')
+          {
+            szOutput[0] = szInput[0];
+            szOutput[1] = szInput[1];
+            AppendBackSlash(szOutput, dwOutputSize);
+          }
+          else if(szInput[1] == '\\')
+          {
+            int iFoundBackSlash = 0;
+            for(dwCounter = 0; dwCounter < dwInputLen; dwCounter++)
+            {
+              if(szInput[dwCounter] == '\\')
+              {
+                szOutput[dwCounter] = szInput[dwCounter];
+                ++iFoundBackSlash;
+              }
+
+              if(iFoundBackSlash == 3)
+                break;
+            }
+
+            if(iFoundBackSlash != 0)
+              AppendBackSlash(szOutput, dwOutputSize);
+          }
+          break;
+      }
+    }
+  }
 }
 
 void ParseCommandLine(LPSTR lpszCmdLine)
@@ -731,7 +834,8 @@ RunInstaller()
   char                szTempPath[4096];
   char                szTmp[MAX_PATH];
   char                szCurrentDirectory[MAX_PATH];
-  char                szBuf[MAX_PATH];
+  char                szFilename[MAX_BUF];
+  char                szBuf[MAX_BUF];
   DWORD               dwLen;
 
   // Update UI
@@ -760,11 +864,16 @@ RunInstaller()
   else
   {
     lstrcpy(szCmdLine, szSetupFile);
-    GetCurrentDirectory(MAX_PATH, szCurrentDirectory);
-    GetShortPathName(szCurrentDirectory, szBuf, MAX_PATH);
+    GetModuleFileName(NULL, szBuf, sizeof(szBuf));
+    ParsePath(szBuf, szFilename, sizeof(szFilename), PP_FILENAME_ONLY);
+    ParsePath(szBuf, szCurrentDirectory, sizeof(szCurrentDirectory), PP_PATH_ONLY);
+    RemoveBackSlash(szCurrentDirectory);
+    GetShortPathName(szCurrentDirectory, szBuf, sizeof(szBuf));
 
     lstrcat(szCmdLine, " -a ");
     lstrcat(szCmdLine, szBuf);
+    lstrcat(szCmdLine, " -n ");
+    lstrcat(szCmdLine, szFilename);
   }
 
   if(szCmdLine != NULL)

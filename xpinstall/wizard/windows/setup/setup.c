@@ -72,6 +72,7 @@ BOOL            bSDUserCanceled;
 BOOL            bIdiArchivesExists;
 BOOL            bCreateDestinationDir;
 BOOL            bReboot;
+BOOL            bSaveInstallerFiles;
 
 setupGen        sgProduct;
 diS             diSetup;
@@ -82,13 +83,21 @@ diSC            diSelectComponents;
 diSC            diSelectAdditionalComponents;
 diWI            diWindowsIntegration;
 diPF            diProgramFolder;
-diSS            diAdvancedSettings;
+diAS            diAdvancedSettings;
 diSI            diStartInstall;
 diR             diReboot;
 siSD            siSDObject;
 siCF            siCFXpcomFile;
 siC             *siComponents;
 ssi             *ssiSiteSelector;
+
+/* do not add setup.exe to the list because we figure out the filename
+ * by calling GetModuleFileName() */
+char *SetupFileList[] = {"setuprsc.dll",
+                         "config.ini",
+                         "setup.ini",
+                         "sdinst.dll",
+                         ""};
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, int nCmdShow)
 {

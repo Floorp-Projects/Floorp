@@ -80,6 +80,7 @@
 #define IDC_MESSAGE0                    1042
 #define IDC_STATIC_ST0_DESCRIPTION      1042
 #define IDC_STATIC_ST1_DESCRIPTION      1043
+#define IDC_MESSAGE2                    1043
 #define IDC_STATIC_ST2_DESCRIPTION      1044
 #define IDC_STATIC_ST3_DESCRIPTION      1045
 #define IDC_STATIC_MSG0                 1046
@@ -91,6 +92,11 @@
 #define IDC_DOWNLOAD_SIZE               1058
 #define IDC_SITE_SELECTOR               1059
 #define IDC_LIST_SITE_SELECTOR          1059
+#define IDC_CHECK_SAVE_INSTALLER        1061
+#define IDC_CHECK_SAVE_INSTALLER_FILES  1061
+#define IDC_EDIT_PROXY_SERVER           1062
+#define IDC_EDIT_PROXY_PORT             1063
+#define IDC_TAB1                        1064
 #define DLG_WELCOME                     2001
 #define DLG_LICENSE                     2002
 #define DLG_SETUP_TYPE                  2003
@@ -133,7 +139,7 @@
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        112
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1061
+#define _APS_NEXT_CONTROL_VALUE         1065
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

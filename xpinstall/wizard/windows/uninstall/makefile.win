@@ -44,9 +44,15 @@ WIN_LIBS=                       \
 
 include <$(DEPTH)\config\rules.mak>
 
+docopy:
+    $(MAKE_INSTALL) logkeys.h $(DIST)\include
+
+export:: docopy
+
 install:: $(PROGRAM)
     $(MAKE_INSTALL) $(PROGRAM) $(DIST)\install
 
 clobber_all::
     $(RM) $(DIST)\install\$(MODULE).exe
+    $(RM) $(DIST)\include\logkeys.h
 

@@ -72,6 +72,7 @@ extern BOOL             bSDUserCanceled;
 extern BOOL             bIdiArchivesExists;
 extern BOOL             bCreateDestinationDir;
 extern BOOL             bReboot;
+extern BOOL             bSaveInstallerFiles;
 
 extern setupGen         sgProduct;
 extern diS              diSetup;
@@ -82,12 +83,13 @@ extern diSC             diSelectComponents;
 extern diSC             diSelectAdditionalComponents;
 extern diWI             diWindowsIntegration;
 extern diPF             diProgramFolder;
-extern diSS             diAdvancedSettings;
+extern diAS             diAdvancedSettings;
 extern diSI             diStartInstall;
 extern diR              diReboot;
 extern siSD             siSDObject;
 extern siCF             siCFXpcomFile;
 extern siC              *siComponents;
 extern ssi              *ssiSiteSelector;
+extern char             *SetupFileList[];
 
 #endif

@@ -60,6 +60,6 @@ BOOL        WinRegKeyExists(HKEY hkRootKey, LPSTR szKey);
 BOOL        WinRegNameExists(HKEY hkRootKey, LPSTR szKey, LPSTR szName);
 HRESULT     FileCopySequential(LPSTR szSourcePath, LPSTR szDestPath, LPSTR szFilename);
 HRESULT     ProcessCopyFileSequential(DWORD dwTiming);
-void        UpdateInstallLog(LPSTR szDir);
+void        UpdateInstallLog(LPSTR szKey, LPSTR szDir);
 
 #endif

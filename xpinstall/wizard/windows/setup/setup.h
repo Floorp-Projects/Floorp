@@ -65,8 +65,6 @@ typedef int PRInt32;
 #define WIZ_TEMP_DIR                    "ns_temp"
 #define FILE_INSTALL_LOG                "install.log"
 
-#define KEY_CREATE_FOLDER               "create folder: "
-
 /* PP: Parse Path */
 #define PP_FILENAME_ONLY                1
 #define PP_PATH_ONLY                    2
@@ -233,12 +231,13 @@ typedef struct dlgProgramFolder
   LPSTR szMessage0;
 } diPF;
 
-typedef struct dlgSiteSelector
+typedef struct dlgAdvancedSettings
 {
   BOOL  bShowDialog;
   LPSTR szTitle;
   LPSTR szMessage0;
-} diSS;
+  LPSTR szMessage1;
+} diAS;
 
 typedef struct dlgStartInstall
 {
@@ -262,6 +261,9 @@ typedef struct setupStruct
   LPSTR     szProgramFolderName;
   LPSTR     szProgramFolderPath;
   LPSTR     szAlternateArchiveSearchPath;
+  LPSTR     szParentProcessFilename;
+  LPSTR     szProxyServer;
+  LPSTR     szProxyPort;
   LPSTR     szSetupTitle0;
   COLORREF  crSetupTitle0FontColor;
   int       iSetupTitle0FontSize;

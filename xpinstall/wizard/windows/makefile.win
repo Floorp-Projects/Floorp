@@ -28,10 +28,10 @@ DIRS=$(DIRS) nsinstall \
 !if "$(WINOS)"=="WINNT"
              nsztool   \
 !endif
+             uninstall \
              setup     \
              setuprsc  \
              ren8dot3  \
-             uninstall \
              ds32
 
 include <$(DEPTH)\config\rules.mak>

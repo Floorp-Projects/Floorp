@@ -23,6 +23,7 @@
  */
 
 #include "extern.h"
+#include "logkeys.h"
 #include "parser.h"
 #include "extra.h"
 #include "ifuncns.h"
@@ -196,6 +197,33 @@ void ParseForFile(LPSTR szString, LPSTR szKeyStr, LPSTR szShortFilename, DWORD d
   }
 }
 
+void ParseForCopyFile(LPSTR szString, LPSTR szKeyStr, LPSTR szShortFilename, DWORD dwShortFilenameBufSize)
+{
+  int     iLen;
+  LPSTR   szFirstNonSpace;
+  LPSTR   szSubStr = NULL;
+  char    szBuf[MAX_BUF];
+
+  if((szSubStr = strstr(szString, " to ")) != NULL)
+  {
+    if((szFirstNonSpace = GetFirstNonSpace(&(szSubStr[lstrlen(" to ")]))) != NULL)
+    {
+      iLen = lstrlen(szFirstNonSpace);
+      if(szFirstNonSpace[iLen - 1] == '\n')
+        szFirstNonSpace[iLen -1] = '\0';
+
+      if(lstrcmpi(szKeyStr, KEY_WINDOWS_SHORTCUT) == 0)
+      {
+        lstrcpy(szBuf, szFirstNonSpace);
+        lstrcat(szBuf, ".lnk");
+        szFirstNonSpace = szBuf;
+      }
+
+      GetShortPathName(szFirstNonSpace, szShortFilename, dwShortFilenameBufSize);
+    }
+  }
+}
+
 void ParseForWinRegInfo(LPSTR szString, LPSTR szKeyStr, LPSTR szRootKey, DWORD dwRootKeyBufSize, LPSTR szKey, DWORD dwKeyBufSize, LPSTR szName, DWORD dwNameBufSize)
 {
   int     i;
@@ -338,6 +366,13 @@ void Uninstall(sil* silFile)
       else if((szSubStr = strstr(szLCLine, KEY_WINDOWS_SHORTCUT)) != NULL)
       {
         ParseForFile(szSubStr, KEY_WINDOWS_SHORTCUT, szShortFilename, sizeof(szShortFilename));
+        printf("%I64u: %s\n", silTemp->ullLineNumber, szShortFilename);
+        FileDelete(szShortFilename);
+      }
+      else if((szSubStr = strstr(szLCLine, KEY_COPY_FILE)) != NULL)
+      {
+        /* check for "copy file: " string and delete the file */
+        ParseForCopyFile(szSubStr, KEY_COPY_FILE, szShortFilename, sizeof(szShortFilename));
         printf("%I64u: %s\n", silTemp->ullLineNumber, szShortFilename);
         FileDelete(szShortFilename);
       }

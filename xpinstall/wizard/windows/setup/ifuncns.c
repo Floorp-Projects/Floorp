@@ -27,6 +27,7 @@
 #include "dialogs.h"
 #include "shortcut.h"
 #include "ifuncns.h"
+#include <logkeys.h>
 
 HRESULT TimingCheck(DWORD dwTiming, LPSTR szSection, LPSTR szFile)
 {
@@ -237,6 +238,13 @@ HRESULT FileMove(LPSTR szFrom, LPSTR szTo)
   if((FileExists(szFrom)) && (!FileExists(szTo)))
   {
     MoveFile(szFrom, szTo);
+
+    /* log the file move command */
+    lstrcpy(szBuf, szFrom);
+    lstrcat(szBuf, " to ");
+    lstrcat(szBuf, szTo);
+    UpdateInstallLog(KEY_MOVE_FILE, szBuf);
+
     return(FO_SUCCESS);
   }
   /* From file path exists and To file path exists */
@@ -250,6 +258,13 @@ HRESULT FileMove(LPSTR szFrom, LPSTR szTo)
     ParsePath(szFrom, szBuf, MAX_BUF, PP_FILENAME_ONLY);
     lstrcat(szToTemp, szBuf);
     MoveFile(szFrom, szToTemp);
+
+    /* log the file move command */
+    lstrcpy(szBuf, szFrom);
+    lstrcat(szBuf, " to ");
+    lstrcat(szBuf, szToTemp);
+    UpdateInstallLog(KEY_MOVE_FILE, szBuf);
+
     return(FO_SUCCESS);
   }
 
@@ -275,6 +290,12 @@ HRESULT FileMove(LPSTR szFrom, LPSTR szTo)
       lstrcat(szToTemp, fdFile.cFileName);
 
       MoveFile(szFromTemp, szToTemp);
+
+      /* log the file move command */
+      lstrcpy(szBuf, szFromTemp);
+      lstrcat(szBuf, " to ");
+      lstrcat(szBuf, szToTemp);
+      UpdateInstallLog(KEY_MOVE_FILE, szBuf);
     }
 
     bFound = FindNextFile(hFile, &fdFile);
@@ -335,6 +356,13 @@ HRESULT FileCopy(LPSTR szFrom, LPSTR szTo, BOOL bFailIfExists)
     AppendBackSlash(szToTemp, sizeof(szToTemp));
     lstrcat(szToTemp, szBuf);
     CopyFile(szFrom, szToTemp, bFailIfExists);
+
+    /* log the file copy command */
+    lstrcpy(szBuf, szFrom);
+    lstrcat(szBuf, " to ");
+    lstrcat(szBuf, szToTemp);
+    UpdateInstallLog(KEY_COPY_FILE, szBuf);
+
     return(FO_SUCCESS);
   }
 
@@ -362,6 +390,12 @@ HRESULT FileCopy(LPSTR szFrom, LPSTR szTo, BOOL bFailIfExists)
       lstrcat(szToTemp, fdFile.cFileName);
 
       CopyFile(szFromTemp, szToTemp, bFailIfExists);
+
+      /* log the file copy command */
+      lstrcpy(szBuf, szFromTemp);
+      lstrcat(szBuf, " to ");
+      lstrcat(szBuf, szToTemp);
+      UpdateInstallLog(KEY_COPY_FILE, szBuf);
     }
 
     bFound = FindNextFile(hFile, &fdFile);
@@ -387,7 +421,6 @@ HRESULT FileCopySequential(LPSTR szSourcePath, LPSTR szDestPath, LPSTR szFilenam
   HANDLE          hFile;
   WIN32_FIND_DATA fdFile;
   BOOL            bFound;
-
 
   lstrcpy(szSourceFullFilename, szSourcePath);
   AppendBackSlash(szSourceFullFilename, sizeof(szSourceFullFilename));
@@ -543,7 +576,7 @@ HRESULT ProcessCopyFileSequential(DWORD dwTiming)
   return(FO_SUCCESS);
 }
 
-void UpdateInstallLog(LPSTR szDir)
+void UpdateInstallLog(LPSTR szKey, LPSTR szDir)
 {
   FILE *fInstallLog;
   char szBuf[MAX_BUF];
@@ -555,8 +588,8 @@ void UpdateInstallLog(LPSTR szDir)
 
   if((fInstallLog = fopen(szFileInstallLog, "a+t")) != NULL)
   {
-    lstrcpy(szBuf, "    ** ");
-    lstrcat(szBuf, KEY_CREATE_FOLDER);
+    lstrcpy(szBuf, "      ** ");
+    lstrcat(szBuf, szKey);
     lstrcat(szBuf, szDir);
     lstrcat(szBuf, "\n");
     fwrite(szBuf, sizeof(char), lstrlen(szBuf), fInstallLog);
@@ -585,7 +618,7 @@ HRESULT CreateDirectoriesAll(char* szPath, BOOL bLogForUninstall)
         hrResult = CreateDirectory(szCreatePath, NULL);
 
         if(bLogForUninstall)
-          UpdateInstallLog(szCreatePath);
+          UpdateInstallLog(KEY_CREATE_FOLDER, szCreatePath);
       }
       szCreatePath[i] = szPath[i];
     }
@@ -612,7 +645,7 @@ HRESULT ProcessCreateDirectory(DWORD dwTiming)
     {
       DecryptString(szDestination, szBuf);
       AppendBackSlash(szDestination, sizeof(szDestination));
-      CreateDirectoriesAll(szDestination, FALSE);
+      CreateDirectoriesAll(szDestination, TRUE);
     }
 
     ++dwIndex;
