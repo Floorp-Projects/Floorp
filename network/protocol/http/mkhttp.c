@@ -21,6 +21,11 @@
  * Designed and implemented by Lou Montulli '94
  * Additions/Changes by Judson Valeski, Gagan Saksena 1997
  */
+
+#if defined(CookieManagement)
+#define TRUST_LABELS 1
+#endif
+
 #include "rosetta.h"
 #include "xp.h"
 #include "netutils.h"
@@ -79,6 +84,9 @@ extern int XP_HR_TRANSFER_INTERRUPTED;
 extern int XP_TRANSFER_INTERRUPTED;
 extern int XP_ERRNO_EIO;      
 
+#ifdef TRUST_LABELS
+extern void ProcessCookiesAndTrustLabels( ActiveEntry *ce );
+#endif
 
 #ifdef PROFILE
 #pragma profile on
@@ -3332,7 +3340,6 @@ PRIVATE int32
 net_ProcessHTTP (ActiveEntry *ce)
 {
     HTTPConData * cd = (HTTPConData *)ce->con_data;
-
     TRACEMSG(("Entering NET_ProcessHTTP"));
 
     cd->pause_for_read = FALSE; /* already paused; reset */
@@ -3398,6 +3405,10 @@ HG51096
 
             NET_ClearReadSelect(ce->window_id, cd->connection->sock);
             NET_TotalNumberOfOpenConnections--;
+
+#ifdef TRUST_LABELS
+            ProcessCookiesAndTrustLabels( ce );
+#endif
 
             if(ce->URL_s->can_reuse_connection && !cd->use_proxy_tunnel) {
                 cd->connection->busy = FALSE;
@@ -3705,6 +3716,64 @@ NET_InitHTTPProtocol(void)
   NET_RegisterProtocolImplementation(&http_proto_impl, HTTP_TYPE_URL);
   HG93898
 }
+
+#ifdef TRUST_LABELS
+extern XP_List *TrustList;
+PUBLIC
+void ProcessCookiesAndTrustLabels( ActiveEntry *ce )
+{
+#define	TEN_MINUTES (time_t)(10*60) /* 10 minutes in seconds */
+    unsigned int i;
+    TrustLabel *ALabel;
+    XP_List *TempTrustList;
+
+    if ( IsTrustLabelsEnabled() && ce && ce->URL_s) {
+        /*
+         * if the trust label parsing is enabled then look at each cookie
+         * and try to match it to a trust label on the trust list to see
+         * if one matches the cookie
+         */
+        for(i=0 ;i < ce->URL_s->all_headers.empty_index; i++) {
+            /* look for a cookie field - allow Set-cookie: or Set-Cookie2: - CASE INSENSITIVE COMPARE	*/
+            if(!PL_strncasecmp(ce->URL_s->all_headers.key[i], "Set-Cookie", 10)) {
+                NET_SetCookieStringFromHttp(CE_FORMAT_OUT, ce->URL_s, CE_WINDOW_ID, ce->URL_s->address, ce->URL_s->all_headers.value[i]);
+            }
+        }
+
+        /* delete the list of trust labels */
+        if ( !XP_ListIsEmpty( TrustList ) ) {
+            /* delete each trust label for the current URL 
+             * NOTE: this is the one place where entries are removed from the TrustList
+             */
+            time_t now; time(&now); /* current time in seconds */
+            TempTrustList = TrustList;
+            /* march thru the list backwards by ordinal number so I dont miss anybody */
+            for( i=XP_ListCount( TempTrustList ); i>=1; i-- ) {
+                ALabel = (TrustLabel *)XP_ListGetObjectNum( TempTrustList, i );
+                /* is this label for this URL?  OR is this label stale??
+                 * It is possible to add trust labels to the list and if the
+                 * corresponding cookie is never seen - say the user aborted the download - that the 
+                 * label will hang out for the life of the session.  Also someone could attack the 
+                 * browser by sending trust labels with no cookies and this list would get quite large.
+                 * So if an entry was set more than 10 minutes ago delete it.   10 minutes seems long 
+                 * enough because the life of an entry is measured in fractions of a second.
+                 */
+                if ( PL_strcasecmp( ce->URL_s->address, ALabel->szURL ) == 0 ||
+                        (now - ALabel->TimeStamp) > TEN_MINUTES ) {
+                    if ( XP_ListRemoveObject( TrustList, ALabel ) ){
+                        TL_Destruct( ALabel );
+                    }
+                } 
+            }
+            /* if the trust list is empty free it */
+            if ( XP_ListIsEmpty( TrustList ) ) {
+                XP_ListDestroy( TrustList );
+                TrustList = NULL;
+            }
+        }
+    }
+}
+#endif
 
 #ifdef PROFILE
 #pragma profile off
