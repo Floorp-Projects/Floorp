@@ -3,3 +3,5 @@
 #
 
 nsISizeOfHandler.h
+nsFileStream.h
+nsFileSpec.h
