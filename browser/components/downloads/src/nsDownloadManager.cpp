@@ -152,7 +152,7 @@ nsDownloadManager::Init()
   rv = CallGetService("@mozilla.org/observer-service;1", &gObserverService);
   if (NS_FAILED(rv)) return rv;
   
-  gObserverService->AddObserver(this, "about-to-quit-application", PR_FALSE);
+  gObserverService->AddObserver(this, "quit-application-requested", PR_FALSE);
 
   rv = CallGetService(kRDFServiceCID, &gRDFService);
   if (NS_FAILED(rv)) return rv;                                                 
@@ -810,7 +810,7 @@ nsDownloadManager::Observe(nsISupports* aSubject, const char* aTopic, const PRUn
       return CancelDownload(path.get());  
     }
   }
-  else if (nsCRT::strcmp(aTopic, "about-to-quit-application") == 0 && mCurrDownloads.Count()) {
+  else if (nsCRT::strcmp(aTopic, "quit-application-requested") == 0 && mCurrDownloads.Count()) {
     gQuitting = PR_TRUE;
     mCurrDownloads.Enumerate(CancelAllDownloads, this);
   }
