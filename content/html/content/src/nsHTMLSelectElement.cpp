@@ -150,7 +150,7 @@ public:
   NS_IMETHOD Focus();
 
   // nsIDOMNSHTMLSelectElement
-  NS_IMETHOD Item(PRUint32 aIndex, nsIDOMNode** aReturn);
+  NS_IMETHOD Item(PRUint32 aIndex, nsIDOMElement** aReturn);
 
   // nsIScriptObjectOwner
   NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
@@ -624,17 +624,24 @@ nsHTMLSelectElement::RemoveFocus(nsIPresContext* aPresContext)
 }
 
 NS_IMETHODIMP 
-nsHTMLSelectElement::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
+nsHTMLSelectElement::Item(PRUint32 aIndex, nsIDOMElement** aReturn)
 {
-  *aReturn=nsnull;
-  nsresult result = NS_OK;
-
   if (!mOptions) {
     Init();
   }
-  
-  result = mOptions->Item(aIndex, aReturn);
-  return result;
+  if (mOptions) {
+    nsIDOMNode *node;
+    nsresult result = mOptions->Item(aIndex, &node);
+    if ((NS_OK == result) && (nsnull != node)) {
+      result = node->QueryInterface(kIDOMElementIID, (void **)aReturn);
+      NS_RELEASE(node);
+    }
+    else {
+      *aReturn = nsnull;
+    }
+    return result;
+  }
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
