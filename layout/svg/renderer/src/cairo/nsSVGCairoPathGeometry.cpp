@@ -451,6 +451,7 @@ nsSVGCairoPathGeometry::ContainsPoint(float x, float y, PRBool *_retval)
   }
 
   cairo_t *ctx = cairo_create();
+  cairo_set_tolerance(ctx, 1.0);
 
   GeneratePath(ctx);
   cairo_default_matrix(ctx);

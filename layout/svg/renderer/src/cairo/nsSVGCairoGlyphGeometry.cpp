@@ -484,6 +484,7 @@ nsSVGCairoGlyphGeometry::ContainsPoint(float x, float y, PRBool *_retval)
   cairo_font_t *font = metrics->GetFont();
 
   cairo_t *ctx = cairo_create();
+  cairo_set_tolerance(ctx, 1.0);
   cairo_set_font(ctx, font);
 
   GetGlobalTransform(ctx);
