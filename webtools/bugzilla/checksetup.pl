@@ -1262,7 +1262,7 @@ WriteParams();
 
 # These are the files which need to be marked executable
 my @executable_files = ('whineatnews.pl', 'collectstats.pl',
-   'checksetup.pl', 'importxml.pl', 'runtests.sh');
+   'checksetup.pl', 'importxml.pl', 'runtests.sh', 'testserver.pl');
 
 # tell me if a file is executable.  All CGI files and those in @executable_files
 # are executable
