@@ -194,7 +194,6 @@ LINCS= -I..\..\style\src						\
  -I..\..\..\base\src -I..\..\base\src \
 
 LCFLAGS = \
-        -DENDER_LITE \
         $(LCFLAGS) \
         $(DEFINES) \
         $(NULL)

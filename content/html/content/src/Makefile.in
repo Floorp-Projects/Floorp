@@ -131,10 +131,6 @@ include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -D_IMPL_NS_HTML
 
-ifdef MOZ_ENDER_LITE
-DEFINES         += -DENDER_LITE
-endif
-
 INCLUDES	+= \
 		-I$(srcdir)/../../style/src \
 		-I$(srcdir)/../../../base/src \
