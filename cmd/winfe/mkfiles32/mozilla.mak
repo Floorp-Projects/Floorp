@@ -816,6 +816,7 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\lib\layout\fsfile.cpp
 	$(DEPTH)\lib\layout\streams.cpp
 	$(DEPTH)\lib\layout\layarena.c
+	$(DEPTH)\lib\layout\laybuiltin.c
 	$(DEPTH)\lib\layout\layblock.c
 	$(DEPTH)\lib\layout\laycell.c
 	$(DEPTH)\lib\layout\laycols.c

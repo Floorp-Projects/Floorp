@@ -379,7 +379,6 @@ BEGIN
 		MENUITEM  "Show &Navigation Toolbar",	ID_VIEW_COMMANDTOOLBAR
 		MENUITEM  "Show &Location Toolbar",		ID_VIEW_LOCATIONTOOLBAR
 		MENUITEM  "Show &Personal Toolbar",		ID_VIEW_CUSTOMTOOLBAR
-		MENUITEM  "Show Navi&gation Center",	ID_VIEW_NAVCENTER
 		MENUITEM SEPARATOR
         MENUITEM "In&crease Font\tCtrl+]",      ID_VIEW_INCREASEFONT
         MENUITEM "&Decrease Font\tCtrl+[",      ID_VIEW_DECREASEFONT
@@ -783,7 +782,6 @@ BEGIN
 	MENUITEM  "Show &Navigation Toolbar",	ID_VIEW_COMMANDTOOLBAR
 	MENUITEM  "Show &Location Toolbar",		ID_VIEW_LOCATIONTOOLBAR
 	MENUITEM  "Show &Personal Toolbar",		ID_VIEW_CUSTOMTOOLBAR
-	MENUITEM  "Show Navi&gation Center",		ID_VIEW_NAVCENTER
 	MENUITEM SEPARATOR
 	MENUITEM "In&crease Font\tCtrl+]"			ID_VIEW_INCREASEFONT
 	MENUITEM "&Decrease Font\tCtrl+["			ID_VIEW_DECREASEFONT

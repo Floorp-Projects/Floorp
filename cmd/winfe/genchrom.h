@@ -242,6 +242,9 @@ public:
 	virtual void SaveToolbarConfiguration(UINT nToolbarID, CString &csToolbarName);
 	virtual void SetSaveToolbarInfo(BOOL bSaveToolbarInfo);
 
+// URL bars stuff
+	virtual void UpdateURLBars(char* url);
+
 // Animation Stuff
 	virtual void StartAnimation();
 	virtual void StopAnimation();
@@ -251,6 +254,7 @@ public:
 	virtual void SetDocumentTitle(const char*);
 
 //  ToolbarManager Stuff
+	virtual int CreateRDFToolbar(CString toolbarName, int nMaxToolbars, BOOL bHasAnimation);
 	virtual int CreateCustomizableToolbar(CString toolbarName, int nMaxToolbars, BOOL bHasAnimation);
 	virtual int CreateCustomizableToolbar(UINT nStringID, int nMaxToolbars, BOOL bHasAnimation);
 	virtual CString GetCustToolbarString();

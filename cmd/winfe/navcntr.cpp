@@ -49,7 +49,8 @@ static char THIS_FILE[] = __FILE__;
 
 // The Main Event Handler for the NavCenter.  Handles events on the selector bar AND within the tree
 // views.
-void notifyProcedure (HT_Notification ns, HT_Resource n, HT_Event whatHappened) 
+void notifyProcedure (HT_Notification ns, HT_Resource n, HT_Event whatHappened,
+			void *token, uint32 tokenType) 
 {
 	CSelector* theSelector = (CSelector*)ns->data;
 	if (theSelector == NULL)
@@ -60,11 +61,10 @@ void notifyProcedure (HT_Notification ns, HT_Resource n, HT_Event whatHappened)
 	// The pane has to handle some events.  These will go here.
 	if (whatHappened == HT_EVENT_VIEW_SELECTED)
 	{
-		CView* pView = theSelector->GetCurrentView();
 		CSelectorButton* pButton = theSelector->GetCurrentButton();
 
 		// If the new selected view is NULL, then we need to make sure our pane is closed.
-		if (theView == NULL && pView != NULL)
+		if (theView == NULL && pButton != NULL)
 		{
 			// We're open.  Close the pane.
 			((CNSNavFrame*)theSelector->GetParentFrame())->CollapseWindow();
@@ -72,10 +72,10 @@ void notifyProcedure (HT_Notification ns, HT_Resource n, HT_Event whatHappened)
 		else if (theView != NULL)
 		{
 			// We have a view. Select it.
-			CSelectorButton* pButton = (CSelectorButton*)HT_GetViewFEData(theView);
-			theSelector->SetCurrentView(pButton);
-
-			if (pView == NULL)
+			CSelectorButton* pNewButton = (CSelectorButton*)HT_GetViewFEData(theView);
+			theSelector->SetCurrentButton(pNewButton);
+			
+			if (pButton == NULL)
 			{
 				// Need to open the pane.
 				((CNSNavFrame*)theSelector->GetParentFrame())->ExpandWindow();
@@ -89,9 +89,8 @@ void notifyProcedure (HT_Notification ns, HT_Resource n, HT_Event whatHappened)
 
 	if (whatHappened == HT_EVENT_VIEW_ADDED) 
 	{
-		theSelector->ConstructView(theView);
+		theSelector->AddButton(theView);
 		theSelector->RearrangeIcons();
-		CSelectorButton* pButton = (CSelectorButton*)HT_GetViewFEData(theView);
 	}
 	else if (whatHappened == HT_EVENT_VIEW_DELETED)
 	{
@@ -99,8 +98,6 @@ void notifyProcedure (HT_Notification ns, HT_Resource n, HT_Event whatHappened)
 		CSelectorButton* pButton = (CSelectorButton*)HT_GetViewFEData(theView);
 		if (pButton)
 		{
-			pButton->GetView()->DestroyWindow();
-
 			// Delete the button
 			delete pButton;
 
@@ -118,6 +115,11 @@ void notifyProcedure (HT_Notification ns, HT_Resource n, HT_Event whatHappened)
 			// Invalidate the button.
 			pButton->Invalidate();
 
+			// The remaining invalidation only happens if the selected view is the one that was just
+			// changed.
+			if (theSelector->GetCurrentButton() != pButton)
+				return;
+
 			// Invalidate the title bar.
 			CFrameWnd* pFrame = pButton->GetParentFrame();
 			if (pFrame->IsKindOf(RUNTIME_CLASS(CNSNavFrame)))
@@ -126,12 +128,12 @@ void notifyProcedure (HT_Notification ns, HT_Resource n, HT_Event whatHappened)
 				if (pNavFrame)
 				{
 					// Invalidate the title bar.
-					CNavMenuBar* pBar = pNavFrame->GetNavMenuBar();
+					CNavTitleBar* pBar = pNavFrame->GetNavTitleBar();
 					if (pBar)
 						pBar->Invalidate();
 					
 					// Invalidate the tree view.
-					CRDFContentView* theOutlinerView = (CRDFContentView*)pButton->GetTreeView();
+					CRDFContentView* theOutlinerView = theSelector->GetContentView();
 					if (theOutlinerView)
 					{
 						CRDFOutlinerParent* pParent = (CRDFOutlinerParent*)(theOutlinerView->GetOutlinerParent());
@@ -154,51 +156,38 @@ void notifyProcedure (HT_Notification ns, HT_Resource n, HT_Event whatHappened)
 	else if (whatHappened == HT_EVENT_VIEW_WORKSPACE_REFRESH)
 		theSelector->RearrangeIcons(); // Redraw the selector.
 
-	// If the pane doesn't handle the event, then a view does.
-	else 
+	// If the pane doesn't handle the event, then the tree view does, but only if this button is the current
+	// selected button on the selector bar.
+	else
 	{
 		// View needs to exist in order for us to send this event to it.
 		CSelectorButton* pButton = (CSelectorButton*)HT_GetViewFEData(theView);
-		if (pButton)
+		if (pButton && (pButton == theSelector->GetCurrentButton()))
 		{
-			CRDFContentView* theOutlinerView = (CRDFContentView*)pButton->GetTreeView();
+			CRDFContentView* theOutlinerView = theSelector->GetContentView();
 			if (theOutlinerView)
 			{
 				CRDFOutliner* theOutliner = (CRDFOutliner*)(theOutlinerView->GetOutlinerParent()->GetOutliner());
-				theOutliner->HandleEvent(ns, n, whatHappened);
+				if (theOutliner)
+					theOutliner->HandleEvent(ns, n, whatHappened);
 			}
 		}
+		else if (pButton && whatHappened == HT_EVENT_NODE_OPENCLOSE_CHANGED && 
+				 (pButton->GetDropMenu() != NULL))
+		{
+			// We opened or closed a node in the popup menu.
+			PRBool openState;
+			HT_GetOpenState(n, &openState);
+			if (openState)
+				pButton->FillInMenu(n);
+		}
 	}
-}
-
-// The Event Handler for selector popup menus
-static void selectorPopupNotifyProcedure (HT_Notification ns, HT_Resource n, HT_Event whatHappened) 
-{
-    // We respond only to open/closed events.  This procedure is only entered when the user clicks
-	// and holds on a selector bar button to bring up a popup menu.
-  CSelectorButton* theButton = (CSelectorButton*)ns->data;
-  if (n != NULL)
-  {
-	HT_View theView = HT_GetView(n);
-	if (theView != NULL && (whatHappened == HT_EVENT_NODE_OPENCLOSE_CHANGED))
-	{
-	  PRBool openState;
-	  HT_GetOpenState(n, &openState);
-	  if (openState)
-	  {
-	    theButton->FillInMenu(n);
-	  }
-	}
-  }
 }
 
 // SelectorButton
 
 CSelectorButton::~CSelectorButton() 
 {
-	if (m_Pane)
-		HT_DeletePane(m_Pane);	
-	
 	m_Node = NULL;
 }
 
@@ -208,27 +197,18 @@ int CSelectorButton::Create(CWnd *pParent, int nToolbarStyle, CSize noviceButton
 							LPCTSTR pStatusText,
 							CSize bitmapSize, int nMaxTextChars, int nMinTextChars, 
 							HT_Resource pNode,
-							DWORD dwButtonStyle, CView* view, CPaneCX* pane)
-{
-	pView = view;
-	m_pPane = pane;
-
-	// Construct the notification struct used by HT
-	HT_Notification ns = new HT_NotificationStruct;
-	ns->notifyProc = selectorPopupNotifyProcedure;
-	ns->data = this;
-	
-	// Construct the pane and give it our notification struct
-	m_Pane = HT_PaneFromResource(HT_GetRDFResource(pNode), ns, (PRBool)TRUE);
-    HT_SetPaneFEData(m_Pane, this);
-
-	HT_Resource pEntry = NULL;
-	HT_View theView = HT_GetSelectedView(m_Pane);
-	
+							DWORD dwButtonStyle)
+{	
 	BOOKMARKITEM bookmark; // For now, create with the pictures style. No text ever.
-	return CRDFToolbarButton::Create(pParent, TB_PICTURES, noviceButtonSize, advancedButtonSize,
+	BOOL bResult = CRDFToolbarButton::Create(pParent, TB_PICTURES, noviceButtonSize, advancedButtonSize,
 		   pButtonText, pToolTipText, pStatusText, bitmapSize, nMaxTextChars, nMinTextChars,
-		   bookmark, HT_TopNode(theView), dwButtonStyle);
+		   bookmark, pNode, dwButtonStyle);
+	return bResult;
+}
+
+CRDFContentView* CSelectorButton::GetContentView()
+{
+	return m_pSelector->GetContentView();
 }
 
 void CSelectorButton::OnAction()
@@ -398,9 +378,9 @@ BEGIN_MESSAGE_MAP(CSelector, CView)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
-CSelector::CSelector()
+CSelector::CSelector(CRDFContentView* pContent)
 {
-	m_pCurView = NULL;
+	m_pContentView = pContent;
 	m_xpos =  ICONXPOS;
 	m_ypos = ICONYPOS;
     m_pDropTarget = NULL;
@@ -499,59 +479,36 @@ void CSelector::SelectNthView(int i)
 
 BOOL CSelector::IsTreeVisible()
 {
-	return m_pCurView != NULL;
+	return m_pCurButton != NULL;
 }
 
-void CSelector::SetCurrentView(CSelectorButton* pButton)
+void CSelector::SetCurrentButton(CSelectorButton* pButton)
 {
-	CView* pView = pButton->GetView();
-
-	if (m_pCurButton) 
+	// Deselect the old button.
+	if (m_pCurButton)
 	{
 		m_pCurButton->SetDepressed(FALSE);
 	}
+
+	// Selecting the button.
 	m_pCurButton = pButton;
 	m_pCurButton->SetDepressed(TRUE);
-	if (m_pCurView != pView ) 
-	{
-		if (m_pCurView)
-			m_pCurView->ShowWindow(SW_HIDE);
-		m_pCurView = pView;
-		GetParentFrame()->SetActiveView( m_pCurView);
-			
-		((CNSNavFrame*)GetParentFrame())->GetNavMenuBar()->UpdateView(m_pCurButton, m_pCurButton->GetHTView());
-		((CNSNavFrame*)GetParentFrame())->UpdateTitleBar(m_pCurButton->GetHTView());
-	}
 		
 	// adjust the window. here.
-	m_pCurView->ShowWindow(SW_SHOW);
-	if(m_pCurView->GetParent()->IsKindOf(RUNTIME_CLASS(CContentView))) 
-	{
-		CContentView* contentView = (CContentView*)m_pCurView->GetParent();
-		contentView->CalcChildSizes();
-	}
-		
-	m_pCurView->SetFocus();
+	m_pContentView->SwitchHTViews(m_pCurButton->GetHTView());
+	m_pContentView->SetFocus();
 }
 
 void CSelector::UnSelectAll()
 {
 	if (m_pCurButton)
 		m_pCurButton->SetDepressed(FALSE);
-	m_pCurButton = 0;
-	if (m_pCurView)
-	{	
-		m_pCurView->ShowWindow(SW_HIDE);
-		m_pCurView = 0;
-		GetParentFrame()->SetActiveView( m_pCurView);
-	}
-
-	((CNSNavFrame*)GetParentFrame())->GetNavMenuBar()->UpdateView(NULL, NULL);
+	m_pCurButton = NULL;
 }
 
-CView* CSelector::GetCurrentView()
+CRDFContentView* CSelector::GetContentView()
 {
-	return m_pCurView;
+	return m_pContentView;
 }
 
 CSelectorButton* CSelector::GetCurrentButton()
@@ -627,26 +584,26 @@ void CSelector::ShowScrollButton(CSelectorButton* button)
 }
 
 
-void CSelector::AddViewContext(const char* pTitle, CView* pView, CRDFContentView* pTree, 
-							   CPaneCX* htmlPane, HT_View theView)
+void CSelector::AddButton(HT_View theView)
 {
+	// Create the selector button.
 	CSelectorButton* theNSViewButton = new CSelectorButton(this);
 
-	// Button meets the view.  View meets the button.
+	// Set the HT view for the button.
 	theNSViewButton->SetHTView(theView); 
-	theNSViewButton->SetTreeView(pTree);
-
+	
 	HT_SetViewFEData(theView, theNSViewButton);
 
-	HT_Resource node = theView ? HT_TopNode(theView) : NULL;
-	char* pNodeURL = node ? HT_GetNodeURL(node) : "";
+	HT_Resource node = HT_TopNode(theView);
+	char* pNodeURL = HT_GetNodeURL(node);
+	char* pTitle = HT_GetNodeName(node);
 
 	theNSViewButton->Create(this, theApp.m_pToolbarStyle, CSize(60,42), CSize(85, 25), 
 							pTitle,
 							pTitle, pNodeURL, 
 							CSize(23,23), 10, 5, 
 							node,
-                            TB_HAS_DRAGABLE_MENU | TB_HAS_TIMED_MENU, pView, htmlPane);
+                            TB_HAS_DRAGABLE_MENU | TB_HAS_TIMED_MENU);
 	
 	CRect rect;
 	rect.left = (long)m_xpos;
@@ -669,35 +626,15 @@ void CSelector::AddViewContext(const char* pTitle, CView* pView, CRDFContentView
 		m_ypos += buttonSize.cy + 2;
 		rect.right = rect.left + BUTTON_WIDTH;
 	}
-/*
-	CString originalText = HT_GetNodeName(theNSViewButton->GetNode());
-    int currCount = originalText.GetLength();
-        
-    // Start off at the maximal string
-    CString strTxt = originalText;
-
-	CSize theSize = theNSViewButton->GetButtonSizeFromChars(originalText, currCount);
-	int horExtent = theSize.cx;
-
-	while (horExtent > BUTTON_WIDTH)
-	{
-		strTxt = originalText.Left(currCount-3) + "...";
-		theSize = theNSViewButton->GetButtonSizeFromChars(strTxt, currCount);
-		horExtent = theSize.cx;
-		currCount--;
-	}
-
-	theNSViewButton->SetTextWithoutResize(strTxt);
-*/
 
 	ShowScrollButton(theNSViewButton);
 }
-
 
 void CSelector::PopulatePane()
 {
 	// Construct the notification struct used by HT
 	HT_Notification ns = new HT_NotificationStruct;
+	XP_BZERO(ns, sizeof(HT_NotificationStruct));
 	ns->notifyProc = notifyProcedure;
 	ns->data = this;
 	m_Notification = ns;
@@ -709,6 +646,7 @@ void CSelector::PopulatePane()
     //  Inform our XP layer of the new nav center.
     MWContext *pDockedCX = NULL;
     CNSNavFrame *pParentFrame = GetParentFrame()->IsKindOf(RUNTIME_CLASS(CNSNavFrame)) ? (CNSNavFrame*)GetParentFrame() : NULL;
+
     //  Since the XP layer isn't set up yet, we can't use
     //      XP_IsNavCenterDocked in order to tell
     //      if the window is docked.  Use instead wether or
@@ -725,51 +663,6 @@ void CSelector::PopulatePane()
 	// Place any icons that were immediately available.  (The remote ones will trickle in later, and we'll
 	// rearrange the selector bar when we get those VIEW_ADDED events.)
 	RearrangeIcons();
-}
-
-void CSelector::ConstructView(HT_View theView)
-{
-	if (theView == NULL)
-		return;
-
-	CString viewName = HT_GetNodeName(HT_TopNode(theView));
-	
-	// Construct the RDF view
-	CWnd *theParent = (CWnd *)(((CNSNavFrame*)GetParentFrame())->GetContentView());
-
-    DWORD dwCurrentStyle = WS_CHILD;
-    
-    //  Parent may change depending on view (need more panes).
-    CRect rClient(0, 0, 100, 100);
-    CContentView *pAltParent = NULL;
-    CPaneCX *pCX = NULL;
-    if(HT_HasHTMLPane(theView)) 
-	{
-        pAltParent = new CContentView();
-        pAltParent->Create(NULL, "", WS_CHILD, rClient, theParent, NC_IDW_MISCVIEW, NULL);
-        pCX = wfe_CreateNavCenterHTMLPain(theView, pAltParent->m_hWnd);
-        
-        //  Make all other children visible now (we control visibility by being the parent).
-        dwCurrentStyle |= WS_VISIBLE;
-    }
-    if(pAltParent) {
-        theParent = (CWnd *)pAltParent;
-    }
-    theParent->GetClientRect(&rClient);
-    
-	// Can't use CSelector's m_Pane, because it might not have been initialized yet.  Calls
-	// HT_GetPane instead.
-	CRDFOutlinerParent* newParent = new CRDFOutlinerParent(HT_GetPane(theView), theView);
-	CRDFContentView* newView = new CRDFContentView(newParent);
-	
-	// Create the windows
-	newView->Create( NULL, "", dwCurrentStyle, rClient, theParent, NC_IDW_OUTLINER);
-
-	// Initialize the columns, etc.
-	newParent->Initialize();
-	
-	// Name and icon for the view correspond to the name/icon of the top node in the view.
-	AddViewContext(viewName, pAltParent ? (CView *)pAltParent : (CView *)newView, newView, pCX, theView);
 }
 
 void CSelector::DestroyViews()
@@ -861,10 +754,10 @@ void CSelector::RearrangeIcons()
 	if (dockStyle == DOCKSTYLE_HORZTOP || dockStyle == DOCKSTYLE_HORZBOTTOM) 
 	{
 		m_xpos = ICONXPOS;
-		m_ypos = 2;
+		m_ypos = 1;
 	}
 	else {
-		m_xpos = 2;
+		m_xpos = 1;
 		m_ypos = ICONYPOS;
 	}
 	CRect parentRect;
@@ -983,9 +876,8 @@ void CSelector::OnLButtonDown (UINT nFlags, CPoint point )
 	// Called when the user clicks on the menu bar.  Start a drag or collapse the view.
 	if (m_pCurButton)
 	{
-		CRDFContentView* pView = m_pCurButton->GetTreeView();
-		if (pView)
-			pView->SetFocus();
+		if (m_pContentView)
+			m_pContentView->SetFocus();
 	}
 
 	m_PointHit = point;

@@ -20,6 +20,7 @@
 // CURLBar dialog
 
 #include "toolbar2.h"
+#include "usertlbr.h"
 #include "dropmenu.h"
 
 #ifndef URLBAR_H
@@ -32,19 +33,19 @@ protected:
     BOOL m_bRestart;
     char * m_pComplete;
     BOOL m_Scroll;
-    CWnd* m_pBar;
-    CNSToolTip2 *m_ToolTip;
+	CWnd* m_pBar;
+	CNSToolTip2 *m_ToolTip;
 
 public:
-    CEditWnd(CWnd* bar) { m_pBar = bar; m_ToolTip = 0; m_idTimer = 0; m_bRestart = TRUE; m_pComplete = NULL; m_Scroll = FALSE; }
+    CEditWnd(CWnd* bar) { m_pBar = bar; m_idTimer = 0; m_bRestart = TRUE; m_pComplete = NULL; m_Scroll = FALSE; }
     ~CEditWnd();
     void UrlCompletion(void);
     void DrawCompletion(CString & cs, char * pszResult);
-    void SetToolTip(const char *inTipStr);
+	void SetToolTip(const char *inTipStr);
     virtual BOOL PreTranslateMessage ( MSG * msg );
     virtual LRESULT DefWindowProc( UINT message, WPARAM wParam, LPARAM lParam );
-    virtual afx_msg void OnTimer( UINT  nIDEvent );
-    afx_msg void OnMouseMove(UINT nFlags, CPoint point);
+	virtual afx_msg void OnTimer( UINT  nIDEvent );
+	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
     DECLARE_MESSAGE_MAP();
 };
 
@@ -100,7 +101,7 @@ public:
 	DECLARE_MESSAGE_MAP()
 };
 
-#define CURLBarBase	CDialogBar
+#define CURLBarBase	CWnd
 
 class CURLBar : public CURLBarBase
 {
@@ -144,16 +145,12 @@ public:
 	LPMWCONTEXT GetContext() const { return m_pIMWContext; }
 
     void UpdateFields( const char * msg);
-    void SetToolTip(const char * inTip);
+	void SetToolTip(const char * inTip);
 	
 // Implementation
 protected:
 	void ProcessEnterKey();
 	
-	// Overrides
-    virtual LRESULT WindowProc( UINT message, WPARAM wParam, LPARAM lParam );
-    virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
-
 protected:
     // Generated message map functions
 	//{{AFX_MSG(CURLBar)
@@ -169,20 +166,43 @@ protected:
 	afx_msg void OnUpdateEditUndo(CCmdUI* pCmdUI);
     afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg int  OnCreate(LPCREATESTRUCT lpCreateStruct);
-	afx_msg void OnClose();
-	afx_msg void OnDestroy( );
 	afx_msg void OnPaint();
-	afx_msg void OnShowWindow( BOOL bShow, UINT nStatus );
-	afx_msg BOOL OnEraseBkgnd( CDC* pDC );
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
-	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
-	afx_msg void OnLButtonDblClk(UINT nFlags, CPoint point);
-	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
-	afx_msg HBRUSH OnCtlColor( CDC*, CWnd*, UINT );
-	afx_msg void OnPaletteChanged( CWnd* pFocusWnd );
-
+	
 	//}}AFX_MSG
     DECLARE_MESSAGE_MAP()
+};
+
+class CURLBarButton : public CRDFToolbarButton
+{
+protected:
+	CURLBar* m_pURLBar; // A pointer to the URL bar object.
+	BOOL m_bIsSpring; // Whether or not the url bar wants to expand to consume as much space as it can.
+public:
+	CURLBarButton();
+	~CURLBarButton();
+
+	virtual CSize GetButtonSizeFromChars(CString s, int c);
+		// Overridden to handle special width/height requirements.
+
+	virtual void DrawButtonBitmap(HDC hDC, CRect rcImg);
+	virtual void DrawButtonText(HDC hDC, CRect rcTxt, CSize sizeTxt, CString strTxt);
+
+	virtual void UpdateURLBar(char* url);
+
+	virtual BOOL IsSpring() { return m_bIsSpring; }
+
+	int Create(CWnd *pParent, int nToolbarStyle, CSize noviceButtonSize, CSize advancedButtonSize,
+			   LPCTSTR pButtonText, LPCTSTR pToolTipText, 
+			   LPCTSTR pStatusText,
+			   CSize bitmapSize, int nMaxTextChars, int nMinTextChars, BOOKMARKITEM bookmark, 
+			   HT_Resource pNode, DWORD dwButtonStyle = 0);
+
+	// Generated message map functions
+	//{{AFX_MSG(CToolbarButton)
+	afx_msg void OnSize(UINT nType, int x, int y);
+	//}}AFX_MSG
+	DECLARE_MESSAGE_MAP()
 };
 
 #endif // URLBAR_H

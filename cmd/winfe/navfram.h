@@ -72,7 +72,9 @@ public: // create from serialization only
 // Implementation
 public:
 	virtual ~CNSNavFrame();
-	CContentView* GetContentView()	{return m_nsContent;}
+	CRDFContentView* GetContentView()	{return m_nsContent;}
+	void SetContentView(CRDFContentView* v) { m_nsContent = v; }
+
 	// Add new view to this frame.
 	//void AddViewContext(const char* pUrl, const char* pTitle, CView* pView, CPaneCX* htmlPane = NULL);
 
@@ -80,6 +82,10 @@ public:
 	// otherwise we want to create a window that is docked in this frame.
 	void CreateNewNavCenter(CNSGenFrame* pParentFrame = NULL, BOOL useViewType = FALSE, HT_ViewType viewType = HT_VIEW_BOOKMARK);
 	void DeleteNavCenter();
+
+	static CNSNavFrame* CreateFramedRDFViewFromResource(CWnd* pParent, int xPos, int yPos, 
+										  			    int width, int height, 
+														HT_Resource node);
 
 #ifdef _DEBUG
 	virtual void AssertValid() const;
@@ -95,17 +101,21 @@ public:
 	short CanDock(CPoint pt, BOOL mapDesktop = FALSE);
 	void ForceFloat(BOOL show = TRUE);
 	int32 GetDockStyle() { return m_dwOverDockStyle;}
+	void SetDockStyle(int32 d) { m_dwOverDockStyle = d; }
 	void ExpandWindow();
 	void CollapseWindow();
 
 	void ComputeDockingSizes();
 	void UpdateTitleBar(HT_View pView);
-    virtual void PostNcDestroy();
 
 public:
     HT_Pane GetHTPane();
-	CNavMenuBar* GetNavMenuBar() { return m_pNavMenu; }
-	BOOL IsTreeVisible() { return m_pSelector->IsTreeVisible(); }
+	CNavTitleBar* GetNavTitleBar() { return m_pNavTitle; }
+	BOOL IsTreeVisible() { return TRUE; } //m_pSelector->IsTreeVisible(); }
+	
+	void SetHTNode(HT_Resource node) { m_Node = node; }
+	void SetRDFButton(CRDFToolbarButton* pButton) { m_pButton = pButton; }
+	CRDFToolbarButton* GetRDFButton() { return m_pButton; }
 
 protected:  // control bar embedded members
 	friend class CSelector;
@@ -118,7 +128,9 @@ protected:  // control bar embedded members
 	CPoint		m_ptLast;            // last mouse position during drag
 	CDC*		m_pDC;				 // where to draw during drag
 	CDragBar*	m_DragWnd;			// the resize bar, when this frame is docked.
-	
+	HT_Resource m_Node;				// the top node of the view.
+	CRDFToolbarButton* m_pButton;	// A pointer to the button this view points to.
+									// NULL if window is floating.
 	// All of these rects are in the Desktop window's coordinates.
 
 	CRect m_rectDrag;				// bounding rect when this frame is floating
@@ -130,17 +142,8 @@ protected:  // control bar embedded members
 	int m_nXOffset, m_nYOffset;
 
 	CSelector* m_pSelector;		// the selector pane.
-	CContentView *m_nsContent;	// the content pane.
-	CNavMenuBar* m_pNavMenu;	// the embedded menu bar.
-
-    // Indicator used when being docked/undocked.
-    enum {
-        unknown,
-        docked,
-        beingDocked,
-        undocked,
-        beingUndocked
-    } m_dockingState;
+	CRDFContentView *m_nsContent;	// the content pane.
+	CNavTitleBar* m_pNavTitle;	// the embedded title strip.
 
 // Generated message map functions
 protected:

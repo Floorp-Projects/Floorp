@@ -4540,20 +4540,11 @@ void CWinCX::LayoutNewDocument(MWContext *pContext, URL_Struct *pURL, int32 *pWi
 
 	if(GetContext()->type == MWContextBrowser && !EDT_IS_EDITOR(GetContext()))	{
 	    LPCHROME pChrome = GetFrame()->GetChrome();
-	    if(pChrome) {
-    		CWnd *pWnd = pChrome->GetToolbar(ID_LOCATION_TOOLBAR);
-
-    		if (pWnd && pWnd->IsKindOf(RUNTIME_CLASS(CURLBar))){
-    			CURLBar *pUrlBar = (CURLBar *) pWnd;
-
-    			if(pUrlBar != NULL) {
-    				pUrlBar->m_pBox->GetWindowText(csText);
-        			if(m_csSaveLocationBarText == csText && IsGridCell() == FALSE)	{
-    					pUrlBar->UpdateFields(pURL->address);
-        			}
-    			}
-    			else
-    				csText.Empty();
+	    if(pChrome) 
+		{
+    		if(IsGridCell() == FALSE)	
+			{
+    				pChrome->UpdateURLBars(pURL->address);
     		}
     		else
     			csText.Empty();
@@ -4787,11 +4778,14 @@ void CWinCX::SetInternetKeyword(const char *keyword) {
 		return;
 
 	// Only if we're the main context
+	/* Disabled. Needs to be fixed so that the chrome is searched and all URL bars get
+		their tooltips updated. 
 	if( GetFrame()->GetMainContext() == this ) {
 		CURLBar *urlBar = (CURLBar *) GetFrame()->GetChrome()->GetToolbar(ID_LOCATION_TOOLBAR);
 		if (urlBar)
 			urlBar->SetToolTip(keyword);
 	}
+	*/
 }
 
 void CWinCX::ClearView(MWContext *pContext, int iView)  {

@@ -22,7 +22,7 @@
 #include "pain.h"
 #include "navcntr.h"
 
-CPaneCX *wfe_CreateNavCenterHTMLPain(HT_View htView, HWND hParent)
+CPaneCX *wfe_CreateNavCenterHTMLPain(HWND hParent)
 {
     CPaneCX *pRetval = NULL;
 
@@ -47,7 +47,6 @@ CPaneCX *wfe_CreateNavCenterHTMLPain(HT_View htView, HWND hParent)
                 CWinCX *pWinCX = new CWinCX((CGenericDoc *)cccGrid.m_pCurrentDoc, NULL, pNewView, MWContextPane, Pane);
                 if(pWinCX) {
                     pWinCX->Initialize(pWinCX->CDCCX::IsOwnDC(), crClient);
-                    XP_RegisterViewHTMLPane(htView, pWinCX->GetContext());
                     pRetval = VOID2CX(pWinCX, CPaneCX);
                 }
             }

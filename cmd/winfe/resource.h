@@ -103,7 +103,6 @@
 #define IDS_LDAP_SERVER_PROPERTY        125
 #define IDI_MAIL                        126
 #define IDS_ADD_NEWS_SERVER             126
-#define IDC_URLTEXT                     127
 #define IDD_DIALOG1                     127
 #define IDR_MAINFRAME2                  127
 #define IDD_ADDRESS_USER                127
@@ -4073,9 +4072,6 @@
 #define IDM_SAVEASTEMPLATE              65504
 #define IDS_ADVSEARCH_TITLE             65505
 #define IDS_BASICSEARCH_TITLE           65506
-#define ID_VIEW_NAVCENTER				65507
-#define IDS_SHOW_NAVCENTER				65508
-#define IDS_HIDE_NAVCENTER				65509
 
 // Next default values for new objects
 // 

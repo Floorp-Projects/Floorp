@@ -685,6 +685,7 @@ public:
 #ifndef MOZ_NGLAYOUT
 	virtual void DisplayEmbed(MWContext *pContext, int iLocation, LO_EmbedStruct *pEmbed);
 #endif
+	virtual void DisplayBuiltin(MWContext *pContext, int iLocation, LO_BuiltinStruct *pBuiltin);
     virtual void DisplayBorder(MWContext *pContext, int iLocation, int x, int y, int width, int height, int bw, LO_Color *color, LO_LineStyle style);
 	virtual void DisplayHR(MWContext *pContext, int iLocation, LO_HorizRuleStruct *pHorizRule);
 	virtual BITMAPINFO*	 NewPixmap(NI_Pixmap* pImage, BOOL mask = FALSE);
@@ -711,6 +712,7 @@ public:
 #endif
 #ifndef MOZ_NGLAYOUT
 	virtual void FreeEmbedElement(MWContext *pContext, LO_EmbedStruct *pEmbed);
+	virtual void FreeBuiltinElement(MWContext *pContext, LO_BuiltinStruct *pBuiltin);
 	virtual void GetEmbedSize(MWContext *pContext, LO_EmbedStruct *pEmbed, NET_ReloadMethod bReload);
 #endif /* MOZ_NGLAYOUT */
 #ifdef LAYERS

@@ -33,6 +33,7 @@
 #include "libevent.h"
 #include "navfram.h"
 #include "edview.h"
+#include "vocab.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -100,8 +101,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CGenericFrame)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_COMMANDTOOLBAR, OnUpdateViewCommandToolbar)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_LOCATIONTOOLBAR, OnUpdateViewLocationToolbar)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_CUSTOMTOOLBAR, OnUpdateViewCustomToolbar)
-	ON_UPDATE_COMMAND_UI(ID_VIEW_NAVCENTER, OnUpdateViewNavCenter)
-
+	
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -259,6 +259,22 @@ int colorCubeSize = 216;
 #define TEXT_WIDTH      49
 #endif
 
+// The Event Handler for the top-level bookmarks menu in a frame.
+static void qfNotifyProcedure (HT_Notification ns, HT_Resource n, HT_Event whatHappened,
+				void *token, uint32 tokenType) 
+{
+	if (whatHappened == HT_EVENT_NODE_OPENCLOSE_CHANGED)
+	{
+		// The node was opened.
+		PRBool openState;
+		HT_GetOpenState(n, &openState);
+		if (openState)
+		{
+			CGenericFrame* pFrame = (CGenericFrame*)ns->data;
+			pFrame->FinishMenuExpansion(n);
+		}
+	}
+}
 
 int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
@@ -275,16 +291,19 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 			pIStatusBar->Create( this );
 			pIStatusBar->Release();
 		}
-    } else {
-		
-		//I'm hardcoding string since I don't want it translated.
-	    GetChrome()->CreateCustomizableToolbar("Browser", 5, TRUE);
 
-        // Now that the application palette has been created (if 
-        //   appropriate) we can create the url bar.  The animation 
-        //   might need custom colors so we need the palette to be around
-        //
-		
+		if (!theApp.m_bInGetCriticalFiles)
+		{
+			// Get the top level menu going.
+			// Construct the notification struct used by HT
+			HT_Notification ns = new HT_NotificationStruct;
+			XP_BZERO(ns, sizeof(HT_NotificationStruct));
+			ns->notifyProc = qfNotifyProcedure;
+			ns->data = this;
+			m_BookmarkMenuPane = theApp.m_bInGetCriticalFiles ? NULL : HT_NewQuickFilePane(ns);
+		}
+    } else {
+
 		LPNSSTATUSBAR pIStatusBar = NULL;
 		GetChrome()->QueryInterface( IID_INSStatusBar, (LPVOID *) &pIStatusBar );
 		if( pIStatusBar ) 
@@ -293,14 +312,6 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 			pIStatusBar->Release();
 			if (theApp.m_ParentAppWindow || theApp.m_bKioskMode)
 			    pIStatusBar->Show(FALSE);
-		}
-
-		CreateMainToolbar();
-
-		if (!theApp.m_bInGetCriticalFiles) { // if we are here, don't show link bar
-			CreateLocationBar();
-			CreateLinkBar();  
-			GetChrome()->FinishedAddingBrowserToolbars();
 		}
 
 		if(!IsEditFrame())
@@ -330,8 +341,8 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 int CMainFrame::CreateLocationBar()
 {
-
-
+/*
+>>>>>>> 3.3.2.11
 	m_barLocation=new CURLBar(); 
 
 	if (!m_barLocation->Create(this, CURLBar::IDD, CBRS_TOP,CURLBar::IDD)) {
@@ -359,13 +370,14 @@ int CMainFrame::CreateLocationBar()
     m_barLocation->SetContext((LPUNKNOWN)GetMainContext());
 
 	RecalcLayout();
-
+*/
 	return TRUE;
+
 }
 
 int CMainFrame::CreateLinkBar(void)
 {
-	m_barLinks = CRDFToolbar::CreateUserToolbar(this);
+	m_barLinks = CRDFToolbar::CreateUserToolbar(NULL, this);
 
 	CButtonToolbarWindow *pWindow = new CButtonToolbarWindow(m_barLinks, theApp.m_pToolbarStyle, 43, 27, eSMALL_HTAB);
 
@@ -486,6 +498,33 @@ int CMainFrame::CreateMainToolbar(void)
 	return TRUE;
 }
 
+void CMainFrame::BeginStreamingOfRDFToolbars()
+{
+	GetChrome()->CreateRDFToolbar("Browser", 5, TRUE);
+
+	if (!theApp.m_bInGetCriticalFiles)
+	{
+		// Get the top level menu going.
+		// Construct the notification struct used by HT
+		HT_Notification ns = new HT_NotificationStruct;
+		XP_BZERO(ns, sizeof(HT_NotificationStruct));
+		ns->notifyProc = qfNotifyProcedure;
+		ns->data = this;
+		m_BookmarkMenuPane = theApp.m_bInGetCriticalFiles ? NULL : HT_NewQuickFilePane(ns);
+	}
+/*
+	if (!theApp.m_bInGetCriticalFiles && AllowDocking() && 
+		!theApp.m_ParentAppWindow && !theApp.m_bKioskMode)
+	{
+		// Show the selector if the pref says we should.
+		BOOL bSelVisible;
+		PREF_GetBoolPref(gPrefSelectorVisible, &bSelVisible);
+		if (bSelVisible)
+			theApp.CreateNewNavCenter(this);
+	}
+	*/
+}
+
 void CMainFrame::OnShowWindow (BOOL bShow, UINT nStatus)
 {
     CGenericFrame::OnShowWindow(bShow,nStatus);
@@ -599,9 +638,7 @@ void CMainFrame::OnLoadHomePage()
         if (nStartup != 0){
             GetMainContext()->NormalGetUrl(lpszHomePage);
 
-			CURLBar *pUrlBar = (CURLBar *)GetChrome()->GetToolbar(ID_LOCATION_TOOLBAR);
-			if(pUrlBar != NULL)
-				pUrlBar->UpdateFields(lpszHomePage);
+			GetChrome()->UpdateURLBars((char*)lpszHomePage);
 		}
     }
 }

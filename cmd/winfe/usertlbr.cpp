@@ -22,10 +22,22 @@
 #include "dropmenu.h"
 #include "prefapi.h"
 #include "rdfliner.h"
+#include "urlbar.h"
 
 extern "C" {
 #include "xpgetstr.h"
 };
+
+// The Nav Center vocab element
+extern "C" RDF_NCVocab gNavCenter;
+
+#define TEXT_CHARACTERS_SHOWN 9
+#define BORDERSIZE 2
+#define TEXTVERTMARGIN 1
+#define TEXTONLYVERTMARGIN 2
+#define BITMAPVERTMARGIN 2
+#define TEXT_BITMAPVERTMARGIN 1
+#define HORIZMARGINSIZE 4
 
 #define LEFT_TOOLBAR_MARGIN 10
 #define RIGHT_TOOLBAR_MARGIN 20
@@ -87,6 +99,8 @@ CRDFToolbarButton::CRDFToolbarButton()
 	m_uCurBMID = 0;
 
     currentRow = 0;
+
+	m_pTreeView = NULL;
 }
 
 
@@ -133,10 +147,7 @@ int CRDFToolbarButton::Create(CWnd *pParent, int nToolbarStyle, CSize noviceButt
 								CSize bitmapSize, int nMaxTextChars, int nMinTextChars, BOOKMARKITEM bookmark,
 								HT_Resource pNode, DWORD dwButtonStyle )
 {
-	
 	m_bookmark = bookmark;
-
-	char *protocol = NULL;
 
 	BOOL bResult = CToolbarButton::Create(pParent, nToolbarStyle, noviceButtonSize, advancedButtonSize,
 		pButtonText, pToolTipText, pStatusText, 0, 0,
@@ -145,25 +156,33 @@ int CRDFToolbarButton::Create(CWnd *pParent, int nToolbarStyle, CSize noviceButt
 	if(bResult)
 	{
 		SetNode(pNode);
-		m_nIconType = DetermineIconType(pNode, UseLargeIcons());
-
-		m_nBitmapID = GetBitmapID();
-		m_nBitmapIndex = GetBitmapIndex();
-
-		HDC hDC = ::GetDC(m_hWnd);
-
-		HPALETTE hPalette = WFE_GetUIPalette(GetParentFrame());
-		HBITMAP hBitmap = WFE_LookupLoadAndEnterBitmap(hDC, m_nBitmapID, TRUE, hPalette,
-													   sysInfo.m_clrBtnFace, RGB(255, 0, 255));
-		::ReleaseDC(m_hWnd, hDC);
-
-		SetBitmap(hBitmap, TRUE);
-		
+		UpdateIconInfo();		
 		if (m_menu.m_hMenu == NULL || (m_menu.m_hMenu != NULL && !IsMenu(m_menu.m_hMenu)))
           m_menu.CreatePopupMenu();
 	}
 
 	return bResult;
+}
+
+void CRDFToolbarButton::UpdateIconInfo()
+{
+	m_nIconType = DetermineIconType(m_Node, UseLargeIcons());
+	UINT oldBitmapID = m_nBitmapID;
+	m_nBitmapID = GetBitmapID();
+	if (m_nBitmapID != oldBitmapID)
+	{
+		HDC hDC = ::GetDC(m_hWnd);
+		HPALETTE hPalette = WFE_GetUIPalette(GetParentFrame());
+		HBITMAP hBitmap = WFE_LookupLoadAndEnterBitmap(hDC, m_nBitmapID, TRUE, hPalette,
+													   sysInfo.m_clrBtnFace, RGB(255, 0, 255));
+		::ReleaseDC(m_hWnd, hDC);
+		SetBitmap(hBitmap, TRUE);
+		if (m_nBitmapID == IDB_PICTURES)
+			SetBitmapSize(CSize(23,21));	// Command buttons
+		else SetBitmapSize(CSize(23,17)); // Personal toolbar buttons
+	}
+
+	m_nBitmapIndex = GetBitmapIndex(); 
 }
 
 CSize CRDFToolbarButton::GetMinimalButtonSize(void)
@@ -180,8 +199,17 @@ CSize CRDFToolbarButton::GetMaximalButtonSize(void)
 
 void CRDFToolbarButton::OnAction(void)
 {
-	if(m_Node && !HT_IsContainer(m_Node))
+	if(m_Node)
 	{
+		char* url = HT_GetNodeURL(m_Node);
+		if (strncmp(url, "command:", 8) == 0)
+		{
+			// We're a command, baby.  Look up our FE command and execute it.
+			UINT nCommand = theApp.m_pBrowserCommandMap->GetFEResource(url);
+			WFE_GetOwnerFrame(this)->PostMessage(WM_COMMAND, MAKEWPARAM(nCommand, nCommand), 0);
+		}
+		else if (!HT_IsContainer(m_Node))
+		{
 			CAbstractCX * pCX = FEU_GetLastActiveFrameContext();
 			ASSERT(pCX != NULL);
 			if (pCX != NULL)
@@ -189,6 +217,7 @@ void CRDFToolbarButton::OnAction(void)
 				if (!HT_Launch(m_Node, pCX->GetContext()))
 					pCX->NormalGetUrl((LPTSTR)HT_GetNodeURL(m_Node));
 			}
+		}
 	}
 }
 
@@ -199,6 +228,8 @@ void CRDFToolbarButton::FillInOleDataSource(COleDataSource *pDataSource)
     pDataSource->CacheGlobalData(cfHTNode, hString);
 
 	// Need to "select" the button in the view.  Hack.
+	HT_View theView = HT_GetView(m_Node);
+	HT_SetSelectedView(HT_GetPane(theView), theView); // Make sure this view is selected in the pane.
 	HT_SetSelection(m_Node);
 
 	// Now the view is sufficient
@@ -266,40 +297,148 @@ void CRDFToolbarButton::EditTextChanged(char *pText)
 		delete []pText;
 	}
     RemoveTextEdit();
-
-	((CRDFToolbar*)GetParent())->LayoutButtons(-1);
+	
+	if (foundOnRDFToolbar())
+		((CRDFToolbar*)GetParent())->LayoutButtons(-1);
 }
 
 void CRDFToolbarButton::DrawPicturesAndTextMode(HDC hDC, CRect rect)
 {
-	 DrawBitmapOnSide(hDC, rect);
+	if (foundOnRDFToolbar())
+	{
+		CRDFToolbar* theToolbar = (CRDFToolbar*)GetParent();
+		void* data;
+		HT_GetNodeData(HT_TopNode(theToolbar->GetHTView()), gNavCenter->toolbarBitmapPosition, HT_COLUMN_STRING, &data);
+		if (data)
+		{
+			CString position((char*)data);
+			if (position == "top")
+			{
+				DrawBitmapOnTop(hDC, rect);
+				return;
+			}
+		}
+	}
+	
+	DrawBitmapOnSide(hDC, rect);
 }
 
 void CRDFToolbarButton::DrawPicturesMode(HDC hDC, CRect rect)
 {
+	if (foundOnRDFToolbar())
+	{
+		CRDFToolbar* theToolbar = (CRDFToolbar*)GetParent();
+		void* data;
+		HT_GetNodeData(HT_TopNode(theToolbar->GetHTView()), gNavCenter->toolbarBitmapPosition, HT_COLUMN_STRING, &data);
+		if (data)
+		{
+			CString position((char*)data);
+			if (position == "top")
+			{
+				DrawBitmapOnTop(hDC, rect);
+				return;
+			}
+		}
+	}
+
 	DrawBitmapOnSide(hDC, rect);
 }
 
 void CRDFToolbarButton::DrawButtonText(HDC hDC, CRect rcTxt, CSize sizeTxt, CString strTxt)
 {
+	if (foundOnRDFToolbar())
+	{
+		hasCustomTextColor = TRUE;
+		switch (m_eState)
+		{
+			case eDISABLED:
+				customTextColor = ((CRDFToolbar*)GetParent())->GetDisabledColor();
+				if (customTextColor == -1)
+				{
+					hasCustomTextColor = FALSE;
+				}
+				break;
+			case eBUTTON_UP:
+				customTextColor = ((CRDFToolbar*)GetParent())->GetRolloverColor();
+				break;
+			case eBUTTON_DOWN:
+				customTextColor = ((CRDFToolbar*)GetParent())->GetPressedColor();
+				break;
+			case eNORMAL:
+				customTextColor = ((CRDFToolbar*)GetParent())->GetForegroundColor();
+				break;
+		}
+
+		if (m_bDepressed)
+			customTextColor = ((CRDFToolbar*)GetParent())->GetPressedColor();
+	}
+
     CToolbarButton::DrawButtonText(hDC, rcTxt, sizeTxt, strTxt);
 }
 
 CSize CRDFToolbarButton::GetButtonSizeFromChars(CString s, int c)
 {
     if(m_nToolbarStyle != TB_TEXT)
+	{
+		if (foundOnRDFToolbar())
+		{
+			CRDFToolbar* theToolbar = (CRDFToolbar*)GetParent();
+			void* data;
+			HT_GetNodeData(HT_TopNode(theToolbar->GetHTView()), gNavCenter->toolbarBitmapPosition, HT_COLUMN_STRING, &data);
+			if (data)
+			{
+				CString position((char*)data);
+				if (position == "top")
+				{
+					return GetBitmapOnTopSize(s, c);
+				}
+			}
+		}
 		return(GetBitmapOnSideSize(s, c));
+	}
 	else
 		return(GetTextOnlySize(s, c));
 }
 
 void CRDFToolbarButton::GetPicturesAndTextModeTextRect(CRect &rect)
 {
+	if (foundOnRDFToolbar())
+	{
+		CRDFToolbar* theToolbar = (CRDFToolbar*)GetParent();
+		void* data;
+		HT_GetNodeData(HT_TopNode(theToolbar->GetHTView()), gNavCenter->toolbarBitmapPosition, HT_COLUMN_STRING, &data);
+		if (data)
+		{
+			CString position((char*)data);
+			if (position == "top")
+			{
+				GetBitmapOnTopTextRect(rect);
+				return;
+			}
+		}
+	}
+
 	GetBitmapOnSideTextRect(rect);
 }
 
 void CRDFToolbarButton::GetPicturesModeTextRect(CRect &rect)
 {
+	if (foundOnRDFToolbar())
+	{
+		CRDFToolbar* theToolbar = (CRDFToolbar*)GetParent();
+		void* data;
+		HT_GetNodeData(HT_TopNode(theToolbar->GetHTView()), gNavCenter->toolbarBitmapPosition, HT_COLUMN_STRING, &data);
+		if (data)
+		{
+			CString position((char*)data);
+			if (position == "top")
+			{
+				GetBitmapOnTopTextRect(rect);
+				return;
+			}
+		}
+	}
+
 	GetBitmapOnSideTextRect(rect);
 }
 
@@ -309,8 +448,10 @@ BOOL CRDFToolbarButton::CreateRightMouseMenu(void)
 	if (m_bShouldShowRMMenu)
 	{
 		m_MenuCommandMap.Clear();
-		HT_SetSelection(m_Node); // Make sure the node is the selection in the view.
 		HT_View theView = HT_GetView(m_Node);
+		HT_SetSelectedView(HT_GetPane(theView), theView); // Make sure this view is selected in the pane.
+		HT_SetSelection(m_Node); // Make sure the node is the selection in the view.
+		
 		HT_Cursor theCursor = HT_NewContextualMenuCursor(theView, PR_FALSE, PR_FALSE);
 		if (theCursor != NULL)
 		{
@@ -413,9 +554,158 @@ BEGIN_MESSAGE_MAP(CRDFToolbarButton, CRDFToolbarButtonBase)
 	ON_MESSAGE(DT_DRAGGINGOCCURRED, OnDropMenuDraggingOccurred)
 	ON_MESSAGE(DM_MENUCLOSED, OnDropMenuClosed)
 	ON_WM_SYSCOLORCHANGE()
-	//}}AFX_MSG_MAP
+	ON_WM_PAINT()
+	ON_WM_MOUSEACTIVATE()
+		//}}AFX_MSG_MAP
 
 END_MESSAGE_MAP()
+
+
+int CRDFToolbarButton::OnMouseActivate( CWnd* pDesktopWnd, UINT nHitTest, UINT message )
+{
+	m_bButtonDown = TRUE;
+	return MA_ACTIVATE;
+}
+
+
+void CRDFToolbarButton::OnPaint()
+{
+	CRect updateRect;
+
+	GetUpdateRect(&updateRect);
+
+	CPaintDC dcPaint(this);	// device context for painting
+	CRect rcClient;
+	GetClientRect(&rcClient);
+	
+	HDC hSrcDC = dcPaint.m_hDC;
+
+	HPALETTE hPalette;
+	HPALETTE hOldPalette;
+	CFrameWnd* pParent = WFE_GetOwnerFrame(this); 
+	hPalette = WFE_GetUIPalette(pParent);
+	hOldPalette= ::SelectPalette(hSrcDC, hPalette, FALSE);
+	HDC hMemDC = ::CreateCompatibleDC(hSrcDC);
+
+	if(hMemDC)
+	{
+		HPALETTE hOldMemPalette = ::SelectPalette(hMemDC, hPalette, FALSE);
+
+		HBITMAP hbmMem = CreateCompatibleBitmap(hSrcDC,
+										rcClient.Width(),
+										rcClient.Height());
+
+		//
+		// Select the bitmap into the off-screen DC.
+		//
+		HBITMAP hbmOld = (HBITMAP)::SelectObject(hMemDC, hbmMem);
+
+		// if we are not enabled then must make sure that button state is normal
+		if(!m_bEnabled)
+		{
+			m_eState = eNORMAL;
+		}
+
+		CRect innerRect = rcClient;
+
+		innerRect.InflateRect(-BORDERSIZE, -BORDERSIZE);
+
+		int oldMode = ::SetBkMode(hMemDC, TRANSPARENT);
+		if (foundOnRDFToolbar())
+		{
+			CRDFToolbar* pToolbar = (CRDFToolbar*)GetParent();
+			if (pToolbar->GetBackgroundImage() == NULL ||
+				(pToolbar->GetBackgroundImage() != NULL && 
+				 !pToolbar->GetBackgroundImage()->FrameSuccessfullyLoaded()))
+			{
+				// Fill with our background color.
+				HBRUSH hRegBrush = (HBRUSH) ::CreateSolidBrush(pToolbar->GetBackgroundColor());
+				::FillRect(hMemDC, rcClient, hRegBrush);
+			}
+			else 
+			{
+				// There is a background. Let's do a tile on the rect corresponding to our position
+				// in the parent toolbar.
+				CWnd* pGrandParent = pToolbar->GetParent();
+				CRect offsetRect(rcClient);
+				MapWindowPoints(pGrandParent, &offsetRect);
+
+				// Now we want to fill the given rectangle.
+				PaintBackground(hMemDC, rcClient, pToolbar->GetBackgroundImage(), offsetRect.left, offsetRect.top);
+			}
+		}
+		else
+		{
+			::FillRect(hMemDC, rcClient, sysInfo.m_hbrBtnFace);
+		}
+
+		if(m_nToolbarStyle == TB_PICTURESANDTEXT)
+		{
+			DrawPicturesAndTextMode(hMemDC, innerRect);
+		}
+		else if(m_nToolbarStyle == TB_PICTURES)
+		{
+			DrawPicturesMode(hMemDC, innerRect);
+		}
+		else
+		{
+			DrawTextMode(hMemDC, innerRect);
+		}
+
+		// Now, draw 3d visual button effects, depending on our state
+		switch (m_eState)
+		{
+			case eBUTTON_UP:
+			{
+                if( m_nChecked == 0 )
+    				DrawUpButton(hMemDC, rcClient);
+                else
+    			    DrawDownButton(hMemDC, rcClient);
+			}
+			break;
+			
+			case eBUTTON_CHECKED:
+			{
+				// A checked button but NOT mousing over - no black border
+                DrawCheckedButton(hMemDC, rcClient);
+			}
+			break;
+
+			case eBUTTON_DOWN:
+			{
+				DrawDownButton(hMemDC, rcClient);
+			}
+			break;
+
+			case eDISABLED:
+			{
+				if(m_nChecked == 2)
+					DrawCheckedButton(hMemDC, rcClient);
+
+			}
+			break;
+
+			case eNORMAL:
+			{
+				if (m_bDepressed)
+					DrawDownButton(hMemDC, rcClient); // Looks like it's locked down.
+			}
+		}
+
+		::SetBkMode(hMemDC, oldMode);
+
+		::BitBlt(hSrcDC, 0, 0, rcClient.Width(), rcClient.Height(), hMemDC, 0, 0,
+						SRCCOPY);
+	
+		::SelectPalette(hMemDC, hOldMemPalette, FALSE);
+		::SelectPalette(hSrcDC, hOldPalette, FALSE);
+
+		::SelectObject(hMemDC, hbmOld);
+		::DeleteObject(hbmMem);
+ 
+		::DeleteDC(hMemDC);
+	}
+}
 
 LRESULT CRDFToolbarButton::OnDragMenuOpen(WPARAM wParam, LPARAM lParam)
 {
@@ -453,7 +743,7 @@ LRESULT CRDFToolbarButton::OnFillInMenu(WPARAM wParam, LPARAM lParam)
 	if (isOpen)
 		FillInMenu(theNode);
 	else HT_SetOpenState(theNode, (PRBool)TRUE);
-	
+
 	return 1;
 }
 
@@ -585,6 +875,33 @@ void CRDFToolbarButton::OnSysColorChange( )
 
 void CRDFToolbarButton::FillInMenu(HT_Resource theNode)
 {
+	// Determine our position
+/*	CWnd* frame = GetTopLevelFrame();
+	CPoint point(0, GetRequiredButtonSize().cy);
+	MapWindowPoints(frame, &point, 1);
+*/
+
+	if (!m_bDepressed)
+	{
+		CPoint point = RequestMenuPlacement();
+		m_pTreeView = CNSNavFrame::CreateFramedRDFViewFromResource(NULL, point.x, point.y, 300, 500, m_Node);
+		SetDepressed(TRUE);
+		m_pTreeView->SetRDFButton(this);
+		CRDFToolbarHolder* pHolder = (CRDFToolbarHolder*)(GetParent()->GetParent()->GetParent());
+		if (pHolder->GetCurrentButton() != NULL)
+		{
+			pHolder->GetCurrentButton()->GetTreeView()->DeleteNavCenter();
+			pHolder->SetCurrentButton(this);
+		}
+	}
+	else
+	{
+		// Delete NavCenter.
+		m_pTreeView->DeleteNavCenter();
+		m_pTreeView = NULL;
+	}
+
+	/*
 	m_pCachedDropMenu->CreateOverflowMenuItem(ID_HOTLIST_VIEW, CString(szLoadString(IDS_MORE_BOOKMARKS)), NULL, NULL );
 
 	HT_Cursor theCursor = HT_NewCursor(theNode);
@@ -629,20 +946,36 @@ void CRDFToolbarButton::FillInMenu(HT_Resource theNode)
 	
 	HT_DeleteCursor(theCursor);
 	m_pCachedDropMenu = NULL;
+	*/
 }
 
 UINT CRDFToolbarButton::GetBitmapID(void)
 {
-	if (m_nBitmapID != 0)
-		return m_nBitmapID;
+	if (m_Node)
+	{
+		if (strncmp(HT_GetNodeURL(m_Node), "command:", 8) == 0)
+		{
+			// We're an internal command.
+			return IDB_PICTURES;
+		}
+		else if (HT_IsContainer(m_Node))
+			return IDB_BUTTON_FOLDER;
+		else return IDB_USERBTN;
+	}
 
-	if (m_Node && HT_IsContainer(m_Node))
-		return IDB_BUTTON_FOLDER;
-	else return IDB_USERBTN;
+	return IDB_USERBTN;
 }
 
 UINT CRDFToolbarButton::GetBitmapIndex(void)
 {
+	if (m_Node)
+	{
+		if (strncmp(HT_GetNodeURL(m_Node), "command:", 8) == 0)
+		{
+			// We're an internal command.  Access the command bitmap strip.
+			return theApp.m_pCommandToolbarIndices->GetFEResource(HT_GetNodeURL(m_Node));
+		}
+	}
 	return 0;
 }
 
@@ -657,6 +990,18 @@ void CRDFToolbarButton::SetTextWithoutResize(CString text)
 	XP_STRCPY(m_pButtonText, text);
 }
 
+BOOL CRDFToolbarButton::NeedsUpdate()
+{
+	// Only internal commands need updating via the OnUpdateCmdUI handler.
+	// All other buttons are enabled/disabled using the appropriate HT calls.
+	if (m_Node && strncmp(HT_GetNodeURL(m_Node), "command:", 8) == 0)
+	{
+		m_nCommand = theApp.m_pBrowserCommandMap->GetFEResource(HT_GetNodeURL(m_Node));
+		return TRUE;
+	}
+	return FALSE;
+}
+
 void CRDFToolbarButton::LoadComplete(HT_Resource r)
 {
 	Invalidate();
@@ -664,10 +1009,42 @@ void CRDFToolbarButton::LoadComplete(HT_Resource r)
 
 void CRDFToolbarButton::DrawCustomIcon(HDC hDC, int x, int y)
 {
-	int size = UseLargeIcons() ? 23 : 16;
-	DrawArbitraryURL(m_Node, x, y, size, size, hDC, 
-					m_bDepressed ? (::GetSysColor(COLOR_BTNSHADOW)) :  (::GetSysColor(COLOR_BTNFACE)), 
+	if (foundOnRDFToolbar())
+	{
+		CRDFToolbar* pToolbar = (CRDFToolbar*)GetParent();
+
+		CRDFImage* pCustomImage = DrawArbitraryURL(m_Node, x, y, m_bitmapSize.cx, m_bitmapSize.cy, hDC, 
+					 pToolbar->GetBackgroundColor(), 
 					 this, UseLargeIcons());
+	
+		if (!pCustomImage->FrameSuccessfullyLoaded())
+			return;
+
+		// Adjust the toolbar button's width and height.
+		long width = pCustomImage->bmpInfo->bmiHeader.biWidth;
+		long height = pCustomImage->bmpInfo->bmiHeader.biHeight;
+		
+		if (width > m_bitmapSize.cx || height > m_bitmapSize.cy)
+		{
+			SetBitmapSize(CSize(width, height));
+
+			CSize buttonSize = GetMinimalButtonSize(); // Only care about height.
+	
+			// Grow the toolbar if necessary.
+			if (buttonSize.cy > pToolbar->GetRowHeight())
+			{
+				pToolbar->SetRowHeight(buttonSize.cy);
+				pToolbar->LayoutButtons(-1);
+				GetParentFrame()->RecalcLayout();
+			}
+			else
+			{
+				// We're too small.  Need to adjust our bitmap height.
+				int diff = pToolbar->GetRowHeight() - buttonSize.cy;
+				SetBitmapSize(CSize(width, height + diff));
+			}
+		}
+	}
 }
 
 
@@ -677,6 +1054,154 @@ void CRDFToolbarButton::DrawLocalIcon(HDC hDC, int x, int y)
 		DrawLocalFileIcon(m_Node, x, y, hDC);
 }
 
+void CRDFToolbarButton::DrawButtonBitmap(HDC hDC, CRect rcImg)
+{
+	BTN_STATE eState = m_eState;
+
+	if(m_eState == eBUTTON_CHECKED)
+		// A checked button has same bitmap as the normal state with no mouse-over
+		eState = eNORMAL;
+	else if(m_eState == eBUTTON_UP && m_nChecked == 2)
+		// if we are in the mouse over mode, but indeterminate we want our bitmap to have a disabled look
+		eState = eDISABLED;
+
+	UpdateIconInfo();
+	
+	// Create a scratch DC and select our bitmap into it.
+	HDC pBmpDC  = ::CreateCompatibleDC(hDC);
+	HPALETTE hPalette = WFE_GetUIPalette(GetParentFrame());
+	CBitmap BmpImg;
+	CPoint ptDst;
+	
+	HBITMAP hOldBmp;
+	HPALETTE hOldPal;
+	if (m_hBmpImg != NULL)
+	{
+		HINSTANCE hInst = AfxGetResourceHandle();
+		HBITMAP hBmpImg;
+		hBmpImg = m_hBmpImg;
+		hOldBmp = (HBITMAP)::SelectObject(pBmpDC, hBmpImg);
+		hOldPal = ::SelectPalette(pBmpDC, WFE_GetUIPalette(NULL), TRUE);
+		::RealizePalette(pBmpDC);
+	}
+
+	// Get the image dimensions
+		
+	int realBitmapHeight;
+	if(m_nIconType == LOCAL_FILE)
+	{
+		realBitmapHeight = 16;
+		m_bitmapSize.cx = 16;
+	}
+	else if (m_nIconType == ARBITRARY_URL)
+	{
+		realBitmapHeight = m_bitmapSize.cy;
+	}
+	else 
+	{
+		if (m_nBitmapID == IDB_PICTURES)
+			realBitmapHeight = 21;	// Height of command buttons
+		else realBitmapHeight = 17; // Height of personal toolbar button bitmaps.
+	}
+
+	// Center the image within the button	
+	ptDst.x = (rcImg.Width() >= m_bitmapSize.cx) ?
+		rcImg.left + (((rcImg.Width() - m_bitmapSize.cx) + 1) / 2) : rcImg.left;
+	
+	ptDst.y = (rcImg.Height() >= realBitmapHeight) ?
+		rcImg.top + (((rcImg.Height() - realBitmapHeight) + 1) / 2) : rcImg.top;
+
+	// If we're in the checked state, shift the image one pixel
+	if (m_eState == eBUTTON_CHECKED || (m_eState == eBUTTON_UP && m_nChecked == 1))
+	{
+		ptDst.x += 1;
+		ptDst.y += 1;
+	}
+
+	// Call the handy transparent blit function to paint the bitmap over
+	// whatever colors exist.
+	
+	CPoint bitmapStart;
+
+    if(m_bIsResourceID)
+		bitmapStart = CPoint(m_nBitmapIndex * m_bitmapSize.cx, m_bEnabled ? realBitmapHeight * eState : realBitmapHeight);
+
+	if(m_bIsResourceID)  
+	{
+		
+		if(m_nIconType == LOCAL_FILE)
+		{
+			DrawLocalIcon(hDC, ptDst.x, ptDst.y);
+		}
+		else if (m_nIconType == ARBITRARY_URL)
+		{
+			DrawCustomIcon(hDC, ptDst.x, ptDst.y);
+		}
+		else 
+			FEU_TransBlt( hDC, ptDst.x, ptDst.y, m_bitmapSize.cx, realBitmapHeight,
+				pBmpDC, bitmapStart.x, bitmapStart.y ,WFE_GetUIPalette(NULL), 
+				GetSysColor(COLOR_BTNFACE));   
+            //::BitBlt(hDC, ptDst.x, ptDst.y, m_bitmapSize.cx, realBitmapHeight, 
+			//	 pBmpDC, bitmapStart.x, bitmapStart.y, SRCCOPY);
+	}
+
+	if (m_hBmpImg != NULL)
+	{
+		// Cleanup
+		::SelectObject(pBmpDC, hOldBmp);
+		::SelectPalette(pBmpDC, hOldPal, TRUE);
+		::DeleteDC(pBmpDC);
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////
+// Class CRDFSeparatorButton
+///////////////////////////////////////////////////////////////////////////
+
+BEGIN_MESSAGE_MAP(CRDFSeparatorButton, CRDFToolbarButton)
+	//{{AFX_MSG_MAP(CRDFSeparatorButton)
+//}}AFX_MSG_MAP
+
+END_MESSAGE_MAP()
+
+CSize CRDFSeparatorButton::GetButtonSizeFromChars(CString s, int c)
+{
+	return CSize(8, 8);
+}
+
+void CRDFSeparatorButton::DrawButtonBitmap(HDC hDC, CRect rcImg)
+{
+	CDC* pDC = CDC::FromHandle(hDC);
+	
+	CRect clientRect;
+	GetClientRect(&clientRect);
+
+	COLORREF shadowColor = ::GetSysColor(COLOR_3DSHADOW);
+	COLORREF highlightColor = ::GetSysColor(COLOR_3DLIGHT);
+
+	if (foundOnRDFToolbar())
+	{
+		CRDFToolbar* pToolbar = (CRDFToolbar*)GetParent();
+		shadowColor = pToolbar->GetShadowColor();
+		highlightColor = pToolbar->GetHighlightColor();
+	}
+
+	HPEN hShadowPen = (HPEN)::CreatePen(PS_SOLID, 1, shadowColor);
+	HPEN hHighlightPen = (HPEN)::CreatePen(PS_SOLID, 1, highlightColor);
+
+	HPEN hOldPen = (HPEN)(pDC->SelectObject(hShadowPen));
+	pDC->MoveTo(3, 3);
+	pDC->LineTo(3, clientRect.bottom - 2);
+	
+	(HPEN)(pDC->SelectObject(hHighlightPen));
+	pDC->MoveTo(4, 3);
+	pDC->LineTo(4, clientRect.bottom - 2);
+
+	pDC->SelectObject(hOldPen);
+
+	VERIFY(::DeleteObject(hShadowPen));
+	VERIFY(::DeleteObject(hHighlightPen));
+}
 
 ///////////////////////////////////////////////////////////////////////////
 //							Class CRDFToolbarDropTarget
@@ -723,7 +1248,7 @@ DROPEFFECT CRDFToolbarDropTarget::OnDragOver(CWnd * pWnd, COleDataObject * pData
 		pButton = NULL;
 	}
 	
-	HT_Resource theNode = pButton ? pButton->GetNode() : HT_TopNode(HT_GetSelectedView(m_pToolbar->GetPane()));
+	HT_Resource theNode = pButton ? pButton->GetNode() : HT_TopNode(m_pToolbar->GetHTView());
 	
 	m_pToolbar->SetDragButton(pButton);
 
@@ -753,7 +1278,7 @@ DROPEFFECT CRDFToolbarDropTarget::OnDragOver(CWnd * pWnd, COleDataObject * pData
 BOOL CRDFToolbarDropTarget::OnDrop(CWnd * pWnd, COleDataObject * pDataObject,
 			DROPEFFECT dropEffect, CPoint point)
 {
-	HT_Resource theNode = HT_TopNode(HT_GetSelectedView(m_pToolbar->GetPane()));
+	HT_Resource theNode = HT_TopNode(m_pToolbar->GetHTView());
 	if (m_pToolbar->GetDragButton())
 	  theNode = m_pToolbar->GetDragButton()->GetNode();
 
@@ -768,15 +1293,70 @@ BOOL CRDFToolbarDropTarget::OnDrop(CWnd * pWnd, COleDataObject * pDataObject,
 //							Class CRDFToolbar
 ///////////////////////////////////////////////////////////////////////////
 #define LINKTOOLBARHEIGHT 21
+#define COMMANDTOOLBARHEIGHT 42
 #define SPACE_BETWEEN_ROWS 2
 
-// The Event Handler for HT notifications on the personal toolbar
-static void ptNotifyProcedure (HT_Notification ns, HT_Resource n, HT_Event whatHappened) 
+// The Event Handler for HT notifications on the toolbars
+static void toolbarNotifyProcedure (HT_Notification ns, HT_Resource n, HT_Event whatHappened,
+					void *token, uint32 tokenType) 
 {
-  CRDFToolbar* theToolbar = (CRDFToolbar*)ns->data;
-  if (n != NULL)
-  {
+	static int toolbarIDCounter = 0;
+
+	CRDFToolbarHolder* theToolbarHolder = (CRDFToolbarHolder*)ns->data;
+	if (theToolbarHolder == NULL)
+		return;
+
 	HT_View theView = HT_GetView(n);
+	
+	// The pane has to handle some events.  These will go here.
+	if (whatHappened == HT_EVENT_VIEW_SELECTED)
+	{
+		
+	}
+	
+	if (theView == NULL)
+		return;
+
+	if (whatHappened == HT_EVENT_VIEW_ADDED) 
+	{
+		CRDFToolbar* theNewToolbar = CRDFToolbar::CreateUserToolbar(theView, theToolbarHolder->GetCachedParentWindow());
+		CButtonToolbarWindow *pWindow = new CButtonToolbarWindow(theNewToolbar, 
+										theApp.m_pToolbarStyle, 43, 27, eSMALL_HTAB);
+		
+		theToolbarHolder->AddNewWindow(ID_PERSONAL_TOOLBAR+toolbarIDCounter, pWindow, toolbarIDCounter, 43, 27, 1, 
+				HT_GetNodeName(HT_TopNode(theNewToolbar->GetHTView())),theApp.m_pToolbarStyle, TRUE, FALSE);
+		toolbarIDCounter++;
+		theToolbarHolder->GetCachedParentWindow()->RecalcLayout();
+	}
+	else if (whatHappened == HT_EVENT_VIEW_DELETED)
+	{
+		CRDFToolbar* pToolbar = (CRDFToolbar*)HT_GetViewFEData(theView);
+		pToolbar->SetHTView(NULL);
+		delete pToolbar;
+		HT_SetViewFEData(theView, NULL);
+	}
+	else if (whatHappened == HT_EVENT_NODE_VPROP_CHANGED && HT_TopNode(theView) == n)
+	{
+	}
+	else if (whatHappened == HT_EVENT_NODE_EDIT && HT_TopNode(theView) == n)
+	{
+		// Edit being performed on a selector bar item. (STILL TO DO)
+	}
+	else if (whatHappened == HT_EVENT_VIEW_WORKSPACE_REFRESH)
+	{
+	}
+	// If the pane doesn't handle the event, then a view does.
+	else 
+	{
+		CRDFToolbar* pToolbar = (CRDFToolbar*)HT_GetViewFEData(theView);
+		if (pToolbar != NULL)
+			pToolbar->HandleEvent(ns, n, whatHappened);
+	}
+}
+
+void CRDFToolbar::HandleEvent(HT_Notification ns, HT_Resource n, HT_Event whatHappened)
+{
+	HT_View theView = m_ToolbarView;
 	if (theView != NULL)
 	{
 		if (whatHappened == HT_EVENT_NODE_OPENCLOSE_CHANGED)
@@ -788,7 +1368,7 @@ static void ptNotifyProcedure (HT_Notification ns, HT_Resource n, HT_Event whatH
 				if (n == HT_TopNode(theView))
 				{
 					// Initial population of the toolbar. We should only receive this event once.
-					theToolbar->FillInToolbar();
+					FillInToolbar();
 				}
 				else 
 				{
@@ -800,7 +1380,7 @@ static void ptNotifyProcedure (HT_Notification ns, HT_Resource n, HT_Event whatH
 		}
 		else if (whatHappened == HT_EVENT_VIEW_REFRESH)
 		{
-			theToolbar->LayoutButtons(-1);
+			LayoutButtons(-1);
 		}
 		else if (HT_TopNode(theView) == HT_GetParent(n))
 		{
@@ -814,72 +1394,70 @@ static void ptNotifyProcedure (HT_Notification ns, HT_Resource n, HT_Event whatH
 				{
 					// Destroy the toolbar button
 					CRDFToolbarButton* pButton = (CRDFToolbarButton*)HT_GetNodeFEData(n);
-					if (theToolbar->m_hWnd)
-					  theToolbar->RemoveButton(pButton);
-					else theToolbar->DecrementButtonCount();
+					if (m_hWnd)
+					  RemoveButton(pButton);
+					else DecrementButtonCount();
 					delete pButton;
 
 				}
 			}
 			else if (whatHappened == HT_EVENT_NODE_ADDED)
 			{
-				theToolbar->AddHTButton(n);
-				theToolbar->LayoutButtons(-1);
+				AddHTButton(n);
+				LayoutButtons(-1);
+			}
+			else if (whatHappened == HT_EVENT_NODE_EDIT)
+			{	
+				CRDFToolbarButton* pButton = (CRDFToolbarButton*)HT_GetNodeFEData(n);
+				pButton->AddTextEdit();
 			}
 			else if (whatHappened == HT_EVENT_NODE_VPROP_CHANGED)
 			{
 				CRDFToolbarButton* pButton = (CRDFToolbarButton*)HT_GetNodeFEData(n);
-				pButton->SetText(HT_GetNodeName(n)); // Update our name.
-				theToolbar->LayoutButtons(-1);
+				if (pButton->m_hWnd)
+				{
+					pButton->SetText(HT_GetNodeName(n)); // Update our name.
+					LayoutButtons(-1);
+				}
 			}
 		}
 	}
-  }
 }
 
-CRDFToolbar::CRDFToolbar(int nMaxButtons, int nToolbarStyle, int nPicturesAndTextHeight, int nPicturesHeight,
-						   int nTextHeight)
+CRDFToolbar::CRDFToolbar(HT_View htView, int nMaxButtons, int nToolbarStyle, int nPicturesAndTextHeight, 
+						 int nPicturesHeight, int nTextHeight)
 	 : CNSToolbar2(nMaxButtons, nToolbarStyle, nPicturesAndTextHeight, nPicturesHeight, nTextHeight)
 {
+	// Set our view and point HT at us.
+	m_pBackgroundImage = NULL;
+	m_ToolbarView = htView;
+	HT_SetViewFEData(htView, this);
+
 	m_nNumberOfRows = 1;
-	
-	// Construct the notification struct used by HT
-	HT_Notification ns = new HT_NotificationStruct;
-	ns->notifyProc = ptNotifyProcedure;
-	ns->data = this;
-	
-	// Construct the pane and give it our notification struct
-	m_PersonalToolbarPane = HT_NewPersonalToolbarPane(ns);
-	if (m_PersonalToolbarPane)
-		HT_SetPaneFEData(m_PersonalToolbarPane, this);
+	m_nRowHeight = LINKTOOLBARHEIGHT;
+	void* data;
+	HT_GetNodeData(HT_TopNode(GetHTView()), gNavCenter->toolbarBitmapPosition, HT_COLUMN_STRING, &data);
+	if (data)
+	{
+		CString position((char*)data);
+		if (position == "top")
+			m_nRowHeight = COMMANDTOOLBARHEIGHT;
+	}
 }
 
-CRDFToolbar* CRDFToolbar::CreateUserToolbar(CWnd* pParent)
+CRDFToolbar* CRDFToolbar::CreateUserToolbar(HT_View theView, CWnd* pParent)
 {
-	// read in the maximum size we're allowing for personal toolbar items
-	int32 nMaxToolbarButtonChars;
-    int32 nMinToolbarButtonChars;
-
-	if(PREF_GetIntPref("browser.personal_toolbar_button.max_chars", &nMaxToolbarButtonChars) ==
-		PREF_ERROR)
-		m_nMaxToolbarButtonChars = 30;
-	else
-		m_nMaxToolbarButtonChars = CASTINT(nMaxToolbarButtonChars);
-
-    if(PREF_GetIntPref("browser.personal_toolbar_button.min_chars", &nMinToolbarButtonChars) ==
-		PREF_ERROR)
-		m_nMinToolbarButtonChars = 15;
-	else
-		m_nMinToolbarButtonChars = CASTINT(nMinToolbarButtonChars);
-
-	CRDFToolbar* pToolbar = new CRDFToolbar(MAX_TOOLBAR_BUTTONS,theApp.m_pToolbarStyle, 43, 27, 27);
+	CRDFToolbar* pToolbar = new CRDFToolbar(theView, MAX_TOOLBAR_BUTTONS, theApp.m_pToolbarStyle, 43, 27, 27);
 
 	if (pToolbar->Create(pParent))
 	{
-		pToolbar->SetButtonsSameWidth(FALSE);
-
 		// Top node is already open.  Fill it in.
-		pToolbar->FillInToolbar();
+		PRBool openState;
+		HT_Resource topNode = HT_TopNode(theView);
+		HT_GetOpenState(topNode, &openState);
+		if (openState)
+			pToolbar->FillInToolbar();
+		else HT_SetOpenState(topNode, PR_TRUE); // Let the callback kick in.
 	}
 
 	return pToolbar;
@@ -887,12 +1465,7 @@ CRDFToolbar* CRDFToolbar::CreateUserToolbar(CWnd* pParent)
 
 CRDFToolbar::~CRDFToolbar()
 {
-	if (m_PersonalToolbarPane)
-	{
-		HT_Pane oldPane = m_PersonalToolbarPane;
-		m_PersonalToolbarPane = NULL;
-		HT_DeletePane(oldPane);
-	}
+	m_ToolbarView = NULL;
 }
 
 int CRDFToolbar::Create(CWnd *pParent)
@@ -908,19 +1481,28 @@ int CRDFToolbar::Create(CWnd *pParent)
 
 	DragAcceptFiles(FALSE);
 
+	HT_Resource topNode = HT_TopNode(GetHTView());
+	BOOL fixedSize = FALSE;
+
+	void* data;
+	HT_GetNodeData(topNode, gNavCenter->toolbarButtonsFixedSize, HT_COLUMN_STRING, &data);
+	if (data)
+	{
+		CString answer((char*)data);
+		if (answer.GetLength() > 0 && (answer.GetAt(0) == 'y' || answer.GetAt(0) == 'Y'))
+			fixedSize = TRUE;
+	}
+	SetButtonsSameWidth(fixedSize);
+
 	return result;
 }
 
 void CRDFToolbar::FillInToolbar()
 {
-	if (!m_PersonalToolbarPane)
+	if (!m_ToolbarView)
 		return;
 
-	HT_View theView = HT_GetSelectedView(m_PersonalToolbarPane);
-	if (theView == NULL)
-		return;
-
-	HT_Resource top = HT_TopNode(theView);
+	HT_Resource top = HT_TopNode(m_ToolbarView);
 	HT_Cursor cursor = HT_NewCursor(top);
 	if (cursor == NULL)
 		return;
@@ -936,22 +1518,37 @@ void CRDFToolbar::FillInToolbar()
 
 void CRDFToolbar::AddHTButton(HT_Resource item)
 {
-	if (HT_IsSeparator(item))
-		return;
-
-	CRDFToolbarButton* pButton = new CRDFToolbarButton;
 	BOOKMARKITEM bookmark;
-
 	XP_STRCPY(bookmark.szText, HT_GetNodeName(item));
 	XP_STRCPY(bookmark.szAnchor, HT_GetNodeURL(item));
-
 	CString csAmpersandString = FEU_EscapeAmpersand(CString(bookmark.szText));
+	CString tooltipText(bookmark.szText);  // Default is to use the name for the tooltip
+	CString statusBarText(bookmark.szAnchor); // and the URL for the status bar text.
+
+	// Fetch the button's tooltip and status bar text.
+	void* data;
+	HT_GetNodeData(item, gNavCenter->buttonTooltipText, HT_COLUMN_STRING, &data);
+	if (data)
+		tooltipText = (char*)data;
+	HT_GetNodeData(item, gNavCenter->buttonStatusbarText, HT_COLUMN_STRING, &data);
+	if (data)
+		statusBarText = (char*)data;
+
+	CRDFToolbarButton* pButton = NULL;
+	if (HT_IsURLBar(item))
+		pButton = new CURLBarButton;
+	else if (HT_IsSeparator(item))
+	{
+		pButton = new CRDFSeparatorButton;
+		tooltipText = "Separator";
+		statusBarText = "Separator";
+	}
+	else pButton = new CRDFToolbarButton;
 
 	pButton->Create(this, theApp.m_pToolbarStyle, CSize(60,42), CSize(85, 25), csAmpersandString,
-					bookmark.szText, bookmark.szAnchor, CSize(23,17), 
+					tooltipText, statusBarText, CSize(23,17), 
 					m_nMaxToolbarButtonChars, m_nMinToolbarButtonChars, bookmark,
-					item,
-                    (HT_IsContainer(item) ? TB_HAS_DRAGABLE_MENU | TB_HAS_IMMEDIATE_MENU : 0));
+					item, (HT_IsContainer(item) ? TB_HAS_DRAGABLE_MENU | TB_HAS_IMMEDIATE_MENU : 0));
 		
 	if(HT_IsContainer(item))
 	{
@@ -960,16 +1557,75 @@ void CRDFToolbar::AddHTButton(HT_Resource item)
 	}
 
 	HT_SetNodeFEData(item, pButton);
+	CSize buttonSize = pButton->GetMinimalButtonSize(); // Only care about height.
+	
+	if (buttonSize.cy > m_nRowHeight)
+	{
+		m_nRowHeight = buttonSize.cy;
+		GetParentFrame()->RecalcLayout();
+	}
+	else if (buttonSize.cy < m_nRowHeight)
+	{
+		CSize size = pButton->GetBitmapSize();
+		pButton->SetBitmapSize(CSize(size.cx, size.cy + (m_nRowHeight - buttonSize.cy)));
+	}
 
-	AddButtonAtIndex(pButton); // Have to put the button in the array, since the toolbar base class depends on it.
+	m_pButtonArray[m_nNumButtons] = pButton;
+	
+	m_nNumButtons++;
+
+	if(CheckMaxButtonSizeChanged(pButton, TRUE) && !HT_IsURLBar(item) && !HT_IsSeparator(item))
+	{
+		ChangeButtonSizes();
+	}
+	else
+	{
+		CSize size = pButton->GetRequiredButtonSize();
+		int nWidth = size.cx;
+
+		if (m_bButtonsSameWidth && !HT_IsURLBar(item) && !HT_IsSeparator(item))
+			nWidth = m_nMaxButtonWidth;
+
+		//make sure it's the size of the largest button so far
+		pButton->SetButtonSize(CSize(nWidth, m_nMaxButtonHeight));
+	}
+
+	// Update the button if it's a command.
+	if (pButton->NeedsUpdate())
+	{
+		pButton->OnUpdateCmdUI(GetTopLevelFrame(), FALSE);
+	}
+}
+
+void CRDFToolbar::ChangeButtonSizes(void)
+{
+	int nWidth;
+
+	HT_Cursor cursor = HT_NewCursor(HT_TopNode(m_ToolbarView));
+	HT_Resource item;
+	while (item = HT_GetNextItem(cursor))
+	{
+		CRDFToolbarButton* pButton = (CRDFToolbarButton*)(HT_GetNodeFEData(item));
+        if (!HT_IsSeparator(item) && !HT_IsURLBar(item) && pButton) 
+		{
+			if(!m_bButtonsSameWidth)
+			{
+				CSize size = pButton->GetRequiredButtonSize();
+				nWidth = size.cx;
+			}
+			else
+				nWidth = m_nMaxButtonWidth;
+
+			pButton->SetButtonSize(CSize(nWidth, m_nMaxButtonHeight));
+		}
+	}
+	HT_DeleteCursor(cursor);
 }
 
 int CRDFToolbar::GetHeight(void)
 {
-    return m_nNumberOfRows * (LINKTOOLBARHEIGHT + SPACE_BETWEEN_ROWS) + SPACE_BETWEEN_ROWS;
+    return m_nNumberOfRows * (m_nRowHeight + SPACE_BETWEEN_ROWS) + SPACE_BETWEEN_ROWS;
 }
-
-
 
 void CRDFToolbar::SetMinimumRows(int rowWidth)
 {
@@ -983,11 +1639,11 @@ void CRDFToolbar::SetMinimumRows(int rowWidth)
         return;
     }
 
-	HT_Cursor cursor = HT_NewCursor(HT_TopNode(HT_GetSelectedView(m_PersonalToolbarPane)));
+	HT_Cursor cursor = HT_NewCursor(HT_TopNode(m_ToolbarView));
 	if (!cursor)
 		return;
 	HT_Resource item;
-    while (rowCount < MAX_TOOLBAR_ROWS && (item = HT_GetNextItem(cursor)))
+    while ((item = HT_GetNextItem(cursor)))
 	{
         // Get the current button
 		CRDFToolbarButton* pButton = (CRDFToolbarButton*)(HT_GetNodeFEData(item));
@@ -1010,7 +1666,8 @@ void CRDFToolbar::SetMinimumRows(int rowWidth)
     SetRows(rowCount); 
 }
     
-void CRDFToolbar::ComputeLayoutInfo(CRDFToolbarButton* pButton, int numChars, int rowWidth, int& usedSpace)
+void CRDFToolbar::ComputeLayoutInfo(CRDFToolbarButton* pButton, int numChars, int rowWidth, 
+									int& usedSpace)
 {
    CString originalText = HT_GetNodeName(pButton->GetNode());
 
@@ -1025,7 +1682,9 @@ void CRDFToolbar::ComputeLayoutInfo(CRDFToolbarButton* pButton, int numChars, in
    }
    
    pButton->SetTextWithoutResize(strTxt);
-   pButton->SetButtonSize(pButton->GetButtonSizeFromChars(strTxt, numChars));
+
+   if (!m_bButtonsSameWidth || HT_IsURLBar(pButton->GetNode()) || HT_IsSeparator(pButton->GetNode()))
+	  pButton->SetButtonSize(pButton->GetButtonSizeFromChars(strTxt, numChars));
 
 // Determine how much additional padding we'll use to fill out a row if this button doesn't fit.
     int rowUsage = usedSpace % rowWidth;
@@ -1048,7 +1707,6 @@ void CRDFToolbar::ComputeLayoutInfo(CRDFToolbarButton* pButton, int numChars, in
         currentRow--;
 
     pButton->SetRow(currentRow);
-
 }
 
 void CRDFToolbar::LayoutButtons(int nIndex)
@@ -1074,7 +1732,7 @@ void CRDFToolbar::LayoutButtons(int nIndex)
     if (rowWidth <= 0 && m_nWidth > 0)
         rowWidth = m_nWidth - RIGHT_TOOLBAR_MARGIN - LEFT_TOOLBAR_MARGIN;
 
-    SetMinimumRows(rowWidth);
+    SetMinimumRows(width);
 
     int newRows = GetRows();
 
@@ -1084,7 +1742,7 @@ void CRDFToolbar::LayoutButtons(int nIndex)
     int numChars = 0; // Start off trying to fit the whole thing on the toolbar.
     int minChars = 0;
 	
-	HT_Cursor cursor = HT_NewCursor(HT_TopNode(HT_GetSelectedView(m_PersonalToolbarPane)));
+	HT_Cursor cursor = HT_NewCursor(HT_TopNode(m_ToolbarView));
 	if (!cursor)
 		return;
 	HT_Resource item;
@@ -1111,7 +1769,7 @@ void CRDFToolbar::LayoutButtons(int nIndex)
         usedSpace = 0;
         numChars--;
         // Let's see what we can fit.
-        HT_Cursor cursor = HT_NewCursor(HT_TopNode(HT_GetSelectedView(m_PersonalToolbarPane)));
+        HT_Cursor cursor = HT_NewCursor(HT_TopNode(m_ToolbarView));
 		if (!cursor)
 			return;
 		HT_Resource item;
@@ -1128,24 +1786,111 @@ void CRDFToolbar::LayoutButtons(int nIndex)
 		HT_DeleteCursor(cursor);
     }
 
-    // That's it.  lay them out with this number of characters.
-    
-    int nStartX = LEFT_TOOLBAR_MARGIN;
+	int nStartX = LEFT_TOOLBAR_MARGIN;
     int nStartY = SPACE_BETWEEN_ROWS;
 
     int row = 0;
 
-	CSize buttonSize;
-    CString strTxt;
+	// Now we have to handle springs
+	// Initialize our spring counter (we're using this to track the number of springs
+	// on each toolbar row).
+	int* springCounter = new int[newRows];
+	int* rowPadding = new int[newRows];
+	for (int init=0; init < newRows; init++) { springCounter[init] = 0; }
+	for (int init2=0; init2 < newRows; init2++) { rowPadding[init2] = 0; }
 
-	cursor = HT_NewCursor(HT_TopNode(HT_GetSelectedView(m_PersonalToolbarPane)));
+	// Count the springs on each row, as well as the padding on each row.
+	cursor = HT_NewCursor(HT_TopNode(m_ToolbarView));
 	if (!cursor)
 		return;
 	while ((item = HT_GetNextItem(cursor)))
 	{
         // Get the current button
 		CRDFToolbarButton* pButton = (CRDFToolbarButton*)(HT_GetNodeFEData(item));
-        if (!pButton)  // Separator
+        if (!pButton)
+			continue;
+		
+		if (pButton->IsSpring())
+		{
+			springCounter[row]++;
+		}
+
+		CSize buttonSize = pButton->GetButtonSize();  // The size we must be
+        
+        int tempTotal = nStartX + buttonSize.cx;
+        if (tempTotal > (width - RIGHT_TOOLBAR_MARGIN))
+        {
+			// Compute row padding
+			int rowPad = width - RIGHT_TOOLBAR_MARGIN - nStartX;
+
+			// Store the row padding information
+			rowPadding[row] = rowPad;
+
+			// Move to the next row.
+            nStartX = LEFT_TOOLBAR_MARGIN;
+            nStartY += m_nRowHeight + SPACE_BETWEEN_ROWS;
+			row++;
+        }
+
+		nStartX += buttonSize.cx + SPACE_BETWEEN_BUTTONS;
+	}
+	rowPadding[row] = width - RIGHT_TOOLBAR_MARGIN - nStartX;
+	HT_DeleteCursor(cursor);
+	
+	// Now we know the number of springs on each row, and we know how much available padding
+	// we have on each row.  Expand the springs' sizes so that all space on rows with springs
+	// is consumed.
+	cursor = HT_NewCursor(HT_TopNode(m_ToolbarView));
+	if (!cursor)
+		return;
+	while ((item = HT_GetNextItem(cursor)))
+	{
+        // Get the current button
+		CRDFToolbarButton* pButton = (CRDFToolbarButton*)(HT_GetNodeFEData(item));
+        if (!pButton)
+			continue;
+		
+		CSize buttonSize = pButton->GetButtonSize();  // The size we must be
+        int row = pButton->GetRow();
+
+		if (pButton->IsSpring())
+		{
+			// Expand the spring
+			int numSprings = springCounter[row];
+			int rowPad = rowPadding[row];
+			int addPadding = rowPad;
+			if (numSprings > 1)
+			{
+				springCounter[row]--;
+				addPadding = rowPad / numSprings;
+				rowPadding[row] -= addPadding;
+			}
+
+			pButton->SetButtonSize(CSize(buttonSize.cx + addPadding, buttonSize.cy));
+
+		}
+	}
+	HT_DeleteCursor(cursor);
+
+	// Clean up.  Delete our temporary arrays.
+	delete []springCounter;
+	delete []rowPadding;
+
+    // That's it.  lay them out with this number of characters.
+    nStartX = LEFT_TOOLBAR_MARGIN;
+    nStartY = SPACE_BETWEEN_ROWS;
+	row = 0;
+	CSize buttonSize;
+    CString strTxt;
+
+	cursor = HT_NewCursor(HT_TopNode(m_ToolbarView));
+	if (!cursor)
+		return;
+	while ((item = HT_GetNextItem(cursor)))
+	{
+        // Get the current button
+		CRDFToolbarButton* pButton = (CRDFToolbarButton*)(HT_GetNodeFEData(item));
+        if (!pButton)
 			continue;
 
         buttonSize = pButton->GetButtonSize();  // The size we must be
@@ -1154,21 +1899,23 @@ void CRDFToolbar::LayoutButtons(int nIndex)
         if (tempTotal > (width - RIGHT_TOOLBAR_MARGIN))
         {
             nStartX = LEFT_TOOLBAR_MARGIN;
-            nStartY += LINKTOOLBARHEIGHT + SPACE_BETWEEN_ROWS;
+            nStartY += m_nRowHeight + SPACE_BETWEEN_ROWS;
         }
 
+		if (buttonSize.cy < m_nRowHeight)
+		{
+			CSize size = pButton->GetBitmapSize();
+			pButton->SetBitmapSize(CSize(size.cx, size.cy + (m_nRowHeight - buttonSize.cy)));
+		}
+
 		pButton->MoveWindow(nStartX, nStartY,
-									  buttonSize.cx, buttonSize.cy);
+									  buttonSize.cx, m_nRowHeight);
 
 		nStartX += buttonSize.cx + SPACE_BETWEEN_BUTTONS;
 	}
 	HT_DeleteCursor(cursor);
 
-	//record the width of our toolbar
-    //if (nStartY == SPACE_BETWEEN_ROWS && nStartX < (width - RIGHT_TOOLBAR_MARGIN))
-	//  m_nWidth = nStartX;
-    //else 
-       m_nWidth = width;
+	m_nWidth = width;
 
     if (oldRows != newRows)
         GetParentFrame()->RecalcLayout();    
@@ -1193,7 +1940,7 @@ void CRDFToolbar::WidthChanged(int animWidth)
     if (rowWidth <= 0 && m_nWidth > 0)
         rowWidth = m_nWidth - RIGHT_TOOLBAR_MARGIN - LEFT_TOOLBAR_MARGIN;
 
-    SetMinimumRows(rowWidth);
+    SetMinimumRows(width);
 
     int newRows = GetRows();
 
@@ -1202,7 +1949,7 @@ void CRDFToolbar::WidthChanged(int animWidth)
 
     int numChars = 0; // Start off trying to fit the whole thing on the toolbar.
     int minChars = 0;
-	HT_Cursor cursor = HT_NewCursor(HT_TopNode(HT_GetSelectedView(m_PersonalToolbarPane)));
+	HT_Cursor cursor = HT_NewCursor(HT_TopNode(m_ToolbarView));
 	if (!cursor)
 		return;
 	HT_Resource item;
@@ -1229,7 +1976,7 @@ void CRDFToolbar::WidthChanged(int animWidth)
         usedSpace = 0;
         numChars--;
         // Let's see what we can fit.
-        HT_Cursor cursor = HT_NewCursor(HT_TopNode(HT_GetSelectedView(m_PersonalToolbarPane)));
+        HT_Cursor cursor = HT_NewCursor(HT_TopNode(m_ToolbarView));
 		if (!cursor)
 			return;
 		HT_Resource item;
@@ -1253,10 +2000,99 @@ void CRDFToolbar::WidthChanged(int animWidth)
 
     int row = 0;
 
+	// Now we have to handle springs
+	// Initialize our spring counter (we're using this to track the number of springs
+	// on each toolbar row).
+	int* springCounter = new int[newRows];
+	int* rowPadding = new int[newRows];
+	for (int init=0; init < newRows; init++) { springCounter[init] = 0; }
+	for (int init2=0; init2 < newRows; init2++) { rowPadding[init2] = 0; }
+
+	// Count the springs on each row, as well as the padding on each row.
+	cursor = HT_NewCursor(HT_TopNode(m_ToolbarView));
+	if (!cursor)
+		return;
+	while ((item = HT_GetNextItem(cursor)))
+	{
+        // Get the current button
+		CRDFToolbarButton* pButton = (CRDFToolbarButton*)(HT_GetNodeFEData(item));
+        if (!pButton)
+			continue;
+		
+		if (pButton->IsSpring())
+		{
+			springCounter[row]++;
+		}
+
+		CSize buttonSize = pButton->GetButtonSize();  // The size we must be
+        
+        int tempTotal = nStartX + buttonSize.cx;
+        if (tempTotal > (width - RIGHT_TOOLBAR_MARGIN))
+        {
+			// Compute row padding
+			int rowPad = width - RIGHT_TOOLBAR_MARGIN - nStartX;
+
+			// Store the row padding information
+			rowPadding[row] = rowPad;
+
+			// Move to the next row.
+            nStartX = LEFT_TOOLBAR_MARGIN;
+            nStartY += m_nRowHeight + SPACE_BETWEEN_ROWS;
+			row++;
+        }
+
+		nStartX += buttonSize.cx + SPACE_BETWEEN_BUTTONS;
+	}
+	rowPadding[row] = width - RIGHT_TOOLBAR_MARGIN - nStartX;
+	HT_DeleteCursor(cursor);
+
+	// Now we know the number of springs on each row, and we know how much available padding
+	// we have on each row.  Expand the springs' sizes so that all space on rows with springs
+	// is consumed.
+	cursor = HT_NewCursor(HT_TopNode(m_ToolbarView));
+	if (!cursor)
+		return;
+	while ((item = HT_GetNextItem(cursor)))
+	{
+        // Get the current button
+		CRDFToolbarButton* pButton = (CRDFToolbarButton*)(HT_GetNodeFEData(item));
+        if (!pButton)
+			continue;
+		
+		CSize buttonSize = pButton->GetButtonSize();  // The size we must be
+        int row = pButton->GetRow();
+
+		if (pButton->IsSpring())
+		{
+			// Expand the spring
+			int numSprings = springCounter[row];
+			int rowPad = rowPadding[row];
+			int addPadding = rowPad;
+			if (numSprings > 1)
+			{
+				springCounter[row]--;
+				addPadding = rowPad / numSprings;
+				rowPadding[row] -= addPadding;
+			}
+
+			pButton->SetButtonSize(CSize(buttonSize.cx + addPadding, buttonSize.cy));
+
+		}
+	}
+	HT_DeleteCursor(cursor);
+
+	// Clean up.  Delete our temporary arrays.
+	delete []springCounter;
+	delete []rowPadding;
+
+	nStartX = LEFT_TOOLBAR_MARGIN;
+    nStartY = SPACE_BETWEEN_ROWS;
+	row = 0;
+
 	CSize buttonSize;
     CString strTxt;
 
-	cursor = HT_NewCursor(HT_TopNode(HT_GetSelectedView(m_PersonalToolbarPane)));
+	cursor = HT_NewCursor(HT_TopNode(m_ToolbarView));
 	if (!cursor)
 		return;
 	
@@ -1273,11 +2109,17 @@ void CRDFToolbar::WidthChanged(int animWidth)
         if (tempTotal > (width - RIGHT_TOOLBAR_MARGIN))
         {
             nStartX = LEFT_TOOLBAR_MARGIN;
-            nStartY += LINKTOOLBARHEIGHT + SPACE_BETWEEN_ROWS;
+            nStartY += m_nRowHeight + SPACE_BETWEEN_ROWS;
         }
 
+		if (buttonSize.cy < m_nRowHeight)
+		{
+			CSize size = pButton->GetBitmapSize();
+			pButton->SetBitmapSize(CSize(size.cx, size.cy + (m_nRowHeight - buttonSize.cy)));
+		}
+
 		pButton->MoveWindow(nStartX, nStartY,
-									  buttonSize.cx, buttonSize.cy);
+									  buttonSize.cx, m_nRowHeight);
 
 		nStartX += buttonSize.cx + SPACE_BETWEEN_BUTTONS;
 	}
@@ -1290,7 +2132,121 @@ void CRDFToolbar::WidthChanged(int animWidth)
         GetParentFrame()->RecalcLayout();
 }
 
+int CRDFToolbar::GetRowWidth()
+{
+	return m_nWidth - RIGHT_TOOLBAR_MARGIN - LEFT_TOOLBAR_MARGIN - SPACE_BETWEEN_BUTTONS;
+}
 
+void CRDFToolbar::OnPaint(void)
+{
+	CRect rcClient, updateRect, buttonRect, intersectRect;
+	
+	GetClientRect(&rcClient);
+	GetUpdateRect(&updateRect);
+
+	CPaintDC dcPaint(this);
+	
+	// background color
+	HT_Resource top = HT_TopNode(GetHTView());
+	void* data;
+	COLORREF backgroundColor = GetSysColor(COLOR_BTNFACE);
+	COLORREF shadowColor = backgroundColor;
+	COLORREF highlightColor = backgroundColor;
+
+	HT_GetNodeData(top, gNavCenter->viewBGColor, HT_COLUMN_STRING, &data);
+	if (data)
+	{
+		WFE_ParseColor((char*)data, &backgroundColor);
+	}
+	Compute3DColors(backgroundColor, highlightColor, shadowColor);
+
+	if (m_BackgroundColor != backgroundColor)
+	{
+		// Ensure proper filling in of parent space with the background color.
+		SetBackgroundColor(backgroundColor);
+		GetParent()->Invalidate();
+	}
+
+	SetShadowColor(shadowColor);
+	SetHighlightColor(highlightColor);
+
+	// Foreground color
+	COLORREF foregroundColor = GetSysColor(COLOR_BTNTEXT);
+	HT_GetNodeData(top, gNavCenter->viewFGColor, HT_COLUMN_STRING, &data);
+	if (data)
+	{
+		WFE_ParseColor((char*)data, &foregroundColor);
+	}
+	SetForegroundColor(foregroundColor);
+
+	// Rollover color
+	COLORREF rolloverColor = RGB(0, 0, 255);
+	HT_GetNodeData(top, gNavCenter->viewRolloverColor, HT_COLUMN_STRING, &data);
+	if (data)
+	{
+		WFE_ParseColor((char*)data, &rolloverColor);
+	}
+	SetRolloverColor(rolloverColor);
+
+	// Pressed color
+	COLORREF pressedColor = RGB(0, 0, 128);
+	HT_GetNodeData(top, gNavCenter->viewPressedColor, HT_COLUMN_STRING, &data);
+	if (data)
+	{
+		WFE_ParseColor((char*)data, &pressedColor);
+	}
+	SetPressedColor(pressedColor);
+
+	// Disabled color
+	COLORREF disabledColor = -1;
+	HT_GetNodeData(top, gNavCenter->viewDisabledColor, HT_COLUMN_STRING, &data);
+	if (data)
+	{
+		WFE_ParseColor((char*)data, &disabledColor);
+	}
+	SetDisabledColor(disabledColor);
+
+	// Background image URL
+	CString backgroundImageURL = "";
+	HT_GetNodeData(top, gNavCenter->viewBGURL, HT_COLUMN_STRING, &data);
+	if (data)
+		backgroundImageURL = (char*)data;
+	SetBackgroundImage(NULL); // Clear out the BG image.
+
+	HBRUSH hRegBrush = (HBRUSH) ::CreateSolidBrush(backgroundColor); 
+	if (backgroundImageURL != "")
+	{
+		// There's a background that needs to be drawn.
+		SetBackgroundImage(LookupImage(backgroundImageURL, NULL));
+	}
+
+	if (GetBackgroundImage() && 
+		GetBackgroundImage()->FrameSuccessfullyLoaded())
+	{
+		PaintBackground(dcPaint.m_hDC, &rcClient, GetBackgroundImage(), 0);
+	}
+	else
+	{
+		::FillRect(dcPaint.m_hDC, &rcClient, hRegBrush);
+	}
+
+	VERIFY(::DeleteObject(hRegBrush));
+
+	for (int i = 0; i < m_nNumButtons; i++)
+	{
+		m_pButtonArray[i]->GetClientRect(&buttonRect);
+
+		m_pButtonArray[i]->MapWindowPoints(this, &buttonRect);
+
+		if(intersectRect.IntersectRect(updateRect, buttonRect))
+		{
+			MapWindowPoints(m_pButtonArray[i], &intersectRect);
+			m_pButtonArray[i]->RedrawWindow(&intersectRect);
+		}
+
+	}
+
+}
 
 ///////////////////////////////////////////////////////////////////////////////////
 //									CRDFToolbar Messages
@@ -1299,15 +2255,18 @@ void CRDFToolbar::WidthChanged(int animWidth)
 BEGIN_MESSAGE_MAP(CRDFToolbar, CNSToolbar2)
 	//{{AFX_MSG_MAP(CNSToolbar2)
 	ON_WM_RBUTTONDOWN()
-	//}}AFX_MSG_MAP
+	ON_WM_PAINT()
+//}}AFX_MSG_MAP
 
 END_MESSAGE_MAP()
 
 void CRDFToolbar::OnRButtonDown(UINT nFlags, CPoint point)
 {
+	HT_SetSelectedView(HT_GetPane(GetHTView()), GetHTView());
+	HT_SetSelection(HT_TopNode(GetHTView()));
+
 	m_MenuCommandMap.Clear();
-	HT_View theView = HT_GetSelectedView(m_PersonalToolbarPane);
-	HT_Cursor theCursor = HT_NewContextualMenuCursor(theView, PR_FALSE, PR_TRUE);
+	HT_Cursor theCursor = HT_NewContextualMenuCursor(m_ToolbarView, PR_FALSE, PR_TRUE);
 	CMenu menu;
 	ClientToScreen(&point);
 	if (menu.CreatePopupMenu() != 0 && theCursor != NULL)
@@ -1345,9 +2304,227 @@ BOOL CRDFToolbar::OnCommand( WPARAM wParam, LPARAM lParam )
 		if (theCommand)
 		{
 			HT_MenuCmd htCommand = theCommand->GetHTCommand();
-			HT_DoMenuCmd(m_PersonalToolbarPane, htCommand);
+			HT_DoMenuCmd(HT_GetPane(m_ToolbarView), htCommand);
 		}
 		return TRUE;
 	}
 	return((BOOL)GetParentFrame()->SendMessage(WM_COMMAND, wParam, lParam));
+}
+
+// ==========================================================
+// CRDFDragToolbar
+// Contains a single RDF toolbar.
+// Handles drawing of backgrounds etc. etc.
+// ==========================================================
+
+BEGIN_MESSAGE_MAP(CRDFDragToolbar, CDragToolbar)
+	//{{AFX_MSG_MAP(CRDFToolbarButton)
+	ON_WM_PAINT()
+	//}}AFX_MSG_MAP
+END_MESSAGE_MAP()
+
+#define OPEN_BUTTON_WIDTH 9
+#define CLOSED_BUTTON_WIDTH 40
+#define CLOSED_BUTTON_HEIGHT 10
+#define DT_RIGHT_MARGIN 1		//Margin between end of toolbar and right border of Navigator
+#define DRAGGING_BORDER_HEIGHT 2
+#define NOTOOL -1
+
+#define HTAB_TOP_START 0
+#define HTAB_TOP_HEIGHT 7
+#define HTAB_MIDDLE_START 8
+#define HTAB_MIDDLE_HEIGHT 6
+#define HTAB_BOTTOM_START 15
+#define HTAB_BOTTOM_HEIGHT 3
+
+extern HBITMAP				m_hTabBitmap;
+
+void CRDFDragToolbar::OnPaint(void)
+{
+	CPaintDC dcPaint(this);	// device context for painting
+	CRect rect;
+
+	GetClientRect(&rect);
+
+	// Use our toolbar background color (or background image TODO)
+	CRDFToolbar* pToolbar = (CRDFToolbar*)m_pToolbar->GetToolbar();
+
+	HBRUSH brFace = (HBRUSH) ::CreateSolidBrush(pToolbar->GetBackgroundColor());
+				
+	::FillRect(dcPaint.m_hDC, &rect, brFace);
+
+	VERIFY(::DeleteObject(brFace));
+
+	CDC *pDC = &dcPaint;
+	HPALETTE hOldPal = ::SelectPalette(pDC->m_hDC, WFE_GetUIPalette(GetParentFrame()), FALSE);
+
+	if(m_hTabBitmap != NULL)
+	{
+
+		// Create a scratch DC and select our bitmap into it.
+		CDC * pBmpDC = new CDC;
+		pBmpDC->CreateCompatibleDC(pDC);
+
+
+		HBITMAP hOldBmp = (HBITMAP)::SelectObject(pBmpDC->m_hDC ,m_hTabBitmap);
+		HPALETTE hOldPalette = ::SelectPalette(pBmpDC->m_hDC, WFE_GetUIPalette(NULL), TRUE);
+		::RealizePalette(pBmpDC->m_hDC);
+		CPoint bitmapStart(!m_bMouseInTab ? 0 : OPEN_BUTTON_WIDTH ,HTAB_TOP_START);
+
+		//First do top of the tab
+
+		::BitBlt(pDC->m_hDC, 0, 0, OPEN_BUTTON_WIDTH, HTAB_TOP_HEIGHT,
+	  			 pBmpDC->m_hDC, bitmapStart.x, bitmapStart.y, SRCCOPY);
+	
+		//Now do the middle portion of the tab
+		int y = HTAB_TOP_HEIGHT;
+
+		bitmapStart.y = HTAB_MIDDLE_START;
+
+		while(y < rect.bottom - HTAB_BOTTOM_HEIGHT)
+		{
+			::BitBlt(pDC->m_hDC, 0, y, OPEN_BUTTON_WIDTH, HTAB_MIDDLE_HEIGHT,
+		  			 pBmpDC->m_hDC, bitmapStart.x, bitmapStart.y, SRCCOPY);
+
+			y += HTAB_MIDDLE_HEIGHT;
+
+		}
+
+		// Now do the bottom of the tab
+		y = rect.bottom - HTAB_BOTTOM_HEIGHT;
+
+		bitmapStart.y = HTAB_BOTTOM_START;
+
+		::BitBlt(pDC->m_hDC, 0, y, OPEN_BUTTON_WIDTH, HTAB_BOTTOM_HEIGHT,
+	  			 pBmpDC->m_hDC, bitmapStart.x, bitmapStart.y, SRCCOPY);
+
+
+		// Cleanup
+		::SelectObject(pBmpDC->m_hDC, hOldBmp);
+		::SelectPalette(pBmpDC->m_hDC, hOldPalette, TRUE);
+		::SelectPalette(pDC->m_hDC, hOldPal, TRUE);
+		pBmpDC->DeleteDC();
+		delete pBmpDC;
+	}
+
+	if(m_bDragging)
+	{
+		CBrush brush(RGB(0, 0, 0));
+		CBrush *pOldBrush = (CBrush*)dcPaint.SelectObject(&brush);
+
+		//rect.left += OPEN_BUTTON_WIDTH;
+
+		dcPaint.FrameRect(&rect, &brush);
+
+		dcPaint.SelectObject(pOldBrush);
+		brush.DeleteObject();
+	}
+}
+
+// ==========================================================
+// CRDFToolbarHolder
+// The container of all the toolbars
+// ==========================================================
+
+CRDFToolbarHolder::CRDFToolbarHolder(int maxToolbars, CFrameWnd* pParentWindow)
+:CCustToolbar(maxToolbars)
+{
+	m_pCachedParentWindow = pParentWindow;
+	m_pCurrentButton = NULL;
+}
+
+CRDFToolbarHolder::~CRDFToolbarHolder()
+{
+	if (m_ToolbarPane)
+	{
+		HT_Pane oldPane = m_ToolbarPane;
+		m_ToolbarPane = NULL;
+		HT_DeletePane(oldPane);
+	}
+}
+
+void CRDFToolbarHolder::InitializeRDFData()
+{
+	HT_Notification ns = new HT_NotificationStruct;
+	XP_BZERO(ns, sizeof(HT_NotificationStruct));
+	ns->notifyProc = toolbarNotifyProcedure;
+	ns->data = this;
+	
+	// Construct the pane and give it our notification struct
+	HT_Pane newPane = HT_NewToolbarPane(ns);
+	if (newPane)
+	{
+		SetHTPane(newPane);
+		HT_SetPaneFEData(newPane, this);
+	}
+}
+	
+CIsomorphicCommandMap* CIsomorphicCommandMap::InitializeCommandMap(const CString& initType) 
+{
+	CIsomorphicCommandMap* result = new CIsomorphicCommandMap();
+
+	if (initType == "Browser Commands")
+	{
+		// Enter the builtin browser commands into the map.
+		result->AddItem("command:back", ID_NAVIGATE_BACK);
+		result->AddItem("command:forward", ID_NAVIGATE_FORWARD);
+		result->AddItem("command:reload", ID_NAVIGATE_RELOAD);
+		result->AddItem("command:home", ID_GO_HOME);
+		result->AddItem("command:print", ID_FILE_PRINT);
+		result->AddItem("command:stop", ID_NAVIGATE_INTERRUPT);
+	}
+	else if (initType == "Command Toolbar Bitmap Indices")
+	{
+		result->AddItem("command:back", 0);
+		result->AddItem("command:forward", 1);
+		result->AddItem("command:reload", 2);
+		result->AddItem("command:home", 3);
+		result->AddItem("command:print", 7);
+		result->AddItem("command:stop", 11);
+	}
+	return result;
+}
+
+void CIsomorphicCommandMap::AddItem(CString xpItem, UINT feResource)
+{
+	char buffer[20];
+	_itoa((int)feResource, buffer, 10);
+	mapFromXPToFE.SetAt(xpItem, CString(buffer));
+	mapFromFEToXP.SetAt(CString(buffer), xpItem);
+}
+
+void CIsomorphicCommandMap::RemoveXPItem(CString xpItem)
+{
+	CString result;
+	mapFromXPToFE.Lookup(xpItem, result);
+	mapFromXPToFE.RemoveKey(xpItem);
+	mapFromFEToXP.RemoveKey(result);
+}
+
+void CIsomorphicCommandMap::RemoveFEItem(UINT feResource)
+{
+	char buffer[20];
+	_itoa((int)feResource, buffer, 10);
+	CString resource(buffer);
+	CString result;
+	mapFromFEToXP.Lookup(resource, result);
+	mapFromXPToFE.RemoveKey(result);
+	mapFromFEToXP.RemoveKey(resource);
+}
+
+UINT CIsomorphicCommandMap::GetFEResource(CString xpItem)
+{
+	CString result;
+	mapFromXPToFE.Lookup(xpItem, result);
+	return (atoi(result));
+}
+
+CString CIsomorphicCommandMap::GetXPResource(UINT feResource)
+{
+	char buffer[20];
+	_itoa((int)feResource, buffer, 10);
+	CString resource(buffer);
+	CString result;
+	mapFromFEToXP.Lookup(resource, result);
+	return result;
 }

@@ -27,6 +27,7 @@
 
 CNSToolTip2::CNSToolTip2()
 {
+	hasCustomColors = FALSE;
 }
 
 
@@ -68,6 +69,7 @@ LRESULT CNSToolTip2::WindowProc( UINT message, WPARAM wParam, LPARAM lParam )
 
 BEGIN_MESSAGE_MAP(CNSToolTip2, CToolTipCtrl)
 	//{{AFX_MSG_MAP(CNSToolTip2)
+	ON_WM_CTLCOLOR_REFLECT()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -79,5 +81,15 @@ void CNSToolTip2::SetBounding(int *coord, int num, int x, int y)
 {
 }
 
+HBRUSH CNSToolTip2::CtlColor ( CDC* pDC, UINT nCtlColor )
+{
+	if (hasCustomColors)
+	{
+		pDC->SetTextColor( m_ForegroundColor );    // text
+		pDC->SetBkColor( m_BackgroundColor );    // text bkgnd
+		return m_BackgroundBrush;            // ctl bkgnd
+	}
+	return NULL;
+}
 #endif
  

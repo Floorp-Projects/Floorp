@@ -189,6 +189,8 @@ public:
     virtual void LayoutNewDocument(MWContext *pContext, URL_Struct *pURL, int32 *pWidth, int32 *pHeight, int32 *pmWidth, int32 *pmHeight);
     virtual void FinishedLayout(MWContext *pContext);
     virtual void SetDocDimension(MWContext *pContext, int iLocation, int32 lWidth, int32 lLength);
+	virtual void DisplayBuiltin(MWContext *pContext, int iLocation, LO_BuiltinStruct *pBuiltin);
+	virtual void FreeBuiltinElement(MWContext *pContext, LO_BuiltinStruct *pBuiltin);
 };
 
 inline HWND CPaneCX::GetPane() const

@@ -68,49 +68,34 @@ class CSelectorButton : public CRDFToolbarButton
 friend class CSelector;
 
 protected:
-	CView* pView;	// View including the HTML pane
-	CRDFContentView* m_pTreeView; // Pointer straight to the RDF Tree view.
-	CPaneCX* m_pPane;
 	CSelector* m_pSelector;
 	HT_View m_HTView; // Pointer to HT_View if one exists.  Could be NULL.
-	HT_Pane m_Pane; // This is the button's popup menu pane.
-	// The Selector Button actually has two HT_Nodes, two HT_Views, and two HT_Panes. One set is the pane in
-	// which the button is found (along with all the other buttons).  The second set is for the popup menu
-	// that comes up on a timed mouse down on the button.  
-	// m_HTView is used with the pane that contains all the buttons.
-	// m_Pane is used for the popup menu.
-	// The base class has an m_Node member variable.  This is the popup variable's top node in its selected
-	// HT_View.  -- Dave H.
 
 public:
 	CSelectorButton(CSelector* pSelector) 
-		:m_pSelector(pSelector), pView(NULL), m_pPane(NULL), 
-		 m_HTView(NULL) {};
+		:m_pSelector(pSelector), m_HTView(NULL) {};
 	
 	~CSelectorButton();
 
 	void SetHTView(HT_View v) { m_HTView = v; }
 	virtual HT_View GetHTView() { return m_HTView; }
 
-	CView* GetView() { return pView; }
+	CRDFContentView* GetContentView();
 
 	virtual BOOL UseLargeIcons() { return TRUE; }
-
 	virtual void DisplayAndTrackMenu(void);
-
+	virtual UINT GetBitmapID() { return 0; }
 	virtual void OnAction(void);
 
 	int Create(CWnd *pParent, int nToolbarStyle, CSize noviceButtonSize, CSize advancedButtonSize,
 			   LPCTSTR pButtonText, LPCTSTR pToolTipText, 
 			   LPCTSTR pStatusText,
-			   CSize bitmapSize, int nMaxTextChars, int nMinTextChars, 
-			   HT_Resource pNode, DWORD dwButtonStyle = 0, CView* view = NULL, CPaneCX* pane = NULL);
+			   CSize bitmapSize, int nMaxTextChars, int nMinTextChars,
+			   HT_Resource pNode, DWORD dwButtonStyle = 0);
+
+	virtual BOOL foundOnRDFToolbar() { return FALSE; }	// buttons sit on a selector bar and not on a toolbar
 
 	void SetDepressed(BOOL b) { m_bDepressed = b; Invalidate(); }
-
-	CRDFContentView* GetTreeView() { return m_pTreeView; }	// Returns only the tree
-
-	void SetTreeView(CRDFContentView* tree) { m_pTreeView = tree; } // Sets the tree view
 
 	virtual void DrawPicturesMode(HDC hDC, CRect rect);
 		// Overridden because LinkToolbarButtons draw text with the pictures always.  We
@@ -195,30 +180,47 @@ public:
 
 class CSelector : public CView
 {
-
 friend class CSelectorButton;
+
 public:
 	DECLARE_DYNAMIC(CSelector)
-	CSelector();
-	virtual ~CSelector();
-	void AddViewContext(const char* pTitle, CView* pView, CRDFContentView* pTree, 
-						CPaneCX* htmlPane, HT_View theView);
-	CView* GetCurrentView(); // Gets the view including the HTML pane
-	CSelectorButton* GetCurrentButton();
-
-	void SetCurrentView(CSelectorButton* pButton);
-	void SelectNthView(int i);
 	
+	CSelector(CRDFContentView* pContent);
+	virtual ~CSelector();
+
+	void AddButton(HT_View theView);
+		// Add a new view to the selector bar.
+
+	CRDFContentView* GetContentView();
+		// Gets the content area associated with this selector bar.
+	
+	CSelectorButton* GetCurrentButton();
+		// Gets the current pressed button (if there is one).
+
+	void SetCurrentButton(CSelectorButton* pButton);
+		// Sets the current button.
+
+	void SelectNthView(int i);
+		// Select the nth HT view.
+
 	void PopulatePane();
+		// Function that fills the selector bar.
+
 	void DestroyViews();
-	void ConstructView(HT_View v);
+		// Function that destroys the HT views
+	
 	HT_Pane GetHTPane() {return m_Pane;}
+		// Gets the pane associated with this selector bar.
+
+	void UnSelectAll();
+		// Function that deselects all buttons.
+
 	void ShowScrollButton(CSelectorButton* button);
 	void OnDraw( CDC* pDC );
 	int GetScrollDirection() {return m_scrollDirection;}
 	void ScrollSelector();
 	void StopScrolling() {m_scrollDirection = NOSCROLL;}
-	void UnSelectAll();
+	
 	HBRUSH GetNormalBrush() {return hBrush;}
 	HBRUSH GetHtBrush() {return hHtBrush;}
 
@@ -249,8 +251,8 @@ public:
 
 protected:
 	int m_scrollDirection;
-	CSelectorButton * m_pCurButton;
-	CView* m_pCurView; // The entire view (including the HTML pane)
+	CSelectorButton * m_pCurButton;  // The current selected button.
+	CRDFContentView* m_pContentView; // The entire view (including the HTML pane)
 	CRDFCommandMap m_MenuCommandMap;	// Command map for back-end generated right mouse menu commands.
 	
     CSelectorDropTarget * m_pDropTarget;

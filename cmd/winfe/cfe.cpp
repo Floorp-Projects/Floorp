@@ -245,6 +245,12 @@ MWContext *CFE_CreateNewDocWindow(MWContext *pContext, URL_Struct *pURL)	{
 	}
     
     pFrame = (CMainFrame *) pGenFrame;
+
+	// Now that we have the frame, dynamically create the toolbars (We won't enter this function
+	// from JavaScript. FE_MakeNewWindow is used instead.)
+	if (!pFrame->IsEditFrame())
+		pFrame->BeginStreamingOfRDFToolbars();
+	
 	MWContext *pNewContext = pFrame->GetMainContext()->GetContext();
 
 	//	Appropriate assignment of options/prefs can only happen if we are also
@@ -1517,14 +1523,25 @@ extern "C" MWContext *FE_IsNetcasterRunning(void) {
 	return theApp.m_pNetcasterWindow;
 }
 
-#ifdef SHACK
 void CFE_DisplayBuiltin(MWContext *context, int iLocation, LO_BuiltinStruct *builtin_struct)
 {
-    return;
+	if(ABSTRACTCX(context)->IsDestroyed())	
+	{
+		//	Don't allow this to happen if the context has been destroyed...
+		TRACE("Context %p Destroyed :: DisplayBuiltin Blocking\n", context);
+		return;
+	}
+
+    ABSTRACTCX(context)->DisplayBuiltin(context, iLocation, builtin_struct);
 }
 
-void CFE_FreeBuiltinElement(MWContext *context, LO_BuiltinStruct *builtin_struct)
+void CFE_FreeBuiltinElement(MWContext *pContext, LO_BuiltinStruct *builtin_struct)
 {
-    return;
+    if(ABSTRACTCX(pContext)->IsDestroyed())	{
+		//	Don't allow this to happen if the context has been destroyed...
+		TRACE("Context %p Destroyed :: FreeBuiltinElement Blocking\n", pContext);
+		return;
+	}
+
+    ABSTRACTCX(pContext)->FreeBuiltinElement(pContext, builtin_struct);
 }
-#endif //SHACK

@@ -48,6 +48,8 @@ static const int DRAG_ICON_HEIGHT = 15;
 
 static const int BOOKMARKS_TEXT_LEFT = 10;
 
+static const int URLBAR_HEIGHT = 23;
+
 BEGIN_MESSAGE_MAP(CURLBar, CURLBarBase) 
     //{{AFX_MSG_MAP(CURLBar)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_COPY, OnUpdateEditCopy)
@@ -121,72 +123,10 @@ void CURLBar::SetContext( LPUNKNOWN pUnk )
 	}
 }
 
-LRESULT CURLBar::WindowProc( UINT message, WPARAM wParam, LPARAM lParam )
-{
-    if ( ( message == WM_COMMAND ) &&
-#ifdef WIN32
-        ( LOWORD( wParam ) == IDC_URL_EDIT ) )
-            switch ( HIWORD ( wParam ) )
-#else
-        ( wParam == IDC_URL_EDIT ) )
-            switch ( HIWORD ( lParam ) )      
-#endif
-    {
-        case CBN_EDITCHANGE:
-            OnEditChange ( );
-            break;
-
-        case CBN_SELCHANGE:
-            OnSelChange ( );
-            Invalidate(FALSE);
-            break;
-
-        case CBN_CLOSEUP:
-            Invalidate(FALSE);
-            break;
-
-    }
-    return CURLBarBase::WindowProc ( message, wParam, lParam );
-}
-
-
-void CURLBar::OnLButtonDown(UINT nFlags, CPoint point)
-{
-	CDialogBar::OnLButtonDown(nFlags, point);
-
-    int load = FALSE;
-
-    if (!m_pIMWContext) 
-        return;
-
-	MapWindowPoints(GetParent(), &point, 1);
-	GetParent()->SendMessage(WM_LBUTTONDOWN, nFlags, MAKELPARAM(point.x, point.y));
-
-
-}
-
-HBRUSH CURLBar::OnCtlColor( CDC* pDC, CWnd* pWnd, UINT nCtlColor)
-{
-  return CURLBarBase::OnCtlColor(pDC, pWnd, nCtlColor);
-}
-
 void CURLBar::OnPaint() 
 
 {
-    CURLBarBase::OnPaint ( );
-
-	CClientDC dc(this);
-
-	CRect rcClient;
-
-	GetClientRect(&rcClient);
-	
-	HPALETTE hPalette = WFE_GetUIPalette(GetParentFrame());
-	HPALETTE hOldPalette = ::SelectPalette(dc.m_hDC, hPalette, FALSE);
-
-	// Use our background color
-	::FillRect(dc.m_hDC, &rcClient, sysInfo.m_hbrBtnFace);
-
+	CPaintDC dc(this);
 #ifdef _WIN32
 	if ( sysInfo.m_bWin4 )
 		m_pBox->SetFont( CFont::FromHandle ( (HFONT) GetStockObject (DEFAULT_GUI_FONT) ) );
@@ -199,53 +139,8 @@ void CURLBar::OnPaint()
 		ASSERT(m_pFont != NULL);
 		::SendMessage(m_pBox->GetSafeHwnd(), WM_SETFONT, (WPARAM)m_pFont, FALSE);
 	}
-    m_pBox->UpdateWindow ( );
-
-     if ( !sysInfo.m_bWin4 )
-     {
-		 // Draw 3D frame around URL box
-
-	    RECT rect;
-		m_pBox->GetWindowRect ( &rect );
-        rect.right++;
-        rect.bottom++;
-        rect.left--;
-        rect.top--;
-
-		ScreenToClient ( &rect );
-		rect.right--;
-	    rect.bottom--;
-
-		RECT rcTmp = rect;
-		::InflateRect( &rcTmp, -1, -1 );
-	
-		WFE_DrawHighlight( dc.m_hDC, &rcTmp, 
-				   RGB(128, 128, 128), 
-				   RGB(0, 0, 0));
-		WFE_DrawHighlight( dc.m_hDC, &rect, 
-				   RGB(192, 192, 192), 
-				   RGB(231, 231, 231) );
-	}
-
-	::SelectPalette(dc.m_hDC, hOldPalette, TRUE);
-
+    m_pBox->UpdateWindow();
 }
-
-void CURLBar::OnShowWindow( BOOL bShow, UINT nStatus )
-{
-	m_bEraseBackground = bShow;
-}
-
-BOOL CURLBar::OnEraseBkgnd( CDC* pDC )
-{
-	if ( m_bEraseBackground ) {
-		m_bEraseBackground = FALSE;
-		return (BOOL) Default();
-	} else {
-		return TRUE;
-	}
-}
-
 
 #define TOTAL_SAVED_URLS        15
 #define TOTAL_DISPLAYED_URLS    10
@@ -270,37 +165,12 @@ int CURLBar::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		m_pBox = new CEditWnd(this);
 		m_pBox->Create(
 	        WS_CHILD|WS_VISIBLE|WS_TABSTOP,
-			rect, (CWnd *) m_pProxySurround, IDC_URL_EDIT);
+			rect, m_pProxySurround, IDC_URL_EDIT);
 		
 	}
 
     return(nRtn);
 }
-
-void CURLBar::OnDestroy( )
-{
-	CWnd::OnDestroy();
-}
-  
-
-void CURLBar::OnClose()
-{
-}
-
-void CURLBar::OnPaletteChanged( CWnd* pFocusWnd )
-{
-	if (pFocusWnd != this) {
-		HPALETTE hPalette = WFE_GetUIPalette(GetParentFrame());
-		if (WFE_IsGlobalPalette(hPalette)) {
-			HDC hDC = ::GetDC(m_hWnd);
-			HPALETTE hOldPalette = ::SelectPalette(hDC, hPalette, FALSE);
-			::SelectPalette(hDC, hOldPalette, TRUE);
-			::ReleaseDC(m_hWnd, hDC);
-		}
-		Invalidate();
-	}
-}
-
 
 
 CURLBar::~CURLBar()
@@ -321,31 +191,27 @@ CURLBar::~CURLBar()
 
 }
 
-void CURLBar::DoDataExchange(CDataExchange* pDX)
-{
-    CURLBarBase::DoDataExchange(pDX);
-    //{{AFX_DATA_MAP(CURLBar)
-    //}}AFX_DATA_MAP
-}
 
 /////////////////////////////////////////////////////////////////////////////
 // CURLBar message handlers
 
+void CURLBar::OnMouseMove(UINT nFlags, CPoint point) 
+{
+	CURLBarBase::OnMouseMove(nFlags, point);
+    // Display previous status
+    wfe_Progress( m_pIMWContext->GetContext(), "" );
+
+  	MapWindowPoints(GetParent(), &point, 1);
+	GetParent()->SendMessage(WM_MOUSEMOVE, nFlags, MAKELPARAM(point.x, point.y));
+
+}
+
 void CURLBar::OnSize(UINT nType, int cx, int cy)
 {
- 
-    int txtSpacing;
-    int boxSpacing;
-    CRect rcURLtext, rcIcon, bookmarkRect;
-	int x = BOOKMARKS_TEXT_LEFT;
-	
-	CWnd *pText = GetDlgItem( IDC_URLTEXT );
-
-    if (pText) {
-        pText->GetWindowRect(&rcURLtext);
-        // figure out how big we need to make the box
-        CDC * pDC = m_pBox->GetDC();
-        
+	int boxSpacing;
+    if( m_pBox ) 
+	{
+		CDC * pDC = m_pBox->GetDC(); 
         TEXTMETRIC tm;
 
 		// creates font for multibyte system running on WinNT and Win16 
@@ -378,45 +244,22 @@ void CURLBar::OnSize(UINT nType, int cx, int cy)
         if(m_nBoxHeight > (cy - 2))
             m_nBoxHeight = cy - 2;
         m_pBox->ReleaseDC(pDC);       
-    }
-
-    CURLBarBase::OnSize(nType, cx, cy);
-
-    if( pText && m_pBox ) 
-	{
-        // position the "Location" text 
-		txtSpacing = (cy - rcURLtext.Height()) / 2 ; 
-
-        pText->MoveWindow(x, 
-                          txtSpacing, rcURLtext.Width(), rcURLtext.Height());
-
-		x += rcURLtext.Width() + 3;
-
-		m_DragIconX = x;
+    
+		m_DragIconX = 1;
 
 		// Position the proxy surround wnd
+		m_pProxySurround->MoveWindow(0, 0, cx, cy);
 		
-		m_pProxySurround->MoveWindow(x-1, 1, ( cx - x - 
-                        ( GetSystemMetrics(SM_CXBORDER) * 2)),cy-2);
-
         boxSpacing = (cy - m_nBoxHeight) / 2 ;
-        m_DragIconY = boxSpacing + (m_nBoxHeight - DRAG_ICON_HEIGHT)/2;
+        m_DragIconY = (cy - DRAG_ICON_HEIGHT)/2;
 
-		m_pPageProxy->MoveWindow(1, m_DragIconY-1, DRAG_ICON_WIDTH, DRAG_ICON_HEIGHT);
+		m_pPageProxy->MoveWindow(m_DragIconX, m_DragIconY, DRAG_ICON_WIDTH, DRAG_ICON_HEIGHT);
 		
-		x += DRAG_ICON_WIDTH + 2;
-
         // position the location edit box
         m_pBox->MoveWindow( DRAG_ICON_WIDTH+3,
-                   (cy - m_nBoxHeight) / 2 -1, 
-                   ( cx - x - 
-                        ( GetSystemMetrics(SM_CXBORDER) * 2)) ,
-						m_nBoxHeight); 
+							boxSpacing, cx - DRAG_ICON_WIDTH - 5, m_nBoxHeight);
+							
 	}
-      
-    m_DragIconY = boxSpacing + (m_nBoxHeight - DRAG_ICON_HEIGHT)/2 + 1;
-	
-	
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -446,9 +289,6 @@ void CURLBar::ProcessEnterKey()
             id = 0;
         }
 
-#ifdef MOZ_NGLAYOUT
-  XP_ASSERT(0);
-#else
         if (HK_CallHook(HK_LOCATION, NULL, id, text, &new_text))
         {
             // Nothing, new_text is already set.
@@ -457,7 +297,6 @@ void CURLBar::ProcessEnterKey()
         {
             new_text = NULL;
         }
-#endif /* MOZ_NGLAYOUT */
     }
 
     if (new_text)
@@ -481,14 +320,8 @@ void CURLBar::ProcessEnterKey()
 //   need to because of the location / netsite history
 void CURLBar::UpdateFields( const char * msg )
 {       
-    CWnd *pText = GetDlgItem( IDC_URLTEXT );
-
-#ifdef MOZ_NGLAYOUT
-  XP_ASSERT(0);
-#else
     // strip random backend crap out of the url
     msg = LM_StripWysiwygURLPrefix(msg);
-#endif /* MOZ_NGLAYOUT */
 
     CString cs(msg);
     m_pBox->SetWindowText(cs); 
@@ -497,13 +330,13 @@ void CURLBar::UpdateFields( const char * msg )
     m_pBox->Clear();
     
 	// If this was a netsite server change the string
-	History_entry*	pEntry = SHIST_GetCurrent(&m_pIMWContext->GetContext()->hist);
+/*	History_entry*	pEntry = SHIST_GetCurrent(&m_pIMWContext->GetContext()->hist);
 
 	if (pEntry && pEntry->is_netsite)
 		pText->SetWindowText(szLoadString(IDS_NETSITE));
 	else
 		pText->SetWindowText(szLoadString(IDS_LOCATION));
-
+*/
     m_nTextStatus = TRUE;
 }
 
@@ -578,38 +411,13 @@ void CURLBar::OnSelChange()
 //   "Go to:" rather than "Location:"
 void CURLBar::OnEditChange()
 {
-	CWnd *pText = GetDlgItem( IDC_URLTEXT );
-
+/* TODO:
     if( pText && m_nTextStatus )
     {
         pText->SetWindowText(szLoadString(IDS_GOTO));
         m_nTextStatus = FALSE;
     }
-}
-
-void CURLBar::OnMouseMove(UINT nFlags, CPoint point) 
-{
-	CURLBarBase::OnMouseMove(nFlags, point);
-    // Display previous status
-    wfe_Progress( m_pIMWContext->GetContext(), "" );
-
-  	MapWindowPoints(GetParent(), &point, 1);
-	GetParent()->SendMessage(WM_MOUSEMOVE, nFlags, MAKELPARAM(point.x, point.y));
-
-}
-
-void CURLBar::OnLButtonDblClk(UINT nFlags, CPoint point) 
-{
-	CURLBarBase::OnLButtonDblClk(nFlags, point);
-
-}
-
-
-void CURLBar::OnLButtonUp(UINT nFlags, CPoint point) 
-{
-	MapWindowPoints(GetParent(), &point, 1);
-	GetParent()->SendMessage(WM_LBUTTONUP, nFlags, MAKELPARAM(point.x, point.y));
-
+*/
 }
 
 CEditWnd::~CEditWnd()
@@ -618,13 +426,11 @@ CEditWnd::~CEditWnd()
         KillTimer(m_idTimer);
     if (m_pComplete)
         free(m_pComplete);
-    delete m_ToolTip;
 }
 
 
 BEGIN_MESSAGE_MAP(CEditWnd,CGenericEdit)
     ON_WM_TIMER()
-    ON_WM_MOUSEMOVE()
 END_MESSAGE_MAP()
 
 
@@ -692,7 +498,6 @@ BOOL CEditWnd::PreTranslateMessage ( MSG * msg )
 
 					const char *c_url = (const char *)url;
 					url_str = (char *)c_url;
-#ifndef MOZ_NGLAYOUT
 					if (HK_CallHook(HK_LOCATION, NULL, id, url_str, &new_url))
 					{
 						// Nothing, new_url is already set.
@@ -701,7 +506,6 @@ BOOL CEditWnd::PreTranslateMessage ( MSG * msg )
 					{
 						new_url = NULL;
 					}
-#endif /* MOZ_NGLAYOUT */
 				}
 			
 				if (new_url)
@@ -910,7 +714,6 @@ void CEditWnd::OnMouseMove(UINT nFlags, CPoint point)
 		m_ToolTip->RelayEvent(&msg);
 	}
 }
-
 
 // CProxySurroundWnd
 
@@ -1239,4 +1042,146 @@ void CPageProxyWindow::OnTimer( UINT  nIDEvent )
 	}
 
 
+}
+
+// ==============================================
+// The URLBar Button class.
+// ==============================================
+
+BEGIN_MESSAGE_MAP(CURLBarButton, CRDFToolbarButton)
+	//{{AFX_MSG_MAP(CURLBarButton)
+	ON_WM_SIZE()
+//}}AFX_MSG_MAP
+END_MESSAGE_MAP()
+
+// The Nav Center vocab element
+extern "C" RDF_NCVocab gNavCenter;
+
+CSize CURLBarButton::GetButtonSizeFromChars(CString s, int c)
+{
+	// Get our width
+	void* data;
+	BOOL percent = FALSE;
+	int width = 100;
+
+	if (m_Node == NULL)
+		return CSize(0,0);
+
+	m_bIsSpring = FALSE;
+	HT_GetNodeData(m_Node, gNavCenter->urlBarWidth, HT_COLUMN_STRING, &data);
+	if (data)
+	{
+		CString strData((char*)data);
+		int length = strData.GetLength();
+		if (strData[length-1] == '%')
+		{
+			percent = TRUE;
+			strData = strData.Left(length-1);
+		}
+		else if (strData[0] == '*')
+		{
+			m_bIsSpring = TRUE;
+			strData = "0";
+		}
+		else
+			percent = FALSE;
+			
+		width = atoi(strData);
+	}
+
+	if (foundOnRDFToolbar())
+	{
+		CRDFToolbar* pToolbar = (CRDFToolbar*)GetParent();
+		int rowWidth = pToolbar->GetRowWidth();
+		if (percent)
+			return CSize((width/100.0) * rowWidth, URLBAR_HEIGHT);
+		else return CSize(width, URLBAR_HEIGHT);
+	}
+
+	return CSize(0,0); // Must be on an RDF toolbar to make any sense at all.
+}
+
+void CURLBarButton::DrawButtonBitmap(HDC hDC, CRect rcImg)
+{
+} // Do nothing.
+
+void CURLBarButton::DrawButtonText(HDC hDC, CRect rcTxt, CSize sizeTxt, CString strTxt)
+{
+	CRect rect;
+	GetClientRect(&rect);
+	CRect textRect(rect);
+
+	::DrawText(hDC, strTxt, -1, &textRect, DT_CENTER | DT_EXTERNALLEADING | DT_CALCRECT);
+	
+	rect.right = textRect.right;
+	rect.left += 6;
+	rect.right += 6;
+
+	CRDFToolbarButton::DrawButtonText(hDC, rect, CSize(textRect.Width(), textRect.Height()), strTxt);
+
+}
+
+int CURLBarButton::Create(CWnd *pParent, int nToolbarStyle, CSize noviceButtonSize, CSize advancedButtonSize,
+			   LPCTSTR pButtonText, LPCTSTR pToolTipText, 
+			   LPCTSTR pStatusText,
+			   CSize bitmapSize, int nMaxTextChars, int nMinTextChars, BOOKMARKITEM bookmark, 
+			   HT_Resource pNode, DWORD dwButtonStyle)
+{
+
+	int result = CRDFToolbarButton::Create(pParent, nToolbarStyle, noviceButtonSize, advancedButtonSize,
+						pButtonText, pToolTipText, pStatusText, bitmapSize, nMaxTextChars, nMinTextChars,
+						bookmark, pNode, dwButtonStyle);
+	if (result)
+	{
+		// Button successfully created.  Build the URL bar.
+		m_pURLBar=new CURLBar(); 
+		m_pURLBar->Create( NULL, NULL,  
+                           WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE, 
+                           CRect(0,0,10,10), this, CURLBar::IDD);
+         
+		CWnd* pWnd = GetTopLevelFrame();
+		if (pWnd->IsKindOf(RUNTIME_CLASS(CMainFrame)))
+		{
+			CMainFrame* pMain = (CMainFrame*)pWnd;
+			m_pURLBar->SetContext((LPUNKNOWN)pMain->GetMainContext());
+		}
+	}
+
+	return result;
+}
+
+void CURLBarButton::OnSize(UINT nType, int x, int y)
+{
+	m_bitmapSize.cx = m_bitmapSize.cy = 0;
+	if (m_pURLBar)
+	{
+		CRect rect;
+		GetClientRect(&rect);
+
+		CRect textRect(rect);
+
+		CDC* pDC = GetDC();
+		char* text = HT_GetNodeName(m_Node);
+		pDC->DrawText(text, -1, &textRect, DT_CENTER | DT_EXTERNALLEADING | DT_CALCRECT);
+		ReleaseDC(pDC);
+
+		int startY = (rect.Height() - URLBAR_HEIGHT)/2;
+		m_pURLBar->MoveWindow(textRect.right, startY, rect.Width() - textRect.Width() - 3, 
+								URLBAR_HEIGHT);
+	}
+}
+
+void CURLBarButton::UpdateURLBar(char* url)
+{
+	if (m_pURLBar)
+		m_pURLBar->UpdateFields(url);
+}
+
+CURLBarButton::CURLBarButton() 
+:m_pURLBar(NULL), m_bIsSpring(FALSE)
+{}
+
+CURLBarButton::~CURLBarButton()
+{
+	delete m_pURLBar;
 }

@@ -11,9 +11,9 @@
  * NPL.
  *
  * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved.
+ * Commuyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Resnications Corporation.  Portions created by Netscape are
+ * Coperved.
  */
 
 // RDF Tree View for Aurora.  Created by Dave Hyatt.
@@ -100,7 +100,7 @@ private:
 	
 	CRDFCommandMap m_MenuCommandMap;  // The command mapping for menus
 
-	CNavMenuBar* m_NavMenuBar;	// A pointer to the title nav menu. NULL if no menu button is present.
+	CNavTitleBar* m_NavTitleBar;	// A pointer to the title strip.
 
 	// Tree colors, fonts, and backgrounds
 	COLORREF m_ForegroundColor;				// The foreground color.  Used for text, separators, etc.
@@ -113,34 +113,71 @@ private:
 	COLORREF m_SelectionForegroundColor;	// Foreground color of the selection
 	COLORREF m_SelectionBackgroundColor;	// Background color of the selection
 
+	COLORREF m_ShadowColor;					// Shadow color of the tree (used for drawing separators).
+	COLORREF m_HighlightColor;				// Highlight color of the tree (used for drawing separators).
+
+	COLORREF m_SortShadowColor;				// Shadow color of the sorted tree (used for drawing separators).
+	COLORREF m_SortHighlightColor;			// Highlight color of the sorted tree (used for drawing separators).
+
+	COLORREF m_RolloverColor;				// Rollover color of the tree.
+
 	COLORREF m_DividerColor;				// Color of the dividers drawn between lines
 	BOOL	 m_bDrawDividers;				// Whether or not dividers should be drawn
 
 	CString m_BackgroundImageURL;			// The URL of the background image.
 	CRDFImage* m_pBackgroundImage;	// The image for the background.
 
+	BOOL m_bBarColor;				// The color of the tree connections.
+
+	BOOL m_bUseSingleClick;			// Single click vs. double click
+	BOOL m_bUseHyperbolicScaling;	// Whether or not to use hyperbolic scaling.
+
+	CString m_WindowTarget;			// The target window for this tree view.  If "", then the
+									// last active window is assumed.
+
+	BOOL m_bInNavigationMode;	// The tree view has two different sets of defaults that
+								// it will assume if no value is defined for a specific
+								// property.  These defaults are based on whether or not
+								// the user is browsing or managing data.
+	BOOL m_bIsPopup;			// Whether or not we're a popup tree.
+
 public:
-    CRDFOutliner (HT_Pane thePane, HT_View theView, CRDFOutlinerParent* theParent);
+    CRDFOutliner (CRDFOutlinerParent* theParent, HT_Pane thePane = NULL, HT_View theView = NULL);
 	~CRDFOutliner ( );
 
 	// Inspectors
+	COLORREF GetForegroundColor() { return m_ForegroundColor; }
+	COLORREF GetBackgroundColor() { return m_BackgroundColor; }
+	CString GetBackgroundImageURL() { return m_BackgroundImageURL; }
+
 	HT_View GetHTView() { return m_View; } // Return a handle to the hypertree view
 	HT_Resource GetAcquiredNode() { return m_Node; } // Return handle to the acquired HT node
 	CRDFOutlinerParent* GetRDFParent() { return m_Parent; } // RDFOutlinerParent handle
 	UINT GetSelectedColumn() { return m_nSelectedColumn; } // Returns selected column
 	int GetSortColumn() { return m_nSortColumn; }
 	int GetSortType() { return m_nSortType; }
-	
+	BOOL IsPopup() { return m_bIsPopup; }
+	BOOL InNavigationMode() { return m_bInNavigationMode; }
+
 	// Setters
+	void SetNavigationMode(BOOL inMode);
+	void SetIsPopup(BOOL isPopup) { m_bIsPopup = isPopup; }
+
+	void SetHTView(HT_View v); 
+	void SetWindowTarget(char* target) { m_WindowTarget = target; }
+
 	void SetSortType(int sortType) { m_nSortType = sortType; }
 	void SetSortColumn(int sortColumn) { m_nSortColumn = sortColumn; }
     void SetSelectedColumn(int nColumn) { m_nSelectedColumn = nColumn; }
-	void SetDockedMenuBar(CNavMenuBar* bar) { m_NavMenuBar = bar; }
+	void SetTitleBar(CNavTitleBar* bar) { m_NavTitleBar = bar; }
 
 // I am explicitly labeling as virtual any functions that have been
 // overridden.  That is, unless I state otherwise, all virtual functions
 // are overridden versions of COutliner functions.
 	
+	virtual void DestroyColumns();
+		// Overridden to destroy the outliner's columns and clear our RDF column command map.
+
 	virtual void InitializeItemHeight(int iDesiredSize) { m_itemHeight = 19; }
 		// Overridden to place a pixel of padding on either side of the line and to add a pixel for the
 		// divider that is drawn between lines.
@@ -318,6 +355,9 @@ public:
 	afx_msg void OnPaint();
 		// Overridden to perform a drawing optimization (not performed by Outliner)
 
+	afx_msg void OnSize( UINT nType, int cx, int cy );
+		// Overridden to ensure column repainting and resizing.
+
 	afx_msg void OnLButtonDown ( UINT nFlags, CPoint point );
 	afx_msg void OnLButtonUp (UINT nFlags, CPoint point );
 	afx_msg void OnMouseMove( UINT nFlags, CPoint point );
@@ -364,17 +404,21 @@ private:
 	CString m_BackgroundImageURL;
 
 public:
-	CRDFOutlinerParent(HT_Pane thePane, HT_View theView);
+	CRDFOutlinerParent(HT_Pane thePane = NULL, HT_View theView = NULL);
 
 	BOOL PreCreateWindow(CREATESTRUCT& cs);
 	COutliner* GetOutliner();
 	void CreateColumns();
+	void DestroyColumns() { columnMap.Clear(); }
+
 	BOOL RenderData( int iColumn, CRect & rect, CDC &dc, LPCTSTR text );
 	BOOL ColumnCommand( int iColumn );
 	void Initialize();
 	CRDFCommandMap& GetColumnCommandMap() { return columnMap; }
 
 	void LoadComplete(HT_Resource r) { Invalidate(); }
+
+	void SetHTView(HT_View newView) { ((CRDFOutliner*)GetOutliner())->SetHTView(newView); Invalidate(); GetOutliner()->Invalidate(); }
 
 protected:
     afx_msg void OnDestroy();
@@ -383,47 +427,56 @@ protected:
 };
 
 
-class CRDFContentView : public CContentView
+class CRDFContentView : public CView
 {
 public:
-    COutlinerParent * m_pOutlinerParent;
+    CRDFOutlinerParent * m_pOutlinerParent;
+	CPaneCX* m_pHTMLView;
+	CNavTitleBar* m_pNavBar;
 
 // Construction
 public:
-	CRDFContentView(CRDFOutlinerParent* outlinerStuff)
-	{ m_pOutlinerParent = outlinerStuff; };
+	CRDFContentView();
+	
+	~CRDFContentView();
 
-	~CRDFContentView() 
-	{
-		delete m_pOutlinerParent;
-	}
+	void OnDraw(CDC* pDC) {};
 
 	COutlinerParent* GetOutlinerParent() { return m_pOutlinerParent; }
 
-// This functionality has been folded in from COutlinerView. I no longer derive from this class
-// but instead come off of CContentView.
+// This functionality has been folded in from COutlinerView. 
 
     void CreateColumns ( )
     {
         m_pOutlinerParent->CreateColumns ( );
     }
 
-	void InvalidateOutlinerParent();
+	void SwitchHTViews(HT_View htView);
 
-	static void DisplayRDFTree(CWnd* pParent, int width, int height, RDF_Resource rdfResource);
-		// This function can be called to create an embedded RDF tree view inside another window.
-		// Used to embed the tree in HTML.
+	CNavTitleBar* GetTitleBar() { return m_pNavBar; }
+
+	static CRDFContentView* DisplayRDFTreeFromSHACK(CWnd* pParent, int xPos, int yPos, int width, 
+		int height, char* url,  int32 param_count, char** param_names, char** param_values);
+		// This function can be called to create an embedded RDF tree view using an
+		// external URL and specified targeting.
+	
+	static CRDFContentView* DisplayRDFTreeFromResource(CWnd* pParent, int xPos, int yPos, int width, 
+		int height, HT_Resource node, CCreateContext* pContext = NULL);
+		// This function creates an embedded RDF tree view from an existing resource.
+
+	static CRDFContentView* DisplayRDFTreeFromPane(CWnd* pParent, int xPos, int yPos, int width,
+		int height, HT_Pane pane, CCreateContext* pContext = NULL);
+		// This function creates an embedded RDF tree view once the pane has been constructed.
 
 protected:
-    virtual void OnDraw(CDC *pDC);
-	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
 
     DECLARE_DYNCREATE(CRDFContentView)
-	//{{AFX_MSG(CMainFrame)
+	//{{AFX_MSG(CRDFContentView)
 	afx_msg LRESULT OnNavCenterQueryPosition(WPARAM wParam, LPARAM lParam);
 	afx_msg int OnCreate ( LPCREATESTRUCT );
     afx_msg void OnSize ( UINT, int, int );
     afx_msg void OnSetFocus ( CWnd * pOldWnd );
+	afx_msg void OnKillFocus (CWnd* pNewWnd); 
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };
@@ -453,9 +506,5 @@ protected:
     virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
     DECLARE_MESSAGE_MAP()
 };
-
-
-// Functions that will be used by the Personal Toolbar and Quickfile.  Allow the
-// display of arbitrary icons (or local file system icons)
 
 #endif

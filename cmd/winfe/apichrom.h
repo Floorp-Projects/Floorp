@@ -131,6 +131,7 @@ public:
 	virtual void SetMenu( UINT ) = 0;
 
 // General Toolbar functionality
+	virtual void UpdateURLBars(char* url) = 0;
 	virtual void ShowToolbar(UINT nToolbarID, BOOL bShow = TRUE) = 0;
 	virtual BOOL GetToolbarVisible(UINT nToolbarID) = 0;
 	virtual CWnd *GetToolbar(UINT nToolbarID) = 0;
@@ -146,6 +147,7 @@ public:
 	virtual void StopAnimation() = 0;
 
 // Configurable Toolbar Manager stuff
+	virtual int CreateRDFToolbar(CString toolbarName, int nMaxToolbars, BOOL bHasAnimation)=0;
 	virtual int CreateCustomizableToolbar(CString toolbarName, int nMaxToolbars, BOOL bHasAnimation)=0;
 	virtual int CreateCustomizableToolbar(UINT nStringID, int nMaxToolbars, BOOL bHasAnimation) = 0;
 	virtual CString GetCustToolbarString() = 0;

@@ -21,9 +21,11 @@
 #include "stdafx.h"
 #include "mainfrm.h"
 #include "hiddenfr.h"
+#include "xp_ncent.h"
 #include "rdf.h"
 #include "htrdf.h"
 #include "rdfliner.h"
+#include "pain.h"
 #include "shcut.h"
 #include "shcutdlg.h"
 #include "prefapi.h"
@@ -56,7 +58,7 @@ extern int XP_BKMKS_HOURS_AGO;
 #define IDT_DRAGRECT 16414
 
 #define EDIT_DELAY 500
-#define SPRINGLOAD_DELAY 300
+#define SPRINGLOAD_DELAY 500
 #define RDF_DRAG_HEARTBEAT 125 // Faster than COutliner's DRAG_HEARTBEAT
 
 // Click location stuff
@@ -198,14 +200,15 @@ BEGIN_MESSAGE_MAP(CRDFOutliner, COutliner)
 	ON_WM_RBUTTONUP()
 	ON_WM_CREATE()
 	ON_WM_TIMER()
+	ON_WM_SIZE()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
-CRDFOutliner::CRDFOutliner (HT_Pane thePane, HT_View theView, CRDFOutlinerParent* theParent)
+CRDFOutliner::CRDFOutliner (CRDFOutlinerParent* theParent, HT_Pane thePane, HT_View theView)
 :COutliner(FALSE), m_pAncestor(NULL), m_Pane(thePane), m_View(theView), m_Parent(theParent), m_EditField(NULL),
 m_nSortType(HT_NO_SORT), m_nSortColumn(HT_NO_SORT), m_hEditTimer(0), m_hDragRectTimer(0),
 m_bNeedToClear(FALSE), m_nSelectedColumn(0), m_bDoubleClick(FALSE), m_Node(NULL), 
-m_bDataSourceInWindow(FALSE), m_NavMenuBar(NULL)
+m_bDataSourceInWindow(FALSE), m_NavTitleBar(NULL), m_bInNavigationMode(FALSE), m_bIsPopup(FALSE)
 {
     ApiApiPtr(api);
     m_pUnkUserImage = api->CreateClassInstance(APICLASS_IMAGEMAP,NULL,(APISIGNATURE)IDB_BOOKMARKS);
@@ -232,6 +235,13 @@ int CRDFOutliner::OnCreate(LPCREATESTRUCT lpCreateStruct)
     int iRetVal = COutliner::OnCreate(lpCreateStruct);
 	DragAcceptFiles(FALSE);
     return iRetVal;
+}
+
+void CRDFOutliner::OnSize( UINT nType, int cx, int cy )
+{
+    SqueezeColumns( -1, 0, FALSE );
+    m_iPaintLines = ( cy / m_itemHeight ) + 1;
+    EnableScrollBars ( );
 }
 
 void CRDFOutliner::HandleEvent(HT_Notification ns, HT_Resource n, HT_Event whatHappened) 
@@ -593,6 +603,12 @@ CRDFImage* DrawArbitraryURL(HT_Resource r, int left, int top, int imageWidth, in
 					  CCustomImageObject* pObject, BOOL largeIcon)
 {
 	CRDFImage* pImage = FetchCustomIcon(r, pObject, largeIcon);
+	return DrawRDFImage(pImage, left, top, imageWidth, imageHeight, hDC, bkColor);
+}
+
+CRDFImage* DrawRDFImage(CRDFImage* pImage, int left, int top, int imageWidth, int imageHeight, HDC hDC,
+						COLORREF bkColor)
+{
 	if (pImage && pImage->FrameLoaded()) 
 	{
 		// Now we draw this bad boy.
@@ -793,7 +809,7 @@ IconType DetermineIconType(HT_Resource pNode, BOOL largeIcon)
    if (pNode != NULL)
    {
 	    char* pURL = largeIcon? HT_GetNodeLargeIconURL(pNode) : HT_GetNodeSmallIconURL(pNode);
-		TRACE("%s\n", pURL);
+		//TRACE("%s\n", pURL);
 		if (strncmp("icon", pURL, 4) != 0)
 		{
 			// Time to load a custom image.
@@ -893,7 +909,7 @@ void CRDFOutliner::SelectItem(int iSel,int mode,UINT flags)
 			if (m_bNeedToClear)
 			{
 				HT_SetSelection(m_Node);
-				if (m_bNeedToEdit && !m_bDoubleClick)
+				if (m_bNeedToEdit && !m_bDoubleClick && !m_bUseSingleClick)
 				{
 
 					CRDFCommandMap& map = m_Parent->GetColumnCommandMap(); 
@@ -910,6 +926,8 @@ void CRDFOutliner::SelectItem(int iSel,int mode,UINT flags)
 			m_bNeedToClear = FALSE;
 			m_bNeedToEdit = FALSE;
 			m_bDoubleClick = FALSE;
+			if (m_bUseSingleClick)
+				OnSelDblClk(iSel);
 			break;	
 		case OUTLINER_LBUTTONDOWN:
 		case OUTLINER_KEYDOWN:
@@ -984,6 +1002,16 @@ BOOL CRDFOutliner::IsDocked()
 	return theFrame->IsChild(this);
 }
 
+void CRDFOutliner::SetNavigationMode(BOOL mode)
+{
+	m_bInNavigationMode = mode;
+	((CRDFOutlinerParent*)GetParent())->EnableHeaders(!m_bInNavigationMode);
+
+	// Need to invalidate the title strip.
+	CRDFContentView* pView = (CRDFContentView*)(GetParent()->GetParent());
+	pView->GetTitleBar()->Invalidate();
+}
+
 void CRDFOutliner::OnSelDblClk(int iLine)
 {
 	if (m_Node)
@@ -995,13 +1023,32 @@ void CRDFOutliner::OnSelDblClk(int iLine)
 		else if (!HT_IsSeparator(m_Node))// && !IsDocked()) For now always do double-click behavior
 		{
 			DisplayURL();
+			if (IsPopup())
+			{	
+				// Destroy the entire tree.
+				CFrameWnd* pFrameWnd = GetParentFrame();
+				if (pFrameWnd->IsKindOf(RUNTIME_CLASS(CNSNavFrame)))
+					((CNSNavFrame*)pFrameWnd)->DeleteNavCenter();
+			}
 		}
 	}
+}
+
+void CRDFOutliner::SetHTView(HT_View v)
+{ 
+	m_Pane = HT_GetPane(v); 
+	m_View = v; 
+	m_iSelection = m_iFocus = -1;
+	int newCount = HT_GetItemListCount(m_View);
+	SetTotalLines(newCount);  // Update the outliner's visible lines
+	m_iTopLine = 0;
 }
 
 void CRDFOutliner::DisplayURL()
 {
 	char* url = HT_GetNodeURL(m_Node);
+	
+	// Hacking the window target (Added by Dave on 7/12/98)
 	CAbstractCX * pCX = FEU_GetLastActiveFrameContext();
 
     //Check for whether we need new browser window.
@@ -1078,7 +1125,9 @@ void CRDFOutliner::DisplayURL()
 		if (pLocalName)
 			XP_FREE(pLocalName);
 	}
-	else pCX->NormalGetUrl((LPTSTR) url); // Do a normal fetch.
+	else if (m_WindowTarget == "")
+		pCX->NormalGetUrl((LPTSTR) url, "rdftree"); // Do a normal fetch.
+	else pCX->NormalGetUrl((LPTSTR) url, "rdftree", (char*)(const char*)m_WindowTarget);
 }
 
 BOOL CRDFOutliner::TestRowCol(POINT point, int &iRow, int &iCol)
@@ -1646,17 +1695,23 @@ void CRDFOutliner::OnKillFocus ( CWnd * pNewWnd )
 	
 void CRDFOutliner::FocusCheck(CWnd* pWnd, BOOL gotFocus)
 {
-	if (m_NavMenuBar)
+	if (m_NavTitleBar)
 	{
 		if (gotFocus)
-			m_NavMenuBar->NotifyFocus(TRUE);
+			m_NavTitleBar->NotifyFocus(TRUE);
 		else
 		{
-			CFrameWnd* pFrame = GetParentFrame();
-			if (pFrame && !pFrame->IsChild(pWnd))
+			CFrameWnd* pFrameWnd = GetParentFrame();
+			if (pFrameWnd && !pFrameWnd->IsChild(pWnd))
 			{
 				// Invalidate for a redraw
-				m_NavMenuBar->NotifyFocus(FALSE);
+				m_NavTitleBar->NotifyFocus(FALSE);
+				if (IsPopup())
+				{		
+					// Destroy the window.
+					if (pFrameWnd->IsKindOf(RUNTIME_CLASS(CNSNavFrame)))
+						((CNSNavFrame*)pFrameWnd)->DeleteNavCenter();
+				}
 			}
 		}
 	}
@@ -1723,23 +1778,64 @@ void CRDFOutliner::OnPaint()
 	GetClientRect(&rcClient);
     CPaintDC pdc ( this );
 
+	if (m_View == NULL)
+		return;
+
 	// Read in all the properties
 	HT_Resource top = HT_TopNode(m_View);
 	void* data;
 	PRBool foundData = FALSE;
 	
+	if (m_bInNavigationMode)
+	{
+		// Options for navigation mode.
+		// Inherit colors from the toolbar if we point to a button.
+		CFrameWnd* pFrameWnd = GetParentFrame();
+		if (pFrameWnd->IsKindOf(RUNTIME_CLASS(CNSNavFrame)))
+		{
+			// We have a parent navframe that could POTENTIALLY be attached to a button.
+			CNSNavFrame* pNav = (CNSNavFrame*)pFrameWnd;
+			if (pNav->GetRDFButton() != NULL)
+			{
+				// There's a button from which to inherit colors.
+				CRDFToolbar* pToolbar = (CRDFToolbar*)(pNav->GetRDFButton()->GetParent());
+				m_ForegroundColor = m_SortForegroundColor = pToolbar->GetForegroundColor();
+				m_BackgroundColor = m_SortBackgroundColor = pToolbar->GetBackgroundColor();
+			}
+		}
+		else
+		{
+			// Use some defaults
+			m_ForegroundColor = m_SortForegroundColor = RGB(0,0,0);
+			m_BackgroundColor = m_SortBackgroundColor = RGB(240,240,240);
+		}
+
+		m_bHasPipes = FALSE;
+		m_bDrawDividers = FALSE;
+		m_bUseSingleClick = TRUE;
+	}
+	else
+	{
+		// Options for management mode.
+		m_ForegroundColor = RGB(0,0,0);
+		m_BackgroundColor = RGB(240,240,240);
+		m_SortBackgroundColor = RGB(224,224,224);
+		m_SortForegroundColor = RGB(0,0,0);
+		m_bHasPipes = TRUE;
+		m_bDrawDividers = TRUE;
+		m_bUseSingleClick = FALSE;
+	}
+
 	// Foreground color
-	HT_GetNodeData(top, gNavCenter->treeFGColor, HT_COLUMN_STRING, &data);
+	HT_GetNodeData(top, gNavCenter->viewFGColor, HT_COLUMN_STRING, &data);
 	if (data)
 		WFE_ParseColor((char*)data, &m_ForegroundColor);
-	else m_ForegroundColor = RGB(0,0,0);
-
+	
 	// background color
-	HT_GetNodeData(top, gNavCenter->treeBGColor, HT_COLUMN_STRING, &data);
+	HT_GetNodeData(top, gNavCenter->viewBGColor, HT_COLUMN_STRING, &data);
 	if (data)
 		WFE_ParseColor((char*)data, &m_BackgroundColor);
-	else m_BackgroundColor = RGB(240,240,240);
-
+	
 	HT_GetNodeData(top, gNavCenter->showTreeConnections, HT_COLUMN_STRING, &data);
 	if (data)
 	{
@@ -1747,19 +1843,20 @@ void CRDFOutliner::OnPaint()
 		if (answer.GetLength() > 0 && (answer.GetAt(0) == 'n' || answer.GetAt(0) == 'N'))
 			m_bHasPipes = FALSE;
 	}
-	else m_bHasPipes = TRUE;
-
+	
 	// Sort foreground color
 	HT_GetNodeData(top, gNavCenter->sortColumnFGColor, HT_COLUMN_STRING, &data);
 	if (data)
 		WFE_ParseColor((char*)data, &m_SortForegroundColor);
-	else m_SortForegroundColor = RGB(0,0,0);
-
+	
 	// Sort background color
 	HT_GetNodeData(top, gNavCenter->sortColumnBGColor, HT_COLUMN_STRING, &data);
 	if (data)
 		WFE_ParseColor((char*)data, &m_SortBackgroundColor);
-	else m_SortBackgroundColor = RGB(224,224,224);
+	
+	// Compute the shadow/highlight colors for sorting and for normal modes.
+	Compute3DColors(m_SortBackgroundColor, m_SortHighlightColor, m_SortShadowColor);
+	Compute3DColors(m_BackgroundColor, m_HighlightColor, m_ShadowColor);
 
 	// Selection foreground color
 	HT_GetNodeData(top, gNavCenter->selectionFGColor, HT_COLUMN_STRING, &data);
@@ -1775,7 +1872,7 @@ void CRDFOutliner::OnPaint()
 
 	// Background image URL
 	m_BackgroundImageURL = "";
-	HT_GetNodeData(top, gNavCenter->treeBGURL, HT_COLUMN_STRING, &data);
+	HT_GetNodeData(top, gNavCenter->viewBGURL, HT_COLUMN_STRING, &data);
 	if (data)
 		m_BackgroundImageURL = (char*)data;
 	m_pBackgroundImage = NULL; // Clear out the BG image.
@@ -1793,8 +1890,7 @@ void CRDFOutliner::OnPaint()
 		if (answer.GetLength() > 0 && (answer.GetAt(0) == 'n' || answer.GetAt(0) == 'N'))
 			m_bDrawDividers = FALSE;
 	}
-	else m_bDrawDividers = TRUE;
-
+	
 	HPALETTE pOldPalette = NULL;
 	if (sysInfo.m_iBitsPerPixel < 16 && (::GetDeviceCaps(pdc.m_hDC, RASTERCAPS) & RC_PALETTE))
 	{
@@ -1848,7 +1944,7 @@ void CRDFOutliner::OnPaint()
 	{
 		int imageHeight = m_pBackgroundImage->bmpInfo->bmiHeader.biHeight;
 		int ySrcOffset = (bgFillRect.top + m_iTopLine*m_itemHeight) % imageHeight;
-		PaintBackground(pdc, bgFillRect, m_pBackgroundImage, ySrcOffset);
+		PaintBackground(pdc, bgFillRect, m_pBackgroundImage, 0, ySrcOffset);
 	}
 	else
 	{
@@ -1918,7 +2014,161 @@ void DrawBGSubimage(CRDFImage* pImage, HDC hDC, int xSrcOffset, int ySrcOffset, 
 	}
 }
 
-void PaintBackground(HDC hdc, CRect rect, CRDFImage* pImage, int ySrcOffset)
+#define LIGHT_GRAY	RGB(192, 192, 192)
+#define DARK_GRAY	RGB(128, 128, 128)
+#define WHITE		RGB(255, 255, 255)
+#define BLACK		RGB(0, 0, 0)
+
+void
+GetSystem3DColors(COLORREF rgbBackground, COLORREF& rgbLightColor, COLORREF& rgbDarkColor)
+{
+#ifdef XP_WIN32
+	if (sysInfo.IsWin4_32()) {
+		// These are Windows 95 only
+		rgbLightColor = ::GetSysColor(COLOR_3DLIGHT);
+		rgbDarkColor = ::GetSysColor(COLOR_3DSHADOW);
+	} else {
+		rgbLightColor = LIGHT_GRAY;
+		rgbDarkColor = ::GetSysColor(COLOR_BTNSHADOW);
+	}
+#else
+	rgbLightColor = LIGHT_GRAY;
+	rgbDarkColor = ::GetSysColor(COLOR_BTNSHADOW);
+#endif
+
+	// We need to make sure that both colors are visible against
+	// the background
+	if (rgbLightColor == rgbBackground)
+		rgbLightColor = rgbBackground == LIGHT_GRAY ? WHITE : LIGHT_GRAY;
+
+	if (rgbDarkColor == rgbBackground)
+		rgbDarkColor = rgbBackground == DARK_GRAY ? BLACK : DARK_GRAY;
+}
+
+// Constants for calculating Highlight (TS = "TopShadow") and
+//   shadow (BS = "BottomShadow") values relative to background
+// Taken from UNIX version -- Eric Bina's Visual.c
+//
+// Bias brightness calculation by standard color-sensitivity values
+// (Percents -- UNIX used floats, but we don't need to)
+//
+#define RED_LUMINOSITY 30
+#define GREEN_LUMINOSITY 59
+#define BLUE_LUMINOSITY 11
+
+// Percent effect of intensity, light, and luminosity & on brightness,
+#define INTENSITY_FACTOR  25
+#define LIGHT_FACTOR       0
+#define LUMINOSITY_FACTOR 75
+
+// LITE color model percent to interpolate RGB towards black for BS, TS
+
+#define COLOR_LITE_BS_FACTOR   45
+#define COLOR_LITE_TS_FACTOR   70
+
+// DARK color model - percent to interpolate RGB towards white for BS, TS
+
+#define COLOR_DARK_BS_FACTOR   30
+#define COLOR_DARK_TS_FACTOR   50
+#define MAX_COLOR 255
+
+#define COLOR_DARK_THRESHOLD   51
+#define COLOR_LIGHT_THRESHOLD  204
+
+void Compute3DColors(COLORREF rgbColor, COLORREF &rgbLight, COLORREF &rgbDark)
+{
+	unsigned uRed, uGreen, uBlue;
+	unsigned uRedBack = GetRValue(rgbColor);
+	unsigned uGreenBack = GetGValue(rgbColor);
+	unsigned uBlueBack = GetBValue(rgbColor);
+	unsigned intensity = (uRedBack + uGreenBack + uBlueBack) / 3;
+    unsigned luminosity = ((RED_LUMINOSITY * uRedBack)/ 100)
+	                 + ((GREEN_LUMINOSITY * uGreenBack)/ 100)
+                     + ((BLUE_LUMINOSITY * uBlueBack)/ 100);
+	unsigned backgroundBrightness = ((intensity * INTENSITY_FACTOR) +
+				   (luminosity * LUMINOSITY_FACTOR)) / 100;
+    unsigned f;
+	
+    if (backgroundBrightness < COLOR_DARK_THRESHOLD) {
+        // Dark Background - interpolate 30% toward black
+		uRed =  uRedBack - (COLOR_DARK_BS_FACTOR * uRedBack / 100);
+		uGreen = uGreenBack - (COLOR_DARK_BS_FACTOR * uGreenBack / 100);
+		uBlue = uBlueBack - (COLOR_DARK_BS_FACTOR * uBlueBack / 100);
+
+        rgbDark = RGB(uRed, uGreen, uBlue);
+
+        // This interpolotes to 50% toward white
+		uRed = uRedBack + (COLOR_DARK_TS_FACTOR *
+			(MAX_COLOR - uRedBack) / 100);
+		uGreen = uGreenBack + (COLOR_DARK_TS_FACTOR *
+			(MAX_COLOR - uGreenBack) / 100);
+
+		uBlue = uBlueBack + (COLOR_DARK_TS_FACTOR *
+			(MAX_COLOR - uBlueBack) / 100);
+
+	} else if (backgroundBrightness > COLOR_LIGHT_THRESHOLD) {
+        // Interpolate 45% toward black
+		uRed = uRedBack - (COLOR_LITE_BS_FACTOR * uRedBack / 100);
+		uGreen = uGreenBack - (COLOR_LITE_BS_FACTOR * uGreenBack / 100);
+		uBlue = uBlueBack - (COLOR_LITE_BS_FACTOR * uBlueBack / 100);
+        rgbDark = RGB(uRed, uGreen, uBlue);
+
+	    // Original algorithm (from X source: visual.c) used:
+    	// uRed = uRedBack - (COLOR_LITE_TS_FACTOR * uRedBack / 100),
+        //   where FACTOR is 20%, but that makes no sense!
+        // I think the intention was large interpolation toward white,
+        //  so use max of "medium" range (70%) for smooth continuity across threshhold
+      uRed = uRedBack + (COLOR_LITE_TS_FACTOR * (MAX_COLOR - uRedBack) / 100);
+      uGreen = uGreenBack + (COLOR_LITE_TS_FACTOR * (MAX_COLOR - uGreenBack) / 100);
+      uBlue = uBlueBack + (COLOR_LITE_TS_FACTOR * (MAX_COLOR - uBlueBack) / 100);
+	
+	} else {
+        // Medium Background
+		f = COLOR_DARK_BS_FACTOR + (backgroundBrightness 
+		                * ( COLOR_LITE_BS_FACTOR - COLOR_DARK_BS_FACTOR )
+                        / MAX_COLOR);
+
+		uRed = uRedBack - (f * uRedBack / 100);
+		uGreen = uGreenBack - (f * uGreenBack / 100);
+		uBlue = uBlueBack - (f * uBlueBack / 100);
+        rgbDark = RGB(uRed, uGreen, uBlue);
+
+		f = COLOR_DARK_TS_FACTOR + (backgroundBrightness
+		               * ( COLOR_LITE_TS_FACTOR - COLOR_DARK_TS_FACTOR )
+                       / MAX_COLOR);
+
+        uRed = uRedBack + (f * (MAX_COLOR - uRedBack) / 100);
+		uGreen = uGreenBack + (f * (MAX_COLOR - uGreenBack) / 100);
+		uBlue = uBlueBack + (f * (MAX_COLOR - uBlueBack) / 100);
+    }
+    
+	// Safety check for upper limit
+	uRed = min(MAX_COLOR, uRed);
+	uGreen = min(MAX_COLOR, uGreen);
+	uBlue = min(MAX_COLOR, uBlue);
+
+    rgbLight = RGB(uRed, uGreen, uBlue);
+
+	// Special case white backgrounds and black backgrounds
+	if (rgbLight == rgbColor && (uRedBack == MAX_COLOR && uGreenBack == MAX_COLOR && uBlueBack == MAX_COLOR))
+	{
+		// For a white separator use medium gray colors.
+		rgbLight = RGB(192,192,192);
+	}
+	else if (rgbDark == rgbColor && rgbColor == 0)
+	{
+		// Use a dark gray color.
+		rgbDark = RGB(64,64,64);
+	}
+
+	// If either of these colors is the same as the background color
+	// then use the system 3D element colors instead
+	if (rgbLight == rgbColor || rgbDark == rgbColor) {
+		GetSystem3DColors(rgbColor, rgbLight, rgbDark);
+    }
+}
+
+void PaintBackground(HDC hdc, CRect rect, CRDFImage* pImage, int xSrcOffset, int ySrcOffset)
 { 
 	int totalWidth = rect.Width();
 	int totalHeight = rect.Height();
@@ -1933,9 +2183,11 @@ void PaintBackground(HDC hdc, CRect rect, CRDFImage* pImage, int ySrcOffset)
 	int xDstOffset = rect.left;
 	int yDstOffset = rect.top;
 	
-	int xSrcOffset = 0;
 	if (ySrcOffset == -1) // Assume we don't have a scrolled offset in the view we're drawing into.
 	  ySrcOffset = rect.top % imageHeight;
+
+	if (xSrcOffset == -1) // Assume we don't have a scrolled offset in the view we're drawing into.
+	  xSrcOffset = rect.left % imageWidth;
 
 	int xRemainder = imageWidth - xSrcOffset;
 	int yRemainder = imageHeight - ySrcOffset;
@@ -2107,21 +2359,37 @@ void CRDFOutliner::PaintColumn(int iLineNo, int iColumn, LPRECT lpColumnRect,
 		{
 			BOOL hasFocus = FALSE;
 		
-			if (theNode && HT_IsSeparator(theNode))
+			CRect WinRect;
+			GetClientRect(&WinRect);
+			
+			if (theNode && HT_IsSeparator(theNode) && lpColumnRect->right != WinRect.right)
 			{
 				// Draw the horizontal line.
-				CPen separatorPen;
-				if (iColumn == GetSortColumn())
-				  separatorPen.CreatePen(PS_SOLID, 1, m_SortForegroundColor);
-				else separatorPen.CreatePen(PS_SOLID, 1, m_ForegroundColor);
-				
-				HPEN sepPen = (HPEN)separatorPen.GetSafeHandle();
-				
-				HPEN usePen = IsSelected(iLineNo) ? hHighlightPen : sepPen;
+				CPen separatorHighlightPen;
+				CPen separatorShadowPen;
 
-				HPEN pOldPen = (HPEN)(::SelectObject(hdc, usePen));
+				if (iColumn == GetSortColumn())
+				{
+					separatorHighlightPen.CreatePen(PS_SOLID, 1, m_SortHighlightColor);
+					separatorShadowPen.CreatePen(PS_SOLID, 1, m_SortShadowColor);
+				}
+				else 
+				{
+					separatorHighlightPen.CreatePen(PS_SOLID, 1, m_HighlightColor);
+					separatorShadowPen.CreatePen(PS_SOLID, 1, m_ShadowColor);
+				}
+
+				//HPEN sepPen = (HPEN)separatorPen.GetSafeHandle();
+				//HPEN usePen = IsSelected(iLineNo) ? hHighlightPen : sepPen;
+
+				HPEN pOldPen = (HPEN)(::SelectObject(hdc, (HPEN)separatorShadowPen.GetSafeHandle()));
 				::MoveToEx(hdc, lpColumnRect->left, lpColumnRect->top+m_itemHeight/2, NULL);
 				::LineTo(hdc, lpColumnRect->right, lpColumnRect->top+m_itemHeight/2);
+
+				::SelectObject(hdc, (HPEN)separatorHighlightPen.GetSafeHandle());
+				::MoveToEx(hdc, lpColumnRect->left, lpColumnRect->top+m_itemHeight/2+1, NULL);
+				::LineTo(hdc, lpColumnRect->right, lpColumnRect->top+m_itemHeight/2+1);
+
 				::SelectObject(hdc, pOldPen);
 			}
 
@@ -2223,15 +2491,15 @@ void CRDFOutliner::DrawColumn(HDC hdc, LPRECT lpColumnRect, LPCTSTR lpszString,
 			CRect newRect(bgRect);
 			if (hasFocus)
 			{	
-				newRect.top +=2;
-				newRect.bottom-=2;
-				newRect.left+=2;
-				newRect.right-=2;
+				newRect.top +=1;
+				newRect.bottom-=1;
+				newRect.left+=1;
+				newRect.right-=1;
 			}
 			::FillRect(hdc, &newRect, theBrush);
 		}
-		else if (!hasFocus)
-			::FrameRect( hdc, &bgRect, theBrush);
+		
+		::FrameRect( hdc, &bgRect, theBrush);
 	}
 
 	// Adjust the text rectangle for the left and right margins
@@ -2239,11 +2507,6 @@ void CRDFOutliner::DrawColumn(HDC hdc, LPRECT lpColumnRect, LPCTSTR lpszString,
 	textRect.right -= COL_LEFT_MARGIN;
 
 	WFE_DrawTextEx( m_iCSID, hdc, (LPTSTR) lpszString, iLength, &textRect, dwDTFormat, dwMoreFormat );
-
-	if (hasFocus)
-	{
-		DrawFocusRect ( hdc, &bgRect );
-	}
 }
 
 int CRDFOutliner::DrawPipes ( int iLineNo, int iColNo, int offset, HDC hdc, void * pLineData )
@@ -2325,7 +2588,7 @@ int CRDFOutliner::DrawPipes ( int iLineNo, int iColNo, int offset, HDC hdc, void
 		}
 	
 		HT_Resource r = (HT_Resource)pLineData;
-		if (r && HT_IsContainer(r))
+		if (r && HT_IsContainer(r) && m_bHasPipes)
 		{
 			// Draw the trigger
 			CBrush outerTrigger(RGB(128,128,128));
@@ -2384,6 +2647,12 @@ int CRDFOutliner::DrawPipes ( int iLineNo, int iColNo, int offset, HDC hdc, void
 void CRDFOutliner::ColumnsSwapped()
 {
 	SetImageColumn(m_pColumn[0]->iCommand);
+}
+
+void CRDFOutliner::DestroyColumns()
+{
+	m_Parent->DestroyColumns();
+	COutliner::DestroyColumns();
 }
 
 CRect CRDFOutliner::GetColumnRect(int iLine, int column)
@@ -3249,7 +3518,7 @@ END_MESSAGE_MAP()
 
 CRDFOutlinerParent::CRDFOutlinerParent(HT_Pane thePane, HT_View theView)
 {
-	CRDFOutliner* theOutliner = new CRDFOutliner(thePane, theView, this);
+	CRDFOutliner* theOutliner = new CRDFOutliner(this, thePane, theView);
 	m_pOutliner = theOutliner;
 }
 
@@ -3284,6 +3553,9 @@ void CRDFOutlinerParent::OnPaint ( )
 	// Read in our values.
 	CRDFOutliner* pRDFLiner = (CRDFOutliner*)m_pOutliner;
 	HT_View view = pRDFLiner->GetHTView();
+	if (view == NULL)
+		return;
+
 	HT_Resource top = HT_TopNode(view);
 
 	// Foreground color
@@ -3482,16 +3754,24 @@ void CRDFOutlinerParent::CreateColumns ( void )
 	void* token;
 	uint32 tokenType;
 	UINT index = 0;
+
 	while (HT_GetNextColumn(columnCursor, &columnName, &columnWidth, &token, &tokenType))
 	{
 		// We have retrieved a new column.  Contruct a front end column object
 		CRDFColumn* newColumn = new CRDFColumn(columnName, columnWidth, token, tokenType);
 		index = (UINT)columnMap.AddCommand(newColumn);
-		m_pOutliner->AddColumn(columnName, index, 5000, 10000, ColumnVariable, 3000);
+		m_pOutliner->AddColumn(columnName, index, 50, 10000, ColumnVariable, 100);
 	}
 	HT_DeleteColumnCursor(columnCursor);
 	m_pOutliner->SetVisibleColumns(1); // For now... TODO: Get visible/invisible info!
-	m_pOutliner->SetImageColumn(0);
+	m_pOutliner->SetImageColumn(m_pOutliner->m_pColumn[0]->iCommand);
+
+	// Make it so
+	RECT rcClient;
+	m_pOutliner->GetClientRect(&rcClient);
+	((CRDFOutliner*)m_pOutliner)->OnSize(0, rcClient.right, rcClient.bottom);
+
+	Invalidate();
 }
 
 BOOL CRDFOutlinerParent::RenderData( int iColumn, CRect & rect, CDC &dc, LPCTSTR text )
@@ -3563,9 +3843,7 @@ BOOL CRDFOutlinerParent::ColumnCommand( int iColumn )
 	if (enSortType == HT_SORT_ASCENDING)
 		sort = FALSE;
 
-	pOutliner->SetSelectedColumn(pOutliner->m_pColumn[ iColumn ]->iCommand);
-
-	Invalidate();
+	pOutliner->SetSelectedColumn(iColumn);
 
 	HT_SetSortColumn(pOutliner->GetHTView(), 
 		             enSortType == HT_NO_SORT ? NULL : theColumn->GetToken(), 
@@ -3644,51 +3922,52 @@ void CRDFEditWnd::OnKillFocus( CWnd* pNewWnd )
 
 // =========================================================================
 // RDF Content View
-IMPLEMENT_DYNAMIC(CRDFContentView, CContentView)
-BEGIN_MESSAGE_MAP(CRDFContentView, CContentView)
+IMPLEMENT_DYNAMIC(CRDFContentView, CView)
+BEGIN_MESSAGE_MAP(CRDFContentView, CView)
 	//{{AFX_MSG_MAP(CMainFrame)
 		// NOTE - the ClassWizard will add and remove mapping macros here.
 		//    DO NOT EDIT what you see in these blocks of generated code !
-	ON_MESSAGE(WM_NAVCENTER_QUERYPOSITION, OnNavCenterQueryPosition)
 	ON_WM_CREATE()
     ON_WM_SIZE()
     ON_WM_SETFOCUS()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
-LRESULT CRDFContentView::OnNavCenterQueryPosition(WPARAM wParam, LPARAM lParam)
-{
-    NAVCENTPOS *pPos = (NAVCENTPOS *)lParam;
-    
-    //  We like being in the middle.
-    pPos->m_iYDisposition = 0;
-    
-    //  We like being this many units in size.
-    pPos->m_iYVector = 200;
-    
-    //  Handled.
-    return(NULL);
-}
-
-BOOL CRDFContentView::PreCreateWindow(CREATESTRUCT& cs)
-{
-	cs.style |= WS_CLIPSIBLINGS | WS_CLIPCHILDREN;
-
-	return CContentView::PreCreateWindow(cs);
-}
-
-void CRDFContentView::OnDraw ( CDC * pDC )
-{
-}
+CRDFContentView::CRDFContentView()
+{ m_pOutlinerParent = NULL; m_pHTMLView = NULL; m_pNavBar = NULL; }
 
 int CRDFContentView::OnCreate ( LPCREATESTRUCT lpCreateStruct )
 {
-    int iRetVal = CContentView::OnCreate ( lpCreateStruct );
+    int iRetVal = CView::OnCreate ( lpCreateStruct );
 	LPCTSTR lpszClass = AfxRegisterWndClass( CS_VREDRAW, ::LoadCursor(NULL, IDC_ARROW));
+
+	m_pNavBar = new CNavTitleBar();
+
+	m_pOutlinerParent = new CRDFOutlinerParent();
     m_pOutlinerParent->Create( lpszClass, _T("NSOutlinerParent"), 
 							   WS_VISIBLE|WS_CHILD|WS_CLIPCHILDREN,
 							   CRect(0,0,100,100), this, 101 );
+
+	m_pHTMLView = NULL; //wfe_CreateNavCenterHTMLPain(m_hWnd);
+
+	m_pNavBar->Create(NULL, "", WS_CHILD | WS_VISIBLE, CRect(0,0,100,100), this, NC_IDW_NAVMENU);
+	
     return iRetVal;
+}
+
+CRDFContentView::~CRDFContentView()
+{
+	CRDFOutliner* pOutliner = (CRDFOutliner*)(GetOutlinerParent()->GetOutliner());
+	HT_View v = pOutliner->GetHTView();
+	HT_SetViewFEData(v, NULL);
+
+	XP_UnregisterNavCenter(HT_GetPane(v));
+
+	HT_DeletePane(HT_GetPane(v));
+
+	delete m_pNavBar;
+	delete m_pOutlinerParent;
+	delete m_pHTMLView;
 }
 
 void CRDFContentView::OnSize ( UINT nType, int cx, int cy )
@@ -3696,14 +3975,9 @@ void CRDFContentView::OnSize ( UINT nType, int cx, int cy )
 	CView::OnSize ( nType, cx, cy );
 	if (IsWindow(m_pOutlinerParent->m_hWnd)) 
 	{
-		m_pOutlinerParent->MoveWindow ( 0, 0, cx, cy );
+		m_pNavBar->MoveWindow(0,0, cx, NAVBAR_HEIGHT);
+		m_pOutlinerParent->MoveWindow ( 0, NAVBAR_HEIGHT, cx, cy-NAVBAR_HEIGHT);
 	}
-}
-
-void CRDFContentView::InvalidateOutlinerParent()
-{
-//	COutliner* outliner = m_pOutlinerParent->GetOutliner();
-//	outliner->SqueezeColumns(-1, 0, TRUE);
 }
 
 void CRDFContentView::OnSetFocus ( CWnd * pOldWnd )
@@ -3711,39 +3985,91 @@ void CRDFContentView::OnSetFocus ( CWnd * pOldWnd )
    m_pOutlinerParent->SetFocus ( );
 }
 
+void CRDFContentView::SwitchHTViews(HT_View newView)
+{
+	m_pOutlinerParent->SetHTView(newView);
+	m_pOutlinerParent->GetOutliner()->DestroyColumns();
+	CreateColumns();
+}
+
+void CRDFContentView::OnKillFocus(CWnd* pNewWnd)
+{
+}
+
 // Functionality for the RDF Tree Embedded in HTML (Added 3/10/98 by Dave Hyatt).
 
 // The event handler.  Only cares about tree events, so we'll just pass everything to the
 // tree view.
-void embeddedTreeNotifyProcedure (HT_Notification ns, HT_Resource n, HT_Event whatHappened) 
+void embeddedTreeNotifyProcedure (HT_Notification ns, HT_Resource n, HT_Event whatHappened,
+					void *token, uint32 tokenType) 
 {
 	CRDFOutliner* theOutliner = (CRDFOutliner*)HT_GetViewFEData(HT_GetView(n));
 	if (theOutliner)
 		theOutliner->HandleEvent(ns, n, whatHappened);
 }
 
-void CRDFContentView::DisplayRDFTree(CWnd* pParent, int width, int height, RDF_Resource rdfResource)
+CRDFContentView* CRDFContentView::DisplayRDFTreeFromPane(CWnd* pParent, int xPos, int yPos, 
+	int width, int height, HT_Pane thePane, CCreateContext* pContext)
 {
-	HT_Notification ns = new HT_NotificationStruct;
-	ns->notifyProc = embeddedTreeNotifyProcedure;
-	ns->data = NULL;
-	
-	// Construct the pane and give it our notification struct
-	HT_Pane thePane = HT_PaneFromResource(rdfResource, ns, PR_FALSE);
-	
-	// Build our FE windows.
-	CRDFOutlinerParent* newParent = new CRDFOutlinerParent(thePane, HT_GetSelectedView(thePane));
-	CRDFContentView* newView = new CRDFContentView(newParent);
-
 	// Create the windows
-	CRect rClient(0, 0, width, height);
-	newView->Create( NULL, "", WS_CHILD | WS_VISIBLE, rClient, pParent, NC_IDW_OUTLINER);
+	CRect rClient(xPos, yPos, width, height);
+	
+	CRDFContentView* newView = new CRDFContentView();
+
+	newView->Create(NULL, "", WS_CHILD | WS_VISIBLE, rClient, pParent, NC_IDW_OUTLINER, pContext);
+
+	// Get the parent
+	COutlinerParent* newParent = newView->GetOutlinerParent();
+	((CRDFOutlinerParent*)newParent)->SetHTView(HT_GetSelectedView(thePane));
 
 	// Initialize the columns, etc.
-	newParent->Initialize();
+	((CRDFOutlinerParent*)newParent)->Initialize();
+
+	// Retrieve the RDF Outliner.
+	CRDFOutliner* pOutliner = (CRDFOutliner*)newParent->GetOutliner();
+	
+	// Set to navigation mode.
+	pOutliner->SetNavigationMode(TRUE);
 
 	// Set our FE data to be the outliner.
-	HT_SetViewFEData(HT_GetSelectedView(thePane), newParent->GetOutliner());
+	HT_SetViewFEData(HT_GetSelectedView(thePane), pOutliner);
+    
+	// Explain who the title bar belongs to.
+	CNavTitleBar* pTitleBar = newView->GetTitleBar();
+	pTitleBar->SetHTView(HT_GetSelectedView(thePane));
+	pOutliner->SetTitleBar(pTitleBar);
+
+	return newView;
+}
+
+CRDFContentView* CRDFContentView::DisplayRDFTreeFromResource(CWnd* pParent, 
+	int xPos, int yPos, int width, int height, HT_Resource node, CCreateContext* pContext)
+{
+	HT_Notification ns = new HT_NotificationStruct;
+	XP_BZERO(ns, sizeof(HT_NotificationStruct));
+	ns->notifyProc = embeddedTreeNotifyProcedure;
+	ns->data = NULL;
+	theApp.m_pRDFCX->TrackRDFWindow(pParent);
+
+	HT_Pane thePane = HT_PaneFromResource(HT_GetRDFResource(node), ns, PR_FALSE, PR_TRUE, PR_TRUE);
+
+	// Now call our helper function
+	return DisplayRDFTreeFromPane(pParent, xPos, yPos, width, height, thePane, pContext);
+}
+
+CRDFContentView* CRDFContentView::DisplayRDFTreeFromSHACK(CWnd* pParent, int xPos, int yPos, int width, int height, char* url, int32 param_count, char** param_names, char** param_values)
+{
+	HT_Notification ns = new HT_NotificationStruct;
+	XP_BZERO(ns, sizeof(HT_NotificationStruct));
+	ns->notifyProc = embeddedTreeNotifyProcedure;
+	ns->data = NULL;
+	theApp.m_pRDFCX->TrackRDFWindow(pParent);
+	
+	// Construct the pane and give it our notification struct
+	HT_Pane thePane = HT_PaneFromURL(url, ns, 0, param_count, param_names, param_values);  
+	
+	// Now call our helper function
+	return DisplayRDFTreeFromPane(pParent, xPos, yPos, width, height, thePane);
 }
 
 // Function to grab an RDF context

@@ -81,7 +81,7 @@ public:
 	HTAB_BITMAP GetHTab(void) { return m_nHTab; }
 
 	virtual void OnUpdateCmdUI( CFrameWnd* pTarget, BOOL bDisableIfNoHndler ){}
-
+	virtual void UpdateURLBars(char* url) {}
 };
 
 // Class:  CButtonToolbarWindow
@@ -94,6 +94,7 @@ public:
 						 HTAB_BITMAP nHTab);
 
 	virtual void OnUpdateCmdUI( CFrameWnd* pTarget, BOOL bDisableIfNoHndler );
+	virtual void UpdateURLBars(char* url);
 	virtual void SetToolbarStyle(int nToolbarStyle);
 	virtual int GetHeight(void);
 	virtual CWnd* GetNSToolbar() { return GetToolbar(); }
@@ -118,7 +119,7 @@ public:
 
 class CDragToolbar : public CWnd {
 
-private:
+protected:
 	CToolbarWindow *	m_pToolbar;
 	BOOL				m_bIsOpen;
 	BOOL				m_bIsShowing;
@@ -140,6 +141,8 @@ public:
 	~CDragToolbar();
 	int Create(CWnd *pParent, CToolbarWindow *pToolbar);
 
+	virtual BOOL ShouldClipChildren() { return TRUE; }
+
 	CWnd *GetToolbar(void);
 	int   GetToolbarHeight(void);
 	int GetMouseOffsetWithinToolbar(void) { return m_mouseDownPoint.y; }
@@ -158,6 +161,8 @@ public:
 	void SetAnimation(CAnimationBar2 *pAnimation);
 	HTAB_BITMAP GetHTabType(void) { return m_eHTabType;}
 	void OnUpdateCmdUI( CFrameWnd* pTarget, BOOL bDisableIfNoHndler );
+	virtual void UpdateURLBars(char* url);
+
 	// Generated message map functions
 	//{{AFX_MSG(CDragToolbar)
 	afx_msg void OnSize( UINT nType, int cx, int cy );
@@ -236,7 +241,7 @@ public:
 
 	//Construction/destruction
 	CCustToolbar(int nNumToolbars);
-	~CCustToolbar(); 
+	virtual ~CCustToolbar(); 
 
 		//Creation
 	int Create(CFrameWnd* pParent, BOOL bHasAnimation);
@@ -247,6 +252,8 @@ public:
 	// Call this function when you are finished adding the toolbars that go in the
 	// customizable toolbar. 
 	void FinishedAddingNewWindows(void){}
+
+	CDragToolbar**	GetVisibleToolbarArray() { return m_pToolbarArray; };
 
 	//Controlling the animated icon
     void StopAnimation();
@@ -270,6 +277,7 @@ public:
 	CSize CalcDynamicLayout(int nLength, DWORD dwMode );
 
 	virtual void OnUpdateCmdUI( CFrameWnd* pTarget, BOOL bDisableIfNoHndler );
+	virtual void UpdateURLBars(char* url);
 
 	void Customize(CRDFToolbar *pRDFToolbar = NULL, int nSelectedButton = 0);
 	BOOL GetSaveToolbarInfo(void);
@@ -286,6 +294,10 @@ public:
 	void RemoveExternalTab(UINT nTabID);
 
 	void SetBottomBorder(BOOL bBottomBorder);
+
+	int FindDragToolbarFromWindow(CWnd *pWindow, CDragToolbar **pToolbarArray);
+	int FindDragToolbarFromID(UINT nToolbarID, CDragToolbar **pToolbarArray);
+	
 	// Generated message map functions
 	//{{AFX_MSG(CCustToolbar)
 	afx_msg void OnSize( UINT nType, int cx, int cy );
@@ -310,8 +322,6 @@ public:
 protected:
 //	virtual BOOL OnNotify( WPARAM wParam, LPARAM lParam, LRESULT* pResult );
  
-
-private:
 	int  CheckOpenButtons(CPoint point);
 	int	 CheckClosedButtons(CPoint point);
 	BOOL PointInClosedTab(CPoint point, HTAB_BITMAP tabType, int nNumClosedButtons, int nStartX,
@@ -325,8 +335,6 @@ private:
 	int  GetNextClosedButtonX(HTAB_BITMAP tabType, int nNumClosedButtons, int nClosedStartX);
 	void GetClosedButtonRegion(HTAB_BITMAP tabType, int nNumClosedButtons, CRgn &rgn);
 	HBITMAP CreateHorizTab(UINT nID);
-	int FindDragToolbarFromWindow(CWnd *pWindow, CDragToolbar **pToolbarArray);
-	int FindDragToolbarFromID(UINT nToolbarID, CDragToolbar **pToolbarArray);
 	void ShowDragToolbar(int nIndex, BOOL bShow);
 	void OpenDragToolbar(int nIndex);
 	void OpenExternalTab(int nIndex);
@@ -337,6 +345,8 @@ private:
 	void DrawClosedTab(HDC hCompatibleDC, HDC hDestDC, HTAB_BITMAP tabType, int nNumClosedButtons,
 		  			   BOOL bMouseOver, int nStartX, int nBottom);
 
+	virtual CDragToolbar* CreateDragBar();
+	
 	DECLARE_MESSAGE_MAP()
 
 };

@@ -150,30 +150,9 @@ IMPLEMENT_DYNCREATE(CGenericFrame, CNSGenFrame)
 #define new DEBUG_NEW
 #endif
 
-// The Event Handler
-static void qfNotifyProcedure (HT_Notification ns, HT_Resource n, HT_Event whatHappened) 
-{
-	if (whatHappened == HT_EVENT_NODE_OPENCLOSE_CHANGED)
-	{
-		// The node was opened.
-		PRBool openState;
-		HT_GetOpenState(n, &openState);
-		if (openState)
-		{
-			CGenericFrame* pFrame = (CGenericFrame*)ns->data;
-			pFrame->FinishMenuExpansion(n);
-		}
-	}
-}
-
 CGenericFrame::CGenericFrame()
 {
-	// Construct the notification struct used by HT
-	HT_Notification ns = new HT_NotificationStruct;
-	ns->notifyProc = qfNotifyProcedure;
-	ns->data = this;
-
-	m_BookmarkMenuPane = theApp.m_bInGetCriticalFiles ? NULL : HT_NewQuickFilePane(ns);
+	m_BookmarkMenuPane = NULL;
 	m_nBookmarkItems = 0;
 	m_nFileBookmarkItems = 0;
     m_pHotlistMenuMap = new CMapWordToPtr();
@@ -855,8 +834,6 @@ BEGIN_MESSAGE_MAP(CGenericFrame, CFrameWnd)
 	ON_COMMAND(ID_VIEW_LOCATIONTOOLBAR, OnViewLocationToolbar)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_CUSTOMTOOLBAR, OnUpdateViewCustomToolbar)
 	ON_COMMAND(ID_VIEW_CUSTOMTOOLBAR, OnViewCustomToolbar)
-	ON_UPDATE_COMMAND_UI(ID_VIEW_NAVCENTER, OnUpdateViewNavCenter)
-	ON_COMMAND(ID_VIEW_NAVCENTER, OnViewNavCenter)
 	ON_UPDATE_COMMAND_UI(ID_CUSTOMIZE_TOOLBAR, OnUpdateCustomizeToolbar)
 	ON_COMMAND(ID_CUSTOMIZE_TOOLBAR, OnCustomizeToolbar)
 	ON_UPDATE_COMMAND_UI(ID_PLACES, OnUpdatePlaces)
@@ -2252,7 +2229,7 @@ void CGenericFrame::OnAbout()
 
 void CGenericFrame::OnShowBookmarkWindow()
 {   
-    theApp.CreateNewNavCenter(NULL, TRUE, HT_VIEW_BOOKMARK);
+    //theApp.CreateNewNavCenter(NULL, TRUE, HT_VIEW_BOOKMARK);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -2561,30 +2538,6 @@ void CGenericFrame::OnUpdateViewCommandToolbar(CCmdUI *pCmdUI)
 	pCmdUI->m_pMenu->ModifyMenu(CASTUINT(ID_VIEW_COMMANDTOOLBAR), CASTUINT(MF_BYCOMMAND | MF_STRING), CASTUINT(ID_VIEW_COMMANDTOOLBAR),
 				    szLoadString(CASTUINT(bShow ? IDS_HIDE_COMMANDTOOLBAR : IDS_SHOW_COMMANDTOOLBAR)) );
     } else {
-	pCmdUI->SetCheck(bShow);
-    }
-}
-
-void CGenericFrame::OnViewNavCenter()
-{
-	CNSNavFrame* pFrame = GetDockedNavCenter();
-	if (pFrame)
-		pFrame->DeleteNavCenter();
-	else theApp.CreateNewNavCenter(this);
-}
-
-void CGenericFrame::OnUpdateViewNavCenter(CCmdUI *pCmdUI)
-{
-	CNSNavFrame* pFrame = GetDockedNavCenter();
-	BOOL bShow = (pFrame != NULL);
-
-    if( pCmdUI->m_pMenu )
-	{
-	pCmdUI->m_pMenu->ModifyMenu(CASTUINT(ID_VIEW_NAVCENTER), CASTUINT(MF_BYCOMMAND | MF_STRING), CASTUINT(ID_VIEW_NAVCENTER),
-				    szLoadString(CASTUINT(bShow ? IDS_HIDE_NAVCENTER : IDS_SHOW_NAVCENTER)) );
-    } 
-	else 
-	{
 	pCmdUI->SetCheck(bShow);
     }
 }

@@ -52,8 +52,8 @@ class CRDFToolbarButtonDropTarget : public CRDFToolbarButtonDropTargetBase
 
 #define CRDFToolbarButtonBase CDragableToolbarButton
 
-class CRDFToolbarButton: public CRDFToolbarButtonBase, public CCustomImageObject {
-
+class CRDFToolbarButton: public CRDFToolbarButtonBase, public CCustomImageObject 
+{
 protected:
 	HT_Resource m_Node;				// The resource corresponding to the RDF node
 	BOOKMARKITEM m_bookmark;
@@ -62,15 +62,18 @@ protected:
     int currentRow;                 // The row of the personal toolbar this button resides on.
 	CDropMenu* m_pCachedDropMenu;	// A pointer to a drop menu that is tracked across 
 									// node opening (HT) callbacks
+	CNSNavFrame* m_pTreeView;		// A pointer to a tree popup that is tracked.
 	BOOL m_bShouldShowRMMenu;		// Set to TRUE by default.  Quickfile/Breadcrumbs set it to FALSE.
 
 	CRDFCommandMap m_MenuCommandMap;	// Command map for back-end generated right mouse menu commands.
+	
+	int m_nActualBitmapHeight;		// The actual bitmap's height.
 
 public:
 	CRDFToolbarButton();
 	~CRDFToolbarButton();
 
-	int Create(CWnd *pParent, int nToolbarStyle, CSize noviceButtonSize, CSize advancedButtonSize,
+	virtual int Create(CWnd *pParent, int nToolbarStyle, CSize noviceButtonSize, CSize advancedButtonSize,
 			   LPCTSTR pButtonText, LPCTSTR pToolTipText, 
 			   LPCTSTR pStatusText,
 			   CSize bitmapSize, int nMaxTextChars, int nMinTextChars, BOOKMARKITEM bookmark, 
@@ -79,13 +82,24 @@ public:
     int GetRow() { return currentRow; }
     void SetRow(int i) { currentRow = i; }
 
+	virtual BOOL foundOnRDFToolbar() { return TRUE; } // RDF Buttons must ALWAYS reside on RDF toolbars.  (Derived
+											  // classes could have different behavior, but base-class buttons
+											  // make the assumption that they sit on an RDF toolbar.
+
+	CNSNavFrame* GetTreeView() { return m_pTreeView; }
+
 	virtual void OnAction(void);
 	virtual CSize GetButtonSizeFromChars(CString s, int c);
     virtual CSize GetMinimalButtonSize();
     virtual CSize GetMaximalButtonSize();
 
+	virtual BOOL IsSpring() { return FALSE; } // Whether or not the button will expand to consume
+											  // all remaining space on a row.
+
 	virtual BOOL UseLargeIcons() { return FALSE; }
-	virtual void UpdateIconInfo() { DetermineIconType(m_Node, UseLargeIcons()); }
+	virtual void UpdateIconInfo();
+
+	virtual void DrawButtonBitmap(HDC hDC, CRect rcImg);
 
 	virtual void FillInOleDataSource(COleDataSource *pDataSource);
 
@@ -106,6 +120,8 @@ public:
 	
 	virtual HT_View GetHTView() { return HT_GetView(m_Node); }
 
+	virtual BOOL NeedsUpdate();
+
 protected:
 	virtual void DrawPicturesMode(HDC hDC, CRect rect);
 	virtual void DrawPicturesAndTextMode(HDC hDC, CRect rect);
@@ -125,7 +141,9 @@ protected:
 	afx_msg LRESULT OnDropMenuClosed(WPARAM, LPARAM);
 	afx_msg LRESULT OnFillInMenu(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnSysColorChange( );
-
+	afx_msg void OnPaint();
+	afx_msg int OnMouseActivate( CWnd* pDesktopWnd, UINT nHitTest, UINT message );
+	
 	//}}AFX_MSG
 
 	DECLARE_MESSAGE_MAP()
@@ -133,7 +151,30 @@ protected:
 
 };
 
-void ptNotifyProcedure (HT_Notification ns, HT_Resource n, HT_Event whatHappened);
+void toolbarNotifyProcedure (HT_Notification ns, HT_Resource n, HT_Event whatHappened);
+
+/****************************************************************************
+* 
+* Class: CRDFSeparatorButton
+*
+****************************************************************************/
+
+class CRDFSeparatorButton : public CRDFToolbarButton
+{
+protected:
+	
+public:
+	virtual CSize GetButtonSizeFromChars(CString s, int c);
+		// Overridden to handle special width/height requirements.
+
+	virtual void DrawButtonBitmap(HDC hDC, CRect rcImg);
+	virtual void DrawButtonText(HDC hDC, CRect rcTxt, CSize sizeTxt, CString strTxt) {};
+
+	// Generated message map functions
+	//{{AFX_MSG(CRDFSeparatorButton)
+	//}}AFX_MSG
+	DECLARE_MESSAGE_MAP()
+};
 
 /****************************************************************************
 *
@@ -168,37 +209,51 @@ protected:
 
 };
 
-class CRDFToolbar : public CNSToolbar2 {
+class CRDFToolbar : public CNSToolbar2, public CCustomImageObject {
 
 private:
 	CRDFToolbarDropTarget m_DropTarget;
-	HT_Pane m_PersonalToolbarPane;
+	HT_View m_ToolbarView;
 	CRDFCommandMap m_MenuCommandMap;	// Command map for back-end generated right mouse menu commands.
 	
     int m_nNumberOfRows;
+	int m_nRowHeight;
 
 	CRDFToolbarButton* m_pDragButton;
 	int m_iDragFraction;
 
+	COLORREF m_BackgroundColor;
+	COLORREF m_ForegroundColor;
+	COLORREF m_RolloverColor;
+	COLORREF m_PressedColor;
+	COLORREF m_DisabledColor;
+	COLORREF m_ShadowColor;
+	COLORREF m_HighlightColor;
+
+	CRDFImage* m_pBackgroundImage;
+
 	static int m_nMinToolbarButtonChars;
 	static int m_nMaxToolbarButtonChars;
-
+	
 public:
-	CRDFToolbar(int nMaxButtons, int nToolbarStyle, int nPicturesAndTextHeight, int nPicturesHeight,
+	CRDFToolbar(HT_View theView, int nMaxButtons, int nToolbarStyle, int nPicturesAndTextHeight, int nPicturesHeight,
 				 int nTextHeight);
 	~CRDFToolbar();
 
 	// Used to create toolbars
-	static CRDFToolbar* CreateUserToolbar(CWnd* pParent);
+	static CRDFToolbar* CreateUserToolbar(HT_View theView, CWnd* pParent);
 
 	int Create(CWnd *pParent);
 	virtual int GetHeight(void);
-    
+    virtual int GetRowWidth();
+
     // Override layout scheme to dynamically resize buttons.
     void LayoutButtons(int nIndex); // Index will be ignored by this version of the function
                                     // since adding/deleting buttons may cause all buttons to resize
 	
-	
+	// Toolbar's event handler.
+	void HandleEvent(HT_Notification ns, HT_Resource n, HT_Event whatHappened);
+
 	void AddHTButton(HT_Resource n);  // Called to add a new button to the toolbar
 
     void SetMinimumRows(int rowWidth); // Called to determine and set the # of rows required by the toolbar.
@@ -210,13 +265,42 @@ public:
 
 	void FillInToolbar(); // Called to create and place the buttons on the toolbar
 
-	HT_Pane GetPane() { return m_PersonalToolbarPane; }  // Returns the HT-Pane
+	HT_View GetHTView() { return m_ToolbarView; }  // Returns the HT-View for this toolbar.
+	void SetHTView(HT_View v) { m_ToolbarView = v; }
 
 	void SetDragFraction(int i) { m_iDragFraction = i; }
 	int GetDragFraction() { return m_iDragFraction; }
 
 	void SetDragButton(CRDFToolbarButton* pButton) { m_pDragButton = pButton; }
 	CRDFToolbarButton* GetDragButton() { return m_pDragButton; }
+
+	void SetRowHeight(int i) { m_nRowHeight = i; }
+	int GetRowHeight() { return m_nRowHeight; }
+
+	// Color/background customizability stuff
+	
+	COLORREF GetBackgroundColor() { return m_BackgroundColor; }
+	COLORREF GetForegroundColor() { return m_ForegroundColor; }
+	COLORREF GetRolloverColor() { return m_RolloverColor; }
+	COLORREF GetPressedColor() { return m_PressedColor; }
+	COLORREF GetDisabledColor() { return m_DisabledColor; }
+	COLORREF GetShadowColor() { return m_ShadowColor; }
+	COLORREF GetHighlightColor() { return m_HighlightColor; }
+
+	CRDFImage* GetBackgroundImage() { return m_pBackgroundImage; }
+	void SetBackgroundColor(COLORREF c) { m_BackgroundColor = c; }
+	void SetForegroundColor(COLORREF c) { m_ForegroundColor = c; }
+	void SetRolloverColor(COLORREF c) { m_RolloverColor = c; }
+	void SetPressedColor(COLORREF c) { m_PressedColor = c; }
+	void SetDisabledColor(COLORREF c) { m_DisabledColor = c; }
+	void SetShadowColor(COLORREF c) { m_ShadowColor = c; }
+	void SetHighlightColor(COLORREF c) { m_HighlightColor = c; }
+
+	void SetBackgroundImage(CRDFImage* p) { m_pBackgroundImage = p; }
+
+	void LoadComplete(HT_Resource r) { Invalidate(); }
+
+	void ChangeButtonSizes(void); // Overridden to prevent separators and url bars from changing size.
 
 protected:
     // Helper function used in conjunction with LayoutButtons
@@ -226,11 +310,48 @@ protected:
 	//{{AFX_MSG(CRDFToolbar)
 	afx_msg void OnRButtonDown(UINT nFlags, CPoint point);
 	afx_msg BOOL OnCommand( WPARAM wParam, LPARAM lParam );
+	afx_msg void OnPaint(void);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
 
 };
 
+class CRDFDragToolbar : public CDragToolbar
+{
+public:
+	
+	// Generated message map functions
+	//{{AFX_MSG(CDragToolbar)
+	afx_msg void OnPaint(void);
+	//}}AFX_MSG
+
+	DECLARE_MESSAGE_MAP()
+};
+
+class CRDFToolbarHolder : public CCustToolbar
+{
+protected:
+	HT_Pane m_ToolbarPane;
+	CFrameWnd* m_pCachedParentWindow;
+	CRDFToolbarButton* m_pCurrentButton;
+
+public:
+	CRDFToolbarHolder(int maxToolbars, CFrameWnd* pParent);
+	virtual ~CRDFToolbarHolder();
+
+	CRDFToolbarButton* GetCurrentButton() { return m_pCurrentButton; }
+	void SetCurrentButton(CRDFToolbarButton* button) { m_pCurrentButton = button; }
+
+	HT_Pane GetHTPane() { return m_ToolbarPane; }
+	void SetHTPane(HT_Pane p) { m_ToolbarPane = p; }
+	CFrameWnd* GetCachedParentWindow() { return m_pCachedParentWindow; }
+	void InitializeRDFData();
+
+	virtual CDragToolbar* CreateDragBar()
+	{
+		return new CRDFDragToolbar();
+	}
+};
 
 #endif

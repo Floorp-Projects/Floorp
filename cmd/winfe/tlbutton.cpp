@@ -811,7 +811,7 @@ void CToolbarButton::OnLButtonDown(UINT nFlags, CPoint point)
 		{
 			m_hMenuTimer = SetTimer(IDT_MENU, MENU_DELAY_MS, NULL);
 		}
-		
+				
 		RedrawWindow();
 	}
 	if(m_pToolTipText != NULL)
@@ -822,7 +822,13 @@ void CToolbarButton::OnLButtonDown(UINT nFlags, CPoint point)
 
     // Do action immediately if this is set
 	if( m_bDoOnButtonDown )
-        OnAction();
+	{
+        if (m_dwButtonStyle & TB_HAS_IMMEDIATE_MENU)
+		{
+			m_hMenuTimer = SetTimer(IDT_MENU, 0, NULL);
+		}
+		else OnAction();
+	}
     else 
         m_bButtonDown = TRUE;
 }
@@ -890,28 +896,24 @@ void CToolbarButton::OnLButtonUp(UINT nFlags, CPoint point)
 {
 	if(m_bEnabled)
 	{
-		if (m_bHaveFocus)
+		// Do action only if not done on button down
+        if(!m_bDoOnButtonDown)
+        {
+            // Cursor is still over the button, so back to button up look
+			m_eState = eBUTTON_UP;
+			if(m_bButtonDown)
+			{
+				 if (m_dwButtonStyle & TB_HAS_IMMEDIATE_MENU)
+				 {
+					m_hMenuTimer = SetTimer(IDT_MENU, 0, NULL);
+				 }
+				 else OnAction();
+			}
+        }
+		
+		if (m_dwButtonStyle & TB_HAS_IMMEDIATE_MENU)
 		{
-			// Do action only if not done on button down
-            if(!m_bDoOnButtonDown)
-            {
-                // Cursor is still over the button, so back to button up look
-			    m_eState = eBUTTON_UP;
-			    if(m_bButtonDown)
-				{
-					if (m_dwButtonStyle & TB_HAS_IMMEDIATE_MENU)
-					{
-						m_hMenuTimer = SetTimer(IDT_MENU, 0, NULL);
-					}
-					else OnAction();
-				}
-            }
-		}
-		else
-		{
-			// Restore borderless look
-			if(m_nChecked == 0)
-				m_eState = eNORMAL;
+			m_hMenuTimer = SetTimer(IDT_MENU, 0, NULL);
 		}
 		
 		RedrawWindow();
@@ -1032,13 +1034,7 @@ void CToolbarButton::OnPaint()
 		// Use the button face color as our background
 		HBRUSH brFace = sysInfo.m_hbrBtnFace;
 		
-		if (m_bDepressed)
-		{
-			// Use the button shadow color as our background instead.
-			brFace = ::CreateSolidBrush(sysInfo.m_clrBtnShadow);
-			::SetBkColor(hMemDC, sysInfo.m_clrBtnShadow);
-		}
-		else if (hasCustomBGColor)
+		if (hasCustomBGColor)
 		{
 			// Use the button's custom background
 			brFace = ::CreateSolidBrush(customBGColor);

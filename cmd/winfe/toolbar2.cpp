@@ -119,8 +119,12 @@ int CNSToolbar2::Create(CWnd *pParent)
 	rect.SetRectEmpty();
 	CBrush brush;
 
+	DWORD shouldClipChildren = 0;
+	if (ShouldClipChildren())
+		shouldClipChildren = WS_CLIPCHILDREN;
+	
 	BOOL bResult = CWnd::Create( theApp.NSToolBarClass, NULL, 
-			 WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
+			 WS_CHILD | shouldClipChildren | WS_CLIPSIBLINGS,
 			 rect, pParent, 0, NULL);
 
 	if(bResult)
@@ -640,6 +644,14 @@ void CNSToolbar2::OnUpdateCmdUI( CFrameWnd* pTarget, BOOL bDisableIfNoHndler )
 		{
 			m_pButtonArray[i]->OnUpdateCmdUI(pTarget, bDisableIfNoHndler);
 		}
+	}
+}
+
+void CNSToolbar2::UpdateURLBars(char* url)
+{
+	for(int i = 0; i < m_nNumButtons; i++)
+	{
+		m_pButtonArray[i]->UpdateURLBar(url);
 	}
 }
 

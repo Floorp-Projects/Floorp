@@ -22,6 +22,7 @@
 #include "intelli.h"
 #endif
 #include "navcontv.h"
+#include "rdfliner.h"
 
 //  What is CPaneCX?
 //      A pane is part of a complete window.
@@ -1528,3 +1529,45 @@ BOOL CPaneCX::SubClass(HWND hWnd, BOOL bSubClass)
 #endif
 }
 
+char* getBuiltInAttribute (LO_BuiltinStruct *builtin_struct, char* att) {
+	int n = 0;
+
+	while (n < builtin_struct->attribute_cnt) {
+		char* attName = *(builtin_struct->attribute_list + n);
+		char* attValue = *(builtin_struct->value_list + n);
+		if (attName && (stricmp(attName, att) == 0)) {
+			return attValue; 
+		}
+		n++;
+	}
+	return NULL;
+}
+
+void CPaneCX::DisplayBuiltin(MWContext *pContext, int iLocation, LO_BuiltinStruct *builtin_struct)
+{
+	// This code assumes a type of builtin/tree.  Will have to be changed.
+    HWND cView = PANECX(pContext)->GetPane();
+
+	// Ok, we have the parent window.  we need to know where to display it.
+	int xPos = builtin_struct->x;
+    int yPos = builtin_struct->y;
+	int width = builtin_struct->width;
+	int height = builtin_struct->height;
+	char* url = getBuiltInAttribute(builtin_struct, "data");
+    char* target = getBuiltInAttribute(builtin_struct, "target");
+	
+	if (builtin_struct->FE_Data == NULL)
+	{
+		CRDFContentView* pWnd = CRDFContentView::DisplayRDFTreeFromSHACK(CWnd::FromHandle(cView), xPos, yPos, width, height, url, builtin_struct->attribute_cnt, builtin_struct->attribute_list, builtin_struct->value_list);
+		((CRDFOutliner*)pWnd->GetOutlinerParent()->GetOutliner())->SetWindowTarget(target);
+		builtin_struct->FE_Data = pWnd;
+	}
+}
+
+void CPaneCX::FreeBuiltinElement(MWContext *pContext, LO_BuiltinStruct *pBuiltin)
+{
+	// This code assumed a type of builtin/tree.  Will have to be changed.
+
+	CRDFContentView* pWnd = (CRDFContentView*)pBuiltin->FE_Data;
+	pWnd->DestroyWindow();
+}

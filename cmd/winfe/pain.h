@@ -19,6 +19,6 @@
 #ifndef __PAIN_H
 #define __PAIN_H
 
-CPaneCX *wfe_CreateNavCenterHTMLPain(HT_View htView, HWND hParent);
+CPaneCX *wfe_CreateNavCenterHTMLPain(HWND hParent);
 
 #endif // __PAIN_H

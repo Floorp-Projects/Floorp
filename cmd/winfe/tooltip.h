@@ -36,7 +36,12 @@
 #else
 class CNSToolTip2 : public CToolTipCtrl {
 
-
+private:
+	COLORREF m_BackgroundColor;
+	COLORREF m_ForegroundColor;
+	CBrush m_BackgroundBrush;
+	BOOL hasCustomColors;
+	
 public:
 	//Construction
 	CNSToolTip2();
@@ -44,9 +49,14 @@ public:
 protected:
 	virtual LRESULT WindowProc( UINT message, WPARAM wParam, LPARAM lParam );
  
+	void SetCustomColors(COLORREF fore, COLORREF back)
+	{ m_BackgroundColor = back; m_ForegroundColor = fore; hasCustomColors = TRUE; 
+	  m_BackgroundBrush.CreateSolidBrush(m_BackgroundColor);
+	}
 
 	// Generated message map functions
 	//{{AFX_MSG(CNSToolTip2)
+	afx_msg HBRUSH CtlColor ( CDC* pDC, UINT nCtlColor );
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 

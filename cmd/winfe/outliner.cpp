@@ -232,6 +232,24 @@ COutliner::~COutliner ( )
 	delete m_pTip;
 }
 
+void COutliner::DestroyColumns()
+{
+	if ( m_pColumn )
+    {
+        while ( m_iNumColumns )
+        {
+            if (m_pColumn[ m_iNumColumns - 1]->pHeader)
+                free((char*)m_pColumn[ m_iNumColumns - 1]->pHeader);
+            delete(m_pColumn[ m_iNumColumns - 1 ]);
+            m_iNumColumns--;
+        }
+        free(m_pColumn);
+		m_pColumn = NULL;
+    }
+
+	m_iNumColumns = 0;
+}
+
 STDMETHODIMP COutliner::QueryInterface(
    REFIID refiid,
    LPVOID * ppv)
@@ -3358,6 +3376,15 @@ void COutlinerParent::GetColumnRect( int iCol, RECT &rc )
 			rc.right += m_pOutliner->m_pColumn[ i ]->iCol;
 		}
 	}
+}
+
+void COutlinerParent::EnableHeaders(BOOL bEnable)
+{
+	m_bDisableHeaders = !bEnable; 
+	CRect rect;
+	GetClientRect(&rect);
+	Invalidate();
+	OnSize(0, rect.Width(), rect.Height());
 }
 
 void COutlinerParent::InvalidateColumn( int iCol )

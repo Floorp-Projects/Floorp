@@ -295,8 +295,6 @@ protected:
 	afx_msg void OnUpdateViewLocationToolbar(CCmdUI* pCmdUI);
 	afx_msg void OnViewCustomToolbar();
 	afx_msg void OnUpdateViewCustomToolbar(CCmdUI* pCmdUI);
-	afx_msg void OnViewNavCenter();
-	afx_msg void OnUpdateViewNavCenter(CCmdUI* pCmdUI);
 	afx_msg void OnUpdatePlaces(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateCustomizeToolbar(CCmdUI *pCmdUI);
 	afx_msg void OnCustomizeToolbar();

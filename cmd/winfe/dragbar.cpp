@@ -207,7 +207,7 @@ void CDragBar::EndDrag()
 	GetDesktopWindow()->MapWindowPoints( m_parentView, &tempRect);
 	MoveWindow(tempRect);
 	Invalidate();
-	m_dockedFrame->m_pSelector->Invalidate();
+	//m_dockedFrame->m_pSelector->Invalidate();
 	m_parentView->RecalcLayout();
 }
 

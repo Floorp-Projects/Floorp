@@ -1467,6 +1467,9 @@ BOOL CNetscapeApp::InitInstance()
 
 	RDF_Init(&initStruct);	// TODO: Can this fail? Want to bail if so.
 	
+	// Initialize the command map used by RDF configurable UI.
+	m_pBrowserCommandMap = CIsomorphicCommandMap::InitializeCommandMap("Browser Commands");
+	m_pCommandToolbarIndices = CIsomorphicCommandMap::InitializeCommandMap("Command Toolbar Bitmap Indices");
 
 // RDF INITIALIZATION ENDS HERE
 
@@ -2063,34 +2066,27 @@ BOOL CNetscapeApp::InitInstance()
 #endif /* MOZ_MAIL_NEWS */
 
 #ifdef EDITOR
-	    if ( (bIsGold && (iStartupMode & STARTUP_EDITOR)) && !(iStartupMode & STARTUP_BROWSER))
-			{   //start the editor
-		theApp.m_EditTmplate->OpenDocumentFile(NULL);
+	    if (bIsGold && (iStartupMode & STARTUP_EDITOR))
+		{   //start the editor
+			theApp.m_EditTmplate->OpenDocumentFile(NULL);
 				CMainFrame *pMainFrame = (CMainFrame *)FEU_GetLastActiveFrame(MWContextBrowser, TRUE);
 				if(pMainFrame) pMainFrame->OnLoadHomePage();//suppose to load what ever was on the command line
 	    }
-			else
 #endif // EDITOR
-			if ((iStartupMode & STARTUP_BROWSER) && !(iStartupMode & STARTUP_EDITOR) )
-			{       //start the browser
-		    theApp.m_ViewTmplate->OpenDocumentFile(NULL);
-					CMainFrame *pMainFrame = (CMainFrame *)FEU_GetLastActiveFrame(MWContextBrowser, FALSE);
-				if(pMainFrame) pMainFrame->OnLoadHomePage(); //suppose to load what ever was on the command line
-	    }
-#ifdef EDITOR
-			else if ((iStartupMode & STARTUP_BROWSER) && (iStartupMode & STARTUP_EDITOR) )
+		
+		if (iStartupMode & STARTUP_BROWSER)
+		{
+			theApp.m_ViewTmplate->OpenDocumentFile(NULL);  //open browser window
+			CGenericFrame *pFrame = (CGenericFrame *)FEU_GetLastActiveFrame(MWContextBrowser, FALSE);
+			if (pFrame)
 			{
-				    //start both of these guys since there preferences were set 
-				//theApp.m_EditTmplate->OpenDocumentFile(NULL);                             
-		    theApp.m_ViewTmplate->OpenDocumentFile(NULL);  //open browser window
-					CGenericFrame *pFrame = (CGenericFrame *)FEU_GetLastActiveFrame(MWContextBrowser, FALSE);
-					if (pFrame){
-						CMainFrame *pMainFrame = (CMainFrame*)pFrame;
-						pMainFrame->OnLoadHomePage();
-						pFrame->OnOpenComposerWindow();
-					}
+				CMainFrame *pMainFrame = (CMainFrame*)pFrame;
+				pMainFrame->OnLoadHomePage();
+				// Now that we have the frame, dynamically create the toolbars (We won't enter this function
+			    // from JavaScript. FE_MakeNewWindow is used instead.)
+				pMainFrame->BeginStreamingOfRDFToolbars();
 			}
-#endif // EDITOR
+		}
 	}
 
 		if(m_pFrameList && m_pFrameList->GetMainContext())

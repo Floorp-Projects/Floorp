@@ -785,34 +785,8 @@ BOOL CGenericChrome::procTabNavigation( UINT nChar, UINT firstTime, UINT control
 void CGenericChrome::ShowToolbar(UINT nToolbarID, BOOL bShow)
 {
 	if(m_pCustToolbar)
-		m_pCustToolbar->ShowToolbar(nToolbarID, bShow);
-
-	if (nToolbarID == ID_PERSONAL_TOOLBAR) // Hack. Show Aurora if and only if a personal toolbar is shown.
 	{
-		if (m_pParent->IsKindOf(RUNTIME_CLASS(CGenericFrame)))
-		{
-			CGenericFrame* genFrame = (CGenericFrame*)m_pParent;
-			
-			// Create NavCenter unless bShow is FALSE... then we hide it.  HACK!
-			// THIS CODE WILL BE REMOVED! JUST TEMPORARILY HACKED TO PREVENT NAVCENTER
-			// FROM SHOWING UP EVERYWHERE!
-			if (!theApp.m_bInGetCriticalFiles && genFrame->AllowDocking() && 
-				!theApp.m_ParentAppWindow && !theApp.m_bKioskMode)
-			{
-				// Show the selector if the pref says we should.
-				BOOL bSelVisible;
-				PREF_GetBoolPref(gPrefSelectorVisible, &bSelVisible);
-				if (bSelVisible && bShow)
-					theApp.CreateNewNavCenter(genFrame);
-			}
-
-			CNSNavFrame* navFrame = genFrame->GetDockedNavCenter();
-			if (navFrame && !bShow)
-			{
-				// Destroy the Nav Center.
-				navFrame->DeleteNavCenter();
-			}
-		}
+		m_pCustToolbar->ShowToolbar(nToolbarID, bShow);
 	}
 }
 
@@ -978,6 +952,22 @@ void CGenericChrome::StopAnimation()
 	}
 }
 
+int CGenericChrome::CreateRDFToolbar(CString toolbarName, int nMaxToolbars, BOOL bHasAnimation)
+{
+	CRDFToolbarHolder* pHolder = new CRDFToolbarHolder(nMaxToolbars, m_pParent);
+	m_pCustToolbar = pHolder; 
+
+	if(! m_pCustToolbar->Create(m_pParent, bHasAnimation))
+		return FALSE;
+
+	m_toolbarName = toolbarName;
+	
+	// Toolbars will start coming in here.
+	pHolder->InitializeRDFData();
+	
+	return TRUE;
+}
+
 int CGenericChrome::CreateCustomizableToolbar(CString toolbarName, int nMaxToolbars, BOOL bHasAnimation)
 {
 	m_pCustToolbar=new CCustToolbar(nMaxToolbars);
@@ -1070,6 +1060,13 @@ void CGenericChrome::ImagesButton(BOOL bShowImagesButton)
 			pCommandToolbar->HideButtonByCommand(ID_VIEW_LOADIMAGES);
 		}
 	}
+}
+
+// URL Bar Stuff
+void CGenericChrome::UpdateURLBars(char* url)
+{
+	if(m_pCustToolbar)
+		m_pCustToolbar->UpdateURLBars(url);
 }
 
 //	Window Title Stuff

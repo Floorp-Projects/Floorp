@@ -330,7 +330,7 @@ void CGenericFrame::OnFilePageSetup()
 
 void CGenericFrame::OnGoHistory()
 {
-    theApp.CreateNewNavCenter(NULL, TRUE, HT_VIEW_HISTORY);
+    //theApp.CreateNewNavCenter(NULL, TRUE, HT_VIEW_HISTORY);
 }
 
 void CGenericFrame::OnPageFromWizard()

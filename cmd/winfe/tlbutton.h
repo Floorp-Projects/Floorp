@@ -215,6 +215,8 @@ public:
 	const char *GetToolTipText(void) { return m_pToolTipText; }
 	void SetToolTipText(LPCSTR pToolTipText);
 
+	void SetDepressed(BOOL b) { m_bDepressed = b; }
+
 	void SetStatusText(LPCSTR pStatusText);
 
 	void SetBitmap(HBITMAP hBmpImg, BOOL bParentOwns);
@@ -231,21 +233,25 @@ public:
     virtual CSize GetMaximalButtonSize(void);
     virtual CSize GetMinimalButtonSize(void);
 
+	CDropMenu* GetDropMenu() { return m_pDropMenu; }
+
     BOOL AtMinimalSize(void);
     BOOL AtMaximalSize(void);
 
     virtual void CheckForMinimalSize(void);
     virtual void CheckForMaximalSize(void);
 
+	virtual void UpdateURLBar(char* url) {}
+
 	BOOL IsResourceID(void) { return m_bIsResourceID; }
-	UINT GetBitmapID(void) { return m_nBitmapID; }
+	virtual UINT GetBitmapID(void) { return m_nBitmapID; }
 	UINT GetBitmapIndex(void) { return m_nBitmapIndex; }
 	LPCTSTR GetBitmapFile(void) { return m_pBitmapFile; }
 	CSize GetBitmapSize(void) { return m_bitmapSize; }
 	int	 GetMaxTextCharacters(void) { return m_nMaxTextChars; }
     int GetMinTextCharacters(void) { return m_nMinTextChars; }
 
-	BOOL NeedsUpdate(void) { return m_bNeedsUpdate; }
+	virtual BOOL NeedsUpdate(void) { return m_bNeedsUpdate; }
 
 	void Enable(BOOL bEnabled) { m_bEnabled = bEnabled; }
 	BOOL IsEnabled(void) { return m_bEnabled; }

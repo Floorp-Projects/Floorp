@@ -47,13 +47,9 @@ public:
     void CalcChildSizes();
     void AddChildSizeInfo(NAVCENTPOS *pPreference);
 
-	// drag and drop operation for the nav center content view.  If there is a child window
-	// that has ID == NC_IDW_OUTLINER.  The drag and drop message will get pass onto
-	// this child.  If not, the drag and drop message will get pass onto the parent window.
-
 protected:
-	virtual void OnActivateView( BOOL bActivate, CView* pActivateView, CView* pDeactiveView );
 	//{{AFX_MSG(CMainFrame)
+	afx_msg void CContentView::OnActivateView( BOOL bActivate, CView* pActivateView, CView* pDeactiveView );
 	afx_msg void OnSize( UINT nType, int cx, int cy );
 	afx_msg void OnSetFocus(CWnd* pWnd);
 	afx_msg void OnMouseMove( UINT nFlags, CPoint point );

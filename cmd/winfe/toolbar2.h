@@ -98,6 +98,7 @@ public:
 	CToolbarButton* RemoveButtonByCommand(UINT nCommand);
 
 	void DecrementButtonCount() { m_nNumButtons--; }
+	virtual BOOL ShouldClipChildren() { return TRUE; }
 
 	void HideButtonByCommand(UINT nCommand);
 	void ShowButtonByCommand(UINT nCommand, int nPos);
@@ -141,6 +142,7 @@ public:
 	virtual BOOL OnNotify( WPARAM wParam, LPARAM lParam, LRESULT* pResult );
 
 	void OnUpdateCmdUI( CFrameWnd* pTarget, BOOL bDisableIfNoHndler );
+	void UpdateURLBars(char* url);
 
     // Set a button to do its command on button down instead of button up
     BOOL SetDoOnButtonDownByCommand(UINT nCommand, BOOL bDoOnButtonDown);

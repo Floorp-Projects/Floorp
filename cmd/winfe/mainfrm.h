@@ -116,6 +116,8 @@ public:
 #endif
 
 	virtual BOOL AllowDocking() {return TRUE;}
+	virtual void BeginStreamingOfRDFToolbars();
+
 // Generated message map functions
 protected:
     //{{AFX_MSG(CMainFrame)

@@ -21,6 +21,34 @@
 
 #include "cxstubs.h"
 
+class CIsomorphicCommandMap
+{
+private:
+	CMapStringToString mapFromXPToFE;
+	CMapStringToString mapFromFEToXP;
+
+public:
+	static CIsomorphicCommandMap* InitializeCommandMap(const CString& initType);
+	// This function builds the command map and prepopulates it with the set of commands
+	// that can be responded to.  
+
+	void AddItem(CString xpItem, UINT feResource);
+		// Adds an isomorphic entry into the two maps.
+
+	void RemoveXPItem(CString xpItem);
+		// Removes the isomorphic entry from the two maps (keyed on the XP item).
+
+	void RemoveFEItem(UINT feResource);
+		// Removes the isomorphic entry from the two maps (keyed on the FE resource ID)
+
+	UINT GetFEResource(CString xpItem);
+		// Given an XP name, retrieves the FE resource.
+
+	CString GetXPResource(UINT resource);
+		// Given an FE resource, retrieves the XP name.
+};
+
+
 class CCustomImageObject;
 class CRDFImage;
 
@@ -161,12 +189,19 @@ HICON DrawLocalFileIcon(HT_Resource r, int left, int top, HDC hdc);
 CRDFImage* DrawArbitraryURL(HT_Resource r, int left, int top, int imageWidth, 
 								   int imageHeight, HDC hDC, COLORREF bkColor,
 								   CCustomImageObject* pObject, BOOL largeIcon);
+CRDFImage* DrawRDFImage(CRDFImage* pImage, int left, int top, int imageWidth, int imageHeight, HDC hDC,
+						COLORREF bkColor);
 
 HICON FetchLocalFileIcon(HT_Resource r);
 CRDFImage* FetchCustomIcon(HT_Resource r, CCustomImageObject* pObject, BOOL largeIcon);
 IconType DetermineIconType(HT_Resource pNode, BOOL largeIcon);
 
-void PaintBackground(HDC hdc, CRect rect, CRDFImage* pImage, int ySrcOffset = -1);
-		// This function tiles and paints the background image in the tree.
+void PaintBackground(HDC hdc, CRect rect, CRDFImage* pImage, int xSrcOffset=-1, int ySrcOffset=-1);
+	// This function tiles and paints the background image in the tree.
+
+void Compute3DColors(COLORREF rgbColor, COLORREF &rgbLight, COLORREF &rgbDark);
+	// This function computes the appropriate highlight and shadow colors to
+	// use against a custom background.
+
 void ResolveToPaletteColor(COLORREF& color, HPALETTE hPal);
 #endif // RDFACC_H

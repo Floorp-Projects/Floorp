@@ -707,9 +707,7 @@ int CAbstractCX::GetUrl(URL_Struct *pUrl, FO_Present_Types iFormatOut, BOOL bRea
         				CFrameGlue *pFrame = pWinCX->GetFrame();
 
         				if(pFrame){
-        					CURLBar *pUrlBar = (CURLBar *)pFrame->GetChrome()->GetToolbar(ID_LOCATION_TOOLBAR);
-        					if(pUrlBar)
-        						pUrlBar->UpdateFields(pUrl->address);
+							pFrame->GetChrome()->UpdateURLBars(pUrl->address);
         				}
         			}
         		}
