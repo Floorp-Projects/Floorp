@@ -192,7 +192,12 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
 
   // Reflow our one and only child frame
   nsHTMLReflowMetrics kidDesiredSize(nsnull);
-  if (mFrames.NotEmpty()) {
+  if (mFrames.IsEmpty()) {
+    // Return our desired size
+    aDesiredSize.width = aDesiredSize.height = 0;
+    aDesiredSize.ascent = aDesiredSize.descent = 0;
+
+  } else {
     nsIFrame* kidFrame = mFrames.FirstChild();
 
     // We must pass in that the available height is unconstrained, because
