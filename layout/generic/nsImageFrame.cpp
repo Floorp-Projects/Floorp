@@ -1247,8 +1247,8 @@ nsImageFrame::Paint(nsIPresContext*      aPresContext,
 
     // First paint background and borders, which should be in the
     // FOREGROUND or BACKGROUND paint layer if the element is
-    // inline-level or block-level, respectively.  (See CSS2 9.5, which
-    // is the rationale for paint layers.)
+    // inline-level or block-level, respectively (bug 36710).  (See
+    // CSS2 9.5, which is the rationale for paint layers.)
     const nsStyleDisplay *display;
     ::GetStyleData(mStyleContext, &display);
     nsFramePaintLayer backgroundLayer = display->IsBlockLevel()
@@ -1285,7 +1285,7 @@ nsImageFrame::Paint(nsIPresContext*      aPresContext,
         imageLoader->GetImageBlocked(&imageBlocked);
       }
       
-      if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer &&
+      if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer &&
           (!imageBlocked || mIconLoad->mPrefAllImagesBlocked)) {
         DisplayAltFeedback(aPresContext, aRenderingContext, 
                            (loadStatus & imgIRequest::STATUS_ERROR)
