@@ -53,6 +53,7 @@ REQUIRES	= xpcom \
 GFX_LCPPSRCS = \
 		nsRegionMac.cpp \
 		nsWatchTask.cpp \
+		nsRepeater.cpp \
 		$(NULL)
 
 
