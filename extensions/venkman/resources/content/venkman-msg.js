@@ -74,6 +74,7 @@ const MT_INFO      = "INFO";
 const MT_SOURCE    = "SOURCE";
 const MT_STEP      = "STEP";
 const MT_STOP      = "STOP";
+const MT_ETRACE    = "ETRACE";
 const MT_USAGE     = "USAGE";
 const MT_EVAL_IN   = "EVAL-IN";
 const MT_EVAL_OUT  = "EVAL-OUT";
@@ -93,6 +94,7 @@ const exceptionMsgNames = ["err.notimplemented",
 /* message values for non-parameterized messages */
 const MSG_ERR_NO_STACK    = getMsg("msg.err.nostack");
 const MSG_ERR_NO_SOURCE   = getMsg("msg.err.nosource");
+const MSG_ERR_CANT_CLOSE   = getMsg("msg.err.cant.close");
 
 const MSG_TYPE_BOOLEAN    = getMsg("msg.type.boolean");
 const MSG_TYPE_DOUBLE     = getMsg("msg.type.double");
@@ -103,6 +105,8 @@ const MSG_TYPE_OBJECT     = getMsg("msg.type.object");
 const MSG_TYPE_STRING     = getMsg("msg.type.string");
 const MSG_TYPE_UNKNOWN    = getMsg("msg.type.unknown");
 const MSG_TYPE_VOID       = getMsg("msg.type.void");
+
+const MSG_CLASS_XPCOBJ    = getMsg("msg.class.xpcobj");
 
 const MSG_WORD_BREAKPOINT  = getMsg("msg.val.breakpoint");
 const MSG_WORD_DEBUG       = getMsg("msg.val.debug");
@@ -116,6 +120,9 @@ const MSG_VAL_UNKNOWN      = getMsg("msg.val.unknown");
 const MSG_VAL_NA           = getMsg("msg.val.na");
 const MSG_VAL_OBJECT       = getMsg("msg.val.object");
 const MSG_VAL_EXPR         = getMsg("msg.val.expression");
+const MSG_VAL_EXCEPTION    = getMsg("msg.val.exception");
+const MSG_VAL_ON           = getMsg("msg.val.on");
+const MSG_VAL_OFF          = getMsg("msg.val.off");
 
 const MSG_VF_ENUMERABLE    = getMsg("vf.enumerable");
 const MSG_VF_READONLY      = getMsg("vf.readonly");
@@ -130,6 +137,10 @@ const MSG_HELLO            = getMsg("msg.hello");
 const MSG_TIP_HELP           = getMsg("msg.tip.help");
 const MSG_NO_BREAKPOINTS_SET = getMsg("msg.no.breakpoints.set");
 const MSG_NO_FBREAKS_SET     = getMsg("msg.no.fbreaks.set");
+
+const MSG_TMODE_IGNORE     = getMsg("msg.tmode.ignore");
+const MSG_TMODE_TRACE      = getMsg("msg.tmode.trace");
+const MSG_TMODE_BREAK      = getMsg("msg.tmode.break");
 
 const CMD_BREAK           = getMsg("cmd.break");
 const CMD_BREAK_PARAMS    = getMsg("cmd.break.params");
@@ -173,6 +184,9 @@ const CMD_SCOPE_HELP      = getMsg("cmd.scope.help");
 const CMD_STEP            = getMsg("cmd.step");
 const CMD_STEP_PARAMS     = getMsg("cmd.step.params");
 const CMD_STEP_HELP       = getMsg("cmd.step.help");
+const CMD_TMODE           = getMsg("cmd.tmode");
+const CMD_TMODE_PARAMS    = getMsg("cmd.tmode.params");
+const CMD_TMODE_HELP      = getMsg("cmd.tmode.help");
 const CMD_WHERE           = getMsg("cmd.where");
 const CMD_WHERE_PARAMS    = getMsg("cmd.where.params");
 const CMD_WHERE_HELP      = getMsg("cmd.where.help");
@@ -203,6 +217,7 @@ const MSN_FMT_VALUE_SHORT    = "fmt.value.short";
 const MSN_FMT_OBJECT         = "fmt.object";
 const MSN_FMT_JSEXCEPTION    = "fmt.jsexception";
 const MSN_FMT_BADMOJO        = "fmt.badmojo";
+const MSN_FMT_TMP_ASSIGN     = "fmt.tmp.assign";
 
 const MSN_NO_PROPERTIES      = "msg.noproperties";
 const MSN_NO_CMDMATCH        = "msg.no-commandmatch";
@@ -221,6 +236,7 @@ const MSN_FBP_CREATED        = "msg.fbp.created";
 const MSN_FBP_DISABLED       = "msg.fbp.disabled";
 const MSN_FBP_EXISTS         = "msg.fbp.exists";
 const MSN_SOURCE_LINE        = "msg.source.line";
+const MSN_EXCP_TRACE         = "msg.exception.trace";
 
 const MSN_CONT             = "msg.cont";
 const MSN_EVAL_ERROR       = "msg.eval.error";
