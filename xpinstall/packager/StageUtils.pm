@@ -64,7 +64,7 @@ sub CopySubDirs
 
   if(!(-d "$aDestDir"))
   {
-    mkdir("$aDestDir", 755) || die "\n mkdir(\"$aDestDir\", 755): $!\n";
+    mkdir("$aDestDir", 0755) || die "\n mkdir(\"$aDestDir\", 0755): $!\n";
   }
 
   if(-d $aSrc)
@@ -80,7 +80,7 @@ sub CopySubDirs
 
       if(!(-d "$aDestDir/$file"))
       {
-        mkdir("$aDestDir/$file", 755) || die "\n mkdir(\"$aDestDir/$file\", 755): $!\n";
+        mkdir("$aDestDir/$file", 0755) || die "\n mkdir(\"$aDestDir/$file\", 0755): $!\n";
       }
 
       CopySubDirs("$aSrc/$file", "$aDestDir/$file");
@@ -105,7 +105,7 @@ sub CopyFiles
 
   if(!(-d "$aDestDir"))
   {
-    mkdir("$aDestDir", 755) || die "\n mkdir(\"$aDestDir\", 755): $!\n";
+    mkdir("$aDestDir", 0755) || die "\n mkdir(\"$aDestDir\", 0755): $!\n";
   }
   if(-d $aSrc)
   {
@@ -197,7 +197,7 @@ sub CreateStage
   chdir("$savedCwd");
   if(!(-d "$aDirStageProductName"))
   {
-    mkdir("$aDirStageProductName", 755) || die "mkdir($aDirStageProductName, 755): $!\n";
+    mkdir("$aDirStageProductName", 0755) || die "mkdir($aDirStageProductName, 0755): $!\n";
   }
   print("\n Stage area: $aDirStageProductName\n"); 
   if(-d $aDirDistPackagesProductName)
@@ -237,7 +237,7 @@ sub CopyAdditionalPackage
 
   if(!(-e "$aDirDistPackagesProductName"))
   {
-    mkdir("$aDirDistPackagesProductName", 755) || die "\n mkdir($aDirDistPackagesProductName, 755): $!\n";
+    mkdir("$aDirDistPackagesProductName", 0755) || die "\n mkdir($aDirDistPackagesProductName, 0755): $!\n";
   }
 
   if(-e $aFile)
@@ -255,7 +255,7 @@ sub CleanupStage
   rmtree([$dirStageProduct],0,0) if(-d $dirStageProduct);
   if(!(-d "$aDirStage"))
   {
-    mkdir("$aDirStage", 755) || die "\n mkdir($aDirStage, 755): $!\n";
+    mkdir("$aDirStage", 0755) || die "\n mkdir($aDirStage, 0755): $!\n";
   }
 }
 
@@ -267,11 +267,11 @@ sub CleanupDistPackages
   rmtree([$dirDistPackagesProductName],0,0) if(-d $dirDistPackagesProductName);
   if(!(-d "$aDirDistPackages"))
   {
-    mkdir("$aDirDistPackages", 755) || die "\n mkdir($aDirDistPackages, 755): $!\n";
+    mkdir("$aDirDistPackages", 0755) || die "\n mkdir($aDirDistPackages, 0755): $!\n";
   }
   if(!(-d "$dirDistPackagesProductName"))
   {
-    mkdir("$dirDistPackagesProductName", 755) || die "\n mkdir($dirDistPackagesProductName, 755): $!\n";
+    mkdir("$dirDistPackagesProductName", 0755) || die "\n mkdir($dirDistPackagesProductName, 0755): $!\n";
   }
 }
 
@@ -281,7 +281,7 @@ sub GeneratePackagesFromSinglePackage
 
   if(!(-d "$aDestination"))
   {
-    mkdir("$aDestination", 755) || die "\n mkdir('$aDestination', 755): $!\n";
+    mkdir("$aDestination", 0755) || die "\n mkdir('$aDestination', 0755): $!\n";
   }
   system("perl $gDirScripts/make_pkgs_from_list.pl -p $aPlatform -pkg $aSinglePackage -o $aDestination");
 }
