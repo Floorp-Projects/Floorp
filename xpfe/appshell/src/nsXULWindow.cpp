@@ -557,6 +557,27 @@ NS_IMETHODIMP nsXULWindow::PersistPositionAndSize(PRBool aPosition, PRBool aSize
    return NS_OK;
 }
 
+NS_IMETHODIMP nsXULWindow::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
+   PRBool aPrimary, const PRUnichar* aID)
+{
+   nsContentShellInfo* shellInfo = new nsContentShellInfo(aID, aPrimary, aContentShell);
+
+   mContentShells.AppendElement((void*)shellInfo);
+
+   // Set the default content tree owner if one does not exist.
+
+   nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+   aContentShell->GetTreeOwner(getter_AddRefs(treeOwner));
+
+   if(!treeOwner)
+      {
+      NS_ENSURE_SUCCESS(EnsureContentTreeOwner(), NS_ERROR_FAILURE);
+      aContentShell->SetTreeOwner(mContentTreeOwner);
+      }
+
+   return NS_OK;
+}
+
 //*****************************************************************************
 // nsXULWindow: Accessors
 //*****************************************************************************
@@ -572,4 +593,5 @@ nsContentShellInfo::nsContentShellInfo(const nsString& aID, PRBool aPrimary,
 
 nsContentShellInfo::~nsContentShellInfo()
 {
+   //XXX Set Tree Owner to null if the tree owner is nsXULWindow->mContentTreeOwner
 }
