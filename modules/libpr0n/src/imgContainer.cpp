@@ -133,12 +133,12 @@ NS_IMETHODIMP imgContainer::AppendFrame(gfxIImageFrame *item)
   // for animation compositing (GIF) or for filling in with a background color.
   // XXX IMPORTANT: this means that the frame should be initialized BEFORE appending to container
   if(!mCompositingFrame) {
-    nsRect *frameRect;
-    item->GetRect(&frameRect);
-    if(((*frameRect).x != 0) ||
-       ((*frameRect).y != 0) ||
-       ((*frameRect).width != mSize.width) ||
-       ((*frameRect).height != mSize.height)) 
+    nsRect frameRect;
+    item->GetRect(frameRect);
+    if((frameRect.x != 0) ||
+       (frameRect.y != 0) ||
+       (frameRect.width != mSize.width) ||
+       (frameRect.height != mSize.height)) 
     {
       mCompositingFrame = do_CreateInstance("@mozilla.org/gfx/image/frame;2");
       gfx_format format;
@@ -331,7 +331,7 @@ NS_IMETHODIMP_(void) imgContainer::Notify(nsITimer *timer)
   
   // If we're done decoding the next frame, go ahead and display it now and reinit
   // the timer with the next frame's delay time.
-  PRInt32 previousAnimationFrame = mCurrentAnimationFrame;
+  PRUint32 previousAnimationFrame = mCurrentAnimationFrame;
   if (mCurrentFrameIsFinishedDecoding && !mDoneDecoding) {
     // If we have the next frame in the sequence set the timer callback from it
     GetFrameAt(mCurrentAnimationFrame + 1, getter_AddRefs(nextFrame));
@@ -384,12 +384,12 @@ NS_IMETHODIMP_(void) imgContainer::Notify(nsITimer *timer)
       //mObserver->FrameChanged(this, nsnull, nextFrame, &dirtyRect);
     
   } else {
-    nsRect* dirtyRect;
-    nextFrame->GetRect(&dirtyRect);
+    nsRect dirtyRect;
+    nextFrame->GetRect(dirtyRect);
 
     // do notification to FE to draw this frame
     if (mObserver)
-      mObserver->FrameChanged(this, nsnull, nextFrame, dirtyRect);
+      mObserver->FrameChanged(this, nsnull, nextFrame, &dirtyRect);
   }
 
 
