@@ -1740,38 +1740,25 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
     }
   }
 
-  // Give web-shell-container right of refusal
-  if (nsnull != mContainer) {
-    rv = mContainer->WillLoadURL(this, urlSpec.GetUnicode(), nsLoadURL);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-  }
 
    mURL = urlSpec.GetUnicode();
 
   nsISessionHistory * shist;
 
   /* If this is one of the frames, get it from the top level shell */
+
+  if (aModifyHistory) {
   nsIWebShell * ws;
   GetRootWebShell(ws);
   if (ws)
      ws->GetSessionHistory(shist);
       /* Add yourself to the Session History */
-      if (shist) {
-        PRInt32  ret=0;
-        ret = shist->add(this);
-        /* If shist->add returned a non-zero that means that history
-         * does n't quite want this page to be loaded, because, it
-         * it doesn't match with what's in history. Just return.
-         * shist->add() will return a non-zero only when trying to go
-         * back or forward in history and what's on page doesn't quite 
-         * match with what's in history.
-
-        if (ret)
-          return;
-         */
-      }
+   if (shist) {
+      PRInt32  ret=0;
+      ret = shist->add(this);
+   }
+  }
+   
 
   nsString* url = new nsString(urlSpec);
   if (aModifyHistory) {
@@ -1798,7 +1785,24 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
   }
   ShowHistory();
 
-  return DoLoadURL(urlSpec, aCommand, aPostData, aType, aLocalIP);
+  /* The session History may have changed the URL. So pass on the
+   * right one for loading 
+   */
+  PRUnichar * urlString=nsnull;
+  GetURL(&urlString);
+  nsAutoString  newURL(urlString);
+  printf("Loading  url %s in WEbshell %x\n", mURL.ToNewCString(), this);
+
+  // Give web-shell-container right of refusal
+  if (nsnull != mContainer) {
+    rv = mContainer->WillLoadURL(this, mURL.GetUnicode(), nsLoadURL);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
+  
+
+  return DoLoadURL(newURL, aCommand, aPostData, aType, aLocalIP);
 }
 
 NS_IMETHODIMP nsWebShell::Stop(void)
@@ -2647,7 +2651,13 @@ nsWebShell::OnStartURLLoad(nsIDocumentLoader* loader,
   // for seamonkey.  I think Netlib should send a message to all stream listeners
   // when it changes the URL like this.  That would mean adding a new method
   // to nsIStreamListener.  Need to talk to Rick, Kipp, Gagan about this.
-  CheckForTrailingSlash(aURL);
+
+  /* Overriding comments: History mechanism has changed. So is Necko changing. 
+   * Need to check in the new world if this is still valid. If so, new methods
+   * need to be added to nsISessionHistory. Until then. We don't need this.
+   * This is being done so that old History code can be removed.
+   */
+//  CheckForTrailingSlash(aURL);
 
   /*
    *Fire the OnStartDocumentLoad of the webshell observer
@@ -2865,6 +2875,7 @@ nsWebShell::CancelRefreshURLTimers(void)
  */
 nsresult nsWebShell::CheckForTrailingSlash(nsIURL* aURL)
 {
+
   nsString* historyURL = (nsString*) mHistory.ElementAt(mHistoryIndex);
   const char* spec;
   aURL->GetSpec(&spec);
