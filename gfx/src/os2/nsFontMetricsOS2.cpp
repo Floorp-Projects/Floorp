@@ -657,10 +657,11 @@ nsFontMetricsOS2::LoadFont(HPS aPS, const nsAString& aFontname)
     FONTMETRICS* pMetrics = getMetrics(lFonts, facename.get(), aPS);
 
     if (lFonts > 0) {
-      nsAutoString familyname;
-      CopyASCIItoUCS2(nsDependentCString(pMetrics[0].szFamilyname),
-                      familyname);
-      GlobalFontEntry* globalEntry = gGlobalFonts->GetEntry(familyname);
+      nsAutoChar16Buffer familyname;
+      MultiByteToWideChar(0, pMetrics[0].szFamilyname,
+                          strlen(pMetrics[0].szFamilyname), familyname, len);
+      nsAutoString name(familyname.get());
+      GlobalFontEntry* globalEntry = gGlobalFonts->GetEntry(name);
       if (globalEntry) {
         // Look through metrics for one that matches given facename
         nsMiniMetrics* metrics = globalEntry->mMetrics;
@@ -805,19 +806,21 @@ nsFontMetricsOS2::InitializeGlobalFonts()
      //           'italic', 'oblique', 'regular').  If the Facename contains
      //           one of these indicators, then we will create the sort key
      //           based on the Familyname.  Otherwise, use the Facename.
-    nsAutoString fontptr;
+    char* f;
     if (PL_strcasestr(font->szFacename, "bold") != nsnull ||
         PL_strcasestr(font->szFacename, "italic") != nsnull ||
         PL_strcasestr(font->szFacename, "oblique") != nsnull ||
         PL_strcasestr(font->szFacename, "regular") != nsnull ||
         PL_strcasestr(font->szFacename, "-normal") != nsnull)
     {
-      CopyASCIItoUCS2(nsDependentCString(NS_STATIC_CAST(char*, font->szFamilyname)),
-                      fontptr);
+      f = NS_STATIC_CAST(char*, font->szFamilyname);
     } else {
-      CopyASCIItoUCS2(nsDependentCString(NS_STATIC_CAST(char*, font->szFacename)),
-                      fontptr);
+      f = NS_STATIC_CAST(char*, font->szFacename);
     }
+    nsAutoChar16Buffer fontname;
+    PRInt32 len;
+    MultiByteToWideChar(0, f, strlen(f), fontname, len);
+    nsAutoString fontptr(fontname.get());
 
     // The fonts in gBadDBCSFontMapping do not display well in non-Chinese
     //   systems.  Map them to a more intelligible name.
@@ -828,8 +831,7 @@ nsFontMetricsOS2::InitializeGlobalFonts()
           (gSystemCodePage != 950))
       {
         for (int i = 0; gBadDBCSFontMapping[i].mName != nsnull; i++) {
-          if (fontptr.Equals(NS_ConvertASCIItoUCS2(gBadDBCSFontMapping[i].mName),
-                            nsCaseInsensitiveStringComparator()))
+          if (strcmp(f, gBadDBCSFontMapping[i].mName) == 0)
           {
             CopyASCIItoUCS2(nsDependentCString(gBadDBCSFontMapping[i].mWinName),
                             fontptr);
@@ -1685,8 +1687,11 @@ nsFontMetricsOS2::FindWesternFont()
   // Create a 'western' font by making a copy of the currently selected font
   // and changing the codepage 1252
   nsFontOS2* font = new nsFontOS2();
-  *font = *mFontHandle;
+  font->mFattrs = mFontHandle->mFattrs;
   font->mFattrs.usCodePage = 1252;
+  font->mCharbox = mFontHandle->mCharbox;
+  font->mMaxAscent = mFontHandle->mMaxAscent;
+  font->mMaxDescent = mFontHandle->mMaxDescent;
   font->mConvertCodePage = 1252;
   mLoadedFonts.AppendElement(font);
   mWesternFont = font;
