@@ -118,6 +118,28 @@ public interface SecuritySupport {
      * <p>
      * An embedding may filter which Java classes are exposed through 
      * LiveConnect to JavaScript scripts.
+     * <p>
+     * Due to the fact that there is no package reflection in Java,
+     * this method will also be called with package names. There
+     * is no way for Rhino to tell if "Packages.a.b" is a package name 
+     * or a class that doesn't exist. What Rhino does is attempt
+     * to load each segment of "Packages.a.b.c": It first attempts to 
+     * load class "a", then attempts to load class "a.b", then
+     * finally attempts to load class "a.b.c". On a Rhino installation 
+     * without any SecuritySupport set, and without any of the
+     * above classes, the expression "Packages.a.b.c" will result in 
+     * a [JavaPackage a.b.c] and not an error.
+     * <p>
+     * With SecuritySupport supplied, Rhino will first call 
+     * visibleToScripts before attempting to look up the class name. If
+     * visibleToScripts returns false, the class name lookup is not 
+     * performed and subsequent Rhino execution assumes the class is
+     * not present. So for "java.lang.System.out.println" the lookup 
+     * of "java.lang.System" is skipped and thus Rhino assumes that
+     * "java.lang.System" doesn't exist. So then for "java.lang.System.out",
+     * Rhino attempts to load the class "java.lang.System.out" because 
+     * it assumes that "java.lang.System" is a package name.
+     * <p>
      * @param fullClassName the full name of the class (including the package
      *                      name, with '.' as a delimiter). For example the 
      *                      standard string class is "java.lang.String"
