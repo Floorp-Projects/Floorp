@@ -27,7 +27,7 @@ Rights Reserved.
 
 #CardViewBox {
 	overflow: auto;
-	background-color: #EEEEEE;
+	background-color: #EFEFEF;
 	min-width: 150px;
 	-moz-user-focus: ignore;
 }
@@ -57,7 +57,7 @@ Rights Reserved.
 	padding: 1px;
 	padding-left: 5px;
 	margin: 0px 0px 1px 0px;
-	background-color: #99CCCC;
+	background-color: #C2D0D0;
 	color: black;
 	font-weight: bold;
 	min-width: 30px;
@@ -106,7 +106,7 @@ tree {
 	border-left: 1px solid transparent;
 }
 
-tree[class="abDirectory"] treeitem > treerow > treecell > .tree-icon {
+tree[class="abDirectory"] treeitem > treerow > treecell > .tree-cell-primary-icon {
 	list-style-image: url("chrome://messenger/skin/addressbook/myaddrbk.gif");
 }
 
@@ -275,10 +275,9 @@ tree[class="abResults"] treeitem > treerow > treecell.cardicon {
 	padding: 0px;
 }
 
-treeitem[empty="true"] > treerow > treecell > .tree-cell-twisty {               
-                                                                                                                                               
-  list-style-image: none !important;                                             
-                                                                                                                                               
+treeitem[empty="true"] > treerow > treecell > .tree-cell-twisty {
+  list-style-image: none !important;
+  padding-left: 12px;                                         
 }    
 
 /*** Styles for abSelectAddressesDialog.xul ***/
