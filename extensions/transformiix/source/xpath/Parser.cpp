@@ -21,13 +21,12 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *
- * $Id: Parser.cpp,v 1.2 2000/04/12 22:33:30 nisheeth%netscape.com Exp $
+ * $Id: Parser.cpp,v 1.3 2000/05/16 09:34:01 kvisco%ziplink.net Exp $
  */
 
 /**
  * Test App for Expressions
- * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.2 $ $Date: 2000/04/12 22:33:30 $
+ * @version $Revision: 1.3 $ $Date: 2000/05/16 09:34:01 $
 **/
 
 #include <iostream.h>
@@ -42,11 +41,14 @@ void main(int argc, char** argv) {
 
 
     cout <<endl;
+
+    //-- old test cases, commented for re-use
     //String pattern("element[position()=1]");
     //String pattern("*[text()='foo']");
     //String pattern("@*|node()");
+    //String pattern("FSContext/UserList/User[@id=/FSContext/SessionData/@userref]/@priv = 'admin'");
 
-    String pattern("FSContext/UserList/User[@id=/FSContext/SessionData/@userref]/@priv = 'admin'");
+    String pattern("10/3");
 
     cout <<"Lexically Analyzing: "<<pattern<<endl;
     cout<<endl;
