@@ -1,30 +1,41 @@
 /*
- * Copyright © 2002 Keith Packard
+ * Copyright Â© 2002 Keith Packard
  *
- * Permission to use, copy, modify, distribute, and sell this software and its
- * documentation for any purpose is hereby granted without fee, provided that
- * the above copyright notice appear in all copies and that both that
- * copyright notice and this permission notice appear in supporting
- * documentation, and that the name of Keith Packard not be used in
- * advertising or publicity pertaining to distribution of the software without
- * specific, written prior permission.  Keith Packard makes no
- * representations about the suitability of this software for any purpose.  It
- * is provided "as is" without express or implied warranty.
+ * This library is free software; you can redistribute it and/or
+ * modify it either under the terms of the GNU Lesser General Public
+ * License version 2.1 as published by the Free Software Foundation
+ * (the "LGPL") or, at your option, under the terms of the Mozilla
+ * Public License Version 1.1 (the "MPL"). If you do not alter this
+ * notice, a recipient may use your version of this file under either
+ * the MPL or the LGPL.
  *
- * KEITH PACKARD DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
- * INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
- * EVENT SHALL KEITH PACKARD BE LIABLE FOR ANY SPECIAL, INDIRECT OR
- * CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
- * DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
- * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
- * PERFORMANCE OF THIS SOFTWARE.
+ * You should have received a copy of the LGPL along with this library
+ * in the file COPYING-LGPL-2.1; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * You should have received a copy of the MPL along with this library
+ * in the file COPYING-MPL-1.1
+ *
+ * The contents of this file are subject to the Mozilla Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY
+ * OF ANY KIND, either express or implied. See the LGPL or the MPL for
+ * the specific language governing rights and limitations.
+ *
+ * The Original Code is the cairo graphics library.
+ *
+ * The Initial Developer of the Original Code is Keith Packard
+ *
+ * Contributor(s):
+ *	Keith R. Packard <keithp@keithp.com>
+ *	Carl D. Worth <cworth@cworth.org>
  *
  * 2002-07-15: Converted from XRenderCompositeDoublePoly to cairo_trap. Carl D. Worth
  */
 
 #include "cairoint.h"
-
-#define CAIRO_TRAPS_GROWTH_INC 10
 
 /* private functions */
 
@@ -52,12 +63,6 @@ _compare_cairo_edge_by_slope (const void *av, const void *bv);
 static cairo_fixed_16_16_t
 _compute_x (cairo_line_t *line, cairo_fixed_t y);
 
-static double
-_compute_inverse_slope (cairo_line_t *l);
-
-static double
-_compute_x_intercept (cairo_line_t *l, double inverse_slope);
-
 static int
 _line_segs_intersect_ceil (cairo_line_t *left, cairo_line_t *right, cairo_fixed_t *y_ret);
 
@@ -68,6 +73,8 @@ _cairo_traps_init (cairo_traps_t *traps)
 
     traps->traps_size = 0;
     traps->traps = NULL;
+    traps->extents.p1.x = traps->extents.p1.y = CAIRO_MAXSHORT << 16;
+    traps->extents.p2.x = traps->extents.p2.y = CAIRO_MINSHORT << 16;
 }
 
 void
@@ -93,7 +100,8 @@ _cairo_traps_add_trap (cairo_traps_t *traps, cairo_fixed_t top, cairo_fixed_t bo
     }
 
     if (traps->num_traps >= traps->traps_size) {
-	status = _cairo_traps_grow_by (traps, CAIRO_TRAPS_GROWTH_INC);
+	int inc = traps->traps_size ? traps->traps_size : 32;
+	status = _cairo_traps_grow_by (traps, inc);
 	if (status)
 	    return status;
     }
@@ -104,6 +112,28 @@ _cairo_traps_add_trap (cairo_traps_t *traps, cairo_fixed_t top, cairo_fixed_t bo
     trap->left = *left;
     trap->right = *right;
 
+    if (top < traps->extents.p1.y)
+	traps->extents.p1.y = top;
+    if (bottom > traps->extents.p2.y)
+	traps->extents.p2.y = bottom;
+    /*
+     * This isn't generally accurate, but it is close enough for
+     * this purpose.  Assuming that the left and right segments always
+     * contain the trapezoid vertical extents, these compares will
+     * yield a containing box.  Assuming that the points all come from
+     * the same figure which will eventually be completely drawn, then
+     * the compares will yield the correct overall extents
+     */
+    if (left->p1.x < traps->extents.p1.x)
+	traps->extents.p1.x = left->p1.x;
+    if (left->p2.x < traps->extents.p1.x)
+	traps->extents.p1.x = left->p2.x;
+    
+    if (right->p1.x > traps->extents.p2.x)
+	traps->extents.p2.x = right->p1.x;
+    if (right->p2.x > traps->extents.p2.x)
+	traps->extents.p2.x = right->p2.x;
+    
     traps->num_traps++;
 
     return CAIRO_STATUS_SUCCESS;
@@ -327,40 +357,132 @@ _compare_cairo_edge_by_current_x_slope (const void *av, const void *bv)
       sub-computations -- just a bunch of determinants. I haven't
       looked at complexity, (both are probably similar and it probably
       doesn't matter much anyway).
+ */
 
-static double
-_det (double a, double b, double c, double d)
+/* XXX: Keith's new intersection code is much cleaner, and uses
+ * sufficient precision for correctly sorting intersections according
+ * to the analysis in Hobby's paper.
+ *
+ * But, when we enable this code, some things are failing, (eg. the
+ * stars in test/fill_rule get filled wrong). This could indicate a
+ * bug in one of tree places:
+ *
+ *	1) The new intersection code in this file
+ *
+ *	2) cairo_wideint.c (which is only exercised here)
+ *
+ *      3) In the current tessellator, (where the old intersection
+ *	   code, with its mystic increments could be masking the bug).
+ *
+ * It will likely be easier to revisit this when the new tessellation
+ * code is in place. So, for now, we'll simply disable the new
+ * intersection code.
+ */
+
+#define CAIRO_TRAPS_USE_NEW_INTERSECTION_CODE 0
+
+#if CAIRO_TRAPS_USE_NEW_INTERSECTION_CODE
+static const cairo_fixed_32_32_t
+_det16_32 (cairo_fixed_16_16_t a,
+	   cairo_fixed_16_16_t b,
+	   cairo_fixed_16_16_t c,
+	   cairo_fixed_16_16_t d)
 {
-    return a * d - b * c;
+    return _cairo_int64_sub (_cairo_int32x32_64_mul (a, d),
+			     _cairo_int32x32_64_mul (b, c));
+}
+
+static const cairo_fixed_64_64_t
+_det32_64 (cairo_fixed_32_32_t a,
+	   cairo_fixed_32_32_t b,
+	   cairo_fixed_32_32_t c,
+	   cairo_fixed_32_32_t d)
+{
+    return _cairo_int128_sub (_cairo_int64x64_128_mul (a, d),
+			      _cairo_int64x64_128_mul (b, c));
+}
+
+static const cairo_fixed_32_32_t
+_fixed_16_16_to_fixed_32_32 (cairo_fixed_16_16_t a)
+{
+    return _cairo_int64_lsl (_cairo_int32_to_int64 (a), 16);
 }
 
 static int
-_lines_intersect (cairo_line_t *l1, cairo_line_t *l2, cairo_fixed_t *y_intersection)
+_line_segs_intersect_ceil (cairo_line_t *l1, cairo_line_t *l2, cairo_fixed_t *y_intersection)
 {
-    double dx1 = cairo_fixed_to_double (l1->p1.x - l1->p2.x);
-    double dy1 = cairo_fixed_to_double (l1->p1.y - l1->p2.y);
+    cairo_fixed_16_16_t	dx1, dx2, dy1, dy2;
+    cairo_fixed_32_32_t	den_det;
+    cairo_fixed_32_32_t	l1_det, l2_det;
+    cairo_fixed_64_64_t num_det;
+    cairo_fixed_32_32_t	intersect_32_32;
+    cairo_fixed_48_16_t	intersect_48_16;
+    cairo_fixed_16_16_t	intersect_16_16;
+    cairo_quorem128_t	qr;
 
-    double dx2 = cairo_fixed_to_double (l2->p1.x - l2->p2.x);
-    double dy2 = cairo_fixed_to_double (l2->p1.y - l2->p2.y);
-
-    double l1_det, l2_det;
-
-    double den_det = _det (dx1, dy1, dx2, dy2);
-
-    if (den_det == 0)
+    dx1 = l1->p1.x - l1->p2.x;
+    dy1 = l1->p1.y - l1->p2.y;
+    dx2 = l2->p1.x - l2->p2.x;
+    dy2 = l2->p1.y - l2->p2.y;
+    den_det = _det16_32 (dx1, dy1,
+			 dx2, dy2);
+    
+    if (_cairo_int64_eq (den_det, _cairo_int32_to_int64(0)))
 	return 0;
 
-    l1_det = _det (l1->p1.x, l1->p1.y,
-		  l1->p2.x, l1->p2.y);
-    l2_det = _det (l2->p1.x, l2->p1.y,
-		  l2->p2.x, l2->p2.y);
+    l1_det = _det16_32 (l1->p1.x, l1->p1.y,
+			l1->p2.x, l1->p2.y);
+    l2_det = _det16_32 (l2->p1.x, l2->p1.y,
+			l2->p2.x, l2->p2.y);
 
-    *y_intersection = _det (l1_det, dy1,
-			   l2_det, dy2) / den_det;
+    
+    num_det = _det32_64 (l1_det, _fixed_16_16_to_fixed_32_32 (dy1),
+			 l2_det, _fixed_16_16_to_fixed_32_32 (dy2));
+    
+    /*
+     * Ok, this one is a bit tricky in fixed point, the denominator
+     * needs to be left with 32-bits of fraction so that the
+     * result of the divide ends up with 32-bits of fraction (64 - 32 = 32)
+     */
+    qr = _cairo_int128_divrem (num_det, _cairo_int64_to_int128 (den_det));
+    
+    intersect_32_32 = _cairo_int128_to_int64 (qr.quo);
+    
+    /*
+     * Find the ceiling of the quotient -- divrem returns
+     * the quotient truncated towards zero, so if the
+     * quotient should be positive (num_den and den_det have same sign)
+     * bump the quotient up by one.
+     */
+    
+    if (_cairo_int128_ne (qr.rem, _cairo_int32_to_int128 (0)) &&
+	(_cairo_int128_ge (num_det, _cairo_int32_to_int128 (0)) ==
+	 _cairo_int64_ge (den_det, _cairo_int32_to_int64 (0))))
+    {
+	intersect_32_32 = _cairo_int64_add (intersect_32_32,
+					    _cairo_int32_to_int64 (1));
+    }
+	
+    /* 
+     * Now convert from 32.32 to 48.16 and take the ceiling;
+     * this requires adding in 15 1 bits and shifting the result
+     */
+
+    intersect_32_32 = _cairo_int64_add (intersect_32_32,
+					_cairo_int32_to_int64 ((1 << 16) - 1));
+    intersect_48_16 = _cairo_int64_rsa (intersect_32_32, 16);
+    
+    /*
+     * And drop the top bits
+     */
+    intersect_16_16 = _cairo_int64_to_int32 (intersect_48_16);
+    
+    *y_intersection = intersect_16_16;
 
     return 1;
 }
-*/
+#endif /* CAIRO_TRAPS_USE_NEW_INTERSECTION_CODE */
+
 static cairo_fixed_16_16_t
 _compute_x (cairo_line_t *line, cairo_fixed_t y)
 {
@@ -371,6 +493,7 @@ _compute_x (cairo_line_t *line, cairo_fixed_t y)
     return line->p1.x + (ex / dy);
 }
 
+#if ! CAIRO_TRAPS_USE_NEW_INTERSECTION_CODE
 static double
 _compute_inverse_slope (cairo_line_t *l)
 {
@@ -460,6 +583,7 @@ _line_segs_intersect_ceil (cairo_line_t *l1, cairo_line_t *l2, cairo_fixed_t *y_
 
     return 1;
 }
+#endif /* CAIRO_TRAPS_USE_NEW_INTERSECTION_CODE */
 
 /* The algorithm here is pretty simple:
 
@@ -567,32 +691,32 @@ _cairo_traps_tessellate_polygon (cairo_traps_t		*traps,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static int
+static cairo_bool_t
 _cairo_trap_contains (cairo_trapezoid_t *t, cairo_point_t *pt)
 {
     cairo_slope_t slope_left, slope_pt, slope_right;
     
     if (t->top > pt->y)
-	return 0;
+	return FALSE;
     if (t->bottom < pt->y)
-	return 0;
+	return FALSE;
     
     _cairo_slope_init (&slope_left, &t->left.p1, &t->left.p2);
     _cairo_slope_init (&slope_pt, &t->left.p1, pt);
 
     if (_cairo_slope_compare (&slope_left, &slope_pt) < 0)
-	return 0;
+	return FALSE;
 
     _cairo_slope_init (&slope_right, &t->right.p1, &t->right.p2);
     _cairo_slope_init (&slope_pt, &t->right.p1, pt);
 
     if (_cairo_slope_compare (&slope_pt, &slope_right) < 0)
-	return 0;
+	return FALSE;
 
-    return 1;
+    return TRUE;
 }
 
-int
+cairo_bool_t
 _cairo_traps_contain (cairo_traps_t *traps, double x, double y)
 {
     int i;
@@ -603,45 +727,14 @@ _cairo_traps_contain (cairo_traps_t *traps, double x, double y)
 
     for (i = 0; i < traps->num_traps; i++) {
 	if (_cairo_trap_contains (&traps->traps[i], &point))
-	    return 1;
+	    return TRUE;
     }
 
-    return 0;
-}
-
-#define MIN(a,b) ((a) < (b) ? (a) : (b))
-#define MAX(a,b) ((a) > (b) ? (a) : (b))
-
-static void
-_cairo_trap_extents (cairo_trapezoid_t *t, cairo_box_t *extents)
-{
-    cairo_fixed_t x;
-    
-    if (t->top < extents->p1.y)
-	extents->p1.y = t->top;
-    
-    if (t->bottom > extents->p2.y)
-	extents->p2.y = t->bottom;
-    
-    x = MIN (_compute_x (&t->left, t->top),
-	     _compute_x (&t->left, t->bottom));
-    if (x < extents->p1.x)
-	extents->p1.x = x;
-    
-    x = MAX (_compute_x (&t->right, t->top),
-	     _compute_x (&t->right, t->bottom));
-    if (x > extents->p2.x)
-	extents->p2.x = x;
+    return FALSE;
 }
 
 void
 _cairo_traps_extents (cairo_traps_t *traps, cairo_box_t *extents)
 {
-    int i;
-  
-    extents->p1.x = extents->p1.y = CAIRO_MAXSHORT << 16;
-    extents->p2.x = extents->p2.y = CAIRO_MINSHORT << 16;
-    
-    for (i = 0; i < traps->num_traps; i++)
-	_cairo_trap_extents (&traps->traps[i], extents);
+    *extents = traps->extents;
 }

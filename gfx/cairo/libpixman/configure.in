@@ -1,11 +1,13 @@
 # Process this file with autoconf to produce a configure script.
 
+AC_PREREQ(2.54)
+
 AC_INIT(src/pixman.h)
 
 dnl ===========================================================================
 
 # Package version number, (as distinct from shared library version)
-LIBPIXMAN_VERSION=0.1.3
+LIBPIXMAN_VERSION=0.1.4
 
 # libtool shared library version
 

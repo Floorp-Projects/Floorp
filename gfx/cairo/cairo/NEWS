@@ -1,3 +1,129 @@
+Snapshot 0.4.0 (2005-03-08 Carl Worth <cworth@cworth.org>)
+==========================================================
+New documentation
+-----------------
+Owen Taylor has converted cairo's documentation system to gtk-doc and
+has begun some long-needed work on the documentation, which can now be
+viewed online here:
+
+	http://cairographics.org/manual/
+
+New backend: win32
+------------------
+This is the first snapshot to include a functional win32 backend,
+(thanks to Owen Taylor). The interface is as follows:
+
+	#include <cairo-win32.h>
+
+	void 
+	cairo_set_target_win32 (cairo_t *cr,
+				HDC      hdc);
+
+	cairo_surface_t *
+	cairo_win32_surface_create (HDC hdc);
+
+	cairo_font_t *
+	cairo_win32_font_create_for_logfontw (LOGFONTW       *logfont,
+					      cairo_matrix_t *scale);
+
+	cairo_status_t
+	cairo_win32_font_select_font (cairo_font_t *font,
+				      HDC           hdc);
+
+	void
+	cairo_win32_font_done_font (cairo_font_t *font);
+
+	double
+	cairo_win32_font_get_scale_factor (cairo_font_t *font);
+
+And see also the documentation at:
+
+http://cairographics.org/manual/cairo-Microsoft-Windows-Backend.html
+
+Disabled backend: quartz
+------------------------
+Unfortunately, the quartz backend code is currently out of date with
+respect to some recent backend interface changes. So, the quartz
+backend is disabled in this snapshot.
+
+If the quartz backend is brought up-to-date before the next snapshot,
+we would be glad to make a 0.4.1 snapshot that re-enables it, (we do
+not expect many more big backend interface changes).
+
+API Changes
+-----------
+The font system has been revamped, (as Owen Taylor's work with
+integrating pango and cairo gave us the first serious usage of the
+non-toy font API).
+
+One fundamental, user-visible change is that the cairo_font_t object
+now represents a font that is scaled to a particular device
+resolution. Further changes are described below.
+
+ cairo.h
+ -------
+ Removed cairo_font_set_transform and cairo_font_current_transform.
+
+ Added cairo_font_extents and cairo_font_glyph_extents. See
+ documentation for details:
+
+ http://cairographics.org/manual/cairo-cairo-t.html#cairo-font-extents
+
+ cairo-ft.h
+ ----------
+ The cairo_ft_font API changed considerably. Please see the
+ documentation for details:
+
+ http://cairographics.org/manual/cairo-FreeType-Fonts.html
+
+Performance
+-----------
+Make the fast-path clipping (pixel-aligned rectangles) faster.
+
+Add optimization for applying a constant alpha to a pattern.
+
+Optimize gradients that are horizontal or vertical in device space.
+
+Xlib: When RENDER is not available, use image surfaces for
+intermediate surfaces rather than xlib surfaces.
+
+Backend-specific changes
+------------------------
+ Glitz
+ -----
+ Major update to glitz backend. The output quality should now be just
+ as good as the image and xlib backends.
+
+ Track changes to glitz 0.4.0.
+
+ PDF
+ ---
+ Various improvements to produce more conformant output.
+
+Internals
+---------
+David Reveman contributed a large re-work of the cairo_pattern_t
+implementation, providing cleaner code and more optimization
+opportunities.
+
+ Backend interface changes
+ -------------------------
+ Rework backend interface to accept patterns, not surfaces for source
+ and mask.
+
+ Remove set_matrix, set_filter, and set_repeat functions.
+
+ More sophisticated backend interface for image fallbacks,
+ ({acquire,release}_{source,dest}_image() and clone_similar).
+
+Bug fixes
+---------
+Only install header files for backends that have been compiled.
+
+Fixed some rounding errors leading to incorrectly placed glyphs.
+
+Many other minor fixes.
+
 Snapshot 0.3.0 (2005-01-21 Carl Worth <cworth@cworth.org>)
 ==========================================================
 Major API changes

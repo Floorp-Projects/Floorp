@@ -31,7 +31,7 @@
  * California.
  *
  * Contributor(s):
- *	Carl D. Worth <cworth@isi.edu>
+ *	Carl D. Worth <cworth@cworth.org>
  */
 
 #include <stdlib.h>
@@ -100,6 +100,7 @@ _cairo_path_init_copy (cairo_path_t *path, cairo_path_t *other)
     for (other_op = other->op_head; other_op; other_op = other_op->next) {
 	op = _cairo_path_op_buf_create ();
 	if (op == NULL) {
+	    _cairo_path_fini(path);
 	    return CAIRO_STATUS_NO_MEMORY;
 	}
 	*op = *other_op;
@@ -109,6 +110,7 @@ _cairo_path_init_copy (cairo_path_t *path, cairo_path_t *other)
     for (other_arg = other->arg_head; other_arg; other_arg = other_arg->next) {
 	arg = _cairo_path_arg_buf_create ();
 	if (arg == NULL) {
+	    _cairo_path_fini(path);
 	    return CAIRO_STATUS_NO_MEMORY;
 	}
 	*arg = *other_arg;

@@ -1,6 +1,6 @@
 /* cairo - a vector graphics library with display and print output
  *
- * Copyright © 2002 University of Southern California
+ * Copyright © 2005 Red Hat, Inc
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -27,17 +27,18 @@
  *
  * The Original Code is the cairo graphics library.
  *
- * The Initial Developer of the Original Code is University of Southern
- * California.
+ * The Initial Developer of the Original Code is Red Hat, Inc.
  *
  * Contributor(s):
- *	Carl D. Worth <cworth@isi.edu>
+ *      Graydon Hoare <graydon@redhat.com>
+ *	Owen Taylor <otaylor@redhat.com>
  */
-
-#include <cairo.h>
 
 #ifndef CAIRO_FT_H
 #define CAIRO_FT_H
+
+#include <cairo.h>
+
 #ifdef  CAIRO_HAS_FT_FONT
 
 /* Fontconfig/Freetype platform-specific font interface */
@@ -46,17 +47,27 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
-cairo_font_t *
-cairo_ft_font_create (FT_Library ft_library, FcPattern *pattern);
+CAIRO_BEGIN_DECLS
 
 cairo_font_t *
-cairo_ft_font_create_for_ft_face (FT_Face face);
+cairo_ft_font_create (FcPattern      *pattern,
+		      cairo_matrix_t *scale);
+
+cairo_font_t *
+cairo_ft_font_create_for_ft_face (FT_Face         face,
+				  int             load_flags,
+				  cairo_matrix_t *scale);
 
 FT_Face
-cairo_ft_font_face (cairo_font_t *ft_font);
+cairo_ft_font_lock_face (cairo_font_t *ft_font);
+
+void
+cairo_ft_font_unlock_face (cairo_font_t *ft_font);
 
 FcPattern *
-cairo_ft_font_pattern (cairo_font_t  *ft_font);
+cairo_ft_font_get_pattern (cairo_font_t  *ft_font);
+
+CAIRO_END_DECLS
 
 #endif /* CAIRO_HAS_FT_FONT */
 #endif /* CAIRO_FT_H */

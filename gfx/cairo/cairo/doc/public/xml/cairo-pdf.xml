@@ -1,0 +1,120 @@
+<?xml version="1.0"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" 
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<refentry id="cairo-PDF-Backend">
+<refmeta>
+<refentrytitle>PDF Backend</refentrytitle>
+<manvolnum>3</manvolnum>
+<refmiscinfo>CAIRO Library</refmiscinfo>
+</refmeta>
+
+<refnamediv>
+<refname>PDF Backend</refname><refpurpose></refpurpose>
+</refnamediv>
+
+<refsynopsisdiv><title>Synopsis</title>
+
+<synopsis>
+
+
+
+<link linkend="void">void</link>        <link linkend="cairo-set-target-pdf">cairo_set_target_pdf</link>            (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="FILE:CAPS">FILE</link> *file,
+                                             <link linkend="double">double</link> width_inches,
+                                             <link linkend="double">double</link> height_inches,
+                                             <link linkend="double">double</link> x_pixels_per_inch,
+                                             <link linkend="double">double</link> y_pixels_per_inch);
+<link linkend="cairo-surface-t">cairo_surface_t</link>* <link linkend="cairo-pdf-surface-create">cairo_pdf_surface_create</link>   (<link linkend="FILE:CAPS">FILE</link> *file,
+                                             <link linkend="double">double</link> width_inches,
+                                             <link linkend="double">double</link> height_inches,
+                                             <link linkend="double">double</link> x_pixels_per_inch,
+                                             <link linkend="double">double</link> y_pixels_per_inch);
+</synopsis>
+</refsynopsisdiv>
+
+
+
+
+
+
+
+
+
+<refsect1>
+<title>Description</title>
+<para>
+
+</para>
+</refsect1>
+
+<refsect1>
+<title>Details</title>
+<refsect2>
+<title><anchor id="cairo-set-target-pdf"/>cairo_set_target_pdf ()</title>
+<indexterm><primary>cairo_set_target_pdf</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_set_target_pdf            (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="FILE:CAPS">FILE</link> *file,
+                                             <link linkend="double">double</link> width_inches,
+                                             <link linkend="double">double</link> height_inches,
+                                             <link linkend="double">double</link> x_pixels_per_inch,
+                                             <link linkend="double">double</link> y_pixels_per_inch);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>file</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>width_inches</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>height_inches</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>x_pixels_per_inch</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>y_pixels_per_inch</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-pdf-surface-create"/>cairo_pdf_surface_create ()</title>
+<indexterm><primary>cairo_pdf_surface_create</primary></indexterm><programlisting><link linkend="cairo-surface-t">cairo_surface_t</link>* cairo_pdf_surface_create   (<link linkend="FILE:CAPS">FILE</link> *file,
+                                             <link linkend="double">double</link> width_inches,
+                                             <link linkend="double">double</link> height_inches,
+                                             <link linkend="double">double</link> x_pixels_per_inch,
+                                             <link linkend="double">double</link> y_pixels_per_inch);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>file</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>width_inches</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>height_inches</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>x_pixels_per_inch</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>y_pixels_per_inch</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><emphasis>Returns</emphasis>&nbsp;:</term><listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+
+</refsect1>
+
+
+
+
+</refentry>

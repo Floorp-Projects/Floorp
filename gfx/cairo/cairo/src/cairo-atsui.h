@@ -1,6 +1,6 @@
 /* cairo - a vector graphics library with display and print output
  *
- * Copyright © 2004 Calum Robinson
+ * Copyright Â© 2004 Calum Robinson
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -33,18 +33,23 @@
  *	Calum Robinson <calumr@mac.com>
  */
 
-#include <cairo.h>
-
 #ifndef CAIRO_ATSUI_H
 #define CAIRO_ATSUI_H
+
+#include <cairo.h>
+
 #ifdef  CAIRO_HAS_ATSUI_FONT
 
 /* ATSUI platform-specific font interface */
 
 #include <Carbon/Carbon.h>
 
+CAIRO_BEGIN_DECLS
+
 cairo_font_t *
 cairo_atsui_font_create(ATSUStyle style);
+
+CAIRO_END_DECLS
 
 #endif /* CAIRO_HAS_ATSUI_FONT */
 #endif /* CAIRO_ATSUI_H */

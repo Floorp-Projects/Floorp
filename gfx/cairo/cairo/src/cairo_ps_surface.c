@@ -31,7 +31,7 @@
  * California.
  *
  * Contributor(s):
- *	Carl D. Worth <cworth@isi.edu>
+ *	Carl D. Worth <cworth@cworth.org>
  */
 
 #include "cairoint.h"
@@ -42,6 +42,22 @@
 
 static const cairo_surface_backend_t cairo_ps_surface_backend;
 
+/**
+ * cairo_set_target_ps:
+ * @cr: a #cairo_t
+ * @file: an open, writeable file
+ * @width_inches: width of the output page, in inches
+ * @height_inches: height of the output page, in inches
+ * @x_pixels_per_inch: X resolution to use for image fallbacks;
+ *   not all Cairo drawing can be represented in a postscript
+ *   file, so Cairo will write out images for some portions
+ *   of the output.
+ * @y_pixels_per_inch: Y resolution to use for image fallbacks.
+ * 
+ * Directs output for a #cairo_t to a postscript file. The file must
+ * be kept open until the #cairo_t is destroyed or set to have a
+ * different target, and then must be closed by the application.
+ **/
 void
 cairo_set_target_ps (cairo_t	*cr,
 		     FILE	*file,
@@ -192,62 +208,65 @@ _cairo_ps_surface_pixels_per_inch (void *abstract_surface)
     return surface->y_ppi;
 }
 
-static cairo_image_surface_t *
-_cairo_ps_surface_get_image (void *abstract_surface)
+static cairo_status_t
+_cairo_ps_surface_acquire_source_image (void                    *abstract_surface,
+					cairo_image_surface_t  **image_out,
+					void                   **image_extra)
 {
     cairo_ps_surface_t *surface = abstract_surface;
+    
+    *image_out = surface->image;
 
-    cairo_surface_reference (&surface->image->base);
+    return CAIRO_STATUS_SUCCESS;
+}
 
-    return surface->image;
+static void
+_cairo_ps_surface_release_source_image (void                   *abstract_surface,
+					cairo_image_surface_t  *image,
+					void                   *image_extra)
+{
 }
 
 static cairo_status_t
-_cairo_ps_surface_set_image (void			*abstract_surface,
-			     cairo_image_surface_t	*image)
+_cairo_ps_surface_acquire_dest_image (void                    *abstract_surface,
+				      cairo_rectangle_t       *interest_rect,
+				      cairo_image_surface_t  **image_out,
+				      cairo_rectangle_t       *image_rect,
+				      void                   **image_extra)
 {
     cairo_ps_surface_t *surface = abstract_surface;
+    
+    image_rect->x = 0;
+    image_rect->y = 0;
+    image_rect->width = surface->image->width;
+    image_rect->height = surface->image->height;
+    
+    *image_out = surface->image;
 
-    if (image == surface->image)
-	return CAIRO_STATUS_SUCCESS;
+    return CAIRO_STATUS_SUCCESS;
+}
 
-    /* XXX: Need to call _cairo_image_surface_set_image here, but it's
-       not implemented yet. */
+static void
+_cairo_ps_surface_release_dest_image (void                   *abstract_surface,
+				      cairo_rectangle_t      *interest_rect,
+				      cairo_image_surface_t  *image,
+				      cairo_rectangle_t      *image_rect,
+				      void                   *image_extra)
+{
+}
 
+static cairo_status_t
+_cairo_ps_surface_clone_similar (void			*abstract_surface,
+				 cairo_surface_t	*src,
+				 cairo_surface_t     **clone_out)
+{
     return CAIRO_INT_STATUS_UNSUPPORTED;
-}
-
-static cairo_status_t
-_cairo_ps_surface_set_matrix (void		*abstract_surface,
-			      cairo_matrix_t	*matrix)
-{
-    cairo_ps_surface_t *surface = abstract_surface;
-
-    return _cairo_image_surface_set_matrix (surface->image, matrix);
-}
-
-static cairo_status_t
-_cairo_ps_surface_set_filter (void		*abstract_surface,
-			      cairo_filter_t	filter)
-{
-    cairo_ps_surface_t *surface = abstract_surface;
-
-    return _cairo_image_surface_set_filter (surface->image, filter);
-}
-
-static cairo_status_t
-_cairo_ps_surface_set_repeat (void		*abstract_surface,
-			      int		repeat)
-{
-    cairo_ps_surface_t *surface = abstract_surface;
-
-    return _cairo_image_surface_set_repeat (surface->image, repeat);
 }
 
 static cairo_int_status_t
 _cairo_ps_surface_composite (cairo_operator_t	operator,
-			     cairo_surface_t	*generic_src,
-			     cairo_surface_t	*generic_mask,
+			     cairo_pattern_t	*src,
+			     cairo_pattern_t	*mask,
 			     void		*abstract_dst,
 			     int		src_x,
 			     int		src_y,
@@ -273,10 +292,14 @@ _cairo_ps_surface_fill_rectangles (void			*abstract_surface,
 
 static cairo_int_status_t
 _cairo_ps_surface_composite_trapezoids (cairo_operator_t	operator,
-					cairo_surface_t		*generic_src,
+					cairo_pattern_t		*generic_src,
 					void			*abstract_dst,
 					int			x_src,
 					int			y_src,
+					int			x_dst,
+					int			y_dst,
+					unsigned int		width,
+					unsigned int		height,
 					cairo_trapezoid_t	*traps,
 					int			num_traps)
 {
@@ -294,11 +317,9 @@ _cairo_ps_surface_copy_page (void *abstract_surface)
 
     int i, x, y;
 
-    cairo_surface_t *white_surface;
+    cairo_solid_pattern_t white_pattern;
     char *rgb, *compressed;
     long rgb_size, compressed_size;
-
-    cairo_color_t white;
 
     rgb_size = 3 * width * height;
     rgb = malloc (rgb_size);
@@ -316,26 +337,19 @@ _cairo_ps_surface_copy_page (void *abstract_surface)
 
     /* PostScript can not represent the alpha channel, so we blend the
        current image over a white RGB surface to eliminate it. */
-    white_surface = cairo_image_surface_create (CAIRO_FORMAT_RGB24, 1, 1);
-    if (white_surface == NULL) {
-	status = CAIRO_STATUS_NO_MEMORY;
-	goto BAIL2;
-    }
 
-    _cairo_color_init (&white);
-    _cairo_surface_fill_rectangle (white_surface,
-				   CAIRO_OPERATOR_SRC,
-				   &white,
-				   0, 0, 1, 1);
-    cairo_surface_set_repeat (white_surface, 1);
+    _cairo_pattern_init_solid (&white_pattern, 1.0, 1.0, 1.0);
+
     _cairo_surface_composite (CAIRO_OPERATOR_OVER_REVERSE,
-			      white_surface,
+			      &white_pattern.base,
 			      NULL,
 			      &surface->image->base,
 			      0, 0,
 			      0, 0,
 			      0, 0,
 			      width, height);
+    
+    _cairo_pattern_fini (&white_pattern.base);
 
     i = 0;
     for (y = 0; y < height; y++) {
@@ -379,8 +393,6 @@ _cairo_ps_surface_copy_page (void *abstract_surface)
     /* Page footer */
     fprintf (file, "%%%%EndPage\n");
 
-    cairo_surface_destroy (white_surface);
-    BAIL2:
     free (compressed);
     BAIL1:
     free (rgb);
@@ -412,29 +424,20 @@ _cairo_ps_surface_set_clip_region (void *abstract_surface,
     return _cairo_image_surface_set_clip_region (surface->image, region);
 }
 
-static cairo_int_status_t
-_cairo_ps_surface_create_pattern (void *abstract_surface,
-                                  cairo_pattern_t *pattern,
-                                  cairo_box_t *extents)
-{
-    return CAIRO_INT_STATUS_UNSUPPORTED;
-}
-
 static const cairo_surface_backend_t cairo_ps_surface_backend = {
     _cairo_ps_surface_create_similar,
     _cairo_ps_surface_destroy,
     _cairo_ps_surface_pixels_per_inch,
-    _cairo_ps_surface_get_image,
-    _cairo_ps_surface_set_image,
-    _cairo_ps_surface_set_matrix,
-    _cairo_ps_surface_set_filter,
-    _cairo_ps_surface_set_repeat,
+    _cairo_ps_surface_acquire_source_image,
+    _cairo_ps_surface_release_source_image,
+    _cairo_ps_surface_acquire_dest_image,
+    _cairo_ps_surface_release_dest_image,
+    _cairo_ps_surface_clone_similar,
     _cairo_ps_surface_composite,
     _cairo_ps_surface_fill_rectangles,
     _cairo_ps_surface_composite_trapezoids,
     _cairo_ps_surface_copy_page,
     _cairo_ps_surface_show_page,
     _cairo_ps_surface_set_clip_region,
-    _cairo_ps_surface_create_pattern,
     NULL /* show_glyphs */
 };

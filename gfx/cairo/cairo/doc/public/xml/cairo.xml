@@ -1,0 +1,2380 @@
+<?xml version="1.0"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" 
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<refentry id="cairo-cairo-t">
+<refmeta>
+<refentrytitle>cairo_t</refentrytitle>
+<manvolnum>3</manvolnum>
+<refmiscinfo>CAIRO Library</refmiscinfo>
+</refmeta>
+
+<refnamediv>
+<refname>cairo_t</refname><refpurpose>Drawing contexts.</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv><title>Synopsis</title>
+
+<synopsis>
+
+
+
+typedef     <link linkend="cairo-t">cairo_t</link>;
+<link linkend="cairo-t">cairo_t</link>*    <link linkend="cairo-create">cairo_create</link>                    (void);
+<link linkend="void">void</link>        <link linkend="cairo-reference">cairo_reference</link>                 (<link linkend="cairo-t">cairo_t</link> *cr);
+<link linkend="void">void</link>        <link linkend="cairo-destroy">cairo_destroy</link>                   (<link linkend="cairo-t">cairo_t</link> *cr);
+<link linkend="void">void</link>        <link linkend="cairo-save">cairo_save</link>                      (<link linkend="cairo-t">cairo_t</link> *cr);
+<link linkend="void">void</link>        <link linkend="cairo-restore">cairo_restore</link>                   (<link linkend="cairo-t">cairo_t</link> *cr);
+<link linkend="void">void</link>        <link linkend="cairo-copy">cairo_copy</link>                      (<link linkend="cairo-t">cairo_t</link> *dest,
+                                             <link linkend="cairo-t">cairo_t</link> *src);
+<link linkend="void">void</link>        <link linkend="cairo-set-target-surface">cairo_set_target_surface</link>        (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="cairo-surface-t">cairo_surface_t</link> *surface);
+enum        <link linkend="cairo-format-t">cairo_format_t</link>;
+<link linkend="void">void</link>        <link linkend="cairo-set-target-image">cairo_set_target_image</link>          (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="char">char</link> *data,
+                                             <link linkend="cairo-format-t">cairo_format_t</link> format,
+                                             <link linkend="int">int</link> width,
+                                             <link linkend="int">int</link> height,
+                                             <link linkend="int">int</link> stride);
+enum        <link linkend="cairo-operator-t">cairo_operator_t</link>;
+<link linkend="void">void</link>        <link linkend="cairo-set-operator">cairo_set_operator</link>              (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="cairo-operator-t">cairo_operator_t</link> op);
+<link linkend="void">void</link>        <link linkend="cairo-set-rgb-color">cairo_set_rgb_color</link>             (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> red,
+                                             <link linkend="double">double</link> green,
+                                             <link linkend="double">double</link> blue);
+<link linkend="void">void</link>        <link linkend="cairo-set-pattern">cairo_set_pattern</link>               (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="cairo-pattern-t">cairo_pattern_t</link> *pattern);
+<link linkend="void">void</link>        <link linkend="cairo-set-alpha">cairo_set_alpha</link>                 (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> alpha);
+<link linkend="void">void</link>        <link linkend="cairo-set-tolerance">cairo_set_tolerance</link>             (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> tolerance);
+enum        <link linkend="cairo-fill-rule-t">cairo_fill_rule_t</link>;
+<link linkend="void">void</link>        <link linkend="cairo-set-fill-rule">cairo_set_fill_rule</link>             (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="cairo-fill-rule-t">cairo_fill_rule_t</link> fill_rule);
+<link linkend="void">void</link>        <link linkend="cairo-set-line-width">cairo_set_line_width</link>            (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> width);
+enum        <link linkend="cairo-line-cap-t">cairo_line_cap_t</link>;
+<link linkend="void">void</link>        <link linkend="cairo-set-line-cap">cairo_set_line_cap</link>              (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="cairo-line-cap-t">cairo_line_cap_t</link> line_cap);
+enum        <link linkend="cairo-line-join-t">cairo_line_join_t</link>;
+<link linkend="void">void</link>        <link linkend="cairo-set-line-join">cairo_set_line_join</link>             (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="cairo-line-join-t">cairo_line_join_t</link> line_join);
+<link linkend="void">void</link>        <link linkend="cairo-set-dash">cairo_set_dash</link>                  (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> *dashes,
+                                             <link linkend="int">int</link> ndash,
+                                             <link linkend="double">double</link> offset);
+<link linkend="void">void</link>        <link linkend="cairo-set-miter-limit">cairo_set_miter_limit</link>           (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> limit);
+<link linkend="void">void</link>        <link linkend="cairo-translate">cairo_translate</link>                 (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> tx,
+                                             <link linkend="double">double</link> ty);
+<link linkend="void">void</link>        <link linkend="cairo-scale">cairo_scale</link>                     (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> sx,
+                                             <link linkend="double">double</link> sy);
+<link linkend="void">void</link>        <link linkend="cairo-rotate">cairo_rotate</link>                    (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> angle);
+<link linkend="void">void</link>        <link linkend="cairo-concat-matrix">cairo_concat_matrix</link>             (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="cairo-matrix-t">cairo_matrix_t</link> *matrix);
+<link linkend="void">void</link>        <link linkend="cairo-set-matrix">cairo_set_matrix</link>                (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="cairo-matrix-t">cairo_matrix_t</link> *matrix);
+<link linkend="void">void</link>        <link linkend="cairo-default-matrix">cairo_default_matrix</link>            (<link linkend="cairo-t">cairo_t</link> *cr);
+<link linkend="void">void</link>        <link linkend="cairo-identity-matrix">cairo_identity_matrix</link>           (<link linkend="cairo-t">cairo_t</link> *cr);
+<link linkend="void">void</link>        <link linkend="cairo-transform-point">cairo_transform_point</link>           (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> *x,
+                                             <link linkend="double">double</link> *y);
+<link linkend="void">void</link>        <link linkend="cairo-transform-distance">cairo_transform_distance</link>        (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> *dx,
+                                             <link linkend="double">double</link> *dy);
+<link linkend="void">void</link>        <link linkend="cairo-inverse-transform-point">cairo_inverse_transform_point</link>   (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> *x,
+                                             <link linkend="double">double</link> *y);
+<link linkend="void">void</link>        <link linkend="cairo-inverse-transform-distance">cairo_inverse_transform_distance</link>
+                                            (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> *dx,
+                                             <link linkend="double">double</link> *dy);
+<link linkend="void">void</link>        <link linkend="cairo-new-path">cairo_new_path</link>                  (<link linkend="cairo-t">cairo_t</link> *cr);
+<link linkend="void">void</link>        <link linkend="cairo-move-to">cairo_move_to</link>                   (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> x,
+                                             <link linkend="double">double</link> y);
+<link linkend="void">void</link>        <link linkend="cairo-line-to">cairo_line_to</link>                   (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> x,
+                                             <link linkend="double">double</link> y);
+<link linkend="void">void</link>        <link linkend="cairo-curve-to">cairo_curve_to</link>                  (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> x1,
+                                             <link linkend="double">double</link> y1,
+                                             <link linkend="double">double</link> x2,
+                                             <link linkend="double">double</link> y2,
+                                             <link linkend="double">double</link> x3,
+                                             <link linkend="double">double</link> y3);
+<link linkend="void">void</link>        <link linkend="cairo-arc">cairo_arc</link>                       (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> xc,
+                                             <link linkend="double">double</link> yc,
+                                             <link linkend="double">double</link> radius,
+                                             <link linkend="double">double</link> angle1,
+                                             <link linkend="double">double</link> angle2);
+<link linkend="void">void</link>        <link linkend="cairo-arc-negative">cairo_arc_negative</link>              (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> xc,
+                                             <link linkend="double">double</link> yc,
+                                             <link linkend="double">double</link> radius,
+                                             <link linkend="double">double</link> angle1,
+                                             <link linkend="double">double</link> angle2);
+<link linkend="void">void</link>        <link linkend="cairo-rel-move-to">cairo_rel_move_to</link>               (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> dx,
+                                             <link linkend="double">double</link> dy);
+<link linkend="void">void</link>        <link linkend="cairo-rel-line-to">cairo_rel_line_to</link>               (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> dx,
+                                             <link linkend="double">double</link> dy);
+<link linkend="void">void</link>        <link linkend="cairo-rel-curve-to">cairo_rel_curve_to</link>              (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> dx1,
+                                             <link linkend="double">double</link> dy1,
+                                             <link linkend="double">double</link> dx2,
+                                             <link linkend="double">double</link> dy2,
+                                             <link linkend="double">double</link> dx3,
+                                             <link linkend="double">double</link> dy3);
+<link linkend="void">void</link>        <link linkend="cairo-rectangle">cairo_rectangle</link>                 (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> x,
+                                             <link linkend="double">double</link> y,
+                                             <link linkend="double">double</link> width,
+                                             <link linkend="double">double</link> height);
+<link linkend="void">void</link>        <link linkend="cairo-close-path">cairo_close_path</link>                (<link linkend="cairo-t">cairo_t</link> *cr);
+<link linkend="void">void</link>        <link linkend="cairo-stroke">cairo_stroke</link>                    (<link linkend="cairo-t">cairo_t</link> *cr);
+<link linkend="void">void</link>        <link linkend="cairo-fill">cairo_fill</link>                      (<link linkend="cairo-t">cairo_t</link> *cr);
+<link linkend="void">void</link>        <link linkend="cairo-copy-page">cairo_copy_page</link>                 (<link linkend="cairo-t">cairo_t</link> *cr);
+<link linkend="void">void</link>        <link linkend="cairo-show-page">cairo_show_page</link>                 (<link linkend="cairo-t">cairo_t</link> *cr);
+<link linkend="cairo-bool-t">cairo_bool_t</link> <link linkend="cairo-in-stroke">cairo_in_stroke</link>                (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> x,
+                                             <link linkend="double">double</link> y);
+<link linkend="cairo-bool-t">cairo_bool_t</link> <link linkend="cairo-in-fill">cairo_in_fill</link>                  (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> x,
+                                             <link linkend="double">double</link> y);
+typedef     <link linkend="cairo-bool-t">cairo_bool_t</link>;
+<link linkend="void">void</link>        <link linkend="cairo-stroke-extents">cairo_stroke_extents</link>            (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> *x1,
+                                             <link linkend="double">double</link> *y1,
+                                             <link linkend="double">double</link> *x2,
+                                             <link linkend="double">double</link> *y2);
+<link linkend="void">void</link>        <link linkend="cairo-fill-extents">cairo_fill_extents</link>              (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> *x1,
+                                             <link linkend="double">double</link> *y1,
+                                             <link linkend="double">double</link> *x2,
+                                             <link linkend="double">double</link> *y2);
+<link linkend="void">void</link>        <link linkend="cairo-init-clip">cairo_init_clip</link>                 (<link linkend="cairo-t">cairo_t</link> *cr);
+<link linkend="void">void</link>        <link linkend="cairo-clip">cairo_clip</link>                      (<link linkend="cairo-t">cairo_t</link> *cr);
+typedef     <link linkend="cairo-font-t">cairo_font_t</link>;
+            <link linkend="cairo-glyph-t">cairo_glyph_t</link>;
+            <link linkend="cairo-text-extents-t">cairo_text_extents_t</link>;
+            <link linkend="cairo-font-extents-t">cairo_font_extents_t</link>;
+enum        <link linkend="cairo-font-slant-t">cairo_font_slant_t</link>;
+enum        <link linkend="cairo-font-weight-t">cairo_font_weight_t</link>;
+<link linkend="void">void</link>        <link linkend="cairo-select-font">cairo_select_font</link>               (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             const <link linkend="char">char</link> *family,
+                                             <link linkend="cairo-font-slant-t">cairo_font_slant_t</link> slant,
+                                             <link linkend="cairo-font-weight-t">cairo_font_weight_t</link> weight);
+<link linkend="void">void</link>        <link linkend="cairo-scale-font">cairo_scale_font</link>                (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> scale);
+<link linkend="void">void</link>        <link linkend="cairo-transform-font">cairo_transform_font</link>            (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="cairo-matrix-t">cairo_matrix_t</link> *matrix);
+<link linkend="void">void</link>        <link linkend="cairo-show-text">cairo_show_text</link>                 (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             unsigned <link linkend="char">char</link> *utf8);
+<link linkend="void">void</link>        <link linkend="cairo-show-glyphs">cairo_show_glyphs</link>               (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="cairo-glyph-t">cairo_glyph_t</link> *glyphs,
+                                             <link linkend="int">int</link> num_glyphs);
+<link linkend="cairo-font-t">cairo_font_t</link>* <link linkend="cairo-current-font">cairo_current_font</link>            (<link linkend="cairo-t">cairo_t</link> *cr);
+<link linkend="void">void</link>        <link linkend="cairo-current-font-extents">cairo_current_font_extents</link>      (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="cairo-font-extents-t">cairo_font_extents_t</link> *extents);
+<link linkend="void">void</link>        <link linkend="cairo-set-font">cairo_set_font</link>                  (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="cairo-font-t">cairo_font_t</link> *font);
+<link linkend="void">void</link>        <link linkend="cairo-text-extents">cairo_text_extents</link>              (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             unsigned <link linkend="char">char</link> *utf8,
+                                             <link linkend="cairo-text-extents-t">cairo_text_extents_t</link> *extents);
+<link linkend="void">void</link>        <link linkend="cairo-glyph-extents">cairo_glyph_extents</link>             (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="cairo-glyph-t">cairo_glyph_t</link> *glyphs,
+                                             <link linkend="int">int</link> num_glyphs,
+                                             <link linkend="cairo-text-extents-t">cairo_text_extents_t</link> *extents);
+<link linkend="void">void</link>        <link linkend="cairo-text-path">cairo_text_path</link>                 (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             unsigned <link linkend="char">char</link> *utf8);
+<link linkend="void">void</link>        <link linkend="cairo-glyph-path">cairo_glyph_path</link>                (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="cairo-glyph-t">cairo_glyph_t</link> *glyphs,
+                                             <link linkend="int">int</link> num_glyphs);
+<link linkend="void">void</link>        <link linkend="cairo-font-reference">cairo_font_reference</link>            (<link linkend="cairo-font-t">cairo_font_t</link> *font);
+<link linkend="void">void</link>        <link linkend="cairo-font-destroy">cairo_font_destroy</link>              (<link linkend="cairo-font-t">cairo_font_t</link> *font);
+<link linkend="cairo-status-t">cairo_status_t</link> <link linkend="cairo-font-extents">cairo_font_extents</link>           (<link linkend="cairo-font-t">cairo_font_t</link> *font,
+                                             <link linkend="cairo-matrix-t">cairo_matrix_t</link> *font_matrix,
+                                             <link linkend="cairo-font-extents-t">cairo_font_extents_t</link> *extents);
+<link linkend="void">void</link>        <link linkend="cairo-font-glyph-extents">cairo_font_glyph_extents</link>        (<link linkend="cairo-font-t">cairo_font_t</link> *font,
+                                             <link linkend="cairo-matrix-t">cairo_matrix_t</link> *font_matrix,
+                                             <link linkend="cairo-glyph-t">cairo_glyph_t</link> *glyphs,
+                                             <link linkend="int">int</link> num_glyphs,
+                                             <link linkend="cairo-text-extents-t">cairo_text_extents_t</link> *extents);
+<link linkend="void">void</link>        <link linkend="cairo-show-surface">cairo_show_surface</link>              (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="cairo-surface-t">cairo_surface_t</link> *surface,
+                                             <link linkend="int">int</link> width,
+                                             <link linkend="int">int</link> height);
+<link linkend="cairo-operator-t">cairo_operator_t</link> <link linkend="cairo-current-operator">cairo_current_operator</link>     (<link linkend="cairo-t">cairo_t</link> *cr);
+<link linkend="void">void</link>        <link linkend="cairo-current-rgb-color">cairo_current_rgb_color</link>         (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> *red,
+                                             <link linkend="double">double</link> *green,
+                                             <link linkend="double">double</link> *blue);
+<link linkend="cairo-pattern-t">cairo_pattern_t</link>* <link linkend="cairo-current-pattern">cairo_current_pattern</link>      (<link linkend="cairo-t">cairo_t</link> *cr);
+<link linkend="double">double</link>      <link linkend="cairo-current-alpha">cairo_current_alpha</link>             (<link linkend="cairo-t">cairo_t</link> *cr);
+<link linkend="double">double</link>      <link linkend="cairo-current-tolerance">cairo_current_tolerance</link>         (<link linkend="cairo-t">cairo_t</link> *cr);
+<link linkend="void">void</link>        <link linkend="cairo-current-point">cairo_current_point</link>             (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> *x,
+                                             <link linkend="double">double</link> *y);
+<link linkend="cairo-fill-rule-t">cairo_fill_rule_t</link> <link linkend="cairo-current-fill-rule">cairo_current_fill_rule</link>   (<link linkend="cairo-t">cairo_t</link> *cr);
+<link linkend="double">double</link>      <link linkend="cairo-current-line-width">cairo_current_line_width</link>        (<link linkend="cairo-t">cairo_t</link> *cr);
+<link linkend="cairo-line-cap-t">cairo_line_cap_t</link> <link linkend="cairo-current-line-cap">cairo_current_line_cap</link>     (<link linkend="cairo-t">cairo_t</link> *cr);
+<link linkend="cairo-line-join-t">cairo_line_join_t</link> <link linkend="cairo-current-line-join">cairo_current_line_join</link>   (<link linkend="cairo-t">cairo_t</link> *cr);
+<link linkend="double">double</link>      <link linkend="cairo-current-miter-limit">cairo_current_miter_limit</link>       (<link linkend="cairo-t">cairo_t</link> *cr);
+<link linkend="void">void</link>        <link linkend="cairo-current-matrix">cairo_current_matrix</link>            (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="cairo-matrix-t">cairo_matrix_t</link> *matrix);
+<link linkend="cairo-surface-t">cairo_surface_t</link>* <link linkend="cairo-current-target-surface">cairo_current_target_surface</link>
+                                            (<link linkend="cairo-t">cairo_t</link> *cr);
+<link linkend="void">void</link>        <link linkend="cairo-current-path">cairo_current_path</link>              (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="cairo-move-to-func-t">cairo_move_to_func_t</link> *move_to,
+                                             <link linkend="cairo-line-to-func-t">cairo_line_to_func_t</link> *line_to,
+                                             <link linkend="cairo-curve-to-func-t">cairo_curve_to_func_t</link> *curve_to,
+                                             <link linkend="cairo-close-path-func-t">cairo_close_path_func_t</link> *close_path,
+                                             <link linkend="void">void</link> *closure);
+<link linkend="void">void</link>        <link linkend="cairo-current-path-flat">cairo_current_path_flat</link>         (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="cairo-move-to-func-t">cairo_move_to_func_t</link> *move_to,
+                                             <link linkend="cairo-line-to-func-t">cairo_line_to_func_t</link> *line_to,
+                                             <link linkend="cairo-close-path-func-t">cairo_close_path_func_t</link> *close_path,
+                                             <link linkend="void">void</link> *closure);
+enum        <link linkend="cairo-status-t">cairo_status_t</link>;
+<link linkend="cairo-status-t">cairo_status_t</link> <link linkend="cairo-status">cairo_status</link>                 (<link linkend="cairo-t">cairo_t</link> *cr);
+const <link linkend="char">char</link>* <link linkend="cairo-status-string">cairo_status_string</link>             (<link linkend="cairo-t">cairo_t</link> *cr);
+enum        <link linkend="cairo-filter-t">cairo_filter_t</link>;
+<link linkend="cairo-surface-t">cairo_surface_t</link>* <link linkend="cairo-image-surface-create">cairo_image_surface_create</link> (<link linkend="cairo-format-t">cairo_format_t</link> format,
+                                             <link linkend="int">int</link> width,
+                                             <link linkend="int">int</link> height);
+<link linkend="cairo-surface-t">cairo_surface_t</link>* <link linkend="cairo-image-surface-create-for-data">cairo_image_surface_create_for_data</link>
+                                            (<link linkend="char">char</link> *data,
+                                             <link linkend="cairo-format-t">cairo_format_t</link> format,
+                                             <link linkend="int">int</link> width,
+                                             <link linkend="int">int</link> height,
+                                             <link linkend="int">int</link> stride);
+
+</synopsis>
+</refsynopsisdiv>
+
+
+
+
+
+
+
+
+
+<refsect1>
+<title>Description</title>
+
+  <para>
+    <link linkend="cairo-t"><type>cairo_t</type></link> is the main object used when drawing with Cairo. To
+    draw with Cairo, you create a <link linkend="cairo-t"><type>cairo_t</type></link>, set the target surface,
+    and drawing options for the <link linkend="cairo-t"><type>cairo_t</type></link>, create shapes with
+    functions like <link linkend="cairo-move-to"><function>cairo_move_to()</function></link> and <link linkend="cairo-line-to"><function>cairo_line_to()</function></link>, and then
+    draw ships with <link linkend="cairo-stroke"><function>cairo_stroke()</function></link> or <link linkend="cairo-fill"><function>cairo_fill()</function></link>.
+  </para>
+  <para>
+    <link linkend="cairo-t"><type>cairo_t</type></link><!-- -->'s can be pushed to a stack via <link linkend="cairo-save"><function>cairo_save()</function></link>.
+    They may then safely be changed, without loosing the current state.
+    Use <link linkend="cairo-restore"><function>cairo_restore()</function></link> to restore to the saved state.
+  </para>
+</refsect1>
+
+<refsect1>
+<title>Details</title>
+<refsect2>
+<title><anchor id="cairo-t"/>cairo_t</title>
+<indexterm><primary>cairo_t</primary></indexterm><programlisting>typedef struct _cairo cairo_t;
+</programlisting>
+<para>
+A <link linkend="cairo-t"><type>cairo_t</type></link> contains the current state of the rendering device,
+including coordinates of yet to be drawn shapes.</para>
+<para>
+
+</para></refsect2>
+<refsect2>
+<title><anchor id="cairo-create"/>cairo_create ()</title>
+<indexterm><primary>cairo_create</primary></indexterm><programlisting><link linkend="cairo-t">cairo_t</link>*    cairo_create                    (void);</programlisting>
+<para>
+Creates a new <link linkend="cairo-t"><type>cairo_t</type></link> with default values. The target
+surface must be set on the <link linkend="cairo-t"><type>cairo_t</type></link> with <link linkend="cairo-set-target-surface"><function>cairo_set_target_surface()</function></link>,
+or a backend-specific function like <link linkend="cairo-set-target-image"><function>cairo_set_target_image()</function></link> before
+drawing with the <link linkend="cairo-t"><type>cairo_t</type></link>.</para>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><emphasis>Returns</emphasis>&nbsp;:</term><listitem><simpara> a newly allocated <link linkend="cairo-t"><type>cairo_t</type></link> with a reference
+ count of 1. The initial reference count should be released
+ with <link linkend="cairo-destroy"><function>cairo_destroy()</function></link> when you are done using the <link linkend="cairo-t"><type>cairo_t</type></link>.
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-reference"/>cairo_reference ()</title>
+<indexterm><primary>cairo_reference</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_reference                 (<link linkend="cairo-t">cairo_t</link> *cr);</programlisting>
+<para>
+Increases the reference count on <parameter>cr</parameter> by one. This prevents
+<parameter>cr</parameter> from being destroyed until a matching call to <link linkend="cairo-destroy"><function>cairo_destroy()</function></link> 
+is made.</para>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara> a <link linkend="cairo-t"><type>cairo_t</type></link>
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-destroy"/>cairo_destroy ()</title>
+<indexterm><primary>cairo_destroy</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_destroy                   (<link linkend="cairo-t">cairo_t</link> *cr);</programlisting>
+<para>
+Decreases the reference count on <parameter>cr</parameter> by one. If the result
+is zero, then <parameter>cr</parameter> and all associated resources are freed.
+See <link linkend="cairo-destroy"><function>cairo_destroy()</function></link>.</para>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara> a <link linkend="cairo-t"><type>cairo_t</type></link>
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-save"/>cairo_save ()</title>
+<indexterm><primary>cairo_save</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_save                      (<link linkend="cairo-t">cairo_t</link> *cr);</programlisting>
+<para>
+Makes a copy of the current state of <parameter>cr</parameter> and saves it
+on an internal stack of saved states for <parameter>cr</parameter>. When
+<link linkend="cairo-restore"><function>cairo_restore()</function></link> is called, <parameter>cr</parameter> will be restored to
+the saved state. Multiple calls to <link linkend="cairo-save"><function>cairo_save()</function></link> and
+<link linkend="cairo-restore"><function>cairo_restore()</function></link> can be nested; each call to <link linkend="cairo-restore"><function>cairo_restore()</function></link>
+restores the state from the matching paired <link linkend="cairo-save"><function>cairo_save()</function></link>.
+</para>
+<para>
+It isn't necessary to clear all saved states before
+a <link linkend="cairo-t"><type>cairo_t</type></link> is freed. If the reference count of a <link linkend="cairo-t"><type>cairo_t</type></link>
+drops to zero in response to a call to <link linkend="cairo-destroy"><function>cairo_destroy()</function></link>,
+any saved states will be freed along with the <link linkend="cairo-t"><type>cairo_t</type></link>.</para>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara> a <link linkend="cairo-t"><type>cairo_t</type></link>
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-restore"/>cairo_restore ()</title>
+<indexterm><primary>cairo_restore</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_restore                   (<link linkend="cairo-t">cairo_t</link> *cr);</programlisting>
+<para>
+Restores <parameter>cr</parameter> to the state saved by a preceding call to
+<link linkend="cairo-save"><function>cairo_save()</function></link> and removes that state from the stack of
+saved states.</para>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara> a <link linkend="cairo-t"><type>cairo_t</type></link>
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-copy"/>cairo_copy ()</title>
+<indexterm><primary>cairo_copy</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_copy                      (<link linkend="cairo-t">cairo_t</link> *dest,
+                                             <link linkend="cairo-t">cairo_t</link> *src);</programlisting>
+<para>
+This function copies all current state information from src to
+dest. This includes the current point and path, the target surface,
+the transformation matrix, and so forth.
+</para>
+<para>
+The stack of states saved with <link linkend="cairo-save"><function>cairo_save()</function></link> is <emphasis>not</emphasis>
+not copied; nor are any saved states on <parameter>dest</parameter> cleared. The
+operation only copies the current state of <parameter>src</parameter> to the current
+state of <parameter>dest</parameter>.</para>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>dest</parameter>&nbsp;:</term>
+<listitem><simpara> a <link linkend="cairo-t"><type>cairo_t</type></link>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>src</parameter>&nbsp;:</term>
+<listitem><simpara> another <link linkend="cairo-t"><type>cairo_t</type></link>
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-set-target-surface"/>cairo_set_target_surface ()</title>
+<indexterm><primary>cairo_set_target_surface</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_set_target_surface        (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="cairo-surface-t">cairo_surface_t</link> *surface);</programlisting>
+<para>
+Directs output for a <link linkend="cairo-t"><type>cairo_t</type></link> to a given surface. The surface
+will be referenced by the <link linkend="cairo-t"><type>cairo_t</type></link>, so you can immediately
+call <link linkend="cairo-surface-destroy"><function>cairo_surface_destroy()</function></link> on it if you don't need to
+keep a reference to it around.</para>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara> a <link linkend="cairo-t"><type>cairo_t</type></link>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>surface</parameter>&nbsp;:</term>
+<listitem><simpara> a <link linkend="cairo-surface-t"><type>cairo_surface_t</type></link>
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-format-t"/>enum cairo_format_t</title>
+<indexterm><primary>cairo_format_t</primary></indexterm><programlisting>typedef enum cairo_format {
+    CAIRO_FORMAT_ARGB32,
+    CAIRO_FORMAT_RGB24,
+    CAIRO_FORMAT_A8,
+    CAIRO_FORMAT_A1
+} cairo_format_t;
+</programlisting>
+<para>
+<link linkend="cairo-format-t"><type>cairo_format_t</type></link> is used to identify the memory format of
+image data.</para>
+<para>
+
+</para><variablelist role="enum">
+<varlistentry>
+<term><literal>CAIRO_FORMAT_ARGB32</literal></term>
+<listitem><simpara> each pixel is a 32-bit quantity, with
+  alpha in the upper 8 bits, then red, then green, then blue.
+  The 32-bit quanties are stored native-endian. Pre-multiplied
+  alpha is used. (That is, 50% transparent red is 0x80800000,
+  not 0x80ff0000.)
+</simpara></listitem>
+</varlistentry>
+<varlistentry>
+<term><literal>CAIRO_FORMAT_RGB24</literal></term>
+<listitem><simpara> each pixel is a 32-bit quantity, with
+  the upper 8 bits unused. Red, Green, and Blue are stored
+  in the remaining 24 bits in that order.
+</simpara></listitem>
+</varlistentry>
+<varlistentry>
+<term><literal>CAIRO_FORMAT_A8</literal></term>
+<listitem><simpara> each pixel is a 8-bit quantity holding
+  an alpha value.
+</simpara></listitem>
+</varlistentry>
+<varlistentry>
+<term><literal>CAIRO_FORMAT_A1</literal></term>
+<listitem><simpara> each pixel is a 1-bit quantity holding
+  an alpha value. Pixels are packed together into 32-bit
+  quantities. The ordering of the bits matches the
+  endianess of the platform. On a big-endian machine, the
+  first pixel is in the uppermost bit, on a little-endian
+  machine the first pixel is in the least-significant bit.
+</simpara></listitem>
+</varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-set-target-image"/>cairo_set_target_image ()</title>
+<indexterm><primary>cairo_set_target_image</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_set_target_image          (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="char">char</link> *data,
+                                             <link linkend="cairo-format-t">cairo_format_t</link> format,
+                                             <link linkend="int">int</link> width,
+                                             <link linkend="int">int</link> height,
+                                             <link linkend="int">int</link> stride);</programlisting>
+<para>
+Directs output for a <link linkend="cairo-t"><type>cairo_t</type></link> to an in-memory image. The output
+buffer must be kept around until the <link linkend="cairo-t"><type>cairo_t</type></link> is destroyed or set
+to to have a different target.  The initial contents of <parameter>buffer</parameter>
+will be used as the inital image contents; you must explicitely
+clear the buffer, using, for example, <link linkend="cairo-rectangle"><function>cairo_rectangle()</function></link> and
+<link linkend="cairo-fill"><function>cairo_fill()</function></link> if you want it cleared.</para>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara> a <link linkend="cairo-t"><type>cairo_t</type></link>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>data</parameter>&nbsp;:</term>
+<listitem><simpara> a pointer to a buffer supplied by the application
+   in which to write contents.
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>format</parameter>&nbsp;:</term>
+<listitem><simpara> the format of pixels in the buffer
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>width</parameter>&nbsp;:</term>
+<listitem><simpara> the width of the image to be stored in the buffer
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>height</parameter>&nbsp;:</term>
+<listitem><simpara> the eight of the image to be stored in the buffer
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>stride</parameter>&nbsp;:</term>
+<listitem><simpara> the number of bytes between the start of rows
+  in the buffer. Having this be specified separate from <parameter>width</parameter>
+  allows for padding at the end of rows, or for writing
+  to a subportion of a larger image.
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-operator-t"/>enum cairo_operator_t</title>
+<indexterm><primary>cairo_operator_t</primary></indexterm><programlisting>typedef enum cairo_operator { 
+    CAIRO_OPERATOR_CLEAR,
+    CAIRO_OPERATOR_SRC,
+    CAIRO_OPERATOR_DST,
+    CAIRO_OPERATOR_OVER,
+    CAIRO_OPERATOR_OVER_REVERSE,
+    CAIRO_OPERATOR_IN,
+    CAIRO_OPERATOR_IN_REVERSE,
+    CAIRO_OPERATOR_OUT,
+    CAIRO_OPERATOR_OUT_REVERSE,
+    CAIRO_OPERATOR_ATOP,
+    CAIRO_OPERATOR_ATOP_REVERSE,
+    CAIRO_OPERATOR_XOR,
+    CAIRO_OPERATOR_ADD,
+    CAIRO_OPERATOR_SATURATE
+} cairo_operator_t;
+</programlisting>
+<para>
+
+</para></refsect2>
+<refsect2>
+<title><anchor id="cairo-set-operator"/>cairo_set_operator ()</title>
+<indexterm><primary>cairo_set_operator</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_set_operator              (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="cairo-operator-t">cairo_operator_t</link> op);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>op</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-set-rgb-color"/>cairo_set_rgb_color ()</title>
+<indexterm><primary>cairo_set_rgb_color</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_set_rgb_color             (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> red,
+                                             <link linkend="double">double</link> green,
+                                             <link linkend="double">double</link> blue);</programlisting>
+<para>
+Sets a constant color for filling and stroking. This replaces any
+pattern set with <link linkend="cairo-set-pattern"><function>cairo_set_pattern()</function></link>. The color components are
+floating point numbers in the range 0 to 1. If the values passed in
+are outside that range, they will be clamped.</para>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara> a <link linkend="cairo-t"><type>cairo_t</type></link>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>red</parameter>&nbsp;:</term>
+<listitem><simpara> red component of color
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>green</parameter>&nbsp;:</term>
+<listitem><simpara> green component of color
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>blue</parameter>&nbsp;:</term>
+<listitem><simpara> blue component of color
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-set-pattern"/>cairo_set_pattern ()</title>
+<indexterm><primary>cairo_set_pattern</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_set_pattern               (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="cairo-pattern-t">cairo_pattern_t</link> *pattern);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>pattern</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-set-alpha"/>cairo_set_alpha ()</title>
+<indexterm><primary>cairo_set_alpha</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_set_alpha                 (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> alpha);</programlisting>
+<para>
+Sets an overall alpha value used for stroking and filling.  This
+value is multiplied with any alpha value coming from a gradient or
+image pattern.</para>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara> a <link linkend="cairo-t"><type>cairo_t</type></link>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>alpha</parameter>&nbsp;:</term>
+<listitem><simpara> the alpha value. 0 is transparent, 1 fully opaque.
+ if the value is outside the range 0 to 1, it will be
+ clamped to that range.
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-set-tolerance"/>cairo_set_tolerance ()</title>
+<indexterm><primary>cairo_set_tolerance</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_set_tolerance             (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> tolerance);</programlisting>
+<para>
+Sets the tolerance used when converting paths into trapezoids.
+Curved segments of the path will be subdivided until the maximum
+deviation between the original path and the polygonal approximation
+is less than <parameter>tolerance</parameter>. The default value is 0.1. A larger
+value will give better performance, a smaller value, better
+appearance. (Reducing the value from the default value of 0.1
+is unlikely to improve appearance significantly.)</para>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara> a <link linkend="cairo-t"><type>cairo_t</type></link>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>tolerance</parameter>&nbsp;:</term>
+<listitem><simpara> the tolerance, in device units (typically pixels)
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-fill-rule-t"/>enum cairo_fill_rule_t</title>
+<indexterm><primary>cairo_fill_rule_t</primary></indexterm><programlisting>typedef enum cairo_fill_rule {
+    CAIRO_FILL_RULE_WINDING,
+    CAIRO_FILL_RULE_EVEN_ODD
+} cairo_fill_rule_t;
+</programlisting>
+<para>
+<link linkend="cairo-fill-rule-t"><type>cairo_fill_rule_t</type></link> is used to select how paths are filled. For both
+fill rules, whether or not a point is included in the fill is
+determined by taking a ray from that point to infinity and looking
+at intersections with the path. The ray can be in any direction,
+as long as it doesn't pass through the end point of a segment
+or have a tricky intersection such as intersecting tangent to the path.
+(Note that filling is not actually implemented in this way. This
+is just a description of the rule that is applied.)</para>
+<para>
+
+</para><variablelist role="enum">
+<varlistentry>
+<term><literal>CAIRO_FILL_RULE_WINDING</literal></term>
+<listitem><simpara> If the path crosses the ray from
+left-to-right, counts +1. If the path crosses the ray
+from right to left, counts -1. (Left and right are determined
+from the perspective of looking along the ray from the starting
+point.) If the total count is non-zero, the point will be filled.
+</simpara></listitem>
+</varlistentry>
+<varlistentry>
+<term><literal>CAIRO_FILL_RULE_EVEN_ODD</literal></term>
+<listitem><simpara> Counts the total number of
+intersections, without regard to the orientation of the contour. If
+the total number of intersections is odd, the point will be
+filled.
+</simpara></listitem>
+</varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-set-fill-rule"/>cairo_set_fill_rule ()</title>
+<indexterm><primary>cairo_set_fill_rule</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_set_fill_rule             (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="cairo-fill-rule-t">cairo_fill_rule_t</link> fill_rule);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>fill_rule</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-set-line-width"/>cairo_set_line_width ()</title>
+<indexterm><primary>cairo_set_line_width</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_set_line_width            (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> width);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>width</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-line-cap-t"/>enum cairo_line_cap_t</title>
+<indexterm><primary>cairo_line_cap_t</primary></indexterm><programlisting>typedef enum cairo_line_cap {
+    CAIRO_LINE_CAP_BUTT,
+    CAIRO_LINE_CAP_ROUND,
+    CAIRO_LINE_CAP_SQUARE
+} cairo_line_cap_t;
+</programlisting>
+<para>
+enumeration for style of line-endings</para>
+<para>
+
+</para><variablelist role="enum">
+<varlistentry>
+<term><literal>CAIRO_LINE_CAP_BUTT</literal></term>
+<listitem><simpara> start(stop) the line exactly at the start(end) point
+</simpara></listitem>
+</varlistentry>
+<varlistentry>
+<term><literal>CAIRO_LINE_CAP_ROUND</literal></term>
+<listitem><simpara> use a round ending, the center of the circle is the end point
+</simpara></listitem>
+</varlistentry>
+<varlistentry>
+<term><literal>CAIRO_LINE_CAP_SQUARE</literal></term>
+<listitem><simpara> use squared ending, the center of the square is the end point
+</simpara></listitem>
+</varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-set-line-cap"/>cairo_set_line_cap ()</title>
+<indexterm><primary>cairo_set_line_cap</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_set_line_cap              (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="cairo-line-cap-t">cairo_line_cap_t</link> line_cap);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>line_cap</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-line-join-t"/>enum cairo_line_join_t</title>
+<indexterm><primary>cairo_line_join_t</primary></indexterm><programlisting>typedef enum cairo_line_join {
+    CAIRO_LINE_JOIN_MITER,
+    CAIRO_LINE_JOIN_ROUND,
+    CAIRO_LINE_JOIN_BEVEL
+} cairo_line_join_t;
+</programlisting>
+<para>
+
+</para></refsect2>
+<refsect2>
+<title><anchor id="cairo-set-line-join"/>cairo_set_line_join ()</title>
+<indexterm><primary>cairo_set_line_join</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_set_line_join             (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="cairo-line-join-t">cairo_line_join_t</link> line_join);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>line_join</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-set-dash"/>cairo_set_dash ()</title>
+<indexterm><primary>cairo_set_dash</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_set_dash                  (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> *dashes,
+                                             <link linkend="int">int</link> ndash,
+                                             <link linkend="double">double</link> offset);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>dashes</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>ndash</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>offset</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-set-miter-limit"/>cairo_set_miter_limit ()</title>
+<indexterm><primary>cairo_set_miter_limit</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_set_miter_limit           (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> limit);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>limit</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-translate"/>cairo_translate ()</title>
+<indexterm><primary>cairo_translate</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_translate                 (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> tx,
+                                             <link linkend="double">double</link> ty);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>tx</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>ty</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-scale"/>cairo_scale ()</title>
+<indexterm><primary>cairo_scale</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_scale                     (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> sx,
+                                             <link linkend="double">double</link> sy);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>sx</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>sy</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-rotate"/>cairo_rotate ()</title>
+<indexterm><primary>cairo_rotate</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_rotate                    (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> angle);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>angle</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-concat-matrix"/>cairo_concat_matrix ()</title>
+<indexterm><primary>cairo_concat_matrix</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_concat_matrix             (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="cairo-matrix-t">cairo_matrix_t</link> *matrix);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>matrix</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-set-matrix"/>cairo_set_matrix ()</title>
+<indexterm><primary>cairo_set_matrix</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_set_matrix                (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="cairo-matrix-t">cairo_matrix_t</link> *matrix);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>matrix</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-default-matrix"/>cairo_default_matrix ()</title>
+<indexterm><primary>cairo_default_matrix</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_default_matrix            (<link linkend="cairo-t">cairo_t</link> *cr);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-identity-matrix"/>cairo_identity_matrix ()</title>
+<indexterm><primary>cairo_identity_matrix</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_identity_matrix           (<link linkend="cairo-t">cairo_t</link> *cr);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-transform-point"/>cairo_transform_point ()</title>
+<indexterm><primary>cairo_transform_point</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_transform_point           (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> *x,
+                                             <link linkend="double">double</link> *y);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>x</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>y</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-transform-distance"/>cairo_transform_distance ()</title>
+<indexterm><primary>cairo_transform_distance</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_transform_distance        (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> *dx,
+                                             <link linkend="double">double</link> *dy);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>dx</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>dy</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-inverse-transform-point"/>cairo_inverse_transform_point ()</title>
+<indexterm><primary>cairo_inverse_transform_point</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_inverse_transform_point   (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> *x,
+                                             <link linkend="double">double</link> *y);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>x</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>y</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-inverse-transform-distance"/>cairo_inverse_transform_distance ()</title>
+<indexterm><primary>cairo_inverse_transform_distance</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_inverse_transform_distance
+                                            (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> *dx,
+                                             <link linkend="double">double</link> *dy);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>dx</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>dy</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-new-path"/>cairo_new_path ()</title>
+<indexterm><primary>cairo_new_path</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_new_path                  (<link linkend="cairo-t">cairo_t</link> *cr);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-move-to"/>cairo_move_to ()</title>
+<indexterm><primary>cairo_move_to</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_move_to                   (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> x,
+                                             <link linkend="double">double</link> y);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>x</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>y</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-line-to"/>cairo_line_to ()</title>
+<indexterm><primary>cairo_line_to</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_line_to                   (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> x,
+                                             <link linkend="double">double</link> y);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>x</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>y</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-curve-to"/>cairo_curve_to ()</title>
+<indexterm><primary>cairo_curve_to</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_curve_to                  (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> x1,
+                                             <link linkend="double">double</link> y1,
+                                             <link linkend="double">double</link> x2,
+                                             <link linkend="double">double</link> y2,
+                                             <link linkend="double">double</link> x3,
+                                             <link linkend="double">double</link> y3);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>x1</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>y1</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>x2</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>y2</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>x3</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>y3</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-arc"/>cairo_arc ()</title>
+<indexterm><primary>cairo_arc</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_arc                       (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> xc,
+                                             <link linkend="double">double</link> yc,
+                                             <link linkend="double">double</link> radius,
+                                             <link linkend="double">double</link> angle1,
+                                             <link linkend="double">double</link> angle2);</programlisting>
+<para>
+Adds an arc from <parameter>angle1</parameter> to <parameter>angle2</parameter> to the current path. If there
+is a current point, that point is connected to the start of the arc
+by a straight line segment. Angles are measured in radians with an
+angle of 0 along the X axis and an angle of <literal>M_PI</literal> radians (90
+degrees) along the Y axis, so with the default transformation
+matrix, positive angles are clockwise. (To convert from degrees to
+radians, use <literal>degrees * (M_PI / 180.)</literal>.)  This
+function gives the arc in the direction of increasing angle; see
+<link linkend="cairo-arc-negative"><function>cairo_arc_negative()</function></link> to get the arc in the direction of decreasing
+angle.
+</para>
+<para>
+A full arc is drawn as a circle. To make an oval arc, you can scale
+the current transformation matrix by different amounts in the X and
+Y directions. For example, to draw a full oval in the box given
+by <parameter>x</parameter>, <parameter>y</parameter>, <parameter>width</parameter>, <parameter>height</parameter>:
+ 
+<informalexample><programlisting>
+cairo_save (cr);
+cairo_translate (x + width / 2., y + height / 2.);
+cairo_scale (1. / (height / 2.), 1. / (width / 2.));
+cairo_arc (cr, 0., 0., 1., 0., 2 * M_PI);
+cairo_restore (cr);
+</programlisting></informalexample></para>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara> a Cairo context
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>xc</parameter>&nbsp;:</term>
+<listitem><simpara> X position of the center of the arc
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>yc</parameter>&nbsp;:</term>
+<listitem><simpara> Y position of the center of the arc
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>radius</parameter>&nbsp;:</term>
+<listitem><simpara> the radius of the arc
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>angle1</parameter>&nbsp;:</term>
+<listitem><simpara> the start angle, in radians
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>angle2</parameter>&nbsp;:</term>
+<listitem><simpara> the end angle, in radians
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-arc-negative"/>cairo_arc_negative ()</title>
+<indexterm><primary>cairo_arc_negative</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_arc_negative              (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> xc,
+                                             <link linkend="double">double</link> yc,
+                                             <link linkend="double">double</link> radius,
+                                             <link linkend="double">double</link> angle1,
+                                             <link linkend="double">double</link> angle2);</programlisting>
+<para>
+Adds an arc from <parameter>angle1</parameter> to <parameter>angle2</parameter> to the current path. The
+function behaves identically to <link linkend="cairo-arc"><function>cairo_arc()</function></link> except that instead of
+giving the arc in the direction of increasing angle, it gives
+the arc in the direction of decreasing angle.</para>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara> a Cairo context
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>xc</parameter>&nbsp;:</term>
+<listitem><simpara> X position of the center of the arc
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>yc</parameter>&nbsp;:</term>
+<listitem><simpara> Y position of the center of the arc
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>radius</parameter>&nbsp;:</term>
+<listitem><simpara> the radius of the arc
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>angle1</parameter>&nbsp;:</term>
+<listitem><simpara> the start angle, in radians
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>angle2</parameter>&nbsp;:</term>
+<listitem><simpara> the end angle, in radians
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-rel-move-to"/>cairo_rel_move_to ()</title>
+<indexterm><primary>cairo_rel_move_to</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_rel_move_to               (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> dx,
+                                             <link linkend="double">double</link> dy);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>dx</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>dy</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-rel-line-to"/>cairo_rel_line_to ()</title>
+<indexterm><primary>cairo_rel_line_to</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_rel_line_to               (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> dx,
+                                             <link linkend="double">double</link> dy);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>dx</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>dy</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-rel-curve-to"/>cairo_rel_curve_to ()</title>
+<indexterm><primary>cairo_rel_curve_to</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_rel_curve_to              (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> dx1,
+                                             <link linkend="double">double</link> dy1,
+                                             <link linkend="double">double</link> dx2,
+                                             <link linkend="double">double</link> dy2,
+                                             <link linkend="double">double</link> dx3,
+                                             <link linkend="double">double</link> dy3);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>dx1</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>dy1</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>dx2</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>dy2</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>dx3</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>dy3</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-rectangle"/>cairo_rectangle ()</title>
+<indexterm><primary>cairo_rectangle</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_rectangle                 (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> x,
+                                             <link linkend="double">double</link> y,
+                                             <link linkend="double">double</link> width,
+                                             <link linkend="double">double</link> height);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>x</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>y</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>width</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>height</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-close-path"/>cairo_close_path ()</title>
+<indexterm><primary>cairo_close_path</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_close_path                (<link linkend="cairo-t">cairo_t</link> *cr);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-stroke"/>cairo_stroke ()</title>
+<indexterm><primary>cairo_stroke</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_stroke                    (<link linkend="cairo-t">cairo_t</link> *cr);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-fill"/>cairo_fill ()</title>
+<indexterm><primary>cairo_fill</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_fill                      (<link linkend="cairo-t">cairo_t</link> *cr);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-copy-page"/>cairo_copy_page ()</title>
+<indexterm><primary>cairo_copy_page</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_copy_page                 (<link linkend="cairo-t">cairo_t</link> *cr);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-show-page"/>cairo_show_page ()</title>
+<indexterm><primary>cairo_show_page</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_show_page                 (<link linkend="cairo-t">cairo_t</link> *cr);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-in-stroke"/>cairo_in_stroke ()</title>
+<indexterm><primary>cairo_in_stroke</primary></indexterm><programlisting><link linkend="cairo-bool-t">cairo_bool_t</link> cairo_in_stroke                (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> x,
+                                             <link linkend="double">double</link> y);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>x</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>y</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><emphasis>Returns</emphasis>&nbsp;:</term><listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-in-fill"/>cairo_in_fill ()</title>
+<indexterm><primary>cairo_in_fill</primary></indexterm><programlisting><link linkend="cairo-bool-t">cairo_bool_t</link> cairo_in_fill                  (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> x,
+                                             <link linkend="double">double</link> y);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>x</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>y</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><emphasis>Returns</emphasis>&nbsp;:</term><listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-bool-t"/>cairo_bool_t</title>
+<indexterm><primary>cairo_bool_t</primary></indexterm><programlisting>typedef int cairo_bool_t;
+</programlisting>
+<para>
+<link linkend="cairo-bool-t"><type>cairo_bool_t</type></link> is used for boolean values. Returns of type
+<link linkend="cairo-bool-t"><type>cairo_bool_t</type></link> will always be either 0 or 1, but testing against
+these values explicitely is not encouraged; just use the
+value as a boolean condition.
+</para>
+<para>
+<informalexample><programlisting>
+ if (cairo_in_stroke (cr, x, y)) {
+     /<!-- -->* do something *<!-- -->/
+ }
+</programlisting></informalexample></para>
+<para>
+
+</para></refsect2>
+<refsect2>
+<title><anchor id="cairo-stroke-extents"/>cairo_stroke_extents ()</title>
+<indexterm><primary>cairo_stroke_extents</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_stroke_extents            (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> *x1,
+                                             <link linkend="double">double</link> *y1,
+                                             <link linkend="double">double</link> *x2,
+                                             <link linkend="double">double</link> *y2);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>x1</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>y1</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>x2</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>y2</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-fill-extents"/>cairo_fill_extents ()</title>
+<indexterm><primary>cairo_fill_extents</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_fill_extents              (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> *x1,
+                                             <link linkend="double">double</link> *y1,
+                                             <link linkend="double">double</link> *x2,
+                                             <link linkend="double">double</link> *y2);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>x1</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>y1</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>x2</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>y2</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-init-clip"/>cairo_init_clip ()</title>
+<indexterm><primary>cairo_init_clip</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_init_clip                 (<link linkend="cairo-t">cairo_t</link> *cr);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-clip"/>cairo_clip ()</title>
+<indexterm><primary>cairo_clip</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_clip                      (<link linkend="cairo-t">cairo_t</link> *cr);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-font-t"/>cairo_font_t</title>
+<indexterm><primary>cairo_font_t</primary></indexterm><programlisting>typedef struct _cairo_font cairo_font_t;
+</programlisting>
+<para>
+A <link linkend="cairo-font-t"><type>cairo_font_t</type></link> is a font scaled to a particular size and device
+resolution. A font can be set on a <link linkend="cairo-t"><type>cairo_t</type></link> by using
+<link linkend="cairo-set-font"><function>cairo_set_font()</function></link> assuming that the current transformation and
+target surface of the <link linkend="cairo-t"><type>cairo_t</type></link> match that for which the
+<link linkend="cairo-font-t"><type>cairo_font_t</type></link> was created. The effect of using a mismatched
+<link linkend="cairo-font-t"><type>cairo_font_t</type></link> will be incorrect font metrics.</para>
+<para>
+
+</para></refsect2>
+<refsect2>
+<title><anchor id="cairo-glyph-t"/>cairo_glyph_t</title>
+<indexterm><primary>cairo_glyph_t</primary></indexterm><programlisting>typedef struct {
+  unsigned long        index;
+  double               x;
+  double               y;
+} cairo_glyph_t;
+</programlisting>
+<para>
+The <link linkend="cairo-glyph-t"><type>cairo_glyph_t</type></link> structure holds information about a single glyph
+when drawing or measuring text. A font is (in simple terms) a
+collection of shapes used to draw text. A glyph is one of these
+shapes. There can be multiple glyphs for a single character
+(alternates to be used in different contexts, for example), or a
+glyph can be a <firstterm>ligature</firstterm> of multiple
+characters. Cairo doesn't expose any way of converting input text
+into glyphs, so in order to use the Cairo interfaces that take
+arrays of glyphs, you must directly access the appropriate
+underlying font system.
+</para>
+<para>
+Note that the offsets given by <parameter>x</parameter> and <parameter>y</parameter> are not cumulative. When
+drawing or measuring text, each glyph is individually positioned
+with respect to the overall origin</para>
+<para>
+
+</para><variablelist role="struct">
+<varlistentry>
+<term>unsigned&nbsp;<link linkend="long">long</link>&nbsp;<structfield>index</structfield>;</term>
+<listitem><simpara> glyph index in the font. The exact interpretation of the
+     glyph index depends on the font technology being used.
+</simpara></listitem>
+</varlistentry>
+<varlistentry>
+<term><link linkend="double">double</link>&nbsp;<structfield>x</structfield>;</term>
+<listitem><simpara> the offset in the X direction between the origin used for
+    drawing or measuring the string and the origin of this glyph.
+</simpara></listitem>
+</varlistentry>
+<varlistentry>
+<term><link linkend="double">double</link>&nbsp;<structfield>y</structfield>;</term>
+<listitem><simpara> the offset in the Y direction between the origin used for
+    drawing or measuring the string and the origin of this glyph.
+</simpara></listitem>
+</varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-text-extents-t"/>cairo_text_extents_t</title>
+<indexterm><primary>cairo_text_extents_t</primary></indexterm><programlisting>typedef struct {
+    double x_bearing;
+    double y_bearing;
+    double width;
+    double height;
+    double x_advance;
+    double y_advance;
+} cairo_text_extents_t;
+</programlisting>
+<para>
+The <link linkend="cairo-text-extents-t"><type>cairo_text_extents_t</type></link>&lt; structure stores the extents of a single
+glyph or a string of glyphs in user-space coordinates. Because text
+extents are in user-space coordinates, they don't scale along with
+the current transformation matrix. If you call
+<literal>cairo_scale(cr, 2.0, 2.0)</literal>, text will
+be drawn twice as big, but the reported text extents will not be
+doubled. They will change slightly due to hinting (so you can't
+assume that metrics are independent of the transformation matrix),
+but otherwise will remain unchanged.</para>
+<para>
+
+</para><variablelist role="struct">
+<varlistentry>
+<term><link linkend="double">double</link>&nbsp;<structfield>x_bearing</structfield>;</term>
+<listitem><simpara> the horizontal distance from the origin to the
+  leftmost part of the glyphs as drawn. Positive if the
+  glyphs lie entirely to the right of the origin.
+</simpara></listitem>
+</varlistentry>
+<varlistentry>
+<term><link linkend="double">double</link>&nbsp;<structfield>y_bearing</structfield>;</term>
+<listitem><simpara> the vertical distance from the origin to the
+  topmost part of the glyphs as drawn. Positive only if the
+  glyphs lie completely below the origin; will usually be
+  negative.
+</simpara></listitem>
+</varlistentry>
+<varlistentry>
+<term><link linkend="double">double</link>&nbsp;<structfield>width</structfield>;</term>
+<listitem><simpara> width of the glyphs as drawn
+</simpara></listitem>
+</varlistentry>
+<varlistentry>
+<term><link linkend="double">double</link>&nbsp;<structfield>height</structfield>;</term>
+<listitem><simpara> height of the glyphs as drawn
+</simpara></listitem>
+</varlistentry>
+<varlistentry>
+<term><link linkend="double">double</link>&nbsp;<structfield>x_advance</structfield>;</term>
+<listitem><simpara>distance to advance in the X direction
+   after drawing these glyphs
+</simpara></listitem>
+</varlistentry>
+<varlistentry>
+<term><link linkend="double">double</link>&nbsp;<structfield>y_advance</structfield>;</term>
+<listitem><simpara> distance to advance in the Y direction
+  after drawing these glyphs. Will typically be zero except
+  for vertical text layout as found in East-Asian languages.
+</simpara></listitem>
+</varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-font-extents-t"/>cairo_font_extents_t</title>
+<indexterm><primary>cairo_font_extents_t</primary></indexterm><programlisting>typedef struct {
+    double ascent;
+    double descent;
+    double height;
+    double max_x_advance;
+    double max_y_advance;
+} cairo_font_extents_t;
+</programlisting>
+<para>
+
+</para></refsect2>
+<refsect2>
+<title><anchor id="cairo-font-slant-t"/>enum cairo_font_slant_t</title>
+<indexterm><primary>cairo_font_slant_t</primary></indexterm><programlisting>typedef enum cairo_font_slant {
+  CAIRO_FONT_SLANT_NORMAL,
+  CAIRO_FONT_SLANT_ITALIC,
+  CAIRO_FONT_SLANT_OBLIQUE
+} cairo_font_slant_t;
+</programlisting>
+<para>
+
+</para></refsect2>
+<refsect2>
+<title><anchor id="cairo-font-weight-t"/>enum cairo_font_weight_t</title>
+<indexterm><primary>cairo_font_weight_t</primary></indexterm><programlisting>typedef enum cairo_font_weight {
+  CAIRO_FONT_WEIGHT_NORMAL,
+  CAIRO_FONT_WEIGHT_BOLD
+} cairo_font_weight_t;
+</programlisting>
+<para>
+
+</para></refsect2>
+<refsect2>
+<title><anchor id="cairo-select-font"/>cairo_select_font ()</title>
+<indexterm><primary>cairo_select_font</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_select_font               (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             const <link linkend="char">char</link> *family,
+                                             <link linkend="cairo-font-slant-t">cairo_font_slant_t</link> slant,
+                                             <link linkend="cairo-font-weight-t">cairo_font_weight_t</link> weight);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>family</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>slant</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>weight</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-scale-font"/>cairo_scale_font ()</title>
+<indexterm><primary>cairo_scale_font</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_scale_font                (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> scale);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>scale</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-transform-font"/>cairo_transform_font ()</title>
+<indexterm><primary>cairo_transform_font</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_transform_font            (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="cairo-matrix-t">cairo_matrix_t</link> *matrix);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>matrix</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-show-text"/>cairo_show_text ()</title>
+<indexterm><primary>cairo_show_text</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_show_text                 (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             unsigned <link linkend="char">char</link> *utf8);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>utf8</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-show-glyphs"/>cairo_show_glyphs ()</title>
+<indexterm><primary>cairo_show_glyphs</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_show_glyphs               (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="cairo-glyph-t">cairo_glyph_t</link> *glyphs,
+                                             <link linkend="int">int</link> num_glyphs);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>glyphs</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>num_glyphs</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-current-font"/>cairo_current_font ()</title>
+<indexterm><primary>cairo_current_font</primary></indexterm><programlisting><link linkend="cairo-font-t">cairo_font_t</link>* cairo_current_font            (<link linkend="cairo-t">cairo_t</link> *cr);</programlisting>
+<para>
+Gets the current font object for a <link linkend="cairo-t"><type>cairo_t</type></link>. If there is no current
+font object, because the font parameters, transform, or target
+surface has been changed since a font was last used, a font object
+will be created and stored in in the <link linkend="cairo-t"><type>cairo_t</type></link>.</para>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara> a <link linkend="cairo-t"><type>cairo_t</type></link>
+</simpara></listitem></varlistentry>
+<varlistentry><term><emphasis>Returns</emphasis>&nbsp;:</term><listitem><simpara> the current font object. Can return <literal>NULL</literal>
+  on out-of-memory or if the context is already in
+  an error state. This object is owned by Cairo. To keep
+  a reference to it, you must call <link linkend="cairo-font-reference"><function>cairo_font_reference()</function></link>.
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-current-font-extents"/>cairo_current_font_extents ()</title>
+<indexterm><primary>cairo_current_font_extents</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_current_font_extents      (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="cairo-font-extents-t">cairo_font_extents_t</link> *extents);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>extents</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-set-font"/>cairo_set_font ()</title>
+<indexterm><primary>cairo_set_font</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_set_font                  (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="cairo-font-t">cairo_font_t</link> *font);</programlisting>
+<para>
+Replaces the current <link linkend="cairo-font-t"><type>cairo_font_t</type></link> object in the <link linkend="cairo-t"><type>cairo_t</type></link> with
+<parameter>font</parameter>. The replaced font in the <link linkend="cairo-t"><type>cairo_t</type></link> will be destroyed if there
+are no other references to it. Since a <link linkend="cairo-font-t"><type>cairo_font_t</type></link> is specific to
+a particular output device and size, changing the transformation,
+font transformation, or target surfaces of a <link linkend="cairo-t"><type>cairo_t</type></link> will clear
+any previously set font. Setting the font using <link linkend="cairo-set-font"><function>cairo_set_font()</function></link> is
+exclusive with the simple font selection API provided by
+<link linkend="cairo-select-font"><function>cairo_select_font()</function></link>. The size and transformation set by
+<link linkend="cairo-scale-font"><function>cairo_scale_font()</function></link> and <link linkend="cairo-transform-font"><function>cairo_transform_font()</function></link> are ignored unless
+they were taken into account when creating <parameter>font</parameter>.</para>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara> a <link linkend="cairo-t"><type>cairo_t</type></link>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>font</parameter>&nbsp;:</term>
+<listitem><simpara> a <link linkend="cairo-font-t"><type>cairo_font_t</type></link>, or <literal>NULL</literal> to unset any previously set font.
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-text-extents"/>cairo_text_extents ()</title>
+<indexterm><primary>cairo_text_extents</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_text_extents              (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             unsigned <link linkend="char">char</link> *utf8,
+                                             <link linkend="cairo-text-extents-t">cairo_text_extents_t</link> *extents);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>utf8</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>extents</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-glyph-extents"/>cairo_glyph_extents ()</title>
+<indexterm><primary>cairo_glyph_extents</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_glyph_extents             (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="cairo-glyph-t">cairo_glyph_t</link> *glyphs,
+                                             <link linkend="int">int</link> num_glyphs,
+                                             <link linkend="cairo-text-extents-t">cairo_text_extents_t</link> *extents);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>glyphs</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>num_glyphs</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>extents</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-text-path"/>cairo_text_path ()</title>
+<indexterm><primary>cairo_text_path</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_text_path                 (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             unsigned <link linkend="char">char</link> *utf8);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>utf8</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-glyph-path"/>cairo_glyph_path ()</title>
+<indexterm><primary>cairo_glyph_path</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_glyph_path                (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="cairo-glyph-t">cairo_glyph_t</link> *glyphs,
+                                             <link linkend="int">int</link> num_glyphs);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>glyphs</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>num_glyphs</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-font-reference"/>cairo_font_reference ()</title>
+<indexterm><primary>cairo_font_reference</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_font_reference            (<link linkend="cairo-font-t">cairo_font_t</link> *font);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>font</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-font-destroy"/>cairo_font_destroy ()</title>
+<indexterm><primary>cairo_font_destroy</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_font_destroy              (<link linkend="cairo-font-t">cairo_font_t</link> *font);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>font</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-font-extents"/>cairo_font_extents ()</title>
+<indexterm><primary>cairo_font_extents</primary></indexterm><programlisting><link linkend="cairo-status-t">cairo_status_t</link> cairo_font_extents           (<link linkend="cairo-font-t">cairo_font_t</link> *font,
+                                             <link linkend="cairo-matrix-t">cairo_matrix_t</link> *font_matrix,
+                                             <link linkend="cairo-font-extents-t">cairo_font_extents_t</link> *extents);</programlisting>
+<para>
+Gets the metrics for a <link linkend="cairo-font-t"><type>cairo_font_t</type></link>.</para>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>font</parameter>&nbsp;:</term>
+<listitem><simpara> a <link linkend="cairo-font-t"><type>cairo_font_t</type></link>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>font_matrix</parameter>&nbsp;:</term>
+<listitem><simpara> the font transformation for which this font was
+   created. (See <link linkend="cairo-transform-font"><function>cairo_transform_font()</function></link>). This is needed
+   properly convert the metrics from the font into user space.
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>extents</parameter>&nbsp;:</term>
+<listitem><simpara> a <link linkend="cairo-font-extents-t"><type>cairo_font_extents_t</type></link> which to store the retrieved extents.
+</simpara></listitem></varlistentry>
+<varlistentry><term><emphasis>Returns</emphasis>&nbsp;:</term><listitem><simpara> <literal>CAIRO_STATUS_SUCCESS</literal> on success. Otherwise, an
+ error such as <literal>CAIRO_STATUS_NO_MEMORY</literal>.
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-font-glyph-extents"/>cairo_font_glyph_extents ()</title>
+<indexterm><primary>cairo_font_glyph_extents</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_font_glyph_extents        (<link linkend="cairo-font-t">cairo_font_t</link> *font,
+                                             <link linkend="cairo-matrix-t">cairo_matrix_t</link> *font_matrix,
+                                             <link linkend="cairo-glyph-t">cairo_glyph_t</link> *glyphs,
+                                             <link linkend="int">int</link> num_glyphs,
+                                             <link linkend="cairo-text-extents-t">cairo_text_extents_t</link> *extents);</programlisting>
+<para>
+<link linkend="cairo-font-glyph-extents"><function>cairo_font_glyph_extents()</function></link> gets the overall metrics for a string of
+glyphs. The X and Y offsets in <parameter>glyphs</parameter> are taken from an origin of 0,0.</para>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>font</parameter>&nbsp;:</term>
+<listitem><simpara> a <link linkend="cairo-font-t"><type>cairo_font_t</type></link>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>font_matrix</parameter>&nbsp;:</term>
+<listitem><simpara> the font transformation for which this font was
+   created. (See <link linkend="cairo-transform-font"><function>cairo_transform_font()</function></link>). This is needed
+   properly convert the metrics from the font into user space.
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>glyphs</parameter>&nbsp;:</term>
+<listitem><simpara> an array of glyph IDs with X and Y offsets.
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>num_glyphs</parameter>&nbsp;:</term>
+<listitem><simpara> the number of glyphs in the <parameter>glyphs</parameter> array
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>extents</parameter>&nbsp;:</term>
+<listitem><simpara> a <link linkend="cairo-text-extents-t"><type>cairo_text_extents_t</type></link> which to store the retrieved extents.
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-show-surface"/>cairo_show_surface ()</title>
+<indexterm><primary>cairo_show_surface</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_show_surface              (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="cairo-surface-t">cairo_surface_t</link> *surface,
+                                             <link linkend="int">int</link> width,
+                                             <link linkend="int">int</link> height);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>surface</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>width</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>height</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-current-operator"/>cairo_current_operator ()</title>
+<indexterm><primary>cairo_current_operator</primary></indexterm><programlisting><link linkend="cairo-operator-t">cairo_operator_t</link> cairo_current_operator     (<link linkend="cairo-t">cairo_t</link> *cr);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><emphasis>Returns</emphasis>&nbsp;:</term><listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-current-rgb-color"/>cairo_current_rgb_color ()</title>
+<indexterm><primary>cairo_current_rgb_color</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_current_rgb_color         (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> *red,
+                                             <link linkend="double">double</link> *green,
+                                             <link linkend="double">double</link> *blue);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>red</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>green</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>blue</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-current-pattern"/>cairo_current_pattern ()</title>
+<indexterm><primary>cairo_current_pattern</primary></indexterm><programlisting><link linkend="cairo-pattern-t">cairo_pattern_t</link>* cairo_current_pattern      (<link linkend="cairo-t">cairo_t</link> *cr);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><emphasis>Returns</emphasis>&nbsp;:</term><listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-current-alpha"/>cairo_current_alpha ()</title>
+<indexterm><primary>cairo_current_alpha</primary></indexterm><programlisting><link linkend="double">double</link>      cairo_current_alpha             (<link linkend="cairo-t">cairo_t</link> *cr);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><emphasis>Returns</emphasis>&nbsp;:</term><listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-current-tolerance"/>cairo_current_tolerance ()</title>
+<indexterm><primary>cairo_current_tolerance</primary></indexterm><programlisting><link linkend="double">double</link>      cairo_current_tolerance         (<link linkend="cairo-t">cairo_t</link> *cr);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><emphasis>Returns</emphasis>&nbsp;:</term><listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-current-point"/>cairo_current_point ()</title>
+<indexterm><primary>cairo_current_point</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_current_point             (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="double">double</link> *x,
+                                             <link linkend="double">double</link> *y);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>x</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>y</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-current-fill-rule"/>cairo_current_fill_rule ()</title>
+<indexterm><primary>cairo_current_fill_rule</primary></indexterm><programlisting><link linkend="cairo-fill-rule-t">cairo_fill_rule_t</link> cairo_current_fill_rule   (<link linkend="cairo-t">cairo_t</link> *cr);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><emphasis>Returns</emphasis>&nbsp;:</term><listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-current-line-width"/>cairo_current_line_width ()</title>
+<indexterm><primary>cairo_current_line_width</primary></indexterm><programlisting><link linkend="double">double</link>      cairo_current_line_width        (<link linkend="cairo-t">cairo_t</link> *cr);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><emphasis>Returns</emphasis>&nbsp;:</term><listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-current-line-cap"/>cairo_current_line_cap ()</title>
+<indexterm><primary>cairo_current_line_cap</primary></indexterm><programlisting><link linkend="cairo-line-cap-t">cairo_line_cap_t</link> cairo_current_line_cap     (<link linkend="cairo-t">cairo_t</link> *cr);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><emphasis>Returns</emphasis>&nbsp;:</term><listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-current-line-join"/>cairo_current_line_join ()</title>
+<indexterm><primary>cairo_current_line_join</primary></indexterm><programlisting><link linkend="cairo-line-join-t">cairo_line_join_t</link> cairo_current_line_join   (<link linkend="cairo-t">cairo_t</link> *cr);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><emphasis>Returns</emphasis>&nbsp;:</term><listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-current-miter-limit"/>cairo_current_miter_limit ()</title>
+<indexterm><primary>cairo_current_miter_limit</primary></indexterm><programlisting><link linkend="double">double</link>      cairo_current_miter_limit       (<link linkend="cairo-t">cairo_t</link> *cr);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><emphasis>Returns</emphasis>&nbsp;:</term><listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-current-matrix"/>cairo_current_matrix ()</title>
+<indexterm><primary>cairo_current_matrix</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_current_matrix            (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="cairo-matrix-t">cairo_matrix_t</link> *matrix);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>matrix</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-current-target-surface"/>cairo_current_target_surface ()</title>
+<indexterm><primary>cairo_current_target_surface</primary></indexterm><programlisting><link linkend="cairo-surface-t">cairo_surface_t</link>* cairo_current_target_surface
+                                            (<link linkend="cairo-t">cairo_t</link> *cr);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><emphasis>Returns</emphasis>&nbsp;:</term><listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-current-path"/>cairo_current_path ()</title>
+<indexterm><primary>cairo_current_path</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_current_path              (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="cairo-move-to-func-t">cairo_move_to_func_t</link> *move_to,
+                                             <link linkend="cairo-line-to-func-t">cairo_line_to_func_t</link> *line_to,
+                                             <link linkend="cairo-curve-to-func-t">cairo_curve_to_func_t</link> *curve_to,
+                                             <link linkend="cairo-close-path-func-t">cairo_close_path_func_t</link> *close_path,
+                                             <link linkend="void">void</link> *closure);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>move_to</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>line_to</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>curve_to</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>close_path</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>closure</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-current-path-flat"/>cairo_current_path_flat ()</title>
+<indexterm><primary>cairo_current_path_flat</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_current_path_flat         (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="cairo-move-to-func-t">cairo_move_to_func_t</link> *move_to,
+                                             <link linkend="cairo-line-to-func-t">cairo_line_to_func_t</link> *line_to,
+                                             <link linkend="cairo-close-path-func-t">cairo_close_path_func_t</link> *close_path,
+                                             <link linkend="void">void</link> *closure);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>move_to</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>line_to</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>close_path</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>closure</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-status-t"/>enum cairo_status_t</title>
+<indexterm><primary>cairo_status_t</primary></indexterm><programlisting>typedef enum cairo_status {
+    CAIRO_STATUS_SUCCESS = 0,
+    CAIRO_STATUS_NO_MEMORY,
+    CAIRO_STATUS_INVALID_RESTORE,
+    CAIRO_STATUS_INVALID_POP_GROUP,
+    CAIRO_STATUS_NO_CURRENT_POINT,
+    CAIRO_STATUS_INVALID_MATRIX,
+    CAIRO_STATUS_NO_TARGET_SURFACE,
+    CAIRO_STATUS_NULL_POINTER,
+    CAIRO_STATUS_INVALID_STRING
+} cairo_status_t;
+</programlisting>
+<para>
+
+</para></refsect2>
+<refsect2>
+<title><anchor id="cairo-status"/>cairo_status ()</title>
+<indexterm><primary>cairo_status</primary></indexterm><programlisting><link linkend="cairo-status-t">cairo_status_t</link> cairo_status                 (<link linkend="cairo-t">cairo_t</link> *cr);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><emphasis>Returns</emphasis>&nbsp;:</term><listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-status-string"/>cairo_status_string ()</title>
+<indexterm><primary>cairo_status_string</primary></indexterm><programlisting>const <link linkend="char">char</link>* cairo_status_string             (<link linkend="cairo-t">cairo_t</link> *cr);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><emphasis>Returns</emphasis>&nbsp;:</term><listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-filter-t"/>enum cairo_filter_t</title>
+<indexterm><primary>cairo_filter_t</primary></indexterm><programlisting>typedef enum {
+    CAIRO_FILTER_FAST,
+    CAIRO_FILTER_GOOD,
+    CAIRO_FILTER_BEST,
+    CAIRO_FILTER_NEAREST,
+    CAIRO_FILTER_BILINEAR,
+    CAIRO_FILTER_GAUSSIAN
+} cairo_filter_t;
+</programlisting>
+<para>
+
+</para></refsect2>
+<refsect2>
+<title><anchor id="cairo-image-surface-create"/>cairo_image_surface_create ()</title>
+<indexterm><primary>cairo_image_surface_create</primary></indexterm><programlisting><link linkend="cairo-surface-t">cairo_surface_t</link>* cairo_image_surface_create (<link linkend="cairo-format-t">cairo_format_t</link> format,
+                                             <link linkend="int">int</link> width,
+                                             <link linkend="int">int</link> height);</programlisting>
+<para>
+Creates an image surface of the specified format and
+dimensions. The initial contents of the surface is undefined; you
+must explicitely clear the buffer, using, for example,
+<link linkend="cairo-rectangle"><function>cairo_rectangle()</function></link> and <link linkend="cairo-fill"><function>cairo_fill()</function></link> if you want it cleared.</para>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>format</parameter>&nbsp;:</term>
+<listitem><simpara> format of pixels in the surface to create 
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>width</parameter>&nbsp;:</term>
+<listitem><simpara> width of the surface, in pixels
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>height</parameter>&nbsp;:</term>
+<listitem><simpara> height of the surface, in pixels
+</simpara></listitem></varlistentry>
+<varlistentry><term><emphasis>Returns</emphasis>&nbsp;:</term><listitem><simpara> the newly created surface, or <literal>NULL</literal> if it couldn't
+  be created because of lack of memory
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-image-surface-create-for-data"/>cairo_image_surface_create_for_data ()</title>
+<indexterm><primary>cairo_image_surface_create_for_data</primary></indexterm><programlisting><link linkend="cairo-surface-t">cairo_surface_t</link>* cairo_image_surface_create_for_data
+                                            (<link linkend="char">char</link> *data,
+                                             <link linkend="cairo-format-t">cairo_format_t</link> format,
+                                             <link linkend="int">int</link> width,
+                                             <link linkend="int">int</link> height,
+                                             <link linkend="int">int</link> stride);</programlisting>
+<para>
+Creates an image surface for the provided pixel data. The output
+buffer must be kept around until the <link linkend="cairo-surface-t"><type>cairo_surface_t</type></link> is destroyed
+or <link linkend="cairo-surface-finish"><function>cairo_surface_finish()</function></link> is called on the surface.  The initial
+contents of <parameter>buffer</parameter> will be used as the inital image contents; you
+must explicitely clear the buffer, using, for example,
+<link linkend="cairo-rectangle"><function>cairo_rectangle()</function></link> and <link linkend="cairo-fill"><function>cairo_fill()</function></link> if you want it cleared.</para>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>data</parameter>&nbsp;:</term>
+<listitem><simpara> a pointer to a buffer supplied by the application
+   in which to write contents.
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>format</parameter>&nbsp;:</term>
+<listitem><simpara> the format of pixels in the buffer
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>width</parameter>&nbsp;:</term>
+<listitem><simpara> the width of the image to be stored in the buffer
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>height</parameter>&nbsp;:</term>
+<listitem><simpara> the height of the image to be stored in the buffer
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>stride</parameter>&nbsp;:</term>
+<listitem><simpara> the number of bytes between the start of rows
+  in the buffer. Having this be specified separate from <parameter>width</parameter>
+  allows for padding at the end of rows, or for writing
+  to a subportion of a larger image.
+</simpara></listitem></varlistentry>
+<varlistentry><term><emphasis>Returns</emphasis>&nbsp;:</term><listitem><simpara> the newly created surface, or <literal>NULL</literal> if it couldn't
+  be created because of lack of memory
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+
+</refsect1>
+
+
+
+
+</refentry>

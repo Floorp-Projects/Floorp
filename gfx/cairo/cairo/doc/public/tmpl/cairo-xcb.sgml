@@ -1,0 +1,28 @@
+<!-- ##### SECTION Title ##### -->
+XCB Backend
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION cairo_set_target_xcb ##### -->
+<para>
+
+</para>
+
+@cr: 
+@dpy: 
+@drawable: 
+@visual: 
+@format: 
+
+

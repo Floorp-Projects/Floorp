@@ -31,16 +31,19 @@
  * California.
  *
  * Contributor(s):
- *	Carl D. Worth <cworth@isi.edu>
+ *	Carl D. Worth <cworth@cworth.org>
  */
-
-#include <cairo.h>
 
 #ifndef CAIRO_PDF_H
 #define CAIRO_PDF_H
+
+#include <cairo.h>
+
 #ifdef  CAIRO_HAS_PDF_SURFACE
 
 #include <stdio.h>
+
+CAIRO_BEGIN_DECLS
 
 void
 cairo_set_target_pdf (cairo_t	*cr,
@@ -57,6 +60,8 @@ cairo_pdf_surface_create (FILE		*file,
 			  double	height_inches,
 			  double	x_pixels_per_inch,
 			  double	y_pixels_per_inch);
+
+CAIRO_END_DECLS
 
 #endif /* CAIRO_HAS_PDF_SURFACE */
 #endif /* CAIRO_PDF_H */

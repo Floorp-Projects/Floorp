@@ -31,17 +31,20 @@
  * California.
  *
  * Contributor(s):
- *	Carl D. Worth <cworth@isi.edu>
+ *	Carl D. Worth <cworth@cworth.org>
  */
-
-#include <cairo.h>
 
 #ifndef CAIRO_XCB_H
 #define CAIRO_XCB_H
+
+#include <cairo.h>
+
 #ifdef  CAIRO_HAS_XCB_SURFACE
 
 #include <X11/XCB/xcb.h>
 #include <X11/XCB/render.h>
+
+CAIRO_BEGIN_DECLS
 
 void
 cairo_set_target_xcb (cairo_t		*cr,
@@ -49,6 +52,8 @@ cairo_set_target_xcb (cairo_t		*cr,
 		      XCBDRAWABLE	drawable,
 		      XCBVISUALTYPE	*visual,
 		      cairo_format_t	format);
+
+CAIRO_END_DECLS
 
 #endif /* CAIRO_HAS_XCB_SURFACE */
 #endif /* CAIRO_XCB_H */

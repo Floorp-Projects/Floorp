@@ -1,5 +1,5 @@
 /*
- * Copyright © 2003 USC, Information Sciences Institute
+ * Copyright Â© 2003 USC, Information Sciences Institute
  *
  * Permission to use, copy, modify, distribute, and sell this software
  * and its documentation for any purpose is hereby granted without
@@ -22,7 +22,7 @@
  * NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * Author: Carl D. Worth <cworth@isi.edu>
+ * Author: Carl D. Worth <cworth@cworth.org>
  */
 
 #include <stdio.h>
@@ -46,26 +46,24 @@ unpremultiply_data (png_structp png, png_row_infop row_info, png_bytep data)
         if (alpha == 0) {
 	    b[0] = b[1] = b[2] = b[3] = 0;
 	} else {
-            b[0] = (((pixel & 0x0000ff) >>  0) * 255) / alpha;
-            b[1] = (((pixel & 0x00ff00) >>  8) * 255) / alpha;
-            b[2] = (((pixel & 0xff0000) >> 16) * 255) / alpha;
+            b[0] = (((pixel & 0x0000ff) >>  0) * 255 + alpha / 2) / alpha;
+            b[1] = (((pixel & 0x00ff00) >>  8) * 255 + alpha / 2) / alpha;
+            b[2] = (((pixel & 0xff0000) >> 16) * 255 + alpha / 2) / alpha;
 	    b[3] = alpha;
 	}
     }
 }
 
 void
-write_png_argb32 (char *buffer, char *filename,
+write_png_argb32 (char *buffer, FILE *file,
 		  int width, int height, int stride)
 {
-    FILE *f;
     int i;
     png_struct *png;
     png_info *info;
     png_byte **rows;
     png_color_16 white;
     
-    f = fopen (filename, "w");
     rows = malloc (height * sizeof(png_byte*));
 
     for (i = 0; i < height; i++) {
@@ -75,7 +73,7 @@ write_png_argb32 (char *buffer, char *filename,
     png = png_create_write_struct (PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     info = png_create_info_struct (png);
 
-    png_init_io (png, f);
+    png_init_io (png, file);
     png_set_IHDR (png, info,
 		  width, height, 8,
 		  PNG_COLOR_TYPE_RGB_ALPHA, 
@@ -98,5 +96,4 @@ write_png_argb32 (char *buffer, char *filename,
     png_destroy_write_struct (&png, &info);
 
     free (rows);
-    fclose (f);
 }

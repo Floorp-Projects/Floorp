@@ -1,0 +1,41 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>PNG Backend</title><meta name="generator" content="DocBook XSL Stylesheets V1.65.1"><link rel="home" href="index.html" title="Cairo: A Vector Graphics Library"><link rel="up" href="pt02.html" title="Part II. Reference"><link rel="previous" href="cairo-PDF-Backend.html" title="PDF Backend"><link rel="next" href="cairo-PS-Backend.html" title="PS Backend"><meta name="generator" content="GTK-Doc V1.3 (XML mode)"><link rel="stylesheet" href="style.css" type="text/css"><link rel="part" href="pt01.html" title="Part I. Tutorial"><link rel="part" href="pt02.html" title="Part II. Reference"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><table class="navigation" width="100%" summary="Navigation header" cellpadding="2" cellspacing="2"><tr valign="middle"><td><a accesskey="p" href="cairo-PDF-Backend.html"><img src="left.png" width="24" height="24" border="0" alt="Prev"></a></td><td><a accesskey="u" href="pt02.html"><img src="up.png" width="24" height="24" border="0" alt="Up"></a></td><td><a accesskey="h" href="index.html"><img src="home.png" width="24" height="24" border="0" alt="Home"></a></td><th width="100%" align="center">Cairo: A Vector Graphics Library</th><td><a accesskey="n" href="cairo-PS-Backend.html"><img src="right.png" width="24" height="24" border="0" alt="Next"></a></td></tr></table><div class="refentry" lang="en"><a name="cairo-PNG-Backend"></a><div class="titlepage"><div></div><div></div></div><div class="refnamediv"><table width="100%"><tr><td valign="top"><h2><span class="refentrytitle">PNG Backend</span></h2><p>PNG Backend &#8212; </p></td><td valign="top" align="right"></td></tr></table></div><div class="refsynopsisdiv"><h2>Synopsis</h2><pre class="synopsis">
+
+
+
+void        <a href="cairo-PNG-Backend.html#cairo-set-target-png">cairo_set_target_png</a>            (<a href="cairo-cairo-t.html#cairo-t">cairo_t</a> *cr,
+                                             FILE *file,
+                                             <a href="cairo-cairo-t.html#cairo-format-t">cairo_format_t</a> format,
+                                             int width,
+                                             int height);
+<a href="cairo-cairo-surface-t.html#cairo-surface-t">cairo_surface_t</a>* <a href="cairo-PNG-Backend.html#cairo-png-surface-create">cairo_png_surface_create</a>   (FILE *file,
+                                             <a href="cairo-cairo-t.html#cairo-format-t">cairo_format_t</a> format,
+                                             int width,
+                                             int height);
+</pre></div><div class="refsect1" lang="en"><a name="id2730876"></a><h2>Description</h2><p>
+
+</p></div><div class="refsect1" lang="en"><a name="id2730885"></a><h2>Details</h2><div class="refsect2" lang="en"><a name="id2730891"></a><h3><a name="cairo-set-target-png"></a>cairo_set_target_png ()</h3><a class="indexterm" name="id2730899"></a><pre class="programlisting">void        cairo_set_target_png            (<a href="cairo-cairo-t.html#cairo-t">cairo_t</a> *cr,
+                                             FILE *file,
+                                             <a href="cairo-cairo-t.html#cairo-format-t">cairo_format_t</a> format,
+                                             int width,
+                                             int height);</pre><p>
+
+</p><div class="variablelist"><table border="0"><col align="left" valign="top"><tbody><tr><td><span class="term"><i class="parameter"><tt>cr</tt></i> :</span></td><td>
+</td></tr><tr><td><span class="term"><i class="parameter"><tt>file</tt></i> :</span></td><td>
+</td></tr><tr><td><span class="term"><i class="parameter"><tt>format</tt></i> :</span></td><td>
+</td></tr><tr><td><span class="term"><i class="parameter"><tt>width</tt></i> :</span></td><td>
+</td></tr><tr><td><span class="term"><i class="parameter"><tt>height</tt></i> :</span></td><td>
+
+
+</td></tr></tbody></table></div></div><hr><div class="refsect2" lang="en"><a name="id2742406"></a><h3><a name="cairo-png-surface-create"></a>cairo_png_surface_create ()</h3><a class="indexterm" name="id2742414"></a><pre class="programlisting"><a href="cairo-cairo-surface-t.html#cairo-surface-t">cairo_surface_t</a>* cairo_png_surface_create   (FILE *file,
+                                             <a href="cairo-cairo-t.html#cairo-format-t">cairo_format_t</a> format,
+                                             int width,
+                                             int height);</pre><p>
+
+</p><div class="variablelist"><table border="0"><col align="left" valign="top"><tbody><tr><td><span class="term"><i class="parameter"><tt>file</tt></i> :</span></td><td>
+</td></tr><tr><td><span class="term"><i class="parameter"><tt>format</tt></i> :</span></td><td>
+</td></tr><tr><td><span class="term"><i class="parameter"><tt>width</tt></i> :</span></td><td>
+</td></tr><tr><td><span class="term"><i class="parameter"><tt>height</tt></i> :</span></td><td>
+</td></tr><tr><td><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></td><td>
+
+
+</td></tr></tbody></table></div></div></div></div><table class="navigation" width="100%" summary="Navigation footer" cellpadding="2" cellspacing="0"><tr valign="middle"><td align="left"><a accesskey="p" href="cairo-PDF-Backend.html"><b>&lt;&lt; PDF Backend</b></a></td><td align="right"><a accesskey="n" href="cairo-PS-Backend.html"><b>PS Backend &gt;&gt;</b></a></td></tr></table></body></html>

@@ -1,53 +1,56 @@
-cairoincludedir = $(includedir)/cairo
-cairoinclude_HEADERS =	\
-	cairo.h		\
-	cairo-atsui.h	\
-	cairo-features.h\
-	cairo-ft.h	\
-	cairo-glitz.h	\
-	cairo-pdf.h	\
-	cairo-png.h	\
-	cairo-ps.h	\
-	cairo-quartz.h	\
-	cairo-xcb.h	\
-	cairo-xlib.h
-
-lib_LTLIBRARIES = libcairo.la
 
 if CAIRO_HAS_PS_SURFACE
-libcairo_ps_sources = cairo_ps_surface.c cairo-ps.h
+libcairo_ps_headers = cairo-ps.h
+libcairo_ps_sources = cairo_ps_surface.c
 endif
 
 if CAIRO_HAS_PDF_SURFACE
-libcairo_pdf_sources = cairo_pdf_surface.c cairo-pdf.h
+libcairo_pdf_headers = cairo-pdf.h
+libcairo_pdf_sources = cairo_pdf_surface.c
 endif
 
 if CAIRO_HAS_PNG_SURFACE
-libcairo_png_sources = cairo_png_surface.c cairo-png.h
+libcairo_png_headers = cairo-png.h
+libcairo_png_sources = cairo_png_surface.c
 endif
 
 if CAIRO_HAS_XLIB_SURFACE
-libcairo_xlib_sources = cairo_xlib_surface.c cairo-xlib.h
+libcairo_xlib_headers = cairo-xlib.h
+libcairo_xlib_sources = cairo_xlib_surface.c
 endif
 
 if CAIRO_HAS_QUARTZ_SURFACE
-libcairo_quartz_sources = cairo_quartz_surface.c cairo-quartz.h
+libcairo_quartz_headers = cairo-quartz.h
+libcairo_quartz_sources = cairo_quartz_surface.c
 endif
 
 if CAIRO_HAS_XCB_SURFACE
-libcairo_xcb_sources = cairo_xcb_surface.c cairo-xcb.h
+libcairo_xcb_headers = cairo-xcb.h
+libcairo_xcb_sources = cairo_xcb_surface.c
+endif
+
+libcairo_win32_sources =
+if CAIRO_HAS_WIN32_SURFACE
+libcairo_win32_headers = cairo-win32.h
+libcairo_win32_sources += cairo_win32_surface.c cairo-win32-private.h
+endif
+if CAIRO_HAS_WIN32_FONT
+libcairo_win32_sources += cairo_win32_font.c
 endif
 
 if CAIRO_HAS_GLITZ_SURFACE
-libcairo_glitz_sources = cairo_glitz_surface.c cairo-glitz.h
+libcairo_glitz_headers = cairo-glitz.h
+libcairo_glitz_sources = cairo_glitz_surface.c
 endif
 
 if CAIRO_HAS_ATSUI_FONT
-libcairo_atsui_sources = cairo_atsui_font.c cairo-atsui.h
+libcairo_atsui_headers = cairo-atsui.h
+libcairo_atsui_sources = cairo_atsui_font.c
 endif
 
 if CAIRO_HAS_FT_FONT
-libcairo_ft_sources = cairo_ft_font.c cairo-ft.h
+libcairo_ft_headers = cairo-ft.h
+libcairo_ft_sources = cairo_ft_font.c cairo-ft-private.h
 endif
 
 # These names match automake style variable definition conventions so
@@ -56,6 +59,23 @@ endif
 # term and automake does not care about it)
 FONTCONFIG_LIBS=@FONTCONFIG_LIBS@
 XRENDER_LIBS=@XRENDER_LIBS@
+
+cairoincludedir = $(includedir)/cairo
+cairoinclude_HEADERS =			\
+	cairo.h				\
+	cairo-features.h		\
+	$(libcairo_atsui_headers)	\
+	$(libcairo_ft_headers)		\
+	$(libcairo_glitz_headers)	\
+	$(libcairo_pdf_headers)		\
+	$(libcairo_png_headers)		\
+	$(libcairo_ps_headers)		\
+	$(libcairo_quartz_headers)	\
+	$(libcairo_win32_headers)	\
+	$(libcairo_xcb_headers)		\
+	$(libcairo_xlib_headers)
+
+lib_LTLIBRARIES = libcairo.la
 
 libcairo_la_SOURCES = 		\
 	cairo.c			\
@@ -80,6 +100,7 @@ libcairo_la_SOURCES = 		\
 	cairo_surface.c		\
 	cairo_traps.c		\
 	cairo_pattern.c		\
+	cairo_unicode.c		\
 	cairo_wideint.c		\
 	cairo-wideint.h		\
 	$(libcairo_atsui_sources)\
@@ -91,6 +112,8 @@ libcairo_la_SOURCES = 		\
 	$(libcairo_quartz_sources)\
 	$(libcairo_xcb_sources) \
 	$(libcairo_glitz_sources)\
+	$(libcairo_win32_sources)\
+	$(libcairo_freetype_sources)  \
 	cairoint.h
 
 libcairo_la_LDFLAGS = -version-info @VERSION_INFO@ -no-undefined
@@ -98,3 +121,13 @@ libcairo_la_LDFLAGS = -version-info @VERSION_INFO@ -no-undefined
 INCLUDES = -I$(srcdir) $(CAIRO_CFLAGS)
 
 libcairo_la_LIBADD = $(CAIRO_LIBS)
+
+install-data-local:
+	@if test -f $(includedir)/cairo.h || test -f $(includedir)/cairo-features.h ; then \
+	  echo "****************************************************************" ;	\
+	  echo "*** Error: Old headers found. You should remove the following" ;	\
+	  echo "***        files and then type 'make install' again." ;			\
+	  ls $(includedir)/cairo*.h ;							\
+	  echo "****************************************************************" ;	\
+	  false ;									\
+        fi

@@ -463,7 +463,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS VERSION_INFO INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CPP build build_cpu build_vendor build_os host host_cpu host_vendor host_os EGREP LN_S ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL PKG_CONFIG XRENDER_CFLAGS XRENDER_LIBS X_CFLAGS X_PRE_LIBS X_LIBS X_EXTRA_LIBS CAIRO_HAS_XLIB_SURFACE_TRUE CAIRO_HAS_XLIB_SURFACE_FALSE XLIB_SURFACE_FEATURE XRENDER_REQUIRES CAIRO_HAS_QUARTZ_SURFACE_TRUE CAIRO_HAS_QUARTZ_SURFACE_FALSE QUARTZ_SURFACE_FEATURE XCB_CFLAGS XCB_LIBS CAIRO_HAS_XCB_SURFACE_TRUE CAIRO_HAS_XCB_SURFACE_FALSE XCB_SURFACE_FEATURE CAIRO_HAS_PS_SURFACE_TRUE CAIRO_HAS_PS_SURFACE_FALSE PS_SURFACE_FEATURE PS_LIBS CAIRO_HAS_PDF_SURFACE_TRUE CAIRO_HAS_PDF_SURFACE_FALSE PDF_SURFACE_FEATURE PDF_LIBS PNG_CFLAGS PNG_LIBS CAIRO_HAS_PNG_SURFACE_TRUE CAIRO_HAS_PNG_SURFACE_FALSE PNG_SURFACE_FEATURE PNG_REQUIRES GLITZ_CFLAGS GLITZ_LIBS CAIRO_HAS_GLITZ_SURFACE_TRUE CAIRO_HAS_GLITZ_SURFACE_FALSE GLITZ_SURFACE_FEATURE GLITZ_REQUIRES SANITY_CHECKING_FEATURE PIXMAN_CFLAGS PIXMAN_LIBS FONTCONFIG_CFLAGS FONTCONFIG_LIBS FREETYPE_CONFIG FREETYPE_CFLAGS FREETYPE_LIBS CAIRO_HAS_FT_FONT_TRUE CAIRO_HAS_FT_FONT_FALSE FT_FONT_FEATURE CAIRO_HAS_ATSUI_FONT_TRUE CAIRO_HAS_ATSUI_FONT_FALSE ATSUI_FONT_FEATURE CAIRO_CFLAGS CAIRO_LIBS LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS VERSION_INFO INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CPP build build_cpu build_vendor build_os host host_cpu host_vendor host_os EGREP LN_S ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL PKG_CONFIG XRENDER_CFLAGS XRENDER_LIBS X_CFLAGS X_PRE_LIBS X_LIBS X_EXTRA_LIBS CAIRO_HAS_XLIB_SURFACE_TRUE CAIRO_HAS_XLIB_SURFACE_FALSE XLIB_SURFACE_FEATURE XRENDER_REQUIRES CAIRO_HAS_QUARTZ_SURFACE_TRUE CAIRO_HAS_QUARTZ_SURFACE_FALSE QUARTZ_SURFACE_FEATURE XCB_CFLAGS XCB_LIBS CAIRO_HAS_XCB_SURFACE_TRUE CAIRO_HAS_XCB_SURFACE_FALSE XCB_SURFACE_FEATURE CAIRO_HAS_WIN32_SURFACE_TRUE CAIRO_HAS_WIN32_SURFACE_FALSE CAIRO_HAS_WIN32_FONT_TRUE CAIRO_HAS_WIN32_FONT_FALSE WIN32_SURFACE_FEATURE WIN32_FONT_FEATURE CAIRO_HAS_PS_SURFACE_TRUE CAIRO_HAS_PS_SURFACE_FALSE PS_SURFACE_FEATURE PS_LIBS PNG_CFLAGS PNG_LIBS CAIRO_HAS_PNG_SURFACE_TRUE CAIRO_HAS_PNG_SURFACE_FALSE PNG_SURFACE_FEATURE PNG_REQUIRES GLITZ_CFLAGS GLITZ_LIBS CAIRO_HAS_GLITZ_SURFACE_TRUE CAIRO_HAS_GLITZ_SURFACE_FALSE GLITZ_SURFACE_FEATURE GLITZ_REQUIRES SANITY_CHECKING_FEATURE PIXMAN_CFLAGS PIXMAN_LIBS FONTCONFIG_CFLAGS FONTCONFIG_LIBS FREETYPE_CONFIG FREETYPE_CFLAGS FREETYPE_LIBS FREETYPE_REQUIRES CAIRO_HAS_FT_FONT_TRUE CAIRO_HAS_FT_FONT_FALSE FT_FONT_FEATURE CAIRO_HAS_PDF_SURFACE_TRUE CAIRO_HAS_PDF_SURFACE_FALSE PDF_SURFACE_FEATURE PDF_LIBS CAIRO_HAS_ATSUI_FONT_TRUE CAIRO_HAS_ATSUI_FONT_FALSE ATSUI_FONT_FEATURE CAIRO_CFLAGS CAIRO_LIBS HTML_DIR ENABLE_GTK_DOC_TRUE ENABLE_GTK_DOC_FALSE GTK_DOC_USE_LIBTOOL_TRUE GTK_DOC_USE_LIBTOOL_FALSE LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -1041,13 +1041,15 @@ Optional Features:
   --disable-xlib          Disable cairo's Xlib backend
   --disable-quartz          Disable cairo's quartz backend
   --disable-xcb           Disable cairo's XCB backend
+  --disable-win32          Disable cairo's Microsoft Windows backend
   --disable-ps            Disable cairo's PostScript backend
-  --disable-pdf           Disable cairo's PDF backend
   --disable-png           Disable cairo's PNG backend
   --disable-glitz         Disable cairo's glitz backend
   --disable-sanity        Disable cairo's sanity checking routines
   --disable-freetype      Disable cairo's freetype font backend
+  --disable-pdf           Disable cairo's PDF backend
   --disable-atsui         Disable cairo's atsui font backend
+  --enable-gtk-doc        use gtk-doc to build documentation default=no
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -1058,6 +1060,7 @@ Optional Packages:
   --with-tags[=TAGS]
                           include additional configurations [automatic]
   --with-x                use the X Window System
+  --with-html-dir=PATH    path to installed docs
 
 Some influential environment variables:
   CC          C compiler command
@@ -1514,7 +1517,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 # Package version number, (as distinct from shared library version)
-CAIRO_VERSION=0.3.0
+CAIRO_VERSION=0.4.0
 
 # libtool shared library version
 
@@ -3945,7 +3948,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 3948 "configure"' > conftest.$ac_ext
+  echo '#line 3951 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -5283,7 +5286,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:5286:" \
+echo "$as_me:5289:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -6317,11 +6320,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:6320: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:6323: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:6324: \$? = $ac_status" >&5
+   echo "$as_me:6327: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -6550,11 +6553,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:6553: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:6556: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:6557: \$? = $ac_status" >&5
+   echo "$as_me:6560: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -6610,11 +6613,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:6613: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:6616: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:6617: \$? = $ac_status" >&5
+   echo "$as_me:6620: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -7944,7 +7947,7 @@ linux*)
   libsuff=
   case "$host_cpu" in
   x86_64*|s390x*|powerpc64*)
-    echo '#line 7947 "configure"' > conftest.$ac_ext
+    echo '#line 7950 "configure"' > conftest.$ac_ext
     if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -8815,7 +8818,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 8818 "configure"
+#line 8821 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -8913,7 +8916,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 8916 "configure"
+#line 8919 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -11092,11 +11095,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:11095: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:11098: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:11099: \$? = $ac_status" >&5
+   echo "$as_me:11102: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -11152,11 +11155,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:11155: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:11158: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:11159: \$? = $ac_status" >&5
+   echo "$as_me:11162: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -11663,7 +11666,7 @@ linux*)
   libsuff=
   case "$host_cpu" in
   x86_64*|s390x*|powerpc64*)
-    echo '#line 11666 "configure"' > conftest.$ac_ext
+    echo '#line 11669 "configure"' > conftest.$ac_ext
     if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -12534,7 +12537,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 12537 "configure"
+#line 12540 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -12632,7 +12635,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 12635 "configure"
+#line 12638 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -13459,11 +13462,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13462: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13465: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:13466: \$? = $ac_status" >&5
+   echo "$as_me:13469: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -13519,11 +13522,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13522: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13525: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:13526: \$? = $ac_status" >&5
+   echo "$as_me:13529: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -14833,7 +14836,7 @@ linux*)
   libsuff=
   case "$host_cpu" in
   x86_64*|s390x*|powerpc64*)
-    echo '#line 14836 "configure"' > conftest.$ac_ext
+    echo '#line 14839 "configure"' > conftest.$ac_ext
     if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -15574,11 +15577,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:15577: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:15580: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:15581: \$? = $ac_status" >&5
+   echo "$as_me:15584: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -15807,11 +15810,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:15810: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:15813: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:15814: \$? = $ac_status" >&5
+   echo "$as_me:15817: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -15867,11 +15870,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:15870: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:15873: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:15874: \$? = $ac_status" >&5
+   echo "$as_me:15877: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -17201,7 +17204,7 @@ linux*)
   libsuff=
   case "$host_cpu" in
   x86_64*|s390x*|powerpc64*)
-    echo '#line 17204 "configure"' > conftest.$ac_ext
+    echo '#line 17207 "configure"' > conftest.$ac_ext
     if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -18072,7 +18075,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 18075 "configure"
+#line 18078 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -18170,7 +18173,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 18173 "configure"
+#line 18176 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -19579,6 +19582,109 @@ echo "$as_me: error: unknown endianness
 presetting ac_cv_c_bigendian=no (or yes) will help" >&2;}
    { (exit 1); exit 1; }; } ;;
 esac
+
+
+
+for ac_func in vasnprintf
+do
+as_ac_var=`echo "ac_cv_func_$ac_func" | $as_tr_sh`
+echo "$as_me:$LINENO: checking for $ac_func" >&5
+echo $ECHO_N "checking for $ac_func... $ECHO_C" >&6
+if eval "test \"\${$as_ac_var+set}\" = set"; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+/* Define $ac_func to an innocuous variant, in case <limits.h> declares $ac_func.
+   For example, HP-UX 11i <limits.h> declares gettimeofday.  */
+#define $ac_func innocuous_$ac_func
+
+/* System header to define __stub macros and hopefully few prototypes,
+    which can conflict with char $ac_func (); below.
+    Prefer <limits.h> to <assert.h> if __STDC__ is defined, since
+    <limits.h> exists even on freestanding compilers.  */
+
+#ifdef __STDC__
+# include <limits.h>
+#else
+# include <assert.h>
+#endif
+
+#undef $ac_func
+
+/* Override any gcc2 internal prototype to avoid an error.  */
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+/* We use char because int might match the return type of a gcc2
+   builtin and then its argument prototype would still apply.  */
+char $ac_func ();
+/* The GNU C library defines this for functions which it implements
+    to always fail with ENOSYS.  Some functions are actually named
+    something starting with __ and the normal name is an alias.  */
+#if defined (__stub_$ac_func) || defined (__stub___$ac_func)
+choke me
+#else
+char (*f) () = $ac_func;
+#endif
+#ifdef __cplusplus
+}
+#endif
+
+int
+main ()
+{
+return f != $ac_func;
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  eval "$as_ac_var=yes"
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+eval "$as_ac_var=no"
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+fi
+echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_var'}'`" >&5
+echo "${ECHO_T}`eval echo '${'$as_ac_var'}'`" >&6
+if test `eval echo '${'$as_ac_var'}'` = yes; then
+  cat >>confdefs.h <<_ACEOF
+#define `echo "HAVE_$ac_func" | $as_tr_cpp` 1
+_ACEOF
+
+fi
+done
 
 
 LIBM=
@@ -21905,6 +22011,91 @@ CAIRO_LIBS="$CAIRO_LIBS $XCB_LIBS"
 
 
 
+echo "$as_me:$LINENO: checking for some Win32 platform" >&5
+echo $ECHO_N "checking for some Win32 platform... $ECHO_C" >&6
+case "$host" in
+  *-*-mingw*|*-*-cygwin*)
+    cairo_platform_win32=yes
+    ;;
+  *)
+    cairo_platform_win32=no
+    ;;
+esac
+echo "$as_me:$LINENO: result: $cairo_platform_win32" >&5
+echo "${ECHO_T}$cairo_platform_win32" >&6
+
+# Check whether --enable-win32 or --disable-win32 was given.
+if test "${enable_win32+set}" = set; then
+  enableval="$enable_win32"
+  use_win32=$enableval
+else
+  use_win32="yes"
+fi;
+
+if test "x$cairo_platform_win32" != "xyes" ; then
+  use_win32=no
+fi
+
+if test "x$use_win32" = "xyes"; then
+   CAIRO_LIBS="$CAIRO_LIBS -lgdi32 -lmsimg32"
+fi
+
+if test "x$use_win32" != "xyes"; then
+  WIN32_SURFACE_FEATURE=CAIRO_HAS_NO_WIN32_SURFACE
+
+
+if false; then
+  CAIRO_HAS_WIN32_SURFACE_TRUE=
+  CAIRO_HAS_WIN32_SURFACE_FALSE='#'
+else
+  CAIRO_HAS_WIN32_SURFACE_TRUE='#'
+  CAIRO_HAS_WIN32_SURFACE_FALSE=
+fi
+
+else
+  WIN32_SURFACE_FEATURE=CAIRO_HAS_WIN32_SURFACE
+
+
+if true; then
+  CAIRO_HAS_WIN32_SURFACE_TRUE=
+  CAIRO_HAS_WIN32_SURFACE_FALSE='#'
+else
+  CAIRO_HAS_WIN32_SURFACE_TRUE='#'
+  CAIRO_HAS_WIN32_SURFACE_FALSE=
+fi
+
+fi
+
+if test "x$use_win32" != "xyes"; then
+  WIN32_FONT_FEATURE=CAIRO_HAS_NO_WIN32_FONT
+
+
+if false; then
+  CAIRO_HAS_WIN32_FONT_TRUE=
+  CAIRO_HAS_WIN32_FONT_FALSE='#'
+else
+  CAIRO_HAS_WIN32_FONT_TRUE='#'
+  CAIRO_HAS_WIN32_FONT_FALSE=
+fi
+
+else
+  WIN32_FONT_FEATURE=CAIRO_HAS_WIN32_FONT
+
+
+if true; then
+  CAIRO_HAS_WIN32_FONT_TRUE=
+  CAIRO_HAS_WIN32_FONT_FALSE='#'
+else
+  CAIRO_HAS_WIN32_FONT_TRUE='#'
+  CAIRO_HAS_WIN32_FONT_FALSE=
+fi
+
+fi
+
+
+
+
+
 # Check whether --enable-ps or --disable-ps was given.
 if test "${enable_ps+set}" = set; then
   enableval="$enable_ps"
@@ -21946,47 +22137,6 @@ CAIRO_LIBS="$CAIRO_LIBS $PS_LIBS"
 
 
 
-# Check whether --enable-pdf or --disable-pdf was given.
-if test "${enable_pdf+set}" = set; then
-  enableval="$enable_pdf"
-  use_pdf=$enableval
-else
-  use_pdf=yes
-fi;
-
-if test "x$use_pdf" != "xyes"; then
-  PDF_SURFACE_FEATURE=CAIRO_HAS_NO_PDF_SURFACE
-
-
-if false; then
-  CAIRO_HAS_PDF_SURFACE_TRUE=
-  CAIRO_HAS_PDF_SURFACE_FALSE='#'
-else
-  CAIRO_HAS_PDF_SURFACE_TRUE='#'
-  CAIRO_HAS_PDF_SURFACE_FALSE=
-fi
-
-else
-  PDF_SURFACE_FEATURE=CAIRO_HAS_PDF_SURFACE
-  PDF_LIBS=-lz
-
-
-if true; then
-  CAIRO_HAS_PDF_SURFACE_TRUE=
-  CAIRO_HAS_PDF_SURFACE_FALSE='#'
-else
-  CAIRO_HAS_PDF_SURFACE_TRUE='#'
-  CAIRO_HAS_PDF_SURFACE_FALSE=
-fi
-
-fi
-
-CAIRO_LIBS="$CAIRO_LIBS $PDF_LIBS"
-
-
-
-
-
 # Check whether --enable-png or --disable-png was given.
 if test "${enable_png+set}" = set; then
   enableval="$enable_png"
@@ -21996,202 +22146,120 @@ else
 fi;
 
 if test "x$use_png" = "xyes"; then
-
-  succeeded=no
-
-  if test -z "$PKG_CONFIG"; then
-    # Extract the first word of "pkg-config", so it can be a program name with args.
-set dummy pkg-config; ac_word=$2
-echo "$as_me:$LINENO: checking for $ac_word" >&5
-echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6
-if test "${ac_cv_path_PKG_CONFIG+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  case $PKG_CONFIG in
-  [\\/]* | ?:[\\/]*)
-  ac_cv_path_PKG_CONFIG="$PKG_CONFIG" # Let the user override the test with a path.
-  ;;
-  *)
-  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-  for ac_exec_ext in '' $ac_executable_extensions; do
-  if $as_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_path_PKG_CONFIG="$as_dir/$ac_word$ac_exec_ext"
-    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-done
-
-  test -z "$ac_cv_path_PKG_CONFIG" && ac_cv_path_PKG_CONFIG="no"
-  ;;
-esac
-fi
-PKG_CONFIG=$ac_cv_path_PKG_CONFIG
-
-if test -n "$PKG_CONFIG"; then
-  echo "$as_me:$LINENO: result: $PKG_CONFIG" >&5
-echo "${ECHO_T}$PKG_CONFIG" >&6
-else
-  echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
-fi
-
-  fi
-
-  if test "$PKG_CONFIG" = "no" ; then
-     echo "*** The pkg-config script could not be found. Make sure it is"
-     echo "*** in your path, or set the PKG_CONFIG environment variable"
-     echo "*** to the full path to pkg-config."
-     echo "*** Or see http://www.freedesktop.org/software/pkgconfig to get pkg-config."
-  else
-     PKG_CONFIG_MIN_VERSION=0.9.0
-     if $PKG_CONFIG --atleast-pkgconfig-version $PKG_CONFIG_MIN_VERSION; then
-        echo "$as_me:$LINENO: checking for libpng12" >&5
-echo $ECHO_N "checking for libpng12... $ECHO_C" >&6
-
-        if $PKG_CONFIG --exists "libpng12" ; then
-            echo "$as_me:$LINENO: result: yes" >&5
-echo "${ECHO_T}yes" >&6
-            succeeded=yes
-
-            echo "$as_me:$LINENO: checking PNG_CFLAGS" >&5
-echo $ECHO_N "checking PNG_CFLAGS... $ECHO_C" >&6
-            PNG_CFLAGS=`$PKG_CONFIG --cflags "libpng12"`
-            echo "$as_me:$LINENO: result: $PNG_CFLAGS" >&5
-echo "${ECHO_T}$PNG_CFLAGS" >&6
-
-            echo "$as_me:$LINENO: checking PNG_LIBS" >&5
-echo $ECHO_N "checking PNG_LIBS... $ECHO_C" >&6
-            PNG_LIBS=`$PKG_CONFIG --libs "libpng12"`
-            echo "$as_me:$LINENO: result: $PNG_LIBS" >&5
-echo "${ECHO_T}$PNG_LIBS" >&6
-        else
-            PNG_CFLAGS=""
-            PNG_LIBS=""
-            ## If we have a custom action on failure, don't print errors, but
-            ## do set a variable so people can do so.
-            PNG_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "libpng12"`
-
-        fi
-
-
-
-     else
-        echo "*** Your version of pkg-config is too old. You need version $PKG_CONFIG_MIN_VERSION or newer."
-        echo "*** See http://www.freedesktop.org/software/pkgconfig"
-     fi
-  fi
-
-  if test $succeeded = yes; then
-
-    PNG_REQUIRES=libpng12
-    use_png=yes
-  else
-
-
-  succeeded=no
-
-  if test -z "$PKG_CONFIG"; then
-    # Extract the first word of "pkg-config", so it can be a program name with args.
-set dummy pkg-config; ac_word=$2
-echo "$as_me:$LINENO: checking for $ac_word" >&5
-echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6
-if test "${ac_cv_path_PKG_CONFIG+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  case $PKG_CONFIG in
-  [\\/]* | ?:[\\/]*)
-  ac_cv_path_PKG_CONFIG="$PKG_CONFIG" # Let the user override the test with a path.
-  ;;
-  *)
-  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-  for ac_exec_ext in '' $ac_executable_extensions; do
-  if $as_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_path_PKG_CONFIG="$as_dir/$ac_word$ac_exec_ext"
-    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-done
-
-  test -z "$ac_cv_path_PKG_CONFIG" && ac_cv_path_PKG_CONFIG="no"
-  ;;
-esac
-fi
-PKG_CONFIG=$ac_cv_path_PKG_CONFIG
-
-if test -n "$PKG_CONFIG"; then
-  echo "$as_me:$LINENO: result: $PKG_CONFIG" >&5
-echo "${ECHO_T}$PKG_CONFIG" >&6
-else
-  echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
-fi
-
-  fi
-
-  if test "$PKG_CONFIG" = "no" ; then
-     echo "*** The pkg-config script could not be found. Make sure it is"
-     echo "*** in your path, or set the PKG_CONFIG environment variable"
-     echo "*** to the full path to pkg-config."
-     echo "*** Or see http://www.freedesktop.org/software/pkgconfig to get pkg-config."
-  else
-     PKG_CONFIG_MIN_VERSION=0.9.0
-     if $PKG_CONFIG --atleast-pkgconfig-version $PKG_CONFIG_MIN_VERSION; then
-        echo "$as_me:$LINENO: checking for libpng10" >&5
-echo $ECHO_N "checking for libpng10... $ECHO_C" >&6
-
-        if $PKG_CONFIG --exists "libpng10" ; then
-            echo "$as_me:$LINENO: result: yes" >&5
-echo "${ECHO_T}yes" >&6
-            succeeded=yes
-
-            echo "$as_me:$LINENO: checking PNG_CFLAGS" >&5
-echo $ECHO_N "checking PNG_CFLAGS... $ECHO_C" >&6
-            PNG_CFLAGS=`$PKG_CONFIG --cflags "libpng10"`
-            echo "$as_me:$LINENO: result: $PNG_CFLAGS" >&5
-echo "${ECHO_T}$PNG_CFLAGS" >&6
-
-            echo "$as_me:$LINENO: checking PNG_LIBS" >&5
-echo $ECHO_N "checking PNG_LIBS... $ECHO_C" >&6
-            PNG_LIBS=`$PKG_CONFIG --libs "libpng10"`
-            echo "$as_me:$LINENO: result: $PNG_LIBS" >&5
-echo "${ECHO_T}$PNG_LIBS" >&6
-        else
-            PNG_CFLAGS=""
-            PNG_LIBS=""
-            ## If we have a custom action on failure, don't print errors, but
-            ## do set a variable so people can do so.
-            PNG_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "libpng10"`
-
-        fi
-
-
-
-     else
-        echo "*** Your version of pkg-config is too old. You need version $PKG_CONFIG_MIN_VERSION or newer."
-        echo "*** See http://www.freedesktop.org/software/pkgconfig"
-     fi
-  fi
-
-  if test $succeeded = yes; then
-
-      PNG_REQUIRES=libpng10
+  use_png=no
+  # libpng13 is GnuWin32's libpng-1.2.8 :-(
+  for l in libpng12 libpng13 libpng10 ; do
+    if $PKG_CONFIG --exists $l ; then
+      PNG_REQUIRES=$l
       use_png=yes
+      break
+    fi
+  done
+
+  if test "x$use_png" = "xyes" ; then
+    # Sets PNG_CFLAGS, PNG_LIBS
+
+  succeeded=no
+
+  if test -z "$PKG_CONFIG"; then
+    # Extract the first word of "pkg-config", so it can be a program name with args.
+set dummy pkg-config; ac_word=$2
+echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6
+if test "${ac_cv_path_PKG_CONFIG+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  case $PKG_CONFIG in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_PKG_CONFIG="$PKG_CONFIG" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if $as_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+    ac_cv_path_PKG_CONFIG="$as_dir/$ac_word$ac_exec_ext"
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+
+  test -z "$ac_cv_path_PKG_CONFIG" && ac_cv_path_PKG_CONFIG="no"
+  ;;
+esac
+fi
+PKG_CONFIG=$ac_cv_path_PKG_CONFIG
+
+if test -n "$PKG_CONFIG"; then
+  echo "$as_me:$LINENO: result: $PKG_CONFIG" >&5
+echo "${ECHO_T}$PKG_CONFIG" >&6
+else
+  echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+fi
+
+  fi
+
+  if test "$PKG_CONFIG" = "no" ; then
+     echo "*** The pkg-config script could not be found. Make sure it is"
+     echo "*** in your path, or set the PKG_CONFIG environment variable"
+     echo "*** to the full path to pkg-config."
+     echo "*** Or see http://www.freedesktop.org/software/pkgconfig to get pkg-config."
   else
-     use_png="no (requires libpng http://www.libpng.org)"
+     PKG_CONFIG_MIN_VERSION=0.9.0
+     if $PKG_CONFIG --atleast-pkgconfig-version $PKG_CONFIG_MIN_VERSION; then
+        echo "$as_me:$LINENO: checking for $PNG_REQUIRES" >&5
+echo $ECHO_N "checking for $PNG_REQUIRES... $ECHO_C" >&6
+
+        if $PKG_CONFIG --exists "$PNG_REQUIRES" ; then
+            echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+            succeeded=yes
+
+            echo "$as_me:$LINENO: checking PNG_CFLAGS" >&5
+echo $ECHO_N "checking PNG_CFLAGS... $ECHO_C" >&6
+            PNG_CFLAGS=`$PKG_CONFIG --cflags "$PNG_REQUIRES"`
+            echo "$as_me:$LINENO: result: $PNG_CFLAGS" >&5
+echo "${ECHO_T}$PNG_CFLAGS" >&6
+
+            echo "$as_me:$LINENO: checking PNG_LIBS" >&5
+echo $ECHO_N "checking PNG_LIBS... $ECHO_C" >&6
+            PNG_LIBS=`$PKG_CONFIG --libs "$PNG_REQUIRES"`
+            echo "$as_me:$LINENO: result: $PNG_LIBS" >&5
+echo "${ECHO_T}$PNG_LIBS" >&6
+        else
+            PNG_CFLAGS=""
+            PNG_LIBS=""
+            ## If we have a custom action on failure, don't print errors, but
+            ## do set a variable so people can do so.
+            PNG_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "$PNG_REQUIRES"`
+            echo $PNG_PKG_ERRORS
+        fi
+
+
+
+     else
+        echo "*** Your version of pkg-config is too old. You need version $PKG_CONFIG_MIN_VERSION or newer."
+        echo "*** See http://www.freedesktop.org/software/pkgconfig"
+     fi
   fi
 
+  if test $succeeded = yes; then
+     :
+  else
+     { { echo "$as_me:$LINENO: error: Library requirements ($PNG_REQUIRES) not met; consider adjusting the PKG_CONFIG_PATH environment variable if your libraries are in a nonstandard prefix so pkg-config can find them." >&5
+echo "$as_me: error: Library requirements ($PNG_REQUIRES) not met; consider adjusting the PKG_CONFIG_PATH environment variable if your libraries are in a nonstandard prefix so pkg-config can find them." >&2;}
+   { (exit 1); exit 1; }; }
   fi
 
+  else
+    { echo "$as_me:$LINENO: WARNING: Could not find libpng in the pkg-config search path" >&5
+echo "$as_me: WARNING: Could not find libpng in the pkg-config search path" >&2;}
+  fi
 fi
 
 if test "x$use_png" != "xyes"; then
@@ -22290,23 +22358,23 @@ fi
   else
      PKG_CONFIG_MIN_VERSION=0.9.0
      if $PKG_CONFIG --atleast-pkgconfig-version $PKG_CONFIG_MIN_VERSION; then
-        echo "$as_me:$LINENO: checking for glitz >= 0.3.0" >&5
-echo $ECHO_N "checking for glitz >= 0.3.0... $ECHO_C" >&6
+        echo "$as_me:$LINENO: checking for glitz >= 0.4.0" >&5
+echo $ECHO_N "checking for glitz >= 0.4.0... $ECHO_C" >&6
 
-        if $PKG_CONFIG --exists "glitz >= 0.3.0" ; then
+        if $PKG_CONFIG --exists "glitz >= 0.4.0" ; then
             echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
             succeeded=yes
 
             echo "$as_me:$LINENO: checking GLITZ_CFLAGS" >&5
 echo $ECHO_N "checking GLITZ_CFLAGS... $ECHO_C" >&6
-            GLITZ_CFLAGS=`$PKG_CONFIG --cflags "glitz >= 0.3.0"`
+            GLITZ_CFLAGS=`$PKG_CONFIG --cflags "glitz >= 0.4.0"`
             echo "$as_me:$LINENO: result: $GLITZ_CFLAGS" >&5
 echo "${ECHO_T}$GLITZ_CFLAGS" >&6
 
             echo "$as_me:$LINENO: checking GLITZ_LIBS" >&5
 echo $ECHO_N "checking GLITZ_LIBS... $ECHO_C" >&6
-            GLITZ_LIBS=`$PKG_CONFIG --libs "glitz >= 0.3.0"`
+            GLITZ_LIBS=`$PKG_CONFIG --libs "glitz >= 0.4.0"`
             echo "$as_me:$LINENO: result: $GLITZ_LIBS" >&5
 echo "${ECHO_T}$GLITZ_LIBS" >&6
         else
@@ -22314,7 +22382,7 @@ echo "${ECHO_T}$GLITZ_LIBS" >&6
             GLITZ_LIBS=""
             ## If we have a custom action on failure, don't print errors, but
             ## do set a variable so people can do so.
-            GLITZ_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "glitz >= 0.3.0"`
+            GLITZ_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "glitz >= 0.4.0"`
 
         fi
 
@@ -22440,23 +22508,23 @@ fi
   else
      PKG_CONFIG_MIN_VERSION=0.9.0
      if $PKG_CONFIG --atleast-pkgconfig-version $PKG_CONFIG_MIN_VERSION; then
-        echo "$as_me:$LINENO: checking for libpixman >= 0.1.2" >&5
-echo $ECHO_N "checking for libpixman >= 0.1.2... $ECHO_C" >&6
+        echo "$as_me:$LINENO: checking for libpixman >= 0.1.4" >&5
+echo $ECHO_N "checking for libpixman >= 0.1.4... $ECHO_C" >&6
 
-        if $PKG_CONFIG --exists "libpixman >= 0.1.2" ; then
+        if $PKG_CONFIG --exists "libpixman >= 0.1.4" ; then
             echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
             succeeded=yes
 
             echo "$as_me:$LINENO: checking PIXMAN_CFLAGS" >&5
 echo $ECHO_N "checking PIXMAN_CFLAGS... $ECHO_C" >&6
-            PIXMAN_CFLAGS=`$PKG_CONFIG --cflags "libpixman >= 0.1.2"`
+            PIXMAN_CFLAGS=`$PKG_CONFIG --cflags "libpixman >= 0.1.4"`
             echo "$as_me:$LINENO: result: $PIXMAN_CFLAGS" >&5
 echo "${ECHO_T}$PIXMAN_CFLAGS" >&6
 
             echo "$as_me:$LINENO: checking PIXMAN_LIBS" >&5
 echo $ECHO_N "checking PIXMAN_LIBS... $ECHO_C" >&6
-            PIXMAN_LIBS=`$PKG_CONFIG --libs "libpixman >= 0.1.2"`
+            PIXMAN_LIBS=`$PKG_CONFIG --libs "libpixman >= 0.1.4"`
             echo "$as_me:$LINENO: result: $PIXMAN_LIBS" >&5
 echo "${ECHO_T}$PIXMAN_LIBS" >&6
         else
@@ -22464,7 +22532,7 @@ echo "${ECHO_T}$PIXMAN_LIBS" >&6
             PIXMAN_LIBS=""
             ## If we have a custom action on failure, don't print errors, but
             ## do set a variable so people can do so.
-            PIXMAN_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "libpixman >= 0.1.2"`
+            PIXMAN_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "libpixman >= 0.1.4"`
             echo $PIXMAN_PKG_ERRORS
         fi
 
@@ -22479,8 +22547,8 @@ echo "${ECHO_T}$PIXMAN_LIBS" >&6
   if test $succeeded = yes; then
      :
   else
-     { { echo "$as_me:$LINENO: error: Library requirements (libpixman >= 0.1.2) not met; consider adjusting the PKG_CONFIG_PATH environment variable if your libraries are in a nonstandard prefix so pkg-config can find them." >&5
-echo "$as_me: error: Library requirements (libpixman >= 0.1.2) not met; consider adjusting the PKG_CONFIG_PATH environment variable if your libraries are in a nonstandard prefix so pkg-config can find them." >&2;}
+     { { echo "$as_me:$LINENO: error: Library requirements (libpixman >= 0.1.4) not met; consider adjusting the PKG_CONFIG_PATH environment variable if your libraries are in a nonstandard prefix so pkg-config can find them." >&5
+echo "$as_me: error: Library requirements (libpixman >= 0.1.4) not met; consider adjusting the PKG_CONFIG_PATH environment variable if your libraries are in a nonstandard prefix so pkg-config can find them." >&2;}
    { (exit 1); exit 1; }; }
   fi
 
@@ -22682,6 +22750,8 @@ echo "${ECHO_T}$FREETYPE_VERSION - OK" >&6
 
   FREETYPE_CFLAGS=`$FREETYPE_CONFIG --cflags`
   FREETYPE_LIBS=`$FREETYPE_CONFIG --libs`
+  FREETYPE_REQUIRES=fontconfig
+
 
 
 fi
@@ -22714,6 +22784,53 @@ else
 fi
 
 fi
+
+
+
+# Check whether --enable-pdf or --disable-pdf was given.
+if test "${enable_pdf+set}" = set; then
+  enableval="$enable_pdf"
+  use_pdf=$enableval
+else
+  use_pdf=yes
+fi;
+
+if test x"$use_freetype" != "xyes" ; then
+  { echo "$as_me:$LINENO: WARNING: PDF backend requires FreeType, disabling" >&5
+echo "$as_me: WARNING: PDF backend requires FreeType, disabling" >&2;}
+  use_pdf=no
+fi
+
+if test "x$use_pdf" != "xyes"; then
+  PDF_SURFACE_FEATURE=CAIRO_HAS_NO_PDF_SURFACE
+
+
+if false; then
+  CAIRO_HAS_PDF_SURFACE_TRUE=
+  CAIRO_HAS_PDF_SURFACE_FALSE='#'
+else
+  CAIRO_HAS_PDF_SURFACE_TRUE='#'
+  CAIRO_HAS_PDF_SURFACE_FALSE=
+fi
+
+else
+  PDF_SURFACE_FEATURE=CAIRO_HAS_PDF_SURFACE
+  PDF_LIBS=-lz
+
+
+if true; then
+  CAIRO_HAS_PDF_SURFACE_TRUE=
+  CAIRO_HAS_PDF_SURFACE_FALSE='#'
+else
+  CAIRO_HAS_PDF_SURFACE_TRUE='#'
+  CAIRO_HAS_PDF_SURFACE_FALSE=
+fi
+
+fi
+
+CAIRO_LIBS="$CAIRO_LIBS $PDF_LIBS"
+
+
 
 
 
@@ -23046,7 +23163,116 @@ CAIRO_LIBS="$CAIRO_LIBS"
 
 
 
-                                                  ac_config_files="$ac_config_files cairo.pc Makefile src/Makefile src/cairo-features.h test/Makefile"
+
+
+# Check whether --with-html-dir or --without-html-dir was given.
+if test "${with_html_dir+set}" = set; then
+  withval="$with_html_dir"
+
+else
+  with_html_dir='${datadir}/gtk-doc/html'
+fi;
+  HTML_DIR="$with_html_dir"
+
+
+    # Check whether --enable-gtk-doc or --disable-gtk-doc was given.
+if test "${enable_gtk_doc+set}" = set; then
+  enableval="$enable_gtk_doc"
+
+else
+  enable_gtk_doc=no
+fi;
+
+  have_gtk_doc=no
+  if test x$enable_gtk_doc = xyes; then
+    if test -z "$PKG_CONFIG"; then
+      # Extract the first word of "pkg-config", so it can be a program name with args.
+set dummy pkg-config; ac_word=$2
+echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6
+if test "${ac_cv_path_PKG_CONFIG+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  case $PKG_CONFIG in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_PKG_CONFIG="$PKG_CONFIG" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if $as_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+    ac_cv_path_PKG_CONFIG="$as_dir/$ac_word$ac_exec_ext"
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+
+  test -z "$ac_cv_path_PKG_CONFIG" && ac_cv_path_PKG_CONFIG="no"
+  ;;
+esac
+fi
+PKG_CONFIG=$ac_cv_path_PKG_CONFIG
+
+if test -n "$PKG_CONFIG"; then
+  echo "$as_me:$LINENO: result: $PKG_CONFIG" >&5
+echo "${ECHO_T}$PKG_CONFIG" >&6
+else
+  echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+fi
+
+    fi
+    if test "$PKG_CONFIG" != "no" && $PKG_CONFIG --exists gtk-doc; then
+      have_gtk_doc=yes
+    fi
+
+  gtk_doc_min_version=1.3
+    if test "$have_gtk_doc" = yes; then
+      echo "$as_me:$LINENO: checking gtk-doc version >= $gtk_doc_min_version" >&5
+echo $ECHO_N "checking gtk-doc version >= $gtk_doc_min_version... $ECHO_C" >&6
+      if $PKG_CONFIG --atleast-version $gtk_doc_min_version gtk-doc; then
+        echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+      else
+        echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+        have_gtk_doc=no
+      fi
+    fi
+
+    if test "$have_gtk_doc" != yes; then
+      enable_gtk_doc=no
+    fi
+  fi
+
+
+
+if test x$enable_gtk_doc = xyes; then
+  ENABLE_GTK_DOC_TRUE=
+  ENABLE_GTK_DOC_FALSE='#'
+else
+  ENABLE_GTK_DOC_TRUE='#'
+  ENABLE_GTK_DOC_FALSE=
+fi
+
+
+
+if test -n "$LIBTOOL"; then
+  GTK_DOC_USE_LIBTOOL_TRUE=
+  GTK_DOC_USE_LIBTOOL_FALSE='#'
+else
+  GTK_DOC_USE_LIBTOOL_TRUE='#'
+  GTK_DOC_USE_LIBTOOL_FALSE=
+fi
+
+
+
+                                                                      ac_config_files="$ac_config_files cairo.pc Makefile src/Makefile src/cairo-features.h test/Makefile doc/Makefile doc/public/Makefile"
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
 # tests run on this system so they can be shared between configure
@@ -23208,10 +23434,31 @@ echo "$as_me: error: conditional \"CAIRO_HAS_XCB_SURFACE\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
-if test -z "${CAIRO_HAS_PS_SURFACE_TRUE}" && test -z "${CAIRO_HAS_PS_SURFACE_FALSE}"; then
-  { { echo "$as_me:$LINENO: error: conditional \"CAIRO_HAS_PS_SURFACE\" was never defined.
+if test -z "${CAIRO_HAS_WIN32_SURFACE_TRUE}" && test -z "${CAIRO_HAS_WIN32_SURFACE_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"CAIRO_HAS_WIN32_SURFACE\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
-echo "$as_me: error: conditional \"CAIRO_HAS_PS_SURFACE\" was never defined.
+echo "$as_me: error: conditional \"CAIRO_HAS_WIN32_SURFACE\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${CAIRO_HAS_WIN32_SURFACE_TRUE}" && test -z "${CAIRO_HAS_WIN32_SURFACE_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"CAIRO_HAS_WIN32_SURFACE\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"CAIRO_HAS_WIN32_SURFACE\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${CAIRO_HAS_WIN32_FONT_TRUE}" && test -z "${CAIRO_HAS_WIN32_FONT_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"CAIRO_HAS_WIN32_FONT\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"CAIRO_HAS_WIN32_FONT\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${CAIRO_HAS_WIN32_FONT_TRUE}" && test -z "${CAIRO_HAS_WIN32_FONT_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"CAIRO_HAS_WIN32_FONT\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"CAIRO_HAS_WIN32_FONT\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
@@ -23222,17 +23469,10 @@ echo "$as_me: error: conditional \"CAIRO_HAS_PS_SURFACE\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
-if test -z "${CAIRO_HAS_PDF_SURFACE_TRUE}" && test -z "${CAIRO_HAS_PDF_SURFACE_FALSE}"; then
-  { { echo "$as_me:$LINENO: error: conditional \"CAIRO_HAS_PDF_SURFACE\" was never defined.
+if test -z "${CAIRO_HAS_PS_SURFACE_TRUE}" && test -z "${CAIRO_HAS_PS_SURFACE_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"CAIRO_HAS_PS_SURFACE\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
-echo "$as_me: error: conditional \"CAIRO_HAS_PDF_SURFACE\" was never defined.
-Usually this means the macro was only invoked conditionally." >&2;}
-   { (exit 1); exit 1; }; }
-fi
-if test -z "${CAIRO_HAS_PDF_SURFACE_TRUE}" && test -z "${CAIRO_HAS_PDF_SURFACE_FALSE}"; then
-  { { echo "$as_me:$LINENO: error: conditional \"CAIRO_HAS_PDF_SURFACE\" was never defined.
-Usually this means the macro was only invoked conditionally." >&5
-echo "$as_me: error: conditional \"CAIRO_HAS_PDF_SURFACE\" was never defined.
+echo "$as_me: error: conditional \"CAIRO_HAS_PS_SURFACE\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
@@ -23278,6 +23518,20 @@ echo "$as_me: error: conditional \"CAIRO_HAS_FT_FONT\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
+if test -z "${CAIRO_HAS_PDF_SURFACE_TRUE}" && test -z "${CAIRO_HAS_PDF_SURFACE_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"CAIRO_HAS_PDF_SURFACE\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"CAIRO_HAS_PDF_SURFACE\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${CAIRO_HAS_PDF_SURFACE_TRUE}" && test -z "${CAIRO_HAS_PDF_SURFACE_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"CAIRO_HAS_PDF_SURFACE\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"CAIRO_HAS_PDF_SURFACE\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
 if test -z "${CAIRO_HAS_ATSUI_FONT_TRUE}" && test -z "${CAIRO_HAS_ATSUI_FONT_FALSE}"; then
   { { echo "$as_me:$LINENO: error: conditional \"CAIRO_HAS_ATSUI_FONT\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
@@ -23289,6 +23543,20 @@ if test -z "${CAIRO_HAS_ATSUI_FONT_TRUE}" && test -z "${CAIRO_HAS_ATSUI_FONT_FAL
   { { echo "$as_me:$LINENO: error: conditional \"CAIRO_HAS_ATSUI_FONT\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
 echo "$as_me: error: conditional \"CAIRO_HAS_ATSUI_FONT\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${ENABLE_GTK_DOC_TRUE}" && test -z "${ENABLE_GTK_DOC_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"ENABLE_GTK_DOC\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"ENABLE_GTK_DOC\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${GTK_DOC_USE_LIBTOOL_TRUE}" && test -z "${GTK_DOC_USE_LIBTOOL_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"GTK_DOC_USE_LIBTOOL\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"GTK_DOC_USE_LIBTOOL\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
@@ -23741,6 +24009,8 @@ do
   "src/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
   "src/cairo-features.h" ) CONFIG_FILES="$CONFIG_FILES src/cairo-features.h" ;;
   "test/Makefile" ) CONFIG_FILES="$CONFIG_FILES test/Makefile" ;;
+  "doc/Makefile" ) CONFIG_FILES="$CONFIG_FILES doc/Makefile" ;;
+  "doc/public/Makefile" ) CONFIG_FILES="$CONFIG_FILES doc/public/Makefile" ;;
   "depfiles" ) CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
   "config.h" ) CONFIG_HEADERS="$CONFIG_HEADERS config.h" ;;
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
@@ -23916,14 +24186,16 @@ s,@XCB_LIBS@,$XCB_LIBS,;t t
 s,@CAIRO_HAS_XCB_SURFACE_TRUE@,$CAIRO_HAS_XCB_SURFACE_TRUE,;t t
 s,@CAIRO_HAS_XCB_SURFACE_FALSE@,$CAIRO_HAS_XCB_SURFACE_FALSE,;t t
 s,@XCB_SURFACE_FEATURE@,$XCB_SURFACE_FEATURE,;t t
+s,@CAIRO_HAS_WIN32_SURFACE_TRUE@,$CAIRO_HAS_WIN32_SURFACE_TRUE,;t t
+s,@CAIRO_HAS_WIN32_SURFACE_FALSE@,$CAIRO_HAS_WIN32_SURFACE_FALSE,;t t
+s,@CAIRO_HAS_WIN32_FONT_TRUE@,$CAIRO_HAS_WIN32_FONT_TRUE,;t t
+s,@CAIRO_HAS_WIN32_FONT_FALSE@,$CAIRO_HAS_WIN32_FONT_FALSE,;t t
+s,@WIN32_SURFACE_FEATURE@,$WIN32_SURFACE_FEATURE,;t t
+s,@WIN32_FONT_FEATURE@,$WIN32_FONT_FEATURE,;t t
 s,@CAIRO_HAS_PS_SURFACE_TRUE@,$CAIRO_HAS_PS_SURFACE_TRUE,;t t
 s,@CAIRO_HAS_PS_SURFACE_FALSE@,$CAIRO_HAS_PS_SURFACE_FALSE,;t t
 s,@PS_SURFACE_FEATURE@,$PS_SURFACE_FEATURE,;t t
 s,@PS_LIBS@,$PS_LIBS,;t t
-s,@CAIRO_HAS_PDF_SURFACE_TRUE@,$CAIRO_HAS_PDF_SURFACE_TRUE,;t t
-s,@CAIRO_HAS_PDF_SURFACE_FALSE@,$CAIRO_HAS_PDF_SURFACE_FALSE,;t t
-s,@PDF_SURFACE_FEATURE@,$PDF_SURFACE_FEATURE,;t t
-s,@PDF_LIBS@,$PDF_LIBS,;t t
 s,@PNG_CFLAGS@,$PNG_CFLAGS,;t t
 s,@PNG_LIBS@,$PNG_LIBS,;t t
 s,@CAIRO_HAS_PNG_SURFACE_TRUE@,$CAIRO_HAS_PNG_SURFACE_TRUE,;t t
@@ -23944,14 +24216,24 @@ s,@FONTCONFIG_LIBS@,$FONTCONFIG_LIBS,;t t
 s,@FREETYPE_CONFIG@,$FREETYPE_CONFIG,;t t
 s,@FREETYPE_CFLAGS@,$FREETYPE_CFLAGS,;t t
 s,@FREETYPE_LIBS@,$FREETYPE_LIBS,;t t
+s,@FREETYPE_REQUIRES@,$FREETYPE_REQUIRES,;t t
 s,@CAIRO_HAS_FT_FONT_TRUE@,$CAIRO_HAS_FT_FONT_TRUE,;t t
 s,@CAIRO_HAS_FT_FONT_FALSE@,$CAIRO_HAS_FT_FONT_FALSE,;t t
 s,@FT_FONT_FEATURE@,$FT_FONT_FEATURE,;t t
+s,@CAIRO_HAS_PDF_SURFACE_TRUE@,$CAIRO_HAS_PDF_SURFACE_TRUE,;t t
+s,@CAIRO_HAS_PDF_SURFACE_FALSE@,$CAIRO_HAS_PDF_SURFACE_FALSE,;t t
+s,@PDF_SURFACE_FEATURE@,$PDF_SURFACE_FEATURE,;t t
+s,@PDF_LIBS@,$PDF_LIBS,;t t
 s,@CAIRO_HAS_ATSUI_FONT_TRUE@,$CAIRO_HAS_ATSUI_FONT_TRUE,;t t
 s,@CAIRO_HAS_ATSUI_FONT_FALSE@,$CAIRO_HAS_ATSUI_FONT_FALSE,;t t
 s,@ATSUI_FONT_FEATURE@,$ATSUI_FONT_FEATURE,;t t
 s,@CAIRO_CFLAGS@,$CAIRO_CFLAGS,;t t
 s,@CAIRO_LIBS@,$CAIRO_LIBS,;t t
+s,@HTML_DIR@,$HTML_DIR,;t t
+s,@ENABLE_GTK_DOC_TRUE@,$ENABLE_GTK_DOC_TRUE,;t t
+s,@ENABLE_GTK_DOC_FALSE@,$ENABLE_GTK_DOC_FALSE,;t t
+s,@GTK_DOC_USE_LIBTOOL_TRUE@,$GTK_DOC_USE_LIBTOOL_TRUE,;t t
+s,@GTK_DOC_USE_LIBTOOL_FALSE@,$GTK_DOC_USE_LIBTOOL_FALSE,;t t
 s,@LIBOBJS@,$LIBOBJS,;t t
 s,@LTLIBOBJS@,$LTLIBOBJS,;t t
 CEOF
@@ -24676,26 +24958,30 @@ echo "cairo will be compiled with the following surface backends:"
 echo "  Xlib: $use_xlib"
 echo "  Quartz: $use_quartz"
 echo "  XCB: $use_xcb"
+echo "  Win32: $use_win32"
 echo "  PostScript: $use_ps"
 echo "  PDF: $use_pdf"
 echo "  PNG: $use_png"
 echo "  glitz: $use_glitz"
 echo ""
 echo "and the following font backends:"
-echo "  freetype: $use_freetype"
-echo "  atsui: $use_atsui"
+echo "  FreeType: $use_freetype"
+echo "  Win32: $use_win32"
+echo "  ATSUI: $use_atsui"
 echo ""
 
 if test x"$use_freetype" != "xyes" && \
+   test x"$use_win32"    != "xyes" && \
    test x"$use_atsui"    != "xyes" ; then
 
    { { echo "$as_me:$LINENO: error: Cairo requires at least one font backend.
-                  Please install freetype and fontconfig, then try again:
-                  http://freetype.org/  http://fontconfig.org/
-                " >&5
+		  Please install freetype and fontconfig, then try again:
+		  http://freetype.org/	http://fontconfig.org/
+		" >&5
 echo "$as_me: error: Cairo requires at least one font backend.
-                  Please install freetype and fontconfig, then try again:
-                  http://freetype.org/  http://fontconfig.org/
-                " >&2;}
+		  Please install freetype and fontconfig, then try again:
+		  http://freetype.org/	http://fontconfig.org/
+		" >&2;}
    { (exit 1); exit 1; }; }
 fi
+

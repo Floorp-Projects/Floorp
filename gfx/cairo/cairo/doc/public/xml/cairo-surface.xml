@@ -1,0 +1,255 @@
+<?xml version="1.0"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" 
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<refentry id="cairo-cairo-surface-t">
+<refmeta>
+<refentrytitle>cairo_surface_t</refentrytitle>
+<manvolnum>3</manvolnum>
+<refmiscinfo>CAIRO Library</refmiscinfo>
+</refmeta>
+
+<refnamediv>
+<refname>cairo_surface_t</refname><refpurpose></refpurpose>
+</refnamediv>
+
+<refsynopsisdiv><title>Synopsis</title>
+
+<synopsis>
+
+
+
+typedef     <link linkend="cairo-surface-t">cairo_surface_t</link>;
+<link linkend="cairo-surface-t">cairo_surface_t</link>* <link linkend="cairo-surface-create-for-image">cairo_surface_create_for_image</link>
+                                            (<link linkend="char">char</link> *data,
+                                             <link linkend="cairo-format-t">cairo_format_t</link> format,
+                                             <link linkend="int">int</link> width,
+                                             <link linkend="int">int</link> height,
+                                             <link linkend="int">int</link> stride);
+<link linkend="cairo-surface-t">cairo_surface_t</link>* <link linkend="cairo-surface-create-similar">cairo_surface_create_similar</link>
+                                            (<link linkend="cairo-surface-t">cairo_surface_t</link> *other,
+                                             <link linkend="cairo-format-t">cairo_format_t</link> format,
+                                             <link linkend="int">int</link> width,
+                                             <link linkend="int">int</link> height);
+<link linkend="void">void</link>        <link linkend="cairo-surface-reference">cairo_surface_reference</link>         (<link linkend="cairo-surface-t">cairo_surface_t</link> *surface);
+<link linkend="void">void</link>        <link linkend="cairo-surface-destroy">cairo_surface_destroy</link>           (<link linkend="cairo-surface-t">cairo_surface_t</link> *surface);
+<link linkend="cairo-status-t">cairo_status_t</link> <link linkend="cairo-surface-set-repeat">cairo_surface_set_repeat</link>     (<link linkend="cairo-surface-t">cairo_surface_t</link> *surface,
+                                             <link linkend="int">int</link> repeat);
+<link linkend="cairo-status-t">cairo_status_t</link> <link linkend="cairo-surface-set-matrix">cairo_surface_set_matrix</link>     (<link linkend="cairo-surface-t">cairo_surface_t</link> *surface,
+                                             <link linkend="cairo-matrix-t">cairo_matrix_t</link> *matrix);
+<link linkend="cairo-status-t">cairo_status_t</link> <link linkend="cairo-surface-get-matrix">cairo_surface_get_matrix</link>     (<link linkend="cairo-surface-t">cairo_surface_t</link> *surface,
+                                             <link linkend="cairo-matrix-t">cairo_matrix_t</link> *matrix);
+<link linkend="cairo-status-t">cairo_status_t</link> <link linkend="cairo-surface-set-filter">cairo_surface_set_filter</link>     (<link linkend="cairo-surface-t">cairo_surface_t</link> *surface,
+                                             <link linkend="cairo-filter-t">cairo_filter_t</link> filter);
+<link linkend="cairo-filter-t">cairo_filter_t</link> <link linkend="cairo-surface-get-filter">cairo_surface_get_filter</link>     (<link linkend="cairo-surface-t">cairo_surface_t</link> *surface);
+</synopsis>
+</refsynopsisdiv>
+
+
+
+
+
+
+
+
+
+<refsect1>
+<title>Description</title>
+<para>
+
+</para>
+</refsect1>
+
+<refsect1>
+<title>Details</title>
+<refsect2>
+<title><anchor id="cairo-surface-t"/>cairo_surface_t</title>
+<indexterm><primary>cairo_surface_t</primary></indexterm><programlisting>typedef struct _cairo_surface cairo_surface_t;
+</programlisting>
+<para>
+A <link linkend="cairo-surface-t"><type>cairo_surface_t</type></link> represents an image, either as the destination
+of a drawing operation or as source when drawing onto another
+surface. There are different subtypes of cairo_surface_t for
+different drawing backends; for example, <link linkend="cairo-image-surface-create"><function>cairo_image_surface_create()</function></link>
+creates a bitmap image in memory.
+</para>
+<para>
+Memory management of <link linkend="cairo-surface-t"><type>cairo_surface_t</type></link> is done with
+<link linkend="cairo-surface-reference"><function>cairo_surface_reference()</function></link> and <link linkend="cairo-surface-destroy"><function>cairo_surface_destroy()</function></link>.</para>
+<para>
+
+</para></refsect2>
+<refsect2>
+<title><anchor id="cairo-surface-create-for-image"/>cairo_surface_create_for_image ()</title>
+<indexterm><primary>cairo_surface_create_for_image</primary></indexterm><programlisting><link linkend="cairo-surface-t">cairo_surface_t</link>* cairo_surface_create_for_image
+                                            (<link linkend="char">char</link> *data,
+                                             <link linkend="cairo-format-t">cairo_format_t</link> format,
+                                             <link linkend="int">int</link> width,
+                                             <link linkend="int">int</link> height,
+                                             <link linkend="int">int</link> stride);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>data</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>format</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>width</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>height</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>stride</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><emphasis>Returns</emphasis>&nbsp;:</term><listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-surface-create-similar"/>cairo_surface_create_similar ()</title>
+<indexterm><primary>cairo_surface_create_similar</primary></indexterm><programlisting><link linkend="cairo-surface-t">cairo_surface_t</link>* cairo_surface_create_similar
+                                            (<link linkend="cairo-surface-t">cairo_surface_t</link> *other,
+                                             <link linkend="cairo-format-t">cairo_format_t</link> format,
+                                             <link linkend="int">int</link> width,
+                                             <link linkend="int">int</link> height);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>other</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>format</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>width</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>height</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><emphasis>Returns</emphasis>&nbsp;:</term><listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-surface-reference"/>cairo_surface_reference ()</title>
+<indexterm><primary>cairo_surface_reference</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_surface_reference         (<link linkend="cairo-surface-t">cairo_surface_t</link> *surface);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>surface</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-surface-destroy"/>cairo_surface_destroy ()</title>
+<indexterm><primary>cairo_surface_destroy</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_surface_destroy           (<link linkend="cairo-surface-t">cairo_surface_t</link> *surface);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>surface</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-surface-set-repeat"/>cairo_surface_set_repeat ()</title>
+<indexterm><primary>cairo_surface_set_repeat</primary></indexterm><programlisting><link linkend="cairo-status-t">cairo_status_t</link> cairo_surface_set_repeat     (<link linkend="cairo-surface-t">cairo_surface_t</link> *surface,
+                                             <link linkend="int">int</link> repeat);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>surface</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>repeat</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><emphasis>Returns</emphasis>&nbsp;:</term><listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-surface-set-matrix"/>cairo_surface_set_matrix ()</title>
+<indexterm><primary>cairo_surface_set_matrix</primary></indexterm><programlisting><link linkend="cairo-status-t">cairo_status_t</link> cairo_surface_set_matrix     (<link linkend="cairo-surface-t">cairo_surface_t</link> *surface,
+                                             <link linkend="cairo-matrix-t">cairo_matrix_t</link> *matrix);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>surface</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>matrix</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><emphasis>Returns</emphasis>&nbsp;:</term><listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-surface-get-matrix"/>cairo_surface_get_matrix ()</title>
+<indexterm><primary>cairo_surface_get_matrix</primary></indexterm><programlisting><link linkend="cairo-status-t">cairo_status_t</link> cairo_surface_get_matrix     (<link linkend="cairo-surface-t">cairo_surface_t</link> *surface,
+                                             <link linkend="cairo-matrix-t">cairo_matrix_t</link> *matrix);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>surface</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>matrix</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><emphasis>Returns</emphasis>&nbsp;:</term><listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-surface-set-filter"/>cairo_surface_set_filter ()</title>
+<indexterm><primary>cairo_surface_set_filter</primary></indexterm><programlisting><link linkend="cairo-status-t">cairo_status_t</link> cairo_surface_set_filter     (<link linkend="cairo-surface-t">cairo_surface_t</link> *surface,
+                                             <link linkend="cairo-filter-t">cairo_filter_t</link> filter);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>surface</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>filter</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><emphasis>Returns</emphasis>&nbsp;:</term><listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-surface-get-filter"/>cairo_surface_get_filter ()</title>
+<indexterm><primary>cairo_surface_get_filter</primary></indexterm><programlisting><link linkend="cairo-filter-t">cairo_filter_t</link> cairo_surface_get_filter     (<link linkend="cairo-surface-t">cairo_surface_t</link> *surface);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>surface</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><emphasis>Returns</emphasis>&nbsp;:</term><listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+
+</refsect1>
+
+
+
+
+</refentry>

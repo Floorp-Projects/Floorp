@@ -31,16 +31,19 @@
  * California.
  *
  * Contributor(s):
- *	Carl D. Worth <cworth@isi.edu>
+ *	Carl D. Worth <cworth@cworth.org>
  */
-
-#include <cairo.h>
 
 #ifndef CAIRO_PNG_H
 #define CAIRO_PNG_H
-#ifdef  CAIRO_HAS_PNG_SURFACE
+
+#include <cairo.h>
+
+#ifdef CAIRO_HAS_PNG_SURFACE
 
 #include <stdio.h>
+
+CAIRO_BEGIN_DECLS
 
 void
 cairo_set_target_png (cairo_t	*cr,
@@ -54,6 +57,8 @@ cairo_png_surface_create (FILE			*file,
 			  cairo_format_t	format,
 			  int			width,
 			  int			height);
+
+CAIRO_END_DECLS
 
 #endif /* CAIRO_HAS_PNG_SURFACE */
 #endif /* CAIRO_PNG_H */

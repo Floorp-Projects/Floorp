@@ -1,0 +1,80 @@
+<?xml version="1.0"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" 
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<refentry id="cairo-XCB-Backend">
+<refmeta>
+<refentrytitle>XCB Backend</refentrytitle>
+<manvolnum>3</manvolnum>
+<refmiscinfo>CAIRO Library</refmiscinfo>
+</refmeta>
+
+<refnamediv>
+<refname>XCB Backend</refname><refpurpose></refpurpose>
+</refnamediv>
+
+<refsynopsisdiv><title>Synopsis</title>
+
+<synopsis>
+
+
+
+<link linkend="void">void</link>        <link linkend="cairo-set-target-xcb">cairo_set_target_xcb</link>            (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="XCBConnection">XCBConnection</link> *dpy,
+                                             <link linkend="XCBDRAWABLE:CAPS">XCBDRAWABLE</link> drawable,
+                                             <link linkend="XCBVISUALTYPE:CAPS">XCBVISUALTYPE</link> *visual,
+                                             <link linkend="cairo-format-t">cairo_format_t</link> format);
+</synopsis>
+</refsynopsisdiv>
+
+
+
+
+
+
+
+
+
+<refsect1>
+<title>Description</title>
+<para>
+
+</para>
+</refsect1>
+
+<refsect1>
+<title>Details</title>
+<refsect2>
+<title><anchor id="cairo-set-target-xcb"/>cairo_set_target_xcb ()</title>
+<indexterm><primary>cairo_set_target_xcb</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_set_target_xcb            (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="XCBConnection">XCBConnection</link> *dpy,
+                                             <link linkend="XCBDRAWABLE:CAPS">XCBDRAWABLE</link> drawable,
+                                             <link linkend="XCBVISUALTYPE:CAPS">XCBVISUALTYPE</link> *visual,
+                                             <link linkend="cairo-format-t">cairo_format_t</link> format);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>dpy</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>drawable</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>visual</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>format</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+
+</refsect1>
+
+
+
+
+</refentry>

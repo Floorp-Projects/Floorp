@@ -1,0 +1,63 @@
+<!-- ##### SECTION Title ##### -->
+FreeType Fonts
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION cairo_ft_font_create ##### -->
+<para>
+
+</para>
+
+@pattern: 
+@scale: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cairo_ft_font_create_for_ft_face ##### -->
+<para>
+
+</para>
+
+@face: 
+@load_flags: 
+@scale: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cairo_ft_font_lock_face ##### -->
+<para>
+
+</para>
+
+@ft_font: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cairo_ft_font_unlock_face ##### -->
+<para>
+
+</para>
+
+@ft_font: 
+
+
+<!-- ##### FUNCTION cairo_ft_font_get_pattern ##### -->
+<para>
+
+</para>
+
+@ft_font: 
+@Returns: 
+
+

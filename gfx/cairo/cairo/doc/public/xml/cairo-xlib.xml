@@ -1,0 +1,113 @@
+<?xml version="1.0"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" 
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<refentry id="cairo-XLib-Backend">
+<refmeta>
+<refentrytitle>XLib Backend</refentrytitle>
+<manvolnum>3</manvolnum>
+<refmiscinfo>CAIRO Library</refmiscinfo>
+</refmeta>
+
+<refnamediv>
+<refname>XLib Backend</refname><refpurpose></refpurpose>
+</refnamediv>
+
+<refsynopsisdiv><title>Synopsis</title>
+
+<synopsis>
+
+
+
+<link linkend="void">void</link>        <link linkend="cairo-set-target-drawable">cairo_set_target_drawable</link>       (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="Display">Display</link> *dpy,
+                                             <link linkend="Drawable">Drawable</link> drawable);
+<link linkend="cairo-surface-t">cairo_surface_t</link>* <link linkend="cairo-xlib-surface-create">cairo_xlib_surface_create</link>  (<link linkend="Display">Display</link> *dpy,
+                                             <link linkend="Drawable">Drawable</link> drawable,
+                                             <link linkend="Visual">Visual</link> *visual,
+                                             <link linkend="cairo-format-t">cairo_format_t</link> format,
+                                             <link linkend="Colormap">Colormap</link> colormap);
+</synopsis>
+</refsynopsisdiv>
+
+
+
+
+
+
+
+
+
+<refsect1>
+<title>Description</title>
+<para>
+
+</para>
+</refsect1>
+
+<refsect1>
+<title>Details</title>
+<refsect2>
+<title><anchor id="cairo-set-target-drawable"/>cairo_set_target_drawable ()</title>
+<indexterm><primary>cairo_set_target_drawable</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_set_target_drawable       (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="Display">Display</link> *dpy,
+                                             <link linkend="Drawable">Drawable</link> drawable);</programlisting>
+<para>
+Directs output for a <link linkend="cairo-t"><type>cairo_t</type></link> to an Xlib drawable.  <parameter>drawable</parameter> must
+be a Window or Pixmap on the default screen of <parameter>dpy</parameter> using the
+default colormap and visual.  Using this function is slow because
+the function must retrieve information about <parameter>drawable</parameter> from the X
+server.
+ 
+The combination of <link linkend="cairo-xlib-surface-create"><function>cairo_xlib_surface_create()</function></link> and
+<link linkend="cairo-set-target-surface"><function>cairo_set_target_surface()</function></link> is somewhat more flexible, although
+it still is slow.</para>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara> a <link linkend="cairo-t"><type>cairo_t</type></link>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>dpy</parameter>&nbsp;:</term>
+<listitem><simpara> an X display
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>drawable</parameter>&nbsp;:</term>
+<listitem><simpara> a window or pixmap on the default screen of <parameter>dpy</parameter>
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-xlib-surface-create"/>cairo_xlib_surface_create ()</title>
+<indexterm><primary>cairo_xlib_surface_create</primary></indexterm><programlisting><link linkend="cairo-surface-t">cairo_surface_t</link>* cairo_xlib_surface_create  (<link linkend="Display">Display</link> *dpy,
+                                             <link linkend="Drawable">Drawable</link> drawable,
+                                             <link linkend="Visual">Visual</link> *visual,
+                                             <link linkend="cairo-format-t">cairo_format_t</link> format,
+                                             <link linkend="Colormap">Colormap</link> colormap);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>dpy</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>drawable</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>visual</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>format</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>colormap</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><emphasis>Returns</emphasis>&nbsp;:</term><listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+
+</refsect1>
+
+
+
+
+</refentry>

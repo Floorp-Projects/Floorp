@@ -47,9 +47,9 @@ premultiply_data (png_structp   png,
 	unsigned char  alpha = base[3];
 	unsigned long	p;
 
-	red = (unsigned) red * (unsigned) alpha / 255;
-	green = (unsigned) green * (unsigned) alpha / 255;
-	blue = (unsigned) blue * (unsigned) alpha / 255;
+	red = ((unsigned) red * (unsigned) alpha + 127) / 255;
+	green = ((unsigned) green * (unsigned) alpha + 127) / 255;
+	blue = ((unsigned) blue * (unsigned) alpha + 127) / 255;
 	p = (alpha << 24) | (red << 16) | (green << 8) | (blue << 0);
 	memcpy (base, &p, sizeof (unsigned long));
     }

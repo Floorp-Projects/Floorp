@@ -1,5 +1,5 @@
 /*
- * Copyright © 2000 Keith Packard
+ * Copyright Â© 2000 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
  * documentation for any purpose is hereby granted without fee, provided that
@@ -193,6 +193,9 @@ IcComputeCompositeRegion (pixman_region16_t	*region,
 			  int16_t		yDst,
 			  uint16_t	width,
 			  uint16_t	height);
+
+int
+miIsSolidAlpha (pixman_image_t *src);
 
 /*
 pixman_private int

@@ -1,7 +1,7 @@
 /*
- * $Id: icpixels.c,v 1.1 2005/02/24 20:08:55 tor%cs.brown.edu Exp $
+ * $Id: icpixels.c,v 1.3 2005/06/04 07:03:28 vladimir%pobox.com Exp $
  *
- * Copyright © 1998 Keith Packard
+ * Copyright Â© 1998 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
  * documentation for any purpose is hereby granted without fee, provided that

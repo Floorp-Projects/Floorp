@@ -1,5 +1,5 @@
 /*
- * Copyright © 2000 SuSE, Inc.
+ * Copyright Â© 2000 SuSE, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
  * documentation for any purpose is hereby granted without fee, provided that
@@ -639,3 +639,34 @@ IcComputeCompositeRegion (pixman_region16_t	*region,
     return 1;
 }
 
+int
+miIsSolidAlpha (pixman_image_t *src)
+{
+    char	line[1];
+    
+    /* Alpha-only */
+    if (PICT_FORMAT_TYPE (src->format_code) != PICT_TYPE_A)
+	return 0;
+    /* repeat */
+    if (!src->repeat)
+	return 0;
+    /* 1x1 */
+    if (src->pixels->width != 1 || src->pixels->height != 1)
+	return 0;
+    line[0] = 1;
+    /* XXX: For the next line, fb has:
+	(*pScreen->GetImage) (src->pixels, 0, 0, 1, 1, ZPixmap, ~0L, line);
+       Is the following simple assignment sufficient?
+    */
+    line[0] = src->pixels->data[0];
+    switch (src->pixels->bpp) {
+    case 1:
+	return (uint8_t) line[0] == 1 || (uint8_t) line[0] == 0x80;
+    case 4:
+	return (uint8_t) line[0] == 0xf || (uint8_t) line[0] == 0xf0;
+    case 8:
+	return (uint8_t) line[0] == 0xff;
+    default:
+	return 0;
+    }
+}

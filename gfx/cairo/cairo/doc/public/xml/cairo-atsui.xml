@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" 
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<refentry id="cairo-ATSUI-Fonts">
+<refmeta>
+<refentrytitle>ATSUI Fonts</refentrytitle>
+<manvolnum>3</manvolnum>
+<refmiscinfo>CAIRO Library</refmiscinfo>
+</refmeta>
+
+<refnamediv>
+<refname>ATSUI Fonts</refname><refpurpose></refpurpose>
+</refnamediv>
+
+<refsynopsisdiv><title>Synopsis</title>
+
+<synopsis>
+
+
+
+<link linkend="cairo-font-t">cairo_font_t</link>* <link linkend="cairo-atsui-font-create">cairo_atsui_font_create</link>       (<link linkend="ATSUStyle">ATSUStyle</link> style);
+</synopsis>
+</refsynopsisdiv>
+
+
+
+
+
+
+
+
+
+<refsect1>
+<title>Description</title>
+<para>
+
+</para>
+</refsect1>
+
+<refsect1>
+<title>Details</title>
+<refsect2>
+<title><anchor id="cairo-atsui-font-create"/>cairo_atsui_font_create ()</title>
+<indexterm><primary>cairo_atsui_font_create</primary></indexterm><programlisting><link linkend="cairo-font-t">cairo_font_t</link>* cairo_atsui_font_create       (<link linkend="ATSUStyle">ATSUStyle</link> style);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>style</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><emphasis>Returns</emphasis>&nbsp;:</term><listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+
+</refsect1>
+
+
+
+
+</refentry>

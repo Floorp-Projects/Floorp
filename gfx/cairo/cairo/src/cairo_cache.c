@@ -94,9 +94,9 @@ static const cairo_cache_arrangement_t cache_arrangements [] = {
  * a mostly-dead table.
  *
  * Generally you do not need to worry about freeing cache entries; the
- * cache will expire entries randomly as it experiences memory pressure. 
- * There is currently no explicit entry-removing call, though one can be 
- * added easily.
+ * cache will expire entries randomly as it experiences memory pressure.
+ * If max_memory is set, entries are not expired, and must be explicitely
+ * removed.
  *
  * This table is open-addressed with double hashing. Each table size is a
  * prime chosen to be a little more than double the high water mark for a
@@ -282,17 +282,51 @@ _load_factor (cairo_cache_t *cache)
 }
 #endif
 
-static unsigned long
-_random_live_entry (cairo_cache_t *cache)
-{
-    unsigned long idx;
-    assert(cache != NULL);
-    do {
-	idx = rand () % cache->arrangement->size;
-    } while (! LIVE_ENTRY_P(cache, idx));
-    return idx;
-}
+/* Find a random in the cache matching the given predicate. We use the
+ * same algorithm as the probing algorithm to walk over the entries in
+ * the hash table in a pseudo-random order. Walking linearly would
+ * favor entries following gaps in the hash table. We could also
+ * call rand() repeatedly, which works well for almost-full tables,
+ * but degrades when the table is almost empty, or predicate
+ * returns false for most entries.
+ */
+static cairo_cache_entry_base_t **
+_random_entry (cairo_cache_t *cache,
+	       int (*predicate)(void*))
+{    
+    cairo_cache_entry_base_t **probe;
+    unsigned long hash;
+    unsigned long table_size, i, idx, step;
+    
+    _cache_sane_state (cache);
 
+    table_size = cache->arrangement->size;
+    hash = rand ();
+    idx = hash % table_size;
+    step = 0;
+
+    for (i = 0; i < table_size; ++i)
+    {
+	assert(idx < table_size);
+	probe = cache->entries + idx;
+
+	if (LIVE_ENTRY_P(cache, idx)
+	    && (!predicate || predicate (*probe)))
+	    return probe;
+
+	if (step == 0) { 	    
+	    step = hash % cache->arrangement->rehash;
+	    if (step == 0)
+		step = 1;
+	}
+
+	idx += step;
+	if (idx >= table_size)
+	    idx -= table_size;
+    }
+
+    return NULL;
+}
 
 /* public API follows */
 
@@ -356,8 +390,9 @@ _cairo_cache_destroy (cairo_cache_t *cache)
 
 cairo_status_t
 _cairo_cache_lookup (cairo_cache_t *cache,
-		     void *key,
-		     void **entry_return)
+		     void          *key,
+		     void         **entry_return,
+		     int           *created_entry)
 {
 
     unsigned long idx;
@@ -392,6 +427,8 @@ _cairo_cache_lookup (cairo_cache_t *cache,
 	cache->hits++;
 #endif
 	*entry_return = *slot;
+	if (created_entry)
+	    *created_entry = 0;
 	return status;
     }
 
@@ -401,19 +438,18 @@ _cairo_cache_lookup (cairo_cache_t *cache,
 
     /* Build the new entry. */
     status = cache->backend->create_entry (cache, key, 
-					   entry_return);
+					   (void **)&new_entry);
     if (status != CAIRO_STATUS_SUCCESS)
 	return status;
-
-    new_entry = (cairo_cache_entry_base_t *) (*entry_return);
 
     /* Store the hash value in case the backend forgot. */
     new_entry->hashcode = cache->backend->hash (cache, key);
 
     /* Make some entries die if we're under memory pressure. */
     while (cache->live_entries > 0 &&
+	   cache->max_memory > 0 &&
 	   ((cache->max_memory - cache->used_memory) < new_entry->memory)) {
-	idx = _random_live_entry (cache);
+	idx =  _random_entry (cache, NULL) - cache->entries;
 	assert (idx < cache->arrangement->size);
 	_entry_destroy (cache, idx);
     }
@@ -425,7 +461,6 @@ _cairo_cache_lookup (cairo_cache_t *cache,
     status = _resize_cache (cache, cache->live_entries + 1);
     if (status != CAIRO_STATUS_SUCCESS) {
 	cache->backend->destroy_entry (cache, new_entry);
-	*entry_return = NULL;
 	return status;
     }
 
@@ -439,7 +474,36 @@ _cairo_cache_lookup (cairo_cache_t *cache,
 
     _cache_sane_state (cache);
 
+    *entry_return = new_entry;
+    if (created_entry)
+      *created_entry = 1;
+    
     return status;
+}
+
+cairo_status_t
+_cairo_cache_remove (cairo_cache_t *cache,
+		     void          *key)
+{
+    cairo_cache_entry_base_t **slot;
+
+    _cache_sane_state (cache);
+
+    /* See if we have an entry in the table already. */
+    slot = _find_exact_live_entry_for (cache, key);
+    if (slot != NULL)
+      	_entry_destroy (cache, slot - cache->entries);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+void *
+_cairo_cache_random_entry (cairo_cache_t *cache,
+			   int (*predicate)(void*))
+{
+    cairo_cache_entry_base_t **slot = _random_entry (cache, predicate);
+
+    return slot ? *slot : NULL;
 }
 
 unsigned long
