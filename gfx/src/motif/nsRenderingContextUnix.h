@@ -63,97 +63,98 @@ public:
 
   NS_IMETHOD Init(nsIDeviceContext* aContext, nsIWidget *aWindow);
   NS_IMETHOD Init(nsIDeviceContext* aContext, nsDrawingSurface aSurface);
-  virtual nsresult CommonInit();
 
-  virtual void Reset();
+  NS_IMETHOD Reset(void);
 
-  virtual nsIDeviceContext * GetDeviceContext(void);
+  NS_IMETHOD GetDeviceContext(nsIDeviceContext *&aContext);
 
   NS_IMETHOD SelectOffScreenDrawingSurface(nsDrawingSurface aSurface);
   NS_IMETHOD GetHints(PRUint32& aResult);
 
-  virtual void PushState(void);
-  virtual PRBool PopState(void);
+  NS_IMETHOD PushState(void);
+  NS_IMETHOD PopState(PRBool &aClipEmpty);
 
-  virtual PRBool IsVisibleRect(const nsRect& aRect);
+  NS_IMETHOD IsVisibleRect(const nsRect& aRect, PRBool &aClipEmpty);
 
-  virtual PRBool SetClipRectInPixels(const nsRect& aRect, nsClipCombine aCombine);
-  virtual PRBool SetClipRect(const nsRect& aRect, nsClipCombine aCombine);
-  virtual PRBool GetClipRect(nsRect &aRect);
-  virtual PRBool SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine);
-  virtual void GetClipRegion(nsIRegion **aRegion);
+  NS_IMETHOD SetClipRect(const nsRect& aRect, nsClipCombine aCombine, PRBool &aClipEmpty);
+  NS_IMETHOD GetClipRect(nsRect &aRect, PRBool &aClipValid);
+  NS_IMETHOD SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine, PRBool &aClipEmpty);
+  NS_IMETHOD GetClipRegion(nsIRegion **aRegion);
 
   NS_IMETHOD SetLineStyle(nsLineStyle aLineStyle);
   NS_IMETHOD GetLineStyle(nsLineStyle &aLineStyle);
 
-  virtual void SetColor(nscolor aColor);
-  virtual nscolor GetColor() const;
+  NS_IMETHOD SetColor(nscolor aColor);
+  NS_IMETHOD GetColor(nscolor &aColor) const;
 
-  virtual void SetFont(const nsFont& aFont);
-  virtual void SetFont(nsIFontMetrics *aFontMetrics);
-  virtual const nsFont& GetFont();
+  NS_IMETHOD SetFont(const nsFont& aFont);
+  NS_IMETHOD SetFont(nsIFontMetrics *aFontMetrics);
 
-  virtual nsIFontMetrics * GetFontMetrics();
+  NS_IMETHOD GetFontMetrics(nsIFontMetrics *&aFontMetrics);
 
-  virtual void Translate(nscoord aX, nscoord aY);
-  virtual void Scale(float aSx, float aSy);
-  virtual nsTransform2D * GetCurrentTransform();
+  NS_IMETHOD Translate(nscoord aX, nscoord aY);
+  NS_IMETHOD Scale(float aSx, float aSy);
+  NS_IMETHOD GetCurrentTransform(nsTransform2D *&aTransform);
 
-  virtual nsDrawingSurface CreateDrawingSurface(nsRect *aBounds, PRUint32 aSurfFlags);
-  virtual void DestroyDrawingSurface(nsDrawingSurface aDS);
+  NS_IMETHOD CreateDrawingSurface(nsRect *aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface);
+  NS_IMETHOD DestroyDrawingSurface(nsDrawingSurface aDS);
 
-  virtual void DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1);
-  virtual void DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints);
+  NS_IMETHOD DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1);
+  NS_IMETHOD DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints);
 
-  virtual void DrawRect(const nsRect& aRect);
-  virtual void DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
-  virtual void FillRect(const nsRect& aRect);
-  virtual void FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
+  NS_IMETHOD DrawRect(const nsRect& aRect);
+  NS_IMETHOD DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
+  NS_IMETHOD FillRect(const nsRect& aRect);
+  NS_IMETHOD FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
 
-  virtual void DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
-  virtual void FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
+  NS_IMETHOD DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
+  NS_IMETHOD FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
 
-  virtual void DrawEllipse(const nsRect& aRect);
-  virtual void DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
-  virtual void FillEllipse(const nsRect& aRect);
-  virtual void FillEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
+  NS_IMETHOD DrawEllipse(const nsRect& aRect);
+  NS_IMETHOD DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
+  NS_IMETHOD FillEllipse(const nsRect& aRect);
+  NS_IMETHOD FillEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
 
-  virtual void DrawArc(const nsRect& aRect,
-                       float aStartAngle, float aEndAngle);
-  virtual void DrawArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
-                       float aStartAngle, float aEndAngle);
-  virtual void FillArc(const nsRect& aRect,
-                       float aStartAngle, float aEndAngle);
-  virtual void FillArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
-                       float aStartAngle, float aEndAngle);
+  NS_IMETHOD DrawArc(const nsRect& aRect,
+                     float aStartAngle, float aEndAngle);
+  NS_IMETHOD DrawArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
+                     float aStartAngle, float aEndAngle);
+  NS_IMETHOD FillArc(const nsRect& aRect,
+                     float aStartAngle, float aEndAngle);
+  NS_IMETHOD FillArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
+                     float aStartAngle, float aEndAngle);
 
-  NS_IMETHOD  GetWidth(char aC, nscoord &aWidth);
-  NS_IMETHOD  GetWidth(PRUnichar aC, nscoord &aWidth);
-  NS_IMETHOD  GetWidth(const nsString& aString, nscoord &aWidth);
-  NS_IMETHOD  GetWidth(const char *aString, nscoord &aWidth);
-  NS_IMETHOD  GetWidth(const char *aString, PRUint32 aLength, nscoord &aWidth);
-  NS_IMETHOD  GetWidth(const PRUnichar *aString, PRUint32 aLength, nscoord &aWidth);
+  NS_IMETHOD GetWidth(char aC, nscoord &aWidth);
+  NS_IMETHOD GetWidth(PRUnichar aC, nscoord &aWidth);
+  NS_IMETHOD GetWidth(const nsString& aString, nscoord &aWidth);
+  NS_IMETHOD GetWidth(const char *aString, nscoord &aWidth);
+  NS_IMETHOD GetWidth(const char *aString, PRUint32 aLength, nscoord &aWidth);
+  NS_IMETHOD GetWidth(const PRUnichar *aString, PRUint32 aLength, nscoord &aWidth);
 
-  virtual void DrawString(const char *aString, PRUint32 aLength,
-                          nscoord aX, nscoord aY,
-                          nscoord aWidth,
-                          const nscoord* aSpacing);
-  virtual void DrawString(const PRUnichar *aString, PRUint32 aLength,
-                          nscoord aX, nscoord aY,
-                          nscoord aWidth,
-                          const nscoord* aSpacing);
-  virtual void DrawString(const nsString& aString, nscoord aX, nscoord aY,
-                          nscoord aWidth,
-                          const nscoord* aSpacing);
+  NS_IMETHOD DrawString(const char *aString, PRUint32 aLength,
+                        nscoord aX, nscoord aY,
+                        nscoord aWidth,
+                        const nscoord* aSpacing);
+  NS_IMETHOD DrawString(const PRUnichar *aString, PRUint32 aLength,
+                        nscoord aX, nscoord aY,
+                        nscoord aWidth,
+                        const nscoord* aSpacing);
+  NS_IMETHOD DrawString(const nsString& aString, nscoord aX, nscoord aY,
+                        nscoord aWidth,
+                        const nscoord* aSpacing);
 
-  virtual void DrawImage(nsIImage *aImage, nscoord aX, nscoord aY);
-  virtual void DrawImage(nsIImage *aImage, nscoord aX, nscoord aY,
-                         nscoord aWidth, nscoord aHeight); 
-  virtual void DrawImage(nsIImage *aImage, const nsRect& aRect);
-  virtual void DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect);
+  NS_IMETHOD DrawImage(nsIImage *aImage, nscoord aX, nscoord aY);
+  NS_IMETHOD DrawImage(nsIImage *aImage, nscoord aX, nscoord aY,
+                       nscoord aWidth, nscoord aHeight); 
+  NS_IMETHOD DrawImage(nsIImage *aImage, const nsRect& aRect);
+  NS_IMETHOD DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect);
 
   NS_IMETHOD CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
                                const nsRect &aDestBounds, PRUint32 aCopyFlags);
+
+  //locals
+  NS_IMETHOD CommonInit();
+  NS_IMETHOD SetClipRectInPixels(const nsRect& aRect, nsClipCombine aCombine, PRBool &aClipEmpty);
 
 protected:
 

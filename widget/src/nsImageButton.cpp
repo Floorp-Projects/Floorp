@@ -413,7 +413,9 @@ nsresult nsImageButton::PushState(nsIRenderingContext& aRenderingContext)
 //-----------------------------------------------------------------------------
 PRBool nsImageButton::PopState(nsIRenderingContext& aRenderingContext)
 {
-  return (aRenderingContext.PopState());
+  PRBool clipState;
+  aRenderingContext.PopState(clipState);
+  return clipState;
 }
 
 //-----------------------------------------------------------------------------
@@ -545,7 +547,7 @@ nsEventStatus nsImageButton::HandleEvent(nsGUIEvent *aEvent)
 
           nsEventStatus es ;
           nsRect rect;
-          nsDrawingSurface ds;
+          nsDrawingSurface ds = nsnull;
           nsIRenderingContext * ctx = ((nsPaintEvent*)aEvent)->renderingContext;
 
           /*nsRect widgetRect;
@@ -562,7 +564,7 @@ nsEventStatus nsImageButton::HandleEvent(nsGUIEvent *aEvent)
           aEvent->widget->GetBounds(rect);
           rect.x = 0;
           rect.y = 0;
-          ds = ctx->CreateDrawingSurface(&rect, 0);
+          ctx->CreateDrawingSurface(&rect, 0, ds);
           if (ds == nsnull) {
             return nsEventStatus_eConsumeNoDefault;
           }

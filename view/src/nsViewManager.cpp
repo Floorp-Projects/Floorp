@@ -304,7 +304,8 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsI
 
   mContext->GetAppUnitsToDevUnits(scale);
 
-  localcx->SetClipRegion(*region, nsClipCombine_kReplace);
+  PRBool  result;
+  localcx->SetClipRegion(*region, nsClipCombine_kReplace, result);
 
   nsRect  trect;
   float   p2t;
@@ -314,7 +315,6 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsI
   region->GetBoundingBox(&trect.x, &trect.y, &trect.width, &trect.height);
   trect.ScaleRoundOut(p2t);
 
-  PRBool  result;
   // Paint the view. The clipping rect was set above set don't clip again.
   aView->Paint(*localcx, trect, NS_VIEW_FLAG_CLIP_SET, result);
 
@@ -388,9 +388,10 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, con
 
   nsRect trect = *rect;
 
-  localcx->SetClipRect(trect, nsClipCombine_kReplace);
-
   PRBool  result;
+
+  localcx->SetClipRect(trect, nsClipCombine_kReplace, result);
+
   // Paint the view. The clipping rect was set above set don't clip again.
   aView->Paint(*localcx, trect, NS_VIEW_FLAG_CLIP_SET, result);
 
@@ -1120,7 +1121,7 @@ nsDrawingSurface nsViewManager :: GetDrawingSurface(nsIRenderingContext &aContex
       aContext.DestroyDrawingSurface(mDrawingSurface);
     }
 
-    mDrawingSurface = aContext.CreateDrawingSurface(&aBounds, 0);
+    aContext.CreateDrawingSurface(&aBounds, 0, mDrawingSurface);
     mDSBounds = aBounds;
   }
 

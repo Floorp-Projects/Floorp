@@ -386,7 +386,8 @@ nsRenderingContextWin :: ~nsRenderingContextWin()
 
   //destroy the initial GraphicsState
 
-  PopState();
+  PRBool clipState;
+  PopState(clipState);
 
   //cleanup the DC so that we can just destroy objects
   //in the graphics state without worrying that we are
@@ -482,37 +483,46 @@ nsRenderingContextWin :: ~nsRenderingContextWin()
 }
 
 nsresult
-nsRenderingContextWin::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+nsRenderingContextWin :: QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-  if (nsnull == aInstancePtr) {
+  if (nsnull == aInstancePtr)
     return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kIRenderingContextIID)) {
+
+  if (aIID.Equals(kIRenderingContextIID))
+  {
     nsIRenderingContext* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIScriptObjectOwnerIID)) {
+
+  if (aIID.Equals(kIScriptObjectOwnerIID))
+  {
     nsIScriptObjectOwner* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIDOMRenderingContextIID)) {
+
+  if (aIID.Equals(kIDOMRenderingContextIID))
+  {
     nsIDOMRenderingContext* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
+
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-  if (aIID.Equals(kISupportsIID)) {
+
+  if (aIID.Equals(kISupportsIID))
+  {
     nsIRenderingContext* tmp = this;
     nsISupports* tmp2 = tmp;
     *aInstancePtr = (void*) tmp2;
     NS_ADDREF_THIS();
     return NS_OK;
   }
+
   return NS_NOINTERFACE;
 }
 
@@ -685,7 +695,7 @@ nsRenderingContextWin :: SelectOffScreenDrawingSurface(nsDrawingSurface aSurface
 }
 
 NS_IMETHODIMP
-nsRenderingContextWin::GetHints(PRUint32& aResult)
+nsRenderingContextWin :: GetHints(PRUint32& aResult)
 {
   PRUint32 result = 0;
 
@@ -697,17 +707,19 @@ nsRenderingContextWin::GetHints(PRUint32& aResult)
   return NS_OK;
 }
 
-void nsRenderingContextWin :: Reset()
+NS_IMETHODIMP nsRenderingContextWin :: Reset()
 {
+  return NS_OK;
 }
 
-nsIDeviceContext * nsRenderingContextWin :: GetDeviceContext(void)
+NS_IMETHODIMP nsRenderingContextWin :: GetDeviceContext(nsIDeviceContext *&aContext)
 {
   NS_IF_ADDREF(mContext);
-  return mContext;
+  aContext = mContext;
+  return NS_OK;
 }
 
-void nsRenderingContextWin :: PushState(void)
+NS_IMETHODIMP nsRenderingContextWin :: PushState(void)
 {
   PRInt32 cnt = mStateCache->Count();
 
@@ -749,9 +761,11 @@ void nsRenderingContextWin :: PushState(void)
   }
 
   mTMatrix = &mStates->mMatrix;
+
+  return NS_OK;
 }
 
-PRBool nsRenderingContextWin :: PopState(void)
+NS_IMETHODIMP nsRenderingContextWin :: PopState(PRBool &aClipEmpty)
 {
   PRBool  retval = PR_FALSE;
 
@@ -805,15 +819,18 @@ PRBool nsRenderingContextWin :: PopState(void)
       mTMatrix = nsnull;
   }
 
-  return retval;
+  aClipEmpty = retval;
+
+  return NS_OK;
 }
 
-PRBool nsRenderingContextWin :: IsVisibleRect(const nsRect& aRect)
+NS_IMETHODIMP nsRenderingContextWin :: IsVisibleRect(const nsRect& aRect, PRBool &aVisible)
 {
-  return PR_TRUE;
+  aVisible = PR_TRUE;
+  return NS_OK;
 }
 
-PRBool nsRenderingContextWin :: SetClipRect(const nsRect& aRect, nsClipCombine aCombine)
+NS_IMETHODIMP nsRenderingContextWin :: SetClipRect(const nsRect& aRect, nsClipCombine aCombine, PRBool &aClipEmpty)
 {
   nsRect  trect = aRect;
   int     cliptype;
@@ -872,23 +889,27 @@ PRBool nsRenderingContextWin :: SetClipRect(const nsRect& aRect, nsClipCombine a
     NS_ASSERTION(FALSE, "illegal clip combination");
 
   if (cliptype == NULLREGION)
-    return PR_TRUE;
+    aClipEmpty = PR_TRUE;
   else
-    return PR_FALSE;
+    aClipEmpty = PR_FALSE;
+
+  return NS_OK;
 }
 
-PRBool nsRenderingContextWin :: GetClipRect(nsRect &aRect)
+NS_IMETHODIMP nsRenderingContextWin :: GetClipRect(nsRect &aRect, PRBool &aClipValid)
 {
   if (mStates->mFlags & FLAG_LOCAL_CLIP_VALID)
   {
     aRect = mStates->mLocalClip;
-    return PR_TRUE;
+    aClipValid = PR_TRUE;
   }
   else
-    return PR_FALSE;
+    aClipValid = PR_FALSE;
+
+  return NS_OK;
 }
 
-PRBool nsRenderingContextWin :: SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine)
+NS_IMETHODIMP nsRenderingContextWin :: SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine, PRBool &aClipEmpty)
 {
   nsRegionWin *pRegion = (nsRegionWin *)&aRegion;
   HRGN        hrgn = pRegion->GetHRGN();
@@ -924,88 +945,90 @@ PRBool nsRenderingContextWin :: SetClipRegion(const nsIRegion& aRegion, nsClipCo
     return PR_FALSE;
 
   if (cliptype == NULLREGION)
-    return PR_TRUE;
+    aClipEmpty = PR_TRUE;
   else
-    return PR_FALSE;
+    aClipEmpty = PR_FALSE;
+
+  return NS_OK;
 }
 
-void nsRenderingContextWin :: GetClipRegion(nsIRegion **aRegion)
+NS_IMETHODIMP nsRenderingContextWin :: GetClipRegion(nsIRegion **aRegion)
 {
   //XXX wow, needs to do something.
+  return NS_OK;
 }
 
-void nsRenderingContextWin :: SetColor(nscolor aColor)
+NS_IMETHODIMP nsRenderingContextWin :: SetColor(nscolor aColor)
 {
   mCurrentColor = aColor;
   mColor = RGB(mGammaTable[NS_GET_R(aColor)],
                mGammaTable[NS_GET_G(aColor)],
                mGammaTable[NS_GET_B(aColor)]);
+  return NS_OK;
 }
 
-nscolor nsRenderingContextWin :: GetColor() const
+NS_IMETHODIMP nsRenderingContextWin :: GetColor(nscolor &aColor) const
 {
-  return mCurrentColor;
+  aColor = mCurrentColor;
+  return NS_OK;
 }
 
-nsresult nsRenderingContextWin :: SetLineStyle(nsLineStyle aLineStyle)
+NS_IMETHODIMP nsRenderingContextWin :: SetLineStyle(nsLineStyle aLineStyle)
 {
   mCurrLineStyle = aLineStyle;
   return NS_OK;
 }
 
-nsresult nsRenderingContextWin :: GetLineStyle(nsLineStyle &aLineStyle)
+NS_IMETHODIMP nsRenderingContextWin :: GetLineStyle(nsLineStyle &aLineStyle)
 {
   aLineStyle = mCurrLineStyle;
   return NS_OK;
 }
 
-void nsRenderingContextWin :: SetFont(const nsFont& aFont)
+NS_IMETHODIMP nsRenderingContextWin :: SetFont(const nsFont& aFont)
 {
   NS_IF_RELEASE(mFontMetrics);
   mContext->GetMetricsFor(aFont, mFontMetrics);
+  return NS_OK;
 }
 
-void nsRenderingContextWin :: SetFont(nsIFontMetrics *aFontMetrics)
+NS_IMETHODIMP nsRenderingContextWin :: SetFont(nsIFontMetrics *aFontMetrics)
 {
   NS_IF_RELEASE(mFontMetrics);
   mFontMetrics = aFontMetrics;
   NS_IF_ADDREF(mFontMetrics);
+
+  return NS_OK;
 }
 
-const nsFont& nsRenderingContextWin :: GetFont()
-{
-  const nsFont* font;
-
-  if (nsnull != mFontMetrics)
-    mFontMetrics->GetFont(font);
-
-  return *font;
-}
-
-nsIFontMetrics* nsRenderingContextWin :: GetFontMetrics()
+NS_IMETHODIMP nsRenderingContextWin :: GetFontMetrics(nsIFontMetrics *&aFontMetrics)
 {
   NS_IF_ADDREF(mFontMetrics);
-  return mFontMetrics;
+  aFontMetrics = mFontMetrics;
+  return NS_OK;
 }
 
 // add the passed in translation to the current translation
-void nsRenderingContextWin :: Translate(nscoord aX, nscoord aY)
+NS_IMETHODIMP nsRenderingContextWin :: Translate(nscoord aX, nscoord aY)
 {
 	mTMatrix->AddTranslation((float)aX,(float)aY);
+  return NS_OK;
 }
 
 // add the passed in scale to the current scale
-void nsRenderingContextWin :: Scale(float aSx, float aSy)
+NS_IMETHODIMP nsRenderingContextWin :: Scale(float aSx, float aSy)
 {
 	mTMatrix->AddScale(aSx, aSy);
+  return NS_OK;
 }
 
-nsTransform2D * nsRenderingContextWin :: GetCurrentTransform()
+NS_IMETHODIMP nsRenderingContextWin :: GetCurrentTransform(nsTransform2D *&aTransform)
 {
-  return mTMatrix;
+  aTransform = mTMatrix;
+  return NS_OK;
 }
 
-nsDrawingSurface nsRenderingContextWin :: CreateDrawingSurface(nsRect *aBounds, PRUint32 aSurfFlags)
+NS_IMETHODIMP nsRenderingContextWin :: CreateDrawingSurface(nsRect *aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface)
 {
   nsDrawingSurfaceWin *surf = new nsDrawingSurfaceWin();
 
@@ -1065,10 +1088,12 @@ nsDrawingSurface nsRenderingContextWin :: CreateDrawingSurface(nsRect *aBounds, 
     }
   }
 
-  return (nsDrawingSurface)surf;
+  aSurface = (nsDrawingSurface)surf;
+
+  return NS_OK;
 }
 
-void nsRenderingContextWin :: DestroyDrawingSurface(nsDrawingSurface aDS)
+NS_IMETHODIMP nsRenderingContextWin :: DestroyDrawingSurface(nsDrawingSurface aDS)
 {
   nsDrawingSurfaceWin *surf = (nsDrawingSurfaceWin *)aDS;
 
@@ -1080,12 +1105,14 @@ void nsRenderingContextWin :: DestroyDrawingSurface(nsDrawingSurface aDS)
   }
 
   NS_IF_RELEASE(surf);
+
+  return NS_OK;
 }
 
-void nsRenderingContextWin :: DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
+NS_IMETHODIMP nsRenderingContextWin :: DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
 {
   if (nsLineStyle_kNone == mCurrLineStyle)
-    return;
+    return NS_OK;
 
 	mTMatrix->TransformCoord(&aX0,&aY0);
 	mTMatrix->TransformCoord(&aX1,&aY1);
@@ -1108,12 +1135,14 @@ void nsRenderingContextWin :: DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, ns
     ::MoveToEx(mDC, (int)(aX0), (int)(aY0), NULL);
     ::LineTo(mDC, (int)(aX1), (int)(aY1));
   }
+
+  return NS_OK;
 }
 
-void nsRenderingContextWin :: DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints)
+NS_IMETHODIMP nsRenderingContextWin :: DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
   if (nsLineStyle_kNone == mCurrLineStyle)
-    return;
+    return NS_OK;
 
   // First transform nsPoint's into POINT's; perform coordinate space
   // transformation at the same time
@@ -1140,9 +1169,11 @@ void nsRenderingContextWin :: DrawPolyline(const nsPoint aPoints[], PRInt32 aNum
   // Release temporary storage if necessary
   if (pp0 != pts)
     delete pp0;
+
+  return NS_OK;
 }
 
-void nsRenderingContextWin :: DrawRect(const nsRect& aRect)
+NS_IMETHODIMP nsRenderingContextWin :: DrawRect(const nsRect& aRect)
 {
   RECT nr;
 	nsRect	tr;
@@ -1155,9 +1186,11 @@ void nsRenderingContextWin :: DrawRect(const nsRect& aRect)
 	nr.bottom = tr.y+tr.height;
 
   ::FrameRect(mDC, &nr, SetupSolidBrush());
+
+  return NS_OK;
 }
 
-void nsRenderingContextWin :: DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
+NS_IMETHODIMP nsRenderingContextWin :: DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
   RECT nr;
 
@@ -1168,9 +1201,11 @@ void nsRenderingContextWin :: DrawRect(nscoord aX, nscoord aY, nscoord aWidth, n
 	nr.bottom = aY+aHeight;
 
   ::FrameRect(mDC, &nr, SetupSolidBrush());
+
+  return NS_OK;
 }
 
-void nsRenderingContextWin :: FillRect(const nsRect& aRect)
+NS_IMETHODIMP nsRenderingContextWin :: FillRect(const nsRect& aRect)
 {
   RECT nr;
 	nsRect	tr;
@@ -1183,9 +1218,11 @@ void nsRenderingContextWin :: FillRect(const nsRect& aRect)
 	nr.bottom = tr.y+tr.height;
 
   ::FillRect(mDC, &nr, SetupSolidBrush());
+
+  return NS_OK;
 }
 
-void nsRenderingContextWin :: FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
+NS_IMETHODIMP nsRenderingContextWin :: FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
   RECT nr;
 	nsRect	tr;
@@ -1197,9 +1234,11 @@ void nsRenderingContextWin :: FillRect(nscoord aX, nscoord aY, nscoord aWidth, n
 	nr.bottom = aY+aHeight;
 
   ::FillRect(mDC, &nr, SetupSolidBrush());
+
+  return NS_OK;
 }
 
-void nsRenderingContextWin::DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
+NS_IMETHODIMP nsRenderingContextWin :: DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
   // First transform nsPoint's into POINT's; perform coordinate space
   // transformation at the same time
@@ -1234,9 +1273,11 @@ void nsRenderingContextWin::DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoi
   // Release temporary storage if necessary
   if (pp0 != pts)
     delete pp0;
+
+  return NS_OK;
 }
 
-void nsRenderingContextWin::FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
+NS_IMETHODIMP nsRenderingContextWin :: FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
   // First transform nsPoint's into POINT's; perform coordinate space
   // transformation at the same time
@@ -1270,17 +1311,19 @@ void nsRenderingContextWin::FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoi
   // Release temporary storage if necessary
   if (pp0 != pts)
     delete pp0;
+
+  return NS_OK;
 }
 
-void nsRenderingContextWin :: DrawEllipse(const nsRect& aRect)
+NS_IMETHODIMP nsRenderingContextWin :: DrawEllipse(const nsRect& aRect)
 {
-  DrawEllipse(aRect.x, aRect.y, aRect.width, aRect.height);
+  return DrawEllipse(aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
-void nsRenderingContextWin :: DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
+NS_IMETHODIMP nsRenderingContextWin :: DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
   if (nsLineStyle_kNone == mCurrLineStyle)
-    return;
+    return NS_OK;
 
   mTMatrix->TransformCoord(&aX, &aY, &aWidth, &aHeight);
 
@@ -1290,14 +1333,16 @@ void nsRenderingContextWin :: DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth
   
   ::Ellipse(mDC, aX, aY, aX + aWidth, aY + aHeight);
   ::SelectObject(mDC, oldBrush);
+
+  return NS_OK;
 }
 
-void nsRenderingContextWin :: FillEllipse(const nsRect& aRect)
+NS_IMETHODIMP nsRenderingContextWin :: FillEllipse(const nsRect& aRect)
 {
-  FillEllipse(aRect.x, aRect.y, aRect.width, aRect.height);
+  return FillEllipse(aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
-void nsRenderingContextWin :: FillEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
+NS_IMETHODIMP nsRenderingContextWin :: FillEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
   mTMatrix->TransformCoord(&aX, &aY, &aWidth, &aHeight);
 
@@ -1305,19 +1350,21 @@ void nsRenderingContextWin :: FillEllipse(nscoord aX, nscoord aY, nscoord aWidth
   SetupSolidBrush();
   
   ::Ellipse(mDC, aX, aY, aX + aWidth, aY + aHeight);
+
+  return NS_OK;
 }
 
-void nsRenderingContextWin :: DrawArc(const nsRect& aRect,
+NS_IMETHODIMP nsRenderingContextWin :: DrawArc(const nsRect& aRect,
                                  float aStartAngle, float aEndAngle)
 {
-  this->DrawArc(aRect.x,aRect.y,aRect.width,aRect.height,aStartAngle,aEndAngle);
+  return DrawArc(aRect.x,aRect.y,aRect.width,aRect.height,aStartAngle,aEndAngle);
 }
 
-void nsRenderingContextWin :: DrawArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
+NS_IMETHODIMP nsRenderingContextWin :: DrawArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
                                  float aStartAngle, float aEndAngle)
 {
   if (nsLineStyle_kNone == mCurrLineStyle)
-    return;
+    return NS_OK;
 
   PRInt32 quad1, quad2, sx, sy, ex, ey, cx, cy;
   float   anglerad, distance;
@@ -1346,15 +1393,17 @@ void nsRenderingContextWin :: DrawArc(nscoord aX, nscoord aY, nscoord aWidth, ns
   ::SetArcDirection(mDC, AD_COUNTERCLOCKWISE);
 
   ::Arc(mDC, aX, aY, aX + aWidth, aY + aHeight, sx, sy, ex, ey); 
+
+  return NS_OK;
 }
 
-void nsRenderingContextWin :: FillArc(const nsRect& aRect,
+NS_IMETHODIMP nsRenderingContextWin :: FillArc(const nsRect& aRect,
                                  float aStartAngle, float aEndAngle)
 {
-  this->FillArc(aRect.x, aRect.y, aRect.width, aRect.height, aStartAngle, aEndAngle);
+  return FillArc(aRect.x, aRect.y, aRect.width, aRect.height, aStartAngle, aEndAngle);
 }
 
-void nsRenderingContextWin :: FillArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
+NS_IMETHODIMP nsRenderingContextWin :: FillArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
                                  float aStartAngle, float aEndAngle)
 {
   PRInt32 quad1, quad2, sx, sy, ex, ey, cx, cy;
@@ -1385,33 +1434,31 @@ void nsRenderingContextWin :: FillArc(nscoord aX, nscoord aY, nscoord aWidth, ns
   ::SetArcDirection(mDC, AD_COUNTERCLOCKWISE);
 
   ::Pie(mDC, aX, aY, aX + aWidth, aY + aHeight, sx, sy, ex, ey); 
+
+  return NS_OK;
 }
 
 
-NS_IMETHODIMP
-nsRenderingContextWin :: GetWidth(char ch, nscoord& aWidth)
+NS_IMETHODIMP nsRenderingContextWin :: GetWidth(char ch, nscoord& aWidth)
 {
   char buf[1];
   buf[0] = ch;
   return GetWidth(buf, 1, aWidth);
 }
 
-NS_IMETHODIMP
-nsRenderingContextWin :: GetWidth(PRUnichar ch, nscoord &aWidth)
+NS_IMETHODIMP nsRenderingContextWin :: GetWidth(PRUnichar ch, nscoord &aWidth)
 {
   PRUnichar buf[1];
   buf[0] = ch;
   return GetWidth(buf, 1, aWidth);
 }
 
-NS_IMETHODIMP
-nsRenderingContextWin :: GetWidth(const char* aString, nscoord& aWidth)
+NS_IMETHODIMP nsRenderingContextWin :: GetWidth(const char* aString, nscoord& aWidth)
 {
   return GetWidth(aString, strlen(aString), aWidth);
 }
 
-NS_IMETHODIMP
-nsRenderingContextWin :: GetWidth(const char* aString,
+NS_IMETHODIMP nsRenderingContextWin :: GetWidth(const char* aString,
                                   PRUint32 aLength,
                                   nscoord& aWidth)
 {
@@ -1429,14 +1476,12 @@ nsRenderingContextWin :: GetWidth(const char* aString,
     return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
-nsRenderingContextWin :: GetWidth(const nsString& aString, nscoord& aWidth)
+NS_IMETHODIMP nsRenderingContextWin :: GetWidth(const nsString& aString, nscoord& aWidth)
 {
   return GetWidth(aString.GetUnicode(), aString.Length(), aWidth);
 }
 
-NS_IMETHODIMP
-nsRenderingContextWin :: GetWidth(const PRUnichar *aString,
+NS_IMETHODIMP nsRenderingContextWin :: GetWidth(const PRUnichar *aString,
                                   PRUint32 aLength,
                                   nscoord &aWidth)
 {
@@ -1454,8 +1499,7 @@ nsRenderingContextWin :: GetWidth(const PRUnichar *aString,
     return NS_ERROR_FAILURE;
 }
 
-void
-nsRenderingContextWin :: DrawString(const char *aString, PRUint32 aLength,
+NS_IMETHODIMP nsRenderingContextWin :: DrawString(const char *aString, PRUint32 aLength,
                                     nscoord aX, nscoord aY,
                                     nscoord aWidth,
                                     const nscoord* aSpacing)
@@ -1485,7 +1529,9 @@ nsRenderingContextWin :: DrawString(const char *aString, PRUint32 aLength,
 
   if (nsnull != mFontMetrics)
   {
-    PRUint8 decorations = GetFont().decorations;
+    nsFont *font;
+    mFontMetrics->GetFont(font);
+    PRUint8 decorations = font->decorations;
 
     if (decorations & NS_FONT_DECORATION_OVERLINE)
     {
@@ -1495,10 +1541,11 @@ nsRenderingContextWin :: DrawString(const char *aString, PRUint32 aLength,
       FillRect(aX, aY, aWidth, size);
     }
   }
+
+  return NS_OK;
 }
 
-void
-nsRenderingContextWin :: DrawString(const PRUnichar *aString, PRUint32 aLength,
+NS_IMETHODIMP nsRenderingContextWin :: DrawString(const PRUnichar *aString, PRUint32 aLength,
                                     nscoord aX, nscoord aY, nscoord aWidth,
                                     const nscoord* aSpacing)
 {
@@ -1535,7 +1582,9 @@ nsRenderingContextWin :: DrawString(const PRUnichar *aString, PRUint32 aLength,
 
   if (nsnull != mFontMetrics)
   {
-    PRUint8 decorations = GetFont().decorations;
+    nsFont *font;
+    mFontMetrics->GetFont(font);
+    PRUint8 decorations = font->decorations;
 
     if (decorations & NS_FONT_DECORATION_OVERLINE)
     {
@@ -1545,17 +1594,18 @@ nsRenderingContextWin :: DrawString(const PRUnichar *aString, PRUint32 aLength,
       FillRect(aX, aY, aWidth, size);
     }
   }
+
+  return NS_OK;
 }
 
-void
-nsRenderingContextWin :: DrawString(const nsString& aString,
+NS_IMETHODIMP nsRenderingContextWin :: DrawString(const nsString& aString,
                                     nscoord aX, nscoord aY, nscoord aWidth,
                                     const nscoord* aSpacing)
 {
-  DrawString(aString.GetUnicode(), aString.Length(), aX, aY, aWidth, aSpacing);
+  return DrawString(aString.GetUnicode(), aString.Length(), aX, aY, aWidth, aSpacing);
 }
 
-void nsRenderingContextWin :: DrawImage(nsIImage *aImage, nscoord aX, nscoord aY)
+NS_IMETHODIMP nsRenderingContextWin :: DrawImage(nsIImage *aImage, nscoord aX, nscoord aY)
 {
   NS_PRECONDITION(PR_TRUE == mInitialized, "!initialized");
 
@@ -1564,10 +1614,10 @@ void nsRenderingContextWin :: DrawImage(nsIImage *aImage, nscoord aX, nscoord aY
   width = NSToCoordRound(mP2T * aImage->GetWidth());
   height = NSToCoordRound(mP2T * aImage->GetHeight());
 
-  this->DrawImage(aImage, aX, aY, width, height);
+  return DrawImage(aImage, aX, aY, width, height);
 }
 
-void nsRenderingContextWin :: DrawImage(nsIImage *aImage, nscoord aX, nscoord aY,
+NS_IMETHODIMP nsRenderingContextWin :: DrawImage(nsIImage *aImage, nscoord aX, nscoord aY,
                                         nscoord aWidth, nscoord aHeight) 
 {
   nsRect  tr;
@@ -1577,10 +1627,10 @@ void nsRenderingContextWin :: DrawImage(nsIImage *aImage, nscoord aX, nscoord aY
   tr.width = aWidth;
   tr.height = aHeight;
 
-  this->DrawImage(aImage, tr);
+  return DrawImage(aImage, tr);
 }
 
-void nsRenderingContextWin :: DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect)
+NS_IMETHODIMP nsRenderingContextWin :: DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect)
 {
   nsRect	sr,dr;
 
@@ -1590,17 +1640,17 @@ void nsRenderingContextWin :: DrawImage(nsIImage *aImage, const nsRect& aSRect, 
   dr = aDRect;
 	mTMatrix->TransformCoord(&dr.x, &dr.y, &dr.width, &dr.height);
 
-  ((nsImageWin *)aImage)->Draw(*this, mSurface, sr.x, sr.y, sr.width, sr.height, dr.x, dr.y, dr.width, dr.height);
+  return aImage->Draw(*this, mSurface, sr.x, sr.y, sr.width, sr.height, dr.x, dr.y, dr.width, dr.height);
 }
 
-void nsRenderingContextWin :: DrawImage(nsIImage *aImage, const nsRect& aRect)
+NS_IMETHODIMP nsRenderingContextWin :: DrawImage(nsIImage *aImage, const nsRect& aRect)
 {
   nsRect	tr;
 
 	tr = aRect;
 	mTMatrix->TransformCoord(&tr.x, &tr.y, &tr.width, &tr.height);
 
-  ((nsImageWin *)aImage)->Draw(*this, mSurface, tr.x, tr.y, tr.width, tr.height);
+  return aImage->Draw(*this, mSurface, tr.x, tr.y, tr.width, tr.height);
 }
 
 NS_IMETHODIMP nsRenderingContextWin :: CopyOffScreenBits(nsDrawingSurface aSrcSurf,

@@ -299,14 +299,14 @@ void nsImageWin :: CreateDDB(nsDrawingSurface aSurface)
 }
 
 // Draw the bitmap, this method has a source and destination coordinates
-PRBool nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
-                          PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
-                          PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
+NS_IMETHODIMP nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
+                                 PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
+                                 PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
   HDC   the_hdc = ((nsDrawingSurfaceWin *)aSurface)->mDC;
 
   if (mBHead == nsnull) 
-    return PR_FALSE;
+    return NS_ERROR_FAILURE;
 
   // If the image can be optimized then make sure we've created the DDB
   if (mIsOptimized && (nsnull == mHBitmap)) {
@@ -333,7 +333,8 @@ PRBool nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurfa
   }
   else
   {
-    nsIDeviceContext    *dx = aContext.GetDeviceContext();
+    nsIDeviceContext    *dx;
+    aContext.GetDeviceContext(dx);
     nsDrawingSurface     ds;
     dx->GetDrawingSurface(aContext, ds);
     nsDrawingSurfaceWin *srcds = (nsDrawingSurfaceWin *)ds;
@@ -380,19 +381,19 @@ PRBool nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurfa
     NS_RELEASE(dx);
   }
 
-  return PR_TRUE;
+  return NS_OK;
 }
 
 //------------------------------------------------------------
 
 // Draw the bitmap, this draw just has destination coordinates
-PRBool nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
-                          PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
+NS_IMETHODIMP nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
+                                 PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
   HDC   the_hdc = ((nsDrawingSurfaceWin *)aSurface)->mDC;
 
   if (mBHead == nsnull) 
-    return PR_FALSE;
+    return NS_ERROR_FAILURE;
 
   // If the image can be optimized then make sure we've created the DDB
   if (mIsOptimized && (nsnull == mHBitmap)) {
@@ -419,7 +420,8 @@ PRBool nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurfa
   }
   else
   {
-    nsIDeviceContext    *dx = aContext.GetDeviceContext();
+    nsIDeviceContext    *dx;
+    aContext.GetDeviceContext(dx);
     nsDrawingSurface     ds;
     dx->GetDrawingSurface(aContext, ds);
     nsDrawingSurfaceWin *srcds = (nsDrawingSurfaceWin *)ds;
@@ -467,7 +469,7 @@ PRBool nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurfa
     NS_RELEASE(dx);
   }
 
-  return PR_TRUE;
+  return NS_OK;
 }
 
 //------------------------------------------------------------

@@ -540,7 +540,8 @@ ImageFrame::DisplayAltText(nsIPresContext&      aPresContext,
   aRenderingContext.SetFont(font->mFont);
 
   // Format the text to display within the formatting rect
-  nsIFontMetrics* fm = aRenderingContext.GetFontMetrics();
+  nsIFontMetrics* fm;
+  aRenderingContext.GetFontMetrics(fm);
 
   nscoord maxDescent, height;
   fm->GetMaxDescent(maxDescent);
@@ -597,6 +598,7 @@ ImageFrame::DisplayAltFeedback(nsIPresContext&      aPresContext,
                                PRInt32              aIconId)
 {
   // Display a recessed one pixel border in the inner area
+  PRBool clipState;
   nsRect  inner;
   GetInnerArea(&aPresContext, inner);
 
@@ -614,11 +616,12 @@ ImageFrame::DisplayAltFeedback(nsIPresContext&      aPresContext,
 
   // Clip so we don't render outside the inner rect
   aRenderingContext.PushState();
-  aRenderingContext.SetClipRect(inner, nsClipCombine_kIntersect);
+  aRenderingContext.SetClipRect(inner, nsClipCombine_kIntersect, clipState);
 
 #ifdef _WIN32
   // Display the icon
-  nsIDeviceContext* dc = aRenderingContext.GetDeviceContext();
+  nsIDeviceContext* dc;
+  aRenderingContext.GetDeviceContext(dc);
   nsIImage*         icon;
 
   if (NS_SUCCEEDED(dc->LoadIconImage(aIconId, icon))) {
@@ -644,7 +647,7 @@ ImageFrame::DisplayAltFeedback(nsIPresContext&      aPresContext,
     }
   }
 
-  aRenderingContext.PopState();
+  aRenderingContext.PopState(clipState);
 }
 
 NS_METHOD
@@ -690,11 +693,12 @@ ImageFrame::Paint(nsIPresContext& aPresContext,
     if (GetShowFrameBorders()) {
       nsIImageMap* map = GetImageMap();
       if (nsnull != map) {
+        PRBool clipState;
         aRenderingContext.SetColor(NS_RGB(0, 0, 0));
         aRenderingContext.PushState();
         aRenderingContext.Translate(inner.x, inner.y);
-          map->Draw(aPresContext, aRenderingContext);
-          aRenderingContext.PopState();
+        map->Draw(aPresContext, aRenderingContext);
+        aRenderingContext.PopState(clipState);
       }
     }
   }

@@ -160,10 +160,11 @@ void nsContainerFrame::PaintChildren(nsIPresContext&      aPresContext,
   const nsStyleDisplay* disp =
     (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
   PRBool hidden = PR_FALSE;
+  PRBool clipState;
   if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
     aRenderingContext.PushState();
     aRenderingContext.SetClipRect(nsRect(0, 0, mRect.width, mRect.height),
-                                  nsClipCombine_kIntersect);
+                                  nsClipCombine_kIntersect, clipState);
     hidden = PR_TRUE;
   }
 
@@ -216,14 +217,14 @@ void nsContainerFrame::PaintChildren(nsIPresContext&      aPresContext,
           aRenderingContext.DrawRect(0, 0, kidRect.width, kidRect.height);
         }
 #endif
-        aRenderingContext.PopState();
+        aRenderingContext.PopState(clipState);
       }
     }
     kid->GetNextSibling(kid);
   }
 
   if (hidden) {
-    aRenderingContext.PopState();
+    aRenderingContext.PopState(clipState);
   }
 }
 

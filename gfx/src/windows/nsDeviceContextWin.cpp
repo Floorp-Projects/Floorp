@@ -77,7 +77,7 @@ NS_IMETHODIMP nsDeviceContextWin :: GetScrollBarDimensions(float &aWidth, float 
 NS_IMETHODIMP nsDeviceContextWin :: GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface)
 {
   if (NULL == mSurface) {
-    mSurface = aContext.CreateDrawingSurface(nsnull, 0);
+    aContext.CreateDrawingSurface(nsnull, 0, mSurface);
   }
 
   aSurface = mSurface;

@@ -193,16 +193,16 @@ void nsImageMac :: ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRe
 //------------------------------------------------------------
 
 // Draw the bitmap, this method has a source and destination coordinates
-PRBool nsImageMac :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
-                          PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
+NS_IMETHODIMP nsImageMac :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
+                                 PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
-PixMapPtr	destpix;
-RGBColor	rgbblack = {0x0000,0x0000,0x0000};
-RGBColor	rgbwhite = {0xFFFF,0xFFFF,0xFFFF};
-Rect			srcrect,dstrect;
+  PixMapPtr	destpix;
+  RGBColor	rgbblack = {0x0000,0x0000,0x0000};
+  RGBColor	rgbwhite = {0xFFFF,0xFFFF,0xFFFF};
+  Rect			srcrect,dstrect;
 
   if (nsnull == mThePixelmap.baseAddr)
-    return PR_FALSE;
+    return NS_ERROR_FAILURE;
 
 	::SetRect(&srcrect,aSX,aSY,aSX+aSWidth,aSY+aSHeight);
 	::SetRect(&dstrect,aDX,aDY,aDX+aDWidth,aDY+aDHeight);
@@ -214,16 +214,16 @@ Rect			srcrect,dstrect;
 	
 	::CopyBits((BitMap*)&mThePixelmap,(BitMap*)destpix,&srcrect,&dstrect,ditherCopy,0L);
 
-  return PR_TRUE;
+  return NS_OK;
 }
 
 //------------------------------------------------------------
 
 // Draw the bitmap, this draw just has destination coordinates
-PRBool nsImageMac :: Draw(nsIRenderingContext &aContext, 
-                       nsDrawingSurface aSurface,
-                       PRInt32 aX, PRInt32 aY, 
-                       PRInt32 aWidth, PRInt32 aHeight)
+NS_IMETHODIMP nsImageMac :: Draw(nsIRenderingContext &aContext, 
+                                 nsDrawingSurface aSurface,
+                                 PRInt32 aX, PRInt32 aY, 
+                                 PRInt32 aWidth, PRInt32 aHeight)
 {
 
   return Draw(aContext,aSurface,0,0,mWidth,mHeight,aX,aY,aWidth,aHeight);
