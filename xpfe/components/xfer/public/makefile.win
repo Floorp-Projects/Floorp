@@ -1,4 +1,4 @@
-#!gmake
+#!nmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -22,7 +22,12 @@ MODULE=xpfe\components
 DEPTH=..\..\..\..
 
 EXPORTS=\
-	nsIStreamTransfer.h \
 	$(NULL)
+
+XPIDL_MODULE=mozxfer
+
+XPIDLSRCS=\
+    .\nsIStreamTransfer.idl \
+    $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

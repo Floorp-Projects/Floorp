@@ -22,7 +22,12 @@ MODULE=xpfe\components
 DEPTH=..\..\..\..
 
 EXPORTS=\
-	nsIUnknownContentTypeHandler.h \
 	$(NULL)
+
+XPIDL_MODULE=mozucth
+
+XPIDLSRCS=\
+    .\nsIUnknownContentTypeHandler.idl \
+    $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

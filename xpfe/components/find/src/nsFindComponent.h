@@ -39,11 +39,7 @@ public:
     NS_DECL_IAPPSHELLCOMPONENT
 
     // This class implements the nsIFindComponent interface functions.
-    NS_IMETHOD CreateContext(nsIWebShell *aWebShell, nsIEditor* aEditor, nsISupports **aResult);
-    NS_IMETHOD Find(nsISupports *aContext, PRBool *aDidFind);
-    NS_IMETHOD Replace(nsISupports *aContext);
-    NS_IMETHOD FindNext(nsISupports *aContext, PRBool *aDidFind);
-    NS_IMETHOD ResetContext(nsISupports *aContext, nsIEditor* aEditor, nsIWebShell *aNewWebShell);
+    NS_DECL_IFINDCOMPONENT
 
     // "Context" for this implementation.
     class Context : public nsISupports

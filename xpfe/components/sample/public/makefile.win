@@ -22,7 +22,12 @@ MODULE=xpfe\components
 DEPTH=..\..\..\..
 
 EXPORTS=\
-	nsISampleAppShellComponent.h \
 	$(NULL)
+
+XPIDL_MODULE=mozsampl
+
+XPIDLSRCS=\
+    .\nsISampleAppShellComponent.idl \
+    $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

@@ -23,8 +23,13 @@ srcdir		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 EXPORTS =				\
-		nsIFindComponent.h \
 		$(NULL)
+
+XPIDL_MODULE=mozfind
+
+XPIDLSRCS=\
+    nsIFindComponent.idl \
+    $(NULL)
 
 include $(topsrcdir)/config/config.mk
 
