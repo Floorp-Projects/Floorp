@@ -1,21 +1,5 @@
 housecleaning
 ------------- 
-* move the ldap_unbind() call out of the nsLDAPConnection destructor, 
-  since nsLDAPConnection will soon go back to being callable from the UI 
-  thread, and ldap_unbind() is actually synchronous.  
-
-* deal with timeouts
-
-* come up with a strategy for removing completed nsILDAPOperations from
-  the connection's pending request queue
-
-* sort out nsldap.h vs. nsLDAP.h.  can the former go away?
-
-* I have a sneaking suspicion that the thread might be getting killed
-  but not cleaned up when the last nsILDAPConnection::Release is
-  called.  But I don't know if that's really the case.  Need to check
-  this out.
-
 * currently nsILDAPOperation::SimpleBind is called as though it were
   asynchronous (ie from the UI thread), which it mostly is -- the call
   to connect() can stall.  We could use the ASYNC_CONNECT flag,
@@ -25,9 +9,6 @@ housecleaning
   actually be pushed from nsILDAPOperation into nsILDAPConnection and
   then called after the thread for the connection is spun up.
   
-* remove nsILDAPService from (at least) the build and
-  nsLDAPProtocolModule.cpp (if not CVS), since it's not currently in use.
-
 * some (many?) destructors don't clean up completely or correctly.  
   audit for this and fix.
 
@@ -40,8 +21,6 @@ housecleaning
 
 * audit for and implement any appropriate NOT_IMPLEMENTED functions
 
-* grep for XXXs and fix the issues 
-
 * audit for and fix leaks
 
 * use bloat tools to ensure code is not doing anything dumb
@@ -49,10 +28,7 @@ housecleaning
 * re-read the IDL for interfaces implemented by nsLDAPChannel.cpp make sure 
   all interfaces are implemented correctly
 
-* go through the various options that can be used with the SDK function 
-  ldap_set_options() and decide if and where the various functions should 
-  be used.  This will include memory allocator settings, and possibly 
-  threadsafety callbacks (if necessary).
+* is there any need or use for implementing nsIWebProgress stuff?
 
 * figure out our strategy for LDAPv2 vs. LDAPv3
 
@@ -60,23 +36,11 @@ housecleaning
   off to callers as ASCII.  How does this all relate to the stated
   UTF16 (referred to as UCS2 in Mozilla) policy for Mozilla?
 
-* get rid of "friend"liness of nsLDAP{Message,Connection,Operation} classes?
-
 * investigate use of DNS in LDAP sdk.  are sync functions used in the 
   wrong places (eg they end up getting called from Mozilla on the UI thread)?
 
 * investigate the MOZILLA_CLIENT define as used by the SDK. eg do we still
   want the reference to "xp_sort.h"?
-
-* error handling: sort out what should be NS_ASSERTIONs vs. normal
-  error conditions (eg network & data errors).  should audit interface
-  boundaries to make sure they do appropriate checking.
-
-* does always using this-> for member vars cause inheritance problems?  if so, 
-  does it matter in an XPCOM world?
-
-* shouldn't be casting results of nsILDAPConnection::GetErrorString to void
-  in ldapSearch
 
 * are we using the right constructs for -lldap40 and -llber40 in 
   Makefile.in?  (maybe should set up MOZ_LDAP_LIBS?)
@@ -85,8 +49,10 @@ housecleaning
   thread as ldap_result() and before the threads-specific ldaperrno has a 
   chance to change.
 
-* get rid of inappropriate use of nsVoidKey by implementing an nsPRInt32Key
+* revamp nsILDAPService to manage LDAP connections and allow for
+  sharing connections between browser clients.
 
+* grep for XXXs and fix the issues 
 
 items blocked waiting for other work
 ------------------------------------
@@ -95,6 +61,31 @@ items blocked waiting for other work
   callback work off the UI thread to the LDAP connection thread didn't 
   help; so this would appear to be lossage in the event system itself.  
   blocked waiting for more event love from blizzard and dougt.
+
+* move the ldap_unbind() call out of the nsLDAPConnection destructor, 
+  since nsLDAPConnection will soon go back to being callable from the
+  UI thread, and ldap_unbind() is actually synchronous.  additionally,
+  arrange for the connection thread to shutdown.  (waiting for
+  nsILDAPService to be implemented on the theory that nsILDAPService
+  might have it's own thread and it would be reasonable to call
+  ldap_unbind() from that thread).
+
+* go through the various options that can be used with the SDK function 
+  ldap_set_options() and decide if and where the various functions should 
+  be used.  This will include memory allocator settings, and possibly 
+  threadsafety callbacks (if necessary).  (blocked waiting on LDAP C
+  SDK 4.1 to land, since it contains NSPR bindings for some of this).
+
+* deal with timeouts (blocked on LDAP C SDK 4.1, in the hopes that the NSPR 
+  binding of the IO functions will provide us with some way to pop out
+  of the select()).
+
+* error handling: sort out what should be NS_ASSERTIONs vs. normal
+  error conditions (eg network & data errors).  should audit interface
+  boundaries to make sure they do appropriate checking.  also,
+  shouldn't be casting results of nsILDAPConnection::GetErrorString to
+  void in ldapSearch.  (blocked in the hopes that 13423 (xpidl nsresult decls)
+  gets implemented soon).
 
 
 misc
@@ -125,7 +116,6 @@ testing
 
 perf
 ----
-
 * rather than having one thread per nsILDAPConnection, have identical
   nsILDAPConnections share the same thread.  possibly pre-spin up a
   thread-pool to handle this?
@@ -141,12 +131,13 @@ perf
 
 later
 -----
+* get rid of inappropriate use of nsVoidKey by implementing an nsPRInt32Key
+* get rid of "friend"liness of nsLDAP{Message,Connection,Operation} classes?
 * referrals
 * failover
 * addressbook/mail UI glue
 * PSM certs from directory glue(?)
 * secure (& proxied/socksified?) ldap
-* ldap_io_functions for portability? (wait for new mcs code?)
 * make the LDAP C SDK autoconf glue not be a shim and not require
   nsprpub build infrastructure.  requires work with the LDAP C SDK
   owners, and shouldn't this shouldn't happen until after the most
