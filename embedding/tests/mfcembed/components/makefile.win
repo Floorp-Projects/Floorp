@@ -33,6 +33,7 @@ LLFLAGS=-SUBSYSTEM:windows
 CPP_OBJS= \
     .\$(OBJDIR)\Dialogs.obj \
     .\$(OBJDIR)\PromptService.obj \
+    .\$(OBJDIR)\HelperAppDlg.obj \
     $(NULL)
 
 LLIBS= \
