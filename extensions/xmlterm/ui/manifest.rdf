@@ -19,10 +19,10 @@
 
   <!-- xmlterm overlay information -->
   <RDF:Seq about="urn:mozilla:overlays">
-    <RDF:li resource="chrome://global/content/tasksOverlay.xul"/>
+    <RDF:li resource="chrome://communicator/content/tasksOverlay.xul"/>
   </RDF:Seq>
 
-  <RDF:Seq about="chrome://global/content/tasksOverlay.xul">
+  <RDF:Seq about="chrome://communicator/content/tasksOverlay.xul">
     <RDF:li>chrome://xmlterm/content/xmltermOverlay.xul</RDF:li>
   </RDF:Seq>
 
