@@ -205,10 +205,6 @@ JS_HashTableRawAdd(JSHashTable *ht, JSHashEntry **hep,
     /* Grow the table if it is overloaded */
     n = NBUCKETS(ht);
     if (ht->nentries >= OVERLOADED(n)) {
-#ifdef HASHMETER
-        ht->ngrows++;
-#endif
-        ht->shift--;
         oldbuckets = ht->buckets;
 #if defined(XP_PC) && defined _MSC_VER && _MSC_VER <= 800
         if (2 * n > 16000)
@@ -221,6 +217,10 @@ JS_HashTableRawAdd(JSHashTable *ht, JSHashEntry **hep,
             return NULL;
 	}
         memset(ht->buckets, 0, nb);
+#ifdef HASHMETER
+        ht->ngrows++;
+#endif
+        ht->shift--;
 
         for (i = 0; i < n; i++) {
             for (he = oldbuckets[i]; he; he = next) {
@@ -286,10 +286,6 @@ JS_HashTableRawRemove(JSHashTable *ht, JSHashEntry **hep, JSHashEntry *he)
     /* Shrink table if it's underloaded */
     n = NBUCKETS(ht);
     if (--ht->nentries < UNDERLOADED(n)) {
-#ifdef HASHMETER
-        ht->nshrinks++;
-#endif
-        ht->shift++;
         oldbuckets = ht->buckets;
         nb = n * sizeof(JSHashEntry*) / 2;
         ht->buckets = (JSHashEntry**) (*ht->allocOps->allocTable)(ht->allocPriv, nb);
@@ -298,6 +294,10 @@ JS_HashTableRawRemove(JSHashTable *ht, JSHashEntry **hep, JSHashEntry *he)
             return;
         }
         memset(ht->buckets, 0, nb);
+#ifdef HASHMETER
+        ht->nshrinks++;
+#endif
+        ht->shift++;
 
         for (i = 0; i < n; i++) {
             for (he = oldbuckets[i]; he; he = next) {
