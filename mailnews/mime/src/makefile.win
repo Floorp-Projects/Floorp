@@ -55,7 +55,8 @@ EXPORTS = 	nsRFC822toHTMLStreamConverter.h		\
 		$(NULL)
 
 
-DEFINES= -DEBUG_rhp -DHAVE_MIME_DATA_SLOT -D_IMPL_NS_HTML 
+#DEFINES= -DEBUG_rhp -DHAVE_MIME_DATA_SLOT -D_IMPL_NS_HTML 
+DEFINES= -DEBUG_rhp -D_IMPL_NS_HTML 
 
 #//------------------------------------------------------------------------
 #// 
@@ -74,6 +75,7 @@ OBJS=							\
 # Code for stream converter interface to netlib...
 #
 			.\$(OBJDIR)\plugin_inst.obj	\
+			.\$(OBJDIR)\rebuffer.obj	\
 # MIME parsing code
 			.\$(OBJDIR)\mimecont.obj	\
 			.\$(OBJDIR)\mimeebod.obj	\
@@ -101,7 +103,8 @@ OBJS=							\
 			.\$(OBJDIR)\mimetpla.obj	\
 			.\$(OBJDIR)\mimetric.obj	\
 			.\$(OBJDIR)\mimeunty.obj	\
-			.\$(OBJDIR)\mimemoz.obj		\
+#			.\$(OBJDIR)\mimemoz.obj		\
+			.\$(OBJDIR)\mimemoz2.obj	\
 			.\$(OBJDIR)\mimecth.obj		\
 			.\$(OBJDIR)\mimebuf.obj		\
 			.\$(OBJDIR)\mimecom.obj		\

@@ -210,14 +210,6 @@ extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* aServMgr)
   return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
 }
 
-// 
-// rhp - when the new interface is in place...this GOES AWAY!
-//       External includes necessary for test application
-//
-#include "net.h"
-extern NET_StreamClass *MIME_MessageConverter(int format_out, void *closure, 
-											  URL_Struct *url, MWContext *context);
-
 extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *path)
 {
   nsresult rv;
@@ -234,16 +226,24 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
 #ifdef NS_DEBUG
   printf("*** Mime being registered\n");
 #endif
+  
+  // Content type handler object class access interface
   rv = compMgr->RegisterComponent(kCMimeMimeObjectClassAccessCID, NULL, NULL, path, 
                                   PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) goto done;
-  rv = compMgr->RegisterComponent(kCMimeRFC822HTMLConverterCID, NULL, NULL, path, 
-                                  PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
+
+  // I18N Header Conversion routines
   rv = compMgr->RegisterComponent(kCMimeHeaderConverterCID, NULL, NULL, path, 
                                   PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) goto done;
+
+  // The new interface for stream conversion                              
   rv = compMgr->RegisterComponent(kINetPluginMIMECID, NULL, PROGRAM_ID, path, 
+                                  PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) goto done;
+
+  // The original interface (NOT FUNCTIONAL) for stream conversion
+  rv = compMgr->RegisterComponent(kCMimeRFC822HTMLConverterCID, NULL, NULL, path, 
                                   PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) goto done;
 
@@ -270,12 +270,13 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char
 #endif
   rv = compMgr->UnregisterComponent(kCMimeMimeObjectClassAccessCID, path);
   if (NS_FAILED(rv)) goto done;
-  rv = compMgr->UnregisterComponent(kCMimeRFC822HTMLConverterCID, path);
   if (NS_FAILED(rv)) goto done;
   rv = compMgr->UnregisterComponent(kCMimeHeaderConverterCID, path);
   if (NS_FAILED(rv)) goto done;
 	rv = compMgr->UnregisterComponent(kINetPluginMIMECID, path);
   if (NS_FAILED(rv)) goto done;
+  // The original interface (NOT FUNCTIONAL) for stream conversion
+  rv = compMgr->UnregisterComponent(kCMimeRFC822HTMLConverterCID, path);
 
   done:
   (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);

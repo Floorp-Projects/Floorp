@@ -18,6 +18,7 @@
 #ifndef plugin_inst_h_
 #define plugin_inst_h_
 
+#include "rebuffer.h"
 #include "nsINetOStream.h"
 #include "nsINetPluginInstance.h"
 
@@ -39,7 +40,7 @@ public:
     NS_DECL_ISUPPORTS
 
     // from nsINetPluginInstance
-    NS_IMETHOD    Initialize(nsINetOStream* out_stream, const char * streamName);
+    NS_IMETHOD    Initialize(nsINetOStream* out_stream, const char *stream_name);
     NS_IMETHOD    GetMIMEOutput(const char* *result);
     NS_IMETHOD    Start(void);
     NS_IMETHOD    Stop(void);
@@ -60,9 +61,14 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     // MimePluginInstance specific methods:
-protected:
-    nsINetOStream *OutStream;
-    PRBool         first_write;
+    ////////////////////////////////////////////////////////////////////////////
+    NS_IMETHOD    InternalCleanup(void);
+
+    nsINetOStream *mOutStream;
+    void          *mBridgeStream;
+    PRUint32      mTotalWritten;
+    PRUint32      mTotalRead;
+    MimeRebuffer  *mRebuffer;
 };
 
 /* this function will be used by the factory to generate an class access object....*/
