@@ -1,7 +1,39 @@
-// Hash of items being downloaded, indexed by URL, so the load event listener
-// can access the FeedItem objects after it downloads their content.
-// XXX Not currently being used, since we're not downloading content these days.
-var gFzItemCache = new Object();
+# -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is an RSS Feed Item
+#
+# The Initial Developer of the Original Code is
+# The Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2004
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK ***** */
 
 // Handy conversion values.
 const HOURS_TO_MINUTES = 60;
@@ -9,52 +41,7 @@ const MINUTES_TO_SECONDS = 60;
 const SECONDS_TO_MILLISECONDS = 1000;
 const MINUTES_TO_MILLISECONDS = MINUTES_TO_SECONDS * SECONDS_TO_MILLISECONDS;
 const HOURS_TO_MILLISECONDS = HOURS_TO_MINUTES * MINUTES_TO_MILLISECONDS;
-
 const MSG_FLAG_NEW      = 0x10000;
-
-function FeedItem() {
-  // XXX Convert date to a consistent representation in a setter.
-  this.date = new Date().toString();
-
-  return this;
-}
-
-FeedItem.prototype.id = null;
-FeedItem.prototype.feed = null;
-FeedItem.prototype.description = null;
-FeedItem.prototype.content = null;
-FeedItem.prototype.title = "(no subject)";
-FeedItem.prototype.author = "anonymous";
-
-FeedItem.prototype._url = null;
-FeedItem.prototype.url getter = function() { return this._url }
-FeedItem.prototype.url setter = function(url) {
-  var uri =
-    Components
-      .classes["@mozilla.org/network/standard-url;1"]
-        .getService(Components.interfaces["nsIStandardURL"]);
-  uri.init(1, 80, url, null, null);
-  var uri = uri.QueryInterface(Components.interfaces.nsIURI);
-  this._url = uri.spec;
-}
-
-// A string that identifies the item; currently only used in debug statements.
-FeedItem.prototype.identity getter = function() { return this.feed.name + ": " + this.title + " (" + this.id + ")" }
-
-FeedItem.prototype.messageID getter = function() {
-  // XXX Make this conform to the message ID spec.
-
-  var messageID = this.id || this.url || this.title;
-
-  // Escape occurrences of message ID meta characters <, >, and @.
-  messageID.replace(/</g, "%3C");
-  messageID.replace(/>/g, "%3E");
-  messageID.replace(/@/g, "%40");
-
-  messageID = messageID + "@" + "localhost.localdomain";
-
-  return messageID;
-}
 
 const MESSAGE_TEMPLATE = "\n\
 <html>\n\
@@ -108,38 +95,92 @@ const LOCAL_CONTENT_TEMPLATE = "\n\
 // no local style overrides at this time
 const LOCAL_STYLE = "\n";
 
-FeedItem.prototype.store = function() {
-    FeedItem.unicodeConverter.charset = this.characterSet;
+function FeedItem() 
+{
+  this.mDate = new Date().toString();
+  this.mUnicodeConverter = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"]
+                          .createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
+}
 
-    try {
+FeedItem.prototype = 
+{
+  id: null,
+  feed: null,
+  description: null,
+  content: null,
+  title: "(no subject)",  // TO DO: this needs to be localized
+  author: "anonymous",
+  mURL: null,
+  characterSet: "",
+
+  get url()
+  {
+    return this.mURL;
+  },
+
+  set url(aVal)
+  {
+    var uri = Components.classes["@mozilla.org/network/standard-url;1"].getService(Components.interfaces["nsIStandardURL"]);
+    uri.init(1, 80, aVal, null, null);
+    var uri = uri.QueryInterface(Components.interfaces.nsIURI);
+    this.mURL = uri.spec;
+  },
+
+  get identity ()
+  {
+    return this.feed.name + ": " + this.title + " (" + this.id + ")"
+  },
+
+  get messageID()
+  {
+    var messageID = this.id || this.mURL || this.title;
+
+    // Escape occurrences of message ID meta characters <, >, and @.
+    messageID.replace(/</g, "%3C");
+    messageID.replace(/>/g, "%3E");
+    messageID.replace(/@/g, "%40");
+    messageID = messageID + "@" + "localhost.localdomain";
+    return messageID;
+  },
+
+  store: function() 
+  {
+    this.mUnicodeConverter.charset = this.characterSet;
+
+    try 
+    {
       if (this.title)
-        this.title = FeedItem.unicodeConverter.ConvertToUnicode(this.title);
+        this.title = this.mUnicodeConverter.ConvertToUnicode(this.title);
     } catch (ex) {}
 
-    try {
+    try 
+    {
       if (this.description)
-        this.description =  FeedItem.unicodeConverter.ConvertToUnicode(this.description);
+        this.description =  this.mUnicodeConverter.ConvertToUnicode(this.description);
     } catch (ex) {}
 
-    if (this.isStored()) {
+    if (this.isStored()) 
       debug(this.identity + " already stored; ignoring");
-    }
-    else if (this.content) {
-     try {
-        this.content = FeedItem.unicodeConverter.ConvertToUnicode(this.content);
-      } catch (ex) {}
+    else if (this.content) 
+    {
+      try 
+      {
+        this.content = this.mUnicodeConverter.ConvertToUnicode(this.content);
+      } 
+      catch (ex) {}
 
       debug(this.identity + " has content; storing");
       var content = MESSAGE_TEMPLATE;
       content = content.replace(/%CONTENT_TEMPLATE%/, LOCAL_CONTENT_TEMPLATE);
       content = content.replace(/%STYLE%/, LOCAL_STYLE);
       content = content.replace(/%TITLE%/, this.title);
-      content = content.replace(/%URL%/g, this.url);
+      content = content.replace(/%URL%/g, this.mURL);
       content = content.replace(/%CONTENT%/, this.content);
       this.content = content; // XXX store it elsewhere, f.e. this.page
       this.writeToFolder();
     }
-    else if (this.feed.quickMode) {
+    else if (this.feed.quickMode) 
+    {
       debug(this.identity + " in quick mode; storing");
 
       this.content = this.description || this.title;
@@ -148,254 +189,230 @@ FeedItem.prototype.store = function() {
       content = content.replace(/%CONTENT_TEMPLATE%/, LOCAL_CONTENT_TEMPLATE);
       content = content.replace(/%STYLE%/, LOCAL_STYLE);
       content = content.replace(/%TITLE%/, this.title);
-      content = content.replace(/%URL%/g, this.url);
+      content = content.replace(/%URL%/g, this.mURL);
       content = content.replace(/%CONTENT%/, this.content);
       this.content = content; // XXX store it elsewhere, f.e. this.page
       this.writeToFolder();
-    } else {
+    } 
+    else 
+    {
       //debug(this.identity + " needs content; downloading");
       debug(this.identity + " needs content; creating and storing");
       var content = MESSAGE_TEMPLATE;
       content = content.replace(/%CONTENT_TEMPLATE%/, REMOTE_CONTENT_TEMPLATE);
       content = content.replace(/%STYLE%/, REMOTE_STYLE);
       content = content.replace(/%TITLE%/, this.title);
-      content = content.replace(/%URL%/g, this.url);
+      content = content.replace(/%URL%/g, this.mURL);
       content = content.replace(/%DESCRIPTION%/, this.description || this.title);
       this.content = content; // XXX store it elsewhere, f.e. this.page
       this.writeToFolder();
     }
-}
+  },
 
-FeedItem.prototype.isStored = function() {
-  // Checks to see if the item has already been stored in its feed's message folder.
-
-  debug(this.identity + " checking to see if stored");
-
-  var server = this.feed.server;
-  var folder = this.feed.folder;
-
-  try {
-    if (!folder)
-      folder = server.rootMsgFolder.getChildNamed(this.feed.name);
-  } catch(e) {}
-
-  if (!folder) 
+  isStored: function()
   {
-    debug(this.feed.name + " folder doesn't exist; creating");
-		debug("creating " + this.feed.name + "as child of " + server.rootMsgFolder + "\n");
-    server.rootMsgFolder.createSubfolder(this.feed.name, null /* supposed to be a msg window */);
-    folder = server.rootMsgFolder.FindSubFolder(this.feed.name);
-    debug(this.identity + " not stored (folder didn't exist)");
-    return false;
-  }
+    // Checks to see if the item has already been stored in its feed's message folder.
 
-  var ds = getItemsDS(server);
-  var itemURI = this.url || ("urn:" + this.id);
-  var itemResource = rdf.GetResource(itemURI);
+    debug(this.identity + " checking to see if stored");
 
-  var downloaded = ds.GetTarget(itemResource, FZ_STORED, true);
-  if (!downloaded || downloaded.QueryInterface(Components.interfaces.nsIRDFLiteral).Value == "false") 
-  {
-    // HACK ALERT: before we give up, try to work around an entity escaping bug in RDF
-    // See Bug #258465 for more details
-    itemURI = itemURI.replace(/&lt;/g, '<');
-    itemURI = itemURI.replace(/&gt;/g, '>');
-    itemURI = itemURI.replace(/&amp;/g, '&');
-    itemURI = itemURI.replace(/&quot;/g, '"');
+    var server = this.feed.server;
+    var folder = this.feed.folder;
 
-    debug('Failed to find item, trying entity replacement version: '  + itemURI);
-    itemResource = rdf.GetResource(itemURI);
-    downloaded = ds.GetTarget(itemResource, FZ_STORED, true);
+    try 
+    {
+      if (!folder)
+        folder = server.rootMsgFolder.getChildNamed(this.feed.name);
+    } catch(e) {}
 
-    if (downloaded)
-    { 
-      debug(this.identity + " not stored");
-      return true;
+    if (!folder) 
+    {
+      debug(this.feed.name + " folder doesn't exist; creating");
+		  debug("creating " + this.feed.name + "as child of " + server.rootMsgFolder + "\n");
+      server.rootMsgFolder.createSubfolder(this.feed.name, null /* supposed to be a msg window */);
+      folder = server.rootMsgFolder.FindSubFolder(this.feed.name);
+      debug(this.identity + " not stored (folder didn't exist)");
+      return false;
     }
 
-    debug(this.identity + " not stored");
-    return false;
-  }
-  else 
+    var ds = getItemsDS(server);
+    var itemURI = this.mURL || ("urn:" + this.id);
+    var itemResource = rdf.GetResource(itemURI);
+
+    var downloaded = ds.GetTarget(itemResource, FZ_STORED, true);
+    if (!downloaded || downloaded.QueryInterface(Components.interfaces.nsIRDFLiteral).Value == "false") 
+    {
+      // HACK ALERT: before we give up, try to work around an entity escaping bug in RDF
+      // See Bug #258465 for more details
+      itemURI = itemURI.replace(/&lt;/g, '<');
+      itemURI = itemURI.replace(/&gt;/g, '>');
+      itemURI = itemURI.replace(/&amp;/g, '&');
+      itemURI = itemURI.replace(/&quot;/g, '"');
+
+      debug('Failed to find item, trying entity replacement version: '  + itemURI);
+      itemResource = rdf.GetResource(itemURI);
+      downloaded = ds.GetTarget(itemResource, FZ_STORED, true);
+
+      if (downloaded)
+      { 
+        debug(this.identity + " not stored");
+        return true;
+      }
+
+      debug(this.identity + " not stored");
+      return false;
+    }
+    else 
+    {
+      debug(this.identity + " stored");
+      return true;
+    }
+  },
+
+  markValid: function() 
   {
-    debug(this.identity + " stored");
-    return true;
-  }
-}
-
-// XXX This should happen in the constructor automatically.
-FeedItem.prototype.markValid = function() {
-    debug("validating " + this.url);
-
+    debug("validating " + this.mURL);
     var ds = getItemsDS(this.feed.server);
-    var resource = rdf.GetResource(this.url || ("urn:" + this.id));
+    var resource = rdf.GetResource(this.mURL || ("urn:" + this.id));
     
     if (!ds.HasAssertion(resource, FZ_FEED, rdf.GetResource(this.feed.url), true))
       ds.Assert(resource, FZ_FEED, rdf.GetResource(this.feed.url), true);
     
-    if (ds.hasArcOut(resource, FZ_VALID)) {
+    if (ds.hasArcOut(resource, FZ_VALID)) 
+    {
       var currentValue = ds.GetTarget(resource, FZ_VALID, true);
       ds.Change(resource, FZ_VALID, currentValue, RDF_LITERAL_TRUE);
     }
-    else {
+    else 
       ds.Assert(resource, FZ_VALID, RDF_LITERAL_TRUE, true);
-    }
-}
+  },
 
-
-FeedItem.prototype.markStored = function() {
+  markStored: function() 
+  {
     var ds = getItemsDS(this.feed.server);
-    var resource = rdf.GetResource(this.url || ("urn:" + this.id));
+    var resource = rdf.GetResource(this.mURL || ("urn:" + this.id));
    
     if (!ds.HasAssertion(resource, FZ_FEED, rdf.GetResource(this.feed.url), true))
       ds.Assert(resource, FZ_FEED, rdf.GetResource(this.feed.url), true);
     
     var currentValue;
-    if (ds.hasArcOut(resource, FZ_STORED)) {
+    if (ds.hasArcOut(resource, FZ_STORED)) 
+    {
       currentValue = ds.GetTarget(resource, FZ_STORED, true);
       ds.Change(resource, FZ_STORED, currentValue, RDF_LITERAL_TRUE);
     }
     else 
       ds.Assert(resource, FZ_STORED, RDF_LITERAL_TRUE, true);
-}
+  },
 
-FeedItem.prototype.download = function() {
-  this.request = new XMLHttpRequest();
-  this.request.item = this;
-  this.request.open("GET", this.url);
-  this.request.onload = FeedItem.onDownloaded;
-  this.request.onerror = FeedItem.onDownloadError;
-  this.request.send(null);
-  //updateServerBusyState(1);
-  gFzItemCache[this.url] = this;
-}
+  markStored: function() 
+  {
+    var ds = getItemsDS(this.feed.server);
+    var resource = rdf.GetResource(this.mURL || ("urn:" + this.id));
+   
+    if (!ds.HasAssertion(resource, FZ_FEED, rdf.GetResource(this.feed.url), true))
+      ds.Assert(resource, FZ_FEED, rdf.GetResource(this.feed.url), true);
+    
+    var currentValue;
+    if (ds.hasArcOut(resource, FZ_STORED)) 
+    {
+      currentValue = ds.GetTarget(resource, FZ_STORED, true);
+      ds.Change(resource, FZ_STORED, currentValue, RDF_LITERAL_TRUE);
+    }
+    else 
+      ds.Assert(resource, FZ_STORED, RDF_LITERAL_TRUE, true);
+  },
 
-FeedItem.onDownloaded = function(event) {
-  var request = event.target;
-  var url = request.channel.originalURI.spec;
+  mimeEncodeSubject: function(aSubject, aCharset)
+  {  
+    // get the mime header encoder service
+    var mimeEncoder = Components.classes["@mozilla.org/messenger/mimeconverter;1"].getService(Components.interfaces.nsIMimeConverter);
 
-  //updateServerBusyState(-1);
+    // this routine sometimes throws exceptions for mis-encoded data so wrap it 
+    // with a try catch for now..
+    var newSubject;
+    try 
+    {
+      newSubject = mimeEncoder.encodeMimePartIIStr(this.mUnicodeConverter.ConvertFromUnicode(aSubject), false, aCharset, 9, 72);
+    }
+    catch (ex) 
+    { 
+      newSubject = aSubject; 
+    }
 
-  var item = gFzItemCache[url];
+    return newSubject;
+  }, 
 
-  if (!item)
-    throw("error after downloading " + url + ": couldn't retrieve item from request");
-  if (!request.responseText)
-    throw(item.identity + " content supposedly downloaded but missing");
-
-  debug(item.identity + ": content downloaded");
-
-  item.content = request.responseText;
-  item.writeToFolder();
-  delete gFzItemCache[url];
-}
-
-FeedItem.onDownloadError = function(event) {
-  // XXX add error message if available and notify the user?
-  var request = event.target;
-  var url = request.channel.originalURI.spec;
-  var item = gFzItemCache[url];
-  throw("error downloading item " + (item ? item.identity : url));
-}
-
-FeedItem.unicodeConverter =
-  Components
-    .classes["@mozilla.org/intl/scriptableunicodeconverter"]
-      .createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
-
-FeedItem.prototype.mimeEncodeSubject = function(aSubject, charset)
-{  
-  // get the mime header encoder service
-  var mimeEncoder = Components
-    .classes["@mozilla.org/messenger/mimeconverter;1"]
-    .getService(Components.interfaces.nsIMimeConverter);
-
-  // this routine sometimes throws exceptions for mis encoded data so wrap it 
-  // with a try catch for now..
-  var newSubject;
-
-  try {
-    newSubject = mimeEncoder.encodeMimePartIIStr(FeedItem.unicodeConverter.ConvertFromUnicode(aSubject), false, charset, 9, 72);
-  }
-  catch (ex) { 
-    newSubject = aSubject; 
-  }
-
-  return newSubject;
-}
-
-FeedItem.prototype.writeToFolder = function() {
-  debug(this.identity + " writing to message folder" + this.feed.name + "\n");
+  writeToFolder: function() 
+  {
+    debug(this.identity + " writing to message folder" + this.feed.name + "\n");
   
-  var server = this.feed.server;
-  FeedItem.unicodeConverter.charset = this.characterSet;
+    var server = this.feed.server;
+    this.mUnicodeConverter.charset = this.characterSet;
 
-  // XXX Should we really be modifying the original data here instead of making
-  // a copy of it?  Currently we never use the item object again after writing it
-  // to the message folder, but will that always be the case?
+    // If the sender isn't a valid email address, quote it so it looks nicer.
+    if (this.author && this.author.indexOf('@') == -1)
+      this.author = '<' + this.author + '>';
 
-  // If the sender isn't a valid email address, quote it so it looks nicer.
-  if (this.author && this.author.indexOf('@') == -1)
-    this.author = '<' + this.author + '>';
+    // Convert the title to UTF-16 before performing our HTML entity replacement
+    // reg expressions.
+    var title = this.title; 
 
-  // Convert the title to UTF-16 before performing our HTML entity replacement
-  // reg expressions.
-  var title = this.title; 
-
-  // the subject may contain HTML entities.
-  // Convert these to their unencoded state. i.e. &amp; becomes '&'
-  title = title.replace(/&lt;/g, '<');
-  title = title.replace(/&gt;/g, '>');
-  title = title.replace(/&amp;/g, '&');
-  title = title.replace(/&quot;/g, '"');
+    // the subject may contain HTML entities.
+    // Convert these to their unencoded state. i.e. &amp; becomes '&'
+    title = title.replace(/&lt;/g, '<');
+    title = title.replace(/&gt;/g, '>');
+    title = title.replace(/&amp;/g, '&');
+    title = title.replace(/&quot;/g, '"');
   
-  // Compress white space in the subject to make it look better.
-  title = title.replace(/[\t\r\n]+/g, " ");
+    // Compress white space in the subject to make it look better.
+    title = title.replace(/[\t\r\n]+/g, " ");
 
-  this.title = this.mimeEncodeSubject(title, this.characterSet);
+    this.title = this.mimeEncodeSubject(title, this.characterSet);
 
-  // If the date looks like it's in W3C-DTF format, convert it into
-  // an IETF standard date.  Otherwise assume it's in IETF format.
-  if (this.date.search(/^\d\d\d\d/) != -1)
-    this.date = W3CToIETFDate(this.date);
+    // If the date looks like it's in W3C-DTF format, convert it into
+    // an IETF standard date.  Otherwise assume it's in IETF format.
+    if (this.mDate.search(/^\d\d\d\d/) != -1)
+      this.mDate = W3CToIETFDate(this.mDate);
 
-  // Escape occurrences of "From " at the beginning of lines of content
-  // per the mbox standard, since "From " denotes a new message, and add
-  // a line break so we know the last line has one.
-  this.content = this.content.replace(/([\r\n]+)(>*From )/g, "$1>$2");
-  this.content += "\n";
+    // Escape occurrences of "From " at the beginning of lines of content
+    // per the mbox standard, since "From " denotes a new message, and add
+    // a line break so we know the last line has one.
+    this.content = this.content.replace(/([\r\n]+)(>*From )/g, "$1>$2");
+    this.content += "\n";
 
-  // The opening line of the message, mandated by standards to start with
-  // "From ".  It's useful to construct this separately because we not only
-  // need to write it into the message, we also need to use it to calculate
-  // the offset of the X-Mozilla-Status lines from the front of the message
-  // for the statusOffset property of the DB header object.
-  var openingLine = 'From - ' + this.date + '\n';
+    // The opening line of the message, mandated by standards to start with
+    // "From ".  It's useful to construct this separately because we not only
+    // need to write it into the message, we also need to use it to calculate
+    // the offset of the X-Mozilla-Status lines from the front of the message
+    // for the statusOffset property of the DB header object.
+    var openingLine = 'From - ' + this.mDate + '\n';
 
-  var source =
-    openingLine +
-    'X-Mozilla-Status: 0000\n' +
-    'X-Mozilla-Status2: 00000000\n' +
-    'Date: ' + this.date + '\n' +
-    'Message-Id: <' + this.messageID + '>\n' +
-    'From: ' + this.author + '\n' +
-    'MIME-Version: 1.0\n' +
-    'Subject: ' + this.title + '\n' +
-    'Content-Type: text/html; charset=' + this.characterSet + '\n' +
-    'Content-Transfer-Encoding: 8bit\n' +
-    'Content-Base: ' + this.url + '\n' +
-    '\n' +
-    this.content;
-  debug(this.identity + " is " + source.length + " characters long");
+    var source =
+      openingLine +
+      'X-Mozilla-Status: 0000\n' +
+      'X-Mozilla-Status2: 00000000\n' +
+      'Date: ' + this.mDate + '\n' +
+      'Message-Id: <' + this.mMessageID + '>\n' +
+      'From: ' + this.author + '\n' +
+      'MIME-Version: 1.0\n' +
+      'Subject: ' + this.title + '\n' +
+      'Content-Type: text/html; charset=' + this.characterSet + '\n' +
+      'Content-Transfer-Encoding: 8bit\n' +
+      'Content-Base: ' + this.mURL + '\n' +
+      '\n' +
+      this.content;
+    
+    debug(this.identity + " is " + source.length + " characters long");
 
-  // Get the folder and database storing the feed's messages and headers.
-  var folder = this.feed.folder ? this.feed.folder : server.rootMsgFolder.getChildNamed(this.feed.name);
-  folder = folder.QueryInterface(Components.interfaces.nsIMsgLocalMailFolder);
+    // Get the folder and database storing the feed's messages and headers.
+    var folder = this.feed.folder ? this.feed.folder : server.rootMsgFolder.getChildNamed(this.feed.name);
+    folder = folder.QueryInterface(Components.interfaces.nsIMsgLocalMailFolder);
 
-  // source is a unicode string, we want to save a char * string in the original charset. So convert back
-  folder.addMessage(FeedItem.unicodeConverter.ConvertFromUnicode(source));
-  this.markStored();
-}
+    // source is a unicode string, we want to save a char * string in the original charset. So convert back
+    folder.addMessage(this.mUnicodeConverter.ConvertFromUnicode(source));
+    this.markStored();
+  }
+};
 
 function W3CToIETFDate(dateString) {
   // Converts a W3C-DTF (subset of ISO 8601) date string to an IETF date string.
@@ -480,4 +497,3 @@ function W3CToIETFDate(dateString) {
 
   return date.toUTCString();
 }
-
