@@ -27,8 +27,6 @@ LIBRARY_NAME	= jar$(VERSION_NUMBER)
 
 CPPSRCS = \
 	nsZipArchive.cpp \
-	nsJAR.cpp \
-	nsJARFactory.cpp \
 	$(NULL)
 
 EXPORTS = zipfile.h 
