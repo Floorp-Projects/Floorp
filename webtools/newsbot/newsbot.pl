@@ -169,12 +169,12 @@ xmlns="http://my.netscape.com/rdf/simple/0.9/"
   <channel>
     <title>NewsBot</title>
     <link>http://www.mozilla.org/newsbot/</link>
-    <description>The mozilla.org news reaper</description>
+    <description>Pointers to the hottest newsgroup threads.</description>
   </channel>
 
   <image>
     <title>Mozilla</title>
-    <url>http://www.mozilla.org/images/moz.gif</url>
+    <url>http://www.mozilla.org/images/hack.gif</url>
     <link>http://www.mozilla.org</link>
   </image>
 
