@@ -237,10 +237,11 @@ ifdef MOZ_UPDATE_XTERM
 UPDATE_TITLE = echo "]2;gmake: $@ in $(shell $(topsrcdir)/build/autoconf/print-depth-path.sh)/$$d";
 endif
 
-ifdef BUILD_OFFICIAL
+ifndef BUILD_OFFICIAL
 # "Official" build only: Continue past errors.
 CONTINUE_ON_ERROR := set -e;
 EXIT_ON_ERROR := set +e;
+else
 PRINT_TIMESTAMP := date;
 endif
 
@@ -361,9 +362,7 @@ makefiles: $(SUBMAKEFILES)
 ifdef DIRS
 	@for d in $(filter-out $(STATIC_MAKEFILES), $(DIRS)); do\
 		$(UPDATE_TITLE);				\
-		oldDir=`pwd`;					\
-		echo "cd $$d; $(MAKE) $@";			\
-		cd $$d; $(MAKE) $@; cd $$oldDir;		\
+		$(MAKE) -C $$d $@				\
 	done
 endif
 
