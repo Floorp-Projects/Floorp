@@ -30,6 +30,7 @@
 <!ENTITY navbarCmd.accesskey "N">
 <!ENTITY personalbarCmd.label "Bookmarks Toolbar">
 <!ENTITY personalbarCmd.accesskey "B">
+<!ENTITY bookmarksToolbarItem.label "Bookmarks Toolbar Items">
 <!ENTITY taskbarCmd.label "Status Bar">
 <!ENTITY taskbarCmd.accesskey "B">
 
