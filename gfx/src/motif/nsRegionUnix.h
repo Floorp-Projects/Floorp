@@ -37,6 +37,7 @@ public:
   virtual void Union(const nsIRegion &aRegion);
   virtual void Union(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
   virtual void Subtract(const nsIRegion &aRegion);
+  virtual void Subtract(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
   virtual PRBool IsEmpty(void);
   virtual PRBool IsEqual(const nsIRegion &aRegion);
   virtual void GetBoundingBox(PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, PRInt32 *aHeight);
