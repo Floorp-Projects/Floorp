@@ -1509,7 +1509,10 @@ blapi_selftest(char **modesToTest, int numModesToTest,
 {
 	blapitestCryptoFn cryptofn;
 	blapitestInfo info;
-	SECItem output, asciiOut, item, inpCopy;
+	SECItem output = { 0, 0, 0 };
+	SECItem asciiOut = { 0, 0, 0 };
+	SECItem inpCopy = { 0, 0, 0 };
+	SECItem item = { 0, 0, 0 };
 	SECStatus rv;
 	char filename[256];
 	PRFileDesc *file;
@@ -1545,20 +1548,29 @@ blapi_selftest(char **modesToTest, int numModesToTest,
 			fprintf(stderr, "File %s does not exist.\n", filename);
 			return SECFailure;
 		}
+		memset(&item, 0, sizeof(item));
 		rv = SECU_FileToItem(&item, file);
 		PR_Close(file);
 		/* loop over the tests in the directory */
 		for (j=0; j<(int)(item.data[0] - '0'); j++) {
+			memset(&info.key, 0, sizeof(info.key));
+			memset(&info.iv, 0, sizeof(info.iv));
+			memset(&info.in, 0, sizeof(info.in));
+			memset(&info.seed, 0, sizeof(info.seed));
+			memset(&info.sigseed, 0, sizeof(info.sigseed));
 			rv = get_ascii_file_data(&info.key, mode, "key", j);
 			rv = get_ascii_file_data(&info.iv, mode, "iv", j);
 			rv = get_ascii_file_data(&info.in, mode, "plaintext", j);
+#if 0
 			rv = get_ascii_file_data(&info.seed, mode, "keyseed", j);
+#endif
 			rv = get_ascii_file_data(&info.sigseed, mode, "sigseed", j);
 			SECITEM_CopyItem(NULL, &inpCopy, &info.in);
 			get_params(&info, mode, j);
 			sprintf(filename, "%s/tests/%s/%s%d", testdir, mode, 
 			        "ciphertext", j);
 			file = PR_Open(filename, PR_RDONLY, 00440);
+			memset(&asciiOut, 0, sizeof(asciiOut));
 			rv = SECU_FileToItem(&asciiOut, file);
 			PR_Close(file);
 			rv = atob(&asciiOut, &output);
@@ -1572,6 +1584,11 @@ blapi_selftest(char **modesToTest, int numModesToTest,
 			}*/
 decrypt:
 			if (!decrypt) continue;
+			if (PL_strcmp(mode, "md2") == 0 ||
+			    PL_strcmp(mode, "md5") == 0 ||
+			    PL_strcmp(mode, "sha1") == 0) {
+				continue; /* hashes only go once */
+			}
 			info.encrypt = info.hash = info.sign = PR_FALSE;
 			info.decrypt = info.verify = PR_TRUE;
 			if (PL_strcmp(mode, "dsa") == 0) {
@@ -1608,7 +1625,7 @@ get_file_data(char *filename, SECItem *item, PRBool b64)
 	SECStatus rv = SECSuccess;
 	PRFileDesc *file = PR_Open(filename, PR_RDONLY, 006600);
 	if (file) {
-		SECItem asciiItem;
+		SECItem asciiItem = { 0, 0, 0 };
 		rv = SECU_FileToItem(&asciiItem, file);
 		CHECKERROR(rv, __LINE__);
 		if (b64) {
