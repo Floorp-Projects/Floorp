@@ -143,7 +143,8 @@ PRBool BasicTableLayoutStrategy::Initialize(nsSize* aMaxElementSize)
   {
     aMaxElementSize->height = 0;
     aMaxElementSize->width = mMinTableWidth;
-    if (PR_TRUE==gsDebug) printf("BTLS::Init setting aMaxElementSize->width = %d\n", aMaxElementSize->width);
+    if (PR_TRUE==gsDebug) 
+      printf("BTLS::Init setting aMaxElementSize->width = %d\n", aMaxElementSize->width);
   }
 
   return result;
