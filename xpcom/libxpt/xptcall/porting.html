@@ -1,0 +1,205 @@
+<html>
+<head>
+<title>xptcall Porting Guide</title>
+</head>
+<body bgcolor = "white">
+<h2><center>xptcall Porting Guide</center></h2>
+
+<h3>Overview</h3>
+
+<blockquote>
+
+<a href="http://www.mozilla.org/scriptable/xptcall-faq.html"> xptcall</a> is a
+library that supports both invoking methods on arbitrary xpcom objects and
+implementing classes whose objects can impersonate any xpcom interface. It does
+this using platform specific assembly language code. This code needs to be
+ported to all platforms that want to support xptcall (and thus mozilla).
+
+</blockquote>
+
+<h3>The tree</h3>
+
+<blockquote>
+<pre>
+<a href="http://lxr.mozilla.org/mozilla/source/xpcom/libxpt/xptcall">mozilla/xpcom/libxpt/xptcall</a>
+  +--<a href="http://lxr.mozilla.org/mozilla/source/xpcom/libxpt/xptcall/public">public</a>  // exported headers
+  +--<a href="http://lxr.mozilla.org/mozilla/source/xpcom/libxpt/xptcall/src">src</a>  // core source
+  |  \--<a href="http://lxr.mozilla.org/mozilla/source/xpcom/libxpt/xptcall/src/md">md</a>  // platform specific parts
+  |     +--<a href="http://lxr.mozilla.org/mozilla/source/xpcom/libxpt/xptcall/src/md/mac">mac</a>  // mac ppc
+  |     +--<a href="http://lxr.mozilla.org/mozilla/source/xpcom/libxpt/xptcall/src/md/unix">unix</a>  // all unix
+  |     \--<a href="http://lxr.mozilla.org/mozilla/source/xpcom/libxpt/xptcall/src/md/win32">win32</a>  // win32
+  |     +--<a href="http://lxr.mozilla.org/mozilla/source/xpcom/libxpt/xptcall/src/md/test">test</a>  // simple tests to get started
+  \--<a href="http://lxr.mozilla.org/mozilla/source/xpcom/libxpt/xptcall/tests">tests</a>  // full tests via api
+</pre>
+
+Porters are free to create subdirectories under the base <code>md</code>
+directory for their given platforms and to integrate into the build system as
+appropriate for their platform.
+
+</blockquote>
+
+<h3>Theory of operation</h3>
+
+<blockquote>
+
+There are really two pieces of functionality: <i>invoke</i> and <i>stubs</i>...
+
+<p>
+
+The <b><i>invoke</i></b> functionality requires the implementation of the
+following on each platform (from <a href="http://lxr.mozilla.org/mozilla/source/xpcom/libxpt/xptcall/public/xptcall.h#131">xptcall/public/xptcall.h</a>):
+
+<pre>
+XPTC_PUBLIC_API(nsresult)
+XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
+                   PRUint32 paramCount, nsXPTCVariant* params);
+</pre>
+
+Calling code is expected to supply an array of <code>nsXPTCVariant</code>
+structs. These are discriminated unions describing the type and value of each
+parameter of the target function. The platform specific code then builds a call
+frame and invokes the method indicated by the index <code>methodIndex</code> on
+the xpcom interface <code>that</code>.
+
+<p>
+
+Here are examples of this implementation for 
+<a href="http://lxr.mozilla.org/mozilla/source/xpcom/libxpt/xptcall/src/md/win32/xptcinvoke.cpp">Win32</a>
+and 
+<a href="http://lxr.mozilla.org/mozilla/source/xpcom/libxpt/xptcall/src/md/unix/xptcinvoke_linux_x86.cpp">Linux x86</a>.
+
+Both of these implementations use the basic strategy of: figure out how much
+stack space is needed for the params, make the space in a new frame, copy the
+params to that space, invoke the method, cleanup and return. C++ is used where
+appropriate, Assembly language is used where necessary. Inline assembly language is used here,
+but it is equally valid to use separate assembly language source files. Porters
+can decide how best to do this for their platforms.
+
+<p>
+
+The <b><i>stubs</i></b> functionality is more complex. The goal here is a class
+whose vtbl can look like the vtbl of any arbitrary xpcom interface. Objects of
+this class can then be built to impersonate any xpcom object. The base interface
+for this is (from <a href="http://lxr.mozilla.org/mozilla/source/xpcom/libxpt/xptcall/public/xptcall.h#109">xptcall/public/xptcall.h</a>):
+
+<pre>
+class nsXPTCStubBase : public nsISupports
+{
+public:
+    // Include generated vtbl stub declarations.
+    // These are virtual and *also* implemented by this class..
+#include "xptcstubsdecl.inc"
+
+    // The following methods must be provided by inheritor of this class.
+
+    // return a refcounted pointer to the InterfaceInfo for this object
+    // NOTE: on some platforms this MUST not fail or we crash!
+    NS_IMETHOD GetInterfaceInfo(nsIInterfaceInfo** info) = 0;
+
+    // call this method and return result
+    NS_IMETHOD CallMethod(PRUint16 methodIndex,
+                          const nsXPTMethodInfo* info,
+                          nsXPTCMiniVariant* params) = 0;
+};
+</pre>
+
+Code that wishes to make use of this <i>stubs</i> functionality (such as 
+<a href="http://www.mozilla.org/scriptable/">XPConnect</a>) implement a class
+which inherits from <code>nsXPTCStubBase</code> and implements the
+<code>GetInterfaceInfo</code> and <code>CallMethodCallMethod</code> to let the
+platform specific code know how to get interface information and how to dispatch methods
+once their parameters have been pulled out of the platform specific calling
+frame.
+
+<p>
+
+Porters of this functionality implement the platform specific code for the
+<i>stub</i> methods that fill the vtbl for this class. The idea here is that the
+class has a vtbl full of a large number of generic stubs. All instances of this
+class share that vtbl and the same stubs. The stubs forward calls to a platform
+specific method that uses the interface information supplied by
+the overridden <code>GetInterfaceInfo</code> to extract the parameters and build
+an array of platform independent <code>nsXPTCMiniVariant</code> structs which
+are in turn passed on to the overridden <code>CallMethodCallMethod</code>. The
+platform dependent code is responsible for doing any cleanup and returning.
+
+<p>
+
+The stub methods are declared in <a
+href="http://lxr.mozilla.org/mozilla/source/xpcom/libxpt/xptcall/public/xptcstubsdecl.inc">xptcall/public/xptcstubsdecl.inc</a>.
+These are '#included' into the declaration of <code>nsXPTCStubBase</code>. A
+similar include file (<a
+href="http://lxr.mozilla.org/mozilla/source/xpcom/libxpt/xptcall/public/xptcstubsdef.inc">xptcall/public/xptcstubsdef.inc</a>)
+is expanded using platform specific macros to define the stub functions. These
+'.inc' files are checked into cvs. However, they can be regenerated as necessary
+(i.e. to change the number of stubs or to change their specific declaration)
+using the Perl script  <a
+href="http://lxr.mozilla.org/mozilla/source/xpcom/libxpt/xptcall/public/genstubs.pl">xptcall/public/genstubs.pl</a>.
+
+<p>
+
+Here are examples of this implementation for  <a
+href="http://lxr.mozilla.org/mozilla/source/xpcom/libxpt/xptcall/src/md/win32/xptcstubs.cpp">Win32</a>
+and  <a
+href="http://lxr.mozilla.org/mozilla/source/xpcom/libxpt/xptcall/src/md/unix/xptcstubs_linux_x86.cpp">Linux
+x86</a>. Both of these examples use inline assembly language. That is just how I
+decided to do it. You can do it as you choose.
+
+<p>
+
+The Win32 version is somewhat tighter because the __declspec(naked) feature
+allows for very small stubs. However, the __stdcall requires the callee to clean
+up the stack, so it is imperative that the interface information scheme allow
+the code to determine the correct stack pointer fixup for return without fail,
+else the process will crash.
+
+<p>
+
+I opted to use inline assembler for the gcc Linux x86 port. I ended up with
+larger stubs than I would have preferred rather than battle the compiler over
+what would happen to the stack before my asm code began running.
+
+<p>
+
+I believe that the non-assembly parts of these files can be copied and reused
+with minimal (but not zero) platform specific tweaks. Feel free to copy and
+paste as necessary. Please remember that safety and reliability are more
+important than speed optimizations. This code is primarily used to connect XPCOM
+components with JavaScript; function call overhead is a <b>tiny</b> part of the
+time involved.
+
+<p>
+
+I put together 
+<a
+href="http://lxr.mozilla.org/mozilla/source/xpcom/libxpt/xptcall/src/md/test">xptcall/src/md/test
+</a> as a place to evolve the basic functionality as a port is coming together.
+Not all of the functionality is exercised, but it is a place to get started. 
+<a
+href="http://lxr.mozilla.org/mozilla/source/xpcom/libxpt/xptcall/tests">xptcall/tests
+</a> has an api level test for <code>XPTC_InvokeByIndex</code>, but no tests for
+the <i>stubs</i> functionality. Such a test ought to be written, but this has not
+yet been done.
+
+<p>
+
+A full 'test' at this point requires building the client and running the
+XPConnect test called <i>TestXPC</i> in
+<a
+href="http://lxr.mozilla.org/mozilla/source/js/src/xpconnect/tests">mozilla/js/src/xpconnect/tests
+</a>.
+
+<p>
+
+Getting these ports done is very important. Please let <a
+href="mailto:jband@netscape.com">me</a> know if you are interested in doing one.
+I'll answer any questions as I get them.
+
+</blockquote>
+
+<hr>
+<b>Author:</b> <a href="mailto:jband@netscape.com">John Bandhauer &lt;jband@netscape.com&gt;</a><br>
+<b>Last modified:</b> 1 April 1999
+
+</body>
+</html>
