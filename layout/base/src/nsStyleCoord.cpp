@@ -20,14 +20,18 @@
 #include "nsString.h"
 #include "nsCRT.h"
 
-nsStyleCoord::nsStyleCoord(void)
-  : mUnit(eStyleUnit_Twips)
+nsStyleCoord::nsStyleCoord(nsStyleUnit aUnit)
+  : mUnit(aUnit)
 {
+  NS_ASSERTION(aUnit < eStyleUnit_Percent, "not a valueless unit");
+  if (aUnit >= eStyleUnit_Percent) {
+    mUnit = eStyleUnit_Null;
+  }
   mValue.mInt = 0;
 }
 
 nsStyleCoord::nsStyleCoord(nscoord aValue)
-  : mUnit(eStyleUnit_Twips)
+  : mUnit(eStyleUnit_Coord)
 {
   mValue.mInt = aValue;
 }
@@ -35,7 +39,18 @@ nsStyleCoord::nsStyleCoord(nscoord aValue)
 nsStyleCoord::nsStyleCoord(PRInt32 aValue, nsStyleUnit aUnit)
   : mUnit(aUnit)
 {
-  mValue.mInt = aValue;
+  NS_ASSERTION((aUnit == eStyleUnit_Proportional) ||
+               (aUnit == eStyleUnit_Enumerated) ||
+               (aUnit == eStyleUnit_Integer), "not an int value");
+  if ((aUnit == eStyleUnit_Proportional) ||
+      (aUnit == eStyleUnit_Enumerated) ||
+      (aUnit == eStyleUnit_Integer)) {
+    mValue.mInt = aValue;
+  }
+  else {
+    mUnit = eStyleUnit_Null;
+    mValue.mInt = 0;
+  }
 }
 
 nsStyleCoord::nsStyleCoord(float aValue)
@@ -80,37 +95,53 @@ PRBool nsStyleCoord::operator==(const nsStyleCoord& aOther) const
   return PR_FALSE;
 }
 
-void nsStyleCoord::Set(nscoord aValue)
+void nsStyleCoord::Reset(void)
 {
-  mUnit = eStyleUnit_Twips;
+  mUnit = eStyleUnit_Null;
+  mValue.mInt = 0;
+}
+
+void nsStyleCoord::SetCoordValue(nscoord aValue)
+{
+  mUnit = eStyleUnit_Coord;
   mValue.mInt = aValue;
 }
 
-void nsStyleCoord::Set(PRInt32 aValue, nsStyleUnit aUnit)
+void nsStyleCoord::SetIntValue(PRInt32 aValue, nsStyleUnit aUnit)
 {
-  mUnit = aUnit;
-  mValue.mInt = aValue;
+  NS_ASSERTION((aUnit == eStyleUnit_Proportional) ||
+               (aUnit == eStyleUnit_Enumerated) ||
+               (aUnit == eStyleUnit_Integer), "not an int value");
+  if ((aUnit == eStyleUnit_Proportional) ||
+      (aUnit == eStyleUnit_Enumerated) ||
+      (aUnit == eStyleUnit_Integer)) {
+    mUnit = aUnit;
+    mValue.mInt = aValue;
+  }
+  else {
+    Reset();
+  }
 }
 
-void nsStyleCoord::Set(float aValue)
+void nsStyleCoord::SetPercentValue(float aValue)
 {
   mUnit = eStyleUnit_Percent;
   mValue.mFloat = aValue;
 }
 
-void nsStyleCoord::SetNormal(void)
+void nsStyleCoord::SetNormalValue(void)
 {
   mUnit = eStyleUnit_Normal;
   mValue.mInt = 0;
 }
 
-void nsStyleCoord::SetAuto(void)
+void nsStyleCoord::SetAutoValue(void)
 {
   mUnit = eStyleUnit_Auto;
   mValue.mInt = 0;
 }
 
-void nsStyleCoord::SetInherit(void)
+void nsStyleCoord::SetInheritValue(void)
 {
   mUnit = eStyleUnit_Inherit;
   mValue.mInt = 0;
@@ -121,9 +152,10 @@ void nsStyleCoord::AppendToString(nsString& aBuffer) const
   if (eStyleUnit_Percent == mUnit) {
     aBuffer.Append(mValue.mFloat);
   }
-  else if ((eStyleUnit_Twips == mUnit) || 
+  else if ((eStyleUnit_Coord == mUnit) || 
            (eStyleUnit_Proportional == mUnit) ||
-           (eStyleUnit_Enumerated == mUnit)) {
+           (eStyleUnit_Enumerated == mUnit) ||
+           (eStyleUnit_Integer == mUnit)) {
     aBuffer.Append(mValue.mInt, 10);
     aBuffer.Append("[0x");
     aBuffer.Append(mValue.mInt, 16);
@@ -131,13 +163,15 @@ void nsStyleCoord::AppendToString(nsString& aBuffer) const
   }
 
   switch (mUnit) {
-    case eStyleUnit_Twips:        aBuffer.Append("tw");       break;
+    case eStyleUnit_Null:         aBuffer.Append("Null");     break;
+    case eStyleUnit_Coord:        aBuffer.Append("tw");       break;
     case eStyleUnit_Percent:      aBuffer.Append("%");        break;
     case eStyleUnit_Normal:       aBuffer.Append("Normal");   break;
     case eStyleUnit_Auto:         aBuffer.Append("Auto");     break;
     case eStyleUnit_Inherit:      aBuffer.Append("Inherit");  break;
     case eStyleUnit_Proportional: aBuffer.Append("*");        break;
     case eStyleUnit_Enumerated:   aBuffer.Append("enum");     break;
+    case eStyleUnit_Integer:      aBuffer.Append("int");      break;
   }
   aBuffer.Append(' ');
 }
