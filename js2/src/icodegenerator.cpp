@@ -394,26 +394,37 @@ ICodeOp ICodeGenerator::mapExprNodeToICodeOp(ExprNode::Kind kind)
     switch (kind) {
     // binary
     case ExprNode::add:
+    case ExprNode::addEquals:
         return ADD;
     case ExprNode::subtract:
+    case ExprNode::subtractEquals:
         return SUBTRACT;
     case ExprNode::multiply:
+    case ExprNode::multiplyEquals:
         return MULTIPLY;
     case ExprNode::divide:
+    case ExprNode::divideEquals:
         return DIVIDE;
     case ExprNode::modulo:
+    case ExprNode::moduloEquals:
         return REMAINDER;
     case ExprNode::leftShift:
+    case ExprNode::leftShiftEquals:
         return SHIFTLEFT;
     case ExprNode::rightShift:
+    case ExprNode::rightShiftEquals:
         return SHIFTRIGHT;
     case ExprNode::logicalRightShift:
+    case ExprNode::logicalRightShiftEquals:
         return USHIFTRIGHT;
     case ExprNode::bitwiseAnd:
+    case ExprNode::bitwiseAndEquals:
         return AND;
     case ExprNode::bitwiseXor:
+    case ExprNode::bitwiseXorEquals:
         return XOR;
     case ExprNode::bitwiseOr:
+    case ExprNode::bitwiseOrEquals:
         return OR;
     // unary
     case ExprNode::plus:
@@ -771,6 +782,58 @@ Register ICodeGenerator::genExpr(ExprNode *p,
                     }
         }
         break;
+    case ExprNode::addEquals:
+    case ExprNode::subtractEquals:
+    case ExprNode::multiplyEquals:
+    case ExprNode::divideEquals:
+    case ExprNode::moduloEquals:
+    case ExprNode::leftShiftEquals:
+    case ExprNode::rightShiftEquals:
+    case ExprNode::logicalRightShiftEquals:
+    case ExprNode::bitwiseAndEquals:
+    case ExprNode::bitwiseXorEquals:
+    case ExprNode::bitwiseOrEquals:
+        {
+            BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
+            ret = genExpr(b->op2);
+            if (b->op1->getKind() == ExprNode::identifier) {
+                if (!mWithinWith) {
+                    Register v = findVariable((static_cast<IdentifierExprNode *>(b->op1))->name);
+                    if (v != NotARegister) {
+                        ret = op(mapExprNodeToICodeOp(p->getKind()), v, ret);
+                        move(v, ret);
+                    }
+                    else {
+                        v = loadName((static_cast<IdentifierExprNode *>(b->op1))->name);
+                        ret = op(mapExprNodeToICodeOp(p->getKind()), v, ret);
+                        saveName((static_cast<IdentifierExprNode *>(b->op1))->name, ret);
+                    }
+                }
+                else {
+                    Register v = loadName((static_cast<IdentifierExprNode *>(b->op1))->name);
+                    ret = op(mapExprNodeToICodeOp(p->getKind()), v, ret);
+                    saveName((static_cast<IdentifierExprNode *>(b->op1))->name, ret);
+                }
+            }
+            else
+                if (b->op1->getKind() == ExprNode::dot) {
+                    BinaryExprNode *lb = static_cast<BinaryExprNode *>(b->op1);
+                    Register base = genExpr(lb->op1);
+                    Register v = getProperty(base, static_cast<IdentifierExprNode *>(lb->op2)->name);
+                    ret = op(mapExprNodeToICodeOp(p->getKind()), v, ret);
+                    setProperty(base, static_cast<IdentifierExprNode *>(lb->op2)->name, ret);
+                }
+                else
+                    if (b->op1->getKind() == ExprNode::index) {
+                        BinaryExprNode *lb = static_cast<BinaryExprNode *>(b->op1);
+                        Register base = genExpr(lb->op1);
+                        Register index = genExpr(lb->op2);
+                        Register v = getElement(base, index);
+                        ret = op(mapExprNodeToICodeOp(p->getKind()), v, ret);
+                        setElement(base, index, ret);
+                    }
+        }
+        break;
     case ExprNode::equal:
     case ExprNode::lessThan:
     case ExprNode::lessThanOrEqual:
@@ -1064,7 +1127,7 @@ Register ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
             }
             icg.preprocess(f->function.body);
             icg.genStmt(f->function.body);
-            stdOut << icg;
+            //stdOut << icg;
             ICodeModule *icm = icg.complete();
             if (f->function.name->getKind() == ExprNode::identifier)
                 defFunction((static_cast<IdentifierExprNode *>(f->function.name))->name, icm);
