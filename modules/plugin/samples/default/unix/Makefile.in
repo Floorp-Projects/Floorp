@@ -61,6 +61,11 @@ CXXFLAGS	+= $(MOZ_GTK2_CFLAGS)
 CFLAGS		+= $(MOZ_GTK2_CFLAGS)
 endif
 
+ifeq ($(OS_ARCH), OpenVMS)
+DEFINES		+= -DGENERIC_MOTIF_REDEFINES
+OS_CXXFLAGS	+= -Wc,warn=disa=NOSIMPINT
+endif
+
 install-plugin: $(SHARED_LIBRARY)
 ifdef SHARED_LIBRARY
 	$(INSTALL) $(SHARED_LIBRARY) $(DIST)/bin/plugins

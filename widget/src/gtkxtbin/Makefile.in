@@ -62,6 +62,10 @@ ifeq ($(OS_ARCH), Linux)
 DEFINES		+= -D_BSD_SOURCE
 endif
 
+ifeq ($(OS_ARCH), OpenVMS)
+DEFINES		+= -DGENERIC_MOTIF_REDEFINES
+endif
+
 INCLUDES	+= \
 		-I$(srcdir) \
 		$(NULL)

@@ -121,6 +121,11 @@ CXXFLAGS	+= -GX
 OS_LIBS		+= version.lib
 endif
 
+ifeq ($(OS_ARCH), OpenVMS)
+DEFINES		+= -DGENERIC_MOTIF_REDEFINES
+OS_CXXFLAGS	+= -Wc,warn=disa=NOSIMPINT
+endif
+
 ifeq ($(OS_ARCH),OS2)
 ADD_TO_DEF_FILE = cat < $(srcdir)/extradefs.os2 >> $(DEF_FILE)
 endif

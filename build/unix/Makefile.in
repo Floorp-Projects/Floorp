@@ -80,6 +80,11 @@ libs:: mozilla-config
 libs:: $(srcdir)/run-mozilla.sh $(pkg_config_files)
 	$(INSTALL) $< $(DIST)/bin
 
+ifeq ($(OS_ARCH),OpenVMS)
+libs:: vms/mozilla.com vms/install.com vms/getinfo.com
+	$(INSTALL) $? $(DIST)/bin
+endif
+
 install:: run-mozilla.sh
 	$(SYSINSTALL) $(IFLAGS2) $< $(DESTDIR)$(mozappdir)
 

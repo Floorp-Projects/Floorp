@@ -287,6 +287,19 @@ GARBAGE_DIRS += SunWS_cache
 endif
 endif
 
+ifeq ($(OS_ARCH),OpenVMS)
+GARBAGE			+= $(wildcard *.c*_defines) 
+ifdef SHARED_LIBRARY
+VMS_SYMVEC_FILE		= $(SHARED_LIBRARY:$(DLL_SUFFIX)=_symvec.opt)
+VMS_SYMVEC_FILE_MODULE	= $(topsrcdir)/build/unix/vms/$(notdir $(VMS_SYMVEC_FILE))
+VMS_SYMVEC_FILE_COMP	= $(topsrcdir)/build/unix/vms/component_symvec.opt
+GARBAGE			+= $(VMS_SYMVEC_FILE)
+ifdef IS_COMPONENT
+DSO_LDOPTS := $(filter-out -auto_symvec,$(DSO_LDOPTS)) $(VMS_SYMVEC_FILE)
+endif
+endif
+endif
+
 XPIDL_GEN_DIR		= _xpidlgen
 
 ifdef MOZ_UPDATE_XTERM
@@ -750,7 +763,7 @@ $(HOST_PROGRAM): $(HOST_PROGOBJS) $(HOST_EXTRA_DEPS) Makefile Makefile.in
 ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
 	$(HOST_LD) /NOLOGO /OUT:$@ /PDB:$(PDBFILE) $(HOST_OBJS) $(WIN32_EXE_LDFLAGS) $(HOST_LIBS) $(EXTRA_LIBS)
 else
-	$(HOST_CC) -o $@ $(HOST_CFLAGS) $(HOST_PROGOBJS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
+	$(HOST_CC) -o $@ $(HOST_CFLAGS) $(HOST_LDFLAGS) $(HOST_PROGOBJS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
 endif
 
 #
@@ -894,7 +907,20 @@ endif
 $(SHARED_LIBRARY): $(OBJS) $(LOBJS) $(DEF_FILE) $(RESFILE) $(SHARED_LIBRARY_LIBS) $(EXTRA_DEPS) Makefile Makefile.in
 	rm -f $@
 ifneq ($(OS_ARCH),OS2)
-ifneq ($(OS_ARCH),OpenVMS)
+ifeq ($(OS_ARCH),OpenVMS)
+	@if test ! -f $(VMS_SYMVEC_FILE); then \
+	  if test -f $(VMS_SYMVEC_FILE_MODULE); then \
+	    echo Creating specific component options file $(VMS_SYMVEC_FILE); \
+	    cp $(VMS_SYMVEC_FILE_MODULE) $(VMS_SYMVEC_FILE); \
+	  fi; \
+	fi
+ifdef IS_COMPONENT
+	@if test ! -f $(VMS_SYMVEC_FILE); then \
+	  echo Creating generic component options file $(VMS_SYMVEC_FILE); \
+	  cp $(VMS_SYMVEC_FILE_COMP) $(VMS_SYMVEC_FILE); \
+	fi
+endif
+endif
 ifdef NO_LD_ARCHIVE_FLAGS
 ifdef SHARED_LIBRARY_LIBS
 	@rm -f $(SUB_SHLOBJS)
@@ -903,18 +929,6 @@ endif # SHARED_LIBRARY_LIBS
 endif # NO_LD_ARCHIVE_FLAGS
 	$(MKSHLIB) $(SHLIB_LDSTARTFILE) $(OBJS) $(LOBJS) $(SUB_SHLOBJS) $(RESFILE) $(LDFLAGS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS) $(EXTRA_LIBS) $(DEF_FILE) $(SHLIB_LDENDFILE)
 	@rm -f foodummyfilefoo $(SUB_SHLOBJS)
-else
-	@touch no-such-file.vms; rm -f no-such-file.vms $(SUB_LOBJS)
-ifndef IS_COMPONENT
-	@if test ! -f VMSuni.opt; then \
-	    echo "Creating universal symbol option file VMSuni.opt"; \
-	    for lib in $(SHARED_LIBRARY_LIBS); do $(AR_EXTRACT) $${lib}; $(CLEANUP2); done; \
-	    create_opt_uni $(OBJS) $(SUB_LOBJS); \
-	fi
-	@touch no-such-file.vms; rm -f no-such-file.vms $(SUB_LOBJS)
-endif
-	$(MKSHLIB) -o $@ $(OBJS) $(LOBJS) $(EXTRA_DSO_LDOPTS) $(EXTRA_LIBS) VMSuni.opt;
-endif
 else # OS2
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
 	$(MKSHLIB) /O:$@ /DLL /INC:_dllentry $(LDFLAGS) $(OBJS) $(LOBJS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS) $(EXTRA_LIBS) $(DEF_FILE)
@@ -1632,6 +1646,7 @@ showbuild:
 showhost:
 	@echo "HOST_CC            = $(HOST_CC)"
 	@echo "HOST_CFLAGS        = $(HOST_CFLAGS)"
+	@echo "HOST_LDFLAGS       = $(HOST_LDFLAGS)"
 	@echo "HOST_LIBS          = $(HOST_LIBS)"
 	@echo "HOST_EXTRA_LIBS    = $(HOST_EXTRA_LIBS)"
 	@echo "HOST_EXTRA_DEPS    = $(HOST_EXTRA_DEPS)"

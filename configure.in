@@ -502,10 +502,6 @@ if test -n "$CROSS_COMPILE"; then
     case "${target_os}" in
         linux*)       OS_ARCH=Linux ;;
         solaris*)     OS_ARCH=SunOS OS_RELEASE=5 ;;
-        openvms*)     OS_TARGET=`uname -s`
-                      OS_ARCH=`uname -s | sed -e 's|/|_|g'`
-                      OS_RELEASE=`uname -r`
-                      OS_TEST=`uname -Wh`;;
     esac
 else
     OS_TARGET=`uname -s`
@@ -1187,16 +1183,18 @@ case "$target" in
     ;;
 
 *-openvms*) 
-    if test "$OS_TARGET" = "POSIX_for_OpenVMS_AXP"; then
-	dnl Hack...
-	_OPENVMS_CROSS_COMPILE=1
-    fi
     AC_DEFINE(NO_PW_GECOS)
     AC_DEFINE(NO_UDSOCK)
     AC_DEFINE(POLL_WITH_XCONNECTIONNUMBER)
     USE_PTHREADS=1
     MKSHLIB_FORCE_ALL='-all'
     MKSHLIB_UNFORCE_ALL='-none'
+    AS='as'
+    AS_DASH_C_FLAG='-Wc/names=as_is'
+    AR_FLAGS='c $@'
+    DSO_LDOPTS='-shared -auto_symvec'
+    DSO_PIC_CFLAGS=
+    COMPAQ_CXX=1
     ;;
 
 
@@ -4450,10 +4448,6 @@ if test -n "$CROSS_COMPILE"; then
         HOST_LIBIDL_CFLAGS="$LIBIDL_CFLAGS"
         HOST_LIBIDL_LIBS="$LIBIDL_LIBS"
     fi
-    if test "$OS_TARGET" = "POSIX_for_OpenVMS_AXP"; then
-      LIBIDL_CFLAGS=`${LIBIDL_CONFIG}-VMS --cflags`
-      LIBIDL_LIBS=`${LIBIDL_CONFIG}-VMS --libs`
-    fi
 fi
 
 if test -z "$SKIP_PATH_CHECKS" && test -z "$MOZ_ENABLE_GTK2"; then
@@ -4848,7 +4842,7 @@ elif test "$OS_ARCH" = "Darwin"; then
   AC_DEFINE(UNIX_EMBED)
   AC_DEFINE(UNIX_LDAP)
   AC_DEFINE(UNIX_ASYNC_DNS)
-elif test "$OS_ARCH" = "POSIX_for_OpenVMS_AXP"; then
+elif test "$OS_ARCH" = "OpenVMS"; then
   AC_DEFINE(XP_UNIX)
   AC_DEFINE(UNIX_ASYNC_DNS)
 else
