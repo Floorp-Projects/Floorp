@@ -21,6 +21,15 @@
  *   Stuart Parmenter <pavlov@netscape.com>
  */
 
+#ifdef XP_MAC
+#define IMG_BUILD_gif 1
+#define IMG_BUILD_bmp 1
+#define IMG_BUILD_png 1
+#define IMG_BUILD_jpeg 1
+#define IMG_BUILD_xbm 1
+#define IMG_BUILD_ppm 1
+#endif
+
 #include "nsIGenericFactory.h"
 #include "nsIModule.h"
 
