@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -54,6 +54,7 @@
 #include "nsIPluginInstancePeer.h"
 #include "nsIPluginTagInfo2.h"
 #include "nsIScriptablePlugin.h"
+#include "nsINPRuntimePlugin.h"
 
 #include "npupp.h"
 #ifdef OJI
@@ -73,15 +74,16 @@ class ns4xPluginStreamListener;
 
 struct nsInstanceStream
 {
-  nsInstanceStream *mNext;
-  ns4xPluginStreamListener *mPluginStreamListener;
+    nsInstanceStream *mNext;
+    ns4xPluginStreamListener *mPluginStreamListener;
 
-  nsInstanceStream();
-  ~nsInstanceStream();
+    nsInstanceStream();
+    ~nsInstanceStream();
 };
 
 class ns4xPluginInstance : public nsIPluginInstance,
-                           public nsIScriptablePlugin
+                           public nsIScriptablePlugin,
+                           public nsINPRuntimePlugin
 {
 public:
 
@@ -159,6 +161,8 @@ public:
 
     // cache this 4.x plugin like an XPCOM plugin
     nsresult SetCached(PRBool aCache) { mCached = aCache; return NS_OK; };
+
+    virtual JSObject *GetJSObject(JSContext *cx);
     
 protected:
 

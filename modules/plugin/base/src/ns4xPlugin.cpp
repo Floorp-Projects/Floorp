@@ -38,6 +38,7 @@
 // TODO: Implement Java callbacks
 
 #include "prtypes.h"
+#include "prmem.h"
 #include "ns4xPlugin.h"
 #include "ns4xPluginInstance.h"
 #include "ns4xPluginStreamListener.h"
@@ -59,6 +60,9 @@
 #include "nsIDOMWindow.h"
 #include "nsIDocument.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsIScriptContext.h"
+
+#include "nsIXPConnect.h"
 
 #if defined(XP_MAC) || defined(XP_MACOSX)
 #include <Resources.h>
@@ -77,6 +81,7 @@
 #include "gtk2xtbin.h"
 #endif
 
+#include "nsJSNPRuntime.h"
 
 // POST/GET stream type
 enum eNPPStreamTypeInternal {
@@ -187,9 +192,6 @@ PR_BEGIN_EXTERN_C
   static jref NP_EXPORT
   _getJavaPeer(NPP npp);
 
-  static java_lang_Class* NP_EXPORT
-  _getJavaClass(void* handle);
-
 #endif
 #endif /* OJI */
 
@@ -241,7 +243,6 @@ static void* FP2TV(void *fp)
 ////////////////////////////////////////////////////////////////////////
 // Globals
 NPNetscapeFuncs ns4xPlugin::CALLBACKS;
-static nsIServiceManagerObsolete* gServiceMgr = nsnull;
 static nsIMemory* gMalloc = nsnull;
 
 ////////////////////////////////////////////////////////////////////////
@@ -257,29 +258,115 @@ ns4xPlugin::CheckClassInitialized(void)
   CALLBACKS.size = sizeof(CALLBACKS);
   CALLBACKS.version = (NP_VERSION_MAJOR << 8) + NP_VERSION_MINOR;
   
-  CALLBACKS.geturl           = NewNPN_GetURLProc(FP2TV(_geturl));
-  CALLBACKS.posturl          = NewNPN_PostURLProc(FP2TV(_posturl));
-  CALLBACKS.requestread      = NewNPN_RequestReadProc(FP2TV(_requestread));
-  CALLBACKS.newstream        = NewNPN_NewStreamProc(FP2TV(_newstream));
-  CALLBACKS.write            = NewNPN_WriteProc(FP2TV(_write));
-  CALLBACKS.destroystream    = NewNPN_DestroyStreamProc(FP2TV(_destroystream));
-  CALLBACKS.status           = NewNPN_StatusProc(FP2TV(_status));
-  CALLBACKS.uagent           = NewNPN_UserAgentProc(FP2TV(_useragent));
-  CALLBACKS.memalloc         = NewNPN_MemAllocProc(FP2TV(_memalloc));
-  CALLBACKS.memfree          = NewNPN_MemFreeProc(FP2TV(_memfree));
-  CALLBACKS.memflush         = NewNPN_MemFlushProc(FP2TV(_memflush));
-  CALLBACKS.reloadplugins    = NewNPN_ReloadPluginsProc(FP2TV(_reloadplugins));
+  CALLBACKS.geturl =
+    NewNPN_GetURLProc(FP2TV(_geturl));
+
+  CALLBACKS.posturl =
+    NewNPN_PostURLProc(FP2TV(_posturl));
+
+  CALLBACKS.requestread =
+    NewNPN_RequestReadProc(FP2TV(_requestread));
+
+  CALLBACKS.newstream =
+    NewNPN_NewStreamProc(FP2TV(_newstream));
+
+  CALLBACKS.write =
+    NewNPN_WriteProc(FP2TV(_write));
+
+  CALLBACKS.destroystream =
+    NewNPN_DestroyStreamProc(FP2TV(_destroystream));
+
+  CALLBACKS.status =
+    NewNPN_StatusProc(FP2TV(_status));
+
+  CALLBACKS.uagent =
+    NewNPN_UserAgentProc(FP2TV(_useragent));
+
+  CALLBACKS.memalloc =
+    NewNPN_MemAllocProc(FP2TV(_memalloc));
+
+  CALLBACKS.memfree =
+    NewNPN_MemFreeProc(FP2TV(_memfree));
+
+  CALLBACKS.memflush =
+    NewNPN_MemFlushProc(FP2TV(_memflush));
+
+  CALLBACKS.reloadplugins =
+    NewNPN_ReloadPluginsProc(FP2TV(_reloadplugins));
+
 #ifdef OJI
-  CALLBACKS.getJavaEnv       = NewNPN_GetJavaEnvProc(FP2TV(_getJavaEnv));
-  CALLBACKS.getJavaPeer      = NewNPN_GetJavaPeerProc(FP2TV(_getJavaPeer));
+  CALLBACKS.getJavaEnv =
+    NewNPN_GetJavaEnvProc(FP2TV(_getJavaEnv));
+
+  CALLBACKS.getJavaPeer =
+    NewNPN_GetJavaPeerProc(FP2TV(_getJavaPeer));
 #endif
-  CALLBACKS.geturlnotify     = NewNPN_GetURLNotifyProc(FP2TV(_geturlnotify));
-  CALLBACKS.posturlnotify    = NewNPN_PostURLNotifyProc(FP2TV(_posturlnotify));
-  CALLBACKS.getvalue         = NewNPN_GetValueProc(FP2TV(_getvalue));
-  CALLBACKS.setvalue         = NewNPN_SetValueProc(FP2TV(_setvalue));
-  CALLBACKS.invalidaterect   = NewNPN_InvalidateRectProc(FP2TV(_invalidaterect));
-  CALLBACKS.invalidateregion = NewNPN_InvalidateRegionProc(FP2TV(_invalidateregion));
-  CALLBACKS.forceredraw      = NewNPN_ForceRedrawProc(FP2TV(_forceredraw));
+
+  CALLBACKS.geturlnotify =
+    NewNPN_GetURLNotifyProc(FP2TV(_geturlnotify));
+
+  CALLBACKS.posturlnotify =
+    NewNPN_PostURLNotifyProc(FP2TV(_posturlnotify));
+
+  CALLBACKS.getvalue =
+    NewNPN_GetValueProc(FP2TV(_getvalue));
+
+  CALLBACKS.setvalue =
+    NewNPN_SetValueProc(FP2TV(_setvalue));
+
+  CALLBACKS.invalidaterect =
+    NewNPN_InvalidateRectProc(FP2TV(_invalidaterect));
+
+  CALLBACKS.invalidateregion =
+    NewNPN_InvalidateRegionProc(FP2TV(_invalidateregion));
+
+  CALLBACKS.forceredraw =
+    NewNPN_ForceRedrawProc(FP2TV(_forceredraw));
+
+  CALLBACKS.getstringidentifier =
+    NewNPN_GetStringIdentifierProc(FP2TV(_getstringidentifier));
+
+  CALLBACKS.getstringidentifiers =
+    NewNPN_GetStringIdentifiersProc(FP2TV(_getstringidentifiers));
+
+  CALLBACKS.getintidentifier =
+    NewNPN_GetIntIdentifierProc(FP2TV(_getintidentifier));
+
+  CALLBACKS.identifierisstring =
+    NewNPN_IdentifierIsStringProc(FP2TV(_identifierisstring));
+
+  CALLBACKS.utf8fromidentifier =
+    NewNPN_UTF8FromIdentifierProc(FP2TV(_utf8fromidentifier));
+
+  CALLBACKS.createobject =
+    NewNPN_CreateObjectProc(FP2TV(_createobject));
+
+  CALLBACKS.retainobject =
+    NewNPN_RetainObjectProc(FP2TV(_retainobject));
+
+  CALLBACKS.releaseobject =
+    NewNPN_ReleaseObjectProc(FP2TV(_releaseobject));
+
+  CALLBACKS.call =
+    NewNPN_CallProc(FP2TV(_call));
+
+  CALLBACKS.evaluate =
+    NewNPN_EvaluateProc(FP2TV(_evaluate));
+
+  CALLBACKS.getproperty =
+    NewNPN_GetPropertyProc(FP2TV(_getproperty));
+
+  CALLBACKS.setproperty =
+    NewNPN_SetPropertyProc(FP2TV(_setproperty));
+
+  CALLBACKS.removeproperty =
+    NewNPN_RemovePropertyProc(FP2TV(_removeproperty));
+
+  CALLBACKS.releasevariantvalue =
+    NewNPN_ReleaseVariantValueProc(FP2TV(_releasevariantvalue));
+
+  CALLBACKS.setexception =
+    NewNPN_SetExceptionProc(FP2TV(_setexception));
 
   initialized = TRUE;
 
@@ -294,7 +381,6 @@ NS_IMPL_ISUPPORTS2(ns4xPlugin, nsIPlugin, nsIFactory)
 ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary, NP_PLUGINSHUTDOWN aShutdown, nsIServiceManagerObsolete* serviceMgr)
 {
   memset((void*) &fCallbacks, 0, sizeof(fCallbacks));
-  gServiceMgr = serviceMgr;
   fLibrary = nsnull;
 
 #if defined(XP_WIN) || defined(XP_OS2)
@@ -801,9 +887,8 @@ ns4xPlugin::GetValue(nsPluginVariable variable, void *value)
   if (npGetValue && NPERR_NO_ERROR == npGetValue(nsnull, variable, value)) {
     return NS_OK;
   }
-  else {
-    return NS_ERROR_FAILURE;
-  }
+
+  return NS_ERROR_FAILURE;
 }
 
 // Create a new NPP GET or POST url stream that may have a notify callback
@@ -1106,10 +1191,6 @@ void NP_EXPORT
 _reloadplugins(NPBool reloadPages)
 {
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("NPN_ReloadPlugins: reloadPages=%d\n", reloadPages));
-  NS_ASSERTION(gServiceMgr != NULL, "null service manager");
-
-  if(gServiceMgr == nsnull)
-    return;
 
   nsCOMPtr<nsIPluginManager> pm(do_GetService(kPluginManagerCID));
 
@@ -1188,6 +1269,375 @@ _forceredraw(NPP npp)
       wpeer->ForceRedraw();
     }
   }
+}
+
+static JSContext *
+GetJSContextFromNPP(NPP npp)
+{
+  NS_ENSURE_TRUE(npp, nsnull);
+
+  ns4xPluginInstance *inst = (ns4xPluginInstance *)npp->ndata;
+  NS_ENSURE_TRUE(inst, nsnull);
+
+  nsCOMPtr<nsIPluginInstancePeer> pip;
+  inst->GetPeer(getter_AddRefs(pip));
+  nsCOMPtr<nsPIPluginInstancePeer> pp(do_QueryInterface(pip));
+  NS_ENSURE_TRUE(pp, nsnull);
+
+  nsCOMPtr<nsIPluginInstanceOwner> owner;
+  pp->GetOwner(getter_AddRefs(owner));
+  NS_ENSURE_TRUE(owner, nsnull);
+
+  nsCOMPtr<nsIDocument> doc;
+  owner->GetDocument(getter_AddRefs(doc));
+  NS_ENSURE_TRUE(doc, nsnull);
+
+  nsIScriptGlobalObject *sgo = doc->GetScriptGlobalObject();
+  NS_ENSURE_TRUE(sgo, nsnull);
+
+  nsIScriptContext *scx = sgo->GetContext();
+  NS_ENSURE_TRUE(scx, nsnull);
+
+  return (JSContext *)scx->GetNativeContext();
+}
+
+NPObject* NP_EXPORT
+_getwindowobject(NPP npp)
+{
+  JSContext *cx = GetJSContextFromNPP(npp);
+  NS_ENSURE_TRUE(cx, nsnull);
+
+  return nsJSObjWrapper::GetNewOrUsed(npp, cx, ::JS_GetGlobalObject(cx));
+}
+
+NPObject* NP_EXPORT
+_getpluginelement(NPP npp)
+{
+  nsIDOMElement *elementp = nsnull;
+  NPError nperr = _getvalue(npp, NPNVDOMElement, &elementp);
+
+  if (nperr != NPERR_NO_ERROR) {
+    return nsnull;
+  }
+
+  // Pass ownership of elementp to element
+  nsCOMPtr<nsIDOMElement> element;
+  element.swap(elementp);
+
+  JSContext *cx = GetJSContextFromNPP(npp);
+  NS_ENSURE_TRUE(cx, nsnull);
+
+  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID()));
+  NS_ENSURE_TRUE(xpc, nsnull);
+
+  nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+  xpc->WrapNative(cx, ::JS_GetGlobalObject(cx), element,
+                  NS_GET_IID(nsIDOMElement),
+                  getter_AddRefs(holder));
+  NS_ENSURE_TRUE(holder, nsnull);
+
+  JSObject* obj = nsnull;
+  holder->GetJSObject(&obj);
+  NS_ENSURE_TRUE(obj, nsnull);
+
+  return nsJSObjWrapper::GetNewOrUsed(npp, cx, obj);
+}
+
+static NPIdentifier
+doGetIdentifier(JSContext *cx, const NPUTF8* name)
+{
+  NS_ConvertUTF8toUTF16 utf16name(name);
+
+  JSString *str = ::JS_InternUCStringN(cx, (jschar *)utf16name.get(),
+                                       utf16name.Length());
+
+  if (!str)
+    return nsnull;
+
+  return (NPIdentifier)STRING_TO_JSVAL(str);
+}
+
+NPIdentifier NP_EXPORT
+_getstringidentifier(const NPUTF8* name)
+{
+  nsCOMPtr<nsIThreadJSContextStack> stack =
+    do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+  if (!stack)
+    return NULL;
+
+  JSContext *cx = nsnull;
+  stack->GetSafeJSContext(&cx);
+  if (!cx)
+    return NULL;
+
+  return doGetIdentifier(cx, name);
+}
+
+void NP_EXPORT
+_getstringidentifiers(const NPUTF8** names, int32_t nameCount,
+                      NPIdentifier *identifiers)
+{
+  nsCOMPtr<nsIThreadJSContextStack> stack =
+    do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+  if (!stack)
+    return;
+
+  JSContext *cx = nsnull;
+  stack->GetSafeJSContext(&cx);
+  if (!cx)
+    return;
+
+  for (int32_t i = 0; i < nameCount; ++i) {
+    identifiers[i] = doGetIdentifier(cx, names[i]);
+  }
+}
+
+NPIdentifier NP_EXPORT
+_getintidentifier(int32_t intid)
+{
+  return (NPIdentifier)INT_TO_JSVAL(intid);
+}
+
+NPUTF8* NP_EXPORT
+_utf8fromidentifier(NPIdentifier identifier)
+{
+  if (!identifier)
+    return NULL;
+
+  jsval v = (jsval)identifier;
+
+  if (!JSVAL_IS_STRING(v)) {
+    return nsnull;
+  }
+
+  JSString *str = JSVAL_TO_STRING(v);
+
+  return
+    ToNewUTF8String(nsDependentString((PRUnichar *)::JS_GetStringChars(str),
+                                      ::JS_GetStringLength(str)));
+}
+
+int32_t NP_EXPORT
+_intfromidentifier(NPIdentifier identifier)
+{
+  jsval v = (jsval)identifier;
+
+  if (!JSVAL_IS_INT(v)) {
+    return PR_INT32_MIN;
+  }
+
+  return JSVAL_TO_INT(v);
+}
+
+bool NP_EXPORT
+_identifierisstring(NPIdentifier identifier)
+{
+  jsval v = (jsval)identifier;
+
+  return JSVAL_IS_STRING(v);
+}
+
+NPObject* NP_EXPORT
+_createobject(NPClass* aClass)
+{
+  if (!aClass) {
+    NS_ERROR("Null class passed to _createobject()!");
+
+    return 0;
+  }
+
+  NPObject *npobj;
+
+  if (aClass->allocate) {
+    npobj = aClass->allocate();
+  } else {
+    npobj = (NPObject *)PR_Malloc(sizeof(NPObject));
+  }
+
+  if (npobj) {
+    npobj->_class = aClass;
+    npobj->referenceCount = 1;
+  }
+
+  return npobj;
+}
+
+NPObject* NP_EXPORT
+_retainobject(NPObject* npobj)
+{
+  if (npobj) {
+    PR_AtomicIncrement((PRInt32*)&npobj->referenceCount);
+  }
+
+  return npobj;
+}
+
+void NP_EXPORT
+_releaseobject(NPObject* npobj)
+{
+  if (!npobj)
+    return;
+
+  int32_t refCnt = PR_AtomicDecrement((PRInt32*)&npobj->referenceCount);
+
+  if (refCnt == 0) {
+    if (npobj->_class && npobj->_class->deallocate) {
+      npobj->_class->deallocate(npobj);
+    } else {
+      PR_Free(npobj);
+    }
+  }
+}
+
+bool NP_EXPORT
+_call(NPObject* npobj, NPIdentifier method, const NPVariant *args,
+      uint32_t argCount, NPVariant *result)
+{
+  if (!npobj || !npobj->_class || !npobj->_class->invoke)
+    return PR_FALSE;
+
+  return npobj->_class->invoke(npobj, method, args, argCount, result);
+}
+
+bool NP_EXPORT
+_evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result)
+{
+  JSContext *cx = GetJSContextFromNPP(npp);
+  NS_ENSURE_TRUE(cx, false);
+
+  JSObject *obj =
+    nsNPObjWrapper::GetNewOrUsed(npp, cx, npobj);
+
+  if (!obj) {
+    return false;
+  }
+
+  if (result) {
+    // Initialize the out param to void
+    VOID_TO_NPVARIANT(*result);
+  }
+
+  if (!script || !script->utf8length || !script->utf8characters) {
+    // Nothing to evaluate.
+
+    return true;
+  }
+
+  NS_ConvertUTF8toUTF16 utf16script(script->utf8characters,
+                                    script->utf8length);
+
+  nsCOMPtr<nsIScriptContext> scx = GetScriptContextFromJSContext(cx);
+  NS_ENSURE_TRUE(scx, false);
+
+  nsIPrincipal *principal = nsnull;
+  // XXX: Get the principal from the security stack (TBD)
+
+  jsval rval;
+  nsresult rv = scx->EvaluateStringWithValue(utf16script, obj, principal,
+                                             nsnull, 0, nsnull, &rval,
+                                             nsnull);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  if (result) {
+    return JSValToNPVariant(npp, cx, rval, result);
+  }
+
+  return true;
+}
+
+bool NP_EXPORT
+_getproperty(NPObject* npobj, NPIdentifier property, NPVariant *result)
+{
+  if (!npobj || !npobj->_class || !npobj->_class->getProperty)
+    return PR_FALSE;
+
+  return npobj->_class->getProperty(npobj, property, result);
+}
+
+bool NP_EXPORT
+_setproperty(NPObject* npobj, NPIdentifier property,
+             const NPVariant *value)
+{
+  if (!npobj || !npobj->_class || !npobj->_class->setProperty)
+    return PR_FALSE;
+
+  return npobj->_class->setProperty(npobj, property, value);
+}
+
+bool NP_EXPORT
+_removeproperty(NPObject* npobj, NPIdentifier property)
+{
+  if (!npobj || !npobj->_class || !npobj->_class->removeProperty)
+    return PR_FALSE;
+
+  return npobj->_class->removeProperty(npobj, property);
+}
+
+bool NP_EXPORT
+_hasproperty(NPObject* npobj, NPIdentifier propertyName)
+{
+  if (!npobj || !npobj->_class || !npobj->_class->hasProperty)
+    return PR_FALSE;
+
+  return npobj->_class->hasProperty(npobj, propertyName);
+}
+
+bool NP_EXPORT
+_hasmethod(NPObject* npobj, NPIdentifier methodName)
+{
+  if (!npobj || !npobj->_class || !npobj->_class->hasMethod)
+    return PR_FALSE;
+
+  return npobj->_class->hasProperty(npobj, methodName);
+}
+
+void NP_EXPORT
+_releasevariantvalue(NPVariant* variant)
+{
+  switch (variant->type) {
+  case NPVariantType_Void :
+  case NPVariantType_Null :
+  case NPVariantType_Bool :
+  case NPVariantType_Int32 :
+  case NPVariantType_Double :
+    break;
+  case NPVariantType_String :
+    {
+      const NPString *s = &NPVARIANT_TO_STRING(*variant);
+
+      if (s->utf8characters)
+        PR_Free((void *)s->utf8characters);
+
+      break;
+    }
+  case NPVariantType_Object:
+    {
+      NPObject *npobj = NPVARIANT_TO_OBJECT(*variant);
+
+      if (npobj)
+        _releaseobject(npobj);
+
+      break;
+    }
+  default:
+    NS_ERROR("Unknown NPVariant type!");
+  }
+
+  VOID_TO_NPVARIANT(*variant);
+}
+
+bool NP_EXPORT
+_tostring(NPObject* npobj, NPVariant *result)
+{
+  NS_ERROR("Write me!");
+
+  return PR_FALSE;
+}
+
+void NP_EXPORT
+_setexception(NPObject* npobj, const NPUTF8 *message)
+{
+  // XXX: Write me!
 }
 
 
@@ -1347,6 +1797,19 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
 #endif
     return NPERR_NO_ERROR;
   }
+
+  case NPNVWindowNPObject: {
+    *(NPObject **)result = _getwindowobject(npp);
+
+    return NPERR_NO_ERROR;
+  }
+
+  case NPNVPluginElementNPObject: {
+    *(NPObject **)result = _getpluginelement(npp);
+
+    return NPERR_NO_ERROR;
+  }
+
   default : return NPERR_GENERIC_ERROR;
   }
 }
@@ -1482,10 +1945,6 @@ _useragent(NPP npp)
 {
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("NPN_UserAgent: npp=%p\n", (void*)npp));
 
-  NS_ASSERTION(gServiceMgr != NULL, "null service manager");
-  if (gServiceMgr == NULL)
-    return NULL;
-  
   char *retstr;
 
   nsCOMPtr<nsIPluginManager> pm(do_GetService(kPluginManagerCID));
@@ -1505,15 +1964,6 @@ _memalloc (uint32 size)
 }
 
 #ifdef OJI
-////////////////////////////////////////////////////////////////////////
-java_lang_Class* NP_EXPORT
-_getJavaClass(void* handle)
-{
-  NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("NPN_GetJavaClass\n"));
-  return NULL;
-}
-
-
 ////////////////////////////////////////////////////////////////////////
 jref NP_EXPORT
 _getJavaPeer(NPP npp)

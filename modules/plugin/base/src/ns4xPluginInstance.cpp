@@ -48,6 +48,8 @@
 #include "nsPluginSafety.h"
 #include "nsPluginLogging.h"
 
+#include "nsJSNPRuntime.h"
+
 #ifdef XP_OS2
 #include "nsILegacyPluginWrapperOS2.h"
 #endif
@@ -760,7 +762,8 @@ nsInstanceStream::~nsInstanceStream()
 
 ///////////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_ISUPPORTS2(ns4xPluginInstance, nsIPluginInstance, nsIScriptablePlugin)
+NS_IMPL_ISUPPORTS3(ns4xPluginInstance, nsIPluginInstance, nsIScriptablePlugin,
+                   nsINPRuntimePlugin)
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -914,6 +917,8 @@ NS_IMETHODIMP ns4xPluginInstance::Stop(void)
   ("NPP Destroy called: this=%p, npp=%p, return=%d\n", this, &fNPP, error));
 
   mStarted = PR_FALSE;
+
+  nsJSNPRuntime::OnPluginDestroy(&fNPP);
 
   if(error != NPERR_NO_ERROR)
     return NS_ERROR_FAILURE;
@@ -1512,6 +1517,9 @@ NS_IMETHODIMP ns4xPluginInstance::GetScriptablePeer(void * *aScriptablePeer)
   return GetValueInternal(NPPVpluginScriptableInstance, aScriptablePeer);
 }
 
+PR_BEGIN_EXTERN_C
+void _releaseobject(NPObject *obj);
+PR_END_EXTERN_C
 
 ////////////////////////////////////////////////////////////////////////
 /* readonly attribute nsIIDPtr scriptableInterface; */
@@ -1522,4 +1530,21 @@ NS_IMETHODIMP ns4xPluginInstance::GetScriptableInterface(nsIID * *aScriptableInt
 
   *aScriptableInterface = nsnull;
   return GetValueInternal(NPPVpluginScriptableIID, (void*)aScriptableInterface);
+}
+
+JSObject *
+ns4xPluginInstance::GetJSObject(JSContext *cx)
+{
+  JSObject *obj = nsnull;
+  NPObject *npobj = nsnull;
+
+  nsresult rv = GetValueInternal(NPPVpluginScriptableNPObject, &npobj);
+
+  if (NS_SUCCEEDED(rv) && npobj) {
+    obj = nsNPObjWrapper::GetNewOrUsed(&fNPP, cx, npobj);
+
+    _releaseobject(npobj);
+  }
+
+  return obj;
 }

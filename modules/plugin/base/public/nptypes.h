@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -15,11 +15,12 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2000
+ * mozilla.org.
+ * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Johnny Stenback <jst@mozilla.org> (Original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,25 +36,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/**
- * Interface for exposing scriptable plugin methods to JavaScript via XPConnect.
+/*
+ * Header file for ensuring that C99 types ([u]int32_t and boolean)
+ * are available.
  */
 
-#include "nsISupports.idl"
-
-[uuid(f1a12bba-1dd1-11b2-a95f-cdc118605e92)]
-interface nsIScriptablePlugin : nsISupports
-{
-    /**
-     * The object to be wrapped and exposed to JavaScript.  It should
-     * be an XPCOM object, and it can be the same object as the plugin.
-     */
-    readonly attribute nsQIResult scriptablePeer;
-
-    /**
-     * The interface that XPConnect should use when exposing the peer
-     * object to JavaScript.  All scriptable methods on the interface
-     * will be available to JavaScript.
-     */
-    readonly attribute nsIIDPtr scriptableInterface;
-};
+#if defined(WIN32) || defined(OS2)
+typedef int int32_t;
+typedef unsigned int uint32_t;
+#else
+#include <stdint.h>
+#include <stdbool.h>
+#include <math.h>
+#endif

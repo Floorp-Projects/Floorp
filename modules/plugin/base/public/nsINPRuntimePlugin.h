@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,18 +12,18 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Communicator client code.
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2000
+ * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -34,26 +34,24 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#ifndef nsINPRuntimePlugin_h___
+#define nsINPRuntimePlugin_h___
 
-/**
- * Interface for exposing scriptable plugin methods to JavaScript via XPConnect.
- */
+#include "nsISupports.h"
 
-#include "nsISupports.idl"
+struct JSObject;
+struct JSContext;
 
-[uuid(f1a12bba-1dd1-11b2-a95f-cdc118605e92)]
-interface nsIScriptablePlugin : nsISupports
+#define NS_INPRUNTIMEPLUGIN_IID \
+  {0xbd962bb4, 0x54c3, 0x4d23, \
+    { 0xa8, 0xca, 0x54, 0x16, 0x08, 0x02, 0xc2, 0x59 }}
+
+class NS_NO_VTABLE nsINPRuntimePlugin : public nsISupports
 {
-    /**
-     * The object to be wrapped and exposed to JavaScript.  It should
-     * be an XPCOM object, and it can be the same object as the plugin.
-     */
-    readonly attribute nsQIResult scriptablePeer;
+public: 
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_INPRUNTIMEPLUGIN_IID)
 
-    /**
-     * The interface that XPConnect should use when exposing the peer
-     * object to JavaScript.  All scriptable methods on the interface
-     * will be available to JavaScript.
-     */
-    readonly attribute nsIIDPtr scriptableInterface;
+  virtual JSObject *GetJSObject(JSContext *cx) = 0;
 };
+
+#endif /* nsINPRuntimePlugin_h___ */
