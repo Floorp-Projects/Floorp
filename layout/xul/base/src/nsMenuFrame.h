@@ -196,6 +196,8 @@ public:
     mFrameConstructor = aFC;
   }
 
+  static PRBool IsSizedToPopup(nsIContent* aContent, PRBool aRequireAlways);
+
 protected:
 
   virtual void RePositionPopup(nsBoxLayoutState& aState);

@@ -938,6 +938,24 @@ nsMenuFrame::GetMenuChildrenElement(nsIContent** aResult)
   }
 }
 
+PRBool
+nsMenuFrame::IsSizedToPopup(nsIContent* aContent, PRBool aRequireAlways)
+{
+  nsCOMPtr<nsIAtom> tag;
+  aContent->GetTag(*getter_AddRefs(tag));
+  PRBool sizeToPopup;
+  if (tag == nsHTMLAtoms::select)
+    sizeToPopup = PR_TRUE;
+  else {
+    nsAutoString sizedToPopup;
+    aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::sizetopopup, sizedToPopup);
+    sizeToPopup = (sizedToPopup.EqualsIgnoreCase("always") ||
+                   (!aRequireAlways && sizedToPopup.EqualsIgnoreCase("pref")));
+  }
+  
+  return sizeToPopup;
+}
+
 NS_IMETHODIMP
 nsMenuFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
 {
@@ -953,13 +971,8 @@ nsMenuFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
 
   nsIFrame* popupChild = mPopupFrames.FirstChild();
 
-  if (popupChild) {
-    nsAutoString sizedToPopup;
-    mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::sizetopopup, sizedToPopup);
-    
-    if (sizedToPopup.EqualsIgnoreCase("always"))
-      return GetPrefSize(aBoxLayoutState, aSize);
-  }
+  if (popupChild && IsSizedToPopup(mContent, PR_TRUE))
+    return GetPrefSize(aBoxLayoutState, aSize);
 
   return nsBoxFrame::GetMinSize(aBoxLayoutState, aSize);
 }
@@ -977,11 +990,7 @@ nsMenuFrame::DoLayout(nsBoxLayoutState& aState)
   nsIFrame* popupChild = mPopupFrames.FirstChild();
 
   if (popupChild) {
-    nsAutoString sizedToPopup;
-    mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::sizetopopup, sizedToPopup);
-    PRBool sizeToPopup = (sizedToPopup.EqualsIgnoreCase("pref") ||
-                          sizedToPopup.EqualsIgnoreCase("always"));
-    
+    PRBool sizeToPopup = IsSizedToPopup(mContent, PR_FALSE);
     nsIBox* ibox = nsnull;
     nsresult rv2 = popupChild->QueryInterface(NS_GET_IID(nsIBox), (void**)&ibox);
     NS_ASSERTION(NS_SUCCEEDED(rv2) && ibox,"popupChild is not box!!");
@@ -1983,12 +1992,7 @@ nsMenuFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
   aSize.height = 0;
   nsresult rv = nsBoxFrame::GetPrefSize(aState, aSize);
 
-  nsAutoString sizedToPopup;
-  mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::sizetopopup, sizedToPopup);
-  PRBool sizeToPopup = (sizedToPopup.EqualsIgnoreCase("pref") ||
-                        sizedToPopup.EqualsIgnoreCase("always"));
-
-  if (sizeToPopup) {
+  if (IsSizedToPopup(mContent, PR_FALSE)) {
     nsSize tmpSize(-1,0);
     nsIBox::AddCSSPrefSize(aState, this, tmpSize);
     nscoord flex;
