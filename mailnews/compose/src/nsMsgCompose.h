@@ -56,6 +56,8 @@ class nsMsgCompose : public nsIMsgCompose
 
    MSG_ComposeType				GetMessageType();
 
+	nsresult 					ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell, nsString aBuf,
+															PRBool aQuoted, PRBool aHTMLEditor);
  // Deal with quoting issues...
 	nsresult                      QuoteOriginalMessage(const PRUnichar * originalMsgURI, PRInt32 what); // New template
   PRBool                        QuotingToFollow(void);
@@ -92,24 +94,34 @@ class nsMsgCompose : public nsIMsgCompose
 	nsresult CreateMessage(const PRUnichar * originalMsgURI, MSG_ComposeType type, MSG_ComposeFormat format, nsIMsgCompFields* compFields);
 	void CleanUpRecipients(nsString& recipients);
 
+	typedef enum {
+    	eComposeFieldsReady
+	} TStateListenerNotification;
+  
+	// tell the doc state listeners that the doc state has changed
+	nsresult NotifyStateListeners(TStateListenerNotification aNotificationType);
+
 	nsMsgComposeSendListener      *m_sendListener;
 	nsIEditorShell                *m_editor;
 	nsIDOMWindow                  *m_window;
 	nsIWebShell                   *m_webShell;
 	nsIWebShellWindow             *m_webShellWin;
 	nsMsgCompFields               *m_compFields;
-  nsCOMPtr<nsIMsgIdentity>      m_identity;
-	PRBool						            m_composeHTML;
+	nsCOMPtr<nsIMsgIdentity>      m_identity;
+	PRBool						  m_composeHTML;
 	QuotingOutputStreamListener   *mQuoteStreamListener;
 	nsCOMPtr<nsIOutputStream>     mBaseStream;
 
-  nsCOMPtr<nsIMsgSend>          mMsgSend;   // for composition back end
+	nsCOMPtr<nsIMsgSend>          mMsgSend;   // for composition back end
 
   // Deal with quoting issues...
 	nsCOMPtr<nsIMsgQuote>         mQuote;
 	PRBool						            mQuotingToFollow; // Quoting indicator
-  nsMsgDocumentStateListener    *mDocumentListener;
-  MSG_ComposeType				mType;		//Message type
+	nsMsgDocumentStateListener    *mDocumentListener;
+	MSG_ComposeType				  mType;		//Message type
+    nsCOMPtr<nsISupportsArray> 	  mStateListeners;		// contents are nsISupports
+    
+    friend class QuotingOutputStreamListener;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////

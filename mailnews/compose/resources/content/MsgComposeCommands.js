@@ -49,9 +49,11 @@ if (prefs) {
 	}
 }
 
-var editorDocumentListener = {
-	NotifyDocumentCreated: function() {
+var stateListener = {
+	NotifyComposeFieldsReady: function() {
+//		dump("\n RECEIVE NotifyComposeFieldsReady\n\n");
 		documentLoaded = true;
+		msgCompose.UnregisterStateListener(stateListener);
 	}
 };
 
@@ -198,8 +200,6 @@ function ComposeStartup()
 			window.editorShell.SetContentWindow(contentWindow);
 			window.editorShell.SetWebShellWindow(window);
 			window.editorShell.SetToolbarWindow(window);
-			window.editorShell.RegisterDocumentStateListener(editorDocumentListener);
-
 			
 	    	var msgCompFields = msgCompose.compFields;
 	    	if (msgCompFields)
@@ -236,6 +236,8 @@ function ComposeStartup()
 			
 			// Now that we have an Editor AppCore, we can finish to initialize the Compose AppCore
 			msgCompose.editor = window.editorShell;
+
+			msgCompose.RegisterStateListener(stateListener);
 			WaitFinishLoadingDocument();
 		}
 	}

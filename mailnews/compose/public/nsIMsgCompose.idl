@@ -74,6 +74,13 @@ interface nsIMsgCompDeliverMode {
     const long SaveAsTemplate = 5;
 };
 
+[scriptable, uuid(e72c6981-992a-11d3-a449-eb15bb19bc7c)]
+interface nsIMsgComposeStateListener : nsISupports
+{
+	/* ... */
+	void        NotifyComposeFieldsReady();
+};
+
 
 [scriptable, uuid(4E606270-B588-11D2-8289-00805F2A0107)]
 interface nsIMsgCompose : nsISupports {
@@ -86,6 +93,12 @@ interface nsIMsgCompose : nsISupports {
 
 	/* ... */
 	void SetDocumentCharset(in wstring charset);
+	
+	/* ... */
+	void RegisterStateListener(in nsIMsgComposeStateListener stateListener);
+
+	/* ... */
+	void UnregisterStateListener(in nsIMsgComposeStateListener stateListener);
 
 	/* ... */
 	void SendMsg(in MSG_DeliverMode deliverMode,

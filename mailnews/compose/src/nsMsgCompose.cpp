@@ -52,8 +52,6 @@
 #include "nsMsgBaseCID.h"
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
-#define TEMP_MESSAGE_IN       "tempMessage.eml"
-
 // Defines....
 static NS_DEFINE_CID(kMsgQuoteCID, NS_MSGQUOTE_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
@@ -120,8 +118,7 @@ NS_IMPL_ISUPPORTS(nsMsgCompose, nsCOMTypeInfo<nsMsgCompose>::GetIID());
 //
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
-nsresult
-ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell, nsString aBuf, PRBool aQuoted, PRBool aHTMLEditor)
+nsresult nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell, nsString aBuf, PRBool aQuoted, PRBool aHTMLEditor)
 {
   // Now, insert it into the editor...
   if ( (aQuoted) )
@@ -150,6 +147,7 @@ ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell, nsString aBuf, PRBool 
 	}
   }
 
+  NotifyStateListeners(nsMsgCompose::eComposeFieldsReady);
   return NS_OK;
 }
 
@@ -236,6 +234,46 @@ nsresult nsMsgCompose::SetDocumentCharset(const PRUnichar *charset)
 	m_compFields->SetCharacterSet(nsAutoCString(charset));
 	
 	return NS_OK;
+}
+
+nsresult nsMsgCompose::RegisterStateListener(nsIMsgComposeStateListener *stateListener)
+{
+  nsresult rv = NS_OK;
+  
+  if (!stateListener)
+    return NS_ERROR_NULL_POINTER;
+  
+  if (!mStateListeners)
+  {
+    rv = NS_NewISupportsArray(getter_AddRefs(mStateListeners));
+    if (NS_FAILED(rv)) return rv;
+  }
+  nsCOMPtr<nsISupports> iSupports = do_QueryInterface(stateListener, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  // note that this return value is really a PRBool, so be sure to use
+  // NS_SUCCEEDED or NS_FAILED to check it.
+  return mStateListeners->AppendElement(iSupports);
+}
+
+nsresult nsMsgCompose::UnregisterStateListener(nsIMsgComposeStateListener *stateListener)
+{
+  if (!stateListener)
+    return NS_ERROR_NULL_POINTER;
+
+  nsresult rv = NS_OK;
+  
+  // otherwise, see if it exists in our list
+  if (!mStateListeners)
+    return (nsresult)PR_FALSE;      // yeah, this sucks, but I'm emulating the behaviour of
+                                    // nsISupportsArray::RemoveElement()
+
+  nsCOMPtr<nsISupports> iSupports = do_QueryInterface(stateListener, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  // note that this return value is really a PRBool, so be sure to use
+  // NS_SUCCEEDED or NS_FAILED to check it.
+  return mStateListeners->RemoveElement(iSupports);
 }
 
 nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode,
@@ -898,10 +936,10 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel * /* aChanne
     nsIEditorShell *editor = nsnull;
     if (NS_SUCCEEDED(mComposeObj->GetEditor(&editor)) && editor)
     {
-      ConvertAndLoadComposeWindow(editor, mMsgBody, PR_TRUE, compHTML);
+      mComposeObj->ConvertAndLoadComposeWindow(editor, mMsgBody, PR_TRUE, compHTML);
     }
   }
-  
+    
   NS_IF_RELEASE(mComposeObj);	//We are done with it, therefore release it.
   return rv;
 }
@@ -1324,7 +1362,7 @@ nsMsgDocumentStateListener::NotifyDocumentCreated(void)
     rv = mComposeObj->ProcessSignature(identity, &tBody);
     if ((NS_SUCCEEDED(rv)) && editor)
     {
-      ConvertAndLoadComposeWindow(editor, tBody, PR_FALSE, compHTML);
+      mComposeObj->ConvertAndLoadComposeWindow(editor, tBody, PR_FALSE, compHTML);
     }
 
     return rv;
@@ -1529,3 +1567,35 @@ nsMsgCompose::BuildBodyMessage()
   return NS_OK;
 }
 
+nsresult nsMsgCompose::NotifyStateListeners(TStateListenerNotification aNotificationType)
+{
+  if (!mStateListeners)
+    return NS_OK;    // maybe there just aren't any.
+ 
+  PRUint32 numListeners;
+  nsresult rv = mStateListeners->Count(&numListeners);
+  if (NS_FAILED(rv)) return rv;
+
+  PRUint32 i;
+  switch (aNotificationType)
+  {
+    case eComposeFieldsReady:
+      for (i = 0; i < numListeners;i++)
+      {
+        nsCOMPtr<nsISupports> iSupports = getter_AddRefs(mStateListeners->ElementAt(i));
+        nsCOMPtr<nsIMsgComposeStateListener> thisListener = do_QueryInterface(iSupports);
+        if (thisListener)
+        {
+          rv = thisListener->NotifyComposeFieldsReady();
+          if (NS_FAILED(rv))
+            break;
+        }
+      }
+      break;
+    
+    default:
+      NS_NOTREACHED("Unknown notification");
+  }
+
+  return rv;
+}
