@@ -45,6 +45,7 @@ REQUIRES	= xpcom \
 		  shistory \
 		  timer \
 		  windowwatcher \
+		  mimetype \
 		  $(NULL)
 
 CPPSRCS		= \
