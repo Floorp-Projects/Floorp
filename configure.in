@@ -381,6 +381,7 @@ AC_PATH_PROG(XARGS, xargs)
 if test -z "$XARGS" || test "$XARGS" = ":"; then
     AC_MSG_ERROR([xargs not found in \$PATH .])
 fi
+AC_PATH_PROG(DOXYGEN, doxygen, :)
 
 dnl Be sure the make we use is GNU make.
 AC_PATH_PROGS(MAKE, gmake make, :)
