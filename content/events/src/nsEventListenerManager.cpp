@@ -1631,6 +1631,7 @@ nsEventListenerManager::CreateEvent(nsPresContext* aPresContext,
       case NS_MUTATION_EVENT:
         return NS_NewDOMMutationEvent(aDOMEvent, aPresContext, NS_STATIC_CAST(nsMutationEvent*,aEvent));
       case NS_GUI_EVENT:
+      case NS_COMPOSITION_EVENT:
         return NS_NewDOMUIEvent(aDOMEvent, aPresContext, NS_STATIC_CAST(nsGUIEvent*,aEvent));
       case NS_KEY_EVENT:
         return NS_NewDOMKeyboardEvent(aDOMEvent, aPresContext, NS_STATIC_CAST(nsKeyEvent*,aEvent));

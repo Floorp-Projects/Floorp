@@ -67,7 +67,7 @@ public:
   NS_IMETHOD GetReconversionReply(nsReconversionEventReply** aReply);
   
   // Forward to nsDOMEvent
-  NS_FORWARD_NSIDOMEVENT(nsDOMEvent::)
+  NS_FORWARD_TO_NSDOMEVENT
 
 protected:
 
