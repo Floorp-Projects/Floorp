@@ -10,8 +10,8 @@
 # without the '.gz.html' extension.
 
 
-# $Revision: 1.10 $ 
-# $Date: 2003/08/04 17:14:57 $ 
+# $Revision: 1.11 $ 
+# $Date: 2003/08/17 00:44:04 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/gunzip.cgi,v $ 
 # $Name:  $ 
@@ -36,10 +36,8 @@
 # Rights Reserved.
 #
 
-# complete rewrite by Ken Estes:
-#	 kestes@staff.mail.com Old work.
-#	 kestes@reefedge.com New work.
-#	 kestes@walrus.com Home.
+# complete rewrite by Ken Estes for contact info see the
+#     mozilla/webtools/tinderbox2/Contact file.
 # Contributor(s): 
 
 
