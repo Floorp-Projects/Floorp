@@ -40,11 +40,11 @@
   windowtype="bookmarks:manager"
   >
 
-  <html:script src="chrome://communicator/content/bookmarks/bookmarks.js"/>
-  <html:script src="chrome://communicator/content/bookmarks/bookmarksDD.js"/>
-  <html:script src="chrome://global/content/treePopups.js"/>
-  <html:script src="chrome://global/content/strres.js"/>
-  <html:script src="chrome://global/content/globalOverlay.js"/>
+  <script src="chrome://communicator/content/bookmarks/bookmarks.js"/>
+  <script src="chrome://communicator/content/bookmarks/bookmarksDD.js"/>
+  <script src="chrome://global/content/treePopups.js"/>
+  <script src="chrome://global/content/strres.js"/>
+  <script src="chrome://global/content/globalOverlay.js"/>
 
 <commands id="commands">
   <commandset id="CommandUpdate_Bookmarks"
@@ -265,7 +265,7 @@
       <treecell class="treecell-header sortDirectionIndicator" value="&tree.header.lastmod.label;" onclick="return doSort('LastModColumn');" observes="LastModColumn" />
       <treecell class="treecell-header" allowevents="true" id="popupCell">
         <menu>
-          <titledbutton src="chrome://global/skin/opentwisty.gif"/>
+          <image class="treecell-popup-icon"/>
           <menupopup popupanchor="bottomright" 
             popupalign="topright"
             oncreate="BuildTreePopup(document.getElementById('theColumns'), document.getElementById('headRow'), this,
