@@ -19,6 +19,7 @@
 #include "plstr.h"
 #include "nsCSSProps.h"
 #include "nsCSSKeywords.h"
+#include "nsString.h"
 
 static const char* kJunkNames[] = {
   nsnull,
@@ -31,35 +32,42 @@ static const char* kJunkNames[] = {
 
 int TestProps() {
   int rv = 0;
-  PRInt32 id;
+  nsCSSProperty id;
+  nsCSSProperty index;
 
   // First make sure we can find all of the tags that are supposed to
   // be in the table. Futz with the case to make sure any case will
   // work
-  const nsCSSProps::NameTableEntry* et = &nsCSSProps::kNameTable[0];
-  const nsCSSProps::NameTableEntry* end = &nsCSSProps::kNameTable[PROP_MAX];
+  extern const char* kCSSRawProperties[];
+  const char** et = &kCSSRawProperties[0];
+  const char** end = &kCSSRawProperties[eCSSProperty_COUNT];
+  index = eCSSProperty_UNKNOWN;
   while (et < end) {
     char tagName[100];
-    id = nsCSSProps::LookupName(et->name);
-    if (id < 0) {
-      printf("bug: can't find '%s'\n", et->name);
+    PL_strcpy(tagName, *et);
+    index = nsCSSProperty(PRInt32(index) + 1);
+
+    id = nsCSSProps::LookupProperty(nsSubsumeCStr(tagName, PR_FALSE));
+    if (id == eCSSProperty_UNKNOWN) {
+      printf("bug: can't find '%s'\n", tagName);
       rv = -1;
     }
-    if (et->id != id) {
-      printf("bug: name='%s' et->id=%d id=%d\n", et->name, et->id, id);
+    if (id != index) {
+      printf("bug: name='%s' id=%d index=%d\n", tagName, id, index);
       rv = -1;
     }
 
     // fiddle with the case to make sure we can still find it
-    PL_strcpy(tagName, et->name);
-    tagName[0] = tagName[0] - 32;
-    id = nsCSSProps::LookupName(tagName);
+    if (('a' <= tagName[0]) && (tagName[0] <= 'z')) {
+      tagName[0] = tagName[0] - 32;
+    }
+    id = nsCSSProps::LookupProperty(nsAutoString(tagName));
     if (id < 0) {
       printf("bug: can't find '%s'\n", tagName);
       rv = -1;
     }
-    if (et->id != id) {
-      printf("bug: name='%s' et->id=%d id=%d\n", et->name, et->id, id);
+    if (index != id) {
+      printf("bug: name='%s' id=%d index=%d\n", tagName, id, index);
       rv = -1;
     }
     et++;
@@ -68,7 +76,7 @@ int TestProps() {
   // Now make sure we don't find some garbage
   for (int i = 0; i < (int) (sizeof(kJunkNames) / sizeof(const char*)); i++) {
     const char* tag = kJunkNames[i];
-    id = nsCSSProps::LookupName(tag);
+    id = nsCSSProps::LookupProperty(nsCAutoString(tag));
     if (id >= 0) {
       printf("bug: found '%s'\n", tag ? tag : "(null)");
       rv = -1;
@@ -79,36 +87,54 @@ int TestProps() {
 }
 
 int TestKeywords() {
+  nsCSSKeywords::AddRefTable();
+
   int rv = 0;
-  PRInt32 id;
+  nsCSSKeyword id;
+  nsCSSKeyword index;
+
+  extern const char* kCSSRawKeywords[];
 
   // First make sure we can find all of the tags that are supposed to
   // be in the table. Futz with the case to make sure any case will
   // work
-  const nsCSSKeywords::NameTableEntry* et = &nsCSSKeywords::kNameTable[0];
-  const nsCSSKeywords::NameTableEntry* end = &nsCSSKeywords::kNameTable[KEYWORD_MAX];
+  const char**  et = &kCSSRawKeywords[0];
+  const char**  end = &kCSSRawKeywords[eCSSKeyword_COUNT - 1];
+  index = eCSSKeyword_UNKNOWN;
   while (et < end) {
-    char tagName[100];
-    id = nsCSSKeywords::LookupName(et->name);
-    if (id < 0) {
-      printf("bug: can't find '%s'\n", et->name);
+    char tagName[512];
+    char* underscore = &(tagName[0]);
+
+    PL_strcpy(tagName, *et);
+    while (*underscore) {
+      if (*underscore == '_') {
+        *underscore = '-';
+      }
+      underscore++;
+    }
+    index = nsCSSKeyword(PRInt32(index) + 1);
+
+    id = nsCSSKeywords::LookupKeyword(nsSubsumeCStr(tagName, PR_FALSE));
+    if (id <= eCSSKeyword_UNKNOWN) {
+      printf("bug: can't find '%s'\n", tagName);
       rv = -1;
     }
-    if (et->id != id) {
-      printf("bug: name='%s' et->id=%d id=%d\n", et->name, et->id, id);
+    if (id != index) {
+      printf("bug: name='%s' id=%d index=%d\n", tagName, id, index);
       rv = -1;
     }
 
     // fiddle with the case to make sure we can still find it
-    PL_strcpy(tagName, et->name);
-    tagName[0] = tagName[0] - 32;
-    id = nsCSSKeywords::LookupName(tagName);
-    if (id < 0) {
+    if (('a' <= tagName[0]) && (tagName[0] <= 'z')) {
+      tagName[0] = tagName[0] - 32;
+    }
+    id = nsCSSKeywords::LookupKeyword(nsSubsumeCStr(tagName, PR_FALSE));
+    if (id <= eCSSKeyword_UNKNOWN) {
       printf("bug: can't find '%s'\n", tagName);
       rv = -1;
     }
-    if (et->id != id) {
-      printf("bug: name='%s' et->id=%d id=%d\n", et->name, et->id, id);
+    if (id != index) {
+      printf("bug: name='%s' id=%d index=%d\n", tagName, id, index);
       rv = -1;
     }
     et++;
@@ -117,13 +143,14 @@ int TestKeywords() {
   // Now make sure we don't find some garbage
   for (int i = 0; i < (int) (sizeof(kJunkNames) / sizeof(const char*)); i++) {
     const char* tag = kJunkNames[i];
-    id = nsCSSKeywords::LookupName(tag);
-    if (id >= 0) {
+    id = nsCSSKeywords::LookupKeyword(nsCAutoString(tag));
+    if (eCSSKeyword_UNKNOWN < id) {
       printf("bug: found '%s'\n", tag ? tag : "(null)");
       rv = -1;
     }
   }
 
+  nsCSSKeywords::ReleaseTable();
   return rv;
 }
 

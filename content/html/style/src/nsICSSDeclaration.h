@@ -25,6 +25,7 @@
 #include "nsString.h"
 #include "nsCoord.h"
 #include "nsCSSValue.h"
+#include "nsCSSProps.h"
 
 
 struct nsCSSStruct {
@@ -127,7 +128,6 @@ struct nsCSSColor : public nsCSSStruct  {
   nsCSSValue      mBackAttachment;
   nsCSSValue      mBackPositionX;
   nsCSSValue      mBackPositionY;
-  nsCSSValue      mBackFilter;
   nsCSSValueList* mCursor;
   nsCSSValue      mOpacity;
 };
@@ -168,8 +168,8 @@ struct nsCSSText : public nsCSSStruct  {
 struct nsCSSRect {
   nsCSSRect(void);
   nsCSSRect(const nsCSSRect& aCopy);
-  void List(FILE* out = 0, PRInt32 aPropID = -1, PRInt32 aIndent = 0) const;
-  void List(FILE* out, PRInt32 aIndent, PRIntn aTRBL[]) const;
+  void List(FILE* out = 0, nsCSSProperty aPropID = eCSSProperty_UNKNOWN, PRInt32 aIndent = 0) const;
+  void List(FILE* out, PRInt32 aIndent, const nsCSSProperty aTRBL[]) const;
 
   nsCSSValue mTop;
   nsCSSValue mRight;
@@ -192,7 +192,6 @@ struct nsCSSDisplay : public nsCSSStruct  {
   nsCSSRect* mClip;
   nsCSSValue mOverflow;
   nsCSSValue mVisibility;
-  nsCSSValue mFilter;
 };
 
 struct nsCSSMargin : public nsCSSStruct  {
@@ -360,19 +359,19 @@ public:
   NS_IMETHOD GetData(const nsID& aIID, nsCSSStruct** aData) = 0;
   NS_IMETHOD EnsureData(const nsID& aSID, nsCSSStruct** aData) = 0;
 
-  NS_IMETHOD AppendValue(PRInt32 aProperty, const nsCSSValue& aValue) = 0;
-  NS_IMETHOD AppendStructValue(PRInt32 aProperty, void* aStruct) = 0;
-  NS_IMETHOD SetValueImportant(PRInt32 aProperty) = 0;
+  NS_IMETHOD AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValue) = 0;
+  NS_IMETHOD AppendStructValue(nsCSSProperty aProperty, void* aStruct) = 0;
+  NS_IMETHOD SetValueImportant(nsCSSProperty aProperty) = 0;
   NS_IMETHOD AppendComment(const nsString& aComment) = 0;
 
 // XXX make nscolor a struct to avoid type conflicts
-  NS_IMETHOD GetValue(PRInt32 aProperty, nsCSSValue& aValue) = 0;
+  NS_IMETHOD GetValue(nsCSSProperty aProperty, nsCSSValue& aValue) = 0;
 
-  NS_IMETHOD GetValue(PRInt32 aProperty, nsString& aValue) = 0;
+  NS_IMETHOD GetValue(nsCSSProperty aProperty, nsString& aValue) = 0;
   NS_IMETHOD GetValue(const nsString& aProperty, nsString& aValue) = 0;
 
   NS_IMETHOD GetImportantValues(nsICSSDeclaration*& aResult) = 0;
-  NS_IMETHOD GetValueIsImportant(PRInt32 aProperty, PRBool& aIsImportant) = 0;
+  NS_IMETHOD GetValueIsImportant(nsCSSProperty aProperty, PRBool& aIsImportant) = 0;
   NS_IMETHOD GetValueIsImportant(const nsString& aProperty, PRBool& aIsImportant) = 0;
 
   NS_IMETHOD Count(PRUint32* aCount) = 0;
