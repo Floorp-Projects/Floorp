@@ -41,6 +41,7 @@
 #include "nsIDOMEvent.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIDOMNodeObserver.h"
+#include "nsIDOMNSDocument.h"
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsIDOMSelection.h"
 #include "nsIDOMStyleSheetCollection.h"
@@ -385,6 +386,7 @@ class XULDocumentImpl : public nsIDocument,
                         public nsIRDFDocument,
                         public nsIStreamLoadableDocument,
                         public nsIDOMXULDocument,
+                        public nsIDOMNSDocument,
                         public nsIDOMEventCapturer, 
                         public nsIJSScriptObject,
                         public nsIScriptObjectOwner,
@@ -411,9 +413,9 @@ public:
                                  nsIStreamListener **aDocListener,
                                  const char* aCommand);
 
-		NS_IMETHOD LoadFromStream( nsIInputStream& xulStream,
-															 nsIContentViewerContainer* aContainer,
-															 const char* aCommand );
+    NS_IMETHOD LoadFromStream(nsIInputStream& xulStream,
+                              nsIContentViewerContainer* aContainer,
+                              const char* aCommand );
 
     virtual const nsString* GetDocumentTitle() const;
 
@@ -612,7 +614,11 @@ public:
     NS_IMETHOD    CreateAttribute(const nsString& aName, nsIDOMAttr** aReturn);
     NS_IMETHOD    CreateEntityReference(const nsString& aName, nsIDOMEntityReference** aReturn);
     NS_IMETHOD    GetElementsByTagName(const nsString& aTagname, nsIDOMNodeList** aReturn);
+
+    // nsIDOMNSDocument interface
     NS_IMETHOD    GetStyleSheets(nsIDOMStyleSheetCollection** aStyleSheets);
+    NS_IMETHOD    CreateElementWithNameSpace(const nsString& aTagName, const nsString& aNameSpace, nsIDOMElement** aResult);
+    NS_IMETHOD    CreateRange(nsIDOMRange** aRange);
 
     // nsIDOMXULDocument interface
     NS_DECL_IDOMXULDOCUMENT
@@ -726,6 +732,9 @@ protected:
 
     nsresult
     AddNamedDataSource(const char* uri);
+
+    nsresult
+    CreateElement(PRInt32 aNameSpaceID, nsIAtom* aTagName, nsCOMPtr<nsIContent>* aResult);
 
     // IMPORTANT: The ownership implicit in the following member variables has been 
     // explicitly checked and set using nsCOMPtr for owning pointers and raw COM interface 
@@ -980,6 +989,9 @@ XULDocumentImpl::QueryInterface(REFNSIID iid, void** result)
              iid.Equals(nsIDOMDocument::GetIID()) ||
              iid.Equals(nsIDOMNode::GetIID())) {
         *result = NS_STATIC_CAST(nsIDOMXULDocument*, this);
+    }
+    else if (iid.Equals(nsIDOMNSDocument::GetIID())) {
+        *result = NS_STATIC_CAST(nsIDOMNSDocument*, this);
     }
     else if (iid.Equals(kIJSScriptObjectIID)) {
         *result = NS_STATIC_CAST(nsIJSScriptObject*, this);
@@ -2684,11 +2696,6 @@ XULDocumentImpl::CreateElement(const nsString& aTagName, nsIDOMElement** aReturn
     if (! aReturn)
         return NS_ERROR_NULL_POINTER;
 
-    // we need this so that we can create a resource URI
-    NS_PRECONDITION(mDocumentURL != nsnull, "not initialized");
-    if (! mDocumentURL)
-        return NS_ERROR_NOT_INITIALIZED;
-
     nsresult rv;
 
     nsCOMPtr<nsIAtom> name;
@@ -2699,55 +2706,8 @@ XULDocumentImpl::CreateElement(const nsString& aTagName, nsIDOMElement** aReturn
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to parse tag name");
     if (NS_FAILED(rv)) return rv;
 
-    // construct an element
     nsCOMPtr<nsIContent> result;
-    rv = NS_NewRDFElement(nameSpaceID, name, getter_AddRefs(result));
-    if (NS_FAILED(rv)) return rv;
-
-    // assign it an "anonymous" identifier so that it can be referred
-    // to in the graph.
-    nsCOMPtr<nsIRDFResource> resource;
-    const char* context;
-    rv = mDocumentURL->GetSpec(&context);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = rdf_CreateAnonymousResource(context, getter_AddRefs(resource));
-    if (NS_FAILED(rv)) return rv;
-
-    nsXPIDLCString uri;
-    rv = resource->GetValue(getter_Copies(uri));
-    if (NS_FAILED(rv)) return rv;
-
-    rv = result->SetAttribute(kNameSpaceID_None, kIdAtom, (const char*) uri, PR_FALSE);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set element's ID");
-    if (NS_FAILED(rv)) return rv;
-
-    // Set it's RDF:type in the graph s.t. the element's tag can be
-    // constructed from it.
-    nsCOMPtr<nsIRDFResource> type;
-    rv = MakeProperty(nameSpaceID, name, getter_AddRefs(type));
-    if (NS_FAILED(rv)) return rv;
-
-    rv = mDocumentDataSource->Assert(resource, kRDF_type, type, PR_TRUE);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set element's tag info in graph");
-    if (NS_FAILED(rv)) return rv;
-
-    // Mark it as a XUL element
-    rv = mDocumentDataSource->Assert(resource, kRDF_instanceOf, kXUL_element, PR_TRUE);
-    NS_ASSERTION(rv == NS_OK, "unable to mark as XUL element");
-    if (NS_FAILED(rv)) return rv;
-
-    {
-        NS_WITH_SERVICE(nsIRDFContainerUtils, rdfc, kRDFContainerUtilsCID, &rv);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = rdfc->MakeSeq(mDocumentDataSource, resource, nsnull);
-        NS_ASSERTION(rv == NS_OK, "unable to mark as XUL element");
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    // `this' will be its document
-    rv = result->SetDocument(this, PR_FALSE);
+    rv = CreateElement(nameSpaceID, name, &result);
     if (NS_FAILED(rv)) return rv;
 
     // get the DOM interface
@@ -2885,6 +2845,9 @@ XULDocumentImpl::GetElementsByAttribute(const nsString& aAttribute, const nsStri
 }
 
 
+////////////////////////////////////////////////////////////////////////
+// nsIDOMNSDocument interface
+
 NS_IMETHODIMP
 XULDocumentImpl::GetStyleSheets(nsIDOMStyleSheetCollection** aStyleSheets)
 {
@@ -2892,6 +2855,46 @@ XULDocumentImpl::GetStyleSheets(nsIDOMStyleSheetCollection** aStyleSheets)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+
+NS_IMETHODIMP
+XULDocumentImpl::CreateElementWithNameSpace(const nsString& aTagName,
+                                            const nsString& aNameSpace,
+                                            nsIDOMElement** aResult)
+{
+    // Create a DOM element given a namespace URI and a tag name.
+    NS_PRECONDITION(aResult != nsnull, "null ptr");
+    if (! aResult)
+        return NS_ERROR_NULL_POINTER;
+
+    nsresult rv;
+
+    nsCOMPtr<nsIAtom> name = dont_QueryInterface(NS_NewAtom(aTagName.GetUnicode()));
+    if (! name)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    PRInt32 nameSpaceID;
+    rv = mNameSpaceManager->GetNameSpaceID(aNameSpace, nameSpaceID);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIContent> result;
+    rv = CreateElement(nameSpaceID, name, &result);
+    if (NS_FAILED(rv)) return rv;
+
+    // get the DOM interface
+    rv = result->QueryInterface(nsIDOMElement::GetIID(), (void**) aResult);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "not a DOM element");
+    if (NS_FAILED(rv)) return rv;
+
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+XULDocumentImpl::CreateRange(nsIDOMRange** aRange)
+{
+    NS_NOTYETIMPLEMENTED("write me!");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -4253,4 +4256,85 @@ XULDocumentImpl::ReleaseEvent(const nsString& aType)
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
+}
+
+
+
+nsresult
+XULDocumentImpl::CreateElement(PRInt32 aNameSpaceID,
+                               nsIAtom* aTagName,
+                               nsCOMPtr<nsIContent>* aResult)
+{
+    // Create a content element. This sets up the underlying document
+    // graph properly. Specifically, it:
+    //
+    // 1) Assigns the element an "anonymous" URI as its ID. The URI is
+    //    relative to the current document's URL.
+    //
+    // 2) Marks it as an RDF container, so that children can be
+    //    appended to it.
+    //
+    // 3) Assigns `this' to be the new element's document.
+    //
+
+    // we need this so that we can create a resource URI
+    NS_PRECONDITION(mDocumentURL != nsnull, "not initialized");
+    if (! mDocumentURL)
+        return NS_ERROR_NOT_INITIALIZED;
+
+    nsresult rv;
+
+    // construct an element
+    nsCOMPtr<nsIContent> result;
+    rv = NS_NewRDFElement(aNameSpaceID, aTagName, getter_AddRefs(result));
+    if (NS_FAILED(rv)) return rv;
+
+    // assign it an "anonymous" identifier so that it can be referred
+    // to in the graph.
+    nsCOMPtr<nsIRDFResource> resource;
+    const char* context;
+    rv = mDocumentURL->GetSpec(&context);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = rdf_CreateAnonymousResource(context, getter_AddRefs(resource));
+    if (NS_FAILED(rv)) return rv;
+
+    nsXPIDLCString uri;
+    rv = resource->GetValue(getter_Copies(uri));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = result->SetAttribute(kNameSpaceID_None, kIdAtom, (const char*) uri, PR_FALSE);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set element's ID");
+    if (NS_FAILED(rv)) return rv;
+
+    // Set it's RDF:type in the graph s.t. the element's tag can be
+    // constructed from it.
+    nsCOMPtr<nsIRDFResource> type;
+    rv = MakeProperty(aNameSpaceID, aTagName, getter_AddRefs(type));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = mDocumentDataSource->Assert(resource, kRDF_type, type, PR_TRUE);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set element's tag info in graph");
+    if (NS_FAILED(rv)) return rv;
+
+    // Mark it as a XUL element
+    rv = mDocumentDataSource->Assert(resource, kRDF_instanceOf, kXUL_element, PR_TRUE);
+    NS_ASSERTION(rv == NS_OK, "unable to mark as XUL element");
+    if (NS_FAILED(rv)) return rv;
+
+    {
+        NS_WITH_SERVICE(nsIRDFContainerUtils, rdfc, kRDFContainerUtilsCID, &rv);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = rdfc->MakeSeq(mDocumentDataSource, resource, nsnull);
+        NS_ASSERTION(rv == NS_OK, "unable to mark as XUL element");
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    // `this' will be its document
+    rv = result->SetDocument(this, PR_FALSE);
+    if (NS_FAILED(rv)) return rv;
+
+    *aResult = result;
+    return NS_OK;
 }
