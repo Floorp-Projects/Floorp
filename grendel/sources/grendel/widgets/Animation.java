@@ -37,10 +37,11 @@ public class Animation extends Component implements Runnable
   Thread fThread;
   Icon fGlyphs[];
   int fCurrent = 0;
+	boolean runAnimation = true;
 
   public void run()
   {
-    while (true)
+    while (runAnimation)
     {
       try
       {
@@ -58,7 +59,7 @@ public class Animation extends Component implements Runnable
       }
       catch (InterruptedException e)
       {
-        fThread.stop();
+        runAnimation = false;
         fThread = null;
       }
     }
@@ -112,7 +113,13 @@ public class Animation extends Component implements Runnable
   public synchronized void start()
   {
     if (fThread != null) {
-      fThread.stop();
+      fThread.interrupt( );
+			try {
+				fThread.join( );
+			}
+			catch ( InterruptedException ie ) {
+				// ignore
+			}
     }
     fThread = new Thread(this, "Animation");
     fThread.start();
@@ -121,7 +128,13 @@ public class Animation extends Component implements Runnable
   public synchronized void stop()
   {
     if (fThread != null) {
-      fThread.stop();
+			fThread.interrupt( );
+			try {
+				fThread.join( );
+			}
+			catch ( InterruptedException ie ) {
+				// ignore
+			}
       fThread = null;
     }
     fCurrent = 0;

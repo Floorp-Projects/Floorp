@@ -390,7 +390,7 @@ public class UnixDotLock {
         if (debug) System.err.println("KILLING " + lock_heartbeat_thread);
         Thread h = lock_heartbeat_thread;
         lock_heartbeat_thread = null;
-        h.stop();
+        h.interrupt();
         try {
           h.join();
         } catch (InterruptedException e) {
@@ -416,7 +416,7 @@ public class UnixDotLock {
   public static final void main(String arg[])
     throws SecurityException, IOException, InterruptedException {
 
-    System.runFinalizersOnExit(true);
+//    System.runFinalizersOnExit(true);
 
     File file1 = new File("/tmp/a");
     File file2 = new File("/tmp/b");

@@ -59,7 +59,7 @@ import javax.mail.event.StoreEvent;
 import grendel.util.Constants;
 
 public class PopStore extends Store {
-  static final boolean DEBUG = true;
+  static final boolean DEBUG = false;
   static void Spew(String s) {
     if (DEBUG) System.out.println("PopStore: " + s);
   }

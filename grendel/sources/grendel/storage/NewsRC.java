@@ -51,7 +51,7 @@ import grendel.util.Constants;
   */
 public class NewsRC {
 
-  static final boolean DEBUG = true;
+  static final boolean DEBUG = false;
 
   protected File file = null;   // disk file; might not exist, but never null.
 

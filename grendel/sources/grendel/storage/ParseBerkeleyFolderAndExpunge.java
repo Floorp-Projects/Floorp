@@ -39,7 +39,7 @@ import grendel.util.Constants;
 
 class ParseBerkeleyFolderAndExpunge extends ParseBerkeleyFolder {
 
-  private static final boolean DEBUG = true;
+  private static final boolean DEBUG = false;
 
   protected RandomAccessFile in = null;
   protected RandomAccessFile out = null;

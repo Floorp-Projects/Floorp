@@ -247,7 +247,6 @@ public class FolderPanel extends GeneralPanel {
 
   public FolderPanel() {
     JScrollPane scrollPane = new JScrollPane();
-    //scrollPane.setBorder(BorderUIResource.getLoweredBevelBorderUIResource());
     scrollPane.setBorder(BorderFactory.createLoweredBevelBorder());
     Util.RegisterScrollingKeys(scrollPane);
 
@@ -389,7 +388,13 @@ public class FolderPanel extends GeneralPanel {
 
   public synchronized void setFolder(Folder aFolder) {
     if (fFolderLoadThread != null) {
-      fFolderLoadThread.stop();
+      fFolderLoadThread.interrupt();
+			try {
+				fFolderLoadThread.join();
+			}
+			catch ( InterruptedException ie ) {
+				// ignore
+			}
       if (fListeners != null) {
         fListeners.folderLoaded(new ChangeEvent(fPanel));
         fListeners.folderStatus(new StatusEvent(fPanel,

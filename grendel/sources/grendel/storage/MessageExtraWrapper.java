@@ -34,7 +34,7 @@ import grendel.util.Constants;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.SequenceInputStream;
-import java.io.StringBufferInputStream;
+import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.Enumeration;
