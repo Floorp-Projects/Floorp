@@ -352,6 +352,11 @@ nsTreeCellFrame::ToggleOpenClose()
     if (! treeItem)
       return;
 	  
+    nsAutoString empty;
+    treeItem->GetAttribute(NS_ConvertASCIItoUCS2("empty"), empty);
+    if (empty.EqualsWithConversion("true"))
+      return;
+
 	  // Take the tree item content and toggle the value of its open attribute.
 	  nsAutoString attrValue;
     treeItem->GetAttribute(NS_ConvertASCIItoUCS2("open"), attrValue);
