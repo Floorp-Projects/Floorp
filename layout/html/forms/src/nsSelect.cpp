@@ -43,10 +43,16 @@
 #include "nsStyleUtil.h"
 #include "nsFont.h"
 
+#define NS_IOPTION_IID   \
+{ 0xfa6a8b11, 0x2af2, 0x11d2, \
+  { 0x80, 0x3a, 0x0, 0x60, 0x8, 0x15, 0xa7, 0x91 } }
+
 static NS_DEFINE_IID(kListWidgetIID, NS_ILISTWIDGET_IID);
 static NS_DEFINE_IID(kComboBoxIID, NS_ICOMBOBOX_IID);
 static NS_DEFINE_IID(kListBoxIID, NS_ILISTBOX_IID);
+static NS_DEFINE_IID(kOptionIID, NS_IOPTION_IID);
  
+class nsOption;
 
 class nsSelectFrame : public nsInputFrame {
 public:
@@ -88,6 +94,8 @@ public:
                                nsIStyleContext* aStyleContext,
                                nsIFrame*&       aResult);
 
+  nsOption* GetNthOption(PRInt32 aIndex);
+
   virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
 
   virtual nsContentAttr GetAttribute(nsIAtom* aAttribute,
@@ -125,6 +133,8 @@ public:
                                nsIFrame*        aParentFrame,
                                nsIStyleContext* aStyleContext,
                                nsIFrame*&       aResult);
+
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
   virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
 
@@ -242,23 +252,28 @@ nsSelectFrame::GetDesiredSize(nsIPresContext* aPresContext,
   nsSize styleSize;
   GetStyleSize(*aPresContext, aReflowState, styleSize);
 
-  // get the size of the longest child
+  // get the size of the longest option child
   PRInt32 maxWidth = 1;
   PRInt32 numChildren = select->ChildCount();
-  for (int i = 0; i < numChildren; i++) {
-    nsOption* option = (nsOption*) select->ChildAt(i);  // YYY this had better be an option 
-    option->CompressContent();
-    nsString text;
-    if (PR_FALSE == option->GetContent(text)) {
-      continue;
+  for (int childX = 0; childX < numChildren; childX++) {
+    nsIContent* child = select->ChildAt(childX);
+    nsOption* option;
+    nsresult result = child->QueryInterface(kOptionIID, (void**)&option);
+    if (NS_OK == result) {
+      option->CompressContent();
+      nsString text;
+      if (PR_FALSE == option->GetContent(text)) {
+        continue;
+      }
+      nsSize textSize;
+      // use the style for the select rather that the option, since widgets don't support it
+      nsInputFrame::GetTextSize(*aPresContext, this, text, textSize); 
+      if (textSize.width > maxWidth) {
+        maxWidth = textSize.width;
+      }
+      NS_RELEASE(option);
     }
-    nsSize textSize;
-    // use the style for the select rather that the option, since widgets don't support it
-    nsInputFrame::GetTextSize(*aPresContext, this, text, textSize); 
-    if (textSize.width > maxWidth) {
-      maxWidth = textSize.width;
-    }
-    NS_RELEASE(option);  // YYY remove this comment if ok
+    NS_RELEASE(child);  
   }
 
   PRInt32 rowHeight = 0;
@@ -363,14 +378,21 @@ nsSelectFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView)
   }
 
   PRInt32 numChildren = select->ChildCount();
-  for (int i = 0; i < numChildren; i++) {
-    nsOption* option = (nsOption*) select->ChildAt(i);  // YYY this had better be an option
-    nsString text;
-    if (PR_TRUE != option->GetContent(text)) {
-      text = " ";
+  int optionX = -1;
+  for (int childX = 0; childX < numChildren; childX++) {
+    nsIContent* child = select->ChildAt(childX);
+    nsOption* option;
+    nsresult result = child->QueryInterface(kOptionIID, (void**)&option);
+    if (NS_OK == result) {
+      optionX++;
+      nsString text;
+      if (PR_TRUE != option->GetContent(text)) {
+        text = " ";
+      }
+      list->AddItemAt(text, optionX);
+      NS_RELEASE(option);
     }
-    list->AddItemAt(text, i);
-    NS_RELEASE(option); // YYY remove comment if ok
+    NS_RELEASE(child);  
   }
 
   NS_RELEASE(view);
@@ -443,6 +465,27 @@ nsSelect::GetMaxNumValues()
   }
 }
 
+nsOption* nsSelect::GetNthOption(PRInt32 aIndex)
+{
+  int optionX = -1;
+  PRInt32 numChildren = ChildCount();
+  for (int childX = 0; childX < numChildren; childX++) {
+    nsIContent* child = ChildAt(childX);
+    nsOption* option;
+    nsresult result = child->QueryInterface(kOptionIID, (void**)&option);
+    if (NS_OK == result) {
+      optionX++;
+      if (aIndex == optionX) {
+        NS_RELEASE(child);
+        return option;
+      }
+      NS_RELEASE(option);
+    }
+    NS_RELEASE(child);  
+  }
+  return nsnull;
+}
+
 PRBool
 nsSelect::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
                          nsString* aValues, nsString* aNames)
@@ -459,11 +502,13 @@ nsSelect::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
     NS_ASSERTION((NS_OK == stat), "invalid widget");
     PRInt32 index = list->GetSelectedIndex();
     if (index >= 0) {
-      nsOption* selected = (nsOption*)ChildAt(index);
-      selected->GetNamesValues(aMaxNumValues, aNumValues, aValues, aNames);
-      aNames[0] = *mName;
-      NS_RELEASE(selected); // YYY remove this comment if ok
-      return PR_TRUE;
+      nsOption* selected = GetNthOption(index);
+      if (selected) {
+        selected->GetNamesValues(aMaxNumValues, aNumValues, aValues, aNames);
+        aNames[0] = *mName;
+        NS_RELEASE(selected); // YYY remove this comment if ok
+        return PR_TRUE;
+      }
     }
     else {
       aNumValues = 0;
@@ -482,13 +527,16 @@ nsSelect::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
       PRInt32 numValues;
       aNumValues = 0;
       for (int i = 0; i < numSelections; i++) {
-        nsOption* selected = (nsOption*)ChildAt(selections[i]);
-        selected->GetNamesValues(aMaxNumValues - i, numValues, 
-                                 aValues + i, aNames + i);  // options can only have 1 value
-        aNames[i] = *mName;
-        aNumValues += 1;
-        NS_RELEASE(selected); // YYY remove this comment if ok
+        nsOption* selected = GetNthOption(selections[i]);
+        if (selected) {
+          selected->GetNamesValues(aMaxNumValues - i, numValues, 
+                                   aValues + i, aNames + i);  // options can only have 1 value
+          aNames[i] = *mName;
+          aNumValues += 1;
+          NS_RELEASE(selected); // YYY remove this comment if ok
+        }
       }
+      delete [] selections;
       return PR_TRUE;
     }
     else {
@@ -496,6 +544,8 @@ nsSelect::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
       return PR_FALSE;
     }
   }
+  aNumValues = 0;
+  return PR_FALSE;
 }
 
 
@@ -513,18 +563,25 @@ nsSelect::Reset()
   list->Deselect();
 
   PRInt32 selIndex = -1;
-  for (int i = 0; i < numChildren; i++) {
-    nsOption* option = (nsOption*)ChildAt(i);  // YYY this had better be an option 
-    PRInt32 selAttr;
-    ((nsInput *)option)->GetAttribute(nsHTMLAtoms::selected, selAttr);
-    if (ATTR_NOTSET != selAttr) {
-      list->SelectItem(i);
-      selIndex = i;
-      if (!mMultiple) {
-        break;  
+  int optionX      = -1;
+  for (int childX = 0; childX < numChildren; childX++) {
+    nsIContent* child = ChildAt(childX);
+    nsOption* option;
+    nsresult result = child->QueryInterface(kOptionIID, (void**)&option);
+    if (NS_OK == result) {
+      optionX++;
+      PRInt32 selAttr;
+      ((nsInput *)option)->GetAttribute(nsHTMLAtoms::selected, selAttr);
+      if (ATTR_NOTSET != selAttr) {
+        list->SelectItem(optionX);
+        selIndex = optionX;
+        if (!mMultiple) {
+          break;  
+        }
       }
+      NS_RELEASE(option);
     }
-    NS_RELEASE(option);  // YYY remove this comment if ok
+    NS_RELEASE(child);  
   }
 
   // if none were selected, select 1st one if we are a combo box
@@ -569,6 +626,16 @@ nsOption::CreateFrame(nsIPresContext* aPresContext,
   frame->SetStyleContext(aPresContext, aStyleContext);
   aResult = frame;
   return NS_OK;
+}
+
+nsresult nsOption::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  if (aIID.Equals(kOptionIID)) {
+    AddRef();
+    *aInstancePtr = (void**) this;
+    return NS_OK;
+  }
+  return nsInput::QueryInterface(aIID, aInstancePtr);
 }
 
 void nsOption::SetAttribute(nsIAtom* aAttribute,
