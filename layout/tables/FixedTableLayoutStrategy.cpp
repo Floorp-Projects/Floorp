@@ -69,6 +69,7 @@ PRBool FixedTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext *aTableStyl
     printf("\n");
   }
 
+  // XXX Hey Cujo, result has never been initialized...
   return result;
 }
 
