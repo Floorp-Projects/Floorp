@@ -45,6 +45,7 @@
 class nsFSStringConversion {
 public:
      nsFSStringConversion();
+     virtual ~nsFSStringConversion(){};
      NS_IMETHOD UCSToNewFS( const PRUnichar* aIn, char** aOut);  
      NS_IMETHOD FSToNewUCS( const char* aIn, PRUnichar** aOut);  
 
@@ -149,7 +150,6 @@ nsFSStringConversion::PrepareDecoder()
    {
        res = PrepareFSCharset();
        if(NS_SUCCEEDED(res)) {
-           nsresult res;
            NS_WITH_SERVICE(nsICharsetConverterManager,
                 ucmgr, NS_CHARSETCONVERTERMANAGER_PROGID, &res);
            NS_ASSERTION((NS_SUCCEEDED(res) && (nsnull != ucmgr)), 

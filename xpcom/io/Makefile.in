@@ -37,6 +37,7 @@ CPPSRCS		= \
 		nsEscape.cpp \
 		nsLinebreakConverter.cpp \
 		nsLocalFileUnix.cpp \
+		nsLocalFileCommon.cpp \
 		nsFileSpec.cpp \
 		nsFileSpecStreaming.cpp \
 		nsFileStream.cpp \

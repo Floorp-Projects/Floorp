@@ -56,6 +56,7 @@ interface nsILocalFile : nsIFile
      *          path must in native.
      */
     void initWithPath([const] in string filePath);
+    void initWithUnicodePath([const] in wstring filePath);
        
     [noscript] PRFileDescStar openNSPRFileDesc(in long flags, in long mode);
     [noscript] FILE           openANSIFileDesc(in string mode);
@@ -72,5 +73,8 @@ interface nsILocalFile : nsIFile
 
 extern "C" NS_EXPORT nsresult
 NS_NewLocalFile(const char* path, nsILocalFile* *result);
+
+extern "C" NS_EXPORT nsresult
+NS_NewUnicodeLocalFile(const PRUnichar* path, nsILocalFile* *result);
 
 %}
