@@ -503,7 +503,7 @@ NS_IMETHODIMP nsFileLocator::GetFileLocation(
        return NS_OK;
    }
    *(nsSpecialFileSpec*)&spec = (nsSpecialFileSpec::Type)aType;
-   return NS_SUCCEEDED(spec.Error()) ? NS_NewFileSpecWithSpec(spec, outSpec) : nsnull;
+   return NS_SUCCEEDED(spec.Error()) ? NS_NewFileSpecWithSpec(spec, outSpec) : NS_ERROR_ILLEGAL_VALUE;
 }
 
 //----------------------------------------------------------------------------------------
