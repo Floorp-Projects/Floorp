@@ -201,7 +201,7 @@ sub process_test {
     $javascript .= "suites[\"$suite\"].testDirs[\"$test_dir\"].tests" .
       "[\"$test\"] = \"radio$uid\"\n";
     $html .= "      <input type='radio' value='$test' name='radio$uid' ".
-      "onclick='onRadioClick(\"radio$uid\")'>" .
+      "onclick='return onRadioClick(\"radio$uid\");'>" .
 	"<a href='$lxr_url$suite/$test_dir/$test' target='other_window'>" .
 	  "$test</a> $title<br>\n";
 

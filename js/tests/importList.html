@@ -13,7 +13,7 @@
       function doImport()
       {
           var lines =
-              document.forms["foo"].elements["testList"].value.split("\n");
+              document.forms["foo"].elements["testList"].value.split(/\r?\n/);
           var suites = window.opener.suites;
           var elems = window.opener.document.forms["testCases"].elements;
 
@@ -22,7 +22,7 @@
 
           for (var l in lines)
           {
-              if (lines[l].search(/\s*\#/) == -1)
+              if (lines[l].search(/^\s$|\s*\#/) == -1)
               {
                   var ary = lines[l].match (/(.*)\/(.*)\/(.*)/);
 
@@ -41,6 +41,8 @@
           }
 
           window.opener.updateTotals();
+
+	  window.close();
                   
       }
       </script>
@@ -51,7 +53,7 @@
     <form name="foo">
       <textarea rows="25" cols="50" name="testList"></textarea><br>
       <input type="radio" name="clear_all" checked 
-        onclick="onRadioClick('clear_all');">
+        onclick="return onRadioClick('clear_all');">
       &nbsp;Clear all selections berofe import.<br>
       <input type="button" value="Import" onclick="doImport();">
       <input type="button" value="Cancel" onclick="window.close();">
