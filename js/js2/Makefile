@@ -4,6 +4,7 @@ CFLAGS = -g -ggdb -DDEBUG -DXP_UNIX -Wall -W -Wpointer-arith -Wbad-function-cast
 
 objs = 	hash.o \
 	icodegenerator.o \
+	interpreter.o \
 	js2.o \
 	numerics.o \
 	parser.o \
