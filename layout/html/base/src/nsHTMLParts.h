@@ -316,6 +316,10 @@ extern nsresult
 NS_NewHTMLSelectFrame(nsIContent* aContent, nsIFrame* aParentFrame,
                       nsIFrame*& aResult);
 
+extern nsresult
+NS_NewBulletFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                  nsIFrame*& aResult);
+
 // Everything below this line is obsolete...
 //----------------------------------------------------------------------
 // XXX naming consistency puhleeze!

@@ -175,6 +175,18 @@ NS_NewHTMLBullet(nsIHTMLContent** aInstancePtrResult)
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
+nsresult
+NS_NewBulletFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                  nsIFrame*& aResult)
+{
+  nsIFrame* frame = new BulletFrame(aContent, aParentFrame);
+  if (nsnull == frame) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  aResult = frame;
+  return NS_OK;
+}
+
 //----------------------------------------------------------------------
 
 BulletFrame::BulletFrame(nsIContent* aContent, nsIFrame* aParentFrame)
