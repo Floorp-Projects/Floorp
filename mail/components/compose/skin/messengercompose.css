@@ -134,6 +134,19 @@ toolbar[mode="text"] .toolbarbutton-text {
   -moz-image-region: rect(64px 192px 96px 160px) !important;
 } 
 
+#quoteButton {
+  list-style-image: url("chrome://messenger/skin/messengercompose/compose-toolbar.png");
+  -moz-image-region: rect(0px 224px 32px 192px);
+}
+
+#quoteButton:hover {
+  -moz-image-region: rect(32px 224px 64px 192px);
+}
+
+#quoteButton[disabled="true"] {
+  -moz-image-region: rect(64px 224px 96px 192px) !important;
+}
+
 /* ::::: small primary toolbar buttons ::::: */
 
 toolbar[iconsize="small"] .toolbarbutton-1 {
@@ -204,6 +217,19 @@ toolbar[iconsize="small"] #button-save:hover {
 toolbar[iconsize="small"] #button-save[disabled] {
   -moz-image-region: rect(40px 120px 60px 100px) !important;
 } 
+
+toolbar[iconsize="small"] #quoteButton {
+  list-style-image: url("chrome://messenger/skin/messengercompose/compose-toolbar-small.png");
+  -moz-image-region: rect(0px 140px 20px 120px);
+}
+
+toolbar[iconsize="small"] #quoteButton:hover {
+  -moz-image-region: rect(20px 140px 40px 120px);
+} 
+
+toolbar[iconsize="small"] #quoteButton[disabled="true"] {
+  -moz-image-region: rect(40px 140px 60px 120px) !important;
+}
 
 /* ::::: special toolbar colors ::::: */
 

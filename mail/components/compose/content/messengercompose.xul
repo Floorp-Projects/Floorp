@@ -338,7 +338,7 @@
       </menu>
   
       <menu id="optionsMenu" label="&optionsMenu.label;" accesskey="&optionsMenu.accesskey;">
-        <menupopup id="optionsMenuPopup" onpopupshowing="updateOptionItems();"> 
+        <menupopup id="optionsMenuPopup"> 
           <menuitem label="&checkSpellingCmd.label;" id="menu_checkspelling" accesskey="&checkSpellingCmd.accesskey;" key="key_checkspelling" command="cmd_spelling"/>
           <menuitem label="&quoteCmd.label;" accesskey="&quoteCmd.accesskey;" command="cmd_quoteMessage"/>
           <menuseparator/>
@@ -441,6 +441,7 @@
   </toolbar>
 
   <toolbarpalette id="MsgComposeToolbarPalette">
+    
     <toolbarbutton class="toolbarbutton-1"
                id="button-send" label="&sendButton.label;"
                tooltiptext="&sendButton.tooltip;" 
@@ -451,10 +452,12 @@
                later_tooltiptext="&sendlaterButton.tooltip;">
       <observes element="Communicator:WorkMode" attribute="offline"/>
     </toolbarbutton>
+    
     <toolbarbutton class="toolbarbutton-1"
                id="button-address" label="&addressButton.label;" 
                tooltiptext="&addressButton.tooltip;" 
                oncommand="toggleAddressPicker();"/>
+    
     <toolbarbutton class="toolbarbutton-1" type="menu-button"
                id="button-attach" label="&attachButton.label;" 
                tooltiptext="&attachButton.tooltip;" 
@@ -464,9 +467,11 @@
            <menuitem label="&attachPageCmd.label;" accesskey="&attachPageCmd.accesskey;" command="cmd_attachPage"/>
          </menupopup>
     </toolbarbutton>
+    
     <toolbarbutton class="toolbarbutton-1"
                id="spellingButton" label="&spellingButton.label;" 
                command="cmd_spelling"/>
+    
     <toolbarbutton class="toolbarbutton-1" type="menu-button"
                id="button-save" label="&saveButton.label;" 
                tooltiptext="&saveButton.tooltip;" 
@@ -478,6 +483,12 @@
            <menuitem label="&saveAsTemplateCmd.label;" accesskey="&saveAsTemplateCmd.accesskey;" command="cmd_saveAsTemplate"/>
          </menupopup>
     </toolbarbutton>
+
+    <toolbarbutton class="toolbarbutton-1"
+               id="quoteButton" label="&quoteButton.label;" 
+               tooltiptext="&quoteButton.tooltip;" 
+               command="cmd_quoteMessage"/>
+
     <toolbaritem id="throbber-box" align="center" pack="center">
       <button id="navigator-throbber" oncommand="loadThrobberUrl('compose.throbber.url')" tooltiptext="&throbber.tooltip;">
           <observes element="broadcaster_throbber" attribute="busy"/>
