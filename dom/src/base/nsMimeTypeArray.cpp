@@ -107,7 +107,7 @@ NS_IMETHODIMP MimeTypeArrayImpl::Item(PRUint32 aIndex, nsIDOMMimeType** aReturn)
 		if (rv != NS_OK)
 			return rv;
 	}
-	if (aIndex >= 0 && aIndex < mMimeTypeCount) {
+	if (aIndex < mMimeTypeCount) {
 		*aReturn = mMimeTypeArray[aIndex];
 		NS_IF_ADDREF(*aReturn);
 		return NS_OK;
