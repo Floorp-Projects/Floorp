@@ -117,8 +117,9 @@ public:
 		nsImapOfflineToOnlineMove				= 0x10000025,
 		nsImapBiff								= 0x10000026,
 		nsImapSelectNoopFolder					= 0x10000027,
-        nsImapAppendDraftFromFile                 = 0x10000028,
-        nsImapUidExpunge                        = 0x10000029
+        nsImapAppendDraftFromFile               = 0x10000028,
+        nsImapUidExpunge                        = 0x10000029,
+        nsImapSaveMessageToDisk                 = 0x10000030
 	} nsImapAction;
 
 	// Initialization method used to initialize the url...right now
