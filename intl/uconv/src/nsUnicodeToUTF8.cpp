@@ -107,18 +107,18 @@ NS_IMETHODIMP nsUnicodeToUTF8::Convert(const PRUnichar * aSrc,
   }
 
   while (src < srcEnd) {
-    if ( *src < 0x007f) {
+    if ( *src <= 0x007f) {
       if (destLen < 1)
         goto error_more_output;
       *dest++ = (char)*src;
       --destLen;
-    } else if (*src < 0x07ff) {
+    } else if (*src <= 0x07ff) {
       if (destLen < 2)
         goto error_more_output;
       *dest++ = (char)0xc0 | (*src >> 6);
       *dest++ = (char)0x80 | (*src & 0x003f);
       destLen -= 2;
-    } else if (*src >= (PRUnichar)0xD800 && *src < (PRUnichar)0xDA00) {
+    } else if (*src >= (PRUnichar)0xD800 && *src < (PRUnichar)0xDC00) {
       if ((src+1) >= srcEnd) {
         //we need another surrogate to complete this unicode char
         mHighSurrogate = *src;
