@@ -180,8 +180,8 @@ nsHttpChannel::Init(nsIURI *uri,
     if (NS_FAILED(rv)) return rv;
 
     rv = nsHttpHandler::get()->
-        AddStandardRequestHeaders(&mRequestHead.Headers(),
-                                  caps,
+        AddStandardRequestHeaders(&mRequestHead.Headers(), caps,
+                                  !mConnectionInfo->UsingSSL() &&
                                   mConnectionInfo->UsingHttpProxy());
     if (NS_FAILED(rv)) return rv;
 
@@ -385,7 +385,7 @@ nsHttpChannel::SetupTransaction()
     NS_ADDREF(mTransaction);
 
     // use the URI path if not proxying (transparent proxying such as SSL proxy
-    // does not count here).
+    // does not count here). also, figure out what version we should be speaking.
     nsCAutoString buf, path;
     const char* requestURI;
     if (mConnectionInfo->UsingSSL() || !mConnectionInfo->UsingHttpProxy()) {
@@ -396,15 +396,17 @@ nsHttpChannel::SetupTransaction()
             requestURI = buf.get();
         else
             requestURI = path.get();
+        mRequestHead.SetVersion(nsHttpHandler::get()->HttpVersion());
     }
-    else
+    else {
         requestURI = mSpec.get();
+        mRequestHead.SetVersion(nsHttpHandler::get()->ProxyHttpVersion());
+    }
 
     // trim off the #ref portion if any...
     char *p = (char *)strchr(requestURI, '#');
     if (p) *p = 0;
 
-    mRequestHead.SetVersion(nsHttpHandler::get()->DefaultVersion());
     mRequestHead.SetRequestURI(requestURI);
 
     // set the request time for cache expiration calculations
@@ -435,7 +437,8 @@ nsHttpChannel::SetupTransaction()
 
     return mTransaction->SetupRequest(&mRequestHead, mUploadStream, 
                                       mUploadStreamHasHeaders, 
-                                      mConnectionInfo->UsingHttpProxy() && mConnectionInfo->UsingSSL());
+                                      mConnectionInfo->UsingSSL() &&
+                                      mConnectionInfo->UsingHttpProxy());
 }
 
 void
