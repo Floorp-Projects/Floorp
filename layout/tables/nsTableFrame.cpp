@@ -1793,19 +1793,19 @@ PRUint8 nsTableFrame::CompareBorderStyles(PRUint8 aStyle1, PRUint8 aStyle2)
   {
     switch (aStyle1)
     {
-    case NS_STYLE_BORDER_STYLE_INSET:
+    case NS_STYLE_BORDER_STYLE_BG_INSET:
       result = BORDER_PRECEDENT_LOWER;
       break;
 
     case NS_STYLE_BORDER_STYLE_GROOVE:
-      if (NS_STYLE_BORDER_STYLE_INSET==aStyle2)
+      if (NS_STYLE_BORDER_STYLE_BG_INSET==aStyle2)
         result = BORDER_PRECEDENT_HIGHER;
       else
         result = BORDER_PRECEDENT_LOWER;
       break;      
 
-    case NS_STYLE_BORDER_STYLE_OUTSET:
-      if (NS_STYLE_BORDER_STYLE_INSET==aStyle2 || 
+    case NS_STYLE_BORDER_STYLE_BG_OUTSET:
+      if (NS_STYLE_BORDER_STYLE_BG_INSET==aStyle2 || 
           NS_STYLE_BORDER_STYLE_GROOVE==aStyle2)
         result = BORDER_PRECEDENT_HIGHER;
       else
@@ -1813,18 +1813,18 @@ PRUint8 nsTableFrame::CompareBorderStyles(PRUint8 aStyle1, PRUint8 aStyle2)
       break;      
 
     case NS_STYLE_BORDER_STYLE_RIDGE:
-      if (NS_STYLE_BORDER_STYLE_INSET==aStyle2  || 
+      if (NS_STYLE_BORDER_STYLE_BG_INSET==aStyle2  || 
           NS_STYLE_BORDER_STYLE_GROOVE==aStyle2 ||
-          NS_STYLE_BORDER_STYLE_OUTSET==aStyle2)
+          NS_STYLE_BORDER_STYLE_BG_OUTSET==aStyle2)
         result = BORDER_PRECEDENT_HIGHER;
       else
         result = BORDER_PRECEDENT_LOWER;
       break;
 
     case NS_STYLE_BORDER_STYLE_DOTTED:
-      if (NS_STYLE_BORDER_STYLE_INSET==aStyle2  || 
+      if (NS_STYLE_BORDER_STYLE_BG_INSET==aStyle2  || 
           NS_STYLE_BORDER_STYLE_GROOVE==aStyle2 ||
-          NS_STYLE_BORDER_STYLE_OUTSET==aStyle2 ||
+          NS_STYLE_BORDER_STYLE_BG_OUTSET==aStyle2 ||
           NS_STYLE_BORDER_STYLE_RIDGE==aStyle2)
         result = BORDER_PRECEDENT_HIGHER;
       else
@@ -1832,9 +1832,9 @@ PRUint8 nsTableFrame::CompareBorderStyles(PRUint8 aStyle1, PRUint8 aStyle2)
       break;
 
     case NS_STYLE_BORDER_STYLE_DASHED:
-      if (NS_STYLE_BORDER_STYLE_INSET==aStyle2  || 
+      if (NS_STYLE_BORDER_STYLE_BG_INSET==aStyle2  || 
           NS_STYLE_BORDER_STYLE_GROOVE==aStyle2 ||
-          NS_STYLE_BORDER_STYLE_OUTSET==aStyle2 ||
+          NS_STYLE_BORDER_STYLE_BG_OUTSET==aStyle2 ||
           NS_STYLE_BORDER_STYLE_RIDGE==aStyle2  ||
           NS_STYLE_BORDER_STYLE_DOTTED==aStyle2)
         result = BORDER_PRECEDENT_HIGHER;
@@ -1843,9 +1843,9 @@ PRUint8 nsTableFrame::CompareBorderStyles(PRUint8 aStyle1, PRUint8 aStyle2)
       break;
 
     case NS_STYLE_BORDER_STYLE_SOLID:
-      if (NS_STYLE_BORDER_STYLE_INSET==aStyle2  || 
+      if (NS_STYLE_BORDER_STYLE_BG_INSET==aStyle2  || 
           NS_STYLE_BORDER_STYLE_GROOVE==aStyle2 ||
-          NS_STYLE_BORDER_STYLE_OUTSET==aStyle2 ||
+          NS_STYLE_BORDER_STYLE_BG_OUTSET==aStyle2 ||
           NS_STYLE_BORDER_STYLE_RIDGE==aStyle2  ||
           NS_STYLE_BORDER_STYLE_DOTTED==aStyle2 ||
           NS_STYLE_BORDER_STYLE_DASHED==aStyle2)
@@ -2218,13 +2218,13 @@ NS_METHOD nsTableFrame::Paint(nsIPresContext& aPresContext,
       if (NS_STYLE_BORDER_SEPARATE==tableStyle->mBorderCollapse)
       {
         nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                    aDirtyRect, rect, *spacing, skipSides);
+                                    aDirtyRect, rect, *spacing, mStyleContext, skipSides);
       }
       else
       {
         //printf("paint table frame\n");
         nsCSSRendering::PaintBorderEdges(aPresContext, aRenderingContext, this,
-                                         aDirtyRect, rect, &mBorderEdges, skipSides);
+                                         aDirtyRect, rect,  &mBorderEdges, mStyleContext, skipSides);
       }
     }
   }
@@ -4267,10 +4267,10 @@ void nsTableFrame::MapHTMLBorderStyle(nsStyleSpacing& aSpacingStyle, nscoord aBo
   aSpacingStyle.mBorder.SetBottom(width);
   aSpacingStyle.mBorder.SetRight(width);
 
-  aSpacingStyle.SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_OUTSET);
-  aSpacingStyle.SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_OUTSET);
-  aSpacingStyle.SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_OUTSET);
-  aSpacingStyle.SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_OUTSET);
+  aSpacingStyle.SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_BG_OUTSET);
+  aSpacingStyle.SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_BG_OUTSET);
+  aSpacingStyle.SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_BG_OUTSET);
+  aSpacingStyle.SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_BG_OUTSET);
 
   nsIStyleContext* styleContext = mStyleContext; 
   const nsStyleColor* colorData = (const nsStyleColor*)

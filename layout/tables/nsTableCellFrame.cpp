@@ -143,13 +143,13 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
           if (NS_STYLE_BORDER_SEPARATE==tableStyle->mBorderCollapse)
           {
             nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                        aDirtyRect, rect, *mySpacing, skipSides);
+                                        aDirtyRect, rect, *mySpacing, mStyleContext, skipSides);
           }
           else
           {
 			      //printf("-- Paint cell (%d %d)\n", GetRowIndex(), GetColIndex());
             nsCSSRendering::PaintBorderEdges(aPresContext, aRenderingContext, this,
-                                             aDirtyRect, rect, &mBorderEdges, skipSides);
+                                             aDirtyRect, rect, &mBorderEdges, mStyleContext, skipSides);
           }
         }
       }
@@ -605,10 +605,10 @@ void nsTableCellFrame::MapHTMLBorderStyle(nsIPresContext* aPresContext,
   // not be hardcoded. Using solid causes the borders not to show up...
 #if 1
 
-  aSpacingStyle.SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_INSET);
-  aSpacingStyle.SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_INSET);
-  aSpacingStyle.SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_INSET);
-  aSpacingStyle.SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_INSET);
+  aSpacingStyle.SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_BG_INSET);
+  aSpacingStyle.SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_BG_INSET);
+  aSpacingStyle.SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_BG_INSET);
+  aSpacingStyle.SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_BG_INSET);
 
 #endif
   
