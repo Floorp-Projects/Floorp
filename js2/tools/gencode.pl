@@ -274,6 +274,7 @@ $ops{"BRANCH"} =
   };
 $ops{"BRANCH_TRUE"} = $cbranch_op;
 $ops{"BRANCH_FALSE"} = $cbranch_op;
+$ops{"BRANCH_INITIALIZED"} = $cbranch_op;
 $ops{"RETURN"} =
   {
    super    => "Instruction_1",
