@@ -114,8 +114,9 @@ nsImageLoadingContent::Shutdown()
 // removing themselves.
 #define LOOP_OVER_OBSERVERS(func_)                                       \
   PR_BEGIN_MACRO                                                         \
-    for (ImageObserver* observer = &mObserverList; observer;             \
-         observer = observer->mNext) {                                   \
+    for (ImageObserver* observer = &mObserverList, *next; observer;      \
+         observer = next) {                                              \
+      next = observer->mNext;                                            \
       if (observer->mObserver) {                                         \
         observer->mObserver->func_;                                      \
       }                                                                  \
