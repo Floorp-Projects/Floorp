@@ -36,7 +36,7 @@ Contributor(s):
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   title="&window.title;"
   windowtype="mailnews:filtereditor"
-  width="510" height="360"
+  width="560" height="360"
   persist="width height screenX screenY"
   buttons="accept,cancel,help"
   onload="filterEditorOnLoad();"
