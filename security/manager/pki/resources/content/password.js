@@ -47,7 +47,7 @@ function onLoad()
      var sectokdb = Components.classes[nsPK11TokenDB].getService(nsIPK11TokenDB);
      var tokenList = sectokdb.listTokens();
      var enumElement;
-     i=0;
+     var i=0;
      var menu = document.getElementById("tokenMenu");
      try {
         for ( ; !tokenList.isDone(); tokenList.next()) {
