@@ -22,7 +22,8 @@
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kITransactionManagerIID, NS_ITRANSACTIONMANAGER_IID);
 
-nsTransactionManager::nsTransactionManager()
+nsTransactionManager::nsTransactionManager(PRInt32 aMaxLevelsOfUndo)
+  : mMaxLevelsOfUndo(aMaxLevelsOfUndo), mRF(), mUndoStack(mRF), mRedoStack(mRF)
 {
 }
 
@@ -56,19 +57,98 @@ nsTransactionManager::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsresult
 nsTransactionManager::Do(nsITransaction *aTransaction)
 {
-  return NS_OK;
+  nsresult result = NS_OK;
+
+  if (!aTransaction)
+    return NS_ERROR_NULL_POINTER;
+
+  // XXX: LOCK the transaction manager
+
+  result = aTransaction->Do();
+
+  if (! NS_SUCCEEDED(result)) {
+    // XXX: UNLOCK the transaction manager
+    return result;
+  }
+
+  // XXX: Check if we can coalesce this transaction with the one
+  //      at the top of the undo stack. If we can, merge this one
+  //      into the one currently on the stack.
+
+  // XXX: Check to see if we've hit the max level of undo. If so,
+  //      pop the bottom transaction of the undo stack and release it!
+
+  NS_ADDREF(aTransaction);
+  mUndoStack.Push(aTransaction);
+
+  result = PruneRedoStack();
+
+  if (! NS_SUCCEEDED(result)) {
+    // XXX: What do we do in the case where a prune fails?
+    //      Remove the transaction from the stack, and release it?
+  }
+
+  // XXX: UNLOCK the transaction manager
+
+  return result;
 }
 
 nsresult
 nsTransactionManager::Undo()
 {
-  return NS_OK;
+  nsresult result    = NS_OK;
+  nsITransaction *tx = 0;
+
+  // XXX: LOCK the transaction manager
+
+  // Peek at the top of the undo stack. Don't remove the transaction
+  // until it has successfully completed.
+  tx = (nsITransaction *)(--mUndoStack.End());
+
+  // Bail if there's nothing on the stack.
+  if (!tx) {
+    // XXX: UNLOCK the transaction manager
+    return NS_OK;
+  }
+
+  result = tx->Undo();
+
+  if (NS_SUCCEEDED(result)) {
+    mRedoStack.Push(mUndoStack.Pop());
+  }
+
+  // XXX: UNLOCK the transaction manager
+
+  return result;
 }
 
 nsresult
 nsTransactionManager::Redo()
 {
-  return NS_OK;
+  nsresult result    = NS_OK;
+  nsITransaction *tx = 0;
+
+  // XXX: LOCK the transaction manager
+
+  // Peek at the top of the redo stack. Don't remove the transaction
+  // until it has successfully completed.
+  tx = (nsITransaction *)(--mRedoStack.End());
+
+  // Bail if there's nothing on the stack.
+  if (!tx) {
+    // XXX: UNLOCK the transaction manager
+    return NS_OK;
+  }
+
+  result = tx->Redo();
+
+  if (NS_SUCCEEDED(result)) {
+    mUndoStack.Push(mRedoStack.Pop());
+  }
+
+  // XXX: UNLOCK the transaction manager
+
+  return result;
 }
 
 nsresult
@@ -76,6 +156,8 @@ nsTransactionManager::GetNumberOfUndoItems(PRInt32 *aNumItems)
 {
   if (aNumItems)
     *aNumItems = 0;
+
+  *aNumItems = mUndoStack.GetSize();
 
   return NS_OK;
 }
@@ -85,6 +167,8 @@ nsTransactionManager::GetNumberOfRedoItems(PRInt32 *aNumItems)
 {
   if (aNumItems)
     *aNumItems = 0;
+
+  *aNumItems = mRedoStack.GetSize();
 
   return NS_OK;
 }
@@ -104,6 +188,15 @@ nsTransactionManager::AddListener(nsITransactionListener *aListener)
 nsresult
 nsTransactionManager::RemoveListener(nsITransactionListener *aListener)
 {
+  return NS_OK;
+}
+
+nsresult
+nsTransactionManager::PruneRedoStack()
+{
+  // XXX: The order in which you release things off this stack matters!
+  //      We may not be able to use Erase().
+  mRedoStack.Erase();
   return NS_OK;
 }
 
