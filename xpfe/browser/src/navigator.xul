@@ -140,6 +140,16 @@
     }
   }
 
+  function BrowserSetDocumentCharacterSet(aCharset)
+  {
+    appCore = XPAppCoresManager.Find("BrowserAppCore");  
+    if (appCore != null) {
+      appCore.SetDocumentCharset(aCharset);
+    } else {
+      dump("BrowserAppCore has not been created!\n");
+    }
+  }
+
   function BrowserClose()
   {
     dump("BrowserClose\n");
@@ -184,6 +194,11 @@
     </menu>
     <menu name="View">
       <menuitem name="Reload" onclick="BrowserReload();"/>
+      <separator />
+      <menuitem name="Latin1" onclick="BrowserSetDocumentCharacterSet('ISO-8859-1');"/>
+      <menuitem name="ISO-2022-JP" onclick="BrowserSetDocumentCharacterSet('ISO-2022-JP');"/>
+      <menuitem name="Shift_JIS" onclick="BrowserSetDocumentCharacterSet('Shift_JIS');"/>
+      <menuitem name="EUC-JP" onclick="BrowserSetDocumentCharacterSet('EUC-JP');"/>
     </menu>
     <menu name="Go">
       <menuitem name="Back" onclick="BrowserBack();"/>
