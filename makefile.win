@@ -78,7 +78,6 @@ DIRS =                         \
   layout                       \
   rdf                          \
   docshell                     \
-#  embedding                     \
   webshell                     \
   profile                      \
   editor                       \
