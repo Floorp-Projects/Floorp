@@ -16,9 +16,10 @@
 # This is a list of local files which get copied to the mozilla:dist:mailnews directory
 #
 
-nsMsgSearchAdapter.h
+nsMsgBodyHandler.h
 nsMsgResultElement.h
 nsMsgSearchArray.h
 nsMsgSearchBoolExpression.h
 nsMsgSearchScopeTerm.h
 nsMsgSearchTerm.h
+nsMsgSearchAdapter.h
