@@ -132,7 +132,8 @@ nsresult nsCollation::CreateSortKey(nsICollation *inst, const nsCollationStrengt
 
   res = inst->GetSortKeyLen(strength, stringIn, &aLength);
   if (NS_SUCCEEDED(res)) {
-    PRUint32 bufferLength = (aLength + 1) / 2 * 2;  // should be even
+	  PRUint32 bufferLength = (aLength==0) ? 2 :((aLength + 1) / 2 * 2);  // should be even
+	
     aKey = new PRUint8[bufferLength];
     if (nsnull != aKey) {
       aKey[bufferLength-1] = 0;                     // pre-set zero to the padding
