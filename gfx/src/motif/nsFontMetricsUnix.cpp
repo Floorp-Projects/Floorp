@@ -50,7 +50,7 @@ nsFontMetricsUnix :: ~nsFontMetricsUnix()
   if (nsnull != mFontHandle) {
     nsNativeWidget  widget;
     mContext->GetNativeWidget(widget);
-    ::XUnloadFont(XtDisplay((Widget)widget, mFontHandle);  
+    ::XUnloadFont(XtDisplay((Widget)widget), mFontHandle);  
   }
 }
 
@@ -237,7 +237,7 @@ void nsFontMetricsUnix::RealizeFont()
 {
   nsNativeWidget  widget;
   mContext->GetNativeWidget(widget);
-  mFontInfo = ::XQueryFont(XtDisplay((Widget)widget, mFontHandle);
+  mFontInfo = ::XQueryFont(XtDisplay((Widget)widget), mFontHandle);
 
   float f = mContext->GetDevUnitsToAppUnits();
   
