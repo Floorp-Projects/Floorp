@@ -4,7 +4,7 @@ interface XULCommandDispatcher {
 		{ 0xbf, 0x87, 0x0, 0x10, 0x5a, 0x1b, 0x6, 0x27 } } */
 
 	attribute Element focusedElement;
-	attribute Window focusedWindow;
+	attribute WindowInternal focusedWindow;
     attribute boolean suppressFocus;
 	attribute boolean suppressFocusScroll;
     attribute boolean active;
