@@ -542,7 +542,7 @@ nsDownloadManager::CancelDownload(const PRUnichar* aPath)
   nsresult rv = NS_OK;
   nsStringKey key(aPath);
   if (!mCurrDownloads.Exists(&key))
-    return NS_ERROR_FAILURE;
+    return RemoveDownload(aPath); // XXXBlake for now, to provide a workaround for stuck downloads
   
   nsCOMPtr<nsIDownload> download;
   nsDownload* internalDownload = NS_STATIC_CAST(nsDownload*, mCurrDownloads.Get(&key));
