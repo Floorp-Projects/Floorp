@@ -1111,6 +1111,13 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext* aPresContext,
     // XXX For the time being just fall through and treat it like a
     // pass 2 reflow...
     mPass = kPASS_SECOND;
+
+#if 0
+    // XXX Hack...
+    aDesiredSize.width = mRect.width;
+    aDesiredSize.height = mRect.height;
+    return NS_OK;
+#endif
   }
 
   if (PR_TRUE==NeedsReflow(aReflowState.maxSize))

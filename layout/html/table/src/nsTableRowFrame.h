@@ -150,6 +150,11 @@ protected:
                             nsSize*         aMaxElementSize,
                             nsSize&         aKidMaxElementSize);
 
+  nsresult      IncrementalReflow(nsIPresContext*      aPresContext,
+                                  RowReflowState&      aState,
+                                  const nsReflowState& aReflowState,
+                                  nsSize*              aMaxElementSize);
+
   /**
    * Reflow the frames we've already created
    *
