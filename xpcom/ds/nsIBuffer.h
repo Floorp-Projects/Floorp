@@ -61,6 +61,12 @@ class nsIBuffer : public nsISupports {
 public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IBUFFER_IID);
 
+    /**
+     * The segment overhead is the amount of space chopped out of each 
+     * segment for implementation purposes. The remainder of the segment
+     * is available for data, e.g.:
+     *     segmentDataSize = growBySize - SEGMENT_OVERHEAD;
+     */
     enum { SEGMENT_OVERHEAD = 8 };
 
     /**
@@ -73,16 +79,43 @@ public:
                     nsIAllocator* allocator) = 0;
 
     /**
+     * Reads from the read cursor into a char buffer up to a specified length.
+     */
+    NS_IMETHOD Read(char* toBuf, PRUint32 bufLen, PRUint32 *readCount) = 0;
+
+    /**
      * This read method allows you to pass a callback function that gets called 
      * repeatedly for each buffer segment until the entire amount is read.
      * This avoids the need to copy data to/from and intermediate buffer.
      */
     NS_IMETHOD ReadSegments(nsWriteSegmentFun writer, void* closure, PRUint32 count,
                             PRUint32 *readCount) = 0;
-    NS_IMETHOD Read(char* toBuf, PRUint32 bufLen, PRUint32 *readCount) = 0;
-    NS_IMETHOD GetReadBuffer(PRUint32 startPosition, 
-                             char* *result,
-                             PRUint32 *readBufferLength) = 0;
+
+    /**
+     * Returns the raw char buffer segment and its length available for reading. 
+     * @param segmentLogicalOffset - The offset from the current read cursor for
+     *   the segment to be returned. If this is beyond the available written area, 
+     *   NULL is returned for the resultSegment.
+     * @param resultSegment - The resulting read segment.
+     * @param resultSegmentLength - The resulting read segment length. 
+     */
+    NS_IMETHOD GetReadSegment(PRUint32 segmentLogicalOffset, 
+                              const char* *resultSegment,
+                              PRUint32 *resultSegmentLen) = 0;
+
+    /**
+     * Writes from a char buffer up to a specified length. 
+     * @param writeCount - The amount that could be written. If the buffer becomes full,
+     *   this could be less then the specified bufLen.
+     */
+    NS_IMETHOD Write(const char* fromBuf, PRUint32 bufLen, PRUint32 *writeCount) = 0;
+
+    /**
+     * Writes from an input stream up to a specified count of bytes. 
+     * @param writeCount - The amount that could be written. If the buffer becomes full,
+     *   this could be less then the specified count.
+     */
+    NS_IMETHOD WriteFrom(nsIInputStream* fromStream, PRUint32 count, PRUint32 *writeCount) = 0;
 
     /**
      * This write method allows you to pass a callback function that gets called 
@@ -91,12 +124,26 @@ public:
      */
     NS_IMETHOD WriteSegments(nsReadSegmentFun reader, void* closure, PRUint32 count,
                              PRUint32 *writeCount) = 0;
-    NS_IMETHOD Write(const char* fromBuf, PRUint32 bufLen, PRUint32 *writeCount) = 0;
-    NS_IMETHOD WriteFrom(nsIInputStream* fromStream, PRUint32 count, PRUint32 *writeCount) = 0;
-    NS_IMETHOD GetWriteBuffer(PRUint32 startPosition,
-                              char* *result,
-                              PRUint32 *writeBufferLength) = 0;
+
+    /**
+     * Returns the raw char buffer segment and its length available for writing. 
+     * @param resultSegment - The resulting write segment.
+     * @param resultSegmentLength - The resulting write segment length. 
+     */
+    NS_IMETHOD GetWriteSegment(char* *resultSegment,
+                               PRUint32 *resultSegmentLen) = 0;
+
+    /**
+     * Sets an EOF marker (typcially done by the writer) so that a reader can be informed
+     * when all the data in the buffer is consumed. After the EOF marker has been
+     * set, all subsequent calls to the above write methods will return NS_BASE_STREAM_EOF.
+     */
     NS_IMETHOD SetEOF() = 0;
+
+    /**
+     * Tests whether EOF marker is set. Note that this does not necessarily mean that 
+     * all the data in the buffer has yet been consumed.
+     */
     NS_IMETHOD AtEOF(PRBool *result) = 0;
 
     /**

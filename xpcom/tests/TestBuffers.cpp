@@ -38,8 +38,8 @@ public:
 
         char buf[100];
         PRUint32 readCnt;
-        char* readBuf;
-        rv = mReadBuffer->GetReadBuffer(0, &readBuf, &readCnt);
+        const char* readBuf;
+        rv = mReadBuffer->GetReadSegment(0, &readBuf, &readCnt);
         if (NS_FAILED(rv)) return rv;
         while (!(mDone && readCnt == 0)) {
             rv = mReadBuffer->Read(buf, 99, &readCnt);
@@ -52,7 +52,7 @@ public:
                     break;
                 mon.Notify(); // wake up writer
                 mon.Wait();   // wait for more
-                rv = mReadBuffer->GetReadBuffer(0, &readBuf, &readCnt);
+                rv = mReadBuffer->GetReadSegment(0, &readBuf, &readCnt);
                 if (NS_FAILED(rv)) return rv;
             }
             else {
