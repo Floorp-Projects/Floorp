@@ -75,7 +75,7 @@ nsFontMetricsPh :: Init(const nsFont& aFont, nsIDeviceContext *aContext)
   char          *str = nsnull;
   nsresult      result;  	
   nsresult      ret_code = NS_ERROR_FAILURE;
-  int           MAX_FONTDETAIL = 30;
+  int           MAX_FONTDETAIL = 50;
   FontDetails   fDetails[MAX_FONTDETAIL];
   int           fontcount;
   int           index;
@@ -111,7 +111,7 @@ nsFontMetricsPh :: Init(const nsFont& aFont, nsIDeviceContext *aContext)
     fontcount = PfQueryFonts('a', PHFONT_ALL_FONTS, fDetails, MAX_FONTDETAIL);
     if (fontcount >= MAX_FONTDETAIL)
     {
-	  printf("nsFontMetricsPh::Init Font Array should be increased!\n");
+	  printf("nsFontMetricsPh::Init Font Array should be increased! fontcount=%d\n",fontcount);
     }
 
     if (fontcount)
