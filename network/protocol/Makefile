@@ -41,6 +41,12 @@ DIRS += ldap \
 	$(NULL)
 endif
 
+ifdef SMART_MAIL
+DIRS += \
+      pop3 \
+      $(NULL)
+endif
+
 ifdef MOZ_MAIL_NEWS
 DIRS += \
 	mailbox \
