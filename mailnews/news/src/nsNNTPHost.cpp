@@ -21,7 +21,8 @@
 
 #include "nntpCore.h"
 #include "nsINNTPHost.h"
-#include "nsINNTPHost.h"
+#include "nsINNTPCategory.h"
+#include "nsINNTPCategoryContainer.h"
 #include "nsNNTPHost.h"
 #include "nsNNTPArticleSet.h"
 
@@ -29,12 +30,16 @@
 #include "nsMsgPtrArray.h"
 
 #include "nsINNTPNewsgroup.h"
+#include "nsIMsgFolder.h"
 
 /* for XP_FilePerm */
 #include "xp_file.h"
 
 /* for XP_HashTable */
 #include "xp_hash.h"
+
+/* for XP_StripLine */
+#include "xp_str.h"
 
 /* for LINEBREAK, etc */
 #include "fe_proto.h"
@@ -45,7 +50,6 @@
 
 /* temporary hacks to test if this compiles */
 typedef void MSG_GroupName;
-typedef void MSG_FolderInfoCategoryContainer;
 
 
 #ifdef XP_UNIX
@@ -73,7 +77,7 @@ public:
 	NS_IMETHOD QueryExtension (const char *ext, PRBool *_retval);
     
     NS_IMPL_CLASS_GETSET(PostingAllowed, PRBool, m_postingAllowed);
-    NS_IMPL_CLASS_GETSET(PushAuth, PRBool, m_pushAuth);
+    NS_IMPL_CLASS_GETTER(PushAuth, PRBool, m_pushAuth);
     
     NS_IMPL_CLASS_GETSET(LastUpdateTime, PRInt64, m_lastGroupUpdate);
 
@@ -88,7 +92,9 @@ public:
 	NS_IMETHOD QueryPropertyForGet (const char *property, char **_retval);
 
     NS_IMETHOD AddSearchableGroup(const char *groupname);
+    // should these go into interfaces?
 	PRBool QuerySearchableGroup (const char *group);
+    const char *QuerySearchableGroupCharsets(const char *group);
 
     // Virtual groups
     NS_IMETHOD AddVirtualGroup(const char *responseText);
@@ -100,7 +106,7 @@ public:
     NS_IMETHOD QuerySearchableHeader(const char *headerName, PRBool *_retval);
     
 	// Go load the newsrc for this host.  Creates the subscribed hosts as
-	// children of the given MSG_FolderInfo.
+	// children of the given nsIMsgFolder.
 	NS_IMETHOD LoadNewsrc();
     
 	// Write out the newsrc for this host right now.  In general, either
@@ -174,9 +180,9 @@ private:
 	virtual const char* getFullUIName();
 
 
-	// Get the MSG_FolderInfo which represents this host; the children
-	// of this MSG_FolderInfo are the groups in this host.
-	MSG_FolderInfo* GetHostInfo() {return m_hostinfo;}
+	// Get the nsIMsgFolder which represents this host; the children
+	// of this nsIMsgFolder are the groups in this host.
+	nsIMsgFolder* GetHostInfo() {return m_hostinfo;}
 
 
 #ifdef HAVE_MASTER
@@ -321,8 +327,8 @@ protected:
 	nsMsgGroupRecord* FindOrCreateGroup(const char* groupname,
 									   int* statusOfMakingGroup = NULL);	
 
-	nsINNTPNewsgroup *SwitchNewsToCategoryContainer(nsINNTPNewsgroup *newsInfo);
-	nsINNTPNewsgroup *SwitchCategoryContainerToNews(MSG_FolderInfoCategoryContainer *catContainerInfo);
+	nsINNTPCategoryContainer *SwitchNewsToCategoryContainer(nsINNTPNewsgroup *newsInfo);
+	nsINNTPNewsgroup *SwitchCategoryContainerToNews(nsINNTPCategoryContainer *catContainerInfo);
 
 	char* m_hostname;
 	PRInt32 m_port;
@@ -335,7 +341,7 @@ protected:
 	MSG_Master* m_master;
 #endif
 
-	MSG_FolderInfo* m_hostinfo;	// Object representing entire newshost in
+	nsIMsgFolder* m_hostinfo;	// Object representing entire newshost in
 								// tree.
 	char* m_optionLines;
 
@@ -671,7 +677,7 @@ nsNNTPHost::ProcessLine(char* line, PRUint32 line_size)
 	if (subscribed && IsCategoryContainer(line))
 	{
 #ifdef HAVE_FOLDERINFO
-		info = new MSG_FolderInfoCategoryContainer(line, set, subscribed,
+		info = new nsINNTPCategoryContainer(line, set, subscribed,
 												   this,
 												   m_hostinfo->GetDepth() + 1);
 #endif
@@ -713,13 +719,13 @@ nsNNTPHost::ProcessLine(char* line, PRUint32 line_size)
 	if (NS_FAILED(rv) || !info) return MK_OUT_OF_MEMORY;
 
 	// for now, you can't subscribe to category by itself.
-    PRBool isCategory;
-    rv = info->IsCategory(&isCategory);
+    nsINNTPCategory *category;
     
-	if (NS_SUCCEEDED(rv) && !isCategory);
-	{
+	if (NS_SUCCEEDED(info->QueryInterface(nsINNTPCategory::IID(),
+                                          (void **)&category))) {
 		XPPtrArray* infolist = (XPPtrArray*) m_hostinfo->GetSubFolders();
 		infolist->Add(info);
+        NS_RELEASE(category);
 	}
 
 	m_groups->Add(info);
@@ -734,7 +740,7 @@ nsNNTPHost::ProcessLine(char* line, PRUint32 line_size)
 }
 
 
-nsresult nsNNTPHost::LoadNewsrc(/* MSG_FolderInfo* hostinfo*/)
+nsresult nsNNTPHost::LoadNewsrc(/* nsIMsgFolder* hostinfo*/)
 {
 	char *ibuffer = 0;
 	PRUint32 ibuffer_size = 0;
@@ -794,9 +800,10 @@ nsresult nsNNTPHost::LoadNewsrc(/* MSG_FolderInfo* hostinfo*/)
 	// of counts will work before category containers are opened.
 	for (PRInt32 i = 0; i < m_groups->GetSize(); i++) {
 		nsINNTPNewsgroup *info = (nsINNTPNewsgroup *) m_groups->GetAt(i);
-        /* should we be using QueryInterface to determine the type? */
-        
-		if (info->GetType() == FOLDER_CATEGORYCONTAINER) {
+        nsINNTPCategoryContainer *catContainer;
+		if (NS_SUCCEEDED(info->QueryInterface(nsINNTPCategoryContainer::IID(),
+                                              (void **)&catContainer))) {
+              
 			char* groupname;
             nsresult rv = info->GetName(&groupname);
             
@@ -806,8 +813,6 @@ nsresult nsNNTPHost::LoadNewsrc(/* MSG_FolderInfo* hostinfo*/)
 			PR_ASSERT(NS_SUCCEEDED(rv) && group);
             
 			if (NS_SUCCEEDED(rv) && group) {
-				MSG_FolderInfoCategoryContainer *catContainer =
-					(MSG_FolderInfoCategoryContainer *) info;
 
 				info->SetFlag(MSG_FOLDER_FLAG_ELIDED | MSG_FOLDER_FLAG_DIRECTORY);
 #ifdef HAVE_MASTER
@@ -815,6 +820,7 @@ nsresult nsNNTPHost::LoadNewsrc(/* MSG_FolderInfo* hostinfo*/)
 					2, m_master);
 #endif
 			}
+            NS_RELEASE(catContainer);
 		}
 	}
 	return 0;
@@ -1567,7 +1573,7 @@ nsNNTPHost::AddGroup(const char *groupName,
     nsMsgGroupRecord *inGroupRecord=NULL;
 #endif
 	nsINNTPNewsgroup *newsInfo = NULL;
-	MSG_FolderInfoCategoryContainer *categoryContainer = NULL;
+	nsINNTPCategoryContainer *categoryContainer = NULL;
 	char* containerName = NULL;
 	PRBool needpaneupdate = PR_FALSE;
     nsresult result = NS_OK;
@@ -1586,7 +1592,7 @@ nsNNTPHost::AddGroup(const char *groupName,
         nsresult rv = FindGroup(containerName, &newsInfo);
         
 		if (NS_SUCCEEDED(rv))
-            categoryContainer = (MSG_FolderInfoCategoryContainer *) newsInfo;
+            categoryContainer = (nsINNTPCategoryContainer *) newsInfo;
 		// if we're not subscribed to container, do that instead.
 
         if (NS_SUCCEEDED(rv))
@@ -1605,7 +1611,9 @@ nsNNTPHost::AddGroup(const char *groupName,
     nsresult rv;
     rv = FindGroup(groupName, &newsInfo);
 	if (NS_SUCCEEDED(rv)) {	// seems to be already added
-		if (!newsInfo->IsSubscribed()) {
+        PRBool subscribed;
+        rv = newsInfo->IsSubscribed(&subscribed);
+		if (NS_SUCCEEDED(rv) && !subscribed) {
 			newsInfo->SetSubscribed(PR_TRUE);
 			XPPtrArray* infolist = (XPPtrArray*) m_hostinfo->GetSubFolders();
 			// don't add it if it's already in the list!
@@ -1657,8 +1665,10 @@ nsNNTPHost::AddGroup(const char *groupName,
             
             rv = FindGroup(fullname, &info);
 			if (NS_SUCCEEDED(rv)) {
-				if (!info->IsSubscribed()) {
-					info->Subscribe(PR_TRUE);
+                PRBool subscribed;
+                rv = info->IsSubscribed(&subscribed);
+				if (NS_SUCCEEDED(rv) && !subscribed) {
+					info->SetSubscribed(PR_TRUE);
 				}
 			} else {
 				char* groupLine = PR_smprintf("%s:", fullname);
@@ -1669,19 +1679,25 @@ nsNNTPHost::AddGroup(const char *groupName,
 			}
 			delete [] fullname;
 		}
-		if (newsInfo->GetType() != FOLDER_CATEGORYCONTAINER)
+
+        // XXX ACK. This is hairy code. Fix this.
+        nsINNTPCategoryContainer *catContainer;
+        nsresult rv =
+            newsInfo->QueryInterface(nsINNTPCategoryContainer::IID(),
+                                     (void **)&catContainer);
+		if (NS_FAILED(rv))
 		{
-			newsInfo = SwitchNewsToCategoryContainer(newsInfo);
+			catContainer = SwitchNewsToCategoryContainer(newsInfo);
 		}
-		PR_ASSERT(newsInfo->GetType() == FOLDER_CATEGORYCONTAINER);
-		if (newsInfo->GetType() == FOLDER_CATEGORYCONTAINER) {
+		PR_ASSERT(catContainer);
+		if (catContainer) {
+            // XXX should this call be on catContainer or newsInfo?
 			newsInfo->SetFlag(MSG_FOLDER_FLAG_ELIDED);
-			MSG_FolderInfoCategoryContainer *catContainer =
-				(MSG_FolderInfoCategoryContainer *) newsInfo;
 #ifdef HAVE_MASTER
 			catContainer->BuildCategoryTree(catContainer, groupName, group,
 											);
 #endif
+            NS_RELEASE(catContainer);
 		}
 	}
 	else if (group->IsCategory() && categoryContainer)
@@ -1704,12 +1720,14 @@ DONE:
     *retval = newsInfo;
 }
 
-nsINNTPNewsgroup *nsNNTPHost::SwitchNewsToCategoryContainer(nsINNTPNewsgroup *newsInfo)
+nsINNTPCategoryContainer *
+nsNNTPHost::SwitchNewsToCategoryContainer(nsINNTPNewsgroup *newsInfo)
 {
 	int groupIndex = m_groups->FindIndex(0, newsInfo);
 	if (groupIndex != -1)
 	{
-		MSG_FolderInfoCategoryContainer *newCatCont = newsInfo->CloneIntoCategoryContainer();
+		nsINNTPCategoryContainer *newCatCont =
+            newsInfo->CloneIntoCategoryContainer();
 		// slip the category container where the newsInfo was.
 		m_groups->SetAt(groupIndex, newCatCont);
 		XPPtrArray* infoList = (XPPtrArray*) m_hostinfo->GetSubFolders();
@@ -1717,12 +1735,14 @@ nsINNTPNewsgroup *nsNNTPHost::SwitchNewsToCategoryContainer(nsINNTPNewsgroup *ne
 		groupIndex = infoList->FindIndex(0, newsInfo);
 		if (groupIndex != -1)
 			infoList->SetAt(groupIndex, newCatCont);
-		newsInfo = newCatCont;
+        return newCatCont;
 	}
-	return newsInfo;
+    // we used to just return newsInfo if groupIndex == -1
+    // now we return NULL and caller has to check for that.
+    return NULL;
 }
 
-nsINNTPNewsgroup *nsNNTPHost::SwitchCategoryContainerToNews(MSG_FolderInfoCategoryContainer *catContainerInfo)
+nsINNTPNewsgroup *nsNNTPHost::SwitchCategoryContainerToNews(nsINNTPCategoryContainer *catContainerInfo)
 {
 	nsINNTPNewsgroup *retInfo = NULL;
 
@@ -1746,9 +1766,12 @@ nsINNTPNewsgroup *nsNNTPHost::SwitchCategoryContainerToNews(MSG_FolderInfoCatego
 nsresult
 nsNNTPHost::RemoveGroup (nsINNTPNewsgroup *newsInfo)
 {
-	if (newsInfo && newsInfo->IsSubscribed()) 
+    PRBool subscribed;
+    if (!newsInfo) return NS_ERROR_NULL_POINTER;
+    nsresult rv = newsInfo->IsSubscribed(&subscribed);
+	if (NS_SUCCEEDED(rv) && subscribed) 
 	{
-		newsInfo->Subscribe(PR_FALSE);
+		newsInfo->SetSubscribed(PR_FALSE);
 #ifdef HAVE_MASTER
 		m_master->BroadcastFolderDeleted (newsInfo);
 #endif
@@ -1829,7 +1852,14 @@ nsNNTPHost::GetNumGroupsNeedingCounts()
 	PRInt32 result = 0;
 	for (int i=0 ; i<num ; i++) {
 		nsINNTPNewsgroup* info = (nsINNTPNewsgroup*) ((*m_groups)[i]);
-		if (info->GetWantNewTotals() && info->IsSubscribed()) {
+        PRBool wantNewTotals, subscribed;
+        nsresult rv;
+        rv = info->IsWantNewTotals(&wantNewTotals);
+        if (NS_SUCCEEDED(rv))
+            rv = info->IsSubscribed(&subscribed);
+		if (NS_SUCCEEDED(rv) &&
+            wantNewTotals &&
+            subscribed) {
 			result++;
 		}
 	}
@@ -1844,7 +1874,16 @@ nsNNTPHost::GetFirstGroupNeedingCounts()
 	int num = m_groups->GetSize();
 	for (int i=0 ; i<num ; i++) {
 		nsINNTPNewsgroup* info = (nsINNTPNewsgroup*) ((*m_groups)[i]);
-		if (info->GetWantNewTotals() && info->IsSubscribed()) {
+        
+        PRBool wantNewTotals, subscribed;
+        nsresult rv;
+        rv = info->IsWantNewTotals(&wantNewTotals);
+        if (NS_SUCCEEDED(rv))
+            rv = info->IsSubscribed(&subscribed);
+        
+		if (NS_SUCCEEDED(rv) &&
+            wantNewTotals &&
+            subscribed) {
 			info->SetWantNewTotals(PR_FALSE);
             char *newsgroupName;
             nsresult rv = info->GetName(&newsgroupName);
@@ -1897,7 +1936,9 @@ PRBool nsNNTPHost::NeedsExtension (const char * /*extension*/)
 nsresult
 nsNNTPHost::AddExtension (const char *ext)
 {
-	if (!QueryExtension(ext))
+    PRBool alreadyHasExtension=FALSE;
+    QueryExtension(ext, &alreadyHasExtension);
+	if (!alreadyHasExtension)
 	{
 		char *ourExt = PL_strdup (ext);
 		if (ourExt)
@@ -2029,16 +2070,18 @@ nsNNTPHost::AddPropertyForGet (const char *property, const char *value)
 	tmp = PL_strdup(value);
 	if (tmp)
 		m_valuesForGet.Add (tmp);
-    return NULL;
+
+    // this is odd. do we need this return value?
+    return NS_OK;
 }
 
 nsresult
-nsNNTPHost::QueryPropertyForGet (const char *property, const char *retval)
+nsNNTPHost::QueryPropertyForGet (const char *property, char **retval)
 {
     *retval=NULL;
 	for (int i = 0; i < m_propertiesForGet.GetSize(); i++)
 		if (!PL_strcasecmp(property, (const char *) m_propertiesForGet.GetAt(i))) {
-            *retval = (const char *) m_valuesForGet.GetAt(i);
+            *retval = m_valuesForGet.GetAt(i);
 			return NS_OK;
         }
     
@@ -2046,7 +2089,8 @@ nsNNTPHost::QueryPropertyForGet (const char *property, const char *retval)
 }
 
 
-void nsNNTPHost::SetPushAuth(PRBool value)
+nsresult
+nsNNTPHost::SetPushAuth(PRBool value)
 {
 	if (m_pushAuth != value) 
 	{
@@ -2072,6 +2116,8 @@ nsNNTPHost::GetURLBase()
 
 int nsNNTPHost::RemoveHost()
 {
+    nsresult rv;
+    
 	if (m_groupFile) {
 		XP_FileClose(m_groupFile);
 		m_groupFile = NULL;
@@ -2088,14 +2134,16 @@ int nsNNTPHost::RemoveHost()
 	// Delete disk storage for summary files etc.
 	// Use notifications through the master to prevent the folder pane 
 	// from loading anything while we're deleting all the newsgroups.
+#ifdef HAVE_MASTER
 	m_master->BroadcastBeginDeletingHost (m_hostinfo);
-	MSG_FolderInfo *tree = m_master->GetFolderTree();
-	MsgERR err = tree->PropagateDelete(&m_hostinfo, PR_TRUE /*deleteStorage*/);
+	nsIMsgFolder *tree = m_master->GetFolderTree();
+    rv = tree->PropagateDelete(&m_hostinfo, PR_TRUE /*deleteStorage*/);
+#endif
 
 	// Here's a little hack to work around the fact that the FE may be holding
 	// a newsgroup open, and part of the delete might have failed. The WinFE does 
 	// this when you delete a news server from the prefs
-	if (eSUCCESS != err && m_hostinfo)
+	if (NS_SUCCEEDED(err) && m_hostinfo)
 	{
 		m_master->BroadcastFolderDeleted (m_hostinfo);
 		tree->RemoveSubFolder (m_hostinfo);
@@ -2103,6 +2151,8 @@ int nsNNTPHost::RemoveHost()
 	m_master->BroadcastEndDeletingHost (m_hostinfo);
 
 	m_master->GetHostTable()->RemoveEntry(this);
+    // XXX And what are we supposed to be doing here? Do we keep
+    // a reference to ourselves?
 	delete this;
 
 	return 0;
@@ -2203,7 +2253,7 @@ nsNNTPHost::SetIsCategoryContainer(const char* groupname, PRBool value, nsMsgGro
 			{
 				if (newsFolder->GetType() == FOLDER_CATEGORYCONTAINER)
 				{
-					MSG_FolderInfoCategoryContainer *catCont = (MSG_FolderInfoCategoryContainer *) newsFolder;
+					nsINNTPCategoryContainer *catCont = (nsINNTPCategoryContainer *) newsFolder;
 					newsFolder = SwitchCategoryContainerToNews(catCont);
 				}
 				if (newsFolder)
@@ -2648,9 +2698,17 @@ void nsNNTPHost::GroupNotFound(const char *groupName, PRBool opening)
 			nsINNTPNewsgroup *catCont = GetCategoryContainerFolderInfo(groupName);
 			if (catCont)
 			{
-				MSG_FolderInfo *parentCategory = catCont->FindParentOf(newsInfo);
-				if (parentCategory)
-					parentCategory->RemoveSubFolder(newsInfo);
+                nsIMsgFolder *catFolder;
+                nsIMsgFolder *parentCategory;
+                nsresult rv;
+                rv = catCont->QueryInterface(nsIMsgFolder::IID(),
+                                             (void **)&catFolder);
+                if (NS_SUCCEEDED(rv)) {
+                    rv = catFolder->FindParentOf(newsInfo,&parentCategory);
+                    if (NS_SUCCEEDED(rv))
+                        parentCategory->RemoveSubFolder(newsInfo);
+                    NS_RELEASE(catFolder);
+                }
 			}
 		}
 		else if (newsInfo)
@@ -2666,6 +2724,7 @@ void nsNNTPHost::GroupNotFound(const char *groupName, PRBool opening)
 			infolist->Remove(newsInfo);
 			m_groups->Remove(newsInfo);
 			m_dirty = PR_TRUE;
+            NS_RELEASE(newsInfo);
 		}
 	}
 }
@@ -2686,7 +2745,7 @@ int nsNNTPHost::ReorderGroup (nsINNTPNewsgroup *groupToMove, nsINNTPNewsgroup *g
 			// Not necessary to remove from infoList here because the folderPane does that (urk)
 
 			// Unsubscribed groups are in the lists, but not in the view
-			MSG_FolderInfo *group = NULL;
+			nsIMsgFolder *group = NULL;
 			int idxInView, idxInData;
 			int idxInHostInfo = 0;
 			PRBool	foundIdxInHostInfo = PR_FALSE;
@@ -2694,7 +2753,7 @@ int nsNNTPHost::ReorderGroup (nsINNTPNewsgroup *groupToMove, nsINNTPNewsgroup *g
 			for (idxInData = 0, idxInView = -1; idxInData < m_groups->GetSize(); idxInData++)
 			{
 				group = m_groups->GetAt (idxInData);
-				MSG_FolderInfo *groupInHostInfo = (MSG_FolderInfo *) infoList->GetAt(idxInHostInfo);
+				nsIMsgFolder *groupInHostInfo = (nsIMsgFolder *) infoList->GetAt(idxInHostInfo);
 				if (group->CanBeInFolderPane())
 					idxInView++;
 				if (group == groupToMoveBefore)
