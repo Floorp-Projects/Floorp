@@ -661,8 +661,11 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
                                       NS_LITERAL_STRING("true"), PR_FALSE);
 
                 if (! (mFlags & eDontTestEmpty)) {
+                    NS_NAMED_LITERAL_STRING(true_, "true");
+                    NS_NAMED_LITERAL_STRING(false_, "false");
+
                     realKid->SetAttribute(kNameSpaceID_None, nsXULAtoms::empty,
-                                          isempty ? NS_LITERAL_STRING("true") : NS_LITERAL_STRING("false"),
+                                          isempty ? true_ : false_,
                                           PR_FALSE);
                 }
             }
