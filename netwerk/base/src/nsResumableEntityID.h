@@ -46,7 +46,7 @@ public:
     ~nsResumableEntityID();
 
 private:
-    PRUint32 mSize;
+    PRUint64 mSize;
     nsCString mLastModified;
     nsCString mEntityTag;
 };

@@ -243,14 +243,12 @@ DataRequestForwarder::GetEntityID(nsIResumableEntityID* *aEntityID)
 }
 
 NS_IMETHODIMP
-DataRequestForwarder::AsyncOpenAt(nsIStreamListener *,
-                                  nsISupports *,
-                                  unsigned int, 
-                                  nsIResumableEntityID *)
+DataRequestForwarder::ResumeAt(PRUint64, 
+                               nsIResumableEntityID *)
 {
     // We shouldn't get here. This class only exists in the middle of a
     // request
-    NS_NOTREACHED("DataRequestForwarder::AsyncOpenAt");
+    NS_NOTREACHED("DataRequestForwarder::ResumeAt");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -384,7 +382,7 @@ nsFtpState::nsFtpState()
     
     mControlConnection = nsnull;
     mDRequestForwarder = nsnull;
-    mFileSize          = PRUint32(-1);
+    mFileSize          = LL_MaxUint();
 
     // make sure handler stays around
     NS_ADDREF(gFtpHandler);
@@ -1330,8 +1328,10 @@ nsFtpState::S_size() {
 FTP_STATE
 nsFtpState::R_size() {
     if (mResponseCode/100 == 2) {
-        mFileSize = atoi(mResponseMsg.get()+4);
-        if (NS_FAILED(mChannel->SetContentLength(mFileSize))) return FTP_ERROR;
+        PR_sscanf(mResponseMsg.get() + 4, "%llu", &mFileSize);
+        PRUint32 size32;
+        LL_L2UI(size32, mFileSize);
+        if (NS_FAILED(mChannel->SetContentLength(size32))) return FTP_ERROR;
     }
 
     // We may want to be able to resume this
@@ -1386,7 +1386,7 @@ nsFtpState::R_mdtm() {
          entEqual)) {
         return FTP_S_REST;
     } else {
-        mInternalError = NS_ERROR_NOT_RESUMABLE;
+        mInternalError = NS_ERROR_ENTITY_CHANGED;
         mResponseMsg.Truncate();
         return FTP_ERROR;
     }

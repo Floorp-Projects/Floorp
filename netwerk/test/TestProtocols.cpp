@@ -83,6 +83,8 @@
 #include "prlog.h"
 #include "prtime.h"
 
+#include "nsInt64.h"
+
 #if defined(PR_LOGGING)
 //
 // set NSPR_LOG_MODULES=Test:5
@@ -100,7 +102,7 @@ static PRBool gVerbose = PR_FALSE;
 static nsIEventQueue* gEventQ = nsnull;
 static PRBool gAskUserForInput = PR_FALSE;
 static PRBool gResume = PR_FALSE;
-static PRUint32 gStartAt = 0;
+static PRUint64 gStartAt = 0;
 
 static const char* gLastMod = NULL;
 static const char* gETag = NULL;
@@ -178,7 +180,7 @@ public:
   NS_DECL_ISUPPORTS
 
   const char* Name() { return mURLString.get(); }
-  PRInt32   mBytesRead;
+  nsInt64   mBytesRead;
   PRTime    mTotalTime;
   PRTime    mConnectTime;
   nsCString mURLString;
@@ -418,10 +420,10 @@ InputTestConsumer::OnStartRequest(nsIRequest *request, nsISupports* context)
       nsCOMPtr<nsIResumableEntityID> entityID;
       nsresult rv = resChannel->GetEntityID(getter_AddRefs(entityID));
       if (NS_SUCCEEDED(rv) && entityID) {
-          PRUint32 size;
+          PRUint64 size;
           if (NS_SUCCEEDED(entityID->GetSize(&size)) &&
-              size != PRUint32(-1))
-              LOG(("\tSize: %d\n", size));
+              LL_NE(size, LL_MaxUint()))
+              LOG(("\tSize: %llu\n", size));
           else
               LOG(("\tSize: Unknown\n"));
           nsCAutoString lastModified;
@@ -533,10 +535,10 @@ InputTestConsumer::OnStopRequest(nsIRequest *request, nsISupports* context,
      }
     LOG(("\tTime to connect: %.3f seconds\n", connectTime));
     LOG(("\tTime to read: %.3f seconds.\n", readTime));
-    LOG(("\tRead: %d bytes.\n", info->mBytesRead));
-    if (!info->mBytesRead) {
+    LOG(("\tRead: %lld bytes.\n", info->mBytesRead.mValue));
+    if (info->mBytesRead == nsInt64(0)) {
     } else if (readTime > 0.0) {
-      LOG(("\tThroughput: %.0f bps.\n", (info->mBytesRead*8)/readTime));
+      LOG(("\tThroughput: %.0f bps.\n", (PRFloat64)(info->mBytesRead*nsInt64(8))/readTime));
     } else {
       LOG(("\tThroughput: REAL FAST!!\n"));
     }
@@ -676,14 +678,10 @@ nsresult StartLoadingURL(const char* aUrlString)
                     id->SetSize(gTotalSize);
                 }
             }
-            rv = res->AsyncOpenAt(listener,
-                                  info,
-                                  gStartAt,
-                                  id);
-        } else {            
-            rv = pChannel->AsyncOpen(listener,  // IStreamListener consumer
-                                     info);
+            res->ResumeAt(gStartAt, id);
         }
+        rv = pChannel->AsyncOpen(listener,  // IStreamListener consumer
+                                 info);
 
         if (NS_SUCCEEDED(rv)) {
             gKeepRunning += 1;
@@ -807,7 +805,7 @@ main(int argc, char* argv[])
 
             if (PL_strcasecmp(argv[i], "-resume") == 0) {
                 gResume = PR_TRUE;
-                gStartAt = atoi(argv[++i]);
+                PR_sscanf(argv[++i], "%llu", &gStartAt);
                 continue;
             }
 

@@ -46,7 +46,7 @@ interface nsIResumableEntityID : nsISupports {
      * Size of the entity.
      * @throw NS_ERROR_NOT_AVAILABLE if the size is not known.
      */
-    attribute unsigned long size;
+    attribute unsigned long long size;
     
     /**
      * An opaque, but human-readable ASCII string specifying the date when the

@@ -45,6 +45,7 @@
 #include "nsHttpAuthCache.h"
 #include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
+#include "nsInt64.h"
 
 #include "nsIHttpChannel.h"
 #include "nsIHttpChannelInternal.h"
@@ -211,7 +212,7 @@ private:
 
     PRUint32                          mLoadFlags;
     PRUint32                          mStatus;
-    PRUint32                          mLogicalOffset;
+    nsInt64                           mLogicalOffset;
     PRUint8                           mCaps;
 
     nsCString                         mContentTypeHint;
@@ -232,7 +233,7 @@ private:
 
     // Resumable channel specific data
     nsCOMPtr<nsIResumableEntityID>    mEntityID;
-    PRUint32                          mStartPos;
+    PRUint64                          mStartPos;
 
     // redirection specific data.
     PRUint8                           mRedirectionLimit;

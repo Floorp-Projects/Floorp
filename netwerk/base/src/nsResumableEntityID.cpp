@@ -44,21 +44,21 @@
 NS_IMPL_ISUPPORTS1(nsResumableEntityID, nsIResumableEntityID)
     
 nsResumableEntityID::nsResumableEntityID() :
-    mSize(PR_UINT32_MAX) {
+    mSize(LL_MaxUint()) {
 }
 
 nsResumableEntityID::~nsResumableEntityID() {}
 
 NS_IMETHODIMP
-nsResumableEntityID::GetSize(PRUint32 *aSize) {
-    if (mSize == PR_UINT32_MAX)
+nsResumableEntityID::GetSize(PRUint64 *aSize) {
+    if (LL_EQ(mSize, LL_MaxUint()))
         return NS_ERROR_NOT_AVAILABLE;
     *aSize = mSize;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsResumableEntityID::SetSize(PRUint32 aSize) {
+nsResumableEntityID::SetSize(PRUint64 aSize) {
     mSize = aSize;
     return NS_OK;
 }
@@ -89,13 +89,13 @@ nsResumableEntityID::GetEntityTag(nsACString& aTag) {
 
 NS_IMETHODIMP
 nsResumableEntityID::Equals(nsIResumableEntityID *other, PRBool *ret) {
-    PRUint32 size;
+    PRUint64 size;
     nsCAutoString lastMod;
     nsCAutoString entityTag;
 
     nsresult rv = other->GetSize(&size);
     if (NS_FAILED(rv))
-        size = PR_UINT32_MAX;
+        size = LL_MaxUint();
 
     rv = other->GetLastModified(lastMod);
     if (NS_FAILED(rv))
@@ -109,7 +109,7 @@ nsResumableEntityID::Equals(nsIResumableEntityID *other, PRBool *ret) {
     // exactly the same way for both of these entity IDs (same timezone, same
     // format, etc).
     *ret = mEntityTag.Equals(entityTag) && lastMod.Equals(mLastModified) &&
-           (mSize == size);
+           LL_EQ(mSize, size);
 
     return NS_OK;
 }

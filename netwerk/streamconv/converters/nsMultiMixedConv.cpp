@@ -89,7 +89,7 @@ public:
   NS_DECL_NSIMULTIPARTCHANNEL
 
 protected:
-  virtual ~nsPartChannel();
+  ~nsPartChannel();
 
 protected:
   nsCOMPtr<nsIChannel>    mMultipartChannel;
@@ -190,6 +190,7 @@ nsPartChannel::Cancel(nsresult aStatus)
 {
     // Cancelling an individual part must not cancel the underlying
     // multipart channel...
+    // XXX but we should stop sending data for _this_ part channel!
     mStatus = aStatus;
     return NS_OK;
 }
@@ -199,6 +200,7 @@ nsPartChannel::Suspend(void)
 {
     // Suspending an individual part must not suspend the underlying
     // multipart channel...
+    // XXX why not?
     return NS_OK;
 }
 
@@ -207,6 +209,7 @@ nsPartChannel::Resume(void)
 {
     // Resuming an individual part must not resume the underlying
     // multipart channel...
+    // XXX why not?
     return NS_OK;
 }
 

@@ -111,6 +111,8 @@ public:
     nsresult SetupState(PRUint32 startPos, nsIResumableEntityID* entityID);
     nsresult GenerateCacheKey(nsACString &cacheKey);
     
+    nsresult AsyncOpenAt(nsIStreamListener *listener, nsISupports *ctxt,
+                         PRUint64 startPos, nsIResumableEntityID* entityID);
 
 protected:
     nsCOMPtr<nsIURI>                mOriginalURI;
@@ -153,6 +155,7 @@ protected:
     nsCOMPtr<nsICacheEntryDescriptor> mCacheEntry;
     nsCOMPtr<nsIProxyInfo>            mProxyInfo;
     nsCOMPtr<nsIResumableEntityID>    mEntityID;
+    PRUint64                          mStartPos;
 };
 
 #endif /* nsFTPChannel_h___ */

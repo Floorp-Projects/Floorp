@@ -200,10 +200,18 @@
 
 
 /**
- * XXX document me
+ * This request is not resumable, but it was tried to resume it, or to
+ * request resume-specific data.
  */
 #define NS_ERROR_NOT_RESUMABLE \
     NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 25)
+
+/**
+ * It was attempted to resume the request, but the entity has changed in the
+ * meantime.
+ */
+#define NS_ERROR_ENTITY_CHANGED \
+    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 32)
 
 /**
  * The request failed as a result of a detected redirection loop.

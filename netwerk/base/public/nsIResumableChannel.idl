@@ -42,27 +42,29 @@ interface nsIResumableEntityID;
 [scriptable, uuid(87cccd68-1dd2-11b2-8b66-cbf10a1b6438)]
 interface nsIResumableChannel : nsISupports {
     /**
-     * Open this channel, and read starting at the specified offset.
-     * @param listener - As for asyncOpen
-     * @param ctxt - As for asyncOpen
-     * @param startPos - the starting offset, in bytes, to use to download
-     * @param info - information about the file, to match before obtaining
-     *  the file. Pass null to use anything.
-     * OnStartRequest wil have a status of NS_ERROR_NOT_RESUMABLE if the file
-     *  cannot be resumed, eg because the server doesn't support this, or the
-     *  nsIFileInfo doesn't match. This error may be occur even if startPos
-     *  is 0, so that the front end can warn the user.
+     * Prepare this channel for resuming. The request will not start until
+     * asyncOpen or open is called. Calling resumeAt after open or asyncOpen
+     * has been called has undefined behaviour.
      *
-     * The request given to the nsIStreamListener will be QIable to
-     * nsIResumableInfo
+     * @param startPos the starting offset, in bytes, to use to download
+     * @param entityID information about the file, to match before obtaining
+     *  the file. Pass null to use anything.
+     *
+     * During OnStartRequest, this channel will have a status of
+     *  NS_ERROR_NOT_RESUMABLE if the file cannot be resumed, eg because the
+     *  server doesn't support this. This error may occur even if startPos
+     *  is 0, so that the front end can warn the user.
+     * Similarly, the status of this channel during OnStartRequest may be
+     *  NS_ERROR_ENTITY_CHANGED, which indicates that the entity has changed,
+     *  as indicated by a changed entityID.
+     * In both of these cases, no OnDataAvailable will be called, and
+     *  OnStopRequest will immediately follow with the same status code.
      */
-    void asyncOpenAt(in nsIStreamListener listener,
-                     in nsISupports ctxt,
-                     in unsigned long startPos,
-                     in nsIResumableEntityID entityID);
+    void resumeAt(in unsigned long long startPos,
+                  in nsIResumableEntityID entityID);
 
     /**
-     * The nsIResumableEntityID for this uri. Available after OnStartRequest
+     * The nsIResumableEntityID for this URI. Available after OnStartRequest.
      * If this attribute is null, then this load is not resumable.
      */
     readonly attribute nsIResumableEntityID entityID;

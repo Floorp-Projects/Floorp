@@ -68,6 +68,7 @@
 #include "nsEscape.h"
 #include "nsICookieService.h"
 #include "nsIResumableChannel.h"
+#include "nsInt64.h"
 
 static NS_DEFINE_CID(kStreamListenerTeeCID, NS_STREAMLISTENERTEE_CID);
 
@@ -99,7 +100,7 @@ nsHttpChannel::nsHttpChannel()
     , mPostID(0)
     , mRequestTime(0)
     , mAuthContinuationState(nsnull)
-    , mStartPos(0)
+    , mStartPos(LL_MaxUint())
     , mRedirectionLimit(gHttpHandler->RedirectionLimit())
     , mIsPending(PR_FALSE)
     , mApplyConversion(PR_TRUE)
@@ -537,7 +538,7 @@ nsHttpChannel::SetupTransaction()
 
     if (mResuming) {
         char buf[32];
-        PR_snprintf(buf, sizeof(buf), "bytes=%u-", mStartPos);
+        PR_snprintf(buf, sizeof(buf), "bytes=%llu-", mStartPos);
         mRequestHead.SetHeader(nsHttp::Range, nsDependentCString(buf));
 
         if (mEntityID) {
@@ -760,7 +761,7 @@ nsHttpChannel::ProcessResponse()
     case 412: // Precondition failed
     case 416: // Invalid range
         if (mResuming) {
-            Cancel(NS_ERROR_NOT_RESUMABLE);
+            Cancel(NS_ERROR_ENTITY_CHANGED);
             rv = CallOnStartRequest();
             break;
         }
@@ -829,7 +830,7 @@ nsHttpChannel::ProcessNormal()
             PRBool equal;
             rv = mEntityID->Equals(id, &equal);
             if (NS_FAILED(rv) || !equal)
-                Cancel(NS_ERROR_NOT_RESUMABLE);
+                Cancel(NS_ERROR_ENTITY_CHANGED);
         }
     }
 
@@ -1346,16 +1347,16 @@ nsHttpChannel::CheckCache()
     // of the cached content, then the cached response is partial...
     // either we need to issue a byte range request or we need to refetch the
     // entire document.
-    PRUint32 contentLength = (PRUint32) mCachedResponseHead->ContentLength();
-    if (contentLength != PRUint32(-1)) {
+    nsInt64 contentLength = mCachedResponseHead->ContentLength();
+    if (contentLength != nsInt64(-1)) {
         PRUint32 size;
         rv = mCacheEntry->GetDataSize(&size);
         if (NS_FAILED(rv)) return rv;
 
-        if (size != contentLength) {
+        if (nsInt64(size) != contentLength) {
             LOG(("Cached data size does not match the Content-Length header "
-                 "[content-length=%u size=%u]\n", contentLength, size));
-            if ((size < contentLength) && mCachedResponseHead->IsResumable()) {
+                 "[content-length=%lld size=%u]\n", PRInt64(contentLength), size));
+            if ((nsInt64(size) < contentLength) && mCachedResponseHead->IsResumable()) {
                 // looks like a partial entry.
                 rv = SetupByteRangeRequest(size);
                 if (NS_FAILED(rv)) return rv;
@@ -1819,6 +1820,16 @@ nsHttpChannel::SetupReplacementChannel(nsIURI       *newURI,
     nsCOMPtr<nsIEncodedChannel> encodedChannel = do_QueryInterface(httpChannel);
     if (encodedChannel)
         encodedChannel->SetApplyConversion(mApplyConversion);
+
+    // transfer the resume information
+    if (mResuming) {
+        nsCOMPtr<nsIResumableChannel> resumableChannel(do_QueryInterface(newChannel));
+        if (!resumableChannel) {
+            NS_WARNING("Got asked to resume, but redirected to non-resumable channel!");
+            return NS_ERROR_NOT_RESUMABLE;
+        }
+        resumableChannel->ResumeAt(mStartPos, mEntityID);
+    }
 
     return NS_OK;
 }
@@ -2950,7 +2961,8 @@ nsHttpChannel::GetContentLength(PRInt32 *value)
     if (!mResponseHead)
         return NS_ERROR_NOT_AVAILABLE;
 
-    *value = mResponseHead->ContentLength();
+    // XXX truncates to 32 bit
+    LL_L2I(*value, mResponseHead->ContentLength());
     return NS_OK;
 }
 
@@ -3688,8 +3700,8 @@ nsHttpChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
         // of a byte range request, the content length stored in the cached
         // response headers is what we want to use here.
 
-        PRUint32 progressMax = mResponseHead->ContentLength();
-        PRUint32 progress = mLogicalOffset + count;
+        nsInt64 progressMax(mResponseHead->ContentLength());
+        nsInt64 progress = mLogicalOffset + nsInt64(count);
         NS_ASSERTION(progress <= progressMax, "unexpected progress values");
 
         OnTransportStatus(nsnull, transportStatus, progress, progressMax);
@@ -3856,15 +3868,13 @@ nsHttpChannel::IsFromCache(PRBool *value)
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsHttpChannel::AsyncOpenAt(nsIStreamListener* aListener,
-                           nsISupports* aCtxt,
-                           PRUint32 aStartPos,
-                           nsIResumableEntityID* aEntityID)
+nsHttpChannel::ResumeAt(PRUint64 aStartPos,
+                        nsIResumableEntityID* aEntityID)
 {
     mEntityID = aEntityID;
     mStartPos = aStartPos;
     mResuming = PR_TRUE;
-    return AsyncOpen(aListener, aCtxt);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -3881,7 +3891,7 @@ nsHttpChannel::GetEntityID(nsIResumableEntityID** aEntityID)
         return NS_OK;
     }
 
-    PRUint32 size = PR_UINT32_MAX;
+    PRUint64 size = LL_MaxUint();
     nsCAutoString etag, lastmod;
     if (mResponseHead) {
         size = mResponseHead->TotalEntitySize();
