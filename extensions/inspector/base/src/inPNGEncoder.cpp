@@ -48,7 +48,7 @@ NS_IMPL_ISUPPORTS1(inPNGEncoder, inIPNGEncoder);
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static void gPNGErrorHandler(png_structp aPNGStruct, png_const_charp aMsg);
+PR_STATIC_CALLBACK(void) gPNGErrorHandler(png_structp aPNGStruct, png_const_charp aMsg);
 
 ///////////////////////////////////////////////////////////////////////////////
 /// inIPNGEncoder
@@ -114,7 +114,7 @@ inPNGEncoder::ReverseRGB(PRUint32 aWidth, PRUint32 aHeight, PRUint8* aBits)
   }
 }
 
-static void gPNGErrorHandler(png_structp aPNGStruct, png_const_charp aMsg)
+void gPNGErrorHandler(png_structp aPNGStruct, png_const_charp aMsg)
 {
   printf("ERROR ENCODING PNG IMAGE\n");
 }
