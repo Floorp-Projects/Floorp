@@ -355,11 +355,11 @@ function SendPage()
 function FillInTooltip ( tipElement )
 {
   var retVal = false;
-  var button = document.getElementById('replaceMe');
-  if ( button ) {  
-    var tipText = tipElement.getAttribute('tooltiptext');
+  var textNode = document.getElementById("TOOLTIP_tooltipText");
+  if ( textNode ) {  
+    var tipText = tipElement.getAttribute("tooltiptext");
     if ( tipText != "" ) {
-      button.setAttribute('value', tipText);
+      textNode.setAttribute('value', tipText);
       retVal = true;
     }
   }

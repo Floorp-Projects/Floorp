@@ -161,12 +161,9 @@
 	</box>
 	
 <popupset id="aTooltipSet">
-  <popup id="aTooltip" 
-    oncreate="return FillInTooltip(document.tooltipNode);"
-    style="border: thin solid black;"> 
-   <titledbutton id="replaceMe" align="left" crop="right" class="borderless"
-     value="Empty Tooltip" />
- </popup>
+  <popup id="aTooltip" class="tooltip" oncreate="return FillInTooltip(document.tooltipNode);" > 
+    <text id="TOOLTIP_tooltipText"/>
+  </popup>
 </popupset>
 
 </overlay>		

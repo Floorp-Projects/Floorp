@@ -463,7 +463,8 @@
 
   <binding id="toolbar">
     <content>
-      <xul:toolbargrippy onclick="var v = parentNode;
+      <xul:toolbargrippy inherits="grippytooltiptext:tooltiptext" 
+                         onclick="var v = parentNode;
                                   var attr = v.getAttribute('collapsed');
                                   if (attr == 'true') {
                                     v.removeAttribute('collapsed');
