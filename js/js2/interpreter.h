@@ -47,26 +47,12 @@ namespace Interpreter {
         explicit Context(World& world, JSScope* aGlobal)
             : mWorld(world), mGlobal(aGlobal), mLinkage(0), mActivation(0) {}
 
-        JSScope* getGlobalObject() { return mGlobal; }
-
-        JSScope* setGlobalObject(JSScope* aGlobal)
-        {
-            JSScope* oldGlobal = mGlobal;
-            mGlobal = aGlobal;
-            return oldGlobal;
-        }
-
-        InstructionIterator getPC() 
-        {
-            return mPc;
-        }
+        World& getWorld()           { return mWorld; }
+        JSScope* getGlobalObject()  { return mGlobal; }
+        InstructionIterator getPC() { return mPC; }
         
-        JSValues &getRegisters();
-        
-        ICodeModule *getICode()
-        {
-            return mICode;
-        }
+        JSValues& getRegisters();
+        ICodeModule* getICode();
 
         class Listener {
         public:
@@ -96,8 +82,7 @@ namespace Interpreter {
         Linkage* mLinkage;
         std::vector<Listener*> mListeners;
         Activation* mActivation;
-        ICodeModule *mICode;
-        InstructionIterator mPc;
+        InstructionIterator mPC;
         
     }; /* class Context */
 
