@@ -1203,7 +1203,6 @@ void nsDocument::ToXIF(nsString & aBuffer, PRBool aUseSelection)
 {
   
   nsXIFConverter  converter(aBuffer);
-  nsIDOMNode *root = nsnull;
   // call the function
 
   converter.AddStartTag("section");
@@ -1212,8 +1211,10 @@ void nsDocument::ToXIF(nsString & aBuffer, PRBool aUseSelection)
   converter.AddEndTag("section_head");
 
   converter.AddStartTag("section_body");
-  if (NS_OK == GetFirstChild(&root)) 
-  {
+
+  nsIDOMElement* root = nsnull;
+  if (NS_OK == GetDocumentElement(&root)) 
+  {  
     ToXIF(converter,root);
     NS_RELEASE(root);
   }
