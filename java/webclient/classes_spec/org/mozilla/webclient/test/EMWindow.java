@@ -50,7 +50,7 @@ import org.mozilla.util.Assert;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EMWindow.java,v 1.3 2000/04/12 18:06:21 ashuk%eng.sun.com Exp $
+ * @version $Id: EMWindow.java,v 1.4 2000/04/20 03:16:15 ashuk%eng.sun.com Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlFactory
 
@@ -316,7 +316,7 @@ public void delete()
 		currentPage.findNextInPage(false);
 	      }
 	      else if (command.equals("View Page Source")) {
-		currentPage.getSourceBytes(viewMode);
+		// currentPage.getSourceBytes(viewMode);
 		viewMode = !viewMode;
 	      }
 	    }
