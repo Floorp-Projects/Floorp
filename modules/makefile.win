@@ -51,7 +51,7 @@ DIRS=                   \
 	libutil         \
 	libimg          \
 	libfont         \
-!ifdef JAVA_OR_OJI
+!ifdef JAVA_OR_NSJVM
 !ifdef EDITOR
 	edtplug         \
 !endif
@@ -71,13 +71,14 @@ DIRS=                   \
 !ifdef MOZ_SPELLCHK
 	spellchk        \
 !endif
-	rdf				\
-    schedulr	\
-	xml	\
+	rdf		\
+	schedulr	\
+	xml	        \
 !ifdef MOZ_CALENDAR
 	calendar \
 	libnls \
 !endif
+	plugin		\
 	oji
 
 #//------------------------------------------------------------------------
