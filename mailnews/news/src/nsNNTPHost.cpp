@@ -1193,8 +1193,12 @@ nsNNTPHost::GetNewsrcFile(char *newshostname, nsFileSpec &path, nsFileSpec &news
 }
 
 
-nsresult nsNNTPHost::LoadNewsrc(const char *uri/* , nsIMsgFolder* hostinfo*/)
+nsresult nsNNTPHost::LoadNewsrc(const char *uri /* , nsIMsgFolder* hostinfo*/)
 {
+#ifdef DEBUG_sspitzer
+    printf("nsNNTPHost::LoadNewsrc(%s)\n", uri);
+#endif
+
 	nsresult rv = NS_OK;
 
     /*	m_hostinfo = hostinfo; 
@@ -2757,7 +2761,7 @@ nsresult
 nsNNTPHost::SetPrettyName(const char* name, const char* prettyname)
 {
 	nsMsgGroupRecord* group = FindOrCreateGroup(name);
-	if (!group) return MK_OUT_OF_MEMORY;
+	if (!group) return NS_ERROR_OUT_OF_MEMORY;
 	nsresult rv = group->SetPrettyName(prettyname);
 	if (NS_FAILED(rv))
 	{
@@ -2873,7 +2877,7 @@ nsresult
 nsNNTPHost::SetGroupNeedsExtraInfo(const char *name, PRBool value)
 {
 	nsMsgGroupRecord* group = FindOrCreateGroup(name);
-	if (!group) return MK_OUT_OF_MEMORY;
+	if (!group) return NS_ERROR_OUT_OF_MEMORY;
 	nsresult rv = group->SetNeedsExtraInfo(value);
 	if (NS_SUCCEEDED(rv)) m_groupTreeDirty |= 1;
 	return rv;
@@ -3194,7 +3198,7 @@ nsNNTPHost::FindOrCreateGroup(const char* name,
 		PR_ASSERT(length > 0);	// names can't contain ".." or end in
 								// a ".".
 		if (length <= 0) return NULL;
-		PR_ASSERT(length < sizeof(buf));
+		PR_ASSERT((unsigned int)length < sizeof(buf));
 		if ((unsigned int)length >= sizeof(buf)) return NULL;
 		PL_strncpyz(buf, start, length + 1);
 		buf[length] = '\0';
@@ -3670,7 +3674,6 @@ nsNNTPHost::getFolderFor(_type * _class) {\
 MSG_IMPL_GETFOLDER(nsINNTPNewsgroup)
 MSG_IMPL_GETFOLDER(nsINNTPCategoryContainer)
 
-// this is just to make sure we can instantiate a news host
 nsresult
 NS_NewNNTPHost(nsINNTPHost **aNNTPHost, const char* name, PRUint32 port)
 {

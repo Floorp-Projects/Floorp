@@ -56,6 +56,8 @@
 #include "nsNNTPHost.h"
 #include "nsNNTPArticleSet.h"
 
+#include "nsNewsUtils.h"
+
 /* #define UNREADY_CODE	*/  /* mscott: generic flag for hiding access to url struct and active entry which are now gone */
 
 /*#define CACHE_NEWSGRP_PASSWORD*/
@@ -465,12 +467,10 @@ PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer)
   PRInt32 status = 0;
   PRBool bVal = FALSE;
   char * hostAndPort = 0;
-  int32 port = 0;
   char *group = 0;
   char *messageID = 0;
   char *commandSpecificData = 0;
   PRBool cancel = FALSE;
-  char* colon;
   nsINNTPNewsgroupPost *message=NULL;
   //char *message_id = 0;
 
@@ -519,29 +519,35 @@ PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer)
   if (status < 0)
 	goto FAIL;
 
-  colon = PL_strchr (hostAndPort, ':');
-  if (colon) 
-  {
-	*colon = '\0';
-	sscanf (colon+1, " %u ", &port);
-  }
-
-  if (colon) *colon = ':';
   // if we don't have a news host already, go get one...
   if (m_newsHost == nsnull)
   {
-	  rv = NS_NewNNTPHost(&m_newsHost, hostAndPort, port ? port : NEWS_PORT);
-	  // save it on our url for future use....
+      char *colon = nsnull;
+      PRUint32 port = 0;
+ 
+      colon = PL_strchr (hostAndPort, ':');
+      if (colon) {
+          *colon = '\0';  /* turn hostname:port into hostname */
+          port = (PRUint32) strtol(colon + 1, (char **)nsnull, 10 /* base 10 */);
+      }
+      // at this point, hostAndPort is really just the hostname
+      // because we put a '\0' in for the colon, if there was one
+
+	  rv = NS_NewNNTPHost(&m_newsHost, hostAndPort /* really just hostname */, port ? port : NEWS_PORT);
 
 	  if (NS_FAILED(rv) || (m_newsHost == nsnull)) {
 			status = -1;
 			goto FAIL;
 	  }
 
+	  // save it on our url for future use....
 	  m_runningURL->SetNntpHost(m_newsHost);
 
 	  // read in the newsrc file now, to build up the host correctly.
-	  rv = m_newsHost->LoadNewsrc("news://news.mozilla.org");
+      char *newshosturi = PR_smprintf("%s/%s", kNewsRootURI, hostAndPort /* really just hostname */);
+	  rv = m_newsHost->LoadNewsrc(newshosturi);
+      PR_FREEIF(newshosturi);
+
 	  if (NS_FAILED(rv)) {
 			status = -1;
 			goto FAIL;
@@ -679,7 +685,7 @@ PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer)
 			userName = nsCRT::strdup(unamePwd);
 			password = nsCRT::strdup(colon+1);
 			*colon = ':';
-			PR_Free(unamePwd);
+			PR_FREEIF(unamePwd);
 		}
 		else 
 		{
@@ -690,7 +696,7 @@ PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer)
 		    char *mungedUsername = HG64643(userName);
             cd->newsgroup->SetUsername(mungedUsername);
 			PR_FREEIF(mungedUsername);
-			PR_Free(userName);
+			PR_FREEIF(userName);
 		}
 		if (password)
 		{
@@ -698,7 +704,7 @@ PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer)
             cd->newsgroup->SetPassword(mungedPassword);
 
 			PR_FREEIF(mungedPassword);
-			PR_Free(password);
+			PR_FREEIF(password);
 		}
 
     }
@@ -2864,7 +2870,7 @@ PRInt32 nsNNTPProtocol::XoverSend()
 				m_lastArticle);
 
 #ifdef DEBUG_sspitzer
-	printf("XOVER %ld-%ld\n", m_firstArticle, m_lastArticle);
+	printf("XOVER %d-%d\n", m_firstArticle, m_lastArticle);
 #endif
 
 	NNTP_LOG_WRITE(outputBuffer);
