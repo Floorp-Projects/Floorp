@@ -731,7 +731,7 @@ ifdef SHARED_LIBRARY_LIBS
 	@for lib in $(SHARED_LIBRARY_LIBS); do $(AR_EXTRACT) $${lib}; $(CLEANUP2); done
 endif # SHARED_LIBRARY_LIBS
 endif # NO_LD_ARCHIVE_FLAGS
-	$(MKSHLIB) $(OBJS) $(LOBJS) $(SUB_SHLOBJS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS) $(EXTRA_LIBS) $(DEF_FILE)
+	$(MKSHLIB) $(OBJS) $(LOBJS) $(SUB_SHLOBJS) $(LDFLAGS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS) $(EXTRA_LIBS) $(DEF_FILE)
 	@rm -f foodummyfilefoo $(SUB_SHLOBJS)
 else
 	@touch no-such-file.vms; rm -f no-such-file.vms $(SUB_LOBJS)
