@@ -301,23 +301,26 @@ NS_IMETHODIMP
 nsHTMLOptionElement::GetDefaultSelected(PRBool* aDefaultSelected)
 {
   nsHTMLValue val;                                                 
-  nsresult rv = mInner.GetHTMLAttribute(nsHTMLAtoms::selected, val);       
-  *aDefaultSelected = (NS_CONTENT_ATTR_NOT_THERE != rv);                        
-  return NS_OK;                                                     
+  nsresult rv = mInner.GetHTMLAttribute(nsHTMLAtoms::selected, val);
+  *aDefaultSelected = (NS_CONTENT_ATTR_NOT_THERE != rv);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHTMLOptionElement::SetDefaultSelected(PRBool aDefaultSelected)
 {
+  nsresult rv = NS_OK;
   nsHTMLValue empty(eHTMLUnit_Empty);
-  // When setting DefaultSelected, we must also reset Selected
-  SetSelected(aDefaultSelected);
   if (aDefaultSelected) {
-    return mInner.SetHTMLAttribute(nsHTMLAtoms::selected, empty, PR_TRUE);
+    rv = mInner.SetHTMLAttribute(nsHTMLAtoms::selected, empty, PR_TRUE);
   } else {
-    mInner.UnsetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::selected, PR_TRUE);
-    return NS_OK;
+    rv = mInner.UnsetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::selected, PR_TRUE);
   }
+  if (NS_SUCCEEDED(rv)) {
+    // When setting DefaultSelected, we must also reset Selected (DOM Errata)
+    rv = SetSelected(aDefaultSelected);
+  }
+  return rv;
 }
 
 NS_IMETHODIMP 
