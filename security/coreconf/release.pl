@@ -59,13 +59,6 @@ foreach $jarfile (split(/ /,$var{FILES}) ) {
 	}
     }
 
-# don't compress jar files containing classes since some java
-# implementations do not implement decompression correctly
-	if ( ($jarfile eq 'xpclass.jar') || ($jarfile eq 'xpclass_dbg.jar') ) {
-	    $zipoptions .= ' -0';
-	}
-
-
 # just in case the directory ends in a /, remove it
     if ($jardir =~ /\/$/) {
 	chop $jardir;
