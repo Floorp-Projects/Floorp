@@ -75,3 +75,10 @@
 .alertText[clickable="true"]:hover:active {
   color: #424F63;
 }
+
+.alertTextBox
+{
+  padding-right: 10px;
+  padding-top: 5px;
+}
+
