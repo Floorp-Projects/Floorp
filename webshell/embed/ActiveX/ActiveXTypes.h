@@ -19,6 +19,7 @@
 #define ACTIVEXTYPES_H
 
 #include <vector>
+#include <map>
 
 // STL based class for handling TCHAR strings
 typedef std::basic_string<TCHAR> tstring;
@@ -29,13 +30,7 @@ typedef CComPtr<IUnknown> CIUnkPtr;
 // Smart pointer macro for CComQIPtr
 #define CIPtr(iface) CComQIPtr< iface, &IID_ ## iface >
 
-struct CNamedObject
-{
-	tstring  szName;
-	CIUnkPtr spObject;
-};
-
 typedef std::vector<CIUnkPtr> CObjectList;
-typedef std::vector<CNamedObject> CNamedObjectList;
+typedef std::map<tstring, CIUnkPtr> CNamedObjectList;
 
 #endif

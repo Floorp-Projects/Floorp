@@ -28,6 +28,9 @@ class CActiveScriptSite :	public CComObjectRootEx<CComSingleThreadModel>,
 	// List of registered, named objects
 	CNamedObjectList m_cObjectList;
 
+	// Current script state
+	SCRIPTSTATE m_ssScriptState;
+
 public:
 	CActiveScriptSite();
 	virtual ~CActiveScriptSite();
@@ -48,9 +51,11 @@ END_COM_MAP()
 	// Parse the specified script
 	virtual HRESULT ParseScriptText(const tstring &szScript);
 	// Add object to script address space
-	virtual HRESULT AddNamedObject(const tstring &szName, IUnknown *pObject);
+	virtual HRESULT AddNamedObject(const tstring &szName, IUnknown *pObject, BOOL bGlobalMembers = FALSE);
 	// Play the script
 	virtual HRESULT PlayScript();
+	// Stop the script
+	virtual HRESULT StopScript();
 
 	// IActiveScriptSite
     virtual HRESULT STDMETHODCALLTYPE GetLCID(/* [out] */ LCID __RPC_FAR *plcid);

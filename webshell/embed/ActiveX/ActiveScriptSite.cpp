@@ -23,6 +23,7 @@
 
 CActiveScriptSite::CActiveScriptSite()
 {
+	m_ssScriptState = SCRIPTSTATE_UNINITIALIZED;
 }
 
 CActiveScriptSite::~CActiveScriptSite()
@@ -35,27 +36,42 @@ HRESULT CActiveScriptSite::Attach(CLSID clsidScriptEngine)
 	// Detach to anything already attached to
 	Detach();
 
+	// Create the new script engine
 	HRESULT hr = m_spIActiveScript.CoCreateInstance(clsidScriptEngine);
 	if (FAILED(hr))
 	{
 		return hr;
 	}
 
+	// Attach the script engine to this site
 	m_spIActiveScript->SetScriptSite(this);
+
+	// Initialise the script engine
+	CIPtr(IActiveScriptParse) spActiveScriptParse = m_spIActiveScript;
+	if (spActiveScriptParse)
+	{
+		spActiveScriptParse->InitNew();
+	}
+	else
+	{
+	}
 
 	return S_OK;
 }
+
 
 HRESULT CActiveScriptSite::Detach()
 {
 	if (m_spIActiveScript)
 	{
+		StopScript();
 		m_spIActiveScript->Close();
 		m_spIActiveScript.Release();
 	}
 
 	return S_OK;
 }
+
 
 HRESULT CActiveScriptSite::AttachVBScript()
 {
@@ -65,6 +81,7 @@ HRESULT CActiveScriptSite::AttachVBScript()
 	return Attach(CLSID_VBScript);
 }
 
+
 HRESULT CActiveScriptSite::AttachJScript()
 {
 	static const CLSID CLSID_JScript =
@@ -73,18 +90,50 @@ HRESULT CActiveScriptSite::AttachJScript()
 	return Attach(CLSID_JScript);
 }
 
-HRESULT CActiveScriptSite::AddNamedObject(const tstring &szName, IUnknown *pObject)
+
+HRESULT CActiveScriptSite::AddNamedObject(const tstring &szName, IUnknown *pObject, BOOL bGlobalMembers)
 {
-	// TODO check for objects of the same name already
+	if (m_spIActiveScript == NULL)
+	{
+		return E_UNEXPECTED;
+	}
+
+	if (pObject == NULL || szName.empty())
+	{
+		return E_INVALIDARG;
+	}
+
+	// Check for objects of the same name already
+	CNamedObjectList::iterator i = m_cObjectList.find(szName);
+	if (i != m_cObjectList.end())
+	{
+		return E_FAIL;
+	}
 
 	// Add object to the list
-	CNamedObject cObject;
-	cObject.szName = szName;
-	cObject.spObject = pObject;
-	m_cObjectList.push_back(cObject);
+	m_cObjectList.insert(CNamedObjectList::value_type(szName, pObject));
+
+	// Tell the script engine about the object
+	HRESULT hr;
+	USES_CONVERSION;
+	DWORD dwFlags = SCRIPTITEM_ISSOURCE | SCRIPTITEM_ISVISIBLE;
+	if (bGlobalMembers)
+	{
+		dwFlags |= SCRIPTITEM_GLOBALMEMBERS;
+	}
+
+
+	hr = m_spIActiveScript->AddNamedItem(T2OLE(szName.c_str()), dwFlags);
+
+	if (FAILED(hr))
+	{
+		m_cObjectList.erase(szName);
+		return hr;
+	}
 
 	return S_OK;
 }
+
 
 HRESULT CActiveScriptSite::ParseScriptText(const tstring &szScript)
 {
@@ -99,23 +148,31 @@ HRESULT CActiveScriptSite::ParseScriptText(const tstring &szScript)
 		USES_CONVERSION;
 
 		CComVariant vResult;
-		DWORD dwCookie = 1; // TODO
+		DWORD dwCookie = 0; // TODO
 		DWORD dwFlags = 0;
 		EXCEPINFO cExcepInfo;
+		HRESULT hr;
 
-		spIActiveScriptParse->ParseScriptText(
-			T2OLE(szScript.c_str()),
-			NULL, NULL, NULL, dwCookie, 0, dwFlags,
-			&vResult, &cExcepInfo);
+		hr = spIActiveScriptParse->ParseScriptText(
+					T2OLE(szScript.c_str()),
+					NULL, NULL, NULL, dwCookie, 0, dwFlags,
+					&vResult, &cExcepInfo);
+
+		if (FAILED(hr))
+		{
+			return E_FAIL;
+		}
 	}
 	else
 	{
-		// TODO persist from IStream
+		// TODO stick text into a HGLOBAL, create a stream on it and load it
+		// into the script via IPersistStream
 		return E_UNEXPECTED;
 	}
 
 	return S_OK;
 }
+
 
 HRESULT CActiveScriptSite::PlayScript()
 {
@@ -124,7 +181,20 @@ HRESULT CActiveScriptSite::PlayScript()
 		return E_UNEXPECTED;
 	}
 
-	m_spIActiveScript->SetScriptState(SCRIPTSTATE_STARTED);
+	m_spIActiveScript->SetScriptState(SCRIPTSTATE_CONNECTED);
+
+	return S_OK;
+}
+
+
+HRESULT CActiveScriptSite::StopScript()
+{
+	if (m_spIActiveScript == NULL)
+	{
+		return E_UNEXPECTED;
+	}
+
+	m_spIActiveScript->SetScriptState(SCRIPTSTATE_DISCONNECTED);
 
 	return S_OK;
 }
@@ -142,12 +212,56 @@ HRESULT STDMETHODCALLTYPE CActiveScriptSite::GetLCID(/* [out] */ LCID __RPC_FAR 
 
 HRESULT STDMETHODCALLTYPE CActiveScriptSite::GetItemInfo(/* [in] */ LPCOLESTR pstrName, /* [in] */ DWORD dwReturnMask, /* [out] */ IUnknown __RPC_FAR *__RPC_FAR *ppiunkItem, /* [out] */ ITypeInfo __RPC_FAR *__RPC_FAR *ppti)
 {
-//	/* [in] */ LPCOLESTR pstrName,
-//	/* [in] */ DWORD dwReturnMask,
-//	/* [out] */ IUnknown __RPC_FAR *__RPC_FAR *ppiunkItem,
-//	/* [out] */ ITypeInfo __RPC_FAR *__RPC_FAR *ppti)
+	if (pstrName == NULL)
+	{
+		return E_INVALIDARG;
+	}
 	
-	return TYPE_E_ELEMENTNOTFOUND;
+	if (ppiunkItem)
+	{
+		*ppiunkItem = NULL;
+	}
+
+	if (ppti)
+	{
+		*ppti = NULL;
+	}
+
+	USES_CONVERSION;
+
+	// Find object in list
+	CIUnkPtr spUnkObject;
+	CNamedObjectList::iterator i = m_cObjectList.find(OLE2T(pstrName));
+	if (i != m_cObjectList.end())
+	{
+		spUnkObject = (*i).second;
+	}
+
+	// Fill in the output values
+	if (spUnkObject == NULL) 
+	{
+		return TYPE_E_ELEMENTNOTFOUND;
+	}
+	if (dwReturnMask & SCRIPTINFO_IUNKNOWN) 
+	{
+		spUnkObject->QueryInterface(IID_IUnknown, (void **) ppiunkItem);
+	}
+	if (dwReturnMask & SCRIPTINFO_ITYPEINFO) 
+	{
+		// Return the typeinfo in ptti
+		CIPtr(IDispatch) spIDispatch = spUnkObject;
+		if (spIDispatch)
+		{
+			HRESULT hr;
+			hr = spIDispatch->GetTypeInfo(0, GetSystemDefaultLCID(), ppti);
+			if (FAILED(hr))
+			{
+				*ppti = NULL;
+			}
+		}
+	}
+
+	return S_OK;
 }
 
 
@@ -165,12 +279,38 @@ HRESULT STDMETHODCALLTYPE CActiveScriptSite::OnScriptTerminate(/* [in] */ const 
 
 HRESULT STDMETHODCALLTYPE CActiveScriptSite::OnStateChange(/* [in] */ SCRIPTSTATE ssScriptState)
 {
+	m_ssScriptState = ssScriptState;
 	return S_OK;
 }
 
 
 HRESULT STDMETHODCALLTYPE CActiveScriptSite::OnScriptError(/* [in] */ IActiveScriptError __RPC_FAR *pscripterror)
 {
+	BSTR bstrSourceLineText = NULL;
+	DWORD dwSourceContext = 0;
+	ULONG pulLineNumber = 0;
+	LONG  ichCharPosition = 0;
+	EXCEPINFO cExcepInfo;
+
+	memset(&cExcepInfo, 0, sizeof(cExcepInfo));
+
+	// Get error information
+	pscripterror->GetSourcePosition(&dwSourceContext, &pulLineNumber, &ichCharPosition);
+	pscripterror->GetSourceLineText(&bstrSourceLineText);
+	pscripterror->GetExceptionInfo(&cExcepInfo);
+
+	tstring szDescription(_T("(No description)"));
+	if (cExcepInfo.bstrDescription)
+	{
+		// Dump info
+		USES_CONVERSION;
+		szDescription = OLE2T(cExcepInfo.bstrDescription);
+	}
+
+	ATLTRACE(_T("Script Error: %s, code=0x%08x\n"), szDescription.c_str(), cExcepInfo.scode);
+
+	SysFreeString(bstrSourceLineText);
+
 	return S_OK;
 }
 
