@@ -139,6 +139,7 @@ static NS_DEFINE_IID(kCTimerManagerCID,            NS_TIMERMANAGER_CID);
 static NS_DEFINE_IID(kSoundCID,            NS_SOUND_CID);
 static NS_DEFINE_CID(kFileSpecWithUICID, NS_FILESPECWITHUI_CID);
 static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
+static NS_DEFINE_IID(kCFilePickerCID, NS_FILEPICKER_CID);
 static NS_DEFINE_IID(kCPopUpCID,NS_POPUP_CID);
 
 // widgets
@@ -319,6 +320,7 @@ NS_SetupRegistry()
   nsComponentManager::RegisterComponentLib(kCHScrollbarCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCDialogCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCFileWidgetCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kCFilePickerCID, "FilePicker", "component://mozilla/filepicker", WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCChildCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCPopUpCID,NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCAppShellCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
