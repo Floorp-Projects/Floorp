@@ -126,7 +126,8 @@ nsProperties::Load(nsIInputStream *aIn)
     }
   }
   mIn->Close();
-  mIn = nsnull;
+  NS_RELEASE(mIn);
+  NS_ASSERTION(!mIn, "unexpected remaining reference");
 
   return NS_OK;
 }
