@@ -1,0 +1,68 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "nsISupports.idl"
+#include "MailNewsTypes2.idl"
+
+[ptr] native nsString(nsString); 
+%{ C++
+#include "nsString.h"
+%}
+
+[scriptable, uuid(5cb11c00-cb8b-11d2-8d67-00805f8a6617)]
+
+interface  nsIDBFolderInfo : nsISupports {
+	attribute long Flags;
+	long		  OrFlags(in long flags);
+	long		  AndFlags(in long flags);
+	void	  SetHighWater(in nsMsgKey highwater, in boolean force);
+	attribute nsMsgKey HighWater;
+	attribute nsMsgKey ExpiredMark;
+	attribute unsigned long FolderSize;
+	attribute nsMsgKey LastMessageLoaded;
+	attribute long FolderDate;
+	void ChangeNumNewMessages(in long delta);
+	void ChangeNumMessages(in long delta);
+	void ChangeNumVisibleMessages(in long delta);
+	attribute long NumNewMessages;
+	attribute long NumMessages;
+	attribute long NumVisibleMessages;
+	attribute long ImapUidValidity;
+	attribute unsigned long Version;
+	attribute long ImapTotalPendingMessages;
+	attribute long ImapUnreadPendingMessages;
+    void ChangeExpungedBytes(in long delta);
+
+	void SetUint32Property(in string propertyName, in unsigned long propertyValue);
+	unsigned long GetUint32Property(in string propertyName);
+
+	void GetCharacterSet(in nsString result);
+	void SetCharacterSet(in nsString result);
+	void GetLocale(in nsString result);
+	void SetLocale(in nsString locale);
+    
+	void SetMailboxName(in nsString newBoxName);
+	void GetMailboxName(in nsString boxName);
+
+
+	void GetProperty(in string propertyName, in nsString resultProperty);
+	void SetProperty(in string propertyName, in nsString propertyStr);
+	void SetKnownArtsSet(in nsString newsArtSet);
+	void GetKnownArtsSet(in nsString newsArtSet);
+};
+
