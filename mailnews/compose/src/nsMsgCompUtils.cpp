@@ -779,7 +779,11 @@ mime_generate_attachment_headers (const char *type,
   nsresult rv;
   nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 
 
-  PRInt32 buffer_size = 2048 + (base_url ? 2*PL_strlen(base_url) : 0);
+  PRInt32 buffer_size = 2048 + (real_name ? 2*PL_strlen(real_name) : 0) + (base_url ? 2*PL_strlen(base_url) : 0) +
+                        (type_param ? PL_strlen(type_param) : 0) + (encoding ? PL_strlen(encoding) : 0) +
+                        (description ? PL_strlen(description) : 0) + (x_mac_type ? PL_strlen(x_mac_type) : 0) +
+                        (x_mac_creator ? PL_strlen(x_mac_creator) : 0) + (attachmentCharset ? PL_strlen(attachmentCharset) : 0) +
+                        (bodyCharset ? PL_strlen(bodyCharset) : 0) + (content_id ? PL_strlen(content_id) : 0);
   char *buffer = (char *) PR_Malloc (buffer_size);
   char *buffer_tail = buffer;
 
