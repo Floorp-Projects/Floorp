@@ -49,6 +49,10 @@ throbber[busy] {
 	background-image:url("resource:/res/throbber/anims07.gif");
 }
 
+titledbutton:button-focus {
+	border: none;
+}
+
 broadcaster {
 	display: none;
 }
