@@ -121,6 +121,8 @@ interface nsIThread : nsISupports
 
     // return the "main" thread
     static NS_COM nsresult GetMainThread(nsIThread **result);
+
+    static NS_COM PRBool IsMainThread(); 
 %}
 };
 

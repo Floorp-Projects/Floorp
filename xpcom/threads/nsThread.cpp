@@ -415,6 +415,17 @@ nsIThread::GetMainThread(nsIThread **result)
     return NS_OK;
 }
 
+NS_COM PRBool
+nsIThread::IsMainThread()
+{
+    if (gMainThread == 0)
+        return PR_TRUE;
+    
+    PRThread *theMainThread;
+    gMainThread->GetPRThread(&theMainThread);
+    return theMainThread == PR_CurrentThread();
+}
+
 void 
 nsThread::Shutdown()
 {
