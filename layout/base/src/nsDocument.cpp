@@ -64,6 +64,7 @@
 #include "nsFileSpec.h"
 #include "nsFileStream.h"
 
+#include "nsRange.h"
 #include "nsIDOMText.h"
 #include "nsIDOMComment.h"
 
@@ -445,8 +446,15 @@ nsDOMImplementation::HasFeature(const nsString& aFeature,
 {
   // XXX Currently this is hardcoded. In the future, we should
   // probably figure out some of this by querying the registry??
-  if (aFeature.EqualsIgnoreCase("HTML") ||
-      aFeature.EqualsIgnoreCase("XML")) {
+  PRInt32 result;
+  float ver = aVersion.ToFloat(&result);
+  if (NS_FAILED(result)) {
+    return result;
+  }
+
+  if ((aFeature.EqualsIgnoreCase("HTML") ||
+      aFeature.EqualsIgnoreCase("XML")) &&
+      (ver >= 1.0) && (ver <= 2.0)) {
     *aReturn = PR_TRUE;
   }
   else {
@@ -909,6 +917,13 @@ nsIURL* nsDocument::GetDocumentURL() const
 {
   NS_IF_ADDREF(mDocumentURL);
   return mDocumentURL;
+}
+
+NS_IMETHODIMP 
+nsDocument::GetContentType(nsString& aContentType) const
+{
+  // Must be implemented by derived class.
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsIURLGroup* nsDocument::GetDocumentURLGroup() const
@@ -1827,6 +1842,12 @@ nsDocument::CreateElementWithNameSpace(const nsString& aTagName,
                                        nsIDOMElement** aReturn)
 {
   return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsDocument::CreateRange(nsIDOMRange** aReturn)
+{
+  return NS_NewRange(aReturn);
 }
 
 //

@@ -127,6 +127,11 @@ public:
   virtual nsIURL* GetDocumentURL() const;
 
   /**
+   * Return the content (mime) type of this document.
+   */
+  NS_IMETHOD GetContentType(nsString& aContentType) const;
+
+  /**
    * Return the URLGroup for the document. May return null.
    */
   virtual nsIURLGroup* GetDocumentURLGroup() const;
@@ -323,6 +328,7 @@ public:
   NS_IMETHOD    CreateElementWithNameSpace(const nsString& aTagName, 
                                            const nsString& aNameSpace, 
                                            nsIDOMElement** aReturn);
+  NS_IMETHOD    CreateRange(nsIDOMRange** aReturn);
                      
   // nsIDOMNode interface
   NS_IMETHOD    GetNodeName(nsString& aNodeName);

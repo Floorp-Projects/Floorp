@@ -166,6 +166,14 @@ nsXMLDocument::Reset(nsIURL* aURL)
 }
 
 NS_IMETHODIMP 
+nsXMLDocument::GetContentType(nsString& aContentType) const
+{
+  // XXX Should get document type from incoming stream
+  aContentType.SetString("text/xml");
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
 nsXMLDocument::StartDocumentLoad(nsIURL *aUrl, 
                                  nsIContentViewerContainer* aContainer,
                                  nsIStreamListener **aDocListener,

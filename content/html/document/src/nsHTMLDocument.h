@@ -50,6 +50,8 @@ public:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
 
+  NS_IMETHOD GetContentType(nsString& aContentType) const;
+
   NS_IMETHOD StartDocumentLoad(nsIURL* aUrl, 
                                nsIContentViewerContainer* aContainer,
                                nsIStreamListener** aDocListener,

@@ -85,6 +85,7 @@ public:
 
   // nsIDOMNSRange interface
   NS_IMETHOD    InsertFragment(const nsString& aFragment);
+  NS_IMETHOD    IsValidFragment(const nsString& aFragment, PRBool* aReturn);
 
 /*BEGIN nsIScriptObjectOwner interface implementations*/
   NS_IMETHOD 		GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
