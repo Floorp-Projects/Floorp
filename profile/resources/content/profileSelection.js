@@ -115,7 +115,9 @@ function onStart()
     
   var profilename = selected.getAttribute("profile_name");
   if( selected.getAttribute("rowMigrate") == "true" ) {
-    if( confirm( bundle.GetStringFromName("migratebeforestart") ) ) 
+    var lString = bundle.GetStringFromName("migratebeforestart");
+    lString = lString.replace(/\s*<html:br\/>/g,"\n");
+    if( confirm( lString ) ) 
       profile.migrateProfile( profilename, true );
     else
       return false;

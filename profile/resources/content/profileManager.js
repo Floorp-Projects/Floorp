@@ -56,7 +56,9 @@ function RenameProfile()
     var selected = profileTree.selectedItems[0];
     if( selected.getAttribute("rowMigrate") == "true" ) {
       // auto migrate if the user wants to
-      if( confirm( bundle.GetStringFromName("migratebeforerename") ) ) 
+      var lString = bundle.GetStringFromName("migratebeforerename");
+      lString = lString.replace(/\s*<html:br\/>/g,"\n");
+      if( confirm( lString ) ) 
         profile.migrateProfile( profilename, true );
       else
         return false;
@@ -76,7 +78,9 @@ function RenameProfile()
         selected.setAttribute( "profile_name", newName );
       }
       catch (ex) {
-        alert( bundle.GetStringFromName("renamefailed") );
+        var lString = bundle.GetStringFromName("renamefailed");
+        lString = lString.replace(/\s*<html:br\/>/g,"\n");
+        alert( lString );
       }
     }
   }
@@ -105,7 +109,9 @@ function ConfirmDelete()
 
   if( selected.getAttribute("rowMigrate") == "true" ) {
       // auto migrate if the user wants to. THIS IS REALLY REALLY DUMB PLEASE FIX THE BACK END.
-    if( confirm( bundle.GetStringFromName("migratebeforedelete") ) ) 
+    var lString = bundle.GetStringFromName("migratebeforedelete");
+    lString = lString.replace(/\s*<html:br\/>/g,"\n");
+    if( confirm( lString ) ) 
       profile.migrateProfile( profilename, true );
     else
       return false;
@@ -127,7 +133,9 @@ function DeleteProfile( deleteFiles )
     profileKids.removeChild( selected );
   }
   catch (ex) {
-    alert( bundle.GetStringFromName("deletefailed") );
+    var lString = bundle.GetStringFromName("deletefailed");
+    lString = lString.replace(/\s*<html:br\/>/g,"\n");
+    alert( lString );
   }
   // set the button state
   DoEnabling();
