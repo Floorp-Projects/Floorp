@@ -29,6 +29,7 @@
 #include "JManager.h"
 
 struct EventRecord;
+struct nsPluginPrint;
 
 class MRJFrame {
 public:
@@ -58,6 +59,8 @@ public:
 
 	virtual void focusEvent(Boolean gotFocus);
 	virtual void menuSelected(UInt32 message, SInt16 modifiers);
+
+	virtual void print(GrafPtr printingPort, Point frameOrigin);
 
 protected:
 	virtual GrafPtr getPort() = 0;
