@@ -3825,6 +3825,8 @@ net_get_ftp_password(ActiveEntry *ce)
 		  }
 	  }
 
+    cd->next_state = FTP_SEND_PASSWORD;
+
     return 0;
 }
 
