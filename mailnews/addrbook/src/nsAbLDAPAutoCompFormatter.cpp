@@ -557,7 +557,7 @@ nsAbLDAPAutoCompFormatter::ProcessFormat(const nsAReadableString & aFormat,
 
                 // this character gets treated as a literal
                 //
-                (*aValue).Append(NS_ConvertUCS2toUTF8(*iter));
+                (*aValue).Append(NS_ConvertUCS2toUTF8(nsDependentString(iter.get(), 1))); //XXXjag poke me about string generators
             }
         }
 

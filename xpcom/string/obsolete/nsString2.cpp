@@ -1653,13 +1653,6 @@ NS_ConvertASCIItoUCS2::NS_ConvertASCIItoUCS2( const char* aCString )
     AppendWithConversion(aCString);
   }
 
-NS_ConvertASCIItoUCS2::NS_ConvertASCIItoUCS2( char aChar )
-  {
-    Initialize(*this,mBuffer,(sizeof(mBuffer)>>eTwoByte)-1,0,eTwoByte,PR_FALSE);
-    AddNullTerminator(*this);
-    AppendWithConversion(aChar);
-  }
-
 void
 NS_ConvertUTF8toUCS2::Init( const char* aCString, PRUint32 aLength )
 {

@@ -524,12 +524,6 @@ class NS_COM NS_ConvertUCS2toUTF8
           Append( aString, aLength );
         }
 
-      explicit
-      NS_ConvertUCS2toUTF8( PRUnichar aChar )
-        {
-          Append( &aChar, 1 );
-        }
-
       explicit NS_ConvertUCS2toUTF8( const nsAString& aString );
 
     protected:
