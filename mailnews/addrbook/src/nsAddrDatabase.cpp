@@ -2150,7 +2150,7 @@ NS_IMETHODIMP nsAddrDBEnumerator::First(void)
 	nsresult rv = 0;
 	mDone = PR_FALSE;
 
-	if (!mDB || !mDB->GetPabTable())
+	if (!mDB || !mDB->GetPabTable() || !mDB->GetEnv())
 		return NS_ERROR_NULL_POINTER;
 		
 	mDB->GetPabTable()->GetTableRowCursor(mDB->GetEnv(), -1, &mRowCursor);
@@ -2160,6 +2160,11 @@ NS_IMETHODIMP nsAddrDBEnumerator::First(void)
 
 NS_IMETHODIMP nsAddrDBEnumerator::Next(void)
 {
+	if (!mRowCursor)
+	{
+		mDone = PR_TRUE;
+		return NS_ERROR_FAILURE;
+	}
 	nsresult rv = mRowCursor->NextRow(mDB->GetEnv(), &mCurrentRow, &mRowPos);
     if (mCurrentRow && NS_SUCCEEDED(rv))
 		return NS_OK;

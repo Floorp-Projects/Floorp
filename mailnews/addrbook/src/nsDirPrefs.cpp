@@ -1911,18 +1911,18 @@ nsresult DIR_DeleteServerFromList(DIR_Server *server)
 	{
 		nsCOMPtr<nsIAddrDatabase> database;
 
-		nsFileSpec prefFile = (*dbPath);
-		prefFile += server->fileName;
+		(*dbPath) += server->fileName;
 
 		// close file before delete it
 		NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDBCID, &rv);
 
 		if (NS_SUCCEEDED(rv) && addrDBFactory)
 			rv = addrDBFactory->Open(dbPath, PR_FALSE, getter_AddRefs(database), PR_TRUE);
-		if (database)
+		if (database)  /* database exists */
+		{
 			database->ForceClosed();
-
-		prefFile.Delete(PR_FALSE);
+			dbPath->Delete(PR_FALSE);
+		}
 
 		nsVoidArray *dirList = DIR_GetDirectories();
 		DIR_SetServerPosition(dirList, server, DIR_POS_DELETE);
