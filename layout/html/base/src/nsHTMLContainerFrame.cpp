@@ -368,8 +368,11 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext& aPresContext,
 {
   nsIView* view;
   aFrame->GetView(view);
+  // If we don't yet have a view; see if we need a view
   if (nsnull == view) {
-    // We don't yet have a view; see if we need a view
+    // Get my nsStyleColor
+    const nsStyleColor* myColor = (const nsStyleColor*)
+      aStyleContext->GetStyleData(eStyleStruct_Color);
 
     // See if the opacity is not the same as the geometric parent
     // frames opacity.
@@ -377,10 +380,6 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext& aPresContext,
       nsIFrame* parent;
       aFrame->GetGeometricParent(parent);
       if (nsnull != parent) {
-        // Get my nsStyleColor
-        const nsStyleColor* myColor = (const nsStyleColor*)
-          aStyleContext->GetStyleData(eStyleStruct_Color);
-
         // Get parent's nsStyleColor
         const nsStyleColor* parentColor;
         parent->GetStyleData(eStyleStruct_Color,
@@ -440,8 +439,15 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext& aPresContext,
         aFrame->GetRect(bounds);
         view->Init(viewManager, bounds, rootView);
         viewManager->InsertChild(rootView, view, 0);
-        //XXX this needs to be conditional...
-        viewManager->SetViewContentTransparency(view, PR_TRUE);
+        // If the background color is transparent then mark the view as having
+        // transparent content.
+        // XXX We could try and be smarter about this and check whether there's
+        // a background image. If there is a background image and the image is
+        // fully opaque then we don't need to mark the view as having transparent
+        // content...
+        if (NS_STYLE_BG_COLOR_TRANSPARENT & myColor->mBackgroundFlags) {
+          viewManager->SetViewContentTransparency(view, PR_TRUE);
+        }
 
         NS_RELEASE(viewManager);
       }
