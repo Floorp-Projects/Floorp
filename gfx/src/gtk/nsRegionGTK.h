@@ -33,6 +33,7 @@ public:
 
   virtual void SetTo(const nsIRegion &aRegion);
   virtual void SetTo(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
+  void SetTo(const nsRegionGTK *aRegion);
   virtual void Intersect(const nsIRegion &aRegion);
   virtual void Intersect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
   virtual void Union(const nsIRegion &aRegion);

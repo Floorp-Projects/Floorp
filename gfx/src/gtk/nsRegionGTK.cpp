@@ -25,7 +25,7 @@ nsRegionGTK::nsRegionGTK()
 {
   NS_INIT_REFCNT();
   
-  mRegion = nsnull;
+  mRegion = ::gdk_region_new();
   mRegionType = eRegionComplexity_empty;
 }
 
@@ -43,6 +43,8 @@ NS_IMPL_RELEASE(nsRegionGTK)
 
 nsresult nsRegionGTK::Init(void)
 {
+  if (mRegion)
+    ::gdk_region_destroy(mRegion);
   mRegion = ::gdk_region_new();  //correct?
   mRegionType = eRegionComplexity_empty;
   
@@ -60,6 +62,14 @@ void nsRegionGTK::SetTo(const nsIRegion &aRegion)
   mRegion = nRegion;
 }
 
+void nsRegionGTK::SetTo(const nsRegionGTK *aRegion)
+{
+  SetRegionEmpty();
+  
+  GdkRegion *nRegion = ::gdk_regions_union(mRegion, aRegion->mRegion);
+  ::gdk_region_destroy(mRegion);
+  mRegion = nRegion;
+}
 
 void nsRegionGTK::SetTo(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
