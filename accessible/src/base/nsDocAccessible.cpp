@@ -508,7 +508,6 @@ nsresult nsDocAccessible::AddEventListeners()
   docShellTreeItem->GetItemType(&itemType);
 
   PRBool isContent = (itemType == nsIDocShellTreeItem::typeContent);
-  PRBool isLoading = isContent;
 
   if (isContent) {
     CheckForEditor();
@@ -529,19 +528,15 @@ nsresult nsDocAccessible::AddEventListeners()
       mBusy = eBusyStateDone;
       return NS_OK;
     }
+
+    mWebProgress = do_GetInterface(docShellTreeItem);
+    NS_ENSURE_TRUE(mWebProgress, NS_ERROR_FAILURE);
+
+    mWebProgress->AddProgressListener(this, nsIWebProgress::NOTIFY_STATE_DOCUMENT |
+                                            nsIWebProgress::NOTIFY_LOCATION);
+    mIsNewDocument = PR_TRUE;
+    mBusy = eBusyStateLoading;
   }
-  
-  mWebProgress = do_GetInterface(docShellTreeItem);
-  NS_ENSURE_TRUE(mWebProgress, NS_ERROR_FAILURE);
-
-  mWebProgress->AddProgressListener(this, nsIWebProgress::NOTIFY_LOCATION | 
-                                    nsIWebProgress::NOTIFY_STATE_DOCUMENT);
-
-
-  mWebProgress->GetIsLoadingDocument(&isLoading);
-
-  mIsNewDocument = PR_TRUE;
-  mBusy = eBusyStateLoading;
 
   // add ourself as a mutation event listener 
   // (this slows down mozilla about 3%, but only used when accessibility APIs active)
@@ -724,9 +719,16 @@ NS_IMETHODIMP nsDocAccessible::ScrollPositionDidChange(nsIScrollableView *aScrol
 }
 
 NS_IMETHODIMP nsDocAccessible::OnStateChange(nsIWebProgress *aWebProgress,
-  nsIRequest *aRequest, PRUint32 aStateFlags, nsresult aStatus)
+                                             nsIRequest *aRequest,
+                                             PRUint32 aStateFlags,
+                                             nsresult aStatus)
 {
-  if ((aStateFlags & STATE_IS_DOCUMENT) && (aStateFlags & STATE_STOP)) {
+  NS_ASSERTION(aStateFlags & STATE_IS_DOCUMENT, "Should not be listening to other OnStateChange types");
+  NS_ASSERTION((aStateFlags & STATE_START) || (aStateFlags & STATE_STOP) , "Should not be listening to other OnStateChange types");
+  if (!mWeakShell || !mDocument) {
+    return NS_OK;
+  }
+  if (aStateFlags & STATE_STOP) {
     if (!mDocLoadTimer) {
       mDocLoadTimer = do_CreateInstance("@mozilla.org/timer;1");
     }
@@ -734,28 +736,19 @@ NS_IMETHODIMP nsDocAccessible::OnStateChange(nsIWebProgress *aWebProgress,
       mDocLoadTimer->InitWithFuncCallback(DocLoadCallback, this, 4,
                                           nsITimer::TYPE_ONE_SHOT);
     }
+    return NS_OK;
   }
 
-  return NS_OK;
-}
+  // STATE_START
 
-/* void onProgressChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aCurSelfProgress, in long aMaxSelfProgress, in long aCurTotalProgress, in long aMaxTotalProgress); */
-NS_IMETHODIMP nsDocAccessible::OnProgressChange(nsIWebProgress *aWebProgress,
-  nsIRequest *aRequest, PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress,
-  PRInt32 aCurTotalProgress, PRInt32 aMaxTotalProgress)
-{
-  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
-  return NS_OK;
-}
-
-/* void onLocationChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsIURI location); */
-NS_IMETHODIMP nsDocAccessible::OnLocationChange(nsIWebProgress *aWebProgress,
-  nsIRequest *aRequest, nsIURI *location)
-{
-  PRBool isLoadingDocument;
-  aWebProgress->GetIsLoadingDocument(&isLoadingDocument);
-  if (!isLoadingDocument) {
-    return NS_OK;  // Staying on the same page, jumping to a named anchor
+  if (gLastFocusedNode) {
+    nsCOMPtr<nsIDOMDocument> focusedDOMDoc;
+    gLastFocusedNode->GetOwnerDocument(getter_AddRefs(focusedDOMDoc));
+    if (!SameCOMIdentity(focusedDOMDoc, mDocument)) {
+      // Load is not occuring in the currently focused pane, so don't fire 
+      // doc load event there, otherwise assistive technology may become confused
+      return NS_OK;
+    }
   }
 
   // Load has been verified, it will occur, about to commence
@@ -778,6 +771,22 @@ NS_IMETHODIMP nsDocAccessible::OnLocationChange(nsIWebProgress *aWebProgress,
 #endif
   }
 
+  return NS_OK;
+}
+
+/* void onProgressChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aCurSelfProgress, in long aMaxSelfProgress, in long aCurTotalProgress, in long aMaxTotalProgress); */
+NS_IMETHODIMP nsDocAccessible::OnProgressChange(nsIWebProgress *aWebProgress,
+  nsIRequest *aRequest, PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress,
+  PRInt32 aCurTotalProgress, PRInt32 aMaxTotalProgress)
+{
+  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+  return NS_OK;
+}
+
+/* void onLocationChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsIURI location); */
+NS_IMETHODIMP nsDocAccessible::OnLocationChange(nsIWebProgress *aWebProgress,
+  nsIRequest *aRequest, nsIURI *location)
+{
   return NS_OK;
 }
 
