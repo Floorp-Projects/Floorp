@@ -29,12 +29,6 @@ INCLUDES+= -I../xpwidgets -I../motif -I.
 
 CPPSRCS=dlldeps.cpp nsWidgetSupport.cpp nsMotifWidgetFactory.cpp
 
-ifeq ($(OS_ARCH),IRIX)
-LD = $(CCC)
-LD_ALL = -all
-LD_NONE = -none
-endif
-
 EXTRA_DSO_LDOPTS+=\
 	$(DIST)/lib/libraptorwidgetunix_s.a \
 	$(DIST)/lib/libraptorbasewidget_s.a \

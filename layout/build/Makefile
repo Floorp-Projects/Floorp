@@ -33,12 +33,6 @@ EXPORTS=nsLayoutCID.h
 
 INCLUDES +=  -I../html/base/src
 
-ifeq ($(OS_ARCH),IRIX)
-LD = $(CCC)
-LD_ALL = -all
-LD_NONE = -none
-endif
-
 #
 # Rhapsody is using a more-portable way of specifying
 # the link line, Linux and other OS's probably want
