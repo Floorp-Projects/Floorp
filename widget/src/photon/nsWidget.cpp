@@ -1549,6 +1549,8 @@ int nsWidget::WorkProc( void *data )
 {
   DamageQueueEntry **dq = (DamageQueueEntry **) data;
 
+printf( "In work proc.\n" );
+
   if( dq && (*dq))
   {
     DamageQueueEntry *dqe = *dq;
@@ -1566,6 +1568,7 @@ int nsWidget::WorkProc( void *data )
       extent.lr.y = extent.ul.y + dqe->inst->mUpdateArea.height - 1;
 
       dqe->inst->mCreateHold = PR_FALSE;
+printf( "Damaged widget.\n" );
       PtDamageExtent( dqe->widget, &extent );
       dqe->inst->mUpdateArea.SetRect(0,0,0,0);
 
@@ -1576,9 +1579,12 @@ int nsWidget::WorkProc( void *data )
 
     *dq = nsnull;
     mDmgQueueInited = PR_FALSE;
+printf( "Done (END).\n" );
+    PtFlush();
     return Pt_END;
   }
 
+printf( "Done (CONTINUE).\n" );
   return Pt_CONTINUE;
 }
 
