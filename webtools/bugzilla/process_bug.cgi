@@ -941,10 +941,9 @@ SWITCH: for ($::FORM{'knob'}) {
             SendSQL("SELECT initialqacontact FROM components " .
                     "WHERE components.id = $comp_id");
             my $qacontact = FetchOneColumn();
-            if (defined $qacontact && $qacontact != 0) {
-                DoComma();
-                $::query .= "qa_contact = $qacontact";
-            }
+            $qacontact = 0 unless (defined $qacontact && $qacontact != 0);
+            DoComma();
+            $::query .= "qa_contact = $qacontact";
         }
         last SWITCH;
     };   
