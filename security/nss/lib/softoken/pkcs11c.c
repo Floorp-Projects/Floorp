@@ -1731,7 +1731,6 @@ finish_rsa:
 	    crv = CKR_KEY_TYPE_INCONSISTENT;
 	    break;
 	}
-	context->multi = PR_FALSE;
 	privKey = pk11_GetPrivKey(key,CKK_RSA,&crv);
 	if (privKey == NULL) {
 	    if (info) PORT_Free(info);
@@ -2187,7 +2186,6 @@ finish_rsa:
 	    crv = CKR_KEY_TYPE_INCONSISTENT;
 	    break;
 	}
-	context->multi = PR_FALSE;
 	pubKey = pk11_GetPubKey(key,CKK_DSA,&crv);
 	if (pubKey == NULL) {
 	    break;
