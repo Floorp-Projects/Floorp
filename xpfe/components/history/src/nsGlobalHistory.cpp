@@ -921,7 +921,7 @@ nsGlobalHistory::GetSource(nsIRDFResource* aProperty,
 
     if (row) {
       // ...if so, return the URL. kNC_URL is just a self-referring arc.
-      return aTarget->QueryInterface(NS_GET_IID(nsIRDFResource), (void**) aSource);
+      return CallQueryInterface(aTarget, aSource);
     }
   }
   else if ((aProperty == kNC_Date) ||
@@ -1097,12 +1097,12 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
     // It's a real property! Okay, first we'll get the row...
     mdb_err err;
 
-    nsXPIDLCString uri;
-    rv = aSource->GetValueConst(getter_Shares(uri));
+    const char* uri;
+    rv = aSource->GetValueConst(&uri);
     if (NS_FAILED(rv)) return rv;
 
     PRInt32 len = PL_strlen(uri);
-    mdbYarn yarn = { (void*)NS_STATIC_CAST(const char*, uri), len, len, 0, 0, nsnull };
+    mdbYarn yarn = { NS_CONST_CAST(void*, NS_STATIC_CAST(const void*, uri)), len, len, 0, 0, nsnull };
 
     mdbOid rowId;
     nsMdbPtr<nsIMdbRow> row(mEnv);
@@ -1131,7 +1131,7 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
       rv = gRDFService->GetDateLiteral(i, getter_AddRefs(date));
       if (NS_FAILED(rv)) return rv;
 
-      return date->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) aTarget);
+      return CallQueryInterface(date, aTarget);
     }
     else if (aProperty == kNC_VisitCount) {
       // Visit count
@@ -1148,14 +1148,16 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
 
       cell->AliasYarn(mEnv, &yarn);
 
-      // XXX Could probably alias the buffer here to avoid copy
-      nsAutoString str((const PRUnichar*) yarn.mYarn_Buf, PRInt32(yarn.mYarn_Fill / sizeof(PRUnichar)));
+      // Can't alias, because we don't store the terminating null
+      // character in the db.
+      len = yarn.mYarn_Fill / sizeof(PRUnichar);
+      nsAutoString str((const PRUnichar*) yarn.mYarn_Buf, len);
 
       nsCOMPtr<nsIRDFLiteral> name;
       rv = gRDFService->GetLiteral(str.GetUnicode(), getter_AddRefs(name));
       if (NS_FAILED(rv)) return rv;
 
-      return name->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) aTarget);
+      return CallQueryInterface(name, aTarget);
     }
     else if (aProperty == kNC_Referrer) {
       // Referrer field
@@ -1174,11 +1176,11 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
       rv = gRDFService->GetResource((const char*) str, getter_AddRefs(referrer));
       if (NS_FAILED(rv)) return rv;
 
-      return referrer->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) aTarget);
+      return CallQueryInterface(referrer, aTarget);
     }
     else if (aProperty == kNC_URL) {
       // URL. This is just a self-referring arc.
-      return aSource->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) aTarget);
+      return CallQueryInterface(aSource, aTarget);
     }
     else {
       NS_NOTREACHED("huh, how'd I get here?");
