@@ -75,6 +75,11 @@ CHROME_CONTENT= \
 	.\radioBindings.xml \
 	.\tabBindings.xml \
 	.\treeBindings.xml \
+	.\nsClipboard.js \
+	.\nsDragAndDrop.js \
+	.\nsJSSupportsUtils.js \
+	.\nsTransferable.js \
+	.\nsJSComponentManager.js \
 	.\xul.css \
 	$(NULL)
 
