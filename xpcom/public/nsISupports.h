@@ -157,6 +157,7 @@ public:
 #define NS_IMPL_ADDREF(_class)                               \
 nsrefcnt _class::AddRef(void)                                \
 {                                                            \
+  NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");  \
   return ++mRefCnt;                                          \
 }
 
@@ -419,6 +420,7 @@ nsresult _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
 #define NS_IMPL_THREADSAFE_ADDREF(_class)                                   \
 nsrefcnt _class::AddRef(void)                                               \
 {                                                                           \
+  NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");                 \
   return InterlockedIncrement((LONG*)&mRefCnt);                             \
 }
 
@@ -428,6 +430,7 @@ nsrefcnt _class::AddRef(void)                                               \
 {                                                                           \
   nsrefcnt count;                                                           \
   NS_LOCK_INSTANCE();                                                       \
+  NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");                 \
   count = ++mRefCnt;                                                        \
   NS_UNLOCK_INSTANCE();                                                     \
   return count;                                                             \
