@@ -189,6 +189,7 @@ void nsHTTreeDataModel::GetColumnHeaderStyle(nsIDeviceContext* dc, nsColumnHeade
 	styleInfo.backgroundColor = NS_RGB(192,192,192);
 	styleInfo.sortFGColor = NS_RGB(0,0,0);
 	styleInfo.sortBGColor = NS_RGB(64,64,64);
+	styleInfo.disabledColor = NS_RGB(192,192,192);
 
 	styleInfo.pBackgroundImage = GetColumnHeaderBGImage();
 }

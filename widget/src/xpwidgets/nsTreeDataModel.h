@@ -33,6 +33,8 @@ struct nsColumnHeaderStyleInfo: public nsBasicStyleInfo
 	PRBool transparentSort;
 	nsFont sortFont;
 
+	nscolor disabledColor; // Used for the pushers.
+
 	nsColumnHeaderStyleInfo(const nsFont& aFont)
 		:nsBasicStyleInfo(aFont), sortFont(aFont)
 	{ pSortBackgroundImage = nsnull; };

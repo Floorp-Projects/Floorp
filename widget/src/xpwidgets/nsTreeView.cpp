@@ -237,7 +237,7 @@ nsEventStatus nsTreeView::HandleEvent(nsGUIEvent *aEvent)
 			  // Finish up.
 			  DragColumnEdge(mCachedMovePoint.x);
 
-			  // TODO: Need to recompute the column percentages
+			  RecomputeColumnPercentages();
 
 			  mDraggingColumnEdge = PR_FALSE;
 		  }
@@ -515,7 +515,26 @@ void nsTreeView::PaintColumnBar(nsIRenderingContext* drawCtx,
 							  mColumnBarRect.y, singlePusher+1,
 							  mColumnBarRect.height);
 
+			// Are our pushers enabled or disabled?
+			PRUint32 visColumns = mDataModel->GetVisibleColumnCount();
+			PRUint32 totalColumns = mDataModel->GetColumnCount();
+
+			// Left pusher
+			PRBool enabled = PR_TRUE;
+			if (visColumns == totalColumns)
+				enabled = PR_FALSE;
+			if (enabled)
+				drawCtx->SetColor(styleInfo.foregroundColor);
+			else drawCtx->SetColor(styleInfo.disabledColor);
 			PaintPusherArrow(drawCtx, PR_TRUE, currentPosition, singlePusher);
+
+			// Right pusher
+			enabled = PR_TRUE;
+			if (visColumns<=1)
+				enabled = PR_FALSE;
+			if (enabled)
+				drawCtx->SetColor(styleInfo.foregroundColor);
+			else drawCtx->SetColor(styleInfo.disabledColor);
 			PaintPusherArrow(drawCtx, PR_FALSE, currentPosition+singlePusher, singlePusher);
 		}
 	}
@@ -591,7 +610,7 @@ void nsTreeView::PaintPusherArrow(nsIRenderingContext* drawCtx,
 
 		if (vertStart < mColumnBarRect.y + 2)
 			break;
-
+		
 		drawCtx->DrawLine(i, vertStart, i, vertEnd);
 	}
 }
@@ -828,20 +847,16 @@ void nsTreeView::ShowColumn()
 		visColumns++;
 		mDataModel->SetVisibleColumnCount(visColumns);
 
-		double newColPercentage = 1.0 / visColumns;
+		nsTreeColumn* pShownColumn = mDataModel->GetNthColumn(visColumns-1);
+		double totalPercentage = 1.0 + pShownColumn->GetDesiredPercentage();
 
 		// Do a recomputation of column widths and percentages
         for (PRUint32 i = 0; i < visColumns; i++)
         {
 			nsTreeColumn* pColumn = mDataModel->GetNthColumn(i);
-			if (i < visColumns-1)
-			{
-				// An already visible column is being adjusted
-				pColumn->SetDesiredPercentage(pColumn->GetDesiredPercentage() *
-											  (1.0 - newColPercentage));
-			}
-			else pColumn->SetDesiredPercentage(newColPercentage); // New column
-
+			pColumn->SetDesiredPercentage(pColumn->GetDesiredPercentage() /
+											  totalPercentage);
+			
 			pColumn->SetPixelWidth((int)(pColumn->GetDesiredPercentage() * totalSpace));
 			remainingSpace -= pColumn->GetPixelWidth();
 			if (i == visColumns-1)
@@ -871,7 +886,12 @@ void nsTreeView::HideColumn()
 
 		// Do a recomputation of column widths and percentages
 		nsTreeColumn* pHiddenColumn = mDataModel->GetNthColumn(visColumns);
+
+		// The hidden column's desired percentage should be changed so that
+		// if it is subsequently reshown, it will be the same size.
 		double totalPercentage = 1.0 - pHiddenColumn->GetDesiredPercentage();
+		pHiddenColumn->SetDesiredPercentage(pHiddenColumn->GetDesiredPercentage() / totalPercentage);
+
 		for (PRUint32 i = 0; i < visColumns; i++)
 		{
 			nsTreeColumn* pColumn = mDataModel->GetNthColumn(i);
@@ -884,6 +904,29 @@ void nsTreeView::HideColumn()
 		}
 
 		Invalidate(PR_FALSE);
+	}
+}
+
+void nsTreeView::RecomputeColumnPercentages()
+{
+	int width = mColumnBarRect.width;
+	PRUint32 count = mDataModel->GetVisibleColumnCount();
+	int currentPosition = 0;
+	int pusherWidth = (int)(mColumnBarRect.height * 1.25);
+	if (pusherWidth % 2 != 0)
+		pusherWidth++;
+
+	int totalSpace = width - pusherWidth;
+	
+	for (PRUint32 n = 0; n < count; n++)
+	{
+		// Fetch each column.
+		nsTreeColumn* pColumn = mDataModel->GetNthColumn(n);
+		if (pColumn)
+		{
+			int pixelWidth = pColumn->GetPixelWidth();
+			pColumn->SetDesiredPercentage(((double)pixelWidth)/((double)totalSpace));
+		}
 	}
 }
 

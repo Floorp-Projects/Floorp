@@ -95,6 +95,7 @@ protected:
 
 	// Column Adjusters/Routines
 	void ResizeColumns(int width);
+	void RecomputeColumnPercentages();
 	void ShowColumn();
 	void HideColumn();
 	void DragColumnEdge(int xPos);
