@@ -82,7 +82,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext& aPresContext,
   switch (aEvent->message) {
   case NS_MOUSE_MOVE:
     UpdateCursor(aPresContext, aEvent->point, aTargetFrame);
-    GenerateMouseEnterExit(aPresContext, aEvent, aTargetFrame);
+    GenerateMouseEnterExit(aPresContext, aEvent);
     break;
   case NS_MOUSE_EXIT:
     //GenerateMouseEnterExit(aPresContext, aEvent, aTargetFrame);
@@ -209,17 +209,17 @@ nsEventStateManager::UpdateCursor(nsIPresContext& aPresContext, nsPoint& aPoint,
 }
 
 void
-nsEventStateManager::GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIEvent* aEvent, nsIFrame* aTargetFrame)
+nsEventStateManager::GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIEvent* aEvent)
 {
   switch(aEvent->message) {
   case NS_MOUSE_MOVE:
     {
-      if (mLastMouseOverFrame != aTargetFrame) {
+      if (mLastMouseOverFrame != mCurrentTarget) {
         //We'll need the content, too, to check if it changed separately from the frames.
         nsIContent *lastContent = nsnull;
         nsIContent *targetContent;
 
-        aTargetFrame->GetContent(targetContent);
+        mCurrentTarget->GetContent(targetContent);
 
         if (nsnull != mLastMouseOverFrame) {
           //fire mouseout
@@ -259,17 +259,14 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIE
         }
 
         //Now dispatch to the frame
-        aTargetFrame->HandleEvent(aPresContext, &event, status);   
+        if (nsnull != mCurrentTarget) {
+          mCurrentTarget->HandleEvent(aPresContext, &event, status);
+        }
 
         NS_IF_RELEASE(lastContent);
         NS_IF_RELEASE(targetContent);
 
-        mLastMouseOverFrame = aTargetFrame;
-
-        nsFrameState state;
-        mLastMouseOverFrame->GetFrameState(state);
-        state |= NS_FRAME_EXTERNAL_REFERENCE;
-        mLastMouseOverFrame->SetFrameState(state);
+        mLastMouseOverFrame = mCurrentTarget;
       }
     }
     break;

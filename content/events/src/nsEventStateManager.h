@@ -56,7 +56,7 @@ public:
 
 protected:
   void UpdateCursor(nsIPresContext& aPresContext, nsPoint& aPoint, nsIFrame* aTargetFrame);
-  void GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIEvent* aEvent, nsIFrame* aTargetFrame);
+  void GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIEvent* aEvent);
   NS_IMETHOD DispatchKeyPressEvent(nsIPresContext& aPresContext, nsKeyEvent *aEvent, nsEventStatus& aStatus);  
   NS_IMETHOD CheckForAndDispatchClick(nsIPresContext& aPresContext, nsMouseEvent *aEvent, nsEventStatus& aStatus);  
   void ShiftFocus();
