@@ -18,6 +18,10 @@
 
 #include "nsIEnumerator.h"
 
+////////////////////////////////////////////////////////////////////////////////
+// Intersection Enumerators
+////////////////////////////////////////////////////////////////////////////////
+
 class nsConjoiningEnumerator : public nsIBidirectionalEnumerator
 {
 public:
@@ -83,7 +87,7 @@ nsConjoiningEnumerator::First(void)
 }
 
 NS_IMETHODIMP 
-nsConjoiningEnumerator:: Next(void)
+nsConjoiningEnumerator::Next(void)
 {
   nsresult rv = mCurrent->Next();
   if (NS_FAILED(rv) && mCurrent == mFirst) {
@@ -94,22 +98,23 @@ nsConjoiningEnumerator:: Next(void)
 }
 
 NS_IMETHODIMP 
-nsConjoiningEnumerator:: CurrentItem(nsISupports **aItem)
+nsConjoiningEnumerator::CurrentItem(nsISupports **aItem)
 {
   return mCurrent->CurrentItem(aItem);
 }
 
 NS_IMETHODIMP 
-nsConjoiningEnumerator:: IsDone(void)
+nsConjoiningEnumerator::IsDone(void)
 {
-  return (mCurrent == mFirst && mCurrent->IsDone())
-      || (mCurrent == mSecond && mCurrent->IsDone());
+  return (mCurrent == mFirst && mCurrent->IsDone() == NS_OK)
+      || (mCurrent == mSecond && mCurrent->IsDone() == NS_OK)
+    ? NS_OK : NS_COMFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP 
-nsConjoiningEnumerator:: Last(void)
+nsConjoiningEnumerator::Last(void)
 {
   nsresult rv;
   nsIBidirectionalEnumerator* be;
@@ -122,7 +127,7 @@ nsConjoiningEnumerator:: Last(void)
 }
 
 NS_IMETHODIMP 
-nsConjoiningEnumerator:: Prev(void)
+nsConjoiningEnumerator::Prev(void)
 {
   nsresult rv;
   nsIBidirectionalEnumerator* be;
@@ -149,6 +154,268 @@ NS_NewConjoiningEnumerator(nsIEnumerator* first, nsIEnumerator* second,
   if (aInstancePtrResult == 0)
     return NS_ERROR_NULL_POINTER;
   nsConjoiningEnumerator* e = new nsConjoiningEnumerator(first, second);
+  if (e == 0)
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(e);
+  *aInstancePtrResult = e;
+  return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+static nsresult
+nsEnumeratorContains(nsIEnumerator* e, nsISupports* item)
+{
+  nsresult rv;
+  for (e->First(); e->IsDone() != NS_OK; e->Next()) {
+    nsISupports* other;
+    rv = e->CurrentItem(&other);
+    if (NS_FAILED(rv)) return rv;
+    if (item == other) {
+      NS_RELEASE(other);
+      return NS_OK;     // true -- exists in enumerator
+    }
+    NS_RELEASE(other);
+  }
+  return NS_COMFALSE;   // false -- doesn't exist
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Intersection Enumerators
+////////////////////////////////////////////////////////////////////////////////
+
+class nsIntersectionEnumerator : public nsIEnumerator
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  // nsIEnumerator methods:
+  NS_IMETHOD First(void);
+  NS_IMETHOD Next(void);
+  NS_IMETHOD CurrentItem(nsISupports **aItem);
+  NS_IMETHOD IsDone(void);
+
+  // nsIntersectionEnumerator methods:
+  nsIntersectionEnumerator(nsIEnumerator* first, nsIEnumerator* second);
+  virtual ~nsIntersectionEnumerator(void);
+
+protected:
+  nsIEnumerator* mFirst;
+  nsIEnumerator* mSecond;
+};
+
+nsIntersectionEnumerator::nsIntersectionEnumerator(nsIEnumerator* first, nsIEnumerator* second)
+  : mFirst(first), mSecond(second)
+{
+  NS_ADDREF(mFirst);
+  NS_ADDREF(mSecond);
+}
+
+nsIntersectionEnumerator::~nsIntersectionEnumerator(void)
+{
+  NS_RELEASE(mFirst);
+  NS_RELEASE(mSecond);
+}
+
+NS_IMPL_ADDREF(nsIntersectionEnumerator);
+NS_IMPL_RELEASE(nsIntersectionEnumerator);
+
+NS_IMETHODIMP
+nsIntersectionEnumerator::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  if (NULL == aInstancePtr)
+    return NS_ERROR_NULL_POINTER; 
+
+  if (aIID.Equals(nsIBidirectionalEnumerator::GetIID()) || 
+      aIID.Equals(nsIEnumerator::GetIID()) || 
+      aIID.Equals(nsISupports::GetIID())) {
+    *aInstancePtr = (void*) this; 
+    NS_ADDREF_THIS(); 
+    return NS_OK; 
+  } 
+  return NS_NOINTERFACE; 
+}
+
+NS_IMETHODIMP 
+nsIntersectionEnumerator::First(void)
+{
+  nsresult rv = mFirst->First();
+  if (NS_FAILED(rv)) return rv;
+  return Next();
+}
+
+NS_IMETHODIMP 
+nsIntersectionEnumerator::Next(void)
+{
+  nsresult rv;
+
+  // find the first item that exists in both
+  for (; mFirst->IsDone() != NS_OK; mFirst->Next()) {
+    nsISupports* item;
+    rv = mFirst->CurrentItem(&item);
+    if (NS_FAILED(rv)) return rv;
+
+    // see if it also exists in mSecond
+    rv = nsEnumeratorContains(mSecond, item);
+    if (NS_FAILED(rv)) return rv;
+
+    NS_RELEASE(item);
+    if (rv != NS_OK) {
+      // if it didn't exist in mSecond, return, making it the current item
+      return NS_OK;
+    }
+    
+    // each time around, make sure that mSecond gets reset to the beginning
+    // so that when mFirst is done, we'll be ready to enumerate mSecond
+    rv = mSecond->First();
+    if (NS_FAILED(rv)) return rv;
+  }
+  
+  return mSecond->Next();
+}
+
+NS_IMETHODIMP 
+nsIntersectionEnumerator::CurrentItem(nsISupports **aItem)
+{
+  if (mFirst->IsDone() != NS_OK)
+    return mFirst->CurrentItem(aItem);
+  else
+    return mSecond->CurrentItem(aItem);
+}
+
+NS_IMETHODIMP 
+nsIntersectionEnumerator::IsDone(void)
+{
+  return (mFirst->IsDone() == NS_OK && mSecond->IsDone() == NS_OK)
+    ? NS_OK : NS_COMFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+NS_COM nsresult
+NS_NewIntersectionEnumerator(nsIEnumerator* first, nsIEnumerator* second,
+                      nsIEnumerator* *aInstancePtrResult)
+{
+  if (aInstancePtrResult == 0)
+    return NS_ERROR_NULL_POINTER;
+  nsIntersectionEnumerator* e = new nsIntersectionEnumerator(first, second);
+  if (e == 0)
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(e);
+  *aInstancePtrResult = e;
+  return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Union Enumerators
+////////////////////////////////////////////////////////////////////////////////
+
+class nsUnionEnumerator : public nsIEnumerator
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  // nsIEnumerator methods:
+  NS_IMETHOD First(void);
+  NS_IMETHOD Next(void);
+  NS_IMETHOD CurrentItem(nsISupports **aItem);
+  NS_IMETHOD IsDone(void);
+
+  // nsUnionEnumerator methods:
+  nsUnionEnumerator(nsIEnumerator* first, nsIEnumerator* second);
+  virtual ~nsUnionEnumerator(void);
+
+protected:
+  nsIEnumerator* mFirst;
+  nsIEnumerator* mSecond;
+};
+
+nsUnionEnumerator::nsUnionEnumerator(nsIEnumerator* first, nsIEnumerator* second)
+  : mFirst(first), mSecond(second)
+{
+  NS_ADDREF(mFirst);
+  NS_ADDREF(mSecond);
+}
+
+nsUnionEnumerator::~nsUnionEnumerator(void)
+{
+  NS_IF_RELEASE(mFirst);
+  NS_RELEASE(mSecond);
+}
+
+NS_IMPL_ADDREF(nsUnionEnumerator);
+NS_IMPL_RELEASE(nsUnionEnumerator);
+
+NS_IMETHODIMP
+nsUnionEnumerator::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  if (NULL == aInstancePtr)
+    return NS_ERROR_NULL_POINTER; 
+
+  if (aIID.Equals(nsIBidirectionalEnumerator::GetIID()) || 
+      aIID.Equals(nsIEnumerator::GetIID()) || 
+      aIID.Equals(nsISupports::GetIID())) {
+    *aInstancePtr = (void*) this; 
+    NS_ADDREF_THIS(); 
+    return NS_OK; 
+  } 
+  return NS_NOINTERFACE; 
+}
+
+NS_IMETHODIMP 
+nsUnionEnumerator::First(void)
+{
+  nsresult rv = mFirst->First();
+  if (NS_FAILED(rv)) return rv;
+  return Next();
+}
+
+NS_IMETHODIMP 
+nsUnionEnumerator::Next(void)
+{
+  nsresult rv;
+
+  // find the first item that exists in both
+  for (; mFirst->IsDone() != NS_OK; mFirst->Next()) {
+    nsISupports* item;
+    rv = mFirst->CurrentItem(&item);
+    if (NS_FAILED(rv)) return rv;
+
+    // see if it also exists in mSecond
+    rv = nsEnumeratorContains(mSecond, item);
+    if (NS_FAILED(rv)) return rv;
+
+    NS_RELEASE(item);
+    if (rv == NS_OK) {
+      // found in both, so return leaving it as the current item of mFirst
+      return NS_OK;
+    }
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP 
+nsUnionEnumerator::CurrentItem(nsISupports **aItem)
+{
+  return mFirst->CurrentItem(aItem);
+}
+
+NS_IMETHODIMP 
+nsUnionEnumerator::IsDone(void)
+{
+  return mFirst->IsDone();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+NS_COM nsresult
+NS_NewUnionEnumerator(nsIEnumerator* first, nsIEnumerator* second,
+                      nsIEnumerator* *aInstancePtrResult)
+{
+  if (aInstancePtrResult == 0)
+    return NS_ERROR_NULL_POINTER;
+  nsUnionEnumerator* e = new nsUnionEnumerator(first, second);
   if (e == 0)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(e);
