@@ -52,6 +52,7 @@
 #include "nsReadableUtils.h"
 #endif
 
+#include NEW_H
 
   // enable support for the obsolete string API if not explicitly disabled
 #ifndef MOZ_STRING_WITH_OBSOLETE_API
@@ -214,7 +215,6 @@ typedef nsAutoString nsVoidableString;
 #include <string.h>
 #include <stdio.h>
 #include "plhash.h"
-#include NEW_H
 
 inline PRInt32 MinInt(PRInt32 x, PRInt32 y)
   {

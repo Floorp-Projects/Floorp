@@ -682,3 +682,56 @@ getter_Copies( nsTXPIDLString_CharT& aString )
   {
     return nsTGetterCopies_CharT(aString);
   }
+
+
+  /**
+   * nsTAdoptString extends nsTXPIDString such that:
+   *
+   *   (1) Adopt given string on construction or assignment
+   */
+class nsTAdoptingString_CharT : public nsTXPIDLString_CharT
+  {
+    public:
+
+      typedef nsTAdoptingString_CharT    self_type;
+
+    public:
+
+      explicit nsTAdoptingString_CharT(char_type* str, size_type length = (-1))
+        {
+          Adopt(str, length);
+        }
+
+        // copy-constructor required to adopt on copy
+      nsTAdoptingString_CharT( const self_type& str )
+        {
+          *this = str;
+        }
+
+        // |operator=| does not inherit, so we must define our own
+      self_type& operator=( const substring_type& str )                                         { Assign(str);      return *this; }
+      self_type& operator=( const substring_tuple_type& tuple )                                 { Assign(tuple);    return *this; }
+      self_type& operator=( const abstract_string_type& readable )                              { Assign(readable); return *this; }
+
+
+        // Adopt() when assigning to a const self_type&
+      self_type& operator=( const self_type& str )
+        {
+          Adopt(str.mData, str.mLength);
+
+          self_type* mutable_str = NS_CONST_CAST(self_type*, &str);
+
+          // Make str forget the buffer we just took ownership of.
+          new (mutable_str) self_type();
+
+          return *this;
+        }
+
+    private:
+        // NOT TO BE IMPLEMENTED.
+      self_type& operator=( const char_type* data );
+      self_type& operator=( char_type* data );
+
+      explicit nsTAdoptingString_CharT() {}
+  };
+
