@@ -55,6 +55,7 @@ protected:
   ns4xPluginInstance* mInst;
   NPStream mNPStream;
   PRUint32 mPosition;
+  PRUint32 mCurrentStreamOffset;
   nsPluginStreamType mStreamType;
 
 public:
