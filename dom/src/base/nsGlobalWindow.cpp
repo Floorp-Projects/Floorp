@@ -217,6 +217,9 @@ GlobalWindowImpl::GlobalWindowImpl()
   if (gRefCnt++ == 0 || !gEntropyCollector) {
     CallGetService(NS_ENTROPYCOLLECTOR_CONTRACTID, &gEntropyCollector);
   }
+#ifdef DEBUG
+  printf("++DOMWINDOW == %d\n", gRefCnt);
+#endif
 
   if (!gPrefBranch) {
     CallGetService(NS_PREFSERVICE_CONTRACTID, &gPrefBranch);
@@ -236,6 +239,9 @@ GlobalWindowImpl::~GlobalWindowImpl()
   if (!--gRefCnt) {
     NS_IF_RELEASE(gEntropyCollector);
   }
+#ifdef DEBUG
+  printf("--DOMWINDOW == %d\n", gRefCnt);
+#endif
 
   mDocument = nsnull;           // Forces Release
 
