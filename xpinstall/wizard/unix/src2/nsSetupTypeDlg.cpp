@@ -153,7 +153,7 @@ nsSetupTypeDlg::Parse(nsINIParser *aParser)
     char *currLCSec = (char *) malloc(strlen(LEGACY_CHECKd) + 3);
     if (!currLCSec) return E_MEM;
     char *currVal = NULL;
-    nsLegacyCheck *currLC = NULL, *lastLC= NULL, *nextLC = NULL;
+    nsLegacyCheck *currLC = NULL, *lastLC = NULL, *nextLC = NULL;
     nsComponent *currComp = NULL;
     nsComponent *currCompDup = NULL;
     int currIndex;
@@ -859,61 +859,66 @@ nsSetupTypeDlg::DeleteOldInst()
     int numLines = 0, i;
     char *msg = NULL, *msgPtr = NULL, *msgChunkPtr = NULL;
     char msgChunk[65];
+    nsLegacyCheck *currLC = NULL;
 
-    memset(path, 0, MAXPATHLEN);
-    ConstructPath(path, gCtx->opt->mDestination, sLegacyChecks->GetFilename());
-    DUMP(path);
-
-    // XXX implement multiple legacy checks (currently only LegacyCheck0 used)
-
-    // check if old installation exists
-    if (0 == stat(path, &dummy))
+    currLC = sLegacyChecks;
+    while (currLC)
     {
-        // throw up delete dialog 
-        sDelInstDlg = gtk_dialog_new();
-        gtk_window_set_title(GTK_WINDOW(sDelInstDlg), gCtx->opt->mTitle);
-        gtk_window_set_position(GTK_WINDOW(sDelInstDlg), GTK_WIN_POS_CENTER);
+      memset(path, 0, MAXPATHLEN);
+      ConstructPath(path, gCtx->opt->mDestination, currLC->GetFilename());
+      DUMP(path);
 
-        deleteBtn = gtk_button_new_with_label(gCtx->Res("DELETE_LABEL"));
-        cancelBtn = gtk_button_new_with_label(gCtx->Res("CANCEL_LABEL"));
+      // check if old installation exists
+      if (0 == stat(path, &dummy))
+      {
+          // throw up delete dialog 
+          sDelInstDlg = gtk_dialog_new();
+          gtk_window_set_title(GTK_WINDOW(sDelInstDlg), gCtx->opt->mTitle);
+          gtk_window_set_position(GTK_WINDOW(sDelInstDlg), GTK_WIN_POS_CENTER);
 
-        gtk_container_add(GTK_CONTAINER(GTK_DIALOG(sDelInstDlg)->action_area), 
-            deleteBtn);
-        gtk_container_add(GTK_CONTAINER(GTK_DIALOG(sDelInstDlg)->action_area),
-            cancelBtn);
-        gtk_signal_connect(GTK_OBJECT(deleteBtn), "clicked",
-                       GTK_SIGNAL_FUNC(DeleteInstDelete), sDelInstDlg);
-        gtk_signal_connect(GTK_OBJECT(cancelBtn), "clicked",
-                       GTK_SIGNAL_FUNC(DeleteInstCancel), sDelInstDlg);
+          deleteBtn = gtk_button_new_with_label(gCtx->Res("DELETE_LABEL"));
+          cancelBtn = gtk_button_new_with_label(gCtx->Res("CANCEL_LABEL"));
 
-        // wrap message at 64 columns, and truncate at 20 rows
-        msg = sLegacyChecks->GetMessage();
-        msgPtr = msg;
-        numLines = strlen(msg)/64;
-        for (i = 0; i <= numLines && i < 20; i++)
-        {
-            memset(msgChunk, 0, 65);
-            strncpy(msgChunk, msgPtr, 64);
+          gtk_container_add(GTK_CONTAINER(GTK_DIALOG(sDelInstDlg)->action_area), 
+              deleteBtn);
+          gtk_container_add(GTK_CONTAINER(GTK_DIALOG(sDelInstDlg)->action_area),
+              cancelBtn);
+          gtk_signal_connect(GTK_OBJECT(deleteBtn), "clicked",
+                         GTK_SIGNAL_FUNC(DeleteInstDelete), sDelInstDlg);
+          gtk_signal_connect(GTK_OBJECT(cancelBtn), "clicked",
+                         GTK_SIGNAL_FUNC(DeleteInstCancel), sDelInstDlg);
 
-            // pad by a line but don't allow overflow
-            if (msgPtr > msg + strlen(msg))
-                break;
+          // wrap message at 64 columns, and truncate at 20 rows
+          msg = currLC->GetMessage();
+          msgPtr = msg;
+          numLines = strlen(msg)/64;
+          for (i = 0; i <= numLines && i < 20; i++)
+          {
+              memset(msgChunk, 0, 65);
+              strncpy(msgChunk, msgPtr, 64);
 
-            // find last space
-            msgChunkPtr = strrchr(msgChunk, ' ');
-            if (64 != msgChunkPtr - msgChunk + 1)
-            {
-                msgChunk[msgChunkPtr - msgChunk] = 0;
-                msgPtr = msgPtr + (msgChunkPtr - msgChunk + 1);
-            }
-            label = gtk_label_new(msgChunk);
-            gtk_box_pack_start(GTK_BOX(GTK_DIALOG(sDelInstDlg)->vbox), label,
-                FALSE, FALSE, 0);
-        }
-        gtk_widget_show_all(sDelInstDlg);
-        sDelInstUp = TRUE;
-    
-        err = E_OLD_INST;
+              // pad by a line but don't allow overflow
+              if (msgPtr > msg + strlen(msg))
+                  break;
+
+              // find last space
+              msgChunkPtr = strrchr(msgChunk, ' ');
+              if (64 != msgChunkPtr - msgChunk + 1)
+              {
+                  msgChunk[msgChunkPtr - msgChunk] = 0;
+                  msgPtr = msgPtr + (msgChunkPtr - msgChunk + 1);
+              }
+              label = gtk_label_new(msgChunk);
+              gtk_box_pack_start(GTK_BOX(GTK_DIALOG(sDelInstDlg)->vbox), label,
+                  FALSE, FALSE, 0);
+          }
+          gtk_widget_show_all(sDelInstDlg);
+          sDelInstUp = TRUE;
+      
+          err = E_OLD_INST;
+          break;
+      }
+      currLC = currLC->GetNext();    
     }
     
     return err;
