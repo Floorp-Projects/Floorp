@@ -22,6 +22,8 @@
 #include "mkselect.h"
 #include "mktcp.h"
 #include "mkgeturl.h"
+#include "prmem.h"
+#include "plstr.h"
 
 #ifdef MOZILLA_CLIENT
 
