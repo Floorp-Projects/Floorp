@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
-$::UtilsVersion = '$Revision: 1.185 $ ';
+$::UtilsVersion = '$Revision: 1.186 $ ';
 
 package TinderUtils;
 
@@ -1553,9 +1553,57 @@ sub run_all_tests {
         $test_result =
             FileBasedTest("DomToTextConversionTest", $build_dir, $binary_dir,
                           ["perl", "TestOutSinks.pl"], $Settings::DomTestTimeout,
-                          "FAILED", 0,
-                          0);  # Timeout means failure.
+                          "FAILED", 0, 0);  # Timeout means failure.
     }
+
+
+    # Codesize test.  Needed to do by hand:
+    #
+    # cvs checkout mozilla/tools/codesighs
+    #
+    if ($Settings::CodesizeTest and $test_result eq 'success') {
+      
+      # test needs this set
+      $ENV{MOZ_MAPINFO} = "1";
+      $ENV{TINDERBOX_OUTPUT} = "1";
+      
+      #chdir(".."); # up one level.
+
+      my $cwd = get_system_cwd();
+      print_log "cwd = $cwd\n";
+      
+      my $args;
+
+      $args = "new.log old.log diff.log";
+
+      print_log "\$build_dir = $build_dir";
+
+      my $test_result =
+        FileBasedTest("CodesizeConversionTest", 
+                      "$build_dir", 
+                      "$build_dir",  # run top of tree, not in dist.
+                      ["autosummary.linux.bash $args"],
+                      $Settings::CodesizeTestTimeout,
+                      "FAILED",
+                      0, 0);  # Timeout means failure.
+
+      if($test_result eq 'success') {
+        rename("$build_dir/new.log", "$build_dir/old.log");
+      } else {
+        unlink("$build_dir/new.log");
+      }
+
+      if(-e "$build_dir/new.log") {
+        print "found $build_dir/new.log\n";
+      } else {
+        print "no $build_dir/new.log\n";
+      }
+
+      # back to build_dir
+      #chdir($build_dir);
+    }
+
+
 
     # Layout performance test.
     if ($Settings::LayoutPerformanceTest and $test_result eq 'success') {
