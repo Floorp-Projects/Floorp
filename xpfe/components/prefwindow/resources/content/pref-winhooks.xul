@@ -75,7 +75,7 @@
 
     <!-- Internet Shortcuts -->
     <label class="indent" control="protocols" value="&shortcuts.text;"/>
-    <listbox class="indent" id="protocols" tyle="width: 0px; height: 0px;" flex="2">
+    <listbox class="indent" id="protocols" style="width: 0px; height: 0px;" flex="2">
       <listitem type="checkbox" id="isHandlingHTTP"   label="&http.label;"/>
       <listitem type="checkbox" id="isHandlingHTTPS"  label="&https.label;"/>
       <listitem type="checkbox" id="isHandlingFTP"    label="&ftp.label;"/>
