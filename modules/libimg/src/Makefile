@@ -80,6 +80,10 @@ EXPORTS		= PIMGCB.h PPSIMGCB.h
 
 REQUIRES	= jtools java nspr dbm util img layer js xpcom
 
+ifdef NU_CACHE
+REQUIRES 	+= cache
+endif
+
 LOCAL_INCLUDES	= -I.
 EXTRA_LIBS	= 
 
