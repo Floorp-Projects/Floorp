@@ -18,26 +18,16 @@
 DEPTH=..\..
 IGNORE_MANIFEST=1
 
-DIRS = windows
-
 DEFINES=-D_IMPL_NS_WEB -DWIN32_LEAN_AND_MEAN
 MODULE=raptor 
 
-EXPORTS =			\
-	nsApplicationManager.h		\
-	$(NULL)
-
 CPPSRCS=				\
  nsLinkHandler.cpp			\
- nsShellInstance.cpp			\
- nsApplicationManager.cpp			\
  nsWebWidget.cpp			\
  $(NULL)
 
 CPP_OBJS=				\
  .\$(OBJDIR)\nsLinkHandler.obj		\
- .\$(OBJDIR)\nsShellInstance.obj		\
- .\$(OBJDIR)\nsApplicationManager.obj		\
  .\$(OBJDIR)\nsWebWidget.obj		\
  $(NULL)
 

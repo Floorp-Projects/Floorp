@@ -23,9 +23,7 @@ MODULE=raptor
 
 EXPORTS =			\
 	nsIDocumentWidget.h		\
-	nsIApplicationShell.h		\
 	nsILinkHandler.h	\
-	nsIShellInstance.h	\
 	nsIWebWidget.h		\
 	nsweb.h			\
 	$(NULL)
