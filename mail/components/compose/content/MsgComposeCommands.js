@@ -808,7 +808,7 @@ function setupLdapAutocompleteSession()
                 // if we don't have this pref, no big deal
             }
             if (protocolVersion == "2") {
-                LDAPSession.login = 
+                LDAPSession.version = 
                     Components.interfaces.nsILDAPConnection.VERSION2;
             }
 
