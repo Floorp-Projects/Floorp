@@ -272,6 +272,8 @@ nsJARChannel::EnsureJarInput(PRBool blocking)
     }
 
     if (mJarFile) {
+        // NOTE: we do not need to deal with mSecurityInfo here,
+        // because we're loading from a local file
         rv = CreateJarInput(gJarHandler->JarCache());
     }
     else if (blocking) {
@@ -489,7 +491,8 @@ nsJARChannel::SetNotificationCallbacks(nsIInterfaceRequestor *aCallbacks)
 NS_IMETHODIMP 
 nsJARChannel::GetSecurityInfo(nsISupports **aSecurityInfo)
 {
-    *aSecurityInfo = nsnull;
+    NS_PRECONDITION(aSecurityInfo, "Null out param");
+    NS_IF_ADDREF(*aSecurityInfo = mSecurityInfo);
     return NS_OK;
 }
 
@@ -627,9 +630,16 @@ nsJARChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx)
 
 NS_IMETHODIMP
 nsJARChannel::OnDownloadComplete(nsIDownloader *downloader,
+                                 nsIRequest    *request,
+                                 nsISupports   *context,
                                  nsresult       status,
                                  nsIFile       *file)
 {
+    // Grab the security info from our base channel
+    nsCOMPtr<nsIChannel> channel(do_QueryInterface(request));
+    if (channel)
+        channel->GetSecurityInfo(getter_AddRefs(mSecurityInfo));
+    
     if (NS_SUCCEEDED(status)) {
         mJarFile = file;
     
