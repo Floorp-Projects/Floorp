@@ -503,7 +503,10 @@ function formatValue (v, formatType)
 {
     if (!v)
         throw new BadMojo (ERR_REQUIRED_PARAM, "v");
-    
+
+    if (!(v instanceof jsdIValue))
+        throw new BadMojo (ERR_INVALID_PARAM, "v", String(v));
+
     var type;
     var value;
         
@@ -579,7 +582,7 @@ function formatValue (v, formatType)
         return [type, className, value];
 
     if (className)
-        return getMsg (MSN_FMT_VALUE_LONG, [type, v.className, value]);
+        return getMsg (MSN_FMT_VALUE_LONG, [type, v.jsClassName, value]);
 
     return getMsg (MSN_FMT_VALUE_MED, [type, value]);
 
