@@ -541,6 +541,10 @@ ifndef NO_UNIX_LDAP
 DEFINES		+= -DUNIX_LDAP
 endif
 
+ifdef MOZ_MEDIUM
+SMART_MAIL = 1
+endif
+
 # i'm not sure if SHACK and ENDER still need to be defined explicitly
 # but I will just to be on the safe side. -skinny
 ifdef SMART_MAIL
