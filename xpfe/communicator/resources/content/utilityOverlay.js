@@ -144,11 +144,20 @@ function goPreferences(containerID, paneURL, itemID)
     resizable = false;
   }
 
-  var modality = modal ? "yes" : "no";
-  var resizability = resizable ? "yes" : "no";
-  var features = "chrome,titlebar,modal=" + modality + ",resizable=" + resizability;
-  openDialog("chrome://communicator/content/pref/pref.xul","PrefWindow", 
-             features, paneURL, containerID, itemID);
+  //check for an existing pref window and focus it; it's not application modal
+  const kWindowMediatorContractID = "@mozilla.org/rdf/datasource;1?name=window-mediator";
+  const kWindowMediatorIID = Components.interfaces.nsIWindowMediator;
+  const kWindowMediator = Components.classes[kWindowMediatorContractID].getService(kWindowMediatorIID);
+  var lastPrefWindow = kWindowMediator.getMostRecentWindow("mozilla:preferences");
+  if (lastPrefWindow)
+    lastPrefWindow.focus();
+  else {
+    var modality = modal ? "yes" : "no";
+    var resizability = resizable ? "yes" : "no";
+    var features = "chrome,titlebar,modal=" + modality + ",resizable=" + resizability;
+    openDialog("chrome://communicator/content/pref/pref.xul","PrefWindow", 
+               features, paneURL, containerID, itemID);
+  }
 }
 
 function goToggleToolbar( id, elementID )
