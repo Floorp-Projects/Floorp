@@ -69,6 +69,11 @@
       <treechildren id="panelChildren">
        <treeitem id="calendarPublishPanel" container="false">
          <treerow>
+           <treecell class="treecell-indent" url="chrome://calendar/content/pref/alarmPrefs.xul" label="&calendar.alarms.label;" id="calendarAlarm"/>
+         </treerow>
+       </treeitem>
+		 <treeitem id="calendarPublishPanel" container="false">
+         <treerow>
            <treecell class="treecell-indent" url="chrome://calendar/content/pref/publishPrefs.xul" label="&calendar.publish.label;" id="calendarPublish"/>
          </treerow>
        </treeitem>

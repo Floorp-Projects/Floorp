@@ -20,8 +20,6 @@
    -
    - Contributor(s):
    -  Mike Potter <mikep@oeone.com>
-   -  ArentJan Banck <ajbanck@planet.nl>
-   -  Jano John Akim Franke <mozilla-mod@jjaf.de>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -55,27 +53,22 @@
    
    <script type="application/x-javascript">
       var _elementIDs = [
-         "publishPath", "publishFileName", "publishUsername", "publishPassword"
+         "alarmplaysound", "alarmshow", "alarmemailaddress"
       ];
    </script>
 
    <groupbox>
-      <caption label="&pref.publish.caption;"/>
+      <caption label="Alarms"/>
+      <description>&pref.alarmgoesoff.label;</description>
+      <checkbox id="alarmplaysound" prefstring="calendar.alarms.playsound"
+          label="&pref.playasound;" />
+          
+      <checkbox id="alarmshow" prefstring="calendar.alarms.show" label="&pref.showalarmbox;" />
+          
       <hbox>
-         <description>&pref.publish.path.label;</description>
-         <textbox flex="1" id="publishPath" prefstring="calendar.publish.path"/>
+         <description>Default address to send alarms to:</description>
+         <textbox id="alarmemailaddress" prefstring="calendar.alarms.emailaddress" flex="1"/>      
       </hbox>
-      <hbox>
-         <description>&pref.publish.filename.label;</description>
-         <textbox flex="1" id="publishFileName" prefstring="calendar.publish.filename"/>
-      </hbox>
-      <hbox>
-         <description>&pref.publish.username.label;</description>
-         <textbox flex="1" id="publishUsername" prefstring="calendar.publish.username"/>
-      </hbox>
-      <hbox>
-         <description>&pref.publish.password.label;</description>
-         <textbox flex="1" type="password" id="publishPassword" prefstring="calendar.publish.password"/>
-      </hbox>
+
    </groupbox>
 </page>
