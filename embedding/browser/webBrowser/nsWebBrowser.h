@@ -98,7 +98,8 @@ protected:
    nsCOMPtr<nsIInterfaceRequestor> mDocShellAsReq;
    nsCOMPtr<nsIBaseWindow>    mDocShellAsWin;
    nsCOMPtr<nsIDocShellTreeItem> mDocShellAsItem;
-   nsCOMPtr<nsIWebNavigation>  mDocShellAsNav;
+   nsCOMPtr<nsIWebNavigation> mDocShellAsNav;
+   nsCOMPtr<nsIWebProgress>   mDocShellAsProgress;
    nsCOMPtr<nsIScrollable>    mDocShellAsScrollable;
    nsCOMPtr<nsITextScroll>    mDocShellAsTextScroll;
    nsCOMPtr<nsIWidget>        mInternalWidget;
