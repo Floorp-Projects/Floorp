@@ -1,0 +1,12 @@
+#! gmake
+
+DEPTH = ..
+topsrcdir	= @top_srcdir@
+VPATH		= @srcdir@
+srcdir		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+DIRS =  xpviewer
+
+include $(topsrcdir)/config/rules.mk
