@@ -123,6 +123,8 @@ protected:
   nsPlaceholderFrame* CreatePlaceholderFrame(nsIPresContext* aPresContext,
                                              nsIFrame*       aFloatedFrame);
 
+  // XXX CONSTRUCTION
+  nsresult CreateNewFrames(nsIPresContext* aPresContext);
   nsresult AppendNewFrames(nsIPresContext* aPresContext, nsIFrame*);
 
   friend nsresult NS_NewCSSInlineFrame(nsIFrame**  aInstancePtrResult,
