@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://addressbook/skin/resultPane.css" type="text/css"?>
+
+<!DOCTYPE window
+[
+	<!ENTITY nameColumn.label "Name">
+	<!ENTITY emailColumn.label "Email">
+	<!ENTITY phoneColumn.label "Phone Number">
+	<!ENTITY orgColumn.label "Organization">
+	<!ENTITY nicknameColumn.label "Nickname">
+	<!ENTITY cityColumn.label "City">
+]>   
+
+<window
+  xmlns:rdf="http://www.w3.org/TR/WD-rdf-syntax#"
+  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+
+<tree>
+  <treehead>
+    <treeitem>
+		<treecell>&nameColumn.label;</treecell>
+		<treecell>&emailColumn.label;</treecell>
+		<treecell>&phoneColumn.label;</treecell>
+		<treecell>&orgColumn.label;</treecell>
+		<treecell>&nicknameColumn.label;</treecell>
+		<treecell>&cityColumn.label;</treecell>
+    </treeitem>
+  </treehead>
+  
+
+  <treebody id="person" name="personlist">
+    <treeitem  open="true">
+		<treecell>Candice huang</treecell>
+		<treecell>chuang@netscape.com</treecell>
+		<treecell>2674</treecell>
+		<treecell>Mail</treecell>
+		<treecell>candice</treecell>
+		<treecell>Mountain View</treecell>
+    </treeitem>
+  </treebody>
+</tree>
+
+</window>

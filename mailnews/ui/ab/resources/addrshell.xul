@@ -1,0 +1,171 @@
+<?xml version="1.0"?> 
+<?xml-stylesheet href="chrome://addressbook/skin/" type="text/css"?> 
+
+<!DOCTYPE window
+[
+
+<!ENTITY addressbookWindow.title "Address Book">
+
+<!-- menu items:  the . means that the menu item isn't implemented yet -->
+<!-- File menu items -->
+
+<!-- Toolbar items -->  
+<!ENTITY newcardButton.img "chrome://addressbook/skin/newcard.gif">
+<!ENTITY newcardButton.label "New Card">  
+<!ENTITY newlistButton.img "chrome://addressbook/skin/newlist.gif">
+<!ENTITY newlistButton.label "New List">  
+<!ENTITY propertiesButton.img "chrome://addressbook/skin/property.gif">
+<!ENTITY propertiesButton.label "Properties">  
+<!ENTITY newmsgButton.img "chrome://addressbook/skin/abnewmsg.gif">
+<!ENTITY newmsgButton.label "New Msg">  
+<!ENTITY deleteButton.img "chrome://messenger/skin/trash.gif">
+<!ENTITY deleteButton.label "Delete">  
+<!ENTITY stopButton.img "resource:/res/toolbar/TB_Stop.gif">
+<!ENTITY stopButton.label "Stop">  
+<!ENTITY search.label "Show names containing:">  
+<!ENTITY throbber.img "resource:/res/throbber/anims00.gif">
+<!ENTITY throbber.url "http://www.mozilla.org/"> 
+
+]> 
+
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+	title="&addressbookWindow.title;"
+        style="width:100%;height:100%">
+
+<html:script src="resource:/res/mailnews/messenger/widgetglue.js"></html:script>
+<html:script src="resource:/res/mailnews/messenger/commandglue.js"></html:script>
+<html:script src="resource:/res/mailnews/messenger/shareglue.js"></html:script>
+
+  <menubar>
+    <menu name="File">
+      <menu name="New">
+        <menuitem name=".Navigator Window" onclick="NewBrowserWindow();"/>
+        <menuitem name="Message" onclick="MsgNewMessage();"/>
+        <menuitem name=".Blank Page" onclick="NewBlankPage();"/>
+        <separator/>
+        <menuitem name=".Page from Template" onclick="TemplatePage();"/>
+        <menuitem name=".Page from Wizard" onclick="WizardPage();"/>
+      </menu>
+      <menuitem name=".New Card..." onclick="AbNewCard();"/>
+      <menuitem name=".New List..." onclick="AbNewList();"/>
+      <menuitem name=".New Address Book..." onclick="AbNewAddressBook();"/>
+      <menuitem name=".New Directory..." onclick="AbNewDirectoryt();"/>
+      <separator/>
+      <menuitem name=".Call" onclick="MsgCall();"/>
+      <separator/>
+      <menuitem name=".Import.." onclick="AbImport();"/>
+      <menuitem name=".Export..." onclick="AbExport();"/>
+      <separator/>
+      <menuitem name=".Close" onclick="Close();"/>
+      <menuitem name="Exit" onclick="Exit();"/>
+    </menu>
+    <menu name="Edit">
+      <menuitem name=".Undo" onclick="AbEditUndo();"/>
+      <menuitem name=".Redo" onclick="AbEditRedo();"/>
+      <separator/>
+      <menuitem name=".Cut" onclick="AbEditCut();"/>
+      <menuitem name=".Copy" onclick="AbEditCopy();"/>
+      <menuitem name=".Paste" onclick="AbEditPaste();"/>
+      <menuitem name=".Delete" onclick="AbDelete();"/>
+      <menuitem name=".Select All" onclick="AbSelectAll();"/>
+      <separator/>
+      <menuitem name=".Search for..." onclick="AbSearchFor();"/>
+      <menuitem name=".Find Again" onclick="AbFindAgain();"/>
+      <separator/>
+      <menuitem name=".HTML Domain..." onclick="AbHTMLDomain();"/>
+      <menuitem name=".Properties" onclick="AbProperties();"/>
+      <separator/>
+      <menuitem name="Preferences" onclick="MsgPreferences();"/>
+    </menu>
+    <menu name="View">
+      <menu name=".Show">
+      <menuitem name=".Addressbook Toolbar" onclick="AbShowToolbar();"/>
+      <menuitem name=".Address Books" onclick="AbShowAddressBooks();"/>
+      </menu>
+      <menu name="Sort">
+        <menuitem name="by Type" onclick="AbSortByType();"/>
+        <menuitem name=".by Name" onclick="AbSortByName();"/>
+        <menuitem name=".by Email" onclick="AbSortByEmail();"/>
+        <menuitem name="by Organization" onclick="AbSortByOrganization();"/>
+        <menuitem name=".by Nickname" onclick="AbSortByNickname();"/>
+        <menuitem name="by Phone Number" onclick="AbSortByPhoneNumber();"/>
+        <menuitem name="by City" onclick="AbSortByCity();"/>
+        <separator/>
+        <menuitem name=".Ascending" onclick="AbSortAscending();"/>
+        <menuitem name=".Descending" onclick="AbSortDescending();"/>
+      </menu>
+    </menu>
+    <menu name="Communicator">
+      <menuitem name="Navigator" onclick="NavigatorWindow();"/>
+      <menuitem name=".Messenger" onclick="MessengerWindow();"/>
+      <menuitem name=".Composer" onclick="ComposerWindow();"/>
+      <menuitem name=".AOL Instant Messenger Service" onclick="AIMService();"/>
+      <separator/>
+      <menu name=".Bookmarks">
+        <menuitem name=".Add Bookmark" onclick="AddBookmark();"/>
+        <menuitem name=".File Bookmark" onclick="FileBookmark();"/>
+        <menuitem name=".Edit Bookmark" onclick="EditBookmark();"/>
+      </menu>
+      <menuitem name=".Newsgroups" onclick="Newsgroups();"/>
+      <menuitem name=".Address Book" onclick="AddressBook();"/>
+      <separator/>
+      <menu name=".Tools">
+        <menuitem name=".History" onclick="History();"/>
+        <menuitem name=".Security Info" onclick="SecurityInfo();"/>
+        <menuitem name=".Message Center" onclick="MessengerCenter();"/>
+        <menuitem name=".Import Utility" onclick="Import();"/>
+        <menuitem name=".Java Console" onclick="JavaConsole();"/>
+      </menu>
+      <separator/>
+      <menuitem name=".Window" onclick="WindowList();"/>
+    </menu>
+    <menu name=".Help">
+      <menuitem name=".Help Content" onclick="Help();"/>
+      <menuitem name=".Reference Library" onclick="Help();"/>
+      <menuitem name=".Release Notes" onclick="Help();"/>
+      <menuitem name=".Produce Information and Support" onclick="Help();"/>
+      <separator/>
+      <menuitem name=".Software Updates" onclick="Help();"/>
+      <menuitem name=".Register Now" onclick="Help();"/>
+      <menuitem name=".Member Services" onclick="Help();"/>
+      <separator/>
+      <menuitem name=".International Users" onclick="Help();"/>
+      <menuitem name=".Security" onclick="Help();"/>
+      <menuitem name=".NetWatch" onclick="Help();"/>
+      <separator/>
+      <menuitem name=".About Plug-ins" onclick="About();"/>
+      <menuitem name=".About Font Displayers" onclick="About();"/>
+      <menuitem name=".About Communicator..." onclick="About();"/>
+    </menu>
+  </menubar>
+
+  <box id="header" align="vertical" style="width:100%;height:100%">
+    <toolbox>
+      <toolbar>
+	  <titledbutton src="&newcardButton.img;" align="bottom" value="&newcardButton.label;" onclick="AbNewCard()"/>
+	  <titledbutton src="&newlistButton.img;" align="bottom" value="&newlistButton.label;" onclick="AbNewList()"/>
+	  <titledbutton src="&propertiesButton.img;" align="bottom" value="&propertiesButton.label;" onclick="AbProperties()"/>
+	  <titledbutton src="&newmsgButton.img;" align="bottom" value="&newmsgButton.label;" onclick="AbNewMsg()"/>
+	  <titledbutton src="&deleteButton.img;" align="bottom" value="&deleteButton.label;" onclick="AbDelete()"/>
+
+	  <box align="vertical" flex="100%"> -->
+<!--	    <titledbutton align="left" value="&search.label;"/>-->
+		<spring flex="100%"/> 
+	  	<html:input id="searchtext" type="text" style="min-width: 100px; min-height: 25px"/> 
+		<spring flex="100%"/> 
+	  </box>
+
+	  <titledbutton src="&stopButton.img;" align="bottom" value="&stopButton.label;" onclick="AbStop()"/>
+          <spring flex="100%"/>
+
+	  <titledbutton src="&throbber.img;" align="right" onclick="MsgHome('&throbber.url;')"/>
+      </toolbar>
+    </toolbox>
+
+    <!-- The main address book three pane frame -->
+	<html:iframe src="resource:/res/mailnews/addrbook/addresspanes.html" name="browser.2paneaddressbook" flex="100%" />
+
+  </box>
+</window>
+

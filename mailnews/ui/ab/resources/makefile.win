@@ -1,0 +1,52 @@
+#!nmake
+#
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+
+DEPTH=..\..\..\..
+IGNORE_MANIFEST=1
+
+DEFINES=-DWIN32_LEAN_AND_MEAN
+MODULE=mailnews
+
+include <$(DEPTH)\config\rules.mak>
+
+install:: 
+	$(MAKE_INSTALL) addrshell.xul	$(DIST)\bin\res\mailnews\addrbook
+	$(MAKE_INSTALL) addrshell.css	$(DIST)\bin\res\mailnews\addrbook
+	$(MAKE_INSTALL) dirPane.xul	$(DIST)\bin\res\mailnews\addrbook
+	$(MAKE_INSTALL) dirPane.css	$(DIST)\bin\res\mailnews\addrbook
+	$(MAKE_INSTALL) resultPane.xul  $(DIST)\bin\res\mailnews\addrbook
+	$(MAKE_INSTALL) resultPane.css	$(DIST)\bin\res\mailnews\addrbook
+	$(MAKE_INSTALL) cardviewPane.xul	$(DIST)\bin\res\mailnews\addrbook
+	$(MAKE_INSTALL) addresspanes.html 	$(DIST)\bin\res\mailnews\addrbook
+	$(MAKE_INSTALL) newcard.gif 	$(DIST)\bin\res\mailnews\addrbook
+	$(MAKE_INSTALL) newlist.gif 	$(DIST)\bin\res\mailnews\addrbook
+	$(MAKE_INSTALL) property.gif 	$(DIST)\bin\res\mailnews\addrbook
+	$(MAKE_INSTALL) abnewmsg.gif 	$(DIST)\bin\res\mailnews\addrbook
+
+clobber::
+	rm -f $(DIST)\res\mailnews\addrbook\addrshell.xul
+	rm -f $(DIST)\res\mailnews\addrbook\addrshell.css
+	rm -f $(DIST)\res\mailnews\addrbook\dirPane.xul
+	rm -f $(DIST)\res\mailnews\addrbook\dirPane.css
+	rm -f $(DIST)\res\mailnews\addrbook\resultPane.xul
+	rm -f $(DIST)\res\mailnews\addrbook\resultPane.css
+	rm -f $(DIST)\res\mailnews\addrbook\cardviewPane.xul
+	rm -f $(DIST)\res\mailnews\addrbook\addresspanes.html
+	rm -f $(DIST)\res\mailnews\addrbook\newcard.gif
+	rm -f $(DIST)\res\mailnews\addrbook\newlist.gif
+	rm -f $(DIST)\res\mailnews\addrbook\property.gif
+	rm -f $(DIST)\res\mailnews\addrbook\abnewmsg.gif

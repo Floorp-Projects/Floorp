@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://addressbook/skin/dirPane.css" type="text/css"?>
+
+<!DOCTYPE window
+[
+	<!ENTITY directoryColumn.label   "Directory"> 
+]>
+
+<window
+  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns:rdf="http://www.w3.org/TR/WD-rdf-syntax#"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+
+<tree>
+  <treehead>
+    <treeitem>
+      <treecell>&directoryColumn.label;</treecell>
+    </treeitem>
+  </treehead>
+
+  <treebody rdf:containment="http://home.netscape.com/NC-rdf#child">
+    <treeitem id="directory">
+      <treecell><treeindentation/>Personal Address Book</treecell>
+      </treeitem>
+  </treebody>
+</tree>
+</window>
