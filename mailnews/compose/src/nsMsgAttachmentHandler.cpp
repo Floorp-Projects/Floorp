@@ -806,13 +806,6 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
       PR_FREEIF(obj->buff);               /* free the working buff.   */
       PR_FREEIF(obj);
 
-
-      //
-      // Now that we have morphed this file, we need to change where mURL is pointing.
-      //
-      NS_RELEASE(mURL);
-      mURL = nsnull;
-
       char *newURLSpec = nsMsgPlatformFileToURL(*mAppleFileSpec);
 
       if (!newURLSpec) 
@@ -822,7 +815,7 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
         return NS_ERROR_OUT_OF_MEMORY;
       }
 
-      if (NS_FAILED(nsMsgNewURL(&mURL, newURLSpec)))
+      if (NS_FAILED(nsMsgNewURL(getter_AddRefs(mURL), newURLSpec)))
       {
         PR_FREEIF(src_filename);
         PR_FREEIF(separator);
@@ -830,7 +823,6 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
         return NS_ERROR_OUT_OF_MEMORY;
       }
   
-      NS_ADDREF(mURL);
       PR_FREEIF(newURLSpec);
       
       // Now after conversion, also patch the types.
@@ -879,7 +871,6 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
   // in the temp file
   //
   // Create a fetcher for the URL attachment...
-  NS_ADDREF(mURL);
 
   nsresult rv;
   nsCOMPtr<nsIURLFetcher> fetcher = do_CreateInstance(NS_URLFETCHER_CONTRACTID, &rv);

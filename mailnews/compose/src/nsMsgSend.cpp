@@ -367,11 +367,7 @@ nsMsgComposeAndSend::Clear()
         m_attachments [i].m_encoder_data = 0;
       }
 
-      if (m_attachments[i].mURL)
-      {
-        NS_RELEASE(m_attachments[i].mURL);
-        m_attachments[i].mURL = nsnull;
-      }
+      m_attachments[i].mURL = nsnull;
 
       PR_FREEIF (m_attachments [i].m_type);
       PR_FREEIF (m_attachments [i].m_charset);
@@ -629,14 +625,13 @@ nsMsgComposeAndSend::GatherMimeAttachments()
     m_plaintext->m_bogus_attachment = PR_TRUE;
 
     char *tempURL = nsMsgPlatformFileToURL (*mHTMLFileSpec);
-    if (!tempURL || NS_FAILED(nsMsgNewURL(&(m_plaintext->mURL), tempURL)))
+    if (!tempURL || NS_FAILED(nsMsgNewURL(getter_AddRefs(m_plaintext->mURL), tempURL)))
     {
       delete m_plaintext;
       m_plaintext = nsnull;
       goto FAILMEM;
     }
   
-    NS_IF_ADDREF(m_plaintext->mURL);
     PR_FREEIF(tempURL);
 
     PR_FREEIF(m_plaintext->m_type);
@@ -1828,8 +1823,6 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
     // Now we have to get all of the interesting information from
     // the nsIDOMNode we have in hand...
     
-    if (m_attachments[i].mURL)
-      NS_RELEASE(m_attachments[i].mURL);
     m_attachments[i].mURL = attachment.url;
     
     PR_FREEIF(m_attachments[i].m_override_type);
@@ -2090,9 +2083,7 @@ nsMsgComposeAndSend::AddCompFieldLocalAttachments()
         //
         m_attachments[newLoc].mDeleteFile = PR_FALSE;
 
-        if (m_attachments[newLoc].mURL)
-          NS_RELEASE(m_attachments[newLoc].mURL);
-          nsMsgNewURL(&(m_attachments[newLoc].mURL), url.get());
+        nsMsgNewURL(getter_AddRefs(m_attachments[newLoc].mURL), url.get());
 
         if (m_attachments[newLoc].mFileSpec)
         {
@@ -2236,10 +2227,7 @@ nsMsgComposeAndSend::AddCompFieldRemoteAttachments(PRUint32   aStartLocation,
         m_attachments[newLoc].m_done = PR_FALSE;
         m_attachments[newLoc].SetMimeDeliveryState(this);
 
-        if (m_attachments[newLoc].mURL)
-          NS_RELEASE(m_attachments[newLoc].mURL);
-
-        nsMsgNewURL(&(m_attachments[newLoc].mURL), url.get());
+        nsMsgNewURL(getter_AddRefs(m_attachments[newLoc].mURL), url.get());
 
         PR_FREEIF(m_attachments[newLoc].m_charset);
         m_attachments[newLoc].m_charset = PL_strdup(mCompFields->GetCharacterSet());
@@ -2358,8 +2346,6 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
       m_attachments[i].m_done = PR_TRUE;
       NS_ASSERTION (preloaded_attachments[i].orig_url, "null url");
 
-      if (m_attachments[i].mURL)
-        NS_RELEASE(m_attachments[i].mURL);
       m_attachments[i].mURL = preloaded_attachments[i].orig_url;
 
       PR_FREEIF(m_attachments[i].m_type);
@@ -2466,8 +2452,6 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
       m_attachments[i].SetMimeDeliveryState(this);
       NS_ASSERTION (attachments[locCount].url, "null url");
 
-      if (m_attachments[i].mURL)
-        NS_RELEASE(m_attachments[i].mURL);
       m_attachments[i].mURL = attachments[locCount].url;
 
       PR_FREEIF(m_attachments[i].m_override_type);

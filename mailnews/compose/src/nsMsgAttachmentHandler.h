@@ -95,7 +95,7 @@ private:
   //////////////////////////////////////////////////////////////////////
   //
 public:
-  nsIURI                *mURL;
+  nsCOMPtr <nsIURI> mURL;
   nsFileSpec            *mFileSpec;         // The temp file to which we save it 
   nsCOMPtr<nsIFileOutputStream>  mOutFile;          
   nsIRequest            *mRequest;          // The live request used while fetching an attachment
