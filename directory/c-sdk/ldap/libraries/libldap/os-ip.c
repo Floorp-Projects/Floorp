@@ -50,7 +50,7 @@ static char copyright[] = "@(#) Copyright (c) 1995 Regents of the University of 
 #endif
 
 #include "ldap-int.h"
-#ifdef LDAP_CONNECT_MUST_NOT_BE_INTERRUPTED
+#ifdef NSLDAPI_CONNECT_MUST_NOT_BE_INTERRUPTED
 #include <signal.h>
 #endif
 
@@ -648,12 +648,12 @@ nsldapi_try_each_host( LDAP *ld, const char *hostlist,
 			    (char *) &address ), sizeof( sin.sin_addr.s_addr) );
 
 			{
-#ifdef LDAP_CONNECT_MUST_NOT_BE_INTERRUPTED
+#ifdef NSLDAPI_CONNECT_MUST_NOT_BE_INTERRUPTED
 /*
- * Block all of the signals that might interrupt connect() since there
- * is an OS bug that causes connect() to fail if it is restarted.  Look in
- * ns/netsite/ldap/include/portable.h for the definition of
- * LDAP_CONNECT_MUST_NOT_BE_INTERRUPTED
+ * Block all of the signals that might interrupt connect() since
+ * there is an OS bug that causes connect() to fail if it is restarted.
+ * Look in ../../include/portable.h for the definition of
+ * NSLDAPI_CONNECT_MUST_NOT_BE_INTERRUPTED.
  */
 				sigset_t	ints_off, oldset;
 
@@ -662,8 +662,8 @@ nsldapi_try_each_host( LDAP *ld, const char *hostlist,
 				sigaddset( &ints_off, SIGIO );
 				sigaddset( &ints_off, SIGCLD );
 
-				sigprocmask( SIG_BLOCK, &ints_off, &oldset );
-#endif /* LDAP_CONNECT_MUST_NOT_BE_INTERRUPTED */
+				NSLDAPI_MT_SAFE_SIGPROCMASK( SIG_BLOCK, &ints_off, &oldset );
+#endif /* NSLDAPI_CONNECT_MUST_NOT_BE_INTERRUPTED */
 
 				if ( NULL != connectwithtofn  ) {	
 					err = (*connectwithtofn)(s,
@@ -675,12 +675,12 @@ nsldapi_try_each_host( LDAP *ld, const char *hostlist,
 						(struct sockaddr *)&sin,
 						sizeof(struct sockaddr_in));
 				}
-#ifdef LDAP_CONNECT_MUST_NOT_BE_INTERRUPTED
+#ifdef NSLDAPI_CONNECT_MUST_NOT_BE_INTERRUPTED
 /*
  * restore original signal mask
  */
-				sigprocmask( SIG_SETMASK, &oldset, 0 );
-#endif /* LDAP_CONNECT_MUST_NOT_BE_INTERRUPTED */
+				NSLDAPI_MT_SAFE_SIGPROCMASK( SIG_SETMASK, &oldset, 0 );
+#endif /* NSLDAPI_CONNECT_MUST_NOT_BE_INTERRUPTED */
 
 			}
 			if ( err >= 0 ) {

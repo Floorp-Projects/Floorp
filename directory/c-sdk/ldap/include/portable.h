@@ -116,7 +116,7 @@
  * some systems don't have the BSD re_comp and re_exec routines
  */
 #ifndef NEED_BSDREGEX
-#if ( defined( SYSV ) || defined( VMS ) || defined( netbsd ) || defined( freebsd ) || defined( linux ) || defined( DARWIN )) && !defined(sgi)
+#if ( defined( SYSV ) || defined( VMS ) || defined( NETBSD ) || defined( freebsd ) || defined( linux ) || defined( DARWIN )) && !defined(sgi)
 #define NEED_BSDREGEX
 #endif
 #endif
@@ -185,10 +185,20 @@
  * for connect() -- must we block signals when calling connect()?  This
  * is necessary on some buggy UNIXes.
  */
-#if !defined(LDAP_CONNECT_MUST_NOT_BE_INTERRUPTED) && \
+#if !defined(NSLDAPI_CONNECT_MUST_NOT_BE_INTERRUPTED) && \
 	( defined(AIX) || defined(IRIX) || defined(HPUX) || defined(SUNOS4) \
 	|| defined(SOLARIS) || defined(OSF1) ||defined(freebsd)) 
-#define LDAP_CONNECT_MUST_NOT_BE_INTERRUPTED
+#define NSLDAPI_CONNECT_MUST_NOT_BE_INTERRUPTED
+#endif
+
+/*
+ * On most platforms, sigprocmask() works fine even in multithreaded code.
+ * But not everywhere.
+ */
+#ifdef AIX
+#define NSLDAPI_MT_SAFE_SIGPROCMASK(h,s,o)	sigthreadmask(h,s,o)
+#else
+#define NSLDAPI_MT_SAFE_SIGPROCMASK(h,s,o)	sigprocmask(h,s,o)
 #endif
 
 
@@ -320,11 +330,14 @@ typedef char GETHOSTBYNAME_buf_t [BUFSIZ /* XXX might be too small */];
 #endif
 #if defined(hpux9) || defined(LINUX1_2) || defined(SUNOS4) || defined(SNI) || \
     defined(SCOOS) || defined(BSDI) || defined(NCR) || defined(VMS) || \
-    defined(NEC) || defined(LINUX) || (defined(AIX) && !defined(USE_REENTRANT_LIBC))
+    defined(NEC) || (defined(LINUX) && __GNU_LIBRARY__ != 6) || \
+    (defined(AIX) && !defined(USE_REENTRANT_LIBC))
 #define STRTOK( s1, s2, l )		strtok( s1, s2 )
 #else
 #define HAVE_STRTOK_R
+#ifndef strtok_r
 char *strtok_r(char *, const char *, char **);
+#endif
 #define STRTOK( s1, s2, l )		(char *)strtok_r( s1, s2, l )
 #endif /* STRTOK */
 #endif /* UNIX */
