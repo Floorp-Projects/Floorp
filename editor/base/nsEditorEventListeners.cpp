@@ -205,9 +205,15 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
 	//	we handle these two special characters here because it makes windows integration
 	//	eaiser
 	//
+
+  PRBool ctrlKey;
+  PRBool altKey;
+  uiEvent->GetCtrlKey(&ctrlKey);
+  uiEvent->GetAltKey(&altKey);
+
 	if (NS_SUCCEEDED(uiEvent->GetKeyCode(&keyCode)))
 	{
-		if (nsIDOMUIEvent::VK_BACK==keyCode) {
+    if (nsIDOMUIEvent::VK_BACK==keyCode) {
 			mEditor->DeleteSelection(nsIEditor::eDeleteLeft);
 			return NS_ERROR_BASE; // consumed
 		}	
@@ -217,7 +223,8 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
 		}
 	}
 	
- 	if (NS_SUCCEEDED(uiEvent->GetCharCode(&character)))
+ 	if ((PR_FALSE==altKey) && (PR_FALSE==ctrlKey) &&
+      (NS_SUCCEEDED(uiEvent->GetCharCode(&character))))
  	{
  		key += character;
  		mEditor->InsertText(key);
