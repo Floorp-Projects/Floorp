@@ -24,6 +24,7 @@ Contributor(s):
                 Bill Law         <law@netscape.com>
                 Blake Ross       <blakeross@telocity.com>
                 Dan Rosen        <dr@netscape.com>
+                Dean Tessman     <dean_tessman@hotmail.com>
                 Simon Fraser     <sfraser@netscape.com>
                 Stuart Parmenter <pavlov@netscape.com>
 -->
@@ -55,7 +56,7 @@ Contributor(s):
     <rows>
       <row>
         <hbox align="center">
-          <label value="&findField.label;"/>
+          <label value="&findField.label;" accesskey="&findField.accesskey;" control="dialog.findKey"/>
         </hbox>
         <hbox align="center">
           <textbox id="dialog.findKey" flex="1" oninput="doEnabling();"/>
@@ -64,16 +65,16 @@ Contributor(s):
       <row>
         <spacer/>
         <vbox align="start">
-          <checkbox id="dialog.caseSensitive" label="&caseSensitiveCheckbox.label;"/>
-          <checkbox id="dialog.wrap" label="&wrapCheckbox.label;"/>
-          <checkbox id="dialog.searchBackwards" label="&backwardsCheckbox.label;"/>
+          <checkbox id="dialog.caseSensitive" label="&caseSensitiveCheckbox.label;" accesskey="&caseSensitiveCheckbox.accesskey;"/>
+          <checkbox id="dialog.wrap" label="&wrapCheckbox.label;" accesskey="&wrapCheckbox.accesskey;"/>
+          <checkbox id="dialog.searchBackwards" label="&backwardsCheckbox.label;" accesskey="&backwardsCheckbox.accesskey;"/>
         </vbox>
       </row>
     </rows>
   </grid>
 
   <!-- used to store the find text -->
-  <data style="display:none;" id="fBLT" label="&findButton.label;"/>
+  <data style="display:none;" id="fBLT" label="&findButton.label;" accesskey="&findButton.accesskey;"/>
 
   <separator/>
   
