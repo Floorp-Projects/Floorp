@@ -83,12 +83,14 @@ nsFileChannel::~nsFileChannel()
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS5(nsFileChannel,
+NS_IMPL_THREADSAFE_ISUPPORTS7(nsFileChannel,
                    nsIFileChannel,
                    nsIChannel,
                    nsIRequest,
                    nsIStreamListener,
-                   nsIStreamObserver)
+                   nsIStreamObserver,
+                   nsIProgressEventSink,
+                   nsIInterfaceRequestor)
 
 NS_METHOD
 nsFileChannel::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
@@ -222,7 +224,7 @@ nsFileChannel::EnsureTransport()
         if (NS_FAILED(rv)) return rv;
     }
     if (mCallbacks) {
-        rv = mFileTransport->SetNotificationCallbacks(mCallbacks);
+        rv = mFileTransport->SetNotificationCallbacks(this);
         if (NS_FAILED(rv)) return rv;
     }
     if (mTransferOffset) {
@@ -586,6 +588,13 @@ NS_IMETHODIMP
 nsFileChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallbacks)
 {
   mCallbacks = aNotificationCallbacks;
+
+  // Cache the new nsIProgressEventSink instance...
+  if (mCallbacks) {
+    (void)mCallbacks->GetInterface(NS_GET_IID(nsIProgressEventSink),
+                                   getter_AddRefs(mProgress));
+  }
+
   return NS_OK;
 }
 
@@ -660,6 +669,57 @@ nsFileChannel::OnDataAvailable(nsIChannel* transportChannel, nsISupports* contex
     }
     return rv;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// From nsIInterfaceRequestor
+////////////////////////////////////////////////////////////////////////////////
+
+NS_IMETHODIMP
+nsFileChannel::GetInterface(const nsIID &anIID, void **aResult )
+{
+    // capture the progress event sink stuff. pass the rest through.
+    if (anIID.Equals(NS_GET_IID(nsIProgressEventSink))) {
+        *aResult = NS_STATIC_CAST(nsIProgressEventSink*, this);
+        NS_ADDREF(this);
+        return NS_OK;
+    } 
+    else if (mCallbacks) {
+        return mCallbacks->GetInterface(anIID, aResult);
+    }
+    return NS_ERROR_NO_INTERFACE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// From nsIProgressEventSink
+////////////////////////////////////////////////////////////////////////////////
+
+NS_IMETHODIMP
+nsFileChannel::OnStatus(nsIChannel *aChannel,
+                        nsISupports *aContext,
+                        const PRUnichar *aMsg)
+{
+    nsresult rv = NS_OK;
+
+    if (mProgress) {
+        mProgress->OnStatus(this, aContext, aMsg);
+    }
+    return rv;
+}
+
+NS_IMETHODIMP
+nsFileChannel::OnProgress(nsIChannel* aChannel,
+                          nsISupports* aContext,
+                          PRUint32 aProgress,
+                          PRUint32 aProgressMax)
+{
+    nsresult rv = NS_OK;
+
+    if (mProgress) {
+        rv = mProgress->OnProgress(this, aContext, aProgress, aProgressMax);
+    }
+    return rv;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // From nsIFileChannel

@@ -27,7 +27,6 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsILoadGroup.h"
 #include "nsIStreamListener.h"
-#include "nsIChannel.h"
 #include "nsFileSpec.h"
 #include "nsIURI.h"
 #include "nsCOMPtr.h"
@@ -36,21 +35,24 @@
 #include "prlock.h"
 #include "nsIEventQueueService.h"
 #include "nsIPipe.h"
-#include "nsILoadGroup.h"
-#include "nsIStreamListener.h"
 #include "nsCOMPtr.h"
 #include "nsIFile.h"        /* Solaris/gcc needed this here. */
+#include "nsIProgressEventSink.h"
 
 class nsFileChannel : public nsIFileChannel,
-                      public nsIStreamListener
+                      public nsIInterfaceRequestor,
+                      public nsIStreamListener,
+                      public nsIProgressEventSink
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIREQUEST
     NS_DECL_NSICHANNEL
     NS_DECL_NSIFILECHANNEL
+    NS_DECL_NSIINTERFACEREQUESTOR
     NS_DECL_NSISTREAMOBSERVER
     NS_DECL_NSISTREAMLISTENER
+    NS_DECL_NSIPROGRESSEVENTSINK
 
     nsFileChannel();
     // Always make the destructor virtual: 
@@ -81,6 +83,7 @@ protected:
     PRUint32                            mBufferSegmentSize;
     PRUint32                            mBufferMaxSize;
     nsresult                            mStatus;
+    nsCOMPtr<nsIProgressEventSink>      mProgress;
 #ifdef DEBUG
     PRThread*                           mInitiator;
 #endif
