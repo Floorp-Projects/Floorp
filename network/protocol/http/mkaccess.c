@@ -87,11 +87,10 @@ extern int MK_ACCESS_NO_COOKIES;
 extern int MK_ACCESS_NAME;
 extern int MK_ACCESS_VALUE;
 extern int MK_ACCESS_HOST;
-extern int MK_ACCESS_SEND_TO_HOST;
-extern int MK_ACCESS_IS_DOMAIN;
-extern int MK_ACCESS_IS_NOT_DOMAIN;
-extern int MK_ACCESS_SEND_TO_PATH;
-extern int MK_ACCESS_AND_BELOW;
+extern int MK_ACCESS_DOMAIN;
+extern int MK_ACCESS_PATH;
+extern int MK_ACCESS_YES;
+extern int MK_ACCESS_NO;
 extern int MK_ACCESS_SECURE;
 extern int MK_ACCESS_EXPIRES;
 extern int MK_ACCESS_END_OF_SESSION;
@@ -3301,41 +3300,39 @@ net_DisplayCookieDetailsAsHTML(MWContext *context,
         "<TABLE>");
 
     g += PR_snprintf(buffer+g, BUFLEN-g,
-        "<TR><TD><b>%s</b></TD> <TD>%s</TD></TR>", XP_GetString(MK_ACCESS_NAME), cookie_name);
+        "<TR><TD><b>%s</b></TD> <TD>%s</TD></TR>",
+	XP_GetString(MK_ACCESS_NAME), cookie_name);
     FLUSH_BUFFER
 
     g += PR_snprintf(buffer+g, BUFLEN-g,
-        "<TR><TD><b>%s</b></TD> <TD>%s</TD></TR>", XP_GetString(MK_ACCESS_VALUE), cookie_cookie);
-    FLUSH_BUFFER
-
-    g += PR_snprintf(buffer+g, BUFLEN-g,
-        "<TR><TD><b>%s</b></TD> <TD>%s</TD></TR>", XP_GetString(MK_ACCESS_HOST), cookie_host);
+        "<TR><TD><b>%s</b></TD> <TD>%s</TD></TR>",
+	XP_GetString(MK_ACCESS_VALUE), cookie_cookie);
     FLUSH_BUFFER
 
     if (cookie_is_domain) {
 	g += PR_snprintf(buffer+g, BUFLEN-g,
-            "<TR><TD><b>%s</b></TD> <TD>%s</TD></TR>", XP_GetString(MK_ACCESS_SEND_TO_HOST),
-	    XP_GetString(MK_ACCESS_IS_DOMAIN));
+            "<TR><TD><b>%s</b></TD> <TD>%s</TD></TR>",
+	    XP_GetString(MK_ACCESS_DOMAIN), cookie_host);
     } else {
 	g += PR_snprintf(buffer+g, BUFLEN-g,
-            "<TR><TD><b>%s</b></TD> <TD>%s</TD></TR>", XP_GetString(MK_ACCESS_SEND_TO_HOST),
-	    XP_GetString(MK_ACCESS_IS_NOT_DOMAIN));
+            "<TR><TD><b>%s</b></TD> <TD>%s</TD></TR>",
+	    XP_GetString(MK_ACCESS_HOST), cookie_host);
     }
     FLUSH_BUFFER
 
     g += PR_snprintf(buffer+g, BUFLEN-g,
-        "<TR><TD><b>%s</b></TD> <TD>%s %s</TD></TR>", XP_GetString(MK_ACCESS_SEND_TO_PATH),
-	cookie_path, XP_GetString(MK_ACCESS_AND_BELOW));
+        "<TR><TD><b>%s</b></TD> <TD>%s</TD></TR>",
+	XP_GetString(MK_ACCESS_PATH), cookie_path);
     FLUSH_BUFFER
 
     if(cookie_secure) {
 	g += PR_snprintf(buffer+g, BUFLEN-g,
-            "<TR><TD><b>%s</b></TD> <TD>%s</TD></TR>", XP_GetString(MK_ACCESS_SECURE),
-            "Yes"); /* bad -- needs i18n */
+            "<TR><TD><b>%s</b></TD> <TD>%s</TD></TR>",
+	    XP_GetString(MK_ACCESS_SECURE), XP_GetString(MK_ACCESS_YES));
     } else {
 	g += PR_snprintf(buffer+g, BUFLEN-g,
-            "<TR><TD><b>%s</b></TD> <TD>%s</TD></TR>", XP_GetString(MK_ACCESS_SECURE),
-            "No"); /* bad -- needs i18n */
+            "<TR><TD><b>%s</b></TD> <TD>%s</TD></TR>",
+	    XP_GetString(MK_ACCESS_SECURE), XP_GetString(MK_ACCESS_NO));
     }
     FLUSH_BUFFER
 
@@ -3343,16 +3340,17 @@ net_DisplayCookieDetailsAsHTML(MWContext *context,
 	expireDate=ctime(&(cookie_expires));
 	if (expireDate) {
 	    g += PR_snprintf(buffer+g, BUFLEN-g,
-                "<TR><TD><b>%s</b></TD> <TD>%s %s</TD></TR>", XP_GetString(MK_ACCESS_EXPIRES),
-		expireDate);
+                "<TR><TD><b>%s</b></TD> <TD>%s</TD></TR>",
+		XP_GetString(MK_ACCESS_EXPIRES), expireDate);
 	} else {
 	    g += PR_snprintf(buffer+g, BUFLEN-g,
-                "<TR><TD><b>%s</b></TD> <TD>%s</TD></TR>", XP_GetString(MK_ACCESS_EXPIRES),
-                "");
+                "<TR><TD><b>%s</b></TD> <TD>%s</TD></TR>",
+                XP_GetString(MK_ACCESS_EXPIRES), "");
 	}
     } else {
 	g += PR_snprintf(buffer+g, BUFLEN-g,
-            "<TR><TD><b>%s</b></TD> <TD>%s</TD></TR>", XP_GetString(MK_ACCESS_EXPIRES),
+            "<TR><TD><b>%s</b></TD> <TD>%s</TD></TR>",
+	    XP_GetString(MK_ACCESS_EXPIRES),
 	    XP_GetString(MK_ACCESS_END_OF_SESSION));
     }
 
