@@ -662,7 +662,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
       nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(child);
       if (imapFolder)
       {
-        nsCAutoString onlineName = m_onlineFolderName; 
+        nsCAutoString onlineName(m_onlineFolderName); 
         if (onlineName.Length() > 0)
           onlineName.AppendWithConversion(hierarchyDelimiter);
         onlineName.AppendWithConversion(folderNameStr);
