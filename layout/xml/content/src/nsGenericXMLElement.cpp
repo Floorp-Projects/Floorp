@@ -104,8 +104,7 @@ nsGenericXMLElement::GetScriptObject(nsIScriptContext* aContext,
     nsAutoString tag;
     mTag->ToString(tag);
 
-    res = factory->NewScriptXMLElement(tag, aContext, 
-                                       (nsISupports *)(nsIDOMElement *)this,
+    res = factory->NewScriptXMLElement(tag, aContext, mContent,
                                        mParent, (void**)&slots->mScriptObject);
     NS_RELEASE(factory);
     
