@@ -26,18 +26,34 @@ display: block;
 math, math[mode="inline"] {
   display: inline;
   font-family: Symbol, Times;
-   font-style: normal;
+  font-style: normal;
 /*   font-weight: bold; */
-   font-size: 14pt;
+/*   font-size: 40pt; */
 }
 
 math[mode="display"] {
   display: block;
   text-align: center;
   font-family: Symbol, Times;
-   font-style: normal;
+  font-style: normal;
 /*   font-weight: bold; */
-   font-size: 14pt;
+/*   font-size: 14pt; */
+}
+
+*[fontstyle="normal"] {
+  font-style: normal;
+}
+
+*[fontstyle="italic"] {
+  font-style: italic;
+}
+
+*[fontweight="normal"] {
+  font-weight: normal;
+}
+
+*[fontweight="bold"] {
+  font-weight: bold;
 }
 
 /*
@@ -93,33 +109,43 @@ mphantom {
 
 mfrac {
 /*  background-color: blue; */
-/* font-size: smaller */
+/*  font-size: smaller */
 /*  border: 1px solid black; */
 }
 
 msub, msup {
-/*   background-color: yellow; */
+/*  background-color: yellow; */
 /*  border: 1px solid black; */
 /*  font-size: small; */
 }
 
-/*
+
 mn {
-  border: 1px solid black;
+/*  border: 1px solid black; */
 }
-*/
+
 
 mi {
   color: red;
 /*  font-style: normal; */
 /*  border: 1px solid blue; */
+/*  background-color: yellow; */
 }
+
 
 mo {
 /*  font-style: normal; */
 /*  border: 1px solid black; */
 /*  background-color: blue; */
 }
+
+
+/*
+munder, mover, munderover {
+  background-color: yellow;
+  border: 1px solid black;
+}
+*/
 
 merror {
   display: block;
@@ -149,7 +175,7 @@ mtable {
 
 /* must never set padding in td, th */
 mtd {
-  vertical-align: inherit;
+  vertical-align: inherit;  
   background-color: inherit;
   text-align: center;
 /* border-style: inset; */
@@ -159,18 +185,27 @@ mtd {
 
 mtr {
   display: table-row;
-  vertical-align: inherit;
+  vertical-align: middle;
   background-color: inherit;
-valign: baseline;
 }
 
-:-moz-math-font-style-italic {
+mi {
   font-style: italic;
+}
+
+mstyle[fontstyle="normal"] mi {
+  font-style: normal;
 }
 
 :-moz-math-font-style-normal {
   font-style: normal;
 }
+
+/*
+:-moz-math-font-style-italic {
+  font-style: italic;
+}
+*/
 
 :-moz-math-font-size-smaller {
   font-size: smaller;
