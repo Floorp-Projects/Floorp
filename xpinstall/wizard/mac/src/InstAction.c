@@ -282,6 +282,12 @@ DownloadRedirect(short vRefNum, long dirID, FSSpecPtr redirectINI)
 	err = FSMakeFSSpec(vRefNum, dirID, "\pGetRedirect.idi", &getRedirectIDI);
 	if (err == noErr)
 		FSpDelete(&getRedirectIDI);
+	err = FSpCreate(&getRedirectIDI, 'NSCP', 'TEXT', smSystemScript);
+	if ((err != noErr) && (err != dupFNErr))
+	{
+		ErrorHandler(err);
+		return false;
+	}
 	err = FSpOpenDF(&getRedirectIDI, fsRdWrPerm, &refNum);
 	if (err != noErr)
 	{
@@ -315,20 +321,30 @@ DownloadRedirect(short vRefNum, long dirID, FSSpecPtr redirectINI)
 #endif /* SDINST_IS_DLL */
 #endif /* MOZILLA */
 	
-	/* verify redirect.ini existence */
-	HLock(gControls->cfg->redirect.url[0]);
-	leaf = strrchr(*(gControls->cfg->redirect.url[0]), '/');
-	if (!leaf)
+	bSuccess = false;
+	for (i = 0; i < gControls->cfg->redirect.numURLs; i++)
 	{
-		bSuccess = false;
-		goto BAIL;
+    	/* verify redirect.ini existence */
+    	HLock(gControls->cfg->redirect.url[i]);
+    	leaf = strrchr(*(gControls->cfg->redirect.url[i]), '/');
+    	if (!leaf)
+    	{
+    		bSuccess = false;
+    		goto BAIL;
+    	}
+    	pLeaf = CToPascal(leaf+1);
+    	HUnlock(gControls->cfg->redirect.url[i]);
+    	
+    	err = FSMakeFSSpec(vRefNum, dirID, pLeaf, redirectINI);
+    	if (err == noErr)
+    	{
+    		bSuccess = true;
+    		break;
+    	}
 	}
-	pLeaf = CToPascal(leaf+1);
-	HUnlock(gControls->cfg->redirect.url[0]);
 	
-	err = FSMakeFSSpec(vRefNum, dirID, pLeaf, redirectINI);
-	if (err != noErr)
-		bSuccess = false;
+	if (!bSuccess)
+	    FSMakeFSSpec(0, 0, "\p", redirectINI);
 	
 BAIL:
 	if (buf)
