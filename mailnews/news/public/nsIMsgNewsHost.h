@@ -2,11 +2,13 @@
  * DO NOT EDIT.  THIS FILE IS GENERATED FROM nsIMsgNewsHost.idl
  */
 
-#ifndef __nsIMsgNewsHost_h__
-#define __nsIMsgNewsHost_h__
+#ifndef __gen_nsIMsgNewsHost_h__
+#define __gen_nsIMsgNewsHost_h__
 
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsIMsgNewsgroup.h" /* interface nsIMsgNewsgroup */
+#include "nsINNTPNewsgroupList.h" /* interface nsINNTPNewsgroupList */
+
 
 /* starting interface nsIMsgNewsHost */
 
@@ -26,69 +28,73 @@ class nsIMsgNewsHost : public nsISupports {
     return iid;
   }
 
-  /* attribute boolean supportsExtensions; */
+  /*  <IDL>  */
   NS_IMETHOD IsSupportsExtensions(PRBool *aIsSupportsExtensions) = 0;
   NS_IMETHOD SetSupportsExtensions(PRBool aSupportsExtensions) = 0;
 
-  /* void AddExtension(in string extension); */
+  /*  <IDL>  */
   NS_IMETHOD AddExtension(const char *extension) = 0;
 
-  /* boolean QueryExtension(in string extension); */
+  /*  <IDL>  */
   NS_IMETHOD QueryExtension(const char *extension, PRBool *_retval) = 0;
 
-  /* attribute boolean postingAllowed; */
+  /*  <IDL>  */
   NS_IMETHOD IsPostingAllowed(PRBool *aIsPostingAllowed) = 0;
   NS_IMETHOD SetPostingAllowed(PRBool aPostingAllowed) = 0;
 
-  /* attribute boolean pushAuth; */
+  /*  <IDL>  */
   NS_IMETHOD IsPushAuth(PRBool *aIsPushAuth) = 0;
   NS_IMETHOD SetPushAuth(PRBool aPushAuth) = 0;
 
-  /* attribute  lastUpdatedTime; */
+  /*  <IDL>  */
   NS_IMETHOD GetLastUpdatedTime(PRInt64 *aLastUpdatedTime) = 0;
   NS_IMETHOD SetLastUpdatedTime(PRInt64 aLastUpdatedTime) = 0;
 
-  /* void AddPropertyForGet(in string name, in string value); */
+  /*  <IDL>  */
   NS_IMETHOD AddPropertyForGet(const char *name, const char *value) = 0;
 
-  /* void AddSearchableGroup(in string groupname); */
+  /*  <IDL>  */
   NS_IMETHOD AddSearchableGroup(const char *groupname) = 0;
 
-  /* void AddProfileGroup(in string responseText); */
+  /*  <IDL>  */
   NS_IMETHOD AddProfileGroup(const char *responseText) = 0;
 
-  /* void AddSearchableHeader(in string headerName); */
+  /*  <IDL>  */
   NS_IMETHOD AddSearchableHeader(const char *headerName) = 0;
 
-  /* void AddSubscribedNewsgroup(in string url); */
+  /*  <IDL>  */
   NS_IMETHOD AddSubscribedNewsgroup(const char *url) = 0;
 
-  /* void GroupNotFound(in string group, in boolean opening); */
+  /*  <IDL>  */
   NS_IMETHOD GroupNotFound(const char *group, PRBool opening) = 0;
 
-  /* void AddNewNewsgroup(in string groupname, in  first, in  last, in string flags, in boolean xactiveFlags); */
+  /*  <IDL>  */
   NS_IMETHOD AddNewNewsgroup(const char *groupname, PRInt32 first, PRInt32 last, const char *flags, PRBool xactiveFlags) = 0;
 
-  /*  GetNumGroupsNeedingCounts(); */
+  /*  <IDL>  */
   NS_IMETHOD GetNumGroupsNeedingCounts(PRInt32 *_retval) = 0;
 
-  /* string GetFirstGroupNeedingCounts(); */
+  /*  <IDL>  */
   NS_IMETHOD GetFirstGroupNeedingCounts(char **_retval) = 0;
 
-  /* void DisplaySubscribedGroup(in string groupname, in  first_message, in  last_message, in  total_messages, in boolean visit_now); */
+  /*  <IDL>  */
   NS_IMETHOD DisplaySubscribedGroup(const char *groupname, PRInt32 first_message, PRInt32 last_message, PRInt32 total_messages, PRBool visit_now) = 0;
 
-  /* nsIMsgNewsgroup GetFirstGroupNeedingExtraInfo(); */
+  /*  <IDL>  */
   NS_IMETHOD GetFirstGroupNeedingExtraInfo(nsIMsgNewsgroup **_retval) = 0;
 
-  /* void SetGroupNeedsExtraInfo(in string groupname, in boolean needsExtraInfo); */
+  /*  <IDL>  */
   NS_IMETHOD SetGroupNeedsExtraInfo(const char *groupname, PRBool needsExtraInfo) = 0;
 
-  /* void GetNewsGroupAndNumberOfID(in string message_id, out nsIMsgNewsgroup group, out unsigned  message_number); */
+  /*  <IDL>  */
   NS_IMETHOD GetNewsGroupAndNumberOfID(const char *message_id, nsIMsgNewsgroup **group, PRUint32 *message_number) = 0;
 
-  /* void AddPrettyName(in string groupName, in string prettyName); */
+  /*  <IDL>  */
   NS_IMETHOD AddPrettyName(const char *groupName, const char *prettyName) = 0;
+
+  /*  <IDL>  */
+  NS_IMETHOD GetNewsgroupList(nsINNTPNewsgroupList * *aNewsgroupList) = 0;
+  NS_IMETHOD SetNewsgroupList(nsINNTPNewsgroupList * aNewsgroupList) = 0;
 };
 
-#endif /* __nsIMsgNewsHost_h__ */
+#endif /* __gen_nsIMsgNewsHost_h__ */
