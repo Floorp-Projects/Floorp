@@ -113,7 +113,6 @@ protected:
 	PRBool							mWindowMadeHere; // true if we created the window
 	PRBool							mIsDialog;       // true if the window is a dialog
 	auto_ptr<nsMacEventHandler>		mMacEventHandler;
-	nsWindowType 					mWindowType;     // normal,pop up, dialog, etc
 	nsIWidget                      *mOffsetParent;
 	PRBool                          mAcceptsActivation;
 };
