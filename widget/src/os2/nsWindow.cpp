@@ -832,6 +832,17 @@ void nsWindow::RealDoCreate( HWND              hwndP,
 
    NS_ASSERTION( mWnd, "Couldn't create window");
 
+   // This is ugly. The Thinkpad TrackPoint driver checks to see whether or not a window
+   // actually has a scroll bar as a child before sending it scroll messages. Needless to
+   // say, no Mozilla window has real scroll bars. So if you have the "os2.trackpoint"
+   // preference set, we put an invisible scroll bar on every child window so we can
+   // scroll. Woohoo!
+   if (gWidgetModuleData->bIsTrackPoint && mWindowType == eWindowType_child && !mIsScrollBar) {
+     WinCreateWindow(mWnd, WC_SCROLLBAR, 0, SBS_VERT,
+                     0, 0, 0, 0, mWnd, HWND_TOP,
+                     FID_VERTSCROLL, NULL, NULL);
+   }
+
 #if DEBUG_sobotka
    printf("\n+++++++++++In nsWindow::RealDoCreate created 0x%lx, %d x %d\n",
 	  mWnd, aRect.width, aRect.height);

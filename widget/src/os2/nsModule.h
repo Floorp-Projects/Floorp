@@ -55,6 +55,7 @@ class nsWidgetModuleData : public nsISupports
    BOOL    bMouseSwitched;  // true if MB1 is the RH mouse button
    LONG    lHtEntryfield;   // ideal height of an entryfield
    BOOL    bIsDBCS;         // true if system is dbcs
+   PRBool    bIsTrackPoint;   // true if system has a TrackPoint
    HPOINTER hptrArray[17];
 
    // xptoolkit services we look after, & the primaeval appshell too.
