@@ -320,10 +320,10 @@ protected:
 public:
     static nsresult
     Create(nsIRequest** aResult);
-	
+
     NS_DECL_ISUPPORTS
 
-	// nsIRequest
+    // nsIRequest
     NS_IMETHOD GetName(nsACString &result) {
         return NS_ERROR_NOT_IMPLEMENTED;
     }
@@ -332,22 +332,22 @@ public:
     NS_IMETHOD Cancel(nsresult status)  { return NS_OK; }
     NS_IMETHOD Suspend(void) { return NS_OK; }
     NS_IMETHOD Resume(void)  { return NS_OK; }
- 	NS_IMETHOD GetLoadGroup(nsILoadGroup * *aLoadGroup) { *aLoadGroup = mLoadGroup; NS_IF_ADDREF(*aLoadGroup); return NS_OK; }
- 	NS_IMETHOD SetLoadGroup(nsILoadGroup * aLoadGroup) { mLoadGroup = aLoadGroup; return NS_OK; }
+    NS_IMETHOD GetLoadGroup(nsILoadGroup * *aLoadGroup) { *aLoadGroup = mLoadGroup; NS_IF_ADDREF(*aLoadGroup); return NS_OK; }
+    NS_IMETHOD SetLoadGroup(nsILoadGroup * aLoadGroup) { mLoadGroup = aLoadGroup; return NS_OK; }
     NS_IMETHOD GetLoadFlags(nsLoadFlags *aLoadFlags) { *aLoadFlags = nsIRequest::LOAD_NORMAL; return NS_OK; }
-   	NS_IMETHOD SetLoadFlags(nsLoadFlags aLoadFlags) { return NS_OK; }
+    NS_IMETHOD SetLoadFlags(nsLoadFlags aLoadFlags) { return NS_OK; }
 
- 	// nsIChannel
+    // nsIChannel
     NS_IMETHOD GetOriginalURI(nsIURI* *aOriginalURI) { *aOriginalURI = gURI; NS_ADDREF(*aOriginalURI); return NS_OK; }
     NS_IMETHOD SetOriginalURI(nsIURI* aOriginalURI) { gURI = aOriginalURI; NS_ADDREF(gURI); return NS_OK; }
     NS_IMETHOD GetURI(nsIURI* *aURI) { *aURI = gURI; NS_ADDREF(*aURI); return NS_OK; }
     NS_IMETHOD SetURI(nsIURI* aURI) { gURI = aURI; NS_ADDREF(gURI); return NS_OK; }
     NS_IMETHOD Open(nsIInputStream **_retval) { *_retval = nsnull; return NS_OK; }
     NS_IMETHOD AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt) { return NS_OK; }
- 	NS_IMETHOD GetOwner(nsISupports * *aOwner) { *aOwner = nsnull; return NS_OK; }
- 	NS_IMETHOD SetOwner(nsISupports * aOwner) { return NS_OK; }
- 	NS_IMETHOD GetNotificationCallbacks(nsIInterfaceRequestor * *aNotificationCallbacks) { *aNotificationCallbacks = nsnull; return NS_OK; }
- 	NS_IMETHOD SetNotificationCallbacks(nsIInterfaceRequestor * aNotificationCallbacks) { return NS_OK; }
+    NS_IMETHOD GetOwner(nsISupports * *aOwner) { *aOwner = nsnull; return NS_OK; }
+    NS_IMETHOD SetOwner(nsISupports * aOwner) { return NS_OK; }
+    NS_IMETHOD GetNotificationCallbacks(nsIInterfaceRequestor * *aNotificationCallbacks) { *aNotificationCallbacks = nsnull; return NS_OK; }
+    NS_IMETHOD SetNotificationCallbacks(nsIInterfaceRequestor * aNotificationCallbacks) { return NS_OK; }
     NS_IMETHOD GetSecurityInfo(nsISupports * *aSecurityInfo) { *aSecurityInfo = nsnull; return NS_OK; }
     NS_IMETHOD GetContentType(nsACString &aContentType) { aContentType.Truncate(); return NS_OK; }
     NS_IMETHOD SetContentType(const nsACString &aContentType) { return NS_OK; }
@@ -3932,9 +3932,9 @@ nsXULDocument::RemoveSubtreeFromDocument(nsIContent* aElement)
         if (NS_FAILED(rv)) return rv;
     }
 
-	  // 4. Remove the element from our broadcaster map, since it is no longer
-	  // in the document.
-	  // Do a getElementById to retrieve the broadcaster
+    // 4. Remove the element from our broadcaster map, since it is no longer
+    // in the document.
+    // Do a getElementById to retrieve the broadcaster
     nsCOMPtr<nsIDOMElement> broadcaster;
     nsAutoString observesVal;
     
@@ -3944,7 +3944,7 @@ nsXULDocument::RemoveSubtreeFromDocument(nsIContent* aElement)
             GetElementById(observesVal, getter_AddRefs(broadcaster));
             if (broadcaster) {
                 nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(aElement));
-		            RemoveBroadcastListenerFor(broadcaster,
+                RemoveBroadcastListenerFor(broadcaster,
                                            elt,
                                            NS_LITERAL_STRING("*"));
             } 
@@ -3957,7 +3957,7 @@ nsXULDocument::RemoveSubtreeFromDocument(nsIContent* aElement)
             GetElementById(observesVal, getter_AddRefs(broadcaster));
             if (broadcaster) {
                 nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(aElement));
-		            RemoveBroadcastListenerFor(broadcaster,
+                RemoveBroadcastListenerFor(broadcaster,
                                            elt,
                                            NS_LITERAL_STRING("*"));
             } 
