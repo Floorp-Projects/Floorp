@@ -973,7 +973,7 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
 NS_IMETHODIMP
 DocumentViewerImpl::Unload()
 {
-  nsresult rv;
+  mEnableRendering = PR_FALSE;
 
   if (!mDocument) {
     return NS_ERROR_NULL_POINTER;
@@ -982,7 +982,7 @@ DocumentViewerImpl::Unload()
   // First, get the script global object from the document...
   nsCOMPtr<nsIScriptGlobalObject> global;
 
-  rv = mDocument->GetScriptGlobalObject(getter_AddRefs(global));
+  nsresult rv = mDocument->GetScriptGlobalObject(getter_AddRefs(global));
   if (!global) {
     // Fail if no ScriptGlobalObject is available...
     NS_ASSERTION(0, "nsIScriptGlobalObject not set for document!");
@@ -1146,6 +1146,9 @@ DocumentViewerImpl::Stop(void)
   if (mDocument) {
     mDocument->StopDocumentLoad();
   }
+
+  if (mEnableRendering && (mLoaded || mStopped) && mPresContext)
+    mPresContext->SetImageAnimationMode(imgIContainer::kDontAnimMode);
 
   mStopped = PR_TRUE;
 
