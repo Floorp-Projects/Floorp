@@ -41,9 +41,7 @@
          xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <stringbundleset id="stringbundleset">
-    <stringbundle id="bundle_viewZoom"/>
-  </stringbundleset>
+  <stringbundle id="bundle_viewZoom"/>
 
   <!-- Keysets -->
   <keyset id="navKeys">
@@ -160,7 +158,7 @@
     <menu id="menu_File">
       <menupopup id="menu_FilePopup" onpopupshowing="getContentAreaFrameCount();">
         <menuitem label="&browserCmd.label;" accesskey="&browserCmd.accesskey;" key="key_newNavigator" command="cmd_newNavigator"/>
-        <menuitem id="menu_newNavigatorTab" command="cmd_newNavigatorTab" key="key_newNavigatorTab"
+        <menuitem command="cmd_newNavigatorTab" key="key_newNavigatorTab"
                   label="&tabCmd.label;" accesskey="&tabCmd.accesskey;"/>
         <menuitem label="&openCmd.label;" accesskey="&openCmd.accesskey;" key="openLocationKb" command="Browser:Open"/>
         <menuitem label="&openFileCmd.label;" accesskey="&openFileCmd.accesskey;" key="openFileKb" command="Browser:OpenFile"/>
@@ -169,7 +167,7 @@
         <menuseparator id="menu_closeSeparator" hidden="true"/>
         <menuseparator/>
         <menuitem label="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;" key="key_savePage" command="Browser:SavePage"/>
-        <menuitem id="savepage" label="&saveFrameCmd.label;" accesskey="&saveFrameCmd.accesskey;" oncommand="saveFrameDocument();" hidden="true"/>
+        <menuitem label="&saveFrameCmd.label;" accesskey="&saveFrameCmd.accesskey;" oncommand="saveFrameDocument();" hidden="true"/>
         <menuseparator/>
         <menuitem id="printSetupMenuItem" label="&printSetupCmd.label;" accesskey="&printSetupCmd.accesskey;" command="Browser:PrintSetup"/>
         <menuitem id="printPreviewMenuItem" label="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;" command="Browser:PrintPreview"/>
