@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *   Peter Annema <disttsc@bart.nl>
+ *   Dean Tessman <dean_tessman@hotmail.com>
  */
 
 //
@@ -717,10 +718,15 @@ nsTextBoxFrame::UpdateAccessIndex()
             if (!mAccessKeyInfo)
                 mAccessKeyInfo = new nsAccessKeyInfo();
 
-            // use reverse string find for appended access keys
             if (!gAlwaysAppendAccessKey) {
-                mAccessKeyInfo->mAccesskeyIndex = mCroppedTitle.Find(mAccessKey, PR_TRUE);
+                // not appending access key - do case-sensitive search first
+                mAccessKeyInfo->mAccesskeyIndex = mCroppedTitle.Find(mAccessKey, PR_FALSE);
+                if (mAccessKeyInfo->mAccesskeyIndex == kNotFound) {
+                    // didn't find it - perform a case-insensitive search
+                    mAccessKeyInfo->mAccesskeyIndex = mCroppedTitle.Find(mAccessKey, PR_TRUE);
+                }
             } else {
+                // use case-insensitive, reverse find for appended access keys
                 mAccessKeyInfo->mAccesskeyIndex = mCroppedTitle.RFind(mAccessKey, PR_TRUE);
             }
         }
