@@ -24,7 +24,18 @@
 #include <windows.h>
 #elif defined(linux)
 #include <setjmp.h>
+
+//
+// On glibc 2.1, the Dl_info api defined in <dlfcn.h> is only exposed
+// if __USE_GNU is defined.  I suppose its some kind of standards
+// adherence thing.
+//
+#if defined(__GLIBC__) && (__GLIBC_MINOR__ >= 1)
+#define __USE_GNU
+#endif
+
 #include <dlfcn.h>
+
 #endif
 
 #if defined(NS_MT_SUPPORTED)
