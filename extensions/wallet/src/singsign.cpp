@@ -47,6 +47,7 @@
 #include "prmem.h"
 #include "prprf.h"  
 #include "nsVoidArray.h"
+#include "nsXPIDLString.h"
 
 typedef PRInt32 nsKeyType;
 
@@ -625,7 +626,7 @@ Local_SACopy(char **destination, const char *source) {
 const char* empty = "empty";
 
 PRIVATE char*
-si_StrippedURL (char* URLName) {
+si_StrippedURL (const char* URLName) {
   char *result = 0;
   char *s, *t;
 
@@ -635,8 +636,7 @@ si_StrippedURL (char* URLName) {
   }
 
   /* remove protocol */
-  s = URLName;
-  s = (char*) PL_strchr(s+1, '/');
+  s = (char*) PL_strchr(URLName +1, '/');
   if (s && *s == '/' && *(s+1) == '/') {
     s += 2;
   }
@@ -777,7 +777,7 @@ PRIVATE PRBool si_signon_list_changed = PR_FALSE;
  * This routine is called only when holding the signon lock!!!
  */
 PRIVATE si_SignonURLStruct *
-si_GetURL(char * URLName) {
+si_GetURL(const char * URLName) {
   si_SignonURLStruct * url;
   char *strippedURLName = 0;
   if (!URLName) {
@@ -822,7 +822,7 @@ static nsresult MangleUrl(const char *url, char **result)
 
 /* Remove a user node from a given URL node */
 PRIVATE PRBool
-si_RemoveUser(char *URLName, nsAutoString userName, PRBool save, PRBool strip) {
+si_RemoveUser(const char *URLName, nsAutoString userName, PRBool save, PRBool strip) {
   nsresult res;
   si_SignonURLStruct * url;
   si_SignonUserStruct * user;
@@ -834,32 +834,31 @@ si_RemoveUser(char *URLName, nsAutoString userName, PRBool save, PRBool strip) {
   }
 
   /* convert URLName to a uri so we can parse out the username and hostname */
-  char* host = nsnull;
+  nsXPIDLCString host;
   if (strip) {
     if (URLName) {
       nsCOMPtr<nsIURL> uri;
       nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, NS_GET_IID(nsIURL), (void **) getter_AddRefs(uri));
-      uri->SetSpec((char *)URLName);
+      res = uri->SetSpec(URLName);
+      if (NS_FAILED(res)) return PR_FALSE;
 
       /* uri is of the form <scheme>://<username>:<password>@<host>:<portnumber>/<pathname>) */
 
       /* get host part of the uri */
-      res = uri->GetHost(&host);
+      res = uri->GetHost(getter_Copies(host));
       if (NS_FAILED(res)) {
         return PR_FALSE;
       }
 
       /* if no username given, extract it from uri -- note: prehost is <username>:<password> */
       if (userName.Length() == 0) {
-        char * userName2 = nsnull;
-        res = uri->GetPreHost(&userName2);
+        nsXPIDLCString userName2;
+        res = uri->GetPreHost(getter_Copies(userName2));
         if (NS_FAILED(res)) {
-          PR_FREEIF(host);
           return PR_FALSE;
         }
-        if (userName2) {
-          userName = nsAutoString(userName2);
-          PR_FREEIF(userName2);
+        if ((const char *)userName2 && (PL_strlen((const char *)userName2))) {
+          userName = nsAutoString((const char *)userName2);
           PRInt32 colon = userName.FindChar(':');
           if (colon != -1) {
             userName.Truncate(colon);
@@ -868,18 +867,17 @@ si_RemoveUser(char *URLName, nsAutoString userName, PRBool save, PRBool strip) {
       }
     }
   } else {
-    res = MangleUrl(URLName, &host);
+    res = MangleUrl(URLName, getter_Copies(host));
     if (NS_FAILED(res)) return PR_FALSE;
   }
 
   si_lock_signon_list();
 
   /* get URL corresponding to host */
-  url = si_GetURL(host);
+  url = si_GetURL((const char *)host);
   if (!url) {
     /* URL not found */
     si_unlock_signon_list();
-    PR_FREEIF(host);
     return PR_FALSE;
   }
 
@@ -904,7 +902,6 @@ si_RemoveUser(char *URLName, nsAutoString userName, PRBool save, PRBool strip) {
       }
     }
     si_unlock_signon_list();
-    PR_FREEIF(host);
     return PR_FALSE; /* user not found so nothing to remove */
     foundUser: ;
   }
@@ -928,7 +925,6 @@ si_RemoveUser(char *URLName, nsAutoString userName, PRBool save, PRBool strip) {
   }
 
   si_unlock_signon_list();
-  PR_FREEIF(host);
   return PR_TRUE;
 }
 
@@ -984,7 +980,7 @@ si_CheckForUser(char *URLName, nsAutoString userName) {
  * This routine is called only if signon pref is enabled!!!
  */
 PRIVATE si_SignonUserStruct*
-si_GetUser(char* URLName, PRBool pickFirstUser, nsAutoString userText) {
+si_GetUser(const char* URLName, PRBool pickFirstUser, nsAutoString userText) {
   si_SignonURLStruct* url;
   si_SignonUserStruct* user = nsnull;
   si_SignonDataStruct* data;
@@ -1130,7 +1126,7 @@ si_GetUser(char* URLName, PRBool pickFirstUser, nsAutoString userText) {
  * This routine is called only if signon pref is enabled!!!
  */
 PRIVATE si_SignonUserStruct*
-si_GetSpecificUser(char* URLName, nsAutoString userName, nsAutoString userText) {
+si_GetSpecificUser(const char* URLName, nsAutoString userName, nsAutoString userText) {
   si_SignonURLStruct* url;
   si_SignonUserStruct* user;
   si_SignonDataStruct* data;
@@ -1286,7 +1282,6 @@ SI_RemoveAllSignonData() {
   si_FullyLoaded = PR_FALSE;
 
  si_Reject * reject;
- PRInt32 rejectCount = LIST_COUNT(si_reject_list);
   while (LIST_COUNT(si_reject_list)>0) {
     reject = NS_STATIC_CAST(si_Reject*, si_reject_list->ElementAt(0));
     if (reject) {
@@ -1417,7 +1412,7 @@ si_PutReject(char * URLName, nsAutoString userName, PRBool save) {
  * This routine is called only if signon pref is enabled!!!
  */
 PRIVATE void
-si_PutData(char * URLName, nsVoidArray * signonData, PRBool save) {
+si_PutData(const char * URLName, nsVoidArray * signonData, PRBool save) {
   PRBool added_to_list = PR_FALSE;
   si_SignonURLStruct * url;
   si_SignonUserStruct * user;
@@ -2422,7 +2417,7 @@ SINGSIGN_RestoreSignonData (char* URLName, PRUnichar* name, PRUnichar** value, P
  * Remember signon data from a browser-generated password dialog
  */
 PRIVATE void
-si_RememberSignonDataFromBrowser(char* URLName, nsAutoString username, nsAutoString password) {
+si_RememberSignonDataFromBrowser(const char* URLName, nsAutoString username, nsAutoString password) {
   /* do nothing if signon preference is not enabled */
   if (!si_GetSignonRememberingPref()){
     return;
@@ -2456,7 +2451,7 @@ si_RememberSignonDataFromBrowser(char* URLName, nsAutoString username, nsAutoStr
  */
 PRIVATE void
 si_RestoreOldSignonDataFromBrowser
-    (char* URLName, PRBool pickFirstUser, nsAutoString& username, nsAutoString& password) {
+    (const char* URLName, PRBool pickFirstUser, nsAutoString& username, nsAutoString& password) {
   si_SignonUserStruct* user;
   si_SignonDataStruct* data;
 
@@ -2513,25 +2508,26 @@ SINGSIGN_PromptUsernameAndPassword
   /* convert to a uri so we can parse out the hostname */
   nsCOMPtr<nsIURL> uri;
   nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, NS_GET_IID(nsIURL), (void **) getter_AddRefs(uri));
-  uri->SetSpec((char *)urlname);
+  res = uri->SetSpec(urlname);
+  if (NS_FAILED(res)) return res;
 
   /* uri is of the form <scheme>://<username>:<password>@<host>:<portnumber>/<pathname>) */
 
   /* get host part of the uri */
-  char* host = nsnull;
+  nsXPIDLCString host;
   if (strip) {
-    res = uri->GetHost(&host);
+    res = uri->GetHost(getter_Copies(host));
     if (NS_FAILED(res)) {
       return res;
     }
   } else {
-    res = MangleUrl(urlname, &host);
+    res = MangleUrl(urlname, getter_Copies(host));
     if (NS_FAILED(res)) return res;
   }
 
   /* prefill with previous username/password if any */
   nsAutoString username, password;
-  si_RestoreOldSignonDataFromBrowser(host, PR_FALSE, username, password);
+  si_RestoreOldSignonDataFromBrowser((const char*)host, PR_FALSE, username, password);
 
   /* get new username/password from user */
   *user = username.ToNewUnicode();
@@ -2542,15 +2538,13 @@ SINGSIGN_PromptUsernameAndPassword
     /* user pressed Cancel */
     PR_FREEIF(*user);
     PR_FREEIF(*pwd);
-    PR_FREEIF(host);
     return res;
   }
   if (checked) {
-    si_RememberSignonDataFromBrowser (host, nsAutoString(*user), nsAutoString(*pwd));
+    si_RememberSignonDataFromBrowser ((const char*)host, nsAutoString(*user), nsAutoString(*pwd));
   }
 
   /* cleanup and return */
-  PR_FREEIF(host);
   return NS_OK;
 }
 
@@ -2571,48 +2565,46 @@ SINGSIGN_PromptPassword
   /* convert to a uri so we can parse out the username and hostname */
   nsCOMPtr<nsIURL> uri;
   nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, NS_GET_IID(nsIURL), (void **) getter_AddRefs(uri));
-  uri->SetSpec((char *)urlname);
+  res = uri->SetSpec(urlname);
+  if (NS_FAILED(res)) return res;
 
   /* uri is of the form <scheme>://<username>:<password>@<host>:<portnumber>/<pathname>) */
 
   /* get host part of the uri */
-  char* host;
+  nsXPIDLCString host;
   if (strip) {
-    res = uri->GetHost(&host);
+    res = uri->GetHost(getter_Copies(host));
     if (NS_FAILED(res)) {
       return res;
     }
   } else {
-    res = MangleUrl(urlname, &host);
+    res = MangleUrl(urlname, getter_Copies(host));
     if (NS_FAILED(res)) return res;
   }
 
   /* extract username from uri -- note: prehost is <username>:<password> */
   if (strip) {
-	  char * prehostCString;
-	  res = uri->GetPreHost(&prehostCString);
+	  nsXPIDLCString prehostCString;
+	  res = uri->GetPreHost(getter_Copies(prehostCString));
 	  if (NS_FAILED(res)) {
-	    PR_FREEIF(host);
 	    return res;
 	  }
-	  nsAutoString prehost = nsAutoString(prehostCString);
+	  nsAutoString prehost = nsAutoString((const char *)prehostCString);
 	  PRInt32 colon = prehost.FindChar(':');
 	  if (colon == -1) {
 	    username = prehost;
 	  } else {
 	    prehost.Left(username, colon);  
 	  }
-	  PR_FREEIF(prehostCString);
   }
 
   /* get previous password used with this username, pick first user if no username found */
-  si_RestoreOldSignonDataFromBrowser(host, (username.Length() == 0), username, password);
+  si_RestoreOldSignonDataFromBrowser((const char *)host, (username.Length() == 0), username, password);
 
   /* return if a password was found */
   if (password.Length() != 0) {
     *pwd = password.ToNewUnicode();
     *returnValue = PR_TRUE;
-    PR_FREEIF(host);
     return NS_OK;
   }
 
@@ -2623,15 +2615,13 @@ SINGSIGN_PromptPassword
   if (NS_FAILED(res)) {
     /* user pressed Cancel */
     PR_FREEIF(*pwd);
-    PR_FREEIF(host);
     return res;
   }
   if (checked) {
-    si_RememberSignonDataFromBrowser (host, username, nsAutoString(*pwd));
+    si_RememberSignonDataFromBrowser ((const char *)host, username, nsAutoString(*pwd));
   }
 
   /* cleanup and return */
-  PR_FREEIF(host);
   return NS_OK;
 }
 
@@ -2651,28 +2641,28 @@ SINGSIGN_Prompt
   /* convert to a uri so we can parse out the hostname */
   nsCOMPtr<nsIURL> uri;
   nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, NS_GET_IID(nsIURL), (void **) getter_AddRefs(uri));
-  uri->SetSpec((char *)urlname);
+  res = uri->SetSpec(urlname);
+  if (NS_FAILED(res)) return res;
 
   /* get host part of the uri */
-  char* host;
+  nsXPIDLCString host;
   if (strip) {
-    res = uri->GetHost(&host);
+    res = uri->GetHost(getter_Copies(host));
     if (NS_FAILED(res)) {
       return res;
     }
   } else {
-    res = MangleUrl(urlname, &host);
+    res = MangleUrl(urlname, getter_Copies(host));
     if (NS_FAILED(res)) return res;
   }
 
   /* get previous data used with this hostname */
-  si_RestoreOldSignonDataFromBrowser(host, PR_TRUE, emptyUsername, data);
+  si_RestoreOldSignonDataFromBrowser((const char *)host, PR_TRUE, emptyUsername, data);
 
   /* return if data was found */
   if (data.Length() != 0) {
     *resultText = data.ToNewUnicode();
     *returnValue = PR_TRUE;
-    PR_FREEIF(host);
     return NS_OK;
   }
 
@@ -2683,15 +2673,13 @@ SINGSIGN_Prompt
   if (NS_FAILED(res)) {
     /* user pressed Cancel */
     PR_FREEIF(*resultText);
-    PR_FREEIF(host);
     return res;
   }
   if (checked) {
-    si_RememberSignonDataFromBrowser (host, emptyUsername, nsAutoString(*resultText));
+    si_RememberSignonDataFromBrowser ((const char *)host, emptyUsername, nsAutoString(*resultText));
   }
 
   /* cleanup and return */
-  PR_FREEIF(host);
   return NS_OK;
 }
 
