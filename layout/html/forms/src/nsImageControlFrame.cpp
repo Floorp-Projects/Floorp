@@ -390,26 +390,24 @@ nsImageControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
   char buf[20];
   aNumValues = 2;
 
-  aValues[0].SetLength(0);
   sprintf(&buf[0], "%d", mLastClickPoint.x);
-  aValues[0].Append(&buf[0]);
+  aValues[0].AssignWithConversion(&buf[0]);
 
-  aValues[1].SetLength(0);
   sprintf(&buf[0], "%d", mLastClickPoint.y);
-  aValues[1].Append(&buf[0]);
+  aValues[1].AssignWithConversion(&buf[0]);
 
   nsAutoString name;
   nsresult result = GetName(&name);
   if (NS_CONTENT_ATTR_HAS_VALUE == result) {
     aNames[0] = name;
-    aNames[0].Append(".x");
+    aNames[0].AppendWithConversion(".x");
     aNames[1] = name;
-    aNames[1].Append(".y");
+    aNames[1].AppendWithConversion(".y");
   } else {
     // If the Image Element has no name, simply return x and y
     // to Nav and IE compatability.
-    aNames[0] = "x";
-    aNames[1] = "y";
+    aNames[0].AssignWithConversion("x");
+    aNames[1].AssignWithConversion("y");
   }
 
   return PR_TRUE;

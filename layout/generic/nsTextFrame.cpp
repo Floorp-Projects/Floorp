@@ -4460,7 +4460,7 @@ nsTextFrame::ToCString(nsString& aBuf, PRInt32* aTotalContentLength) const
       aBuf.AppendWithConversion("\\t");
     } else if ((ch < ' ') || (ch >= 127)) {
       aBuf.AppendWithConversion("\\0");
-      aBuf.AppendWithConversion((PRInt32)ch, 8);
+      aBuf.AppendInt((PRInt32)ch, 8);
     } else {
       aBuf.Append(ch);
     }

@@ -522,7 +522,7 @@ nsXMLContentSink::GetAttributeValueAt(const nsIParserNode& aNode,
             }
             *cp = '\0';
             PRInt32 ch;
-            nsAutoString str(cbuf);
+            nsAutoString str; str.AssignWithConversion(cbuf);
             dtd->ConvertEntityToUnicode(str, &ch);
             if (ch < 0) {
               continue;
@@ -567,7 +567,7 @@ nsXMLContentSink::AddAttributes(const nsIParserNode& aNode,
     }
     if ((kNameSpaceID_XMLNS == nameSpaceID) && aIsHTML) {
       NS_RELEASE(nameAtom);
-      name.Insert("xmlns:", 0);
+      name.InsertWithConversion("xmlns:", 0);
       nameAtom = NS_NewAtom(name);
       nameSpaceID = kNameSpaceID_HTML;  // XXX this is wrong, but necessary until HTML can store other namespaces for attrs
     }
@@ -688,7 +688,7 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
 
   mState = eXMLContentSinkState_InDocumentElement;
 
-  tag = aNode.GetText();
+  tag.Assign(aNode.GetText());
   nameSpacePrefix = getter_AddRefs(CutNameSpacePrefix(tag));
 
   // We must register namespace declarations found in the attribute list
@@ -784,7 +784,7 @@ nsXMLContentSink::CloseContainer(const nsIParserNode& aNode)
   // no close tags for elements.
   PR_ASSERT(eXMLContentSinkState_InDocumentElement == mState);
 
-  tag = aNode.GetText();
+  tag.Assign(aNode.GetText());
   nameSpacePrefix = getter_AddRefs(CutNameSpacePrefix(tag));
   nameSpaceID = GetNameSpaceId(nameSpacePrefix);
   isHTML = IsHTMLNameSpace(nameSpaceID);
@@ -914,7 +914,7 @@ nsXMLContentSink::AddComment(const nsIParserNode& aNode)
   nsIDOMComment *domComment;
   nsresult result = NS_OK;
 
-  text = aNode.GetText();
+  text.Assign(aNode.GetText());
   result = NS_NewCommentNode(&comment);
   if (NS_OK == result) {
     result = comment->QueryInterface(kIDOMCommentIID, (void **)&domComment);
@@ -941,7 +941,7 @@ nsXMLContentSink::AddCDATASection(const nsIParserNode& aNode)
   nsIDOMCDATASection *domCDATA;
   nsresult result = NS_OK;
 
-  text = aNode.GetText();
+  text.Assign(aNode.GetText());
   result = NS_NewXMLCDATASection(&cdata);
   if (NS_OK == result) {
     result = cdata->QueryInterface(kIDOMCDATASectionIID, (void **)&domCDATA);
@@ -1245,7 +1245,7 @@ nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
 
   FlushText();
 
-  text = aNode.GetText();
+  text.Assign(aNode.GetText());
   ParseProcessingInstruction(text, target, data);
   result = NS_NewXMLProcessingInstruction(&node, target, data);
   if (NS_OK == result) {
@@ -1257,28 +1257,28 @@ nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
     nsAutoString type, href, title, media, alternate;
 
     // If it's a stylesheet PI...
-    if (target.Equals(kStyleSheetPI)) {
-      result = GetQuotedAttributeValue(text, "href", href);
+    if (target.EqualsWithConversion(kStyleSheetPI)) {
+      result = GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("href"), href);
       // If there was an error or there's no href, we can't do
       // anything with this PI
       if ((NS_OK != result) || (0 == href.Length())) {
         return result;
       }
-      result = GetQuotedAttributeValue(text, "type", type);
+      result = GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("type"), type);
       if (NS_FAILED(result)) {
-        type="text/css";  // Default the type attribute to the mime type for CSS
+        type.AssignWithConversion("text/css");  // Default the type attribute to the mime type for CSS
       }
-      result = GetQuotedAttributeValue(text, "title", title);
+      result = GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("title"), title);
       if (NS_SUCCEEDED(result)) {
         title.CompressWhitespace();
       }
-      result = GetQuotedAttributeValue(text, "media", media);
+      result = GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("media"), media);
       if (NS_SUCCEEDED(result)) {
         media.ToLowerCase();
       }
-      result = GetQuotedAttributeValue(text, "alternate", alternate);      
+      result = GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("alternate"), alternate);      
 #ifndef XSL
-      result = ProcessCSSStyleLink(node, href, alternate.Equals("yes"),
+      result = ProcessCSSStyleLink(node, href, alternate.EqualsWithConversion("yes"),
                                 title, type, media);
 #else
       result = ProcessStyleLink(node, href, alternate.Equals("yes"),
@@ -1679,7 +1679,7 @@ nsXMLContentSink::OnStreamComplete(nsIStreamLoader* aLoader,
                                    const char* string)
 {
   nsresult rv = NS_OK;
-  nsString aData(string, stringLen);
+  nsString aData; aData.AssignWithConversion(string, stringLen);
 
   if (NS_OK == aStatus) {
     rv = EvaluateScript(aData, 0, mScriptLanguageVersion);
@@ -1890,7 +1890,7 @@ nsXMLContentSink::GetElementFactory(PRInt32 aNameSpaceID, nsIElementFactory** aR
   gNameSpaceManager->GetNameSpaceURI(aNameSpaceID, nameSpace);
 
   nsCAutoString progID = NS_ELEMENT_FACTORY_PROGID_PREFIX;
-  progID.Append(nameSpace);
+  progID.AppendWithConversion(nameSpace);
 
   // Retrieve the appropriate factory.
   NS_WITH_SERVICE(nsIElementFactory, elementFactory, progID, &rv);

@@ -1315,7 +1315,7 @@ nsGenericElement::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, js
     propName.Assign(JS_GetStringChars(JS_ValueToString(aContext, aID)));
     if (propName.Length() > 2) 
       prefix.Assign(propName.GetUnicode(), 2);
-    if (prefix.Equals("on")) {
+    if (prefix.EqualsWithConversion("on")) {
       nsCOMPtr<nsIAtom> atom = getter_AddRefs(NS_NewAtom(propName));
       nsIEventListenerManager *manager = nsnull;
 
@@ -1932,7 +1932,7 @@ nsGenericElement::TriggerLink(nsIPresContext* aPresContext,
     if (NS_FAILED(rv)) return rv;
   }
   else {
-    absURLSpec = aURLSpec;
+    absURLSpec.Assign(aURLSpec);
   }
 
   // Now pass on absolute url to the click handler
@@ -2373,8 +2373,8 @@ nsGenericContainerElement::ListAttributes(FILE* out) const
     nsAutoString buffer;
 
     if (kNameSpaceID_None != attr->mNameSpaceID) {  // prefix namespace
-      buffer.Append(attr->mNameSpaceID, 10);
-      buffer.Append(':');
+      buffer.AppendInt(attr->mNameSpaceID, 10);
+      buffer.AppendWithConversion(':');
     }
 
     // name
@@ -2383,7 +2383,7 @@ nsGenericContainerElement::ListAttributes(FILE* out) const
     buffer.Append(name);
 
     // value
-    buffer.Append("=");
+    buffer.AppendWithConversion("=");
     buffer.Append(attr->mValue);
 
     fputs(" ", out);

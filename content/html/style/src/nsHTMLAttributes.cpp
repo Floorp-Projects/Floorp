@@ -132,12 +132,12 @@ struct HTMLAttribute {
       mAttribute->ToString(temp);
       aBuffer.Append(temp);
       if (eHTMLUnit_Null != mValue.GetUnit()) {
-        aBuffer.Append(" = ");
+        aBuffer.AppendWithConversion(" = ");
         mValue.AppendToString(aBuffer);
       }
     }
     else {
-      aBuffer.Append("null");
+      aBuffer.AppendWithConversion("null");
     }
   }
 
@@ -1514,7 +1514,7 @@ HTMLAttributesImpl::List(FILE* out, PRInt32 aIndent) const
     nsAutoString  buffer;
     mAttrNames[index]->ToString(buffer);
     if (eHTMLUnit_Null != value.GetUnit()) {
-      buffer.Append(" = ");
+      buffer.AppendWithConversion(" = ");
       value.AppendToString(buffer);
     }
     fputs(buffer, out);
