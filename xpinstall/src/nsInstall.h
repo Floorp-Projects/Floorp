@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Daniel Veditz <dveditz@netscape.com>
  *   Douglas Turner <dougt@netscape.com>
+ *   Jens Bannmann <jens.b@web.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -313,7 +314,7 @@ class nsInstall
         PRBool     InInstallTransaction(void) { return mInstalledFiles != nsnull; }
 
         PRInt32    Alert(nsString& string);
-        PRInt32    Confirm(nsString& string, PRBool* aReturn);
+        PRInt32    ConfirmEx(nsString& aDialogTitle, nsString& aText, PRUint32 aButtonFlags, nsString& aButton0Title, nsString& aButton1Title, nsString& aButton2Title, nsString& aCheckMsg, PRBool* aCheckState, PRInt32* aReturn);
         void       InternalAbort(PRInt32 errcode);
 
         PRInt32    ScheduleForInstall(nsInstallObject* ob);

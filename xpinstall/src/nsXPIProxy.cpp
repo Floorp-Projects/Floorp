@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Daniel Veditz <dveditz@netscape.com>
+ *   Jens Bannmann <jens.b@web.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -93,13 +94,13 @@ nsXPIProxy::Alert(const PRUnichar* aTitle, const PRUnichar* aText)
 }
 
 NS_IMETHODIMP
-nsXPIProxy::Confirm(const PRUnichar* aTitle, const PRUnichar* aText, PRBool *aReturn)
+nsXPIProxy::ConfirmEx(const PRUnichar* aDialogTitle, const PRUnichar* aText, PRUint32 aButtonFlags, const PRUnichar* aButton0Title, const PRUnichar* aButton1Title, const PRUnichar* aButton2Title, const PRUnichar* aCheckMsg, PRBool* aCheckState, PRInt32* aReturn)
 {
     nsCOMPtr<nsIPromptService> dialog(do_GetService("@mozilla.org/embedcomp/prompt-service;1"));
 
     if (!dialog)
         return NS_ERROR_FAILURE;
 
-    return dialog->Confirm( nsnull, aTitle, aText, aReturn );
+    return dialog->ConfirmEx( nsnull, aDialogTitle, aText, aButtonFlags, aButton0Title, aButton1Title, aButton2Title, aCheckMsg, aCheckState, aReturn );
 }
 

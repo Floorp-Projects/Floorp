@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Jens Bannmann <jens.b@web.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -46,6 +47,7 @@
 #include "nsInstall.h"
 #include "nsInstallFile.h"
 #include "nsInstallTrigger.h"
+#include "nsIPromptService.h"
 
 #include "nsIDOMInstallVersion.h"
 
@@ -1573,7 +1575,7 @@ InstallAlert(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
   else
   {
-    JS_ReportError(cx, "Function LogComment requires 1 parameter");
+    JS_ReportError(cx, "Function Alert requires 1 parameter");
     return JS_FALSE;
   }
 
@@ -1587,7 +1589,16 @@ PR_STATIC_CALLBACK(JSBool)
 InstallConfirm(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
-  nsAutoString b0;
+  nsAutoString text;
+  nsAutoString title;
+  PRUint32 buttonFlags = nsIPromptService::STD_OK_CANCEL_BUTTONS;
+  nsAutoString button0Title;
+  nsAutoString button1Title;
+  nsAutoString button2Title;
+  nsAutoString checkMsg;
+  JSObject* checkObj = 0;
+  jsval jsCheckState = 0;
+  PRBool checkState = PR_FALSE;
   PRInt32 nativeRet;
 
   *rval = JSVAL_NULL;
@@ -1598,25 +1609,80 @@ InstallConfirm(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
     return JS_TRUE;
   }
 
-  if(argc == 1)
+  if(argc == 0)
   {
-    //  public int InstallConfirm (String aComment);
-
-    ConvertJSValToStr(b0, cx, argv[0]);
-
-    jsrefcount saveDepth = JS_SuspendRequest(cx);//Need to suspend use of thread or deadlock occurs
-
-    nativeThis->Confirm(b0, &nativeRet);
-
-    JS_ResumeRequest(cx, saveDepth);
-
-    *rval = INT_TO_JSVAL(nativeRet);
-  }
-  else
-  {
-    JS_ReportError(cx, "Function LogComment requires 1 parameter");
+    JS_ReportError(cx, "Function Confirm requires at least 1 parameter");
     return JS_FALSE;
   }
+
+  //  public int InstallConfirm (String aComment);
+  ConvertJSValToStr(text, cx, argv[0]);
+
+  //  Any additional parameters are optional.
+  //  public int InstallConfirm (String aText,
+  //                             String aDialogTitle,
+  //                             Number aButtonFlags,
+  //                             String aButton0Title,
+  //                             String aButton1Title,
+  //                             String aButton2Title,
+  //                             String aCheckMsg,
+  //                             Object aCheckState);
+  if (argc > 1)
+    ConvertJSValToStr(title, cx, argv[1]);
+
+  if(argc > 2)
+  {
+    if(!JSVAL_IS_INT(argv[2]))
+    {
+      JS_ReportError(cx, "Parameter 'aButtonFlags' must be a number");
+      return JS_FALSE;
+    }
+    buttonFlags = JSVAL_TO_INT(argv[2]);
+  }
+
+  if (argc > 3)
+    ConvertJSValToStr(button0Title, cx, argv[3]);
+  if (argc > 4)
+    ConvertJSValToStr(button1Title, cx, argv[4]);
+  if (argc > 5)
+    ConvertJSValToStr(button2Title, cx, argv[5]);
+  if (argc > 6)
+    ConvertJSValToStr(checkMsg, cx, argv[6]);
+
+  if (argc > 7 && !JSVAL_IS_PRIMITIVE(argv[7])) 
+  {
+    checkObj = JSVAL_TO_OBJECT(argv[7]);
+    if (!JS_GetProperty(cx, checkObj, "value", &jsCheckState) ||
+      !JSVAL_IS_BOOLEAN(jsCheckState))
+    {
+      JS_ReportError(cx, "Parameter 'aCheckState' must have a boolean 'value' property");
+      return JS_FALSE;
+    }
+    JS_ValueToBoolean(cx, jsCheckState, &checkState);
+  }
+
+  jsrefcount saveDepth = JS_SuspendRequest(cx); //Need to suspend use of thread or deadlock occurs
+
+  nativeThis->ConfirmEx(title, text, buttonFlags, button0Title, button1Title, button2Title, checkMsg, &checkState, &nativeRet);
+
+  JS_ResumeRequest(cx, saveDepth);
+
+  // Only save back checkState when an object was passed as 8th parameter
+  if (checkObj)
+  {
+    jsCheckState = BOOLEAN_TO_JSVAL(checkState);
+    JS_SetProperty(cx, checkObj, "value", &jsCheckState);
+  }
+
+  // To maintain compatibility with the classic one-arg confirm that returned 1
+  // for OK and 0 for cancel/close, we have to swap 0 and 1 here, as confirmEx
+  // always returns 0 for the first (i.e. OK) button.
+  if (nativeRet == 0)
+    nativeRet = 1; // 0 = first button = OK => true(1)
+  else if (nativeRet == 1)
+    nativeRet = 0; // 1 = second button or window closed = Cancel => false(0)
+
+  *rval = INT_TO_JSVAL(nativeRet);
 
   return JS_TRUE;
 }
@@ -1711,6 +1777,25 @@ static JSConstDoubleSpec install_constants[] =
     { nsInstall::REBOOT_NEEDED,              "REBOOT_NEEDED"                },
     { nsInstall::INVALID_SIGNATURE,          "INVALID_SIGNATURE"            },
 
+    // these are flags supported by confirm
+    { nsIPromptService::BUTTON_POS_0,            "BUTTON_POS_0"             },
+    { nsIPromptService::BUTTON_POS_1,            "BUTTON_POS_1"             },
+    { nsIPromptService::BUTTON_POS_2,            "BUTTON_POS_2"             },
+    { nsIPromptService::BUTTON_TITLE_OK,         "BUTTON_TITLE_OK"          },
+    { nsIPromptService::BUTTON_TITLE_CANCEL,     "BUTTON_TITLE_CANCEL"      },
+    { nsIPromptService::BUTTON_TITLE_YES,        "BUTTON_TITLE_YES"         },
+    { nsIPromptService::BUTTON_TITLE_NO,         "BUTTON_TITLE_NO"          },
+    { nsIPromptService::BUTTON_TITLE_SAVE,       "BUTTON_TITLE_SAVE"        },
+    { nsIPromptService::BUTTON_TITLE_DONT_SAVE,  "BUTTON_TITLE_DONT_SAVE"   },
+    { nsIPromptService::BUTTON_TITLE_REVERT,     "BUTTON_TITLE_REVERT"      },
+    { nsIPromptService::BUTTON_TITLE_IS_STRING,  "BUTTON_TITLE_IS_STRING"   },
+    { nsIPromptService::BUTTON_POS_0_DEFAULT,    "BUTTON_POS_0_DEFAULT"     },
+    { nsIPromptService::BUTTON_POS_1_DEFAULT,    "BUTTON_POS_1_DEFAULT"     },
+    { nsIPromptService::BUTTON_POS_2_DEFAULT,    "BUTTON_POS_2_DEFAULT"     },
+    { nsIPromptService::BUTTON_DELAY_ENABLE,     "BUTTON_DELAY_ENABLE"      },
+    { nsIPromptService::STD_OK_CANCEL_BUTTONS,   "STD_OK_CANCEL_BUTTONS"    },
+    { nsIPromptService::STD_YES_NO_BUTTONS,      "STD_YES_NO_BUTTONS"       },
+
     // these are bitwise values supported by addFile
     { DO_NOT_UNINSTALL,                      "DO_NOT_UNINSTALL"             },
     { WIN_SHARED_FILE,                       "WIN_SHARED_FILE"              },
@@ -1742,7 +1827,7 @@ static JSFunctionSpec InstallMethods[] =
   {"addFile",                   InstallAddSubcomponent,         6},
   {"alert",                     InstallAlert,                   1},
   {"cancelInstall",             InstallAbortInstall,            1},
-  {"confirm",                   InstallConfirm,                 2},
+  {"confirm",                   InstallConfirm,                 8},
   {"execute",                   InstallExecute,                 2},
   {"gestalt",                   InstallGestalt,                 1},
   {"getComponentFolder",        InstallGetComponentFolder,      2},
