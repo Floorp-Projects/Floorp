@@ -1520,12 +1520,38 @@ var nsFindCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && !IsInHTMLSourceMode());
+    return ((window.editorShell));
   },
 
   doCommand: function(aCommand)
   {
-    window.editorShell.Replace();
+    var prefs = GetPrefs();
+    var newfind;
+    if (prefs) {
+      try {
+        newfind = prefs.getBoolPref("editor.new_find");
+      }
+      catch (ex) {
+        newfind = false;
+      }
+    }
+    
+    if (newfind)
+    {
+      dump("Using new find dialog\n");
+      try {
+        window.openDialog("chrome://editor/content/EdReplace.xul", "_blank",
+                          "chrome,close,titlebar,modal", "");
+      }
+      catch(ex) {
+        dump("*** Exception: couldn't open Replace Dialog\n");
+      }
+      window._content.focus();
+    }
+    else {
+      dump("Using old find\n");
+      window.editorShell.Replace();
+    }
   }
 };
 
