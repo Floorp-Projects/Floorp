@@ -253,13 +253,16 @@ function CheckForWallet()
 // perform a wallet action
 function WalletAction( action ) 
 {
-
-  if (action == "password") {
-    /* process "password" independent of appcore so it can be called from mail */
+  if (action == "password" || action == "expire") {
     wallet = Components.classes['component://netscape/wallet'];
     wallet = wallet.getService();
     wallet = wallet.QueryInterface(Components.interfaces.nsIWalletService);
-    wallet.WALLET_ChangePassword();
+
+    if (action == "password") {
+      wallet.WALLET_ChangePassword();
+    } else if (action == "expire") {
+      wallet.WALLET_ExpirePassword();
+    }
     return;
   }
 
