@@ -32,6 +32,7 @@
 #include "nsWidgetsCID.h"
 #include "nsViewsCID.h"
 #include "nsHTMLAtoms.h"
+#include "nsIScrollableView.h"
 
 static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMNOTIFICATION_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -123,6 +124,8 @@ public:
 
   void GetSize(float aPixelsToTwips, nsSize& aSize);
   PRBool GetURL(nsString& aURLSpec);
+  PRBool GetName(nsString& aName);
+  nsScrollPreference GetScrolling();
 
 #if 0
   virtual nsContentAttr GetAttribute(nsIAtom* aAttribute,
@@ -132,11 +135,15 @@ public:
 #endif
 
 protected:
-  nsHTMLIFrame(nsIAtom* aTag);
+  nsHTMLIFrame(nsIAtom* aTag, nsIWebWidget* aParentWebWidget);
   virtual  ~nsHTMLIFrame();
 
+  // this is held for a short time until the frame uses it, so it is not ref counted
+  nsIWebWidget* mParentWebWidget;  
+
   friend nsresult NS_NewHTMLIFrame(nsIHTMLContent** aInstancePtrResult,
-                                   nsIAtom* aTag);
+                                   nsIAtom* aTag, nsIWebWidget* aWebWidget);
+  friend class nsHTMLIFrameFrame;
 
 };
 
@@ -193,7 +200,6 @@ float nsHTMLIFrameFrame::GetTwipsToPixels()
     if (parentSup) {
       nsIWebWidget* parentWidget;
       nsresult res = parentSup->QueryInterface(kIWebWidgetIID, (void**)&parentWidget);
-      NS_RELEASE(parentSup);
       if (NS_OK == res) {
         nsIPresContext* presContext = parentWidget->GetPresContext();
         NS_RELEASE(parentWidget);
@@ -252,33 +258,27 @@ void TempMakeAbsURL(nsIContent* aContent, nsString& aRelURL, nsString& aAbsURL)
 
 void nsHTMLIFrameFrame::CreateWebWidget(nsSize aSize, nsString& aURL) 
 {
-  // create the web widget
-  NSRepository::CreateInstance(kCWebWidgetCID, nsnull, kIWebWidgetIID, (void**)&mWebWidget);
+  nsHTMLIFrame* content = (nsHTMLIFrame*)mContent;
 
-  if (nsnull == mWebWidget) {
+  // create the web widget, set its name
+  NSRepository::CreateInstance(kCWebWidgetCID, nsnull, kIWebWidgetIID, (void**)&mWebWidget);
+  if (nsnull != mWebWidget) {
+    nsString frameName;
+    if (content->GetName(frameName)) {
+      mWebWidget->SetName(frameName);
+    }
+  }
+  else {
     NS_ASSERTION(0, "could not create web widget");
     return;
   }
+
   nsresult result;
 
-  // Get the parent web widget, set the parentage
-  nsIFrame* parent;
-  GetGeometricParent(parent);  // don't need to release
-  nsIWebWidget* parentWebWidget = nsnull;
-  while (nsnull != parent) {
-    nsIWebFrame* webFrame; 
-    result = parent->QueryInterface(kIWebFrameIID, (void**)&webFrame);
-    if (NS_OK == result) {
-      parentWebWidget = webFrame->GetWebWidget();
-      NS_RELEASE(webFrame);
-      break;
-    } 
-    parent->GetGeometricParent(parent);
-  }
-  if (!parentWebWidget) {
-    parentWebWidget = mWebWidget->GetRootWebWidget();
-  }
-  mWebWidget->SetContainer(parentWebWidget);
+  // set the web widget parentage
+  nsIWebWidget* parentWebWidget = content->mParentWebWidget;
+  parentWebWidget->AddChild(mWebWidget);
+
 
   // Get the view manager, conversion
   float t2p = 0.0f;
@@ -290,7 +290,7 @@ void nsHTMLIFrameFrame::CreateWebWidget(nsSize aSize, nsString& aURL)
 	viewMan = presShell->GetViewManager();  
   NS_RELEASE(presShell);
   NS_RELEASE(presContext);
-  NS_RELEASE(parentWebWidget);
+  //NS_RELEASE(parentWebWidget);
 
 
   // create, init, set the parent of the view
@@ -317,7 +317,8 @@ void nsHTMLIFrameFrame::CreateWebWidget(nsSize aSize, nsString& aURL)
   NS_RELEASE(view);
   nsRect webBounds(0, 0, NS_TO_INT_ROUND(aSize.width * t2p), 
                    NS_TO_INT_ROUND(aSize.height * t2p));
-  mWebWidget->Init(widget->GetNativeData(NS_NATIVE_WINDOW), webBounds);
+  mWebWidget->Init(widget->GetNativeData(NS_NATIVE_WINDOW), webBounds, 
+                   content->GetScrolling());
   NS_RELEASE(widget);
 
   // load the document
@@ -361,12 +362,14 @@ nsHTMLIFrameFrame::GetDesiredSize(nsIPresContext* aPresContext,
 
 // nsHTMLIFrame
 
-nsHTMLIFrame::nsHTMLIFrame(nsIAtom* aTag) : nsHTMLContainer(aTag)
+nsHTMLIFrame::nsHTMLIFrame(nsIAtom* aTag, nsIWebWidget* aParentWebWidget)
+  : nsHTMLContainer(aTag), mParentWebWidget(aParentWebWidget)
 {
 }
 
 nsHTMLIFrame::~nsHTMLIFrame()
 {
+  mParentWebWidget = nsnull;
 }
 
 nsresult
@@ -429,16 +432,47 @@ PRBool nsHTMLIFrame::GetURL(nsString& aURLSpec)
   return PR_FALSE;
 }
 
+PRBool nsHTMLIFrame::GetName(nsString& aName)
+{
+  nsHTMLValue value;
+  if (eContentAttr_HasValue == (GetAttribute(nsHTMLAtoms::name, value))) {
+    if (eHTMLUnit_String == value.GetUnit()) {
+      value.GetStringValue(aName);
+      return PR_TRUE;
+    }
+  }
+  aName.SetLength(0);
+  return PR_FALSE;
+}
+
+nsScrollPreference nsHTMLIFrame::GetScrolling()
+{
+  nsHTMLValue value;
+  if (eContentAttr_HasValue == (GetAttribute(nsHTMLAtoms::scrolling, value))) {
+    if (eHTMLUnit_String == value.GetUnit()) {
+      nsAutoString scrolling;
+      value.GetStringValue(scrolling);
+      if (scrolling.EqualsIgnoreCase("yes")) {
+        return nsScrollPreference_kAlwaysScroll;
+      } 
+      else if (scrolling.EqualsIgnoreCase("no")) {
+        return nsScrollPreference_kNeverScroll;
+      }
+    }
+  }
+  return nsScrollPreference_kAuto;
+}
+
 nsresult
 NS_NewHTMLIFrame(nsIHTMLContent** aInstancePtrResult,
-                 nsIAtom* aTag)
+                 nsIAtom* aTag, nsIWebWidget* aWebWidget)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
 
-  nsIHTMLContent* it = new nsHTMLIFrame(aTag);
+  nsIHTMLContent* it = new nsHTMLIFrame(aTag, aWebWidget);
 
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;

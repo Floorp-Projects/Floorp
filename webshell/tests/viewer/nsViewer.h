@@ -40,6 +40,7 @@
 
 #define MAXPATHLEN 1024
 
+// XXX this is redundant with nsLinkHandler
 class DocObserver : public nsIDocumentObserver,
                     public nsIStreamListener,
                     public nsILinkHandler

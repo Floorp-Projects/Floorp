@@ -30,12 +30,14 @@ class nsIHTMLContentSink;
 class nsITextContent;
 class nsIURL;
 class nsString;
+class nsIWebWidget;
 
 // XXX naming consistency puhleeze!
 
 extern nsresult NS_NewHTMLContentSink(nsIHTMLContentSink** aInstancePtrResult,
                                       nsIDocument* aDoc,
-                                      nsIURL* aURL);
+                                      nsIURL* aURL,
+                                      nsIWebWidget* aWebWidget);
 
 // Create an html root part
 extern nsresult

@@ -22,6 +22,7 @@
 #include "nsIHTMLDocument.h"
 
 class nsIHTMLStyleSheet;
+class nsIWebWidget;
 
 class nsHTMLDocument : public nsDocument {
 public:
@@ -32,6 +33,7 @@ public:
 
   NS_IMETHOD LoadURL(nsIURL* aURL,
                      nsIStreamListener* aListener,
+                     nsIWebWidget* aWebWidget,
                      nsIPostData* aPostData = 0);
 
   NS_IMETHOD SetTitle(const nsString& aTitle);

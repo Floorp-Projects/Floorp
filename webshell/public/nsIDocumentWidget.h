@@ -20,6 +20,7 @@
 
 #include "nsIWidget.h"
 #include "nsRect.h"
+#include "nsIScrollableView.h"
 class nsIDocument;
 class nsIPostData;
 class nsIScriptContext;
@@ -32,7 +33,8 @@ class nsIDocumentWidget : public nsISupports {
 public:
   // Create a native window for this web widget; may be called once
   virtual nsresult Init(nsNativeWindow aNativeParent,
-                        const nsRect& aBounds) = 0;
+                        const nsRect& aBounds,
+                        nsScrollPreference aScrolling = nsScrollPreference_kAuto) = 0;
 
   virtual nsRect GetBounds() = 0;
 
