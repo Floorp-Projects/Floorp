@@ -78,7 +78,7 @@ include <$(DEPTH)\config\rules.mak>
 
 include <$(DEPTH)\cck\InitDist.win>
 
-libs:: $(DLL)
+install:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(CCKDIST)\CCKTool
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib ..\lib
 

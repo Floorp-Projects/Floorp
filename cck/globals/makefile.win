@@ -73,7 +73,7 @@ include <$(DEPTH)\cck\InitDist.win>
 export:: $(DLLNAME).h
 	$(MAKE_INSTALL) $(DLLNAME).h ..\include
 
-libs:: $(DLL)
+install:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib ..\lib
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(CCKDIST)\CCKTool
 
