@@ -95,3 +95,7 @@ CFLAGS += $(TOOLKIT_CFLAGS)
 
 include $(topsrcdir)/config/rules.mk
 
+RUN_APPRUNNER_SCRIPT=mozilla-apprunner.sh
+
+install:: $(RUN_APPRUNNER_SCRIPT)
+	$(INSTALL) $(RUN_APPRUNNER_SCRIPT) $(DIST)/bin

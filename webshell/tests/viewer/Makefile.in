@@ -157,7 +157,11 @@ CXXFLAGS += $(TOOLKIT_CFLAGS)
 
 include $(topsrcdir)/config/rules.mk
 
-install:: $(PROGRAM)
+RUN_VIEWER_SCRIPT=mozilla-viewer.sh
+
+install:: $(PROGRAM) $(RUN_VIEWER_SCRIPT)
 	$(INSTALL) $(EXPORT_RESOURCE_SAMPLES) $(DIST)/bin/res/samples
 	$(INSTALL) $(EXPORT_RESOURCE_THROBBER) $(DIST)/bin/res/throbber
 	$(INSTALL) $(srcdir)/resources/viewer.properties $(DIST)/bin/res
+	$(INSTALL) $(RUN_VIEWER_SCRIPT) $(DIST)/bin
+
