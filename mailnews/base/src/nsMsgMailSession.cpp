@@ -50,6 +50,12 @@
 #include "nsIDirectoryService.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsReadableUtils.h"
+#include "nsIDOMWindowInternal.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMElement.h"
+#include "nsIWindowMediator.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIDocShell.h"
 
 NS_IMPL_THREADSAFE_ADDREF(nsMsgMailSession)
 NS_IMPL_THREADSAFE_RELEASE(nsMsgMailSession)
@@ -341,32 +347,105 @@ NS_IMETHODIMP nsMsgMailSession::OnItemEvent(nsIFolder *aFolder,
 
 nsresult nsMsgMailSession::GetTopmostMsgWindow(nsIMsgWindow* *aMsgWindow)
 {
- 
-  //for right now just return the first msg window.  Eventually have to figure out which is topmost.
   nsresult rv;
 
   if (!aMsgWindow) return NS_ERROR_NULL_POINTER;
   
   *aMsgWindow = nsnull;
  
-  if(mWindows)
+  if (mWindows)
   {
-	PRUint32 count;
-	rv = mWindows->Count(&count);
-	if(NS_FAILED(rv))
-		return rv;
+    PRUint32 count;
+    rv = mWindows->Count(&count);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    if(count > 0)
+    nsCOMPtr<nsISupports> windowSupports;
+    nsCOMPtr<nsIMsgWindow> msgWindow;
+
+    if (count == 1)
     {
-      nsCOMPtr<nsISupports> windowSupports = getter_AddRefs(mWindows->ElementAt(count - 1));
-      nsCOMPtr<nsIMsgWindow> msgWindow = do_QueryInterface(windowSupports, &rv);
-      NS_ENSURE_SUCCESS(rv,rv);
-      *aMsgWindow = msgWindow;
-      NS_IF_ADDREF(*aMsgWindow);
+      windowSupports = getter_AddRefs(mWindows->ElementAt(0));
+      msgWindow = do_QueryInterface(windowSupports, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+      NS_IF_ADDREF(*aMsgWindow = msgWindow);
+    }
+    // If multiple message windows then we have lots more work.
+    else if (count > 1)
+    {
+      // The msgWindows array does not hold z-order info.
+      // Use mediator to get the top most window then match that with the msgWindows array.
+      nsCOMPtr<nsIWindowMediator> windowMediator = do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nsCOMPtr<nsISimpleEnumerator> windowEnum;
+      rv = windowMediator->GetZOrderDOMWindowEnumerator(nsnull, PR_TRUE, getter_AddRefs(windowEnum));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nsCOMPtr<nsISupports> windowSupports;
+      nsCOMPtr<nsIDOMWindow> topMostWindow;
+      nsCOMPtr<nsIDOMDocument> domDocument;
+      nsCOMPtr<nsIDOMElement> domElement;
+      nsAutoString windowType;
+      PRBool more;
+
+      // loop to get the top most with attibute "mail:3pane" or "mail:messageWindow"
+      windowEnum->HasMoreElements(&more);
+      while (more)
+      {
+        rv = windowEnum->GetNext(getter_AddRefs(windowSupports));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        topMostWindow = do_QueryInterface(windowSupports, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = topMostWindow->GetDocument(getter_AddRefs(domDocument));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = domDocument->GetDocumentElement(getter_AddRefs(domElement));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = domElement->GetAttribute(NS_LITERAL_STRING("windowtype"), windowType);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (windowType.Equals(NS_LITERAL_STRING("mail:3pane")) ||
+            windowType.Equals(NS_LITERAL_STRING("mail:messageWindow")))
+            break;
+
+        windowEnum->HasMoreElements(&more);
+      }
+
+      // identified the top most window
+      if (more)
+      {
+        nsCOMPtr<nsIScriptGlobalObject> globalObj = do_QueryInterface(topMostWindow, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+  
+        nsCOMPtr<nsIDocShell> topDocShell;  // use this for the match
+        rv = globalObj->GetDocShell(getter_AddRefs(topDocShell));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        // loop for the msgWindow array to find the match
+        nsCOMPtr<nsIDocShell> docShell;
+        while (count)
+        {
+          windowSupports = getter_AddRefs(mWindows->ElementAt(count - 1));
+          msgWindow = do_QueryInterface(windowSupports, &rv);
+          NS_ENSURE_SUCCESS(rv,rv);
+
+          rv = msgWindow->GetRootDocShell(getter_AddRefs(docShell));
+          NS_ENSURE_SUCCESS(rv,rv);
+          if (topDocShell == docShell)
+          {
+            NS_IF_ADDREF(*aMsgWindow = msgWindow);
+            break;
+          }
+          count--;
+        }
+      }
     }
   }
 
-  return NS_OK;
+  return (*aMsgWindow) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 
