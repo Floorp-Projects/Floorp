@@ -59,10 +59,10 @@
 #include "prlog.h"
 #include "rdf.h"
 
-#if 1 // defined(MOZ_THREADSAFE_RDF)
-#define NS_AUTOLOCK(__monitor) nsAutoLock __lock(__monitor)
+#if defined(MOZ_THREADSAFE_RDF)
+#define NS_AUTOLOCK(_lock) nsAutoLock _autolock(_lock)
 #else
-#define NS_AUTOLOCK(__monitor)
+#define NS_AUTOLOCK(_lock)
 #endif
 
 #ifdef PR_LOGGING
@@ -130,10 +130,10 @@ Assertion::~Assertion()
 ////////////////////////////////////////////////////////////////////////
 // Utility routines
 
-static PLHashNumber
+static inline PLHashNumber
 rdf_HashPointer(const void* key)
 {
-    return (PLHashNumber) key;
+    return NS_REINTERPRET_CAST(PLHashNumber, key) >> 2;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -194,10 +194,39 @@ protected:
 
 public:
     // Implementation methods
-    Assertion* GetForwardArcs(nsIRDFResource* u);
-    Assertion* GetReverseArcs(nsIRDFNode* v);
-    void       SetForwardArcs(nsIRDFResource* u, Assertion* as);
-    void       SetReverseArcs(nsIRDFNode* v, Assertion* as);
+    Assertion* GetForwardArcs(nsIRDFResource* u)
+    {
+        // Use PL_HashTableRawLookup() so we can inline the hash
+        PLHashEntry** hep = PL_HashTableRawLookup(mForwardArcs, rdf_HashPointer(u), u);
+        return NS_REINTERPRET_CAST(Assertion*, *hep ? ((*hep)->value) : 0);
+    }
+
+    Assertion* GetReverseArcs(nsIRDFNode* v)
+    {
+        // Use PL_HashTableRawLookup() so we can inline the hash
+        PLHashEntry** hep = PL_HashTableRawLookup(mReverseArcs, rdf_HashPointer(v), v);
+        return NS_REINTERPRET_CAST(Assertion*, *hep ? ((*hep)->value) : 0);
+    }
+
+    void SetForwardArcs(nsIRDFResource* u, Assertion* as)
+    {
+        if (as) {
+            PL_HashTableAdd(mForwardArcs, u, as);
+        }
+        else {
+            PL_HashTableRemove(mForwardArcs, u);
+        }
+    }
+
+    void SetReverseArcs(nsIRDFNode* v, Assertion* as)
+    {
+        if (as) {
+            PL_HashTableAdd(mReverseArcs, v, as);
+        }
+        else {
+            PL_HashTableRemove(mReverseArcs, v);
+        }
+    }
 
 #ifdef PR_LOGGING
     void
@@ -637,45 +666,6 @@ InMemoryDataSource::AggregatedQueryInterface(REFNSIID aIID, void** aResult)
 
 
 ////////////////////////////////////////////////////////////////////////
-
-
-Assertion*
-InMemoryDataSource::GetForwardArcs(nsIRDFResource* u)
-{
-    // Cast is okay, we're in a closed system
-    return (Assertion*) PL_HashTableLookup(mForwardArcs, u);
-}
-
-Assertion*
-InMemoryDataSource::GetReverseArcs(nsIRDFNode* v)
-{
-    // Cast is okay, we're in a closed system
-    return (Assertion*) PL_HashTableLookup(mReverseArcs, v);
-}   
-
-void
-InMemoryDataSource::SetForwardArcs(nsIRDFResource* u, Assertion* as)
-{
-    NS_PRECONDITION(u != nsnull, "null ptr");
-    if (as) {
-        PL_HashTableAdd(mForwardArcs, u, as);
-    }
-    else {
-        PL_HashTableRemove(mForwardArcs, u);
-    }
-}
-
-void
-InMemoryDataSource::SetReverseArcs(nsIRDFNode* v, Assertion* as)
-{
-    NS_PRECONDITION(v != nsnull, "null ptr");
-    if (as) {
-        PL_HashTableAdd(mReverseArcs, v, as);
-    }
-    else {
-        PL_HashTableRemove(mReverseArcs, v);
-    }
-}
 
 
 #ifdef PR_LOGGING
@@ -1460,7 +1450,7 @@ InMemoryDataSource::SweepForwardArcsEntries(PLHashEntry* he, PRIntn i, void* arg
             // remove from the reverse arcs
             PLHashEntry** hep =
                 PL_HashTableRawLookup(info->mReverseArcs,
-                                      (PLHashNumber) as->mTarget, // because we know we're using rdf_HashPointer()
+                                      rdf_HashPointer(as->mTarget),
                                       as->mTarget);
             
             Assertion* ras = (Assertion*) ((*hep)->value);
