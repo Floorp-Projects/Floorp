@@ -86,6 +86,7 @@ extern void     SetUpBlend();
 extern void     CleanUpBlend();
 extern nsresult BuildDIB(LPBITMAPINFOHEADER  *aBHead,unsigned char **aBits,PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth);
 extern PRInt32  CalcBytesSpan(PRUint32  aWidth,PRUint32  aBitsPixel);
+extern PRUint32 SpeedTestBlend(nsIBlender *aBlender,nsIImage *aImage);
 
 
 #define RED16(x) ((x)&0x7C00)>>7
@@ -384,6 +385,66 @@ nsIRenderingContext *drawCtx = gWindow->GetRenderingContext();
   delete srcbinfo;
 
   //drawCtx->DrawImage(aImage, 0, 0, aImage->GetWidth(), aImage->GetHeight());
+}
+
+//------------------------------------------------------------
+
+PRUint32
+SpeedTestBlend(nsIBlender *aBlender,nsIImage *aImage)
+{
+nsresult    result;
+float       blendamount;
+nsString    str;
+PRInt32     numerror,height,width;
+POINT       cpos;
+PRUint32    min,seconds,milli,i;
+SYSTEMTIME  thetime;
+
+  if(aBlender && aImage)
+    {
+    gBlendMessage->GetText(str,3);
+    blendamount = (float)(str.ToInteger(&numerror))/100.0f;
+    if(blendamount < 0.0)
+      blendamount = 0.0f;
+    if(blendamount > 1.0)
+      blendamount = 1.0f;
+
+    printf("\nSTARTING TIMING TEST\n");
+    ::GetSystemTime(&thetime);
+    min = thetime.wMinute;
+    seconds = thetime.wSecond;
+    milli = thetime.wMilliseconds;
+
+    for(i=0;i<20;i++)
+      {
+      cpos.x = (100*::rand())/32000;
+      cpos.y = (100*::rand())/32000;
+
+      width = gBlendImage->GetWidth();
+      height = gBlendImage->GetHeight();
+      result = Compositetest(aBlender,aImage,cpos.x,cpos.y,width,height,0,0,blendamount,PR_TRUE);
+
+      if(result == NS_OK)
+        Restore(aBlender,aImage);
+      else
+        break;
+      }
+    ::GetSystemTime(&thetime);
+    min = thetime.wMinute-min;
+    if(min>0)
+      min = min*60;
+    seconds = min+thetime.wSecond-seconds;
+    if(seconds>0)
+      seconds = (seconds*1000)+thetime.wMilliseconds;
+    else
+      seconds = thetime.wMilliseconds;
+    milli=seconds-milli;
+    printf("The Blending Time was %lu Milliseconds\n",milli);
+
+    return(milli);
+    }
+
+  return(0);
 }
 
 //------------------------------------------------------------
@@ -929,8 +990,7 @@ PRInt32   numerror;
         case COMPINT:         // compostite interactive
           InterActiveBlend(gImageblender,gImage);
           break;
-        case COMPTST:         // composite
-        case COMPTSTSPEED:    // composit speed test
+        case COMPTST:         // composite basic test
           IsImageLoaded();
           gBlendMessage->GetText(str,3);
           blendamount = (float)(str.ToInteger(&numerror))/100.0f;
@@ -938,8 +998,10 @@ PRInt32   numerror;
             blendamount = 0.0f;
           if(blendamount > 1.0)
             blendamount = 1.0f;
-
           Compositetest(gImageblender,gImage,0,0,0,0,0,0,blendamount,PR_TRUE);
+          break;
+        case COMPTSTSPEED:    // composit speed test
+          SpeedTestBlend(gImageblender,gImage);
           break;
         case BSTNOOPT:
         case BSTOPT:
