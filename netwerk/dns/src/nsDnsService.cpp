@@ -1283,6 +1283,30 @@ nsDNSService::Run()
     return NS_OK;
 }
 
+#elif defined(XP_OS2)
+
+NS_IMETHODIMP
+nsDNSService::Run()
+{                   
+    return NS_ERROR_FAILURE;
+}
+
+#elif defined(XP_BEOS)
+
+NS_IMETHODIMP
+nsDNSService::Run()
+{
+    return NS_ERROR_FAILURE;
+}
+
+#else
+
+NS_IMETHODIMP
+nsDNSService::Run()
+{
+    return NS_ERROR_FAILURE;
+}
+
 #endif
 
     
