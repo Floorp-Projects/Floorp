@@ -32,7 +32,7 @@ void nsNativeFileSpec::operator = (const nsFilePath& inPath)
 //----------------------------------------------------------------------------------------
 {
 	// Convert '/' to '\'
-	nsFileSpecHelpers::StringAssign(mPath, (const char*)mPath);
+	nsFileSpecHelpers::StringAssign(mPath, (const char*)inPath);
 	for (char* cp = mPath; *cp; cp++)
 	{
 		if (*cp == '/')
