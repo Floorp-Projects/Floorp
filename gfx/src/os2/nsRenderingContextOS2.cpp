@@ -968,6 +968,16 @@ nsresult nsRenderingContextOS2::DrawLine( nscoord aX0, nscoord aY0, nscoord aX1,
                      { (long) aX1, (long) aY1 } };
    NS2PM( ptls, 2);
 
+   if (ptls[0].x > ptls[1].x)
+      ptls[0].x--;
+   else if (ptls[1].x > ptls[0].x)
+      ptls[1].x--;
+
+   if (ptls[0].y < ptls[1].y)
+      ptls[0].y++;
+   else if (ptls[1].y < ptls[0].y)
+      ptls[1].y++;
+
    SetupDrawingColor();
 
    GpiMove( mSurface->mPS, ptls);
