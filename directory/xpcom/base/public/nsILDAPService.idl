@@ -208,4 +208,30 @@ interface nsILDAPService : nsISupports {
     AString createFilter(in unsigned long aMaxSize, in AString aPattern, 
                          in AString aPrefix, in AString aSuffix,
                          in AString aAttr, in AString aValue);
+
+    /**
+     * Convert a Unicode string (AString) to a single byte string, using
+     * UTF8 encoding. This is used to pass UTF8 encoded strings into the
+     * nsILDAPURL interface for instance. Note that this method will go
+     * away (hopefully) once we have a real solution (see bug 84186).
+     *
+     * @param aString                        Unicode string to be converted
+     * @return                               UTF8 encoded string, single byte
+     *
+     * @exception NS_ERROR_NULL_POINTER     NULL pointer
+     * @exception NS_ERROR_OUT_OF_MEMORY    ran out of memory
+     */
+    string UCS2toUTF8(in AString aString);
+
+    /**
+     * Convert a UTF8 string (|string|) to a Unicode (|AString|) string.
+     * Note that this method will go away (hopefully) once we have a
+     * real solution (see bug 84186).
+     *
+     * @param string                 UTF8 string to be converted
+     * @return                       Unicode string
+     *
+     * @exception NS_ERROR_OUT_OF_MEMORY    ran out of memory
+     */
+    AString UTF8toUCS2(in string aString);
 };

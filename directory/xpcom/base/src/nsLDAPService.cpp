@@ -1004,3 +1004,44 @@ nsLDAPService::NextToken(nsReadingIterator<PRUnichar> & aIter,
 
     return token.ToNewCString();
 }
+
+// Note that these 2 functions might go away in the future, see bug 84186.
+//
+// string UCS2ToUTF8 (in AString aString);
+NS_IMETHODIMP
+nsLDAPService::UCS2toUTF8(const nsAReadableString &aString,
+                                        char **_retval)
+{
+    char *str;
+
+    if (!_retval) {
+        NS_ERROR("nsLDAPService::UCS2toUTF8: null pointer ");
+        return NS_ERROR_NULL_POINTER;
+    }
+
+    str = NS_ConvertUCS2toUTF8(aString).ToNewCString();
+    if (!str) {
+        NS_ERROR("nsLDAPService::UCS2toUTF8: out of memory ");
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    *_retval = str;
+    return NS_OK;
+}
+
+// AString UTF8ToUCS2 (in string aString);
+NS_IMETHODIMP
+nsLDAPService::UTF8toUCS2(const char *aString,
+                                        nsAWritableString &_retval)
+{
+    PRUnichar *str;
+
+    str = NS_ConvertUTF8toUCS2(aString).ToNewUnicode();
+    if (!str) {
+        NS_ERROR("nsLDAPService::UTF8toUCS2: out of memory ");
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    _retval = str;
+    return NS_OK;
+}

@@ -788,9 +788,9 @@ nsLDAPChannel::OnLDAPBind(nsILDAPMessage *aMessage)
     //
     PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, 
            ("bind completed; starting search\n"));
-    rv = mCurrentOperation->SearchExt(NS_ConvertASCIItoUCS2(baseDn).get(),
+    rv = mCurrentOperation->SearchExt(NS_ConvertUTF8toUCS2(baseDn).get(),
                                       scope,
-                                      NS_ConvertASCIItoUCS2(filter).get(),
+                                      NS_ConvertUTF8toUCS2(filter).get(),
                                       0, 0,
                                       0, LDAP_NO_LIMIT);
     NS_ENSURE_SUCCESS(rv,rv);

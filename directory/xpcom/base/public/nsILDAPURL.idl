@@ -35,11 +35,27 @@
 
 #include "nsIURI.idl"
 
+/**
+ * Strings in methods inherited from nsIURI, which are using XPIDL
+ * |string| types, are expected to be UTF8 encoded. All such strings
+ * in this interface, except attribute types (e.g. "cn"), should in fact
+ * be UTF8. It's important to remember that attributes can not be UTF8,
+ * they can only be of a limited subset of ASCII (see RFC 2251).
+ *
+ * Currently we deal with this encoding using two little helper methods
+ * in the nsILDAPService interface, |UTF8toUCS2()| and |UCS2toUTF8|,
+ * which are both scriptable. This will hopefully go away once a real
+ * solution is implemented, see bug 84186 for more details.
+ *
+ * FYI, ASCII is a subset of UTF8.
+ */
+
 [scriptable, uuid(7310562d-1567-43c7-a123-633c1ba3663e)]
 interface nsILDAPURL : nsIURI {
 
     /**
-     * The distinguished name of the URL (ie the base DN for the search)
+     * The distinguished name of the URL (ie the base DN for the search).
+     * This string is expected to be a valid UTF8 string.
      *
      * for the getter:
      *
