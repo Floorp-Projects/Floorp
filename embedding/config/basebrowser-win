@@ -186,6 +186,8 @@ components\wallet.xpt
 
 ; psm2
 ; Optional - only if you need PSM2 support
+components\pipboot.dll
+components\pipboot.xpt
 components\pipnss.dll
 components\pipnss.xpt
 chrome\pipnss.jar
