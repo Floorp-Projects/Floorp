@@ -272,7 +272,8 @@
       </tooltip>
       <toolbarbutton id="home-button" class="bookmark-item"
                      label="&homeButton.label;"
-                     oncommand="BrowserHome(); event.preventBubble()"
+                     oncommand="BrowserHome(event);"
+                     onclick="if (event.button == 1) BrowserHome(event);"
                      tooltip="home-button-tooltip"
                      ondraggesture="nsDragAndDrop.startDrag(event, homeButtonObserver)"
                      ondragdrop="nsDragAndDrop.drop(event, homeButtonObserver); event.preventBubble()"

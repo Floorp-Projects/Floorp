@@ -191,7 +191,7 @@
              oncommand="BrowserEditBookmarks();" />
   
     <!-- Go Menu -->  
-    <command id="Browser:Home"    oncommand="BrowserHome();"/>
+    <command id="Browser:Home"    oncommand="BrowserHome(event);"/>
     <command id="Browser:Back"    oncommand="BrowserBack();"    observes="canGoBack"/>
     <command id="Browser:Forward" oncommand="BrowserForward();" observes="canGoForward"/>
     <commandset id="viewZoomCommands"/>
