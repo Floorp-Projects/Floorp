@@ -156,6 +156,10 @@ nsSpamSettings::GetLogFileSpec(nsIFileSpec **aFileSpec)
   nsresult rv = GetServer(getter_AddRefs(server));
   NS_ENSURE_SUCCESS(rv,rv);
 
+  NS_ASSERTION(server, "are you trying to use a cloned spam settings?");
+  if (!server)
+    return NS_ERROR_FAILURE;
+
   rv = server->GetLocalPath(aFileSpec);
   NS_ENSURE_SUCCESS(rv,rv);
 
@@ -244,10 +248,7 @@ NS_IMETHODIMP nsSpamSettings::Clone(nsISpamSettings *aSpamSettings)
 {
   NS_ENSURE_ARG_POINTER(aSpamSettings);
 
-  nsresult rv = aSpamSettings->GetServer(getter_AddRefs(mServer)); 
-  NS_ENSURE_SUCCESS(rv,rv);
-  
-  rv = aSpamSettings->GetUseWhiteList(&mUseWhiteList); 
+  nsresult rv = aSpamSettings->GetUseWhiteList(&mUseWhiteList); 
   NS_ENSURE_SUCCESS(rv,rv);
 
   rv = aSpamSettings->GetMoveOnSpam(&mMoveOnSpam); 
