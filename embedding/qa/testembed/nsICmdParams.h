@@ -40,18 +40,19 @@ public:
 	//}}AFX_VIRTUAL
 
 // Implementation
-	nsICommandParams * GetCommandParamObject();
-	nsICommandManager * GetCommandMgrObject();
-	void GetValueTypeTest(const char *);
-	void GetBooleanValueTest(const char *);
-	void GetLongValueTest(const char *);
-	void GetDoubleValueTest(const char *);
-	void GetStringValueTest(const char *);
+	static nsICommandParams * GetCommandParamObject();
+	void GetValueTypeTest(const char *, const char *);
+	void GetBooleanValueTest(const char *, const char *);
+	void GetLongValueTest(PRInt32, const char *);
+	void GetDoubleValueTest(double, const char *);
+	void GetStringValueTest(char *, const char *);
+	void GetCStringValueTest(const char *, const char *);
 
 	void SetBooleanValueTest(PRBool, const char *);
 	void SetLongValueTest(PRInt32, const char *);
 	void SetDoubleValueTest(double, const char *);
 	void SetStringValueTest(char *, const char *);
+	void SetCStringValueTest(char *, const char *);
 
 	void OnStartTests(UINT nMenuID);
 	void RunAllTests();

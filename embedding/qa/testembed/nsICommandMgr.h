@@ -69,9 +69,8 @@ public:
 	nsCOMPtr<nsICommandParams> cmdParamObj;
 	// test methods
 public:
-	nsICommandManager * GetCommandMgrObject();
-	nsICommandManager * GetCommandMgrWithContractIDObject();
-	nsICommandParams * GetCommandParamsObject();
+	static nsICommandManager * GetCommandMgrObject(nsIWebBrowser *aWebBrowser);
+	static nsICommandManager * GetCommandMgrWithContractIDObject();
 	void IsCommandSupportedTest(const char *);
 	void IsCommandEnabledTest(const char *);
 	void GetCommandStateTest(const char *, const char *);
