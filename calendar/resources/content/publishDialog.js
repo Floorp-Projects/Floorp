@@ -40,40 +40,6 @@
 
 
 
-/***** calendar/calendarEventDialog.js
-* AUTHOR
-*   Garth Smedley
-* REQUIRED INCLUDES 
-*   <script type="application/x-javascript" src="chrome://calendar/content/dateUtils.js"/>
-*   <script type="application/x-javascript" src="chrome://calendar/content/calendarEvent.js"/>
-*
-* NOTES
-*   Code for the calendar's new/edit event dialog.
-*
-*  Invoke this dialog to create a new event as follows:
-
-   var args = new Object();
-   args.mode = "new";               // "new" or "edit"
-   args.onOk = <function>;          // funtion to call when OK is clicked
-   args.calendarEvent = calendarEvent;    // newly creatd calendar event to be editted
-    
-   calendar.openDialog("caNewEvent", "chrome://calendar/content/eventDialog.xul", true, args );
-*
-*  Invoke this dialog to edit an existing event as follows:
-*
-   var args = new Object();
-   args.mode = "edit";                    // "new" or "edit"
-   args.onOk = <function>;                // funtion to call when OK is clicked
-   args.calendarEvent = calendarEvent;    // javascript object containin the event to be editted
-
-* When the user clicks OK the onOk function will be called with a calendar event object.
-*
-*  
-* IMPLEMENTATION NOTES 
-**********
-*/
-
-
 /*-----------------------------------------------------------------
 *   W I N D O W      V A R I A B L E S
 */
@@ -111,6 +77,9 @@ function loadCalendarPublishDialog()
       document.getElementById( "publish-password-textbox" ).value = opener.getCharPref( opener.gCalendarWindow.calendarPreferences.calendarPref, "publish.password", "" );
    }
    document.getElementById( "calendar-publishwindow" ).getButton( "accept" ).setAttribute( "label", "Publish" );   
+   
+   checkURLField( );
+
    var firstFocus = document.getElementById( "publish-remotePath-textbox" );
    firstFocus.focus();
 }
@@ -136,6 +105,15 @@ function onOKCommand()
    document.getElementById( "calendar-publishwindow" ).getButton( "accept" ).setAttribute( "oncommand", "closeDialog()" );   
    document.getElementById( "publish-progressmeter" ).setAttribute( "mode", "determined" );
    return( false );
+}
+
+
+function checkURLField( )
+{
+   if( document.getElementById( "publish-remotePath-textbox" ).value.length == 0 )
+      document.getElementById( "calendar-publishwindow" ).getButton( "accept" ).setAttribute( "disabled", "true" );
+   else
+      document.getElementById( "calendar-publishwindow" ).getButton( "accept" ).removeAttribute( "disabled" );
 }
 
 function closeDialog( )
