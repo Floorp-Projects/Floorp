@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.295 $ ';
+$::UtilsVersion = '$Revision: 1.296 $ ';
 
 package TinderUtils;
 
@@ -265,6 +265,9 @@ sub GetSystemInfo {
     if ($Settings::OS =~ /^WIN/) {
         $host =~ tr/A-Z/a-z/;
         $Settings::TieStderr = "" if $Settings::OS eq 'WIN98';
+    }
+    if ($Settings::OS eq 'OS/2') {
+        $Settings::OS = 'OS2';
     }
 
     $Settings::DirName = "${Settings::OS}_${os_ver}_$build_type";
