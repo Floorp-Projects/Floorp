@@ -126,6 +126,9 @@ nsMenuBarFrame::Init(nsIPresContext*  aPresContext,
   target->AddEventListener("keydown", (nsIDOMKeyListener*)mMenuBarListener, PR_FALSE);  
   target->AddEventListener("keyup", (nsIDOMKeyListener*)mMenuBarListener, PR_FALSE);   
 
+  target->AddEventListener("mousedown", (nsIDOMMouseListener*)mMenuBarListener, PR_FALSE);   
+  target->AddEventListener("blur", (nsIDOMFocusListener*)mMenuBarListener, PR_TRUE);   
+
   return rv;
 }
 
@@ -607,6 +610,9 @@ nsMenuBarFrame::Destroy(nsIPresContext* aPresContext)
   mTarget->RemoveEventListener("keypress", (nsIDOMKeyListener*)mMenuBarListener, PR_FALSE); 
   mTarget->RemoveEventListener("keydown", (nsIDOMKeyListener*)mMenuBarListener, PR_FALSE);  
   mTarget->RemoveEventListener("keyup", (nsIDOMKeyListener*)mMenuBarListener, PR_FALSE);
+
+  mTarget->RemoveEventListener("mousedown", (nsIDOMMouseListener*)mMenuBarListener, PR_FALSE);
+  mTarget->RemoveEventListener("blur", (nsIDOMFocusListener*)mMenuBarListener, PR_TRUE);
 
   NS_IF_RELEASE(mMenuBarListener);
 
