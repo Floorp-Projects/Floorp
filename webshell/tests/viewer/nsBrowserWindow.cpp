@@ -385,6 +385,10 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
     DoJSConsole();
     break;
 
+  case VIEWER_PREFS:
+    DoPrefs();
+    break;
+
   case EDITOR_MODE:
     DoEditorMode(mWebShell);
     break;
@@ -1683,6 +1687,12 @@ void
 nsBrowserWindow::DoJSConsole()
 {
   mApp->CreateJSConsole(this);
+}
+
+void
+nsBrowserWindow::DoPrefs()
+{
+  mApp->DoPrefs(this);
 }
 
 void

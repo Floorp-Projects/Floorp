@@ -49,7 +49,11 @@ LINCS=	\
   -I$(PUBLIC)\netlib \
   -I$(PUBLIC)\java \
   -I$(PUBLIC)\plugin \
-  -I$(PUBLIC)\pref
+  -I$(PUBLIC)\pref \
+!if defined(NGPREFS)
+  -I$(PUBLIC)\ngprefs \
+!endif
+  $(NULL)
 
 MYLIBS=                         \
  $(DIST)\lib\raptorbase.lib     \
@@ -66,6 +70,9 @@ MYLIBS=                         \
  $(DIST)\lib\netlib.lib \
  $(DIST)\lib\jsdom.lib          \
  comdlg32.lib                   \
+!if defined(NGPREFS)
+ ole32.lib                      \
+!endif
  $(NULL)
 
 LLIBS= $(MYLIBS)                \
@@ -76,6 +83,10 @@ include <$(DEPTH)\config\rules.mak>
 
 !ifdef MOZ_NO_DEBUG_RTL
 OS_CFLAGS = $(OS_CFLAGS) -DMOZ_NO_DEBUG_RTL
+!endif
+
+!if defined(NGPREFS)
+OS_CFLAGS = $(OS_CFLAGS) -DNGPREFS
 !endif
 
 install:: $(PROGRAM)

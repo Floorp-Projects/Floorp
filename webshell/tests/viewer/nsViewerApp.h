@@ -66,6 +66,8 @@ public:
   NS_IMETHOD CreateJSConsole(nsBrowserWindow* aWindow);
   NS_IMETHOD Exit();
 
+  NS_IMETHOD DoPrefs(nsBrowserWindow* aWindow);
+
   virtual int Run() = 0;
 
 protected:

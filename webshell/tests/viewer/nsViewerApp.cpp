@@ -17,6 +17,9 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
+#ifdef NGPREFS
+#define INITGUID
+#endif
 #include "nsViewerApp.h"
 #include "nsBrowserWindow.h"
 #include "nsWidgetsCID.h"
@@ -50,6 +53,9 @@
 
 #ifdef XP_PC
 #include "JSConsole.h"
+#ifdef NGPREFS
+#include "ngprefs.h"
+#endif
 #endif
 
 extern nsresult NS_NewBrowserWindowFactory(nsIFactory** aFactory);
@@ -1247,6 +1253,24 @@ nsViewerApp::CreateJSConsole(nsBrowserWindow* aWindow)
   if (nsnull == gConsole) {
     ShowConsole(aWindow);
   }
+#endif
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsViewerApp::DoPrefs(nsBrowserWindow* aWindow)
+{
+#if defined(XP_PC) && defined(NGPREFS)
+  INGLayoutPrefs *pPrefs;
+  CoInitialize(NULL);
+
+  HRESULT res = CoCreateInstance(CLSID_NGLayoutPrefs, NULL, 
+                                 CLSCTX_INPROC_SERVER,
+                                 IID_INGLayoutPrefs, (void**)&pPrefs);
+
+  pPrefs->Show(NULL);
+  pPrefs->Release();
+  CoUninitialize();
 #endif
   return NS_OK;
 }
