@@ -186,6 +186,25 @@ nsImageFrame::UpdateImage(nsIPresContext* aPresContext, PRUint32 aStatus)
       if (nsnull != document) {
         document->ContentChanged(mContent, nsnull);
         NS_RELEASE(document);
+      } else {
+        // The content object isn't associated with a document. That probably
+        // means it's generated content. Mark ourselves dirty and generate a
+        // reflow command targeted at our parent frame
+        nsIReflowCommand* reflowCmd;
+        nsresult          rv;
+
+        mState |= NS_FRAME_IS_DIRTY;
+        rv = NS_NewHTMLReflowCommand(&reflowCmd, mParent,
+                                     nsIReflowCommand::ReflowDirty);
+        if (NS_SUCCEEDED(rv)) {
+          nsIPresShell* presShell;
+          
+          // Add the reflow command
+          aPresContext->GetShell(&presShell);
+          presShell->AppendReflowCommand(reflowCmd);
+          NS_RELEASE(reflowCmd);
+          NS_RELEASE(presShell);
+        }
       }
     }
   }
