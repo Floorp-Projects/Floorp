@@ -158,13 +158,13 @@ function ComposeMessage(type, format, folder, messageArray)
     // if the addressbook sidebar panel is open and has focus, get
     // the selected addresses from it
     if (document.commandDispatcher.focusedWindow.document.documentElement.hasAttribute("selectedaddresses"))
-      return NewMessageToSelectedAddresses(type, format, identity);
+      NewMessageToSelectedAddresses(type, format, identity);
 
-
-		msgComposeService.OpenComposeWindow(null, null, type, format, identity, msgWindow);
+    else
+      msgComposeService.OpenComposeWindow(null, null, type, format, identity, msgWindow);
 		return;
 	}
-    else if (type == msgComposeType.NewsPost) 
+  else if (type == msgComposeType.NewsPost) 
 	{
 		//dump("OpenComposeWindow with " + identity + " and " + newsgroup + "\n");
 		msgComposeService.OpenComposeWindow(null, newsgroup, type, format, identity, msgWindow);
