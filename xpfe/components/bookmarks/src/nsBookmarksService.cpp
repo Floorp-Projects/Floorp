@@ -1820,7 +1820,7 @@ nsBookmarksService::Init()
     NS_ASSERTION(observerService, "Could not get observer service.");
     if (observerService) {
         observerService->AddObserver(this, "profile-before-change", PR_TRUE);
-        observerService->AddObserver(this, "profile-do-change", PR_TRUE);
+        observerService->AddObserver(this, "profile-after-change", PR_TRUE);
 #ifdef MOZ_PHOENIX
         observerService->AddObserver(this, "quit-application", PR_TRUE);
 #endif
@@ -2580,7 +2580,7 @@ NS_IMETHODIMP nsBookmarksService::Observe(nsISupports *aSubject, const char *aTo
         bookmarksFile.Delete(PR_FALSE);
     }
   }    
-  else if (!nsCRT::strcmp(aTopic, "profile-do-change"))
+  else if (!nsCRT::strcmp(aTopic, "profile-after-change"))
   {
     // The profile has aleady changed.
     rv = LoadBookmarks();
