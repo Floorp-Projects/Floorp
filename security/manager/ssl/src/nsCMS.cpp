@@ -578,8 +578,12 @@ NS_IMETHODIMP nsCMSDecoder::Finish(nsICMSMessage ** aCMSMsg)
   NSSCMSMessage *cmsMsg;
   cmsMsg = NSS_CMSDecoder_Finish(m_dcx);
   if (cmsMsg) {
-    nsCOMPtr<nsICMSMessage> msg = new nsCMSMessage(cmsMsg);
-    *aCMSMsg = msg;
+    nsCMSMessage *obj = new nsCMSMessage(cmsMsg);
+    // The NSS object cmsMsg still carries a reference to the context
+    // we gave it on construction.
+    // Make sure the context will live long enough.
+    obj->referenceContext(m_ctx);
+    *aCMSMsg = obj;
     NS_ADDREF(*aCMSMsg);
   }
   return NS_OK;
