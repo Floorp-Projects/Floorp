@@ -1051,7 +1051,7 @@ txXSLTProcessor::processDefaultTemplate(ProcessorState* aPs,
 PRBool
 FindUri(nsString& aElement, void *aData)
 {
-    return !aElement.Equals(*NS_STATIC_CAST(const nsAString*, aData));
+    return !aElement.Equals(*NS_STATIC_CAST(nsAString*, aData));
 }
 
 void
