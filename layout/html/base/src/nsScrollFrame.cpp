@@ -30,6 +30,7 @@
 #include "nsIScrollableView.h"
 #include "nsWidgetsCID.h"
 #include "nsIAreaFrame.h"
+#include "nsScrollFrame.h"
 
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 static NS_DEFINE_IID(kScrollingViewCID, NS_SCROLLING_VIEW_CID);
@@ -40,44 +41,6 @@ static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
 static NS_DEFINE_IID(kAreaFrameIID, NS_IAREAFRAME_IID);
 
 //----------------------------------------------------------------------
-
-/**
- * The scroll frame creates and manages the scrolling view. It creates
- * a nsScrollViewFrame which handles padding and rendering of the
- * background.
- */
-class nsScrollFrame : public nsHTMLContainerFrame {
-public:
-  NS_IMETHOD Init(nsIPresContext&  aPresContext,
-                  nsIContent*      aContent,
-                  nsIFrame*        aParent,
-                  nsIStyleContext* aContext);
-
-  NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
-                                 nsIAtom*        aListName,
-                                 nsIFrame*       aChildList);
-
-  NS_IMETHOD DidReflow(nsIPresContext&   aPresContext,
-                       nsDidReflowStatus aStatus);
-
-  NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
-                    nsHTMLReflowMetrics&     aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus);
-
-  NS_IMETHOD Paint(nsIPresContext&      aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect&        aDirtyRect,
-                   nsFramePaintLayer    aWhichLayer);
-
-  NS_IMETHOD GetFrameName(nsString& aResult) const;
-
-protected:
-  virtual PRIntn GetSkipSides() const;
-
-private:
-  nsresult CreateScrollingView();
-};
 
 NS_IMETHODIMP
 nsScrollFrame::Init(nsIPresContext&  aPresContext,
@@ -480,6 +443,22 @@ nsScrollFrame::GetFrameName(nsString& aResult) const
   return MakeFrameName("Scroll", aResult);
 }
 
+NS_IMETHODIMP 
+nsScrollFrame::ReResolveStyleContext(nsIPresContext* aPresContext, 
+                                     nsIStyleContext* aParentContext) 
+{ 
+  nsresult rv = nsHTMLContainerFrame::ReResolveStyleContext(aPresContext, aParentContext); 
+
+  const nsStyleDisplay* disp = (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
+
+  nsIView * view; 
+  GetView(view); 
+  if (view) { 
+    view->SetVisibility(NS_STYLE_VISIBILITY_HIDDEN == disp->mVisible ?
+nsViewVisibility_kHide:nsViewVisibility_kShow); 
+  } 
+  return rv; 
+} 
 //----------------------------------------------------------------------
 
 nsresult
