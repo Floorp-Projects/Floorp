@@ -450,7 +450,9 @@ PRUint32 StyleMarginImpl::ComputeCRC32(PRUint32 aCrc) const
 #ifdef COMPUTE_STYLEDATA_CRC
   crc = StyleSideCRC(crc,&mMargin);
   crc = AccumulateCRC(crc,(const char *)&mHasCachedMargin,sizeof(mHasCachedMargin));
-  crc = StyleMarginCRC(crc,&mCachedMargin);
+  if (mHasCachedMargin) {
+    crc = StyleMarginCRC(crc,&mCachedMargin);
+  }
 #endif
   return crc;
 }
@@ -525,7 +527,9 @@ PRUint32 StylePaddingImpl::ComputeCRC32(PRUint32 aCrc) const
 #ifdef COMPUTE_STYLEDATA_CRC
   crc = StyleSideCRC(crc,&mPadding);
   crc = AccumulateCRC(crc,(const char *)&mHasCachedPadding,sizeof(mHasCachedPadding));
-  crc = StyleMarginCRC(crc,&mCachedPadding);
+  if (mHasCachedPadding) {
+    crc = StyleMarginCRC(crc,&mCachedPadding);
+  }
 #endif
   return crc;
 }
@@ -702,7 +706,9 @@ PRUint32 StyleBorderImpl::ComputeCRC32(PRUint32 aCrc) const
   crc = StyleSideCRC(crc,&mBorderRadius);
   crc = AccumulateCRC(crc,(const char *)&mFloatEdge,sizeof(mFloatEdge));
   crc = AccumulateCRC(crc,(const char *)&mHasCachedBorder,sizeof(mHasCachedBorder));
-  crc = StyleMarginCRC(crc,&mCachedBorder);
+  if (mHasCachedBorder) {
+    crc = StyleMarginCRC(crc,&mCachedBorder);
+  }
   crc = AccumulateCRC(crc,(const char *)mBorderStyle,sizeof(mBorderStyle)); // array of 4 elements
   crc = AccumulateCRC(crc,(const char *)mBorderColor,sizeof(mBorderColor)); // array ...
 #endif
@@ -805,7 +811,9 @@ PRUint32 StyleOutlineImpl::ComputeCRC32(PRUint32 aCrc) const
   crc = StyleSideCRC(crc,&mOutlineRadius);
   crc = StyleCoordCRC(crc,&mOutlineWidth);
   crc = AccumulateCRC(crc,(const char *)&mHasCachedOutline,sizeof(mHasCachedOutline));
-  crc = AccumulateCRC(crc,(const char *)&mCachedOutlineWidth,sizeof(mCachedOutlineWidth));
+  if (mHasCachedOutline) {
+    crc = AccumulateCRC(crc,(const char *)&mCachedOutlineWidth,sizeof(mCachedOutlineWidth));
+  }
   crc = AccumulateCRC(crc,(const char *)&mOutlineStyle,sizeof(mOutlineStyle));
   crc = AccumulateCRC(crc,(const char *)&mOutlineColor,sizeof(mOutlineColor));
 #endif
