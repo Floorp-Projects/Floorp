@@ -15,11 +15,12 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+
 /* 
    new_manage.c --- defines a subclass of XmManager
    Created: Eric Bina <ebina@netscape.com>, 17-Aug-94.
 
-   Excerts from the X Toolkit Intrinsics Programming Manual - O'Reilly:
+   Excerpts from the X Toolkit Intrinsics Programming Manual - O'Reilly:
 
 	"Writing a general-purpose composite widget is not a trivial task
 	and should only be done when other options fail."
@@ -28,7 +29,6 @@
 	who write commercial widget sets, and concentrate on things that are
 	more important in your application."
  */
-
 
 #include <stdio.h>
 #include <stdlib.h>

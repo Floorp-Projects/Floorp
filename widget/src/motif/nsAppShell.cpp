@@ -72,9 +72,6 @@ NS_METHOD nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener)
 
 NS_METHOD nsAppShell::Create(int* bac, char ** bav)
 {
-  //char *home=nsnull;
-  //char *path=nsnull;
-
   int argc = bac ? *bac : 0;
   char **argv = bav;
 
@@ -96,13 +93,13 @@ NS_METHOD nsAppShell::Create(int* bac, char ** bav)
 							
   mTopLevel = XtAppInitialize(&mAppContext,   // app_context_return
                               "nsAppShell",   // application_class
-                              NULL, 				  // options
-                              0, 			        // num_options
+                              NULL,           // options
+                              0,              // num_options
                               &argc,          // argc_in_out
                               argv,           // argv_in_out
-                              NULL, 				  //	fallback_resources
-                              NULL,           // args 
-                              0);		          //	num_args
+                              NULL,           // fallback_resources
+                              NULL,           // args
+                              0);             // num_args
 
   // XXX This is BAD -- needs to be fixed
   gAppContext = mAppContext;
@@ -128,19 +125,14 @@ static void event_processor_callback(XtPointer       aClosure,
                                      int *           aFd,
                                      XtIntervalId *  aId)
 {
-//   NS_ASSERTION(*aFd==PR_GetEventQueueSelectFD(gUnixMainEventQueue), "Error in nsAppShell.cpp:event_processor_callback");
-//   PR_ProcessPendingEvents(gUnixMainEventQueue);
-
-  nsIEventQueue *eventQueue = (nsIEventQueue*) aClosure;
+  nsIEventQueue *eventQueue = (nsIEventQueue*)aClosure;
   eventQueue->ProcessPendingEvents();
 }
 
 NS_METHOD nsAppShell::Run()
 {
   NS_ADDREF_THIS();
-
   nsresult   rv = NS_OK;
-
   nsIEventQueue * EQueue = nsnull;
 
   // Get the event queue service 
@@ -181,7 +173,7 @@ done:
 
   XtAppAddInput(gAppContext, 
                 EQueue->GetEventQueueSelectFD(),
-                (XtPointer)(XtInputReadMask), 
+                (XtPointer) XtInputReadMask, 
                 event_processor_callback, 
                 0);
 
@@ -214,13 +206,11 @@ done:
 
 NS_METHOD nsAppShell::Spinup()
 {
-  //XXX:Implement this.
   return NS_OK;
 }
 
 NS_METHOD nsAppShell::Spindown()
 {
-  //XXX:Implement this.
   return NS_OK;
 }
 
@@ -256,7 +246,6 @@ NS_METHOD nsAppShell::Exit()
 nsAppShell::nsAppShell()
 { 
   NS_INIT_REFCNT();
-  //mRefCnt = 0;
   mDispatchListener = 0;
 }
 
