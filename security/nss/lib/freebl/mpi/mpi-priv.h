@@ -35,7 +35,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mpi-priv.h,v 1.4 2000/08/01 01:38:29 nelsonb%netscape.com Exp $
+ *  $Id: mpi-priv.h,v 1.5 2000/08/02 01:01:01 nelsonb%netscape.com Exp $
  */
 #ifndef _MPI_PRIV_H_
 #define _MPI_PRIV_H_ 1
@@ -135,6 +135,8 @@ extern const float s_logv_2[];
  void     s_mp_copy(const mp_digit *sp, mp_digit *dp, mp_size count); /* copy */
  void    *s_mp_alloc(size_t nb, size_t ni);       /* general allocator     */
  void     s_mp_free(void *ptr);                   /* general free function */
+extern unsigned long mp_allocs;
+extern unsigned long mp_frees;
 #else
 
  /* Even if these are defined as macros, we need to respect the settings
