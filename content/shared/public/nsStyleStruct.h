@@ -537,14 +537,15 @@ struct nsStyleOutline: public nsStyleStruct {
   }
 
 protected:
-  PRPackedBool  mHasCachedOutline;
   nscoord       mCachedOutlineWidth;
 
-  PRUint8       mOutlineStyle;    // [reset] See nsStyleConsts.h
   nscolor       mOutlineColor;    // [reset] 
 
   // XXX remove with deprecated methods
   nscoord       mBorderWidths[3];
+
+  PRPackedBool  mHasCachedOutline;
+  PRUint8       mOutlineStyle;    // [reset] See nsStyleConsts.h
 };
 
 
@@ -717,18 +718,7 @@ struct nsStyleDisplay : public nsStyleStruct {
 
   nsChangeHint CalcDifference(const nsStyleDisplay& aOther) const;
   
-  PRUint8 mDisplay;             // [reset] see nsStyleConsts.h NS_STYLE_DISPLAY_*
-  PRUint8 mOriginalDisplay;     // [reset] saved mDisplay for position:absolute/fixed
-  PRUint8 mAppearance;          // [reset]
   nsString  mBinding;           // [reset] absolute url string
-  PRUint8   mPosition;          // [reset] see nsStyleConsts.h
-  PRUint8 mFloats;              // [reset] see nsStyleConsts.h NS_STYLE_FLOAT_*
-  PRUint8 mBreakType;           // [reset] see nsStyleConsts.h NS_STYLE_CLEAR_*
-  PRPackedBool mBreakBefore;    // [reset] 
-  PRPackedBool mBreakAfter;     // [reset] 
-  PRUint8   mOverflow;          // [reset] see nsStyleConsts.h
-
-  PRUint8   mClipFlags;         // [reset] see nsStyleConsts.h
 #if 0
   // XXX This is how it is defined in the CSS2 spec, but the errata
   // changed it to be consistent with the positioning draft and how
@@ -737,6 +727,17 @@ struct nsStyleDisplay : public nsStyleStruct {
 #else
   nsRect    mClip;              // [reset] offsets from upper-left border edge
 #endif
+  PRUint8 mDisplay;             // [reset] see nsStyleConsts.h NS_STYLE_DISPLAY_*
+  PRUint8 mOriginalDisplay;     // [reset] saved mDisplay for position:absolute/fixed
+  PRUint8 mAppearance;          // [reset]
+  PRUint8 mPosition;            // [reset] see nsStyleConsts.h
+  PRUint8 mFloats;              // [reset] see nsStyleConsts.h NS_STYLE_FLOAT_*
+  PRUint8 mBreakType;           // [reset] see nsStyleConsts.h NS_STYLE_CLEAR_*
+  PRPackedBool mBreakBefore;    // [reset] 
+  PRPackedBool mBreakAfter;     // [reset] 
+  PRUint8   mOverflow;          // [reset] see nsStyleConsts.h
+
+  PRUint8   mClipFlags;         // [reset] see nsStyleConsts.h
   
   PRBool IsBlockLevel() const {return (NS_STYLE_DISPLAY_BLOCK == mDisplay) ||
                                       (NS_STYLE_DISPLAY_LIST_ITEM == mDisplay) ||
@@ -798,9 +799,9 @@ struct nsStyleTableBorder: public nsStyleStruct {
 
   nsChangeHint CalcDifference(const nsStyleTableBorder& aOther) const;
   
-  PRUint8       mBorderCollapse;// [inherited]
   nsStyleCoord  mBorderSpacingX;// [inherited]
   nsStyleCoord  mBorderSpacingY;// [inherited]
+  PRUint8       mBorderCollapse;// [inherited]
   PRUint8       mCaptionSide;   // [inherited]
   PRUint8       mEmptyCells;    // [inherited]
 };
@@ -1049,8 +1050,8 @@ struct nsStyleUIReset: public nsStyleStruct {
 
   nsChangeHint CalcDifference(const nsStyleUIReset& aOther) const;
 
-  PRUint8   mUserSelect;      // [reset] (selection-style)
   PRUnichar mKeyEquivalent;   // [reset] XXX what type should this be?
+  PRUint8   mUserSelect;      // [reset] (selection-style)
   PRUint8   mResizer;         // [reset]
   PRUint8   mForceBrokenImageIcon; // [reset]  (0 if not forcing, otherwise forcing)
 };
@@ -1102,12 +1103,12 @@ struct nsStyleXUL : public nsStyleStruct {
 
   nsChangeHint CalcDifference(const nsStyleXUL& aOther) const;
   
+  float         mBoxFlex;               // [reset] see nsStyleConsts.h
+  PRUint32      mBoxOrdinal;            // [reset] see nsStyleConsts.h
   PRUint8       mBoxAlign;              // [reset] see nsStyleConsts.h
   PRUint8       mBoxDirection;          // [reset] see nsStyleConsts.h
-  float         mBoxFlex;               // [reset] see nsStyleConsts.h
   PRUint8       mBoxOrient;             // [reset] see nsStyleConsts.h
   PRUint8       mBoxPack;               // [reset] see nsStyleConsts.h
-  PRUint32      mBoxOrdinal;            // [reset] see nsStyleConsts.h
 };
 #endif
 
@@ -1170,12 +1171,12 @@ struct nsBorderEdge
   nscoord mWidth;
   /** the length of the edge */
   nscoord mLength;
-  PRUint8 mStyle;  
   nscolor mColor;
-  /** which side does this edge represent? */
-  PRUint8 mSide;
   /** if this edge is an outside edge, the border infor for the adjacent inside object */
   nsBorderEdges * mInsideNeighbor;
+  PRUint8 mStyle;  
+  /** which side does this edge represent? */
+  PRUint8 mSide;
 
   nsBorderEdge();
 };
