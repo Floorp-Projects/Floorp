@@ -17,7 +17,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
+ *       Ben Bucksch <mozilla@bucksch.org>
  */
 
 #include "mimetpfl.h"
@@ -35,6 +36,9 @@
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
+static const PRUint32 kSpacesForATab = 4; // Must be at least 1.
+static const PRUint32 kInitialBufferSize = 100;
+
 #define MIME_SUPERCLASS mimeInlineTextClass
 MimeDefClass(MimeInlineTextPlainFlowed, MimeInlineTextPlainFlowedClass,
 			 mimeInlineTextPlainFlowedClass, &MIME_SUPERCLASS);
@@ -43,18 +47,19 @@ static int MimeInlineTextPlainFlowed_parse_begin (MimeObject *);
 static int MimeInlineTextPlainFlowed_parse_line (char *, PRInt32, MimeObject *);
 static int MimeInlineTextPlainFlowed_parse_eof (MimeObject *, PRBool);
 
-static void Update_in_tag_info(PRBool *a_in_tag, /* IN/OUT */
-                   PRBool *a_in_quote_in_tag, /* IN/OUT */
-                   char *a_quote_char, /* IN/OUT (pointer to single char) */
-                   char a_current_char); /* IN */
-
 static MimeInlineTextPlainFlowedExData *MimeInlineTextPlainFlowedExDataList = nsnull;
 
+// From mimetpla.cpp
 extern "C" char *MimeTextBuildPrefixCSS(
                        PRInt32 quotedSizeSetting,      // mail.quoted_size
                        PRInt32    quotedStyleSetting,  // mail.quoted_style
                        char       *citationColor);     // mail.citation_color
 
+// Definition below
+extern "C"
+nsresult Line_convert_whitespace(const nsString& a_line,
+                                 const PRBool a_convert_all_whitespace,
+                                 nsString& a_out_line);
 
 static int
 MimeInlineTextPlainFlowedClassInitialize(MimeInlineTextPlainFlowedClass *clazz)
@@ -83,7 +88,7 @@ MimeInlineTextPlainFlowed_parse_begin (MimeObject *obj)
        )       );  // The output will be inserted in the composer as quotation
   PRBool plainHTML = quoting || (obj->options &&
        obj->options->format_out == nsMimeOutput::nsMimeMessageSaveAs);
-       // Just good(tm) HTML. No reliance on CSS (only for prefs).
+       // Just good(tm) HTML. No reliance on CSS.
 
   // Setup the data structure that is connected to the actual document
   // Saved in a linked list in case this is called with several documents
@@ -120,10 +125,10 @@ MimeInlineTextPlainFlowed_parse_begin (MimeObject *obj)
     prefs->GetIntPref("mail.quoted_size", &(text->mQuotedSizeSetting));
     prefs->GetIntPref("mail.quoted_style", &(text->mQuotedStyleSetting));
     prefs->CopyCharPref("mail.citation_color", &(text->mCitationColor));
-    nsresult rv = prefs->GetBoolPref( "mail.fixed_width_messages",
-         &(exdata->fixedwidthfont)  );  // Check at least the success of one
-    NS_ASSERTION(NS_SUCCEEDED(rv),
-         "failed to get the mail.fixed_width_messages pref"); 
+    nsresult rv = prefs->GetBoolPref("mail.fixed_width_messages",
+                                     &(exdata->fixedwidthfont));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get pref");
+         // Check at least the success of one
   }
 
   // Get font
@@ -160,13 +165,10 @@ MimeInlineTextPlainFlowed_parse_begin (MimeObject *obj)
 
   // Opening <div>.
   if (!quoting)
-       /* HACK: 4.x' editor can't break <div>s (e.g. to interleave comments).
-          So, I just don't put it out until we have a better solution.
-          Downside: This removes the information about the original format,
-          which might be useful for styling/processing on the recipient
-          side :(. */
+       /* 4.x' editor can't break <div>s (e.g. to interleave comments).
+          We'll add the class to the <blockquote type=cite> later. */
   {
-    nsCAutoString openingDiv("<div class=text-flowed");
+    nsCAutoString openingDiv("<div class=\"text-flowed\"");
     // We currently have to add formatting here. :-(
     if (!plainHTML && !fontstyle.IsEmpty())
     {
@@ -274,48 +276,6 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
   NS_ASSERTION(length > 0, "zero length");
   if (length <= 0) return 0;
 
-  // Grows the buffer if needed for this line
-  // calculate needed buffersize. Use the linelength
-  // and then double it to compensate for text converted
-  // to links. Then add 15 for each '>' (blockquote) and
-  // 20 for each ':' and '@'. (overhead in conversion to
-  // links). Also add 5 for every '\r' or \n' and 7 for each
-  // space in case they have to be replaced by &nbsp;
-  int32 buffersizeneeded = length * 2 + 15*exdata->quotelevel;
-  for(int32 i=0; i<length; i++) {
-    switch(line[i]) {
-    case '>': buffersizeneeded += 25; break; // '>' -> '<blockquote type=cite>'
-    case '<': buffersizeneeded += 5; break; // '<' -> '&lt;'
-    case ':': buffersizeneeded += 20; break;
-    case '@': buffersizeneeded += 20; break;
-    case '\r': buffersizeneeded += 5; break;
-    case '\n': buffersizeneeded += 5; break;
-    case ' ': buffersizeneeded += 7; break; // Not very good for other charsets
-    case '\t': buffersizeneeded += 30; break;
-    default: break; // Nothing
-    }
-  }
-  buffersizeneeded += 30; // For possible <nobr> ... </nobr>
-
-  /* There is the issue of guessing how much space we will need for emoticons.
-     So what we will do is count the total number of "special" chars and
-     multiply by 82 (max len for a smiley line) and add one for good measure.*/
-  PRInt32   specialCharCount = 0;
-  for (PRInt32 z=0; z<length; z++)
-  {
-     if ( (line[z] == ')') || (line[z] == '(') || (line[z] == ':')
-         || (line[z] == ';') || (line[z] == '>') )
-      ++specialCharCount;
-  }
-  buffersizeneeded += 82 * (specialCharCount + 1); 
-
-  status = MimeObject_grow_obuffer (obj, buffersizeneeded);
-  if (status < 0) return status;
-
-  char *templine = (char *)PR_CALLOC(buffersizeneeded);
-  if(!templine) 
-    return MIME_OUT_OF_MEMORY;
-
   uint32 linequotelevel = 0;
   char *linep = line;
   // Space stuffed?
@@ -352,11 +312,15 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
 
   PRBool skipConversion = !conv ||
                           (obj->options && obj->options->force_user_charset);
+
+  nsString lineSource;
+  nsString lineResult;
+  lineSource.SetCapacity(kInitialBufferSize);
+  lineResult.SetCapacity(kInitialBufferSize);
     
   if (!skipConversion)
   {
-    nsString strline;
-    strline.AssignWithConversion(linep, (length - (linep - line)) );
+    lineSource.AssignWithConversion(linep, (length - (linep - line)) );
     PRUnichar* wresult = nsnull;
     nsresult rv = NS_OK;
     PRBool whattodo = obj->options->whattodo;
@@ -373,40 +337,19 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
 
     /* This is the main TXT to HTML conversion:
        escaping (very important), eventually recognizing etc. */
-    rv = conv->ScanTXT(strline.GetUnicode(), whattodo, &wresult);
-    if (NS_FAILED(rv))
-    {
-      PR_Free(templine);
-      return -1;
-    }
+    rv = conv->ScanTXT(lineSource.GetUnicode(), whattodo, &wresult);
+    if (NS_FAILED(rv)) return -1;
 
-    /* avoid an extra string copy by using nsSubsumeStr, this transfers
-       ownership of wresult to strresult so don't try to free wresult later. */
-    nsSubsumeStr strresult(wresult, PR_TRUE /* assume ownership */);
-
-    /* avoid yet another extra string copy of the line by using .ToCString
-       which will convert and copy directly into the buffer we have already
-       allocated. */
-    strresult.ToCString(templine, buffersizeneeded - 10); 
+    lineResult = wresult;
+    Recycle(wresult);
   }
   else
   {
-    nsCRT::memcpy(templine, line, length);
-    templine[length] = '\0';
+    lineResult.AssignWithConversion(line, length);
     status = NS_OK;
   }
 
-  if (status != NS_OK) {
-    PR_Free(templine);
-    return status;
-  }
-
-  //  NS_ASSERTION(*line == 0 || *obj->obuffer, "have line or buffer");
-  NS_ASSERTION(*line == 0 || *templine, "have line or buffer");
-
-  char *templinep = templine;
-  char *outlinep = obj->obuffer;
-
+  nsCAutoString preface;
 
   /* Correct number of blockquotes */
   int32 quoteleveldiff=linequotelevel - exdata->quotelevel;
@@ -420,28 +363,7 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
   }
   while(quoteleveldiff>0) {
     quoteleveldiff--;
-    /* Output <blockquote> */
-    *outlinep='<'; outlinep++;
-    *outlinep='b'; outlinep++;
-    *outlinep='l'; outlinep++;
-    *outlinep='o'; outlinep++;
-    *outlinep='c'; outlinep++;
-    *outlinep='k'; outlinep++;
-    *outlinep='q'; outlinep++;
-    *outlinep='u'; outlinep++;
-    *outlinep='o'; outlinep++;
-    *outlinep='t'; outlinep++;
-    *outlinep='e'; outlinep++;
-    *outlinep=' '; outlinep++;
-    *outlinep='t'; outlinep++;
-    *outlinep='y'; outlinep++;
-    *outlinep='p'; outlinep++;
-    *outlinep='e'; outlinep++;
-    *outlinep='='; outlinep++;
-    *outlinep='c'; outlinep++;
-    *outlinep='i'; outlinep++;
-    *outlinep='t'; outlinep++;
-    *outlinep='e'; outlinep++;
+    preface += "<blockquote type=cite";
     // This is to have us observe the user pref settings for citations
     MimeInlineTextPlainFlowed *tObj = (MimeInlineTextPlainFlowed *) obj;
     char *style = MimeTextBuildPrefixCSS(tObj->mQuotedSizeSetting,
@@ -449,234 +371,71 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
                                          tObj->mCitationColor);
     if (!plainHTML && style && strlen(style))
     {
-      *outlinep=' '; outlinep++;
-      *outlinep='s'; outlinep++;
-      *outlinep='t'; outlinep++;
-      *outlinep='y'; outlinep++;
-      *outlinep='l'; outlinep++;
-      *outlinep='e'; outlinep++;
-      *outlinep='='; outlinep++;
-      *outlinep='"'; outlinep++;
-      strcpy(outlinep, style);
-      outlinep += nsCRT::strlen(style);
-      *outlinep='"'; outlinep++;
+      preface += " style=\"";
+      preface += style;
+      preface += '"';
       PR_FREEIF(style);
     }
-    *outlinep='>'; outlinep++;
+    preface += '>';
   }
   while(quoteleveldiff<0) {
     quoteleveldiff++;
-    /* Output </blockquote> */
-    *outlinep='<'; outlinep++;
-    *outlinep='/'; outlinep++;
-    *outlinep='b'; outlinep++;
-    *outlinep='l'; outlinep++;
-    *outlinep='o'; outlinep++;
-    *outlinep='c'; outlinep++;
-    *outlinep='k'; outlinep++;
-    *outlinep='q'; outlinep++;
-    *outlinep='u'; outlinep++;
-    *outlinep='o'; outlinep++;
-    *outlinep='t'; outlinep++;
-    *outlinep='e'; outlinep++;
-    *outlinep='>'; outlinep++;
+    preface += "</blockquote>";
   }
   exdata->quotelevel = linequotelevel;
 
-  PRBool in_tag = PR_FALSE; 
-  PRBool in_quote_in_tag = PR_FALSE;
-  char quote_char;
-  
+  nsString lineResult2;
+  lineResult2.SetCapacity(kInitialBufferSize);
+
   if(flowed) {
     // Check RFC 2646 "4.3. Usenet Signature Convention": "-- "+CRLF is
     // not a flowed line
     if
       (  // is "-- "LINEBREAK
-        templinep[0] == '-'
-        && PL_strlen(templinep) >= 4
+        lineSource.Length() >= 4
+        && lineSource[0] == '-'
         &&
         (
-          !PL_strncmp(templinep, "-- \r", 4) ||
-          !PL_strncmp(templinep, "-- \n", 4)
+          lineSource.EqualsWithConversion("-- \r", PR_FALSE, 4) ||
+          lineSource.EqualsWithConversion("-- \n", PR_FALSE, 4)
         )
       )
     {
       if (linequotelevel > 0 || exdata->isSig)
       {
-        *outlinep='-'; outlinep++;
-        *outlinep='-'; outlinep++;
-        *outlinep='&'; outlinep++;
-        *outlinep='n'; outlinep++;
-        *outlinep='b'; outlinep++;
-        *outlinep='s'; outlinep++;
-        *outlinep='p'; outlinep++;
-        *outlinep=';'; outlinep++;
-        *outlinep='<'; outlinep++;
-        *outlinep='b'; outlinep++;
-        *outlinep='r'; outlinep++;
-        *outlinep='>'; outlinep++;
+        preface += "--&nbsp;<br>";
       } else {
         exdata->isSig = PR_TRUE;
-
-        const char *const sig_mark_start =
+        preface +=
          "<div class=\"txt-sig\"><span class=\"txt-tag\">--&nbsp;<br></span>";
-        PRUint32 sig_mark_start_length = PL_strlen(sig_mark_start);
-        memcpy(outlinep, sig_mark_start, sig_mark_start_length);
-        outlinep += sig_mark_start_length;
       }
-      templinep += 3;  // Above, we already outputted the equvivalent to "-- "
     } else {
-
-      // Output templinep
-      
-      /* Convert all spaces but the first in a row into nbsp
-         (i.e. always wrap) */
-      const PRBool firstSpaceNbsp = PR_FALSE;
-      PRBool nextSpaceIsNbsp = firstSpaceNbsp;
-
-      while(*templinep && (*templinep != '\r') && (*templinep != '\n'))
-      {
-
-        Update_in_tag_info(&in_tag, &in_quote_in_tag,
-                           &quote_char, *templinep);
-
-        // We don't touch anything insida a tag.
-        if (!in_tag) {
-          if (' ' == *templinep) {
-            if (nextSpaceIsNbsp)
-            {
-              *outlinep='&'; outlinep++;
-              *outlinep='n'; outlinep++;
-              *outlinep='b'; outlinep++;
-              *outlinep='s'; outlinep++;
-              *outlinep='p'; outlinep++;
-              *outlinep=';'; outlinep++;
-            }
-            else
-            {
-              *outlinep=' '; outlinep++;
-            }
-            nextSpaceIsNbsp = PR_TRUE;
-            templinep++;
-          } else if('\t' == *templinep) {
-            // Output 4 "spaces"
-            for(int spaces=0; spaces<4; spaces++) {
-              if (nextSpaceIsNbsp)
-              {
-                *outlinep='&'; outlinep++;
-                *outlinep='n'; outlinep++;
-                *outlinep='b'; outlinep++;
-                *outlinep='s'; outlinep++;
-                *outlinep='p'; outlinep++;
-                *outlinep=';'; outlinep++;
-              }
-              else
-              {
-                *outlinep=' '; outlinep++;
-              }
-              nextSpaceIsNbsp = PR_TRUE;
-            }
-            templinep++;
-          } else {
-            nextSpaceIsNbsp = firstSpaceNbsp;
-            *outlinep = *templinep;
-            outlinep++;
-            templinep++;
-          } 
-        } else {
-          // In tag. Don't change anything
-          nextSpaceIsNbsp = firstSpaceNbsp;
-          *outlinep = *templinep;
-          outlinep++;
-          templinep++;
-        }
-      }
+      Line_convert_whitespace(lineResult, PR_FALSE /* Allow wraps */,
+                              lineResult2);
     }
 
     exdata->inflow=PR_TRUE;
   } else {
     // Fixed paragraph.
-
-    
-    const PRBool firstSpaceNbsp = !plainHTML &&
-                                  !obj->options->wrap_long_lines_p;
-         /* If wrap, convert all spaces but the first in a row into nbsp,
-            otherwise all. */
-    PRBool nextSpaceIsNbsp = firstSpaceNbsp;
-    while(*templinep && (*templinep != '\r') && (*templinep != '\n')) {
-
-      Update_in_tag_info(&in_tag, &in_quote_in_tag,
-                         &quote_char, *templinep);
-      
-      // We don't touch anything insida a tag.
-      if(!in_tag) {
-        if(' ' == *templinep) {
-          if (nextSpaceIsNbsp)
-          {
-            *outlinep='&'; outlinep++;
-            *outlinep='n'; outlinep++;
-            *outlinep='b'; outlinep++;
-            *outlinep='s'; outlinep++;
-            *outlinep='p'; outlinep++;
-            *outlinep=';'; outlinep++;
-          }
-          else
-          {
-            *outlinep=' '; outlinep++;
-          }
-          nextSpaceIsNbsp = PR_TRUE;
-          templinep++;
-        } else if('\t' == *templinep) {
-          // Output 4 "spaces"
-          for(int spaces=0; spaces<4; spaces++) {
-            if (nextSpaceIsNbsp)
-            {
-              *outlinep='&'; outlinep++;
-              *outlinep='n'; outlinep++;
-              *outlinep='b'; outlinep++;
-              *outlinep='s'; outlinep++;
-              *outlinep='p'; outlinep++;
-              *outlinep=';'; outlinep++;
-            }
-            else
-            {
-              *outlinep=' '; outlinep++;
-            }
-            nextSpaceIsNbsp = PR_TRUE;
-          }
-          templinep++;
-        } else {
-          nextSpaceIsNbsp = firstSpaceNbsp;
-          *outlinep = *templinep;
-          outlinep++;
-          templinep++;
-        } 
-      } else {
-        // In tag. Don't change anything
-        nextSpaceIsNbsp = firstSpaceNbsp;
-        *outlinep = *templinep;
-        outlinep++;
-        templinep++;
-      }
-    }
-
-    *outlinep='<'; outlinep++;
-    *outlinep='b'; outlinep++;
-    *outlinep='r'; outlinep++;
-    *outlinep='>'; outlinep++;
-
+    Line_convert_whitespace(lineResult,
+                            !plainHTML && !obj->options->wrap_long_lines_p
+                              /* If wrap, convert all spaces but the last in
+                                 a row into nbsp, otherwise all. */,
+                            lineResult2);
+    lineResult2 += NS_LITERAL_STRING("<br>");
     exdata->inflow = PR_FALSE;
   } // End Fixed line
 
-  *outlinep='\0'; outlinep++;
-
-  PR_Free(templine);
-
-  // Calculate linelength as
-  // <pointer to the next free char>-<pointer to the beginning>-1
-  // '-1' for the terminating '\0'
   if (!(exdata->isSig && quoting))
-    return MimeObject_write(obj, obj->obuffer, outlinep-obj->obuffer-1, PR_TRUE);
+  {
+    char* tmp = preface.ToNewCString();
+    status = MimeObject_write(obj, tmp, preface.Length(), PR_TRUE);
+    Recycle(tmp);
+    tmp = lineResult2.ToNewCString();
+    status = MimeObject_write(obj, tmp, lineResult2.Length(), PR_TRUE);
+    Recycle(tmp);
+    return status;
+  }
   else
     return NS_OK;
 }
@@ -697,10 +456,9 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
  */
 static void Update_in_tag_info(PRBool *a_in_tag, /* IN/OUT */
                    PRBool *a_in_quote_in_tag, /* IN/OUT */
-                   char *a_quote_char, /* IN/OUT (pointer to single char) */
-                   char a_current_char) /* IN */
+                   PRUnichar *a_quote_char, /* IN/OUT (pointer to single char) */
+                   PRUnichar a_current_char) /* IN */
 {
-
   if(*a_in_tag) {
     // Keep us informed of what's quoted so that we
     // don't end the tag too soon. For instance in
@@ -719,18 +477,15 @@ static void Update_in_tag_info(PRBool *a_in_tag, /* IN/OUT */
       case '\'':
         *a_in_quote_in_tag = PR_TRUE;
         *a_quote_char = a_current_char;
-        break;
-        
+        break;       
       case '>':
         // Tag is ended
         *a_in_tag = PR_FALSE;
         break;
-        
       default:
         // Do nothing
         ;
       }
-      
     }
     return;
   }
@@ -743,6 +498,93 @@ static void Update_in_tag_info(PRBool *a_in_tag, /* IN/OUT */
     *a_in_tag = PR_TRUE;
     *a_in_quote_in_tag = PR_FALSE;
   }
-  
 }
 
+
+/**
+ * Converts whitespace to |&nbsp;|, if appropriate.
+ *
+ * @param in a_current_char, the char to convert.
+ * @param in a_next_char, the char after the char to convert.
+ * @param in a_convert_all_whitespace, if also the last whitespace
+ *                                     in a sequence should be
+ *                                     converted.
+ * @param out a_out_string, result will be appended.
+*/
+static void Convert_whitespace(const PRUnichar a_current_char,
+                               const PRUnichar a_next_char,
+                               const PRBool a_convert_all_whitespace,
+                               nsString& a_out_string)
+{
+  NS_ASSERTION('\t' == a_current_char || ' ' == a_current_char,
+               "Convert_whitespace got something else than a whitespace!");
+
+  PRUint32 number_of_nbsp = 0;
+  PRUint32 number_of_space = 1; // Assume we're going to output one space.
+
+  /* Output the spaces for a tab. All but the last are made into &nbsp;.
+     The last is treated like a normal space. 
+  */
+  if('\t' == a_current_char) {
+    number_of_nbsp = kSpacesForATab - 1;
+  }
+
+  if(' ' == a_next_char || '\t' == a_next_char || a_convert_all_whitespace) {
+    number_of_nbsp += number_of_space;
+    number_of_space = 0;
+  }
+
+  while(number_of_nbsp--) {
+    a_out_string += NS_LITERAL_STRING("&nbsp;");
+  }
+
+  while(number_of_space--) {
+    // a_out_string += ' '; gives error
+    a_out_string += NS_LITERAL_STRING(" ");
+  }
+
+  return;
+}
+
+/**
+ * Passes over the line and converts whitespace to |&nbsp;|, if appropriate
+ *
+ * @param in a_convert_all_whitespace, if also the last whitespace
+ *                                     in a sequence should be
+ *                                     converted.
+ * @param out a_out_string, result will be appended.
+*/
+extern "C"
+nsresult Line_convert_whitespace(const nsString& a_line,
+                                 const PRBool a_convert_all_whitespace,
+                                 nsString& a_out_line)
+{
+  PRBool in_tag = PR_FALSE;
+  PRBool in_quote_in_tag = PR_FALSE;
+  PRUnichar quote_char;
+
+  for (PRUint32 i = 0; a_line.Length() > i; i++)
+  {
+    const PRUnichar ic = a_line[i];  // Cache
+
+    Update_in_tag_info(&in_tag, &in_quote_in_tag, &quote_char, ic);
+    // We don't touch anything inside a tag.
+    if (!in_tag) {
+      if (ic == ' ' || ic == '\t') {
+        // Convert the whitespace to something appropriate
+        Convert_whitespace(ic, a_line.Length() > i + 1 ? a_line[i + 1] : '\0',
+                           a_convert_all_whitespace ||
+                           !i, // First char on line
+                           a_out_line);
+      } else if (ic == '\r') {
+        // strip CRs
+      } else {
+        a_out_line += ic;
+      } 
+    } else {
+      // In tag. Don't change anything
+      a_out_line += ic;
+    }
+  }
+  return NS_OK;
+}
