@@ -62,10 +62,10 @@ Rights Reserved.
 <!ENTITY accountWizardCmd.label "New Account Wizard...">
 
 <!-- View Menu -->
-<!ENTITY showToolbarMenu.label ".Toolbars">
+<!ENTITY showToolbarMenu.label "Show...">
 <!ENTITY showSidebarMenu.label ".SideBar">
-<!ENTITY showMessengerToolbarCmd.label ".Messenger Toolbar">  
-<!ENTITY showMessageCmd.label ".Message">  
+<!ENTITY showMessengerToolbarCmd.label ".Messenger Toolbar">
+<!ENTITY showMessageCmd.label "Message">  
 <!ENTITY showFoldersCmd.label ".Folders">  
 <!ENTITY sortMenu.label "Sort"> 
 <!ENTITY sortByDateCmd.label "by Date">  

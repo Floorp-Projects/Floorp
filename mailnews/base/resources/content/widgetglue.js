@@ -441,13 +441,31 @@ function MsgFilters() {
     window.openDialog("chrome://messenger/content/FilterListDialog.xul", "FilterDialog", "chrome");
 }
 
+function MsgToggleMessagePane()
+{
+    MsgToggleSplitter("messagePaneSplitter");
+}
+
+function MsgToggleSplitter(id)
+{
+    var splitter = document.getElementById("messagePaneSplitter");
+    var state = splitter.getAttribute("state");
+    if (state == "collapsed")
+        splitter.setAttribute("state", null);
+    else
+        splitter.setAttribute("state", "collapsed")
+}
+
+function MsgShowFolders()
+{
+
+
+}
 
 function MsgFolderProperties() {}
 
 function MsgShowMsgToolbar() {}
 function MsgShowLocationbar() {}
-function MsgShowMessage() {}
-function MsgShowFolders() {}
 function MsgSortByFlag() {}
 function MsgSortByPriority() {}
 function MsgSortBySize() {}
