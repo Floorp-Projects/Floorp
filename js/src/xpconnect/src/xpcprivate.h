@@ -134,9 +134,11 @@ public:
     nsIXPCScriptable* GetArbitraryScriptable() {return mArbitraryScriptable;}
 
     virtual ~nsXPConnect();
-private:
+
+protected:
     nsXPConnect();
 
+private:
     JSBool EnsureRuntime() {return mRuntime ? JS_TRUE : CreateRuntime();}
     JSBool CreateRuntime();
 
@@ -482,7 +484,7 @@ public:
 // each wrapped native object exposing a given interface can have zero or one 
 // wrapper for each scope.
 
-class nsXPCWrappedNativeScope : nsIXPCWrappedNativeScope
+class nsXPCWrappedNativeScope : public nsIXPCWrappedNativeScope
 {
 public:
     NS_DECL_ISUPPORTS
