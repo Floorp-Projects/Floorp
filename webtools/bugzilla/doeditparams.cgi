@@ -37,12 +37,10 @@ my $cgi = Bugzilla->cgi;
 
 print $cgi->header();
 
-if (!UserInGroup("tweakparams")) {
-    print "<h1>Sorry, you aren't a member of the 'tweakparams' group.</h1>\n";
-    print "And so, you aren't allowed to edit the parameters.\n";
-    PutFooter();
-    exit;
-}
+UserInGroup("tweakparams")
+  || ThrowUserError("auth_failure", {group  => "tweakparams",
+                                     action => "modify",
+                                     object => "parameters"});
 
 PutHeader("Saving new parameters");
 

@@ -119,9 +119,10 @@ if ($action eq 'approve') {
 }
 
 if ($action eq "delete") {
-    if (!UserInGroup('admin')) {
-        ThrowUserError("quips_edit_denied");
-    }
+    UserInGroup("admin")
+      || ThrowUserError("auth_failure", {group  => "admin",
+                                         action => "delete",
+                                         object => "quips"});
     my $quipid = $cgi->param("quipid");
     ThrowCodeError("need_quipid") unless $quipid =~ /(\d+)/; 
     $quipid = $1;

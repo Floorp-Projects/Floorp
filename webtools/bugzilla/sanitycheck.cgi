@@ -82,7 +82,9 @@ my $dbh = Bugzilla->dbh;
 # prevents users with a legitimate interest in Bugzilla integrity
 # from accessing the script).
 UserInGroup("editbugs")
-  || ThrowUserError("sanity_check_access_denied");
+  || ThrowUserError("auth_failure", {group  => "editbugs",
+                                     action => "run",
+                                     object => "sanity_check"});
 
 print "Content-type: text/html\n";
 print "\n";

@@ -204,9 +204,10 @@ sub validateID
     # Make sure the user is authorized to access this attachment's bug.
     ($bugid, my $isprivate) = FetchSQLData();
     ValidateBugID($bugid);
-    if (($isprivate > 0 ) && Param("insidergroup") && 
-        !(UserInGroup(Param("insidergroup")))) {
-        ThrowUserError("attachment_access_denied");
+    if ($isprivate && Param("insidergroup")) {
+        UserInGroup(Param("insidergroup"))
+          || ThrowUserError("auth_failure", {action => "access",
+                                             object => "attachment"});
     }
 
     # XXX shim code, kill $::FORM

@@ -73,7 +73,10 @@ my $dotweak = $::FORM{'tweak'} ? 1 : 0;
 # Log the user in
 if ($dotweak) {
     Bugzilla->login(LOGIN_REQUIRED);
-    UserInGroup("editbugs") || ThrowUserError("insufficient_privs_for_multi");
+    UserInGroup("editbugs")
+      || ThrowUserError("auth_failure", {group  => "editbugs",
+                                         action => "modify",
+                                         object => "multiple_bugs"});
     GetVersionTable();
 }
 else {

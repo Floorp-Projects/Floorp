@@ -17,7 +17,7 @@
   # Rights Reserved.
   #
   # Contributor(s): Gervase Markham <gerv@gerv.net>
-  #                 Frédéric Buclin <LpSolit@netscape.net>
+  #                 Frédéric Buclin <LpSolit@gmail.com>
   #%]
 
 [%# INTERFACE:
@@ -113,8 +113,10 @@
       [% END %]
     [% END %]
 
-    and so you aren't allowed to
-    [% IF action == "add" %]
+    [% IF group || reason %] and so [% END %] you are not authorized to
+    [% IF action == "access" %]
+      access
+    [% ELSIF action == "add" %]
       add new
     [% ELSIF action == "modify" %]
       modify
@@ -122,13 +124,17 @@
       delete
     [% ELSIF action == "edit" %]
       add, modify or delete
+    [% ELSIF action == "run" %]
+      run
     [% ELSIF action == "schedule" %]
       schedule
     [% ELSIF action == "use" %]
       use
     [% END %]
 
-    [% IF object == "charts" %]
+    [% IF object == "attachment" %]
+      this attachment
+    [% ELSIF object == "charts" %]
       the "New Charts" feature
     [% ELSIF object == "classifications" %]
       classifications
@@ -142,12 +148,18 @@
       keywords
     [% ELSIF object == "milestones" %]
       milestones
+    [% ELSIF object == "multiple_bugs" %]
+      multiple [% terms.bugs %] at once
     [% ELSIF object == "parameters" %]
       parameters
     [% ELSIF object == "products" %]
       products
+    [% ELSIF object == "quips" %]
+      quips
     [% ELSIF object == "reports" %]
       whine reports
+    [% ELSIF object == "sanity_check" %]
+      a sanity check
     [% ELSIF object == "user" %]
       the user you specified
     [% ELSIF object == "users" %]
@@ -155,10 +167,6 @@
     [% ELSIF object == "versions" %]
       versions
     [% END %].
-
-  [% ELSIF error == "attachment_access_denied" %]
-    [% title = "Access Denied" %]
-    You are not authorized to access this attachment.
 
   [% ELSIF error == "attachment_removed" %]
     [% title = "Attachment Removed" %]
@@ -548,11 +556,6 @@
   [% ELSIF error == "insufficient_data_points" %]
     We don't have enough data points to make a graph (yet).
         
-  [% ELSIF error == "insufficient_privs_for_multi" %]
-    [% title = "Insufficient Privileges" %]
-    Sorry, you do not have sufficient privileges to edit multiple 
-    [% terms.bugs %].
-    
   [% ELSIF error == "invalid_attach_id" %]
     [% title = "Invalid Attachment ID" %]
     The attachment id [% attach_id FILTER html %] is invalid.
@@ -918,10 +921,6 @@
     [% title = "Quips Disabled" %]
     Quips are disabled.
 
-  [% ELSIF error == "quips_edit_denied" %]
-    [% title = "Permission Denied" %]
-    You do not have permission to edit quips.
-
   [% ELSIF error == "reassign_to_empty" %]
     [% title = "Illegal Reassignment" %]
     To reassign [% terms.abug %], you must provide an address for
@@ -944,10 +943,6 @@
   [% ELSIF error == "require_summary" %]
     [% title = "Summary Needed" %]
     You must enter a summary for this [% terms.bug %].
-
-  [% ELSIF error == "sanity_check_access_denied" %]
-    [% title = "Access Denied" %]
-    You do not have the permissions necessary to run a sanity check.
 
   [% ELSIF error == "search_content_without_matches" %]
     [% title = "Illegal Search" %]
