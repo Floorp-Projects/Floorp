@@ -37,6 +37,10 @@ public:
 
   NS_IMETHOD GetShowFrameBorders(PRBool* aResult);
 
+  NS_IMETHOD SetShowEventTargetFrameBorder(PRBool aEnable);
+
+  NS_IMETHOD GetShowEventTargetFrameBorder(PRBool* aResult);
+
   NS_IMETHOD GetContentSize(nsIDocument* aDocument,
                             PRInt32* aSizeInBytesResult);
 
@@ -84,6 +88,20 @@ NS_IMETHODIMP
 nsLayoutDebugger::GetShowFrameBorders(PRBool* aResult)
 {
   *aResult = nsIFrameDebug::GetShowFrameBorders();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLayoutDebugger::SetShowEventTargetFrameBorder(PRBool aEnable)
+{
+  nsIFrameDebug::ShowEventTargetFrameBorder(aEnable);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLayoutDebugger::GetShowEventTargetFrameBorder(PRBool* aResult)
+{
+  *aResult = nsIFrameDebug::GetShowEventTargetFrameBorder();
   return NS_OK;
 }
 
