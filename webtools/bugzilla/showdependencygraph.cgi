@@ -47,6 +47,8 @@ PutHeader("Dependency graph", "Dependency graph", $id);
 
 if (defined $id) {
     ConnectToDatabase();
+    quietly_check_login();
+    $::usergroupset = $::usergroupset; # More warning suppression silliness.
 
     mkdir("data/webdot", 0777);
 
@@ -99,8 +101,10 @@ node [URL="${urlbase}show_bug.cgi?id=\\N", style=filled, color=lightgrey]
         my $summary = "";
         my $stat;
         if ($::FORM{'showsummary'}) {
-            SendSQL("select bug_status, short_desc from bugs where bug_id = $k");
+            SendSQL("select bug_status, short_desc from bugs where bug_id = $k and bugs.groupset & $::usergroupset = bugs.groupset");
             ($stat, $summary) = (FetchSQLData());
+            $stat = "NEW" if !defined $stat;
+            $summary = "" if !defined $summary;
         } else {
             SendSQL("select bug_status from bugs where bug_id = $k");
             $stat = FetchOneColumn();
