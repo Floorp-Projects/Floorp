@@ -48,6 +48,7 @@
 #include "nsUnicharUtils.h"
 #include "nsICaseConversion.h"
 #include "prenv.h"
+#include "nsIPrefBranchInternal.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #ifdef IBMBIDI
@@ -55,9 +56,22 @@
 #endif
 
 
-PRPackedBool nsTextTransformer::sWordSelectPrefInited = PR_FALSE;
-PRPackedBool nsTextTransformer::sWordSelectStopAtPunctuation = PR_FALSE;
+nsTextTransformer::WordSelectListener *nsTextTransformer::sWordSelectListener = nsnull;
+PRBool nsTextTransformer::sWordSelectStopAtPunctuation = PR_FALSE;
+static const char kWordSelectPref[] = "layout.word_select.stop_at_punctuation";
 
+NS_IMPL_ISUPPORTS1(nsTextTransformer::WordSelectListener, nsIObserver)
+
+NS_IMETHODIMP
+nsTextTransformer::WordSelectListener::Observe(nsISupports *aSubject,
+                                                 const char *aTopic,
+                                                 const PRUnichar *aData)
+{
+  NS_ASSERTION(!nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID),
+               "wrong topic");
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(aSubject);
+  return prefBranch->GetBoolPref(kWordSelectPref, &sWordSelectStopAtPunctuation);
+}
 
 nsAutoTextBuffer::nsAutoTextBuffer()
   : mBuffer(mAutoBuffer),
@@ -111,15 +125,17 @@ nsresult
 nsTextTransformer::Initialize()
 {
   // read in our global word selection prefs
-  if ( !sWordSelectPrefInited ) {
-    nsCOMPtr<nsIPrefBranch> prefBranch =
+  if ( !sWordSelectListener ) {
+    nsCOMPtr<nsIPrefBranchInternal> prefBranch =
         do_GetService( NS_PREFSERVICE_CONTRACTID );
     if ( prefBranch ) {
-      PRBool temp = PR_FALSE;
-      prefBranch->GetBoolPref("layout.word_select.stop_at_punctuation", &temp);
-      sWordSelectStopAtPunctuation = temp;
+      prefBranch->GetBoolPref(kWordSelectPref, &sWordSelectStopAtPunctuation);
+      sWordSelectListener = new WordSelectListener();
+      if (sWordSelectListener) {
+        NS_ADDREF(sWordSelectListener);
+        prefBranch->AddObserver(kWordSelectPref, sWordSelectListener, PR_FALSE);
+      }
     }
-    sWordSelectPrefInited = PR_TRUE;
   }
 
   return NS_OK;
@@ -139,6 +155,7 @@ static nsresult EnsureCaseConv()
 void
 nsTextTransformer::Shutdown()
 {
+  NS_IF_RELEASE(sWordSelectListener);
   if (gCaseConv) {
     nsServiceManager::ReleaseService(kUnicharUtilCID, gCaseConv);
     gCaseConv = nsnull;
