@@ -84,10 +84,9 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsFtpStreamProvider,
 // nsFtpControlConnection implementation ...
 //
 
-NS_IMPL_THREADSAFE_QUERY_INTERFACE3(nsFtpControlConnection, 
+NS_IMPL_THREADSAFE_QUERY_INTERFACE2(nsFtpControlConnection, 
                                     nsIStreamListener, 
-                                    nsIStreamObserver,
-                                    nsIProgressEventSink);
+                                    nsIStreamObserver);
 
 NS_IMPL_THREADSAFE_ADDREF(nsFtpControlConnection);
 nsrefcnt nsFtpControlConnection::Release(void)
@@ -179,7 +178,7 @@ nsFtpControlConnection::Connect()
 
     rv = mCPipe->AsyncWrite(provider, 
                             NS_STATIC_CAST(nsISupports*, (nsIStreamListener*)this),
-                            0, -1,
+                            0, PRUint32(-1),
                             nsITransport::DONT_PROXY_STREAM_PROVIDER |
                             nsITransport::DONT_PROXY_STREAM_OBSERVER, 
                             getter_AddRefs(mWriteRequest));
@@ -187,7 +186,7 @@ nsFtpControlConnection::Connect()
 
     // get the ball rolling by reading on the control socket.
     rv = mCPipe->AsyncRead(NS_STATIC_CAST(nsIStreamListener*, this), 
-                           nsnull, 0, -1, 0, 
+                           nsnull, 0, PRUint32(-1), 0, 
                            getter_AddRefs(mReadRequest));
 
     if (NS_FAILED(rv)) return rv;
@@ -209,7 +208,7 @@ nsFtpControlConnection::Disconnect()
 }
 
 nsresult 
-nsFtpControlConnection::Write(nsCString& command)
+nsFtpControlConnection::Write(nsCString& command, PRBool suspend)
 {
     if (!mConnected)
         return NS_ERROR_FAILURE;
@@ -217,15 +216,22 @@ nsFtpControlConnection::Write(nsCString& command)
     PRUint32 len = command.Length();
     PRUint32 cnt;
     nsresult rv = mOutStream->Write(command.get(), len, &cnt);
-    if (NS_SUCCEEDED(rv) && len==cnt) {
-        PRInt32 writeWasSuspended = PR_AtomicSet(&mSuspendedWrite, 0);
-        if (writeWasSuspended)
-            mWriteRequest->Resume();
+    
+    if (NS_FAILED(rv))
+        return rv;
+    
+    if (len!=cnt) 
+        return NS_ERROR_FAILURE;
+
+    if (suspend)
         return NS_OK;
-    }
 
-    return NS_ERROR_FAILURE;
+    PRInt32 writeWasSuspended = PR_AtomicSet(&mSuspendedWrite, 0);
+    if (writeWasSuspended)
+        mWriteRequest->Resume();
 
+    return NS_OK;
+    
 }
 
 nsresult 
@@ -240,15 +246,6 @@ nsFtpControlConnection::SetStreamListener(nsIStreamListener *aListener)
 {
     nsAutoLock lock(mLock);
     mListener = aListener;
-    return NS_OK;
-}
-
-
-nsresult 
-nsFtpControlConnection::SetProgressEventSink(nsIProgressEventSink *eventSink)
-{
-    nsAutoLock lock(mLock);
-    mEventSink = eventSink;
     return NS_OK;
 }
 
@@ -318,16 +315,3 @@ nsFtpControlConnection::OnDataAvailable(nsIRequest *request,
                                       aOffset,  aCount);
 }
 
-NS_IMETHODIMP 
-nsFtpControlConnection::OnProgress(nsIRequest *request, nsISupports *ctxt, PRUint32 aProgress, PRUint32 aProgressMax)
-{
-    // Progress Means Nothing...  At least not for the ftp control connection :-)
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsFtpControlConnection::OnStatus(nsIRequest *request, nsISupports *ctxt, nsresult status, const PRUnichar *statusArg)
-{
-    if (mEventSink)
-        mEventSink->OnStatus(request, ctxt, status, statusArg);
-    return NS_OK;
-}

@@ -31,22 +31,20 @@
 #include "nsString.h"
 #include "nsIOutputStream.h"
 #include "nsAutoLock.h"
-#include "nsIProgressEventSink.h"
 
-class nsFtpControlConnection  : public nsIStreamListener, public nsIProgressEventSink
+class nsFtpControlConnection  : public nsIStreamListener
 {
 public:
 	NS_DECL_ISUPPORTS
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSISTREAMOBSERVER
-    NS_DECL_NSIPROGRESSEVENTSINK
 
 	nsFtpControlConnection(nsITransport* socketTransport);
 	virtual ~nsFtpControlConnection();
     
     nsresult Connect();
     nsresult Disconnect();
-    nsresult Write(nsCString& command);
+    nsresult Write(nsCString& command, PRBool suspend);
     
     void     GetReadRequest(nsIRequest** request) { NS_IF_ADDREF(*request=mReadRequest); }
     void     GetWriteRequest(nsIRequest** request) { NS_IF_ADDREF(*request=mWriteRequest); }
@@ -55,7 +53,6 @@ public:
     
     nsresult GetTransport(nsITransport** controlTransport);
     nsresult SetStreamListener(nsIStreamListener *aListener);
-    nsresult SetProgressEventSink(nsIProgressEventSink *eventSink);
 
     PRUint32         mServerType;           // what kind of server is it.
     nsCAutoString    mCwd;                  // what dir are we in
@@ -72,7 +69,6 @@ private:
     nsCOMPtr<nsITransport>      mCPipe;
     nsCOMPtr<nsIOutputStream>   mOutStream;
     nsCOMPtr<nsIStreamListener> mListener;
-    nsCOMPtr<nsIProgressEventSink> mEventSink;
     PRPackedBool                mConnected;
     PRPackedBool                mWriteSuspened;
 };
