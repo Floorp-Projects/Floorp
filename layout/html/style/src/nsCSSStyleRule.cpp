@@ -279,6 +279,7 @@ void nsCSSSelector::Reset(void)
   NS_IF_DELETE(mClassList);
   NS_IF_DELETE(mPseudoClassList);
   NS_IF_DELETE(mAttrList);
+  mOperator = PRUnichar(0);
 }
 
 void nsCSSSelector::SetNameSpace(PRInt32 aNameSpace)
@@ -387,9 +388,6 @@ PRInt32 nsCSSSelector::CalcWeight(void) const
   while (nsnull != attr) {
     weight += 0x000100;
     attr = attr->mNext;
-  }
-  if (nsnull != mNext) {
-    weight += mNext->CalcWeight();
   }
   return weight;
 }
@@ -1990,6 +1988,12 @@ static void ListSelector(FILE* out, const nsCSSSelector* aSelector)
 {
   nsAutoString buffer;
 
+  if (0 != aSelector->mOperator) {
+    buffer.Truncate();
+    buffer.Append(aSelector->mOperator);
+    buffer.Append(" ");
+    fputs(buffer, out);
+  }
   if (kNameSpaceID_None < aSelector->mNameSpace) {
     buffer.Append(aSelector->mNameSpace, 10);
     fputs(buffer, out);
@@ -2014,7 +2018,6 @@ static void ListSelector(FILE* out, const nsCSSSelector* aSelector)
   list = aSelector->mPseudoClassList;
   while (nsnull != list) {
     list->mAtom->ToString(buffer);
-    fputs(":", out);
     fputs(buffer, out);
     list = list->mNext;
   }
@@ -2033,11 +2036,6 @@ static void ListSelector(FILE* out, const nsCSSSelector* aSelector)
     }
     fputs("]", out);
     attr = attr->mNext;
-  }
-  if (0 != aSelector->mOperator) {
-    buffer = aSelector->mOperator;
-    buffer.Append(" ");
-    fputs(buffer, out);
   }
 }
 
