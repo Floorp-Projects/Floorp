@@ -142,7 +142,9 @@ void HandleKeyDown(EventRecord* evt)
 					else
 						ShowTerminalWin();
 					return;				
-				case kComponentsID:					
+				case kComponentsID:		
+                    gControls->cw->compListBox.top = 0;
+                    EraseRect(&gControls->cw->compListBox);			
 					ClearDiskSpaceMsgs();
 					KillControls(gWPtr);
 					if (gControls->cfg->bAdditionsExist)
@@ -151,8 +153,9 @@ void HandleKeyDown(EventRecord* evt)
 						ShowTerminalWin();
 					return;
 				case kAdditionsID:
-					KillControls(gWPtr);
-					// XXX reinit top of listbox
+					KillControls(gWPtr);			    		
+                    gControls->aw->compListBox.top = 0;
+                    EraseRect(&gControls->aw->compListBox);					
 					ClearDiskSpaceMsgs();
 					ShowTerminalWin();
 					return;
@@ -216,8 +219,8 @@ void HandleMenuChoice(SInt32 aChoice)
 
 void HandleUpdateEvt(EventRecord* evt)
 {
-	Rect		bounds;
-	
+    Boolean bDefault = true;
+    	
 	GrafPtr	oldPort;
 	GetPort(&oldPort);
 	
@@ -254,15 +257,8 @@ void HandleUpdateEvt(EventRecord* evt)
 		
 		if (gControls->nextB)
 		{
-			HLock( (Handle) gControls->nextB);
-	
-			bounds = (*(gControls->nextB))->contrlRect;
-			PenMode(patCopy);
-			ForeColor(blackColor);
-			InsetRect( &bounds, -4, -4 );
-			FrameGreyButton( &bounds );
-	
-			HUnlock( (Handle)gControls->nextB );	
+            SetControlData(gControls->nextB, kControlNoPart, 
+                kControlPushButtonDefaultTag, sizeof(bDefault),(Ptr) &bDefault);
 		}
 	
 		EndUpdate( gWPtr );
