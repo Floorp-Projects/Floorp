@@ -174,9 +174,17 @@ function getRDFTargetValue(ds, source, property)
   var node = ds.GetTarget(source, property, true);
   if (node) 
   {
-    node = node.QueryInterface(Components.interfaces.nsIRDFLiteral);
-    if (node)
-      return node.Value;
+    try{
+      node = node.QueryInterface(Components.interfaces.nsIRDFLiteral);
+      if (node)
+        return node.Value;
+    }catch(e){
+      // if the RDF was bogus, do nothing. rethrow if it's some other problem
+      if(!((e instanceof Components.interfaces.nsIXPCException) 
+	    && (e.result==Components.results.NS_ERROR_NO_INTERFACE)))
+        throw e;
+    }	    
+    
   }
   return null;
 }
