@@ -33,6 +33,10 @@ ifdef MODULAR_NETLIB
 DIRS	+= module
 endif
 
+ifdef NU_CACHE
+DIRS += cache/nu
+endif
+
 include $(DEPTH)/config/rules.mk
 
 INCLUDE += $(PUBLIC)\ldap $(PUBLIC)\security
