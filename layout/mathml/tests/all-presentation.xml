@@ -26,17 +26,17 @@
 <para>
 
 Testing tensor indices &lt;mmultiscripts&gt;:
-<math xmlns:math="http://www.w3.org/Math/MathML">
+<math xmlns:math="http://www.w3.org/1998/Math/MathML">
 <!-- {3 \atop k} R {1 \atop i} {2 \atop j} -->
 <math:mmultiscripts><math:mi>R</math:mi><math:mi>i</math:mi><math:mi>1</math:mi><math:mi>j</math:mi><math:mi>2</math:mi><math:mprescripts/><math:mi>k</math:mi><math:mi>3</math:mi></math:mmultiscripts></math>;
 
 This with &lt;none/&gt;, 
-<math xmlns:math="http://www.w3.org/Math/MathML">
+<math xmlns:math="http://www.w3.org/1998/Math/MathML">
 <!-- {{} \atop i} A {p \atop q} -->
 <math:mmultiscripts><math:mi>A</math:mi><math:mi>q</math:mi><math:mi>p</math:mi><math:mprescripts/><math:mi>i</math:mi><none/></math:mmultiscripts></math>;
 
 A bit of calculus with poor markup:
-<math xmlns="http://www.w3.org/Math/MathML">
+<math xmlns="http://www.w3.org/1998/Math/MathML">
 
 <!-- \int_a^b f(x)dx -->
 
@@ -91,26 +91,26 @@ A bit of calculus with poor markup:
 Here is the alphabet with invisible
 portions wrapped by &lt;mphantom&gt; in between:
 
-<math xmlns:math="http://www.w3.org/Math/MathML">
+<math xmlns:math="http://www.w3.org/1998/Math/MathML">
 <math:mi>a</math:mi> <math:mi>b</math:mi> <math:mi>c</math:mi> <math:mphantom><math:mi>d</math:mi> <math:mi>e</math:mi> <math:mi>f</math:mi> <math:mi>g</math:mi>
 <math:mi>h</math:mi> <math:mi>i</math:mi> <math:mi>j</math:mi></math:mphantom> <math:mi>k</math:mi> <math:mi>l</math:mi> <math:mi>m</math:mi> <math:mi>n</math:mi>
 <math:mi>o</math:mi> <math:mphantom><math:mi>p</math:mi> <math:mi>q</math:mi> <math:mi>r</math:mi> <math:mi>s</math:mi></math:mphantom> 
 <math:mi>t</math:mi> <math:mi>u</math:mi> <math:mi>v</math:mi> <math:mi>w</math:mi> <math:mi>x</math:mi> <math:mi>y</math:mi> <math:mi>z</math:mi></math>.
 
 Testing MathML &lt;msub&gt;:
-<math xmlns:math="http://www.w3.org/Math/MathML">
+<math xmlns:math="http://www.w3.org/1998/Math/MathML">
 <!-- a_b -->
 <math:msub><math:mi>a</math:mi><math:mi>b</math:mi></math:msub></math>;
 
 <!-- a_i -->
-<math xmlns:math="http://www.w3.org/Math/MathML"><math:msub><math:mi>a</math:mi><math:mi>i</math:mi></math:msub></math>;
+<math xmlns:math="http://www.w3.org/1998/Math/MathML"><math:msub><math:mi>a</math:mi><math:mi>i</math:mi></math:msub></math>;
 
 <!-- A_{I_{k}} -->
-<math xmlns:math="http://www.w3.org/Math/MathML"><math:msub><math:mi>A</math:mi><math:msub><math:mi>I</math:mi><math:mi>k</math:mi></math:msub></math:msub></math>;
+<math xmlns:math="http://www.w3.org/1998/Math/MathML"><math:msub><math:mi>A</math:mi><math:msub><math:mi>I</math:mi><math:mi>k</math:mi></math:msub></math:msub></math>;
 
 
 Testing MathML &lt;msup&gt;:
-<math xmlns:math="http://www.w3.org/Math/MathML">
+<math xmlns:math="http://www.w3.org/1998/Math/MathML">
 <!-- d^b -->
 <math:msup><math:mi>d</math:mi><math:mi>b</math:mi></math:msup>
 
@@ -126,7 +126,7 @@ Testing MathML &lt;msup&gt;:
 
 Testing MathML &lt;munder&gt;, &lt;mover&gt;, and &lt;munderover&gt;:
 
-<math xmlns:math="http://www.w3.org/Math/MathML">
+<math xmlns:math="http://www.w3.org/1998/Math/MathML">
     <math:munder><math:mi>abcd</math:mi><math:mi>un</math:mi></math:munder>
      <math:mover><math:mi>abcd</math:mi><math:mi>ov</math:mi></math:mover>
 <math:munderover><math:mi>abcd</math:mi><math:mi>under</math:mi><math:mi>over</math:mi></math:munderover>
@@ -134,7 +134,7 @@ Testing MathML &lt;munder&gt;, &lt;mover&gt;, and &lt;munderover&gt;:
 
 
 Testing MathML &lt;msubsup&gt;:
-<math xmlns:math="http://www.w3.org/Math/MathML">
+<math xmlns:math="http://www.w3.org/1998/Math/MathML">
 <!-- a_b^c -->
 <math:msubsup><math:mi>a</math:mi><math:mi>p</math:mi><math:mi>q</math:mi></math:msubsup>
 <math:msubsup><math:mi>a</math:mi><math:mi>b+c</math:mi><math:mi>x</math:mi></math:msubsup>
@@ -144,12 +144,12 @@ Testing MathML &lt;msubsup&gt;:
 Testing MathML &lt;mrow&gt;:
 
 
-<math xmlns:math="http://www.w3.org/Math/MathML">
+<math xmlns:math="http://www.w3.org/1998/Math/MathML">
 <!-- d^{a/b} -->
 <math:msup><math:mi>d</math:mi><math:mrow><math:mo>(</math:mo><math:mfrac><math:mi>a</math:mi><math:mi>b</math:mi></math:mfrac><math:mo>)</math:mo></math:mrow></math:msup>
 </math>;
 
-<math xmlns:math="http://www.w3.org/Math/MathML">
+<math xmlns:math="http://www.w3.org/1998/Math/MathML">
 <!-- x^2  +  4*x  +  \frac{p}{q} = 0 --> 
 <math:mrow>
 <math:mrow><math:msup><math:mi>x</math:mi><math:mn>2</math:mn></math:msup><math:mo> + </math:mo>
@@ -159,7 +159,7 @@ Testing MathML &lt;mrow&gt;:
     
 with this &lt;mfrac&gt; hanging here
 
-<math xmlns:math="http://www.w3.org/Math/MathML">
+<math xmlns:math="http://www.w3.org/1998/Math/MathML">
 <!-- \frac{d*b^{\frac{i+j}{n!}} + p_y*q} 
           {p^x*b_x + \frac{a+c}{d}} -->
 <math:mfrac><math:mrow><math:mi>d</math:mi><math:mo>*</math:mo><math:msup><math:mi>T</math:mi><math:mrow><math:mo>(</math:mo><math:mfrac><math:mi>i + j</math:mi><math:mi>n</math:mi></math:mfrac><math:mo>)</math:mo></math:mrow></math:msup><math:mo> 
@@ -173,7 +173,7 @@ to read.
 
 Testing MathML merror, mtext,
 
-<math xmlns:math="http://www.w3.org/Math/MathML">
+<math xmlns:math="http://www.w3.org/1998/Math/MathML">
 <math:mtext>This is a text in mtext</math:mtext>
 <math:merror>This is a text in merror</math:merror>
 </math>

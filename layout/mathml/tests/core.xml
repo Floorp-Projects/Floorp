@@ -24,7 +24,7 @@
 <para>
 
 Testing MathML msub:
-<math xmlns:math="http://www.w3.org/Math/MathML">
+<math xmlns:math="http://www.w3.org/1998/Math/MathML">
 <!-- a_b -->
 <math:msub>
    <math:mi>a</math:mi>
@@ -32,7 +32,7 @@ Testing MathML msub:
 </math:msub>
 </math>
 
-<math xmlns:math="http://www.w3.org/Math/MathML">
+<math xmlns:math="http://www.w3.org/1998/Math/MathML">
 <!-- a_i -->
 <math:msub>
    <math:mi>a</math:mi>
@@ -41,7 +41,7 @@ Testing MathML msub:
 </math>
 
 Testing MathML msup:
-<math xmlns:math="http://www.w3.org/Math/MathML">
+<math xmlns:math="http://www.w3.org/1998/Math/MathML">
 <!-- d^b -->
 <math:msup>
    <math:mi>d</math:mi>
@@ -81,7 +81,7 @@ Testing MathML msup:
 Testing MathML mrow:
 
 
-<math xmlns:math="http://www.w3.org/Math/MathML">
+<math xmlns:math="http://www.w3.org/1998/Math/MathML">
 <!-- d^{a/b} -->
 <math:msup>
   <math:mi>d</math:mi>
@@ -96,7 +96,7 @@ Testing MathML mrow:
 </math:msup>
 </math>
 
-<math xmlns:math="http://www.w3.org/Math/MathML">
+<math xmlns:math="http://www.w3.org/1998/Math/MathML">
 <!-- x^2  +  4*x  +  4 / \frac{p}{q} = 0 --> 
 <math:mrow>
    <math:mrow>
@@ -125,7 +125,7 @@ Testing MathML mrow:
 
 and then piling fractions with a user-defined line thickness...
 
-<math xmlns:math="http://www.w3.org/Math/MathML">
+<math xmlns:math="http://www.w3.org/1998/Math/MathML">
 <math:mfrac linethickness="2">
    <math:mfrac>
       <math:mi>alpha</math:mi>
@@ -139,7 +139,7 @@ and then piling fractions with a user-defined line thickness...
 </math>
 
 <!--
-<math xmlns:math="http://www.w3.org/Math/MathML">
+<math xmlns:math="http://www.w3.org/1998/Math/MathML">
 <math:mfrac>cdefghijkl
 d</math:mfrac>
 </math>
@@ -147,24 +147,24 @@ d</math:mfrac>
 
 <!--
 
-<math xmlns:math="http://www.w3.org/Math/MathML">
+<math xmlns:math="http://www.w3.org/1998/Math/MathML">
 <math:mfrac><math:mi>Hello</math:mi><math:mi>World!</math:mi></math:mfrac>
 </math>
 
-<math xmlns:math="http://www.w3.org/Math/MathML">
+<math xmlns:math="http://www.w3.org/1998/Math/MathML">
 <math:mfrac><math:mi>a</math:mi><math:msup><math:mi>b</math:mi><math:mi>x</math:mi></math:msup></math:mfrac>
 <math:mi> + </math:mi>
 <math:mfrac><math:mi>c</math:mi><math:mi>d</math:mi></math:mfrac>
 </math>
 
-<math xmlns:math="http://www.w3.org/Math/MathML">
+<math xmlns:math="http://www.w3.org/1998/Math/MathML">
 <math:mfrac>c
 d</math:mfrac>
 </math>
 
 and then piling fractions...
 
-<math xmlns:math="http://www.w3.org/Math/MathML">
+<math xmlns:math="http://www.w3.org/1998/Math/MathML">
 <math:mfrac linethickness="2"><math:mfrac><math:mi>alpha</math:mi><math:mi>a</math:mi></math:mfrac><math:mfrac><math:mi>beta</math:mi><math:mi>b</math:mi></math:mfrac></math:mfrac>
 </math>
 
@@ -172,7 +172,7 @@ and then piling fractions...
 
 -->
 , with this mfrac hanging here
-<math xmlns:math="http://www.w3.org/Math/MathML">
+<math xmlns:math="http://www.w3.org/1998/Math/MathML">
 <!-- \frac{d*b^{\frac{x+y}{z}} + p_y*q} 
           {p^x*b_x + \frac{a+c}{d}} -->
 <math:mfrac><math:mrow><math:mi>d</math:mi><math:mo>*</math:mo><math:msup><math:mi>b</math:mi><math:mrow><math:mo>(</math:mo><math:mfrac><math:mi>x + y</math:mi><math:mi>z</math:mi></math:mfrac><math:mo>)</math:mo></math:mrow></math:msup>
@@ -186,7 +186,7 @@ to read.
 <!--
 <para>
 The lizard should do better than only fractions!
-<math xmlns:math="http://www.w3.org/Math/MathML">
+<math xmlns:math="http://www.w3.org/1998/Math/MathML">
 <math:mfrac><math:mi>b*b  + /- 4ac</math:mi><math:mi>2a</math:mi></math:mfrac>
 </math>
 </para>

@@ -25,7 +25,7 @@
 
 <para>
 
-<math xmlns="http://www.w3.org/Math/MathML">
+<math xmlns="http://www.w3.org/1998/Math/MathML">
 <!-- {3 \atop k} R {1 \atop i} {2 \atop j} -->
 <mmultiscripts>
    <mi>R</mi>
