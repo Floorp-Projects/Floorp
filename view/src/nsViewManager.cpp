@@ -454,6 +454,9 @@ void nsViewManager::UpdateDirtyViews(nsIView *aView) const
       aView->GetWidget(widget);
       widget->Invalidate(rect, PR_FALSE);
       NS_RELEASE(widget);
+
+      // Clear the dirty region
+      dirtyRegion->SetTo(0, 0, 0, 0);
     }
     NS_RELEASE(dirtyRegion);
   }
