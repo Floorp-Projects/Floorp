@@ -302,12 +302,13 @@ class JavaMembers {
         NativeJavaMethod fun = (NativeJavaMethod) ht.get(name);
         if (fun == null) {
             fun = new NativeJavaMethod();
-            fun.setPrototype(ScriptableObject.getFunctionPrototype(scope));
+            if (scope != null)
+                fun.setPrototype(ScriptableObject.getFunctionPrototype(scope));
             ht.put(name, fun);
             fun.add(method);
-        }
-        else
+        } else {
             fun.add(method);
+        }
     }
 
     void reflect(Scriptable scope, Class cl) {
@@ -317,7 +318,7 @@ class JavaMembers {
         Method[] methods = cl.getMethods();
         for (int i = 0; i < methods.length; i++)
             reflectMethod(scope, methods[i]);
-
+        
         Field[] fields = cl.getFields();
         for (int i = 0; i < fields.length; i++)
             reflectField(scope, fields[i]);
