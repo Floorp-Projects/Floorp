@@ -415,6 +415,7 @@ public:
     PRBool IsInitialized() { return mStartFired; }
     PRBool IsSuspended() { return mSuspendCount > 0; }
     PRBool IsCanceled() { return mCanceled; }
+    PRBool HasFailed() { return NS_FAILED(mStatus); }
 
     void SetTransport(nsSocketTransport *);
     void SetObserver(nsIRequestObserver *obs) { mObserver = obs; }
