@@ -96,6 +96,12 @@ interface nsINetDataCacheRecord : nsISupports
      */
     attribute PRUint32 storedContentLength;
 
+	/**
+	 * Opaque security info associated with the cache entry; it can't be serialized
+	 * to disk, so it'll only make sense with memory cache
+	 */
+	attribute nsISupports securityInfo;
+
     /** 
      * Delete this cache entry and its associated content.
      */

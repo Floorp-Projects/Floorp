@@ -197,6 +197,9 @@ private:
     inline void ClearFlag(nsSocketReadWriteInfo aFlag) {
         mReadWriteState &= ~aFlag;
     } 
+
+    PRBool  mOnStartReadFired;
+    PRBool  mOnStartWriteFired;
     
 protected:
     
@@ -253,6 +256,7 @@ protected:
     PRUint32                        mBufferSegmentSize;
     PRUint32                        mBufferMaxSize;
     
+    PRUint32                        mIdleTimeoutInSeconds;
     PRBool                          mWasConnected;
 };
 

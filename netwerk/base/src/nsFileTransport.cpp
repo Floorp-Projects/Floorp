@@ -65,7 +65,8 @@ nsFileTransport::nsFileTransport()
       mOffset(0),
       mTotalAmount(-1),
       mTransferAmount(-1),
-      mBuffer(nsnull)
+      mBuffer(nsnull),
+      mService(nsnull)
 {
     NS_INIT_REFCNT();
 
@@ -81,17 +82,18 @@ nsFileTransport::nsFileTransport()
 }
 
 nsresult
-nsFileTransport::Init(nsIFile* file, PRInt32 ioFlags, PRInt32 perm)
+nsFileTransport::Init(nsFileTransportService *aService, nsIFile* file, PRInt32 ioFlags, PRInt32 perm)
 {
     nsresult rv;
     nsCOMPtr<nsIFileIO> io;
     rv = NS_NewFileIO(getter_AddRefs(io), file, ioFlags, perm);
     if (NS_FAILED(rv)) return rv;
-    return Init(io);
+
+    return Init(aService, io);
 }
 
 nsresult
-nsFileTransport::Init(const char* name, nsIInputStream* inStr,
+nsFileTransport::Init(nsFileTransportService *aService, const char* name, nsIInputStream* inStr,
                       const char* contentType, PRInt32 contentLength)
 {
     nsresult rv;
@@ -99,11 +101,11 @@ nsFileTransport::Init(const char* name, nsIInputStream* inStr,
     rv = NS_NewInputStreamIO(getter_AddRefs(io),
                              name, inStr, contentType, contentLength);
     if (NS_FAILED(rv)) return rv;
-    return Init(io);
+    return Init(aService, io);
 }
 
 nsresult
-nsFileTransport::Init(nsIStreamIO* io)
+nsFileTransport::Init(nsFileTransportService *aService, nsIStreamIO* io)
 {
     nsresult rv = NS_OK;
     if (mMonitor == nsnull) {
@@ -116,6 +118,11 @@ nsFileTransport::Init(nsIStreamIO* io)
     rv = mStreamIO->GetName(getter_Copies(name));
     mStreamName = name;
     NS_ASSERTION(NS_SUCCEEDED(rv), "GetName failed");
+
+    mService = aService;
+    if (mService)
+        PR_AtomicIncrement (&mService -> mTotalTransports);
+
     return rv;
 }
 
@@ -133,6 +140,10 @@ nsFileTransport::~nsFileTransport()
         nsAutoMonitor::DestroyMonitor(mMonitor);
     if (mContentType)
         nsCRT::free(mContentType);
+
+    if (mService)
+        PR_AtomicDecrement (&mService -> mTotalTransports);
+
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS4(nsFileTransport, 
@@ -518,6 +529,10 @@ nsFileTransport::Process(void)
         PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
                ("nsFileTransport: OPENED [this=%x %s]",
                 this, mStreamName.GetBuffer()));
+        
+        if (mService)
+            PR_AtomicIncrement (&mService -> mConnectedTransports);
+
         break;
       }
 
@@ -525,6 +540,9 @@ nsFileTransport::Process(void)
         PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
                ("nsFileTransport: START_READ [this=%x %s]",
                 this, mStreamName.GetBuffer()));
+
+        if (mService)
+            PR_AtomicIncrement (&mService -> mInUseTransports);
 
         mStatus = mStreamIO->GetInputStream(getter_AddRefs(mSource));
         if (NS_FAILED(mStatus)) {
@@ -622,6 +640,10 @@ nsFileTransport::Process(void)
       }
 
       case END_READ: {
+        
+          if (mService)
+            PR_AtomicDecrement (&mService -> mInUseTransports);
+
         PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
                ("nsFileTransport: END_READ [this=%x %s] status=%x",
                 this, mStreamName.GetBuffer(), mStatus));
@@ -661,6 +683,9 @@ nsFileTransport::Process(void)
         PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
                ("nsFileTransport: START_WRITE [this=%x %s]",
                 this, mStreamName.GetBuffer()));
+
+        if (mService)
+            PR_AtomicIncrement (&mService -> mInUseTransports);
 
         mStatus = mStreamIO->GetOutputStream(getter_AddRefs(mSink));
         if (NS_FAILED(mStatus)) {
@@ -763,6 +788,9 @@ nsFileTransport::Process(void)
                ("nsFileTransport: END_WRITE [this=%x %s] status=%x",
                 this, mStreamName.GetBuffer(), mStatus));
 
+        if (mService)
+            PR_AtomicDecrement (&mService -> mInUseTransports);
+
         if (mSink) {
             mSink->Flush();
             mSink = null_nsCOMPtr();
@@ -831,6 +859,9 @@ nsFileTransport::DoClose(void)
         mStreamIO = null_nsCOMPtr();
     }
     mState = CLOSED;
+
+    if (mService)
+        PR_AtomicDecrement (&mService -> mConnectedTransports);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

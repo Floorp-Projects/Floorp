@@ -1064,9 +1064,11 @@ nsHTTPChannel::CacheReceivedResponse(nsIStreamListener *aListener,
     if (!mCacheEntry)
         return NS_OK;
 
-    // ruslan/hack: don't cache secure connections for now
+    // ruslan/hack: don't cache secure connections in case of the persistent cache
     nsCOMPtr<nsISupports> securityInfo;
-    if (NS_SUCCEEDED (GetSecurityInfo (getter_AddRefs (securityInfo))) && securityInfo)
+    if (NS_SUCCEEDED (GetSecurityInfo (getter_AddRefs (securityInfo))) &&
+        securityInfo
+        && ! (mLoadAttributes & nsIChannel::INHIBIT_PERSISTENT_CACHING) )
         return NS_OK;
 
     // If the current response is itself from the cache rather than the network
@@ -2149,6 +2151,9 @@ nsHTTPChannel::GetSecurityInfo (nsISupports * *aSecurityInfo)
         mRequest -> GetTransport (getter_AddRefs (trans));
         if (trans)
             trans -> GetSecurityInfo (getter_AddRefs (mSecurityInfo));
+        else
+        if (mCacheEntry)
+            mCacheEntry -> GetSecurityInfo (getter_AddRefs (mSecurityInfo));
 
         if (mSecurityInfo)
         {

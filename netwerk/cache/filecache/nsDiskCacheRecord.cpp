@@ -242,6 +242,19 @@ nsDiskCacheRecord::SetStoredContentLength(PRUint32 aStoredContentLength)
 }
 
 NS_IMETHODIMP
+nsDiskCacheRecord::GetSecurityInfo (nsISupports ** o_SecurityInfo)
+{
+    NS_ENSURE_ARG(o_SecurityInfo);
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDiskCacheRecord::SetSecurityInfo (nsISupports  * o_SecurityInfo)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsDiskCacheRecord::Delete(void)
 {
   if(mNumChannels)

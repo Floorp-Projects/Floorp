@@ -60,6 +60,9 @@ protected:
 
     friend class nsMemCache;
     friend class nsMemCacheChannel;
+
+private:
+    nsCOMPtr<nsISupports>   mSecurityInfo;
 };
 
 #endif // _nsMemCacheRecord_h_

@@ -939,6 +939,20 @@ nsCachedNetData::SetStoredContentLength(PRUint32 aStoredContentLength)
     return mRecord->SetStoredContentLength(aStoredContentLength);
 }
 
+NS_IMETHODIMP
+nsCachedNetData::GetSecurityInfo (nsISupports ** o_SecurityInfo)
+{
+    CHECK_AVAILABILITY();
+    return mRecord -> GetSecurityInfo (o_SecurityInfo);
+}
+
+NS_IMETHODIMP
+nsCachedNetData::SetSecurityInfo (nsISupports  * o_SecurityInfo)
+{
+    CHECK_AVAILABILITY();
+    return mRecord -> SetSecurityInfo (o_SecurityInfo);
+}
+
 // Notify all cache entry observers
 nsresult
 nsCachedNetData::Notify(PRUint32 aMessage, nsresult aError)

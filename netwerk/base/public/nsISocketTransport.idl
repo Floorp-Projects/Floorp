@@ -52,4 +52,10 @@ interface nsISocketTransport : nsISupports
 	 *					will cause it not to do the timeout checking at all
 	 */
 	boolean	isAlive (in unsigned long seconds);
+
+	/**
+	 * maximum amount of time in seconds the transport is allowed to stay alive
+	 * while connected (0 - default; no maximum idle timeout)
+	 */
+	attribute unsigned long idleTimeout;
 };
