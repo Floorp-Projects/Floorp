@@ -38,7 +38,6 @@
 
 #include "ChangeAttributeTxn.h"
 #include "nsIDOMElement.h"
-#include "nsEditor.h"
 
 ChangeAttributeTxn::ChangeAttributeTxn()
   : EditTxn()
@@ -55,7 +54,7 @@ NS_IMETHODIMP ChangeAttributeTxn::Init(nsIEditor      *aEditor,
                                        const nsAString& aValue,
                                        PRBool aRemoveAttribute)
 {
-	NS_ASSERTION(aEditor && aElement, "bad arg");
+  NS_ASSERTION(aEditor && aElement, "bad arg");
   if (!aEditor || !aElement) { return NS_ERROR_NULL_POINTER; }
 
   mEditor = aEditor;
@@ -64,38 +63,38 @@ NS_IMETHODIMP ChangeAttributeTxn::Init(nsIEditor      *aEditor,
   mValue = aValue;
   mRemoveAttribute = aRemoveAttribute;
   mAttributeWasSet=PR_FALSE;
-  mUndoValue.SetLength(0);
+  mUndoValue.Truncate();
   return NS_OK;
 }
 
 NS_IMETHODIMP ChangeAttributeTxn::DoTransaction(void)
 {
-	NS_ASSERTION(mEditor && mElement, "bad state");
-	if (!mEditor || !mElement) { return NS_ERROR_NOT_INITIALIZED; }
+  NS_ASSERTION(mEditor && mElement, "bad state");
+  if (!mEditor || !mElement) { return NS_ERROR_NOT_INITIALIZED; }
 
   // need to get the current value of the attribute and save it, and set mAttributeWasSet
   nsresult result = mEditor->GetAttributeValue(mElement, mAttribute, mUndoValue, &mAttributeWasSet);
   // XXX: hack until attribute-was-set code is implemented
-      if (PR_FALSE==mUndoValue.IsEmpty())
-        mAttributeWasSet=PR_TRUE;
+  if (!mUndoValue.IsEmpty())
+    mAttributeWasSet = PR_TRUE;
   // XXX: end hack
   
   // now set the attribute to the new value
-  if (PR_FALSE==mRemoveAttribute)
+  if (!mRemoveAttribute)
     result = mElement->SetAttribute(mAttribute, mValue);
   else
-   result = mElement->RemoveAttribute(mAttribute);
+    result = mElement->RemoveAttribute(mAttribute);
 
   return result;
 }
 
 NS_IMETHODIMP ChangeAttributeTxn::UndoTransaction(void)
 {
-	NS_ASSERTION(mEditor && mElement, "bad state");
-	if (!mEditor || !mElement) { return NS_ERROR_NOT_INITIALIZED; }
+  NS_ASSERTION(mEditor && mElement, "bad state");
+  if (!mEditor || !mElement) { return NS_ERROR_NOT_INITIALIZED; }
 
-  nsresult result=NS_OK;
-  if (PR_TRUE==mAttributeWasSet)
+  nsresult result;
+  if (mAttributeWasSet)
     result = mElement->SetAttribute(mAttribute, mUndoValue);
   else
     result = mElement->RemoveAttribute(mAttribute);
@@ -105,22 +104,21 @@ NS_IMETHODIMP ChangeAttributeTxn::UndoTransaction(void)
 
 NS_IMETHODIMP ChangeAttributeTxn::RedoTransaction(void)
 {
-	NS_ASSERTION(mEditor && mElement, "bad state");
-	if (!mEditor || !mElement) { return NS_ERROR_NOT_INITIALIZED; }
+  NS_ASSERTION(mEditor && mElement, "bad state");
+  if (!mEditor || !mElement) { return NS_ERROR_NOT_INITIALIZED; }
 
   nsresult result;
-
-  if (PR_FALSE==mRemoveAttribute)
-   result = mElement->SetAttribute(mAttribute, mValue);
+  if (!mRemoveAttribute)
+    result = mElement->SetAttribute(mAttribute, mValue);
   else
-   result = mElement->RemoveAttribute(mAttribute);
+    result = mElement->RemoveAttribute(mAttribute);
 
   return result;
 }
 
 NS_IMETHODIMP ChangeAttributeTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
 {
-  if (nsnull!=aDidMerge)
+  if (aDidMerge)
     *aDidMerge=PR_FALSE;
   return NS_OK;
 }
