@@ -550,12 +550,12 @@ XXX ...couldn't get this to work...
         // ***** REWRITE ME -- matching attribute lists for inclusion is a bad idea.
         virtual PropertyIterator findNamespacedProperty(const String &name, NamespaceList *names);
 
-        virtual bool deleteProperty(const String &name, NamespaceList *names);
+        virtual bool deleteProperty(Context *cx, const String &name, NamespaceList *names);
 
         // see if the property exists by a specific kind of access
-        virtual bool hasOwnProperty(const String &name, NamespaceList *names, Access acc, PropertyIterator *p);
+        virtual bool hasOwnProperty(Context *cx, const String &name, NamespaceList *names, Access acc, PropertyIterator *p);
         
-        virtual bool hasProperty(const String &name, NamespaceList *names, Access acc, PropertyIterator *p);
+        virtual bool hasProperty(Context *cx, const String &name, NamespaceList *names, Access acc, PropertyIterator *p);
 
         virtual JSValue getPropertyValue(PropertyIterator &i);
 
@@ -607,7 +607,7 @@ XXX ...couldn't get this to work...
         virtual Property *defineVariable(Context *cx, const String &name, NamespaceList *names, PropertyAttribute attrFlags, JSType *type, const JSValue v);
         virtual Property *defineAlias(Context *cx, const String &name, NamespaceList *names, PropertyAttribute attrFlags, JSType *type, JSValue *vp);
         
-        virtual Reference *genReference(bool hasBase, const String& name, NamespaceList *names, Access acc, uint32 depth);
+        virtual Reference *genReference(Context *cx, bool hasBase, const String& name, NamespaceList *names, Access acc, uint32 depth);
 
         virtual JSType *topClass()                      { return NULL; }
         virtual bool isNestedFunction()                 { return false; }
@@ -820,9 +820,9 @@ XXX ...couldn't get this to work...
 
         virtual JSValue getPropertyValue(PropertyIterator &i);
 
-        virtual bool hasProperty(const String &name, NamespaceList *names, Access acc, PropertyIterator *p);
+        virtual bool hasProperty(Context *cx, const String &name, NamespaceList *names, Access acc, PropertyIterator *p);
 
-        virtual Reference *genReference(bool hasBase, const String& name, NamespaceList *names, Access acc, uint32 depth);
+        virtual Reference *genReference(Context *cx, bool hasBase, const String& name, NamespaceList *names, Access acc, uint32 depth);
 
         JSFunction *getDefaultConstructor() { return mDefaultConstructor; }
         JSFunction *getTypeCastFunction()   { return mTypeCast; }
@@ -911,6 +911,8 @@ XXX ...couldn't get this to work...
         void setProperty(Context *cx, const String &name, NamespaceList *names, const JSValue &v);
         void getProperty(Context *cx, const String &name, NamespaceList *names);
 
+        bool hasOwnProperty(Context *cx, const String &name, NamespaceList *names, Access acc, PropertyIterator *p);
+        bool deleteProperty(Context *cx, const String &name, NamespaceList *names);
 
         uint32 mLength;
 
@@ -989,7 +991,7 @@ XXX ...couldn't get this to work...
         void operator delete(void* t)   { trace_release("ParameterBarrel", t); STD::free(t); }
 #endif
 
-        Reference *genReference(bool hasBase, const String& name, NamespaceList *names, Access acc, uint32 depth);
+        Reference *genReference(Context *cx, bool hasBase, const String& name, NamespaceList *names, Access acc, uint32 depth);
 
         JSValue getSlotValue(Context *cx, uint32 slotIndex);
         void setSlotValue(Context *cx, uint32 slotIndex, JSValue &v);
@@ -1081,7 +1083,7 @@ XXX ...couldn't get this to work...
 
         void defineTempVariable(Context *cx, Reference *&readRef, Reference *&writeRef, JSType *type);
 
-        Reference *genReference(bool hasBase, const String& name, NamespaceList *names, Access acc, uint32 depth);
+        Reference *genReference(Context *cx, bool hasBase, const String& name, NamespaceList *names, Access acc, uint32 depth);
 
         JSValue getSlotValue(Context *cx, uint32 slotIndex);
         void setSlotValue(Context *cx, uint32 slotIndex, JSValue &v);
@@ -1188,31 +1190,25 @@ XXX ...couldn't get this to work...
         }
 
         // see if the current scope contains a name already
-        bool hasProperty(const String& name, NamespaceList *names, Access acc, PropertyIterator *p)
+        bool hasProperty(Context *cx, const String& name, NamespaceList *names, Access acc, PropertyIterator *p)
         {
             JSObject *top = mScopeStack.back();
-            return top->hasProperty(name, names, acc, p);
+            return top->hasProperty(cx, name, names, acc, p);
         }
 
         bool deleteName(Context *cx, const String& name, NamespaceList *names);
-/*
-        bool hasOwnProperty(const String& name, NamespaceList *names, Access acc, PropertyIterator *p)
-        {
-            JSObject *top = mScopeStack.back();
-            return top->hasOwnProperty(name, names, acc, p);
-        }
-*/
+
         // delete a property from the top object (already know it's there)
-        bool deleteProperty(const String &name, NamespaceList *names)
+        bool deleteProperty(Context *cx, const String &name, NamespaceList *names)
         {
             JSObject *top = mScopeStack.back();
-            return top->deleteProperty(name, names);
+            return top->deleteProperty(cx, name, names);
         }
 
         // generate a reference to the given name
-        Reference *getName(const String& name, NamespaceList *names, Access acc);
+        Reference *getName(Context *cx, const String& name, NamespaceList *names, Access acc);
 
-        bool hasNameValue(const String& name, NamespaceList *names);
+        bool hasNameValue(Context *cx, const String& name, NamespaceList *names);
 
         // pushes the value of the name and returns it's container object
         JSObject *getNameValue(Context *cx, const String& name, NamespaceList *names);
@@ -1249,7 +1245,7 @@ XXX ...couldn't get this to work...
 
         // a compile time request to get the value for a name
         // (i.e. we're accessing a constant value)
-        JSValue getCompileTimeValue(const String& name, NamespaceList *names);
+        JSValue getCompileTimeValue(Context *cx, const String& name, NamespaceList *names);
 
 
 
@@ -1284,7 +1280,7 @@ XXX ...couldn't get this to work...
         void collectNames(StmtNode *p);
 
         // Lookup a name as a type in the chain
-        JSType *findType(const StringAtom& typeName, size_t pos);
+        JSType *findType(Context *cx, const StringAtom& typeName, size_t pos);
 
         // Get a type from an ExprNode 
         JSType *extractType(ExprNode *t);
@@ -1491,14 +1487,14 @@ XXX ...couldn't get this to work...
                                         { mFunction->getProperty(cx, name, names); }
         void setProperty(Context *cx, const String &name, NamespaceList *names, const JSValue &v)
                                         { mFunction->setProperty(cx, name, names, v); }
-        bool hasProperty(const String &name, NamespaceList *names, Access acc, PropertyIterator *p)
-                                        { return mFunction->hasProperty(name, names, acc, p); }
-        bool hasOwnProperty(const String &name, NamespaceList *names, Access acc, PropertyIterator *p)
-                                        { return mFunction->hasOwnProperty(name, names, acc, p); }
+        bool hasProperty(Context *cx, const String &name, NamespaceList *names, Access acc, PropertyIterator *p)
+                                        { return mFunction->hasProperty(cx, name, names, acc, p); }
+        bool hasOwnProperty(Context *cx, const String &name, NamespaceList *names, Access acc, PropertyIterator *p)
+                                        { return mFunction->hasOwnProperty(cx, name, names, acc, p); }
         PropertyIterator findNamespacedProperty(const String &name, NamespaceList *names)
                                         { return mFunction->findNamespacedProperty(name, names); }
-        bool deleteProperty(const String &name, NamespaceList *names)
-                                        { return mFunction->deleteProperty(name, names); }
+        bool deleteProperty(Context *cx, const String &name, NamespaceList *names)
+                                        { return mFunction->deleteProperty(cx, name, names); }
 
         JSFunction *getFunction()       { return mFunction; }
 

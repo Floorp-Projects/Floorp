@@ -33,6 +33,14 @@
 
 #include "systemtypes.h"
 #include "utilities.h"
+#include "strings.h"
+
+extern "C" char16 canonicalize(char16 ch)
+{
+    char16 cu = JavaScript::toUpper(ch);
+    if ((ch >= 128) && (cu < 128)) return ch;
+    return cu;
+}
 
 #include "regexp.c"
 

@@ -853,8 +853,8 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     pc += sizeof(uint32);
                     const StringAtom &name = *mCurModule->getString(index);
                     PropertyIterator it;
-                    if (obj->hasOwnProperty(name, mNamespaceList, Read, &it))
-                        if (obj->deleteProperty(name, mNamespaceList))
+                    if (obj->hasOwnProperty(this, name, mNamespaceList, Read, &it))
+                        if (obj->deleteProperty(this, name, mNamespaceList))
                             pushValue(kTrueValue);
                         else
                             pushValue(kFalseValue);
@@ -942,7 +942,7 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                         JSFunction *obj = t.function;                        
                         PropertyIterator i;
                         JSFunction *target = NULL;
-                        if (obj->hasProperty(HasInstance_StringAtom, mNamespaceList, Read, &i)) {
+                        if (obj->hasProperty(this, HasInstance_StringAtom, mNamespaceList, Read, &i)) {
                             JSValue hi = obj->getPropertyValue(i);
                             if (hi.isFunction())
                                 target = hi.function;
@@ -1014,7 +1014,7 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     uint32 index = *((uint32 *)pc);
                     pc += sizeof(uint32);
                     const StringAtom &name = *mCurModule->getString(index);
-                    if (mScopeChain->hasNameValue(name, mNamespaceList)) {
+                    if (mScopeChain->hasNameValue(this, name, mNamespaceList)) {
                         mScopeChain->getNameValue(this, name, mNamespaceList);
                     }
                     else
@@ -1204,8 +1204,8 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                         popValue();     // discard base
                         const String *name = index.toString(this).string;
                         PropertyIterator it;
-                        if (obj->hasOwnProperty(*name, mNamespaceList, Read, &it))
-                            obj->deleteProperty(*name, mNamespaceList);
+                        if (obj->hasOwnProperty(this, *name, mNamespaceList, Read, &it))
+                            obj->deleteProperty(this, *name, mNamespaceList);
                         pushValue(kTrueValue);
                     }
                 }
@@ -1402,7 +1402,7 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                             target = typeValue->function;
                             newThis = Object_Type->newInstance(this);
                             PropertyIterator i;
-                            if (target->hasProperty(Prototype_StringAtom, mNamespaceList, Read, &i)) {
+                            if (target->hasProperty(this, Prototype_StringAtom, mNamespaceList, Read, &i)) {
                                 JSValue v = target->getPropertyValue(i);
                                 newThis.object->mPrototype = v.toObject(this).object;
                                 newThis.object->setProperty(this, UnderbarPrototype_StringAtom, (NamespaceList *)NULL, JSValue(newThis.object->mPrototype));
@@ -2415,13 +2415,13 @@ JSValue JSValue::valueToString(Context *cx, const JSValue& value)
     if (obj) {
         JSFunction *target = NULL;
         PropertyIterator i;
-        if (obj->hasProperty(cx->ToString_StringAtom, NULL, Read, &i)) {
+        if (obj->hasProperty(cx, cx->ToString_StringAtom, NULL, Read, &i)) {
             JSValue v = obj->getPropertyValue(i);
             if (v.isFunction())
                 target = v.function;
         }
         if (target == NULL) {
-            if (obj->hasProperty(cx->ValueOf_StringAtom, NULL, Read, &i)) {
+            if (obj->hasProperty(cx, cx->ValueOf_StringAtom, NULL, Read, &i)) {
                 JSValue v = obj->getPropertyValue(i);
                 if (v.isFunction())
                     target = v.function;
@@ -2477,7 +2477,7 @@ JSValue JSValue::toPrimitive(Context *cx, Hint hint) const
     }
 
 
-    if (obj->hasProperty(*first, NULL, Read, &i)) {
+    if (obj->hasProperty(cx, *first, NULL, Read, &i)) {
         JSValue v = obj->getPropertyValue(i);
         if (v.isFunction()) {
             target = v.function;
@@ -2488,7 +2488,7 @@ JSValue JSValue::toPrimitive(Context *cx, Hint hint) const
             }
         }
     }
-    if (obj->hasProperty(*second, NULL, Read, &i)) {
+    if (obj->hasProperty(cx, *second, NULL, Read, &i)) {
         JSValue v = obj->getPropertyValue(i);
         if (v.isFunction()) {
             target = v.function;

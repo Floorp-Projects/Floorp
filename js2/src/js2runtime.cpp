@@ -154,7 +154,7 @@ PropertyIterator JSObject::findNamespacedProperty(const String &name, NamespaceL
 
 
 // see if the property exists by a specific kind of access
-bool JSObject::hasOwnProperty(const String &name, NamespaceList *names, Access acc, PropertyIterator *p)
+bool JSObject::hasOwnProperty(Context * /*cx*/, const String &name, NamespaceList *names, Access acc, PropertyIterator *p)
 {
     *p = findNamespacedProperty(name, names);
     if (*p != mProperties.end()) {
@@ -173,18 +173,18 @@ bool JSObject::hasOwnProperty(const String &name, NamespaceList *names, Access a
         return false;
 }
 
-bool JSObject::hasProperty(const String &name, NamespaceList *names, Access acc, PropertyIterator *p)
+bool JSObject::hasProperty(Context *cx, const String &name, NamespaceList *names, Access acc, PropertyIterator *p)
 {
-    if (hasOwnProperty(name, names, acc, p))
+    if (hasOwnProperty(cx, name, names, acc, p))
         return true;
     else
         if (mPrototype)
-            return mPrototype->hasProperty(name, names, acc, p);
+            return mPrototype->hasProperty(cx, name, names, acc, p);
         else
             return false;
 }
 
-bool JSObject::deleteProperty(const String &name, NamespaceList *names)
+bool JSObject::deleteProperty(Context * /*cx*/, const String &name, NamespaceList *names)
 {    
     PropertyIterator i = findNamespacedProperty(name, names);
     if (i != mProperties.end()) {
@@ -213,12 +213,12 @@ Property *JSObject::insertNewProperty(const String &name, NamespaceList *names, 
     return prop;
 }
 
-void JSObject::defineGetterMethod(Context * /*cx*/, const String &name, AttributeStmtNode *attr, JSFunction *f)
+void JSObject::defineGetterMethod(Context *cx, const String &name, AttributeStmtNode *attr, JSFunction *f)
 {
     NamespaceList *names = (attr) ? attr->attributeValue->mNamespaceList : NULL;
     PropertyAttribute attrFlags = (attr) ? attr->attributeValue->mTrueFlags : 0;
     PropertyIterator i;
-    if (hasProperty(name, names, Write, &i)) {
+    if (hasProperty(cx, name, names, Write, &i)) {
         ASSERT(PROPERTY_KIND(i) == FunctionPair);
         ASSERT(PROPERTY_GETTERF(i) == NULL);
         PROPERTY_GETTERF(i) = f;
@@ -228,12 +228,12 @@ void JSObject::defineGetterMethod(Context * /*cx*/, const String &name, Attribut
         mProperties.insert(e);
     }
 }
-void JSObject::defineSetterMethod(Context * /*cx*/, const String &name, AttributeStmtNode *attr, JSFunction *f)
+void JSObject::defineSetterMethod(Context *cx, const String &name, AttributeStmtNode *attr, JSFunction *f)
 {
     NamespaceList *names = (attr) ? attr->attributeValue->mNamespaceList : NULL;
     PropertyAttribute attrFlags = (attr) ? attr->attributeValue->mTrueFlags : 0;
     PropertyIterator i;
-    if (hasProperty(name, names, Read, &i)) {
+    if (hasProperty(cx, name, names, Read, &i)) {
         ASSERT(PROPERTY_KIND(i) == FunctionPair);
         ASSERT(PROPERTY_SETTERF(i) == NULL);
         PROPERTY_SETTERF(i) = f;
@@ -263,7 +263,7 @@ Property *JSObject::defineVariable(Context *cx, const String &name, AttributeStm
     NamespaceList *names = (attr) ? attr->attributeValue->mNamespaceList : NULL;
     PropertyAttribute attrFlags = (attr) ? attr->attributeValue->mTrueFlags : 0;
     PropertyIterator it;
-    if (hasOwnProperty(name, names, Read, &it)) {
+    if (hasOwnProperty(cx, name, names, Read, &it)) {
         // not a problem if neither are consts
         if ((attrFlags & Property::Const)
                || (PROPERTY_ATTR(it) & Property::Const)) {
@@ -282,7 +282,7 @@ Property *JSObject::defineVariable(Context *cx, const String &name, AttributeStm
 Property *JSObject::defineVariable(Context *cx, const String &name, NamespaceList *names, PropertyAttribute attrFlags, JSType *type)
 {
     PropertyIterator it;
-    if (hasOwnProperty(name, names, Read, &it)) {
+    if (hasOwnProperty(cx, name, names, Read, &it)) {
         // not a problem if neither are consts
         if (PROPERTY_ATTR(it) & Property::Const) {
             cx->reportError(Exception::typeError, "Duplicate definition '{0}'", name);
@@ -301,7 +301,7 @@ Property *JSObject::defineVariable(Context *cx, const String &name, AttributeStm
     NamespaceList *names = (attr) ? attr->attributeValue->mNamespaceList : NULL;
     PropertyAttribute attrFlags = (attr) ? attr->attributeValue->mTrueFlags : 0;
     PropertyIterator it;
-    if (hasOwnProperty(name, names, Read, &it)) {
+    if (hasOwnProperty(cx, name, names, Read, &it)) {
         // not a problem if neither are consts
         if ((attrFlags & Property::Const)
                || (PROPERTY_ATTR(it) & Property::Const)) {
@@ -325,7 +325,7 @@ Property *JSObject::defineVariable(Context *cx, const String &name, AttributeStm
 Property *JSObject::defineVariable(Context *cx, const String &name, NamespaceList *names, PropertyAttribute attrFlags, JSType *type, const JSValue v)
 {
     PropertyIterator it;
-    if (hasOwnProperty(name, names, Read, &it)) {
+    if (hasOwnProperty(cx, name, names, Read, &it)) {
         if (PROPERTY_ATTR(it) & Property::Const) {
             cx->reportError(Exception::typeError, "Duplicate definition '{0}'", name);
         }
@@ -353,10 +353,10 @@ Property *JSObject::defineAlias(Context * /*cx*/, const String &name, NamespaceL
 
 
 
-Reference *JSObject::genReference(bool hasBase, const String& name, NamespaceList *names, Access acc, uint32 /*depth*/)
+Reference *JSObject::genReference(Context *cx, bool hasBase, const String& name, NamespaceList *names, Access acc, uint32 /*depth*/)
 {
     PropertyIterator i;
-    if (hasProperty(name, names, acc, &i)) {
+    if (hasProperty(cx, name, names, acc, &i)) {
         Property *prop = PROPERTY(i);
         switch (prop->mFlag) {
         case ValuePointer:
@@ -384,7 +384,7 @@ Reference *JSObject::genReference(bool hasBase, const String& name, NamespaceLis
 void JSObject::getProperty(Context *cx, const String &name, NamespaceList *names)
 {
     PropertyIterator i;
-    if (hasOwnProperty(name, names, Read, &i)) {
+    if (hasOwnProperty(cx, name, names, Read, &i)) {
         Property *prop = PROPERTY(i);
         switch (prop->mFlag) {
         case ValuePointer:
@@ -414,7 +414,7 @@ void JSObject::getProperty(Context *cx, const String &name, NamespaceList *names
 void JSType::getProperty(Context *cx, const String &name, NamespaceList *names)
 {
     PropertyIterator i;
-    if (hasOwnProperty(name, names, Read, &i))
+    if (hasOwnProperty(cx, name, names, Read, &i))
         JSObject::getProperty(cx, name, names);
     else
         if (mSuperType)
@@ -426,7 +426,7 @@ void JSType::getProperty(Context *cx, const String &name, NamespaceList *names)
 void JSInstance::getProperty(Context *cx, const String &name, NamespaceList *names)
 {
     PropertyIterator i;
-    if (hasOwnProperty(name, names, Read, &i)) {
+    if (hasOwnProperty(cx, name, names, Read, &i)) {
         Property *prop = PROPERTY(i);
         switch (prop->mFlag) {
         case Slot:
@@ -451,16 +451,19 @@ void JSInstance::getProperty(Context *cx, const String &name, NamespaceList *nam
         }
     }
     else
-        if (mType->hasOwnProperty(name, names, Read, &i))
+/*
+XXX this path allows an instance to access static fields of it's type
+        if (mType->hasOwnProperty(cx, name, names, Read, &i))
             mType->getProperty(cx, name, names);
         else
+*/
             JSObject::getProperty(cx, name, names);
 }
 
 void JSObject::setProperty(Context *cx, const String &name, NamespaceList *names, const JSValue &v)
 {
     PropertyIterator i;
-    if (hasProperty(name, names, Write, &i)) {
+    if (hasProperty(cx, name, names, Write, &i)) {
         if (PROPERTY_ATTR(i) & Property::ReadOnly) return;
         Property *prop = PROPERTY(i);
         switch (prop->mFlag) {
@@ -487,7 +490,7 @@ void JSObject::setProperty(Context *cx, const String &name, NamespaceList *names
 void JSType::setProperty(Context *cx, const String &name, NamespaceList *names, const JSValue &v)
 {
     PropertyIterator i;
-    if (hasOwnProperty(name, names, Read, &i))
+    if (hasOwnProperty(cx, name, names, Read, &i))
         JSObject::setProperty(cx, name, names, v);
     else
         if (mSuperType)
@@ -499,7 +502,7 @@ void JSType::setProperty(Context *cx, const String &name, NamespaceList *names, 
 void JSInstance::setProperty(Context *cx, const String &name, NamespaceList *names, const JSValue &v)
 {
     PropertyIterator i;
-    if (hasOwnProperty(name, names, Write, &i)) {
+    if (hasOwnProperty(cx, name, names, Write, &i)) {
         if (PROPERTY_ATTR(i) & Property::ReadOnly) return;
         Property *prop = PROPERTY(i);
         switch (prop->mFlag) {
@@ -529,7 +532,7 @@ void JSInstance::setProperty(Context *cx, const String &name, NamespaceList *nam
     else {
         // the instance doesn't have this property, see if
         // the type does...
-        if (mType->hasOwnProperty(name, names, Write, &i))
+        if (mType->hasOwnProperty(cx, name, names, Write, &i))
             mType->setProperty(cx, name, names, v);
         else
             defineVariable(cx, name, names, Property::Enumerable, Object_Type, v);
@@ -554,7 +557,7 @@ void JSArrayInstance::setProperty(Context *cx, const String &name, NamespaceList
         for (uint32 i = newLength; i < mLength; i++) {
             const String *id = numberToString(i);
             if (findNamespacedProperty(*id, NULL) != mProperties.end())
-                deleteProperty(*id, NULL);
+                deleteProperty(cx, *id, NULL);
             delete id;
         }
 
@@ -577,6 +580,23 @@ void JSArrayInstance::setProperty(Context *cx, const String &name, NamespaceList
         }
     }
 }
+
+bool JSArrayInstance::hasOwnProperty(Context *cx, const String &name, NamespaceList *names, Access acc, PropertyIterator *p)
+{
+    if (name.compare(cx->Length_StringAtom) == 0)
+        return true;
+    else
+        return JSInstance::hasOwnProperty(cx, name, names, acc, p);
+}
+
+bool JSArrayInstance::deleteProperty(Context *cx, const String &name, NamespaceList *names)
+{
+    if (name.compare(cx->Length_StringAtom) == 0)
+        return false;
+    else
+        return JSInstance::deleteProperty(cx, name, names);
+}
+
 
 // get a named property from a string instance, but intercept
 // 'length' by returning the known value
@@ -688,7 +708,7 @@ void ScopeChain::setNameValue(Context *cx, const String& name, NamespaceList *na
     for (ScopeScanner s = mScopeStack.rbegin(), end = mScopeStack.rend(); (s != end); s++)
     {
         PropertyIterator i;
-        if ((*s)->hasProperty(name, names, Write, &i)) {
+        if ((*s)->hasProperty(cx, name, names, Write, &i)) {
             PropertyFlag flag = PROPERTY_KIND(i);
             switch (flag) {
             case ValuePointer:
@@ -706,13 +726,13 @@ void ScopeChain::setNameValue(Context *cx, const String& name, NamespaceList *na
     cx->getGlobalObject()->defineVariable(cx, name, names, 0, Object_Type, v);
 }
 
-bool ScopeChain::deleteName(Context *, const String& name, NamespaceList *names)
+bool ScopeChain::deleteName(Context *cx, const String& name, NamespaceList *names)
 {
     for (ScopeScanner s = mScopeStack.rbegin(), end = mScopeStack.rend(); (s != end); s++)
     {
         PropertyIterator i;
-        if ((*s)->hasOwnProperty(name, names, Read, &i))
-            return (*s)->deleteProperty(name, names);
+        if ((*s)->hasOwnProperty(cx, name, names, Read, &i))
+            return (*s)->deleteProperty(cx, name, names);
     }
     return true;
 }
@@ -725,7 +745,7 @@ JSObject *ScopeChain::getNameValue(Context *cx, const String& name, NamespaceLis
     for (ScopeScanner s = mScopeStack.rbegin(), end = mScopeStack.rend(); (s != end); s++, depth++)
     {
         PropertyIterator i;
-        if ((*s)->hasProperty(name, names, Read, &i)) {
+        if ((*s)->hasProperty(cx, name, names, Read, &i)) {
             PropertyFlag flag = PROPERTY_KIND(i);
             switch (flag) {
             case ValuePointer:
@@ -744,14 +764,14 @@ JSObject *ScopeChain::getNameValue(Context *cx, const String& name, NamespaceLis
     return NULL;
 }
 
-Reference *ScopeChain::getName(const String& name, NamespaceList *names, Access acc)
+Reference *ScopeChain::getName(Context *cx, const String& name, NamespaceList *names, Access acc)
 {
     uint32 depth = 0;
     for (ScopeScanner s = mScopeStack.rbegin(), end = mScopeStack.rend(); (s != end); s++, depth++)
     {
         PropertyIterator i;
-        if ((*s)->hasProperty(name, names, acc, &i))
-            return (*s)->genReference(false, name, names, acc, depth);
+        if ((*s)->hasProperty(cx, name, names, acc, &i))
+            return (*s)->genReference(cx, false, name, names, acc, depth);
         else
             if ((*s)->isDynamic())
                 return NULL;
@@ -760,13 +780,13 @@ Reference *ScopeChain::getName(const String& name, NamespaceList *names, Access 
     return NULL;
 }
 
-bool ScopeChain::hasNameValue(const String& name, NamespaceList *names)
+bool ScopeChain::hasNameValue(Context *cx, const String& name, NamespaceList *names)
 {
     uint32 depth = 0;
     for (ScopeScanner s = mScopeStack.rbegin(), end = mScopeStack.rend(); (s != end); s++, depth++)
     {
         PropertyIterator i;
-        if ((*s)->hasProperty(name, names, Read, &i))
+        if ((*s)->hasProperty(cx, name, names, Read, &i))
             return true;
     }
     return false;
@@ -774,13 +794,13 @@ bool ScopeChain::hasNameValue(const String& name, NamespaceList *names)
 
 // a compile time request to get the value for a name
 // (i.e. we're accessing a constant value)
-JSValue ScopeChain::getCompileTimeValue(const String& name, NamespaceList *names)
+JSValue ScopeChain::getCompileTimeValue(Context *cx, const String& name, NamespaceList *names)
 {
     uint32 depth = 0;
     for (ScopeScanner s = mScopeStack.rbegin(), end = mScopeStack.rend(); (s != end); s++, depth++)
     {
         PropertyIterator i;
-        if ((*s)->hasProperty(name, names, Read, &i)) 
+        if ((*s)->hasProperty(cx, name, names, Read, &i)) 
             return (*s)->getPropertyValue(i);
     }
     return kUndefinedValue;
@@ -788,10 +808,10 @@ JSValue ScopeChain::getCompileTimeValue(const String& name, NamespaceList *names
 
 
 
-Reference *ParameterBarrel::genReference(bool /* hasBase */, const String& name, NamespaceList *names, Access acc, uint32 /*depth*/)
+Reference *ParameterBarrel::genReference(Context *cx, bool /* hasBase */, const String& name, NamespaceList *names, Access acc, uint32 /*depth*/)
 {
     PropertyIterator i;
-    if (hasProperty(name, names, acc, &i)) {
+    if (hasProperty(cx, name, names, acc, &i)) {
         Property *prop = PROPERTY(i);
         ASSERT(prop->mFlag == Slot);
         return new ParameterReference(prop->mData.index, acc, prop->mType, prop->mAttributes);
@@ -850,9 +870,9 @@ void Activation::setSlotValue(Context *cx, uint32 slotIndex, JSValue &v)
 
 
 
-JSType *ScopeChain::findType(const StringAtom& typeName, size_t pos) 
+JSType *ScopeChain::findType(Context *cx, const StringAtom& typeName, size_t pos) 
 {
-    JSValue v = getCompileTimeValue(typeName, NULL);
+    JSValue v = getCompileTimeValue(cx, typeName, NULL);
     if (!v.isUndefined()) {
         if (v.isType())
             return v.type;
@@ -882,7 +902,7 @@ JSType *ScopeChain::extractType(ExprNode *t)
         case ExprNode::identifier:
             {
                 IdentifierExprNode* typeExpr = checked_cast<IdentifierExprNode *>(t);
-                type = findType(typeExpr->name, t->pos);
+                type = findType(m_cx, typeExpr->name, t->pos);
             }
             break;
         case ExprNode::index:
@@ -1055,7 +1075,7 @@ void ScopeChain::collectNames(StmtNode *p)
             m_cx->setAttributeValue(classStmt, 0);              // XXX default attribute for a class?
 
             PropertyIterator it;
-            if (hasProperty(*name, NULL, Read, &it))
+            if (hasProperty(m_cx, *name, NULL, Read, &it))
                 m_cx->reportError(Exception::referenceError, "Duplicate class definition", p->pos);
 
             defineVariable(m_cx, *name, classStmt, Type_Type, JSValue(thisClass));
@@ -1286,7 +1306,7 @@ void ScopeChain::collectNames(StmtNode *p)
             if (!m_cx->checkForPackage(packageName))
                 m_cx->loadPackage(packageName, packageName + ".js");
 
-	    JSValue packageValue = getCompileTimeValue(packageName, NULL);
+	    JSValue packageValue = getCompileTimeValue(m_cx, packageName, NULL);
 	    ASSERT(packageValue.isObject() && (packageValue.object->mType == Package_Type));
 	    Package *package = checked_cast<Package *>(packageValue.object);
             
@@ -1384,11 +1404,11 @@ void JSType::defineMethod(Context *cx, const String& name, AttributeStmtNode *at
 {
     NamespaceList *names = (attr) ? attr->attributeValue->mNamespaceList : NULL;
     PropertyIterator it;
-    if (hasOwnProperty(name, names, Read, &it))
+    if (hasOwnProperty(cx, name, names, Read, &it))
         cx->reportError(Exception::typeError, "Duplicate method definition", attr->pos);
 
     // now check if the method exists in the supertype
-    if (mSuperType && mSuperType->hasOwnProperty(name, names, Read, &it)) {
+    if (mSuperType && mSuperType->hasOwnProperty(cx, name, names, Read, &it)) {
         // if it does, it must have been overridable:
         PropertyAttribute superAttr = PROPERTY_ATTR(it);
         if (superAttr & Property::Final)
@@ -1408,7 +1428,7 @@ void JSType::defineMethod(Context *cx, const String& name, AttributeStmtNode *at
     mProperties.insert(e);
 }
 
-void JSType::defineGetterMethod(Context * /*cx*/, const String &name, AttributeStmtNode *attr, JSFunction *f)
+void JSType::defineGetterMethod(Context *cx, const String &name, AttributeStmtNode *attr, JSFunction *f)
 {
     PropertyIterator i;
     uint32 vTableIndex = mMethods.size();
@@ -1416,7 +1436,7 @@ void JSType::defineGetterMethod(Context * /*cx*/, const String &name, AttributeS
 
     NamespaceList *names = (attr) ? attr->attributeValue->mNamespaceList : NULL;
 
-    if (hasProperty(name, names, Write, &i)) {
+    if (hasProperty(cx, name, names, Write, &i)) {
         ASSERT(PROPERTY_KIND(i) == IndexPair);
         ASSERT(PROPERTY_GETTERI(i) == 0);
         PROPERTY_GETTERI(i) = vTableIndex;
@@ -1428,7 +1448,7 @@ void JSType::defineGetterMethod(Context * /*cx*/, const String &name, AttributeS
     }
 }
 
-void JSType::defineSetterMethod(Context * /*cx*/, const String &name, AttributeStmtNode *attr, JSFunction *f)
+void JSType::defineSetterMethod(Context *cx, const String &name, AttributeStmtNode *attr, JSFunction *f)
 {
     PropertyIterator i;
     uint32 vTableIndex = mMethods.size();
@@ -1436,7 +1456,7 @@ void JSType::defineSetterMethod(Context * /*cx*/, const String &name, AttributeS
 
     NamespaceList *names = (attr) ? attr->attributeValue->mNamespaceList : NULL;
 
-    if (hasProperty(name, names, Read, &i)) {
+    if (hasProperty(cx, name, names, Read, &i)) {
         ASSERT(PROPERTY_KIND(i) == IndexPair);
         ASSERT(PROPERTY_SETTERI(i) == 0);
         PROPERTY_SETTERI(i) = vTableIndex;
@@ -1472,21 +1492,21 @@ JSValue JSType::getPropertyValue(PropertyIterator &i)
     }
 }
 
-bool JSType::hasProperty(const String &name, NamespaceList *names, Access acc, PropertyIterator *p)
+bool JSType::hasProperty(Context *cx, const String &name, NamespaceList *names, Access acc, PropertyIterator *p)
 {
-    if (hasOwnProperty(name, names, acc, p))
+    if (hasOwnProperty(cx, name, names, acc, p))
         return true;
     else
         if (mSuperType)
-            return mSuperType->hasProperty(name, names, acc, p);
+            return mSuperType->hasProperty(cx, name, names, acc, p);
         else
             return false;
 }
 
-Reference *JSType::genReference(bool hasBase, const String& name, NamespaceList *names, Access acc, uint32 depth)
+Reference *JSType::genReference(Context *cx, bool hasBase, const String& name, NamespaceList *names, Access acc, uint32 depth)
 {
     PropertyIterator i;
-    if (hasOwnProperty(name, names, acc, &i)) {
+    if (hasOwnProperty(cx, name, names, acc, &i)) {
         Property *prop = PROPERTY(i);
         switch (prop->mFlag) {
         case FunctionPair:
@@ -1517,7 +1537,7 @@ Reference *JSType::genReference(bool hasBase, const String& name, NamespaceList 
     }
     // walk the supertype chain
     if (mSuperType)
-        return mSuperType->genReference(hasBase, name, names, acc, depth);
+        return mSuperType->genReference(cx, hasBase, name, names, acc, depth);
     return NULL;
 }
 
@@ -1634,10 +1654,10 @@ void Activation::defineTempVariable(Context * /*cx*/, Reference *&readRef, Refer
     mVariableCount++;
 }
 
-Reference *Activation::genReference(bool /* hasBase */, const String& name, NamespaceList *names, Access acc, uint32 depth)
+Reference *Activation::genReference(Context * cx, bool /* hasBase */, const String& name, NamespaceList *names, Access acc, uint32 depth)
 {
     PropertyIterator i;
-    if (hasProperty(name, names, acc, &i)) {
+    if (hasProperty(cx, name, names, acc, &i)) {
         Property *prop = PROPERTY(i);
         ASSERT((prop->mFlag == ValuePointer) || (prop->mFlag == Slot) || (prop->mFlag == FunctionPair)); 
 
@@ -1860,7 +1880,7 @@ void Context::buildRuntimeForStmt(StmtNode *p)
             if (classStmt->superclass) {
                 ASSERT(classStmt->superclass->getKind() == ExprNode::identifier);   // XXX
                 IdentifierExprNode *superClassExpr = checked_cast<IdentifierExprNode *>(classStmt->superclass);
-                superClass = mScopeChain->findType(superClassExpr->name, superClassExpr->pos);
+                superClass = mScopeChain->findType(this, superClassExpr->name, superClassExpr->pos);
             }
             JSType *thisClass = classStmt->mType;
             thisClass->setSuperType(superClass);
@@ -2295,13 +2315,6 @@ static JSValue GenericError_Constructor(Context *cx, const JSValue& thisValue, J
     thisObj->defineVariable(cx, cx->Message_StringAtom, NULL, Property::NoAttribute, String_Type, msg);
     thisObj->defineVariable(cx, cx->Name_StringAtom, NULL, Property::NoAttribute, String_Type, JSValue(errType->mClassName));
     return v;
-}
-
-extern "C" char16 canonicalize(char16 ch)
-{
-    char16 cu = toUpper(ch);
-    if ((ch >= 128) && (cu < 128)) return ch;
-    return cu;
 }
 
 JSValue RegExp_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
@@ -2949,7 +2962,11 @@ void Context::initBuiltins()
     Array_Type          = new JSArrayType(this, Object_Type, &mWorld.identifiers[widenCString(builtInClasses[6].name)], Object_Type, arrayProto, Function_Type->mPrototypeObject);
     arrayProto->mType = Array_Type;
 
-    Boolean_Type        = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[7].name)], Object_Type);
+    JSObject *boolProto = new JSObject();
+    Boolean_Type        = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[7].name)], Object_Type, boolProto);
+    boolProto->mType = Boolean_Type;
+    boolProto->mPrivate = 0;
+
     Void_Type           = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[8].name)], Object_Type);
     Unit_Type           = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[9].name)], Object_Type);
     Attribute_Type      = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[10].name)], Object_Type);
@@ -3062,6 +3079,7 @@ void Context::initBuiltins()
     Array_Type->defineUnaryOperator(Index, new JSFunction(this, Array_GetElement, Object_Type));
     Array_Type->defineUnaryOperator(IndexEqual, new JSFunction(this, Array_SetElement, Object_Type));
     Array_Type->mTypeCast = new JSFunction(this, Array_Constructor, Array_Type);
+    Array_Type->defineVariable(this, Length_StringAtom, NULL, Property::NoAttribute, Number_Type, JSValue(1.0));
 
     Boolean_Type->mTypeCast = new JSFunction(this, Boolean_TypeCast, Boolean_Type);
 

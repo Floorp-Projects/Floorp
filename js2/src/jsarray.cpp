@@ -167,7 +167,7 @@ static JSValue Array_pop(Context *cx, const JSValue& thisValue, JSValue * /*argv
         const String *id = numberToString(arrInst->mLength - 1);
         arrInst->getProperty(cx, *id, NULL);
         JSValue result = cx->popValue();
-        arrInst->deleteProperty(*id, NULL);
+        arrInst->deleteProperty(cx, *id, NULL);
         --arrInst->mLength;
         delete id;
         return result;
@@ -266,8 +266,8 @@ static JSValue Array_reverse(Context *cx, const JSValue& thisValue, JSValue * /*
         const String *id2 = numberToString(length - k - 1);
 
         PropertyIterator it;
-        if (thisObj->hasOwnProperty(*id1, CURRENT_ATTR, Read, &it)) {
-            if (thisObj->hasOwnProperty(*id2, CURRENT_ATTR, Read, &it)) {
+        if (thisObj->hasOwnProperty(cx, *id1, CURRENT_ATTR, Read, &it)) {
+            if (thisObj->hasOwnProperty(cx, *id2, CURRENT_ATTR, Read, &it)) {
                 thisObj->getProperty(cx, *id1, CURRENT_ATTR);
                 thisObj->getProperty(cx, *id2, CURRENT_ATTR);
                 thisObj->setProperty(cx, *id1, CURRENT_ATTR, cx->popValue());
@@ -276,18 +276,18 @@ static JSValue Array_reverse(Context *cx, const JSValue& thisValue, JSValue * /*
             else {
                 thisObj->getProperty(cx, *id1, CURRENT_ATTR);
                 thisObj->setProperty(cx, *id2, CURRENT_ATTR, cx->popValue());
-                thisObj->deleteProperty(*id1, CURRENT_ATTR);
+                thisObj->deleteProperty(cx, *id1, CURRENT_ATTR);
             }
         }
         else {
-            if (thisObj->hasOwnProperty(*id2, CURRENT_ATTR, Read, &it)) {
+            if (thisObj->hasOwnProperty(cx, *id2, CURRENT_ATTR, Read, &it)) {
                 thisObj->getProperty(cx, *id2, CURRENT_ATTR);
                 thisObj->setProperty(cx, *id1, CURRENT_ATTR, cx->popValue());
-                thisObj->deleteProperty(*id2, CURRENT_ATTR);
+                thisObj->deleteProperty(cx, *id2, CURRENT_ATTR);
             }
             else {
-                thisObj->deleteProperty(*id1, CURRENT_ATTR);
-                thisObj->deleteProperty(*id2, CURRENT_ATTR);
+                thisObj->deleteProperty(cx, *id1, CURRENT_ATTR);
+                thisObj->deleteProperty(cx, *id2, CURRENT_ATTR);
             }
         }
     }
@@ -319,15 +319,15 @@ static JSValue Array_shift(Context *cx, const JSValue& thisValue, JSValue * /*ar
         const String *id2 = numberToString(k - 1);
 
         PropertyIterator it;
-        if (thisObj->hasOwnProperty(*id1, CURRENT_ATTR, Read, &it)) {
+        if (thisObj->hasOwnProperty(cx, *id1, CURRENT_ATTR, Read, &it)) {
             thisObj->getProperty(cx, *id1, CURRENT_ATTR);
             thisObj->setProperty(cx, *id2, CURRENT_ATTR, cx->popValue());
         }
         else
-            thisObj->deleteProperty(*id2, CURRENT_ATTR);        
+            thisObj->deleteProperty(cx, *id2, CURRENT_ATTR);        
     }
 
-    thisObj->deleteProperty(*numberToString(length - 1), CURRENT_ATTR);
+    thisObj->deleteProperty(cx, *numberToString(length - 1), CURRENT_ATTR);
     thisObj->setProperty(cx, cx->Length_StringAtom, CURRENT_ATTR, JSValue((float64)(length - 1)) );
 
     return result;
@@ -389,7 +389,7 @@ static JSValue Array_slice(Context *cx, const JSValue& thisValue, JSValue *argv,
     while (start < end) {
         const String *id1 = numberToString(start);
         PropertyIterator it;
-        if (thisObj->hasOwnProperty(*id1, CURRENT_ATTR, Read, &it)) {
+        if (thisObj->hasOwnProperty(cx, *id1, CURRENT_ATTR, Read, &it)) {
             const String *id2 = numberToString(n);
             thisObj->getProperty(cx, *id1, CURRENT_ATTR);
             A->setProperty(cx, *id2, CURRENT_ATTR, cx->popValue());
@@ -603,7 +603,7 @@ static JSValue Array_splice(Context *cx, const JSValue& thisValue, JSValue *argv
         for (k = 0; k < deleteCount; k++) {
             const String *id1 = numberToString(start + k);
             PropertyIterator it;
-            if (thisObj->hasOwnProperty(*id1, CURRENT_ATTR, Read, &it)) {
+            if (thisObj->hasOwnProperty(cx, *id1, CURRENT_ATTR, Read, &it)) {
                 const String *id2 = numberToString(k);
                 thisObj->getProperty(cx, *id1, CURRENT_ATTR);
                 A->setProperty(cx, *id2, CURRENT_ATTR, cx->popValue());
@@ -617,16 +617,16 @@ static JSValue Array_splice(Context *cx, const JSValue& thisValue, JSValue *argv
                 const String *id1 = numberToString(k + deleteCount);
                 const String *id2 = numberToString(k + newItemCount);
                 PropertyIterator it;
-                if (thisObj->hasOwnProperty(*id1, CURRENT_ATTR, Read, &it)) {
+                if (thisObj->hasOwnProperty(cx, *id1, CURRENT_ATTR, Read, &it)) {
                     thisObj->getProperty(cx, *id1, CURRENT_ATTR);
                     thisObj->setProperty(cx, *id2, CURRENT_ATTR, cx->popValue());
                 }
                 else
-                    thisObj->deleteProperty(*id2, CURRENT_ATTR);
+                    thisObj->deleteProperty(cx, *id2, CURRENT_ATTR);
             }
             for (k = length; k > (length - deleteCount + newItemCount); k--) {
                 const String *id1 = numberToString(k - 1);
-                thisObj->deleteProperty(*id1, CURRENT_ATTR);
+                thisObj->deleteProperty(cx, *id1, CURRENT_ATTR);
             }
         }
         else {
@@ -635,12 +635,12 @@ static JSValue Array_splice(Context *cx, const JSValue& thisValue, JSValue *argv
                     const String *id1 = numberToString(k + deleteCount - 1);
                     const String *id2 = numberToString(k + newItemCount - 1);
                     PropertyIterator it;
-                    if (thisObj->hasOwnProperty(*id1, CURRENT_ATTR, Read, &it)) {
+                    if (thisObj->hasOwnProperty(cx, *id1, CURRENT_ATTR, Read, &it)) {
                         thisObj->getProperty(cx, *id1, CURRENT_ATTR);
                         thisObj->setProperty(cx, *id2, CURRENT_ATTR, cx->popValue());
                     }
                     else
-                        thisObj->deleteProperty(*id2, CURRENT_ATTR);
+                        thisObj->deleteProperty(cx, *id2, CURRENT_ATTR);
                 }
             }
         }
@@ -671,12 +671,12 @@ static JSValue Array_unshift(Context *cx, const JSValue& thisValue, JSValue *arg
         const String *id1 = numberToString(k - 1);
         const String *id2 = numberToString(k + argc - 1);
         PropertyIterator it;
-        if (thisObj->hasOwnProperty(*id1, CURRENT_ATTR, Read, &it)) {
+        if (thisObj->hasOwnProperty(cx, *id1, CURRENT_ATTR, Read, &it)) {
             thisObj->getProperty(cx, *id1, CURRENT_ATTR);
             thisObj->setProperty(cx, *id2, CURRENT_ATTR, cx->popValue());
         }
         else
-            thisObj->deleteProperty(*id2, CURRENT_ATTR);
+            thisObj->deleteProperty(cx, *id2, CURRENT_ATTR);
     }
 
     for (k = 0; k < argc; k++) {

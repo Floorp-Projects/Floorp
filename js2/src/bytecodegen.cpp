@@ -759,7 +759,7 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
             VariableBinding *v = vs->bindings;
             bool isStatic = (vs->attributeValue->mTrueFlags & Property::Static) == Property::Static;
             while (v)  {
-                Reference *ref = v->scope->genReference(false, *v->name, vs->attributeValue->mNamespaceList, Write, 0);
+                Reference *ref = v->scope->genReference(m_cx, false, *v->name, vs->attributeValue->mNamespaceList, Write, 0);
    //             Reference *ref = mScopeChain->getName(*v->name, vs->attributeValue->mNamespaceList, Write);
                 ASSERT(ref);    // must have been added previously by collectNames
                 if (v->initializer) {
@@ -930,7 +930,7 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
                 if (f->initializer->getKind() == StmtNode::Var) {
                     VariableStmtNode *vs = checked_cast<VariableStmtNode *>(f->initializer);
                     VariableBinding *v = vs->bindings;
-                    value = mScopeChain->getName(*v->name, NULL, Write);
+                    value = mScopeChain->getName(m_cx, *v->name, NULL, Write);
                 }
                 else {
                     if (f->initializer->getKind() == StmtNode::expression) {
@@ -1363,7 +1363,7 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
                         addOp(JumpFalseOp);
                         addFixup(nextCatch);
                     }
-                    Reference *ref = mScopeChain->getName(c->name, NULL, Write);
+                    Reference *ref = mScopeChain->getName(m_cx, c->name, NULL, Write);
                     ref->emitImplicitLoad(this);
                     ref->emitCodeSequence(this);
                     delete ref;
@@ -1456,7 +1456,7 @@ Reference *ByteCodeGen::genReference(ExprNode *p, Access acc)
     case ExprNode::identifier:
         {
             const StringAtom &name = checked_cast<IdentifierExprNode *>(p)->name;
-            Reference *ref = mScopeChain->getName(name, NULL, acc);            
+            Reference *ref = mScopeChain->getName(m_cx, name, NULL, acc);            
             if (ref == NULL)
                 ref = new NameReference(name, NULL, acc);
             ref->emitImplicitLoad(this);
@@ -1469,7 +1469,7 @@ Reference *ByteCodeGen::genReference(ExprNode *p, Access acc)
             const StringAtom &qualifierName = checked_cast<IdentifierExprNode *>(qe->qualifier)->name;
 
             NamespaceList *ns = new NamespaceList(qualifierName, NULL);
-            Reference *ref = mScopeChain->getName(name, ns, acc);            
+            Reference *ref = mScopeChain->getName(m_cx, name, ns, acc);            
             if (ref == NULL)
                 ref = new NameReference(name, ns, acc);
 
@@ -1492,7 +1492,7 @@ Reference *ByteCodeGen::genReference(ExprNode *p, Access acc)
 
             if (b->op1->getKind() == ExprNode::identifier) {
                 const StringAtom &name = checked_cast<IdentifierExprNode *>(b->op1)->name;
-                JSValue v = mScopeChain->getCompileTimeValue(name, NULL);
+                JSValue v = mScopeChain->getCompileTimeValue(m_cx, name, NULL);
                 if (v.isType()) {
                     lType = v.type;
                     genExpr(b->op1);
@@ -1509,7 +1509,7 @@ Reference *ByteCodeGen::genReference(ExprNode *p, Access acc)
                 const StringAtom &qualifierName = checked_cast<IdentifierExprNode *>(qe->qualifier)->name;
 
                 NamespaceList *ns = new NamespaceList(qualifierName, NULL);
-                Reference *ref = lType->genReference(true, fieldName, ns, acc, Property::NoAttribute);
+                Reference *ref = lType->genReference(m_cx, true, fieldName, ns, acc, Property::NoAttribute);
                 if (ref == NULL)
                     ref = new PropertyReference(fieldName, ns, acc, Object_Type, 0);
 
@@ -1518,7 +1518,7 @@ Reference *ByteCodeGen::genReference(ExprNode *p, Access acc)
             else {
                 ASSERT(b->op2->getKind() == ExprNode::identifier);
                 const StringAtom &fieldName = checked_cast<IdentifierExprNode *>(b->op2)->name;
-                Reference *ref = lType->genReference(true, fieldName, NULL, acc, 0);
+                Reference *ref = lType->genReference(m_cx, true, fieldName, NULL, acc, 0);
                 if (ref == NULL)
                     ref = new PropertyReference(fieldName, NULL, acc, Object_Type, Property::NoAttribute);
                 return ref;
@@ -1539,10 +1539,10 @@ void ByteCodeGen::genReferencePair(ExprNode *p, Reference *&readRef, Reference *
     case ExprNode::identifier:
         {
             const StringAtom &name = checked_cast<IdentifierExprNode *>(p)->name;
-            readRef = mScopeChain->getName(name, NULL, Read);            
+            readRef = mScopeChain->getName(m_cx, name, NULL, Read);            
             if (readRef == NULL)
                 readRef = new NameReference(name, NULL, Read);
-            writeRef = mScopeChain->getName(name, NULL, Write);            
+            writeRef = mScopeChain->getName(m_cx, name, NULL, Write);            
             if (writeRef == NULL)
                 writeRef = new NameReference(name, NULL, Write);
             readRef->emitImplicitLoad(this);
@@ -1571,7 +1571,7 @@ void ByteCodeGen::genReferencePair(ExprNode *p, Reference *&readRef, Reference *
 
             if (b->op1->getKind() == ExprNode::identifier) {
                 const StringAtom &name = checked_cast<IdentifierExprNode *>(b->op1)->name;
-                JSValue v = mScopeChain->getCompileTimeValue(name, NULL);
+                JSValue v = mScopeChain->getCompileTimeValue(m_cx, name, NULL);
                 if (v.isType()) {
                     lType = v.type;
                     genExpr(b->op1);
@@ -1585,10 +1585,10 @@ void ByteCodeGen::genReferencePair(ExprNode *p, Reference *&readRef, Reference *
             }
             else {
                 const StringAtom &fieldName = checked_cast<IdentifierExprNode *>(b->op2)->name;
-                readRef = lType->genReference(true, fieldName, NULL, Read, 0);
+                readRef = lType->genReference(m_cx, true, fieldName, NULL, Read, 0);
                 if (readRef == NULL)
                     readRef = new PropertyReference(fieldName, NULL, Read, Object_Type, Property::NoAttribute);
-                writeRef = lType->genReference(true, fieldName, NULL, Write, 0);
+                writeRef = lType->genReference(m_cx, true, fieldName, NULL, Write, 0);
                 if (writeRef == NULL)
                     writeRef = new PropertyReference(fieldName, NULL, Write, Object_Type, Property::NoAttribute);
             }
