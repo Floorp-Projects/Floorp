@@ -77,6 +77,9 @@
       <menuitem name="Output HTML" onclick="EditorGetHTML()"/>
       <separator />
       <menuitem name="Insert Text" onclick="EditorInsertText()"/>
+      <separator />
+      <menuitem name="Test Selection" onclick="EditorTestSelection()"/>
+      <menuitem name="Test Document" onclick="EditorTestDocument()"/>
     </menu>
     <menu name="Help">
       <menuitem name=".About" onclick=""/>
