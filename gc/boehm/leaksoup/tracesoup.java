@@ -53,6 +53,9 @@ public class tracesoup {
 				cook(arg);
 			}
 		}
+		
+		// quit the application.
+		System.exit(0);
 	}
 
 	static void cook(String inputName) {
@@ -83,9 +86,6 @@ public class tracesoup {
 			
 			writer.println("</PRE>");
 			writer.close();
-			
-			// quit the application.
-			System.exit(0);
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 		}
