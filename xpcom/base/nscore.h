@@ -30,6 +30,10 @@
 #define NS_UNIX 1
 #endif
 
+#if defined(XP_OS2)
+#define NS_OS2 1
+#endif
+
 #include "prtypes.h"
 
 #ifdef __cplusplus
@@ -175,7 +179,7 @@ typedef PRUint16 PRUnichar;
 #endif
 
 /* unix and beos now determine this automatically */
-#if ! defined XP_UNIX && ! defined XP_BEOS
+#if ! defined XP_UNIX && ! defined XP_BEOS && !defined(XP_OS2)
 #define HAVE_CPP_NEW_CASTS /* we'll be optimistic. */
 #endif
 
