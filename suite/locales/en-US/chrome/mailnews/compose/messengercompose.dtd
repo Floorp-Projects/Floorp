@@ -118,7 +118,6 @@
 <!ENTITY saveButton.label "Save">
 <!ENTITY stopButton.img "chrome://messengercompose/skin/stop.gif">
 <!ENTITY stopButton.label "Stop">
-<!ENTITY throbberButton.img "resource:/res/throbber/anims00.gif">
 <!ENTITY throbberButton.url "http://www.mozilla.org/">
 
 <!-- Toolbar items, imported from editorAppShell.xul -->

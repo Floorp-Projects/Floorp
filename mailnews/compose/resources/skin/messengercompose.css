@@ -27,3 +27,8 @@ tree[class="attachment"] treeitem > treerow > treecell > titledbutton {
  border:2px groove black;
  list-style-image: url("chrome://addressbook/skin/myaddrbk.gif");
 }
+
+titledbutton#Throbber
+{
+        list-style-image:url(chrome://navigator/skin/animthrob_single.gif);
+}

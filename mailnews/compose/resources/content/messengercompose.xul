@@ -206,7 +206,7 @@ Rights Reserved.
  		<titledbutton src="&saveButton.img;" align="bottom" value="&saveButton.label;" onclick="SaveAsDraft()"/>
  		<titledbutton src="&stopButton.img;" align="bottom" value="&stopButton.label;" onclick="Stop()"/>
 	    <spring flex="100%"/>
-		<titledbutton src="&throbberButton.img;" align="bottom" onclick="MsgHome('&throbberButton.url;')"/>
+		<titledbutton id="Throbber" align="bottom" onclick="MsgHome('&throbberButton.url;')"/>
 	</toolbar>
 
 	<toolbar>
