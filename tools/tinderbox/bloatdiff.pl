@@ -1,5 +1,19 @@
 #!/usr/bin/perl -w
 
+#
+# Munges the output from 
+#   XPCOM_MEM_BLOAT_LOG=1; mozilla-bin -f bloaturls.txt
+# so that it does some summary and stats stuff.
+#
+# To show leak test results for a set of changes, do something like this:
+#
+#   XPCOM_MEM_BLOAT_LOG=1
+#   mozilla -f bloaturls.txt > a.out
+#     **make change**
+#   mozilla -f bloaturls.txt > b.out
+#   bloatdiff.pl a.out b.out
+#
+
 $OLDFILE = $ARGV[0];
 $NEWFILE = $ARGV[1];
 
