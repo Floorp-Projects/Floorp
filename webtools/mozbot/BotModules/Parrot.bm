@@ -36,7 +36,11 @@ sub Told {
             $self->emote($event, $2);
         } elsif ($message =~ /^\s*announce\s+(.*)$/osi) {
             $self->announce($event, $1);
-        } elsif ($message =~ /^\s*invite\s+(\S+)\s+(\S+)\s*$/osi) {
+        } elsif ($message =~ /^\s* invite \s+
+                                    (\S+) \s+
+                       (?: (?:in|to|into) \s+
+                               (?:channel \s+)? )? 
+                                    (\S+) \s*$/osix) {
             $self->invite($event, $1, $2);
         } else {
             return $self->SUPER::Told(@_);
