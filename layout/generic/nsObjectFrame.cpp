@@ -1438,6 +1438,9 @@ extern nsresult NS_GetObjectFramePluginInstance(nsIFrame* aFrame, nsIPluginInsta
 nsresult
 NS_GetObjectFramePluginInstance(nsIFrame* aFrame, nsIPluginInstance*& aPluginInstance)
 {
+  if(aFrame == nsnull)
+    return NS_ERROR_NULL_POINTER;
+
 	// TODO: any way to determine this cast is safe?
 	nsObjectFrame* objectFrame = NS_STATIC_CAST(nsObjectFrame*, aFrame);
 	return objectFrame->GetPluginInstance(aPluginInstance);
