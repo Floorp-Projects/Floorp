@@ -23,7 +23,4 @@ DEPTH=..\..
 
 DIRS=messenger compose preference ab
 
-CHROME_DIR=messenger
-CHROME_TYPE=content locale skin
-
 include <$(DEPTH)\config\rules.mak>
