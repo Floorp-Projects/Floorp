@@ -48,8 +48,9 @@ public:
   static PRBool IsTableRow(nsIDOMNode *aNode);
   static PRBool IsTableCell(nsIDOMNode *aNode);
   static PRBool IsList(nsIDOMNode *aNode);
-  static PRBool IsUnorderedList(nsIDOMNode *aNode);
   static PRBool IsOrderedList(nsIDOMNode *aNode);
+  static PRBool IsUnorderedList(nsIDOMNode *aNode);
+  static PRBool IsDefinitionList(nsIDOMNode *aNode);
   static PRBool IsBlockquote(nsIDOMNode *aNode);
   static PRBool IsPre(nsIDOMNode *aNode);
   static PRBool IsAddress(nsIDOMNode *aNode);

@@ -3696,6 +3696,23 @@ nsEditor::NodeIsType(nsIDOMNode *aNode, nsIAtom *aTag)
 }
 
 PRBool 
+nsEditor::NodeIsType(nsIDOMNode *aNode, const nsString &aTagStr)
+{
+  nsCOMPtr<nsIDOMElement>element;
+  element = do_QueryInterface(aNode);
+  if (element)
+  {
+    nsAutoString tag;
+    element->GetTagName(tag);
+    if (tag.EqualsIgnoreCase(aTagStr))
+    {
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+
+PRBool 
 nsEditor::CanContainTag(nsIDOMNode* aParent, const nsString &aChildTag)
 {
   nsAutoString parentStringTag;

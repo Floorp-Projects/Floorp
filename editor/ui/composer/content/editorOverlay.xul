@@ -182,6 +182,8 @@
 
     <!-- the state attribute gets filled with the paragraph format before the command is exectued -->
     <command id="cmd_paragraphState" state=""         oncommand="goDoCommand('cmd_paragraphState')"/>
+    <command id="cmd_fontFace"       state=""         oncommand="goDoCommand('cmd_fontFace')"/>
+    <command id="cmd_fontSize"       state=""         oncommand="goDoCommand('cmd_fontSize')"/>
     <command id="cmd_align"          state=""         oncommand="goDoCommand('cmd_align')"/>
     
     <command id="cmd_advancedProperties"              oncommand="goDoCommand('cmd_advancedProperties')"/>
@@ -234,7 +236,6 @@
   	<command id="cmd_viewtaskbar"         oncommand="goToggleToolbar('taskbar','cmd_viewtaskbar');"                 checked="true"/>
 
     <!-- Obsolete; these will go away -->
-    <command id="Editor:Font:Face" face=""/>
     <command id="Editor:Font:Size" fontsize=""/>
   </broadcasterset>
 
@@ -430,7 +431,7 @@
     <!-- Font face submenu -->
     <menu id="fontFaceMenu" value="&fontfaceMenu.label;" accesskey="&formatfontmenu.accesskey;" 
           position="1">
-      <menupopup oncommand="EditorSetFontFace(event.target.data)">
+      <menupopup oncommand="EditorSetFontFace('cmd_fontFace', event.target.data)">
         <menuitem value="&fontVarWidth.label;"      accesskey="&fontvarwidth.accesskey;"    data=""/>
         <menuitem value="&fontFixedWidth.label;"    accesskey="&fontfixedwidth.accesskey;"  data="tt"/>
         <menuseparator/>
@@ -558,7 +559,7 @@
     <menu id="headingMenu" value="&headingMenu.label;"
           accesskey="&formatheadingmenu.accesskey;"
           position="10">
-      <menupopup oncommand="EditorSetParagraphFormat('cmd_paragraphState', event.target.data)">
+      <menupopup oncommand="EditorSetParagraphFormat('cmd_paragraphState', event.target.getAttribute('data'))">
         <menuitem value="&normalCmd.label;"   accesskey="&normal.accesskey;"   data=""/>
         <menuitem value="&heading1Cmd.label;" accesskey="&heading1.accesskey;" data="H1"/>
         <menuitem value="&heading2Cmd.label;" accesskey="&heading2.accesskey;" data="H2"/>
@@ -573,7 +574,7 @@
     <menu id="paragraphMenu" value="&paragraphMenu.label;"
           accesskey="&formatparagraphmenu.accesskey;"
           position="11">
-      <menupopup oncommand="EditorSetParagraphFormat('cmd_paragraphState', event.target.data)">
+      <menupopup oncommand="EditorSetParagraphFormat('cmd_paragraphState', event.target.getAttribute('data'))">
         <menuitem value="&normalCmd.label;"               accesskey="&normal.accesskey;"              data=""/>
         <menuitem value="&paragraphParagraphCmd.label;"   accesskey="&paragraphparagraph.accesskey;"  data="P"/>
         <menuitem value="&paragraphBlockquoteCmd.label;"  accesskey="&paragraphblockquote.accesskey;" data="BLOCKQUOTE"/>
@@ -771,8 +772,8 @@
 
   <!-- Formatting toolbar items. "data" are HTML tagnames, don't translate -->
   <menulist id="ParagraphSelect" tooltip="aTooltip" tooltiptext="&ParagraphSelect.tooltip;">
-    <observes element="cmd_paragraphState" attribute="state" onbroadcast="onParagraphFormatChange('cmd_paragraphState')"/>
-    <menupopup oncommand="EditorSetParagraphFormat('cmd_paragraphState', event.target.data)">
+    <observes element="cmd_paragraphState" attribute="state" onbroadcast="onParagraphFormatChange(this.parentNode, 'cmd_paragraphState')"/>
+    <menupopup id="ParagraphPopup" oncommand="EditorSetParagraphFormat('cmd_paragraphState', event.target.data)">
       <menuitem value="&normalCmd.label;"              data=""/>
       <menuitem value="&paragraphParagraphCmd.label;"  data="P"/>
       <menuitem value="&heading1Cmd.label;"            data="H1"/>
@@ -792,8 +793,8 @@
   <!-- TODO: Use actual "face" value when combobox can display arbitrary HTML -->
   <!-- "data" are HTML tagnames, don't translate -->
   <menulist id="FontFaceSelect" tooltip="aTooltip" tooltiptext="&FontFaceSelect.tooltip;">
-    <observes element="Editor:Font:Face" attribute="face" onbroadcast="onFontFaceChange()"/>
-    <menupopup  oncommand="EditorSetFontFace(event.target.data)">
+    <observes element="cmd_fontFace" attribute="state" onbroadcast="onFontFaceChange(this.parentNode, 'cmd_fontFace')"/>
+    <menupopup id="FontFacePopup" oncommand="EditorSetFontFace('cmd_fontFace', event.target.data)">
       <menuitem value="&fontVarWidth.label;"      data=""/>
       <menuitem value="&fontFixedWidth.label;"    data="tt"/>
       <menuseparator/>
@@ -804,7 +805,7 @@
   </menulist>  
   
   <menulist id="FontSizeSelect" oncommand="EditorSelectFontSize()" tooltip="aTooltip" tooltiptext="&FontSizeSelect.tooltip;">
-    <observes element="Editor:Font:Size" attribute="fontsize" onbroadcast="onFontSizeChange()"/>
+    <observes element="cmd_fontSize" attribute="state" onbroadcast="onFontSizeChange(this.parentNode, 'cmd_fontSize')"/>
     <menupopup>
       <menuitem value="&size-xx-smallCmd.label;"/>
       <menuitem value="&size-x-smallCmd.label;"/>

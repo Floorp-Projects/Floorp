@@ -69,6 +69,7 @@ public:
     kOpAlign               = 3004,
     kOpMakeBasicBlock      = 3005,
     kOpRemoveList          = 3006,
+    kOpMakeDefListItem     = 3007,
     kOpInsertElement       = 3008,
     kOpInsertQuotation     = 3009
   };
@@ -103,6 +104,11 @@ public:
                              const nsString *aAttribute,
                              const nsString *aValue,
                              PRBool &aFirst, PRBool &aAny, PRBool &aAll);
+  NS_IMETHOD GetInlinePropertyWithAttrValue(nsIAtom *aProperty, 
+                             const nsString *aAttribute,
+                             const nsString *aValue,
+                             PRBool &aFirst, PRBool &aAny, PRBool &aAll,
+                             nsString *outValue);
 
   NS_IMETHOD RemoveAllInlineProperties();
   NS_IMETHOD RemoveInlineProperty(nsIAtom *aProperty, const nsString *aAttribute);
@@ -125,13 +131,14 @@ public:
   NS_IMETHOD SetParagraphFormat(const nsString& aParagraphFormat);
 
   NS_IMETHOD GetParentBlockTags(nsStringArray *aTagList, PRBool aGetLists);
-  NS_IMETHOD GetParagraphTags(nsStringArray *aTagList);
-  NS_IMETHOD GetListTags(nsStringArray *aTagList);
+
+  NS_IMETHOD GetParagraphState(PRBool &aMixed, nsString &outFormat);
+  NS_IMETHOD GetFontFaceState(PRBool &aMixed, nsString &outFace);
   NS_IMETHOD GetListState(PRBool &aMixed, PRBool &aOL, PRBool &aUL);
+  NS_IMETHOD GetIndentState(PRBool &aCanIndent, PRBool &aCanOutdent);
 
   NS_IMETHOD MakeOrChangeList(const nsString& aListType);
   NS_IMETHOD RemoveList(const nsString& aListType);
-  NS_IMETHOD InsertBasicBlock(const nsString& aBlockType);
   NS_IMETHOD Indent(const nsString& aIndent);
   NS_IMETHOD Align(const nsString& aAlign);
 
@@ -441,7 +448,8 @@ protected:
                                           const nsString *aAttribute,
                                           const nsString *aValue,
                                           PRBool         &aIsSet,
-                                          nsIDOMNode    **aStyleNode) const;
+                                          nsIDOMNode    **aStyleNode,
+                                          nsString       *outValue = nsnull) const;
 
   /** style-based query returns PR_TRUE if (aProperty, aAttribute) is set in aSC.
     * WARNING: not well tested yet since we don't do style-based queries anywhere.
@@ -472,6 +480,10 @@ protected:
 
   /* small utility routine to test the eEditorReadonly bit */
   PRBool IsModifiable();
+  
+  /* helpers for block transformations */
+  nsresult MakeDefinitionItem(const nsString& aItemType);
+  nsresult InsertBasicBlock(const nsString& aBlockType);
   
   /* increase/decrease the font size of selection */
   nsresult RelativeFontChange( PRInt32 aSizeChange);

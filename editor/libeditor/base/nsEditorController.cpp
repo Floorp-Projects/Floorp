@@ -327,6 +327,8 @@ nsresult nsComposerController::RegisterComposerCommands(nsIControllerCommandMana
 
   // format stuff
   NS_REGISTER_ONE_COMMAND(nsParagraphStateCommand, "cmd_paragraphState");
+  NS_REGISTER_ONE_COMMAND(nsFontFaceStateCommand, "cmd_fontFace");
+
   NS_REGISTER_ONE_COMMAND(nsAlignCommand, "cmd_align");
   NS_REGISTER_ONE_COMMAND(nsRemoveStylesCommand, "cmd_removeStyles");
   NS_REGISTER_ONE_COMMAND(nsIncreaseFontSizeCommand, "cmd_increaseFont");

@@ -57,6 +57,7 @@ TypeInState::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 TypeInState::TypeInState() :
  mSetArray()
 ,mClearedArray()
+,mRelativeFontSize(0)
 {
   NS_INIT_REFCNT();
   Reset();
@@ -108,6 +109,18 @@ nsresult TypeInState::SetProp(nsIAtom *aProp, const nsString &aAttr)
 
 nsresult TypeInState::SetProp(nsIAtom *aProp, const nsString &aAttr, const nsString &aValue)
 {
+  // special case for big/small, these nest
+  if (nsIEditProperty::big == aProp)
+  {
+    mRelativeFontSize++;
+    return NS_OK;
+  }
+  if (nsIEditProperty::small == aProp)
+  {
+    mRelativeFontSize--;
+    return NS_OK;
+  }
+  
   // if it's already set we are done
   if (IsPropSet(aProp,aAttr,aValue)) return NS_OK;
   
@@ -196,6 +209,17 @@ nsresult TypeInState::TakeSetProperty(PropItem **outPropItem)
   return NS_OK;
 }
 
+//**************************************************************************
+//    TakeRelativeFontSize: hands back relative font value, which is then
+//                          cleared out.
+nsresult TypeInState::TakeRelativeFontSize(PRInt32 *outRelSize)
+{
+  if (!outRelSize) return NS_ERROR_NULL_POINTER;
+  *outRelSize = mRelativeFontSize;
+  mRelativeFontSize = 0;
+  return NS_OK;
+}
+
 nsresult TypeInState::GetTypingState(PRBool &isSet, PRBool &theSetting, nsIAtom *aProp)
 {
   return GetTypingState(isSet, theSetting, aProp, nsAutoString(), nsAutoString());
@@ -248,6 +272,7 @@ nsresult TypeInState::RemovePropFromSetList(nsIAtom *aProp,
   if (!aProp)
   {
     // clear _all_ props
+    mRelativeFontSize=0;
     while ((index = mSetArray.Count()))
     {
       // go backwards to keep nsVoidArray from memmoving everything each time

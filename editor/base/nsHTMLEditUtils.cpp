@@ -220,7 +220,9 @@ nsHTMLEditUtils::IsListItem(nsIDOMNode *node)
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
-  if (tag.EqualsWithConversion("li"))
+  if (tag.EqualsWithConversion("li") ||
+      tag.EqualsWithConversion("dd") ||
+      tag.EqualsWithConversion("dt"))
   {
     return PR_TRUE;
   }
@@ -289,7 +291,8 @@ nsHTMLEditUtils::IsList(nsIDOMNode *node)
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
-  if ( (tag.EqualsWithConversion("ol")) ||
+  if ( (tag.EqualsWithConversion("dl")) ||
+       (tag.EqualsWithConversion("ol")) ||
        (tag.EqualsWithConversion("ul")) )
   {
     return PR_TRUE;
@@ -299,7 +302,7 @@ nsHTMLEditUtils::IsList(nsIDOMNode *node)
 
 
 ///////////////////////////////////////////////////////////////////////////
-// IsOrderedList: true if node an html orderd list
+// IsOrderedList: true if node an html ordered list
 //                  
 PRBool 
 nsHTMLEditUtils::IsOrderedList(nsIDOMNode *node)
@@ -317,7 +320,7 @@ nsHTMLEditUtils::IsOrderedList(nsIDOMNode *node)
 
 
 ///////////////////////////////////////////////////////////////////////////
-// IsUnorderedList: true if node an html orderd list
+// IsUnorderedList: true if node an html unordered list
 //                  
 PRBool 
 nsHTMLEditUtils::IsUnorderedList(nsIDOMNode *node)
@@ -327,6 +330,24 @@ nsHTMLEditUtils::IsUnorderedList(nsIDOMNode *node)
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
   if (tag.EqualsWithConversion("ul"))
+  {
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// IsDefinitionList: true if node an html definition list
+//                  
+PRBool 
+nsHTMLEditUtils::IsDefinitionList(nsIDOMNode *node)
+{
+  NS_PRECONDITION(node, "null parent passed to nsHTMLEditUtils::IsDefinitionList");
+  nsAutoString tag;
+  nsEditor::GetTagString(node,tag);
+  tag.ToLowerCase();
+  if (tag.EqualsWithConversion("dl"))
   {
     return PR_TRUE;
   }

@@ -66,7 +66,7 @@ public:                                                 \
   NS_DECL_NSICONTROLLERCOMMAND                          \
 };
 
-// virtual base class for commands that need to save and update state
+// virtual base class for commands that need to save and update Boolean state (like styles etc)
 class nsBaseStateUpdatingCommand : public nsBaseComposerCommand,
                                    public nsIStateUpdatingControllerCommand
 {
@@ -98,7 +98,8 @@ protected:
 };
 
 
-// shared class for the various style updating commands
+// Shared class for the various style updating commands like bold, italics etc.
+// Suitable for commands whose state is either 'on' or 'off'.
 class nsStyleUpdatingCommand : public nsBaseStateUpdatingCommand
 {
 public:
@@ -132,8 +133,58 @@ protected:
 };
 
 
+// Base class for commands whose state consists of a string (e.g. para format)
+class nsMultiStateCommand : public nsBaseComposerCommand,
+                            public nsIStateUpdatingControllerCommand
+{
+public:
+  
+                   nsMultiStateCommand();
+  virtual          ~nsMultiStateCommand();
+  
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSICONTROLLERCOMMAND
+  NS_DECL_NSISTATEUPDATINGCONTROLLERCOMMAND
+
+protected:
+
+  virtual nsresult GetCurrentState(nsIEditorShell *aEditorShell, nsString& outStateString, PRBool& outMixed) = 0;
+  virtual nsresult SetState(nsIEditorShell *aEditorShell, nsString& newState) = 0;
+  
+protected:
+
+  PRPackedBool  mGotState;
+  nsString      mStateString;
+
+};
+
+
+class nsParagraphStateCommand : public nsMultiStateCommand
+{
+public:
+                   nsParagraphStateCommand();
+
+protected:
+
+  virtual nsresult GetCurrentState(nsIEditorShell *aEditorShell, nsString& outStateString, PRBool& outMixed);
+  virtual nsresult SetState(nsIEditorShell *aEditorShell, nsString& newState);
+};
+
+class nsFontFaceStateCommand : public nsMultiStateCommand
+{
+public:
+                   nsFontFaceStateCommand();
+
+protected:
+
+  virtual nsresult GetCurrentState(nsIEditorShell *aEditorShell, nsString& outStateString, PRBool& outMixed);
+  virtual nsresult SetState(nsIEditorShell *aEditorShell, nsString& newState);
+};
+
+
+
+
 // composer commands
-NS_DECL_COMPOSER_COMMAND(nsAlwaysEnabledCommands)
 
 NS_DECL_COMPOSER_COMMAND(nsCloseCommand)
 NS_DECL_COMPOSER_COMMAND(nsPrintingCommands)
@@ -157,7 +208,6 @@ NS_DECL_COMPOSER_COMMAND(nsPasteQuotationCommand)
 NS_DECL_COMPOSER_COMMAND(nsIndentCommand)
 NS_DECL_COMPOSER_COMMAND(nsOutdentCommand)
 
-NS_DECL_COMPOSER_COMMAND(nsParagraphStateCommand)
 NS_DECL_COMPOSER_COMMAND(nsAlignCommand)
 NS_DECL_COMPOSER_COMMAND(nsRemoveStylesCommand)
 NS_DECL_COMPOSER_COMMAND(nsIncreaseFontSizeCommand)
