@@ -1556,9 +1556,12 @@ nsStandardURL::Resolve(const nsACString &in, nsACString &out)
     nsresult rv;
     URLSegment scheme;
     char *resultPath = nsnull;
+    PRBool relative = PR_FALSE;
+    PRUint32 offset = 0;
 
     // relative urls should never contain a host, so we always want to use
     // the noauth url parser.
+    // use it to extract a possible scheme
     rv = gNoAuthParser->ParseURL(relpath, flat.Length(),
                                  &scheme.mPos, &scheme.mLen,
                                  nsnull, nsnull,
@@ -1570,15 +1573,38 @@ nsStandardURL::Resolve(const nsACString &in, nsACString &out)
 
     if (scheme.mLen >= 0) {
         // this URL appears to be absolute
-        *result = nsCRT::strdup(relpath);
-    }
-    else if (relpath[0] == '/' && relpath[1] == '/') {
-        // this URL is almost absolute
+        // but try to find out more
+        if (SegmentIs(mScheme,relpath,scheme)) {
+            // mScheme and Scheme are the same 
+            // but this can still be relative
+            if (nsCRT::strncmp(relpath + scheme.mPos + scheme.mLen,
+                               "://",3) == 0) {
+                // now this is really absolute
+                // because a :// follows the scheme 
+                *result = nsCRT::strdup(relpath);
+            } else {         
+                // This is a deprecated form of relative urls like
+                // http:file or http:/path/file
+                // we will support it for now ...
+                relative = PR_TRUE;
+                offset = scheme.mLen + 1;
+            }
+        } else {
+            // the schemes are not the same, we are also done
+            // because we have to assume this is absolute 
+            *result = nsCRT::strdup(relpath);
+        }  
+    } else if (relpath[0] == '/' && relpath[1] == '/') {
+        // this URL //host/path is almost absolute
         *result = AppendToSubstring(mScheme.mPos, mScheme.mLen + 1, relpath);
+    } else {
+        // then it must be relative 
+        relative = PR_TRUE;
     }
-    else {
+    if (relative) {
         PRUint32 len = 0;
-        switch (*relpath) {
+        const char *realrelpath = relpath + offset;
+        switch (*realrelpath) {
         case '/':
             // overwrite everything after the authority
             len = mAuthority.mPos + mAuthority.mLen;
@@ -1604,8 +1630,7 @@ nsStandardURL::Resolve(const nsACString &in, nsACString &out)
             // overwrite everything after the directory 
             len = mDirectory.mPos + mDirectory.mLen;
         }
-        *result = AppendToSubstring(0, len, relpath);
-
+        *result = AppendToSubstring(0, len, realrelpath);
         // locate result path
         resultPath = *result + mPath.mPos;
     }
