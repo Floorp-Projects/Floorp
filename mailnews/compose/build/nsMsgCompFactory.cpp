@@ -52,6 +52,8 @@
 #include "nsIMsgDraft.h"
 #include "nsMsgCreate.h"    // For drafts...I know, awful file name...
 #include "nsSmtpServer.h"
+#include "nsSmtpDataSource.h"
+#include "nsSmtpDelegateFactory.h"
 #include "nsIContentHandler.h"
 #include "nsMsgRecipientArray.h"
 #include "nsMsgComposeStringBundle.h"
@@ -70,6 +72,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSmtpUrl);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMailtoUrl);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgRecipientArray);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsComposeStringService);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSmtpDataSource);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSmtpDelegateFactory);
 
 ////////////////////////////////////////////////////////////
 //
@@ -150,7 +154,15 @@ static nsModuleComponentInfo components[] =
   { "SMTP string bundle",
     NS_MSG_COMPOSESTRINGSERVICE_CID,
     NS_MSG_SMTPSTRINGSERVICE_PROGID,
-    nsComposeStringServiceConstructor }
+    nsComposeStringServiceConstructor },
+  { "SMTP Datasource",
+    NS_SMTPDATASOURCE_CID,
+    NS_SMTPDATASOURCE_PROGID,
+    nsSmtpDataSourceConstructor },
+  { "SMTP Delegate Factory",
+    NS_SMTPDELEGATEFACTORY_CID,
+    NS_SMTPDELEGATEFACTORY_PROGID,
+    nsSmtpDelegateFactoryConstructor },
 };
 
   
