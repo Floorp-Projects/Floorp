@@ -21,6 +21,7 @@ package grendel.addressbook;
 
 import grendel.addressbook.addresscard.*;
 import grendel.ui.UIAction;
+import grendel.ui.GeneralFrame;
 import grendel.widgets.CollapsiblePanel;
 import grendel.widgets.GrendelToolBar;
 
@@ -45,23 +46,24 @@ import netscape.ldap.*;
  *
  * @author  Lester Schueler
  */
-public class AddressBook extends JFrame {
-    private Hashtable       mCommands;
-    private Hashtable       mMenuItems;
+public class AddressBook extends GeneralFrame {
+   private Hashtable         mCommands;
+   private Hashtable         mMenuItems;
+//   private ACS_Personal      myLocalAddressBook;
 
-    private JMenuBar        mMenubar;
-    private GrendelToolBar       mTtoolbar;
+   private JMenuBar          mMenubar;
+   private GrendelToolBar    mTtoolbar;
 //    private Component       mStatusbar;
-    private JTable          mTable;
-    private JButton         mSearchButton;
-    protected  DataSourceList  mDataSourceList;
-    protected JComboBox       mSearchSource;
-    protected  JTextField      mSearchField;
+   private JTable            mTable;
+   private JButton           mSearchButton;
+   protected DataSourceList  mDataSourceList;
+   protected JComboBox       mSearchSource;
+   protected JTextField      mSearchField;
 
-    public static void main(String[] args) {
-        AddressBook AddressBookFrame = new AddressBook();
-        AddressBookFrame.addWindowListener(new AppCloser());
-        AddressBookFrame.show();
+   public static void main(String[] args) {
+      AddressBook AddressBookFrame = new AddressBook();
+      AddressBookFrame.addWindowListener(new AppCloser());
+      AddressBookFrame.show();
     }
 
     protected static final class AppCloser extends WindowAdapter {
@@ -118,21 +120,25 @@ public class AddressBook extends JFrame {
      *
      */
     public AddressBook() {
-        super("Address Book");
+        super("Address Book","0");
 
         setBackground(Color.lightGray);
-        //setBorderStyle(JPanel.ETCHED);
+//        setBorderStyle(JPanel.ETCHED);
         getContentPane().setLayout(new BorderLayout());
 
 //        addWindowListener(new FrameHider());
 
         //create menubar (top)
         //merge both the editors commands with this applications commands.
-        //        mMenubar = NsMenuManager.createMenuBar("grendel.addressbook.Menus", "grendel.addressbook.MenuLabels", "mainMenubar", defaultActions);
+        //mMenubar = NsMenuManager.createMenuBar("grendel.addressbook.Menus", "grendel.addressbook.MenuLabels", "mainMenubar", defaultActions);
         // FIXME - need to build the menu bar
         // (Jeff)
 
-        mMenubar = new JMenuBar();
+        // mMenubar = new JMenuBar();
+    		// mMenubar = createMenubar();
+        mMenubar = buildMenu("menus.xml",defaultActions);
+
+    		setJMenuBar(mMenubar);
 
             //collapsble panels holds toolbar.
             CollapsiblePanel collapsePanel = new CollapsiblePanel(true);
@@ -156,15 +162,20 @@ public class AddressBook extends JFrame {
         mDataSourceList.addEntry (new DataSource ("Four11 Directory", "ldap.four11.com"));
         mDataSourceList.addEntry (new DataSource ("InfoSpace Directory", "ldap.infospace.com"));
         mDataSourceList.addEntry (new DataSource ("WhoWhere Directory", "ldap.whowhere.com"));
+        mDataSourceList.addEntry (new DataSource ("InfoSeek Directory", "ldap.infoseek.com"));
 
         //Create address panel
         AddressPanel addressPanel = new AddressPanel (mDataSourceList);
         panel1.add(addressPanel, BorderLayout.CENTER);
 
-        getContentPane().add(mMenubar, BorderLayout.NORTH);
+        // getContentPane().add(mMenubar, BorderLayout.NORTH);
         getContentPane().add(panel1, BorderLayout.CENTER);
 
         setSize (600, 400);
+    	
+    		//Create Local Address Book
+    	  //myLocalAddressBook = new ACS_Personal ("MyAddressBook.nab", true);
+
     }
 
     /**
@@ -244,7 +255,7 @@ public class AddressBook extends JFrame {
 //        new Import(),
         new SaveAs(),
 //        new Call(),
-        new CloseWindow()
+        new CloseWindow(),
 
         // "file->new" actions
 //        new NavigatorWindow(),
@@ -257,7 +268,7 @@ public class AddressBook extends JFrame {
 //        new Undo(),
 //        new Redo(),
 //        new Delete(),
-//        new SearchDirectory(),
+        new SearchDirectory(),
 //        new HTMLDomains(),
 //        new CardProperties(),
 //        new Preferences(),
@@ -295,6 +306,22 @@ public class AddressBook extends JFrame {
             aDialog.dispose();
         }
     }
+
+    class SearchDirectory extends UIAction {
+      SearchDirectory() {
+        super(searchDirectoryTag);
+        setEnabled(true);
+      }
+
+      public void actionPerformed(ActionEvent e) {
+        SearchDirectoryDialog aDialog = new SearchDirectoryDialog(getParentFrame());
+
+        //display the new card dialog
+        aDialog.show ();
+        aDialog.dispose();
+      }
+    }
+
 
     class SaveAs extends UIAction {
         SaveAs() {
@@ -381,6 +408,91 @@ public class AddressBook extends JFrame {
     }
 
     /**
+     * Create a Menubar
+     * 
+     */
+		private JMenuBar createMenubar() {
+		
+			JMenuBar menuBar = new JMenuBar();
+				
+			JMenu mFile = new JMenu("File");
+			addMenuBarItem(mFile, new NewCard(), null, "New Card");
+			addMenuBarItem(mFile, null, null, "New List");
+			addMenuBarItem(mFile, null, null, "Import");
+			addMenuBarItem(mFile, null, null, "Save As");
+
+      menuBar.add(mFile);
+
+			JMenu mEdit = new JMenu("Edit");
+			addMenuBarItem(mEdit, null, null, "Undo");
+			addMenuBarItem(mEdit, null, null, "Redo");
+			addMenuBarItem(mEdit, null, null, "Delete");
+			addMenuBarItem(mEdit, new SearchDirectory(), null, "Search Directory ...");
+			addMenuBarItem(mEdit, null, null, "HTML Domains ...");
+			addMenuBarItem(mEdit, null, null, "Properties");
+			addMenuBarItem(mEdit, null, null, "Preferences ...");
+
+      menuBar.add(mEdit);
+
+			return menuBar;
+		}
+
+    public JMenuItem addMenuBarItem(JMenuItem aMenu, UIAction aActionListener, String aImageName, String aText) {
+        JMenuItem m = new JMenuItem();
+
+    		m.setText(aText);
+
+    		aMenu.add(m);
+
+         if (aActionListener != null) {
+           m.addActionListener(aActionListener);}
+
+         return m;
+    }
+
+/*
+        //"File" actions
+        new NewCard(),
+//        new NewList(),
+//        new Import(),
+        new SaveAs(),
+//        new Call(),
+        new CloseWindow()
+
+        // "file->new" actions
+//        new NavigatorWindow(),
+//        new Message(),
+//        new BlankPage(),
+//        new PageFromTemplate(),
+//        new PageFromWizard(),
+
+        //"Edit" actions
+//        new Undo(),
+//        new Redo(),
+//        new Delete(),
+//        new SearchDirectory(),
+//        new HTMLDomains(),
+//        new CardProperties(),
+//        new Preferences(),
+
+        //"View" actions
+//        new HideMessageToolbar(),
+//        new ByType(),
+//        new ByName(),
+//        new ByEmailAddress(),
+//        new ByCompany(),
+//        new ByCity(),
+//        new ByNickname(),
+//        new SortAscending(),
+//        new SortDescending(),
+//        new MyAddressBookCard(),
+//        new WrapLongLines()
+
+        menuBar.addMenu
+				
+		}
+		*/
+     /**
      * Create a Toolbar
      * @see addToolbarButton
      */
@@ -452,21 +564,22 @@ public class AddressBook extends JFrame {
 
 //              try {
             //open a connection to the LDAP server
-System.out.println ("Opening server");
+System.out.println ("Opening server " + aServerName);
             ICardSource Four11AddressBook = new LDAP_Server (aServerName);
 
+	
             //create the query
             ITerm query = new TermEqual (new AC_Attribute ("sn", aSearchString));
 
             String[] attributes = {"sn", "cn", "o", "mail", "city"};
 
             //query the LDAP server.
-System.out.println ("Send query");
+System.out.println ("Send query" + query);
             ICardSet cardSet = Four11AddressBook.getCardSet (query, attributes);
 
             //Sort the list.
-//            String[] sortOrder = {"givenname", "surname"};
-//            cardSet.sort (sortOrder);
+            String[] sortOrder = {"sn", "cn"};
+            cardSet.sort (sortOrder);
 
             //hack. I've put the for loop in a try block to catch the exception
             //thrown when cardEnum.hasMoreElements() incorrectly returns true.
