@@ -334,6 +334,10 @@ BOOL CNetscapeApp::InitInstance()
 //PLEASE DO NOT MOVE THE ABOVE LINE.  Multiple instance detection
 //relies on this window being created.
 
+    //  Need to start traversing the registry early on.
+    //  See helpers.cpp
+    fe_StartRegistryLoop();
+
      //  We allow UNC names, to be turned off by a command line switch.
      if(IsRuntimeSwitch("-nounc")) {
 	 //  Turn off UNC file names.
@@ -2157,7 +2161,11 @@ int CNetscapeApp::ExitInstance()
 		TRACE("Blocking %d reduntant call(s) to CNetscapeApp::ExitInstance.\n", iExitCounter);
 	    return(0);
 	}
-	
+
+    //  Get rid of our registry thread.  Chances are it isn't around.
+    //  See helpers.cpp
+    fe_EndRegistryLoop();
+
 	//unregister our DDE service and free the ServiceName Handle
 	if(CDDECMDWrapper::m_dwidInst)
 	{

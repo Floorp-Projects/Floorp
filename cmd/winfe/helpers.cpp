@@ -271,11 +271,43 @@ void fe_SetExtensionList(NET_cdataStruct *cd_item)
 }
 
 //  Retrieve the default entry of the key.
-BOOL GetKeyDefault(const char *pKey, char *pBuf, long *plBuf)   {
+BOOL GetKeyDefault(const char *pKey, char *pBuf, DWORD *pdwBuf)   {
     BOOL bRetval = FALSE;
 
-    if(ERROR_SUCCESS == RegQueryValue(HKEY_CLASSES_ROOT, pKey, pBuf, plBuf))   {
-        bRetval = TRUE;
+    if(pKey && *pKey)   {
+        HKEY hOpen = NULL;
+        LONG lCheck = RegOpenKeyEx(HKEY_CLASSES_ROOT, pKey, 0, KEY_QUERY_VALUE, &hOpen);
+        if(ERROR_SUCCESS == lCheck) {
+            DWORD dwType = REG_SZ;
+            LONG lResult = RegQueryValueEx(hOpen, NULL, NULL, &dwType, (LPBYTE)pBuf, pdwBuf);
+            if(ERROR_SUCCESS == lResult && *pdwBuf > 1 && REG_SZ == dwType) {
+                bRetval = TRUE;
+            }
+            RegCloseKey(hOpen);
+            hOpen = NULL;
+        }
+    }
+
+    return bRetval;
+}
+
+//  Retrieve the content type entry of the key.
+BOOL GetKeyMime(const char *pKey, char *pBuf, DWORD *pdwBuf)   {
+    BOOL bRetval = FALSE;
+
+    //  Only extensions do we care.
+    if(pKey && '.' == *pKey)   {
+        HKEY hOpen = NULL;
+        LONG lCheck = RegOpenKeyEx(HKEY_CLASSES_ROOT, pKey, 0, KEY_QUERY_VALUE, &hOpen);
+        if(ERROR_SUCCESS == lCheck) {
+            DWORD dwType = REG_SZ;
+            LONG lResult = RegQueryValueEx(hOpen, "Content Type", NULL, &dwType, (LPBYTE)pBuf, pdwBuf);
+            if(ERROR_SUCCESS == lResult && *pdwBuf > 1 && REG_SZ == dwType) {
+                bRetval = TRUE;
+            }
+            RegCloseKey(hOpen);
+            hOpen = NULL;
+        }
     }
 
     return bRetval;
@@ -287,7 +319,7 @@ GetExtClassName(LPCSTR lpszExtension, CString &strClass)
 {
     char    szKey[_MAX_EXT + 1] = { '.', '\0' };
     char    szClass[128];
-	LONG	lcb = sizeof(szClass);
+	DWORD	lcb = sizeof(szClass);
 
 	// Look up the file association key which maps a file extension
 	// to a file class
@@ -303,51 +335,17 @@ GetExtClassName(LPCSTR lpszExtension, CString &strClass)
 }
 
 //  Return value must be freed by caller.
-char *InventMime(const char *pExtension, const char *pClassName)
+char *InventMime(const char *pClassName)
 {
     LPSTR   lpszMimeType = NULL;
-    char    szKey[_MAX_EXT + 1];  // space for '.'
 
-    if (!pExtension)
-        return NULL;
-
-    // Build the file association key. It must begin with a '.'
-    wsprintf(szKey, ".%s", pExtension);
-    
-#ifdef XP_WIN32
-    //  See if the extension has a mime type (Content Type).
-    HKEY hExt = NULL;
-    LONG lCheckOpen = RegOpenKeyEx(HKEY_CLASSES_ROOT, szKey, 0, KEY_QUERY_VALUE, &hExt);
-
-    if (lCheckOpen == ERROR_SUCCESS) {
-        DWORD	dwType;
-        DWORD	cbData;
-        LONG    lResult;
-         
-        // See how much space we need
-        cbData = 0;
-        lResult = RegQueryValueEx(hExt, "Content Type", NULL, &dwType, NULL, &cbData);
-        if (lResult == ERROR_SUCCESS && cbData > 1) {
-            lpszMimeType = (LPSTR)XP_ALLOC(cbData);
-            if (!lpszMimeType) {
-                VERIFY(RegCloseKey(hExt) == ERROR_SUCCESS);
-                return NULL;
-            }
-
-            // Get the string
-            lResult = RegQueryValueEx(hExt, "Content Type", NULL, &dwType, (LPBYTE)lpszMimeType, &cbData);
-            ASSERT(lResult == ERROR_SUCCESS);
+    // Only do this is there's a class associated with the extension
+    if (pClassName && *pClassName)  {
+        lpszMimeType = (LPSTR)XP_ALLOC(lstrlen(SZ_WINASSOC) + lstrlen(pClassName) + 1);
+        if(lpszMimeType)    {
+            lstrcpy(lpszMimeType, SZ_WINASSOC);
+            lstrcat(lpszMimeType, pClassName);
         }
-
-        VERIFY(RegCloseKey(hExt) == ERROR_SUCCESS);
-    }
-#endif
-
-	//  Finally, default to fake generated mime type
-    if (!lpszMimeType) {
-        // Only do this is there's a class associated with the extension
-        if (pClassName && *pClassName)
-            lpszMimeType = PR_smprintf("%s%s", SZ_WINASSOC, pClassName);
     }
 
     return lpszMimeType;
@@ -503,7 +501,7 @@ ProcessFileExtension(const char *pExtension, const char *pClassName, const char 
     const char *pMimeType = ccpMimeType;
     BOOL bFreeMimeType = FALSE;
     if(pMimeType == NULL)   {
-        pMimeType = (const char *)InventMime(pExtension, pClassName);
+        pMimeType = (const char *)InventMime(pClassName);
         if(pMimeType)   {
             bFreeMimeType = TRUE;
         }
@@ -511,6 +509,12 @@ ProcessFileExtension(const char *pExtension, const char *pClassName, const char 
             return NULL;
         }
     }
+#ifdef DEBUG
+    else    {
+        //  Dont like empty mime types.
+        ASSERT(*pMimeType);
+    }
+#endif
 
     // Ignore extensions in the registry that have content type "application/x-msdownload"
     if (bFreeMimeType && stricmp(pMimeType, "application/x-msdownload") == 0) {
@@ -1716,40 +1720,57 @@ BOOL  CopyRegKeys(HKEY  hKeyOldName,
 //  Most involve the netlib cdata lists.
 
 
+//  Some thread info.
+//  Array cannot be accessed unless the thread has exited.
+HANDLE hRegThread = NULL;
+DWORD dwRegThreadID = 0;
+DWORD dwArraySize = 0;
+#define _REGNAME 0
+#define _REGCLASS 1
+#define _REGMIME 2
+#define _REGMAX 3
+char *(*ppaRegArray)[_REGMAX] = NULL;
+
 //  This routines looks at every file type association in the registry.
 //      For each file extension it calls ProcessFileExtension()
 //      For each protocol, it calls ProcessShellProtocol();
 void registry_Loop()
 {
-    char aExtension[MAX_PATH + 1] = { '\0' };
-    DWORD dwExtension = 0;
-    char aClassName[128] = { '\0' };
-    long lClassName = 0;
+    if(hRegThread)  {
+        //  We must wait for the registry thread to complete.
+        WaitForSingleObject(hRegThread, INFINITE);
+        hRegThread = NULL;
+        dwRegThreadID = 0;
 
-    DWORD dwExtKey = 0;
-    LONG lCheckEnum = ERROR_SUCCESS;
-    CString csClassName;
-
-    do  {
-        aExtension[0] = '\0';
-        dwExtension = sizeof(aExtension);
-        lCheckEnum = RegEnumKeyEx(HKEY_CLASSES_ROOT, dwExtKey++, aExtension, &dwExtension, NULL, NULL, NULL, NULL);
-        if(lCheckEnum == ERROR_SUCCESS) {
-            //  I was trying to get the class name using RegEnumKeyEx,
-            //      but all I ever got was empty strings....
-            aClassName[0] = '\0';
-            lClassName = sizeof(aClassName);
-            if(GetKeyDefault(aExtension, aClassName, &lClassName))   {
-                if(aExtension[0] == '.')    {
-                    ProcessFileExtension(&aExtension[1], aClassName, NULL);
+        if(ppaRegArray) {
+            DWORD dwExtKey = 0;
+            do  {
+                if(ppaRegArray[dwExtKey][_REGNAME])    {
+                    if('.' == ppaRegArray[dwExtKey][_REGNAME][0])    {
+                        ProcessFileExtension(&ppaRegArray[dwExtKey][_REGNAME][1], ppaRegArray[dwExtKey][_REGCLASS], ppaRegArray[dwExtKey][_REGMIME]);
+                    }
+                    else    {
+                        //ProcessShellProtocol(ppaRegArray[dwExtKey][_REGNAME], ppaRegArray[dwExtKey][_REGCLASS]);
+                    }
+                    delete ppaRegArray[dwExtKey][_REGNAME];
+                    ppaRegArray[dwExtKey][_REGNAME] = NULL;
+                    if(ppaRegArray[dwExtKey][_REGCLASS])    {
+                        delete ppaRegArray[dwExtKey][_REGCLASS];
+                        ppaRegArray[dwExtKey][_REGCLASS] = NULL;
+                    }
+                    if(ppaRegArray[dwExtKey][_REGMIME])    {
+                        delete ppaRegArray[dwExtKey][_REGMIME];
+                        ppaRegArray[dwExtKey][_REGMIME] = NULL;
+                    }
                 }
-                else    {
-                    //ProcessShellProtocol(&aExtension[0], aClassName);
-                }
+                dwExtKey++;
             }
+            while(dwExtKey < dwArraySize);
+            delete [] ppaRegArray;
+            ppaRegArray = NULL;
+            dwArraySize = 0;
         }
     }
-    while(lCheckEnum == ERROR_SUCCESS);
 }
 
 //  Little understood legacy code.
@@ -1794,7 +1815,7 @@ void fe_MimeProtocolHelperInit(void)	{
 
         //  Empty the message queue before we hog the CPU.
         MSG msg;
-        while(::PeekMessage(&msg, NULL, NULL, NULL, PM_NOREMOVE))	{
+        while(::PeekMessage(&msg, NULL, NULL, NULL, PM_NOREMOVE))   {
             BOOL bPumpVal = theApp.NSPumpMessage();
             //  shouldn't be WM_QUIT here, but would like to know.
             ASSERT(bPumpVal);
@@ -1811,3 +1832,77 @@ void fe_MimeProtocolHelperInit(void)	{
     }
 }
 
+DWORD WINAPI regthreadproc(LPVOID *pParam)  {
+    DWORD dwRetval = 0;
+
+    //  Figure out the size of the registry.
+    LONG lQuery = RegQueryInfoKey(HKEY_CLASSES_ROOT, NULL, NULL, NULL, &dwArraySize, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+    if(ERROR_SUCCESS == lQuery)  {
+        //  Allocate enough space for pointers to the info.
+        ppaRegArray = new char *[dwArraySize][_REGMAX];
+        if(ppaRegArray) {
+            memset(ppaRegArray, 0, dwArraySize * _REGMAX * sizeof(char *));
+
+            char aExtension[256] = { '\0' };
+            DWORD dwExtension = 0;
+
+            DWORD dwExtKey = 0;
+            LONG lCheckEnum = ERROR_SUCCESS;
+
+            //  The loop.
+            do  {
+                aExtension[0] = '\0';
+                dwExtension = sizeof(aExtension);
+                lCheckEnum = RegEnumKeyEx(HKEY_CLASSES_ROOT, dwExtKey, aExtension, &dwExtension, NULL, NULL, NULL, NULL);
+                if(lCheckEnum == ERROR_SUCCESS) {
+                    //  Store the name.
+                    ppaRegArray[dwExtKey][_REGNAME] = new char[lstrlen(aExtension) + 1];
+                    if(ppaRegArray[dwExtKey][_REGNAME])    {
+                        lstrcpy(ppaRegArray[dwExtKey][_REGNAME], aExtension);
+
+                        char aClassName[256] = { '\0' };
+                        DWORD dwClassName = sizeof(aClassName);
+
+                        if(GetKeyDefault(aExtension, aClassName, &dwClassName))   {
+                            //  Store the class.
+                            ppaRegArray[dwExtKey][_REGCLASS] = new char[dwClassName];
+                            if(ppaRegArray[dwExtKey][_REGCLASS])    {
+                                lstrcpy(ppaRegArray[dwExtKey][_REGCLASS], aClassName);
+                            }
+                        }
+
+                        char aMime[256] = { '\0' };
+                        DWORD dwMime = sizeof(aMime);
+                        if(GetKeyMime(aExtension, aMime, &dwMime))   {
+                            //  Store it away too.
+                            ppaRegArray[dwExtKey][_REGMIME] = new char[dwMime];
+                            if(ppaRegArray[dwExtKey][_REGMIME]) {
+                                lstrcpy(ppaRegArray[dwExtKey][_REGMIME], aMime);
+                            }
+                        }
+                    }
+                }
+                dwExtKey++;
+            }
+            while(lCheckEnum == ERROR_SUCCESS && dwExtKey < dwArraySize);
+        }
+    }
+
+    return(dwRetval);
+}
+
+void fe_StartRegistryLoop(void) {
+    hRegThread = CreateThread(NULL, 1024, (LPTHREAD_START_ROUTINE)regthreadproc, NULL, 0, &dwRegThreadID);
+}
+
+void fe_EndRegistryLoop(void)   {
+    //  If the thread is still active, terminate it.
+    //  Forget about cleanup, the app should be exiting and we would
+    //      rather not stand in the way.
+    DWORD dwExitCode = 0;
+    if(hRegThread && GetExitCodeThread(hRegThread, &dwExitCode))  {
+        if(STILL_ACTIVE == dwExitCode)  {
+            TerminateThread(hRegThread, 1);
+        }
+    }
+}
