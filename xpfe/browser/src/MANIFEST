@@ -10,7 +10,7 @@ xul.css
 dialogs.css
 navigator.css
 navigator.xul
-saveToDisk.xul
+unknownContent.xul
 viewSource.xul
 downloadProgress.xul
 downloadProgress.css
