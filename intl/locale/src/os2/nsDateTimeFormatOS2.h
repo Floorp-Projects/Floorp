@@ -16,15 +16,12 @@
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
  * Contributor(s): 
- *
+ *   IBM Corp.
  */
 #ifndef _nsdatetimeformatos2_h_
 #define _nsdatetimeformatos2_h_
 
-
 #include "nsIDateTimeFormat.h"
-
-#define kPlatformLocaleLength 64
 
 class nsDateTimeFormatOS2 : public nsIDateTimeFormat {
 
@@ -59,18 +56,9 @@ class nsDateTimeFormatOS2 : public nsIDateTimeFormat {
                                   const PRExplodedTime*  explodedTime, 
                                   nsString& stringOut);
 
-  nsDateTimeFormatOS2() {NS_INIT_REFCNT();
-                         mLocale.SetLength(0);mAppLocale.SetLength(0);}
-
+  nsDateTimeFormatOS2() {NS_INIT_REFCNT();}
 
   virtual ~nsDateTimeFormatOS2() {}
- 
-private: 
-
-  nsString    mLocale;
-  nsString    mAppLocale;
-  nsString    mCharset;          
-  PRUint32    mLCID;
 };
 
 #endif /* nsDateTimeFormatOS2_h__ */

@@ -15,37 +15,21 @@
  * <john_fairhurst@iname.com>.  Portions created by John Fairhurst are
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
- * Contributor(s): Henry Sobotka <sobotka@axess.com> 01/2000 review and update
- *
- * This Original Code has been modified by IBM Corporation.
- * Modifications made by IBM described herein are
- * Copyright (c) International Business Machines
- * Corporation, 2000
- *
- * Modifications to Mozilla code or documentation
- * identified per MPL Section 3.3
- *
- * Date             Modified by     Description of modification
- * 07/05/2000       IBM Corp.       Reworked file.
+ * Contributor(s):
+ *   Henry Sobotka <sobotka@axess.com>
+ *   IBM Corp.
  */
 
-
-#include "unidef.h"
-#include "time.h"
-#include "plstr.h"
-#include "nsIServiceManager.h"
-#include "nsICharsetConverterManager.h"
+#include <unidef.h>
 #include "nsDateTimeFormatOS2.h"
-#include "nsIComponentManager.h"
-#include "nsLocaleCID.h"
-#include "nsILocaleService.h"
-#include "nsIPlatformCharset.h"
-#include "nsIOS2Locale.h"
-#include "nsCOMPtr.h"
-#include "nsCRT.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsDateTimeFormatOS2,nsIDateTimeFormat)
 
+#define NSDATETIME_FORMAT_BUFFER_LEN  80
+
+#ifndef LOCI_iTime
+#define LOCI_iTime   ((LocaleItem)73)
+#endif
 
 nsresult nsDateTimeFormatOS2::FormatTime(nsILocale* locale, 
                                const nsDateFormatSelector  dateFormatSelector, 
@@ -56,11 +40,6 @@ nsresult nsDateTimeFormatOS2::FormatTime(nsILocale* locale,
   return FormatTMTime(locale, dateFormatSelector, timeFormatSelector, localtime( &timetTime ), stringOut);
 }
 
-/* Workaround for GCC problem */
-#ifndef LOCI_sDate
-#define LOCI_sDate ((LocaleItem)63)
-#endif
-
 // performs a locale sensitive date formatting operation on the struct tm parameter
 nsresult nsDateTimeFormatOS2::FormatTMTime(nsILocale* locale, 
                                const nsDateFormatSelector  dateFormatSelector, 
@@ -68,7 +47,6 @@ nsresult nsDateTimeFormatOS2::FormatTMTime(nsILocale* locale,
                                const struct tm*            tmTime, 
                                nsString                   &stringOut)
 {
-#define NSDATETIME_FORMAT_BUFFER_LEN  80
 
   nsresult rc = NS_ERROR_FAILURE;
   UniChar uFmtD[NSDATETIME_FORMAT_BUFFER_LEN] = { 0 };
@@ -78,6 +56,14 @@ nsresult nsDateTimeFormatOS2::FormatTMTime(nsILocale* locale,
   int res = UniCreateLocaleObject(UNI_UCS_STRING_POINTER, (UniChar *)L"", &locObj);
   if (res != ULS_SUCCESS)
     return rc;  
+
+  PRBool f24Hour = PR_FALSE;
+
+  UniQueryLocaleItem(locObj, LOCI_iTime, &pString);
+
+  if (pString[0] == '1') {
+    f24Hour = PR_TRUE;
+  } /* endif */
 
   // set date format
   switch (dateFormatSelector) {
@@ -91,7 +77,7 @@ nsresult nsDateTimeFormatOS2::FormatTMTime(nsILocale* locale,
       UniStrcat( uFmtD, (UniChar*)L"%x");
       break; 
     case kDateFormatYearMonth:
-      UniQueryLocaleItem( locObj, LOCI_sDate, &pString);
+      UniQueryLocaleItem( locObj, DATESEP, &pString);
       UniStrcat( uFmtD, (UniChar*)L"%y");
       UniStrcat( uFmtD, pString);
       UniStrcat( uFmtD, (UniChar*)L"%m");
@@ -110,24 +96,55 @@ nsresult nsDateTimeFormatOS2::FormatTMTime(nsILocale* locale,
       UniStrcat( uFmtT, (UniChar*)L"");
       break;
    case kTimeFormatSeconds:
-      UniStrcat( uFmtT, (UniChar*)L"%r");
+      UniQueryLocaleItem( locObj, TIMESEP, &pString);
+      if (f24Hour)
+        UniStrcat( uFmtT, (UniChar*)L"%H");
+      else
+        UniStrcat( uFmtT, (UniChar*)L"%I");
+      UniStrcat( uFmtT, pString);
+      UniStrcat( uFmtT, (UniChar*)L"%M");
+      UniStrcat( uFmtT, pString);
+      UniStrcat( uFmtT, (UniChar*)L"%S");
+      if (!f24Hour)
+        UniStrcat( uFmtT, (UniChar*)L" %p");
+      UniFreeMem(pString);
       break;
     case kTimeFormatNoSeconds:
-      UniStrcat( uFmtT, (UniChar*)L"%R");
+      UniQueryLocaleItem( locObj, TIMESEP, &pString);
+      if (f24Hour)
+        UniStrcat( uFmtT, (UniChar*)L"%H");
+      else
+        UniStrcat( uFmtT, (UniChar*)L"%I");
+      UniStrcat( uFmtT, pString);
+      UniStrcat( uFmtT, (UniChar*)L"%M");
+      if (!f24Hour)
+        UniStrcat( uFmtT, (UniChar*)L" %p");
+      UniFreeMem(pString);
       break;
     case kTimeFormatSecondsForce24Hour:
-      UniStrcat( uFmtT, (UniChar*)L"%T");
+      UniQueryLocaleItem( locObj, TIMESEP, &pString);
+      UniStrcat( uFmtT, (UniChar*)L"%H");
+      UniStrcat( uFmtT, pString);
+      UniStrcat( uFmtT, (UniChar*)L"%M");
+      UniStrcat( uFmtT, pString);
+      UniStrcat( uFmtT, (UniChar*)L"%S");
+      UniFreeMem(pString);
       break;
     case kTimeFormatNoSecondsForce24Hour:
-      UniStrcat( uFmtT, (UniChar*)L"%R");
+      UniQueryLocaleItem( locObj, TIMESEP, &pString);
+      UniStrcat( uFmtT, (UniChar*)L"%H");
+      UniStrcat( uFmtT, pString);
+      UniStrcat( uFmtT, (UniChar*)L"%M");
+      UniFreeMem(pString);
       break;  
     default: 
       UniStrcat( uFmtT, (UniChar*)L"");
   }
 
- 
-  PRUnichar buffer[NSDATETIME_FORMAT_BUFFER_LEN] = {0};         
-  UniStrcat( uFmtD, (UniChar*)L" ");
+  PRUnichar buffer[NSDATETIME_FORMAT_BUFFER_LEN] = {0};
+  if ((dateFormatSelector != kDateFormatNone) && (timeFormatSelector != kTimeFormatNone)) {
+    UniStrcat( uFmtD, (UniChar*)L" ");
+  } /* endif */
   UniStrcat( uFmtD, uFmtT);
   int length = UniStrftime(locObj, NS_REINTERPRET_CAST(UniChar *, buffer),
                            NSDATETIME_FORMAT_BUFFER_LEN, uFmtD, tmTime);
