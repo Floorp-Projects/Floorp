@@ -213,6 +213,7 @@ void FormatAndPrintOutput(const char *theInput, int theVar, int outputMode)
 	}
 }
 
+
 // stringMsg is returned in case embeddor wishes to use it in the calling method.
 void RequestName(nsIRequest *request, nsCString &stringMsg, 
 						   int displayMethod)

@@ -14,13 +14,13 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is 
+ * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   David Epstein <depstein@netscape.com> 
+ *   David Epstein <depstein@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -68,14 +68,14 @@ public:
 			   CBrowserImpl *mpBrowserImpl);
 	virtual ~CTests();
 
-	
+
 	// Some helper methods
 
 	// Mozilla interfaces
 	//
 	nsCOMPtr<nsIWebBrowser> qaWebBrowser;
 	nsCOMPtr<nsIBaseWindow> qaBaseWindow;
-	nsCOMPtr<nsIWebNavigation> qaWebNav;	
+	nsCOMPtr<nsIWebNavigation> qaWebNav;
 	CBrowserImpl	*qaBrowserImpl;
 
 	// local test methods
@@ -139,6 +139,7 @@ protected:
 	afx_msg void OnInterfacesNsiwebbrowfind();
 	afx_msg void OnInterfacesNsieditingsession();
 	afx_msg void OnInterfacesNsicommandmgr();
+	afx_msg void OnInterfacesNsicmdparams();
 
 	//}}AFX_MSG
 
