@@ -68,6 +68,7 @@ NS_METHOD nsLabel::Create(nsIWidget *aParent,
   unsigned char alignment = GetNativeAlignment();
 
   mWidget = gtk_label_new("");
+  gtk_widget_show(mWidget);
 //  gtk_misc_set_alignment(GTK_MISC(mWidget), alignment);
   gtk_layout_put(GTK_LAYOUT(aParent), mWidget, aRect.x, aRect.y);
 

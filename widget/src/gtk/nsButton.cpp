@@ -61,7 +61,8 @@ NS_METHOD nsButton::Create(nsIWidget        *aParent,
   InitDeviceContext(aContext, parentWidget);
 
   mWidget = gtk_button_new_with_label("");
-  gtk_layout_put(GTK_LAYOUT(aParent), mWidget, aRect.x, aRect.y);
+  gtk_widget_show(mWidget);
+  gtk_layout_put(GTK_LAYOUT(parentWidget), mWidget, aRect.x, aRect.y);
   /*
   mWidget = ::XtVaCreateManagedWidget("button",
                                     xmPushButtonWidgetClass, 
