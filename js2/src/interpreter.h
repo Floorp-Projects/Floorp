@@ -85,6 +85,10 @@ namespace Interpreter {
 
         const JSValue findBinaryOverride(JSValue &operand1, JSValue &operand2, ExprNode::Kind op);
 
+        JSType *findType(const StringAtom& typeName);
+        JSType *extractType(ExprNode *t);
+        JSType *getParameterType(FunctionDefinition &function, int index);
+
     private:
         void broadcast(Event event);
         void initOperatorsPackage();

@@ -124,52 +124,9 @@ namespace ICG {
     };
 
 
+    class ICodeModule;
+
     typedef std::map<uint32, uint32, std::less<uint32> > InstructionMap;
-
-    class ICodeModule {
-    public:
-        ICodeModule(InstructionStream *iCode, VariableList *variables,
-                    ParameterList *parameters,
-                    uint32 maxRegister,
-                    InstructionMap *instructionMap, 
-                    JSType *resultType, uint32 exceptionRegister) :
-            its_iCode(iCode), itsVariables(variables), itsParameters(parameters),
-            itsMaxRegister(maxRegister),
-            mID(++sMaxID), mInstructionMap(instructionMap), 
-            mParameterInit(NULL), 
-            mEntryPoint(0),
-            mResultType(resultType),
-            mExceptionRegister(exceptionRegister)
-        {
-        }
-
-        ~ICodeModule()
-        {
-            delete its_iCode;
-            delete itsVariables;
-            delete mInstructionMap;
-            if (mParameterInit) delete mParameterInit;
-        }
-
-        Formatter& print(Formatter& f);
-        void setFileName (String aFileName) { mFileName = aFileName; }
-        String getFileName () { return mFileName; }
-        
-        InstructionStream *its_iCode;
-        VariableList *itsVariables;
-        ParameterList *itsParameters;
-        uint32 itsMaxRegister;
-        uint32 mID;
-        InstructionMap *mInstructionMap;
-        String mFileName;
-        uint32 *mParameterInit;
-        uint32 mEntryPoint;
-        JSType *mResultType;
-        uint32 mExceptionRegister;
-
-        static uint32 sMaxID;
-        
-    };
 
     typedef std::vector<const StringAtom *> LabelSet;
     class LabelEntry {
@@ -198,6 +155,7 @@ namespace ICG {
     
     class ICodeGenerator {
     public:
+        friend ICodeModule;
         typedef enum { kNoFlags = 0, kIsTopLevel = 0x01, kIsStaticMethod = 0x02, kIsWithinWith = 0x04 } ICodeGeneratorFlags;
     private:
         InstructionStream *iCode;
@@ -221,6 +179,7 @@ namespace ICG {
 
         const StringAtom &mInitName;
         ICodeGenerator *mContainingFunction;// outer function for nested functions
+        JSType *mResultType;
 
         std::vector<bool> mPermanentRegister;
 
@@ -241,7 +200,6 @@ namespace ICG {
 
         TypedRegister allocateRegister(JSType *type);
 
-        JSType *findType(const StringAtom& typeName);
 
 
         void addParameterLabel(Label *label)    { if (pLabels == NULL) pLabels = new LabelList(); pLabels->push_back(label); }
@@ -289,7 +247,11 @@ namespace ICG {
 
     public:
 
-        ICodeGenerator(Context *cx, ICodeGenerator *containingFunction = NULL, JSClass *aClass = NULL, ICodeGeneratorFlags flags = kIsTopLevel);
+        ICodeGenerator(Context *cx, 
+                            ICodeGenerator *containingFunction = NULL, 
+                            JSClass *aClass = NULL, 
+                            ICodeGeneratorFlags flags = kIsTopLevel,
+                            JSType *resultType = &Any_Type);
         
         ~ICodeGenerator()
         {
@@ -300,11 +262,8 @@ namespace ICG {
             }
         }
                 
-        ICodeModule *complete(JSType *resultType);
+        ICodeModule *complete();
         ICodeModule *readICode(const char *fileName);
-
-        JSType *extractType(ExprNode *t);
-        JSType *getParameterType(FunctionDefinition &function, int index);
     
         TypedRegister genExpr(ExprNode *p, 
                                 bool needBoolValueInBranch = false, 
@@ -322,10 +281,7 @@ namespace ICG {
             return allocateVariable(name, &Any_Type);
         }
         
-        TypedRegister allocateVariable(const StringAtom& name, const StringAtom& typeName)
-        {
-            return allocateVariable(name, findType(typeName));
-        }
+        TypedRegister allocateVariable(const StringAtom& name, const StringAtom& typeName);
         
         TypedRegister allocateVariable(const StringAtom& name, JSType *type)
         { 
@@ -345,10 +301,7 @@ namespace ICG {
             return allocateParameter(name, isOptional, &Any_Type);
         }
         
-        TypedRegister allocateParameter(const StringAtom& name, bool isOptional, const StringAtom& typeName)
-        {
-            return allocateParameter(name, isOptional, findType(typeName));
-        }
+        TypedRegister allocateParameter(const StringAtom& name, bool isOptional, const StringAtom& typeName);
         
         TypedRegister allocateParameter(const StringAtom& name, bool isOptional, JSType *type)
         { 
@@ -421,10 +374,63 @@ namespace ICG {
     Formatter& operator<<(Formatter &f, ICodeGenerator &i);
     Formatter& operator<<(Formatter &f, ICodeModule &i);
     Formatter& operator<<(Formatter &f, std::string &s);
-    /*
-      std::ostream &operator<<(std::ostream &s, ICodeGenerator &i);
-      std::ostream &operator<<(std::ostream &s, StringAtom &str);
-    */
+
+    class ICodeModule {
+    public:
+        ICodeModule(InstructionStream *iCode, VariableList *variables,
+                    ParameterList *parameters,
+                    uint32 maxRegister,
+                    InstructionMap *instructionMap, 
+                    JSType *resultType, uint32 exceptionRegister) :
+            its_iCode(iCode), itsVariables(variables), itsParameters(parameters),
+            itsMaxRegister(maxRegister),
+            mID(++sMaxID), mInstructionMap(instructionMap), 
+            mParameterInit(NULL), 
+            mEntryPoint(0),
+            mResultType(resultType),
+            mExceptionRegister(exceptionRegister)
+        {
+        }
+
+        ICodeModule(ICodeGenerator &icg) :
+            its_iCode(icg.iCode), itsVariables(icg.variableList), itsParameters(icg.parameterList),
+            itsMaxRegister(icg.mPermanentRegister.size()),
+            mID(++sMaxID), mInstructionMap(icg.mInstructionMap), 
+            mParameterInit(NULL), 
+            mEntryPoint(0),
+            mResultType(icg.mResultType),
+            mExceptionRegister(icg.mExceptionRegister.first)
+        {
+        }
+
+
+        ~ICodeModule()
+        {
+            delete its_iCode;
+            delete itsVariables;
+            delete mInstructionMap;
+            if (mParameterInit) delete mParameterInit;
+        }
+
+        Formatter& print(Formatter& f);
+        void setFileName (String aFileName) { mFileName = aFileName; }
+        String getFileName () { return mFileName; }
+        
+        InstructionStream *its_iCode;
+        VariableList *itsVariables;
+        ParameterList *itsParameters;
+        uint32 itsMaxRegister;
+        uint32 mID;
+        InstructionMap *mInstructionMap;
+        String mFileName;
+        uint32 *mParameterInit;
+        uint32 mEntryPoint;
+        JSType *mResultType;
+        uint32 mExceptionRegister;
+
+        static uint32 sMaxID;
+        
+    };
 
 
 

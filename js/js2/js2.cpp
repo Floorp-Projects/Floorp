@@ -361,13 +361,13 @@ static void testCompile()
         Arena a;
         Parser p(world, a, testScript, widenCString("testCompile"));
         StmtNode *parsedStatements = p.parseProgram();
-        ICodeGenerator icg(&cx);
+        ICodeGenerator icg(&cx, NULL, NULL, ICodeGenerator::kIsTopLevel, &Void_Type);
         StmtNode *s = parsedStatements;
         while (s) {
             icg.genStmt(s);
             s = s->next;
         }
-        JSValue result = cx.interpret(icg.complete(&Void_Type), JSValues());
+        JSValue result = cx.interpret(icg.complete(), JSValues());
         stdOut << "result = " << result << "\n";
     }
 }

@@ -82,9 +82,9 @@ ICodeModule* Context::compileFunction(const String &source)
     String filename = widenCString("Some source source");
     Parser p(getWorld(), a, source, filename);
     ExprNode* e = p.parseExpression(false);
-    ICodeGenerator icg(this);
     ASSERT(e->getKind() == ExprNode::functionLiteral);
     FunctionExprNode* f = static_cast<FunctionExprNode*>(e);
+    ICodeGenerator icg(this, NULL, NULL, ICodeGenerator::kIsTopLevel, extractType(f->function.resultType));
     icg.allocateParameter(getWorld().identifiers["this"], false);   // always parameter #0
     VariableBinding* v = f->function.parameters;
     while (v) {
@@ -93,7 +93,7 @@ ICodeModule* Context::compileFunction(const String &source)
         v = v->next;
     }
     icg.genStmt(f->function.body);
-    ICodeModule* result = icg.complete(icg.extractType(f->function.resultType));
+    ICodeModule* result = icg.complete();
     result->setFileName(filename);
     return result;
 }
@@ -143,7 +143,7 @@ JSValue Context::readEvalFile(FILE* in, const String& fileName)
 
 ICodeModule* Context::genCode(StmtNode *p, const String &fileName)
 {
-    ICodeGenerator icg(this);
+    ICodeGenerator icg(this, NULL, NULL, ICodeGenerator::kIsTopLevel, &Void_Type);
     
     TypedRegister ret(NotARegister, &None_Type);
     while (p) {
@@ -152,7 +152,7 @@ ICodeModule* Context::genCode(StmtNode *p, const String &fileName)
     }
     icg.returnStmt(ret);
 
-    ICodeModule *icm = icg.complete(&Void_Type);
+    ICodeModule *icm = icg.complete();
     icm->setFileName(fileName);
     return icm;
 }
@@ -1594,6 +1594,40 @@ void Context::broadcast(Event event)
         listener->listen(this, event);
     }
 }
+
+
+/* Helper functions for extracting types from expression trees */
+JSType *Context::findType(const StringAtom& typeName) 
+{
+    const JSValue& type = getGlobalObject()->getVariable(typeName);
+    if (type.isType())
+        return type.type;
+    return &Any_Type;
+}
+
+JSType *Context::extractType(ExprNode *t)
+{
+    JSType* type = &Any_Type;
+    if (t && (t->getKind() == ExprNode::identifier)) {
+        IdentifierExprNode* typeExpr = static_cast<IdentifierExprNode*>(t);
+        type = findType(typeExpr->name);
+    }
+    return type;
+}
+
+JSType *Context::getParameterType(FunctionDefinition &function, int index)
+{
+    VariableBinding *v = function.parameters;
+    while (v) {
+        if (index-- == 0)
+            return extractType(v->type);
+        else
+            v = v->next;
+    }
+    return NULL;
+}
+
+
 
 Context::Frame* Context::getFrames()
 {
