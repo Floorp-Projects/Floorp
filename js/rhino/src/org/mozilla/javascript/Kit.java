@@ -110,8 +110,9 @@ public class Kit
     /**
      * If initCause methods exists in Throwable, call
      * <tt>ex.initCause(cause)</tt> or otherwise do nothing.
+     * @return The <tt>ex</tt> argument.
      */
-    public static void initCauseOrIgnore(Throwable ex, Throwable cause)
+    public static Throwable initCause(Throwable ex, Throwable cause)
     {
         if (Throwable_initCause != null) {
             Object[] args = { cause };
@@ -121,6 +122,7 @@ public class Kit
                 // Ignore any exceptions
             }
         }
+        return ex;
     }
 
     /**
