@@ -204,6 +204,11 @@ static PRUint16 gPair[MAX_CLASSES] = {
 
 #define IS_HALFWIDTH_IN_JISx4501_CLASS3(u) ((0xff66 <= (u)) && ((u) <= 0xff70))
 
+#define IS_CJK_CHAR(u) ((0x1100 <= (u) && (u) <= 0x11ff) || \
+	                     (0x2e80 <= (u) && (u) <= 0xd7ff) || \
+								(0xf900 <= (u) && (u) <= 0xfaff) )
+
+#define IS_SPACE(u) ((u) == 0x0020 || (u) == 0x0009)
 
 PRInt8 nsJISx4501LineBreaker::GetClass(PRUnichar u)
 {
@@ -356,6 +361,32 @@ NS_IMETHODIMP nsJISx4501LineBreaker::BreakInBetween(
      return NS_OK;
   }
 
+  //search for CJK characters until a space is found. 
+  //if CJK char is found before space, use 4051, otherwise western
+  PRInt32 cur;
+
+  for (cur= aTextLen1-1; cur>=0; cur--)
+  {
+	  if (IS_SPACE(aText1[cur]))
+		  break;
+	  if (IS_CJK_CHAR(aText1[cur]))
+		  goto ROUTE_CJK_BETWEEN;
+  }
+
+  for (cur= 0; cur < (PRInt32)aTextLen2; cur++)
+  {
+	  if (IS_SPACE(aText2[cur]))
+		  break;
+	  if (IS_CJK_CHAR(aText2[cur]))
+		  goto ROUTE_CJK_BETWEEN;
+  }
+
+  //now apply western rule.
+  *oCanBreak = (IS_SPACE(aText1[aTextLen1-1]) || IS_SPACE(aText2[0]));
+  return NS_OK;
+
+ROUTE_CJK_BETWEEN:
+
   PRInt8 c1, c2;
   if(NEED_CONTEXTUAL_ANALYSIS(aText1[aTextLen1-1]))
     c1 = this->ContextualAnalysis((aTextLen1>1)?aText1[aTextLen1-2]:0,
@@ -409,8 +440,28 @@ NS_IMETHODIMP nsJISx4501LineBreaker::Next(
      return NS_OK;
   }
 
-  PRInt8 c1, c2;
+  //forward check for CJK characters until a space is found. 
+  //if CJK char is found before space, use 4051, otherwise western
   PRUint32 cur = aPos;
+
+  for (cur= aPos; cur<(PRInt32)aLen; cur++)
+  {
+	  if (IS_SPACE(aText[cur]))
+	  {
+        *oNext = cur;
+        *oNeedMoreText = PR_FALSE;
+        return NS_OK;
+	  }
+	  if (IS_CJK_CHAR(aText[cur]))
+		  goto ROUTE_CJK_NEXT;
+  }
+  *oNext = aLen;
+  *oNeedMoreText = PR_TRUE;
+  return NS_OK;
+
+ROUTE_CJK_NEXT:
+  PRInt8 c1, c2;
+  cur = aPos;
   if(NEED_CONTEXTUAL_ANALYSIS(aText[cur]))
   {
     c1 = this->ContextualAnalysis((cur>0)?aText[cur-1]:0,
@@ -471,8 +522,40 @@ NS_IMETHODIMP nsJISx4501LineBreaker::Prev(
      return NS_OK;
   }
 
+  //backward check for CJK characters until a space is found. 
+  //if CJK char is found before space, use 4051, otherwise western
+  PRUint32 cur;
+
+  cur = aPos-1;
+  if (IS_SPACE(aText[cur]))
+  {
+        *oPrev = cur;
+        *oNeedMoreText = PR_FALSE;
+        return NS_OK;
+  }
+  else if (IS_CJK_CHAR(aText[cur]))
+		  goto ROUTE_CJK_PREV;
+
+  for (; cur>0; )
+  {
+	  cur--;
+	  if (IS_SPACE(aText[cur]))
+	  {
+        *oPrev = cur+1;
+        *oNeedMoreText = PR_FALSE;
+        return NS_OK;
+	  }
+	  if (IS_CJK_CHAR(aText[cur]))
+		  goto ROUTE_CJK_PREV;
+  }
+
+  *oPrev = 0;
+  *oNeedMoreText = PR_TRUE;
+  return NS_OK;
+
+ROUTE_CJK_PREV:
+  cur = aPos;
   PRInt8 c1, c2;
-  PRUint32 cur = aPos;
   if(NEED_CONTEXTUAL_ANALYSIS(aText[cur-1]))
   {
     c2 = this->ContextualAnalysis(((cur-1)>0)?aText[cur-2]:0,
