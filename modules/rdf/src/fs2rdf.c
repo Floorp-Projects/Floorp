@@ -25,6 +25,7 @@
 #include "atalk.h"
 #include "fs2rdf.h"
 #include "glue.h"
+#include "mcf.h"
 
 	/* external string references in allxpstr */
 extern	int	RDF_UNABLETODELETEFILE, RDF_UNABLETODELETEFOLDER;
@@ -59,6 +60,7 @@ GuessIEBookmarks (void)
       }
       freeMem(pn);
     }
+    PR_DELETE(ProfilesDir);
   }
 #endif
 }

@@ -75,6 +75,7 @@ walkThroughAllBookmarks (RDF_Resource u)
   while ((next = RDF_NextValue(c)) != NULL) {
     if (resourceType(next) == RDF_RT) walkThroughAllBookmarks(next);
   }
+  freeMem(c);
 #endif
 }
 
@@ -118,8 +119,6 @@ RDF_Init(RDF_InitParams params)
   PREF_CopyCharPref("browser.NavCenter", &navCenterURL);
   if (!strchr(navCenterURL, ':')) {
     navCenterURL = makeDBURL(navCenterURL);
-  } else {
-    copyString(navCenterURL);
   }
   *(gNavCenterDataSources + 1) = copyString(navCenterURL);
   gNCDB = newNavCenterDB();

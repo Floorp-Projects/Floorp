@@ -131,6 +131,7 @@ DBM_OpenDBMStore (DBMRDF store, char* directory)
   CHECK_VAR1(profileDirURL);
   dirPathname = makeDBURL(directory);
   CallPRMkDirUsingFileURL(dirPathname, 00700);  
+  freeMem(dirPathname);
 
   dbPathname =  makeRDFDBURL(directory, "names.db");
   CHECK_VAR1(dbPathname);
