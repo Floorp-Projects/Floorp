@@ -39,6 +39,7 @@ VPATH            = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= autoconfig
 DIRS             = public resources src
 
 include $(topsrcdir)/config/rules.mk

@@ -26,6 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= zlib
 DIRS		= src
 
 include $(topsrcdir)/config/rules.mk

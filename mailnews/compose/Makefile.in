@@ -26,6 +26,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= msgcompose
+
 DIRS		= public src
 
 ifndef MOZ_STATIC_MAIL_BUILD

@@ -26,6 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= content
 DIRS		= base html xml xul xbl xsl
 
 ifdef MOZ_SVG

@@ -26,6 +26,7 @@ VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= transformiix
 DIRS            = source
 ifndef TX_EXE
 DIRS += build resources

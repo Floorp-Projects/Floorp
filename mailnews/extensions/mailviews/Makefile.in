@@ -26,6 +26,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= mailview
+
 DIRS		= public src resources
 
 ifndef MOZ_STATIC_MAIL_BUILD

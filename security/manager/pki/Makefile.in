@@ -25,6 +25,7 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
+MODULE		= pippki
 DIRS		= public resources src
 
 include $(topsrcdir)/config/rules.mk

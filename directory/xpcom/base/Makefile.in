@@ -38,6 +38,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= mozldap
 DIRS		= public src resources
 
 include $(topsrcdir)/config/rules.mk

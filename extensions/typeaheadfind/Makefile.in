@@ -31,6 +31,7 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= typeaheadfind
 DIRS		= public src resources
 
 include $(topsrcdir)/config/rules.mk

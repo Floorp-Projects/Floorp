@@ -25,6 +25,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= xremoteservice
 DIRS		= src
 
 include $(topsrcdir)/config/rules.mk

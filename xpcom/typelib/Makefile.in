@@ -26,6 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= xpcom
 DIRS		= xpt xpidl
 
 include $(topsrcdir)/config/rules.mk

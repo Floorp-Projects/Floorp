@@ -26,6 +26,7 @@ VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE	= accessibility
 DIRS    = public src build
 
 include $(topsrcdir)/config/rules.mk

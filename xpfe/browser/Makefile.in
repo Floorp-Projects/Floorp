@@ -26,6 +26,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= browser
+
 DIRS		= src samples resources
 
 include $(topsrcdir)/config/rules.mk

@@ -26,6 +26,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= unicharutil
+
 DIRS		= idl public util src tables
 
 ifdef ENABLE_TESTS

@@ -38,6 +38,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= xpconnect
 DIRS		= public idl
 
 ifdef MOZ_JSLOADER

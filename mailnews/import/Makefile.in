@@ -26,6 +26,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= import
+
 DIRS		= public src text comm4x
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))

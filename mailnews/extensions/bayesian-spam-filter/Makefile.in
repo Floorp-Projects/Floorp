@@ -43,6 +43,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= bayesflt
+
 DIRS=src
 
 ifndef MOZ_STATIC_MAIL_BUILD

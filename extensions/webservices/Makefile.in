@@ -26,6 +26,7 @@ VPATH       = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE	= websrvcs
 DIRS	= public security schema soap interfaceinfo wsdl proxy build
 
 include $(topsrcdir)/config/rules.mk

@@ -26,6 +26,7 @@ VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= xmlextras
 DIRS            = base pointers build
 
 ifdef ENABLE_TESTS
