@@ -343,8 +343,11 @@
         <xul:spacer class="tabs-left"/>
         <xul:toolbarbutton class="tabs-newbutton" xbl:inherits="oncommand=onnewtab,tooltiptext=tooltiptextnew"/>
       </xul:stack>
-      <children/>
-      <xul:stack flex="1">
+      <xul:hbox flex="1" style="min-width: 1px;">
+        <children/>
+        <xul:spacer class="tabs-right" flex="1"/>
+      </xul:hbox>
+      <xul:stack>
         <xul:spacer class="tabs-right"/>
         <xul:hbox class="tabs-closebutton-box" align="center" pack="end">
           <xul:toolbarbutton class="tabs-closebutton close-button" xbl:inherits="disabled=disableclose,oncommand=onclosetab"/>
