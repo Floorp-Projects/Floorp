@@ -12,7 +12,7 @@
         chrome:displayName="English(US)"
         chrome:author="mozilla.org"
         chrome:name="en-US"
-        chrome:localeVersion="1.5b"
+        chrome:localeVersion="@MOZILLA_LOCALE_VERSION@"
         chrome:previewURL="http://www.mozilla.org/locales/en-US.gif">
     <chrome:packages>
       <RDF:Seq about="urn:mozilla:locale:en-US:packages">
