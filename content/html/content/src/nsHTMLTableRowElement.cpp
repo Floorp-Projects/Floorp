@@ -537,9 +537,9 @@ nsHTMLTableRowElement::StringToAttribute(nsIAtom* aAttribute,
     }
   }
   else if (aAttribute == nsHTMLAtoms::width) {
-    /* attributes that resolve to integers or percents or proportions */
+    /* attributes that resolve to integers or percents */
 
-    if (ParseValueOrPercentOrProportional(aValue, aResult, eHTMLUnit_Pixel)) {
+    if (ParseValueOrPercent(aValue, aResult, eHTMLUnit_Pixel)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }

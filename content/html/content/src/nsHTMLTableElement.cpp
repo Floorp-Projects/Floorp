@@ -996,7 +996,7 @@ nsHTMLTableElement::StringToAttribute(nsIAtom* aAttribute,
   else if (aAttribute == nsHTMLAtoms::width) {
     /* attributes that resolve to integers or percents or proportions */
 
-    if (ParseValueOrPercentOrProportional(aValue, aResult, eHTMLUnit_Pixel)) {
+    if (ParseValueOrPercent(aValue, aResult, eHTMLUnit_Pixel)) {
       // treat 0 width as auto
       nsHTMLUnit unit = aResult.GetUnit();
       if ((eHTMLUnit_Pixel == unit) && (0 == aResult.GetPixelValue())) {
