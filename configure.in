@@ -171,6 +171,7 @@ AC_SUBST(GNU_CXX)
 
 dnl set the defaults first
 dnl ========================================================
+AR='ar cr $@'
 AS=
 AS_DASH_C_FLAG='-c'
 NS_USE_NATIVE=
@@ -268,6 +269,7 @@ case "$target" in
        MKSHLIB_FORCE_ALL='-z allextract'
        MKSHLIB_UNFORCE_ALL=''
        DSO_LDOPTS='-G -h $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
+       AR='$(CXX) -xar -o $@'
        AS='/usr/ccs/bin/as'
        AS_DASH_C_FLAG=''
 
@@ -761,6 +763,10 @@ then
 	case "$target" in
 	    *-*-solaris*) 
     			AC_DEFINE(_REENTRANT) 
+			if test ! "$GNU_CC"; then
+				CFLAGS="$CFLAGS -mt" 
+				CXXFLAGS="$CXXFLAGS -mt" 
+			fi
 			;;
 
 	    *-*-linux*) 
@@ -769,17 +775,11 @@ then
 
 	    alpha*-*-osf*)
 			AC_DEFINE(_REENTRANT)
-dnl			if test ! "$GNU_CC"; then
-dnl				CFLAGS="$CFLAGS -pthread" 
-dnl				CXXFLAGS="$CXXFLAGS -pthread" 
-dnl			fi
 			;;
 
 	    *-*-freebsd*)
 			AC_DEFINE(_REENTRANT)
 			AC_DEFINE(_THREAD_SAFE)
-dnl			CFLAGS="$CFLAGS -pthread"
-dnl			CXXFLAGS="$CXXFLAGS -pthread"
 			dnl -pthread links in -lc_r, so don't specify it explicitly.
 			if test "$ac_cv_have_dash_pthread" = "yes"; then
 				PTHREAD_LDFLAGS=""
@@ -1427,6 +1427,7 @@ MOZ_ARG_DISABLE_BOOL(static,
   NO_STATIC_LIB=1)
 
 
+AC_SUBST(AR)
 AC_SUBST(AS)
 AC_SUBST(ASFLAGS)
 AC_SUBST(AS_DASH_C_FLAG)

@@ -82,9 +82,10 @@ XCFLAGS		= @XCFLAGS@
 XLDFLAGS	= @XLDFLAGS@
 XLIBS		= @XLIBS@
 
-AS			= @AS@
-ASFLAGS     = @ASFLAGS@
-AS_DASH_C_FLAG = @AS_DASH_C_FLAG@
+AR		= @AR@
+AS		= @AS@
+ASFLAGS		= @ASFLAGS@
+AS_DASH_C_FLAG	= @AS_DASH_C_FLAG@
 
 # Temp hack.  It is not my intention to leave this crap in here for ever.
 # Im talking to fur right now to solve the problem without introducing 

@@ -231,7 +231,6 @@ INSTALL		= $(NSINSTALL)
 JAVA_PROG	= java
 else
 PATH_SEPARATOR	:= :
-AR		= ar cr $@
 ifndef USE_AUTOCONF
 DLL_SUFFIX	= so
 endif
