@@ -98,13 +98,6 @@ public:
 		return nsnull == aSurface ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
 		}
 
-	inline
-  NS_IMETHODIMP ConvertPixel(nscolor aColor, PRUint32 & aPixel)
-		{
-		aPixel = NS_TO_PH_RGB(aColor);
-		return NS_OK;
-		}
-
   NS_IMETHOD  CheckFontExistence(const nsString& aFontName);
 
   NS_IMETHOD  GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight);

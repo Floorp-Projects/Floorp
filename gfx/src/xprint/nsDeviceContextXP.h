@@ -78,7 +78,6 @@ public:
   NS_IMETHOD  GetScrollBarDimensions(float &aWidth, float &aHeight) const;
 
   NS_IMETHOD         CheckFontExistence(const nsString& aFontName);
-  NS_IMETHOD         ConvertPixel(nscolor aColor, PRUint32 & aPixel);
 
   NS_IMETHOD         GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight);
   NS_IMETHOD         GetRect(nsRect &aRect);

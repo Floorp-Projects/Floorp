@@ -443,15 +443,6 @@ NS_IMETHODIMP nsDeviceContextGTK::GetSystemFont(nsSystemFontID aID, nsFont *aFon
   return status;
 }
 
-NS_IMETHODIMP nsDeviceContextGTK::ConvertPixel(nscolor aColor, 
-                                               PRUint32 & aPixel)
-{
-  aPixel = ::gdk_rgb_xpixel_from_rgb (NS_TO_GDK_RGB(aColor));
-
-  return NS_OK;
-}
-
-
 NS_IMETHODIMP nsDeviceContextGTK::CheckFontExistence(const nsString& aFontName)
 {
   return NS_FontMetricsFamilyExists(this, aFontName);

@@ -372,21 +372,6 @@ NS_IMETHODIMP nsDeviceContextXp::EndPage(void)
   return mPrintContext->EndPage();
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsIDeviceContext.h
- *        @update 12/21/98 dwc
- */
-NS_IMETHODIMP nsDeviceContextXp :: ConvertPixel(nscolor aColor, 
-                                                        PRUint32 & aPixel)
-{
-  PR_LOG(nsDeviceContextXpLM, PR_LOG_DEBUG, ("nsDeviceContextXp::ConvertPixel()\n"));
-  aPixel = xxlib_rgb_xpixel_from_rgb(GetXlibRgbHandle(),
-                                     NS_RGB(NS_GET_B(aColor),
-                                            NS_GET_G(aColor),
-                                            NS_GET_R(aColor)));
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsDeviceContextXp::GetPrintContext(nsXPrintContext*& aContext)
 {

@@ -267,19 +267,6 @@ NS_IMETHODIMP nsDeviceContextBeOS::GetSystemFont(nsSystemFontID aID, nsFont *aFo
   return status;
 }
 
-NS_IMETHODIMP nsDeviceContextBeOS::ConvertPixel(nscolor aColor, 
-                                               PRUint32 & aPixel)
-{
-       // koehler@mythrium.com: 
-       // I think this fill the 32 bits pixel with the desired color 
-       // It's possible that the nscolor is not representing that color 
-       // if you just dump it inside a 32 bits value. 
-  aPixel = aColor;
-
-  return NS_OK;
-}
-
-
 NS_IMETHODIMP nsDeviceContextBeOS::CheckFontExistence(const nsString& aFontName)
 {
   return nsFontMetricsBeOS::FamilyExists(aFontName); 

@@ -504,18 +504,6 @@ NS_IMETHODIMP nsDeviceContextPS::EndPage(void)
   return NS_OK;
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsIDeviceContext.h
- *	@update 12/21/98 dwc
- */
-NS_IMETHODIMP nsDeviceContextPS::ConvertPixel(nscolor aColor, PRUint32 & aPixel)
-{
-  PR_LOG(nsDeviceContextPSLM, PR_LOG_DEBUG, ("nsDeviceContextPS::ConvertPixel()\n"));
-
-  aPixel = aColor;
-  return NS_OK;
-}
-
 class nsFontCachePS : public nsFontCache
 {
 public:

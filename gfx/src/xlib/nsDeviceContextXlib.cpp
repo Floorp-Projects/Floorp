@@ -365,16 +365,6 @@ NS_IMETHODIMP nsDeviceContextXlib::GetSystemFont(nsSystemFontID anID, nsFont *aF
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextXlib::ConvertPixel(nscolor aColor, PRUint32 & aPixel)
-{
-  PR_LOG(DeviceContextXlibLM, PR_LOG_DEBUG, ("nsDeviceContextXlib::ConvertPixel()\n"));
-  aPixel = xxlib_rgb_xpixel_from_rgb(mXlibRgbHandle,
-                                     NS_RGB(NS_GET_B(aColor),
-                                            NS_GET_G(aColor),
-                                            NS_GET_R(aColor)));
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsDeviceContextXlib::CheckFontExistence(const nsString& aFontName)
 {
   return nsFontMetricsXlib::FamilyExists(mFontMetricsContext, aFontName);
