@@ -31,18 +31,7 @@ print_header() {
 }
 
 ac_add_options() {
-  for _opt
-  do
-    # Escape shell characters, space, tab, dollar, quote, backslash,
-    # and substitute '@<word>@' with '$(<word)'.
-    _opt=`echo $_opt | sed -e 's/\([\ \	\$\"\\]\)/\\\\\1/g; s/@\([^@]*\)@/\$(\1)/g;'`
-    case "$_opt" in
-      --with-nspr=* )       echo MOZ_WITH_NSPR=`expr $_opt : ".*=\(.*\)"` ;;
-      --with-pthreads=no )  echo MOZ_WITHOUT_PTHREADS=1 ;;
-      --without-pthreads )  echo MOZ_WITHOUT_PTHREADS=1 ;;
-      --*-* )               echo "# $_opt is not used by client.mk" ;;
-    esac
-  done
+  echo "# $* is not used by client.mk"
 }
 
 mk_add_options() {
