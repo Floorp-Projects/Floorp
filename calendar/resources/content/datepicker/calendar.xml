@@ -95,8 +95,7 @@
 			onset="this.update(val)"/>
 			
 		<property name="onchange"/>
-      <property name="onchangecallback"/>
-		
+      
 		<constructor>
 			<![CDATA[
         if (!this.mInitialized) {

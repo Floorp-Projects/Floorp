@@ -63,6 +63,7 @@ const extensionRtf      = ".rtf";
 const filterHtml        = "HTML Files";
 const extensionHtml     = ".html";
 const filterCsv         = "Comma Separated";
+const filterOutlookCsv  = "Outlook Comma Separated";
 const extensionCsv      = ".csv";
 const filterRdf         = "iCalendar RDF";
 const extensionRdf      = ".rdf";
@@ -103,7 +104,7 @@ function loadEventsFromFile()
    
    fp.appendFilter( filterCalendar, "*" + extensionCalendar );
    fp.appendFilter( filterXcs, "*" + extensionXcs );
-   
+   fp.appendFilter( filterOutlookCsv, "*" + extensionCsv );
    fp.show();
 
    if (fp.file && fp.file.path.length > 0) 
@@ -117,6 +118,9 @@ function loadEventsFromFile()
          break;
       case 1 : // xcs
          calendarEventArray = parseXCSData( aDataStream );
+         break;
+      case 2: // csv
+         calendarEventArray = parseOutlookCSVData( aDataStream );
          break;
       }
    
@@ -281,6 +285,99 @@ function initCalendarEvent( calendarEvent )
    calendarEvent.end.setTime( endDateTime );
 }
 
+
+function datesAreEqual(icalDate, date) {
+
+  if (
+      icalDate.month  == date.getMonth() &&
+      icalDate.day    == date.getDate()  &&
+      icalDate.year   == date.getFullYear() &&
+      icalDate.hour   == date.getHours() &&
+      icalDate.minute == date.getMinutes())
+    return true;
+  else
+    return false;
+}
+
+function entryExists( date, subject) {
+
+  var events = gCalendarWindow.eventSource.getEventsForDay( date );
+
+  var ret = false;
+
+  if (events.length == 0)
+    return false;
+
+  for (var i = 0; i < events.length; i++) {
+
+    var event = events[i].event;
+
+    if ( event.title == subject && datesAreEqual(event.start, date)) {
+      ret = true;
+      break;
+    }
+  }
+
+  return ret;
+}
+
+/**** parseOutlookCSVData
+ *
+ * Takes a text block of iCalendar events and tries to split that into individual events.
+ * Parses those events and returns an array of calendarEvents.
+ */
+ 
+function parseOutlookCSVData( icalStr )
+{
+  var lines = icalStr.split("\n");
+  var calendarEvent;
+  var calendarEventArray = new Array();
+  var lineIndex = 1;
+  var totalLines = lines.length-1;
+
+  var skipped = 0, added = 0;
+
+  while (lineIndex < totalLines) {
+
+    var fields = lines[lineIndex].split('","');
+
+    fields[0] = fields[0].substring(1);
+
+    dump(fields[0] + "\n");
+    dump(fields[1] + "\n");
+    dump(fields[2] + "\n");
+    dump(fields[3] + "\n");
+    dump(fields[4] + "\n");
+    dump("\n");
+
+    var title = fields[0];
+    var stime = new Date(fields[1] + " " + fields[2]);
+    var etime = new Date(fields[3] + " " + fields[4]);
+
+
+    if (!entryExists(stime, title)) {
+      
+      calendarEvent = createEvent();
+      calendarEvent.id = createUniqueID( );
+      calendarEvent.title = title;
+      calendarEvent.start.setTime(stime);
+      calendarEvent.end.setTime(etime);
+      
+      calendarEventArray[ calendarEventArray.length ] = calendarEvent;
+      dump("added: " + title);
+
+      ++added;
+    }
+    else
+      ++skipped;
+
+    ++lineIndex;
+  }
+
+  alert("Skipped: " + skipped + ", added: " + added);
+
+  return calendarEventArray;
+}
 
 /**** parseIcalData
  *
