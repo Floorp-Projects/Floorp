@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE window SYSTEM "chrome://content-packs/locale/prefOverlay.dtd">
+
+<overlay id="contentPackPrefOverlay"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <treechildren id="appearanceChildren">
+    <treeitem id="content-packs-panel" insertafter="themes-panel">
+      <treerow>
+        <treecell class="treecell-indent" url="chrome://content-packs/content/pref-contentpacks.xul" label="&sample.label;"/>
+      </treerow>
+    </treeitem>
+  </treechildren>
+        
+</overlay>
+
+
