@@ -32,6 +32,7 @@
 #include "nsScriptSecurityManager.h"
 #include "nsIAggregatePrincipal.h"
 #include "nsXPIDLString.h"
+#include "nsDirectoryServiceDefs.h"
 
 #ifdef NS_USE_CACHE_MANAGER_FOR_JAR
 #include "nsINetDataCacheManager.h"
@@ -539,7 +540,7 @@ nsJARChannel::GetCacheFile(nsIFile* *cacheFile)
     nsresult rv;
 
     nsCOMPtr<nsIFile> jarCacheFile;
-    rv = NS_GetSpecialDirectory("xpcom.currentProcess.componentDirectory",
+    rv = NS_GetSpecialDirectory(NS_XPCOM_COMPONENT_DIR,
                                 getter_AddRefs(jarCacheFile));
     if (NS_FAILED(rv)) return rv;
 

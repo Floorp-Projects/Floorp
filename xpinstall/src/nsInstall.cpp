@@ -38,6 +38,7 @@
 #include "nsFileStream.h"
 #include "nsSpecialSystemDirectory.h"
 #include "nsDirectoryService.h"
+#include "nsDirectoryServiceDefs.h"
 
 #include "nsIPref.h"
 
@@ -2436,7 +2437,7 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsIFile* aSuggestedName,
     {
         NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_PROGID, &rv);
 
-        directoryService->Get("system.OS_TemporaryDirectory", NS_GET_IID(nsIFile), getter_AddRefs(tempFile));
+        directoryService->Get(NS_OS_TEMP_DIR, NS_GET_IID(nsIFile), getter_AddRefs(tempFile));
   
         nsString tempFileName; tempFileName.AssignWithConversion("xpinstall");
 

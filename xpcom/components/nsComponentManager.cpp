@@ -58,6 +58,7 @@
 #include "nsILocalFile.h"
 #include "nsLocalFile.h"
 #include "nsDirectoryService.h"
+#include "nsDirectoryServiceDefs.h"
 
 #include "plstr.h"
 #include "prlink.h"
@@ -493,7 +494,7 @@ nsComponentManagerImpl::PlatformInit(void)
                                     NS_GET_IID(nsIProperties), 
                                     getter_AddRefs(directoryService));  
     
-    directoryService->Get("xpcom.currentProcess.componentDirectory", NS_GET_IID(nsIFile), getter_AddRefs(mComponentsDir));
+    directoryService->Get(NS_XPCOM_COMPONENT_DIR, NS_GET_IID(nsIFile), getter_AddRefs(mComponentsDir));
 
     if (!mComponentsDir)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -1998,8 +1999,8 @@ nsComponentManagerImpl::AutoRegister(PRInt32 when, nsIFile *inDirSpec)
         if (NS_FAILED(rv)) return rv;
 
         // Don't care if undefining fails
-        directoryService->Undefine("xpcom.currentProcess.componentDirectory"); 
-        rv = directoryService->Define("xpcom.currentProcess.componentDirectory", dir);
+        directoryService->Undefine(NS_XPCOM_COMPONENT_DIR); 
+        rv = directoryService->Define(NS_XPCOM_COMPONENT_DIR, dir);
         if (NS_FAILED(rv)) return rv;
     } 
     else 
@@ -2008,7 +2009,7 @@ nsComponentManagerImpl::AutoRegister(PRInt32 when, nsIFile *inDirSpec)
         NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_PROGID, &rv);
         if (NS_FAILED(rv)) return rv;
 
-        rv = directoryService->Get("xpcom.currentProcess.componentDirectory", NS_GET_IID(nsIFile), getter_AddRefs(dir));
+        rv = directoryService->Get(NS_XPCOM_COMPONENT_DIR, NS_GET_IID(nsIFile), getter_AddRefs(dir));
         if (NS_FAILED(rv)) return rv; // XXX translate error code?
     }
 

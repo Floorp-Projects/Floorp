@@ -63,6 +63,7 @@
 #include "nsILocalFile.h"
 #include "nsLocalFile.h"
 #include "nsDirectoryService.h"
+#include "nsDirectoryServiceDefs.h"
 #include "nsICategoryManager.h"
 
 #include "nsAtomService.h"
@@ -241,7 +242,7 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
             rv = binDirectory->IsDirectory(&value);
 
             if (NS_SUCCEEDED(rv) && value)
-                gDirectoryService->Define("xpcom.currentProcessDirectory", binDirectory);
+                gDirectoryService->Define(NS_XPCOM_INIT_CURRENT_PROCESS_DIR, binDirectory);
 
             //Since people are still using the nsSpecialSystemDirectory, we should init it.
             char* path;

@@ -36,6 +36,7 @@
 /* Implements nsXPCToolsCompiler. */
 
 #include "xpctools_private.h"
+#include "nsDirectoryServiceDefs.h"
 
 NS_IMPL_ISUPPORTS1(nsXPCToolsCompiler, nsIXPCToolsCompiler)
 
@@ -54,7 +55,7 @@ NS_IMETHODIMP nsXPCToolsCompiler::GetBinDir(nsILocalFile * *aBinDir)
     *aBinDir = nsnull;
     
     nsCOMPtr<nsIFile> file;
-    nsresult rv = NS_GetSpecialDirectory("xpcom.currentProcessDirectory", getter_AddRefs(file));
+    nsresult rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR, getter_AddRefs(file));
     if(NS_FAILED(rv))
         return rv;
 

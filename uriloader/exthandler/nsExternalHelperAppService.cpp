@@ -40,6 +40,7 @@
 #include "nsFileLocations.h"
 #include "nsHelperAppRDF.h"
 #include "nsIMIMEInfo.h"
+#include "nsDirectoryServiceDefs.h"
 
 #include "nsIHelperAppLauncherDialog.h"
 #include "nsIFilePicker.h"
@@ -410,10 +411,10 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
 
 #ifdef XP_MAC
  // create a temp file for the data...and open it for writing.
-  NS_GetSpecialDirectory("system.DesktopDirectory", getter_AddRefs(mTempFile));
+  NS_GetSpecialDirectory(NS_MAC_DESKTOP_DIR, getter_AddRefs(mTempFile));
 #else
   // create a temp file for the data...and open it for writing.
-  NS_GetSpecialDirectory("system.OS_TemporaryDirectory", getter_AddRefs(mTempFile));
+  NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(mTempFile));
 #endif
 
   nsCOMPtr<nsIURI> uri;

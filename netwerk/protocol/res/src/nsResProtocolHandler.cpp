@@ -45,6 +45,7 @@
 #include "prprf.h"
 #include "nsXPIDLString.h"
 #include "nsIFile.h"
+#include "nsDirectoryServiceDefs.h"
 
 static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
@@ -91,36 +92,36 @@ nsResProtocolHandler::Init()
         return NS_ERROR_OUT_OF_MEMORY;
 
     // set up initial mappings
-    rv = SetSpecialDir("ProgramDir", "system.OS_CurrentProcessDirectory");
+    rv = SetSpecialDir("ProgramDir", NS_OS_CURRENT_PROCESS_DIR);
     if (NS_FAILED(rv)) return rv;
 
     // make "res:///" == "resource:/"
-    rv = SetSpecialDir("", "xpcom.currentProcess");
+    rv = SetSpecialDir("", NS_XPCOM_CURRENT_PROCESS_DIR);
     if (NS_FAILED(rv)) return rv;
 
-    rv = SetSpecialDir("CurrentDir", "system.OS_CurrentWorkingDirectory");
+    rv = SetSpecialDir("CurrentDir", NS_OS_CURRENT_WORKING_DIR);
     if (NS_FAILED(rv)) return rv;
 
-    rv = SetSpecialDir("CurrentDrive", "system.OS_DriveDirectory");
+    rv = SetSpecialDir("CurrentDrive", NS_OS_DRIVE_DIR);
     if (NS_FAILED(rv)) return rv;
 
-    rv = SetSpecialDir("TempDir", "system.OS_TemporaryDirectory");
+    rv = SetSpecialDir("TempDir", NS_OS_TEMP_DIR);
     if (NS_FAILED(rv)) return rv;
 
-    rv = SetSpecialDir("ComponentsDir", "xpcom.currentProcess.componentDirectory");
+    rv = SetSpecialDir("ComponentsDir", NS_XPCOM_COMPONENT_DIR);
     if (NS_FAILED(rv)) return rv;
 
     rv = SetSpecialDir("SystemDir",
 #ifdef XP_MAC
-                       "system.SystemDirectory"
+                       NS_OS_SYSTEM_DIR
 #elif XP_OS2
-                       "system.SystemDirectory"
+                       NS_OS_SYSTEM_DIR
 #elif XP_PC
-                       "system.SystemDirectory"
+                       NS_OS_SYSTEM_DIR
 #elif XP_BEOS
-                       "system.SystemDirectory"
+                       NS_OS_SYSTEM_DIR
 #else
-                       "system.LibDirectory"  // XXX ???
+                       NS_UNIX_LIB_DIR  // XXX ???
 #endif
                        );
     if (NS_FAILED(rv)) return rv;
@@ -128,7 +129,7 @@ nsResProtocolHandler::Init()
     // Set up the "Resource" root to point to the old resource location 
     // such that:
     //     resource://<path>  ==  res://Resource/<path>
-    rv = SetSpecialDir("Resource", "xpcom.currentProcess");
+    rv = SetSpecialDir("Resource", NS_XPCOM_CURRENT_PROCESS_DIR);
     if (NS_FAILED(rv)) return rv;
 
     return rv;
