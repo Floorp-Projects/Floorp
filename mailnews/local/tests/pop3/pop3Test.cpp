@@ -45,6 +45,8 @@
 #include "nsINetService.h"
 #include "nsIComponentManager.h"
 #include "nsString.h"
+#include "nsIPref.h"
+#include "nsIPop3Service.h"
 
 #include "nsPop3Protocol.h"
 #include "nsPop3URL.h"
@@ -56,6 +58,9 @@
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsXPComCIID.h"
+
+#include "nsIMsgIdentity.h"
+#include "nsIMsgMailSession.h"
 
 #ifdef XP_PC
 #define NETLIB_DLL "netlib.dll"
@@ -75,6 +80,8 @@
 
 static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_CID(kPop3ServiceCID, NS_POP3SERVICE_CID);
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 /////////////////////////////////////////////////////////////////////////////////
 // Define default values to be used to drive the test
@@ -154,6 +161,7 @@ public:
 	nsresult OnUidl();		// lists the status of the user specified group...
     nsresult OnGet();
 	nsresult OnExit(); 
+	nsresult OnIdentityCheck();
 protected:
 	char m_urlSpec[200];	// "sockstub://hostname:port" it does not include the command specific data...
 	char m_urlString[500];	// string representing the current url being run. Includes host AND command specific data.
@@ -168,7 +176,6 @@ protected:
 
 	nsIPop3URL * m_url; 
 	nsPop3Protocol * m_pop3Protocol; // running protocol instance
-	nsITransport * m_transport; // a handle on the current transport object being used with the protocol binding...
 
 	PRBool		m_runningURL;	// are we currently running a url? this flag is set to false on exit...
 
@@ -192,9 +199,6 @@ nsPop3TestDriver::nsPop3TestDriver(nsINetService * pNetService)
         m_mailDirectory = PL_strdup(env);
 	
 	InitializeTestDriver(); // prompts user for initialization information...
-	
-	// create a transport socket...
-	pNetService->CreateSocketTransport(&m_transport, m_port, m_host);
 	m_pop3Protocol = nsnull; // we can't create it until we have a url...
 }
 
@@ -203,7 +207,7 @@ void nsPop3TestDriver::InitializeProtocol(const char * urlString)
 	// this is called when we don't have a url nor a protocol instance yet...
 	NS_NewPop3URL(&m_url, urlString);
 	// now create a protocl instance...
-	m_pop3Protocol = new nsPop3Protocol(m_url, m_transport);
+	m_pop3Protocol = new nsPop3Protocol(m_url);
     m_pop3Protocol->SetUsername(m_username);
     m_pop3Protocol->SetPassword(m_password);
     
@@ -221,7 +225,6 @@ void nsPop3TestDriver::InitializeProtocol(const char * urlString)
 nsPop3TestDriver::~nsPop3TestDriver()
 {
 	NS_IF_RELEASE(m_url);
-	NS_IF_RELEASE(m_transport);
     PR_FREEIF(m_username);
     PR_FREEIF(m_password);
     PR_FREEIF(m_mailDirectory);
@@ -392,6 +395,8 @@ nsresult nsPop3TestDriver::ReadAndDispatchCommand()
     case 4:
         status = OnGet();
         break;
+	case 5:
+		status = OnIdentityCheck();
 	default:
 		status = OnExit();
 		break;
@@ -408,6 +413,7 @@ nsresult nsPop3TestDriver::ListCommands()
 	printf("2) Get mail account url. \n");
 	printf("3) Uidl. \n");
     printf("4) Get new mail. \n");
+	printf("5) Check identity information.\n");
 	printf("9) Exit the test application. \n");
 	return NS_OK;
 }
@@ -423,7 +429,43 @@ nsresult nsPop3TestDriver::OnExit()
 	return NS_OK;
 }
 
+static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
 
+nsresult nsPop3TestDriver::OnIdentityCheck()
+{
+	nsIMsgMailSession * mailSession = nsnull;
+	nsresult result = nsServiceManager::GetService(kCMsgMailSessionCID,
+												   nsIMsgMailSession::GetIID(),
+                                                   (nsISupports **) &mailSession);
+	if (NS_SUCCEEDED(result) && mailSession)
+	{
+		nsIMsgIdentity * msgIdentity = nsnull;
+		result = mailSession->GetCurrentIdentity(&msgIdentity);
+		if (NS_SUCCEEDED(result) && msgIdentity)
+		{
+			const char * value = nsnull;
+			msgIdentity->GetRootFolderPath(&value);
+			printf("Root folder path: %s\n", value ? value : "");
+			msgIdentity->GetUserName(&value);
+			printf("User Name: %s\n", value ? value : "");
+			msgIdentity->GetPopServer(&value);
+			printf("Pop Server: %s\n", value ? value : "");
+			msgIdentity->GetPopPassword(&value);
+			printf("Pop Password: %s\n", value ? value : "");
+			msgIdentity->GetSmtpServer(&value);
+			printf("Smtp Server: %s\n", value ? value : "");
+
+		}
+		else
+			printf("Unable to retrieve the msgIdentity....\n");
+
+		nsServiceManager::ReleaseService(kCMsgMailSessionCID, mailSession);
+	}
+	else
+		printf("Unable to retrieve the mail session service....\n");
+
+	return result;
+}
 nsresult nsPop3TestDriver::OnCheck()
 {
 	nsresult rv = NS_OK; 
@@ -504,6 +546,19 @@ nsresult nsPop3TestDriver::OnGet()
 	m_urlString[0] = '\0';
 	PL_strcpy(m_urlString, m_urlSpec);
 
+	nsIPop3Service * pop3Service = nsnull;
+	nsServiceManager::GetService(kPop3ServiceCID, nsIPop3Service::GetIID(),
+                                 (nsISupports **)&pop3Service); // XXX probably need shutdown listener here
+
+	if (pop3Service)
+	{
+		pop3Service->GetNewMail(nsnull, nsnull);
+	}
+
+	nsServiceManager::ReleaseService(kPop3ServiceCID, pop3Service);
+
+#if 0
+
 	if (m_protocolInitialized == PR_FALSE)
 		InitializeProtocol(m_urlString);
 	else
@@ -516,7 +571,7 @@ nsresult nsPop3TestDriver::OnGet()
 
 		rv = m_pop3Protocol->Load(m_url);
 	} // if user provided the data...
-
+#endif
 	return rv;
 }
 
@@ -533,7 +588,7 @@ int main()
     nsIEventQueueService* pEventQService;
     result = nsServiceManager::GetService(kEventQueueServiceCID,
                                           nsIEventQueueService::GetIID(),
-                                          (nsISupports**)&pNetService);
+                                          (nsISupports**)&pEventQService);
 	if (NS_FAILED(result)) return result;
 
     result = pEventQService->CreateThreadEventQueue();
@@ -546,10 +601,6 @@ int main()
 		printf("unable to initialize net serivce. \n");
 		return 1;
 	}
-
-	// now register a mime converter....
-    //	NET_RegisterContentTypeConverter (MESSAGE_RFC822, FO_NGLAYOUT, NULL, MIME_MessageConverter);
-    //	NET_RegisterContentTypeConverter (MESSAGE_RFC822, FO_CACHE_AND_NGLAYOUT, NULL, MIME_MessageConverter);
 
 	// okay, everything is set up, now we just need to create a test driver and run it...
 	nsPop3TestDriver * driver = new nsPop3TestDriver(pNetService);
