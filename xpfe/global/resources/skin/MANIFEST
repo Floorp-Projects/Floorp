@@ -3,6 +3,7 @@ globalBindings.xml
 global.css
 button.css
 checkbox.css
+tree.css
 menubutton.css
 menulist.css
 radio.css
@@ -104,3 +105,5 @@ tab-leftedge.gif
 tab-rightedge.gif
 sortAscending.gif
 sortDescending.gif
+check-check.gif
+check-radio.gif

@@ -37,6 +37,7 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/menubutton.css \
 		$(srcdir)/menulist.css \
 		$(srcdir)/radio.css \
+		$(srcdir)/tree.css \
     $(srcdir)/scrollbars.css \
 		$(srcdir)/lessCols.gif \
 		$(srcdir)/lessCols_mo.gif \
@@ -129,6 +130,8 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/tab-rightedge.gif \
 		$(srcdir)/sortAscending.gif \
 		$(srcdir)/sortDescending.gif \
+		$(srcdir)/check-check.gif \
+		$(srcdir)/check-radio.gif \
 		$(NULL)
 
 EXPORT_CHROME	= $(srcdir)/xul.css \

@@ -2,7 +2,7 @@
 button {
   border: 1px solid #CCCCCC;
   -moz-border-radius: 3px 2px 2px 3px;
-  margin: 1px 5px 2px 5px;
+  margin: 3px 5px 3px 5px;
   min-width: 5em;
 }
 
@@ -48,7 +48,7 @@ button[disabled]:hover > .internal-box,
 button[disabled]:active > .internal-box {
   border: 1px solid #999999;
   color: #999999;
-  padding: 2px;
+  padding: 2px 10px 2px 10px; 
 }
 
 /* align text in standard buttons to center in the available space */
