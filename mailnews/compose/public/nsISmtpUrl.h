@@ -65,6 +65,20 @@ public:
 		const char ** aReferencePart, const char ** aAttachmentPart, const char ** aPriorityPart, 
 		const char ** aNewsgroupPart, const char ** aNewsHostPart, PRBool * aforcePlainText) = 0;
 
+	// Caller must call PR_FREE on list when it is done with it. This list is a list of all
+	// recipients to send the email to. each name is NULL terminated...
+	NS_IMETHOD GetAllRecipients(char ** aRecipientsList) = 0;
+	// all headers are separated by new lines...
+	NS_IMETHOD GetHeaders(const char ** aHeadersList) = 0;
+	NS_IMETHOD GetBody (const char ** aBody) = 0;
+	NS_IMETHOD GetBodySize(PRUint32 * aBodySize) = 0;
+
+	// is the url a post message url or a bring up the compose window url? 
+	NS_IMETHOD IsPostMessage(PRBool * aPostMessage) = 0; 
+	
+	// used to set the url as a post message url...
+	NS_IMETHOD SetPostMessage(PRBool aPostMessage) = 0;
+
 	/////////////////////////////////////////////////////////////////////////////// 
 	// SMTP Url instance specific getters and setters --> info the protocol needs
 	// to know in order to run the url...these are NOT event sinks which are things
@@ -78,8 +92,8 @@ public:
 	// mscott -- when we have identities it would be nice to just have an identity 
 	// interface here that would encapsulte things like username, domain, password,
 	// etc...
-	NS_IMETHOD GetUserName(const char ** aUserName) = 0;
-	NS_IMETHOD SetUserName(const char * aUserName) = 0;
+	NS_IMETHOD GetUserEmailAddress(const char ** aUserName) = 0;
+	NS_IMETHOD SetUserEmailAddress(const char * aUserName) = 0;
 	NS_IMETHOD GetUserPassword(const char ** aUserPassword) = 0;
 	NS_IMETHOD SetUserPassword(const char * aUserPassword) = 0;
 
