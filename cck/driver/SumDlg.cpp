@@ -2,6 +2,7 @@
 //
 
 #include "stdafx.h"
+#include "globals.h"
 #include "WizardMachine.h"
 #include "SumDlg.h"
 
@@ -10,10 +11,6 @@
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
-extern WIDGET GlobalWidgetArray[1000];
-
-extern int GlobalArrayIndex;
-
 
 CString stringerx1 ="name1";
 

@@ -39,6 +39,7 @@ LLFLAGS = \
 	$(LLFLAGS)
 
 INCS = -I. \
+	-I..\include \
 	$(INCS)
 
 
@@ -62,6 +63,22 @@ OBJS = \
 	.\$(OBJDIR)\wizshell.obj \
 	$(NULL)
 
+LLIBS = $(LLIBS) \
+	..\lib\globals.lib \
+	$(NULL)
+
+#
+# ----- Add your extension libraries here -----
+#
+!if "$(MAKEFLAGS)" == "install"
+LLIBS = $(LLIBS) \
+	..\lib\ibengine.lib \
+	$(NULL)
+!endif
+#
+# ---------------------------------------------
+#
+
 #################################################################
 
 MAKE_OBJ_TYPE = EXE
@@ -78,6 +95,9 @@ PROGRAM = .\$(OBJDIR)\$(EXENAME).EXE
 
 
 !include "$(DEPTH)\config\rules.mak"
+
+export::$(PROGRAM)
+	$(MAKE_INSTALL) $(OBJDIR)\$(EXENAME).lib ..\lib
 
 install::$(PROGRAM)
 	$(MAKE_INSTALL) $(PROGRAM) ..\cckwiz

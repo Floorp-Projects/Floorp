@@ -1,4 +1,6 @@
+#include <direct.h>
 #include "stdafx.h"
+#include "globals.h"
 #include "WizardMachine.h"
 #include "Interpret.h"
 #include "WizardUI.h"
@@ -6,7 +8,6 @@
 #include "SumDlg.h"
 #include "NewDialog.h"
 #include "NewConfigDialog.h"
-#include <direct.h>
 
 // for CopyDir
 #include "winbase.h"  
@@ -30,8 +31,6 @@ extern char iniFilePath[MAX_SIZE];
 extern BOOL inNext;
 extern BOOL inPrev;
 extern NODE* WizardTree;
-extern WIDGET GlobalWidgetArray[1000];
-extern int GlobalArrayIndex;
 extern char currDirPath[MAX_SIZE];
 extern char customizationPath[MAX_SIZE];
 extern BOOL IsSameCache;
@@ -46,8 +45,8 @@ extern _declspec (dllimport) WIDGET ptr_ga[1000];
 CInterpret::CInterpret()
 {
 	// Init linked list to avoid messy operations on the linked list
-	m_DLLs.dllName = "";
-	m_DLLs.procName = "";
+	m_DLLs.dllName = NULL;
+	m_DLLs.procName = NULL;
 	m_DLLs.next = NULL;
 }
 
@@ -92,7 +91,7 @@ BOOL CInterpret::NewConfig(WIDGET *curWidget, CString globalsName)
 	}
 
 					
-	WIDGET* tmpWidget = theApp.findWidget((char*) (LPCTSTR)curWidget->target);
+	WIDGET* tmpWidget = findWidget((char*) (LPCTSTR)curWidget->target);
 	if (!tmpWidget)
 		return FALSE;
 
@@ -102,7 +101,7 @@ BOOL CInterpret::NewConfig(WIDGET *curWidget, CString globalsName)
 	if (!configField.IsEmpty())
 		((CComboBox*)tmpWidget->control)->SelectString(0, configField);
 	
-	theApp.SetGlobal(globalsName, configField);
+	SetGlobal(globalsName, configField);
 
 	return TRUE;
 }
@@ -120,7 +119,7 @@ BOOL CInterpret::BrowseFile(WIDGET *curWidget)
 	if (fileDlg.GetPathName() != "")
 	{	
 		fullFileName = fileDlg.GetPathName();
-		WIDGET* tmpWidget = theApp.findWidget((char*) (LPCTSTR)curWidget->target);
+		WIDGET* tmpWidget = findWidget((char*) (LPCTSTR)curWidget->target);
 		if (tmpWidget && (CEdit*)tmpWidget->control)
 			((CEdit*)tmpWidget->control)->SetWindowText(fullFileName);
 	}
@@ -159,7 +158,7 @@ BOOL CInterpret::BrowseDir(WIDGET *curWidget)
 		else if( bi.ulFlags & BIF_RETURNONLYFSDIRS )
 		{
 			// szPath variable contains the path
-			WIDGET* tmpWidget = theApp.findWidget((char*) (LPCTSTR)curWidget->target);
+			WIDGET* tmpWidget = findWidget((char*) (LPCTSTR)curWidget->target);
 			if (tmpWidget)
 				((CEdit*)tmpWidget->control)->SetWindowText(szPath);
 		}
@@ -285,7 +284,7 @@ BOOL CInterpret::IterateListBox(char *parms)
 	char *target = strtok(parms, ",");
 	char *showstr = strtok(NULL, ",");
 	char *cmd	 = strtok(NULL, "");
-	WIDGET *w 	 = theApp.findWidget(target);
+	WIDGET *w 	 = findWidget(target);
 	char indices[MAX_SIZE];
 	int  showflag;
 
@@ -354,7 +353,7 @@ CString CInterpret::replaceVars(char *str, char *listval)
 					v = listval;
 				else
 				{
-					WIDGET *w = theApp.findWidget(x);
+					WIDGET *w = findWidget(x);
 					if (w)
 					{
 						if (w->control && w->control->m_hWnd)
@@ -394,13 +393,15 @@ BOOL CInterpret::CallDLL(char *dll, char *proc, char *parms)
 	// the handling of the linked list by allowing us to otherwise
 	// ignore the difference in the first node.
 	
+	CString dllStr = CString(dll);
+	CString procStr = CString(proc);
 	DLLINFO *last = &m_DLLs;
 	DLLINFO *dllp = m_DLLs.next;
 	int found = FALSE;
 	while (!found && dllp)
 	{
 		last = dllp;
-		if (strcmp(dllp->dllName, dll) == 0 && strcmp(dllp->procName, proc) == 0)
+		if (*dllp->dllName == dllStr && *dllp->procName == procStr)
 			found = TRUE;
 		else
 			dllp = dllp->next;
@@ -411,14 +412,20 @@ BOOL CInterpret::CallDLL(char *dll, char *proc, char *parms)
 	if (!found)
 	{
 		dllp = (DLLINFO *) GlobalAlloc(0, sizeof(DLLINFO));
-		dllp->dllName = CString(dll);
-		dllp->procName = CString(proc);
+		dllp->dllName = new CString(dll);
+		dllp->procName = new CString(proc);
 		VERIFY(dllp->hDLL = ::LoadLibrary(dll));
 		if (!dllp->hDLL)
+		{
+			DWORD e = GetLastError();
 			return FALSE;
+		}
 		VERIFY(dllp->procAddr = (DLLPROC *) ::GetProcAddress(dllp->hDLL, proc));
 		if (!dllp->procAddr)
+		{
+			DWORD e = GetLastError();
 			return FALSE;
+		}
 		dllp->next = NULL;
 
 		last->next = dllp;
@@ -588,7 +595,7 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 					CNewDialog newDlg;
 					newDlg.DoModal();
 					entryName = newDlg.GetData();
-					theApp.SetGlobal(parms, entryName);
+					SetGlobal(parms, entryName);
 				}
 				else if (strcmp(pcmd, "inform") == 0)
 				{
@@ -601,7 +608,7 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 						
 					CString entryName;
 					CWnd myWnd;
-					entryName = theApp.GetGlobal(parms);
+					entryName = GetGlobal(parms);
 					CString p2path = replaceVars(p2,NULL);
 					if (entryName != "") {
 						myWnd.MessageBox( entryName + " is saved in " + p2path, "Information", MB_OK);
@@ -620,7 +627,7 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 					if (strcmp(parms, "self") == 0)
 						w = curWidget;
 					else
-						w = theApp.findWidget(parms);
+						w = findWidget(parms);
 
 					if (w)
 					{
@@ -666,7 +673,7 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 						CString name = replaceVars(parms, NULL);
 						CString value = replaceVars(p2, NULL);
 						value.TrimRight();
-						theApp.SetGlobal(name, value);
+						SetGlobal(name, value);
 					}
 				}
 				else if (strcmp(pcmd, "ShowDescription") == 0)
@@ -674,7 +681,7 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 					if (curWidget)
 					{
 						int i = ((CCheckListBox*)curWidget->control)->GetCurSel();
-						WIDGET *t = theApp.findWidget((char *)(LPCSTR) curWidget->target);
+						WIDGET *t = findWidget((char *)(LPCSTR) curWidget->target);
 						CString msg(i);
 						((CEdit*)t->control)->SetWindowText(msg);
 					}
@@ -694,7 +701,7 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 						{
 							if (p2)
 								*p2++ = '\0';
-							WIDGET *w = theApp.findWidget(parms);
+							WIDGET *w = findWidget(parms);
 							if (w)
 								w->control->EnableWindow(newval);
 							parms = p2;
@@ -718,7 +725,7 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 						{
 							if (p2)
 								*p2++ = '\0';
-							WIDGET *w = theApp.findWidget(parms);
+							WIDGET *w = findWidget(parms);
 							if (w)
 								w->control->EnableWindow(newval);
 							parms = p2;

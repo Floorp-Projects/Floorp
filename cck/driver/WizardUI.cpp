@@ -23,6 +23,7 @@
 #include "stdafx.h"
 #include "afxmt.h"
 
+#include "globals.h"
 #include "WizardMachine.h"
 #include "fstream.h"
 #include "ImgDlg.h"
@@ -56,8 +57,6 @@ extern char iniFilePath[MAX_SIZE];
 extern BOOL inNext;
 extern BOOL inPrev;
 extern NODE* WizardTree;
-extern WIDGET GlobalWidgetArray[1000];
-extern int GlobalArrayIndex;
 extern char currDirPath[MAX_SIZE];
 extern char customizationPath[MAX_SIZE];
 
@@ -276,7 +275,7 @@ BOOL CWizardUI::ActCommand(WIDGET *curWidget)
 BOOL CWizardUI::SortList(WIDGET *curWidget) 
 {
 #ifdef ACTUALLYNEEDTODOSOMETHINGLIKETHIS
-	WIDGET* listWidget = theApp.findWidget((char*) (LPCTSTR)curWidget->target);
+	WIDGET* listWidget = findWidget((char*) (LPCTSTR)curWidget->target);
 	int count = ((CListBox*)(listWidget->control))->GetCount();
 	char* items[MAX_SIZE];
 
@@ -306,7 +305,7 @@ BOOL CWizardUI::SortList(WIDGET *curWidget)
 
 BOOL CWizardUI::SetDescription(WIDGET *w) 
 {
-	WIDGET *t = theApp.findWidget((char *) (LPCTSTR) w->target);
+	WIDGET *t = findWidget((char *) (LPCTSTR) w->target);
 	if (!t || (t->type != "Text" && t->type != "BoldText"))
 		return FALSE;
 
@@ -531,7 +530,7 @@ void CWizardUI::CreateControls()
 			char widgetName[MID_SIZE];
 			strcpy(widgetName, curWidget->name);
 
-			CString theVal = theApp.GetGlobal(curWidget->group);
+			CString theVal = GetGlobal(curWidget->group);
 
 			//int newLineIndex = theVal.ReverseFind('\n');
 			//if (newLineIndex > -1)
@@ -576,7 +575,7 @@ void CWizardUI::CreateControls()
 				setBack.SetAt(setBack.GetLength()-1, '\0');
 			}
 
-			WIDGET* rWidget = theApp.findWidget((char *) (LPCTSTR) curWidget->group);
+			WIDGET* rWidget = findWidget((char *) (LPCTSTR) curWidget->group);
 
 			rWidget->items = setBack;
 
@@ -916,7 +915,7 @@ CString CWizardUI::GetScreenValue(WIDGET *curWidget)
 		CString allOptions;
 		CString setBack;
 			
-		WIDGET* rWidget = theApp.findWidget((char *) (LPCTSTR) curWidget->group);
+		WIDGET* rWidget = findWidget((char *) (LPCTSTR) curWidget->group);
 
 		allOptions = rWidget->items;
 
@@ -1051,7 +1050,7 @@ void CWizardUI::LoadGlobals()
 		(HMODULE) hGlobal, "SetGlobal")
 	);
 	
-	//CString animatedLogo = theApp.GetGlobal("AnimatedLogoURL");
+	//CString animatedLogo = GetGlobal("AnimatedLogoURL");
 
 	(*pMySetGlobal)("Platform", "32");
 	(*pMySetGlobal)("Custom Inbox Path", (char*)(LPCTSTR)(Path+"IBDemo\\defaults\\inbox"));

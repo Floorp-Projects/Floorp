@@ -22,11 +22,12 @@
 
 #include "stdafx.h"
 #include "afxmt.h"
-#include "WizardMachine.h"
 #include <iostream.h>
 #include <stdlib.h>
 #include <string.h>
 #include <direct.h>
+#include "globals.h"
+#include "WizardMachine.h"
 #include "HelpDlg.h"
 #include "WizHelp.h"
 #include "ImgDlg.h"
@@ -75,9 +76,7 @@ CWizardMachineApp theApp;
 NODE *GlobalDefaults;
 NODE *WizardTree;
 NODE *CurrentNode;
-WIDGET GlobalWidgetArray[1000];
 
-int GlobalArrayIndex=0;
 int CurrentPageBaseIndex=100;
 
 CString Path;
@@ -338,15 +337,6 @@ BOOL CWizardMachineApp::InitInstance()
 	//  application, rather than start the application's message pump.
 	return FALSE;
 }
-
-////Add Wizard machine functions here.
-//Define OnEnter function
-//Define OnExit function
-//Define ExitApp function
-//Define GoToNextNode function
-//Define GoToPrevNode function
-//Define GetGlobal function
-//Define SetGlobal function
 
 void CWizardMachineApp::InitializeTree(CString rootIniFile)
 {
@@ -1223,16 +1213,6 @@ CString CWizardMachineApp::GetModulePath()
 	return CString(currPath);
 }
 
-CString CWizardMachineApp::GetGlobal(CString theName)
-{
-	WIDGET *w = findWidget((char *) (LPCSTR) theName);
-
-	if (w)
-		return w->value;
-
-	return "";
-}
-
 CString CWizardMachineApp::GetGlobalOptions(CString theName)
 {
 	CString temp="";
@@ -1254,42 +1234,6 @@ CString CWizardMachineApp::GetGlobalOptions(CString theName)
 	}
 
 	return temp;
-}
-
-WIDGET* CWizardMachineApp::SetGlobal(CString theName, CString theValue)
-{
-	WIDGET* w = findWidget((char *)(LPCTSTR) theName);
-	if (w == NULL)
-	{
-		// Make sure we can add this value
-		if (GlobalArrayIndex >= sizeof(GlobalWidgetArray))
-		{
-			fprintf(out, "----------------** TERMINATED - Out of Global Space **---------------\n");
-			exit(11);
-		}
-
-		GlobalWidgetArray[GlobalArrayIndex].name  = theName;
-		GlobalWidgetArray[GlobalArrayIndex].value = theValue;
-		w = &GlobalWidgetArray[GlobalArrayIndex];
-		GlobalArrayIndex++;
-	}
-	else 
-		w->value = theValue;
-
-	return w;
-}
-
-WIDGET* CWizardMachineApp::findWidget(char *theName)
-{
-	
-	for (int i = 0; i < GlobalArrayIndex; i++)
-	{
-		if (GlobalWidgetArray[i].name == theName) {
-			return (&GlobalWidgetArray[i]);
-		}
-	}
-
-	return NULL;
 }
 
 void CWizardMachineApp::BuildWidget(WIDGET* aWidget, CString iniSection, CString iniFile, int pageBaseIndex, BOOL readValue)

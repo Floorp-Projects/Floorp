@@ -66,10 +66,7 @@ public:
 	BOOL IsLastNode(NODE* treeNode);
 	BOOL IsFirstNode(NODE* treeNode);
 	CString GetModulePath();
-	CString GetGlobal(CString theName);
-	WIDGET* SetGlobal(CString theName, CString theValue);
 	CString GetGlobalOptions(CString theName);
-	WIDGET* findWidget(char *name);
 	void BuildWidget(WIDGET* aWidget, CString iniSection, CString iniFile, int pageBaseIndex, BOOL readValue);
 //	void BuildHelpWidget(WIDGET* aWidget, CString iniSection, CString iniFile, int pageBaseIndex);
 	void GenerateList(CString action, WIDGET* targetWidget, CString ext);

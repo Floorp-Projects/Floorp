@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "globals.h"
 #include "WizardMachine.h"
 #include "fstream.h"
 #include "direct.h"
@@ -24,10 +25,10 @@ void CreateRshell (void)
 //	FILE* rshell = theApp.OpenAFile(CDdir +"rshell.ini", "w");
 
 	ofstream rshell(Rsh);
-	CString fvalue1=theApp.GetGlobal("ShellTitleText");
-	CString fvalue2=theApp.GetGlobal("ShellBgBitmap");
+	CString fvalue1=GetGlobal("ShellTitleText");
+	CString fvalue2=GetGlobal("ShellBgBitmap");
 //	char *fvalue3=GetGlobal("dialog_title_text");
-	CString fvalue4=theApp.GetGlobal("ShellInstallTextFile");
+	CString fvalue4=GetGlobal("ShellInstallTextFile");
 	char jsprefname[200];
 
 	if(!part1) {
