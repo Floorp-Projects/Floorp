@@ -331,7 +331,8 @@ function SetupRenameMenuItem(folderResource, numSelected, isServer, serverType, 
 {
   var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
   var folderTree = GetFolderTree();
-  var isSpecialFolder = !(specialFolder == "none" || (specialFolder == "Junk" && CanRenameDeleteJunkMail(msgFolder.URI)));
+  var isSpecialFolder = !(specialFolder == "none" || (specialFolder == "Junk" && CanRenameDeleteJunkMail(msgFolder.URI))
+                                                  || (specialFolder == "Virtual") );
   var canRename = GetFolderAttribute(folderTree, folderResource, "CanRename") == "true";
 
   ShowMenuItem("folderPaneContext-rename", (numSelected <= 1) && !isServer && !isSpecialFolder && canRename);
@@ -348,7 +349,8 @@ function SetupRemoveMenuItem(folderResource, numSelected, isServer, serverType, 
 {
   var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
   var isMail = serverType != 'nntp';
-  var isSpecialFolder = !(specialFolder == "none" || (specialFolder == "Junk" && CanRenameDeleteJunkMail(msgFolder.URI)));
+  var isSpecialFolder = !(specialFolder == "none" || (specialFolder == "Junk" && CanRenameDeleteJunkMail(msgFolder.URI))
+                                                  || (specialFolder == "Virtual") );
   //Can't currently delete Accounts or special folders.
   var showRemove = (numSelected <=1) && (isMail && !isSpecialFolder) && !isServer;
 
