@@ -53,6 +53,7 @@ dialog {
 
 .dialog-button {
   font: menu;
+  margin-top: 18px;
 }
 
 /* ::::: dialog header ::::: */
