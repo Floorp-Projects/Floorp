@@ -55,7 +55,7 @@ import java.util.Stack;
  * A dom viewer Frame
 
  *
- * @version $Id: DOMViewerFrame.java,v 1.3 2000/06/30 17:53:58 edburns%acm.org Exp $
+ * @version $Id: DOMViewerFrame.java,v 1.4 2000/07/15 18:56:30 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlFactory
 
@@ -208,6 +208,7 @@ protected void selectNodeInTree(Node node)
     
     tree.clearSelection();
     tree.setSelectionPath(nodePath);
+    tree.scrollPathToVisible(nodePath);
 }
 
 protected void populatePathStackFromNode(Node node)
