@@ -241,7 +241,6 @@ protected:
 
 	} *mChildren;
 
-
 // MAC SPECIFIC MEMBERS
 protected:
 	RgnHandle			mWindowRegion;				// the region defining this window
@@ -251,7 +250,9 @@ protected:
 	PRBool				mWindowMadeHere;			// if main window and we created, true
 	PRBool				mIsMainWindow;				// top level Mac window
 	
-	
+	public:
+		WindowPtr GetWindowPtr() {return mWindowPtr;}
+protected:
 	void InitDeviceContext(nsIDeviceContext *aContext,nsNativeWidget aParentWidget);
 	
 };
