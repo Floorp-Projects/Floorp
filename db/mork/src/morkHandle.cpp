@@ -370,6 +370,7 @@ morkHandle::Handle_CutStrongRef(nsIMdbEnv* mev)
 
 /*virtual*/ mdb_err
 morkHandle::Handle_CloseMdbObject(nsIMdbEnv* mev)
+// called at strong refs zero
 {
   mdb_err outErr = 0;
   
@@ -378,12 +379,16 @@ morkHandle::Handle_CloseMdbObject(nsIMdbEnv* mev)
     morkEnv* ev = CanUseHandle(mev, /*inMutable*/ morkBool_kFalse, &outErr);
     if ( ev )
     {
+      morkObject* object = mHandle_Object;
+      if ( object && object->IsNode() && object->IsOpenNode() )
+        object->CloseMorkNode(ev);
+        
       this->CloseMorkNode(ev);
       outErr = ev->AsErr();
     }
   }
   return outErr;
-} // called at strong refs zero
+}
 
 /*virtual*/ mdb_err
 morkHandle::Handle_IsOpenMdbObject(nsIMdbEnv* mev, mdb_bool* outOpen)
