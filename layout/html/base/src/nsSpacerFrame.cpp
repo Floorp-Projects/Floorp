@@ -93,55 +93,57 @@ SpacerFrame::Reflow(nsIPresContext*          aPresContext,
 
   nscoord width = 0;
   nscoord height = 0;
-  PRUint8 type = GetType();
-  nsresult ca;
-  nsIHTMLContent* hc = nsnull;
-  mContent->QueryInterface(kIHTMLContentIID, (void**) &hc);
-  if (nsnull != hc) {
-    if (type != TYPE_IMAGE) {
-      nsHTMLValue val;
-      ca = hc->GetHTMLAttribute(nsHTMLAtoms::size, val);
-      if (NS_CONTENT_ATTR_HAS_VALUE == ca) {
-        width = val.GetPixelValue();
-      }
-    } else {
-      nsHTMLValue val;
-      ca = hc->GetHTMLAttribute(nsHTMLAtoms::width, val);
-      if (NS_CONTENT_ATTR_HAS_VALUE == ca) {
-        if (eHTMLUnit_Pixel == val.GetUnit()) {
-          width = val.GetPixelValue();
-        }
-      }
-      ca = hc->GetHTMLAttribute(nsHTMLAtoms::height, val);
-      if (NS_CONTENT_ATTR_HAS_VALUE == ca) {
-        if (eHTMLUnit_Pixel == val.GetUnit()) {
-          height = val.GetPixelValue();
-        }
-      }
-    }
-    NS_RELEASE(hc);
-  }
 
-  float p2t;
-  aPresContext->GetScaledPixelsToTwips(&p2t);
+  const nsStylePosition*  position;
+  GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position);
+
+  PRUint8 type = GetType();
   switch (type) {
   case TYPE_WORD:
     if (0 != width) {
-      aMetrics.width = NSIntPixelsToTwips(width, p2t);
+      if (eStyleUnit_Coord == position->mWidth.GetUnit()) {
+        aMetrics.width = position->mWidth.GetCoordValue();
+      }
     }
     break;
 
   case TYPE_LINE:
-    if (0 != width) {
-      aStatus = NS_INLINE_LINE_BREAK_AFTER(NS_FRAME_COMPLETE);
-      aMetrics.height = NSIntPixelsToTwips(width, p2t);
-      aMetrics.ascent = aMetrics.height;
+    aStatus = NS_INLINE_LINE_BREAK_AFTER(NS_FRAME_COMPLETE);
+    if (eStyleUnit_Coord == position->mHeight.GetUnit()) {
+      aMetrics.width = position->mHeight.GetCoordValue();
     }
+    aMetrics.ascent = aMetrics.height;
     break;
 
   case TYPE_IMAGE:
-    aMetrics.width = NSIntPixelsToTwips(width, p2t);
-    aMetrics.height = NSIntPixelsToTwips(height, p2t);
+    // width
+    nsStyleUnit unit = position->mWidth.GetUnit();
+    if (eStyleUnit_Coord == unit) {
+      aMetrics.width = position->mWidth.GetCoordValue();
+    }
+    else if (eStyleUnit_Percent == unit) 
+    {
+      if (NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth)
+      {
+        float factor = position->mWidth.GetPercentValue();
+        aMetrics.width = NSToCoordRound (factor * aReflowState.availableWidth);
+      }
+    }
+
+    // height
+    unit = position->mHeight.GetUnit();
+    if (eStyleUnit_Coord == unit) {
+      aMetrics.height = position->mHeight.GetCoordValue();
+    }
+    else if (eStyleUnit_Percent == unit) 
+    {
+      if (NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight)
+      {
+        float factor = position->mHeight.GetPercentValue();
+        aMetrics.width = NSToCoordRound (factor * aReflowState.availableHeight);
+      }
+    }
+    // accent
     aMetrics.ascent = aMetrics.height;
     break;
   }
