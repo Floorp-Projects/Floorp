@@ -84,6 +84,7 @@ public:
 	void hideFrames();
 	void releaseFrames();
 	
+	void setCodeBase(char* codeBase);
 	const char* getCodeBase();
 	const char* getDocumentBase();
 
