@@ -315,12 +315,6 @@ function NewEditorFromDraft()
 //   and we need a delay to let dialog close)
 function editPage(url, launchWindow, delay)
 {
-  var webNav = null;
-  if ("getWebNavigation" in window)
-    webNav = getWebNavigation();
-  if (webNav && webNav.postData)
-    return;
-
   // User may not have supplied a window
   if (!launchWindow)
   {
