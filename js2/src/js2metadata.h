@@ -220,7 +220,7 @@ public:
 
     ObjectKind kind;
 
-    void *operator new(size_t s)    { ASSERT(false); return 0; }
+    void *operator new(size_t s) throw()    { ASSERT(false); return 0; }
     void operator delete(void *p)   { }
 
     void *operator new(size_t s, JS2Metadata *meta);
@@ -1120,7 +1120,7 @@ private:
 // so they're allocated from an arena carried in the metadata class and cleared after each bytecode gen pass.
 class Reference : public ArenaObject {
 public:
-    virtual ~Reference() { }
+//    virtual ~Reference() { }
     virtual void emitReadBytecode(BytecodeContainer *, size_t)              { ASSERT(false); }
     virtual void emitWriteBytecode(BytecodeContainer *, size_t)             { ASSERT(false); }
     virtual void emitReadForInvokeBytecode(BytecodeContainer *, size_t)     { ASSERT(false); }
@@ -1148,7 +1148,7 @@ public:
         : variableMultiname(mname), env(NULL), strict(strict), mn_index(bCon->saveMultiname(mname)) { }
 //    LexicalReference(const String *name, bool strict) : variableMultiname(name), env(NULL), strict(strict) { }
 //    LexicalReference(const String *name, Namespace *nameSpace, bool strict) : variableMultiname(name, nameSpace), env(NULL), strict(strict) { }
-    virtual ~LexicalReference() { }
+//    virtual ~LexicalReference() { }
     
     Multiname *variableMultiname;   // A nonempty set of qualified names to which this reference can refer
     Environment *env;               // The environment in which the reference was created.
@@ -1181,7 +1181,7 @@ class DotReference : public Reference {
 public:
 //    DotReference(const String *name) : propertyMultiname(name) { }
     DotReference(Multiname *mn, BytecodeContainer *bCon) : propertyMultiname(mn), mn_index(bCon->saveMultiname(propertyMultiname)) { }
-    virtual ~DotReference() { }
+//    virtual ~DotReference() { }
 
     // In this implementation, the base is established by the execution of the preceding expression and
     // is available on the execution stack, not in the reference object (which is a codegen-time only)
@@ -1215,7 +1215,7 @@ class SlotReference : public Reference {
 // A special case of a DotReference with an Sl instead of a D
 public:
     SlotReference(uint32 slotIndex) : slotIndex(slotIndex) { }
-    virtual ~SlotReference()    { }
+//    virtual ~SlotReference()    { }
 
     virtual void emitReadBytecode(BytecodeContainer *bCon, size_t pos)      { bCon->emitOp(eSlotRead, pos); bCon->addShort((uint16)slotIndex); }
     virtual void emitWriteBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eSlotWrite, pos); bCon->addShort((uint16)slotIndex); }
@@ -1238,7 +1238,7 @@ class FrameSlotReference : public Reference {
 // A special case of a DotReference with an FrameSl instead of a D
 public:
     FrameSlotReference(uint32 slotIndex) : slotIndex(slotIndex) { }
-    virtual ~FrameSlotReference()	{ }
+//    virtual ~FrameSlotReference()	{ }
 
     virtual void emitReadBytecode(BytecodeContainer *bCon, size_t pos)      { bCon->emitOp(eFrameSlotRead, pos); bCon->addShort((uint16)slotIndex); }
     virtual void emitWriteBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eFrameSlotWrite, pos); bCon->addShort((uint16)slotIndex); }
@@ -1261,7 +1261,7 @@ class ParameterSlotReference : public Reference {
 // A special case of a DotReference with an ParameterSl instead of a D
 public:
     ParameterSlotReference(uint32 slotIndex) : slotIndex(slotIndex) { }
-    virtual ~ParameterSlotReference()	{ }
+//    virtual ~ParameterSlotReference()	{ }
 
     virtual void emitReadBytecode(BytecodeContainer *bCon, size_t pos)      { bCon->emitOp(eParameterSlotRead, pos); bCon->addShort((uint16)slotIndex); }
     virtual void emitWriteBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eParameterSlotWrite, pos); bCon->addShort((uint16)slotIndex); }
@@ -1284,7 +1284,7 @@ class PackageSlotReference : public Reference {
 // A special case of a DotReference with an PackageSl instead of a D
 public:
     PackageSlotReference(uint32 slotIndex) : slotIndex(slotIndex) { }
-    virtual ~PackageSlotReference()	{ }
+//    virtual ~PackageSlotReference()	{ }
 
     virtual void emitReadBytecode(BytecodeContainer *bCon, size_t pos)      { bCon->emitOp(ePackageSlotRead, pos); bCon->addShort((uint16)slotIndex); }
     virtual void emitWriteBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(ePackageSlotWrite, pos); bCon->addShort((uint16)slotIndex); }
