@@ -35,7 +35,7 @@
 #include "nsHashtable.h"
 #include "nsIProtocolHandler.h"
 #include "nsIProgressEventSink.h"
-#include "nsIEventSinkGetter.h"
+#include "nsICapabilities.h"
 #include "nsIThreadPool.h"
 #include "nsIRequest.h"
 
@@ -60,16 +60,21 @@ public:
     // initializes the channel. creates the FTP connection thread
     // and returns it so the protocol handler can cache it and
     // join() it on shutdown.
-    nsresult Init(const char* verb, nsIURI* uri, nsILoadGroup *aGroup,
-                  nsIEventSinkGetter* getter, nsIURI* originalURI,
-                  nsIProtocolHandler* aHandler, nsIThreadPool* aPool);
+    nsresult Init(const char* verb, 
+                  nsIURI* uri, 
+                  nsILoadGroup* aLoadGroup,
+                  nsICapabilities* notificationCallbacks, 
+                  nsLoadFlags loadAttributes, 
+                  nsIURI* originalURI,
+                  nsIProtocolHandler* aHandler, 
+                  nsIThreadPool* aPool);
 
 protected:
     nsCOMPtr<nsIURI>                mOriginalURI;
     nsCOMPtr<nsIURI>                mURL;
     nsCOMPtr<nsIEventQueue>         mEventQueue;
     nsCOMPtr<nsIProgressEventSink>  mEventSink;
-    nsCOMPtr<nsIEventSinkGetter>    mEventSinkGetter;
+    nsCOMPtr<nsICapabilities>       mCallbacks;
 
     PRBool                          mConnected;
     nsCOMPtr<nsIStreamListener>     mListener;

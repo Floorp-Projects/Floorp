@@ -30,7 +30,6 @@
 #include "nsIInputStream.h"
 #include "nsIStringStream.h"
 #include "nsIURI.h"
-#include "nsIEventSinkGetter.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptContextOwner.h"
 #include "nsIScriptGlobalObject.h"
@@ -41,7 +40,7 @@
 #include "nsProxyObjectManager.h"
 #include "nsIWebShell.h"
 #include "nsDOMError.h"
-
+#include "nsICapabilities.h"
 #include "nsIEvaluateStringProxy.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
@@ -191,27 +190,24 @@ nsJSProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 }
 
 NS_IMETHODIMP
-nsJSProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
-                                nsILoadGroup *aGroup,
-                                nsIEventSinkGetter* eventSinkGetter,
+nsJSProtocolHandler::NewChannel(const char* verb, 
+                                nsIURI* uri,
+                                nsILoadGroup* aLoadGroup,
+                                nsICapabilities* notificationCallbacks,
+                                nsLoadFlags loadAttributes,
                                 nsIURI* originalURI,
                                 nsIChannel* *result)
 {
     NS_ENSURE_ARG_POINTER(uri);
-    NS_ENSURE_ARG_POINTER(eventSinkGetter);
 
     nsresult rv;
 
     // The event sink must be a script context owner or we fail.
-    nsIScriptContextOwner* ownerPtr;
-    rv = eventSinkGetter->GetEventSink(verb,
-                                       NS_GET_IID(nsIScriptContextOwner),
-                                       (nsISupports**)&ownerPtr);
+    nsCOMPtr<nsIScriptContextOwner> owner;
+    rv = notificationCallbacks->QueryCapability(NS_GET_IID(nsIScriptContextOwner),
+                                                getter_AddRefs(owner));
     if (NS_FAILED(rv))
         return rv;
-    nsCOMPtr<nsIScriptContextOwner> owner = ownerPtr;
-    NS_RELEASE(ownerPtr);
-
     if (!owner)
         return NS_ERROR_FAILURE;
 
@@ -354,7 +350,9 @@ nsJSProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
     nsIChannel* channel;
 
     rv = serv->NewInputStreamChannel(uri, "text/html", length,
-                                     in, aGroup, originalURI, &channel);
+                                     in, aLoadGroup,
+                                     notificationCallbacks, loadAttributes,
+                                     originalURI, &channel);
     if (NS_FAILED(rv))
         return rv;
 

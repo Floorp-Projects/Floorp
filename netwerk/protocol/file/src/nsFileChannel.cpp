@@ -22,7 +22,7 @@
 
 #include "nsFileChannel.h"
 #include "nscore.h"
-#include "nsIEventSinkGetter.h"
+#include "nsICapabilities.h"
 #include "nsIURI.h"
 #include "nsIEventQueue.h"
 #include "nsIStreamListener.h"
@@ -56,19 +56,22 @@ static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
 ////////////////////////////////////////////////////////////////////////////////
 
 nsFileChannel::nsFileChannel()
-    : mLoadAttributes(LOAD_NORMAL),
-      mRealListener(nsnull)
+    : mLoadAttributes(LOAD_NORMAL)
 {
     NS_INIT_REFCNT();
 }
 
 nsresult
-nsFileChannel::Init(nsIFileProtocolHandler* handler, const char* command, nsIURI* uri,
-                    nsILoadGroup *aGroup, nsIEventSinkGetter* getter, nsIURI* originalURI)
+nsFileChannel::Init(nsIFileProtocolHandler* handler, 
+                    const char* command,
+                    nsIURI* uri,
+                    nsILoadGroup* aLoadGroup,
+                    nsICapabilities* notificationCallbacks,
+                    nsLoadFlags loadAttributes,
+                    nsIURI* originalURI)
 {
     nsresult rv;
 
-    mGetter = getter;
     mHandler = handler;
     mOriginalURI = originalURI ? originalURI : uri;
     mURI = uri;
@@ -76,11 +79,14 @@ nsFileChannel::Init(nsIFileProtocolHandler* handler, const char* command, nsIURI
     if (mCommand == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    mLoadGroup = aGroup;
-    if (mLoadGroup) {
-        rv = mLoadGroup->GetDefaultLoadAttributes(&mLoadAttributes);
-        if (NS_FAILED(rv)) return rv;
-    }
+    rv = SetLoadAttributes(loadAttributes);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = SetLoadGroup(aLoadGroup);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = SetNotificationCallbacks(notificationCallbacks);
+    if (NS_FAILED(rv)) return rv;
 
     // if we support the nsIURL interface then use it to get just
     // the file path with no other garbage!
@@ -128,29 +134,12 @@ nsFileChannel::~nsFileChannel()
     if (mCommand) nsCRT::free(mCommand);
 }
 
-NS_IMETHODIMP
-nsFileChannel::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-    NS_ASSERTION(aInstancePtr, "no instance pointer");
-    if (aIID.Equals(NS_GET_IID(nsIFileChannel)) ||
-        aIID.Equals(NS_GET_IID(nsIChannel)) ||
-        aIID.Equals(NS_GET_IID(nsIRequest)) ||
-        aIID.Equals(NS_GET_IID(nsISupports))) {
-        *aInstancePtr = NS_STATIC_CAST(nsIFileChannel*, this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    if (aIID.Equals(NS_GET_IID(nsIStreamListener)) ||
-        aIID.Equals(NS_GET_IID(nsIStreamObserver))) {
-        *aInstancePtr = NS_STATIC_CAST(nsIStreamListener*, this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    return NS_NOINTERFACE;
-}
-
-NS_IMPL_ADDREF(nsFileChannel);
-NS_IMPL_RELEASE(nsFileChannel);
+NS_IMPL_ISUPPORTS5(nsFileChannel,
+                   nsIFileChannel,
+                   nsIChannel,
+                   nsIRequest,
+                   nsIStreamListener,
+                   nsIStreamObserver)
 
 NS_METHOD
 nsFileChannel::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
@@ -233,8 +222,10 @@ nsFileChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
     NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = fts->CreateTransport(mSpec, mCommand, mGetter,
-                              getter_AddRefs(mFileTransport));
+    rv = fts->CreateTransport(mSpec, mCommand, getter_AddRefs(mFileTransport));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = mFileTransport->SetNotificationCallbacks(mCallbacks);
     if (NS_FAILED(rv)) return rv;
 
     return mFileTransport->OpenInputStream(startPosition, readCount, result);
@@ -251,8 +242,10 @@ nsFileChannel::OpenOutputStream(PRUint32 startPosition, nsIOutputStream **result
     NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = fts->CreateTransport(mSpec, mCommand, mGetter,
-                              getter_AddRefs(mFileTransport));
+    rv = fts->CreateTransport(mSpec, mCommand, getter_AddRefs(mFileTransport));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = mFileTransport->SetNotificationCallbacks(mCallbacks);
     if (NS_FAILED(rv)) return rv;
 
     return mFileTransport->OpenOutputStream(startPosition, result);
@@ -299,8 +292,10 @@ nsFileChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
     NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = fts->CreateTransport(mSpec, mCommand, mGetter,
-                              getter_AddRefs(mFileTransport));
+    rv = fts->CreateTransport(mSpec, mCommand, getter_AddRefs(mFileTransport));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = mFileTransport->SetNotificationCallbacks(mCallbacks);
     if (NS_FAILED(rv)) return rv;
 
     return mFileTransport->AsyncRead(startPosition, readCount, ctxt, tempListener);
@@ -320,8 +315,10 @@ nsFileChannel::AsyncWrite(nsIInputStream *fromStream,
     NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = fts->CreateTransport(mSpec, mCommand, mGetter,
-                              getter_AddRefs(mFileTransport));
+    rv = fts->CreateTransport(mSpec, mCommand, getter_AddRefs(mFileTransport));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = mFileTransport->SetNotificationCallbacks(mCallbacks);
     if (NS_FAILED(rv)) return rv;
 
     return mFileTransport->AsyncWrite(fromStream, startPosition, writeCount, ctxt, observer);
@@ -385,7 +382,7 @@ nsFileChannel::GetContentLength(PRInt32 *aContentLength)
 }
 
 NS_IMETHODIMP
-nsFileChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
+nsFileChannel::GetLoadGroup(nsILoadGroup* *aLoadGroup)
 {
     *aLoadGroup = mLoadGroup;
     NS_IF_ADDREF(*aLoadGroup);
@@ -393,7 +390,18 @@ nsFileChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
 }
 
 NS_IMETHODIMP
-nsFileChannel::GetOwner(nsISupports * *aOwner)
+nsFileChannel::SetLoadGroup(nsILoadGroup* aLoadGroup)
+{
+    mLoadGroup = aLoadGroup;
+    if (mLoadGroup) {
+        nsresult rv = mLoadGroup->GetDefaultLoadAttributes(&mLoadAttributes);
+        if (NS_FAILED(rv)) return rv;
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileChannel::GetOwner(nsISupports* *aOwner)
 {
     *aOwner = mOwner.get();
     NS_IF_ADDREF(*aOwner);
@@ -401,10 +409,25 @@ nsFileChannel::GetOwner(nsISupports * *aOwner)
 }
 
 NS_IMETHODIMP
-nsFileChannel::SetOwner(nsISupports * aOwner)
+nsFileChannel::SetOwner(nsISupports* aOwner)
 {
     mOwner = aOwner;
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileChannel::GetNotificationCallbacks(nsICapabilities* *aNotificationCallbacks)
+{
+  *aNotificationCallbacks = mCallbacks.get();
+  NS_IF_ADDREF(*aNotificationCallbacks);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileChannel::SetNotificationCallbacks(nsICapabilities* aNotificationCallbacks)
+{
+  mCallbacks = aNotificationCallbacks;
+  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -746,10 +769,10 @@ nsFileChannel::CreateFileChannelFromFileSpec(nsFileSpec& spec, nsIFileChannel **
                           urlStr,
                           nsnull,
                           mLoadGroup,
-                          mGetter,
+                          mCallbacks,
+                          nsIChannel::LOAD_NORMAL,
                           nsnull,
                           &channel);
-
     if (NS_FAILED(rv)) return rv;
 
     // this cast is safe because nsFileURL::GetURLString aways

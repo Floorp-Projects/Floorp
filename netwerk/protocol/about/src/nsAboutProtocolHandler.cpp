@@ -120,8 +120,9 @@ nsAboutProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 
 NS_IMETHODIMP
 nsAboutProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
-                                   nsILoadGroup *aGroup,
-                                   nsIEventSinkGetter* eventSinkGetter,
+                                   nsILoadGroup* aLoadGroup,
+                                   nsICapabilities* notificationCallbacks,
+                                   nsLoadFlags loadAttributes,
                                    nsIURI* originalURI,
                                    nsIChannel* *result)
 {
@@ -147,8 +148,8 @@ nsAboutProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
     nsCRT::free(progIDStr);
     if (NS_SUCCEEDED(rv)) {
         // The standard return case:
-        return aboutMod->NewChannel(verb, uri, aGroup, eventSinkGetter, 
-                                    originalURI, result);
+        return aboutMod->NewChannel(verb, uri, aLoadGroup, notificationCallbacks,
+                                    loadAttributes, originalURI, result);
     }
 
     // mumble...

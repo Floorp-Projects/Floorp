@@ -40,8 +40,11 @@ nsUnicharStreamLoader::nsUnicharStreamLoader()
 }
 
 NS_IMETHODIMP
-nsUnicharStreamLoader::Init(nsIURI* aURL, nsILoadGroup* aLoadGroup,
-                            nsIUnicharStreamLoaderObserver* observer)
+nsUnicharStreamLoader::Init(nsIURI* aURL,
+                            nsIUnicharStreamLoaderObserver* observer, 
+                            nsILoadGroup* aGroup,
+                            nsICapabilities* notificationCallbacks,
+                            nsLoadFlags loadAttributes)
 {
   nsresult rv = NS_OK;
   mObserver = observer;
@@ -55,8 +58,8 @@ nsUnicharStreamLoader::Init(nsIURI* aURL, nsILoadGroup* aLoadGroup,
   if (NS_FAILED(rv)) return rv;
 
   nsIChannel* channel;
-  rv = serv->NewChannelFromURI("load", aURL, aLoadGroup, nsnull, 
-                               nsnull, &channel);
+  rv = serv->NewChannelFromURI("load", aURL, aGroup, notificationCallbacks,
+                               loadAttributes, nsnull, &channel);
   if (NS_FAILED(rv)) return rv;
 
   rv = channel->AsyncRead(0, -1, nsnull, this);

@@ -43,14 +43,14 @@
 #include "nsCOMPtr.h"
 #include "nsISupportsArray.h"
 #include "nsCRT.h"
-//#include "nsIProxy.h"
+#include "nsIProxy.h"
 
 //Forward decl.
 class nsHashtable;
 class nsIChannel;
 class nsHTTPChannel;
 
-class nsHTTPHandler : public nsIHTTPProtocolHandler//, public nsIProxy 
+class nsHTTPHandler : public nsIHTTPProtocolHandler, public nsIProxy 
 {
 
 public:
@@ -82,8 +82,9 @@ public:
     };
 
     NS_IMETHOD               NewChannel(const char* verb, nsIURI* url,
-                                        nsILoadGroup *aGroup,
-                                        nsIEventSinkGetter *eventSinkGetter,
+                                        nsILoadGroup* aLoadGroup,
+                                        nsICapabilities* notificationCallbacks,
+                                        nsLoadFlags loadAttributes,
                                         nsIURI* originalURI,
                                         nsIChannel **_retval);
     
@@ -130,7 +131,6 @@ public:
     */
     virtual nsresult RequestTransport(nsIURI *i_Uri, 
                                       nsHTTPChannel* i_Channel, 
-                                      nsIEventSinkGetter* i_ESG,
                                       nsIChannel** o_pTrans);
     
     /**
@@ -139,7 +139,6 @@ public:
     **/
 
     virtual nsresult CreateTransport(const char* host, PRInt32 port, 
-                                     nsIEventSinkGetter* i_ESG, 
                                      const char* aPrintHost,
                                      nsIChannel** o_pTrans);
     

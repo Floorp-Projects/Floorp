@@ -122,12 +122,13 @@ nsJARChannel::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 }
  
 nsresult 
-nsJARChannel::Init(nsIJARProtocolHandler* aHandler,
-				   const char* command, 
-				   nsIURI* uri, 
-				   nsILoadGroup *aGroup, 
-				   nsIEventSinkGetter* getter,
-				   nsIURI* originalURI)
+nsJARChannel::Init(nsIJARProtocolHandler* aHandler, 
+                   const char* command, 
+                   nsIURI* uri,
+                   nsILoadGroup* aLoadGroup, 
+                   nsICapabilities* notificationCallbacks,
+                   nsLoadFlags loadAttributes,
+                   nsIURI* originalURI)
 {
     nsresult rv;
 	mURI = do_QueryInterface(uri, &rv);
@@ -135,9 +136,17 @@ nsJARChannel::Init(nsIJARProtocolHandler* aHandler,
 	mCommand = nsCRT::strdup(command);
     if (mCommand == nsnull)
         return NS_ERROR_OUT_OF_MEMORY; 
-	mLoadGroup = aGroup;
-	mEventSinkGetter = getter;
     mOriginalURI = originalURI;
+
+    rv = SetLoadAttributes(loadAttributes);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = SetLoadGroup(aLoadGroup);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = SetNotificationCallbacks(notificationCallbacks);
+    if (NS_FAILED(rv)) return rv;
+
 	return NS_OK;
 }
 
@@ -220,7 +229,7 @@ nsJARChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
 
     nsCOMPtr<nsIChannel> jarBaseChannel;
     rv = NS_OpenURI(getter_AddRefs(jarBaseChannel),
-                    mJARBaseURI, mLoadGroup, mEventSinkGetter);
+                    mJARBaseURI, mLoadGroup, mCallbacks, mLoadAttributes);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIFileChannel> jarBaseFile = do_QueryInterface(jarBaseChannel, &rv);
@@ -249,8 +258,11 @@ nsJARChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
         // use a file transport to serve as a data pump for the download (done
         // on some other thread)
         nsCOMPtr<nsIChannel> jarCacheTransport;
-        rv = fts->CreateTransport(jarCacheFile, mCommand, mEventSinkGetter,
+        rv = fts->CreateTransport(jarCacheFile, mCommand,
                                   getter_AddRefs(jarCacheTransport));
+        if (NS_FAILED(rv)) return rv;
+
+        rv = jarCacheTransport->SetNotificationCallbacks(mCallbacks);
         if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsIStreamObserver> downloadObserver = new nsJARDownloadObserver(this);
@@ -299,8 +311,11 @@ nsJARChannel::ExtractJARElement(nsIFileChannel* jarBaseFile)
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIChannel> jarTransport;
-    rv = fts->CreateTransportFromFileSystem(this, mCommand, mEventSinkGetter,
+    rv = fts->CreateTransportFromFileSystem(this, mCommand,
                                             getter_AddRefs(jarTransport));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = jarTransport->SetNotificationCallbacks(mCallbacks);
     if (NS_FAILED(rv)) return rv;
 
     rv = jarTransport->AsyncRead(mStartPosition, mReadCount, nsnull, this);
@@ -401,6 +416,13 @@ nsJARChannel::GetLoadGroup(nsILoadGroup* *aLoadGroup)
 }
 
 NS_IMETHODIMP
+nsJARChannel::SetLoadGroup(nsILoadGroup* aLoadGroup)
+{
+    mLoadGroup = aLoadGroup;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsJARChannel::GetOwner(nsISupports* *aOwner)
 {
     *aOwner = mOwner.get();
@@ -412,6 +434,21 @@ NS_IMETHODIMP
 nsJARChannel::SetOwner(nsISupports* aOwner)
 {
     mOwner = aOwner;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJARChannel::GetNotificationCallbacks(nsICapabilities* *aNotificationCallbacks)
+{
+    *aNotificationCallbacks = mCallbacks.get();
+    NS_IF_ADDREF(*aNotificationCallbacks);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJARChannel::SetNotificationCallbacks(nsICapabilities* aNotificationCallbacks)
+{
+    mCallbacks = aNotificationCallbacks;
     return NS_OK;
 }
 

@@ -29,6 +29,7 @@
 #include "nsCRT.h"
 #include "nsILoadGroup.h"
 #include "nsIStreamListener.h"
+#include "nsICapabilities.h"
 #include "nsCOMPtr.h"
 
 class nsInputStreamChannel : public nsIInputStreamChannel, 
@@ -49,6 +50,7 @@ public:
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
 protected:
+    nsCOMPtr<nsICapabilities>   mCallbacks;
     nsCOMPtr<nsIURI>            mOriginalURI;
     nsCOMPtr<nsIURI>            mURI;
     char*                       mContentType;

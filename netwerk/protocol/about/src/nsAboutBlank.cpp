@@ -34,8 +34,9 @@ static const char kBlankPage[] = "";
 NS_IMETHODIMP
 nsAboutBlank::NewChannel(const char *verb,
                          nsIURI *aURI,
-                         nsILoadGroup *aGroup,
-                         nsIEventSinkGetter *eventSinkGetter,
+                         nsILoadGroup* aLoadGroup,
+                         nsICapabilities* notificationCallbacks,
+                         nsLoadFlags loadAttributes,
                          nsIURI* originalURI,
                          nsIChannel **result)
 {
@@ -55,7 +56,8 @@ nsAboutBlank::NewChannel(const char *verb,
 
     rv = serv->NewInputStreamChannel(aURI, "text/html", 
                                      nsCRT::strlen(kBlankPage),
-                                     in, aGroup, originalURI, &channel);
+                                     in, aLoadGroup, notificationCallbacks,
+                                     loadAttributes, originalURI, &channel);
     NS_RELEASE(in);
     if (NS_FAILED(rv)) return rv;
 

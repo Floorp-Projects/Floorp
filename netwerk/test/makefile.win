@@ -40,10 +40,9 @@ INCS = $(INCS)                  \
         -I$(DEPTH)\dist\include \
         $(NULL)
 
-LLIBS=					\
- $(DIST)\lib\xpcom.lib		\
- $(DIST)\lib\gkgfxwin.lib		\
- $(LIBNSPR)				\
+LLIBS=                 \
+ $(DIST)\lib\xpcom.lib \
+ $(LIBNSPR)            \
  $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

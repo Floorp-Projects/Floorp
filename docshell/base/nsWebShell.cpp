@@ -169,6 +169,7 @@ public:
 
   // nsISupports
   NS_DECL_ISUPPORTS
+  NS_DECL_NSICAPABILITIES
 
   // nsIInterfaceRequestor
   NS_DECL_NSIINTERFACEREQUESTOR
@@ -780,6 +781,7 @@ NS_IMPL_QUERY_HEAD(nsWebShell)
    NS_IMPL_QUERY_BODY(nsIRefreshURI)
    NS_IMPL_QUERY_BODY(nsIClipboardCommands)
    NS_IMPL_QUERY_BODY(nsIInterfaceRequestor)
+   NS_IMPL_QUERY_BODY(nsICapabilities)
 NS_IMPL_QUERY_TAIL(nsIWebShell)
 
 NS_IMETHODIMP
@@ -802,7 +804,7 @@ nsWebShell::GetInterface(const nsIID &aIID, void** aInstancePtr)
    else if(mPluginManager) //XXX this seems a little wrong. MMP
       return mPluginManager->QueryInterface(aIID, aInstancePtr);
 
-   return NS_NOINTERFACE;
+  return QueryInterface(aIID, aInstancePtr);
 }
 
 NS_IMETHODIMP

@@ -27,7 +27,7 @@
 #include "nsCRT.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
-#include "nsIEventSinkGetter.h"
+#include "nsICapabilities.h"
 #include "nsIProgressEventSink.h"
 
 static NS_DEFINE_CID(kStandardURLCID,            NS_STANDARDURL_CID);
@@ -97,8 +97,9 @@ nsDataHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 
 NS_IMETHODIMP
 nsDataHandler::NewChannel(const char* verb, nsIURI* url,
-                          nsILoadGroup *aGroup,
-                          nsIEventSinkGetter* eventSinkGetter,
+                          nsILoadGroup* aLoadGroup,
+                          nsICapabilities* notificationCallbacks,
+                          nsLoadFlags loadAttributes,
                           nsIURI* originalURI,
                           nsIChannel* *result)
 {
@@ -108,7 +109,8 @@ nsDataHandler::NewChannel(const char* verb, nsIURI* url,
     rv = nsDataChannel::Create(nsnull, NS_GET_IID(nsIDataChannel), (void**)&channel);
     if (NS_FAILED(rv)) return rv;
 
-    rv = channel->Init(verb, url, aGroup, eventSinkGetter, originalURI);
+    rv = channel->Init(verb, url, aLoadGroup, notificationCallbacks,
+                       loadAttributes, originalURI);
     if (NS_FAILED(rv)) {
         NS_RELEASE(channel);
         return rv;

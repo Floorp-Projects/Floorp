@@ -46,7 +46,7 @@
 #include "nsIURL.h"
 #include "nsIHTTPChannel.h"
 #include "nsIHttpEventSink.h" 
-#include "nsIEventSinkGetter.h" 
+#include "nsICapabilities.h" 
 #include "nsIDNSService.h" 
 
 #include "nsISimpleEnumerator.h"
@@ -557,35 +557,32 @@ InputTestConsumer::OnStopRequest(nsIChannel* channel,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsEventSinkGetter : public nsIEventSinkGetter {
+class nsNotificationCallbacks : public nsICapabilities {
 public:
     NS_DECL_ISUPPORTS
 
-    nsEventSinkGetter() {
+    nsNotificationCallbacks() {
         NS_INIT_REFCNT();
     }
 
-    NS_IMETHOD GetEventSink(const char* verb, const nsIID& eventSinkIID,
-                            nsISupports* *result) {
+    NS_IMETHOD QueryCapability(const nsIID& eventSinkIID, nsISupports* *result) {
         nsresult rv = NS_ERROR_FAILURE;
 
-        if (nsCRT::strcmp(verb, "load") == 0) { // makeshift verb for now
-            if (eventSinkIID.Equals(nsCOMTypeInfo<nsIHTTPEventSink>::GetIID())) {
-                TestHTTPEventSink *sink;
+        if (eventSinkIID.Equals(NS_GET_IID(nsIHTTPEventSink))) {
+            TestHTTPEventSink *sink;
 
-                sink = new TestHTTPEventSink();
-                if (sink == nsnull)
-                    return NS_ERROR_OUT_OF_MEMORY;
-                NS_ADDREF(sink);
-                rv = sink->QueryInterface(eventSinkIID, (void**)result);
-                NS_RELEASE(sink);
-            }
+            sink = new TestHTTPEventSink();
+            if (sink == nsnull)
+                return NS_ERROR_OUT_OF_MEMORY;
+            NS_ADDREF(sink);
+            rv = sink->QueryInterface(eventSinkIID, (void**)result);
+            NS_RELEASE(sink);
         }
         return rv;
     }
 };
 
-NS_IMPL_ISUPPORTS(nsEventSinkGetter, nsCOMTypeInfo<nsIEventSinkGetter>::GetIID());
+NS_IMPL_ISUPPORTS1(nsNotificationCallbacks, nsICapabilities)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -604,23 +601,23 @@ nsresult StartLoadingURL(const char* aUrlString)
             return rv;
         }
         nsCOMPtr<nsIChannel> pChannel;
-        nsEventSinkGetter* pMySink;
+        nsNotificationCallbacks* callbacks;
 
-        pMySink = new nsEventSinkGetter();
-        NS_IF_ADDREF(pMySink);
-        if (!pMySink) {
+        callbacks = new nsNotificationCallbacks();
+        if (!callbacks) {
             NS_ERROR("Failed to create a new consumer!");
             return NS_ERROR_OUT_OF_MEMORY;;
         }
+        NS_ADDREF(callbacks);
 
         // Async reading thru the calls of the event sink interface
-        rv = pService->NewChannelFromURI("load", pURL, nsnull, pMySink, 
+        rv = pService->NewChannelFromURI("load", pURL, nsnull, callbacks, 
                                          getter_AddRefs(pChannel));
+        NS_RELEASE(callbacks);
         if (NS_FAILED(rv)) {
             printf("ERROR: NewChannelFromURI failed for %s\n", aUrlString);
             return rv;
         }
-        NS_RELEASE(pMySink);
 
         /* 
            You may optionally add/set other headers on this

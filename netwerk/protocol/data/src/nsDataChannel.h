@@ -32,11 +32,9 @@
 #include "nsILoadGroup.h"
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
+#include "nsICapabilities.h"
 
 #include "nsCOMPtr.h"
-
-class nsIEventSinkGetter;
-class nsIProgressEventSink;
 
 class nsDataChannel : public nsIDataChannel {
 public:
@@ -53,19 +51,24 @@ public:
     static NS_METHOD
     Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
     
-    nsresult Init(const char* verb, nsIURI* uri, nsILoadGroup *aGroup,
-                  nsIEventSinkGetter* getter, nsIURI* originalURI);
+    nsresult Init(const char* verb, 
+                  nsIURI* uri, 
+                  nsILoadGroup* aLoadGroup,
+                  nsICapabilities* notificationCallbacks, 
+                  nsLoadFlags loadAttributes,
+                  nsIURI* originalURI);
     nsresult ParseData();
 
 protected:
-    nsCOMPtr<nsIURI>        mOriginalURI;
-    nsIURI                  *mUrl;
-    nsIInputStream          *mDataStream;
-    PRUint32                mLoadAttributes;
-    nsILoadGroup            *mLoadGroup;
-    nsCString               mContentType;
-    PRInt32                 mContentLength;
-    nsCOMPtr<nsISupports>   mOwner;
+    nsCOMPtr<nsICapabilities>   mCallbacks;
+    nsCOMPtr<nsIURI>            mOriginalURI;
+    nsCOMPtr<nsIURI>            mUrl;
+    nsCOMPtr<nsIInputStream>    mDataStream;
+    PRUint32                    mLoadAttributes;
+    nsCOMPtr<nsILoadGroup>      mLoadGroup;
+    nsCString                   mContentType;
+    PRInt32                     mContentLength;
+    nsCOMPtr<nsISupports>       mOwner;
 
 };
 

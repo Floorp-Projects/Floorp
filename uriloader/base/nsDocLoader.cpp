@@ -1020,35 +1020,6 @@ nsDocumentBindInfo::QueryInterface(const nsIID& aIID,
   return NS_NOINTERFACE;
 }
 
-class nsWebShellEventSinkGetter : public nsIEventSinkGetter {
-public:
-  NS_DECL_ISUPPORTS
-
-  nsWebShellEventSinkGetter(nsIWebShell *aWebShell) {
-    NS_INIT_REFCNT();
-    mWebShell = aWebShell;
-    NS_IF_ADDREF(mWebShell);
-  }
-
-  virtual ~nsWebShellEventSinkGetter() {
-    NS_IF_RELEASE(mWebShell);
-  }
-
-  NS_IMETHOD GetEventSink(const char* aVerb, const nsIID& anIID, nsISupports** aSink) {
-    if (mWebShell) {
-      if (nsCRT::strcmp(aVerb, "load") == 0) {
-        return mWebShell->QueryInterface(anIID, (void**)aSink);
-      }
-    }
-    return NS_ERROR_FAILURE;
-  }
-private:
-  nsIWebShell* mWebShell;
-};
-
-// XXXbe second arg is unnecessary given first; hidden static IID in macro... scc help!
-NS_IMPL_ISUPPORTS(nsWebShellEventSinkGetter, nsCOMTypeInfo<nsIEventSinkGetter>::GetIID())
-
 nsresult nsDocumentBindInfo::Bind(nsIURI* aURL, 
                                   nsILoadGroup *aLoadGroup,
                                   nsIInputStream *postDataStream,
@@ -1057,13 +1028,9 @@ nsresult nsDocumentBindInfo::Bind(nsIURI* aURL,
   nsresult rv = NS_OK;
 
   // XXXbe this knows that m_Container implements nsIWebShell
-  nsCOMPtr<nsIWebShell> webShell = do_QueryInterface(m_Container);
-  nsCOMPtr<nsIEventSinkGetter> eventSinkGetter = new nsWebShellEventSinkGetter(webShell);
-  if (!eventSinkGetter)
-    return NS_ERROR_OUT_OF_MEMORY;
-
+  nsCOMPtr<nsICapabilities> capabilities = do_QueryInterface(m_Container);
   nsCOMPtr<nsIChannel> channel;
-  rv = NS_OpenURI(getter_AddRefs(channel), aURL, aLoadGroup, eventSinkGetter);
+  rv = NS_OpenURI(getter_AddRefs(channel), aURL, aLoadGroup, capabilities);
   if (NS_FAILED(rv)) return rv;
 
   if (postDataStream || aReferrer)

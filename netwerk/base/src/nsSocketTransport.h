@@ -38,6 +38,7 @@
 #include "nsIDNSListener.h"
 #include "nsIPipe.h"
 #include "nsIProgressEventSink.h"
+#include "nsICapabilities.h"
 
 #define NS_SOCKET_TRANSPORT_SEGMENT_SIZE        (2*1024)
 #define NS_SOCKET_TRANSPORT_BUFFER_SIZE         (8*1024)
@@ -107,7 +108,7 @@ enum nsSocketReadWriteInfo {
 
 // Forward declarations...
 class nsSocketTransportService;
-class nsIEventSinkGetter;
+class nsICapabilities;
 
 class nsSocketTransport : public nsIChannel, 
                           public nsIDNSListener,
@@ -117,11 +118,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUEST
   NS_DECL_NSICHANNEL
-
-  // nsIPipeObserver methods:
   NS_DECL_NSIPIPEOBSERVER
-
-  // nsIDNSListener methods:
   NS_DECL_NSIDNSLISTENER
 
   // nsSocketTransport methods:
@@ -132,7 +129,6 @@ public:
                 const char* aHost, 
                 PRInt32 aPort,
                 const char* aSocketType,
-                nsIEventSinkGetter* eventSinkGetter,
                 const char* aPrintHost); // This host is used for status mesg
 
   nsresult Process(PRInt16 aSelectFlags);
@@ -197,6 +193,7 @@ protected:
   PRBool                            mCloseConnectionOnceDone;
   nsSocketState                     mCurrentState;
   nsCOMPtr<nsIRequest>              mDNSRequest;
+  nsCOMPtr<nsICapabilities>         mCallbacks;
   nsCOMPtr<nsIProgressEventSink>    mEventSink;
   char*                             mHostName;
   PRIntervalTime                    mLastActiveTime;

@@ -60,14 +60,28 @@ nsInputStreamChannel::Create(nsISupports *aOuter, REFNSIID aIID,
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::Init(nsIURI* uri, const char* contentType,
-                           PRInt32 contentLength, nsIInputStream* in,
-                           nsILoadGroup* group, nsIURI* originalURI)
+nsInputStreamChannel::Init(nsIURI* uri, 
+                           const char* contentType,
+                           PRInt32 contentLength, 
+                           nsIInputStream* in,
+                           nsILoadGroup *aGroup,
+                           nsICapabilities* notificationCallbacks,
+                           nsLoadFlags loadAttributes,
+                           nsIURI* originalURI)
 {
+    nsresult rv;
     mOriginalURI = originalURI ? originalURI : uri;
     mURI = uri;
-    mLoadGroup = group;
     mContentLength = contentLength;
+
+    rv = SetLoadAttributes(loadAttributes);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = SetLoadGroup(aGroup);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = SetNotificationCallbacks(notificationCallbacks);
+    if (NS_FAILED(rv)) return rv;
 
     if (contentType) { 
         mContentType = nsCRT::strdup(contentType);
@@ -156,8 +170,7 @@ nsInputStreamChannel::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
     if (NS_FAILED(rv)) return rv;
 
     rv = fts->CreateTransportFromStream(mInputStream, mContentType, mContentLength,
-                                        "load", nsnull,
-                                        getter_AddRefs(mFileTransport));
+                                        "load", getter_AddRefs(mFileTransport));
     if (NS_FAILED(rv)) return rv;
 
     return mFileTransport->AsyncOpen(observer, ctxt);
@@ -213,8 +226,7 @@ nsInputStreamChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
         if (NS_FAILED(rv)) return rv;
 
         rv = fts->CreateTransportFromStream(mInputStream, mContentType, mContentLength,
-                                            "load", nsnull,
-                                            getter_AddRefs(mFileTransport));
+                                            "load", getter_AddRefs(mFileTransport));
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -262,7 +274,7 @@ nsInputStreamChannel::GetContentLength(PRInt32 *aContentLength)
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
+nsInputStreamChannel::GetLoadGroup(nsILoadGroup* *aLoadGroup)
 {
     *aLoadGroup = mLoadGroup.get();
     NS_IF_ADDREF(*aLoadGroup);
@@ -270,7 +282,14 @@ nsInputStreamChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::GetOwner(nsISupports * *aOwner)
+nsInputStreamChannel::SetLoadGroup(nsILoadGroup* aLoadGroup)
+{
+    mLoadGroup = aLoadGroup;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsInputStreamChannel::GetOwner(nsISupports* *aOwner)
 {
     *aOwner = mOwner.get();
     NS_IF_ADDREF(*aOwner);
@@ -278,10 +297,25 @@ nsInputStreamChannel::GetOwner(nsISupports * *aOwner)
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::SetOwner(nsISupports * aOwner)
+nsInputStreamChannel::SetOwner(nsISupports* aOwner)
 {
     mOwner = aOwner;
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsInputStreamChannel::GetNotificationCallbacks(nsICapabilities* *aNotificationCallbacks)
+{
+  *aNotificationCallbacks = mCallbacks.get();
+  NS_IF_ADDREF(*aNotificationCallbacks);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsInputStreamChannel::SetNotificationCallbacks(nsICapabilities* aNotificationCallbacks)
+{
+  mCallbacks = aNotificationCallbacks;
+  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -26,7 +26,7 @@
 #include "nsIURL.h"
 #include "nsCRT.h"
 #include "nsIComponentManager.h"
-#include "nsIEventSinkGetter.h"
+#include "nsICapabilities.h"
 #include "nsIProgressEventSink.h"
 #include "nsConnectionCacheObj.h"
 
@@ -176,8 +176,9 @@ nsFtpProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 
 NS_IMETHODIMP
 nsFtpProtocolHandler::NewChannel(const char* verb, nsIURI* url,
-                                 nsILoadGroup *aGroup,
-                                 nsIEventSinkGetter* eventSinkGetter,
+                                 nsILoadGroup* aLoadGroup,
+                                 nsICapabilities* notificationCallbacks,
+                                 nsLoadFlags loadAttributes,
                                  nsIURI* originalURI,
                                  nsIChannel* *result)
 {
@@ -187,7 +188,8 @@ nsFtpProtocolHandler::NewChannel(const char* verb, nsIURI* url,
     rv = nsFTPChannel::Create(nsnull, NS_GET_IID(nsIFTPChannel), (void**)&channel);
     if (NS_FAILED(rv)) return rv;
 
-    rv = channel->Init(verb, url, aGroup, eventSinkGetter, originalURI, this, mPool);
+    rv = channel->Init(verb, url, aLoadGroup, notificationCallbacks, loadAttributes,
+                       originalURI, this, mPool);
     if (NS_FAILED(rv)) {
         NS_RELEASE(channel);
         PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFtpProtocolHandler::NewChannel() FAILED\n"));

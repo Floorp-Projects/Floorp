@@ -228,7 +228,8 @@ nsIOService::NewURI(const char* aSpec, nsIURI* aBaseURI,
 NS_IMETHODIMP
 nsIOService::NewChannelFromURI(const char* verb, nsIURI *aURI,
                                nsILoadGroup *aGroup,
-                               nsIEventSinkGetter *eventSinkGetter,
+                               nsICapabilities* notificationCallbacks,
+                               nsLoadFlags loadAttributes,
                                nsIURI* originalURI,
                                nsIChannel **result)
 {
@@ -242,12 +243,8 @@ nsIOService::NewChannelFromURI(const char* verb, nsIURI *aURI,
     rv = GetProtocolHandler((const char*)scheme, getter_AddRefs(handler));
     if (NS_FAILED(rv)) return rv;
 
-    nsIChannel* channel;
-    rv = handler->NewChannel(verb, aURI, aGroup, eventSinkGetter, 
-                             originalURI, &channel);
-    if (NS_FAILED(rv)) return rv;
-
-    *result = channel;
+    rv = handler->NewChannel(verb, aURI, aGroup, notificationCallbacks,
+                             loadAttributes, originalURI, result);
     return rv;
 }
 
@@ -255,7 +252,8 @@ NS_IMETHODIMP
 nsIOService::NewChannel(const char* verb, const char *aSpec,
                         nsIURI *aBaseURI,
                         nsILoadGroup *aGroup,
-                        nsIEventSinkGetter *eventSinkGetter,
+                        nsICapabilities* notificationCallbacks,
+                        nsLoadFlags loadAttributes,
                         nsIURI* originalURI,
                         nsIChannel **result)
 {
@@ -264,8 +262,9 @@ nsIOService::NewChannel(const char* verb, const char *aSpec,
     nsCOMPtr<nsIProtocolHandler> handler;
     rv = NewURI(aSpec, aBaseURI, getter_AddRefs(uri), getter_AddRefs(handler));
     if (NS_FAILED(rv)) return rv;
-    rv = handler->NewChannel(verb, uri, aGroup, eventSinkGetter, 
-                             originalURI, result);
+
+    rv = handler->NewChannel(verb, uri, aGroup, notificationCallbacks,
+                             loadAttributes, originalURI, result);
     return rv;
 }
 
@@ -382,17 +381,23 @@ nsIOService::NewChannelFromNativePath(const char *nativePath, nsIFileChannel **r
 }
 
 NS_IMETHODIMP
-nsIOService::NewInputStreamChannel(nsIURI* uri, const char *contentType, 
+nsIOService::NewInputStreamChannel(nsIURI* uri, 
+                                   const char *contentType, 
                                    PRInt32 contentLength,
-                                   nsIInputStream *inStr, nsILoadGroup* group,
-                                   nsIURI* originalURI, nsIChannel **result)
+                                   nsIInputStream *inStr, 
+                                   nsILoadGroup *aGroup,
+                                   nsICapabilities* notificationCallbacks,
+                                   nsLoadFlags loadAttributes,
+                                   nsIURI* originalURI,
+                                   nsIChannel **result)
 {
     nsresult rv;
     nsInputStreamChannel* channel;
     rv = nsInputStreamChannel::Create(nsnull, NS_GET_IID(nsIChannel),
                                       (void**)&channel);
     if (NS_FAILED(rv)) return rv;
-    rv = channel->Init(uri, contentType, contentLength, inStr, group, originalURI);
+    rv = channel->Init(uri, contentType, contentLength, inStr, aGroup,
+                       notificationCallbacks, loadAttributes, originalURI);
     if (NS_FAILED(rv)) {
         NS_RELEASE(channel);
         return rv;

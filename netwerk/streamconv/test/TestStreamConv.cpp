@@ -277,7 +277,12 @@ main(int argc, char* argv[])
     if (NS_FAILED(rv)) return rv;
     rv = serv->NewInputStreamChannel(dummyURI, "multipart/x-mixed-replacE;boundary=thisrandomstring",
                                      -1,        // XXX fix contentLength
-                                     nsnull, nsnull, nsnull, getter_AddRefs(dummyChannel));
+                                     nsnull,    // inStr
+                                     nsnull,    // loadGroup
+                                     nsnull,    // notificationCallbacks
+                                     nsIChannel::LOAD_NORMAL,
+                                     nsnull,    // originalURI
+                                     getter_AddRefs(dummyChannel));
     if (NS_FAILED(rv)) return rv;
 
 

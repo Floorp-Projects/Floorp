@@ -26,7 +26,7 @@
 #include "nsCRT.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
-#include "nsIEventSinkGetter.h"
+#include "nsICapabilities.h"
 #include "nsIProgressEventSink.h"
 #include "nsIThread.h"
 #include "nsIThreadPool.h"
@@ -127,9 +127,10 @@ nsFileProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 }
 
 NS_IMETHODIMP
-nsFileProtocolHandler::NewChannel(const char* verb, nsIURI* url,
-                                  nsILoadGroup *aGroup,
-                                  nsIEventSinkGetter* eventSinkGetter,
+nsFileProtocolHandler::NewChannel(const char* command, nsIURI* url,
+                                  nsILoadGroup* aLoadGroup,
+                                  nsICapabilities* notificationCallbacks,
+                                  nsLoadFlags loadAttributes,
                                   nsIURI* originalURI,
                                   nsIChannel* *result)
 {
@@ -139,7 +140,8 @@ nsFileProtocolHandler::NewChannel(const char* verb, nsIURI* url,
     rv = nsFileChannel::Create(nsnull, NS_GET_IID(nsIFileChannel), (void**)&channel);
     if (NS_FAILED(rv)) return rv;
 
-    rv = channel->Init(this, verb, url, aGroup, eventSinkGetter, originalURI);
+    rv = channel->Init(this, command, url, aLoadGroup, notificationCallbacks,
+                       loadAttributes, originalURI);
     if (NS_FAILED(rv)) {
         NS_RELEASE(channel);
         return rv;
@@ -163,9 +165,10 @@ nsFileProtocolHandler::NewChannelFromNativePath(const char* nativePath,
     if (NS_FAILED(rv)) return rv;
 
     rv = NewChannel("load",  // XXX what should this be?
-                    uri,
-                    nsnull,  // XXX bogus load group
-                    nsnull,  // XXX bogus getter
+                    uri, 
+                    nsnull,  // loadGroup
+                    nsnull,  // notificationCallbacks
+                    nsIChannel::LOAD_NORMAL,
                     nsnull,  // originalURI same as uri
                     (nsIChannel**)result);
     NS_RELEASE(uri);

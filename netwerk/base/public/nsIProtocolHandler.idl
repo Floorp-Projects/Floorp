@@ -21,10 +21,10 @@
  */
 
 #include "nsISupports.idl"
+#include "nsIChannel.idl"
 
 interface nsIURI;
-interface nsIEventSinkGetter;
-interface nsIChannel;
+interface nsICapabilities;
 interface nsILoadGroup;
 
 [scriptable, uuid(15fd6940-8ea7-11d3-93ad-00104ba0fd40)]
@@ -55,7 +55,8 @@ interface nsIProtocolHandler : nsISupports
     nsIChannel newChannel(in string verb,
                           in nsIURI aURI,
                           in nsILoadGroup aLoadGroup,
-                          in nsIEventSinkGetter eventSinkGetter,
+                          in nsICapabilities notificationCallbacks,
+                          in nsLoadFlags loadAttributes,
                           in nsIURI originalURI);
 };
 
