@@ -514,8 +514,6 @@ PR_IMPLEMENT(PRStatus) PR_JoinThread(PRThread *thred)
         PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
         PR_LogPrint(
             "PR_JoinThread: 0x%X not joinable | already smashed\n", thred);
-
-        PR_ASSERT(!"Illegal thread join attempt");
     }
     else
     {
