@@ -118,6 +118,7 @@ nsStringBundle::~nsStringBundle()
 nsresult
 nsStringBundle::GetStringFromID(PRInt32 aID, nsString& aResult)
 {
+  NS_ENSURE_TRUE(mProps, NS_ERROR_UNEXPECTED);
   nsAutoCMonitor(this);
   nsAutoString name;
   name.AppendInt(aID, 10);
@@ -136,7 +137,7 @@ nsStringBundle::GetStringFromID(PRInt32 aID, nsString& aResult)
 nsresult
 nsStringBundle::GetStringFromName(const nsString& aName, nsString& aResult)
 {
-  nsAutoCMonitor(this);
+  NS_ENSURE_TRUE(mProps, NS_ERROR_FAILURE);
   nsresult ret = mProps->GetStringProperty(aName, aResult);
 #ifdef DEBUG_tao
   char *s = aResult.ToNewCString(),
@@ -173,6 +174,7 @@ nsStringBundle::GetStringFromID(PRInt32 aID, PRUnichar **aResult)
 NS_IMETHODIMP 
 nsStringBundle::GetStringFromName(const PRUnichar *aName, PRUnichar **aResult)
 {
+  nsAutoCMonitor(this);
   *aResult = nsnull;
   nsString tmpstr;
   nsString nameStr(aName);
