@@ -26,6 +26,8 @@
 #include "nsIPref.h"
 #include "prmem.h"
 
+#include "nsCRT.h"  // for nsCRT::strtok
+
 // this should eventually be moved to the pop3 server for upgrading
 #include "nsIPop3IncomingServer.h"
 
@@ -308,11 +310,11 @@ nsMsgAccountManager::addIdentitiesToArray(nsHashKey *key, void *aData, void *clo
   nsISupportsArray *array = (nsISupportsArray*)closure;
   nsIMsgAccount* account = (nsIMsgAccount *)aData;
 
-  nsISupportsArray *identities;
-  nsISupports *identity;
+  nsISupportsArray *identities = nsnull;
 
   // add each list of identities to the list
-  nsresult rv = account->GetIdentities(&identities);
+  nsresult rv = NS_OK;
+  rv = account->GetIdentities(&identities);
   array->AppendElements(identities);
   NS_RELEASE(identities);
   
@@ -386,42 +388,47 @@ nsMsgAccountManager::LoadAccounts()
   if (NS_FAILED(rv) || !accountList || !accountList[0]) {
     // create default bogus accounts
     printf("No accounts. I'll try to migrate 4.x prefs..\n");
-    upgradePrefs();
+    rv = upgradePrefs();
+
+    return rv;
   }
-  
-  char *accountKey = nsnull;
-  char *str = nsnull;
-  nsIMsgAccount *account = nsnull;
+  else {    
+    /* parse accountList and run loadAccount on each string, comma-separated */
 #ifdef DEBUG_sspitzer
-  printf("accountList = %s\n", accountList);
+    printf("accountList = %s\n", accountList);
 #endif
+   
+    nsIMsgAccount *account = nsnull;
+    char *accountKey = nsnull;
+    char *token = nsnull;
+    char *rest = accountList;
 
-  /* parse accountList and run loadAccount on each string, comma-separated */
-  str = strtok(accountList, ",");
-  while (str != nsnull) {
-    accountKey = PL_strdup(str);
+    token = nsCRT::strtok(rest, ",", &rest);
+    while (token && *token) {
+      accountKey = PL_strdup(token);
 #ifdef DEBUG_sspitzer
-    printf("accountKey = %s\n", accountKey);
+      printf("accountKey = %s\n", accountKey);
 #endif
-    account = LoadAccount(accountKey);
-    if (account) {
-      addAccount(account);
-    }
-    else {
-      return NS_ERROR_NULL_POINTER;
+      account = LoadAccount(accountKey);
+      if (account) {
+        addAccount(account);
+      }
+      else {
+        return NS_ERROR_NULL_POINTER;
+      }
+      
+      PR_Free(accountKey);
+      accountKey = nsnull;
+      account = nsnull;
+      token = nsCRT::strtok(rest, ",", &rest);
     }
 
-    PR_Free(accountKey);
-    accountKey = nsnull;
-    account = nsnull;
-    str = strtok(nsnull, ",");
+    /* finished loading accounts */
+    PR_Free(accountList);
+    accountList = nsnull;
+
+    return NS_OK;
   }
-
-  /* finished loading accounts */
-  PR_Free(accountList);
-  accountList = nsnull;
-
-  return NS_OK;
 }
 
 nsIMsgAccount *
