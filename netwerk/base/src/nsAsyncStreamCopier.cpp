@@ -64,10 +64,12 @@ nsAsyncStreamCopier::nsAsyncStreamCopier()
     if (!gStreamCopierLog)
         gStreamCopierLog = PR_NewLogModule("nsStreamCopier");
 #endif
+    LOG(("Creating nsAsyncStreamCopier @%x\n", this));
 }
 
 nsAsyncStreamCopier::~nsAsyncStreamCopier()
 {
+    LOG(("Destroying nsAsyncStreamCopier @%x\n", this));
     PR_DestroyLock(mLock);
 }
 
@@ -322,17 +324,7 @@ nsInputWrapper::Read(char *buf, PRUint32 count, PRUint32 *countRead)
 
     NS_ENSURE_TRUE(mSource, NS_ERROR_NOT_INITIALIZED);
 
-    nsresult rv = mSource->Read(buf, count, countRead);
-    /*
-    if (NS_FAILED(rv)) {
-        if (rv != NS_BASE_STREAM_WOULD_BLOCK)
-            CloseEx(rv);
-        // else, not a real error
-    }
-    else if (*countRead == 0)
-        CloseEx(NS_BASE_STREAM_CLOSED);
-    */
-    return rv;
+    return mSource->Read(buf, count, countRead);
 }
 
 NS_METHOD nsAsyncStreamCopier::
@@ -365,17 +357,7 @@ nsInputWrapper::ReadSegments(nsWriteSegmentFun writer, void *closure,
     mWriter = writer;
     mClosure = closure;
 
-    nsresult rv = mSource->ReadSegments(ReadSegmentsThunk, this, count, countRead);
-    /*
-    if (NS_FAILED(rv)) {
-        if (rv != NS_BASE_STREAM_WOULD_BLOCK)
-            CloseEx(rv);
-        // else, not a real error
-    }
-    else if (*countRead == 0)
-        CloseEx(NS_BASE_STREAM_CLOSED);
-    */
-    return rv;
+    return mSource->ReadSegments(ReadSegmentsThunk, this, count, countRead);
 }
 
 NS_IMETHODIMP nsAsyncStreamCopier::
@@ -392,6 +374,8 @@ nsInputWrapper::IsNonBlocking(PRBool *result)
 NS_IMETHODIMP nsAsyncStreamCopier::
 nsInputWrapper::CloseEx(nsresult reason)
 {
+    LOG(("nsAsyncStreamCopier::nsInputWrapper::CloseEx [this=%x]\n", this));
+
     mCopier->Complete(reason);
 
     if (mAsyncSource)
@@ -404,8 +388,8 @@ nsInputWrapper::CloseEx(nsresult reason)
 NS_IMETHODIMP nsAsyncStreamCopier::
 nsInputWrapper::AsyncWait(nsIInputStreamNotify *notify, PRUint32 amount, nsIEventQueue *eventQ)
 {
-    // we'll cheat a little bit here since we know that NS_AsyncCopy does pass
-    // an event queue.
+    // we'll cheat a little bit here since we know that NS_AsyncCopy does not
+    // pass a non-null event queue.
     NS_ASSERTION(eventQ == nsnull, "unexpected");
 
     if (mAsyncSource) {
@@ -473,12 +457,7 @@ nsOutputWrapper::Write(const char *buf, PRUint32 count, PRUint32 *countWritten)
 
     NS_ENSURE_TRUE(mSink, NS_ERROR_NOT_INITIALIZED);
 
-    nsresult rv = mSink->Write(buf, count, countWritten);
-    /*
-    if (NS_FAILED(rv) && rv != NS_BASE_STREAM_WOULD_BLOCK)
-        CloseEx(rv);
-    */
-    return rv;
+    return mSink->Write(buf, count, countWritten);
 }
 
 NS_METHOD nsAsyncStreamCopier::
@@ -511,12 +490,7 @@ nsOutputWrapper::WriteSegments(nsReadSegmentFun reader, void *closure,
     mReader = reader;
     mClosure = closure;
 
-    nsresult rv = mSink->WriteSegments(WriteSegmentsThunk, this, count, countWritten);
-    /*
-    if (NS_FAILED(rv) && rv != NS_BASE_STREAM_WOULD_BLOCK)
-        CloseEx(rv);
-    */
-    return rv;
+    return mSink->WriteSegments(WriteSegmentsThunk, this, count, countWritten);
 }
 
 NS_IMETHODIMP nsAsyncStreamCopier::
@@ -540,6 +514,8 @@ nsOutputWrapper::IsNonBlocking(PRBool *result)
 NS_IMETHODIMP nsAsyncStreamCopier::
 nsOutputWrapper::CloseEx(nsresult reason)
 {
+    LOG(("nsAsyncStreamCopier::nsOutputWrapper::CloseEx [this=%x]\n", this));
+
     mCopier->Complete(reason);
 
     if (mAsyncSink)
@@ -552,8 +528,8 @@ nsOutputWrapper::CloseEx(nsresult reason)
 NS_IMETHODIMP nsAsyncStreamCopier::
 nsOutputWrapper::AsyncWait(nsIOutputStreamNotify *notify, PRUint32 amount, nsIEventQueue *eventQ)
 {
-    // we'll cheat a little bit here since we know that NS_AsyncCopy does pass
-    // an event queue.
+    // we'll cheat a little bit here since we know that NS_AsyncCopy does not
+    // pass a non-null event queue.
     NS_ASSERTION(eventQ == nsnull, "unexpected");
 
     if (mAsyncSink) {

@@ -879,6 +879,21 @@ nsSocketTransport::InitiateSocket()
     LOG(("nsSocketTransport::InitiateSocket [this=%x]\n", this));
 
     //
+    // find out if it is going to be ok to attach another socket to the STS.
+    // if not then we have to wait for the STS to tell us that it is ok.
+    // the notification is asynchronous, which means that when we could be
+    // in a race to call AttachSocket once notified.  for this reason, when
+    // we get notified, we just re-enter this function.  as a result, we are
+    // sure to ask again before calling AttachSocket.  in this way we deal
+    // with the race condition.  though it isn't the most elegant solution,
+    // it is far simpler than trying to build a system that would guarantee
+    // FIFO ordering (which wouldn't even be that valuable IMO).  see bug
+    // 194402 for more info.
+    //
+    if (!gSocketTransportService->CanAttachSocket())
+        return gSocketTransportService->NotifyWhenCanAttachSocket(this, MSG_RETRY_INIT_SOCKET);
+
+    //
     // create new socket fd, push io layers, etc.
     //
     PRFileDesc *fd;
@@ -1184,6 +1199,10 @@ nsSocketTransport::OnSocketEvent(PRUint32 type, PRUint32 uparam, void *vparam)
             mCondition = InitiateSocket();
         break;
 
+    case MSG_RETRY_INIT_SOCKET:
+        mCondition = InitiateSocket();
+        break;
+
     case MSG_INPUT_CLOSED:
         LOG(("  MSG_INPUT_CLOSED\n"));
         OnMsgInputClosed(uparam);
@@ -1331,7 +1350,8 @@ nsSocketTransport::OnSocketDetached(PRFileDesc *fd)
 //-----------------------------------------------------------------------------
 // xpcom api
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsSocketTransport,
+NS_IMPL_THREADSAFE_ISUPPORTS4(nsSocketTransport,
+                              nsISocketEventHandler,
                               nsISocketTransport,
                               nsITransport,
                               nsIDNSListener)

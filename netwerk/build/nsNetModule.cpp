@@ -830,7 +830,7 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       nsHttpAuthManagerConstructor },
       
     // from netwerk/protocol/ftp:
-    { "The FTP Protocol Handler", 
+    { NS_FTPPROTOCOLHANDLER_CLASSNAME,
       NS_FTPPROTOCOLHANDLER_CID,
       NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "ftp",
       nsFtpProtocolHandlerConstructor

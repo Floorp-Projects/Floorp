@@ -61,9 +61,13 @@ nsSocketTransportService::nsSocketTransportService()
     , mThread(nsnull)
     , mThreadEvent(nsnull)
     , mAutodialEnabled(PR_FALSE)
+    , mEventQHead(nsnull)
+    , mEventQTail(nsnull)
     , mEventQLock(PR_NewLock())
     , mActiveCount(0)
     , mIdleCount(0)
+    , mPendingQHead(nsnull)
+    , mPendingQTail(nsnull)
 {
 #if defined(PR_LOGGING)
     gSocketTransportLog = PR_NewLogModule("nsSocketTransport");
@@ -108,11 +112,12 @@ nsSocketTransportService::PostEvent(nsISocketEventHandler *handler,
     if (!event)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    if (mEventQ.mTail)
-        mEventQ.mTail->mNext = event;
-    mEventQ.mTail = event;
-    if (!mEventQ.mHead)
-        mEventQ.mHead = event;
+    // XXX generalize this into some kind of template class
+    if (mEventQTail)
+        mEventQTail->mNext = event;
+    mEventQTail = event;
+    if (!mEventQHead)
+        mEventQHead = event;
 
     if (mThreadEvent)
         PR_SetPollableEvent(mThreadEvent);
@@ -122,6 +127,31 @@ nsSocketTransportService::PostEvent(nsISocketEventHandler *handler,
 
 //-----------------------------------------------------------------------------
 // socket api (socket thread only)
+
+nsresult
+nsSocketTransportService::NotifyWhenCanAttachSocket(nsISocketEventHandler *handler,
+                                                    PRUint32 msg)
+{
+    LOG(("nsSocketTransportService::NotifyWhenCanAttachSocket\n"));
+
+    if (CanAttachSocket()) {
+        NS_WARNING("should have called CanAttachSocket");
+        return PostEvent(handler, msg, 0, nsnull);
+    }
+
+    PendingSocket *ps = new PendingSocket(handler, msg);
+    if (!ps)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    // XXX generalize this into some kind of template class
+    if (mPendingQTail)
+        mPendingQTail->mNext = ps;
+    mPendingQTail = ps;
+    if (!mPendingQHead)
+        mPendingQHead = ps;
+
+    return NS_OK;
+}
 
 nsresult
 nsSocketTransportService::AttachSocket(PRFileDesc *fd, nsASocketHandler *handler)
@@ -158,6 +188,18 @@ nsSocketTransportService::DetachSocket(SocketContext *sock)
         RemoveFromIdleList(sock);
 
     // NOTE: sock is now an invalid pointer
+    
+    //
+    // notify the first element on the pending socket handler queue...
+    //
+    if (mPendingQHead) {
+        PendingSocket *ps = mPendingQHead;
+        mPendingQHead = ps->mNext;
+        if (!mPendingQHead)
+            mPendingQTail = nsnull;
+        PostEvent(ps->mHandler, ps->mMsg, 0, nsnull);
+        delete ps;
+    }
     return NS_OK;
 }
 
@@ -289,9 +331,9 @@ nsSocketTransportService::ServiceEventQ()
     {
         nsAutoLock lock(mEventQLock);
 
-        head = mEventQ.mHead;
-        mEventQ.mHead = nsnull;
-        mEventQ.mTail = nsnull;
+        head = mEventQHead;
+        mEventQHead = nsnull;
+        mEventQTail = nsnull;
 
         // check to see if we're supposed to shutdown
         keepGoing = mInitialized;

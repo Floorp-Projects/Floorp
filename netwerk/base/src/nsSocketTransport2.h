@@ -149,6 +149,7 @@ private:
     enum {
         MSG_ENSURE_CONNECT,       // no args
         MSG_DNS_LOOKUP_COMPLETE,  // uparam holds "status"
+        MSG_RETRY_INIT_SOCKET,    // no args
         MSG_INPUT_CLOSED,         // uparam holds "reason"
         MSG_INPUT_PENDING,        // no args
         MSG_OUTPUT_CLOSED,        // uparam holds "reason"

@@ -103,10 +103,6 @@ public:
     // nsFTPChannel methods:
     nsFTPChannel();
     virtual ~nsFTPChannel();
-
-    // Define a Create method to be used with a factory:
-    static NS_METHOD
-    Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
     
     // initializes the channel. 
     nsresult Init(nsIURI* uri,
