@@ -327,12 +327,20 @@ GetChar(JSTokenStream *ts)
                         /*
                          * Does the line segment end in \r?  We must check for
                          * a \n at the front of the next segment before storing
-                         * a \n into linebuf.  This case only applies when
+                         * a \n into linebuf.  This case only matters when we're
                          * reading from a file.
                          */
-			if (nl + 1 == ts->userbuf.limit) {
+			if (nl + 1 == ts->userbuf.limit && ts->file) {
 			    len--;
-			    ts->flags |= TSF_CRFLAG;
+			    ts->flags |= TSF_CRFLAG; /* clear NLFLAG? */
+                            if (len == 0) {
+                                /*
+                                 * This can happen when a segment ends in \r\r.
+                                 * Start over.  ptr == limit in this case, so
+                                 * we'll fall into buffer-filling code.
+                                 */
+                                return GetChar(ts);
+                            }
 			} else
                             ts->linebuf.base[len-1] = '\n';
 		    }
