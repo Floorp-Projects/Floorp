@@ -211,7 +211,53 @@ nsFormHistory::RemoveEntriesForName(const nsAString & name)
 NS_IMETHODIMP
 nsFormHistory::RemoveAllEntries()
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult rv = OpenDatabase(); // lazily ensure that the database is open
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!mTable) return NS_OK;
+
+  mdb_err err;
+  mdb_count count;
+  err = mTable->GetCount(mEnv, &count);
+  if (err != 0) return NS_ERROR_FAILURE;
+
+  // Begin the batch.
+  int marker;
+  err = mTable->StartBatchChangeHint(mEnv, &marker);
+  NS_ASSERTION(err == 0, "unable to start batch");
+  if (err != 0) return NS_ERROR_FAILURE;
+
+  // XXX from here until end batch, no early returns!
+  for (mdb_pos pos = count - 1; pos >= 0; --pos) {
+    nsCOMPtr<nsIMdbRow> row;
+    err = mTable->PosToRow(mEnv, pos, getter_AddRefs(row));
+    NS_ASSERTION(err == 0, "unable to get row");
+    if (err != 0)
+      break;
+
+    NS_ASSERTION(row != nsnull, "no row");
+    if (! row)
+      continue;
+
+    // Officially cut the row *now*, before notifying any observers:
+    // that way, any re-entrant calls won't find the row.
+    err = mTable->CutRow(mEnv, row);
+    NS_ASSERTION(err == 0, "couldn't cut row");
+    if (err != 0)
+      continue;
+  
+    // possibly avoid leakage
+    err = row->CutAllColumns(mEnv);
+    NS_ASSERTION(err == 0, "couldn't cut all columns");
+    // we'll notify regardless of whether we could successfully
+    // CutAllColumns or not.
+  }
+  
+  // Finish the batch.
+  err = mTable->EndBatchChangeHint(mEnv, &marker);
+  NS_ASSERTION(err == 0, "error ending batch");
+
+  return (err == 0) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
