@@ -310,11 +310,6 @@ public:
                  // callback to trigger the normal checking codepath)
   };
 
-  enum { // Types of RuleBits
-    eNoneBits,
-    eDependentBits
-  };
-
 private:
   nsIPresContext* mPresContext; // Our pres context.
 
@@ -489,6 +484,19 @@ protected:
                                       nsRuleNode* aHighestNode,
                                       const RuleDetail& aRuleDetail, PRBool aInherited);
 #endif
+
+  // helpers for |ComputeFontData| that need access to |mNoneBits|:
+  static void SetFont(nsIPresContext* aPresContext, nsStyleContext* aContext,
+                      nscoord aMinFontSize, PRBool aUseDocumentFonts,
+                      PRBool aIsGeneric, const nsRuleDataFont& aFontData,
+                      const nsFont& aDefaultFont,
+                      const nsStyleFont* aParentFont,
+                      nsStyleFont* aFont, PRBool& aInherited);
+  static void SetGenericFont(nsIPresContext* aPresContext,
+                             nsStyleContext* aContext,
+                             const nsRuleDataFont& aFontData,
+                             PRUint8 aGenericFontID, nscoord aMinFontSize,
+                             PRBool aUseDocumentFonts, nsStyleFont* aFont);
   
   inline RuleDetail CheckSpecifiedProperties(const nsStyleStructID aSID, const nsRuleDataStruct& aRuleDataStruct);
 
@@ -524,7 +532,6 @@ public:
 
   static nsRuleNode* CreateRootNode(nsIPresContext* aPresContext);
 
-  nsresult GetBits(PRInt32 aType, PRUint32* aResult);
   nsresult Transition(nsIStyleRule* aRule, nsRuleNode** aResult);
   nsRuleNode* GetParent() const { return mParent; }
   PRBool IsRoot() const { return mParent == nsnull; }

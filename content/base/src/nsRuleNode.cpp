@@ -434,19 +434,6 @@ nsRuleNode::~nsRuleNode()
 }
 
 nsresult 
-nsRuleNode::GetBits(PRInt32 aType, PRUint32* aResult)
-{
-  switch (aType) {
-    case eNoneBits :      *aResult = mNoneBits;      break;
-    case eDependentBits : *aResult = mDependentBits; break;
-    default:
-      NS_ERROR("invalid arg");
-      return NS_ERROR_INVALID_ARG;
-  }
-  return NS_OK;
-}
-
-nsresult 
 nsRuleNode::Transition(nsIStyleRule* aRule, nsRuleNode** aResult)
 {
   nsRuleNode* next = nsnull;
@@ -1526,12 +1513,12 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
   return nsnull;
 }
 
-static void
-SetFont(nsIPresContext* aPresContext, nsStyleContext* aContext,
-        nscoord aMinFontSize, PRBool aUseDocumentFonts,
-        PRBool aIsGeneric, const nsRuleDataFont& aFontData,
-        const nsFont& aDefaultFont, const nsStyleFont* aParentFont,
-        nsStyleFont* aFont, PRBool& aInherited)
+/* static */ void
+nsRuleNode::SetFont(nsIPresContext* aPresContext, nsStyleContext* aContext,
+                    nscoord aMinFontSize, PRBool aUseDocumentFonts,
+                    PRBool aIsGeneric, const nsRuleDataFont& aFontData,
+                    const nsFont& aDefaultFont, const nsStyleFont* aParentFont,
+                    nsStyleFont* aFont, PRBool& aInherited)
 {
   const nsFont* defaultVariableFont;
   const nsFont* defaultFixedFont;
@@ -1782,22 +1769,22 @@ SetFont(nsIPresContext* aPresContext, nsStyleContext* aContext,
 //  - backtrack to an ancestor with the same generic font name (possibly
 //    up to the root where default values come from the presentation context)
 //  - re-apply cascading rules from there without caching intermediate values
-static void
-SetGenericFont(nsIPresContext* aPresContext, nsStyleContext* aContext,
-               const nsRuleDataFont& aFontData, PRUint8 aGenericFontID,
-               nscoord aMinFontSize, PRBool aUseDocumentFonts,
-               nsStyleFont* aFont)
+/* static */ void
+nsRuleNode::SetGenericFont(nsIPresContext* aPresContext,
+                           nsStyleContext* aContext,
+                           const nsRuleDataFont& aFontData,
+                           PRUint8 aGenericFontID, nscoord aMinFontSize,
+                           PRBool aUseDocumentFonts, nsStyleFont* aFont)
 {
   // walk up the contexts until a context with the desired generic font
   nsAutoVoidArray contextPath;
   nsStyleContext* higherContext = aContext->GetParent();
   while (higherContext) {
-    contextPath.AppendElement(higherContext);
-    const nsStyleFont* higherFont = higherContext->GetStyleFont();
-    if (higherFont && higherFont->mFlags & aGenericFontID) {
+    if (higherContext->GetStyleFont()->mFlags & aGenericFontID) {
       // done walking up the higher contexts
       break;
     }
+    contextPath.AppendElement(higherContext);
     higherContext = higherContext->GetParent();
   }
 
@@ -1811,24 +1798,20 @@ SetGenericFont(nsIPresContext* aPresContext, nsStyleContext* aContext,
   nsStyleFont parentFont(*defaultFont);
   parentFont.mSize = parentFont.mFont.size
       = nsStyleFont::ZoomText(aPresContext, parentFont.mSize);
-  PRInt32 i = contextPath.Count() - 1;
   if (higherContext) {
-    nsStyleContext* context = (nsStyleContext*)contextPath[i];
-    const nsStyleFont* tmpFont = context->GetStyleFont();
+    const nsStyleFont* tmpFont = higherContext->GetStyleFont();
     parentFont.mFlags = tmpFont->mFlags;
     parentFont.mFont = tmpFont->mFont;
     parentFont.mSize = tmpFont->mSize;
-    --i;
   }
   aFont->mFlags = parentFont.mFlags;
   aFont->mFont = parentFont.mFont;
   aFont->mSize = parentFont.mSize;
 
   PRBool dummy;
-  PRUint32 noneBits;
   PRUint32 fontBit = nsCachedStyleData::GetBitForSID(eStyleStruct_Font);
   
-  for (; i >= 0; --i) {
+  for (PRInt32 i = contextPath.Count() - 1; i >= 0; --i) {
     nsStyleContext* context = (nsStyleContext*)contextPath[i];
     nsRuleDataFont fontData; // Declare a struct with null CSS values.
     nsRuleData ruleData(eStyleStruct_Font, aPresContext, context);
@@ -1837,8 +1820,8 @@ SetGenericFont(nsIPresContext* aPresContext, nsStyleContext* aContext,
     // Trimmed down version of ::WalkRuleTree() to re-apply the style rules
     for (nsRuleNode* ruleNode = context->GetRuleNode(); ruleNode;
          ruleNode = ruleNode->GetParent()) {
-      ruleNode->GetBits(nsRuleNode::eNoneBits, &noneBits);
-      if (noneBits & fontBit) // no more font rules on this branch, get out
+      if (ruleNode->mNoneBits & fontBit)
+        // no more font rules on this branch, get out
         break;
 
       nsIStyleRule *rule = ruleNode->GetRule();
@@ -1849,8 +1832,9 @@ SetGenericFont(nsIPresContext* aPresContext, nsStyleContext* aContext,
     // Compute the delta from the information that the rules specified
     fontData.mFamily.Reset(); // avoid unnecessary operations in SetFont()
 
-    SetFont(aPresContext, context, aMinFontSize, aUseDocumentFonts, PR_TRUE,
-            fontData, *defaultFont, &parentFont, aFont, dummy);
+    nsRuleNode::SetFont(aPresContext, context, aMinFontSize,
+                        aUseDocumentFonts, PR_TRUE, fontData, *defaultFont,
+                        &parentFont, aFont, dummy);
 
     // XXX Not sure if we need to do this here
     // If we have a post-resolve callback, handle that now.
@@ -1865,8 +1849,9 @@ SetGenericFont(nsIPresContext* aPresContext, nsStyleContext* aContext,
   // Finish off by applying our own rules. In this case, aFontData
   // already has the current cascading information that we want. We
   // can just compute the delta from the parent.
-  SetFont(aPresContext, aContext, aMinFontSize, aUseDocumentFonts, PR_TRUE,
-          aFontData, *defaultFont, &parentFont, aFont, dummy);
+  nsRuleNode::SetFont(aPresContext, aContext, aMinFontSize,
+                      aUseDocumentFonts, PR_TRUE, aFontData, *defaultFont,
+                      &parentFont, aFont, dummy);
 }
 
 const nsStyleStruct* 
@@ -1963,18 +1948,18 @@ nsRuleNode::ComputeFontData(nsStyleStruct* aStartStruct,
   if (generic == kGenericFont_NONE) {
     // continue the normal processing
     // our default font is the most recent generic font
-    generic = parentFont->mFlags & NS_STYLE_FONT_FACE_MASK;
     const nsFont* defaultFont;
-    mPresContext->GetDefaultFont(generic, &defaultFont);
-    SetFont(mPresContext, aContext, minimumFontSize,
-            useDocumentFonts, PR_FALSE,
-            fontData, *defaultFont, parentFont, font, inherited);
+    mPresContext->GetDefaultFont(parentFont->mFlags & NS_STYLE_FONT_FACE_MASK,
+                                 &defaultFont);
+    nsRuleNode::SetFont(mPresContext, aContext, minimumFontSize,
+                        useDocumentFonts, PR_FALSE,
+                        fontData, *defaultFont, parentFont, font, inherited);
   }
   else {
     // re-calculate the font as a generic font
     inherited = PR_TRUE;
-    SetGenericFont(mPresContext, aContext, fontData,
-                   generic, minimumFontSize, useDocumentFonts, font);
+    nsRuleNode::SetGenericFont(mPresContext, aContext, fontData, generic,
+                               minimumFontSize, useDocumentFonts, font);
   }
   // Set our generic font's bit to inform our descendants
   font->mFlags &= ~NS_STYLE_FONT_FACE_MASK;
