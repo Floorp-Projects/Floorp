@@ -36,6 +36,7 @@ sub sillyness {
     my $zz;
     $zz = $::userid;
     $zz = $::usergroupset;
+    $zz = @::legal_keywords;
     $zz = %::FORM;
 }
 
