@@ -48,14 +48,24 @@ public:
 
   void AppendFrames(nsIFrame* aParent, nsFrameList& aFrameList) {
     AppendFrames(aParent, aFrameList.mFirstChild);
+    aFrameList.mFirstChild = nsnull;
   }
 
   void AppendFrame(nsIFrame* aParent, nsIFrame* aFrame);
 
+  // Take aFrame out of the frame list. This also disconnects aFrame
+  // from the sibling list. This will return PR_FALSE if aFrame is
+  // nsnull or if aFrame is not in the list.
   PRBool RemoveFrame(nsIFrame* aFrame);
 
+  // Remove the first child from the list. The caller is assumed to be
+  // holding a reference to the first child. This call is equivalent
+  // in behavior to calling RemoveFrame(FirstChild()).
   PRBool RemoveFirstChild();
 
+  // Take aFrame out of the frame list and then delete it. This also
+  // disconnects aFrame from the sibling list. This will return
+  // PR_FALSE if aFrame is nsnull or if aFrame is not in the list.
   PRBool DeleteFrame(nsIPresContext& aPresContext, nsIFrame* aFrame);
 
   void InsertFrame(nsIFrame* aParent,
@@ -65,6 +75,12 @@ public:
   void InsertFrames(nsIFrame* aParent,
                     nsIFrame* aPrevSibling,
                     nsIFrame* aFrameList);
+
+  void InsertFrames(nsIFrame* aParent, nsIFrame* aPrevSibling,
+                    nsFrameList& aFrameList) {
+    InsertFrames(aParent, aPrevSibling, aFrameList.FirstChild());
+    aFrameList.mFirstChild = nsnull;
+  }
 
   PRBool ReplaceFrame(nsIFrame* aParent,
                       nsIFrame* aOldFrame,
@@ -77,9 +93,9 @@ public:
 
   PRBool Split(nsIFrame* aAfterFrame, nsIFrame** aNextFrameResult);
 
-  PRBool PullFrame(nsIFrame* aParent,
-                   nsFrameList& aFromList,
-                   nsIFrame** aResult);
+  nsIFrame* PullFrame(nsIFrame* aParent,
+                      nsIFrame* aLastChild,
+                      nsFrameList& aFromList);
 
   void Join(nsIFrame* aParent, nsFrameList& aList) {
     AppendFrames(aParent, aList.mFirstChild);
@@ -107,6 +123,8 @@ public:
   PRInt32 GetLength() const;
 
   nsIFrame* GetPrevSiblingFor(nsIFrame* aFrame) const;
+
+  void VerifyParent(nsIFrame* aParent) const;
 
 protected:
   nsIFrame* mFirstChild;
