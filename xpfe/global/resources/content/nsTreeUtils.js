@@ -45,6 +45,50 @@ function TriStateColumnSort(column_name)
     return true;
 }
 
+
+// Note: doSort() does NOT support natural order sorting, unless naturalOrderResource is valid,
+//       in which case we sort ascending on naturalOrderResource
+
+function doSort(sortColName, naturalOrderResource)
+{
+    var node = document.getElementById(sortColName);
+    // determine column resource to sort on
+    var sortResource = node.getAttribute('resource');
+    if (!sortResource)
+        return false;
+
+    var sortDirection="ascending";
+    var isSortActive = node.getAttribute('sortActive');
+    if (isSortActive == "true") {
+        sortDirection = "ascending";
+        var currentDirection = node.getAttribute('sortDirection');
+        if (currentDirection == "ascending") {
+            if (sortResource != naturalOrderResource)
+                sortDirection = "descending";
+        }
+        else if (currentDirection == "descending") {
+            if (naturalOrderResource)
+                sortResource = naturalOrderResource;
+        }
+    }
+
+    try {
+        var isupports = Components.classes["@mozilla.org/rdf/xul-sort-service;1"].getService();
+        var xulSortService = isupports.QueryInterface(Components.interfaces.nsIXULSortService);   
+    }
+    catch(ex) {
+        dump(ex);
+        return false;
+    }
+
+    try {
+        xulSortService.Sort(node, sortResource, sortDirection);
+    }
+    catch(ex) {
+    }
+    return true;
+}
+
 function SetSortDirection(direction)
 {
     var current_column = find_sort_column();
@@ -187,20 +231,21 @@ function fillViewMenu(popup)
   var head = document.getElementById('headRow');
   var skip_column = document.getElementById('popupCell');
       
-  if (fill_after.nextSibling == fill_before) {
-      var name_template = get_localized_string("SortMenuItem");
-      var tree_column = head.firstChild;
-      var column_node = columns.firstChild;
-      while (tree_column) {
-          if (skip_column != tree_column) {
+  var name_template = get_localized_string("SortMenuItem");
+  var tree_column = head.firstChild;
+  var column_node = columns.firstChild;
+  var popupChild = popup.firstChild.nextSibling.nextSibling;
+  var firstTime = (fill_after.nextSibling == fill_before);
+  while (tree_column) {
+      if (firstTime) {
+          if (skip_column != tree_column && tree_column.getAttribute("collapsed") != "true") {
               // Construct an entry for each cell in the row.
               var column_name = tree_column.getAttribute("value");
               var item = document.createElement("menuitem");
               item.setAttribute("type", "radio");
               item.setAttribute("name", "sort_column");
-              if (column_name == "") {
-                  column_name = tree_column.getAttribute("display");
-              }
+              if (column_name == "")
+                  column_name = tree_column.getAttribute("display");             
               var name = name_template.replace(/%NAME%/g, column_name);
               var id = column_node.id;
               item.setAttribute("value", name);
@@ -209,12 +254,18 @@ function fillViewMenu(popup)
               
               popup.insertBefore(item, fill_before);
           }
-          tree_column = tree_column.nextSibling;
-          column_node = column_node.nextSibling;
-
-          if (column_node && column_node.tagName == "splitter")
-              column_node = column_node.nextSibling;
       }
+      else {
+          if (column_node.getAttribute("collapsed") == "true")
+              popupChild.setAttribute("hidden", "true");
+          else
+              popupChild.removeAttribute("hidden");
+          popupChild = popupChild.nextSibling;
+      }
+      tree_column = tree_column.nextSibling;
+      column_node = column_node.nextSibling;
+      if (column_node && column_node.tagName == "splitter")
+          column_node = column_node.nextSibling;
   }
   var sort_column = find_sort_column();
   var sort_direction = find_sort_direction(sort_column);
@@ -432,4 +483,3 @@ function get_localized_string(name) {
     var bundle = srGetStrBundle(uri);
     return bundle.GetStringFromName(name);
 }
-
