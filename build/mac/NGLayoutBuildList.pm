@@ -454,6 +454,7 @@ sub BuildClientDist()
     _InstallFromManifest(":mozilla:network:module:MANIFEST",							"$distdirectory:network:module");
 
 	#WALLET
+
     _InstallFromManifest(":mozilla:extensions:wallet:public:MANIFEST",				"$distdirectory:wallet:");
 
 	#WEBSHELL
@@ -742,7 +743,7 @@ sub BuildIDLProjects()
 		
 	BuildIDLProject(":mozilla:rdf:macbuild:RDFIDL.mcp",								"rdf");
 	BuildIDLProject(":mozilla:xpinstall:macbuild:xpinstallIDL.mcp",            		"xpinstall");
-	BuildIDLProject(":mozilla:extensions:wallet:editor:macbuild:WalletEditorIDL.mcp","walleteditor");
+	BuildIDLProject(":mozilla:extensions:wallet:macbuild:walletIDL.mcp","wallet");
 	BuildIDLProject(":mozilla:xpfe:components:bookmarks:macbuild:BookmarksIDL.mcp",	"bookmarks");
 	BuildIDLProject(":mozilla:xpfe:components:history:macbuild:historyIDL.mcp",		"history");
 	BuildIDLProject(":mozilla:xpfe:components:related:macbuild:RelatedIDL.mcp",		"related");
@@ -896,7 +897,7 @@ sub BuildCommonProjects()
 	BuildOneProject(":mozilla:network:macbuild:network.mcp",					"NetworkModular$D.shlb", "network.toc", 1, $main::ALIAS_SYM_FILES, 0);
 
 	BuildOneProject(":mozilla:extensions:wallet:macbuild:wallet.mcp",			"Wallet$D.shlb", "wallet.toc", 1, $main::ALIAS_SYM_FILES, 1);
-	BuildOneProject(":mozilla:extensions:wallet:editor:macbuild:WalletEditor.mcp",	"WalletEditor$D.shlb", "walletEditor.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:extensions:wallet:macbuild:walletviewers.mcp",	"WalletViewers$D.shlb", "walletviewer.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	
 	BuildOneProject(":mozilla:rdf:brprof:build:brprof.mcp",						"BrowsingProfile$D.shlb", "brprof.toc", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:rdf:chrome:build:chrome.mcp",                     "ChomeRegistry$D.shlb", "chrome.toc", 1, $main::ALIAS_SYM_FILES, 1);
@@ -1102,6 +1103,11 @@ sub MakeResourceAliases()
 	_InstallResources(":mozilla:xpfe:components:search:resources:MANIFEST",			"$samples_dir");
 	_InstallResources(":mozilla:xpfe:components:ucth:resources:MANIFEST",			"$samples_dir");
 	_InstallResources(":mozilla:xpfe:components:xfer:resources:MANIFEST",			"$samples_dir");
+	# the WALLET
+	_InstallResources(":mozilla:extensions:wallet:cookieviewer:MANIFEST",			"$samples_dir");
+	_InstallResources(":mozilla:extensions:wallet:signonviewer:MANIFEST",			"$samples_dir");
+	_InstallResources(":mozilla:extensions:wallet:walletpreview:MANIFEST",			"$samples_dir");
+	_InstallResources(":mozilla:extensions:wallet:editor:MANIFEST",					"$samples_dir");
 	{
 		my($pref_chrome_dir) = "$chrome_dir" . "pref";
 		_InstallResources(":mozilla:xpfe:components:prefwindow:resources:content:MANIFEST",	"$pref_chrome_dir:content:default:", 0);
