@@ -329,7 +329,14 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveDocument(
 
     if (datapathAsURI)
     {
+        // Count how many URIs in the URI map require persisting
+        PRUint32 urisToPersist = 0;
         if (mURIMap.Count() > 0)
+        {
+            mURIMap.Enumerate(EnumCountURIsToPersist, &urisToPersist);
+        }
+
+        if (urisToPersist > 0)
         {
             // Persist each file in the uri map. The document(s)
             // will be saved after the last one of these is saved.
@@ -1250,6 +1257,18 @@ nsWebBrowserPersist::EnumCalcProgress(nsHashKey *aKey, void *aData, void* closur
 }
 
 PRBool PR_CALLBACK
+nsWebBrowserPersist::EnumCountURIsToPersist(nsHashKey *aKey, void *aData, void* closure)
+{
+    URIData *data = (URIData *) aData;
+    PRUint32 *count = (PRUint32 *) closure;
+    if (data->mNeedsPersisting && !data->mSaved)
+    {
+        (*count)++;
+    }
+    return PR_TRUE;
+}
+
+PRBool PR_CALLBACK
 nsWebBrowserPersist::EnumPersistURIs(nsHashKey *aKey, void *aData, void* closure)
 {
     URIData *data = (URIData *) aData;
@@ -1274,13 +1293,14 @@ nsWebBrowserPersist::EnumPersistURIs(nsHashKey *aKey, void *aData, void* closure
     NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
     rv = pthis->SaveURIInternal(uri, nsnull, fileAsURI, PR_TRUE);
-    NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
     // Store the actual object because once it's persisted this
     // will be fixed up with the right file extension.
 
     data->mFile = fileAsURI;
     data->mSaved = PR_TRUE;
+
+    NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
     return PR_TRUE;
 }

@@ -129,6 +129,8 @@ private:
         nsHashKey *aKey, void *aData, void* closure);
     static PRBool PR_CALLBACK EnumFixRedirect(
         nsHashKey *aKey, void *aData, void* closure);
+    static PRBool PR_CALLBACK EnumCountURIsToPersist(
+        nsHashKey *aKey, void *aData, void* closure);
 
     nsCOMPtr<nsIURI>          mCurrentDataPath;
     PRBool                    mCurrentDataPathIsRelative;
