@@ -2758,7 +2758,7 @@ BOOL DialerConfig( char* charData)
 	ACCOUNTPARAMS		account;
 	LOCATIONPARAMS		location;
 
-    nsString data(charData);
+    nsString data; data.AssignWithConversion(charData);
     
 	// Set the gathered info into an array
 	SetDataArray(data);
@@ -4333,7 +4333,7 @@ char* GetModemConfig(void)
 
 	// copy all entries to the array
 //	returnData[ 0 ] = 0x00;
-	returnData ="";
+	returnData.SetLength(0);
 /*
 	// pile up account names in a single array, separated by a ()
 	for ( i = 0; i < numDevices; i++ ) 
@@ -4344,7 +4344,7 @@ char* GetModemConfig(void)
 		delete []modemResults[ i ];
 	}
 //	strcpy( returnData, (const char*)str ); */
-	returnData = modemResults[0];
+	returnData.AssignWithConversion(modemResults[0]);
 //	returnData = tmp;
 	printf("this is the modem inside the modemconfig %s \n", returnData.ToNewCString());
 	delete []modemResults;
