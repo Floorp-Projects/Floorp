@@ -141,11 +141,6 @@
                 prefstring="security.enable_java"/>
     </vbox>
     <vbox>
-      <separator/>
-      <description>&description.label;</description>
-      <separator/>
-    </vbox>
-    <vbox>
     <vbox align="start">
       <checkbox id="advancedMailFTP" label="&sendAddFtpCheck.label;" accesskey="&sendAddFtpCheck.accesskey;"
                 prefstring="advanced.mailftp"

@@ -16,8 +16,6 @@
 <!ENTITY imageBlocking.label          "Image Blocking...">
 <!ENTITY imageBlocking.accesskey      "b">
 
-<!ENTITY description.label            "Checked items are automatically enabled when you visit web pages that use them. If you uncheck an item, pages may load faster but some functionality will be limited.">
-
 <!ENTITY perfTitle.label              "Quick Launch">
 <!ENTITY enableTurbo.label            "Keep &brandShortName; in memory to improve startup performance">
 <!ENTITY enableTurboCheck.accesskey   "t">
