@@ -32,7 +32,7 @@
 #include <Controls.h>
 #endif
 #include <Menus.h>
-#include <Windows.h>
+#include <MacWindows.h>
 
 //
 // for non-carbon builds, provide various accessors to keep the code below free of ifdefs.
