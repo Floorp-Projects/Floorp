@@ -80,7 +80,8 @@ public class BaseFunction extends IdScriptable implements Function {
      *              value's prototype chain
      *
      */
-    public boolean hasInstance(Scriptable instance) {
+    public boolean hasInstance(Scriptable instance)
+    {
         Object protoProp = ScriptableObject.getProperty(this, "prototype");
         if (protoProp instanceof Scriptable && protoProp != Undefined.instance)
         {
@@ -90,7 +91,8 @@ public class BaseFunction extends IdScriptable implements Function {
             ("msg.instanceof.bad.prototype", functionName, instance);
     }
 
-    protected int getIdDefaultAttributes(int id) {
+    protected int getIdAttributes(int id)
+    {
         switch (id) {
             case Id_length:
             case Id_arity:
@@ -103,10 +105,11 @@ public class BaseFunction extends IdScriptable implements Function {
             case Id_arguments:
                 return EMPTY;
         }
-        return super.getIdDefaultAttributes(id);
+        return super.getIdAttributes(id);
     }
 
-    protected boolean hasIdValue(int id) {
+    protected boolean hasIdValue(int id)
+    {
         if (id == Id_prototype) {
             return prototypeProperty != NOT_FOUND;
         }
@@ -122,7 +125,8 @@ public class BaseFunction extends IdScriptable implements Function {
         return super.hasIdValue(id);
     }
 
-    protected Object getIdValue(int id) {
+    protected Object getIdValue(int id)
+    {
         switch (id) {
             case Id_length:    return wrap_int(getLength());
             case Id_arity:     return wrap_int(getArity());
@@ -133,7 +137,8 @@ public class BaseFunction extends IdScriptable implements Function {
         return super.getIdValue(id);
     }
 
-    protected void setIdValue(int id, Object value) {
+    protected void setIdValue(int id, Object value)
+    {
         if (id == Id_prototype) {
             prototypeProperty = (value != null) ? value : UniqueTag.NULL_VALUE;
             return;
@@ -141,7 +146,8 @@ public class BaseFunction extends IdScriptable implements Function {
         super.setIdValue(id, value);
     }
 
-    protected void deleteIdValue(int id) {
+    protected void deleteIdValue(int id)
+    {
         if (id == Id_prototype) {
             prototypeProperty = NOT_FOUND;
             return;
@@ -149,7 +155,8 @@ public class BaseFunction extends IdScriptable implements Function {
         super.deleteIdValue(id);
     }
 
-    public int methodArity(int methodId) {
+    public int methodArity(int methodId)
+    {
         if (prototypeFlag) {
             switch (methodId) {
                 case Id_constructor: return 1;
@@ -224,7 +231,8 @@ public class BaseFunction extends IdScriptable implements Function {
         return newInstance;
     }
 
-    public Scriptable createObject(Context cx, Scriptable scope) {
+    public Scriptable createObject(Context cx, Scriptable scope)
+    {
         Scriptable newInstance = new NativeObject();
         newInstance.setPrototype(getClassPrototype());
         newInstance.setParentScope(getParentScope());
@@ -297,7 +305,8 @@ public class BaseFunction extends IdScriptable implements Function {
         return result;
     }
 
-    private void setupDefaultPrototype() {
+    private void setupDefaultPrototype()
+    {
         NativeObject obj = new NativeObject();
         final int attr = ScriptableObject.DONTENUM |
                          ScriptableObject.READONLY |
@@ -314,7 +323,8 @@ public class BaseFunction extends IdScriptable implements Function {
         }
     }
 
-    private Object getArguments() {
+    private Object getArguments()
+    {
         // <Function name>.arguments is deprecated, so we use a slow
         // way of getting it that doesn't add to the invocation cost.
         // TODO: add warning, error based on version
@@ -324,7 +334,8 @@ public class BaseFunction extends IdScriptable implements Function {
                : activation.get("arguments", activation);
     }
 
-    NativeCall getActivation(Context cx) {
+    NativeCall getActivation(Context cx)
+    {
         NativeCall activation = cx.currentActivation;
         while (activation != null) {
             if (activation.getFunctionObject() == this)
@@ -447,7 +458,8 @@ public class BaseFunction extends IdScriptable implements Function {
         return ScriptRuntime.call(cx, function, callThis, callArgs, scope);
     }
 
-    protected String getIdName(int id) {
+    protected String getIdName(int id)
+    {
         switch (id) {
             case Id_length:       return "length";
             case Id_arity:        return "arity";
@@ -480,7 +492,8 @@ public class BaseFunction extends IdScriptable implements Function {
 
     { setMaxId(MAX_INSTANCE_ID); }
 
-    protected int mapNameToId(String s) {
+    protected int mapNameToId(String s)
+    {
         int id;
 // #generated# Last update: 2001-05-20 00:12:12 GMT+02:00
         L0: { id = 0; String X = null; int c;

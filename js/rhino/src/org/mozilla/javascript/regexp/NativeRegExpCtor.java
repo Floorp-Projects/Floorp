@@ -71,7 +71,8 @@ public class NativeRegExpCtor extends NativeFunction {
         return construct(cx, parent, args);
     }
 
-    public Scriptable construct(Context cx, Scriptable scope, Object[] args) {
+    public Scriptable construct(Context cx, Scriptable scope, Object[] args)
+    {
         NativeRegExp re = new NativeRegExp();
         re.compile(cx, scope, args);
         re.setPrototype(getClassPrototype(scope, "RegExp"));
@@ -79,12 +80,14 @@ public class NativeRegExpCtor extends NativeFunction {
         return re;
     }
 
-    static RegExpImpl getImpl() {
+    static RegExpImpl getImpl()
+    {
         Context cx = Context.getCurrentContext();
         return (RegExpImpl) ScriptRuntime.getRegExpProxy(cx);
     }
 
-    protected int getIdDefaultAttributes(int id) {
+    protected int getIdAttributes(int id)
+    {
         int shifted = id - idBase;
         if (1 <= shifted && shifted <= MAX_INSTANCE_ID) {
             switch (shifted) {
@@ -96,14 +99,16 @@ public class NativeRegExpCtor extends NativeFunction {
             }
             return PERMANENT | READONLY;
         }
-        return super.getIdDefaultAttributes(id);
+        return super.getIdAttributes(id);
     }
 
-    private static String stringResult(Object obj) {
+    private static String stringResult(Object obj)
+    {
         return (obj == null) ? "" : obj.toString();
     }
 
-    protected Object getIdValue(int id) {
+    protected Object getIdValue(int id)
+    {
         int shifted = id - idBase;
         if (1 <= shifted && shifted <= MAX_INSTANCE_ID) {
             RegExpImpl impl = getImpl();
@@ -139,7 +144,8 @@ public class NativeRegExpCtor extends NativeFunction {
         return super.getIdValue(id);
     }
 
-    protected void setIdValue(int id, Object value) {
+    protected void setIdValue(int id, Object value)
+    {
         switch (id - idBase) {
             case Id_multiline:
             case Id_STAR:
@@ -154,7 +160,8 @@ public class NativeRegExpCtor extends NativeFunction {
         super.setIdValue(id, value);
     }
 
-    protected String getIdName(int id) {
+    protected String getIdName(int id)
+    {
         int shifted = id - idBase;
         if (1 <= shifted && shifted <= MAX_INSTANCE_ID) {
             switch (shifted) {

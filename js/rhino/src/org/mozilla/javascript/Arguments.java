@@ -152,17 +152,19 @@ class Arguments extends IdScriptable {
         super.delete(index);
     }
 
-    protected int getIdDefaultAttributes(int id) {
+    protected int getIdAttributes(int id)
+    {
         switch (id) {
             case Id_callee:
             case Id_caller:
             case Id_length:
                 return DONTENUM;
         }
-        return super.getIdDefaultAttributes(id);
+        return super.getIdAttributes(id);
     }
 
-    protected boolean hasIdValue(int id) {
+    protected boolean hasIdValue(int id)
+    {
         switch (id) {
             case Id_callee: return calleeObj != NOT_FOUND;
             case Id_length: return lengthObj != NOT_FOUND;
@@ -171,7 +173,8 @@ class Arguments extends IdScriptable {
         return super.hasIdValue(id);
     }
 
-    protected Object getIdValue(int id) {
+    protected Object getIdValue(int id)
+    {
         switch (id) {
             case Id_callee: return calleeObj;
             case Id_length: return lengthObj;
@@ -192,7 +195,8 @@ class Arguments extends IdScriptable {
         return super.getIdValue(id);
     }
 
-    protected void setIdValue(int id, Object value) {
+    protected void setIdValue(int id, Object value)
+    {
         switch (id) {
             case Id_callee: calleeObj = value; return;
             case Id_length: lengthObj = value; return;
@@ -203,7 +207,8 @@ class Arguments extends IdScriptable {
         super.setIdValue(id, value);
     }
 
-    protected void deleteIdValue(int id) {
+    protected void deleteIdValue(int id)
+    {
         switch (id) {
             case Id_callee: calleeObj = NOT_FOUND; return;
             case Id_length: lengthObj = NOT_FOUND; return;
@@ -212,7 +217,8 @@ class Arguments extends IdScriptable {
         super.deleteIdValue(id);
     }
 
-    protected String getIdName(int id) {
+    protected String getIdName(int id)
+    {
         switch (id) {
             case Id_callee: return "callee";
             case Id_length: return "length";
@@ -232,7 +238,8 @@ class Arguments extends IdScriptable {
 
     { setMaxId(MAX_INSTANCE_ID); }
 
-    protected int mapNameToId(String s) {
+    protected int mapNameToId(String s)
+    {
         int id;
 // #generated# Last update: 2002-04-09 20:46:33 CEST
         L0: { id = 0; String X = null; int c;

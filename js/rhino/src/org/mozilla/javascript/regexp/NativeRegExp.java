@@ -2628,11 +2628,13 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
         return result;
     }
 
-    public byte getFlags() {
+    public byte getFlags()
+    {
         return flags;
     }
 
-    private void reportError(String msg, String arg, CompilerState state) {
+    private void reportError(String msg, String arg, CompilerState state)
+    {
         Object[] args = { arg };
         throw NativeGlobal.constructError(
                                           state.cx, "SyntaxError",
@@ -2640,7 +2642,8 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                                           state.scope);
     }
 
-    protected int getIdDefaultAttributes(int id) {
+    protected int getIdAttributes(int id)
+     {
         switch (id) {
             case Id_lastIndex:
                 return ScriptableObject.PERMANENT | ScriptableObject.DONTENUM;
@@ -2651,21 +2654,28 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                 return ScriptableObject.PERMANENT | ScriptableObject.READONLY
                                                   | ScriptableObject.DONTENUM;
         }
-        return super.getIdDefaultAttributes(id);
+        return super.getIdAttributes(id);
     }
 
-    protected Object getIdValue(int id) {
+    protected Object getIdValue(int id)
+    {
         switch (id) {
-            case Id_lastIndex:  return wrap_double(lastIndex);
-            case Id_source:     return new String(source);
-            case Id_global:     return wrap_boolean((flags & JSREG_GLOB) != 0);
-            case Id_ignoreCase: return wrap_boolean((flags & JSREG_FOLD) != 0);
-            case Id_multiline:  return wrap_boolean((flags & JSREG_MULTILINE) != 0);
+            case Id_lastIndex:
+                return wrap_double(lastIndex);
+            case Id_source:
+                return new String(source);
+            case Id_global:
+                return wrap_boolean((flags & JSREG_GLOB) != 0);
+            case Id_ignoreCase:
+                return wrap_boolean((flags & JSREG_FOLD) != 0);
+            case Id_multiline:
+                return wrap_boolean((flags & JSREG_MULTILINE) != 0);
         }
         return super.getIdValue(id);
     }
 
-    protected void setIdValue(int id, Object value) {
+    protected void setIdValue(int id, Object value)
+    {
         if (id == Id_lastIndex) {
             setLastIndex(ScriptRuntime.toNumber(value));
             return;
@@ -2673,11 +2683,13 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
         super.setIdValue(id, value);
     }
 
-    void setLastIndex(double value) {
+    void setLastIndex(double value)
+    {
         lastIndex = value;
     }
 
-    public int methodArity(int methodId) {
+    public int methodArity(int methodId)
+    {
         if (prototypeFlag) {
             switch (methodId) {
                 case Id_compile:  return 1;
@@ -2723,7 +2735,8 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
         return (NativeRegExp)thisObj;
     }
 
-    protected String getIdName(int id) {
+    protected String getIdName(int id)
+    {
         switch (id) {
             case Id_lastIndex:  return "lastIndex";
             case Id_source:     return "source";
@@ -2757,7 +2770,8 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
 
     { setMaxId(MAX_INSTANCE_ID); }
 
-    protected int mapNameToId(String s) {
+    protected int mapNameToId(String s)
+    {
         int id;
 // #generated# Last update: 2001-05-24 12:01:22 GMT+02:00
         L0: { id = 0; String X = null; int c;

@@ -44,7 +44,8 @@ package org.mozilla.javascript;
 
 final class NativeMath extends IdScriptable
 {
-    static void init(Context cx, Scriptable scope, boolean sealed) {
+    static void init(Context cx, Scriptable scope, boolean sealed)
+    {
         NativeMath obj = new NativeMath();
         obj.setPrototype(getObjectPrototype(scope));
         obj.setParentScope(scope);
@@ -55,21 +56,24 @@ final class NativeMath extends IdScriptable
 
     public String getClassName() { return "Math"; }
 
-    protected int getIdDefaultAttributes(int id) {
+    protected int getIdAttributes(int id)
+    {
         if (id > LAST_METHOD_ID) {
             return DONTENUM | READONLY | PERMANENT;
         }
-        return super.getIdDefaultAttributes(id);
+        return super.getIdAttributes(id);
     }
 
-    protected Object getIdValue(int id) {
+    protected Object getIdValue(int id)
+    {
         if (id > LAST_METHOD_ID) {
             return cacheIdValue(id, wrap_double(getField(id)));
         }
         return super.getIdValue(id);
     }
 
-    private double getField(int fieldId) {
+    private double getField(int fieldId)
+    {
         switch (fieldId) {
             case Id_E:       return E;
             case Id_PI:      return PI;
@@ -83,7 +87,8 @@ final class NativeMath extends IdScriptable
         return 0; // Unreachable
     }
 
-    public int methodArity(int methodId) {
+    public int methodArity(int methodId)
+    {
         switch (methodId) {
             case Id_abs:      return 1;
             case Id_acos:     return 1;
@@ -318,7 +323,8 @@ final class NativeMath extends IdScriptable
 
     private double js_tan(double x) { return Math.tan(x); }
 
-    protected String getIdName(int id) {
+    protected String getIdName(int id)
+    {
         switch (id) {
             case Id_abs:      return "abs";
             case Id_acos:     return "acos";
@@ -353,7 +359,8 @@ final class NativeMath extends IdScriptable
 
 // #string_id_map#
 
-    protected int mapNameToId(String s) {
+    protected int mapNameToId(String s)
+    {
         int id;
 // #generated# Last update: 2001-03-23 13:50:14 GMT+01:00
         L0: { id = 0; String X = null; int c;

@@ -72,21 +72,24 @@ final class NativeString extends IdScriptable {
         super.fillConstructorProperties(cx, ctor, sealed);
     }
 
-    protected int getIdDefaultAttributes(int id) {
+    protected int getIdAttributes(int id)
+    {
         if (id == Id_length) {
             return DONTENUM | READONLY | PERMANENT;
         }
-        return super.getIdDefaultAttributes(id);
+        return super.getIdAttributes(id);
     }
 
-    protected Object getIdValue(int id) {
+    protected Object getIdValue(int id)
+    {
         if (id == Id_length) {
             return wrap_int(string.length());
         }
         return super.getIdValue(id);
     }
 
-    public int methodArity(int methodId) {
+    public int methodArity(int methodId)
+    {
         if (prototypeFlag) {
             switch (methodId) {
                 case ConstructorId_fromCharCode:   return 1;
@@ -254,7 +257,8 @@ final class NativeString extends IdScriptable {
         return (NativeString)thisObj;
     }
 
-    private static RegExpProxy checkReProxy(Context cx) {
+    private static RegExpProxy checkReProxy(Context cx)
+    {
         RegExpProxy result = cx.getRegExpProxy();
         if (result == null) {
             throw cx.reportRuntimeError0("msg.no.regexp");
@@ -763,17 +767,18 @@ final class NativeString extends IdScriptable {
         return target;
     }
 
-    private static boolean js_equals(String target, String strOther) {
+    private static boolean js_equals(String target, String strOther)
+    {
         return target.equals(strOther);
     }
-
 
     private static boolean js_equalsIgnoreCase(String target, String strOther)
     {
         return target.equalsIgnoreCase(strOther);
     }
 
-    protected String getIdName(int id) {
+    protected String getIdName(int id)
+    {
         if (id == Id_length) { return "length"; }
 
         if (prototypeFlag) {
@@ -824,7 +829,8 @@ final class NativeString extends IdScriptable {
 
     { setMaxId(MAX_INSTANCE_ID); }
 
-    protected int mapNameToId(String s) {
+    protected int mapNameToId(String s)
+    {
         if (s.equals("length")) { return Id_length; }
         else if (prototypeFlag) {
             return toPrototypeId(s);
@@ -834,7 +840,8 @@ final class NativeString extends IdScriptable {
 
 // #string_id_map#
 
-    private static int toPrototypeId(String s) {
+    private static int toPrototypeId(String s)
+    {
         int id;
 // #generated# Last update: 2001-04-23 12:50:07 GMT+02:00
         L0: { id = 0; String X = null; int c;

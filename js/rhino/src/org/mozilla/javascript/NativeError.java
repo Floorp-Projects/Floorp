@@ -43,9 +43,11 @@ package org.mozilla.javascript;
  *
  *  ECMA 15.11
  */
-final class NativeError extends IdScriptable {
+final class NativeError extends IdScriptable
+{
 
-    static void init(Context cx, Scriptable scope, boolean sealed) {
+    static void init(Context cx, Scriptable scope, boolean sealed)
+    {
         NativeError obj = new NativeError();
         obj.prototypeFlag = true;
         obj.messageValue = "";
@@ -53,36 +55,42 @@ final class NativeError extends IdScriptable {
         obj.addAsPrototype(MAX_PROTOTYPE_ID, cx, scope, sealed);
     }
 
-    protected int getIdDefaultAttributes(int id) {
+    protected int getIdAttributes(int id)
+    {
         if (id == Id_message || id == Id_name) { return EMPTY; }
-        return super.getIdDefaultAttributes(id);
+        return super.getIdAttributes(id);
     }
 
-    protected boolean hasIdValue(int id) {
+    protected boolean hasIdValue(int id)
+    {
         if (id == Id_message) { return messageValue != NOT_FOUND; }
         if (id == Id_name) { return nameValue != NOT_FOUND; }
         return super.hasIdValue(id);
     }
 
-    protected Object getIdValue(int id) {
+    protected Object getIdValue(int id)
+    {
         if (id == Id_message) { return messageValue; }
         if (id == Id_name) { return nameValue; }
         return super.getIdValue(id);
     }
 
-    protected void setIdValue(int id, Object value) {
+    protected void setIdValue(int id, Object value)
+    {
         if (id == Id_message) { messageValue = value; return; }
         if (id == Id_name) { nameValue = value; return; }
         super.setIdValue(id, value);
     }
 
-    protected void deleteIdValue(int id) {
+    protected void deleteIdValue(int id)
+    {
         if (id == Id_message) { messageValue = NOT_FOUND; return; }
         if (id == Id_name) { nameValue = NOT_FOUND; return; }
         super.deleteIdValue(id);
     }
 
-    public int methodArity(int methodId) {
+    public int methodArity(int methodId)
+    {
         if (prototypeFlag) {
             if (methodId == Id_constructor) return 1;
             if (methodId == Id_toString) return 0;
@@ -116,34 +124,40 @@ final class NativeError extends IdScriptable {
         return result;
     }
 
-    private static String js_toString(Scriptable thisObj) {
+    private static String js_toString(Scriptable thisObj)
+    {
         Object name = ScriptRuntime.getStrIdElem(thisObj, "name");
         Object message = ScriptRuntime.getStrIdElem(thisObj, "message");
         return ScriptRuntime.toString(name)
             +": "+ScriptRuntime.toString(message);
     }
 
-    public String getClassName() {
+    public String getClassName()
+    {
         return "Error";
     }
 
-    public String toString() {
+    public String toString()
+    {
         return js_toString(this);
     }
 
-    String getName() {
+    String getName()
+    {
         Object val = nameValue;
         return ScriptRuntime.toString(val != NOT_FOUND ? val
                                                        : Undefined.instance);
     }
 
-    String getMessage() {
+    String getMessage()
+    {
         Object val = messageValue;
         return ScriptRuntime.toString(val != NOT_FOUND ? val
                                                        : Undefined.instance);
     }
 
-    protected String getIdName(int id) {
+    protected String getIdName(int id)
+    {
         if (id == Id_message) { return "message"; }
         if (id == Id_name) { return "name"; }
         if (prototypeFlag) {
@@ -163,7 +177,8 @@ final class NativeError extends IdScriptable {
 
     { setMaxId(MAX_INSTANCE_ID); }
 
-    protected int mapNameToId(String s) {
+    protected int mapNameToId(String s)
+    {
         int id;
 // #generated# Last update: 2001-05-19 21:55:23 CEST
         L0: { id = 0; String X = null;

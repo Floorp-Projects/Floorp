@@ -47,7 +47,7 @@ Any descendant should implement at least the following methods:
 To define non-function properties, the descendant should override
     getIdValue
     setIdValue
-    getIdDefaultAttributes
+    getIdAttributes
 to get/set property value and provide its default attributes.
 
 During initialization descendant should call setMaxId directly or via calling addAsPrototype.
@@ -59,7 +59,8 @@ may override scopeInit or fillConstructorProperties methods.
 public abstract class IdScriptable extends ScriptableObject
     implements IdFunctionMaster
 {
-    public boolean has(String name, Scriptable start) {
+    public boolean has(String name, Scriptable start)
+    {
         if (maxId != 0) {
             int id = mapNameToId_writeCached(name);
             if (id != 0) {
@@ -69,7 +70,8 @@ public abstract class IdScriptable extends ScriptableObject
         return super.has(name, start);
     }
 
-    public Object get(String name, Scriptable start) {
+    public Object get(String name, Scriptable start)
+    {
         if (maxId != 0) {
             int id = mapNameToId_writeCached(name);
             if (id != 0) {
@@ -92,11 +94,12 @@ public abstract class IdScriptable extends ScriptableObject
         return super.get(name, start);
     }
 
-    public void put(String name, Scriptable start, Object value) {
+    public void put(String name, Scriptable start, Object value)
+    {
         if (maxId != 0) {
             int id = mapNameToId_cached(name);
             if (id != 0) {
-                int attr = getIdDefaultAttributes(id);
+                int attr = getIdAttributes(id);
                 if ((attr & READONLY) == 0 && !isSealed()) {
                     if (start == this) {
                         setIdValue(id, value);
@@ -111,13 +114,14 @@ public abstract class IdScriptable extends ScriptableObject
         super.put(name, start, value);
     }
 
-    public void delete(String name) {
+    public void delete(String name)
+    {
         if (maxId != 0) {
             int id = mapNameToId(name);
             if (id != 0) {
                 // Let the super class to throw exceptions for sealed objects
                 if (!isSealed()) {
-                    int attr = getIdDefaultAttributes(id);
+                    int attr = getIdAttributes(id);
                     if ((attr & PERMANENT) == 0) {
                         deleteIdValue(id);
                     }
@@ -135,7 +139,7 @@ public abstract class IdScriptable extends ScriptableObject
             int id = mapNameToId(name);
             if (id != 0) {
                 if (hasValue(id)) {
-                    return getIdDefaultAttributes(id);
+                    return getIdAttributes(id);
                 }
                 // For ids with deleted values super will throw exceptions
             }
@@ -165,8 +169,8 @@ public abstract class IdScriptable extends ScriptableObject
     /**
      * Redefine ScriptableObject.defineProperty to allow changing
      * values/attributes of id-based properties unless
-     * getIdDefaultAttributes contains the READONLY attribute.
-     * @see #getIdDefaultAttributes
+     * getIdAttributes contains the READONLY attribute.
+     * @see #getIdAttributes
      * @see org.mozilla.javascript.ScriptableObject#defineProperty
      */
     public void defineProperty(String propertyName, Object value,
@@ -175,7 +179,7 @@ public abstract class IdScriptable extends ScriptableObject
         if (maxId != 0) {
             int id = mapNameToId(propertyName);
             if (id != 0) {
-                int current_attributes = getIdDefaultAttributes(id);
+                int current_attributes = getIdAttributes(id);
                 if ((current_attributes & READONLY) != 0) {
                     // It is a bug to redefine id with readonly attributes
                     throw new RuntimeException
@@ -189,7 +193,8 @@ public abstract class IdScriptable extends ScriptableObject
         super.defineProperty(propertyName, value, attributes);
     }
 
-    Object[] getIds(boolean getAll) {
+    Object[] getIds(boolean getAll)
+    {
         Object[] result = super.getIds(getAll);
 
         if (maxId != 0) {
@@ -198,7 +203,7 @@ public abstract class IdScriptable extends ScriptableObject
 
             for (int id = maxId; id != 0; --id) {
                 if (hasValue(id)) {
-                    if (getAll || (getIdDefaultAttributes(id) & DONTENUM) == 0) {
+                    if (getAll || (getIdAttributes(id) & DONTENUM) == 0) {
                         if (count == 0) {
                             // Need extra room for nor more then [1..id] names
                             ids = new Object[id];
@@ -223,7 +228,8 @@ public abstract class IdScriptable extends ScriptableObject
     }
 
 // Try to avoid calls to mapNameToId by quering name cache
-    private int mapNameToId_cached(String name) {
+    private int mapNameToId_cached(String name)
+    {
         if (CACHE_NAMES) {
             Object[] data = idMapData;
             if (data != null) {
@@ -272,7 +278,8 @@ public abstract class IdScriptable extends ScriptableObject
      ** this for non-function attributes like length to return
      ** DONTENUM | READONLY | PERMANENT or DONTENUM | PERMANENT
      */
-    protected int getIdDefaultAttributes(int id) {
+    protected int getIdAttributes(int id)
+    {
         return DONTENUM;
     }
 
@@ -281,11 +288,11 @@ public abstract class IdScriptable extends ScriptableObject
      * Descendants should override the default implementation if they want to
      * allow to change id attributes since the default implementation throw an
      * exception unless new attributes eqaul the result of
-     * <tt>getIdDefaultAttributes(id)</tt>.
+     * <tt>getIdAttributes(id)</tt>.
      */
     protected void setIdAttributes(int id, int attributes)
     {
-        int current = getIdDefaultAttributes(id);
+        int current = getIdAttributes(id);
         if (attributes != current) {
             throw new RuntimeException(
                 "Change of attributes for this id is not supported");
@@ -294,7 +301,8 @@ public abstract class IdScriptable extends ScriptableObject
 
     /** Check if id value exists.
      ** Default implementation always returns true */
-    protected boolean hasIdValue(int id) {
+    protected boolean hasIdValue(int id)
+    {
         return true;
     }
 
@@ -304,7 +312,8 @@ public abstract class IdScriptable extends ScriptableObject
      ** Default implementation creates IdFunction instance for given id
      ** and cache its value
      */
-    protected Object getIdValue(int id) {
+    protected Object getIdValue(int id)
+    {
         IdFunction f = newIdFunction(id);
         f.setParentScope(getParentScope());
         return cacheIdValue(id, f);
@@ -313,11 +322,12 @@ public abstract class IdScriptable extends ScriptableObject
     /**
      * Set id value.
      * IdScriptable never calls this method if result of
-     * <code>getIdDefaultAttributes(id)</code> contains READONLY attribute.
+     * <code>getIdAttributes(id)</code> contains READONLY attribute.
      * Descendants can overwrite this method to provide custom handler for
      * property assignments.
      */
-    protected void setIdValue(int id, Object value) {
+    protected void setIdValue(int id, Object value)
+    {
         synchronized (this) {
             Object[] data = ensureIdData();
             data[id - 1] = (value != null) ? value : UniqueTag.NULL_VALUE;
@@ -329,7 +339,8 @@ public abstract class IdScriptable extends ScriptableObject
      * After this call IdScriptable never calls hasIdValue and getIdValue
      * for the given id.
      */
-    protected Object cacheIdValue(int id, Object value) {
+    protected Object cacheIdValue(int id, Object value)
+    {
         synchronized (this) {
             Object[] data = ensureIdData();
             Object curValue = data[id - 1];
@@ -346,11 +357,12 @@ public abstract class IdScriptable extends ScriptableObject
     /**
      * Delete value represented by id so hasIdValue return false.
      * IdScriptable never calls this method if result of
-     * <code>getIdDefaultAttributes(id)</code> contains PERMANENT attribute.
+     * <code>getIdAttributes(id)</code> contains PERMANENT attribute.
      * Descendants can overwrite this method to provide custom handler for
      * property delete.
      */
-    protected void deleteIdValue(int id) {
+    protected void deleteIdValue(int id)
+    {
         synchronized (this) {
             ensureIdData()[id - 1] = NOT_FOUND;
         }
@@ -369,17 +381,20 @@ public abstract class IdScriptable extends ScriptableObject
     /** Get arity or defined argument count for method with given id.
      ** Should return -1 if methodId is not known or can not be used
      ** with execMethod call. */
-    public int methodArity(int methodId) {
+    public int methodArity(int methodId)
+    {
         return -1;
     }
 
     /** Get maximum id mapNameToId can generate */
-    protected final int getMaxId() {
+    protected final int getMaxId()
+    {
         return maxId;
     }
 
     /** Set maximum id mapNameToId can generate */
-    protected final void setMaxId(int maxId) {
+    protected final void setMaxId(int maxId)
+    {
         // maxId can only go up
         if (maxId < this.maxId) Context.codeBug();
         this.maxId = maxId;
@@ -462,37 +477,44 @@ public abstract class IdScriptable extends ScriptableObject
                                       f.getFunctionName(), f);
     }
 
-    protected IdFunction newIdFunction(int id) {
+    protected IdFunction newIdFunction(int id)
+    {
         return newIdFunction(getIdName(id), id);
     }
 
-    protected IdFunction newIdFunction(String name, int id) {
+    protected IdFunction newIdFunction(String name, int id)
+    {
         IdFunction f = new IdFunction(this, name, id);
         if (isSealed()) { f.sealObject(); }
         return f;
     }
 
-    protected final Object wrap_double(double x) {
+    protected final Object wrap_double(double x)
+    {
         return (x == x) ? new Double(x) : ScriptRuntime.NaNobj;
     }
 
-    protected final Object wrap_int(int x) {
+    protected final Object wrap_int(int x)
+    {
         byte b = (byte)x;
         if (b == x) { return new Byte(b); }
         return new Integer(x);
     }
 
-    protected final Object wrap_long(long x) {
+    protected final Object wrap_long(long x)
+    {
         int i = (int)x;
         if (i == x) { return wrap_int(i); }
         return new Long(x);
     }
 
-    protected final Object wrap_boolean(boolean x) {
+    protected final Object wrap_boolean(boolean x)
+    {
         return x ? Boolean.TRUE : Boolean.FALSE;
     }
 
-    private boolean hasValue(int id) {
+    private boolean hasValue(int id)
+    {
         Object value;
         Object[] data = idMapData;
         if (data == null || (value = data[id - 1]) == null) {
@@ -504,7 +526,8 @@ public abstract class IdScriptable extends ScriptableObject
     }
 
     // Must be called only from synchronized (this)
-    private Object[] ensureIdData() {
+    private Object[] ensureIdData()
+    {
         Object[] data = idMapData;
         if (data == null) {
             idMapData = data = new Object[CACHE_NAMES ? maxId * 2 : maxId];

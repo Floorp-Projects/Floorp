@@ -61,7 +61,8 @@ public class NativeArray extends IdScriptable {
      * always gets at least an object back, even when Array == null.
      */
 
-    static void init(Context cx, Scriptable scope, boolean sealed) {
+    static void init(Context cx, Scriptable scope, boolean sealed)
+    {
         NativeArray obj = new NativeArray();
         obj.prototypeFlag = true;
         obj.addAsPrototype(MAX_PROTOTYPE_ID, cx, scope, sealed);
@@ -70,12 +71,14 @@ public class NativeArray extends IdScriptable {
     /**
      * Zero-parameter constructor: just used to create Array.prototype
      */
-    private NativeArray() {
+    private NativeArray()
+    {
         dense = null;
         this.length = 0;
     }
 
-    public NativeArray(long length) {
+    public NativeArray(long length)
+    {
         int intLength = (int) length;
         if (intLength == length && intLength > 0) {
             if (intLength > maximumDenseLength)
@@ -87,37 +90,43 @@ public class NativeArray extends IdScriptable {
         this.length = length;
     }
 
-    public NativeArray(Object[] array) {
+    public NativeArray(Object[] array)
+    {
         dense = array;
         this.length = array.length;
     }
 
-    public String getClassName() {
+    public String getClassName()
+    {
         return "Array";
     }
 
-    protected int getIdDefaultAttributes(int id) {
+    protected int getIdAttributes(int id)
+    {
         if (id == Id_length) {
             return DONTENUM | PERMANENT;
         }
-        return super.getIdDefaultAttributes(id);
+        return super.getIdAttributes(id);
     }
 
-    protected Object getIdValue(int id) {
+    protected Object getIdValue(int id)
+    {
         if (id == Id_length) {
             return wrap_double(length);
         }
         return super.getIdValue(id);
     }
 
-    protected void setIdValue(int id, Object value) {
+    protected void setIdValue(int id, Object value)
+    {
         if (id == Id_length) {
             setLength(value); return;
         }
         super.setIdValue(id, value);
     }
 
-    public int methodArity(int methodId) {
+    public int methodArity(int methodId)
+    {
         if (prototypeFlag) {
             switch (methodId) {
                 case Id_constructor:     return 1;
@@ -188,13 +197,15 @@ public class NativeArray extends IdScriptable {
         return super.execMethod(methodId, f, cx, scope, thisObj, args);
     }
 
-    public Object get(int index, Scriptable start) {
+    public Object get(int index, Scriptable start)
+    {
         if (dense != null && 0 <= index && index < dense.length)
             return dense[index];
         return super.get(index, start);
     }
 
-    public boolean has(int index, Scriptable start) {
+    public boolean has(int index, Scriptable start)
+    {
         if (dense != null && 0 <= index && index < dense.length)
             return dense[index] != NOT_FOUND;
         return super.has(index, start);
@@ -202,7 +213,8 @@ public class NativeArray extends IdScriptable {
 
     // if id is an array index (ECMA 15.4.0), return the number,
     // otherwise return -1L
-    private static long toArrayIndex(String id) {
+    private static long toArrayIndex(String id)
+    {
         double d = ScriptRuntime.toNumber(id);
         if (d == d) {
             long index = ScriptRuntime.toUint32(d);
@@ -217,7 +229,8 @@ public class NativeArray extends IdScriptable {
         return -1;
     }
 
-    public void put(String id, Scriptable start, Object value) {
+    public void put(String id, Scriptable start, Object value)
+    {
         if (start == this) {
             long index = toArrayIndex(id);
             if (index >= length) {
@@ -227,7 +240,8 @@ public class NativeArray extends IdScriptable {
         super.put(id, start, value);
     }
 
-    public void put(int index, Scriptable start, Object value) {
+    public void put(int index, Scriptable start, Object value)
+    {
         if (start == this) {
             // only set the array length if given an array index (ECMA 15.4.0)
             if (this.length <= index) {
@@ -243,7 +257,8 @@ public class NativeArray extends IdScriptable {
         super.put(index, start, value);
     }
 
-    public void delete(int index) {
+    public void delete(int index)
+    {
         if (!isSealed()) {
             if (dense != null && 0 <= index && index < dense.length) {
                 dense[index] = NOT_FOUND;
@@ -253,7 +268,8 @@ public class NativeArray extends IdScriptable {
         super.delete(index);
     }
 
-    public Object[] getIds() {
+    public Object[] getIds()
+    {
         Object[] superIds = super.getIds();
         if (dense == null) { return superIds; }
         int N = dense.length;
@@ -285,7 +301,8 @@ public class NativeArray extends IdScriptable {
         return ids;
     }
 
-    public Object getDefaultValue(Class hint) {
+    public Object getDefaultValue(Class hint)
+    {
         if (hint == ScriptRuntime.NumberClass) {
             Context cx = Context.getContext();
             if (cx.getLanguageVersion() == Context.VERSION_1_2)
@@ -1078,7 +1095,8 @@ public class NativeArray extends IdScriptable {
         return result;
     }
 
-    protected String getIdName(int id) {
+    protected String getIdName(int id)
+    {
         if (id == Id_length) { return "length"; }
 
         if (prototypeFlag) {
@@ -1107,7 +1125,8 @@ public class NativeArray extends IdScriptable {
 
     { setMaxId(MAX_INSTANCE_ID); }
 
-    protected int mapNameToId(String s) {
+    protected int mapNameToId(String s)
+    {
         if (s.equals("length")) { return Id_length; }
         else if (prototypeFlag) {
             return toPrototypeId(s);
@@ -1117,7 +1136,8 @@ public class NativeArray extends IdScriptable {
 
 // #string_id_map#
 
-    private static int toPrototypeId(String s) {
+    private static int toPrototypeId(String s)
+    {
         int id;
 // #generated# Last update: 2001-04-23 11:46:01 GMT+02:00
         L0: { id = 0; String X = null; int c;
