@@ -67,30 +67,46 @@ static nsIStreamListener *getStreamListener(URL_Struct *URL_s)
     return res;
 }
 
+static NS_DEFINE_IID(kINetSupportIID, NS_INETSUPPORT_IID);
+
 static nsINetSupport *getNetSupport(URL_Struct *URL_s) 
 {
-    nsIStreamListener *isl = getStreamListener(URL_s);
-    if (isl) {
-        nsINetSupport *ins;
-        isl->QueryInterface(kINetSupportIID, (void **) &ins);
-        isl->Release();
-        return ins;
+  nsINetSupport *netSupport = nsnull;
+
+  /* Access the nsConnectionInfo object off of the URL Struct fe_data */
+  if ((nsnull != URL_s) && (nsnull != URL_s->fe_data)) {
+    nsConnectionInfo *pConn = (nsConnectionInfo *)URL_s->fe_data;
+
+    /* Now get the nsIURL held by the nsConnectionInfo... */
+    if ((nsnull != pConn) && (nsnull != pConn->pURL)) {
+      nsISupports *container;
+
+      /* The nsINetSupport interface will be implemented by the container */
+      container = pConn->pURL->GetContainer();
+      if (nsnull != container) {
+        container->QueryInterface(kINetSupportIID, (void **) &netSupport);
+        NS_RELEASE(container);
+      }
     }
-    return NULL;
+  }
+  return netSupport;
 }
 
 void stub_Alert(MWContext *context,
                 const char *msg)
 {
-    nsINetSupport *ins;
+  nsINetSupport *ins;
 
-    if (nsnull != (ins = getNetSupport(context->modular_data))) {
-        nsString str(msg);
-        ins->Alert(str);
-        ins->Release();
-    } else {
-        printf("Alert: %s", msg);
-    }
+  if (nsnull != (ins = getNetSupport(context->modular_data))) {
+    nsAutoString str(msg);
+
+    ins->Alert(str);
+    NS_RELEASE(ins);;
+  } 
+  /* No nsINetSupport interface... */
+  else {
+    printf("Alert: %s", msg);
+  }
 }
 
 extern "C" void FE_Alert(MWContext *context, const char *msg)
@@ -115,46 +131,54 @@ extern "C" char * fe_GetProgramDirectory(char *buffer, int length) {
 XP_Bool stub_Confirm(MWContext *context,
                      const char *msg)
 {
-    nsINetSupport *ins;
+  nsINetSupport *ins;
+  XP_Bool bResult = FALSE;
     
-    if (nsnull != (ins = getNetSupport(context->modular_data))) {
-        XP_Bool res;
-        nsString str(msg);
-        res = ins->Confirm(str);
-        ins->Release();
-        return res;
-    } else {
-        printf("Confirm: %s", msg);
-    }
-    return FALSE;
+  if (nsnull != (ins = getNetSupport(context->modular_data))) {
+    nsAutoString str(msg);
+
+    bResult = ins->Confirm(str);
+    NS_RELEASE(ins);
+  } 
+  /* No nsINetSupport interface... */
+  else {
+    printf("Confirm: %s", msg);
+  }
+  return bResult;
 }
 
 char *stub_Prompt(MWContext *context,
                   const char *msg,
                   const char *def)
 {
-    nsINetSupport *ins;
+  nsINetSupport *ins;
+  char *result = nsnull;
     
-    if (nsnull != (ins = getNetSupport(context->modular_data))) {
-        nsString str(msg);
-        nsString defStr(def);
-        nsString res;
-        if (ins->Prompt(msg, defStr, res)) {
-            ins->Release();
-            return res.ToNewCString();
-        }
-        ins->Release();
-    } else {
-        char buf[256];
-        printf("%s\n", msg);
-        printf("Prompt: ");
-        scanf("%s", buf);
-        if (PL_strlen(buf)) {
-            return PL_strdup(buf);
-        }
-    }
+  if (nsnull != (ins = getNetSupport(context->modular_data))) {
+    nsAutoString str(msg);
+    nsAutoString defStr(def);
+    nsAutoString res;
 
-    return NULL;
+    if (ins->Prompt(msg, defStr, res)) {
+      NS_RELEASE(ins);
+      result = res.ToNewCString();
+    }
+    NS_RELEASE(ins);
+
+  } 
+  /* No nsINetSupport interface... */
+  else {
+    char buf[256];
+
+    printf("%s\n", msg);
+    printf("Prompt: ");
+    scanf("%s", buf);
+    if (PL_strlen(buf)) {
+      result = PL_strdup(buf);
+    }
+  }
+
+  return result;
 }
 
 PRIVATE XP_Bool
@@ -163,62 +187,74 @@ stub_PromptUsernameAndPassword(MWContext *context,
                                char **username,
                                char **password)
 {
-    nsINetSupport *ins;
+  nsINetSupport *ins;
+  XP_Bool bResult = FALSE;
     
-    if (nsnull != (ins = getNetSupport(context->modular_data))) {
-        nsString str(msg);
-        nsString userStr;
-        nsString pwdStr;
-        if (ins->PromptUserAndPassword(msg, userStr, pwdStr)) {
-            ins->Release();
-            *username = userStr.ToNewCString();
-            *password = pwdStr.ToNewCString();
-            return TRUE;
-        }
-        ins->Release();
-    } else {
-        char buf[256];
-        printf("%s\n", msg);
-        printf("Username: ");
-        scanf("%s", buf);
-        *username = PL_strdup(buf);
-        printf("Password: ");
-        scanf("%s", buf);
-        *password = PL_strdup(buf);
-        if (**username) {
-             return TRUE;
-        }
-        PR_FREEIF(*username);
-        PR_FREEIF(*password);
-    }
+  if (nsnull != (ins = getNetSupport(context->modular_data))) {
+    nsAutoString str(msg);
+    nsAutoString userStr;
+    nsAutoString pwdStr;
 
-    return FALSE;
+    if (ins->PromptUserAndPassword(msg, userStr, pwdStr)) {
+      *username = userStr.ToNewCString();
+      *password = pwdStr.ToNewCString();
+      bResult = TRUE;
+    }
+    NS_RELEASE(ins);
+
+  } 
+  /* No nsINetSupport interface... */
+  else {
+    char buf[256];
+
+    printf("%s\n", msg);
+    printf("Username: ");
+    scanf("%s", buf);
+    *username = PL_strdup(buf);
+
+    printf("Password: ");
+    scanf("%s", buf);
+    *password = PL_strdup(buf);
+    if (**username) {
+       bResult = TRUE;
+    } else {
+      PR_FREEIF(*username);
+      PR_FREEIF(*password);
+    }
+  }
+
+  return bResult;
 }
 
 char *stub_PromptPassword(MWContext *context,
                           const char *msg)
 {
-    nsINetSupport *ins;
-    
-    if (nsnull != (ins = getNetSupport(context->modular_data))) {
-        nsString str(msg);
-        nsString res;
-        if (ins->PromptPassword(msg, res)) {
-            ins->Release();
-            return res.ToNewCString();
-        }
-        ins->Release();
-    } else {
-        char buf[256];
-        printf("%s\n", msg);
-        printf("Password: ");
-        scanf("%s", buf);
-        if (PL_strlen(buf)) {
-            return PL_strdup(buf);
-        }
-    }
+  nsINetSupport *ins;
+  char *result = nsnull;
 
-    return NULL;
+  if (nsnull != (ins = getNetSupport(context->modular_data))) {
+    nsAutoString str(msg);
+    nsAutoString res;
+
+    if (ins->PromptPassword(msg, res)) {
+      result = res.ToNewCString();
+    }
+    NS_RELEASE(ins);
+
+  } 
+  /* No nsINetSupport interface... */
+  else {
+    char buf[256];
+
+    printf("%s\n", msg);
+    printf("Password: ");
+    scanf("%s", buf);
+    if (PL_strlen(buf)) {
+      result = PL_strdup(buf);
+    }
+  }
+
+  return result;
 }
 
 PRIVATE void stub_GraphProgressInit(MWContext  *context, 
