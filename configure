@@ -19126,22 +19126,23 @@ fi
     ac_configure_args="$_SUBDIR_CONFIG_ARGS"
 fi
 
-if test -z "$MOZ_SYSTEM_CAIRO"; then
-    # these subdirs may not yet have been created in the build tree.
-    # don't use the "-p" switch to mkdir, since not all platforms have it
-    #
-    if test ! -d "gfx/cairo"; then
-        mkdir "gfx/cairo"
-    fi
-    if test ! -d "gfx/cairo/libpixman"; then
-        mkdir "gfx/cairo/libpixman"
-    fi
-    if test ! -d "gfx/cairo/cairo"; then
-        mkdir "gfx/cairo/cairo"
-    fi
+if test "$MOZ_SVG_RENDERER_CAIRO" -o "$MOZ_ENABLE_CAIRO" ; then
+    if test -z "$MOZ_SYSTEM_CAIRO"; then
+        # these subdirs may not yet have been created in the build tree.
+        # don't use the "-p" switch to mkdir, since not all platforms have it
+        #
+        if test ! -d "gfx/cairo"; then
+            mkdir "gfx/cairo"
+        fi
+        if test ! -d "gfx/cairo/libpixman"; then
+            mkdir "gfx/cairo/libpixman"
+        fi
+        if test ! -d "gfx/cairo/cairo"; then
+            mkdir "gfx/cairo/cairo"
+        fi
 
-    ac_configure_args="$_SUBDIR_CONFIG_ARGS --prefix=$MOZ_BUILD_ROOT/dist --includedir=$MOZ_BUILD_ROOT/dist/include/cairo"
-    
+        ac_configure_args="$_SUBDIR_CONFIG_ARGS --prefix=$MOZ_BUILD_ROOT/dist --includedir=$MOZ_BUILD_ROOT/dist/include/cairo"
+        
 if test "$no_recursion" != yes; then
 
   # Remove --cache-file and --srcdir arguments so they do not pile up.
@@ -19240,14 +19241,14 @@ if test "$no_recursion" != yes; then
 fi
 
 
-    export PKG_CONFIG_PATH=$MOZ_BUILD_ROOT/gfx/cairo/libpixman
-    ac_configure_args="$_SUBDIR_CONFIG_ARGS --prefix=$MOZ_BUILD_ROOT/dist --disable-ps --disable-pdf --disable-png --disable-glitz --disable-xcb"
+        export PKG_CONFIG_PATH=$MOZ_BUILD_ROOT/gfx/cairo/libpixman
+        ac_configure_args="$_SUBDIR_CONFIG_ARGS --prefix=$MOZ_BUILD_ROOT/dist --disable-ps --disable-pdf --disable-png --disable-glitz --disable-xcb"
 
-    if test -n "$MACOSX"; then
-        ac_configure_args="$ac_configure_args --disable-freetype --disable-xlib"
-    fi
+        if test -n "$MACOSX"; then
+            ac_configure_args="$ac_configure_args --disable-freetype --disable-xlib"
+        fi
 
-    
+        
 if test "$no_recursion" != yes; then
 
   # Remove --cache-file and --srcdir arguments so they do not pile up.
@@ -19345,5 +19346,6 @@ if test "$no_recursion" != yes; then
   done
 fi
 
-    ac_configure_args="$_SUBDIR_CONFIG_ARGS"
+        ac_configure_args="$_SUBDIR_CONFIG_ARGS"
+    fi
 fi
