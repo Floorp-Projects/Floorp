@@ -34,7 +34,7 @@
 /*
  * CMS signedData methods.
  *
- * $Id: cmssigdata.c,v 1.18 2003/07/31 00:16:27 nelsonb%netscape.com Exp $
+ * $Id: cmssigdata.c,v 1.19 2003/11/26 22:02:38 nelsonb%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -584,22 +584,35 @@ NSS_CMSSignedData_VerifySignerInfo(NSSCMSSignedData *sigd, int i,
     NSSCMSContentInfo *cinfo;
     SECOidData *algiddata;
     SECItem *contentType, *digest;
+    SECStatus rv;
 
     cinfo = &(sigd->contentInfo);
 
     signerinfo = sigd->signerInfos[i];
 
     /* verify certificate */
-    if (NSS_CMSSignerInfo_VerifyCertificate(signerinfo, certdb, certusage) != SECSuccess)
-	return SECFailure;		/* error is set by NSS_CMSSignerInfo_VerifyCertificate */
+    rv = NSS_CMSSignerInfo_VerifyCertificate(signerinfo, certdb, certusage);
+    if (rv != SECSuccess)
+	return rv; /* error is set */
 
     /* find digest and contentType for signerinfo */
     algiddata = NSS_CMSSignerInfo_GetDigestAlg(signerinfo);
+    if (!algiddata)
+    	return SECFailure;  /* error code is set */
     digest = NSS_CMSSignedData_GetDigestByAlgTag(sigd, algiddata->offset);
+    if (!digest) {
+	PORT_SetError(SEC_ERROR_PKCS7_BAD_SIGNATURE);
+    	return SECFailure;
+    }
     contentType = NSS_CMSContentInfo_GetContentTypeOID(cinfo);
+    if (!contentType) {
+	PORT_SetError(SEC_ERROR_PKCS7_BAD_SIGNATURE);
+    	return SECFailure;
+    }
 
     /* now verify signature */
-    return NSS_CMSSignerInfo_Verify(signerinfo, digest, contentType);
+    rv = NSS_CMSSignerInfo_Verify(signerinfo, digest, contentType);
+    return rv;
 }
 
 /*
