@@ -508,9 +508,7 @@ nsTextControlFrame::PaintTextControl(nsIPresContext& aPresContext,
                                      nsIRenderingContext& aRenderingContext,
                                      const nsRect& aDirtyRect)
 {
-#ifdef XP_PC
-  aRenderingContext.PushState();
-
+    aRenderingContext.PushState();
 
     nsFormControlFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
 
@@ -530,137 +528,127 @@ nsTextControlFrame::PaintTextControl(nsIPresContext& aPresContext,
     nsRect inside(outside);
     inside.Deflate(onePixel, onePixel);
 
-  /*if (mGotFocus) { // draw dashed line to indicate selection, XXX don't calc rect every time
-    PRUint8 borderStyles[4];
-    nscolor borderColors[4];
-    nscolor black = NS_RGB(0,0,0);
-    for (PRInt32 i = 0; i < 4; i++) {
-      borderStyles[i] = NS_STYLE_BORDER_STYLE_DOTTED;
-      borderColors[i] = black;
+#if 0
+    if (mGotFocus) { 
+      PaintFocus(aRenderingContext,
+                 aDirtyRect, inside, outside);
     }
-    nsCSSRendering::DrawDashedSides(0, aRenderingContext, borderStyles, borderColors, outside,
-                                    inside, PR_FALSE, nsnull);
-  }*/
-
-  float appUnits;
-  float devUnits;
-  float scale;
-  nsIDeviceContext * context;
-  aRenderingContext.GetDeviceContext(context);
-
-  context->GetCanonicalPixelScale(scale);
-  context->GetAppUnitsToDevUnits(devUnits);
-  context->GetDevUnitsToAppUnits(appUnits);
-
-  //aRenderingContext.SetColor(NS_RGB(192,192,192));
-  //aRenderingContext.FillRect(inside);
-
-  aRenderingContext.SetColor(NS_RGB(0,0,0));
-
-  nsFont font(aPresContext.GetDefaultFixedFont()); 
-  GetFont(&aPresContext, font);
-
-  aRenderingContext.SetFont(font);
-
-  nscoord textWidth;
-  nscoord textHeight;
-  nsString text;
-
-  GetText(&text);
-  aRenderingContext.GetWidth(text, textWidth);
-
-  nsIFontMetrics* metrics;
-  context->GetMetricsFor(font, metrics);
-  metrics->GetHeight(textHeight);
-
-  PRInt32 type;
-  GetType(&type);
-  if (NS_FORM_INPUT_TEXT == type || NS_FORM_INPUT_PASSWORD == type) {
-    nscoord x = inside.x + onePixel + onePixel;
-    nscoord y;
-    
-    if (NS_FORM_INPUT_TEXT == type) {
-      y = ((inside.height  - textHeight) / 2)  + inside.y;
-    } else {
-      metrics->GetMaxAscent(textHeight);
-      y = ((inside.height  - textHeight) / 2)  + inside.y;
-      PRInt32 i;
-      PRInt32 len = text.Length();
-      text.SetLength(0);
-      for (i=0;i<len;i++) {
-        text.Append("*");
-      }
-    }
-    aRenderingContext.DrawString(text, x, y, 0); 
-  } else {
-    float sbWidth;
-    float sbHeight;
-    context->GetCanonicalPixelScale(scale);
-    context->GetScrollBarDimensions(sbWidth, sbHeight);
-    PRInt32 scrollbarScaledWidth  = PRInt32(sbWidth * scale);
-    PRInt32 scrollbarScaledHeight = PRInt32(sbWidth * scale);
-
-    inside.width  -= scrollbarScaledWidth;
-    inside.height -= scrollbarScaledHeight;
-    PRBool clipEmpty;
-    aRenderingContext.PushState();
-    aRenderingContext.SetClipRect(inside, nsClipCombine_kReplace, clipEmpty);
-
-    nscoord x = inside.x + onePixel;
-    nscoord y = inside.y + onePixel;
-
-    // Draw multi-line text
-    PRInt32 oldPos = 0;
-    PRInt32 pos    = text.Find('\n', 0);
-    while (1) {
-      nsString substr;
-      if (-1 == pos) {
-        text.Right(substr, text.Length()-oldPos);
-        aRenderingContext.DrawString(substr, x, y, 0); 
-        break;     
-      } 
-      text.Left(substr, pos);
-      aRenderingContext.DrawString(substr, x, y, 0);
-      y += textHeight;
-      pos++;
-      oldPos = pos;
-      pos = text.Find('\n', pos);
-    }
-
-
-    aRenderingContext.PopState(clipEmpty);
-
-    // Scrollbars
-    const nsStyleColor* myColor = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
-    nsIAtom * sbAtom = NS_NewAtom(":SCROLLBAR-LOOK");
-    nsIStyleContext* scrollbarStyle = aPresContext.ResolvePseudoStyleContextFor(mContent, sbAtom, mStyleContext);
-    NS_RELEASE(sbAtom);
-    sbAtom = NS_NewAtom(":SCROLLBAR-ARROW-LOOK");
-    nsIStyleContext* arrowStyle = aPresContext.ResolvePseudoStyleContextFor(mContent, sbAtom, mStyleContext);
-    NS_RELEASE(sbAtom);
-
-    nsRect srect(mRect.width-scrollbarScaledWidth-(2*onePixel), 2*onePixel, scrollbarScaledWidth, mRect.height-(onePixel*4)-scrollbarScaledWidth);
-
-    DrawScrollbar(aRenderingContext,aPresContext, aDirtyRect, srect, PR_FALSE, onePixel, 
-																  scrollbarStyle, arrowStyle, this, mRect);   
-    // Horizontal
-    srect.SetRect(2*onePixel, mRect.height-scrollbarScaledHeight-(2*onePixel), mRect.width-(onePixel*4)-scrollbarScaledHeight, scrollbarScaledHeight);
-    DrawScrollbar(aRenderingContext,aPresContext, aDirtyRect, srect, PR_TRUE, onePixel, 
-																  scrollbarStyle, arrowStyle, this, mRect);   
-
-    // Draw the small rect "gap" in the bottom right that the two scrollbars don't cover
-    const nsStyleColor*   sbColor   = (const nsStyleColor*)scrollbarStyle->GetStyleData(eStyleStruct_Color);
-    srect.SetRect(mRect.width-scrollbarScaledWidth-(2*onePixel), mRect.height-scrollbarScaledHeight-(onePixel*2), scrollbarScaledWidth, scrollbarScaledHeight);
-    nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                    aDirtyRect, srect, *sbColor, 0, 0);
-  }
-
-
-  NS_RELEASE(context);
-
-  PRBool status;
-  aRenderingContext.PopState(status);
 #endif
+
+    float appUnits;
+    float devUnits;
+    float scale;
+    nsIDeviceContext * context;
+    aRenderingContext.GetDeviceContext(context);
+
+    context->GetCanonicalPixelScale(scale);
+    context->GetAppUnitsToDevUnits(devUnits);
+    context->GetDevUnitsToAppUnits(appUnits);
+
+    aRenderingContext.SetColor(NS_RGB(0,0,0));
+
+    nsFont font(aPresContext.GetDefaultFixedFont()); 
+    GetFont(&aPresContext, font);
+
+    aRenderingContext.SetFont(font);
+
+    nscoord textWidth;
+    nscoord textHeight;
+    nsString text;
+
+    GetText(&text);
+    aRenderingContext.GetWidth(text, textWidth);
+
+    nsIFontMetrics* metrics;
+    context->GetMetricsFor(font, metrics);
+    metrics->GetHeight(textHeight);
+
+    PRInt32 type;
+    GetType(&type);
+    if (NS_FORM_INPUT_TEXT == type || NS_FORM_INPUT_PASSWORD == type) {
+      nscoord x = inside.x + onePixel + onePixel;
+      nscoord y;
+    
+      if (NS_FORM_INPUT_TEXT == type) {
+        y = ((inside.height  - textHeight) / 2)  + inside.y;
+      } else {
+        metrics->GetMaxAscent(textHeight);
+        y = ((inside.height  - textHeight) / 2)  + inside.y;
+        PRInt32 i;
+        PRInt32 len = text.Length();
+        text.SetLength(0);
+        for (i=0;i<len;i++) {
+          text.Append("*");
+        }
+      }
+      aRenderingContext.DrawString(text, x, y, 0); 
+    } else {
+      float sbWidth;
+      float sbHeight;
+      context->GetCanonicalPixelScale(scale);
+      context->GetScrollBarDimensions(sbWidth, sbHeight);
+      PRInt32 scrollbarScaledWidth  = PRInt32(sbWidth * scale);
+      PRInt32 scrollbarScaledHeight = PRInt32(sbWidth * scale);
+
+      inside.width  -= scrollbarScaledWidth;
+      inside.height -= scrollbarScaledHeight;
+      PRBool clipEmpty;
+      aRenderingContext.PushState();
+      aRenderingContext.SetClipRect(inside, nsClipCombine_kReplace, clipEmpty);
+
+      nscoord x = inside.x + onePixel;
+      nscoord y = inside.y + onePixel;
+
+      // Draw multi-line text
+      PRInt32 oldPos = 0;
+      PRInt32 pos    = text.Find('\n', 0);
+      while (1) {
+        nsString substr;
+        if (-1 == pos) {
+          text.Right(substr, text.Length()-oldPos);
+          aRenderingContext.DrawString(substr, x, y, 0); 
+          break;     
+        } 
+        text.Left(substr, pos);
+        aRenderingContext.DrawString(substr, x, y, 0);
+        y += textHeight;
+        pos++;
+        oldPos = pos;
+        pos = text.Find('\n', pos);
+      }
+
+      aRenderingContext.PopState(clipEmpty);
+
+      // Scrollbars
+      const nsStyleColor* myColor = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+      nsIAtom * sbAtom = NS_NewAtom(":SCROLLBAR-LOOK");
+      nsIStyleContext* scrollbarStyle = aPresContext.ResolvePseudoStyleContextFor(mContent, sbAtom, mStyleContext);
+      NS_RELEASE(sbAtom);
+      sbAtom = NS_NewAtom(":SCROLLBAR-ARROW-LOOK");
+      nsIStyleContext* arrowStyle = aPresContext.ResolvePseudoStyleContextFor(mContent, sbAtom, mStyleContext);
+      NS_RELEASE(sbAtom);
+
+      nsRect srect(mRect.width-scrollbarScaledWidth-(2*onePixel), 2*onePixel, scrollbarScaledWidth, mRect.height-(onePixel*4)-scrollbarScaledWidth);
+
+      PaintScrollbar(aRenderingContext,aPresContext, aDirtyRect, srect, PR_FALSE, onePixel, 
+																    scrollbarStyle, arrowStyle, this, mRect);   
+      // Horizontal
+      srect.SetRect(2*onePixel, mRect.height-scrollbarScaledHeight-(2*onePixel), mRect.width-(onePixel*4)-scrollbarScaledHeight, scrollbarScaledHeight);
+      PaintScrollbar(aRenderingContext,aPresContext, aDirtyRect, srect, PR_TRUE, onePixel, 
+																    scrollbarStyle, arrowStyle, this, mRect);   
+
+      // Draw the small rect "gap" in the bottom right that the two scrollbars don't cover
+      const nsStyleColor*   sbColor   = (const nsStyleColor*)scrollbarStyle->GetStyleData(eStyleStruct_Color);
+      srect.SetRect(mRect.width-scrollbarScaledWidth-(2*onePixel), mRect.height-scrollbarScaledHeight-(onePixel*2), scrollbarScaledWidth, scrollbarScaledHeight);
+      nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
+                                      aDirtyRect, srect, *sbColor, 0, 0);
+    }
+
+
+    NS_RELEASE(context);
+
+    PRBool status;
+    aRenderingContext.PopState(status);
 }
 
 NS_METHOD 
@@ -668,8 +656,7 @@ nsTextControlFrame::Paint(nsIPresContext& aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           const nsRect& aDirtyRect)
 {
-#ifdef XP_PC
   PaintTextControl(aPresContext, aRenderingContext, aDirtyRect);
-#endif
+
   return NS_OK;
 }

@@ -256,12 +256,16 @@ protected:
   //nscoord GetStyleDim(nsIPresContext& aPresContext, nscoord aMaxDim, 
   //                    nscoord aMaxWidth, const nsStyleCoord& aCoord);
 
-//
-// XXX: The following paint code is TEMPORARY. It is being used to get printing working
-// under windows. Later it may be used to GFX-render the controls to the display. 
-// Expect this code to repackaged and moved to a new location in the future.
-//
 
+//
+//-------------------------------------------------------------------------------------
+// Utility methods for rendering Form Elements using GFX
+//-------------------------------------------------------------------------------------
+//
+// XXX: The following location for the paint code is TEMPORARY. 
+// It is being used to get printing working
+// under windows. Later it will be used to GFX-render the controls to the display. 
+// Expect this code to repackaged and moved to a new location in the future.
 
    /**
     * Enumeration of possible mouse states used to detect mouse clicks
@@ -274,15 +278,23 @@ protected:
    };
 
    /**
-    * Setup an array of Points
+    * Scale, translate and convert an arrow of poitns from nscoord's to nsPoints's.
+    *
+    * @param aNumberOfPoints number of (x,y) pairs
+    * @param aPoints arrow of points to convert
+    * @param aScaleFactor scale factor to apply to each points translation.
+    * @param aX x coordinate to add to each point after scaling
+    * @param aY y coordinate to add to each point after scaling
+    * @param aCenterX x coordinate of the center point in the original array of points.
+    * @param aCenterY y coordiante of the center point in the original array of points.
     */
 
-   static void SetupPoints(PRUint32 aNumberOfPoints, nscoord* points, 
-     nsPoint* polygon, nscoord aScaleFactor, nscoord aX, nscoord aY);
+   static void SetupPoints(PRUint32 aNumberOfPoints, nscoord* aPoints, 
+     nsPoint* aPolygon, nscoord aScaleFactor, nscoord aX, nscoord aY,
+     nscoord aCenterX, nscoord aCenterY);
 
    /**
-    * Draw a fat line. The line is drawn as a polygon with a specified width.
-	  * Utility used for rendering a form control during printing.
+    * Paint a fat line. The line is drawn as a polygon with a specified width.
 	  *  
     * @param aRenderingContext the rendering context
     * @param aSX starting x in pixels
@@ -294,35 +306,39 @@ protected:
     * @param aOnePixel number of twips in a single pixel.
     */
 
-  static void DrawLine(nsIRenderingContext& aRenderingContext, 
+  static void PaintLine(nsIRenderingContext& aRenderingContext, 
                  nscoord aSX, nscoord aSY, nscoord aEX, nscoord aEY, 
                  PRBool aHorz, nscoord aWidth, nscoord aOnePixel);
 
-
    /**
-    * Draw a arrow glyph
+    * Draw an arrow glyph. 
 	  * 
     * @param aRenderingContext the rendering context
     * @param aSX upper left x coordinate pixels
    	* @param aSY upper left y coordinate pixels
-    * @param aType @see nsArrowDirection
+    * @param aType @see nsArrowDirection enumeration 
     * @param aOnePixel number of twips in a single pixel.
     */
 
-  static void DrawArrowGlyph(nsIRenderingContext& aRenderingContext, 
-                 nscoord aSX, nscoord aSY, nsArrowDirection aArrowDirection, 
-                 nscoord aOnePixel);
+  static void PaintArrowGlyph(nsIRenderingContext& aRenderingContext, 
+                              nscoord aSX, nscoord aSY, nsArrowDirection aArrowDirection, 
+                              nscoord aOnePixel);
 
    /**
-    * Draw a arrow 
+    * Draw an arrow 
    	* 
+    * @param aArrowDirection @see nsArrowDirection enumeration
     * @param aRenderingContext the rendering context
-    * @param aRect location and size of in pixels 
-    * @param aType @see nsArrowDirection
-    * @param aOnePixel number of twips in a single pixel.
+		* @param aPresContext the presentation context
+		* @param aDirtyRect rectangle requiring update
+    * @param aOnePixel number of TWIPS in a single pixel
+		* @param aColor color of the arrow glph
+		* @param aSpacing spacing for the arrow background
+		* @param aForFrame frame which the arrow will be rendered into.
+    * @param aFrameRect rectangle for the frame specified by aForFrame
     */
 
-  static void DrawArrow(nsArrowDirection aArrowDirection,
+  static void PaintArrow(nsArrowDirection aArrowDirection,
 					                    nsIRenderingContext& aRenderingContext,
 															nsIPresContext& aPresContext, 
 															const nsRect& aDirtyRect,
@@ -332,15 +348,22 @@ protected:
 															const nsStyleSpacing& aSpacing,
 															nsIFrame* aForFrame,
                               nsRect& aFrameRect);
-  /**
-    * Draw a scrollbar
+   /**
+    * Paint a scrollbar
 	  * 
     * @param aRenderingContext the rendering context
-    * @param aHorizontal if TRUE a horizontal scrollbar is drawn, if FALSE a vertical scrollbar is drawn
-    * @param aOnePixel number of twips in a single pixel.
+		* @param aPresContext the presentation context
+		* @param aDirtyRect rectangle requiring update
+    * @param aRect width and height of the scrollbar
+		* @param aHorizontal if TRUE scrollbar is drawn horizontally, vertical if FALSE
+		* @param aOnePixel number TWIPS per pixel
+    * @param aScrollbarStyleContext style context for the scrollbar
+    * @param aScrollbarArrowStyleContext style context for the scrollbar arrow
+		* @param aForFrame the frame that the scrollbar will be rendered in to
+    * @param aFrameRect the rectangle for the frame passed as aForFrame
     */
 
-  static void DrawScrollbar(nsIRenderingContext& aRenderingContext,
+  static void PaintScrollbar(nsIRenderingContext& aRenderingContext,
 																	nsIPresContext& aPresContext, 
 																  const nsRect& aDirtyRect,
                                   nsRect& aRect, 
@@ -350,6 +373,76 @@ protected:
                                   nsIStyleContext* aScrollbarArrowStyleContext,
 																	nsIFrame* aForFrame,
                                   nsRect& aFrameRect);
+   /**
+    * Paint a fixed size checkmark
+	  * 
+    * @param aRenderingContext the rendering context
+	  * @param aPixelsToTwips scale factor for convering pixels to twips.
+    */
+
+  static void PaintFixedSizeCheckMark(nsIRenderingContext& aRenderingContext, 
+                                     float aPixelsToTwips);
+
+   /**
+    * Paint a fixed size checkmark border
+	  * 
+    * @param aRenderingContext the rendering context
+	  * @param aPixelsToTwips scale factor for convering pixels to twips.
+    */
+
+  static void PaintFixedSizeCheckMarkBorder(nsIRenderingContext& aRenderingContext,
+                         float aPixelsToTwips);
+
+   /**
+    * Paint a rectangular button. Includes background, string, and focus indicator
+	  * 
+    * @param aPresContext the presentation context
+    * @param aRenderingContext the rendering context
+    * @param aDirtyRect rectangle requiring update
+    * @param aWidth width the checkmark border in TWIPS
+    * @param aHeight height of the checkmark border in TWIPS
+    * @param aShift if PR_TRUE offset button as if it were pressed
+    * @param aShowFocus if PR_TRUE draw focus rectangle over button
+    * @param aStyleContext style context used for drawing button background 
+    * @param aLabel label for button
+    * @param aForFrame the frame that the scrollbar will be rendered in to
+    */
+
+  static void PaintRectangularButton(nsIPresContext& aPresContext,
+                            nsIRenderingContext& aRenderingContext,
+                            const nsRect& aDirtyRect, PRUint32 aWidth, 
+                            PRUint32 aHeight, PRBool aShift, PRBool aShowFocus,
+                            nsIStyleContext* aStyleContext, nsString& aLabel, 
+                            nsFormControlFrame* aForFrame);
+   /**
+    * Paint a focus indicator.
+	  * 
+    * @param aRenderingContext the rendering context
+    * @param aDirtyRect rectangle requiring update
+	  * @param aInside border inside
+    * @param aOutside border outside
+    */
+
+  static void PaintFocus(nsIRenderingContext& aRenderingContext,
+                         const nsRect& aDirtyRect, nsRect& aInside, nsRect& aOutside);
+
+   /**
+    * Paint a circular border
+	  * 
+    * @param aPresContext the presentation context
+    * @param aRenderingContext the rendering context
+    * @param aDirtyRect rectangle requiring update
+    * @param aStyleContext style context specifying colors and spacing
+    * @param aInset if PR_TRUE draw inset, otherwise draw outset
+    * @param aForFrame the frame that the scrollbar will be rendered in to
+    * @param aWidth width of the border in TWIPS
+    * @param aHeight height ofthe border in TWIPS
+    */
+
+  static void PaintCircularBorder(nsIPresContext& aPresContext,
+                         nsIRenderingContext& aRenderingContext,
+                         const nsRect& aDirtyRect, nsIStyleContext* aStyleContext, PRBool aInset,
+                         nsIFrame* aForFrame, PRUint32 aWidth, PRUint32 aHeight);
 
 
   nsMouseState mLastMouseState;

@@ -317,105 +317,28 @@ nsRadioControlFrame::PaintRadioButton(nsIPresContext& aPresContext,
                             nsIRenderingContext& aRenderingContext,
                             const nsRect& aDirtyRect)
 {
-#ifdef XP_PC
   aRenderingContext.PushState();
 
-  float p2t;
-  aPresContext.GetScaledPixelsToTwips(p2t);
- 
-  nsFormControlFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
-
-  const nsStyleSpacing* spacing = (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
-  nsMargin border;
-  spacing->CalcBorderFor(this, border);
-
-  nscoord onePixel     = NSIntPixelsToTwips(1, p2t);
-  nscoord twelvePixels = NSIntPixelsToTwips(12, p2t);
-
-  nsRect outside(0, 0, mRect.width, mRect.height);
-
-  aRenderingContext.SetColor(NS_RGB(192,192,192));
-  aRenderingContext.FillRect(outside);
-
-  PRBool standardSize = PR_FALSE;
-  if (standardSize) {
-    outside.SetRect(0, 0, twelvePixels, twelvePixels);
-    aRenderingContext.SetColor(NS_RGB(255,255,255));
-    aRenderingContext.FillArc(outside, 0, 180);
-    aRenderingContext.FillArc(outside, 180, 360);
-
-    if (mLastMouseState == eMouseDown) {
-      outside.Deflate(onePixel, onePixel);
-      outside.Deflate(onePixel, onePixel);
-      aRenderingContext.SetColor(NS_RGB(192,192,192));
-      aRenderingContext.FillArc(outside, 0, 180);
-      aRenderingContext.FillArc(outside, 180, 360);
-      outside.SetRect(0, 0, twelvePixels, twelvePixels);
-    }
-
-    // DrakGray
-    aRenderingContext.SetColor(NS_RGB(128,128,128));
-    DrawLine(aRenderingContext, 4, 0, 7, 0, PR_TRUE, 1, onePixel);
-    DrawLine(aRenderingContext, 2, 1, 3, 1, PR_TRUE, 1, onePixel);
-    DrawLine(aRenderingContext, 8, 1, 9, 1, PR_TRUE, 1, onePixel);
-
-    DrawLine(aRenderingContext, 1, 2, 1, 3, PR_FALSE, 1, onePixel);
-    DrawLine(aRenderingContext, 0, 4, 0, 7, PR_FALSE, 1, onePixel);
-    DrawLine(aRenderingContext, 1, 8, 1, 9, PR_FALSE, 1, onePixel);
-
-    // Black
-    aRenderingContext.SetColor(NS_RGB(0,0,0));
-    DrawLine(aRenderingContext, 4, 1, 7, 1, PR_TRUE, 1, onePixel);
-    DrawLine(aRenderingContext, 2, 2, 3, 2, PR_TRUE, 1, onePixel);
-    DrawLine(aRenderingContext, 8, 2, 9, 2, PR_TRUE, 1, onePixel);
-
-    DrawLine(aRenderingContext, 2, 2, 2, 3, PR_FALSE, 1, onePixel);
-    DrawLine(aRenderingContext, 1, 4, 1, 7, PR_FALSE, 1, onePixel);
-    DrawLine(aRenderingContext, 2, 8, 2, 8, PR_FALSE, 1, onePixel);
-
-    // Gray
-    aRenderingContext.SetColor(NS_RGB(192, 192, 192));
-    DrawLine(aRenderingContext, 2, 9, 3, 9, PR_TRUE, 1, onePixel);
-    DrawLine(aRenderingContext, 8, 9, 9, 9, PR_TRUE, 1, onePixel);
-    DrawLine(aRenderingContext, 4, 10, 7, 10, PR_TRUE, 1, onePixel);
-
-    DrawLine(aRenderingContext, 9, 3, 9, 3, PR_FALSE, 1, onePixel);
-    DrawLine(aRenderingContext, 10, 4, 10, 7, PR_FALSE, 1, onePixel);
-    DrawLine(aRenderingContext, 9, 8, 9, 9, PR_FALSE, 1, onePixel);
-
-    outside.Deflate(onePixel, onePixel);
-    outside.Deflate(onePixel, onePixel);
-    outside.Deflate(onePixel, onePixel);
-    outside.Deflate(onePixel, onePixel);
-  } else {
-    outside.SetRect(0, 0, twelvePixels, twelvePixels);
-
-    aRenderingContext.SetColor(NS_RGB(128,128,128));
-    aRenderingContext.FillArc(outside, 46, 225);
-    aRenderingContext.SetColor(NS_RGB(255,255,255));
-    aRenderingContext.FillArc(outside, 225, 360);
-    aRenderingContext.FillArc(outside, 0, 44);
-
-    outside.Deflate(onePixel, onePixel);
-    aRenderingContext.SetColor(NS_RGB(0,0,0));
-    aRenderingContext.FillArc(outside, 46, 225);
-    aRenderingContext.SetColor(NS_RGB(192,192,192));
-    aRenderingContext.FillArc(outside, 225, 360);
-    aRenderingContext.FillArc(outside, 0, 44);
-
-    outside.Deflate(onePixel, onePixel);
-    aRenderingContext.SetColor(NS_RGB(255,255,255));
-    aRenderingContext.FillArc(outside, 0, 180);
-    aRenderingContext.FillArc(outside, 180, 360);
-    outside.Deflate(onePixel, onePixel);
-    outside.Deflate(onePixel, onePixel);
-  }
+  nsFormControlFrame::PaintCircularBorder(aPresContext,aRenderingContext,
+                         aDirtyRect, mStyleContext, PR_FALSE, this, mRect.width, mRect.height);
 
   PRBool checked = PR_TRUE;
   GetCurrentRadioState(&checked); // Get check state from the content model
   if (PR_TRUE == checked) {
 	  // Have to do 180 degress at a time because FillArc will not correctly
 	  // go from 0-360
+    float p2t;
+    aPresContext.GetScaledPixelsToTwips(p2t);
+
+    nscoord onePixel     = NSIntPixelsToTwips(1, p2t);
+    nscoord twelvePixels = NSIntPixelsToTwips(12, p2t);
+    nsRect outside(0, 0, twelvePixels, twelvePixels);
+    
+    outside.Deflate(onePixel, onePixel);
+    outside.Deflate(onePixel, onePixel);
+    outside.Deflate(onePixel, onePixel);
+    outside.Deflate(onePixel, onePixel);
+    
     aRenderingContext.SetColor(NS_RGB(0,0,0));
     aRenderingContext.FillArc(outside, 0, 180);
     aRenderingContext.FillArc(outside, 180, 360);
@@ -423,7 +346,6 @@ nsRadioControlFrame::PaintRadioButton(nsIPresContext& aPresContext,
 
   PRBool clip;
   aRenderingContext.PopState(clip);
-#endif
 }
 
 NS_METHOD 
@@ -431,8 +353,7 @@ nsRadioControlFrame::Paint(nsIPresContext& aPresContext,
                             nsIRenderingContext& aRenderingContext,
                             const nsRect& aDirtyRect)
 {
-#ifdef XP_PC
   PaintRadioButton(aPresContext, aRenderingContext, aDirtyRect);
-#endif
+
   return NS_OK;
 }
