@@ -481,6 +481,9 @@ public:
    */
   NS_IMETHOD GetExtents(nsRect *aExtents) = 0;
 
+  // XXX Temporary for Bug #19416
+  NS_IMETHOD IgnoreSetPosition(PRBool aShouldIgnore) = 0;
+
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;
   NS_IMETHOD_(nsrefcnt) Release(void) = 0;

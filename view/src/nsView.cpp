@@ -856,10 +856,27 @@ NS_IMETHODIMP nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags,
   return NS_OK;
 }
 
+// XXX Start Temporary fix for Bug #19416
+NS_IMETHODIMP nsView :: IgnoreSetPosition(PRBool aShouldIgnore)
+{
+  mShouldIgnoreSetPosition = aShouldIgnore;
+  // resync here
+  if (!mShouldIgnoreSetPosition) {
+    SetPosition(mBounds.x, mBounds.y);
+  }
+  return NS_OK;
+}
+// XXX End Temporary fix for Bug #19416
 
 NS_IMETHODIMP nsView :: SetPosition(nscoord x, nscoord y)
 {
   mBounds.MoveTo(x, y);
+
+  // XXX Start Temporary fix for Bug #19416
+  if (mShouldIgnoreSetPosition) {
+    return NS_OK;
+  }
+  // XXX End Temporary fix for Bug #19416
 
   if (nsnull != mWindow)
   {
@@ -1012,6 +1029,7 @@ NS_IMETHODIMP nsView :: GetClip(nscoord *aLeft, nscoord *aTop, nscoord *aRight, 
 
 NS_IMETHODIMP nsView :: SetVisibility(nsViewVisibility aVisibility)
 {
+
   mVis = aVisibility;
 
   if (nsnull != mWindow)
