@@ -529,6 +529,12 @@ CalendarWindow.prototype.compareNumbers = function calWin_compareNumbers(a, b) {
 }
 
 
+CalendarWindow.prototype.onMouseUpCalendarSplitter = function calWinOnMouseUpCalendarSplitter()
+{
+   //check if calendar-splitter is collapsed
+   this.doResize();
+}
+
 CalendarWindow.prototype.onMouseUpCalendarViewSplitter = function calWinOnMouseUpCalendarViewSplitter()
 {
    //check if calendar-view-splitter is collapsed

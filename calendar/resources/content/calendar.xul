@@ -588,7 +588,7 @@
          </vbox>
     
          <splitter id="calendar-splitter" collapse="before" persist="state"
-          class="chromeclass-extrachrome sidebar-splitter" orient="horizontal">
+          class="chromeclass-extrachrome sidebar-splitter" orient="horizontal" onmouseup="setTimeout( 'gCalendarWindow.onMouseUpCalendarSplitter()', 1 );">
             <grippy class="sidebar-splitter-grippy"/>
          </splitter>
          
