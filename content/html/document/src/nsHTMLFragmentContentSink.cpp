@@ -707,6 +707,7 @@ nsHTMLFragmentContentSink::DidBuildContent()
 {
   if (!mAllContent) {
     FlushText();
+    DidBuildModel(); // Release our ref to the parser now.
     mProcessing = PR_FALSE;
   }
 
