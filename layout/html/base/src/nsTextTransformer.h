@@ -64,9 +64,6 @@ public:
                          PRInt32& aContentLenResult,
                          PRBool& aIsWhitespaceResult);
 
-  PRUnichar* GetNextSection(PRInt32& aLineLenResult,
-                            PRInt32& aContentLenResult);
-
   PRBool HasMultibyte() const {
     return mHasMultibyte;
   }
@@ -75,14 +72,6 @@ public:
 
 protected:
   PRBool GrowBuffer();
-
-  void SimpleTransform(PRBool aIsWhitespace,
-                       PRInt32& aWordLenResult,
-                       PRInt32& aContentLenResult);
-
-  void ComplexTransform(PRBool aIsWhitespace,
-                        PRInt32& aWordLenResult,
-                        PRInt32& aContentLenResult);
 
   PRUnichar* mAutoBuffer;
   PRInt32 mAutoBufferLength;
@@ -99,8 +88,8 @@ protected:
   const nsTextFragment* mCurrentFrag;
   PRInt32 mCurrentFragOffset;
 
-  PRBool mCompressWS;
   PRUint8 mTextTransform;
+  PRUint8 mWhiteSpace;
 };
 
 #endif /* nsTextTransformer_h___ */
