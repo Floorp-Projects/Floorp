@@ -32,6 +32,20 @@
 #include "ddraw.h"
 #endif
 
+//#define GFX_DEBUG
+
+#ifdef GFX_DEBUG
+  #define BREAK_TO_DEBUGGER           DebugBreak()
+#else   
+  #define BREAK_TO_DEBUGGER
+#endif  
+
+#ifdef GFX_DEBUG
+  #define VERIFY(exp)                 ((exp) ? 0: (GetLastError(), BREAK_TO_DEBUGGER))
+#else   // !_DEBUG
+  #define VERIFY(exp)                 (exp)
+#endif  // !_DEBUG
+
 static NS_DEFINE_IID(kIDOMRenderingContextIID, NS_IDOMRENDERINGCONTEXT_IID);
 static NS_DEFINE_IID(kIRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
@@ -152,36 +166,18 @@ GraphicsState :: ~GraphicsState()
 {
   if (NULL != mClipRegion)
   {
-    ::DeleteObject(mClipRegion);
+    VERIFY(::DeleteObject(mClipRegion));
     mClipRegion = NULL;
   }
 
-  if (NULL != mSolidBrush)
-  {
-    ::DeleteObject(mSolidBrush);
-    mSolidBrush = NULL;
-  }
+  //these are killed by the rendering context...
+  mSolidBrush = NULL;
+  mSolidPen = NULL;
+  mDashedPen = NULL;
+  mDottedPen = NULL;
 
   //don't delete this because it lives in the font metrics
   mFont = NULL;
-
-  if (NULL != mSolidPen)
-  {
-    ::DeleteObject(mSolidPen);
-    mSolidPen = NULL;
-  }
-
-  if (NULL != mDashedPen)
-  {
-    ::DeleteObject(mDashedPen);
-    mDashedPen = NULL;
-  }
-
-  if (NULL != mDottedPen)
-  {
-    ::DeleteObject(mDottedPen);
-    mDottedPen = NULL;
-  }
 }
 
 nsDrawingSurfaceWin :: nsDrawingSurfaceWin()
@@ -206,7 +202,7 @@ nsDrawingSurfaceWin :: ~nsDrawingSurfaceWin()
     HBITMAP bits = (HBITMAP)::SelectObject(mDC, mOrigBitmap);
 
     if (nsnull != bits)
-      ::DeleteObject(bits);
+      VERIFY(::DeleteObject(bits));
 
     mOrigBitmap = nsnull;
   }
@@ -362,6 +358,7 @@ nsRenderingContextWin :: nsRenderingContextWin()
   mCurrBrushColor = NULL;
   mCurrFontMetrics = nsnull;
   mCurrPenColor = NULL;
+  mCurrPen = NULL;
   mNullPen = NULL;
   mCurrTextColor = RGB(0, 0, 0);
   mCurrLineStyle = nsLineStyle_kSolid;
@@ -378,7 +375,6 @@ nsRenderingContextWin :: nsRenderingContextWin()
   PushState();
 
   mP2T = 1.0f;
-
 }
 
 nsRenderingContextWin :: ~nsRenderingContextWin()
@@ -411,7 +407,7 @@ nsRenderingContextWin :: ~nsRenderingContextWin()
 
     if (NULL != mDefFont)
     {
-      ::DeleteObject(mDefFont);
+      VERIFY(::DeleteObject(mDefFont));
       mDefFont = NULL;
     }
 
@@ -420,32 +416,32 @@ nsRenderingContextWin :: ~nsRenderingContextWin()
       ::SelectObject(mDC, mOrigSolidPen);
       mOrigSolidPen = NULL;
     }
-
-    if (NULL != mCurrBrush)
-      ::DeleteObject(mCurrBrush);
-
-    if ((NULL != mBlackBrush) && (mBlackBrush != mCurrBrush))
-      ::DeleteObject(mBlackBrush);
-
-    mCurrBrush = NULL;
-    mBlackBrush = NULL;
-
-    //don't kill the font because the font cache/metrics owns it
-    mCurrFont = NULL;
-
-    if (NULL != mCurrPen)
-      ::DeleteObject(mCurrPen);
-
-    if ((NULL != mBlackPen) && (mBlackPen != mCurrPen))
-      ::DeleteObject(mBlackPen);
-
-    if ((NULL != mNullPen) && (mNullPen != mCurrPen))
-      ::DeleteObject(mNullPen);
-
-    mCurrPen = NULL;
-    mBlackPen = NULL;
-    mNullPen = NULL;
   }
+
+  if (NULL != mCurrBrush)
+    VERIFY(::DeleteObject(mCurrBrush));
+
+  if ((NULL != mBlackBrush) && (mBlackBrush != mCurrBrush))
+    VERIFY(::DeleteObject(mBlackBrush));
+
+  mCurrBrush = NULL;
+  mBlackBrush = NULL;
+
+  //don't kill the font because the font cache/metrics owns it
+  mCurrFont = NULL;
+
+  if (NULL != mCurrPen)
+    VERIFY(::DeleteObject(mCurrPen));
+
+  if ((NULL != mBlackPen) && (mBlackPen != mCurrPen))
+    VERIFY(::DeleteObject(mBlackPen));
+
+  if ((NULL != mNullPen) && (mNullPen != mCurrPen))
+    VERIFY(::DeleteObject(mNullPen));
+
+  mCurrPen = NULL;
+  mBlackPen = NULL;
+  mNullPen = NULL;
 
   if (nsnull != mStateCache)
   {
@@ -481,7 +477,6 @@ nsRenderingContextWin :: ~nsRenderingContextWin()
   mTMatrix = nsnull;
   mDC = NULL;
   mMainDC = NULL;
-
 }
 
 nsresult
@@ -1788,7 +1783,7 @@ HBRUSH nsRenderingContextWin :: SetupSolidBrush(void)
     ::SelectObject(mDC, tbrush);
 
     if (NULL != mCurrBrush)
-      ::DeleteObject(mCurrBrush);
+      VERIFY(::DeleteObject(mCurrBrush));
 
     mStates->mSolidBrush = mCurrBrush = tbrush;
     mStates->mBrushColor = mCurrBrushColor = mCurrentColor;
@@ -1861,7 +1856,7 @@ HPEN nsRenderingContextWin :: SetupSolidPen(void)
     ::SelectObject(mDC, tpen);
 
     if (NULL != mCurrPen)
-      ::DeleteObject(mCurrPen);
+      VERIFY(::DeleteObject(mCurrPen));
 
     mStates->mSolidPen = mCurrPen = tpen;
     mStates->mPenColor = mCurrPenColor = mCurrentColor;
@@ -1880,7 +1875,7 @@ HPEN nsRenderingContextWin :: SetupDashedPen(void)
     ::SelectObject(mDC, tpen);
 
     if (NULL != mCurrPen)
-      ::DeleteObject(mCurrPen);
+      VERIFY(::DeleteObject(mCurrPen));
 
     mStates->mDashedPen = mCurrPen = tpen;
     mStates->mPenColor  = mCurrPenColor = mCurrentColor;
@@ -1899,7 +1894,7 @@ HPEN nsRenderingContextWin :: SetupDottedPen(void)
     ::SelectObject(mDC, tpen);
 
     if (NULL != mCurrPen)
-      ::DeleteObject(mCurrPen);
+      VERIFY(::DeleteObject(mCurrPen));
 
     mStates->mDottedPen = mCurrPen = tpen;
     mStates->mPenColor = mCurrPenColor = mCurrentColor;
