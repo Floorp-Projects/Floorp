@@ -32,8 +32,7 @@ public:
 
 	NS_DECL_ISUPPORTS
 
-  NS_IMETHOD  Init(nsNativeWidget aNativeWidget);
-  
+  NS_IMETHOD  Init(nsNativeWidget aNativeWidget);  
 
   NS_IMETHOD  CreateRenderingContext(nsIRenderingContext *&aContext);
   NS_IMETHOD  SupportsNativeWidgets(PRBool &aSupportsWidgets);
@@ -65,10 +64,6 @@ public:
 protected:
   virtual 	~nsDeviceContextMac();
   
-/** ---------------------------------------------------
- *  Common initialization actions for the nsDeviceContextMac
- *	@update 12/9/98 dwc
- */
   nsDrawingSurface 			mSurface;
   PRUint32 							mDepth;
   Rect									mPageRect;

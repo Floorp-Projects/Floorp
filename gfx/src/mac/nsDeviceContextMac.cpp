@@ -32,35 +32,10 @@ static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 
 nsDeviceContextMac :: nsDeviceContextMac()
 {
-GDHandle			thegd;
-PixMapHandle	thepix;
-double				pix_inch;
 
   NS_INIT_REFCNT();
+  mSpec = nsnull;
   
-  // see IM Imaging with Quickdraw, chapter 5.  This is an incomplete implementation
-  
-  // cps - see technote <http://developer.apple.com/technotes/tn/tn1118.html>
-  // Basically it says: don't unlock GDevice handles
-  thegd = ::GetMainDevice();
-  SInt8 hState = ::HGetState ((Handle) thegd);
-  ::HLock((Handle)thegd);
-	thepix = (**thegd).gdPMap;
-	
-    // Be sure to lock the PixMapHandle before dereferencing it
-    SInt8 PixMapHState = ::HGetState ((Handle) thepix);
-    ::HLock((Handle)thepix);
-	pix_inch = Fix2X((**thepix).hRes);
-	
-	mTwipsToPixels = pix_inch/(float)NSIntPointsToTwips(72);
-	mPixelsToTwips = 1.0f/mTwipsToPixels;
-	
-	mDepth = (**thepix).pixelSize;
-	
-    ::HSetState ((Handle)thepix,PixMapHState);
-  // cps - Unlocking GDeviceHandles is a no - no. See above.
-  //::HUnlock((Handle)thegd);
-  ::HSetState ((Handle)thegd,hState);
 }
 
 //------------------------------------------------------------------------
@@ -79,21 +54,46 @@ NS_IMPL_RELEASE(nsDeviceContextMac)
 
 NS_IMETHODIMP nsDeviceContextMac :: Init(nsNativeWidget aNativeWidget)
 {
-  NS_ASSERTION(!(aNativeWidget == nsnull), "attempt to init devicecontext with null widget");
+GDHandle			thegd;
+PixMapHandle	thepix;
+double				pix_inch;
 
+
+  NS_ASSERTION(!(aNativeWidget == nsnull), "attempt to init devicecontext with null widget");
 
 	// this is a windowptr, or grafptr, native to macintosh only
 	mSurface = aNativeWidget;
-	
 
+  // see IM Imaging with Quickdraw, chapter 5.  This is an incomplete implementation
+  // cps - see technote <http://developer.apple.com/technotes/tn/tn1118.html>
+  // Basically it says: don't unlock GDevice handles
+  thegd = ::GetMainDevice();
+  SInt8 hState = ::HGetState ((Handle) thegd);
+  ::HLock((Handle)thegd);
+	thepix = (**thegd).gdPMap;
+	
+  // Be sure to lock the PixMapHandle before dereferencing it
+  SInt8 PixMapHState = ::HGetState ((Handle) thepix);
+  ::HLock((Handle)thepix);
+	pix_inch = Fix2X((**thepix).hRes);
+	
+	mTwipsToPixels = pix_inch/(float)NSIntPointsToTwips(72);
+	mPixelsToTwips = 1.0f/mTwipsToPixels;
+	
+	mDepth = (**thepix).pixelSize;
+	
+  ::HSetState ((Handle)thepix,PixMapHState);
+  // cps - Unlocking GDeviceHandles is a no - no. See above.
+  ::HSetState ((Handle)thegd,hState);  
+	
   return NS_OK;
 }
+
 
 /** ---------------------------------------------------
  *  See documentation in nsIDeviceContext.h
  *	@update 12/9/98 dwc
  */
-
 NS_IMETHODIMP nsDeviceContextMac :: CreateRenderingContext(nsIRenderingContext *&aContext)
 {
 nsIRenderingContext   *pContext;
@@ -244,17 +244,30 @@ NS_IMETHODIMP nsDeviceContextMac::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PR
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsDeviceContextMac::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
-                                                      nsIDeviceContext *&aContext)
+NS_IMETHODIMP nsDeviceContextMac::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,nsIDeviceContext *&aContext)
 {
-GrafPtr	curPort;
-	
+GrafPtr	curPort;	
+double	pix_Inch;
+THPrint	thePrintRecord;			// handle to print record
+
 	aContext = new nsDeviceContextMac();
 	((nsDeviceContextMac*)aContext)->mSpec = aDevice;
 	NS_ADDREF(aDevice);
-
+	
 	::GetPort(&curPort);
-  return ((nsDeviceContextMac*)aContext)->Init(curPort);
+	
+	thePrintRecord = ((nsDeviceContextSpecMac*)aDevice)->mPrtRec;
+	pix_Inch = (**thePrintRecord).prInfo.iHRes;
+	
+	((nsDeviceContextMac*)aContext)->Init(curPort);
+
+	((nsDeviceContextMac*)aContext)->mPageRect = (**thePrintRecord).prInfo.rPage;	
+	((nsDeviceContextMac*)aContext)->mTwipsToPixels = pix_Inch/(float)NSIntPointsToTwips(72);
+	((nsDeviceContextMac*)aContext)->mPixelsToTwips = 1.0f/mTwipsToPixels;
+  ((nsDeviceContextMac*)aContext)->mAppUnitsToDevUnits = mTwipsToPixels;
+  ((nsDeviceContextMac*)aContext)->mDevUnitsToAppUnits = 1.0f / mAppUnitsToDevUnits;
+	//((nsDeviceContextMac*)aContext)->Init(this);
+  return NS_OK;
 }
 
 
@@ -302,13 +315,7 @@ NS_IMETHODIMP nsDeviceContextMac::BeginPage(void)
 NS_IMETHODIMP nsDeviceContextMac::EndPage(void)
 {
  	if(((nsDeviceContextSpecMac*)(this->mSpec))->mPrintManagerOpen) {
- 		Rect	theRect;
- 		
  		::SetPort((GrafPtr)(((nsDeviceContextSpecMac*)(this->mSpec))->mPrinterPort));
- 		::SetRect(&theRect,0,0,100,100);
- 		::PenNormal();
- 		::PaintRect(&theRect);
- 		
 		::PrClosePage(((nsDeviceContextSpecMac*)(this->mSpec))->mPrinterPort);
 	}
   return NS_OK;
