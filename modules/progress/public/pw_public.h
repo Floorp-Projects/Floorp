@@ -42,7 +42,7 @@ XP_BEGIN_PROTOS
 
 typedef void *  pw_ptr;
 
-typedef enum {
+typedef enum _PW_WindowType {
 	pwApplicationModal,
 	pwStandard
 } PW_WindowType;

@@ -371,6 +371,12 @@ extern void
 ET_SetNestingUrl(MWContext * context, char * szUrl);
 
 /*
+** Set up the principals for an upcoming softupdate script.
+*/
+extern void
+ET_StartSoftUpdate(MWContext * pContext, char *codebase);
+
+/*
 ** Remember the current language version in the MochaDecoder
 */
 extern void

@@ -1293,6 +1293,61 @@ ET_SetDecoderStream(MWContext * pContext, NET_StreamClass *stream,
 
 /**********************************************************************/
 
+typedef struct {
+    ETEvent	           ce;
+    char                  *codebase;
+} StartSoftUpdateStruct;
+
+PR_STATIC_CALLBACK(void)
+et_startsoftupdate_handler(StartSoftUpdateStruct *e)
+{
+    ET_BEGIN_EVENT_HANDLER(e);
+
+    /* This decoder should have just been created to do the softupdate,
+     * so it shouldn't have any principals yet. */
+    XP_ASSERT(decoder->principals == NULL);
+
+    decoder->principals = LM_NewJSPrincipals(NULL, NULL, e->codebase);
+    if (decoder->principals == NULL)
+        return;
+    JSPRINCIPALS_HOLD(decoder->js_context, decoder->principals);
+    
+    ET_END_EVENT_HANDLER(e);
+}
+
+PR_STATIC_CALLBACK(void)
+et_startsoftupdate_destructor(StartSoftUpdateStruct *e)
+{
+    XP_FREE(e->codebase);
+    XP_FREE(e);
+}
+
+/*
+ */
+void
+ET_StartSoftUpdate(MWContext *pContext, char *codebase)
+{
+    /* create our event object */
+    StartSoftUpdateStruct *pEvent = XP_NEW_ZAP(StartSoftUpdateStruct);
+    if (pEvent == NULL)
+        return;
+
+    /* do a PR_InitEvent on the event structure */
+    PR_InitEvent(&pEvent->ce.event, pContext,
+		         (PRHandleEventProc)et_startsoftupdate_handler, 
+		         (PRDestroyEventProc)et_startsoftupdate_destructor);
+
+    /* fill in the non-PR fields we care about */
+    pEvent->ce.context = pContext;
+    pEvent->codebase = codebase;
+
+    /* add the event to the event queue */
+    et_event_to_mocha(&pEvent->ce);
+
+}
+
+/**********************************************************************/
+
 PR_STATIC_CALLBACK(void)
 et_clearstream_handler(DecoderStreamStruct * e)
 {

@@ -27,7 +27,7 @@
 #include "lm.h"
 #include "prefapi.h"
 #include "VerReg.h"
-#ifdef JAVA
+#ifdef MOZ_SMARTUPDATE
 #include "softupdt.h"
 #endif
 #include "gui.h"	/* XP_AppPlatform */
@@ -203,22 +203,19 @@ JSBool PR_CALLBACK asd_get_version
 JSBool PR_CALLBACK asd_start_update
 	(JSContext *cx, JSObject *obj, uint argc, jsval *argv, jsval *rval)
 {
+	*rval = BOOLEAN_TO_JSVAL(JS_FALSE);
+
+#ifdef MOZ_SMARTUPDATE        
 	if (argc >= 2 && JSVAL_IS_STRING(argv[0]) &&
 		JSVAL_IS_INT(argv[1])) {
 		char* url = JS_GetStringBytes(JSVAL_TO_STRING(argv[0]));
-		/* Bookmarks is a hack, you should really get some SmartUpdate context */
-		MWContext* cx = XP_FindContextOfType(NULL, MWContextBookmarks);
-
-#ifdef JAVA
+		MWContext* cx = FE_GetInitContext();
 		XP_Bool result = SU_StartSoftwareUpdate( cx, url,
 			NULL, NULL, NULL, JSVAL_TO_INT(argv[1]) );
-#else
-		XP_Bool result = FALSE;
-#endif
 		*rval = BOOLEAN_TO_JSVAL(result);
 		return JS_TRUE;
 	}
-	*rval = BOOLEAN_TO_JSVAL(JS_FALSE);
+#endif
 	return JS_TRUE;
 }
 
@@ -233,7 +230,11 @@ JSBool PR_CALLBACK asd_conditional_update
 	(JSContext *cx, JSObject *obj, uint argc, jsval *argv, jsval *rval)
 {
 	REGERR status = 0;
-	if (argc >= 4 && JSVAL_IS_STRING(argv[0]) &&
+
+    *rval = BOOLEAN_TO_JSVAL(JS_FALSE);	/*INT_TO_JSVAL(status);*/
+
+#ifdef MOZ_SMARTUPDATE
+    if (argc >= 4 && JSVAL_IS_STRING(argv[0]) &&
 		JSVAL_IS_STRING(argv[1]) &&
 		JSVAL_IS_OBJECT(argv[2]) &&
 		JSVAL_IS_INT(argv[3]))
@@ -248,20 +249,15 @@ JSBool PR_CALLBACK asd_conditional_update
 			asd_objToVers(cx, versObj, &req_vers);
 			if ( asd_compareVersion(&req_vers, &curr_vers) > 0 ) {
 				char* url = JS_GetStringBytes(JSVAL_TO_STRING(argv[0]));
-				MWContext* cx = XP_FindContextOfType(NULL, MWContextBookmarks);
-
-#ifdef JAVA
+				MWContext* cx = FE_GetInitContext();
 				XP_Bool result = SU_StartSoftwareUpdate( cx, url,
 					NULL, NULL, NULL, JSVAL_TO_INT(argv[3]) );
-#else
-				XP_Bool result = FALSE;
-#endif
 				*rval = BOOLEAN_TO_JSVAL(result);
 				return JS_TRUE;
 			}
 		}
 	}
-	*rval = BOOLEAN_TO_JSVAL(JS_FALSE);	/*INT_TO_JSVAL(status);*/
+#endif
 	return JS_TRUE;
 }
 
@@ -270,7 +266,7 @@ JSBool PR_CALLBACK asd_alert
 {
 	if (argc >= 1 && JSVAL_IS_STRING(argv[0])) {
 		char* msg = JS_GetStringBytes(JSVAL_TO_STRING(argv[0]));
-		MWContext* ctx = XP_FindSomeContext();
+		MWContext* ctx = FE_GetInitContext();
 		
 		if (ctx)
 			FE_Alert(ctx, msg);

@@ -971,7 +971,8 @@ canExtendTrust(JSContext *cx, void *from, void *to)
     if (from == NULL || to == NULL) {
         return JS_FALSE;
     }
-    return (JSBool)netscape_security_PrivilegeManager_canExtendTrust(
+    return (from == to) ||
+            (JSBool)netscape_security_PrivilegeManager_canExtendTrust(
                     env,
                     getPrivilegeManager(env),
                     from,
@@ -2003,6 +2004,10 @@ LM_RegisterPrincipals(MochaDecoder *decoder, JSPrincipals *principals,
             return principals;
         }
         if (inner == container) {
+            if (containerData->signedness == HAS_NO_SCRIPTS) {
+                lm_SetContainerPrincipals(cx, container, principals);
+                return principals; 
+            }
             /*
              * Intersect principals and container principals,
              * modifying the container principals.

@@ -222,6 +222,7 @@ localDefPref("news.directory",                  "");
 localDefPref("security.directory",              "");
 
 pref("autoupdate.enabled",              true);
+pref("autoupdate.confirm_install",				false);
 
 pref("imap.io.mac.logging", false);
 
