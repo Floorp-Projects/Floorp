@@ -88,7 +88,6 @@ bin/components/libmozbrwsr.so
 bin/components/libmozfind.so
 bin/components/libmozucth.so
 bin/components/libmozxfer.so
-bin/components/libnecko_cache.so
 bin/components/libnsgif.so
 bin/components/libnsjpg.so
 bin/components/libnslocale.so
