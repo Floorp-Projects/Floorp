@@ -28,16 +28,17 @@ Rights Reserved.
 
 <!DOCTYPE window SYSTEM "chrome://messengercompose/locale/messengercompose.dtd">
 
-<window xmlns:html="http://www.w3.org/TR/REC-html40"
+<window id="main-window" xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:nc="http://home.netscape.com/NC-rdf#"
 		onunload="ComposeUnload()"
 		onload="ComposeLoad()"
         onclose="return ComposeCanClose()"
 		title="&msgComposeWindow.title;"
+		windowtype="msgcompose"
 		align="vertical"
 		width="640" height="480"
-		persist="width height x y"
+		persist="screenX screenY width height"
 		> 
 
 <html:script language="JavaScript" src="chrome://messenger/content/accountUtils.js"/>
