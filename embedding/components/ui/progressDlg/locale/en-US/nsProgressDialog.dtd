@@ -59,7 +59,7 @@
 
 <!-- Labels on other fields -->
 <!ENTITY status      "Status:"> 
-<!ENTITY timeElapsed "Elapsed Time:">
+<!ENTITY timeElapsed "Time Elapsed:">
 <!ENTITY timeLeft    "Time Left:">
 <!ENTITY progress    "Progress:">
 
