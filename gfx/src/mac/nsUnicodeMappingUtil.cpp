@@ -37,7 +37,22 @@ nsUnicodeMappingUtil *nsUnicodeMappingUtil::gSingleton = nsnull;
 static nsIPref* gPref = nsnull;
 static int gUnicodeMappingUtilCount = 0;
 
+int PrefChangedCallback( const char* aPrefName, void* instance_data)
+{
+	//printf("PrefChangeCallback \n");
+	nsUnicodeMappingUtil::GetSingleton()->Reset();
+	return 0;
+}
 nsUnicodeMappingUtil::nsUnicodeMappingUtil()
+{
+	Init();
+}
+void nsUnicodeMappingUtil::Reset()
+{
+	CleanUp();
+	Init();
+}
+void nsUnicodeMappingUtil::Init()
 {
 	InitScriptEnabled();
 	InitGenericFontMapping();
@@ -47,9 +62,7 @@ nsUnicodeMappingUtil::nsUnicodeMappingUtil()
 	gCache = new nsUnicodeFontMappingCache();
 	++gUnicodeMappingUtilCount;
 }
-//--------------------------------------------------------------------------
-
-nsUnicodeMappingUtil::~nsUnicodeMappingUtil()
+void nsUnicodeMappingUtil::CleanUp()
 {
 	for(int i= 0 ; i < 32; i ++) {
 		for(int j=0; j < 5; j++) {
@@ -60,8 +73,17 @@ nsUnicodeMappingUtil::~nsUnicodeMappingUtil()
 	if(gCache)
 		delete gCache;
 
-	if(0 == --gUnicodeMappingUtilCount)
+}
+//--------------------------------------------------------------------------
+
+nsUnicodeMappingUtil::~nsUnicodeMappingUtil()
+{
+	CleanUp();
+
+	if(0 == --gUnicodeMappingUtilCount) {
+		gPref->UnregisterCallback("font.name.", PrefChangedCallback, (void*) nsnull);
 		NS_IF_RELEASE(gPref);
+	}
 }
 
 //--------------------------------------------------------------------------
@@ -257,6 +279,10 @@ PrefEnumCallback(const char* aName, void* aClosure)
   ScriptCode script = Self->MapLangGroupToScriptCode(langGroup);
   if(script >= smUninterp)
   	return;
+  if((script == smRoman) && !langGroup.Equals(nsCAutoString("x-western"))) {
+  	// need special processing for t,r x-baltic, x-usr-defined
+  	return;
+  }
   
   nsString genNameString; genNameString.AssignWithConversion(genName);
   nsGenericFontNameType type = Self->MapGenericFontNameType(genNameString);
@@ -289,6 +315,11 @@ PrefEnumCallback(const char* aName, void* aClosure)
   if( Self->mGenericFontMapping[script][type] )
   	nsString::Recycle(Self->mGenericFontMapping[script][type]);
   Self->mGenericFontMapping[script][type] = fontname;
+#ifdef DEBUG_ftang_font
+  char* utf8 = fontname->ToNewUTF8String();
+  printf("font %d %d %s= %s\n",script , type, aName,utf8);
+  Recycle(utf8); 
+#endif
 }
 void nsUnicodeMappingUtil::InitFromPref()
 {
@@ -298,8 +329,10 @@ void nsUnicodeMappingUtil::InitFromPref()
     if (!gPref) {
       return;
     }
+    gPref->RegisterCallback("font.name.", PrefChangedCallback, (void*) nsnull);
   }	  
   gPref->EnumerateChildren("font.name.", PrefEnumCallback, this);
+  
 }
 //--------------------------------------------------------------------------
 
