@@ -24,7 +24,7 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS = public src
 
-ifdef BUILD_XPIDL
+ifdef USE_XPIDL
 DIRS += idl
 endif
 

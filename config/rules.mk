@@ -603,7 +603,7 @@ endif #STRICT_CPLUSPLUS_SUFFIX
 
 
 # these rules only apply when the XPIDL compiler is available
-ifdef BUILD_XPIDL
+ifdef USE_XPIDL
 %.h: %.idl $(IDL_COMPILE)
 	$(IDL_COMPILE) -m header -w -I $(DIST)/idl $<
 
