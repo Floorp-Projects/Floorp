@@ -232,6 +232,9 @@ public:
   virtual nsIPresContext* GetPresContext();
   virtual nsIViewManager* GetViewManager();
   virtual nsIStyleSet* GetStyleSet();
+  NS_IMETHOD GetActiveAlternateStyleSheet(nsString& aSheetTitle);
+  NS_IMETHOD SelectAlternateStyleSheet(const nsString& aSheetTitle);
+  NS_IMETHOD ListAlternateStyleSheets(nsStringArray& aTitleList);
   virtual nsresult GetSelection(nsISelection **aSelection);
   NS_IMETHOD EnterReflowLock();
   NS_IMETHOD ExitReflowLock();
@@ -549,6 +552,92 @@ PresShell::GetStyleSet()
   return mStyleSet;
 }
 
+NS_IMETHODIMP
+PresShell::GetActiveAlternateStyleSheet(nsString& aSheetTitle)
+{ // first non-html sheet in style set that has title
+  if (nsnull != mStyleSet) {
+    PRInt32 count = mStyleSet->GetNumberOfDocStyleSheets();
+    PRInt32 index;
+    nsAutoString textHtml("text/html");
+    for (index = 0; index < count; index++) {
+      nsIStyleSheet* sheet = mStyleSet->GetDocStyleSheetAt(index);
+      if (nsnull != sheet) {
+        nsAutoString type;
+        sheet->GetType(type);
+        if (PR_FALSE == type.Equals(textHtml)) {
+          nsAutoString title;
+          sheet->GetTitle(title);
+          if (0 < title.Length()) {
+            aSheetTitle = title;
+            index = count;  // stop looking
+          }
+        }
+        NS_RELEASE(sheet);
+      }
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PresShell::SelectAlternateStyleSheet(const nsString& aSheetTitle)
+{
+  if ((nsnull != mDocument) && (nsnull != mStyleSet)) {
+    PRInt32 count = mDocument->GetNumberOfStyleSheets();
+    PRInt32 index;
+    nsAutoString textHtml("text/html");
+    for (index = 0; index < count; index++) {
+      nsIStyleSheet* sheet = mDocument->GetStyleSheetAt(index);
+      if (nsnull != sheet) {
+        nsAutoString type;
+        sheet->GetType(type);
+        if (PR_FALSE == type.Equals(textHtml)) {
+          nsAutoString  title;
+          sheet->GetTitle(title);
+          if (0 < title.Length()) {
+            if (title.EqualsIgnoreCase(aSheetTitle)) {
+              mStyleSet->AddDocStyleSheet(sheet, mDocument);
+            }
+            else {
+              mStyleSet->RemoveDocStyleSheet(sheet);
+            }
+          }
+        }
+        NS_RELEASE(sheet);
+      }
+    }
+    ReconstructFrames();
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PresShell::ListAlternateStyleSheets(nsStringArray& aTitleList)
+{
+  if (nsnull != mDocument) {
+    PRInt32 count = mDocument->GetNumberOfStyleSheets();
+    PRInt32 index;
+    nsAutoString textHtml("text/html");
+    for (index = 0; index < count; index++) {
+      nsIStyleSheet* sheet = mDocument->GetStyleSheetAt(index);
+      if (nsnull != sheet) {
+        nsAutoString type;
+        sheet->GetType(type);
+        if (PR_FALSE == type.Equals(textHtml)) {
+          nsAutoString  title;
+          sheet->GetTitle(title);
+          if (0 < title.Length()) {
+            if (-1 == aTitleList.IndexOfIgnoreCase(title)) {
+              aTitleList.AppendString(title);
+            }
+          }
+        }
+        NS_RELEASE(sheet);
+      }
+    }
+  }
+  return NS_OK;
+}
 
 nsresult
 PresShell::GetSelection(nsISelection **aSelection)
