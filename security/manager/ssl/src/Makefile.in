@@ -102,10 +102,12 @@ EXTRA_DEPS = $(EXTRA_LIBS)
 
 include $(topsrcdir)/config/rules.mk
 
-INCLUDES	+=	\
-		-I$(DIST)/public/security \
-		-I$(DIST)/private/security \
-		$(NULL)
+# Use local includes because they are inserted before INCLUDES
+# so that Mozilla's nss.h is used, not glibc's
+LOCAL_INCLUDES += -I$(DIST)/public/security \
+                  -I$(DIST)/private/security \
+                  $(NULL)
+
 
 ifeq ($(OS_ARCH),OpenVMS)
 # OpenVMS wants the link libs in EXTRA_DSO_LDOPTS, with no dups
