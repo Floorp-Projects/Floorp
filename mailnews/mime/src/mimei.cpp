@@ -343,13 +343,8 @@ mime_find_class (const char *content_type, MimeHeaders *hdrs,
            ? MimeHeaders_get_parameter(content_type_row, "format", NULL, NULL)
            : 0);
 
-        PRBool doFormatFlowed = PR_TRUE;
-        if ( (opts) && ( (opts->format_out == nsMimeOutput::nsMimeMessageQuoting) ||
-                         (opts->format_out == nsMimeOutput::nsMimeMessageBodyQuoting)) )
-          doFormatFlowed = PR_FALSE;
-
-        if ( content_type_format && (!nsCRT::strcasecmp(content_type_format, "flowed")) 
-             && doFormatFlowed)
+        if (content_type_format && !nsCRT::strcasecmp(content_type_format,
+                                                      "flowed"))
           clazz = (MimeObjectClass *)&mimeInlineTextPlainFlowedClass;
         else
           clazz = (MimeObjectClass *)&mimeInlineTextPlainClass;
