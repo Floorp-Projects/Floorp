@@ -126,7 +126,7 @@ nsresult nsScanner::SetDocumentCharset(const nsString& aCharset , nsCharsetSourc
                                        kICharsetAliasIID,
                                        (nsISupports**)&calias);
 
-  NS_ASSERTION( nsnull != calias, "cannot find charet alias");
+  NS_ASSERTION( nsnull != calias, "cannot find charset alias");
   nsAutoString charsetName = aCharset;
   if( NS_SUCCEEDED(res) && (nsnull != calias))
   {
