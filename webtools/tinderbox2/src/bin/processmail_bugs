@@ -23,8 +23,8 @@
 
 
 
-# $Revision: 1.6 $ 
-# $Date: 2001/02/16 01:43:49 $ 
+# $Revision: 1.7 $ 
+# $Date: 2001/02/16 20:06:28 $ 
 # $Author: kestes%tradinglinx.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/processmail_bugs,v $ 
 # $Name:  $ 
@@ -229,6 +229,20 @@ sub parse_bt_vars {
   # assignment of each variable.  This means that long variables can
   # not be split up to multiple lines.
 
+  # Because of the bugzilla program diffs the old/new ticket we do not
+  # always get all the interesting fields we need in the contents of
+  # the message. We ensure that we always have a bug number and
+  # Summary line, by taking it out of the subject line, if the message
+  # has a different date it will overwrite this default.
+
+  if ($MAIL_HEADER{'Subject'} =~ m/\[Bug\s+(\d+)\]/) {
+    $tinderbox{$BTData::BUGID_FIELD_NAME} = $1;
+  }
+
+  if ($MAIL_HEADER{'Subject'} =~ m/Changed\s+-\s+(.*)/) {
+    $tinderbox{'Summary'} = $1;
+  }
+
   # We parse the whole mail message because some formats are hard to
   # tell when we are done AND we do not need to keep the long
   # descriptions anyway.
@@ -322,10 +336,11 @@ sub set_tinderbox_variables {
   # set known tinderbox fields based on the bug trackers variables.
   my ($bug_id) = $TINDERBOX{$BTData::BUGID_FIELD_NAME};
 
-  $TINDERBOX{'tinderbox_timenow'} = MailProcess::mailstring2time($MAIL_HEADER{'Date'});
+  $TINDERBOX{'tinderbox_timenow'} = time();
 
   $TINDERBOX{'tinderbox_mailto'} = $MAIL_HEADER{'To'};
   $TINDERBOX{'tinderbox_mailfrom'} = $MAIL_HEADER{'From'};
+  $TINDERBOX{'tinderbox_mailsubject'} = $MAIL_HEADER{'Subject'};
 
   # I believe this is sendmail specific so do not rely on it, 
   # however I hate to lose the data.
@@ -338,21 +353,6 @@ sub set_tinderbox_variables {
   return 1;
 }
 
-
-
-sub check_required_vars {
-
-  is_time_valid($TINDERBOX{'tinderbox_timenow'}) ||
-    die("Mail Header: Date is not a valid time. Date: $MAIL_HEADER{'Date'}\n");
-
-  BTData::is_status_valid($TINDERBOX{'tinderbox_status'}) ||
-    die("Status: $TINDERBOX{'tinderbox_status'} is not a valid bug status\n");
-
-  # the validity of tree is tested in BTData::update2tree if need be.
-
-
-  return 1;
-} # check_required_vars
 
 
 
@@ -374,12 +374,18 @@ sub check_required_vars {
     set_tinderbox_variables();
 
     $TINDERBOX{'tinderbox_tree'} = $tree;
-    
-    # when we are testing turn off the checks
-    
-    ($SKIP_CHECK) ||
-      check_required_vars();
-    
+
+    # some updates do not have a status.  We can not do anything with
+    # them, and we probably only want to only report when the bug
+    # changes state anyway.
+
+    ($TINDERBOX{'tinderbox_status'}) ||
+      exit 0;
+
+    (BTData::is_status_valid($TINDERBOX{'tinderbox_status'})) ||
+      die("Status: $TINDERBOX{'tinderbox_status'} ".
+          "is not a valid bug status\n");
+
     # Testing is easier if the update files appear at the top of the
     # status page, even though they are checked out of CVS.
     
