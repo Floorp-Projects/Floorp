@@ -599,6 +599,13 @@ STDMETHODIMP nsAccessibleWrap::accHitTest(
     } else { // its not create an Accessible for it.
       pvarChild->vt = VT_DISPATCH;
       pvarChild->pdispVal = NativeAccessible(xpAccessible);
+      nsCOMPtr<nsIDOMNode> domNode;
+      xpAccessible->AccGetDOMNode(getter_AddRefs(domNode));
+      if (!domNode) {
+        // Has already been shut down
+        pvarChild->vt = VT_EMPTY;
+        return E_FAIL;
+      }
     }
   } else {
     // no child at that point
@@ -821,6 +828,8 @@ void nsAccessibleWrap::GetXPAccessibleFor(const VARIANT& aVarChild, nsIAccessibl
     nsCOMPtr<nsIAccessible> xpAccessible, nextAccessible;
     GetAccFirstChild(getter_AddRefs(xpAccessible));
     for (PRInt32 index = 0; xpAccessible; index ++) {
+      if (!xpAccessible)
+        break; // Failed
       if (aVarChild.lVal == index) {
         *aXPAccessible = xpAccessible;
         break;

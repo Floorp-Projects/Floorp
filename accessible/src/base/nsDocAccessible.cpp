@@ -95,6 +95,9 @@ nsDocAccessible::nsDocAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell)
   
   NS_ASSERTION(gGlobalDocAccessibleCache, "No global doc accessible cache");
   PutCacheEntry(gGlobalDocAccessibleCache, NS_STATIC_CAST(void*, mWeakShell), this);
+#ifdef DEBUG
+  printf("\nATTENTION: New doc accessible for weak shell %x\n", mWeakShell);
+#endif
 
   // XXX aaronl should we use an algorithm for the initial cache size?
 #ifdef OLD_HASH
@@ -497,8 +500,10 @@ void nsDocAccessible::ScrollTimerCallback(nsITimer *aTimer, void *aClosure)
     // That indicates a pause in scrolling, so we fire the accessibilty scroll event
     docAcc->FireToolkitEvent(nsIAccessibleEventReceiver::EVENT_SCROLLINGEND, docAcc, nsnull);
     docAcc->mScrollPositionChangedTicks = 0;
-    docAcc->mScrollWatchTimer->Cancel();
-    docAcc->mScrollWatchTimer = nsnull;
+    if (docAcc->mScrollWatchTimer) {
+      docAcc->mScrollWatchTimer->Cancel();
+      docAcc->mScrollWatchTimer = nsnull;
+    }
   }
 }
 
