@@ -355,7 +355,7 @@ nsWindow::nsWindow(nsISupports *aOuter) : nsObject(aOuter)
     mToolkit       = NULL;
     mMouseListener = NULL;
     mEventListener = NULL;
-    mBackground    = ::GetSysColor(COLOR_WINDOW);
+    mBackground    = ::GetSysColor(COLOR_BTNFACE);
     mBrush         = ::CreateSolidBrush(NSRGB_2_COLOREF(mBackground));
     mForeground    = ::GetSysColor(COLOR_WINDOWTEXT);
     mPalette       = NULL;
@@ -967,9 +967,13 @@ void nsWindow::SetBackgroundColor(const nscolor &aColor)
 {
     mBackground = aColor;
 
-    ::DeleteObject(mBrush);
+    if (mBrush)
+      ::DeleteObject(mBrush);
+
     mBrush = ::CreateSolidBrush(NSRGB_2_COLOREF(mBackground));
-    SetClassLong(mWnd, GCL_HBRBACKGROUND, (LONG)mBrush);
+    if (mWnd != NULL) {
+      SetClassLong(mWnd, GCL_HBRBACKGROUND, (LONG)mBrush);
+    }
 }
 
     
@@ -1449,8 +1453,8 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 	          }
             break;
 
-        case WM_CTLCOLORBTN:
         case WM_CTLCOLOREDIT:
+        case WM_CTLCOLORBTN:
         case WM_CTLCOLORLISTBOX:
         case WM_CTLCOLORSCROLLBAR:
         case WM_CTLCOLORSTATIC:
@@ -1458,8 +1462,9 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
               nsWindow* control = (nsWindow*)::GetWindowLong((HWND)lParam, GWL_USERDATA);
 		          if (control) {
                 HDC hDC = (HDC)wParam;
-                //::SetBkColor (hDC, mBackground);
-                ::SetTextColor(hDC, mForeground);
+                ::SetBkColor (hDC, NSRGB_2_COLOREF(mBackground));
+                ::SetTextColor(hDC, NSRGB_2_COLOREF(mForeground));
+                ::SetBkMode (hDC, TRANSPARENT);
 		            *aRetValue = (LPARAM)control->OnControlColor();
 		          }
 	          }
@@ -1595,7 +1600,7 @@ LPCTSTR nsWindow::WindowClass()
         wc.hInstance        = nsToolkit::mDllInstance;
         wc.hIcon            = ::LoadIcon(NULL, IDI_APPLICATION);
         wc.hCursor          = NULL;
-        wc.hbrBackground    = NULL; 
+        wc.hbrBackground    = mBrush;
         wc.lpszMenuName     = NULL;
         wc.lpszClassName    = className;
     
@@ -1717,6 +1722,7 @@ PRBool nsWindow::OnPaint()
     PRBool result = PR_TRUE;
     PAINTSTRUCT ps;
     HDC hDC = ::BeginPaint(mWnd, &ps);
+
 
     if (ps.rcPaint.left || ps.rcPaint.right || ps.rcPaint.top || ps.rcPaint.bottom) {
         // call the event callback 
@@ -1851,11 +1857,11 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
         GetBounds(rect);
         if (rect.Contains(event.point.x, event.point.y)) {
           if (gCurrentWindow == NULL || gCurrentWindow != this) {
-            printf("Mouse enter");
+            //printf("Mouse enter");
             gCurrentWindow = this;
           }
         } else {
-          printf("Mouse exit");
+          //printf("Mouse exit");
         }
 
       } break;
@@ -2044,6 +2050,39 @@ DWORD ChildWindow::WindowStyle()
     return WS_CHILD | WS_CLIPCHILDREN | GetBorderStyle(mBorderStyle);
 }
 
+//-------------------------------------------------------------------------
+//
+// Deal with all sort of mouse event
+//
+//-------------------------------------------------------------------------
+PRBool ChildWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
+{
+  PRBool result = PR_FALSE;
+
+  if (nsnull == mEventCallback && nsnull == mMouseListener) {
+    return result;
+  }
+
+  switch (aEventType) {
+    case NS_MOUSE_LEFT_BUTTON_DOWN:
+    case NS_MOUSE_MIDDLE_BUTTON_DOWN:
+    case NS_MOUSE_RIGHT_BUTTON_DOWN:
+      SetCapture(mWnd);
+      break;
+
+    case NS_MOUSE_LEFT_BUTTON_UP:
+    case NS_MOUSE_MIDDLE_BUTTON_UP:
+    case NS_MOUSE_RIGHT_BUTTON_UP:
+      ReleaseCapture();
+      break;
+
+    default:
+      break;
+
+  } // switch
+
+  return nsWindow::DispatchMouseEvent(aEventType, aPoint);
+}
 
 DWORD nsWindow::GetBorderStyle(nsBorderStyle aBorderStyle)
 {
