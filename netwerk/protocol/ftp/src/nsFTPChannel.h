@@ -55,8 +55,8 @@ public:
                           nsISupports *ctxt,
                           nsIEventQueue *eventQueue,
                           nsIStreamObserver *observer);
-    NS_IMETHOD GetLoadQuiet(PRBool *aLoadQuiet);
-    NS_IMETHOD SetLoadQuiet(PRBool aLoadQuiet);
+    NS_IMETHOD GetLoadAttributes(PRUint32 *aLoadAttributes);
+    NS_IMETHOD SetLoadAttributes(PRUint32 aLoadAttributes);
     NS_IMETHOD GetContentType(char * *aContentType);
 
     // nsIFTPChannel methods:
@@ -98,7 +98,7 @@ protected:
 
     PRBool                  mConnected;
     nsIStreamListener*      mListener;
-    PRBool                  mLoadQuiet;
+    PRUint32                mLoadAttributes;
 };
 
 #endif /* nsFTPChannel_h___ */

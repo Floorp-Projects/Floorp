@@ -30,6 +30,7 @@
 #include "prmem.h"      // for PR_Malloc
 #include <ctype.h>      // for isalpha
 #include "nsIFileProtocolHandler.h"     // for NewChannelFromNativePath
+#include "nsLoadGroup.h"
 
 static NS_DEFINE_CID(kFileTransportService, NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
@@ -324,36 +325,13 @@ nsIOService::NewChannelFromNativePath(const char *nativePath, nsIFileChannel **r
     return NS_OK;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// HELPER ROUTINES
-////////////////////////////////////////////////////////////////////////////////
-#if 0
-static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
-static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
-
-nsresult NS_NewURI(nsIURI** aInstancePtrResult,
-                   const char *aSpec,
-                   nsIURI* aBaseURI)
+NS_IMETHODIMP
+nsIOService::NewLoadGroup(nsILoadGroup **result)
 {
-    NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-    if (nsnull == aInstancePtrResult) {
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    nsINetService *inet = nsnull;
-    nsresult rv = nsServiceManager::GetService(kNetServiceCID,
-                                               kINetServiceIID,
-                                               (nsISupports **)&inet);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = inet->NewURI(aSpec, aInstancePtrResult, aBaseURI);
-
-    if (NS_FAILED(rv)) return rv;
-
-    nsServiceManager::ReleaseService(kNetServiceCID, inet);
-    return rv;
+    return nsLoadGroup::Create(nsnull, nsILoadGroup::GetIID(), 
+                               (void**)result);
 }
-#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 
     

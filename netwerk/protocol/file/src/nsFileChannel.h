@@ -68,8 +68,8 @@ public:
     NS_IMETHOD AsyncWrite(nsIInputStream *fromStream, PRUint32 startPosition, PRInt32 writeCount, nsISupports *ctxt, nsIEventQueue *eventQueue, nsIStreamObserver *observer);
 
     /* attribute boolean LoadQuiet; */
-    NS_IMETHOD GetLoadQuiet(PRBool *aLoadQuiet);
-    NS_IMETHOD SetLoadQuiet(PRBool aLoadQuiet);
+    NS_IMETHOD GetLoadAttributes(PRUint32 *aLoadAttributes);
+    NS_IMETHOD SetLoadAttributes(PRUint32 aLoadAttributes);
 
     /* readonly attribute string ContentType; */
     NS_IMETHOD GetContentType(char * *aContentType);
@@ -181,7 +181,7 @@ protected:
     PRInt32                     mAmount;
 
     PRLock*                     mLock;
-    PRBool                      mLoadQuiet;
+    PRUint32                    mLoadAttributes;
 };
 
 #define NS_FILE_TRANSPORT_SEGMENT_SIZE   (4*1024)

@@ -22,13 +22,12 @@
 #include "nsIURL.h"
 #include "nsAgg.h"
 
-// XXX regenerate:
 #define NS_THIS_STANDARDURL_IMPLEMENTATION_CID       \
-{ /* 905ed480-f11f-11d2-9322-000000000000 */         \
-    0x905ed480,                                      \
-    0xf11f,                                          \
-    0x11d2,                                          \
-    {0x93, 0x22, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00} \
+{ /* e3939dc8-29ab-11d3-8cce-0060b0fc14a3 */         \
+    0xe3939dc8,                                      \
+    0x29ab,                                          \
+    0x11d3,                                          \
+    {0x8c, 0xce, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
 }
 
 class nsStandardURL : public nsIURI

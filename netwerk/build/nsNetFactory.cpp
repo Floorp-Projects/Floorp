@@ -26,6 +26,7 @@
 #include "nscore.h"
 #include "nsStandardUrl.h"
 #include "nsDnsService.h"
+#include "nsLoadGroup.h"
 
 static NS_DEFINE_CID(kComponentManagerCID,       NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
@@ -34,6 +35,7 @@ static NS_DEFINE_CID(kStandardURLCID,            NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kExternalModuleManagerCID,  NS_NETMODULEMGR_CID);
 static NS_DEFINE_CID(kDNSServiceCID,             NS_DNSSERVICE_CID);
+static NS_DEFINE_CID(kLoadGroupCID,              NS_LOADGROUP_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -71,6 +73,9 @@ NSGetFactory(nsISupports* aServMgr,
     }
     else if (aClass.Equals(kDNSServiceCID)) {
         rv = NS_NewGenericFactory(&fact, nsDNSService::Create);
+    }
+    else if (aClass.Equals(kLoadGroupCID)) {
+        rv = NS_NewGenericFactory(&fact, nsLoadGroup::Create);
     }
     else {
         rv = NS_ERROR_FAILURE;

@@ -45,7 +45,8 @@ nsFileChannel::nsFileChannel()
       mContext(nsnull), mState(QUIESCENT),
       mSuspended(PR_FALSE), mFileStream(nsnull),
       mBufferInputStream(nsnull), mBufferOutputStream(nsnull),
-      mStatus(NS_OK), mHandler(nsnull), mSourceOffset(0)
+      mStatus(NS_OK), mHandler(nsnull), mSourceOffset(0),
+      mLoadAttributes(LOAD_NORMAL)
 {
     NS_INIT_REFCNT();
 }
@@ -418,16 +419,16 @@ nsFileChannel::AsyncWrite(nsIInputStream *fromStream,
 }
 
 NS_IMETHODIMP
-nsFileChannel::GetLoadQuiet(PRBool *aLoadQuiet)
+nsFileChannel::GetLoadAttributes(PRUint32 *aLoadAttributes)
 {
-    *aLoadQuiet = mLoadQuiet;
+    *aLoadAttributes = mLoadAttributes;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFileChannel::SetLoadQuiet(PRBool aLoadQuiet)
+nsFileChannel::SetLoadAttributes(PRUint32 aLoadAttributes)
 {
-    mLoadQuiet = aLoadQuiet;
+    mLoadAttributes = aLoadAttributes;
     return NS_OK;
 }
 
