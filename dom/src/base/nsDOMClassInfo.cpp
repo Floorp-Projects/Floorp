@@ -2988,7 +2988,10 @@ nsHTMLAppletElementSH::GetPluginJSObject(JSContext *cx, JSObject *obj,
 
   jobject appletObject = nsnull;
   nsresult rv = javaPluginInstance->GetJavaObject(&appletObject);
-  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (NS_FAILED(rv) || !appletObject) {
+    return rv;
+  }
 
   nsCOMPtr<nsILiveConnectManager> manager =
     do_GetService(nsIJVMManager::GetCID());
