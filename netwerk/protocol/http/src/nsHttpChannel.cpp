@@ -116,6 +116,8 @@ nsHttpChannel::Init(nsIURI *uri,
     rv = mURI->GetSpec(getter_Copies(mSpec));
     if (NS_FAILED(rv)) return rv;
 
+    LOG(("uri=%s\n", mSpec.get()));
+
     //
     // Construct connection info object
     //
@@ -1982,11 +1984,6 @@ nsHttpChannel::SetApplyConversion(PRBool value)
 NS_IMETHODIMP
 nsHttpChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
-    // if the request is for something we no longer reference, then simply 
-    // drop this event.
-    if ((request != mTransaction) && (request != mCacheReadRequest))
-        return NS_OK;
-
     LOG(("nsHttpChannel::OnStartRequest [this=%x request=%x]\n", this, request));
 
     if (mTransaction) {
@@ -2060,15 +2057,15 @@ nsHttpChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
                                nsIInputStream *input,
                                PRUint32 offset, PRUint32 count)
 {
+    LOG(("nsHttpChannel::OnDataAvailable [this=%x request=%x offset=%u count=%u]\n",
+        this, request, offset, count));
+
     // if the request is for something we no longer reference, then simply 
     // drop this event.
     if ((request != mTransaction) && (request != mCacheReadRequest)) {
         NS_WARNING("got stale request... why wasn't it cancelled?");
         return NS_BASE_STREAM_CLOSED;
     }
-
-    LOG(("nsHttpChannel::OnDataAvailable [this=%x offset=%u count=%u]\n",
-        this, offset, count));
 
     if (mListener)
         return mListener->OnDataAvailable(this, mListenerContext, input, offset, count);
