@@ -47,6 +47,7 @@
 #include "nsIPresContext.h"
 #include "nsIFrame.h"
 #include "nsIScrollableView.h"
+#include "nsIScrollableFrame.h"
 #include "nsIBox.h"
 
 
@@ -109,24 +110,45 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollByLine(PRInt32 dlines)
   return scrollableView->ScrollByLines(0, dlines);
 }
 
+// XUL <scrollbox> elements have a single box child element.
+// Get a pointer to that box.
+// Note that now that the <scrollbox> is just a regular box
+// with 'overflow:hidden', the boxobject's frame is an nsXULScrollFrame,
+// the <scrollbox>'s box frame is the scrollframe's "scrolled frame", and
+// the <scrollbox>'s child box is a child of that.
+static nsIBox* GetScrolledBox(nsBoxObject* aScrollBox) {
+  nsIFrame* frame = aScrollBox->GetFrame();
+  if (!frame) 
+    return nsnull;
+  nsIScrollableFrame* scrollFrame;
+  if (NS_FAILED(CallQueryInterface(frame, &scrollFrame))) {
+    NS_WARNING("nsIScrollBoxObject attached to something that's not a scroll frame!");
+    return nsnull;
+  }
+  nsIFrame* scrolledFrame;
+  if (NS_FAILED(scrollFrame->GetScrolledFrame(frame->GetPresContext(), scrolledFrame)))
+    return nsnull;
+  nsIBox* scrollBox;
+  if (NS_FAILED(CallQueryInterface(scrolledFrame, &scrollBox)))
+    return nsnull;
+  nsIBox* scrolledBox;
+  if (NS_FAILED(scrollBox->GetChildBox(&scrolledBox)))
+    return nsnull;
+  return scrolledBox;
+}
+
 /* void scrollByIndex (in long dindexes); */
 NS_IMETHODIMP nsScrollBoxObject::ScrollByIndex(PRInt32 dindexes)
 {
     nsIScrollableView* scrollableView = GetScrollableView();
     if (!scrollableView)
        return NS_ERROR_FAILURE;
-
-    // get our box
-    nsIFrame* frame = GetFrame();
-    nsIBox* box;
-    CallQueryInterface(frame, &box);
+    nsIBox* scrolledBox = GetScrolledBox(this);
+    if (!scrolledBox)
+       return NS_ERROR_FAILURE;
 
     nsRect rect;
-    nsIBox* scrolledBox;
     nsIBox* child;
-
-    // get the scrolled box
-    box->GetChildBox(&scrolledBox);
 
     // now get the scrolled boxes first child.
     scrolledBox->GetChildBox(&child);
@@ -217,16 +239,14 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollToElement(nsIDOMElement *child)
     float pixelsToTwips = 0.0;
     pixelsToTwips = context->PixelsToTwips();
     
-    // get our box
-    nsIFrame* frame = GetFrame();
-    nsIBox *box;
-    CallQueryInterface(frame, &box);
+    nsIBox* scrolledBox = GetScrolledBox(this);
+    if (!scrolledBox)
+       return NS_ERROR_FAILURE;
 
     nsRect rect, crect;
-    nsIBox* scrolledBox;
     nsCOMPtr<nsIDOMXULElement> childDOMXULElement (do_QueryInterface(child));
     nsIBoxObject * childBoxObject;
-	childDOMXULElement->GetBoxObject(&childBoxObject);
+    childDOMXULElement->GetBoxObject(&childBoxObject);
 
     PRInt32 x,y;
     childBoxObject->GetX(&x);
@@ -235,9 +255,6 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollToElement(nsIDOMElement *child)
     rect.x = NSToIntRound(x * pixelsToTwips);
     rect.y = NSToIntRound(y * pixelsToTwips);
     
-    // get the scrolled box
-    box->GetChildBox(&scrolledBox);
-
     // TODO: make sure the child is inside the box
 
     // get our current info
@@ -297,13 +314,11 @@ NS_IMETHODIMP nsScrollBoxObject::EnsureElementIsVisible(nsIDOMElement *child)
     float pixelsToTwips = 0.0;
     pixelsToTwips = context->PixelsToTwips();
     
-    // get our box
-    nsIFrame* frame = GetFrame();
-    nsIBox* box;
-    CallQueryInterface(frame, &box);
+    nsIBox* scrolledBox = GetScrolledBox(this);
+    if (!scrolledBox)
+       return NS_ERROR_FAILURE;
 
     nsRect rect, crect;
-    nsIBox* scrolledBox;
     nsCOMPtr<nsIDOMXULElement> childDOMXULElement (do_QueryInterface(child));
     nsIBoxObject * childBoxObject;
     childDOMXULElement->GetBoxObject(&childBoxObject);
@@ -318,9 +333,6 @@ NS_IMETHODIMP nsScrollBoxObject::EnsureElementIsVisible(nsIDOMElement *child)
     rect.y = NSToIntRound(y * pixelsToTwips);
     rect.width = NSToIntRound(width * pixelsToTwips);
     rect.height = NSToIntRound(height * pixelsToTwips);
-
-    // get the scrolled box
-    box->GetChildBox(&scrolledBox);
 
     // TODO: make sure the child is inside the box
 
@@ -378,12 +390,15 @@ nsScrollBoxObject::GetScrollableView()
   if (!frame) 
     return nsnull;
   
-  nsIScrollableView* scrollingView;
-  if (NS_SUCCEEDED(CallQueryInterface(frame->GetView(), &scrollingView))) {  
-    return scrollingView;
-  }
+  nsIScrollableFrame* scrollFrame;
+  if (NS_FAILED(CallQueryInterface(frame, &scrollFrame)))
+    return nsnull;
 
-  return nsnull;
+  nsIScrollableView* scrollingView;
+  if (NS_FAILED(scrollFrame->GetScrollableView(frame->GetPresContext(), &scrollingView)))
+    return nsnull;
+
+  return scrollingView;
 }
 
 nsresult

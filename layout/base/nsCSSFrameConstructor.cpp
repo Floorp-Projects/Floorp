@@ -5345,11 +5345,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
         rv = NS_NewPopupSetFrame(aPresShell, &newFrame);
         ((nsPopupSetFrame*) newFrame)->SetFrameConstructor(this);
       }
-      else if (aTag == nsXULAtoms::scrollbox) {
-            rv = NS_NewScrollBoxFrame(aPresShell, &newFrame);
-            processChildren = PR_TRUE;
-            isReplaced = PR_TRUE;
-      } 
       else if (aTag == nsXULAtoms::iframe || aTag == nsXULAtoms::editor ||
                aTag == nsXULAtoms::browser) {
         isReplaced = PR_TRUE;

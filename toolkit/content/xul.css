@@ -838,6 +838,7 @@ scrollbar[value="hidden"] {
 
 scrollbox {
   -moz-binding: url("chrome://global/content/bindings/scrollbox.xml#scrollbox");
+  overflow:hidden ! important;
 }
 
 arrowscrollbox {
