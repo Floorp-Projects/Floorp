@@ -4013,10 +4013,10 @@ XP_Bool CEditLinkManager::FixupLinksToTarget(char *pOldName, char *pNewName)
         {
             // Point to 1 character past the #
             char *pTarget = pLink->hrefStr + 1;
-            int   iNewLen = XP_STRLEN(pNewName); 
+            intn  iNewLen = XP_STRLEN(pNewName); 
             if( 0 == XP_STRCMP(pTarget, pOldName) )
             {
-                if( iNewLen > XP_STRLEN(pOldName) )
+                if( iNewLen > (intn)XP_STRLEN(pOldName) )
                 {
                     // New name is longer - allocate more space
                     XP_FREE(pLink->hrefStr);
@@ -4263,6 +4263,8 @@ CSizingObject::CSizingObject() :
         m_iStyle(0),
         m_iXOrigin(0),
         m_iYOrigin(0),
+        m_iXMouseOffset(0),
+        m_iYMouseOffset(0),
         m_iStartWidth(0),
         m_iStartHeight(0),
         m_iViewWidth(0),
@@ -4367,8 +4369,6 @@ XP_Bool CSizingObject::Create(CEditBuffer *pBuffer,
     }
 
     LO_Any *pAny = &(m_pLoElement->lo_any);
-    int32 iSelectX = pAny->x + pAny->x_offset;
-    int32 iSelectY = pAny->y + pAny->y_offset;
 
     m_iParentWidth = 0;
     // Check for sizing of table cell or nested table
@@ -4382,8 +4382,6 @@ XP_Bool CSizingObject::Create(CEditBuffer *pBuffer,
             m_iParentWidth = pParentCell->width;
             m_iWidthMsgID = XP_EDT_PERCENT_CELL;
         }
-        iSelectX = pAny->x;
-        iSelectY = pAny->y;
     } 
     else if( pAny->type == LO_CELL )
     {
@@ -4395,15 +4393,6 @@ XP_Bool CSizingObject::Create(CEditBuffer *pBuffer,
             m_iParentWidth = lo_CalcTableWidthForPercentMode(m_pLoElement);
             m_iWidthMsgID = XP_EDT_PERCENT_TABLE;
         }
-        iSelectX = pAny->x;
-        iSelectY = pAny->y;
-    } else {
-        // If not a table or cell, 
-        //   select the item of interest to make it the current element
-        // Select at its CENTER to avoid setting caret
-        //   if real X,Y is near the left or right edge
-        iSelectX += pAny->width/2;
-        iSelectY += pAny->height/2;
     }
     
     if( m_iParentWidth == 0 )
@@ -4637,9 +4626,29 @@ XP_Bool CSizingObject::Create(CEditBuffer *pBuffer,
         m_iStartHeight = max(1, pAny->height);
     }
 
+    // Calculate the offset of actual object edge to
+    //  the location of the mouse cursor
+    switch( iSizingStyle )
+    {
+        case ED_SIZE_LEFT:
+            m_iXMouseOffset = m_Rect.left - pAny->x_offset + m_iXOrigin - xVal;
+            break;
+        case ED_SIZE_RIGHT:
+            m_iXMouseOffset = m_Rect.right - pAny->x_offset + m_iXOrigin - xVal;
+            break;
+        case ED_SIZE_TOP:
+            m_iYMouseOffset = m_Rect.top - pAny->y_offset + m_iYOrigin - yVal;
+            break;
+        case ED_SIZE_BOTTOM:
+            m_iYMouseOffset = m_Rect.bottom - pAny->y_offset + m_iYOrigin - yVal;
+            break;
+    }
+
     // Call this now primarily to start the 
     //  status line display of sizing information
     GetSizingRect(xVal, yVal, bModifierKeyPressed, &m_Rect);
+    //NOTE: If above offsets are correct, then m_Rect shouldn't change
+    //      during call to GetSizingRect
 
     if( pRect )
         *pRect = m_Rect;
@@ -4677,6 +4686,13 @@ void CalcAddColRect(int32 iCols, XP_Rect *pTableRect, XP_Rect *pRect)
 XP_Bool CSizingObject::GetSizingRect(int32 xVal, int32 yVal, XP_Bool bModifierKeyPressed, XP_Rect *pRect)
 {
     XP_ASSERT(pRect);
+
+    // Adjust input X an Y by amount calculated in Create
+    //  so we resize as if cursor started exactly on the correct edge
+    //  instead of just close to it
+    xVal += m_iXMouseOffset;
+    yVal += m_iYMouseOffset;
+
     int i;
     // We never allow lock aspect for table sizing
     // Instead, modifier is used to distinguish between sizing the last column or row
@@ -6156,7 +6172,7 @@ ED_HitType EDT_GetSelectedTableElement(MWContext *pContext, LO_Element **ppEleme
 
 // Object Sizer
 ED_SizeStyle EDT_CanSizeObject(MWContext *pContext, LO_Element *pElement,
-                      int32 xVal, int32 yVal){
+                               int32 xVal, int32 yVal){
     GET_EDIT_BUF_OR_RETURN(pContext, pEditBuffer) 0;
     return pEditBuffer->CanSizeObject(pElement, xVal, yVal);
 }

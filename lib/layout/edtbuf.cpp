@@ -11816,15 +11816,20 @@ void CEditBuffer::BeginSelection( XP_Bool bExtend, XP_Bool bFromStart ){
         // then move the cursor to the start of the next element.
         if ( m_pCurrent->GetLen() == m_iCurrentOffset
                 && (pNext = m_pCurrent->LeafInContainerAfter()) != 0
-                && ! m_pCurrent->CausesBreakAfter() && ! pNext->CausesBreakBefore()){
+                && ! m_pCurrent->CausesBreakAfter() && ! pNext->CausesBreakBefore())
+        {
             XP_Bool good = pNext->GetLOElementAndOffset( 0, FALSE,
                     pLayoutElement, iLayoutOffset );
+            // WARNING: Null element is encountered in PRE text
+            if( !pLayoutElement )
+                return;
             if ( ! good ) {
                 XP_ASSERT(FALSE);
                 return;
             }
-       }
-        else {
+        }
+        else 
+        {
             XP_Bool good = m_pCurrent->GetLOElementAndOffset( m_iCurrentOffset, m_bCurrentStickyAfter,
                         pLayoutElement, iLayoutOffset );
             if ( ! good ) {
@@ -17106,7 +17111,6 @@ CEditTableCellElement *CEditBuffer::GetNextSelectedCell(intn* pRowCounter)
 }
 
 // Dynamic object sizing
-
 ED_SizeStyle CEditBuffer::CanSizeObject(LO_Element *pLoElement, int32 xVal, int32 yVal, XP_Bool bModifierKeyPressed)
 {
     // Table and Cells are special case - use more complicated hit testing

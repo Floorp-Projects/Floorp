@@ -2131,12 +2131,15 @@ lo_NewElement(MWContext *context, lo_DocState *state, intn type,
 									    edit_offset,
 									    type,
 									    eptr );
-            } else if( edit_element && (type == LO_TABLE || type == LO_CELL) )
-            {
-                /* _TABLE_EXPERIMENT_  SAVE POINTER TO EDIT ELEMENT IN LO STRUCT */
-                eptr->lo_any.edit_element = edit_element;
-
             }
+#ifdef DEBUG_cmanske
+            else if( type == LO_LINEFEED)
+            {
+                /******* TEMP ********/
+                ED_Element *pBreak = edit_element;
+                XP_TRACE(("Editable Element = LO_LINEFEED"));
+            }
+#endif
         }
 		state->edit_force_offset = FALSE;
 #endif

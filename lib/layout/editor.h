@@ -3019,6 +3019,8 @@ private:
     int            m_iStyle;
     int32          m_iXOrigin;
     int32          m_iYOrigin;
+    int32          m_iXMouseOffset;
+    int32          m_iYMouseOffset;
     int32          m_iStartWidth;
     int32          m_iStartHeight;
     int32          m_iParentWidth;
