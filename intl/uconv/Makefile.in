@@ -17,6 +17,18 @@
 # Rights Reserved.
 #
 # Contributor(s): 
+# IBM Corporation
+#
+# This Original Code has been modified by IBM Corporation.
+# Modifications made by IBM described herein are
+# Copyright (c) International Business Machines
+# Corporation, 1999
+#
+# Modifications to Mozilla code or documentation
+# identified per MPL Section 3.3
+#
+# Date         Modified by     Description of modification
+# 12/09/1999   IBM Corp.       Support for IBM codepages - 850,852,855,857,862,864
 #
 
 DEPTH		= ../..
@@ -26,7 +38,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= idl public src ucvja ucvcn ucvlatin ucvtw ucvtw2 ucvko
+DIRS		= idl public src ucvja ucvcn ucvlatin ucvtw ucvtw2 ucvko ucvibm
 
 #ifdef ENABLE_TESTS
 #DIRS		+= tests

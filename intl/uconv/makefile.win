@@ -18,11 +18,24 @@
 # Rights Reserved.
 #
 # Contributor(s): 
+# IBM Corporation
+#
+# This Original Code has been modified by IBM Corporation.
+# Modifications made by IBM described herein are
+# Copyright (c) International Business Machines
+# Corporation, 1999
+#
+# Modifications to Mozilla code or documentation
+# identified per MPL Section 3.3
+#
+# Date         Modified by     Description of modification
+# 12/09/1999   IBM Corp.       Support for IBM codepages - 850,852,855,857,862,864
 
 DEPTH=..\..
 
 DIRS=idl public src  \
      ucvlatin \
+     ucvibm \
      ucvja \
      ucvcn \
      ucvtw \
