@@ -1,0 +1,9 @@
+file:///s|/mozilla/layout/html/tests/table/printing/bug56792.html
+file:///s|/mozilla/layout/html/tests/table/printing/bug53690.html
+file:///s|/mozilla/layout/html/tests/table/printing/bug54829.html
+file:///s|/mozilla/layout/html/tests/table/printing/bug57378.html
+file:///s|/mozilla/layout/html/tests/table/printing/split2Rows.html
+file:///s|/mozilla/layout/html/tests/table/printing/split3Rows.html
+file:///s|/mozilla/layout/html/tests/table/printing/tfoot.html
+file:///s|/mozilla/layout/html/tests/table/printing/thead.html
+file:///s|/mozilla/layout/html/tests/table/printing/theadfoot.html
