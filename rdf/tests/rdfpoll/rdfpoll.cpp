@@ -53,7 +53,6 @@
 #include "nsIEventQueueService.h"
 #include "nsIInputStream.h"
 #include "nsIIOService.h"
-#include "nsIGenericFactory.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFRemoteDataSource.h"
 #include "nsIRDFNode.h"
@@ -81,7 +80,6 @@ static NS_DEFINE_CID(kRDFXMLDataSourceCID,  NS_RDFXMLDATASOURCE_CID);
 
 // xpcom
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_CID(kGenericFactoryCID,    NS_GENERICFACTORY_CID);
 
 ////////////////////////////////////////////////////////////////////////
 // IIDs
