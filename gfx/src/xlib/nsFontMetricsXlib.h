@@ -96,6 +96,7 @@ public:
   NS_IMETHOD  Destroy();
 
   NS_IMETHOD  GetXHeight(nscoord& aResult);
+  NS_IMETHOD  GetNormalLineHeight(nscoord &);
   NS_IMETHOD  GetSuperscriptOffset(nscoord& aResult);
   NS_IMETHOD  GetSubscriptOffset(nscoord& aResult);
   NS_IMETHOD  GetStrikeout(nscoord& aOffset, nscoord& aSize);

@@ -105,6 +105,7 @@ class nsRenderingContextXlib : public nsIRenderingContext
   NS_IMETHOD DrawStdLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1);
 
   NS_IMETHOD DrawPath(nsPathPoint aPointArray[], PRInt32 aNumPts);
+  NS_IMETHOD FillPath(nsPathPoint aPointArray[], PRInt32 aNumPts);
 
   NS_IMETHOD FillRect(const nsRect& aRect);
   NS_IMETHOD FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
@@ -114,6 +115,7 @@ class nsRenderingContextXlib : public nsIRenderingContext
 
   NS_IMETHOD DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
   NS_IMETHOD FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
+  NS_IMETHOD FillStdPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
 
   NS_IMETHOD DrawEllipse(const nsRect& aRect);
   NS_IMETHOD DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
