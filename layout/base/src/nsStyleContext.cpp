@@ -19,7 +19,6 @@
 #include "nsStyleConsts.h"
 #include "nsString.h"
 #include "nsUnitConversion.h"
-#include "nsIContent.h"
 #include "nsIPresContext.h"
 #include "nsIStyleRule.h"
 #include "nsISupportsArray.h"
@@ -537,22 +536,19 @@ struct StyleTableImpl: public nsStyleTable {
 
 StyleTableImpl::StyleTableImpl()
 { 
-  mLayoutStrategy = NS_STYLE_TABLE_LAYOUT_AUTO;
   ResetFrom(nsnull, nsnull);
 }
 
 void StyleTableImpl::ResetFrom(const nsStyleTable* aParent, nsIPresContext* aPresContext)
 {
   // values not inherited
+  mLayoutStrategy = NS_STYLE_TABLE_LAYOUT_AUTO;
   mCols  = NS_STYLE_TABLE_COLS_NONE;
   mFrame = NS_STYLE_TABLE_FRAME_NONE;
   mRules = NS_STYLE_TABLE_RULES_NONE;
   mCellPadding.Reset();
   mCellSpacing.Reset();
   mSpan=1;
-  // values inherited
-  if (nsnull!=aParent)
-    mLayoutStrategy = aParent->mLayoutStrategy;
 }
 
 
@@ -561,7 +557,7 @@ void StyleTableImpl::ResetFrom(const nsStyleTable* aParent, nsIPresContext* aPre
 class StyleContextImpl : public nsIStyleContext {
 public:
   StyleContextImpl(nsIStyleContext* aParent, nsISupportsArray* aRules, 
-                   nsIContent* aContent, nsIPresContext* aPresContext);
+                   nsIPresContext* aPresContext);
   ~StyleContextImpl();
 
   void* operator new(size_t sz) {
@@ -578,7 +574,6 @@ public:
   virtual PRInt32 GetBackstopStyleRuleCount(void) const;
   virtual void SetBackstopStyleRuleCount(PRInt32 aCount);
 
-  virtual nsIStyleContext* FindChildWithContent(nsIContent* aContent);
   virtual nsIStyleContext* FindChildWithRules(nsISupportsArray* aRules);
 
   virtual PRBool    Equals(const nsIStyleContext* aOther) const;
@@ -604,8 +599,6 @@ protected:
 
   StyleContextImpl* mPrevLinear;
   StyleContextImpl* mNextLinear;
-
-  nsIContent*       mContent;
 
   PRUint32          mHashValid: 1;
   PRUint32          mHashValue: 31;
@@ -635,15 +628,11 @@ static PRInt32 gInstanceCount;
 static PRInt32 gInstrument = 6;
 #endif
 
-// XXX the storage of mContent can cause deleted content to dangle if the context
-//     is shared, need to adda cleanup pass to content delete style notification
 StyleContextImpl::StyleContextImpl(nsIStyleContext* aParent,
                                    nsISupportsArray* aRules, 
-                                   nsIContent* aContent,
                                    nsIPresContext* aPresContext)
   : mParent((StyleContextImpl*)aParent), // weak ref
     mChild(nsnull),
-    mContent(aContent),
     mRules(aRules),
     mBackstopRuleCount(0),
     mDataCode(-1),
@@ -657,7 +646,6 @@ StyleContextImpl::StyleContextImpl(nsIStyleContext* aParent,
     mTable(nsnull)
 {
   NS_INIT_REFCNT();
-  NS_IF_ADDREF(mContent);
   NS_IF_ADDREF(mRules);
 
   mNextSibling = this;
@@ -692,7 +680,6 @@ StyleContextImpl::~StyleContextImpl()
   }
 
   NS_IF_RELEASE(mRules);
-  NS_IF_RELEASE(mContent);
 
   if (nsnull != mTable) {
     delete mTable;
@@ -780,26 +767,6 @@ void StyleContextImpl::SetBackstopStyleRuleCount(PRInt32 aCount)
   mBackstopRuleCount = aCount;
 }
 
-nsIStyleContext* StyleContextImpl::FindChildWithContent(nsIContent* aContent)
-{
-  nsIStyleContext* result = nsnull;
-
-  if (nsnull != mChild) {
-    StyleContextImpl* child = mChild->mPrevSibling;
-    do {
-      if ((0 == child->mDataCode) &&  // only look at children with un-twiddled data
-          (child->mContent == aContent)) {
-        result = child;
-        NS_ADDREF(result);
-        break;
-      }
-      child = child->mPrevSibling;
-    } while (child != mChild->mPrevSibling);
-  }
-  return result;
-}
-
-
 nsIStyleContext* StyleContextImpl::FindChildWithRules(nsISupportsArray* aRules)
 {
   nsIStyleContext* result = nsnull;
@@ -833,9 +800,6 @@ PRBool StyleContextImpl::Equals(const nsIStyleContext* aOther) const
       result = PR_FALSE;
     }
     else if (mDataCode != other->mDataCode) {
-      result = PR_FALSE;
-    }
-    else if (mContent != other->mContent) {
       result = PR_FALSE;
     }
     else {
@@ -1079,7 +1043,6 @@ NS_LAYOUT nsresult
 NS_NewStyleContext(nsIStyleContext** aInstancePtrResult,
                    nsIStyleContext* aParentContext,
                    nsISupportsArray* aRules,
-                   nsIContent* aContent,
                    nsIPresContext* aPresContext)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
@@ -1087,7 +1050,7 @@ NS_NewStyleContext(nsIStyleContext** aInstancePtrResult,
     return NS_ERROR_NULL_POINTER;
   }
 
-  StyleContextImpl* context = new StyleContextImpl(aParentContext, aRules, aContent, aPresContext);
+  StyleContextImpl* context = new StyleContextImpl(aParentContext, aRules, aPresContext);
   if (nsnull == context) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

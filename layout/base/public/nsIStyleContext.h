@@ -29,7 +29,6 @@
 
 class nsIFrame;
 class nsIPresContext;
-class nsIContent;
 class nsISupportsArray;
 
 
@@ -154,13 +153,13 @@ protected:
 };
 
 struct nsStyleTable: public nsStyleStruct {
-  PRUint8       mLayoutStrategy;// [inherited] see nsStyleConsts.h NS_STYLE_TABLE_LAYOUT_*
+  PRUint8       mLayoutStrategy;// [reset] see nsStyleConsts.h NS_STYLE_TABLE_LAYOUT_*
   PRUint8       mFrame;         // [reset] see nsStyleConsts.h NS_STYLE_TABLE_FRAME_*
   PRUint8       mRules;         // [reset] see nsStyleConsts.h NS_STYLE_TABLE_RULES_*
   nsStyleCoord  mCellPadding;   // [reset] 
   nsStyleCoord  mCellSpacing;   // [reset] 
-  PRInt32       mCols;          // an integer if set, or see nsStyleConsts.h NS_STYLE_TABLE_COLS_*
-  PRInt32       mSpan;          // the number of columns spanned by a colgroup
+  PRInt32       mCols;          // [reset] an integer if set, or see nsStyleConsts.h NS_STYLE_TABLE_COLS_*
+  PRInt32       mSpan;          // [reset] the number of columns spanned by a colgroup
 
 protected:
   nsStyleTable(void);
@@ -183,7 +182,6 @@ public:
   virtual PRInt32 GetBackstopStyleRuleCount(void) const = 0;
   virtual void SetBackstopStyleRuleCount(PRInt32 aCount) = 0;
 
-  virtual nsIStyleContext* FindChildWithContent(nsIContent* aRules) = 0;
   virtual nsIStyleContext* FindChildWithRules(nsISupportsArray* aRules) = 0;
 
   // get a style data struct by ID, may return null 
@@ -209,7 +207,6 @@ extern NS_LAYOUT nsresult
   NS_NewStyleContext(nsIStyleContext** aInstancePtrResult,
                      nsIStyleContext* aParentContext,
                      nsISupportsArray* aRules,
-                     nsIContent* aContent,
                      nsIPresContext* aPresContext);
 
 #endif /* nsIStyleContext_h___ */

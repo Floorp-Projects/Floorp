@@ -250,7 +250,6 @@ protected:
   virtual ~StyleSetImpl();
   PRBool EnsureArray(nsISupportsArray** aArray);
   nsIStyleContext* GetContext(nsIPresContext* aPresContext, nsIFrame* aParentFrame, 
-                              nsIContent* aContent,
                               nsIStyleContext* aParentContext, nsISupportsArray* aRules,
                               PRBool aForceUnique);
   PRInt32 RulesMatching(nsISupportsArray* aSheets,
@@ -508,7 +507,6 @@ PRInt32 StyleSetImpl::RulesMatching(nsISupportsArray* aSheets,
 }
 
 nsIStyleContext* StyleSetImpl::GetContext(nsIPresContext* aPresContext, nsIFrame* aParentFrame, 
-                                          nsIContent* aContent,
                                           nsIStyleContext* aParentContext, nsISupportsArray* aRules,
                                           PRBool aForceUnique)
 {
@@ -532,7 +530,7 @@ nsIStyleContext* StyleSetImpl::GetContext(nsIPresContext* aPresContext, nsIFrame
       result = nsnull;
     }
     if (nsnull == result) {
-      if (NS_OK == NS_NewStyleContext(&result, aParentContext, aRules, aContent, aPresContext)) {
+      if (NS_OK == NS_NewStyleContext(&result, aParentContext, aRules, aPresContext)) {
         if (PR_TRUE == aForceUnique) {
           result->ForceUnique();
         }
@@ -553,7 +551,7 @@ nsIStyleContext* StyleSetImpl::GetContext(nsIPresContext* aPresContext, nsIFrame
       result = nsnull;
     }
     if (nsnull == result) {
-      if (NS_OK == NS_NewStyleContext(&result, aParentContext, aRules, aContent, aPresContext)) {
+      if (NS_OK == NS_NewStyleContext(&result, aParentContext, aRules, aPresContext)) {
         if (PR_TRUE == aForceUnique) {
           result->ForceUnique();
         }
@@ -626,7 +624,7 @@ nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
 
       SortRulesByStrength(rules, backstopRules);
 
-      result = GetContext(aPresContext, aParentFrame, aContent, parentContext, rules, aForceUnique);
+      result = GetContext(aPresContext, aParentFrame, parentContext, rules, aForceUnique);
       if (nsnull != result) {
         result->SetBackstopStyleRuleCount(backstopRules);
       }
@@ -687,7 +685,7 @@ nsIStyleContext* StyleSetImpl::ResolvePseudoStyleFor(nsIPresContext* aPresContex
 
     SortRulesByStrength(rules, backstopRules);
 
-    result = GetContext(aPresContext, aParentFrame, nsnull, parentContext, rules, aForceUnique);
+    result = GetContext(aPresContext, aParentFrame, parentContext, rules, aForceUnique);
     if (nsnull != result) {
       result->SetBackstopStyleRuleCount(backstopRules);
     }
@@ -727,7 +725,7 @@ nsIStyleContext* StyleSetImpl::ProbePseudoStyleFor(nsIPresContext* aPresContext,
     if (0 < ruleCount) {
       SortRulesByStrength(rules, backstopRules);
 
-      result = GetContext(aPresContext, aParentFrame, nsnull, parentContext, rules, aForceUnique);
+      result = GetContext(aPresContext, aParentFrame, parentContext, rules, aForceUnique);
       if (nsnull != result) {
         result->SetBackstopStyleRuleCount(backstopRules);
       }
