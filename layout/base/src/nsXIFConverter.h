@@ -99,12 +99,9 @@ public:
   void BeginCSSRule();
   void EndCSSRule();
 
-  void BeginCSSSelector();
-  void AddCSSTag(const nsString& aTag);
-  void AddCSSID(const nsString& aTag);
-  void AddCSSClass(const nsString& aTag);
-  void AddCSSPsuedoClass(const nsString& aTag);
-  void EndCSSSelector();
+  void BeginCSSSelectors();
+  void AddCSSSelectors(const nsString& aSelectors);
+  void EndCSSSelectors();
 
   void BeginCSSDeclarationList();
   void BeginCSSDeclaration();
