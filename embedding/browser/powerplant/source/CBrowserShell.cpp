@@ -268,14 +268,13 @@ void CBrowserShell::ListenToMessage(MessageT			inMessage,
 
 NS_IMETHODIMP CBrowserShell::SetTopLevelWindow(nsIWebBrowserChrome * aTopLevelWindow)
 {
-   mWebBrowser->SetTopLevelWindow(aTopLevelWindow);  
+   mWebBrowser->SetContainerWindow(aTopLevelWindow);  
    
    /*
    In case we needed to do something with the underlying docshell...   
 
-   nsCOMPtr<nsIDocShell>    aDocShell;
-   mWebBrowser->GetDocShell(getter_AddRefs(aDocShell));
-   NS_ENSURE_TRUE(aDocShell, NS_ERROR_FAILURE);
+   nsCOMPtr<nsIDocShell> ourDocShell(do_GetInterface(mWebBrowser));
+   NS_ENSURE_TRUE(ourDocShell, NS_ERROR_FAILURE);
  	*/
  	 
    return NS_OK;
@@ -516,8 +515,7 @@ void CBrowserShell::AdjustFrame()
 
 NS_METHOD CBrowserShell::EnsureFinder()
 {
-   nsCOMPtr<nsIDocShell> ourDocShell;
-   mWebBrowser->GetDocShell(getter_AddRefs(ourDocShell));
+   nsCOMPtr<nsIDocShell> ourDocShell(do_GetInterface(mWebBrowser));
    
    if (mFinder)
    {
