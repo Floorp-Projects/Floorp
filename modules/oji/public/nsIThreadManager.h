@@ -101,7 +101,7 @@ public:
 class nsIRunnable : public nsISupports {
 public:
 	/**
-	 * Returns a unique identifier for the "current" system thread.
+	 * Defines an entry point for a newly created thread.
 	 */
 	NS_IMETHOD
 	Run() = 0;
