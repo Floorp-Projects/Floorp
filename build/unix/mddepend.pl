@@ -29,6 +29,8 @@
 #
 # Send comments, improvements, bugs to Steve Lamm (slamm@netscape.com).
 
+#$debug = 1;
+
 $outfile = shift @ARGV;
 
 @alldeps=();
@@ -56,6 +58,7 @@ while ($line = <>) {
     $line =~ s/^\s+//;
     push @{$deps}, split /\s+/, $line;
   }
+  warn "add @{$deps}\n" if $debug;
   push @alldeps, $deps;
 }
 
