@@ -34,6 +34,8 @@ var gStatusBar = null;
 var gSearchInProgress = false;
 var gSearchInput = null;
 var gClearButton = null;
+var gDefaultSearchViewTerms = null;
+var gQSViewIsDirty = false;
 
 // nsIMsgSearchNotify object
 var gSearchNotificationListener =
@@ -151,8 +153,20 @@ function onEnterInSearchBar()
      {
        statusFeedback.showStatusString("");
        disableQuickSearchClearButton();
-       restorePreSearchView();
+
+       if (gDefaultSearchViewTerms)
+       {
+         if (gQSViewIsDirty)
+         {
+           initializeSearchBar();
+           onSearch(gDefaultSearchViewTerms);
+         }
+       }
+       else
+        restorePreSearchView();
      }
+     
+     gQSViewIsDirty = false;
      return;
    }
 
@@ -164,6 +178,7 @@ function onEnterInSearchBar()
    ClearMessagePane();
 
    onSearch(null);
+   gQSViewIsDirty = false;
 }
 
 function restorePreSearchView()
@@ -253,17 +268,10 @@ function createSearchTermsWithList(aTermsArray)
   gSearchSession.addScopeTerm(nsMsgSearchScope.offlineMail, selectedFolder);
 
   // add each item in termsArray to the search session
-  var isupports = null;
-  var searchTerm; 
 
   var termsArray = aTermsArray.QueryInterface(Components.interfaces.nsISupportsArray);
   for (var i = 0; i < termsArray.Count(); i++)
-  {
-    isupports = termsArray.GetElementAt(i);
-    searchTerm = isupports.QueryInterface(Components.interfaces.nsIMsgSearchTerm);
-    gSearchSession.appendTerm(searchTerm);
-  }
-
+    gSearchSession.appendTerm(termsArray.GetElementAt(i).QueryInterface(Components.interfaces.nsIMsgSearchTerm));
 }
 
 function createSearchTerms()
@@ -301,6 +309,21 @@ function createSearchTerms()
   term.op = nsMsgSearchOp.Contains; 
   term.booleanAnd = false;
   searchTermsArray.AppendElement(term);
+
+  // now append the default view criteria to the quick search so we don't lose any default
+  // view information
+  if (gDefaultSearchViewTerms)
+  {
+    var isupports = null;
+    var searchTerm; 
+    var termsArray = gDefaultSearchViewTerms.QueryInterface(Components.interfaces.nsISupportsArray);
+    for (var i = 0; i < termsArray.Count(); i++)
+    {
+      isupports = termsArray.GetElementAt(i);
+      searchTerm = isupports.QueryInterface(Components.interfaces.nsIMsgSearchTerm);
+      searchTermsArray.AppendElement(searchTerm);
+    }
+  }
   
   createSearchTermsWithList(searchTermsArray);
   
@@ -357,6 +380,9 @@ function disableQuickSearchClearButton()
 function Search(str)
 {
   GetSearchInput();
+ 
+  gQSViewIsDirty = str != gSearchInput.value;
+
   gSearchInput.value = str;  //on input does not get fired for some reason
   onSearchInput(true);
 }

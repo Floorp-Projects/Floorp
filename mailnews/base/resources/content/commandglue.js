@@ -760,7 +760,8 @@ function FolderPaneSelectionChange()
                 searchInput.value = "";
             }
             ClearMessagePane();
-            if (gSearchEmailAddress)
+
+            if (gSearchEmailAddress || gDefaultSearchViewTerms)
               viewType = nsMsgViewType.eShowQuickSearchResults;
             else if (viewType == nsMsgViewType.eShowQuickSearchResults)
               viewType = nsMsgViewType.eShowAllThreads;  //override viewType - we don't want to start w/ quick search

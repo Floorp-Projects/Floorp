@@ -114,6 +114,7 @@ var folderListener = {
            if(resource) {
              var uri = resource.Value;
              if(uri == gCurrentFolderToReroot) {
+               gQSViewIsDirty = true;
                gCurrentFolderToReroot="";
                var msgFolder = folder.QueryInterface(Components.interfaces.nsIMsgFolder);
                if(msgFolder) {
@@ -214,6 +215,10 @@ var folderListener = {
                Search(gSearchEmailAddress);
                gSearchEmailAddress = null;
              } 
+             else if (gDefaultSearchViewTerms)
+             {
+               Search("");
+             }
            }
          }
        } 
