@@ -2869,8 +2869,13 @@ public:
           mOld(mTLS->SetResolveName(name)),
           mCheck(name) {}
     ~AutoResolveName()
-        {jsval old = mTLS->SetResolveName(mOld);
-         NS_ASSERTION(old == mCheck, "Bad Nesting!");}
+        {
+#ifdef DEBUG
+            jsval old = 
+#endif
+            mTLS->SetResolveName(mOld);
+            NS_ASSERTION(old == mCheck, "Bad Nesting!");
+        }
 
 private:
     XPCPerThreadData* mTLS;
