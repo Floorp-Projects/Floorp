@@ -281,7 +281,8 @@ nsresult nsFileSpec::Move(const nsFileSpec& inNewParentDirectory) const
         result = NS_FILE_RESULT(CrudeFileCopy(*this, destPath));
         if (result == NS_OK)
 	{
-		Delete(PR_FALSE);
+    // cast to fix const-ness
+		((nsFileSpec*)this)->Delete(PR_FALSE);
 	}
 	delete [] destPath;
     }
