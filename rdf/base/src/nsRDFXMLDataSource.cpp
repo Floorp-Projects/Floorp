@@ -1374,6 +1374,10 @@ static const char kRDFDescription3[] = "  </RDF:Description>\n";
     rv = mInner->ArcLabelsOut(aResource, getter_AddRefs(arcs));
     if (NS_FAILED(rv)) return rv;
 
+	nsCOMPtr<nsISupportsArray> array;
+	rv = NS_NewISupportsArray(getter_AddRefs(array));
+	if (NS_FAILED(rv)) return rv;
+
     while (1) {
         PRBool hasMore;
         rv = arcs->HasMoreElements(&hasMore);
@@ -1385,6 +1389,11 @@ static const char kRDFDescription3[] = "  </RDF:Description>\n";
         nsIRDFResource* property;
         rv = arcs->GetNext((nsISupports**) &property);
         if (NS_FAILED(rv)) return rv;
+
+	// have we already seen this resource?  If so, don't write it out again
+	PRInt32 arrayIndex = array->IndexOf(property);
+	if (arrayIndex >=0)	continue;
+	array->AppendElement(property);
 
         if (! IsContainerProperty(property)) {
             // Ignore properties that pertain to containers; we may be
