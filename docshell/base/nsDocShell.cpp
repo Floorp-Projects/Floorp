@@ -2772,7 +2772,8 @@ nsDocShell::SetTitle(const PRUnichar * aTitle)
         mCurrentURI->GetSpec(getter_Copies(url));
         nsCOMPtr<nsIBrowserHistory> browserHistory =
             do_QueryInterface(mGlobalHistory);
-        browserHistory->SetPageTitle(url, aTitle);
+        if (browserHistory)
+            browserHistory->SetPageTitle(url, aTitle);
     }
 
 
