@@ -50,6 +50,8 @@ CHROME_SKIN = \
 	.\icons.css \
 	.\internet.css \
 	.\internetresults.css \
+	.\category.gif \
+	.\result.gif \
 	$(NULL)
 
 CHROME_L10N = \

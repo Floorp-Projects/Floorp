@@ -101,11 +101,25 @@
                 </treeitem>
               </treechildren>
             </rule>
+
+            <rule searchtype="category">
+              <treechildren>
+                <treeitem uri="..." persist="open"
+                        loading="rdf:http://home.netscape.com/NC-rdf#loading"
+			searchtype="rdf:http://home.netscape.com/NC-rdf#searchtype"
+                        type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
+                  <treerow class="searchresult">
+                    <treecell value="rdf:http://home.netscape.com/NC-rdf#Name" />
+                  </treerow>
+                </treeitem>
+              </treechildren>
+            </rule>
       
             <rule>
               <treechildren>
                 <treeitem uri="..." persist="open"
                         loading="rdf:http://home.netscape.com/NC-rdf#loading"
+			searchtype="rdf:http://home.netscape.com/NC-rdf#SearchType"
                         type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
                   <treerow class="searchresult">
                     <treecell value="rdf:http://home.netscape.com/NC-rdf#Name"

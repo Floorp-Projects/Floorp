@@ -316,22 +316,25 @@ function SearchPanelShutdown()
 
 function doStop()
 {
-	var isupports = Components.classes["component://netscape/rdf/datasource?name=internetsearch"].getService();
-	if (!isupports) 
-    return false;
-	var internetSearchService = isupports.QueryInterface(Components.interfaces.nsIInternetSearchService);
-	if (internetSearchService)
-		internetSearchService.Stop();
-
-  // should stop button press also stop the load of the page in the browser? I think so. 
+	// should stop button press also stop the load of the page in the browser? I think so. 
 	var progressNode = parent.document.getElementById("statusbar-icon");
 	var stopButtonNode = document.getElementById("stopbutton");
 	var searchButtonNode = document.getElementById("searchbutton");
-  if( !progressNode || !stopButtonNode || !searchButtonNode ) 
-    return; 
-  progressNode.setAttribute("mode", "normal");
-  stopButtonNode.setAttribute("style", "display: none;");
-	searchButtonNode.setAttribute("style", "display: inherit;");
+	if(progressNode && stopButtonNode && searchButtonNode )
+	{
+		progressNode.setAttribute("mode", "normal");
+		stopButtonNode.setAttribute("style", "display: none;");
+		searchButtonNode.setAttribute("style", "display: inherit;");
+	}
+
+	// stop any network connections
+	var isupports = Components.classes["component://netscape/rdf/datasource?name=internetsearch"].getService();
+	if (isupports)
+	{
+		var internetSearchService = isupports.QueryInterface(Components.interfaces.nsIInternetSearchService);
+		if (internetSearchService)
+			internetSearchService.Stop();
+	}
 
 	// get various services
 	var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
@@ -518,6 +521,7 @@ function doSearch()
     
   // run the search
 	OpenSearch("internet", false, textNode.value, engineURIs );
+	switchTab(0);
 	return true;
 }
 
@@ -531,40 +535,54 @@ function doCheck( aNode )
 function checkSearchProgress( aSearchURL )
 {
 	var	activeSearchFlag = false;
-	var resultsTree = top.content.document.getElementById("internetresultstree");
-  var enginesBox = top.content.document.getElementById("engineTabs");
-	if( !resultsTree || !enginesBox )	
-    return (activeSearchFlag);
+	var	resultsTree = top.content.document.getElementById("internetresultstree");
+	var	enginesBox = top.content.document.getElementById("engineTabs");
+	if( !resultsTree || !enginesBox )
+	{	
+		doStop();
+		return (activeSearchFlag);
+	}
 	var treeref = resultsTree.getAttribute("ref");
-  if( aSearchURL ) {
-    resultsTree.setAttribute( "ref", aSearchURL );
-    treeref = aSearchURL;
-  }
+
+	if( aSearchURL )
+	{
+		resultsTree.setAttribute( "ref", aSearchURL );
+		treeref = aSearchURL;
+	}
 
 	var ds = resultsTree.database;
 	if ( treeref && ds )
 	{
-		var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
-		if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
-		if (rdf)
+		try
 		{
-			var source = rdf.GetResource( treeref, true);
-			var loadingProperty = rdf.GetResource("http://home.netscape.com/NC-rdf#loading", true);
-			var target = ds.GetTarget(source, loadingProperty, true);
-			if (target)	target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
-			if (target)	target = target.Value;
-			if (target == "true")
-				activeSearchFlag = true;
+			var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
+			if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
+			if (rdf)
+			{
+				var source = rdf.GetResource( treeref, true);
+				var loadingProperty = rdf.GetResource("http://home.netscape.com/NC-rdf#loading", true);
+				var target = ds.GetTarget(source, loadingProperty, true);
+				if (target)	target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
+				if (target)	target = target.Value;
+				if (target == "true")
+					activeSearchFlag = true;
+			}
+		}
+		catch(ex)
+		{
 		}
 	}
 	if( activeSearchFlag )
+	{
 		setTimeout("checkSearchProgress(null)", 1000);
-	else {
+	}
+	else
+	{
 		//window.frames["sidebar-content"].doStop();
-    doStop();
-  }
+		doStop();
+	}
   
-  return(activeSearchFlag);
+	return(activeSearchFlag);
 }
 
 function FOO_doSearch()
@@ -729,12 +747,12 @@ function OpenSearch( tabName, forceDialogFlag, aSearchStr, engineURIs )
           gURL = searchURL;
           
           top.content.location.href = "chrome://search/content/internetresults.xul";
-        	setTimeout("checkSearchProgress('" + searchURL + "')", 1000);
         }
   		}
   		catch(ex)
   		{
   		}
+        	setTimeout("checkSearchProgress('" + searchURL + "')", 1000);
     }
 	}
 }
