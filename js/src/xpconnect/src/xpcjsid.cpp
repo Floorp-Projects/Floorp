@@ -442,11 +442,11 @@ nsJSIID::FillCache(JSContext *cx, JSObject *obj,
                    nsIXPCScriptable *arbitrary)
 {
     nsIInterfaceInfoManager* iim = nsnull;
-    nsIInterfaceInfo* iinfo;
+    nsCOMPtr<nsIInterfaceInfo> iinfo;
     PRUint16 count;
 
     if(!(iim = XPTI_GetInterfaceInfoManager()) ||
-       NS_FAILED(iim->GetInfoForIID(mDetails.GetID(), &iinfo)) ||
+       NS_FAILED(iim->GetInfoForIID(mDetails.GetID(), getter_AddRefs(iinfo))) ||
        !iinfo ||
        NS_FAILED(iinfo->GetConstantCount(&count)))
 
