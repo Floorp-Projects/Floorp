@@ -145,7 +145,7 @@ console.sourceView._scrollTo = BasicOView.prototype.scrollTo;
 console.sourceView.scrollTo =
 function sv_scrollto (line, align)
 {
-    if (!this.childData || !this.childData.isLoaded)
+    if (!("childData" in this) || !this.childData.isLoaded)
     {
         /* the source hasn't been loaded yet, store line/align for processing
          * when the load is done. */
@@ -161,7 +161,7 @@ function sv_scrollto (line, align)
 console.sourceView.displaySource =
 function sov_dsource (source)
 {
-    if (source == this.childData)
+    if ("childData" in this && source == this.childData)
         return;
     
     function tryAgain (result)
@@ -175,7 +175,7 @@ function sov_dsource (source)
     }
 
     /* save the current position before we change to another source */
-    if (this.childData)
+    if ("childData" in this)
         this.childData.lastTopRow = this.outliner.getFirstVisibleRow() + 1;
     
     /* if the source for his record isn't loaded yet, load it and call ourselves
@@ -198,16 +198,16 @@ function sov_dsource (source)
     this.outliner.rowCountChanged(0, this.rowCount);
     this.outliner.invalidate();
 
-    hdr = document.getElementById("source-line-text");
+    var hdr = document.getElementById("source-line-text");
     hdr.setAttribute ("label", source.fileName);
 
-    if (this.pendingScroll)
+    if ("pendingScroll" in this)
     {
         this.scrollTo (this.pendingScroll[0], this.pendingScroll[1]);
         delete this.pendingScroll;
     }
     
-    if (typeof this.pendingSelect != "undefined")
+    if ("pendingSelect" in this)
     {
         console.sourceView.selection.timedSelect (this.pendingSelect, 500);
         delete this.pendingSelect;
@@ -226,7 +226,7 @@ function sov_dsource (source)
 console.sourceView.softScrollTo =
 function sv_lscroll (line)
 {
-    if (!this.childData || !this.childData.isLoaded)
+    if (!("childData" in this) || !this.childData.isLoaded)
     {
         /* the source hasn't been loaded yet, queue the scroll for later. */
         this.pendingScroll = [line, 0];
@@ -382,10 +382,14 @@ function sr_locate (script)
 SourceRecord.prototype.makeCurrent =
 function sr_makecur ()
 {
-    if (console.sourceView.childData != this)
+    if (!("childData" in console.sourceView) ||
+        console.sourceView.childData != this)
     {
         console.sourceView.displaySource(this);
-        console.sourceView.scrollTo (this.lastTopRow, -1);
+        if ("lastTopRow" in this)
+            console.sourceView.scrollTo (this.lastTopRow, -1);
+        else
+            console.sourceView.scrollTo (0, -1);
     }
 }
 
@@ -398,11 +402,11 @@ function sr_loadsrc (cb)
         cb (Components.results.NS_OK);
         return;
     }
-    if (this.isLoading)
+    if ("isLoading" in this)
     {
         /* if we're in the process of loading, make a note of the callback, and
          * return. */
-        if (!this.extraCallbacks)
+        if (!("extraCallbacks" in this))
             this.extraCallbacks = new Array();
         this.extraCallbacks.push (cb);
         return;
@@ -545,7 +549,7 @@ function sr_isexecutable (line)
 ScriptRecord.prototype.__defineGetter__ ("bpcount", sr_getbpcount);
 function sr_getbpcount ()
 {
-    if (!this._bpcount)
+    if (!("_bpcount" in this))
         return 0;
 
     return this._bpcount;
@@ -554,10 +558,17 @@ function sr_getbpcount ()
 ScriptRecord.prototype.__defineSetter__ ("bpcount", sr_setbpcount);
 function sr_setbpcount (value)
 {
-    if (value == this._bpcount)
-        return value;
+    var delta;
     
-    var delta = (this._bpcount) ? value - this._bpcount : value;
+    if ("_bpcount" in this)
+    {
+        if (value == this._bpcount)
+            return value;
+        delta = value - this._bpcount;
+    }
+    else
+        delta = value;
+
     this._bpcount = value;
     this.invalidate();
     this.parentRecord.bpcount += delta;
@@ -804,7 +815,7 @@ function vr_refresh ()
             this.property = wv.atomObject;
             /* if we had children, and were open before, then we need to descend
              * and refresh our children. */
-            if (this.childData && this.childData.length > 0)
+            if ("childData" in this && this.childData.length > 0)
             {
                 var rc = 0;
                 rc = this.refreshChildren();
@@ -813,7 +824,10 @@ function vr_refresh ()
                 this.visualFootprint += rc;
             }
             else
+            {
                 this.childData = new Array();
+                this.isContainerOpen = false;
+            }
             break;
             
 
@@ -957,6 +971,7 @@ function vr_create()
     }
     
     this.childData = new Array();
+    this.isContainerOpen = false;
     
     var p = new Object();
     this.value.getProperties (p, {});
@@ -1151,8 +1166,6 @@ function bpr_setenabled (state)
     }
     this._enabled = state;
 }
-
-BPRecord.prototype.locateChildByScript
 
 BPRecord.prototype.matchesScriptRecord =
 function bpr_matchrec (scriptRec)
