@@ -82,7 +82,7 @@ public:
   PRUnichar* GetTextAt(PRInt32 aOffset);
 
 protected:
-  PRBool GrowBuffer();
+  PRBool GrowBuffer(PRBool aForNextWord=PR_TRUE);
 
   PRUnichar* mAutoBuffer;
   PRUnichar* mBuffer;
