@@ -26,10 +26,15 @@ CPPSRCS=				\
 	nsHTMLAnchor.cpp		\
 	nsHTMLApplet.cpp		\
 	nsHTMLArea.cpp			\
+	nsHTMLBR.cpp			\
 	nsHTMLBase.cpp			\
 	nsHTMLBaseFont.cpp		\
-	nsHTMLBR.cpp			\
+	nsHTMLBody.cpp			\
 	nsHTMLComment.cpp		\
+	nsHTMLDList.cpp			\
+	nsHTMLDel.cpp			\
+	nsHTMLDirectory.cpp		\
+	nsHTMLDiv.cpp			\
 	nsHTMLEmbed.cpp			\
 	nsHTMLGenericContent.cpp	\
 	nsHTMLHead.cpp			\
@@ -50,10 +55,15 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsHTMLAnchor.obj		\
 	.\$(OBJDIR)\nsHTMLApplet.obj		\
 	.\$(OBJDIR)\nsHTMLArea.obj		\
+	.\$(OBJDIR)\nsHTMLBR.obj		\
 	.\$(OBJDIR)\nsHTMLBase.obj		\
 	.\$(OBJDIR)\nsHTMLBaseFont.obj		\
-	.\$(OBJDIR)\nsHTMLBR.obj		\
+	.\$(OBJDIR)\nsHTMLBody.obj		\
 	.\$(OBJDIR)\nsHTMLComment.obj		\
+	.\$(OBJDIR)\nsHTMLDList.obj		\
+	.\$(OBJDIR)\nsHTMLDel.obj		\
+	.\$(OBJDIR)\nsHTMLDirectory.obj		\
+	.\$(OBJDIR)\nsHTMLDiv.obj		\
 	.\$(OBJDIR)\nsHTMLEmbed.obj		\
 	.\$(OBJDIR)\nsHTMLGenericContent.obj	\
 	.\$(OBJDIR)\nsHTMLHead.obj		\
