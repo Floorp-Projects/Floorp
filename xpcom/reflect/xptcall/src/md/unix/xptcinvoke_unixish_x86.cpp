@@ -115,7 +115,11 @@ XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
     "pushl %%ecx\n\t"
     "movl  (%%ecx), %%edx\n\t"
     "movl  %5, %%eax\n\t"   /* function index */
+#if defined(__GXX_ABI_VERSION) && __GXX_ABI_VERSION >= 100 /* G++ V3 ABI */
+    "leal  (%%edx,%%eax,4), %%edx\n\t"
+#else /* not G++ V3 ABI  */
     "leal  8(%%edx,%%eax,4), %%edx\n\t"
+#endif /* G++ V3 ABI */
 #endif
     "call  *(%%edx)\n\t"    /* safe to not cleanup esp */
     "addl  $4, %%esp\n\t"
