@@ -63,7 +63,7 @@
     } else {
       dump("BrowserAppCore has already been created! Why?\n");
     }
-	}
+  }
 
   function DoDisableButtons()
   {
@@ -271,9 +271,153 @@
   </html:div>
 
   <html:div id="footer">
-     <html:iframe html:name="status" html:src="status.html" html:width="100%" html:height="34"></html:iframe>
+    <html:script>
+        var bindCount = 0;
+        function onStatus() {
+            var status = document.getElementById("Browser:Status");
+            if ( status ) {
+                var text = status.getAttribute("text");
+                var statusText = document.getElementById("statusText");
+                if ( statusText ) {
+                    statusText.childNodes[0].nodeValue = text;
+                }
+                if ( bindCount == 0 ) {
+                    // This presumably precedes the first onStartBinding, spin
+                    // the progress meter.
+                    var meter = document.getElementById("Browser:LoadingProgress");
+                    if ( meter ) {
+                        meter.setAttribute( "mode", "undetermined" );
+                    } 
+                }
+            } else {
+                dump("Can't find status broadcaster!\n");
+            }
+        }
+        function onSecurity() {
+            var security = document.getElementById("Browser:Security");
+            var indicator = document.getElementById("statusbar-indicator");
+            var style = indicator.getAttribute("style");
+            // Strip off current display/width setting.
+            style = style.replace( /display[^;]*;/, "" );
+            style = style.replace( /width[^;]*;/, "" );
+            if ( security.getAttribute("secure") == "true" ) {
+                // Set indicator to display:normal;
+                style = style + "display:normal;width:120px;";
+                color = "border-top-color:yellow;"
+            } else {
+                // Set indicator to display:none;
+                style = style + "display:none;width:0%;";
+                color = "border-top-color:rgb(192,192,192);"
+            }
+            indicator.setAttribute("style",style);
+
+            var meter = document.getElementById("statusbar-meter");
+            var text  = document.getElementById("statusbar-text");
+            style = meter.getAttribute("style");
+            style = style.replace( /border-top-color[^;];/, "" );
+            style = style + color;
+            meter.setAttribute("style",style);
+            style = text.getAttribute("style");
+            style = style.replace( /border-top-color[^;];/, "" );
+            style = style + color;
+            text.setAttribute("style",style);
+        }
+        function securityOn() {
+            var security = document.getElementById("Browser:Security");
+            if ( security.getAttribute("secure") == "false" ) {
+                security.setAttribute("secure","true");
+                // Temporary till onchange handlers work.
+                onSecurity();
+            }
+        }
+        function securityOff() {
+            var security = document.getElementById("Browser:Security");
+            if ( security.getAttribute("secure") == "true" ) {
+                security.setAttribute("secure","false");
+                // Temporary till onchange handlers work.
+                onSecurity();
+            }
+        }
+        function doTests() {
+            // Turn security on.
+            securityOn();
+        }
+        function onStartBinding() {
+            bindCount++;
+            if ( bindCount == 1 ) {
+                // Something is going on, turn on progress meter.
+                var meter = document.getElementById("Browser:LoadingProgress");
+                if ( meter ) {
+                    meter.setAttribute( "mode", "undetermined" );
+                } 
+            }
+        }
+        function onStopBinding() {
+            bindCount--;
+            if ( bindCount < 0 ) {
+                // Something unusual occurred (stop/back?).
+                bindCount = 0;
+            }
+            var stop = document.getElementById("Browser:OnStopBinding");
+            if ( bindCount == 0 ) {
+                // Turn off progress meter.
+                var meter  = document.getElementById("Browser:LoadingProgress");
+                var status = document.getElementById("Browser:Status");
+                status.setAttribute("text","Document: Done");
+                meter.setAttribute("value","0");
+                meter.setAttribute("mode","normal");
+            }
+        }
+        function dumpProgress() {
+            var broadcaster = document.getElementById("Browser:LoadingProgress");
+            var meter       = document.getElementById("meter");
+            dump( "bindCount=" + bindCount + "\n" );
+            dump( "broadcaster mode=" + broadcaster.getAttribute("mode") + "\n" );
+            dump( "broadcaster value=" + broadcaster.getAttribute("value") + "\n" );
+            dump( "meter mode=" + meter.getAttribute("mode") + "\n" );
+            dump( "meter value=" + meter.getAttribute("value") + "\n" );
+        }
+    </html:script>
+
+    <broadcaster id="Browser:LoadingProgress"/>
+    <broadcaster id="Browser:Status"/>
+    <broadcaster id="Browser:OnStartBinding"/>
+    <broadcaster id="Browser:OnStopBinding"/>
+    <broadcaster id="Browser:Security" secure="false"/>
+    
+    <html:center>
+    <html:table class="statusbar" style="table-spacing:0;table-padding:0;width:99%;border:1px;">
+        <html:tr>
+        	<html:td class="notification" style="width:200px;font-family:sans-serif;font-size:8pt;">
+        		<html:div onclick="doTests()">
+        			[Notification Component] Click to test...
+        		</html:div>
+        	</html:td>
+            <html:td id="statusbar-indicator" class="statusbar-indicator" style="display:none;background-color:yellow;font-family:sans-serif;font-size:8pt;border-top:2px solid yellow;">
+                <html:div onclick="securityOff();">
+                    <html:img src="resource:/res/toolbar/StatusBar-secure.gif" style="vertical-align:middle"/>Secure Conn.
+                </html:div>
+            </html:td>
+            <html:td id="statusbar-meter" class="statusbar-meter" onclick="dumpProgress()" style="width:100px;border-top:2px solid;">
+                <progressmeter id="meter" mode="normal" value="0" style="width:100px;">
+                    <!-- <observes element="Browser:LoadingProgress" attribute="value"/> -->
+                    <observes element="Browser:LoadingProgress" attribute="mode"/>
+                    <!-- This <observes> element really belongs under the html:div below  -->
+                    <!-- Unfortunately, it doesn't work (right now) if a child of an html -->
+                    <!-- element.                                                         -->
+                    <observes element="Browser:Status" attribute="text" onchange="onStatus()"/>			
+                    <observes element="Browser:OnStartBinding" attribute="url" onchange="onStartBinding()"/>			
+                    <observes element="Browser:OnStopBinding" attribute="url" onchange="onStopBinding()"/>			
+                </progressmeter>
+            </html:td>
+            <html:td id="statusbar-text" class="statusbar-text" style="width:*;font-family:sans-serif;font-size:8pt;border-top:2px solid;">
+                <html:div id="statusText">
+                    Document: Done
+                </html:div>
+            </html:td>
+        </html:tr>
+    </html:table>
+    </html:center>
   </html:div>
 
 </window>
-
-
