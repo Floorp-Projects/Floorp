@@ -1150,6 +1150,9 @@ extern "C" JSBool pref_InitInitialObjects()
 	NS_ASSERTION(worked, "initpref.js not parsed successfully");
 	// Keep this child
 
+#ifdef DEBUG_mcafee
+            printf("Parsing default JS files.\n");
+#endif
 	for (; Exists(i); i->Next())
 	{
 		nsIFileSpec* child;
@@ -1166,6 +1169,10 @@ extern "C" JSBool pref_InitInitialObjects()
 		// Skip files in the special list.
 		if (shouldParse)
 		{
+#ifdef DEBUG_mcafee
+            printf("Parsing %s\n", leafName);
+#endif
+
 			for (int j = 0; j < (int) (sizeof(specialFiles) / sizeof(char*)); j++)
 				if (strcmp(leafName, specialFiles[j]) == 0)
 					shouldParse = PR_FALSE;
@@ -1184,6 +1191,9 @@ extern "C" JSBool pref_InitInitialObjects()
 	next_child:
 		NS_IF_RELEASE(child);
 	}
+#ifdef DEBUG_mcafee
+            printf("Parsing platform-specific JS files.\n");
+#endif
 	// Finally, parse any other special files (platform-specific ones).
 	for (k = 1; k < (int) (sizeof(specialFiles) / sizeof(char*)); k++)
 	{
@@ -1192,6 +1202,11 @@ extern "C" JSBool pref_InitInitialObjects()
 	    	continue;
 		if (NS_FAILED(specialChild2->AppendRelativeUnixPath((char*)specialFiles[k])))
 	    	continue;
+
+#ifdef DEBUG_mcafee
+            printf("Parsing %s\n", specialFiles[k]);
+#endif
+
 	    worked = (JSBool)(pref_OpenFileSpec(
     		specialChild2,
 	    	PR_FALSE,
