@@ -36,6 +36,7 @@ import java.io.*;
 import org.mozilla.jss.CryptoManager;
 import org.mozilla.jss.util.Password;
 import org.mozilla.jss.util.Debug;
+import org.mozilla.jss.crypto.*;
 import java.security.MessageDigest;
 
 public class DigestTest {

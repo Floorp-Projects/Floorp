@@ -36,6 +36,7 @@ package org.mozilla.jss.tests;
 import org.mozilla.jss.util.*;
 import org.mozilla.jss.crypto.*;
 import org.mozilla.jss.*;
+import org.mozilla.jss.pkcs11.*;
 import java.io.*;
 import java.awt.*;
 import java.security.cert.*;

@@ -38,6 +38,7 @@ import java.security.cert.X509Certificate;
 import java.io.*;
 import org.mozilla.jss.util.*;
 import org.mozilla.jss.*;
+import org.mozilla.jss.crypto.*;
 
 public class JCASigTest {
 
@@ -53,7 +54,7 @@ public class JCASigTest {
 		byte[] signature;
 		java.security.Signature signer;
 		PublicKey pubk;
-		KeyPairGenerator kpgen;
+		org.mozilla.jss.crypto.KeyPairGenerator kpgen;
 		KeyPair keyPair;
 
 		if(args.length != 2) {

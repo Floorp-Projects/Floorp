@@ -34,6 +34,7 @@
 package org.mozilla.jss.tests;
 
 import org.mozilla.jss.crypto.*;
+import org.mozilla.jss.CryptoManager;
 import java.util.Enumeration;
 import java.math.BigInteger;
 

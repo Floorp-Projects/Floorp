@@ -33,6 +33,7 @@
 package org.mozilla.jss.tests;
 
 import org.mozilla.jss.CryptoManager;
+import org.mozilla.jss.crypto.*;
 
 public class ListCerts {
 
