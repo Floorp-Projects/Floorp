@@ -414,8 +414,10 @@ nsGrid::BuildCellMap(PRInt32 aRows, PRInt32 aColumns, nsGridCell** aCells)
 {
   PRInt32 size = aRows*aColumns;
   PRInt32 oldsize = mRowCount*mColumnCount;
-  if (size == 0)
+  if (size == 0) {
+    delete[] mCellMap;
     (*aCells) = nsnull;
+  }
   else {
     if (size > oldsize) {
       delete[] mCellMap;
