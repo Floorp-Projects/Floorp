@@ -692,6 +692,8 @@ nsResChannel::OnStopRequest(nsIChannel* transportChannel, nsISupports* context,
             return AsyncRead(GetUserListener(), mUserContext);
           case ASYNC_WRITE:
             return AsyncWrite(mFromStream, mUserObserver, mUserContext);
+          default:
+            break;
         }
     }
     return EndRequest(aStatus, aMsg);

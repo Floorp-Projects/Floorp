@@ -39,7 +39,7 @@ public:
             printf("failed to get current thread\n");
             return rv;
         }
-        printf("running %d on thread %x\n", mNum, thread);
+        printf("running %d on thread %x\n", mNum, thread.get());
 
         // if we don't do something slow, we'll never see the other
         // worker threads run
