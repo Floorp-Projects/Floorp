@@ -26,6 +26,7 @@
 #include "nsIWebBrowser.h"
 #include "nsIWebProgress.h"
 #include "nsIRequest.h"
+#include "nsIDocShellTreeItem.h"
 
 #define NS_IGTKEMBED_IID_STR "ebe19ea4-1dd1-11b2-bc20-8e8105516b2f"
 
@@ -40,24 +41,14 @@ class GtkEmbedListener
   {
     MessageLink = 0,
     MessageJSStatus,
-    MessageLocation,
     MessageTitle
   };
-  virtual nsresult NewBrowser(PRUint32 chromeMask, 
-			      nsIWebBrowser **_retval) = 0;
+  virtual nsresult NewBrowser(PRUint32 aChromeFlags,
+			      nsIDocShellTreeItem **_retval) = 0;
   virtual void     Destroy(void) = 0;
   virtual void     Visibility(PRBool aVisibility) = 0;
   virtual void     Message(GtkEmbedListenerMessageType aType,
 			   const char *aMessage) = 0;
-  virtual void     ProgressChange(nsIWebProgress *aProgress,
-				  nsIRequest *aRequest,
-				  PRInt32 curSelfProgress,
-				  PRInt32 maxSelfProgress,
-				  PRInt32 curTotalProgress,
-				  PRInt32 maxTotalProgress) = 0;
-  virtual void     Net(nsIWebProgress *aProgress,
-		       nsIRequest *aRequest,
-		       PRInt32 aFlags, nsresult aStatus) = 0;
   virtual PRBool   StartOpen(const char *aURI) = 0;
   virtual void     SizeTo(PRInt32 width, PRInt32 height) = 0;
 };
@@ -72,7 +63,6 @@ public:
   NS_IMETHOD SetEmbedListener             (GtkEmbedListener *aListener) = 0;
   NS_IMETHOD GetLinkMessage               (char **retval) = 0;
   NS_IMETHOD GetJSStatus                  (char **retval) = 0;
-  NS_IMETHOD GetLocation                  (char **retval) = 0;
   NS_IMETHOD GetTitleChar                 (char **retval) = 0;
   NS_IMETHOD OpenStream                   (const char *aBaseURI, const char *aContentType) = 0;
   NS_IMETHOD AppendToStream               (const char *aData, gint32 aLen) = 0;

@@ -684,7 +684,10 @@ void progress_change_cb   (GtkMozEmbed *embed, gint cur, gint max,
   {
     browser->bytesLoaded = cur;
     browser->maxBytesLoaded = max;
-    browser->loadPercent = (cur * 100) / max;
+    if (cur > max)
+      browser->loadPercent = 100;
+    else
+      browser->loadPercent = (cur * 100) / max;
     update_status_bar_text(browser);
     gtk_progress_set_percentage(GTK_PROGRESS(browser->progressBar), browser->loadPercent / 100.0);
   }
