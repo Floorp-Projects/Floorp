@@ -56,14 +56,14 @@ window {
   display: block; 
 }
 
-button.throbber {
-	width: 32px;
-	height: 32px;
-	background-color:red;
-	background-image:url("resource:/res/throbber/anims00.gif");
+titledbutton#Throbber
+{
+	list-style-image:url("resource:/res/throbber/anims00.gif");
 }
-throbber[busy] {
-	background-image:url("resource:/res/throbber/anims07.gif");
+
+
+titledbutton#Throbber[busy="true"] {
+	list-style-image:url("resource:/res/throbber/throbbingN.gif");
 }
 
 titledbutton:button-focus {
