@@ -1536,7 +1536,7 @@ GetCookieLine(nsInputFileStream strm, nsAutoString& aLine)
 
     /* stop at the '\r' */
     if (c != '\r') {
-      aLine.Append(c);
+      aLine.AppendWithConversion(c);
     }
     else {
       break;
