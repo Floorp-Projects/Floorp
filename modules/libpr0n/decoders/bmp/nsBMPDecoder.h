@@ -176,7 +176,6 @@ private:
 
     void ProcessFileHeader();
     void ProcessInfoHeader();
-    PRIntervalTime mStartDecoding;
 };
 
 

@@ -75,7 +75,6 @@ nsBMPDecoder::~nsBMPDecoder()
 
 NS_IMETHODIMP nsBMPDecoder::Init(imgILoad *aLoad)
 {
-    mStartDecoding = PR_IntervalNow();
     PR_LOG(gBMPLog, PR_LOG_DEBUG, ("nsBMPDecoder::Init(%p)\n", aLoad));
     mObserver = do_QueryInterface(aLoad);
 
@@ -119,10 +118,6 @@ NS_IMETHODIMP nsBMPDecoder::Close()
 
 NS_IMETHODIMP nsBMPDecoder::Flush()
 {
-    PRIntervalTime endDec = PR_IntervalNow();
-    PRUint32 muSec = PR_IntervalToMicroseconds(endDec - mStartDecoding);
-    PR_LOG(gBMPLog, PR_LOG_DEBUG, ("%lu musec.\n", muSec));
-    printf("%lu musec\n", muSec);
     mFrame->SetMutable(PR_FALSE);
     return NS_OK;
 }
