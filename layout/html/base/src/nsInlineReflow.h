@@ -40,15 +40,24 @@ struct nsStyleSpacing;
 class nsInlineReflow {
 public:
   nsInlineReflow(nsLineLayout& aLineLayout,
-                 nsFrameReflowState& aOuterReflowState,
-                 nsHTMLContainerFrame* aOuter,
-                 PRBool aOuterIsBlock);
+                 const nsHTMLReflowState& aOuterReflowState,
+                 nsHTMLContainerFrame* aOuterFrame,
+                 PRBool aOuterIsBlock,
+                 PRBool aComputeMaxElementSize);
   ~nsInlineReflow();
 
   void Init(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
 
   void SetMinLineHeight(nscoord aMinLineHeight) {
     mMinLineHeight = aMinLineHeight;
+  }
+
+  void SetNextRCFrame(nsIFrame* aNextRCFrame) {
+    mNextRCFrame = aNextRCFrame;
+  }
+
+  nsIFrame* GetNextRCFrame() const {
+    return mNextRCFrame;
   }
 
   void UpdateBand(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
@@ -106,21 +115,10 @@ public:
 protected:
   nsresult SetFrame(nsIFrame* aFrame);
 
-  const nsStyleDisplay* GetDisplay();
+  void ApplyLeftMargin(const nsHTMLReflowState& aReflowState);
 
-  const nsStylePosition* GetPosition();
-
-  const nsStyleSpacing* GetSpacing();
-
-  void ApplyLeftMargin();
-
-  PRBool ComputeAvailableSize();
-
-  PRBool ReflowFrame(PRBool aIsAsjacentWithTop,
-                     nsHTMLReflowMetrics& aMetrics,
-                     nsReflowStatus& aStatus);
-
-  PRBool CanPlaceFrame(nsHTMLReflowMetrics& aMetrics,
+  PRBool CanPlaceFrame(const nsHTMLReflowState& aReflowState,
+                       nsHTMLReflowMetrics& aMetrics,
                        nsReflowStatus& aStatus);
 
   void PlaceFrame(nsHTMLReflowMetrics& aMetrics);
@@ -130,15 +128,17 @@ protected:
   void JustifyFrames(nscoord aMaxWidth, nsRect& aLineBox);
 
   // The outer frame that contains the frames that we reflow.
+  const nsHTMLReflowState& mOuterReflowState;
   nsHTMLContainerFrame* mOuterFrame;
   nsISpaceManager* mSpaceManager;
   nsLineLayout& mLineLayout;
-  nsFrameReflowState& mOuterReflowState;
   nsIPresContext& mPresContext;
   PRBool mOuterIsBlock;
   nscoord mMinLineHeight;
 
   PRIntn mFrameNum;
+
+  nsIFrame* mNextRCFrame;
 
   /*
    * For each frame reflowed, we keep this state around
@@ -146,14 +146,11 @@ protected:
   struct PerFrameData {
     nsIFrame* mFrame;
     nsCSSFrameType mFrameType;
-
     nscoord mAscent;            // computed ascent value
     nscoord mDescent;           // computed descent value
-
     nsMargin mMargin;           // computed margin value
-
-    // computed border+padding value, but only for inline non-replaced frames
-    nsMargin mBorderPadding;
+    nsMargin mBorderPadding;    // computed border+padding value
+    nsSize mMaxElementSize;     // from frames reflow
 
     // Location and size of frame after its reflowed but before it is
     // positioned finally by VerticalAlignFrames
@@ -162,8 +159,6 @@ protected:
     // Combined area value from nsHTMLReflowMetrics
     nsRect mCombinedArea;
 
-    nsSize mMaxElementSize;
-
     PRBool mSplittable;
   };
 
@@ -171,11 +166,6 @@ protected:
   PerFrameData* mFrameDataBase;
   PerFrameData mFrameDataBuf[20];
   PRIntn mNumFrameData;
-
-  // Current frame state
-  const nsStyleSpacing* mSpacing;
-  const nsStylePosition* mPosition;
-  const nsStyleDisplay* mDisplay;
 
   PRBool mCanBreakBeforeFrame;          // we can break before the frame
 
@@ -188,9 +178,6 @@ protected:
   nscoord mCarriedOutTopMargin;
   nscoord mCarriedOutBottomMargin;
 
-  // The computed available size and location for the frame
-  nsSize mFrameAvailSize;
-
   nscoord mLeftEdge;
   nscoord mX;
   nscoord mRightEdge;
@@ -201,6 +188,9 @@ protected:
   PRBool mUpdatedBand;
   PRUint8 mPlacedFloaters;
   PRBool mInWord;
+  PRUint8 mDirection;
+  PRUint8 mTextAlign;
+  PRBool mNoWrap;
 };
 
 #endif /* nsInlineReflow_h___ */
