@@ -150,6 +150,7 @@ nsJAR::GetEntry(const char *zipEntry, nsIZipEntry* *result)
 {
   nsZipItem item;
   PRInt32 err = mZip.GetItem(zipEntry, &item);
+  if (err != 0) return NS_ERROR_FAILURE;
 
   nsJARItem* jarItem = new nsJARItem();
   if (jarItem == nsnull)
