@@ -23,7 +23,7 @@
 #include <stat.h>
 #endif
 
-#if !defined XP_UNIX && !defined XP_MAC
+#if !defined XP_UNIX && !defined XP_MAC && !defined XP_BEOS
 #include <direct.h>
 #endif
 
