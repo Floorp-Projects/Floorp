@@ -460,7 +460,7 @@ Force Upgrade File0=[SETUP PATH]\xpcom.dll
 [Component Navigator]
 Description Short=Navigator
 ;*** LOCALIZE ME BABY ***
-Description Long=Web Browser
+Description Long=for web browsing
 Archive=browser.xpi
 $InstallSize$:browser
 $InstallSizeSystem$
@@ -543,7 +543,7 @@ OS=NT51
 [Component MailNews]
 Description Short=Mail & Newsgroups
 ;*** LOCALIZE ME BABY ***
-Description Long=Email and Newsgroup Software
+Description Long=for reading email and newsgroups
 Archive=mail.xpi
 $InstallSize$:mail
 $InstallSizeSystem$
@@ -643,7 +643,7 @@ Path=[WINDIR]
 [Component Chatzilla]
 Description Short=Chatzilla
 ;*** LOCALIZE ME BABY ***
-Description Long=IRC Client
+Description Long=for chatting on Internet Relay Chat(IRC)
 Archive=chatzilla.xpi
 $InstallSize$:chatzilla
 $InstallSizeSystem$
@@ -654,7 +654,7 @@ Force Upgrade File0=[SETUP PATH]\Chrome\chatzilla.jar
 [Component Venkman]
 Description Short=Debugger
 ;*** LOCALIZE ME BABY ***
-Description Long=JavaScript Debugger
+Description Long=for debugging JavaScript
 Archive=venkman.xpi
 $InstallSize$:venkman
 $InstallSizeSystem$
@@ -700,7 +700,7 @@ Force Upgrade File0=[SETUP PATH]\Chrome\en-US.jar
 ;*** LOCALIZE ME BABY ***
 Description Short=US region pack
 ;*** LOCALIZE ME BABY ***
-Description Long=Regional contents for US users
+Description Long=Regional content for US users
 Archive=regus.xpi
 $InstallSize$:regus
 $InstallSizeSystem$
@@ -711,7 +711,7 @@ Force Upgrade File0=[SETUP PATH]\Chrome\US.jar
 [Component QFA]
 Description Short=Quality Feedback Agent
 ;*** LOCALIZE ME BABY ***
-Description Long=Tool for reporting software crashes
+Description Long=for reporting $ProductName$ crash information
 Archive=talkback.xpi
 Install Size=787
 Install Size System=1
@@ -728,7 +728,7 @@ Random Install Percentage=100
 [Component PSM]
 Description Short=Personal Security Manager
 ;*** LOCALIZE ME BABY ***
-Description Long=Personal Security Manager (PSM) for crypto operations
+Description Long=for secure browsing and email; required for SSL(https) and S/MIME
 Archive=psm.xpi
 $InstallSize$:psm
 $InstallSizeSystem$
