@@ -2637,7 +2637,7 @@ extern CString WFE_EscapeURL(const char* url)
 	return encoded;
 }
 
-extern void FE_SetRefreshURLTimer(MWContext *pContext, uint32 ulSeconds, char *pRefreshUrl) {
+extern void FE_SetRefreshURLTimer(MWContext *pContext, URL_Struct *URL_s) {
 //	Purpose:    Set a delayed load timer for a window for a particular URL.
 //	Arguments:  pContext    The context that we're in.  We are only interested on wether or not there appears to be a Frame/hence document.
 //              ulSeconds   The number of seconds that will pass before we attempt the reload.
@@ -2650,8 +2650,13 @@ extern void FE_SetRefreshURLTimer(MWContext *pContext, uint32 ulSeconds, char *p
 //
 
     //  Only do this if it is a window context from the back end.
+    if( URL_s->dont_cache)
+	URL_s->force_reload = NET_SUPER_RELOAD;
+
     if(ABSTRACTCX(pContext) && ABSTRACTCX(pContext)->IsWindowContext()) {
-        FEU_ClientPull(pContext, ulSeconds * 1000, NET_CreateURLStruct(pRefreshUrl, NET_NORMAL_RELOAD), FO_CACHE_AND_PRESENT, FALSE);
+        FEU_ClientPull(pContext, URL_s->refresh * 1000, 
+                       NET_CreateURLStruct(URL_s->refresh_url, URL_s->force_reload),
+                        FO_CACHE_AND_PRESENT, FALSE);
     }
 }
 
