@@ -3317,13 +3317,6 @@ MOZ_ARG_DISABLE_BOOL(dtd-debug,
 
 dnl ========================================================
 dnl =
-dnl = Untested or Broken Options
-dnl = 
-dnl ========================================================
-MOZ_ARG_HEADER(Untested or Broken Options)
-
-dnl ========================================================
-dnl =
 dnl = OS/2 Build Options
 dnl = 
 dnl ========================================================
