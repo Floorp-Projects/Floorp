@@ -1085,6 +1085,9 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsIContent* aOuter,
     if (hrefCStr) {
       nsAutoString href;
       href.AssignWithConversion(hrefCStr);
+      // Strip off any unneeded CF/LF (for Bug 52119)
+      // It can't be done in the parser because of Bug 15204
+      href.StripChars("\r\n");
 
       switch (aEvent->message) {
       case NS_MOUSE_LEFT_BUTTON_DOWN:
