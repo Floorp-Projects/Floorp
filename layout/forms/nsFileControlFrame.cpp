@@ -44,6 +44,7 @@
 #include "nsDocument.h"
 #include "nsIDOMMouseListener.h"
 #include "nsIPresShell.h"
+#include "nsIDOMHTMLInputElement.h"
 
 
 static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
@@ -91,7 +92,10 @@ nsFileControlFrame::CreateAnonymousContent(nsISupportsArray& aChildList)
   if (NS_OK == NS_NewHTMLInputElement(&mTextContent, tag)) {
     mTextContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, nsAutoString("text"), PR_FALSE);
     if (nsFormFrame::GetDisabled(this)) {
-      mTextContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::readonly, nsAutoString("true"), PR_FALSE);
+      nsCOMPtr<nsIDOMHTMLInputElement> textControl = do_QueryInterface(mTextContent);
+      if (textControl) {
+        textControl->SetDisabled(nsFormFrame::GetDisabled(this));
+      }
     }
     aChildList.AppendElement(mTextContent);
   }
@@ -380,8 +384,13 @@ nsFileControlFrame::AttributeChanged(nsIPresContext* aPresContext,
 {
   // set the text control to readonly or not
   if (nsHTMLAtoms::disabled == aAttribute) {
-    nsAutoString val(nsFormFrame::GetDisabled(this) ? "true":"false");
-    mTextContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::readonly, val, PR_FALSE);
+    //nsAutoString val(nsFormFrame::GetDisabled(this) ? "true":"false");
+    nsCOMPtr<nsIDOMHTMLInputElement> textControl = do_QueryInterface(mTextContent);
+    if (textControl)
+    {
+      textControl->SetDisabled(nsFormFrame::GetDisabled(this));
+    }
+    //mTextContent->SetHTMLAttribute(nsHTMLAtoms::disabled, val, PR_TRUE);
   }
 
   return nsAreaFrame::AttributeChanged(aPresContext, aChild,  aAttribute, aHint);
