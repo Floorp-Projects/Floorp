@@ -11030,10 +11030,32 @@ nsresult
 nsCSSFrameConstructor::RecreateFramesForContent(nsIPresContext* aPresContext,
                                                 nsIContent* aContent)                                   
 {
+  // Is the frame `special'? If so, we need to reframe the containing
+  // block *here*, rather than trying to remove and re-insert the
+  // content (which would otherwise result in *two* nested reframe
+  // containing block from ContentRemoved() and ContentInserted(),
+  // below!)
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
+
+  nsIFrame* frame;
+  shell->GetPrimaryFrameFor(aContent, &frame);
+
+  if (frame && IsFrameSpecial(frame)) {
+#ifdef DEBUG
+    if (gNoisyContentUpdates) {
+      printf("nsCSSFrameConstructor::RecreateFramesForContent: frame=");
+      nsFrame::ListTag(stdout, frame);
+      printf(" is special\n");
+    }
+#endif
+    return ReframeContainingBlock(aPresContext, frame);
+  }
+
   nsresult rv = NS_OK;
-  nsIContent* container;
-  rv = aContent->GetParent(container);
-  if (NS_SUCCEEDED(rv) && container) {
+  nsCOMPtr<nsIContent> container;
+  aContent->GetParent(*getter_AddRefs(container));
+  if (container) {
     PRInt32 indexInContainer;    
     rv = container->IndexOf(aContent, indexInContainer);
     if (NS_SUCCEEDED(rv)) {
@@ -11050,7 +11072,6 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIPresContext* aPresContext,
         rv = ContentInserted(aPresContext, container, aContent, indexInContainer, mTempFrameTreeState);
       }      
     }
-    NS_RELEASE(container);
   }
   return rv;
 }
@@ -12829,7 +12850,7 @@ nsCSSFrameConstructor::WipeContainingBlock(nsIPresContext* aPresContext,
  *
  *             .--------.
  *            /          \
- *       b-->2   2*  2'   b'
+ *       b-->2==>2*=>2'   b'
  *           |   |   |
  *           o   O   o'
  *
@@ -12838,14 +12859,18 @@ nsCSSFrameConstructor::WipeContainingBlock(nsIPresContext* aPresContext,
  *    note that 2 still refers to b' as its next sibling, and that 2'
  *    does not.
  *
+ *    The double-arrow line indicates that an annotation is made in
+ *    the frame manager that indicates 2* is the `special sibling' of
+ *    2, and that 2' is the `special sibling' of 2*.
+ *
  * 4. We recurse again to split 1. At this point, we'll break the
  *    link between 2 and b', and make b' be the next sibling of 2'.
  *
  *             .-----------.
  *            /             \
- *       a-->1      1*  1'   a'
+ *       a-->1=====>1*=>1'   a'
  *           |      |   |
- *           b-->2  2*  2'-->b'
+ *           b-->2=>2*=>2'-->b'
  *               |  |   |
  *               o  O   o'
  *
@@ -12858,14 +12883,17 @@ nsCSSFrameConstructor::WipeContainingBlock(nsIPresContext* aPresContext,
  *
  *     A-->B-->C
  *         |
- *         a-->1------>1*-->1'-->a'      
+ *         a-->1-=-=-=>1*-=>1'-->a'      
  *             |       |    |
- *             b-->2   2*   2'-->b'
+ *             b-->2==>2*==>2'-->b'
  *                 |   |    |
  *                 o   O    o'
  *
  *    Since B is a block, it is allowed to contain both block and
  *    inline frames, so we can let 1* and 1' be "real siblings" of 1.
+ *
+ *    Note that 1* is both the `normal' sibling and `special' sibling
+ *    of 1, and 1' is both the `normal' and `special sibling of 1*.
  */
 nsresult
 nsCSSFrameConstructor::SplitToContainingBlock(nsIPresContext* aPresContext,
