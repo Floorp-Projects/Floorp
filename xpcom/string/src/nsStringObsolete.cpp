@@ -1206,20 +1206,6 @@ nsString::AppendWithConversion( const nsACString& aData )
 
 
   /**
-   * nsTString::InsertWithConversion
-   */
-
-void
-nsString::InsertWithConversion( const char* aData, PRUint32 aOffset, PRInt32 aCount )
-  {
-    if (aCount < 0)
-      aCount = nsCharTraits<char>::length(aData);
-
-    Insert(NS_ConvertASCIItoUTF16(aData), aOffset);
-  }
-
-
-  /**
    * nsTString::AppendInt
    */
 

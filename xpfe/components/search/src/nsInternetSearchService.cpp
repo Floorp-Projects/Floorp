@@ -4066,9 +4066,9 @@ InternetSearchDataSource::SaveEngineInfoIntoGraph(nsIFile *file, nsIFile *icon,
 		getter_AddRefs(searchRes))))	return(rv);
 
 	// save the basename reference
-	if (basename.Length() > 0)
+	if (!basename.IsEmpty())
 	{
-		basename.InsertWithConversion(kURINC_SearchCategoryEngineBasenamePrefix, 0);
+		basename.Insert(NS_ConvertASCIItoUTF16(kURINC_SearchCategoryEngineBasenamePrefix), 0);
 
 		if (NS_FAILED(rv = gRDFService->GetUnicodeResource(basename,
 			getter_AddRefs(categoryRes))))	return(rv);
