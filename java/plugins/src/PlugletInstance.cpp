@@ -106,6 +106,7 @@ NS_METHOD PlugletInstance::NewStream(nsIPluginStreamListener** listener) {
     //nb check for JNI exception
     if (obj) {
 	*listener = new PlugletStreamListener(obj);
+	(*listener)->AddRef();
     }
     return NS_OK;
 }
