@@ -113,60 +113,11 @@ public:
   
   /* nsIMsgAccountManager methods */
   
-  /* nsIMsgAccount createAccount (in nsIMsgIncomingServer server,
-     in nsIMsgIdentity identity); */
-  NS_IMETHOD CreateAccount(nsIMsgIncomingServer *server,
-                           nsIMsgIdentity *identity,
-                           nsIMsgAccount **_retval) ;
+  NS_DECL_NSIMSGACCOUNTMANAGER
   
-  /* nsIMsgAccount AddAccount (in nsIMsgIncomingServer server,
-     in nsIMsgIdentity identity, in string accountKey); */
-  NS_IMETHOD CreateAccountWithKey(nsIMsgIncomingServer *server,
-                                  nsIMsgIdentity *identity, 
-                                  const char *accountKey,
-                                  nsIMsgAccount **_retval) ;
-
-  NS_IMETHOD AddAccount(nsIMsgAccount *account);
-  NS_IMETHOD RemoveAccount(nsIMsgAccount *account);
-  
-  /* attribute nsIMsgAccount defaultAccount; */
-  NS_IMETHOD GetDefaultAccount(nsIMsgAccount * *aDefaultAccount) ;
-  NS_IMETHOD SetDefaultAccount(nsIMsgAccount * aDefaultAccount) ;
-  
-  NS_IMETHOD GetAccounts(nsISupportsArray **_retval) ;
-  
-  /* string getAccountKey (in nsIMsgAccount account); */
-  NS_IMETHOD getAccountKey(nsIMsgAccount *account, char **_retval) ;
-
-  /* nsISupportsArray GetAllIdentities (); */
-  NS_IMETHOD GetAllIdentities(nsISupportsArray **_retval) ;
-
-  /* nsISupportsArray GetAllServers (); */
-  NS_IMETHOD GetAllServers(nsISupportsArray **_retval) ;
-
-  NS_IMETHOD LoadAccounts();
-  NS_IMETHOD UnloadAccounts();
-  NS_IMETHOD MigratePrefs();
-  NS_IMETHOD WriteToFolderCache(nsIMsgFolderCache *folderCache);
-
-  /* nsIMsgIdentity GetIdentityByKey (in string key); */
-  NS_IMETHOD GetIdentityByKey(const char *key, nsIMsgIdentity **_retval);
-
-  NS_IMETHOD FindServer(const char* username,
-                        const char* hostname,
-                        const char *type,
-                        nsIMsgIncomingServer* *aResult);
-
-  NS_IMETHOD GetIdentitiesForServer(nsIMsgIncomingServer *server,
-                                    nsISupportsArray **_retval);
-
-  NS_IMETHOD GetServersForIdentity(nsIMsgIdentity *identity,
-                                   nsISupportsArray **_retval);
-
   //Add/remove an account to/from the Biff Manager if it has Biff turned on.
   nsresult AddAccountToBiff(nsIMsgAccount *account);
   nsresult RemoveAccountFromBiff(nsIMsgAccount *account);
-  
 private:
   PRBool m_accountsLoaded;
   
@@ -1909,10 +1860,10 @@ nsMsgAccountManager::findServerByName(nsISupports *aElement, void *data)
   rv = server->GetHostName(getter_Copies(thisHostname));
   if (NS_FAILED(rv)) return PR_TRUE;
 
-  char *username=nsnull;
-  rv = server->GetUsername(&username);
+  nsXPIDLCString username;
+  rv = server->GetUsername(getter_Copies(username));
   if (NS_FAILED(rv)) return PR_TRUE;
-  if (!username) username=PL_strdup("");
+  if (!username) username.Copy("");
   
   nsXPIDLCString thisType;
   rv = server->GetType(getter_Copies(thisType));
