@@ -281,17 +281,49 @@ class JavaMembers
             boolean isStatic = Modifier.isStatic(mods);
             Hashtable ht = isStatic ? staticMembers : members;
             String name = method.getName();
-            NativeJavaMethod fun = (NativeJavaMethod) ht.get(name);
-            if (fun == null) {
-                fun = new NativeJavaMethod(method, name);
-                if (scope != null) {
-                    fun.setPrototype(
-                        ScriptableObject.getFunctionPrototype(scope));
-                }
-                ht.put(name, fun);
+            Object value = ht.get(name);
+            if (value == null) {
+                ht.put(name, method);
             } else {
-                fun.add(method);
+                ObjArray overloadedMethods;
+                if (value instanceof ObjArray) {
+                    overloadedMethods = (ObjArray)value;
+                } else {
+                    if (!(value instanceof Method)) Context.codeBug();
+                    // value should be instance of Method as reflectMethods is
+                    // called when staticMembers and members are empty
+                    overloadedMethods = new ObjArray();
+                    overloadedMethods.add(value);
+                    ht.put(name, overloadedMethods);
+                }
+                overloadedMethods.add(method);
             }
+        }
+        initNativeMethods(staticMembers, scope);
+        initNativeMethods(members, scope);
+    }
+
+    private static void initNativeMethods(Hashtable ht, Scriptable scope)
+    {
+        Enumeration e = ht.keys();
+        while (e.hasMoreElements()) {
+            String name = (String)e.nextElement();
+            Method[] methods;
+            Object value = ht.get(name);
+            if (value instanceof Method) {
+                methods = new Method[1];
+                methods[0] = (Method)value;
+            } else {
+                ObjArray overloadedMethods = (ObjArray)value;
+                if (overloadedMethods.size() < 2) Context.codeBug();
+                methods = new Method[overloadedMethods.size()];
+                overloadedMethods.toArray(methods);
+            }
+            NativeJavaMethod fun = new NativeJavaMethod(methods);
+            if (scope != null) {
+                fun.setPrototype(ScriptableObject.getFunctionPrototype(scope));
+            }
+            ht.put(name, fun);
         }
     }
 
@@ -371,12 +403,16 @@ class JavaMembers
 
                 // Make the bean property name.
                 String beanPropertyName = nameComponent;
-                if (Character.isUpperCase(nameComponent.charAt(0))) {
+                char ch0 = nameComponent.charAt(0);
+                if (Character.isUpperCase(ch0)) {
                     if (nameComponent.length() == 1) {
-                        beanPropertyName = nameComponent.substring(0, 1).toLowerCase();
-                    } else if (!Character.isUpperCase(nameComponent.charAt(1))) {
-                        beanPropertyName = Character.toLowerCase(nameComponent.charAt(0)) +
-                                           nameComponent.substring(1);
+                        beanPropertyName = nameComponent.toLowerCase();
+                    } else {
+                        char ch1 = nameComponent.charAt(1);
+                        if (!Character.isUpperCase(ch1)) {
+                            beanPropertyName = Character.toLowerCase(ch0)
+                                               +nameComponent.substring(1);
+                        }
                     }
                 }
 
@@ -391,61 +427,25 @@ class JavaMembers
                     continue;
                 NativeJavaMethod getJavaMethod = (NativeJavaMethod) method;
 
-                // Grab and inspect the getter method; does it have an empty parameter list,
-                // with a return value (eg. a getSomething() or isSomething())?
-                Class[] params;
-                Method[] getMethods = getJavaMethod.methods;
-                Class type;
-                if (getMethods != null &&
-                    getMethods.length == 1 &&
-                    (type = getMethods[0].getReturnType()) != null &&
-                    (params = getMethods[0].getParameterTypes()) != null &&
-                    params.length == 0)
-                {
-
-                    // Make sure the method static-ness is preserved for this property.
-                    if (isStatic && !Modifier.isStatic(getMethods[0].getModifiers()))
-                        continue;
+                Method getMethod = extractGetMethod(getJavaMethod, isStatic);
+                if (getMethod != null) {
 
                     // We have a getter.  Now, do we have a setter?
                     Method setMethod = null;
-                    String setter = "set" + nameComponent;
+                    String setter = "set".concat(nameComponent);
                     if (ht.containsKey(setter)) {
 
                         // Is this value a method?
                         method = ht.get(setter);
                         if (method instanceof NativeJavaMethod) {
-
-                            //
-                            // Note: it may be preferable to allow NativeJavaMethod.findFunction()
-                            //       to find the appropriate setter; unfortunately, it requires an
-                            //       instance of the target arg to determine that.
-                            //
-
-                            // Make two passes: one to find a method with direct type assignment,
-                            // and one to find a widening conversion.
-                            NativeJavaMethod setJavaMethod = (NativeJavaMethod) method;
-                            Method[] setMethods = setJavaMethod.methods;
-                            for (int pass = 1; pass <= 2 && setMethod == null; ++pass) {
-                                for (int i = 0; i < setMethods.length; ++i) {
-                                    if (setMethods[i].getReturnType() == Void.TYPE &&
-                                        (!isStatic || Modifier.isStatic(setMethods[i].getModifiers())) &&
-                                        (params = setMethods[i].getParameterTypes()) != null &&
-                                        params.length == 1 ) {
-
-                                        if ((pass == 1 && params[0] == type) ||
-                                            (pass == 2 && params[0].isAssignableFrom(type))) {
-                                            setMethod = setMethods[i];
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
+                            NativeJavaMethod njm = (NativeJavaMethod) method;
+                            Class type = getMethod.getReturnType();
+                            setMethod = extractSetMethod(type, njm, isStatic);
                         }
                     }
 
                     // Make the property.
-                    BeanProperty bp = new BeanProperty(getMethods[0], setMethod);
+                    BeanProperty bp = new BeanProperty(getMethod, setMethod);
                     toAdd.put(beanPropertyName, bp);
                 }
             }
@@ -457,6 +457,66 @@ class JavaMembers
             Object value = toAdd.get(key);
             ht.put(key, value);
         }
+    }
+
+    private static Method extractGetMethod(NativeJavaMethod njm,
+                                           boolean isStatic)
+    {
+         // Grab and inspect the getter method; does it have an empty parameter
+         // list with a return value (eg. a getSomething() or isSomething())?
+        Method[] methods = njm.methods;
+        if (methods.length == 1) {
+            Method method = methods[0];
+            // Make sure the method static-ness is preserved for this property.
+            if (!isStatic || Modifier.isStatic(method.getModifiers())) {
+                Class[] params = method.getParameterTypes();
+                if (params != null && params.length == 0) {
+                    Class type = method.getReturnType();
+                    if (type != null && type != Void.TYPE) {
+                        return method;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+            
+    private static Method extractSetMethod(Class type,
+                                           NativeJavaMethod njm,
+                                           boolean isStatic)
+    {
+        //
+        // Note: it may be preferable to allow NativeJavaMethod.findFunction()
+        //       to find the appropriate setter; unfortunately, it requires an
+        //       instance of the target arg to determine that.
+        //
+
+        // Make two passes: one to find a method with direct type assignment,
+        // and one to find a widening conversion.
+        Method[] methods = njm.methods;
+        for (int pass = 1; pass <= 2; ++pass) {
+            for (int i = 0; i < methods.length; ++i) {
+                Method method = methods[i];
+                if (!isStatic || Modifier.isStatic(method.getModifiers())) {
+                    if (method.getReturnType() == Void.TYPE) {
+                        Class[] params = method.getParameterTypes();
+                        if (params != null && params.length == 1) {
+                            if (pass == 1) {
+                                if (params[0] == type) {
+                                    return method;
+                                }
+                            } else {
+                                if (pass != 2) Context.codeBug();
+                                if (params[0].isAssignableFrom(type)) {
+                                    return method;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     Hashtable getFieldAndMethodsObjects(Scriptable scope, Object javaObject,

@@ -68,22 +68,6 @@ public class NativeJavaMethod extends BaseFunction
         this.functionName = name;
     }
 
-    public void add(Method method)
-    {
-        if (functionName == null) {
-            functionName = method.getName();
-        } else if (!functionName.equals(method.getName())) {
-            throw new RuntimeException("internal method name mismatch");
-        }
-        // XXX a more intelligent growth algorithm would be nice
-        int len = methods == null ? 0 : methods.length;
-        Method[] newMeths = new Method[len + 1];
-        for (int i = 0; i < len; i++)
-            newMeths[i] = methods[i];
-        newMeths[len] = method;
-        methods = newMeths;
-    }
-
     private static String scriptSignature(Object value)
     {
         if (value == null) {
