@@ -1622,9 +1622,9 @@ nsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
     // news case
     rv = nsGetNewsRoot(pathResult);
   }
-  else if (strcmp(rootURI, kImapMessageRootURI) == 0) {
-    // imap case
-    rv = nsGetImapRoot(pathResult);
+  else if ((strcmp(rootURI, kImapMessageRootURI) == 0) ||
+           (strcmp(rootURI, kImapRootURI) == 0)) {
+	  rv = nsGetImapRoot(pathResult);
   }
   else {
     rv = NS_ERROR_FAILURE; 
@@ -1710,7 +1710,7 @@ nsPath2URI(const char* rootURI, const nsFileSpec& spec, char **uri)
     rv = nsGetNewsRoot(root);
   }
   else if (strcmp(rootURI, kImapMessageRootURI) == 0) {
-    rv = nsGetImapRoot(root);
+	  rv = nsGetImapRoot(root);
   }
   else {
     // local mail case
@@ -1780,7 +1780,7 @@ nsURI2Name(const char* rootURI, char* uriStr, nsString& name)
   return uri.Right(name, count);
 }
 
-/* parses LocalMessageURI and NewsMessageURI */
+/* parses LocalMessageURI, NewsMessageURI, and ImapMessageURI */
 nsresult nsParseMessageURI(const char* uri, nsString& folderURI, PRUint32 *key)
 {
 	if(!key)
@@ -1861,7 +1861,6 @@ nsresult nsBuildImapMessageURI(const nsFileSpec& path, PRUint32 key, char** uri)
 
 }
 
-
 nsresult nsGetFolderFromMessage(nsIMessage *message, nsIMsgFolder** folder)
 {
 	nsresult rv;
@@ -1875,9 +1874,25 @@ nsresult nsGetFolderFromMessage(nsIMessage *message, nsIMsgFolder** folder)
 		nsMsgKey key;
 		nsParseMessageURI(uri, messageFolderURIStr, &key);
 		nsString folderOnly, folderURIStr;
-		messageFolderURIStr.Right(folderOnly, messageFolderURIStr.Length() -nsCRT::strlen(kMailboxMessageRootURI));
-		folderURIStr = kMailboxRootURI;
-		folderURIStr+= folderOnly;
+
+		if (messageFolderURIStr.Find(kMailboxMessageRootURI) != ((PRInt32)-1))
+		{
+			messageFolderURIStr.Right(folderOnly, messageFolderURIStr.Length() -nsCRT::strlen(kMailboxMessageRootURI));
+			folderURIStr = kMailboxRootURI;
+			folderURIStr+= folderOnly;
+		}
+		else if (messageFolderURIStr.Find(kNewsMessageRootURI) != ((PRInt32)-1))
+		{
+			messageFolderURIStr.Right(folderOnly, messageFolderURIStr.Length() -nsCRT::strlen(kNewsMessageRootURI));
+			folderURIStr = kMailboxRootURI;
+			folderURIStr+= folderOnly;
+		}
+		else if (messageFolderURIStr.Find(kImapMessageRootURI) != ((PRInt32)-1))
+		{
+			messageFolderURIStr.Right(folderOnly, messageFolderURIStr.Length() -nsCRT::strlen(kImapMessageRootURI));
+			folderURIStr = kMailboxRootURI;
+			folderURIStr+= folderOnly;
+		}
 
 		nsIRDFResource *folderResource;
 		char *folderURI = folderURIStr.ToNewCString();
