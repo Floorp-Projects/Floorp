@@ -15,6 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+
 #ifndef nsIByteBuffer_h___
 #define nsIByteBuffer_h___
 
@@ -31,27 +32,28 @@ class nsIInputStream;
 class nsIByteBuffer : public nsISupports {
 public:
   /** @return length of buffer, i.e. how many bytes are currently in it. */
-  virtual PRUint32 GetLength(void) const = 0;
+  NS_IMETHOD_(PRUint32) GetLength(void) const = 0;
 
   /** @return number of bytes allocated in the buffer */
-  virtual PRUint32 GetBufferSize(void) const = 0;
+  NS_IMETHOD_(PRUint32) GetBufferSize(void) const = 0;
 
   /** @return the buffer */
-  virtual char* GetBuffer(void) const = 0;
+  NS_IMETHOD_(char*) GetBuffer(void) const = 0;
 
   /** Grow buffer to aNewSize bytes. */
-  virtual PRBool Grow(PRUint32 aNewSize) = 0;
+  NS_IMETHOD_(PRBool) Grow(PRUint32 aNewSize) = 0;
 
   /** Fill the buffer with data from aStream.  Don't grow the buffer, only
    *  read until length of buffer equals buffer size. */
-  virtual PRInt32 Fill(nsresult* aErrorCode, nsIInputStream* aStream,
-                        PRUint32 aKeep) = 0;
+  NS_IMETHOD_(PRInt32) Fill(nsresult* aErrorCode, nsIInputStream* aStream,
+                            PRUint32 aKeep) = 0;
 };
 
 /** Create a new byte buffer using the given buffer size. */
-extern NS_BASE nsresult NS_NewByteBuffer(nsIByteBuffer** aInstancePtrResult,
-                                         nsISupports* aOuter,
-                                         PRUint32 aBufferSize = 0);
+extern NS_BASE nsresult 
+NS_NewByteBuffer(nsIByteBuffer** aInstancePtrResult,
+                 nsISupports* aOuter,
+                 PRUint32 aBufferSize = 0);
 
 #endif /* nsIByteBuffer_h___ */
 
