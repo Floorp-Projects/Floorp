@@ -402,8 +402,11 @@ pk11_InitGeneric(PK11Session *session,PK11SessionContext **contextPtr,
 }
 
 /* NSC_CryptInit initializes an encryption/Decryption operation. */
-/* This function is used by NSC_EncryptInit and NSC_WrapKey. The only difference
- * in their uses if whether or not etype is CKA_ENCRYPT or CKA_WRAP */
+/* This function is used by NSC_EncryptInit, NSC_DecryptInit, 
+ *                          NSC_WrapKey, NSC_UnwrapKey, 
+ *                          NSC_SignInit, NSC_VerifyInit (via pk11_InitCBCMac),
+ * The only difference in their uses is the value of etype.
+ */
 static CK_RV
 pk11_CryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
 		 CK_OBJECT_HANDLE hKey, CK_ATTRIBUTE_TYPE etype,
@@ -424,6 +427,10 @@ pk11_CryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
     unsigned char newdeskey[8];
     PRBool useNewKey=PR_FALSE;
     int t;
+
+    crv = pk11_MechAllowsOperation(pMechanism->mechanism, etype);
+    if (crv != CKR_OK) 
+    	return crv;
 
     session = pk11_SessionFromHandle(hSession);
     if (session == NULL) return CKR_SESSION_HANDLE_INVALID;
@@ -619,8 +626,8 @@ finish_des:
 	}
 	context->update = (PK11Cipher) (isEncrypt ? DES_Encrypt : DES_Decrypt);
 	context->destroy = (PK11Destroy) DES_DestroyContext;
-
 	break;
+
     case CKM_AES_CBC_PAD:
 	context->doPad = PR_TRUE;
 	context->blockSize = 16;
@@ -3448,7 +3455,6 @@ CK_RV NSC_WrapKey(CK_SESSION_HANDLE hSession,
 		crv = CKR_KEY_TYPE_INCONSISTENT;
 		break;
 	    }
-     
 	    crv = pk11_CryptInit(hSession, pMechanism, hWrappingKey, 
 					CKA_WRAP, PK11_ENCRYPT, PR_TRUE);
 	    if (crv != CKR_OK) {
