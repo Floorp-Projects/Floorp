@@ -464,7 +464,7 @@
       <toolbarbutton class="toolbarbutton-1" id="button-editcard" label="&editButton.label;" tooltiptext="&editButton.tooltip;" oncommand="goDoCommand('button_edit');"/>
       <toolbarbutton class="toolbarbutton-1" id="button-newmessage" label="&newmsgButton.label;" tooltiptext="&newmsgButton.tooltip;" oncommand="AbNewMessage();"/>
       <toolbarbutton class="toolbarbutton-1" id="button-newim" label="&newIM.label;" tooltiptext="&newIM.tooltip;" oncommand="AbIMSelected();"/>
-      <toolbarbutton class="toolbarbutton-1" id="button-delete" observes="button_delete" label="&deleteButton.label;" tooltiptext="&deleteButton.tooltip;" oncommand="goDoCommand('button_delete');"/>
+      <toolbarbutton class="toolbarbutton-1" id="button-abdelete" observes="button_delete" label="&deleteButton.label;" tooltiptext="&deleteButton.tooltip;" oncommand="goDoCommand('button_delete');"/>
 
       <toolbaritem id="throbber-box" align="center" pack="center">
         <button id="navigator-throbber" oncommand="loadThrobberUrl('addressbook.throbber.url')" tooltiptext="&throbber.tooltip;">
@@ -478,7 +478,7 @@
            fullscreentoolbar="true" mode="full"
            customizable="true"
            context="toolbar-context-menu"
-           defaultset="button-newcard,button-newlist,space,button-editcard,button-newmessage,button-newim,button-delete,spring,throbber-box">
+           defaultset="button-newcard,button-newlist,space,button-editcard,button-newmessage,button-newim,button-abdelete,spring,throbber-box">
    </toolbar>
    <toolbarset id="customToolbars" context="toolbar-context-menu"/>
   </toolbox>

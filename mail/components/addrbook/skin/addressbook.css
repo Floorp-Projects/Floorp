@@ -132,16 +132,16 @@ toolbar[mode="text"] .toolbarbutton-text {
  -moz-image-region: rect(60px 150px 90px 120px) !important;
 } 
 
-#button-delete {
+#button-abdelete {
   list-style-image: url("chrome://messenger/skin/addressbook/icons/addressbook-toolbar.png");
   -moz-image-region: rect(0px 180px 30px 150px);
 }
 
-#button-delete:hover {
+#button-abdelete:hover {
   -moz-image-region: rect(30px 180px 60px 150px);
 } 
 
-#button-delete[disabled] {
+#button-abdelete[disabled] {
   -moz-image-region: rect(60px 180px 90px 150px) !important;
 }
 
@@ -216,16 +216,16 @@ toolbar[iconsize="small"] #button-newim[disabled] {
   -moz-image-region: rect(40px 100px 60px 80px) !important;
 } 
 
-toolbar[iconsize="small"] #button-delete {
+toolbar[iconsize="small"] #button-abdelete {
    list-style-image: url("chrome://messenger/skin/addressbook/icons/addressbook-toolbar-small.png");
   -moz-image-region: rect(0px 120px 20px 100px);
 }
 
-toolbar[iconsize="small"] #button-delete:hover {
+toolbar[iconsize="small"] #button-abdelete:hover {
   -moz-image-region: rect(20px 120px 40px 100px);
 } 
 
-toolbar[iconsize="small"] #button-delete[disabled] {
+toolbar[iconsize="small"] #button-abdelete[disabled] {
   -moz-image-region: rect(40px 120px 60px 100px) !important;
 } 
 
