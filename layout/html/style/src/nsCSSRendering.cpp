@@ -2547,8 +2547,29 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
   PRBool isCanvas;
   const nsStyleBackground *color;
 
-  if (!FindBackground(aPresContext, aForFrame, &color, &isCanvas))
-    return;
+  if (!FindBackground(aPresContext, aForFrame, &color, &isCanvas)) {
+    // we don't want to bail out of moz-appearance is set on a root
+    // node. If it has a parent content node, bail because it's not
+    // a root, other wise keep going in order to let the theme stuff
+    // draw the background. The canvas really should be drawing the
+    // bg, but there's no way to hook that up via css.
+    const nsStyleDisplay* displayData = nsnull;
+    aForFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct*&)displayData));
+    if (displayData->mAppearance) {
+      nsCOMPtr<nsIContent> content;
+      aForFrame->GetContent(getter_AddRefs(content));
+      if ( content ) {
+        nsCOMPtr<nsIContent> parent;
+        content->GetParent(*getter_AddRefs(parent));
+        if ( parent )
+          return;
+      }
+      else
+        return;
+    }
+    else
+      return;
+  }
   if (!isCanvas) {
     PaintBackgroundWithSC(aPresContext, aRenderingContext, aForFrame,
                           aDirtyRect, aBorderArea, *color, aBorder, aDX, aDY, aUsePrintSettings);
