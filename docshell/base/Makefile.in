@@ -54,7 +54,7 @@ REQUIRES	= xpcom \
 		  webshell \
 		  chardet \
 		  uconv \
-		  appcomps \
+		  history \
 		  xuldoc \
 		  find \
 		  nkcache \

@@ -709,19 +709,20 @@ nsWebShell::GetLinkState(const nsACString& aLinkURI, nsLinkState& aState)
   nsresult rv;
     
   // get the cached IO service
-  if (!mIOService)
-    mIOService = do_GetService(NS_IOSERVICE_CONTRACTID);
+  if (!mIOService) {
+    mIOService = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
+        
+    if (NS_SUCCEEDED(rv)) {
 
-  if (mIOService) {
+      // clean up the url using the right parser
+      nsCOMPtr<nsIURI> uri;
+      rv = NS_NewURI(getter_AddRefs(uri), aLinkURI, nsnull, nsnull,
+                     mIOService);
 
-    // clean up the url using the right parser
-    nsCOMPtr<nsIURI> uri;
-    rv = NS_NewURI(getter_AddRefs(uri), aLinkURI, nsnull, nsnull,
-                   mIOService);
-
-    // now get the fully canonicalized path
-    if (NS_SUCCEEDED(rv))
-      rv = uri->GetSpec(resolvedPath);
+      // now get the fully canonicalized path
+      if (NS_SUCCEEDED(rv))
+        rv = uri->GetSpec(resolvedPath);
+    }
   }
   
   PRBool isVisited;
