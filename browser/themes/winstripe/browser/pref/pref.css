@@ -38,15 +38,18 @@
 */
 
 .buttonBox {
-  margin: 0px 5px 0px 0px !important;
+  margin-top: 0px !important;
+  margin-bottom: 0px !important;
+  -moz-margin-start: 0px !important;
+  -moz-margin-end: 5px !important;
 }
 
 .buttonBoxButton {
   -moz-appearance: none;
   border: 1px solid transparent;
   background-color: transparent;
-  margin-left: 1px;
-  margin-right: 1px;
+  -moz-margin-start: 1px;
+  -moz-margin-end: 1px;
 	list-style-image: url("chrome://browser/skin/pref/Options.png");
 	color: WindowText;
 }
@@ -127,7 +130,7 @@ expander {
 }
 
 .themesLink {                                                                   
-  margin-left: 5px;                                                             
+  -moz-margin-start: 5px;                                                             
   text-decoration: underline;                                                   
   color: blue;                                                                  
   cursor: pointer;                                                              

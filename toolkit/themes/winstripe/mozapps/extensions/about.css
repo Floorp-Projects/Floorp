@@ -38,7 +38,7 @@
 }
 
 #extensionDescription, #extensionContributors, #creatorBox, #contributorsBox {
-  margin-left: 6px;
+  -moz-margin-start: 6px;
 }
 
 #extensionCreator, .contributor {

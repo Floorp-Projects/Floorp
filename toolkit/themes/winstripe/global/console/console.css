@@ -67,7 +67,10 @@
 /* ..... error rows ..... */
 
 .console-row-code {
-  padding: 3px 0px 3px 3px;
+  padding-top: 3px;
+  padding-bottom: 3px;
+  -moz-padding-start: 3px;
+  -moz-padding-end: 0px;
   color: #0000BB;
   font-size: larger;
 }
@@ -125,7 +128,10 @@
 }
 
 #ButtonEval {
-  margin: 2px 2px 2px 0px !important;
+  margin-top: 2px !important;
+  margin-bottom: 2px !important;
+  -moz-margin-start: 0px !important;
+  -moz-margin-end: 2px !important;
 }
 
 toolbarseparator {

@@ -13,7 +13,7 @@
 }
 
 .searchbar-dropmarker-image {
-  margin-left: 12px;
+  -moz-margin-start: 12px;
   margin-top: 8px;
   list-style-image: url("chrome://browser/skin/search-arrow.gif");
 }

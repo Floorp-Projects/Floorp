@@ -63,6 +63,10 @@
   cursor: default;
 }
 
+toolbarbutton {
+  -moz-box-align: center;
+}
+
 .sbtab-label {
   margin: 0px 0px 0px 0px !important;
 }
@@ -73,5 +77,10 @@
 }
 
 .sbtab-twisty[selected="true"] {
-  list-style-image: url("chrome://help/skin/sbtab-twisty-open.gif");
+  list-style-image: url("chrome://help/skin/sbtab-twisty-open.gif") !important;
 }
+
+toolbarbutton[chromedir="rtl"] .sbtab-twisty {
+  list-style-image: url("chrome://help/skin/sbtab-twisty-rtl.gif");
+}
+
