@@ -14,7 +14,7 @@
 # The Original Code is Mozilla.org Code.
 # 
 # The Initial Developer of the Original Code is
-# Doron Rosenberg.
+# Ben Goodger.
 # Portions created by the Initial Developer are Copyright (C) 2001
 # the Initial Developer. All Rights Reserved.
 # 

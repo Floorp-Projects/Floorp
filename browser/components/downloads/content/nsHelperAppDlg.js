@@ -132,6 +132,21 @@ nsUnknownContentTypeDialog.prototype = {
       try {
         result = prefs.getComplexValue(kDownloadFolderPref, Components.interfaces.nsILocalFile);
         result.append(aDefaultFile);
+        
+        // Since we're automatically downloading, we don't get the file picker's 
+        // logic to check for existing files, so we need to do that here.
+        while (result.exists()) {
+          var parts = /.+-(\d+)(\..*)?$/.exec(result.leafName);
+          if (parts) {
+            result.leafName = result.leafName.replace(/((\d+)\.)/, 
+                                                      function (str, p1, part, s) { 
+                                                        return (parseInt(part) + 1) + "."; 
+                                                      });
+          }
+          else {
+            result.leafName = result.leafName.replace(/\./, "-1$&");
+          }
+        }
       }
       catch (e) { }
       
