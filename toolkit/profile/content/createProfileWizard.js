@@ -74,10 +74,26 @@ function initSecondWizardPage()
   checkCurrentInput(profileName.value);
 }
 
+const kSaltTable = [
+  'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
+  'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+  '1', '2', '3', '4', '5', '6', '7', '8', '9', '0' ];
+
+var kSaltString = "";
+for (var i = 0; i < 8; ++i) {
+  kSaltString += kSaltTable[Math.floor(Math.random() * kSaltTable.length)];
+}
+
+
+function saltName(aName)
+{
+  return kSaltString + "." + aName;
+}
+
 function setDisplayToDefaultFolder()
 {
   var defaultProfileDir = gDefaultProfileParent.clone();
-  defaultProfileDir.append(document.getElementById("profileName").value);
+  defaultProfileDir.append(saltName(document.getElementById("profileName").value));
   gProfileRoot = defaultProfileDir;
   document.getElementById("useDefault").disabled = true;
 }
@@ -137,8 +153,12 @@ function checkCurrentInput(currentInput)
 function updateProfileName(aNewName) {
   checkCurrentInput(aNewName);
 
-  if (gProfileRoot.leafName == gOldProfileName) {
-    gProfileRoot.leafName = aNewName;
+  var re = new RegExp("^[a-z0-9]{8}\\." +
+                      gOldProfileName.replace(/[|^$()\[\]{}\\+?.*]/g, "\\$&")
+                      + '$');
+
+  if (re.test(gProfileRoot.leafName)) {
+    gProfileRoot.leafName = saltName(aNewName);
     updateProfileDisplay();
   }
   gOldProfileName = aNewName;
