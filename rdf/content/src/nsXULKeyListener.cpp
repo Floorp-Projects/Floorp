@@ -474,23 +474,13 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
   if (prevent)
     return NS_OK;
 
-  static PRBool executingKeyBind = PR_FALSE;
   nsresult ret = NS_OK;
 
-  if (executingKeyBind)
-    return NS_OK;
-
-  executingKeyBind = PR_TRUE;
-
-  if (!aKeyEvent) {
-    executingKeyBind = PR_FALSE;
+  if (!aKeyEvent)
     return ret;
-  }
 
-  if (!mDOMDocument) {
-    executingKeyBind = PR_FALSE;
+  if (!mDOMDocument)
     return ret;
-  }
 
   // Get DOMEvent target
   nsCOMPtr<nsIDOMNode> target = nsnull;
@@ -571,7 +561,6 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
     }
   }
 
-  executingKeyBind = PR_FALSE;
   return ret;
 }
 
@@ -1475,7 +1464,7 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
         // document is appearing.
         nsCOMPtr<nsIDocument> document = do_QueryInterface(aDocument);
         nsCOMPtr<nsIContent> content = do_QueryInterface(keyElement);
-        if (aDocument != mDOMDocument) {
+        /*if (aDocument != mDOMDocument) */{
           nsCOMPtr<nsIScriptEventHandlerOwner> handlerOwner = do_QueryInterface(keyElement);
           if (handlerOwner) {
             nsAutoString eventStr;
@@ -1537,25 +1526,40 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
             }
 
             if (handler) {
-              nsCOMPtr<nsIDOMElement> rootElement;
-              mDOMDocument->GetDocumentElement(getter_AddRefs(rootElement));
-              nsCOMPtr<nsIScriptObjectOwner> owner = do_QueryInterface(rootElement);
-              void* scriptObject;
-              owner->GetScriptObject(masterContext, &scriptObject);
+              if(aDocument != mDOMDocument){
+                nsCOMPtr<nsIDOMElement> rootElement;
+                mDOMDocument->GetDocumentElement(getter_AddRefs(rootElement));
+                nsCOMPtr<nsIScriptObjectOwner> owner = do_QueryInterface(rootElement);
+                void* scriptObject;
+                owner->GetScriptObject(masterContext, &scriptObject);
 
-              masterContext->BindCompiledEventHandler(scriptObject, eventName, handler);
+                masterContext->BindCompiledEventHandler(scriptObject, eventName, handler);
 
-              nsCOMPtr<nsIDOMEventListener> eventListener;
-              NS_NewJSEventListener(getter_AddRefs(eventListener), masterContext, owner);
-              eventListener->HandleEvent(aKeyEvent);
+                nsCOMPtr<nsIDOMEventListener> eventListener;
+                NS_NewJSEventListener(getter_AddRefs(eventListener), masterContext, owner);
+                eventListener->HandleEvent(aKeyEvent);
 
-              masterContext->BindCompiledEventHandler(scriptObject, eventName, nsnull);
-
-              return NS_OK;
+                masterContext->BindCompiledEventHandler(scriptObject, eventName, nsnull);
+               
+                aKeyEvent->PreventBubble();
+                aKeyEvent->PreventCapture();
+                aKeyEvent->PreventDefault();
+        
+                return NS_OK;
+              } else {
+                nsCOMPtr<nsIScriptObjectOwner> owner = do_QueryInterface(keyElement);
+                nsCOMPtr<nsIDOMEventListener> eventListener;
+                NS_NewJSEventListener(getter_AddRefs(eventListener), masterContext, owner);
+                eventListener->HandleEvent(aKeyEvent);
+              }
             }
           }
         }
 
+        aKeyEvent->PreventBubble();
+        aKeyEvent->PreventCapture();
+        aKeyEvent->PreventDefault();
+          
         PRInt32 count = document->GetNumberOfShells();
         for (PRInt32 i = 0; i < count; i++) {
           nsCOMPtr<nsIPresContext> aPresContext;
@@ -1567,20 +1571,6 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
             shell->GetPresContext(getter_AddRefs(aPresContext));
           }
 
-          // Handle the DOM event
-          nsEventStatus status = nsEventStatus_eIgnore;
-          nsKeyEvent event;
-          event.eventStructType = NS_KEY_EVENT;
-          switch (aEventType)
-          {
-            case eKeyPress:  event.message = NS_KEY_PRESS; break;
-            case eKeyDown:   event.message = NS_KEY_DOWN; break;
-            default:         event.message = NS_KEY_UP; break;
-          }
-          aKeyEvent->PreventBubble();
-          aKeyEvent->PreventCapture();
-          aKeyEvent->PreventDefault();
-          content->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
           nsresult ret = NS_ERROR_BASE;
 
           if (aEventType == eKeyPress) {
