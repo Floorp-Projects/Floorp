@@ -1161,6 +1161,10 @@ nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange *aRange,
   PRBool canContainChildren;
 
   startContent = do_QueryInterface(startNode);
+  if (!startContent) {
+    NS_NOTREACHED("startContent should never be null");
+    return;
+  }
   origContent = startContent;
 
   if (NS_SUCCEEDED(startContent->CanContainChildren(canContainChildren)) &&
