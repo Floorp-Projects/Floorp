@@ -49,6 +49,7 @@
 #include "nsIPresShell.h"
 #include "nsIFrame.h"
 #include "nsIFormControlFrame.h"
+#include "nsIPrivateDOMEvent.h"
 
 static NS_DEFINE_IID(kIDOMHTMLTextAreaElementIID, NS_IDOMHTMLTEXTAREAELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
@@ -533,8 +534,58 @@ nsHTMLTextAreaElement::HandleDOMEvent(nsIPresContext* aPresContext,
     }
   }
 
-  return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
+  // We have anonymous content underneath
+  // that we need to hide.  We need to set the event target now
+  // to ourselves
+  {
+    // If the event is starting here that's fine.  If it's not
+    // init'ing here it started beneath us and needs modification.
+    if (!(NS_EVENT_FLAG_INIT & aFlags)) {
+      if (!*aDOMEvent) {
+        // We haven't made a DOMEvent yet.  Force making one now.
+        nsCOMPtr<nsIEventListenerManager> listenerManager;
+        if (NS_FAILED(rv = mInner.GetListenerManager(getter_AddRefs(listenerManager)))) {
+          return rv;
+        }
+        nsAutoString empty;
+        if (NS_FAILED(rv = listenerManager->CreateEvent(aPresContext, aEvent, empty, aDOMEvent))) {
+          return rv;
+        }
+      }
+      if (!*aDOMEvent) {
+        return NS_ERROR_FAILURE;
+      }
+      nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(*aDOMEvent);
+      if (!privateEvent) {
+        return NS_ERROR_FAILURE;
+      }
+
+      nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface((nsIDOMHTMLTextAreaElement*)this);
+      privateEvent->SetTarget(target);
+    }
+  }
+  
+  rv = mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);
+
+  // Finish the special anonymous content processing...
+  {
+    // If the event is starting here that's fine.  If it's not
+    // init'ing here it started beneath us and needs modification.
+    if (!(NS_EVENT_FLAG_INIT & aFlags)) {
+      if (!*aDOMEvent) {
+        return NS_ERROR_FAILURE;
+      }
+      nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(*aDOMEvent);
+      if (!privateEvent) {
+        return NS_ERROR_FAILURE;
+      }
+
+      // This will reset the target to its original value
+      privateEvent->SetTarget(nsnull);
+    }
+  }
+  return rv;
 }
 
 // nsIFormControl
