@@ -12,6 +12,9 @@ function getIncomingServer() {
   if (gFzIncomingServer)
     return gFzIncomingServer;
 
+  var accountManager = Components.classes["@mozilla.org/messenger/account-manager;1"]
+                      .getService(Components.interfaces.nsIMsgAccountManager);
+
   gFzIncomingServer = accountManager.FindServer("nobody", SERVER_NAME, "rss");
 
   return gFzIncomingServer;
@@ -25,6 +28,9 @@ var gFzAccount; // cache
 function getAccount() {
   if (gFzAccount)
     return gFzAccount;
+
+  var accountManager = Components.classes["@mozilla.org/messenger/account-manager;1"]
+                       .getService(Components.interfaces.nsIMsgAccountManager);
 
 	try {
 		gFzAccount = accountManager.FindAccountForServer(getIncomingServer());
@@ -42,6 +48,9 @@ function createAccount() {
   // addIdentity() call below to add it to the account.
   //var identity = accountManager.createIdentity();
   //identity.email="<INSERT IDENTITY HERE>";
+
+  var accountManager = Components.classes["@mozilla.org/messenger/account-manager;1"]
+                      .getService(Components.interfaces.nsIMsgAccountManager);
 
   var server = accountManager.createIncomingServer("nobody", SERVER_NAME, "rss");
 

@@ -9,7 +9,10 @@ var rdfparser =
       .createInstance(Components.interfaces.nsIRDFXMLParser);
 
 // For use when serializing content in Atom feeds.
-var serializer = new XMLSerializer;
+var serializer =   
+  Components
+    .classes["@mozilla.org/xmlextras/xmlserializer;1"]
+      .createInstance(Components.interfaces.nsIDOMSerializer);
 
 // Hash of feeds being downloaded, indexed by URL, so the load event listener
 // can access the Feed objects after it finishes downloading the feed files.
@@ -58,7 +61,8 @@ Feed.prototype.download = function(parseItems, aCallback) {
   // just the title of the feed when the user subscribes to it.
   this.parseItems = parseItems == null ? true : parseItems ? true : false;
 
-  this.request = new XMLHttpRequest();
+  this.request = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
+                 .createInstance(Components.interfaces.nsIXMLHttpRequest);
   this.request.onprogress = Feed.onProgress; // must be set before calling .open
   this.request.open("GET", this.url, true);
 
@@ -186,7 +190,7 @@ Feed.prototype.parse = function() {
 }
 
 Feed.prototype.parseAsRSS2 = function() {
-  if (!this.request.responseXML || !(this.request.responseXML instanceof XMLDocument))
+  if (!this.request.responseXML || !(this.request.responseXML instanceof Components.interfaces.nsIDOMXMLDocument))
     throw("error parsing RSS 2.0 feed " + this.url + ": data not parsed into XMLDocument object");
 
   // Get the first channel (assuming there is only one per RSS File).
@@ -298,7 +302,7 @@ Feed.prototype.parseAsRSS1 = function() {
 }
 
 Feed.prototype.parseAsAtom = function() {
-  if (!this.request.responseXML || !(this.request.responseXML instanceof XMLDocument))
+  if (!this.request.responseXML || !(this.request.responseXML instanceof Components.interfaces.nsIDOMXMLDocument))
     throw("error parsing Atom feed " + this.url + ": data not parsed into XMLDocument object");
 
   // Get the first channel (assuming there is only one per Atom File).
