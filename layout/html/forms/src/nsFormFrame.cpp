@@ -760,7 +760,12 @@ NS_IMETHODIMP nsFormFrame::GetEncoder(nsIUnicodeEncoder** encoder)
   if(NS_SUCCEEDED(rv) && (nsnull != ccm)) {
      rv = ccm->GetUnicodeEncoder(&charset, encoder);
      nsServiceManager::ReleaseService( kCharsetConverterManagerCID, ccm);
-     rv = (*encoder)->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nsnull, (PRUnichar)'?');
+     if (nsnull == encoder) {
+       rv = NS_ERROR_FAILURE;
+     }
+     if (NS_SUCCEEDED(rv)) {
+       rv = (*encoder)->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nsnull, (PRUnichar)'?');
+     }
   }
   return NS_OK;
 }
