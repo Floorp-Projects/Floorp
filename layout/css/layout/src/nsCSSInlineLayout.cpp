@@ -45,6 +45,7 @@ nsCSSInlineLayout::nsCSSInlineLayout(nsCSSLineLayout&     aLineLayout,
     aContainerStyle->GetStyleData(eStyleStruct_Display);
   mDirection = mContainerDisplay->mDirection;
   mIsBullet = PR_FALSE;
+  mHaveBullet = PR_FALSE;
   mNextRCFrame = nsnull;
 }
 
@@ -87,6 +88,7 @@ nsCSSInlineLayout::Prepare(PRBool aUnconstrainedWidth,
                            PRBool aComputeMaxElementSize)
 {
   mIsBullet = PR_FALSE;
+  mHaveBullet = PR_FALSE;
   mFrameNum = 0;
   mUnconstrainedWidth = aUnconstrainedWidth;
   mNoWrap = aNoWrap;
@@ -192,7 +194,10 @@ nsCSSInlineLayout::ReflowAndPlaceFrame(nsIFrame* aFrame)
 PRBool
 nsCSSInlineLayout::IsFirstChild()
 {
-  return 0 == mFrameNum;
+  if (mHaveBullet) {
+    return mFrameNum < 2;
+  }
+  return mFrameNum < 1;
 }
 
 PRBool
@@ -290,8 +295,8 @@ nsCSSInlineLayout::PlaceFrame(nsIFrame* aFrame,
 {
   nscoord horizontalMargins = 0;
 
+  // XXX RTL
   // Special case to position outside list bullets.
-  // XXX RTL bullets
   if (mIsBullet) {
     // We are placing the first child of the container and we have
     // list-style-position of "outside" therefore this is the
@@ -299,23 +304,18 @@ nsCSSInlineLayout::PlaceFrame(nsIFrame* aFrame,
     // padding area of this block. Don't worry about getting the Y
     // coordinate of the bullet right (vertical alignment will
     // take care of that).
-
-    // Compute gap between bullet and inner rect left edge
     nsIFontMetrics* fm =
       mLineLayout.mPresContext->GetMetricsFor(mContainerFont->mFont);
-    nscoord kidAscent = fm->GetMaxAscent();
     nscoord dx = fm->GetHeight() / 2;  // from old layout engine
     NS_RELEASE(fm);
-
-    // XXX RTL bullets
     aFrameRect.x = mX - aFrameRect.width - dx;
+    if (aFrameRect.x < 0) aFrameRect.x = 0;
     aFrame->SetRect(aFrameRect);
   }
   else {
     // Place normal in-flow child
     aFrame->SetRect(aFrameRect);
 
-    // XXX RTL
     // Advance
     const nsStyleDisplay* frameDisplay;
     aFrame->GetStyleData(eStyleStruct_Display,
