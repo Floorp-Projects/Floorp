@@ -46,6 +46,11 @@
 <!ENTITY repeat.units.months   "Months" >
 <!ENTITY repeat.units.years    "Years" >
 
+<!ENTITY repeat.units.day     "Day" >
+<!ENTITY repeat.units.week    "Week" >
+<!ENTITY repeat.units.month   "Month" >
+<!ENTITY repeat.units.year    "Year" >
+
 
 <!ENTITY newevent.title.label        "Title" >
 <!ENTITY newevent.location.label     "Location" >
