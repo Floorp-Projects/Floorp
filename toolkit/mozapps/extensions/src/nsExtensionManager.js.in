@@ -623,10 +623,19 @@ nsExtensionManager.prototype = {
           win.close();
         }
         
-        this._checkForGlobalInstalls(cmdLineSvc.getCmdLineValue("-install-global"));
+        var globalFlags = cmdLineSvc.getCmdLineValue("-install-global");
+        if (globalFlags)
+          this._checkForGlobalInstalls(globalFlags);
 
         this._finishOperations();
-        this._loadDefaults();      
+        this._loadDefaults();
+        if (globalFlags) {
+          // If we did a global install, shut down the app now. 
+          // XXXben - change to nsIAppStartup w/bsmedberg change
+          var appStartup = Components.classes['@mozilla.org/appshell/appShellService;1']
+                                     .getService(Components.interfaces.nsIAppShellService);
+          appStartup.quit(Components.interfaces.nsIAppShellService.eForceQuit);          
+        }
       }
       else {
         var win = this._showProgressWindow();
@@ -649,9 +658,6 @@ nsExtensionManager.prototype = {
   
   _checkForGlobalInstalls: function (aPath)
   {
-    if (!aPath)
-      return;
-      
     // First see if the path supplied is a file path
     var file = Components.classes["@mozilla.org/file/local;1"]
                          .createInstance(Components.interfaces.nsILocalFile);
@@ -669,9 +675,8 @@ nsExtensionManager.prototype = {
     
     if (file.exists())
       this.installExtensionFromXPI(file, nsIExtensionManager.FLAG_INSTALL_GLOBAL);
-    else {
-      printf("Invalid XPI Path: " + aPath + "\n");
-    }
+    else
+      dump("Invalid XPI Path: " + aPath + "\n");
   },
   
   _finishOperations: function ()
