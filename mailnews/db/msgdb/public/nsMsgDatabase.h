@@ -154,10 +154,12 @@ public:
 	virtual nsresult		MarkHasAttachments(MessageKey messageKey, PRBool bHasAttachments, 
 								nsIDBChangeListener *instigator = NULL);
 
+#ifdef WE_DO_THREADING_YET
 	virtual nsresult		MarkThreadIgnored(nsThreadMessageHdr *thread, MessageKey threadKey, PRBool bIgnored,
 									nsIDBChangeListener *instigator = NULL);
 	virtual nsresult		MarkThreadWatched(nsThreadMessageHdr *thread, MessageKey threadKey, PRBool bWatched,
 									nsIDBChangeListener *instigator = NULL);
+#endif
 	virtual nsresult		IsRead(MessageKey messageKey, PRBool *pRead);
 	virtual nsresult		IsIgnored(MessageKey messageKey, PRBool *pIgnored);
 	virtual nsresult		IsMarked(MessageKey messageKey, PRBool *pMarked);
@@ -171,16 +173,19 @@ public:
 										nsIDBChangeListener *instigator = NULL,
 										PRBool commit = PR_TRUE);
 	virtual nsresult		DeleteHeader(nsMsgHdr *msgHdr, nsIDBChangeListener *instigator, PRBool commit, PRBool notify = TRUE);
+#ifdef WE_DO_UNDO
 	virtual nsresult		UndoDelete(nsMsgHdr *msgHdr);
+#endif
 	virtual nsresult		MarkLater(MessageKey messageKey, time_t until);
 	virtual nsresult		MarkMarked(MessageKey messageKey, PRBool mark,
 										nsIDBChangeListener *instigator = NULL);
 	virtual nsresult		MarkOffline(MessageKey messageKey, PRBool offline,
 										nsIDBChangeListener *instigator);
+#ifdef WE_DO_IMAP
 	virtual PRBool			AllMessageKeysImapDeleted(const nsMsgKeyArray &keys);
+#endif
 	virtual nsresult		MarkImapDeleted(MessageKey messageKey, PRBool deleted,
 										nsIDBChangeListener *instigator);
-
 	virtual MessageKey		GetFirstNew();
 	virtual PRBool			HasNew();
 	virtual void			ClearNewList(PRBool notify = FALSE);
@@ -264,6 +269,7 @@ protected:
 	mdb_token			m_priorityColumnToken;
 	mdb_token			m_statusOffsetColumnToken;
 	mdb_token			m_numLinesColumnToken;
+	mdb_token			m_ccListColumnToken;
 };
 
 #endif

@@ -48,6 +48,8 @@ public:
 	nsresult	GetStringReference(PRInt32 refNum, nsString &resultReference);
 	time_t		GetDate();
 	nsresult	SetDate(time_t date);
+	void		SetCSID(PRUint16 csid) {m_csID = csid;}
+	PRInt16		GetCSID();
 	nsresult	SetMessageId(const char *messageId);
 	nsresult	SetReferences(const char *references);
 	nsresult	SetCCList(const char *ccList);
@@ -63,7 +65,6 @@ public:
 	void		SetFlags(PRUint32 flags);
 	PRUint32	OrFlags(PRUint32 flags);
 	PRUint32	AndFlags(PRUint32 flags);
-	PRUint32	GetMozillaStatusFlags();
 
 	MessageKey  GetMessageKey();
 	MessageKey	GetThreadId();
@@ -82,6 +83,7 @@ public:
 protected:
 	nsresult	SetStringColumn(const char *str, mdb_token token);
 	nsresult	SetUInt32Column(PRUint32 value, mdb_token token);
+	nsresult	GetUInt32Column(mdb_token token, PRUint32 *pvalue);
 
 	nsrefcnt mRefCnt;                                                         
 
@@ -92,6 +94,7 @@ protected:
 	PRUint32		m_statusOffset;	// offset in a local mail message of the mozilla status hdr
 	PRUint32		m_flags;
 	PRUint16		m_numReferences;	// x-ref header for threading
+	PRInt16			m_csID;			// cs id of message
 	MSG_PRIORITY	m_priority;
 
   // nsMsgHdrs will have to know what db and row they belong to, since they are really

@@ -27,34 +27,6 @@
 static NS_DEFINE_IID(kIMDBIID, NS_IMDB_IID);
 static NS_DEFINE_IID(kIMBBCID, NS_IMBB_IID);
 
-// change announcer methods - just broadcast to all listeners.
-void nsDBChangeAnnouncer::NotifyKeyChangeAll(MessageKey keyChanged, int32 flags, 
-	nsIDBChangeListener *instigator)
-{
-
-	for (int i = 0; i < GetSize(); i++)
-	{
-		nsIDBChangeListener *changeListener = (nsIDBChangeListener *) GetAt(i);
-
-		changeListener->OnKeyChange(keyChanged, flags, instigator); 
-	}
-}
-
-void nsDBChangeAnnouncer::NotifyAnnouncerGoingAway(ChangeAnnouncer *instigator)
-{
-	if (instigator == NULL)
-		instigator = this;	// not sure about this - should listeners even care?
-	// run loop backwards because listeners remove themselves from the list 
-	// on this notification
-	for (int i = GetSize() - 1; i >= 0 ; i--)
-	{
-		nsIDBChangeListener *changeListener = (nsIDBChangeListener *) GetAt(i);
-
-		changeListener->OnAnnouncerGoingAway(instigator); 
-	}
-}
-
-
 
 	nsresult rv = nsRepository::CreateInstance(kMDBCID, nsnull, kIMDBIID, (void **)&gMDBInterface);
 
@@ -65,6 +37,64 @@ void nsDBChangeAnnouncer::NotifyAnnouncerGoingAway(ChangeAnnouncer *instigator)
 	  }
 	}
 #endif
+
+
+nsDBChangeAnnouncer::nsDBChangeAnnouncer()
+{
+}
+
+nsDBChangeAnnouncer::~nsDBChangeAnnouncer()
+{
+	NS_ASSERTION(Count() == 0, "shouldn't have any listeners"); // better not be any listeners, because we're going away.
+}
+
+PRBool nsDBChangeAnnouncer::AddListener(nsIDBChangeListener *listener)
+{
+	AppendElement((void *) listener);
+	return PR_TRUE;
+}
+
+PRBool nsDBChangeAnnouncer::RemoveListener(nsIDBChangeListener *listener)
+{
+	for (int i = 0; i < Count(); i++)
+	{
+		if ((nsIDBChangeListener *) ElementAt(i) == listener)
+		{
+			RemoveElementAt(i);
+			return PR_TRUE;
+		}
+	}
+	return PR_FALSE;
+}
+
+	// change announcer methods - just broadcast to all listeners.
+void nsDBChangeAnnouncer::NotifyKeyChangeAll(MessageKey keyChanged, PRInt32 flags, 
+	nsIDBChangeListener *instigator)
+{
+
+	for (int i = 0; i < Count(); i++)
+	{
+		nsIDBChangeListener *changeListener = (nsIDBChangeListener *) ElementAt(i);
+
+		changeListener->OnKeyChange(keyChanged, flags, instigator); 
+	}
+}
+
+void nsDBChangeAnnouncer::NotifyAnnouncerGoingAway(nsDBChangeAnnouncer *instigator)
+{
+	if (instigator == NULL)
+		instigator = this;	// not sure about this - should listeners even care?
+	// run loop backwards because listeners remove themselves from the list 
+	// on this notification
+	for (int i = Count() - 1; i >= 0 ; i--)
+	{
+		nsIDBChangeListener *changeListener = (nsIDBChangeListener *) ElementAt(i);
+
+		changeListener->OnAnnouncerGoingAway(instigator); 
+	}
+}
+
+
 
 nsMsgDatabaseArray *nsMsgDatabase::m_dbCache = NULL;
 
@@ -96,9 +126,6 @@ nsMsgDatabase::CleanupCache()
 			nsMsgDatabase* pMessageDB = GetDBCache()->GetAt(i);
 			if (pMessageDB)
 			{
-#ifdef DEBUG_bienvenu
-				XP_Trace("closing %s\n", pMessageDB->m_dbName);
-#endif
 				pMessageDB->ForceClosed();
 				i--;	// back up array index, since closing removes db from cache.
 			}
@@ -170,9 +197,6 @@ void nsMsgDatabase::DumpCache()
 		nsMsgDatabase* pMessageDB = 
 #endif
         GetDBCache()->GetAt(i);
-#ifdef DEBUG_bienvenu
-		XP_Trace("db %s in cache use count = %d\n", pMessageDB->m_dbName, pMessageDB->mRefCnt);
-#endif
 	}
 }
 #endif /* DEBUG */
@@ -343,6 +367,11 @@ nsresult	nsMsgDatabase::Commit(msgDBCommitType commitType)
 	return err;
 }
 
+nsresult nsMsgDatabase::Close(PRBool forceCommit /* = TRUE */)
+{
+	return CloseMDB(forceCommit);
+}
+
 const char *kMsgHdrsScope = "ns:msg:db:row:scope:msgs:all";
 const char *kMsgHdrsTableKind = "ns:msg:db:table:kind:msgs";
 const char *kSubjectColumnName = "subject";
@@ -356,6 +385,7 @@ const char *kFlagsColumnName = "flags";
 const char *kPriorityColumnName = "priority";
 const char *kStatusOffsetColumnName = "statusOfset";
 const char *kNumLinesColumnName = "numLines";
+const char *kCCListColumnName = "ccList";
 
 struct mdbOid gAllMsgHdrsTableOID;
 
@@ -421,7 +451,8 @@ nsresult nsMsgDatabase::InitMDBInfo()
 			GetStore()->StringToToken(GetEnv(),  kPriorityColumnName, &m_priorityColumnToken);
 			GetStore()->StringToToken(GetEnv(),  kStatusOffsetColumnName, &m_statusOffsetColumnToken);
 			GetStore()->StringToToken(GetEnv(),  kNumLinesColumnName, &m_numLinesColumnToken);
-
+			GetStore()->StringToToken(GetEnv(),  kCCListColumnName, &m_ccListColumnToken);
+			
 			err = GetStore()->StringToToken(GetEnv(), kMsgHdrsTableKind, &m_hdrTableKindToken); 
 			if (err == NS_OK)
 			{
@@ -467,6 +498,19 @@ nsresult nsMsgDatabase::GetMsgHdrForKey(MessageKey messageKey, nsMsgHdr **pmsgHd
 
 	return err;
 }
+
+nsresult  nsMsgDatabase::DeleteMessage(MessageKey messageKey, nsIDBChangeListener *instigator, PRBool commit)
+{
+	nsresult	err = NS_OK;
+	nsMsgHdr *msgHdr = NULL;
+
+	err = GetMsgHdrForKey(messageKey, &msgHdr);
+	if (msgHdr == NULL)
+		return NS_MSG_MESSAGE_NOT_FOUND;
+
+	return DeleteHeader(msgHdr, instigator, commit);
+}
+
 
 nsresult nsMsgDatabase::DeleteMessages(nsMsgKeyArray &messageKeys, nsIDBChangeListener *instigator)
 {
@@ -574,6 +618,24 @@ nsresult nsMsgDatabase::IsHeaderRead(nsMsgHdr *hdr, PRBool *pRead)
 
 	*pRead = (hdr->GetFlags() & MSG_FLAG_READ) != 0;
 	return NS_OK;
+}
+
+nsresult nsMsgDatabase::IsMarked(MessageKey messageKey, PRBool *pMarked)
+{
+	nsresult	err = NS_OK;
+	nsMsgHdr *msgHdr;
+
+	err = GetMsgHdrForKey(messageKey, &msgHdr);
+	if (err == NS_OK && msgHdr != NULL)
+	{
+		*pMarked = (msgHdr->GetFlags() & MSG_FLAG_MARKED) == MSG_FLAG_MARKED;
+		msgHdr->Release();
+		return err;
+	}
+	else
+	{
+		return NS_MSG_MESSAGE_NOT_FOUND;
+	}
 }
 
 nsresult nsMsgDatabase::IsIgnored(MessageKey messageKey, PRBool *pIgnored)

@@ -32,6 +32,7 @@ void nsMsgHdr::Init()
 {
 	m_statusOffset = -1;
 	m_messageKey = MSG_MESSAGEKEYNONE;
+	m_csID = 0;
 }
 
 nsMsgHdr::~nsMsgHdr()
@@ -76,6 +77,26 @@ MessageKey  nsMsgHdr::GetMessageKey()
 	return m_messageKey;
 }
 
+void		nsMsgHdr::SetFlags(PRUint32 flags)
+{
+	m_flags = flags;
+	SetUInt32Column(m_mdb->m_flagsColumnToken, m_flags);
+}
+
+PRUint32	nsMsgHdr::OrFlags(PRUint32 flags)
+{
+	if ((m_flags & flags) != flags)
+		SetFlags (m_flags | flags);
+	return m_flags;
+}
+
+PRUint32	nsMsgHdr::AndFlags(PRUint32 flags)
+{
+	if ((m_flags & flags) != m_flags)
+		SetFlags (m_flags & flags);
+	return m_flags;
+}
+
 nsresult	nsMsgHdr::GetProperty(const char *propertyName, nsString &resultProperty)
 {
 	nsresult err = NS_OK;
@@ -117,6 +138,7 @@ nsresult nsMsgHdr::GetUint32Property(const char *propertyName, PRUint32 *pResult
 	return err;
 }
 
+
 uint16		nsMsgHdr::GetNumReferences()
 {
 	return 0;
@@ -138,6 +160,33 @@ nsresult	nsMsgHdr::SetMessageId(const char *messageId)
 	return SetStringColumn(messageId, m_mdb->m_messageIdColumnToken);
 }
 
+nsresult	nsMsgHdr::SetSubject(const char *subject)
+{
+	return SetStringColumn(subject, m_mdb->m_subjectColumnToken);
+}
+
+nsresult	nsMsgHdr::SetAuthor(const char *author)
+{
+	return SetStringColumn(author, m_mdb->m_senderColumnToken);
+}
+
+nsresult	nsMsgHdr::SetReferences(const char *references)
+{
+	return SetStringColumn(references, m_mdb->m_referencesColumnToken);
+}
+
+nsresult	nsMsgHdr::SetRecipients(const char *recipients, PRBool rfc822 /* = PR_TRUE */)
+{
+	// need to put in rfc822 address parsing code here (or make caller do it...)
+	return SetStringColumn(recipients, m_mdb->m_recipientsColumnToken);
+}
+
+nsresult	nsMsgHdr::SetCCList(const char *ccList)
+{
+	return SetStringColumn(ccList, m_mdb->m_ccListColumnToken);
+}
+
+
 void nsMsgHdr::SetMessageSize(PRUint32 messageSize)
 {
 	SetUInt32Column(m_mdb->m_messageSizeColumnToken, messageSize);
@@ -146,6 +195,24 @@ void nsMsgHdr::SetMessageSize(PRUint32 messageSize)
 void nsMsgHdr::SetLineCount(PRUint32 lineCount)
 {
 	SetUInt32Column(m_mdb->m_numLinesColumnToken, lineCount);
+}
+
+nsresult nsMsgHdr::SetStatusOffset(PRUint32 statusOffset)
+{
+	return SetUInt32Column(m_mdb->m_statusOffsetColumnToken, statusOffset);
+}
+
+nsresult nsMsgHdr::SetDate(time_t date)
+{
+	return SetUInt32Column(m_mdb->m_dateColumnToken, (PRUint32) date);
+}
+
+PRUint32 nsMsgHdr::GetStatusOffset()
+{
+	PRUint32 offset;
+	nsresult res = GetUInt32Column(m_mdb->m_statusOffsetColumnToken, &offset);
+
+	return offset;
 }
 
 void nsMsgHdr::SetPriority(const char *priority)
@@ -169,4 +236,9 @@ nsresult nsMsgHdr::SetUInt32Column(PRUint32 value, mdb_token token)
 {
 	struct mdbYarn yarn;
 	return m_mdbRow->AddColumn(m_mdb->GetEnv(),  token, nsMsgDatabase::UInt32ToYarn(&yarn, value));
+}
+
+nsresult nsMsgHdr::GetUInt32Column(mdb_token token, PRUint32 *pvalue)
+{
+	return m_mdb->RowCellColumnToUInt32(GetMDBRow(), token, pvalue);
 }

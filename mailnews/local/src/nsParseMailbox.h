@@ -192,12 +192,10 @@ public:
 
 	// message socket libnet callbacks, which come through folder pane
 	virtual int ProcessMailboxInputStream(nsIURL* aURL, nsIInputStream *aIStream, PRUint32 aLength);
-	virtual void CloseFolderSock(const char* folder_name, const char* message_id,
-							   PRInt32 msgnum, void* folder_ptr);
 
 	virtual void	DoneParsingFolder();
 	virtual void	AbortNewHeader();
-	virtual PRInt32 EmbeddedLineHandler(char *line, PRUint32 line_length);
+	virtual PRInt32 HandleLine(char *line, PRUint32 line_length);
 
 	void			UpdateDBFolderInfo();
 	void			UpdateDBFolderInfo(nsMailDatabase *mailDB, const char *mailboxName);

@@ -174,15 +174,10 @@ void nsParseMailboxProtocol::UpdateDBFolderInfo()
 // update folder info in db so we know not to reparse.
 void nsParseMailboxProtocol::UpdateDBFolderInfo(nsMailDatabase *mailDB, const char *mailboxName)
 {
-	XP_StatStruct folderst;
 	nsDBFolderInfo *folderInfo = mailDB->GetDBFolderInfo();
 
 	// ### wrong - use method on db.
-	if (!XP_Stat (mailboxName, &folderst, xpMailFolder))
-	{
-		folderInfo->m_folderDate = folderst.st_mtime;
-		folderInfo->m_folderSize = folderst.st_size;
-	}
+	mailDB->SetSummaryValid(PR_TRUE);
 	mailDB->Commit(kLargeCommit);
 //	m_mailDB->Close();
 }
@@ -237,7 +232,7 @@ void nsParseMailboxProtocol::AbortNewHeader()
 	}
 }
 
-PRInt32 nsParseMailboxProtocol::EmbeddedLineHandler(char *line, PRUint32 lineLength)
+PRInt32 nsParseMailboxProtocol::HandleLine(char *line, PRUint32 lineLength)
 {
 	int status = 0;
 
@@ -590,67 +585,67 @@ int nsParseMailMessageState::ParseHeaders ()
 	  switch (buf [0])
 		{
 		case 'C': case 'c':
-		  if (!strncasecomp ("CC", buf, end - buf))
+		  if (!nsCRT::strncasecmp ("CC", buf, end - buf))
 			header = GetNextHeaderInAggregate(m_ccList);
 		  break;
 		case 'D': case 'd':
-		  if (!strncasecomp ("Date", buf, end - buf))
+		  if (!nsCRT::strncasecmp ("Date", buf, end - buf))
 			header = &m_date;
-		  else if (!strncasecomp("Disposition-Notification-To", buf, end - buf))
+		  else if (!nsCRT::strncasecmp("Disposition-Notification-To", buf, end - buf))
 			header = &m_mdn_dnt;
 		  break;
 		case 'F': case 'f':
-		  if (!strncasecomp ("From", buf, end - buf))
+		  if (!nsCRT::strncasecmp ("From", buf, end - buf))
 			header = &m_from;
 		  break;
 		case 'M': case 'm':
-		  if (!strncasecomp ("Message-ID", buf, end - buf))
+		  if (!nsCRT::strncasecmp ("Message-ID", buf, end - buf))
 			header = &m_message_id;
 		  break;
 		case 'N': case 'n':
-		  if (!strncasecomp ("Newsgroups", buf, end - buf))
+		  if (!nsCRT::strncasecmp ("Newsgroups", buf, end - buf))
 			header = &m_newsgroups;
 		  break;
 		case 'O': case 'o':
-			if (!strncasecomp ("Original-Recipient", buf, end - buf))
+			if (!nsCRT::strncasecmp ("Original-Recipient", buf, end - buf))
 				header = &m_mdn_original_recipient;
 			break;
 		case 'R': case 'r':
-		  if (!strncasecomp ("References", buf, end - buf))
+		  if (!nsCRT::strncasecmp ("References", buf, end - buf))
 			header = &m_references;
-		  else if (!strncasecomp ("Return-Path", buf, end - buf))
+		  else if (!nsCRT::strncasecmp ("Return-Path", buf, end - buf))
 			  header = &m_return_path;
 		   // treat conventional Return-Receipt-To as MDN
 		   // Disposition-Notification-To
-		  else if (!strncasecomp ("Return-Receipt-To", buf, end - buf))
+		  else if (!nsCRT::strncasecmp ("Return-Receipt-To", buf, end - buf))
 			  header = &m_mdn_dnt;
 		  break;
 		case 'S': case 's':
-		  if (!strncasecomp ("Subject", buf, end - buf))
+		  if (!nsCRT::strncasecmp ("Subject", buf, end - buf))
 			header = &m_subject;
-		  else if (!strncasecomp ("Sender", buf, end - buf))
+		  else if (!nsCRT::strncasecmp ("Sender", buf, end - buf))
 			header = &m_sender;
-		  else if (!strncasecomp ("Status", buf, end - buf))
+		  else if (!nsCRT::strncasecmp ("Status", buf, end - buf))
 			header = &m_status;
 		  break;
 		case 'T': case 't':
-		  if (!strncasecomp ("To", buf, end - buf))
+		  if (!nsCRT::strncasecmp ("To", buf, end - buf))
 			header = GetNextHeaderInAggregate(m_toList);
 		  break;
 		case 'X':
 		  if (X_MOZILLA_STATUS2_LEN == end - buf &&
-			  !strncasecomp(X_MOZILLA_STATUS2, buf, end - buf) &&
+			  !nsCRT::strncasecmp(X_MOZILLA_STATUS2, buf, end - buf) &&
 			  !m_IgnoreXMozillaStatus)
 			  header = &m_mozstatus2;
 		  else if ( X_MOZILLA_STATUS_LEN == end - buf &&
-			  !strncasecomp(X_MOZILLA_STATUS, buf, end - buf) && !m_IgnoreXMozillaStatus)
+			  !nsCRT::strncasecmp(X_MOZILLA_STATUS, buf, end - buf) && !m_IgnoreXMozillaStatus)
 			header = &m_mozstatus;
 		  // we could very well care what the priority header was when we 
 		  // remember its value. If so, need to remember it here. Also, 
 		  // different priority headers can appear in the same message, 
 		  // but we only rememeber the last one that we see.
-		  else if (!strncasecomp("X-Priority", buf, end - buf)
-			  || !strncasecomp("Priority", buf, end - buf))
+		  else if (!nsCRT::strncasecmp("X-Priority", buf, end - buf)
+			  || !nsCRT::strncasecmp("Priority", buf, end - buf))
 			  header = &m_priority;
 		  break;
 		}
@@ -2066,7 +2061,7 @@ PRInt32	ParseOutgoingMessage::ParseFolderLine(const char *line, PRUint32 lineLen
 
 			if (m_newMsgHdr)
 				m_newMsgHdr->SetStatusOffset(m_bytes_written);
-			PR_snprintf(buf, sizeof(buf), X_MOZILLA_STATUS_FORMAT LINEBREAK, (m_newMsgHdr) ? m_newMsgHdr->GetMozillaStatusFlags() & ~MSG_FLAG_RUNTIME_ONLY : 0);
+			PR_snprintf(buf, sizeof(buf), X_MOZILLA_STATUS_FORMAT LINEBREAK, (m_newMsgHdr) ? m_newMsgHdr->GetFlags() & ~MSG_FLAG_RUNTIME_ONLY : 0);
 			len = strlen(buf);
 			res = XP_FileWrite(buf, len, m_out_file);
 			if (res < len)
