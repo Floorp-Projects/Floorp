@@ -64,8 +64,19 @@ static PRLogModuleInfo* gSinkLogModuleInfo;
       PR_LogPrint _args;                          \
     }                                             \
   PR_END_MACRO
+
+#define SINK_TRACE_NODE(_bit,_msg,_node)               \
+  PR_BEGIN_MACRO                                       \
+    if (SINK_LOG_TEST(gSinkLogModuleInfo,_bit)) {      \
+      char cbuf[40];                                   \
+      (_node).GetText().ToCString(cbuf, sizeof(cbuf)); \
+      PR_LogPrint("%s: node='%s'", _msg, cbuf);        \
+    }                                                  \
+  PR_END_MACRO
+
 #else
 #define SINK_TRACE(_bit,_args)
+#define SINK_TRACE_NODE(_bit,_msg,_node)
 #endif
 
 //----------------------------------------------------------------------
@@ -118,7 +129,6 @@ public:
   // FORMS, FRAME, SCRIPT, etc. here too!
   virtual PRBool OpenContainer(const nsIParserNode& aNode);
   virtual PRBool CloseContainer(const nsIParserNode& aNode);
-  virtual PRBool CloseTopmostContainer();
 
   // Called for text, comments and so on...
   virtual PRBool AddLeaf(const nsIParserNode& aNode);
@@ -312,8 +322,8 @@ HTMLContentSink::OpenHTML(const nsIParserNode& aNode)
 {
   FlushText();
 
-  SINK_TRACE(SINK_TRACE_CALLS,
-             ("HTMLContentSink::OpenHTML"));
+  SINK_TRACE_NODE(SINK_TRACE_CALLS,
+                  "HTMLContentSink::OpenHTML", aNode);
   NS_PRECONDITION(0 == mStackPos, "bad stack pos");
 
   mNodeStack[0] = (eHTMLTags)aNode.GetNodeType();
@@ -328,8 +338,8 @@ HTMLContentSink::CloseHTML(const nsIParserNode& aNode)
 {
   FlushText();
 
-  SINK_TRACE(SINK_TRACE_CALLS,
-             ("HTMLContentSink::CloseHTML"));
+  SINK_TRACE_NODE(SINK_TRACE_CALLS,
+                  "HTMLContentSink::CloseHTML", aNode);
 
   NS_ASSERTION(mStackPos > 0, "bad bad");
   mNodeStack[--mStackPos] = eHTMLTag_unknown;
@@ -344,8 +354,8 @@ HTMLContentSink::OpenHead(const nsIParserNode& aNode)
 {
   FlushText();
 
-  SINK_TRACE(SINK_TRACE_CALLS,
-             ("HTMLContentSink::OpenHead"));
+  SINK_TRACE_NODE(SINK_TRACE_CALLS,
+                  "HTMLContentSink::OpenHead", aNode);
 
   mNodeStack[mStackPos] = (eHTMLTags)aNode.GetNodeType();
   mContainerStack[mStackPos] = mHead;
@@ -358,8 +368,8 @@ HTMLContentSink::CloseHead(const nsIParserNode& aNode)
 {
   FlushText();
 
-  SINK_TRACE(SINK_TRACE_CALLS,
-             ("HTMLContentSink::CloseHead"));
+  SINK_TRACE_NODE(SINK_TRACE_CALLS,
+                  "HTMLContentSink::CloseHead", aNode);
 
   NS_ASSERTION(mStackPos > 0, "bad bad");
   mNodeStack[--mStackPos] = eHTMLTag_unknown;
@@ -395,8 +405,8 @@ HTMLContentSink::OpenBody(const nsIParserNode& aNode)
 {
   FlushText();
 
-  SINK_TRACE(SINK_TRACE_CALLS,
-             ("HTMLContentSink::OpenBody"));
+  SINK_TRACE_NODE(SINK_TRACE_CALLS,
+                  "HTMLContentSink::OpenBody", aNode);
 
   mNodeStack[mStackPos] = (eHTMLTags)aNode.GetNodeType();
   mContainerStack[mStackPos] = mBody;
@@ -431,8 +441,8 @@ HTMLContentSink::CloseBody(const nsIParserNode& aNode)
 {
   FlushText();
 
-  SINK_TRACE(SINK_TRACE_CALLS,
-             ("HTMLContentSink::CloseBody"));
+  SINK_TRACE_NODE(SINK_TRACE_CALLS,
+                  "HTMLContentSink::CloseBody", aNode);
 
   NS_ASSERTION(mStackPos > 0, "bad bad");
   mNodeStack[--mStackPos] = eHTMLTag_unknown;
@@ -449,8 +459,8 @@ HTMLContentSink::OpenForm(const nsIParserNode& aNode)
 {
   FlushText();
 
-  SINK_TRACE(SINK_TRACE_CALLS,
-             ("HTMLContentSink::OpenForm"));
+  SINK_TRACE_NODE(SINK_TRACE_CALLS,
+                  "HTMLContentSink::OpenForm", aNode);
 
   // Close out previous form if it's there
   if (nsnull != mCurrentForm) {
@@ -526,8 +536,8 @@ HTMLContentSink::CloseForm(const nsIParserNode& aNode)
 {
   FlushText();
 
-  SINK_TRACE(SINK_TRACE_CALLS,
-             ("HTMLContentSink::CloseForm"));
+  SINK_TRACE_NODE(SINK_TRACE_CALLS,
+                  "HTMLContentSink::CloseForm", aNode);
 
   if (nsnull != mCurrentForm) {
 	  NS_RELEASE(mCurrentForm);
@@ -541,8 +551,8 @@ HTMLContentSink::OpenFrameset(const nsIParserNode& aNode)
 {
   FlushText();
 
-  SINK_TRACE(SINK_TRACE_CALLS,
-             ("HTMLContentSink::OpenFrameset"));
+  SINK_TRACE_NODE(SINK_TRACE_CALLS,
+                  "HTMLContentSink::OpenFrameset", aNode);
 
   mNodeStack[mStackPos++] = (eHTMLTags)aNode.GetNodeType();
   return 0;
@@ -553,8 +563,8 @@ HTMLContentSink::CloseFrameset(const nsIParserNode& aNode)
 {
   FlushText();
 
-  SINK_TRACE(SINK_TRACE_CALLS,
-             ("HTMLContentSink::CloseFrameset"));
+  SINK_TRACE_NODE(SINK_TRACE_CALLS,
+                  "HTMLContentSink::CloseFrameset", aNode);
 
   mNodeStack[--mStackPos] = eHTMLTag_unknown;
   return 0;
@@ -565,8 +575,8 @@ HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
 {
   FlushText();
 
-  SINK_TRACE(SINK_TRACE_CALLS,
-             ("HTMLContentSink::OpenContainer"));
+  SINK_TRACE_NODE(SINK_TRACE_CALLS,
+                  "HTMLContentSink::OpenContainer", aNode);
 
   nsAutoString tmp(aNode.GetText());
   tmp.ToUpperCase();
@@ -598,7 +608,7 @@ HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
         // Add the map to the document
         ((nsHTMLDocument*)mDocument)->AddImageMap(mCurrentMap);
       }
-      return PR_TRUE;
+      return 0;
 
     case eHTMLTag_table:
       rv = NS_NewTablePart(&container, atom);
@@ -669,8 +679,8 @@ HTMLContentSink::CloseContainer(const nsIParserNode& aNode)
 {
   FlushText();
 
-  SINK_TRACE(SINK_TRACE_CALLS,
-             ("HTMLContentSink::CloseContainer"));
+  SINK_TRACE_NODE(SINK_TRACE_CALLS,
+                  "HTMLContentSink::CloseContainer", aNode);
 
   switch (aNode.GetNodeType()) {
   case eHTMLTag_map:
@@ -765,11 +775,6 @@ HTMLContentSink::CloseContainer(const nsIParserNode& aNode)
   }
 
   return 0;
-}
-
-PRBool HTMLContentSink::CloseTopmostContainer()
-{
-  return PR_TRUE;
 }
 
 /**
@@ -927,8 +932,8 @@ nsIHTMLContent* HTMLContentSink::GetCurrentContainer(eHTMLTags* aType)
 
 PRInt32 HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
 {
-  SINK_TRACE(SINK_TRACE_CALLS,
-             ("HTMLContentSink::AddLeaf"));
+  SINK_TRACE_NODE(SINK_TRACE_CALLS,
+                  "HTMLContentSink::AddLeaf", aNode);
 
   // Check for nodes that require special handling
   switch (aNode.GetNodeType()) {
