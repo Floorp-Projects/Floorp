@@ -39,6 +39,13 @@ ifndef MKSHLIB_FORCE_ALL
 CPPSRCS_gtk += GTKdlldeps.cpp
 endif
 
+CPPSRCS_photon	:= \
+	nsPhWidgetFactory.cpp
+
+ifndef MKSHLIB_FORCE_ALL
+CPPSRCS_photon += Phdlldeps.cpp
+endif
+
 # nsMotifWidgetFactory actually has no Motif/Xt/Xlib code in it -- surprise!
 
 CPPSRCS_motif	:= \
