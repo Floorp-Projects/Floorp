@@ -25,6 +25,9 @@ include <$(DEPTH)\config\config.mak>
 
 EXPORTS=	nsEmitterUtils.h	\
     		nsMimeRebuffer.h	\
+			nsMimeHtmlEmitter.h	\
+			nsMimeRawEmitter.h	\
+			nsMimeXmlEmitter.h	\
 			$(NULL)
 
 ################################################################################
@@ -32,13 +35,12 @@ EXPORTS=	nsEmitterUtils.h	\
 
 LIBRARY_NAME=emitterutils_s
 
-LCFLAGS =		   \
-        $(LCFLAGS) \
-        $(DEFINES) \
-        $(NULL)
 
-CPP_OBJS=   .\$(OBJDIR)\nsEmitterUtils.obj	\
-			.\$(OBJDIR)\nsMimeRebuffer.obj	\
+CPP_OBJS=   .\$(OBJDIR)\nsEmitterUtils.obj		\
+			.\$(OBJDIR)\nsMimeRebuffer.obj		\
+			.\$(OBJDIR)\nsMimeHtmlEmitter.obj	\
+			.\$(OBJDIR)\nsMimeRawEmitter.obj	\
+			.\$(OBJDIR)\nsMimeXmlEmitter.obj	\
 			$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
