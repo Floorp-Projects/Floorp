@@ -80,11 +80,8 @@ class C
 }
 
 
-// Here is a CLASS-level "objX" to resolve...
 class CC extends C
 {
-  var objX:Object;
-
   constructor function CC()
   {
     objX = this;
