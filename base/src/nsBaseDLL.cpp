@@ -127,7 +127,7 @@ nsBaseFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, void **aRe
   if (mClassID.Equals(kObserverCID)) {
     return NS_NewObserver((nsIObserver**)aResult);
   }
-
+#ifdef XP_PC  // XXX for now until i fix the build
   if (mClassID.Equals(kPageManagerCID)) {
     nsPageMgr* pageMgr = new nsPageMgr();
     if (pageMgr == nsnull)
@@ -156,7 +156,7 @@ nsBaseFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, void **aRe
     }
     return NS_OK;
   }
-
+#endif
   return NS_NOINTERFACE;
 }  
 
