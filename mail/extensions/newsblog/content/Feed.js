@@ -449,9 +449,15 @@ var gItemsToStoreIndex = 0;
 // otherwise it triggers a download done notification to the UI
 function storeNextItem()
 {
-  var item = gItemsToStore[gItemsToStoreIndex++]; 
+  var item = gItemsToStore[gItemsToStoreIndex]; 
   item.store();
   item.markValid();
+
+  // if the listener is tracking progress for storing each item, report it here...
+  if (item.feed.downloadCallback.onFeedItemStored)
+    item.feed.downloadCallback.onFeedItemStored(item.feed, gItemsToStoreIndex, gItemsToStore.length);
+ 
+  gItemsToStoreIndex++
 
   // eventually we'll report individual progress here....
 

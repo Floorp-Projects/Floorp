@@ -53,7 +53,6 @@ function openFeedEditor(feedProperties)
     return feedProperties;
 } 
 
-
 // status helper routines
 
 function updateStatusItem(aID, aValue)
@@ -78,8 +77,6 @@ var feedDownloadCallback = {
     if (feed)
     {
       updateStatusItem('progressMeter', 100);
-      updateStatusItem('statusText', document.getElementById("bundle_newsblog").getString('subscribe-validFeedFound'));
-      updateStatusItem('statusText', 'Valid Feed Found!');
 
       var server = getIncomingServer();
       // if we get here...we should always have a folder by now...either
@@ -99,6 +96,16 @@ var feedDownloadCallback = {
 
     // our operation is done...clear out the status text and progressmeter
     setTimeout(clearStatusInfo, 1000);
+  },
+
+  // this gets called after the RSS parser finishes storing a feed item to disk
+  // aCurrentFeedItems is an integer corresponding to how many feed items have been downloaded so far
+  // aMaxFeedItems is an integer corresponding to the total number of feed items to download
+  onFeedItemStored: function (feed, aCurrentFeedItems, aMaxFeedItems)
+  { 
+    updateStatusItem('statusText', 
+      document.getElementById("bundle_newsblog").getFormattedString("subscribe-fetchingFeedItems", [aCurrentFeedItems, aMaxFeedItems]) );
+    this.onProgress(aCurrentFeedItems, aMaxFeedItems);
   },
 
   onProgress: function(aProgress, aProgressMax)
