@@ -45,7 +45,7 @@
 /* :::::::::: menulist :::::::::: */
 
 menulist {
-  margin: 3px;
+  margin: 1px 4px;
   border: 2px solid transparent;
   min-height: 19px;
   color: #000000;
