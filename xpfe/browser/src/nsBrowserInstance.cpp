@@ -111,9 +111,6 @@
 
 #include "nsIDocShellHistory.h"
 
-// Interface for "unknown content type handler" component/service.
-#include "nsIUnkContentTypeHandler.h"
-
 // Stuff to implement file download dialog.
 #include "nsIDocumentObserver.h"
 #include "nsIContent.h"
