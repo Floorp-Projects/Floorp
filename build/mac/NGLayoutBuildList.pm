@@ -1137,6 +1137,7 @@ sub MakeResourceAliases()
 
         _InstallResources(":mozilla:mailnews:compose:resources:content:MANIFEST",        "$messengercomposer_chrome_dir:content:default:", 0);
         _InstallResources(":mozilla:mailnews:compose:resources:skin:MANIFEST",           "$messengercomposer_chrome_dir:skin:default:", 0);
+        _InstallResources(":mozilla:mailnews:compose:resources:locale:en-US:MANIFEST",   "$messengercomposer_chrome_dir:locale:en-US:", 0);
         _InstallResources(":mozilla:mailnews:compose:prefs:resources:content:MANIFEST",  "$messengercomposer_chrome_dir:content:default:", 0);
 
         _InstallResources(":mozilla:mailnews:addrbook:resources:content:MANIFEST",       "$addressbook_chrome_dir:content:default:", 0);
