@@ -42,12 +42,8 @@ nsGetImapServer(const char* username, const char* hostname,
 {
     nsresult rv = NS_OK; 
 
-	NS_WITH_SERVICE(nsIMsgMailSession, session, kMsgMailSessionCID, &rv); 
-    if (NS_FAILED(rv)) return rv;
-
-    
-	nsCOMPtr<nsIMsgAccountManager> accountManager;
-	rv = session->GetAccountManager(getter_AddRefs(accountManager));
+    NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
+                    NS_MSGACCOUNTMANAGER_PROGID, &rv);
     if(NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIMsgIncomingServer> server;

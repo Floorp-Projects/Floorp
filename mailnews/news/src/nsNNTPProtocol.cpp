@@ -463,12 +463,10 @@ nsresult nsNNTPProtocol::Initialize(void)
 	if (NS_FAILED(rv)) return rv;
 
     // retrieve the AccountManager
-    NS_WITH_SERVICE(nsIMsgMailSession, session, kCMsgMailSessionCID, &rv);
+    NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
+                    NS_MSGACCOUNTMANAGER_PROGID, &rv);
     if (NS_FAILED(rv)) return rv;
-    nsCOMPtr<nsIMsgAccountManager> accountManager;
-    rv = session->GetAccountManager(getter_AddRefs(accountManager));
-    if (NS_FAILED(rv)) return rv;                  
-    
+
     // find the news host
     nsCOMPtr<nsIMsgIncomingServer> server;
     rv = accountManager->FindServer(m_userName,

@@ -21,22 +21,17 @@
  */
 
 #include "msgCore.h" // for pre-compiled headers
-//#include "nsIMsgIdentity.h"
-#include "nsIMsgAccountManager.h"
-//#include "nsIPop3IncomingServer.h"
 #include "nsMsgMailSession.h"
 #include "nsMsgLocalCID.h"
 #include "nsMsgBaseCID.h"
 #include "nsCOMPtr.h"
-#include "nsMsgFolderCache.h"
 #include "nsIFileLocator.h"
 #include "nsFileLocations.h"
 #include "nsIMsgStatusFeedback.h"
 #include "nsIMsgWindow.h"
 
-NS_IMPL_ISUPPORTS(nsMsgMailSession, nsCOMTypeInfo<nsIMsgMailSession>::GetIID());
+NS_IMPL_ISUPPORTS1(nsMsgMailSession, nsIMsgMailSession);
 
-static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_IID(kIFileLocatorIID,      NS_IFILELOCATOR_IID);
 static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
  
@@ -67,59 +62,6 @@ nsresult nsMsgMailSession::Init()
 
 nsresult nsMsgMailSession::Shutdown()
 {
-  return NS_OK;
-}
-
-// nsIMsgMailSession
-nsresult nsMsgMailSession::GetCurrentIdentity(nsIMsgIdentity ** aIdentity)
-{
-  nsresult rv;
-
-  nsCOMPtr<nsIMsgAccountManager> accountManager;
-  rv = GetAccountManager(getter_AddRefs(accountManager));
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsIMsgAccount> defaultAccount;
-  rv = accountManager->GetDefaultAccount(getter_AddRefs(defaultAccount));
-  if (NS_FAILED(rv)) return rv;
-  
-  rv = defaultAccount->GetDefaultIdentity(aIdentity);
-  if (NS_SUCCEEDED(rv))
-  	NS_ADDREF(*aIdentity);
-  
-  return rv;
-}
-
-nsresult nsMsgMailSession::GetCurrentServer(nsIMsgIncomingServer ** aServer)
-{
-  nsresult rv=NS_ERROR_UNEXPECTED;
-
-  nsCOMPtr<nsIMsgAccountManager> accountManager;
-  rv = GetAccountManager(getter_AddRefs(accountManager));
-  if (NS_FAILED(rv)) return rv;
-  
-  nsCOMPtr<nsIMsgAccount> defaultAccount;
-  rv = accountManager->GetDefaultAccount(getter_AddRefs(defaultAccount));
-  if (NS_FAILED(rv)) return rv;
-
-  //if successful aServer will be addref'd by GetIncomingServer
-  rv = defaultAccount->GetIncomingServer(aServer);
-
-  return rv;
-}
-
-nsresult nsMsgMailSession::GetAccountManager(nsIMsgAccountManager* *aAM)
-{
-  NS_ENSURE_ARG_POINTER(aAM);
-
-  nsresult rv;
-  
-  NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, kMsgAccountManagerCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-  accountManager->LoadAccounts();
-    
-  *aAM = accountManager;
-  NS_IF_ADDREF(*aAM);
   return NS_OK;
 }
 

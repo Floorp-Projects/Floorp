@@ -25,6 +25,7 @@ var messengerProgID        = "component://netscape/messenger";
 var statusFeedbackProgID   = "component://netscape/messenger/statusfeedback";
 var messageViewProgID      = "component://netscape/messenger/messageview";
 var mailSessionProgID      = "component://netscape/messenger/services/session";
+var accountManagerProgID   = "component://netscape/messenger/account-manager";
 var prefProgID             = "component://netscape/preferences";
 var msgWindowProgID		   = "component://netscape/messenger/msgwindow";
 
@@ -187,9 +188,8 @@ function saveWindowPosition()
 
 function verifyAccounts() {
     try {
-        var mail = Components.classes[mailSessionProgID].getService(Components.interfaces.nsIMsgMailSession);
+        var am = Components.classes[accountManagerProgID].getService(Components.interfaces.nsIMsgAccountManager);
 
-        var am = mail.accountManager;
         var accounts = am.accounts;
 
         // as long as we have some accounts, we're fine.

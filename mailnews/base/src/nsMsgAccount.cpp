@@ -79,7 +79,7 @@ nsMsgAccount::getPrefService() {
   if (m_prefs) return NS_OK;
   
   return nsServiceManager::GetService(kPrefServiceCID,
-                                      nsCOMTypeInfo<nsIPref>::GetIID(),
+                                      NS_GET_IID(nsIPref),
                                       (nsISupports**)&m_prefs);
 }
 
@@ -150,15 +150,12 @@ nsMsgAccount::createIncomingServer()
 #endif
     
   // get the server from the account manager
-  NS_WITH_SERVICE(nsIMsgMailSession,session, NS_MSGMAILSESSION_PROGID, &rv);
-  if (NS_FAILED(rv)) return rv;
-    
-  nsCOMPtr<nsIMsgAccountManager> am;
-  rv = session->GetAccountManager(getter_AddRefs(am));
+  NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
+                  NS_MSGACCOUNTMANAGER_PROGID, &rv);
   if (NS_FAILED(rv)) return rv;
     
   nsCOMPtr<nsIMsgIncomingServer> server;
-  rv = am->GetIncomingServer(serverKey, getter_AddRefs(server));
+  rv = accountManager->GetIncomingServer(serverKey, getter_AddRefs(server));
   if (NS_FAILED(rv)) return rv;
   
 #ifdef DEBUG_alecf
@@ -238,16 +235,14 @@ nsMsgAccount::createIdentities()
 #endif
   
   // get the server from the account manager
-  NS_WITH_SERVICE(nsIMsgMailSession,session, NS_MSGMAILSESSION_PROGID, &rv);
+  NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
+                  NS_MSGACCOUNTMANAGER_PROGID, &rv);
   if (NS_FAILED(rv)) return rv;
     
-  nsCOMPtr<nsIMsgAccountManager> am;
-  rv = session->GetAccountManager(getter_AddRefs(am));
-  if (NS_FAILED(rv)) return rv;
     
   // XXX todo: iterate through identities. for now, assume just one
   nsCOMPtr<nsIMsgIdentity> identity;
-  rv = am->GetIdentity(identityKey, getter_AddRefs(identity));
+  rv = accountManager->GetIdentity(identityKey, getter_AddRefs(identity));
   if (NS_FAILED(rv)) return rv;
 
   rv = AddIdentity(identity);

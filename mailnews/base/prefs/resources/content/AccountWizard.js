@@ -209,8 +209,7 @@ function onFinish() {
 function createAccount(hash) {
 
     try {
-    var mail = Components.classes["component://netscape/messenger/services/session"].getService(Components.interfaces.nsIMsgMailSession);
-    var am = mail.accountManager;
+        var am = Components.classes["component://netscape/messenger/account-manager"].getService(Components.interfaces.nsIMsgAccountManager);
 
 
     // workaround for lame-ass combo box bug

@@ -144,12 +144,7 @@ nsMsgAccountManagerDataSource::Init()
     nsresult rv=NS_OK;
     
     if (!mAccountManager) {
-        NS_WITH_SERVICE(nsIMsgMailSession, mailSession,
-                        kMsgMailSessionCID, &rv);
-        if (NS_FAILED(rv)) return rv;
-        
-        // maybe the account manager should be a service too? not sure.
-        rv = mailSession->GetAccountManager(getter_AddRefs(mAccountManager));
+        mAccountManager = do_GetService(NS_MSGACCOUNTMANAGER_PROGID, &rv);
         if (NS_FAILED(rv)) return rv;
     }
     

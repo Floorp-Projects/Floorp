@@ -18,8 +18,9 @@
  * Rights Reserved.
  */
 
-var mailSessionProgID      = "component://netscape/messenger/services/session";
-var msgService = Components.classes[mailSessionProgID].getService(Components.interfaces.nsIMsgMailSession);
+var accountManagerProgID   = "component://netscape/messenger/account-manager";
+var accountManager = Components.classes[accountManagerProgID].getService(Components.interfaces.nsIMsgAccountManager);
+
 var msgComposeService = Components.classes["component://netscape/messengercompose"].getService();
 msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService);
 var msgCompose = null;
@@ -143,7 +144,7 @@ function ComposeStartup()
     {
     	//TODO: what I need here is not the current selected identity but the default one. 
     	//      For now GetCurrentIdentity gives back the first identity (not the selected one).
-    	identity = msgService.currentIdentity;
+    	identity = accountManager.currentIdentity;
     }
     identitySelect.value = identity.key;
 
@@ -260,7 +261,6 @@ function MsgAccountWizard()
 
 function MigratePrefsIfNecessary()
 {
-        var accountManager = msgService.accountManager;
         var accounts = accountManager.accounts;
 
         // as long as we have some accounts, we're fine.
@@ -530,7 +530,6 @@ function queryISupportsArray(supportsArray, iid) {
 
 function GetIdentities()
 {
-    var accountManager = msgService.accountManager;
 
     var idSupports = accountManager.allIdentities;
     var identities = queryISupportsArray(idSupports,
@@ -558,8 +557,6 @@ function fillIdentitySelect(selectElement)
 
 function getCurrentIdentity()
 {
-    var accountManager = msgService.accountManager;
-
     // fill in Identity combobox
     var identitySelect = document.getElementById("msgIdentity");
     var identityKey = identitySelect.value;
@@ -571,8 +568,6 @@ function getCurrentIdentity()
 
 function getIdentityForKey(key)
 {
-    var accountManager = msgService.accountManager;
-
     return accountManager.getIdentity(key);
 }
 

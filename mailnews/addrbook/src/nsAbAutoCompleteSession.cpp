@@ -30,11 +30,10 @@
 #include "nsIAbCard.h"
 #include "nsXPIDLString.h"
 #include "nsMsgBaseCID.h"
-#include "nsIMsgMailSession.h"
+#include "nsIMsgAccountManager.h"
 
 static NS_DEFINE_CID(kHeaderParserCID, NS_MSGHEADERPARSER_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
 
 nsresult NS_NewAbAutoCompleteSession(const nsIID &aIID, void ** aInstancePtrResult)
 {
@@ -62,11 +61,12 @@ nsAbAutoCompleteSession::nsAbAutoCompleteSession()
     
     // temporary hack to get the current identity
     nsresult rv;
-    NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv);
+    NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
+                    NS_MSGACCOUNTMANAGER_PROGID, &rv);
     if (NS_SUCCEEDED(rv))
     {    
 	    nsCOMPtr<nsIMsgIdentity> identity;
-	    rv = mailSession->GetCurrentIdentity(getter_AddRefs(identity));
+	    rv = accountManager->GetCurrentIdentity(getter_AddRefs(identity));
 	    if (NS_SUCCEEDED(rv))
 	    {
 			char * email;

@@ -269,12 +269,13 @@ HackUpAURIToPlayWith(void)
   nsresult            rv = NS_OK;
 
   // temporary hack to get the current identity
-  NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv);
+  NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
+                  NS_MSGACCOUNTMANAGER_PROGID, &rv);
   if (NS_FAILED(rv)) 
     return nsnull;
   
   nsCOMPtr<nsIMsgIdentity> identity = nsnull;
-  rv = mailSession->GetCurrentIdentity(getter_AddRefs(identity));
+  rv = accountManager->GetCurrentIdentity(getter_AddRefs(identity));
   if (NS_FAILED(rv)) 
     return nsnull;
 

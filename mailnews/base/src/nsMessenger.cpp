@@ -176,7 +176,7 @@ static nsresult ConvertDOMListToResourceArray(nsIDOMNodeList *nodeList, nsISuppo
 		if(NS_FAILED(nodeList->Item(i, &node)))
 			return rv;
 
-		if(NS_SUCCEEDED(rv = node->QueryInterface(nsCOMTypeInfo<nsIDOMXULElement>::GetIID(), (void**)&xulElement)))
+		if(NS_SUCCEEDED(rv = node->QueryInterface(NS_GET_IID(nsIDOMXULElement), (void**)&xulElement)))
 		{
 			if(NS_SUCCEEDED(rv = xulElement->GetResource(&resource)) && resource)
 			{
@@ -215,7 +215,7 @@ nsMessenger::~nsMessenger()
 //
 // nsISupports
 //
-NS_IMPL_ISUPPORTS(nsMessenger, nsCOMTypeInfo<nsIMessenger>::GetIID())
+NS_IMPL_ISUPPORTS(nsMessenger, NS_GET_IID(nsIMessenger))
 
 //
 // nsIMsgAppCore
@@ -366,11 +366,13 @@ void nsMessenger::InitializeFolderRoot()
     nsresult rv;
     
 	// get the current identity from the mail session....
-    NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv);
+    NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
+                    NS_MSGACCOUNTMANAGER_PROGID, &rv)
     if (NS_FAILED(rv)) return;
 
     nsCOMPtr<nsIMsgIncomingServer> server;
-    rv = mailSession->GetCurrentServer(getter_AddRefs(server));
+    rv = accountManager->GetCurrentServer(getter_AddRefs(server));
+    if (NS_FAILED(rv)) return;
     
     nsCOMPtr<nsIFileSpec> folderRoot;
     if (NS_SUCCEEDED(rv) && server)
@@ -654,7 +656,7 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity)
                 needDummyHeader =
                   PL_strcasestr(aListener->m_templateUri, "mailbox") != nsnull;
                 rv = aListener->QueryInterface(
-                  nsCOMTypeInfo<nsIUrlListener>::GetIID(),
+                  NS_GET_IID(nsIUrlListener),
                   getter_AddRefs(urlListener));
                 if (NS_FAILED(rv))
                 {
@@ -856,7 +858,7 @@ nsMessenger::GetRDFResourceForMessage(nsIDOMXULElement *tree,
     {
         rv = aEnumerator->CurrentItem(&aItem);
         if (rv != NS_OK) break;
-        rv = aItem->QueryInterface(nsCOMTypeInfo<nsIMessage>::GetIID(), (void**)aSupport);
+        rv = aItem->QueryInterface(NS_GET_IID(nsIMessage), (void**)aSupport);
         aItem->Release();
         if (rv == NS_OK && *aSupport) break;
         rv = aEnumerator->Next();
@@ -1280,7 +1282,7 @@ public:
   NS_IMETHOD OnStopSending(nsresult aStatus, const PRUnichar *aMsg, PRUint32 aTotalTried, PRUint32 aSuccessful);
 };
 
-NS_IMPL_ISUPPORTS(SendLaterListener, nsCOMTypeInfo<nsIMsgSendLaterListener>::GetIID());
+NS_IMPL_ISUPPORTS(SendLaterListener, NS_GET_IID(nsIMsgSendLaterListener));
 
 SendLaterListener::SendLaterListener()
 {
@@ -1327,7 +1329,7 @@ nsMessenger::SendUnsentMessages()
 {
 	nsresult rv;
 	nsCOMPtr<nsIMsgSendLater> pMsgSendLater; 
-	rv = nsComponentManager::CreateInstance(kMsgSendLaterCID, NULL,nsCOMTypeInfo<nsIMsgSendLater>::GetIID(),
+	rv = nsComponentManager::CreateInstance(kMsgSendLaterCID, NULL,NS_GET_IID(nsIMsgSendLater),
 																					(void **)getter_AddRefs(pMsgSendLater)); 
 	if (NS_SUCCEEDED(rv) && pMsgSendLater) 
 	{ 
@@ -1343,11 +1345,12 @@ nsMessenger::SendUnsentMessages()
     pMsgSendLater->AddListener(sendLaterListener);
 
     // temporary hack to get the current identity
-    NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv);
+    NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
+                    NS_MSGACCOUNTMANAGER_PROGID, &rv);
     if (NS_FAILED(rv)) return rv;
-    
+
     nsCOMPtr<nsIMsgIdentity> identity;
-    rv = mailSession->GetCurrentIdentity(getter_AddRefs(identity));
+    rv = accountManager->GetCurrentIdentity(getter_AddRefs(identity));
     if (NS_FAILED(rv)) return rv;
       
     pMsgSendLater->SendUnsentMessages(identity, nsnull); 
@@ -1362,7 +1365,7 @@ nsMessenger::LoadFirstDraft()
 	nsresult              rv = NS_ERROR_FAILURE;
 	nsCOMPtr<nsIMsgDraft> pMsgDraft; 
 
-	rv = nsComponentManager::CreateInstance(kMsgDraftCID, NULL, nsCOMTypeInfo<nsIMsgDraft>::GetIID(),
+	rv = nsComponentManager::CreateInstance(kMsgDraftCID, NULL, NS_GET_IID(nsIMsgDraft),
 																					(void **)getter_AddRefs(pMsgDraft)); 
 	if (NS_SUCCEEDED(rv) && pMsgDraft) 
 	{ 

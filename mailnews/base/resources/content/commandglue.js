@@ -27,7 +27,7 @@
 var msgComposeService = Components.classes['component://netscape/messengercompose'].getService();
 msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService);
 var mailSession = Components.classes["component://netscape/messenger/services/session"].getService(Components.interfaces.nsIMsgMailSession); 
-var accountManager = mailSession.accountManager;
+var accountManager = Components.classes["component://netscape/messenger/account-manager"].getService(Components.interfaces.nsIMsgAccountManager);
 
 var RDF = Components.classes['component://netscape/rdf/rdf-service'].getService();
 RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
@@ -196,9 +196,11 @@ function ChangeFolderByURI(uri, isThreaded, sortID)
       resource.QueryInterface(Components.interfaces.nsIMsgFolder);
   if (msgfolder.isServer)
       window.title = msgfolder.name;
-  else
+  else if (msgfolder.server)
       window.title = msgfolder.name + " on " +
           msgfolder.server.prettyName;
+  else
+      window.title = msgfolder.name;
 
   gBeforeFolderLoadTime = new Date();
 
@@ -214,6 +216,7 @@ function ChangeFolderByURI(uri, isThreaded, sortID)
 	}
 	catch(ex)
 	{
+        printf("Error loading with many headers to download\n");
 	}
   }
   else
@@ -312,6 +315,7 @@ function SortColumn(node, sortKey)
 			}
 			catch(e)
 			{
+                dump("Sort failed: " + e + "\n");
 			}
 		}
 	}

@@ -25,7 +25,6 @@
 #include "nsIPref.h"
 #include "nsIMsgCopyService.h"
 #include "nsMsgBaseCID.h"
-#include "nsIMsgMailSession.h"
 #include "nsMsgFolderFlags.h"
 #include "nsIMsgFolder.h"
 #include "nsIMsgAccountManager.h"
@@ -42,7 +41,6 @@
 
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kMsgCopyServiceCID,NS_MSGCOPYSERVICE_CID);
-static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -291,12 +289,9 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
     return NS_ERROR_INVALID_ARG;
   }
   
-  // get the current mail session....
-  NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv); 
-  if (NS_FAILED(rv)) return rv;
-  
-  nsCOMPtr<nsIMsgAccountManager> accountManager;
-  rv = mailSession->GetAccountManager(getter_AddRefs(accountManager));
+  // get the account manager
+  NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
+                  NS_MSGACCOUNTMANAGER_PROGID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   // as long as it doesn't start with anyfolder://

@@ -44,10 +44,6 @@ interface nsIMsgWindow;
 [scriptable, uuid(D5124440-D59E-11d2-806A-006008128C4E)]
 interface nsIMsgMailSession : nsISupports {
 
-  readonly attribute nsIMsgIdentity currentIdentity;
-  readonly attribute nsIMsgIncomingServer currentServer;
-  readonly attribute nsIMsgAccountManager accountManager;
-
   attribute nsIMsgWindow temporaryMsgWindow;
 
   void Shutdown();

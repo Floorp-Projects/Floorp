@@ -25,8 +25,7 @@
 #include "nsIServiceManager.h"
 #include "prsystem.h"
 #include "nsCOMPtr.h"
-
-#include "nsIMsgMailSession.h"
+#include "nsIMsgAccountManager.h"
 #include "nsIMsgIncomingServer.h"
 #include "nsINntpIncomingServer.h"
 #include "nsMsgBaseCID.h"
@@ -35,8 +34,6 @@
 #ifdef DEBUG_seth_
 #define DEBUG_NEWS 1
 #endif
-
-static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
 static nsresult
 nsGetNewsServer(const char* username, const char *hostname,
@@ -48,11 +45,9 @@ nsGetNewsServer(const char* username, const char *hostname,
   nsresult rv = NS_OK;
 
   // retrieve the AccountManager
-  NS_WITH_SERVICE(nsIMsgMailSession, session, kMsgMailSessionCID, &rv);
+  NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
+                  NS_MSGACCOUNTMANAGER_PROGID, &rv);
   if (NS_FAILED(rv)) return rv;
-  nsCOMPtr<nsIMsgAccountManager> accountManager;
-  rv = session->GetAccountManager(getter_AddRefs(accountManager));
-  if (NS_FAILED(rv)) return rv;                  
   
   // find the news host
   nsCOMPtr<nsIMsgIncomingServer> server;

@@ -47,11 +47,9 @@ static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 // this is totally lame and MUST be removed by M6
 // the real fix is to attach the URI to the URL as it runs through netlib
 // then grab it and use it on the other side
-#include "nsIMsgMailSession.h"
 #include "nsCOMPtr.h"
 #include "nsMsgBaseCID.h"
-
-static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
+#include "nsIMsgAccountManager.h"
 
 static char *nsMailboxGetURI(const char *nativepath)
 {
@@ -59,11 +57,8 @@ static char *nsMailboxGetURI(const char *nativepath)
     nsresult rv;
     char *uri = nsnull;
 
-    NS_WITH_SERVICE(nsIMsgMailSession, session, kMsgMailSessionCID, &rv);
-    if (NS_FAILED(rv)) return nsnull;
-
-    nsCOMPtr<nsIMsgAccountManager> accountManager;
-    rv = session->GetAccountManager(getter_AddRefs(accountManager));
+    NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
+                    NS_MSGACCOUNTMANAGER_PROGID, &rv);
     if (NS_FAILED(rv)) return nsnull;
 
     nsCOMPtr<nsISupportsArray> serverArray;
