@@ -734,19 +734,12 @@ sub do_panel {
           font-size: 8pt;
         }
       </style>
-      <script>
-       // The content window that we are supposed to be observing. This is
-       // god-awful fragile. The logic goes something like this. Our parent
-       // is the sidebar, whose parent is the content frame, whose frame[1]
-       // is the content area.
-       var ContentWindow = window.parent.parent.frames[1];
-      </script>
     </head>
     <body BGCOLOR="#FFFFFF" TEXT="#000000" 
           LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
   );
   # Hack the panel link for now.
-  print "<a href='$url' onclick='ContentWindow.location=\"http://tinderbox.mozilla.org/seamonkey/\"; return false;'>$tree";
+  print "<a target='_content' href='http://tinderbox.mozilla.org/seamonkey/'>$tree";
   
   $bonsai_tree = '';
   require "$tree/treedata.pl";
