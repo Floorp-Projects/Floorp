@@ -369,11 +369,11 @@ nsresult DeleteRangeTxn::CreateTxnsToDeleteNodesBetween(nsIDOMNode *aCommonParen
           break;
 #ifdef NS_DEBUG
         // begin debug output
-        nsCOMPtr<nsIDOMElement> childElement = (nsISupports*)child;
+        nsCOMPtr<nsIDOMElement> childElement (child);
         nsAutoString childElementTag="text node";
         if (childElement)
           childElement->GetTagName(childElementTag);
-        nsCOMPtr<nsIDOMElement> parentElement = (nsISupports*)parent;
+        nsCOMPtr<nsIDOMElement> parentElement(parent);
         nsAutoString parentElementTag="text node";
         if (parentElement)
           parentElement->GetTagName(parentElementTag);
@@ -432,11 +432,11 @@ nsresult DeleteRangeTxn::CreateTxnsToDeleteNodesBetween(nsIDOMNode *aCommonParen
             break;
 #ifdef NS_DEBUG
           // begin debug output
-          nsCOMPtr<nsIDOMElement> childElement = (nsISupports*)child;
+          nsCOMPtr<nsIDOMElement> childElement(child);
           nsAutoString childElementTag="text node";
           if (childElement)
             childElement->GetTagName(childElementTag);
-          nsCOMPtr<nsIDOMElement> parentElement = (nsISupports*)parent;
+          nsCOMPtr<nsIDOMElement> parentElement(parent);
           nsAutoString parentElementTag="text node";
           if (parentElement)
             parentElement->GetTagName(parentElementTag);
@@ -479,7 +479,7 @@ nsresult DeleteRangeTxn::BuildAncestorList(nsIDOMNode *aNode, nsISupportsArray *
   {
     aList->Clear();
     nsCOMPtr<nsIDOMNode> parent;
-    nsCOMPtr<nsIDOMNode> child = aNode;
+    nsCOMPtr<nsIDOMNode> child(aNode);
     result = child->GetParentNode(getter_AddRefs(parent));
     while ((NS_SUCCEEDED(result)) && child && parent)
     {
@@ -488,7 +488,7 @@ nsresult DeleteRangeTxn::BuildAncestorList(nsIDOMNode *aNode, nsISupportsArray *
       aList->AppendElement(parentAsISupports);
 #ifdef NS_DEBUG
         // begin debug output
-        nsCOMPtr<nsIDOMElement> parentElement = (nsISupports*)parent;
+        nsCOMPtr<nsIDOMElement> parentElement(parent);
         nsAutoString parentElementTag="text node";
         if (parentElement)
           parentElement->GetTagName(parentElementTag);
