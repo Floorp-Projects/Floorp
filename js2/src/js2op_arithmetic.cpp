@@ -892,7 +892,7 @@
         {
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
-            meta->env->lexicalRead(meta, mn, phase, &a);
+            meta->env->lexicalRead(meta, mn, phase, &a, NULL);
             if (JS2VAL_IS_LONG(a)) {
                 int64 i = *JS2VAL_TO_LONG(a);
                 JSLL_ADD(i, i, 1);
@@ -918,7 +918,7 @@
         {
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
-            meta->env->lexicalRead(meta, mn, phase, &a);
+            meta->env->lexicalRead(meta, mn, phase, &a, NULL);
             float64 num = meta->toFloat64(a);
             meta->env->lexicalWrite(meta, mn, allocNumber(num - 1.0), true);
             pushNumber(num);
@@ -928,7 +928,7 @@
         {
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
-            meta->env->lexicalRead(meta, mn, phase, &a);
+            meta->env->lexicalRead(meta, mn, phase, &a, NULL);
             float64 num = meta->toFloat64(a);
             a = pushNumber(num + 1.0);
             meta->env->lexicalWrite(meta, mn, a, true);
@@ -938,7 +938,7 @@
         {
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
-            meta->env->lexicalRead(meta, mn, phase, &a);
+            meta->env->lexicalRead(meta, mn, phase, &a, NULL);
             float64 num = meta->toFloat64(a);
             a = pushNumber(num - 1.0);
             meta->env->lexicalWrite(meta, mn, a, true);

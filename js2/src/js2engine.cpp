@@ -224,6 +224,12 @@ namespace MetaData {
         return new (p) String(*s);
     }
 
+    String *JS2Engine::allocStringPtr(const String *s, uint32 index, uint32 length)
+    {
+        String *p = (String *)(JS2Object::alloc(sizeof(String), false));
+        return new (p) String(*s, index, length);
+    }
+
     String *JS2Engine::concatStrings(const String *s1, const String *s2)
     {
         String *p = (String *)(JS2Object::alloc(sizeof(String), false));
@@ -897,8 +903,12 @@ namespace MetaData {
         // reset to previous env.
         meta->env = activationStackTop->env;
         sp = execStack + activationStackTop->execStackBase;
-        if (!JS2VAL_IS_VOID(activationStackTop->retval))    // XXX might need an actual 'returnValue' flag instead
-            retval = activationStackTop->retval;
+        if (!JS2VAL_IS_VOID(activationStackTop->retval))    // XXX might need an actual 'returnValue' flag instead?
+            // if the value being returned is a non-object, prefer it to the value
+            // set in the activation frame. [This is the mechanism used to handle
+            // the automatic return of a new object from an E3 constructor call]
+            if (!JS2VAL_IS_OBJECT(retval))
+                retval = activationStackTop->retval;
     }
 
     // GC-mark any JS2Objects in the activation frame stack, the execution stack
@@ -1046,6 +1056,17 @@ namespace MetaData {
                     LocalBindingEntry::NamespaceBinding ns = *i;
                     if ((ns.first == meta->publicNamespace) && ns.second->enumerable)
                         nameList[length++] = &lbe->name;
+                }
+            }
+            if (length == 0) {
+                if (obj->kind == SimpleInstanceKind) {
+                    js2val protoval = (checked_cast<SimpleInstance *>(obj))->super;
+                    if (!JS2VAL_IS_NULL(protoval)) {
+                        if (JS2VAL_IS_OBJECT(protoval)) {
+                            obj = JS2VAL_TO_OBJECT(protoval);
+                            return buildNameList(meta);
+                        }
+                    }
                 }
             }
             it = 0;

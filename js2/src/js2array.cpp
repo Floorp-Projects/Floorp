@@ -258,13 +258,14 @@ static js2val Array_join(JS2Metadata *meta, const js2val thisValue, js2val *argv
     JS2Object *thisObj = JS2VAL_TO_OBJECT(thatValue);
     uint32 length = getLength(meta, thisObj);
 
-    const String *separator;
+    const String *separator = NULL;
+    DEFINE_ROOTKEEPER(rk1, separator);
     if ((argc == 0) || JS2VAL_IS_UNDEFINED(argv[0]))
-        separator = new String(widenCString(","));
+        separator = meta->engine->allocStringPtr(",");
     else
         separator = meta->toString(argv[0]);
 
-    String *S = new String();
+    String *S = new String();   // not engine allocated, doesn't need rooting
     JS2Class *c = meta->objectType(thisObj);
 
     for (uint32 k = 0; k < length; k++) {
@@ -537,7 +538,9 @@ static int32 sort_compare(js2val *a, js2val *b, CompareArgs *arg)
         }
         else {
             const String *astr = meta->toString(av);
+            DEFINE_ROOTKEEPER(rk1, astr);
             const String *bstr = meta->toString(bv);
+            DEFINE_ROOTKEEPER(rk2, bstr);
             result = astr->compare(*bstr);
         }
         return result;

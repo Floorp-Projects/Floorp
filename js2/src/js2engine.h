@@ -210,8 +210,10 @@ public:
     js2val allocString(const String *s)       { return STRING_TO_JS2VAL(allocStringPtr(s)); }
     js2val allocString(const String &s)       { return allocString(&s); }
     js2val allocString(const char *s)         { return STRING_TO_JS2VAL(allocStringPtr(s)); }
+    js2val allocString(const String *s, uint32 index, uint32 length)         { return STRING_TO_JS2VAL(allocStringPtr(s, index, length)); }
     String *allocStringPtr(const String *s);
     String *allocStringPtr(const char *s);
+    String *allocStringPtr(const String *s, uint32 index, uint32 length);
     String *concatStrings(const String *s1, const String *s2);
 
     String *numberToString(float64 *number);    // non-static since they need access to meta

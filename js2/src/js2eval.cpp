@@ -270,7 +270,7 @@ namespace MetaData {
                 DEFINE_ROOTKEEPER(rk, runtimeFrame);
                 runtimeFrame->instantiate(env);
                 runtimeFrame->thisObject = thisValue;
-                runtimeFrame->assignArguments(this, fnObj, argv, argc);
+                runtimeFrame->assignArguments(this, fnObj, argv, argc, argc);
                 Frame *oldTopFrame = env->getTopFrame();
                 env->addFrame(runtimeFrame);
                 try {
@@ -363,7 +363,7 @@ namespace MetaData {
         // if that's not available or returns a non primitive, throw a TypeError
 
         JS2Object *obj = JS2VAL_TO_OBJECT(x);
-        if (obj->kind != SimpleInstanceKind)    // therefore, not an E3 object, so just return
+        if (obj->kind == ClassKind)    // therefore, not an E3 object, so just return
             return engine->typeofString(x);     // the 'typeof' string
 
         if (hint == StringHint) {
@@ -674,19 +674,24 @@ namespace MetaData {
         Member *m = meta->findCommonMember(&base, multiname, WriteAccess, true);
         if (m == NULL) {
             // XXX E3 compatibility...
+            JS2Object *baseObj = NULL;
+            DEFINE_ROOTKEEPER(rk, baseObj);
             if (JS2VAL_IS_PRIMITIVE(base)) {
-                base = meta->toObject(base);   
+                if (meta->cxt.E3compatibility)
+                    baseObj = JS2VAL_TO_OBJECT(meta->toObject(base));   
             }
+            else
+                baseObj = JS2VAL_TO_OBJECT(base);
             if (createIfMissing 
-                    && JS2VAL_IS_OBJECT(base) 
-                    && ( ((JS2VAL_TO_OBJECT(base)->kind == SimpleInstanceKind) && !checked_cast<SimpleInstance *>(JS2VAL_TO_OBJECT(base))->sealed)
-                            || ( (JS2VAL_TO_OBJECT(base)->kind == PackageKind) && !checked_cast<Package *>(JS2VAL_TO_OBJECT(base))->sealed)) ) {
+                    && baseObj
+                    && ( ((baseObj->kind == SimpleInstanceKind) && !checked_cast<SimpleInstance *>(baseObj)->sealed)
+                            || ( (baseObj->kind == PackageKind) && !checked_cast<Package *>(baseObj)->sealed)) ) {
                 QualifiedName qName = multiname->selectPrimaryName(meta);
                 Multiname *mn = new Multiname(qName);
                 DEFINE_ROOTKEEPER(rk, mn);
                 if ( (meta->findBaseInstanceMember(limit, mn, ReadAccess) == NULL)
                         && (meta->findCommonMember(&base, mn, ReadAccess, true) == NULL) ) {
-                    meta->createDynamicProperty(JS2VAL_TO_OBJECT(base), &qName, newValue, ReadWriteAccess, false, true);
+                    meta->createDynamicProperty(baseObj, &qName, newValue, ReadWriteAccess, false, true);
                     return true;
                 }
             }

@@ -74,7 +74,12 @@
                             meta->reportError(Exception::badValueError, "Non-object prototype value", errorPos());
                     }
 
+                    uint32 length = getLength(meta, obj);
                     if (fWrap->code) {  // native code, pass pointer to argument base
+                        while (argCount < length) {
+                            push(JS2VAL_UNDEFINED);
+                            argCount++;
+                        }
                         a = fWrap->code(meta, a, base(argCount), argCount);
                         pop(argCount + 1);
                         push(a);
@@ -84,7 +89,7 @@
                         pFrame->instantiate(meta->env);
                         baseVal = OBJECT_TO_JS2VAL(new SimpleInstance(meta, protoVal, meta->objectType(protoVal)));
                         pFrame->thisObject = baseVal;
-                        pFrame->assignArguments(meta, obj, base(argCount), argCount);
+                        pFrame->assignArguments(meta, obj, base(argCount), argCount, length);
                         jsr(phase, fWrap->bCon, base(argCount + 1) - execStack, baseVal, fWrap->env);   // seems out of order, but we need to catch the current top frame 
                         meta->env->addFrame(pFrame);
                         pFrame = NULL;
@@ -119,18 +124,26 @@
                         a = OBJECT_TO_JS2VAL(g);
                     }
                 }
+                uint32 length = getLength(meta, fObj);
                 if (fWrap->code) {  // native code
+                    Environment *oldEnv = meta->env;
+                    meta->env = fWrap->env;
+                    while (argCount < length) {
+                        push(JS2VAL_UNDEFINED);
+                        argCount++;
+                    }
                     a = fWrap->code(meta, a, base(argCount), argCount);
                     pop(argCount + 2);
                     push(a);
+                    meta->env = oldEnv;
                 }
                 else {
                     pFrame = new ParameterFrame(fWrap->compileFrame);
                     pFrame->instantiate(meta->env);
                     pFrame->thisObject = a;
-    //                assignArguments(runtimeFrame, fWrap->compileFrame->signature);
-                    // XXX
-                    pFrame->assignArguments(meta, fObj, base(argCount), argCount);
+                    // XXX (use fWrap->compileFrame->signature)
+                    uint32 i = length;
+                    pFrame->assignArguments(meta, fObj, base(argCount), argCount, length);
                     jsr(phase, fWrap->bCon, base(argCount + 2) - execStack, JS2VAL_VOID, fWrap->env);   // seems out of order, but we need to catch the current top frame 
                     meta->env->addFrame(pFrame);
                     pFrame = NULL;
@@ -141,18 +154,25 @@
                 MethodClosure *mc = checked_cast<MethodClosure *>(fObj);
                 SimpleInstance *fInst = mc->method->fInst;
                 FunctionWrapper *fWrap = fInst->fWrap;
-
+                uint32 length = getLength(meta, fObj);
                 if (fWrap->code) {
+                    Environment *oldEnv = meta->env;
+                    meta->env = fWrap->env;
+                    while (argCount < length) {
+                        push(JS2VAL_UNDEFINED);
+                        argCount++;
+                    }
                     a = fWrap->code(meta, mc->thisObject, base(argCount), argCount);
                     pop(argCount + 2);
                     push(a);
+                    meta->env = oldEnv;
                 }
                 else {
                     pFrame = new ParameterFrame(fWrap->compileFrame);
                     pFrame->instantiate(meta->env);
                     pFrame->thisObject = mc->thisObject;
 //                assignArguments(runtimeFrame, fWrap->compileFrame->signature);
-                    pFrame->assignArguments(meta, fObj, base(argCount), argCount);
+                    pFrame->assignArguments(meta, fObj, base(argCount), argCount, length);
                     jsr(phase, fWrap->bCon, base(argCount + 2) - execStack, JS2VAL_VOID, fWrap->env);   // seems out of order, but we need to catch the current top frame 
                     meta->env->addFrame(meta->objectType(mc->thisObject));
                     meta->env->addFrame(pFrame);

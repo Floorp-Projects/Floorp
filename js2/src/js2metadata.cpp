@@ -118,7 +118,7 @@ namespace MetaData {
                     // XXX define a static binding for each parameter
                     Variable *v = new Variable(objectClass, JS2VAL_UNDEFINED, false);
                     compileFrame->positional[pCount++] = v;
-                    pb->mn = defineLocalMember(env, pb->name, &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, pb->pos);
+                    pb->mn = defineLocalMember(env, pb->name, &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, pb->pos, true);
                     pb = pb->next;
                 }
             }
@@ -372,6 +372,9 @@ namespace MetaData {
                 break;
             case StmtNode::Return:
                 {
+                    Frame *regionalFrame = *env->getRegionalFrame();
+                    if (regionalFrame->kind != ParameterKind)
+                        reportError(Exception::syntaxError, "Return statement not in function", p->pos);
                     ExprStmtNode *e = checked_cast<ExprStmtNode *>(p);
                     if (e->expr) {
                         ValidateExpression(cxt, env, e->expr);
@@ -441,7 +444,7 @@ namespace MetaData {
                                 }
                                 else {
                                     Variable *v = new Variable(functionClass, OBJECT_TO_JS2VAL(fObj), true);
-                                    defineLocalMember(env, f->function.name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, p->pos);
+                                    defineLocalMember(env, f->function.name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, p->pos, true);
                                 }
                             }
                         }
@@ -463,7 +466,7 @@ namespace MetaData {
                             ASSERT(!prototype); // XXX right?
                             FunctionInstance *fObj = validateStaticFunction(&f->function, compileThis, prototype, unchecked, cxt, env);
                             ConstructorMethod *cm = new ConstructorMethod(OBJECT_TO_JS2VAL(fObj));
-                            defineLocalMember(env, f->function.name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, cm, p->pos);
+                            defineLocalMember(env, f->function.name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, cm, p->pos, true);
                         }
                         break;
                     }
@@ -517,7 +520,7 @@ namespace MetaData {
                                     Variable *v = new Variable(FUTURE_TYPE, immutable ? JS2VAL_FUTUREVALUE : JS2VAL_INACCESSIBLE, immutable);
                                     vb->member = v;
                                     v->vb = vb;
-                                    vb->mn = defineLocalMember(env, name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, p->pos);
+                                    vb->mn = defineLocalMember(env, name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, p->pos, true);
                                     bCon->saveMultiname(vb->mn);
                                 }
                                 break;
@@ -560,7 +563,7 @@ namespace MetaData {
                     if ( ! ((a->memberMod == Attribute::NoModifier) || ((a->memberMod == Attribute::Static) && (env->getTopFrame()->kind == ClassKind))) )
                         reportError(Exception::definitionError, "Illegal attribute", p->pos);
                     Variable *v = new Variable(namespaceClass, OBJECT_TO_JS2VAL(new Namespace(&ns->name)), true);
-                    defineLocalMember(env, &ns->name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, p->pos);
+                    defineLocalMember(env, &ns->name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, p->pos, true);
                 }
                 break;
             case StmtNode::Use:
@@ -622,7 +625,7 @@ namespace MetaData {
                     JS2Class *c = new JS2Class(superClass, protoVal, new Namespace(engine->private_StringAtom), (a->dynamic || superClass->dynamic), true, final, engine->allocStringPtr(&classStmt->name));
                     classStmt->c = c;
                     Variable *v = new Variable(classClass, OBJECT_TO_JS2VAL(c), true);
-                    defineLocalMember(env, &classStmt->name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, p->pos);
+                    defineLocalMember(env, &classStmt->name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, p->pos, true);
                     if (classStmt->body) {
                         env->addFrame(c);
                         ValidateStmtList(cxt, env, pl, classStmt->body->statements);
@@ -2424,7 +2427,7 @@ doUnary:
     // Attempt the read in each frame in the current environment, stopping at the
     // first succesful effort. If the property can't be found in any frame, it's 
     // an error.
-    void Environment::lexicalRead(JS2Metadata *meta, Multiname *multiname, Phase phase, js2val *rval)
+    void Environment::lexicalRead(JS2Metadata *meta, Multiname *multiname, Phase phase, js2val *rval, js2val *base)
     {
         LookupKind lookup(true, findThis(meta, false));
         FrameListIterator fi = getBegin();
@@ -2455,6 +2458,8 @@ doUnary:
                     js2val withVal = OBJECT_TO_JS2VAL(wf->obj);
                     JS2Class *limit = meta->objectType(withVal);
                     result = limit->read(meta, &withVal, limit, multiname, &lookup, phase, rval);
+                    if (result && base)
+                        *base = withVal;
                 }
                 break;
             }
@@ -2729,7 +2734,7 @@ doUnary:
     // 
     Multiname *JS2Metadata::defineLocalMember(Environment *env, const String *id, NamespaceList *namespaces, 
                                                 Attribute::OverrideModifier overrideMod, bool xplicit, Access access,
-                                                LocalMember *m, size_t pos)
+                                                LocalMember *m, size_t pos, bool enumerable)
     {
         NonWithFrame *innerFrame = checked_cast<NonWithFrame *>(*(env->getBegin()));
         if ((overrideMod != Attribute::NoOverride) || (xplicit && innerFrame->kind != PackageKind))
@@ -2789,7 +2794,7 @@ doUnary:
         else
             lbe = *lbeP;
         for (NamespaceListIterator nli = multiname->nsList->begin(), nlend = multiname->nsList->end(); (nli != nlend); nli++) {
-            LocalBinding *new_b = new LocalBinding(access, m, true);
+            LocalBinding *new_b = new LocalBinding(access, m, enumerable);
             lbe->bindingList.push_back(LocalBindingEntry::NamespaceBinding(*nli, new_b));
         }
         // Mark the bindings of multiname as Forbidden in all non-innermost frames in the current
@@ -3034,9 +3039,13 @@ rescan:
 
     static js2val GlobalObject_eval(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint32 argc)
     {
-        if (!JS2VAL_IS_STRING(argv[0]))
-            return argv[0];
-        return meta->readEvalString(*meta->toString(argv[0]), widenCString("Eval Source"));
+        if (argc) {
+            if (!JS2VAL_IS_STRING(argv[0]))
+                return argv[0];
+            return meta->readEvalString(*meta->toString(argv[0]), widenCString("Eval Source"));
+        }
+        else
+            return JS2VAL_UNDEFINED;
     }
 
 #define JS7_ISHEX(c)    ((c) < 128 && isxdigit(c))
@@ -3214,6 +3223,18 @@ static const uint8 urlCharType[256] =
         createDynamicProperty(fInst, engine->length_StringAtom, INT_TO_JS2VAL(length), ReadAccess, true, false);
     }
 
+    static js2val Object_Constructor(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc)
+    {
+        if (argc) {
+            if (JS2VAL_IS_OBJECT(argv[0]))
+                return argv[0];     // XXX special handling for host objects?
+            else
+                return meta->toObject(argv[0]);
+        }
+        else
+            return OBJECT_TO_JS2VAL(new SimpleInstance(meta, meta->objectClass->prototype, meta->objectClass));
+    }
+
     static js2val Object_toString(JS2Metadata *meta, const js2val thisValue, js2val /* argv */ [], uint32 /* argc */)
     {
         ASSERT(JS2VAL_IS_OBJECT(thisValue));
@@ -3302,19 +3323,20 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 
 /*** ECMA 3  Object Class ***/
         v = new Variable(classClass, OBJECT_TO_JS2VAL(objectClass), true);
-        defineLocalMember(env, &world.identifiers["Object"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        defineLocalMember(env, &world.identifiers["Object"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
         // Function properties of the Object prototype object
         objectClass->prototype = OBJECT_TO_JS2VAL(new SimpleInstance(this, NULL, objectClass));
+        objectClass->construct = Object_Constructor;
         // Adding "prototype" as a static member of the class - not a dynamic property
         env->addFrame(objectClass);
             v = new Variable(objectClass, OBJECT_TO_JS2VAL(objectClass->prototype), true);
-            defineLocalMember(env, engine->prototype_StringAtom, &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+            defineLocalMember(env, engine->prototype_StringAtom, &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
         env->removeTopFrame();
 
 /*** ECMA 3  Function Class ***/
 // Need this initialized early, as subsequent FunctionInstances need the Function.prototype value
         v = new Variable(classClass, OBJECT_TO_JS2VAL(functionClass), true);
-        defineLocalMember(env, &world.identifiers["Function"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        defineLocalMember(env, &world.identifiers["Function"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
         initFunctionObject(this);
 
 // Adding 'toString' to the Object.prototype XXX Or make this a static class member?
@@ -3326,34 +3348,34 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 /*** ECMA 3  Date Class ***/
         MAKEBUILTINCLASS(dateClass, objectClass, true, true, true, engine->allocStringPtr(&world.identifiers["Date"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(dateClass), true);
-        defineLocalMember(env, &world.identifiers["Date"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        defineLocalMember(env, &world.identifiers["Date"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
         initDateObject(this);
 
 /*** ECMA 3  RegExp Class ***/
         MAKEBUILTINCLASS(regexpClass, objectClass, true, true, true, engine->allocStringPtr(&world.identifiers["RegExp"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(regexpClass), true);
-        defineLocalMember(env, &world.identifiers["RegExp"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        defineLocalMember(env, &world.identifiers["RegExp"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
         initRegExpObject(this);
 
 /*** ECMA 3  String Class ***/
         v = new Variable(classClass, OBJECT_TO_JS2VAL(stringClass), true);
-        defineLocalMember(env, &world.identifiers["String"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        defineLocalMember(env, &world.identifiers["String"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
         initStringObject(this);
 
 /*** ECMA 3  Number Class ***/
         v = new Variable(classClass, OBJECT_TO_JS2VAL(numberClass), true);
-        defineLocalMember(env, &world.identifiers["Number"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        defineLocalMember(env, &world.identifiers["Number"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
         initNumberObject(this);
 
 /*** ECMA 3  Boolean Class ***/
         v = new Variable(classClass, OBJECT_TO_JS2VAL(booleanClass), true);
-        defineLocalMember(env, &world.identifiers["Boolean"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        defineLocalMember(env, &world.identifiers["Boolean"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
         initBooleanObject(this);
 
 /*** ECMA 3  Math Class ***/
         MAKEBUILTINCLASS(mathClass, objectClass, true, true, true, engine->allocStringPtr(&world.identifiers["Math"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(mathClass), true);
-        defineLocalMember(env, &world.identifiers["Math"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        defineLocalMember(env, &world.identifiers["Math"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
         initMathObject(this);
 
 /*** ECMA 3  Array Class ***/
@@ -3361,31 +3383,31 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         arrayClass->write = arrayWriteProperty;
         arrayClass->writePublic = arrayWritePublic;
         v = new Variable(classClass, OBJECT_TO_JS2VAL(arrayClass), true);
-        defineLocalMember(env, &world.identifiers["Array"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        defineLocalMember(env, &world.identifiers["Array"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
         initArrayObject(this);
 
 /*** ECMA 3  Error Classes ***/
         MAKEBUILTINCLASS(errorClass, objectClass, true, true, true, engine->allocStringPtr(&world.identifiers["Error"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(errorClass), true);
-        defineLocalMember(env, &world.identifiers["Error"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        defineLocalMember(env, &world.identifiers["Error"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
         MAKEBUILTINCLASS(evalErrorClass, objectClass, true, true, true, engine->allocStringPtr(&world.identifiers["EvalError"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(evalErrorClass), true);
-        defineLocalMember(env, &world.identifiers["EvalError"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        defineLocalMember(env, &world.identifiers["EvalError"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
         MAKEBUILTINCLASS(rangeErrorClass, objectClass, true, true, true, engine->allocStringPtr(&world.identifiers["RangeError"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(rangeErrorClass), true);
-        defineLocalMember(env, &world.identifiers["RangeError"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        defineLocalMember(env, &world.identifiers["RangeError"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
         MAKEBUILTINCLASS(referenceErrorClass, objectClass, true, true, true, engine->allocStringPtr(&world.identifiers["ReferenceError"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(referenceErrorClass), true);
-        defineLocalMember(env, &world.identifiers["ReferenceError"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        defineLocalMember(env, &world.identifiers["ReferenceError"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
         MAKEBUILTINCLASS(syntaxErrorClass, objectClass, true, true, true, engine->allocStringPtr(&world.identifiers["SyntaxError"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(syntaxErrorClass), true);
-        defineLocalMember(env, &world.identifiers["SyntaxError"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        defineLocalMember(env, &world.identifiers["SyntaxError"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
         MAKEBUILTINCLASS(typeErrorClass, objectClass, true, true, true, engine->allocStringPtr(&world.identifiers["TypeError"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(typeErrorClass), true);
-        defineLocalMember(env, &world.identifiers["TypeError"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        defineLocalMember(env, &world.identifiers["TypeError"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
         MAKEBUILTINCLASS(uriErrorClass, objectClass, true, true, true, engine->allocStringPtr(&world.identifiers["UriError"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(uriErrorClass), true);
-        defineLocalMember(env, &world.identifiers["UriError"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        defineLocalMember(env, &world.identifiers["UriError"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
         initErrorObject(this);
 
     }
@@ -3448,37 +3470,6 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     {
         return c->isAncestor(objectType(objVal));
     }
-
-
-
-/*
-    void ArrayInstance::writeProperty(JS2Metadata *meta, const String *name, js2val newValue, uint32 flags)
-    {
-        // An index has to pass the test that :
-        //   ToString(ToUint32(ToString(index))) == ToString(index)     
-        // (we already have done the 'ToString(index)' part, so require
-        //
-        //  ToString(ToUint32(name)) == name
-        //
-
-        // XXX things would go faster if the index made it here as an int
-        // (which it more typically is) rather than converted to string
-        // and back.
-
-        const char16 *numEnd;        
-        float64 f = stringToDouble(name->data(), name->data() + name->length(), numEnd);
-        uint32 index = JS2Engine::float64toUInt32(f);
-
-        char buf[dtosStandardBufferSize];
-        const char *chrp = doubleToStr(buf, dtosStandardBufferSize, index, dtosStandard, 0);
-
-        if (widenCString(chrp) == *name) {
-            uint32 length = getLength(meta, this);
-            if (index >= length)
-                setLength(meta, this, index + 1);
-        }
-    }
-*/
 
     InstanceMember *JS2Metadata::findLocalInstanceMember(JS2Class *limit, Multiname *multiname, Access access)
     {
@@ -3714,6 +3705,13 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         return (findCommonMember(&val, mn, ReadWriteAccess, true) != NULL);
     }
 
+    void JS2Metadata::createDynamicProperty(JS2Object *obj, const String *name, js2val initVal, Access access, bool sealed, bool enumerable) 
+    {
+        DEFINE_ROOTKEEPER(rk, name);
+        QualifiedName qName(publicNamespace, name); 
+        createDynamicProperty(obj, &qName, initVal, access, sealed, enumerable); 
+    }
+
     // The caller must make sure that the created property does not already exist and does not conflict with any other property.
     void JS2Metadata::createDynamicProperty(JS2Object *obj, QualifiedName *qName, js2val initVal, Access access, bool sealed, bool enumerable)
     {
@@ -3851,9 +3849,9 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         env->addFrame(builtinClass);
         {
             Variable *v = new Variable(builtinClass, OBJECT_TO_JS2VAL(builtinClass->prototype), true);
-            defineLocalMember(env, engine->prototype_StringAtom, &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+            defineLocalMember(env, engine->prototype_StringAtom, &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
             v = new Variable(builtinClass, INT_TO_JS2VAL(1), true);
-            defineLocalMember(env, engine->length_StringAtom, &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+            defineLocalMember(env, engine->length_StringAtom, &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
 
             pf = staticFunctions;
             if (pf) {
@@ -3861,7 +3859,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                     SimpleInstance *callInst = new SimpleInstance(this, functionClass->prototype, functionClass);
                     callInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code, env);
                     v = new Variable(functionClass, OBJECT_TO_JS2VAL(callInst), true);
-                    defineLocalMember(env, &world.identifiers[pf->name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+                    defineLocalMember(env, &world.identifiers[pf->name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
                     createDynamicProperty(callInst, engine->length_StringAtom, INT_TO_JS2VAL(pf->length), ReadAccess, true, false);
                     pf++;
                 }
@@ -3874,7 +3872,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         createDynamicProperty(fInst, engine->length_StringAtom, INT_TO_JS2VAL(1), ReadAccess, true, false);
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), construct, env);
         ASSERT(JS2VAL_IS_OBJECT(builtinClass->prototype));
-        createDynamicProperty(JS2VAL_TO_OBJECT(builtinClass->prototype), &world.identifiers["constructor"], OBJECT_TO_JS2VAL(fInst), ReadWriteAccess, false, true);
+        createDynamicProperty(JS2VAL_TO_OBJECT(builtinClass->prototype), &world.identifiers["constructor"], OBJECT_TO_JS2VAL(fInst), ReadWriteAccess, false, false);
     
         pf = protoFunctions;
         if (pf) {
@@ -3882,12 +3880,12 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 SimpleInstance *callInst = new SimpleInstance(this, functionClass->prototype, functionClass);
                 callInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code, env);
                 Multiname *mn = new Multiname(&world.identifiers[pf->name], &publicNamespaceList);
-                InstanceMember *m = new InstanceMethod(mn, callInst, true, true);
+                InstanceMember *m = new InstanceMethod(mn, callInst, true, false);
                 defineInstanceMember(builtinClass, &cxt, mn->name, mn->nsList, Attribute::NoOverride, false, m, 0);
 
                 FunctionInstance *fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
                 fInst->fWrap = callInst->fWrap;
-                createDynamicProperty(JS2VAL_TO_OBJECT(builtinClass->prototype), &world.identifiers[pf->name], OBJECT_TO_JS2VAL(fInst), ReadWriteAccess, false, true);
+                createDynamicProperty(JS2VAL_TO_OBJECT(builtinClass->prototype), &world.identifiers[pf->name], OBJECT_TO_JS2VAL(fInst), ReadWriteAccess, false, false);
                 createDynamicProperty(fInst, engine->length_StringAtom, INT_TO_JS2VAL(pf->length), ReadAccess, true, false);
                 pf++;
             }
@@ -4106,6 +4104,20 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         GCMARKOBJECT(type); 
     }
 
+ /************************************************************************************
+ *
+ *  ArrayInstance
+ *
+ ************************************************************************************/
+
+    ArrayInstance::ArrayInstance(JS2Metadata *meta, js2val parent, JS2Class *type) 
+        : SimpleInstance(meta, parent, type) 
+    {
+        JS2Object *result = this;
+        DEFINE_ROOTKEEPER(rk1, result);
+
+        meta->createDynamicProperty(this, meta->engine->length_StringAtom, INT_TO_JS2VAL(0), ReadWriteAccess, true, false);
+    }
 
  /************************************************************************************
  *
@@ -4117,7 +4129,13 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
      : SimpleInstance(meta, parent, type) 
     {
         // Add prototype property
-        meta->createDynamicProperty(this, meta->engine->prototype_StringAtom, OBJECT_TO_JS2VAL(parent), ReadWriteAccess, false, true);
+        JS2Object *result = this;
+        DEFINE_ROOTKEEPER(rk1, result);
+
+        JS2Object *obj = new SimpleInstance(meta, meta->objectClass->prototype, meta->objectClass);
+        DEFINE_ROOTKEEPER(rk2, obj);
+
+        meta->createDynamicProperty(this, meta->engine->prototype_StringAtom, OBJECT_TO_JS2VAL(obj), ReadWriteAccess, false, true);
     }
 
 
@@ -4219,7 +4237,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     // Assume that instantiate has been called, the plural frame will contain
     // the cloned Variables assigned into this (singular) frame. Use the 
     // incoming values to initialize the positionals.
-    void ParameterFrame::assignArguments(JS2Metadata *meta, JS2Object *fnObj, js2val *argBase, uint32 argCount)
+    // Pad out to 'length' args with undefined values if argCount is insufficient
+    void ParameterFrame::assignArguments(JS2Metadata *meta, JS2Object *fnObj, js2val *argBase, uint32 argCount, uint32 length)
     {
         Multiname *mn = new Multiname(NULL, meta->publicNamespace);
         DEFINE_ROOTKEEPER(rk1, mn);
@@ -4228,7 +4247,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         ParameterFrame *plural = checked_cast<ParameterFrame *>(pluralFrame);
         ASSERT((plural->positionalCount == 0) || (plural->positional != NULL));
         
-        SimpleInstance *argsObj = new SimpleInstance(meta, meta->objectClass->prototype, meta->objectClass);;
+        SimpleInstance *argsObj = new SimpleInstance(meta, meta->objectClass->prototype, meta->objectClass);
         DEFINE_ROOTKEEPER(rk2, argsObj);
 
         // Add the 'arguments' property
@@ -4245,11 +4264,17 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 ASSERT(plural->positional[i]->cloneContent->kind == Member::Variable);
                 (checked_cast<Variable *>(plural->positional[i]->cloneContent))->value = argBase[i];
             }
-//            mn->name = meta->engine->numberToString(i);
             meta->arrayClass->writePublic(meta, OBJECT_TO_JS2VAL(argsObj), meta->arrayClass, meta->engine->numberToString(i), true, argBase[i]);
         }
-        setLength(meta, argsObj, i);
-//        mn->name = meta->engine->allocStringPtr(&meta->world.identifiers["callee"]);
+        while (i++ < length) {
+            if (i < plural->positionalCount) {
+                ASSERT(plural->positional[i]->cloneContent);
+                ASSERT(plural->positional[i]->cloneContent->kind == Member::Variable);
+                (checked_cast<Variable *>(plural->positional[i]->cloneContent))->value = JS2VAL_UNDEFINED;
+            }
+            meta->arrayClass->writePublic(meta, OBJECT_TO_JS2VAL(argsObj), meta->arrayClass, meta->engine->numberToString(i), true, JS2VAL_UNDEFINED);
+        }
+        setLength(meta, argsObj, argCount);
         meta->arrayClass->writePublic(meta, OBJECT_TO_JS2VAL(argsObj), meta->arrayClass, meta->engine->allocStringPtr("callee"), true, OBJECT_TO_JS2VAL(fnObj));
     }
 

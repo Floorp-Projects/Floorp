@@ -261,28 +261,30 @@ js2val dump(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint
         else
         if (JS2VAL_IS_OBJECT(argv[0])) {
             JS2Object *fObj = JS2VAL_TO_OBJECT(argv[0]);
-            if (fObj->kind == SimpleInstanceKind) {
-                
-                SimpleInstance *s = checked_cast<SimpleInstance *>(fObj);
-                stdOut << "SimpleInstance\n";
-                if (JS2VAL_IS_OBJECT(s->super))
-                    printFormat(stdOut, "super = 0x%08X\n", s->super);
-                else
-                    stdOut << "super = " << *metadata->toString(s->super) << '\n';
-                stdOut << ((s->sealed) ? "sealed " : "not-sealed ") << '\n';
-                stdOut << "type = " << *s->type->getName() << '\n';
-                printLocalBindings(&s->localBindings);
-                if (meta->objectType(argv[0]) == meta->functionClass) {
-                    FunctionWrapper *fWrap;
-                    fWrap = (checked_cast<SimpleInstance *>(fObj))->fWrap;
-                    if (fWrap->code)
-                        stdOut << "<native code>\n";
+            switch (fObj->kind) {
+            case SimpleInstanceKind:
+                {                
+                    SimpleInstance *s = checked_cast<SimpleInstance *>(fObj);
+                    stdOut << "SimpleInstance\n";
+                    if (JS2VAL_IS_OBJECT(s->super))
+                        printFormat(stdOut, "super = 0x%08X\n", s->super);
                     else
-                        dumpBytecode(fWrap->bCon);
+                        stdOut << "super = " << *metadata->toString(s->super) << '\n';
+                    stdOut << ((s->sealed) ? "sealed " : "not-sealed ") << '\n';
+                    stdOut << "type = " << *s->type->getName() << '\n';
+                    printLocalBindings(&s->localBindings);
+                    if (meta->objectType(argv[0]) == meta->functionClass) {
+                        FunctionWrapper *fWrap;
+                        fWrap = (checked_cast<SimpleInstance *>(fObj))->fWrap;
+                        if (fWrap->code)
+                            stdOut << "<native code>\n";
+                        else
+                            dumpBytecode(fWrap->bCon);
+                    }
                 }
-            }
-            else {
-                if (fObj->kind == ClassKind) {
+                break;
+            case ClassKind:
+                {
                     JS2Class *c = checked_cast<JS2Class *>(fObj);
                     stdOut << "class " << *c->getName();
                     if (c->super)
@@ -309,6 +311,23 @@ js2val dump(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint
                         }
                     }
                 }
+                break;
+            case PackageKind:
+                {
+                    Package *pkg = checked_cast<Package *>(fObj);
+                    stdOut << "Package\n";
+                    if (JS2VAL_IS_OBJECT(pkg->super))
+                        printFormat(stdOut, "super = 0x%08X\n", pkg->super);
+                    else
+                        stdOut << "super = " << *metadata->toString(pkg->super) << '\n';
+                    stdOut << ((pkg->sealed) ? "sealed " : "not-sealed ") << '\n';
+                    printLocalBindings(&pkg->localBindings);
+
+                }
+                break;
+            default:
+                stdOut << "<<unimplemented kind " << (int32)(fObj->kind) << ">>\n";
+                break;
             }
         }
     }

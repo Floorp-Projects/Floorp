@@ -99,7 +99,7 @@
         {
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
-            meta->env->lexicalRead(meta, mn, phase, &a);
+            meta->env->lexicalRead(meta, mn, phase, &a, NULL);
             push(a);
         }
         break;
@@ -142,8 +142,9 @@
         {
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
-            meta->env->lexicalRead(meta, mn, phase, &a);
-            push(JS2VAL_NULL);
+            b = JS2VAL_NULL;
+            meta->env->lexicalRead(meta, mn, phase, &a, &b);
+            push(b);
             push(a);
         }
         break;

@@ -648,7 +648,7 @@ public:
     void removeTopFrame()                   { frameList.pop_front(); }
 
     js2val findThis(JS2Metadata *meta, bool allowPrototypeThis);
-    void lexicalRead(JS2Metadata *meta, Multiname *multiname, Phase phase, js2val *rval);
+    void lexicalRead(JS2Metadata *meta, Multiname *multiname, Phase phase, js2val *rval, js2val *base);
     void lexicalWrite(JS2Metadata *meta, Multiname *multiname, js2val newValue, bool createIfMissing);
     void lexicalInit(JS2Metadata *meta, Multiname *multiname, js2val newValue);
     bool lexicalDelete(JS2Metadata *meta, Multiname *multiname, Phase phase);
@@ -821,8 +821,7 @@ public:
 // are added.
 class ArrayInstance : public SimpleInstance {
 public:
-    ArrayInstance(JS2Metadata *meta, js2val parent, JS2Class *type) : SimpleInstance(meta, parent, type) { }
-
+    ArrayInstance(JS2Metadata *meta, js2val parent, JS2Class *type);
     virtual ~ArrayInstance()             { }
 };
 
@@ -1067,7 +1066,7 @@ public:
     uint32 positionalCount;
 
     virtual void instantiate(Environment *env);
-    void assignArguments(JS2Metadata *meta, JS2Object *fnObj, js2val *argBase, uint32 argCount);
+    void assignArguments(JS2Metadata *meta, JS2Object *fnObj, js2val *argBase, uint32 argCount, uint32 length);
     virtual void markChildren();
     virtual ~ParameterFrame()           { }
 };
@@ -1201,7 +1200,7 @@ public:
     InstanceBinding *resolveInstanceMemberName(JS2Class *js2class, Multiname *multiname, Access access, Phase phase, QualifiedName *qname);
 
     DynamicVariable *defineHoistedVar(Environment *env, const String *id, StmtNode *p, bool isVar);
-    Multiname *defineLocalMember(Environment *env, const String *id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, LocalMember *m, size_t pos);
+    Multiname *defineLocalMember(Environment *env, const String *id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, LocalMember *m, size_t pos, bool enumerable);
     InstanceMember *defineInstanceMember(JS2Class *c, Context *cxt, const String *id, NamespaceList *namespaces, 
                                                                     Attribute::OverrideModifier overrideMod, bool xplicit,
                                                                     InstanceMember *m, size_t pos);
@@ -1221,8 +1220,7 @@ public:
     js2val invokeFunction(JS2Object *fnObj, js2val thisValue, js2val *argv, uint32 argc);
 
     void createDynamicProperty(JS2Object *obj, QualifiedName *qName, js2val initVal, Access access, bool sealed, bool enumerable);
-    void createDynamicProperty(JS2Object *obj, const String *name, js2val initVal, Access access, bool sealed, bool enumerable) 
-            { QualifiedName qName(publicNamespace, name); createDynamicProperty(obj, &qName, initVal, access, sealed, enumerable); }
+    void createDynamicProperty(JS2Object *obj, const String *name, js2val initVal, Access access, bool sealed, bool enumerable);
 
 
 
