@@ -411,8 +411,6 @@ public:
   NS_IMETHOD GetIsInSHist(PRBool& aIsFrame);
   NS_IMETHOD GetURL(const PRUnichar** aURL);
   NS_IMETHOD SetURL(const PRUnichar* aURL);
-  NS_IMETHOD SetUrlDispatcher(nsIUrlDispatcher * anObserver);
-  NS_IMETHOD GetUrlDispatcher(nsIUrlDispatcher *& aResult);
 
   NS_IMETHOD SetParentURIContentListener(nsIURIContentListener * aContentListener);
   NS_IMETHOD GetParentURIContentListener(nsIURIContentListener ** aContentListener);
@@ -436,7 +434,6 @@ protected:
   nsIWidget* mWindow;
   nsIDocumentLoader* mDocLoader;
   nsIDocumentLoaderObserver* mDocLoaderObserver;
-  nsIUrlDispatcher *  mUrlDispatcher;
 
   nsIWebShell* mParent;
   nsVoidArray mChildren;
@@ -563,8 +560,6 @@ static NS_DEFINE_IID(kIScriptContextOwnerIID, NS_ISCRIPTCONTEXTOWNER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kRefreshURIIID,          NS_IREFRESHURI_IID);
 
-static NS_DEFINE_IID(kIWebShellIID,           NS_IWEB_SHELL_IID);
-static NS_DEFINE_IID(kIWebShellServicesIID,   NS_IWEB_SHELL_SERVICES_IID);
 static NS_DEFINE_IID(kIWidgetIID,             NS_IWIDGET_IID);
 static NS_DEFINE_IID(kIPluginManagerIID,      NS_IPLUGINMANAGER_IID);
 static NS_DEFINE_IID(kIPluginHostIID,         NS_IPLUGINHOST_IID);
@@ -1142,7 +1137,6 @@ nsWebShell::Destroy()
 
   SetContainer(nsnull);
   SetDocLoaderObserver(nsnull);
-  SetUrlDispatcher(nsnull);
 
   // Remove this webshell from its parent's child list
   if (nsnull != mParent) {
@@ -1481,26 +1475,6 @@ nsWebShell::GetDocLoaderObserver(nsIDocumentLoaderObserver*& aResult)
 {
   aResult = mDocLoaderObserver;
   NS_IF_ADDREF(mDocLoaderObserver);
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsWebShell::SetUrlDispatcher(nsIUrlDispatcher* aDispatcher)
-{
-  NS_IF_RELEASE(mUrlDispatcher);
-
-  mUrlDispatcher = aDispatcher;
-  NS_IF_ADDREF(mUrlDispatcher);
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsWebShell::GetUrlDispatcher(nsIUrlDispatcher*& aResult)
-{
-  aResult = mUrlDispatcher;
-  NS_IF_ADDREF(mUrlDispatcher);
   return NS_OK;
 }
 
@@ -4398,32 +4372,13 @@ nsWebShellFactory::~nsWebShellFactory()
 {
 }
 
-nsresult
-nsWebShellFactory::QueryInterface(const nsIID &aIID, void **aResult)
-{
-  if (aResult == NULL) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  // Always NULL result, in case of failure
-  *aResult = NULL;
-
-  if (aIID.Equals(kISupportsIID)) {
-    *aResult = (void *)(nsISupports*)this;
-  } else if (aIID.Equals(kIFactoryIID)) {
-    *aResult = (void *)(nsIFactory*)this;
-  }
-
-  if (*aResult == NULL) {
-    return NS_NOINTERFACE;
-  }
-
-  NS_ADDREF_THIS();  // Increase reference count for caller
-  return NS_OK;
-}
-
 NS_IMPL_ADDREF(nsWebShellFactory);
 NS_IMPL_RELEASE(nsWebShellFactory);
+
+NS_INTERFACE_MAP_BEGIN(nsWebShellFactory)
+   NS_INTERFACE_MAP_ENTRY(nsISupports)
+   NS_INTERFACE_MAP_ENTRY(nsIFactory)
+NS_INTERFACE_MAP_END
 
 nsresult
 nsWebShellFactory::CreateInstance(nsISupports *aOuter,
