@@ -28,7 +28,6 @@
 
 <dialog id="ssl_warning" title="&newserver.title;"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  style="width: 30em; height: 16em"
   onload="onLoad();"
   buttons="accept,cancel,help"
   ondialogaccept="return doOK();"
@@ -40,24 +39,37 @@
 <script type="application/x-javascript" src="chrome://pippki/content/newserver.js"/>
 <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
+<stringbundle id="newserver_bundle" src="chrome://pippki/locale/newserver.properties"/>
+
 <vbox flex="1">
   <hbox valign="top" align="center">
 
     <image class="alert-icon" style="margin: 5px"/>
     <vbox flex="1" valign="middle">
 
-      <description id="message"/>
+      <description id="intro"/>
       <separator class="thin"/>
-      <description id="notRecognized"/>
+      <description>&newserver.reasons;</description>
+      <description>&newserver.reason1;</description>
+      <description>&newserver.reason2;</description>
+      <description id="reason3"/>
+      <separator class="thin"/>
+      <description>&newserver.notify;</description>
       <separator/>
-
+      <description id="question"/>
+      <separator class="thin"/>
       <vbox flex="1" align="start">
-        <button id="examineCert-button" label="&examineCert.label;"
+        <button id="examineCert-button" label="&newserver.examine;"
                 oncommand="viewCert();"/> 
       </vbox>
-
-      <checkbox id="alwaysAccept" label="&alwaysAccept.label;"/>
-
+      <separator class="thin"/>
+      <vbox>
+        <radiogroup id="whatnow" flex="1">
+          <radio label="&newserver.remember;" id="remember"/>
+          <radio label="&newserver.session;" id="session" selected="true"/>
+          <radio label="&newserver.refuse;" id="refuse"/>
+        </radiogroup>
+      </vbox>
     </vbox>
   </hbox>
 </vbox>
