@@ -675,7 +675,7 @@ NS_IMETHODIMP nsEditorShell::SetDisplayMode(PRInt32 aDisplayMode)
                 return NS_ERROR_NULL_POINTER;
 
               // Don't need to QI (subclass)
-              styleSheet = cssStyleSheet;
+              styleSheet = do_QueryInterface(cssStyleSheet);
               if (!styleSheet)
                 return NS_ERROR_NULL_POINTER;
             }
