@@ -27,8 +27,14 @@ DEPTH=..\..\..\..
 
 OBJS = $(OBJS) .\$(OBJDIR)\xpstrdll.obj
 RCFLAGS=\
-	/I$(DEPTH)\include \
-	/I$(DIST)\include \
+        /I$(DEPTH)\include \
+        /I$(DIST)\include \
+# hack to include NSPR headers
+!if defined(MOZ_DEBUG)
+        /I$(DEPTH)\dist\WIN954.0_DBG.OBJD\include \
+!else
+        /I$(DEPTH)\dist\WIN95_4.0_OPT.OBJ\include \
+!endif
 	/I$(DEPTH)\dist\public\security \
 !if "$(MOZ_BITS)" == "32"
 	/DWIN32 \
