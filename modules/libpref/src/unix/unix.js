@@ -67,6 +67,10 @@ pref("clipboard.autocopy", true);
 
 pref("browser.urlbar.clickSelectsAll", false);
 
+// Tab focus model bit field:
+// 1 focuses text controls, 2 focuses other form elements, 4 adds links.
+pref("accessibility.tabfocus", 1);
+
 // override double-click word selection behavior.
 pref("layout.word_select.stop_at_punctuation", false);
 
