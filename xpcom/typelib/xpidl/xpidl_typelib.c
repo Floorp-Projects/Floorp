@@ -1033,7 +1033,6 @@ typelib_op_dcl(TreeState *state)
     IDL_tree iter;
     uint16 num_args = 0;
     uint8 op_flags = 0;
-    gboolean saw_retval = FALSE;
     gboolean op_notxpcom = (IDL_tree_property_get(op->ident, "notxpcom")
                             != NULL);
     gboolean op_noscript = (IDL_tree_property_get(op->ident, "noscript")
@@ -1073,19 +1072,6 @@ typelib_op_dcl(TreeState *state)
         XPTParamDescriptor *pd = &meth->params[num_args];
         if (!fill_pd_from_param(state, pd, IDL_LIST(iter).data))
             return FALSE;
-        if (pd->flags & XPT_PD_RETVAL) {
-            if (op->op_type_spec) {
-                IDL_tree_error(state->tree, 
-                               "can't have [retval] with non-void return type");
-                return FALSE;
-            }
-            if (saw_retval) {
-                IDL_tree_error(state->tree,
-                               "can't have more than one [retval] parameter");
-                return FALSE;
-            }
-            saw_retval = TRUE;
-        }
     }
 
     /* stick retval param where we can see it later */

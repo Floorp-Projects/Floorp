@@ -212,7 +212,6 @@ IDL_tree /* IDL_TYPE_DCL */
 find_underlying_type(IDL_tree typedef_ident)
 {
     IDL_tree up;
-    IDL_tree type;
 
     if (typedef_ident == NULL || IDL_NODE_TYPE(typedef_ident) != IDLN_IDENT)
         return NULL;
@@ -347,6 +346,7 @@ verify_method_declaration(IDL_tree method_tree)
     IDL_tree iter;
     gboolean scriptable_interface;
     gboolean scriptable_method;
+    gboolean seen_retval = FALSE;
     const char *method_name = IDL_IDENT(IDL_OP_DCL(method_tree).ident).str;
 
     if (op->f_varargs) {
@@ -408,6 +408,29 @@ verify_method_declaration(IDL_tree method_tree)
                            "types (parameter \"%s\") must be marked "
                            "[noscript]", param_name);
             return FALSE;
+        }
+
+        /*
+         * Sanity checks on return values.
+         */
+        if (IDL_tree_property_get(simple_decl, "retval") != NULL) {
+            if (IDL_LIST(iter).next != NULL) {
+                IDL_tree_error(method_tree,
+                               "only the last parameter can be marked [retval]");
+                return FALSE;
+            }
+            if (op->op_type_spec) {
+                IDL_tree_error(method_tree,
+                               "can't have [retval] with non-void return type");
+                return FALSE;
+            }
+            /* In case XPConnect relaxes the retval-is-last restriction. */
+            if (seen_retval) {
+                IDL_tree_error(method_tree,
+                               "can't have more than one [retval] parameter");
+                return FALSE;
+            }
+            seen_retval = TRUE;
         }
 
         /*
