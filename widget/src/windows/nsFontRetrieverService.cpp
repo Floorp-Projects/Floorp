@@ -181,7 +181,7 @@ static int CALLBACK MyEnumFontFamProc(ENUMLOGFONT FAR *lpelf,
 {
   FontInfo * font = (FontInfo *)lParam;
 
-  ////printf("  sizes-> %d\n", lpelf->elfLogFont.lfHeight);
+  //printf("  sizes-> %d\n", lpelf->elfLogFont.lfHeight);
   LOGFONT  ourLogFont;    // Local copy of the LOGFONT structure.
   memcpy(&ourLogFont,  (const void *)&lpelf->elfLogFont, sizeof LOGFONT); // Make the copy
   //printf("Size: %d", ourLogFont.lfHeight);

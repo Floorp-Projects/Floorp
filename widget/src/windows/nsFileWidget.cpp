@@ -339,7 +339,9 @@ nsFileDlgResults nsFileWidget::GetFolder(nsIWidget        * aParent,
         pathStr.Assign(unichar);
         delete [] unichar;
       }
+#ifdef DEBUG
       //printf("[%s]\n", path);
+#endif
       nsFilePath filePath(pathStr);
       nsFileSpec fileSpec(filePath);
       theFileSpec = fileSpec;

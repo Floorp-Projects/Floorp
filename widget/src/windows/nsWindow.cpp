@@ -117,13 +117,17 @@ OleRegisterMgr::OleRegisterMgr()
   if (FAILED(::OleInitialize(NULL))) {
     NS_ASSERTION(0, "***** OLE has not been initialized!\n");
   } else {
+#ifdef DEBUG
     //printf("***** OLE has been initialized!\n");
+#endif
   }
 }
  
 OleRegisterMgr::~OleRegisterMgr()
 {
+#ifdef DEBUG
   //printf("***** OLE has been Uninitialized!\n");
+#endif
   ::OleUninitialize();
 }
 
@@ -169,11 +173,12 @@ static LONG  gLastClickCount    = 0L;
 ////////////////////////////////////////////////////
 
 #if 0
-// #ifdef KE_DEBUG
 static PRBool is_vk_down(int vk)
 {
    SHORT st = GetKeyState(vk);
+#ifdef DEBUG
    printf("is_vk_down vk=%x st=%x\n",vk, st);
+#endif
    return (st & 0x80) ? PR_TRUE : PR_FALSE;
 }
 #define IS_VK_DOWN is_vk_down
@@ -2410,7 +2415,9 @@ BOOL nsWindow::OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode)
 
   aVirtualKeyCode = !mIMEIsComposing?MapFromNativeToDOM(aVirtualKeyCode):aVirtualKeyCode;
 
+#ifdef DEBUG
   //printf("In OnKeyDown ascii %d  virt: %d  scan: %d\n", asciiKey, aVirtualKeyCode, aScanCode);
+#endif
 
   BOOL result = DispatchKeyEvent(NS_KEY_DOWN, asciiKey, aVirtualKeyCode);
 
@@ -2954,7 +2961,9 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
               MSG wmsg;
               do {
+#ifdef DEBUG
                 //printf("fire\n");
+#endif
                 queue->FireNextReadyTimer(NS_PRIORITY_LOWEST);
               } while (queue->HasReadyTimers(NS_PRIORITY_LOWEST) && 
                   !::PeekMessage(&wmsg, NULL, 0, 0, PM_NOREMOVE));
@@ -3465,8 +3474,9 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
                 // Realize the drawing palette
                 int i = ::RealizePalette(hDC);
 
+#ifdef DEBUG
                 //printf("number of colors that changed=%d\n",i);
-
+#endif
                 // we should always invalidate.. because the lookup may have changed
                 ::InvalidateRect(mWnd, (LPRECT)NULL, TRUE);
 
@@ -3522,13 +3532,16 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 					break;
 
         case WM_DROPFILES: {
-          /*HDROP hDropInfo = (HDROP) wParam;
+#if 0
+	        HDROP hDropInfo = (HDROP) wParam;
 	        UINT nFiles = ::DragQueryFile(hDropInfo, (UINT)-1, NULL, 0);
 
 	        for (UINT iFile = 0; iFile < nFiles; iFile++) {
 		        TCHAR szFileName[_MAX_PATH];
 		        ::DragQueryFile(hDropInfo, iFile, szFileName, _MAX_PATH);
+#ifdef DEBUG
             printf("szFileName [%s]\n", szFileName);
+#endif
             nsAutoString fileStr(szFileName);
             nsEventStatus status;
             nsDragDropEvent event;
@@ -3537,7 +3550,8 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             event.mIsFileURL = PR_FALSE;
             event.mURL       = (PRUnichar *)fileStr.GetUnicode();
             DispatchEvent(&event, status);
-	        }*/
+	        }
+#endif
         } break;
 
       case WM_DESTROYCLIPBOARD: {
@@ -4310,7 +4324,9 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
             gCurrentWindow = this;
           }
         } else {
+#ifdef DEBUG
           //printf("Mouse exit");
+#endif
         }
 
       } break;
@@ -5615,9 +5631,13 @@ LRESULT CALLBACK nsWindow::MozSpecialMsgFilter(int code, WPARAM wParam, LPARAM l
     }
     if (code != gLastMsgCode) {
       if (gMSGFEvents[inx].mId == code) {
+#ifdef DEBUG
         printf("MozSpecialMessageProc - code: 0x%X  - %s  hw: %p\n", code, gMSGFEvents[inx].mStr, pMsg->hwnd);
+#endif
       } else {
+#ifdef DEBUG
         printf("MozSpecialMessageProc - code: 0x%X  - %d  hw: %p\n", code, gMSGFEvents[inx].mId, pMsg->hwnd);
+#endif
       }
       gLastMsgCode = code;
     }
