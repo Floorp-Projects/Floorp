@@ -268,6 +268,7 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext& aPresContext,
         const nsStylePosition* position = (const nsStylePosition*)
           aStyleContext->GetStyleData(eStyleStruct_Position);
 
+        // XXX Michael: uncomment this code to test the problem I described...
         if ((NS_STYLE_POSITION_RELATIVE == position->mPosition) ||
             (NS_STYLE_POSITION_ABSOLUTE == position->mPosition)) {
           viewManager->SetViewContentTransparency(view, PR_TRUE);
