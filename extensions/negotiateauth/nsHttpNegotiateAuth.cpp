@@ -143,7 +143,7 @@ nsHttpNegotiateAuth::ChallengeReceived(nsIHttpChannel *httpChannel,
         httpInternal->GetProxyInfo(getter_AddRefs(proxyInfo));
         NS_ENSURE_STATE(proxyInfo);
 
-        service = proxyInfo->Host();
+        proxyInfo->GetHost(service);
     }
     else {
         PRBool allowed = TestPref(uri, kNegotiateAuthTrustedURIs);
