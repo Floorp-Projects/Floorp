@@ -331,18 +331,13 @@ NSSRWLock_UnlockWrite(NSSRWLock *rwlock)
 
 	rwlock->rw_owner = NULL;		/* I don't own it any more. */
 
-	if (rwlock->rw_reader_locks == 0) { /* no readers, wake up somebody. */
-	    /* Give preference to waiting writers. */
-	    if (rwlock->rw_waiting_writers > 0) 
+	/* Give preference to waiting writers. */
+	if (rwlock->rw_waiting_writers > 0) {
+	    if (rwlock->rw_reader_locks == 0)
 		PZ_NotifyCondVar(rwlock->rw_writer_waitq);
-	    else if (rwlock->rw_waiting_readers > 0)
-		PZ_NotifyAllCondVar(rwlock->rw_reader_waitq);
-	} else {
-	    /* Give preference to waiting writers. */
-	    if (  rwlock->rw_waiting_writers == 0 &&
-                  rwlock->rw_waiting_readers > 0)
-		PZ_NotifyAllCondVar(rwlock->rw_reader_waitq);
-        }
+	} else if (rwlock->rw_waiting_readers > 0) {
+	    PZ_NotifyAllCondVar(rwlock->rw_reader_waitq);
+	}
     }
     PZ_Unlock(rwlock->rw_lock);
 
