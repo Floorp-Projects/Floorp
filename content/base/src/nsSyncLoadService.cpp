@@ -246,7 +246,7 @@ nsSyncLoader::LoadDocument(nsIURI* documentURI, nsIDOMDocument **_retval)
     JSContext* cx;
     if (NS_SUCCEEDED(rv) && cc) {
         rv = cc->GetJSContext(&cx);
-        if (NS_FAILED(rv)) NS_ERROR_FAILURE;
+        if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
     }
     else {
         NS_WITH_SERVICE(nsIAppShellService, appshellSvc, kAppShellServiceCID, &rv);

@@ -45,7 +45,7 @@
  * URIUtils
  * A set of utilities for handling URIs
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.15 $ $Date: 2001/06/26 14:10:10 $
+ * @version $Revision: 1.16 $ $Date: 2001/07/02 09:24:52 $
 **/
 
 #ifdef TX_EXE
@@ -253,8 +253,6 @@ istream* URIUtils::openStream(ParsedURI* uri) {
     return inStream;
 } //-- openStream
 
-/*  */
-
 URIUtils::ParsedURI* URIUtils::parseURI(const String& uri) {
 
     ParsedURI* uriTokens = new ParsedURI;
@@ -349,41 +347,4 @@ URIUtils::ParsedURI* URIUtils::parseURI(const String& uri) {
     return uriTokens;
 } //-- parseURI
 
-/**
- *
-**
-void URIUtils::test(const String& str) {
-    cout << "parsing: " << str << endl;
-    ParsedURI* uri = parseURI(str);
-    cout << "protocol : " << uri->protocol << endl;
-    cout << "host     : " << uri->host << endl;
-    cout << "port     : " << uri->port << endl;
-    cout << "path     : " << uri->path << endl;
-    cout << "malformed: " << uri->isMalformed << endl;
-    delete uri;
-} //-- test
-
-/**
- * The test class for the URIUtils
-**
-void main(int argc, char** argv) {
-    URIUtils::test("file:///c|\\test");
-    URIUtils::test("http://my.domain.com");
-    URIUtils::test("my.domain.com");
-    URIUtils::test("http://my.domain.com:80");
-    URIUtils::test("http://my.domain.com:88/foo.html");
-
-    String url("http://my.domain.com:88/foo.html");
-    String docBase;
-    URIUtils::getDocumentBase(url, docBase);
-    cout << "url          : " << url <<endl;
-    cout << "document base: " << docBase <<endl;
-    String localPart("foo.html");
-    url.clear();
-    URIUtils::resolveHref(localPart, docBase, url);
-    cout << "local part   : " << localPart << endl;
-    cout << "resolved url : " << url << endl;
-
-}
-*/
 #endif

@@ -21,13 +21,13 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: Numbering.cpp,v 1.2 2001/04/08 14:40:02 peterv%netscape.com Exp $
+ * $Id: Numbering.cpp,v 1.3 2001/07/02 09:24:26 peterv%netscape.com Exp $
  */
 
 /**
  * Numbering methods
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.2 $ $Date: 2001/04/08 14:40:02 $
+ * @version $Revision: 1.3 $ $Date: 2001/07/02 09:24:26 $
 **/
 
 #include "Numbering.h"
@@ -152,45 +152,3 @@ NodeSet* Numbering::getAncestorsOrSelf
     }
     return nodeSet;
 } //-- fromAncestorsOrSelf
-
-/**
-    * Retrieves all nodes that come before the given element
-    * at any level in the document that match the count pattern of
-    * this XSLNumber starting from the closest element that matches
-    * the from pattern
-    * @param element the element to find the nearest ancestor of
-    * @return a List of all matching nodes
-**
-NodeSet* Numbering::getAnyPreviousNodes
-    ( PatternExpr* patternExpr, Node* context, ProcessorState* ps)
-{
-
-    NodeSet* nodes = new NodeSet();
-
-    Node* current = context;
-
-    while (current) {
-
-        // Check from MatchExpr
-        if ((from != null) && from.matches(element,element,ps))
-            return nodes;
-
-        // Check count MatchExpr
-        if (matchExpr.matches(element, element, ps))
-            nodes.add(element);
-
-        Node sibling = element;
-        while ( (sibling = sibling.getPreviousSibling()) != null) {
-            if (sibling.getNodeType() == Node.ELEMENT_NODE) break;
-        }
-        if (sibling == null) {
-            Node parent = element.getParentNode();
-            if (parent.getNodeType() != Node.ELEMENT_NODE) break;
-            element = (Element)parent;
-        }
-        else element = (Element)sibling;
-    }
-    return nodes;
-} //-- getAnyPreviousNodes
-
-/* */
