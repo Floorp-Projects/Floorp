@@ -196,6 +196,11 @@ function msgOpenAccountWizard()
       window.openDialog("chrome://messenger/content/AccountWizard.xul",
                         "AccountWizard", "chrome,modal,titlebar,resizable");
 
+  //For the first account we need to reset the default smtp server in the panel.
+  var smtpService = Components.classes["@mozilla.org/messengercompose/smtp;1"].getService(Components.interfaces.nsISmtpService);
+  var serverCount = smtpService.smtpServers.Count();
+  if(serverCount == 1)
+    ReloadSmtpPanel();
 }
 
 // selectPage: the xul file name for the viewing page, 
