@@ -10,3 +10,5 @@ commonDialog.xul
 commonDialog.js
 strres.js
 about.html
+charsetOverlay.xul
+charsetOverlay.js
