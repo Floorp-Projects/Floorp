@@ -538,26 +538,57 @@ NS_IMETHODIMP nsRenderingContextMotif :: SetClipRegion(const nsIRegion& aRegion,
 
 NS_IMETHODIMP nsRenderingContextMotif :: GetClipRegion(nsIRegion **aRegion)
 {
-  nsIRegion * pRegion ;
+//   nsIRegion * pRegion ;
 
-  static NS_DEFINE_IID(kCRegionCID, NS_REGION_CID);
-  static NS_DEFINE_IID(kIRegionIID, NS_IREGION_IID);
+//   static NS_DEFINE_IID(kCRegionCID, NS_REGION_CID);
+//   static NS_DEFINE_IID(kIRegionIID, NS_IREGION_IID);
 
-  nsresult rv = nsComponentManager::CreateInstance(kCRegionCID, 
-					     nsnull, 
-					     kIRegionIID, 
-					     (void **)aRegion);
+//   nsresult rv = nsComponentManager::CreateInstance(kCRegionCID, 
+// 					     nsnull, 
+// 					     kIRegionIID, 
+// 					     (void **)aRegion);
 
-  if (NS_OK == rv) {
-    nsRect rect;
-    PRBool clipState;
-    pRegion = (nsIRegion *)&aRegion;
-    pRegion->Init();    
-    GetClipRect(rect, clipState);
-    pRegion->Union(rect.x,rect.y,rect.width,rect.height);
+//   if (NS_OK == rv) {
+//     nsRect rect;
+//     PRBool clipState;
+//     pRegion = (nsIRegion *)&aRegion;
+//     pRegion->Init();    
+//     GetClipRect(rect, clipState);
+//     pRegion->Union(rect.x,rect.y,rect.width,rect.height);
+//   }
+
+//   return NS_OK;
+
+  nsresult  rv = NS_OK;
+
+  NS_ASSERTION(!(nsnull == aRegion), "no region ptr");
+
+  if (nsnull == *aRegion)
+  {
+    nsRegionMotif *rgn = new nsRegionMotif();
+
+    if (nsnull != rgn)
+    {
+      NS_ADDREF(rgn);
+
+      rv = rgn->Init();
+
+      if (NS_OK == rv)
+        *aRegion = rgn;
+      else
+        NS_RELEASE(rgn);
+    }
+    else
+      rv = NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return NS_OK;
+//   if (rv == NS_OK)
+//     (*aRegion)->SetTo(*mClipRegion);
+
+//   if (rv == NS_OK)
+//     (*aRegion)->SetTo(*mClipRegion);
+
+  return rv;
 }
 
 NS_IMETHODIMP nsRenderingContextMotif :: SetColor(nscolor aColor)
