@@ -3676,7 +3676,7 @@ DocumentViewerImpl::ReturnToGalleyPresentation()
   // because it is needing when re-constructing the Galley Mode)
   SetIsPrintPreview(PR_FALSE);
 
-  mViewManager->EnableRefresh(NS_VMREFRESH_NO_SYNC);
+  mViewManager->EnableRefresh(NS_VMREFRESH_DEFERRED);
 
   Show();
 
@@ -3767,7 +3767,7 @@ DocumentViewerImpl::InstallNewPresentation()
   mDeviceContext->SetUseAltDC(kUseAltDCFor_FONTMETRICS, PR_FALSE);
   mDeviceContext->SetUseAltDC(kUseAltDCFor_CREATERC_PAINT, PR_TRUE);
 
-  mViewManager->EnableRefresh(NS_VMREFRESH_NO_SYNC);
+  mViewManager->EnableRefresh(NS_VMREFRESH_DEFERRED);
 
   Show();
 

@@ -2677,7 +2677,13 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
 
   if (mCaret)
     mCaret->EraseCaret();
-  
+
+  NS_ASSERTION(mViewManager, "Should have view manager");
+  // Painting should be suppressed for the initial reflow, so this won't
+  // really do anything right now, but it will be useful when we
+  // start batching widget changes
+  mViewManager->BeginUpdateViewBatch();
+
   WillCauseReflow();
 
   if (mPresContext) {
@@ -2780,6 +2786,8 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
   DidCauseReflow();
   DidDoReflow();
 
+  mViewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
+
   if (mViewManager && mCaret && !mViewEventListener) {
     nsIScrollableView* scrollingView = nsnull;
     mViewManager->GetRootScrollableView(&scrollingView);
@@ -2839,6 +2847,9 @@ NS_IMETHODIMP
 PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 {
   PRBool firstReflow = PR_FALSE;
+
+  NS_ASSERTION(mViewManager, "Must have view manager");
+  mViewManager->BeginUpdateViewBatch();
 
   WillCauseReflow();
 
@@ -2924,6 +2935,8 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 #endif
   
   DidDoReflow();
+
+  mViewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
 
   if (!firstReflow) {
     //Set resize event timer
@@ -3753,7 +3766,12 @@ PresShell::RecreateFramesFor(nsIContent* aContent)
 
   nsStyleChangeList changeList;
   changeList.AppendChange(nsnull, aContent, nsChangeHint_ReconstructFrame);
-  return mFrameConstructor->ProcessRestyledFrames(changeList, mPresContext);
+
+  NS_ASSERTION(mViewManager, "Should have view manager");
+  mViewManager->BeginUpdateViewBatch();
+  nsresult rv = mFrameConstructor->ProcessRestyledFrames(changeList, mPresContext);
+  mViewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -4975,14 +4993,12 @@ PresShell::FlushPendingNotifications(mozFlushType aType)
   PRBool isSafeToFlush;
   IsSafeToFlush(isSafeToFlush);
 
-  if (isSafeToFlush) {
-    // XXXbz we should probably do a view batch no matter what here
-    // and just change the flag for the batch end based on whether
-    // Flush_OnlyPaint is set.
-    PRBool batchViews = (aType & Flush_OnlyPaint);
-    if (batchViews && mViewManager) {
-      mViewManager->BeginUpdateViewBatch();
-    }
+  NS_ASSERTION(!isSafeToFlush || mViewManager, "Must have view manager");
+  if (isSafeToFlush && mViewManager) {
+    // Style reresolves not in conjunction with reflows can't cause
+    // painting or geometry changes, so don't bother with view update
+    // batching if we only have style reresolve
+    mViewManager->BeginUpdateViewBatch();
 
     if (aType & Flush_StyleReresolves) {
       mFrameConstructor->ProcessPendingRestyles();
@@ -4992,9 +5008,13 @@ PresShell::FlushPendingNotifications(mozFlushType aType)
       ProcessReflowCommands(PR_FALSE);
     }
 
-    if (batchViews && mViewManager) {
-      mViewManager->EndUpdateViewBatch(NS_VMREFRESH_IMMEDIATE);
+    PRUint32 updateFlags = NS_VMREFRESH_NO_SYNC;
+    if (aType & Flush_OnlyPaint) {
+      // Flushing paints, so perform the invalidates and drawing
+      // immediately
+      updateFlags = NS_VMREFRESH_IMMEDIATE;
     }
+    mViewManager->EndUpdateViewBatch(updateFlags);
   }
 
   return NS_OK;
@@ -5171,7 +5191,10 @@ nsIPresShell::ReconstructStyleDataInternal()
   FrameManager()->ComputeStyleChangeFor(rootFrame, &changeList,
                                        NS_STYLE_HINT_NONE);
 
+  NS_ASSERTION(mViewManager, "Should have view manager");
+  mViewManager->BeginUpdateViewBatch();
   mFrameConstructor->ProcessRestyledFrames(changeList, mPresContext);
+  mViewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
 
   VERIFY_STYLE_TREE;
 }
@@ -6081,7 +6104,10 @@ struct ReflowEvent : public PLEvent {
         // Set a kung fu death grip on the view manager associated with the pres shell
         // before processing that pres shell's reflow commands.  Fixes bug 54868.
         nsCOMPtr<nsIViewManager> viewManager = presShell->GetViewManager();
+
+        viewManager->BeginUpdateViewBatch();
         ps->ProcessReflowCommands(PR_TRUE);
+        viewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
 
         // Now, explicitly release the pres shell before the view manager
         presShell = nsnull;
@@ -6548,6 +6574,9 @@ PresShell::Observe(nsISupports* aSubject,
     // Need to null-check because "chrome-flush-skin-caches" can happen
     // at interesting times during startup.
     if (rootFrame) {
+      NS_ASSERTION(mViewManager, "View manager must exist");
+      mViewManager->BeginUpdateViewBatch();
+
       WalkFramesThroughPlaceholders(mPresContext, rootFrame,
                                     &ReResolveMenusAndTrees, nsnull);
 
@@ -6557,6 +6586,8 @@ PresShell::Observe(nsISupports* aSubject,
       WalkFramesThroughPlaceholders(mPresContext, rootFrame,
                                     ReframeImageBoxes, &changeList);
       mFrameConstructor->ProcessRestyledFrames(changeList, mPresContext);
+
+      mViewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
     }
     return NS_OK;
   }

@@ -890,7 +890,7 @@ nsSVGOuterSVGFrame::InvalidateRegion(nsISVGRendererRegion* region, PRBool bRedra
     if (sink)
       region->GetRectangleScans(sink);
   }
-  vm->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
+  vm->EndUpdateViewBatch(NS_VMREFRESH_DEFERRED);
   
   return NS_OK;
 }
@@ -981,7 +981,7 @@ nsSVGOuterSVGFrame::UnsuspendRedraw()
 
   NS_ENSURE_TRUE(mPresShell, NS_ERROR_FAILURE);
 
-  vm->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
+  vm->EndUpdateViewBatch(NS_VMREFRESH_DEFERRED);
   return NS_OK;
 }
 

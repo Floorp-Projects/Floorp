@@ -462,6 +462,7 @@ nsViewManager::nsViewManager()
   mAllowDoubleBuffering = PR_TRUE; 
   mHasPendingInvalidates = PR_FALSE;
   mRecursiveRefreshPending = PR_FALSE;
+  mUpdateBatchFlags = 0;
 }
 
 nsViewManager::~nsViewManager()
@@ -3190,12 +3191,17 @@ NS_IMETHODIMP nsViewManager::EnableRefresh(PRUint32 aUpdateFlags)
 
   mRefreshEnabled = PR_TRUE;
 
+  // nested batching can combine IMMEDIATE with DEFERRED. Favour
+  // IMMEDIATE over DEFERRED and DEFERRED over NO_SYNC.
   if (aUpdateFlags & NS_VMREFRESH_IMMEDIATE) {
     ProcessPendingUpdates(mRootView);
     mHasPendingInvalidates = PR_FALSE;
     Composite();
-  } else {
+  } else if (aUpdateFlags & NS_VMREFRESH_DEFERRED) {
     PostInvalidateEvent();
+  } else { // NO_SYNC
+    ProcessPendingUpdates(mRootView);
+    mHasPendingInvalidates = PR_FALSE;
   }
 
   return NS_OK;
@@ -3205,8 +3211,10 @@ NS_IMETHODIMP nsViewManager::BeginUpdateViewBatch(void)
 {
   nsresult result = NS_OK;
   
-  if (mUpdateBatchCnt == 0)
+  if (mUpdateBatchCnt == 0) {
+    mUpdateBatchFlags = 0;
     result = DisableRefresh();
+  }
 
   if (NS_SUCCEEDED(result))
     ++mUpdateBatchCnt;
@@ -3228,8 +3236,10 @@ NS_IMETHODIMP nsViewManager::EndUpdateViewBatch(PRUint32 aUpdateFlags)
       return NS_ERROR_FAILURE;
     }
 
-  if (mUpdateBatchCnt == 0)
-    result = EnableRefresh(aUpdateFlags);
+  mUpdateBatchFlags |= aUpdateFlags;
+  if (mUpdateBatchCnt == 0) {
+    result = EnableRefresh(mUpdateBatchFlags);
+  }
 
   return result;
 }
