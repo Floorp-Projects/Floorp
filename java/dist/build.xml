@@ -30,7 +30,7 @@
 
   <property name="Name" value="webclient"/>
   <property name="name" value="webclient"/>
-  <property name="version" value="2_0_a2"/>
+  <property name="version" value="2_0_a2b"/>
 
 <!-- ************ Per user local properties ******************************* -->
 
@@ -136,9 +136,13 @@
     </zip>
   </target>
 
-  <target name="test.dist" depends="prepare,clean.dev.build">
-
+  <target name="unzip.dist" depends="prepare">
     <unzip dest="${moz.install.dir}" src="${dist.home}/${name}_${version}_${platform}.zip" />
+  </target>
+
+  <target name="test.dist" depends="prepare">
+
+    <antcall target="unzip.dist" />
 
     <ant inheritAll="false" dir="${moz.install.dir}"/>
 
@@ -149,6 +153,8 @@
   <target name="clean.test.dist" depends="props">
 
     <delete file="${moz.install.dir}/build.xml" />
+    <delete file="${moz.install.dir}/runwc.bat" />
+    <delete file="${moz.install.dir}/runwc.sh" />
     <delete file="${moz.install.dir}/components/${so.prefix}javadom.${so.extension}" />
     <delete file="${moz.install.dir}/${so.prefix}javadomjni.${so.extension}" />
     <delete file="${moz.install.dir}/${so.prefix}${name}.${so.extension}" />

@@ -3,6 +3,20 @@
   <property environment="myenv" />
 
   <target name="props">
+    <condition property="is.win32" value="true">
+      <and>
+        <os family="windows" />
+      </and>
+    </condition>
+
+    <condition property="is.unix" value="true">
+      <and>
+        <os family="unix" />
+      </and>
+    </condition>
+
+
+
     <condition property="PATH_SEP" value=";">
       <and>
         <os family="windows" />
@@ -55,7 +69,31 @@
 
   </target>
 
-  <target name="main" depends="props">
+  <target name="main" depends="main.win32,main.unix"/>
+
+  <target name="main.win32" depends="props" if="is.win32">
+
+    <delete file="${basedir}/runwc.bat" />
+    <echo file="${basedir}/runwc.bat">
+SET PATH=${java.libpath};%PATH%
+SET NSPR_LOG_MODULES=webclient:4,webclientstub:4
+SET NSPR_LOG_FILE=webclient.log
+ant run.test.browser
+    </echo>
+    <exec command=".\runwc.bat" newenvironment="true" />
+
+  </target>
+
+  <target name="main.unix" depends="props" if="is.unix">
+
+    <delete file="${basedir}/runwc.sh" />
+    <echo file="${basedir}/runwc.sh">
+    </echo>
+
+  </target>
+
+
+  <target name="run.test.browser" depends="props">
 
     <java newenvironment="true"
           classname="org.mozilla.webclient.test.TestBrowser"

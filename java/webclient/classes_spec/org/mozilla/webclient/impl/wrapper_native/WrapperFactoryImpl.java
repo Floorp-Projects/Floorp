@@ -316,7 +316,8 @@ public class WrapperFactoryImpl extends Object implements WrapperFactory {
 			
 			((Service)WrapperFactoryImpl.this.profileManager).startup();
 			((Service)WrapperFactoryImpl.this.prefs).startup();
-			((Service)WrapperFactoryImpl.this.bookmarks).startup();
+			// PENDING(edburns): see Message-ID: <bbf0af98.0410171147.3109d532@posting.google.com> on n.p.m.java
+			// ((Service)WrapperFactoryImpl.this.bookmarks).startup();
 			
 			WrapperFactoryImpl.this.nativeAppSetup(nativeWrapperFactory);
 			return null;
