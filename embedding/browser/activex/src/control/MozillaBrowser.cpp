@@ -1095,14 +1095,14 @@ HRESULT CMozillaBrowser::OnEditorCommand(DWORD nCmdID)
 		PRBool bAll = PR_TRUE;
 
 		// Set or remove
-		pHtmlEditor->GetInlineProperty(pInlineProperty, nsnull, nsnull, bFirst, bAny, bAll);
+		pHtmlEditor->GetInlineProperty(pInlineProperty, nsString(), nsString(), &bFirst, &bAny, &bAll);
 		if (bAny)
 		{
-			pHtmlEditor->RemoveInlineProperty(pInlineProperty, nsnull);
+			pHtmlEditor->RemoveInlineProperty(pInlineProperty, nsString());
 		}
 		else
 		{
-			pHtmlEditor->SetInlineProperty(pInlineProperty, nsnull, nsnull);
+			pHtmlEditor->SetInlineProperty(pInlineProperty, nsString(), nsString());
 		}
 	}
 
