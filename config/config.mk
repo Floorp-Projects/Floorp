@@ -180,20 +180,20 @@ ifneq (,$(filter OS2 WINNT, $(OS_ARCH)))
 ifndef GNU_CC
 NSS_LIBS	= \
 	$(DIST)/lib/$(LIB_PREFIX)crmf.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)smime3.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)ssl3.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)nss3.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)softokn3.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)smime3.$(IMPORT_LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)ssl3.$(IMPORT_LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)nss3.$(IMPORT_LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)softokn3.$(IMPORT_LIB_SUFFIX) \
 	$(NULL)
 endif
 endif
 
 NSS_DEP_LIBS	= \
 	$(DIST)/lib/$(LIB_PREFIX)crmf.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)smime3$(DLL_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)ssl3$(DLL_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)nss3$(DLL_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)softokn3$(DLL_SUFFIX) \
+	$(DIST)/lib/$(DLL_PREFIX)smime3$(DLL_SUFFIX) \
+	$(DIST)/lib/$(DLL_PREFIX)ssl3$(DLL_SUFFIX) \
+	$(DIST)/lib/$(DLL_PREFIX)nss3$(DLL_SUFFIX) \
+	$(DIST)/lib/$(DLL_PREFIX)softokn3$(DLL_SUFFIX) \
 	$(NULL)
 
 MOZ_UNICHARUTIL_LIBS = $(DIST)/lib/$(LIB_PREFIX)unicharutil_s.$(LIB_SUFFIX)

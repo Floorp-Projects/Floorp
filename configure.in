@@ -486,11 +486,13 @@ AR_EXTRACT='$(AR) x'
 AR_DELETE='$(AR) d'
 AS='$(CC)'
 AS_DASH_C_FLAG='-c'
+DLL_PREFIX=lib
 LIB_PREFIX=lib
 DLL_SUFFIX=.so
 OBJ_SUFFIX=o
 LIB_SUFFIX=a
 ASM_SUFFIX=s
+IMPORT_LIB_SUFFIX=
 TARGET_MD_ARCH=unix
 DIRENT_INO=d_ino
 CYGWIN_WRAPPER=
@@ -1004,6 +1006,8 @@ case "$target" in
         MOZ_MNG_LIBS='-L$(DIST)/lib -lmng'
         MOZ_JS_LIBS='-L$(DIST)/lib -ljs$(MOZ_BITS)$(VERSION_NUMBER)'
         XPCOM_LIBS='-L$(DIST)/lib -lxpcom'
+        DLL_PREFIX=
+        IMPORT_LIB_SUFFIX=dll.a
     else
         CYGWIN_WRAPPER="sh ${srcdir}/build/cygwin-wrapper"
         if test "`echo ${srcdir} | grep -c ^/ 2>/dev/null`" = 0; then
@@ -1024,7 +1028,9 @@ case "$target" in
         GARBAGE='$(OBJDIR)/vc20.pdb $(OBJDIR)/vc40.pdb'
         OBJ_SUFFIX=obj
         LIB_SUFFIX=lib
+        DLL_PREFIX=
         LIB_PREFIX=
+        IMPORT_LIB_SUFFIX=lib
         MKSHLIB='$(LD) /NOLOGO /DLL /OUT:$@ /PDB:$(PDBFILE) $(DSO_LDOPTS)'
         MKCSHLIB='$(LD) /NOLOGO /DLL /OUT:$@ /PDB:$(PDBFILE) $(DSO_LDOPTS)'
         MKSHLIB_FORCE_ALL=
@@ -1228,10 +1234,12 @@ case "$target" in
 *-os2*)
     AC_DEFINE(XP_OS2)
     USE_SHORT_LIBNAME=1
+    DLL_PREFIX=
     LIB_PREFIX=
     LIB_SUFFIX=lib
     BIN_SUFFIX=".exe"
     DLL_SUFFIX=".dll"
+    IMPORT_LIB_SUFFIX=lib
     DSO_PIC_CFLAGS=
     TARGET_MD_ARCH=os2
     _PLATFORM_DEFAULT_TOOLKIT=os2
@@ -4800,7 +4808,7 @@ if test "$MOZ_SVG"; then
     MOZ_LIBART_CFLAGS='-I${DIST}/include/libart_lgpl'
     case "$target_os" in
     msvc*|mks*|cygwin*|mingw*)
-        MOZ_LIBART_LIBS='$(DIST)/lib/$(LIB_PREFIX)moz_art_lgpl.$(LIB_SUFFIX)' 
+        MOZ_LIBART_LIBS='$(DIST)/lib/$(LIB_PREFIX)moz_art_lgpl.$(IMPORT_LIB_SUFFIX)' 
         ;;
     beos*)
         MOZ_LIBART_LIBS='-lmoz_art_lgpl -lroot -lbe'
@@ -4863,10 +4871,10 @@ if test "$MOZ_LDAP_XPCOM"; then
         if test -n "$GNU_CC"; then
             LDAP_LIBS='-L$(DIST)/lib -lnsldap32v50 -lnsldappr32v50'
         else
-            LDAP_LIBS='$(DIST)/lib/$(LIB_PREFIX)nsldap32v50.${LIB_SUFFIX} $(DIST)/lib/$(LIB_PREFIX)/nsldappr32v50.${LIB_SUFFIX}'
+            LDAP_LIBS='$(DIST)/lib/$(LIB_PREFIX)nsldap32v50.${IMPORT_LIB_SUFFIX} $(DIST)/lib/$(LIB_PREFIX)nsldappr32v50.${IMPORT_LIB_SUFFIX}'
         fi
     elif test "$VACPP"; then
-            LDAP_LIBS='$(DIST)/lib/$(LIB_PREFIX)ldap50.${LIB_SUFFIX} $(DIST)/lib/$(LIB_PREFIX)/prldap50.${LIB_SUFFIX}'
+            LDAP_LIBS='$(DIST)/lib/$(LIB_PREFIX)ldap50.${IMPORT_LIB_SUFFIX} $(DIST)/lib/$(LIB_PREFIX)prldap50.${IMPORT_LIB_SUFFIX}'
     else
         LDAP_LIBS='-L${DIST}/bin -L${DIST}/lib -lldap50 -llber50 -lprldap50'
     fi
@@ -5117,12 +5125,14 @@ AC_SUBST(DSO_CFLAGS)
 AC_SUBST(DSO_PIC_CFLAGS)
 AC_SUBST(DSO_LDOPTS)
 AC_SUBST(LIB_PREFIX)
+AC_SUBST(DLL_PREFIX)
 AC_SUBST(DLL_SUFFIX)
 AC_DEFINE_UNQUOTED(MOZ_DLL_SUFFIX, "$DLL_SUFFIX")
 AC_SUBST(LIB_SUFFIX)
 AC_SUBST(OBJ_SUFFIX)
 AC_SUBST(BIN_SUFFIX)
 AC_SUBST(ASM_SUFFIX)
+AC_SUBST(IMPORT_LIB_SUFFIX)
 AC_SUBST(USE_N32)
 AC_SUBST(CC_VERSION)
 AC_SUBST(CXX_VERSION)

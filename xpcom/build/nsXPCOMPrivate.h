@@ -118,15 +118,10 @@ NS_GetFrozenFunctions(XPCOMFunctions *entryPoints, const char* libraryPath);
 
 #if defined(XP_WIN32) || defined(XP_OS2)
 
-#if defined(XP_WIN32) && defined(__GNUC__)
-#define XPCOM_DLL         "libxpcom" MOZ_DLL_SUFFIX
-#else
-#define XPCOM_DLL         "xpcom.dll"
-#endif
-
 #define XPCOM_SEARCH_KEY  "PATH"
 #define GRE_CONF_NAME     "gre.config"
 #define GRE_WIN_REG_LOC   "Software\\mozilla.org\\GRE\\"
+#define XPCOM_DLL         "xpcom.dll"
 
 #elif defined(XP_MAC)
 
