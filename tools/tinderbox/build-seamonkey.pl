@@ -10,7 +10,7 @@ use Sys::Hostname;
 use POSIX qw(sys_wait_h strftime);
 use Cwd;
 
-$Version = '$Revision: 1.57 $ ';
+$Version = '$Revision: 1.58 $ ';
 
 
 sub PrintUsage {
@@ -212,11 +212,6 @@ sub BuildIt {
 	  }
 	} else {
 	  print LOG "no binary detected, can't delete.\n";
-
-	  # If we're only running tests and have no binary, bail.
-	  if ($TestOnly) {
-		$EarlyExit++;
-	  }
 	}
 
     
@@ -304,6 +299,12 @@ sub BuildIt {
 	  }
 	} else {
 	  print LOG "Error: $mozillaBinary binary missing, build FAILED\n";
+
+	  # If we're only running tests and have no binary, bail.
+	  if ($TestOnly) {
+		$EarlyExit++;
+	  }
+
 	  $BuildStatus = 666;
 	} # if (&BinaryExists($mozillaBinary))
 
