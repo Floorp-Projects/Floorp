@@ -20,7 +20,7 @@
  * Contributor(s): Ed Burns <edburns@acm.org>
  */
 
-#include "nsPluginDefs.idl"
+#include "nsISupports.idl"
 
 /**
  
