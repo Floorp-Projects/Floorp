@@ -242,7 +242,7 @@ nsJARChannel::Resume()
 NS_IMETHODIMP
 nsJARChannel::GetOriginalURI(nsIURI* *aOriginalURI)
 {
-    *aOriginalURI = mOriginalURI ? mOriginalURI : (nsIURI*)mURI;
+    *aOriginalURI = mOriginalURI ? mOriginalURI : nsCOMPtr<nsIURI>(mURI);
     NS_ADDREF(*aOriginalURI);
     return NS_OK;
 }
