@@ -25,7 +25,7 @@
 
 #include "nsDiskCacheEntry.h"
 
-NS_IMPL_ISUPPORTS0(nsDiskCacheEntry);
+NS_IMPL_THREADSAFE_ISUPPORTS0(nsDiskCacheEntry);
 
 PLDHashNumber
 nsDiskCacheEntry::Hash(const char* key)
