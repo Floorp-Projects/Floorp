@@ -22,9 +22,6 @@
 #include "nsIToolkit.h"
 #include <gtk/gtk.h>
 
-struct PLEventQueue;
-struct MethodInfo;
-
 /**
  * Wrapper around the thread running the message pump.
  * The toolkit abstraction is necessary because the message pump must

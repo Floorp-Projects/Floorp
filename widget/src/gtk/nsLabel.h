@@ -20,7 +20,6 @@
 #define nsLabel_h__
 
 #include "nsWidget.h"
-#include "nsIAppShell.h"
 #include "nsILabel.h"
 
 /**

@@ -16,15 +16,13 @@
  * Reserved.
  */
 #include "nsPopUpMenu.h"
-#include "nsIPopUpMenu.h"
 #include "nsIMenu.h"
 #include "nsIWidget.h"
 
 #include "nsString.h"
-#include "nsStringUtil.h"
+#include "nsFileSpec.h" // XXX: For nsAutoCString
 
-static NS_DEFINE_IID(kPopUpMenuIID, NS_IPOPUPMENU_IID);
-NS_IMPL_ISUPPORTS(nsPopUpMenu, kPopUpMenuIID)
+NS_IMPL_ISUPPORTS(nsPopUpMenu, nsPopUpMenu::GetIID())
 
 //-------------------------------------------------------------------------
 //
@@ -71,14 +69,11 @@ NS_METHOD nsPopUpMenu::Create(nsIWidget *aParent)
 //-------------------------------------------------------------------------
 NS_METHOD nsPopUpMenu::AddItem(const nsString &aText)
 {
-  char * labelStr = mLabel.ToNewCString();
   GtkWidget *widget;
 
-  widget = gtk_menu_item_new_with_label (labelStr);
+  widget = gtk_menu_item_new_with_label ((const char*)nsAutoCString(mLabel));
   gtk_widget_show(widget);
   gtk_menu_shell_append (GTK_MENU_SHELL (mMenu), widget);
-
-  delete[] labelStr;
 
   return NS_OK;
 }
@@ -103,21 +98,16 @@ NS_METHOD nsPopUpMenu::AddMenu(nsIMenu * aMenu)
 {
   nsString Label;
   GtkWidget *item=NULL, *parentmenu=NULL, *newmenu=NULL;
-  char *labelStr;
   void *voidData=NULL;
   
   aMenu->GetLabel(Label);
 
-  labelStr = Label.ToNewCString();
-
   GetNativeData(voidData);
   parentmenu = GTK_WIDGET(voidData);
 
-  item = gtk_menu_item_new_with_label (labelStr);
+  item = gtk_menu_item_new_with_label ((const char*)nsAutoCString(Label));
   gtk_widget_show(item);
   gtk_menu_shell_append (GTK_MENU_SHELL (parentmenu), item);
-
-  delete[] labelStr;
 
   voidData = NULL;
 

@@ -20,11 +20,7 @@
 
 #include "nsTextHelper.h"
 #include "nsTextWidget.h"
-#include "nsToolkit.h"
-#include "nsColor.h"
-#include "nsGUIEvent.h"
 #include "nsString.h"
-#include "nsStringUtil.h"
 
 NS_IMPL_ADDREF_INHERITED(nsTextHelper, nsWidget)
 NS_IMPL_RELEASE_INHERITED(nsTextHelper, nsWidget)

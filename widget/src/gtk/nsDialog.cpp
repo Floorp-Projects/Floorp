@@ -17,12 +17,7 @@
  */
 
 #include "nsDialog.h"
-#include "nsIDialog.h"
-#include "nsToolkit.h"
-#include "nsColor.h"
-#include "nsGUIEvent.h"
 #include "nsString.h"
-#include "nsStringUtil.h"
 
 #include <gtk/gtk.h>
 
@@ -92,8 +87,7 @@ nsresult nsDialog::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
   nsresult result = nsWidget::QueryInterface(aIID, aInstancePtr);
 
-  static NS_DEFINE_IID(kInsDialogIID, NS_IDIALOG_IID);
-  if (result == NS_NOINTERFACE && aIID.Equals(kInsDialogIID)) {
+  if (result == NS_NOINTERFACE && aIID.Equals(nsIDialog::GetIID())) {
       *aInstancePtr = (void*) ((nsIDialog*)this);
       AddRef();
       result = NS_OK;

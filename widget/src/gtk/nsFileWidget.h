@@ -19,8 +19,7 @@
 #ifndef nsFileWidget_h__
 #define nsFileWidget_h__
 
-#include "nsToolkit.h"
-#include "nsWidgetsCID.h"
+#include "nsIToolkit.h"
 #include "nsIWidget.h"
 #include "nsIFileWidget.h"
 

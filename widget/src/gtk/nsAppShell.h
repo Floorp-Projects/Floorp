@@ -20,7 +20,6 @@
 #define nsAppShell_h__
 
 #include "nsIAppShell.h"
-#include "plevent.h"
 #include <gtk/gtk.h>
 
 /**

@@ -19,7 +19,6 @@
 #ifndef nsTextWidget_h__
 #define nsTextWidget_h__
 
-#include "nsWidget.h"
 #include "nsTextHelper.h"
 
 #include "nsITextWidget.h"

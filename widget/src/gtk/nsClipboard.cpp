@@ -20,19 +20,12 @@
 
 #include "nsCOMPtr.h"
 
-#include "nsISupportsArray.h"
 #include "nsIClipboardOwner.h"
 #include "nsITransferable.h"   // kTextMime
 
 #include "nsIWidget.h"
-#include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsWidgetsCID.h"
-
-// interface definitions
-static NS_DEFINE_IID(kIWidgetIID,        NS_IWIDGET_IID);
-static NS_DEFINE_IID(kWindowCID,         NS_WINDOW_CID);
-
 
 // The class statics:
 GtkWidget* nsClipboard::sWidget = 0;
@@ -40,7 +33,6 @@ GtkWidget* nsClipboard::sWidget = 0;
 NS_IMPL_ADDREF_INHERITED(nsClipboard, nsBaseClipboard)
 NS_IMPL_RELEASE_INHERITED(nsClipboard, nsBaseClipboard)
 
-static NS_DEFINE_IID(kIClipboardIID,       NS_ICLIPBOARD_IID);
 static NS_DEFINE_CID(kCClipboardCID,       NS_CLIPBOARD_CID);
 
 #if defined(DEBUG_akkana) || defined(DEBUG_mcafee)
@@ -102,8 +94,7 @@ nsresult nsClipboard::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
   nsresult rv = NS_NOINTERFACE;
 
-  static NS_DEFINE_IID(kIClipboard, NS_ICLIPBOARD_IID);
-  if (aIID.Equals(kIClipboard)) {
+  if (aIID.Equals(nsIClipboard::GetIID())) {
     *aInstancePtr = (void*) ((nsIClipboard*)this);
     NS_ADDREF_THIS();
     return NS_OK;

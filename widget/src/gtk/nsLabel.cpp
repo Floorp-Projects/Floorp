@@ -19,13 +19,7 @@
 #include <gtk/gtk.h>
 
 #include "nsLabel.h"
-#include "nsToolkit.h"
-#include "nsColor.h"
-#include "nsGUIEvent.h"
 #include "nsString.h"
-#include "nsStringUtil.h"
-
-#include "nsGtkEventHandler.h"
 
 NS_IMPL_ADDREF_INHERITED(nsLabel, nsWidget)
 NS_IMPL_RELEASE_INHERITED(nsLabel, nsWidget)
@@ -106,8 +100,7 @@ nsresult nsLabel::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
   nsresult result = nsWidget::QueryInterface(aIID, aInstancePtr);
 
-  static NS_DEFINE_IID(kILabelIID, NS_ILABEL_IID);
-  if (result == NS_NOINTERFACE && aIID.Equals(kILabelIID)) {
+  if (result == NS_NOINTERFACE && aIID.Equals(nsILabel::GetIID())) {
       *aInstancePtr = (void*) ((nsILabel*)this);
       AddRef();
       result = NS_OK;

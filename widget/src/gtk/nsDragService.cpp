@@ -23,7 +23,7 @@
 #include "nsWidgetsCID.h"
 
 static NS_DEFINE_IID(kIDragServiceIID,   NS_IDRAGSERVICE_IID);
-static NS_DEFINE_IID(kCDragServiceCID,   NS_DRAGSERVICE_CID);
+static NS_DEFINE_CID(kCDragServiceCID,   NS_DRAGSERVICE_CID);
 
 // The class statics:
 GtkWidget* nsDragService::sWidget = 0;
@@ -70,7 +70,7 @@ nsresult nsDragService::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
   nsresult rv = NS_NOINTERFACE;
 
-  if (aIID.Equals(kIDragServiceIID)) {
+  if (aIID.Equals(nsIDragService::GetIID())) {
     *aInstancePtr = (void*) ((nsIDragService*)this);
     NS_ADDREF_THIS();
     return NS_OK;
