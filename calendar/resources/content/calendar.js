@@ -1452,3 +1452,14 @@ function changeDisplayToDoInViewCheckbox( menuindex ) {
   }
   gCalendarWindow.currentView.refreshEvents( );
 }
+
+function openAboutDialog()
+{
+  window.openDialog("chrome://calendar/content/aboutDialog.xul", "About", "modal,centerscreen,chrome,resizable=no");
+}
+
+function openPreferences()
+{
+  openDialog("chrome://calendar/content/pref/pref.xul","PrefWindow",
+             "chrome,titlebar,resizable,modal");
+}

@@ -1,6 +1,9 @@
 calendar.jar:
     content/calendar/about.html (content/about.html)
     content/calendar/about.xul (content/about.xul)
+    content/calendar/aboutDialog.xul (content/aboutDialog.xul)
+    content/calendar/sunbird.png (content/sunbird.png)
+    content/calendar/sunbird_small.png (content/sunbird_small.png)
     content/calendar/alertDialog.js (content/alertDialog.js)
     content/calendar/alertDialog.xul (content/alertDialog.xul)
     content/calendar/attachFile.js (content/attachFile.js)
@@ -74,6 +77,7 @@ calendar.jar:
     content/calendar/jslib/rdf/rdfContainer.js (content/jslib/rdf/rdfContainer.js)
     content/calendar/jslib/rdf/rdfFile.js (content/jslib/rdf/rdfFile.js)
     content/calendar/jslib/rdf/rdfResource.js (content/jslib/rdf/rdfResource.js)
+    content/calendar/pref/pref.xul (content/pref/pref.xul)
     content/calendar/pref/alarmPrefs.xul (content/pref/alarmPrefs.xul)
 	 content/calendar/pref/calendarPref.xul (content/pref/calendarPref.xul)
     content/calendar/pref/prefOverlay.xul (content/pref/prefOverlay.xul)
