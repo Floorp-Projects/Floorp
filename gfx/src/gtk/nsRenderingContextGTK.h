@@ -242,7 +242,7 @@ private:
   GdkGC                 *mGC;
   GdkFunction            mFunction;
   GdkLineStyle           mLineStyle;
-  gchar                 *mDashList;
+  gint8                  mDashList[2];
   gint                   mDashes;
   nscolor                mCurrentColor;
   nsFontGTK             *mCurrentFont;

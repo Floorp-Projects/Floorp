@@ -686,8 +686,7 @@ NS_IMETHODIMP nsRenderingContextGTK::SetLineStyle(nsLineStyle aLineStyle)
       case nsLineStyle_kDashed:
         {
           mLineStyle = GDK_LINE_ON_OFF_DASH;
-          static char dashed[2] = {4,4};
-          mDashList = dashed;
+          mDashList[0] = mDashList[1] = 4;
           mDashes = 2;
 
           /*          ::gdk_gc_set_dashes(mSurface->GetGC(), 
@@ -698,9 +697,8 @@ NS_IMETHODIMP nsRenderingContextGTK::SetLineStyle(nsLineStyle aLineStyle)
 
       case nsLineStyle_kDotted:
         {
+          mDashList[0] = mDashList[1] = 1;
           mLineStyle = GDK_LINE_ON_OFF_DASH;
-          static char dotted[2] = {1,1};
-          mDashList = dotted;
           mDashes = 2;
 
           /*          ::gdk_gc_set_dashes(mSurface->GetGC(), 
