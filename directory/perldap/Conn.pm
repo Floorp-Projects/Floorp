@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: Conn.pm,v 1.14 1998/08/09 01:16:52 leif Exp $
+# $Id: Conn.pm,v 1.15 1998/08/13 11:02:11 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -11,7 +11,7 @@
 # License for the specific language governing rights and limitations
 # under the License.
 #
-# The Original Code is PerlDAP. The Initial Developer of the Original
+# The Original Code is PerLDAP. The Initial Developer of the Original
 # Code is Netscape Communications Corp. and Clayton Donley. Portions
 # created by Netscape are Copyright (C) Netscape Communications
 # Corp., portions created by Clayton Donley are Copyright (C) Clayton
@@ -51,26 +51,26 @@ sub new
       my $hash;
 
       $hash = $_[$[];
-      $self->{host} = $hash->{host};
-      $self->{port} = $hash->{port};
-      $self->{binddn} = $hash->{bind};
-      $self->{bindpasswd} = $hash->{pswd};
-      $self->{certdb} = $hash->{cert};
+      $self->{"host"} = $hash->{"host"} if defined($hash->{"host"});
+      $self->{"port"} = $hash->{"port"} if defined($hash->{"port"});
+      $self->{"binddn"} = $hash->{"bind"} if defined($hash->{"bind"});
+      $self->{"bindpasswd"} = $hash->{"pswd"} if defined($hash->{"pswd"});
+      $self->{"certdb"} = $hash->{"cert"} if defined($hash->{"cert"});
     }
   else
     {
       my ($host, $port, $binddn, $bindpasswd, $certdb, $authmeth) = @_;
 
-      $self->{host} = $host;
-      $self->{port} = $port;
-      $self->{binddn} = $binddn;
-      $self->{bindpasswd} = $bindpasswd;
-      $self->{certdb} = $certdb;
+      $self->{"host"} = $host;
+      $self->{"port"} = $port;
+      $self->{"binddn"} = $binddn;
+      $self->{"bindpasswd"} = $bindpasswd;
+      $self->{"certdb"} = $certdb;
     }
 
-  if (!defined($self->{port}) || ($self->{port} eq ""))
+  if (!defined($self->{"port"}) || ($self->{"port"} eq ""))
     {
-      $self->{port} = (($self->{certdb} ne "") ? LDAPS_PORT : LDAP_PORT);
+      $self->{"port"} = (($self->{"certdb"} ne "") ? LDAPS_PORT : LDAP_PORT);
     }
 
   bless $self, $class;
@@ -87,12 +87,12 @@ sub DESTROY
 {
   my $self = shift;
 
-  return unless defined($self->{ld});
+  return unless defined($self->{"ld"});
 
-  ldap_unbind_s($self->{ld});
-  ldap_msgfree($self->{ldres}) if defined($self->{ldres});
+  ldap_unbind_s($self->{"ld"});
+  ldap_msgfree($self->{"ldres"}) if defined($self->{"ldres"});
 
-  undef $self->{ld};
+  undef $self->{"ld"};
 }
 
 
@@ -106,16 +106,16 @@ sub init
   my $ret;
   my $ld;
 
-  if ($self->{certdb} ne "")
+  if ($self->{"certdb"} ne "")
     {
-      $ret = ldapssl_client_init($self->{certdb}, "");
+      $ret = ldapssl_client_init($self->{"certdb"}, "");
       return 0 if ($ret < 0);
 
-      $ld = ldapssl_init($self->{host}, $self->{port}, 1);
+      $ld = ldapssl_init($self->{"host"}, $self->{"port"}, 1);
     }
   else
     {
-      $ld = ldap_init($self->{host}, $self->{port});
+      $ld = ldap_init($self->{"host"}, $self->{"port"});
     }
   if (!$ld)
     {
@@ -124,8 +124,8 @@ sub init
       return 0;
     }
 
-  $self->{ld} = $ld;
-  $ret = ldap_simple_bind_s($ld, $self->{binddn}, $self->{bindpasswd});
+  $self->{"ld"} = $ld;
+  $ret = ldap_simple_bind_s($ld, $self->{"binddn"}, $self->{"bindpasswd"});
 
   if ($ret)
     {
@@ -157,7 +157,7 @@ sub getLD
 {
   my ($self) = @_;
 
-  return $self->{ld} if $self->{ld};
+  return $self->{"ld"} if $self->{"ld"};
 }
 
 
@@ -171,7 +171,7 @@ sub getErrorCode
   my ($self, $match, $msg) = @_;
   my $ret;
 
-  return ldap_get_lderrno($self->{ld}, $match, $msg);
+  return ldap_get_lderrno($self->{"ld"}, $match, $msg);
 }
 *getError = \*getErrorCode;
 
@@ -184,7 +184,7 @@ sub getErrorString
   my ($self) = @_;
   my ($err);
   
-  $err = ldap_get_lderrno($self->{ld}, undef, undef);
+  $err = ldap_get_lderrno($self->{"ld"}, undef, undef);
 
   return ldap_err2string($err);
 }
@@ -198,7 +198,7 @@ sub printError
   my ($self, $str) = @_;
 
   $str = "LDAP error: " if ($str eq "");
-  ldap_perror($self->{ld}, $str);
+  ldap_perror($self->{"ld"}, $str);
 }
 
 
@@ -216,23 +216,23 @@ sub search
   $scope = Mozilla::LDAP::Utils::str2Scope($scope);
   $filter = "(objectclass=*)" if ($filter =~ /^ALL$/i);
 
-  ldap_msgfree($self->{ldres}) if defined($self->{ldres});
+  ldap_msgfree($self->{"ldres"}) if defined($self->{"ldres"});
   if (ldap_is_ldap_url($filter))
     {
-      if (! ldap_url_search_s($self->{ld}, $filter, $attrsonly, $res))
+      if (! ldap_url_search_s($self->{"ld"}, $filter, $attrsonly, $res))
 	{
-	  $self->{ldres} = $res;
-	  $self->{ldfe} = 1;
+	  $self->{"ldres"} = $res;
+	  $self->{"ldfe"} = 1;
 	  $entry = $self->nextEntry();
 	}
     }
   else
     {
-      if (! ldap_search_s($self->{ld}, $basedn, $scope, $filter, \@attrs,
+      if (! ldap_search_s($self->{"ld"}, $basedn, $scope, $filter, \@attrs,
 			  $attrsonly, $res))
 	{
-	  $self->{ldres} = $res;
-	  $self->{ldfe} = 1;
+	  $self->{"ldres"} = $res;
+	  $self->{"ldfe"} = 1;
 	  $entry = $self->nextEntry();
 	}
     }
@@ -251,11 +251,11 @@ sub searchURL
   my $entry;
   my $res = \$resv;
 
-  ldap_msgfree($self->{ldres}) if defined($self->{ldres});
-  if (! ldap_url_search_s($self->{ld}, $url, $attrsonly, $res))
+  ldap_msgfree($self->{"ldres"}) if defined($self->{"ldres"});
+  if (! ldap_url_search_s($self->{"ld"}, $url, $attrsonly, $res))
     {
-      $self->{ldres} = $res;
-      $self->{ldfe} = 1;
+      $self->{"ldres"} = $res;
+      $self->{"ldfe"} = 1;
       $entry = $self->nextEntry();
     }
 
@@ -272,46 +272,46 @@ sub nextEntry
   my $self = shift;
   my %entry;
   my @ocorder;
-  my ($attr, $vals, $obj, $ldentry, $berv, $dn);
+  my ($attr, @vals, $obj, $ldentry, $berv, $dn);
   my $ber = \$berv;
 
   # I use the object directly, to avoid setting the "change" flags
   $obj = tie %entry, Mozilla::LDAP::Entry;
 
-  $self->{dn} = "";
-  if ($self->{ldfe} == 1)
+  $self->{"dn"} = "";
+  if ($self->{"ldfe"} == 1)
     {
-      $self->{ldfe} = 0;
-      $ldentry = ldap_first_entry($self->{ld}, $self->{ldres}); 
-      $self->{ldentry} = $ldentry;
+      $self->{"ldfe"} = 0;
+      $ldentry = ldap_first_entry($self->{"ld"}, $self->{"ldres"}); 
+      $self->{"ldentry"} = $ldentry;
     }
   else
     {
-      return "" unless $self->{ldentry};
-      $ldentry = ldap_next_entry($self->{ld}, $self->{ldentry}); 
-      $self->{ldentry} = $ldentry;
+      return "" unless $self->{"ldentry"};
+      $ldentry = ldap_next_entry($self->{"ld"}, $self->{"ldentry"}); 
+      $self->{"ldentry"} = $ldentry;
     }
   return "" unless $ldentry;
 
-  $dn = ldap_get_dn($self->{ld}, $self->{ldentry});
-  $obj->{dn} = $dn;
-  $self->{dn} = $dn;
-  $attr = ldap_first_attribute($self->{ld}, $self->{ldentry}, $ber);
+  $dn = ldap_get_dn($self->{"ld"}, $self->{"ldentry"});
+  $obj->{"dn"} = $dn;
+  $self->{"dn"} = $dn;
+  $attr = ldap_first_attribute($self->{"ld"}, $self->{"ldentry"}, $ber);
   return (bless \%entry, Mozilla::LDAP::Entry) unless $attr;
 
-  @vals = ldap_get_values_len($self->{ld}, $self->{ldentry}, $attr);
+  @vals = ldap_get_values_len($self->{"ld"}, $self->{"ldentry"}, $attr);
   $obj->{$attr} = [@vals];
   push(@ocorder, $attr);
 
-  while ($attr = ldap_next_attribute($self->{ld},
-				     $self->{ldentry}, $ber))
+  while ($attr = ldap_next_attribute($self->{"ld"},
+				     $self->{"ldentry"}, $ber))
     {
-      @vals = ldap_get_values_len($self->{ld}, $self->{ldentry}, $attr);
+      @vals = ldap_get_values_len($self->{"ld"}, $self->{"ldentry"}, $attr);
       $obj->{$attr} = [@vals];
       push(@ocorder, $attr);
     }
-  $obj->{_oc_order_} = \@ocorder;
-  $obj->{_self_obj_} = $obj;
+  $obj->{"_oc_order_"} = \@ocorder;
+  $obj->{"_self_obj_"} = $obj;
 
   ldap_ber_free($ber, 0) if $ber;
 
@@ -330,8 +330,8 @@ sub close
   my $self = shift;
   my $ret = 1;
 
-  $ret = ldap_unbind_s($self->{ld}) if defined($self->{ld});
-  undef $self->{ld};
+  $ret = ldap_unbind_s($self->{"ld"}) if defined($self->{"ld"});
+  undef $self->{"ld"};
 
   return ($ret == LDAP_SUCCESS);
 }
@@ -351,9 +351,9 @@ sub delete
     }
   else
     {
-      $dn = Mozilla::LDAP::Utils::normalizeDN($self->{dn});
+      $dn = Mozilla::LDAP::Utils::normalizeDN($self->{"dn"});
     }
-  $ret = ldap_delete_s($self->{ld}, $dn) if ($dn ne "");
+  $ret = ldap_delete_s($self->{"ld"}, $dn) if ($dn ne "");
 
   return ($ret == LDAP_SUCCESS)
 }
@@ -379,7 +379,7 @@ sub add
 	  $gotcha++;
 	}
 
-      $ret = ldap_add_s($self->{ld}, $entry->{dn}, \%ent) if $gotcha;
+      $ret = ldap_add_s($self->{"ld"}, $entry->{"dn"}, \%ent) if $gotcha;
     }
 
   return ($ret == LDAP_SUCCESS);
@@ -397,17 +397,17 @@ sub modifyRDN
   my $ret = 1;
 
   $del = 1 if ($del eq "");
-  $dn = $self->{dn} if ($dn eq "");
+  $dn = $self->{"dn"} if ($dn eq "");
 
   @vals = ldap_explode_dn(lc $dn, 0);
   if ($vals[$[] ne $rdn)
     {
-      $ret = ldap_modrdn2_s($self->{ld}, $dn, $rdn, $del);
+      $ret = ldap_modrdn2_s($self->{"ld"}, $dn, $rdn, $del);
       if ($ret == LDAP_SUCCESS)
 	{
 	  shift(@vals);
 	  unshift(@vals, ($rdn));
-	  $ld->{dn} = join(@vals);
+	  $ld->{"dn"} = join(@vals);
 	}
     }
 
@@ -460,14 +460,14 @@ sub update
 	      $mod{$key}{"ab"} = [@arr] if ($#arr >= $[);
 	    }
 
-	  delete $entry->{_self_obj_}->{"_${key}_modified_"};
+	  delete $entry->{"_self_obj_"}->{"_${key}_modified_"};
 	  undef @{$entry->{"_${key}_save_"}};
 	}
       elsif ($entry->{"_${key}_deleted_"})
 	{
 	  $mod{$key} = { "db", [] };
 	  undef @{$entry->{"_${key}_save_"}};
-	  delete $entry->{_self_obj_}->{"_${key}_deleted_"};
+	  delete $entry->{"_self_obj_"}->{"_${key}_deleted_"};
 	}
     }
 
@@ -489,7 +489,7 @@ sub update
 	}
     }
 
-  $ret = ldap_modify($self->{ld}, $entry->{dn}, \%mod)
+  $ret = ldap_modify($self->{"ld"}, $entry->{"dn"}, \%mod)
     if ($#arr >= $[);
 
   return ($ret == LDAP_SUCCESS);
@@ -504,7 +504,7 @@ sub setRebindProc
   my ($self, $proc) = @_;
 
   # Should we try to reinitialize the connection?
-  die "No LDAP connection" unless defined($self->{ld});
+  die "No LDAP connection" unless defined($self->{"ld"});
 
   ldap_set_rebind_proc($self->{"ld"}, $proc);
 }
@@ -626,16 +626,16 @@ providing each individual argument, you can provide one hash array
 
 The components of the hash are:
 
-    $ld->{host}
-    $ld->{port}
-    $ld->{root}
-    $ld->{bind}
-    $ld->{pswd}
-    $ld->{cert}
+    $ld->{"host"}
+    $ld->{"port"}
+    $ld->{"root"}
+    $ld->{"bind"}
+    $ld->{"pswd"}
+    $ld->{"cert"}
 
 and (not used in the B<new> method)
 
-    $ld->{scope}
+    $ld->{"scope"}
 
 Once a connection is established, the package will take care of the
 rest. If for some reason the connection is lost, the object should
@@ -821,6 +821,11 @@ the LDAP connection to be established over an SSL channel. Currently we do
 not support Client Authentication, so you still have to use the simple
 authentication method (i.e. with a password).
 
+A typical usage could be something like
+
+    %ld = Mozilla::LDAP::Utils::ldapArgs();
+    $conn = new Mozilla::LDAP::Conn(\%ld);
+
 Also, remember that if you use SSL, the port is (usually) 636.
 
 =item B<search>
@@ -833,7 +838,16 @@ argument is a list (array) of attributes to return.
 
 The last option is very important for performance. If you are only
 interested in say the "mail" and "mailHost" attributes, specifying this in
-the search will signficantly reduce the search time.
+the search will signficantly reduce the search time. An example of an
+efficient search is
+
+    @attr = ("cn", "uid", "mail");
+    $filter = "(uid=*)";
+    $entry = $conn->search($root, $scope, $filter, 0, @attr);
+    while ($entry) {
+        # do something
+        $entry = $conn->nextEntry();
+    }
 
 =item B<searchURL>
 
@@ -857,13 +871,18 @@ changed will be updated, assuming you have used the appropriate methods in
 the Entry object. For instance, do not use B<push> or B<splice> to
 modify an entry, the B<update> will not recognize such changes.
 
+To change the CN value for an entry, you could do
+
+    $entry->{cn} = ["Leif Hedstrom"];
+    $conn->update($entry);
+
 =item B<delete>
 
 This will delete the current entry, or possibly an entry as specified with
 the optional argument. You can use this function to delete any entry you
 like, by passing it an explicit DN. If you don't pass it this argument,
 B<delete> defaults to delete the current entry, from the last call to
-B<search> or B<entry> .
+B<search> or B<entry>.
 
 =item B<add>
 
@@ -877,7 +896,11 @@ directly, the destructor for the object instance will do the job for you.
 
 =item B<modifyRDN>
 
-This will rename the specified LDAP entry, by modifying it's RDN.
+This will rename the specified LDAP entry, by modifying it's RDN. For
+example:
+
+    $rdn = "uid=fiel, ou=people, dc=netscape, dc=com";
+    $conn->modifyRDN($rdn, $entry->getDN());
 
 =back
 
@@ -899,12 +922,21 @@ use this in most cases, unless of course our OO layer is seriously flawed.
 
 Return the error code (numeric) from the last LDAP API function
 call. Remember that this can only be called I<after> the successful
-creation of a new object instance.
+creation of a new object instance. A typical usage could be
+
+    if (! $opt_n) {
+        $conn->modifyRDN($rdn, $entry->getDN());
+        $conn->printError() if $conn->getErrorCode();
+    }
+
+Which will report any error message as generated by the call to B<modifyRDN>.
+
 
 =item B<getErrorString>
 
 Very much like B<getError>, but return a string with a human readable
-error message.
+error message. This can then be used to print a good error message on the
+console.
 
 =item B<printError>
 
@@ -946,13 +978,13 @@ package. See the installation procedures which are part of this package.
 
 This package can be retrieved from a number of places, including:
 
-    http://www.mozilla.org/
+    http://www.mozilla.org/directory/
     Your local CPAN server
 
 =head1 AUTHOR INFORMATION
 
-Address bug reports and comments to:
-xxx@netscape.com
+Address bug reports and comments to the Netscape DevEdge newsgroups at:
+nntps://secnews.netscape.com/netscape.dev.directory.
 
 =head1 CREDITS
 
