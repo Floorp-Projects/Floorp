@@ -44,6 +44,7 @@
 
 *|*:-moz-fieldset-content {
   display: block;
+  height: inherit;   /* Need this so percentage heights of kids work right */
 }
 
 form {
