@@ -1339,8 +1339,12 @@ static NSArray* sToolbarDefaults = nil;
         aDomain = [NSString stringWithUTF8String:spec.get()];
       }
 
+      // Escape the search string so the user can search for strings with
+      // special characters ("&", "+", etc.) List from RFC2396.
+      NSString *escapedSearchString = (NSString *) CFURLCreateStringByAddingPercentEscapes(NULL, (CFStringRef)searchString, NULL, CFSTR(";/?:@&=+$,"), kCFStringEncodingUTF8);
+      
       // replace the conversion specifiers (%d, %s) in the search string
-      [self transformFormatString:searchURL domain:aDomain search:searchString];
+      [self transformFormatString:searchURL domain:aDomain search:escapedSearchString];
       
       [self loadURL:searchURL referrer:nil activate:NO];
     }
