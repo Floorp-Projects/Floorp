@@ -92,6 +92,7 @@ GTK2_VERSION=1.3.7
 MAKE_VERSION=3.78
 WINDRES_VERSION=2.14.90
 W32API_VERSION=2.4
+GNOMEVFS_VERSION=2.0
 
 dnl Set various checks
 dnl ========================================================
@@ -3464,6 +3465,36 @@ then
 fi
 
 dnl ========================================================
+dnl = GnomeVFS support module
+dnl ========================================================
+
+if test "$_X11_TOOLKIT"
+then
+    MOZ_ENABLE_GNOMEVFS=1
+
+    MOZ_ARG_DISABLE_BOOL(gnomevfs,
+    [  --disable-gnomevfs      Disable GnomeVFS support ],
+        MOZ_ENABLE_GNOMEVFS=,
+        MOZ_ENABLE_GNOMEVFS=force)
+
+    if test "$MOZ_ENABLE_GNOMEVFS"
+    then
+        PKG_CHECK_MODULES(MOZ_GNOMEVFS, gnome-vfs-2.0 >= $GNOMEVFS_VERSION,[
+            MOZ_ENABLE_GNOMEVFS=1
+        ],[
+            if test "$MOZ_ENABLE_GNOMEVFS" = "force"
+            then
+                AC_MSG_ERROR([* * * Could not find gnome-vfs-2.0 >= $GNOMEVFS_VERSION])
+            fi
+            MOZ_ENABLE_GNOMEVFS=
+        ])
+    fi
+
+    AC_SUBST(MOZ_GNOMEVFS_CFLAGS)
+    AC_SUBST(MOZ_GNOMEVFS_LIBS)
+fi
+
+dnl ========================================================
 dnl = Setting MOZ_EXTRA_X11CONVERTERS turns on additional 
 dnl = converters in intl/uconv that are used only by X11 gfx 
 dnl = implementations. By default, it's undefined so that 
@@ -3686,6 +3717,14 @@ done],
 if test -z "$MOZ_ENABLE_GTK" && test `echo "$MOZ_EXTENSIONS" | grep -c xmlterm` -ne 0; then
     AC_MSG_WARN([Cannot build xmlterm without gtk toolkit. Removing xmlterm from MOZ_EXTENSIONS.])
     MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|xmlterm||'`
+fi
+
+if test -z "$MOZ_ENABLE_GNOMEVFS" && test `echo "$MOZ_EXTENSIONS" | grep -c gnomevfs` -ne 0; then
+    # Suppress warning on non-X11 platforms
+    if test "$_X11_TOOLKIT"; then
+        AC_MSG_WARN([Cannot build gnomevfs without gnome-vfs-2 toolkit. Removing gnomevfs from MOZ_EXTENSIONS.])
+    fi
+    MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|gnomevfs||'`
 fi
 
 if test -z "$MOZ_JSDEBUGGER" && test `echo "$MOZ_EXTENSIONS" | grep -c venkman` -ne 0; then

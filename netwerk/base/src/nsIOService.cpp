@@ -1,3 +1,4 @@
+/* vim:set ts=4 sw=4 cindent et: */
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
@@ -342,6 +343,30 @@ nsIOService::GetProtocolHandler(const char* scheme, nsIProtocolHandler* *result)
     }
     
     if (externalProtocol || NS_FAILED(rv)) {
+#ifdef MOZ_X11
+
+      // check to see if GnomeVFS can handle this URI scheme.  if it can create
+      // a nsIURI for the "scheme:", then we assume it has support for the
+      // requested protocol.  otherwise, we failover to using the default
+      // protocol handler.
+
+      // XXX should this be generalized into something that searches a category?
+      // (see bug 234714)
+
+      rv = CallGetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX"moz-gnomevfs",
+                          result);
+      if (NS_SUCCEEDED(rv)) {
+          nsCAutoString spec(scheme);
+          spec.Append(':');
+          nsCOMPtr<nsIURI> uri;
+          rv = (*result)->NewURI(spec, nsnull, nsnull, getter_AddRefs(uri));
+          if (NS_SUCCEEDED(rv))
+              return NS_OK;
+          NS_RELEASE(*result);
+      }
+
+#endif
+
       // okay we don't have a protocol handler to handle this url type, so use the default protocol handler.
       // this will cause urls to get dispatched out to the OS ('cause we can't do anything with them) when 
       // we try to read from a channel created by the default protocol handler.
