@@ -49,7 +49,7 @@
 #define USE_LONG
 #endif
 
-#ifdef NSS_USE_64
+#if defined(NSS_USE_HYBRID) && !defined(SOLARIS) && !defined(NSS_USE_64) 
 typedef unsigned long long WORD;
 #else
 typedef unsigned long WORD;
@@ -185,6 +185,7 @@ RC4_DestroyContext(RC4Context *cx, PRBool freeit)
 	cx->S[tmpj] = tmpSi; \
 	t = tmpSi + tmpSj;
 
+#ifdef CONVERT_TO_WORDS
 /*
  * Straight RC4 op.  No optimization.
  */
@@ -214,7 +215,9 @@ rc4_no_opt(RC4Context *cx, unsigned char *output,
 	cx->j = tmpj;
 	return SECSuccess;
 }
+#endif
 
+#ifndef CONVERT_TO_WORDS
 /*
  * Byte-at-a-time RC4, unrolling the loop into 8 pieces.
  */
@@ -287,6 +290,7 @@ rc4_unrolled(RC4Context *cx, unsigned char *output,
 	*outputLen = inputLen;
 	return SECSuccess;
 }
+#endif
 
 #ifdef IS_LITTLE_ENDIAN
 #define ARCFOUR_NEXT4BYTES_L(n) \
@@ -302,7 +306,7 @@ rc4_unrolled(RC4Context *cx, unsigned char *output,
 	ARCFOUR_NEXT_BYTE(); streamWord |= (WORD)cx->S[t] << (n     );
 #endif
 
-#ifdef NSS_USE_64
+#if (defined(NSS_USE_HYBRID) && !defined(SOLARIS)) || defined(NSS_USE_64)
 /* 64-bit wordsize */
 #ifdef IS_LITTLE_ENDIAN
 #define ARCFOUR_NEXT_WORD() \
@@ -330,6 +334,7 @@ rc4_unrolled(RC4Context *cx, unsigned char *output,
 #define LSH <<
 #endif
 
+#ifdef CONVERT_TO_WORDS
 /*
  * Convert input and output buffers to words before performing
  * RC4 operations.
@@ -515,6 +520,7 @@ rc4_wordconv(RC4Context *cx, unsigned char *output,
 	cx->j = tmpj;
 	return SECSuccess;
 }
+#endif
 
 SECStatus 
 RC4_Encrypt(RC4Context *cx, unsigned char *output,
