@@ -2444,6 +2444,24 @@ nsXULDocument::AddSubtreeToDocument(nsIContent* aElement)
         if (NS_FAILED(rv)) return rv;
     }
 
+    // 3. Check for a broadcaster hookup attribute, in which case
+    // we'll hook the node up as a listener on a broadcaster.
+    PRBool resolved;
+    rv = CheckBroadcasterHookup(this, aElement, &resolved);
+    if (NS_FAILED(rv)) return rv;
+
+    // If it's not there yet, we may be able to defer hookup until
+    // later.
+    if (!resolved && !mForwardReferencesResolved) {
+        BroadcasterHookup* hookup = new BroadcasterHookup(this, aElement);
+        if (! hookup)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        rv = AddForwardReference(hookup);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    // Finally, recurse to children.
     PRInt32 count;
     nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(aElement);
     rv = xulcontent ? xulcontent->PeekChildCount(count) : aElement->ChildCount(count);
@@ -4350,10 +4368,10 @@ nsXULDocument::ResumeWalk()
                 nsCOMPtr<nsIContent> child;
 
                 if ((mState == eState_Master) || (mContextStack.Depth() > 1)) {
-                    // Either we're in the master document, or we're
-                    // in an overlay and far enough down into the
-                    // overlay's content that we can simply build the
-                    // delegates and attach them to the parent node.
+                    // We're in the master document -or -we're in an
+                    // overlay, and far enough down into the overlay's
+                    // content that we can simply build the delegates
+                    // and attach them to the parent node.
                     rv = CreateElement(protoele, getter_AddRefs(child));
                     if (NS_FAILED(rv)) return rv;
 
@@ -4361,15 +4379,12 @@ nsXULDocument::ResumeWalk()
                     rv = element->AppendChildTo(child, PR_FALSE);
                     if (NS_FAILED(rv)) return rv;
 
-                    rv = AddElementToMap(child);
-                    if (NS_FAILED(rv)) return rv;
-
-                    rv = ProcessCommonAttributes(child);
-                    if (NS_FAILED(rv)) return rv;
-
-                    if ((protoele->mNameSpaceID == kNameSpaceID_XUL) &&
-                        (protoele->mTag.get() == kObservesAtom)) {
-                        rv = HookupObserver(child);
+                    // ...but only do document-level hookup if we're
+                    // in the master document. For an overlay, this
+                    // will happend when the overlay is successfully
+                    // resolved.
+                    if (mState == eState_Master) {
+                        rv = AddSubtreeToDocument(child);
                         if (NS_FAILED(rv)) return rv;
                     }
                 }
@@ -4772,7 +4787,7 @@ nsXULDocument::CreateOverlayElement(nsXULPrototypeElement* aPrototype, nsIConten
     rv = nsXULElement::Create(aPrototype, this, PR_FALSE, getter_AddRefs(element));
     if (NS_FAILED(rv)) return rv;
 
-    OverlayForwardReference* fwdref = new OverlayForwardReference(element);
+    OverlayForwardReference* fwdref = new OverlayForwardReference(this, element);
     if (! fwdref)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -4951,23 +4966,6 @@ nsXULDocument::CheckTemplateBuilder(nsIContent* aElement)
 
 
 nsresult
-nsXULDocument::HookupObserver(nsIContent* aElement)
-{
-    nsresult rv;
-
-    // It's not there yet. Defer hookup until later.
-    BroadcasterHookup* hookup = new BroadcasterHookup(aElement);
-    if (! hookup)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    rv = AddForwardReference(hookup);
-    if (NS_FAILED(rv)) return rv;
-
-    return NS_OK;
-}
-
-
-nsresult
 nsXULDocument::AddPrototypeSheets()
 {
     // Add mCurrentPrototype's style sheets to the document.
@@ -5019,20 +5017,12 @@ nsXULDocument::OverlayForwardReference::Resolve()
     // hook it up into the main document.
     nsresult rv;
 
-    nsCOMPtr<nsIDocument> doc;
-    rv = mOverlay->GetDocument(*getter_AddRefs(doc));
-    if (NS_FAILED(rv)) return eResolve_Error;
-
-    nsCOMPtr<nsIDOMXULDocument> xuldoc = do_QueryInterface(doc);
-    if (! xuldoc)
-        return eResolve_Error;
-
     nsAutoString id;
     rv = mOverlay->GetAttribute(kNameSpaceID_None, kIdAtom, id);
     if (NS_FAILED(rv)) return eResolve_Error;
 
     nsCOMPtr<nsIDOMElement> domtarget;
-    rv = xuldoc->GetElementById(id, getter_AddRefs(domtarget));
+    rv = mDocument->GetElementById(id, getter_AddRefs(domtarget));
     if (NS_FAILED(rv)) return eResolve_Error;
 
     // If we can't find the element in the document, defer the hookup
@@ -5086,8 +5076,6 @@ nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
             rv = aTargetNode->SetAttribute(nameSpaceID, tag, value, PR_FALSE);
             if (NS_FAILED(rv)) return rv;
         }
-
-        rv = ProcessCommonAttributes(aTargetNode);
     }
 
     {
@@ -5097,6 +5085,8 @@ nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
         if (NS_FAILED(rv)) return rv;
 
         for (PRInt32 i = 0; i < count; ++i) {
+            // Remove the child from the temporary "overlay
+            // placeholder" node, and insert into the content model.
             nsCOMPtr<nsIContent> child;
             rv = aOverlayNode->ChildAt(0, *getter_AddRefs(child));
             if (NS_FAILED(rv)) return rv;
@@ -5108,8 +5098,9 @@ nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
             if (NS_FAILED(rv)) return rv;
         }
 
-        // N.B. that kids will have been added to the document map
-        // already.
+        // Add child and any descendants to the element map
+        rv = mDocument->AddSubtreeToDocument(aTargetNode);
+        if (NS_FAILED(rv)) return rv;
 
         // Now check for a 'datasources' attribute, and build a
         // template builder if necessary.
@@ -5145,118 +5136,11 @@ nsXULDocument::OverlayForwardReference::~OverlayForwardReference()
 nsForwardReference::Result
 nsXULDocument::BroadcasterHookup::Resolve()
 {
-    // Resolve a broadcaster hookup. Look at the element that we're
-    // trying to resolve: it could be an '<observes>' element, or just
-    // a vanilla element with an 'observes' attribute on it.
     nsresult rv;
-
-    nsCOMPtr<nsIAtom> tag;
-    rv = mObservesElement->GetTag(*getter_AddRefs(tag));
+    rv = CheckBroadcasterHookup(mDocument, mObservesElement, &mResolved);
     if (NS_FAILED(rv)) return eResolve_Error;
 
-    nsCOMPtr<nsIDOMElement> listener;
-    nsAutoString broadcasterID;
-    nsAutoString attribute;
-
-    if (tag.get() == kObservesAtom) {
-        // It's an <observes> element, which means that the actual
-        // listener is the _parent_ node. This element should have an
-        // 'element' attribute that specifies the ID of the
-        // broadcaster element, and an 'attribute' element, which
-        // specifies the name of the attribute to observe.
-        nsCOMPtr<nsIContent> parent;
-        rv = mObservesElement->GetParent(*getter_AddRefs(parent));
-        if (NS_FAILED(rv)) return eResolve_Error;
-
-        nsCOMPtr<nsIAtom> parentTag;
-        rv = parent->GetTag(*getter_AddRefs(parentTag));
-        if (NS_FAILED(rv)) return eResolve_Error;
-
-        // If we're still parented by an 'overlay' tag, then we haven't
-        // made it into the real document yet. Defer hookup.
-        if (parentTag.get() == kOverlayAtom)
-            return eResolve_Later;
-
-        listener = do_QueryInterface(parent);
-
-        rv = mObservesElement->GetAttribute(kNameSpaceID_None, kElementAtom, broadcasterID);
-        if (NS_FAILED(rv)) return eResolve_Error;
-
-        rv = mObservesElement->GetAttribute(kNameSpaceID_None, kAttributeAtom, attribute);
-        if (NS_FAILED(rv)) return eResolve_Error;
-    }
-    else {
-        // It's a generic element, which means that we'll use the
-        // value of the 'observes' attribute to determine the ID of
-        // the broadcaster element, and we'll watch _all_ of its
-        // values.
-        listener = do_QueryInterface(mObservesElement);
-
-        rv = mObservesElement->GetAttribute(kNameSpaceID_None, kObservesAtom, broadcasterID);
-        if (NS_FAILED(rv)) return eResolve_Error;
-
-        attribute = "*";
-    }
-
-    // Make sure we got a valid listener.
-    NS_ASSERTION(listener != nsnull, "no listener");
-    if (! listener)
-        return eResolve_Error;
-
-    // Try to find the broadcaster element in the document.
-    nsCOMPtr<nsIDocument> doc;
-    rv = mObservesElement->GetDocument(*getter_AddRefs(doc));
-    if (NS_FAILED(rv)) return eResolve_Error;
-
-    nsCOMPtr<nsIDOMXULDocument> xuldoc = do_QueryInterface(doc);
-    if (! xuldoc)
-        return eResolve_Error;
-
-    nsCOMPtr<nsIDOMElement> target;
-    rv = xuldoc->GetElementById(broadcasterID, getter_AddRefs(target));
-    if (NS_FAILED(rv)) return eResolve_Error;
-
-    // If we can't find the broadcaster, then we'll need to defer the
-    // hookup. We may need to resolve some of the other overlays
-    // first.
-    if (! target)
-        return eResolve_Later;
-
-    nsCOMPtr<nsIDOMXULElement> broadcaster = do_QueryInterface(target);
-    if (! broadcaster)
-        return eResolve_Error; // not a XUL element, so we can't subscribe
-
-    rv = broadcaster->AddBroadcastListener(attribute, listener);
-    if (NS_FAILED(rv)) return eResolve_Error;
-
-#ifdef PR_LOGGING
-    // Tell the world we succeeded
-    if (PR_LOG_TEST(gXULLog, PR_LOG_ALWAYS)) {
-        nsCOMPtr<nsIContent> content =
-            do_QueryInterface(listener);
-
-        NS_ASSERTION(content != nsnull, "not an nsIContent");
-        if (! content)
-            return eResolve_Error;
-
-        nsCOMPtr<nsIAtom> tag2;
-        rv = content->GetTag(*getter_AddRefs(tag2));
-        if (NS_FAILED(rv)) return eResolve_Error;
-
-        nsAutoString tagStr;
-        rv = tag2->ToString(tagStr);
-        if (NS_FAILED(rv)) return eResolve_Error;
-
-        PR_LOG(gXULLog, PR_LOG_ALWAYS,
-               ("xul: broadcaster hookup <%s attribute='%s'> to %s",
-                (const char*) nsCAutoString(tagStr),
-                (const char*) nsCAutoString(attribute),
-                (const char*) nsCAutoString(broadcasterID)));
-    }
-#endif
-
-    mResolved = PR_TRUE;
-    return eResolve_Succeeded;
+    return mResolved ? eResolve_Succeeded : eResolve_Later;
 }
 
 
@@ -5306,6 +5190,127 @@ nsXULDocument::BroadcasterHookup::~BroadcasterHookup()
 
 
 nsresult
+nsXULDocument::CheckBroadcasterHookup(nsXULDocument* aDocument,
+                                      nsIContent* aElement,
+                                      PRBool* aDidResolve)
+{
+    // Resolve a broadcaster hookup. Look at the element that we're
+    // trying to resolve: it could be an '<observes>' element, or just
+    // a vanilla element with an 'observes' attribute on it.
+    nsresult rv;
+
+    *aDidResolve = PR_FALSE;
+
+    PRInt32 nameSpaceID;
+    rv = aElement->GetNameSpaceID(nameSpaceID);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIAtom> tag;
+    rv = aElement->GetTag(*getter_AddRefs(tag));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIDOMElement> listener;
+    nsAutoString broadcasterID;
+    nsAutoString attribute;
+
+    if ((nameSpaceID == kNameSpaceID_XUL) && (tag.get() == kObservesAtom)) {
+        // It's an <observes> element, which means that the actual
+        // listener is the _parent_ node. This element should have an
+        // 'element' attribute that specifies the ID of the
+        // broadcaster element, and an 'attribute' element, which
+        // specifies the name of the attribute to observe.
+        nsCOMPtr<nsIContent> parent;
+        rv = aElement->GetParent(*getter_AddRefs(parent));
+        if (NS_FAILED(rv)) return rv;
+
+        nsCOMPtr<nsIAtom> parentTag;
+        rv = parent->GetTag(*getter_AddRefs(parentTag));
+        if (NS_FAILED(rv)) return rv;
+
+        // If we're still parented by an 'overlay' tag, then we haven't
+        // made it into the real document yet. Defer hookup.
+        if (parentTag.get() == kOverlayAtom)
+            return NS_OK;
+
+        listener = do_QueryInterface(parent);
+
+        rv = aElement->GetAttribute(kNameSpaceID_None, kElementAtom, broadcasterID);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = aElement->GetAttribute(kNameSpaceID_None, kAttributeAtom, attribute);
+        if (NS_FAILED(rv)) return rv;
+    }
+    else {
+        // It's a generic element, which means that we'll use the
+        // value of the 'observes' attribute to determine the ID of
+        // the broadcaster element, and we'll watch _all_ of its
+        // values.
+        rv = aElement->GetAttribute(kNameSpaceID_None, kObservesAtom, broadcasterID);
+        if (NS_FAILED(rv)) return rv;
+
+        // Bail if there's no broadcasterID
+        if ((rv != NS_CONTENT_ATTR_HAS_VALUE) || (broadcasterID.Length() == 0))
+            return NS_OK;
+
+        listener = do_QueryInterface(aElement);
+
+        attribute = "*";
+    }
+
+    // Make sure we got a valid listener.
+    NS_ASSERTION(listener != nsnull, "no listener");
+    if (! listener)
+        return NS_ERROR_UNEXPECTED;
+
+    // Try to find the broadcaster element in the document.
+    nsCOMPtr<nsIDOMElement> target;
+    rv = aDocument->GetElementById(broadcasterID, getter_AddRefs(target));
+    if (NS_FAILED(rv)) return rv;
+
+    // If we can't find the broadcaster, then we'll need to defer the
+    // hookup. We may need to resolve some of the other overlays
+    // first.
+    if (! target)
+        return NS_OK;
+
+    nsCOMPtr<nsIDOMXULElement> broadcaster = do_QueryInterface(target);
+    if (! broadcaster)
+        return NS_OK; // not a XUL element, so we can't subscribe
+
+    rv = broadcaster->AddBroadcastListener(attribute, listener);
+    if (NS_FAILED(rv)) return rv;
+
+#ifdef PR_LOGGING
+    // Tell the world we succeeded
+    if (PR_LOG_TEST(gXULLog, PR_LOG_ALWAYS)) {
+        nsCOMPtr<nsIContent> content =
+            do_QueryInterface(listener);
+
+        NS_ASSERTION(content != nsnull, "not an nsIContent");
+        if (! content)
+            return rv;
+
+        nsCOMPtr<nsIAtom> tag2;
+        rv = content->GetTag(*getter_AddRefs(tag2));
+        if (NS_FAILED(rv)) return rv;
+
+        nsAutoString tagStr;
+        rv = tag2->ToString(tagStr);
+        if (NS_FAILED(rv)) return rv;
+
+        PR_LOG(gXULLog, PR_LOG_ALWAYS,
+               ("xul: broadcaster hookup <%s attribute='%s'> to %s",
+                (const char*) nsCAutoString(tagStr),
+                (const char*) nsCAutoString(attribute),
+                (const char*) nsCAutoString(broadcasterID)));
+    }
+#endif
+
+    *aDidResolve = PR_TRUE;
+    return NS_OK;
+}
+
+nsresult
 nsXULDocument::InsertElement(nsIContent* aParent, nsIContent* aChild)
 {
     // Insert aChild appropriately into aParent, accountinf for a
@@ -5332,76 +5337,6 @@ nsXULDocument::InsertElement(nsIContent* aParent, nsIContent* aChild)
     if (! wasInserted) {
         rv = aParent->AppendChildTo(aChild, PR_FALSE);
         if (NS_FAILED(rv)) return rv;
-    }
-
-    return NS_OK;
-}
-
-
-nsresult
-nsXULDocument::ProcessCommonAttributes(nsIContent* aElement)
-{
-    // Common code for handling 'magic' attributes
-
-    nsresult rv;
-
-    nsCOMPtr<nsIDocument> doc;
-    rv = aElement->GetDocument(*getter_AddRefs(doc));
-    if (NS_FAILED(rv)) return rv;
-
-    nsAutoString value;
-
-    // Check for a 'commandupdater' attribute, in which case we'll
-    // hook the node up as a command updater.
-    rv = aElement->GetAttribute(kNameSpaceID_None, kCommandUpdaterAtom, value);
-    if (NS_FAILED(rv)) return rv;
-
-    if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && value.Equals("true")) {
-        rv = gXULUtils->SetCommandUpdater(doc, aElement);
-        if (NS_FAILED(rv)) return rv;
-    }
-
-
-    // Check for an 'observes' attribute, in which case we'll hook the
-    // node up as a listener on a broadcaster.
-    rv = aElement->GetAttribute(kNameSpaceID_None, kObservesAtom, value);
-    if (NS_FAILED(rv)) return rv;
-
-    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-        nsCOMPtr<nsIDOMXULDocument> domxuldoc = do_QueryInterface(doc);
-        if (! domxuldoc)
-            return NS_ERROR_UNEXPECTED;
-
-        nsCOMPtr<nsIDOMElement> broadcaster;
-        rv = domxuldoc->GetElementById(value, getter_AddRefs(broadcaster));
-        if (NS_FAILED(rv)) return rv;
-
-        if (broadcaster) {
-            nsCOMPtr<nsIDOMXULElement> xulbroadcaster = do_QueryInterface(broadcaster);
-            if (xulbroadcaster) {
-                nsCOMPtr<nsIDOMElement> domelement = do_QueryInterface(aElement);
-                NS_ASSERTION(domelement != nsnull, "not an nsIDOMElement");
-                if (! domelement)
-                    return NS_ERROR_UNEXPECTED;
-
-                rv = xulbroadcaster->AddBroadcastListener("*", domelement);
-                if (NS_FAILED(rv)) return rv;
-            }
-        }
-        else {
-            nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(doc);
-            if (! xuldoc)
-                return NS_ERROR_UNEXPECTED;
-
-            BroadcasterHookup* fwdref = 
-                new BroadcasterHookup(aElement);
-
-            if (! fwdref)
-                return NS_ERROR_OUT_OF_MEMORY;
-
-            rv = xuldoc->AddForwardReference(fwdref);
-            if (NS_FAILED(rv)) return rv;
-        }
     }
 
     return NS_OK;
