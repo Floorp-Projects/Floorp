@@ -163,7 +163,8 @@ NS_IMETHODIMP nsRenderingContextPh :: Init( nsIDeviceContext* aContext, nsIWidge
 			mGC = PgCreateGC( 0 );
 			mOwner = PR_TRUE;
 
-			res = mSurface->Init( mGC );
+			/* use the dc you get by doing a PhDCSetCurrent( NULL ) */
+			res = mSurface->Init( _Ph_->dflt_draw_context, mGC );
 			if( res != NS_OK )
 				return NS_ERROR_FAILURE;
 			
@@ -878,33 +879,6 @@ NS_IMETHODIMP nsRenderingContextPh::DrawImage( nsIImage *aImage, const nsRect& a
  *  See documentation in nsIRenderingContext.h
  *	@update 3/16/00 dwc
  */
-NS_IMETHODIMP nsRenderingContextPh::DrawTile( nsIImage *aImage,nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1, nscoord aWidth,nscoord aHeight ) 
-{
-	mTranMatrix->TransformCoord(&aX0,&aY0,&aWidth,&aHeight);
-	mTranMatrix->TransformCoord(&aX1,&aY1);
-	
-	nsRect srcRect (0, 0, aWidth,  aHeight);
-	nsRect tileRect(aX0, aY0, aX1-aX0, aY1-aY0);
-	
-	((nsImagePh*)aImage)->DrawTile(*this, mSurface, srcRect, tileRect);
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsRenderingContextPh::DrawTile( nsIImage *aImage, nscoord aSrcXOffset, nscoord aSrcYOffset, const nsRect &aTileRect ) 
-{
-	nsRect tileRect( aTileRect );
-	nsRect srcRect(0, 0, aSrcXOffset, aSrcYOffset);
-	mTranMatrix->TransformCoord(&srcRect.x, &srcRect.y, &srcRect.width, &srcRect.height);
-	mTranMatrix->TransformCoord(&tileRect.x, &tileRect.y, &tileRect.width, &tileRect.height);
-	
-	if( tileRect.width > 0 && tileRect.height > 0 )
-		((nsImagePh*)aImage)->DrawTile(*this, mSurface, srcRect.width, srcRect.height, tileRect);
-	else
-		NS_ASSERTION(aTileRect.width > 0 && aTileRect.height > 0,
-			   "You can't draw an image with a 0 width or height!");
-	return NS_OK;
-}
-
 NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits( nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY, const nsRect &aDestBounds, PRUint32 aCopyFlags ) 
 {
 	PhArea_t              darea, sarea;

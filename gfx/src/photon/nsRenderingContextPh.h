@@ -83,6 +83,7 @@ public:
 
 		mSurface = (nsDrawingSurfacePh *) aSurface;
 		NS_ADDREF(mSurface);
+		mOffscreenSurface = mSurface;
 
 		mGC = mSurface->GetGC();
 		mOwner = PR_FALSE;
@@ -346,10 +347,6 @@ public:
    NS_IMETHODIMP DrawImage(nsIImage *aImage, const nsRect& aRect) { return DrawImage( aImage, aRect.x, aRect.y, aRect.width, aRect.height ); }
 
    NS_IMETHOD DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect);
-   NS_IMETHOD DrawTile(nsIImage *aImage,nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,
-					   nscoord aWidth,nscoord aHeight);
-   NS_IMETHOD DrawTile(nsIImage *aImage, nscoord aSrcXOffset, nscoord aSrcYOffset,
-					   const nsRect &aTileRect);
    
    NS_IMETHOD CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
 								const nsRect &aDestBounds, PRUint32 aCopyFlags);

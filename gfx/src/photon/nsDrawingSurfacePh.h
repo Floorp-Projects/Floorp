@@ -81,11 +81,11 @@ public:
 
   /* Initialize a On-Screen Drawing Surface */
 	inline
-  NS_IMETHODIMP Init( PhGC_t *aGC )
+  NS_IMETHODIMP Init( PhDrawContext_t *aDC, PhGC_t *aGC )
 		{
 		mGC = aGC;
 		mIsOffscreen = PR_FALSE;
-		mDrawContext =  _Ph_->dflt_draw_context; /* it's the dc you get by doing a PhDCSetCurrent( NULL ) */
+		mDrawContext =  aDC;
 		return NS_OK;
 		}
 
