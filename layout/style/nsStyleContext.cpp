@@ -730,9 +730,9 @@ PRInt32 StyleListImpl::CalcDifference(const StyleListImpl& aOther) const
       if (mListStyleType == aOther.mListStyleType) {
         return NS_STYLE_HINT_NONE;
       }
-      return NS_STYLE_HINT_VISUAL;
+      return NS_STYLE_HINT_REFLOW;
     }
-    return NS_STYLE_HINT_CONTENT;
+    return NS_STYLE_HINT_REFLOW;
   }
   return NS_STYLE_HINT_REFLOW;
 }
@@ -816,11 +816,12 @@ void StyleTextImpl::ResetFrom(const nsStyleText* aParent, nsIPresContext* aPresC
     mTextAlign = aParent->mTextAlign;
     mTextTransform = aParent->mTextTransform;
     mWhiteSpace = aParent->mWhiteSpace;
-
     mLetterSpacing = aParent->mLetterSpacing;
-    if ((eStyleUnit_Normal == aParent->mLineHeight.GetUnit()) ||
-        (eStyleUnit_Factor == aParent->mLineHeight.GetUnit()) ||
-        (eStyleUnit_Coord == aParent->mLineHeight.GetUnit())) {
+
+    // Inherit everything except percentage line-height values
+    nsStyleUnit unit = aParent->mLineHeight.GetUnit();
+    if ((eStyleUnit_Normal == unit) || (eStyleUnit_Factor == unit) ||
+        (eStyleUnit_Coord == unit)) {
       mLineHeight = aParent->mLineHeight;
     }
     else {
