@@ -25,6 +25,10 @@
 #include "nsBaseWidget.h"
 #include "nsHashtable.h"
 
+#ifdef DEBUG_blizzard
+#define XLIB_WIDGET_NOISY
+#endif
+
 class nsWidget : public nsBaseWidget
 {
 public:

@@ -161,16 +161,28 @@ NS_IMETHODIMP nsWidget::Destroy()
 
 NS_IMETHODIMP nsWidget::Move(PRUint32 aX, PRUint32 aY)
 {
+#ifdef XLIB_WIDGET_NOISY
   printf("nsWidget::Move(x, y)\n");
+#endif
+
   if (aX < 0) {
+#ifdef XLIB_WIDGET_NOISY
     printf("*** x is %d, fixing.\n", aX);
+#endif
+
     aX = 0;
   }
   if (aY < 0) {
+#ifdef XLIB_WIDGET_NOISY
     printf("*** y is %d, fixing.\n", aY);
+#endif
+
     aY = 0;
   }
+#ifdef XLIB_WIDGET_NOISY
   printf("Moving window 0x%lx to %d, %d\n", mBaseWindow, aX, aY);
+#endif
+
   XMoveWindow(mDisplay, mBaseWindow, aX, aY);
   return NS_OK;
 }
@@ -179,16 +191,28 @@ NS_IMETHODIMP nsWidget::Resize(PRUint32 aWidth,
                                PRUint32 aHeight,
                                PRBool   aRepaint)
 {
+#ifdef XLIB_WIDGET_NOISY
   printf("nsWidget::Resize(width, height)\n");
+#endif
+
   if (aWidth <= 0) {
+#ifdef XLIB_WIDGET_NOISY
     printf("*** width is %d, fixing.\n", aWidth);
+#endif
+
     aWidth = 1;
   }
   if (aHeight <= 0) {
+#ifdef XLIB_WIDGET_NOISY
     printf("*** height is %d, fixing.\n", aHeight);
+#endif
+
     aHeight = 1;
   }
+#ifdef XLIB_WIDGET_NOISY
   printf("Resizing window 0x%lx to %d, %d\n", mBaseWindow, aWidth, aHeight);
+#endif
+
   mBounds.width = aWidth;
   mBounds.height = aHeight;
   XResizeWindow(mDisplay, mBaseWindow, aWidth, aHeight);
@@ -201,25 +225,42 @@ NS_IMETHODIMP nsWidget::Resize(PRUint32 aX,
                                PRUint32 aHeight,
                                PRBool   aRepaint)
 {
+#ifdef XLIB_WIDGET_NOISY
   printf("nsWidget::Resize(x, y, width, height)\n");
+#endif
+
   if (aWidth <= 0) {
+#ifdef XLIB_WIDGET_NOISY
     printf("*** width is %d, fixing.\n", aWidth);
+#endif
+
     aWidth = 1;
   }
   if (aHeight <= 0) {
+#ifdef XLIB_WIDGET_NOISY
     printf("*** height is %d, fixing.\n", aHeight);
+#endif
+
     aHeight = 1;
   }
   if (aX < 0) {
+#ifdef XLIB_WIDGET_NOISY
     printf("*** x is %d, fixing.\n", aX);
+#endif
+
     aX = 0;
   }
   if (aY < 0) {
+#ifdef XLIB_WIDGET_NOISY
     printf("*** y is %d, fixing.\n", aY);
+#endif
+
     aY = 0;
   }
+#ifdef XLIB_WIDGET_NOISY
   printf("Resizing window 0x%lx to %d, %d\n", mBaseWindow, aWidth, aHeight);
   printf("Moving window 0x%lx to %d, %d\n", mBaseWindow, aX, aY);
+#endif
   mBounds.width = aWidth;
   mBounds.height = aHeight;
   XMoveResizeWindow(mDisplay, mBaseWindow, aX, aY, aWidth, aHeight);
@@ -238,13 +279,19 @@ NS_IMETHODIMP nsWidget::SetFocus(void)
 
 NS_IMETHODIMP nsWidget::Invalidate(PRBool aIsSynchronous)
 {
+#ifdef XLIB_WIDGET_NOISY
   printf("nsWidget::Invalidate(sync)\n");
+#endif
+
   return NS_OK;
 }
 
 NS_IMETHODIMP nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 {
+#ifdef XLIB_WIDGET_NOISY
   printf("nsWidget::Invalidate(rect, sync)\n");
+#endif
+
   return NS_OK;
 }
 
@@ -356,13 +403,19 @@ NS_IMETHODIMP nsWidget::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
 
 NS_IMETHODIMP nsWidget::Update()
 {
+#ifdef XLIB_WIDGET_NOISY
   printf("nsWidget::Update()\n");
+#endif
+
   return NS_OK;
 }
 
 NS_IMETHODIMP nsWidget::SetBackgroundColor(const nscolor &aColor)
 {
+#ifdef XLIB_WIDGET_NOISY
   printf("nsWidget::SetBackgroundColor()\n");
+#endif
+
   nsBaseWidget::SetBackgroundColor(aColor);
   mBackgroundPixel = xlib_rgb_xpixel_from_rgb(mBackground);
   // set the window attrib
@@ -430,23 +483,35 @@ void nsWidget::CreateNativeWindow(Window aParent, nsRect aRect,
   int width;
   int height;
 
+#ifdef XLIB_WIDGET_NOISY
   printf("*** Warning: nsWidget::CreateNative falling back to sane default for widget type \"%s\"\n", 
          (const char *) nsAutoCString(mName));
 
   if (mName == "unnamed") {
     printf("What freaking widget is this, anyway?\n");
   }
+#endif
+
+#ifdef XLIB_WIDGET_NOISY
   printf("Creating XWindow: x %d y %d w %d h %d\n",
          aRect.x, aRect.y, aRect.width, aRect.height);
+#endif
+
   if (aRect.width <= 0) {
+#ifdef XLIB_WIDGET_NOISY
     printf("*** Fixing width...\n");
+#endif
+
     width = 1;
   }
   else {
     width = aRect.width;
   }
   if (aRect.height <= 0) {
+#ifdef XLIB_WIDGET_NOISY
     printf("*** Fixing height...\n");
+#endif
+
     height = 1;
   }
   else {
@@ -464,8 +529,10 @@ void nsWidget::CreateNativeWindow(Window aParent, nsRect aRect,
                               aMask,
                               &aAttr);
 
+#ifdef XLIB_WIDGET_NOISY
   printf("nsWidget: Created window 0x%lx with parent 0x%lx\n",
          mBaseWindow, aParent);
+#endif
 
   // XXX when we stop getting lame values for this remove it.
   // sometimes the dimensions have been corrected by the code above.
