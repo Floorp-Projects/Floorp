@@ -25,9 +25,9 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= nntpurl
 LIBRARY_NAME	= nntpurl
 
-CSRCS		= \
-	mknews.c	\
-	mknewsgr.c	\
+CPPSRCS		= \
+	mknews.cpp	\
+	mknewsgr.cpp	\
 	$(NULL)
 
 EXPORTS= mknews.h mknewsgr.h
