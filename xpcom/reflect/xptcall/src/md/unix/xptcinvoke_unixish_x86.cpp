@@ -73,7 +73,7 @@ invoke_count_words(PRUint32 paramCount, nsXPTCVariant* s)
 }
 
 static void
-invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s)
+invoke_copy_to_stack(PRUint32 paramCount, nsXPTCVariant* s, PRUint32* d)
 {
     for(PRUint32 i = 0; i < paramCount; i++, d++, s++)
     {
@@ -110,28 +110,21 @@ XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
                    PRUint32 paramCount, nsXPTCVariant* params)
 {
     PRUint32 result;
-    void* fn_count = invoke_count_words;
-    void* fn_copy = invoke_copy_to_stack;
+  PRUint32 n = invoke_count_words (paramCount, params) * 4;
+  void (*fn_copy) (unsigned int, nsXPTCVariant *, PRUint32 *) = invoke_copy_to_stack;
+  int temp1, temp2, temp3;
 
  __asm__ __volatile__(
-    "pushl %4\n\t"
-    "pushl %3\n\t"
-    "movl  %5, %%eax\n\t"
-    "call  *%%eax\n\t"       /* count words */
-    "addl  $0x8, %%esp\n\t"
-    "shl   $2, %%eax\n\t"    /* *= 4 */
-    "subl  %%eax, %%esp\n\t" /* make room for params */
-    "movl  %%esp, %%edx\n\t"
-    "pushl %4\n\t"
-    "pushl %3\n\t"
-    "pushl %%edx\n\t"
-    "movl  %6, %%eax\n\t"
-    "call  *%%eax\n\t"       /* copy params */
+    "subl  %8, %%esp\n\t" /* make room for params */
+    "pushl %%esp\n\t"
+    "pushl %7\n\t"
+    "pushl %6\n\t"
+    "call  *%0\n\t"       /* copy params */
     "addl  $0xc, %%esp\n\t"
-    "movl  %1, %%ecx\n\t"
+    "movl  %4, %%ecx\n\t"
 #ifdef CFRONT_STYLE_THIS_ADJUST
-    "movl  (%%ecx), %%edx\n\t"
-    "movl  %2, %%eax\n\t"   /* function index */
+    "movl  (%%ecx), %%edx\n\t" 
+    "movl  %5, %%eax\n\t"   /* function index */
     "shl   $3, %%eax\n\t"   /* *= 8 */
     "addl  $8, %%eax\n\t"   /* += 8 skip first entry */
     "addl  %%eax, %%edx\n\t"
@@ -141,22 +134,24 @@ XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
     "addl  $4, %%edx\n\t"   /* += 4, method pointer */
 #else /* THUNK_BASED_THIS_ADJUST */
     "pushl %%ecx\n\t"
-    "movl  (%%ecx), %%edx\n\t"
-    "movl  %2, %%eax\n\t"   /* function index */
-    "shl   $2, %%eax\n\t"   /* *= 4 */
-    "addl  $8, %%eax\n\t"   /* += 8 */
-    "addl  %%eax, %%edx\n\t"
+    "movl  (%%ecx), %%edx\n\t" 
+    "movl  %5, %%eax\n\t"   /* function index */
+    "leal  8(%%edx,%%eax,4), %%edx\n\t"
 #endif
     "call  *(%%edx)\n\t"    /* safe to not cleanup esp */
-    "movl  %%eax, %0"
-    : "=g" (result)         /* %0 */
-    : "g" (that),           /* %1 */
-      "g" (methodIndex),    /* %2 */
-      "g" (paramCount),     /* %3 */
-      "g" (params),         /* %4 */
-      "g" (fn_count),       /* %5 */
-      "g" (fn_copy)         /* %6 */
-    : "ax", "cx", "dx", "memory" 
+    "addl  $4, %%esp\n\t"
+    "addl  %8, %%esp"
+    : "=a" (result),        /* %0 */
+      "=c" (temp1),         /* %1 */
+      "=d" (temp2),         /* %2 */
+      "=g" (temp3)          /* %3 */
+    : "g" (that),           /* %4 */
+      "g" (methodIndex),    /* %5 */
+      "1" (paramCount),     /* %6 */
+      "2" (params),         /* %7 */
+      "g" (n),              /* %8 */
+      "0" (fn_copy)         /* %3 */
+    : "memory"
     );
   
   return result;
