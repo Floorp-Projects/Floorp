@@ -77,7 +77,32 @@ static NS_DEFINE_IID(kIXPBaseWindowIID, NS_IXPBASE_WINDOW_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 
+/* MOZ_TIMEBOMB should be of the form "Dec 04 1998 14:19:09" */
 
+/* TIMEBOMB_GOES_HERE */
+
+#ifdef MOZ_TIMEBOMB
+#include <stdio.h>
+#endif
+
+static PRBool
+CheckTimebomb(void)
+{
+#ifdef MOZ_TIMEBOMB
+  PRTime die, now = PR_Now();
+  if (PR_FAILURE == PR_ParseTimeString(MOZ_TIMEBOMB, PR_FALSE, &die) ||
+      LL_CMP(now, >, die)) {
+    char * err = PR_smprintf("Your browser expired at: %s.\nGet a new one from http://www.mozilla.org/\n", MOZ_TIMEBOMB);
+    fputs(err, stderr);
+    /* TIMEBOMB EXPIRED */
+    return PR_FALSE;
+  } else {
+    fputs("You have not expired, but you are using pre-release\n", stderr);
+    fputs("software. Use at your own risk.\n", stderr);
+  }    
+#endif
+  return PR_TRUE;
+}
 
 nsViewerApp::nsViewerApp()
 {
@@ -187,6 +212,9 @@ nsViewerApp::Initialize(int argc, char** argv)
   }
   mPrefs->Startup("prefs.js");
 
+  if (!CheckTimebomb())
+    return NS_ERROR_FAILURE;
+  
   // Load Fullcircle Talkback crash-reporting mechanism.
   // http://www.fullcirclesoftware.com for more details.
   // Private build only.
