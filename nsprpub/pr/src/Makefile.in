@@ -69,13 +69,24 @@ ifeq ($(OS_ARCH),SunOS)
 ifeq ($(OS_RELEASE),4.1.3_U1)
 OS_LIBS			= -lm
 else	# 4.1.3_U1
+
+#
+# In Solaris 2.6 or earlier, -lrt is called -lposix4.
+# 
+LIBRT_TEST=$(firstword $(sort 5.7 $(OS_RELEASE)))
+ifeq (5.7, $(LIBRT_TEST))
+LIBRT=-lrt
+else
+LIBRT=-lposix4
+endif
+
 ifdef USE_PTHREADS
-OS_LIBS			= -lpthread -lthread -lposix4 -lsocket -lnsl -ldl
+OS_LIBS			= -lpthread -lthread ${LIBRT} -lsocket -lnsl -ldl
 else
 ifdef LOCAL_THREADS_ONLY
 OS_LIBS			= -lsocket -lnsl -ldl
 else
-OS_LIBS			= -lthread -lposix4 -lsocket -lnsl -ldl
+OS_LIBS			= -lthread ${LIBRT} -lsocket -lnsl -ldl
 endif	# LOCAL_THREADS_ONLY
 endif	# USE_PTHREADS
 endif	# 4.1.3_U1
