@@ -646,7 +646,8 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
   // then process the node itself
   if ( !aChildrenOnly && 
         (aProperty && NodeIsType(aNode, aProperty) || // node is prop we asked for
-        (aProperty == nsIEditProperty::href && nsHTMLEditUtils::IsLink(aNode))) || // but check for link (<a href=...)
+        (aProperty == nsIEditProperty::href && nsHTMLEditUtils::IsLink(aNode)) || // but check for link (<a href=...)
+        (aProperty == nsIEditProperty::name && nsHTMLEditUtils::IsNamedAnchor(aNode))) || // and for named anchors
         (!aProperty && NodeIsProperty(aNode)))  // or node is any prop and we asked for that
   {
     // if we weren't passed an attribute, then we want to 
@@ -791,6 +792,63 @@ PRBool nsHTMLEditor::HasAttrVal(nsIDOMNode *aNode,
   return PR_FALSE;
 }
 
+nsresult nsHTMLEditor::PromoteRangeIfStartsOrEndsInNamedAnchor(nsIDOMRange *inRange)
+{
+  if (!inRange) return NS_ERROR_NULL_POINTER;
+  nsresult res;
+  nsCOMPtr<nsIDOMNode> startNode, endNode, parent, tmp;
+  PRInt32 startOffset, endOffset, tmpOffset;
+  
+  res = inRange->GetStartContainer(getter_AddRefs(startNode));
+  if (NS_FAILED(res)) return res;
+  res = inRange->GetStartOffset(&startOffset);
+  if (NS_FAILED(res)) return res;
+  res = inRange->GetEndContainer(getter_AddRefs(endNode));
+  if (NS_FAILED(res)) return res;
+  res = inRange->GetEndOffset(&endOffset);
+  if (NS_FAILED(res)) return res;
+
+  tmp = startNode;
+  while ( tmp && 
+          !nsTextEditUtils::IsBody(tmp) &&
+          !nsHTMLEditUtils::IsNamedAnchor(tmp))
+  {
+    res = GetNodeLocation(tmp, address_of(parent), &tmpOffset);
+    if (NS_FAILED(res)) return res;
+    tmp = parent;
+  }
+  if (!tmp) return NS_ERROR_NULL_POINTER;
+  if (nsHTMLEditUtils::IsNamedAnchor(tmp))
+  {
+    res = GetNodeLocation(tmp, address_of(parent), &tmpOffset);
+    if (NS_FAILED(res)) return res;
+    startNode = parent;
+    startOffset = tmpOffset;
+  }
+
+  tmp = endNode;
+  while ( tmp && 
+          !nsTextEditUtils::IsBody(tmp) &&
+          !nsHTMLEditUtils::IsNamedAnchor(tmp))
+  {
+    res = GetNodeLocation(tmp, address_of(parent), &tmpOffset);
+    if (NS_FAILED(res)) return res;
+    tmp = parent;
+  }
+  if (!tmp) return NS_ERROR_NULL_POINTER;
+  if (nsHTMLEditUtils::IsNamedAnchor(tmp))
+  {
+    res = GetNodeLocation(tmp, address_of(parent), &tmpOffset);
+    if (NS_FAILED(res)) return res;
+    endNode = parent;
+    endOffset = tmpOffset + 1;
+  }
+
+  res = inRange->SetStart(startNode, startOffset);
+  if (NS_FAILED(res)) return res;
+  res = inRange->SetEnd(endNode, endOffset);
+  return res;
+}
 
 nsresult nsHTMLEditor::PromoteInlineRange(nsIDOMRange *inRange)
 {
@@ -1161,7 +1219,8 @@ nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsAStr
     // manipulating text attributes on a collapsed selection only sets state for the next text insertion
 
     // For links, aProperty uses "href", use "a" instead
-    if (aProperty == nsIEditProperty::href)
+    if (aProperty == nsIEditProperty::href ||
+        aProperty == nsIEditProperty::name)
       aProperty = nsIEditProperty::a;
 
     if (aProperty) return mTypeInState->ClearProp(aProperty, nsAutoString(*aAttribute));
@@ -1195,10 +1254,18 @@ nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsAStr
       
       nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
 
-      // adjust range to include any ancestors who's children are entirely selected
-      res = PromoteInlineRange(range);
+      if (aProperty == nsIEditProperty::name)
+      {
+        // promote range if it starts or end in a named anchor and we
+        // want to remove named anchors
+        res = PromoteRangeIfStartsOrEndsInNamedAnchor(range);
+      }
+      else {
+        // adjust range to include any ancestors who's children are entirely selected
+        res = PromoteInlineRange(range);
+      }
       if (NS_FAILED(res)) return res;
-      
+
       // remove this style from ancestors of our range endpoints, 
       // splitting them as appropriate
       res = SplitStyleAboveRange(range, aProperty, aAttribute);

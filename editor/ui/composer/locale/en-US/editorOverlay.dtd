@@ -21,6 +21,7 @@
    -    Sammy Ford
    -    Blake Ross
    -    Ryan Cassin (rcassin@supernova.org)
+   -    Daniel Glazman (glazman@netscape.com)
   -->
 
 <!-- Attn: Localization - some of the menus in this dialog directly affect mail also. -->
@@ -404,6 +405,9 @@
 
 <!ENTITY formatremovestyles.keybinding "y">
 <!ENTITY formatremovelinks.keybinding "k">
+<!ENTITY formatRemoveNamedAnchors.label "Remove Named Anchors">
+<!ENTITY formatRemoveNamedAnchors.accesskey "d">
+<!ENTITY formatremovenamedanchors.keybinding "a">
 
 <!ENTITY formatindent.keybinding "]">
 <!ENTITY formatoutdent.keybinding "[">

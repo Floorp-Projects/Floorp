@@ -1754,7 +1754,7 @@ function EditorInitFormatMenu()
 {
   try {
     InitObjectPropertiesMenuitem("objectProperties");
-    InitRemoveStylesMenuitems("removeStylesMenuitem", "removeLinksMenuitem");
+    InitRemoveStylesMenuitems("removeStylesMenuitem", "removeLinksMenuitem", "removeNamedAnchorsMenuitem");
   } catch(ex) {}
   // Set alignment check
 }
@@ -2358,11 +2358,12 @@ function InitJoinCellMenuitem(id)
   menuItem.setAttribute("accesskey",GetString("JoinCellAccesskey"));
 }
 
-function InitRemoveStylesMenuitems(removeStylesId, removeLinksId)
+function InitRemoveStylesMenuitems(removeStylesId, removeLinksId, removeNamedAnchorsId)
 {
   // Change wording of menuitems depending on selection
   var stylesItem = document.getElementById(removeStylesId);
   var linkItem = document.getElementById(removeLinksId);
+  var namedAnchorsItem = document.getElementById(removeNamedAnchorsId);
 
   var isCollapsed = editorShell.editorSelection.isCollapsed;
   if (stylesItem)
@@ -2379,6 +2380,11 @@ function InitRemoveStylesMenuitems(removeStylesId, removeLinksId)
     // Disable if not in a link, but always allow "Remove"
     //  if selection isn't collapsed since we only look at anchor node
     DisableItem(removeLinksId, isCollapsed && !window.editorShell.GetElementOrParentByTagName("href", null));
+  }
+  if (namedAnchorsItem)
+  {
+    // Disable if selection is collapsed
+    DisableItem(removeNamedAnchorsId, isCollapsed);
   }
 }
 

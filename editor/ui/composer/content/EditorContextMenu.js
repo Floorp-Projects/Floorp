@@ -36,7 +36,7 @@ function EditorFillContextMenu(event, contextMenuNode)
   // Setup object property menuitem
   var objectName = InitObjectPropertiesMenuitem("objectProperties_cm");
 
-  InitRemoveStylesMenuitems("removeStylesMenuitem_cm", "removeLinksMenuitem_cm");
+  InitRemoveStylesMenuitems("removeStylesMenuitem_cm", "removeLinksMenuitem_cm", "removeNamedAnchorsMenuitem_cm");
 
   // This item is present only in context menu:
   DisableItem("editLink_cm", objectName != "href");
@@ -76,7 +76,8 @@ function EditorFillContextMenu(event, contextMenuNode)
   var haveStyle =
     IsMenuItemShowing("removeStylesMenuitem_cm") ||
     IsMenuItemShowing("createLink_cm") ||
-    IsMenuItemShowing("removeLinksMenuitem_cm");
+    IsMenuItemShowing("removeLinksMenuitem_cm") ||
+    IsMenuItemShowing("removeNamedAnchorsMenuitem_cm");
 
   var havePropsOrImage =
     IsMenuItemShowing("objectProperties_cm") ||

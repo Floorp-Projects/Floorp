@@ -65,6 +65,7 @@
 
     <key id="removestyleskb"       key="&formatremovestyles.keybinding;"   observes="cmd_removeStyles"  modifiers="accel, shift"/>
     <key id="removelinkskb"        key="&formatremovelinks.keybinding;"    observes="cmd_removeLinks"  modifiers="accel, shift"/>
+    <key id="removenamedanchorskb" key="&formatremovenamedanchors.keybinding;"    observes="cmd_removeNamedAnchors"  modifiers="accel, shift"/>
     <key id="decreasefontsizekb"   key="&decreaseFontSize.keybinding;"     observes="cmd_decreaseFont"  modifiers="accel"/>
     <key id="increasefontsizekb"   key="&increaseFontSize.keybinding;"     observes="cmd_increaseFont"  modifiers="accel"/>
 
@@ -224,6 +225,7 @@
     
     <command id="cmd_removeStyles"                    oncommand="goDoCommand('cmd_removeStyles')"/>
     <command id="cmd_removeLinks"                     oncommand="goDoCommand('cmd_removeLinks')"/>
+    <command id="cmd_removeNamedAnchors"              oncommand="goDoCommand('cmd_removeNamedAnchors')"/>
   </commandset>
 
   <!-- commands updated only when the menu gets created -->
@@ -483,7 +485,12 @@
     <menuitem id="removeLinksMenuitem" key="removelinkskb"
           observes="cmd_removeLinks"
           position="7"/>
-    <menuseparator position="8"/>
+    <menuitem id="removeNamedAnchorsMenuitem"  label="&formatRemoveNamedAnchors.label;"
+          key="removenamedanchorskb"
+          accesskey="&formatRemoveNamedAnchors.accesskey;"
+          observes="cmd_removeNamedAnchors"
+          position="8"/>
+    <menuseparator position="9"/>
 
     <!-- Note: the 'Init' menu methods for Paragraph, List, and Align
          assume that the id = 'menu_'+tagName (the 'value' label),
@@ -492,7 +499,7 @@
     <!-- Paragraph Style submenu -->
     <menu id="paragraphMenu" label="&paragraphMenu.label;"
           accesskey="&formatparagraphmenu.accesskey;"
-          position="9" onpopupshowing="InitParagraphMenu()">
+          position="10" onpopupshowing="InitParagraphMenu()">
       <menupopup oncommand="doStatefulCommand('cmd_paragraphState', event.target.getAttribute('value'))">
         <menuitem id="menu_bodyText"  type="radio" name="1" label="&bodyTextCmd.label;"             accesskey="&bodytext.accesskey;"            value=""      observes="cmd_renderedHTMLEnabler"/>
         <menuitem id="menu_p"         type="radio" name="1" label="&paragraphParagraphCmd.label;"   accesskey="&paragraphparagraph.accesskey;"  value="p"     observes="cmd_renderedHTMLEnabler"/>
@@ -512,7 +519,7 @@
     <!-- List Style submenu -->
     <menu id="listMenu" label="&formatlistMenu.label;"
           accesskey="&formatlistmenu.accesskey;"
-          position="10" onpopupshowing="InitListMenu()">
+          position="11" onpopupshowing="InitListMenu()">
       <menupopup>
         <menuitem id="menu_noList" type="radio" name="1" label="&noneCmd.label;"           accesskey="&none.accesskey;"           observes="cmd_removeList"/>
         <menuitem id="menu_ul"     type="radio" name="1" label="&listBulletCmd.label;"     accesskey="&listbullet.accesskey;"     observes="cmd_ul"/>
@@ -523,16 +530,16 @@
         <menuitem id="listProps" label="&listProps.label;" accesskey="&listprops.accesskey;" observes="cmd_listProperties"/>
       </menupopup>
     </menu>
-    <menuseparator position="11"/>
+    <menuseparator position="12"/>
 
     <menuitem id="increaseIndent" label="&increaseIndent.label;"  accesskey="&increaseindent.accesskey;"  key="increaseindentkb"
-                observes="cmd_indent" position="12"/>
+                observes="cmd_indent" position="13"/>
     <menuitem id="decreaseIndent" label="&decreaseIndent.label;"  accesskey="&decreaseindent.accesskey;"  key="decreaseindentkb"
-              observes="cmd_outdent"  position="13"/>
+              observes="cmd_outdent"  position="14"/>
 
     <menu id="alignMenu" label="&alignMenu.label;" accesskey="&formatalignmenu.accesskey;"
         onpopupshowing="InitAlignMenu()"
-        position="14">
+        position="15">
       <!-- Align submenu -->
       <menupopup oncommand="doStatefulCommand('cmd_align', event.target.getAttribute('value'))">
         <menuitem id="menu_left"    label="&alignLeft.label;"  accesskey="&alignleft.accesskey;"      type="radio" name="1" value="left"    observes="cmd_renderedHTMLEnabler"/>
@@ -541,7 +548,7 @@
         <menuitem id="menu_justify" label="&alignJustify.label;" accesskey="&alignjustify.accesskey;" type="radio" name="1" value="justify" observes="cmd_renderedHTMLEnabler"/>
       </menupopup>
     </menu>
-    <menuseparator position="15"/>
+    <menuseparator position="16"/>
     <!-- Merge Table Menu and separator in Messenger Composer here -->
     <!-- Merge property items here -->
   </menupopup>
