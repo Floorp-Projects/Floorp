@@ -92,7 +92,12 @@ function StartUp()
   }
 
   var autoSelectLastProfile = document.getElementById("autoSelectLastProfile");
-  autoSelectLastProfile.checked = profile.startWithLastUsedProfile;
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                    .getService(Components.interfaces.nsIPrefBranch);
+  if (prefs.getBoolPref("profile.manage_only_at_launch"))
+    autoSelectLastProfile.hidden = true;
+  else
+    autoSelectLastProfile.checked = profile.startWithLastUsedProfile;
 
   var profileList = document.getElementById("profiles");
   profileList.focus();
@@ -219,9 +224,10 @@ function onStart()
     if (offlineState.checked != ioService.offline)
       ioService.offline = offlineState.checked;
   }
-  
+
   var autoSelectLastProfile = document.getElementById("autoSelectLastProfile");
-  profile.startWithLastUsedProfile = autoSelectLastProfile.checked;
+  if (!autoSelectLastProfile.hidden)
+    profile.startWithLastUsedProfile = autoSelectLastProfile.checked;
   
   try {
     profile.currentProfile = profilename;

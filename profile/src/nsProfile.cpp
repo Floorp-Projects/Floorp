@@ -468,7 +468,12 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr, PRBool canInteract)
         // multiple profiles.
         
         PRBool startWithLastUsedProfile = PR_FALSE;
-        GetStartWithLastUsedProfile(&startWithLastUsedProfile);
+
+        // But first, make sure this app supports this.
+        PRBool cantAutoSelect;
+        rv = prefBranch->GetBoolPref("profile.manage_only_at_launch", &cantAutoSelect);
+        if (NS_SUCCEEDED(rv) && !cantAutoSelect)
+          GetStartWithLastUsedProfile(&startWithLastUsedProfile);
         
         // This means that there was no command-line argument to force
         // profile UI to come up. But we need the UI anyway if there

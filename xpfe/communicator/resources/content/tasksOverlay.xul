@@ -33,7 +33,7 @@
               <menuitem id="java" label="&javaConsoleCmd.label;" accesskey="&javaConsoleCmd.accesskey;" oncommand="toJavaConsole()"/>
             </menupopup>
           </menu>
-          <menuseparator/>
+          <menuseparator id="sep_switchprofile"/>
           <menuitem id="cmd_switchprofile" label="&switchProfileCmd.label;" accesskey="&switchProfileCmd.accesskey;" oncommand="toProfileManager();"/>
         </menupopup>
       </menu>
