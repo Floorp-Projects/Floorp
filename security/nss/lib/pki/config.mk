@@ -1,4 +1,4 @@
-# 
+#
 # The contents of this file are subject to the Mozilla Public
 # License Version 1.1 (the "License"); you may not use this file
 # except in compliance with the License. You may obtain a copy of
@@ -30,8 +30,125 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-CONFIG_CVS_ID = "@(#) $RCSfile: config.mk,v $ $Revision: 1.1 $ $Date: 2001/07/19 20:41:36 $ $Name:  $"
+
+#CONFIG_CVS_ID = "@(#) $RCSfile: config.mk,v $ $Revision: 1.2 $ $Date: 2001/09/13 22:16:21 $ $Name:  $"
 
 ifdef BUILD_IDG
 DEFINES += -DNSSDEBUG
 endif
+
+#
+#  Override TARGETS variable so that only static libraries
+#  are specifed as dependencies within rules.mk.
+#
+
+#TARGETS        = $(LIBRARY)
+#SHARED_LIBRARY =
+#IMPORT_LIBRARY =
+#PROGRAM        =
+
+# can't do this in manifest.mn because OS_ARCH isn't defined there.
+ifeq ($(OS_ARCH), WINNT)
+
+# don't want the 32 in the shared library name
+SHARED_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).dll
+IMPORT_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).lib
+
+DLLFLAGS += -DEF:nsspki.def
+RES = $(OBJDIR)/nsspki.res
+RESNAME = nsspki.rc
+
+# $(PROGRAM) has explicit dependencies on $(EXTRA_LIBS)
+
+SHARED_LIBRARY_LIBS = \
+	$(DIST)/lib/nssb.lib \
+	$(DIST)/lib/nssdev.lib \
+	$(DIST)/lib/nsspki.lib \
+	$(NULL)
+
+SHARED_LIBRARY_DIRS = \
+	../base \
+	../dev \
+	$(NULL)
+
+EXTRA_LIBS += \
+	$(NULL)
+
+EXTRA_SHARED_LIBS += \
+	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plc4.lib \
+	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plds4.lib \
+	$(DIST)/lib/$(NSPR31_LIB_PREFIX)nspr4.lib \
+	$(NULL)
+
+# $(PROGRAM) has NO explicit dependencies on $(OS_LIBS)
+#OS_LIBS += \
+#	wsock32.lib \
+#	winmm.lib \
+#	$(NULL)
+else
+
+# $(PROGRAM) has explicit dependencies on $(EXTRA_LIBS)
+SHARED_LIBRARY_LIBS = \
+	$(DIST)/lib/libnssb.$(LIB_SUFFIX) \
+	$(DIST)/lib/libnssdev.$(LIB_SUFFIX) \
+	$(DIST)/lib/libnsspki.$(LIB_SUFFIX) \
+	$(NULL)
+
+EXTRA_LIBS += \
+	$(NULL)
+
+SHARED_LIBRARY_DIRS = \
+	../base \
+	../dev \
+	$(NULL)
+
+# $(PROGRAM) has NO explicit dependencies on $(EXTRA_SHARED_LIBS)
+# $(EXTRA_SHARED_LIBS) come before $(OS_LIBS), except on AIX.
+EXTRA_SHARED_LIBS += \
+	-L$(DIST)/lib/ \
+	-lplc4 \
+	-lplds4 \
+	-lnspr4 \
+	$(NULL)
+endif
+
+ifeq ($(OS_ARCH),SunOS)
+MAPFILE = $(OBJDIR)/nsspkimap.sun
+ALL_TRASH += $(MAPFILE)
+MKSHLIB += -M $(MAPFILE)
+ifndef USE_64
+ifeq ($(CPU_ARCH),sparc)
+# The -R '$ORIGIN' linker option instructs libnss3.so to search for its
+# dependencies (libfreebl_*.so) in the same directory where it resides.
+MKSHLIB += -R '$$ORIGIN'
+endif
+endif
+endif
+
+ifeq ($(OS_ARCH),AIX)
+MAPFILE = $(OBJDIR)/nsspkimap.aix
+ALL_TRASH += $(MAPFILE)
+EXPORT_RULES = -bexport:$(MAPFILE)
+endif
+
+ifeq ($(OS_ARCH),HP-UX)
+MAPFILE = $(OBJDIR)/nsspkimap.hp
+ALL_TRASH += $(MAPFILE)
+MKSHLIB += -c $(MAPFILE)
+endif
+
+ifeq ($(OS_ARCH), OSF1)
+MAPFILE = $(OBJDIR)/nsspkimap.osf
+ALL_TRASH += $(MAPFILE)
+MKSHLIB += -hidden -input $(MAPFILE)
+endif
+
+ifeq ($(OS_ARCH),Linux)
+MAPFILE = $(OBJDIR)/nsspkimap.linux
+ALL_TRASH += $(MAPFILE)
+MKSHLIB += -Wl,--version-script,$(MAPFILE)
+endif
+
+
+	
+

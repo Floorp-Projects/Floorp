@@ -32,24 +32,126 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.1 $ $Date: 2001/07/19 20:41:36 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.2 $ $Date: 2001/09/13 22:16:21 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
 #include "nsspki.h"
 #endif /* NSSPKI_H */
 
-PRStatus
+#ifndef PKIT_H
+#include "pkit.h"
+#endif /* PKIT_H */
+
+#ifndef CKHELPER_H
+#include "ckhelper.h"
+#endif /* CKHELPER_H */
+
+/* I assume the following accessors into cert fields will be needed.
+ * We need to be able to return basic cert info, however, these are
+ * really PKCS#11 fields, so maybe not these in particular (mcgreer)
+ */
+NSS_IMPLEMENT NSSUTF8 *
+NSSCertificate_GetLabel
+(
+  NSSCertificate *c
+)
+{
+    NSSUTF8 *rvStr;
+    rvStr = nssUTF8_Create(NULL, nssStringType_PrintableString, 
+                           c->label.data, c->label.size);
+    return rvStr;
+}
+
+NSS_IMPLEMENT NSSItem *
+NSSCertificate_GetID
+(
+  NSSCertificate *c
+)
+{
+    return &c->id;
+}
+
+/* NSS needs access to this function, but does anyone else? */
+static NSSCertificate *
+NSSCertificate_Create
+(
+ /* blah blah blah */
+)
+{
+    NSSArena *arena;
+    NSSCertificate *rvCert;
+    arena = NSSArena_Create();
+    if(!arena) {
+	return (NSSCertificate *)NULL;
+    }
+    rvCert = nss_ZNEW(arena, NSSCertificate);
+    if (!rvCert) {
+	goto loser;
+    }
+    rvCert->refCount = 1;
+    rvCert->arena = arena;
+    return rvCert;
+loser:
+    if (arena) {
+	nssArena_Destroy(arena);
+    }
+    return (NSSCertificate *)NULL;
+}
+
+/* Create a certificate from an object handle. */
+NSS_IMPLEMENT NSSCertificate *
+NSSCertificate_CreateFromHandle
+(
+  CK_OBJECT_HANDLE object,
+  NSSSlot *slot
+)
+{
+    NSSCertificate *rvCert;
+    PRStatus nssrv;
+    CK_ULONG template_size;
+    CK_ATTRIBUTE cert_template[] = {
+	{ CKA_ID,    NULL, 0 },
+	{ CKA_VALUE, NULL, 0 },
+	{ CKA_LABEL, NULL, 0 },
+    };
+    template_size = sizeof(cert_template) / sizeof(cert_template[0]);
+    rvCert = NSSCertificate_Create();
+    if (!rvCert) {
+	return (NSSCertificate *)NULL;
+    }
+    rvCert->handle = object;
+    rvCert->slot = slot;
+    nssrv = NSSCKObject_GetAttributes(object, cert_template, template_size,
+                                      rvCert->arena, rvCert->slot);
+    if (nssrv) {
+	/* okay, but if failed because one of the attributes could not be
+	 * found, do it gracefully (i.e., catch the error).
+	 */
+	goto loser;
+    }
+    NSS_CK_ATTRIBUTE_TO_ITEM(&cert_template[0], &rvCert->id);
+    NSS_CK_ATTRIBUTE_TO_ITEM(&cert_template[1], &rvCert->der);
+    NSS_CK_ATTRIBUTE_TO_ITEM(&cert_template[2], &rvCert->label);
+    return rvCert;
+loser:
+    NSSCertificate_Destroy(rvCert);
+    return (NSSCertificate *)NULL;
+}
+
+NSS_IMPLEMENT PRStatus
 NSSCertificate_Destroy
 (
   NSSCertificate *c
 )
 {
-    nss_SetError(NSS_ERROR_NOT_FOUND);
-    return PR_FAILURE;
+    if (--c->refCount == 0) {
+	return NSSArena_Destroy(c->arena);
+    }
+    return PR_SUCCESS;
 }
 
-PRStatus
+NSS_IMPLEMENT PRStatus
 NSSCertificate_DeleteStoredObject
 (
   NSSCertificate *c,
@@ -60,7 +162,7 @@ NSSCertificate_DeleteStoredObject
     return PR_FAILURE;
 }
 
-PRStatus
+NSS_IMPLEMENT PRStatus
 NSSCertificate_Validate
 (
   NSSCertificate *c,
@@ -73,7 +175,7 @@ NSSCertificate_Validate
     return PR_FAILURE;
 }
 
-void ** /* void *[] */
+NSS_IMPLEMENT void ** /* void *[] */
 NSSCertificate_ValidateCompletely
 (
   NSSCertificate *c,
@@ -89,7 +191,7 @@ NSSCertificate_ValidateCompletely
     return NULL;
 }
 
-PRStatus
+NSS_IMPLEMENT PRStatus
 NSSCertificate_ValidateAndDiscoverUsagesAndPolicies
 (
   NSSCertificate *c,
@@ -107,7 +209,7 @@ NSSCertificate_ValidateAndDiscoverUsagesAndPolicies
     return PR_FAILURE;
 }
 
-NSSDER *
+NSS_IMPLEMENT NSSDER *
 NSSCertificate_Encode
 (
   NSSCertificate *c,
@@ -119,7 +221,7 @@ NSSCertificate_Encode
     return NULL;
 }
 
-NSSCertificate **
+NSS_IMPLEMENT NSSCertificate **
 NSSCertificate_BuildChain
 (
   NSSCertificate *c,
@@ -135,7 +237,7 @@ NSSCertificate_BuildChain
     return NULL;
 }
 
-NSSTrustDomain *
+NSS_IMPLEMENT NSSTrustDomain *
 NSSCertificate_GetTrustDomain
 (
   NSSCertificate *c
@@ -145,7 +247,7 @@ NSSCertificate_GetTrustDomain
     return NULL;
 }
 
-NSSToken *
+NSS_IMPLEMENT NSSToken *
 NSSCertificate_GetToken
 (
   NSSCertificate *c,
@@ -156,7 +258,7 @@ NSSCertificate_GetToken
     return NULL;
 }
 
-NSSSlot *
+NSS_IMPLEMENT NSSSlot *
 NSSCertificate_GetSlot
 (
   NSSCertificate *c,
@@ -167,7 +269,7 @@ NSSCertificate_GetSlot
     return NULL;
 }
 
-NSSModule *
+NSS_IMPLEMENT NSSModule *
 NSSCertificate_GetModule
 (
   NSSCertificate *c,
@@ -178,7 +280,7 @@ NSSCertificate_GetModule
     return NULL;
 }
 
-NSSItem *
+NSS_IMPLEMENT NSSItem *
 NSSCertificate_Encrypt
 (
   NSSCertificate *c,
@@ -196,7 +298,7 @@ NSSCertificate_Encrypt
     return NULL;
 }
 
-PRStatus
+NSS_IMPLEMENT PRStatus
 NSSCertificate_Verify
 (
   NSSCertificate *c,
@@ -213,7 +315,7 @@ NSSCertificate_Verify
     return PR_FAILURE;
 }
 
-NSSItem *
+NSS_IMPLEMENT NSSItem *
 NSSCertificate_VerifyRecover
 (
   NSSCertificate *c,
@@ -231,7 +333,7 @@ NSSCertificate_VerifyRecover
     return NULL;
 }
 
-NSSItem *
+NSS_IMPLEMENT NSSItem *
 NSSCertificate_WrapSymmetricKey
 (
   NSSCertificate *c,
@@ -249,7 +351,7 @@ NSSCertificate_WrapSymmetricKey
     return NULL;
 }
 
-NSSCryptoContext *
+NSS_IMPLEMENT NSSCryptoContext *
 NSSCertificate_CreateCryptoContext
 (
   NSSCertificate *c,
@@ -264,7 +366,7 @@ NSSCertificate_CreateCryptoContext
     return NULL;
 }
 
-NSSPublicKey *
+NSS_IMPLEMENT NSSPublicKey *
 NSSCertificate_GetPublicKey
 (
   NSSCertificate *c
@@ -274,7 +376,7 @@ NSSCertificate_GetPublicKey
     return NULL;
 }
 
-NSSPrivateKey *
+NSS_IMPLEMENT NSSPrivateKey *
 NSSCertificate_FindPrivateKey
 (
   NSSCertificate *c,
@@ -285,7 +387,7 @@ NSSCertificate_FindPrivateKey
     return NULL;
 }
 
-PRBool
+NSS_IMPLEMENT PRBool
 NSSCertificate_IsPrivateKeyAvailable
 (
   NSSCertificate *c,
@@ -297,7 +399,7 @@ NSSCertificate_IsPrivateKeyAvailable
     return PR_FALSE;
 }
 
-PRBool
+NSS_IMPLEMENT PRBool
 NSSUserCertificate_IsStillPresent
 (
   NSSUserCertificate *uc,
@@ -308,7 +410,7 @@ NSSUserCertificate_IsStillPresent
     return PR_FALSE;
 }
 
-NSSItem *
+NSS_IMPLEMENT NSSItem *
 NSSUserCertificate_Decrypt
 (
   NSSUserCertificate *uc,
@@ -326,7 +428,7 @@ NSSUserCertificate_Decrypt
     return NULL;
 }
 
-NSSItem *
+NSS_IMPLEMENT NSSItem *
 NSSUserCertificate_Sign
 (
   NSSUserCertificate *uc,
@@ -344,7 +446,7 @@ NSSUserCertificate_Sign
     return NULL;
 }
 
-NSSItem *
+NSS_IMPLEMENT NSSItem *
 NSSUserCertificate_SignRecover
 (
   NSSUserCertificate *uc,
@@ -362,7 +464,7 @@ NSSUserCertificate_SignRecover
     return NULL;
 }
 
-NSSSymmetricKey *
+NSS_IMPLEMENT NSSSymmetricKey *
 NSSUserCertificate_UnwrapSymmetricKey
 (
   NSSUserCertificate *uc,
@@ -380,7 +482,7 @@ NSSUserCertificate_UnwrapSymmetricKey
     return NULL;
 }
 
-NSSSymmetricKey *
+NSS_IMPLEMENT NSSSymmetricKey *
 NSSUserCertificate_DeriveSymmetricKey
 (
   NSSUserCertificate *uc, /* provides private key */
