@@ -335,13 +335,9 @@ sub GenerateSQL {
          },
 
          "^cc," => sub {
-                my $tablecc = "cc_" . $chartid;
-                my $tableprof = "cc_prof_" . $chartid;
-		push(@supptables, "cc $tablecc, profiles $tableprof");
-		$ff = "$tableprof.login_name ";
-		$ref = $funcsbykey{",$t"};
-		&$ref;
-                push(@wherepart, " $tablecc.bug_id = bugs.bug_id AND $tablecc.who=$tableprof.userid ");
+            push(@supptables,                                                  
+              ("LEFT JOIN cc cc_$chartid ON bugs.bug_id = cc_$chartid.bug_id LEFT JOIN profiles map_cc_$chartid ON cc_$chartid.who = map_cc_$chartid.userid"));
+            $f = "map_cc_$chartid.login_name";  
          },
 
          "^long_?desc,changedby" => sub {
