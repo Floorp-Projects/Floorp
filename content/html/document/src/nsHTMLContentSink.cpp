@@ -397,8 +397,6 @@ public:
   nsString mBaseTarget;
 
   nsICSSLoader *mCSSLoader;
-
-  // depth of containment within <noembed>, <noframes> etc
   PRInt32 mInsideNoXXXTag;
   PRInt32 mInMonolithicContainer;
   PRUint32 mFlags;
@@ -1033,7 +1031,11 @@ NS_CreateHTMLElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo,
       parserService->HTMLIdToStringTag(id, &tag);
       NS_ASSERTION(tag, "What? Reverse mapping of id to string broken!!!");
 
-      if (!name->Equals(nsDependentString(tag))) {
+      const PRUnichar *name_str = nsnull;
+      name->GetUnicode(&name_str);
+      NS_ASSERTION(name_str, "What? No string in atom?!?");
+
+      if (nsCRT::strcmp(tag, name_str) != 0) {
         nsCOMPtr<nsIAtom> atom = do_GetAtom(tag);
 
         rv = aNodeInfo->NameChanged(atom, *getter_AddRefs(kungFuDeathGrip));
@@ -1708,13 +1710,14 @@ SinkContext::CloseContainer(const nsHTMLTag aTag)
       // Tracing code
       nsCOMPtr<nsIAtom> tag;
       mStack[mStackPos].mContent->GetTag(*getter_AddRefs(tag));
-      const char *tagStr;
-      tag->GetUTF8String(&tagStr);
+      const PRUnichar* tagChar;
+      tag->GetUnicode(&tagChar);
+      nsDependentString str(tagChar);
 
       SINK_TRACE(SINK_TRACE_REFLOW,
                  ("SinkContext::CloseContainer: reflow on notifyImmediate "
                   "tag=%s newIndex=%d stackPos=%d",
-                  tagStr,
+                  NS_LossyConvertUCS2toASCII(str).get(),
                   mStack[mStackPos].mNumFlushed, mStackPos));
 #endif
       mSink->NotifyAppend(content, mStack[mStackPos].mNumFlushed);
@@ -2114,12 +2117,13 @@ SinkContext::FlushTags(PRBool aNotify)
         // Tracing code
         nsCOMPtr<nsIAtom> tag;
         mStack[stackPos].mContent->GetTag(*getter_AddRefs(tag));
-        const char* tagStr;
-        tag->GetUTF8String(&tagStr);
+        const PRUnichar* tagChar;
+        tag->GetUnicode(&tagChar);
+        nsDependentString str(tagChar);
 
         SINK_TRACE(SINK_TRACE_REFLOW,
                    ("SinkContext::FlushTags: tag=%s from newindex=%d at "
-                    "stackPos=%d", tagStr,
+                    "stackPos=%d", NS_LossyConvertUCS2toASCII(str).get(),
                     mStack[stackPos].mNumFlushed, stackPos));
 #endif
         if ((mStack[stackPos].mInsertionPoint != -1) &&
@@ -5255,11 +5259,12 @@ HTMLContentSink::ProcessHeaderData(nsIAtom* aHeader, const nsAString& aValue,
     if (NS_SUCCEEDED(mParser->GetChannel(getter_AddRefs(channel)))) {
       nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
       if (httpChannel) {
-        const char* header;
-        (void)aHeader->GetUTF8String(&header);
-        (void)httpChannel->SetResponseHeader(nsDependentCString(header),
-                                             NS_ConvertUCS2toUTF8(aValue),
-                                             PR_TRUE);
+        const PRUnichar *header = 0;
+        (void)aHeader->GetUnicode(&header);
+        (void)httpChannel->SetResponseHeader(
+                       NS_ConvertUCS2toUTF8(header),
+                       NS_ConvertUCS2toUTF8(aValue),
+                       PR_TRUE);
       }
     }
   }

@@ -607,8 +607,8 @@ nsresult nsMsgI18NSaveAsCharset(const char* contentType, const char *charset,
   res = ccm2->GetCharsetAtom(NS_ConvertASCIItoUCS2(charset).get(), getter_AddRefs(charsetAtom));
   NS_ENSURE_SUCCESS(res, res);
 
-  const char *charsetName;
-  res = charsetAtom->GetUTF8String(&charsetName);
+  const PRUnichar *charsetName;
+  res = charsetAtom->GetUnicode(&charsetName);
   NS_ENSURE_SUCCESS(res, res);
 
   // charset converter plus entity, NCR generation
@@ -620,14 +620,14 @@ nsresult nsMsgI18NSaveAsCharset(const char* contentType, const char *charset,
   // plain text - charset conv then fallback to '?'
   if (bTEXT_HTML)
     // For ISO-8859-1 only, convert to entity first (always generate entites like &nbsp;).
-    res = conv->Init(charsetName,
-                     !nsCRT::strcmp(charsetName, "ISO-8859-1") ?
+    res = conv->Init(NS_ConvertUCS2toUTF8(charsetName).get(), 
+                     !nsCRT::strcmp(charsetName, NS_LITERAL_STRING("ISO-8859-1").get()) ?
                      nsISaveAsCharset::attr_htmlTextDefault :
                      nsISaveAsCharset::attr_EntityAfterCharsetConv + nsISaveAsCharset::attr_FallbackDecimalNCR, 
                      nsIEntityConverter::html32);
   else
     // fallback for text/plain: first try transliterate then '?'
-    res = conv->Init(charsetName, 
+    res = conv->Init(NS_ConvertUCS2toUTF8(charsetName).get(), 
                      nsISaveAsCharset::attr_FallbackQuestionMark + nsISaveAsCharset::attr_EntityAfterCharsetConv, 
                      nsIEntityConverter::transliterate);
   NS_ENSURE_SUCCESS(res, res);
@@ -636,7 +636,7 @@ nsresult nsMsgI18NSaveAsCharset(const char* contentType, const char *charset,
 
   // Mapping characters in a certain range (required for Japanese only)
   nsAutoString mapped;
-  if (!nsCRT::strcmp(charsetName, "ISO-2022-JP")) {
+  if (!nsCRT::strcmp(charsetName, NS_LITERAL_STRING("ISO-2022-JP").get())) {
     static PRInt32 sSendHankakuKana = -1;
     if (sSendHankakuKana < 0) {
       nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &res));
@@ -697,7 +697,7 @@ nsresult nsMsgI18NSaveAsCharset(const char* contentType, const char *charset,
   // In case of HTML, non ASCII may be encoded as CER, NCR.
   // Exclude stateful charset which is 7 bit but not ASCII only.
   else if (isAsciiOnly && bTEXT_HTML && *outString &&
-           !nsMsgI18Nstateful_charset(charsetName))
+           !nsMsgI18Nstateful_charset(NS_LossyConvertUCS2toASCII(charsetName).get()))
     *isAsciiOnly = nsCRT::IsAscii(*outString);
 
   return res;

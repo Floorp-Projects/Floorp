@@ -2062,6 +2062,7 @@ nsresult GetMailNewsFont(MimeObject *obj, PRBool styleFixed,  PRInt32 *fontPixel
     nsCOMPtr<nsICharsetConverterManager2> charSetConverterManager2;
     nsCOMPtr <nsIAtom> charsetAtom;
     nsCOMPtr<nsIAtom> langGroupAtom;
+    const PRUnichar* langGroup = nsnull;
     nsCAutoString prefStr;
 
     ToLowerCase(charset);
@@ -2077,13 +2078,15 @@ nsresult GetMailNewsFont(MimeObject *obj, PRBool styleFixed,  PRInt32 *fontPixel
     rv = charSetConverterManager2->GetCharsetLangGroup(charsetAtom,getter_AddRefs(langGroupAtom));
     if (NS_FAILED(rv))
       return rv;
-    rv = langGroupAtom->ToUTF8String(fontLang);
+    rv = langGroupAtom->GetUnicode(&langGroup);
     if (NS_FAILED(rv))
       return rv;
 
+    fontLang.AssignWithConversion(langGroup);
+
     // get a font size from pref
     prefStr.Assign(!styleFixed ? "font.size.variable." : "font.size.fixed.");
-    prefStr.Append(fontLang);
+    prefStr.AppendWithConversion(langGroup);
     rv = prefs->GetIntPref(prefStr.get(), fontPixelSize);
     if (NS_FAILED(rv))
       return rv;

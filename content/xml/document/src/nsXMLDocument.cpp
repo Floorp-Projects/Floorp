@@ -946,8 +946,11 @@ MatchId(nsIContent *aContent, const nsAString& aName)
     nsCOMPtr<nsIXMLContent> xmlContent = do_QueryInterface(aContent);    
     nsCOMPtr<nsIAtom> IDValue;
     if (xmlContent && NS_SUCCEEDED(xmlContent->GetID(*getter_AddRefs(IDValue))) && IDValue) {
-      if (IDValue->Equals(aName))
+      const PRUnichar* IDValStr = nsnull;
+      IDValue->GetUnicode(&IDValStr);       
+      if (aName.Equals(IDValStr)) {
         return aContent;
+      }
     }
   }
   

@@ -56,7 +56,7 @@ public:
 
   virtual PRBool IsPermanent();
 
-  void* operator new(size_t size, const nsACString& aString) CPP_THROW_NEW;
+  void* operator new(size_t size, const nsAString& aString) CPP_THROW_NEW;
 
   void operator delete(void* ptr) {
     ::operator delete(ptr);
@@ -67,7 +67,7 @@ public:
 
   // Actually more; 0 terminated. This slot is reserved for the
   // terminating zero.
-  char mString[1];
+  PRUnichar mString[1];
 };
 
 /**
@@ -84,7 +84,7 @@ public:
 
   virtual PRBool IsPermanent();
 
-  void* operator new(size_t size, const nsACString& aString) CPP_THROW_NEW {
+  void* operator new(size_t size, const nsAString& aString) CPP_THROW_NEW {
     return AtomImpl::operator new(size, aString);
   }
   void* operator new(size_t size, AtomImpl* aAtom) CPP_THROW_NEW;

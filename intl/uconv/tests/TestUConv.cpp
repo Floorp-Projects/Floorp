@@ -245,7 +245,7 @@ nsresult nsTestUConv::TestCharsetManager()
   char * trace = "TestCharsetManager";
   mLog.AddTrace(trace);
   nsresult res = NS_OK;
-  nsAutoString name;
+  const PRUnichar * name;
   nsCOMPtr<nsIAtom> csAtom;
 
   nsCOMPtr<nsICharsetConverterManager2> ccMan = 
@@ -263,12 +263,12 @@ nsresult nsTestUConv::TestCharsetManager()
     mLog.PrintError("GetCharsetAtom()", res);
     return res;
   }
-  res = csAtom->ToString(name);
+  res = csAtom->GetUnicode(&name);
   if (NS_FAILED(res)) {
     mLog.PrintError("get()", res);
     return res;
   }
-  if (!csName.Equals(name)) {
+  if (!csName.Equals(nsDependentString(name))) {
     mLog.PrintError("Equals()", "unexpected charset name");
     return NS_ERROR_UNEXPECTED;
   }
@@ -280,12 +280,12 @@ nsresult nsTestUConv::TestCharsetManager()
     mLog.PrintError("GetCharsetAtom()", res);
     return res;
   }
-  res = csAtom->ToString(name);
+  res = csAtom->GetUnicode(&name);
   if (NS_FAILED(res)) {
     mLog.PrintError("get()", res);
     return res;
   }
-  if (!csAlias2.Equals(name)) {
+  if (!csAlias2.Equals(nsDependentString(name))) {
     mLog.PrintError("Equals()", "unexpected charset name");
     return NS_ERROR_UNEXPECTED;
   }
@@ -335,8 +335,8 @@ nsresult nsTestUConv::DisplayDetectors()
       return res;
     }
 
-    nsAutoString name;
-    res = cs->ToString(name);
+    const PRUnichar * name;
+    res = cs->GetUnicode(&name);
     if (NS_FAILED(res)) {
       mLog.PrintError("get()", res);
       return res;
@@ -410,8 +410,8 @@ nsresult nsTestUConv::DisplayCharsets()
       return res;
     }
 
-    nsAutoString name;
-    res = cs->ToString(name);
+    const PRUnichar * name;
+    res = cs->GetUnicode(&name);
     if (NS_FAILED(res)) {
       mLog.PrintError("get()", res);
       return res;

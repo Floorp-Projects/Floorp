@@ -1439,7 +1439,7 @@ function UpdateMailEditCharset()
 
   if (gCharsetConvertManager) {
     var charsetAtom = gCharsetConvertManager.GetCharsetAtom(compFieldsCharset);
-    if (charsetAtom && (charsetAtom.equals("us-ascii")))
+    if (charsetAtom && (charsetAtom.GetUnicode() == "us-ascii"))
       compFieldsCharset = "ISO-8859-1";   // no menu item for "us-ascii"
   }
 

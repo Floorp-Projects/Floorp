@@ -584,8 +584,8 @@ PRInt32 nsCSSSelector::CalcWeight(void) const
 static PRBool IsPseudoElement(nsIAtom* aAtom)
 {
   if (aAtom) {
-    const char* str;
-    aAtom->GetUTF8String(&str);
+    const PRUnichar *str;
+    aAtom->GetUnicode(&str);
     return str && (*str == ':');
   }
 
@@ -604,7 +604,7 @@ void nsCSSSelector::AppendNegationToString(nsAString& aString)
 nsresult nsCSSSelector::ToString( nsAString& aString, nsICSSStyleSheet* aSheet, PRBool aIsPseudoElem,
                                   PRInt8 aNegatedIndex) const
 {
-  nsAutoString temp;
+  const PRUnichar* temp;
   PRBool aIsNegated = PRBool(0 < aNegatedIndex);
 
   // selectors are linked from right-to-left, so the next selector in the linked list
@@ -631,8 +631,8 @@ nsresult nsCSSSelector::ToString( nsAString& aString, nsICSSStyleSheet* aSheet, 
     // will return null if namespace was the default
     sheetNS->FindNameSpacePrefix(mNameSpace, *getter_AddRefs(prefixAtom));
     if (prefixAtom) {
-      nsAutoString prefix;
-      prefixAtom->ToString(prefix);
+      const PRUnichar* prefix;
+      prefixAtom->GetUnicode(&prefix);
       aString.Append(prefix);
       aString.Append(PRUnichar('|'));
     }
@@ -648,16 +648,15 @@ nsresult nsCSSSelector::ToString( nsAString& aString, nsICSSStyleSheet* aSheet, 
   } else {
     // Append the tag name, if there is one
     if (mTag) {
-      nsAutoString prefix;
-      mTag->ToString(prefix);
-      aString.Append(prefix);
+      mTag->GetUnicode(&temp);
+      aString.Append(temp);
       NS_IF_NEGATED_END(aIsNegated, aString)
     }
     // Append the id, if there is one
     if (mIDList) {
       nsAtomList* list = mIDList;
       while (list != nsnull) {
-        list->mAtom->ToString(temp);
+        list->mAtom->GetUnicode(&temp);
         NS_IF_NEGATED_START(aIsNegated, aString)
         aString.Append(PRUnichar('#'));
         aString.Append(temp);
@@ -669,7 +668,7 @@ nsresult nsCSSSelector::ToString( nsAString& aString, nsICSSStyleSheet* aSheet, 
     if (mClassList) {
       nsAtomList* list = mClassList;
       while (list != nsnull) {
-        list->mAtom->ToString(temp);
+        list->mAtom->GetUnicode(&temp);
         NS_IF_NEGATED_START(aIsNegated, aString)
         aString.Append(PRUnichar('.'));
         aString.Append(temp);
@@ -693,14 +692,14 @@ nsresult nsCSSSelector::ToString( nsAString& aString, nsICSSStyleSheet* aSheet, 
         // will return null if namespace was the default
         sheetNS->FindNameSpacePrefix(list->mNameSpace, *getter_AddRefs(prefixAtom));
         if (prefixAtom) { 
-          nsAutoString prefix;
-          prefixAtom->ToString(prefix);
+          const PRUnichar* prefix;
+          prefixAtom->GetUnicode(&prefix);
           aString.Append(prefix);
           aString.Append(PRUnichar('|'));
         }
       }
       // Append the attribute name
-      list->mAttr->ToString(temp);
+      list->mAttr->GetUnicode(&temp);
       aString.Append(temp);
       // Append the function
       if (list->mFunction == NS_ATTR_FUNC_EQUALS) {
@@ -733,7 +732,7 @@ nsresult nsCSSSelector::ToString( nsAString& aString, nsICSSStyleSheet* aSheet, 
   if (mPseudoClassList) {
     nsAtomStringList* list = mPseudoClassList;
     while (list != nsnull) {
-      list->mAtom->ToString(temp);
+      list->mAtom->GetUnicode(&temp);
       NS_IF_NEGATED_START(aIsNegated, aString)
       aString.Append(temp);
       if (nsnull != list->mString) {

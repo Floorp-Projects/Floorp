@@ -503,7 +503,7 @@ function onselect_loadURI(tree, columnName) {
 function getPropertyValue(properties, propName) {
   for (var i=0; i< properties.Count(); ++i) {
     var atom = properties.GetElementAt(i).QueryInterface(Components.interfaces.nsIAtom);
-    var atomValue = atom.toString();
+    var atomValue = atom.GetUnicode();
     if (atomValue.substr(0, propName.length) == propName)
       return atomValue.substr(propName.length);
   }

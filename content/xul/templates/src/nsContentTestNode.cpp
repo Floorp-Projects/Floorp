@@ -184,14 +184,14 @@ nsContentTestNode::FilterInstantiations(InstantiationSet& aInstantiations, void*
                 if (tag != mTag) {
                     consistent = PR_FALSE;
 
-                    const char *expected, *actual;
-                    mTag->GetUTF8String(&expected);
-                    tag->GetUTF8String(&actual);
+                    const PRUnichar *expected, *actual;
+                    mTag->GetUnicode(&expected);
+                    tag->GetUnicode(&actual);
 
                     PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                            ("    => tag mismatch; expected %s, actual %s",
-                            expected,
-                            actual));
+                            NS_LossyConvertUCS2toASCII(expected).get(),
+                            NS_LossyConvertUCS2toASCII(actual).get()));
                 }
             }
 

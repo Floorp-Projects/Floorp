@@ -1177,6 +1177,7 @@ nsXMLContentSink::ProcessHeaderData(nsIAtom* aHeader,const nsAString& aValue,nsI
     rv = originalCodebase->GetURI(getter_AddRefs(codebaseURI));
     NS_ENSURE_SUCCESS(rv, rv);
 
+    char *cookie = ToNewUTF8String(aValue);
     nsCOMPtr<nsIScriptGlobalObject> globalObj;
     nsCOMPtr<nsIPrompt> prompt;
     mDocument->GetScriptGlobalObject(getter_AddRefs(globalObj));
@@ -1195,8 +1196,8 @@ nsXMLContentSink::ProcessHeaderData(nsIAtom* aHeader,const nsAString& aValue,nsI
       }
     }
 
-    rv = cookieServ->SetCookieString(codebaseURI, prompt, NS_ConvertUCS2toUTF8(aValue).get(), httpChannel);
-
+    rv = cookieServ->SetCookieString(codebaseURI, prompt, cookie, httpChannel);
+    nsCRT::free(cookie);
     if (NS_FAILED(rv)) return rv;
   } // END set-cookie
   else if (aHeader == nsHTMLAtoms::link) {
@@ -1222,11 +1223,12 @@ nsXMLContentSink::ProcessHeaderData(nsIAtom* aHeader,const nsAString& aValue,nsI
     if (NS_SUCCEEDED(mParser->GetChannel(getter_AddRefs(channel)))) {
       nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
       if (httpChannel) {
-        const char *header = 0;
-        (void)aHeader->GetUTF8String(&header);
-        (void)httpChannel->SetResponseHeader(nsDependentCString(header),
-                                             NS_ConvertUCS2toUTF8(aValue),
-                                             PR_TRUE);
+        const PRUnichar *header = 0;
+        (void)aHeader->GetUnicode(&header);
+        (void)httpChannel->SetResponseHeader(
+                       NS_ConvertUCS2toUTF8(header),
+                       NS_ConvertUCS2toUTF8(aValue),
+                       PR_TRUE);
       }
     }
   }
