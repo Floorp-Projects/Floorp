@@ -180,7 +180,7 @@ NS_IMPL_ZEROING_OPERATOR_NEW(nsFrame)
 
 nsFrame::nsFrame()
 {
-  mState = NS_FRAME_FIRST_REFLOW | NS_FRAME_SYNC_FRAME_AND_VIEW;
+  mState = NS_FRAME_FIRST_REFLOW | NS_FRAME_SYNC_FRAME_AND_VIEW | NS_FRAME_IS_DIRTY;
 }
 
 nsFrame::~nsFrame()
@@ -2094,6 +2094,16 @@ nsFrame::TraceMsg(const char* aFormatString, ...)
     char tagbuf[40];
     GetTagName(this, mContent, sizeof(tagbuf), tagbuf);
     PR_LogPrint("%s: %s", tagbuf, argbuf);
+  }
+}
+
+void
+nsFrame::VerifyDirtyBitSet(nsIFrame* aFrameList)
+{
+  for (nsIFrame*f = aFrameList; f; f->GetNextSibling(&f)) {
+    nsFrameState  frameState;
+    f->GetFrameState(&frameState);
+    NS_ASSERTION(frameState & NS_FRAME_IS_DIRTY, "dirty bit not set");
   }
 }
 #endif

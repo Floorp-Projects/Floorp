@@ -310,6 +310,10 @@ public:
   void Trace(const char* aMethod, PRBool aEnter);
   void Trace(const char* aMethod, PRBool aEnter, nsReflowStatus aStatus);
   void TraceMsg(const char* fmt, ...);
+
+  // Helper function that verifies that each frame in the list has the
+  // NS_FRAME_IS_DIRTY bit set
+  static void VerifyDirtyBitSet(nsIFrame* aFrameList);
 #endif
 
   void ListTag(FILE* out) const {
