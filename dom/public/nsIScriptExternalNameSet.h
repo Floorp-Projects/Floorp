@@ -44,6 +44,8 @@ class nsIScriptContext;
  */
 class nsIScriptExternalNameSet : public nsISupports {
 public:
+
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISCRIPTEXTERNALNAMESET_IID);
   /**
    * Called to tell the name set to do any class initialization
    * it needs to
