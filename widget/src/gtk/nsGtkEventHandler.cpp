@@ -254,30 +254,6 @@ void UninitExposeEvent(GdkEventExpose *aGEE,
 }
 
 //==============================================================
-void InitMotionEvent(GdkEventMotion *aGEM,
-                            gpointer   p,
-                            nsMouseEvent &anEvent,
-                            PRUint32   aEventType)
-{
-  anEvent.message = aEventType;
-  anEvent.widget  = (nsWidget *) p;
-
-  anEvent.eventStructType = NS_MOUSE_EVENT;
-
-  if (aGEM != NULL) {
-    anEvent.point.x = nscoord(aGEM->x);
-    anEvent.point.y = nscoord(aGEM->y);
-    anEvent.time = aGEM->time;
-  }
-}
-
-//==============================================================
-void UninitMotionEvent(GdkEventMotion *aGEM,
-                              gpointer   p,
-                              nsMouseEvent &anEvent,
-                              PRUint32     aEventType)
-{
-}
 
 //==============================================================
 void InitKeyEvent(GdkEventKey *aGEK,
@@ -547,20 +523,6 @@ gint handle_button_release_event(GtkWidget *w, GdkEventButton * event, gpointer 
 }
 
 //==============================================================
-gint handle_motion_notify_event(GtkWidget *w, GdkEventMotion * event, gpointer p)
-{
-  nsMouseEvent mevent;
-  InitMotionEvent(event, p, mevent, NS_MOUSE_MOVE);
-
-  nsWindow *win = (nsWindow *)p;
-  win->AddRef();
-  win->DispatchMouseEvent(mevent);
-  win->Release();
-
-  UninitMotionEvent(event, p, mevent, NS_MOUSE_MOVE);
-
-  return PR_TRUE;
-}
 
 //==============================================================
 gint handle_focus_in_event(GtkWidget *w, GdkEventFocus * event, gpointer p)

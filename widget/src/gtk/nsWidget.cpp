@@ -765,6 +765,7 @@ NS_METHOD nsWidget::Create(nsNativeWidget aParent,
 //-------------------------------------------------------------------------
 void nsWidget::InitCallbacks(char *aName)
 {
+#if 1
 /* basically we are keeping the parent from getting the childs signals by
  * doing this. */
   gtk_signal_connect_after(GTK_OBJECT(mWidget),
@@ -779,6 +780,7 @@ void nsWidget::InitCallbacks(char *aName)
                      "motion_notify_event",
                      GTK_SIGNAL_FUNC(gtk_true),
                      NULL);
+#endif
   /*
     gtk_signal_connect(GTK_OBJECT(mWidget),
     "enter_notify_event",
@@ -974,3 +976,88 @@ PRBool nsWidget::DispatchMouseEvent(nsMouseEvent& aEvent)
   }
   return result;
 }
+
+//////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////
+//
+// GTK signal installers
+//
+//////////////////////////////////////////////////////////////////
+void 
+nsWidget::InstallMotionNotifySignal(GtkWidget * aWidget,
+									PRBool aInstallSignal,
+									PRBool aSetEvents)
+{
+  NS_ASSERTION( nsnull != aWidget, "widget is null!");
+  NS_ASSERTION( aInstallSignal || aSetEvents, "nothing to do");
+
+  // Connect the signal if needed
+  if (aInstallSignal)
+  {
+	gtk_signal_connect(GTK_OBJECT(aWidget),
+					   "motion_notify_event",
+					   GTK_SIGNAL_FUNC(nsWidget::MotionNotifySignal),
+					   (gpointer) this);
+  }
+
+  // Set the events so widget will get the events if needed
+  if (aSetEvents)
+  {
+	gtk_widget_add_events(aWidget,GDK_POINTER_MOTION_MASK);
+  }
+}
+//////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////
+//
+// OnSomething handlers
+//
+//////////////////////////////////////////////////////////////////
+/* virtual */ void 
+nsWidget::OnMotionNotify(GdkEventMotion * aGdkMotionEvent)
+{
+  nsMouseEvent event;
+
+  event.message = NS_MOUSE_MOVE;
+  event.widget  = this;
+  event.eventStructType = NS_MOUSE_EVENT;
+
+  if (aGdkMotionEvent != NULL) 
+  {
+	event.point.x = nscoord(aGdkMotionEvent->x);
+	event.point.y = nscoord(aGdkMotionEvent->y);
+    event.time = aGdkMotionEvent->time;
+  }
+
+  AddRef();
+
+  DispatchMouseEvent(event);
+
+  Release();
+}
+//////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////
+//
+// GTK widget signals
+//
+//////////////////////////////////////////////////////////////////
+/* static */ gint
+nsWidget::MotionNotifySignal(GtkWidget * aWidget,
+							 GdkEventMotion * aGdkMotionEvent,
+							 gpointer aData)
+{
+  NS_ASSERTION( nsnull != aWidget, "widget is null!");
+  NS_ASSERTION( nsnull != aGdkMotionEvent, "event is null!");
+
+  nsWidget * widget = (nsWidget *) aData;
+
+  NS_ASSERTION( nsnull != widget, "instance pointer is null!");
+
+  widget->OnMotionNotify(aGdkMotionEvent);
+
+  return PR_TRUE;
+}
+//////////////////////////////////////////////////////////////////
