@@ -50,6 +50,13 @@ public:
    */
   virtual nsresult Reset(nsIDOMEvent* aEvent) = 0;
 
+  /**
+   * Processes a form change event
+   * @param aEvent @see nsIDOMEvent.h 
+   * @returns whether the event was consumed or ignored. @see nsresult
+   */
+  virtual nsresult Change(nsIDOMEvent* aEvent) = 0;
+
 };
 
 #endif // nsIDOMFormListener_h__

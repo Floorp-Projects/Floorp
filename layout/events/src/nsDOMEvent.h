@@ -58,6 +58,7 @@ public:
     eDOMEvents_error,
     eDOMEvents_submit,
     eDOMEvents_reset,
+    eDOMEvents_change,
     eDOMEvents_paint
   };
 
