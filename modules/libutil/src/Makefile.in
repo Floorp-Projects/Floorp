@@ -23,7 +23,7 @@ srcdir		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= util
-LIBRARY_NAME	= $(MOZ_LIB_UTIL_PREFIX)util
+LIBRARY_NAME	= mozutil
 
 INHIBIT_STRIP_NOT_EXPORTED = 1
 

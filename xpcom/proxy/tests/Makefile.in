@@ -35,8 +35,9 @@ endif
 
 LIBS		= \
 		-L$(DIST)/bin \
+		-L$(DIST)/lib \
 		-lxpcom \
-		-l$(MOZ_LIB_UTIL_PREFIX)util \
+		-lmozutil \
 		$(LOST_SYM_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)

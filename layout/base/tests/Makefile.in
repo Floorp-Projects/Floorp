@@ -49,10 +49,10 @@ LIBS		+= \
 		-lsecfree \
 		-lraptorgfx \
 		-limg \
-		-l$(MOZ_LIB_UTIL_PREFIX)util \
+		-lmozutil \
 		$(PNG_LIBS) \
 		$(JPEG_LIBS) \
-		-l$(MOZ_LIB_JS_PREFIX)js \
+		-lmozjs \
 		$(TIMER_LIBS) \
 		-lxpcom \
 		-lmozreg \

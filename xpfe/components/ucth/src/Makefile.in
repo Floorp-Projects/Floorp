@@ -33,9 +33,9 @@ EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/lib \
 		-lxpcom \
 		-lmozreg \
+		-lmozjs	\
 		$(ZLIB_LIBS) \
 		$(NSPR_LIBS) \
-		-l$(MOZ_LIB_JS_PREFIX)js	\
 		$(NULL)
 
 ifndef NECKO

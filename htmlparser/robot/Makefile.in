@@ -53,7 +53,7 @@ LIBS		= \
 		-lnetcache \
 		-lhttpurl \
 		-lpwcac \
-		-l$(MOZ_LIB_JS_PREFIX)js \
+		-lmozjs \
 		-limg \
 		-lmozutil \
 		-lxpcom \

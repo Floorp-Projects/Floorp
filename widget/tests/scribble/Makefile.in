@@ -54,13 +54,13 @@ endif
 LIBS		= \
 		-lpref \
 		-lsecfree \
-		-l$(MOZ_LIB_UTIL_PREFIX)util \
+		-lmozutil \
 		-limg \
 		$(PNG_LIBS) \
 		$(JPEG_LIBS) \
 		-lxpcom \
 		-lmozreg \
-		-l$(MOZ_LIB_JS_PREFIX)js \
+		-lmozjs \
 		$(MOZ_WIDGET_TOOLKIT_LDFLAGS) \
 		-lraptorgfx \
 		$(MOZ_GFX_TOOLKIT_LDFLAGS) \

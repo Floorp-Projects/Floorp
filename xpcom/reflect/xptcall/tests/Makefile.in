@@ -27,18 +27,17 @@ SIMPLE_PROGRAMS	= TestXPTCInvoke
 
 CPPSRCS		= TestXPTCInvoke.cpp
 
-include $(topsrcdir)/config/config.mk
-
-CFLAGS		+= -DJS_THREADSAFE
-
 LIBS		= \
 		-L$(DIST)/bin \
+		-L$(DIST)/lib \
 		-lxpcom \
-		-l$(MOZ_LIB_UTIL_PREFIX)util \
+		-lmozutil \
 		$(NSPR_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
+CFLAGS		+= -DJS_THREADSAFE
 
 # For _write().
 ifeq ($(OS_ARCH),BSD_OS)
