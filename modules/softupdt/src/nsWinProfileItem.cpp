@@ -17,8 +17,64 @@
  */
 
 #include "nsWinProfileItem.h"
+#include "xp.h"
+#include "xp_str.h"
 
 PR_BEGIN_EXTERN_C
 
+/* Public Methods */
+
+nsWinProfileItem::nsWinProfileItem(nsWinProfile* profileObj, 
+								   char* sectionName, char* keyName,
+								   char* val) : nsInstallObject(profileObj->softUpdate())
+{
+	profile = profileObj;
+	section = XP_STRDUP(sectionName);
+	key = XP_STRDUP(keyName);
+	value = XP_STRDUP(val);
+}
+
+char* nsWinProfileItem::Complete()
+{
+	profile->finalWriteString(section, key, value);
+	return NULL;
+}
+  
+float nsWinProfileItem::GetInstallOrder()
+{
+	return 4;
+}
+
+char* nsWinProfileItem::toString()
+{
+	PRInt32 len;
+	char* result;
+	char* filename = profile->getFilename();
+
+	len = XP_STRLEN("Write ") + XP_STRLEN(filename) +
+		  XP_STRLEN(": [") + XP_STRLEN(section) + XP_STRLEN("] ") +
+		  XP_STRLEN(key) + XP_STRLEN("=") + XP_STRLEN(value);
+
+	result = (char*)XP_ALLOC((len+1)*sizeof(char));
+	XP_STRCAT(result, "Write ");
+	XP_STRCAT(result, filename);
+	XP_STRCAT(result, ": [");
+	XP_STRCAT(result, section);
+	XP_STRCAT(result, "] ");
+	XP_STRCAT(result, key);
+	XP_STRCAT(result, "=");
+	XP_STRCAT(result, value);
+
+	return result;
+}
+
+void nsWinProfileItem::Abort()
+{
+}
+
+char* nsWinProfileItem::Prepare()
+{
+	return NULL;
+}
 
 PR_END_EXTERN_C
