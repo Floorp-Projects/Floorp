@@ -21,6 +21,20 @@
 #include "plstr.h"
 #include <stdlib.h>
 
+// The return from strcmp etc is only defined to be postive, zero or
+// negative. The magnitude of a non-zero return is irrelevant.
+PRIntn sign(PRIntn val) {
+    if (val == 0)
+	return 0;
+    else {
+	if (val > 0)
+	    return 1;
+	else
+	    return -1;
+    }
+}
+
+
 // Verify that nsCRT versions of string comparison routines get the
 // same answers as the native non-unicode versions. We only pass in
 // iso-latin-1 strings, so the comparision must be valid.
@@ -45,15 +59,15 @@ static void Check(const char* s1, const char* s2, PRIntn n)
   PRIntn u2_case = nsCRT::strcasecmp(us1, us2);
   PRIntn u2_case_n = nsCRT::strncasecmp(us1, us2, n);
 
-  NS_ASSERTION(clib == u, "strcmp");
-  NS_ASSERTION(clib_n == u_n, "strncmp");
-  NS_ASSERTION(clib_case == u_case, "strcasecmp");
-  NS_ASSERTION(clib_case_n == u_case_n, "strncasecmp");
+  NS_ASSERTION(sign(clib) == sign(u), "strcmp");
+  NS_ASSERTION(sign(clib_n) == sign(u_n), "strncmp");
+  NS_ASSERTION(sign(clib_case) == sign(u_case), "strcasecmp");
+  NS_ASSERTION(sign(clib_case_n) == sign(u_case_n), "strncasecmp");
 
-  NS_ASSERTION(clib == u2, "strcmp");
-  NS_ASSERTION(clib_n == u2_n, "strncmp");
-  NS_ASSERTION(clib_case == u2_case, "strcasecmp");
-  NS_ASSERTION(clib_case_n == u2_case_n, "strncasecmp");
+  NS_ASSERTION(sign(clib) == sign(u2), "strcmp");
+  NS_ASSERTION(sign(clib_n) == sign(u2_n), "strncmp");
+  NS_ASSERTION(sign(clib_case) == sign(u2_case), "strcasecmp");
+  NS_ASSERTION(sign(clib_case_n) == sign(u2_case_n), "strncasecmp");
 }
 
 struct Test {

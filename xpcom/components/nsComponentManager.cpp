@@ -1912,6 +1912,9 @@ nsComponentManagerImpl::AutoRegisterComponent(RegistrationTime when, nsIFileSpec
         ".so.1.0",	/* Unix: BSD */
         ".sl",		/* Unix: HP-UX */
         ".shlb",	/* Mac ? */
+#if defined(VMS)
+        ".exe",		/* Open VMS */
+#endif
         ".dlm",		/* new for all platforms */
         NULL
     };

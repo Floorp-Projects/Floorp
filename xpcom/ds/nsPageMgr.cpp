@@ -37,6 +37,13 @@
 #endif
 #endif
 
+#if defined(VMS)
+#include <starlet.h>
+#include <ssdef.h>
+#include <vadef.h>
+#include <va_rangedef.h>
+#endif
+
 #endif
 
 /******************************************************************************/
@@ -310,6 +317,51 @@ nsPageMgr::InitPages(nsPageCount minPages, nsPageCount maxPages)
 
     return PR_SUCCESS;
 
+#elif defined(VMS)
+
+    nsPage* addr = NULL;
+    nsPageCount size = maxPages;
+    struct _va_range retadr, retadr2;
+    int status;
+
+    /*
+    ** $EXPREG will extend the virtual address region by the requested
+    ** number of pages (or pagelets on Alpha). The process must have
+    ** sufficient PGFLQUOTA for the operation, otherwise SS$_EXQUOTA will
+    ** be returned. However, in the case of SS$_EXQUOTA, $EXPREG will have
+    ** grown the region by the largest possible amount. In this case we will
+    ** take what we could get, just so long as its over our minimum
+    ** threshold.
+    */
+
+    status = sys$expreg(size << (NS_PAGEMGR_PAGE_BITS-VA$C_PAGELET_SHIFT_SIZE),
+                        &retadr,0,0);
+    switch (status) {
+        case SS$_NORMAL:
+            break;
+        case SS$_EXQUOTA:
+            size = ( (int)retadr.va_range$ps_end_va -
+                     (int)retadr.va_range$ps_start_va + 1
+                   ) >> NS_PAGEMGR_PAGE_BITS;
+            if (size < minPages) {
+                status=sys$deltva(&retadr,&retadr2,0);
+                return PR_FAILURE;
+            }
+            break;
+        default:
+            return PR_FAILURE;
+    }
+
+    /* We got at least something */
+    addr = (nsPage *)retadr.va_range$ps_start_va;
+
+    PR_ASSERT(NS_PAGEMGR_IS_ALIGNED(addr, NS_PAGEMGR_PAGE_BITS));
+    mMemoryBase = addr;
+    mPageCount = size;
+    mBoundary = addr;
+
+    return PR_SUCCESS;
+
 #else
 
     nsPage* addr = NULL;
@@ -368,6 +420,16 @@ nsPageMgr::FinalizePages()
 #elif defined(XP_BEOS)
 
 	delete_area(mAid);
+
+#elif defined(VMS)
+
+    struct _va_range retadr, retadr2;
+
+    retadr.va_range$ps_start_va = mMemoryBase;
+    retadr.va_range$ps_end_va = mMemoryBase +
+		(mPageCount << NS_PAGEMGR_PAGE_BITS) - 1;
+
+    sys$deltva(&retadr,&retadr2,0);
 
 #else
     munmap((caddr_t)mMemoryBase, mPageCount << NS_PAGEMGR_PAGE_BITS);
