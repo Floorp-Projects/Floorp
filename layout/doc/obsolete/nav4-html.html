@@ -1,0 +1,898 @@
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+   <META NAME="Author" CONTENT="Kipp E.B. HIckman">
+   <META NAME="GENERATOR" CONTENT="Mozilla/4.03 [en] (WinNT; I) [Netscape]">
+   <TITLE>HTML</TITLE>
+   <BASE HREF="file:///s|/ns/xena/htmlpars/testhtml/">
+</HEAD>
+<BODY TEXT="#000000" BGCOLOR="#FFFFFF" LINK="#FF0000" VLINK="#800080" ALINK="#0000FF">
+
+<H2>
+HTML</H2>
+This documents describes the complete handling of HTML in magellan. The
+document covers the parsing process - how HTML is lexically analysized
+and then interprted. After the parsing process is discussed we give a detailed
+analysis of each HTML tag and the attributes that are supported, the values
+for the attributes and how the tag is treated by magellan.
+<H2>
+Parsing</H2>
+HTML is tokenized by an HTML scanner. The scanner is fed unicode data to
+parse. Stream converters are used to translate from various encodings to
+unicode. The scanner seperates the input stream into tokens which consist
+of:
+<UL>
+<LI>
+text</LI>
+
+<LI>
+tags</LI>
+
+<LI>
+entities</LI>
+
+<LI>
+script-entities</LI>
+
+<LI>
+comments</LI>
+
+<LI>
+conditional comments</LI>
+</UL>
+The HTML parsing engine uses the HTML scanner for lexical anlaysis. The
+parsing engine operates by attacking the input stream in a set of well
+defined steps:
+<UL>
+<LI>
+The parser processes the head portion of the document first, without emitting
+any output. This is done to discover a few special features of html:</LI>
+
+<UL>
+<LI>
+The parser processes META tags looking for META TARGET</LI>
+
+<LI>
+The parser processes META tags looking for META tags which affect the character
+set. Nav4 handles the very first character set defining meta tag (all others
+are ingored) by reloading the document with the proper character conversion
+module inserted into the stream pipeline.</LI>
+</UL>
+
+<LI>
+After the head portion is processed the parser then proceeds to process
+the body of the document</LI>
+</UL>
+
+<H3>
+Tag Processing</H3>
+Tags are processed by the parser by locating a <B>"tag handler"</B> for
+the tag. The HTML parser serves as the tag handler for all of the builtin
+tags documented below. Tag attribute handling is done during translation
+of tags into content. This mapping translates the tag attributes into content
+data and into style data. The translation to style data is documented below
+by indicating the mapping from tag attributes to their CSS1 (plus extensions)
+equivalents.
+<H3>
+Special Hacks</H3>
+The following list describes hacks added to the magellan parsing engine
+to deal with navigator compatability. These are just the parser hacks,
+not the layout or presentation hacks. Most hacks are intriduced for HTML
+syntax error recovering. HTML doesn't specify much how to handle those
+error conditions. Netscape has made big effort to render pages with non-prefect
+HTML. For many reasons, new browsers need to keep compatible in thsi area.
+<UL>
+<LI>
+Entities can be used as escape in quoted string. For value string in name-value
+pair,&nbsp; see <A HREF="../testhtml/quote001.html">compatibility test
+quote001.html</A>. Test line 70 shows that an entity quote at the begining
+means the value is NOT quoted. Test line 90 shows that if the value is
+started with a quote, then an entity quote does NOT terminate the value
+string.</LI>
+
+<LI>
+Wrapping tags are special tags such as title, textarea, server, script,
+style, and etc.. The comment in ns\lib\libparse\pa_parse.c says:</LI>
+
+<BR>&nbsp; /*
+<BR>&nbsp;&nbsp; * These tags are special in that, after opening one of
+them, all other tags are ignored until the matching
+<BR>&nbsp;&nbsp; * closing tag.
+<BR>&nbsp;&nbsp; */
+<BR>During the searching of an end tag, comments and quoted strings are
+observed. see <A HREF="../testhtml/title01.html">compatibility test title01.html</A>.
+6.0 handles coments now, need to add quoeted string.
+<LI>
+If a &lt;tr> or &lt;td> tag is seen outside any &lt;table> scope, it is
+ignored. see <A HREF="../testhtml/table110.htm">compatibility test table110.htm</A>.</LI>
+
+<LI>
+<FONT COLOR="#000000">In case of table in table but not in cell, table
+tags before the last table tag are ignored. We found this problem in some
+Netscape public pages, see bug #85118. For example, &lt;table> &lt;table
+border> .....,or &lt;table> &lt;tr> &lt;table border>...,&nbsp; the table
+will be displayed with border.&nbsp;</FONT> <A HREF="../testhtml/table201.html">compatibility
+test table201.html</A>. There table and tr tags are buffered for this recovery.
+When a TD or CAPTION tag is open, the buffer is flushed out, because we
+cannot buffer contents of TD or CAPTION for performance and memory constrains.
+They are subdoc's and can be very big. If we see a &lt;table> outside cell
+after previous table is flushed out, the new &lt;table> tag is ignored.
+Nav4.0 can discard previous table in such case. <A HREF="../testhtml/tableall.html">tableall.html
+</A>is the index for table test cases.</LI>
+
+<LI>
+Caption is not a commonly used feature. In Nav4.0, captions can be anywhere.
+For Captions outside cells, the first one takes effect. For captions inside
+cells, the last one takes effect, and they also close TD and TR. In 6.0,
+caption is limited to the standard position: after &lt;table>. Captions
+in other places are ignored, their contents are treated as text. See test
+case table05a.html to table05o.html.</LI>
+
+<LI>
+<FONT COLOR="#000000">For &lt;table> &lt;tr> &lt;tr>, the first &lt;tr>
+takes effect.</FONT></LI>
+
+<LI>
+The nav4 parser notices when it hits EOF and it's in the middle of scanning
+in a comment. When this happens, the parser goes back and looks for an
+improperly closed comment (e.g. a simple > instead of a -->). If it finds
+one, it reparses the input after closing out the comment.</LI>
+
+<LI>
+<FONT COLOR="#FF0000">XXX Brendan also pointed out that there is something
+similar done for tags, but I don't recall what it is right now.</FONT></LI>
+
+<LI>
+<FONT COLOR="#000000">When Nav4.0 sees the '&lt;' sign, it searchs for
+'>', observing quoted values. If it cannot find one till EOF, the '&lt;'
+sign is treated as text. In Xena 6.0, a limit is set for how far the '>'
+is searched. the default limit is 4096 char, and there is a API HTMLScanner.setMaxTagLength()
+to changed it. setting -1 means no limit, which is same as Nav4.0.</FONT></LI>
+</UL>
+<FONT COLOR="#FF0000">TODO:</FONT>
+<UL><FONT COLOR="#FF0000">Document the mapping of tag attributes into CSS1
+style, including any new "css1" attributes</FONT>
+<BR>&nbsp;</UL>
+<B>List of 6.0 features incompatible with 4.0</B>
+<UL>
+<LI>
+Navigator 4.0 value string is truncated at 82 characters. XENA60 limit
+is MAX_STRING_LENGTH = 2000.</LI>
+
+<BR>&nbsp;</UL>
+
+<HR WIDTH="100%">
+<H2>
+Tags (Categorically sorted)</H2>
+All line breaks are conditional. If the x coordinate is at the current
+left margin then a soft line break does nothing. Hard line breaks are ignored
+if the last tag did a hard line break.
+
+<P><B>divalign</B> = left | right | center | justify
+<BR><B>alignparam</B> = abscenter | left | right | texttop | absbottom
+| baseline | center | bottom | top | middle | absmiddle
+<BR><B>colorspec</B> = named-color | #xyz | #xxyyzz | #xxxyyyzzz | #xxxxyyyyzzzz
+<BR><B>clip</B> = [auto | value-or-pct-xy](1..4) (pct of width for even
+coordinates; pct of height for odd coordinates)
+<BR><B>value-or-pct = </B>an integer with an optional %; ifthe percent
+is present any following characters are ignored!
+<BR><B>coord-list</B> = <FONT COLOR="#DD0000">XXX</FONT>
+<BR><FONT COLOR="#000000"><B>whitespace-strip</B> = remove leading and
+trailing and any embedded whitespace that is not an actual space (e.g.
+newlines)</FONT>
+<H1>
+Head objects:</H1>
+<B>TITLE</B>
+<UL>The TITLE tag is a container tag whose contents are not HTML. The contents
+are pure text and are processed by the parser until the closing tag is
+found. There are no attributes on the tag and any whitespace present in
+the tag is compressed down with leading and trailing whitespace eliminated.
+The first TITLE tag found by the parser is used as the document's title
+(subsequent tags are ignored).</UL>
+<B>BASE</B>
+<UL>Sets the base element in the head portion of the document. Defines
+the base URL for <FONT COLOR="#DD0000">all</FONT>? links in the document.
+<BR>Attributes:
+<UL><B>HREF</B>=url [This is an absolute URL]
+<BR><B>TARGET</B>=string [must start with XP_ALPHA|XP_DIGIT|underscore
+otherwise nav4 ignores it]</UL>
+</UL>
+<B>META</B>
+<UL>Can define several header fields (content-encoding, author, etc.)
+<BR>Attributes:
+<UL><B>REL</B>=SMALL_BOOKMARK_ICON|LARGE_BOOKMARK_ICON
+<UL><B>SRC</B>=string</UL>
+<B>HTTP-EQUIV</B>="header: value"
+<UL><B>CONTENT</B>=string</UL>
+</UL>
+HTTP-EQUIV values (from libnet/mkutils.c NET_ParseMimeHeader):
+<UL>ACCEPT-RANGES
+<BR>CONTENT-DISPOSITION
+<BR>CONTENT-ENCODING
+<BR>CONTENT-RANGE
+<BR>CONTENT-TYPE [ defines character set only ]
+<BR>CONNECTION
+<BR>DATE
+<BR>EXPIRES
+<BR>EXT-CACHE
+<BR>LOCATION
+<BR>LAST-MODIFIED
+<BR>LINK
+<BR>PROXY-AUTHENTICATE
+<BR>PROXY-CONNECTION
+<BR>PRAGMA
+<BR>RANGE
+<BR>REFRESH
+<BR>SET-COOKIE
+<BR>SERVER
+<BR>WWW-AUTHENTICATE
+<BR>WWW-PROTECTION-TEMPLATE
+<BR>WINDOW-TARGET</UL>
+Style sheets and HTML w3c spec adds this:
+<UL>CONTENT-STYLE-TYPE [ last one wins; overrides header from server if
+any ]</UL>
+</UL>
+<B>LINK</B>
+<UL>List related resources. Used by extensions mechanism to find tag handlers.
+<FONT COLOR="#0000FF">/LINK == LINK!</FONT>
+<BR>Attributes:
+<UL><B>REL</B>=FONTDEF
+<UL><B>SRC</B>=url</UL>
+<B>REL</B>=STYLESHEET [ If MEDIA param is defined it must ==nc screen ]
+<UL><B>LANGUAGE</B>=LiveScript|Mocha|JavaScript1.1|JavaScript1.2
+<BR><B>TYPE</B>="text/javascript" | "text/css"
+<BR><B>HREF</B>=url
+<BR><B>ARCHIVE</B>=url
+<BR><B>CODEBASE</B>=url
+<BR><B>ID</B>=string
+<BR><B>SRC</B>=url</UL>
+</UL>
+Note: HREF takes precedence over SRC in nav4.</UL>
+<B>HEAD</B>
+<UL>/HEAD clears the "in_head" flag (but leaves the "in_body" flag alone.
+<BR>Text in head clears in_head, and set in_body true, just as if the author
+forgot the /HEAD tag.
+<BR>Attributes: none</UL>
+<B>HTML</B>
+<UL>Ignored.
+<BR>Attributes: none</UL>
+<B>STYLE</B>
+<UL>Allowed anywhere in the document. Note that entities are not parsed
+in the style tag's content.
+<BR>Attributes:
+<UL><B>LANGUAGE</B>=LiveScript|Mocha|JavaScript1.1|JavaScript1.2
+<BR><B>TYPE</B>="text/javascript" | "text/css"
+<BR><B>HREF</B>=url
+<BR><B>ARCHIVE</B>=url
+<BR><B>CODEBASE</B>=url
+<BR><B>ID</B>=string
+<BR><B>SRC</B>=url</UL>
+</UL>
+<B>FRAMESET</B>
+<UL>Frameset with rows=1 and cols=1 is ignored.
+<BR>Attributes:
+<UL><B>FRAMEBORDER</B>= no | 0 (zero) [default is no_edges=false]
+<BR><B>BORDER</B>= int [clamped: >= 0 &amp;&amp; &lt;= 100]
+<BR><B>BORDERCOLOR</B>= color
+<BR><B>ROWS</B>= pct-list
+<BR><B>COLS</B>= pct-list</UL>
+</UL>
+<B>FRAME</B>
+<UL>Border width of zero disables edges.
+<BR>Attributes:
+<UL><B>FRAMEBORDER</B>= no | 0 (zero) [default is framesets value]
+<BR><B>BORDER</B>= int [clamped; >= 0 &amp;&amp; &lt;= 100]
+<BR><B>BORDERCOLOR</B>= color
+<BR><B>NORESIZE</B>= true [default is false]
+<BR><B>SCROLLING</B>= yes | scroll | on | no | noscroll | off
+<BR><B>SRC</B>= url [clamped: prevent recursion by eliminating any anscestor
+references]
+<BR><B>NAME</B>= string
+<BR><B>MARGINWIDTH</B>= int (clamped: >= 1)
+<BR><B>MARGINHEIGHT</B>= int (clamped: >= 1)</UL>
+</UL>
+<B>NOFRAMES</B>
+<UL>Used when frames are disabled or for backrev browsers. Has no stylistic
+consequences.</UL>
+
+<H1>
+
+<HR WIDTH="100%">Body objects:</H1>
+&nbsp;<B>BODY</B>
+<UL>The tag is only processed on open tags and it is always processed.
+See ns\lib\layout\laytags.c, searching for "case P_BODY". During tag processing
+the in_head flag is set to false and the in_body flag is set to true. An
+attribute is ignored if the document already has that attribute set. Attributes
+can be set by style sheets, or by previous BODY tags. see <A HREF="../testhtml/head02.html">test
+head02.html</A>.
+<BR>Attributes:
+<UL><B>MARGINWIDTH</B>=int [clamped: >= 0 &amp;&amp; &lt; (windowWidth/2
+- 1)]
+<BR><B>MARGINHEIGHT</B>=int [clamped: >= 0 &amp;&amp; &lt; (windowHeight/2
+- 1)]
+<BR><B>BACKGROUND</B>=url
+<BR><B>BGCOLOR</B>=colorspec
+<BR><B>TEXT</B>=colorspec
+<BR><B>LINK</B>=colorspec
+<BR><B>VLINK</B>=colorspec
+<BR><B>ALINK</B>=colorspec
+<BR><B>ONLOAD, ONUNLOAD, UNFOCUS, ONBLUR, ONHELP</B>=script
+<BR><B>ID</B>=string</UL>
+</UL>
+<B>LAYER, ILAYER</B>
+<UL>Open layer/ilayer tag automaticly close out an open form if one is
+open. It does something to the soft linebreak state too.
+<BR>Attributes:
+<UL><B>LEFT</B>=value-or-pct (pct of <TT>right-left</TT> margin)
+<BR><B>PAGEX</B>=x (if no LEFT)
+<BR><B>TOP</B>=value-or-pct
+<BR><B>PAGEY</B>=y (if no TOP)
+<BR><B>CLIP</B>=clip
+<BR><B>WIDTH</B>=value-or-pct (pct of <TT>right-left</TT> margin)
+<BR><B>HEIGHT</B>=value-or-pct
+<BR><B>OVERFLOW</B>=string
+<BR><B>NAME</B>=string
+<BR><B>ID</B>=string
+<BR><B>ABOVE</B>=string
+<BR><B>BELOW</B>=string
+<BR><B>ZINDEX</B>=int [any value]
+<BR><B>VISIBILITY</B>=string
+<BR><B>BGCOLOR</B>=colorspec
+<BR><B>BACKGROUND</B>=url</UL>
+</UL>
+<B>NOLAYER</B>
+<UL>Container for content which is used when layers are disabled or unsupported.
+The content has no style consequences (though it could if somebody stuck
+in some CSS1 style rules for it).</UL>
+<B>P</B>
+<UL>Closes the paragraph. If the attribute is present then an alignment
+gets pushed on the alignment stack. All values are supported by nav4.
+<BR>Attributes:
+<UL><B>ALIGN</B>=divalign</UL>
+</UL>
+<B>ADDRESS</B>
+<UL>There are no attributes. ADDRESS closes out the open paragraph. The
+open tag does a conditional soft line break and then pushes a merge of
+the current style with italics enabled onto the style stack. The close
+always pop the style stack and also does a conditional soft line break.</UL>
+<B>PLAINTEXT, XMP</B>
+<UL>PLAINTEXT causes the remaining content to no longer be parsed. XMP
+causes the content to not parse entities or other tags. The XMP can be
+closed by it's own tag (on any boundary); PLAINTEXT is not closed (html3.2
+allows it to be closed). Both tags change the style to a fixed font of
+a</UL>
+<B>LISTING</B>
+<UL>Closes the paragraph. Does a hard line break on open and close. Open
+pushes a fixed width font style of a particular font size on the style
+stack. The close tag pops the top of the style stack.
+<BR>Attributes: none</UL>
+<B>PRE</B>
+<UL>Closes the paragraph. The open tag does a hard line break. A fixed
+font style (unless VARIABLE is present) is pushed on the style stack. The
+close tag pops the top of the style stack. It also does a hard line break.
+<BR>Attributes:
+<UL><B>WRAP</B>
+<BR><B>COLS</B>=int [clamped: >= 0]
+<BR><B>TABSTOP</B>=int [clamped: >= 0; clamped value is replaced with default
+value]
+<BR><B>VARIABLE</B></UL>
+</UL>
+<B>NOBR</B>
+<UL>This tag doesn't nest. Instead it just sets or clears a flag in the
+state machine. It has no effect on any other state.</UL>
+<B>CENTER</B>
+<UL>Closes the paragraph. Always does a conditional soft line break. The
+open tag pushes an alignment on the aligment stack. The close tag pops
+the top alighment off.
+<BR>Attributes: none</UL>
+<B>DIV</B>
+<UL>Closes the paragraph. Always does a conditional soft line break. COLS
+defines the number of columns to layout in (like MULTICOL). The open tag
+pushes an alignment on the alignment stack (if COLS > 1 then it pretends
+to be a MULTICOL tag). The close tag pops an aligment from the alignment
+stack.
+<BR>Attributes:
+<UL><B>ALIGN</B>=divalign
+<BR><B>COLS</B>=int [if cols > 1 then DIV acts like a MULTICOL tag else
+DIV is just a container]
+<UL><B>GUTTER</B>= int (clamped: >= 1)
+<BR><B>WIDTH</B>= value-or-pct [pct of right-left margin; clamped >= 1/0
+(strange code)]</UL>
+</UL>
+</UL>
+<B>H1-H6</B>
+<UL>Closes the paragraph. The open tag does a hard line break and pushes
+a style item which enables bold and disables fixed and italic. The close
+tag always pops the top item from the style stack. It also does a hard
+line break. If the <B>ALIGN</B> attribute is present then the open tag
+pushes an alignment on the alignment stack. The close tag will look at
+the top of the alignment stack and if its a header of any kind (H1 through
+H6) then the alignment is popped. In either case the close tag also does
+a conditional soft line break (this happens before the hard line break).
+<BR>Attributes:
+<UL><B>ALIGN</B>=divalign</UL>
+</UL>
+A note regarding closing paragraphs: Any time a close paragraph is done
+(for any tag) if the top of the alignment stack has a tag named "P" then
+a conditional soft line break is done and the alignment is popped.
+<H3>
+
+<HR ALIGN=LEFT WIDTH="50%"></H3>
+<B>TABLE</B>
+<UL>Close the paragraph.
+<BR>Attributes:
+<UL><B>ALIGN=</B>left|right|center|abscenter
+<BR><B>BORDER</B>=int [clamped: if null then -1, if &lt; 1 then 1 ]
+<BR><B>BORDERCOLOR</B>=string [if not supplied then set to the text color
+]
+<BR><B>VSPACE</B>=int [ clamped: >= 0 ]
+<BR><B>HSPACE</B>=int [ clamped: >= 0 ]
+<BR><B>BGCOLOR</B>=color
+<BR><B>BACKGROUND</B>=url
+<BR><B>WIDTH</B>=value-or-pct [ % of win.width minus margins; clamped:
+>= 0 ]
+<BR><B>HEIGHT</B>=value-or-pct [ % of win.height minus margins; clamped:
+>= 0 ]
+<BR><B>CELLPADDING</B>=int [clamped: >= 0; seperate pads take precedence
+]
+<BR><B>TOPPADDING</B>= int [clamped: >= 0 ]
+<BR><B>BOTTOMPADDING</B>= int [clamped: >= 0 ]
+<BR><B>LEFTPADDING</B>= int [clamped: >= 0 ]
+<BR><B>RIGHTPADDING</B>= int [clamped: >= 0 ]
+<BR><B>CELLSPACING</B>= int [clamped: >= 0 ]
+<BR><B>COLS</B>=int [clamped: >= 0]</UL>
+The code supports more attributes in the Table attribute handler than it
+does in the code that gets the attributes from the tag! They are border_top,
+border_left, border_right, border_bottom, border_style (defaults to outset;
+allows for outset/dotted/none/dashed/solid/double/groove/ridge/inset).</UL>
+<B>TR</B>
+<UL>Open TR automatically closes an open table row (and an open table cell
+if one is open). It also automatically closes a CAPTION tag.
+<BR>Attributes:
+<UL><B>BGCOLOR</B>=color
+<BR><B>BACKGROUND</B>=url
+<BR><B>VALIGN</B>=top|bottom|middle|center(==middle)|baseline; default
+is top
+<BR><B>ALIGN</B>=left|right|middle|center(==middle); default is left</UL>
+</UL>
+<B>TH, TD</B>
+<UL>If no table then the tag is ignored (open or close). If no row is currently
+opened or the current row is current done (because of a &lt;/TR> tag) then
+a new row is begun. Oddly enough the tag parameters for the row come from
+the TH/TD tag in this case. An open of either of these tags will automatically
+close the previous cell.
+<BR>Attributes:
+<UL><B>COLSPAN</B>=int [clamped: >= 1 &amp;&amp; &lt;= 1000 ]
+<BR><B>ROWSPAN</B>=int [clamped: >= 1 &amp;&amp; &lt;= 10000 ]
+<BR><B>NOWRAP</B> [boolean: disables wrapping ]
+<BR><B>BGCOLOR</B>=color [default: inherit from the row; if not row then
+table; if not table then inherit from an outer table cell; this works because
+the style is flattened so the outer table cell will have a color]
+<BR><B>BACKGROUND</B>=url [same rules as bgcolor for inheritance; tile
+mode is inherited too and not settable by TH/TD attributes (have to use
+style sheets for that)]
+<BR><B>VALIGN</B>=top|bottom|middle|center(==middle)|baseline; default
+is top
+<BR><B>ALIGN</B>=left|right|middle|center(==middle); default is left
+<BR><B>WIDTH</B>=value-or-pct [ clamped: >= 0 ]
+<BR><B>HEIGHT</B>=value-or-pct [ clamped: >= 0 ]</UL>
+</UL>
+<B>CAPTION</B>
+<UL>An open caption tag will automatically close an open table row (and
+an open cell).
+<BR>Attributes:
+<UL><B>ALIGN</B>=bottom</UL>
+The code sets the vertical alignment to top w/o providing a mechanism for
+the user to set it (there is no VALIGN attribute).</UL>
+<B>MULTICOL</B>
+<UL>The open tag does a hard line break. The close tag checks to see if
+the state machine has an open multicol and if it does then it does a conditional
+soft line break and then continues to break until both margins are cleared
+of floating elements. It recomputes the margins based on the list indenting
+level (?). After the synthetic table is output the close tag does a hard
+line break.
+
+<P>This tag will treat the input as source for a table with one row and
+COLS columns. The data is laid out using the width divided by the number
+of columns. After the total height is known, the content is partitioned
+as evenly as possible between the columns in the table.
+<BR>Attributes:
+<UL><B>COLS</B>=int [clamped: values less than 2 cause the tag to be ignored]
+<BR><B>GUTTER</B>=int [clamped: >= 1]
+<BR><B>WIDTH</B>=value-or-pct [pct of right-left margin; clamped: >= 1/0
+(strange code)]</UL>
+</UL>
+
+<H3>
+
+<HR ALIGN=LEFT WIDTH="50%"></H3>
+<B>BLOCKQUOTE</B>
+<UL>Closes the paragraph. The open tag does a hard line break. A list with
+the empty-bullet style is pushed on the list stack (unless TYPE=cite/jwz
+then a styled list is pushed). The close tag pops any list and does a hard
+line break.
+<BR>Attributes:
+<UL><B>TYPE</B>=cite | jwz</UL>
+</UL>
+<B>UL, OL, MENU, DIR</B>
+<UL>For top-level lists (lists not in lists) a hard break is done on the
+open tag, otherwise a conditional-soft-break is done. Tag always does a
+close paragrah. The close tag does a conditional soft line break when nested;
+when not nested the close tag does a hard line break (even if no list is
+open). The open tag pushes the list on the list stack. The close tag pops
+any list off the list stack.
+<BR>Attributes:
+<UL><B>TYPE</B>= none | disc | circle | round | square | decimal | lower-roman
+| upper-roman | lower-alpha | upper-alpha | A | a | I | i [clamped: if
+none of the above is picked and OL then the bullet type is "number" otherwise
+the bullet type is "basic"]
+<BR><B>START</B>=int [clamped: >= 1]
+<BR><B>COMPACT</B></UL>
+</UL>
+<B>DL</B>
+<UL>Closes the paragraph. For the open tag, if the list is nested then
+a conditional soft line break is done otherwise a hard line break is done.
+The open tag pushes a list on the list stack. The close tag pops any list
+from the list stack. Closing the list acts like other lists closes.
+<BR>Attributes:
+<UL><B>COMPACT</B></UL>
+</UL>
+<B>LI</B>
+<UL>Closes the paragraph. The open tag does a conditional soft line break.
+Close tags are ignored (except for closing the paragraph).
+<BR>Attributes:
+<UL><B>TYPE</B>= A | a | I | i (if the containing list is an <B>OL</B>)
+<BR><B>TYPE</B>= round | circle | square (if the containing list is not
+<B>OL</B> and not <B>DL</B>)
+<BR><B>VALUE</B>=int [clamped: >= 1]</UL>
+The magellan html parser allows the full set of list item styles from the
+OL/DL tag instead of just the limited set that nav4 allows.</UL>
+<B>DD</B>
+<UL>Closes the paragraph. Close tags are ignored (except for closing the
+paragraph). DD outside a DL just advances the X coordinate of layout by
+a small constant. DD inside a DL does a conditional soft line break and
+other margin crud.
+<BR>Attributes: none.</UL>
+<B>DT</B>
+<UL>Closes the paragraph (open or close). Close tags are otherwise ignored.
+Does a conditional soft line break. Moves the X layout coordinate to the
+left margin.
+<BR>Attributes: none</UL>
+
+<H3>
+
+<HR ALIGN=LEFT WIDTH="50%"></H3>
+<B>A</B>
+<UL>Open anchors push a style on the style stack if the anchor has an <B>HREF</B>.
+Close anchors pop as many styles off the top of the style stack that are
+anchor tags (anchor tags don't nest in other words). In addition, any styles
+on the stack that have the ANCHOR bit set have it cleared and fiddle with
+the foreground and background colors.
+<BR>Attributes:
+<UL><B>NAME</B>=string
+<BR><B>HREF</B>=url
+<UL><B>TARGET</B>=target
+<BR><B>SUPPRESS</B>=true</UL>
+</UL>
+</UL>
+<B>STRIKE, S, TT, CODE, SAMPLE, KBD, B, STRONG, I, EM, VAR, CITE, BLINK,
+BIG, SMALL, U, INLINEINPUT, SPELL</B>
+<UL>The open tag pushes onto the style stack. The close tag always pops
+the top item from the style stack.
+<BR>Attributes: none</UL>
+<B>SUP, SUB</B>
+<UL>The open tag pushes a font size descrease on the style stack. The close
+tag always pops the top of the style stack. The open and close tag impacts
+the baselineThe only difference between SUP and SUB is how they impact
+the baseline. Note that the baseline information is forgotten after a line
+break; therefore a close SUP/SUB on the next line will do strange things.
+<BR>Attributes: none</UL>
+<B>SPAN</B>
+<UL>Ignored by the navigator.
+<BR>Attributes: none</UL>
+<B>FONT</B>
+<UL>The open font tag with no attributes resets the font size to the base
+font size. The open tag always pushes a style stack entry. The close tag
+always pops the top item off the style stack.
+<BR>Attributes:
+<UL><B>SIZE</B>=[+ int | - int | int ]&nbsp; [clamped: >=1 &amp;&amp; &lt;=
+7]
+<BR><B>POINT-SIZE=</B>[+ int | - int | int ] [clamped: >= 1 &amp;&amp;
+&lt;= 1600]
+<BR><B>FONT-WEIGHT</B>=[+ int | - int | int ] [clamped: >= 100 &amp;&amp;
+&lt;= 900]
+<BR><B>COLOR</B>=colorspec
+<BR><B>FACE</B>=string</UL>
+</UL>
+A note regarding the style stack: The pop of the stack checks to see if
+the top of the stack is an ANCHOR tag. If it is not an anchor then the
+top item is unconditionally popped. If the top of the style stack is an
+anchor tag then the code searches for either the bottom of the stack or
+the first style stack entry not created by an anchor tag. If the entry
+is followed by another entry then the entry is removed from the stack (an
+out-of-order pop in other words). In this case the anchor style stack entry
+is left untouched.
+<H3>
+
+<HR ALIGN=LEFT WIDTH="50%"></H3>
+<B>text, entities</B>
+<UL>These are basic content objects that get fed directly to the output.
+In navigator the text is processed by doing line-breaking (entities have
+been converted to text already by the parser). The line-breaking is controlled
+by the margin settings and the list depth, the floating elements, the style
+attributes (font size, etc.), the preformatted flag, the no-break flag
+and so on.</UL>
+<B>IMG, IMAGE</B>
+<UL>Close tag is ignored.
+<BR>Attributes:
+<UL><B>ISMAP</B>
+<BR><B>USEMAP</B>=url
+<BR><B>ALIGN</B>=alignparam
+<BR><B>SRC</B>=url [ whitespace is stripped ]
+<BR><B>LOWSRC</B>=url
+<BR><B>ALT</B>=string
+<BR><B>WIDTH</B>=value-or-pct (pct of <TT>right-left</TT> width)
+<BR><B>HEIGHT</B>=value-or-pct (pct of window height)
+<BR><B>BORDER</B>=int [clamped: >= 0]
+<BR><B>VSPACE</B>=int [clamped: >= 0]
+<BR><B>HSPACE</B>=int [clamped: >= 0]
+<BR><B>SUPPRESS</B>=true | false (only in blocked image layout???)</UL>
+</UL>
+<B>HR</B>
+<UL>Closes the paragraph. If an open tag then does a conditional soft line
+break. The rule inherits alignment from the parent container unless there
+is no container (then it's centered) or if the tag defines it's own alignment.
+After the object is inserted into the layout stream a soft line break is
+inserted as well.
+<BR>Attributes:
+<UL><B>ALIGN</B>=divalign (sort of; in laytags.c it's divalign; in layhrule.c
+it's left or right only)
+<BR><B>SIZE</B>=int (1 to 100 inclusive)
+<BR><B>WIDTH</B>=val-or-pct (pct of <TT>right-left</TT> width)
+<BR><B>NOSHADE</B></UL>
+</UL>
+<B>BR</B>
+<UL>Does an unconditional soft break. If clear is set then it will also
+soft break until either the left or right or both margins are clear of
+floating elements. Note that<FONT COLOR="#0000FF"> /BR == BR!</FONT>
+<BR>Attributes:
+<UL><B>CLEAR</B>=left | right | all | both</UL>
+</UL>
+<B>WBR</B>
+<UL>Soft word break.
+<BR>Attributes: none</UL>
+<B>EMBED</B>
+<UL>Close tag does nothing. Embed's operate inline just like images (they
+don't close the paragraph).
+<BR>Attributes:
+<UL><B>HIDDEN</B>=no | false | off
+<BR><B>ALIGN</B>=alignparam
+<BR><B>SRC</B>=url
+<BR><B>WIDTH</B>=val-or-pct (pct of <TT>right-left</TT> width)
+<BR><B>HEIGHT</B>=val-of-pct; if val is &lt; 1 (sometimes) the element
+gets HIDDEN automatically
+<BR><B>BORDER</B>=int (unsupported by navigator)
+<BR><B>VSPACE</B>=int [clamped: >= 0]
+<BR><B>HSPACE</B>=int [clamped: >= 0]</UL>
+</UL>
+<B>NOEBMED</B>
+<UL>Used when EMBED's are disabled. It is a container for regular content
+that has no stylistic consequences (no line breaking, no style stack effect,
+etc.).</UL>
+<B>APPLET</B>
+<UL>Applet tags don't nest (there is a notion of current_applet). The open
+tag automatically closes an open applet tag.
+<BR>Attributes:
+<UL><B>ALIGN</B>=alignparam
+<BR><B>CODE</B>=string
+<BR><B>CODEBASE</B>=string
+<BR><B>ARCHIVE</B>=string
+<BR><B>MAYSCRIPT</B>
+<BR><B>NAME</B>=string [clamped: white space is stripped out]
+<BR><B>WIDTH</B>=value-or-pct [pct of right-left width; clamped: >= 1]
+<BR><B>HEIGHT</B>=value-or-pct [pct of window height; clamped >= 1]
+<BR><B>BORDER</B>=int [clamped: >= 0]
+<BR><B>HSPACE</B>=int [clamped: >= 0]
+<BR><B>VSPACE</B>=int [clamped: >= 0]</UL>
+If no width is provided:
+<UL>if a height was provided, use the height. Otherwise, use 90% of the
+window width if percentage widths are allowed, otherwise use a value of
+600.
+<BR>&nbsp;</UL>
+If no height is provided:
+<UL>if a width was provided, use the width. Otherwise, use 50% of the window
+height if percentage widths are allowed, otherwise use a value of 400.</UL>
+If the applet is hidden, then the widht/height get forced to zero.</UL>
+<B>PARAM</B>
+<UL>The param tag is supported when contained by the APPLET tag or the
+OBJECT tag. It has no stylistic consequences. The attribute values from
+the tag are passed to the containing APPLET or OBJECT. Note that <FONT COLOR="#0000FF">/PARAM
+== PARAM</FONT>.
+<BR>Attributes:
+<UL><B>NAME</B>=string [clamped: white space is stripped out]
+<BR><B>VALUE</B>=string [clamped: white space is stripped out]</UL>
+White space being stripped is done as follows: leading and trailing whitespace
+is removed. Any embedded whitespace is left alone except if it's a non-space
+whitespace in which case it is removed.</UL>
+<B>OBJECT</B>
+<UL>The open tag pushes an object onto the object stack. The close tag
+pops from the object stack. I don't understand how the data stuff works.
+<BR>Attributes:
+<UL><B>CLASSID</B>=string (clsid:, java:, javaprogram:, javabean: are the
+supported prefixes; maybe it's a url if no prefix shown?)
+<BR><B>TYPE</B>=string (a mime type)
+<BR><B>DATA</B>=string (data: prefix mentions a url)</UL>
+There are more attributes that depend on the type of object being embedded
+in the page. If the object is a java bean (?) then the applet parameters
+are supported:
+<UL>CLASSID
+<BR>HIDDEN
+<BR>ALIGN
+<BR>CLASSID (instead of CODE)
+<BR>CODEBASE
+<BR>ARCHIVE
+<BR>MAYSCRIPT
+<BR>ID (applets use NAME)
+<BR>WIDTH
+<BR>HEIGHT
+<BR>BORDER
+<BR>HSPACE
+<BR>VSPACE</UL>
+</UL>
+<B>MAP</B>
+<UL>The open tag automatically closes an open map (maps don't nest). There
+is no stylistic consequence of the map nor does it provide any visible
+presentation in the normal layout case (an editor would do something different).
+The map can be declared anywhere in the document.
+<BR>Attributes:
+<UL><B>NAME</B>=string [clamped: white space is stripped out]</UL>
+</UL>
+<B>AREA</B>
+<UL>Does nothing if there is no current map or the tag is a close tag.
+<BR>Attributes:
+<UL><B>SHAPE</B>=default | rect | circle | poly | polygon
+<BR><B>ALT</B>=string [clamped: newlines are stripped]
+<BR><B>COORDS</B>=coord-list
+<BR><B>HREF=</B>url
+<UL><B>TARGET</B>=target (only if HREF is specified)</UL>
+<B>SUPPRESS</B></UL>
+</UL>
+<B>SERVER</B>
+<UL>A container for server-side javascript. Not evaluated by the client
+(parsed and ignored). Note: The navigator parser doesn't expand entities
+in a <B>SERVER </B>tag.</UL>
+<B>SPACER</B>
+<UL>Close tag is ignored. Open tag provides whitespace during layout: <B>TYPE</B>=line/vert/vertical
+causes a conditional soft line break and then adds <B>SIZE </B>to the Y
+layout coordinate. <B>TYPE</B>=word causes a conditional soft word break
+and then adds <B>SIZE </B>to the X layout coordinate. <B>TYPE</B>=block
+causes <FONT COLOR="#DD0000">blockish </FONT>layout stuff to happen.
+<BR>Attributes:
+<UL><B>TYPE</B>=line | vert | vertical | block (default: word)
+<UL><B>ALIGN</B>=alignparam (these 3 params are only for <B>TYPE</B>=block)
+<BR><B>WIDTH</B>=value-or-pct
+<BR><B>HEIGHT</B>=value-or-pct</UL>
+<B>SIZE</B>=int [clampled: >= 0]</UL>
+</UL>
+
+<H3>
+
+<HR ALIGN=LEFT WIDTH="50%"></H3>
+<B>SCRIPT</B>
+<UL>Note: The navigator parser doesn't expand entities in a SCRIPT tag.
+<BR>Attributes:
+<UL><B>LANGUAGE</B>=LiveScript | Mocha | JavaScript1.1 | JavaScript1.2
+<BR><B>TYPE</B>="text/javascript" | "text/css"
+<BR><B>HREF</B>=url
+<BR><B>ARCHIVE</B>=url
+<BR><B>CODEBASE</B>=url
+<BR><B>ID</B>=string
+<BR><B>SRC</B>=url</UL>
+</UL>
+<B>NOSCRIPT</B>
+<UL>Used when scripting is off or by backrev browsers. It is a container
+that has no stylistic consequences.</UL>
+
+<H3>
+
+<HR ALIGN=LEFT WIDTH="50%"></H3>
+<B>FORM&nbsp;</B>
+<UL>Attributes:
+<UL><B>ACTION</B>=href
+<BR><B>ENCODING</B>=string
+<BR><B>TARGET</B>=string
+<BR><B>METHOD</B>=get | post</UL>
+</UL>
+<B>ISINDEX&nbsp;</B>
+<UL>This tag is a shortcut for creating a form element with a submit button
+and a single text field. If the PROMPT attribute is not present in the
+tag then the value used is <B>"This is a searchable index. Enter search
+keywords:"</B>.
+
+<P>Attributes:
+<UL><B>PROMPT</B>=string
+<BR><B>ACTION</B>=href
+<BR><B>ENCODING</B>=string
+<BR><B>TARGET</B>=string
+<BR><B>METHOD</B>=get | post</UL>
+</UL>
+<B>INPUT&nbsp;</B>
+<UL>Attributes vary according to type:
+<UL><B>TYPE</B>= text | radio | checkbox | hidden | submit | reset | password
+| button | image | file | jot | readonly | object
+<BR><B>NAME</B>= string
+<BR>&nbsp;</UL>
+<B>TYPE</B>=image
+<UL>attributes are from the IMG tag (!)</UL>
+<B>TYPE</B>= text | password | file
+<UL>font style is forced to fixed
+<BR><B>VALUE</B>= string
+<BR><B>SIZE</B>= int (clamped; >= 1)
+<BR><B>MAXLENGTH</B>= int (not clamped!)</UL>
+<B>TYPE</B>= submit | reset | button | hidden | readonly
+<UL><B>VALUE</B>=string; default if no value to the attribute varies according
+to the type:
+<UL><B>submit</B> -> "Submit Query"
+<BR><B>reset</B> -> "Reset"
+<BR>others -> "&nbsp; " (2 spaces)
+<BR>Note also that the value has newlines stripped from it</UL>
+<B>WIDTH</B>=int (clamped >=0 &amp;&amp; &lt;= 1000) (only for submit,
+reset or button)
+<BR><B>HEIGHT</B>=int (clamped >=0 &amp;&amp; &lt;= 1000) (only for submit,
+reset or button)</UL>
+<B>TYPE</B>=radio | checkbox
+<UL><B>CHECKED</B> (flag - if present then set to true)
+<BR><B>VALUE</B>= string (the default value is "on")</UL>
+</UL>
+<B>SELECT&nbsp;</B>
+<UL>Attributes:
+<UL><B>MULTIPLE</B> (boolean)
+<BR><B>SIZE</B>= int (clamped >= 1)
+<BR><B>NAME=</B> string
+<BR><B>WIDTH</B>= int (clampled >= 0 &amp;&amp; &lt;= 1000)
+<BR><B>HEIGHT</B>= int (clamped >= 0 &amp;&amp; &lt;= 1000; only examined
+for single entry lists (!multiple || size==1))</UL>
+</UL>
+<B>OPTION&nbsp;</B>
+<UL>Lives inside the SELECT tag (ignored otherwise).
+<BR>Attributes:
+<UL><B>VALUE</B>=string
+<BR><B>SELECTED</B> boolean</UL>
+</UL>
+<B>TEXTAREA&nbsp;</B>
+<UL>Attributes:
+<UL><B>NAME</B>=string
+<BR><B>ROWS</B>=int (clamped; >= 1)
+<BR><B>COLS</B>=int (clamped; >= 1)
+<BR><B>WRAP</B>= off | hard | soft (default is off; any value which is
+not known turns into soft)</UL>
+</UL>
+<B>KEYGEN&nbsp;</B>
+<UL>Attributes:
+<UL><B>NAME</B>=string
+<BR><B>CHALLENGE</B>=string
+<BR><B>PQG</B>=string
+<BR><B>KEYTYPE</B>=string</UL>
+</UL>
+
+<H3>
+
+<HR ALIGN=LEFT WIDTH="50%"></H3>
+<B>BASEFONT&nbsp;</B>
+<UL>Sets the base font value which +/- size values in FONT tags are relative
+to.
+<BR>Attributes:
+<UL>SIZE=+ int | - int | int (just like FONT)</UL>
+</UL>
+
+<H2>
+
+<HR WIDTH="100%">Unsupported</H2>
+<B>NSCP_CLOSE, NSCP_OPEN, NSCP_REBLOCK, MQUOTE, CELL, SUBDOC, CERTIFICATE,
+INLINEINPUTTHICK, INLINEINPUTDOTTED, COLORMAP, HYPE, SPELL, NSDT</B>
+<UL>These tags are unsupported because they are used internally by netscape
+and are never seen in real content. If somebody does use them between 4.0
+and magellan, tough beans. We never documented them so they lose.</UL>
+
+</BODY>
+</HTML>
