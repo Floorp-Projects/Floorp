@@ -193,7 +193,8 @@ ldap_parse_virtuallist_control
 )
 {
     BerElement		*ber;
-    int			i, foundListControl, errcode;
+    int			i, foundListControl;
+    long		errcode;
     LDAPControl		*listCtrlp;
     unsigned long	target_pos, list_size;
 
