@@ -1028,10 +1028,35 @@ function SetNextMessageAfterDelete()
     gNextMessageViewIndexAfterDelete = gDBView.msgToSelectAfterDelete;
 }
 
+function EnsureAllAncestorsAreExpanded(outliner, resource)
+{
+    // get the parent of the desired folder, and then try to get
+    // the index of the parent in the outliner
+    var folder = resource.QueryInterface(Components.interfaces.nsIFolder);
+    var parentFolderResource = RDF.GetResource(folder.parent.URI);
+    var folderIndex = GetFolderIndex(outliner, parentFolderResource);
+
+    if (folderIndex == -1) {
+      // if we couldn't find the parent, recurse
+      EnsureAllAncestorsAreExpanded(outliner, parentFolderResource);
+      // ok, now we should be able to find the parent
+      folderIndex = GetFolderIndex(outliner, parentFolderResource);
+    }
+
+    // if the parent isn't open, open it
+    if (!(outliner.outlinerBoxObject.view.isContainerOpen(folderIndex)))
+      outliner.outlinerBoxObject.view.toggleOpenState(folderIndex);
+}
+
 function SelectFolder(folderUri)
 {
     var folderOutliner = GetFolderOutliner();
     var folderResource = RDF.GetResource(folderUri);
+
+    // before we can select a folder, we need to make sure it is "visible"
+    // in the outliner.  to do that, we need to ensure that all its
+    // ancestors are expanded
+    EnsureAllAncestorsAreExpanded(folderOutliner, folderResource);
     var folderIndex = GetFolderIndex(folderOutliner, folderResource);
     ChangeSelection(folderOutliner, folderIndex);
 }
