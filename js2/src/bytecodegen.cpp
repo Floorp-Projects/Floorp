@@ -423,16 +423,22 @@ uint32 ByteCodeGen::getLabel(LabelStmtNode *lbl)
 uint32 ByteCodeGen::getTopLabel(Label::LabelKind kind, const StringAtom *name, StmtNode *p)
 {
     uint32 result = uint32(-1);
+    bool foundName = false;
+    bool foundLabel = false;
     for (std::vector<uint32>::reverse_iterator i = mLabelStack.rbegin(),
                         end = mLabelStack.rend();
                         (i != end); i++)
     {
-        // find the closest kind of label
-        if (mLabelList[*i].matches(kind))
+        // find the appropriate kind of label
+        if (mLabelList[*i].matches(kind)) {
             result = *i;
+            foundLabel = true;
+        }
         else // and return it when we get the name
-            if (mLabelList[*i].matches(name))
-                return result;
+            if (mLabelList[*i].matches(name)) {
+                if (foundLabel)
+                    return result;
+            }
     }
     m_cx->reportError(Exception::syntaxError, "label not found", p->pos);
     return false;
@@ -852,25 +858,6 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
     case StmtNode::ForIn:
         {
             ForStmtNode *f = checked_cast<ForStmtNode *>(p);
-            Reference *value = NULL;
-
-            if (f->initializer->getKind() == StmtNode::Var) {
-                VariableStmtNode *vs = checked_cast<VariableStmtNode *>(f->initializer);
-                VariableBinding *v = vs->bindings;
-                value = mScopeChain->getName(*v->name, CURRENT_ATTR, Write);
-            }
-            else {
-                if (f->initializer->getKind() == StmtNode::expression) {
-                    ExprStmtNode *e = checked_cast<ExprStmtNode *>(f->initializer);
-                    value = genReference(e->expr, Write);
-                }
-                else
-                    NOT_REACHED("what else??");
-            }            
-            if (value == NULL)
-                m_cx->reportError(Exception::referenceError, "Invalid for..in target");
-
-            uint16 valueBaseDepth = value->baseExpressionDepth();
 
             uint32 breakLabel = getLabel(Label::BreakLabel);
             uint32 labelAtTopOfBlock = getLabel();
@@ -917,14 +904,23 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
                 addFixup(labelAtTestCondition);
 
             setLabel(labelAtTopOfBlock);
-                if (valueBaseDepth) {
-                    if (valueBaseDepth > 1) {
-                        addOpAdjustDepth(DupNOp, valueBaseDepth);
-                        addShort(valueBaseDepth);
+
+                Reference *value = NULL;
+                if (f->initializer->getKind() == StmtNode::Var) {
+                    VariableStmtNode *vs = checked_cast<VariableStmtNode *>(f->initializer);
+                    VariableBinding *v = vs->bindings;
+                    value = mScopeChain->getName(*v->name, CURRENT_ATTR, Write);
+                }
+                else {
+                    if (f->initializer->getKind() == StmtNode::expression) {
+                        ExprStmtNode *e = checked_cast<ExprStmtNode *>(f->initializer);
+                        value = genReference(e->expr, Write);
                     }
                     else
-                        addOp(DupOp);
-                }
+                        NOT_REACHED("what else??");
+                }            
+                if (value == NULL)
+                    m_cx->reportError(Exception::referenceError, "Invalid for..in target");
                 iteratorReadRef->emitCodeSequence(this);
                 addOp(GetPropertyOp);
                 addStringRef(m_cx->Value_StringAtom);
@@ -969,15 +965,16 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
                 addOp(PopOp);
 
             setLabel(labelAtEnd);
+/*
             if (valueBaseDepth) {
                 if (valueBaseDepth > 1) {
-                    addOpAdjustDepth(PopNOp, valueBaseDepth);
+                    addOpAdjustDepth(PopNOp, -valueBaseDepth);
                     addShort(valueBaseDepth);
                 }
                 else
                     addOp(PopOp);
             }
-
+*/
             delete objectReadRef;
             delete objectWriteRef;
             delete iteratorReadRef;
@@ -1030,7 +1027,11 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
         {
             LabelStmtNode *l = checked_cast<LabelStmtNode *>(p);
             mLabelStack.push_back(getLabel(l));
+            uint32 breakLabel = getLabel(Label::BreakLabel);
+            mLabelStack.push_back(breakLabel);
             genCodeForStatement(l->stmt, static_cg, finallyLabel);
+            setLabel(breakLabel);
+            mLabelStack.pop_back();
             mLabelStack.pop_back();
         }
         break;
@@ -1111,7 +1112,7 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
                         switchTempReadRef->emitCodeSequence(this);
                         genExpr(c->expr);
                         addOp(DoOperatorOp);
-                        addByte(Equal);
+                        addByte(SpittingImage);
                         addOp(JumpTrueOp);
                         addFixup(c->label);
                     }
@@ -1185,19 +1186,17 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
         break;
     case StmtNode::Return:
         {
+            JSFunction *container = mScopeChain->getContainerFunction();
+            if (!container)                    
+                m_cx->reportError(Exception::syntaxError, "return statement outside of function", p->pos);
             ExprStmtNode *e = checked_cast<ExprStmtNode *>(p);
             if (e->expr) {
                 genExpr(e->expr);
-
-                JSFunction *container = mScopeChain->getContainerFunction();
-                if (container) {                    
-                    if (container->getResultType() != Object_Type) {
-                        addOp(LoadTypeOp);
-                        addPointer(container->getResultType());
-                        addOp(CastOp);
-                    }
+                if (container->getResultType() != Object_Type) {
+                    addOp(LoadTypeOp);
+                    addPointer(container->getResultType());
+                    addOp(CastOp);
                 }
-
                 ASSERT(mStackTop == 1);
                 addOpSetDepth(ReturnOp, 0);
             }
@@ -2195,11 +2194,23 @@ BinaryOpEquals:
             PairListExprNode *plen = checked_cast<PairListExprNode *>(p);
             ExprPairList *e = plen->pairs;
             while (e) {
-                if (e->field && e->value && (e->field->getKind() == ExprNode::identifier)) {
+                if (e->field && e->value) {
                     addOp(DupOp);
                     genExpr(e->value);
                     addOp(SetPropertyOp);
-                    addStringRef(checked_cast<IdentifierExprNode *>(e->field)->name);
+                    switch (e->field->getKind()) {
+                    case ExprNode::identifier:
+                        addStringRef(checked_cast<IdentifierExprNode *>(e->field)->name);
+                        break;
+                    case ExprNode::string:
+                        addStringRef(checked_cast<StringExprNode *>(e->field)->str);
+                        break;
+                    case ExprNode::number:
+                        addStringRef(*numberToString(checked_cast<NumberExprNode *>(e->field)->value));
+                        break;
+                    default:
+                        NOT_REACHED("bad field name");
+                    }
                     addOp(PopOp);
                 }
                 e = e->next;

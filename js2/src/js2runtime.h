@@ -551,7 +551,7 @@ XXX ...couldn't get this to work...
 
         // add a property
         virtual Property *defineVariable(Context *cx, const String &name, AttributeStmtNode *attr, JSType *type);
-        virtual Property *defineVariable(Context *cx, const String &name, NamespaceList *names, JSType *type);
+        virtual Property *defineVariable(Context *cx, const String &name, NamespaceList *names, PropertyAttribute attrFlags, JSType *type);
 
         // add a property/value into the map 
         // - assumes the map doesn't already have this property
@@ -588,7 +588,7 @@ XXX ...couldn't get this to work...
         virtual void defineSetterMethod(Context *cx, const String &name, AttributeStmtNode *attr, JSFunction *f);
 
         virtual Property *defineVariable(Context *cx, const String &name, AttributeStmtNode *attr, JSType *type, const JSValue v);
-        virtual Property *defineVariable(Context *cx, const String &name, NamespaceList *names, JSType *type, const JSValue v);
+        virtual Property *defineVariable(Context *cx, const String &name, NamespaceList *names, PropertyAttribute attrFlags, JSType *type, const JSValue v);
         
         virtual Reference *genReference(bool hasBase, const String& name, NamespaceList *names, Access acc, uint32 depth);
 
@@ -600,6 +600,8 @@ XXX ...couldn't get this to work...
         virtual uint32 localVarCount()  { return 0; }
 
         virtual void defineTempVariable(Context *cx, Reference *&readRef, Reference *&writeRef, JSType *type);
+
+        virtual JSValue getSlotValue(Context *cx, uint32 slotIndex)    { ASSERT(false); return kUndefinedValue; }
 
         // debug only        
         void printProperties(Formatter &f) const
@@ -866,6 +868,8 @@ XXX ...couldn't get this to work...
 
 
     // captures the Parameter names scope
+    // it's a JSType simply because it's also a thing that
+    // maps from names to slots.
     class ParameterBarrel : public JSType {
     public:
 
@@ -880,6 +884,8 @@ XXX ...couldn't get this to work...
 #endif
 
         Reference *genReference(bool hasBase, const String& name, NamespaceList *names, Access acc, uint32 depth);
+
+        JSValue getSlotValue(Context *cx, uint32 slotIndex);
 
     };
 
@@ -1218,6 +1224,8 @@ XXX ...couldn't get this to work...
         bool isMethod()                         { return (mClass != NULL); }
         virtual ByteCodeModule *getByteCode()   { ASSERT(!isNative()); return mByteCode; }
         virtual NativeCode *getNativeCode()     { ASSERT(isNative()); return mCode; }
+        virtual ParameterBarrel *getParameterBarrel()
+                                                { return mParameterBarrel; }
 
         virtual JSType *getResultType()         { return mResultType; }
         virtual JSType *getArgType(uint32 a)    { ASSERT(mArguments && (a < (mRequiredArgs + mOptionalArgs))); return mArguments[a].mType; }
@@ -1268,7 +1276,7 @@ XXX ...couldn't get this to work...
         JSObject *mThis;
     public:
         JSBoundFunction(JSFunction *f, JSObject *thisObj)
-            : mFunction(f), mThis(thisObj) { }
+            : mFunction(NULL), mThis(thisObj) { if (f->hasBoundThis()) mFunction = f->getFunction(); else mFunction = f; }
 
         ~JSBoundFunction() { }  // keeping gcc happy
 
@@ -1278,7 +1286,8 @@ XXX ...couldn't get this to work...
         bool isConstructor()            { return mFunction->isConstructor(); }
         ByteCodeModule *getByteCode()   { return mFunction->getByteCode(); }
         NativeCode *getNativeCode()     { return mFunction->getNativeCode(); }
-
+        ParameterBarrel *getParameterBarrel()
+                                        { return mFunction->mParameterBarrel; }
         JSType *getResultType()         { return mFunction->getResultType(); }
         JSType *getArgType(uint32 a)    { return mFunction->getArgType(a); }
         bool argHasInitializer(uint32 a){ return mFunction->argHasInitializer(a); }

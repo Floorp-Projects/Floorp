@@ -227,7 +227,7 @@ void JSObject::defineTempVariable(Context *cx, Reference *&readRef, Reference *&
     char buf[32];
     sprintf(buf, "%%tempvar%%_%d", tempVarCount++);
     const String &name = cx->mWorld.identifiers[buf];
-    /* Property *prop = */defineVariable(cx, name, (NamespaceList *)NULL, type);
+    /* Property *prop = */defineVariable(cx, name, (NamespaceList *)NULL, Property::NoAttribute, type);
     readRef = new NameReference(name, Read, Object_Type, 0);
     writeRef = new NameReference(name, Write, Object_Type, 0);
 }
@@ -255,7 +255,7 @@ Property *JSObject::defineVariable(Context *cx, const String &name, AttributeStm
     mProperties.insert(e);
     return prop;
 }
-Property *JSObject::defineVariable(Context *cx, const String &name, NamespaceList *names, JSType *type)
+Property *JSObject::defineVariable(Context *cx, const String &name, NamespaceList *names, PropertyAttribute attrFlags, JSType *type)
 {
     PropertyIterator it;
     if (hasOwnProperty(name, names, Read, &it)) {
@@ -265,7 +265,7 @@ Property *JSObject::defineVariable(Context *cx, const String &name, NamespaceLis
         }
     }
 
-    Property *prop = new Property(new JSValue(), type, 0);
+    Property *prop = new Property(new JSValue(), type, attrFlags);
     const PropertyMap::value_type e(name, new NamespacedProperty(prop, names));
     mProperties.insert(e);
     return prop;
@@ -298,7 +298,7 @@ Property *JSObject::defineVariable(Context *cx, const String &name, AttributeStm
     mProperties.insert(e);
     return prop;
 }
-Property *JSObject::defineVariable(Context *cx, const String &name, NamespaceList *names, JSType *type, const JSValue v)
+Property *JSObject::defineVariable(Context *cx, const String &name, NamespaceList *names, PropertyAttribute attrFlags, JSType *type, const JSValue v)
 {
     PropertyIterator it;
     if (hasOwnProperty(name, names, Read, &it)) {
@@ -307,7 +307,7 @@ Property *JSObject::defineVariable(Context *cx, const String &name, NamespaceLis
         }
     }
 
-    Property *prop = new Property(new JSValue(v), type, 0);
+    Property *prop = new Property(new JSValue(v), type, attrFlags);
     const PropertyMap::value_type e(name, new NamespacedProperty(prop, names));
     mProperties.insert(e);
     return prop;
@@ -440,7 +440,7 @@ void JSObject::setProperty(Context *cx, const String &name, NamespaceList *names
         }
     }
     else
-        defineVariable(cx, name, names, Object_Type, v);
+        defineVariable(cx, name, names, Property::Enumerable, Object_Type, v);
 }
 
 void JSType::setProperty(Context *cx, const String &name, NamespaceList *names, const JSValue &v)
@@ -490,7 +490,7 @@ void JSInstance::setProperty(Context *cx, const String &name, NamespaceList *nam
         if (mType->hasOwnProperty(name, names, Write, &i))
             mType->setProperty(cx, name, names, v);
         else
-            defineVariable(cx, name, names, Object_Type, v);
+            defineVariable(cx, name, names, Property::Enumerable, Object_Type, v);
     }
 }
 
@@ -644,13 +644,8 @@ void ScopeChain::setNameValue(Context *cx, const String& name, AttributeStmtNode
             else
                 ASSERT(false);      // what else needs to be implemented ?
         }
-        else {
-            if ((*s)->mType == Object_Type) {
-                (*s)->defineVariable(cx, name, attr, Object_Type, v);
-                break;
-            }
-        }
     }
+    cx->getGlobalObject()->defineVariable(cx, name, attr, Object_Type, v);
 }
 
 inline char narrow(char16 ch) { return char(ch); }
@@ -667,6 +662,9 @@ JSObject *ScopeChain::getNameValue(Context *cx, const String& name, AttributeStm
             switch (flag) {
             case ValuePointer:
                 cx->pushValue(*PROPERTY_VALUEPOINTER(i));
+                break;
+            case Slot:
+                cx->pushValue((*s)->getSlotValue(cx, PROPERTY_INDEX(i)));
                 break;
             default:
                 ASSERT(false);      // what else needs to be implemented ?
@@ -734,7 +732,11 @@ Reference *ParameterBarrel::genReference(bool /* hasBase */, const String& name,
     return NULL;
 }
 
-
+JSValue ParameterBarrel::getSlotValue(Context *cx, uint32 slotIndex)
+{
+    // Assume that the appropriate argument chunk is the topmost one
+    return cx->mArgumentBase[slotIndex];
+}
 
 
 
@@ -908,6 +910,12 @@ void ScopeChain::collectNames(StmtNode *p)
 
             defineVariable(m_cx, *name, classStmt, Type_Type, JSValue(thisClass));
             classStmt->mType = thisClass;
+        }
+        break;
+    case StmtNode::label:
+        {
+            LabelStmtNode *l = checked_cast<LabelStmtNode *>(p);
+            collectNames(l->stmt);
         }
         break;
     case StmtNode::block:
@@ -1128,7 +1136,7 @@ void ScopeChain::collectNames(StmtNode *p)
             NamespaceStmtNode *n = checked_cast<NamespaceStmtNode *>(p);
             Attribute *x = new Attribute(0, 0);
             x->mNamespaceList = new NamespaceList(&n->name, x->mNamespaceList);
-            m_cx->getGlobalObject()->defineVariable(m_cx, n->name, (NamespaceList *)(NULL), Attribute_Type, JSValue(x));            
+            m_cx->getGlobalObject()->defineVariable(m_cx, n->name, (NamespaceList *)(NULL), Property::NoAttribute, Attribute_Type, JSValue(x));            
         }
         break;
     default:
@@ -1519,14 +1527,19 @@ void Context::buildRuntimeForStmt(StmtNode *p)
             }            
         }
         break;
+    case StmtNode::label:
+        {
+            LabelStmtNode *l = checked_cast<LabelStmtNode *>(p);
+            buildRuntimeForStmt(l->stmt);
+        }
+        break;
     case StmtNode::Try:
         {
             TryStmtNode *t = checked_cast<TryStmtNode *>(p);
             if (t->catches) {
                 CatchClause *c = t->catches;
                 while (c) {
-                    if (c->type)
-                        c->prop->mType = mScopeChain->extractType(c->type);
+                    c->prop->mType = mScopeChain->extractType(c->type);
                     c = c->next;
                 }
             }
@@ -1734,12 +1747,17 @@ static JSValue Object_forin(Context *cx, const JSValue& thisValue, JSValue * /*a
     IteratorDongle *itDude = new IteratorDongle();
     itDude->obj = obj;
     itDude->it = obj->mProperties.begin();
-    while (itDude->it == itDude->obj->mProperties.end()) {
-		itDude->obj = itDude->obj->mPrototype;
-		if (itDude->obj == NULL)
-			return kNullValue;
-		itDude->it = itDude->obj->mProperties.begin();
-	}
+    while (true) {
+        while (itDude->it == itDude->obj->mProperties.end()) {
+            itDude->obj = itDude->obj->mPrototype;
+            if (itDude->obj == NULL)
+                return kNullValue;
+            itDude->it = itDude->obj->mProperties.begin();
+        }
+        if (PROPERTY_ATTR(itDude->it) & Property::Enumerable)
+            break;
+        itDude->it++;
+    }
 
     JSValue v(&PROPERTY_NAME(itDude->it));
     iteratorObject->setProperty(cx, cx->mWorld.identifiers["value"], 0, v);
@@ -1755,13 +1773,17 @@ static JSValue Object_next(Context *cx, const JSValue& /*thisValue*/, JSValue *a
 
     IteratorDongle *itDude = (IteratorDongle *)(iteratorObject->mPrivate);
     itDude->it++;
-
-    while (itDude->it == itDude->obj->mProperties.end()) {
-		itDude->obj = itDude->obj->mPrototype;
-		if (itDude->obj == NULL)
-			return kNullValue;
-		itDude->it = itDude->obj->mProperties.begin();
-	}
+    while (true) {
+        while (itDude->it == itDude->obj->mProperties.end()) {
+            itDude->obj = itDude->obj->mPrototype;
+            if (itDude->obj == NULL)
+                return kNullValue;
+            itDude->it = itDude->obj->mProperties.begin();
+        }
+        if (PROPERTY_ATTR(itDude->it) & Property::Enumerable)
+            break;
+        itDude->it++;
+    }
     JSValue v(&PROPERTY_NAME(itDude->it));
     iteratorObject->setProperty(cx, cx->mWorld.identifiers["value"], 0, v);
     return iteratorValue;
@@ -2063,7 +2085,7 @@ JSFunction::JSFunction(Context *cx, JSType *resultType, ScopeChain *scopeChain)
     if (Function_Type)    // protect against bootstrap
         mPrototype = Function_Type->mPrototypeObject;
     mActivation.mContainer = this;
-    defineVariable(cx, cx->Length_StringAtom, (NamespaceList *)NULL, Number_Type, JSValue((float64)0)); 
+    defineVariable(cx, cx->Length_StringAtom, (NamespaceList *)NULL, Property::NoAttribute, Number_Type, JSValue((float64)0)); 
 }
 
 JSFunction::JSFunction(Context *cx, NativeCode *code, JSType *resultType) 
@@ -2088,7 +2110,7 @@ JSFunction::JSFunction(Context *cx, NativeCode *code, JSType *resultType)
     if (Function_Type)    // protect against bootstrap
         mPrototype = Function_Type->mPrototypeObject;
     mActivation.mContainer = this;
-    defineVariable(cx, cx->Length_StringAtom, (NamespaceList *)NULL, Number_Type, JSValue((float64)0)); 
+    defineVariable(cx, cx->Length_StringAtom, (NamespaceList *)NULL, Property::NoAttribute, Number_Type, JSValue((float64)0)); 
 }
               
 JSValue JSFunction::runArgInitializer(Context *cx, uint32 a, const JSValue& thisValue, JSValue *argv, uint32 argc)
@@ -2153,6 +2175,7 @@ void Context::initClass(JSType *type, ClassDef *cdef, PrototypeFunctions *pdef)
             fun->setArgCounts(this, pdef->mDef[i].length, 0, false);
             type->mPrototypeObject->defineVariable(this, *name,
                                                (NamespaceList *)(NULL), 
+                                               Property::NoAttribute,
                                                pdef->mDef[i].result, 
                                                JSValue(fun));
         }
@@ -2160,7 +2183,7 @@ void Context::initClass(JSType *type, ClassDef *cdef, PrototypeFunctions *pdef)
     type->completeClass(this, mScopeChain);
     type->setStaticInitializer(this, NULL);
     type->mUninitializedValue = *cdef->uninit;
-    getGlobalObject()->defineVariable(this, widenCString(cdef->name), (NamespaceList *)(NULL), Type_Type, JSValue(type));
+    getGlobalObject()->defineVariable(this, widenCString(cdef->name), (NamespaceList *)(NULL), Property::NoAttribute, Type_Type, JSValue(type));
     mScopeChain->popScope();
     if (pdef) delete pdef;
 }
@@ -2436,7 +2459,7 @@ Context::Context(JSObject **global, World &world, Arena &a, Pragma::Flags flags)
     
 
     JSObject *mathObj = Object_Type->newInstance(this);
-    getGlobalObject()->defineVariable(this, Math_StringAtom, (NamespaceList *)(NULL), Object_Type, JSValue(mathObj));
+    getGlobalObject()->defineVariable(this, Math_StringAtom, (NamespaceList *)(NULL), Property::NoAttribute, Object_Type, JSValue(mathObj));
     initMathObject(this, mathObj);
     initDateObject(this);
     
@@ -2478,11 +2501,11 @@ Context::Context(JSObject **global, World &world, Arena &a, Pragma::Flags flags)
     
     for (i = 0; i < (sizeof(attribute_init) / sizeof(Attribute_Init)); i++) {
         Attribute *attr = new Attribute(attribute_init[i].trueFlags, attribute_init[i].falseFlags);
-        getGlobalObject()->defineVariable(this, widenCString(attribute_init[i].name), (NamespaceList *)(NULL), Attribute_Type, JSValue(attr));
+        getGlobalObject()->defineVariable(this, widenCString(attribute_init[i].name), (NamespaceList *)(NULL), Property::NoAttribute, Attribute_Type, JSValue(attr));
     }
 
     JSFunction *x = new JSFunction(this, ExtendAttribute_Invoke, Attribute_Type);
-    getGlobalObject()->defineVariable(this, Extend_StringAtom, (NamespaceList *)(NULL), Attribute_Type, JSValue(x));
+    getGlobalObject()->defineVariable(this, Extend_StringAtom, (NamespaceList *)(NULL), Property::NoAttribute, Attribute_Type, JSValue(x));
 
 
     
@@ -2499,7 +2522,7 @@ Context::Context(JSObject **global, World &world, Arena &a, Pragma::Flags flags)
         x = new JSFunction(this, globalObjectFunctions[i].imp, globalObjectFunctions[i].result);
         x->setArgCounts(this, globalObjectFunctions[i].length, 0, false);
         x->setIsPrototype(true);
-        getGlobalObject()->defineVariable(this, widenCString(globalObjectFunctions[i].name), (NamespaceList *)(NULL), globalObjectFunctions[i].result, JSValue(x));    
+        getGlobalObject()->defineVariable(this, widenCString(globalObjectFunctions[i].name), (NamespaceList *)(NULL), Property::NoAttribute, globalObjectFunctions[i].result, JSValue(x));    
     }
 
 /*    
@@ -2514,9 +2537,9 @@ Context::Context(JSObject **global, World &world, Arena &a, Pragma::Flags flags)
     getGlobalObject()->defineVariable(this, widenCString("parseInt"), (NamespaceList *)(NULL), Object_Type, JSValue(x));
 */
 
-    getGlobalObject()->defineVariable(this, Undefined_StringAtom, (NamespaceList *)(NULL), Void_Type, kUndefinedValue);
-    getGlobalObject()->defineVariable(this, NaN_StringAtom, (NamespaceList *)(NULL), Void_Type, kNaNValue);
-    getGlobalObject()->defineVariable(this, Infinity_StringAtom, (NamespaceList *)(NULL), Void_Type, kPositiveInfinity);                
+    getGlobalObject()->defineVariable(this, Undefined_StringAtom, (NamespaceList *)(NULL), Property::NoAttribute, Void_Type, kUndefinedValue);
+    getGlobalObject()->defineVariable(this, NaN_StringAtom, (NamespaceList *)(NULL), Property::NoAttribute, Void_Type, kNaNValue);
+    getGlobalObject()->defineVariable(this, Infinity_StringAtom, (NamespaceList *)(NULL), Property::NoAttribute, Void_Type, kPositiveInfinity);                
 
 }
 

@@ -673,34 +673,34 @@ static JSValue Date_format(Context * /*cx*/, float64 date, formatspec format)
     StringFormatter outf;
     char tzbuf[100];
     bool usetz;
-    size_t i, tzlen;
+    size_t i, tzlen, bytesStored;
     PRMJTime split;
 
     if (!JSDOUBLE_IS_FINITE(date)) {
-	outf << js_NaN_date_str;
+        outf << js_NaN_date_str;
     } else {
-	float64 local = LocalTime(date);
+        float64 local = LocalTime(date);
 
-	/* offset from GMT in minutes.  The offset includes daylight savings,
-	   if it applies. */
+        /* offset from GMT in minutes.  The offset includes daylight savings,
+           if it applies. */
         int32 minutes = (int32)fd::floor((LocalTZA + DaylightSavingTA(date)) / msPerMinute);
 
-	/* map 510 minutes to 0830 hours */
-	int32 offset = (minutes / 60) * 100 + minutes % 60;
+        /* map 510 minutes to 0830 hours */
+        int32 offset = (minutes / 60) * 100 + minutes % 60;
 
-	/* print as "Wed Nov 05 19:38:03 GMT-0800 (PST) 1997" The TZA is
-	 * printed as 'GMT-0800' rather than as 'PST' to avoid
-	 * operating-system dependence on strftime (which
-	 * PRMJ_FormatTimeUSEnglish calls, for %Z only.)  win32 prints
-	 * PST as 'Pacific Standard Time.'  This way we always know
-	 * what we're getting, and can parse it if we produce it.
-	 * The OS TZA string is included as a comment.
-	 */
+        /* print as "Wed Nov 05 19:38:03 GMT-0800 (PST) 1997" The TZA is
+         * printed as 'GMT-0800' rather than as 'PST' to avoid
+         * operating-system dependence on strftime (which
+         * PRMJ_FormatTimeUSEnglish calls, for %Z only.)  win32 prints
+         * PST as 'Pacific Standard Time.'  This way we always know
+         * what we're getting, and can parse it if we produce it.
+         * The OS TZA string is included as a comment.
+         */
 
-	/* get a timezone string from the OS to include as a
-	   comment. */
-	new_explode(date, &split, true);
-	PRMJ_FormatTime(tzbuf, sizeof tzbuf, "(%Z)", &split);
+        /* get a timezone string from the OS to include as a
+           comment. */
+        new_explode(date, &split, true);
+        bytesStored = PRMJ_FormatTime(tzbuf, sizeof tzbuf, "(%Z)", &split);
 
         /* Decide whether to use the resulting timezone string.
          *
@@ -708,23 +708,27 @@ static JSValue Date_format(Context * /*cx*/, float64 date, formatspec format)
          * It's then likely in some other character encoding, and we probably
          * won't display it correctly.
          */
-        usetz = true;
-        tzlen = strlen(tzbuf);
-        if (tzlen > 100) {
-            usetz = false;
-        } else {
-            for (i = 0; i < tzlen; i++) {
-                int16 c = tzbuf[i];
-                if (c > 127 ||
-                    !(isalpha(c) || isdigit(c) ||
-                      c == ' ' || c == '(' || c == ')')) {
-                    usetz = false;
+        if (bytesStored > 0) {
+            usetz = true;
+            tzlen = strlen(tzbuf);
+            if (tzlen > 100) {
+                usetz = false;
+            } else {
+                for (i = 0; i < tzlen; i++) {
+                    int16 c = tzbuf[i];
+                    if (c > 127 ||
+                        !(isalpha(c) || isdigit(c) ||
+                          c == ' ' || c == '(' || c == ')')) {
+                        usetz = false;
+                    }
                 }
             }
-        }
 
-        /* Also reject it if it's not parenthesized or if it's '()'. */
-        if (tzbuf[0] != '(' || tzbuf[1] == ')')
+            /* Also reject it if it's not parenthesized or if it's '()'. */
+            if (tzbuf[0] != '(' || tzbuf[1] == ')')
+                usetz = false;
+        }
+        else
             usetz = false;
 
         switch (format) {

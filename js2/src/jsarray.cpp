@@ -68,7 +68,7 @@ JSValue Array_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, 
             arrInst->mLength = argc;
             for (uint32 i = 0; i < argc; i++) {
                 const String *id = numberToString(i);
-                arrInst->defineVariable(cx, *id, (NamespaceList *)(NULL), Object_Type, argv[i]);
+                arrInst->defineVariable(cx, *id, (NamespaceList *)(NULL), Property::Enumerable, Object_Type, argv[i]);
                 delete id;
             }
         }
@@ -137,7 +137,7 @@ static JSValue Array_push(Context *cx, const JSValue& thisValue, JSValue *argv, 
 
     for (uint32 i = 0; i < argc; i++) {
         const String *id = numberToString(i + arrInst->mLength);
-        arrInst->defineVariable(cx, *id, (NamespaceList *)(NULL), Object_Type, argv[i]);
+        arrInst->defineVariable(cx, *id, (NamespaceList *)(NULL), Property::NoAttribute, Object_Type, argv[i]);
         delete id;
     }
     arrInst->mLength += argc;
@@ -573,7 +573,7 @@ JSValue Array_SetElement(Context *cx, const JSValue& thisValue, JSValue *argv, u
         if (isArrayIndex(cx, index, intIndex)) {
             PropertyIterator it = thisObj->findNamespacedProperty(*name, NULL);
             if (it == thisObj->mProperties.end())
-                thisObj->insertNewProperty(*name, NULL, 0, Object_Type, argv[1]);
+                thisObj->insertNewProperty(*name, NULL, Property::Enumerable, Object_Type, argv[1]);
             else {
                 Property *prop = PROPERTY(it);
                 ASSERT(prop->mFlag == ValuePointer);
