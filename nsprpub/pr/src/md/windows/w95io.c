@@ -224,41 +224,67 @@ _PR_MD_WRITE(PRFileDesc *fd, void *buf, PRInt32 len)
 PRInt32
 _PR_MD_LSEEK(PRFileDesc *fd, PRInt32 offset, int whence)
 {
+    DWORD moveMethod;
     PRInt32 rv;
 
-    rv = SetFilePointer((HANDLE)fd->secret->md.osfd, offset, 0, whence);
+    switch (whence) {
+        case PR_SEEK_SET:
+            moveMethod = FILE_BEGIN;
+            break;
+        case PR_SEEK_CUR:
+            moveMethod = FILE_CURRENT;
+            break;
+        case PR_SEEK_END:
+            moveMethod = FILE_END;
+            break;
+        default:
+            PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+            return -1;
+    }
 
-	/*
-	 * If the lpDistanceToMoveHigh argument (third argument) is
-	 * NULL, SetFilePointer returns 0xffffffff on failure.
-	 */
-	if (-1 == rv) {
-		_PR_MD_MAP_LSEEK_ERROR(GetLastError());
-		return -1;
-	} else
-		return rv;
+    rv = SetFilePointer((HANDLE)fd->secret->md.osfd, offset, NULL, moveMethod);
+
+    /*
+     * If the lpDistanceToMoveHigh argument (third argument) is
+     * NULL, SetFilePointer returns 0xffffffff on failure.
+     */
+    if (-1 == rv) {
+        _PR_MD_MAP_LSEEK_ERROR(GetLastError());
+    }
+    return rv;
 }
 
 PRInt64
 _PR_MD_LSEEK64(PRFileDesc *fd, PRInt64 offset, int whence)
 {
-    PRInt64 result;
-    PRInt32 rv, low = (PRInt32)offset, hi = (PRInt32)(offset >> 32);
+    DWORD moveMethod;
+    LARGE_INTEGER li;
+    DWORD err;
 
-    rv = SetFilePointer((HANDLE)fd->secret->md.osfd, low, &hi, whence);
-
-	/*
-	 * If the lpDistanceToMoveHigh argument (third argument) is
-	 * NULL, SetFilePointer returns 0xffffffff on failure.
-	 */
-	if (-1 == rv)
-    {
-		_PR_MD_MAP_LSEEK_ERROR(GetLastError());
-        return -1;
+    switch (whence) {
+        case PR_SEEK_SET:
+            moveMethod = FILE_BEGIN;
+            break;
+        case PR_SEEK_CUR:
+            moveMethod = FILE_CURRENT;
+            break;
+        case PR_SEEK_END:
+            moveMethod = FILE_END;
+            break;
+        default:
+            PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+            return -1;
     }
 
-    result = (hi << 32) + rv;
-	return result;
+    li.QuadPart = offset;
+    li.LowPart = SetFilePointer((HANDLE)fd->secret->md.osfd,
+            li.LowPart, &li.HighPart, moveMethod);
+
+    if (0xffffffff == li.LowPart && (err = GetLastError()) != NO_ERROR) {
+        _PR_MD_MAP_LSEEK_ERROR(err);
+        li.QuadPart = -1;
+    }
+    return li.QuadPart;
 }
 
 /*
