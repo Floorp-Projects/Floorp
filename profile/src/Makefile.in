@@ -23,6 +23,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME=profile
+IS_COMPONENT=1
 
 CPPSRCS = \
 	nsProfile.cpp \
