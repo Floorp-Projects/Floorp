@@ -2282,8 +2282,8 @@ nsMsgComposeAndSend::AddCompFieldLocalAttachments()
         m_attachments[newLoc].mDeleteFile = PR_FALSE;
         if (m_attachments[newLoc].mURL)
         {
-          nsXPIDLString proposedName;
-          element->GetName(getter_Copies(proposedName));
+          nsAutoString proposedName;
+          element->GetName(proposedName);
           msg_pick_real_name(&m_attachments[newLoc], proposedName.get(), mCompFields->GetCharacterSet());
         }
 
@@ -2449,9 +2449,9 @@ nsMsgComposeAndSend::AddCompFieldRemoteAttachments(PRUint32   aStartLocation,
 
           if (do_add_attachment)
           {
-            nsXPIDLString proposedName;
-            element->GetName(getter_Copies(proposedName));
-            msg_pick_real_name(&m_attachments[newLoc], proposedName, mCompFields->GetCharacterSet());
+            nsAutoString proposedName;
+            element->GetName(proposedName);
+            msg_pick_real_name(&m_attachments[newLoc], proposedName.get(), mCompFields->GetCharacterSet());
             ++newLoc;
           }
         }

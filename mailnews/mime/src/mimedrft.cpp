@@ -233,7 +233,7 @@ CreateTheComposeWindow(nsIMsgCompFields *   compFields,
           rv = ConvertToUnicode(msgCompHeaderInternalCharset(), curAttachment->real_name, nameStr);
           if (NS_FAILED(rv))
             nameStr.AssignWithConversion(curAttachment->real_name);
-          attachment->SetName(nameStr.get());
+          attachment->SetName(nameStr);
           attachment->SetUrl(spec.get());
           attachment->SetTemporary(PR_TRUE);
           attachment->SetContentType(curAttachment->real_type);

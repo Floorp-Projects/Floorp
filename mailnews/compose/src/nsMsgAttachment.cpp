@@ -39,6 +39,9 @@
 #include "nsILocalFile.h"
 #include "nsReadableUtils.h"
 #include "nsNetUtil.h"
+#ifdef XP_MAC
+#include "nsIUnicodeNormalizer.h"
+#endif
 
 NS_IMPL_ISUPPORTS1(nsMsgAttachment, nsIMsgAttachment)
 
@@ -54,17 +57,28 @@ nsMsgAttachment::~nsMsgAttachment()
 }
 
 /* attribute wstring name; */
-NS_IMETHODIMP nsMsgAttachment::GetName(PRUnichar * *aName)
+NS_IMETHODIMP nsMsgAttachment::GetName(nsAString & aName)
 {
-  NS_ENSURE_ARG_POINTER(aName);
-
-  *aName = ToNewUnicode(mName);
-  return (*aName ? NS_OK : NS_ERROR_OUT_OF_MEMORY);
-}
-NS_IMETHODIMP nsMsgAttachment::SetName(const PRUnichar * aName)
-{
-  mName = aName;
+  aName = mName;
   return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgAttachment::SetName(const nsAString & aName)
+{
+#ifndef XP_MAC
+  mName = aName;
+#else
+  // Mac OS X filesystem uses NFD. When exporting names to the 'world',
+  // we have to convert NFD (decomposed Unicode) to NFC (precomopsed Unicode)
+  // because most other platforms expect that.
+   nsCOMPtr<nsIUnicodeNormalizer> normalizer (do_GetService(NS_UNICODE_NORMALIZER_CONTRACTID));
+   if (normalizer)
+     normalizer->NormalizeUnicodeNFC(aName, mName);
+   else
+     mName = aName;
+#endif
+
+   return NS_OK;
 }
 
 /* attribute string url; */

@@ -46,7 +46,7 @@ interface nsIMsgAttachment : nsISupports {
    * @Attachment real name, will be sent with the attachment's header.
    * @If no name has been provided, a name will be generated using the url.
    */
-	attribute wstring   name;
+ 	attribute AString   name;
 	
   /**
    * url attribute

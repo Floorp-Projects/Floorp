@@ -118,6 +118,9 @@
 #include "plbase64.h"
 #include "nsIUTF8ConverterService.h"
 #include "nsUConvCID.h"
+#ifdef XP_MAC
+#include "nsIUnicodeNormalizer.h"
+#endif
 
 // Defines....
 static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
@@ -873,13 +876,11 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
         attachmentsArray->QueryElementAt(i, NS_GET_IID(nsIMsgAttachment), getter_AddRefs(element));
         if (element)
         {
-          nsXPIDLString name;
+          nsAutoString name;
           nsXPIDLCString url;
-          nsXPIDLCString nameCStr;
-          element->GetName(getter_Copies(name));
-          nameCStr.Adopt(ToNewCString(name));
+          element->GetName(name);
           element->GetUrl(getter_Copies(url));
-          printf("Attachment %d: %s - %s\n",i + 1, nameCStr.get(), url.get());
+          printf("Attachment %d: %s - %s\n",i + 1, NS_ConvertUTF16toUTF8(name).get(), url.get());
         }
       }
     }
@@ -1103,11 +1104,11 @@ NS_IMETHODIMP nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity
                   userid.Truncate(index);
 
               if (userid.IsEmpty()) 
-                  attachment->SetName(NS_LITERAL_STRING("vcard.vcf").get());
+                  attachment->SetName(NS_LITERAL_STRING("vcard.vcf"));
               else
               {
                   userid.Append(NS_LITERAL_CSTRING(".vcf"));
-                  attachment->SetName(NS_ConvertASCIItoUCS2(userid).get());
+                  attachment->SetName(NS_ConvertASCIItoUCS2(userid));
               }
  
               attachment->SetUrl(vCardUrl.get());
@@ -1679,7 +1680,7 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
             nsCOMPtr<nsIMsgAttachment> attachment = do_CreateInstance(NS_MSGATTACHMENT_CONTRACTID, &rv);
             if (NS_SUCCEEDED(rv) && attachment)
             {
-              attachment->SetName(subject.get());
+              attachment->SetName(subject);
               attachment->SetUrl(uri);
               m_compFields->AddAttachment(attachment);
             }
@@ -3629,7 +3630,17 @@ nsresult nsMsgCompose::AttachmentPrettyName(const char* url, const char* charset
     nsFileSpec fileSpec(fileUrl);
     char* leafName = fileSpec.GetLeafName();
     NS_ENSURE_TRUE(leafName && *leafName, NS_ERROR_UNEXPECTED);
-    CopyUTF8toUTF16(nsDependentCString(leafName), _retval);
+#ifdef XP_MAC
+    nsAutoString decomposedName;
+    CopyUTF8toUTF16(leafName, decomposedName);
+    nsCOMPtr<nsIUnicodeNormalizer> normalizer (do_GetService(NS_UNICODE_NORMALIZER_CONTRACTID));
+    if (normalizer)
+      normalizer->NormalizeUnicodeNFC(decomposedName, _retval);
+    else
+      _retval = decomposedName;
+#else
+    CopyUTF8toUTF16(leafName, _retval);
+#endif
     nsCRT::free(leafName);
     return NS_OK;
   }
