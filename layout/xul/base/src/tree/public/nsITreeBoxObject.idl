@@ -40,6 +40,9 @@ interface nsIOutlinerBoxObject : nsISupports
   // Gets the number of possible visible rows.
   long getPageCount();
 
+  // Ensures that a row at a given index is visible.
+  void scrollToRow(in long index);
+  
   // Invalidation methods for fine-grained painting control.
   void invalidate();
   void invalidateRow(in long index);

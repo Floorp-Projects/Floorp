@@ -33,7 +33,7 @@
   display: none;
 }
 
-checkbox,radio,tree,menulist {
+checkbox,radio,tree,outliner,menulist {
   -moz-user-focus: normal;
 }
 
@@ -41,7 +41,7 @@ menupopup, popup, splitter {
   -moz-user-focus: ignore;
 }
 
-treechildren, treehead, treerows {
+treechildren, treehead, treerows, outlinercol, outlinerrows, outlinerbody {
   -moz-user-focus: none;
 }
 
@@ -261,6 +261,30 @@ menupopup, popup {
 }
 
 /******** Titled buttons **********/
+
+/******** Outliner widget ******/
+
+outliner {
+ width: 10px;
+ height: 10px;
+ min-width: 0px;
+ min-height: 0px;
+ -moz-binding: url("chrome://global/content/outlinerBindings.xml#outliner");
+}
+
+outlinercol {
+ width: 16px;
+ min-width: 16px;
+ -moz-binding: url("chrome://global/content/outlinerBindings.xml#outlinercol");
+}
+
+outlinerbody {
+ -moz-binding: url("chrome://global/content/outlinerBindings.xml#outlinerbody");
+}
+
+outlinerrows {
+ -moz-binding: url("chrome://global/content/outlinerBindings.xml#outlinerrows");
+}
 
 /******** Tree widget **********/
 

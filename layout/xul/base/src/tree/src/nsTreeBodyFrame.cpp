@@ -182,6 +182,11 @@ NS_IMETHODIMP nsOutlinerBodyFrame::GetPageCount(PRInt32 *_retval)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsOutlinerBodyFrame::ScrollToRow(PRInt32 aRow)
+{
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsOutlinerBodyFrame::Invalidate()
 {
   return NS_OK;

@@ -63,9 +63,6 @@ interface nsIOutlinerView : nsISupports
   // :moz-outliner-indentation pseudoclass to compute the exact indendation.
   wstring getCellText(in long row, in wstring colID, out long level);
   
-  // Ensures that a row at a given index is visible.
-  void scrollToRow(in long index);
-  
   // Called during initialization to link the view to the front end box object.
   void setOutliner(in nsIOutlinerBoxObject outliner);
   
