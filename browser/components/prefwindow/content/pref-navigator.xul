@@ -43,25 +43,23 @@
   <!-- homepage specification -->
   <groupbox>
     <caption label="&header2.label;"/>
-    <vbox flex="1">
-      <hbox align="center">
-        <label value="&location.label;" accesskey="&location.accesskey;" control="browserStartupHomepage"/>
-        <textbox id="browserStartupHomepage" type="autocomplete" flex="1" 
-                 searchSessions="history" timeout="50" maxrows="6" preftype="localizedstring"
-                 prefstring="browser.startup.homepage"/>  <!-- we may wish to change this to data
-                                                 when we support fancy formatted local filenames -->
-      </hbox>
-      <hbox align="center" pack="end">
-        <button label="&useCurrent.label;" accesskey="&useCurrent.accesskey;"
-                oncommand="setHomePageToCurrentPage();"
-                id="browserUseCurrent"
-                prefstring="pref.browser.homepage.disable_button.current_page"/>
-        <button label="&useBlank.label;" accesskey="&useBlank.accesskey;"
-                oncommand="document.getElementById('browserStartupHomepage').value = 'about:blank';"
-                id="browserUseBlank"
-                prefstring="pref.browser.homepage.disable_button.blank_page"/>
-      </hbox>
-    </vbox>
+    <hbox align="center" flex="1">
+      <label value="&location.label;" accesskey="&location.accesskey;" control="browserStartupHomepage"/>
+      <textbox id="browserStartupHomepage" type="autocomplete" flex="1" 
+               searchSessions="history" timeout="50" maxrows="6" preftype="localizedstring"
+               prefstring="browser.startup.homepage"/>  <!-- we may wish to change this to data
+                                               when we support fancy formatted local filenames -->
+    </hbox>
+    <hbox align="center" pack="end">
+      <button label="&useCurrent.label;" accesskey="&useCurrent.accesskey;"
+              oncommand="setHomePageToCurrentPage();"
+              id="browserUseCurrent"
+              prefstring="pref.browser.homepage.disable_button.current_page"/>
+      <button label="&useBlank.label;" accesskey="&useBlank.accesskey;"
+              oncommand="document.getElementById('browserStartupHomepage').value = 'about:blank';"
+              id="browserUseBlank"
+              prefstring="pref.browser.homepage.disable_button.blank_page"/>
+    </hbox>
   </groupbox>
   <groupbox id="pref-nav-platform-extensions"/>
 </page>
