@@ -373,13 +373,14 @@ nsInputStreamPump::OnStateTransfer()
     }
     else if (NS_SUCCEEDED(rv) && avail) {
         // figure out how much data to report (XXX detect overflow??)
-        if (avail + mStreamOffset > mStreamLength) {
+        if (avail + mStreamOffset > mStreamLength)
             avail = mStreamLength - mStreamOffset;
-            if (avail > mSegSize)
-                avail = mSegSize;
-        }
 
         if (avail) {
+            // XXX need to make max ODA size configurable
+            if (avail > 16384)
+                avail = 16384;
+
             LOG(("  calling OnDataAvailable [offset=%u count=%u]\n", mStreamOffset, avail));
 
             rv = mListener->OnDataAvailable(this, mListenerContext, mAsyncStream, mStreamOffset, avail);
@@ -395,8 +396,14 @@ nsInputStreamPump::OnStateTransfer()
     if (NS_SUCCEEDED(mStatus)) {
         if (NS_FAILED(rv))
             mStatus = rv;
-        else if (avail)
-            return STATE_TRANSFER;
+        else if (avail) {
+            // if stream is now closed, advance to STATE_STOP right away.
+            // Available may return 0 bytes available at the moment; that
+            // would not mean that we are done.
+            rv = mAsyncStream->Available(&avail);
+            if (NS_SUCCEEDED(rv))
+                return STATE_TRANSFER;
+        }
     }
     return STATE_STOP;
 }

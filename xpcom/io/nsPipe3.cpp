@@ -613,10 +613,9 @@ nsPipeInputStream::Available(PRUint32 *result)
 {
     nsAutoMonitor mon(mPipe->Monitor());
 
-    // return error if pipe closed with error.
+    // return error if pipe closed
     if (!mAvailable && NS_FAILED(mPipe->mStatus))
-        if (mPipe->mStatus != NS_BASE_STREAM_CLOSED)
-            return mPipe->mStatus;
+        return mPipe->mStatus;
 
     *result = mAvailable;
     return NS_OK;
