@@ -22,7 +22,7 @@
 #ifndef SYSMACROS_MD_H_
 #define SYSMACROS_MD_H_
 
-#if defined(XP_PC) && !defined(_WIN32)
+#if defined (XP_PC) && !defined (_WIN32) && !defined (XP_OS2)
 #ifndef HUGEP
 #define HUGEP __huge
 #endif
@@ -30,6 +30,7 @@
 #ifndef HUGEP
 #define HUGEP
 #endif
-#endif /* defined(XP_PC) && !defined(_WIN32) */
+#endif /* defined(XP_PC) && !defined (_WIN32) && !defined (XP_OS2) */
+
 
 #endif /*SYSMACROS_MD_H_*/

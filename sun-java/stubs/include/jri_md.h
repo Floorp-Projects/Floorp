@@ -53,7 +53,17 @@ extern "C" {
 /* DLL Entry modifiers... */
 
 /* PC */
-#if defined(XP_PC) || defined(_WINDOWS) || defined(WIN32) || defined(_WIN32)
+#if defined(XP_OS2)
+#  ifdef XP_OS2_VACPP
+#	  define JRI_PUBLIC_API(ResultType)	    ResultType _Optlink
+#	  define JRI_PUBLIC_VAR(VarType)        VarType
+#     define JRI_CALLBACK
+#  else
+#	  define JRI_PUBLIC_API(ResultType)	    ResultType
+#	  define JRI_PUBLIC_VAR(VarType)        VarType
+#     define JRI_CALLBACK
+#  endif
+#elif defined(XP_PC) || defined(_WINDOWS) || defined(WIN32) || defined(_WIN32)
 #	include <windows.h>
 #	if defined(_MSC_VER)
 #		if defined(WIN32) || defined(_WIN32)
