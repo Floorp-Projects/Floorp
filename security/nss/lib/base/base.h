@@ -35,7 +35,7 @@
 #define BASE_H
 
 #ifdef DEBUG
-static const char BASE_CVS_ID[] = "@(#) $RCSfile: base.h,v $ $Revision: 1.8 $ $Date: 2001/10/08 19:26:02 $ $Name:  $";
+static const char BASE_CVS_ID[] = "@(#) $RCSfile: base.h,v $ $Revision: 1.9 $ $Date: 2001/10/15 17:13:31 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -850,6 +850,18 @@ nssList_SetCompareFunction
 (
   nssList *list, 
   nssListCompareFunc compareFunc
+);
+
+/*
+ * nssList_SetSortFunction
+ *
+ * Sort function to use for an ordered list.
+ */
+NSS_EXTERN void
+nssList_SetSortFunction
+(
+  nssList *list, 
+  nssListSortFunc sortFunc
 );
 
 /*
