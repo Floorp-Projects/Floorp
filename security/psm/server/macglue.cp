@@ -33,13 +33,31 @@
 //#include "TArray.h"
 //#include "TArrayIterator.h"
 
-#include "nsError.h"
-#include "nsVoidArray.h"
 
 #include "prthread.h"
 #include "prlog.h"
 #include "prmem.h"
 
+#include "nsError.h"
+#include "nsVoidArray.h"
+
+#include "macglue.h"
+
+
+#include "nsCOMPtr.h"
+
+#include "nsIEventQueue.h"
+#include "nsIEventQueueService.h"
+#include "nsIServiceManager.h"
+#include "nspr.h"
+#include "nscore.h"
+#include "nsError.h"
+
+//#define MAC_PL_EVENT_TWEAKING
+
+// Class IDs...
+static NS_DEFINE_CID(kEventQueueCID,  NS_EVENTQUEUE_CID);
+static NS_DEFINE_CID(kEventQueueServiceCID,  NS_EVENTQUEUESERVICE_CID);
 
 typedef struct SSMThreadPrivateData
 {
@@ -50,31 +68,8 @@ typedef struct SSMThreadPrivateData
 
 
 static nsVoidArray*		gThreadsList = NULL;
-static PRUintn 				gThreadIndex = 0;
+static PRUintn 			gThreadIndex = 0;
 
-
-#ifdef DEBUG
-// just here to satisfy linkage in debug mode. nsTraceRefcnt is a class used for tracking
-// memory usage in debug builds. This is fragile, and a hack.
-class nsTraceRefcnt
-{
-
-  static NS_COM void LogCtor(void* aPtr, const char* aTypeName,
-                             PRUint32 aInstanceSize);
-
-  static NS_COM void LogDtor(void* aPtr, const char* aTypeName,
-                             PRUint32 aInstanceSize);
-
-};
-
-void nsTraceRefcnt::LogCtor(void* aPtr, const char* aTypeName,
-                             PRUint32 aInstanceSize)
-{}
-
-void nsTraceRefcnt::LogDtor(void* aPtr, const char* aTypeName,
-                             PRUint32 aInstanceSize)
-{}
-#endif
 
 
 PRUintn GetThreadIndex()
@@ -144,3 +139,16 @@ SSM_CreateAndRegisterThread(PRThreadType type,
 	return newThread;
 }
 
+void ProcessEventQ(void)
+{
+}
+
+PRInt32 SetupEventQ(void)
+{
+	nsresult res = NS_InitXPCOM(NULL, NULL);
+	NS_ASSERTION( NS_SUCCEEDED(res), "NS_InitXPCOM failed" );
+	
+	if (NS_FAILED(res))
+		return -1;
+	return 0;
+}
