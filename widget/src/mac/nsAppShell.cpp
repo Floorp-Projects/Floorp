@@ -191,10 +191,14 @@ nsresult nsAppShell::DispatchNativeEvent(void * aEvent)
 NS_METHOD
 nsAppShell::GetSelectionMgr(nsISelectionMgr** aSelectionMgr)
 {
+#ifdef USE_SELECTION_MGR
   *aSelectionMgr = mSelectionMgr;
   NS_IF_ADDREF(mSelectionMgr);
   if (!mSelectionMgr)
     return NS_ERROR_NOT_INITIALIZED;
   return NS_OK;
+#else /* USE_SELECTION_MGR */
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif /* USE_SELECTION_MGR */
 }
 
