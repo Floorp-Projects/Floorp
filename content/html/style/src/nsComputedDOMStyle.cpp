@@ -65,108 +65,171 @@
  */
 
 static const nsCSSProperty queryableProperties[] = {
-  eCSSProperty_width,
-  eCSSProperty_height,
-  eCSSProperty_max_height,
-  eCSSProperty_max_width,
-  eCSSProperty_min_height,
-  eCSSProperty_min_width,
-  eCSSProperty_left,
-  eCSSProperty_top,
-  eCSSProperty_right,
-  eCSSProperty_bottom,
-  eCSSProperty_clip,
-  eCSSProperty_overflow,
+  /* ******************************************************************* *\
+   * Properties below are listed in alphabetical order.                  *
+   * Please keep them that way.                                          *
+   *                                                                     *
+   * Properties commented out with // are not yet implemented            *
+   * Properties commented out with //// are shorthands and not queryable *
+  \* ******************************************************************* */
 
-  eCSSProperty_color,
-  eCSSProperty_font_family,
-  eCSSProperty_font_style,
-  eCSSProperty_font_size,
-  eCSSProperty_font_size_adjust,
-  eCSSProperty_font_weight,
-  eCSSProperty_font_variant,
+  /* ****************************** *\
+   * Implementations of CSS2 styles *
+  \* ****************************** */
 
+  // eCSSProperty_azimuth,
+
+  //// eCSSProperty_background,
   eCSSProperty_background_attachment,
   eCSSProperty_background_color,
   eCSSProperty_background_image,
+  //// eCSSProperty_background_position,
   eCSSProperty_background_repeat,
-
-  eCSSProperty_display,
-  eCSSProperty_visibility,
-  eCSSProperty_opacity,
-  eCSSProperty_position,
-  eCSSProperty_binding,
-  eCSSProperty_clear,
-  eCSSProperty_float,
-
-  // shorthand properties are not really queryable.  There is no
-  // decent way to generate them based on computed style
-  // eCSSProperty_padding,
-  eCSSProperty_padding_top,
-  eCSSProperty_padding_bottom,
-  eCSSProperty_padding_left,
-  eCSSProperty_padding_right,
-
-  // shorthand properties are not really queryable.  There is no
-  // decent way to generate them based on computed style
-  // eCSSProperty_border_style,
-  // eCSSProperty_border_width,
-  // eCSSProperty_border_spacing,
-  eCSSProperty_border_collapse,
-  eCSSProperty_caption_side,
-  eCSSProperty_empty_cells,
-  eCSSProperty_table_layout,
-  eCSSProperty_vertical_align,
-
-  eCSSProperty_border_top_style,
-  eCSSProperty_border_right_style,
-  eCSSProperty_border_bottom_style,
-  eCSSProperty_border_left_style,
-  eCSSProperty_border_top_width,
-  eCSSProperty_border_right_width,
-  eCSSProperty_border_bottom_width,
-  eCSSProperty_border_left_width,
-  eCSSProperty_border_top_color,
-  eCSSProperty_border_right_color,
+  //// eCSSProperty_border,
+  //// eCSSProperty_border_bottom,
   eCSSProperty_border_bottom_color,
+  eCSSProperty_border_bottom_style,
+  eCSSProperty_border_bottom_width,
+  eCSSProperty_border_collapse,
+  //// eCSSProperty_border_color,
+  //// eCSSProperty_border_left,
   eCSSProperty_border_left_color,
+  eCSSProperty_border_left_style,
+  eCSSProperty_border_left_width,
+  //// eCSSProperty_border_right,
+  eCSSProperty_border_right_color,
+  eCSSProperty_border_right_style,
+  eCSSProperty_border_right_width,
+  //// eCSSProperty_border_spacing,
+  //// eCSSProperty_border_style,
+  //// eCSSProperty_border_top,
+  eCSSProperty_border_top_color,
+  eCSSProperty_border_top_style,
+  eCSSProperty_border_top_width,
+  //// eCSSProperty_border_width,
+  eCSSProperty_bottom,
 
-  // shorthand properties are not really queryable.  There is no
-  // decent way to generate them based on computed style
-  //   eCSSProperty_margin,
-  eCSSProperty_margin_top,
-  eCSSProperty_margin_bottom,
-  eCSSProperty_margin_left,
-  eCSSProperty_margin_right,
+  eCSSProperty_caption_side,
+  eCSSProperty_clear,
+  eCSSProperty_clip,
+  eCSSProperty_color,
+  // eCSSProperty_content,
+  // eCSSProperty_counter_increment,
+  // eCSSProperty_counter_reset,
+  //// eCSSProperty_cue,
+  // eCSSProperty_cue_after,
+  // eCSSProperty_cue_before,
+  eCSSProperty_cursor,
 
-  // shorthand properties are not really queryable.  There is no
-  // decent way to generate them based on computed style
-  //   eCSSProperty_outline,
-  eCSSProperty_outline_width,
-  eCSSProperty_outline_style,
-  eCSSProperty_outline_color,
+  eCSSProperty_direction,
+  eCSSProperty_display,
 
-  eCSSProperty_marker_offset,
+  // eCSSProperty_elevation,
+  eCSSProperty_empty_cells,
 
-  eCSSProperty_z_index,
+  eCSSProperty_float,
+  //// eCSSProperty_font,
+  eCSSProperty_font_family,
+  eCSSProperty_font_size,
+  eCSSProperty_font_size_adjust,
+  // eCSSProperty_font_stretch,
+  eCSSProperty_font_style,
+  eCSSProperty_font_variant,
+  eCSSProperty_font_weight,
 
+  eCSSProperty_height,
+
+  eCSSProperty_left,
+  eCSSProperty_letter_spacing,
+  eCSSProperty_line_height,
+  //// eCSSProperty_list_style,
   eCSSProperty_list_style_image,
   eCSSProperty_list_style_position,
   eCSSProperty_list_style_type,
 
-  eCSSProperty_line_height,
+  //// eCSSProperty_margin,
+  eCSSProperty_margin_bottom,
+  eCSSProperty_margin_left,
+  eCSSProperty_margin_right,
+  eCSSProperty_margin_top,
+  eCSSProperty_marker_offset,
+  // eCSSProperty_marks,
+  eCSSProperty_max_height,
+  eCSSProperty_max_width,
+  eCSSProperty_min_height,
+  eCSSProperty_min_width,
+
+  // eCSSProperty_orphans,
+  //// eCSSProperty_outline,
+  // eCSSProperty_outline_color,
+  // eCSSProperty_outline_style,
+  // eCSSProperty_outline_width,
+  eCSSProperty_overflow,
+
+  //// eCSSProperty_padding,
+  eCSSProperty_padding_bottom,
+  eCSSProperty_padding_left,
+  eCSSProperty_padding_right,
+  eCSSProperty_padding_top,
+  // eCSSProperty_page,
+  // eCSSProperty_page_break_after,
+  // eCSSProperty_page_break_before,
+  // eCSSProperty_page_break_inside,
+  //// eCSSProperty_pause,
+  // eCSSProperty_pause_after,
+  // eCSSProperty_pause_before,
+  // eCSSProperty_pitch,
+  // eCSSProperty_pitch_range,
+  //// eCSSProperty_play_during,
+  eCSSProperty_position,
+
+  // eCSSProperty_quotes,
+
+  // eCSSProperty_richness,
+  eCSSProperty_right,
+
+  //// eCSSProperty_size,
+  // eCSSProperty_speak,
+  // eCSSProperty_speak_header,
+  // eCSSProperty_speak_numeral,
+  // eCSSProperty_speak_punctuation,
+  // eCSSProperty_speech_rate,
+  // eCSSProperty_stress,
+
+  eCSSProperty_table_layout,
   eCSSProperty_text_align,
   eCSSProperty_text_decoration,
   eCSSProperty_text_indent,
+  // eCSSProperty_text_shadow,
   eCSSProperty_text_transform,
-  eCSSProperty_letter_spacing,
-  eCSSProperty_word_spacing,
-  eCSSProperty_white_space,
+  eCSSProperty_top,
 
-  eCSSProperty_direction,
   eCSSProperty_unicode_bidi,
 
-  eCSSProperty_cursor
+  eCSSProperty_vertical_align,
+  eCSSProperty_visibility,
+  // eCSSProperty_voice_family,
+  // eCSSProperty_volume,
+
+  eCSSProperty_white_space,
+  // eCSSProperty_widows,
+  eCSSProperty_width,
+  eCSSProperty_word_spacing,
+
+  eCSSProperty_z_index,
+
+  /* ******************************* *\
+   * Implementations of -moz- styles *
+  \* ******************************* */
+
+  eCSSProperty_binding,
+
+  eCSSProperty_opacity,
+  //// eCSSProperty_outline,
+  eCSSProperty_outline_color,
+  eCSSProperty_outline_style,
+  eCSSProperty_outline_width
+
 };
 
 nsresult
