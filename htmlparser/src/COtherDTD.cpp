@@ -274,12 +274,7 @@ COtherDTD::CanParse(CParserContext& aParserContext, const nsString& aBuffer,
   eAutoDetectResult result=eUnknownDetect;
 
   if(mEnableStrict) {
-    if(eViewSource==aParserContext.mParserCommand) {
-      if(PR_TRUE==aParserContext.mMimeType.EqualsWithConversion(kPlainTextContentType)) {
-        result=eValidDetect;
-      }
-    }
-    else {
+    if(aParserContext.mParserCommand != eViewSource) {
       if(PR_TRUE==aParserContext.mMimeType.EqualsWithConversion(kPlainTextContentType)) {
         result=eValidDetect;
       }
