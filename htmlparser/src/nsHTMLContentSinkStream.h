@@ -157,7 +157,10 @@ protected:
     PRBool    mDoFormat;
     PRBool    mDoHeader;
 
-    nsString  mBuffer;
+    char*     mBuffer;
+    PRInt32   mBufferLength;  // The length of the data in the buffer
+    PRInt32   mBufferSize;    // The actual size of the buffer, regardless of the data
+
     nsIUnicodeEncoder*  mUnicodeEncoder;
     nsString            mCharsetOverride;
 };

@@ -204,12 +204,15 @@ NS_New_HTMLToTXT_SinkStream(nsIHTMLContentSink** aInstancePtrResult,
  * @param 
  * @return
  */
-nsHTMLToTXTSinkStream::nsHTMLToTXTSinkStream(nsIOutputStream* aStream, nsString* aString)  : mBuffer("",eOneByte) {
+nsHTMLToTXTSinkStream::nsHTMLToTXTSinkStream(nsIOutputStream* aStream, nsString* aString)  {
   NS_INIT_REFCNT();
   mStream = aStream;
   mColPos = 0;
   mIndent = 0;
   mDoOutput = PR_FALSE;
+  mBufferSize = 0;
+  mBufferLength = 0;
+  mBuffer = nsnull;
   mUnicodeEncoder = nsnull;
   mStream = aStream;
   mString = aString;
@@ -224,6 +227,7 @@ nsHTMLToTXTSinkStream::nsHTMLToTXTSinkStream(nsIOutputStream* aStream, nsString*
  * @return
  */
 nsHTMLToTXTSinkStream::~nsHTMLToTXTSinkStream() {
+  delete [] mBuffer;
   NS_IF_RELEASE(mUnicodeEncoder);
 }
 
@@ -451,8 +455,8 @@ nsHTMLToTXTSinkStream::EndContext(PRInt32 aPosition)
   return NS_OK;
 }
 
-void nsHTMLToTXTSinkStream::EnsureBufferSize(PRInt32 aNewSize) {
-/*
+void nsHTMLToTXTSinkStream::EnsureBufferSize(PRInt32 aNewSize)
+{
   if (mBufferSize < aNewSize)
   {
     delete [] mBuffer;
@@ -463,16 +467,19 @@ void nsHTMLToTXTSinkStream::EnsureBufferSize(PRInt32 aNewSize) {
       mBufferLength = 0;
     }
   }
-*/
 }
 
 
 
 void nsHTMLToTXTSinkStream::EncodeToBuffer(const nsString& aSrc)
 {
-  NS_ASSERTION(0!=mUnicodeEncoder,"The unicode encoder needs to be initialized");
-  if (0==mUnicodeEncoder)   {
-    mBuffer.Assign(aSrc);
+  NS_ASSERTION(mUnicodeEncoder != nsnull,"The unicode encoder needs to be initialized");
+  if (mUnicodeEncoder == nsnull)
+  {
+    char* str = aSrc.ToNewCString();
+    EnsureBufferSize(aSrc.Length()+1);
+    strcpy(mBuffer, str);
+    delete[] str;
     return;
   }
 
@@ -483,16 +490,22 @@ void nsHTMLToTXTSinkStream::EncodeToBuffer(const nsString& aSrc)
 
   if (mUnicodeEncoder != nsnull && length > 0)
   {
+    EnsureBufferSize(length);
+    mBufferLength = mBufferSize;
     
     mUnicodeEncoder->Reset();
-    mBuffer.SetCapacity(2*length);  //cause that's what greg used to do, but may not be necessary.
-    PRInt32 theNewLength=mBuffer.mCapacity;
-    result = mUnicodeEncoder->Convert(aSrc.GetUnicode(), &length, (char*)mBuffer.GetBuffer(), &theNewLength);
-    mBuffer.Truncate(theNewLength);
+    result = mUnicodeEncoder->Convert(aSrc.GetUnicode(), &length, mBuffer, &mBufferLength);
+    mBuffer[mBufferLength] = 0;
+    PRInt32 temp = mBufferLength;
     if (NS_SUCCEEDED(result))
-      result = mUnicodeEncoder->Finish((char*)mBuffer.GetBuffer(),&theNewLength);
+      result = mUnicodeEncoder->Finish(mBuffer,&temp);
 
-    mBuffer.ReplaceChar(CH_NBSP,' ');  //switch all nbsp's to spaces
+
+    for (PRInt32 i = 0; i < mBufferLength; i++)
+    {
+      if (mBuffer[i] == char(CH_NBSP))
+        mBuffer[i] = ' ';
+    }
   }
   
 }
@@ -504,7 +517,7 @@ void nsHTMLToTXTSinkStream::EncodeToBuffer(const nsString& aSrc)
  *  or the output string.
  *  When going to the stream, all data is run through the encoder
  *  
- *  @updated gess 05/28/99
+ *  @updated gpk02/03/99
  *  @param   
  *  @return  
  */
@@ -515,11 +528,13 @@ void nsHTMLToTXTSinkStream::Write(const nsString& aString)
   if (mUnicodeEncoder != nsnull)
   {
     EncodeToBuffer(aString);
-    if (0!=mStream) {
+    if (mStream != nsnull)
+    {
       nsOutputStream out(mStream);
-      out.write(mBuffer.GetBuffer(),mBuffer.Length());
+      out.write(mBuffer,mBufferLength);
     }
-    if (0!=mString) {
+    if (mString != nsnull)
+    {
       mString->Append(mBuffer);
     }
   }
@@ -659,7 +674,7 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode){
   {
     text = aNode.GetText();
     EncodeToBuffer(text);
-    PRUnichar entity = NS_EntityToUnicode(mBuffer.GetBuffer());
+    PRUnichar entity = NS_EntityToUnicode(mBuffer);
     nsString temp;
     
     temp.Append(entity);

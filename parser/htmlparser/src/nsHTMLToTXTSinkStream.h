@@ -125,12 +125,16 @@ protected:
 
 
 protected:
-    nsIOutputStream*  mStream;
-    nsString*         mString;
-    nsString          mBuffer;
-    PRInt32           mIndent;
-    PRInt32           mColPos;
-    PRBool            mDoOutput;
+    nsIOutputStream* mStream;
+    nsString*        mString;
+
+    PRInt32         mIndent;
+    PRInt32         mColPos;
+    PRBool          mDoOutput;
+
+    char*           mBuffer;
+    PRInt32         mBufferLength;  // The length of the data in the buffer
+    PRInt32         mBufferSize;    // The actual size of the buffer, regardless of the data
 
     nsIUnicodeEncoder*  mUnicodeEncoder;
     nsString            mCharsetOverride;
