@@ -14,8 +14,7 @@
  *
  * The Original Code is the Mozilla SVG Cairo Renderer project.
  *
- * The Initial Developer of the Original Code is
- * Crocodile Clips Ltd..
+ * The Initial Developer of the Original Code is Crocodile Clips Ltd..
  * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
  *

@@ -14,10 +14,14 @@
  *
  * The Original Code is the Mozilla SVG Cairo Renderer project.
  *
- * The Initial Developer of the Original Code is
- * IBM Corporation.
+ * The Initial Developer of the Original Code is IBM Corporation.
  * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
+ *
+ * Parts of this file contain code derived from the following files(s)
+ * of the Mozilla SVG project (these parts are Copyright (C) by their
+ * respective copyright-holders):
+ *    layout/svg/renderer/src/gdiplus/nsSVGGDIPlusGlyphMetrics.cpp
  *
  * Contributor(s):
  *
