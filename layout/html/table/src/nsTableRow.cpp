@@ -245,6 +245,7 @@ void nsTableRow::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
     nsHTMLTagContent::SetAttribute(aAttribute, val);
     return;
   }
+  nsTableContent::SetAttribute(aAttribute, aValue);
 }
 
 void nsTableRow::MapAttributesInto(nsIStyleContext* aContext,
