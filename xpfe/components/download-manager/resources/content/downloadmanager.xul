@@ -169,6 +169,10 @@
                   label="&view.header.timeelapsed.label;"
                   onclick="return TriStateColumnSort('TimeElapsed');"
                   observes="TimeElapsed" />
+        <treecell class="treecell-header sortDirectionIndicator"
+                  label="&view.header.source.label;"
+                  onclick="return TriStateColumnSort('Source');"
+                  observes="Source" />
         <treecell class="treecell-header treecell-popup-icon" allowevents="true" id="popupCell">
           <menu align="center" pack="center">
             <menupopup popupanchor="bottomright" popupalign="topright"
@@ -200,6 +204,7 @@
               <treecell label="rdf:http://home.netscape.com/NC-rdf#Transferred"/>
               <treecell label="rdf:http://home.netscape.com/NC-rdf#TransferRate"/>
               <treecell label="rdf:http://home.netscape.com/NC-rdf#TimeElapsed"/>
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#URL"/>
             </treerow>
           </treeitem>
         </treechildren>
@@ -248,7 +253,13 @@
                sortSeparators="true" width="1*" flex="1" hidden="true"
                persist="width sortActive sortDirection hidden"
                resource="http://home.netscape.com/NC-rdf#TimeElapsed"
-               resource2="http://home.netscape.com/NC-rdf#TimeElapsed"/>
+               resource2="http://home.netscape.com/NC-rdf#Name"/>
+      <splitter class="tree-splitter"/>
+      <treecol id="Source"
+               sortSeparators="true" width="1*" flex="1" hidden="true"
+               persist="width sortActive sortDirection hidden"
+               resource="http://home.netscape.com/NC-rdf#Source"
+               resource2="http://home.netscape.com/NC-rdf#Name"/>
       <treecol persist="width" fixed="true" width="14" id="PopupColumn"/>
     </treecolgroup>
   </tree>

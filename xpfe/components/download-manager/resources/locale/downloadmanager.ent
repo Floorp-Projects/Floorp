@@ -6,6 +6,7 @@
 <!ENTITY view.header.transferrate.label   "Speed">
 <!ENTITY view.header.timeelapsed.label    "Time Elapsed">
 <!ENTITY view.header.progresstext.label   "Percent Done">
+<!ENTITY view.header.source.label         "Source">
 
 <!ENTITY downloadManager.title            "Download Manager">
 
