@@ -144,7 +144,10 @@ BOOL CInterpret::BrowseFile(WIDGET *curWidget)
 		if (tmpWidget && (CEdit*)tmpWidget->control)
 		{
 			tmpWidget->value = fullFileName;
-			tmpWidget->display = GetTrimFile(fullFileName);
+			if (tmpWidget->name == "LinuxPath")
+				tmpWidget->display = fullFileName;
+			else
+				tmpWidget->display = GetTrimFile(fullFileName);
 		}
 	}
 	((CEdit*)tmpWidget->control)->SetWindowText(tmpWidget->display);
