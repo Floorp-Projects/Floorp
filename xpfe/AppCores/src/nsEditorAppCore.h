@@ -61,7 +61,9 @@ class nsEditorAppCore : public nsBaseAppCore,
     NS_IMETHOD    SetDocumentCharset(const nsString& aCharset)  { return nsBaseAppCore::SetDocumentCharset(aCharset); } 
 
 	  NS_IMETHOD    SetEditorType(const nsString& aEditorType);
-    NS_IMETHOD    SetAttribute(const nsString& aAttr, const nsString& aValue);
+		NS_IMETHOD    SetTextProperty(const nsString& aAttr);
+		NS_IMETHOD    RemoveTextProperty(const nsString& aAttr);
+		NS_IMETHOD    GetTextProperty(const nsString& aAttr, PRBool* aAnyHas, PRBool* aAllHas);
     NS_IMETHOD    Undo();
     NS_IMETHOD    Redo();
     NS_IMETHOD    Back();
@@ -87,6 +89,9 @@ class nsEditorAppCore : public nsBaseAppCore,
     NS_IMETHOD		InsertLink();
     NS_IMETHOD		InsertImage();
     
+	  NS_IMETHOD    BeginBatchChanges();
+	  NS_IMETHOD    EndBatchChanges();
+
     NS_IMETHOD    NewWindow();
     NS_IMETHOD    PrintPreview();
     NS_IMETHOD    Close();
@@ -104,6 +109,7 @@ class nsEditorAppCore : public nsBaseAppCore,
     NS_IMETHOD 			DoEditorMode(nsIWebShell *aWebShell);
     NS_IMETHOD	 		ExecuteScript(nsIScriptContext * aContext, const nsString& aScript);
     NS_IMETHOD			InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShell);
+    NS_IMETHOD			RemoveOneProperty(const nsString& aAttr);
     void 						SetButtonImage(nsIDOMNode * aParentNode, PRInt32 aBtnNum, const nsString &aResName);
 		
     nsString            mEnableScript;     

@@ -398,17 +398,18 @@ nsEditorAppCore::DoEditorMode(nsIWebShell *aWebShell)
   return err;
 }
 
-
+// the name of the attribute here should be the contents of the appropriate
+// tag, e.g. 'b' for bold, 'i' for italics.
 NS_IMETHODIMP    
-nsEditorAppCore::SetAttribute(const nsString& aAttr, const nsString& aValue)
+nsEditorAppCore::SetTextProperty(const nsString& aAttr)
 {
 	nsIAtom		*styleAtom = nsnull;
-	nsresult	err = NS_OK;
+	nsresult	err = NS_NOINTERFACE;
 
 	styleAtom = NS_NewAtom(aAttr);			/// XXX Hack alert! Look in nsIEditProperty.h for this
 
 	if (! styleAtom)
-	return NS_ERROR_OUT_OF_MEMORY;
+		return NS_ERROR_OUT_OF_MEMORY;
 
 	// addref it while we're using it
 	NS_ADDREF(styleAtom);
@@ -417,6 +418,7 @@ nsEditorAppCore::SetAttribute(const nsString& aAttr, const nsString& aValue)
 	{
 		case ePlainTextEditorType:
 			{
+				// should we allow this?
 				nsCOMPtr<nsITextEditor>	textEditor = do_QueryInterface(mEditor);
 				if (textEditor)
 					err = textEditor->SetTextProperty(styleAtom);
@@ -433,6 +435,130 @@ nsEditorAppCore::SetAttribute(const nsString& aAttr, const nsString& aValue)
 			err = NS_ERROR_NOT_IMPLEMENTED;
 	}
 
+	NS_RELEASE(styleAtom);
+	return err;
+}
+
+
+
+NS_IMETHODIMP
+nsEditorAppCore::RemoveOneProperty(const nsString &aAttr)
+{
+	nsIAtom		*styleAtom = nsnull;
+	nsresult	err = NS_NOINTERFACE;
+
+	styleAtom = NS_NewAtom(aAttr);			/// XXX Hack alert! Look in nsIEditProperty.h for this
+
+	if (! styleAtom)
+		return NS_ERROR_OUT_OF_MEMORY;
+
+	// addref it while we're using it
+	NS_ADDREF(styleAtom);
+
+	switch (mEditorType)
+	{
+		case ePlainTextEditorType:
+			{
+				// should we allow this?
+				nsCOMPtr<nsITextEditor>	textEditor = do_QueryInterface(mEditor);
+				if (textEditor)
+					err = textEditor->RemoveTextProperty(styleAtom);
+			}
+			break;
+		case eHTMLTextEditorType:
+			{
+				nsCOMPtr<nsIHTMLEditor>	htmlEditor = do_QueryInterface(mEditor);
+				if (htmlEditor)
+					err = htmlEditor->RemoveTextProperty(styleAtom);
+			}
+			break;
+		default:
+			err = NS_ERROR_NOT_IMPLEMENTED;
+	}
+
+	NS_RELEASE(styleAtom);
+	return err;
+}
+
+
+// the name of the attribute here should be the contents of the appropriate
+// tag, e.g. 'b' for bold, 'i' for italics.
+NS_IMETHODIMP    
+nsEditorAppCore::RemoveTextProperty(const nsString& aAttr)
+{
+	// OK, I'm really hacking now. This is just so that we can accept 'all' as input.
+	// this logic should live elsewhere.
+	static const char*	sAllKnownStyles[] = {
+		"b",
+		"i",
+		"u",
+		nsnull			// this null is important
+	};
+	
+	nsAutoString	allStr = aAttr;
+	allStr.ToLowerCase();
+	PRBool		doingAll = (allStr == "all");
+	nsresult	err = NS_OK;
+
+	if (doingAll)
+	{
+		nsAutoString	thisAttr;
+		const char		**tagName = sAllKnownStyles;
+	
+		while (*tagName)
+		{
+			thisAttr.Truncate(0);
+			thisAttr += (char *)(*tagName);
+		
+			err = RemoveOneProperty(thisAttr);
+
+			tagName ++;
+		}
+	
+	}
+	else
+	{
+		err = RemoveOneProperty(aAttr);
+	}
+	
+	return err;
+}
+
+NS_IMETHODIMP
+nsEditorAppCore::GetTextProperty(const nsString& aAttr, PRBool* aAnyHas, PRBool* aAllHas)
+{
+	nsIAtom		*styleAtom = nsnull;
+	nsresult	err = NS_NOINTERFACE;
+
+	PRBool		anyOfSelectionHasProp = PR_FALSE;
+	PRBool		allOfSelectionHasProp = PR_FALSE;
+	
+	styleAtom = NS_NewAtom(aAttr);			/// XXX Hack alert! Look in nsIEditProperty.h for this
+
+	switch (mEditorType)
+	{
+		case ePlainTextEditorType:
+			{
+				// should we allow this?
+				nsCOMPtr<nsITextEditor>	textEditor = do_QueryInterface(mEditor);
+				if (textEditor)
+					err = textEditor->GetTextProperty(styleAtom, anyOfSelectionHasProp, allOfSelectionHasProp);
+			}
+			break;
+		case eHTMLTextEditorType:
+			{
+				nsCOMPtr<nsIHTMLEditor>	htmlEditor = do_QueryInterface(mEditor);
+				if (htmlEditor)
+					err = htmlEditor->GetTextProperty(styleAtom, anyOfSelectionHasProp, allOfSelectionHasProp);
+			}
+			break;
+		default:
+			err = NS_ERROR_NOT_IMPLEMENTED;
+	}
+
+	if (aAnyHas) *aAnyHas = anyOfSelectionHasProp;
+	if (aAllHas) *aAllHas = allOfSelectionHasProp;
+	
 	NS_RELEASE(styleAtom);
 	return err;
 }
@@ -566,7 +692,7 @@ nsEditorAppCore::NewWindow()
 NS_IMETHODIMP    
 nsEditorAppCore::Undo()
 { 
-	nsresult	err = NS_OK;
+	nsresult	err = NS_NOINTERFACE;
 	
 	switch (mEditorType)
 	{
@@ -583,6 +709,7 @@ nsEditorAppCore::Undo()
 				if (htmlEditor)
 					err = htmlEditor->Undo(1);
 			}
+			break;
 		default:
 			err = NS_ERROR_NOT_IMPLEMENTED;
 	}
@@ -593,7 +720,7 @@ nsEditorAppCore::Undo()
 NS_IMETHODIMP    
 nsEditorAppCore::Redo()
 {  
-	nsresult	err = NS_OK;
+	nsresult	err = NS_NOINTERFACE;
 	
 	switch (mEditorType)
 	{
@@ -610,6 +737,7 @@ nsEditorAppCore::Redo()
 				if (htmlEditor)
 					err = htmlEditor->Redo(1);
 			}
+			break;
 		default:
 			err = NS_ERROR_NOT_IMPLEMENTED;
 	}
@@ -620,7 +748,7 @@ nsEditorAppCore::Redo()
 NS_IMETHODIMP    
 nsEditorAppCore::Cut()
 {  
-	nsresult	err = NS_OK;
+	nsresult	err = NS_NOINTERFACE;
 	
 	switch (mEditorType)
 	{
@@ -637,6 +765,7 @@ nsEditorAppCore::Cut()
 				if (htmlEditor)
 					err = htmlEditor->Cut();
 			}
+			break;
 		default:
 			err = NS_ERROR_NOT_IMPLEMENTED;
 	}
@@ -647,7 +776,7 @@ nsEditorAppCore::Cut()
 NS_IMETHODIMP    
 nsEditorAppCore::Copy()
 {  
-	nsresult	err = NS_OK;
+	nsresult	err = NS_NOINTERFACE;
 	
 	switch (mEditorType)
 	{
@@ -664,6 +793,7 @@ nsEditorAppCore::Copy()
 				if (htmlEditor)
 					err = htmlEditor->Copy();
 			}
+			break;
 		default:
 			err = NS_ERROR_NOT_IMPLEMENTED;
 	}
@@ -674,7 +804,7 @@ nsEditorAppCore::Copy()
 NS_IMETHODIMP    
 nsEditorAppCore::Paste()
 {  
-	nsresult	err = NS_OK;
+	nsresult	err = NS_NOINTERFACE;
 	
 	switch (mEditorType)
 	{
@@ -691,6 +821,7 @@ nsEditorAppCore::Paste()
 				if (htmlEditor)
 					err = htmlEditor->Paste();
 			}
+			break;
 		default:
 			err = NS_ERROR_NOT_IMPLEMENTED;
 	}
@@ -701,7 +832,7 @@ nsEditorAppCore::Paste()
 NS_IMETHODIMP    
 nsEditorAppCore::SelectAll()
 {  
-	nsresult	err = NS_OK;
+	nsresult	err = NS_NOINTERFACE;
 	
 	switch (mEditorType)
 	{
@@ -718,6 +849,7 @@ nsEditorAppCore::SelectAll()
 				if (htmlEditor)
 					err = htmlEditor->SelectAll();
 			}
+			break;
 		default:
 			err = NS_ERROR_NOT_IMPLEMENTED;
 	}
@@ -729,7 +861,7 @@ nsEditorAppCore::SelectAll()
 NS_IMETHODIMP
 nsEditorAppCore::InsertText(const nsString& textToInsert)
 {
-	nsresult	err = NS_OK;
+	nsresult	err = NS_NOINTERFACE;
 	
 	switch (mEditorType)
 	{
@@ -746,6 +878,7 @@ nsEditorAppCore::InsertText(const nsString& textToInsert)
 				if (htmlEditor)
 					err = htmlEditor->InsertText(textToInsert);
 			}
+			break;
 		default:
 			err = NS_ERROR_NOT_IMPLEMENTED;
 	}
@@ -757,7 +890,7 @@ nsEditorAppCore::InsertText(const nsString& textToInsert)
 NS_IMETHODIMP
 nsEditorAppCore::GetContentsAsText(nsString& aContentsAsText)
 {
-	nsresult	err = NS_OK;
+	nsresult	err = NS_NOINTERFACE;
 	
 	switch (mEditorType)
 	{
@@ -774,6 +907,7 @@ nsEditorAppCore::GetContentsAsText(nsString& aContentsAsText)
 				if (htmlEditor)
 					err = htmlEditor->OutputText(aContentsAsText);
 			}
+			break;
 		default:
 			err = NS_ERROR_NOT_IMPLEMENTED;
 	}
@@ -784,7 +918,7 @@ nsEditorAppCore::GetContentsAsText(nsString& aContentsAsText)
 NS_IMETHODIMP
 nsEditorAppCore::GetContentsAsHTML(nsString& aContentsAsHTML)
 {
-	nsresult	err = NS_OK;
+	nsresult	err = NS_NOINTERFACE;
 	
 	switch (mEditorType)
 	{
@@ -801,6 +935,7 @@ nsEditorAppCore::GetContentsAsHTML(nsString& aContentsAsHTML)
 				if (htmlEditor)
 					err = htmlEditor->OutputHTML(aContentsAsHTML);
 			}
+			break;
 		default:
 			err = NS_ERROR_NOT_IMPLEMENTED;
 	}
@@ -813,7 +948,7 @@ nsEditorAppCore::GetContentsAsHTML(nsString& aContentsAsHTML)
 NS_IMETHODIMP
 nsEditorAppCore::InsertLink()
 {
-	nsresult	err = NS_OK;
+	nsresult	err = NS_NOINTERFACE;
   nsString tmpString ("http://www.mozilla.org/editor/");
 
 	switch (mEditorType)
@@ -824,6 +959,7 @@ nsEditorAppCore::InsertLink()
 				if (htmlEditor)
 					err = htmlEditor->InsertLink(tmpString);
 			}
+			break;
 		case ePlainTextEditorType:
 		default:
 			err = NS_ERROR_NOT_IMPLEMENTED;
@@ -836,7 +972,7 @@ nsEditorAppCore::InsertLink()
 NS_IMETHODIMP
 nsEditorAppCore::InsertImage()
 {
-	nsresult	err = NS_OK;
+	nsresult	err = NS_NOINTERFACE;
 	
   nsString url ("http://www.mozilla.org/editor/images/pensplat.gif");
   nsString width("100");
@@ -854,6 +990,7 @@ nsEditorAppCore::InsertImage()
 				if (htmlEditor)
 					err = htmlEditor->InsertImage(url, width, height, hspace, hspace, border, alt, align);
 			}
+			break;
 		case ePlainTextEditorType:
 		default:
 			err = NS_ERROR_NOT_IMPLEMENTED;
@@ -862,6 +999,62 @@ nsEditorAppCore::InsertImage()
   return err;
 }
 
+
+NS_IMETHODIMP
+nsEditorAppCore::BeginBatchChanges()
+{
+	nsresult	err = NS_NOINTERFACE;
+	
+	switch (mEditorType)
+	{
+		case ePlainTextEditorType:
+			{
+				nsCOMPtr<nsITextEditor>	textEditor = do_QueryInterface(mEditor);
+				if (textEditor)
+					err = textEditor->BeginTransaction();
+			}
+			break;
+		case eHTMLTextEditorType:
+			{
+				nsCOMPtr<nsIHTMLEditor>	htmlEditor = do_QueryInterface(mEditor);
+				if (htmlEditor)
+					err = htmlEditor->BeginTransaction();
+			}
+			break;
+		default:
+			err = NS_ERROR_NOT_IMPLEMENTED;
+	}
+
+  return err;
+}
+
+NS_IMETHODIMP
+nsEditorAppCore::EndBatchChanges()
+{
+	nsresult	err = NS_NOINTERFACE;
+	
+	switch (mEditorType)
+	{
+		case ePlainTextEditorType:
+			{
+				nsCOMPtr<nsITextEditor>	textEditor = do_QueryInterface(mEditor);
+				if (textEditor)
+					err = textEditor->EndTransaction();
+			}
+			break;
+		case eHTMLTextEditorType:
+			{
+				nsCOMPtr<nsIHTMLEditor>	htmlEditor = do_QueryInterface(mEditor);
+				if (htmlEditor)
+					err = htmlEditor->EndTransaction();
+			}
+			break;
+		default:
+			err = NS_ERROR_NOT_IMPLEMENTED;
+	}
+
+  return err;
+}
 
 static PRInt32 MakeNewWindow(char* urlName)
 {
