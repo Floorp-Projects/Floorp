@@ -173,7 +173,6 @@ NS_IMETHODIMP mozXMLTerminal::SetHistory(PRInt32 aHistory)
   }
 }
 
-
 NS_IMETHODIMP mozXMLTerminal::GetPrompt(PRUnichar **aPrompt)
 {
   if (mXMLTermSession) {
@@ -399,9 +398,6 @@ NS_IMETHODIMP mozXMLTerminal::Activate(void)
     return NS_ERROR_FAILURE;
 
   // Get reference to presentation shell
-  if (mPresShell != nsnull)
-    return NS_ERROR_FAILURE;
-
   nsCOMPtr<nsIPresContext> presContext;
   result = mDocShell->GetPresContext(getter_AddRefs(presContext));
   if (NS_FAILED(result) || !presContext)
@@ -414,16 +410,19 @@ NS_IMETHODIMP mozXMLTerminal::Activate(void)
 
   // Get reference to DOMDocument
   nsCOMPtr<nsIDocument> document;
-  result = mPresShell->GetDocument(getter_AddRefs(document));
+  result = presShell->GetDocument(getter_AddRefs(document));
 
-  nsCOMPtr<nsIDOMDocument> domDocument = do_QueryInterface(document);
-  if (NS_FAILED(result) || !domDocument)
+  if (NS_FAILED(result) || !document)
     return NS_ERROR_FAILURE;
 
-  // Save references to DOMDocument and presentation shell
+  nsCOMPtr<nsIDOMDocument> domDocument = do_QueryInterface(document);
+  if (!domDocument)
+    return NS_ERROR_FAILURE;
+
+  // Save references to presentation shell and DOMDocument
   // (SVN: Should these be addref'ed and released in the destructor?)
-  mDOMDocument = domDocument;  // no addref
   mPresShell = presShell;      // no addref
+  mDOMDocument = domDocument;  // no addref
 
   // Instantiate and initialize XMLTermSession object
   mXMLTermSession = new mozXMLTermSession();
@@ -470,6 +469,11 @@ NS_IMETHODIMP mozXMLTerminal::Activate(void)
 
   // Save cookie
   mCookie = cookie;
+
+  // Resize XMLterm
+  result = Resize();
+  if (NS_FAILED(result))
+    return result;
 
   // Get the DOM event receiver for document
   nsCOMPtr<nsIDOMEventReceiver> eventReceiver;
@@ -664,8 +668,10 @@ NS_IMETHODIMP mozXMLTerminal::Poll(void)
   PRBool processedData;
 
   result = mXMLTermSession->ReadAll(mLineTermAux, processedData);
-  if (NS_FAILED(result))
+  if (NS_FAILED(result)) {
+    XMLT_WARNING("mozXMLTerminal::Poll: Warning - Error return 0x%x from ReadAll\n", result);
     return result;
+  }
 
   if (processedData && (mFirstInput.Length() > 0)) {
     // Send first input command line(s)
@@ -705,6 +711,7 @@ NS_IMETHODIMP mozXMLTerminal::GetDocument(nsIDOMDocument** aDoc)
 {
   if (!aDoc)
     return NS_ERROR_NULL_POINTER;
+
   *aDoc = nsnull;
 
   NS_PRECONDITION(mDOMDocument, "bad state, null mDOMDocument");
@@ -720,6 +727,7 @@ NS_IMETHODIMP mozXMLTerminal::GetDocShell(nsIDocShell** aDocShell)
 {
   if (!aDocShell)
     return NS_ERROR_NULL_POINTER;
+
   *aDocShell = nsnull;
 
   NS_PRECONDITION(mDocShell, "bad state, null mDocShell");
@@ -735,6 +743,7 @@ NS_IMETHODIMP mozXMLTerminal::GetPresShell(nsIPresShell** aPresShell)
 {
   if (!aPresShell)
     return NS_ERROR_NULL_POINTER;
+
   *aPresShell = nsnull;
 
   NS_PRECONDITION(mPresShell, "bad state, null mPresShell");
@@ -742,6 +751,49 @@ NS_IMETHODIMP mozXMLTerminal::GetPresShell(nsIPresShell** aPresShell)
     return NS_ERROR_NOT_INITIALIZED;
   return mPresShell->QueryInterface(NS_GET_IID(nsIPresShell),
                                     (void **)aPresShell);
+}
+
+
+/** Checks if supplied cookie is valid for XMLTerm
+ * @param aCookie supplied cookie string
+ * @param _retval true if supplied cookie matches XMLTerm cookie
+ */
+NS_IMETHODIMP mozXMLTerminal::MatchesCookie(const PRUnichar* aCookie,
+                                            PRBool *_retval)
+{
+  XMLT_LOG(mozXMLTerminal::MatchesCookie,20,("\n"));
+
+  if (!_retval)
+    return NS_ERROR_NULL_POINTER;
+
+  // Check if supplied cookie matches XMLTerm cookie
+  *_retval = mCookie.Equals(aCookie);
+
+  if (!(*_retval)) {
+    XMLT_ERROR("mozXMLTerminal::MatchesCookie: Error - Cookie mismatch\n");
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
+
+/** Resizes XMLterm to match a resized window.
+ */
+NS_IMETHODIMP mozXMLTerminal::Resize(void)
+{
+  nsresult result;
+
+  XMLT_LOG(mozXMLTerminal::Resize,20,("\n"));
+
+  if (!mXMLTermSession)
+    return NS_ERROR_FAILURE;
+
+  result = mXMLTermSession->Resize(mLineTermAux);
+  if (NS_FAILED(result))
+    return result;
+
+  return NS_OK;
 }
 
 

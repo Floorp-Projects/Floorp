@@ -120,6 +120,16 @@ public:
    * @param aPresShell (output) presentation shell
    */
   NS_IMETHOD GetPresShell(nsIPresShell** aPresShell) = 0;
+
+  /** Checks if supplied cookie is valid for XMLTerm
+   * @param aCookie supplied cookie string
+   * @param _retval true if supplied cookie matches XMLTerm cookie
+   */
+  NS_IMETHOD MatchesCookie(const PRUnichar* aCookie, PRBool *_retval) = 0;
+
+  /** Resizes XMLterm to match a resized window.
+   */
+  NS_IMETHOD Resize(void) = 0;
 };
 
 #define MOZXMLTERMINAL_CID                       \

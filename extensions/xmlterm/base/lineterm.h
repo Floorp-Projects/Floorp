@@ -63,7 +63,7 @@ extern "C" {
 /* LTERM module number (used for trace/log operations) */
 #define LTERM_TLOG_MODULE  1
 
-/* Initializes all LTERM operations;
+/** Initializes all LTERM operations;
  * needs to be called before any calls to lterm_new.
  * @return 0 on success, or -1 on error.
  *
@@ -90,7 +90,7 @@ int lterm_init(int messageLevel);
 
 int lterm_new();
 
-/* Opens line terminal indexed by LTERM for input/output and creates
+/** Opens line terminal indexed by LTERM for input/output and creates
  * a process attached to it to execute the command line contained in string
  * array ARGV.
  * Called from the adminstrative/output thread of LTERM.
@@ -162,7 +162,7 @@ int lterm_open(int lterm, char *const argv[], const char* cookie,
                lterm_callback_func_t callback_func, void *callback_data);
 
 
-/* Closes line terminal indexed by LTERM.
+/** Closes line terminal indexed by LTERM.
  * The default action is to block until active calls to lterm_write
  * and lterm_read to complete.
  * Called from the administrative/output thread of LTERM.
@@ -178,14 +178,14 @@ int lterm_close(int lterm);
 int lterm_delete(int lterm);
 
 
-/* Closes all LTERMs, but does not delete them.
+/** Closes all LTERMs, but does not delete them.
  * This may be used to free any resources associated with LTERMs for clean up.
  * The closed LTERMs should still be deleted, if possible.
  */
 void lterm_close_all(void);
 
 
-/* Set input echo flag for line terminal indexed by LTERM.
+/** Set input echo flag for line terminal indexed by LTERM.
  * Called from the output thread of LTERM.
  * @return 0 on success, or -1 on error.
  */
@@ -193,16 +193,18 @@ void lterm_close_all(void);
 int lterm_setecho(int lterm, int echo_flag);
 
 
-/* Resizes the line terminal indexed by LTERM.
+/** Resizes the line terminal indexed by LTERM to new row/column count.
  * Called from the output thread of LTERM.
  * @return 0 on success, or -1 on error.
  */
 
-int lterm_resize(int lterm, int rows, int cols,
-                            int xpix, int ypix);
+int lterm_resize(int lterm, int rows, int cols);
 
 
-/* Sets cursor position in line terminal indexed by LTERM.
+/** Sets cursor position in line terminal indexed by LTERM.
+ * NOT YET IMPLEMENTED
+ * Row numbers increase upward, starting from 0.
+ * Column numbers increase rightward, starting from 0.
  * Called from the output thread of LTERM.
  * @return 0 on success, or -1 on error.
  */
@@ -210,7 +212,7 @@ int lterm_resize(int lterm, int rows, int cols,
 int lterm_setcursor(int lterm, int row, int col);
 
 
-/* Writes supplied to Unicode string in BUF of length COUNT to
+/** Writes supplied to Unicode string in BUF of length COUNT to
  * line terminal indexed by LTERM.
  * (May be called from any thread, since it uses a pipe to communicate
  *  with the output thread.)
@@ -231,7 +233,7 @@ int lterm_setcursor(int lterm, int row, int col);
 int lterm_write(int lterm, const UNICHAR *buf, int count, int dataType);
 
 
-/* Completes meta input in line terminal indexed by LTERM with the
+/** Completes meta input in line terminal indexed by LTERM with the
  * supplied to Unicode string in BUF of length COUNT.
  * Called from the output thread of the LTERM.
  * @return 0 on success, or -1 on error.
@@ -240,7 +242,7 @@ int lterm_write(int lterm, const UNICHAR *buf, int count, int dataType);
 int lterm_metacomplete(int lterm, const UNICHAR *buf, int count);
 
 
-/* reads upto COUNT Unicode characters from a single line of output
+/** reads upto COUNT Unicode characters from a single line of output
  * from line terminal indexed by LTERM into BUF.
  * Called from the output thread of the LTERM.
  * Returns the number of characters read (>=0) on a successful read.
@@ -274,6 +276,8 @@ int lterm_metacomplete(int lterm, const UNICHAR *buf, int count);
  *
  * OPCODES ::= SCREENDATA BELL? ( OUTPUT | CLEAR | INSERT | DELETE | SCROLL )?
  * if ScreenMode data is being returned.
+ * If none of the flags OUTPUT ... SCROLL are set in screen mode,
+ * do nothing but position the cursor (and ring the bell, if need be).
  *
  * OPCODES ::= LINEDATA BELL? (  CLEAR
  *                             | ( PROMPT | OUTPUT)? INPUT ( NEWLINE HIDE? )?
@@ -289,8 +293,7 @@ int lterm_metacomplete(int lterm, const UNICHAR *buf, int count);
  *
  * BUF_ROW and BUF_COL denote the row and starting column at which to
  * display the data in BUF.
- * (If character count returned by lterm_read is zero, implying there is no
- *  data in BUF, then values of BUF_ROW and BUF_COL should be ignored.)
+ * (BUF_ROW and BUF_COL are not used for CLEAR option in screen/line mode)
  * In ScreenMode or LineMode, CURSOR_ROW and CURSOR_COL denote the final
  * cursor position after any data in BUF is displayed.
  *

@@ -202,6 +202,9 @@ mozXMLTermKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
       case nsIDOMKeyEvent::DOM_VK_DOWN:
         keyChar = U_CTL_N;
         break;
+      case nsIDOMKeyEvent::DOM_VK_ESCAPE:
+        keyChar = U_ESCAPE;
+        break;
       case nsIDOMKeyEvent::DOM_VK_TAB: // Consume TAB to avoid scroll problems
         keyChar = 0;
         break;

@@ -141,7 +141,7 @@ int ltermProcessOutput(struct lterms *lts, int *opcodes, int *opvals,
         /* Replace character and style info at current cursor location */
         j = lto->cursorRow*lts->nCols + lto->cursorCol;
 
-        assert(j < lts->screenSize);
+        assert(j < (lts->nRows * lts->nCols));
 
         lto->screenChar[j] = uch;
         lto->screenStyle[j] = ustyle;
@@ -375,6 +375,19 @@ int ltermProcessOutput(struct lterms *lts, int *opcodes, int *opvals,
     }
   }
 
+  if (lto->outputMode == LTERM1_SCREEN_MODE) {
+    char modifiedRows[81];
+    int showRows = (lts->nRows < 80) ? lts->nRows : 80;
+    for (j=0; j<showRows; j++) {
+      if (lto->modifiedCol[j] > -1)
+        modifiedRows[j] = 'M';
+      else
+        modifiedRows[j] = '.';
+    }
+    modifiedRows[showRows] = '\0';
+    LTERM_LOG(ltermProcessOutput,38,("modifiedRows=%s\n", modifiedRows));
+  }
+
   LTERM_LOG(ltermProcessOutput,31,("returned opcodes=0x%X\n", *opcodes));
 
   return 0;
@@ -397,7 +410,7 @@ void ltermClearOutputLine(struct lterms *lts)
 }
 
 
-/** Clears output screen buffer (allocating memory, if first time) */
+/** Clears output screen buffer (allocating memory, if first time/resized) */
 int ltermClearOutputScreen(struct lterms *lts)
 {
   struct LtermOutput *lto = &(lts->ltermOutput);
@@ -407,7 +420,9 @@ int ltermClearOutputScreen(struct lterms *lts)
 
   if (lto->screenChar == NULL) {
     /* Allocate memory for full screen */
-    lto->screenChar = (UNICHAR *) MALLOC(lts->screenSize * sizeof(UNICHAR));
+    int screenSize = lts->nRows * lts->nCols;
+
+    lto->screenChar = (UNICHAR *) MALLOC(screenSize * sizeof(UNICHAR));
 
     if (lto->screenChar == NULL) {
       LTERM_ERROR("ltermClearOutputScreen: Error - failed to allocate memory for chars\n");
@@ -415,7 +430,7 @@ int ltermClearOutputScreen(struct lterms *lts)
     }
 
     assert(lto->screenStyle == NULL);
-    lto->screenStyle = (UNISTYLE *) MALLOC(lts->screenSize * sizeof(UNISTYLE));
+    lto->screenStyle = (UNISTYLE *) MALLOC(screenSize * sizeof(UNISTYLE));
 
     if (lto->screenStyle == NULL) {
       LTERM_ERROR("ltermClearOutputScreen: Error - failed to allocate memory for style\n");

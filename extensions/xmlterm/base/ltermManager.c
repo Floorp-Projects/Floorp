@@ -308,10 +308,9 @@ int lterm_open(int lterm, char *const argv[], const char* cookie,
   lto->decodedChars = 0;
   lto->incompleteEscapeSequence = 0;
 
-  /* Set screen parameters (VT100) */
+  /* Set default screen size (VT100) */
   lts->nRows = 24;
   lts->nCols = 80;
-  lts->screenSize = lts->nRows * lts->nCols;
 
   /* Clear screen buffer */
   lto->screenChar  = NULL;
@@ -437,7 +436,7 @@ int lterm_open(int lterm, char *const argv[], const char* cookie,
       LTERM_OPEN_ERROR_RETURN(lterm,lts,
             "lterm_open: Error - PTY resizing failed\n")
     }
-#endif  /* NO_PTY */
+#endif  /* !NO_PTY */
 
     /* Copy PTY structure */
     lts->pty = ptyStruc;
@@ -689,7 +688,7 @@ int ltermClose(struct lterms *lts)
     /* Close PTY */
 #ifndef NO_PTY
     pty_close(&(lts->pty));
-#endif
+#endif  /* !NO_PTY */
 
   } else {
     /* Destroy process */
@@ -861,6 +860,111 @@ int lterm_setecho(int lterm, int echo_flag)
 
   lts->disabledInputEcho = !echo_flag;
   lts->restoreInputEcho = 0;
+
+  GLOBAL_UNLOCK;
+
+  return 0;
+}
+
+
+/** Resizes the line terminal indexed by LTERM to new row/column count.
+ * Called from the output thread of LTERM.
+ * @return 0 on success, or -1 on error.
+ */
+
+int lterm_resize(int lterm, int rows, int cols)
+{
+  struct lterms *lts;
+  struct LtermOutput *lto;
+
+  CHECK_IF_VALID_LTERM_NUMBER(lterm_resize,lterm)
+
+  LTERM_LOG(lterm_resize,10,("Resizing LTERM=%d, rows=%d, cols=%d\n",
+                             lterm, rows, cols));
+
+  if ((rows <= 0)  || (cols <= 0))
+    return -1;
+
+  GLOBAL_LOCK;
+
+  lts = ltermGlobal.termList[lterm];
+
+  if (lts == NULL || !lts->opened || lts->suspended) {
+    /* LTERM is deleted/closed/suspended */
+    if (lts == NULL)
+      LTERM_WARNING("lterm_resize: Warning - LTERM %d not active\n", lterm);
+    GLOBAL_UNLOCK;
+    return -2;
+  }
+
+  if ((rows == lts->nRows) && (cols == lts->nCols)) {
+    /* Nothing to do */
+    GLOBAL_UNLOCK;
+    return 0;
+  }
+
+  lto = &(lts->ltermOutput);
+
+  /* Free full screen buffers */
+  if (lto->screenChar != NULL)
+    FREE(lto->screenChar);
+
+  if (lto->screenStyle != NULL)
+    FREE(lto->screenStyle);
+
+  /* Clear screen buffer */
+  lto->screenChar  = NULL;
+  lto->screenStyle = NULL;
+
+  /* Resize screen */
+  lts->nRows = rows;
+  lts->nCols = cols;
+
+  if (lts->ptyMode) {
+    /* Resize PTY */
+#ifndef NO_PTY
+    if (pty_resize(&(lts->pty), lts->nRows, lts->nCols, 0, 0) != 0) {
+      GLOBAL_UNLOCK;
+      return -1;
+    }
+#endif  /* !NO_PTY */
+  }
+
+  GLOBAL_UNLOCK;
+
+  return 0;
+}
+
+
+/** Sets cursor position in line terminal indexed by LTERM.
+ * NOT YET IMPLEMENTED
+ * Row numbers increase upward, starting from 0.
+ * Column numbers increase rightward, starting from 0.
+ * Called from the output thread of LTERM.
+ * @return 0 on success, or -1 on error.
+ */
+
+int lterm_setcursor(int lterm, int row, int col)
+{
+  struct lterms *lts;
+
+  CHECK_IF_VALID_LTERM_NUMBER(lterm_setcursor,lterm)
+
+  LTERM_LOG(lterm_setcursor,10,
+            ("Setting cursor, LTERM=%d row=%d, col=%d (NOT YET IMPLEMENTED)\n",
+             lterm, row, col));
+
+  GLOBAL_LOCK;
+
+  lts = ltermGlobal.termList[lterm];
+
+  if (lts == NULL || !lts->opened || lts->suspended) {
+    /* LTERM is deleted/closed/suspended */
+    if (lts == NULL)
+      LTERM_WARNING("lterm_setcursor: Warning - LTERM %d not active\n", lterm);
+    GLOBAL_UNLOCK;
+    return -2;
+  }
 
   GLOBAL_UNLOCK;
 

@@ -13,6 +13,10 @@ PRE { font-family: monaco;
 SPAN.prompt      { color: blue }
 SPAN.command     { color: blue }
 
+/* Screen display */
+PRE.row   { margin: 0; padding-top: 0; padding-bottom: 0 }
+SPAN.row  { margin: 0; padding-top: 0; padding-bottom: 0 }
+
 /* Directory display */
 SPAN.plainfile   { font-family: monaco}
 SPAN.directory   { font-family: monaco; color: blue; cursor: hand }

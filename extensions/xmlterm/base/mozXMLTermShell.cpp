@@ -138,40 +138,44 @@ NS_IMETHODIMP mozXMLTermShell::GetCurrentEntryNumber(PRInt32 *aNumber)
 }
 
 
-NS_IMETHODIMP mozXMLTermShell::GetHistory(PRInt32 *aHistory)
+/** Sets command history buffer count
+ * @param aHistory history buffer count
+ * @param aCookie document.cookie string for authentication
+ */
+NS_IMETHODIMP mozXMLTermShell::SetHistory(PRInt32 aHistory,
+                                          const PRUnichar* aCookie)
 {
   if (mXMLTerminal) {
-    return mXMLTerminal->GetHistory(aHistory);
-  } else {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-}
+    nsresult result;
+    PRBool matchesCookie;
+    result = mXMLTerminal->MatchesCookie(aCookie, &matchesCookie);
+    if (NS_FAILED(result) || !matchesCookie)
+      return NS_ERROR_FAILURE;
 
-
-NS_IMETHODIMP mozXMLTermShell::SetHistory(PRInt32 aHistory)
-{
-  if (mXMLTerminal) {
     return mXMLTerminal->SetHistory(aHistory);
+
   } else {
     return NS_ERROR_NOT_INITIALIZED;
   }
 }
 
 
-NS_IMETHODIMP mozXMLTermShell::GetPrompt(PRUnichar **aPrompt)
+/** Sets command prompt
+ * @param aPrompt command prompt string (HTML)
+ * @param aCookie document.cookie string for authentication
+ */
+NS_IMETHODIMP mozXMLTermShell::SetPrompt(const PRUnichar* aPrompt,
+                                         const PRUnichar* aCookie)
 {
   if (mXMLTerminal) {
-    return mXMLTerminal->GetPrompt(aPrompt);
-  } else {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-}
+    nsresult result;
+    PRBool matchesCookie;
+    result = mXMLTerminal->MatchesCookie(aCookie, &matchesCookie);
+    if (NS_FAILED(result) || !matchesCookie)
+      return NS_ERROR_FAILURE;
 
-
-NS_IMETHODIMP mozXMLTermShell::SetPrompt(const PRUnichar* aPrompt)
-{
-  if (mXMLTerminal) {
     return mXMLTerminal->SetPrompt(aPrompt);
+
   } else {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -228,6 +232,28 @@ mozXMLTermShell::Init(nsIDOMWindow* aContentWin,
 }
 
 
+/** Closes XMLterm, freeing resources
+ * @param aCookie document.cookie string for authentication
+ */
+NS_IMETHODIMP
+mozXMLTermShell::Close(const PRUnichar* aCookie)
+{
+  XMLT_LOG(mozXMLTermShell::Close,10,("\n"));
+
+  if (mInitialized && mXMLTerminal) {
+    nsresult result;
+    PRBool matchesCookie;
+    result = mXMLTerminal->MatchesCookie(aCookie, &matchesCookie);
+    if (NS_FAILED(result) || !matchesCookie)
+      return NS_ERROR_FAILURE;
+
+    Finalize();
+  }
+
+  return NS_OK;
+}
+
+
 // De-initialize XMLTermShell and free resources
 NS_IMETHODIMP
 mozXMLTermShell::Finalize(void)
@@ -259,18 +285,29 @@ NS_IMETHODIMP mozXMLTermShell::Poll(void)
 }
 
 
+/** Resizes XMLterm to match a resized window.
+ */
+NS_IMETHODIMP mozXMLTermShell::Resize(void)
+{
+  if (!mXMLTerminal)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  return mXMLTerminal->Resize();
+}
+
+
 // Send string to LineTerm as if the user had typed it
-NS_IMETHODIMP mozXMLTermShell::SendText(const PRUnichar* buf,
-                                        const PRUnichar* cookie)
+NS_IMETHODIMP mozXMLTermShell::SendText(const PRUnichar* aString,
+                                        const PRUnichar* aCookie)
 {
   if (!mXMLTerminal)
     return NS_ERROR_FAILURE;
 
-  nsAutoString sendStr (buf);
+  nsAutoString sendStr (aString);
 
   XMLT_LOG(mozXMLTermShell::SendText,10,("length=%d\n", sendStr.Length()));
 
-  return mXMLTerminal->SendText(sendStr, cookie);
+  return mXMLTerminal->SendText(sendStr, aCookie);
 }
 
 

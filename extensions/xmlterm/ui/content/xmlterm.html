@@ -95,8 +95,7 @@
       function SetHistory() {
         var field = document.getElementById('HistoryValue');
         dump("SetHistory "+field.value+"\n");
-        xmltermshell.history = field.value;
-        field.value = xmltermshell.history;
+        xmltermshell.SetHistory(field.value, document.cookie);
         return (false);
       }
 

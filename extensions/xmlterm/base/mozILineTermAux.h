@@ -43,12 +43,6 @@ class mozILineTermAux : public mozILineTerm {
   NS_DEFINE_STATIC_IID_ACCESSOR(MOZILINETERMAUX_IID)
 
   // mozILineTerm interface
-  NS_IMETHOD GetCursorRow(PRInt32 *aCursorRow) = 0;
-  NS_IMETHOD SetCursorRow(PRInt32 aCursorRow) = 0;
-
-  NS_IMETHOD GetCursorColumn(PRInt32 *aCursorColumn) = 0;
-  NS_IMETHOD SetCursorColumn(PRInt32 aCursorColumn) = 0;
-
   NS_IMETHOD Open(const PRUnichar *command,
                   const PRUnichar *promptRegexp,
                   PRInt32 options, PRInt32 processType,
@@ -100,6 +94,12 @@ class mozILineTermAux : public mozILineTerm {
    */
   NS_IMETHOD CloseAllAux(void) = 0;
 
+  /** Resizes XMLterm to match a resized window.
+   * @param nRows number of rows
+   * @param nCols number of columns
+   */
+  NS_IMETHOD ResizeAux(PRInt32 nRows, PRInt32 nCols) = 0;
+
   /** Read output data and style strings and parameters from LineTerm
    * @param opcodes (output) output data descriptor bits (see lineterm.h)
    * @param opvals (output) output data value(s)
@@ -113,6 +113,17 @@ class mozILineTermAux : public mozILineTerm {
   NS_IMETHOD ReadAux(PRInt32 *opcodes, PRInt32 *opvals,
                      PRInt32 *buf_row, PRInt32 *buf_col,
                      PRUnichar **_retval, PRUnichar **retstyle) = 0;
+
+  NS_IMETHOD GetCookie(nsString& aCookie) = 0;
+
+  NS_IMETHOD GetCursorRow(PRInt32 *aCursorRow) = 0;
+  NS_IMETHOD SetCursorRow(PRInt32 aCursorRow) = 0;
+
+  NS_IMETHOD GetCursorColumn(PRInt32 *aCursorColumn) = 0;
+  NS_IMETHOD SetCursorColumn(PRInt32 aCursorColumn) = 0;
+
+  NS_IMETHOD GetEchoFlag(PRBool *aEchoFlag) = 0;
+  NS_IMETHOD SetEchoFlag(PRBool aEchoFlag) = 0;
 };
 
 // Factory for mozILineTermAux
