@@ -47,6 +47,10 @@
 /* *                                                                        * */
 /* *             0.5.3 - 06/21/2000 - G.Juyn                                * */
 /* *             - added speedtype to facilitate testing                    * */
+/* *             0.5.3 - 06/27/2000 - G.Juyn                                * */
+/* *             - added typedef for mng_size_t                             * */
+/* *             - changed size parameter for memory callbacks to           * */
+/* *               mng_size_t                                               * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -167,6 +171,8 @@ typedef unsigned char  mng_uint8;
 
 typedef double         mng_float;                /* basic float */
 
+typedef size_t         mng_size_t;               /* size field for memory allocation */
+
 typedef char *         mng_pchar;                /* string */
 typedef void *         mng_ptr;                  /* generic pointer */
 
@@ -280,9 +286,9 @@ typedef enum mng_speedtypes mng_speedtype;
 /* ************************************************************************** */
 
                                        /* memory management callbacks */
-typedef mng_ptr    MNG_DECL (*mng_memalloc)      (mng_uint32  iLen);
+typedef mng_ptr    MNG_DECL (*mng_memalloc)      (mng_size_t  iLen);
 typedef void       MNG_DECL (*mng_memfree)       (mng_ptr     iPtr,
-                                                  mng_uint32  iLen);
+                                                  mng_size_t  iLen);
 
                                        /* I/O management callbacks */
 typedef mng_bool   MNG_DECL (*mng_openstream)    (mng_handle  hHandle);
