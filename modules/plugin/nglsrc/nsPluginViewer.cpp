@@ -620,14 +620,17 @@ PluginListener::OnStartRequest(nsIURI* aURL, const char *contentType)
     return rv;
   }
   rv = mViewer->StartLoad(channel, mNextStream);
-  NS_RELEASE(channel);
-  if (NS_FAILED(rv)) return rv;
+
+  if (NS_FAILED(rv))
+  {
+    NS_RELEASE(channel);
+    return rv;
+  }
 #else
   mViewer->StartLoad(aURL, contentType, mNextStream);
 #endif
-  if (nsnull == mNextStream) {
+  if (nsnull == mNextStream) 
     return NS_ERROR_FAILURE;
-  }
 #ifdef NECKO
   return mNextStream->OnStartRequest(channel, ctxt);
 #else
