@@ -60,8 +60,6 @@ class nsIAtom;
   IBOutlet id mRenameSheet;
   IBOutlet NSTextField* mRenameTextField;
   
-  IBOutlet id mBookmarkInfoPanel;
-  
   NSString* mCachedHref;
   
   BookmarkInfoController* mBookmarkInfoController;
