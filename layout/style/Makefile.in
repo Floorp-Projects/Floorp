@@ -167,6 +167,7 @@ LOCAL_INCLUDES	= \
 		$(NULL)
 
 _FILES	= \
+	ua.css \
 	html.css \
 	quirk.css \
 	viewsource.css \
@@ -174,7 +175,7 @@ _FILES	= \
 	arrowd.gif \
 	$(NULL)
 
-GARBAGE		+= $(addprefix $(DIST)/bin/res/,$(_FILES)) $(DIST)/bin/res/ua.css
+GARBAGE		+= $(addprefix $(DIST)/bin/res/,$(_FILES))
 
 FORMS_CSS_SRC = $(srcdir)/forms.css
 PREPROCESS_FORMS_CSS = $(PERL) $(MOZILLA_DIR)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $(FORMS_CSS_SRC)
@@ -190,10 +191,8 @@ install:: $(DESTDIR)$(mozappdir)/res/forms.css
 
 libs:: $(_FILES)
 	$(INSTALL) $^ $(DIST)/bin/res
-	rm -f $(DIST)/bin/res/ua.css
-	$(NSINSTALL) $(srcdir)/ua.css $(DIST)/bin/res
 
-install:: $(_FILES) ua.css
+install:: $(_FILES)
 	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/res
 
 DEFINES += -D_IMPL_NS_LAYOUT
