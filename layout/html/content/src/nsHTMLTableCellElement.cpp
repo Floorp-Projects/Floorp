@@ -327,6 +327,8 @@ static nsGenericHTMLElement::EnumTable kCellScopeTable[] = {
   { 0 }
 };
 
+#define MAX_COLSPAN 1000
+
 NS_IMETHODIMP
 nsHTMLTableCellElement::StringToAttribute(nsIAtom* aAttribute,
                                    const nsString& aValue,
@@ -346,6 +348,11 @@ nsHTMLTableCellElement::StringToAttribute(nsIAtom* aAttribute,
   else if ((aAttribute == nsHTMLAtoms::colspan) ||
       (aAttribute == nsHTMLAtoms::rowspan)) {
     if (nsGenericHTMLElement::ParseValue(aValue, 1, aResult, eHTMLUnit_Integer)) {
+      PRInt32 val = aResult.GetIntValue();
+      if (val > MAX_COLSPAN) {
+        nsHTMLUnit unit = aResult.GetUnit();
+        aResult.SetIntValue(MAX_COLSPAN, unit);
+      }
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
