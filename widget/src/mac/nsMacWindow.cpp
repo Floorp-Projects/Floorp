@@ -72,18 +72,18 @@ nsMacWindow::~nsMacWindow()
 {
 	if (mWindowPtr)
 	{
-		nsRefData* theRefData = (nsRefData*)::GetWRefCon(mWindowPtr);
+//		nsRefData* theRefData = (nsRefData*)::GetWRefCon(mWindowPtr);
 
 		if (mWindowMadeHere)
 			::CloseWindow(mWindowPtr);
-		else
-			::SetWRefCon(mWindowPtr, theRefData->GetUserData());	// restore the refCon if we did not create the window
+//		else
+//			::SetWRefCon(mWindowPtr, theRefData->GetUserData());	// restore the refCon if we did not create the window
 
-		::SetWindowKind(mWindowPtr, ::GetWindowKind(mWindowPtr) & ~kRaptorWindowKindBit);
 
+		nsMacMessageSink::RemoveRaptorWindowFromList(mWindowPtr);
 		mWindowPtr = nsnull;
 
-		delete theRefData;
+//		delete theRefData;
 	}
 }
 
@@ -169,14 +169,15 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 	}
 	
 	// set the refData
-	nsRefData* theRefData = new nsRefData();	
-	if (theRefData == nsnull)
-		return NS_ERROR_OUT_OF_MEMORY;
-	theRefData->SetNSMacWindow(this);
-	theRefData->SetUserData(::GetWRefCon(mWindowPtr));	// save the actual refCon in case we did not create the window
-	::SetWRefCon(mWindowPtr, (long)theRefData);
+//	nsRefData* theRefData = new nsRefData();	
+//	if (theRefData == nsnull)
+//		return NS_ERROR_OUT_OF_MEMORY;
 
-	::SetWindowKind(mWindowPtr, ::GetWindowKind(mWindowPtr) | kRaptorWindowKindBit);
+//	theRefData->SetNSMacWindow(this);
+//	theRefData->SetUserData(::GetWRefCon(mWindowPtr));	// save the actual refCon in case we did not create the window
+//	::SetWRefCon(mWindowPtr, (long)theRefData);
+
+	nsMacMessageSink::AddRaptorWindowToList(mWindowPtr, this);
 
 	// reset the coordinates to (0,0) because it's the top level widget
 	nsRect bounds(0, 0, aRect.width, aRect.height);

@@ -56,17 +56,17 @@ const short kMinWindowHeight = 150;
 
 NS_WIDGET nsMacMessagePump::nsWindowlessMenuEventHandler nsMacMessagePump::gWindowlessMenuEventHandler = nsnull;
 
-
+/*
 // a small helper routine, inlined for efficiency
 bool IsUserWindow(WindowPtr);
 inline bool IsUserWindow(WindowPtr wp)
 {
 	return wp && ((::GetWindowKind(wp) & kRaptorWindowKindBit) != 0);
 }
+*/
 
 //=================================================================
 
-static long ConvertOSMenuResultToPPMenuResult(long menuResult);
 static long ConvertOSMenuResultToPPMenuResult(long menuResult)
 {
 	// Convert MacOS menu item to PowerPlant menu item because
@@ -428,7 +428,7 @@ void  nsMacMessagePump::DoMenu(EventRecord &anEvent, long menuResult)
 {
 	// The app can handle its menu commands here or
 	// in the nsNativeBrowserWindow and nsNativeViewerApp
-	if (IsUserWindow(::FrontWindow()))
+	if (mMessageSink->IsRaptorWindow(::FrontWindow()))
 	{
 		DispatchMenuCommandToRaptor(anEvent, menuResult);
 	}
@@ -488,12 +488,16 @@ void  nsMacMessagePump::DoIdle(EventRecord &anEvent)
 // DispatchOSEventToRaptor
 //
 //-------------------------------------------------------------------------
-void  nsMacMessagePump::DispatchOSEventToRaptor(
+PRBool  nsMacMessagePump::DispatchOSEventToRaptor(
 													EventRecord 	&anEvent,
 													WindowPtr			aWindow)
 {
-	if (aWindow && IsUserWindow(aWindow))
-		mMessageSink->DispatchOSEvent(anEvent, aWindow);
+	PRBool		handled = PR_FALSE;
+	
+	if (mMessageSink->IsRaptorWindow(aWindow))
+		handled = mMessageSink->DispatchOSEvent(anEvent, aWindow);
+		
+	return handled;
 }
 
 
@@ -502,12 +506,14 @@ void  nsMacMessagePump::DispatchOSEventToRaptor(
 // DispatchMenuCommandToRaptor
 //
 //-------------------------------------------------------------------------
-void nsMacMessagePump::DispatchMenuCommandToRaptor(
+PRBool nsMacMessagePump::DispatchMenuCommandToRaptor(
 													EventRecord 	&anEvent,
 													long					menuResult)
 {
-	WindowPtr whichWindow = ::FrontWindow();
-	if (whichWindow && IsUserWindow(whichWindow))
-		mMessageSink->DispatchMenuCommand(anEvent, menuResult);
+	PRBool		handled = PR_FALSE;
 
+	if (mMessageSink->IsRaptorWindow(::FrontWindow()))
+		handled = mMessageSink->DispatchMenuCommand(anEvent, menuResult);
+
+	return handled;
 }

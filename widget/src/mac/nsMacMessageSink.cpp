@@ -20,42 +20,112 @@
 #include "nsMacWindow.h"
 
 
-
-#pragma mark -
 //-------------------------------------------------------------------------
 //
-// DispatchOSEventToRaptor
+// DispatchOSEvent
+//
+//	Return PR_TRUE if the event was handled
 //
 //-------------------------------------------------------------------------
-NS_EXPORT void  nsMacMessageSink::DispatchOSEvent(
+NS_EXPORT PRBool nsMacMessageSink::DispatchOSEvent(
 													EventRecord 	&anEvent,
 													WindowPtr			aWindow)
 {
-	if (aWindow)
+	PRBool		eventHandled = PR_FALSE;
+	
+	nsMacWindow* raptorWindow = GetNSWindowFromMacWindow(aWindow);
+
+	if (raptorWindow)
 	{
-		nsRefData* refData = (nsRefData*)::GetWRefCon(aWindow);
-		nsMacWindow* raptorWindow = refData->GetNSMacWindow();
-		if (raptorWindow)
-			raptorWindow->HandleOSEvent(anEvent);
-	}
+		eventHandled = raptorWindow->HandleOSEvent(anEvent);
+  }
+  
+  return eventHandled;
 }
 
 
 //-------------------------------------------------------------------------
 //
-// DispatchMenuCommandToRaptor
+// DispatchMenuCommand
 //
 //-------------------------------------------------------------------------
-NS_EXPORT void nsMacMessageSink::DispatchMenuCommand(
+NS_EXPORT PRBool nsMacMessageSink::DispatchMenuCommand(
 													EventRecord 	&anEvent,
 													long					menuResult)
 {
-	WindowPtr whichWindow = ::FrontWindow();
-	if (whichWindow)
+	PRBool		eventHandled = PR_FALSE;
+
+	nsMacWindow* raptorWindow = GetNSWindowFromMacWindow(::FrontWindow());
+	
+	if (raptorWindow)
 	{
-		nsRefData* refData = (nsRefData*)::GetWRefCon(whichWindow);
-		nsMacWindow* raptorWindow = refData->GetNSMacWindow();
-		if (raptorWindow)
-			raptorWindow->HandleMenuCommand(anEvent, menuResult);
+		eventHandled = raptorWindow->HandleMenuCommand(anEvent, menuResult);
 	}
+  return eventHandled;
 }
+
+
+#pragma mark -
+
+//-------------------------------------------------------------------------
+//
+// GetNSWindowFromWindow
+//
+//-------------------------------------------------------------------------
+NS_EXPORT nsMacWindow *nsMacMessageSink::GetNSWindowFromMacWindow(WindowPtr inWindow)
+{
+	if (!inWindow) return nsnull;
+	
+	nsMacWindow	*foundMacWindow = GetRaptorWindowList()[inWindow];
+	return foundMacWindow;
+}
+
+//-------------------------------------------------------------------------
+//
+// GetRaptorWindowList
+//
+//-------------------------------------------------------------------------
+/* static */nsMacMessageSink::TWindowMap& nsMacMessageSink::GetRaptorWindowList()
+{
+	static TWindowMap		sRaptorWindowList;
+
+	return sRaptorWindowList;
+}
+
+
+//-------------------------------------------------------------------------
+//
+// IsRaptorWindow
+//
+//-------------------------------------------------------------------------
+NS_EXPORT PRBool nsMacMessageSink::IsRaptorWindow(WindowPtr inWindow)
+{
+	if (!inWindow) return PR_FALSE;
+	return (GetRaptorWindowList()[inWindow] != nsnull);
+}
+
+
+//-------------------------------------------------------------------------
+//
+// AddRaptorWindowToList
+//
+//-------------------------------------------------------------------------
+/* static */ void nsMacMessageSink::AddRaptorWindowToList(WindowPtr wind, nsMacWindow* theRaptorWindow)
+{
+	TWindowMap&		windowList = GetRaptorWindowList();
+	windowList[wind] = theRaptorWindow;
+}
+
+
+//-------------------------------------------------------------------------
+//
+// RemoveRaptorWindowFromList
+//
+//-------------------------------------------------------------------------
+/* static */ void	nsMacMessageSink::RemoveRaptorWindowFromList(WindowPtr wind)
+{
+	TWindowMap&		windowList = GetRaptorWindowList();
+	windowList.erase(wind);
+}
+
+
