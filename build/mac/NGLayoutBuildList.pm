@@ -372,6 +372,7 @@ sub BuildClientDist()
 
     #LIBJAR
     _InstallFromManifest(":mozilla:modules:libjar:MANIFEST",                         "$distdirectory:libjar:");
+    _InstallFromManifest(":mozilla:modules:libjar:MANIFEST_IDL",						"$distdirectory:idl:");
 
 	#LIBUTIL
     _InstallFromManifest(":mozilla:modules:libutil:public:MANIFEST",					"$distdirectory:libutil:");
@@ -728,6 +729,7 @@ sub BuildIDLProjects()
 
 	BuildIDLProject(":mozilla:xpcom:macbuild:XPCOMIDL.mcp", 						"xpcom");
 	BuildIDLProject(":mozilla:modules:libpref:macbuild:libprefIDL.mcp",				"libpref");
+	BuildIDLProject(":mozilla:modules:libjar:macbuild:libjarIDL.mcp",				"libjar");
 	BuildIDLProject(":mozilla:js:macbuild:XPConnectIDL.mcp", 						"xpconnect");
 	BuildIDLProject(":mozilla:dom:macbuild:domIDL.mcp", 							"dom");
 	BuildIDLProject(":mozilla:widget:macbuild:widgetIDL.mcp", 						"widget");
