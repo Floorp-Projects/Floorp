@@ -1062,6 +1062,8 @@ NS_IMETHODIMP nsDocShell::Reload(PRInt32 aReloadType)
 
    // XXXTAB Convert reload type to our type
    loadType type = loadReloadNormal;
+   if ( aReloadType == nsIWebNavigation::reloadBypassProxyAndCache )
+   	type = loadReloadBypassProxyAndCache;
    
    NS_ENSURE_SUCCESS(InternalLoad(mCurrentURI, mReferrerURI, nsnull, nsnull, 
       type), NS_ERROR_FAILURE);
@@ -1629,6 +1631,7 @@ NS_IMETHODIMP nsDocShell::SetTitle(const PRUnichar* aTitle)
       mGlobalHistory->SetPageTitle(url, aTitle);
       }
 
+
    // Update SessionHistory too with Title. Otherwise entry for current page
    // has previous page's title.
    if(mSessionHistory)
@@ -1641,6 +1644,7 @@ NS_IMETHODIMP nsDocShell::SetTitle(const PRUnichar* aTitle)
          shEntry->SetTitle(mTitle.GetUnicode());      
       }
    
+
    return NS_OK;
 }
 
@@ -2530,6 +2534,44 @@ NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI, nsIURI* aReferrerURI,
    nsLoadFlags loadAttribs = 0;
    channel->GetLoadAttributes(&loadAttribs);
    loadAttribs |= nsIChannel::LOAD_DOCUMENT_URI;
+  
+  	switch ( mLoadType )
+  	{
+  	 case loadHistory:
+  	 		loadAttribs |= nsIChannel::VALIDATE_NEVER;
+  	 		break;
+  	 		
+  	 case loadReloadNormal:
+  	 			loadAttribs |= nsIChannel::FORCE_VALIDATION;
+  	 		break;
+  	 		
+  	 case loadReloadBypassProxyAndCache:
+  	 		loadAttribs |= nsIChannel::FORCE_RELOAD;
+  	 		break;
+	   case loadNormal:
+		   // Set cache checking flags
+		   if ( mPrefs )
+		   {
+		   		PRInt32 prefSetting;
+		   		if ( NS_SUCCEEDED( 	mPrefs->GetIntPref( "browser.cache.check_doc_frequency" , &prefSetting) ) )
+		   		{
+		   			switch ( prefSetting )
+		   			{
+		   				case 0:
+		   					loadAttribs |= nsIChannel::VALIDATE_ONCE_PER_SESSION;
+		   					break;
+		   				case 1:
+		   					loadAttribs |= nsIChannel::VALIDATE_ALWAYS;
+		   					break;
+		   				case 2:
+		   					loadAttribs |= nsIChannel::VALIDATE_NEVER;
+		   					break;
+		   			}
+		   		}
+			   }
+			break;
+   }
+   
    channel->SetLoadAttributes(loadAttribs);
 
    nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(channel));
@@ -2587,7 +2629,7 @@ NS_IMETHODIMP nsDocShell::OnLoadingSite(nsIChannel* aChannel)
       case loadReloadNormal:
       case loadReloadBypassCache:
       case loadReloadBypassProxy:
-      case loadRelaodBypassProxyAndCache:
+      case loadReloadBypassProxyAndCache:
          updateHistory = PR_FALSE;
          break;
 
