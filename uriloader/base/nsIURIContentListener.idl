@@ -33,7 +33,6 @@
 #include "nsISupports.idl"
 #include "nsIURILoader.idl"
 
-interface nsIProtocolHandler;
 interface nsIRequest;
 interface nsIStreamListener;
 interface nsIURI;
@@ -49,18 +48,6 @@ interface nsIURIContentListener : nsISupports
 	  return value --> specifies if the open should be aborted.  
   */
   boolean onStartURIOpen(in nsIURI aURI);
-
-  /* Give the content listener first crack at forcing us to use
-     a specific content handler. Content listener's do not need to 
-     support this method if they want the uri dispatcher to find the
-     default protocol handler from the registry. 
-
-	 aURI --> the uri we need a protocol handler for
-	 aProtocolHandler --> the protocol handler you want the uri loader
-	 to use. You can pass back null if you want the uri loader to look
-	 up an appropriate protocol handler
-   */
-  nsIProtocolHandler getProtocolHandler(in nsIURI aURI);
 
   /* doContent --> When the content listener is expected to process the
      content, the uri loader calls doContent. doContent needs to return a 

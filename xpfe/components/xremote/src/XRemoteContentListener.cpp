@@ -42,14 +42,6 @@ XRemoteContentListener::OnStartURIOpen(nsIURI *aURI, PRBool *_retval)
 }
 
 NS_IMETHODIMP
-XRemoteContentListener::GetProtocolHandler(nsIURI *aURI,
-					   nsIProtocolHandler **_retval)
-{
-  *_retval = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 XRemoteContentListener::DoContent(const char *aContentType,
 				  nsURILoadCommand aCommand,
 				  nsIRequest *request,

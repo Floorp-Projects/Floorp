@@ -1280,14 +1280,6 @@ nsExternalAppHandler::OnStartURIOpen(nsIURI* aURI, PRBool* aAbortOpen)
 }
 
 NS_IMETHODIMP
-nsExternalAppHandler::GetProtocolHandler(nsIURI *aURI,
-                                         nsIProtocolHandler **aProtocolHandler)
-{
-  *aProtocolHandler = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsExternalAppHandler::IsPreferred(const char * aContentType,
                                   nsURILoadCommand aCommand,
                                   char ** aDesiredContentType,
