@@ -21,7 +21,7 @@
 
 DEPTH = ../../..
 
-LIBRARY_NAME = DisassembleX86
+LIBRARY_NAME = EFDisassemble
 
 CSRCS = 	XDisAsm.c				\
 			$(NULL)	
