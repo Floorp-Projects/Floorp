@@ -44,4 +44,3 @@ date >> $1/README
 # notify the user about what's left todo
 echo "$1 theme has been created.  now you have to do cvs add and cvs commit.  (don't forget -kb for binary files)"
 echo "you also have to fix mozilla/theme/makefiles, mozilla/themes/makefile.win, mozilla/themes/Makefile.in and mozilla/build/mac/NGLayoutBuildList.pm to add your $1 to the build."
-
