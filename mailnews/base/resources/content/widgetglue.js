@@ -276,7 +276,13 @@ function MsgEmptyTrash()
             var folder;
             folder = folderList[0];
             if (folder)
+			{
                 messenger.EmptyTrash(tree.database, folder);
+				if(IsSpecialFolderSelected('Trash'))
+				{
+					RefreshThreadTreeView()
+				}
+			}
         }
     }
 }

@@ -475,3 +475,25 @@ function OpenToFolder(item, folderURI)
 	}
 	return null;
 }
+
+function IsSpecialFolderSelected(folderName)
+{
+	var selectedFolder = GetThreadTreeFolder();
+	var id = selectedFolder.getAttribute('ref');
+	var folderResource = RDF.GetResource(id);
+	if(!folderResource)
+		return false;
+
+	var folderTree = GetFolderTree();
+	var db = folderTree.database;
+	var db = db.QueryInterface(Components.interfaces.nsIRDFDataSource);
+
+	var property = RDF.GetResource('http://home.netscape.com/NC-rdf#SpecialFolder');
+	var result = db.GetTarget(folderResource, property , true);
+	result = result.QueryInterface(Components.interfaces.nsIRDFLiteral);
+	if(result.Value == folderName)
+		return true;
+
+	return false;
+}
+
