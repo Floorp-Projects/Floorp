@@ -7,7 +7,7 @@
 <!ENTITY  diskCache.label               "Size:">
 <!ENTITY  diskCache.accesskey           "S">
 <!ENTITY  mbytes                        "MB">
-<!ENTITY  diskCacheFolder.label         "Cache Folder:">
+<!ENTITY  diskCacheFolder.label         "Cache Folder Location:">
 <!ENTITY  clearDiskCache.label          "Clear Cache">
 <!ENTITY  clearDiskCache.accesskey      "l">
 <!ENTITY  chooseDiskCacheFolder.label   "Choose Folder...">
