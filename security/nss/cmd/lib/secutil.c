@@ -1533,6 +1533,43 @@ secu_PrintX509InvalidDate(FILE *out, SECItem *value, char *msg, int level)
     return (rv);
 }
 
+static SECStatus
+PrintExtKeyUsageExten  (FILE *out, SECItem *value, char *msg, int level)
+{
+  CERTOidSequence *os;
+  SECItem **op;
+
+  SECU_Indent(out, level); fprintf(out, "Extended Key Usage Extension:\n");
+
+  os = CERT_DecodeOidSequence(value);
+  if( (CERTOidSequence *)NULL == os ) {
+    return SECFailure;
+  }
+
+  if( (SECItem **)NULL == op ) {
+    return SECFailure;
+  }
+
+  for( op = os->oids; *op; op++ ) {
+    SECOidData *od = SECOID_FindOID(*op);
+    
+    if( (SECOidData *)NULL == od ) {
+      SECU_Indent(out, level+1);
+      SECU_PrintAsHex(out, *op, "Unknown:", level+2);
+      secu_Newline(out);
+      continue;
+    }
+
+    SECU_Indent(out, level+1);
+    if( od->desc ) fprintf(out, "%s", od->desc);
+    else SECU_PrintAsHex(out, &od->oid, "", level+2);
+
+    secu_Newline(out);
+  }
+
+  return SECSuccess;
+}
+
 char *
 itemToString(SECItem *item)
 {
@@ -1763,7 +1800,10 @@ SECU_PrintExtensions(FILE *out, CERTCertExtension **extensions,
 		case SEC_OID_X509_POLICY_MAPPINGS:
 		case SEC_OID_X509_POLICY_CONSTRAINTS:
 		case SEC_OID_X509_AUTH_KEY_ID:
+            goto defualt;
 		case SEC_OID_X509_EXT_KEY_USAGE:
+            PrintExtKeyUsageExten(out, tmpitem, "", level+1);
+            break;
 		case SEC_OID_X509_AUTH_INFO_ACCESS:
 
 		case SEC_OID_X509_CRL_NUMBER:
@@ -1793,6 +1833,7 @@ SECU_PrintExtensions(FILE *out, CERTCertExtension **extensions,
 		case SEC_OID_EXT_KEY_USAGE_TIME_STAMP:
 
 	      default:
+          defualt:
 		/*SECU_PrintAsHex(out, tmpitem, "Data", level+1); */
 		secu_PrintAny(out, tmpitem, "Data", level+1);
 		break;
@@ -2719,6 +2760,11 @@ printFlags(FILE *out, unsigned int flags, int level)
     if ( flags & CERTDB_TRUSTED_CLIENT_CA ) {
 	SECU_Indent(out, level); fprintf(out, "Trusted Client CA\n");
     }
+#ifdef DEBUG
+    if ( flags & CERTDB_GOVT_APPROVED_CA ) {
+	SECU_Indent(out, level); fprintf(out, "Step-up\n");
+    }
+#endif /* DEBUG */
 }
 
 void
