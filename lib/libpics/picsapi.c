@@ -21,7 +21,7 @@
  * Coded by Lou Montulli
  */
 #if defined(CookieManagement)
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(XP_MAC)
 #define TRUST_LABELS 1
 #endif
 #endif
@@ -1335,7 +1335,7 @@ Bool ISODateToLocalTime( DVal_t *Value, PRTime *LocalDate )
 		tm.tm_month  = Value->month - 1;
 		tm.tm_mday	 = Value->day;
 		tm.tm_hour	 = Value->hour;
-		tm.tm_min	 = min(Value->minute, 59 );
+		tm.tm_min	 = HTMIN(Value->minute, 59 );
 		/* the adjustment for GMT offset to the local time zone in seconds */
 	    tm.tm_params.tp_gmt_offset = Value->timeZoneHours *3600 + Value->timeZoneMinutes * 60;
 		*LocalDate = PR_ImplodeTime(&tm);
@@ -1586,8 +1586,12 @@ TrustLabel *TL_Construct()
 		ALabel->recipients = 0;	
 		ALabel->szTrustAuthority = NULL;	
 		ALabel->isGeneric = FALSE;	
-		ALabel->isSigned = FALSE;	
+		ALabel->isSigned = FALSE;
+		#ifdef XP_MAC
+		ALabel->ExpDate.hi = ALabel->ExpDate.lo = 0;
+		#else	
 		ALabel->ExpDate = 0;	
+		#endif
 		ALabel->signatory = NULL;	
 		ALabel->domainName = NULL;	
 		ALabel->path = NULL;  
