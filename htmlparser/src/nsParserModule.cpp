@@ -46,7 +46,6 @@
 #include "nsParser.h"
 #include "CNavDTD.h"
 #include "COtherDTD.h"
-#include "COtherDTD.h"
 #include "nsViewSourceHTML.h"
 #include "nsHTMLEntities.h"
 #include "nsHTMLTokenizer.h"
@@ -68,7 +67,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsExpatDriver)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsParser)
 NS_GENERIC_FACTORY_CONSTRUCTOR(CNavDTD)
-NS_GENERIC_FACTORY_CONSTRUCTOR(COtherDTD)
 NS_GENERIC_FACTORY_CONSTRUCTOR(CTransitionalDTD)
 NS_GENERIC_FACTORY_CONSTRUCTOR(CViewSourceHTML)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsParserService)
@@ -82,13 +80,11 @@ static const nsModuleComponentInfo gComponents[] = {
 
   { "Parser", NS_PARSER_CID, NULL, nsParserConstructor },
   { "Navigator HTML DTD", NS_CNAVDTD_CID, NULL, CNavDTDConstructor },
-  { "OTHER DTD", NS_COTHER_DTD_CID, NULL, COtherDTDConstructor },
   { "Transitional DTD", NS_CTRANSITIONAL_DTD_CID, NULL,
     CTransitionalDTDConstructor },
   { "ViewSource DTD", NS_VIEWSOURCE_DTD_CID, NULL, CViewSourceHTMLConstructor },
   { "ParserService", NS_PARSERSERVICE_CID, NULL, nsParserServiceConstructor }
 };
-#define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
 
 static PRBool gInitialized = PR_FALSE;
 

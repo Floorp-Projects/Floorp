@@ -82,7 +82,6 @@ public:
     nsCOMPtr<nsIRequest> mRequest; // provided by necko to differnciate different input streams
                                    // why is mRequest strongly referenced? see bug 102376.
     nsIDTD*              mDTD;
-    nsIDTD*              mValidator;
     nsIRequestObserver*  mListener;
     char*                mTransferBuffer;
     void*                mKey;

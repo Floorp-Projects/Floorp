@@ -129,11 +129,7 @@
 #include "TextEditorTest.h"
 #include "nsEditorUtils.h"
 #include "nsIPref.h"
-
-// HACK - CID for NS_CTRANSITIONAL_DTD_CID so that we can get at transitional dtd
-#define NS_CTRANSITIONAL_DTD_CID \
-{ 0x4611d482, 0x960a, 0x11d4, { 0x8e, 0xb0, 0xb6, 0x17, 0x66, 0x1b, 0x6f, 0x7c } }
-
+#include "nsParserCIID.h"
 
 static NS_DEFINE_CID(kHTMLEditorCID,  NS_HTMLEDITOR_CID);
 static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
