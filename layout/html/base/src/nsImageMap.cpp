@@ -952,22 +952,6 @@ nsImageMap::IsAncestorOf(nsIContent* aContent,
 }
 
 void
-nsImageMap::ContentChanged(nsIDocument *aDocument,
-                           nsIContent* aContent,
-                           nsISupports* aSubContent)
-{
-  // If the parent of the changing content node is our map then update
-  // the map.
-  nsIContent* parent = aContent->GetParent();
-  if (parent) {
-    if ((parent == mMap) || 
-        (mContainsBlockContents && IsAncestorOf(parent, mMap))) {
-      UpdateAreas();
-    }
-  }
-}
-
-void
 nsImageMap::MaybeUpdateAreas(nsIContent *aContent)
 {
   if (aContent == mMap || 

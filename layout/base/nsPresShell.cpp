@@ -1212,8 +1212,9 @@ public:
   virtual void EndUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType);
   virtual void BeginLoad(nsIDocument* aDocument);
   virtual void EndLoad(nsIDocument* aDocument);
-  virtual void ContentChanged(nsIDocument* aDocument, nsIContent* aContent,
-                              nsISupports* aSubContent);
+  virtual void CharacterDataChanged(nsIDocument* aDocument,
+                                    nsIContent* aContent,
+                                    PRBool aAppend);
   virtual void ContentStatesChanged(nsIDocument* aDocument,
                                     nsIContent* aContent1,
                                     nsIContent* aContent2,
@@ -5186,12 +5187,12 @@ PresShell::GetReflowBatchingStatus(PRBool* aIsBatching)
 }
 
 void
-PresShell::ContentChanged(nsIDocument *aDocument,
-                          nsIContent*  aContent,
-                          nsISupports* aSubContent)
+PresShell::CharacterDataChanged(nsIDocument *aDocument,
+                                nsIContent*  aContent,
+                                PRBool aAppend)
 {
   WillCauseReflow();
-  mFrameConstructor->ContentChanged(mPresContext, aContent, aSubContent);
+  mFrameConstructor->CharacterDataChanged(mPresContext, aContent, aAppend);
   VERIFY_STYLE_TREE;
   DidCauseReflow();
 }

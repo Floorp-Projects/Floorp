@@ -81,12 +81,12 @@ public:
   Init(nsIPresContext*  aPresContext,
        nsIContent*      aContent,
        nsIFrame*        aParent,
-       nsStyleContext* aContext,
+       nsStyleContext*  aContext,
        nsIFrame*        aPrevInFlow);
 
-  NS_IMETHOD  ContentChanged(nsIPresContext* aPresContext,
-                             nsIContent*     aChild,
-                             nsISupports*    aSubContent);
+  NS_IMETHOD  CharacterDataChanged(nsIPresContext* aPresContext,
+                                   nsIContent*     aChild,
+                                   nsISupports*    aAppend);
 
   NS_IMETHOD  SetSelected(nsIPresContext* aPresContext,
                           nsIDOMRange*    aRange,
@@ -241,12 +241,12 @@ nsSVGGlyphFrame::Init(nsIPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGGlyphFrame::ContentChanged(nsIPresContext* aPresContext,
-                                nsIContent*     aChild,
-                                nsISupports*    aSubContent)
+nsSVGGlyphFrame::CharacterDataChanged(nsIPresContext* aPresContext,
+                                      nsIContent*     aChild,
+                                      PRBool          aAppend)
 {
 #ifdef DEBUG
-//  printf("** nsSVGGlyphFrame::ContentChanged\n");
+//  printf("** nsSVGGlyphFrame::CharacterDataChanged\n");
 #endif
   nsISVGOuterSVGFrame* outerSVGFrame = GetOuterSVGFrame();
   if (!outerSVGFrame) {

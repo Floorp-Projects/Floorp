@@ -5770,7 +5770,7 @@ nsTypedSelection::RemoveAllRanges()
 
   return mFrameSelection->NotifySelectionListeners(GetType());
   // Also need to notify the frames!
-  // PresShell::ContentChanged should do that on DocumentChanged
+  // PresShell::CharacterDataChanged should do that on DocumentChanged
 }
 
 /** AddRange adds the specified range to the selection

@@ -2223,20 +2223,12 @@ nsFrame::TrimTrailingWhiteSpace(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsFrame::ContentChanged(nsIPresContext* aPresContext,
-                        nsIContent*     aChild,
-                        nsISupports*    aSubContent)
+nsFrame::CharacterDataChanged(nsIPresContext* aPresContext,
+                              nsIContent*     aChild,
+                              PRBool          aAppend)
 {
-  nsresult rv = NS_OK;
-  nsIPresShell *shell = aPresContext->GetPresShell();
-
-  if (shell) {
-    nsHTMLReflowCommand* reflowCmd;
-    rv = NS_NewHTMLReflowCommand(&reflowCmd, this, eReflowType_ContentChanged);
-    if (NS_SUCCEEDED(rv))
-      shell->AppendReflowCommand(reflowCmd);
-  }
-  return rv;
+  NS_NOTREACHED("should only be called for text frames");
+  return NS_OK;
 }
 
 NS_IMETHODIMP

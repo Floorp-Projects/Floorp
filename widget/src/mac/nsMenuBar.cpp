@@ -631,7 +631,7 @@ nsMenuBar::EndUpdate( nsIDocument * aDocument, nsUpdateType aUpdateType )
 }
 
 NS_IMETHODIMP
-nsMenuBar::ContentChanged( nsIDocument * aDocument, nsIContent * aContent, nsISupports * aSubContent)
+nsMenuBar::CharacterDataChanged( nsIDocument * aDocument, nsIContent * aContent, PRBool aAppend)
 {
   return NS_OK;
 }

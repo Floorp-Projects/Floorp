@@ -400,9 +400,9 @@ public:
                        nsPoint& aPoint,
                        PRInt32& aCursor);
 
-  NS_IMETHOD ContentChanged(nsIPresContext* aPresContext,
-                            nsIContent*     aChild,
-                            nsISupports*    aSubContent);
+  NS_IMETHOD CharacterDataChanged(nsIPresContext* aPresContext,
+                                  nsIContent*     aChild,
+                                  PRBool          aAppend);
 
   NS_IMETHOD GetNextInFlow(nsIFrame** aNextInFlow) const {
     *aNextInFlow = mNextInFlow;
@@ -1364,25 +1364,18 @@ nsTextFrame::GetLastInFlow() const
 }
 
 NS_IMETHODIMP
-nsTextFrame::ContentChanged(nsIPresContext* aPresContext,
-                            nsIContent*     aChild,
-                            nsISupports*    aSubContent)
+nsTextFrame::CharacterDataChanged(nsIPresContext* aPresContext,
+                                  nsIContent*     aChild,
+                                  PRBool          aAppend)
 {
   nsIFrame* targetTextFrame = this;
 
   PRBool markAllDirty = PR_TRUE;
-  if (aSubContent) {
-    nsCOMPtr<nsITextContentChangeData> tccd = do_QueryInterface(aSubContent);
-    if (tccd) {
-      nsITextContentChangeData::ChangeType type;
-      tccd->GetChangeType(&type);
-      if (nsITextContentChangeData::Append == type) {
-        markAllDirty = PR_FALSE;
-        nsTextFrame* frame = (nsTextFrame*)GetLastInFlow();
-        frame->mState |= NS_FRAME_IS_DIRTY;
-        targetTextFrame = frame;
-      }
-    }
+  if (aAppend) {
+    markAllDirty = PR_FALSE;
+    nsTextFrame* frame = (nsTextFrame*)GetLastInFlow();
+    frame->mState |= NS_FRAME_IS_DIRTY;
+    targetTextFrame = frame;
   }
 
   if (markAllDirty) {
@@ -5308,7 +5301,7 @@ nsTextFrame::Reflow(nsIPresContext*          aPresContext,
   
   // We can avoid actually measuring the text if:
   // - this is a resize reflow
-  // - we're not dirty (see ContentChanged() function)
+  // - we're not dirty (see CharacterDataChanged() function)
   // - we don't have a next in flow
   // - the previous reflow successfully reflowed all text in the
   //   available space

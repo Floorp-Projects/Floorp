@@ -42,7 +42,6 @@
 #include "nsIDOMRange.h"
 #include "nsIDOMDocument.h"
 #include "nsRange.h"
-#include "nsTextContentChangeData.h"
 #include "nsISelection.h"
 #include "nsISelectionPrivate.h"
 #include "nsReadableUtils.h"
@@ -427,19 +426,7 @@ nsGenericDOMDataNode::AppendData(const nsAString& aData)
 
   // Trigger a reflow
   if (mDocument) {
-    // This seems bad, why do we need to *allocate* a
-    // nsTextContentChangeData thingy here? Could it not be on the stack?
-
-    nsTextContentChangeData* tccd = nsnull;
-    rv = NS_NewTextContentChangeData(&tccd);
-    if (NS_SUCCEEDED(rv)) {
-      tccd->SetData(nsITextContentChangeData::Append, length,
-                    aData.Length());
-      mDocument->ContentChanged(this, tccd);
-      NS_RELEASE(tccd);
-    } else {
-      mDocument->ContentChanged(this, nsnull);
-    }
+    mDocument->CharacterDataChanged(this, PR_TRUE);
   }
 
   return rv;
@@ -1128,7 +1115,7 @@ nsGenericDOMDataNode::SetText(const PRUnichar* aBuffer,
 
   // Trigger a reflow
   if (aNotify && mDocument) {
-    mDocument->ContentChanged(this, nsnull);
+    mDocument->CharacterDataChanged(this, PR_FALSE);
   }
   return NS_OK;
 }
@@ -1163,7 +1150,7 @@ nsGenericDOMDataNode::SetText(const char* aBuffer, PRInt32 aLength,
 
   // Trigger a reflow
   if (aNotify && mDocument) {
-    mDocument->ContentChanged(this, nsnull);
+    mDocument->CharacterDataChanged(this, PR_FALSE);
   }
 
   return NS_OK;
@@ -1193,7 +1180,7 @@ nsGenericDOMDataNode::SetText(const nsAString& aStr,
 
   // Trigger a reflow
   if (aNotify && mDocument) {
-    mDocument->ContentChanged(this, nsnull);
+    mDocument->CharacterDataChanged(this, PR_FALSE);
   }
 
   return NS_OK;

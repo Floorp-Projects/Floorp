@@ -106,12 +106,3 @@ nsLeafFrame::AddBordersAndPadding(nsIPresContext* aPresContext,
   aMetrics.ascent = aMetrics.height;
   aMetrics.descent = 0;
 }
-
-NS_IMETHODIMP
-nsLeafFrame::ContentChanged(nsIPresContext* aPresContext,
-                            nsIContent*     aChild,
-                            nsISupports*    aSubContent)
-{
-    mState |= NS_FRAME_IS_DIRTY;
-    return mParent->ReflowDirtyChild(aPresContext->PresShell(), this);
-}

@@ -105,10 +105,6 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
   
-  NS_IMETHOD  ContentChanged(nsIPresContext* aPresContext,
-                             nsIContent*     aChild,
-                             nsISupports*    aSubContent);
-
   NS_IMETHOD CanContinueTextRun(PRBool& aContinueTextRun) const;
 
 

@@ -1528,9 +1528,9 @@ NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(nsWebShellWindow)
 // this is needed for menu changes
 ///////////////////////////////////////////////////////////////
 void
-nsWebShellWindow::ContentChanged(nsIDocument *aDocument,
-                                 nsIContent* aContent,
-                                 nsISupports* aSubContent)
+nsWebShellWindow::CharacterDataChanged(nsIDocument *aDocument,
+                                       nsIContent* aContent,
+                                       PRBool aAppend)
 {
 }
 

@@ -367,8 +367,8 @@ public:
   virtual void EndUpdate(nsUpdateType aUpdateType);
   virtual void BeginLoad();
   virtual void EndLoad();
-  virtual void ContentChanged(nsIContent* aContent,
-                              nsISupports* aSubContent);
+  virtual void CharacterDataChanged(nsIContent* aContent,
+                                    PRBool aAppend);
   virtual void ContentStatesChanged(nsIContent* aContent1,
                                     nsIContent* aContent2,
                                     PRInt32 aStateMask);

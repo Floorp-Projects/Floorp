@@ -846,9 +846,9 @@ txMozillaXSLTProcessor::DocumentWillBeDestroyed(nsIDocument* aDocument)
 }
 
 void
-txMozillaXSLTProcessor::ContentChanged(nsIDocument* aDocument,
-                                       nsIContent *aContent,
-                                       nsISupports *aSubContent)
+txMozillaXSLTProcessor::CharacterDataChanged(nsIDocument* aDocument,
+                                             nsIContent *aContent,
+                                             PRBool aAppend)
 {
     mStylesheet = nsnull;
 }

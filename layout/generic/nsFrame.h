@@ -223,9 +223,9 @@ public:
                                         PRInt32 aLineStart, 
                                         PRInt8 aOutSideLimit
                                         );
-  NS_IMETHOD  ContentChanged(nsIPresContext* aPresContext,
-                             nsIContent*     aChild,
-                             nsISupports*    aSubContent);
+  NS_IMETHOD  CharacterDataChanged(nsIPresContext* aPresContext,
+                                   nsIContent*     aChild,
+                                   PRBool          aAppend);
   NS_IMETHOD  AttributeChanged(nsIPresContext* aPresContext,
                                nsIContent*     aChild,
                                PRInt32         aNameSpaceID,

@@ -474,8 +474,7 @@ public:
   virtual void EndUpdate(nsUpdateType aUpdateType) = 0;
   virtual void BeginLoad() = 0;
   virtual void EndLoad() = 0;
-  virtual void ContentChanged(nsIContent* aContent,
-                              nsISupports* aSubContent) = 0;
+  virtual void CharacterDataChanged(nsIContent* aContent, PRBool aAppend) = 0;
   // notify that one or two content nodes changed state
   // either may be nsnull, but not both
   virtual void ContentStatesChanged(nsIContent* aContent1,

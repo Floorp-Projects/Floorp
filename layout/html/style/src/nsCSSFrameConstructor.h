@@ -115,9 +115,9 @@ public:
                           PRInt32         aIndexInContainer,
                           PRBool          aInContentReplaced);
 
-  nsresult ContentChanged(nsIPresContext* aPresContext,
-                          nsIContent*     aContent,
-                          nsISupports*    aSubContent);
+  nsresult CharacterDataChanged(nsIPresContext* aPresContext,
+                                nsIContent*     aContent,
+                                PRBool          aAppend);
 
   nsresult ContentStatesChanged(nsIPresContext* aPresContext, 
                                 nsIContent*     aContent1,
