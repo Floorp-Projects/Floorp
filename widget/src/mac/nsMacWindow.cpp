@@ -567,20 +567,34 @@ NS_IMETHODIMP nsMacWindow::Move(PRInt32 aX, PRInt32 aY)
 		
 		return NS_OK;
 	} else if (mWindowMadeHere){
+	    // Sanity check against screen size
 		// make sure the window stays visible
 		Rect screenRect;
 		::GetRegionBounds(::GetGrayRgn(), &screenRect);
 
+        // Need to use non-negative coordinates
+        PRInt32 screenWidth;
+        if(screenRect.left < 0)
+          screenWidth = screenRect.right - screenRect.left;
+        else
+          screenWidth = screenRect.right;
+        
+        PRInt32 screenHeight;
+        if(screenRect.top < 0)
+          screenHeight = screenRect.bottom - screenRect.top;
+        else
+          screenHeight = screenRect.bottom;
+        
 		Rect portBounds;
 		::GetWindowPortBounds(mWindowPtr, &portBounds);
 		short windowWidth = portBounds.right - portBounds.left;
-		if (((PRInt32)aX) < screenRect.left - windowWidth)
-			aX = screenRect.left - windowWidth;
-		else if (((PRInt32)aX) > screenRect.right)
-			aX = screenRect.right;
-
-		if (((PRInt32)aY) > screenRect.bottom-screenRect.top)
-			aY = screenRect.bottom;
+		if (aX <= screenRect.left - windowWidth)
+	      aX = screenRect.left;
+		else if (aX >= screenWidth)
+		  aX = 0;
+        
+		if (aY >= screenRect.bottom - screenRect.top)
+			aY = 0;
 
 		if (mIsDialog)
 		{
@@ -646,6 +660,29 @@ NS_IMETHODIMP nsMacWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepai
 {
 	if (mWindowMadeHere)
 	{
+      // Sanity check against screen size
+      Rect screenRect;
+	  ::GetRegionBounds(::GetGrayRgn(), &screenRect);
+
+      // Need to use non-negative coordinates
+      PRInt32 screenWidth;
+      if(screenRect.left < 0)
+        screenWidth = screenRect.right - screenRect.left;
+      else
+        screenWidth = screenRect.right;
+        
+      PRInt32 screenHeight;
+      if(screenRect.top < 0)
+        screenHeight = screenRect.bottom - screenRect.top;
+      else
+        screenHeight = screenRect.bottom;
+          
+      if(aHeight > screenHeight)
+        aHeight = screenHeight;
+        
+      if(aWidth > screenWidth)
+        aWidth = screenWidth;      
+		
 		Rect macRect;
 		::GetWindowPortBounds ( mWindowPtr, &macRect );
 #ifdef WINDOW_SIZE_TWEAKING
