@@ -54,10 +54,10 @@
 #include "sslerr.h"
 #include "certdb.h"
 
-//#define DEBUG_SSL_VERBOSE //Enable this define to get minimal 
+#define DEBUG_SSL_VERBOSE //Enable this define to get minimal 
                             //reports when doing SSL read/write
                             
-//#define DUMP_BUFFER  //Enable this define along with
+#define DUMP_BUFFER  //Enable this define along with
                        //DEBUG_SSL_VERBOSE to dump SSL
                        //read/write buffer to a log.
                        //Uses PR_LOG except on Mac where
@@ -638,7 +638,6 @@ nsContinueDespiteCertError(nsNSSSocketInfo  *infoObject,
     return PR_FALSE;
   nsITransportSecurityInfo *csi = NS_STATIC_CAST(nsITransportSecurityInfo*,
                                                  infoObject);
-  NS_ADDREF(nssCert);
   nsIX509Cert *callBackCert = NS_STATIC_CAST(nsIX509Cert*, nssCert);
   CERTCertificate *peerCert = nssCert->GetCert();
   NS_ASSERTION(peerCert, "Got nsnull cert back from nsNSSCertificate");
@@ -731,6 +730,7 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
   if (!nssCert) {
     return SECFailure;
   } 
+  NS_ADDREF(nssCert);
   while (rv != SECSuccess) {
     error = PR_GetError();
     if (!nsCertErrorNeedsDialog(error)) {
