@@ -461,7 +461,7 @@ nsEmbedCString::GrowCapacity(size_type aNewCapacity)
 // non-standalone will be using the copy in the string lib.
 // See bug 196506
 
-#ifdef STRING_STANDALONE
+#ifdef STRING_EMBEDSTANDALONE
 
 template <class CharT> class CalculateLength
   {
