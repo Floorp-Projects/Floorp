@@ -61,7 +61,13 @@ endif
 ifdef PROGRAM
 _RC_STRING += -BINARY $(PROGRAM)
 else
+ifdef _PROGRAM
+_RC_STRING += -BINARY $(_PROGRAM)
+else
+ifdef SHARED_LIBRARY
 _RC_STRING += -BINARY $(SHARED_LIBRARY)
+endif
+endif
 endif
 ifdef RCINCLUDE
 _RC_STRING += -RCINCLUDE $(srcdir)/$(RCINCLUDE)
@@ -79,5 +85,11 @@ endif  # RESFILE
 endif  # Windows
 
 
+ifdef VERSION_TMPL
+GARBAGE += $(VERSION_TMPL)
+
+export::
+	$(PERL) $(topsrcdir)/config/milestone.pl --topsrcdir $(topsrcdir) --objdir . --srcdir $(srcdir) --template $(VERSION_TMPL)
+endif
 
 endif

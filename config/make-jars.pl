@@ -261,6 +261,7 @@ sub RegIt
 sub EnsureFileInDir
 {
     my ($destPath, $srcPath, $destFile, $srcFile, $override, $preproc) = @_;
+    my $objPath;
 
     #print "EnsureFileInDir($destPath, $srcPath, $destFile, $srcFile, $override)\n";
 
@@ -316,9 +317,14 @@ sub EnsureFileInDir
         if ($srcPath) {
             $file = $srcPath;
         }
+        $objPath = "$objdir/$destFile";
 
         if (!-e $file) {
-            die "error: file '$file' doesn't exist";
+            if (!-e $objPath) {
+                die "error: file '$file' doesn't exist";
+            } else {
+                $file = "$objPath";
+            }
         }
         if (!-e $dir) {
             mkpath($dir, 0, 0775) || die "can't mkpath $dir: $!";

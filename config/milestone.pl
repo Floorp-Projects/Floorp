@@ -38,71 +38,73 @@ use Getopt::Long;
 
 use strict;
 use vars qw(
+            $OBJDIR
+            $SRCDIR
             $TOPSRCDIR
+            $SCRIPTDIR
+            @TEMPLATE_FILE
             $MILESTONE_FILE
             $MILESTONE
             $MILESTONE_NUM
             @MILESTONE_PARTS
-            $MILESTONE_BUILD
-            $MILESTONE_QUALIFIER
-            $opt_getms
+            $MINI_VERSION
+            $MICRO_VERSION
             $opt_debug
+            $opt_template
             $opt_help
             );
 
-&GetOptions('topsrcdir=s' => \$TOPSRCDIR, 'getms', 'debug', 'help');
+$SCRIPTDIR = $0;
+$SCRIPTDIR =~ s/[^\/]*$//;
+push(@INC,$SCRIPTDIR);
+
+require "Moz/Milestone.pm";
+
+&GetOptions('topsrcdir=s' => \$TOPSRCDIR, 'srcdir=s' => \$SRCDIR, 'objdir=s' => \$OBJDIR, 'debug', 'help', 'template');
 
 if (defined($opt_help)) {
     &usage();
     exit;
 }
 
+if (defined($opt_template)) {
+    @TEMPLATE_FILE = @ARGV;
+    if ($opt_debug) {
+        print("TEMPLATE_FILE = --@TEMPLATE_FILE--\n");
+    }
+}
+
+if (!defined($SRCDIR)) { $SRCDIR = '.'; }
+if (!defined($OBJDIR)) { $OBJDIR = '.'; }
+
 $MILESTONE_FILE  = "$TOPSRCDIR/config/milestone.txt";
 @MILESTONE_PARTS = (0, 0, 0, 0);
-$MILESTONE_QUALIFIER = "";
 
 #
 # Grab milestone (top line of $MILESTONE_FILE that starts with a digit)
 #
-open(FILE,"$MILESTONE_FILE") ||
-  die ("Can't open $MILESTONE_FILE for reading!");
-$MILESTONE = <FILE>;
-while($MILESTONE =~ /^\s*#/ || $MILESTONE !~ /^\d/) {
-    $MILESTONE = <FILE>;
-}
-close(FILE);
-chomp($MILESTONE);
-$MILESTONE_NUM = $MILESTONE;
+Moz::Milestone::getOfficialMilestone($MILESTONE_FILE);
 
-#
-# Split the milestone into parts (major, minor, minor2, minor3, ...)
-#
-if ($MILESTONE =~ /\+$/) {    # for things like 0.9.9+, strip off the +
-    $MILESTONE_QUALIFIER = "+";
-    $MILESTONE_NUM =~ s/\D*$//;
-}
-@MILESTONE_PARTS = split(/\./, $MILESTONE_NUM);
+if (defined(@TEMPLATE_FILE)) {
+  my $TFILE;
 
-if ($opt_debug) {
-    print ("MS $MILESTONE MSNUM $MILESTONE_NUM MSQ $MILESTONE_QUALIFIER MS_PARTS @MILESTONE_PARTS\n");
-}
+  foreach $TFILE (@TEMPLATE_FILE) {
+    my $BUILT_FILE = "$OBJDIR/$TFILE";
+    $TFILE = "$SRCDIR/$TFILE.tmpl";
 
-if ($opt_getms && !$MILESTONE_QUALIFIER) {
-    print "$MILESTONE";
-    exit;
-}
+    if (-e $TFILE) {
 
-# TODO
-# Later on I'll add options to update *all* hardcoded versions in
-# the source tree...
-# probably have a file listing all files that need to be changed,
-# and replace them with templates that have __MOZ_MAJOR_VERSION__
-# or whatever in place of 0, __MOZ_MINOR_VERSION__ instead of 9,
-# etc., given the right options.
+      Moz::Milestone::build_file($TFILE,$BUILT_FILE);
+
+    } else {
+      warn("$0:  No such file $TFILE!\n");
+    }
+  }
+}
 
 sub usage() {
-    print <<END
-`milestone.pl [--topsrcdir TOPSRCDIR] --getms`  # will output \$MILESTONE if no '+'
+  print <<END
+`milestone.pl [--topsrcdir TOPSRCDIR] [--objdir OBJDIR] [--srcdir SRCDIR] --template [file list]`  # will build file list from .tmpl files
 END
     ;
 }
