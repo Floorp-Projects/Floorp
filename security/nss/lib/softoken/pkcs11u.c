@@ -2130,9 +2130,6 @@ pk11_PutObjectToList(PK11Object *object, PK11ObjectFreeList *list,
     PRBool optimizeSpace = isSessionObject && 
 				((PK11SessionObject *)object)->optimizeSpace; 
     if (!optimizeSpace && (list->count < MAX_OBJECT_LIST_SIZE)) {
-	if (list->lock == NULL) {
-	    list->lock = PZ_NewLock(nssILockObject);
-	}
 	PK11_USE_THREADS(PZ_Lock(list->lock));
 	object->next = list->head;
 	list->head = object;
@@ -2179,9 +2176,11 @@ pk11_CleanupFreeList(PK11ObjectFreeList *list, PRBool isSessionList)
 {
     PK11Object *object;
 
+#ifdef PKCS11_USE_THREADS
     if (!list->lock) {
 	return;
     }
+#endif
     PK11_USE_THREADS(PZ_Lock(list->lock));
     for (object= list->head; object != NULL; 
 					object = pk11_freeObjectData(object)) {
