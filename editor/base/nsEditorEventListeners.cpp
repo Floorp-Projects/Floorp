@@ -373,9 +373,9 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
           if (htmlEditor)
           {
             if (isShift)
-              res = htmlEditor->OutputTextToString(output);
+              res = htmlEditor->OutputTextToString(output, PR_FALSE);
             else
-              res = htmlEditor->OutputHTMLToString(output);
+              res = htmlEditor->OutputHTMLToString(output, PR_FALSE);
           }
           else
           {
@@ -383,9 +383,9 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
             if (textEditor)
             {
               if (isShift)
-                res = textEditor->OutputTextToString(output);
+                res = textEditor->OutputTextToString(output, PR_FALSE);
               else
-                res = textEditor->OutputHTMLToString(output);
+                res = textEditor->OutputHTMLToString(output, PR_FALSE);
             }
           }
 
