@@ -534,6 +534,8 @@ pref("mail.compose.add_undisclosed_recipients", true);
 pref("mail.purge.min_delay",480);
 pref("mail.purge.timer_interval",5); 
 
+// require a password before showing imap or local headers in thread pane
+pref("mail.password_protect_local_cache", false);
 // to reduce forking in the js / C++
 // overridden by stand alone mail
 pref("mail.standalone", false);
