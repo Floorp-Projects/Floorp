@@ -122,7 +122,7 @@ PRInt32 nsStyleUtil::FindNextSmallerFontSize(nscoord aFontSize, PRInt32 aBasePoi
     }
   }
   else { // smaller than HTML table
-    for (index = 0; ; index--)
+    for (index = 0; -25<index ; index--) //prevent infinite loop (bug 17045)
       if (fontSize > NSTwipsToFloorIntPoints(CalcFontPointSize(index, aBasePointSize, aScalingFactor))) {
         break;
       }
@@ -149,7 +149,7 @@ PRInt32 nsStyleUtil::FindNextLargerFontSize(nscoord aFontSize, PRInt32 aBasePoin
     }
   }
   else {  // smaller than HTML table
-    for (index = 0; ; index--)
+    for (index = 0; -25<index ; index--) //prevent infinite loop (bug 17045)
       if (fontSize > NSTwipsToFloorIntPoints(CalcFontPointSize(index, aBasePointSize, aScalingFactor))) {
         index++;
         break;
