@@ -70,7 +70,6 @@ class LocationImpl;
 class NavigatorImpl;
 class ScreenImpl;
 class HistoryImpl;
-class nsIDocShellLoadInfo;
 
 //*****************************************************************************
 // GlobalWindowImpl: Global Object for Scripting
@@ -362,7 +361,7 @@ protected:
                            PRBool aReplace);
    nsresult GetSourceURL(JSContext* cx,
                         nsIURI** sourceURL);
-   nsresult CheckURL(nsIURI *url, nsIDocShellLoadInfo** aLoadInfo);
+   nsresult CheckURL(nsIURI *url, nsIURI** aReferrer);
 
    nsIDocShell *mDocShell; // Weak Reference
    void *mScriptObject;
