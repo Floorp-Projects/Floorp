@@ -51,12 +51,10 @@
 #include "nsIWindowMediator.h"
 #include "nsIDOMWindow.h"
 #include "nsIClipboard.h"
-#ifndef XP_MAC
 #include "nsISoftwareUpdate.h"
 #include "nsSoftwareUpdateIIDs.h"
 
 static NS_DEFINE_CID(kSoftUpdateCID,     NS_SoftwareUpdate_CID);
-#endif
 static NS_DEFINE_IID(kIWindowMediatorIID,NS_IWINDOWMEDIATOR_IID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 static NS_DEFINE_IID(kWalletServiceCID,     NS_WALLETSERVICE_CID);
@@ -661,7 +659,6 @@ int main(int argc, char* argv[])
   rv = NS_InitXPCOM(NULL, NULL, NULL);
   NS_ASSERTION( NS_SUCCEEDED(rv), "NS_InitXPCOM failed" );
 
-#ifndef XP_MAC
   {
     //----------------------------------------------------------------
     // XPInstall needs to clean up after any updates that couldn't
@@ -677,8 +674,7 @@ int main(int argc, char* argv[])
     if (NS_SUCCEEDED(rv))
       su->StartupTasks();
   }
-#endif
-
+  
 
   nsresult result = main1( argc, argv );
 
