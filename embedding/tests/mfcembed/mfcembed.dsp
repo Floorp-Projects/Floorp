@@ -146,10 +146,6 @@ SOURCE=.\ProfilesDlg.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\SecurityInfoDlg.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=.\StdAfx.cpp
 # End Source File
 # Begin Source File
@@ -207,10 +203,6 @@ SOURCE=.\ProfilesDlg.h
 # Begin Source File
 
 SOURCE=.\resource.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\SecurityInfoDlg.h
 # End Source File
 # Begin Source File
 
