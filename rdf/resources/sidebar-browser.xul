@@ -5,8 +5,8 @@
 <!DOCTYPE window
 [
 <!ENTITY sidebar.title.label         "Sidebar">
-<!ENTITY sidebar.reload.label        "Reload">
-<!ENTITY sidebar.customize.label     "Customize">
+<!ENTITY sidebar.reload.label        "reload">
+<!ENTITY sidebar.customize.label     "customize">
 ]>
 
 <window
@@ -16,7 +16,7 @@
   onload="Init('resource:/res/rdf/sidebar-browser.rdf',
                'NC:BrowserSidebarRoot');" align="vertical">
 
-<html:script src="sidebar.js" />
+<html:script src="resource://res/rdf/sidebar.js" />
 <box id="sidebox" align="vertical" flex="100%">
  <box class="sidebartitle">
   <html:div class="sidebartitlelabel">&sidebar.title.label;</html:div>
