@@ -45,6 +45,7 @@
 #include "softoken.h"
 
 char *progName;
+char *testdir = NULL;
 
 #define CHECKERROR(rv, ln) \
 	if (rv) { \
@@ -215,6 +216,8 @@ btoa_file(SECItem *binary, PRFileDesc *outfile)
 	SECItem ascii;
 	ascii.data = NULL; 
 	ascii.len = 0;
+	if (binary->len == 0) 
+		return SECSuccess;
 	cx = NSSBase64Encoder_Create(output_ascii, outfile);
 	status = NSSBase64Encoder_Update(cx, binary->data, binary->len);
 	status = NSSBase64Encoder_Destroy(cx, PR_FALSE);
@@ -296,6 +299,37 @@ rsakey_to_file(RSAPrivateKey *key, char *filename)
 	PR_Close(file);
 }
 
+static PQGParams *
+pqg_from_filedata(SECItem *filedata)
+{
+	PRArenaPool *arena;
+	PQGParams *pqg;
+	unsigned char *buf = filedata->data;
+	int fpos = 0;
+	int i;
+	SECItem *item;
+	/*  Allocate space for key structure. */
+	arena = PORT_NewArena(2048);
+	pqg = (PQGParams *)PORT_ArenaZAlloc(arena, sizeof(PQGParams));
+	pqg->arena = arena;
+	item = &pqg->prime;
+	for (i=0; i<3; i++) {
+		item->len  = (buf[fpos++] & 0xff) << 24;
+		item->len |= (buf[fpos++] & 0xff) << 16;
+		item->len |= (buf[fpos++] & 0xff) <<  8;
+		item->len |= (buf[fpos++] & 0xff);
+		if (item->len > 0) {
+			item->data = PORT_ArenaAlloc(arena, item->len);
+			PORT_Memcpy(item->data, &buf[fpos], item->len);
+		} else {
+			item->data = NULL;
+		}
+		fpos += item->len;
+		item++;
+	}
+	return pqg;
+}
+
 static DSAPrivateKey *
 dsakey_from_filedata(SECItem *filedata)
 {
@@ -328,6 +362,34 @@ dsakey_from_filedata(SECItem *filedata)
 }
 
 static void
+pqg_to_file(PQGParams *params, char *filename)
+{
+	PRFileDesc *file;
+	SECItem *item;
+	unsigned char len[4];
+	int i;
+	SECStatus status;
+	NSSBase64Encoder *cx;
+	SECItem ascii;
+	ascii.data = NULL; 
+	ascii.len = 0;
+	file  = PR_Open(filename, PR_WRONLY|PR_CREATE_FILE, 00660);
+	cx = NSSBase64Encoder_Create(output_ascii, file);
+	item = &params->prime;
+	for (i=0; i<3; i++) {
+		len[0] = (item->len >> 24) & 0xff;
+		len[1] = (item->len >> 16) & 0xff;
+		len[2] = (item->len >>  8) & 0xff;
+		len[3] = (item->len & 0xff);
+		status = NSSBase64Encoder_Update(cx, len, 4);
+		status = NSSBase64Encoder_Update(cx, item->data, item->len);
+		item++;
+	}
+	status = NSSBase64Encoder_Destroy(cx, PR_FALSE);
+	status = PR_Write(file, "\r\n", 2);
+}
+
+static void
 dsakey_to_file(DSAPrivateKey *key, char *filename)
 {
 	PRFileDesc *file;
@@ -355,6 +417,22 @@ dsakey_to_file(DSAPrivateKey *key, char *filename)
 	status = PR_Write(file, "\r\n", 2);
 }
 
+static void
+dump_pqg(PQGParams *pqg)
+{
+	SECU_PrintInteger(stdout, &pqg->prime, "PRIME:", 0);
+	SECU_PrintInteger(stdout, &pqg->subPrime, "SUBPRIME:", 0);
+	SECU_PrintInteger(stdout, &pqg->base, "BASE:", 0);
+}
+
+static void
+dump_dsakey(DSAPrivateKey *key)
+{
+	dump_pqg(&key->params);
+	SECU_PrintInteger(stdout, &key->publicValue, "PUBLIC VALUE:", 0);
+	SECU_PrintInteger(stdout, &key->privateValue, "PRIVATE VALUE:", 0);
+}
+
 /*  Multi-purpose crypto information */
 typedef struct 
 {
@@ -364,6 +442,7 @@ typedef struct
 	PRBool  verify;
 	PRBool  hash;
 	SECItem seed;
+	SECItem pqg;
 	SECItem key;
    	SECItem iv;
    	SECItem in;
@@ -375,6 +454,7 @@ typedef struct
 	PRBool  usesigseed;
 	PRBool  performance;
 	PRBool  multihash;
+	PQGParams *params;      /* DSA only */
 	unsigned int rounds;    /* RC5 only */
 	unsigned int wordsize;  /* RC5 only */
 	unsigned int rsapubexp; /* RSA only */
@@ -900,12 +980,27 @@ rsa_test(blapitestInfo *info)
 }
 
 static SECStatus
+pqg_test(blapitestInfo *info)
+{
+	SECStatus rv = SECSuccess;
+	PQGVerify *verify;
+	int i, numiter;
+	numiter = info->repetitions;
+	if (info->pqg.len > 0) {
+		info->params = pqg_from_filedata(&info->pqg);
+	} else {
+		rv = PQG_ParamGen(info->keysize, &info->params, &verify);
+		pqg_to_file(info->params, "tmp.pqg");
+	}
+	CHECKERROR(rv, __LINE__);
+	return rv;
+}
+
+static SECStatus
 dsa_test(blapitestInfo *info)
 {
-	PQGParams *params;
-	PQGVerify *verify;
 	DSAPrivateKey *key;
-	SECStatus rv;
+	SECStatus rv = SECSuccess;
 	PRIntervalTime time1, time2;
 	int i, numiter;
 	numiter = info->repetitions;
@@ -913,15 +1008,14 @@ dsa_test(blapitestInfo *info)
 	if (info->key.len > 0) {
 		key = dsakey_from_filedata(&info->key);
 	} else {
-		rv = PQG_ParamGen(info->keysize, &params, &verify);
-		CHECKERROR(rv, __LINE__);
+		pqg_test(info);
 		if (info->useseed) {
 			if (info->seed.len == 0)
 				get_and_write_random_bytes(&info->seed, DSA_SUBPRIME_LEN, 
 				                           "tmp.seed");
-			rv = DSA_NewKeyFromSeed(params, info->seed.data, &key);
+			rv = DSA_NewKeyFromSeed(info->params, info->seed.data, &key);
 		} else {
-			rv = DSA_NewKey(params, &key);
+			rv = DSA_NewKey(info->params, &key);
 		}
 		CHECKERROR(rv, __LINE__);
 		dsakey_to_file(key, "tmp.key");
@@ -1184,6 +1278,7 @@ static blapitestCryptoFn crypto_fns[] =
 	rc5_cbc_test,
 	rsa_test,
 	NULL,
+	pqg_test,
 	dsa_test,
 	NULL,
 	md5_test,
@@ -1205,6 +1300,7 @@ static char *mode_strings[] =
 	"rc5_cbc",
 	"rsa",
 	"#endencrypt",
+	"pqg",
 	"dsa",
 	"#endsign",
 	"md5",
@@ -1264,7 +1360,7 @@ get_params(blapitestInfo *info, char *mode, int num)
 	char *mark, *param, *val;
 	int index = 0;
 	int len;
-	sprintf(filename, "tests/%s/params%d", mode, num);
+	sprintf(filename, "%s/tests/%s/params%d", testdir, mode, num);
 	/*
 	file = PR_Open(filename, PR_RDONLY, 00440);
 	if (file)
@@ -1299,7 +1395,7 @@ get_ascii_file_data(SECItem *item, char *mode, char *type, int num)
 	char filename[32];
 	PRFileDesc *file;
 	SECStatus rv;
-	sprintf(filename, "tests/%s/%s%d", mode, type, num);
+	sprintf(filename, "%s/tests/%s/%s%d", testdir, mode, type, num);
 	file = PR_Open(filename, PR_RDONLY, 00440);
 	if (file)
 		rv = SECU_FileToItem(item, file);
@@ -1344,10 +1440,13 @@ blapi_selftest(char **modesToTest, int numModesToTest)
 		} else {
 			mode = mode_strings[i];
 		}
+		/* skip pqg - nothing to do for self-test. */
+		if (PL_strcmp(mode, "pqg") == 0)
+			continue;
 		cryptofn = get_test_mode(mode);
 		if (mode[0] == '#') continue;
 		/* get the number of tests in the directory */
-		sprintf(filename, "tests/%s/%s", mode, "numtests");
+		sprintf(filename, "%s/tests/%s/%s", testdir, mode, "numtests");
 		file = PR_Open(filename, PR_RDONLY, 00440);
 		rv = SECU_FileToItem(&item, file);
 		PR_Close(file);
@@ -1356,11 +1455,12 @@ blapi_selftest(char **modesToTest, int numModesToTest)
 			rv = get_ascii_file_data(&info.key, mode, "key", j);
 			rv = get_ascii_file_data(&info.iv, mode, "iv", j);
 			rv = get_ascii_file_data(&info.in, mode, "plaintext", j);
-			rv = get_ascii_file_data(&info.seed, mode, "pqgseed", j);
+			rv = get_ascii_file_data(&info.seed, mode, "keyseed", j);
 			rv = get_ascii_file_data(&info.sigseed, mode, "sigseed", j);
 			SECITEM_CopyItem(NULL, &inpCopy, &info.in);
 			get_params(&info, mode, j);
-			sprintf(filename, "tests/%s/%s%d", mode, "ciphertext", j);
+			sprintf(filename, "%s/tests/%s/%s%d", testdir, mode, 
+			        "ciphertext", j);
 			file = PR_Open(filename, PR_RDONLY, 00440);
 			rv = SECU_FileToItem(&asciiOut, file);
 			PR_Close(file);
@@ -1374,26 +1474,80 @@ blapi_selftest(char **modesToTest, int numModesToTest)
 			}
 			info.encrypt = info.hash = info.sign = PR_FALSE;
 			info.decrypt = info.verify = PR_TRUE;
-			SECITEM_ZfreeItem(&info.out, PR_FALSE);
-			SECITEM_ZfreeItem(&info.in, PR_FALSE);
-			SECITEM_CopyItem(NULL, &info.in, &output);
-			info.out.len = 0;
-			rv = (*cryptofn)(&info);
-			if (rv == SECSuccess) {
-				if (SECITEM_CompareItem(&inpCopy, &info.out) != 0) {
-					fprintf(stderr, "decrypt self-test for %s failed!\n", mode);
+			if (PL_strcmp(mode, "dsa") == 0) {
+				rv = (*cryptofn)(&info);
+				if (rv == SECSuccess) {
+					fprintf(stderr, "signature self-test for %s passed.\n", 
+					        mode);
 				} else {
-					fprintf(stderr, "decrypt self-test for %s passed.\n", mode);
+					fprintf(stderr, "signature self-test for %s failed!\n", 
+					        mode);
+				}
+			} else {
+				SECITEM_ZfreeItem(&info.in, PR_FALSE);
+				SECITEM_ZfreeItem(&info.out, PR_FALSE);
+				SECITEM_CopyItem(NULL, &info.in, &output);
+				info.out.len = 0;
+				rv = (*cryptofn)(&info);
+				if (rv == SECSuccess) {
+					if (SECITEM_CompareItem(&inpCopy, &info.out) != 0) {
+						fprintf(stderr, "decrypt self-test for %s failed!\n", 
+						        mode);
+					} else {
+						fprintf(stderr, "decrypt self-test for %s passed.\n", 
+						        mode);
+					}
 				}
 			}
 		}
 	}
 }
 
+static SECStatus
+get_file_data(char *filename, SECItem *item, PRBool b64) 
+{
+	SECStatus rv = SECSuccess;
+	PRFileDesc *file = PR_Open(filename, PR_RDONLY, 006600);
+	if (file) {
+		SECItem asciiItem;
+		rv = SECU_FileToItem(&asciiItem, file);
+		CHECKERROR(rv, __LINE__);
+		if (b64) {
+			rv = atob(&asciiItem, item);
+		} else {
+			SECITEM_CopyItem(NULL, item, &asciiItem);
+			if (item->data[item->len-1] == '\n')
+				item->len--;
+		}
+		CHECKERROR(rv, __LINE__);
+		PR_Close(file);
+	}
+	return rv;
+}
+
+SECStatus
+dump_file(char *mode, char *filename)
+{
+	SECItem item;
+	if (PL_strcmp(mode, "rsa") == 0) {
+	} else if (PL_strcmp(mode, "pqg") == 0) {
+		PQGParams *pqg;
+		get_file_data(filename, &item, PR_TRUE);
+		pqg = pqg_from_filedata(&item);
+		dump_pqg(pqg);
+	} else if (PL_strcmp(mode, "dsa") == 0) {
+		DSAPrivateKey *key;
+		get_file_data(filename, &item, PR_TRUE);
+		key = dsakey_from_filedata(&item);
+		dump_dsakey(key);
+	}
+	return SECFailure;
+}
+
 int main(int argc, char **argv) 
 {
-	PRFileDesc *infile, *outfile, *keyfile, *ivfile, *sigfile, *seedfile,
-	           *sigseedfile;
+	char *infile, *outfile, *keyfile, *ivfile, *sigfile, *seedfile,
+	     *sigseedfile, *pqgfile;
 	PRBool b64 = PR_TRUE;
 	blapitestInfo info;
 	blapitestCryptoFn cryptofn = NULL;
@@ -1402,6 +1556,7 @@ int main(int argc, char **argv)
 	PRBool dofips = PR_FALSE;
 	PRBool doselftest = PR_FALSE;
 	PRBool zerobuffer = PR_FALSE;
+	char *dumpfile = NULL;
 	char *mode = NULL;
 	char *modesToTest[20];
 	int numModesToTest = 0;
@@ -1413,49 +1568,54 @@ int main(int argc, char **argv)
 	info.rsapubexp = 17;
 	info.rounds = 10;
 	info.wordsize = 4;
-	infile=outfile=keyfile=ivfile=sigfile=seedfile=sigseedfile=NULL;
+	infile=outfile=keyfile=pqgfile=ivfile=sigfile=seedfile=sigseedfile=NULL;
 	info.repetitions = 1;
     progName = strrchr(argv[0], '/');
     progName = progName ? progName+1 : argv[0];
-	optstate = 
-	  PL_CreateOptState(argc, argv, "DEFHSTVab:ce:g:i:o:p:k:m:t:qr:s:v:w:xyz:");
+	optstate = PL_CreateOptState(argc, argv, 
+	    "DEFHP:STVab:d:ce:g:j:i:o:p:k:m:t:qr:s:v:w:xyz:");
 	while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 		switch (optstate->option) {
 		case 'D':  info.decrypt = PR_TRUE; break;
 		case 'E':  info.encrypt = PR_TRUE; break;
 		case 'F':  dofips = PR_TRUE; break;
 		case 'H':  info.hash = PR_TRUE; break;
+		case 'P':  dumpfile = PL_strdup(optstate->value); break;
 		case 'S':  info.sign = PR_TRUE; break;
 		case 'T':  doselftest = PR_TRUE; break;
 		case 'V':  info.verify = PR_TRUE; break;
 		case 'a':  b64 = PR_FALSE; break;
 		case 'b':  info.bufsize = PORT_Atoi(optstate->value); break;
 		case 'c':  info.multihash = PR_TRUE; break;
+		case 'd':  testdir = PL_strdup(optstate->value); break;
 		case 'e':  info.rsapubexp = PORT_Atoi(optstate->value); break;
 		case 'g':  info.keysize = PORT_Atoi(optstate->value); break;
-		case 'i':  infile  = PR_Open(optstate->value, PR_RDONLY, 00440); break;
-		case 'k':  keyfile = PR_Open(optstate->value, PR_RDONLY, 00440); break;
+		case 'i':  infile  = PL_strdup(optstate->value); break;
+		case 'j':  pqgfile = PL_strdup(optstate->value); break;
+		case 'k':  keyfile = PL_strdup(optstate->value); break;
 		case 'm':  cryptofn = get_test_mode(optstate->value);
 		           mode = PL_strdup(optstate->value); 
 		           break;
-		case 'o':  outfile = PR_Open(optstate->value, PR_WRONLY|PR_CREATE_FILE,
-		                             00660); break;
+		case 'o':  outfile = PL_strdup(optstate->value); break;
 		case 'p':  info.performance = PR_TRUE; 
 			   info.repetitions = PORT_Atoi(optstate->value); 
 			   break;
 		case 'q':  zerobuffer = PR_TRUE; break;
 		case 'r':  info.rounds = PORT_Atoi(optstate->value); break;
-		case 's':  sigfile  = PR_Open(optstate->value, PR_RDONLY, 00440); break;
-		case 't':  sigseedfile=PR_Open(optstate->value, PR_RDONLY, 00440);break;
+		case 's':  sigfile  = PL_strdup(optstate->value); break;
+		case 't':  sigseedfile = PL_strdup(optstate->value); break;
+		case 'v':  ivfile  = PL_strdup(optstate->value); break;
 		case 'w':  info.wordsize = PORT_Atoi(optstate->value); break;
-		case 'v':  ivfile  = PR_Open(optstate->value, PR_RDONLY, 00440); break;
 		case 'x':  info.useseed = PR_TRUE; break;
 		case 'y':  info.usesigseed = PR_TRUE; break;
-		case 'z':  seedfile  = PR_Open(optstate->value, PR_RDONLY,00440); break;
+		case 'z':  seedfile  = PL_strdup(optstate->value); break;
 		case '\0': modesToTest[numModesToTest++] = PL_strdup(optstate->value);
 		default: break;
 		}
 	}
+
+	if (dumpfile)
+		return dump_file(mode, dumpfile);
 
 	if (doselftest) {
 		if (numModesToTest > 0) {
@@ -1486,102 +1646,54 @@ int main(int argc, char **argv)
 	RNG_RNGInit();
 
 	if (keyfile) {
-		SECItem asciiKey;
-		rv = SECU_FileToItem(&asciiKey, keyfile);
-		CHECKERROR(rv, __LINE__);
-		if (b64 || PL_strcmp(mode,"rsa")==0 || PL_strcmp(mode,"dsa")==0) {
-			rv = atob(&asciiKey, &info.key);
-		} else {
-			SECITEM_CopyItem(NULL, &info.key, &asciiKey);
-			if (info.key.data[info.key.len-1] == '\n')
-				info.key.len--;
-			}
-		CHECKERROR(rv, __LINE__);
+		/* RSA and DSA keys are always b64 encoded. */
+		if (b64 || PL_strcmp(mode,"rsa")==0 || PL_strcmp(mode,"dsa")==0)
+			get_file_data(keyfile, &info.key, PR_TRUE);
+		else
+			get_file_data(keyfile, &info.key, b64);
 	}
-
-	if (ivfile) {
-		SECItem asciiIv;
-		rv = SECU_FileToItem(&asciiIv, ivfile);
-		CHECKERROR(rv, __LINE__);
-		if (b64) {
-			rv = atob(&asciiIv, &info.iv);
-		} else {
-			SECITEM_CopyItem(NULL, &info.iv, &asciiIv);
-			if (info.iv.data[info.iv.len-1] == '\n')
-				info.iv.len--;
-		}
-		CHECKERROR(rv, __LINE__);
-	}
-
-	if (infile) {
-		SECItem asciiFile;
-		rv = SECU_FileToItem(&asciiFile, infile);
-		CHECKERROR(rv, __LINE__);
-		if (b64) {
-			rv = atob(&asciiFile, &info.in);
-			CHECKERROR(rv, __LINE__);
-		} else {
-			SECITEM_CopyItem(NULL, &info.in, &asciiFile);
-			if (info.in.data[info.in.len-1] == '\n')
-				info.in.len--;
-		}
-		info.bufsize = info.in.len;
-	}
-
-	if (zerobuffer) {
-		info.in.len = info.bufsize;
-		info.in.data = PORT_ZAlloc(info.in.len);
-		infile = PR_Open("tmp.pt", PR_WRONLY|PR_CREATE_FILE, 00660);
-		rv = btoa_file(&info.in, infile);
-		CHECKERROR((rv < 0), __LINE__);
-	}
-
-	if (sigfile) {
-		SECItem asciiSig;
-		rv = SECU_FileToItem(&asciiSig, sigfile);
-		CHECKERROR(rv, __LINE__);
-		rv = atob(&asciiSig, &info.out);
-		CHECKERROR(rv, __LINE__);
-	}
-
+	if (ivfile)
+		get_file_data(ivfile, &info.iv, b64);
+	if (infile)
+		get_file_data(infile, &info.in, b64);
+	if (sigfile)
+		get_file_data(sigfile, &info.out, PR_TRUE);
 	if (seedfile) {
-		SECItem asciiSeed;
-		rv = SECU_FileToItem(&asciiSeed, seedfile);
-		CHECKERROR(rv, __LINE__);
-		rv = atob(&asciiSeed, &info.seed);
-		CHECKERROR(rv, __LINE__);
+		get_file_data(seedfile, &info.seed, b64);
 		info.useseed = PR_TRUE;
 	}
-
 	if (sigseedfile) {
-		SECItem asciiSeed;
-		rv = SECU_FileToItem(&asciiSeed, sigseedfile);
-		CHECKERROR(rv, __LINE__);
-		rv = atob(&asciiSeed, &info.sigseed);
-		CHECKERROR(rv, __LINE__);
+		get_file_data(sigseedfile, &info.sigseed, b64);
 		info.usesigseed = PR_TRUE;
+	}
+	if (pqgfile)
+		get_file_data(pqgfile, &info.pqg, PR_TRUE);
+
+	if (zerobuffer) {
+		PRFileDesc *ifile;
+		info.in.len = info.bufsize;
+		info.in.data = PORT_ZAlloc(info.in.len);
+		ifile = PR_Open("tmp.pt", PR_WRONLY|PR_CREATE_FILE, 00660);
+		rv = btoa_file(&info.in, ifile);
+		CHECKERROR((rv < 0), __LINE__);
+		PR_Close(ifile);
 	}
 
 	rv = (*cryptofn)(&info);
 		CHECKERROR(rv, __LINE__);
 
-	if (!sigfile) {
+	if (!sigfile && info.out.len > 0) {
+		PRFileDesc *ofile;
 		if (!outfile)
-			outfile = PR_Open("tmp.out", PR_WRONLY|PR_CREATE_FILE, 00660);
-		rv = btoa_file(&info.out, outfile);
+			ofile = PR_Open("tmp.out", PR_WRONLY|PR_CREATE_FILE, 00660);
+		else
+			ofile = PR_Open(outfile, PR_WRONLY|PR_CREATE_FILE, 00660);
+		rv = btoa_file(&info.out, ofile);
+		PR_Close(ofile);
 		CHECKERROR((rv < 0), __LINE__);
 	}
 
 	RNG_RNGShutdown();
-
-	if (infile)
-		PR_Close(infile);
-	if (outfile)
-		PR_Close(outfile);
-	if (keyfile)
-		PR_Close(keyfile);
-	if (ivfile)
-		PR_Close(ivfile);
 
 	return SECSuccess;
 }
