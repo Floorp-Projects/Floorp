@@ -1143,7 +1143,7 @@ nsGenericDOMDataNode::SplitText(PRUint32 aOffset, nsIDOMText** aReturn)
     return rv;
   }
 
-  rv = DeleteData(aOffset, length-aOffset);
+  rv = DeleteData(aOffset, length - aOffset);
   if (NS_FAILED(rv)) {
     return rv;
   }
