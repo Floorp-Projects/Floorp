@@ -4022,14 +4022,21 @@ dnl ========================================================
 dnl C++ exceptions (g++/egcs only - for now)
 dnl Should be smarter and check that the compiler does indeed have exceptions
 dnl ========================================================
+_MOZ_CPP_EXCEPTIONS=
 MOZ_ARG_ENABLE_BOOL(cpp-exceptions,
 [  --enable-cpp-exceptions Enable C++ exceptions ],
 [ if test "$MIPSPRO_CXX"; then
     _MOZ_EXCEPTIONS_FLAGS=-LANG:exceptions=ON
 else
     _MOZ_EXCEPTIONS_FLAGS=-fexceptions 
-fi ])
+fi
+_MOZ_CPP_EXCEPTIONS=1 ])
 
+if test "$_MOZ_CPP_EXCEPTIONS"; then
+    AC_DEFINE(CPP_THROW_NEW, [])
+else
+    AC_DEFINE(CPP_THROW_NEW, [throw()])
+fi
 AC_LANG_C
 
 dnl ========================================================
