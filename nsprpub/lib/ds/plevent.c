@@ -942,6 +942,10 @@ static void _md_CreateEventQueue( PLEventQueue *eventQueue )
 */
 static void _md_CreateEventQueue( PLEventQueue *eventQueue )
 {
+#ifdef XP_MAC 
+#pragma unused(eventQueue) 
+#endif 
+
     /* there's really nothing special to do here,
     ** the guts of the unix stuff is in the setupnativenotify
     ** and related functions.
