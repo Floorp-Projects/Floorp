@@ -2984,7 +2984,7 @@ nsWebShell::GetTarget(const PRUnichar* aName)
     if (nsnull != mContainer) {
       mContainer->FindWebShellWithName(aName, target);
       if (nsnull == target) {
-        mContainer->NewWebShell(PRUint32(~0), PR_TRUE, target);
+        mContainer->NewWebShell(NS_CHROME_ALL_CHROME, PR_TRUE, target);
       }
       if (nsnull != target) {
         target->SetName(aName);      
