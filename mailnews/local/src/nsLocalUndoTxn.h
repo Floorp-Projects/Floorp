@@ -60,6 +60,9 @@ public:
     nsresult Init(nsIMsgFolder* srcFolder,
 				  nsIMsgFolder* dstFolder,
 				  PRBool isMove);
+    nsresult UndoImapDeleteFlag(nsIMsgFolder* aFolder, 
+                                nsMsgKeyArray& aKeyArray,
+                                PRBool addFlag);
   
 private:
     nsCOMPtr<nsIMsgFolder> m_srcFolder;

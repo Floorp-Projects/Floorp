@@ -86,16 +86,19 @@ nsImapMoveCopyMsgTxn::Undo(void)
 	if (NS_FAILED(rv)) return rv;
 	if (m_isMove)
     {
-        nsCOMPtr<nsIUrlListener> srcListener = do_QueryInterface(m_srcFolder,
-                                                                 &rv);
-		rv = imapService->SubtractMessageFlags(m_eventQueue, m_srcFolder,
-											   srcListener, nsnull,
-											   m_srcMsgIdString.GetBuffer(),
-											   kImapMsgDeletedFlag,
-											   m_idsAreUids);
-        if (NS_SUCCEEDED(rv))
-            rv = imapService->SelectFolder(m_eventQueue, m_srcFolder,
-                                           srcListener, nsnull);
+        rv = UndoMailboxDelete();
+        if (NS_FAILED(rv))
+        {
+            nsCOMPtr<nsIUrlListener> srcListener =
+                do_QueryInterface(m_srcFolder, &rv);
+            rv = imapService->SubtractMessageFlags(
+                m_eventQueue, m_srcFolder, srcListener, nsnull,
+                m_srcMsgIdString.GetBuffer(), kImapMsgDeletedFlag,
+                m_idsAreUids);
+            if (NS_SUCCEEDED(rv))
+                rv = imapService->SelectFolder(m_eventQueue, m_srcFolder,
+                                               srcListener, nsnull);
+        }
     }
     if (m_dstKeyArray.GetSize() > 0)
     {
@@ -121,16 +124,20 @@ nsImapMoveCopyMsgTxn::Redo(void)
 	if (NS_FAILED(rv)) return rv;
 	if (m_isMove)
     {
-        nsCOMPtr<nsIUrlListener> srcListener = do_QueryInterface(m_srcFolder,
-                                                                 &rv); 
-		rv = imapService->AddMessageFlags(m_eventQueue, m_srcFolder,
-										  srcListener, nsnull,
-										  m_srcMsgIdString.GetBuffer(),
-										  kImapMsgDeletedFlag,
-										  m_idsAreUids);
-        if (NS_SUCCEEDED(rv))
-            rv = imapService->SelectFolder(m_eventQueue, m_srcFolder,
-                                           srcListener, nsnull);
+        rv = RedoMailboxDelete();
+        if (NS_FAILED(rv))
+        {
+            nsCOMPtr<nsIUrlListener> srcListener =
+                do_QueryInterface(m_srcFolder, &rv); 
+            rv = imapService->AddMessageFlags(m_eventQueue, m_srcFolder,
+                                              srcListener, nsnull,
+                                              m_srcMsgIdString.GetBuffer(),
+                                              kImapMsgDeletedFlag,
+                                              m_idsAreUids);
+            if (NS_SUCCEEDED(rv))
+                rv = imapService->SelectFolder(m_eventQueue, m_srcFolder,
+                                               srcListener, nsnull);
+        }
     }
     if (m_dstKeyArray.GetSize() > 0)
     {
@@ -217,6 +224,83 @@ nsImapMoveCopyMsgTxn::AddDstKey(nsMsgKey aKey)
 {
     m_dstKeyArray.Add(aKey);
     return NS_OK;
+}
+
+nsresult
+nsImapMoveCopyMsgTxn::UndoMailboxDelete()
+{
+    nsresult rv = NS_ERROR_FAILURE;
+    char *uri = nsnull;
+    rv = m_srcFolder->GetURI(&uri);
+    nsString2 protocolType(uri, eOneByte);
+    PR_FREEIF(uri);
+    protocolType.SetLength(protocolType.Find(':'));
+    // ** jt -- only do this for mailbox protocol
+    if (protocolType.EqualsIgnoreCase("mailbox"))
+    {
+        nsCOMPtr<nsIMsgDatabase> srcDB;
+        nsCOMPtr<nsIMsgDatabase> dstDB;
+        rv = m_srcFolder->GetMsgDatabase(getter_AddRefs(srcDB));
+        if (NS_FAILED(rv)) return rv;
+        rv = m_dstFolder->GetMsgDatabase(getter_AddRefs(dstDB));
+        if (NS_FAILED(rv)) return rv;
+        
+        PRUint32 count = m_srcKeyArray.GetSize();
+        PRUint32 i;
+        nsCOMPtr<nsIMsgDBHdr> oldHdr;
+        nsCOMPtr<nsIMsgDBHdr> newHdr;
+        for (i=0; i<count; i++)
+        {
+            rv = dstDB->GetMsgHdrForKey(m_dstKeyArray.GetAt(i),
+                                        getter_AddRefs(oldHdr));
+            if (NS_SUCCEEDED(rv))
+            {
+                srcDB->CopyHdrFromExistingHdr(m_srcKeyArray.GetAt(i),
+                                              oldHdr,
+                                              getter_AddRefs(newHdr));
+                if (NS_SUCCEEDED(rv))
+                {
+                    srcDB->UndoDelete(newHdr);
+                }
+            }
+        }
+        srcDB->Commit(nsMsgDBCommitType::kLargeCommit);
+        return NS_OK; // always return NS_OK
+    }
+    else
+    {
+        rv = NS_ERROR_FAILURE;
+    }
+    return rv;
+}
+
+
+nsresult
+nsImapMoveCopyMsgTxn::RedoMailboxDelete()
+{
+    nsresult rv = NS_ERROR_FAILURE;
+    char *uri = nsnull;
+    rv = m_srcFolder->GetURI(&uri);
+    nsString2 protocolType(uri, eOneByte);
+    PR_FREEIF(uri);
+    protocolType.SetLength(protocolType.Find(':'));
+    // ** jt -- only do this for mailbox protocol
+    if (protocolType.EqualsIgnoreCase("mailbox"))
+    {
+        nsCOMPtr<nsIMsgDatabase> srcDB;
+        rv = m_srcFolder->GetMsgDatabase(getter_AddRefs(srcDB));
+        if (NS_SUCCEEDED(rv))
+        {
+            srcDB->DeleteMessages(&m_srcKeyArray, nsnull);
+            srcDB->Commit(nsMsgDBCommitType::kLargeCommit);
+        }
+        return NS_OK; // always return NS_OK
+    }
+    else
+    {
+        rv = NS_ERROR_FAILURE;
+    }
+    return rv;
 }
 
 

@@ -61,6 +61,8 @@ public:
     nsresult GetSrcKeyArray(nsMsgKeyArray& srcKeyArray);
     nsresult GetDstKeyArray(nsMsgKeyArray& dstKeyArray);
     nsresult AddDstKey(nsMsgKey aKey);
+    nsresult UndoMailboxDelete();
+    nsresult RedoMailboxDelete();
 
 private:
 

@@ -1291,6 +1291,7 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
   char *uri = nsnull;
   rv = srcFolder->GetURI(&uri);
   nsString2 protocolType(uri, eOneByte);
+  PR_FREEIF(uri);
   protocolType.SetLength(protocolType.Find(':'));
 
   if (!protocolType.EqualsIgnoreCase("mailbox"))
@@ -1425,27 +1426,7 @@ nsresult nsMsgLocalMailFolder::DeleteMessage(nsIMessage *message,
                                              PRBool deleteStorage)
 {
 	nsresult rv = NS_OK;
-#if 0
-	PRBool isTrashFolder = mFlags & MSG_FOLDER_FLAG_TRASH;
-	if(!deleteStorage && !isTrashFolder)
-	{
-		nsCOMPtr<nsIMsgFolder> rootFolder;
-		rv = GetRootFolder(getter_AddRefs(rootFolder));
-		if(NS_SUCCEEDED(rv))
-		{
-			nsCOMPtr<nsIMsgFolder> trashFolder;
-			PRUint32 numFolders;
-			rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_TRASH, getter_AddRefs(trashFolder), 1, &numFolders);
-			if(NS_SUCCEEDED(rv) && (numFolders == 1))
-			{
-				rv = CopyMessageTo(message, trashFolder, PR_TRUE);
-			}
-		}
-	}
-	else
-#else
   if (deleteStorage)
-#endif
 	{
 		nsCOMPtr <nsIMsgDBHdr> msgDBHdr;
 		nsCOMPtr<nsIDBMessage> dbMessage(do_QueryInterface(message, &rv));
@@ -1537,27 +1518,36 @@ NS_IMETHODIMP nsMsgLocalMailFolder::BeginCopy(nsIMessage *message)
   }
   if (mCopyState->m_dummyEnvelopeNeeded)
   {
-    static char result[75];
+    nsString2 result("", eOneByte);
     char timeBuffer[128];
     PRExplodedTime now;
     PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &now);
     PR_FormatTimeUSEnglish(timeBuffer, sizeof(timeBuffer),
                            "%a %b %d %H:%M:%S %Y",
                            &now);
-    PL_strcpy(result, "From - ");
-    PL_strcpy(result + 7, timeBuffer);
-    PL_strcpy(result + 7 + 24, MSG_LINEBREAK);
+    result.Append("From - ");
+    result.Append(timeBuffer);
+    result.Append(CRLF);
+
     // *** jt - hard code status line for now; come back later
     mCopyState->m_fileStream->seek(PR_SEEK_END, 0);
-    *(mCopyState->m_fileStream) << result;
-    *(mCopyState->m_fileStream) << "X-Mozilla-Status: 0001";
-    *(mCopyState->m_fileStream) << MSG_LINEBREAK;
-    *(mCopyState->m_fileStream) << "X-Mozilla-Status2: 00000000";
-    *(mCopyState->m_fileStream) << MSG_LINEBREAK;
+
+    *(mCopyState->m_fileStream) << result.GetBuffer();
+    if (mCopyState->m_parseMsgState)
+        mCopyState->m_parseMsgState->ParseAFolderLine(
+          result.GetBuffer(), result.Length());
+    result = "X-Mozilla-Status: 0001" CRLF;
+    *(mCopyState->m_fileStream) << result.GetBuffer();
+    if (mCopyState->m_parseMsgState)
+        mCopyState->m_parseMsgState->ParseAFolderLine(
+          result.GetBuffer(), result.Length());
+    result = "X-Mozilla-Status2: 00000000" CRLF;
+    *(mCopyState->m_fileStream) << result.GetBuffer();
+    if (mCopyState->m_parseMsgState)
+        mCopyState->m_parseMsgState->ParseAFolderLine(
+          result.GetBuffer(), result.Length());
   }
 
-  if (message)
-    mCopyState->m_message = do_QueryInterface(message, &rv);
   return rv;
 }
 
@@ -1648,7 +1638,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
   if (mCopyState->m_dummyEnvelopeNeeded)
   {
     mCopyState->m_fileStream->seek(PR_SEEK_END, 0);
-    *(mCopyState->m_fileStream) << MSG_LINEBREAK;
+    *(mCopyState->m_fileStream) << CRLF;
   }
 
   // CopyFileMessage() and CopyMessages() from servers other than mailbox
@@ -1680,10 +1670,11 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
   { // CopyMessages() goes here; CopyFileMessage() never gets in here because
     // curCopyIndex will always be less than the mCopyState->m_totalMsgCount
     nsCOMPtr<nsISupports> aSupport =
-      getter_AddRefs(mCopyState->m_messages->ElementAt(mCopyState->m_curCopyIndex));
-    mCopyState->m_message = do_QueryInterface(aSupport, &rv);
+      getter_AddRefs(mCopyState->m_messages->ElementAt
+                     (mCopyState->m_curCopyIndex));
+    nsCOMPtr<nsIMessage>aMessage = do_QueryInterface(aSupport, &rv);
     if (NS_SUCCEEDED(rv))
-      rv = CopyMessageTo(mCopyState->m_message, this, mCopyState->m_isMove);
+      rv = CopyMessageTo(aMessage, this, mCopyState->m_isMove);
   }
   else
   { // both CopyMessages() & CopyFileMessage() go here if they have
@@ -1714,6 +1705,9 @@ nsresult nsMsgLocalMailFolder::CopyMessageTo(nsIMessage *message,
 	nsCOMPtr<nsIRDFResource> messageNode(do_QueryInterface(message));
 	if(!messageNode)
 		return NS_ERROR_FAILURE;
+
+  if (message)
+    mCopyState->m_message = do_QueryInterface(message, &rv);
 
 	char *uri;
 	messageNode->GetValue(&uri);

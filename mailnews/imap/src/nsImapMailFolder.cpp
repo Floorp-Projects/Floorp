@@ -2548,6 +2548,8 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                     m_copyState->m_curIndex++;
                     if (m_copyState->m_curIndex >= m_copyState->m_totalCount)
                     {
+                        if (m_transactionManager && m_copyState->m_undoMsgTxn)
+                            m_transactionManager->Do(m_copyState->m_undoMsgTxn);
                         ClearCopyState(aExitCode);
                     }
                 }
@@ -2941,7 +2943,19 @@ nsImapMailFolder::CopyMessages2(nsIMsgFolder* srcFolder,
     if(NS_FAILED(rv)) return rv;
 
     m_copyState->m_streamCopy = PR_TRUE;
+
     // ** jt - needs to create server to server move/copy undo msg txn
+    nsString2 messageIds("", eOneByte);
+    nsMsgKeyArray srcKeyArray;
+    nsCOMPtr<nsIUrlListener> urlListener;
+
+	rv = QueryInterface(nsIUrlListener::GetIID(), getter_AddRefs(urlListener));
+    rv = BuildIdsAndKeyArray(messages, messageIds, srcKeyArray);
+
+    nsImapMoveCopyMsgTxn* undoMsgTxn = new nsImapMoveCopyMsgTxn(
+        srcFolder, &srcKeyArray, messageIds.GetBuffer(), this,
+        PR_TRUE, isMove, m_eventQueue, urlListener);
+    m_copyState->m_undoMsgTxn = do_QueryInterface(undoMsgTxn, &rv);
     
     nsCOMPtr<nsISupports> msgSupport;
     msgSupport = getter_AddRefs(messages->ElementAt(0));
