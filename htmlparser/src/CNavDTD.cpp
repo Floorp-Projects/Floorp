@@ -847,7 +847,7 @@ PRInt32 GetIndexOfChildOrSynonym(nsEntryStack& aTagStack,eHTMLTags aChildTag) {
     } 
     else{
       theChildIndex=aTagStack.GetCount();
-      PRInt32 theGroup=gHTMLElements[aChildTag].mParentBits;
+      PRInt32 theGroup=nsHTMLElement::GetSynonymousGroups(gHTMLElements[aChildTag].mParentBits);
       while(-1<--theChildIndex) {
         eHTMLTags theTag=aTagStack[theChildIndex];
         if(gHTMLElements[theTag].IsMemberOf(theGroup)) {

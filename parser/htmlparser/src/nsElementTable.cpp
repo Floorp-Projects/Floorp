@@ -1218,6 +1218,41 @@ public:
 };
 CTableInitializer gTableInitializer;
 
+int nsHTMLElement::GetSynonymousGroups(int aGroup) {
+  int result=0;
+
+  switch(aGroup) {
+
+    case kPhrase:
+    case kSpecial:
+    case kFontStyle: 
+      result=aGroup; 
+      break;
+
+    case kHTMLContent:
+    case kHeadContent:
+    case kHeadMisc:
+    case kFormControl:
+    case kPreformatted:
+    case kHeading:
+    case kBlockMisc:
+    case kBlock:
+    case kList:
+    case kPCDATA:
+    case kExtensions:
+    case kTable:
+    case kSelf:
+    case kInlineEntity:
+    case kBlockEntity:
+    case kFlowEntity:
+    case kAllTags:
+    default:
+      break;
+  }
+
+  return result;
+}
+
 /**
  * 
  * @update	gess12/13/98
