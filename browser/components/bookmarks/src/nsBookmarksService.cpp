@@ -89,6 +89,8 @@
 #include "nsIPlatformCharset.h"
 #include "nsIPref.h"
 
+#include "plbase64.h"
+
 nsIRDFResource      *kNC_IEFavoritesRoot;
 nsIRDFResource      *kNC_SystemBookmarksStaticRoot;
 nsIRDFResource      *kNC_Bookmark;
@@ -3092,7 +3094,8 @@ nsBookmarksService::IsBookmarkedResource(nsIRDFResource *aSource, PRBool *aIsBoo
 }
 
 NS_IMETHODIMP
-nsBookmarksService::UpdateBookmarkIcon(const char *aURL, const PRUnichar *aIconURL)
+nsBookmarksService::UpdateBookmarkIcon(const char *aURL, const char *aMIMEType,
+                                       const PRUint8* aIconData, const PRUint32 aIconDataLen)
 {
     nsCOMPtr<nsIRDFLiteral> urlLiteral;
     nsresult rv = gRDF->GetLiteral(NS_ConvertUTF8toUCS2(aURL).get(),
@@ -3104,6 +3107,32 @@ nsBookmarksService::UpdateBookmarkIcon(const char *aURL, const PRUnichar *aIconU
     rv = mInner->GetSources(kNC_URL, urlLiteral, PR_TRUE, getter_AddRefs(bookmarks));
     if (NS_FAILED(rv))
         return rv;
+
+    // base64 encode the icon data, and create a new literal;
+    // or encode data: if it's invalid
+    nsCOMPtr<nsIRDFLiteral> iconDataLiteral;
+    PRBool isInvalidIcon = PR_FALSE;
+    if (aIconData == NULL || aIconDataLen == 0) {
+        isInvalidIcon = PR_TRUE;
+        rv = gRDF->GetLiteral (NS_LITERAL_STRING("data:").get(), getter_AddRefs(iconDataLiteral));
+        if (NS_FAILED(rv)) return rv;
+    } else {
+        PRInt32 len = ((aIconDataLen + 2) / 3) * 4;
+        char *iconDataBase64 = PL_Base64Encode((const char *) aIconData, aIconDataLen, nsnull);
+        if (!iconDataBase64) {
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        nsString dataUri;
+        dataUri += NS_LITERAL_STRING("data:");
+        dataUri += NS_ConvertASCIItoUTF16(aMIMEType);
+        dataUri += NS_LITERAL_STRING(";base64,");
+        dataUri += NS_ConvertASCIItoUTF16(iconDataBase64, len);
+        nsMemory::Free(iconDataBase64);
+
+        rv = gRDF->GetLiteral (dataUri.get(), getter_AddRefs(iconDataLiteral));
+        if (NS_FAILED(rv)) return rv;
+    }
 
     PRBool hasMoreBookmarks = PR_FALSE;
     while (NS_SUCCEEDED(rv = bookmarks->HasMoreElements(&hasMoreBookmarks)) &&
@@ -3121,29 +3150,21 @@ nsBookmarksService::UpdateBookmarkIcon(const char *aURL, const PRUnichar *aIconU
                 (void) mInner->Unassert(bookmark, kNC_Icon, iconNode);
             }
 
-            // create a new literal for the url
-            nsCOMPtr<nsIRDFLiteral> urlLiteral;
-            rv = gRDF->GetLiteral(aIconURL, getter_AddRefs(urlLiteral));
-            if (NS_FAILED(rv))
-                return rv;
+            nsCOMPtr<nsIRDFPropagatableDataSource> propDS = do_QueryInterface(mInner);
+            PRBool oldPropChanges = PR_TRUE;
 
-            if (nsDependentString(aIconURL).Equals(NS_LITERAL_STRING("data:"))) {
-                // if it's just "data:", then don't send notifications, otherwise
-                // things will update with a null icon
-                nsCOMPtr<nsIRDFPropagatableDataSource> propDS = do_QueryInterface(mInner);
-                PRBool oldPropChanges = PR_TRUE;
-                if (propDS) {
-                    (void) propDS->GetPropagateChanges(&oldPropChanges);
-                    (void) propDS->SetPropagateChanges(PR_FALSE);
-                }
-
-                rv = mInner->Assert(bookmark, kNC_Icon, urlLiteral, PR_TRUE);
-
-                if (propDS)
-                    (void) propDS->SetPropagateChanges(oldPropChanges);
-            } else {
-                rv = mInner->Assert(bookmark, kNC_Icon, urlLiteral, PR_TRUE);
+            // if it's just "data:", then don't send notifications, otherwise
+            // things will update with a null icon
+            if (propDS && isInvalidIcon) {
+                (void) propDS->GetPropagateChanges(&oldPropChanges);
+                (void) propDS->SetPropagateChanges(PR_FALSE);
             }
+
+            rv = mInner->Assert(bookmark, kNC_Icon, iconDataLiteral, PR_TRUE);
+
+            if (propDS && isInvalidIcon)
+                (void) propDS->SetPropagateChanges(oldPropChanges);
+
             if (NS_FAILED(rv))
                 return rv;
 

@@ -1,4 +1,4 @@
-# -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+# -*- Mode: javascript; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 # ***** BEGIN LICENSE BLOCK *****
 # Version: NPL 1.1/GPL 2.0/LGPL 2.1
 # 
@@ -1745,7 +1745,7 @@ bookmarksFavIconLoadListener.prototype = {
   mFavIconURL : null,
   mCountRead : null,
   mChannel : null,
-  mBytes : "",
+  mBytes : Array(),
   mStream : null,
 
   QueryInterface: function (iid) {
@@ -1786,12 +1786,32 @@ bookmarksFavIconLoadListener.prototype = {
       if (this.mCountRead > 16384) {
         dataurl = "data:";      // hack meaning "pretend this doesn't exist"
       } else {
-        // build a data URL for the favicon
-        // we can't really trust contentType, but then, the image loader doesn't
-        // trust it either.
-        dataurl = "data:" + this.mChannel.contentType + ";base64," + btoa(this.mBytes);
+        // get us a mime type for this
+        var mimeType = null;
+
+        const nsICategoryManager = Components.interfaces.nsICategoryManager;
+        const nsIContentSniffer = Components.interfaces.nsIContentSniffer;
+
+        var catMgr = Components.classes["@mozilla.org/categorymanager;1"].getService(nsICategoryManager);
+        var sniffers = catMgr.enumerateCategory("content-sniffing-services");
+        while (mimeType == null && sniffers.hasMoreElements()) {
+          var snifferCID = sniffers.getNext().QueryInterface(Components.interfaces.nsISupportsCString).toString();
+          var sniffer = Components.classes[snifferCID].getService(nsIContentSniffer);
+
+          try {
+            mimeType = sniffer.getMIMETypeFromContent (this.mBytes, this.mCountRead);
+          } catch (e) {
+            mimeType = null;
+            // ignore
+          }
+        }
       }
-      BMSVC.updateBookmarkIcon(this.mURI, dataurl);
+
+      if (mimeType == null) {
+        BMSVC.updateBookmarkIcon(this.mURI, null, null, 0);
+      } else {
+        BMSVC.updateBookmarkIcon(this.mURI, mimeType, this.mBytes, this.mCountRead);
+      }
     }
 
     this.mChannel = null;
@@ -1803,7 +1823,9 @@ bookmarksFavIconLoadListener.prototype = {
     // it's unlikely we'll get more than one onDataAvailable for a
     // favicon anyway
     this.mStream.setInputStream(aInputStream);
-    this.mBytes += this.mStream.readBytes(aCount);
+
+    var chunk = this.mStream.readByteArray(aCount);
+    this.mBytes = this.mBytes.concat(chunk);
     this.mCountRead += aCount;
   },
 
