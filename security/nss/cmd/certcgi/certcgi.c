@@ -47,8 +47,7 @@
 #include "genname.h"
 #include "xconst.h"
 #include "secutil.h"
-#include "blapi.h"
-#include "pqgutil.h"
+#include "pk11pqg.h"
 #include "certxutl.h"
 #include "secrng.h"	/* for RNG_ */
 #include "nss.h"
@@ -510,7 +509,7 @@ makeCertReq(Pair             *form_data,
 	    error_out("ERROR: Unsupported Key length selected");
 	}
 	if (find_field_bool(form_data, "keyType-dsa", PR_TRUE)) {
-	    rv = PQG_ParamGen(keySizeInBits, &pqgParams, &pqgVfy);
+	    rv = PK11_PQG_ParamGen(keySizeInBits, &pqgParams, &pqgVfy);
 	    if (rv != SECSuccess) {
 		error_out("ERROR: Unable to generate PQG parameters");
 	    }
@@ -541,10 +540,10 @@ makeCertReq(Pair             *form_data,
 	SECKEY_DestroySubjectPublicKeyInfo(spki);
     }
     if (pqgParams != NULL) {
-	PQG_DestroyParams(pqgParams);
+	PK11_PQG_DestroyParams(pqgParams);
     }
     if (pqgVfy != NULL) {
-	PQG_DestroyVerify(pqgVfy);
+	PK11_PQG_DestroyVerify(pqgVfy);
     }
     return certReq;
 }
