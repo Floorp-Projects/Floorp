@@ -42,9 +42,11 @@ REQUIRES	= js \
 		  webbrowserpersist \
 		  jsconsole \
 		  find \
+		  htmlparser \
 		  embed_base \
 		  dom \
 		  txtsvc \
+		  lwbrk \
 		  mimetype \
 		  content \
 		  uriloader \

@@ -43,16 +43,20 @@
 #include "nsIFind.h"
 
 #include "nsCOMPtr.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMNode.h"
-#include "nsISelectionController.h"
 #include "nsIDOMRange.h"
 #include "nsDeque.h"
 #include "nsIContentIterator.h"
 #include "nsIParserService.h"
+#include "nsIWordBreaker.h"
 
 class nsIPresShell;
 class nsIAtom;
+
+#define NS_FIND_CONTRACTID "@mozilla.org/embedcomp/rangefind;1"
+
+#define NS_FIND_CID \
+ {0x471f4944, 0x1dd2, 0x11b2, {0x87, 0xac, 0x90, 0xbe, 0x0a, 0x51, 0xd6, 0x09}}
 
 class nsFind : public nsIFind
 {
@@ -66,20 +70,17 @@ public:
 protected:
   static PRInt32 sInstanceCount;
   static nsIAtom* sScriptAtom;
+  static nsIAtom* sTextAtom;
+  static nsIAtom* sCommentAtom;
+  static nsIAtom* sImgAtom;
+  static nsIAtom* sHRAtom;
 
   // Parameters set from the interface:
-  nsCOMPtr<nsIDOMDocument> mDoc;
-  nsCOMPtr<nsIDOMRange> mRange;   // search only in this range
+  //nsCOMPtr<nsIDOMRange> mRange;   // search only in this range
   PRPackedBool mFindBackward;
   PRPackedBool mCaseSensitive;
-  PRPackedBool mWrapFind;
-  PRPackedBool mEntireWord;
 
-  // Other items we need to save:
-  PRPackedBool mWrappedOnce;
-
-  nsCOMPtr<nsISelectionController> mSelCon;
-
+  nsCOMPtr<nsIWordBreaker> mWordBreaker;
   nsCOMPtr<nsIParserService> mParserService;
 
   PRInt32 mIterOffset;
@@ -94,23 +95,23 @@ protected:
   nsresult GetBlockParent(nsIDOMNode* aNode, nsIDOMNode** aParent);
 
   // Utility routines:
-  nsresult SetRangeToSelection();
-  void SetRangeAroundDocument();
   PRBool IsTextNode(nsIDOMNode* aNode);
   PRBool IsBlockNode(nsIContent* aNode);
   PRBool SkipNode(nsIContent* aNode);
-  void SetSelectionAndScroll(nsIDOMRange* aRange);
   void AddIterNode(PRInt32 aPatLen);
-  nsresult GetRootNode(nsIDOMNode** aNode);
 
   PRBool FindInQ(const PRUnichar* aPatStr, PRInt32 aPatLen,
+                 nsIDOMRange* aSearchRange,
+                 nsIDOMRange* aStartPoint, nsIDOMRange* aEndPoint,
                  nsIDOMRange** aRangeRet);
 
   // Move in the right direction for our search:
-  nsresult NextNode();
+  nsresult NextNode(nsIDOMRange* aSearchRange,
+                    nsIDOMRange* aStartPoint, nsIDOMRange* aEndPoint,
+                    PRBool aContinueOk);
 
   // The iterator we use to move through the document:
-  nsresult InitIterator();
+  nsresult InitIterator(nsIDOMRange* aSearchRange);
   nsCOMPtr<nsIContentIterator> mIterator;
 
   void ClearQ();
