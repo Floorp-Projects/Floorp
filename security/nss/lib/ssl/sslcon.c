@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslcon.c,v 1.12 2001/09/25 01:25:41 wtc%netscape.com Exp $
+ * $Id: sslcon.c,v 1.13 2001/10/31 20:03:29 relyea%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -1581,6 +1581,7 @@ ssl2_CreateSessionCypher(sslSocket *ss, sslSessionID *sid, PRBool isClient)
 	if (readcx)  (*sec->destroy)(readcx, PR_TRUE);
 	if (writecx) (*sec->destroy)(writecx, PR_TRUE);
     }
+    sec->destroy = NULL;
     if (slot) PK11_FreeSlot(slot);
 
   sec_loser:
