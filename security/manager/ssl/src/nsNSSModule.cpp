@@ -197,4 +197,4 @@ static nsModuleComponentInfo components[] =
 
 };
 
-NS_IMPL_NSGETMODULE("NSS", components);
+NS_IMPL_NSGETMODULE(NSS, components);
