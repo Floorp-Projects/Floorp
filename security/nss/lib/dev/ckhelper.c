@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.18 $ $Date: 2002/04/04 20:00:21 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.19 $ $Date: 2002/04/09 17:58:00 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKEPV_H
@@ -170,7 +170,9 @@ nssCKObject_GetAttributes
 	 * of the attributes we passed. For those tokens read them one at
 	 * a time */
 	for (i=0; i < count; i++) {
-	    if (obj_template[i].ulValueLen == 0) {
+	    if ((obj_template[i].ulValueLen == 0) 
+				|| (obj_template[i].ulValueLen == -1)) {
+		obj_template[i].ulValueLen=0;
 		(void) nssCKObject_GetAttributes(object,&obj_template[i], 1,
 			arenaOpt, session, slot);
 	    }
