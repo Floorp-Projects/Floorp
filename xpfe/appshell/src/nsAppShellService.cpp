@@ -251,7 +251,7 @@ nsAppShellService::EnumerateComponents( void (nsAppShellService::*function)( con
          &&
          ( failed = "Open" )
          &&
-         NS_SUCCEEDED( ( rv = registry->Open() ) )
+         NS_SUCCEEDED( ( rv = registry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry) ) )
          &&
          ( failed = "GetSubtree" )
          &&

@@ -287,7 +287,7 @@ NSRegisterSelf( nsISupports* aServiceMgr, const char* path ) { \
                                                          nsIRegistry::GetIID(), \
                                                          (nsISupports**)&registry ); \
                 if ( NS_SUCCEEDED( rv ) ) { \
-                    registry->Open(); \
+                    registry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry); \
                     char buffer[256]; \
                     char *cid = className::GetCID().ToString(); \
                     PR_snprintf( buffer, \
