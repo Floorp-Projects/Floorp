@@ -32,7 +32,6 @@
  */
 #include "cmtcmn.h"
 #include "cmtutils.h"
-#include "obscure.h"
 #include "messages.h"
 #ifdef XP_MAC
 #include "cmtmac.h"

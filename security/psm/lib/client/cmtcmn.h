@@ -62,7 +62,6 @@
 #endif
 #endif
 #include "cmtclist.h"
-#include "obscure.h"
 
 typedef void (*void_fun) (void);
 
@@ -414,7 +413,6 @@ typedef struct _CMT_CONTROL {
     CMUint32 policy;
     CMInt32 refCount;
     CMT_MUTEX* mutex;
-    SSMObscureObject *obscureObj;
     char *serverStringVersion;
     CMT_SocketFuncs  sockFuncs;
     CMT_UserCallbacks userFuncs;

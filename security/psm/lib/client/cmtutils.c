@@ -347,7 +347,7 @@ CMTStatus CMT_ReceiveMessage(PCMT_CONTROL control, CMTItem * response)
     CMTMessageHeader header;
     CMUint32 numread, rv;
 
-    /* Get the obscured message header */
+    /* Get the message header */
     numread = CMT_ReadThisMany(control, control->sock, 
                             (void *)&header, sizeof(CMTMessageHeader));
     if (numread != sizeof(CMTMessageHeader)) {
