@@ -1,0 +1,155 @@
+<?xml version="1.0"?> 
+<!-- The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Mozilla Communicator client code, released
+March 31, 1998.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+Copyright (C) 1998-1999 Netscape Communications Corporation. All
+Rights Reserved.
+
+Contributor(s): ______________________________________. -->
+
+<!DOCTYPE window SYSTEM "chrome://navigator/locale/navigator.dtd" >
+
+<overlay id="navigatorOverlay"
+        xmlns:html="http://www.w3.org/TR/REC-html40"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<keyset id="defaultBrowserKeySet">
+  <!-- key id="newmessagekb" disabled="false" command="true" key="m" onkeypress="NewMessage()" / -->
+
+    <key id="newBrowserKb"   	disabled="false" command="true" key="n" observes="Browser:NewWindow" />
+    <key id="newMailKb"  		disabled="false" command="true" key="m" observes="Browser:NewMail" />
+    <key id="newBlankPageKB"    disabled="false" command="true" shift="true" key="n" observes="Browser:NewEditor"/>
+    <key id="openBrowserKb"     disabled="false" command="true" key="o" observes="Browser:OpenUrl" />
+    <key id="openFileKb"        disabled="false" command="true" key="l" observes="Browser:OpenFile" />
+    <key id="printKb"           disabled="false" command="true" key="p" observes="Browser:Print" />
+	<key id="closeKb"           disabled="false" command="true" key="w" observes="Browser:Close" />
+    <key id="quitKb"            disabled="false" command="true" key="q" observes="Browser:Quit" />
+
+	<key id="goForwardKb"         disabled="false" command="true" key="]" observes="Browser:GoForward" />
+	<key id="goBackwardKb"        disabled="false" command="true" key="[" observes="Browser:GoBackwards" />
+    <key id="goHomeKb"            disabled="false" command="true" key="h" observes="Browser:GoHome" />
+    
+    <key id="addBookmarkKb"        disabled="false" command="true" key="d" observes="Browser:AddBookmark" />
+    <key id="manBookmarkKb"        disabled="false" command="true" key="b" observes="Browser:ManageBookmark" />
+
+<!-- how to handle return, enter, tab, function keys, arrow keys, others? saari working on solution -->
+  </keyset>
+
+<broadcasterset id="browserbroadcasterset">
+<!-- Broadcaster nodes -->
+  <broadcaster id="Browser:NewWindow"    	value="&browserCmd.label;"                  		         oncommand="BrowserNewWindow()"/>
+  <broadcaster id="Browser:NewMail"         value="&newMailCmd.label;"                          		 oncommand="MsgNewMessage();"/>
+  <broadcaster id="Browser:NewEditor"       value="&newBlankPageCmd.label;"         					 oncommand="BrowserNewEditorWindow();"/>
+  <broadcaster id="Browser:NewEditorTemplate" value="&newPageFromTemplateCmd.label;"    disabled="true"  oncommand="BrowserNewWindow();"/>
+  <broadcaster id="Browser:NewEditorDraft"  value="&newPageFromDraftCmd.label;"        	disabled="true"  oncommand="BrowserNewWindow();"/>
+ 
+  <broadcaster id="Browser:Open"  value="&openCmd.label;"        										 oncommand="BrowserOpenWindow();"/>
+  <broadcaster id="Browser:OpenFile"  value="&openFileCmd.label;"        								 oncommand="BrowserOpenFileWindow();"/>
+  <broadcaster id="Browser:SendPage"  value="&sendPageCmd.label;"        	disabled ="true" 			 oncommand="BrowserReload();"/>
+  <broadcaster id="Browser:EditPage"  value="&editPageCmd.label;"      									 oncommand="BrowserEditPage(window.content.location.href);"/>
+ 	
+  <broadcaster id="Browser:GoOffline"  value="&offlineGoOfflineCmd.label;"       disabled="true" 		 oncommand="BrowserReload();"/>
+  <broadcaster id="Browser:Synchronize"  value="&openFileCmd.label;"        	 disabled="true" 		 oncommand="BrowserReload();"/>
+  
+  <broadcaster id="Browser:PrintSetup"  value="&printSetupCmd.label;"        	disabled ="true" 		 oncommand="BrowserReload();"/>
+  <broadcaster id="Browser:PrintPreview"  value="&offlineSynchronizeCmd.label;" disabled="true"     	 oncommand="BrowserReload();"/>
+  <broadcaster id="Browser:Print"  value="&printCmd.label;"        										 oncommand="BrowserPrint();"/>
+  
+ 
+  <broadcaster id="Browser:Close"  value="&closeCmd.label;"    oncommand="BrowserClose();"/>
+  <broadcaster id="Browser:Quit"  value="&quitCmd.label;"      oncommand="BrowserExit"/>
+  
+  
+  <broadcaster id="canGoBack" 	 value="&goBackCmd.label;" 		disabled="true" 		oncommand="BrowserBack();"/>
+  <broadcaster id="canGoForward" value="&goForwardCmd.label;" disabled="true"	oncommand="BrowserForward();"/>
+  <broadcaster id="Browser:Home" value="&goHomeCmd.label;" 						oncommand="BrowserHome();" />
+  
+  <broadcaster id="Browser:AddBookmark" value="&addCurPageCmd.label;" 	oncommand="BrowserAddBookmark(window.content.location.href,window.content.document.title);"/>
+  <broadcaster id="Browser:ManageBookmark" value="&manBookmarksCmd.label;" 						oncommand="BrowserEditBookmarks();" />
+</broadcasterset>
+
+
+<menu accesskey="&fileMenu.accesskey;" value="&fileMenu.label;" id="fileMenu">
+    <menupopup>
+      <menuitem accesskey="&browserCmd.accesskey;" key="newBrowserKb" observes="Browser:NewWindow" />
+	    <menu value="&newMenu.label;" accesskey="&newMenu.accesskey;">
+          <menupopup>
+            <menuitem accessKey="&newMailCmd.accesskey;" key="newMailKb" observes="Browser:NewMail"/>
+              <menuseparator />
+              <menuitem accessKey="&newBlankPageCmd.accesskey;" key="newBlankPageKB" observes="Browser:NewEditor"/>
+              <menuitem accessKey="&newPageFromTemplateCmd.accesskey;" observes="Browser:NewEditorTemplate"/>
+              <menuitem accessKey="&newPageFromDraftCmd.accesskey;" observes="Browser:NewEditorDraft"/>
+          </menupopup>
+        </menu>
+
+      <menuitem accesskey="&openCmd.accesskey;" key="openBrowserKb" observes="Browser:Open"/>
+      <menuitem accesskey="&openFileCmd.accesskey;" key="openFileKb" observes="Browser:OpenFile"/>
+      <menuseparator/>
+      <menuitem accesskey="&sendPageCmd.label;" observes="Browser:SendPage"/>
+      <menuitem accesskey="&editPageCmd.label;" observes="Browser:EditPage" />
+      <menuseparator />
+      <menu value="&offlineMenu.label;" accesskey="&offlineMenu.accesskey;">
+        <menupopup>
+          <menuitem accesskey="&offlineGoOfflineCmd.accesskey;" observes="Browser:GoOffline"/>
+          <menuseparator />
+          <menuitem accesskey="&offlineSynchronizeCmd.accesskey;" observes="Browser:Synchronize"/>
+        </menupopup>
+      </menu>
+      <menuseparator/>
+      <menuitem accesskey="&printSetupCmd.accesskey;" observes="Browser:PrintSetup"/>
+      <menuitem accesskey="&printPreviewCmd.accesskey;" observes="Browser:PrintPreview"/>
+      <menuitem accesskey="&printCmd.accesskey;" key="printKb" observes="Browser:Print"/>
+      <menuseparator />
+      <menuitem accesskey="&closeCmd.accesskey;" key="closeKb" observes="Browser:Close"/>
+      <menuitem accesskey="&quitCmd.accesskey;" key="quitKb" observes="Browser:Quit"/>
+  </menupopup>
+</menu>
+
+  <menu accesskey="&goMenu.accesskey;" id="gomenu" value="&goMenu.label;" >
+	  <menupopup>
+		  <menuitem id="menuitem-back" accesskey="&goBackCmd.accesskey;"  key="goBackwardKb" observes="canGoBack"/>
+		  <menuitem id="menuitem-forward" accesskey="&goForwardCmd.accesskey;"  key="goForwardKb" observes="canGoForward" />
+		  <menuitem accesskey="&goHomeCmd.accesskey;" key="goHomeKb" observes="Browser:Home"/>
+		  <menuseparator />
+	  </menupopup>
+    </menu>
+    
+    
+      <menu accesskey="&bookmarksMenu.accesskey;" value="&bookmarksMenu.label;"
+                           datasources="rdf:bookmarks rdf:files rdf:find rdf:internetsearch" id="BookmarksMenu" ref="NC:BookmarksRoot">
+		<template>
+			<rule iscontainer="true">
+			  <menupopup>
+				<menu uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+			  </menupopup>
+			</rule>
+			<rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
+			  <menupopup> 
+				<menuseparator uri="..." />
+			  </menupopup>
+			</rule>
+			<rule>
+			  <menupopup>
+				<menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="OpenBookmarkURL(event.target, 'BookmarksMenu')" />
+			  </menupopup>
+			</rule>
+		</template>
+		<menupopup>
+			<menuitem accesskey="&addCurPageCmd.accesskey;" key="addBookmarkKb" observes="Browser:AddBookmark"/>
+			<menuitem accesskey="&manBookmarksCmd.accesskey;" key="manBookmarkKb" observes="Browser:ManageBookmark"/>
+			<menuseparator/>
+		</menupopup>
+    </menu>
+</overlay>
