@@ -5907,7 +5907,7 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
             nsIFrame*     frame = GetFrameFor(shell, aPresContext, aContainer);
             nsTreeRowGroupFrame* frameTreeRowGroup = (nsTreeRowGroupFrame*)frame;
             if(frameTreeRowGroup)
-              frameTreeRowGroup->OnContentInserted(aPresContext, nextSibling);
+              frameTreeRowGroup->OnContentInserted(aPresContext, nextSibling, aIndexInContainer);
           }
           return NS_OK;
         }

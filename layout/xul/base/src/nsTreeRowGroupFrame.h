@@ -74,7 +74,7 @@ public:
 
   // Responses to changes
   void OnContentAdded(nsIPresContext* aPresContext);
-  void OnContentInserted(nsIPresContext* aPresContext, nsIFrame* aNextSibling);
+  void OnContentInserted(nsIPresContext* aPresContext, nsIFrame* aNextSibling, PRInt32 aIndex);
   void OnContentRemoved(nsIPresContext* aPresContext, nsIFrame* aChildFrame);
 
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext, nsIContent* aChild,
