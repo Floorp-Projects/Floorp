@@ -429,7 +429,7 @@ const int kReuseWindowOnAE = 2;
     else
       [browserWindowController loadURL:[(Bookmark *)item url] referrer:nil activate:YES];
   }
-  else if ([item isKindOfClass:[BookmarkFolder class]] && [(BookmarkFolder *)item isGroup])
+  else if ([item isKindOfClass:[BookmarkFolder class]])
   {
     if (openInNewWindow)
       [self openBrowserWindowWithURLs:[(BookmarkFolder *)item childURLs] behind:behindWindow];
