@@ -591,7 +591,7 @@ foreach my $id (@idlist) {
     SendSQL("LOCK TABLES bugs $write, bugs_activity $write, cc $write, " .
             "profiles $write, dependencies $write, votes $write, " .
             "keywords $write, longdescs $write, fielddefs $write, " .
-            "keyworddefs READ, groups READ");
+            "keyworddefs READ, groups READ, attachments READ");
     my @oldvalues = SnapShotBug($id);
     my $i = 0;
     foreach my $col (@::log_columns) {
