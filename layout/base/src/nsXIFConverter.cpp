@@ -307,9 +307,9 @@ void nsXIFConverter::AddContent(const nsString& aContent)
 void nsXIFConverter::AddComment(const nsString& aContent)
 {
 
-  mBuffer.Append(mBeginComment);
+//  mBuffer.Append(mBeginComment);
     mBuffer.Append(aContent);
-  mBuffer.Append(mEndComment);
+//  mBuffer.Append(mEndComment);
 }
 
 
@@ -456,10 +456,16 @@ void nsXIFConverter::EndCSSDeclaration()
 
 void nsXIFConverter::Write()
 {
-
-
 #if defined(WIN32)
   const char* filename="c:\\temp\\xif.html";
+  ofstream out(filename);
+
+  char* s = mBuffer.ToNewCString();
+  out << s;
+  out.close();
+  delete[] s;
+#elif defined(XP_UNIX)
+  const char* filename="/tmp/xif.html";
   ofstream out(filename);
 
   char* s = mBuffer.ToNewCString();
