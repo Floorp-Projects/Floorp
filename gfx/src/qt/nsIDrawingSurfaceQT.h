@@ -22,7 +22,7 @@
 #include "nsIDrawingSurface.h"
 
 class QPainter;
-class QPixmap;
+class QPaintDevice;
 
 // windows specific drawing surface method set
 
@@ -40,7 +40,7 @@ public:
      * @param  aDC HDC to initialize drawing surface with
      * @return error status
      **/
-    NS_IMETHOD Init(QPixmap * aPixmap, QPainter * aGC) = 0;
+    NS_IMETHOD Init(QPaintDevice * aPaintDevice, QPainter * aGC) = 0;
 
     /**
      * Initialize an offscreen drawing surface using a
