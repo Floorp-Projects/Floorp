@@ -290,7 +290,7 @@ private:
 
 
 
-nsresult NS_NewRangeList(nsIDOMSelection **);
+nsresult NS_NewRangeList(nsIFrameSelection **aRangeList);
 
 nsresult NS_NewRangeList(nsIFrameSelection **aRangeList)
 {
@@ -3226,26 +3226,11 @@ nsDOMSelection::ScrollIntoView(SelectionRegion aRegion)
   // leaving caret turds on the screen!
   //
   nsCOMPtr<nsIPresShell> presShell;
-
   result = GetPresShell(getter_AddRefs(presShell));
-
   if (NS_FAILED(result))
     return result;
 
-  PRBool caretEnabled = PR_FALSE;
-
-  result = presShell->GetCaretEnabled(&caretEnabled);
-
-  if (NS_FAILED(result))
-    return result;
-
-  if (caretEnabled)
-  {
-    result = presShell->SetCaretEnabled(PR_FALSE);
-
-    if (NS_FAILED(result))
-      return result;
-  }
+  StCaretHider  caretHider(presShell);			// stack-based class hides and shows the caret
 
   //
   // Scroll the selection region into view.
@@ -3257,18 +3242,6 @@ nsDOMSelection::ScrollIntoView(SelectionRegion aRegion)
     return result;
 
   result = ScrollRectIntoView(rect, NS_PRESSHELL_SCROLL_ANYWHERE, NS_PRESSHELL_SCROLL_ANYWHERE);
-
-  //
-  // Turn the caret back on.
-  //
-  if (caretEnabled)
-  {
-    result = presShell->SetCaretEnabled(PR_TRUE);
-
-    if (NS_FAILED(result))
-      return result;
-  }
-
   return result;
 }
 
