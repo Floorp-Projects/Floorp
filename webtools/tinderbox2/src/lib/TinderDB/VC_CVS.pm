@@ -129,7 +129,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.10 $ )[1];
+$VERSION = ( qw $Revision: 1.11 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -467,15 +467,31 @@ sub status_table_row {
     } else {
       $mindate = $main::TIME;
     }
-    
+    my $format_maxdate = HTMLPopUp::timeHTML($maxdate);
+    my $format_mindate = HTMLPopUp::timeHTML($mindate);
+    my $time_interval_str = "$format_maxdate to $format_mindate",
+
+    # create a string of all VC data for displaying with the checkin table
+
+    my $vc_info;
+    foreach $key ('module',) {
+      $vc_info .= "$key: $TreeData::VC_TREE{$tree}{$key} <br>\n";
+    }
+
+    # I wish we could give only the information for a particular
+    # branch, since we can not document that this is for all branches
+
+    $vc_info .= "branch: all <br>\n";
+
+    # define a table, to show what was checked in for each author
+
     foreach $author (sort keys %authors) {
       my ($table) = '';
       my ($num_rows) = 0;
       my ($max_length) = 0;
       
-      # define a table, to show what was checked in
       $table .= (
-                 "Checkins by <b>$author</b>\n".
+                 "Checkins by <b>$author</b> <br> for $vc_info \n".
                  "<table border cellspacing=2>\n".
                  "");
       
@@ -512,7 +528,10 @@ sub status_table_row {
                           "linktxt" => "\t\t<tt>$author</tt>",
                           
                           "windowtxt" => $table,
-                          "windowtitle" => "VC Info Author: $author",
+                          "windowtitle" => ("VC Info ".
+                                            "Author: $author ".
+                                            "$time_interval_str "),
+
                           "windowheight" => ($num_rows * 50) + 100,
                           "windowwidth" => ($max_length * 10) + 100,
                          );
@@ -546,8 +565,8 @@ sub status_table_row {
                              );
       }
 
-	# put each link on its own line and add good comments so we
-	# can debug the HTML.
+      # put each link on its own line and add good comments so we
+      # can debug the HTML.
 
       $query_link = "\t\t".$query_link."\n";
 
