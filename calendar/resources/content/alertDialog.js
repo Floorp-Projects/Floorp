@@ -116,7 +116,7 @@ function onAlarmCall( Event )
 {
    var AddToArray = true;
    //check and make sure that the event is not already in the array
-   for( i = 0; i < gAllEvents.length; i++ )
+   for( var i = 0; i < gAllEvents.length; i++ )
    {
       if( gAllEvents[i].id == Event.id )
          AddToArray = false;   
