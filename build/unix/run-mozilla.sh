@@ -141,7 +141,7 @@ moz_get_debugger()
 		moz_test_binary /bin/type
 		if [ $? -eq 1 ]
 		then
-			dpath=`type ${d} | awk '{print $3;}'`	
+			dpath=`type ${d} | awk '{print $3;}' | sed -e 's/\.$//'`	
 		else 	
 			dpath=`which ${d}`	
 		fi
@@ -172,7 +172,7 @@ moz_run_program()
 	moz_test_binary /bin/type
 	if [ $? -eq 1 ]
 	then
-		crc_prog=`type md5sum 2>/dev/null | awk '{print $3;}' 2>/dev/null`
+		crc_prog=`type md5sum 2>/dev/null | awk '{print $3;}' 2>/dev/null | sed -e 's/\.$//'`
 	else
 		crc_prog=`which md5sum 2>/dev/null`
 	fi
@@ -240,7 +240,7 @@ moz_debug_program()
 		moz_test_binary /bin/type
 		if [ $? -eq 1 ]
 		then	
-			debugger=`type $moz_debugger | awk '{print $3;}'` 
+			debugger=`type $moz_debugger | awk '{print $3;}' | sed -e 's/\.$//'` 
 		else
 			debugger=`which $moz_debugger` 
 		fi	
