@@ -132,7 +132,7 @@ sub SendSQL {
     SqlLog($str);
     $::currentquery = $::db->prepare($str);
     $::currentquery->execute
-	|| die "$str: " . $::db->errmsg;
+	|| die "$str: " . $::db->errstr;
     SqlLog("Done");
     if (!$dontshadow && $iswrite && Param("shadowdb")) {
         my $q = SqlQuote($str);
