@@ -40,6 +40,13 @@
           var element = document.getElementById( "cookiesCell" );
           element.setAttribute( "value", element.getAttribute( "valueWithImages" ) );
         }      
+
+      if (top.window.navigator.platform == "Macintosh") {
+        var advancedChildren = document.getElementById("advancedChildren");
+        var mousewheelItem = document.getElementById("mousewheelItem");
+        advancedChildren.removeChild(mousewheelItem);
+      }
+
       // Test for presence of "winhooks" component.
       var showWinhooks = false;
       try {
