@@ -63,7 +63,7 @@ Contributor(s):
       </row>
       <row>
         <spacer/>
-        <vbox>
+        <vbox align="start">
           <checkbox id="dialog.caseSensitive" label="&caseSensitiveCheckbox.label;"/>
           <checkbox id="dialog.wrap" label="&wrapCheckbox.label;"/>
           <checkbox id="dialog.searchBackwards" label="&backwardsCheckbox.label;"/>
