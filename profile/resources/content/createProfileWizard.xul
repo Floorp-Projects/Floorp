@@ -6,7 +6,7 @@
 <!DOCTYPE window SYSTEM "chrome://profile/locale/createProfileWizard.dtd">
 
 <window title="&newprofile.title;" align="vertical"
-  class="dialog"
+  class="color-dialog"
 	xmlns:html="http://www.w3.org/TR/REC-html40"
 	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"

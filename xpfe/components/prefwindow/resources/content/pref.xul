@@ -38,23 +38,20 @@ Contributor(s): ______________________________________. -->
   persist="width height"
   width="620" height="470"> 
 
-  <html:script language="javascript" src="chrome://global/content/strres.js" />
-  <html:script language="javascript" src="chrome://global/content/dialogOverlay.js" />
-  <html:script language="javascript" src="chrome://global/content/widgetStateManager.js" />
-  <html:script language="javascript" src="chrome://pref/content/pref.js" />
+  <script language="javascript" src="chrome://global/content/strres.js" />
+  <script language="javascript" src="chrome://global/content/dialogOverlay.js" />
+  <script language="javascript" src="chrome://global/content/widgetStateManager.js" />
+  <script language="javascript" src="chrome://pref/content/pref.js" />
 
   <keyset id="keyset"/>
 
-  <spring style="height: 7px"/>
-  <box align="horizontal" flex="100%" style="width: 100%">
-    <!-- we may like to load this into a tabpanel set as per mpt's post -->
-    <spring style="width: 7px;"/>
+  <box flex="1">
     <!-- tree sidebar -->
     <tree id="prefsTree" class="inset"/>
-    <spring style="width: 10px;"/>
+
     <!-- content frame -->
     <html:iframe id="panelFrame" name="panelFrame" style="width:0px" flex="6"/>
-    <html:script language="javascript">
+    <script language="javascript">
     <![CDATA[
       if( window.arguments && window.arguments[0] ) {
         dump("*** panel to load is = " + window.arguments[0] + "\n");
@@ -65,16 +62,12 @@ Contributor(s): ______________________________________. -->
         document.getElementById("panelFrame").setAttribute("src", "chrome://pref/content/pref-navigator.xul" );
       }
     ]]>
-    </html:script>
-    
-    <spring style="width: 7px;"/>
+    </script>
   </box>
-  <html:div class="separator" align="horizontal" style="margin-bottom: -2px;"/>
-  <box align="horizontal">
-    <spring flex="100%"/>
-    <box id="okCancelButtons" style="margin-bottom: -2px;"/>
-  </box>
-  <spring style="height: 7px"/>
+
+  <separator class="groove"/>
+
+  <box id="okCancelButtons" />
 
   <keyset>
     <key id="fooKey" key="p" xulkey="true" shift="true" onkeydown="foo()"/>

@@ -27,7 +27,7 @@
 <window 
     xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
-    class="dialog wizardPanel"
+    class="color-dialog wizardPanel"
     orient="vertical"
 		onload="parent.wizardManager.onPageLoad('newProfile1_1');"> 
 
