@@ -69,11 +69,14 @@ nsFtpConnectionThread::nsFtpConnectionThread(nsIEventQueue* aEventQ, nsIStreamLi
     mAscii = PR_TRUE;
     mLength = 0;
     mConnected = PR_FALSE;
+
+	mLock = PR_NewLock();
 }
 
 nsFtpConnectionThread::~nsFtpConnectionThread() {
     NS_IF_RELEASE(mListener);
     NS_IF_RELEASE(mEventQueue);
+	PR_DestroyLock(mLock);
 }
 
 
@@ -87,14 +90,21 @@ nsFtpConnectionThread::Cancel(void) {
 
 NS_IMETHODIMP
 nsFtpConnectionThread::Suspend(void) {
-    return NS_ERROR_NOT_IMPLEMENTED;
+	PRStatus status;
+	PR_Lock(mLock);
+	status = PR_Sleep(PR_INTERVAL_NO_TIMEOUT);
+	PR_Unlock(mLock);
+	if (PR_FAILURE == status)
+		return NS_FAILURE;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFtpConnectionThread::Resume(void) {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
-#endif
+#endif // #if 0
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsIRunnable method:
 
@@ -105,6 +115,9 @@ nsFtpConnectionThread::Run() {
     PRBool processing = PR_TRUE;
     nsIChannel* lCPipe = nsnull;
     nsIChannel* lDPipe = nsnull;
+
+	// set our thread var
+	mThread = PR_CurrentThread();
 
     mState = FTP_S_USER;
 
@@ -1296,8 +1309,10 @@ nsFtpConnectionThread::Init(nsIThread* aThread, nsIURI* aUrl) {
     PR_CNotify(this);
     PR_CExitMonitor(this);
 */
+	PR_Lock(mLock);
     mUrl = aUrl;
     NS_ADDREF(mUrl);
+	PR_Unlock(mLock);
     return NS_OK;
 }
 
@@ -1305,7 +1320,9 @@ nsresult
 nsFtpConnectionThread::SetAction(FTP_ACTION aAction) {
     if (mConnected)
         return NS_ERROR_ALREADY_CONNECTED;
+	PR_Lock(mLock);
     mAction = aAction;
+	PR_Unlock(mLock);
     return NS_OK;
 }
 
@@ -1313,7 +1330,9 @@ nsresult
 nsFtpConnectionThread::SetUsePasv(PRBool aUsePasv) {
     if (mConnected)
         return NS_ERROR_ALREADY_CONNECTED;
+	PR_Lock(mLock);
     mUsePasv = aUsePasv;
+	PR_Unlock(mLock);
     return NS_OK;
 }
 
