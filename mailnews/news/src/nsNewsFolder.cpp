@@ -102,7 +102,6 @@ static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kCNewsDB, NS_NEWSDB_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
-static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 
 // ###tw  This really ought to be the most
 // efficient file reading size for the current
@@ -386,30 +385,31 @@ nsresult nsMsgNewsFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
     rv = GetPath(getter_AddRefs(pathSpec));
     if (NS_FAILED(rv)) return rv;
     
-    nsresult folderOpen = NS_OK;
-    nsCOMPtr <nsIMsgDatabase> newsDBFactory;
-    
-    rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, NS_GET_IID(nsIMsgDatabase), getter_AddRefs(newsDBFactory));
-    if (NS_SUCCEEDED(rv) && newsDBFactory) {
-      folderOpen = newsDBFactory->OpenFolderDB(this, PR_TRUE, PR_FALSE, getter_AddRefs(mDatabase));
-    }
+    nsCOMPtr <nsIMsgDatabase> newsDBFactory = do_CreateInstance(kCNewsDB, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    nsresult folderOpen = newsDBFactory->OpenFolderDB(this, PR_TRUE, PR_FALSE, getter_AddRefs(mDatabase));
     
     if(folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING || folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE)
       folderOpen = newsDBFactory->OpenFolderDB(this, PR_TRUE, PR_TRUE, getter_AddRefs(mDatabase));
 
-    if (mDatabase) {
-      if(mAddListener)
-        rv = mDatabase->AddListener(this);
+    if (NS_FAILED(folderOpen))
+      return folderOpen;
+
+    if(mAddListener)
+      rv = mDatabase->AddListener(this);
       
-      nsCOMPtr<nsINewsDatabase> db(do_QueryInterface(mDatabase, &rv));
-      if (NS_FAILED(rv)) return rv;        
+    nsCOMPtr<nsINewsDatabase> db = do_QueryInterface(mDatabase, &rv);
+    if (NS_FAILED(rv)) 
+      return rv;        
       
-      rv = db->SetReadSet(mReadSet);
-      if (NS_FAILED(rv)) return rv;        
-      rv = UpdateSummaryTotals(PR_TRUE);
-    }
-    if (NS_FAILED(rv)) return rv;
-    
+    rv = db->SetReadSet(mReadSet);
+    if (NS_FAILED(rv)) 
+      return rv;        
+
+    rv = UpdateSummaryTotals(PR_TRUE);
+    if (NS_FAILED(rv)) 
+      return rv;
   }
   return NS_OK;
 }
@@ -769,9 +769,7 @@ nsMsgNewsFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDataba
     return NS_ERROR_NULL_POINTER; 
 
   openErr = GetDatabase(nsnull);
-
-  *db = mDatabase;
-  NS_IF_ADDREF(*db);
+  NS_IF_ADDREF(*db = mDatabase);
   if (NS_SUCCEEDED(openErr)&& *db)
     openErr = (*db)->GetDBFolderInfo(folderInfo);
   return openErr;
@@ -1241,8 +1239,8 @@ nsresult nsMsgNewsFolder::CreateNewsgroupUrlForSignon(const char *inUriStr, cons
     PRInt32 port = 0;
     nsXPIDLCString spec;
 
-    nsCOMPtr<nsIURL> url;
-    nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, NS_GET_IID(nsIURL), (void **) getter_AddRefs(url));
+    nsCOMPtr<nsIURL> url = do_CreateInstance(NS_STANDARDURL_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
 
     rv = url->SetSpec(inUriStr);
     if (NS_FAILED(rv)) return rv;
