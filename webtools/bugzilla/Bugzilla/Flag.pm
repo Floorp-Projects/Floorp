@@ -32,6 +32,7 @@ package Bugzilla::Flag;
 use Bugzilla::FlagType;
 use Bugzilla::User;
 use Bugzilla::Config;
+use Bugzilla::Util;
 
 use Attachment;
 
@@ -312,7 +313,7 @@ sub modify {
         my $flag = get($id);
 
         my $status = $data->{"flag-$id"};
-        my $requestee_email = &::trim($data->{"requestee-$id"});
+        my $requestee_email = trim($data->{"requestee-$id"});
         
         # Ignore flags the user didn't change.  A flag hasn't changed
         # if its status and requestee remain the same.  Status is easy;
