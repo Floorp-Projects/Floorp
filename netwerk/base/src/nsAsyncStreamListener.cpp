@@ -57,6 +57,7 @@ public:
     virtual ~nsAsyncStreamObserver();
 
     nsresult Init(nsIStreamObserver* aObserver, nsIEventQueue* aEventQ) {
+        nsresult rv = NS_OK;
         mReceiver = aObserver;
         
         NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueService, &rv);
