@@ -40,7 +40,7 @@
 #include "nsIDocumentLoader.h"
 #include "nsIPref.h"
 //#include "nsIDocumentWidget.h"
-#include "nsHTMLFrameset.h"
+#include "nsFrameSetFrame.h"
 #include "nsIDOMHTMLFrameElement.h"
 #include "nsIDOMHTMLIFrameElement.h"
 #include "nsGenericHTMLElement.h"
