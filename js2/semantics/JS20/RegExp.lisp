@@ -609,32 +609,35 @@
             (assert-true (eq (first result) 'r:r-e-match))
             (return (list* i (subseq input i (second result)) (cddr result)))))))))
 
+(defun dump-regexp ()
+  (values
+   (depict-rtf-to-local-file
+    "JS20/RegExpGrammar.rtf"
+    "Regular Expression Grammar"
+    #'(lambda (rtf-stream)
+        (depict-world-commands rtf-stream *rw* :heading-offset 1 :visible-semantics nil)))
+   (depict-rtf-to-local-file
+    "JS20/RegExpSemantics.rtf"
+    "Regular Expression Semantics"
+    #'(lambda (rtf-stream)
+        (depict-world-commands rtf-stream *rw* :heading-offset 1)))
+   (depict-html-to-local-file
+    "JS20/RegExpGrammar.html"
+    "Regular Expression Grammar"
+    t
+    #'(lambda (html-stream)
+        (depict-world-commands html-stream *rw* :heading-offset 1 :visible-semantics nil))
+    :external-link-base "notation.html")
+   (depict-html-to-local-file
+    "JS20/RegExpSemantics.html"
+    "Regular Expression Semantics"
+    t
+    #'(lambda (html-stream)
+        (depict-world-commands html-stream *rw* :heading-offset 1))
+    :external-link-base "notation.html")))
+
 #|
-(values
- (depict-rtf-to-local-file
-  "JS20/RegExpGrammar.rtf"
-  "Regular Expression Grammar"
-  #'(lambda (rtf-stream)
-      (depict-world-commands rtf-stream *rw* :heading-offset 1 :visible-semantics nil)))
- (depict-rtf-to-local-file
-  "JS20/RegExpSemantics.rtf"
-  "Regular Expression Semantics"
-  #'(lambda (rtf-stream)
-      (depict-world-commands rtf-stream *rw* :heading-offset 1)))
- (depict-html-to-local-file
-  "JS20/RegExpGrammar.html"
-  "Regular Expression Grammar"
-  t
-  #'(lambda (html-stream)
-      (depict-world-commands html-stream *rw* :heading-offset 1 :visible-semantics nil))
-  :external-link-base "notation.html")
- (depict-html-to-local-file
-  "JS20/RegExpSemantics.html"
-  "Regular Expression Semantics"
-  t
-  #'(lambda (html-stream)
-      (depict-world-commands html-stream *rw* :heading-offset 1))
-  :external-link-base "notation.html"))
+(dump-regexp)
 
 (with-local-output (s "JS20/RegExpGrammar.txt") (print-lexer *rl* s) (print-grammar *rg* s))
 
