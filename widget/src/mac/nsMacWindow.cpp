@@ -55,14 +55,10 @@ const short kWindowMarginWidth = 6;
 const short kDialogTitleBarHeight = 26;
 const short kDialogMarginWidth = 6;
 
-#if TARGET_CARBON
-// quickest fix. not sure why this doesn't compile w/out carbon.
-DragTrackingHandlerUPP nsMacWindow::sDragTrackingHandlerUPP = ::NewDragTrackingHandlerProc(DragTrackingHandler);
-DragReceiveHandlerUPP nsMacWindow::sDragReceiveHandlerUPP = ::NewDragReceiveHandlerProc(DragReceiveHandler);
-#else
-DragTrackingHandlerUPP nsMacWindow::sDragTrackingHandlerUPP = NULL;
-DragReceiveHandlerUPP nsMacWindow::sDragReceiveHandlerUPP = NULL;
-#endif
+
+DragTrackingHandlerUPP nsMacWindow::sDragTrackingHandlerUPP = NewDragTrackingHandlerProc(DragTrackingHandler);
+DragReceiveHandlerUPP nsMacWindow::sDragReceiveHandlerUPP = NewDragReceiveHandlerProc(DragReceiveHandler);
+
 
 //еее this should probably go into the drag session as a static
 pascal OSErr
