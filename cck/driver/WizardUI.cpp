@@ -340,7 +340,7 @@ BOOL CWizardUI::NewConfig(WIDGET *curWidget, CString globalsName)
 	CString params = theInterpreter->replaceVars(tmpWidget->action.parameters,NULL);
 	theApp.GenerateList(tmpFunction, tmpWidget, params);	
 	*/
-	if (tmpWidget->action.onInit)
+	if (!tmpWidget->action.onInit.IsEmpty())
 		theInterpreter->interpret(tmpWidget->action.onInit, tmpWidget);
 					
 	((CComboBox*)tmpWidget->control)->SelectString(0, configField);
@@ -571,7 +571,7 @@ void CWizardUI::EnableWidget(WIDGET *curWidget)
 {
 	// all controls are enabled by default, only do something if not enabled...
 	int enabled = TRUE;
-	if (curWidget->action.onInit)
+	if (!curWidget->action.onInit.IsEmpty())
 	{
 		CString enableStr = theInterpreter->replaceVars(curWidget->action.onInit,NULL);				
 		// Cheat the interpret overhead since this is called a lot!
@@ -585,6 +585,8 @@ void CWizardUI::EnableWidget(WIDGET *curWidget)
 
 void CWizardUI::CreateControls() 
 {
+	int rv;
+
 	m_pFont = new CFont; 
 	m_pFont->CreateFont(8, 0, 0, 0, FW_NORMAL,
 					0, 0, 0, ANSI_CHARSET,
@@ -626,17 +628,17 @@ void CWizardUI::CreateControls()
 
 		if (widgetType == "Text" || widgetType == "BoldText") {
 			curWidget->control = new CStatic;
-			((CStatic*)curWidget->control)->Create(curWidget->value, SS_LEFT, tmpRect, this, ID);
+			rv = ((CStatic*)curWidget->control)->Create(curWidget->value, SS_LEFT, tmpRect, this, ID);
 			EnableWidget(curWidget);
 		}
 		else if (widgetType == "Navigation Text") {
 			curWidget->control = new CNavText;
-			((CNavText*)curWidget->control)->Create(curWidget->value, SS_LEFT, tmpRect, this, ID);
+			rv = ((CNavText*)curWidget->control)->Create(curWidget->value, SS_LEFT, tmpRect, this, ID);
 			EnableWidget(curWidget);
 		}
 		else if (widgetType == "EditBox") {
 			curWidget->control = new CEdit;//Added new style parameter ES_AUTOHSCROLL- to allow *GASP* SCROLLING!!
-			if (((CEdit*)curWidget->control)->CreateEx(WS_EX_CLIENTEDGE, 
+			if (rv = ((CEdit*)curWidget->control)->CreateEx(WS_EX_CLIENTEDGE, 
 													_T("EDIT"), 
 													NULL,
 													WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER |ES_AUTOHSCROLL ,
@@ -654,12 +656,12 @@ void CWizardUI::CreateControls()
 		}
 		else if (widgetType == "Button") {
 			curWidget->control = new CButton;
-			((CButton*)curWidget->control)->Create(curWidget->value, BS_PUSHBUTTON | WS_TABSTOP, tmpRect, this, ID);
+			rv = ((CButton*)curWidget->control)->Create(curWidget->value, BS_PUSHBUTTON | WS_TABSTOP, tmpRect, this, ID);
 			EnableWidget(curWidget);
 		}
 		else if (widgetType == "RadioButton") {
 			curWidget->control = new CButton;
-			((CButton*)curWidget->control)->Create(curWidget->title, BS_AUTORADIOBUTTON | WS_TABSTOP, tmpRect, this, ID);
+			rv = ((CButton*)curWidget->control)->Create(curWidget->title, BS_AUTORADIOBUTTON | WS_TABSTOP, tmpRect, this, ID);
 
 			//char* widgetName = new char[sizeof(curWidget->name)];
 			char widgetName[MID_SIZE];
@@ -731,14 +733,14 @@ void CWizardUI::CreateControls()
 		}
 		else if (widgetType == "CheckBox") {
 			curWidget->control = new CButton;
-			((CButton*)curWidget->control)->Create(curWidget->title, BS_AUTOCHECKBOX | WS_TABSTOP, tmpRect, this, ID);
+			rv = ((CButton*)curWidget->control)->Create(curWidget->title, BS_AUTOCHECKBOX | WS_TABSTOP, tmpRect, this, ID);
 			((CButton*)curWidget->control)->SetCheck(atoi(curWidget->value));
 			EnableWidget(curWidget);
 		}
 		else if (widgetType == "ListBox") 
 		{
 			curWidget->control = new CListBox;
-			((CListBox*)curWidget->control)->Create(LBS_STANDARD | LBS_MULTIPLESEL | WS_HSCROLL | WS_VSCROLL | WS_TABSTOP, tmpRect, this, ID);
+			rv = ((CListBox*)curWidget->control)->Create(LBS_STANDARD | LBS_MULTIPLESEL | WS_HSCROLL | WS_VSCROLL | WS_TABSTOP, tmpRect, this, ID);
 			((CListBox*)curWidget->control)->ModifyStyleEx(NULL, WS_EX_CLIENTEDGE, 0);
 
 			/*
@@ -749,7 +751,7 @@ void CWizardUI::CreateControls()
 				theApp.GenerateList(curWidget->action.onInit, curWidget, ext);
 			}
 			*/
-			if (curWidget->action.onInit)
+			if (!curWidget->action.onInit.IsEmpty())
 				theInterpreter->interpret(curWidget->action.onInit, curWidget);
 			else
 			{
@@ -772,12 +774,13 @@ void CWizardUI::CreateControls()
 				((CListBox*)curWidget->control)->SelectString(0, s);
 				s = strtok( NULL, "," );
 			}
+			GlobalFree(selectedItems);
 			EnableWidget(curWidget);
 		}
 		else if (widgetType == "CheckListBox") 
 		{
 			curWidget->control = new CCheckListBox;
-			((CCheckListBox*)curWidget->control)->Create(
+			rv = ((CCheckListBox*)curWidget->control)->Create(
 				LBS_STANDARD | LBS_HASSTRINGS | BS_CHECKBOX |
 				LBS_OWNERDRAWFIXED | WS_HSCROLL | WS_VSCROLL | 
 				WS_TABSTOP, tmpRect, this, ID);
@@ -791,7 +794,7 @@ void CWizardUI::CreateControls()
 				theApp.GenerateList(curWidget->action.onInit, curWidget, ext);
 			}
 			*/
-			if (curWidget->action.onInit)
+			if (!curWidget->action.onInit.IsEmpty())
 				theInterpreter->interpret(curWidget->action.onInit, curWidget);
 			else
 			{
@@ -817,11 +820,12 @@ void CWizardUI::CreateControls()
 					((CCheckListBox*)curWidget->control)->SetCheck(i, 1);
 				s = strtok( NULL, "," );
 			}
+			GlobalFree(selectedItems);
 			EnableWidget(curWidget);
 		}
 		else if (widgetType == "ComboBox") {
 			curWidget->control = new CComboBox;
-			((CComboBox*)curWidget->control)->Create(CBS_DROPDOWNLIST | WS_TABSTOP, tmpRect, this, ID);
+			rv = ((CComboBox*)curWidget->control)->Create(CBS_DROPDOWNLIST | WS_TABSTOP, tmpRect, this, ID);
 
 			/*
 			if (curWidget->action.onInit == "GenerateFileList" ||
@@ -831,7 +835,7 @@ void CWizardUI::CreateControls()
 				theApp.GenerateList(curWidget->action.onInit, curWidget, ext);
 			}
 			*/
-			if (curWidget->action.onInit)
+			if (!curWidget->action.onInit.IsEmpty())
 				theInterpreter->interpret(curWidget->action.onInit, curWidget);
 			else
 			{
@@ -849,15 +853,22 @@ void CWizardUI::CreateControls()
 		}
 		else if (widgetType == "GroupBox") {
 			curWidget->control = new CButton;
-			((CButton*)curWidget->control)->Create(curWidget->value, BS_GROUPBOX, tmpRect, this, ID);
+			rv = ((CButton*)curWidget->control)->Create(curWidget->value, BS_GROUPBOX, tmpRect, this, ID);
 			EnableWidget(curWidget);
 		}
 		else if (widgetType == "ProgressBar") {
 			curWidget->control = new CProgressCtrl;
-			((CProgressCtrl*)curWidget->control)->Create(WS_TABSTOP, tmpRect, this, ID);
+			rv = ((CProgressCtrl*)curWidget->control)->Create(WS_TABSTOP, tmpRect, this, ID);
 			EnableWidget(curWidget);
 		}
 
+
+		if (!rv)
+		{
+			CWnd myWnd;
+			myWnd.MessageBox("Create failed on a widget.", "Error", MB_OK);
+		}
+		else
 
 		// Set the font of the widget and increment the dynamically assigned ID value
 		/*
@@ -868,7 +879,7 @@ void CWizardUI::CreateControls()
 		{
 			curWidget->control->SetFont(m_pNavFont);
 		}
-		else if (curWidget->control)
+		else if (curWidget->control && curWidget->control->m_hWnd)
 		{
 			curWidget->control->SetFont(m_pFont);
 		}
@@ -889,7 +900,7 @@ void CWizardUI::DisplayControls()
 	for (int i = m_pControlCount-1; i >= 0; i--) {
 		curWidget = CurrentNode->pageWidgets[i];
 		
-		if (curWidget->control)
+		if (curWidget->control && curWidget->control->m_hWnd)
 		{
 			curWidget->control->SetWindowPos(
 				&wndTop,
@@ -927,7 +938,7 @@ CString CWizardUI::GetScreenValue(WIDGET *curWidget)
 	CString widgetType = curWidget->type;
 	CString rv("");
 
-	if (!curWidget->control)
+	if (!curWidget->control || !curWidget->control->m_hWnd)
 		rv = curWidget->value; // !!! Fix this so we're not copying strings all the time
 								// Should be able to just pass in an "assign" boolean
 	else if (widgetType == "CheckBox") {
@@ -1028,6 +1039,7 @@ CString CWizardUI::GetScreenValue(WIDGET *curWidget)
 			if ( i+1 < count)
 				rv += ",";
 		}
+		GlobalFree(choices);
 	}
 	else if (widgetType == "CheckListBox")
 	{

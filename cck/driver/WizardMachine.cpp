@@ -150,12 +150,11 @@ BOOL CWizardMachineApp::InitInstance()
 
 	int i=0;
 	// Each argument limited to 100 chars
-	argv[i] = (char *) GlobalAlloc(0, sizeof(char) * MIN_SIZE);
 	argv[i] = strtok(m_lpCmdLine," ");
 	while(argv[i])
 	{
-		argv[++i] = (char *) GlobalAlloc(0, sizeof(char) * MIN_SIZE);
-		argv[i] = strtok(NULL," ");
+		//argv[++i] = (char *) GlobalAlloc(0, sizeof(char) * MIN_SIZE);
+		argv[++i] = strtok(NULL," ");
 	}
 	
 	argc = --i;
@@ -170,6 +169,7 @@ BOOL CWizardMachineApp::InitInstance()
 		if (!strcmp(argv[i], "-p"))
 			action = argv[i+1];
 	}
+	GlobalFree(argv);
 
 	if ((iniFile.IsEmpty()) || (iniFile.GetLength() < 5) || (iniFile.Right(4) != ".ini"))
 	{
@@ -413,9 +413,9 @@ NODE* CWizardMachineApp::CreateNode(NODE *parentNode, CString iniFile)
 
 	NewNode->numChildNodes = NewNode->numChildNodes - numHidePages;
 
-	NewNode->childNodes = (NODE **) GlobalAlloc(0,NewNode->numChildNodes * sizeof(NODE *));
+	NewNode->childNodes = (NODE **) GlobalAlloc(0,(NewNode->numChildNodes+1) * sizeof(NODE **));
 
-	for (i=0; i < NewNode->numChildNodes ; i++)
+	for (i=0; i <= NewNode->numChildNodes ; i++)
 	{
 		NewNode->childNodes[i] = NULL;
 	}
