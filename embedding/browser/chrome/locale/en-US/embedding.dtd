@@ -1,1 +1,10 @@
-<!ENTITY ircCmd.label				        "IRC Chat">  
+<!ENTITY backButton.label             "Back">
+<!ENTITY backButton.tooltip           "Go back one page">
+<!ENTITY forwardButton.label          "Forward">
+<!ENTITY forwardButton.tooltip        "Go forward one page">
+<!ENTITY reloadButton.label           "Reload">
+<!ENTITY reloadButton.tooltip         "Reload current page">
+<!ENTITY stopButton.label             "Stop">
+<!ENTITY stopButton.tooltip           "Stop loading this page">
+<!ENTITY searchButton.label           "Search">
+<!ENTITY searchButton.tooltip         "Type a word in the field to the left, then click Search">
