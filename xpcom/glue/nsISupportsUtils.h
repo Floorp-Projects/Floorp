@@ -727,6 +727,7 @@ nsrefcnt _class::Release(void)                                              \
   count = PR_AtomicDecrement((PRInt32 *)&mRefCnt);                          \
   NS_LOG_RELEASE(this, count, #_class);                                     \
   if (0 == count) {                                                         \
+    mRefCnt = 1; /* stabilize */                                            \
     /* enable this to find non-threadsafe destructors: */                   \
     /* NS_ASSERT_OWNINGTHREAD(_class); */                                   \
     NS_DELETEXPCOM(this);                                                   \
