@@ -85,18 +85,12 @@ static NS_DEFINE_CID(kCChildCID, NS_CHILD_CID);
 //#define DEBUG_PRINTING
 #endif
 
-#ifdef DEBUG_PRINTING
-#define PRINT_DEBUG_MSG1(_msg1) fprintf(mDebugFD, (_msg1))
-#define PRINT_DEBUG_MSG2(_msg1, _msg2) fprintf(mDebugFD, (_msg1), (_msg2))
-#define PRINT_DEBUG_MSG3(_msg1, _msg2, _msg3) fprintf(mDebugFD, (_msg1), (_msg2), (_msg3))
-#define PRINT_DEBUG_MSG4(_msg1, _msg2, _msg3, _msg4) fprintf(mDebugFD, (_msg1), (_msg2), (_msg3), (_msg4))
-#define PRINT_DEBUG_MSG5(_msg1, _msg2, _msg3, _msg4, _msg5) fprintf(mDebugFD, (_msg1), (_msg2), (_msg3), (_msg4), (_msg5))
-#else //--------------
-#define PRINT_DEBUG_MSG1(_msg) 
-#define PRINT_DEBUG_MSG2(_msg1, _msg2) 
-#define PRINT_DEBUG_MSG3(_msg1, _msg2, _msg3) 
-#define PRINT_DEBUG_MSG4(_msg1, _msg2, _msg3, _msg4) 
-#define PRINT_DEBUG_MSG5(_msg1, _msg2, _msg3, _msg4, _msg5) 
+#include "prlog.h"
+#ifdef PR_LOGGING 
+extern PRLogModuleInfo * kPrintingLogMod;
+#define PR_PL(_p1)  PR_LOG(kPrintingLogMod, PR_LOG_DEBUG, _p1)
+#else
+#define PR_PL(_p1)
 #endif
 
 // XXX Part of Temporary fix for Bug 127263
@@ -119,9 +113,6 @@ nsPageFrame::nsPageFrame() :
   mSupressHF(PR_FALSE),
   mClipRect(-1, -1, -1, -1)
 {
-#ifdef NS_DEBUG
-  mDebugFD = stdout;
-#endif
 }
 
 nsPageFrame::~nsPageFrame()
@@ -256,8 +247,8 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsIPresContext*          aPresContext,
       }
 #endif
     }
-    PRINT_DEBUG_MSG2("PageFrame::Reflow %p ", this);
-    PRINT_DEBUG_MSG5("[%d,%d][%d,%d]\n", aDesiredSize.width, aDesiredSize.height, aReflowState.availableWidth, aReflowState.availableHeight);
+    PR_PL(("PageFrame::Reflow %p ", this));
+    PR_PL(("[%d,%d][%d,%d]\n", aDesiredSize.width, aDesiredSize.height, aReflowState.availableWidth, aReflowState.availableHeight));
 
     // Return our desired size
     aDesiredSize.width = aReflowState.availableWidth;
@@ -265,8 +256,8 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsIPresContext*          aPresContext,
       aDesiredSize.height = aReflowState.availableHeight;
     }
   }
-  PRINT_DEBUG_MSG2("PageFrame::Reflow %p ", this);
-  PRINT_DEBUG_MSG3("[%d,%d]\n", aReflowState.availableWidth, aReflowState.availableHeight);
+  PR_PL(("PageFrame::Reflow %p ", this));
+  PR_PL(("[%d,%d]\n", aReflowState.availableWidth, aReflowState.availableHeight));
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;
@@ -580,11 +571,12 @@ nsPageFrame::DrawHeaderFooter(nsIPresContext*      aPresContext,
 #endif // IBMBIDI
     aRenderingContext.DrawString(str, x, y + aAscent);
     aRenderingContext.PopState(clipEmpty);
+
 #ifdef DEBUG_PRINTING
-    PRINT_DEBUG_MSG2("Page: %p", this);
+    PR_PL(("Page: %p", this));
     const char * s = NS_ConvertUCS2toUTF8(str).get();
     if (s) {
-      PRINT_DEBUG_MSG2(" [%s]", s);
+      PR_PL((" [%s]", s));
     }
     char justStr[64];
     switch (aJust) {
@@ -592,10 +584,10 @@ nsPageFrame::DrawHeaderFooter(nsIPresContext*      aPresContext,
       case nsIPrintSettings::kJustCenter:strcpy(justStr, "Center");break;
       case nsIPrintSettings::kJustRight:strcpy(justStr, "Right");break;
     } // switch
-    PRINT_DEBUG_MSG2(" HF: %s ", aHeaderFooter==eHeader?"Header":"Footer");
-    PRINT_DEBUG_MSG2(" JST: %s ", justStr);
-    PRINT_DEBUG_MSG3(" x,y: %d,%d", x, y);
-    PRINT_DEBUG_MSG2(" Hgt: %d \n", aHeight);
+    PR_PL((" HF: %s ", aHeaderFooter==eHeader?"Header":"Footer"));
+    PR_PL((" JST: %s ", justStr));
+    PR_PL((" x,y: %d,%d", x, y));
+    PR_PL((" Hgt: %d \n", aHeight));
 #endif
   }
 }
@@ -669,10 +661,10 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
 
 #if defined(DEBUG_rods) || defined(DEBUG_dcone)
   if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
-    fprintf(mDebugFD, "PF::Paint    -> %p  SupHF: %s  Rect: [%5d,%5d,%5d,%5d] SC:%s\n", this, 
-            mSupressHF?"Yes":"No", mRect.x, mRect.y, mRect.width, mRect.height, specialClipIsSet?"Yes":"No");
-    fprintf(stdout, "PF::Paint    -> %p  SupHF: %s  Rect: [%5d,%5d,%5d,%5d] SC:%s\n", this, 
-            mSupressHF?"Yes":"No", mRect.x, mRect.y, mRect.width, mRect.height, specialClipIsSet?"Yes":"No");
+    PR_PL(("PF::Paint    -> %p  SupHF: %s  Rect: [%5d,%5d,%5d,%5d] SC:%s\n", this, 
+            mSupressHF?"Yes":"No", mRect.x, mRect.y, mRect.width, mRect.height, specialClipIsSet?"Yes":"No"));
+    PR_PL(("PF::Paint    -> %p  SupHF: %s  Rect: [%5d,%5d,%5d,%5d] SC:%s\n", this, 
+            mSupressHF?"Yes":"No", mRect.x, mRect.y, mRect.width, mRect.height, specialClipIsSet?"Yes":"No"));
   }
 #endif
 

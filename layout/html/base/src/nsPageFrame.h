@@ -75,10 +75,7 @@ public:
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
   
 #ifdef NS_DEBUG
-  // Debugging
   NS_IMETHOD  GetFrameName(nsAString& aResult) const;
-  void SetDebugFD(FILE* aFD) { mDebugFD = aFD; }
-  FILE * mDebugFD;
 #endif
 
   //////////////////
