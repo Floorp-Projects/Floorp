@@ -26,6 +26,19 @@ use strict;
 
 require "CGI.pl";
 
+if (!defined $::FORM{'attach_id'}) {
+    print "Content-type: text/html\n";
+    print "\n";
+    PutHeader("Search by attachment number");  
+    print "<FORM METHOD=GET ACTION=\"showattachment.cgi\">\n";
+    print "You may view a single attachment by entering its id here: \n";
+    print "<INPUT NAME=attach_id>\n";   
+    print "<INPUT TYPE=\"submit\" VALUE=\"Show Me This Attachment\">\n";
+    print "</FORM>\n";
+    PutFooter();
+    exit;
+}
+
 ConnectToDatabase();
 
 quietly_check_login();
