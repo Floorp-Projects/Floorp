@@ -127,7 +127,7 @@ nsDownloadManager::Init()
   gRDFService->GetResource(NC_NAMESPACE_URI "DownloadState", &gNC_DownloadState);
   gRDFService->GetResource(NC_NAMESPACE_URI "StatusText", &gNC_StatusText);
 
-  nsAutoCString downloadsDB;
+  nsCAutoString downloadsDB;
   rv = GetProfileDownloadsFileURL(getter_Copies(downloadsDB));
   if (NS_FAILED(rv)) return rv;
 
