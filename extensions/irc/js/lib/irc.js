@@ -270,7 +270,7 @@ function CIRCServer (parent, connection)
 
 CIRCServer.prototype.MAX_LINES_PER_SEND = 5;
 CIRCServer.prototype.MS_BETWEEN_SENDS = 1500;
-CIRCServer.prototype.READ_TIMEOUT = 2000;
+CIRCServer.prototype.READ_TIMEOUT = 100;
 CIRCServer.prototype.TOO_MANY_LINES_MSG = "\01ACTION has said too much\01";
 CIRCServer.prototype.VERSION_RPLY = "JS-IRC Library v0.01, " +
     "Copyright (C) 1999 Robert Ginda; rginda@ndcico.com";
@@ -766,6 +766,37 @@ function serv_332 (e)
 
     return true;
     
+}
+
+/* whois name */
+CIRCServer.prototype.on311 =
+function serv_311 (e)
+{
+    e.user = new CIRCUser (this, e.params[2], e.params[3], e.params[4]);
+    e.destObject = this.parent;
+    e.set = "network";
+}
+    
+/* whois server */
+CIRCServer.prototype.on312 =
+function serv_312 (e)
+{
+    e.user = new CIRCUser (this, e.params[2]);
+    e.user.connectionHost = e.params[3];
+
+    e.destObject = this.parent;
+    e.set = "network";
+}
+
+/* whois idle time */
+CIRCServer.prototype.on317 =
+function serv_317 (e)
+{
+    e.user = new CIRCUser (this, e.params[2]);
+    e.user.idleSeconds = e.params[3];
+
+    e.destObject = this.parent;
+    e.set = "network";
 }
 
 /* topic information */
@@ -1333,6 +1364,15 @@ function serv_ctcp (e)
     return true;
     
 }
+
+CIRCServer.prototype.onCTCPAction =
+function serv_cact (e)
+{
+    e.destObject = e.replyTo;
+    e.set = (e.replyTo == e.user) ? "user" : "channel";        
+
+}
+
 
 CIRCServer.prototype.onCTCPVersion = 
 function serv_cver (e)

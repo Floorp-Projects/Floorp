@@ -80,8 +80,8 @@ function http_poll (e)
     if (this.duration < this.GET_TIMEOUT)
         try
         {    
-                line = this.connection.readData (50);
-                need_more = true;
+            line = this.connection.readData (50);
+            need_more = true;
         }
             catch (ex)
         {

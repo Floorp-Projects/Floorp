@@ -21,13 +21,16 @@
  *  Robert Ginda, rginda@ndcico.com, original author
  */
 
+var debugData = {lastEventType: "", lastEventData: ""};
+
 /*
  * Hook used to trace events.
  */
 function event_tracer (e)
 {
-    var name="", data="";
-
+    var name="";
+    var data="";
+    
     switch (e.set)
     {
         case "server":
@@ -35,8 +38,19 @@ function event_tracer (e)
             if (e.type == "rawdata")
                 data = "'" + e.data + "'";
             if (e.type == "senddata")
-                data = "'" + e.destObject.sendQueue[0].replace ("\n", "\\n")
+            {
+                var nextLine =
+                    e.destObject.sendQueue[e.destObject.sendQueue.length - 1];
+                data = "'" + nextLine.replace ("\n", "\\n")
                     + "' (may retry a few times)";
+                if (debugData.lastEventType == "senddata"  &&
+                    debugData.lastEventData == data)
+                {
+                    /* don't keep printing this event */
+                    return;
+                }
+                
+            }
             break;
 
         case "network":
@@ -86,6 +100,9 @@ function event_tracer (e)
 
     dd (str);
 
+    debugData.lastEventType = e.type;
+    debugData.lastEventData = data;
+    
     return true;
 
 }

@@ -124,7 +124,10 @@ function dumpObjectTree (o, recurse, compress, level)
                 if (sfunc[2] == "    [native code]")
                     sfunc = "[native code]";
                 else
-                    sfunc = sfunc.length + " lines";
+                    if (sfunc.length == 1)
+                        sfunc = String(sfunc);
+                    else
+                        sfunc = sfunc.length + " lines";
                 s += pfx + tee + i + " (function) " + sfunc + "\n";
                 break;
 
