@@ -152,6 +152,7 @@ components/xpconnect.xpt
 ; 
 
 libgkgfx.so 
+libgtksuperwin.so
 libgtkxtbin.so 
 libgtkembedmoz.so 
 libxlibrgb.so
