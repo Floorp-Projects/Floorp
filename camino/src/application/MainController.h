@@ -72,7 +72,7 @@ typedef enum EBookmarkOpenBehavior
     // IBOutlet NSMenuItem*    mOfflineMenuItem;
     IBOutlet NSMenuItem*    mCloseWindowMenuItem;
     IBOutlet NSMenuItem*    mCloseTabMenuItem;
-    IBOutlet NSMenuItem*    mToggleSidebarMenuItem;
+    IBOutlet NSMenuItem*    mShowAllBookmarksMenuItem;
 
     IBOutlet NSMenu*        mGoMenu;
     IBOutlet NSMenu*        mBookmarksMenu;
