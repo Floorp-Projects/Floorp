@@ -75,9 +75,9 @@ EXTRA_DSO_LDOPTS = \
 	$(DIST)/lib/libraptorhtmldoc_s.a		\
 	$(DIST)/lib/libnglhtmlcon_s.a			\
 	$(DIST)/lib/libraptorhtmldoc_s.a		\
-	$(DIST)/lib/libraptorhtmlforms_s.a		\
 	$(DIST)/lib/libraptorhtmlbase_s.a		\
 	$(DIST)/lib/libraptorhtmlstyle_s.a		\
+	$(DIST)/lib/libraptorhtmlforms_s.a		\
 	$(DIST)/lib/libraptorhtmltable_s.a		\
 	$(DIST)/lib/libraptorlayout_s.a		        \
 	$(DIST)/lib/libraptorevents_s.a			\
