@@ -610,6 +610,8 @@ PRIVATE XP_List * si_reject_list=0;
 PRIVATE PRBool si_signon_list_changed = PR_FALSE;
 
 
+char empty[] = "empty";
+
 /* Remove misleading portions from URL name */
 PRIVATE char*
 si_StrippedURL (char* URLName) {
@@ -664,8 +666,12 @@ si_StrippedURL (char* URLName) {
         }
     }
 
-    /* alll done */
-    return result;
+    /* all done */
+    if (XP_STRLEN(result)) {
+      return result;
+    } else {
+      return PL_strdup(empty);
+    }
 }
 
 /* remove terminating CRs or LFs */
@@ -1196,11 +1202,6 @@ PRIVATE PRBool
 si_OkToSave(char *URLName, char *userName) {
     PRBool remember_checked = PR_TRUE;
     char *strippedURLName = 0;
-
-    /* do not save signons if user didn't know the key */
-    if (!si_KeySet()) {
-        return(-1);
-    }
 
     /* if url/user already exists, then it is safe to save it again */
     if (si_CheckForUser(URLName, userName)) {
@@ -2959,6 +2960,9 @@ SINGSIGN_GetSignonListForViewer(nsString& aSignonList)
     si_SignonUserStruct * user;
     si_SignonDataStruct* data;
 
+    /* force loading of the signons file */
+    si_RegisterSignonPrefCallbacks();
+
     buffer[0] = '\0';
     url_ptr = si_signon_list;
     signonNum = 0;
@@ -2989,6 +2993,9 @@ SINGSIGN_GetRejectListForViewer(nsString& aRejectList)
     int g = 0, rejectNum;
     XP_List *reject_ptr;
     si_Reject *reject;
+
+    /* force loading of the signons file */
+    si_RegisterSignonPrefCallbacks();
 
     buffer[0] = '\0';
     reject_ptr = si_reject_list;
