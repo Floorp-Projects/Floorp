@@ -418,6 +418,7 @@
   </hbox>
   <statusbar class="chromeclass-status" id="status-bar"
              ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
+    <statusbarpanel id="security-button" class="statusbarpanel-iconic" ondblclick="displaySecurityInfo();"/>
     <statusbarpanel id="page-report-button" class="statusbarpanel-iconic" tooltiptext="&pageReportIcon.tooltip;"
                     ondblclick="displayPageReport();"/>
     <statusbarpanel id="page-theme-button" type="menu" class="statusbarpanel-menu-iconic" tooltiptext="&pageThemeIcon.tooltip;">
