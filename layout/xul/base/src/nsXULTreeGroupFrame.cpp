@@ -90,7 +90,8 @@ NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 nsXULTreeGroupFrame::nsXULTreeGroupFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager, PRBool aIsHorizontal)
 :nsBoxFrame(aPresShell, aIsRoot, aLayoutManager, aIsHorizontal), mFrameConstructor(nsnull), mPresContext(nsnull),
  mOuterFrame(nsnull), mAvailableHeight(10000), mTopFrame(nsnull), mBottomFrame(nsnull), mLinkupFrame(nsnull),
- mContentChain(nsnull), mYDropLoc(nsTreeItemDragCapturer::kNoDropLoc), mDropOnContainer(PR_FALSE)
+ mContentChain(nsnull), mYDropLoc(nsTreeItemDragCapturer::kNoDropLoc), mDropOnContainer(PR_FALSE),
+ mOnScreenRowCount(-1)
 {}
 
 // Destructor
@@ -156,6 +157,34 @@ void nsXULTreeGroupFrame::LocateFrame(nsIFrame* aStartFrame, nsIFrame** aResult)
   else aStartFrame->GetNextSibling(aResult);
 }
 
+NS_IMETHODIMP
+nsXULTreeGroupFrame::NeedsRecalc()
+{
+  mOnScreenRowCount = -1;
+  return nsBoxFrame::NeedsRecalc();
+}
+
+NS_IMETHODIMP
+nsXULTreeGroupFrame::GetOnScreenRowCount(PRInt32* aCount)
+{
+  if (mOnScreenRowCount == -1)
+  {
+    mOnScreenRowCount = 0;
+    nsIBox* box = nsnull;
+    GetChildBox(&box);
+    while(box) {
+      PRInt32 count = 0;
+      nsCOMPtr<nsIXULTreeSlice> slice(do_QueryInterface(box));
+      slice->GetOnScreenRowCount(&count);
+      mOnScreenRowCount += count;
+      box->GetNextBox(&box);
+    }
+  }
+
+  *aCount = mOnScreenRowCount;
+  return NS_OK;
+}
+
 nsIFrame*
 nsXULTreeGroupFrame::GetFirstFrame()
 {
@@ -178,8 +207,12 @@ nsXULTreeGroupFrame::GetLastFrame()
 }
 
 nsIBox* 
-nsXULTreeGroupFrame::GetFirstTreeBox()
+nsXULTreeGroupFrame::GetFirstTreeBox(PRBool* aCreated)
 {
+
+  if (aCreated)
+     *aCreated = PR_FALSE;
+
   // Clear ourselves out.
   mLinkupFrame = nsnull;
   mBottomFrame = mTopFrame;
@@ -250,6 +283,10 @@ nsXULTreeGroupFrame::GetFirstTreeBox()
     mFrameConstructor->CreateTreeWidgetContent(mPresContext, this, nsnull, startContent,
                                                &mTopFrame, isAppend, PR_FALSE, 
                                                nsnull);
+
+    if (aCreated)
+      *aCreated = PR_TRUE;
+
     //if (mTopFrame)
     //  mOuterFrame->PostReflowCallback();
 
@@ -267,8 +304,9 @@ nsXULTreeGroupFrame::GetFirstTreeBox()
     }
 
     SetContentChain(nsnull);
-    
+ 
     nsCOMPtr<nsIBox> box(do_QueryInterface(mTopFrame));
+    
     return box;
   }
   return nsnull;
@@ -276,8 +314,11 @@ nsXULTreeGroupFrame::GetFirstTreeBox()
 }
 
 nsIBox* 
-nsXULTreeGroupFrame::GetNextTreeBox(nsIBox* aBox)
+nsXULTreeGroupFrame::GetNextTreeBox(nsIBox* aBox, PRBool* aCreated)
 {
+  if (aCreated)
+      *aCreated = PR_FALSE;
+
   // We're ultra-cool. We build our frames on the fly.
   nsIFrame* result;
   nsIFrame* frame;
@@ -329,6 +370,10 @@ nsXULTreeGroupFrame::GetNextTreeBox(nsIBox* aBox)
       mFrameConstructor->CreateTreeWidgetContent(mPresContext, this, prevFrame, nextContent,
                                                  &result, isAppend, PR_FALSE,
                                                  nsnull);
+
+      if (aCreated)
+         *aCreated = PR_TRUE;
+
       //if (result)
       //  mOuterFrame->PostReflowCallback();
     }
@@ -346,8 +391,8 @@ nsXULTreeGroupFrame::TreeInsertFrames(nsIFrame* aPrevFrame, nsIFrame* aFrameList
   // insert the frames to our info list
   nsBoxLayoutState state(mPresContext);
   Insert(state, aPrevFrame, aFrameList);
-
   mFrames.InsertFrames(nsnull, aPrevFrame, aFrameList);
+  MarkDirtyChildren(state);
   return NS_OK;
 }
 
@@ -357,8 +402,9 @@ nsXULTreeGroupFrame::TreeAppendFrames(nsIFrame* aFrameList)
   // append them after
   nsBoxLayoutState state(mPresContext);
   Append(state,aFrameList);
-
   mFrames.AppendFrames(nsnull, aFrameList);
+  MarkDirtyChildren(state);
+
   return NS_OK;
 }
 
@@ -392,8 +438,10 @@ nsXULTreeGroupFrame::OnContentInserted(nsIPresContext* aPresContext, nsIFrame* a
     mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, currFrame, nsnull);
      
     nsBoxLayoutState state(aPresContext);
+
     Remove(state, currFrame);
     mFrames.DestroyFrame(aPresContext, currFrame);
+
     currFrame = nextFrame;
   }
   nsBoxLayoutState state(aPresContext);
@@ -412,9 +460,11 @@ void nsXULTreeGroupFrame::OnContentRemoved(nsIPresContext* aPresContext,
   nsBoxLayoutState state(aPresContext);
   if (aChildFrame) {
     mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, aChildFrame, nsnull);
+
     Remove(state, aChildFrame);
     mFrames.DestroyFrame(aPresContext, aChildFrame);
-    
+    MarkDirtyChildren(state);
+
     // Get our old row count.
     PRInt32 rowCount = mOuterFrame->GetRowCount();
 
@@ -460,18 +510,21 @@ PRBool nsXULTreeGroupFrame::ContinueReflow(nscoord height)
       // Nuke them.
       nsIFrame* currFrame;
       startingPoint->GetNextSibling(&currFrame);
+      nsBoxLayoutState state(mPresContext);
+
       while (currFrame) {
         nsIFrame* nextFrame;
         currFrame->GetNextSibling(&nextFrame);
         mFrameConstructor->RemoveMappingsForFrameSubtree(mPresContext, currFrame, nsnull);
         
-        nsBoxLayoutState state(mPresContext);
         Remove(state, currFrame);
 
         mFrames.DestroyFrame(mPresContext, currFrame);
 
         currFrame = nextFrame;
       }
+
+      MarkDirtyChildren(state);
     }
     return PR_FALSE;
   }
@@ -510,8 +563,11 @@ void nsXULTreeGroupFrame::DestroyRows(PRInt32& aRowsToLose)
     nsIFrame* nextFrame = GetNextFrame(childFrame);
     mFrameConstructor->RemoveMappingsForFrameSubtree(mPresContext, childFrame, nsnull);
     nsBoxLayoutState state(mPresContext);
+
     Remove(state, childFrame);
     mFrames.DestroyFrame(mPresContext, childFrame);
+    MarkDirtyChildren(state);
+
     mTopFrame = childFrame = nextFrame;
   }
 }
@@ -547,8 +603,11 @@ void nsXULTreeGroupFrame::ReverseDestroyRows(PRInt32& aRowsToLose)
     prevFrame = mFrames.GetPrevSiblingFor(childFrame);
     mFrameConstructor->RemoveMappingsForFrameSubtree(mPresContext, childFrame, nsnull);
     nsBoxLayoutState state(mPresContext);
+
     Remove(state, childFrame);
     mFrames.DestroyFrame(mPresContext, childFrame);
+    MarkDirtyChildren(state);
+
     mBottomFrame = childFrame = prevFrame;
   }
 }
@@ -914,7 +973,7 @@ nsXULTreeGroupFrame :: FindFirstChildTreeItemFrame ( nsIPresContext* inPresConte
       break;
     currChildFrame->GetNextSibling ( &currChildFrame );
   } // foreach child of the treeItem
-  NS_ASSERTION ( currChildFrame, "Can't find <treechildren>" );
+  //NS_ASSERTION ( currChildFrame, "Can't find <treechildren>" );
   
   // |currChildFrame| now holds the correct frame if we found it
   if ( currChildFrame )

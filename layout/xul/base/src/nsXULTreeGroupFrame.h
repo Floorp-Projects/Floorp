@@ -68,8 +68,8 @@ public:
                                  PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRInt32 aHint) ;
 
   nsXULTreeOuterGroupFrame* GetOuterFrame() { return mOuterFrame; };
-  nsIBox* GetFirstTreeBox();
-  nsIBox* GetNextTreeBox(nsIBox* aBox);
+  nsIBox* GetFirstTreeBox(PRBool* aCreated = nsnull);
+  nsIBox* GetNextTreeBox(nsIBox* aBox, PRBool* aCreated = nsnull);
 
   nsIFrame* GetFirstFrame();
   nsIFrame* GetNextFrame(nsIFrame* aCurrFrame);
@@ -92,7 +92,11 @@ public:
   NS_IMETHOD IsOutermostFrame(PRBool* aResult) { *aResult = PR_FALSE; return NS_OK; };
   NS_IMETHOD IsGroupFrame(PRBool* aResult) { *aResult = PR_TRUE; return NS_OK; };
   NS_IMETHOD IsRowFrame(PRBool* aResult) { *aResult = PR_FALSE; return NS_OK; };
+  NS_IMETHOD GetOnScreenRowCount(PRInt32* aCount);
   
+  // nsIBox
+  NS_IMETHOD NeedsRecalc();
+
   virtual nscoord GetAvailableHeight() { return mAvailableHeight; };
   void SetAvailableHeight(nscoord aHeight) { mAvailableHeight = aHeight; };
 
@@ -133,6 +137,7 @@ protected:
   nsIFrame* mBottomFrame;
   nsIFrame* mLinkupFrame;
   nsISupportsArray* mContentChain; // Our content chain
+  PRInt32 mOnScreenRowCount;
   
   // -- members for drag and drop --
   

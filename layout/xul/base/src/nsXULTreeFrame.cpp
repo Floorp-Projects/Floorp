@@ -110,13 +110,7 @@ nsXULTreeFrame::DoLayout(nsBoxLayoutState& aBoxLayoutState)
   nsXULTreeOuterGroupFrame* treeOuterGroup = nsnull;
   GetTreeBody(&treeOuterGroup);
 
-  if (treeOuterGroup)
-    treeOuterGroup->SetLayingOut(PR_TRUE);
-
   nsresult rv = nsBoxFrame::DoLayout(aBoxLayoutState);
-
-  if (treeOuterGroup)
-    treeOuterGroup->SetLayingOut(PR_FALSE);
 
   return rv;
 }

@@ -40,6 +40,7 @@ public:
   NS_IMETHOD IsOutermostFrame(PRBool* aResult) { *aResult = PR_FALSE; return NS_OK; };
   NS_IMETHOD IsGroupFrame(PRBool* aResult) { *aResult = PR_FALSE; return NS_OK; };
   NS_IMETHOD IsRowFrame(PRBool* aResult) { *aResult = PR_TRUE; return NS_OK; };
+  NS_IMETHOD GetOnScreenRowCount(PRInt32* aCount) { *aCount = 1; return NS_OK; }
 
   // nsIBox
   NS_IMETHOD GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize);

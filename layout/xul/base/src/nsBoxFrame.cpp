@@ -764,6 +764,20 @@ nsBoxFrame::Reflow(nsIPresContext*   aPresContext,
     computedSize.height += m.top + m.bottom;
   }
 
+  // handle reflow state min and max sizes
+
+  if (computedSize.width > aReflowState.mComputedMaxWidth)
+    computedSize.width = aReflowState.mComputedMaxWidth;
+
+  if (computedSize.height > aReflowState.mComputedMaxHeight)
+    computedSize.height = aReflowState.mComputedMaxHeight;
+
+  if (computedSize.width < aReflowState.mComputedMinWidth)
+    computedSize.width = aReflowState.mComputedMinWidth;
+
+  if (computedSize.height < aReflowState.mComputedMinHeight)
+    computedSize.height = aReflowState.mComputedMinHeight;
+
   nsRect r(mRect.x, mRect.y, computedSize.width, computedSize.height);
 
   SetBounds(state, r);

@@ -70,6 +70,10 @@ public:
   virtual void GetLayoutFlags(PRUint32& aFlags);
   virtual void SetLayoutFlags(const PRUint32& aFlags);
 
+  // if true no one under us will paint during reflow.
+  virtual void SetDisablePainting(PRBool aDisable) { mDisablePainting = aDisable; }
+  virtual PRBool GetDisablePainting() { return mDisablePainting; }
+
   virtual eBoxLayoutReason GetLayoutReason() { return mType; }
   virtual void SetLayoutReason(eBoxLayoutReason aReason) { mType = aReason; }
   virtual const nsHTMLReflowState* GetReflowState() { return mReflowState; }
@@ -95,6 +99,7 @@ private:
   nsSize mOverFlowSize;
   PRBool mIncludeOverFlow;
   PRUint32 mLayoutFlags;
+  PRBool mDisablePainting;
 };
 
 #endif

@@ -40,6 +40,7 @@
 class nsCSSFrameConstructor;
 class nsDragOverListener;
 class nsDragAutoScrollTimer;
+class nsScrollSmoother;
 
 
 // I want to eventually use a delay so that the user has to hover over
@@ -49,13 +50,6 @@ class nsDragAutoScrollTimer;
 // bottom. Leaving the code around so that if we ever get this, we'll be
 // good (pinkerton)
 #define USE_TIMER_TO_DELAY_SCROLLING 0
-
-
-enum nsTreeLayoutState {
-  eTreeLayoutNormal,
-  eTreeLayoutAbort,
-  eTreeLayoutDirtyAll
-};
 
 class nsXULTreeRowGroupInfo {
 public:
@@ -141,8 +135,6 @@ public:
   void SetRowHeight(PRInt32 aRowHeight);
   PRBool IsFixedRowSize();
 
-  void SetLayingOut(PRBool aLayingOut) { mLayingOut = aLayingOut; };
-
   nscoord GetYPosition();
   nscoord GetAvailableHeight();
   NS_IMETHOD GetNumberOfVisibleRows(PRInt32 *aResult) {
@@ -155,7 +147,7 @@ public:
 
   NS_IMETHOD GetRowCount(PRInt32* aResult) { *aResult = GetRowCount(); return NS_OK; }
   
-  NS_IMETHOD PositionChanged(PRInt32 aOldIndex, PRInt32 aNewIndex);
+  NS_IMETHOD PositionChanged(PRInt32 aOldIndex, PRInt32& aNewIndex);
   NS_IMETHOD ScrollbarButtonPressed(PRInt32 aOldIndex, PRInt32 aNewIndex);
   NS_IMETHOD VisibilityChanged(PRBool aVisible);
 
@@ -188,16 +180,19 @@ public:
                          PRInt32 *aResult);
 
   NS_IMETHOD InternalPositionChanged(PRBool aUp, PRInt32 aDelta);
+  NS_IMETHOD InternalPositionChangedCallback();
+
+  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
 
   PRBool IsTreeSorted ( ) const { return mTreeIsSorted; }
   PRBool CanDropBetweenRows ( ) const { return mCanDropBetweenRows; }
 
-  nsTreeLayoutState GetTreeLayoutState() { return mTreeLayoutState; }
-  void SetTreeLayoutState(nsTreeLayoutState aState) { mTreeLayoutState = aState; }
-
   void PostReflowCallback();
 
+
 protected:
+
+  nsScrollSmoother* GetSmoother();
 
   void ComputeTotalRowCount(PRInt32& aRowCount, nsIContent* aParent);
 
@@ -225,9 +220,13 @@ protected:
     // in Init() for why this is a weak ref.
   nsDragOverListener* mDragOverListener;
 
-  nsTreeLayoutState mTreeLayoutState;
-  PRBool mReflowCallbackPosted;
-  PRBool mLayingOut;
+  PRPackedBool mRowHeightWasSet;
+  PRPackedBool mReflowCallbackPosted;
+  PRPackedBool mScrolling;
+  PRPackedBool mAdjustScroll;
+  PRInt32 mYPosition;
+  nsScrollSmoother* mScrollSmoother;
+  PRInt32 mTimePerRow;
 }; // class nsXULTreeOuterGroupFrame
 
 

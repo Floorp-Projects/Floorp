@@ -39,7 +39,7 @@ public:
 
   static const nsIID& GetIID() { static nsIID iid = NS_ISCROLLBARLISTENER_IID; return iid; }
   
-  NS_IMETHOD PositionChanged(nsIPresContext* aPresContext, PRInt32 aOldIndex, PRInt32 aNewIndex) = 0;
+  NS_IMETHOD PositionChanged(nsIPresContext* aPresContext, PRInt32 aOldIndex, PRInt32& aNewIndex) = 0;
 
   NS_IMETHOD PagedUpDown() = 0;
 };
