@@ -134,6 +134,23 @@ public:
 
   NS_IMETHOD GetGraphics(nsIGraphics* *aGraphics);
 
+#ifdef MOZ_MATHML
+  /**
+   * Returns metrics (in app units) of an 8-bit character string
+   */
+  NS_IMETHOD GetBoundingMetrics(const char*        aString,
+                                PRUint32           aLength,
+                                nsBoundingMetrics& aBoundingMetrics);
+  
+  /**
+   * Returns metrics (in app units) of a Unicode character string
+   */
+  NS_IMETHOD GetBoundingMetrics(const PRUnichar*   aString,
+                                PRUint32           aLength,
+                                nsBoundingMetrics& aBoundingMetrics,
+                                PRInt32*           aFontID);
+#endif /* MOZ_MATHML */
+
   //locals
   NS_IMETHOD SetPortTextState();
   nsresult   Init(nsIDeviceContext* aContext, GrafPtr aPort);

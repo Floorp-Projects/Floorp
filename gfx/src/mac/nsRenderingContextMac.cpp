@@ -1459,3 +1459,24 @@ NS_IMETHODIMP nsRenderingContextMac::GetGraphics(nsIGraphics* *aGraphics)
 	else
 		return NS_ERROR_OUT_OF_MEMORY;
 }
+
+#ifdef MOZ_MATHML
+
+NS_IMETHODIMP
+nsRenderingContextMac::GetBoundingMetrics(const char*        aString, 
+                                          PRUint32           aLength,
+                                          nsBoundingMetrics& aBoundingMetrics)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsRenderingContextMac::GetBoundingMetrics(const PRUnichar*   aString, 
+                                          PRUint32           aLength,
+                                          nsBoundingMetrics& aBoundingMetrics,
+                                          PRInt32*           aFontID)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+#endif /* MOZ_MATHML */
