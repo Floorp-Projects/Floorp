@@ -552,10 +552,10 @@ nsServiceManager::ReleaseService(const char* aProgID, nsISupports* service,
     // Don't create the global service manager here because we might
     // be shutting down, and releasing all the services in its
     // destructor
-    nsIServiceManager* mgr = mGlobalServiceManager;
-    if (mgr) {
-        return mgr->ReleaseService(aProgID, service, shutdownListener);
-    }
+    if (mGlobalServiceManager)
+        return mGlobalServiceManager->ReleaseService(aProgID, service, shutdownListener);
+    // If there wasn't a global service manager, just release the object:
+    NS_RELEASE(service);
     return NS_OK;
 }
 
