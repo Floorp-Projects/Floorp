@@ -58,13 +58,14 @@ class nsCaret : public nsICaret,
 	
 	protected:
 
+		void					KillTimer();
 		nsresult			PrimeTimer();
 		
 		nsresult			StartBlinking();
 		nsresult			StopBlinking();
 		
 		void					DrawCaret();
-		
+		void					ToggleDrawnStatus()	{ 	mDrawn = !mDrawn; }
 
 	  nsIPresShell  *mPresShell;				// we rely on the nsEditor to refCount this
 		nsITimer*			mBlinkTimer;
@@ -78,7 +79,6 @@ class nsCaret : public nsICaret,
 	private:
 	
 		PRBool				mDrawn;							// this should be mutable
-		nsRect				mCaretRect;					// the last caret that was drawn
 		
 };
 

@@ -31,7 +31,9 @@
 #include "nsIContent.h"
 #include "nsIPresShell.h"
 #include "nsIRenderingContext.h"
+#include "nsIDeviceContext.h"
 #include "nsIView.h"
+#include "nsIViewManager.h"
 #include "nsIPresContext.h"
 
 #include "nsCaretProperties.h"
@@ -48,9 +50,9 @@ nsCaret::nsCaret()
 :	mPresShell(nsnull)
 ,	mBlinkTimer(nsnull)
 ,	mBlinkRate(500)
-, mVisible(PR_FALSE)
-, mReadOnly(PR_TRUE)
-, mDrawn(PR_FALSE)
+,	mVisible(PR_FALSE)
+,	mReadOnly(PR_TRUE)
+,	mDrawn(PR_FALSE)
 {
   NS_INIT_REFCNT();
 }
@@ -59,7 +61,7 @@ nsCaret::nsCaret()
 //-----------------------------------------------------------------------------
 nsCaret::~nsCaret()
 {
-	NS_IF_RELEASE(mBlinkTimer);
+	KillTimer();
 }
 
 //-----------------------------------------------------------------------------
@@ -74,7 +76,7 @@ NS_METHOD nsCaret::Init(nsIPresShell *inPresShell, nsCaretProperties *inCaretPro
 	mPresShell = inPresShell;		// the presshell owns us, so no addref
 	
 	mBlinkRate = inCaretProperties->GetCaretBlinkRate();
-	mCaretWidth = NSIntPointsToTwips(inCaretProperties->GetCaretWidth());
+	mCaretWidth = inCaretProperties->GetCaretWidth();
 	
 	// get the selection from the pres shell, and set ourselves up as a selection
 	// listener
@@ -153,18 +155,21 @@ NS_METHOD nsCaret::SetCaretReadOnly(PRBool inMakeReadonly)
 //-----------------------------------------------------------------------------
 NS_METHOD nsCaret::Refresh()
 {
-
-	if (mVisible)
+	// a refresh is different from a simple redraw, in that it does not affect
+	// the timer, or toggle the drawn status. It's used to redraw the caret
+	// when layout is redrawn on a timer.
+	if (mVisible && mDrawn)
 	{
-		StopBlinking();
-		StartBlinking();
+		DrawCaret();
 	}
 	
 	return NS_OK;
 }
 
 
+#ifdef XP_MAC
 #pragma mark -
+#endif
 
 //-----------------------------------------------------------------------------
 NS_METHOD nsCaret::NotifySelectionChanged()
@@ -179,13 +184,26 @@ NS_METHOD nsCaret::NotifySelectionChanged()
 	return NS_OK;
 }
 
+
+#ifdef XP_MAC
 #pragma mark -
+#endif
+
+//-----------------------------------------------------------------------------
+void nsCaret::KillTimer()
+{
+	if (mBlinkTimer)
+	{
+		mBlinkTimer->Cancel();
+		NS_RELEASE(mBlinkTimer);
+	}
+}
 
 
 //-----------------------------------------------------------------------------
 nsresult nsCaret::PrimeTimer()
 {
-	NS_IF_RELEASE(mBlinkTimer);
+	KillTimer();
 	
 	// set up the blink timer
 	if (mBlinkRate > 0)
@@ -209,8 +227,9 @@ nsresult nsCaret::StartBlinking()
 		
   NS_ASSERTION(!mDrawn, "Caret should not be drawn here");
   
+	ToggleDrawnStatus();
 	DrawCaret();		// draw it right away
-
+	
 	return NS_OK;
 }
 
@@ -219,9 +238,13 @@ nsresult nsCaret::StartBlinking()
 nsresult nsCaret::StopBlinking()
 {
 	if (mDrawn)			// erase the caret if necessary
+	{
+		ToggleDrawnStatus();
 		DrawCaret();
+	}
 	
-	NS_IF_RELEASE(mBlinkTimer);
+	KillTimer();
+	
 	return NS_OK;
 }
 
@@ -229,79 +252,80 @@ nsresult nsCaret::StopBlinking()
 //-----------------------------------------------------------------------------
 void nsCaret::DrawCaret()
 {
-	PRBool	mCanDrawCaret = PR_FALSE;
-
-	// first get a rendering context for the root frame. We draw relative to the root frame.
-	nsIFrame	*rootFrame;		// frames are not refcounted
-	if (NS_FAILED(mPresShell->GetRootFrame(&rootFrame)) || !rootFrame)
-		return;
-	
-	nsCOMPtr<nsIRenderingContext>		aContext;
-	if (NS_FAILED(mPresShell->CreateRenderingContext(rootFrame, getter_AddRefs(aContext))))
-		return;
-
-	// the strategy here is this. If we are not drawn, we figure out the caret rect
-	// from the selection, and store the rect. If we are drawn, we _have_ to erase,
-	// which why the rect is stored, and the stored rect used to erase.
-	
-  if (!mDrawn)
+  nsCOMPtr<nsIDOMSelection> domSelection;
+  nsresult err = mPresShell->GetSelection(getter_AddRefs(domSelection));
+  if (!NS_SUCCEEDED(err) || !domSelection)
+  	return;
+  	
+  PRBool isCollapsed;
+  
+  if (domSelection && NS_SUCCEEDED(domSelection->IsCollapsed(&isCollapsed)) && isCollapsed)
   {
-	  nsCOMPtr<nsIDOMSelection> domSelection;
-	  nsresult err = mPresShell->GetSelection(getter_AddRefs(domSelection));
-	  if (!NS_SUCCEEDED(err) || !domSelection)
-	  	return;
-	  	
-	  PRBool isCollapsed;
-	  
-	  if (domSelection && NS_SUCCEEDED(domSelection->IsCollapsed(&isCollapsed)) && isCollapsed)
-	  {
-			// start and end parent should be the same since we are collapsed
-			nsCOMPtr<nsIDOMNode>	focusNode;
-			PRInt32	focusOffset;
-			
-			domSelection->GetFocusNodeAndOffset(getter_AddRefs(focusNode), &focusOffset);
-			
+		// start and end parent should be the same since we are collapsed
+		nsCOMPtr<nsIDOMNode>	focusNode;
+		PRInt32	focusOffset;
+		
+		if (NS_SUCCEEDED(domSelection->GetFocusNodeAndOffset(getter_AddRefs(focusNode), &focusOffset)) &&
+						focusNode)
+		{
 			// is this a text node?
-			nsCOMPtr<nsIDOMCharacterData>	nodeAsText(do_QueryInterface(focusNode));
+			nsCOMPtr<nsIDOMCharacterData>	nodeAsText = do_QueryInterface(focusNode);
+			
 			if (nodeAsText)
 			{
-				PRInt32 contentOffset = focusOffset;
-				
-				if (focusNode)
+	      nsCOMPtr<nsIContent>contentNode = do_QueryInterface(focusNode);
+	      
+				if (contentNode)
 				{
-		      nsCOMPtr<nsIContent>contentNode(do_QueryInterface(focusNode));
-		      
-					if (contentNode)
+					nsIFrame*	theFrame = nsnull;
+					PRInt32 	contentOffset = focusOffset;
+					
+					if (NS_SUCCEEDED(mPresShell->GetPrimaryFrameFor(contentNode, &theFrame)) &&
+						 theFrame && NS_SUCCEEDED(theFrame->GetChildFrameContainingOffset(focusOffset, &focusOffset, &theFrame)))
 					{
-						nsIFrame*	theFrame = nsnull;
-						
-						if (NS_SUCCEEDED(mPresShell->GetPrimaryFrameFor(contentNode, &theFrame)) &&
-							 theFrame && NS_SUCCEEDED(theFrame->GetChildFrameContainingOffset(focusOffset, &focusOffset, &theFrame)))
-						{
-							nsRect		frameRect;
-							theFrame->GetRect(frameRect);
+						nsRect		frameRect;
+						theFrame->GetRect(frameRect);
 
-							nsCOMPtr<nsIPresContext> presContext;
-							mPresShell->GetPresContext(getter_AddRefs(presContext));
+						nsCOMPtr<nsIPresContext> presContext;
+						mPresShell->GetPresContext(getter_AddRefs(presContext));
+						
+						nsIView * view = nsnull;
+						nsPoint   offset;
+						theFrame->GetOffsetFromView(offset, &view);
+						frameRect.x = offset.x;
+						frameRect.y = offset.y;
+						
+						if (presContext && view)		// when can this fail?
+						{
+							nsIView*	nextView = view;
+							nscoord		x, y;
 							
-							nsIView * view = nsnull;
-							nsPoint   offset;
-							theFrame->GetOffsetFromView(offset, &view);
-							frameRect.x = offset.x;
-							frameRect.y = offset.y;
+							do {
+								nextView->GetPosition(&x, &y);
+								frameRect.x += x;
+								frameRect.y += y;
+
+								nsCOMPtr<nsIWidget>	viewWidget;
+  							nextView->GetWidget(*getter_AddRefs(viewWidget));
+								if (viewWidget) break;
+								
+								nextView->GetParent(nextView);
+							} while (nextView);
 							
-							if (presContext && view)		// when can this fail?
+							// make a rendering context for the first view that has a widget
+							nsCOMPtr<nsIRenderingContext>	aContext;
+							nsCOMPtr<nsIDeviceContext> 		dx;
+
+							if (NS_SUCCEEDED(presContext->GetDeviceContext(getter_AddRefs(dx)) && dx))
 							{
-								nscoord		x, y;
-								
-								do {
-									view->GetPosition(&x, &y);
-									frameRect.x += x;
-									frameRect.y += y;
-									
-									view->GetParent(view);
-								} while (view);
-								
+								if (nextView)
+									dx->CreateRenderingContext(nextView, *getter_AddRefs(aContext));
+								else
+									dx->CreateRenderingContext(*getter_AddRefs(aContext));
+							}
+
+							if (aContext)
+							{
 								nsPoint		framePos(0, 0);
 								
 								theFrame->GetPointFromOffset(presContext, aContext, contentOffset, &framePos);
@@ -313,36 +337,28 @@ void nsCaret::DrawCaret()
 
 								frameRect.width = mCaretWidth;
 								
-								mCaretRect = frameRect;
-								mCanDrawCaret = PR_TRUE;
+								// XXX need to use XOR mode when GFX supports that. For now, just
+								// draw and erase
+								if (mDrawn)
+									aContext->SetColor(NS_RGB(0, 0, 0));				// we are drawing it; black
+								else
+									aContext->SetColor(NS_RGB(255, 255, 255));	// we are erasing it; white
+
+								aContext->FillRect(frameRect);
 							}
 						}
-		      }
+					}
 	      }
-			}
-	  }
-	}
+      }
+		}
+  }
 
-	if ( (!mDrawn && mCanDrawCaret) || mDrawn)
-	{
-		// XXX need to use XOR mode when GFX supports that. For now, just
-		// draw and erase
-		if (mDrawn)
-			aContext->SetColor(NS_RGB(255, 255, 255));
-		else
-			aContext->SetColor(NS_RGB(0, 0, 0));
-
-		aContext->FillRect(mCaretRect);
-
-		mDrawn = !mDrawn;
-	}
-
-	PrimeTimer();
 }
 
 
-
+#ifdef XP_MAC
 #pragma mark -
+#endif
 
 //-----------------------------------------------------------------------------
 /* static */
@@ -351,7 +367,9 @@ void nsCaret::CaretBlinkCallback(nsITimer *aTimer, void *aClosure)
 	nsCaret		*theCaret = NS_REINTERPRET_CAST(nsCaret*, aClosure);
 	if (!theCaret) return;
 	
+	theCaret->ToggleDrawnStatus();
 	theCaret->DrawCaret();
+	theCaret->PrimeTimer();
 }
 
 

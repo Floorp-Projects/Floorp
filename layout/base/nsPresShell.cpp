@@ -69,7 +69,7 @@ static PRBool gsNoisyRefs = PR_FALSE;
 
 
 // comment out to hide caret
-//#define SHOW_CARET
+#define SHOW_CARET
 
 static PLHashNumber
 HashKey(nsIFrame* key)
@@ -334,9 +334,7 @@ protected:
   // turn the caret on and off.
   nsresult EnableCaret();
   nsresult DisableCaret();
-  
-  PRBool    mCaretEnabled;
-  
+    
 #ifdef NS_DEBUG
   void VerifyIncrementalReflow();
   PRBool mInVerifyReflow;
@@ -592,8 +590,6 @@ PresShell::Init(nsIDocument* aDocument,
   }
  
 #endif
-
-  mCaretEnabled = PR_FALSE;
   
   // Important: this has to happen after the selection has been set up
 #ifdef SHOW_CARET
@@ -1007,7 +1003,7 @@ nsresult PresShell::DisableCaret()
 
 nsresult PresShell::EnableCaret()
 {
-	if (mCaret && mCaretEnabled)
+	if (mCaret)
 		return mCaret->SetCaretVisible(PR_TRUE);
 	return NS_OK;
 }
