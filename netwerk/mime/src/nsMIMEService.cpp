@@ -27,8 +27,7 @@
 
 PRBool DeleteEntry(nsHashKey *aKey, void *aData, void* closure) {
     nsMIMEInfoImpl *entry = (nsMIMEInfoImpl*)aData;
-    delete entry;
-    entry = nsnull;
+	NS_IF_RELEASE(entry);
     return PR_TRUE;   
 };
 
