@@ -143,6 +143,8 @@ function SetFields( aDataObject )
     if ( parent.hPrefWindow.getPrefIsLocked( "browser.display.use_document_fonts" ) ) {
         useDocFontsCheckbox.disabled = true;
     }
+
+    return true;
   }
 
 function Startup()
