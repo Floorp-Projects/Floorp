@@ -78,8 +78,10 @@ interface nsIPromptService : nsISupports
    *
    * @param dialogTitle
    * @param text
-   * @param button0And1Flags  The titles and positions for buttons 0 and 1
-   * @param button2Title      The title for button 2 or null if no button
+   * @param buttonFlags       Title flags for each button.
+   * @param button0Title      Used when button 0 uses TITLE_IS_STRING
+   * @param button1Title      Used when button 1 uses TITLE_IS_STRING
+   * @param button2Title      Used when button 2 uses TITLE_IS_STRING
    * @param checkMsg          null if no checkbox
    * @param checkValue    
    * @param buttonPressed
@@ -88,22 +90,28 @@ interface nsIPromptService : nsISupports
    * the sequence goes from right to left or left to right.
    * Button 0 will be the default button.
    *
-   * Buttons 0 and 1 use predefined titles which are specified by the
-   * following flags. Each title constant can be multiplied by the button
-   * position value to assign a title to that particular button.
+   * A button may use a predefined title, specified by one of the
+   * constants below. Each title constant can be multiplied by a
+   * position constant to assign the title to a particular button.
+   * If BUTTON_TITLE_IS_STRING is used for a button, the string
+   * parameter for that button will be used. If the value for a button
+   * position is zero, the button will not be shown
    *
-   * Button 2, if present, is specified by a string
    */
    
   const unsigned long BUTTON_POS_0              = 1;
   const unsigned long BUTTON_POS_1              = 1 << 8;
-   
+  const unsigned long BUTTON_POS_2              = 1 << 16;
+     
   const unsigned long BUTTON_TITLE_OK            = 1;
   const unsigned long BUTTON_TITLE_CANCEL        = 2;
   const unsigned long BUTTON_TITLE_YES           = 3;
   const unsigned long BUTTON_TITLE_NO            = 4;
   const unsigned long BUTTON_TITLE_SAVE          = 5;
-  const unsigned long BUTTON_TITLE_REVERT        = 6;
+  const unsigned long BUTTON_TITLE_DONT_SAVE     = 6;
+  const unsigned long BUTTON_TITLE_REVERT        = 7;
+
+  const unsigned long BUTTON_TITLE_IS_STRING     = 127;
    
   const unsigned long STD_OK_CANCEL_BUTTONS      = (BUTTON_TITLE_OK * BUTTON_POS_0) +
                                                     (BUTTON_TITLE_CANCEL * BUTTON_POS_1);
@@ -111,7 +119,9 @@ interface nsIPromptService : nsISupports
   void confirmEx(in nsIDOMWindow parent,
                  in wstring dialogTitle,
                  in wstring text,
-                 in unsigned long button0And1Flags,
+                 in unsigned long buttonFlags,
+                 in wstring button0Title,
+                 in wstring button1Title,
                  in wstring button2Title,
                  in wstring checkMsg,
                  inout boolean checkValue,

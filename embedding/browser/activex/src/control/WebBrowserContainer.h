@@ -42,7 +42,6 @@ class CWebBrowserContainer :
 		public nsIURIContentListener,
 		public nsIDocShellTreeOwner,
 		public nsIInterfaceRequestor,
-		public nsIPrompt,
         public nsIContextMenuListener,
         public nsICommandHandler,
         public nsSupportsWeakReference
@@ -75,9 +74,6 @@ public:
 	NS_DECL_NSIWEBPROGRESSLISTENER
     NS_DECL_NSICONTEXTMENULISTENER
     NS_DECL_NSICOMMANDHANDLER
-
-	// "Services" accessed through nsIInterfaceRequestor
-	NS_DECL_NSIPROMPT
 };
 
 #endif

@@ -244,7 +244,8 @@ nsPromptService::ConfirmCheck(nsIDOMWindow *parent,
 NS_IMETHODIMP
 nsPromptService::ConfirmEx(nsIDOMWindow *parent,
                     const PRUnichar *dialogTitle, const PRUnichar *text,
-                    PRUint32 button0And1Flags, const PRUnichar *button2Title,
+                    PRUint32 buttonFlags, const PRUnichar *button0Title,
+                    const PRUnichar *button1Title, const PRUnichar *button2Title,
                     const PRUnichar *checkMsg, PRBool *checkValue,
                     PRInt32 *buttonPressed)
 {
@@ -265,39 +266,44 @@ nsPromptService::ConfirmEx(nsIDOMWindow *parent,
   block->SetString(eDialogTitle, dialogTitle);
   block->SetString(eMsg, text);
   
+  int buttonIDs[] = { eButton0Text, eButton1Text, eButton2Text };
+  const PRUnichar* buttonStrings[] = { button0Title, button1Title, button2Title };
+  
   PRInt32 numberButtons = 0;
-  for (int buttonID = eButton0Text; buttonID <= eButton1Text; buttonID++) { 
+  for (int i = 0; i < 3; i++) { 
     
-    PRUnichar *buttonText = nsnull;
-    switch (button0And1Flags & 0xff) {
+    nsXPIDLString buttonText;
+    switch (buttonFlags & 0xff) {
       case BUTTON_TITLE_OK:
-        GetLocaleString("OK", &buttonText);
+        GetLocaleString("OK", getter_Copies(buttonText));
         break;
       case BUTTON_TITLE_CANCEL:
-        GetLocaleString("Cancel", &buttonText);
+        GetLocaleString("Cancel", getter_Copies(buttonText));
         break;
       case BUTTON_TITLE_YES:
-        GetLocaleString("Yes", &buttonText);
+        GetLocaleString("Yes", getter_Copies(buttonText));
         break;
       case BUTTON_TITLE_NO:
-        GetLocaleString("No", &buttonText);
+        GetLocaleString("No", getter_Copies(buttonText));
         break;
       case BUTTON_TITLE_SAVE:
-        GetLocaleString("Save", &buttonText);
+        GetLocaleString("Save", getter_Copies(buttonText));
+        break;
+      case BUTTON_TITLE_DONT_SAVE:
+        GetLocaleString("DontSave", getter_Copies(buttonText));
         break;
       case BUTTON_TITLE_REVERT:
-        GetLocaleString("Revert", &buttonText);
+        GetLocaleString("Revert", getter_Copies(buttonText));
+        break;
+      case BUTTON_TITLE_IS_STRING:
+        *getter_Shares(buttonText) = buttonStrings[i];
         break;
     }
-    if (buttonText) {
-      block->SetString(buttonID, buttonText);
+    if (buttonText.get()) {
+      block->SetString(buttonIDs[i], buttonText.get());
       ++numberButtons;
     }
-    button0And1Flags >>= 8;
-  }
-  if (button2Title) {
-    block->SetString(eButton2Text, button2Title);
-    ++numberButtons;
+    buttonFlags >>= 8;
   }
   block->SetInt(eNumberButtons, numberButtons);
   

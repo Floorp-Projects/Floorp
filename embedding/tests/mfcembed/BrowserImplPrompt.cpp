@@ -131,7 +131,8 @@ CBrowserImpl::ConfirmCheck(const PRUnichar *dialogTitle,
 
 NS_IMETHODIMP
 CBrowserImpl::ConfirmEx(const PRUnichar *dialogTitle, const PRUnichar *text,
-                        PRUint32 button0And1Flags, const PRUnichar *button2Title,
+                        PRUint32 buttonFlags, const PRUnichar *button0Title,
+                        const PRUnichar *button1Title, const PRUnichar *button2Title,
                         const PRUnichar *checkMsg, PRBool *checkValue,
                         PRInt32 *buttonPressed)
 {

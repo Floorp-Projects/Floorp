@@ -291,7 +291,7 @@ nsWindowsHooks::CheckSettings( nsIDOMWindowInternal *aParent ) {
                         if ( !settings->mHaveBeenSet ) {
                             textKey  = "initialPromptText";
                         }
-                        nsXPIDLString text, label, title, yesButtonLabel, noButtonLabel, cancelButtonLabel;
+                        nsXPIDLString text, label, title;
                         if ( NS_SUCCEEDED( ( rv = bundle->GetStringFromName( NS_ConvertASCIItoUCS2( textKey ).get(),
                                                                              getter_Copies( text ) ) ) )
                              &&
@@ -299,16 +299,7 @@ nsWindowsHooks::CheckSettings( nsIDOMWindowInternal *aParent ) {
                                                                              getter_Copies( label ) ) ) )
                              &&
                              NS_SUCCEEDED( ( rv = bundle->GetStringFromName( NS_LITERAL_STRING( "title" ).get(),
-                                                                             getter_Copies( title ) ) ) )
-                             &&
-                             NS_SUCCEEDED( ( rv = bundle->GetStringFromName( NS_LITERAL_STRING( "yesButtonLabel" ).get(),
-                                                                             getter_Copies( yesButtonLabel ) ) ) )
-                             &&
-                             NS_SUCCEEDED( ( rv = bundle->GetStringFromName( NS_LITERAL_STRING( "noButtonLabel" ).get(),
-                                                                             getter_Copies( noButtonLabel ) ) ) )
-                             &&
-                             NS_SUCCEEDED( ( rv = bundle->GetStringFromName( NS_LITERAL_STRING( "cancelButtonLabel" ).get(),
-                                                                             getter_Copies( cancelButtonLabel ) ) ) ) ) {
+                                                                             getter_Copies( title ) ) ) ) ) {
                             // Got the text, now show dialog.
                             PRBool  showDialog = settings->mShowDialog;
                             PRInt32 dlgResult  = -1;
@@ -324,8 +315,9 @@ nsWindowsHooks::CheckSettings( nsIDOMWindowInternal *aParent ) {
                             //    o No
                             rv = promptService->ConfirmEx(aParent, title, text,
                                                           (nsIPromptService::BUTTON_TITLE_YES * nsIPromptService::BUTTON_POS_0) +
-                                                          (nsIPromptService::BUTTON_TITLE_NO * nsIPromptService::BUTTON_POS_1),
-                                                          cancelButtonLabel, labelArg, &showDialog, &dlgResult);
+                                                          (nsIPromptService::BUTTON_TITLE_CANCEL * nsIPromptService::BUTTON_POS_1) +
+                                                          (nsIPromptService::BUTTON_TITLE_NO * nsIPromptService::BUTTON_POS_2),
+                                                          nsnull, nsnull, nsnull, labelArg, &showDialog, &dlgResult);
                             
                             if ( NS_SUCCEEDED( rv ) ) {
                                 // Did they say go ahead?

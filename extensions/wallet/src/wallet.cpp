@@ -533,7 +533,7 @@ Wallet_ConfirmYN(PRUnichar * szMessage, nsIDOMWindowInternal* window) {
   res = dialog->ConfirmEx(confirm_string, szMessage,
                           (nsIPrompt::BUTTON_TITLE_YES * nsIPrompt::BUTTON_POS_0) +
                           (nsIPrompt::BUTTON_TITLE_NO * nsIPrompt::BUTTON_POS_1),
-                          nsnull, nsnull, nsnull, &buttonPressed);
+                          nsnull, nsnull, nsnull, nsnull, nsnull, &buttonPressed);
 
   Recycle(confirm_string);
   return (buttonPressed == 0);
@@ -555,8 +555,9 @@ Wallet_3ButtonConfirm(PRUnichar * szMessage, nsIDOMWindowInternal* window)
 
   res = dialog->ConfirmEx(confirm_string, szMessage,
                           (nsIPrompt::BUTTON_TITLE_YES * nsIPrompt::BUTTON_POS_0) +
-                          (nsIPrompt::BUTTON_TITLE_NO * nsIPrompt::BUTTON_POS_1),
-                          never_string, nsnull, nsnull, &buttonPressed);
+                          (nsIPrompt::BUTTON_TITLE_NO * nsIPrompt::BUTTON_POS_1) +
+                          (nsIPrompt::BUTTON_TITLE_IS_STRING * nsIPrompt::BUTTON_POS_2),
+                          nsnull, nsnull, never_string, nsnull, nsnull, &buttonPressed);
 
   Recycle(never_string);
   Recycle(confirm_string);
@@ -609,7 +610,7 @@ Wallet_CheckConfirmYN
   res = dialog->ConfirmEx(confirm_string, szMessage,
                           (nsIPrompt::BUTTON_TITLE_YES * nsIPrompt::BUTTON_POS_0) +
                           (nsIPrompt::BUTTON_TITLE_NO * nsIPrompt::BUTTON_POS_1),
-                          nsnull, szCheckMessage, checkValue, &buttonPressed);
+                          nsnull, nsnull, nsnull, szCheckMessage, checkValue, &buttonPressed);
 
   if (NS_FAILED(res)) {
     *checkValue = 0;

@@ -1452,8 +1452,9 @@ function ComposeCanClose()
                               gComposeMsgsBundle.getString("saveDlogTitle"),
                               gComposeMsgsBundle.getString("saveDlogMessage"),
                               (promptService.BUTTON_TITLE_SAVE * promptService.BUTTON_POS_0) +
-                              (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_1),
-                              gComposeMsgsBundle.getString("saveDlogDontSaveBtn"),
+                              (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_1) +
+                              (promptService.BUTTON_TITLE_DONT_SAVE * promptService.BUTTON_POS_2),
+                              null, null, null,
                               null, {value:0}, result);
 
 			if (result)

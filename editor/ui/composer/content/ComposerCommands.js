@@ -389,7 +389,7 @@ var nsRevertCommand =
       promptService.confirmEx(window, window.editorShell.GetString("RevertCaption"), msg,
   						      (promptService.BUTTON_TITLE_REVERT * promptService.BUTTON_POS_0) +
   						      (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_1),
-  						      null, null, {value:0}, result);
+  						      null, null, null, null, {value:0}, result);
 
       // Reload page if first button (Revert) was pressed
       if(result.value == 0)

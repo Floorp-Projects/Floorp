@@ -55,24 +55,30 @@ interface nsIPrompt : nsISupports
                          
     const unsigned long BUTTON_POS_0              = 1;
     const unsigned long BUTTON_POS_1              = 1 << 8;
-
+    const unsigned long BUTTON_POS_2              = 1 << 16;
+     
     const unsigned long BUTTON_TITLE_OK            = 1;
     const unsigned long BUTTON_TITLE_CANCEL        = 2;
     const unsigned long BUTTON_TITLE_YES           = 3;
     const unsigned long BUTTON_TITLE_NO            = 4;
     const unsigned long BUTTON_TITLE_SAVE          = 5;
-    const unsigned long BUTTON_TITLE_REVERT        = 6;
+    const unsigned long BUTTON_TITLE_DONT_SAVE     = 6;
+    const unsigned long BUTTON_TITLE_REVERT        = 7;
 
+    const unsigned long BUTTON_TITLE_IS_STRING     = 127;
+   
     const unsigned long STD_OK_CANCEL_BUTTONS      = (BUTTON_TITLE_OK * BUTTON_POS_0) +
                                                     (BUTTON_TITLE_CANCEL * BUTTON_POS_1);
-                       
-     void confirmEx(in wstring dialogTitle,
-                    in wstring text,
-                    in unsigned long button0And1Flags,
-                    in wstring button2Title,
-                    in wstring checkMsg,
-                    inout boolean checkValue,
-                    out PRInt32 buttonPressed);
+
+    void confirmEx(in wstring dialogTitle,
+                   in wstring text,
+                   in unsigned long buttonFlags,
+                   in wstring button0Title,
+                   in wstring button1Title,
+                   in wstring button2Title,
+                   in wstring checkMsg,
+                   inout boolean checkValue,
+                   out PRInt32 buttonPressed);
 
      boolean prompt(in wstring dialogTitle,
                     in wstring text,
