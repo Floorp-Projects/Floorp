@@ -177,10 +177,6 @@ nsresult nsExternalHelperAppService::InitDataSource()
   nsCOMPtr<nsIRDFService> rdf = do_GetService(kRDFServiceCID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIRDFRemoteDataSource> remoteDS = do_CreateInstance(kRDFXMLDataSourceCID, &rv);
-  mOverRideDataSource = do_QueryInterface(remoteDS);
-  NS_ENSURE_SUCCESS(rv,rv);
-
   // Get URI of the mimeTypes.rdf data source.  Do this the same way it's done in
   // pref-applications-edit.xul, for example, to ensure we get the same data source!
   // Note that the way it was done previously (using nsIFileSpec) worked better, but it
@@ -194,12 +190,9 @@ nsresult nsExternalHelperAppService::InitDataSource()
   rv = mimeTypesFile->GetURL(getter_Copies(urlSpec));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = remoteDS->Init(urlSpec);
+  // Get the data source; if it is going to be created, then load is synchronous.
+  rv = rdf->GetDataSourceBlocking( urlSpec, getter_AddRefs( mOverRideDataSource ) );
   NS_ENSURE_SUCCESS(rv, rv);
-
-  // for now load synchronously (async seems to be busted)
-  rv = remoteDS->Refresh(PR_TRUE);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "failed refresh?\n");
 
 #ifdef DEBUG_mscott
     PRBool loaded;
