@@ -25,6 +25,7 @@
 #include "nsTransform2D.h"
 #include "nsVoidArray.h"
 #include "nsGfxCIID.h"
+#include "nsCOMPtr.h"
 
 //#define USE_ATSUI_HACK
 
@@ -411,29 +412,32 @@ NS_IMETHODIMP nsRenderingContextMac::Init(nsIDeviceContext* aContext, nsIWidget*
 	SelectDrawingSurface(mFrontSurface);
 
 	// clip out the children from the GS main region
-	nsIEnumerator* children = aWindow->GetChildren();
-  if (children)
+	nsCOMPtr<nsIEnumerator> children ( dont_AddRef(aWindow->GetChildren()) );
+	if (children)
 	{
 		RgnHandle myRgn = ::NewRgn();
 		RgnHandle childRgn = ::NewRgn();
 		::CopyRgn(mGS->mMainRegion, myRgn);
 
-    nsIWidget* child;
 		children->First();
 		do
 		{
-      if (NS_SUCCEEDED(children->CurrentItem((nsISupports **)&child)))
-      {
-      	nsRect childRect;
-      	Rect macRect;
-      	child->GetBounds(childRect);
-      	::SetRect(&macRect, childRect.x, childRect.y, childRect.x + childRect.width, childRect.y + childRect.height);
-      	::RectRgn(childRgn, &macRect);
-      	::DiffRgn(myRgn, childRgn, myRgn);
-      }
-		}
-    while (NS_SUCCEEDED(children->Next()));			
-		delete children;
+			nsCOMPtr<nsISupports> child;
+			if ( NS_SUCCEEDED(children->CurrentItem(getter_AddRefs(child))) )
+			{	
+				// thanks to sdr@camsoft.com for pointing out a memory leak here,
+				// leading to the use of nsCOMPtr
+				nsCOMPtr<nsIWidget> childWidget ( child );
+				if ( childWidget ) {
+					nsRect childRect;
+					Rect macRect;
+					childWidget->GetBounds(childRect);
+					::SetRect(&macRect, childRect.x, childRect.y, childRect.x + childRect.width, childRect.y + childRect.height);
+					::RectRgn(childRgn, &macRect);
+					::DiffRgn(myRgn, childRgn, myRgn);
+				}	
+			}
+		} while (NS_SUCCEEDED(children->Next()));			
 
 		::CopyRgn(myRgn, mGS->mMainRegion);
 		::CopyRgn(myRgn, mGS->mClipRegion);
