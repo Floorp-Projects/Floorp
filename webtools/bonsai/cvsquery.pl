@@ -158,6 +158,7 @@ sub query_checkins {
 
     if (defined $::query_file && $::query_file ne '') {
         my $q = SqlQuote($::query_file);
+        $::query_filetype ||= "exact";
         if ($::query_filetype eq 'regexp') {
             $qstring .= " and files.file regexp $q";
         } else {
