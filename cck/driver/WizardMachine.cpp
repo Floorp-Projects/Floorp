@@ -458,6 +458,7 @@ NODE* CWizardMachineApp::CreateNode(NODE *parentNode, CString iniFile)
 	NewNode->navControls->onNextAction = buffer;
 	GetPrivateProfileString(navCtrlSection, "onEnter", "", buffer, MAX_SIZE, iniFile);
 	NewNode->navControls->onEnter = buffer;
+//	AfxMessageBox((LPCTSTR)(buffer),MB_OK);
 	GetPrivateProfileString(navCtrlSection, "Help", "", buffer, MAX_SIZE, iniFile);
 	NewNode->navControls->helpFile = buffer;
 	  
@@ -795,11 +796,11 @@ BOOL CWizardMachineApp::GoToNextNode()
 
 	//----------------------------------------------------------------------------------------------
 	
-	NODE* tempNode;
+	NODE* tempNode = CurrentNode;
 
 	NODE* tmpParentNode;
 
-	tmpParentNode = CurrentNode->parent;
+	tmpParentNode = tempNode->parent;
 
 	while (tmpParentNode->localVars->pageName != "Globals")
 	{
@@ -825,27 +826,22 @@ BOOL CWizardMachineApp::GoToNextNode()
 			if (!tempNode)
 				0; /* ??? */
 			
-			if (!theInterpreter->interpret(tempNode->navControls->onEnter, NULL))
-				return FALSE;
-			
-			CurrentNode = tempNode;
-
 			BOOL isAContainerNode;	
 			BOOL haveChildNodes = TRUE;
 
-			isAContainerNode = (CurrentNode->numWidgets == 0);
+			isAContainerNode = (tempNode->numWidgets == 0);
 			while(isAContainerNode && haveChildNodes)
 			{
-				NODE* containerNode = CurrentNode;
+				NODE* containerNode = tempNode;
 				if (containerNode->numChildNodes > 0)
 				{
-					CurrentNode = containerNode->childNodes[0];
-					if (!CurrentNode)
+					tempNode = containerNode->childNodes[0];
+					if (!tempNode)
 					{
-						CurrentNode = CreateNode(containerNode, 
+						tempNode = CreateNode(containerNode, 
 							containerNode->subPages->pages.GetAt(0) + ".ini");
 					}
-					isAContainerNode = (CurrentNode->numWidgets == 0);
+					isAContainerNode = (tempNode->numWidgets == 0);
 					PrintNodeInfo(containerNode);
 					haveChildNodes = TRUE;
 				}
@@ -854,7 +850,7 @@ BOOL CWizardMachineApp::GoToNextNode()
 					haveChildNodes = FALSE;
 				}
 			}
-			PrintNodeInfo(CurrentNode);
+			PrintNodeInfo(tempNode);
 			if (haveChildNodes)
 			{
 				break;
@@ -876,6 +872,11 @@ BOOL CWizardMachineApp::GoToNextNode()
 	if (IsNewValue)
 		CreateNewCache();
 
+	if (!theInterpreter->interpret(tempNode->navControls->onEnter, NULL))
+		return FALSE;
+			
+	CurrentNode = tempNode;
+
 	return TRUE;
 }
 
@@ -887,11 +888,11 @@ BOOL CWizardMachineApp::GoToPrevNode()
 		//for now check existence of display information
 		//go to last child and so on
 
-	NODE* tempNode;
+	NODE* tempNode = CurrentNode;
 
 	NODE* tmpParentNode;
 
-	tmpParentNode = CurrentNode->parent;
+	tmpParentNode = tempNode->parent;
 
 	while (tmpParentNode->localVars->pageName != "Globals")
 	{
@@ -917,28 +918,25 @@ BOOL CWizardMachineApp::GoToPrevNode()
 			if (!tempNode)
 				0;/*then what*/
 
-			if (!theInterpreter->interpret(tempNode->navControls->onEnter, NULL))
-				return FALSE;
-			CurrentNode = tempNode;
 			
 			BOOL isAContainerNode;	
 			BOOL haveChildNodes = TRUE;
 
-			isAContainerNode = (CurrentNode->numWidgets == 0);
+			isAContainerNode = (tempNode->numWidgets == 0);
 			while(isAContainerNode && haveChildNodes)
 			{
-				NODE* containerNode = CurrentNode;
+				NODE* containerNode = tempNode;
 
 				if (containerNode->numChildNodes > 0)
 				{
 					int index = containerNode->currNodeIndex;
-					CurrentNode = containerNode->childNodes[index];
-					if (!CurrentNode)
+					tempNode = containerNode->childNodes[index];
+					if (!tempNode)
 					{
-						CurrentNode = CreateNode(containerNode,
+						tempNode = CreateNode(containerNode,
 						    containerNode->subPages->pages.GetAt(index) + ".ini");
 					}
-					isAContainerNode = (CurrentNode->numWidgets == 0);
+					isAContainerNode = (tempNode->numWidgets == 0);
 					PrintNodeInfo(containerNode);
 				}
 				else
@@ -947,7 +945,7 @@ BOOL CWizardMachineApp::GoToPrevNode()
 				}
 			}
 
-			PrintNodeInfo(CurrentNode);
+			PrintNodeInfo(tempNode);
 			if (haveChildNodes)
 			{
 				break;
@@ -968,6 +966,9 @@ BOOL CWizardMachineApp::GoToPrevNode()
 
 	if (IsNewValue)
 		CreateNewCache();
+	if (!theInterpreter->interpret(tempNode->navControls->onEnter, NULL))
+		return FALSE;
+	CurrentNode = tempNode;
 
 	return TRUE;
 
