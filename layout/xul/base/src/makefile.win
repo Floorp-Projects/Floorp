@@ -78,8 +78,10 @@ CPPSRCS=					\
         nsTreeItemDragCapturer.cpp \
   nsXULTreeFrame.cpp \
   nsXULTreeGroupFrame.cpp \
+  nsXULTreeOuterGroupFrame.cpp \
   nsXULTreeSliceFrame.cpp \
   nsXULTreeCellFrame.cpp \
+  nsTreeLayout.cpp \
 	nsSpinnerFrame.cpp \
 	nsScrollbarFrame.cpp \
         nsScrollbarButtonFrame.cpp \
@@ -147,8 +149,10 @@ CPP_OBJS=					\
         .\$(OBJDIR)\nsTreeItemDragCapturer.obj \
   .\$(OBJDIR)\nsXULTreeFrame.obj \
   .\$(OBJDIR)\nsXULTreeGroupFrame.obj \
+  .\$(OBJDIR)\nsXULTreeOuterGroupFrame.obj \
   .\$(OBJDIR)\nsXULTreeSliceFrame.obj \
   .\$(OBJDIR)\nsXULTreeCellFrame.obj \
+  .\$(OBJDIR)\nsTreeLayout.obj \
 	.\$(OBJDIR)\nsSpinnerFrame.obj \
 	.\$(OBJDIR)\nsScrollbarFrame.obj \
 	.\$(OBJDIR)\nsScrollbarButtonFrame.obj \

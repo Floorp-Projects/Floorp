@@ -266,6 +266,7 @@ NS_NewScrollbarFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
 // QueryInterface
 //
 NS_INTERFACE_MAP_BEGIN(nsScrollbarFrame)
+  NS_INTERFACE_MAP_ENTRY(nsIScrollbarFrame)
 NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 
 

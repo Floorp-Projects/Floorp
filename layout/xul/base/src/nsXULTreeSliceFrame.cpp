@@ -48,6 +48,25 @@ NS_NewXULTreeSliceFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool a
 } // NS_NewXULTreeSliceFrame
 
 
+NS_IMETHODIMP_(nsrefcnt) 
+nsXULTreeSliceFrame::AddRef(void)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP_(nsrefcnt)
+nsXULTreeSliceFrame::Release(void)
+{
+  return NS_OK;
+}
+
+//
+// QueryInterface
+//
+NS_INTERFACE_MAP_BEGIN(nsXULTreeSliceFrame)
+  NS_INTERFACE_MAP_ENTRY(nsIXULTreeSlice)
+NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
+
 // Constructor
 nsXULTreeSliceFrame::nsXULTreeSliceFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager, PRBool aIsHorizontal)
 :nsBoxFrame(aPresShell, aIsRoot, aLayoutManager, aIsHorizontal) 

@@ -23,16 +23,24 @@
  */
 
 #include "nsBoxFrame.h"
+#include "nsIXULTreeSlice.h"
 
-class nsXULTreeSliceFrame : public nsBoxFrame
+class nsXULTreeSliceFrame : public nsBoxFrame, public nsIXULTreeSlice
 {
 public:
+  NS_DECL_ISUPPORTS
+
   friend nsresult NS_NewXULTreeSliceFrame(nsIPresShell* aPresShell, 
                                           nsIFrame** aNewFrame, 
                                           PRBool aIsRoot = PR_FALSE,
                                           nsIBoxLayout* aLayoutManager = nsnull,
                                           PRBool aDefaultHorizontal = PR_TRUE);
 
+  // nsIXULTreeSlice
+  NS_IMETHOD IsOutermostFrame(PRBool* aResult) { *aResult = PR_FALSE; return NS_OK; };
+  NS_IMETHOD IsGroupFrame(PRBool* aResult) { *aResult = PR_FALSE; return NS_OK; };
+  NS_IMETHOD IsRowFrame(PRBool* aResult) { *aResult = PR_TRUE; return NS_OK; };
+  
 protected:
   nsXULTreeSliceFrame(nsIPresShell* aPresShell, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull, PRBool aDefaultHorizontal = PR_TRUE);
   virtual ~nsXULTreeSliceFrame();

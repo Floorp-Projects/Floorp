@@ -23,10 +23,16 @@
  */
 
 #include "nsBoxFrame.h"
+#include "nsIXULTreeSlice.h"
 
-class nsXULTreeGroupFrame : public nsBoxFrame
+class nsCSSFrameConstructor;
+class nsXULTreeOuterGroupFrame;
+
+class nsXULTreeGroupFrame : public nsBoxFrame, public nsIXULTreeSlice
 {
 public:
+  NS_DECL_ISUPPORTS
+
   friend nsresult NS_NewXULTreeGroupFrame(nsIPresShell* aPresShell, 
                                           nsIFrame** aNewFrame, 
                                           PRBool aIsRoot = PR_FALSE,
@@ -37,6 +43,60 @@ protected:
   nsXULTreeGroupFrame(nsIPresShell* aPresShell, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull, PRBool aDefaultHorizontal = PR_TRUE);
   virtual ~nsXULTreeGroupFrame();
 
-protected: // Data Members
+  void LocateFrame(nsIFrame* aStartFrame, nsIFrame** aResult);
+
+public:
+  void InitGroup(nsCSSFrameConstructor* aFC, nsIPresContext* aContext, nsXULTreeOuterGroupFrame* aOuterFrame) 
+  {
+    mFrameConstructor = aFC;
+    mPresContext = aContext;
+    mOuterFrame = aOuterFrame;
+  }
+
+  nsXULTreeOuterGroupFrame* GetOuterFrame() { return mOuterFrame; };
+  nsIBox* GetFirstTreeBox();
+  nsIBox* GetNextTreeBox(nsIBox* aBox);
+
+  nsIFrame* GetFirstFrame();
+  nsIFrame* GetNextFrame(nsIFrame* aCurrFrame);
+  nsIFrame* GetLastFrame();
   
+  NS_IMETHOD IsDirty(PRBool& aDirtyFlag) { aDirtyFlag = PR_TRUE; return NS_OK; };
+
+  NS_IMETHOD TreeAppendFrames(nsIFrame*       aFrameList);
+
+  NS_IMETHOD TreeInsertFrames(nsIFrame*       aPrevFrame,
+                              nsIFrame*       aFrameList);
+
+  // Responses to changes
+  void OnContentInserted(nsIPresContext* aPresContext, nsIFrame* aNextSibling, PRInt32 aIndex);
+  void OnContentRemoved(nsIPresContext* aPresContext, nsIFrame* aChildFrame, PRInt32 aIndex);
+
+  // nsIXULTreeSlice
+  NS_IMETHOD IsOutermostFrame(PRBool* aResult) { *aResult = PR_FALSE; return NS_OK; };
+  NS_IMETHOD IsGroupFrame(PRBool* aResult) { *aResult = PR_TRUE; return NS_OK; };
+  NS_IMETHOD IsRowFrame(PRBool* aResult) { *aResult = PR_FALSE; return NS_OK; };
+  
+  virtual nscoord GetAvailableHeight() { return mAvailableHeight; };
+  void SetAvailableHeight(nscoord aHeight) { mAvailableHeight = aHeight; };
+
+  virtual nscoord GetYPosition() { return 0; };
+  PRBool ContinueReflow(nscoord height);
+
+  void DestroyRows(PRInt32& aRowsToLose);
+  void ReverseDestroyRows(PRInt32& aRowsToLose);
+  void GetFirstRowContent(nsIContent** aResult);
+
+  void SetContentChain(nsISupportsArray* aContentChain);
+  void InitSubContentChain(nsXULTreeGroupFrame* aRowGroupFrame);
+
+protected: // Data Members
+  nsCSSFrameConstructor* mFrameConstructor; // We don't own this. (No addref/release allowed, punk.)
+  nsIPresContext* mPresContext;
+  nsXULTreeOuterGroupFrame* mOuterFrame;
+  nscoord mAvailableHeight;
+  nsIFrame* mTopFrame;
+  nsIFrame* mBottomFrame;
+  nsIFrame* mLinkupFrame;
+  nsISupportsArray* mContentChain; // Our content chain
 }; // class nsXULTreeGroupFrame

@@ -54,6 +54,8 @@
 #include "nsTitledButtonFrame.h"
 #include "nsScrollbarButtonFrame.h"
 #include "nsIScrollbarListener.h"
+#include "nsIScrollbarMediator.h"
+#include "nsIScrollbarFrame.h"
 #include "nsISupportsArray.h"
 #include "nsIXMLContent.h"
 #include "nsXULAtoms.h"
@@ -678,6 +680,18 @@ nsSliderFrame::SetCurrentPosition(nsIContent* scrollbar, nsIFrame* aThumbFrame, 
       newpos = maxpos;
   else if (newpos < 0) 
       newpos = 0;
+
+  nsIBox* scrollbarBox = GetScrollbar();
+  nsCOMPtr<nsIScrollbarFrame> scrollbarFrame(do_QueryInterface(scrollbarBox));
+  if (scrollbarFrame) {
+    // See if we have a mediator.
+    nsCOMPtr<nsIScrollbarMediator> mediator;
+    scrollbarFrame->GetScrollbarMediator(getter_AddRefs(mediator));
+    if (mediator) {
+      mediator->PositionChanged(GetCurrentPosition(scrollbar), newpos);
+      return;
+    }
+  }
 
   char ch[100];
   sprintf(ch,"%d", newpos);
