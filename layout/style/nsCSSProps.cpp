@@ -182,6 +182,8 @@ const PRInt32 nsCSSProps::kAppearanceKTable[] = {
   eCSSKeyword_sliderthumbstart,       NS_THEME_SLIDER_THUMB_START,
   eCSSKeyword_sliderthumbend,         NS_THEME_SLIDER_THUMB_END,
   eCSSKeyword_sliderthumbtick,        NS_THEME_SLIDER_TICK,
+  eCSSKeyword_checkboxcontainer,      NS_THEME_CHECKBOX_CONTAINER,
+  eCSSKeyword_radiocontainer,         NS_THEME_RADIO_CONTAINER,
   -1,-1
 };
 

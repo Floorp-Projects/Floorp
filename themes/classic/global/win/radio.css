@@ -30,6 +30,7 @@
 /* ::::: radio ::::: */
 
 radio {
+  -moz-appearance: radio-container;
   -moz-box-align: center;
   margin: 2px 4px;
   padding: 1px 2px 1px 4px;

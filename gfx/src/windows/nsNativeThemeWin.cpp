@@ -54,6 +54,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsIPresContext.h"
 #include "nsILookAndFeel.h"
+#include "nsIMenuFrame.h"
 #include <malloc.h>
 
 #define THEME_COLOR 204
@@ -399,16 +400,27 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       aPart = (aWidgetType == NS_THEME_CHECKBOX) ? BP_CHECKBOX : BP_RADIO; 
       if (!aFrame)
         aState = TS_NORMAL;
-      else if (IsDisabled(aFrame))
-        aState = TS_DISABLED;
       else {
-        PRInt32 eventState = GetContentState(aFrame);
-        if (eventState & NS_EVENT_STATE_HOVER && eventState & NS_EVENT_STATE_ACTIVE)
-          aState = TS_ACTIVE;
-        else if (eventState & NS_EVENT_STATE_HOVER)
-          aState = TS_HOVER;
-        else 
-          aState = TS_NORMAL;
+        // For XUL checkboxes and radio buttons, the state of the parent
+        // determines our state.
+        nsCOMPtr<nsIContent> content;
+        aFrame->GetContent(getter_AddRefs(content));
+        if (content->IsContentOfType(nsIContent::eXUL))
+          aFrame->GetParent(&aFrame);
+      }
+
+      if (aFrame) {
+        if (IsDisabled(aFrame))
+          aState = TS_DISABLED;
+        else {
+          PRInt32 eventState = GetContentState(aFrame);
+          if (eventState & NS_EVENT_STATE_HOVER && eventState & NS_EVENT_STATE_ACTIVE)
+            aState = TS_ACTIVE;
+          else if (eventState & NS_EVENT_STATE_HOVER)
+            aState = TS_HOVER;
+          else 
+            aState = TS_NORMAL;
+        }
       }
 
       // XXXdwh This check will need to be more complicated, since HTML radio groups
@@ -627,6 +639,15 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       if (!aFrame) {
         aState = TS_NORMAL;
         return NS_OK;
+      }
+      else {
+        // For XUL menu lists, the state of the parent
+        // determines our state.
+        nsIFrame* parentFrame;
+        aFrame->GetParent(&parentFrame);
+        nsCOMPtr<nsIMenuFrame> menuFrame(do_QueryInterface(parentFrame));
+        if (menuFrame)
+          aFrame = parentFrame;
       }
 
       if (IsDisabled(aFrame)) {
@@ -908,8 +929,15 @@ PRBool
 nsNativeThemeWin::ThemeSupportsWidget(nsIPresContext* aPresContext,
                                       PRUint8 aWidgetType)
 {
-  // XXXdwh We can go even further and call the API to ask if support exists.
-  HANDLE theme = GetTheme(aWidgetType);
+  // XXXdwh We can go even further and call the API to ask if support exists for
+  // specific widgets.
+  HANDLE theme = NULL;
+  if (aWidgetType == NS_THEME_CHECKBOX_CONTAINER)
+    theme = GetTheme(NS_THEME_CHECKBOX);
+  else if (aWidgetType == NS_THEME_RADIO_CONTAINER)
+    theme = GetTheme(NS_THEME_RADIO);
+  else
+    theme = GetTheme(aWidgetType);
   return theme != NULL;
 }
 
