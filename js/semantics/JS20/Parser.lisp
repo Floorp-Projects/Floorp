@@ -16,8 +16,6 @@
     (production :identifier ($identifier) identifier-identifier)
     (production :identifier (get) identifier-get)
     (production :identifier (set) identifier-set)
-    ;(production :identifier (namespace) identifier-namespace)
-    ;(production :identifier (use) identifier-use)
     
     (production :qualifier (:identifier) qualifier-identifier)
     (production :qualifier (public) qualifier-public)
@@ -157,7 +155,9 @@
     (%subsection "Prefix Unary Operators")
     (production :unary-expression (:postfix-expression) unary-expression-postfix)
     (production :unary-expression (delete :postfix-expression) unary-expression-delete)
+    (production :unary-expression (void :unary-expression) unary-expression-void)
     (production :unary-expression (typeof :unary-expression) unary-expression-typeof)
+    (production :unary-expression (classof :unary-expression) unary-expression-classof)
     (production :unary-expression (++ :postfix-expression) unary-expression-increment)
     (production :unary-expression (-- :postfix-expression) unary-expression-decrement)
     (production :unary-expression (+ :unary-expression) unary-expression-plus)
