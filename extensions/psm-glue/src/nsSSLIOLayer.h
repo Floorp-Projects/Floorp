@@ -25,7 +25,13 @@
 
 #include "prtypes.h"
 #include "prio.h"
+#include "nsIPSMSocketInfo.h"
+
+// define taken from 4.x cartman glue code.  
+#define SSMSTRING_PADDED_LENGTH(x) ((((x)+3)/4)*4)
 
 nsresult nsSSLIOLayerNewSocket(const char* hostName, PRFileDesc **fd, nsISupports **securityInfo);
+
+
 
 #endif /* _NSSSLIOLAYER_H */

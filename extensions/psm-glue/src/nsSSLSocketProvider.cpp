@@ -47,28 +47,33 @@ NS_IMPL_ISUPPORTS2(nsSSLSocketProvider, nsISocketProvider, nsISSLSocketProvider)
 
 NS_METHOD
 nsSSLSocketProvider::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
-{
-  if (aOuter)
-    return NS_ERROR_NO_AGGREGATION;
+{                                                                               
+    nsresult rv;                                                                
+                                                                                
+    nsSSLSocketProvider * inst;                                                      
+                                                                                
+    if (NULL == aResult) {                                                      
+        rv = NS_ERROR_NULL_POINTER;                                             
+        return rv;                                                              
+    }                                                                           
+    *aResult = NULL;                                                            
+    if (NULL != aOuter) {                                                       
+        rv = NS_ERROR_NO_AGGREGATION;                                           
+        return rv;                                                              
+    }                                                                           
+                                                                                
+    NS_NEWXPCOM(inst, nsSSLSocketProvider);                                          
+    if (NULL == inst) {                                                         
+        rv = NS_ERROR_OUT_OF_MEMORY;                                            
+        return rv;                                                              
+    }                                                                           
+    NS_ADDREF(inst);                                                            
+    rv = inst->QueryInterface(aIID, aResult);                                   
+    NS_RELEASE(inst);                                                           
+                                                                                
+    return rv;                                                                  
+}                                                                               
 
-  nsSSLSocketProvider* pSockProv = new nsSSLSocketProvider();
-
-  if (nsnull == pSockProv)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(pSockProv);
-
-  nsresult rv = pSockProv->Init();
-
-  if (NS_SUCCEEDED(rv))
-    {
-    rv = pSockProv->QueryInterface(aIID, aResult);
-    }
-
-  NS_RELEASE(pSockProv);
-
-  return rv;
-}
 
 NS_IMETHODIMP
 nsSSLSocketProvider::NewSocket(const char *hostName, PRFileDesc **_result, nsISupports **securityInfo)

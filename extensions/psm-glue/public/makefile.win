@@ -42,6 +42,7 @@ XPIDLSRCS= \
     .\nsIPSMUIHandler.idl \
     .\nsISecureBrowserUI.idl \
     .\nsISSLSocketProvider.idl \
+    .\nsIPSMSocketInfo.idl \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

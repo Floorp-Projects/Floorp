@@ -22,23 +22,24 @@
 
 window.addEventListener("load", SetSecurityButton, false);
 
+var securityUI;
+
 function SetSecurityButton()
 {
     dump("in SetSecurityButton\n");
 
-    var ui = Components.classes["component://netscape/secure_browser_ui"].getService();
-    ui = ui.QueryInterface(Components.interfaces.nsSecureBrowserUI);
+    var ui = Components.classes["component://netscape/secure_browser_ui"].createInstance();
+    securityUI = ui.QueryInterface(Components.interfaces.nsSecureBrowserUI);
 
     var button  = document.getElementById('security-button');
 	if (button && window.content)
-		ui.init(window.content, button);
+		securityUI.init(window.content, button);
 }
 
 function displayPageInfo()
 {
-    var psm = Components.classes["component://netscape/psm"].getService();
-    psm = psm.QueryInterface(Components.interfaces.nsIPSMComponent);
-    psm.DisplaySecurityAdvisor( null );
+   if (securityUI)
+     securityUI.displayPageInfoUI();
 }
 
 

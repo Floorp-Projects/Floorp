@@ -98,6 +98,8 @@ nsPSMShimConnect(CMTSocket sock, short port, char *path)
     PRErrorCode errcode;
     CMTStatus   rv = CMTSuccess;
     CMSocket    *cmSock = (CMSocket *)sock;
+    
+    if (!sock) return CMTFailure;
 
     if (cmSock->isUnix)
     {
@@ -162,14 +164,16 @@ nsPSMShimVerifyUnixSocket(CMTSocket sock)
 #ifndef XP_UNIX
     return CMTFailure;
 #else
-    
+
     int  rv;
-    CMSocket  *cmSock = (CMSocket *)sock;
+    CMSocket  *cmSock;
     struct stat statbuf;
 
-    if (!cmSock->isUnix) 
+    cmSock = (CMSocket *)sock
+        
+    if (!cmSock || !cmSock->isUnix) 
         return CMTFailure;
-    
+ 
     rv = stat(cmSock->netAddr.local.path, &statbuf);
     if (rv < 0 || statbuf.st_uid != geteuid() )
     {
@@ -188,6 +192,8 @@ nsPSMShimSend(CMTSocket sock, void *buffer, size_t length)
     PRInt32   total;
     CMSocket *cmSock = (CMSocket *)sock;
 
+    if (!sock) return CMTFailure;
+
     total = PR_Send(cmSock->fd, buffer, length, 0, PR_INTERVAL_NO_TIMEOUT);
 
     /* TODO: for now, return 0 if there's an error */
@@ -203,6 +209,8 @@ nsPSMShimSelect(CMTSocket *socks, int numsocks, int poll)
     PRIntervalTime   timeout;
     PRInt32          cnt;
     int              i;
+
+    if (!socks) return NULL;
 
     memset(readPDs, 0, sizeof(readPDs));
 
@@ -237,6 +245,8 @@ nsPSMShimReceive(CMTSocket sock, void *buffer, size_t bufSize)
 {
     PRInt32   total;
     CMSocket *cmSock = (CMSocket *)sock;
+    
+    if (!sock) return CMTFailure;
 
     total = PR_Recv(cmSock->fd, buffer, bufSize, 0, PR_INTERVAL_NO_TIMEOUT);
 
@@ -248,7 +258,11 @@ CMTStatus
 nsPSMShimShutdown(CMTSocket sock)
 {
     CMSocket *cmSock = (CMSocket*)sock;
-    PRStatus rv = PR_Shutdown(cmSock->fd, PR_SHUTDOWN_SEND);
+    PRStatus rv;
+
+    if (!sock) return CMTFailure;
+
+    rv = PR_Shutdown(cmSock->fd, PR_SHUTDOWN_SEND);
     return (PR_SUCCESS == rv) ? CMTSuccess : CMTFailure;
 }
 
@@ -259,10 +273,11 @@ nsPSMShimClose(CMTSocket sock)
     PRStatus rv      = PR_SUCCESS;
     PR_ASSERT(cmSock);
 
+    if (!sock) return CMTFailure;
+
     rv = PR_Close(cmSock->fd);
     cmSock->fd = NULL;
 
-    /* TODO: release ref on control connection */
     PR_Free(cmSock);
 
     return (PR_SUCCESS == rv) ? CMTSuccess : CMTFailure;

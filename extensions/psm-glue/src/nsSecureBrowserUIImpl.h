@@ -31,8 +31,11 @@
 #include "nsIObserver.h"
 #include "nsIDocumentLoaderObserver.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMWindow.h"
+#include "nsIStringBundle.h"
 #include "nsISecureBrowserUI.h"
 #include "nsIDocShell.h"
+#include "nsIPref.h"
 
 #define NS_SECURE_BROWSER_DOCOBSERVER_CLASSNAME "Mozilla Secure Browser Doc Observer"
 
@@ -43,51 +46,39 @@
 #define NS_SECURE_BROWSER_DOCOBSERVER_PROGID "component://netscape/secure_browser_docobserver"
 
 
-class nsSecureBrowserObserver : public nsIDocumentLoaderObserver
+class nsSecureBrowserUIImpl : public nsIDocumentLoaderObserver, public nsSecureBrowserUI
 {
 public:
 
-	nsSecureBrowserObserver();
-	virtual ~nsSecureBrowserObserver();
+	nsSecureBrowserUIImpl();
+	virtual ~nsSecureBrowserUIImpl();
+    
+    static NS_METHOD Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
-	nsresult Init(nsIDOMElement *button, nsIDocShell* content);
+	NS_DECL_ISUPPORTS    
+    NS_DECL_NSIDOCUMENTLOADEROBSERVER
+    NS_DECL_NSSECUREBROWSERUI
 
-    NS_DECL_ISUPPORTS    
-
-	// nsIDocumentLoaderObserver
-   NS_DECL_NSIDOCUMENTLOADEROBSERVER
-	    
-	static nsresult IsSecureDocumentLoad(nsIDocumentLoader* loader, PRBool *value);
-	static nsresult IsSecureChannelLoad(nsIChannel* channel, PRBool *value);
-	static nsresult IsSecureUrl(PRBool fileSecure, nsIURI* aURL, PRBool *value);
-	static nsresult GetURIFromDocumentLoader(nsIDocumentLoader* aLoader, nsIURI** uri);
+    static nsresult IsSecureUrl(PRBool fileSecure, nsIURI* aURL, PRBool *value);
+    static nsresult GetURIFromDocumentLoader(nsIDocumentLoader* aLoader, nsIURI** uri);
 
 protected:
 
-	nsCOMPtr<nsIDOMElement> mSecurityButton;
+	nsCOMPtr<nsIDOMWindow>              mWindow;
+    nsCOMPtr<nsIDOMElement>             mSecurityButton;
 	nsCOMPtr<nsIDocumentLoaderObserver> mOldWebShellObserver;
+    nsCOMPtr<nsIPref>                   mPref;
+    nsCOMPtr<nsIStringBundle>           mStringBundle;
 
 	PRBool					mIsSecureDocument;  // is https loaded
 	PRBool					mIsDocumentBroken;  // 
 	PRBool					mMixContentAlertShown;
-
-};
-
-class nsSecureBrowserUIImpl :  public nsSecureBrowserUI
-{
-public:
-
-    nsSecureBrowserUIImpl();
-	virtual ~nsSecureBrowserUIImpl();
-
-	NS_DECL_ISUPPORTS    
-    NS_DECL_NSSECUREBROWSERUI
     
-	static NS_METHOD CreateSecureBrowserUI(nsISupports* aOuter, REFNSIID aIID, void **aResult);
-    
-protected:
+    char*                   mLastPSMStatus;
+    char*                   mHost;
 
-    static nsSecureBrowserUIImpl* mInstance;
+    void GetBundleString(const nsString& name, nsString &outString);
+
 };
 
 

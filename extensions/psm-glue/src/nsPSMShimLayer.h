@@ -26,10 +26,10 @@
 #define _NSPSMSHIMLAYER_H_
 
 #include "cmtcmn.h"
+#include "prio.h"
 
 PR_BEGIN_EXTERN_C
 
-/* TODO: make sure CMSocket is cleaned up */
 typedef struct CMSocket {
     PRFileDesc *fd;
     PRBool      isUnix;
