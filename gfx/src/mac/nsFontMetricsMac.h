@@ -55,6 +55,8 @@ public:
   NS_IMETHOD  GetFont(const nsFont *&aFont);
   NS_IMETHOD  GetFontHandle(nsFontHandle& aHandle);
 
+  virtual nsresult  GetSpaceWidth(nscoord &aSpaceWidth);
+
 	// fill a native TextStyle record with the font, size and style (not color)
 	static void 	GetNativeTextStyle(nsIFontMetrics& inMetrics,
 																		const nsIDeviceContext& inDevContext, TextStyle &outStyle);
@@ -70,6 +72,7 @@ protected:
   nscoord           mMaxAscent;
   nscoord           mMaxDescent;
   nscoord           mMaxAdvance;
+  nscoord						mSpaceWidth;
 
   nsFont            *mFont;
   nsIDeviceContext  *mContext;
