@@ -64,6 +64,7 @@ public:
 
   static nsIAtom* cellpadding;
   static nsIAtom* cellspacing;
+  static nsIAtom* charset;
   static nsIAtom* checked;
   static nsIAtom* kClass;
   static nsIAtom* classid;
@@ -110,6 +111,7 @@ public:
   static nsIAtom* hover;
   static nsIAtom* hr;
   static nsIAtom* href;
+  static nsIAtom* hreflang;
   static nsIAtom* hspace;
   static nsIAtom* httpEquiv;
 
@@ -172,6 +174,7 @@ public:
   static nsIAtom* readonly;
   static nsIAtom* rel;
   static nsIAtom* repeat;
+  static nsIAtom* rev;
   static nsIAtom* rightpadding;
   static nsIAtom* rootContentPseudo;
   static nsIAtom* rows;
