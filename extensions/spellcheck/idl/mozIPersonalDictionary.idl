@@ -38,7 +38,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(24C87207-AD7B-40e0-A074-B5401D9925E6)]
+[scriptable, uuid(F4A02EFB-7823-465D-B459-C6C07A03D30F)]
 
 /**
   This interface represents a Personal Dictionary.

@@ -40,7 +40,7 @@
 
 interface mozIPersonalDictionary;
 
-[scriptable, uuid(781E555A-51CA-47a7-88BF-BF306A062DC0)]
+[scriptable, uuid(4D3AF565-43AF-4B2E-A006-069A9F4EC6A8)]
 
 /**
   This interface represents a SpellChecker.

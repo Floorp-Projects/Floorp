@@ -50,9 +50,9 @@ class nsAVLTree;
 
 #define MOZ_PERSONALDICTIONARY_CONTRACTID "@mozilla.org/spellchecker/personaldictionary;1"
 #define MOZ_PERSONALDICTIONARY_CID         \
-{ /* FC17F1C5-367A-4d04-84A5-AF7E8F973699} */  \
-0xFC17F1C5, 0x367A, 0x4d04,                    \
-{ 0x84, 0xA5, 0xAF, 0x7E, 0x8F, 0x97, 0x36, 0x99} }
+{ /* F4A02EFB-7823-465D-B459-C6C07A03D30F} */  \
+0XF4A02EFB, 0X7823, 0X465D, \
+  { 0XB4, 0X59, 0XC6, 0XC0, 0X7A, 0X03, 0XD3, 0X0F } }
 
 class mozPersonalDictionary : public mozIPersonalDictionary, 
                               public nsIObserver,

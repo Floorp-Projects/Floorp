@@ -38,7 +38,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(24635FE1-2C7F-4d91-9274-B1AC77D93419)]
+[scriptable, uuid(12E6146C-B026-4F0C-A47D-7CCA9B52F4B3)]
 
 /**
   This interface contains various I18N related code used in various places by the spell checker.
