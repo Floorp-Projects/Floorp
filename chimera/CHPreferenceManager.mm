@@ -62,11 +62,6 @@ extern const char *prefContractID;
     setenv("MOZILLA_FIVE_HOME", cstr, 1);
 
     nsresult rv;
-rv = NS_InitEmbedding(nsnull, nsnull);
-    if (NS_FAILED(rv)) {
-        printf("Embedding init failed.\n");
-         return NO;
-}
 
     nsCOMPtr<nsIProfile> profileService(do_GetService(NS_PROFILE_CONTRACTID, &rv));
     if (NS_FAILED(rv))
@@ -88,6 +83,12 @@ rv = NS_InitEmbedding(nsnull, nsnull);
     if (NS_FAILED(rv))
         return NO;
 
+    rv = NS_InitEmbedding(nsnull, nsnull);
+    if (NS_FAILED(rv)) {
+      printf("Embedding init failed.\n");
+      return NO;
+    }
+    
     [self syncMozillaPrefs];
     return YES;
 }
