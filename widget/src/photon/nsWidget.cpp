@@ -341,7 +341,7 @@ the PtRealizeWidget functions */
 	  {
         PtWidget_t *parent = PtWidgetParent(mWidget);
         PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Show Failed to Realize this=<%p> mWidget=<%p> mWidget->Parent=<%p> parent->IsRealized=<%d> \n", this, mWidget,parent, PtWidgetIsRealized(parent) ));
-        printf("nsWidget::Show Failed to Realize this=<%p> mWidget=<%p> mWidget->Parent=<%p> parent->IsRealized=<%d> \n", this, mWidget,parent, PtWidgetIsRealized(parent) );
+        //printf("nsWidget::Show Failed to Realize this=<%p> mWidget=<%p> mWidget->Parent=<%p> parent->IsRealized=<%d> \n", this, mWidget,parent, PtWidgetIsRealized(parent) );
       }
 
        if (mWidget->rid == -1)
@@ -431,55 +431,12 @@ NS_METHOD nsWidget::IsVisible(PRBool &aState)
 NS_METHOD nsWidget::Move(PRInt32 aX, PRInt32 aY)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Move (%p) from (%ld,%ld) to (%ld,%ld)\n", this, mBounds.x, mBounds.y, aX, aY ));
-  //printf("nsWidget::Move (%p) from (%ld,%ld) to (%ld,%ld)\n", this, mBounds.x, mBounds.y, aX, aY );
 
   if (( mBounds.x == aX ) && ( mBounds.y == aY ))
   {
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Move  already there.\n" ));
     return NS_OK;
   }
-
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Move  was at (%i,%i)\n", mBounds.x, mBounds.y ));
-
-  /* Get the offset for Pop-up's such as Combo-Boxes */
-  PtArg_t    arg;
-  PhArea_t   *area;
-  PtWidget_t *parent;
-  PhPoint_t  offset;
-  nsRect     rect2;
-  PtWidget_t *disjoint = PtFindDisjoint( mWidget );
-
-  rect2.x = rect2.y = 0;
-
-  if (mWidget)
-  {
-    parent = PtWidgetParent( mWidget );
-    if (parent)
-    {
-      PtSetArg( &arg, Pt_ARG_AREA, &area, 0 );
-      if( PtGetResources( parent, 1, &arg ) == 0 )
-      {
-        if ( (parent == disjoint) || (PtWidgetIsClass(parent, PtWindow)) 
-              || (PtWidgetIsClass(parent, PtRegion)) )
-        {
-          rect2.x = rect2.y = 0;
-        }
-        else
-       {
-          PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Move Getting offeset for type=<%s>\n", mWidget->class_rec ));
-          //printf ("nsWidget::Move type: %p\n",mWidget->class_rec);
-
-          PtWidgetOffset( parent, &offset );
-          if (PtWidgetIsClass(mWidget,PtRegion))
-          {
-     		//printf ("nsWidget::Move offset: %d %d\n",offset.x,offset.y);
-            rect2.x = offset.x;
-            rect2.y = offset.y;
-          }
-       }
-    }
-  }
-}
 
   mBounds.x = aX;
   mBounds.y = aY;
@@ -490,8 +447,8 @@ NS_METHOD nsWidget::Move(PRInt32 aX, PRInt32 aY)
     PhPoint_t *oldpos;
     PhPoint_t pos;
     
-     pos.x = aX+rect2.x;
-     pos.y = aY+rect2.y;
+     pos.x = aX;
+     pos.y = aY;
 
     EnableDamage( mWidget, PR_FALSE );
 
@@ -539,9 +496,18 @@ NS_METHOD nsWidget::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
       if( PtGetResources( mWidget, 1, &arg ) == 0 )
       {
 		/* Add the border to the size of the widget */
+#if 1
+       PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Resize broder size =<%d>\n", border));
         PhDim_t dim = {aWidth - 2*(*border), aHeight - 2*(*border)};
-
+#else
+        PhDim_t dim = {0,0};
+        
+        dim.w = aWidth;
+        dim.h = aHeight; 
+#endif
         EnableDamage( mWidget, PR_FALSE );
+
+        PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Resize (%p) actually resizing to <%d, %d>\n", this, dim.w, dim.h ));
 
         PtSetArg( &arg, Pt_ARG_DIM, &dim, 0 );
         PtSetResources( mWidget, 1, &arg );
@@ -558,7 +524,7 @@ NS_METHOD nsWidget::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
     }
     else
 	{
-      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Resize - mWidget is NULL!\n" ));
+      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Resize FAILED- mWidget is NULL!\n" ));
 	}
   }
 

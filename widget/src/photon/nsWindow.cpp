@@ -167,17 +167,13 @@ NS_IMETHODIMP nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::WidgetToScreen - Not Implemented this=<%p> mBounds=<%d,%d,%d,%d> aOldRect=<%d,%d>\n", this, mBounds.x, mBounds.y, mBounds.width, mBounds.height,aOldRect.x,aOldRect.y ));
   PhPoint_t p1;
 
-  if (mWidget && PtWidgetOffset(mWidget,&p1))
+  if (mWidget)
   {
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::WidgetToScreen - Not Implemented mWidget=<%d,%d>\n", p1.x, p1.y));
+    PtWidgetOffset(mWidget,&p1);
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::WidgetToScreen - Not Implemented mWidget offset <%d,%d>\n", p1.x, p1.y));
   }
 
-  if (mClientWidget && PtWidgetOffset(mClientWidget,&p1))
-  {
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::WidgetToScreen - Not Implemented mClientWidget=<%d,%d>\n", p1.x, p1.y));
-  }  
-
-/* I don't know which is "right"... I see no difference between these... */
+ /* I don't know which is "right"... I see no difference between these... */
 #if 0
    aNewRect.x = p1.x + aOldRect.x;
    aNewRect.y = p1.y + aOldRect.y;
@@ -423,8 +419,10 @@ NS_IMETHODIMP nsWindow::Invalidate(const nsRect &aRect, PRBool aIsSynchronous)
   }
   
   /* Offset the rect by the mBounds X,Y to fix damaging inside widget in test14 */
-  //mUpdateArea->Union(aRect.x, aRect.y, aRect.width, aRect.height);
-  mUpdateArea->Union((aRect.x+mBounds.x), (aRect.y+mBounds.y), aRect.width, aRect.height);
+  if (mWindowType == eWindowType_popup)
+     mUpdateArea->Union(aRect.x, aRect.y, aRect.width, aRect.height);
+  else
+     mUpdateArea->Union((aRect.x+mBounds.x), (aRect.y+mBounds.y), aRect.width, aRect.height);
 
   if (aIsSynchronous)
   {
@@ -479,7 +477,8 @@ NS_IMETHODIMP nsWindow::InvalidateRegion(const nsIRegion* aRegion, PRBool aIsSyn
 #endif
 
  
-  newRegion->Offset(mBounds.x, mBounds.y);
+  if (mWindowType != eWindowType_popup)
+    newRegion->Offset(mBounds.x, mBounds.y);
   mUpdateArea->Union(*newRegion);
 
   if (aIsSynchronous)
@@ -1157,7 +1156,6 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
   PRBool nNeedToShow = PR_FALSE;
 
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Resize this=<%p> w/h=(%i,%i) Repaint=<%i> mWindowType=<%d>\n", this, aWidth, aHeight, aRepaint, mWindowType ));
-  //printf("nsWindow::Resize  (%p) to %d %d\n", this, aWidth, aHeight);
 
   mBounds.width  = aWidth;
   mBounds.height = aHeight;
@@ -1175,7 +1173,7 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
       mIsTooSmall = PR_TRUE;
       if (mShown)
       {
-        printf("nsWindow::Resize Forcing small toplevel window window to Hide\n");
+        PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Resize Forcing small toplevel window window to Hide\n"));
 		//Show(PR_FALSE);
       }
     }
@@ -1184,7 +1182,7 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
       aWidth = 1;
       aHeight = 1;
       mIsTooSmall = PR_TRUE;
-      printf("nsWindow::Resize Forcing small non-toplevel window to Hide\n");
+      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Resize Forcing small non-toplevel window to Hide\n"));
 	  //Show(PR_FALSE);
     }
   }
@@ -1232,6 +1230,7 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Resize - mWidget is NULL!\n" ));
   }
 
+
   if (mIsToplevel || mListenForResizes)
   {
     nsSizeEvent sevent;
@@ -1257,6 +1256,7 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
     Release();
     delete sevent.windowSize;
   }
+
 
   if (nNeedToShow)
   {
@@ -2297,8 +2297,8 @@ int nsWindow::ResizeHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t *c
     /* This enables the resize holdoff */
     if (PtWidgetIsRealized(widget))
     {
-        someWindow->ResizeHoldOff();  /* commenting this out sometimes makes pref. dlg draw */
-  	someWindow->OnResize( rect );
+      someWindow->ResizeHoldOff();
+      someWindow->OnResize( rect );
     }
   }
 	return( Pt_CONTINUE );
@@ -2524,55 +2524,131 @@ NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
 
   PRInt32 origX, origY;
 
+  /* Keep a untouched version of the coordinates laying around for comparison */
   origX=aX;
   origY=aY;
 
+#if defined(DEBUG) && 0
   if (mWindowType==eWindowType_popup)
   {
-    PtWidget_t *top, *last = mWidget;
-      while (top=PtWidgetParent(last))
-      {
-        last = top;  
-      }
-  
-    nsWindow *myWindowParent = (nsWindow *) GetInstance(last);
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move last=<%p> myWindowParent=<%p>\n", last, myWindowParent));
-
-#if 1
-    if (myWindowParent)
+    /* For Pop-Up Windows print out Area Ancestry */
+    int count = 1;
+    PhArea_t area;
+    PtWidget_t *top;
+    PhPoint_t offset;
+    
+    PtWidgetArea(mWidget, &area);
+    PtWidgetOffset(mWidget, &offset );
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move %d mWidget area=<%d,%d,%d,%d>\n", count, area.pos.x,area.pos.y,area.size.w,area.size.h));
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move %d mWidget offset=<%d,%d>", count, offset.x,offset.y));
+    count++;
+    top = PtWidgetParent(mWidget);
+    while(top)
     {
-      short int FrameLeft, FrameTop, FrameBottom;
-      PhArea_t   area;
-
-       //printf("nsWindow:: Move Popup offset=<%d,%d>\n", aX, aY);
-
-        FrameLeft = FrameTop = FrameBottom = 0;
-        //myWindowParent->GetFrameSize(&FrameLeft, NULL, &FrameTop, &FrameBottom);
-
-        PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move parent frame size left=<%d> top=<%d>\n", FrameLeft, FrameTop));
-
-        //PtGetAbsPosition(mWidget->parent, &FrameLeft, &FrameTop);
-        FrameLeft = 5;          /* 5 looks the best? */
-        FrameTop = 21;
-        PtWidgetArea(last, &area);
-        PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move parent area=<%d,%d,%d,%d>\n", area.pos.x,area.pos.y,area.size.w,area.size.h));
-		  
-        /* Must add in area in order for pop-up to be positioned right when */
-		/* mozilla is not at 0,0 */
-        aX = aX + FrameLeft + area.pos.x;
-
-	    /* Subtract FrameBottom for Augusta/Photon 2  PHOTON BUG */
-        aY = aY + FrameTop + area.pos.y;
+      PtWidgetArea(top, &area);
+      PtWidgetOffset(top, &offset );
+      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move %d parent area=<%d,%d,%d,%d>\n", count, area.pos.x,area.pos.y,area.size.w,area.size.h));
+      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move %d parent offset=<%d,%d>", count, offset.x,offset.y));
+      count++;
+      top = PtWidgetParent(top);    
     }
+  }
 #endif
+
+#if defined(DEBUG) && 0
+  if (mWindowType==eWindowType_popup)
+  {
+    /* For Pop-Up Windows print out Area Ancestry */
+    int count = 1;
+    PhArea_t area;
+    PtWidget_t *top, *last=nsnull;
+    PhPoint_t offset;
+        
+    PtWidgetArea(mWidget, &area);
+    PtWidgetOffset(mWidget, &offset );
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move %d mWidget area=<%d,%d,%d,%d>\n", count, area.pos.x,area.pos.y,area.size.w,area.size.h));
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move %d mWidget offset=<%d,%d>", count, offset.x,offset.y));
+    count++;
+    top = PtFindDisjoint(mWidget);
+    while((top != last) && top)
+    {
+      PtWidgetArea(top, &area);
+      PtWidgetOffset(top, &offset );
+      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move %d disjoint area=<%d,%d,%d,%d>\n", count, area.pos.x,area.pos.y,area.size.w,area.size.h));
+      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move %d disjoint offset=<%d,%d>", count, offset.x,offset.y));
+      if (PtWidgetIsClass(top, PtWindow))
+          PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move disjoint window is a PtWindow\n"));
+      if (PtWidgetIsClass(top, PtRegion))
+          PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move disjoint window is a PtRegion\n"));
+      count++;
+      last = top;
+      PtWidget_t *tmp = PtWidgetParent(top);
+      if (tmp)
+        top = PtFindDisjoint(tmp);    
+      else
+        top = tmp;
+    }
+  }
+#endif
+
+
+  if (mWindowType==eWindowType_popup)
+  {
+    short int FrameLeft, FrameTop, FrameBottom;
+    PhArea_t area;
+    PhPoint_t offset, total_offset;
+    
+      FrameLeft = FrameTop = FrameBottom = 0;
+      /* Hard code these values for now */
+      FrameLeft = 5;          /* 5 looks the best? */
+      FrameTop = 20;        /* started with 21 */
+
+      aX += FrameLeft;
+      aY += FrameTop;
+
+    PtWidget_t *parent, *disjoint = PtFindDisjoint(mWidget);
+      disjoint = PtFindDisjoint(PtWidgetParent(disjoint));
+      total_offset.x = 0;
+      total_offset.y = 0;
+      while(disjoint)
+      {
+         PtWidgetArea(disjoint, &area);
+         total_offset.x += area.pos.x;
+         total_offset.y += area.pos.y;
+         if (PtWidgetIsClass(disjoint, PtWindow))
+         {
+            /* Stop at the first PtWindow */
+            PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move disjoint window is a PtWindow exiting loop \n"));
+            break;
+         }
+         parent = PtWidgetParent(disjoint);
+         if (parent)
+           disjoint = PtFindDisjoint(parent);
+         else
+         {
+           disjoint = parent;
+           break;
+         }           
+      }
+
+     aX += total_offset.x;
+     aY += total_offset.y;
+
+    /* Add the Offset if the widget is offset from its parent.. */
+      parent = PtWidgetParent( mWidget );
+      PtWidgetOffset(parent, &offset);
+      aX += offset.x;
+      aY += offset.y;    
   }
 
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move this=(%p) to (%ld,%ld) \n", this, aX, aY ));
 
 #if 1
  /* Offset to the current virtual console */
-  if ( (mWindowType == eWindowType_dialog) ||
-	   (mWindowType == eWindowType_toplevel) )
+  if ( (mWindowType == eWindowType_dialog)
+	   || (mWindowType == eWindowType_toplevel)
+//	   || (mWindowType == eWindowType_popup)
+	 )
   {
     PhRect_t console;
 	
@@ -2586,6 +2662,7 @@ NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
   }
 #endif
   
+
   /* Call my base class */
   nsresult res = nsWidget::Move(aX, aY);
 
@@ -2595,13 +2672,18 @@ NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
 	   (mWindowType == eWindowType_toplevel) )
   {
     //printf("HACK HACK: forcing bounds to 0,0 for toplevel window\n");
-    mBounds.x = origX;
+	mBounds.x = origX;
 	mBounds.y = origY;
   }
   else if (mWindowType == eWindowType_popup)
   {
+#if 1
+	mBounds.x = origX;
+	mBounds.y = origY;
+#else
     mBounds.x = 0;
 	mBounds.y = 0;
+#endif
   }  
   return res;
 }
@@ -2640,7 +2722,8 @@ int nsWindow::MenuRegionCallback( PtWidget_t *widget, void *data, PtCallbackInfo
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::MenuRegionCallback event->type=<%d>\n", event->type));
 
  if (event->type == Ph_EV_BUT_PRESS)
-  {
+// if (event->type == Ph_EV_BUT_RELEASE)
+ {
     //printf("nsWindow::MenuRegionCallback event is Ph_EV_BUT_PRESS \n");
     //printf("nsWindow::MenuRegionCallback pWin->gRollupWidget=<%p> pWin->gRollupListener=<%p>\n", pWin->gRollupWidget, pWin->gRollupListener);
 
