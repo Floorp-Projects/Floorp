@@ -163,8 +163,9 @@ MakeSN(const char *principal, nsCString &result)
 
 //-----------------------------------------------------------------------------
 
-nsNegotiateAuth::nsNegotiateAuth()
+nsNegotiateAuth::nsNegotiateAuth(PRBool useNTLM)
     : mServiceFlags(REQ_DEFAULT)
+    , mUseNTLM(useNTLM)
 {
     memset(&mCred, 0, sizeof(mCred));
     memset(&mCtxt, 0, sizeof(mCtxt));
@@ -205,8 +206,10 @@ nsNegotiateAuth::Init(const char *serviceName,
     // we don't expect to be passed any user credentials
     NS_ASSERTION(!domain && !username && !password, "unexpected credentials");
 
-    // it's critial that the caller supply a service name to be used
-    NS_ENSURE_TRUE(serviceName && *serviceName, NS_ERROR_INVALID_ARG);
+    // if we're configured for SPNEGO, then it's critial that the caller
+    // supply a service name to be used.
+    if (!mUseNTLM)
+        NS_ENSURE_TRUE(serviceName && *serviceName, NS_ERROR_INVALID_ARG);
 
     nsresult rv;
 
@@ -217,16 +220,23 @@ nsNegotiateAuth::Init(const char *serviceName,
             return rv;
     }
 
-    rv = MakeSN(serviceName, mServiceName);
-    if (NS_FAILED(rv))
-        return rv;
-    mServiceFlags = serviceFlags;
+    SEC_CHAR *package;
+    if (mUseNTLM)
+        package = "NTLM";
+    else {
+        package = "Negotiate";
+
+        rv = MakeSN(serviceName, mServiceName);
+        if (NS_FAILED(rv))
+            return rv;
+        mServiceFlags = serviceFlags;
+    }
 
     TimeStamp useBefore;
     SECURITY_STATUS rc;
 
     rc = (sspi->AcquireCredentialsHandle)(NULL,
-                                          "Negotiate",
+                                          package,
                                           SECPKG_CRED_OUTBOUND,
                                           NULL,
                                           NULL,
@@ -293,9 +303,15 @@ nsNegotiateAuth::GetNextToken(const void *inToken,
         return NS_ERROR_OUT_OF_MEMORY;
     memset(ob.pvBuffer, 0, ob.cbBuffer);
 
+    SEC_CHAR *sn;
+    if (mUseNTLM)
+        sn = NULL;
+    else
+        sn = (SEC_CHAR *) mServiceName.get();
+
     rc = (sspi->InitializeSecurityContext)(&mCred,
                                            ctxIn,
-                                           (SEC_CHAR *) mServiceName.get(),
+                                           sn,
                                            ctxReq,
                                            0,
                                            SECURITY_NATIVE_DREP,

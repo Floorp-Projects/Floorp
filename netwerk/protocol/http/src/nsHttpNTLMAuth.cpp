@@ -1,3 +1,4 @@
+/* vim:set ts=4 sw=4 sts=4 et ci: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -45,6 +46,160 @@
 
 //-----------------------------------------------------------------------------
 
+#ifdef XP_WIN
+
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
+#include "nsIServiceManager.h"
+#include "nsIHttpChannel.h"
+#include "nsIURI.h"
+
+static const char kAllowProxies[] = "network.automatic-ntlm-auth.allow-proxies";
+static const char kTrustedURIs[]  = "network.automatic-ntlm-auth.trusted-uris";
+
+// XXX MatchesBaseURI and TestPref are duplicated in nsHttpNegotiateAuth.cpp,
+// but since that file lives in a separate library we cannot directly share it.
+// bug 236865 addresses this problem.
+
+static PRBool
+MatchesBaseURI(const nsCSubstring &matchScheme,
+               const nsCSubstring &matchHost,
+               PRInt32             matchPort,
+               const char         *baseStart,
+               const char         *baseEnd)
+{
+    // check if scheme://host:port matches baseURI
+
+    // parse the base URI
+    const char *hostStart, *schemeEnd = strstr(baseStart, "://");
+    if (schemeEnd) {
+        // the given scheme must match the parsed scheme exactly
+        if (!matchScheme.Equals(Substring(baseStart, schemeEnd)))
+            return PR_FALSE;
+        hostStart = schemeEnd + 3;
+    }
+    else
+        hostStart = baseStart;
+
+    // XXX this does not work for IPv6-literals
+    const char *hostEnd = strchr(hostStart, ':');
+    if (hostEnd && hostEnd <= baseEnd) {
+        // the given port must match the parsed port exactly
+        int port = atoi(hostEnd + 1);
+        if (matchPort != (PRInt32) port)
+            return PR_FALSE;
+    }
+    else
+        hostEnd = baseEnd;
+
+
+    // if we didn't parse out a host, then assume we got a match.
+    if (hostStart == hostEnd)
+        return PR_TRUE;
+
+    PRUint32 hostLen = hostEnd - hostStart;
+
+    // matchHost must either equal host or be a subdomain of host
+    if (matchHost.Length() < hostLen)
+        return PR_FALSE;
+
+    const char *end = matchHost.EndReading();
+    if (PL_strncasecmp(end - hostLen, hostStart, hostLen) == 0) {
+        // if matchHost ends with host from the base URI, then make sure it is
+        // either an exact match, or prefixed with a dot.  we don't want
+        // "foobar.com" to match "bar.com"
+        if (matchHost.Length() == hostLen ||
+            *(end - hostLen) == '.' ||
+            *(end - hostLen - 1) == '.')
+            return PR_TRUE;
+    }
+
+    return PR_FALSE;
+}
+
+static PRBool
+TestPref(nsIURI *uri, const char *pref)
+{
+    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (!prefs)
+        return PR_FALSE;
+
+    nsCAutoString scheme, host;
+    PRInt32 port;
+
+    if (NS_FAILED(uri->GetScheme(scheme)))
+        return PR_FALSE;
+    if (NS_FAILED(uri->GetAsciiHost(host)))
+        return PR_FALSE;
+    if (NS_FAILED(uri->GetPort(&port)))
+        return PR_FALSE;
+
+    char *hostList;
+    if (NS_FAILED(prefs->GetCharPref(pref, &hostList)) || !hostList)
+        return PR_FALSE;
+
+    // pseudo-BNF
+    // ----------
+    //
+    // url-list       base-url ( base-url "," LWS )*
+    // base-url       ( scheme-part | host-part | scheme-part host-part )
+    // scheme-part    scheme "://"
+    // host-part      host [":" port]
+    //
+    // for example:
+    //   "https://, http://office.foo.com"
+    //
+
+    char *start = hostList, *end;
+    for (;;) {
+        // skip past any whitespace
+        while (*start == ' ' || *start == '\t')
+            ++start;
+        end = strchr(start, ',');
+        if (!end)
+            end = start + strlen(start);
+        if (start == end)
+            break;
+        if (MatchesBaseURI(scheme, host, port, start, end))
+            return PR_TRUE;
+        if (*end == '\0')
+            break;
+        start = end + 1;
+    }
+    
+    nsMemory::Free(hostList);
+    return PR_FALSE;
+}
+
+static PRBool
+CanUseSysNTLM(nsIHttpChannel *channel, PRBool isProxyAuth)
+{
+    // check prefs
+
+    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (!prefs)
+        return PR_FALSE;
+
+    PRBool val;
+    if (isProxyAuth) {
+        if (NS_FAILED(prefs->GetBoolPref(kAllowProxies, &val)))
+            val = PR_FALSE;
+        return val;
+    }
+    else {
+        nsCOMPtr<nsIURI> uri;
+        channel->GetURI(getter_AddRefs(uri));
+        if (uri && TestPref(uri, kTrustedURIs))
+            return PR_TRUE;
+    }
+
+    return PR_FALSE;
+}
+
+#endif
+
+//-----------------------------------------------------------------------------
+
 NS_IMPL_ISUPPORTS1(nsHttpNTLMAuth, nsIHttpAuthenticator)
 
 NS_IMETHODIMP
@@ -60,10 +215,33 @@ nsHttpNTLMAuth::ChallengeReceived(nsIHttpChannel *channel,
     // NOTE: we don't define any session state
 
     *identityInvalid = PR_FALSE;
-    // only request new identity if challenge is exactly "NTLM"
+    // start new auth sequence if challenge is exactly "NTLM"
     if (PL_strcasecmp(challenge, "NTLM") == 0) {
-        nsCOMPtr<nsIAuthModule> module =
-                do_CreateInstance(NS_AUTH_MODULE_CONTRACTID_PREFIX "ntlm");
+        nsCOMPtr<nsIAuthModule> module;
+#ifdef XP_WIN
+        //
+        // on windows, we may have access to the built-in SSPI library,
+        // which could be used to authenticate the user without prompting.
+        // 
+        // if the continuationState is null, then we may want to try using
+        // the SSPI NTLM module.  however, we need to take care to only use
+        // that module when speaking to a trusted host.  because the SSPI
+        // may send a weak LMv1 hash of the user's password, we cannot just
+        // send it to any server.
+        //
+        if (!*continuationState && CanUseSysNTLM(channel, isProxyAuth))
+            module = do_CreateInstance(NS_AUTH_MODULE_CONTRACTID_PREFIX "sys-ntlm");
+
+        // it's possible that there is no ntlm-sspi auth module...
+        if (!module)
+#endif
+        {
+            module = do_CreateInstance(NS_AUTH_MODULE_CONTRACTID_PREFIX "ntlm");
+
+            // prompt user for domain, username, and password...
+            *identityInvalid = PR_TRUE;
+        }
+
         // if this fails, then it means that we cannot do NTLM auth.
         if (!module)
             return NS_ERROR_UNEXPECTED;
@@ -73,9 +251,6 @@ nsHttpNTLMAuth::ChallengeReceived(nsIHttpChannel *channel,
         NS_IF_RELEASE(*continuationState);
 
         NS_ADDREF(*continuationState = module);
-
-        // prompt user for domain, username, and password...
-        *identityInvalid = PR_TRUE;
     }
     return NS_OK;
 }
