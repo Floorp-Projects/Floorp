@@ -1272,6 +1272,7 @@ certdb_name_cb(void *arg, int dbVersion)
        break;
     case 5:
         dbver = "5";
+	break;
     case 4:
     default:
         dbver = "";
