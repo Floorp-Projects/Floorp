@@ -22,12 +22,15 @@
 #include "nsUrl.h"
 #include "nscore.h"
 #include "nsString2.h"
+#include "nsXPComCIID.h"
 #include "nsIServiceManager.h"
+#include "nsIEventQueueService.h"
 #include "nsIFileTransportService.h"
 #include "nsConnectionGroup.h"
 #include <ctype.h>      // for isalpha
 
 static NS_DEFINE_CID(kFileTransportService, NS_FILETRANSPORTSERVICE_CID);
+static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -182,8 +185,15 @@ nsNetService::NewConnection(nsIUrl* url,
     rv = GetProtocolHandler(scheme, &handler);
     if (NS_FAILED(rv)) return rv;
 
+    PLEventQueue* eventQ;
+    NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueService, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &eventQ);
+    }
+    if (NS_FAILED(rv)) return rv;
+
     nsIProtocolConnection* connection;
-    rv = handler->NewConnection(url, eventSink, &connection);
+    rv = handler->NewConnection(url, eventSink, eventQ, &connection);
     NS_RELEASE(handler);
     if (NS_FAILED(rv)) return rv;
 
