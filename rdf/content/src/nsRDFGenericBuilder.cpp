@@ -126,6 +126,7 @@ nsIAtom* RDFGenericBuilderImpl::kTemplateContentsGeneratedAtom;
 nsIAtom* RDFGenericBuilderImpl::kContainerContentsGeneratedAtom;
 nsIAtom* RDFGenericBuilderImpl::kIdAtom;
 nsIAtom* RDFGenericBuilderImpl::kOpenAtom;
+nsIAtom* RDFGenericBuilderImpl::kEmptyAtom;
 nsIAtom* RDFGenericBuilderImpl::kResourceAtom;
 nsIAtom* RDFGenericBuilderImpl::kURIAtom;
 nsIAtom* RDFGenericBuilderImpl::kContainmentAtom;
@@ -171,15 +172,16 @@ RDFGenericBuilderImpl::RDFGenericBuilderImpl(void)
     if (gRefCnt == 0) {
         kContainerAtom                  = NS_NewAtom("container");
         kLazyContentAtom                = NS_NewAtom("lazycontent");
-		kIsContainerAtom                = NS_NewAtom("iscontainer");
-		kXULContentsGeneratedAtom       = NS_NewAtom("xulcontentsgenerated");
+	kIsContainerAtom                = NS_NewAtom("iscontainer");
+	kXULContentsGeneratedAtom       = NS_NewAtom("xulcontentsgenerated");
         kTemplateContentsGeneratedAtom  = NS_NewAtom("templatecontentsgenerated");
         kContainerContentsGeneratedAtom = NS_NewAtom("containercontentsgenerated");
 
         kIdAtom              = NS_NewAtom("id");
         kOpenAtom            = NS_NewAtom("open");
+        kEmptyAtom           = NS_NewAtom("empty");
         kResourceAtom        = NS_NewAtom("resource");
-		kURIAtom             = NS_NewAtom("uri");
+	kURIAtom             = NS_NewAtom("uri");
         kContainmentAtom     = NS_NewAtom("containment");
         kIgnoreAtom          = NS_NewAtom("ignore");
         kRefAtom             = NS_NewAtom("ref");
@@ -268,14 +270,15 @@ RDFGenericBuilderImpl::~RDFGenericBuilderImpl(void)
         NS_RELEASE(kContainerAtom);
         NS_RELEASE(kLazyContentAtom);
         NS_RELEASE(kIsContainerAtom);
-		NS_RELEASE(kXULContentsGeneratedAtom);
+	NS_RELEASE(kXULContentsGeneratedAtom);
         NS_RELEASE(kTemplateContentsGeneratedAtom);
         NS_RELEASE(kContainerContentsGeneratedAtom);
 
         NS_RELEASE(kIdAtom);
         NS_RELEASE(kOpenAtom);
+        NS_RELEASE(kEmptyAtom);
         NS_RELEASE(kResourceAtom);
-		NS_RELEASE(kURIAtom);
+	NS_RELEASE(kURIAtom);
         NS_RELEASE(kContainmentAtom);
         NS_RELEASE(kIgnoreAtom);
         NS_RELEASE(kRefAtom);
@@ -1421,7 +1424,7 @@ RDFGenericBuilderImpl::IsTemplateRuleMatch(nsIRDFResource *aNode, nsIContent *aR
 		else if ((attribNameSpaceID == kNameSpaceID_None) && (attribAtom.get() == kIsContainerAtom))
 		{
 			// check and see if aNode is a container
-			PRBool	containerFlag = IsContainer(aRule, aNode);
+			PRBool	containerFlag = IsContainer(aRule, aNode, PR_FALSE);
 			if (containerFlag && (!attribValue.EqualsIgnoreCase("true")))
 			{
 				*matchingRuleFound = PR_FALSE;
@@ -2476,7 +2479,7 @@ RDFGenericBuilderImpl::IsIgnoredProperty(nsIContent* aElement, nsIRDFResource* a
 }
 
 PRBool
-RDFGenericBuilderImpl::IsContainer(nsIContent* aElement, nsIRDFResource* aResource)
+RDFGenericBuilderImpl::IsContainer(nsIContent* aElement, nsIRDFResource* aResource, PRBool trackEmptyFlag)
 {
     // Look at all of the arcs extending _out_ of the resource: if any
     // of them are that "containment" property, then we know we'll
@@ -2510,14 +2513,19 @@ RDFGenericBuilderImpl::IsContainer(nsIContent* aElement, nsIRDFResource* aResour
         if (! IsContainmentProperty(aElement, property))
             continue;
 
-        // see if it has a value
-        nsCOMPtr<nsIRDFNode> value;
-        rv = mDB->GetTarget(aResource, property, PR_TRUE, getter_AddRefs(value));
-        if (NS_FAILED(rv))
-            return PR_FALSE;
-
-        if (value)
-            return PR_TRUE;
+	if (trackEmptyFlag == PR_TRUE)
+	{
+		// now that we know its a container, set its "empty" attribute
+		nsAutoString		emptyVal("true");
+		nsCOMPtr<nsIRDFNode>	value;
+		if (NS_SUCCEEDED(rv = mDB->GetTarget(aResource, property, PR_TRUE,
+			getter_AddRefs(value))) && (value))
+		{
+			emptyVal = "false";
+		}
+		aElement->SetAttribute(kNameSpaceID_None, kEmptyAtom, emptyVal, PR_TRUE);
+	}
+        return PR_TRUE;
     }
 
     return PR_FALSE;
