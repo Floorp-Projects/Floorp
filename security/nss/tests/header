@@ -469,7 +469,7 @@ tbx_dirs()
         Debug "Setting RESULTDIR for tinderbox"
         TXB_NOBITS=""
         (echo $NSS_VER_DIR | grep 64  && TXB_NOBITS=64) >/dev/null
-        TRD="${HOST}{$TXB_NOBITS}-`date +%Y%m%d-%H.%M`"
+        TRD="${HOST}${TXB_NOBITS}-`date +%Y%m%d-%H.%M`"
         RESULTDIR="${NSS_VER_DIR}/tinderbox/tests_results/security/${TRD}"
     fi
     TBX_DAILY_BUILD=`cd ../../../../..;pwd`
