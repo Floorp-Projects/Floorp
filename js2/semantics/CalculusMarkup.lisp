@@ -278,6 +278,22 @@
    (t (error "Bad type expression: ~S" type-expr))))
 
 
+; (integer-range <low-limit> <high-limit>)
+;   "{<low-limit> ... <high-limit>}"
+(defun depict-integer-range (markup-stream world level low-limit-expr high-limit-expr)
+  (declare (ignore level))
+  (let ((low-limit-annotated-expr (nth-value 2 (scan-value world *null-type-env* low-limit-expr)))
+        (high-limit-annotated-expr (nth-value 2 (scan-value world *null-type-env* high-limit-expr))))
+    (depict-logical-block (markup-stream 0)
+      (depict markup-stream "{")
+      (depict-expression markup-stream world low-limit-annotated-expr %term%)
+      (depict-space markup-stream)
+      (depict markup-stream "...")
+      (depict-break markup-stream 1)
+      (depict-expression markup-stream world high-limit-annotated-expr %term%)
+      (depict markup-stream "}"))))
+
+
 ; (-> (<arg-type1> ... <arg-typen>) <result-type>)
 ;   "<arg-type1> x ... x <arg-typen> -> <result-type>"
 (defun depict--> (markup-stream world level arg-type-exprs result-type-expr)
@@ -516,12 +532,6 @@
 
 ;;; ------------------------------------------------------------------------------------------------------
 ;;; DEPICTING SPECIAL FORMS
-
-
-; (bottom)
-(defun depict-bottom (markup-stream world level)
-  (declare (ignore world level))
-  (depict markup-stream :bottom-10))
 
 
 ; (todo)
@@ -1075,6 +1085,13 @@
 (defun depict-*/ (markup-stream world semicolon last-paragraph-style)
   (declare (ignore markup-stream world semicolon last-paragraph-style))
   (error "Unmatched */"))
+
+
+; (bottom)
+(defun depict-bottom (markup-stream world semicolon last-paragraph-style &rest text)
+  (declare (ignore world semicolon))
+  (depict-division-style (markup-stream :wrap)
+    (depict-text-paragraph markup-stream last-paragraph-style (or text (list :bottom-10)))))
 
 
 (defvar *assertion-depictor*)
