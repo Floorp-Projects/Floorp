@@ -100,9 +100,9 @@ protected:
     static nsresult
     PostLoadEvent(nsCachedChromeChannel* aChannel, PLHandleEventProc aHandler);
 
-    static void* HandleStartLoadEvent(PLEvent* aEvent);
-    static void* HandleStopLoadEvent(PLEvent* aEvent);
-    static void DestroyLoadEvent(PLEvent* aEvent);
+    static void* PR_CALLBACK HandleStartLoadEvent(PLEvent* aEvent);
+    static void* PR_CALLBACK HandleStopLoadEvent(PLEvent* aEvent);
+    static void PR_CALLBACK DestroyLoadEvent(PLEvent* aEvent);
 
 #ifdef PR_LOGGING
     static PRLogModuleInfo* gLog;
@@ -496,7 +496,7 @@ nsCachedChromeChannel::PostLoadEvent(nsCachedChromeChannel* aChannel,
     return rv;
 }
 
-void*
+void* PR_CALLBACK
 nsCachedChromeChannel::HandleStartLoadEvent(PLEvent* aEvent)
 {
     // Fire the OnStartRequest() for the cached chrome channel, then
@@ -519,7 +519,7 @@ nsCachedChromeChannel::HandleStartLoadEvent(PLEvent* aEvent)
 }
 
 
-void*
+void* PR_CALLBACK
 nsCachedChromeChannel::HandleStopLoadEvent(PLEvent* aEvent)
 {
     // Fire the OnStopRequest() for the cached chrome channel, and
@@ -548,7 +548,7 @@ nsCachedChromeChannel::HandleStopLoadEvent(PLEvent* aEvent)
     return nsnull;
 }
 
-void
+void PR_CALLBACK
 nsCachedChromeChannel::DestroyLoadEvent(PLEvent* aEvent)
 {
     LoadEvent* event = NS_REINTERPRET_CAST(LoadEvent*, aEvent);

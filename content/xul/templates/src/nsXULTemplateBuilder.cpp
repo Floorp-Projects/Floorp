@@ -709,11 +709,11 @@ protected:
 
     const Match* mLastMatch;
 
-    static PLHashNumber HashMatch(const void* aMatch) {
+    static PLHashNumber PR_CALLBACK HashMatch(const void* aMatch) {
         const Match* match = NS_STATIC_CAST(const Match*, aMatch);
         return Instantiation::Hash(&match->mInstantiation) ^ (PLHashNumber(match->mRule) >> 2); }
 
-    static PRIntn CompareMatches(const void* aLeft, const void* aRight) {
+    static PRIntn PR_CALLBACK CompareMatches(const void* aLeft, const void* aRight) {
         const Match* left  = NS_STATIC_CAST(const Match*, aLeft);
         const Match* right = NS_STATIC_CAST(const Match*, aRight);
         return *left == *right; }
