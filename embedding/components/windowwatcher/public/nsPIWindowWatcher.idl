@@ -44,17 +44,18 @@ interface nsPIWindowWatcher : nsISupports
       style arguments. The exact definition of this method is temporary
       pending the XPIDL rewrite of the DOM.
       @param aParent parent window, if any. null if not.
-      @param aURL window URL from JS window.open
-      @param aName window name from JS window.open
-      @param aFeatures window features from JS window.open
+      @param aURL url to which to open the new window. Must already be
+             escaped, if applicable. can be null.
+      @param aName window name from JS window.open. can be null.
+      @param aFeatures window features from JS window.open. can be null.
       @param aDialog use dialog defaults (see nsIDOMWindowInternal::openDialog)
       @param argc count of argv arguments
       @param argv extra JS arguments, if any
                   (see nsIDOMWindowInternal::openDialog)
       @return the new window
   */
-  nsIDOMWindow openWindowJS(in nsIDOMWindow aParent, in wstring aUrl,
-               in wstring aName, in wstring aFeatures, in boolean aDialog,
+  nsIDOMWindow openWindowJS(in nsIDOMWindow aParent, in string aUrl,
+               in string aName, in string aFeatures, in boolean aDialog,
                in PRUint32 argc, in jsvalptr argv);
 
 };

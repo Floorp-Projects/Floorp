@@ -27,13 +27,11 @@
 #include "jscntxt.h"
 #include "nsAutoLock.h"
 #include "nsCRT.h"
-#include "nsEscape.h"
 #include "nsWWJSUtils.h"
 #include "nsNetUtil.h"
 #include "plstr.h"
 
 #include "nsIBaseWindow.h"
-#include "nsICharsetConverterManager.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellLoadInfo.h"
 #include "nsIDocShellTreeItem.h"
@@ -51,11 +49,14 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsISupportsArray.h"
+#include "nsISupportsPrimitives.h"
 #include "nsIURI.h"
 #include "nsIWebBrowser.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIWebNavigation.h"
 #include "nsIWindowCreator.h"
+#include "nsIXPConnect.h"
 #ifdef USEWEAKREFS
 #include "nsIWeakReference.h"
 #endif
@@ -313,6 +314,25 @@ nsresult JSContextAutoPopper::Push()
 }
 
 /****************************************************************
+ ************************** AutoFree ****************************
+ ****************************************************************/
+
+class AutoFree {
+public:
+  AutoFree(void *aPtr) : mPtr(aPtr) {
+  }
+  ~AutoFree() {
+    if (mPtr)
+      nsMemory::Free(mPtr);
+  }
+  void Invalidate() {
+    mPtr = 0;
+  }
+private:
+  void *mPtr;
+};
+
+/****************************************************************
  *********************** nsWindowWatcher ************************
  ****************************************************************/
 
@@ -350,19 +370,32 @@ nsWindowWatcher::Init()
 
 NS_IMETHODIMP
 nsWindowWatcher::OpenWindow(nsIDOMWindow *aParent,
-                            const PRUnichar *aUrl,
-                            const PRUnichar *aName,
-                            const PRUnichar *aFeatures,
+                            const char *aUrl,
+                            const char *aName,
+                            const char *aFeatures,
+                            nsISupports *aArguments,
                             nsIDOMWindow **_retval)
 {
-  return OpenWindowJS(aParent, aUrl, aName, aFeatures, PR_FALSE, 0, 0, _retval);
+  PRUint32  argc;
+  jsval    *argv = nsnull;
+  nsresult  rv;
+
+  rv = ConvertSupportsTojsvals(aParent, aArguments, &argc, &argv);
+  if (NS_SUCCEEDED(rv)) {
+    PRBool dialog = argc == 0 ? PR_FALSE : PR_TRUE;
+    rv = OpenWindowJS(aParent, aUrl, aName, aFeatures, dialog, argc, argv,
+                      _retval);
+  }
+  if (argv) // Free goes to libc free(). so i'm assuming a bad libc.
+    nsMemory::Free(argv);
+  return rv;
 }
 
 NS_IMETHODIMP
 nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
-                            const PRUnichar *aUrl,
-                            const PRUnichar *aName,
-                            const PRUnichar *aFeatures,
+                            const char *aUrl,
+                            const char *aName,
+                            const char *aFeatures,
                             PRBool aDialog,
                             PRUint32 argc,
                             jsval *argv,
@@ -395,14 +428,14 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
 
   nameSpecified = PR_FALSE;
   if (aName) {
-    name.Assign(aName);
+    name.AssignWithConversion(aName);
     CheckWindowName(name);
     nameSpecified = PR_TRUE;
   }
 
   featuresSpecified = PR_FALSE;
   if (aFeatures) {
-    features.AssignWithConversion(aFeatures);
+    features.Assign(aFeatures);
     featuresSpecified = PR_TRUE;
   }
 
@@ -819,140 +852,28 @@ nsWindowWatcher::RemoveEnumerator(nsWindowEnumerator* inEnumerator)
   return mEnumeratorList.RemoveElement(inEnumerator);
 }
 
-// stolen from GlobalWindowImpl
 nsresult
-nsWindowWatcher::Escape(const nsAReadableString& aStr, nsAWritableString& aReturn,
-                        nsIDOMWindow *aWindow)
-{
-  nsresult                    rv = NS_OK;
-  nsCOMPtr<nsIUnicodeEncoder> encoder;
-  nsAutoString                charset;
-
-  // Get the document character set
-  charset.AssignWithConversion("UTF-8"); // default to utf-8
-  if (aWindow) {                         // or use aWindow's, if possible
-    nsCOMPtr<nsIDOMDocument> domDoc;
-    aWindow->GetDocument(getter_AddRefs(domDoc));
-    if (domDoc) {
-      nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
-      if (doc)
-        rv = doc->GetDocumentCharacterSet(charset);
-    }
-  }
-  if (NS_FAILED(rv))
-    return rv;
-
-  nsCOMPtr<nsICharsetConverterManager>
-    ccm(do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID));
-  if (!ccm)
-    return NS_ERROR_FAILURE;
-
-  // Get an encoder for the character set
-  rv = ccm->GetUnicodeEncoder(&charset, getter_AddRefs(encoder));
-  if (NS_FAILED(rv))
-    return rv;
-
-  rv = encoder->Reset();
-  if (NS_FAILED(rv))
-    return rv;
-
-  PRInt32 maxByteLen, srcLen;
-  srcLen = aStr.Length();
-
-  nsPromiseFlatString flatSrc(aStr);
-  const PRUnichar* src = flatSrc.get();
-
-  // Get the expected length of result string
-  rv = encoder->GetMaxLength(src, srcLen, &maxByteLen);
-  if (NS_FAILED(rv))
-    return rv;
-
-  // Allocate a buffer of the maximum length
-  char* dest = (char *) nsMemory::Alloc(maxByteLen + 1);
-  PRInt32 destLen2, destLen = maxByteLen;
-  if (!dest)
-    return NS_ERROR_OUT_OF_MEMORY;
-  
-  // Convert from unicode to the character set
-  rv = encoder->Convert(src, &srcLen, dest, &destLen);
-  if (NS_SUCCEEDED(rv)) {
-    // Allow the encoder to finish the conversion
-    destLen2 = maxByteLen - destLen;
-    encoder->Finish(dest + destLen, &destLen2);
-    dest[destLen + destLen2] = '\0';
-
-    // Escape the string
-    char *outBuf =
-      nsEscape(dest, nsEscapeMask(url_XAlphas | url_XPAlphas | url_Path));
-    CopyASCIItoUCS2(nsLiteralCString(outBuf), aReturn);
-    nsMemory::Free(outBuf);
-  }
-
-  nsMemory::Free(dest);
-
-  return rv;
-}
-
-nsresult
-nsWindowWatcher::URIfromURL(const PRUnichar *aURL,
+nsWindowWatcher::URIfromURL(const char *aURL,
                             nsIDOMWindow *aParent,
                             nsIURI **aURI)
 {
-  *aURI = 0;
-
-  nsresult     rv = NS_OK;
-  nsAutoString unescapedURL(aURL);
-  nsAutoString escapedURL;
-
-  // fix bug 35076
-  // if the URL contains non ASCII, then escape from the first non ASCII char
-  if (unescapedURL.IsASCII())
-    escapedURL = unescapedURL;
-  else {
-    const PRUnichar *pt = unescapedURL.GetUnicode();
-    PRUint32 len = unescapedURL.Length();
-    PRUint32 i;
-    for (i = 0; i < len; i++)
-      if (0xFF80 & *pt++)
-        break;
-
-    nsAutoString right, escapedRight;
-    unescapedURL.Left(escapedURL, i);
-    unescapedURL.Right(right, len - i);
-    if (NS_SUCCEEDED(Escape(right, escapedRight, aParent)))
-      escapedURL.Append(escapedRight);
-    else
-      escapedURL = unescapedURL;
+  // build the URI relative to the parent window, if possible
+  nsCOMPtr<nsIURI>      baseURI;
+  if (aParent) {
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    aParent->GetDocument(getter_AddRefs(domDoc));
+    if (domDoc) {
+      nsCOMPtr<nsIDocument> doc;
+      doc = do_QueryInterface(domDoc);
+      if (doc)
+        baseURI = dont_AddRef(doc->GetDocumentURL());
+    }
   }
 
-  if (!escapedURL.IsEmpty()) {
-    nsAutoString          absoluteURL;
-    nsCOMPtr<nsIDocument> doc;
-    nsCOMPtr<nsIURI>      baseURI;
-
-    if (aParent) {
-      nsCOMPtr<nsIDOMDocument> domDoc;
-      aParent->GetDocument(getter_AddRefs(domDoc));
-      if (domDoc)
-        doc = do_QueryInterface(domDoc);
-    }
-    if (doc) {
-      // build absolute URI relative to this document.
-      baseURI = dont_AddRef(doc->GetDocumentURL());
-      rv = NS_MakeAbsoluteURI(absoluteURL, escapedURL, baseURI);
-    }
-    if (NS_FAILED(rv) || !baseURI) {
-      /* probably no document, probably because the context window's
-         URL hasn't finished loading. (don't call this function with
-         no context window and a relative URL!). All we can do is hope
-         the URL we've been given is absolute. */
-      absoluteURL = escapedURL;
-    }
-    // make URI; if absoluteURL is relative (or otherwise bogus) this will fail.
-    rv = NS_NewURI(aURI, absoluteURL);
-  }
-
-  return rv;
+  /* make URI; if absoluteURL is relative (or otherwise bogus) this will
+      fail. (don't call this function with no context window and
+      a relative URL!) */
+  return NS_NewURI(aURI, aURL, baseURI);
 }
 
 /* Check for an illegal name e.g. frame3.1
@@ -1446,6 +1367,264 @@ nsWindowWatcher::AttachArguments(nsIDOMWindow *aWindow,
       }
     }
   }
+}
+
+nsresult
+nsWindowWatcher::ConvertSupportsTojsvals(nsIDOMWindow *aWindow,
+                                         nsISupports *aArgs,
+                                         PRUint32 *aArgc, jsval **aArgv)
+{
+  nsresult rv = NS_OK;
+
+  *aArgv = nsnull;
+  *aArgc = 0;
+
+  // copy the elements in aArgsArray into the JS array
+  // window.arguments in the new window
+
+  if (!aArgs)
+    return NS_OK;
+
+  PRUint32 argCtr, argCount;
+  nsCOMPtr<nsISupportsArray> argsArray(do_QueryInterface(aArgs));
+
+  if (argsArray) {
+    argsArray->Count(&argCount);
+    if (argCount == 0)
+      return NS_OK;
+  } else
+    argCount = 1; // the nsISupports which is not an array
+
+  jsval *argv = NS_STATIC_CAST(jsval *, nsMemory::Alloc(argCount * sizeof(jsval)));
+  NS_ENSURE_TRUE(argv, NS_ERROR_OUT_OF_MEMORY);
+
+  AutoFree             argvGuard(argv);
+
+  JSContext           *cx = GetExtantJSContext(aWindow);
+  JSContextAutoPopper  contextGuard;
+
+  if (!cx) {
+    rv = contextGuard.Push();
+    if (NS_FAILED(rv))
+      return rv;
+    cx = contextGuard.get();
+  }
+
+  if (argsArray)
+    for (argCtr = 0; argCtr < argCount && NS_SUCCEEDED(rv); argCtr++) {
+      nsCOMPtr<nsISupports> s(dont_AddRef(argsArray->ElementAt(argCtr)));
+      rv = AddSupportsTojsvals(s, cx, argv + argCtr);
+    }
+  else
+    rv = AddSupportsTojsvals(aArgs, cx, argv);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  argvGuard.Invalidate();
+
+  *aArgv = argv;
+  *aArgc = argCount;
+  return NS_OK;
+}
+
+nsresult
+nsWindowWatcher::AddInterfaceTojsvals(nsISupports *aArg,
+                                      JSContext *cx,
+                                      jsval *aArgv)
+{
+  nsresult rv;
+  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
+  rv = xpc->WrapNative(cx, ::JS_GetGlobalObject(cx), aArg,
+              NS_GET_IID(nsISupports), getter_AddRefs(wrapper));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  JSObject *obj;
+  rv = wrapper->GetJSObject(&obj);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aArgv = OBJECT_TO_JSVAL(obj);
+  return NS_OK;
+}
+
+nsresult
+nsWindowWatcher::AddSupportsTojsvals(nsISupports *aArg,
+                                     JSContext *cx, jsval *aArgv)
+{
+  if (!aArg) {
+    *aArgv = JSVAL_NULL;
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsISupportsPrimitive> argPrimitive(do_QueryInterface(aArg));
+  if (!argPrimitive)
+    return AddInterfaceTojsvals(aArg, cx, aArgv);
+
+  PRUint16 type;
+  argPrimitive->GetType(&type);
+
+  switch(type) {
+    case nsISupportsPrimitive::TYPE_STRING : {
+      nsCOMPtr<nsISupportsString> p(do_QueryInterface(argPrimitive));
+      NS_ENSURE_TRUE(p, NS_ERROR_UNEXPECTED);
+
+      char *data;
+
+      p->GetData(&data);
+
+      JSString *str = ::JS_NewString(cx, data, nsCRT::strlen(data));
+      NS_ENSURE_TRUE(str, NS_ERROR_OUT_OF_MEMORY);
+
+      *aArgv = STRING_TO_JSVAL(str);
+
+      break;
+    }
+    case nsISupportsPrimitive::TYPE_WSTRING : {
+      nsCOMPtr<nsISupportsWString> p(do_QueryInterface(argPrimitive));
+      NS_ENSURE_TRUE(p, NS_ERROR_UNEXPECTED);
+
+      PRUnichar *data;
+
+      p->GetData(&data);
+
+      JSString *str = ::JS_NewUCString(cx, data, nsCRT::strlen(data));
+      NS_ENSURE_TRUE(str, NS_ERROR_OUT_OF_MEMORY);
+
+      *aArgv = STRING_TO_JSVAL(str);
+
+      break;
+    }
+    case nsISupportsPrimitive::TYPE_PRBOOL : {
+      nsCOMPtr<nsISupportsPRBool> p(do_QueryInterface(argPrimitive));
+      NS_ENSURE_TRUE(p, NS_ERROR_UNEXPECTED);
+
+      PRBool data;
+
+      p->GetData(&data);
+
+      *aArgv = BOOLEAN_TO_JSVAL(data);
+
+      break;
+    }
+    case nsISupportsPrimitive::TYPE_PRUINT8 : {
+      nsCOMPtr<nsISupportsPRUint8> p(do_QueryInterface(argPrimitive));
+      NS_ENSURE_TRUE(p, NS_ERROR_UNEXPECTED);
+
+      PRUint8 data;
+
+      p->GetData(&data);
+
+      *aArgv = INT_TO_JSVAL(data);
+
+      break;
+    }
+    case nsISupportsPrimitive::TYPE_PRUINT16 : {
+      nsCOMPtr<nsISupportsPRUint16> p(do_QueryInterface(argPrimitive));
+      NS_ENSURE_TRUE(p, NS_ERROR_UNEXPECTED);
+
+      PRUint16 data;
+
+      p->GetData(&data);
+
+      *aArgv = INT_TO_JSVAL(data);
+
+      break;
+    }
+    case nsISupportsPrimitive::TYPE_PRUINT32 : {
+      nsCOMPtr<nsISupportsPRUint32> p(do_QueryInterface(argPrimitive));
+      NS_ENSURE_TRUE(p, NS_ERROR_UNEXPECTED);
+
+      PRUint32 data;
+
+      p->GetData(&data);
+
+      *aArgv = INT_TO_JSVAL(data);
+
+      break;
+    }
+    case nsISupportsPrimitive::TYPE_CHAR : {
+      nsCOMPtr<nsISupportsChar> p(do_QueryInterface(argPrimitive));
+      NS_ENSURE_TRUE(p, NS_ERROR_UNEXPECTED);
+
+      char data;
+
+      p->GetData(&data);
+
+      *aArgv = INT_TO_JSVAL(data);
+
+      break;
+    }
+    case nsISupportsPrimitive::TYPE_PRINT16 : {
+      nsCOMPtr<nsISupportsPRInt16> p(do_QueryInterface(argPrimitive));
+      NS_ENSURE_TRUE(p, NS_ERROR_UNEXPECTED);
+
+      PRInt16 data;
+
+      p->GetData(&data);
+
+      *aArgv = INT_TO_JSVAL(data);
+
+      break;
+    }
+    case nsISupportsPrimitive::TYPE_PRINT32 : {
+      nsCOMPtr<nsISupportsPRInt32> p(do_QueryInterface(argPrimitive));
+      NS_ENSURE_TRUE(p, NS_ERROR_UNEXPECTED);
+
+      PRInt32 data;
+
+      p->GetData(&data);
+
+      *aArgv = INT_TO_JSVAL(data);
+
+      break;
+    }
+    case nsISupportsPrimitive::TYPE_FLOAT : {
+      nsCOMPtr<nsISupportsFloat> p(do_QueryInterface(argPrimitive));
+      NS_ENSURE_TRUE(p, NS_ERROR_UNEXPECTED);
+
+      float data;
+
+      p->GetData(&data);
+
+      jsdouble *d = ::JS_NewDouble(cx, data);
+
+      *aArgv = DOUBLE_TO_JSVAL(d);
+
+      break;
+    }
+    case nsISupportsPrimitive::TYPE_DOUBLE : {
+      nsCOMPtr<nsISupportsDouble> p(do_QueryInterface(argPrimitive));
+      NS_ENSURE_TRUE(p, NS_ERROR_UNEXPECTED);
+
+      double data;
+
+      p->GetData(&data);
+
+      jsdouble *d = ::JS_NewDouble(cx, data);
+
+      *aArgv = DOUBLE_TO_JSVAL(d);
+
+      break;
+    }
+    case nsISupportsPrimitive::TYPE_ID :
+    case nsISupportsPrimitive::TYPE_PRUINT64 :
+    case nsISupportsPrimitive::TYPE_PRINT64 :
+    case nsISupportsPrimitive::TYPE_PRTIME :
+    case nsISupportsPrimitive::TYPE_VOID : {
+      NS_WARNING("Unsupported primitive type used");
+      *aArgv = JSVAL_NULL;
+      break;
+    }
+    default : {
+      NS_WARNING("Unknown primitive type used");
+      *aArgv = JSVAL_NULL;
+      break;
+    }
+  }
+  return NS_OK;
 }
 
 void
