@@ -24,6 +24,4 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS	= public src
 
-NO_STATIC_LIB=1
-
 include $(topsrcdir)/config/rules.mk

@@ -73,7 +73,5 @@ EXPORTS		= PIMGCB.h PPSIMGCB.h
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
-NO_STATIC_LIB=1
-
 include $(topsrcdir)/config/rules.mk
 

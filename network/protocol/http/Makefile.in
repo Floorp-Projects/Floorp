@@ -32,7 +32,5 @@ CSRCS		= \
 
 EXPORTS = mkaccess.h httpurl.h httpauth.h cookies.h 
 
-NO_STATIC_LIB=1
-
 include $(topsrcdir)/config/rules.mk
 

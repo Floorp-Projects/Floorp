@@ -83,6 +83,4 @@ ifndef MOZ_NATIVE_ZLIB
 REQUIRES	+= zlib
 endif
 
-NO_STATIC_LIB=1
-
 include $(topsrcdir)/config/rules.mk
