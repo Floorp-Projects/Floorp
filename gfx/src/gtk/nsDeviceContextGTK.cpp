@@ -819,7 +819,7 @@ AppendFontName(XFontStruct* aFontStruct, nsString& aString, Display *aDisplay)
     ::XFree(xlfdName);
   }
  
-  aString.Append(NS_LITERAL_STRING(','));
+  aString.Append(PRUnichar(','));
 
   // next, we need to append family name to cover more encodings.
   ::XGetFontProperty(aFontStruct, XA_FAMILY_NAME, &pr);
