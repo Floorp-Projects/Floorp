@@ -3014,6 +3014,25 @@ static PRBool SelectorMatches(SelectorMatchesData &data,
         result = PRBool(localTrue == (data.mContent == lastChild));
         NS_IF_RELEASE(lastChild);
       }
+      else if (nsCSSAtoms::emptyPseudo == pseudoClass->mAtom) {
+        nsIContent* child = nsnull;
+        nsIContent* element = data.mContent;
+        PRInt32 index = -1;
+        do {
+          element->ChildAt(++index, child);
+          if (child) { // stop at first non-comment and non-whitespace node
+            if (IsSignificantChild(child, PR_TRUE)) {
+              break;
+            }
+            NS_RELEASE(child);
+          }
+          else {
+            break;
+          }
+        } while (1 == 1);
+        result = PRBool(localTrue == (child == nsnull));
+        NS_IF_RELEASE(child);
+      }
       else if (nsCSSAtoms::rootPseudo == pseudoClass->mAtom) {
         if (data.mParentContent) {
           result = localFalse;

@@ -52,6 +52,8 @@ CSS_ATOM(disabledPseudo, ":disabled")
 CSS_ATOM(dragOverPseudo, ":drag-over")
 CSS_ATOM(dragPseudo, ":drag")
 
+CSS_ATOM(emptyPseudo, ":empty")
+
 CSS_ATOM(enabledPseudo, ":enabled")
 
 CSS_ATOM(firstChildPseudo, ":first-child")
