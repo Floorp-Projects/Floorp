@@ -1017,7 +1017,8 @@ NS_IMETHODIMP nsMsgDatabase::ForceClosed()
   AddRef();	
   NotifyAnnouncerGoingAway();
   // make sure dbFolderInfo isn't holding onto mork stuff because mork db is going away
-  m_dbFolderInfo->ReleaseExternalReferences();
+  if (m_dbFolderInfo)
+    m_dbFolderInfo->ReleaseExternalReferences();
   NS_IF_RELEASE(m_dbFolderInfo);
   
   err = CloseMDB(PR_FALSE);	// since we're about to delete it, no need to commit.
