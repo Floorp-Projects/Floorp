@@ -57,6 +57,7 @@ en-US.jar:
         locale/en-US/help/images/mailicon.gif           (locale/en-US/images/mailicon.gif)
         locale/en-US/help/images/newmail.gif            (locale/en-US/images/newmail.gif)
         locale/en-US/help/images/newmailicon.gif        (locale/en-US/images/newmailicon.gif)
+        locale/en-US/help/images/mail_junk_column.png   (locale/en-US/images/mail_junk_column.png)
         locale/en-US/help/images/numbers.gif            (locale/en-US/images/numbers.gif)
         locale/en-US/help/images/online.gif             (locale/en-US/images/online.gif)
         locale/en-US/help/images/offline.gif            (locale/en-US/images/offline.gif)
