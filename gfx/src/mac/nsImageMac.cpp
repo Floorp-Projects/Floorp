@@ -204,7 +204,11 @@ NS_IMETHODIMP nsImageMac :: Draw(nsIRenderingContext &aContext, nsDrawingSurface
 	::SetRect(&maskrect,aSX,aSY,aSX+aSWidth,aSY+aSHeight);
 	::SetRect(&dstrect,aDX,aDY,aDX+aDWidth,aDY+aDHeight);
 
+#if TARGET_CARBON
+	destpix = *::GetPortPixMap((CGrafPtr)aSurface);
+#else
 	destpix = *((CGrafPtr)aSurface)->portPixMap;
+#endif
 
 	::RGBForeColor(&rgbblack);
 	::RGBBackColor(&rgbwhite);
