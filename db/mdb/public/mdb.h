@@ -1225,7 +1225,7 @@ public:
 
   // { ----- begin ID methods -----
    mdb_err GetOid(nsIMdbEnv* ev,
-    const mdbOid* outOid) ; // read object identity
+    mdbOid* outOid) ; // read object identity
    mdb_err BecomeContent(nsIMdbEnv* ev,
 	   const mdbOid* inOid) {m_Oid = *inOid;  return 0;} // exchange content
   // } ----- end ID methods -----
@@ -1647,12 +1647,14 @@ public:
 
 // } ===== end nsIMdbRow methods =====
    // mdb stub hacks.
-   nsIMdbRow(nsIMdbTable *owningTable, nsIMdbStore *owningStore);
+   nsIMdbRow(nsIMdbTable *owningTable, nsIMdbPort *owningPort);
 	MDBCellArray	m_cells;
 	mdbOid			m_oid;
 	nsIMdbTable		*m_owningTable;
-	nsIMdbStore		*m_owningStore;
+	nsIMdbPort		*m_owningPort;
 
+   mdb_err Write(nsIOFileStream *);
+   mdb_err Read(nsIOFileStream *);
 
 };
 
@@ -1847,6 +1849,7 @@ class nsIMdbCell : public nsIMdbBlob { // text attribute in row with column scop
   // } ----- end children methods -----
 
 // } ===== end nsIMdbCell methods =====
+
 };
 
 // } %%%%% end C++ abstract class interfaces %%%%%
@@ -1861,6 +1864,10 @@ public:
 	mdb_column	m_column;
 	PRBool		Equals(const mdbCellImpl& other);
 	char		*m_cellValue;
+
+   // mdb stubs hackery
+   mdb_err Write(nsIOFileStream *);
+   mdb_err Read(nsIOFileStream *);
 };
 
 
