@@ -240,9 +240,9 @@
 #include "xp_mcom.h"
 #define O_ACCMODE       3       /* Mask for file access modes */
 #define EFTYPE 2000
-XP_BEGIN_PROTOS
+PR_BEGIN_EXTERN_C
 int mkstemp(const char *path);
-XP_END_PROTOS
+PR_END_EXTERN_C
 #endif	/* MACINTOSH */
 
 #if !defined(_WINDOWS) && !defined(macintosh) && !defined(XP_OS2)

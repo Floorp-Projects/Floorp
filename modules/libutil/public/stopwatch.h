@@ -1,6 +1,5 @@
 #ifndef __STOPWATCH_H
 #define __STOPWATCH_H
-#include "xp_core.h"
 #include "nscore.h"
 #include "prlog.h"
 #include "nsDeque.h"

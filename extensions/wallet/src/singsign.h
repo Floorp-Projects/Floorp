@@ -45,7 +45,6 @@
 #ifndef _SINGSIGN_H
 #define _SINGSIGN_H
 
-#include "xp_core.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
 #include "nsIPref.h"
@@ -57,7 +56,7 @@
 #define SINGSIGN_SAVE_PASSWORD_PERMANENTLY    2
 
 class nsIPrompt;
-XP_BEGIN_PROTOS
+PR_BEGIN_EXTERN_C
 
 extern PRInt32
 SINGSIGN_HostCount();
@@ -159,6 +158,6 @@ extern void
 SINGSIGN_RememberSignonData
   (nsIPrompt* dialog, const char* URLName, nsVoidArray * signonData, nsIDOMWindowInternal* window);
 
-XP_END_PROTOS
+PR_END_EXTERN_C
 
 #endif /* !_SINGSIGN_H */

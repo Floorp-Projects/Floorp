@@ -40,7 +40,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "xp_core.h" 
 #include "nsQuickSort.h" 
 #include "nsFontMetricsBeOS.h" 
 #include "nsIServiceManager.h" 

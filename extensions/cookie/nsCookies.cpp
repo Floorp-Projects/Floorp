@@ -44,7 +44,6 @@
 #include "nsIFileSpec.h"
 #include "nsVoidArray.h"
 #include "prprf.h"
-#include "xp_core.h"
 #include "prmem.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
@@ -56,6 +55,8 @@
 #include "nsIURL.h"
 #include "nsIHttpChannel.h"
 #include "prnetdb.h"
+
+#include <time.h>
 
 #define MAX_NUMBER_OF_COOKIES 300
 #define MAX_COOKIES_PER_SERVER 20

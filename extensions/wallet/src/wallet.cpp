@@ -75,6 +75,8 @@
 
 #include "nsIWalletService.h"
 
+#include <time.h>
+
 #ifdef DEBUG_morse
 #define morseAssert NS_ASSERTION
 #else

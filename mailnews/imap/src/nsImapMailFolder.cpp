@@ -38,7 +38,6 @@
 
 #include "msgCore.h"
 
-#include "xp_core.h"
 #include "nsMsgImapCID.h"
 #include "nsImapMailFolder.h"
 #include "nsIEnumerator.h"
@@ -98,6 +97,7 @@
 #include "nsIMAPNamespace.h"
 #include "nsHashtable.h"
 #include "nsMsgMessageFlags.h"
+#include <time.h>
 
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);

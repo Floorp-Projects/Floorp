@@ -13,8 +13,6 @@
 #ifndef JPEGLIB_H
 #define JPEGLIB_H
 
-#include "xp_core.h"
-
 #ifdef XP_OS2
 /*
  * On OS/2, the system will have defined RGB_* so we #undef 'em to avoid warnings

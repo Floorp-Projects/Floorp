@@ -31,9 +31,6 @@
 //
 // (c) 2000, ActiveState corp.
 
-// Main Mozilla cross-platform declarations.
-#include "xp_core.h"
-
 #include "nsIAllocator.h"
 #include "nsIWeakReference.h"
 #include "nsIInterfaceInfoManager.h"

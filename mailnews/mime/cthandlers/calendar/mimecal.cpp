@@ -35,8 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "mimecal.h"
-#include "xp_core.h"
-#include "xp_mem.h"
 #include "prmem.h"
 #include "plstr.h"
 #include "mimexpcom.h"

@@ -130,12 +130,12 @@ they will use an appropriately defined local type |vwchar_t|.
         typedef wchar_t vwchar_t;
 #endif
 
+#include "prtypes.h"
 #include "nsFileSpec.h"
-#include "xp_core.h"
 
 class nsOutputFileStream;
 
-XP_BEGIN_PROTOS
+PR_BEGIN_EXTERN_C
 
 #define VC7bitProp        "7bit"
 #define VC8bitProp        "8bit"
@@ -436,7 +436,7 @@ void writeVObjectsToFile(nsFileSpec *fname, VObject *list);
 #define MAXPROPNAMESIZE 256
 #define MAXMOZPROPNAMESIZE 16
 
-XP_END_PROTOS
+PR_END_EXTERN_C
 
 #endif /* __VOBJECT_H__ */
 

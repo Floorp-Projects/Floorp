@@ -35,6 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "prlog.h"
 #include "nsJVMManager.h"
 #include "nsIServiceManager.h"
 #include "nsIJVMPrefsWindow.h"

@@ -37,7 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsUtils.h"
-#include "xp_core.h"
 #include "nsXPIDLString.h"
 #include "nsIStringBundle.h"
 #include "nsIPref.h"

@@ -72,7 +72,6 @@
 #include "prlog.h"
 #include "prerror.h"
 #include "nsEscape.h"
-#include "xp_core.h"
 
 #include "prprf.h"
 
@@ -114,6 +113,8 @@
 #include "nsINntpService.h"
 #include "nntpCore.h"
 #include "nsIStreamConverterService.h"
+
+#include <time.h>
 
 #undef GetPort  // XXX Windows!
 #undef SetPort  // XXX Windows!

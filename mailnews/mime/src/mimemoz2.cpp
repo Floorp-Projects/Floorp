@@ -35,9 +35,9 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#include "prlog.h"
 #include "nsCOMPtr.h"
 #include "modlmime.h"
-#include "xp_core.h"
 #include "nsCRT.h"
 #include "mimeobj.h"
 #include "mimemsg.h"

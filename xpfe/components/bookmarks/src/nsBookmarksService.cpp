@@ -62,7 +62,6 @@
 #include "prio.h"
 #include "prlog.h"
 #include "rdf.h"
-#include "xp_core.h"
 #include "prlong.h"
 #include "prtime.h"
 #include "nsEnumeratorUtils.h"

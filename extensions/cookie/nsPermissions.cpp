@@ -48,7 +48,6 @@
 #include "nsIPrompt.h"
 #include "nsIWindowWatcher.h"
 #include "nsVoidArray.h"
-#include "xp_core.h"
 #include "prmem.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIIOService.h"

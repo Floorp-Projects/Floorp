@@ -91,11 +91,11 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsIMessengerWindowService.h"
 #include "nsIWindowMediator.h"
-#include "xp_core.h"
 #include "nsIPrompt.h"
 #include "nsIWindowWatcher.h"
 #include "nsImapProtocol.h"
 #include "nsIMsgMailSession.h"
+#include <time.h>
 #define PREF_MAIL_ROOT_IMAP "mail.root.imap"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);

@@ -51,6 +51,7 @@
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 
+#include "prlog.h"
 #include "plstr.h"
 #include "prmem.h"
 #include "xp_str.h"
@@ -505,7 +506,7 @@ nsresult DIR_InitServer (DIR_Server *server)
 	NS_ASSERTION((server != nsnull), "server is null");
 	if (server)
 	{
-		XP_BZERO(server, sizeof(DIR_Server));
+		memset(server, 0, sizeof(DIR_Server));
 		server->saveResults = PR_TRUE;
 		server->efficientWildcards = kDefaultEfficientWildcards;
 		server->port = LDAP_PORT;
@@ -629,7 +630,7 @@ nsresult DIR_CopyServer (DIR_Server *in, DIR_Server **out)
 		*out = (DIR_Server*)PR_Malloc(sizeof(DIR_Server));
 		if (*out)
 		{
-			XP_BZERO (*out, sizeof(DIR_Server));
+			memset(*out, 0, sizeof(DIR_Server));
 
 			if (in->prefName)
 			{
@@ -776,7 +777,7 @@ nsresult DIR_CopyServer (DIR_Server *in, DIR_Server **out)
 				(*out)->basicSearchAttributes = (DIR_AttributeId*) PR_Malloc(bsaLength);
 				if ((*out)->basicSearchAttributes)
 				{
-					XP_MEMCPY ((*out)->basicSearchAttributes, in->basicSearchAttributes, bsaLength);
+					memcpy((*out)->basicSearchAttributes, in->basicSearchAttributes, bsaLength);
 					(*out)->basicSearchAttributesCount = in->basicSearchAttributesCount;
 				}
 			}
@@ -2393,24 +2394,24 @@ static nsresult DIR_AddCustomAttribute(DIR_Server *server, const char *attrName,
 			char *attrToken = nsnull;
 			PRUint32 attrCount = 0;
 
-			XP_BZERO(attrStruct, sizeof(DIR_Attribute));
+			memset(attrStruct, 0, sizeof(DIR_Attribute));
 
 			/* Try to pull out the pretty name into the struct */
 			attrStruct->id = id;
-            attrStruct->prettyName = nsCRT::strdup(XP_STRTOK(scratchAttr, ":")); 
+            attrStruct->prettyName = nsCRT::strdup(strtok(scratchAttr, ":")); 
 
 			/* Count up the attribute names */
-			while ((attrToken = XP_STRTOK(nsnull, ", ")) != nsnull)
+			while ((attrToken = strtok(nsnull, ", ")) != nsnull)
 				attrCount++;
 
 			/* Pull the attribute names into the struct */
 			PL_strcpy(scratchAttr, jsAttrForTokenizing);
-			XP_STRTOK(scratchAttr, ":"); 
+			strtok(scratchAttr, ":"); 
 			attrStruct->attrNames = (char**) PR_Malloc((attrCount + 1) * sizeof(char*));
 			if (attrStruct->attrNames)
 			{
 				PRInt32 i = 0;
-				while ((attrToken = XP_STRTOK(nsnull, ", ")) != nsnull)
+				while ((attrToken = strtok(nsnull, ", ")) != nsnull)
                     attrStruct->attrNames[i++] = nsCRT::strdup(attrToken);
 				attrStruct->attrNames[i] = nsnull; /* null-terminate the array */
 			}
@@ -2443,7 +2444,7 @@ PRInt32 DIR_GetNumAttributeIDsForColumns(DIR_Server * server)
 		if (buffer)
 		{
 			marker = buffer;
-			while (AB_pstrtok_r(nil, ", ", &buffer))
+			while (AB_pstrtok_r(0, ", ", &buffer))
 				count++;
 			PR_FREEIF(marker);
 		}
@@ -2480,7 +2481,7 @@ nsresult DIR_GetAttributeIDsForColumns(DIR_Server *server, DIR_AttributeId ** id
 			{
 				for (indx = 0; indx < numItems; indx++)
 				{
-					idName = AB_pstrtok_r(nil,", ",&marker);
+					idName = AB_pstrtok_r(0,", ",&marker);
 					if (idName)
 					{
 						status = DIR_AttributeNameToId(server, idName, &idArray[numAdded]);
@@ -2528,11 +2529,11 @@ static nsresult dir_CreateTokenListFromWholePref(const char *pref, char ***outLi
 		if (*outList)
 		{
 			PRInt32 i;
-			char *token = XP_STRTOK(commaSeparatedList, ", ");
+			char *token = strtok(commaSeparatedList, ", ");
 			for (i = 0; i < *outCount; i++)
 			{
                 (*outList)[i] = nsCRT::strdup(token);
-				token = XP_STRTOK(nsnull, ", ");
+				token = strtok(nsnull, ", ");
 			}
 		}
 		else
@@ -2705,7 +2706,7 @@ static nsresult DIR_GetCustomFilterPrefs(const char *prefstring, DIR_Server *ser
 				if (filter)
 				{
 					PRBool tempBool;
-					XP_BZERO(filter, sizeof(DIR_Filter));
+					memset(filter, 0, sizeof(DIR_Filter));
 
 					/* Pull per-filter preferences out of JS values */
 					filter->string = DIR_GetStringPref (scratch, "string", localScratch, 
@@ -2756,7 +2757,7 @@ static void DIR_ConvertServerFileName(DIR_Server* pServer)
 		newLeafName = XP_STRRCHR (leafName, '\\');
 #endif /* XP_FileIsFullPath */
 #else
-	newLeafName = XP_STRRCHR (leafName, '/');
+	newLeafName = strrchr(leafName, '/');
 #endif
     pServer->fileName = newLeafName ? nsCRT::strdup(newLeafName + 1) : nsCRT::strdup(leafName);
 	if (leafName) PR_Free(leafName);

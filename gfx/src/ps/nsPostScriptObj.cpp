@@ -35,7 +35,6 @@
 
 #include "nscore.h"
 #include "nsPostScriptObj.h"
-#include "xp_mem.h"
 #include "isotab.c"
 #include "nsFont.h"
 #include "nsIImage.h"
@@ -58,6 +57,8 @@
 #endif /* !NS_BUILD_ID */
 
 #include "prenv.h"
+
+#include <locale.h>
 
 #ifdef VMS
 #include <stdlib.h>
@@ -503,7 +504,7 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
 void 
 nsPostScriptObj::finalize_translation()
 {
-  XP_DELETE(mPrintContext->prSetup);
+  free(mPrintContext->prSetup);
   mPrintContext->prSetup = nsnull;
 }
 
@@ -514,7 +515,7 @@ nsPostScriptObj::finalize_translation()
 void 
 nsPostScriptObj::initialize_translation(PrintSetup* pi)
 {
-  PrintSetup *dup = XP_NEW(PrintSetup);
+  PrintSetup *dup = (PrintSetup *)malloc(sizeof(PrintSetup));
   *dup = *pi;
   mPrintContext->prSetup = dup;
   dup->width = POINT_TO_PAGE(dup->width);

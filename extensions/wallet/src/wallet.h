@@ -45,7 +45,7 @@
 #ifndef _WALLET_H
 #define _WALLET_H
 
-#include "xp_core.h"
+#include "prtypes.h"
 #include "nsIPresShell.h"
 #include "nsString.h"
 #include "nsFileSpec.h"
@@ -54,7 +54,7 @@
 class nsIDOMWindowInternal;
 class nsIDOMNode;
 
-XP_BEGIN_PROTOS
+PR_BEGIN_EXTERN_C
 
 #define HEADER_VERSION "#2c"
 
@@ -153,6 +153,6 @@ Wallet_SignonViewerReturn(const nsString& results);
 extern void
 Wallet_ReleaseAllLists();
 
-XP_END_PROTOS
+PR_END_EXTERN_C
 
 #endif /* !_WALLET_H */

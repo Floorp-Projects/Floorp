@@ -35,7 +35,6 @@
 #define JPEG_INTERNALS
 #include "jinclude.h"
 #include "jpeglib.h"
-#include "xp_core.h"
 
 #ifdef UPSAMPLE_MERGING_SUPPORTED
 

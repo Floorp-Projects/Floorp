@@ -37,7 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "msgCore.h"
-#include "xp_core.h"
 #include "nsReadableUtils.h"
 #include "nsMsgDBFolder.h"
 #include "nsMsgFolderFlags.h"
@@ -61,6 +60,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 
+#include <time.h>
 
 #define oneHour 3600000000
 #include "nsMsgUtils.h"

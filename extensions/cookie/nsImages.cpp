@@ -40,7 +40,6 @@
 #include "nsUtils.h"
 
 #include "nsVoidArray.h"
-#include "xp_core.h"
 #include "prmem.h"
 #include "nsIPref.h"
 #include "nsTextFormatter.h"

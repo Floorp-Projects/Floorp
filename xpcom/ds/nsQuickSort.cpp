@@ -39,6 +39,7 @@
 
 #include <stdlib.h>
 #include "prtypes.h"
+#include "nsComObsolete.h"
 #include "nsQuickSort.h"
 
 NS_BEGIN_EXTERN_C

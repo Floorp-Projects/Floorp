@@ -37,7 +37,6 @@
 
 #include "prefapi.h"
 #include "jsapi.h"
-#include "xp_core.h" /* Needed for XP_ defines */
 
 #if defined(XP_MAC)
   #include <stat.h>

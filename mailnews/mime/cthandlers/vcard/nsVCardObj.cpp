@@ -78,6 +78,7 @@ DFARS 252.227-7013 or 48 CFR 52.227-19, as applicable.
  * vobject, and convert a vobject into its textual representation.
  */
 
+#include "prlog.h"
 #include "nsVCard.h"
 #include "nsVCardObj.h"
 #include "prmem.h"

@@ -67,7 +67,6 @@
 #include "prmem.h"
 #include "prprf.h"
 #include "rdf.h"
-#include "xp_core.h"
 
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetAlias.h"

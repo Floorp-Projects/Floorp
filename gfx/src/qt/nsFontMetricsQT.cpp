@@ -38,7 +38,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "xp_core.h"
 #include "nsQuickSort.h"
 #include "nsFontMetricsQT.h"
 #include "nsFont.h"

@@ -37,7 +37,6 @@ static NS_DEFINE_CID(kAbCardPropertyCID, NS_ABCARDPROPERTY_CID);
 
 // ONLY included for the ldif code that was copied over from nsAddressBook.cpp
 // Maybe re-write that code and get rid of this? (isspace is what is needed)
-#include "xp_core.h"
 #include "plstr.h"
 #include "prmem.h"
 #include "prprf.h"
