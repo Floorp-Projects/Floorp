@@ -35,13 +35,9 @@ else
 PROGRAM		= mozilla-bin
 endif
 
-EXTRA_DSO_LIBS	= gkgfx
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-EXTRA_DSO_LIBS	+= xpfelocation_s mpfilelocprovider_s
-else
-SHARED_LIBRARY_LIBS = -lxpfelocation_s -lmpfilelocprovider_s
-endif
+EXTRA_DSO_LIBS	= gkgfx \
+		xpfelocation_s mpfilelocprovider_s \
+		$(NULL)
 
 CPPSRCS		= \
 		nsAppRunner.cpp \
