@@ -601,11 +601,11 @@ printf("nsTextEditor.cpp: failed to get TextEvent Listener\n");
       PRInt32 index;
       if (NS_FAILED(parent->IndexOf(content, index)) || index<0 )
       {
-        rootElement = do_QueryInterface(parent);
+        rootElement = do_QueryInterface(parent); //this will put listener on the form element basically
         result = rootElement->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(erP));
       }
       else
-        rootElement = 0;
+        rootElement = 0;//let the event receiver work on the document instead of the root element
     }
   }
   if (!rootElement && domdoc)

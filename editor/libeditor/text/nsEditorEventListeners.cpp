@@ -1093,7 +1093,7 @@ nsTextEditorFocusListener::Blur(nsIDOMEvent* aEvent)
           (flags & nsIHTMLEditor::eEditorDisabledMask) ||
           (flags & nsIHTMLEditor::eEditorFilterInputMask))
         {
-          selCon->SetDisplaySelection(nsISelectionController::SELECTION_OFF);
+          selCon->SetDisplaySelection(nsISelectionController::SELECTION_HIDDEN);//hide but do NOT turn off
         }
         else
         {
