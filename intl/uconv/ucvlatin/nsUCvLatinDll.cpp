@@ -17,6 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
+// #define DEBUG_PROGID
 #define NS_IMPL_IDS
 
 #include "pratom.h"
@@ -804,6 +805,8 @@ FactoryData g_FactoryData[] =
 #define ARRAY_SIZE                                      \
      (sizeof(g_FactoryData) / sizeof(FactoryData))
 
+PRUint32 gArraySize = 105;
+
 //----------------------------------------------------------------------
 // Class nsConverterFactory [declaration]
 
@@ -869,7 +872,8 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
   nsConverterFactory * fac;
   FactoryData * data;
 
-  for (PRUint32 i=0; i<ARRAY_SIZE; i++) {
+  NS_ASSERTION(ARRAY_SIZE == gArraySize, "wrong array size");
+  for (PRUint32 i=0; i<gArraySize; i++) {
     data = &(g_FactoryData[i]);
     if (aClass.Equals(*(data->mCID))) {
       fac = new nsConverterFactory(data);
@@ -919,7 +923,8 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports * aServMgr,
   char name[128];
   char progid[128];
   char * cid_string;
-  for (i=0; i<ARRAY_SIZE; i++) {
+  NS_ASSERTION(ARRAY_SIZE == gArraySize, "wrong array size");
+  for (i=0; i<gArraySize; i++) {
     if(0==PL_strcmp(g_FactoryData[i].mCharsetSrc,"Unicode"))
     {
        PL_strcpy(name, DECODER_NAME_BASE);
@@ -932,6 +937,9 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports * aServMgr,
        PL_strcpy(progid, NS_UNICODEENCODER_PROGID_BASE);
        PL_strcat(progid, g_FactoryData[i].mCharsetSrc);
     }
+#ifdef DEBUG_PROGID
+printf("%s\n" , progid);
+#endif
     // register component
     res = compMgr->RegisterComponent(*(g_FactoryData[i].mCID), name, progid,
       path, PR_TRUE, PR_TRUE);
@@ -974,7 +982,8 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf_0(nsISupports* aServMgr, const char
                            (nsISupports**)&compMgr);
   if (NS_FAILED(rv)) return rv;
 
-  for (PRUint32 i=0; i<ARRAY_SIZE; i++) {
+  NS_ASSERTION(ARRAY_SIZE == gArraySize, "wrong array size");
+  for (PRUint32 i=0; i<gArraySize; i++) {
     rv = compMgr->RegisterComponent(*(g_FactoryData[i].mCID), NULL, NULL,
       path, PR_TRUE, PR_TRUE);
     if(NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
@@ -998,7 +1007,8 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char
                            (nsISupports**)&compMgr);
   if (NS_FAILED(rv)) return rv;
 
-  for (PRUint32 i=0; i<ARRAY_SIZE; i++) {
+  NS_ASSERTION(ARRAY_SIZE == gArraySize, "wrong array size");
+  for (PRUint32 i=0; i<gArraySize; i++) {
     rv = compMgr->UnregisterComponent(*(g_FactoryData[i].mCID), path);
     if(NS_FAILED(rv)) goto done;
   }
