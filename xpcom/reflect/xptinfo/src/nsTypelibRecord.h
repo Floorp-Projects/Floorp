@@ -29,7 +29,6 @@
 
 
 struct XPTHeader;
-class nsIAllocator;
 class nsInterfaceInfoManager;
 class nsInterfaceRecord;
 
@@ -38,19 +37,17 @@ class nsTypelibRecord {
 public:
     friend class nsInterfaceInfoManager;
 
-    nsTypelibRecord(int size, nsTypelibRecord *in_next, XPTHeader *in_header,
-                    nsIAllocator *allocator);
+    nsTypelibRecord(int size, nsTypelibRecord *in_next, XPTHeader *in_header);
 
-    static void DestroyList(nsTypelibRecord* aList, nsIAllocator* aAllocator);
+    static void DestroyList(nsTypelibRecord* aList);
+
+    ~nsTypelibRecord();
 
     // array of pointers to (potentially shared) interface records,
     // NULL terminated.
     nsInterfaceRecord **interfaceRecords;
     nsTypelibRecord *next;
     XPTHeader *header;
-
-protected:
-    void Destroy(nsIAllocator* aAllocator);
 };    
 
 #endif /* nsTypelibRecord_h___ */
