@@ -120,8 +120,6 @@ protected:
 
   void DrainOverflowLists();
 
-  // XXX CONSTRUCTION
-  nsresult CreateNewFrames(nsIPresContext* aPresContext);
   nsresult AppendNewFrames(nsIPresContext* aPresContext, nsIFrame*);
 
   friend nsresult NS_NewInlineFrame(nsIContent* aContent, nsIFrame* aParentFrame,
