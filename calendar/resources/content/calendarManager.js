@@ -209,8 +209,6 @@ calendarManager.prototype.getAllCalendars = function calMan_getAllCalendars()
    //go through the prefs file, calendars are stored in there.
    var NumberOfCalendars = getIntPref(this.CalendarWindow.calendarPreferences.calendarPref, "servers.count", 1 );
    
-   var RefreshServers = getBoolPref(this.CalendarWindow.calendarPreferences.calendarPref, "servers.reloadonlaunch", false );
-   
    dump( "\nYou have "+NumberOfCalendars+" and I'm supposed to refresh teh server? "+RefreshServers );
    
    //don't count the default server, so this starts at 1
@@ -226,9 +224,6 @@ calendarManager.prototype.getAllCalendars = function calMan_getAllCalendars()
          thisCalendar.remote = getBoolPref(this.CalendarWindow.calendarPreferences.calendarPref, "server"+i+".remote", false );
          thisCalendar.remotePath = getCharPref(this.CalendarWindow.calendarPreferences.calendarPref, "server"+i+".remotePath", "" );
          
-         if( RefreshServers == true && thisCalendar.remote == true )
-            this.retrieveAndSaveRemoteCalendar( thisCalendar, onResponseAndRefresh );
-         
          this.calendars[ this.calendars.length ] = thisCalendar;
       }
       catch ( e )
@@ -236,6 +231,12 @@ calendarManager.prototype.getAllCalendars = function calMan_getAllCalendars()
          dump( "error: could not get calendar information from preferences\n"+e );
       }
    }
+
+   var RefreshServers = getBoolPref(this.CalendarWindow.calendarPreferences.calendarPref, "servers.reloadonlaunch", false );
+   
+   if( RefreshServers == true )
+      this.refreshAllRemoteCalendars( );
+
 }
 
 
@@ -272,7 +273,6 @@ calendarManager.prototype.getCalendarIndex = function calMan_getCalendarIndex( T
 var xmlhttprequest;
 var request;
 var calendarToGet = null;
-var refresh = false;
 
 calendarManager.prototype.retrieveAndSaveRemoteCalendar = function calMan_retrieveAndSaveRemoteCalendar( ThisCalendarObject, onResponse )
 {
@@ -294,10 +294,8 @@ calendarManager.prototype.refreshAllRemoteCalendars = function calMan_refreshAll
 {
    for( var i = 0; i < this.calendars.length; i++ )
    {
-      if( this.calendars[i].remote == true )
+      if( this.calendars[i].remote == true && this.calendars[i].remotePath != "" )
       {
-         refresh = true;
-         
          this.retrieveAndSaveRemoteCalendar( this.calendars[i], onResponseAndRefresh );
       }
    }

@@ -594,6 +594,7 @@ treeView.prototype.getCellText = function(row,column)
       break;
       case "unifinder-search-results-tree-col-startdate":
          var eventStartDate = getNextOrPreviousRecurrence( calendarEvent );
+         var startTime = formatUnifinderEventTime( eventStartDate );
          var startDate = formatUnifinderEventDate( eventStartDate );
          if( calendarEvent.allDay )
          {
@@ -607,6 +608,7 @@ treeView.prototype.getCellText = function(row,column)
       break;
       case "unifinder-search-results-tree-col-enddate":
          var eventEndDate = getNextOrPreviousRecurrence( calendarEvent );
+         var endTime = formatUnifinderEventTime( eventEndDate );
          var endDate = formatUnifinderEventDate( eventEndDate );
          if( calendarEvent.allDay )
          {
@@ -614,7 +616,7 @@ treeView.prototype.getCellText = function(row,column)
          }
          else
          {
-            endText = startDate + " " + endTime;
+            endText = endDate + " " + endTime;
          }
          return( endText );
       break;

@@ -244,6 +244,9 @@ MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
       
       var dayBoxItem = this.dayBoxItemByDateArray[ eventDayInMonth ];
             
+      if( !dayBoxItem )
+         break;
+
       // Display no more than three, show dots for the events > 3
       
       dayBoxItem.numEvents +=  1;
