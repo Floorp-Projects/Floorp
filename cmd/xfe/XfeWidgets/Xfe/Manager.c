@@ -80,6 +80,13 @@ static XtGeometryResult GeometryManager	(Widget,XtWidgetGeometry *,
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* Composite XtOrderProc for XmNinsertPosition							*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static Cardinal	InsertPosition		(Widget);
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* Constraint Class Methods												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
@@ -355,6 +362,17 @@ static XtResource resources[] =
 		XmRImmediate, 
 		(XtPointer) XfeDEFAULT_PREFERRED_HEIGHT
 	},
+
+    /* XmNinsertPosition */
+	{ 
+		XmNinsertPosition,
+		XmCInsertPosition,
+		XmRFunction,
+		sizeof(XtOrderProc),
+		XtOffsetOf(XfeManagerRec , composite . insert_position),
+		XmRImmediate, 
+		(XtPointer) InsertPosition
+    },
 };
 
 /*----------------------------------------------------------------------*/
@@ -1292,6 +1310,33 @@ GeometryManager(Widget child,XtWidgetGeometry *request,XtWidgetGeometry *reply)
 	
 	return XtGeometryYes;
 #endif
+}
+/*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* Composite XtOrderProc for XmNinsertPosition							*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static Cardinal
+InsertPosition(Widget child)
+{
+	Widget w = _XfeParent(child);
+
+ 	/* Insert private components at the tail */
+    if (_XfeManagerPrivateComponent(child))
+    {
+      return _XfemNumChildren(w);
+    }
+
+	/* Insert children before private components */
+	if (_XfemNumPrivateComponents(w) > 0)
+	{
+		return _XfemNumChildren(w) - _XfemNumPrivateComponents(w);
+	}
+
+	/* Otherwise return the default position - tail */
+	return _XfemNumChildren(w);
 }
 /*----------------------------------------------------------------------*/
 
