@@ -4331,14 +4331,8 @@ nsTextFrame::Reflow(nsIPresContext* aPresContext,
   }
 #endif
 
-  // If it's an incremental reflow command, then invalidate our existing
-  // bounds.
-  // XXX We need a finer granularity than this, but it isn't clear what
-  // has actually changed...
-  if (eReflowReason_Incremental == aReflowState.reason ||
-      eReflowReason_Dirty == aReflowState.reason) {
-    Invalidate(aPresContext, mRect);
-  }
+  nscoord maxFrameWidth  = mRect.width;
+  nscoord maxFrameHeight = mRect.height;
 
   // For future resize reflows we would like to avoid measuring the text.
   // We can only do this if after this reflow we're:
@@ -4354,6 +4348,18 @@ nsTextFrame::Reflow(nsIPresContext* aPresContext,
   else {
     mState &= ~TEXT_OPTIMIZE_RESIZE;
   }
+
+  // If it's an incremental reflow command, then invalidate our existing
+  // bounds.
+  // XXX We need a finer granularity than this, but it isn't clear what
+  // has actually changed...
+  if (eReflowReason_Incremental == aReflowState.reason ||
+      eReflowReason_Dirty == aReflowState.reason) {
+    maxFrameWidth  = PR_MAX(maxFrameWidth,  mRect.width);
+    maxFrameHeight = PR_MAX(maxFrameHeight, mRect.height);
+    Invalidate(aPresContext, nsRect(0,0,maxFrameWidth,maxFrameHeight));
+  }
+
 
 #ifdef NOISY_REFLOW
   ListTag(stdout);
