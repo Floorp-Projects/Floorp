@@ -24,7 +24,7 @@
 #include "nsIDOMXPConnectFactory.h"
 #include "nsAppShellCIDs.h"
 #include "nsIFileLocator.h"
-
+#include "nsINetSupportDialogService.h"
 #include "nsIEditor.h"
 
 #include "nsAppCoresCIDs.h"
@@ -77,7 +77,7 @@ static NS_DEFINE_IID(kCCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
 static NS_DEFINE_IID(kFileLocatorCID,     NS_FILELOCATOR_CID);
 static NS_DEFINE_IID(kXPConnectFactoryCID, NS_XPCONNECTFACTORY_CID);
 static NS_DEFINE_IID(kGlobalHistoryCID,    NS_GLOBALHISTORY_CID);
-
+static NS_DEFINE_IID(kNetSupportDialogCID,    NS_NETSUPPORTDIALOG_CID);
 ///static NS_DEFINE_IID(kCBrowserControllerCID, NS_BROWSERCONTROLLER_CID);
 //static NS_DEFINE_IID(kIEditFactoryIID, NS_IEDITORFACTORY_IID);
 
@@ -108,6 +108,7 @@ NS_SetupRegistry_1()
   nsComponentManager::RegisterComponent(kFileLocatorCID,  NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kXPConnectFactoryCID, NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kGlobalHistoryCID, NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kNetSupportDialogCID, NULL, NULL, APPSHELL_DLL, PR_TRUE, PR_TRUE);
 
   nsComponentManager::RegisterComponent(kAppCoresManagerCID,       NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kToolkitCoreCID,    NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
@@ -118,7 +119,7 @@ NS_SetupRegistry_1()
   nsComponentManager::RegisterComponent(kBrowserAppCoreCID, NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kEditorAppCoreCID,  NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kRDFCoreCID,     NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
-
+  
   //All Editor registration is done in webshell/tests/viewer/nsSetupregistry.cpp
 
 ///  nsComponentManager::RegisterComponent(kCBrowserControllerCID, NULL, NULL, BROWSER_DLL, PR_FALSE, PR_FALSE);
