@@ -1,3 +1,11 @@
+function upgradeCleanup()
+{
+  // Obsolete files from Netscape 6.0 and Netscape 6.01 that
+  // need to be cleaned up.
+  deleteThisFile("Components", "mail.xpt");
+  deleteThisFile("Components", "signed.shlb");
+}
+
 var srDest = $SpaceRequired$;
 
 var err = initInstall("Mozilla Mail", "Mail", "$Version$"); 
@@ -8,6 +16,10 @@ logComment("fProgram: " + fProgram);
 
 if (verifyDiskSpace(fProgram, srDest))
 {
+    // Call upgradeCleanup() before addDirectory() in case we accidentaly
+    // delete files that we happen to be also installing.  This way, if we do,
+    // it will just get reinstalled.  This is for safety measure.
+    upgradeCleanup();
     err = addDirectory("Program",
                    "$Version$",
                    "viewer",           // jar source folder 

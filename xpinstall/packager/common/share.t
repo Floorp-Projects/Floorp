@@ -37,3 +37,19 @@ function deleteThisFile(dirKey, file)
     return(false);
 }
 
+// this function deletes a folder (recursively) if it exists
+function deleteThisFolder(dirKey, folder)
+{
+  var fToDelete;
+
+  fToDelete = getFolder(dirKey, folder);
+  logComment(folder + " folder: " + fToDelete);
+  if(folder.exists(fToDelete, true))
+  {
+    File.dirRemove(fToDelete);
+    return(true);
+  }
+  else
+    return(false);
+}
+

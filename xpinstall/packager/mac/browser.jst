@@ -1,3 +1,18 @@
+function upgradeCleanup()
+{
+  // Obsolete files from Netscape 6.0 and Netscape 6.01 that
+  // need to be cleaned up.
+  deleteThisFile("Components", "browser.xpt");
+  deleteThisFile("Components", "DOMDataSource.shlb");
+  deleteThisFile("Components", "PSMGlue.shlb");
+  deleteThisFile("Components", "ucth.shlb");
+  deleteThisFile("Program",    "defaults/wallet/URLFieldSchema.tbl");
+  deleteThisFile("Program",    "Essential Files/PSM.shlb");
+  deleteThisFolder("Program",  "psmdata");
+  deleteThisFolder("Program",  "res/samples");
+  deleteThisFolder("Program",  "res/throbber");
+}
+
 var srDest = $SpaceRequired$;
 
 var err = initInstall("Mozilla Seamonkey", "Browser", "$Version$"); 
@@ -8,6 +23,10 @@ logComment("fProgram: " + fProgram);
 
 if (verifyDiskSpace(fProgram, srDest))
 {
+    // Call upgradeCleanup() before addDirectory() in case we accidentaly
+    // delete files that we happen to be also installing.  This way, if we do,
+    // it will just get reinstalled.  This is for safety measure.
+    upgradeCleanup();
     err = addDirectory("Program",
                        "$Version$",
                        "viewer",           // jar source folder
