@@ -51,6 +51,7 @@ EXPORTS =				\
 		nsIFolderListener.h	\
 		nsIDOMMsgAppCore.h	\
 		nsIMsgGroupRecord.h	\
+		nsICopyMessageListener.h \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk

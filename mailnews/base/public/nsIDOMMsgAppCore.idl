@@ -41,6 +41,7 @@
 #include "nsIDOMWindow.idl"
 #include "nsIDOMNodeList.idl"
 #include "nsIDOMXULTreeElement.idl"
+#include "nsIDOMXULElement.idl"
 
 [object, uuid(4f7966d0-c14f-11d2-b7f2-00805f05ffa5)]
 interface nsIDOMMsgAppCore : nsIDOMBaseAppCore {
@@ -49,7 +50,9 @@ interface nsIDOMMsgAppCore : nsIDOMBaseAppCore {
 	void Open3PaneWindow();
     void SetWindow(in nsIDOMWindow ptr);
     void OpenURL(in string str);
-    void DeleteMessage(in nsIDOMXULTreeElement tree, in nsIDOMNodeList node);
+    void DeleteMessage(in nsIDOMXULTreeElement tree, in nsIDOMXULElement srcFolder, in nsIDOMNodeList node);
+	void CopyMessages(in nsIDOMXULElement srcFolderElement, in nsIDOMXULElement dstFolderElement, in nsIDOMNodeList messages,
+					  in boolean isMove);
     nsISupports GetRDFResourceForMessage(in nsIDOMXULTreeElement tree, in nsIDOMNodeList node);
 	void Exit();
 };

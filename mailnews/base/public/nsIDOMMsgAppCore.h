@@ -7,7 +7,7 @@
 
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsIDOMWindow.h" /* interface nsIDOMWindow */
-#include "nsID.h" /* interface nsID */
+#include "nsIDOMXULElement.h" /* interface nsIDOMXULElement */
 #include "nsIDOMXULTreeElement.h" /* interface nsIDOMXULTreeElement */
 #include "nsIDOMBaseAppCore.h" /* interface nsIDOMBaseAppCore */
 #include "nsIDOMNodeList.h" /* interface nsIDOMNodeList */
@@ -43,8 +43,11 @@ class nsIDOMMsgAppCore : public nsIDOMBaseAppCore {
   /* void OpenURL (in string str); */
   NS_IMETHOD OpenURL(const char *str) = 0;
 
-  /* void DeleteMessage (in nsIDOMXULTreeElement tree, in nsIDOMNodeList node); */
-  NS_IMETHOD DeleteMessage(nsIDOMXULTreeElement *tree, nsIDOMNodeList *node) = 0;
+  /* void DeleteMessage (in nsIDOMXULTreeElement tree, in nsIDOMXULElement srcFolder, in nsIDOMNodeList node); */
+  NS_IMETHOD DeleteMessage(nsIDOMXULTreeElement *tree, nsIDOMXULElement *srcFolder, nsIDOMNodeList *node) = 0;
+
+  /* void CopyMessages (in nsIDOMXULElement srcFolderElement, in nsIDOMXULElement dstFolderElement, in nsIDOMNodeList messages, in boolean isMove); */
+  NS_IMETHOD CopyMessages(nsIDOMXULElement *srcFolderElement, nsIDOMXULElement *dstFolderElement, nsIDOMNodeList *messages, PRBool isMove) = 0;
 
   /* nsISupports GetRDFResourceForMessage (in nsIDOMXULTreeElement tree, in nsIDOMNodeList node); */
   NS_IMETHOD GetRDFResourceForMessage(nsIDOMXULTreeElement *tree, nsIDOMNodeList *node, nsISupports **_retval) = 0;

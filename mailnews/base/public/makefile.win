@@ -25,6 +25,7 @@ IDLSRCS =                                       \
 			nsIFolder.idl						\
 			nsIFolderListener.idl				\
 			nsIMsgGroupRecord.idl				\
+			nsICopyMessageListener.idl			\
 			$(NULL)
 
 EXPORTS =                           \
@@ -48,6 +49,7 @@ EXPORTS =                           \
 			nsIMsgIdentity.h		\
 			nsIDOMMsgAppCore.h		\
 			nsIMsgGroupRecord.h		\
+			nsICopyMessageListener.h \
 			$(NULL)
 
 MODULE=mailnews
