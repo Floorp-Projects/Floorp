@@ -77,7 +77,7 @@ CPPSRCS		= \
 		EmbedContentListener.cpp \
 		EmbedEventListener.cpp \
 		EmbedWindowCreator.cpp \
-    $(NULL)
+		$(NULL)
 
 ifdef MOZ_ENABLE_GTK2
 CSRCS           = \
