@@ -21,7 +21,7 @@
  *
  * Contributor(s):
  *   Alexey Chernyak <alexeyc@bigfoot.com> (XHTML 1.1 conversion)
- *   Henrik Gemal <gemal@gemal.dk>
+ *   Henrik Gemal <mozilla@gemal.dk>
  *   Darin Fisher <darin@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
