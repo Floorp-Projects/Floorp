@@ -54,7 +54,6 @@ include $(srcdir)/../config/xmlterm_config.mk
 include $(topsrcdir)/config/rules.mk
 
 XMLTERM_SCRIPTS = \
-	$(srcdir)/menuhack \
 	$(srcdir)/xmlterm \
 	$(srcdir)/xls \
 	$(srcdir)/xcat \
@@ -62,3 +61,16 @@ XMLTERM_SCRIPTS = \
 
 install:: 
 	$(INSTALL) -m 555 $(XMLTERM_SCRIPTS) $(DIST)/bin
+
+xpi::
+	zip $(DIST)/bin/xmlterm.xpi install.js
+	cd $(DIST); zip -g bin/xmlterm.xpi \
+               bin/xcat \
+               bin/xls \
+               bin/xmlterm
+	cd $(DIST)/bin; zip -g xmlterm.xpi \
+               components/libxmlterm.so \
+               components/xmlterm.xpt \
+               components/xmlterm-service.js
+	cd $(DIST)/bin; zip -g -r xmlterm.xpi chrome/packages/xmlterm
+	echo Created $(DIST)/bin/xmlterm.xpi

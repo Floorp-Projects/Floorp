@@ -83,12 +83,6 @@ interface mozIXMLTermShell : nsISupports
    */
   void IgnoreKeyPress(in boolean aIgnore, in wstring aCookie);
 
-  /** Opens new XMLterm window with specified args (not yet implemented)
-   * @param args argument string to be passed to XMLterm
-   *             (at the moment this just contains any initial input data)
-   */
-  nsIDOMWindow NewXMLTermWindow(in wstring args);
-
   /** Exit browser, closing all windows (not yet implemented)
    */ 
   void Exit();

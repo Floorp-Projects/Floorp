@@ -47,44 +47,20 @@ endif
 
 
 # Debug option
-DEBUG = 1
+DEBUG = 
 
 # Program
-PROGRAM = geckoterm
+PROGRAM = 
 
 # Exported header files
-EXPORTS = mozISimpleContainer.h
+EXPORTS = 
 
 # Defines
-DEFINES = $(TK_CFLAGS)
+DEFINES = 
 
 # C++ source files
-CPPSRCS = nsSetupRegistry.cpp  \
-	mozSimpleContainer.cpp \
-	mozGeckoTerm.cpp       \
-#	nsTimer.cpp            \
-	$(NULL)
+CPPSRCS = 
 
-# Libraries to be linked
-GTK_GLUE		= -lgtksuperwin
-
-XP_DIST_LIBS		= \
-			-lgkgfx \
-			$(MOZ_JS_LIBS) \
-			$(XPCOM_LIBS) \
-			$(JSJ_LIB) \
-			$(NULL)
-
-XP_NS_UNDERBAR_CRAP	= \
-			$(MOZ_NECKO_UTIL_LIBS) \
-			$(MOZ_WIDGET_SUPPORT_LIBS) \
-			$(NULL)
-
-XP_LIBS			= \
-			$(XP_NS_UNDERBAR_CRAP) \
-			$(XP_DIST_LIBS) \
-			$(NSPR_LIBS) \
-			$(NULL)
 
 ifdef DYNAMIC_LINK
 # NOTE: a soft link needs to be created for libxmlterm.so in dist/bin
@@ -93,13 +69,6 @@ else
 # Statically link the entire XMLTERM library
 XMLTERM_LIBS = ../base/libxmlterm.a
 endif
-
-LIBS =		        \
-        $(GTK_GLUE)     \
-	$(XP_LIBS)      \
-	$(TK_LIBS)      \
-	$(XMLTERM_LIBS) \
-	$(NULL)
 
 include $(topsrcdir)/config/config.mk
 
