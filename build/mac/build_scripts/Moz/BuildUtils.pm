@@ -107,7 +107,7 @@ sub SetupBuildRootDir($)
 {
     my($rel_path_to_script) = @_;
 
-    my($cur_dir) = dirname($0);
+    my($cur_dir) = cwd();
     $cur_dir =~ s/$rel_path_to_script$//;
     chdir($cur_dir);
     $main::MOZ_SRC = cwd();

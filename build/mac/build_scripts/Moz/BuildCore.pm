@@ -224,6 +224,8 @@ sub Checkout($)
     
     unless ( $main::pull{all} ) { return; }
 
+    my($start_time) = TimeStart();
+
 #    assertRightDirectory();
     my($cvsfile) = AskAndPersistFile($main::filepaths{"sessionpath"});
     my($session) = Moz::MacCVS->new( $cvsfile );
@@ -275,6 +277,8 @@ sub Checkout($)
     }
 
     close(CHECKOUT_FILE);
+
+    TimeEnd($start_time, "Checkout");
 }
 
 
@@ -301,6 +305,12 @@ sub RunBuild($$$$)
                      $input_files->{"buildflags"},
                      $build_prefs);
 
+    # If we were told to pull, make sure we do, overriding prefs etc.
+    if ($do_pull)
+    {
+        $main::pull{"all"} = 1;
+    }
+    
     # setup the build log
     SetupBuildLog($main::filepaths{"buildlogfilepath"}, $main::USE_TIMESTAMPED_LOGS);
     StopForErrors();
@@ -311,14 +321,7 @@ sub RunBuild($$$$)
         
     # run a pre-build check to see that the tools etc are in order
     DoPrebuildCheck();
-    
-    if ($do_pull) {
-        my($start_time) = TimeStart();
-        
-        Checkout($input_files->{"checkoutdata"});
-        
-        TimeEnd($start_time, "Checkout");
-    }
+    Checkout($input_files->{"checkoutdata"});
     
     unless ($do_build) { return; }
 
