@@ -286,6 +286,7 @@ protected:
 
   PRPackedBool          mDroppedDown;             // Current state of the dropdown list, PR_TRUE is dropped down
   PRPackedBool          mGoodToGo;
+  PRPackedBool          mInRedisplayText;
 
   PRInt32               mRecentSelectedIndex;
   PRInt32               mDisplayedIndex;
