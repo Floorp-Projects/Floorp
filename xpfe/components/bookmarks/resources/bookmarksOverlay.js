@@ -324,6 +324,10 @@ BookmarksUIElement.prototype = {
       openDialog("chrome://communicator/content/bookmarks/addBookmark.xul", "", 
                  "centerscreen,chrome,modal=yes,dialog=yes,resizable=yes", null, null, folder, null, "selectFolder", rv);
       if (rv.selectedFolder) {
+        for (var k = 0; k < selection.length; ++k) {
+          if (NODE_ID(selection[k]) == rv.selectedFolder) 
+            return; // Selection contains the target folder. Just fail silently.
+        }
         var additiveFlag = false;
         var selectedItems = [].concat(this.getSelection())
         for (var i = 0; i < selectedItems.length; ++i) {
