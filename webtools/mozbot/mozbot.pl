@@ -69,6 +69,7 @@
 # XXX protect the bot from DOS attacks causing server overload
 # XXX protect the server from an overflowing log (add log size limitter
 #     or rotation)
+# XXX fix the "hack hack hack" bits to be better.
 
 
 ################################
@@ -543,6 +544,7 @@ sub on_connect {
         $connectTimeout = $connectTimeout * 1.2;
         &Configuration::Save($cfgfile, &configStructure(\$connectTimeout));
         $self->quit('having trouble connecting, brb...');
+        # XXX we don't call the SpottedQuit handlers here
         return;
     }
 
@@ -632,6 +634,7 @@ sub on_check_connect {
     return if (defined($self->{'__mozbot__shutdown'}) or defined($self->{'__mozbot__active'})); # HACK HACK HACK
     $self->{'__mozbot__shutdown'} = 1; # HACK HACK HACK
     &debug("connection timed out -- trying again");
+    # XXX we don't call the SpottedQuit handlers here
     foreach (@modules) { $_->unload(); }
     @modules = ();
     $self->quit('connection timed out -- trying to reconnect');
@@ -643,6 +646,7 @@ sub on_disconnected {
     my ($self, $event) = @_;
     return if defined($self->{'__mozbot__shutdown'}); # HACK HACK HACK
     $self->{'__mozbot__shutdown'} = 1; # HACK HACK HACK
+    # &do(@_, 'SpottedQuit'); # XXX do we want to do this?
     my($reason) = $event->args;
     if ($reason =~ /Connection timed out/osi
         and ($serverRestrictsIRCNames ne $server
@@ -881,6 +885,8 @@ sub toToChannel {
     return lc($channel); # if message was sent to one person only, this is it
 }
 
+# XXX some code below calls this, on lines marked "hack hack hack". We
+# should fix this so that those are supported calls.
 sub do {
     my $self = shift @_;
     my $event = shift @_;
@@ -2047,6 +2053,7 @@ sub JoinedChannel {
     }
 }
 
+# Called by the Admin module's Kicked and SpottedPart handlers
 sub PartedChannel {
     my $self = shift;
     my ($event, $channel) = @_;
@@ -2542,7 +2549,11 @@ sub Told {
     } elsif ($self->isAdmin($event)) {
         if ($message =~ /^\s*(?:shutdown,?\s+please)\s*[?!.]*\s*$/osi) {
             $self->say($event, 'But of course. Have a nice day!');
-            $event->{'bot'}->quit('I was told to shutdown by '.$event->{'from'}.'. :-(');
+            my $reason = 'I was told to shutdown by '.$event->{'from'}.'. :-(';
+            # XXX should do something like &::do($event->{'bot'}, $event->{'_event'}, 'SpottedQuit'); # hack hack hack
+            #     ...but it should have the right channel/nick/reason info
+            # XXX we don't unload the modules here?
+            $event->{'bot'}->quit($reason);
             exit(0); # prevents any other events happening...
         } elsif ($message =~ /^\s*shutdown/osi) {
             $self->say($event, 'If you really want me to shutdown, use the magic word.');
@@ -2608,12 +2619,16 @@ sub Told {
                 $self->say($event, 'But I wasn\'t saying anything!');
             }
         } elsif ($message =~ /^\s*cycle(?:\s+please)?\s*[?!.]*\s*$/osi) {
-            $event->{'bot'}->quit('I was told to cycle by '.$event->{'from'}.'. BRB!');
+            my $reason = 'I was told to cycle by '.$event->{'from'}.'. BRB!';
+            # XXX should do something like &::do($event->{'bot'}, $event->{'_event'}, 'SpottedQuit'); # hack hack hack
+            #     ...but it should have the right channel/nick/reason info
+            # XXX we don't unload the modules here?
+            $event->{'bot'}->quit($reason);
             &Configuration::Get($cfgfile, &::configStructure());
         } elsif ($message =~ /^\s*join\s+([&#+][^\s]+)(?:\s+please)?\s*[?!.]*\s*$/osi) {
             $self->Invited($event, $1);
         } elsif ($message =~ /^\s*part\s+([&#+][^\s]+)(?:\s+please)?\s*[?!.]*\s*$/osi) {
-            $self->Kicked($event, $1);
+            $event->{'bot'}->part("$1 :I was told to leave by $event->{'from'}. :-(");
         } elsif ($message =~ /^\s*bless\s+('?)($variablepattern)\1\s*$/osi) {
             if (defined($users{$2})) {
                 $userFlags{$2} = $userFlags{$2} || 1;
@@ -2722,6 +2737,12 @@ sub CheckSource {
 sub Restart {
     my $self = shift;
     my ($event, $reason) = @_;
+    # XXX should do something like &::do($event->{'bot'}, $event->{'_event'}, 'SpottedQuit'); # hack hack hack
+    #     ...but it should have the right channel/nick/reason info
+    #     ...and it is broken if called from CheckSource, which is a
+    #     scheduled event handler, since $event is then a very basic
+    #     incomplete hash.
+    # XXX we don't unload modules here?
     $event->{'bot'}->quit($reason);
     # Note that `exec' will not call our `END' blocks, nor will it
     # call any `DESTROY' methods in our objects. So we fork a child to
@@ -2863,46 +2884,56 @@ sub Invited {
     # on the server should the bot join first.
     my $channel = lc($channelName);
     if (grep $_ eq $channel, @channels) {
-        $self->directSay($event, "I think I'm already *in* channel $channel! If this is not the case please make me part and then rejoin.");
-    } else {
-        if ($self->isAdmin($event) || $self->{'allowInviting'}) {
-            $self->debug("Joining $channel, since I was invited.");
-            if (defined($channelKeys{$channel})) {
-                $event->{'bot'}->join($channel, $channelKeys{$channel});
-            } else {
-                $event->{'bot'}->join($channel);
-            }
+        $self->directSay($event, "I thought I was already *in* channel $channel! Oh well.");
+    }
+    if ($self->isAdmin($event) || $self->{'allowInviting'}) {
+        $self->debug("Joining $channel, since I was invited.");
+        if (defined($channelKeys{$channel})) {
+            $event->{'bot'}->join($channel, $channelKeys{$channel});
         } else {
-            $self->debug($event->{'from'}." asked me to join $channel, but I refused.");
-            $self->directSay($event, "Please contact one of my administrators if you want me to join $channel.");
-            $self->tellAdmin($event, "Excuse me, but ".$event->{'from'}." asked me to join $channel. I thought you should know.");
+            $event->{'bot'}->join($channel);
         }
+    } else {
+        $self->debug($event->{'from'}." asked me to join $channel, but I refused.");
+        $self->directSay($event, "Please contact one of my administrators if you want me to join $channel.");
+        $self->tellAdmin($event, "Excuse me, but ".$event->{'from'}." asked me to join $channel. I thought you should know.");
     }
     return $self->SUPER::Invited($event, $channel);
 }
 
-# This is also called when we are /msg'ed a 'part' command
 sub Kicked {
     my $self = shift;
     my ($event, $channel) = @_;
-    $channel = lc($channel);
-    my %channels = map { $_ => 1 } @channels;
-    if ($channels{$channel}) {
-        $self->debug("kicked from $channel by ".$event->{'from'});
-        # XXX this next line can cause a "nosuchchannel: mozbot I No such channel" message
-        # would be nice to fix that somehow
-        $event->{'bot'}->part($channel, 'I was told to leave by '.$event->{'from'}.'. :-(');
-        delete($channels{$channel});
-        @channels = keys %channels;
-        &Configuration::Save($cfgfile, &::configStructure(\@channels));
+    $self->debug("kicked from $channel by ".$event->{'from'});
+    $self->debug('about to autopart modules...');
+    foreach (@modules) {
+        $_->PartedChannel($event, $channel);
+    }
+    return $self->SUPER::Kicked($event, $channel);
+}
+
+sub SpottedPart {
+    my $self = shift;
+    my ($event, $channel, $who) = @_;
+    if (lc $who eq lc $event->{'nick'}) {
+        $self->debug("parted $channel");
         $self->debug('about to autopart modules...');
         foreach (@modules) {
             $_->PartedChannel($event, $channel);
         }
-    } else {
-        $self->directSay($event, "I'm not *in* channel $channel!");
     }
-    return $self->SUPER::Kicked($event, $channel);
+    return $self->SUPER::SpottedPart($event, $channel, $who);
+}
+
+sub PartedChannel {
+    my $self = shift;
+    my ($event, $channel) = @_;
+    $channel = lc($channel);
+    my %channels = map { $_ => 1 } @channels;
+    delete($channels{$channel});
+    @channels = keys %channels;
+    &Configuration::Save($cfgfile, &::configStructure(\@channels));
+    return $self->SUPER::PartedChannel($event, $channel);
 }
 
 sub LoadModule {
