@@ -953,8 +953,7 @@ nsFormControlList::AddElementToTable(nsIFormControl* aChild, const nsString& aNa
       list->QueryInterface(NS_GET_IID(nsISupports),
                            getter_AddRefs(listSupports));
       // Replace the element with the list.
-      nsISupports *old = (nsISupports *)mLookupTable->Put(&key, listSupports.get());
-      NS_IF_RELEASE(old); // Release the old value
+      mLookupTable->Put(&key, listSupports.get());
     } else {
       // There's already a list in the hash, add the child to the list
       nsCOMPtr<nsIDOMNodeList> nodeList(do_QueryInterface(supports));
@@ -1018,8 +1017,7 @@ nsFormControlList::RemoveElementFromTable(nsIFormControl* aChild)
 
         if (node) {
           nsCOMPtr<nsISupports> tmp(do_QueryInterface(node));
-          nsISupports *old = (nsISupports *)mLookupTable->Put(&key, tmp.get());
-          NS_IF_RELEASE(old); // Release the old value
+          mLookupTable->Put(&key, tmp.get());
         }
       }
     }
