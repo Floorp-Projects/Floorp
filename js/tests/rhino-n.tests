@@ -64,6 +64,7 @@ js1_5/Regress/regress-68498-003.js
 js1_5/Regress/regress-80981.js
 js1_5/Regress/regress-89443.js
 js1_5/Regress/regress-90445.js
+js1_5/Regress/regress-111557.js
 #Rhino doesn't implement the (non-ECMA) toSource() method
 js1_5/Regress/regress-44009.js
 js1_5/Object/regress-90596-001.js
