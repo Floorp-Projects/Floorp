@@ -44,14 +44,45 @@ public:
      */
     NS_IMETHOD PeekChildCount(PRInt32& aCount) const = 0;
 
+    /**
+     * These flags are used to maintain bookkeeping information for partially-
+     * constructed content.
+     *
+     *   eChildrenMustBeRebuilt
+     *     The element's children are invalid or unconstructed, and should
+     *     be reconstructed.
+     *
+     *   eTemplateContentsBuilt
+     *     Child content that is built from a XUL template has been
+     *     constructed. 
+     *
+     *   eContainerContentsBuilt
+     *     Child content that is built by following the ``containment''
+     *     property in a XUL template has been built.
+     */
     enum {
         eChildrenMustBeRebuilt  = 0x1,
         eTemplateContentsBuilt  = 0x2,
         eContainerContentsBuilt = 0x4
     };
 
+    /**
+     * Set one or more ``lazy state'' flags.
+     * @aFlags a mask of flags to set
+     */
     NS_IMETHOD SetLazyState(PRInt32 aFlags) = 0;
+
+    /**
+     * Clear one or more ``lazy state'' flags.
+     * @aFlags a mask of flags to clear
+     */
     NS_IMETHOD ClearLazyState(PRInt32 aFlags) = 0;
+
+    /**
+     * Get the value of a single ``lazy state'' flag.
+     * @aFlag a flag to test
+     * @aResult the result
+     */
     NS_IMETHOD GetLazyState(PRInt32 aFlag, PRBool& aResult) = 0;
 };
 
