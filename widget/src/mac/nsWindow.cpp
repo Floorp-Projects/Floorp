@@ -780,7 +780,7 @@ void nsWindow::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
 		{
 			if ( NS_SUCCEEDED(children->CurrentItem(getter_AddRefs(child))) )
 			{
-				nsCOMPtr<nsIWidget> childWidget ( child );
+				nsCOMPtr<nsIWidget> childWidget ( do_QueryInterface(child) );
 				if ( childWidget ) {
 					nsRect childBounds;
 					childWidget->GetBounds(childBounds);
@@ -842,7 +842,7 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 		{
 			nsCOMPtr<nsISupports> child;
 			if ( NS_SUCCEEDED(children->CurrentItem(getter_AddRefs(child))) ) {
-				nsCOMPtr<nsIWidget> childWidget ( child );
+				nsCOMPtr<nsIWidget> childWidget ( do_QueryInterface(child) );
 				if ( childWidget ) {	
 					nsWindow* window = dynamic_cast<nsWindow*> ( childWidget.get() );
 					if ( window ) {
@@ -1137,7 +1137,7 @@ nsWindow*  nsWindow::FindWidgetHit(Point aThePoint)
 				nsCOMPtr<nsISupports> child;
 				if ( NS_SUCCEEDED(children->CurrentItem(getter_AddRefs(child))) )
 				{
-					nsCOMPtr<nsIWidget> childWidget ( child );
+					nsCOMPtr<nsIWidget> childWidget ( do_QueryInterface(child) );
 					if ( childWidget ) {	
 						nsWindow* window = dynamic_cast<nsWindow*> ( childWidget.get() );
 						if ( window ) {
