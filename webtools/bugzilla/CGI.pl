@@ -456,7 +456,7 @@ sub make_options {
         }
         print "<pre>src = " . value_quote(join(' ', @$src)) . "\n";
         print "default = " . value_quote($default) . "</pre>";
-        Putfooter();
+        PutFooter();
 #        confess "Gulp.";
         exit 0;
               
