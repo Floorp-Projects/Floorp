@@ -1920,7 +1920,7 @@ nsGfxTextControlFrame2::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
 NS_IMETHODIMP
 nsGfxTextControlFrame2::GetMinSize(nsBoxLayoutState& aState, nsSize& aSize)
 {
-
+#define FIX_FOR_BUG_40596
 #ifdef FIX_FOR_BUG_40596
   aSize = mMinSize;
   return NS_OK;
