@@ -141,16 +141,24 @@ sub process_log {
 	return;
     }
 
+    # The name of the log file without any suffix indicating compression.
+    # This script treats foo.log and foo.log.gz as the same file so we can
+    # compress logs after processing them and they won't get reprocessed.
+    # Note that the "name" column in the "logs" table stores the base name
+    # of the log file, not the actual name.
+    my $basename = $logfile;
+    $basename =~ s/\.(gz|bz2)$//;
+
     # Get the log file's unique ID and status from the database.
     my ($log_id, $status) = 
-	$dbh->selectrow_array($get_log_status_sth, {}, $relative_path, $logfile);
+	$dbh->selectrow_array($get_log_status_sth, {}, $relative_path, $basename);
 
     if (!$log_id) {
 	print LOG "Creating entry in database for log $File::Find::name.\n";
 	#$dbh->do("LOCK TABLES logs WRITE");
 	($log_id) = $dbh->selectrow_array("SELECT MAX(id) FROM logs");
 	$log_id = ($log_id || 0) + 1;
-	$insert_log_sth->execute($log_id, $relative_path, $logfile, $site_id, "new");
+	$insert_log_sth->execute($log_id, $relative_path, $basename, $site_id, "new");
 	#$dbh->do("UNLOCK TABLES");
     }
     elsif ($status eq "processed") {
@@ -168,7 +176,11 @@ sub process_log {
 
     if ($logfile =~ /\.gz$/) {
 	open(LOGFILE, "gunzip -c $File::Find::name |")
-	  or die "Couldn't open gzipped file for reading: $!";
+	  or die "Couldn't open gzipped file $File::Find::name for reading: $!";
+    }
+    elsif ($logfile =~ /\.bz2$/) {
+	open(LOGFILE, "bunzip2 -c $File::Find::name |")
+	  or die "Couldn't open bzip2ed file $File::Find::name for reading: $!";
     }
     else {
 	open(LOGFILE, "< $File::Find::name")
