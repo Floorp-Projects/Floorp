@@ -21,6 +21,7 @@ IGNORE_MANIFEST=1
 DEFINES = -D_IMPL_NS_BASE
 
 EXPORTS =		\
+    nsIProperties.h	\
     nsISizeOfHandler.h	\
 	nsFileSpec.h \
 	nsFileStream.h \
