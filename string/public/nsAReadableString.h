@@ -393,7 +393,8 @@ operator==( const nsReadingIterator<CharT>& lhs, const nsReadingIterator<CharT>&
   {
     return lhs.operator->() == rhs.operator->();
   }
-#if 0
+
+#ifdef HAVE_CPP_UNAMBIGUOUS_STD_NOTEQUAL
 template <class CharT>
 inline
 PRBool
