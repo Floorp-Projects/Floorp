@@ -957,15 +957,19 @@ CPluginManager::ReloadPlugins(PRBool reloadPages)
 //   forceJSEnabled: Forces JavaScript to be enabled for 'javascript:' URLs,
 //          even if the user currently has JavaScript disabled. 
 NS_METHOD
-CPluginManager::GetURL(nsISupports* peer, const char* url, const char* target,
+CPluginManager::GetURL(nsISupports* pinst, const char* url, const char* target,
                        void* notifyData, const char* altHost,
                        const char* referrer, PRBool forceJSEnabled)
 {
-    // assert( npp != NULL );
-    // assert( url != NULL );
- 	assert( peer != NULL);
-
-	CPluginInstancePeer* instancePeer = (CPluginInstancePeer*)(nsIPluginInstancePeer*) peer;
+    nsIPluginInstance* inst = NULL;
+    nsresult rslt = pinst->QueryInterface(kIPluginInstanceIID, (void**)&inst);
+    if (rslt != NS_OK) return rslt;
+	CPluginInstancePeer* instancePeer = NULL;
+    rslt = inst->GetPeer((nsIPluginInstancePeer**)&instancePeer);
+    if (rslt != NS_OK) {
+        inst->Release();
+        return rslt;
+    }
 	NPP npp = instancePeer->GetNPPInstance();
 
     NPError err;
@@ -976,23 +980,29 @@ CPluginManager::GetURL(nsISupports* peer, const char* url, const char* target,
     } else {
         err = NPN_GetURLNotify(npp, url, target, notifyData);
     }
+    instancePeer->Release();
+    inst->Release();
     return fromNPError[err];
 }
 
 
 NS_METHOD
-CPluginManager::PostURL(nsISupports* peer, const char* url, const char* target,
+CPluginManager::PostURL(nsISupports* pinst, const char* url, const char* target,
                         PRUint32 postDataLen, const char* postData,
                         PRBool isFile, void* notifyData,
                         const char* altHost, const char* referrer,
                         PRBool forceJSEnabled,
                         PRUint32 postHeadersLength, const char* postHeaders)
 {
-    // assert( npp != NULL );
-    // assert( url != NULL );
- 	assert( peer != NULL);
-
-	CPluginInstancePeer* instancePeer = (CPluginInstancePeer*)(nsIPluginInstancePeer*) peer;
+    nsIPluginInstance* inst = NULL;
+    nsresult rslt = pinst->QueryInterface(kIPluginInstanceIID, (void**)&inst);
+    if (rslt != NS_OK) return rslt;
+	CPluginInstancePeer* instancePeer = NULL;
+    rslt = inst->GetPeer((nsIPluginInstancePeer**)&instancePeer);
+    if (rslt != NS_OK) {
+        inst->Release();
+        return rslt;
+    }
 	NPP npp = instancePeer->GetNPPInstance();
 
     NPError err;
@@ -1003,6 +1013,8 @@ CPluginManager::PostURL(nsISupports* peer, const char* url, const char* target,
     } else {
         err = NPN_PostURLNotify(npp, url, target, postDataLen, postData, isFile, notifyData);
     }
+    instancePeer->Release();
+    inst->Release();
     return fromNPError[err];
 }
 
