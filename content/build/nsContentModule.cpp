@@ -246,6 +246,8 @@ Shutdown(nsIModule* aSelf)
   nsXULContentUtils::Finish();
   nsXULAtoms::ReleaseAtoms();
   nsXULElement::ReleaseGlobals();
+  nsXULPrototypeElement::ReleaseGlobals();
+  nsXULPrototypeScript::ReleaseGlobals();
 #endif
 
 #ifdef MOZ_SVG

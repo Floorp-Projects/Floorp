@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Ben Goodger <ben@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -49,9 +50,11 @@
 class nsICSSStyleSheet;
 class nsIURI;
 class nsIXULPrototypeDocument;
+class nsIXULDocument;
 class nsCString;
 class nsIDocument;
 class nsIXBLDocumentInfo;
+class nsIFastLoadService;
 
 // {3A0A0FC1-8349-11d3-BE47-00104BDE6048}
 #define NS_XULPROTOTYPECACHE_CID \
@@ -105,10 +108,34 @@ public:
      * Stop the FastLoad process abruptly, removing the FastLoad file.
      */
     NS_IMETHOD AbortFastLoads() = 0;
+
+    /** 
+     * Retrieve the FastLoad service
+     */
+    NS_IMETHOD GetFastLoadService(nsIFastLoadService** aResult) = 0;
+
+    /** 
+     * Remove a XULDocument from the set of loading documents
+     */
+    NS_IMETHOD RemoveFromFastLoadSet(nsIURI* aDocumentURI) = 0;
+
+    /** 
+     * Write Prototype Document to FastLoad file
+     */
+    NS_IMETHOD WritePrototype(nsIXULPrototypeDocument* aDocument) = 0;
 };
 
 
 extern NS_IMETHODIMP
 NS_NewXULPrototypeCache(nsISupports* aOuter, REFNSIID aIID, void** aResult);
+
+
+const char XUL_FASTLOAD_FILE_BASENAME[] = "XUL";
+
+#define XUL_FASTLOAD_FILE_VERSION       (0xfeedbeef - 4)
+
+#define XUL_SERIALIZATION_BUFFER_SIZE   (64 * 1024)
+#define XUL_DESERIALIZATION_BUFFER_SIZE (8 * 1024)
+
 
 #endif // nsIXULPrototypeCache_h__

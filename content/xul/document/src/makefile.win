@@ -52,6 +52,9 @@ REQUIRES	= xpcom \
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
+EXPORTS	= \
+	$(NULL)
+
 CPP_OBJS=					        \
         .\$(OBJDIR)\nsElementMap.obj                    \
         .\$(OBJDIR)\nsXULCommandDispatcher.obj          \

@@ -23,6 +23,7 @@
  *   Chris Waterson <waterson@netscape.com>
  *   Peter Annema <disttsc@bart.nl>
  *   Mike Shaver <shaver@mozilla.org>
+ *   Ben Goodger <ben@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -54,6 +55,7 @@
 #include "nsIAtom.h"
 #include "nsINodeInfo.h"
 #include "nsIControllers.h"
+#include "nsICSSParser.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMXULElement.h"
@@ -69,12 +71,14 @@
 #include "nsIXBLBinding.h"
 #include "nsIURI.h"
 #include "nsIXULContent.h"
+#include "nsIXULPrototypeCache.h"
 #include "nsIXULTemplateBuilder.h"
 #include "nsIBoxObject.h"
 #include "nsXULAttributes.h"
 #include "nsIChromeEventHandler.h"
 #include "nsXULAttributeValue.h"
 #include "nsIXBLService.h"
+#include "nsLayoutCID.h"
 
 #include "nsGenericElement.h" // for nsCheapVoidArray
 
@@ -93,6 +97,8 @@ class nsIWebShell;
 
 class nsIObjectInputStream;
 class nsIObjectOutputStream;
+
+static NS_DEFINE_CID(kCSSParserCID, NS_CSSPARSER_CID);
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -195,9 +201,10 @@ public:
           
     virtual ~nsXULPrototypeNode() {}
     virtual nsresult Serialize(nsIObjectOutputStream* aStream,
-                               nsIScriptContext* aContext);
+                               nsIScriptContext* aContext) = 0;
     virtual nsresult Deserialize(nsIObjectInputStream* aStream,
-                                 nsIScriptContext* aContext);
+                                 nsIScriptContext* aContext,
+                                 nsIURI* aDocumentURI) = 0;
 
     void AddRef() { mRefCnt++; };
     void Release() 
@@ -249,7 +256,8 @@ public:
     virtual nsresult Serialize(nsIObjectOutputStream* aStream,
                                nsIScriptContext* aContext);
     virtual nsresult Deserialize(nsIObjectInputStream* aStream,
-                                 nsIScriptContext* aContext);
+                                 nsIScriptContext* aContext,
+                                 nsIURI* aDocumentURI);
 
     PRInt32                  mNumChildren;
     nsXULPrototypeNode**     mChildren;           // [OWNER]
@@ -263,6 +271,36 @@ public:
     nsClassList*             mClassList;
 
     nsresult GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsAString& aValue);
+
+
+    static void ReleaseGlobals() 
+    { 
+        NS_IF_RELEASE(sNodeInfoManager); 
+        NS_IF_RELEASE(sCSSParser);
+    }
+
+protected:
+    static nsINodeInfoManager* GetNodeInfoManager()
+    {
+        if (!sNodeInfoManager) {
+            CallCreateInstance(NS_NODEINFOMANAGER_CONTRACTID, &sNodeInfoManager);
+
+            nsCOMPtr<nsINameSpaceManager> nsmgr;
+            NS_NewNameSpaceManager(getter_AddRefs(nsmgr));
+
+            sNodeInfoManager->Init(nsnull, nsmgr);
+        }
+        return sNodeInfoManager;
+    }
+    static nsINodeInfoManager* sNodeInfoManager;
+
+    static nsICSSParser* GetCSSParser()
+    {
+        if (!sCSSParser)
+            CallCreateInstance(kCSSParserCID, &sCSSParser);
+        return sCSSParser;
+    }
+    static nsICSSParser* sCSSParser;
 };
 
 struct JSRuntime;
@@ -278,7 +316,10 @@ public:
     virtual nsresult Serialize(nsIObjectOutputStream* aStream,
                                nsIScriptContext* aContext);
     virtual nsresult Deserialize(nsIObjectInputStream* aStream,
-                                 nsIScriptContext* aContext);
+                                 nsIScriptContext* aContext,
+                                 nsIURI* aDocumentURI);
+    virtual nsresult DeserializeOutOfLineScript(nsIObjectInputStream* aInput,
+                                                nsIScriptContext* aContext);
 
     nsresult Compile(const PRUnichar* aText, PRInt32 aTextLength,
                      nsIURI* aURI, PRInt32 aLineNo,
@@ -287,9 +328,25 @@ public:
 
     nsCOMPtr<nsIURI>         mSrcURI;
     PRBool                   mSrcLoading;
+    PRBool                   mOutOfLine;
     nsXULDocument*           mSrcLoadWaiters;   // [OWNER] but not COMPtr
     JSObject*                mJSObject;
     const char*              mLangVersion;
+
+    static void ReleaseGlobals() 
+    { 
+        NS_IF_RELEASE(sXULPrototypeCache); 
+    }
+
+protected:
+    static nsIXULPrototypeCache* GetXULCache()
+    {
+        if (!sXULPrototypeCache)
+            CallGetService("@mozilla.org/xul/xul-prototype-cache;1", &sXULPrototypeCache);
+
+        return sXULPrototypeCache;
+    }
+    static nsIXULPrototypeCache* sXULPrototypeCache;
 };
 
 class nsXULPrototypeText : public nsXULPrototypeNode
@@ -305,6 +362,12 @@ public:
     {
         MOZ_COUNT_DTOR(nsXULPrototypeText);
     }
+
+    virtual nsresult Serialize(nsIObjectOutputStream* aStream,
+                               nsIScriptContext* aContext);
+    virtual nsresult Deserialize(nsIObjectInputStream* aStream,
+                                 nsIScriptContext* aContext,
+                                 nsIURI* aDocumentURI);
 
     nsString                 mValue;
 };
