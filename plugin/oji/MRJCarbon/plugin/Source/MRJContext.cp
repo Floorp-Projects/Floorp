@@ -110,12 +110,13 @@ static RgnHandle NewEmptyRgn()
 }
 
 MRJContext::MRJContext(MRJSession* session, MRJPluginInstance* instance)
-	:	mPluginInstance(instance), mSession(session), mSessionRef(session->getSessionRef()), mPeer(NULL),
-		mLocator(NULL), mContext(NULL), mViewer(NULL), mViewerFrame(NULL), mIsActive(false),
+	:	mPluginInstance(instance), mSession(session), mPeer(NULL),
+		mLocator(NULL), mContext(NULL), mViewer(NULL), mViewerFrame(NULL),
+		mIsActive(false), mIsFocused(false), mIsVisible(false),
 		mPluginWindow(NULL), mPluginClipping(NULL), mPluginPort(NULL),
 		mDocumentBase(NULL), mAppletHTML(NULL), mPage(NULL), mSecurityContext(NULL)
 #if TARGET_CARBON
-        , mAppletFrame(NULL), mAppletControl(NULL)
+        , mAppletFrame(NULL), mAppletControl(NULL), mScrollCounter(0)
 #endif
 {
 	instance->GetPeer(&mPeer);
@@ -191,8 +192,16 @@ MRJContext::~MRJContext()
     if (mSession) {
         JNIEnv* env = mSession->getCurrentEnv();
     	if (mAppletFrame != NULL) {
-            OSStatus status = ::SetJavaAppletState(env, mAppletFrame, kAppletDestroy);
-    	    env->DeleteGlobalRef(mAppletFrame);
+    	    OSStatus status;
+    	    
+            // disconnect callbacks.
+            status = ::RegisterStatusCallback(env, mAppletFrame, NULL, NULL);
+            status = ::RegisterShowDocumentCallback(env, mAppletFrame, NULL, NULL);
+            
+            // destroy the applet.
+            status = ::SetJavaAppletState(env, mAppletFrame, kAppletDestroy);
+
+    	    // env->DeleteGlobalRef(mAppletFrame);
     	    mAppletFrame = NULL;
     	}
     }
@@ -979,45 +988,147 @@ void MRJContext::setProxyInfoForURL(char * url, JMProxyType proxyType)
 
 #if TARGET_CARBON
 
-struct SetStatusMessage {
-    MRJContext* mContext;
+class TimedMessage {
+    EventLoopTimerUPP mTimerUPP;
+public:
+	TimedMessage();
+	virtual ~TimedMessage();
+	
+    OSStatus send();
+	virtual void execute() = 0;
+
+private:
+    static pascal void TimedMessageHandler(EventLoopTimerRef inTimer, void *inUserData);
+};
+
+TimedMessage::TimedMessage()
+    :   mTimerUPP(NULL)
+{
+    mTimerUPP = NewEventLoopTimerUPP(TimedMessageHandler);
+}
+
+TimedMessage::~TimedMessage()
+{
+     if (mTimerUPP) ::DisposeEventLoopTimerUPP(mTimerUPP);
+}
+
+OSStatus TimedMessage::send()
+{
+    EventLoopTimerRef timerRef;
+    return ::InstallEventLoopTimer(::GetMainEventLoop(), 0, 0,
+                                 mTimerUPP, this, &timerRef);
+    // XXX does this leak timers? should the timer be released right here?
+}
+
+pascal void TimedMessage::TimedMessageHandler(EventLoopTimerRef inTimer, void *inUserData)
+{
+    TimedMessage* message = reinterpret_cast<TimedMessage*>(inUserData);
+    message->execute();
+    delete message;
+}
+
+static char* getCString(CFStringRef stringRef)
+{
+    CFIndex len = 1 + ::CFStringGetLength(stringRef);
+    char* result = new char[len];
+    if (result)
+        CFStringGetCString(stringRef, result, len, kCFStringEncodingMacRoman);
+    return result;
+}
+
+class SetStatusMessage : public TimedMessage {
+    nsIPluginInstancePeer* mPeer;
     CFStringRef mStatus;
-    
-    SetStatusMessage(MRJContext* context, CFStringRef statusString)
-        : mContext(context), mStatus(::CFStringCreateCopy(NULL, statusString))
+
+public:
+    SetStatusMessage(nsIPluginInstancePeer* peer, CFStringRef statusString)
+        : mPeer(peer), mStatus(statusString)
     {
+        NS_ADDREF(mPeer);
+        ::CFRetain(mStatus);
     }
     
     ~SetStatusMessage()
     {
         ::CFRelease(mStatus);
+        NS_RELEASE(mPeer);
     }
+    
+    virtual void execute();
 };
 
-static pascal void setStatusTimer(EventLoopTimerRef inTimer, void *inUserData)
+void SetStatusMessage::execute()
 {
-    SetStatusMessage* message = (SetStatusMessage*) inUserData;
-    CFStringRef statusMessage = message->mStatus;
-	char statusBuffer[1024];
-    const char* statusPtr = CFStringGetCStringPtr(statusMessage, kCFStringEncodingMacRoman);
-    if (statusPtr == NULL) {
-        CFStringGetCString(statusMessage, statusBuffer, sizeof(statusBuffer), kCFStringEncodingMacRoman);
-        statusPtr = statusBuffer;
+    char* status = getCString(mStatus);
+    if (status) {
+        mPeer->ShowStatus(status);
+        delete[] status;
     }
-    message->mContext->showStatus(statusPtr);
-    delete message;
 }
 
 static void setStatusCallback(jobject applet, CFStringRef statusMessage, void *inUserData)
 {
     // use a timer on the main event loop to handle this?
-    SetStatusMessage* message = new SetStatusMessage((MRJContext*)inUserData, statusMessage);
+    MRJContext* context = reinterpret_cast<MRJContext*>(inUserData);
+    SetStatusMessage* message = new SetStatusMessage(context->getPeer(), statusMessage);
     if (message) {
-        EventLoopTimerRef timerRef;
-        OSStatus status = InstallEventLoopTimer(GetMainEventLoop(), 0, 0,
-                                                NewEventLoopTimerUPP(setStatusTimer),
-                                                message,
-                                                &timerRef);
+        OSStatus status = message->send();
+        if (status != noErr) delete message;
+    }
+}
+
+class ShowDocumentMessage : public TimedMessage {
+    nsIPluginInstance* mPluginInstance;
+    CFURLRef mURL;
+    CFStringRef mWindowName;
+
+public:
+    ShowDocumentMessage(nsIPluginInstance* pluginInstance, CFURLRef url, CFStringRef windowName)
+        :   mPluginInstance(pluginInstance), mURL(url), mWindowName(windowName)
+    {
+        NS_ADDREF(mPluginInstance);
+        ::CFRetain(mURL);
+        ::CFRetain(mWindowName);
+    }
+    
+    ~ShowDocumentMessage()
+    {
+        ::CFRelease(mWindowName);
+        ::CFRelease(mURL);
+        NS_RELEASE(mPluginInstance);
+    }
+    
+    virtual void execute();
+};
+
+void ShowDocumentMessage::execute()
+{
+    char* url = NULL;
+    char* target = NULL;
+    
+    CFStringRef urlRef = CFURLGetString(mURL);
+    if (urlRef) {
+        url = getCString(urlRef);
+        ::CFRelease(urlRef);
+    }
+    
+    target = getCString(mWindowName);
+    
+    if (url && target)
+        thePluginManager->GetURL(mPluginInstance, url, target);
+
+    delete[] url;
+    delete[] target;
+}
+
+static void showDocumentCallback(jobject applet, CFURLRef url, CFStringRef windowName, void *inUserData)
+{
+    // use a timer on the main event loop to handle this?
+    MRJContext* context = reinterpret_cast<MRJContext*>(inUserData);
+    ShowDocumentMessage* message = new ShowDocumentMessage(context->getInstance(), url, windowName);
+    if (message) {
+        OSStatus status = message->send();
+        if (status != noErr) delete message;
     }
 }
 
@@ -1040,7 +1151,7 @@ Boolean MRJContext::loadApplet()
 	}
 
     CFURLRef documentBase = CFURLCreateWithBytes(NULL, (const UInt8*)mDocumentBase,
-                                                  strlen(mDocumentBase), kCFStringEncodingUTF8, NULL);
+                                                 strlen(mDocumentBase), kCFStringEncodingUTF8, NULL);
 
     if (attributes && parameters && documentBase) {
         AppletDescriptor desc = {
@@ -1052,8 +1163,10 @@ Boolean MRJContext::loadApplet()
         JNIEnv* env = mSession->getCurrentEnv();
         status = ::CreateJavaApplet(env, desc, false, kUniqueArena, &mAppletFrame);
         if (status == noErr) {
-            // install status callback.
+            // install status/document callbacks.
             status = ::RegisterStatusCallback(env, mAppletFrame, &setStatusCallback, this);
+            status = ::RegisterShowDocumentCallback(env, mAppletFrame, &showDocumentCallback, this);
+
             // wrap applet in a control.
             Rect bounds = { 0, 0, 100, 100 };
             status = ::CreateJavaControl(env, GetWindowFromPort(mPluginPort), &bounds, mAppletFrame, true, &mAppletControl);
@@ -1163,6 +1276,16 @@ jobject MRJContext::getApplet()
 	}
 #endif
 	return NULL;
+}
+
+nsIPluginInstance* MRJContext::getInstance()
+{
+    return mPluginInstance;
+}
+
+nsIPluginInstancePeer* MRJContext::getPeer()
+{
+    return mPeer;
 }
 
 /**
@@ -1298,6 +1421,9 @@ void MRJContext::click(const EventRecord* event, MRJFrame* appletFrame)
     ::HandleControlClick(mAppletControl, localWhere,
                          event->modifiers, NULL);
 
+    // the Java control seems to focus itself automatically when clicked in.
+    mIsFocused = true;
+    
 	port.Exit();
 #else
 	nsPluginPort* npPort = mPluginWindow->window;
@@ -1345,42 +1471,81 @@ void MRJContext::keyRelease(long message, short modifiers)
 #endif
 }
 
-void MRJContext::handleEvent(EventRecord* event)
+void MRJContext::scrollingBegins()
 {
+    if (mScrollCounter++ == 0) {
+        if (mAppletControl) {
+            JNIEnv* env = mSession->getCurrentEnv();
+            StopJavaControlAsyncDrawing(env, mAppletControl);
+        }
+    }
+}
+
+void MRJContext::scrollingEnds()
+{
+    if (--mScrollCounter == 0) {
+        if (mAppletControl) {
+            synchronizeClipping();
+            JNIEnv* env = mSession->getCurrentEnv();
+            RestartJavaControlAsyncDrawing(env, mAppletControl);
+        }
+    }
+}
+
+Boolean MRJContext::handleEvent(EventRecord* event)
+{
+    Boolean eventHandled = false;
     if (mAppletControl) {
+        eventHandled = true;
     	switch (event->what) {
+    	case updateEvt:
+    	    drawApplet();
+    	    break;
+    	    
+        case keyDown:
+            if (mIsFocused) {
+                ::HandleControlKey(mAppletControl,
+                                   (event->message & keyCodeMask) >> 8,
+                                   (event->message & charCodeMask),
+                                   event->modifiers);
+                eventHandled = true;
+            }
+            break;	
+
+        case mouseDown:
+            click(event, NULL);
+            break;
+
     	case nsPluginEventType_GetFocusEvent:
-    		// frame->focusEvent(true);
+    	    if (!mIsFocused) {
+                ::SetKeyboardFocus(::GetWindowFromPort(mPluginPort), mAppletControl, kControlFocusNextPart);
+                mIsFocused = true;
+            }
     		break;
     	
     	case nsPluginEventType_LoseFocusEvent:
-    		// frame->focusEvent(false);
+            ::SetKeyboardFocus(::GetWindowFromPort(mPluginPort), mAppletControl, kControlFocusNoPart);
+            mIsFocused = true;
     		break;
 
     	case nsPluginEventType_AdjustCursorEvent:
-    		// frame->idle(event->modifiers);
+    		::IdleControls(::GetWindowFromPort(mPluginPort));
     		break;
     	
     	case nsPluginEventType_MenuCommandEvent:
     		// frame->menuSelected(event->message, event->modifiers);
     		break;
     	
-    	case updateEvt:
-    	    drawApplet();
+    	case nsPluginEventType_ScrollingBeginsEvent:
+    	    scrollingBegins();
     	    break;
-    	    
-        case keyDown:
-            ::HandleControlKey(mAppletControl,
-                               (event->message & keyCodeMask) >> 8,
-                               (event->message & charCodeMask),
-                               event->modifiers);
-            break;	
-
-        case mouseDown:
-            click(event, NULL);
-            break;
+    	
+    	case nsPluginEventType_ScrollingEndsEvent:
+    	    scrollingEnds();
+    	    break;
     	}
     }
+    return eventHandled;
 }
 
 void MRJContext::idle(short modifiers)
@@ -1408,33 +1573,40 @@ void MRJContext::idle(short modifiers)
 // should tell the AWTContext that the window has gone away. could use an offscreen
 // or empty clipped grafport.
 
+
+
+OSStatus MRJContext::installEventHandlers(WindowRef window)
+{
+    // install mouseDown/mouseUp handlers for this window, so we can disable
+    // async updates during mouse tracking.
+    return noErr;
+}
+
+OSStatus MRJContext::removeEventHandlers(WindowRef window)
+{
+    return noErr;
+}
+
 void MRJContext::setWindow(nsPluginWindow* pluginWindow)
 {
-	// don't do anything if the AWTContext hasn't been created yet.
-#if !TARGET_CARBON
-	if (mContext != NULL) {
-#endif
-    	if (pluginWindow != NULL) {
-    		if (pluginWindow->height != 0 && pluginWindow->width != 0) {
-    			mPluginWindow = pluginWindow;
+	if (pluginWindow != NULL) {
+		if (pluginWindow->height && pluginWindow->width && pluginWindow->x && pluginWindow->y) {
+			mPluginWindow = pluginWindow;
 
-    			// establish the GrafPort the plugin will draw in.
-    			mPluginPort = pluginWindow->window->port;
+			// establish the GrafPort the plugin will draw in.
+            mPluginPort = pluginWindow->window->port;
 
-    			if (! appletLoaded())
-    				loadApplet();
-    		}
-    	} else {
-    		// tell MRJ the window has gone away.
-    		mPluginWindow = NULL;
-    		
-    		// use a single, 0x0, empty port for all future drawing.
-    		mPluginPort = getEmptyPort();
-    	}
-    	synchronizeClipping();
-#if !TARGET_CARBON
-    }
-#endif
+			if (! appletLoaded())
+				loadApplet();
+		}
+	} else {
+		// tell MRJ the window has gone away.
+		mPluginWindow = NULL;
+		
+		// use a single, 0x0, empty port for all future drawing.
+		mPluginPort = getEmptyPort();
+	}
+	synchronizeClipping();
 }
 
 static Boolean equalRect(const nsPluginRect* r1, const nsPluginRect* r2)
@@ -1574,10 +1746,28 @@ void MRJContext::synchronizeVisibility()
 
             status = ::MoveAndClipJavaControl(env, mAppletControl, posX, posY,
                                               clipX, clipY, clipWidth, clipHeight);
-            status = ::ShowHideJavaControl(env, mAppletControl, true);
+
+            if (!mIsVisible) {
+                status = ::ShowHideJavaControl(env, mAppletControl, true);
+                mIsVisible = (status == noErr);
+            } else {
+                status = ::DrawJavaControl(env, mAppletControl);
+            }
+
+#if 0
+            // Invalidate the old clip rectangle, so that any bogus drawing that may
+            // occurred at the old location, will be corrected.
+    		GrafPtr framePort = (GrafPtr)mPluginPort;
+        	LocalPort port(framePort);
+            port.Enter();
+        	::InvalWindowRect(GetWindowFromPort(mPluginPort), (Rect*)&oldClipRect);
+        	::InvalWindowRect(GetWindowFromPort(mPluginPort), (Rect*)&mCachedClipRect);
+            port.Exit();
+#endif
         } else {
            status = ::MoveAndClipJavaControl(env, mAppletControl, 0, 0, 0, 0, 0, 0);
            status = ::ShowHideJavaControl(env, mAppletControl, false);
+           mIsVisible = false;
         }
     }
 #else
