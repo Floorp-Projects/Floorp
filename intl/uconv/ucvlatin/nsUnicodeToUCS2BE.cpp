@@ -205,7 +205,7 @@ protected:
   {
      PRUnichar *p = (PRUnichar*) aDest;
      // copy the data  by swaping 
-     for(PRInt32 i; i < aLen; i++)
+     for(PRInt32 i=0; i < aLen; i++)
      {
         PRUnichar aChar = *aSrc++;
         *p++ = (0x00FF & (aChar >> 8)) | (0xFF00 & (aChar << 8));
