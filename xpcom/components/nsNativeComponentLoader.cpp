@@ -579,9 +579,6 @@ nsNativeComponentLoader::DumpLoadError(nsDll *dll,
 nsresult
 nsNativeComponentLoader::SelfUnregisterDll(nsDll *dll)
 {
-    // Precondition: dll is not loaded
-    PR_ASSERT(dll->IsLoaded() == PR_FALSE);
-
     nsIServiceManager* serviceMgr = NULL;
     nsresult res = nsServiceManager::GetGlobalServiceManager(&serviceMgr);
     if (NS_FAILED(res)) return res;
@@ -623,9 +620,38 @@ nsNativeComponentLoader::SelfUnregisterDll(nsDll *dll)
         }
     }
 #endif /* OBSOLETE_MODULE_LOADING */
-    dll->Unload();
     return res;
 }
+
+nsresult
+nsNativeComponentLoader::AutoUnregisterComponent(PRInt32 when,
+                                                 nsIFile *component,
+                                                 PRBool *unregistered)
+{
+    nsresult rv = NS_ERROR_FAILURE;
+
+    nsXPIDLCString persistentDescriptor;
+    rv = mCompMgr->RegistryLocationForSpec(component,
+                                           getter_Copies(persistentDescriptor));
+    if (NS_FAILED(rv)) return rv;
+
+    nsDll *dll = NULL;
+    PRInt64 mod = LL_Zero(), size = LL_Zero();
+    rv = CreateDll(component, persistentDescriptor, &mod, &size, &dll);
+    if (NS_FAILED(rv) || dll == NULL) return rv;
+
+    rv = SelfUnregisterDll(dll);
+
+    // Remove any autoreg info about this dll
+    if (NS_SUCCEEDED(rv))
+        RemoveRegistryDllInfo(persistentDescriptor);
+
+    PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
+           ("nsNativeComponentLoader: AutoUnregistration for %s %s.",
+            (NS_FAILED(rv) ? "FAILED" : "succeeded"), dll->GetDisplayPath()));
+    return rv;
+}
+
 
 nsresult
 nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
@@ -938,6 +964,12 @@ nsNativeComponentLoader::SetRegistryDllInfo(const char *aLocation,
     if (NS_FAILED(rv)) return rv;
     rv = mRegistry->SetLongLong(key, fileSizeValueName, fileSize);
     return rv;
+}
+
+nsresult
+nsNativeComponentLoader::RemoveRegistryDllInfo(const char *aLocation)
+{
+    return mRegistry->RemoveSubtree(mXPCOMKey, aLocation);
 }
 
 //

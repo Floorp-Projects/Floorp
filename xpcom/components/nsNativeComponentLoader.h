@@ -64,6 +64,7 @@ class nsNativeComponentLoader : public nsIComponentLoader {
                                 PRInt64 *fileSize);
     nsresult SetRegistryDllInfo(const char *aLocation, PRInt64 *lastModifiedTime,
                                 PRInt64 *fileSize);
+    nsresult RemoveRegistryDllInfo(const char *aLocation);
     nsresult GetFactoryFromModule(nsDll *aDll, const nsCID &aCID,
                                   nsIFactory **aFactory);
     /* obsolete! already! */

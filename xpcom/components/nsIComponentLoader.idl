@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.1 (the "NPL"); you may not use this file except in
@@ -67,6 +67,13 @@ interface nsIComponentLoader : nsISupports {
      * NS_FAILED code if there was an error during registration.
      */
     boolean autoRegisterComponent(in long aWhen, in nsIFile aComponent);
+
+    /**
+     * AutoUnregister the given component.
+     * Returns true if the component was unregistered, false if it coudln't
+     * attempt to unregister the component (not found, wrong type).
+     */
+    boolean autoUnregisterComponent(in long aWhen, in nsIFile aComponent);
 
     /**
      * Register any deferred (NS_ERROR_FACTORY_REGISTER_AGAIN) components.
