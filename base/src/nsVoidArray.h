@@ -19,6 +19,7 @@
 #define nsVoidArray_h___
 
 #include "nscore.h"
+class nsISizeOfHandler;
 
 // Enumerator callback function. Return PR_FALSE to stop
 typedef PRBool (*nsVoidArrayEnumFunc)(void* aElement, void *aData);
@@ -30,6 +31,8 @@ public:
   ~nsVoidArray();
 
   nsVoidArray& operator=(const nsVoidArray& other);
+
+  void  SizeOf(nsISizeOfHandler* aHandler) const;
 
   PRInt32 Count() const {
     return mCount;

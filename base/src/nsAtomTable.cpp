@@ -19,6 +19,7 @@
 #include "nsString.h"
 #include "nsCRT.h"
 #include "plhash.h"
+#include "nsISizeOfHandler.h"
 
 /**
  * The shared hash table for atom lookups.
@@ -38,6 +39,8 @@ public:
   virtual void ToString(nsString& aBuf) const;
 
   virtual const PRUnichar* GetUnicode() const;
+
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const;
 
   // Actually more; 0 terminated. This slot is reserved for the
   // terminating zero.
@@ -87,6 +90,13 @@ void AtomImpl::ToString(nsString& aBuf) const
 const PRUnichar* AtomImpl::GetUnicode() const
 {
   return mString;
+}
+
+NS_IMETHODIMP
+AtomImpl::SizeOf(nsISizeOfHandler* aHandler) const
+{
+  aHandler->Add(sizeof(*this) + nsCRT::strlen(mString) * sizeof(PRUnichar));
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------

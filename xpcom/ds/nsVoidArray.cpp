@@ -17,6 +17,7 @@
  */
 #include "nsVoidArray.h"
 #include "nsCRT.h"
+#include "nsISizeOfHandler.h"
 
 static PRInt32 kGrowArrayBy = 8;
 
@@ -47,8 +48,14 @@ nsVoidArray& nsVoidArray::operator=(const nsVoidArray& other)
 nsVoidArray::~nsVoidArray()
 {
   if (nsnull != mArray) {
-    delete mArray;
+    delete [] mArray;
   }
+}
+void
+nsVoidArray::SizeOf(nsISizeOfHandler* aHandler) const
+{
+  aHandler->Add(sizeof(*this));
+  aHandler->Add(sizeof(void*) * mArraySize);
 }
 
 void* nsVoidArray::ElementAt(PRInt32 aIndex) const
@@ -84,16 +91,16 @@ PRBool nsVoidArray::InsertElementAt(void* aElement, PRInt32 aIndex)
     // We have to grow the array
     PRInt32 newCount = oldCount + kGrowArrayBy;
     void** newArray = new void*[newCount];
-	if (mArray != nsnull && aIndex != 0)
-		nsCRT::memcpy(newArray, mArray, aIndex * sizeof(void*));
+    if (mArray != nsnull && aIndex != 0)
+      nsCRT::memcpy(newArray, mArray, aIndex * sizeof(void*));
     PRInt32 slide = oldCount - aIndex;
     if (0 != slide) {
       // Slide data over to make room for the insertion
       nsCRT::memcpy(newArray + aIndex + 1, mArray + aIndex,
                     slide * sizeof(void*));
     }
-	if (mArray != nsnull)
-		delete mArray;
+    if (mArray != nsnull)
+      delete [] mArray;
     mArray = newArray;
     mArraySize = newCount;
   } else {
@@ -164,10 +171,12 @@ void nsVoidArray::Compact()
   PRInt32 count = mCount;
   if (mArraySize != count) {
     void** newArray = new void*[count];
-    nsCRT::memcpy(newArray, mArray, count * sizeof(void*));
-    delete mArray;
-    mArray = newArray;
-    mArraySize = count;
+    if (nsnull != newArray) {
+      nsCRT::memcpy(newArray, mArray, count * sizeof(void*));
+      delete [] mArray;
+      mArray = newArray;
+      mArraySize = count;
+    }
   }
 }
 

@@ -21,6 +21,7 @@
 #include "nscore.h"
 #include "nsISupports.h"
 class nsString;
+class nsISizeOfHandler;
 
 #define NS_IATOM_IID          \
 { 0x3d1b15b0, 0x93b4, 0x11d1, \
@@ -43,6 +44,11 @@ public:
    * Return a pointer to a zero terminated unicode string.
    */
   virtual const PRUnichar* GetUnicode() const = 0;
+
+  /**
+   * Add the size, in bytes, of the atom to the handler.
+   */
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const = 0;
 };
 
 /**
