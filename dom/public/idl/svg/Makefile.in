@@ -60,6 +60,7 @@ XPIDLSRCS	= \
 		nsIDOMSVGAnimatedRect.idl \
 		nsIDOMSVGAnimTransformList.idl \
 		nsIDOMSVGCircleElement.idl \
+		nsIDOMSVGDefsElement.idl \
 		nsIDOMSVGDocument.idl \
 		nsIDOMSVGElement.idl \
 		nsIDOMSVGEllipseElement.idl \
