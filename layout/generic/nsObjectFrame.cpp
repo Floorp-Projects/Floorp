@@ -31,6 +31,9 @@
 #include "nsIContentViewerContainer.h"
 #include "prmem.h"
 
+// XXX For temporary paint code
+#include "nsIStyleContext.h"
+
 #define nsObjectFrameSuper nsLeafFrame
 
 class nsObjectFrame : public nsObjectFrameSuper {
@@ -41,9 +44,11 @@ public:
                     nsReflowMetrics&     aDesiredSize,
                     const nsReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
-
   NS_IMETHOD DidReflow(nsIPresContext& aPresContext,
                        nsDidReflowStatus aStatus);
+  NS_IMETHOD Paint(nsIPresContext& aPresContext,
+                   nsIRenderingContext& aRenderingContext,
+                   const nsRect& aDirtyRect);
 
 protected:
   virtual ~nsObjectFrame();
@@ -189,6 +194,7 @@ nsObjectFrame::Reflow(nsIPresContext&      aPresContext,
 
   // XXX deal with border and padding the usual way...wrap it up!
 
+#if XXX
   // Create view if necessary
   nsIView* view;
   GetView(view);
@@ -248,6 +254,7 @@ nsObjectFrame::Reflow(nsIPresContext&      aPresContext,
   else {
     NS_RELEASE(view);
   }
+#endif
 
   aStatus = NS_FRAME_COMPLETE;
   return NS_OK;
@@ -270,6 +277,31 @@ nsObjectFrame::DidReflow(nsIPresContext& aPresContext,
     }
   }
   return rv;
+}
+
+NS_IMETHODIMP
+nsObjectFrame::Paint(nsIPresContext& aPresContext,
+                     nsIRenderingContext& aRenderingContext,
+                     const nsRect& aDirtyRect)
+{
+  const nsStyleFont* font =
+    (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
+
+  aRenderingContext.SetFont(font->mFont);
+  aRenderingContext.SetColor(NS_RGB(192, 192, 192));
+  aRenderingContext.FillRect(0, 0, mRect.width, mRect.height);
+  aRenderingContext.SetColor(NS_RGB(0, 0, 0));
+  aRenderingContext.DrawRect(0, 0, mRect.width, mRect.height);
+  float p2t = aPresContext.GetPixelsToTwips();
+  nscoord px3 = nscoord(3 * p2t);
+  nsAutoString tmp;
+  nsIAtom* atom = mContent->GetTag();
+  if (nsnull != atom) {
+    atom->ToString(tmp);
+    NS_RELEASE(atom);
+    aRenderingContext.DrawString(tmp, px3, px3, 0);
+  }
+  return NS_OK;
 }
 
 nsresult
