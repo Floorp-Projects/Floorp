@@ -335,6 +335,17 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
       NS_SUCCEEDED(uiEvent->GetCtrlKey(&ctrlKey)) &&
       NS_SUCCEEDED(uiEvent->GetAltKey(&altKey)) ) 
   {
+#ifdef XP_MAC
+    // hack to make Mac work for hard-coded keybindings
+    // metaKey query is only way to query for command key on Mac
+    // if that's pressed, we'll set the ctrlKey boolean 
+    // (even though the control key might also be pressed)
+    PRBool isMetaKey;
+    if (NS_SUCCEEDED(uiEvent->GetMetaKey(&isMetaKey)) && PR_TRUE==isMetaKey) {
+      ctrlKey = PR_TRUE;
+    }
+#endif
+    
     if (PR_TRUE==ctrlKey) {
       aProcessed = PR_TRUE;
     } 
@@ -344,6 +355,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
     {
       // XXX: hard-coded select all
       case nsIDOMUIEvent::VK_A:
+      case (PRUint32)('a'):
         if (PR_TRUE==ctrlKey)
         {
           if (mEditor)
@@ -385,6 +397,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
 
       // XXX: hard-coded copy
       case nsIDOMUIEvent::VK_C:
+      case (PRUint32)('c'):
         if (PR_TRUE==ctrlKey)
         {
           if (mEditor)
@@ -483,6 +496,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
 
       // XXX: hard-coded paste
       case nsIDOMUIEvent::VK_V:
+      case (PRUint32)('v'):
         if (PR_TRUE==ctrlKey)
         {
           printf("control-v\n");
@@ -502,6 +516,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
 
       // XXX: hard-coded undo
       case nsIDOMUIEvent::VK_Z:
+      case (PRUint32)('z'):
         if (PR_TRUE==ctrlKey)
         {
           if (mEditor)
@@ -511,6 +526,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
 
       // XXX: hard-coded redo
       case nsIDOMUIEvent::VK_Y:
+      case (PRUint32)('y'):
         if (PR_TRUE==ctrlKey)
         {
           if (mEditor)
