@@ -14,14 +14,13 @@ Layout:
 - stick the DOM_StyleGetElementProperty stuff in all the right places
 (reflow?)
 - make <HR> honour inherited style (colour, etc.)
+- lo_SetStyleSheetLayerProperties and need-to-pop-layer
 
 libmocha:
 - move destruction into LM_ReleaseDocument
 - add destruction of style db
 - look closely at the implicit pop stuff in DOM_HTMLPushNode
 - wire up node reordering
-- put single <HTML> element child on #document at creation (and never
-  pop it off)
 
 XML:
 - everything, really

@@ -22,13 +22,6 @@ LIBRARY_NAME	= dom
 
 REQUIRES	= js dom
 
-ifdef MOZILLA_CLIENT
-REQUIRES       += lay img layer util
-
-# hack until PERIGNON takes over the world
-REQUIRES       += style
-endif
-
 EXPORTS         = dom.h domstyle.h
 
 CSRCS =	  	  domattr.c \

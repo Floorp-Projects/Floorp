@@ -24,14 +24,18 @@
 #include "dom_priv.h"
 
 #ifdef DEBUG_shaver
-/* #define DEBUG_shaver_style_primitives 1 */
+#define DEBUG_shaver_style_primitives 1
+#define DEBUG_shaver_verbose 1
+#define DEBUG_shaver_SME 1
 #endif
 
 #define STYLE_DB_FROM_CX(db, cx)                                              \
 PR_BEGIN_MACRO                                                                \
-    (db) = DOM_StyleDatabaseFromContext(cx);                                  \
-    if (!db)                                                                  \
-        return JS_FALSE;                                                      \
+    {                                                                         \
+        (db) = DOM_StyleDatabaseFromContext(cx);                              \
+        if (!db)                                                              \
+            return JS_FALSE;                                                  \
+    }                                                                         \
 PR_END_MACRO
 
 /* if either is present, they must both be and match */
@@ -77,151 +81,6 @@ DOM_DestroyStyleDatabase(JSContext *cx, DOM_StyleDatabase *db)
     PL_HashTableDestroy(db->ht);
     XP_FREE(db);
 }
-
-#ifdef MOZILLA_CLIENT
-#include "lo_ele.h"
-#include "structs.h"
-#include "layout.h"
-#include "laystyle.h"
-#include "proto.h"
-#define IMAGE_DEF_ANCHOR_BORDER         2
-#define IMAGE_DEF_VERTICAL_SPACE	0
-
-DOM_StyleDatabase *
-DOMMOZ_NewStyleDatabase(JSContext *cx, lo_DocState *state)
-{
-    DOM_StyleDatabase *db;
-    LO_Color visitCol, linkCol;
-    DOM_StyleSelector *sel, *imgsel;
-    DOM_AttributeEntry *entry;
-    lo_TopState *top = state->top_state;
-
-    /*
-     * Install default rules.
-     * In an ideal world (perhaps 5.0?), we would parse .netscape/ua.css
-     * at startup and keep the JSSS style buffer around for execution
-     * right here.  That would be very cool in many ways, including the
-     * fact that people could have ua.css at all.  We might want to
-     * make the weighting stuff work correctly at the same time, too,
-     * but I don't think it's vital.
-     */
-    db = DOM_NewStyleDatabase(cx);
-    if (!db)
-        return NULL;
-
-    linkCol.red = STATE_UNVISITED_ANCHOR_RED(state);
-    linkCol.green = STATE_UNVISITED_ANCHOR_GREEN(state);
-    linkCol.blue = STATE_UNVISITED_ANCHOR_BLUE(state);
-    visitCol.red = STATE_VISITED_ANCHOR_RED(state);
-    visitCol.green = STATE_VISITED_ANCHOR_GREEN(state);
-    visitCol.blue = STATE_VISITED_ANCHOR_BLUE(state);
-
-    top->style_db = db;
-
-    sel = DOM_StyleFindSelectorFull(cx, db, NULL, SELECTOR_TAG,
-                                    "A", NULL, "link");
-    if (!sel)
-        goto error;
-
-#define SET_DEFAULT_VALUE(name, value)                                        \
-        entry = DOM_StyleAddRule(cx, db, sel, name, "default");               \
-        if (!entry)                                                           \
-            goto error;                                                       \
-        entry->dirty = JS_FALSE;                                              \
-        entry->data = value;
-        
-    /* A:link { color:prefLinkColor } */
-    SET_DEFAULT_VALUE(COLOR_STYLE, *(uint32*)&linkCol);
-
-    /* A:link { text-decoration:underline } */
-    if (lo_underline_anchors() &&
-        !DOM_StyleAddRule(cx, db, sel, TEXTDECORATION_STYLE, "underline"))
-        goto error;
-
-    sel = DOM_StyleFindSelectorFull(cx, db, NULL, SELECTOR_TAG,
-                                    "A", NULL, "visited");
-    if (!sel)
-        goto error;
-
-    /* A:visited { color:prefVisitedLinkColor } */
-    SET_DEFAULT_VALUE(COLOR_STYLE, *(uint32*)&visitCol);
-
-    /* A:visited { text-decoration:underline } */
-    if (lo_underline_anchors() &&
-        !DOM_StyleAddRule(cx, db, sel, TEXTDECORATION_STYLE, "underline"))
-        goto error;
-
-    /* set styles for IMG within A:link and A:visited */
-    /* XXX should set (and teach layout about) borderTop/Bottom, etc. */
-    imgsel = DOM_StyleFindSelectorFull(cx, db, NULL, SELECTOR_TAG,
-                                       "IMG", NULL, NULL);
-    if (!imgsel)
-        goto error;
-
-    /* set border styles for ``A:link IMG'' */
-    sel = DOM_StyleFindSelectorFull(cx, db, imgsel, SELECTOR_TAG,
-                                    "A", NULL, "link");
-    if (!sel)
-        goto error;
-    SET_DEFAULT_VALUE(BORDERWIDTH_STYLE, IMAGE_DEF_ANCHOR_BORDER);
-    SET_DEFAULT_VALUE(PADDING_STYLE, IMAGE_DEF_VERTICAL_SPACE);
-
-    /* set border styles for ``A:visited IMG'' */
-    sel = DOM_StyleFindSelectorFull(cx, db, imgsel, SELECTOR_TAG,
-                                    "A", NULL, "visited");
-    if (!sel)
-        goto error;
-    SET_DEFAULT_VALUE(BORDERWIDTH_STYLE, IMAGE_DEF_ANCHOR_BORDER);
-    SET_DEFAULT_VALUE(PADDING_STYLE, IMAGE_DEF_VERTICAL_SPACE);
-
-#ifdef DEBUG_shaver
-    fprintf(stderr, "successfully added all default rules\n");
-#endif
-    return db;
-
- error:
-    if (db)
-        DOM_DestroyStyleDatabase(cx, db);
-    return NULL;
-}
-
-DOM_StyleDatabase *
-DOM_StyleDatabaseFromContext(JSContext *cx)
-{
-    MochaDecoder *decoder;
-    lo_TopState *top;
-    lo_DocState *state;
-    DOM_StyleDatabase *db = NULL;
-
-    if (!cx)
-        return NULL;
-
-    decoder = JS_GetPrivate(cx, JS_GetGlobalObject(cx));
-    if (!decoder)
-        return NULL;
-    
-    LO_LockLayout();
-    top = lo_FetchTopState(decoder->window_context->doc_id);
-    if (!top)
-        goto out;
-
-    if (top->style_db) {
-        LO_UnlockLayout();
-        return (DOM_StyleDatabase *)top->style_db;
-    }
-
-    state = top->doc_state;
-    if (!state)
-        goto out;
-
-    db = DOMMOZ_NewStyleDatabase(cx, state);
-    top->style_db = db;
-
-out:
-    LO_UnlockLayout();
-    return db;
-}
-#endif /* MOZILLA_CLIENT */
 
 static JSBool
 InsertBaseSelector(JSContext *cx, DOM_StyleDatabase *db,
@@ -303,12 +162,22 @@ GetBaseSelector(JSContext *cx, DOM_StyleDatabase *db, uint8 type,
                 DOM_StyleToken pseudo, JSBool strict)
 {
     DOM_StyleSelector *sel;
+
+#ifdef DEBUG_shaver
+    fprintf(stderr, "getting base selector %d from db %p\n", type, db);
+#endif
+
     if (!cx)
         return NULL;
-    if (!db)
-        STYLE_DB_FROM_CX(db, cx);
-    if (!db)
-        return NULL;
+
+    if (!db) {
+        db = DOM_StyleDatabaseFromContext(cx);
+#ifdef DEBUG_shaver
+        fprintf(stderr, "got new db %p\n", db);
+#endif
+        if (!db)
+            return NULL;
+    }
 
     sel = PL_HashTableLookup(db->ht, token);
     for (; sel; sel = sel->sibling) {
@@ -658,6 +527,8 @@ DOM_StyleGetProperty(JSContext *cx, DOM_StyleDatabase *db,
                 token = iter->tagName;
                 extra = NULL;
                 break;
+              default:
+                continue;
             }
             if (!token)
                 continue;

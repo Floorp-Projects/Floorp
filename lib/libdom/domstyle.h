@@ -58,9 +58,8 @@ DOM_DestroyStyleDatabase(JSContext *cx, DOM_StyleDatabase *db);
 
 /*
  * Find or create the StyleDatabase for the given JSContext.
- * The embedder must provide an implementation, or #define MOZILLA_CLIENT
- * to get the Mozilla-specific one which depends on MochaDecoder and 
- * MWContext and lo_TopState and stuff.
+ * The embedder must provide an implementation, an example of which can be
+ * found in libmocha/lm_dom.c.
  */
 DOM_StyleDatabase *
 DOM_StyleDatabaseFromContext(JSContext *cx);
