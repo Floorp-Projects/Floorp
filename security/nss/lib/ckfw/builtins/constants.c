@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: constants.c,v $ $Revision: 1.3 $ $Date: 2000/09/06 22:24:00 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: constants.c,v $ $Revision: 1.4 $ $Date: 2001/09/20 22:09:49 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -62,7 +62,7 @@ NSS_IMPLEMENT_DATA const CK_VERSION
 nss_builtins_LibraryVersion = { 1, 0 };
 
 NSS_IMPLEMENT_DATA const NSSUTF8 *
-nss_builtins_SlotDescription = "";
+nss_builtins_SlotDescription = (NSSUTF8 *) "";
 
 NSS_IMPLEMENT_DATA const CK_VERSION
 nss_builtins_HardwareVersion = { 1, 0 };

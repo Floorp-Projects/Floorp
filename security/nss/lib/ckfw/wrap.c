@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: wrap.c,v $ $Revision: 1.3 $ $Date: 2000/09/06 22:23:57 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: wrap.c,v $ $Revision: 1.4 $ $Date: 2001/09/20 22:09:47 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -683,9 +683,8 @@ NSSCKFWC_WaitForSlotEvent
   for( i = 0; i < nSlots; i++ ) {
     if( fwSlot == slots[i] ) {
       *pSlot = (CK_SLOT_ID)(CK_ULONG)(i+1);
+      return CKR_OK;
     }
-
-    return CKR_OK;
   }
 
   error = CKR_GENERAL_ERROR; /* returned something not in the slot list */

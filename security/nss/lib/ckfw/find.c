@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: find.c,v $ $Revision: 1.1 $ $Date: 2000/03/31 19:43:14 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: find.c,v $ $Revision: 1.2 $ $Date: 2001/09/20 22:09:45 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -134,7 +134,7 @@ nssCKFWFindObjects_Create
   CK_RV *pError
 )
 {
-  NSSCKFWFindObjects *fwFindObjects;
+  NSSCKFWFindObjects *fwFindObjects = NULL;
   NSSArena *arena;
   NSSCKMDSession *mdSession;
   NSSCKMDToken *mdToken;

@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.4 $ $Date: 2000/09/06 22:23:57 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.5 $ $Date: 2001/09/20 22:09:46 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -1405,7 +1405,7 @@ nssCKFWToken_GetMechanismCount
   }
 #endif /* NSSDEBUG */
 
-  if( (void *)NULL == fwToken->mdToken->GetMechanismCount ) {
+  if( (void *)NULL == (void *)fwToken->mdToken->GetMechanismCount ) {
     return 0;
   }
 
@@ -1434,7 +1434,7 @@ nssCKFWToken_GetMechanismTypes
   }
 #endif /* NSSDEBUG */
 
-  if( (void *)NULL == fwToken->mdToken->GetMechanismTypes ) {
+  if( (void *)NULL == (void *)fwToken->mdToken->GetMechanismTypes ) {
     /*
      * This should only be called with a sufficiently-large
      * "types" array, which can only be done if GetMechanismCount

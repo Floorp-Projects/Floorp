@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: object.c,v $ $Revision: 1.5 $ $Date: 2001/08/23 00:00:05 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: object.c,v $ $Revision: 1.6 $ $Date: 2001/09/20 22:09:46 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -948,9 +948,9 @@ NSSCKFWObject_GetAttributeTypes
   CK_ULONG ulCount
 )
 {
+#ifdef DEBUG
   CK_RV error = CKR_OK;
 
-#ifdef DEBUG
   error = nssCKFWObject_verifyPointer(fwObject);
   if( CKR_OK != error ) {
     return error;
