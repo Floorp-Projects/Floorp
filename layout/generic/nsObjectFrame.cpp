@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+// vim:set ts=2 sts=2 sw=2 et cin:
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -131,7 +132,6 @@
 #include "nsMimeTypes.h"
 #include "nsIMIMEService.h"
 #include "nsCExternalHandlerService.h"
-#include "nsICategoryManager.h"
 #include "imgILoader.h"
 
 #include "nsObjectFrame.h"
@@ -492,21 +492,30 @@ nsObjectFrame::GetSkipSides() const
 
 // #define DO_DIRTY_INTERSECT 1   // enable dirty rect intersection during paint
 static PRBool
-IsSupportedImageMimeType(const char *aMimeType)
+IsSupportedImage(const nsCString& aMimeType)
 {
   nsCOMPtr<imgILoader> loader(do_GetService("@mozilla.org/image/loader;1"));
 
   PRBool supported;
-  nsresult rv = loader->SupportImageWithMimeType(aMimeType, &supported);
+  nsresult rv = loader->SupportImageWithMimeType(aMimeType.get(), &supported);
 
   return NS_SUCCEEDED(rv) && supported;
 }
 
 static PRBool
-IsSupportedDocumentMimeType(nsIContent* aOurContent,
-                            const nsCString& aMimeType)
+IsSupportedDocument(nsIContent* aOurContent,
+                    const nsCString& aMimeType)
 {
   nsresult rv;
+
+  // only allow browser to handle content of <embed> for svg (bug 240408)
+  if (aOurContent->Tag() == nsHTMLAtoms::embed)
+#ifdef MOZ_SVG
+    if (!aMimeType.LowerCaseEqualsLiteral("image/svg+xml"))
+#endif
+      return PR_FALSE;
+
+
   nsCOMPtr<nsIWebNavigationInfo> info(
     do_GetService(NS_WEBNAVIGATION_INFO_CONTRACTID, &rv));
   PRUint32 supported;
@@ -521,107 +530,46 @@ IsSupportedDocumentMimeType(nsIContent* aOurContent,
     supported != nsIWebNavigationInfo::PLUGIN;
 }
 
-// static
-PRBool
-nsObjectFrame::IsSupportedImage(nsIContent* aContent)
+nsresult
+nsObjectFrame::GetMIMEType(nsACString& aType)
 {
-  if (!aContent)
-    return PR_FALSE;
-
-  nsAutoString uType;
-  nsresult rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, uType);
-  NS_ConvertUCS2toUTF8 type(uType);
-  PRBool haveType = (rv == NS_CONTENT_ATTR_HAS_VALUE) && (!type.IsEmpty());
-  if (!haveType) {
-    nsAutoString data;
-
-    // If this is an OBJECT tag, we should look for a DATA attribute.
-    // If not, it's an EMBED tag, and so we should look for a SRC attribute.
-    if (aContent->Tag() == nsHTMLAtoms::object)
-      rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, data);
-    else
-      rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, data);
-
-    PRBool havedata = (rv == NS_CONTENT_ATTR_HAS_VALUE) && (!data.IsEmpty());
-    if (!havedata)
-      return PR_FALSE;
- 
-    // Find the extension in the string 
-    PRInt32 iLastCharOffset = data.Length() - 1;
-    PRInt32 iPointOffset = data.RFindChar('.');
-
-    if (iPointOffset == -1)
-      return PR_FALSE;
-  
-    const nsAString & ext = Substring(data, iPointOffset + 1,
-                                      iLastCharOffset - iPointOffset);
-
-    nsCOMPtr<nsIMIMEService> mimeService(do_GetService("@mozilla.org/mime;1"));
-    if (!mimeService)
-      return PR_FALSE;
-
-    rv = mimeService->GetTypeFromExtension(NS_ConvertUCS2toUTF8(ext), type);
-    if (NS_FAILED(rv))
-      return PR_FALSE;
-  }
-  
-  return IsSupportedImageMimeType(type.get());
-}
-
-// static
-PRBool
-nsObjectFrame::IsSupportedDocument(nsIContent* aContent)
-{
-  nsresult rv;
-  
-  if (aContent == nsnull)
-    return PR_FALSE;
-
   nsAutoString type;
-  nsCAutoString typeStr;
-  rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, type);
+  nsresult rv = mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, type);
   if (rv != NS_CONTENT_ATTR_HAS_VALUE || type.IsEmpty()) {
     // if we don't have a TYPE= try getting the mime-type via the DATA= url
     nsAutoString data;
     // If this is an OBJECT tag, we should look for a DATA attribute.
     // If not, it's an EMBED tag, and so we should look for a SRC attribute.
-    if (aContent->Tag() == nsHTMLAtoms::object)
-      rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, data);
+    if (mContent->Tag() == nsHTMLAtoms::object)
+      rv = mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, data);
     else
-      rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, data);
+      rv = mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, data);
 
     if (rv != NS_CONTENT_ATTR_HAS_VALUE || data.IsEmpty()) {
-      return PR_FALSE;
+      return NS_ERROR_NOT_AVAILABLE;
     }
     
     nsCOMPtr<nsIURI> uri;
-    nsCOMPtr<nsIURI> baseURI = aContent->GetBaseURI();
-    rv = NS_NewURI(getter_AddRefs(uri), data, nsnull, baseURI);
+    nsCOMPtr<nsIURI> baseURI = mContent->GetBaseURI();
+    rv = NS_NewURI(getter_AddRefs(uri), data, mContent->GetOwnerDoc()->GetDocumentCharacterSet().get(), baseURI);
     if (NS_FAILED(rv))
-      return PR_FALSE;
+      return rv;
 
     nsCOMPtr<nsIMIMEService> mimeService = do_GetService(NS_MIMESERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv))
-      return PR_FALSE;
+      return rv;
 
     nsXPIDLCString contentType;
     rv = mimeService->GetTypeFromURI(uri, contentType);
     if (NS_FAILED(rv) || contentType.IsEmpty())
-      return PR_FALSE;
+      return NS_ERROR_NOT_AVAILABLE;
     
-    typeStr = contentType;
+    aType = contentType;
   } else {
-    CopyUTF16toUTF8(type, typeStr);
+    CopyUTF16toUTF8(type, aType);
   }
 
-  // only allow browser to handle content of <embed> for svg (bug 240408)
-  if (aContent->Tag() == nsHTMLAtoms::embed)
-#ifdef MOZ_SVG
-    if (!typeStr.LowerCaseEqualsLiteral("image/svg+xml"))
-#endif
-      return PR_FALSE;
-
-  return IsSupportedDocumentMimeType(aContent, typeStr);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -678,8 +626,15 @@ nsObjectFrame::Init(nsPresContext*   aPresContext,
   if (NS_FAILED(rv))
     return rv;
 
+  // Find our content type
+  nsCAutoString type;
+  rv = GetMIMEType(type);
+  // If that fails, just return and render nothing.
+  if (NS_FAILED(rv))
+    return NS_OK;
+
   // Ideally this should move to Reflow when the stream starts to come
-  if (IsSupportedImage(aContent)) {
+  if (IsSupportedImage(type)) {
     // kick off the image load in the content node
     // XXX once this moves to somewhere where we have the data stream,
     // we should have a way to load images with a channel....
@@ -720,7 +675,7 @@ nsObjectFrame::Init(nsPresContext*   aPresContext,
 
   // for now, we should try to do the same for "document" types and
   // create an iframe-like sub-frame
-  if (IsSupportedDocument(aContent)) {
+  if (IsSupportedDocument(aContent, type)) {
     nsIFrame * aNewFrame = nsnull;
     rv = NS_NewSubDocumentFrame(aPresContext->PresShell(), &aNewFrame);
     if (NS_FAILED(rv))
@@ -3096,10 +3051,12 @@ nsObjectFrame::PluginNotAvailable(const char *aMimeType)
     return;
   }
 
+  nsDependentCString type(aMimeType);
+
   // For non-image and non-document mime types, fire the plugin not
   // found event and mark this plugin as broken.
-  if (!IsSupportedImageMimeType(aMimeType) &&
-      !IsSupportedDocumentMimeType(mContent, nsDependentCString(aMimeType))) {
+  if (!IsSupportedImage(type) &&
+      !IsSupportedDocument(mContent, type)) {
     FirePluginNotFoundEvent(mContent);
 
     mIsBrokenPlugin = PR_TRUE;
