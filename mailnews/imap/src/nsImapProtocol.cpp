@@ -628,6 +628,7 @@ NS_IMETHODIMP nsImapProtocol::OnDataAvailable(nsIURL* aURL, nsIInputStream *aISt
 			PR_EnterMonitor(m_dataAvailableMonitor);
             PR_Notify(m_dataAvailableMonitor);
 			PR_ExitMonitor(m_dataAvailableMonitor);
+            Log("OnDataAvailable", nsnull, m_dataBuf);
         }
         NS_RELEASE(aImapUrl);
     }
@@ -671,6 +672,7 @@ PRInt32 nsImapProtocol::SendData(const char * dataBuffer)
 	if (dataBuffer && m_outputStream)
 	{
         m_currentCommand = dataBuffer;
+        Log("SendData", nsnull, dataBuffer);
 		nsresult rv = m_outputStream->Write(dataBuffer, PL_strlen(dataBuffer), &writeCount);
 		if (NS_SUCCEEDED(rv) && writeCount == PL_strlen(dataBuffer))
 		{
@@ -771,7 +773,6 @@ void nsImapProtocol::BeginMessageDownLoad(
 	char *sizeString = PR_smprintf("OPEN Size: %ld", total_message_size);
 	Log("STREAM",sizeString,"Begin Message Download Stream");
 	PR_FREEIF(sizeString);
-	//PR_LOG(IMAP, out, ("STREAM: Begin Message Download Stream.  Size: %ld",
     //total_message_size)); 
 	StreamInfo *si = (StreamInfo *) PR_CALLOC (sizeof (StreamInfo));		// This will be freed in the event
 	if (si)
@@ -1074,7 +1075,7 @@ nsImapProtocol::FetchMessage(nsString2 &messageIds,
 		delete [] cCommandStr;
 		delete [] cMessageIdsStr;
 
-		ParseIMAPandCheckForNewMail(protocolString);
+		// ParseIMAPandCheckForNewMail(protocolString);
 	    PR_Free(protocolString);
    	}
     else
@@ -1192,7 +1193,7 @@ void nsImapProtocol::PipelinedFetchMessageParts(nsString2 &uid, nsIMAPMessagePar
 		if (commandString)
 		{
 			int ioStatus = SendData(commandString);
-			ParseIMAPandCheckForNewMail(commandString);
+			// ParseIMAPandCheckForNewMail(commandString);
 			PR_Free(commandString);
 		}
 		else
@@ -1358,7 +1359,6 @@ void nsImapProtocol::AbortMessageDownLoad()
 {
 	Log("STREAM", "CLOSE", "Abort Message  Download Stream");
 
-	//PR_LOG(IMAP, out, ("STREAM: Abort Message Download Stream"));
 	if (m_trackingTime)
 		AdjustChunkSize();
 	if (!m_downloadLineCache.CacheEmpty())
@@ -1643,16 +1643,18 @@ void nsImapProtocol::Log(const char *logSubName, const char *extraInfo, const ch
 	static char *selectedStateName = "S";
 	static char *waitingStateName = "W";
 	char *stateName = NULL;
-#if 0
+    const char *hostName = "";  // initilize to empty string
+    if (m_runningUrl)
+        m_runningUrl->GetHost(&hostName);
 	switch (GetServerStateParser().GetIMAPstate())
 	{
 	case nsImapServerResponseParser::kFolderSelected:
-		if (fCurrentUrl)
+		if (m_runningUrl)
 		{
 			if (extraInfo)
-				PR_LOG(IMAP, out, ("%s:%s-%s:%s:%s: %s", fCurrentUrl->GetUrlHost(),selectedStateName, GetServerStateParser().GetSelectedMailboxName(), logSubName, extraInfo, logData));
+				PR_LOG(IMAP, PR_LOG_ALWAYS, ("%s:%s-%s:%s:%s: %s", hostName,selectedStateName, GetServerStateParser().GetSelectedMailboxName(), logSubName, extraInfo, logData));
 			else
-				PR_LOG(IMAP, out, ("%s:%s-%s:%s: %s", fCurrentUrl->GetUrlHost(),selectedStateName, GetServerStateParser().GetSelectedMailboxName(), logSubName, logData));
+				PR_LOG(IMAP, PR_LOG_ALWAYS, ("%s:%s-%s:%s: %s", hostName,selectedStateName, GetServerStateParser().GetSelectedMailboxName(), logSubName, logData));
 		}
 		return;
 		break;
@@ -1669,14 +1671,13 @@ void nsImapProtocol::Log(const char *logSubName, const char *extraInfo, const ch
 #endif 
 	}
 
-	if (fCurrentUrl)
+	if (m_runningUrl)
 	{
 		if (extraInfo)
-			PR_LOG(IMAP, out, ("%s:%s:%s:%s: %s",fCurrentUrl->GetUrlHost(),stateName,logSubName,extraInfo,logData));
+			PR_LOG(IMAP, PR_LOG_ALWAYS, ("%s:%s:%s:%s: %s", hostName,stateName,logSubName,extraInfo,logData));
 		else
-			PR_LOG(IMAP, out, ("%s:%s:%s: %s",fCurrentUrl->GetUrlHost(),stateName,logSubName,logData));
+			PR_LOG(IMAP, PR_LOG_ALWAYS, ("%s:%s:%s: %s",hostName,stateName,logSubName,logData));
 	}
-#endif
 }
 
 // In 4.5, this posted an event back to libmsg and blocked until it got a response.
@@ -1729,7 +1730,6 @@ void nsImapProtocol::PseudoInterrupt(PRBool the_interrupt)
 	if (the_interrupt)
 	{
 		Log("CONTROL", NULL, "PSEUDO-Interrupted");
-		//PR_LOG(IMAP, out, ("PSEUDO-Interrupted"));
 	}
 	PR_ExitMonitor(m_pseudoInterruptMonitor);
 }
@@ -2074,7 +2074,7 @@ nsImapProtocol::Store(nsString2 &messageList, const char * messageData,
 	            
 	    int                 ioStatus = SendData(protocolString);
 	    
-		ParseIMAPandCheckForNewMail(protocolString); // ??? do we really need this
+		// ParseIMAPandCheckForNewMail(protocolString); // ??? do we really need this
 	    PR_Free(protocolString);
     }
     else
@@ -2097,7 +2097,7 @@ nsImapProtocol::Expunge()
         PR_Free(tmpBuffer);
     }
     
-	ParseIMAPandCheckForNewMail(); // ??? do we really need to do this
+	// ParseIMAPandCheckForNewMail(); // ??? do we really need to do this
 }
 
 void
