@@ -582,7 +582,7 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell)
 
 	mPresShell->SetCaretEnabled(PR_TRUE);
 
-  // Set the selection to the beginning, to make sure we have one:
+  // Set the selection to the beginning:
   BeginningOfDocument();
 
   NS_POSTCONDITION(mDoc && mPresShell, "bad state");
@@ -1045,6 +1045,36 @@ NS_IMETHODIMP nsEditor::SelectAll()
   return result;
 }
 
+//
+// GetDeepFirst/LastChild borrowed from nsContentIterator
+//
+nsCOMPtr<nsIDOMNode>
+nsEditor::GetDeepFirstChild(nsCOMPtr<nsIDOMNode> aRoot)
+{
+  nsCOMPtr<nsIContent> deepFirstChild;
+
+  if (aRoot) 
+  {  
+    nsCOMPtr<nsIContent> cN (do_QueryInterface(aRoot));
+    nsCOMPtr<nsIContent> cChild;
+    cN->ChildAt(0,*getter_AddRefs(cChild));
+    while ( cChild )
+    {
+      cN = cChild;
+      nsCOMPtr<nsIDOMNode> cChildN;
+      int i = 0;
+      do {
+        cN->ChildAt(i++, *getter_AddRefs(cChild));
+        cChildN = do_QueryInterface(cChild);
+      } while (cChild && cChildN && !IsEditable(cChildN));
+    }
+    deepFirstChild = cN;
+  }
+
+  nsCOMPtr<nsIDOMNode> deepFirstChildN (do_QueryInterface(deepFirstChild));
+  return deepFirstChildN;
+}
+
 NS_IMETHODIMP nsEditor::BeginningOfDocument()
 {
 #ifdef ENABLE_JS_EDITOR_LOG
@@ -1073,9 +1103,8 @@ NS_IMETHODIMP nsEditor::BeginningOfDocument()
       if ((NS_SUCCEEDED(result)) && bodyNode)
       {
         // Get the first child of the body node:
-        nsCOMPtr<nsIDOMNode> firstNode;
-        result = bodyNode->GetFirstChild(getter_AddRefs(firstNode));
-        if (NS_SUCCEEDED(result))
+        nsCOMPtr<nsIDOMNode> firstNode = GetDeepFirstChild(bodyNode);
+        if (firstNode)
         {
           result = selection->Collapse(firstNode, 0);
           ScrollIntoView(PR_TRUE);
@@ -1084,6 +1113,44 @@ NS_IMETHODIMP nsEditor::BeginningOfDocument()
     }
   }
   return result;
+}
+
+nsCOMPtr<nsIDOMNode>
+nsEditor::GetDeepLastChild(nsCOMPtr<nsIDOMNode> aRoot)
+{
+  nsCOMPtr<nsIContent> deepLastChild;
+
+  if (aRoot) 
+  {  
+    nsCOMPtr<nsIContent> cN (do_QueryInterface(aRoot));
+    nsCOMPtr<nsIContent> cChild;
+    PRInt32 numChildren;
+  
+    cN->ChildCount(numChildren);
+
+    while ( numChildren )
+    {
+      nsCOMPtr<nsIDOMNode> cChildN;
+      do {
+        cN->ChildAt(--numChildren, *getter_AddRefs(cChild));
+        cChildN = (do_QueryInterface(cChild));
+      } while (cChild && !IsEditable(cChildN));
+
+      if (cChild)
+      {
+        cChild->ChildCount(numChildren);
+        cN = cChild;
+      }
+      else
+      {
+        break;
+      }
+    }
+    deepLastChild = cN;
+  }
+
+  nsCOMPtr<nsIDOMNode> deepLastChildN (do_QueryInterface(deepLastChild));
+  return deepLastChildN;
 }
 
 NS_IMETHODIMP nsEditor::EndOfDocument()
@@ -1113,14 +1180,18 @@ NS_IMETHODIMP nsEditor::EndOfDocument()
       result = nodeList->Item(0, getter_AddRefs(bodyNode));
       if ((NS_SUCCEEDED(result)) && bodyNode)
       {
-        nsCOMPtr<nsIDOMNode> lastChild;
-        result = bodyNode->GetLastChild(getter_AddRefs(lastChild));
+        nsCOMPtr<nsIDOMNode> lastChild = GetDeepLastChild(bodyNode);
         if ((NS_SUCCEEDED(result)) && lastChild)
         {
-          // XXX this is wrong, should iterate to collapse to
-          // XXX last child of last child of last ...
-          // XXX instead of beginning of last child of body.
-          result = selection->Collapse(lastChild, 0);
+          // See if the last child is a text node; if so, set offset:
+          PRUint32 offset = 0;
+          if (IsTextNode(lastChild))
+          {
+            nsCOMPtr<nsIDOMText> text (do_QueryInterface(lastChild));
+            if (text)
+              text->GetLength(&offset);
+          }
+          result = selection->Collapse(lastChild, offset);
           ScrollIntoView(PR_FALSE);
         }
       }
@@ -3833,7 +3904,7 @@ nsEditor::IsPreformatted(nsIDOMNode *aNode, PRBool *aResult)
   
   if (!aResult || !content) return NS_ERROR_NULL_POINTER;
   
-  if (!mPresShell) return NS_ERROR_NULL_POINTER;
+  if (!mPresShell) return NS_ERROR_NOT_INITIALIZED;
   
   result = mPresShell->GetPrimaryFrameFor(content, &frame);
   if (NS_FAILED(result)) return result;
@@ -4135,7 +4206,8 @@ nsAutoSelectionReset::nsAutoSelectionReset(nsIDOMSelection *aSel)
     mSel->GetAnchorOffset(&mStartOffset);
     mSel->GetFocusNode(getter_AddRefs(mEndNode));
     mSel->GetFocusOffset(&mEndOffset);
-    mInitialized = PR_TRUE;
+    if (mStartNode && mEndNode)
+      mInitialized = PR_TRUE;
   }
 }
 

@@ -510,6 +510,11 @@ public:
   /** returns PR_TRUE if aNode is an editable node */
   static PRBool IsEditable(nsIDOMNode *aNode);
 
+  /** Find the deep first and last children */
+  static nsCOMPtr<nsIDOMNode> GetDeepFirstChild(nsCOMPtr<nsIDOMNode> aRoot);
+  static nsCOMPtr<nsIDOMNode> GetDeepLastChild(nsCOMPtr<nsIDOMNode> aRoot);
+
+
   /** from html rules code - migration in progress */
   static nsresult GetTagString(nsIDOMNode *aNode, nsString& outString);
   static nsCOMPtr<nsIAtom> GetTag(nsIDOMNode *aNode);
