@@ -50,7 +50,7 @@ DeviceContextImpl :: DeviceContextImpl()
   mColorSpace = nsnull;
 }
 
-static PRBool DeleteValue(nsHashKey* aKey, void* aValue)
+static PRBool DeleteValue(nsHashKey* aKey, void* aValue, void* closure)
 {
   delete ((nsString*)aValue);
   return PR_TRUE;
@@ -140,7 +140,7 @@ NS_IMETHODIMP DeviceContextImpl :: CreateRenderingContext(nsIView *aView, nsIRen
   static NS_DEFINE_IID(kRCIID, NS_IRENDERING_CONTEXT_IID);
 
   aContext = nsnull;
-  rv = NSRepository::CreateInstance(kRCCID, nsnull, kRCIID, (void **)&pContext);
+  rv = nsRepository::CreateInstance(kRCCID, nsnull, kRCIID, (void **)&pContext);
 
   if (NS_OK == rv) {
     rv = InitRenderingContext(pContext, win);
