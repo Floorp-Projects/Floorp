@@ -384,7 +384,10 @@ nsMsgCopyService::CopyMessages(nsIMsgFolder* srcFolder, /* UI src foler */
     // duplicate the message array so we could sort the messages by it's
     // folder easily
     for (i=0; i<cnt; i++)
-        msgArray->AppendElement(messages->ElementAt(i));
+    {
+        aSupport = getter_AddRefs(messages->ElementAt(i));
+        msgArray->AppendElement(aSupport);
+    }
 
     rv = msgArray->Count(&rv);
     if (NS_FAILED(rv)) goto done;
