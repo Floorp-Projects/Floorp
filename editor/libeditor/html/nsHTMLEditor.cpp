@@ -63,6 +63,8 @@
 #include "nsISupportsArray.h"
 #include "nsVoidArray.h"
 #include "nsFileSpec.h"
+#include "nsIFile.h"
+#include "nsIURL.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsWidgetsCID.h"
@@ -4394,6 +4396,7 @@ NS_IMETHODIMP nsHTMLEditor::PrepareTransferable(nsITransferable **transferable)
     {
       (*transferable)->AddDataFlavor(kJPEGImageMime);
       (*transferable)->AddDataFlavor(kHTMLMime);
+      (*transferable)->AddDataFlavor(kFileMime);
     }
     (*transferable)->AddDataFlavor(kUnicodeMime);
   }
@@ -4440,6 +4443,64 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
         // pasting does not inherit local inline styles
         RemoveAllInlineProperties();
         rv = InsertText(stuffToPaste);
+      }
+    }
+    else if (flavor.EqualsWithConversion(kFileMime))
+    {
+      nsCOMPtr<nsIFile> fileObj ( do_QueryInterface(genericDataObj) );
+      if (fileObj && len > 0)
+      {
+        nsCOMPtr<nsIFileURL> fileURL;
+        rv = nsComponentManager::CreateInstance("component://netscape/network/standard-url", nsnull, 
+                                     NS_GET_IID(nsIURL), getter_AddRefs(fileURL));
+        if (NS_FAILED(rv))
+          return rv;
+        
+        if ( fileURL )
+        {
+          rv = fileURL->SetFile( fileObj );
+          if (NS_FAILED(rv))
+            return rv;
+          
+          PRBool insertAsImage = PR_FALSE;
+          char *fileextension = nsnull;
+          rv = fileURL->GetFileExtension( &fileextension );
+          if ( NS_SUCCEEDED(rv) && fileextension )
+          {
+            if ( (nsCRT::strcasecmp( fileextension, "jpg" ) == 0 )
+              || (nsCRT::strcasecmp( fileextension, "jpeg" ) == 0 )
+              || (nsCRT::strcasecmp( fileextension, "gif" ) == 0 )
+              || (nsCRT::strcasecmp( fileextension, "png" ) == 0 ) )
+            {
+              insertAsImage = PR_TRUE;
+            }
+          }
+          if (fileextension) nsCRT::free(fileextension);
+          
+          char *urltext = nsnull;
+          rv = fileURL->GetSpec( &urltext );
+          if ( NS_SUCCEEDED(rv) && urltext && urltext[0] != 0)
+          {
+            len = strlen(urltext);
+            if ( insertAsImage )
+            {
+              stuffToPaste.AssignWithConversion ( "<IMG src=\"", 10);
+              stuffToPaste.AppendWithConversion ( urltext, len );
+              stuffToPaste.AppendWithConversion ( "\">" );
+            }
+            else /* insert as link */
+            {
+              stuffToPaste.AssignWithConversion ( "<A href=\"" );
+              stuffToPaste.AppendWithConversion ( urltext, len );
+              stuffToPaste.AppendWithConversion ( "\">" );
+              stuffToPaste.AppendWithConversion ( urltext, len );
+              stuffToPaste.AppendWithConversion ( "</A>" );
+            }
+            nsAutoEditBatch beginBatching(this);
+            rv = InsertHTML(stuffToPaste);
+          }
+          if (urltext) nsCRT::free(urltext);
+        }
       }
     }
     else if (flavor.EqualsWithConversion(kJPEGImageMime))
