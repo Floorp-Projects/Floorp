@@ -18,7 +18,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::UtilsVersion = '$Revision: 1.40 $ ';
+$::UtilsVersion = '$Revision: 1.41 $ ';
 
 package TinderUtils;
 
@@ -781,19 +781,27 @@ sub run_all_tests {
     }
 
 	# Startup performance test.  Time how fast it takes the browser
-	# to start up.
+	# to start up.  Some help from John Morrison to get this going.
     if ($Settings::StartupPerformanceTest and $test_result eq 'success') {
 	  # Settle OS.
 	  run_system_cmd("sync; sleep 30", 35);
 
+	  # Generate URL of form file:///<cwd>/startup.html?begin=986869495000
+	  # Where begin value is current time.
+	  my ($time, $url, $cwd, $cmd);
+	  $time = time() . "000"; # looks stupid, but 'time()*1000' returns a negative
+	  $cwd = Cwd::getcwd();
+	  print "cwd = $cwd\n";
+	  $url  = "\"file:$binary_dir/startup.html?begin=$time\"";
+	  print "url = $url\n";
+
+	  # Then load startup.html, which will pull off the begin argument
+	  # and compare it to the current time to compute startup time.
 	  $test_result = AliveTest("StartupPerformanceTest", $build_dir,
 							   $binary, 
-							   "\"http://jrgm.mcom.com/page-loader/loader.pl?delay=1000&nocache=0&maxcycle=0\"",
+							   $url,
 							   $Settings::StartupPerformanceTestTimeout);
     }
-
-
-
 
     return $test_result;
 }
