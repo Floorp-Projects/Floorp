@@ -463,8 +463,8 @@ sub BuildClientDist()
 	    _InstallFromManifest(":mozilla:network:module:MANIFEST",						"$distdirectory:network:module");
 	}
 
-	#WALLET
-
+	#EXTENSIONS
+    _InstallFromManifest(":mozilla:extensions:cookie:public:MANIFEST",				"$distdirectory:cookie:");
     _InstallFromManifest(":mozilla:extensions:wallet:public:MANIFEST",				"$distdirectory:wallet:");
 
 	#WEBSHELL
