@@ -112,7 +112,6 @@ protected:
 
     nscoord               mCaretTwipsWidth;   // caret width in twips. this gets calculated laziiy
     nscoord               mBidiIndicatorTwipsSize;   // width and height of bidi indicator
-    static const kMinBidiIndicatorPixels = 2;
 
     PRPackedBool          mVisible;           // is the caret blinking
     PRPackedBool          mDrawn;             // this should be mutable
