@@ -762,46 +762,6 @@ nsresult nsAbView::GenerateCollationKeysForCard(const PRUnichar *colID, AbCard *
   nsresult rv;
   nsXPIDLString value;
 
-  rv = GetCardValue(abcard->card, colID, getter_Copies(value));
-  NS_ENSURE_SUCCESS(rv,rv);
-  
-  // XXX todo
-  // be smarter about the allocation, use an arena?
-  if (abcard->primaryCollationKey)
-    nsMemory::Free(abcard->primaryCollationKey);
-  rv = CreateCollationKey(value, &(abcard->primaryCollationKey), &(abcard->primaryCollationKeyLen));
-  NS_ENSURE_SUCCESS(rv,rv);
-  
-  // XXX todo
-  // fix me, do this with a const getter, to avoid the strcpy
-
-  // hardcode email to be our secondary key
-  rv = GetCardValue(abcard->card, NS_LITERAL_STRING(kPriEmailColumn).get(), getter_Copies(value));
-  NS_ENSURE_SUCCESS(rv,rv);
-  
-  // XXX todo
-  // be smarter about the allocation, use an arena?
-  if (abcard->secondaryCollationKey)
-    nsMemory::Free(abcard->secondaryCollationKey);
-  rv = CreateCollationKey(value, &(abcard->secondaryCollationKey), &(abcard->secondaryCollationKeyLen));
-  NS_ENSURE_SUCCESS(rv,rv);
-  return rv;
-}
-
-nsresult nsAbView::CreateCollationKey(const PRUnichar *aSource, PRUint8 **aKey, PRUint32 *aKeyLen)
-{
-  NS_ENSURE_ARG_POINTER(aKey);
-  NS_ENSURE_ARG_POINTER(aKeyLen);
-
-  if (!*aSource)
-  {
-    // no string, so no key.
-    *aKey = nsnull;
-    *aKeyLen = 0;
-    return NS_OK;
-  }
-
-  nsresult rv;
   if (!mCollationKeyGenerator)
   {
     nsCOMPtr<nsILocaleService> localeSvc = do_GetService(NS_LOCALESERVICE_CONTRACTID,&rv); 
@@ -818,11 +778,26 @@ nsresult nsAbView::CreateCollationKey(const PRUnichar *aSource, PRUint8 **aKey, 
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // XXX can we avoid this copy?
-  nsAutoString sourceString(aSource);
-  rv = mCollationKeyGenerator->AllocateRawSortKey(kCollationCaseInSensitive, sourceString, aKey, aKeyLen);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to generate a raw sort key, see bug #121868");
-  return NS_OK;
+  rv = GetCardValue(abcard->card, colID, getter_Copies(value));
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  PR_FREEIF(abcard->primaryCollationKey);
+  rv = mCollationKeyGenerator->AllocateRawSortKey(kCollationCaseInSensitive,
+    value, &(abcard->primaryCollationKey), &(abcard->primaryCollationKeyLen));
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  // XXX todo
+  // fix me, do this with a const getter, to avoid the strcpy
+
+  // hardcode email to be our secondary key
+  rv = GetCardValue(abcard->card, NS_LITERAL_STRING(kPriEmailColumn).get(), getter_Copies(value));
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  PR_FREEIF(abcard->secondaryCollationKey);
+  rv = mCollationKeyGenerator->AllocateRawSortKey(kCollationCaseInSensitive,
+    value, &(abcard->secondaryCollationKey), &(abcard->secondaryCollationKeyLen));
+  NS_ENSURE_SUCCESS(rv,rv);
+  return rv;
 }
 
 NS_IMETHODIMP nsAbView::OnItemAdded(nsISupports *parentDir, nsISupports *item)

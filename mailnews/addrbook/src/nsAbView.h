@@ -80,7 +80,6 @@ public:
 private:
   nsCOMPtr<nsITreeBoxObject> mTree;
   nsCOMPtr<nsITreeSelection> mTreeSelection;
-  nsresult CreateCollationKey(const PRUnichar *aSource, PRUint8 **aKey, PRUint32 *aKenLen);
   PRInt32 FindIndexForInsert(AbCard *abcard);
   PRInt32 FindIndexForCard(nsIAbCard *card);
   nsresult GenerateCollationKeysForCard(const PRUnichar *colID, AbCard *abcard);
