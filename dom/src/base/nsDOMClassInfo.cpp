@@ -110,7 +110,6 @@
 #include "nsIDOMNSHTMLFormControlList.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsIHTMLDocument.h"
-#include "nsIImageDocument.h"
 
 // HTMLSelectElement helper includes
 #include "nsIDOMHTMLSelectElement.h"
@@ -310,6 +309,8 @@
 #include "nsIDOMSVGAnimatedRect.h"
 #endif
 
+#include "nsIImageDocument.h"
+
 static NS_DEFINE_CID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
 static NS_DEFINE_CID(kDOMSOF_CID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
@@ -470,9 +471,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   // Misc HTML classes
   NS_DEFINE_CLASSINFO_DATA(HTMLDocument, nsHTMLDocumentSH,
-                           DOCUMENT_SCRIPTABLE_FLAGS |
-                           nsIXPCScriptable::WANT_ENUMERATE)
-  NS_DEFINE_CLASSINFO_DATA(ImageDocument, nsHTMLDocumentSH,
                            DOCUMENT_SCRIPTABLE_FLAGS |
                            nsIXPCScriptable::WANT_ENUMERATE)
   NS_DEFINE_CLASSINFO_DATA(HTMLCollection, nsHTMLCollectionSH,
@@ -810,6 +808,10 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   NS_DEFINE_CLASSINFO_DATA(XMLStylesheetProcessingInstruction, nsNodeSH,
                            NODE_SCRIPTABLE_FLAGS)
+
+  NS_DEFINE_CLASSINFO_DATA(ImageDocument, nsHTMLDocumentSH,
+                           DOCUMENT_SCRIPTABLE_FLAGS |
+                           nsIXPCScriptable::WANT_ENUMERATE)
 };
 
 nsIXPConnect *nsDOMClassInfo::sXPConnect = nsnull;
@@ -1418,21 +1420,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
   DOM_CLASSINFO_MAP_END_WITH_XPATH
-
-  DOM_CLASSINFO_MAP_BEGIN(ImageDocument, nsIImageDocument)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLDocument)
-    DOM_CLASSINFO_MAP_ENTRY(nsIImageDocument)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLDocument)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSDocument)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentStyle)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentView)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentRange)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentTraversal)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentXBL)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
-  DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(HTMLCollection, nsIDOMHTMLCollection)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeList)
@@ -2156,6 +2143,21 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(ContentList, nsIDOMHTMLCollection)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeList)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLCollection)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(ImageDocument, nsIImageDocument)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLDocument)
+    DOM_CLASSINFO_MAP_ENTRY(nsIImageDocument)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLDocument)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSDocument)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentEvent)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentStyle)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentView)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentRange)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentTraversal)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentXBL)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
   DOM_CLASSINFO_MAP_END
 
 #ifdef NS_DEBUG
