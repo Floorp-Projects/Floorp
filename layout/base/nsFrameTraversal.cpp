@@ -84,6 +84,9 @@ public:
   nsLeafIterator(nsIPresContext* aPresContext, nsIFrame *start);
   void SetExtensive(PRBool aExtensive) {mExtensive = aExtensive;}
   PRBool GetExtensive(){return mExtensive;}
+  void SetPreOrder(PRBool aPreOrder) { mPreOrder = aPreOrder; }
+  PRBool GetPreOrder() { return mPreOrder; }
+
 private :
   
   NS_IMETHOD Next();
@@ -91,7 +94,8 @@ private :
   NS_IMETHOD Prev();
 
   nsIPresContext* mPresContext;
-  PRBool mExtensive;
+  PRPackedBool mExtensive;
+  PRPackedBool mPreOrder;
 };
 
 #ifdef IBMBIDI // Simon
@@ -144,8 +148,9 @@ NS_NewFrameTraversal(nsIBidirectionalEnumerator **aEnumerator,
     *aEnumerator = NS_STATIC_CAST(nsIBidirectionalEnumerator*, trav);
     NS_ADDREF(trav);
     trav->SetExtensive(PR_FALSE);
-             }
-    break;
+    trav->SetPreOrder(PR_FALSE);
+  }
+  break;
   case EXTENSIVE:{
     nsLeafIterator *trav = new nsLeafIterator(aPresContext, aStart);
     if (!trav)
@@ -153,8 +158,19 @@ NS_NewFrameTraversal(nsIBidirectionalEnumerator **aEnumerator,
     *aEnumerator = NS_STATIC_CAST(nsIBidirectionalEnumerator*, trav);
     NS_ADDREF(trav);
     trav->SetExtensive(PR_TRUE);
-             }
-    break;
+    trav->SetPreOrder(PR_FALSE);
+  }
+  break;
+  case EXTENSIVE_PREORDER: {
+    nsLeafIterator *trav = new nsLeafIterator(aPresContext, aStart);
+    if (!trav)
+      return NS_ERROR_OUT_OF_MEMORY;
+    *aEnumerator = NS_STATIC_CAST(nsIBidirectionalEnumerator*, trav);
+    NS_ADDREF(trav);
+    trav->SetExtensive(PR_TRUE);
+    trav->SetPreOrder(PR_TRUE);
+  }
+  break;
 #ifdef IBMBIDI
   case VISUAL:{
     nsVisualIterator *trav = new nsVisualIterator(aPresContext, aStart);
@@ -287,12 +303,15 @@ nsLeafIterator::Next()
   nsIFrame *parent = getCurrent();
   if (!parent)
     parent = getLast();
-  if (!mExtensive)
+  if (!mExtensive && !mPreOrder)
   {
      while(NS_SUCCEEDED(parent->FirstChild(mPresContext, nsnull,&result)) && result)
     {
       parent = result;
     }
+  } else if (mPreOrder) {
+    if (NS_SUCCEEDED(parent->FirstChild(mPresContext, nsnull, &result)) && result)
+      parent = result;
   }
   if (parent != getCurrent())
   {
@@ -300,13 +319,15 @@ nsLeafIterator::Next()
   }
   else {
     while(parent && !IsRootFrame(parent)) {
-      if (NS_SUCCEEDED(parent->GetNextSibling(&result)) && result){
-        parent = result;
-        while(NS_SUCCEEDED(parent->FirstChild(mPresContext, nsnull,&result)) && result)
-        {
+      if (NS_SUCCEEDED(parent->GetNextSibling(&result)) && result) {
+        if (!mPreOrder) {
           parent = result;
+          while(NS_SUCCEEDED(parent->FirstChild(mPresContext, nsnull,&result)) && result)
+            {
+              parent = result;
+            }
+          result = parent;
         }
-        result = parent;
         break;
       }
       else
@@ -319,7 +340,7 @@ nsLeafIterator::Next()
         else 
         {
           parent = result;
-          if (mExtensive)
+          if (mExtensive && !mPreOrder)
             break;
         }
       }

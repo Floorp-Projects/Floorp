@@ -26,7 +26,32 @@
 #include "nsIEnumerator.h"
 #include "nsIFrame.h"
 
-enum nsTraversalType{LEAF, EXTENSIVE, FASTEST
+/* Brief explanation of frame traversal types:
+ *
+ * LEAF:
+ *  Iterate over only the leaf frames in the tree, in depth-first order.
+ *
+ * EXTENSIVE:
+ *  Iterate over all frames in the tree, including non-leaf frames.
+ *  Child frames are traversed before their parents going both forward
+ *  and backward.
+ *
+ * EXTENSIVE_PREORDER:
+ *  Like EXTENSIVE, but traverse parent frames before their children
+ *  when going forward.
+ *
+ * FASTEST:
+ *  XXX not implemented
+ *
+ * VISUAL:
+ *  Traverse frames in "visual" order (left-to-right, top-to-bottom).
+ */
+
+enum nsTraversalType{
+  LEAF,
+  EXTENSIVE,
+  EXTENSIVE_PREORDER,
+  FASTEST
 #ifdef IBMBIDI // Simon
    , VISUAL
 #endif
