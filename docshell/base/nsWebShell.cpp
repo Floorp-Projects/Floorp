@@ -241,7 +241,8 @@ public:
 #else
                      nsURLReloadType aType = nsURLReload,
 #endif
-                     const PRUint32 localIP = 0);
+                     const PRUint32 localIP = 0,
+					 nsISupports * aHistoryState = nsnull);
   NS_IMETHOD LoadURL(const PRUnichar *aURLSpec,
                      const char* aCommand,
                      nsIInputStream* aPostDataStream=nsnull,
@@ -251,7 +252,8 @@ public:
 #else
                      nsURLReloadType aType = nsURLReload,
 #endif
-                     const PRUint32 localIP = 0);
+                     const PRUint32 localIP = 0,
+					 nsISupports * aHistoryState=nsnull);
 
   NS_IMETHOD Stop(void);
 
@@ -1990,14 +1992,15 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
 #else
                     nsURLReloadType aType,
 #endif
-                    const PRUint32 aLocalIP)
+                    const PRUint32 aLocalIP,
+					nsISupports * aHistoryState)
 {
   // Initialize margnwidth, marginheight. Put scrolling back the way it was
   // before the last document was loaded.
   InitFrameData(PR_FALSE);
 
   return LoadURL(aURLSpec, "view", aPostDataStream,
-                 aModifyHistory,aType, aLocalIP);
+                 aModifyHistory,aType, aLocalIP, aHistoryState);
 }
 
 // Nisheeth: returns true if the host and the file parts of
@@ -2226,7 +2229,8 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
 #else
                     nsURLReloadType aType,
 #endif
-                    const PRUint32 aLocalIP)
+                    const PRUint32 aLocalIP,
+					nsISupports * aHistoryState)
 {
   nsresult rv;
 
@@ -2342,24 +2346,55 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
   }
 
 
+  /* 
+   * Before the new page is added to the session history,
+   * save the history information of the previous page in
+   * session history
+   */
   
+   nsISupports * historyState=nsnull;
+
+   // Get the history object for the previous page.
+   rv = GetHistoryState(&historyState);
+   nsCOMPtr<nsIWebShell> rootWebShell;
+   rv = GetRootWebShell(*getter_AddRefs(rootWebShell));
+   if (NS_SUCCEEDED(rv) && rootWebShell)
+   {
+        nsCOMPtr<nsISessionHistory> shist;
+	    rv = rootWebShell->GetSessionHistory(*getter_AddRefs(shist));
+		if (NS_SUCCEEDED(rv) && shist) {
+		   PRInt32 indix=0;
+		   shist->getCurrentIndex(indix);
+		   // Save it in session history
+		   shist->SetHistoryObjectForIndex(indix, historyState);
+		}
+   }
+
+
+
   /* If this is one of the frames, get it from the top level shell */
 
   if (aModifyHistory) {
-	  nsCOMPtr<nsIWebShell> webShell;
-	  rv = GetRootWebShell(*getter_AddRefs(webShell));
-	  if (NS_SUCCEEDED(rv) && webShell)
+	  if (rootWebShell)
 	  {
-      nsCOMPtr<nsISessionHistory> shist;
-	    webShell->GetSessionHistory(*getter_AddRefs(shist));
+        nsCOMPtr<nsISessionHistory> shist;
+	    rootWebShell->GetSessionHistory(*getter_AddRefs(shist));
 	      /* Add yourself to the Session History */
 		  if (shist) {
 		    PRInt32  ret=0;
 		    ret = shist->add(this);
 		  }
-		}
+	  }
   }
-   
+
+  /* Set the History state object for the current page in the 
+   * presentation shell. If it is a new page being visited, 
+   * aHistoryState is null. If the load is coming from
+   * session History, it will be set to the cached history object by
+   * session History.
+   */
+  SetHistoryState(aHistoryState);
+
   nsString* url = new nsString(uriSpec);
   if (aModifyHistory) {
     // Discard part of history that is no longer reachable
@@ -2401,6 +2436,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
   return DoLoadURL(uriSpec, aCommand, aPostDataStream, aType, aLocalIP);
 //#endif
 }
+
 
 NS_IMETHODIMP nsWebShell::Stop(void)
 {
@@ -2846,7 +2882,9 @@ nsWebShell::GetHistoryState(nsISupports** aLayoutHistoryState)
   // XXX Need to think about what to do for framesets.
   // For now, return an error if this webshell 
   // contains a frame or a frameset document.
-  if (mParent || mChildren.Count() > 0) {
+  // The main content area will always have a parent. It is 
+  // enough to check the children count to verify frames.
+  if (mChildren.Count() > 0) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
