@@ -33,8 +33,8 @@ var cert;
 function setWindowName()
 {
   myName = self.name;
-  //var windowReference=document.getElementById('certDetails');
-  //windowReference.setAttribute("title","Certificate Detail: \""+myName+"\"");
+  var certname = document.getElementById("certname");
+  certname.setAttribute("value", myName);
 
   //  Get the cert from the cert database
   certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
