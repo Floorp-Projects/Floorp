@@ -2585,7 +2585,7 @@ NS_IMETHODIMP nsWebShellWindow::SetTitle(const PRUnichar* aTitle)
   if (webshellElement )
   {
   	webshellElement->GetAttribute("titlemodifier", windowTitleModifier );
-  	webshellElement->GetAttribute("titleseparator", windowSeparator );
+  	webshellElement->GetAttribute("titlemenuseparator", windowSeparator );
   }
    nsString title( aTitle );
    
