@@ -219,14 +219,14 @@ protected:
   PRBool ParseAzimuth(PRInt32& aErrorCode, nsCSSValue& aValue);
   PRBool ParseBackground(PRInt32& aErrorCode);
   PRBool ParseBackgroundPosition(PRInt32& aErrorCode);
-  PRBool ParseBorder(PRInt32& aErrorCode);
   PRBool ParseBorderColor(PRInt32& aErrorCode);
   PRBool ParseBorderColors(PRInt32& aErrorCode,
                            nsCSSValueList** aResult,
                            nsCSSProperty aProperty);
   PRBool ParseBorderSpacing(PRInt32& aErrorCode);
   PRBool ParseBorderSide(PRInt32& aErrorCode,
-                         const nsCSSProperty aPropIDs[]);
+                         const nsCSSProperty aPropIDs[],
+                         PRBool aSetAllSides);
   PRBool ParseBorderStyle(PRInt32& aErrorCode);
   PRBool ParseBorderWidth(PRInt32& aErrorCode);
   PRBool ParseBorderRadius(PRInt32& aErrorCode);
@@ -3762,7 +3762,7 @@ PRBool CSSParserImpl::ParseProperty(PRInt32& aErrorCode,
   case eCSSProperty_background_position:
     return ParseBackgroundPosition(aErrorCode);
   case eCSSProperty_border:
-    return ParseBorder(aErrorCode);
+    return ParseBorderSide(aErrorCode, kBorderTopIDs, PR_TRUE);
   case eCSSProperty_border_color:
     return ParseBorderColor(aErrorCode);
   case eCSSProperty_border_spacing:
@@ -3770,13 +3770,13 @@ PRBool CSSParserImpl::ParseProperty(PRInt32& aErrorCode,
   case eCSSProperty_border_style:
     return ParseBorderStyle(aErrorCode);
   case eCSSProperty_border_bottom:
-    return ParseBorderSide(aErrorCode, kBorderBottomIDs);
+    return ParseBorderSide(aErrorCode, kBorderBottomIDs, PR_FALSE);
   case eCSSProperty_border_left:
-    return ParseBorderSide(aErrorCode, kBorderLeftIDs);
+    return ParseBorderSide(aErrorCode, kBorderLeftIDs, PR_FALSE);
   case eCSSProperty_border_right:
-    return ParseBorderSide(aErrorCode, kBorderRightIDs);
+    return ParseBorderSide(aErrorCode, kBorderRightIDs, PR_FALSE);
   case eCSSProperty_border_top:
-    return ParseBorderSide(aErrorCode, kBorderTopIDs);
+    return ParseBorderSide(aErrorCode, kBorderTopIDs, PR_FALSE);
   case eCSSProperty_border_bottom_colors:
     return ParseBorderColors(aErrorCode,
                              &mTempData.mMargin.mBorderColors.mBottom,
@@ -4583,44 +4583,6 @@ static const nsCSSProperty kOutlineRadiusIDs[] = {
   eCSSProperty__moz_outline_radius_bottomLeft
 };
 
-PRBool CSSParserImpl::ParseBorder(PRInt32& aErrorCode)
-{
-  const PRInt32 numProps = 3;
-  static const nsCSSProperty kBorderIDs[] = {
-    eCSSProperty_border_top_width,  // only one value per property
-    eCSSProperty_border_top_style,
-    eCSSProperty_border_top_color
-  };
-
-  nsCSSValue  values[numProps];
-
-  PRInt32 found = ParseChoice(aErrorCode, values, kBorderIDs, numProps);
-  if ((found < 1) || (PR_FALSE == ExpectEndProperty(aErrorCode, PR_TRUE))) {
-    return PR_FALSE;
-  }
-
-  if (0 == (found & 1)) { // provide missing border width's
-    values[0].SetIntValue(NS_STYLE_BORDER_WIDTH_MEDIUM, eCSSUnit_Enumerated);
-  }
-  
-  if (0 == (found & 2)) { // provide missing border style's
-    values[1].SetNoneValue();
-  }
-
-  if (0 == (found & 4)) { // text color will be used
-    values[2].SetIntValue(NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR, eCSSUnit_Enumerated);
-  }
-
-  PRInt32 index;
-  for (index = 0; index < 4; index++) {
-    AppendValue(kBorderWidthIDs[index], values[0]);
-    AppendValue(kBorderStyleIDs[index], values[1]);
-    AppendValue(kBorderColorIDs[index], values[2]);
-  }
-
-  return PR_TRUE;
-}
-
 PRBool CSSParserImpl::ParseBorderColor(PRInt32& aErrorCode)
 {
   return ParseBoxProperties(aErrorCode, mTempData.mMargin.mBorderColor,
@@ -4657,7 +4619,8 @@ PRBool CSSParserImpl::ParseBorderSpacing(PRInt32& aErrorCode)
 }
 
 PRBool CSSParserImpl::ParseBorderSide(PRInt32& aErrorCode,
-                                      const nsCSSProperty aPropIDs[])
+                                      const nsCSSProperty aPropIDs[],
+                                      PRBool aSetAllSides)
 {
   const PRInt32 numProps = 3;
   nsCSSValue  values[numProps];
@@ -4673,13 +4636,24 @@ PRBool CSSParserImpl::ParseBorderSide(PRInt32& aErrorCode,
   if ((found & 2) == 0) { // Provide default border-style
     values[1].SetNoneValue();
   }
-  if ((found & 4) == 0) { // reset border-color so color property gets used
-    values[2].Reset();
+  if ((found & 4) == 0) { // text color will be used
+    values[2].SetIntValue(NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR, eCSSUnit_Enumerated);
   }
 
-  PRInt32 index;
-  for (index = 0; index < numProps; index++) {
-    AppendValue(aPropIDs[index], values[index]);
+  if (aSetAllSides) {
+    // Parsing "border" shorthand; set all four sides to the same thing
+    for (PRInt32 index = 0; index < 4; index++) {
+      NS_ASSERTION(numProps == 3, "This code needs updating");
+      AppendValue(kBorderWidthIDs[index], values[0]);
+      AppendValue(kBorderStyleIDs[index], values[1]);
+      AppendValue(kBorderColorIDs[index], values[2]);
+    }   
+  }
+  else {
+    // Just set our one side
+    for (PRInt32 index = 0; index < numProps; index++) {
+      AppendValue(aPropIDs[index], values[index]);
+    }
   }
   return PR_TRUE;
 }
