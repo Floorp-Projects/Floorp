@@ -5495,12 +5495,12 @@ PRBool nsImapProtocol::TryToLogon()
 #endif
 				if (imapPasswordIsNew) 
 				{
-#ifdef UNREADY_CODE
-	                if (fCurrentBiffState == MSG_BIFF_Unknown)
+	                if (m_currentBiffState == nsMsgBiffState_Unknown)
 	                {
-	                	fCurrentBiffState = MSG_BIFF_NoMail;
-	                    SendSetBiffIndicatorEvent(fCurrentBiffState);
+	                	m_currentBiffState = nsMsgBiffState_NoMail;
+	                    SendSetBiffIndicatorEvent(m_currentBiffState);
 	                }
+#ifdef UNREADY_CODE
 	                LIBNET_LOCK();
 	                if (!DeathSignalReceived())
 	                {

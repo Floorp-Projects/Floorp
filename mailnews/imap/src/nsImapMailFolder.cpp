@@ -1278,6 +1278,13 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
     		mDatabase->DeleteMessages(&keysToDelete,NULL);
 			total = keysToDelete.GetSize();
 		}
+		// if this is the INBOX, tell the stand-alone biff about the new high water mark
+		if (mFlags & MSG_FOLDER_FLAG_INBOX)
+		{
+			if (keysToFetch.GetSize() > 0)
+				SetBiffState(nsMsgBiffState_NewMail);
+			SetNumNewMessages(keysToFetch.GetSize());
+		}
 	   	if (keysToFetch.GetSize())
     	{			
             PrepareToAddHeadersToMailDB(aProtocol, keysToFetch, aSpec);
@@ -2726,7 +2733,8 @@ NS_IMETHODIMP
 nsImapMailFolder::SetBiffStateAndUpdate(nsIImapProtocol* aProtocol,
                                         nsMsgBiffState biffState)
 {
-    return NS_ERROR_FAILURE;
+	SetBiffState(biffState);
+    return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -38,6 +38,9 @@
 #include "prmem.h"
 #include "plstr.h"
 #include "nsXPIDLString.h"
+#include "nsIMsgFolder.h"
+
+#include "nsCOMPtr.h"
 
 static NS_DEFINE_CID(kCImapHostSessionList, NS_IIMAPHOSTSESSIONLIST_CID);
 static NS_DEFINE_CID(kImapProtocolCID, NS_IMAPPROTOCOL_CID);
@@ -83,6 +86,8 @@ public:
 		/* attribute string personal namespace; */
 	NS_IMETHOD GetOtherUsersNamespace(char * *aOtherUsersNamespace);
 	NS_IMETHOD SetOtherUsersNamespace(char * aOtherUsersNamespace);
+
+	NS_IMETHOD PerformBiff();
 
 private:
     nsresult CreateImapConnection (nsIEventQueue* aEventQueue,
@@ -459,6 +464,23 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
     PR_CExitMonitor(this);
 	return rv;
 }
+
+NS_IMETHODIMP nsImapIncomingServer::PerformBiff()
+{
+	nsresult rv;
+
+	nsCOMPtr<nsIFolder> rootFolder;
+	rv = GetRootFolder(getter_AddRefs(rootFolder));
+	if(NS_SUCCEEDED(rv))
+	{
+		nsCOMPtr<nsIMsgFolder> rootMsgFolder = do_QueryInterface(rootFolder);
+		if(rootMsgFolder)
+			rv = rootMsgFolder->GetNewMessages();
+	}
+
+	return rv;
+}
+    
 
 nsresult NS_NewImapIncomingServer(const nsIID& iid,
                                   void **result)
