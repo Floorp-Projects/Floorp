@@ -21,6 +21,11 @@
       background-color	  : transparent;
     }
     
+  .button-toolbar-4
+  	{
+  	  margin			  : 0px 0px 1px 0px;	
+  	}  
+  
   .button-toolbar-1:hover, .button-toolbar-1:hover:active, 
   .button-toolbar:hover, .button-toolbar:hover:active, 
   .button-toolbar-2:hover, .button-toolbar-2:hover:active,
@@ -32,7 +37,7 @@
   
   .button-toolbar:hover, .button-toolbar:hover:active
     {
-  	  border			  : 1px solid #DDDDDD;
+  	  border			  : 1px solid transparent;
   	  text-decoration	  : underline;  
     }
   
@@ -51,10 +56,17 @@
       padding-left        : 4px;
     }    
 
-  .button-toolbar > .button-internal-box,
-  .button-toolbar-4 > .button-internal-box
+  .button-toolbar > .button-internal-box
     {
       padding             : 1px 4px 1px 3px;
+      vertical-align      : middle;
+      text-align          : center;
+      border              : 1px solid transparent;
+    }
+
+  .button-toolbar-4 > .button-internal-box
+    {
+      padding			  : 0px 1px;
       vertical-align      : middle;
       text-align          : center;
       border              : 1px solid transparent;
@@ -62,7 +74,7 @@
   
   .button-toolbar:hover:active > .button-internal-box
     {
-      padding             : 1px 5px 1px 4px;
+	  padding			  : 1px 5px 1px 4px;
       color               : #FF0000;
     }
   
@@ -81,6 +93,7 @@
     {
       border              : 1px solid transparent;
       color               : #777777;
+      background-color	  : transparent
     }
     
 /* internal frame */
@@ -114,11 +127,11 @@
     
   .button-toolbar-4:hover:active > .button-internal-box
     {
-      padding             : 1px 3px 0px 4px;
       border-left         : 1px solid #9D9D9D !important;
       border-top          : 1px solid #9D9D9D !important;
       border-right        : 1px solid #FFFFFF !important;
       border-bottom       : 1px solid #FFFFFF !important;
+      padding			  : 0px 0px 0px 2px;
     }
 
   .button-toolbar-1 > .button-internal-box > .button-text-container,
@@ -144,7 +157,8 @@
     {
       padding             : 2px 8px 2px 7px !important;
       border              : 1px solid transparent !important;
-      color	              : #777777;
+      color				  : #777777;
+      background-color	  : transparent;
     }
       
 

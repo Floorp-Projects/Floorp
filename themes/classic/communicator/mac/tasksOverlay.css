@@ -52,14 +52,14 @@
          list-style-image      : url("chrome://global/skin/taskbar-composer-hover.gif");
   }
 
-#taskbar 
+#taskbar
   {
-	  margin-top            : 2px;
+      background-image	  : url("chrome://communicator/skin/toolbar-bg-mac.gif")
   }
 
 .taskbutton 
   {
-	  margin-right          : 1em !important;
+	  margin-right          : 3px !important;
   }
 
 .taskbarspacer 

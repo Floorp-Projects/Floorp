@@ -52,6 +52,7 @@ EXPORT_RESOURCE = \
 		$(srcdir)/broken.gif \
 		$(srcdir)/tasksOverlay.css \
 		$(srcdir)/dialogOverlay.css \
+		$(srcdir)/prefpanels.css \
 		$(NULL)
 
 DIRS = search xpinstall sidebar bookmarks directory profile regviewer related wallet 

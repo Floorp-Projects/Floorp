@@ -5,6 +5,8 @@ splitter
     cursor                : e-resize;
     background-color      : #DDDDDD;
     vertical-align		  : middle;
+    border-right		  : 2px ridge #000000;
+    background-image      : url("chrome://communicator/skin/toolbar-bg-mac.gif");
   }
 
 grippy, grippy[collapse="before"]
@@ -63,6 +65,8 @@ splitter:hover:active
   box[align="vertical"] > splitter
     {
       cursor              : n-resize;
+      border-right		  : 0px;
+      border-top		  : 2px ridge #000000;
     }
 
   window[orient="vertical"] > splitter > grippy,

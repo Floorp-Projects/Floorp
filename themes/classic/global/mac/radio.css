@@ -63,9 +63,9 @@
   radio[value] > .internal-box > html,
   radio.iconic > .internal-box > .icon 
     {
-      /* Good for 8pt font */
-      margin:  0px 0px 0px 2px;  /* 7pt: 0px 0px 0px 3px */
-      padding:  2px;              /* 7pt:  1px 2px 2px 2px */
+      /* Good for 10px font */
+      margin:  0px 0px 0px 2px;  /* 9px: 0px 0px 0px 3px */
+      padding:  2px;              /* 9px:  1px 2px 2px 2px */
     }
 
   radio.iconic > .internal-box > html 

@@ -9,6 +9,11 @@ menu, menuitem
 	  vertical-align        : middle;
   }
 
+menuitem 
+  {
+	padding	: 0px !important; 
+  }
+
 menu[disabled="true"], menuitem[disabled="true"],
 menu[menuactive="true"][disabled="true"],
 menuitem[menuactive="true"][disabled="true"]

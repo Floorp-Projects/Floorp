@@ -54,7 +54,7 @@
     { 
       background-color    : #DDDDDD;
       padding             : 0px;
-      font				  : 8pt geneva;
+      font				  : 10px geneva;
     }
   
   window[wait-cursor] 
@@ -77,7 +77,7 @@
       border-top-width    : 10px;
       padding             : 2px;
       margin              : 2px;
-      color               : white;
+      color               : #000000;
     }
   
   :-moz-vertical-box-debug 
@@ -86,7 +86,7 @@
       border-left-width   : 10px;
       padding             : 2px;
       margin              : 2px;
-      color               : white;
+      color               : #000000;
     }
 
 /**
@@ -121,9 +121,10 @@
       background-color    : #DDDDDD;
       overflow            : hidden;
       min-width           : 1px;
-      border-left         : 1px solid #9D9D9D;
       border-right        : 1px solid #FFFFFF;
       border-bottom       : 1px solid #FFFFFF;
+      border-top		  : 2px groove #000000;
+      background-image	  : url("chrome://communicator/skin/toolbar-bg-mac.gif")
     }
   
   statusbarpanel
@@ -173,18 +174,18 @@
     {
       min-width           : 100px;
       margin              : 0px 4px 0px 4px;
-      border-left         : 1px solid #9D9D9D;
-      border-top          : 1px solid #9D9D9D;
-      border-right        : 1px solid #FFFFFF;
-      border-bottom       : 1px solid #FFFFFF;
+      border-top          : 1px solid #AAAAAA;
+      border-left		  : 1px solid #AAAAAA;
+      border-right		  : 1px solid #FFFFFF;
+      border-bottom		  : 1px solid #FFFFFF;
     }
 
   progressmeter > .progressmeter-internal-box 
     {
       border              : 1px solid #000000;
+      max-height		  : 12px;
     }
     
-
   .progressmeter-statusbar 
     {
       border-left         : 1px solid #FFFFFF;
@@ -202,12 +203,27 @@
 /* progress indicators */
   .progress-bar 
     {
-	    background-color    : #9D9D9D;
+      background-color	  : #9999FF;
+	  background-image    : url(chrome://global/skin/progressmeter-bar.gif);
+	  border-left		  : 1px solid #6666CC;
+	  border-right		  : 1px solid #000000;
     }
   
+  .progressmeter-progressbar[value="0"] > .progress-bar,
+  .progressmeter-progressbar[value="100"] > .progress-bar
+    {
+      display			  : none;
+    } 
+  
+  .progressmeter-progressbar
+    {
+  	  max-height		  : 10px;  
+    }
+    
+/* No progress text in mac status bars */
   .progress-text 
     {
-      visibility          : collapse;
+      display				: none;
     }
 
 /** XUL <scrollbar> element **/

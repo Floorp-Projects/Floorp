@@ -8,10 +8,10 @@ scrollbar {
 }
 
 scrollbar[align="vertical"] {
-    border-right: none;
+    border-right: 1px solid #000000;
     border-top: none;
     border-bottom: none;
-    border-left: 1px solid black;
+    border-left: 1px solid #000000;
 }
 
 slider {
@@ -92,7 +92,7 @@ scrollbarbutton {
   cursor: default;
 }
 
-scrollbarbutton:active {
+scrollbarbutton:hover:active {
   user-focus: ignore;
   user-select: none;
 }
@@ -104,13 +104,14 @@ scrollbarbutton[type="decrement"] {
    border-right: 1px solid black;
 }
 
-scrollbarbutton[type="decrement"]:active {
+scrollbarbutton[type="decrement"]:hover:active {
    user-focus: ignore;
    user-select: none;
    list-style-image: url("chrome://global/skin/scroll-left-active.gif");
 }
 
-scrollbarbutton[type="decrement"][disabled="true"] {
+scrollbarbutton[type="decrement"][disabled="true"],
+scrollbarbutton[type="decrement"][disabled="true"]:hover:active {
    user-focus: ignore;
    user-select: none;
    list-style-image: url("chrome://global/skin/scroll-left-disabled.gif");
@@ -124,19 +125,18 @@ scrollbarbutton[type="increment"] {
    border-right: 1px solid black;
 }
 
-scrollbarbutton[type="increment"]:active {
+scrollbarbutton[type="increment"]:hover:active {
    user-focus: ignore;
    user-select: none;
    list-style-image: url("chrome://global/skin/scroll-right-active.gif");
 }
 
-scrollbarbutton[type="increment"][disabled="true"] {
+scrollbarbutton[type="increment"][disabled="true"],
+scrollbarbutton[type="increment"][disabled="true"]:hover:active {
    user-focus: ignore;
    user-select: none;
    list-style-image: url("chrome://global/skin/scroll-right-disabled.gif") 
 }
-
-/* Optimization here??  Make Direct Child? */
 
 scrollbar[align="vertical"] > scrollbarbutton {
     border-left: none;
@@ -150,14 +150,15 @@ scrollbar[align="vertical"] > scrollbarbutton[type="decrement"] {
    border-bottom: 1px solid black;
 }
 
-scrollbar[align="vertical"] > scrollbarbutton[type="decrement"]:active {
+scrollbar[align="vertical"] > scrollbarbutton[type="decrement"]:hover:active {
    user-focus: ignore;
    user-select: none;
    list-style-image: url("chrome://global/skin/scroll-up-active.gif");
 }
 
 
-scrollbar[align="vertical"] > scrollbarbutton[type="decrement"][disabled="true"] {
+scrollbar[align="vertical"] > scrollbarbutton[type="decrement"][disabled="true"],
+scrollbar[align="vertical"] > scrollbarbutton[type="decrement"][disabled="true"]:hover:active {
    user-focus: ignore;
    user-select: none;
    list-style-image: url("chrome://global/skin/scroll-up-disabled.gif");
@@ -171,13 +172,14 @@ scrollbar[align="vertical"] > scrollbarbutton[type="increment"] {
    border-bottom: 1px solid black;
 }
 
-scrollbar[align="vertical"] > scrollbarbutton[type="increment"]:active {
+scrollbar[align="vertical"] > scrollbarbutton[type="increment"]:hover:active {
    user-focus: ignore;
    user-select: none;
    list-style-image: url("chrome://global/skin/scroll-down-active.gif");
 }
 
-scrollbar[align="vertical"] > scrollbarbutton[type="increment"][disabled="true"] {
+scrollbar[align="vertical"] > scrollbarbutton[type="increment"][disabled="true"],
+scrollbar[align="vertical"] > scrollbarbutton[type="increment"][disabled="true"]:hover:active {
    user-focus: ignore;
    user-select: none;
    list-style-image: url("chrome://global/skin/scroll-down-disabled.gif");

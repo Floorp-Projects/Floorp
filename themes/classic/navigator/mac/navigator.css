@@ -5,18 +5,6 @@
 @import url(chrome://communicator/skin/bookmarks/bookmarks.css);
 @import url(chrome://communicator/skin/sidebar/sidebar.css);
 
-#content
-  {
-    border-left           : 1px solid #000000;
-    border-bottom         : 1px solid #000000;
-  }
-
-#browser
-  {
-    border-left           : 1px solid #9D9D9D;
-  }  
-  
-
 #ubhist 
   {
     margin                : 0px;
@@ -223,7 +211,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
   
 .menuitem-iconic
   {
-    padding               : 2px;
+    padding               : 0px !important;
   }
 
 #statusbar-icon

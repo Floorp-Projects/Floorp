@@ -15,6 +15,11 @@ menu, menuitem
 	vertical-align        : middle;
   }
 
+menuitem 
+  {
+	padding	: 0px !important; 
+  }
+
 menu[disabled="true"], menuitem[disabled="true"],
 menu[menuactive="true"][disabled="true"],
 menuitem[menuactive="true"][disabled="true"]
@@ -36,7 +41,7 @@ menupopup, popup
 menupopup > menu, popup > menu,
 menupopup > menuitem, popup > menuitem
   {
-  	font				  : 9pt charcoal;
+    font				  : 12px charcoal;
     max-width             : 250px;
     min-width             : 0px;
     padding 			  : 0px;
@@ -94,7 +99,7 @@ popup > menuitem[menuactive="true"]
  **/
 .menu-right 
   {
-    margin                : 0px 3px 0px 6px;
+    margin                : -1px 3px 1px 6px;
     width                 : 8px;
     text-align            : center;
     list-style-image      : url("chrome://global/skin/menu-arrow.gif");
@@ -103,11 +108,24 @@ popup > menuitem[menuactive="true"]
 .menu-iconic-left 
   {
     color                 : inherit;
-    margin                : 0px 9px 0px 1px;
+    margin                : 0px 5px 0px 1px;
     width                 : 11px;
     text-align            : center;
     list-style-image      : inherit;
+    padding-left          : 16px;
   }
+
+/**This is a workaround for bug 46231 and should be removed when that bug is fixed*/
+menuitem[type="checkbox"] > .menu-iconic-left, menuitem[type="radio"] > .menu-iconic-left 
+  {
+    color                 : inherit;
+    margin                : 0px 10px 0px 0px;
+    width                 : 11px;
+    text-align            : center;
+    list-style-image      : inherit;
+    padding-left		  : 2px;
+  }
+/**end of workaround*/
 
 .menubar-left 
   {
@@ -189,10 +207,10 @@ menuitem[checked="true"][menuactive="true"]
  **/
 .tooltip
   {
-    background-color      : #CCCCFF;
+    background-color      : #FFFFCC;
     border                : none;
     color                 : #000000;
-    font                  : 7pt geneva;
+    font                  : 9px geneva;
     padding               : 0px 5px 3px 4px;
     margin				  : 0px;
   }
@@ -215,7 +233,7 @@ menuitem[checked="true"][menuactive="true"]
 }
 
 autorepeatbutton {
-  text-align: center;
+  text-align: left;
   vertical-align: middle;
 }
 
@@ -223,8 +241,16 @@ autorepeatbutton:hover {
   background-color      : #333399;
 }
 
+autorepeatbutton > .autorepeatbutton-up {
+    padding: 2px 0px 4px 17px;
+}
+
 autorepeatbutton:hover > .autorepeatbutton-up {
     list-style-image: url("chrome://global/skin/arrow-med-up-hover.gif")
+}
+
+autorepeatbutton > .autorepeatbutton-down {
+    padding: 4px 0px 2px 17px;
 }
 
 autorepeatbutton:hover > .autorepeatbutton-down {

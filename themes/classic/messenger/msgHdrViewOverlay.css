@@ -71,13 +71,13 @@ text.emailDisplayButton {
   max-height: 15px;
 }
 
-button.showMoreAddressesButton {
-  list-style-image:url("chrome://messenger/skin/more.gif");
+image.showMoreAddressesButton {
+  list-style-image: url("chrome://messenger/skin/more.gif");
   display: inline;
 }
 
-button.showFewerAddressesButton {
-  list-style-image:url("chrome://messenger/skin/less.gif");
+image.showFewerAddressesButton {
+  list-style-image: url("chrome://messenger/skin/less.gif");
   display: inline;
 }
 

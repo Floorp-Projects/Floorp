@@ -69,12 +69,12 @@ treeitem[container="true"][open="true"] > treerow > .treecell-bookmark {
 
 treeitem[type="http://home.netscape.com/NC-rdf#Folder"][id="NC:PersonalToolbarFolder"] > treerow > .treecell-bookmark
 {
- list-style-image: url("chrome://communicator/skin/bookmarks/personal-folder-closed.gif");
+ list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-folder-closed.gif");
 }
 
 treeitem[type="http://home.netscape.com/NC-rdf#Folder"][id="NC:PersonalToolbarFolder"][open="true"] > > treerow > .treecell-bookmark
 {
- list-style-image: url("chrome://communicator/skin/bookmarks/personal-folder-open.gif");
+ list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-folder-open.gif");
 }
 
 treeitem[type="http://home.netscape.com/NC-rdf#BookmarkSeparator"] > treerow > .treecell-bookmark

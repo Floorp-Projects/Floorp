@@ -5,6 +5,11 @@
 
 /** plain (raw) buttons, class="plain" **/
 
+  button.plain
+    {
+      behavior			  : url(chrome://global/content/xulBindings.xml#buttonleft);
+    }
+
   button.plain, button.plain:hover, button.plain:hover:active,
   button:hover:active > .button-internal-box,
   button.plain > .button-internal-box, 
@@ -16,7 +21,7 @@
   button-plain > .button-internal-box > .button-icon, 
   button.plain > .button-internal-box > .button.icon:hover:active
     {
-      border              : 0px !important;
+      border              : 0px;
       margin              : 0px;
       padding             : 0px;
       color				  : #000000;
@@ -35,13 +40,13 @@ button, .exit-dialog {
 }
 
 button {
-	font				: 8pt geneva;
+	font				: 10px geneva;
 	padding				: 0px;
     margin              : 4px 5px 5px 5px;
 }
 
 .exit-dialog {
-	font				: 9pt charcoal ! important;
+	font				: 12px charcoal ! important;
 	margin				: 4px 5px 5px 5px;  /* So that non-default "Cancel" buttons line up with default ones */
 }
 

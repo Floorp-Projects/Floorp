@@ -46,6 +46,17 @@
     background-color      : #666666;
   }
 
+.classic-simplebutton:hover:active
+  {
+    border-left           : 1px solid #444444 !important;
+    border-top            : 1px solid #444444 !important;
+    border-right          : 1px solid #AAAAAA !important;
+    border-bottom         : 1px solid #AAAAAA !important;
+    padding               : 3px 7px 1px 8px;
+    color				  : #FFFFFF;
+    background-color	  : #666666 !important;
+  } 
+
 .classic-simplebutton,
 .classic-simplebutton[disabled="true"],
 .classic-simplebutton[disabled="true"]:hover,
@@ -60,7 +71,8 @@
     min-width             : 0px;
     padding               : 2px 8px 2px 7px;
     text-align            : center;
-    color                 : #777777;
+    color				  : #777777;
+    background-color	  : transparent !important;
   }
 
 .classic-simplebutton
@@ -78,18 +90,7 @@
     border-right          : 1px solid #9D9D9D !important;
     border-bottom         : 1px solid #9D9D9D !important;
   }  
-  
-.classic-simplebutton:hover:active
-  {
-    border-left           : 1px solid #444444 !important;
-    border-top            : 1px solid #444444 !important;
-    border-right          : 1px solid #AAAAAA !important;
-    border-bottom         : 1px solid #AAAAAA !important;
-    padding               : 3px 7px 1px 8px;
-    color				          : #FFFFFF;
-    background-color	    : #666666 !important;
-  }  
-  
+    
 .classic-dropmarker
   {
     list-style-image      : url("chrome://global/skin/dropmarker-down-on.gif");
