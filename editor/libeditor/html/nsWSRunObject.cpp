@@ -1595,6 +1595,8 @@ nsWSRunObject::DeleteChars(nsIDOMNode *aStartNode, PRInt32 aStartOffset,
         res = mHTMLEditor->DeleteNode(node);
         NS_ENSURE_SUCCESS(res, res);
         mNodeArray.RemoveObject(node);
+        --count;
+        --idx;
       }
     }
     idx++;
