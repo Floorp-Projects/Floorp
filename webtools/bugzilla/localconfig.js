@@ -9,7 +9,7 @@ var bugzilla = "";
 //var bugzilla = "http://bugzilla.mozilla.org/";
 
 // Status and Resolution
-// =====================
+// ---------------------
 
 var statuses_open     = new Array("UNCONFIRMED","NEW","ASSIGNED","REOPENED");
 var statuses_resolved = new Array("RESOLVED","VERIFIED","CLOSED");
@@ -17,7 +17,7 @@ var resolutions       = new Array("FIXED","INVALID","WONTFIX","LATER",
                                   "REMIND","DUPLICATE","WORKSFORME","MOVED");
 
 // Keywords
-// ========
+// --------
 //
 // Enumerate all your keywords here. This is necessary to avoid 
 // "foo is not a legal keyword" errors. This makes it possible
@@ -28,7 +28,7 @@ var keywords = new Array(
 );
 
 // Platforms
-// =========
+// ---------
 //
 // A list of words <w> (substrings of platform values) 
 // that will automatically be translated to "platform:<w>" 
@@ -44,7 +44,7 @@ var platforms = new Array(
 );
 
 // Severities
-// ==========
+// ----------
 //
 // A list of words <w> (substrings of severity values)
 // that will automatically be translated to "severity:<w>"
@@ -54,7 +54,7 @@ var platforms = new Array(
 var severities = new Array("blo","cri","maj","nor","min","tri","enh");
 
 // Products and Components
-// =======================
+// -----------------------
 //
 // It is not necessary to list all products and components here.
 // Instead, you can define a "blacklist" for some commonly used 
