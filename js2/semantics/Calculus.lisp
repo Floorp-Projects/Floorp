@@ -3939,7 +3939,7 @@
 
 
 ; (// . <styled-text>)
-; Used to insert comment statements.
+; A one-paragraph comment using the given <styled-text>.
 (defun scan-// (world type-env rest-statements last special-form &rest text)
   (unless text
     (error "// should have non-empty text"))
@@ -3947,6 +3947,38 @@
     (values rest-codes
             rest-live
             (cons (cons special-form text) rest-annotated-stmts))))
+
+
+; (/* . <styled-text>)
+; A one-paragraph comment using the given <styled-text>.  The subsequent statements are hidden until the next (*/) statement.
+; These comments cannot nest.
+(defun scan-/* (world type-env rest-statements last special-form &rest text)
+  (unless text
+    (error "/* should have non-empty text"))
+  (multiple-value-bind (rest-codes rest-live rest-annotated-stmts) (scan-statements world type-env rest-statements last)
+    (let ((end-special-form (assert-non-null (world-find-symbol world '*/))))
+      (loop
+        (when (endp rest-annotated-stmts)
+          (error "Missing */"))
+        (let* ((annotated-stmt (pop rest-annotated-stmts))
+               (stmt-keyword (first annotated-stmt)))
+          (cond
+           ((eq stmt-keyword special-form)
+            (error "/* comments can't nest"))
+           ((eq stmt-keyword end-special-form)
+            (return))))))
+    (values rest-codes
+            rest-live
+            (cons (cons special-form text) rest-annotated-stmts))))
+
+
+; (*/)
+; Terminates a /* comment.
+(defun scan-*/ (world type-env rest-statements last special-form)
+  (multiple-value-bind (rest-codes rest-live rest-annotated-stmts) (scan-statements world type-env rest-statements last)
+    (values rest-codes
+            rest-live
+            (cons (list special-form) rest-annotated-stmts))))
 
 
 ; (assert <condition-expr> . <styled-text>)
@@ -4586,6 +4618,8 @@
     
     (:statement
      (// scan-// depict-//)
+     (/* scan-/* depict-//)
+     (*/ scan-*/ depict-*/)
      (assert scan-assert depict-assert)
      (exec scan-exec depict-exec)
      (const scan-const depict-var)

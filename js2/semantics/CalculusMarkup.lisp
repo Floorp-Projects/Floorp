@@ -965,10 +965,18 @@
 
 
 ; (// . <styled-text>)
+; (/* . <styled-text>)
 (defun depict-// (markup-stream world semicolon last-paragraph-style &rest text)
   (declare (ignore world semicolon))
   (depict-division-style (markup-stream :wrap)
     (depict-text-paragraph markup-stream last-paragraph-style text)))
+
+
+; (*/)
+; These should have been filtered out by scan-/*, so any that remain are errors.
+(defun depict-*/ (markup-stream world semicolon last-paragraph-style)
+  (declare (ignore markup-stream world semicolon last-paragraph-style))
+  (error "Unmatched */"))
 
 
 (defvar *assertion-depictor*)
