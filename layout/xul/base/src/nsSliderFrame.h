@@ -16,13 +16,13 @@
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
+ * 
+ * AUTHOR: Eric Vaughan
  *
  * Contributor(s): 
+ * Tomi Leppikangas 
+ * Davor Cubranic
  */
-
-//
-// nsSliderFrame
-//
 
 #ifndef nsSliderFrame_h__
 #define nsSliderFrame_h__
@@ -224,6 +224,7 @@ private:
   nscoord mThumbStart;
 
   PRInt32 mCurPos;
+  PRBool mMiddlePref;
 
   nsIScrollbarListener* mScrollbarListener;
 

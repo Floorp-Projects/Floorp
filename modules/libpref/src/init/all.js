@@ -511,6 +511,8 @@ pref("mousewheel.withaltkey.action",2);
 pref("mousewheel.withaltkey.numlines",1);
 pref("mousewheel.withaltkey.sysnumlines",false);
 
+pref("middlemouse.scrollbarPosition", false);
+
 pref("profile.confirm_automigration",true);
 
 // Customizable toolbar stuff
