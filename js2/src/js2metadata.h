@@ -231,6 +231,7 @@ public:
     const String *name;
 
     virtual void markChildren();
+    virtual ~Multiname()            { }
 };
 
 
@@ -440,6 +441,7 @@ public:
     Frame *pluralFrame;                         // for a singular frame, this the plural frame from which it will be instantiated
 
     virtual void markChildren();
+    virtual ~Frame()            { }
 
 };
 
@@ -475,6 +477,7 @@ public:
 
     virtual void instantiate(Environment * /* env */)  { }      // nothing to do
     virtual void markChildren();
+    virtual ~JS2Class()            { }
 
 };
 
@@ -485,6 +488,7 @@ public:
     Namespace *internalNamespace;               // This global object's internal namespace
     DynamicPropertyMap dynamicProperties;       // A set of this global object's dynamic properties
     virtual void markChildren();
+    virtual ~GlobalObject()            { }
 };
 
 
@@ -528,6 +532,7 @@ public:
     const String  *typeofString;  // A string to return if typeof is invoked on this instance
     Slot        *slots;         // A set of slots that hold this instance's fixed property values
     virtual void markChildren();
+    virtual ~FixedInstance()            { }
 };
 
 // Instances of dynamic classes are represented as DYNAMICINSTANCE records. These instances can contain fixed and dynamic properties.
@@ -546,6 +551,7 @@ public:
     virtual void markChildren();
 
     virtual void writeProperty(JS2Metadata *meta, const String *name, js2val newValue);
+    virtual ~DynamicInstance()            { }
 };
 
 // Prototype instances are represented as PROTOTYPE records. Prototype instances
@@ -562,6 +568,7 @@ public:
     JS2Class    *type;          // XXX used to determine [[class]] value 
     DynamicPropertyMap dynamicProperties; // A set of this instance's dynamic properties
     virtual void markChildren();
+    virtual ~PrototypeInstance()            { }
 };
 
 // Date instances are fixed (not dynamic? XXX) instances created by the Date class, they have an extra field 
@@ -582,13 +589,14 @@ public:
     String     *mValue;             // has been allocated by engine in the GC'able Pond
 
     virtual void markChildren()     { if (mValue) JS2Object::mark(mValue); }
+    virtual ~StringInstance()            { }
 };
 
 // Number instances are fixed (not dynamic? XXX) instances created by the Number class, they have an extra field 
 // that contains the float64 data
 class NumberInstance : public FixedInstance {
 public:
-    NumberInstance(JS2Class *type) : FixedInstance(type), mValue(NULL) { }
+    NumberInstance(JS2Class *type) : FixedInstance(type), mValue(0.0) { }
 
     float64     mValue;
 };
@@ -601,6 +609,7 @@ public:
     ArrayInstance(JS2Class *type) : DynamicInstance(type) { }
 
     virtual void writeProperty(JS2Metadata *meta, const String *name, js2val newValue);
+    virtual ~ArrayInstance()            { }
 };
 
 // RegExp instances are dynamic instances created by the RegExp class, they have an extra field 
@@ -622,6 +631,7 @@ public:
     js2val getSource(JS2Metadata *meta);
 
     REState     *mRegExp;
+    virtual ~RegExpInstance()            { }
 };
 
 // A helper class for 'for..in' statements
@@ -638,6 +648,7 @@ public:
     JS2Object *originalObj;
 
     virtual void markChildren()     { GCMARKOBJECT(obj); GCMARKOBJECT(originalObj); }
+    virtual ~ForIteratorObject()            { }
 
 private:
 
@@ -781,6 +792,7 @@ public:
 class SystemFrame : public Frame {
 public:
     SystemFrame() : Frame(SystemKind) { }
+    virtual ~SystemFrame()            { }
 };
 
 // Frames holding bindings for invoked functions
@@ -802,6 +814,7 @@ public:
     virtual void instantiate(Environment *env);
     void assignArguments(js2val *argBase, uint32 argCount);
     virtual void markChildren();
+    virtual ~ParameterFrame()           { }
 };
 
 class BlockFrame : public Frame {
@@ -812,6 +825,7 @@ public:
     Plurality plurality;
 
     virtual void instantiate(Environment *env);
+    virtual ~BlockFrame()           { }
 };
 
 
