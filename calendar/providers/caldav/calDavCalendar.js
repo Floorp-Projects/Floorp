@@ -682,7 +682,7 @@ WebDavResource.prototype = {
     mResourceURL: {},
     get resourceURL() { 
         return this.mResourceURL;}  ,
-    QueryInterface: function(outer, iid) {
+    QueryInterface: function(iid) {
         if (iid.equals(CI.nsIWebDAVResource) ||
             iid.equals(CI.nsISupports)) {
             return this;
