@@ -87,8 +87,8 @@
               value="&useHtml.label;"/>
 
     <box orient="horizontal">
-      <spring flex="100%"/>
+      <spring flex="1"/>
       <button onclick="onAdvanced();" value="&advancedButton.label;"/>
-      <text hidden="true" wsm_persist="true" type="hidden" id="identity.smtpServerKey"/>
+      <text hidden="true" wsm_persist="true" id="identity.smtpServerKey"/>
     </box>
 </window>

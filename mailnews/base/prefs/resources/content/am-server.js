@@ -34,7 +34,7 @@ function onPreInit(account, accountValues)
 
 
 function initServerType() {
-  var serverType = document.getElementById("server.type").value;
+  var serverType = document.getElementById("server.type").getAttribute("value");
   
   var verboseName;
 
@@ -42,8 +42,8 @@ function initServerType() {
 
   verboseName = stringBundle.GetStringFromName(propertyName);
 
-  var hostname = document.getElementById("server.hostName").value;
-  var username = document.getElementById("server.username").value;
+  var hostname = document.getElementById("server.hostName").getAttribute("value");
+  var username = document.getElementById("server.username").getAttribute("value");
 
   setDivText("servertype.verbose", verboseName);
   setDivText("servername.verbose", hostname);
@@ -112,39 +112,32 @@ function openImapAdvanced()
 function getImapServer() {
     var imapServer = new Array;
 
-    // boolean prefs, need to do special convertion    
-    imapServer.dualUseFolders =
-        (document.getElementById("imap.dualUseFolders").value == "true" ?
-         true : false);
-    imapServer.usingSubscription =
-        (document.getElementById("imap.usingSubscription").value == "true" ? true : false);
+    imapServer.dualUseFolders = document.getElementById("imap.dualUseFolders").checked
+
+    imapServer.usingSubscription = document.getElementById("imap.usingSubscription").checked;
 
     // string prefs
-    imapServer.personalNamespace = document.getElementById("imap.personalNamespace").value;
-    imapServer.publicNamespace = document.getElementById("imap.publicNamespace").value;
-    imapServer.serverDirectory = document.getElementById("imap.serverDirectory").value;
-    imapServer.otherUsersNamespace = document.getElementById("imap.otherUsersNamespace").value;
+    imapServer.personalNamespace = document.getElementById("imap.personalNamespace").getAttribute("value");
+    imapServer.publicNamespace = document.getElementById("imap.publicNamespace").getAttribute("value");
+    imapServer.serverDirectory = document.getElementById("imap.serverDirectory").getAttribute("value");
+    imapServer.otherUsersNamespace = document.getElementById("imap.otherUsersNamespace").getAttribute("value");
 
-    // boolean prefs, need to do special convertion    
-    imapServer.overrideNamespaces =
-        (document.getElementById("imap.overrideNamespaces").value == "true" ? true : false);
+    imapServer.overrideNamespaces = document.getElementById("imap.overrideNamespaces").checked;
     return imapServer;
 }
 
 function saveServerLocally(imapServer)
 {
-    // boolean prefs, JS does the conversion for us
-    document.getElementById("imap.dualUseFolders").value = imapServer.dualUseFolders.toString();
-    document.getElementById("imap.usingSubscription").value = imapServer.usingSubscription.toString();
+    document.getElementById("imap.dualUseFolders").checked = imapServer.dualUseFolders;
+    document.getElementById("imap.usingSubscription").checked = imapServer.usingSubscription;
 
     // string prefs
-    document.getElementById("imap.personalNamespace").value = imapServer.personalNamespace;
-    document.getElementById("imap.publicNamespace").value = imapServer.publicNamespace;
-    document.getElementById("imap.serverDirectory").value = imapServer.serverDirectory;
-    document.getElementById("imap.otherUsersNamespace").value = imapServer.otherUsersNamespace;
+    document.getElementById("imap.personalNamespace").setAttribute("value", imapServer.personalNamespace);
+    document.getElementById("imap.publicNamespace").setAttribute("value", imapServer.publicNamespace);
+    document.getElementById("imap.serverDirectory").setAttribute("value", imapServer.serverDirectory);
+    document.getElementById("imap.otherUsersNamespace").setAttribute("value", imapServer.otherUsersNamespace);
 
-    // boolean prefs, JS does the conversion for us
-    document.getElementById("imap.overrideNamespaces").value = imapServer.overrideNamespaces.toString();
+    document.getElementById("imap.overrideNamespaces").checked = imapServer.overrideNamespaces;
 
 }
 

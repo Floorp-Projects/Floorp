@@ -552,6 +552,17 @@ function getFormElementValue(formElement) {
       return null;
     }
   }
+
+  else if (type == "text") {
+    var val = formElement.getAttribute("value");
+    dump("getting text element '" +
+         formElement.id + "` = " +
+         val + "\n");
+    
+    if (val) return val;
+    else return null;
+  }
+  
   else {
     return formElement.value;
   }
@@ -614,6 +625,14 @@ function setFormElementValue(formElement, value) {
     }
   }
 
+  else if (type == "text") {
+    dump("setting text element '" + formElement.id + "' to " + value + "\n");
+    if (value == null || value == undefined)
+      formElement.removeAttribute("value");
+    else
+      formElement.setAttribute("value",value);
+  }
+  
   // let the form figure out what to do with it
   else {
     if (value == undefined) {

@@ -87,13 +87,13 @@
                     onclick="openImapAdvanced(event);"/>
     </box>
 
-    <text hidden="true" wsm_persist="true" id="imap.dualUseFolders"/>
-    <text hidden="true" wsm_persist="true" id="imap.usingSubscription"/>
+    <checkbox hidden="true" wsm_persist="true" id="imap.dualUseFolders"/>
+    <checkbox hidden="true" wsm_persist="true" id="imap.usingSubscription"/>
     <text hidden="true" wsm_persist="true" id="imap.personalNamespace"/>
     <text hidden="true" wsm_persist="true" id="imap.publicNamespace"/>
     <text hidden="true" wsm_persist="true" id="imap.otherUsersNamespace"/>
     <text hidden="true" wsm_persist="true" id="imap.serverDirectory"/>
-    <text hidden="true" wsm_persist="true" id="imap.overrideNamespaces"/>
+    <checkbox hidden="true" wsm_persist="true" id="imap.overrideNamespaces"/>
   </box>
 
   <!-- News -->

@@ -21,60 +21,53 @@
  * Alec Flett <alecf@netscape.com>
  */
 
-var smtpService;
 var serverList;
 
-var stringBundle;
+function init() {
+
+    serverList = document.getElementById("smtpServerList");
+
+}
+
+function preSelectServer(key)
+{
+    if (!key) {
+        // no key, so preselect the "useDefault" item.
+        serverList.selectedItem = document.getElementById("useDefaultItem");
+        return;
+    }
+    
+    var preselectedItems = serverList.getElementsByAttribute("key", key);
+
+    if (preselectedItems && preselectedItems.length > 0)
+        serverList.selectedItem = preselectedItems[0];
+}
 
 function onLoad()
 {
-    var selectedServer = null;
-    if (window.arguments && window.arguments[0] && window.arguments[0].server)
-        selectedServer = window.arguments[0].server;
+    init();
+    if (window.arguments && window.arguments[0]) {
+        selectedServerKey = window.arguments[0].smtpServerKey;
+        preSelectServer(selectedServerKey);
+    }
 
-    dump("pre-select server: " + selectedServer + "\n");
-    
-    if (!smtpService)
-        smtpService = Components.classes["component://netscape/messengercompose/smtp"].getService(Components.interfaces.nsISmtpService);
 
-    if (!stringBundle)
-        stringBundle = srGetStrBundle("chrome://messenger/locale/messenger.properties");
-
-    //serverList = document.getElementById("smtpPopup");
-
-    refreshServerList(smtpService.smtpServers, selectedServer);
-    
     doSetOKCancel(onOk, 0);
 }
 
 function onOk()
 {
-    dump("serverList.selectedItem = " + document.getElementById("smtpPopup").getAttribute("selectedKey") + "\n");
+
+    var selectedServerElement = serverList.selectedItem;
+    dump("selectedServerKey: " + selectedServerElement + "\n");
+
+    var key = selectedServerElement.getAttribute("key");
+    if (key)
+        window.arguments[0].smtpServerKey = key;
+    else
+        window.arguments[0].smtpServerKey = null;
+    
     window.close();
-}
-
-function refreshServerList(servers, selectedServer)
-{
-    var defaultMenuItem = document.createElement("menuitem");
-    defaultMenuItem.setAttribute("value", stringBundle.GetStringFromName("useDefaultServer"));
-    document.getElementById("smtpPopup").appendChild(defaultMenuItem);
-        
-    var serverCount = servers.Count();
-
-    for (var i=0; i<serverCount; i++) {
-        var server = servers.QueryElementAt(i, Components.interfaces.nsISmtpServer);
-        var menuitem = document.createElement("menuitem");
-        menuitem.setAttribute("value", server.hostname);
-        menuitem.setAttribute("id", server.serverURI);
-        menuitem.setAttribute("key", server.key);
-        
-        document.getElementById("smtpPopup").appendChild(menuitem);
-        if (server == selectedServer) {
-            dump("found the selected one!\n");
-            serverList.setAttribute("selectedKey", server.key);
-        }
-    }
-
 }
 
 function onSelected(event)

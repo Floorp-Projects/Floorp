@@ -32,12 +32,12 @@ function onInit() {
 
 function initFolderDisplay(fieldname, pickerID) {
     var formElement = document.getElementById(fieldname);
-    var uri = formElement.value;
+    var uri = formElement.getAttribute("value");
     SetFolderPicker(uri,pickerID);
 }
 
 function initBccSelf() {
-    var bccValue = document.getElementById("identity.email").value;
+    var bccValue = document.getElementById("identity.email").getAttribute("value");
     setDivText("identity.bccSelf",bccValue);
 }
 
@@ -74,6 +74,6 @@ function SaveUriFromPicker(fieldName, pickerID)
 	
 	formElement = document.getElementById(fieldName);
 	//dump("old value = " + formElement.value + "\n");
-	formElement.value = uri;
+	formElement.setAttribute("value",uri);
 	//dump("new value = " + formElement.value + "\n");
 }

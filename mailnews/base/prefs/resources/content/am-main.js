@@ -24,15 +24,19 @@
 function onAdvanced()
 {
     dump("onAdvanced..\n");
-    var oldSmtpServer = null; // where will I get this from?
-    var arg = {result: false,
-               smtpServer: oldSmtpServer };
+    var serverKeyElement = document.getElementById("identity.smtpServerKey");
+    var oldSmtpServerKey = serverKeyElement.getAttribute("value");
+    dump("selected key = " + oldSmtpServerKey + "\n");
+    var arg = { smtpServerKey: oldSmtpServerKey };
     window.openDialog('am-identity-advanced.xul','smtpadvanced',
                       'modal,chrome', arg);
     
-    if (arg.result && arg.smtpServer != oldSmtpServer) {
+    if (arg.smtpServerKey != oldSmtpServerKey) {
         // save the identity back to the page as a key
-        document.getElementById("identity.smtpServerKey").value =
-            arg.smtpServer.key;
+        dump("Setting the smtp server to " + arg.smtpServerKey + "\n");
+        if (arg.smtpServerKey)
+            serverKeyElement.setAttribute("value", arg.smtpServerKey);
+        else
+            serverKeyElement.removeAttribute("value");
     }
 }

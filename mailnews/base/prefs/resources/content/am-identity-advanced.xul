@@ -28,6 +28,7 @@
 
 <window class="dialog"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   title="&identityAdvanced.label;"
   align="vertical"
   onload="onLoad();">
@@ -37,9 +38,25 @@
   
   <html style="width: 20em; ">&smtpDesc.label;</html>
   <box orient="horizontal">
-    <text value="&smtpName.label;" class="label"/>
-    <menulist oncommand="onSelected(event)">
-      <menupopup id="smtpPopup"/>
+    <text value="&smtpName.label;" class="label" for="smtpServerList"/>
+    <menulist rdf:datasources="rdf:smtp"
+              rdf:containment="http://home.netscape.com/NC-rdf#child"
+              ref="NC:smtpservers"
+              oncommand="onSelected(event)" id="smtpServerList">
+      <template>
+        <rule>
+          <menupopup>
+            <menuitem uri="..." key="rdf:http://home.netscape.com/NC-rdf#Key"
+                      value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+          </menupopup>
+        </rule>
+        <menupopup/>
+      </template>
+      <menupopup id="smtpPopup">
+        <menuitem value="&smtpDefaultServer.label;" id="useDefaultItem"/>
+        <menuseparator/>
+        <!-- template will be inserted here -->
+      </menupopup>
     </menulist>
   </box>
         
