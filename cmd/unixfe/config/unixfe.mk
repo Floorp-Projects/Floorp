@@ -44,6 +44,15 @@
 
 ##########################################################################
 #
+# XFE_MKICONS_BIN_LDPATH
+#
+# This needs to be set to -L$(DIST)/bin if at least one of jpeg, png or
+# zlib is not native and is shared.
+#
+##########################################################################
+
+##########################################################################
+#
 # MOZ_NATIVE_JPEG
 #
 # The default usage for libjpeg is that its built as part of Mozilla.
@@ -54,11 +63,13 @@
 ##########################################################################
 ifdef MOZ_NATIVE_JPEG
 
-XFE_JPEG_LDFLAGS = -ljpeg
+XFE_JPEG_LDFLAGS			= -ljpeg
 
 else
 
-XFE_JPEG_LDFLAGS = $(DIST)/lib/libjpeg.a
+XFE_JPEG_LDFLAGS			= $(DIST)/lib/libjpeg.a
+XFE_JPEG_REQUIRES			= jpeg
+XFE_MKICONS_BIN_LDPATH		= -L$(DIST)/bin
 
 endif
 
@@ -74,11 +85,13 @@ endif
 ##########################################################################
 ifdef MOZ_NATIVE_PNG
 
-XFE_PNG_LDFLAGS = -lpng
+XFE_PNG_LDFLAGS				= -lpng
 
 else
 
-XFE_PNG_LDFLAGS = $(DIST)/lib/libpng.a
+XFE_PNG_LDFLAGS				= $(DIST)/lib/libpng.a
+XFE_PNG_REQUIRES			= png
+XFE_MKICONS_BIN_LDPATH		= -L$(DIST)/bin
 
 endif
 
@@ -106,23 +119,23 @@ endif
 ##########################################################################
 ifdef MOZ_NATIVE_ZLIB
 
-XFE_ZLIB_LDFLAGS = -lz
-
-XFE_ZLIB_MKICONS_LDFLAGS = -lz
+XFE_ZLIB_LDFLAGS			= -lz
+XFE_ZLIB_MKICONS_LDFLAGS	= -lz
 
 else
+
+XFE_ZLIB_REQUIRES			= zlib
 
 ifdef FULL_STATIC_BUILD
 
-XFE_ZLIB_LDFLAGS = $(DIST)/lib/libzlib.a
-
-XFE_ZLIB_MKICONS_LDFLAGS = $(DIST)/lib/libzlib.a
+XFE_ZLIB_LDFLAGS			= $(DIST)/lib/libzlib.a
+XFE_ZLIB_MKICONS_LDFLAGS	= $(DIST)/lib/libzlib.a
 
 else
 
-XFE_ZLIB_DSO_LDFLAGS = -lzlib
-
-XFE_ZLIB_MKICONS_LDFLAGS = -lzlib
+XFE_ZLIB_DSO_LDFLAGS		= -lzlib
+XFE_ZLIB_MKICONS_LDFLAGS	= -lzlib
+XFE_MKICONS_BIN_LDPATH		= -L$(DIST)/bin
 
 endif
 
