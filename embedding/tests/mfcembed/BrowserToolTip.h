@@ -25,40 +25,63 @@
  * DEALINGS IN THE SOFTWARE.
  *
  * Contributor(s):
- *   Conrad Carlen <conrad@ingress.com>
+ *   Adam Lock <adamlock@netscape.com>
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIDirectoryService.h"
-#include "nsILocalFile.h"
+#if !defined(AFX_BROWSERTOOLTIP_H__13240069_1816_403C_A79D_306FD710B75A__INCLUDED_)
+#define AFX_BROWSERTOOLTIP_H__13240069_1816_403C_A79D_306FD710B75A__INCLUDED_
 
-class nsIFile;
+#if _MSC_VER > 1000
+#pragma once
+#endif // _MSC_VER > 1000
+// BrowserToolTip.h : header file
+//
 
-//*****************************************************************************
-// class winEmbedFileLocProvider
-//*****************************************************************************   
+/////////////////////////////////////////////////////////////////////////////
+// CBrowserToolTip window
 
-class winEmbedFileLocProvider : public nsIDirectoryServiceProvider
+class CBrowserToolTip : public CWnd
 {
+// Construction
 public:
-    // productDirName is the name (not path) of the dir
-    // in which the application registry and profiles live.
-    winEmbedFileLocProvider(const char* productDirName);
+	CBrowserToolTip();
 
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIDIRECTORYSERVICEPROVIDER
+// Attributes
+public:
 
-    static char * GetGreLocationFromRegistry();
+// Operations
+public:
 
+// Overrides
+	// ClassWizard generated virtual function overrides
+	//{{AFX_VIRTUAL(CBrowserToolTip)
+	protected:
+	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
+	//}}AFX_VIRTUAL
+
+	CString m_szTipText;
+// Implementation
+public:
+	virtual ~CBrowserToolTip();
+
+    BOOL Create(CWnd *pParentWnd);
+	void SetTipText(const CString &szTipText);
+    void Show(CWnd *pOverWnd, long left, long top);
+    void Hide();
+
+
+	// Generated message map functions
 protected:
-    virtual              ~winEmbedFileLocProvider();
-
-    NS_METHOD            CloneMozBinDirectory(nsILocalFile **aLocalFile);   
-    NS_METHOD            GetProductDirectory(nsILocalFile **aLocalFile);
-    NS_METHOD            GetDefaultUserProfileRoot(nsILocalFile **aLocalFile);
-    NS_METHOD            GetGreDirectory(nsILocalFile **aLocalFile);   
-
-
-    char                 mProductDirName[256];
-    nsCOMPtr<nsILocalFile> mMozBinDirectory;
+	//{{AFX_MSG(CBrowserToolTip)
+	afx_msg void OnPaint();
+	//}}AFX_MSG
+	DECLARE_MESSAGE_MAP()
 };
+
+/////////////////////////////////////////////////////////////////////////////
+
+//{{AFX_INSERT_LOCATION}}
+// Microsoft Visual C++ will insert additional declarations immediately before the previous line.
+
+#endif // !defined(AFX_BROWSERTOOLTIP_H__13240069_1816_403C_A79D_306FD710B75A__INCLUDED_)

@@ -44,7 +44,7 @@ static char THIS_FILE[] = __FILE__;
 IMPLEMENT_DYNAMIC(CPreferences, CPropertySheet)
 
 CPreferences::CPreferences(LPCTSTR pszCaption, CWnd* pParentWnd, UINT iSelectPage)
-	:CPropertySheet(pszCaption, pParentWnd, iSelectPage)
+    :CPropertySheet(pszCaption, pParentWnd, iSelectPage)
 {
     AddPage(&m_startupPage);
 }
@@ -54,22 +54,22 @@ CPreferences::~CPreferences()
 }
 
 BEGIN_MESSAGE_MAP(CPreferences, CPropertySheet)
-	//{{AFX_MSG_MAP(CPreferences)
-		// NOTE - the ClassWizard will add and remove mapping macros here.
-	//}}AFX_MSG_MAP
+    //{{AFX_MSG_MAP(CPreferences)
+        // NOTE - the ClassWizard will add and remove mapping macros here.
+    //}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 
 BOOL CPreferences::OnInitDialog() 
 {
-	BOOL bResult = CPropertySheet::OnInitDialog();
-	
+    BOOL bResult = CPropertySheet::OnInitDialog();
+    
     // Hide the Apply button
     CWnd* pApplyButton = GetDlgItem(ID_APPLY_NOW);
     ASSERT(pApplyButton);
     pApplyButton->ShowWindow(SW_HIDE);
 
-	return bResult;
+    return bResult;
 }
 
 
@@ -80,10 +80,10 @@ IMPLEMENT_DYNCREATE(CStartupPrefsPage, CPropertyPage)
 
 CStartupPrefsPage::CStartupPrefsPage() : CPropertyPage(CStartupPrefsPage::IDD)
 {
-	//{{AFX_DATA_INIT(CStartupPrefsPage)
-	m_strHomePage = _T("");
-	m_iStartupPage = -1;
-	//}}AFX_DATA_INIT
+    //{{AFX_DATA_INIT(CStartupPrefsPage)
+    m_strHomePage = _T("");
+    m_iStartupPage = -1;
+    //}}AFX_DATA_INIT
 }
 
 CStartupPrefsPage::~CStartupPrefsPage()
@@ -92,16 +92,16 @@ CStartupPrefsPage::~CStartupPrefsPage()
 
 void CStartupPrefsPage::DoDataExchange(CDataExchange* pDX)
 {
-	CPropertyPage::DoDataExchange(pDX);
-	//{{AFX_DATA_MAP(CStartupPrefsPage)
-	DDX_Control(pDX, IDC_EDIT_HOMEPAGE, m_HomePage);
-	DDX_Text(pDX, IDC_EDIT_HOMEPAGE, m_strHomePage);
-	DDX_Radio(pDX, IDC_RADIO_BLANK_PAGE, m_iStartupPage);
-	//}}AFX_DATA_MAP
+    CPropertyPage::DoDataExchange(pDX);
+    //{{AFX_DATA_MAP(CStartupPrefsPage)
+    DDX_Control(pDX, IDC_EDIT_HOMEPAGE, m_HomePage);
+    DDX_Text(pDX, IDC_EDIT_HOMEPAGE, m_strHomePage);
+    DDX_Radio(pDX, IDC_RADIO_BLANK_PAGE, m_iStartupPage);
+    //}}AFX_DATA_MAP
 }
 
 
 BEGIN_MESSAGE_MAP(CStartupPrefsPage, CPropertyPage)
-	//{{AFX_MSG_MAP(CStartupPrefsPage)
-	//}}AFX_MSG_MAP
+    //{{AFX_MSG_MAP(CStartupPrefsPage)
+    //}}AFX_MSG_MAP
 END_MESSAGE_MAP()

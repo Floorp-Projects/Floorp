@@ -50,21 +50,21 @@
 CMostRecentUrls::CMostRecentUrls() :
         mNumURLs(0)
 {
-	for (int i=0;i<MAX_URLS;i++) {
-		mURLs[i] = NULL;
-	}
+    for (int i=0;i<MAX_URLS;i++) {
+        mURLs[i] = NULL;
+    }
 
-	FILE * fd = GetFD("r");
-	if (fd) {
-		char line[512];
-		while (fgets(line, 512, fd)) {
-			if (strlen(line) > 1) {
-				line[strlen(line)-1] = 0;
-				mURLs[mNumURLs++] = _strdup(line);
-			}
-		}
-		fclose(fd);
-	}
+    FILE * fd = GetFD("r");
+    if (fd) {
+        char line[512];
+        while (fgets(line, 512, fd)) {
+            if (strlen(line) > 1) {
+                line[strlen(line)-1] = 0;
+                mURLs[mNumURLs++] = _strdup(line);
+            }
+        }
+        fclose(fd);
+    }
 
 }
 
@@ -110,33 +110,33 @@ char * CMostRecentUrls::GetURL(int aInx)
 
 void CMostRecentUrls::AddURL(const char * aURL)
 {
-	TCHAR szTemp[512];
-	strcpy(szTemp, aURL);
+    TCHAR szTemp[512];
+    strcpy(szTemp, aURL);
 
-	// check to see if an existing url matches the one passed in
-	for (int i=0; i<MAX_URLS-1; i++)
-	{
+    // check to see if an existing url matches the one passed in
+    for (int i=0; i<MAX_URLS-1; i++)
+    {
         if(mURLs[i])
         {
             if(strcmpi(mURLs[i], szTemp) == 0)
                 break; 
         }
-	}
+    }
 
     // if there was a match "i" will point to matching url entry
     // if not i will be MAX_URLS-1
 
     // move all url entries before this one down
-	for (; i>0; i--)
-	{
+    for (; i>0; i--)
+    {
         if(mURLs[i])
           free(mURLs[i]);
 
         if(mURLs[i-1])  
             mURLs[i] = _strdup(mURLs[i-1]);
-	}
+    }
 
-	// place this url at the top
+    // place this url at the top
     if(mURLs[0])
         free(mURLs[0]);
     mURLs[0] = _strdup(szTemp);

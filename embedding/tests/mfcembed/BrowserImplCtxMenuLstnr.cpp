@@ -41,8 +41,8 @@
 
 NS_IMETHODIMP CBrowserImpl::OnShowContextMenu(PRUint32 aContextFlags, nsIContextMenuInfo *aInfo)
 {
-	if(m_pBrowserFrameGlue)
-		m_pBrowserFrameGlue->ShowContextMenu(aContextFlags, aInfo);
+    if(m_pBrowserFrameGlue)
+        m_pBrowserFrameGlue->ShowContextMenu(aContextFlags, aInfo);
 
-	return NS_OK;
+    return NS_OK;
 }

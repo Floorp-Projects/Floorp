@@ -80,6 +80,7 @@ CPPSRCS		= \
 		BrowserImpl.cpp \
 		BrowserImplWebPrgrsLstnr.cpp \
 		BrowserImplCtxMenuLstnr.cpp \
+        BrowserToolTip.cpp \
 		Dialogs.cpp       \
 		ProfileMgr.cpp \
 		ProfilesDlg.cpp \
