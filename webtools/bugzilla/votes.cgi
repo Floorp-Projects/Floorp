@@ -44,11 +44,11 @@ my $cgi = Bugzilla->cgi;
 #
 # If no action is defined, we default to show_bug if a bug_id is given,
 # otherwise to show_user.
-my $action = $::FORM{'action'} || 
-                                 ($::FORM{'bug_id'} ? "show_bug" : "show_user");
+my $bug_id = $cgi->param('bug_id');
+my $action = $cgi->param('action') || ($bug_id ? "show_bug" : "show_user");
 
 if ($action eq "show_bug" ||
-    ($action eq "show_user" && defined($::FORM{'user'}))) 
+    ($action eq "show_user" && defined $cgi->param('user')))
 {
     Bugzilla->login();
 }
@@ -62,9 +62,8 @@ else {
 
 # Make sure the bug ID is a positive integer representing an existing
 # bug that the user is authorized to access.
-if (defined $::FORM{'bug_id'}) {
-  ValidateBugID($::FORM{'bug_id'});
-}
+
+ValidateBugID($bug_id) if defined $bug_id;
 
 ################################################################################
 # End Data/Security Validation
@@ -90,9 +89,8 @@ exit;
 sub show_bug {
     my $cgi = Bugzilla->cgi;
 
-    my $bug_id = $::FORM{'bug_id'} 
-      || ThrowCodeError("missing_bug_id");
-      
+    ThrowCodeError("missing_bug_id") unless defined $bug_id;
+
     my $total = 0;
     my @users;
     
@@ -124,9 +122,9 @@ sub show_user {
     my $cgi = Bugzilla->cgi;
 
     # If a bug_id is given, and we're editing, we'll add it to the votes list.
-    my $bug_id = $::FORM{'bug_id'} || "";
-        
-    my $name = $::FORM{'user'} || Bugzilla->user->login;
+    $bug_id ||= "";
+    
+    my $name = $cgi->param('user') || Bugzilla->user->login;
     my $who = DBNameToIdAndCheck($name);
     my $userid = Bugzilla->user ? Bugzilla->user->id : 0;
     
@@ -236,18 +234,19 @@ sub record_votes {
     # Build a list of bug IDs for which votes have been submitted.  Votes
     # are submitted in form fields in which the field names are the bug 
     # IDs and the field values are the number of votes.
-    my @buglist = grep {/^[1-9][0-9]*$/} keys(%::FORM);
+
+    my @buglist = grep {/^[1-9][0-9]*$/} $cgi->param();
 
     # If no bugs are in the buglist, let's make sure the user gets notified
     # that their votes will get nuked if they continue.
     if (scalar(@buglist) == 0) {
-        if (!defined($::FORM{'delete_all_votes'})) {
+        if (!defined $cgi->param('delete_all_votes')) {
             print $cgi->header();
             $template->process("bug/votes/delete-all.html.tmpl", $vars)
               || ThrowTemplateError($template->error());
             exit();
         }
-        elsif ($::FORM{'delete_all_votes'} == 0) {
+        elsif ($cgi->param('delete_all_votes') == 0) {
             print $cgi->redirect("votes.cgi");
             exit();
         }
@@ -258,9 +257,11 @@ sub record_votes {
     # to access, and make sure the number of votes submitted is also
     # a non-negative integer (a series of digits not preceded by a
     # minus sign).
+    my %votes;
     foreach my $id (@buglist) {
       ValidateBugID($id);
-      detaint_natural($::FORM{$id})
+      $votes{$id} = $cgi->param($id);
+      detaint_natural($votes{$id}) 
         || ThrowUserError("votes_must_be_nonnegative");
     }
 
@@ -285,14 +286,14 @@ sub record_votes {
         while (MoreSQLData()) {
             my ($id, $prod, $max) = FetchSQLData();
             $prodcount{$prod} ||= 0;
-            $prodcount{$prod} += $::FORM{$id};
+            $prodcount{$prod} += $votes{$id};
             
             # Make sure we haven't broken the votes-per-bug limit
-            ($::FORM{$id} <= $max)               
+            ($votes{$id} <= $max)               
               || ThrowUserError("too_many_votes_for_bug",
                                 {max => $max, 
                                  product => $prod, 
-                                 votes => $::FORM{$id}});
+                                 votes => $votes{$id}});
         }
 
         # Make sure we haven't broken the votes-per-product limit
@@ -326,9 +327,9 @@ sub record_votes {
     
     # Insert the new values in their place
     foreach my $id (@buglist) {
-        if ($::FORM{$id} > 0) {
+        if ($votes{$id} > 0) {
             SendSQL("INSERT INTO votes (who, bug_id, vote_count) 
-                     VALUES ($who, $id, $::FORM{$id})");
+                     VALUES ($who, $id, ".$votes{$id}.")");
         }
         
         $affected{$id} = 1;
