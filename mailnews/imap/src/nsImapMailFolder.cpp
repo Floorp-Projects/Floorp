@@ -632,12 +632,13 @@ NS_IMETHODIMP nsImapMailFolder::GetName(PRUnichar ** name)
     return result;
 }
 
-NS_IMETHODIMP nsImapMailFolder::GetPrettyName(char ** prettyName)
+NS_IMETHODIMP nsImapMailFolder::GetPrettyName(PRUnichar ** prettyName)
 {
     if (mDepth == 1) {
         char *hostName = nsnull;
         GetHostname(&hostName);
-        *prettyName = PL_strdup(hostName);
+		nsString2 unicodePrettyName(hostName);
+        *prettyName = unicodePrettyName.ToNewUnicode();
         PR_FREEIF(hostName);
     }
     else {
