@@ -2317,7 +2317,7 @@ lo_BeginTextareaTag(MWContext *context, lo_DocState *state, PA_Tag *tag)
 	if (type_block)
 	{
 		PA_LOCK(type_str, char *, type_block);
-		if (!XP_STRCMP(type_str,"htmlarea")) //ONLY LOWERCASE??
+		if (!XP_STRCMP(type_str,"htmlarea")) /* ONLY LOWERCASE?? */
 			form_element = lo_form_textarea(context, state, tag,
 				FORM_TYPE_HTMLAREA);
 		else
