@@ -54,7 +54,7 @@ function onOK()
   if (srcInput.value != "")
     editorShell.InsertSource(srcInput.value);
   else {
-    dump("Null value -- not inserting\n");
+    dump("Null value -- not inserting in HTML Source dialog\n");
     return false;
   }
   SaveWindowLocation();

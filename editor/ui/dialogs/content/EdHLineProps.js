@@ -156,15 +156,12 @@ function ValidateData()
 {
   // Height is always pixels
   height = ValidateNumberString(dialog.heightInput.value, 1, maxPixels);
-  if (height == "") {
-    // Set focus to the offending control
-    dump("Height is empty\n");
-    SetTextfieldFocus(dialog.heightInput);
-    SetTextfieldFocus(dialog.heightInput);
-    return false;
+  if (height)
+  {
+    globalElement.setAttribute("size", height);
   }
-  dump("Setting height="+height+"\n");
-  globalElement.setAttribute("size", height);
+  else
+    globalElement.removeAttribute("size");
 
   var isPercent = (dialog.pixelOrPercentMenulist.selectedIndex == 1);
   var maxLimit;
@@ -176,16 +173,14 @@ function ValidateData()
   }
 
   width = ValidateNumberString(dialog.widthInput.value, 1, maxLimit);
-  if (width == "") {
-    dump("Width is empty\n");
-    SetTextfieldFocus(dialog.widthInput);
-    return false;
+  if (width)
+  {
+    if (isPercent)
+      width = width + "%";
+    globalElement.setAttribute("width", width);
   }
-  if (isPercent)
-    width = width + "%";
-
-dump("HLine: Height="+height+" Width="+width+"\n");
-  globalElement.setAttribute("width", width);
+  else 
+    globalElement.removeAttribute("width");
 
   align = "left";
   if (dialog.centerAlign.checked) {

@@ -56,7 +56,7 @@
       </row>
       <row>
         <text class="label" id="ReplaceWordLabel" value="&wordEditField.label;"/>
-        <textfield id="ReplaceWord" onkeyup="ChangeReplaceWord()"/>
+        <textfield id="ReplaceWord" oninput="ChangeReplaceWord()"/>
         <button id="CheckWord" oncommand="CheckWord()" value="&checkwordButton.label;"/>
       </row>
     </rows>

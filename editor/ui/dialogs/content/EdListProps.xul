@@ -67,7 +67,7 @@
     <spring class="spacer"/>
     <box>
       <text class="label" id="StartingNumberLabel" value="&startingNumber.label;"/>
-      <textfield class="narrow" id="StartingNumber" onkeyup="forceInteger(this.id)"/>
+      <textfield class="narrow" id="StartingNumber" oninput="forceInteger(this.id)"/>
       <spring/>
     </box>
     <html id="StartExample" class="wrap" flex="1" style="width: 1em">&startingHelp.label;</html>

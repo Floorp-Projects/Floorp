@@ -48,7 +48,7 @@
   <popupset id="aTooltipSet" />
 
   <text class="label" align="left" for="nameInput" value="&anchorNameEditField.label;"/>
-  <textfield class="MinWidth20em" id="nameInput" onkeyup="ChangeName()" 
+  <textfield class="MinWidth20em" id="nameInput" oninput="ChangeName()" 
              tooltip="aTooltip" tooltiptext="&nameInput.tooltip;"/>
   <spring class="spacer"/>
   <!-- from EdDialogOverlay -->

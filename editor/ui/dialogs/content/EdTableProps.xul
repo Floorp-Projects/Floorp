@@ -61,11 +61,11 @@
             <rows>
               <row valign="middle">
                 <text class="label" value="&tableRows.label;"/>
-                <textfield class="narrow" id="TableRowsInput" onkeyup="forceInteger(this.id);"/>
+                <textfield class="narrow" id="TableRowsInput" oninput="forceInteger(this.id);"/>
               </row>
               <row valign="middle">
                 <text class="label" value="&tableColumns.label;"/>
-                <textfield class="narrow" id="TableColumnsInput" onkeyup="forceInteger(this.id);"/>
+                <textfield class="narrow" id="TableColumnsInput" oninput="forceInteger(this.id);"/>
               </row>
             </rows>
           </grid>
@@ -75,7 +75,7 @@
             <rows>
               <row valign="middle">
                 <text class="label" value="&tableWidth.label;"/>
-                <textfield class="narrow" id="TableWidthInput" onkeyup="forceInteger(this.id);"/>
+                <textfield class="narrow" id="TableWidthInput" oninput="forceInteger(this.id);"/>
                 <menulist id="TableWidthUnits"/>
               </row>
             </rows>
@@ -87,17 +87,17 @@
           <rows>
             <row valign="middle">
               <text class="label" value="&tableBorderWidth.label;"/>
-              <textfield class="narrow" id="BorderWidthInput" onkeyup="forceInteger(this.id);"/>
+              <textfield class="narrow" id="BorderWidthInput" oninput="forceInteger(this.id);"/>
               <text class="label" align="left" value="&pixels.label;"/>
             </row>
             <row valign="middle">
               <text class="label" value="&tableSpacing.label;"/>
-              <textfield class="narrow" id="SpacingInput" onkeyup="forceInteger(this.id);"/>
+              <textfield class="narrow" id="SpacingInput" oninput="forceInteger(this.id);"/>
               <text class="label" value="&tablePxBetwCells.label;"/>
             </row>
             <row valign="middle" autostretch="never">
               <text class="label" value="&tablePadding.label;"/>
-              <textfield class="narrow" id="PaddingInput" onkeyup="forceInteger(this.id);"/>
+              <textfield class="narrow" id="PaddingInput" oninput="forceInteger(this.id);"/>
               <text class="label" value="&tablePxBetwBrdrCellContent.label;"/>
             </row>
           </rows>
@@ -178,12 +178,12 @@
             <rows>
               <row valign="middle" autostretch="never">
                 <checkbox id="CellHeightCheckbox" value="&tableHeight.label;"/>
-                <textfield class="narrow" id="CellHeightInput" onkeyup="ChangeIntTextfield(this.id,'CellHeightCheckbox');"/>
+                <textfield class="narrow" id="CellHeightInput" oninput="ChangeIntTextfield(this.id,'CellHeightCheckbox');"/>
                 <menulist id="CellHeightUnits" oncommand="SetCheckbox('CellHeightCheckbox');"/>
               </row>
               <row valign="middle" autostretch="never">
                 <checkbox id="CellWidthCheckbox" value="&tableWidth.label;"/>
-                <textfield class="narrow" id="CellWidthInput" onkeyup="ChangeIntTextfield(this.id,'CellWidthCheckbox');"/>
+                <textfield class="narrow" id="CellWidthInput" oninput="ChangeIntTextfield(this.id,'CellWidthCheckbox');"/>
                 <menulist id="CellWidthUnits" oncommand="SetCheckbox('CellWidthCheckbox');"/>
               </row>
             </rows>
@@ -194,11 +194,11 @@
             <rows>
               <row valign="middle" autostretch="never">
                 <checkbox id="RowSpanCheckbox" value="&cellRowSpan.label;"/>
-                <textfield class="narrow" id="RowSpanInput" onkeyup="ChangeIntTextfield(this.id,'RowSpanCheckbox');"/>
+                <textfield class="narrow" id="RowSpanInput" oninput="ChangeIntTextfield(this.id,'RowSpanCheckbox');"/>
               </row>
               <row valign="middle" autostretch="never">
                 <checkbox id="ColSpanCheckbox" value="&cellColSpan.label;"/>
-                <textfield class="narrow" id="ColSpanInput" onkeyup="ChangeIntTextfield(this.id,'ColSpanCheckbox');"/>
+                <textfield class="narrow" id="ColSpanInput" oninput="ChangeIntTextfield(this.id,'ColSpanCheckbox');"/>
               </row>
             </rows>
           </grid>

@@ -176,7 +176,6 @@ function onOK()
       tableElement.appendChild(tableBody);
 
       // Create necessary rows and cells for the table
-      //dump("Rows = "+rows+"  Columns = "+columns+"\n");
       for (var i = 0; i < rows; i++)
       {
         var newRow = editorShell.CreateElementWithDefaults("tr");

@@ -67,7 +67,7 @@
             />
           <textfield 
             id         = "srcInput" 
-            onkeyup    = "doOverallEnabling()"
+            oninput    = "doOverallEnabling()"
             onmouseup  = "doOverallEnabling()"
             onchange   = "ChangeImageSrc()"
             style      = "min-width : 20em"/>
@@ -172,7 +172,7 @@
                   id       = "widthInput" 
                   class    = "narrow"
                   onfocus  = "oldSourceInt = this.value;"
-                  onkeyup  = "constrainProportions(this.id, 'heightInput')"/>
+                  oninput  = "constrainProportions(this.id, 'heightInput')"/>
                 <menulist id = "widthUnitsMenulist"
                   oncommand = "doDimensionEnabling();" />
                 <!-- contents are appended by JS -->
@@ -187,7 +187,7 @@
                   id       = "heightInput" 
                   class    = "narrow"
                   onfocus  = "oldSourceInt = this.value;"
-                  onkeyup  = "constrainProportions(this.id, 'widthInput')"/>
+                  oninput  = "constrainProportions(this.id, 'widthInput')"/>
                 <menulist id = "heightUnitsMenulist"
                   oncommand = "doDimensionEnabling();" />
                 <!-- contents are appended by JS -->
@@ -282,7 +282,7 @@
                 <textfield 
                   class     = "narrow"
                   id        = "imageleftrightInput" 
-                  onkeyup   = "forceInteger(this.id)"/>
+                  oninput   = "forceInteger(this.id)"/>
                 <text 
                   class = "label" 
                   id    = "leftrighttypeLabel"
@@ -296,7 +296,7 @@
                 <textfield 
                   class     = "narrow"
                   id        = "imagetopbottomInput" 
-                  onkeyup   = "forceInteger(this.id)"/>
+                  oninput   = "forceInteger(this.id)"/>
                 <text
                   class = "label" 
                   id    = "topbottomtypeLabel"
@@ -309,7 +309,7 @@
                 <textfield
                   class     = "narrow"
                   id        = "border" 
-                  onkeyup   = "forceInteger(this.id)"/>
+                  oninput   = "forceInteger(this.id)"/>
                 <text 
                   class = "label" 
                   id    = "bordertypeLabel"
