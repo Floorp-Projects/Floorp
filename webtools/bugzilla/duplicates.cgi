@@ -37,7 +37,7 @@ use vars qw($buffer);
 # Go directly to the XUL version of the duplicates report (duplicates.xul)
 # if the user specified ctype=xul.  Adds params if they exist, and directs
 # the user to a signed copy of the script in duplicates.jar if it exists.
-if ($::FORM{'ctype'} eq "xul") {
+if ($::FORM{'ctype'} && $::FORM{'ctype'} eq "xul") {
     my $params = CanonicaliseParams($::buffer, ["format", "ctype"]);
     print "Location: " . (-e "duplicates.jar" ? "duplicates.jar!/" : "") . 
           "duplicates.xul" . ($params ? "?$params" : "") . "\n\n";
