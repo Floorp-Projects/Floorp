@@ -159,7 +159,7 @@ sub Heard {
     }
     my $me = quotemeta($event->{'bot'}->nick);
     my $expandedme = join('+', split(//gos, $me)).'+';
-    if ($message =~ /^\s*(?:(?:(?:g[ood\']*\s*)?(?:mornin[g\']?|evenin[g\']?|afternoon|day)|hi|heya?|bonjour|hoi|w+a+[sz]+u+p+|hello|lo|wb|welcome\s+back|greetings|yo(?:\s+yo)*)\s+$expandedme[!1\s]*|o+h[\s,.!?]+look[\s,.!?]+a\s+$me[\s.!1]*)(?::-?[\)Pp]\s*)*$/si) {
+    if ($message =~ /^\s*(?:(?:(?:(?:g[ood\']*\s*)?(?:mornin[g\']?|evenin[g\']?|afternoon|day)|hi|heya?|bonjour|hoi|w+a+[sz]+u+p+|hello|lo|wb|welcome\s+back|greetings|yo(?:\s+yo)*)\s+)?$expandedme[!1\s]*|o+h[\s,.!?]+look[\s,.!?]+a\s+$me[\s.!1]*)(?::-?[\)Pp]\s*)*$/si) {
         if ($self->canGreet($event)) {
             $self->Perform($event, 'greetings');
         }
