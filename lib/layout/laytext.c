@@ -6521,11 +6521,11 @@ void lo_LayoutTextBlock ( MWContext * context, lo_DocState * state, Bool flushLa
 			if ( !allTextFits && !justify )
 				{
 				lo_SoftLineBreak(context, state, TRUE);
+
+                /* tell the break engine that we broke the line here */
+                lo_SetLineBreak ( block, !justify );
 				}
 			
-			/* tell the break engine that we broke the line here */
-			lo_SetLineBreak ( block, !justify );
-
 
 #ifdef EDITOR
 			/* tell the editor where we are */
