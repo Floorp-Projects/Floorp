@@ -35,7 +35,7 @@
   xmlns:html="http://www.w3.org/TR/REC-html40"
   width="475" height="335"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
-	class="dialog profile"
+	class="color-dialog profile"
 	title="&windowtitle.label;"
   align="vertical"
   onload="StartUp();"> 
@@ -51,7 +51,6 @@
   <box type="largeheader" id="header" value="&windowtitle.label;"/>
   
   <box id="contentarea" flex="1">
-    <separator class="thin" orient="vertical"/>
 
     <!-- instructions -->
     <deck id="prattle">
@@ -85,7 +84,6 @@
       </treehead>
       <treechildren id="profilekids"/>
     </tree>    
-    <separator class="thin" orient="vertical"/>
   </box>
   
   <box class="selection">
