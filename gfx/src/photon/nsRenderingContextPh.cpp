@@ -1449,7 +1449,7 @@ NS_IMETHODIMP nsRenderingContextPh :: GetWidth(const char* aString,
 
 NS_IMETHODIMP nsRenderingContextPh :: GetWidth(const nsString& aString, nscoord& aWidth, PRInt32 *aFontID)
 {
-#if 0
+#if defined(DEBUG) && 1
   /* DEBUG ONLY */
   char *str = aString.ToNewCString();
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::GetWidth5 aString=<%s>\n", str));
@@ -1475,51 +1475,40 @@ NS_IMETHODIMP nsRenderingContextPh :: GetWidth(const PRUnichar *aString,
                                                 PRInt32 *aFontID)
 {
   nsresult ret_code = NS_ERROR_FAILURE;
-  nscoord photonWidth;
+
+#if defined(DEBUG) && 1
+  /* DEBUG ONLY */
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::GetWidth6 aString=<%s>\n", aString));
+#endif
+
   
   aWidth = 0;	// Initialize to zero in case we fail.
-
   if (nsnull != mFontMetrics)
   {
     PhRect_t      extent;
-//    nsFontHandle  fontHandle;			/* really a (nsString  *) */
-//    nsString      *pFontHandle = nsnull;
-//    char          *PhotonFontName =  nsnull;
 
-//    mFontMetrics->GetFontHandle(fontHandle);
-//    pFontHandle = (nsString *) fontHandle;
-//    PhotonFontName =  pFontHandle->ToNewCString();
-	
     if (PfExtentWideText(&extent, NULL, mPhotonFontName, (wchar_t *) aString, (aLength*2)))
     {
-//	  photonWidth = (extent.lr.x - extent.ul.x + 1);
-// 	  aWidth = (int) ((float) photonWidth * mP2T);
       aWidth = (int) ((extent.lr.x - extent.ul.x + 1) * mP2T);
-//      PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::GetWidth4 PhotonWidth=<%d> aWidth=<%d> PhotonFontName=<%s>\n",photonWidth, aWidth, PhotonFontName));
-//      printf ("nsRenderingContextPh::GetWidth4 aWidth=<%d> PhotonFontName=<%s>\n", aWidth, mPhotonFontName);
-
+      PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::GetWidth6 aWidth=<%d>mPhotonFontName=<%s>\n", aWidth, mPhotonFontName));
       ret_code = NS_OK;
-//	  delete [] PhotonFontName;
     }
     else
     {
-//	printf ("kedl2 error: %d\n",errno);
+       NS_ASSERTION(0,"PfExtentWideText failed in nsRenderingContextPh::GetWidth6\n");
     }
   }
   else
   {
     PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::GetWidth6 FAILED = a NULL mFontMetrics detected\n"));
-    ret_code = NS_ERROR_FAILURE;
   }  
 
   if (nsnull != aFontID)
   {
     *aFontID = 0;
   }
-  	
 
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::GetWidth6  aLength=<%d> aWidth=<%d> ret_code=<%d>\n", aLength, aWidth, ret_code));
-
   return ret_code;
 }
 

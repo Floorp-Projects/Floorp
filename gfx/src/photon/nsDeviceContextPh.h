@@ -36,16 +36,17 @@ class nsDeviceContextPh : public DeviceContextImpl
 {
 public:
   nsDeviceContextPh();
-
+  virtual ~nsDeviceContextPh();
+  
   NS_DECL_ISUPPORTS
   
   NS_IMETHOD  Init(nsNativeWidget aWidget);
 
   NS_IMETHOD  CreateRenderingContext(nsIRenderingContext *&aContext);
+  NS_IMETHOD  CreateRenderingContext(nsIView *aView, nsIRenderingContext *&aContext) {return (DeviceContextImpl::CreateRenderingContext(aView,aContext));}
+  NS_IMETHOD  CreateRenderingContext(nsIWidget *aWidget, nsIRenderingContext *&aContext) {return (DeviceContextImpl::CreateRenderingContext(aWidget,aContext));}
 
   NS_IMETHOD  SupportsNativeWidgets(PRBool &aSupportsWidgets);
-
-  NS_IMETHOD  GetCanonicalPixelScale(float &aScale) const;
 
   NS_IMETHOD  GetScrollBarDimensions(float &aWidth, float &aHeight) const;
   NS_IMETHOD  GetSystemAttribute(nsSystemAttrID anID, SystemAttrStruct * aInfo) const;
@@ -54,40 +55,42 @@ public:
   //that is passed in is used to create the drawing surface if there isn't
   //already one in the device context. the drawing surface is then cached
   //in the device context for re-use.
+
   NS_IMETHOD  GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface);
 
+  NS_IMETHOD  ConvertPixel(nscolor aColor, PRUint32 & aPixel);
   NS_IMETHOD  CheckFontExistence(const nsString& aFontName);
+
+  NS_IMETHOD  GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight);
+  NS_IMETHOD  GetClientRect(nsRect &aRect);
+
+  NS_IMETHOD  GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
+                                  nsIDeviceContext *&aContext);
+
+  NS_IMETHOD  BeginDocument(void);
+  NS_IMETHOD  EndDocument(void);
+
+  NS_IMETHOD  BeginPage(void);
+  NS_IMETHOD  EndPage(void);
 
   NS_IMETHOD  GetDepth(PRUint32& aDepth);
 
-  NS_IMETHOD  GetILColorSpace(IL_ColorSpace*& aColorSpace);
-
-  NS_IMETHOD  GetPaletteInfo(nsPaletteInfo&);
-
-  NS_IMETHOD ConvertPixel(nscolor aColor, PRUint32 & aPixel);
-
-  NS_IMETHOD GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight);
-  NS_IMETHOD GetClientRect(nsRect &aRect);
-
-  NS_IMETHOD GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
-                                 nsIDeviceContext *&aContext);
-
-  NS_IMETHOD BeginDocument(void);
-  NS_IMETHOD EndDocument(void);
-
-  NS_IMETHOD BeginPage(void);
-  NS_IMETHOD EndPage(void);
+  static int prefChanged(const char *aPref, void *aClosure);
+  nsresult    SetDPI(PRInt32 dpi);
 
 protected:
-  virtual ~nsDeviceContextPh();
-  nsresult Init(nsNativeDeviceContext aContext, nsIDeviceContext *aOrigContext);
-  nsresult GetDisplayInfo(PRInt32 &aWidth, PRInt32 &aHeight, PRUint32 &aDepth);
-  void     CommonInit(nsNativeDeviceContext aDC);
+
+  nsresult    Init(nsNativeDeviceContext aContext, nsIDeviceContext *aOrigContext);
+  nsresult    GetDisplayInfo(PRInt32 &aWidth, PRInt32 &aHeight, PRUint32 &aDepth);
+  void        CommonInit(nsNativeDeviceContext aDC);
 
   nsDrawingSurface      mSurface;
   PRUint32              mDepth;  // bit depth of device
   nsPaletteInfo         mPaletteInfo;
   float                 mPixelScale;
+  PRInt16               mScrollbarHeight;
+  PRInt16               mScrollbarWidth;
+  
   float                 mWidthFloat;
   float                 mHeightFloat;
   PRInt32               mWidth;
@@ -95,6 +98,9 @@ protected:
 
   nsIDeviceContextSpec  *mSpec;
   nsNativeDeviceContext mDC;
+
+  static nscoord        mDpi;
+
 };
 
 #endif /* nsDeviceContextPh_h___ */

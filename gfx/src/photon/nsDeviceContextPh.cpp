@@ -37,6 +37,10 @@
 static NS_DEFINE_IID(kIDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
+#define NS_TO_PH_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff)
+
+nscoord nsDeviceContextPh::mDpi = 96;
+
 NS_IMPL_ISUPPORTS1(nsDeviceContextPh, nsIDeviceContext)
 
 
@@ -78,40 +82,29 @@ nsDeviceContextPh :: ~nsDeviceContextPh()
   if (NULL != mPaletteInfo.palette)
     PR_Free(mPaletteInfo.palette);
 
-#if 0
-  if (NULL != mDC)
-  {
-    ::DeleteDC(mDC);
-    mDC = NULL;
-  }
-#endif
-
   NS_IF_RELEASE(mSpec);
 }
 
 
 NS_IMETHODIMP nsDeviceContextPh :: Init(nsNativeWidget aWidget)
 {
+  float newscale, origscale;
+  float a2d,t2d;
+    
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::Init with aWidget aWidget=<%p>\n", aWidget));
 
   CommonInit(NULL);
  
-  {
-  float newscale, origscale;
-  
   GetTwipsToDevUnits(newscale);
   GetAppUnitsToDevUnits(origscale);
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::Init newscale=<%f> origscale=<%f>\n", newscale, origscale));
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::Init mPixelScale=<%f>\n", mPixelScale));
 
-  float a2d,t2d;
   GetTwipsToDevUnits(t2d);
   GetAppUnitsToDevUnits(a2d);
+
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::Init t2d=<%f> a2d=<%f> mTwipsToPixels=<%f>\n", t2d,a2d,mTwipsToPixels));
 
-  } 
- 
- 
   // Call my base class
   return DeviceContextImpl::Init(aWidget);
 }
@@ -122,10 +115,9 @@ nsresult nsDeviceContextPh :: Init(nsNativeDeviceContext aContext, nsIDeviceCont
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::Init with nsNativeDeviceContext aContext=<%p> aOrigContext=<%p>\n", aContext, aOrigContext));
 
-  nsDeviceContextSpecPh * PrintSpec = nsnull;
-  PpPrintContext_t      *PrinterContext = nsnull;
-  float origscale, newscale;
-  float t2d, a2d;
+  nsDeviceContextSpecPh  * PrintSpec = nsnull;
+  PpPrintContext_t       *PrinterContext = nsnull;
+  float                  origscale, newscale, t2d, a2d;
     
   /* convert the mSpec into a nsDeviceContextPh */
   if (mSpec)
@@ -136,7 +128,6 @@ nsresult nsDeviceContextPh :: Init(nsNativeDeviceContext aContext, nsIDeviceCont
   	  PrintSpec->GetPrintContext( PrinterContext );
 
       PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::Init PpPrinterContext=<%p>\n", PrinterContext));
-
     }	    
   }
   
@@ -144,7 +135,6 @@ nsresult nsDeviceContextPh :: Init(nsNativeDeviceContext aContext, nsIDeviceCont
 
   CommonInit(mSpec);		/* HACK! */
 
-#if 1
   GetTwipsToDevUnits(newscale);
   aOrigContext->GetAppUnitsToDevUnits(origscale);
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::Init printing newscale=<%f> origscale=<%f>\n", newscale, origscale));
@@ -161,7 +151,6 @@ nsresult nsDeviceContextPh :: Init(nsNativeDeviceContext aContext, nsIDeviceCont
   
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::Init mAppUnitsToDevUnits=<%f>\n", mAppUnitsToDevUnits));
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::Init mDevUnitsToAppUnits=<%f>\n", mDevUnitsToAppUnits));
-#endif
 
   return NS_OK;
 }
@@ -172,56 +161,58 @@ void nsDeviceContextPh :: CommonInit(nsNativeDeviceContext aDC)
 
   PRInt32           aWidth, aHeight;
   nsresult          err;
-  static nscoord    dpi = 96;
   static int        initialized = 0;
 
   if (!initialized)
   {
     initialized = 1;
+    // Set prefVal the value of the preference "browser.screen_resolution"
+    // or -1 if we can't get it.
+    // If it's negative, we pretend it's not set.
+    // If it's 0, it means force use of the operating system's logical resolution.
+    // If it's positive, we use it as the logical resolution
+    PRInt32 prefVal = -1;
     nsresult res;
-    NS_WITH_SERVICE(nsIPref,prefs,kPrefCID,&res);
+
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res);
     if (NS_SUCCEEDED(res) && prefs)
-	{
-      PRInt32 intVal = 96;
-      res = prefs->GetIntPref("browser.screen_resolution", &intVal);
-      if (NS_SUCCEEDED(res))
-	  {
-        if (intVal)
-		{
-          dpi = intVal;
-        }
-//        else {
-//          // Compute dpi of display
-//          float screenWidth = float(::gdk_screen_width());
-//          float screenWidthIn = float(::gdk_screen_width_mm()) / 25.4f;
-//          dpi = nscoord(screenWidth / screenWidthIn);
-//        }
+    {
+      res = prefs->GetIntPref("browser.screen_resolution", &prefVal);
+      if (! NS_SUCCEEDED(res))
+      {
+        prefVal = 96;
       }
+
+      prefs->RegisterCallback("browser.screen_resolution", prefChanged,
+                              (void *)this);
+      mDpi = prefVal;
     }
   }
 
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::CommonInit dpi=<%d>\n", dpi));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::CommonInit mDpi=<%d>\n", mDpi));
 
-  mTwipsToPixels = float(dpi) / float(NSIntPointsToTwips(72));
+#if 1
+  SetDPI(mDpi); 
+#else  
+  mTwipsToPixels = float(mDpi) / float(NSIntPointsToTwips(72));
   mPixelsToTwips = 1.0f / mTwipsToPixels;
+#endif
 
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::CommonInit mPixelsToTwips=<%f>\n", mPixelsToTwips));
   
-//  if (aDC != NULL)
-//  {
-//    mWidthFloat  = (float) 480;
-//    mHeightFloat = (float) 320;  
-//  }
-//  else
-  {
     err = GetDisplayInfo(aWidth, aHeight, mDepth);
     if (err == NS_ERROR_FAILURE)
       abort();
 
+#if 0
     // HACK multipled by three to make Mozilla work on 3x3 virtual console
     mWidthFloat  = (float) aWidth * 3;
-    mHeightFloat = (float) aHeight * 3;  
-  }
+    mHeightFloat = (float) aHeight * 3;
+#else
+    /* Turn off virtual console support... */
+    mWidthFloat  = (float) aWidth;
+    mHeightFloat = (float) aHeight;
+#endif
     
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::CommonInit with aWidget: Screen Size (%f,%f)\n", mWidthFloat,mHeightFloat));
 
@@ -250,6 +241,10 @@ void nsDeviceContextPh :: CommonInit(nsNativeDeviceContext aDC)
 	}
   }
 
+  /* Revisit: the scroll bar sizes is a gross guess based on Phab */
+  mScrollbarHeight = 17.0f;
+  mScrollbarWidth  = 17.0f;
+  
   /* Call Base Class */
   DeviceContextImpl::CommonInit();
 }
@@ -308,35 +303,101 @@ NS_IMETHODIMP nsDeviceContextPh :: SupportsNativeWidgets(PRBool &aSupportsWidget
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextPh :: GetCanonicalPixelScale(float &aScale) const
-{
-//  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::GetCanonicalPixelScale <%f>\n", mPixelScale));
-
-  aScale = mPixelScale;		// mPixelScale should be 1.0f
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsDeviceContextPh :: GetScrollBarDimensions(float &aWidth, float &aHeight) const
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::GetScrollBarDimensions\n"));
 
   /* Revisit: the scroll bar sizes is a gross guess based on Phab */
-  aWidth = 17.0f *  mPixelsToTwips;
-  aHeight = 17.0f *  mPixelsToTwips;
+  aWidth = mScrollbarWidth * mPixelsToTwips;
+  aHeight = mScrollbarHeight * mPixelsToTwips;
   
-  return NS_OK;
-}
-
-nsresult GetSysFontInfo( PhGC_t &aGC, nsSystemAttrID anID, nsFont * aFont) 
-{
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::GetSysFontInfo - Not Implemented\n"));
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextPh :: GetSystemAttribute(nsSystemAttrID anID, SystemAttrStruct * aInfo) const
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::GetSystemAttribute - Not Implemented\n"));
+   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::GetSystemAttribute\n"));
+  nsresult status = NS_OK;
+
+#if 1
+  switch (anID) {
+    //---------
+    // Colors
+    //---------
+    case eSystemAttr_Color_WindowBackground:
+        *aInfo->mColor = NS_RGB(255,255,255);	/* White */
+        break;
+    case eSystemAttr_Color_WindowForeground:
+        *aInfo->mColor = NS_RGB(0,0,0);	        /* Black */
+        break;
+    case eSystemAttr_Color_WidgetBackground:
+        *aInfo->mColor = NS_RGB(128,128,128);	/* Gray */
+        break;
+    case eSystemAttr_Color_WidgetForeground:
+        *aInfo->mColor = NS_RGB(0,0,0);	        /* Black */
+        break;
+    case eSystemAttr_Color_WidgetSelectBackground:
+        *aInfo->mColor = NS_RGB(200,200,200);	/* Dark Gray */
+        break;
+    case eSystemAttr_Color_WidgetSelectForeground:
+        *aInfo->mColor = NS_RGB(0,0,0);	        /* Black */
+        break;
+    case eSystemAttr_Color_Widget3DHighlight:
+        *aInfo->mColor = NS_RGB(0xa0,0xa0,0xa0);
+        break;
+    case eSystemAttr_Color_Widget3DShadow:
+        *aInfo->mColor = NS_RGB(0x40,0x40,0x40);
+        break;
+    case eSystemAttr_Color_TextBackground:
+        *aInfo->mColor = NS_RGB(255,255,255);	/* White */
+        break;
+    case eSystemAttr_Color_TextForeground: 
+        *aInfo->mColor = NS_RGB(0,0,0);	        /* Black */
+        break;
+    case eSystemAttr_Color_TextSelectBackground:
+        *aInfo->mColor = NS_RGB(0,0,255);	        /* Blue */
+        break;
+    case eSystemAttr_Color_TextSelectForeground:
+        *aInfo->mColor = NS_RGB(255,255,255);	/* White */
+        break;
+    //---------
+    // Size
+    //---------
+    case eSystemAttr_Size_ScrollbarHeight:
+        aInfo->mSize = mScrollbarHeight;
+        break;
+    case eSystemAttr_Size_ScrollbarWidth: 
+        aInfo->mSize = mScrollbarWidth;
+        break;
+    case eSystemAttr_Size_WindowTitleHeight:
+        aInfo->mSize = 0;
+        break;
+    case eSystemAttr_Size_WindowBorderWidth:
+        aInfo->mSize = 8; // REVISIT - HACK!
+        break;
+    case eSystemAttr_Size_WindowBorderHeight:
+        aInfo->mSize = 20; // REVISIT - HACK!
+        break;
+    case eSystemAttr_Size_Widget3DBorder:
+        aInfo->mSize = 4;
+        break;
+    //---------
+    // Fonts
+    //---------
+    case eSystemAttr_Font_Caption:
+    case eSystemAttr_Font_Icon:
+    case eSystemAttr_Font_Menu:
+    case eSystemAttr_Font_MessageBox:
+    case eSystemAttr_Font_SmallCaption:
+    case eSystemAttr_Font_StatusBar:
+    case eSystemAttr_Font_Tooltips:
+    case eSystemAttr_Font_Widget:
+      status = NS_ERROR_FAILURE;
+      break;
+  } // switch
+
+#endif
+
   return NS_OK;
 }
 
@@ -367,10 +428,11 @@ NS_IMETHODIMP nsDeviceContextPh :: GetClientRect(nsRect &aRect)
 /* I need to know the requested font size to finish this function */
 NS_IMETHODIMP nsDeviceContextPh :: CheckFontExistence(const nsString& aFontName)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::CheckFontExistence\n" ));
-
   nsresult    ret_code = NS_ERROR_FAILURE;
   char        *fontName = aFontName.ToNewCString();
+
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::CheckFontExistence for font=<%s>\n",fontName));
+
 
   if( fontName )
   {
@@ -413,43 +475,16 @@ NS_IMETHODIMP nsDeviceContextPh :: CheckFontExistence(const nsString& aFontName)
 
 NS_IMETHODIMP nsDeviceContextPh::GetDepth(PRUint32& aDepth)
 {
-  aDepth = mDepth; // 24; /* REVISIT: Should be mDepth, kedl, FIXME */
+  aDepth = mDepth; // 24;
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::GetDepth aDepth=<%d> - Not Implemented\n", aDepth));
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextPh::GetILColorSpace(IL_ColorSpace*& aColorSpace)
-{
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::GetILColorSpace - Calling base class method\n"));
-
-  /* This used to return NS_OK but I chose to call my base class instead */
-  return DeviceContextImpl::GetILColorSpace(aColorSpace);
-}
-
-NS_IMETHODIMP nsDeviceContextPh::GetPaletteInfo(nsPaletteInfo& aPaletteInfo)
-{
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::GetPaletteInfo - Not Implemented\n"));
-
-  aPaletteInfo.isPaletteDevice = mPaletteInfo.isPaletteDevice;
-  aPaletteInfo.sizePalette = mPaletteInfo.sizePalette;
-  aPaletteInfo.numReserved = mPaletteInfo.numReserved;
-  aPaletteInfo.palette = NULL;
-  if (NULL != mPaletteInfo.palette)
-  {
-    aPaletteInfo.palette = PR_Malloc( sizeof(PgColor_t) * _Pg_MAX_PALETTE );
-    if (NULL != aPaletteInfo.palette)
-    {
-      /* If the memory was allocated */
-	  memcpy(aPaletteInfo.palette, mPaletteInfo.palette, sizeof(PgColor_t)*_Pg_MAX_PALETTE);
-	}
-  }
-  
-  return NS_OK;
-}
 
 NS_IMETHODIMP nsDeviceContextPh :: ConvertPixel(nscolor aColor, PRUint32 & aPixel)
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::ConvertPixel - Not Implemented\n"));
+  aPixel = NS_TO_PH_RGB(aColor);
   return NS_OK;
 }
 
@@ -482,6 +517,41 @@ NS_IMETHODIMP nsDeviceContextPh :: GetDeviceContextFor(nsIDeviceContextSpec *aDe
   
   return ((nsDeviceContextPh *) aContext)->Init((nsIDeviceContext*)aContext, (nsIDeviceContext*)this);
 }
+
+nsresult nsDeviceContextPh::SetDPI(PRInt32 aDpi)
+{
+  const int pt2t = 72;
+
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::SetDPI old DPI=<%d> new DPI=<%d>\n", mDpi,aDpi));
+
+  mDpi = aDpi;
+    
+  // make p2t a nice round number - this prevents rounding problems
+  mPixelsToTwips = float(NSToIntRound(float(NSIntPointsToTwips(pt2t)) / float(aDpi)));
+  mTwipsToPixels = 1.0f / mPixelsToTwips;
+
+  // XXX need to reflow all documents
+  return NS_OK;
+}
+
+int nsDeviceContextPh::prefChanged(const char *aPref, void *aClosure)
+{
+  nsDeviceContextPh *context = (nsDeviceContextPh*)aClosure;
+  nsresult rv;
+
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::prefChanged aPref=<%s>\n", aPref));
+  
+  if (nsCRT::strcmp(aPref, "browser.screen_resolution")==0) {
+    PRInt32 dpi;
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+    rv = prefs->GetIntPref(aPref, &dpi);
+    if (NS_SUCCEEDED(rv))
+      context->SetDPI(dpi);
+  }
+  
+  return 0;
+}
+
 
 NS_IMETHODIMP nsDeviceContextPh :: BeginDocument(void)
 {
