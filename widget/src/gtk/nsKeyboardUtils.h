@@ -27,8 +27,10 @@ extern "C" {
 
 class nsXKBModeSwitch {
   public:
-    static void EnableWorkaround(gboolean enable);
-    static void AreGrabbingKeyboard(gboolean grabbing);
+    static void ControlWorkaround(gboolean grab_during_popup,
+                                  gboolean ungrab_during_mode_switch);
+    static gint GrabKeyboard(GdkWindow *win, gint owner_events, guint32 time);
+    static void UnGrabKeyboard(guint32 time);
     static void HandleKeyPress(XKeyEvent *xke);
     static void HandleKeyRelease(XKeyEvent *xke);
     static void HandleMappingNotify();
@@ -36,20 +38,14 @@ class nsXKBModeSwitch {
   private:
     static void Init();
 
-    static PRBool   gInitedGlobals;
     static PRUint32 gModeSwitchKeycode1;
     static PRUint32 gModeSwitchKeycode2;
-    static PRUint32 gModeSwitchBit;
-    static PRBool   gWorkaroundEnabled;
-    static PRBool   gAreGrabbingKeyboard;
+    static PRBool   gGrabDuringPopup;
+    static PRBool   gUnGrabDuringModeSwitch;
     static PRBool   gModeSwitchDown;
-    static PRBool   gEnableXkbKeysymToModifiers;
-    static PRUint32 gUserDefinedModeSwitchBit;
+    static gint     gOwnerEvents;
+    static guint32  gGrabTime;
+
 };
 
 #endif /* _NSKEYBOARDUTILS_H_ */
-
-
-
-
-

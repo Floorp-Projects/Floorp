@@ -153,6 +153,7 @@ public:
   // this will get the nsWindow with the grab.  The return will not be
   // addrefed.
   static nsWindow *GetGrabWindow(void);
+  GdkWindow *GetGdkGrabWindow(void);
   
   virtual void DispatchSetFocusEvent(void);
   virtual void DispatchLostFocusEvent(void);

@@ -218,13 +218,16 @@ nsWindow::nsWindow()
         gRaiseWindows = val;
 
       //
-      // control the "keyboard Mode_switch during XGrabKeyboard" workaround
+      // control the "keyboard Mode_switch during XGrabKeyboard"
       //
-      val = PR_TRUE;
-      rv = prefs->GetBoolPref("keyboard.mode_switch.enable_workaround",
-                              &val);
-      if (NS_SUCCEEDED(rv))
-        nsXKBModeSwitch::EnableWorkaround(val);
+      PRBool grab_during_popup = PR_TRUE;
+      PRBool ungrab_during_mode_switch = PR_TRUE;
+      prefs->GetBoolPref("autocomplete.grab_during_popup",
+                              &grab_during_popup);
+      prefs->GetBoolPref("autocomplete.ungrab_during_mode_switch",
+                              &ungrab_during_mode_switch);
+      nsXKBModeSwitch::ControlWorkaround(grab_during_popup,
+                           ungrab_during_mode_switch);
     }
   }
 }
@@ -914,30 +917,24 @@ void nsWindow::NativeGrab(PRBool aGrab)
       mLastGrabFailed = PR_TRUE;
 
     if (mTransientParent)
-      retval = gdk_keyboard_grab(GTK_WIDGET(mTransientParent)->window,
+      retval = nsXKBModeSwitch::GrabKeyboard(GTK_WIDGET(mTransientParent)->window,
                                  PR_TRUE, GDK_CURRENT_TIME);
-    else 
-      retval = gdk_keyboard_grab(mSuperWin->bin_window,
+    else
+      retval = nsXKBModeSwitch::GrabKeyboard(mSuperWin->bin_window,
                                  PR_TRUE, GDK_CURRENT_TIME);
 #ifdef DEBUG_GRAB
     printf("nsWindow::NativeGrab %p keyboard_grab %d\n", this, retval);
 #endif
     // check and set our flag if the grab failed
-    if (retval != 0) {
+    if (retval != 0)
       mLastGrabFailed = PR_TRUE;
-      nsXKBModeSwitch::AreGrabbingKeyboard(PR_FALSE);
-    }
-    else {
-      nsXKBModeSwitch::AreGrabbingKeyboard(PR_TRUE);
-    }
 
     gdk_cursor_destroy(cursor);
   } else {
 #ifdef DEBUG_GRAB
     printf("nsWindow::NativeGrab %p ungrab\n", this);
 #endif
-    gdk_keyboard_ungrab(GDK_CURRENT_TIME);
-    nsXKBModeSwitch::AreGrabbingKeyboard(PR_FALSE);
+    nsXKBModeSwitch::UnGrabKeyboard(GDK_CURRENT_TIME);
     DropMotionTarget();
     gdk_pointer_ungrab(GDK_CURRENT_TIME);
   }
@@ -3011,6 +3008,20 @@ nsWindow::GetGrabWindow(void)
   }
   else
     return nsnull;
+}
+
+GdkWindow *
+nsWindow::GetGdkGrabWindow(void)
+{
+  if (!nsWindow::sIsGrabbing)
+  {
+    return nsnull;
+  }
+  if (mTransientParent)
+    return GTK_WIDGET(mTransientParent)->window;
+  else
+    return mSuperWin->bin_window;
+
 }
 
 /* virtual */ GdkWindow *
