@@ -389,8 +389,8 @@ net_check_for_company_hostname(ActiveEntry *ce)
             /* no dots in hostname */
             if (goBrowsing && !PL_strchr(ce->URL_s->address, '/')) {     
                 char *pUrl;
-                PREF_CopyCharPref("network.search.url",&pUrl);
-                if (pUrl) {
+                if ( (PREF_OK == PREF_CopyCharPref("network.search.url",&pUrl))
+                    && pUrl) {
                     char *tmp = NET_ParseURL(ce->URL_s->address, GET_HOST_PART);
                     char* new_address = PR_smprintf("%sgo+%s", pUrl, tmp);
                     PR_Free(pUrl);
@@ -3667,7 +3667,9 @@ PRIVATE void
 HTTP_ReadPrefs(void)
 {
     XP_Bool b;
-    PREF_GetBoolPref("network.sendRefererHeader", &b);
+     if ( (PREF_OK != PREF_GetBoolPref("network.sendRefererHeader", &b)) ) {
+        b = TRUE;
+    }
     NET_SetSendRefererHeader(b);
 }
 
@@ -3684,6 +3686,8 @@ HTTP_InitPrefs(void)
     PREF_RegisterCallback(REFERER_HEADER_PREF ,HTTP_PrefChangedFunc,NULL);
 }
 
+#define HTTP_SCHEME "http:"
+
 MODULE_PRIVATE void
 NET_InitHTTPProtocol(void)
 {
@@ -3695,6 +3699,8 @@ NET_InitHTTPProtocol(void)
   http_proto_impl.process = net_ProcessHTTP;
   http_proto_impl.interrupt = net_InterruptHTTP;
   http_proto_impl.cleanup = net_CleanupHTTP;
+  StrAllocCopy(http_proto_impl.scheme, HTTP_SCHEME); 
+
 
   NET_RegisterProtocolImplementation(&http_proto_impl, HTTP_TYPE_URL);
   HG93898

@@ -70,11 +70,12 @@ pref_DownloadDone(URL_Struct* URL_s, int status, MWContext* window_id)
 		m_FindProxyInJSC = jsc_check_for_find_proxy();
 	} 
 
-	PREF_GetConfigInt("autoadmin.refresh_interval", &minutes);
-	if ( minutes > 0 ) {
-		FE_SetTimeout((TimeoutCallbackFunction) AutoAdminRefreshCallback,
-						NULL, minutes * 60 * 1000);
-	}
+    if (PREF_OK ==  PREF_GetConfigInt("autoadmin.refresh_interval", &minutes)) {
+	    if ( minutes > 0 ) {
+		    FE_SetTimeout((TimeoutCallbackFunction) AutoAdminRefreshCallback,
+						    NULL, minutes * 60 * 1000);
+	    }
+    }
 }
 
 
@@ -118,7 +119,9 @@ NET_DownloadAutoAdminCfgFile()
 
 	if ( first_time && (NET_InitPacfContext() == FALSE) ) return;
 
-	PREF_CopyConfigString("autoadmin.global_config_url", &url);
+    if (PREF_OK != PREF_CopyConfigString("autoadmin.global_config_url", &url)) {
+        return;
+    }
  
 	if (( url == NULL ) || (!(*url))) {
 		return;
@@ -126,7 +129,9 @@ NET_DownloadAutoAdminCfgFile()
  
   	if ( !PREF_IsAutoAdminEnabled() ) {
 		XP_Bool failover = FALSE;
-		PREF_GetConfigBool("autoadmin.failover_to_cached", &failover);
+        if (PREF_OK != PREF_GetConfigBool("autoadmin.failover_to_cached", &failover)) {
+            return;
+        }
 		if ( failover == FALSE ) {
 			NET_DisableGetURL();
 		}
@@ -134,15 +139,17 @@ NET_DownloadAutoAdminCfgFile()
 		return;
 	}
 
-	PREF_GetConfigBool("autoadmin.append_emailaddr", &append_email);
-	if ( append_email ) {
-		StrAllocCat(url, "?");
-		PREF_CopyCharPref("mail.identity.useremail", &email_addr);
-		if ( email_addr ) {
-			StrAllocCat(url, email_addr);
-			XP_FREE(email_addr);
-		}
-	}
+    if (PREF_OK == PREF_GetConfigBool("autoadmin.append_emailaddr", &append_email)) {
+         if ( append_email ) {
+            StrAllocCat(url, "?");
+            if (PREF_OK == PREF_CopyCharPref("mail.identity.useremail", &email_addr)) {
+                if ( email_addr ) {
+                    StrAllocCat(url, email_addr);
+                    XP_FREE(email_addr);
+                }
+            }
+        }
+    }
  
 	if ( url && *url ) {
 		URL_Struct* url_s = NET_CreateURLStruct(url, NET_SUPER_RELOAD);
@@ -155,11 +162,12 @@ NET_DownloadAutoAdminCfgFile()
 			int32 seconds;
 			first_time = FALSE;
 			/* Timeout so we don't hang here */
-			PREF_GetConfigInt("autoadmin.timeout", &seconds);
-			if ( seconds > 0 ) {
-				FE_SetTimeout((TimeoutCallbackFunction) AutoAdminTimeoutCallback,
-						NULL, seconds * 1000);
-			}
+            if (PREF_OK == PREF_GetConfigInt("autoadmin.timeout", &seconds)) {
+			    if ( seconds > 0 ) {
+				    FE_SetTimeout((TimeoutCallbackFunction) AutoAdminTimeoutCallback,
+						    NULL, seconds * 1000);
+			    }
+            }
 			while ( m_GettingConfigFile && !m_TimesUp ) {
 				FEU_StayingAlive();
 			}
@@ -202,7 +210,9 @@ jsc_try_failover(MWContext* w)
 	XP_StatStruct st;
 	XP_File fp = NULL;
 
-	PREF_GetConfigBool("autoadmin.failover_to_cached", &failover);
+    if (PREF_OK != PREF_GetConfigBool("autoadmin.failover_to_cached", &failover)) {
+        goto failed;
+    }
 
 	if ( failover == FALSE ) {
 		FE_Alert(w, XP_GetString(XP_BAD_AUTOCONFIG_NO_FAILOVER));
@@ -259,8 +269,10 @@ jsc_check_for_find_proxy(void)
 	JSBool ok;
 	jsval rv;
 
-	PREF_GetConfigContext(&configContext);
-	PREF_GetGlobalConfigObject(&globalConfig);
+	if (PREF_OK != PREF_GetConfigContext(&configContext) ||
+        PREF_OK != PREF_GetGlobalConfigObject(&globalConfig) ) {
+        return FALSE;
+    }
 
 	XP_SPRINTF(buf, "typeof(ProxyConfig.FindProxyForURL) == \"function\"");
 	ok = JS_EvaluateScript(configContext, globalConfig, buf, strlen(buf), 0, 0, 

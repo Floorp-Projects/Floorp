@@ -408,12 +408,15 @@ NET_UpdateManualProxyInfo(const char * prefChanged) {
 
 	if (bSetupAll || !PL_strcmp(prefChanged, "network.proxy.ftp") || 
 		!PL_strcmp(prefChanged, "network.proxy.ftp_port")) {
-		PREF_CopyCharPref("network.proxy.ftp",&proxy);
-		if(proxy && *proxy) {
-			PREF_GetIntPref("network.proxy.ftp_port",&iPort);
-			sprintf(text,"%s:%d", proxy, iPort);
-		    StrAllocCopy(MKftp_proxy, text);
-			iPort=0;
+		if( (PREF_OK == PREF_CopyCharPref("network.proxy.ftp",&proxy))
+            && proxy && *proxy) {
+            if ( (PREF_OK == PREF_GetIntPref("network.proxy.ftp_port",&iPort)) ) {
+			    sprintf(text,"%s:%d", proxy, iPort);
+		        StrAllocCopy(MKftp_proxy, text);
+			    iPort=0;
+            } else {
+                FREE_AND_CLEAR(MKftp_proxy);
+            }
 		}
 		else 
 			FREE_AND_CLEAR(MKftp_proxy);
@@ -422,12 +425,15 @@ NET_UpdateManualProxyInfo(const char * prefChanged) {
 
 	if (bSetupAll || !PL_strcmp(prefChanged, "network.proxy.gopher") || 
 		!PL_strcmp(prefChanged, "network.proxy.gopher_port")) {
-		PREF_CopyCharPref("network.proxy.gopher",&proxy);
-		if(proxy && *proxy) {
-			PREF_GetIntPref("network.proxy.gopher_port",&iPort);
-			sprintf(text,"%s:%d", proxy, iPort);  
-		    StrAllocCopy(MKgopher_proxy, text);
-			iPort=0;
+		if( (PREF_OK == PREF_CopyCharPref("network.proxy.ftp",&proxy)) 
+            && proxy && *proxy) {
+            if ( (PREF_OK == PREF_GetIntPref("network.proxy.gopher_port",&iPort)) ) {
+			    sprintf(text,"%s:%d", proxy, iPort);  
+		        StrAllocCopy(MKgopher_proxy, text);
+			    iPort=0;
+            } else {
+                FREE_AND_CLEAR(MKgopher_proxy);
+            }
 		}
 		else 
 			FREE_AND_CLEAR(MKgopher_proxy);
@@ -436,12 +442,15 @@ NET_UpdateManualProxyInfo(const char * prefChanged) {
 
 	if (bSetupAll || !PL_strcmp(prefChanged, "network.proxy.http") || 
 		!PL_strcmp(prefChanged, "network.proxy.http_port")) {
-		PREF_CopyCharPref("network.proxy.http",&proxy);
-		if(proxy && *proxy) {
-			PREF_GetIntPref("network.proxy.http_port",&iPort);
-			sprintf(text,"%s:%d", proxy, iPort);  
-		    StrAllocCopy(MKhttp_proxy, text);
-			iPort=0;
+		if( (PREF_OK == PREF_CopyCharPref("network.proxy.http",&proxy)) 
+            && proxy && *proxy) {
+            if ( (PREF_OK == PREF_GetIntPref("network.proxy.http_port",&iPort)) ) {
+			    sprintf(text,"%s:%d", proxy, iPort);  
+		        StrAllocCopy(MKhttp_proxy, text);
+			    iPort=0;
+            } else {
+                FREE_AND_CLEAR(MKhttp_proxy);
+            }
 		}
 		else 
 			FREE_AND_CLEAR(MKhttp_proxy);
@@ -453,12 +462,15 @@ NET_UpdateManualProxyInfo(const char * prefChanged) {
 
 	if (bSetupAll || !PL_strcmp(prefChanged, "network.proxy.news") || 
 		!PL_strcmp(prefChanged, "network.proxy.news_port")) {
-		PREF_CopyCharPref("network.proxy.news",&proxy);
-		if(proxy && *proxy) {
-			PREF_GetIntPref("network.proxy.news_port",&iPort);
-			sprintf(text,"%s:%d", proxy, iPort);  
-		    StrAllocCopy(MKnews_proxy, text);
-			iPort=0;
+		if( (PREF_OK == PREF_CopyCharPref("network.proxy.news",&proxy))
+            && proxy && *proxy) {
+            if ( (PREF_OK == PREF_GetIntPref("network.proxy.news_port",&iPort)) ) {
+			    sprintf(text,"%s:%d", proxy, iPort);  
+		        StrAllocCopy(MKnews_proxy, text);
+			    iPort=0;
+            } else {
+                FREE_AND_CLEAR(MKnews_proxy);
+            }
 		}
 		else 
 			FREE_AND_CLEAR(MKnews_proxy);
@@ -467,12 +479,15 @@ NET_UpdateManualProxyInfo(const char * prefChanged) {
 
 	if (bSetupAll || !PL_strcmp(prefChanged, "network.proxy.wais") || 
 		!PL_strcmp(prefChanged, "network.proxy.wais_port")) {
-		PREF_CopyCharPref("network.proxy.wais",&proxy);
-		if(proxy && *proxy) {
-			PREF_GetIntPref("network.proxy.wais_port",&iPort);
-			sprintf(text,"%s:%d", proxy, iPort);  
-		    StrAllocCopy(MKwais_proxy, text);
-			iPort=0;
+		if( (PREF_OK == PREF_CopyCharPref("network.proxy.wais",&proxy))
+            && proxy && *proxy) {
+            if ( (PREF_OK == PREF_GetIntPref("network.proxy.wais_port",&iPort)) ) {
+			    sprintf(text,"%s:%d", proxy, iPort);  
+		        StrAllocCopy(MKwais_proxy, text);
+			    iPort=0;
+            } else {
+                FREE_AND_CLEAR(MKwais_proxy);
+            }
 		}
 		else 
 			FREE_AND_CLEAR(MKwais_proxy);
@@ -481,11 +496,14 @@ NET_UpdateManualProxyInfo(const char * prefChanged) {
 
 	if (bSetupAll || !PL_strcmp(prefChanged, "network.hosts.socks_server") || 
 		!PL_strcmp(prefChanged, "network.hosts.socks_serverport")) {
-		PREF_CopyCharPref("network.hosts.socks_server",&proxy);
-		if (proxy && *proxy) {
-			PREF_GetIntPref("network.hosts.socks_serverport",&iPort);
-			PR_snprintf(text, sizeof(text), "%s:%d", proxy, iPort);  
-			NET_SetSocksHost(text);
+		if ( (PREF_OK == PREF_CopyCharPref("network.hosts.socks_server",&proxy)) 
+            && proxy && *proxy) {
+            if ( (PREF_OK == PREF_GetIntPref("network.hosts.socks_serverport",&iPort)) ) {
+			    PR_snprintf(text, sizeof(text), "%s:%d", proxy, iPort);  
+			    NET_SetSocksHost(text);
+            } else {
+                NET_SetSocksHost(NULL); /* NULL is ok */
+            }
 		}
 		else {
 			NET_SetSocksHost(proxy); /* NULL is ok */
@@ -495,12 +513,12 @@ NET_UpdateManualProxyInfo(const char * prefChanged) {
 	if (proxy) FREE_AND_CLEAR(proxy);
 
 	if (bSetupAll || !PL_strcmp(prefChanged, "network.proxy.no_proxies_on")) {
-		PREF_CopyCharPref("network.proxy.no_proxies_on",&proxy);
-		if(proxy && *proxy) {
+		if( (PREF_OK == PREF_CopyCharPref("network.proxy.no_proxies_on",&proxy))
+            && proxy && *proxy) {
 		    StrAllocCopy(MKno_proxy, proxy);
-		}
-		else 
-			FREE_AND_CLEAR(MKno_proxy);
+        } else {
+            FREE_AND_CLEAR(MKno_proxy);
+        }
 	}
 	if (proxy) FREE_AND_CLEAR(proxy);
 	return;
@@ -549,8 +567,8 @@ NET_SelectProxyStyle(NET_ProxyStyle style)
 	
 	if (MKproxy_style == PROXY_STYLE_AUTOMATIC) {
 		/* Get the autoconfig url */
-		PREF_CopyCharPref("network.proxy.autoconfig_url",&proxy);
-		if (proxy && *proxy) {
+		if ( (PREF_OK == PREF_CopyCharPref("network.proxy.autoconfig_url",&proxy))
+            && proxy && *proxy) {
 			StrAllocCopy(MKproxy_ac_url, proxy);
 			NET_ProxyAcLoaded = FALSE;
 		}
@@ -598,31 +616,41 @@ NET_SetupPrefs(const char * prefChanged)
 
 	if (bSetupAll || !PL_strcmp(prefChanged, "network.dnsCacheExpiration")) {
 		int32 n;
-		PREF_GetIntPref("network.dnsCacheExpiration",&n);
+        if ( (PREF_OK != PREF_GetIntPref("network.dnsCacheExpiration",&n)) ) {
+            n = DEF_DNS_EXPIRATION;
+        }
 		NET_SetDNSExpirationPref(n);
 	}
 	
 	if (bSetupAll || !PL_strcmp(prefChanged,"browser.prefetch")) {
 		int32 n;
-		PREF_GetIntPref("browser.prefetch",&n);
+        if ( (PREF_OK != PREF_GetIntPref("browser.prefetch",&n)) ) {
+            n = 0;
+        }
     	PRE_Enable((PRUint8)n);
 	}
 		
 	if (bSetupAll || !PL_strcmp(prefChanged,"browser.cache.memory_cache_size")) {
-		int32 nMemCache = 8192;
-		PREF_GetIntPref("browser.cache.memory_cache_size",&nMemCache);
+		int32 nMemCache;
+        if ( (PREF_OK != PREF_GetIntPref("browser.cache.memory_cache_size",&nMemCache)) ) {
+            nMemCache = DEF_MEM_CACHE_SIZE;
+        }
 		NET_SetMemoryCacheSize(nMemCache * 1024);
 	}
 
 	if (bSetupAll || !PL_strcmp(prefChanged,"browser.cache.disk_cache_size")) {
 		int32 nDiskCache;
-		PREF_GetIntPref("browser.cache.disk_cache_size",&nDiskCache);
+        if ( (PREF_OK != PREF_GetIntPref("browser.cache.disk_cache_size",&nDiskCache)) ) {
+            nDiskCache = DEF_DISK_CACHE_SIZE;
+        }
 	    NET_SetDiskCacheSize(nDiskCache * 1024);
 	}
 
 	if (bSetupAll || !PL_strcmp(prefChanged, "browser.cache.check_doc_frequency")) {
 		int32 nDocReqFreq;
-		PREF_GetIntPref("browser.cache.check_doc_frequency" ,&nDocReqFreq);
+        if ( (PREF_OK != PREF_GetIntPref("browser.cache.check_doc_frequency" ,&nDocReqFreq)) ) {
+            nDocReqFreq = DEF_CHECK_DOC_FREQ;
+        }
 		NET_SetCacheUseMethod((CacheUseEnum)nDocReqFreq);
 	}
 	
@@ -630,14 +658,16 @@ NET_SetupPrefs(const char * prefChanged)
 #ifdef MOZ_MAIL_NEWS
 	if (bSetupAll || !PL_strcmp(prefChanged,"mail.allow_at_sign_in_user_name")) {
 		XP_Bool prefBool;
-		PREF_GetBoolPref("mail.allow_at_sign_in_user_name",&prefBool);
+        if ( (PREF_OK != PREF_GetBoolPref("mail.allow_at_sign_in_user_name",&prefBool)) ) {
+            prefBool = DEF_ALLOW_AT_SIGN_UNAME;
+        }
 		NET_SetAllowAtSignInMailUserName (prefBool);
 	}
 #endif /* MOZ_MAIL_NEWS */
 	
 	if (bSetupAll || !PL_strcmp(prefChanged,"network.proxy.autoconfig_url")) {
-		PREF_CopyCharPref("network.proxy.autoconfig_url",&proxy);
-		if (proxy && *proxy) {
+		if ( (PREF_OK == PREF_CopyCharPref("network.proxy.autoconfig_url",&proxy))
+            && proxy && *proxy) {
 			StrAllocCopy(MKproxy_ac_url, proxy);
 			NET_ProxyAcLoaded = FALSE;
 		}
@@ -650,8 +680,10 @@ NET_SetupPrefs(const char * prefChanged)
 
 	if (bSetupAll || !PL_strcmp(prefChanged, "network.proxy.type")) {
 		int32 iType;
-		PREF_GetIntPref("network.proxy.type",&iType);
-	NET_SelectProxyStyle((NET_ProxyStyle)iType);
+        if ( (PREF_OK != PREF_GetIntPref("network.proxy.type",&iType)) ) {
+            iType = DEF_PROXY_TYPE;
+        }
+	    NET_SelectProxyStyle((NET_ProxyStyle)iType);
 	}
 }
 
@@ -2356,9 +2388,9 @@ NET_GetURL (URL_Struct *URL_s,
 			if(escaped)
 			  {
 				char *pUrl;
-				PREF_CopyCharPref("network.search.url",&pUrl);
 				FREE(munged);
-				if (pUrl) {
+				if ( (PREF_OK == PREF_CopyCharPref("network.search.url",&pUrl))
+                    && pUrl) {
 					munged = PR_smprintf("%s%s", pUrl, escaped);
 					FREE(escaped);
 					PR_Free(pUrl);

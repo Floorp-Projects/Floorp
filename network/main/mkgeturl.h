@@ -21,6 +21,14 @@
 
 #include "xp.h"
 
+/* default values */
+#define DEF_DNS_EXPIRATION      900
+#define DEF_MEM_CACHE_SIZE      8192
+#define DEF_DISK_CACHE_SIZE     7680
+#define DEF_CHECK_DOC_FREQ      0
+#define DEF_ALLOW_AT_SIGN_UNAME FALSE
+#define DEF_PROXY_TYPE          3
+#define DEF_COOKIE_BEHAVIOR     0
 
 /* fix Mac warnings about missing prototypes */
 MODULE_PRIVATE int PR_CALLBACK 
@@ -94,6 +102,7 @@ struct _NET_ProtoImpl {
 				      			  * than once, when we need to shut down 
 				      			  * connections or free up memory
 				      			  */
+    char * scheme;  /* What scheme does this protocol implementation handle */
 };
 
 PR_BEGIN_EXTERN_C

@@ -1436,8 +1436,10 @@ NET_GetCookieScriptPref(void)
 MODULE_PRIVATE int PR_CALLBACK
 NET_CookieBehaviorPrefChanged(const char * newpref, void * data)
 {
-	int32	n = 0;
-	PREF_GetIntPref(pref_cookieBehavior, &n);
+	int32	n;
+    if ( (PREF_OK != PREF_GetIntPref(pref_cookieBehavior, &n)) ) {
+        n = DEF_COOKIE_BEHAVIOR;
+    }
 	NET_SetCookieBehaviorPref((NET_CookieBehaviorEnum)n);
 	return PREF_NOERROR;
 }
@@ -1445,8 +1447,10 @@ NET_CookieBehaviorPrefChanged(const char * newpref, void * data)
 MODULE_PRIVATE int PR_CALLBACK
 NET_CookieWarningPrefChanged(const char * newpref, void * data)
 {
-	Bool	x = FALSE;
-	PREF_GetBoolPref(pref_warnAboutCookies, &x);
+	Bool	x;
+    if ( (PREF_OK != PREF_GetBoolPref(pref_warnAboutCookies, &x)) ) {
+        x = FALSE;
+    }
 	NET_SetCookieWarningPref(x);
 	return PREF_NOERROR;
 }
@@ -1536,17 +1540,21 @@ NET_CookiePermission(MWContext * context) {
 PUBLIC void
 NET_RegisterCookiePrefCallbacks(void)
 {
-	int32	n = 0;
-	Bool	x = FALSE;
+	int32	n;
+	Bool	x;
     char    s[64];
     int len = sizeof(s);
     *s = '\0';
 
-	PREF_GetIntPref(pref_cookieBehavior, &n);
+    if ( (PREF_OK != PREF_GetIntPref(pref_cookieBehavior, &n)) ) {
+        n = DEF_COOKIE_BEHAVIOR;
+    }
 	NET_SetCookieBehaviorPref((NET_CookieBehaviorEnum)n);
 	PREF_RegisterCallback(pref_cookieBehavior, NET_CookieBehaviorPrefChanged, NULL);
 
-	PREF_GetBoolPref(pref_warnAboutCookies, &x);
+    if ( (PREF_OK != PREF_GetBoolPref(pref_warnAboutCookies, &x)) ) {
+        x = FALSE;
+    }
 	NET_SetCookieWarningPref(x);
 	PREF_RegisterCallback(pref_warnAboutCookies, NET_CookieWarningPrefChanged, NULL);
 

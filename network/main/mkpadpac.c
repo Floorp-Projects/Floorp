@@ -77,17 +77,19 @@ net_PadPacURLPrefChanged(const char *pref, void *data) {
     int len = sizeof(s);
 	memset(s, 0, len);
 
-    PREF_GetCharPref(pref_padPacURL, s, &len);
-	NET_SetPadPacURL(s);
+    if ( (PREF_OK == PREF_GetCharPref(pref_padPacURL, s, &len)) ) {
+	    NET_SetPadPacURL(s);
+    }
     return PREF_NOERROR;
 }
 
 /* Pref for allowing (or not) proxy autodiscovery. */
 MODULE_PRIVATE int PR_CALLBACK 
 net_EnablePadPrefChanged(const char *pref, void *data) {
-	XP_Bool x;
-	PREF_GetBoolPref(pref_enablePad, &x);
-	MK_PadEnabled=x;
+	XP_Bool x = FALSE;
+    if ( (PREF_OK == PREF_GetBoolPref(pref_enablePad, &x)) ) {
+	    MK_PadEnabled=x;
+    }
 	return PREF_NOERROR;
 }
 
@@ -95,16 +97,20 @@ net_EnablePadPrefChanged(const char *pref, void *data) {
  * Initializes the pad variables and registers pad callbacks */
 PUBLIC void
 NET_RegisterPadPrefCallbacks(void) {
-	XP_Bool x;
+	XP_Bool x = FALSE;
     char s[128];
     int len=sizeof(s);
 	memset(s, 0, len);
 
-	PREF_GetBoolPref(pref_enablePad, &x);
-	MK_PadEnabled=x;
+    if ( (PREF_OK == PREF_GetBoolPref(pref_enablePad, &x)) ) {
+	    MK_PadEnabled=x;
+    } else {
+        MK_PadEnabled=x;
+    }
 	PREF_RegisterCallback(pref_enablePad, net_EnablePadPrefChanged, NULL);
 
-	PREF_GetCharPref(pref_padPacURL, s, &len);
-	NET_SetPadPacURL(s);
+    if ( (PREF_OK == PREF_GetCharPref(pref_padPacURL, s, &len)) ) {
+	    NET_SetPadPacURL(s);
+    }
 	PREF_RegisterCallback(pref_padPacURL, net_PadPacURLPrefChanged, NULL);
 }

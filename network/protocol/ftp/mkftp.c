@@ -319,7 +319,9 @@ net_get_send_email_address_as_password(void)
 	static XP_Bool	net_read_FTP_password_pref = FALSE;
 
 	if (!net_read_FTP_password_pref) {
-		PREF_GetBoolPref(pref_email_as_ftp_password, &net_send_email_address_as_password);
+        if ( (PREF_OK != PREF_GetBoolPref(pref_email_as_ftp_password, &net_send_email_address_as_password)) ) {
+            net_send_email_address_as_password = FALSE;
+        }
 		PREF_RegisterCallback(pref_email_as_ftp_password, net_ftp_pref_changed, NULL);
 		net_read_FTP_password_pref = TRUE;
 	}
