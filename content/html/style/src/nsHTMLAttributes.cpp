@@ -30,6 +30,7 @@
 static NS_DEFINE_IID(kIHTMLAttributesIID, NS_IHTML_ATTRIBUTES_IID);
 static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
 
+//#define DEBUG_REFS
 
 struct HTMLAttribute {
   HTMLAttribute(void)
@@ -236,7 +237,18 @@ protected:
   nsIAtom*      mID;
   nsIAtom*      mClass;
   nsMapAttributesFunc mMapper;
+
+#ifdef DEBUG_REFS
+  PRInt32 mInstance;
+#endif
 };
+
+
+#ifdef DEBUG_REFS
+static PRInt32  gInstanceCount = 0;
+static PRInt32  gInstrument = 4;
+#endif
+
 
 void* HTMLAttributesImpl::operator new(size_t size)
 {
@@ -282,6 +294,11 @@ HTMLAttributesImpl::HTMLAttributesImpl(nsMapAttributesFunc aMapFunc)
     mMapper(aMapFunc)
 {
   NS_INIT_REFCNT();
+
+#ifdef DEBUG_REFS
+  mInstance = ++gInstanceCount;
+  fprintf(stdout, "%d of %d + HTMLAttributes\n", mInstance, gInstanceCount);
+#endif
 }
 
 HTMLAttributesImpl::HTMLAttributesImpl(const HTMLAttributesImpl& aCopy)
@@ -305,15 +322,48 @@ HTMLAttributesImpl::HTMLAttributesImpl(const HTMLAttributesImpl& aCopy)
 
   NS_IF_ADDREF(mID);
   NS_IF_ADDREF(mClass);
+
+#ifdef DEBUG_REFS
+  mInstance = ++gInstanceCount;
+  fprintf(stdout, "%d of %d + HTMLAttributes\n", mInstance, gInstanceCount);
+#endif
 }
 
 HTMLAttributesImpl::~HTMLAttributesImpl(void)
 {
   Reset();
+
+#ifdef DEBUG_REFS
+  fprintf(stdout, "%d of %d - HTMLAttribtues\n", mInstance, gInstanceCount);
+  --gInstanceCount;
+#endif
 }
 
+#ifdef DEBUG_REFS
+nsrefcnt HTMLAttributesImpl::AddRef(void)                                
+{                                    
+  if ((gInstrument == -1) || (mInstance == gInstrument)) {
+    fprintf(stdout, "%d AddRef HTMLAttributes %d\n", mRefCnt + 1, mInstance);
+  }
+  return ++mRefCnt;                                          
+}
+
+nsrefcnt HTMLAttributesImpl::Release(void)                         
+{                                                      
+  if ((gInstrument == -1) || (mInstance == gInstrument)) {
+    fprintf(stdout, "%d Release HTMLAttributes %d\n", mRefCnt - 1, mInstance);
+  }
+  if (--mRefCnt == 0) {                                
+    delete this;                                       
+    return 0;                                          
+  }                                                    
+  return mRefCnt;                                      
+}
+#else
 NS_IMPL_ADDREF(HTMLAttributesImpl)
 NS_IMPL_RELEASE(HTMLAttributesImpl)
+#endif
+
 
 nsresult HTMLAttributesImpl::QueryInterface(const nsIID& aIID,
                                             void** aInstancePtrResult)
