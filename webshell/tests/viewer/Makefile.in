@@ -75,7 +75,7 @@ TOOLKIT_CPPSRCS_xlib := \
 
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
-BEOS_PROGRAM_RESOURCE = viewer-beos.rsrc
+BEOS_PROGRAM_RESOURCE = $(srcdir)/viewer-beos.rsrc
 endif
 
 TOOLKIT_CPPSRCS := $(TOOLKIT_CPPSRCS_$(MOZ_WIDGET_TOOLKIT))
