@@ -4,6 +4,12 @@
 #include "nsIAtom.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsINameSpaceManager.h"
+#include "nsIScriptContext.h"
+#include "nsIScriptObjectOwner.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIDocument.h"
+#include "nsIDOMDocument.h"
+#include "nsIJSEventListener.h"
 
 PRUint32 nsXBLEventHandler::gRefCnt = 0;
 nsIAtom* nsXBLEventHandler::kKeyCodeAtom = nsnull;
@@ -25,6 +31,7 @@ nsXBLEventHandler::nsXBLEventHandler(nsIContent* aBoundElement, nsIContent* aHan
     kControlAtom = NS_NewAtom("control");
     kAltAtom = NS_NewAtom("alt");
     kMetaAtom = NS_NewAtom("meta");
+    kValueAtom = NS_NewAtom("value");
   }
 }
 
@@ -40,6 +47,7 @@ nsXBLEventHandler::~nsXBLEventHandler()
     NS_RELEASE(kControlAtom);
     NS_RELEASE(kAltAtom);
     NS_RELEASE(kMetaAtom);
+    NS_RELEASE(kValueAtom);
   }
 }
 
@@ -55,7 +63,7 @@ nsresult nsXBLEventHandler::KeyUp(nsIDOMEvent* aKeyEvent)
 {
   nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
   if (KeyEventMatched(keyEvent))
-    ExecuteHandler();
+    ExecuteHandler(nsAutoString("keyup"), aKeyEvent);
   return NS_OK;
 }
 
@@ -63,7 +71,7 @@ nsresult nsXBLEventHandler::KeyDown(nsIDOMEvent* aKeyEvent)
 {
   nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
   if (KeyEventMatched(keyEvent))
-    ExecuteHandler();
+    ExecuteHandler(nsAutoString("keydown"), aKeyEvent);
   return NS_OK;
 }
 
@@ -71,7 +79,7 @@ nsresult nsXBLEventHandler::KeyPress(nsIDOMEvent* aKeyEvent)
 {
   nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
   if (KeyEventMatched(keyEvent))
-    ExecuteHandler();
+    ExecuteHandler(nsAutoString("keypress"), aKeyEvent);
   return NS_OK;
 }
    
@@ -79,7 +87,7 @@ nsresult nsXBLEventHandler::MouseDown(nsIDOMEvent* aMouseEvent)
 {
   nsCOMPtr<nsIDOMUIEvent> mouseEvent = do_QueryInterface(aMouseEvent);
   if (MouseEventMatched(mouseEvent))
-    ExecuteHandler();
+    ExecuteHandler(nsAutoString("mousedown"), aMouseEvent);
   return NS_OK;
 }
 
@@ -87,7 +95,7 @@ nsresult nsXBLEventHandler::MouseUp(nsIDOMEvent* aMouseEvent)
 {
   nsCOMPtr<nsIDOMUIEvent> mouseEvent = do_QueryInterface(aMouseEvent);
   if (MouseEventMatched(mouseEvent))
-    ExecuteHandler();
+    ExecuteHandler(nsAutoString("mouseup"), aMouseEvent);
   return NS_OK;
 }
 
@@ -95,7 +103,7 @@ nsresult nsXBLEventHandler::MouseClick(nsIDOMEvent* aMouseEvent)
 {
   nsCOMPtr<nsIDOMUIEvent> mouseEvent = do_QueryInterface(aMouseEvent);
   if (MouseEventMatched(mouseEvent))
-    ExecuteHandler();
+    ExecuteHandler(nsAutoString("click"), aMouseEvent);
   return NS_OK;
 }
 
@@ -103,7 +111,7 @@ nsresult nsXBLEventHandler::MouseDblClick(nsIDOMEvent* aMouseEvent)
 {
   nsCOMPtr<nsIDOMUIEvent> mouseEvent = do_QueryInterface(aMouseEvent);
   if (MouseEventMatched(mouseEvent))
-    ExecuteHandler();
+    ExecuteHandler(nsAutoString("dblclick"), aMouseEvent);
   return NS_OK;
 }
 
@@ -111,7 +119,7 @@ nsresult nsXBLEventHandler::MouseOver(nsIDOMEvent* aMouseEvent)
 {
   nsCOMPtr<nsIDOMUIEvent> mouseEvent = do_QueryInterface(aMouseEvent);
   if (MouseEventMatched(mouseEvent))
-    ExecuteHandler();
+    ExecuteHandler(nsAutoString("mouseover"), aMouseEvent);
   return NS_OK;
 }
 
@@ -119,7 +127,7 @@ nsresult nsXBLEventHandler::MouseOut(nsIDOMEvent* aMouseEvent)
 {
   nsCOMPtr<nsIDOMUIEvent> mouseEvent = do_QueryInterface(aMouseEvent);
   if (MouseEventMatched(mouseEvent))
-    ExecuteHandler();
+    ExecuteHandler(nsAutoString("mouseout"), aMouseEvent);
   return NS_OK;
 }
 
@@ -219,8 +227,77 @@ nsXBLEventHandler::MouseEventMatched(nsIDOMUIEvent* aMouseEvent)
 }
 
 NS_IMETHODIMP
-nsXBLEventHandler::ExecuteHandler()
+nsXBLEventHandler::ExecuteHandler(const nsString& aEventName, nsIDOMEvent* aEvent)
 {
+  // Look for a compiled handler on the element. 
+  nsCOMPtr<nsIAtom> eventName = getter_AddRefs(NS_NewAtom(aEventName));
+  nsCOMPtr<nsIScriptEventHandlerOwner> handlerOwner = do_QueryInterface(mHandlerElement);
+  if (!handlerOwner)
+    return NS_ERROR_FAILURE;
+
+  void* handler = nsnull;
+  handlerOwner->GetCompiledEventHandler(eventName, &handler);
+
+  if (!handler) {
+    // We've never compiled the event handler before.  Let's get it
+    // compiled.
+    nsAutoString handlerText;
+    mHandlerElement->GetAttribute(kNameSpaceID_None, kValueAtom, handlerText);
+    if (handlerText.IsEmpty())
+      return NS_OK; // For whatever reason, they didn't give us anything to do.
+
+    nsCOMPtr<nsIDocument> document;
+    mHandlerElement->GetDocument(*getter_AddRefs(document));
+
+    // Ensure that a global object has been made for the XBL document.
+    nsCOMPtr<nsIScriptGlobalObject> globalObject;
+    document->GetScriptGlobalObject(getter_AddRefs(globalObject));
+    if (!globalObject) {
+      NS_NewScriptGlobalObject(getter_AddRefs(globalObject));
+      document->SetScriptGlobalObject(globalObject);
+    }
+
+    // Ensure that we have a script context for the XBL document.
+    nsCOMPtr<nsIScriptContext> context;
+    globalObject->GetContext(getter_AddRefs(context));
+    if (!context) {
+      NS_CreateScriptContext(globalObject, getter_AddRefs(context));
+      nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(document);
+      globalObject->SetNewDocument(domDoc); // Ensures document is set.
+    }
+
+    nsCOMPtr<nsIScriptObjectOwner> owner = do_QueryInterface(mHandlerElement);
+    void* scriptObject;
+    owner->GetScriptObject(context, &scriptObject);
+
+    handlerOwner->CompileEventHandler(context, scriptObject, eventName, handlerText, &handler);
+  }
+
+  // Now that the handler has been compiled, let's bind it to the 
+  // element in question.
+  nsCOMPtr<nsIDocument> boundDocument;
+  mBoundElement->GetDocument(*getter_AddRefs(boundDocument));
+  nsCOMPtr<nsIScriptGlobalObject> boundGlobal;
+  boundDocument->GetScriptGlobalObject(getter_AddRefs(boundGlobal));
+
+  nsCOMPtr<nsIScriptContext> boundContext;
+  boundGlobal->GetContext(getter_AddRefs(boundContext));
+
+  nsCOMPtr<nsIScriptObjectOwner> owner = do_QueryInterface(mBoundElement);
+  void* scriptObject;
+  owner->GetScriptObject(boundContext, &scriptObject);
+  
+  // Temporarily bind it to the bound element
+  boundContext->BindCompiledEventHandler(scriptObject, eventName, handler);
+
+  // Execute it.
+  nsCOMPtr<nsIDOMEventListener> eventListener;
+  NS_NewJSEventListener(getter_AddRefs(eventListener), boundContext, owner);
+  eventListener->HandleEvent(aEvent);
+
+  // Now unbind it.
+  boundContext->BindCompiledEventHandler(scriptObject, eventName, nsnull);
+
   return NS_OK;
 }
 
