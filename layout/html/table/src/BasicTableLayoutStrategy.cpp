@@ -37,6 +37,8 @@ static const PRBool gsDebug = PR_FALSE;
 static const PRBool gsDebugCLD = PR_FALSE;
 #endif
 
+const nscoord gBigSpace = 100000;
+
 /* ---------- ProportionalColumnLayoutStruct ---------- */  
 // TODO: make public so other subclasses can use it
 
@@ -776,7 +778,7 @@ PRBool BasicTableLayoutStrategy::BalanceProportionalColumns(const nsReflowState&
   if (NS_UNCONSTRAINEDSIZE==aMaxWidth  ||  NS_UNCONSTRAINEDSIZE==mMinTableWidth)
   { // the max width of the table fits comfortably in the available space
     if (gsDebug) printf ("  * auto table laying out in NS_UNCONSTRAINEDSIZE, calling BalanceColumnsTableFits\n");
-    nscoord bigSpace = 100000;
+    nscoord bigSpace = gBigSpace;
     bigSpace = PR_MAX(bigSpace, mMaxTableWidth);
     result = BalanceColumnsTableFits(aReflowState, bigSpace, 
                                      bigSpace, aTableSpecifiedWidth, aTableIsAutoWidth);
@@ -1285,8 +1287,9 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(const nsReflowState& aR
         nscoord otherWidth = (nscoord)((1.0f/remainingPercent)*((float)(widthOfOtherCells)));
         if (PR_TRUE==gsDebug)
           printf("    percentWidth=%d otherWidth=%d\n", percentWidth, otherWidth);
-        newTableWidth = PR_MAX(percentWidth, otherWidth);
-        newTableWidth = PR_MIN(newTableWidth, aMaxWidth);   // since this is an auto-width table, it can't normally be wider than it's parent
+        newTableWidth = PR_MAX(percentWidth, otherWidth);     // the table width is the larger of the two computations
+        newTableWidth = PR_MIN(newTableWidth, aMaxWidth);     // an auto-width table can't normally be wider than it's parent
+        newTableWidth = PR_MIN(newTableWidth, mMaxTableWidth);// an auto-width table can't normally be wider than it's own computed max width 
       }
       nscoord excess = newTableWidth-mFixedTableWidth;      // the amount of new space that needs to be 
                                                             // accounted for in the non-fixed columns
@@ -1450,7 +1453,8 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(const nsReflowState& aR
   // next, if the specified width of the table is greater than the table's computed width, expand the
   // table's computed width to match the specified width, giving the extra space to proportionately-sized
   // columns if possible.
-  if ((PR_FALSE==aTableIsAutoWidth) && (aAvailWidth > (tableWidth-widthOfFixedTableColumns)))
+  if ((PR_FALSE==aTableIsAutoWidth) && (aAvailWidth > (tableWidth-widthOfFixedTableColumns)) &&
+      (gBigSpace!=aAvailWidth))
   {
     DistributeExcessSpace(aAvailWidth, tableWidth, widthOfFixedTableColumns);
   }

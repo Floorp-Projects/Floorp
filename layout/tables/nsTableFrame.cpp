@@ -466,7 +466,7 @@ PRInt32 nsTableFrame::GetEffectiveColSpan (PRInt32 aColIndex, nsTableCellFrame *
 {
   NS_PRECONDITION (nsnull!=aCell, "bad cell arg");
   nsCellMap *cellMap = GetCellMap();
-  NS_PRECONDITION (nsnull!=cellMap, "bad call, mCellMap not yet allocated.");
+  NS_PRECONDITION (nsnull!=cellMap, "bad call, cellMap not yet allocated.");
   NS_PRECONDITION (0<=aColIndex && aColIndex<GetColCount(), "bad col index arg");
 
   if (cellMap->GetRowCount()==1)
@@ -481,7 +481,7 @@ PRInt32 nsTableFrame::GetEffectiveColSpan (PRInt32 aColIndex, nsTableCellFrame *
 PRInt32 nsTableFrame::GetEffectiveCOLSAttribute()
 {
   nsCellMap *cellMap = GetCellMap();
-  NS_PRECONDITION (nsnull!=cellMap, "bad call, mCellMap not yet allocated.");
+  NS_PRECONDITION (nsnull!=cellMap, "bad call, cellMap not yet allocated.");
   PRInt32 result;
   nsIFrame *tableFrame = this;
 // begin REMOVE_ME_WHEN_TABLE_STYLE_IS_RESOLVED!   XXX
@@ -629,13 +629,14 @@ nsCellMap * nsTableFrame::GetCellMap()
 }
 
 void nsTableFrame::EnsureCellMap()
-{
+{ // XXX: must be called ONLY on first-in-flow
   if (mCellMap == nsnull)
     BuildCellMap();
 }
 
 void nsTableFrame::BuildCellMap ()
 {
+  // XXX: must be called only on first-in-flow!
   if (gsDebug==PR_TRUE) printf("Build Cell Map...\n");
 
   int rowCount = GetRowCount();
@@ -897,12 +898,13 @@ void nsTableFrame::ListColumnLayoutData(FILE* out, PRInt32 aIndent)
     return;
   }
 
-  if (nsnull!=mCellMap)
+  nsCellMap *cellMap = GetCellMap();
+  if (nsnull!=cellMap)
   {
     fprintf(out,"Column Layout Data \n");
     
     PRInt32 numCols = GetColCount();
-    PRInt32 numRows = mCellMap->GetRowCount();
+    PRInt32 numRows = cellMap->GetRowCount();
     for (PRInt32 colIndex = 0; colIndex<numCols; colIndex++)
     {
       for (PRInt32 indent = aIndent; --indent >= 0; ) 
@@ -910,7 +912,7 @@ void nsTableFrame::ListColumnLayoutData(FILE* out, PRInt32 aIndent)
       fprintf(out,"Column Data [%d] \n",colIndex);
       for (PRInt32 rowIndex = 0; rowIndex < numRows; rowIndex++)
       {
-        nsTableCellFrame *cellFrame = mCellMap->GetCellFrameAt(rowIndex, colIndex);
+        nsTableCellFrame *cellFrame = cellMap->GetCellFrameAt(rowIndex, colIndex);
         PRInt32 rowIndent;
         for (rowIndent = aIndent+2; --rowIndent >= 0; ) fputs("  ", out);
         fprintf(out,"Cell Data [%d] \n",rowIndex);
@@ -956,11 +958,12 @@ void nsTableFrame::AppendLayoutData(nsVoidArray* aList, nsTableCellFrame* aTable
 
 void nsTableFrame::RecalcLayoutData()
 {
-  if (nsnull==mCellMap)
+  nsCellMap *cellMap = GetCellMap();
+  if (nsnull==cellMap)
     return; // no info yet, so nothing useful to do
 
   PRInt32 colCount = GetColCount();
-  PRInt32 rowCount = mCellMap->GetRowCount();
+  PRInt32 rowCount = cellMap->GetRowCount();
   PRInt32 row = 0;
   PRInt32 col = 0;
 
@@ -984,7 +987,7 @@ void nsTableFrame::RecalcLayoutData()
       for (col = 0; col < colCount; col++)
       {
         nsTableCellFrame*  cell = nsnull;
-        CellData*     cellData = mCellMap->GetCellAt(row,col);
+        CellData*     cellData = cellMap->GetCellAt(row,col);
         
         if (cellData)
           cell = cellData->mCell;
@@ -1007,7 +1010,7 @@ void nsTableFrame::RecalcLayoutData()
           above = nsnull;
         else
         {
-          cellData = mCellMap->GetCellAt(row-1,col);
+          cellData = cellMap->GetCellAt(row-1,col);
           if (nsnull != cellData)
             above = cellData->mRealCell->mCell;
 
@@ -1022,7 +1025,7 @@ void nsTableFrame::RecalcLayoutData()
           left = nsnull;
         else
         {
-          cellData = mCellMap->GetCellAt(row,col-1);
+          cellData = cellMap->GetCellAt(row,col-1);
           if (cellData != nsnull)
             left = cellData->mRealCell->mCell;
 
@@ -1053,7 +1056,7 @@ void nsTableFrame::RecalcLayoutData()
             // Add top edge cells
             if (c != col)
             {
-              cellData = mCellMap->GetCellAt(r1,c);
+              cellData = cellMap->GetCellAt(r1,c);
               if ((cellData != nsnull) && (cellData->mCell != above))
               {
                 above = cellData->mCell;
@@ -1070,7 +1073,7 @@ void nsTableFrame::RecalcLayoutData()
           if (r2 < rowCount)
           {
             // Add bottom edge cells
-            cellData = mCellMap->GetCellAt(r2,c);
+            cellData = cellMap->GetCellAt(r2,c);
             if ((cellData != nsnull) && cellData->mCell != below)
             {
               below = cellData->mCell;
@@ -1095,7 +1098,7 @@ void nsTableFrame::RecalcLayoutData()
           {
             if (r != row)
             {
-              cellData = mCellMap->GetCellAt(r,c1);
+              cellData = cellMap->GetCellAt(r,c1);
               if ((cellData != nsnull) && (cellData->mCell != left))
               {
                 left = cellData->mCell;
@@ -1112,7 +1115,7 @@ void nsTableFrame::RecalcLayoutData()
           if (c2 < colCount)
           {
             // Add right edge cells
-            cellData = mCellMap->GetCellAt(r,c2);
+            cellData = cellMap->GetCellAt(r,c2);
             if ((cellData != nsnull) && (cellData->mCell != right))
             {
               right = cellData->mCell;
@@ -2470,7 +2473,8 @@ void nsTableFrame::VerticallyAlignChildren(nsIPresContext* aPresContext,
 
 void nsTableFrame::AdjustColumnsForCOLSAttribute()
 {
-  NS_ASSERTION(nsnull!=mCellMap, "bad cell map");
+  nsCellMap *cellMap = GetCellMap();
+  NS_ASSERTION(nsnull!=cellMap, "bad cell map");
   
   // any specified-width column turns off COLS attribute
   nsStyleTable* tableStyle = (nsStyleTable *)mStyleContext->GetMutableStyleData(eStyleStruct_Table);
@@ -2482,7 +2486,7 @@ void nsTableFrame::AdjustColumnsForCOLSAttribute()
     {
       for (PRInt32 colIndex=0; colIndex<numCols; colIndex++)
       {
-        nsTableCellFrame *cellFrame = mCellMap->GetCellFrameAt(rowIndex, colIndex);
+        nsTableCellFrame *cellFrame = cellMap->GetCellFrameAt(rowIndex, colIndex);
         // get the cell style info
         const nsStylePosition* cellPosition;
         if (nsnull!=cellFrame)
@@ -2560,10 +2564,10 @@ nsTableFrame::SetColumnStyleFromCell(nsIPresContext  * aPresContext,
 NS_METHOD nsTableFrame::GetColumnFrame(PRInt32 aColIndex, nsTableColFrame *&aColFrame)
 {
   aColFrame = nsnull; // initialize out parameter
-  nsTableFrame * firstInFlow = (nsTableFrame *)GetFirstInFlow();
-  if (nsnull!=firstInFlow->mCellMap)
+  nsCellMap *cellMap = GetCellMap();
+  if (nsnull!=cellMap)
   { // hooray, we get to do this the easy way because the info is cached
-    aColFrame = firstInFlow->mCellMap->GetColumnFrame(aColIndex);
+    aColFrame = cellMap->GetColumnFrame(aColIndex);
     NS_ASSERTION(nsnull!=aColFrame, "bad col frame");
   }
   else
@@ -3145,6 +3149,7 @@ nscoord nsTableFrame::GetTableContainerWidth(const nsReflowState& aReflowState)
             parentWidth = NS_UNCONSTRAINEDSIZE;
             if (nsnull != ((nsTableFrame*)table)->mColumnWidths)
             {
+              parentWidth=0;
               PRInt32 colIndex = ((nsTableCellFrame *)greatgrandchildFrame)->GetColIndex();
               PRInt32 colSpan = ((nsTableFrame*)table)->GetEffectiveColSpan(colIndex, ((nsTableCellFrame *)greatgrandchildFrame));
               for (PRInt32 i = 0; i<colSpan; i++)
@@ -3168,28 +3173,49 @@ nscoord nsTableFrame::GetTableContainerWidth(const nsReflowState& aReflowState)
           {
             if (nsnull!=((nsTableFrame*)table)->mColumnWidths)
             {
+              parentWidth=0;
               PRInt32 colIndex = ((nsTableCellFrame*)greatgrandchildFrame)->GetColIndex();
-              parentWidth = ((nsTableFrame*)table)->GetColumnWidth(colIndex);
+              PRInt32 colSpan = ((nsTableFrame*)table)->GetEffectiveColSpan(colIndex, ((nsTableCellFrame *)greatgrandchildFrame));
+              for (PRInt32 i = 0; i<colSpan; i++)
+                parentWidth += ((nsTableFrame*)table)->GetColumnWidth(i+colIndex);
+              if (eStyleUnit_Percent == tablePosition->mWidth.GetUnit())
+              {
+                float percent = tablePosition->mWidth.GetPercentValue();
+                parentWidth = (nscoord)(percent*((float)parentWidth));
+              }
             }
             else
             {
               nsSize tableSize;
               table->GetSize(tableSize);
               parentWidth = tableSize.width;
-              spacing->CalcBorderPaddingFor(rs->frame, borderPadding);
-              parentWidth -= (borderPadding.right + borderPadding.left);
-              // same for the row group
-              childFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
-              spacing->CalcBorderPaddingFor(childFrame, borderPadding);
-              parentWidth -= (borderPadding.right + borderPadding.left);
-              // same for the row
-              grandchildFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
-              spacing->CalcBorderPaddingFor(grandchildFrame, borderPadding);
-              parentWidth -= (borderPadding.right + borderPadding.left);
-              // same for the cell
-              greatgrandchildFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
-              spacing->CalcBorderPaddingFor(greatgrandchildFrame, borderPadding);
-              parentWidth -= (borderPadding.right + borderPadding.left);
+              if (0!=tableSize.width)
+              { // the table has been sized, so we can compute the available space for the child
+                spacing->CalcBorderPaddingFor(rs->frame, borderPadding);
+                parentWidth -= (borderPadding.right + borderPadding.left);
+                // same for the row group
+                childFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
+                spacing->CalcBorderPaddingFor(childFrame, borderPadding);
+                parentWidth -= (borderPadding.right + borderPadding.left);
+                // same for the row
+                grandchildFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
+                spacing->CalcBorderPaddingFor(grandchildFrame, borderPadding);
+                parentWidth -= (borderPadding.right + borderPadding.left);
+                // same for the cell
+                greatgrandchildFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
+                spacing->CalcBorderPaddingFor(greatgrandchildFrame, borderPadding);
+                parentWidth -= (borderPadding.right + borderPadding.left);
+              }
+              else
+              {
+                // the table has not yet been sized, so we need to infer the available space
+                parentWidth = rs->maxSize.width;
+                if (eStyleUnit_Percent == tablePosition->mWidth.GetUnit())
+                {
+                  float percent = tablePosition->mWidth.GetPercentValue();
+                  parentWidth = (nscoord)(percent*((float)parentWidth));
+                }
+              }
             }
             if (PR_TRUE==gsDebugNT)
               printf("%p: found a table frame %p, returning parentWidth %d \n", 
