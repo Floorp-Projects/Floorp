@@ -450,15 +450,15 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext* aPresContext,
     GetView(&view);
     if (!view) {
       nsresult result = nsComponentManager::CreateInstance(kViewCID, nsnull, NS_GET_IID(nsIView), (void **)&view);
-	    nsCOMPtr<nsIPresShell> presShell;
+      nsCOMPtr<nsIPresShell> presShell;
       aPresContext->GetShell(getter_AddRefs(presShell));
-	    nsCOMPtr<nsIViewManager> viewMan;
+      nsCOMPtr<nsIViewManager> viewMan;
       presShell->GetViewManager(getter_AddRefs(viewMan));
 
       nsIFrame* parWithView;
-	    nsIView *parView;
+      nsIView *parView;
       GetParentWithView(&parWithView);
-	    parWithView->GetView(&parView);
+      parWithView->GetView(&parView);
       // the view's size is not know yet, but its size will be kept in synch with our frame.
       nsRect boundBox(0, 0, 500, 500); 
       result = view->Init(viewMan, boundBox, parView, nsnull);
@@ -474,11 +474,11 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext* aPresContext,
   }
 #endif
 
-  // reflow the child
+  // Reflow the child
   nsIFrame* firstKid = mFrames.FirstChild();
   nsSize availSize(aReflowState.mComputedWidth, NS_INTRINSICSIZE);
 
-  // indent the child inside us by the the focus border. We must do this separate from the
+  // Indent the child inside us by the the focus border. We must do this separate from the
   // regular border.
   nsMargin focusPadding = mRenderer.GetAddedButtonBorderAndPadding();
 
@@ -511,60 +511,22 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext* aPresContext,
     }
   }
 
-  nsHTMLReflowState reflowState(aPresContext, aReflowState, firstKid, availSize, reason);
-  //reflowState.computedWidth = availSize;
+  // Reflow the contents of the button a first time.
+  ReflowButtonContents(aPresContext, aDesiredSize, aReflowState, firstKid,
+                       availSize, reason, focusPadding, aStatus);
 
-  ReflowChild(firstKid, aPresContext, aDesiredSize, reflowState,
-              focusPadding.left + aReflowState.mComputedBorderPadding.left,
-              focusPadding.top + aReflowState.mComputedBorderPadding.top,
-              0, aStatus);
-  
-  // calculate the min internal size so the contents gets centered correctly
-  // minInternalWidth is not being used at all and causes a warning--commenting
-  // out until someone wants it.
-  //  nscoord minInternalWidth  = aReflowState.mComputedMinWidth  == 0?0:aReflowState.mComputedMinWidth - 
-  //    (aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right);
-  nscoord minInternalHeight = aReflowState.mComputedMinHeight == 0?0:aReflowState.mComputedMinHeight - 
-    (aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom);
+  // If we just performed the first pass of a shrink-wrap reflow (which will have
+  // found the requested size of the children, but not placed them), perform
+  // the second pass of a shrink-wrap reflow (which places the children
+  // within this parent button which has now shrink-wrapped around them).
+  if (availSize.width == NS_SHRINKWRAPWIDTH) {
+    nsSize newAvailSize(aDesiredSize.width, NS_INTRINSICSIZE);
 
-  // center child vertically
-  nscoord yoff = 0;
-  if (aReflowState.mComputedHeight != NS_INTRINSICSIZE) {
-    yoff = (aReflowState.mComputedHeight - aDesiredSize.height)/2;
-    if (yoff < 0) {
-      yoff = 0;
-    }
-  } else if (aDesiredSize.height < minInternalHeight) {
-    yoff = (minInternalHeight - aDesiredSize.height) / 2;
+    ReflowButtonContents(aPresContext, aDesiredSize, aReflowState, firstKid,
+                         newAvailSize, eReflowReason_Resize, focusPadding, aStatus);
   }
 
-  // Place the child.  If we have a non-intrinsic width, we want to
-  // reduce the left padding as needed to try and fit the text in the
-  // button
-  nscoord xoffset = focusPadding.left + aReflowState.mComputedBorderPadding.left;
-  if (aReflowState.mComputedWidth != NS_INTRINSICSIZE) {
-    // First, how much did we "overflow"?  This is the width of our
-    // kid plus our special focus stuff (which did not get accounted
-    // for in calculating aReflowState.mComputedWidth minus the width
-    // we're forced to be.
-    nscoord extrawidth =
-      aDesiredSize.width + focusPadding.left + focusPadding.right
-      - aReflowState.mComputedWidth;
-    if (extrawidth > 0) {
-      // Split it evenly between right and left
-      extrawidth /= 2;
-      // But do not shoot out the left side of the button, please
-      extrawidth = PR_MIN(extrawidth, aReflowState.mComputedPadding.left);
-      xoffset -= extrawidth;
-    }
-  }
-  
-  // Place the child
-  FinishReflowChild(firstKid, aPresContext, &reflowState, aDesiredSize,
-                    xoffset,
-                    yoff + focusPadding.top + aReflowState.mComputedBorderPadding.top, 0);
-
-  // if computed use the computed values.
+  // If computed use the computed values.
   if (aReflowState.mComputedWidth != NS_INTRINSICSIZE) 
     aDesiredSize.width = aReflowState.mComputedWidth;
   else 
@@ -608,6 +570,69 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext* aPresContext,
                                        mCachedMaxElementWidth, aDesiredSize);
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;
+}
+
+void
+nsHTMLButtonControlFrame::ReflowButtonContents(nsIPresContext* aPresContext,
+                                               nsHTMLReflowMetrics& aDesiredSize,
+                                               const nsHTMLReflowState& aReflowState,
+                                               nsIFrame* aFirstKid,
+                                               const nsSize& aAvailSize,
+                                               nsReflowReason aReason,
+                                               nsMargin aFocusPadding,
+                                               nsReflowStatus& aStatus)
+{
+  nsHTMLReflowState reflowState(aPresContext, aReflowState, aFirstKid, aAvailSize, aReason);
+
+  ReflowChild(aFirstKid, aPresContext, aDesiredSize, reflowState,
+              aFocusPadding.left + aReflowState.mComputedBorderPadding.left,
+              aFocusPadding.top + aReflowState.mComputedBorderPadding.top,
+              0, aStatus);
+  
+  // calculate the min internal size so the contents gets centered correctly
+  // minInternalWidth is not being used at all and causes a warning--commenting
+  // out until someone wants it.
+  //  nscoord minInternalWidth  = aReflowState.mComputedMinWidth  == 0?0:aReflowState.mComputedMinWidth - 
+  //    (aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right);
+  nscoord minInternalHeight = aReflowState.mComputedMinHeight == 0?0:aReflowState.mComputedMinHeight - 
+    (aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom);
+
+  // center child vertically
+  nscoord yoff = 0;
+  if (aReflowState.mComputedHeight != NS_INTRINSICSIZE) {
+    yoff = (aReflowState.mComputedHeight - aDesiredSize.height)/2;
+    if (yoff < 0) {
+      yoff = 0;
+    }
+  } else if (aDesiredSize.height < minInternalHeight) {
+    yoff = (minInternalHeight - aDesiredSize.height) / 2;
+  }
+
+  // Place the child.  If we have a non-intrinsic width, we want to
+  // reduce the left padding as needed to try and fit the text in the
+  // button
+  nscoord xoffset = aFocusPadding.left + aReflowState.mComputedBorderPadding.left;
+  if (aReflowState.mComputedWidth != NS_INTRINSICSIZE) {
+    // First, how much did we "overflow"?  This is the width of our
+    // kid plus our special focus stuff (which did not get accounted
+    // for in calculating aReflowState.mComputedWidth minus the width
+    // we're forced to be.
+    nscoord extrawidth =
+      aDesiredSize.width + aFocusPadding.left + aFocusPadding.right
+      - aReflowState.mComputedWidth;
+    if (extrawidth > 0) {
+      // Split it evenly between right and left
+      extrawidth /= 2;
+      // But do not shoot out the left side of the button, please
+      extrawidth = PR_MIN(extrawidth, aReflowState.mComputedPadding.left);
+      xoffset -= extrawidth;
+    }
+  }
+  
+  // Place the child
+  FinishReflowChild(aFirstKid, aPresContext, &reflowState, aDesiredSize,
+                    xoffset,
+                    yoff + aFocusPadding.top + aReflowState.mComputedBorderPadding.top, 0);
 }
 
 NS_IMETHODIMP
