@@ -30,11 +30,32 @@
 #include "nsIMutableStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
+#include "nsIPresShell.h"
 #include "nsIHTMLAttributes.h"
+#include "nsIJSScriptObject.h"
+#include "nsSize.h"
+#include "nsIDocument.h"
+#include "nsIDOMWindow.h"
+#include "nsIDOMDocument.h"
+#include "nsIScriptContext.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIURL.h"
+#include "nsIIOService.h"
+#include "nsIURL.h"
+#include "nsIServiceManager.h"
+#include "nsNetUtil.h"
+#include "nsLayoutUtils.h"
+#include "nsIWebShell.h"
+#include "nsIFrame.h"
+#include "nsImageFrame.h"
+#include "nsLayoutAtoms.h"
 
-// XXX add nsIDOMHTMLSpacer?
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
-//static NS_DEFINE_IID(kIDOMHTMLSpacerElementIID, NS_IDOMHTMLSpacerELEMENT_IID);
+// XXX nav attrs: suppress
+
+static NS_DEFINE_IID(kIDOMWindowIID, NS_IDOMWINDOW_IID);
+static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
 
 class nsHTMLSpacerElement : public nsIDOMHTMLElement,
                             public nsIJSScriptObject,
@@ -56,14 +77,26 @@ public:
   // nsIDOMHTMLElement
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
 
-  // nsIJSScriptObject
-  NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
-
   // nsIContent
   NS_IMPL_ICONTENT_USING_GENERIC(mInner)
 
   // nsIHTMLContent
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
+
+  // nsIJSScriptObject
+  NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
+  virtual PRBool    AddProperty(JSContext *aContext, JSObject *aObj, 
+                        jsval aID, jsval *aVp);
+  virtual PRBool    DeleteProperty(JSContext *aContext, JSObject *aObj, 
+                        jsval aID, jsval *aVp);
+  virtual PRBool    GetProperty(JSContext *aContext, JSObject *aObj, 
+                        jsval aID, jsval *aVp);
+  virtual PRBool    SetProperty(JSContext *aContext, JSObject *aObj, 
+                        jsval aID, jsval *aVp);
+  virtual PRBool    EnumerateProperty(JSContext *aContext, JSObject *aObj);
+  virtual PRBool    Resolve(JSContext *aContext, JSObject *aObj, jsval aID);
+  virtual PRBool    Convert(JSContext *aContext, JSObject *aObj, jsval aID);
+  virtual void      Finalize(JSContext *aContext, JSObject *aObj);
 
 protected:
   nsGenericHTMLLeafElement mInner;
@@ -101,15 +134,16 @@ NS_IMPL_RELEASE(nsHTMLSpacerElement)
 nsresult
 nsHTMLSpacerElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-  NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-#if 0
-  if (aIID.Equals(kIDOMHTMLSpacerElementIID)) {
-    nsIDOMHTMLSpacerElement* tmp = this;
+  // Note that this has to stay above the generic element
+  // QI macro, since it overrides the nsIJSScriptObject implementation
+  // from the generic element.
+  if (aIID.Equals(kIJSScriptObjectIID)) {
+    nsIJSScriptObject* tmp = this;
     *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
+    AddRef();
     return NS_OK;
-  }
-#endif
+  }                                                             
+  NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
   return NS_NOINTERFACE;
 }
 
@@ -168,10 +202,15 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
                   nsIMutableStyleContext* aContext,
                   nsIPresContext* aPresContext)
 {
-  if (nsnull != aAttributes) {
+  NS_PRECONDITION(aContext, "no style context");
+  NS_PRECONDITION(aPresContext, "no pres context");
+
+  if (aAttributes && aPresContext && aContext) {
     nsHTMLValue value;
     nsStyleDisplay* display = (nsStyleDisplay*)
       aContext->GetMutableStyleData(eStyleStruct_Display);
+    nsStylePosition* position = (nsStylePosition*)
+      aContext->GetMutableStyleData(eStyleStruct_Position);
     aAttributes->GetAttribute(nsHTMLAtoms::align, value);
     if (eHTMLUnit_Enumerated == value.GetUnit()) {
       switch (value.GetIntValue()) {
@@ -186,36 +225,79 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
       }
     }
 
+    nsGenericHTMLElement::MapImageAttributesInto(aAttributes, aContext, aPresContext);
+
+    float p2t;
+    aPresContext->GetScaledPixelsToTwips(&p2t);
+    PRBool typeIsBlock = PR_FALSE;
     aAttributes->GetAttribute(nsHTMLAtoms::type, value);
     if (eHTMLUnit_String == value.GetUnit()) {
       nsAutoString tmp;
       value.GetStringValue(tmp);
-      // XXX This list is copied in the frame code; add style consts
-      // for it?  or use the display enums?
       if (tmp.EqualsIgnoreCase("line") ||
           tmp.EqualsIgnoreCase("vert") ||
-          tmp.EqualsIgnoreCase("vertical")) {
+          tmp.EqualsIgnoreCase("vertical") ||
+          tmp.EqualsIgnoreCase("block")) {
         // This is not strictly 100% compatible: if the spacer is given
         // a width of zero then it is basically ignored.
         display->mDisplay = NS_STYLE_DISPLAY_BLOCK;
+        if (tmp.EqualsIgnoreCase("block")) {
+          typeIsBlock = PR_TRUE;
+        }
+      }
+    }
+    if (typeIsBlock)
+    {
+      // width: value
+      aAttributes->GetAttribute(nsHTMLAtoms::width, value);
+      if (value.GetUnit() == eHTMLUnit_Pixel) {
+        nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
+        position->mWidth.SetCoordValue(twips);
+      }
+      else if (value.GetUnit() == eHTMLUnit_Percent) {
+        position->mWidth.SetPercentValue(value.GetPercentValue());
+      }
+      // height: value
+      aAttributes->GetAttribute(nsHTMLAtoms::height, value);
+      if (value.GetUnit() == eHTMLUnit_Pixel) {
+        nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
+        position->mHeight.SetCoordValue(twips);
+      }
+      else if (value.GetUnit() == eHTMLUnit_Percent) {
+        position->mHeight.SetPercentValue(value.GetPercentValue());
+      }
+    }
+    else 
+    {
+      // size: value
+      aAttributes->GetAttribute(nsHTMLAtoms::size, value);
+      if (value.GetUnit() == eHTMLUnit_Pixel) {
+        nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
+        position->mWidth.SetCoordValue(twips);
       }
     }
   }
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
 }
 
+
 NS_IMETHODIMP
 nsHTMLSpacerElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
-                                              PRInt32& aHint) const
+                                             PRInt32& aHint) const
 {
-  if (aAttribute == nsHTMLAtoms::align) {
-    aHint = NS_STYLE_HINT_REFLOW;
-  }
-  else if (aAttribute == nsHTMLAtoms::type) {
+  if ((aAttribute == nsHTMLAtoms::usemap) ||
+      (aAttribute == nsHTMLAtoms::ismap)) {
     aHint = NS_STYLE_HINT_FRAMECHANGE;
   }
+  else if (aAttribute == nsHTMLAtoms::align) {
+    aHint = NS_STYLE_HINT_REFLOW;
+  }
   else if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
-    aHint = NS_STYLE_HINT_CONTENT;
+    if (! nsGenericHTMLElement::GetImageMappedAttributesImpact(aAttribute, aHint)) {
+      if (! nsGenericHTMLElement::GetImageBorderAttributeImpact(aAttribute, aHint)) {
+        aHint = NS_STYLE_HINT_CONTENT;
+      }
+    }
   }
 
   return NS_OK;
@@ -224,7 +306,7 @@ nsHTMLSpacerElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
 
 NS_IMETHODIMP
 nsHTMLSpacerElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
-                                                  nsMapAttributesFunc& aMapFunc) const
+                                                 nsMapAttributesFunc& aMapFunc) const
 {
   aFontMapFunc = nsnull;
   aMapFunc = &MapAttributesInto;
@@ -234,18 +316,67 @@ nsHTMLSpacerElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapF
 
 NS_IMETHODIMP
 nsHTMLSpacerElement::HandleDOMEvent(nsIPresContext* aPresContext,
-                                    nsEvent* aEvent,
-                                    nsIDOMEvent** aDOMEvent,
-                                    PRUint32 aFlags,
-                                    nsEventStatus* aEventStatus)
+                                   nsEvent* aEvent,
+                                   nsIDOMEvent** aDOMEvent,
+                                   PRUint32 aFlags,
+                                   nsEventStatus* aEventStatus)
 {
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);
 }
 
+PRBool    
+nsHTMLSpacerElement::AddProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
+{
+  return mInner.AddProperty(aContext, aObj, aID, aVp);
+}
+
+PRBool    
+nsHTMLSpacerElement::DeleteProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
+{
+  return mInner.DeleteProperty(aContext, aObj, aID, aVp);
+}
+
+PRBool    
+nsHTMLSpacerElement::GetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
+{
+  return mInner.GetProperty(aContext, aObj, aID, aVp);
+}
+
+PRBool    
+nsHTMLSpacerElement::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
+{
+  return NS_OK;
+}
+
+PRBool    
+nsHTMLSpacerElement::EnumerateProperty(JSContext *aContext, JSObject *aObj)
+{
+  return mInner.EnumerateProperty(aContext, aObj);
+}
+
+PRBool    
+nsHTMLSpacerElement::Resolve(JSContext *aContext, JSObject *aObj, jsval aID)
+{
+  return mInner.Resolve(aContext, aObj, aID);
+}
+
+PRBool    
+nsHTMLSpacerElement::Convert(JSContext *aContext, JSObject *aObj, jsval aID)
+{
+  return mInner.Convert(aContext, aObj, aID);
+}
+
+void      
+nsHTMLSpacerElement::Finalize(JSContext *aContext, JSObject *aObj)
+{
+  mInner.Finalize(aContext, aObj);
+}
 
 NS_IMETHODIMP
 nsHTMLSpacerElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
   return mInner.SizeOf(aSizer, aResult, sizeof(*this));
 }
+
+
