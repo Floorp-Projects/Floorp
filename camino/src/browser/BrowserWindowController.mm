@@ -893,8 +893,8 @@ static NSArray* sToolbarDefaults = nil;
   }
   else if ( [itemIdent isEqual:SidebarToolbarItemIdentifier] )
   {
-    [toolbarItem setLabel:NSLocalizedString(@"Bookmarks", @"Bookmarks")];
-    [toolbarItem setPaletteLabel:NSLocalizedString(@"Manage Bookmarks", @"Manage Bookmarks")];
+    [toolbarItem setLabel:NSLocalizedString(@"ToggleBookmarks", @"Manage Bookmarks label")];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"Manage Bookmarks", @"Manage Bookmarks palette")];
     [toolbarItem setToolTip:NSLocalizedString(@"BookmarkMgrToolTip", @"Show or hide all bookmarks")];
     [toolbarItem setImage:[NSImage imageNamed:@"manager"]];
     [toolbarItem setTarget:self];
