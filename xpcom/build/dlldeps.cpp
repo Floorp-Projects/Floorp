@@ -190,4 +190,12 @@ void XXXNeverCalled()
     NS_StringSetData(str1, nsnull, 0);
     NS_StringSetDataRange(str1, 0, 0, nsnull, 0);
     NS_StringCopy(str1, str1);
+    {
+      nsAdoptingCString foo, bar;
+      foo = bar;
+    }
+    {
+      nsAdoptingString foo, bar;
+      foo = bar;
+    }
 }

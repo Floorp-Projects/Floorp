@@ -685,9 +685,12 @@ getter_Copies( nsTXPIDLString_CharT& aString )
 
 
   /**
-   * nsTAdoptString extends nsTXPIDString such that:
+   * nsTAdoptingString extends nsTXPIDLString such that:
    *
-   *   (1) Adopt given string on construction or assignment
+   * (1) Adopt given string on construction or assignment, i.e. take
+   * the value of what's given, and make what's given forget its
+   * value. Note that this class violates constness in a few
+   * places. Be careful!
    */
 class nsTAdoptingString_CharT : public nsTXPIDLString_CharT
   {
@@ -697,12 +700,16 @@ class nsTAdoptingString_CharT : public nsTXPIDLString_CharT
 
     public:
 
+      explicit nsTAdoptingString_CharT() {}
       explicit nsTAdoptingString_CharT(char_type* str, size_type length = size_type(-1))
         {
           Adopt(str, length);
         }
 
-        // copy-constructor required to adopt on copy
+        // copy-constructor required to adopt on copy. Note that this
+        // will violate the constness of |str| in the operator=()
+        // call. |str| will be truncated as a side-effect of this
+        // constructor.
       nsTAdoptingString_CharT( const self_type& str )
         {
           *this = str;
@@ -713,25 +720,14 @@ class nsTAdoptingString_CharT : public nsTXPIDLString_CharT
       self_type& operator=( const substring_tuple_type& tuple )                                 { Assign(tuple);    return *this; }
       self_type& operator=( const abstract_string_type& readable )                              { Assign(readable); return *this; }
 
-
-        // Adopt() when assigning to a const self_type&
-      self_type& operator=( const self_type& str )
-        {
-          Adopt(str.mData, str.mLength);
-
-          self_type* mutable_str = NS_CONST_CAST(self_type*, &str);
-
-          // Make str forget the buffer we just took ownership of.
-          new (mutable_str) self_type();
-
-          return *this;
-        }
+        // Adopt(), if possible, when assigning to a self_type&. Note
+        // that this violates the constness of str, str is always
+        // truncated when this operator is called.
+      NS_COM self_type& operator=( const self_type& str );
 
     private:
         // NOT TO BE IMPLEMENTED.
       self_type& operator=( const char_type* data );
       self_type& operator=( char_type* data );
-
-      explicit nsTAdoptingString_CharT() {}
   };
 
