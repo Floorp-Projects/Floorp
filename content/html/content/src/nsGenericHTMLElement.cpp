@@ -449,33 +449,37 @@ nsGenericHTMLElement::InNavQuirksMode() const
 nsresult
 nsGenericHTMLElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
 {
+  PRBool doNothing = PR_FALSE;
   if (aDocument == mDocument) {
-    return NS_OK; // short circuit useless work
+    doNothing = PR_TRUE; // short circuit useless work
   }
+
   nsresult result = nsGenericElement::SetDocument(aDocument, aDeep);
-  
   if (NS_OK != result) {
     return result;
   }
 
-  nsIHTMLContent* htmlContent;
+  if (!doNothing) {
+    nsIHTMLContent* htmlContent;
 
-  result = mContent->QueryInterface(kIHTMLContentIID, (void **)&htmlContent);
-  if (NS_OK != result) {
-    return result;
-  }
-
-  if ((nsnull != mDocument) && (nsnull != mAttributes)) {
-    ReparseStyleAttribute();
-    nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
-    if (nsnull != sheet) {
-      mAttributes->SetStyleSheet(sheet);
-//      sheet->SetAttributesFor(htmlContent, mAttributes); // sync attributes with sheet
-      NS_RELEASE(sheet);
+    result = mContent->QueryInterface(kIHTMLContentIID, (void **)&htmlContent);
+    if (NS_OK != result) {
+      return result;
     }
+
+    if ((nsnull != mDocument) && (nsnull != mAttributes)) {
+      ReparseStyleAttribute();
+      nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
+      if (nsnull != sheet) {
+        mAttributes->SetStyleSheet(sheet);
+        //      sheet->SetAttributesFor(htmlContent, mAttributes); // sync attributes with sheet
+        NS_RELEASE(sheet);
+      }
+    }
+    
+    NS_RELEASE(htmlContent);
   }
 
-  NS_RELEASE(htmlContent);
   return result;
 }
 
@@ -1340,7 +1344,8 @@ nsGenericHTMLElement::ParseCaseSensitiveEnumValue(const nsString& aValue,
 PRBool
 nsGenericHTMLElement::EnumValueToString(const nsHTMLValue& aValue,
                                         EnumTable* aTable,
-                                        nsString& aResult)
+                                        nsString& aResult,
+                                        PRBool aFoldCase)
 {
   aResult.Truncate(0);
   if (aValue.GetUnit() == eHTMLUnit_Enumerated) {
@@ -1348,7 +1353,9 @@ nsGenericHTMLElement::EnumValueToString(const nsHTMLValue& aValue,
     while (nsnull != aTable->tag) {
       if (aTable->value == v) {
         aResult.Append(aTable->tag);
-        aResult.SetCharAt(nsCRT::ToUpper(aResult[0]), 0);
+        if (aFoldCase) {
+          aResult.SetCharAt(nsCRT::ToUpper(aResult[0]), 0);
+        }
         return PR_TRUE;
       }
       aTable++;
