@@ -32,6 +32,8 @@ public:
 
   virtual PRBool       EvaluateString(const char *aScript, 
                                       PRUint32 aScriptSize, 
+                                      const char *aURL,
+                                      PRUint32 aLineNo,
                                       jsval *aRetValue);
   virtual nsIScriptGlobalObject*    GetGlobalObject();
   virtual void*                     GetNativeContext();
