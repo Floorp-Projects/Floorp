@@ -188,6 +188,8 @@
 
 #define UNKNOWN_CONTENT_TYPE                "application/x-unknown-content-type"
 
+#define VIEWSOURCE_CONTENT_TYPE             "application/x-view-source"
+
 #define APPLICATION_DIRECTORY				        "application/directory" /* text/x-vcard is synonym */
 
 #endif /* nsMimeTypes_h_ */

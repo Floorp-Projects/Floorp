@@ -291,16 +291,13 @@ nsViewSourceChannel::GetContentType(nsACString &aContentType)
         rv = mChannel->GetContentType(contentType);
         if (NS_FAILED(rv)) return rv;
 
-        // Tack on the view-source param to the content type
-        // Doing this so as to preserve the original content
-        // type as received from the webserver. But, by adding
-        // the x-view-type param we're indicating a custom preference
-        // of how this should be displayed - viewsource or regular view
-
-        contentType += NS_LITERAL_CSTRING(X_VIEW_SOURCE_PARAM);
-
-        // At this stage the content-type string will be
-        // of the form "text/html; x-view-type=view-source"
+        // If we don't know our type, just say so.  The unknown
+        // content decoder will then kick in automatically, and it
+        // will call our SetOriginalContentType method instead of our
+        // SetContentType method to set the type it determines.
+        if (!contentType.Equals(UNKNOWN_CONTENT_TYPE)) {
+          contentType = VIEWSOURCE_CONTENT_TYPE;
+        }
 
         mContentType = contentType;
     }
@@ -312,24 +309,23 @@ nsViewSourceChannel::GetContentType(nsACString &aContentType)
 NS_IMETHODIMP
 nsViewSourceChannel::SetContentType(const nsACString &aContentType)
 {
-    // Our GetContentType() currently returns strings of the 
-    // form "text/html; x-view-type=view-source"(see above)
+    // Our GetContentType() currently returns VIEWSOURCE_CONTENT_TYPE
     //
-    // However, during the parsing phase the parser calls our channel's
-    // GetContentType(). Returing a string of the form given above
-    // trips up the parser. In order to avoid messy changes and not to have
-    // the parser depend on nsIViewSourceChannel Vidur proposed the 
+    // However, during the parsing phase the parser calls our
+    // channel's GetContentType(). Returing the string above trips up
+    // the parser. In order to avoid messy changes and not to have the
+    // parser depend on nsIViewSourceChannel Vidur proposed the
     // following solution:
     //
-    // The ViewSourceChannel initially returns a content type of the
-    // form "text/html; x-view-type=view-source". Based on this type
-    // decisions to create a viewer for doing a view source are made.
-    // After the viewer is created, nsLayoutDLF::CreateInstance()
-    // calls this SetContentType() with the original content type.
-    // When it's time for the parser to find out the content type it
-    // will call our channel's GetContentType() and it will get the 
-    // original content type, such as, text/html and everything
-    // is kosher from then on
+    // The ViewSourceChannel initially returns a content type of
+    // VIEWSOURCE_CONTENT_TYPE.  Based on this type decisions to
+    // create a viewer for doing a view source are made.  After the
+    // viewer is created, nsLayoutDLF::CreateInstance() calls this
+    // SetContentType() with the original content type.  When it's
+    // time for the parser to find out the content type it will call
+    // our channel's GetContentType() and it will get the original
+    // content type, such as, text/html and everything is kosher from
+    // then on.
 
     mContentType = aContentType;
     return NS_OK;
@@ -430,6 +426,17 @@ nsViewSourceChannel::GetOriginalContentType(nsACString &aContentType)
     NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);
 
     return mChannel->GetContentType(aContentType);
+}
+
+NS_IMETHODIMP
+nsViewSourceChannel::SetOriginalContentType(const nsACString &aContentType)
+{
+  NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);
+
+  // clear our cached content-type value
+  mContentType.Truncate();
+
+  return mChannel->SetContentType(aContentType);
 }
 
 // nsIRequestObserver methods

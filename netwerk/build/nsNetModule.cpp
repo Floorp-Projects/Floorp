@@ -258,7 +258,6 @@ nsresult NS_NewStreamConv(nsStreamConverterService **aStreamConv);
 #define MULTI_MIXED                  "?from=multipart/mixed&to=*/*"
 #define MULTI_BYTERANGES             "?from=multipart/byteranges&to=*/*"
 #define UNKNOWN_CONTENT              "?from=application/x-unknown-content-type&to=*/*"
-#define UNKNOWN_CONTENT_SOURCE       "?from=application/x-unknown-content-type; x-view-type=view-source&to=*/*"
 #define CHUNKED_TO_UNCHUNKED         "?from=chunked&to=unchunked"
 #define UNCHUNKED_TO_CHUNKED         "?from=unchunked&to=chunked"
 #define GZIP_TO_UNCOMPRESSED         "?from=gzip&to=uncompressed"
@@ -272,12 +271,6 @@ nsresult NS_NewStreamConv(nsStreamConverterService **aStreamConv);
 #define BINHEX_TO_WILD               "?from=application/mac-binhex40&to=*/*"
 #endif
 
-#ifndef XP_MAC
-static PRUint32 g_StreamConverterCount = 17;
-#else
-static PRUint32 g_StreamConverterCount = 16;
-#endif
-
 static const char *const g_StreamConverterArray[] = {
         FTP_TO_INDEX,
         GOPHER_TO_INDEX,
@@ -286,7 +279,6 @@ static const char *const g_StreamConverterArray[] = {
         MULTI_MIXED,
         MULTI_BYTERANGES,
         UNKNOWN_CONTENT,
-        UNKNOWN_CONTENT_SOURCE,
         CHUNKED_TO_UNCHUNKED,
         UNCHUNKED_TO_CHUNKED,
         GZIP_TO_UNCOMPRESSED,
@@ -299,6 +291,8 @@ static const char *const g_StreamConverterArray[] = {
 #endif
         PLAIN_TO_HTML
     };
+
+static PRUint32 g_StreamConverterCount = sizeof(g_StreamConverterCount)/sizeof(const char*);
 
 // each stream converter must add its from/to key to the category manager
 // in RegisterStreamConverters(). This provides a string representation
@@ -807,14 +801,10 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       NS_ISTREAMCONVERTER_KEY MULTI_MIXED,
       CreateNewMultiMixedConvFactory
     },
+
     { "Unknown Content-Type Decoder",
       NS_UNKNOWNDECODER_CID,
       NS_ISTREAMCONVERTER_KEY UNKNOWN_CONTENT,
-      CreateNewUnknownDecoderFactory
-    },
-    { "Unknown Content-Type Decoder for Viewing Source",
-      NS_UNKNOWNDECODER_CID,
-      NS_ISTREAMCONVERTER_KEY UNKNOWN_CONTENT_SOURCE,
       CreateNewUnknownDecoderFactory
     },
 
