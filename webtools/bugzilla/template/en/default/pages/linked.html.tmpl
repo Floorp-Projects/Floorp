@@ -21,6 +21,8 @@
   #%]
 
 [% INCLUDE global/header.html.tmpl title = "Your Linkified Text" %]
+[% USE Bugzilla %]
+[% cgi = Bugzilla.cgi %]
 
 <p>
   Copy and paste the text below:
@@ -30,7 +32,7 @@
 
 <p>
 <pre>
-[%- form.text FILTER quoteUrls FILTER html -%]
+[%- cgi.param("text") FILTER quoteUrls FILTER html -%]
 </pre>
 </p>
 
@@ -45,7 +47,7 @@
 
 <p>
 <pre>
-[%- form.text FILTER quoteUrls -%]
+[%- cgi.param("text") FILTER quoteUrls -%]
 </pre>
 </p>
 
