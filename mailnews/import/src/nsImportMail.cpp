@@ -785,6 +785,8 @@ ImportMailThread( void *stuff)
 		pData->abort = PR_TRUE;
 	}
 
+	IMPORT_LOG1( "Total number of mailboxes: %d\n", (int) count);
+
 	for (i = 0; (i < count) && !(pData->abort); i++) {
 		pSupports = pData->boxes->ElementAt( i);
 		if (pSupports) {
@@ -900,6 +902,7 @@ ImportMailThread( void *stuff)
 					pData->currentSize = 0;
 					pData->currentTotal += size;
 					if (fatalError) {
+						IMPORT_LOG1( "*** ImportMailbox returned fatalError, mailbox #%d\n", (int) i);
 						pData->fatalError = PR_TRUE;
 						break;
 					}
@@ -911,7 +914,10 @@ ImportMailThread( void *stuff)
 	nsImportGenericMail::SetLogs( success, error, pData->successLog, pData->errorLog);
 
 	if (pData->abort || pData->fatalError) {
+		IMPORT_LOG0( "Abort or fatalError set\n");
 		if (pData->ownsDestRoot) {
+			IMPORT_LOG0( "Calling destRoot->RecursiveDelete\n");
+
 			destRoot->RecursiveDelete( PR_TRUE);
 		}
 		else {
@@ -919,7 +925,10 @@ ImportMailThread( void *stuff)
 		}
 	}
 
+	IMPORT_LOG1( "Import mailbox thread done: %d\n", (int) pData->currentTotal);
+
 	pData->ThreadDelete();	
+
 }
 
 

@@ -14,6 +14,7 @@ function ContinueMailImport() {
 		}
 	}
 	if (clear == true) {
+		dump( "Mail import finished\n");
 		clearInterval( intervalState);
 		intervalState = null;
 		importMailInterface = null;		
@@ -68,6 +69,54 @@ function test1() {
 
 
 }
+
+function eudoraMail() {
+	if (importMailInterface || intervalState) {
+		dump( "Already importing mail, wait till this one is done!\n");
+		return;
+	}
+
+	dump( "test1\n");
+	dump( "Loading outlook express component\n");
+	var module = Components.classes["component://mozilla/import/import-eudora"].createInstance();
+	module = module.QueryInterface(Components.interfaces.nsIImportModule);
+	
+	dump( "Loaded outlook express import module\n");
+	dump( "Getting the mail interface\n");
+
+	var mailInterface = module.GetImportInterface( "mail");
+	mailInterface = mailInterface.QueryInterface( Components.interfaces.nsIImportGeneric);
+
+	dump( "Got the mail interface\n");
+	
+	var loc = mailInterface.GetData( "mailLocation");
+
+	dump( "Mail location: " + loc + "\n");
+
+	if (mailInterface.WantsProgress()) {
+		dump( "Beginning import with progress\n");
+		if (mailInterface.BeginImport( null, null)) {
+			var count = 0;
+			dump( "Importing ");
+			importMailInterface = mailInterface;
+			intervalState = setInterval( "ContinueMailImport()", 100);
+	
+			dump( "\nWaiting for import to finish.....\n");
+		}
+		else {
+			dump( "BeginImport returned failure\n");
+		}
+	}
+	else {
+		if (mailInterface.BeginImport( null, null)) {
+			dump( "BeginImport successful without progress\n");
+		}
+		else {
+			dump( "BeginImport FAILED without progress\n");
+		}
+	}
+}
+
 
 function test2() {
 	dump( "test2\n");
@@ -147,7 +196,8 @@ function test3() {
 <form name="form">
 <input type="button" value="Import Outlook Express Mail" onclick="test1();"><br>
 <input type="button" value="Import Outlook Express Address Book" onclick="test2();"><br>
-<input type="button" value="Import Outlook Express Settings" onclick="test3();">
+<input type="button" value="Import Outlook Express Settings" onclick="test3();"><br>
+<input type="button" value="Import Eudora Mail" onclick="eudoraMail();">
 <form> 
 
 </body>
