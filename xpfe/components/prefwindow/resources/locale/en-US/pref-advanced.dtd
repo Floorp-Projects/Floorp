@@ -10,9 +10,6 @@
 <!ENTITY enbJavaCheck.label           "Enable Java">
 <!ENTITY enbJavaCheck.accesskey       "j">
 
-<!ENTITY sendAddFtpCheck.label        "Send this email address as anonymous FTP password:">
-<!ENTITY sendAddFtpCheck.accesskey    "e">
-
 <!ENTITY imageBlocking.label          "Image Blocking...">
 <!ENTITY imageBlocking.accesskey      "b">
 
