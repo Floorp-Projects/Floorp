@@ -47,11 +47,9 @@ REQUIRES	= xpcom \
 		  xpconnect \
 		  docshell \
 		  dom \
-		  appcomps \
 		  windowwatcher \
 		  zlib \
 		  content \
-		  raptor \
 		  $(NULL)
 
 include <$(DEPTH)/config/config.mak>

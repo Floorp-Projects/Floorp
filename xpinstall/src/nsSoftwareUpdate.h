@@ -18,7 +18,6 @@
 class nsInstallInfo;
 
 #include "nsIScriptExternalNameSet.h"
-#include "nsIAppShellComponent.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIObserver.h"
 #include "nsPIXPIStubHook.h"

@@ -95,12 +95,10 @@ nsFTPConn::Open()
     DUMP(resp);
 
     /* issue USER command on control connection */
-    sprintf(cmd, "USER anonymous\r\n");
-    err = IssueCmd(cmd, resp, kRespBufSize, mCntlSock);
+    err = IssueCmd("USER anonymous\r\n", resp, kRespBufSize, mCntlSock);
 
     /* issue PASS command on control connection */
-    sprintf(cmd, "PASS -linux@installer.sbg\r\n");
-    ERR_CHECK(IssueCmd(cmd, resp, kRespBufSize, mCntlSock));
+    ERR_CHECK(IssueCmd("PASS -linux@installer.sbg\r\n", resp, kRespBufSize, mCntlSock));
 
     mState = OPEN;
 
@@ -394,7 +392,7 @@ BAIL:
 }
 
 int
-nsFTPConn::IssueCmd(char *aCmd, char *aResp, int aRespSize, nsSocket *aSock)
+nsFTPConn::IssueCmd(const char *aCmd, char *aResp, int aRespSize, nsSocket *aSock)
 {
     int err = OK;
     int len;

@@ -58,7 +58,6 @@
 #include "nsAppDirectoryServiceDefs.h"
 
 #include "nsProxiedService.h"
-#include "nsIAppShellComponentImpl.h"
 #include "nsIPromptService.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsISupportsPrimitives.h"

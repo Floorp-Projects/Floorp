@@ -40,7 +40,7 @@
 #include "nsIRegistry.h"
 #include "nsIRegistryUtils.h"
 
-#define NS_IXPINSTALLCOMPONENT_CONTRACTID NS_IAPPSHELLCOMPONENT_CONTRACTID "/xpinstall;1"
+#define NS_IXPINSTALLCOMPONENT_CONTRACTID  "@mozilla.org/xpinstall;1"
 #define NS_IXPINSTALLCOMPONENT_CLASSNAME "Mozilla XPInstall Component"
 
 #define XPINSTALL_ENABLE_PREF            "xpinstall.enabled"
