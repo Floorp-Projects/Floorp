@@ -41,20 +41,25 @@ that can be used interactively and with test scripts.
 <P><I>Scott Furman, 4/8/98</I>
 <H2>
 Build conventions</H2>
-To enable multi-threaded execution, define the <TT><FONT SIZE=+1>JS_THREADSAFE</FONT></TT>
-cpp macro and flesh out the stubs and required headers in jslock.c/.h.&nbsp;
-See the JS API docs for more.&nbsp; JSRef must also be built with <TT><FONT SIZE=+1>JS_THREADSAFE</FONT></TT>.
-
-<P>Update your JVM's <TT><FONT SIZE=+1>CLASSPATH</FONT></TT> to point to
-the <TT><FONT SIZE=+1>liveconnect/classes</FONT></TT> subdirectory.&nbsp;
-If you do not, LiveConnect will still operate but with the limitation that
+Update your JVM's <TT><FONT SIZE=+1>CLASSPATH</FONT></TT> to point to the
+<TT><FONT SIZE=+1>liveconnect/classes</FONT></TT> subdirectory.&nbsp; If
+you do not, LiveConnect will still operate but with the limitation that
 JS objects may not be passed as arguments of Java methods and it will not
 be possible to call from Java into JavaScript, i.e. the <I>netscape.javascript.JSObject</I>
-class will be inaccessible.
+class will be inaccessible.&nbsp; If your <TT><FONT SIZE=+1>CLASSPATH</FONT></TT>
+is set improperly, you will see a message like, "<TT><FONT SIZE=+1>initialization
+error: Can't load class netscape/javascript/JSObject</FONT></TT>" when
+starting a LiveConnect debug build.
+
+<P>To enable multi-threaded execution, define the <TT><FONT SIZE=+1>JS_THREADSAFE</FONT></TT>
+cpp macro and flesh out the stubs and required headers in jslock.c/.h.&nbsp;
+See the JS API docs for more.&nbsp; JSRef must also be built with <TT><FONT SIZE=+1>JS_THREADSAFE</FONT></TT>.
+<BR>&nbsp;
 <UL><B>Windows</B>
 <UL>
 <LI>
-Use MSDEV5.0 (LiveConnectShell.dsw).</LI>
+Use MSDEV5.0 with the <TT><FONT SIZE=+1>LiveConnectShell.dsw</FONT></TT>
+project file.</LI>
 
 <LI>
 You must first build the JS runtime, js32.dll, by using the normal JSRef
@@ -78,7 +83,8 @@ and appears in the output directory.</LI>
 <LI>
 You must have the JVM DLL in your <TT><FONT SIZE=+1>PATH</FONT></TT> environment
 variable in order to run.&nbsp; If you are using the Sun JDK, the DLL appears
-in the JDK's bin directory.</LI>
+in the JDK's bin directory.<BR>
+<BR></LI>
 </UL>
 <B>Mac</B>
 <UL>
@@ -87,7 +93,8 @@ in the JDK's bin directory.</LI>
 project files created yet</FONT></LI>
 
 <LI>
-Use CodeWarrior 1.x (???.prj.hqx) or 2 (???.prj2.hqx).</LI>
+Use CodeWarrior 1.x (???.prj.hqx) or 2 (???.prj2.hqx).<BR>
+<BR></LI>
 </UL>
 <B>Unix</B>
 <UL>
@@ -198,29 +205,33 @@ and types</TD>
 <TR>
 <TD>jsj.c</TD>
 
-<TD>Public API entry points and initialization code</TD>
+<TD>Public LiveConnect API entry points and initialization code</TD>
 </TR>
 
 <TR>
 <TD>jsj_array.c</TD>
 
-<TD>Read and write elements of a Java array using the JNI.</TD>
+<TD>Read and write elements of a Java array, performing needed conversions
+to/from JS types.</TD>
 </TR>
 
 <TR>
 <TD>jsj_class.c</TD>
 
 <TD>Construct and manipulate JavaClassDescriptor structs, which are the
-native wrappers for Java classes.&nbsp; JavaClassDescriptors are used to
-describe the signatures of methods and fields.&nbsp; There is a JavaClassDescriptor
-associated with the reflection of each Java Object.</TD>
+native representation for Java classes.&nbsp; JavaClassDescriptors are
+used to describe the methods and fields of a class, including their type
+signatures, and include a reference to the peer <I>java.lang.Class</I>
+object.&nbsp; Since each Java object has a class, there is a JavaClassDescriptor
+associated with the JavaScript reflection of each Java Object.</TD>
 </TR>
 
 <TR>
 <TD>jsj_convert.c</TD>
 
-<TD>Convert between Java and JavaScript values of all types, including
-the wrapping of JS objects as Java objects and vice-versa.</TD>
+<TD>Convert between Java and JavaScript values of all types, which may
+require calling routines in other files to wrap JS objects as Java objects
+and vice-versa.</TD>
 </TR>
 
 <TR>
@@ -256,7 +267,8 @@ although some of the code in this file is used by the JavaArray code.</TD>
 <TD>jsj_JavaPackage.c</TD>
 
 <TD>Implementation of the JavaScript JavaPackage class.&nbsp;&nbsp; Instances
-of JavaPackage are used to reflect Java packages.</TD>
+of JavaPackage are used to reflect Java packages.&nbsp; The JS properties
+of a JavaPackage are either nested JavaPackage objects or a JavaClass object.</TD>
 </TR>
 
 <TR>
@@ -264,8 +276,9 @@ of JavaPackage are used to reflect Java packages.</TD>
 
 <TD>Implementation of the native methods for the&nbsp; <I>netscape.javascript.JSObject</I>
 Java class, which are used for calling into JavaScript from Java.&nbsp;
-It also contains the code that handles propagation of exceptions both into
-and out of Java.</TD>
+It also contains the code that wraps JS objects as instances of&nbsp; <I>netscape.javascript.JSObject
+</I>and the code that handles propagation of exceptions both into and out
+of Java.</TD>
 </TR>
 
 <TR>
