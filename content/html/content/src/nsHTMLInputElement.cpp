@@ -1293,8 +1293,12 @@ nsHTMLInputElement::StringToAttribute(nsIAtom* aAttribute,
     nsAutoString valueStr(aValue);
     while (nsnull != table->tag) { 
       if (valueStr.EqualsIgnoreCase(table->tag)) {
+        // If the type is being changed to file, set the element value
+        // to the empty string. This is for security.
+        if (table->value == NS_FORM_INPUT_FILE)
+          SetValue(NS_LITERAL_STRING(""));
         aResult.SetIntValue(table->value, eHTMLUnit_Enumerated);
-        mType = table->value;  // set the type of this input 
+        mType = table->value;  // set the type of this input
         return NS_CONTENT_ATTR_HAS_VALUE;
       }
       table++;
