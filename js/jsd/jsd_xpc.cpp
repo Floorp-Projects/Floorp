@@ -1007,7 +1007,7 @@ jsdScript::CreatePPLineMap()
         fun = JS_CompileUCFunction (cx, obj, "ppfun", fun->nargs, argnames,
                                     JS_GetStringChars(jsstr),
                                     JS_GetStringLength(jsstr),
-                                    "jsd:ppfun", 3);
+                                    "x-jsd:internal:ppbuffer:function", 3);
         if (!fun || !(script = JS_GetFunctionScript(cx, fun)))
             return 0;
         baseLine = 3;
@@ -1020,7 +1020,7 @@ jsdScript::CreatePPLineMap()
         script = JS_CompileUCScript (cx, obj,
                                      JS_GetStringChars(jsstr),
                                      JS_GetStringLength(jsstr),
-                                     "jsd:ppscript", 1);
+                                     "x-jsd:internal:ppbuffer:script", 1);
         if (!script)
             return 0;
         scriptOwner = PR_TRUE;
