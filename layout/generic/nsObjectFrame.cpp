@@ -1633,6 +1633,11 @@ nsObjectFrame::Paint(nsPresContext*      aPresContext,
     npPrintInfo.type = NP_PRINT;
     npPrintInfo.fp   = plugintmpfile;
     npprint.print.embedPrint.platformPrint = (void *)&npPrintInfo;
+    /* aDirtyRect contains the right information for ps print */
+    window.x =   aDirtyRect.x;
+    window.y =   aDirtyRect.y;
+    window.width =   aDirtyRect.width;
+    window.height =   aDirtyRect.height;
     npprint.print.embedPrint.window        = window;
     rv = pi->Print(&npprint);
     if (NS_FAILED(rv)) {
@@ -1641,48 +1646,10 @@ nsObjectFrame::Paint(nsPresContext*      aPresContext,
       return rv;
     }
 
-    unsigned char *pluginbuffer;
-    long           fileLength;
-
-    /* Get file size */
-    fseek(plugintmpfile, 0, SEEK_END);
-    fileLength = ftell(plugintmpfile);
-    
-    /* Safeguard against bogus values
-     * (make sure we clamp the size to a reasonable value (say... 128 MB)) */
-    if( fileLength <= 0 || fileLength > (128 * 1024 * 1024) ) {
-      PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG, ("error: file size %ld too large\n", fileLength));
-      fclose(plugintmpfile);
-      return NS_ERROR_FAILURE;
-    }
-
-    pluginbuffer = new unsigned char[fileLength+1];
-    if (!pluginbuffer) {
-      PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG, ("error: no buffer memory for %ld bytes\n", fileLength+1));
-      fclose(plugintmpfile);
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    /* Read data into temp. buffer */
-    long numBytesRead = 0;
-    fseek(plugintmpfile, 0, SEEK_SET);
-    numBytesRead = fread(pluginbuffer, 1, fileLength, plugintmpfile);
-    
-    if( numBytesRead == fileLength ) {
-      PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG, ("sending %ld bytes of PostScript data to printer\n", numBytesRead));
-
-      /* Send data to printer */
-      aRenderingContext.RenderPostScriptDataFragment(pluginbuffer, numBytesRead);
-    }
-    else
-    {
-      PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG,
-             ("error: bytes read in buffer (%ld) does not match file length (%ld)\n",
-             numBytesRead, fileLength));
-    }
+    /* Send data to printer */
+    rv = aRenderingContext.RenderEPS(aDirtyRect, plugintmpfile);
 
     fclose(plugintmpfile);
-    delete [] pluginbuffer;
 
     PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG, ("plugin printing done, return code is %lx\n", (long)rv));
 

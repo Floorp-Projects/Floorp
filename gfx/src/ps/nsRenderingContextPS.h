@@ -275,15 +275,14 @@ public:
 #endif /* MOZ_MATHML */
 
   /** ---------------------------------------------------
-   *  Output postscript supplied by the caller to the print job. The
-   *  caller should have already called PushState() (and preferably
-   *  SetClipRect()).
-   *    @update  9/31/2003 kherron
-   *    @param   aData    Buffer containing postscript to be output
-   *             aDataLen Number of characters in aData
-   *    @return  NS_OK
+   *  Output an encapsulated postscript file to the print job. See
+   *  documentation in gfx/public/nsIRenderingContext.h.
+   *    @update  3/6/2004 kherron
+   *    @param   aRect  Rectangle in which to render the EPS
+   *    @param   aDataFile - data stored in a file
+   *    @return  NS_OK or a suitable error code.
    */
-  NS_IMETHOD RenderPostScriptDataFragment(const unsigned char *aData, unsigned long aDatalen);
+  NS_IMETHOD RenderEPS(const nsRect& aRect, FILE *aDataFile);
 
 private:
   nsresult CommonInit(void);

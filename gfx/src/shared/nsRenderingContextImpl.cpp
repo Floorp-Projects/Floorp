@@ -398,7 +398,7 @@ nsRenderingContextImpl::FlushRect(nscoord aX, nscoord aY, nscoord aWidth, nscoor
 }
 
 NS_IMETHODIMP
-nsRenderingContextImpl::RenderPostScriptDataFragment(const unsigned char *aData, unsigned long aDatalen)
+nsRenderingContextImpl::RenderEPS(const nsRect& aRect, FILE *aDataFile)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -104,7 +104,7 @@ public:
   NS_IMETHOD DrawImage(imgIContainer *aImage, const nsRect & aSrcRect, const nsRect & aDestRect);
   NS_IMETHOD DrawTile(imgIContainer *aImage, nscoord aXOffset, nscoord aYOffset, const nsRect * aTargetRect);
 
-  NS_IMETHOD RenderPostScriptDataFragment(const unsigned char *aData, unsigned long aDatalen);
+  NS_IMETHOD RenderEPS(const nsRect& aRect, FILE *aDataFile);
 
 protected:
   virtual ~nsRenderingContextImpl();

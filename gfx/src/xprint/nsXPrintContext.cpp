@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
+ *   Roland Mainz <roland.mainz@nrubsig.org>
  *   Leon Sha <leon.sha@sun.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -57,6 +57,9 @@
 #include "nsDeviceContextXP.h"
 #include "xprintutil.h"
 #include "prenv.h" /* for PR_GetEnv */
+#include "prprf.h"
+#include "plstr.h"
+#include "nsPrintfCString.h"
 
 /* NS_XPRINT_RGB_DITHER: Macro to check whether we should dither or not.
  * In theory we only have to look at the visual and depth ("TrueColor" with 
@@ -1378,13 +1381,166 @@ NS_IMETHODIMP nsXPrintContext::GetPrintResolution(int &aPrintResolution)
   return NS_ERROR_FAILURE;    
 }
 
-NS_IMETHODIMP nsXPrintContext::RenderPostScriptDataFragment(const unsigned char *aData, unsigned long aDatalen)
+/* nsEPSObjectXp - a EPSF helper class
+ * For details on the EPSF spec, see Adobe specification #5002,
+ * "Encapsulated PostScript File Format Specification". The document
+ * structuring conventions are described in Specificion #5001, 
+ * "PostScript Language Document Structuring Conventions Specification".
+ */
+class nsEPSObjectXp {
+  public:
+      /** ---------------------------------------------------
+       * Constructor
+       */
+      nsEPSObjectXp(const unsigned char *aData, unsigned long aDataLength) :
+        mStatus(NS_ERROR_INVALID_ARG),
+        mData(nsnull),
+        mDataLength(0UL),
+        mCurrPos(nsnull),
+        mBBllx(0.0),
+        mBBlly(0.0),
+        mBBurx(0.0),
+        mBBury(0.0)
+      {
+        mData       = aData;
+        mDataLength = aDataLength;
+
+        NS_PRECONDITION(aData != nsnull,   "aData == nsnull");
+        NS_PRECONDITION(aDataLength > 0UL, "No data");    
+
+        Reset();
+        Parse();
+      }
+      
+      static inline
+      PRBool IsEPSF(const unsigned char *aData, unsigned long aDataLength)
+      {
+        /* First line (assuming a single line of PostScript line is not longer
+         * than 256 chars) should usually look like "%!PS-Adobe-3.0 EPSF-3.0"
+         * (version numbers may be different) */
+        return (PL_strnstr(aData, " EPSF-", PR_MIN(aDataLength, 256)) != nsnull);
+      }
+      
+
+      /** ---------------------------------------------------
+       * @return the result code from parsing the EPS data.
+       * If the return value is not NS_OK, the EPS object is
+       * invalid and should not be used further.
+       */
+      nsresult GetStatus() { return mStatus; };
+
+      /** ---------------------------------------------------
+       * Return Bounding box coordinates: lower left x,
+       * lower left y, upper right x, upper right y.
+       */
+      inline void GetBoundingBox(PRFloat64 &aBBllx,
+                          PRFloat64 &aBBlly,
+                          PRFloat64 &aBBurx,
+                          PRFloat64 &aBBury)
+      {
+        aBBllx = mBBllx;
+        aBBlly = mBBlly;
+        aBBurx = mBBurx;
+        aBBury = mBBury;
+      };
+
+      /** ---------------------------------------------------
+       * Append the EPS object to the provided string object.
+       */
+      void AppendTo(nsACString& aDestBuffer)
+      {
+        nsCAutoString line;
+        PRBool        inPreview = PR_FALSE;
+
+        Reset();
+        while (EPSFFgets(line)) {
+          if (inPreview) {
+            /* filter out the print-preview section */
+            if (StringBeginsWith(line, NS_LITERAL_CSTRING("%%EndPreview")))
+                inPreview = PR_FALSE;
+            continue;
+          }
+          else if (StringBeginsWith(line, NS_LITERAL_CSTRING("%%BeginPreview:"))){
+            inPreview = PR_TRUE;
+            continue;
+          }
+
+          /* Output the EPSF with this platform's line terminator */
+          aDestBuffer.Append(line.get(), line.Length());
+          aDestBuffer.Append(NS_LITERAL_CSTRING("\n"));
+        }
+      }
+  private:
+      nsresult             mStatus;
+      const unsigned char *mData;
+      unsigned long        mDataLength;
+      const char          *mCurrPos;
+      PRFloat64            mBBllx,
+                           mBBlly,
+                           mBBurx,
+                           mBBury;
+
+      void Parse()
+      {
+        nsCAutoString line;
+
+        Reset();   
+        while (EPSFFgets(line)) {
+          if (PR_sscanf(line.get(), "%%%%BoundingBox: %lf %lf %lf %lf",
+                        &mBBllx, &mBBlly, &mBBurx, &mBBury) == 4) {
+            mStatus = NS_OK;
+            return;
+          }
+        }
+        mStatus = NS_ERROR_INVALID_ARG;
+      }
+      
+      inline void Reset()
+      {
+        mCurrPos = mData;
+      }
+
+      PRBool EPSFFgets(nsACString& aBuffer)
+      {
+        aBuffer.Truncate();
+        
+        if (!mCurrPos)
+          return PR_FALSE;
+        
+        while (1) {
+          int ch = *mCurrPos++;
+          if ('\n' == ch) {
+            /* Eat any following carriage return */
+            ch = *mCurrPos++;
+            if ((mCurrPos < (mData + mDataLength)) && ('\r' != ch))
+              mCurrPos--;
+            return PR_TRUE;
+          }
+          else if ('\r' == ch) {
+            /* Eat any following line feed */
+            ch = *mCurrPos++;
+            if ((mCurrPos < (mData + mDataLength)) && ('\n' != ch))
+              mCurrPos--;
+            return PR_TRUE;
+          }
+          else if (mCurrPos >= (mData + mDataLength)) {
+            /* If we read any text before the EOF, return true. */
+            return !aBuffer.IsEmpty();
+          }
+
+          /* Normal case */
+          aBuffer.Append((char)ch);
+        }
+      }
+};
+
+NS_IMETHODIMP nsXPrintContext::RenderEPS(const nsRect& aRect, const unsigned char *aData, unsigned long aDatalen)
 {
   PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, 
-         ("nsXPrintContext::RenderPostScriptDataFragment(aData, aDatalen=%d)\n", aDatalen));
+         ("nsXPrintContext::EPS(aData, aDatalen=%d)\n", aDatalen));
   
   char xp_formats_supported[] = "xp-embedded-formats-supported";
-  const char *embedded_formats_supported = XpGetOneAttribute(mPDisplay, mPContext,XPPrinterAttr, xp_formats_supported);
+  const char *embedded_formats_supported = XpGetOneAttribute(mPDisplay, mPContext, XPPrinterAttr, xp_formats_supported);
 
   /* Check whether "PostScript Level 2" is supported as embedding format
    * (The content of the "xp-embedded-formats-supported" attribute needs
@@ -1394,7 +1550,7 @@ NS_IMETHODIMP nsXPrintContext::RenderPostScriptDataFragment(const unsigned char 
    * To avoid problems we simply use |PL_strcasestr()| (case-insensitive
    * strstr()) instead of |strstr()| here...)
    */
-  if( embedded_formats_supported == NULL )
+  if (embedded_formats_supported == NULL)
   {
     PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::RenderPostScriptDataFragment(): Embedding data not supported for this DDX/Printer\n"));
     return NS_ERROR_FAILURE;    
@@ -1407,6 +1563,75 @@ NS_IMETHODIMP nsXPrintContext::RenderPostScriptDataFragment(const unsigned char 
             "(supported embedding formats are '%s')\n", embedded_formats_supported));
     XFree((void *)embedded_formats_supported);
     return NS_ERROR_FAILURE;    
+  }
+
+  /* Temp buffer for EPSF data - this has to live outside the if()/else()
+   * block below to gurantee that the pointers we get from it are still
+   * valid when we feed the data to |XpPutDocumentData| */
+  nsXPIDLCString  aBuffer;
+  const unsigned char *embedData;
+  unsigned long        embedDataLength;
+    
+  /* If the input is EPSF then we need to do some EPSF-specific handling */
+  if (nsEPSObjectXp::IsEPSF(aData, aDatalen))
+  {
+    PRFloat64 boxLLX, 
+              boxLLY,
+              boxURX,
+              boxURY;
+
+    nsEPSObjectXp epsfData(aData, aDatalen);
+    /* Non-EPSF data are not supported yet */
+    if (NS_FAILED(epsfData.GetStatus()))
+      return NS_ERROR_INVALID_ARG;  
+
+    epsfData.GetBoundingBox(boxLLX, boxLLY, boxURX, boxURY);
+
+    /* Size buffer that all the data in |aData| and context fits into the string */
+    aBuffer.SetCapacity(aDatalen + 1024); 
+    aBuffer.Assign("%%BeginDocument: Mozilla EPSF plugin data\n"
+                   "/b4_Inc_state save def\n"
+                   "/dict_count countdictstack def\n"
+                   "/op_count count 1 sub def\n"
+                   "userdict begin\n"
+                   "/showpage { } def\n"
+                   "0 setgray 0 setlinecap 1 setlinewidth 0 setlinejoin\n"
+                   "10 setmiterlimit [ ] 0 setdash newpath\n"
+                   "/languagelevel where\n"
+                   "{pop languagelevel\n"
+                   "  1 ne\n"
+                   "  {false setstrokeadjust false setoverprint\n"
+                   "  } if\n"
+                   "} if\n");
+
+    /* translate to the lower left corner of the rectangle */
+    aBuffer.Append(nsPrintfCString(64, "%f %f translate\n", 
+                   double(aRect.x),
+                   double(aRect.y + aRect.height)));
+
+    /* Rescale */
+    aBuffer.Append(nsPrintfCString(64, "%f %f scale\n", 
+                   double(aRect.width / (boxURX - boxLLX)),
+                   double(-(aRect.height / (boxURY - boxLLY)))));
+
+    /* Translate to the EPSF origin. Can't use translate() here because
+     * it takes integers.
+     */
+    aBuffer.Append(nsPrintfCString(64, "%f %f translate\n", double(-boxLLX), double(-boxLLY)));
+
+    epsfData.AppendTo(aBuffer);
+    aBuffer.Append("count op_count sub { pop } repeat\n"
+                   "countdictstack dict_count sub { end } repeat\n"
+                   "b4_Inc_state restore\n"
+                   "%%EndDocument\n");
+    embedData       = aBuffer.get();
+    embedDataLength = aBuffer.Length();
+  }
+  else
+  {
+    /* Non-EPSF codepath - pass the data as-is... */
+    embedData       = aData;
+    embedDataLength = aDatalen;
   }
   
   /* Note that the embedded PostScript code uses the same resolution and
@@ -1421,7 +1646,7 @@ NS_IMETHODIMP nsXPrintContext::RenderPostScriptDataFragment(const unsigned char 
                                           * supported options/option values) */
 
   /* XpPutDocumentData() takes |const| input for all string arguments, only the X11 prototypes do not allow |const| yet */
-  XpPutDocumentData(mPDisplay, mDrawable, (unsigned char *)aData, aDatalen, (char *)type, (char *)option);
+  XpPutDocumentData(mPDisplay, mDrawable, (unsigned char *)embedData, embedDataLength, (char *)type, (char *)option);
 
   XFree((void *)embedded_formats_supported);
   

@@ -2227,7 +2227,7 @@ void
 nsPostScriptObj::scale(float aX, float aY)
 {
   fprintf(mScriptFP, "%s %s scale\n",
-      fpCString(aX).get(), fpCString(aX).get());
+      fpCString(aX).get(), fpCString(aY).get());
 }
 
 /** ---------------------------------------------------
@@ -2752,3 +2752,69 @@ nsPostScriptObj::initlanggroup(FILE *aHandle)
       PrefEnumCallback, (void *) &closure);
 }
 
+
+ /** ---------------------------------------------------
+  *  See documentation in nsPostScriptObj.h
+  *  @update 3/6/2004 kherron
+  *  @update 3/25/2004 dantifer
+  */
+nsresult
+nsPostScriptObj::render_eps(const nsRect& aRect, nsEPSObjectPS &anEPS)
+{
+  FILE     *bfile = mScriptFP;
+  nsresult  rv;
+
+  NS_PRECONDITION(nsnull != bfile, "No document body file handle");
+
+  /* Set up EPSF state. See Adobe spec #5002 section 3.2 */
+  fputs(
+    "/b4_Inc_state save def\n"
+    "/dict_count countdictstack def\n"
+    "/op_count count 1 sub def\n"
+    "userdict begin\n"
+    "/showpage { } def\n"
+    "0 setgray 0 setlinecap 1 setlinewidth 0 setlinejoin\n"
+    "10 setmiterlimit [ ] 0 setdash newpath\n"
+    "/languagelevel where\n"
+    "{pop languagelevel\n"
+    "  1 ne\n"
+    "  {false setstrokeadjust false setoverprint\n"
+    "  } if\n"
+    "} if\n",
+    bfile);
+
+  /* Set up a clipping region around the EPS rectangle */
+  box(aRect.x, aRect.y, aRect.width, aRect.height);
+  clip();
+
+  /* translate to the lower left corner of the rectangle */
+  translate(aRect.x, aRect.y + aRect.height);
+
+  /* Rescale */
+  scale(
+    aRect.width / (anEPS.GetBoundingBoxURX() - anEPS.GetBoundingBoxLLX()),
+    -(aRect.height / (anEPS.GetBoundingBoxURY() - anEPS.GetBoundingBoxLLY()))
+  );
+
+  /* Translate to the EPSF origin. Can't use translate() here because
+  * it takes integers.
+  */
+  fprintf(bfile, "%s %s translate\n",
+    fpCString(-anEPS.GetBoundingBoxLLX()).get(),
+    fpCString(-anEPS.GetBoundingBoxLLY()).get()
+  );
+
+  /* embeding EPS file content */
+  comment("%BeginDocument: Mozilla-Internal");
+  rv = anEPS.WriteTo(bfile);
+  comment("%EndDocument");
+
+  /* Restore previous state */
+  fputs(
+    "count op_count sub { pop } repeat\n"
+    "countdictstack dict_count sub { end } repeat\n"
+    "b4_Inc_state restore\n",
+    bfile);
+
+  return rv;
+}
