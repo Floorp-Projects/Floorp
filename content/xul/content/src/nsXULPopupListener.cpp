@@ -122,7 +122,7 @@ XULPopupListenerImpl::QueryInterface(REFNSIID iid, void** result)
         return NS_OK;
     }
     else if (iid.Equals(nsIDOMFocusListener::GetIID())) {
-        *result = NS_STATIC_CAST(nsIDOMMouseListener*, this);
+        *result = NS_STATIC_CAST(nsIDOMFocusListener*, this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
