@@ -30,7 +30,11 @@
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsScriptError, nsIConsoleMessage, nsIScriptError);
 
-nsScriptError::nsScriptError() {};
+nsScriptError::nsScriptError() 
+{
+	NS_INIT_REFCNT();
+}
+
 nsScriptError::~nsScriptError() {};
 
 // nsIConsoleMessage methods
