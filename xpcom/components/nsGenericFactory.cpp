@@ -43,7 +43,7 @@
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
 #include "nsIComponentManager.h"
-#include "nsIComponentManagerObsolete.h"
+#include "nsIComponentRegistrar.h"
 nsGenericFactory::nsGenericFactory(nsModuleComponentInfo *info)
     : mInfo(info)
 {
@@ -358,15 +358,14 @@ nsGenericModule::RegisterSelf(nsIComponentManager *aCompMgr,
     for (PRUint32 i = 0; i < mComponentCount; i++) {
         // Register the component only if it has a constructor
         if (cp->mConstructor) {
-            // what I want to do here is QI for a Component Registration Manager.  Since this 
-            // has not been invented yet, QI to the obsolete manager.  Kids, don't do this at home.
-            nsCOMPtr<nsIComponentManagerObsolete> obsoleteManager = do_QueryInterface(aCompMgr, &rv);
-            if (obsoleteManager)
-                rv = obsoleteManager->RegisterComponentWithType(cp->mCID, 
-                                                                cp->mDescription,
-                                                                cp->mContractID, aPath,
-                                                                registryLocation, PR_TRUE,
-                                                                PR_TRUE, componentType);
+            nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(aCompMgr, &rv);
+            if (registrar)
+                rv = registrar->RegisterFactoryLocation(cp->mCID, 
+                                                        cp->mDescription,
+                                                        cp->mContractID, 
+                                                        aPath,
+                                                        registryLocation,
+                                                        componentType);
             if (NS_FAILED(rv)) {
 #ifdef DEBUG
                 printf("nsGenericModule %s: unable to register %s component => %x\n",
@@ -411,13 +410,10 @@ nsGenericModule::UnregisterSelf(nsIComponentManager* aCompMgr,
         }
 
         // Unregister the component
-
-        // what I want to do here is QI for a Component Registration Manager.  Since this 
-        // has not been invented yet, QI to the obsolete manager.  Kids, don't do this at home.
         nsresult rv; 
-        nsCOMPtr<nsIComponentManagerObsolete> obsoleteManager = do_QueryInterface(aCompMgr, &rv);
-        if (obsoleteManager)
-             rv = obsoleteManager->UnregisterComponentSpec(cp->mCID, aPath);
+        nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(aCompMgr, &rv);
+        if (registrar)
+             rv = registrar->UnregisterFactoryLocation(cp->mCID, aPath);
         if (NS_FAILED(rv)) {
 #ifdef DEBUG
             printf("nsGenericModule %s: unable to unregister %s component => %x\n",

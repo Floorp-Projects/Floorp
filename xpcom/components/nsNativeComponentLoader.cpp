@@ -373,7 +373,6 @@ nsFreeLibrary(nsDll *dll, nsIServiceManager *serviceMgr, PRInt32 when)
 #endif /* OBSOLETE_MODULE_LOADING */
 
     mobj = nsnull; // Release our reference to the module object
-
     // When shutting down, whether we can unload the dll or not,
     // we will shutdown the dll to release any memory it has got
     if (when == nsIComponentManagerObsolete::NS_Shutdown)

@@ -40,6 +40,7 @@
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLAtoms.h"
 #include "nsIComponentManager.h"
+#include "nsIComponentRegistrar.h"
 #include "nsICategoryManager.h"
 #include "nsIDocumentLoader.h"
 #include "nsIDocumentLoaderFactory.h"
@@ -580,16 +581,16 @@ RegisterTypes(nsIComponentManager* aCompMgr,
 #ifdef NOISY_REGISTRY
     printf("Register %s => %s\n", contractid, aPath);
 #endif
-
-    // what I want to do here is QI for a Component Registration Manager.  Since this 
-    // has not been invented yet, QI to the obsolete manager.  Kids, don't do this at home.
-    nsCOMPtr<nsIComponentManagerObsolete> obsoleteManager = do_QueryInterface(aCompMgr, &rv);
+    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(aCompMgr, &rv);
     if (NS_FAILED(rv))
       return rv;
 
-    rv = obsoleteManager->RegisterComponentWithType(kDocumentFactoryImplCID, "Layout",
-                                                    contractid, aPath, aLocation,
-                                                    PR_TRUE, PR_TRUE, aType);
+    rv = registrar->RegisterFactoryLocation(kDocumentFactoryImplCID, 
+                                            "Layout",
+                                            contractid, 
+                                            aPath, 
+                                            aLocation,
+                                            aType);
     if (NS_FAILED(rv)) break;
 
     // add the MIME types layotu can handle to the handlers category.
@@ -657,15 +658,12 @@ nsContentDLF::UnregisterDocumentFactories(nsIComponentManager* aCompMgr,
                                           const nsModuleComponentInfo* aInfo)
 {
   // XXXwaterson seems like this leaves the registry pretty dirty.
-
-  // what I want to do here is QI for a Component Registration Manager.  Since this 
-  // has not been invented yet, QI to the obsolete manager.  Kids, don't do this at home.
   nsresult rv;
-  nsCOMPtr<nsIComponentManagerObsolete> obsoleteManager = do_QueryInterface(aCompMgr, &rv);
+  nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(aCompMgr, &rv);
   if (NS_FAILED(rv))
     return rv;
 
-  return obsoleteManager->UnregisterComponentSpec(kDocumentFactoryImplCID, aPath);
+  return registrar->UnregisterFactoryLocation(kDocumentFactoryImplCID, aPath);
 }
 
 /* static */ nsresult

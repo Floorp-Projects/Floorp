@@ -49,7 +49,7 @@
 #include "nsIEventQueue.h"
 #include "nsILocalFile.h"
 #include "plhash.h"
-
+#include "nsIComponentRegistrar.h"
 
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
 
@@ -193,14 +193,6 @@ TestSyncWrites(char* filenamePrefix, PRUint32 startPosition, PRInt32 length)
 }
         
 ////////////////////////////////////////////////////////////////////////////////
-
-nsresult
-NS_AutoregisterComponents()
-{
-  nsresult rv = nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup, NULL /* default */);
-  return rv;
-}
-
 int
 main(int argc, char* argv[])
 {
@@ -213,8 +205,11 @@ main(int argc, char* argv[])
     char* fileName = argv[1];
     int length = atoi(argv[2]);
 
-    rv = NS_AutoregisterComponents();
-    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIServiceManager> servMan;
+    NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+    registrar->AutoRegister(nsnull);
 
     rv = TestSyncWrites(fileName, 0, length);
     NS_ASSERTION(NS_SUCCEEDED(rv), "TestAsyncRead failed");

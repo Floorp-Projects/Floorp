@@ -41,6 +41,7 @@
 #include "nsIScriptError.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
+#include "nsIComponentRegistrar.h"
 #include "nsIJSContextStack.h"
 #include "nsIJSRuntimeService.h"
 #include "nsMemory.h"
@@ -53,14 +54,6 @@
 #include "jsgc.h"   // for js_ForceGC
 
 #include "xpctest.h"
-
-/***************************************************************************/
-// initialization stuff for the xpcom runtime
-
-static void SetupRegistry()
-{
-    nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup, nsnull);
-}
 
 /***************************************************************************/
 // host support for jsengine
@@ -713,8 +706,12 @@ int main()
     gErrFile = stderr;
     gOutFile = stdout;
 
-    SetupRegistry();
-
+    nsCOMPtr<nsIServiceManager> servMan;
+    NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+    registrar->AutoRegister(nsnull);
+    
     // get the JSRuntime from the runtime svc, if possible
     nsCOMPtr<nsIJSRuntimeService> rtsvc = 
              do_GetService("@mozilla.org/js/xpc/RuntimeService;1", &rv);

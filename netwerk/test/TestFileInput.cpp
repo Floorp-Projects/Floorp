@@ -38,6 +38,7 @@
 #include "nsIFileTransportService.h"
 #include "nsIStreamListener.h"
 #include "nsIServiceManager.h"
+#include "nsIComponentRegistrar.h"
 #include "nsIInputStream.h"
 #include "nsIEventQueue.h"
 #include "nsIEventQueueService.h"
@@ -393,12 +394,6 @@ ParallelReadTest(char* dirName, nsIFileTransportService* fts)
     NS_ASSERTION(status == PR_SUCCESS, "can't close dir");
 }
 
-nsresult NS_AutoregisterComponents()
-{
-  nsresult rv = nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup, NULL /* default */);
-  return rv;
-}
-
 int
 main(int argc, char* argv[])
 {
@@ -410,8 +405,12 @@ main(int argc, char* argv[])
     }
     char* dirName = argv[1];
 
-    rv = NS_AutoregisterComponents();
-    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIServiceManager> servMan;
+    NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+    registrar->AutoRegister(nsnull);
 
     nsCOMPtr<nsIFileTransportService> fts = 
              do_GetService(kFileTransportServiceCID, &rv);

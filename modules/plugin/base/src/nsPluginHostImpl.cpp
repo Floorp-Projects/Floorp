@@ -86,7 +86,7 @@
 #include "nsHashtable.h"
 #include "nsIProxyInfo.h"
 #include "nsObsoleteModuleLoading.h"
-
+#include "nsIComponentRegistrar.h"
 #include "nsPluginLogging.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -2639,10 +2639,18 @@ nsresult nsPluginHostImpl::ReloadPlugins(PRBool reloadPages)
   mPluginsLoaded = PR_FALSE;
 
   //refresh the component registry first
-  nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup, nsnull);
+  nsCOMPtr<nsIServiceManager> servManager;
+  NS_GetServiceManager(getter_AddRefs(servManager));
+  nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servManager);
+  if (!registrar) {
+    NS_ASSERTION(0, "No nsIComponentRegistrar from get service");
+    return NS_ERROR_FAILURE;
+  }
+  NS_ASSERTION(registrar, "No nsIComponentRegistrar from get service");
+  nsresult rv = registrar->AutoRegister(nsnull);
 
   // load them again
-  nsresult rv = LoadPlugins();
+  rv = LoadPlugins();
 
   PLUGIN_LOG(PLUGIN_LOG_NORMAL,
   ("nsPluginHostImpl::ReloadPlugins End active_instance_count=%d\n",

@@ -40,51 +40,12 @@
 #include "TestFactory.h"
 #include "nsISupports.h"
 #include "nsIComponentManager.h"
+#include "nsIComponentRegistrar.h"
 #include "nsIServiceManager.h"
 
 NS_DEFINE_CID(kTestFactoryCID, NS_TESTFACTORY_CID);
 NS_DEFINE_CID(kTestLoadedFactoryCID, NS_TESTLOADEDFACTORY_CID);
 
-int main(int argc, char **argv) {
-  nsresult rv;
-
-  rv = nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup,
-                                        NULL /* default */);
-  if (NS_FAILED(rv)) return rv;
-
-  RegisterTestFactories();
-
-  ITestClass *t = NULL;
-  nsComponentManager::CreateInstance(kTestFactoryCID,
-                               NULL,
-                               NS_GET_IID(ITestClass),
-                               (void **) &t);
-
-  if (t != NULL) {
-    t->Test();
-    t->Release();
-  } else {
-    cout << "CreateInstance failed\n";
-  }
-
-  t = NULL;
-
-  nsComponentManager::CreateInstance(kTestLoadedFactoryCID,
-                               NULL,
-                               NS_GET_IID(ITestClass),
-                               (void **) &t);
-
-  if (t != NULL) {
-    t->Test();
-    t->Release();
-  } else {
-    cout << "Dynamic CreateInstance failed\n";
-  }
-
-  nsComponentManager::FreeLibraries();
-
-  return 0;
-}
 
 /**
  * ITestClass implementation
@@ -150,19 +111,50 @@ nsresult TestFactory::CreateInstance(nsISupports *aDelegate,
   return res;
 }
 
-/**
- * TestFactory registration function
- */
 
-extern "C" void RegisterTestFactories() {
-  nsComponentManager::RegisterFactory(kTestFactoryCID, 0, 0,
-                                new TestFactory(), PR_FALSE);
+int main(int argc, char **argv) {
+  nsresult rv;
 
-  // Windows can use persistant registry  
-#ifndef USE_NSREG
-  nsComponentManager::RegisterComponent(kTestLoadedFactoryCID, NULL, NULL,
-                                "libtestdynamic"MOZ_DLL_SUFFIX,
-                                PR_FALSE,
-                                PR_TRUE);
-#endif
+
+  nsCOMPtr<nsIServiceManager> servMan;
+  rv = NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+  if (NS_FAILED(rv)) return -1;
+  nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+  NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+
+  registrar->RegisterFactory(kTestFactoryCID, 
+                             nsnull, 
+                             nsnull,
+                             new TestFactory());
+
+
+  ITestClass *t = NULL;
+  nsComponentManager::CreateInstance(kTestFactoryCID,
+                               NULL,
+                               NS_GET_IID(ITestClass),
+                               (void **) &t);
+
+  if (t != NULL) {
+    t->Test();
+    t->Release();
+  } else {
+    cout << "CreateInstance failed\n";
+  }
+
+  t = NULL;
+
+  nsComponentManager::CreateInstance(kTestLoadedFactoryCID,
+                               NULL,
+                               NS_GET_IID(ITestClass),
+                               (void **) &t);
+
+  if (t != NULL) {
+    t->Test();
+    t->Release();
+  } else {
+    cout << "Dynamic CreateInstance failed\n";
+  }
+
+  return 0;
 }
+

@@ -50,7 +50,7 @@
 #include "nsSupportsArray.h"
 #include <fstream.h>
 #include "nsReadableUtils.h"
-
+#include "nsIComponentRegistrar.h"
 int getStrLine(const char *src, char *str, int ind, int max);
 nsresult auxLoad(char *uriBuf);
 //----------------------------------------------------------------------
@@ -265,13 +265,6 @@ MyNotifications::OnProgress(nsIRequest *req, nsISupports *ctx,
 // main, etc..
 //-----------------------------------------------------------------------------
 
-nsresult NS_AutoregisterComponents()
-{
-
-  nsresult rv = nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup, NULL /* default */);
-  return rv;
-}
-
 //---------getStrLine Helper function---------------
 //Finds a newline in src starting at ind. Puts the
 //line in str (must be big enough). Returns the index
@@ -361,13 +354,16 @@ int main(int argc, char **argv)
         return -1;
     }
 
+    nsCOMPtr<nsIServiceManager> servMan;
+    NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+    registrar->AutoRegister(nsnull);
+
     PRTime start, finish;
 
     rv = NS_NewISupportsArray(getter_AddRefs(uriList));
     RETURN_IF_FAILED(rv, "NS_NewISupportsArray");
-
-    rv = NS_AutoregisterComponents();
-    RETURN_IF_FAILED(rv, "NS_AutoregisterComponents");
 
     // Create the Event Queue for this thread...
     nsCOMPtr<nsIEventQueueService> eqs = 

@@ -55,6 +55,7 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsNetCID.h"
+#include "nsIComponentRegistrar.h"
 
 // Define CIDs...
 static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
@@ -393,12 +394,6 @@ int doMakeAbsTest(const char* i_URL = 0, const char* i_relativePortion=0)
     }
 }
 
-nsresult NS_AutoregisterComponents()
-{
-  nsresult rv = nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup, NULL /* default */);
-  return rv;
-}
-
 void printusage(void)
 {
     cout << "urltest [-std] [-file <filename>] <URL> " <<
@@ -422,8 +417,11 @@ int main(int argc, char **argv)
         return NS_OK;
     }
 
-    result = NS_AutoregisterComponents();
-    if (NS_FAILED(result)) return result;
+    nsCOMPtr<nsIServiceManager> servMan;
+    NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+    registrar->AutoRegister(nsnull);
 
     // end of all messages from register components...
     cout << "------------------" << endl << endl; 

@@ -58,12 +58,14 @@ jsConsoleHandler.prototype = {
 /* jsConsoleHandler Module (for XPCOM registration) */
 var jsConsoleHandlerModule = {
     registerSelf: function(compMgr, fileSpec, location, type) {
-        compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentManagerObsolete);
+        compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
 
-        compMgr.registerComponentWithType(JSCONSOLEHANDLER_CID, 
-            'JS Console Commandline Handler component',
-            JSCONSOLEHANDLER_CONTRACTID, fileSpec,
-            location, true, true, type);
+        compMgr.registerFactoryLocation(JSCONSOLEHANDLER_CID, 
+                                        'JS Console Commandline Handler component',
+                                        JSCONSOLEHANDLER_CONTRACTID, 
+                                        fileSpec,
+                                        location, 
+                                        type);
         var catman = Components.classes["@mozilla.org/categorymanager;1"]
             .getService(Components.interfaces.nsICategoryManager);
         catman.addCategoryEntry("command-line-argument-handlers", "jsconsole command line handler",
@@ -72,8 +74,8 @@ var jsConsoleHandlerModule = {
     },
 
     unregisterSelf: function(compMgr, fileSpec, location) {
-        compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentManagerObsolete);
-        compMgr.unregisterComponentSpec(JSCONSOLEHANDLER_CID, fileSpec);
+        compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
+        compMgr.unregisterFactoryLocation(JSCONSOLEHANDLER_CID, fileSpec);
         var catman = Components.classes["@mozilla.org/categorymanager;1"]
             .getService(Components.interfaces.nsICategoryManager);
         catman.deleteCategoryEntry("command-line-argument-handlers",

@@ -83,7 +83,7 @@ public:
     {
       return nsnull;
     }
-    return mImpl->mArray[aIndex];
+    return mImpl ? mImpl->mArray[aIndex] : nsnull;
   }
 
   // bounds-checked version
@@ -93,7 +93,7 @@ public:
     {
       return nsnull;
     }
-    return mImpl->mArray[aIndex];
+    return mImpl ? mImpl->mArray[aIndex] : nsnull;
   }
 
   void* operator[](PRInt32 aIndex) const { return ElementAt(aIndex); }

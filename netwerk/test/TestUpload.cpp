@@ -39,6 +39,7 @@
 #include <windows.h>
 #endif
 
+#include "nsIComponentRegistrar.h"
 #include "nsIEventQueueService.h"
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
@@ -53,12 +54,6 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static int gKeepRunning = 1;
 static nsIEventQueue* gEventQ = nsnull;
 
-
-nsresult NS_AutoregisterComponents()
-{
-  nsresult rv = nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup, NULL /* default */);
-  return rv;
-}
 //-----------------------------------------------------------------------------
 // InputTestConsumer
 //-----------------------------------------------------------------------------
@@ -138,10 +133,12 @@ main(int argc, char* argv[])
     char* uriSpec  = argv[1];
     char* fileName = argv[2];
 
-    
 
-    rv = NS_AutoregisterComponents();
-    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIServiceManager> servMan;
+    NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+    registrar->AutoRegister(nsnull);
 
     // Create the Event Queue for this thread...
     nsCOMPtr<nsIEventQueueService> eventQService = 

@@ -48,6 +48,7 @@
 #include "nsISocketTransportService.h"
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
+#include "nsIComponentRegistrar.h"
 #include "nsITransport.h"
 #include "nsIRequest.h"
 #include "nsIStreamListener.h"
@@ -134,12 +135,6 @@ InputTestConsumer::OnStopRequest(nsIRequest *request, nsISupports* context,
 }
 
 
-nsresult NS_AutoregisterComponents()
-{
-  nsresult rv = nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup, NULL /* default */);
-  return rv;
-}
-
 int
 main(int argc, char* argv[])
 {
@@ -157,8 +152,11 @@ main(int argc, char* argv[])
 //port = portString.ToInteger(&rv);
   port = 13;
 
-  rv = NS_AutoregisterComponents();
-  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIServiceManager> servMan;
+  NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+  nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+  NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+  registrar->AutoRegister(nsnull);
 
   // Create the Event Queue for this thread...
   nsCOMPtr<nsIEventQueueService> eventQService = 

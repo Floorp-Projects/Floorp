@@ -50,7 +50,7 @@
 #include "nsIEventQueue.h"
 
 #include "nsIComponentManager.h"
-
+#include "nsIComponentRegistrar.h"
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
 #include "nsINetService.h"
@@ -252,8 +252,12 @@ int main(int argc, char **argv)
         return 0;
     }
 
-    nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup, "./components");
-
+    nsCOMPtr<nsIServiceManager> servMan;
+    NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+    registrar->AutoRegister(nsnull);
+    
     testURL(argv[1]);
     return 0;
 #if 0

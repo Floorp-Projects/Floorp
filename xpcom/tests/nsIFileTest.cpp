@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include "nsXPCOM.h"
 #include "nsIComponentManager.h"
+#include "nsIComponentRegistrar.h"
 #include "nsIServiceManager.h"
 #include "nsIMemory.h"
 #include "nsXPIDLString.h"
@@ -314,11 +315,12 @@ DeletionTest(const char* creationPath, const char* appendPath, PRBool recursive)
 
 int main(void)
 {
-    NS_InitXPCOM2(nsnull, nsnull, nsnull);
-    nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup,
-                                     NULL);
-
-
+    nsCOMPtr<nsIServiceManager> servMan;
+    NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+    registrar->AutoRegister(nsnull);
+  
 #ifdef XP_PC
     InitTest("c:\\temp\\", "sub1/sub2/");
     InitTest("d:\\temp\\", "sub1\\sub2\\");

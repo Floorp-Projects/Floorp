@@ -40,6 +40,7 @@
 #include "nsIIOService.h"
 #include "nsIInputStream.h"
 #include "nsIComponentManager.h"
+#include "nsIComponentRegistrar.h"
 #include "nsIStreamListener.h"
 #include "nsIEventQueueService.h"
 #include "nsIURI.h"
@@ -240,22 +241,17 @@ TestAsyncRead(const char* url)
     return rv;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-nsresult
-NS_AutoregisterComponents()
-{
-    nsresult rv = nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup,
-                                                   NULL /* default */);
-    return rv;
-}
-
 int
 main(int argc, char* argv[])
 {
     nsresult rv;
 
-    rv = NS_AutoregisterComponents();
+    nsCOMPtr<nsIServiceManager> servMan;
+    NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+    registrar->AutoRegister(nsnull);
+
     NS_ASSERTION(NS_SUCCEEDED(rv), "AutoregisterComponents failed");
 
     if (argc < 2) {

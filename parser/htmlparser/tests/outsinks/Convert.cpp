@@ -30,6 +30,8 @@
 #include "nsLayoutCID.h"
 #include "nsIHTMLToTextSink.h"
 #include "nsIComponentManager.h"
+#include "nsIServiceManager.h"
+#include "nsIComponentRegistrar.h"
 #include "nsReadableUtils.h"
 
 static NS_DEFINE_IID(kIParserIID, NS_IPARSER_IID);
@@ -288,8 +290,12 @@ Usage: %s [-i intype] [-o outtype] [-f flags] [-w wrapcol] [-c comparison_file] 
   }
   else file = stdin;
 
-  NS_InitXPCOM2(nsnull, nsnull, nsnull);
-  nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup, 0);
+
+  nsCOMPtr<nsIServiceManager> servMan;
+  NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+  nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+  NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+  registrar->AutoRegister(nsnull);
 
   // Read in the string: very inefficient, but who cares?
   nsString inString;

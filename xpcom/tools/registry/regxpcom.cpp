@@ -45,6 +45,7 @@
 #include "plstr.h"
 #include "prlink.h"
 #include "nsIComponentManager.h"
+#include "nsIComponentRegistrar.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 #include "nsILocalFile.h"
@@ -52,7 +53,7 @@
 static PRBool gUnreg = PR_FALSE, gSilent = PR_FALSE, gQuiet = PR_FALSE;
 
 
-nsresult Register(const char *path) 
+nsresult Register(nsIComponentRegistrar* registrar, const char *path) 
 { 
   nsCOMPtr<nsILocalFile> spec;
   nsresult rv = nsComponentManager::CreateInstance(NS_LOCAL_FILE_CONTRACTID, 
@@ -68,11 +69,10 @@ nsresult Register(const char *path)
 
   rv = spec->InitWithPath(path);
   if (NS_FAILED(rv)) return rv;
-  rv = nsComponentManager::AutoRegisterComponent(nsIComponentManagerObsolete::NS_Startup, spec);
-  return rv;
+  return registrar->AutoRegister(spec);
 }
 
-nsresult Unregister(const char *path) 
+nsresult Unregister(nsIComponentRegistrar *registrar, const char *path) 
 {
   nsCOMPtr<nsILocalFile> spec;
   nsresult rv = nsComponentManager::CreateInstance(NS_LOCAL_FILE_CONTRACTID, 
@@ -88,8 +88,7 @@ nsresult Unregister(const char *path)
 
   rv = spec->InitWithPath(path);
   if (NS_FAILED(rv)) return rv;
-  rv = nsComponentManager::AutoUnregisterComponent(nsIComponentManagerObsolete::NS_Startup, spec);
-  return rv;
+  return registrar->AutoUnregister(spec);
 }
 
 void ReportSuccess(const char *file)
@@ -133,7 +132,7 @@ void ReportError(nsresult err, const char *file)
   fprintf(stderr, ") %s\n", file);
 }
 
-int ProcessArgs(int argc, char *argv[])
+int ProcessArgs(nsIComponentRegistrar *registrar, int argc, char *argv[])
 {
   int i = 1, result = 0;
   nsresult res;
@@ -158,9 +157,9 @@ int ProcessArgs(int argc, char *argv[])
       }
     } else {
       if (gUnreg == PR_TRUE)
-        res = Unregister(argv[i]);
+        res = Unregister(registrar, argv[i]);
       else
-        res = Register(argv[i]);
+        res = Register(registrar, argv[i]);
       if (NS_FAILED(res)) {
         ReportError(res, argv[i]);
         result = -1;
@@ -183,18 +182,27 @@ int main(int argc, char *argv[])
 #endif
 #endif
 
-    NS_InitXPCOM2(nsnull, nsnull, nsnull);
-
+    nsCOMPtr<nsIServiceManager> servMan;
+    nsresult rv = NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+    
+    if (NS_FAILED(rv)) {
+      printf("Can not initialize XPCOM\n");
+      return -1;
+    }
+    
+    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+ 
     /* With no arguments, RegFactory will autoregister */
     if (argc <= 1)
     {
-        nsresult rv = nsComponentManager::AutoRegister(
-                                                       nsIComponentManagerObsolete::NS_Startup,
-                                                       NULL /* default location */);
-        ret = (NS_FAILED(rv)) ? -1 : 0;
+      rv = registrar->AutoRegister(nsnull);
+      ret = (NS_FAILED(rv)) ? -1 : 0;
     }
     else
-      ret = ProcessArgs(argc, argv);
+    {
+      ret = ProcessArgs(registrar, argc, argv);
+    }
 
     NS_ShutdownXPCOM(NULL);
     return ret;

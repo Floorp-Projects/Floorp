@@ -40,6 +40,7 @@
 
 #include "nsXPCOM.h"
 #include "nsIComponentManager.h"
+#include "nsIComponentRegistrar.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 #include "nsSpecialSystemDirectory.h"    // For exe dir
@@ -496,11 +497,12 @@ main(int argc, char **argv)
     if (argc > 1)
         numberOfThreads = atoi(argv[1]);
 
-    NS_InitXPCOM2(nsnull, nsnull, nsnull);
-    nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup,
-                                     NULL /* default */);
-
-
+    nsCOMPtr<nsIServiceManager> servMan;
+    NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+    registrar->AutoRegister(nsnull);
+    
     static PRThread** threads = (PRThread**) calloc(sizeof(PRThread*), numberOfThreads);
     static PRThread*  aEventThread;
     

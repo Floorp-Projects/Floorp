@@ -38,6 +38,7 @@
 #include <iostream.h>
 #include "plstr.h"
 #include "prlink.h"
+#include "nsIComponentRegistrar.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
@@ -64,14 +65,14 @@ void print_err(nsresult err)
   }
 }
 
-nsresult Register(const char *path) 
+nsresult Register(nsIComponentRegistrar* register, const char *path) 
 { 
   nsCOMPtr<nsIFileSpec> spec;
   nsresult res = NS_NewFileSpec(getter_AddRefs(spec));
   if (NS_FAILED(res)) return res;
   res = spec->SetNativePath((char *)path);
   if (NS_FAILED(res)) return res;
-  res = nsComponentManager::AutoRegisterComponent(nsIComponentManagerObsolete::NS_Startup, spec);
+  res = register->AutoRegister(spec);
   return res;
 }
 
@@ -79,14 +80,14 @@ nsresult Unregister(const char *path)
 {
   /* NEEDS IMPLEMENTATION */
 #if 0
-  nsresult res = nsComponentManager::AutoUnregisterComponent(path);
+    nsresult res = nsComponentManager::AutoUnregisterComponent(path);
   return res;
 #else
   return NS_ERROR_FAILURE;
 #endif
 }
 
-int ProcessArgs(int argc, char *argv[])
+int ProcessArgs(nsIComponentRegistrar* register, int argc, char *argv[])
 {
   int i = 1;
   nsresult res;
@@ -115,7 +116,7 @@ int ProcessArgs(int argc, char *argv[])
           cerr << "): " << argv[i] << "\n";
         }
       } else {
-        res = Register(argv[i]);
+        res = Register(register, argv[i]);
         if (NS_SUCCEEDED(res)) {
           cout << "Successfully registered: " << argv[i] << "\n";
         } else {
@@ -134,16 +135,20 @@ int main(int argc, char *argv[])
 {
     int ret = 0;
 
+    nsCOMPtr<nsIServiceManager> servMan;
+    rv = NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+    if (NS_FAILED(rv)) return -1;
+    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+
     /* With no arguments, RegFactory will autoregister */
     if (argc <= 1)
     {
-        nsresult rv = nsComponentManager::AutoRegister(
-                                                       nsIComponentManagerObsolete::NS_Startup,
-                                                       NULL /* default location */);
-        ret = (NS_FAILED(rv)) ? -1 : 0;
+      rv = registrar->AutoRegister(nsnull);
+      ret = (NS_FAILED(rv)) ? -1 : 0;
     }
     else
-      ret = ProcessArgs(argc, argv);
+      ret = ProcessArgs(registrar, argc, argv);
 
     return ret;
 }
