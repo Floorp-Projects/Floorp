@@ -32,6 +32,9 @@ var accountManagerDSProgID = datasourceProgIDPrefix + "msgaccountmanager";
 var folderDSProgID         = datasourceProgIDPrefix + "mailnewsfolders";
 var messageDSProgID        = datasourceProgIDPrefix + "mailnewsmessages";
 
+var gFolderTree;
+
+// get the messenger instance
 var messenger = Components.classes[messengerProgID].createInstance();
 messenger = messenger.QueryInterface(Components.interfaces.nsIMessenger);
 
@@ -218,6 +221,7 @@ function InitPanes()
 
 function OnLoadFolderPane(folderTree)
 {
+    gFolderTree = folderTree;
 	SortFolderPane('FolderColumn', 'http://home.netscape.com/NC-rdf#Name');
 	//Add folderDataSource and accountManagerDataSource to folderPane
 	accountManagerDataSource = accountManagerDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
@@ -244,6 +248,8 @@ function OnLoadThreadPane(threadTree)
 /* Functions for accessing particular parts of the window*/
 function GetFolderTree()
 {
+    if (gFolderTree) return gFolderTree;
+    
 	var folderTree = FindInSidebar(frames[0], 'folderTree'); 
 	return folderTree;
 }
