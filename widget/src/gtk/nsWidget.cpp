@@ -442,6 +442,9 @@ nsresult nsWidget::StandardWindowCreate(nsIWidget *aParent,
   GtkWidget *parentWidget = nsnull;
   mBounds = aRect;
 
+  gtk_widget_push_colormap(gdk_rgb_get_cmap());
+  gtk_widget_push_visual(gdk_rgb_get_visual());
+
   BaseCreate(aParent, aRect, aHandleEventFunction, aContext, 
              aAppShell, aToolkit, aInitData);
 
@@ -471,6 +474,9 @@ nsresult nsWidget::StandardWindowCreate(nsIWidget *aParent,
 
   InitCallbacks();
   CreateGC();
+
+  gtk_widget_pop_colormap();
+  gtk_widget_pop_visual();
   
   return NS_OK;
 }
