@@ -1,12 +1,19 @@
 var card;
 var newCard = -1;
 var okCallback;
+var abURI;
 var editCardTitlePrefix = "Card for ";
 
 function OnLoadNewCard()
 {
 	top.card = newCard;
 	top.okCallback = 0;
+	
+	if (window.arguments && window.arguments[0])
+	{
+		if ( window.arguments[0].abURI )
+			top.abURI = window.arguments[0].abURI;
+	}
 }
 
 
@@ -19,11 +26,13 @@ function OnLoadEditCard()
 			top.card = window.arguments[0].card;
 		if ( window.arguments[0].okCallback )
 			top.okCallback = window.arguments[0].okCallback;
-			
-		GetCardValues(top.card, frames["browser.editcard"].document);
-		
-		//top.window.setAttribute('title', editCardTitlePrefix + top.card.DisplayName);
+		if ( window.arguments[0].abURI )
+			top.abURI = window.arguments[0].abURI;
 	}
+			
+	GetCardValues(top.card, frames["editcard"].document);
+		
+	//top.window.setAttribute('title', editCardTitlePrefix + top.card.DisplayName);
 }
 
 
@@ -35,9 +44,9 @@ function NewCardOKButton()
 
 	if ( cardproperty )
 	{
-		SetCardValues(cardproperty, frames["browser.newcard"].document);
+		SetCardValues(cardproperty, frames["editcard"].document);
 	
-		cardproperty.AddCardToDatabase();
+		cardproperty.AddCardToDatabase();// Candice pass  top.abURI  this is the var containing GetResultTreeDirectory()
 	}
 	
 	top.window.close();
@@ -46,9 +55,9 @@ function NewCardOKButton()
 
 function EditCardOKButton()
 {
-	SetCardValues(top.card, frames["browser.editcard"].document);
+	SetCardValues(top.card, frames["editcard"].document);
 	
-	top.card.EditCardToDatabase();
+	top.card.EditCardToDatabase();// Candice pass  top.abURI  this is the var containing GetResultTreeDirectory()
 	
 	// callback to allow caller to update
 	if ( top.okCallback )

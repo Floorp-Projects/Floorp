@@ -39,7 +39,7 @@ function AddAddressFromComposeWindow(addresses, prefix)
 {
 	if ( addresses )
 	{
-		var bucketDoc = frames["browser.addressbucket"].document;
+		var bucketDoc = frames["addressbucket"].document;
 		var addressArray = addresses.split(",");
 		
 		for ( var index = 0; index < addressArray.length; index++ )
@@ -56,7 +56,7 @@ function AddAddressFromComposeWindow(addresses, prefix)
 
 function SelectAddressOKButton()
 {
-	var bucketDoc = frames["browser.addressbucket"].document;
+	var bucketDoc = frames["addressbucket"].document;
 	var body = bucketDoc.getElementById('bucketBody');
 	var item, row, cell, text, colon;
 	var toAddress="", ccAddress="", bccAddress="";
@@ -123,7 +123,7 @@ function saChangeDirectoryByDOMNode(dirNode)
 
 function saChangeDirectoryByURI(uri)
 {
-	var tree = frames["browser.selAddrResultPane"].document.getElementById('resultTree');
+	var tree = frames["resultsFrame"].document.getElementById('resultTree');
 	//dump("tree = " + tree + "\n");
 
 	var treechildrenList = tree.getElementsByTagName('treechildren');
@@ -160,7 +160,7 @@ function SelectAddressEditButton()
 	var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
 	rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
 
-	var resultsDoc = frames["browser.selAddrResultPane"].document;
+	var resultsDoc = frames["resultsFrame"].document;
 	var selArray = resultsDoc.getElementsByAttribute('selected', 'true');
 
 	if ( selArray && selArray.length == 1 )
@@ -175,8 +175,8 @@ function SelectAddressEditButton()
 function AddSelectedAddressesIntoBucket(prefix)
 {
 	var item, uri, rdf, cardResource, card, address;
-	var resultsDoc = frames["browser.selAddrResultPane"].document;
-	var bucketDoc = frames["browser.addressbucket"].document;
+	var resultsDoc = frames["resultsFrame"].document;
+	var bucketDoc = frames["addressbucket"].document;
 	
 	rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
 	rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
@@ -212,7 +212,7 @@ function AddAddressIntoBucket(doc, address)
 
 function RemoveSelectedFromBucket()
 {
-	var bucketDoc = frames["browser.addressbucket"].document;
+	var bucketDoc = frames["addressbucket"].document;
 	var body = bucketDoc.getElementById("bucketBody");
 	
 	var selArray = body.getElementsByAttribute('selected', 'true');

@@ -115,7 +115,7 @@ Rights Reserved.
 				<box align="vertical" flex="50%">
 					<!-- Results pane -->
 					<html:iframe flex="100%" style="border:none; border-bottom:thin solid"
-								 name="browser.selAddrResultPane"
+								 name="resultsFrame"
 								 src="chrome://addressbook/content/resultPane.xul"/>
 					
 					<!-- Box that holds (to,cc,bcc buttons) -->
@@ -137,7 +137,7 @@ Rights Reserved.
 				
 					<!-- The bucket -->
 					<html:iframe flex="100%" style="border:none; border-bottom:thin solid"
-								 name="browser.addressbucket"
+								 name="addressbucket"
 								 src="chrome://addressbook/content/addressbucket.xul"/>
 				</box>
 			</box>

@@ -252,7 +252,7 @@
 	</toolbox>
 
 	<!-- The main address book three pane frame -->
-	<html:iframe src="chrome://addressbook/content/addresspanes.html" name="browser.2paneaddressbook" flex="100%" />
+	<html:iframe src="chrome://addressbook/content/addresspanes.html" name="3paneaddressbook" flex="100%" />
 
 </window>
 

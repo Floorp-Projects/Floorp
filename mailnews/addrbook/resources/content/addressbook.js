@@ -2,7 +2,9 @@ function AbNewCardDialog()
 {
 	var dialog = window.openDialog("chrome://addressbook/content/newcardDialog.xul",
 								   "abNewCard",
-								   "chrome");
+								   "chrome",
+								   {abURI:GetResultTreeDirectory()});
+
 	return dialog;
 }
 
@@ -11,7 +13,8 @@ function AbEditCardDialog(card, okCallback)
 	var dialog = window.openDialog("chrome://addressbook/content/editcardDialog.xul",
 								   "abEditCard",
 								   "chrome",
-								   {card:card, okCallback:okCallback});
+								   {abURI:GetResultTreeDirectory(),
+								    card:card, okCallback:okCallback});
 	
 	return dialog;
 }

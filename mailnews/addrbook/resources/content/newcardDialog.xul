@@ -34,7 +34,7 @@
 	<!-- editcard -->
 	<html:iframe flex="100%"
 				 style="border:none"
-				 name="browser.newcard"
+				 name="editcard"
 				 src="chrome://addressbook/content/editcard.xul"/>
 	
 	<spring style="height:10px"/>
