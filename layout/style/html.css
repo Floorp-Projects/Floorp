@@ -78,6 +78,7 @@ center {
 div {
   display: block;
 }
+
 h1 {
   display: block;
   font-size: 2em;
@@ -1458,6 +1459,7 @@ sourcetext { /* XXX should not be in HTML namespace */
 
 :button-content {
   display: block;
+  text-align: center;
 }
 
 :label-content {
