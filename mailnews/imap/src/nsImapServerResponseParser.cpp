@@ -1277,6 +1277,7 @@ void nsImapServerResponseParser::envelope_data()
 			break;
 		fNextToken = GetNextToken();
 	}
+
 	fNextToken = GetNextToken();
 }
 
@@ -1361,6 +1362,12 @@ void nsImapServerResponseParser::parse_address(nsCAutoString &addressLine)
 		}
 		if (*fNextToken == ')')
 			fNextToken++;
+    // if the next token isn't a ')' for the address term,
+    // then we must have another address pair left....so get the next
+    // token and continue parsing in this loop...
+    if ( *fNextToken == '\0' )
+      fNextToken = GetNextToken();
+
 	}
 	if (*fNextToken == ')')
 		fNextToken++;
