@@ -220,7 +220,7 @@ nsWidget::StandardWidgetCreate(nsIWidget *aParent,
   if (mIsToplevel == PR_TRUE) {
     SetUpWMHints();
   }
-  XSync(mDisplay, False);
+  //  XSync(mDisplay, False);
   return NS_OK;
 }
 

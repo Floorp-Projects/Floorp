@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <errno.h>
 
 #include "nsWidget.h"
 #include "nsAppShell.h"
@@ -249,7 +250,7 @@ NS_METHOD nsAppShell::Create(int* argc, char ** argv)
     exit(1);
   }
 
-  _Xdebug = 1;
+  //  _Xdebug = 1;
 
   mScreen = DefaultScreenOfDisplay(mDisplay);
 
@@ -307,12 +308,6 @@ nsresult nsAppShell::Run()
  done:
   printf("Getting the xlib connection number.\n");
   xlib_fd = ConnectionNumber(mDisplay);
-  queue_fd = EQueue->GetEventQueueSelectFD();
-  if (xlib_fd >= queue_fd) {
-    max_fd = xlib_fd + 1;
-  } else {
-    max_fd = queue_fd + 1;
-  }
   // process events.
   while (DieAppShellDie == PR_FALSE) {
     XEvent          event;
@@ -320,11 +315,19 @@ nsresult nsAppShell::Run()
     struct timeval *cur_time_ptr;
     int             please_run_timer_queue = 0;
     gettimeofday(&cur_time, NULL);
+    // set up our fds
+    queue_fd = EQueue->GetEventQueueSelectFD();
+    if (xlib_fd >= queue_fd) {
+      max_fd = xlib_fd + 1;
+    } else {
+      max_fd = queue_fd + 1;
+    }
     FD_ZERO(&select_set);
     // add the queue and the xlib connection to the select set
     FD_SET(queue_fd, &select_set);
     FD_SET(xlib_fd, &select_set);
 
+    //printf("cur time: %ld %ld\n", cur_time.tv_sec, cur_time.tv_usec);
     if (CallTimeToNextTimeoutFunc(&cur_time) == 0) {
       cur_time_ptr = NULL;
     }
@@ -335,12 +338,14 @@ nsresult nsAppShell::Run()
         please_run_timer_queue = 1;
       }
     }
+    //    if (cur_time_ptr) 
+    //printf("select time: %ld %ld\n", cur_time_ptr->tv_sec, cur_time_ptr->tv_usec);
     // note that we are passing in the timeout_ptr from above.
     // if there are no timers, this will be null and this will
     // block until hell freezes over
     select_retval = select(max_fd, &select_set, NULL, NULL, cur_time_ptr);
     if (select_retval == -1) {
-      printf("Select returned error.\n");
+      printf("Select returned error: %s.\n", strerror(errno));
       return NS_ERROR_FAILURE;
     }
     if (select_retval == 0) {
@@ -406,7 +411,6 @@ NS_METHOD nsAppShell::PushThreadEventQueue()
 NS_METHOD nsAppShell::PopThreadEventQueue()
 {
   nsresult rv;
-
   NS_WITH_SERVICE(nsIEventQueueService, eQueueService, kEventQueueServiceCID, &rv);
   if (NS_SUCCEEDED(rv))
     rv = eQueueService->PopThreadEventQueue();
@@ -458,6 +462,11 @@ nsAppShell::DispatchXEvent(XEvent *event)
 {
   nsWidget *widget;
   widget = nsWidget::GetWidgetForWindow(event->xany.window);
+
+  // did someone pass us an x event for a window we don't own?
+  // bad! bad!
+  if (widget == nsnull)
+    return;
 
   // switch on the type of event
   switch (event->type) 
