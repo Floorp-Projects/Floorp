@@ -2081,7 +2081,7 @@ CK_RV NSC_SignInit(CK_SESSION_HANDLE hSession,
     switch(pMechanism->mechanism) {
     case CKM_MD5_RSA_PKCS:
         context->multi = PR_TRUE;
-	crv = pk11_doSubMD2(context);
+	crv = pk11_doSubMD5(context);
 	if (crv != CKR_OK) break;
 	context->update = (PK11Cipher) pk11_HashSign;
 	info = (PK11HashSignInfo *)PORT_Alloc(sizeof(PK11HashSignInfo));
