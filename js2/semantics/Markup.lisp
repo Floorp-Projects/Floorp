@@ -75,22 +75,30 @@
 
 
 ; The concatenation of link-prefix and link-name is the name of a link.  Mark the link referenced.
-; If external is true, the link refers to the page given by *external-link-base*; if *external-link-base*
+; If external is t, the link refers to the page given by *external-link-base*; if *external-link-base*
 ; is null and external is true, no link gets made.
+; If external is a string, the link refers to the page given by that string.
 ; Return the full href if links are allowed or nil if not.
 (defun record-link-reference (links link-prefix link-name external)
   (assert-type link-prefix string)
   (assert-type link-name string)
-  (and links
-       (if external
-         (and *external-link-base*
-              (let ((href (concatenate 'string *external-link-base* "#" link-prefix link-name)))
-                (setf (gethash href links) :external)
-                href))
-         (let ((name (concatenate 'string link-prefix link-name)))
-           (unless (eq (gethash name links) :defined)
-             (setf (gethash name links) :referenced))
-           (concatenate 'string "#" name)))))
+  (cond
+   ((not links) nil)
+   ((stringp external) 
+    (let ((href (concatenate 'string external "#" link-prefix link-name)))
+      (setf (gethash href links) :external)
+      href))
+   ((eq external t)
+    (and *external-link-base*
+         (let ((href (concatenate 'string *external-link-base* "#" link-prefix link-name)))
+           (setf (gethash href links) :external)
+           href)))
+   ((not external)
+    (let ((name (concatenate 'string link-prefix link-name)))
+      (unless (eq (gethash name links) :defined)
+        (setf (gethash name links) :referenced))
+      (concatenate 'string "#" name)))
+   (t (error "Bad value of external"))))
 
 
 ; Warn about all referenced but not defined links.
@@ -497,6 +505,7 @@
 ; to which the body can emit contents.  Depending on link, do one of the following:
 ;   :reference   Emit a reference to the link with the given body of the reference;
 ;   :external    Emit an external reference to the link with the given body of the reference;
+;   a string     Emit an external reference to the link with the given body of the reference to the given html file;
 ;   :definition  Emit the link as an anchor, followed by the body;
 ;   nil          Emit the body only.
 ; If duplicate is true, allow duplicate anchors, in which case only the first one takes effect.
@@ -506,13 +515,15 @@
                   #'(lambda (,markup-stream) ,@body)))
 
 (defun depict-link-f (markup-stream link link-prefix link-name duplicate emitter)
-  (ecase link
-    (:reference (depict-link-reference-f markup-stream link-prefix link-name nil emitter))
-    (:external (depict-link-reference-f markup-stream link-prefix link-name t emitter))
-    (:definition
-      (depict-anchor markup-stream link-prefix link-name duplicate)
-      (funcall emitter markup-stream))
-    ((nil) (funcall emitter markup-stream))))
+  (if (stringp link)
+    (depict-link-reference-f markup-stream link-prefix link-name link emitter)
+    (ecase link
+      (:reference (depict-link-reference-f markup-stream link-prefix link-name nil emitter))
+      (:external (depict-link-reference-f markup-stream link-prefix link-name t emitter))
+      (:definition
+        (depict-anchor markup-stream link-prefix link-name duplicate)
+        (funcall emitter markup-stream))
+      ((nil) (funcall emitter markup-stream)))))
 
 
 (defun depict-logical-block-f (markup-stream indent emitter)
