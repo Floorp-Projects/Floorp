@@ -117,7 +117,7 @@ function WeekView( calendarWindow )
         onAlarm: function(aAlarmItem) {},
         onError: function(aErrNo, aMessage) { }
     }
-    calendar = createCalendar();
+    var calendar = createCalendar();
     calendar.addObserver(calendarObserver, calendar.ITEM_FILTER_TYPE_ALL);
 }
 
@@ -167,7 +167,7 @@ WeekView.prototype.refreshEvents = function()
         }
     };
 
-    ccalendar = createCalendar(); // XXX Should get the composite calendar here
+    var ccalendar = createCalendar(); // XXX Should get the composite calendar here
 
     dump("Fetching events from " + startDate.toString() + " to " + endDate.toString() + "\n");
 

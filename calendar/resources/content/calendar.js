@@ -771,7 +771,7 @@ function isToDo(aObject)
 
 function jsDateToDateTime(date)
 {
-    newDate = createDateTime();
+    var newDate = createDateTime();
     newDate.jsDate = date;
     dump ("date: " + date + " newDate: " + newDate + " newDate.jsDate: "+ newDate.jsDate + "\n");
     return newDate;
@@ -833,7 +833,7 @@ function newEvent(startDate, endDate, allDay)
    if (!endDate) {
        var MinutesToAddOn = getIntPref(gCalendarWindow.calendarPreferences.calendarPref, "event.defaultlength", gCalendarBundle.getString("defaultEventLength" ) );
        
-       var endDate = new Date(startDate);
+       endDate = new Date(startDate);
        endDate.setMinutes(endDate.getMinutes() + MinutesToAddOn);
    }
 
@@ -1242,11 +1242,12 @@ function deleteToDoCommand( DoNotConfirm )
    var numRanges = tree.view.selection.getRangeCount();
    var t;
    var v;
+   var toDoItem;
    if( numRanges == 1 ) {
       for (t=numRanges-1; t>= 0; t--) {
          tree.view.selection.getRangeAt(t, start, end);
          for (v=end.value; v>=start.value; v--){
-            var toDoItem = tree.taskView.getCalendarTaskAtRow( v );
+            toDoItem = tree.taskView.getCalendarTaskAtRow( v );
             SelectedItems.push(toDoItem);
          }
       }
@@ -1254,7 +1255,7 @@ function deleteToDoCommand( DoNotConfirm )
       for (t=numRanges; t >= 0; t--) {
          tree.view.selection.getRangeAt(t,start,end);
          for (v=end.value; v >= start.value; v--){
-            var toDoItem=tree.taskView.getCalendarTaskAtRow( v );
+            toDoItem=tree.taskView.getCalendarTaskAtRow( v );
             SelectedItems.push(toDoItem);
          }
       }
