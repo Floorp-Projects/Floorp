@@ -171,7 +171,7 @@
    <menuitem label="&calendar.context.deleteevent.label;" accesskey="&calendar.context.deleteevent.accesskey;" observes="delete_command"/>
 
    <menuseparator/>
-   <menuitem label="&calendar.context.cutevent.label;" accesskey="&calendar.context.cutevent.accesskey;" observes="copy_command"/>
+   <menuitem label="&calendar.context.cutevent.label;" accesskey="&calendar.context.cutevent.accesskey;" observes="cut_command"/>
    <menuitem label="&calendar.context.copyevent.label;" accesskey="&calendar.context.copyevent.accesskey;" observes="copy_command"/>
    <menuitem label="&calendar.context.pasteevent.label;" accesskey="&calendar.context.pasteevent.accesskey;" observes="paste_command"/>
    <menuseparator/>
