@@ -111,7 +111,7 @@ sub Told {
         } else {
             $self->say($event, "$1");
         }
-    } elsif ($message =~ /^\s*(?:you\s+(?:really\s+)?suck(?:\s+hard|(?:\s+big)?\s+rocks)?|you(?:\s+a|\')re\s+an\s+idiot|i\s+hate\s+you|bi+tch)[?!1.\s]*$/osi) {
+    } elsif ($message =~ /^\s*(?:you\s+(?:really\s+)?suck(?:\s+hard|(?:\s+big)?\s+rocks)?|you(?:\s+a|\')re\s+(?:an?\s+)?(?:really\s+)?(?:idiot|stupid|dumb)(?:\s+bot)?|i\s+hate\s+you|bi+tch)[?!1.\s]*$/osi) {
         $self->Perform($event, 'yousuck');
     } elsif ($message =~ /^\s*(?:oh[!1?.,\s]*)?(?:thanks|thank\s+you|cheers)[\s!1.]*(?:[;:8][-o]?[]()\|O0<>[]\s*)?$/osi) {
         $self->Perform($event, 'thanks');
@@ -171,11 +171,11 @@ sub Heard {
         $self->Perform($event, 'thanks');
     } elsif (($message =~ /^\s*(?:good\s+bot)[!1.\s]*(?:[;:8][-o]?[]()\|O0<>[]\s*)?$/osi) and ($self->canAssumeThanks($event))) {
         $self->Perform($event, 'happy');
-    } elsif (($message =~ /^\s*(?:bad\s+bot|foo[l\']?|idiot)[!.\s]*?$/osi) and ($self->canAssumeThanks($event))) {
+    } elsif (($message =~ /^\s*(?:bad\s+bot|foo[l\']?|idiot|dumb\s+bot)[!.\s]*?$/osi) and ($self->canAssumeThanks($event))) {
         $self->Perform($event, 'unhappy');
     } elsif (($message =~ /^\s*bad\s*$me[!.\s]*$/si) and ($self->canAssumeThanks($event))) {
         $self->Perform($event, 'unhappy');
-    } elsif (($message =~ /^\s*(?:you\s+(?:really\s+)?suck(?:\s+hard|(?:\s+big)?\s+rocks)?|you(?:\s+a|\')re\s+an\s+idiot|i\s+hate\s+you)[?!1.\s]*$/osi) and 
+    } elsif (($message =~ /^\s*(?:you\s+(?:really\s+)?suck(?:\s+hard|(?:\s+big)?\s+rocks)?|you(?:\s+a|\')re\s+(?:an?\s+)?(?:really\s+)?(?:idiot|stupid|dumb)(?:\s+bot)?|i\s+hate\s+you|bi+tch)[?!1.\s]*$/osi) and
              ($self->canAssumeThanks($event))) {
         $self->Perform($event, 'yousuck');
     } elsif ($message =~ /^\s*(?:good(?:\s$me)?|yay[\s!1.]*|i\s+love\s+you)\s+$me[\s!1.]*(?:[;:8][-o]?[]()\|O0<>[]\s*)?$/si) {
