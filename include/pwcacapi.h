@@ -62,7 +62,7 @@ extern char *PC_Prompt(MWContext *context,
 
 void PC_FreeNameValueArray(PCNameValueArray *array);
 
-PCNameValueArray * PC_NewNameValueArray();
+PCNameValueArray * PC_NewNameValueArray(void);
 
 uint32 PC_ArraySize(PCNameValueArray *array);
 
