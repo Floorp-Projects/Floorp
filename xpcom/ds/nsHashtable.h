@@ -58,6 +58,49 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
+// nsObjectHashtable: an nsHashtable where the elements are C++ objects to be
+// deleted
+
+typedef void* (*nsHashtableCloneElementFunc)(nsHashKey *aKey, void *aData, void* closure);
+
+class NS_COM nsObjectHashtable : public nsHashtable {
+public:
+  nsObjectHashtable(nsHashtableCloneElementFunc cloneElementFun,
+                    void* cloneElementClosure,
+                    nsHashtableEnumFunc destroyElementFun,
+                    void* destroyElementClosure,
+                    PRUint32 aSize = 256, PRBool threadSafe = PR_FALSE);
+  ~nsObjectHashtable();
+
+  nsHashtable *Clone();
+  void Reset();
+
+protected:
+  static PR_CALLBACK PRIntn CopyElement(PLHashEntry *he, PRIntn i, void *arg);
+  
+  nsHashtableCloneElementFunc   mCloneElementFun;
+  void*                         mCloneElementClosure;
+  nsHashtableEnumFunc           mDestroyElementFun;
+  void*                         mDestroyElementClosure;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// nsSupportsHashtable: an nsHashtable where the elements are nsISupports*
+
+class NS_COM nsSupportsHashtable : public nsHashtable {
+public:
+  nsSupportsHashtable(PRUint32 aSize = 256, PRBool threadSafe = PR_FALSE)
+    : nsHashtable(aSize, threadSafe) {}
+  ~nsSupportsHashtable();
+
+  void *Put(nsHashKey *aKey, void *aData);
+  void *Get(nsHashKey *aKey);
+  void *Remove(nsHashKey *aKey);
+  nsHashtable *Clone();
+  void Reset();
+};
+
+////////////////////////////////////////////////////////////////////////////////
 // nsISupportsKey: Where keys are nsISupports objects that get refcounted.
 
 #include "nsISupports.h"
