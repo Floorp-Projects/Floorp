@@ -369,7 +369,7 @@ CString GetLocaleName(CString localeCode)
 	*/
 
 	CString rootPath, languageFile, regionFile, langCode, regCode,
-			langName,regName, localeName;
+			langName, regName, localeName, strVersion;
 	int langlen, reglen;
 	char buffer[MIN_SIZE];
 	
