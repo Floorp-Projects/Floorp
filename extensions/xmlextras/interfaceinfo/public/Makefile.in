@@ -27,6 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xmlextras
+XPIDL_MODULE	= xmlextras_interfaceinfo
 
 XPIDLSRCS	= \
 	    nsIGenericInterfaceInfoSet.idl \

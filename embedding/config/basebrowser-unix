@@ -216,6 +216,7 @@ libnssckbi.so
 ; xmlextras, optional for XMLHttpRequest support
 components/libxmlextras.so
 components/xmlextras.xpt
+components/xmlextras_interfaceinfo.xpt
 
 res/language.properties
 res/langGroups.properties

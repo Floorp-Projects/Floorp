@@ -223,6 +223,7 @@ bin/components/commandhandler.xpt
 bin/components/webbrowserpersist.xpt
 bin/components/windowwatcher.xpt
 bin/components/xmlextras.xpt
+bin/components/xmlextras_interfaceinfo.xpt
 bin/components/libxmlextras.so
 bin/components/xmlsoap.xpt
 bin/components/xmlschema.xpt
