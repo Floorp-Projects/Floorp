@@ -26,7 +26,6 @@
 #include "nsMathMLOperators.h"
 #include "nsMathMLFrame.h"
 
-typedef PRUnichar nsGlyphCode;
 class nsGlyphTable;
 
 // Hints for Stretch() to indicate criteria for stretching
@@ -35,6 +34,20 @@ class nsGlyphTable;
 #define NS_STRETCH_SMALLER 0x00000004 // don't stretch more than requested size
 #define NS_STRETCH_LARGER  0x00000008 // don't stretch less than requested size
 #define NS_STRETCH_LARGEOP 0x00000010 // for a largeop in displaystyle
+
+// A single glyph in our internal representation is characterized by a 'code@font' 
+// pair. The 'code' is interpreted as a Unicode point or as the direct glyph index
+// (depending on the type of nsGlyphTable where this comes from). The 'font' is a
+// numeric identifier given to the font to which the glyph belongs.
+struct nsGlyphCode {
+  PRUnichar code; 
+  PRInt32   font;
+
+  // conversion operator to just return the code point that we generally want
+  operator PRUnichar () {
+    return code;
+  }
+};
 
 // class used to handle stretchy symbols (accent, delimiter and boundary symbols)
 class nsMathMLChar
@@ -166,20 +179,22 @@ private:
   static nsresult
   PaintVertically(nsIPresContext*      aPresContext,
                   nsIRenderingContext& aRenderingContext,
+                  nsFont&              aFont,
                   nscoord              aFontAscent,
                   nsIStyleContext*     aStyleContext,
                   nsGlyphTable*        aGlyphTable,
                   nsMathMLChar*        aChar,
-                  nsRect               aRect);
+                  nsRect&              aRect);
 
   static nsresult
   PaintHorizontally(nsIPresContext*      aPresContext,
                     nsIRenderingContext& aRenderingContext,
+                    nsFont&              aFont,
                     nscoord              aFontAscent,
                     nsIStyleContext*     aStyleContext,
                     nsGlyphTable*        aGlyphTable,
                     nsMathMLChar*        aChar,
-                    nsRect               aRect);
+                    nsRect&              aRect);
 };
 
 #endif /* nsMathMLChar_h___ */
