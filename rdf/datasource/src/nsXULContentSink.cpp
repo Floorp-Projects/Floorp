@@ -581,19 +581,16 @@ XULContentSinkImpl::OpenContainer(const nsIParserNode& aNode)
     if (PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
         const nsString& text = aNode.GetText();
 
-        nsAutoString extraWhiteSpace;
+        nsCAutoString extraWhiteSpace;
         PRInt32 count = mContextStack ? mContextStack->Count() : 0;
         while (--count >= 0)
             extraWhiteSpace += "  ";
 
-        char* extraWhiteSpaceStr = extraWhiteSpace.ToNewCString();
-        char* textStr = text.ToNewCString();
-
         PR_LOG(gLog, PR_LOG_DEBUG,
-               ("xul: %.5d. %s<%s>", aNode.GetSourceLineNumber(), extraWhiteSpaceStr, textStr));
-
-        delete[] textStr;
-        delete[] extraWhiteSpaceStr;
+               ("xul: %.5d. %s<%s>",
+                aNode.GetSourceLineNumber(),
+                NS_STATIC_CAST(const char*, extraWhiteSpace),
+                NS_STATIC_CAST(const char*, nsCAutoString(text))));
     }
 #endif
 
@@ -617,7 +614,10 @@ XULContentSinkImpl::OpenContainer(const nsIParserNode& aNode)
 
     case eXULContentSinkState_InEpilog:
     case eXULContentSinkState_InScript:
-        PR_ASSERT(0);
+        PR_LOG(gLog, PR_LOG_ALWAYS,
+               ("xul: warning: unexpected tags in epilog at line %d",
+                aNode.GetSourceLineNumber()));
+
         rv = NS_ERROR_UNEXPECTED; // XXX
         break;
     }
@@ -635,19 +635,16 @@ XULContentSinkImpl::CloseContainer(const nsIParserNode& aNode)
     if (PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
         const nsString& text = aNode.GetText();
 
-        nsAutoString extraWhiteSpace;
+        nsCAutoString extraWhiteSpace;
         PRInt32 count = mContextStack ? mContextStack->Count() : 0;
         while (--count > 0)
             extraWhiteSpace += "  ";
 
-        char* extraWhiteSpaceStr = extraWhiteSpace.ToNewCString();
-        char* textStr = text.ToNewCString();
-
         PR_LOG(gLog, PR_LOG_DEBUG,
-               ("xul: %.5d. %s</%s>", aNode.GetSourceLineNumber(), extraWhiteSpaceStr, textStr));
-
-        delete[] textStr;
-        delete[] extraWhiteSpaceStr;
+               ("xul: %.5d. %s</%s>",
+                aNode.GetSourceLineNumber(),
+                NS_STATIC_CAST(const char*, extraWhiteSpace),
+                NS_STATIC_CAST(const char*, nsCAutoString(text))));
     }
 #endif
 
@@ -1364,6 +1361,22 @@ XULContentSinkImpl::AddAttributes(const nsIParserNode& aNode,
 
         nsAutoString valueStr(aNode.GetValueAt(i));
         nsRDFParserUtils::StripAndConvert(valueStr);
+
+#ifdef PR_LOGGING
+        if (PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
+            nsCAutoString extraWhiteSpace;
+            PRInt32 count = mContextStack ? mContextStack->Count() : 0;
+            while (--count >= 0)
+                extraWhiteSpace += "  ";
+
+            PR_LOG(gLog, PR_LOG_DEBUG,
+                   ("xul: %.5d. %s    %s=%s",
+                    aNode.GetSourceLineNumber(),
+                    NS_STATIC_CAST(const char*, extraWhiteSpace),
+                    NS_STATIC_CAST(const char*, nsCAutoString(key)),
+                    NS_STATIC_CAST(const char*, nsCAutoString(valueStr))));
+        }
+#endif
 
         //if (nameSpaceID == kNameSpaceID_HTML)
         //    attr.ToLowerCase(); // Not our problem. You'd better be lowercase.
