@@ -149,6 +149,7 @@
 
                 <toolbarbutton id="help-sidebar-button"
                 	class="toolbarbutton-1"
+                	tooltiptext="&sidebarBtn.tooltip;"
                 	customizeable="true" label="&sidebarBtn.label;"
                 	command="Help:ToggleSidebar"/>
                 <toolbarbutton id="help-back-button" type="menu-button"
@@ -170,15 +171,18 @@
                 </toolbarbutton>
                 <toolbarbutton id="help-home-button"
                     class="browserButton" label="&homeButton.label;"
+                    tooltiptext="&homeButton.tooltip;"
                     command="Help:Home"/>
                 <toolbarbutton id="help-find-button"
                     class="toolbarbutton-1" label="&findBtn.label;"
                     command="Help:Find"/>
                 <toolbarbutton id="help-zoom-small-button"
                     class="toolbarbutton-1" label="&textZoomReduceBtn.label;"
+                    tooltiptext="&textZoomReduceBtn.tooltip;"
                     command="cmd_textZoomReduce"/>
                 <toolbarbutton id="help-zoom-large-button"
                     class="toolbarbutton-1" label="&textZoomEnlargeBtn.label;"
+                    tooltiptext="&textZoomReduceBtn.tooltip;"
                     command="cmd_textZoomEnlarge"/>
                 <toolbarbutton id="help-print-button" class="browserButton"
                     label="&printButton.label;"
