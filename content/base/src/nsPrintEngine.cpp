@@ -2831,6 +2831,7 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO, PRBool aDoCalcShrink)
 
   if (!adjRect.width || !adjRect.height || !width || !height) {
     aPO->mDontPrint = PR_TRUE;
+    aPO->mPresShell->EndObservingDocument();
     return NS_OK;
   }
 
