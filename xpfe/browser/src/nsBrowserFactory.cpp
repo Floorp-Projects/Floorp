@@ -51,9 +51,7 @@ NSGetFactory(nsISupports* serviceMgr,
     return NS_ERROR_NULL_POINTER;
   }
 
-//  if (aClass.Equals(kSampleControllerCID)) {
     rv = NS_NewBrowserControllerFactory(aFactory);
-//  }
 
   return rv;
 }
