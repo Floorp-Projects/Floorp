@@ -17,7 +17,7 @@ P { text-align: justify; }
 <h1 align="center">
 Change Log for Rhino</h1>
 
-<h2>Rhino 1.6R1</h2>
+<h2>Rhino 1.6R1 Release Candidate 3</h2>
 
 <h3>Release overview</h3>
 <p>
@@ -69,7 +69,7 @@ See <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=257128">Bugzilla 257128
 
 <h4>Support for continuations in the interpreter</h4>
 <p>
-The interpreter mode in Rhino supports continuations. The code is based on the ideas from the original implementation of Christopher Oliver and  
+The interpreter mode in Rhino supports continuations. The code is based on the ideas from the original implementation of continuations by Christopher Oliver and  
 <a href="http://sisc.sourceforge.net/">SISC</a> project. To use the
 continuations make sure that the interpreter mode is selected through <a
 href="apidocs/org/mozilla/javascript/Context.html#setOptimizationLevel(int)">setting</a>
@@ -105,7 +105,7 @@ with (SwingGui) {
 }
 </pre>
 <p>
-Previously such functionality was available only to embeddings that used <a href="apidocs/org/mozilla/javascript/ImporterTopLevel.html"><tt>org.mozilla.javascript.ImporterTopLevel</tt></a> class as the top level scope. The class provides additional <tt>importPackage()</tt> and <tt>importClass()</tt> global functions but their extensive usage has tendency to pollute the global name space with names of Java classes
+Previously such functionality was available only to embeddings that used <a href="apidocs/org/mozilla/javascript/ImporterTopLevel.html"><tt>org.mozilla.javascript.ImporterTopLevel</tt></a> class as the top level scope. The class provides additional <tt>importPackage()</tt> and <tt>importClass()</tt> global functions for scripts but their extensive usage has tendency to pollute the global name space with names of Java classes and prevents loaded classes from garbage collection.
 </p>
 <p>
 See <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=245882">Bugzilla 245882</a> for details.
