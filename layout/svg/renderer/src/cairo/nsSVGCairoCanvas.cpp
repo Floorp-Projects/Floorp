@@ -367,6 +367,7 @@ nsSVGCairoCanvas::CompositeSurface(nsISVGRendererSurface *aSurface,
   aSurface->GetWidth(&width);
   aSurface->GetHeight(&height);
 
+  cairo_move_to(mCR, 0.0, 0.0);
   cairo_show_surface(mCR, cairoSurface->GetSurface(), width, height);
   cairo_restore(mCR);
 
@@ -420,6 +421,7 @@ nsSVGCairoCanvas::CompositeSurfaceMatrix(nsISVGRendererSurface *aSurface,
   aSurface->GetWidth(&width);
   aSurface->GetHeight(&height);
 
+  cairo_move_to(mCR, 0.0, 0.0);
   cairo_set_alpha(mCR, aOpacity);
   cairo_show_surface(mCR, cairoSurface->GetSurface(), width, height);
 
