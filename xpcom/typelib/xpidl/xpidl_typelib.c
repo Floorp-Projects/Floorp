@@ -47,14 +47,16 @@ struct priv_data {
 #endif
 
 typedef struct {
-    char *full_name;
-    char *name;
-    char *name_space;
-    char *iid;
+    char    *full_name;
+    char    *name;
+    char    *name_space;
+    char    *iid;
+    PRUint8 flags;
 } NewInterfaceHolder;
 
 static NewInterfaceHolder*
-CreateNewInterfaceHolder(char *name, char *name_space, char *iid)
+CreateNewInterfaceHolder(char *name, char *name_space, 
+                         char *iid, PRUint8 flags)
 {
     NewInterfaceHolder *holder = calloc(1, sizeof(NewInterfaceHolder));
     if(holder) {
@@ -75,6 +77,7 @@ CreateNewInterfaceHolder(char *name, char *name_space, char *iid)
             holder->full_name = holder->name;
         if(iid)
             holder->iid = strdup(iid);
+        holder->flags = flags;
     }
     return holder;
 }
@@ -112,10 +115,13 @@ add_interface_maybe(IDL_tree_func_data *tfd, gpointer user_data)
                 char *iid = (char *)IDL_tree_property_get(tfd->tree, "uuid");
                 char *name_space = (char *)
                             IDL_tree_property_get(tfd->tree, "namespace");
+                PRUint8 flags =
+                            IDL_tree_property_get(tfd->tree, "scriptable") ?
+                                    XPT_ID_SCRIPTABLE : 0;
                 NewInterfaceHolder *holder =
-                        CreateNewInterfaceHolder(iface, name_space, iid);
+                        CreateNewInterfaceHolder(iface, name_space, iid, flags);
                 if(!holder)
-                    return PR_FALSE;
+                    return FALSE;
                 g_hash_table_insert(IFACE_MAP(state),
                                     holder->full_name, holder);
                 IFACES(state)++;
@@ -132,7 +138,7 @@ add_interface_maybe(IDL_tree_func_data *tfd, gpointer user_data)
         }
     }
 
-    return PR_TRUE;
+    return TRUE;
 }
 
 /* Find all the interfaces referenced in the tree (uses add_interface_maybe) */
@@ -146,7 +152,7 @@ find_interfaces(IDL_tree_func_data *tfd, gpointer user_data)
         node = IDL_ATTR_DCL(tfd->tree).param_type_spec;
         break;
       case IDLN_OP_DCL:
-        IDL_tree_walk_in_order(IDL_OP_DCL(tfd->tree).parameter_dcls, find_interfaces,
+         IDL_tree_walk_in_order(IDL_OP_DCL(tfd->tree).parameter_dcls, find_interfaces,
                                user_data);
         node = IDL_OP_DCL(tfd->tree).op_type_spec;
         break;
@@ -247,8 +253,10 @@ fill_ide_table(gpointer key, gpointer value, gpointer user_data)
     iid = holder->iid ? holder->iid : "";
 
 #ifdef DEBUG_shaver_ifaces
-    fprintf(stderr, "filling %s\n", holder->full_name);
+    fprintf(stderr, "filling %s with flags %d\n", holder->full_name, 
+                                                  (int)holder->flags);
 #endif
+
     if (!fill_iid(&id, iid)) {
         IDL_tree_error(state->tree, "cannot parse IID %s\n", iid);
         return FALSE;
@@ -256,7 +264,8 @@ fill_ide_table(gpointer key, gpointer value, gpointer user_data)
 
     ide = &(HEADER(state)->interface_directory[IFACES(state)]);
     if (!XPT_FillInterfaceDirectoryEntry(ide, &id, holder->name,
-                                         holder->name_space, NULL)) {
+                                         holder->name_space, NULL,
+                                         (void*)holder->flags)) {
         IDL_tree_error(state->tree, "INTERNAL: XPT_FillIDE failed for %s\n",
                        holder->full_name);
         return FALSE;
@@ -358,7 +367,7 @@ pass_1(TreeState *state)
     if (state->tree) {
         state->priv = calloc(1, sizeof(struct priv_data));
         if (!state->priv)
-            return PR_FALSE;
+            return FALSE;
         IFACES(state) = 0;
         IFACE_MAP(state) = g_hash_table_new(g_str_hash, g_str_equal);
         if (!IFACE_MAP(state)) {
@@ -465,7 +474,7 @@ static XPTInterfaceDirectoryEntry *
 FindInterfaceByName(XPTInterfaceDirectoryEntry *ides, uint16 num_interfaces,
                     const char *name)
 {
-    int i;
+    uint16 i;
     for (i = 0; i < num_interfaces; i++) {
         if (!strcmp(ides[i].name, name))
             return &ides[i];
@@ -509,7 +518,7 @@ typelib_interface(TreeState *state)
         }
     }
 
-    id = XPT_NewInterfaceDescriptor(parent_id, 0, 0);
+    id = XPT_NewInterfaceDescriptor(parent_id, 0, 0, (uint8) ide->user_data);
     if (!id)
         return FALSE;
 
@@ -797,7 +806,7 @@ static gboolean
 fill_pd_as_nsresult(XPTParamDescriptor *pd)
 {
     pd->type.prefix.flags = TD_UINT32; /* TD_NSRESULT */
-    return PR_TRUE;
+    return TRUE;
 }
 
 static gboolean
@@ -846,6 +855,7 @@ typelib_op_dcl(TreeState *state)
     uint16 num_args = 0;
     uint8 op_flags = 0;
     gboolean op_notxpcom = !!IDL_tree_property_get(op->ident, "notxpcom");
+    gboolean op_noscript = !!IDL_tree_property_get(op->ident, "noscript");
 
     if (!XPT_InterfaceDescriptorAddMethods(id, 1))
         return FALSE;
@@ -856,7 +866,7 @@ typelib_op_dcl(TreeState *state)
         num_args++;             /* count params */
     if (op->op_type_spec && !op_notxpcom)
         num_args++;             /* fake param for _retval */
-    if (op->f_noscript || op_notxpcom)
+    if (op->f_noscript || op_noscript || op_notxpcom)
         op_flags |= XPT_MD_HIDDEN;
     if (op->f_varargs)
         op_flags |= XPT_MD_VARARGS;

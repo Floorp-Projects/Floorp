@@ -140,6 +140,9 @@ struct XPTInterfaceDirectoryEntry {
     char                   *name;
     char                   *name_space;
     XPTInterfaceDescriptor *interface_descriptor;
+
+    /* not stored on disk. Available for compiler and at runtime */
+    void                   *user_data;
 #if 0 /* not yet */
     /* not stored on disk */
     PRUint32                 offset; /* the offset for an ID still to be read */
@@ -149,19 +152,28 @@ struct XPTInterfaceDirectoryEntry {
 extern XPT_PUBLIC_API(PRBool)
 XPT_FillInterfaceDirectoryEntry(XPTInterfaceDirectoryEntry *ide,
                                 nsID *iid, char *name, char *name_space,
-                                XPTInterfaceDescriptor *descriptor);
+                                XPTInterfaceDescriptor *descriptor,
+                                void *user_data);
 
 /*
  * An InterfaceDescriptor is a variable-size record used to describe a 
  * single XPCOM interface, including all of its methods. 
  */
 struct XPTInterfaceDescriptor {
-    PRUint16                    parent_interface;
-    PRUint16                    num_methods;
-    XPTMethodDescriptor        *method_descriptors;
-    PRUint16                    num_constants;
-    XPTConstDescriptor         *const_descriptors;
+    PRUint16                parent_interface;
+    PRUint16                num_methods;
+    XPTMethodDescriptor     *method_descriptors;
+    PRUint16                num_constants;
+    XPTConstDescriptor      *const_descriptors;
+    PRUint8                 flags;
 };
+
+#define XPT_ID_SCRIPTABLE           0x80
+#define XPT_ID_FLAGMASK             0x80
+#define XPT_ID_TAGMASK              (~XPT_ID_FLAGMASK)
+#define XPT_ID_TAG(id)              ((id).flags & XPT_ID_TAGMASK)
+
+#define XPT_ID_IS_SCRIPTABLE(flags) (flags & XPT_ID_SCRIPTABLE)
 
 extern XPT_PUBLIC_API(PRBool)
 XPT_GetInterfaceIndexByName(XPTInterfaceDirectoryEntry *ide_block,
@@ -170,7 +182,7 @@ XPT_GetInterfaceIndexByName(XPTInterfaceDirectoryEntry *ide_block,
 
 extern XPT_PUBLIC_API(XPTInterfaceDescriptor *)
 XPT_NewInterfaceDescriptor(PRUint16 parent_interface, PRUint16 num_methods,
-                           PRUint16 num_constants);
+                           PRUint16 num_constants, PRUint8 flags);
 
 extern XPT_PUBLIC_API(PRBool)
 XPT_InterfaceDescriptorAddMethods(XPTInterfaceDescriptor *id, PRUint16 num);
@@ -316,7 +328,7 @@ struct XPTConstDescriptor {
  * single argument to a method or a method's result.
  */
 struct XPTParamDescriptor {
-    PRUint8             flags;
+    PRUint8           flags;
     XPTTypeDescriptor type;
 };
 
@@ -343,9 +355,9 @@ XPT_FillParamDescriptor(XPTParamDescriptor *pd, PRUint8 flags,
  * interface method.
  */
 struct XPTMethodDescriptor {
-    PRUint8               flags;
+    PRUint8             flags;
     char                *name;
-    PRUint8               num_args;
+    PRUint8             num_args;
     XPTParamDescriptor  *params;
     XPTParamDescriptor  *result;
 };
@@ -389,10 +401,10 @@ XPT_FillMethodDescriptor(XPTMethodDescriptor *meth, PRUint8 flags, char *name,
 
 struct XPTAnnotation {
     XPTAnnotation *next;
-    PRUint8 flags;
+    PRUint8       flags;
     /* remaining fields are present in typelib iff XPT_ANN_IS_PRIVATE */
-    XPTString *creator;
-    XPTString *private_data;
+    XPTString     *creator;
+    XPTString     *private_data;
 };
 
 #define XPT_ANN_LAST	                0x80

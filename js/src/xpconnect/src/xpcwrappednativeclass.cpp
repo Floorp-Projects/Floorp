@@ -58,7 +58,10 @@ nsXPCWrappedNativeClass::GetNewOrUsedClass(XPCContext* xpcc,
             nsIInterfaceInfo* info;
             if(NS_SUCCEEDED(iimgr->GetInfoForIID(&aIID, &info)))
             {
-                if(nsXPConnect::IsISupportsDescendent(info))
+                PRBool canScript;
+                if(NS_SUCCEEDED(info->IsScriptable(&canScript)) &&
+                   canScript &&
+                   nsXPConnect::IsISupportsDescendent(info))
                 {
                     clazz = new nsXPCWrappedNativeClass(xpcc, aIID, info);
                     if(-1 == clazz->mMemberCount) // -1 means 'failed to init'

@@ -41,6 +41,8 @@ public:
     NS_IMETHOD GetName(char** name) = 0; // returns IAllocatator alloc'd copy
     NS_IMETHOD GetIID(nsIID** iid) = 0;  // returns IAllocatator alloc'd copy
 
+    NS_IMETHOD IsScriptable(PRBool* result) = 0;
+
     NS_IMETHOD GetParent(nsIInterfaceInfo** parent) = 0;
 
     // these include counts of parents
