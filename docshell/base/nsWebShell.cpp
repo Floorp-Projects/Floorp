@@ -576,11 +576,11 @@ nsWebShell::~nsWebShell()
 
 void nsWebShell::InitFrameData(PRBool aCompleteInitScrolling)
 {
-  mMarginWidth  = -1;  
-  mMarginHeight = -1;
   if (aCompleteInitScrolling) {
     mScrolling[0] = -1;
     mScrolling[1] = -1;
+    mMarginWidth  = -1;
+    mMarginHeight = -1;
   }
   else {
     mScrolling[1] = mScrolling[0];
