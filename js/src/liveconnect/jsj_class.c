@@ -80,6 +80,14 @@ jsj_GetJavaClassName(JSContext *cx, JNIEnv *jEnv, jclass java_class)
     if (!java_class_name_jstr)
         goto error;
 
+    /* Fix bugzilla #183092
+     * It is necessary to check Exception from JPI
+     * even though java_class_name_jstr != null */
+#ifdef XP_UNIX
+    if ((*jEnv)->ExceptionOccurred(jEnv))
+        goto error;
+#endif
+
     /* Convert to UTF8 encoding and copy */
     java_class_name = jsj_DupJavaStringUTF(cx, jEnv, java_class_name_jstr);
 
