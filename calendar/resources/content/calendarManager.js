@@ -667,7 +667,8 @@ calendarManager.prototype.getRemoteCalendarText = function calMan_getRemoteCalen
          window.setCursor( "default" );
 
          var retval = false;
-         result = String.fromCharCode.apply(this, result);
+         if( typeof( result ) != "string" ) //for 1.7 compatibility
+             result = String.fromCharCode.apply(this, result);
 
          var ch = Channel.QueryInterface(Components.interfaces.nsIHttpChannel);
          if (!ch.requestSucceeded) {
