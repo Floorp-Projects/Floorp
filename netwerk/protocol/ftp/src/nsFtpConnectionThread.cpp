@@ -1148,6 +1148,12 @@ nsFtpState::R_pass() {
             }
         }
 
+        // If the login was anonymous, and it failed, try again with a username
+        if (mAnonymous) {
+            mAnonymous = PR_FALSE;
+            return FTP_S_USER;
+        }
+
         mRetryPass = PR_TRUE;
         return FTP_ERROR;
     }
