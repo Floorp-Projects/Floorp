@@ -75,4 +75,11 @@ extern "C" NS_COM nsresult NS_NewCharIOStream(
     // Factory method to get an nsOutputStream to a string.  Result will implement all the
     // file stream interfaces in nsIFileStream.h
 
+//----------------------------------------------------------------------------------------
+extern "C" NS_COM nsresult NS_NewByteInputStream(
+    nsISupports** aStreamResult,
+    const char* aStringToRead,
+    PRInt32 aLength);
+    // Factory method to get an nsInputStream from a string.  Result will implement all the
+    // 
 #endif /* nsIStringStream_h___ */
