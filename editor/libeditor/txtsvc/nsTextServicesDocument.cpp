@@ -902,7 +902,7 @@ nsTextServicesDocument::DeleteSelection()
 
   // Now delete the actual content!
 
-  result = mEditor->DeleteSelection(nsIEditor::eRTL);
+  result = mEditor->DeleteSelection(nsIEditor::eDeleteLeft);
 
   if (NS_FAILED(result))
   {
