@@ -37,6 +37,11 @@
 #include "prmem.h"
 #include "plevent.h"
 
+#ifdef DEBUG
+// defined by the socket transport service while active
+extern PRThread *NS_SOCKET_THREAD;
+#endif
+
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 
 //-----------------------------------------------------------------------------
@@ -110,22 +115,6 @@ nsHttpConnection::SetTransaction(nsHttpTransaction *transaction)
     mKeepAliveMask = mKeepAlive =
         mTransaction->Capabilities() & NS_HTTP_ALLOW_KEEPALIVE;
 
-    // build a proxy for the progress event sink
-    mProgressSink = 0;
-    if (mTransaction->Callbacks() && mTransaction->ConsumerEventQ()) {
-        nsCOMPtr<nsIProgressEventSink> temp = do_GetInterface(mTransaction->Callbacks());
-        if (temp) {
-            nsCOMPtr<nsIProxyObjectManager> mgr;
-            nsHttpHandler::get()->GetProxyObjectManager(getter_AddRefs(mgr));
-            if (mgr)
-                mgr->GetProxyForObject(mTransaction->ConsumerEventQ(),
-                                       NS_GET_IID(nsIProgressEventSink),
-                                       temp,
-                                       PROXY_ASYNC | PROXY_ALWAYS,
-                                       getter_AddRefs(mProgressSink));
-        }
-    }
- 
     return ActivateConnection();
 }
 
@@ -281,12 +270,13 @@ nsHttpConnection::Resume()
 nsresult
 nsHttpConnection::ProxyStepUp()
 {
-    nsCOMPtr<nsISupports> securityInfo;
-    nsresult rv;
-
     LOG(("nsHttpConnection::ProxyStepUp [this=%x]\n", this));
+#ifdef DEBUG
+    NS_PRECONDITION(PR_GetCurrentThread() == NS_SOCKET_THREAD, "wrong thread");
+#endif
 
-    rv = mSocketTransport->GetSecurityInfo(getter_AddRefs(securityInfo));
+    nsCOMPtr<nsISupports> securityInfo;
+    nsresult rv = mSocketTransport->GetSecurityInfo(getter_AddRefs(securityInfo));
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsISSLSocketControl> ssl = do_QueryInterface(securityInfo, &rv);
@@ -323,19 +313,9 @@ nsHttpConnection::DropTransaction()
     // asserting this.
     NS_IF_RELEASE(mTransaction);
     mTransaction = 0;
-    mProgressSink = 0;
     
     // if the transaction was dropped, then we cannot reuse this connection.
     mKeepAliveMask = mKeepAlive = PR_FALSE;
-}
-
-// called on the socket thread
-void
-nsHttpConnection::ReportProgress(PRUint32 progress, PRInt32 progressMax)
-{
-    if (mProgressSink)
-        mProgressSink->OnProgress(nsnull, nsnull, progress,
-                                  progressMax < 0 ? 0 : PRUint32(progressMax));
 }
 
 //-----------------------------------------------------------------------------
@@ -614,9 +594,6 @@ nsHttpConnection::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
 
         // break the cycle between the socket transport and this
         mSocketTransport->SetNotificationCallbacks(nsnull, 0);
-        
-        // don't need this anymore
-        mProgressSink = 0;
 
         // make sure mTransaction is clear before calling OnStopTransaction
         if (mTransaction) { 
@@ -740,9 +717,8 @@ NS_IMETHODIMP
 nsHttpConnection::OnStatus(nsIRequest *req, nsISupports *ctx, nsresult status,
                            const PRUnichar *statusText)
 {
-    if (mProgressSink)
-        mProgressSink->OnStatus(nsnull, nsnull, status, statusText);
-
+    if (mTransaction)
+        mTransaction->OnStatus(status, statusText);
     return NS_OK;
 }
 
@@ -751,7 +727,7 @@ nsHttpConnection::OnProgress(nsIRequest *req, nsISupports *ctx,
                              PRUint32 progress, PRUint32 progressMax)
 {
     // we ignore progress notifications from the socket transport.
-    // we'll generate these ourselves from OnDataAvailable
+    // we'll generate these ourselves from OnDataAvailable.
     return NS_OK;
 }
 

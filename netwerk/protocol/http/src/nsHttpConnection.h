@@ -97,18 +97,13 @@ public:
                              mIdleTimeout = 0; }
 
     void DropTransaction();
-    void ReportProgress(PRUint32 progress, PRInt32 progressMax);
 
     nsHttpTransaction    *Transaction()    { return mTransaction; }
     nsHttpConnectionInfo *ConnectionInfo() { return mConnectionInfo; }
-    nsIEventQueue        *ConsumerEventQ() { return mConsumerEventQ; }
 
 private:
     nsresult ActivateConnection();
     nsresult CreateTransport();
-
-    // proxy the release of the transaction
-    nsresult ProxyReleaseTransaction(nsHttpTransaction *);
 
     nsresult SetupSSLProxyConnect();
 
@@ -118,9 +113,6 @@ private:
     nsCOMPtr<nsISocketTransport>    mSocketTransport;
     nsCOMPtr<nsIRequest>            mWriteRequest;
     nsCOMPtr<nsIRequest>            mReadRequest;
-
-    nsCOMPtr<nsIProgressEventSink>  mProgressSink;
-    nsCOMPtr<nsIEventQueue>         mConsumerEventQ;
 
     nsCOMPtr<nsIInputStream>        mSSLProxyConnectStream;
 

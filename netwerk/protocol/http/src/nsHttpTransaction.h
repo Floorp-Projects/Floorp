@@ -30,6 +30,7 @@
 #include "nsIInputStream.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsIProgressEventSink.h"
 #include "nsIEventQueue.h"
 #include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
@@ -91,6 +92,9 @@ public:
     // Called when the transaction should stop, possibly prematurely with an error.
     nsresult OnStopTransaction(nsresult);
 
+    // Called by the connection to report socket status
+    void     OnStatus(nsresult status, const PRUnichar *statusText);
+
 private:
     void     ParseLine(char *line);
     void     ParseLineSegment(char *seg, PRUint32 len);
@@ -105,6 +109,7 @@ private:
 private:
     nsCOMPtr<nsIStreamListener>     mListener;
     nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
+    nsCOMPtr<nsIProgressEventSink>  mProgressSink;
     nsCOMPtr<nsIEventQueue>         mConsumerEventQ;
     nsCOMPtr<nsISupports>           mSecurityInfo;
 

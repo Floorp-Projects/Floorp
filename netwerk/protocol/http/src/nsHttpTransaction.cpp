@@ -113,6 +113,21 @@ nsHttpTransaction::SetupRequest(nsHttpRequestHead *requestHead,
     if (eqs)
         eqs->ResolveEventQueue(NS_CURRENT_EVENTQ, getter_AddRefs(mConsumerEventQ));
 
+    // build a proxy for the progress event sink
+    if (mCallbacks && mConsumerEventQ) {
+        nsCOMPtr<nsIProgressEventSink> temp = do_GetInterface(mCallbacks);
+        if (temp) {
+            nsCOMPtr<nsIProxyObjectManager> mgr;
+            nsHttpHandler::get()->GetProxyObjectManager(getter_AddRefs(mgr));
+            if (mgr)
+                mgr->GetProxyForObject(mConsumerEventQ,
+                                       NS_GET_IID(nsIProgressEventSink),
+                                       temp,
+                                       PROXY_ASYNC | PROXY_ALWAYS,
+                                       getter_AddRefs(mProgressSink));
+        }
+    }
+
     if (requestHead->Method() == nsHttp::Head)
         mNoContent = PR_TRUE;
 
@@ -271,6 +286,15 @@ nsHttpTransaction::OnStopTransaction(nsresult status)
         mRequestHead = nsnull;
 	}
     return NS_OK;
+}
+
+void
+nsHttpTransaction::OnStatus(nsresult status, const PRUnichar *statusText)
+{
+    LOG(("nsHttpTransaction::OnStatus [this=%x status=%x]\n", this, status));
+
+    if (mProgressSink)
+        mProgressSink->OnStatus(nsnull, nsnull, status, statusText);
 }
 
 //-----------------------------------------------------------------------------
@@ -537,7 +561,8 @@ nsHttpTransaction::HandleContent(char *buf,
     if (*countRead) {
         // update count of content bytes read and report progress...
         mContentRead += *countRead;
-        mConnection->ReportProgress(mContentRead, mContentLength);
+        if (mProgressSink)
+            mProgressSink->OnProgress(nsnull, nsnull, mContentRead, PR_MAX(0, mContentLength));
     }
 
     LOG(("nsHttpTransaction [this=%x count=%u read=%u mContentRead=%u mContentLength=%d]\n",
