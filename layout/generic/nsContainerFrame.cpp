@@ -358,10 +358,29 @@ nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
     return result;
   }
 
+#ifdef DEBUG
+  if (nsnull != aDesiredSize.maxElementSize) {
+    aDesiredSize.maxElementSize->width = nscoord(0xdeadbeef);
+    aDesiredSize.maxElementSize->height = nscoord(0xdeadbeef);
+  }
+#endif
+
   // Send the WillReflow notification, and reflow the child frame
   htmlReflow->WillReflow(aPresContext);
   result = htmlReflow->Reflow(aPresContext, aDesiredSize, aReflowState,
                               aStatus);
+
+#ifdef DEBUG
+  if ((nsnull != aDesiredSize.maxElementSize) &&
+      ((nscoord(0xdeadbeef) == aDesiredSize.maxElementSize->width) ||
+       (nscoord(0xdeadbeef) == aDesiredSize.maxElementSize->height))) {
+    printf("nsContainerFrame: ");
+    nsFrame::ListTag(stdout, aKidFrame);
+    printf(" didn't set max-element-size!\n");
+    aDesiredSize.maxElementSize->width = 0;
+    aDesiredSize.maxElementSize->height = 0;
+  }
+#endif
 
   // If the reflow was successful and the child frame is complete, delete any
   // next-in-flows
