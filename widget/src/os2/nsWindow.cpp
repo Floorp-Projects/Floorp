@@ -859,9 +859,6 @@ void nsWindow::RealDoCreate( HWND              hwndP,
          printf( "Couldn't find DC instance for nsWindow\n");
 #endif
    }
-   WinSetPresParam( mWnd, PP_FONTNAMESIZE,
-		    strlen( gModuleData.pszFontNameSize) + 1,
-		    gModuleData.pszFontNameSize);
 
    Resize( aRect.x, aRect.y, aRect.width, aRect.height, PR_FALSE);
 

@@ -65,7 +65,6 @@ POINTER ID_PTR_ARROWWAIT   arrow_wait.ptr
 /* stringtable */
 STRINGTABLE
 BEGIN
-   ID_STR_FONT   "8.Helv"
    ID_STR_HMMDIR "Cannot locate directory %s.  Would you like it to be created?"
    ID_STR_NOCDIR "Could not create directory."
 END
