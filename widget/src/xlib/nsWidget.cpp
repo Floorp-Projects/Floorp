@@ -447,6 +447,18 @@ NS_IMETHODIMP nsWidget::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 NS_IMETHODIMP nsWidget::WidgetToScreen(const nsRect& aOldRect,
                                        nsRect& aNewRect)
 {
+  int x = 0;
+  int y = 0;
+  Window child;
+  if (XTranslateCoordinates(mDisplay,
+                            mBaseWindow,
+                            RootWindowOfScreen(mScreen),
+                            0, 0,
+                            &x, &y,
+                            &child) == True) {
+    aNewRect.x = x + aOldRect.x;
+    aNewRect.y = y + aOldRect.y;
+  }
   return NS_OK;
 }
 
