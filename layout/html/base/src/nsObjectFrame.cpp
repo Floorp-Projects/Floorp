@@ -2263,7 +2263,7 @@ NS_IMETHODIMP_(void) nsPluginInstanceOwner::Notify(nsITimer* /* timer */)
 
 void nsPluginInstanceOwner::CancelTimer()
 {
-	if (mPluginTimer != NULL) {
+	if (mPluginTimer) {
 	    mPluginTimer->Cancel();
     }
 }
