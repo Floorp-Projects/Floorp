@@ -98,6 +98,7 @@ PRLogModuleInfo* gWalletLog = nsnull;
 /* The following data and procedures are for preference */
 /********************************************************/
 
+static const char *pref_WalletExtractTables = "wallet.extractTables";
 static const char *pref_Caveat = "wallet.caveat";
 #ifdef AutoCapture
 static const char *pref_captureForms = "wallet.captureForms";
@@ -349,6 +350,7 @@ InputConsumer::OnStopRequest(nsIChannel* channel,
   if (NS_SUCCEEDED(rv)) {
     mFileSpec.Delete(PR_FALSE);
     mDownloadFileSpec.Rename(mFileName);
+    SI_SetBoolPref(pref_WalletExtractTables, PR_TRUE);
   }
 
   return rv;
@@ -563,6 +565,7 @@ PRBool stopwatchRunning = PR_FALSE;
 static void
 wallet_ClearTiming() {
   timing_index  = 0;
+  LL_I2L(timings[timing_index++], PR_IntervalNow());
 }
 
 static void
@@ -2208,6 +2211,12 @@ IsDigit (PRUnichar c) {
 
 static void
 wallet_UseFileFetchedDuringPreviousBrowserSession() {
+
+  /* see if we need to extract wallet tables from the composit file */
+  if (!SI_GetBoolPref(pref_WalletExtractTables, PR_FALSE)) {
+    return;
+  }
+
   nsresult rv;
   nsFileSpec dirSpec;
   rv = Wallet_ProfileDirectory(dirSpec);
@@ -2270,8 +2279,8 @@ wallet_UseFileFetchedDuringPreviousBrowserSession() {
       }
       wallet_PutLine(thisFile, buffer);
     }
-
   }
+  SI_SetBoolPref(pref_WalletExtractTables, PR_FALSE);
 }
 
 static void
@@ -3246,8 +3255,8 @@ WLLT_Prefill(nsIPresShell* shell, PRBool quick)
     wallet_list = wallet_PrefillElement_list;
     wallet_url = urlName;
 #ifdef DEBUG
-wallet_DumpStopwatch();
-wallet_ClearStopwatch();
+////wallet_DumpStopwatch();
+////wallet_ClearStopwatch();
 //wallet_DumpTiming();
 //wallet_ClearTiming();
 #endif
