@@ -9,6 +9,11 @@ var gFromGlobalPref = false;
 var gUpdate = false;
 var gDeletedDirectories = new Array();
 
+var gLDAPPrefsService = Components.classes[
+                        "@mozilla.org/ldapprefs-service;1"].getService();
+gLDAPPrefsService = gLDAPPrefsService.QueryInterface(
+                    Components.interfaces.nsILDAPPrefsService);
+
 function onEditDirectories()
 {
   var args = {fromGlobalPref: gFromGlobalPref};
@@ -87,63 +92,6 @@ function createDirectoriesList(flag)
   }
 }
 
-function migrate(pref_string)
-{
-  if (!gPrefInt) { 
-    try {
-      gPrefInt = Components.classes["@mozilla.org/preferences;1"];
-      gPrefInt = gPrefInt.getService(Components.interfaces.nsIPref);
-    }
-    catch (ex) {
-      gPrefInt = null;
-    }
-  }
-  try{
-    var migrated = gPrefInt.GetBoolPref("ldap_2.prefs_migrated");
-  }
-  catch(ex){
-    migrated = false;
-  }
-  if (!migrated) {
-  try {
-    var ldapUrl = Components.classes["@mozilla.org/network/ldap-url;1"];
-    ldapUrl = ldapUrl.getService(Components.interfaces.nsILDAPURL);
-  }
-  catch (ex) {
-    ldapUrl = null;
-  }
-  try {
-    var ldapService = Components.classes[
-        "@mozilla.org/network/ldap-service;1"].
-        getService(Components.interfaces.nsILDAPService);
-  }
-  catch (ex)
-  { 
-    dump("failed to get ldapService \n");
-    ldapService = null;
-  }
-  try{
-    ldapUrl.host = gPrefInt.CopyCharPref(pref_string + ".serverName");
-    if(ldapService) {
-      var base = gPrefInt.CopyUnicharPref(pref_string + ".searchBase"); 
-      ldapUrl.dn = ldapService.UCS2toUTF8(base);
-    }
-  }
-  catch(ex) {
-  }
-  try {
-    var port = gPrefInt.CopyCharPref(pref_string + ".port");
-  }
-  catch(ex) {
-    port = 389;
-  }
-  ldapUrl.port = port;
-  ldapUrl.scope = 0;
-  gPrefInt.SetUnicharPref(pref_string + ".uri", ldapUrl.spec);
-  gPrefInt.SetBoolPref("ldap_2.prefs_migrated", true);
-  }
-}
-
 function LoadDirectories(popup)
 {
   var children;
@@ -198,7 +146,6 @@ function LoadDirectories(popup)
               item.setAttribute("value", arrayOfDirectories[i]);
               popup.appendChild(item);
             }
-            migrate(arrayOfDirectories[i]);
             gAvailDirectories[j] = new Array(2);
             gAvailDirectories[j][0] = arrayOfDirectories[i];
             gAvailDirectories[j][1] = description;

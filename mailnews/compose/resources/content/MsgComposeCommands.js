@@ -42,6 +42,12 @@ msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMs
 var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
 promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
 
+//This migrates the LDAPServer Preferences from 4.x to mozilla format.
+var LDAPPrefsService = Components.classes[
+                       "@mozilla.org/ldapprefs-service;1"].getService();
+LDAPPrefsService = LDAPPrefsService.QueryInterface(
+                   Components.interfaces.nsILDAPPrefsService);
+
 var msgCompose = null;
 var MAX_RECIPIENTS = 0;
 var currentAttachment = null;

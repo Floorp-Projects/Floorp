@@ -1,0 +1,45 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is mozilla.org code.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are 
+ * Copyright (C) 2001 Netscape Communications Corporation.  All
+ * Rights Reserved.
+ * 
+ * Contributor(s): 
+ * Srilatha Moturi <srilatha@netscape.com>
+ *
+ *  nsILDAPPrefsService.idl
+ */
+
+#include "nsISupports.idl"
+#include "nsILDAPURL.idl"
+#include "nsILDAPService.idl"
+
+/**
+ * this service implements migrating ldap prefs from 4.x format
+ * to mozilla format.
+ */
+[scriptable, uuid(5a4911e0-44cd-11d5-9074-0010a4b26cda)]
+interface nsILDAPPrefsService: nsISupports {
+   
+   /**
+     * Convert 4.x ldap prefs to mozilla format
+     * hostname, dn, scope, port are converted to uri
+     * Also converts the autocompletion preference from 4.x format 
+     * (ldap_2.servers.<server-name>.autocomplete.enabled)
+     * to mozilla format (ldap_2.servers.directoryServer)
+     */
+    void migrate();
+};

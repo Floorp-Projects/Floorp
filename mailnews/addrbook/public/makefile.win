@@ -38,6 +38,9 @@ XPIDLSRCS =						 \
 			.\nsIAbAddressCollecter.idl		\
 			.\nsIAbUpgrader.idl \
 			.\nsIAddbookUrl.idl \
+!if !defined(DISABLE_LDAP)
+			.\nsILDAPPrefsService.idl \
+!endif
 			$(NULL)
 
 

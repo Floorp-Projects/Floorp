@@ -45,6 +45,10 @@ XPIDLSRCS	= \
 		nsIAbUpgrader.idl \
 		nsIAddbookUrl.idl \
 		$(NULL)
+ifdef MOZ_LDAP_XPCOM
+XPIDLSRCS       += nsILDAPPrefsService.idl \
+endif
+		
 
 include $(topsrcdir)/config/rules.mk
 

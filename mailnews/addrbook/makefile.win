@@ -23,6 +23,11 @@ DEPTH=..\..
 
 include <$(DEPTH)\config\config.mak>
 
+!if !defined(DISABLE_LDAP)
+install::
+	$(MAKE_INSTALL) .\src\nsLDAPPrefsService.js $(DIST)\bin\components
+!endif
+
 DIRS=public src prefs build
 
 include <$(DEPTH)\config\rules.mak>

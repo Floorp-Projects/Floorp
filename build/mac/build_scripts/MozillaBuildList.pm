@@ -1908,6 +1908,7 @@ sub BuildMailNewsProjects()
 
     # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
     my($D) = $main::DEBUG ? "Debug" : "";
+    my($dist_dir) = GetBinDirectory();
 
     StartBuildModule("mailnews");
 
@@ -1928,6 +1929,8 @@ sub BuildMailNewsProjects()
     BuildOneProject(":mozilla:mailnews:import:macbuild:msgImport.mcp",                  "msgImport$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:mailnews:import:text:macbuild:msgImportText.mcp",         "msgImportText$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:mailnews:import:eudora:macbuild:msgImportEudora.mcp",     "msgImportEudora$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+             
+    InstallResources(":mozilla:mailnews:addrbook:src:MANIFEST_COMPONENTS",              "${dist_dir}Components");
 
     EndBuildModule("mailnews");
 }
