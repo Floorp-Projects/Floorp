@@ -1,0 +1,91 @@
+<html>
+<!-- Copyright (c) 2000-2001 ActiveState Tool Corporation.
+     See the file LICENSE.txt for licensing information. -->
+
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<title>Python XPCOM module</title>
+</head>
+
+<body>
+
+<h1>Python XPCOM Package</h1>
+
+<p>Version 0.91 - January 2001</p>
+<p>This is the readme for the Python interface to <b>XPCOM</b>.</p>
+<p><b>XPCOM </b>is an acronym for &quot;Cross Platform COM&quot;.&nbsp; It has
+come out of the <a href="http://www.mozilla.org">Mozilla</a>  project, which
+maintains the <a href="http://www.mozilla.org/projects/xpcom/">main XPCOM
+project pages.</a>&nbsp; The Python XPCOM package is a set of Python bindings to
+XPCOM, allowing a Python programmer to both use and implement XPCOM
+interfaces.&nbsp; If you don't know what <a href="http://www.python.org">Python</a>
+is, then none of this probably interests you at all!</p>
+<p>This readme has links to the following information:</p>
+<ul>
+  <li><a href="doc/configure.html">Building, Configuring and
+   Testing the Python
+    XPCOM Package</a></li>
+  <li><a href="doc/tutorial.html">A tutorial for the Python XPCOM package</a></li>
+  <li>Some <a href="doc/advanced.html">advanced
+    topics and other miscellaneous information</a></li>
+  <li><a href="doc/architecture.html">Information on the architecture</a></li>
+  <li>A list of the <a href="#KnownBugs">known issues and bugs</a>, the <a href="#ReleaseHistory">release
+    history</a> and the <a href="doc/credits.html">PyXPCOM acknowledgements</a></li>
+</ul>
+<p>Note: <b>This package requires Python 1.6 or later</b>; we recommend using
+the latest
+official Python version (currently 2.0).&nbsp; This package works
+very well with the latest <a href="http://www.ActiveState.com/Products/ActivePython">ActivePython</a>,
+and does not require any external modules or packages beyond what is provided in
+the core Python release for each platform.</p>
+<h2>About the Python XPCOM Package</h2>
+<p>The Python XPCOM Package was developed by <a href="http://www.ActiveState.com">ActiveState
+Tool Corporation</a>, and came out of their <a href="http://www.ActiveState.com/Products/Komodo">Komodo
+project</a>.&nbsp; The Python XPCOM package is released under the <a href="http://www.mozilla.org/MPL/">Mozilla
+Public License (MPL)</a></p>
+<p>Please see the <a href="doc/credits.html">credits file</a> for a list of
+contributors. </p>
+<h2><a name="KnownBugs">Known Bugs</a>/Issues</h2>
+<ul>
+  <li>No attempt is made to recurse sub-directories of the main
+&quot;components&quot; directory.&nbsp; This is because we may decide on some
+smart scheme for recursion (similar to Python packages), and don't want people
+to rely on simple recursive searches.</li>
+  <li>No management of the PythonPath is done by the package.&nbsp; You must
+arrange for the Python <i>xpcom</i> package to be on your PythonPath.&nbsp;
+Significantly, the XPCOM <i> components</i> directory is not on the PythonPath and
+generally cannot be, as Python will often find other DLLs in this directory and
+attempt to use them as Python modules.&nbsp; This means that Python module
+files will not be found in the <i> components</i> directory, even when referenced by
+another component - thus, a component can&nbsp; not import another component
+source file as a regular module!&nbsp; It is thought that when we know what to
+do with sub-directories of the <i> components</i> directory (as described above), some
+automated PythonPath support will be provided, so Python components and regular
+Python modules the component depends on can exist in the same directory
+structure.</li>
+  <li>No unregistration support at all.&nbsp;The main Python Component Loader supports
+    unregistration, but the actual Python objects themselves do not support unregistration.&nbsp;It is unclear if the Component Loader
+    unregistration process needs to manually remove each component it is responsible
+for.</li>
+  <li>All Python-implemented components unconditionally support
+weak-references.&nbsp; There is no way to disable this feature for any or all
+components.&nbsp; It is unclear if there is a need to prevent this, but it is
+documented here just in case!</li>
+</ul>
+<h2><a name="ReleaseHistory">Release History</a></h2>
+<h3>Version 0.90 - January 2001</h3>
+<ul>
+  <li>First public release.</li>
+</ul>
+<h3>Version 0.91 - January 2001</h3>
+<ul>
+  <li>Fix a seg fault on Linux when PYTHONPATH is not set.</li>
+  <li>Changes to allow building with stand-alone XPCOM.</li>
+</ul>
+
+</body>
+
+</html>
