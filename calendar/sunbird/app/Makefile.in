@@ -266,7 +266,7 @@ libs::
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 
-APP_NAME = Mozilla\ Sunbird
+APP_NAME = MozillaSunbird
 
 libs:: $(PROGRAM)
 	mkdir -p $(DIST)/$(APP_NAME).app/Contents/MacOS
