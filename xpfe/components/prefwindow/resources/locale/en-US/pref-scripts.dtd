@@ -1,7 +1,7 @@
 <!-- extracted from content/pref-scripts.xul -->
 
-<!--LOCALIZATION NOTE : FILE The 'Scripts & Plugins' preferences dialog -->
-<!ENTITY lHeader "Scripts &amp; Plugins">
+<!--LOCALIZATION NOTE : FILE The 'Scripts & Plug-ins' preferences dialog -->
+<!ENTITY lHeader "Scripts &amp; Plug-ins">
 
 <!--LOCALIZATION NOTE (enableJsCheck.label): 'JavaScript' should never be translated -->
 <!ENTITY navigator.label             "Navigator">
@@ -18,4 +18,4 @@
 <!ENTITY allowDocumentCookieGet.label    "Read cookies">
 <!ENTITY allowHideStatusBar.label        "Hide the status bar">
 
-<!ENTITY enablePlugin.label              "Enable Plugins for">
+<!ENTITY enablePlugin.label              "Enable Plug-ins for">
