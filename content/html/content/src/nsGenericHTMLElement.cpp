@@ -2560,7 +2560,10 @@ static nsGenericHTMLElement::EnumTable kCompatTableCellHAlignTable[] = {
 
   // The following are non-standard but necessary for Nav4 compatibility
   { "middle", NS_STYLE_TEXT_ALIGN_MOZ_CENTER },
-  { "absmiddle", NS_STYLE_TEXT_ALIGN_CENTER },// XXX is this right???
+  // allow center and absmiddle to map to NS_STYLE_TEXT_ALIGN_CENTER and
+  // NS_STYLE_TEXT_ALIGN_CENTER to map to center by using the following order
+  { "center", NS_STYLE_TEXT_ALIGN_CENTER },
+  { "absmiddle", NS_STYLE_TEXT_ALIGN_CENTER },
 
   { 0 }
 };
