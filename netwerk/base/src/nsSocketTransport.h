@@ -32,6 +32,7 @@
 #include "nsIStreamListener.h"
 #include "nsIDNSListener.h"
 #include "nsIPipe.h"
+#include "nsIProgressEventSink.h"
 
 #define NS_SOCKET_TRANSPORT_SEGMENT_SIZE        (2*1024)
 #define NS_SOCKET_TRANSPORT_BUFFER_SIZE         (8*1024)
@@ -107,6 +108,7 @@ enum nsSocketReadWriteInfo {
 
 // Forward declarations...
 class nsSocketTransportService;
+class nsIEventSinkGetter;
 
 class nsSocketTransport : public nsIChannel, 
                           public nsIDNSListener,
@@ -130,7 +132,8 @@ public:
   nsresult Init(nsSocketTransportService* aService,
                 const char* aHost, 
                 PRInt32 aPort,
-                const char* aSocketType);
+                const char* aSocketType,
+                nsIEventSinkGetter* eventSinkGetter);
   nsresult Process(PRInt16 aSelectFlags);
 
   nsresult CloseConnection(void);
@@ -150,6 +153,9 @@ protected:
 
   nsresult doWriteFromBuffer(PRUint32 *aCount);
   nsresult doWriteFromStream(PRUint32 *aCount);
+
+  nsresult fireStatus(PRUint32 aCode);
+  nsresult GetSocketErrorString(PRUint32 iCode, PRUnichar** oString) const;
 
 private:
   // Access methods for manipulating the ReadWriteInfo...
@@ -177,6 +183,8 @@ private:
   } 
 
 protected:
+
+
   PRCList           mListLink;
 
   PRLock*           mLock;
@@ -217,6 +225,8 @@ protected:
   nsCOMPtr<nsIRequest>      mDNSRequest;
   nsresult                  mStatus;
   nsCOMPtr<nsISupports>     mOwner;
+  // For tracking connection progress and status
+  nsCOMPtr<nsIProgressEventSink>    mEventSink;
 };
 
 

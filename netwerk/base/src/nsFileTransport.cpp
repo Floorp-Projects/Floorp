@@ -40,10 +40,12 @@
 #include "nsEscape.h"
 #include "nsIMIMEService.h"
 #include "prlog.h"
+#include "nsProxyObjectManager.h"
 
 static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
 #if defined(PR_LOGGING)
 //
@@ -294,8 +296,23 @@ nsFileTransport::Init(nsFileSpec& spec, const char* command, nsIEventSinkGetter*
         return rv;
     if (getter) {
         nsCOMPtr<nsISupports> sink;
-        (void)getter->GetEventSink(command, nsIProgressEventSink::GetIID(), getter_AddRefs(sink));
-        mProgress = (nsIProgressEventSink*)sink.get();
+        (void)getter->GetEventSink(command, 
+            nsIProgressEventSink::GetIID(), getter_AddRefs(sink));
+        if (sink) 
+        {
+            // Now generate a proxied event sink-
+            NS_WITH_SERVICE(nsIProxyObjectManager, 
+                    proxyMgr, kProxyObjectManagerCID, &rv);
+            if (NS_SUCCEEDED(rv))
+            {
+                rv = proxyMgr->GetProxyObject(
+                                nsnull, // primordial thread - should change?
+                                NS_GET_IID(nsIProgressEventSink),
+                                sink,
+                                PROXY_ASYNC | PROXY_ALWAYS,
+                                getter_AddRefs(mProgress));
+            }
+        }
     }
     return NS_OK;
 }
@@ -789,8 +806,8 @@ nsFileTransport::Process(void)
 
           if (mProgress) {
               nsresult rv = mProgress->OnProgress(this, mContext, 
-                                                  mTotalAmount - mTransferAmount,
-                                                  mTotalAmount);
+                                      mTotalAmount - mTransferAmount,
+                                      mTotalAmount);
               NS_ASSERTION(NS_SUCCEEDED(rv), "unexpected OnProgress failure");
           }
 
@@ -826,7 +843,13 @@ nsFileTransport::Process(void)
               // XXX fix up this message for i18n
               nsAutoString msg = "Read ";
               msg += (const char*)mSpec;
+              // this should just change to msg.mUStr instead once bug
+              // # 16273 is fixed
+#ifndef BUG_16273_FIXED //TODO
+              (void)mProgress->OnStatus(this, mContext, msg.ToNewUnicode());
+#else
               (void)mProgress->OnStatus(this, mContext, msg.mUStr);
+#endif
           }
           mContext = null_nsCOMPtr();
 

@@ -359,8 +359,9 @@ nsHTTPHandler::NewPostDataStream(PRBool isFile, const char *data, PRUint32 encod
 
 
 nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri, 
-                                         nsHTTPChannel* i_Channel,
-                                         nsIChannel** o_pTrans)
+                                     nsHTTPChannel* i_Channel,
+                                     nsIEventSinkGetter* i_ESG,
+                                     nsIChannel** o_pTrans)
 {
     nsresult rv;
     PRUint32 count;
@@ -413,18 +414,19 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
             GetDefaultPort(&port);
         }
 
-        rv = sts->CreateTransport(host, port, &trans);
+        rv = sts->CreateTransport(host, port, i_ESG, &trans);
         i_Channel->SetUsingProxy(PR_FALSE);
     }
     else
     {
-        rv = sts->CreateTransport(mProxy, mProxyPort, &trans);
+        rv = sts->CreateTransport(mProxy, mProxyPort, i_ESG, &trans);
         i_Channel->SetUsingProxy(PR_TRUE);
     }
     if (NS_FAILED(rv)) return rv;
 
     // Put it in the table...
-    rv = mTransportList->AppendElement(trans) ? NS_OK : NS_ERROR_FAILURE;  // XXX this method incorrectly returns a bool
+    // XXX this method incorrectly returns a bool
+    rv = mTransportList->AppendElement(trans) ? NS_OK : NS_ERROR_FAILURE;  
     if (NS_FAILED(rv)) return rv;
 
     *o_pTrans = trans;

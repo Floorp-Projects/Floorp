@@ -61,7 +61,7 @@ nsresult nsMsgProtocol::OpenNetworkSocket(nsIURI * aURL) // open a connection on
 		aURL->GetPort(&port);
 		aURL->GetHost(getter_Copies(hostName));
 
-		rv = socketService->CreateTransport(hostName, port, getter_AddRefs(m_channel));
+		rv = socketService->CreateTransport(hostName, port, nsnull, getter_AddRefs(m_channel));
 		if (NS_SUCCEEDED(rv) && m_channel)
 		{
 			m_socketIsOpen = PR_FALSE;

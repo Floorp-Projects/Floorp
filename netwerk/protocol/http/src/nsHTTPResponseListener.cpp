@@ -777,6 +777,8 @@ nsresult nsHTTPResponseListener::ProcessStatusCode(void)
       PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
              ("ProcessStatusCode [this=%x].\tStatus - Successful: %d.\n",
               this, statusCode));
+      // If channel's AuthTriedWithPrehost then enter this user/pass and 
+      // authstring into the auth list. 
       break;
 
     //
