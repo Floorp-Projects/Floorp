@@ -63,6 +63,7 @@ void nsToolkit::CreateSharedGC(void)
 
 GdkGC *nsToolkit::GetSharedGC(void)
 {
+  mSharedGC = gdk_gc_ref(mSharedGC);
   return mSharedGC;
 }
 

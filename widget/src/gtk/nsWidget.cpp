@@ -529,12 +529,21 @@ void *nsWidget::GetNativeData(PRUint32 aDataType)
 {
   switch(aDataType) {
     case NS_NATIVE_WINDOW:
+#ifdef NS_GTK_REF
+      return (void *)gdk_window_ref(mWidget->window);
+#else
       return (void *)mWidget->window;
+#endif
     case NS_NATIVE_DISPLAY:
       return (void *)GDK_DISPLAY();
     case NS_NATIVE_WIDGET:
+#ifdef NS_GTK_REF
+      gtk_widget_ref(mWidget);
+#endif
       return (void *)mWidget;
     case NS_NATIVE_GRAPHIC:
+    /* GetSharedGC ups the ref count on the GdkGC so make sure you release
+     * it afterwards. */
       return (void *)((nsToolkit *)mToolkit)->GetSharedGC();
     default:
       g_print("nsWidget::GetNativeData(%i) - weird value\n", aDataType);
@@ -622,6 +631,7 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
   if (aNativeParent) {
     parentWidget = GTK_WIDGET(aNativeParent);
   } else if (aParent) {
+    // this ups the refcount of the gtk widget, we must unref later.
     parentWidget = GTK_WIDGET(aParent->GetNativeData(NS_NATIVE_WIDGET));
   } else if(aAppShell) {
     nsNativeWidget shellWidget = aAppShell->GetNativeData(NS_NATIVE_SHELL);
@@ -642,6 +652,10 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
 
   DispatchStandardEvent(NS_CREATE);
   InitCallbacks();
+
+#ifdef NS_GTK_REF
+  gtk_widget_unref(parentWidget);
+#endif
 
   return NS_OK;
 }

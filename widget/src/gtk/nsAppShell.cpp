@@ -23,11 +23,15 @@
 #include "nsIEventQueueService.h"
 #include "nsSelectionMgr.h"
 #include "nsXPComCIID.h"
+#include "nsICmdLineService.h"
 #include <stdlib.h>
 
 
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
+
+static NS_DEFINE_IID(kCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
+static NS_DEFINE_IID(kICmdLineServiceIID, NS_ICOMMANDLINE_SERVICE_IID);
 
 //-------------------------------------------------------------------------
 //
@@ -80,16 +84,34 @@ static void event_processor_callback(gpointer data,
 //
 //-------------------------------------------------------------------------
 
-NS_METHOD nsAppShell::Create(int* argc, char ** argv)
+#ifdef CMDLINEARGS
+NS_METHOD nsAppShell::Create(int *bac, char **bav)
+#else
+NS_METHOD nsAppShell::Create(int *argc, char **argv)
+#endif
+
 {
   gchar *path;
-  
+#ifdef CMDLINEARGS
+  int *argc;
+  char **argv;
+  nsICmdLineService *cmdLineArgs=nsnull;
+  nsresult   rv = NS_OK;
+
+  rv = nsServiceManager::GetService(kCmdLineServiceCID,
+                                    kICmdLineServiceIID,
+                                    (nsISupports **)&cmdLineArgs);
+ // Get the value of -width option
+  rv = cmdLineArgs->GetArgc(argc);
+  rv = cmdLineArgs->GetArgv(&argv);
+#endif
   gtk_set_locale ();
 
   gtk_init (argc, &argv);
 
+  // delete the cmdLineArgs thing?
+
   gdk_rgb_init();
-  gdk_rgb_set_verbose(PR_TRUE);
 
   path = g_strdup_printf("%s%s", g_get_home_dir(),"/.gtkrc");
   gtk_rc_parse(path);
@@ -176,6 +198,9 @@ NS_METHOD nsAppShell::Exit()
 void* nsAppShell::GetNativeData(PRUint32 aDataType)
 {
   if (aDataType == NS_NATIVE_SHELL) {
+  // this isn't accually used, but if it was, we need to gtk_widget_ref() it.
+
+
 //    return mTopLevel;
   }
   return nsnull;
