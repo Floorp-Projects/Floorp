@@ -38,7 +38,6 @@
 #include "ipcIService.h"
 #include "ipcIMessageObserver.h"
 #include "ipcILockService.h"
-#include "ipcILockNotify.h"
 #include "ipcCID.h"
 #include "ipcLockCID.h"
 

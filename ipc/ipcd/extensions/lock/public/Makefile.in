@@ -51,7 +51,6 @@ EXPORTS		= \
 
 XPIDLSRCS	= \
 			ipcILockService.idl \
-			ipcILockNotify.idl \
 			$(NULL)
 
 include $(topsrcdir)/config/rules.mk
