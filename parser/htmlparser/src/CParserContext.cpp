@@ -61,6 +61,7 @@ CParserContext::CParserContext(nsScanner* aScanner,
   mMultipart=PR_TRUE; 
   mContextType=eCTNone; 
   mCopyUnused=aCopyUnused; 
+  mChannel=0;
 } 
 
 /**
@@ -95,6 +96,7 @@ CParserContext::CParserContext(const CParserContext &aContext) :
   mMultipart=aContext.mMultipart;
   mContextType=aContext.mContextType;
   mCopyUnused;
+  mChannel=aContext.mChannel;
 }
 
 
