@@ -61,6 +61,7 @@ def test_attribute_failure(ob, attr_name, new_value, expected_exception):
         print_error("*** Setting attribute '%s' to '%r' didnt yield an exception!" % (attr_name, new_value) )
     except:
         exc_typ = sys.exc_info()[0]
+        exc_val = sys.exc_info()[1]
         ok = issubclass(exc_typ, expected_exception)
         if not ok:
             print_error("*** Wrong exception setting '%s' to '%r'- got '%s: %s', expected '%s'" % (attr_name, new_value, exc_typ, exc_val, expected_exception))
