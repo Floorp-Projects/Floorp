@@ -37,6 +37,7 @@ EXPORTS= \
 
 SHARED_LIBRARY_LIBS =	\
 	$(DIST)/lib/liblocalmailbase_s.a	\
+	$(DIST)/lib/librdfutil_s.a	\
 	$(NULL)
 
 EXTRA_DSO_LDOPTS = 	\
@@ -45,11 +46,9 @@ EXTRA_DSO_LDOPTS = 	\
 	$(MKSHLIB_UNFORCE_ALL)	\
 	$(NSPR_LIBS)			\
 	-L$(DIST)/bin			\
-	-L$(DIST)/lib			\
 	-lxpcom				\
 	-lreg			\
 	-lraptorbase			\
-	-lrdfutil_s			\
 	-lmsgbaseutil			\
 	$(NULL)
 
