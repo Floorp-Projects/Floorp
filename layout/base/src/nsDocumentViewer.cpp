@@ -1856,3 +1856,4 @@ nsDocViewerFocusListener::Init(DocumentViewerImpl *aDocViewer)
   mDocViewer = aDocViewer;
   return NS_OK;
 }
+
