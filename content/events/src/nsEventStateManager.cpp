@@ -71,6 +71,7 @@
 #include "nsIDocShell.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsITreeFrame.h"
+#include "nsIOutlinerBoxObject.h"
 #include "nsIScrollableViewProvider.h"
 #include "nsIDOMNSDocument.h"
 
@@ -905,16 +906,52 @@ nsEventStateManager::DoWheelScroll(nsIPresContext* aPresContext,
   
   // Special case for tree/list frames - they handle their own scrolling
   nsITreeFrame* treeFrame = nsnull;
+  nsCOMPtr<nsIOutlinerBoxObject> outlinerBoxObject;
   nsIFrame* curFrame = aTargetFrame;
   
   while (curFrame) {
     if (NS_OK == curFrame->QueryInterface(NS_GET_IID(nsITreeFrame),
                                           (void**) &treeFrame))
       break;
+
+    outlinerBoxObject = do_QueryInterface(curFrame);
+    if (outlinerBoxObject)
+      break;
+
     curFrame->GetParent(&curFrame);
   }
-  if (treeFrame)
-    return DoTreeScroll(aPresContext, numLines, scrollPage, treeFrame);
+  
+  if (treeFrame) {
+    PRInt32 scrollIndex, visibleRows;
+    treeFrame->GetIndexOfFirstVisibleRow(&scrollIndex);
+    treeFrame->GetNumberOfVisibleRows(&visibleRows);
+
+    if (scrollPage)
+      scrollIndex += ((numLines > 0) ? visibleRows : -visibleRows);
+    else
+      scrollIndex += numLines;
+    
+    if (scrollIndex < 0)
+      scrollIndex = 0;
+    else {
+      PRInt32 numRows, lastPageTopRow;
+      treeFrame->GetRowCount(&numRows);
+      lastPageTopRow = numRows - visibleRows;
+      if (scrollIndex > lastPageTopRow)
+        scrollIndex = lastPageTopRow;
+    }
+    
+    treeFrame->ScrollToIndex(scrollIndex);
+    return NS_OK;
+  }
+
+  if (outlinerBoxObject) {
+    if (scrollPage)
+      outlinerBoxObject->ScrollByPages((numLines > 0) ? 1 : -1);
+    else
+      outlinerBoxObject->ScrollByLines(numLines);
+    return NS_OK;
+  }
   
   nsCOMPtr<nsIPresShell> presShell;
   aPresContext->GetShell(getter_AddRefs(presShell));

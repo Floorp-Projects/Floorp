@@ -73,6 +73,7 @@ LLIBS=					\
  $(DIST)\lib\layouthtmltable_s.lib	\
  $(DIST)\lib\layoutxulbase_s.lib \
  $(DIST)\lib\layoutxulcontent_s.lib	\
+ $(DIST)\lib\raptorxuloutliner_s.lib	\
 !ifdef MOZ_MATHML
  $(DIST)\lib\layoutmathmlbase_s.lib \
  $(DIST)\lib\layoutmathmlcontent_s.lib	\

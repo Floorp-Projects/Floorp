@@ -179,6 +179,7 @@ modern.jar:
     skin/modern/global/toolbar-menu-arrow-hover.gif                   (global/toolbar-menu-arrow-hover.gif)
     skin/modern/global/toolbar-menu-arrow.gif                         (global/toolbar-menu-arrow.gif)
     skin/modern/global/toolbar.css                                    (global/toolbar.css)
+	skin/modern/global/outliner.css                                   (global/outliner.css)
     skin/modern/global/tree.css                                       (global/tree.css)
     skin/modern/global/wizardOverlay.css                              (global/wizardOverlay.css)
     skin/modern/global/loading.gif                                    (global/loading.gif)
