@@ -66,7 +66,9 @@ SourceChecker.cgi	scc wrote to help sanitize code.  DELETE
 
 SourceChecker.pm	???
 
-addcheckin.tcl		???
+addcheckin.tcl		TCL. Add a checkin to a Bonsai hook. Determines
+			if the tree was open or closed at the time, shunts
+			checkin to proper tree.
 
 admin.cgi		TCL.  Select from various administrative tasks 
 			(which require a password.)
@@ -118,9 +120,11 @@ admin.cgi		TCL.  Select from various administrative tasks
 					newpassword2=<text>
 					doglobal=<radio>
 
-adminfuncs.tcl		???
+adminfuncs.tcl		TCL. Collection of functions to administrate a Bonsai
+			hook.
 
-adminmail.tcl		???
+adminmail.tcl		TCL. Set of routines for opening and closing the
+			Bonsai hook based on receipt of e-mail.
 
 bonsai.gif		a bonsai tree.
 
@@ -134,7 +138,8 @@ branchspammer.cgi	more garbage
 
 changebar.tcl		???
 
-closemessage		???
+closemessage	 	HTML, text that gets sent to all people on the hook
+			when the tree is closed.	
 
 configure/		???
 
@@ -336,9 +341,12 @@ editwhiteboard.cgi	TCL.  Edits the free-for-all whiteboard.
 
 globals.tcl		???
 
-handleAdminMail.tcl	???
+handleAdminMail.tcl 	TCL. Mail is piped to this script and parsed.  
+			Calls:
+				adminfuncs.tcl	
 
-handleCheckinMail.tcl	???
+handleCheckinMail.tcl	TCL. Mail is piped to this script and parsed. It
+			then adds a checkin to a Bonsai hook.
 
 header.pl		???
 
