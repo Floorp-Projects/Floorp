@@ -67,11 +67,26 @@
 #endif
     
     <radiogroup id="importSourceGroup">
+ 
       <radio id="seamonkey" label="&importFromSeamonkey.label;" accesskey="&importFromSeamonkey.accesskey;"/>
+
+#ifdef XP_WIN
       <radio id="oexpress"  label="&importFromOExpress.label;"  accesskey="&importFromOExpress.accesskey;"/>
       <radio id="outlook"   label="&importFromOutlook.label;"   accesskey="&importFromOutlook.accesskey;"/>
+#endif
+
       <radio id="dogbert"   label="&importFromNetscape4.label;" accesskey="&importFromNetscape4.accesskey;"/>
+
+#ifdef XP_UNIX
+#ifdef XP_MACOSX
       <radio id="eudora"    label="&importFromEudora.label;"    accesskey="&importFromEudora.accesskey;"/>
+#endif
+#endif
+
+#ifdef XP_WIN
+      <radio id="eudora"    label="&importFromEudora.label;"    accesskey="&importFromEudora.accesskey;"/>
+#endif
+      
       <radio id="nothing"   label="&importFromNothing.label;"   accesskey="&importFromNothing.accesskey;" hidden="true"/>
     </radiogroup>
   </wizardpage>
