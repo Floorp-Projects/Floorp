@@ -240,8 +240,7 @@ ValidateRealName(nsMsgAttachmentData *aAttach, MimeHeaders *aHdrs)
 
   // Special case...if this is a enclosed RFC822 message, give it a nice
   // name.
-  if (aAttach->real_type && !nsCRT::strcasecmp(aAttach->real_type, MESSAGE_RFC822) && 
-     (!aAttach->real_name || *aAttach->real_name == 0))
+  if (aAttach->real_type && !nsCRT::strcasecmp(aAttach->real_type, MESSAGE_RFC822))
   {
     if (aHdrs->munged_subject)
     {
@@ -289,23 +288,171 @@ ValidateRealName(nsMsgAttachmentData *aAttach, MimeHeaders *aHdrs)
 static  PRInt32     attIndex = 0;
 
 nsresult
+GenerateAttachmentData(MimeObject *object, const char *aMessageURL, MimeDisplayOptions *options,
+                       PRBool isAnAppleDoublePart, nsMsgAttachmentData *aAttachData)
+{
+  nsXPIDLCString imappart;
+  nsXPIDLCString part;
+  PRBool isIMAPPart;
+
+  part.Adopt(mime_part_address(object));
+  if (part.IsEmpty()) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  if (options->missing_parts)
+    imappart.Adopt(mime_imap_part_address(object));
+
+  char *urlSpec = nsnull;
+  if (!imappart.IsEmpty())
+  {
+    isIMAPPart = PR_TRUE;
+    urlSpec = mime_set_url_imap_part(aMessageURL, imappart.get(), part.get());
+  }
+  else
+  {
+    isIMAPPart = PR_FALSE;
+    urlSpec = mime_set_url_part(aMessageURL, part.get(), PR_TRUE);
+  }
+
+  if (!urlSpec)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  nsMsgAttachmentData *tmp = &(aAttachData[attIndex++]);
+  nsresult rv = nsMimeNewURI(&(tmp->url), urlSpec, nsnull);
+
+	PR_FREEIF(urlSpec);
+
+  if ( (NS_FAILED(rv)) || (!tmp->url) )
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  tmp->real_type = object->content_type ? nsCRT::strdup(object->content_type) : nsnull;
+  tmp->real_encoding = object->encoding ? nsCRT::strdup(object->encoding) : nsnull;
+  
+  PRInt32 i;
+  char *charset = nsnull;
+  char *disp = MimeHeaders_get(object->headers, HEADER_CONTENT_DISPOSITION, PR_FALSE, PR_FALSE);
+  if (disp) 
+  {
+    tmp->real_name = MimeHeaders_get_parameter(disp, "filename", &charset, nsnull);
+    if (isAnAppleDoublePart)
+      for (i = 0; i < 2 && !tmp->real_name; i ++)
+      {
+        PR_FREEIF(disp);
+        PR_FREEIF(charset);
+        disp = MimeHeaders_get(((MimeContainer *)object)->children[i]->headers, HEADER_CONTENT_DISPOSITION, PR_FALSE, PR_FALSE);
+        tmp->real_name = MimeHeaders_get_parameter(disp, "filename", &charset, nsnull);
+      }
+
+    if (tmp->real_name)
+    {
+      // check encoded type
+      //
+      // The parameter of Content-Disposition must use RFC 2231.
+      // But old Netscape 4.x and Outlook Express etc. use RFC2047.
+      // So we should parse both types.
+
+      char *fname = nsnull;
+      fname = mime_decode_filename(tmp->real_name, charset, options);
+      PR_FREEIF(charset);
+
+      if (fname && fname != tmp->real_name)
+      {
+        PR_FREEIF(tmp->real_name);
+        tmp->real_name = fname;
+      }
+    }
+
+    PR_FREEIF(disp);
+  }
+
+  disp = MimeHeaders_get(object->headers, HEADER_CONTENT_TYPE, PR_FALSE, PR_FALSE);
+  if (disp)
+  {
+    tmp->x_mac_type   = MimeHeaders_get_parameter(disp, PARAM_X_MAC_TYPE, nsnull, nsnull);
+    tmp->x_mac_creator= MimeHeaders_get_parameter(disp, PARAM_X_MAC_CREATOR, nsnull, nsnull);
+    
+    if (!tmp->real_name || *tmp->real_name == 0)
+    {
+      PR_FREEIF(tmp->real_name);
+      tmp->real_name = MimeHeaders_get_parameter(disp, "name", &charset, nsnull);
+      if (isAnAppleDoublePart)
+        for (i = 0; i < 2 && !tmp->real_name; i ++)
+        {
+          PR_FREEIF(disp);
+          PR_FREEIF(charset);
+          disp = MimeHeaders_get(((MimeContainer *)object)->children[i]->headers, HEADER_CONTENT_TYPE, PR_FALSE, PR_FALSE);
+          tmp->real_name = MimeHeaders_get_parameter(disp, "name", &charset, nsnull);
+        }
+      
+      if (tmp->real_name)
+      {
+        // check encoded type
+        //
+        // The parameter of Content-Disposition must use RFC 2231.
+        // But old Netscape 4.x and Outlook Express etc. use RFC2047.
+        // So we should parse both types.
+
+        char *fname = nsnull;
+        fname = mime_decode_filename(tmp->real_name, charset, options);
+        PR_FREEIF(charset);
+
+        if (fname && fname != tmp->real_name)
+        {
+          PR_Free(tmp->real_name);
+          tmp->real_name = fname;
+        }
+      }
+    }
+    PR_FREEIF(disp);
+  }
+
+  tmp->description = MimeHeaders_get(object->headers, HEADER_CONTENT_DESCRIPTION, 
+                                     PR_FALSE, PR_FALSE);
+
+  // Now, do the right thing with the name!
+  if (!tmp->real_name && nsCRT::strcasecmp(tmp->real_type, MESSAGE_RFC822))
+  {
+    /* If this attachment doesn't have a name, just give it one... */
+    tmp->real_name = MimeGetStringByID(MIME_MSG_DEFAULT_ATTACHMENT_NAME);
+    if (tmp->real_name)
+    {
+      char *newName = PR_smprintf(tmp->real_name, part.get());
+      if (newName)
+      {
+        PR_Free(tmp->real_name);
+        tmp->real_name = newName;
+      }
+    }
+    else
+      tmp->real_name = mime_part_address(object);
+  }
+  ValidateRealName(tmp, object->headers);
+
+  if (isIMAPPart)
+  {
+    // If we get here, we should mark this attachment as not being
+    // downloaded. 
+    tmp->notDownloaded = PR_TRUE;
+  }
+
+  return NS_OK;
+}
+
+nsresult
 BuildAttachmentList(MimeObject *aChild, nsMsgAttachmentData *aAttachData,
                     const char *aMessageURL, PRBool addExternalBodiesOnly)
 {
-  char                  *disp;
+  nsresult              rv;
   PRInt32               i;
-  PRInt32               j;
   MimeContainer         *cobj = (MimeContainer *) aChild;
-  nsMsgAttachmentData   *tmp = nsnull;
   PRBool                isAlternativeOrRelated;
-  PRBool                isIMAPPart = PR_FALSE;
-  char                  *charset = nsnull;
 
   if ( (!aChild) || (!cobj->children) || 
        (mime_typep(aChild, (MimeObjectClass *)&mimeExternalBodyClass)))
     return NS_OK;
 
-  if (MimeObjectChildIsMessageBody(aChild, &isAlternativeOrRelated))
+  if (MimeObjectChildIsMessageBody(aChild, &isAlternativeOrRelated) &&
+      !mime_typep(aChild, (MimeObjectClass *) &mimeMessageClass))
     i = 1;
   else
     i = 0;
@@ -313,12 +460,7 @@ BuildAttachmentList(MimeObject *aChild, nsMsgAttachmentData *aAttachData,
   for (; i<cobj->nchildren ; i++) 
   {
     MimeObject    *child = cobj->children[i];
-    nsXPIDLCString imappart;
-    nsXPIDLCString part;
 
-    /*
-      if we are processing an inline RFC822 message, we should skip its childern
-    */
     PRBool isAnInlineMessage = mime_typep(child, (MimeObjectClass *) &mimeMessageClass);
     
     /*
@@ -346,141 +488,8 @@ BuildAttachmentList(MimeObject *aChild, nsMsgAttachmentData *aAttachData,
     if (addExternalBodiesOnly && !mime_typep((MimeObject *)child, (MimeObjectClass *)&mimeExternalObjectClass) && !isAnAppleDoublePart )
         return NS_OK;
 
-    part.Adopt(mime_part_address(child));
-    if (part.IsEmpty()) 
-      return NS_ERROR_OUT_OF_MEMORY;
-
-    if (aChild->options->missing_parts)
-      imappart.Adopt(mime_imap_part_address(child));
-
-    char *urlSpec = nsnull;
-    if (!imappart.IsEmpty())
-    {
-      isIMAPPart = PR_TRUE;
-      urlSpec = mime_set_url_imap_part(aMessageURL, imappart.get(), part.get());
-    }
-    else
-      urlSpec = mime_set_url_part(aMessageURL, part.get(), PR_TRUE);
-  
-    if (!urlSpec)
-      return NS_ERROR_OUT_OF_MEMORY;
-
-    tmp = &(aAttachData[attIndex++]);
-    nsresult rv = nsMimeNewURI(&(tmp->url), urlSpec, nsnull);
-
-	  PR_FREEIF(urlSpec);
-
-    if ( (NS_FAILED(rv)) || (!tmp->url) )
-      return NS_ERROR_OUT_OF_MEMORY;
-
-    tmp->real_type = child->content_type ? nsCRT::strdup(child->content_type) : NULL;
-    tmp->real_encoding = child->encoding ? nsCRT::strdup(child->encoding) : NULL;
-    disp = MimeHeaders_get(child->headers, HEADER_CONTENT_DISPOSITION, PR_FALSE, PR_FALSE);
-
-    if (disp) 
-    {
-      tmp->real_name = MimeHeaders_get_parameter(disp, "filename", &charset, NULL);
-      if (isAnAppleDoublePart)
-        for (j = 0; j < 2 && !tmp->real_name; j ++)
-        {
-          PR_FREEIF(disp);
-          PR_FREEIF(charset);
-          disp = MimeHeaders_get(((MimeContainer *)child)->children[j]->headers, HEADER_CONTENT_DISPOSITION, PR_FALSE, PR_FALSE);
-          tmp->real_name = MimeHeaders_get_parameter(disp, "filename", &charset, NULL);
-        }
-
-      if (tmp->real_name)
-      {
-        // check encoded type
-        //
-        // The parameter of Content-Disposition must use RFC 2231.
-        // But old Netscape 4.x and Outlook Express etc. use RFC2047.
-        // So we should parse both types.
-
-        char *fname = NULL;
-        fname = mime_decode_filename(tmp->real_name, charset, aChild->options);
-        PR_FREEIF(charset);
-
-        if (fname && fname != tmp->real_name)
-        {
-          PR_FREEIF(tmp->real_name);
-          tmp->real_name = fname;
-        }
-      }
-
-      PR_FREEIF(disp);
-    }
-
-    disp = MimeHeaders_get(child->headers, HEADER_CONTENT_TYPE, PR_FALSE, PR_FALSE);
-    if (disp)
-    {
-      tmp->x_mac_type   = MimeHeaders_get_parameter(disp, PARAM_X_MAC_TYPE, NULL, NULL);
-      tmp->x_mac_creator= MimeHeaders_get_parameter(disp, PARAM_X_MAC_CREATOR, NULL, NULL);
-      
-      if (!tmp->real_name || *tmp->real_name == 0)
-      {
-        PR_FREEIF(tmp->real_name);
-        tmp->real_name = MimeHeaders_get_parameter(disp, "name", &charset, NULL);
-        if (isAnAppleDoublePart)
-          for (j = 0; j < 2 && !tmp->real_name; j ++)
-          {
-            PR_FREEIF(disp);
-            PR_FREEIF(charset);
-            disp = MimeHeaders_get(((MimeContainer *)child)->children[j]->headers, HEADER_CONTENT_TYPE, PR_FALSE, PR_FALSE);
-            tmp->real_name = MimeHeaders_get_parameter(disp, "name", &charset, NULL);
-          }
-        
-        if (tmp->real_name)
-        {
-          // check encoded type
-          //
-          // The parameter of Content-Disposition must use RFC 2231.
-          // But old Netscape 4.x and Outlook Express etc. use RFC2047.
-          // So we should parse both types.
-
-          char *fname = NULL;
-          fname = mime_decode_filename(tmp->real_name, charset, 
-                                       aChild->options);
-          PR_FREEIF(charset);
-
-          if (fname && fname != tmp->real_name)
-          {
-            PR_Free(tmp->real_name);
-            tmp->real_name = fname;
-          }
-        }
-      }
-      PR_FREEIF(disp);
-    }
-
-    tmp->description = MimeHeaders_get(child->headers, HEADER_CONTENT_DESCRIPTION, 
-                                       PR_FALSE, PR_FALSE);
-
-    // Now, do the right thing with the name!
-    if (!tmp->real_name)
-    {
-      /* If this attachment doesn't have a name, just give it one... */
-      tmp->real_name = MimeGetStringByID(MIME_MSG_DEFAULT_ATTACHMENT_NAME);
-      if (tmp->real_name)
-      {
-        char *newName = PR_smprintf(tmp->real_name, part.get());
-        if (newName)
-        {
-          PR_Free(tmp->real_name);
-          tmp->real_name = newName;
-        }
-      }
-      else
-        tmp->real_name = mime_part_address(child);
-    }
-    ValidateRealName(tmp, child->headers);
-
-    if (isIMAPPart)
-    {
-      // If we get here, we should mark this attachment as not being
-      // downloaded. 
-      tmp->notDownloaded = PR_TRUE;
-    }
+    rv = GenerateAttachmentData(child, aMessageURL, aChild->options, isAnAppleDoublePart, aAttachData);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   return NS_OK;
@@ -524,7 +533,16 @@ MimeGetAttachmentList(MimeObject *tobj, const char *aMessageURL, nsMsgAttachment
   memset(*data, 0, (n + 1) * sizeof(nsMsgAttachmentData));
   
   // Now, build the list!
-  return BuildAttachmentList((MimeObject *) cobj, *data, aMessageURL, PR_FALSE);
+
+  nsresult rv;
+
+  PRBool isBodyAnInlineMessage = mime_typep(obj, (MimeObjectClass *) &mimeMessageClass);
+  rv = BuildAttachmentList((MimeObject *) cobj, *data, aMessageURL, isBodyAnInlineMessage);
+  if (NS_SUCCEEDED(rv))
+    if (isBodyAnInlineMessage)
+      rv = GenerateAttachmentData(obj, aMessageURL, obj->options, PR_FALSE, *data);
+
+  return rv;
 }
 
 extern "C" void
@@ -1291,8 +1309,8 @@ PRBool MimeObjectChildIsMessageBody(MimeObject *obj,
 			 !nsCRT::strcasecmp (firstChild->content_type, TEXT_MDL) ||
 			 !nsCRT::strcasecmp (firstChild->content_type, MULTIPART_ALTERNATIVE) ||
 			 !nsCRT::strcasecmp (firstChild->content_type, MULTIPART_RELATED) ||
-			 !nsCRT::strcasecmp (firstChild->content_type, MESSAGE_NEWS) ||
-			 !nsCRT::strcasecmp (firstChild->content_type, MESSAGE_RFC822))
+       !nsCRT::strcasecmp (firstChild->content_type, MESSAGE_NEWS) ||
+       !nsCRT::strcasecmp (firstChild->content_type, MESSAGE_RFC822))
 		bRet = PR_TRUE;
 	else
 		bRet = PR_FALSE;
