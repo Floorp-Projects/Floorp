@@ -67,7 +67,7 @@ static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
 static PR_CALLBACK PRIntn
 net_pop3_check_for_hash_messages_marked_delete(PLHashEntry* he,
-				       						   PRIntn index, 
+				       						   PRIntn msgindex, 
 				       						   void *arg)
 {
 	char valueChar = (char) (int) he->value;
@@ -195,7 +195,7 @@ net_pop3_load_state(const char* searchhost,
 }
 
 static PR_CALLBACK PRIntn
-hash_clear_mapper(PLHashEntry* he, PRIntn index, void* arg)
+hash_clear_mapper(PLHashEntry* he, PRIntn msgindex, void* arg)
 {
 #ifdef UNREADY_CODE   // mscott: the compiler won't take this line and I can't figure out why..=(
   PR_FREEIF( (char *)he->key );
@@ -204,7 +204,7 @@ hash_clear_mapper(PLHashEntry* he, PRIntn index, void* arg)
 }
 
 static PR_CALLBACK PRIntn
-hash_empty_mapper(PLHashEntry* he, PRIntn index, void* arg)
+hash_empty_mapper(PLHashEntry* he, PRIntn msgindex, void* arg)
 {
   *((PRBool*) arg) = PR_FALSE;
   return HT_ENUMERATE_STOP;
@@ -220,7 +220,7 @@ hash_empty(PLHashTable* hash)
 
 
 static PR_CALLBACK PRIntn
-net_pop3_write_mapper(PLHashEntry* he, PRIntn index, void* arg)
+net_pop3_write_mapper(PLHashEntry* he, PRIntn msgindex, void* arg)
 {
   nsOutputFileStream* file = (nsOutputFileStream*) arg;
   PR_ASSERT((he->value == ((void *) (int) KEEP)) ||

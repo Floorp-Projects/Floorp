@@ -1576,7 +1576,7 @@ nsOutputFileStream * nsParseNewMailState::GetLogFile ()
 
 nsresult nsParseNewMailState::GetTrashFolder(nsIMsgFolder **pTrashFolder)
 {
-	nsresult rv;
+	nsresult rv=NS_ERROR_UNEXPECTED;
 	if (!pTrashFolder)
 		return NS_ERROR_NULL_POINTER;
 
