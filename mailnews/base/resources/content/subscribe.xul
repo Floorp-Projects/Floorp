@@ -37,6 +37,7 @@ Rights Reserved.
         id="subscribeWindow"
         persist="width height screenX screenY"
         onload="SubscribeOnLoad()"
+        onunload="SubscribeOnUnload()"
         onclose="Stop()">
         
 <stringbundle id="bundle_subscribe" src="chrome://messenger/locale/subscribe.properties"/>

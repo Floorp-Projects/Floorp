@@ -149,6 +149,16 @@ function SetUpTree(forceToServer)
 }
 
 
+function SubscribeOnUnload()
+{
+  try {
+    gSubscribeTree.database.RemoveDataSource(subscribeDS);
+  }
+  catch (ex) {
+    dump("failed to remove the subscribe ds: " + ex + "\n");
+  }
+}
+
 function SubscribeOnLoad()
 {
 	//dump("SubscribeOnLoad()\n");
