@@ -141,16 +141,6 @@ struct nsTableReflowState {
 
 };
 
-const nsHTMLReflowState*
-GetGrandParentReflowState(const nsHTMLReflowState& aInnerRS)
-{
-  const nsHTMLReflowState* rs = nsnull;
-  if (aInnerRS.parentReflowState) {
-    rs = aInnerRS.parentReflowState->parentReflowState;  
-  }
-  return rs;
-}
-
 nscoord 
 GetHorBorderPaddingWidth(const nsHTMLReflowState& aReflowState,
                          nsTableFrame*            aTableFrame)
@@ -2477,8 +2467,12 @@ nsTableFrame::IncrementalReflow(nsIPresContext*          aPresContext,
       // Get the next frame in the reflow chain
       nsIFrame* nextFrame;
       aReflowState.reflowCommand->GetNext(nextFrame);
-      NS_ASSERTION(nextFrame, "next frame in reflow command is null"); 
-      rv = IR_TargetIsChild(aPresContext, state, aStatus, nextFrame);
+      if (nextFrame) {
+        rv = IR_TargetIsChild(aPresContext, state, aStatus, nextFrame);
+      }
+      else {
+        NS_ASSERTION(PR_FALSE, "next frame in reflow command is null"); 
+      }
     }
   }
   return rv;
@@ -3869,63 +3863,10 @@ nsTableFrame::GetTableFrame(nsIFrame*      aSourceFrame,
   return rv;
 }
 
-/* helper method for determining if this is a nested table or not */
-// aReflowState must be the reflow state for this inner table frame, should have an assertion here for that
-PRBool 
-nsTableFrame::IsNested(const nsHTMLReflowState& aReflowState,
-                       const nsStylePosition*&  aPosition) const
-{
-  aPosition = nsnull;
-  PRBool result = PR_FALSE;
-  // Walk up the reflow state chain until we find a cell or the root
-  const nsHTMLReflowState* rs = GetGrandParentReflowState(aReflowState);
-  while (rs) {
-    nsCOMPtr<nsIAtom> frameType;
-    rs->frame->GetFrameType(getter_AddRefs(frameType));
-    if (nsLayoutAtoms::tableFrame == frameType.get()) {
-      result = PR_TRUE;
-      rs->frame->GetStyleData(eStyleStruct_Position, ((const nsStyleStruct *&)aPosition));
-      break;
-    }
-    rs = rs->parentReflowState;
-  }
-  return result;
-}
-
 PRBool 
 nsTableFrame::IsAutoWidth(PRBool* aIsPctWidth)
 {
-  PRBool isAuto = PR_TRUE;  // the default
-  if (aIsPctWidth) {
-    *aIsPctWidth = PR_FALSE;
-  }
-
-  nsStylePosition* tablePosition = (nsStylePosition*)mStyleContext->GetStyleData(eStyleStruct_Position);
-  switch (tablePosition->mWidth.GetUnit()) {
-
-  case eStyleUnit_Auto:         // specified auto width
-  case eStyleUnit_Proportional: // illegal for table, so ignored
-    break;
-  case eStyleUnit_Inherit:
-    // get width of parent and see if it is a specified value or not
-    // XXX for now, just return true
-    break;
-  case eStyleUnit_Coord:
-    isAuto = PR_FALSE;
-    break;
-  case eStyleUnit_Percent:
-    if (tablePosition->mWidth.GetPercentValue() > 0.0f) {
-      isAuto = PR_FALSE;
-      if (aIsPctWidth) {
-        *aIsPctWidth = PR_TRUE;
-      }
-    }
-    break;
-  default:
-    break;
-  }
-
-  return isAuto; 
+  return nsTableOuterFrame::IsAutoWidth(*this, aIsPctWidth);
 }
 
 nscoord 

@@ -835,6 +835,64 @@ nsTableOuterFrame::GetInnerOrigin(nsIPresContext*  aPresContext,
   return NS_OK;
 }
 
+// helper method for determining if this is a nested table or not
+PRBool 
+nsTableOuterFrame::IsNested(const nsHTMLReflowState& aReflowState) const
+{
+  PRBool result = PR_FALSE;
+  // Walk up the reflow state chain until we find a cell or the root
+  const nsHTMLReflowState* rs = aReflowState.parentReflowState;
+  while (rs) {
+    nsCOMPtr<nsIAtom> frameType;
+    rs->frame->GetFrameType(getter_AddRefs(frameType));
+    if (nsLayoutAtoms::tableFrame == frameType.get()) {
+      result = PR_TRUE;
+      break;
+    }
+    rs = rs->parentReflowState;
+  }
+  return result;
+}
+
+PRBool 
+nsTableOuterFrame::IsAutoWidth(nsIFrame& aTableOrCaption,
+                               PRBool*   aIsPctWidth)
+{
+  PRBool isAuto = PR_TRUE;  // the default
+  if (aIsPctWidth) {
+    *aIsPctWidth = PR_FALSE;
+  }
+
+  nsCOMPtr<nsIStyleContext> styleContext;
+  aTableOrCaption.GetStyleContext(getter_AddRefs(styleContext)); 
+
+  nsStylePosition* position = (nsStylePosition*)styleContext->GetStyleData(eStyleStruct_Position);
+
+  switch (position->mWidth.GetUnit()) {
+    case eStyleUnit_Auto:         // specified auto width
+    case eStyleUnit_Proportional: // illegal for table, so ignored
+      break;
+    case eStyleUnit_Inherit:
+      // get width of parent and see if it is a specified value or not
+      // XXX for now, just return true
+      break;
+    case eStyleUnit_Coord:
+      isAuto = PR_FALSE;
+      break;
+    case eStyleUnit_Percent:
+      if (position->mWidth.GetPercentValue() > 0.0f) {
+        isAuto = PR_FALSE;
+        if (aIsPctWidth) {
+          *aIsPctWidth = PR_TRUE;
+        }
+      }
+      break;
+    default:
+      break;
+  }
+
+  return isAuto; 
+}
 // eReflowReason_Resize was being used for incremental cases
 nsresult
 nsTableOuterFrame::OuterReflowChild(nsIPresContext*            aPresContext,
@@ -859,6 +917,20 @@ nsTableOuterFrame::OuterReflowChild(nsIPresContext*            aPresContext,
   nsHTMLReflowState childRS(aPresContext, aOuterRS, aChildFrame,
                             nsSize(availWidth, aOuterRS.availableHeight));
   childRS.reason = aReflowReason;
+
+  // If mComputedWidth > availableWidth for a nested percent table then adjust it
+  // based on availableWidth if this isn't the intial reflow. 
+  if ((childRS.mComputedWidth > childRS.availableWidth) && 
+      (NS_UNCONSTRAINEDSIZE != childRS.mComputedWidth)  &&
+      (eReflowReason_Initial != aReflowReason)          &&
+      IsNested(aOuterRS)) {
+    PRBool isPctWidth;
+    IsAutoWidth(*aChildFrame, &isPctWidth);
+    if (isPctWidth) {
+      childRS.mComputedWidth = childRS.availableWidth - childRS.mComputedBorderPadding.left -
+                                                        childRS.mComputedBorderPadding.right;
+    }
+  }
 
   // Normally, the outer table's mComputed values are NS_INTRINSICSIZE (although to
   // to work around boxes they can also be set to 0) since they depend on the caption 
