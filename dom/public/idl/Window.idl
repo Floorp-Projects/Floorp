@@ -11,11 +11,26 @@
 	      attribute  wstring status;
 	      attribute  wstring defaultStatus;
 	      attribute  wstring name;
+	      attribute  long innerWidth;
+	      attribute  long innerHeight;
+	      attribute  long outerWidth;
+	      attribute  long outerHeight;
+	      attribute  long screenX;
+	      attribute  long screenY;
+	      attribute  long pageXOffset;
+	      attribute  long pageYOffset;
+
 	      void  dump(in wstring str);
 	      void  alert(in wstring str);
 	      void  focus();
 	      void  blur();
 	      void  close();
+        void  moveTo(in long xPos, in long yPos);
+        void  moveBy(in long xDif, in long yDif);
+        void  resizeTo(in long width, in long height);
+        void  resizeBy(in long widthDif, in long heightDif);        
+        void  scrollTo(in long xScroll, in long yScroll);
+        void  scrollBy(in long xScrollDif, in long yScrollDif);        
  
         void clearTimeout(in long timerID);
         void clearInterval(in long timerID);

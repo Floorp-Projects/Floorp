@@ -18,6 +18,7 @@
 
 #include "nsGlobalWindow.h"
 #include "nscore.h"
+#include "nsRect.h"
 #include "nslayout.h"
 #include "prmem.h"
 #include "prtime.h"
@@ -48,6 +49,7 @@
 #include "nsIDocument.h"
 #include "nsIURL.h"
 #include "nsCRT.h"
+#include "nsRect.h"
 
 #include "jsapi.h"
 
@@ -450,6 +452,204 @@ GlobalWindowImpl::SetName(const nsString& aName)
 }
 
 NS_IMETHODIMP
+GlobalWindowImpl::GetInnerWidth(PRInt32* aInnerWidth)
+{
+  nsIBrowserWindow *mBrowser;
+
+  if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
+    nsRect r;
+    mBrowser->GetBounds(r);
+    *aInnerWidth = r.width;
+    NS_RELEASE(mBrowser);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::SetInnerWidth(PRInt32 aInnerWidth)
+{
+  nsIBrowserWindow *mBrowser;
+
+  if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
+    nsRect r;
+    mBrowser->GetBounds(r);
+
+    mBrowser->SizeTo(aInnerWidth, r.height);
+    NS_RELEASE(mBrowser);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::GetInnerHeight(PRInt32* aInnerHeight)
+{
+  nsIBrowserWindow *mBrowser;
+
+  if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
+    nsRect r;
+    mBrowser->GetBounds(r);
+    *aInnerHeight = r.height;
+    NS_RELEASE(mBrowser);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::SetInnerHeight(PRInt32 aInnerHeight)
+{
+  nsIBrowserWindow *mBrowser;
+
+  if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
+    nsRect r;
+    mBrowser->GetBounds(r);
+
+    mBrowser->SizeTo(r.width, aInnerHeight);
+    NS_RELEASE(mBrowser);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::GetOuterWidth(PRInt32* aOuterWidth)
+{
+  nsIBrowserWindow *mBrowser;
+
+  if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
+    nsRect r;
+    mBrowser->GetWindowBounds(r);
+    *aOuterWidth = r.width;
+    NS_RELEASE(mBrowser);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::SetOuterWidth(PRInt32 aOuterWidth)
+{
+  nsIBrowserWindow *mBrowser;
+
+  if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
+    nsRect r;
+    mBrowser->GetWindowBounds(r);
+
+    mBrowser->SizeTo(aOuterWidth, r.height);
+    NS_RELEASE(mBrowser);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::GetOuterHeight(PRInt32* aOuterHeight)
+{
+  nsIBrowserWindow *mBrowser;
+
+  if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
+    nsRect r;
+    mBrowser->GetWindowBounds(r);
+    *aOuterHeight = r.height;
+    NS_RELEASE(mBrowser);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::SetOuterHeight(PRInt32 aOuterHeight)
+{
+  nsIBrowserWindow *mBrowser;
+
+  if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
+    nsRect r;
+    mBrowser->GetWindowBounds(r);
+
+    mBrowser->SizeTo(r.width, aOuterHeight);
+    NS_RELEASE(mBrowser);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::GetScreenX(PRInt32* aScreenX)
+{
+  nsIBrowserWindow *mBrowser;
+
+  if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
+    nsRect r;
+    mBrowser->GetWindowBounds(r);
+    *aScreenX = r.x;
+    NS_RELEASE(mBrowser);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::SetScreenX(PRInt32 aScreenX)
+{
+  nsIBrowserWindow *mBrowser;
+
+  if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
+    nsRect r;
+    mBrowser->GetWindowBounds(r);
+
+    mBrowser->MoveTo(aScreenX, r.y);
+    NS_RELEASE(mBrowser);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::GetScreenY(PRInt32* aScreenY)
+{
+  nsIBrowserWindow *mBrowser;
+
+  if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
+    nsRect r;
+    mBrowser->GetWindowBounds(r);
+    *aScreenY = r.y;
+    NS_RELEASE(mBrowser);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::SetScreenY(PRInt32 aScreenY)
+{
+  nsIBrowserWindow *mBrowser;
+
+  if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
+    nsRect r;
+    mBrowser->GetWindowBounds(r);
+
+    mBrowser->MoveTo(r.x, aScreenY);
+    NS_RELEASE(mBrowser);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::GetPageXOffset(PRInt32* aPageXOffset)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::SetPageXOffset(PRInt32 aPageXOffset)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::GetPageYOffset(PRInt32* aPageYOffset)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::SetPageYOffset(PRInt32 aPageYOffset)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 GlobalWindowImpl::Dump(const nsString& aStr)
 {
   char *cstr = aStr.ToNewCString();
@@ -495,6 +695,72 @@ GlobalWindowImpl::Close()
       NS_RELEASE(mBrowser);
     }
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::MoveTo(PRInt32 aXPos, PRInt32 aYPos)
+{
+  nsIBrowserWindow *mBrowser;
+
+  if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
+    mBrowser->MoveTo(aXPos, aYPos);
+    NS_RELEASE(mBrowser);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::MoveBy(PRInt32 aXDif, PRInt32 aYDif)
+{
+  nsIBrowserWindow *mBrowser;
+
+  if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
+    nsRect r;
+    mBrowser->GetWindowBounds(r);
+
+    mBrowser->MoveTo(r.x + aXDif, r.y + aYDif);
+    NS_RELEASE(mBrowser);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::ResizeTo(PRInt32 aWidth, PRInt32 aHeight)
+{
+  nsIBrowserWindow *mBrowser;
+
+  if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
+    mBrowser->SizeTo(aWidth, aHeight);
+    NS_RELEASE(mBrowser);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::ResizeBy(PRInt32 aWidthDif, PRInt32 aHeightDif)
+{
+  nsIBrowserWindow *mBrowser;
+
+  if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
+    nsRect r;
+    mBrowser->GetWindowBounds(r);
+
+    mBrowser->SizeTo(r.width + aWidthDif, r.height + aHeightDif);
+    NS_RELEASE(mBrowser);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::ScrollTo(PRInt32 aXScroll, PRInt32 aYScroll)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::ScrollBy(PRInt32 aXScrollDif, PRInt32 aYScrollDif)
+{
   return NS_OK;
 }
 
@@ -1045,6 +1311,9 @@ GlobalWindowImpl::Open(JSContext *cx,
       webShellContainer->NewWebShell(newWebShell);
     }
     if (nsnull != newWebShell) {
+      newWebShell->SetName(name);
+      newWebShell->LoadURL(mAbsURL);
+
       if (NS_OK == newWebShell->GetContainer(newContainer) && nsnull != newContainer) {
         newContainer->QueryInterface(kIBrowserWindowIID, (void**)&newWindow);
         NS_RELEASE(newContainer);
@@ -1059,10 +1328,6 @@ GlobalWindowImpl::Open(JSContext *cx,
     newWindow->SetChrome(mChrome);
     newWindow->SizeTo(mWidth ? mWidth : 620, mHeight ? mHeight : 400);
     newWindow->MoveTo(mLeft, mTop);
-
-    newWebShell->LoadURL(mAbsURL);
-    newWebShell->SetName(name);
-
     newWindow->Show();
 
     /* Get win obj */
@@ -1083,12 +1348,15 @@ GlobalWindowImpl::Open(JSContext *cx,
   }
 
   nsIDOMWindow *newDOMWindow = nsnull;
-  if (nsnull != newGlobalObject && NS_OK == newGlobalObject->QueryInterface(kIDOMWindowIID, (void**)&newDOMWindow)) {
+  if (nsnull != newGlobalObject) {
+    if (NS_OK == newGlobalObject->QueryInterface(kIDOMWindowIID, (void**)&newDOMWindow)) {
     *aReturn = newDOMWindow;
+    }
+
+    /* Set opener */
+    newGlobalObject->SetOpenerWindow(this);
   }
 
-  /* Set opener */
-  newGlobalObject->SetOpenerWindow(this);
 
   NS_IF_RELEASE(newGlobalObject);
 

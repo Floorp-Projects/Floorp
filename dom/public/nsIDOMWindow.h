@@ -65,6 +65,30 @@ public:
   NS_IMETHOD    GetName(nsString& aName)=0;
   NS_IMETHOD    SetName(const nsString& aName)=0;
 
+  NS_IMETHOD    GetInnerWidth(PRInt32* aInnerWidth)=0;
+  NS_IMETHOD    SetInnerWidth(PRInt32 aInnerWidth)=0;
+
+  NS_IMETHOD    GetInnerHeight(PRInt32* aInnerHeight)=0;
+  NS_IMETHOD    SetInnerHeight(PRInt32 aInnerHeight)=0;
+
+  NS_IMETHOD    GetOuterWidth(PRInt32* aOuterWidth)=0;
+  NS_IMETHOD    SetOuterWidth(PRInt32 aOuterWidth)=0;
+
+  NS_IMETHOD    GetOuterHeight(PRInt32* aOuterHeight)=0;
+  NS_IMETHOD    SetOuterHeight(PRInt32 aOuterHeight)=0;
+
+  NS_IMETHOD    GetScreenX(PRInt32* aScreenX)=0;
+  NS_IMETHOD    SetScreenX(PRInt32 aScreenX)=0;
+
+  NS_IMETHOD    GetScreenY(PRInt32* aScreenY)=0;
+  NS_IMETHOD    SetScreenY(PRInt32 aScreenY)=0;
+
+  NS_IMETHOD    GetPageXOffset(PRInt32* aPageXOffset)=0;
+  NS_IMETHOD    SetPageXOffset(PRInt32 aPageXOffset)=0;
+
+  NS_IMETHOD    GetPageYOffset(PRInt32* aPageYOffset)=0;
+  NS_IMETHOD    SetPageYOffset(PRInt32 aPageYOffset)=0;
+
   NS_IMETHOD    Dump(const nsString& aStr)=0;
 
   NS_IMETHOD    Alert(const nsString& aStr)=0;
@@ -74,6 +98,18 @@ public:
   NS_IMETHOD    Blur()=0;
 
   NS_IMETHOD    Close()=0;
+
+  NS_IMETHOD    MoveTo(PRInt32 aXPos, PRInt32 aYPos)=0;
+
+  NS_IMETHOD    MoveBy(PRInt32 aXDif, PRInt32 aYDif)=0;
+
+  NS_IMETHOD    ResizeTo(PRInt32 aWidth, PRInt32 aHeight)=0;
+
+  NS_IMETHOD    ResizeBy(PRInt32 aWidthDif, PRInt32 aHeightDif)=0;
+
+  NS_IMETHOD    ScrollTo(PRInt32 aXScroll, PRInt32 aYScroll)=0;
+
+  NS_IMETHOD    ScrollBy(PRInt32 aXScrollDif, PRInt32 aYScrollDif)=0;
 
   NS_IMETHOD    ClearTimeout(PRInt32 aTimerID)=0;
 
@@ -104,11 +140,33 @@ public:
   NS_IMETHOD    SetDefaultStatus(const nsString& aDefaultStatus);  \
   NS_IMETHOD    GetName(nsString& aName);  \
   NS_IMETHOD    SetName(const nsString& aName);  \
+  NS_IMETHOD    GetInnerWidth(PRInt32* aInnerWidth);  \
+  NS_IMETHOD    SetInnerWidth(PRInt32 aInnerWidth);  \
+  NS_IMETHOD    GetInnerHeight(PRInt32* aInnerHeight);  \
+  NS_IMETHOD    SetInnerHeight(PRInt32 aInnerHeight);  \
+  NS_IMETHOD    GetOuterWidth(PRInt32* aOuterWidth);  \
+  NS_IMETHOD    SetOuterWidth(PRInt32 aOuterWidth);  \
+  NS_IMETHOD    GetOuterHeight(PRInt32* aOuterHeight);  \
+  NS_IMETHOD    SetOuterHeight(PRInt32 aOuterHeight);  \
+  NS_IMETHOD    GetScreenX(PRInt32* aScreenX);  \
+  NS_IMETHOD    SetScreenX(PRInt32 aScreenX);  \
+  NS_IMETHOD    GetScreenY(PRInt32* aScreenY);  \
+  NS_IMETHOD    SetScreenY(PRInt32 aScreenY);  \
+  NS_IMETHOD    GetPageXOffset(PRInt32* aPageXOffset);  \
+  NS_IMETHOD    SetPageXOffset(PRInt32 aPageXOffset);  \
+  NS_IMETHOD    GetPageYOffset(PRInt32* aPageYOffset);  \
+  NS_IMETHOD    SetPageYOffset(PRInt32 aPageYOffset);  \
   NS_IMETHOD    Dump(const nsString& aStr);  \
   NS_IMETHOD    Alert(const nsString& aStr);  \
   NS_IMETHOD    Focus();  \
   NS_IMETHOD    Blur();  \
   NS_IMETHOD    Close();  \
+  NS_IMETHOD    MoveTo(PRInt32 aXPos, PRInt32 aYPos);  \
+  NS_IMETHOD    MoveBy(PRInt32 aXDif, PRInt32 aYDif);  \
+  NS_IMETHOD    ResizeTo(PRInt32 aWidth, PRInt32 aHeight);  \
+  NS_IMETHOD    ResizeBy(PRInt32 aWidthDif, PRInt32 aHeightDif);  \
+  NS_IMETHOD    ScrollTo(PRInt32 aXScroll, PRInt32 aYScroll);  \
+  NS_IMETHOD    ScrollBy(PRInt32 aXScrollDif, PRInt32 aYScrollDif);  \
   NS_IMETHOD    ClearTimeout(PRInt32 aTimerID);  \
   NS_IMETHOD    ClearInterval(PRInt32 aTimerID);  \
   NS_IMETHOD    SetTimeout(JSContext *cx, jsval *argv, PRUint32 argc, PRInt32* aReturn);  \
@@ -134,11 +192,33 @@ public:
   NS_IMETHOD    SetDefaultStatus(const nsString& aDefaultStatus) { return _to##SetDefaultStatus(aDefaultStatus); } \
   NS_IMETHOD    GetName(nsString& aName) { return _to##GetName(aName); } \
   NS_IMETHOD    SetName(const nsString& aName) { return _to##SetName(aName); } \
+  NS_IMETHOD    GetInnerWidth(PRInt32* aInnerWidth) { return _to##GetInnerWidth(aInnerWidth); } \
+  NS_IMETHOD    SetInnerWidth(PRInt32 aInnerWidth) { return _to##SetInnerWidth(aInnerWidth); } \
+  NS_IMETHOD    GetInnerHeight(PRInt32* aInnerHeight) { return _to##GetInnerHeight(aInnerHeight); } \
+  NS_IMETHOD    SetInnerHeight(PRInt32 aInnerHeight) { return _to##SetInnerHeight(aInnerHeight); } \
+  NS_IMETHOD    GetOuterWidth(PRInt32* aOuterWidth) { return _to##GetOuterWidth(aOuterWidth); } \
+  NS_IMETHOD    SetOuterWidth(PRInt32 aOuterWidth) { return _to##SetOuterWidth(aOuterWidth); } \
+  NS_IMETHOD    GetOuterHeight(PRInt32* aOuterHeight) { return _to##GetOuterHeight(aOuterHeight); } \
+  NS_IMETHOD    SetOuterHeight(PRInt32 aOuterHeight) { return _to##SetOuterHeight(aOuterHeight); } \
+  NS_IMETHOD    GetScreenX(PRInt32* aScreenX) { return _to##GetScreenX(aScreenX); } \
+  NS_IMETHOD    SetScreenX(PRInt32 aScreenX) { return _to##SetScreenX(aScreenX); } \
+  NS_IMETHOD    GetScreenY(PRInt32* aScreenY) { return _to##GetScreenY(aScreenY); } \
+  NS_IMETHOD    SetScreenY(PRInt32 aScreenY) { return _to##SetScreenY(aScreenY); } \
+  NS_IMETHOD    GetPageXOffset(PRInt32* aPageXOffset) { return _to##GetPageXOffset(aPageXOffset); } \
+  NS_IMETHOD    SetPageXOffset(PRInt32 aPageXOffset) { return _to##SetPageXOffset(aPageXOffset); } \
+  NS_IMETHOD    GetPageYOffset(PRInt32* aPageYOffset) { return _to##GetPageYOffset(aPageYOffset); } \
+  NS_IMETHOD    SetPageYOffset(PRInt32 aPageYOffset) { return _to##SetPageYOffset(aPageYOffset); } \
   NS_IMETHOD    Dump(const nsString& aStr) { return _to##Dump(aStr); }  \
   NS_IMETHOD    Alert(const nsString& aStr) { return _to##Alert(aStr); }  \
   NS_IMETHOD    Focus() { return _to##Focus(); }  \
   NS_IMETHOD    Blur() { return _to##Blur(); }  \
   NS_IMETHOD    Close() { return _to##Close(); }  \
+  NS_IMETHOD    MoveTo(PRInt32 aXPos, PRInt32 aYPos) { return _to##MoveTo(aXPos, aYPos); }  \
+  NS_IMETHOD    MoveBy(PRInt32 aXDif, PRInt32 aYDif) { return _to##MoveBy(aXDif, aYDif); }  \
+  NS_IMETHOD    ResizeTo(PRInt32 aWidth, PRInt32 aHeight) { return _to##ResizeTo(aWidth, aHeight); }  \
+  NS_IMETHOD    ResizeBy(PRInt32 aWidthDif, PRInt32 aHeightDif) { return _to##ResizeBy(aWidthDif, aHeightDif); }  \
+  NS_IMETHOD    ScrollTo(PRInt32 aXScroll, PRInt32 aYScroll) { return _to##ScrollTo(aXScroll, aYScroll); }  \
+  NS_IMETHOD    ScrollBy(PRInt32 aXScrollDif, PRInt32 aYScrollDif) { return _to##ScrollBy(aXScrollDif, aYScrollDif); }  \
   NS_IMETHOD    ClearTimeout(PRInt32 aTimerID) { return _to##ClearTimeout(aTimerID); }  \
   NS_IMETHOD    ClearInterval(PRInt32 aTimerID) { return _to##ClearInterval(aTimerID); }  \
   NS_IMETHOD    SetTimeout(JSContext *cx, jsval *argv, PRUint32 argc, PRInt32* aReturn) { return _to##SetTimeout(cx, argv, argc, aReturn); }  \

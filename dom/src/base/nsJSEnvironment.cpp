@@ -62,16 +62,16 @@ nsJSContext::~nsJSContext()
 
 NS_IMPL_ISUPPORTS(nsJSContext, kIScriptContextIID);
 
-PRBool nsJSContext::EvaluateString(const char *aScript, 
-                                  PRUint32 aScriptSize,
+PRBool nsJSContext::EvaluateString(nsString& aScript, 
                                   const char *aURL,
                                   PRUint32 aLineNo,
                                   jsval *aRetValue)
 {
-  return ::JS_EvaluateScript(mContext, 
+  return ::JS_EvaluateUCScriptForPrincipals(mContext, 
                               JS_GetGlobalObject(mContext),
-                              aScript, 
-                              aScriptSize,
+                              nsnull,
+                              (jschar*)aScript.GetUnicode(), 
+                              aScript.Length(),
                               aURL, 
                               aLineNo,
                               aRetValue);

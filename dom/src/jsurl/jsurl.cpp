@@ -156,7 +156,7 @@ evaluate_script(URL_Struct* urls, const char *what, JSConData *con_data)
             if (script_context) {
               jsval ret;
               
-              if (script_context->EvaluateString(what, PL_strlen(what),
+              if (script_context->EvaluateString(nsString(what),
                                                  nsnull, 0,
                                                  &ret)) {
                 JSContext *cx = (JSContext *)script_context->GetNativeContext();

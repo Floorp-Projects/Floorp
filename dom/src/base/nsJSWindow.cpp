@@ -62,7 +62,15 @@ enum Window_slots {
   WINDOW_OPENER = -9,
   WINDOW_STATUS = -10,
   WINDOW_DEFAULTSTATUS = -11,
-  WINDOW_NAME = -12
+  WINDOW_NAME = -12,
+  WINDOW_INNERWIDTH = -13,
+  WINDOW_INNERHEIGHT = -14,
+  WINDOW_OUTERWIDTH = -15,
+  WINDOW_OUTERHEIGHT = -16,
+  WINDOW_SCREENX = -17,
+  WINDOW_SCREENY = -18,
+  WINDOW_PAGEXOFFSET = -19,
+  WINDOW_PAGEYOFFSET = -20
 };
 
 /***********************************************************************/
@@ -347,6 +355,94 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
+      case WINDOW_INNERWIDTH:
+      {
+        PRInt32 prop;
+        if (NS_OK == a->GetInnerWidth(&prop)) {
+          *vp = INT_TO_JSVAL(prop);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case WINDOW_INNERHEIGHT:
+      {
+        PRInt32 prop;
+        if (NS_OK == a->GetInnerHeight(&prop)) {
+          *vp = INT_TO_JSVAL(prop);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case WINDOW_OUTERWIDTH:
+      {
+        PRInt32 prop;
+        if (NS_OK == a->GetOuterWidth(&prop)) {
+          *vp = INT_TO_JSVAL(prop);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case WINDOW_OUTERHEIGHT:
+      {
+        PRInt32 prop;
+        if (NS_OK == a->GetOuterHeight(&prop)) {
+          *vp = INT_TO_JSVAL(prop);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case WINDOW_SCREENX:
+      {
+        PRInt32 prop;
+        if (NS_OK == a->GetScreenX(&prop)) {
+          *vp = INT_TO_JSVAL(prop);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case WINDOW_SCREENY:
+      {
+        PRInt32 prop;
+        if (NS_OK == a->GetScreenY(&prop)) {
+          *vp = INT_TO_JSVAL(prop);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case WINDOW_PAGEXOFFSET:
+      {
+        PRInt32 prop;
+        if (NS_OK == a->GetPageXOffset(&prop)) {
+          *vp = INT_TO_JSVAL(prop);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case WINDOW_PAGEYOFFSET:
+      {
+        PRInt32 prop;
+        if (NS_OK == a->GetPageYOffset(&prop)) {
+          *vp = INT_TO_JSVAL(prop);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
       default:
       {
         nsIJSScriptObject *object;
@@ -453,6 +549,134 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
       
         a->SetName(prop);
+        
+        break;
+      }
+      case WINDOW_INNERWIDTH:
+      {
+        PRInt32 prop;
+        int32 temp;
+        if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
+          prop = (PRInt32)temp;
+        }
+        else {
+          JS_ReportError(cx, "Parameter must be a number");
+          return JS_FALSE;
+        }
+      
+        a->SetInnerWidth(prop);
+        
+        break;
+      }
+      case WINDOW_INNERHEIGHT:
+      {
+        PRInt32 prop;
+        int32 temp;
+        if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
+          prop = (PRInt32)temp;
+        }
+        else {
+          JS_ReportError(cx, "Parameter must be a number");
+          return JS_FALSE;
+        }
+      
+        a->SetInnerHeight(prop);
+        
+        break;
+      }
+      case WINDOW_OUTERWIDTH:
+      {
+        PRInt32 prop;
+        int32 temp;
+        if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
+          prop = (PRInt32)temp;
+        }
+        else {
+          JS_ReportError(cx, "Parameter must be a number");
+          return JS_FALSE;
+        }
+      
+        a->SetOuterWidth(prop);
+        
+        break;
+      }
+      case WINDOW_OUTERHEIGHT:
+      {
+        PRInt32 prop;
+        int32 temp;
+        if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
+          prop = (PRInt32)temp;
+        }
+        else {
+          JS_ReportError(cx, "Parameter must be a number");
+          return JS_FALSE;
+        }
+      
+        a->SetOuterHeight(prop);
+        
+        break;
+      }
+      case WINDOW_SCREENX:
+      {
+        PRInt32 prop;
+        int32 temp;
+        if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
+          prop = (PRInt32)temp;
+        }
+        else {
+          JS_ReportError(cx, "Parameter must be a number");
+          return JS_FALSE;
+        }
+      
+        a->SetScreenX(prop);
+        
+        break;
+      }
+      case WINDOW_SCREENY:
+      {
+        PRInt32 prop;
+        int32 temp;
+        if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
+          prop = (PRInt32)temp;
+        }
+        else {
+          JS_ReportError(cx, "Parameter must be a number");
+          return JS_FALSE;
+        }
+      
+        a->SetScreenY(prop);
+        
+        break;
+      }
+      case WINDOW_PAGEXOFFSET:
+      {
+        PRInt32 prop;
+        int32 temp;
+        if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
+          prop = (PRInt32)temp;
+        }
+        else {
+          JS_ReportError(cx, "Parameter must be a number");
+          return JS_FALSE;
+        }
+      
+        a->SetPageXOffset(prop);
+        
+        break;
+      }
+      case WINDOW_PAGEYOFFSET:
+      {
+        PRInt32 prop;
+        int32 temp;
+        if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
+          prop = (PRInt32)temp;
+        }
+        else {
+          JS_ReportError(cx, "Parameter must be a number");
+          return JS_FALSE;
+        }
+      
+        a->SetPageYOffset(prop);
         
         break;
       }
@@ -707,6 +931,276 @@ WindowClose(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
   else {
     JS_ReportError(cx, "Function close requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method MoveTo
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowMoveTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *nativeThis = (nsIDOMWindow*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  PRInt32 b0;
+  PRInt32 b1;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 2) {
+
+    if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
+      JS_ReportError(cx, "Parameter must be a number");
+      return JS_FALSE;
+    }
+
+    if (!JS_ValueToInt32(cx, argv[1], (int32 *)&b1)) {
+      JS_ReportError(cx, "Parameter must be a number");
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->MoveTo(b0, b1)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function moveTo requires 2 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method MoveBy
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowMoveBy(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *nativeThis = (nsIDOMWindow*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  PRInt32 b0;
+  PRInt32 b1;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 2) {
+
+    if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
+      JS_ReportError(cx, "Parameter must be a number");
+      return JS_FALSE;
+    }
+
+    if (!JS_ValueToInt32(cx, argv[1], (int32 *)&b1)) {
+      JS_ReportError(cx, "Parameter must be a number");
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->MoveBy(b0, b1)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function moveBy requires 2 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method ResizeTo
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowResizeTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *nativeThis = (nsIDOMWindow*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  PRInt32 b0;
+  PRInt32 b1;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 2) {
+
+    if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
+      JS_ReportError(cx, "Parameter must be a number");
+      return JS_FALSE;
+    }
+
+    if (!JS_ValueToInt32(cx, argv[1], (int32 *)&b1)) {
+      JS_ReportError(cx, "Parameter must be a number");
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->ResizeTo(b0, b1)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function resizeTo requires 2 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method ResizeBy
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowResizeBy(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *nativeThis = (nsIDOMWindow*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  PRInt32 b0;
+  PRInt32 b1;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 2) {
+
+    if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
+      JS_ReportError(cx, "Parameter must be a number");
+      return JS_FALSE;
+    }
+
+    if (!JS_ValueToInt32(cx, argv[1], (int32 *)&b1)) {
+      JS_ReportError(cx, "Parameter must be a number");
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->ResizeBy(b0, b1)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function resizeBy requires 2 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method ScrollTo
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowScrollTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *nativeThis = (nsIDOMWindow*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  PRInt32 b0;
+  PRInt32 b1;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 2) {
+
+    if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
+      JS_ReportError(cx, "Parameter must be a number");
+      return JS_FALSE;
+    }
+
+    if (!JS_ValueToInt32(cx, argv[1], (int32 *)&b1)) {
+      JS_ReportError(cx, "Parameter must be a number");
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->ScrollTo(b0, b1)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function scrollTo requires 2 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method ScrollBy
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowScrollBy(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *nativeThis = (nsIDOMWindow*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  PRInt32 b0;
+  PRInt32 b1;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 2) {
+
+    if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
+      JS_ReportError(cx, "Parameter must be a number");
+      return JS_FALSE;
+    }
+
+    if (!JS_ValueToInt32(cx, argv[1], (int32 *)&b1)) {
+      JS_ReportError(cx, "Parameter must be a number");
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->ScrollBy(b0, b1)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function scrollBy requires 2 parameters");
     return JS_FALSE;
   }
 
@@ -1040,6 +1534,14 @@ static JSPropertySpec WindowProperties[] =
   {"status",    WINDOW_STATUS,    JSPROP_ENUMERATE},
   {"defaultStatus",    WINDOW_DEFAULTSTATUS,    JSPROP_ENUMERATE},
   {"name",    WINDOW_NAME,    JSPROP_ENUMERATE},
+  {"innerWidth",    WINDOW_INNERWIDTH,    JSPROP_ENUMERATE},
+  {"innerHeight",    WINDOW_INNERHEIGHT,    JSPROP_ENUMERATE},
+  {"outerWidth",    WINDOW_OUTERWIDTH,    JSPROP_ENUMERATE},
+  {"outerHeight",    WINDOW_OUTERHEIGHT,    JSPROP_ENUMERATE},
+  {"screenX",    WINDOW_SCREENX,    JSPROP_ENUMERATE},
+  {"screenY",    WINDOW_SCREENY,    JSPROP_ENUMERATE},
+  {"pageXOffset",    WINDOW_PAGEXOFFSET,    JSPROP_ENUMERATE},
+  {"pageYOffset",    WINDOW_PAGEYOFFSET,    JSPROP_ENUMERATE},
   {0}
 };
 
@@ -1054,6 +1556,12 @@ static JSFunctionSpec WindowMethods[] =
   {"focus",          WindowFocus,     0},
   {"blur",          WindowBlur,     0},
   {"close",          WindowClose,     0},
+  {"moveTo",          WindowMoveTo,     2},
+  {"moveBy",          WindowMoveBy,     2},
+  {"resizeTo",          WindowResizeTo,     2},
+  {"resizeBy",          WindowResizeBy,     2},
+  {"scrollTo",          WindowScrollTo,     2},
+  {"scrollBy",          WindowScrollBy,     2},
   {"clearTimeout",          WindowClearTimeout,     1},
   {"clearInterval",          WindowClearInterval,     1},
   {"setTimeout",          WindowSetTimeout,     0},

@@ -20,6 +20,7 @@
 #define nsIScriptContext_h__
 
 #include "nscore.h"
+#include "nsString.h"
 #include "nsISupports.h"
 #include "jsapi.h"
 
@@ -49,8 +50,7 @@ public:
    * @return true if the script was valid and got executed
    *
    **/
-  virtual PRBool EvaluateString(const char *aScript, 
-                                PRUint32 aScriptSize, 
+  virtual PRBool EvaluateString(nsString& aScript, 
                                 const char *aURL,
                                 PRUint32 aLineNo,
                                 jsval *aRetValue) = 0;
