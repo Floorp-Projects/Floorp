@@ -1466,7 +1466,7 @@ nsRangeList::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
   }
 
   // If we get here, the focus wasn't contained in any of the ranges.
-#ifdef DEBUG
+#ifdef DEBUG_mjudge
   printf("nsRangeList::Extend: focus not contained in any ranges\n");
 #endif
   return NS_ERROR_UNEXPECTED;
