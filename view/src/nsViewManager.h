@@ -86,7 +86,7 @@ public:
   // should be in the layer's coordinate space.
   virtual void UpdateView(nsIView *aView, nsIRegion *aRegion,
                           PRUint32 aUpdateFlags);
-  virtual void UpdateView(nsIView *aView, nsRect &aRect, PRUint32 aUpdateFlags);
+  virtual void UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 aUpdateFlags);
 
   // Called to dispatch an event to the appropriate layer. Often called
   // as a result of receiving a mouse or keyboard event from the native
