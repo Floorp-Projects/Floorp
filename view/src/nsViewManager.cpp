@@ -37,26 +37,8 @@ static void vm_timer_callback(nsITimer *aTimer, void *aClosure)
   PRInt32 fr = vm->GetFrameRate();
 
   vm->mFrameRate = 0;
-
   vm->SetFrameRate(fr);
-
-  if (vm->mDirtyRect.IsEmpty() == PR_FALSE)
-  {
-    nsIRenderingContext *cx;
-    nsIPresContext      *px = vm->GetPresContext();
-    nsIDeviceContext    *dx = px->GetDeviceContext();
-
-    cx = dx->CreateRenderingContext(vm->mRootView);
-
-    if (nsnull != cx)
-    {
-      vm->Refresh(vm->mRootView, cx, &vm->mDirtyRect, NS_VMREFRESH_DOUBLE_BUFFER);
-      NS_RELEASE(cx);
-    }
-
-    NS_RELEASE(dx);
-    NS_RELEASE(px);
-  }
+  vm->Composite();
 }
 
 static NS_DEFINE_IID(knsViewManagerIID, NS_IVIEWMANAGER_IID);
@@ -301,6 +283,21 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsR
 
 void nsViewManager :: Composite()
 {
+  if (mDirtyRect.IsEmpty() == PR_FALSE)
+  {
+    nsIRenderingContext *cx;
+    nsIDeviceContext    *dx = mContext->GetDeviceContext();
+
+    cx = dx->CreateRenderingContext(mRootView);
+
+    if (nsnull != cx)
+    {
+      Refresh(mRootView, cx, &mDirtyRect, NS_VMREFRESH_DOUBLE_BUFFER);
+      NS_RELEASE(cx);
+    }
+
+    NS_RELEASE(dx);
+  }
 }
 
 void nsViewManager :: UpdateView(nsIView *aView, nsRegion *aRegion, PRUint32 aUpdateFlags)
