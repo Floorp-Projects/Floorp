@@ -152,8 +152,6 @@ nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
   mPresContext = aPresContext;
   mEventIsTrusted = PR_FALSE;
 
-  NS_IF_ADDREF(mPresContext);
-
   if (aEvent) {
     mEvent = aEvent;
     mEventIsTrusted = PR_TRUE;
@@ -193,12 +191,9 @@ nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
     }
   }
 
-  mTarget = nsnull;
-  mCurrentTarget = nsnull;
-  mOriginalTarget = nsnull;
   // Get the explicit original target (if it's anonymous make it null)
   {
-    GetTargetFromFrame(&mExplicitOriginalTarget);
+    mExplicitOriginalTarget = GetTargetFromFrame();
     nsCOMPtr<nsIContent> content = do_QueryInterface(mExplicitOriginalTarget);
     if (content) {
       if (content->IsNativeAnonymous()) {
@@ -212,7 +207,6 @@ nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
     }
   }
   mText = nsnull;
-  mTextRange = nsnull;
   mButton = -1;
   if (aEvent) {
     mScreenPoint.x = aEvent->refPoint.x;
@@ -263,26 +257,12 @@ nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
 	  // call GetInputRange and AddRef to the result
 
     mTextRange = new nsPrivateTextRangeList(te->rangeCount ,tempTextRangeList);
-
-		NS_IF_ADDREF(mTextRange);
   }
 }
 
 nsDOMEvent::~nsDOMEvent() 
 {
   NS_ASSERT_OWNINGTHREAD(nsDOMEvent);
-
-  nsCOMPtr<nsIPresShell> shell;
-  if (mPresContext)
-  { // we were arena-allocated, prepare to recycle myself    
-    // XXX this does not appear to be needed anymore
-    mPresContext->GetShell(getter_AddRefs(shell));
-  }
-  NS_IF_RELEASE(mPresContext);
-  NS_IF_RELEASE(mTarget);
-  NS_IF_RELEASE(mCurrentTarget);
-  NS_IF_RELEASE(mOriginalTarget);
-  NS_IF_RELEASE(mTextRange);
 
   if (mEventIsInternal) {
     if (mEvent->userType) {
@@ -334,7 +314,7 @@ NS_METHOD nsDOMEvent::GetTarget(nsIDOMEventTarget** aTarget)
 {
   if (nsnull != mTarget) {
     *aTarget = mTarget;
-    NS_ADDREF(mTarget);
+    NS_ADDREF(*aTarget);
     return NS_OK;
   }
   
@@ -348,7 +328,7 @@ NS_METHOD nsDOMEvent::GetTarget(nsIDOMEventTarget** aTarget)
   }
   
   if (targetContent) {
-    CallQueryInterface(targetContent, &mTarget);
+    mTarget = do_QueryInterface(targetContent);
     if (mTarget) {
       *aTarget = mTarget;
       NS_ADDREF(*aTarget);
@@ -360,7 +340,7 @@ NS_METHOD nsDOMEvent::GetTarget(nsIDOMEventTarget** aTarget)
     nsCOMPtr<nsIPresShell> presShell;
     if (mPresContext && NS_SUCCEEDED(mPresContext->GetShell(getter_AddRefs(presShell))) && presShell) {
       if (NS_SUCCEEDED(presShell->GetDocument(getter_AddRefs(doc))) && doc) {
-        CallQueryInterface(doc, &mTarget);
+        mTarget = do_QueryInterface(doc);
         if (mTarget) {
           *aTarget = mTarget;
           NS_ADDREF(*aTarget);
@@ -383,12 +363,10 @@ nsDOMEvent::GetCurrentTarget(nsIDOMEventTarget** aCurrentTarget)
 //
 // Get the actual event target node (may have been retargeted for mouse events)
 //
-void
-nsDOMEvent::GetTargetFromFrame(nsIDOMEventTarget** aTarget)
+already_AddRefed<nsIDOMEventTarget>
+nsDOMEvent::GetTargetFromFrame()
 {
-  *aTarget = nsnull;
-
-  if (!mPresContext) { return; }
+  if (!mPresContext) { return nsnull; }
 
   // Get the target frame (have to get the ESM first)
   nsCOMPtr<nsIEventStateManager> esm;
@@ -396,15 +374,17 @@ nsDOMEvent::GetTargetFromFrame(nsIDOMEventTarget** aTarget)
 
   nsIFrame* targetFrame = nsnull;
   esm->GetEventTarget(&targetFrame);
-  if (!targetFrame) { return; }
+  if (!targetFrame) { return nsnull; }
 
   // get the real content
   nsCOMPtr<nsIContent> realEventContent;
   targetFrame->GetContentForEvent(mPresContext, mEvent, getter_AddRefs(realEventContent));
-  if (!realEventContent) { return; }
+  if (!realEventContent) { return nsnull; }
 
   // Finally, we have the real content.  QI it and return.
-  CallQueryInterface(realEventContent, aTarget);
+  nsIDOMEventTarget* target = nsnull;
+  CallQueryInterface(realEventContent, &target);
+  return target;
 }
 
 NS_IMETHODIMP
@@ -1374,31 +1354,19 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
 
 NS_METHOD nsDOMEvent::SetTarget(nsIDOMEventTarget* aTarget)
 {
-  if (mTarget != aTarget) {
-    NS_IF_RELEASE(mTarget);
-    NS_IF_ADDREF(aTarget);
-    mTarget = aTarget;
-  }
+  mTarget = aTarget;
   return NS_OK;
 }
 
 NS_METHOD nsDOMEvent::SetCurrentTarget(nsIDOMEventTarget* aCurrentTarget)
 {
-  if (mCurrentTarget != aCurrentTarget) {
-    NS_IF_RELEASE(mCurrentTarget);
-    NS_IF_ADDREF(aCurrentTarget);
-    mCurrentTarget = aCurrentTarget;
-  }
+  mCurrentTarget = aCurrentTarget;
   return NS_OK;
 }
 
 NS_METHOD nsDOMEvent::SetOriginalTarget(nsIDOMEventTarget* aOriginalTarget)
 {
-  if (mOriginalTarget != aOriginalTarget) {
-    NS_IF_RELEASE(mOriginalTarget);
-    NS_IF_ADDREF(aOriginalTarget);
-    mOriginalTarget = aOriginalTarget;
-  }
+  mOriginalTarget = aOriginalTarget;
   return NS_OK;
 }
 

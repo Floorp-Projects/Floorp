@@ -49,10 +49,12 @@
 #include "nsIPrivateTextEvent.h"
 #include "nsIPrivateTextRange.h"
 #include "nsIDOMEvent.h"
-
+#include "nsCOMPtr.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIPresContext.h"
 #include "nsPoint.h"
 #include "nsGUIEvent.h"
+
 class nsIContent;
 class nsIScrollableView;
 
@@ -226,16 +228,16 @@ protected:
                          float* aT2P);
   nsresult SetEventType(const nsAString& aEventTypeArg);
   const char* GetEventName(PRUint32 aEventType);
-  void GetTargetFromFrame(nsIDOMEventTarget** aTarget);
+  already_AddRefed<nsIDOMEventTarget> GetTargetFromFrame();
 
   nsEvent* mEvent;
-  nsIPresContext* mPresContext;
-  nsIDOMEventTarget* mTarget;
-  nsIDOMEventTarget* mCurrentTarget;
-  nsIDOMEventTarget* mOriginalTarget;
-  nsIDOMEventTarget* mExplicitOriginalTarget;
+  nsCOMPtr<nsIPresContext> mPresContext;
+  nsCOMPtr<nsIDOMEventTarget> mTarget;
+  nsCOMPtr<nsIDOMEventTarget> mCurrentTarget;
+  nsCOMPtr<nsIDOMEventTarget> mOriginalTarget;
+  nsCOMPtr<nsIDOMEventTarget> mExplicitOriginalTarget;
   nsString*	mText;
-  nsIPrivateTextRangeList*	mTextRange;
+  nsCOMPtr<nsIPrivateTextRangeList> mTextRange;
   PRPackedBool mEventIsInternal;
   PRPackedBool mEventIsTrusted;
 
