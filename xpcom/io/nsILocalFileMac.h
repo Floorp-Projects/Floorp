@@ -73,6 +73,11 @@ public:
 	// SetFileTypeAndCreator call will preserve the existing code
 	NS_IMETHOD GetFileTypeAndCreator(OSType *type, OSType *creator) = 0;
 	NS_IMETHOD SetFileTypeAndCreator(OSType type, OSType creator) = 0;
+	
+	// Since Mac files can consist of both a data and resource fork we have a
+	// method that will return the combined size of both forks rather than just the
+	// size of the data fork as returned by GetFileSize()
+	NS_IMETHOD GetFileSizeWithResFork(PRInt64 *aFileSize) = 0;
 };
 
 #endif

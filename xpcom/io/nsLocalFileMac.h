@@ -70,6 +70,8 @@ public:
 	NS_IMETHOD GetFileTypeAndCreator(OSType *type, OSType *creator);
 	NS_IMETHOD SetFileTypeAndCreator(OSType type, OSType creator);
 
+	NS_IMETHOD GetFileSizeWithResFork(PRInt64 *aFileSize);
+
 private:
 
     // this is the flag which indicates if I can used cached information about the file
