@@ -39,7 +39,10 @@ include $(CORE_DEPTH)/coreconf/AIX.mk
 ifeq ($(USE_64), 1)
 # Next line replaced by generic name handling in arch.mk
 #	COMPILER_TAG    = _64
-	OS_CFLAGS	+= -O2 -DAIX_64BIT
+	OS_CFLAGS	+= -DAIX_64BIT
+ifdef BUILD_OPT
+	OPTIMIZER  += -O2
+endif
 	OBJECT_MODE=64
 	export OBJECT_MODE
 endif
