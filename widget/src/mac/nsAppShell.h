@@ -39,7 +39,6 @@ class nsAppShell : public nsIAppShell
   private:
     nsDispatchListener		*mDispatchListener;
     nsToolkit							*mToolKit;
-		nsMacMessenger				*mMessages;
 
 	// CLASS METHODS
 	private:		    

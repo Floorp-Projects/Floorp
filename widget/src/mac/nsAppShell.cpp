@@ -58,8 +58,7 @@ nsresult nsAppShell::Run()
 nsMacMessagePump	*macpump;
 
 	
-	mMessages = new nsMacMessenger();
-	macpump = new nsMacMessagePump( mMessages );
+	macpump = new nsMacMessagePump(mToolKit);
 	
 	macpump->DoMessagePump();
 
@@ -76,9 +75,6 @@ nsMacMessagePump	*macpump;
 //-------------------------------------------------------------------------
 void nsAppShell::Exit()
 {
-	if(mMessages)
-		mMessages->Quit();
-
 }
 
 //-------------------------------------------------------------------------
@@ -90,7 +86,6 @@ nsAppShell::nsAppShell()
 { 
   mRefCnt = 0;
   mDispatchListener = 0;
-  mMessages = 0;
 }
 
 //-------------------------------------------------------------------------
