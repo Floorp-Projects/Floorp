@@ -29,20 +29,8 @@ var gDraggingFromPalette = false;
 
 function addItemToToolbar(newItem, newToolbar)
 {
-  newItem.removeAttribute("observes");
-  newItem.removeAttribute("disabled");
-  newItem.removeAttribute("type");
-
-  if (newItem.localName == "toolbaritem" && 
-      newItem.firstChild) {
-    newItem.firstChild.removeAttribute("observes");
-    if (newItem.firstChild.localName == "textbox")
-      newItem.firstChild.setAttribute("disabled", "true");
-    else
-      newItem.firstChild.removeAttribute("disabled");
-  }
-
-  enclosure = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+  cleanUpItemForAdding(newItem);
+  var enclosure = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                        "toolbarpaletteitem");
   if (newItem.getAttribute("flex"))
     enclosure.setAttribute("flex", newItem.getAttribute("flex"));
@@ -62,7 +50,7 @@ function buildDialog()
   if (!currentSet)
     currentSet = toolbar.getAttribute("defaultset");
   currentSet = currentSet.split(",");
-  var enclosure;
+
   // Create a new toolbar that will model the one the user is trying to customize.
   // We won't just cloneNode() because we want to wrap each element on the toolbar in a
   // <toolbarpaletteitem/>, to prevent them from getting events (so they aren't styled on
@@ -120,7 +108,7 @@ function buildDialog()
 
     rowSlot++;
     // Create an enclosure for the item.
-    enclosure = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+    var enclosure = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                          "toolbarpaletteitem");
     enclosure.setAttribute("align", "center");
     enclosure.setAttribute("pack", "center");
@@ -148,6 +136,8 @@ function buildDialog()
 
     paletteBox.appendChild(currentRow);
   }
+  
+  // Set a min height on the new toolbar so it doesn't shrink if all the buttons are removed.
   newToolbar.setAttribute("minheight", newToolbar.boxObject.height);
 }
 
@@ -155,19 +145,14 @@ var dragObserver = {
   onDragStart: function (aEvent, aXferData, aDragAction) {
     aXferData.data = new TransferDataSet();
     var data = new TransferData();
-    data.addDataForFlavour("text/button-id", aEvent.target.firstChild.id);
+    data.addDataForFlavour("text/toolbaritem-id", aEvent.target.firstChild.id);
     aXferData.data.push(data);
   }
 }
 
-var dropObserver = {
+var toolbarDNDObserver = {
   onDragOver: function (aEvent, aFlavour, aDragSession)
   {
-    if (aFlavour.contentType != "text/button-id") {
-      aDragSession.canDrop = true;
-      return;
-    }
-
     if (gCurrentDragOverItem)
       gCurrentDragOverItem.removeAttribute("dragactive");
 
@@ -216,10 +201,15 @@ var dropObserver = {
     if (!item)
       return;
 
+    // We have to remove the funky flex and width attributes that were set on
+    // the item to space it properly in the palette.
     item.removeAttribute("flex");
+    item.removeAttribute("width");
+    
+    // Set whatever flex the item in our enclosure has on the enclosure,
+    // so that we flex properly.
     if (item.firstChild.getAttribute("flex"))
       item.setAttribute("flex", item.firstChild.getAttribute("flex"));
-    item.removeAttribute("width");
     item.setAttribute("ondraggesture", "gDraggingFromPalette = false; nsDragAndDrop.startDrag(event, dragObserver);");
  
     if (gCurrentDragOverItem.id == "cloneToolbar")
@@ -236,69 +226,51 @@ var dropObserver = {
   {
     if (!this._flavourSet) {
       this._flavourSet = new FlavourSet();
-      this._flavourSet.appendFlavour("text/button-id");
+      this._flavourSet.appendFlavour("text/toolbaritem-id");
     }
     return this._flavourSet;
   }
 }
 
-var paletteDropObserver = {
+var paletteDNDObserver = {
   onDragOver: function(aEvent, aFlavour, aDragSession)
   {
     aDragSession.canDrop = !gDraggingFromPalette;
   },
   onDrop: function(aEvent, aXferData, aDragSession)
   {
-
-  },
-  _flavourSet: null,
-  getSupportedFlavours: function ()
-  {
-    if (!this._flavourSet) {
-      this._flavourSet = new FlavourSet();
-      this._flavourSet.appendFlavour("text/button-id");
-    }
-    return this._flavourSet;
-  }
-}
-
-var trashObserver = {
-  onDragOver: function (aEvent, aFlavour, aDragSession)
-  {
-    if (gDraggingFromPalette || aFlavour.contentType != "text/button-id") {
-      aDragSession.canDrop = false;
-      return;
-    }
-    var trashCan = document.getElementById("trash-can");
-    trashCan.setAttribute("dragactive", "true");
-    aDragSession.canDrop = true;
-  },
-  onDrop: function (aEvent, aXferData, aDragSession)
-  {
-    if (gDraggingFromPalette)
-      return;
-    var buttonId = aXferData.data;
+    var itemID = aXferData.data;
+    var item = null;
+    var palette = document.getElementById("palette-box");
     var toolbar = document.getElementById("cloneToolbar");
     var toolbarItem = toolbar.firstChild;
     while (toolbarItem) {
-      if (toolbarItem.firstChild.id == buttonId) {
-        toolbar.removeChild(toolbarItem);
-        gToolbarChanged = true;
+      if (toolbarItem.firstChild.id == itemID) {
+        item = toolbarItem;
         return;
       }
       toolbarItem = toolbarItem.nextSibling;
     }
+    
+    // We're going back in the palette now, so we have to readd the flex
+    // and width which we removed when moving the item to the toolbar.
+    // (These attributes help space the items properly in the palette.)
+    item.setAttribute("flex", "1");
+    item.setAttribute("width", "0");
+    
+    // XXX Now insertBefore |item| in the right place.
+    gToolbarChanged = true;
   },
   _flavourSet: null,
   getSupportedFlavours: function ()
   {
     if (!this._flavourSet) {
       this._flavourSet = new FlavourSet();
-      this._flavourSet.appendFlavour("text/button-id");
+      this._flavourSet.appendFlavour("text/toolbaritem-id");
     }
     return this._flavourSet;
   }
-}    
+}
 
 // Make sure all buttons look enabled (and that textboxes are disabled).
 // Hey, you try to come up with a better name.
