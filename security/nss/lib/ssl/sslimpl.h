@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslimpl.h,v 1.34 2004/04/27 23:04:39 gerv%gerv.net Exp $ */
+/* $Id: sslimpl.h,v 1.35 2004/06/19 03:21:39 jpierre%netscape.com Exp $ */
 
 #ifndef __sslimpl_h_
 #define __sslimpl_h_
@@ -1264,6 +1264,10 @@ ssl_SetWrappingKey(SSLWrappedSymWrappingKey *wswk);
 
 /* get rid of the symmetric wrapping key references. */
 extern SECStatus SSL3_ShutdownServerCache(void);
+
+extern void ssl_InitClientSessionCacheLock(void);
+
+extern void ssl_InitSymWrapKeysLock(void);
 
 /********************** misc calls *********************/
 

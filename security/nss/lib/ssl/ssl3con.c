@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3con.c,v 1.67 2004/04/27 23:04:39 gerv%gerv.net Exp $ */
+/* $Id: ssl3con.c,v 1.68 2004/06/19 03:21:39 jpierre%netscape.com Exp $ */
 
 #include "nssrenam.h"
 #include "cert.h"
@@ -3333,7 +3333,7 @@ typedef struct {
     PK11SymKey *      symWrapKey[kt_kea_size];
 } ssl3SymWrapKey;
 
-static PZLock *          symWrapKeysLock;
+static PZLock *          symWrapKeysLock = NULL;
 static ssl3SymWrapKey    symWrapKeys[SSL_NUM_WRAP_MECHS];
 
 SECStatus
@@ -3358,6 +3358,13 @@ SSL3_ShutdownServerCache(void)
 
     PZ_Unlock(symWrapKeysLock);
     return SECSuccess;
+}
+
+void ssl_InitSymWrapKeysLock(void)
+{
+    /* atomically initialize the lock */
+    if (!symWrapKeysLock)
+	nss_InitLock(&symWrapKeysLock, nssILockOther);
 }
 
 /* Try to get wrapping key for mechanism from in-memory array.
@@ -3397,9 +3404,7 @@ getWrappingKey( sslSocket *       ss,
 
     pSymWrapKey = &symWrapKeys[symWrapMechIndex].symWrapKey[exchKeyType];
 
-    /* atomically initialize the lock */
-    if (!symWrapKeysLock)
-	nss_InitLock(&symWrapKeysLock, nssILockOther);
+    ssl_InitSymWrapKeysLock();
 
     PZ_Lock(symWrapKeysLock);
 

@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslnonce.c,v 1.14 2004/04/27 23:04:39 gerv%gerv.net Exp $ */
+/* $Id: sslnonce.c,v 1.15 2004/06/19 03:21:39 jpierre%netscape.com Exp $ */
 
 #include "nssrenam.h"
 #include "cert.h"
@@ -54,8 +54,8 @@
 PRUint32 ssl_sid_timeout = 100;
 PRUint32 ssl3_sid_timeout = 86400L; /* 24 hours */
 
-static sslSessionID *cache;
-static PZLock *      cacheLock;
+static sslSessionID *cache = NULL;
+static PZLock *      cacheLock = NULL;
 
 /* sids can be in one of 4 states:
  *
@@ -68,14 +68,16 @@ static PZLock *      cacheLock;
 #define LOCK_CACHE 	lock_cache()
 #define UNLOCK_CACHE	PZ_Unlock(cacheLock)
 
+void ssl_InitClientSessionCacheLock(void)
+{
+    if (!cacheLock)
+	nss_InitLock(&cacheLock, nssILockCache);
+}
+
 static void 
 lock_cache(void)
 {
-    /* XXX Since the client session cache has no init function, we must
-     * XXX init the cacheLock on the first call.  Fix in NSS 3.0.
-     */
-    if (!cacheLock)
-	nss_InitLock(&cacheLock, nssILockCache);
+    ssl_InitClientSessionCacheLock();
     PZ_Lock(cacheLock);
 }
 
