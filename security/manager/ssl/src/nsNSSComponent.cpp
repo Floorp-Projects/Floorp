@@ -1605,15 +1605,18 @@ PSMContentDownloader::OnStartRequest(nsIRequest* request, nsISupports* context)
   // Get the URI //
   channel->GetURI(getter_AddRefs(mURI));
 
-  rv = channel->GetContentLength(&mContentLength);
-  if (rv != NS_OK || mContentLength == -1)
-    mContentLength = kDefaultCertAllocLength;
+  PRInt32 contentLength;
+  rv = channel->GetContentLength(&contentLength);
+  if (NS_FAILED(rv) || contentLength <= 0)
+    contentLength = kDefaultCertAllocLength;
   
   mBufferOffset = 0;
-  mByteData = (char*) nsMemory::Alloc(mContentLength);
+  mBufferSize = 0;
+  mByteData = (char*) nsMemory::Alloc(contentLength);
   if (!mByteData)
     return NS_ERROR_OUT_OF_MEMORY;
   
+  mBufferSize = contentLength;
   return NS_OK;
 }
 
@@ -1630,21 +1633,21 @@ PSMContentDownloader::OnDataAvailable(nsIRequest* request,
   PRUint32 amt;
   nsresult err;
   //Do a check to see if we need to allocate more memory.
-  if ((mBufferOffset + (PRInt32)aLength) > mContentLength) {
-      size_t newSize = mContentLength + kDefaultCertAllocLength;
+  if ((mBufferOffset + (PRInt32)aLength) > mBufferSize) {
+      size_t newSize = (mBufferOffset + aLength) *2; // grow some more than needed
       char *newBuffer;
       newBuffer = (char*)nsMemory::Realloc(mByteData, newSize);
       if (newBuffer == nsnull) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
       mByteData = newBuffer;
-      mContentLength = newSize;
+      mBufferSize = newSize;
   }
   
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("CertDownloader::OnDataAvailable\n"));
   do {
     err = aIStream->Read(mByteData+mBufferOffset,
-                         mContentLength-mBufferOffset, &amt);
+                         aLength, &amt);
     if (amt == 0) break;
     if (NS_FAILED(err)) return err;
     
