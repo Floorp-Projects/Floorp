@@ -969,7 +969,7 @@ sub BuildCommonProjects()
 	#// Stub libraries
 	#//
 
-	_BuildProject(":mozilla:modules:security:freenav:macbuild:NoSecurity.mcp",			"Security.o");
+	#_BuildProject(":mozilla:modules:security:freenav:macbuild:NoSecurity.mcp",			"Security.o");
 	
 	#//
 	#// Shared libraries
