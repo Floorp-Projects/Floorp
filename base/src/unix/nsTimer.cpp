@@ -21,11 +21,17 @@
 #include "prlog.h"
 #include <stdio.h>
 #include <limits.h>
+#include "Xm/Xm.h"
 
 static NS_DEFINE_IID(kITimerIID, NS_ITIMER_IID);
 
+// Hack for now. This is Bad because it creates a dependency between the widget
+// library and this library. This needs to be replaced with having code 
+// to pass an interface which can be queried for the app context.
+extern XtAppContext gAppContext;
+
 /*
- * Implementation of timers lifted from Windows front-end file timer.cpp
+ * Implementation of timers using Xt timer facility 
  */
 class TimerImpl : public nsITimer {
 public:
@@ -47,7 +53,9 @@ public:
 
   virtual void Cancel();
   virtual PRUint32 GetDelay() { return mDelay; }
-  virtual void SetDelay(PRUint32 aDelay) { };
+  virtual void SetDelay(PRUint32 aDelay) { mDelay=aDelay; };
+
+  void FireTimeout();
 
 private:
   nsresult Init(PRUint32 aDelay);
@@ -58,9 +66,24 @@ private:
   nsITimerCallback *mCallback;
   // PRBool mRepeat;
   TimerImpl *mNext;
+  XtIntervalId mTimerId; 
 };
 
-//TimerImpl *TimerImpl::gTimerList = NULL;
+void TimerImpl::FireTimeout()
+{
+  if (mFunc != NULL) {
+    (*mFunc)(this, mClosure);
+  }
+  else if (mCallback != NULL) {
+    mCallback->Notify(this); // Fire the timer
+  }
+}
+
+void nsTimerExpired(XtPointer aCallData)
+{
+  TimerImpl* timer = (TimerImpl *)aCallData;
+  timer->FireTimeout();
+}
 
 
 TimerImpl::TimerImpl()
@@ -69,6 +92,7 @@ TimerImpl::TimerImpl()
   mFunc = NULL;
   mCallback = NULL;
   mNext = NULL;
+  mTimerId = 0;
 }
 
 TimerImpl::~TimerImpl()
@@ -85,6 +109,8 @@ TimerImpl::Init(nsTimerCallbackFunc aFunc,
     mClosure = aClosure;
     // mRepeat = aRepeat;
 
+    mTimerId = XtAppAddTimeOut(gAppContext, aDelay,(XtTimerCallbackProc)nsTimerExpired, this);
+
     return Init(aDelay);
 }
 
@@ -95,6 +121,8 @@ TimerImpl::Init(nsITimerCallback *aCallback,
 {
     mCallback = aCallback;
     // mRepeat = aRepeat;
+
+    mTimerId = XtAppAddTimeOut(gAppContext, aDelay, (XtTimerCallbackProc)nsTimerExpired, this);
 
     return Init(aDelay);
 }
@@ -114,7 +142,7 @@ NS_IMPL_ISUPPORTS(TimerImpl, kITimerIID)
 void
 TimerImpl::Cancel()
 {
-
+  XtRemoveTimeOut(mTimerId);
 }
 
 NS_BASE nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
