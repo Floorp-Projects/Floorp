@@ -280,6 +280,14 @@ void SaveWindowPosition(HWND aDlg)
 
   if(GetWindowPlacement(aDlg, &wndPlacement))
   {
+    RECT rectDesktop;
+    if (SystemParametersInfo(SPI_GETWORKAREA, 0, &rectDesktop, SPIF_SENDWININICHANGE))
+    {
+      wndPlacement.rcNormalPosition.left   += rectDesktop.left;
+      wndPlacement.rcNormalPosition.right  += rectDesktop.left;
+      wndPlacement.rcNormalPosition.top    += rectDesktop.top;
+      wndPlacement.rcNormalPosition.bottom += rectDesktop.top;
+    }
     gSystemInfo.lastWindowPosCenterX = ((wndPlacement.rcNormalPosition.right - wndPlacement.rcNormalPosition.left) / 2) + wndPlacement.rcNormalPosition.left;
     gSystemInfo.lastWindowPosCenterY = ((wndPlacement.rcNormalPosition.bottom - wndPlacement.rcNormalPosition.top) / 2) + wndPlacement.rcNormalPosition.top;
     gSystemInfo.lastWindowMinimized  = (wndPlacement.showCmd & SW_MINIMIZE)?TRUE:FALSE;
