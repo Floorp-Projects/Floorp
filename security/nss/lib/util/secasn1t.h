@@ -35,7 +35,7 @@
  * Types for encoding/decoding of ASN.1 using BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1t.h,v 1.5 2001/08/03 00:37:53 javi%netscape.com Exp $
+ * $Id: secasn1t.h,v 1.6 2002/08/07 03:25:13 jpierre%netscape.com Exp $
  */
 
 #ifndef _SECASN1T_H_
@@ -184,6 +184,11 @@ typedef struct sec_ASN1Template_struct {
                                            to solve ambiguities with potential
                                            streaming entries that are 
                                            optional */
+#define SEC_ASN1_DEBUG_BREAK   0X400000 /* put this in your template and the
+                                           decoder will assert when it
+                                           processes it. Only for use with
+                                           SEC_QuickDERDecodeItem */
+
                                           
 
 /* Shorthand/Aliases */
