@@ -32,6 +32,7 @@
  */
 
 #include "secutil.h"
+#include <errno.h>
 
 #if defined(XP_WIN) || (defined(__sun) && !defined(SVR4))
 #if !defined(WIN32)

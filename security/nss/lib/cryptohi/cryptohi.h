@@ -32,15 +32,13 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: cryptohi.h,v 1.1 2000/03/31 19:44:59 relyea%netscape.com Exp $
+ * $Id: cryptohi.h,v 1.2 2001/01/04 00:44:23 wtc%netscape.com Exp $
  */
 
 #ifndef _CRYPTOHI_H_
 #define _CRYPTOHI_H_
 
 #include "blapi.h"
-
-#include "mcom_db.h"
 
 #include "seccomon.h"
 #include "secrngt.h"

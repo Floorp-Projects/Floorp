@@ -36,7 +36,6 @@
 #ifndef _PK11FUNC_H_
 #define _PK11FUNC_H_
 #include "plarena.h"
-#include "mcom_db.h"
 #include "seccomon.h"
 #include "secoidt.h"
 #include "secdert.h"
