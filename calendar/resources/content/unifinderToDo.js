@@ -417,7 +417,7 @@ var toDoTreeView =
          case "unifinder-todo-tree-col-title":
             var titleText;
             if( calendarToDo.title == "" )
-               titleText = "Untitled";
+               titleText = gCalendarBundle.getString( "eventUntitled" );
             else  
                titleText = calendarToDo.title;
             return( titleText );
