@@ -215,8 +215,12 @@ nsJARChannel::Resume()
 NS_IMETHODIMP
 nsJARChannel::GetOriginalURI(nsIURI* *aOriginalURI)
 {
-    *aOriginalURI = mOriginalURI ? mOriginalURI : mURI.get();
-    NS_ADDREF(*aOriginalURI);
+    if (mOriginalURI)
+        *aOriginalURI = mOriginalURI.get();
+    else
+        mURI->QueryInterface(NS_GET_IID(nsIURI), (void**)aOriginalURI);
+    
+    NS_IF_ADDREF(*aOriginalURI);
     return NS_OK;
 }
 
