@@ -163,28 +163,34 @@ private:
                         PRUint8 *imageOrigin, PRUint32 imageStride,
                         PRUint8 *alphaOrigin, PRUint32 alphaStride,
                         unsigned width, unsigned height,
-                        XImage *ximage, unsigned char *readData);
+                        XImage *ximage, unsigned char *readData, unsigned char *srcData);
   void DrawComposited24(PRBool isLSB, PRBool flipBytes,
                         PRUint8 *imageOrigin, PRUint32 imageStride,
                         PRUint8 *alphaOrigin, PRUint32 alphaStride,
                         unsigned width, unsigned height,
-                        XImage *ximage, unsigned char *readData);
+                        XImage *ximage, unsigned char *readData, unsigned char *srcData);
   void DrawComposited16(PRBool isLSB, PRBool flipBytes,
                         PRUint8 *imageOrigin, PRUint32 imageStride,
                         PRUint8 *alphaOrigin, PRUint32 alphaStride,
                         unsigned width, unsigned height,
-                        XImage *ximage, unsigned char *readData);
+                        XImage *ximage, unsigned char *readData, unsigned char *srcData);
   void DrawCompositedGeneral(PRBool isLSB, PRBool flipBytes,
                              PRUint8 *imageOrigin, PRUint32 imageStride,
                              PRUint8 *alphaOrigin, PRUint32 alphaStride,
                              unsigned width, unsigned height,
-                             XImage *ximage, unsigned char *readData);
+                             XImage *ximage, unsigned char *readData, unsigned char *srcData);
   inline void DrawComposited(nsIRenderingContext &aContext,
                              nsDrawingSurface aSurface,
                              PRInt32 aSX, PRInt32 aSY,
                              PRInt32 aSWidth, PRInt32 aSHeight,
                              PRInt32 aDX, PRInt32 aDY,
                              PRInt32 aDWidth, PRInt32 aDHeight);
+  inline void DrawCompositeTile(nsIRenderingContext &aContext,
+                                nsDrawingSurface aSurface,
+                                PRInt32 aSX, PRInt32 aSY,
+                                PRInt32 aSWidth, PRInt32 aSHeight,
+                                PRInt32 aDX, PRInt32 aDY,
+                                PRInt32 aDWidth, PRInt32 aDHeight);
 
   inline void TilePixmap(GdkPixmap *src, GdkPixmap *dest, PRInt32 aSXOffset, PRInt32 aSYOffset, 
                          const nsRect &destRect, const nsRect &clipRect, PRBool useClip);
