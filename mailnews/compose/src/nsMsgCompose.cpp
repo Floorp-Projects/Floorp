@@ -999,39 +999,38 @@ NS_IMETHODIMP nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity 
     
     if (NS_SUCCEEDED(rv) && !msgBody.IsEmpty())
     {
-      // Convert body to mail charset not to utf-8 (because we don't manipulate body text)
-      char *outCString = nsnull;
+      // Convert body to mail charset
+      nsXPIDLCString outCString; 
       nsXPIDLCString fallbackCharset;
       PRBool isAsciiOnly;
+      // check if the body text is covered by the current charset.
       rv = nsMsgI18NSaveAsCharset(contentType, m_compFields->GetCharacterSet(), 
-                                  msgBody.get(), &outCString, 
+                                  msgBody.get(), getter_Copies(outCString),
                                   getter_Copies(fallbackCharset), &isAsciiOnly);
       SET_SIMULATED_ERROR(SIMULATED_SEND_ERROR_14, rv, NS_ERROR_UENC_NOMAPPING);
-      if (NS_SUCCEEDED(rv) && nsnull != outCString) 
+      if (NS_SUCCEEDED(rv) && !outCString.IsEmpty())
       {
-        // body contains multilingual data, confirm send to the user
+        // body contains characters outside the repertoire of the current 
+        // charset. ask whether to convert to UTF-8 or go back to reset
+        // charset with a wider repertoire. (bug 233361)
         if (NS_ERROR_UENC_NOMAPPING == rv) {
-          PRBool proceedTheSend;
-          rv = nsMsgAskBooleanQuestionByID(prompt, NS_ERROR_MSG_MULTILINGUAL_SEND, &proceedTheSend);
-          if (!proceedTheSend) {
-            PR_FREEIF(outCString);
+          PRBool sendInUTF8;
+          rv = nsMsgAskBooleanQuestionByID(prompt,
+               NS_ERROR_MSG_MULTILINGUAL_SEND, &sendInUTF8);
+          if (!sendInUTF8) 
             return NS_ERROR_MSG_MULTILINGUAL_SEND;
-          }
+          CopyUTF16toUTF8(msgBody.get(), outCString);
+          m_compFields->SetCharacterSet("UTF-8");
         }
         // re-label to the fallback charset
         else if (fallbackCharset)
           m_compFields->SetCharacterSet(fallbackCharset.get());
         m_compFields->SetBodyIsAsciiOnly(isAsciiOnly);
-        m_compFields->SetBody(outCString);
+        m_compFields->SetBody(outCString.get());
         entityConversionDone = PR_TRUE;
-        PR_Free(outCString);
       }
       else
-      {
-        nsCAutoString msgbodyC;
-        msgbodyC.AssignWithConversion(msgBody);
-        m_compFields->SetBody(msgbodyC.get());
-      }
+        m_compFields->SetBody(NS_LossyConvertUTF16toASCII(msgBody).get());
     }
   }
 

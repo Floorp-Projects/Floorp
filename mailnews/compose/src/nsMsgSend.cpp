@@ -1684,11 +1684,8 @@ nsMsgComposeAndSend::GetBodyFromEditor()
   // get the HTML data, we need to store it in the m_attachment_1_body
   // member variable after doing the necessary charset conversion.
   //
-  char          *attachment1_body = nsnull;
-  char          *attachment1_type = TEXT_HTML;  // we better be "text/html" at this point
-  PRUint32       attachment1_body_length = 0;
 
- // 
+  // 
   // Query the editor, get the body of HTML!
   //
   nsString  format; format.AssignWithConversion(TEXT_HTML);
@@ -1746,8 +1743,12 @@ nsMsgComposeAndSend::GetBodyFromEditor()
     }
   }
   
+  nsCString attachment1_body;
+  // we'd better be "text/html" at this point
+  char          *attachment1_type = TEXT_HTML;  
+
   // Convert body to mail charset
-  char      *outCString = nsnull;
+  nsXPIDLCString    outCString;
   const char  *aCharset = mCompFields->GetCharacterSet();
 
   if (aCharset && *aCharset)
@@ -1756,11 +1757,11 @@ nsMsgComposeAndSend::GetBodyFromEditor()
     // If later Editor generates entities then we can remove this.
     PRBool isAsciiOnly;
     rv = nsMsgI18NSaveAsCharset(mCompFields->GetForcePlainText() ? TEXT_PLAIN : attachment1_type, 
-                                aCharset, bodyText, &outCString, nsnull, &isAsciiOnly);
+                                aCharset, bodyText, getter_Copies(outCString), nsnull, &isAsciiOnly);
 
     mCompFields->SetBodyIsAsciiOnly(isAsciiOnly);
-    // body contains multilingual data, confirm send to the user
-    // do this only for text/plain
+    // body contains characters outside the current mail charset,
+    // ask whether to convert to UTF-8 (bug 233361). do this only for text/plain
     if ((NS_ERROR_UENC_NOMAPPING == rv) && mCompFields->GetForcePlainText()) {
       // if nbsp then replace it by sp and try again
       PRUnichar *bodyTextPtr = bodyText;
@@ -1769,22 +1770,23 @@ nsMsgComposeAndSend::GetBodyFromEditor()
           *bodyTextPtr = 0x0020;
         bodyTextPtr++;
       }
-      PR_FREEIF(outCString);
       
       nsXPIDLCString fallbackCharset;
-      rv = nsMsgI18NSaveAsCharset(TEXT_PLAIN, aCharset, bodyText, &outCString, getter_Copies(fallbackCharset));
+      rv = nsMsgI18NSaveAsCharset(TEXT_PLAIN, aCharset, bodyText,
+           getter_Copies(outCString), getter_Copies(fallbackCharset));
 
       if (NS_ERROR_UENC_NOMAPPING == rv) {
-        PRBool proceedTheSend;
+        PRBool sendInUTF8;
         nsCOMPtr<nsIPrompt> prompt;
         GetDefaultPrompt(getter_AddRefs(prompt));
-        rv = nsMsgAskBooleanQuestionByID(prompt, NS_ERROR_MSG_MULTILINGUAL_SEND, &proceedTheSend);
-        if (!proceedTheSend) {
-          PR_FREEIF(attachment1_body);
-          PR_FREEIF(outCString);
+        rv = nsMsgAskBooleanQuestionByID(prompt, NS_ERROR_MSG_MULTILINGUAL_SEND,
+                                         &sendInUTF8);
+        if (!sendInUTF8) {
           Recycle(bodyText);
           return NS_ERROR_MSG_MULTILINGUAL_SEND;
         }
+        CopyUTF16toUTF8(bodyText, outCString);
+        mCompFields->SetCharacterSet("UTF-8"); // tag as UTF-8
       }
       // re-label to the fallback charset
       else if (fallbackCharset)
@@ -1792,12 +1794,7 @@ nsMsgComposeAndSend::GetBodyFromEditor()
     }
 
     if (NS_SUCCEEDED(rv)) 
-    {
-      PR_FREEIF(attachment1_body);
       attachment1_body = outCString;
-    }
-    else
-      PR_FREEIF(outCString);
 
     // If we have an origHTMLBody that is not null, this means that it is
     // different than the bodyText because of formatting conversions. Because of
@@ -1823,14 +1820,12 @@ nsMsgComposeAndSend::GetBodyFromEditor()
   // just copy what we have as the original body text.
   //
   if (!origHTMLBody)
-    mOriginalHTMLBody = nsCRT::strdup(attachment1_body);
+    mOriginalHTMLBody = nsCRT::strdup(attachment1_body.get());
   else
     mOriginalHTMLBody = (char *)origHTMLBody;
 
-  attachment1_body_length = PL_strlen(attachment1_body);
-
-  rv = SnarfAndCopyBody(attachment1_body, attachment1_body_length, attachment1_type);
-  PR_FREEIF (attachment1_body);
+  rv = SnarfAndCopyBody(attachment1_body.get(), attachment1_body.Length(),
+                        attachment1_type);
 
   return rv;
 }
