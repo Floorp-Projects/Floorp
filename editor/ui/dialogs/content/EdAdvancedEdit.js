@@ -22,8 +22,11 @@
  */
 
 /**************         FOR NOW         **************/
-var TEXT_WIDGETS_DONT_SUCK  = false;
-var PERFORMANCE_BOOSTS      = false;
+const TEXT_WIDGETS_DONT_SUCK  = false;
+const PERFORMANCE_BOOSTS      = false;
+
+/**************       NAMESPACES       ***************/
+const XUL_NS    = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
  
 /**************         GLOBALS         **************/
 
@@ -71,11 +74,7 @@ function Startup()
 
   // place the tag name in the header
   var tagLabel = document.getElementById("tagLabel");
-  if(tagLabel.hasChildNodes()) {
-    tagLabel.removeChild(tagLabel.firstChild);
-  }
-  var textLabel = document.createTextNode("<" + element.nodeName + ">");
-  tagLabel.appendChild(textLabel);
+  tagLabel.setAttribute("value", ("<" + element.nodeName + ">"));
 
   // Create dialog object to store controls for easy access
   dialog                            = new Object;
@@ -152,8 +151,6 @@ function CheckAttributeNameSimilarity(attName, attArray)
  **/
 function CheckAttributeNotRemoved( attName, attArray )
 {
-  dump("IN CAAAAAAAA\n");
-  dump("CAAAA: " + attArray + "\n");
   for( var i = 0; i < attArray.length; i++ ) 
   {
     if( attName == attArray[i] )
@@ -270,9 +267,9 @@ function AddTreeItem ( name, value, treekids, attArray, valueCaseFunc )
 {
   attArray[attArray.length] = name;
   var treekids    = document.getElementById ( treekids );
-  var treeitem    = document.createElementNS ( "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "treeitem" );
-  var treerow     = document.createElementNS ( "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "treerow" );
-  var attrcell    = document.createElementNS ( "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "treecell" );
+  var treeitem    = document.createElementNS ( XUL_NS, "treeitem" );
+  var treerow     = document.createElementNS ( XUL_NS, "treerow" );
+  var attrcell    = document.createElementNS ( XUL_NS, "treecell" );
   attrcell.setAttribute( "class", "propertylist" );
   attrcell.setAttribute( "value", name.toLowerCase() );
   treerow.appendChild ( attrcell );
@@ -293,15 +290,14 @@ function AddTreeItem ( name, value, treekids, attArray, valueCaseFunc )
 // optional parameters for initial values.
 function CreateCellWithField( name, value )
 {
-  var valcell     = document.createElementNS ( "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "treecell" );
+  var valcell     = document.createElementNS ( XUL_NS, "treecell" );
   valcell.setAttribute ( "class", "value propertylist" );
   valcell.setAttribute ( "allowevents", "true" );
-  var valField    = document.createElementNS ( "http://www.w3.org/TR/REC-html40", "html:input" );
-  valField.setAttribute ( "type", "text" );
+  var valField    = document.createElementNS ( XUL_NS, "textfield" );
   if ( name  ) valField.setAttribute ( "id", name );
   if ( value ) valField.setAttribute ( "value", value );
-  valField.setAttribute ( "flex", "100%" );
-  valField.setAttribute ( "class", "AttributesCell" );
+  valField.setAttribute ( "flex", "1" );
+  valField.setAttribute ( "class", "plain" );
   valcell.appendChild ( valField );
   return valcell;
 }
