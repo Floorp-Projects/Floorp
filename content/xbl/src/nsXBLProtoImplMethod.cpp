@@ -199,13 +199,13 @@ nsXBLProtoImplMethod::CompileMember(nsIScriptContext* aContext, const nsCString&
 
   // No parameters or body was supplied, so don't install method.
   if (!mUncompiledMethod)
-    return NS_ERROR_FAILURE;
+    return NS_OK;
 
   // Don't install method if no name or body was supplied.
   if (!(mName && mUncompiledMethod->mBodyText.GetText())) {
     delete mUncompiledMethod;
     mUncompiledMethod = nsnull;
-    return NS_ERROR_FAILURE;
+    return NS_OK;
   }
 
   nsDependentString body(mUncompiledMethod->mBodyText.GetText());
