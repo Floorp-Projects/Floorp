@@ -266,34 +266,25 @@ moz_debugger=""
 ##
 ## Parse the command line
 ##
-while [ -n "$(echo $1 | grep '^-')" ]
+while [ $# -gt 0 ]
 do
-	case $1 in
-		# help
-		-h | --help)
-			moz_usage
-
-			exit 0
-			;;
-
-		# debug
-		-g | --debug)
-			moz_debug=1
-			;;
-
-		-d | --debugger)
-			moz_debugger=$2;
-
-			shift
-
-			;;
-
-		*)
-			ARGS_SAVE="$ARGS_SAVE $1"
-			;;
-	esac
-
-	shift
+  case $1 in
+    -h | --help)
+      moz_usage
+      exit 0
+      ;;
+    -g | --debug)
+      moz_debug=1
+      shift
+      ;;
+    -d | --debugger)
+      moz_debugger=$2;
+      shift 2
+      ;;
+    *)
+      break;
+      ;;
+  esac
 done
 
 ##
@@ -415,5 +406,5 @@ if [ "$moz_debug" = "1" ]
 then
 	moz_debug_program ${1+"$@"}
 else
-	moz_run_program $ARGS_SAVE ${1+"$@"}
+	moz_run_program ${1+"$@"}
 fi
