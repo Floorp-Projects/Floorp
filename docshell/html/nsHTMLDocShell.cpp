@@ -27,8 +27,8 @@
 //***    nsHTMLDocShell: Object Management
 //*****************************************************************************
 
-nsHTMLDocShell::nsHTMLDocShell() : nsDocShellBase(), m_AllowPlugins(PR_TRUE),
-   m_MarginWidth(0), m_MarginHeight(0), m_IsFrame(PR_FALSE)
+nsHTMLDocShell::nsHTMLDocShell() : nsDocShellBase(), mAllowPlugins(PR_TRUE),
+   mMarginWidth(0), mMarginHeight(0), mIsFrame(PR_FALSE)
 {
 }
 
@@ -84,7 +84,7 @@ NS_IMETHODIMP nsHTMLDocShell::CanHandleContentType(const PRUnichar* contentType,
 NS_IMETHODIMP nsHTMLDocShell::ScrollToNode(nsIDOMNode* aNode)
 {
    NS_ENSURE_ARG(aNode);
-   NS_ENSURE_STATE(m_PresShell);
+   NS_ENSURE_STATE(mPresShell);
 
    // Get the nsIContent interface, because that's what we need to 
    // get the primary frame
@@ -99,7 +99,7 @@ NS_IMETHODIMP nsHTMLDocShell::ScrollToNode(nsIDOMNode* aNode)
       NS_ERROR_FAILURE);
 
    // tell the pres shell to scroll to the frame
-   NS_ENSURE_SUCCESS(m_PresShell->ScrollFrameIntoView(frame, 
+   NS_ENSURE_SUCCESS(mPresShell->ScrollFrameIntoView(frame, 
       NS_PRESSHELL_SCROLL_TOP, NS_PRESSHELL_SCROLL_ANYWHERE), NS_ERROR_FAILURE); 
    return NS_OK; 
 }
@@ -108,13 +108,13 @@ NS_IMETHODIMP nsHTMLDocShell::GetAllowPlugins(PRBool* aAllowPlugins)
 {
    NS_ENSURE_ARG_POINTER(aAllowPlugins);
 
-   *aAllowPlugins = m_AllowPlugins;
+   *aAllowPlugins = mAllowPlugins;
    return NS_OK;
 }
 
 NS_IMETHODIMP nsHTMLDocShell::SetAllowPlugins(PRBool aAllowPlugins)
 {
-   m_AllowPlugins = aAllowPlugins;
+   mAllowPlugins = aAllowPlugins;
    return NS_OK;
 }
 
@@ -122,13 +122,13 @@ NS_IMETHODIMP nsHTMLDocShell::GetMarginWidth(PRInt32* aMarginWidth)
 {
    NS_ENSURE_ARG_POINTER(aMarginWidth);
 
-   *aMarginWidth = m_MarginWidth;
+   *aMarginWidth = mMarginWidth;
    return NS_OK;  
 }
 
 NS_IMETHODIMP nsHTMLDocShell::SetMarginWidth(PRInt32 aMarginWidth)
 {
-   m_MarginWidth = aMarginWidth;
+   mMarginWidth = aMarginWidth;
    return NS_OK;
 }
 
@@ -136,13 +136,13 @@ NS_IMETHODIMP nsHTMLDocShell::GetMarginHeight(PRInt32* aMarginHeight)
 {
    NS_ENSURE_ARG_POINTER(aMarginHeight);
 
-   *aMarginHeight = m_MarginHeight;
+   *aMarginHeight = mMarginHeight;
    return NS_OK; 
 }
 
 NS_IMETHODIMP nsHTMLDocShell::SetMarginHeight(PRInt32 aMarginHeight)
 {
-   m_MarginHeight = aMarginHeight;
+   mMarginHeight = aMarginHeight;
    return NS_OK;
 }
 
@@ -150,13 +150,13 @@ NS_IMETHODIMP nsHTMLDocShell::GetIsFrame(PRBool* aIsFrame)
 {
   NS_ENSURE_ARG_POINTER(aIsFrame);
 
-  *aIsFrame = m_IsFrame;
+  *aIsFrame = mIsFrame;
   return NS_OK;
 }
 
 NS_IMETHODIMP nsHTMLDocShell::SetIsFrame(PRBool aIsFrame)
 {
-  m_IsFrame = aIsFrame;
+  mIsFrame = aIsFrame;
   return NS_OK;
 }
 
@@ -167,12 +167,12 @@ NS_IMETHODIMP nsHTMLDocShell::GetDefaultCharacterSet(PRUnichar** aDefaultCharact
 {
   NS_ENSURE_ARG_POINTER(aDefaultCharacterSet);
 
-/*  if (0 == m_DefaultCharacterSet.Length()) 
+/*  if (0 == mDefaultCharacterSet.Length()) 
   {
     if ((nsnull == gDefCharset) || (nsnull == *gDefCharset)) 
     {
-      if(m_Prefs)
-        m_Prefs->CopyCharPref("intl.charset.default", &gDefCharset);
+      if(mPrefs)
+        mPrefs->CopyCharPref("intl.charset.default", &gDefCharset);
     }
     if ((nsnull == gDefCharset) || (nsnull == *gDefCharset))
       mDefaultCharacterSet = "ISO-8859-1";
@@ -283,13 +283,13 @@ NS_IMETHODIMP nsHTMLDocShell::SizeToContent()
  */
 NS_IMETHODIMP nsHTMLDocShell::SelectAll()
 {
-   NS_ENSURE_STATE(m_Document && m_PresShell);
+   NS_ENSURE_STATE(mDocument && mPresShell);
 /*  XXX Implement - There is something not quite right with the objects
    being retrieved.  bodyNode isn't defined and bodyElement isn't used
    and nor is node.
    // get the selection object
    nsCOMPtr<nsIDOMSelection> selection;
-   NS_ENSURE_SUCCESS(m_PresShell->GetSelection(SELECTION_NORMAL, 
+   NS_ENSURE_SUCCESS(mPresShell->GetSelection(SELECTION_NORMAL, 
       getter_AddRefs(selection)), NS_ERROR_FAILURE);
    NS_ENSURE(selection, NS_ERROR_FAILURE);
 
@@ -298,7 +298,7 @@ NS_IMETHODIMP nsHTMLDocShell::SelectAll()
    nsCOMPtr<nsIDOMElement> bodyElement;
    nsAutoString bodyTag = "body";
 
-   NS_ENSURE_SUCCESS(m_Document->GetElementsByTagName(bodyTag, 
+   NS_ENSURE_SUCCESS(mDocument->GetElementsByTagName(bodyTag, 
       getter_AddRefs(nodeList)), NS_ERROR_FAILURE);
    NS_ENSURE(nodeList, NS_OK); // this means the document has no body, so nothing to select
 

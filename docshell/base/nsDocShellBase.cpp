@@ -21,23 +21,25 @@
  */
 
 #include "nsDocShellBase.h"
+#include "nsIDocument.h"
+#include "nsIDOMDocument.h"
 
 //*****************************************************************************
 //***    nsDocShellBase: Object Management
 //*****************************************************************************
 
-nsDocShellBase::nsDocShellBase() : m_Created(PR_FALSE)
+nsDocShellBase::nsDocShellBase() : mCreated(PR_FALSE)
 {
 	NS_INIT_REFCNT();
-   m_BaseInitInfo = new nsDocShellInitInfo();
+   mBaseInitInfo = new nsDocShellInitInfo();
 }
 
 nsDocShellBase::~nsDocShellBase()
 {
-   if(m_BaseInitInfo)
+   if(mBaseInitInfo)
       {
-      delete m_BaseInitInfo;
-      m_BaseInitInfo = nsnull;
+      delete mBaseInitInfo;
+      mBaseInitInfo = nsnull;
       }
 }
 
@@ -70,7 +72,7 @@ NS_IMETHODIMP nsDocShellBase::LoadURI(const PRUnichar* uri)
 NS_IMETHODIMP nsDocShellBase::LoadURIVia(const PRUnichar* uri, 
    PRUint32 adapterBinding)
 {
-   NS_ENSURE_ARG(uri);
+  NS_ENSURE_ARG(uri);
    //XXX First Check
 	/*
 	Loads a given URI through the specified adapter.  This will give priority
@@ -81,62 +83,68 @@ NS_IMETHODIMP nsDocShellBase::LoadURIVia(const PRUnichar* uri,
 	@param uri - The URI to load.
 	@param adapterBinding - The local IP address of the adapter to bind to.
 	*/
-   return NS_ERROR_FAILURE;
+  return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsDocShellBase::GetDocument(nsIDOMDocument** document)
+NS_IMETHODIMP nsDocShellBase::GetDocument(nsIDOMDocument** aDocument)
 {
-   NS_ENSURE_ARG_POINTER(document);
-   //XXX First Check
-	/*
-	The current document that is loaded in the DocShell.  When setting this it
-	will will simulate the normal load process.
-	*/
-   return NS_ERROR_FAILURE;
+  NS_ENSURE_ARG_POINTER(aDocument);
+  NS_ENSURE_STATE(mPresShell);
+
+  nsCOMPtr<nsIDocument>doc;
+  NS_ENSURE_SUCCESS(mPresShell->GetDocument(getter_AddRefs(doc)), NS_ERROR_FAILURE);
+  NS_ENSURE(doc, NS_ERROR_NULL_POINTER);
+
+  // the result's addref comes from this QueryInterface call
+  doc->QueryInterface(nsIDOMDocument::GetIID(), (void **)aDocument);
+
+  return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::SetDocument(nsIDOMDocument* document)
+// SetDocument is only meaningful for doc shells that support DOM documents.  Not all do.
+NS_IMETHODIMP nsDocShellBase::SetDocument(nsIDOMDocument* aDocument)
 {
-   //XXX First Check
-	/*
-	The current document that is loaded in the DocShell.  When setting this it
-	will will simulate the normal load process.
-	*/
-   return NS_ERROR_FAILURE;
+  NS_WARN_IF_FALSE(PR_FALSE, "Subclasses should override this method!!!!");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsDocShellBase::GetName(PRUnichar** name)
+// caller is responsible for calling nsString::Recycle(*aName);
+NS_IMETHODIMP nsDocShellBase::GetName(PRUnichar** aName)
 {
-   NS_ENSURE_ARG_POINTER(name);
-   //XXX First Check
-	/*
-	name of the DocShell
-	*/
-   return NS_ERROR_FAILURE;
+  NS_ENSURE_ARG_POINTER(aName);
+  *aName = nsnull;
+  if (0!=mName.Length())
+  {
+    *aName = mName.ToNewUnicode();
+  }
+  return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::SetName(const PRUnichar* name)
+NS_IMETHODIMP nsDocShellBase::SetName(const PRUnichar* aName)
 {
-   //XXX First Check
-	/*
-	name of the DocShell
-	*/
-   return NS_ERROR_FAILURE;
+  if (aName) {
+    mName = aName;  // this does a copy of aName
+  }
+  else {
+    mName = "";
+  }
+  return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::GetPresContext(nsIPresContext** presContext)
+NS_IMETHODIMP nsDocShellBase::GetPresContext(nsIPresContext** aPresContext)
 {
-   NS_ENSURE_ARG_POINTER(presContext);
+   NS_ENSURE_ARG_POINTER(aPresContext);
 
-   *presContext = m_PresContext;
-   NS_IF_ADDREF(*presContext);
+   *aPresContext = mPresContext;
+   NS_IF_ADDREF(*aPresContext);
 
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::SetPresContext(nsIPresContext* presContext)
+NS_IMETHODIMP nsDocShellBase::SetPresContext(nsIPresContext* aPresContext)
 {
-   m_PresContext = presContext;
+  // null aPresContext is ok
+   mPresContext = aPresContext;   // this assignment does an addref
    
    return NS_OK;
 }
@@ -146,16 +154,17 @@ NS_IMETHODIMP nsDocShellBase::GetParent(nsIDocShell** parent)
 {
    NS_ENSURE_ARG_POINTER(parent);
 
-   *parent = m_Parent;
+   *parent = mParent;
    NS_IF_ADDREF(*parent);
 
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::SetParent(nsIDocShell* parent)
+NS_IMETHODIMP nsDocShellBase::SetParent(nsIDocShell* aParent)
 {
-   m_Parent = parent;
-   return NS_OK;
+  // null aParent is ok
+  mParent = aParent;   // this assignment does an addref
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShellBase::CanHandleContentType(const PRUnichar* contentType, 
@@ -169,35 +178,37 @@ NS_IMETHODIMP nsDocShellBase::CanHandleContentType(const PRUnichar* contentType,
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::GetPrefs(nsIPref** prefs)
+NS_IMETHODIMP nsDocShellBase::GetPrefs(nsIPref** aPrefs)
 {
-   NS_ENSURE_ARG_POINTER(prefs);
-   //XXX First Check
-	/*
-	Prefs to use for the DocShell.
-	*/
-   return NS_ERROR_FAILURE;
+   NS_ENSURE_ARG_POINTER(aPrefs);
+
+   *aPrefs = mPrefs;
+   NS_IF_ADDREF(*aPrefs);
+
+   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::SetPrefs(nsIPref* prefs)
+NS_IMETHODIMP nsDocShellBase::SetPrefs(nsIPref* aPrefs)
 {
-   //XXX First Check
-	/*
-	Prefs to use for the DocShell.
-	*/
-   return NS_ERROR_FAILURE;
+  // null aPrefs is ok
+  mPrefs = aPrefs;    // this assignment does an addref
+  return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::GetRootDocShell(nsIDocShell** rootDocShell)
+NS_IMETHODIMP nsDocShellBase::GetRootDocShell(nsIDocShell** aRootDocShell)
 {
-   NS_ENSURE_ARG_POINTER(rootDocShell);
-   //XXX First Check
-	/*
-	Returns the root DocShell instance.  Since DocShells can be nested
-	(when frames are present for example) this instance represents the 
-	outermost DocShell.
-	*/
-   return NS_ERROR_FAILURE;
+  NS_ENSURE_ARG_POINTER(aRootDocShell);
+  *aRootDocShell = this;
+
+  nsCOMPtr<nsIDocShell> parent;
+  NS_ENSURE(GetParent(getter_AddRefs(parent)), NS_ERROR_FAILURE);
+  while (parent)
+  {
+    *aRootDocShell = parent;
+    NS_ENSURE(GetParent(getter_AddRefs(parent)), NS_ERROR_FAILURE);
+  }
+  NS_IF_ADDREF(*aRootDocShell);
+  return NS_OK;
 }
 
 //*****************************************************************************
@@ -206,23 +217,23 @@ NS_IMETHODIMP nsDocShellBase::GetRootDocShell(nsIDocShell** rootDocShell)
 
 NS_IMETHODIMP nsDocShellBase::Search()
 {
-   //XXX First Check
-   return NS_ERROR_FAILURE;
+  NS_WARN_IF_FALSE(PR_FALSE, "Subclasses should override this method!!!!");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsDocShellBase::GetSearchable(PRBool* searchable)
+NS_IMETHODIMP nsDocShellBase::GetSearchable(PRBool* aSearchable)
 {
-   NS_ENSURE_ARG_POINTER(searchable);
-   //XXX First Check
-   return NS_ERROR_FAILURE;
+   NS_ENSURE_ARG_POINTER(aSearchable);
+   *aSearchable = PR_FALSE;
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShellBase::ClearSelection()
 {
-   NS_ENSURE_STATE(m_PresShell);
+   NS_ENSURE_STATE(mPresShell);
 
    nsCOMPtr<nsIDOMSelection> selection;
-   NS_ENSURE_SUCCESS(m_PresShell->GetSelection(SELECTION_NORMAL, 
+   NS_ENSURE_SUCCESS(mPresShell->GetSelection(SELECTION_NORMAL, 
       getter_AddRefs(selection)), NS_ERROR_FAILURE);
 
    NS_ENSURE_SUCCESS(selection->ClearSelection(), NS_ERROR_FAILURE);
@@ -232,16 +243,16 @@ NS_IMETHODIMP nsDocShellBase::ClearSelection()
 
 NS_IMETHODIMP nsDocShellBase::SelectAll()
 {
-   //XXX First Check
-   return NS_ERROR_FAILURE;
+  NS_WARN_IF_FALSE(PR_FALSE, "Subclasses should override this method!!!!");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsDocShellBase::CopySelection()
 {
-   NS_ENSURE_STATE(m_PresShell);
+   NS_ENSURE_STATE(mPresShell);
 
    // the pres shell knows how to copy, so let it do the work
-   NS_ENSURE_SUCCESS(m_PresShell->DoCopy(), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(mPresShell->DoCopy(), NS_ERROR_FAILURE);
    return NS_OK;
 }
 
@@ -252,10 +263,10 @@ NS_IMETHODIMP nsDocShellBase::GetCopyable(PRBool *aCopyable)
 {
    NS_ENSURE_ARG_POINTER(aCopyable);
 
-   NS_ENSURE_STATE(m_PresShell);
+   NS_ENSURE_STATE(mPresShell);
 
    nsCOMPtr<nsIDOMSelection> selection;
-   NS_ENSURE_SUCCESS(m_PresShell->GetSelection(SELECTION_NORMAL, 
+   NS_ENSURE_SUCCESS(mPresShell->GetSelection(SELECTION_NORMAL, 
       getter_AddRefs(selection)), NS_ERROR_FAILURE);
 
    if(!selection)
@@ -278,13 +289,14 @@ NS_IMETHODIMP nsDocShellBase::CutSelection()
    return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsDocShellBase::GetCutable(PRBool* cutable)
+NS_IMETHODIMP nsDocShellBase::GetCutable(PRBool* aCutable)
 {
-   NS_ENSURE_ARG_POINTER(cutable);
+   NS_ENSURE_ARG_POINTER(aCutable);
    //XXX Implement
    //Should check to find the current focused object.  Then see if it can
    //be cut out of.  For now the answer is always no since CutSelection()
    // has not been implemented.
+   *aCutable = PR_FALSE;
    return NS_ERROR_FAILURE;
 }
 
@@ -294,15 +306,15 @@ NS_IMETHODIMP nsDocShellBase::Paste()
    return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsDocShellBase::GetPasteable(PRBool* pasteable)
+NS_IMETHODIMP nsDocShellBase::GetPasteable(PRBool* aPasteable)
 {
-   NS_ENSURE_ARG_POINTER(pasteable);
+   NS_ENSURE_ARG_POINTER(aPasteable);
 
    //XXX Implement
    //Should check to find the current focused object.  Then see if it can
    //be pasted into.  For now the answer is always no since Paste()
    // has not been implemented.
-   *pasteable = PR_FALSE;
+   *aPasteable = PR_FALSE;
    return NS_OK;
 }
 
@@ -355,23 +367,23 @@ NS_IMETHODIMP nsDocShellBase::InitWindow(nativeWindow parentNativeWindow,
    nsIWidget* parentWidget, PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy)   
 {
    NS_ENSURE_ARG(parentWidget);  // DocShells must get a widget for a parent
-   NS_ENSURE_STATE(!m_Created && m_BaseInitInfo);
+   NS_ENSURE_STATE(!mCreated && mBaseInitInfo);
 
-   m_ParentWidget = parentWidget;
-   m_BaseInitInfo->x = x;
-   m_BaseInitInfo->y = y;
-   m_BaseInitInfo->cx = cx;
-   m_BaseInitInfo->cy = cy;
+   mParentWidget = parentWidget;
+   mBaseInitInfo->x = x;
+   mBaseInitInfo->y = y;
+   mBaseInitInfo->cx = cx;
+   mBaseInitInfo->cy = cy;
 
    return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShellBase::Create()
 {
-   NS_ENSURE_STATE(!m_Created);
+   NS_ENSURE_STATE(!mCreated);
 
-   // Use m_BaseInitInfo to do create
-   // Then delete m_BaseInitInfo
+   // Use mBaseInitInfo to do create
+   // Then delete mBaseInitInfo
    //XXX First Check
 	/*
 	Tells the window that intialization and setup is complete.  When this is
@@ -390,10 +402,10 @@ NS_IMETHODIMP nsDocShellBase::Destroy()
 
 NS_IMETHODIMP nsDocShellBase::SetPosition(PRInt32 x, PRInt32 y)
 {
-   if(!m_Created)
+   if(!mCreated)
       {
-      m_BaseInitInfo->x = x;
-      m_BaseInitInfo->y = y;
+      mBaseInitInfo->x = x;
+      mBaseInitInfo->y = y;
       }
    else
       {
@@ -429,10 +441,10 @@ NS_IMETHODIMP nsDocShellBase::GetPosition(PRInt32* x, PRInt32* y)
 {
    NS_ENSURE_ARG_POINTER(x && y);
 
-   if(!m_Created)
+   if(!mCreated)
       {
-      *x = m_BaseInitInfo->x;
-      *y = m_BaseInitInfo->y;
+      *x = mBaseInitInfo->x;
+      *y = mBaseInitInfo->y;
       }
    else
       {
@@ -460,10 +472,10 @@ NS_IMETHODIMP nsDocShellBase::GetPosition(PRInt32* x, PRInt32* y)
 
 NS_IMETHODIMP nsDocShellBase::SetSize(PRInt32 cx, PRInt32 cy, PRBool fRepaint)
 {
-   if(!m_Created)
+   if(!mCreated)
       {
-      m_BaseInitInfo->cx = cx;
-      m_BaseInitInfo->cy = cy;
+      mBaseInitInfo->cx = cx;
+      mBaseInitInfo->cy = cy;
       }
    else
       {
@@ -506,10 +518,10 @@ NS_IMETHODIMP nsDocShellBase::GetSize(PRInt32* cx, PRInt32* cy)
 {
    NS_ENSURE_ARG_POINTER(cx && cy);
 
-   if(!m_Created)
+   if(!mCreated)
       {
-      *cx = m_BaseInitInfo->cx;
-      *cy = m_BaseInitInfo->cy;
+      *cx = mBaseInitInfo->cx;
+      *cy = mBaseInitInfo->cy;
       }
    else
       {
@@ -538,12 +550,12 @@ NS_IMETHODIMP nsDocShellBase::GetSize(PRInt32* cx, PRInt32* cy)
 NS_IMETHODIMP nsDocShellBase::SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx,
    PRInt32 cy, PRBool fRepaint)
 {
-   if(!m_Created)
+   if(!mCreated)
       {
-      m_BaseInitInfo->x = x;
-      m_BaseInitInfo->y = y;
-      m_BaseInitInfo->cx = cx;
-      m_BaseInitInfo->cy = cy;
+      mBaseInitInfo->x = x;
+      mBaseInitInfo->y = y;
+      mBaseInitInfo->cx = cx;
+      mBaseInitInfo->cy = cy;
       }
    else
       {
@@ -614,16 +626,16 @@ NS_IMETHODIMP nsDocShellBase::GetParentWidget(nsIWidget** parentWidget)
 {
    NS_ENSURE_ARG_POINTER(parentWidget);
 
-   *parentWidget = m_ParentWidget;
+   *parentWidget = mParentWidget;
 
    return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShellBase::SetParentWidget(nsIWidget* parentWidget)
 {
-   NS_ENSURE_STATE(!m_Created);
+   NS_ENSURE_STATE(!mCreated);
 
-   m_ParentWidget = parentWidget;
+   mParentWidget = parentWidget;
 
    return NS_OK;
 }
@@ -632,8 +644,8 @@ NS_IMETHODIMP nsDocShellBase::GetParentNativeWindow(nativeWindow* parentNativeWi
 {
    NS_ENSURE_ARG_POINTER(parentNativeWindow);
 
-   if(m_ParentWidget)
-      *parentNativeWindow = m_ParentWidget->GetNativeData(NS_NATIVE_WIDGET);
+   if(mParentWidget)
+      *parentNativeWindow = mParentWidget->GetNativeData(NS_NATIVE_WIDGET);
    else
       *parentNativeWindow = nsnull;
 
@@ -649,8 +661,8 @@ NS_IMETHODIMP nsDocShellBase::GetVisibility(PRBool* visibility)
 {
    NS_ENSURE_ARG_POINTER(visibility);
 
-   if(!m_Created)
-      *visibility = m_BaseInitInfo->visible;
+   if(!mCreated)
+      *visibility = mBaseInitInfo->visible;
    else
       {
       //XXX Query underlying control
@@ -661,8 +673,8 @@ NS_IMETHODIMP nsDocShellBase::GetVisibility(PRBool* visibility)
 
 NS_IMETHODIMP nsDocShellBase::SetVisibility(PRBool visibility)
 {
-   if(!m_Created)
-      m_BaseInitInfo->visible = visibility;
+   if(!mCreated)
+      mBaseInitInfo->visible = visibility;
    else
       {
       // XXX Set underlying control visibility
@@ -676,7 +688,7 @@ NS_IMETHODIMP nsDocShellBase::GetMainWidget(nsIWidget** mainWidget)
    NS_ENSURE_ARG_POINTER(mainWidget);
 
    // For now we don't create our own widget, so simply return the parent one. 
-   *mainWidget = m_ParentWidget;
+   *mainWidget = mParentWidget;
    NS_IF_ADDREF(*mainWidget);
 
    return NS_OK;
