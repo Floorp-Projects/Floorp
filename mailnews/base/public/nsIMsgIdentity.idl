@@ -127,6 +127,14 @@ interface nsIMsgIdentity : nsISupports {
    * for the message send
    */
   attribute string smtpServerKey;
+
+  /**
+   * default request for return receipt option for this identity
+   * if this is set, the Return Receipt menu item on the compose
+   * window will be checked
+   */
+  readonly attribute boolean requestReturnReceipt;
+  readonly attribute long receiptHeaderType;
   
   /* copy the attributes of the identity we pass in */
   void copy(in nsIMsgIdentity identity);

@@ -637,3 +637,43 @@ nsMsgIdentity::Copy(nsIMsgIdentity *identity)
 
     return NS_OK;
 }
+
+NS_IMETHODIMP
+nsMsgIdentity::GetRequestReturnReceipt(PRBool *aVal)
+{
+  NS_ENSURE_ARG_POINTER(aVal);
+  nsresult rv;
+  PRBool useCustomPrefs = PR_FALSE;
+  rv = GetBoolAttribute("use_custom_prefs", &useCustomPrefs);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (useCustomPrefs)
+  {
+    return GetBoolAttribute("request_return_receipt_on", aVal);
+  }
+  else
+  {
+    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+    NS_ENSURE_SUCCESS(rv, rv);
+    return prefs->GetBoolPref("mail.receipt.request_return_receipt_on", aVal);
+  }
+}
+
+NS_IMETHODIMP
+nsMsgIdentity::GetReceiptHeaderType(PRInt32 *aType)
+{
+  NS_ENSURE_ARG_POINTER(aType);
+  nsresult rv;
+  PRBool useCustomPrefs = PR_FALSE;
+  rv = GetBoolAttribute("use_custom_prefs", &useCustomPrefs);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (useCustomPrefs)
+  {
+    return GetBoolAttribute("request_receipt_header_type", aType);
+  }
+  else
+  {
+    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+    NS_ENSURE_SUCCESS(rv, rv);
+    return prefs->GetBoolPref("mail.receipt.request_header_type", aType);
+  }
+}

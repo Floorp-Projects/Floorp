@@ -1902,8 +1902,7 @@ function ToggleReturnReceipt(target)
     {
         msgCompFields.returnReceipt = ! msgCompFields.returnReceipt;
         target.setAttribute('checked', msgCompFields.returnReceipt);
-        if (!gReceiptOptionChanged)
-          gReceiptOptionChanged = true;
+        gReceiptOptionChanged = true;
     }
 }
 
@@ -2434,8 +2433,7 @@ function LoadIdentity(startup)
           RemoveDirectoryServerObserver(prefstring);
           var prevReplyTo = prevIdentity.replyTo;
           var prevBcc = "";
-          var prevReceipt =
-            prevIdentity.getBoolAttribute("request_return_receipt_on");
+          var prevReceipt = prevIdentity.requestReturnReceipt;
           if (prevIdentity.bccSelf)
             prevBcc += prevIdentity.email;
           if (prevIdentity.bccOthers)
@@ -2447,8 +2445,7 @@ function LoadIdentity(startup)
 
           var newReplyTo = gCurrentIdentity.replyTo;
           var newBcc = "";
-          var newReceipt =
-            gCurrentIdentity.getBoolAttribute("request_return_receipt_on");
+          var newReceipt = gCurrentIdentity.requestReturnReceipt;
           if (gCurrentIdentity.bccSelf)
             newBcc += gCurrentIdentity.email;
           if (gCurrentIdentity.bccOthers)
