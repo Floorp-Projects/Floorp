@@ -61,6 +61,7 @@
 #include "nsIAddrDatabase.h"
 #include "nsIAddrBookSession.h"
 #include "nsIAddressBook.h"
+#include "nsCExternalHandlerService.h"
 #include "nsIMIMEService.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeOwner.h"
@@ -77,7 +78,6 @@ static NS_DEFINE_CID(kHeaderParserCID, NS_MSGHEADERPARSER_CID);
 static NS_DEFINE_CID(kAddrBookCID, NS_ADDRESSBOOK_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kMsgRecipientArrayCID, NS_MSGRECIPIENTARRAY_CID);
-static NS_DEFINE_CID(kMimeServiceCID, NS_MIMESERVICE_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 static PRInt32 GetReplyOnTop()
@@ -1969,7 +1969,7 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
     // this signature...if we can't, we assume text
     rv = NS_OK;
     char      *sigContentType = nsnull;
-    NS_WITH_SERVICE(nsIMIMEService, mimeFinder, kMimeServiceCID, &rv); 
+    nsCOMPtr<nsIMIMEService> mimeFinder (do_GetService(NS_MIMESERVICE_PROGID, &rv));
     if (NS_SUCCEEDED(rv) && mimeFinder && fileExt) 
     {
       mimeFinder->GetTypeFromExtension(fileExt, &(sigContentType));

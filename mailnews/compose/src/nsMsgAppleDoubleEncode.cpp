@@ -35,10 +35,9 @@
 #include "nsMsgAppleCodes.h"
 #include "nsFileSpec.h"
 #include "nsMsgCompUtils.h"
+#include "nsCExternalHandlerService.h"
 #include "nsIMIMEService.h"
 #include "nsIMIMEInfo.h"
-
-static NS_DEFINE_CID(kMimeServiceCID, NS_MIMESERVICE_CID);
 
 #ifdef XP_MAC
 
@@ -110,7 +109,7 @@ MacGetFileType(nsFileSpec   *fs,
 
     if (NS_SUCCEEDED(nsMsgNewURL(&tURI, tFileURL.GetURLString())) && tURI)
     {
-      NS_WITH_SERVICE(nsIMIMEService, mimeFinder, kMimeServiceCID, &rv); 
+      nsCOMPtr<nsIMIMEService> mimeFinder (do_GetService(NS_MIMESERVICE_PROGID, &rv));
       if (NS_SUCCEEDED(rv) && mimeFinder) 
       {
         char *mimeType = nsnull;

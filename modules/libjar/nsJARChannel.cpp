@@ -25,6 +25,7 @@
 #include "nsCRT.h"
 #include "nsIFileTransportService.h"
 #include "nsIURL.h"
+#include "nsCExternalHandlerService.h"
 #include "nsIMIMEService.h"
 #include "nsAutoLock.h"
 #include "nsIFileStreams.h"
@@ -41,7 +42,6 @@
 #endif
 
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
-static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
 static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
 static NS_DEFINE_CID(kScriptSecurityManagerCID, NS_SCRIPTSECURITYMANAGER_CID);
 
@@ -683,7 +683,7 @@ nsJARChannel::GetContentType(char* *aContentType)
             }
 
             if (ext) {
-                NS_WITH_SERVICE(nsIMIMEService, mimeServ, kMIMEServiceCID, &rv);
+                nsCOMPtr<nsIMIMEService> mimeServ (do_GetService(NS_MIMESERVICE_PROGID, &rv));
                 if (NS_SUCCEEDED(rv)) {
                     rv = mimeServ->GetTypeFromExtension(ext, &mContentType);
                 }
@@ -925,6 +925,7 @@ nsJARChannel::OnStopRequest(nsIChannel* jarExtractionTransport, nsISupports* con
                 (const char*)jarURLStr, aStatus));
     }
 #endif
+
     rv = mUserListener->OnStopRequest(this, mUserContext, aStatus, aStatusArg);
 
     if (mLoadGroup) {

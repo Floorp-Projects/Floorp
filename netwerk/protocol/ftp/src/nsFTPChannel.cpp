@@ -25,11 +25,11 @@
 #include "nsFTPChannel.h"
 #include "nsIStreamListener.h"
 #include "nsIServiceManager.h"
+#include "nsCExternalHandlerService.h"
 #include "nsIMIMEService.h"
 #include "nsNetUtil.h"
 #include "nsMimeTypes.h"
 
-static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
  
 #if defined(PR_LOGGING)
@@ -431,7 +431,8 @@ nsFTPChannel::GetContentType(char* *aContentType) {
     nsAutoLock lock(mLock);
     *aContentType = nsnull;
     if (mContentType.IsEmpty()) {
-        NS_WITH_SERVICE(nsIMIMEService, MIMEService, kMIMEServiceCID, &rv);
+
+        nsCOMPtr<nsIMIMEService> MIMEService (do_GetService(NS_MIMESERVICE_PROGID, &rv));
         if (NS_FAILED(rv)) return rv;
         rv = MIMEService->GetTypeFromURI(mURL, aContentType);
         if (NS_SUCCEEDED(rv)) {

@@ -59,6 +59,7 @@
 #include "nsIMsgMailNewsUrl.h"
 #include "nsSpecialSystemDirectory.h"
 #include "mozITXTToHTMLConv.h"
+#include "nsCExternalHandlerService.h"
 #include "nsIMIMEService.h"
 #include "nsIImapUrl.h"
 #include "nsMsgI18N.h"
@@ -73,7 +74,6 @@
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-static NS_DEFINE_CID(kMimeServiceCID, NS_MIMESERVICE_CID);
 
 #ifdef MOZ_SECURITY
 #include HG01944
@@ -252,7 +252,7 @@ ValidateRealName(nsMsgAttachmentData *aAttach, MimeHeaders *aHdrs)
     if (pos > 0)
       contentType.Truncate(pos);
 
-    NS_WITH_SERVICE(nsIMIMEService, mimeFinder, kMimeServiceCID, &rv); 
+    nsCOMPtr<nsIMIMEService> mimeFinder (do_GetService(NS_MIMESERVICE_PROGID, &rv));
     if (NS_SUCCEEDED(rv) && mimeFinder) 
     {
       nsIMIMEInfo *mimeInfo = nsnull;
@@ -592,7 +592,7 @@ mime_file_type (const char *filename, void *stream_closure)
   if (ext)
   {
     ext++;
-    NS_WITH_SERVICE(nsIMIMEService, mimeFinder, kMimeServiceCID, &rv); 
+    nsCOMPtr<nsIMIMEService> mimeFinder (do_GetService(NS_MIMESERVICE_PROGID, &rv));
     if (NS_SUCCEEDED(rv) && mimeFinder) 
       mimeFinder->GetTypeFromExtension(ext, &retType);
   }

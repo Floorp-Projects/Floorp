@@ -56,6 +56,7 @@
 #include "nsIMsgMessageService.h"
 #include "nsMsgUtils.h"
 #include "nsXPIDLString.h"
+#include "nsCExternalHandlerService.h"
 #include "nsIMIMEService.h"
 #include "nsIMIMEInfo.h"
 
@@ -82,7 +83,6 @@ static nsString& mime_decode_string(const char* str ,
 
 // CID's
 static NS_DEFINE_CID(kCMsgComposeServiceCID,  NS_MSGCOMPOSESERVICE_CID);       
-static NS_DEFINE_CID(kMimeServiceCID, NS_MIMESERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////
@@ -1713,7 +1713,7 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
     if (pos > 0)
       contentType.Truncate(pos);
     nsresult  rv = NS_OK;
-    NS_WITH_SERVICE(nsIMIMEService, mimeFinder, kMimeServiceCID, &rv); 
+    nsCOMPtr<nsIMIMEService> mimeFinder (do_GetService(NS_MIMESERVICE_PROGID, &rv));
     if (NS_SUCCEEDED(rv) && mimeFinder) 
     {
       nsCOMPtr<nsIMIMEInfo> mimeInfo = nsnull;

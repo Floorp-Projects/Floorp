@@ -32,6 +32,7 @@
 #include "nsIURL.h"
 #include "nsIOutputStream.h"
 #include "netCore.h"
+#include "nsCExternalHandlerService.h"
 #include "nsIMIMEService.h"
 #include "nsISupportsUtils.h"
 #include "prio.h"
@@ -39,7 +40,6 @@
 //static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
-static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
 
 // This is copied from nsMemCacheChannel, We should consolidate these two.
 class WriteStreamWrapper : public nsIOutputStream 
@@ -500,8 +500,7 @@ nsDiskCacheRecordChannel::GetContentType(char * *aContentType)
     rv = url->SetSpec((char*)urlStr);
     if (NS_FAILED(rv)) 
         return rv;
-
-    NS_WITH_SERVICE(nsIMIMEService, MIMEService, kMIMEServiceCID, &rv);
+    nsCOMPtr<nsIMIMEService> MIMEService (do_GetService(NS_MIMESERVICE_PROGID, &rv));
     if (NS_FAILED(rv)) return rv;
 
     rv = MIMEService->GetTypeFromURI(url, aContentType);

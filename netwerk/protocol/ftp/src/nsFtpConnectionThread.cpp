@@ -22,7 +22,6 @@
 
 #include "nsFtpConnectionThread.h"
 #include "nsISocketTransport.h"
-#include "nsIMIMEService.h"
 #include "nsIStreamConverterService.h"
 #include "prprf.h"
 #include "prlog.h"
@@ -43,7 +42,6 @@
 
 static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 static NS_DEFINE_CID(kStreamConverterServiceCID,    NS_STREAMCONVERTERSERVICE_CID);
-static NS_DEFINE_CID(kMIMEServiceCID,               NS_MIMESERVICE_CID);
 static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
