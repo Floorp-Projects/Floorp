@@ -159,16 +159,18 @@ public:
   static nsIAtom *cssFontStyle;
   static nsIAtom *cssFontWeight;
   static nsIAtom *cssHeight;
+  static nsIAtom *cssLeft;
   static nsIAtom *cssListStyleType;
   static nsIAtom *cssMarginLeft;
   static nsIAtom *cssMarginRight;
   static nsIAtom *cssTextAlign;
   static nsIAtom *cssTextDecoration;
+  static nsIAtom *cssTop;
   static nsIAtom *cssVerticalAlign;
   static nsIAtom *cssWhitespace;
   static nsIAtom *cssWidth;
-  static nsIAtom *cssMozUserSelect;
 
+  static nsIAtom *cssMozUserSelect;
 
   static nsIAtom *cssPxUnit;
   static nsIAtom *cssEmUnit;
