@@ -858,7 +858,14 @@ function openLocation()
     gURLBar.select();
   }
   else {
-    openDialog("chrome://browser/content/openLocation.xul", "_blank", "chrome,modal,titlebar", window);
+#ifdef XP_MACOSX
+    if (window.location.href == "chrome://browser/content/hiddenWindow.xul") {
+      // If no windows are active, open a new one. 
+      window.openDialog("chrome://browser/content/", "_blank", "chrome,all,dialog=no", "about:blank");
+    }
+    else
+#endif
+      openDialog("chrome://browser/content/openLocation.xul", "_blank", "chrome,modal,titlebar", window);
   }
 }
 
