@@ -1038,12 +1038,15 @@ CreateStyleSet(nsIDocument* aDocument, nsIStyleSet** aStyleSet)
 
   rv = NS_NewStyleSet(aStyleSet);
   if (NS_OK == rv) {
-    PRInt32 count = aDocument->GetNumberOfStyleSheets();
-    for (PRInt32 index = 0; index < count; index++) {
+    PRInt32 index = aDocument->GetNumberOfStyleSheets();
+    while (0 < index--) {
+      // NOTE: turn the order around for the set
       nsIStyleSheet* sheet = aDocument->GetStyleSheetAt(index);
       (*aStyleSet)->AppendDocStyleSheet(sheet);
       NS_RELEASE(sheet);
     }
+    // XXX this is just wrong, the UA style sheet should be owned by the UA
+    // for that matter, the style set should be created by the UA too
     if (nsnull != gUAStyleSheet) {
       (*aStyleSet)->AppendBackstopStyleSheet(gUAStyleSheet);
     }
