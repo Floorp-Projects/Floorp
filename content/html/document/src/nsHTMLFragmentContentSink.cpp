@@ -715,7 +715,7 @@ GetAttributeValueAt(const nsIParserNode& aNode,
           continue;
         }
         *cp = '\0';
-        PRInt32 ch = NS_EntityToUnicode(cbuf);
+        PRInt32 ch = nsHTMLEntities::EntityToUnicode(nsSubsumeCStr(cbuf, PR_FALSE));
         if (ch < 0) {
           continue;
         }
