@@ -116,10 +116,12 @@ public class NewFolderDialog extends GeneralDialog {
     newFolderDialogPanel = new JPanel(new GridBagLayout(), true);
 
     JLabel parentPrompt = new JLabel("Parent:");
-    newFolderDialogPanel.add(parentPrompt, GridBagConstraints.WEST);
+    // newFolderDialogPanel.add(parentPrompt, GridBagConstraints.WEST);
+    newFolderDialogPanel.add(parentPrompt);
     newFolderDialogPanel.add(fParentCombo, GridBagConstraints.REMAINDER);
     JLabel namePrompt = new JLabel("Name:");
-    newFolderDialogPanel.add(namePrompt, GridBagConstraints.WEST);
+    // newFolderDialogPanel.add(namePrompt, GridBagConstraints.WEST);
+    newFolderDialogPanel.add(namePrompt);
     JTextField nameField = new JTextField();
     newFolderDialogPanel.add(nameField, GridBagConstraints.REMAINDER);
     
@@ -127,13 +129,13 @@ public class NewFolderDialog extends GeneralDialog {
                                               JOptionPane.PLAIN_MESSAGE,
                                               JOptionPane.OK_CANCEL_OPTION);
     actionPanel.addPropertyChangeListener(new OptionListener());
-    add(actionPanel);
+    getContentPane().add(actionPanel);
 
     // XXX This is a stupid hack because PageUI doesn't to a resource lookup
     // on it's title. Bleh.
-    String title = null;
+    String title = "PageUI";
       try {
-        title = (String) model.getAttribute(title.substring(1));
+	title = (String) model.getAttribute(title.substring(1));
       } catch (NoSuchElementException e) {}
  
     setTitle(title);
