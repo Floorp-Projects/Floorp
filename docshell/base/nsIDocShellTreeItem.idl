@@ -72,13 +72,13 @@ interface nsIDocShellTreeItem : nsISupports
 
 	/*
 	Returns the root DocShellTreeItem.  This is a convience equivalent to 
-	getting the parent and it's parent until there isn't a parent.
+	getting the parent and its parent until there isn't a parent.
 	*/
 	readonly attribute nsIDocShellTreeItem rootTreeItem;
 
 	/*
 	Returns the root DocShellTreeItem of the same type.  This is a convience 
-	equivalent to getting the parent of the same type and it's parent until 
+	equivalent to getting the parent of the same type and its parent until 
 	there isn't a parent.
 	*/
 	readonly attribute nsIDocShellTreeItem sameTypeRootTreeItem;
@@ -101,11 +101,11 @@ interface nsIDocShellTreeItem : nsISupports
 	Return the child DocShellTreeItem with the specified name.
 	name - This is the name of the item that is trying to be found.
 	aRequestor - This is the object that is requesting the find.  This
-		parameter is used to identify when the child is asking it's parent to find
+		parameter is used to identify when the child is asking its parent to find
 		a child with the specific name.  The parent uses this parameter to ensure
 		a resursive state does not occur by not again asking the requestor to find
 		a shell by the specified name.  Inversely the child uses it to ensure it
-		does not ask it's parent to do the search if it's parent is the one that
+		does not ask its parent to do the search if its parent is the one that
 		asked it to search.  Children also use this to test against the treeOwner;
 	*/
 	nsIDocShellTreeItem findItemWithName(in wstring name, in nsISupports aRequestor);

@@ -36,12 +36,12 @@ interface nsIDocShellTreeOwner : nsISupports
 	Return the child DocShellTreeItem with the specified name.
 	name - This is the name of the item that is trying to be found.
 	aRequestor - This is the docshellTreeItem that is requesting the find.  This
-		parameter is used to identify when the child is asking it's parent to find
-		a child with the specific name.  The parent uses this parameter to ensure
-		a resursive state does not occur by not again asking the requestor for find
-		a shell by the specified name.  Inversely the child uses it to ensure it
-		does not ask it's parent to do the search if it's parent is the one that
-		asked it to search.
+	parameter is used to identify when the child is asking its parent to find
+	a child with the specific name.  The parent uses this parameter to ensure
+	a resursive state does not occur by not again asking the requestor for find
+	a shell by the specified name.  Inversely the child uses it to ensure it
+	does not ask its parent to do the search if its parent is the one that
+	asked it to search.
 	*/
 	nsIDocShellTreeItem findItemWithName(in wstring name, 
 		in nsIDocShellTreeItem aRequestor);
@@ -61,23 +61,23 @@ interface nsIDocShellTreeOwner : nsISupports
 	readonly attribute nsIDocShellTreeItem primaryContentShell;
 
 	/*
-		Tells the tree owner to size it's window or parent window in such a way
-		that the shell passed along will be the size specified.
+	Tells the tree owner to size its window or parent window in such a way
+	that the shell passed along will be the size specified.
 	*/
 	void sizeShellTo(in nsIDocShellTreeItem shell, in long cx, in long cy);
 
 	/*
-		Shows the window as a modal window.
+	Shows the window as a modal window.
 	*/
 	void showModal();	
 
 	/*
-		Tells the implementer of this interface to create a new window.  This is
-		a new logical window.  Meaning in some implementations the result may not
-		be an actual new window, but rather a new tab or view in an existing
-		window.  What is returned is the new DocShellTreeItem from which the
-		internals can operate on.  This most often will be called when there is
-		a need for a new JS window, etc.	
+	Tells the implementer of this interface to create a new window.  This is
+	a new logical window.  Meaning in some implementations the result may not
+	be an actual new window, but rather a new tab or view in an existing
+	window.  What is returned is the new DocShellTreeItem from which the
+	internals can operate on.  This most often will be called when there is
+	a need for a new JS window, etc.	
 	*/
 	nsIDocShellTreeItem getNewWindow(in long aChromeFlags);
 };
