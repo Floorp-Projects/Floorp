@@ -25,7 +25,7 @@
 /* THIS IS A PUBLIC EMBEDDING API */
 
 /**
- * The nsIWebBrowserSiteWindow is implemented by the embedder to provide
+ * The nsIEmbeddingSiteWindow is implemented by the embedder to provide
  * Gecko with the means to call up to the host to resize the window,
  * hide or show it and change/query various other properties.
  */
@@ -52,7 +52,7 @@ interface nsIEmbeddingSiteWindow : nsISupports
     const unsigned long DIM_FLAGS_SIZE_OUTER = 4;
 
     /**
-     * Sets the dimensions for the window; the width and size. Use the
+     * Sets the dimensions for the window; the position & size. Use the
      * flags to indicate what you want to set and whether the size
      * refers to the inner or outer area. The inner area refers to just
      * the embedded area, wheras the outer area includes the embedded
