@@ -118,6 +118,115 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(nsIPresContext* aPresContext,
   return collapsedTopMargin;
 }
 
+struct nsBlockHorizontalAlign {
+  nscoord mXOffset;  // left edge
+  nscoord mLeftMargin;
+  nscoord mRightMargin;
+};
+
+// Given the width of the block frame and a suggested x-offset calculate
+// the actual x-offset taking into account horizontal alignment. Also returns
+// the actual left and right margin
+void
+nsBlockReflowContext::AlignBlockHorizontally(nscoord                 aWidth,
+                                             nsBlockHorizontalAlign &aAlign)
+{
+  // Initialize OUT parameters
+  aAlign.mLeftMargin = mMargin.left;
+  aAlign.mRightMargin = mMargin.right;
+
+  // Get style unit associated with the left and right margins
+  nsStyleUnit leftUnit = mStyleSpacing->mMargin.GetLeftUnit();
+  if (eStyleUnit_Inherit == leftUnit) {
+    leftUnit = GetRealMarginLeftUnit();
+  }
+  nsStyleUnit rightUnit = mStyleSpacing->mMargin.GetRightUnit();
+  if (eStyleUnit_Inherit == rightUnit) {
+    rightUnit = GetRealMarginRightUnit();
+  }
+
+  // Apply post-reflow horizontal alignment. When a block element
+  // doesn't use it all of the available width then we need to
+  // align it using the text-align property.
+  if (NS_UNCONSTRAINEDSIZE != mSpace.width) {
+    // It is possible that the object reflowed was given a
+    // constrained width and ended up picking a different width
+    // (e.g. a table width a set width that ended up larger
+    // because its contents required it). When this happens we
+    // need to recompute auto margins because the reflow state's
+    // computations are no longer valid.
+    if (aWidth != mComputedWidth) {
+      if (eStyleUnit_Auto == leftUnit) {
+        aAlign.mXOffset = 0;
+        aAlign.mLeftMargin = 0;
+      }
+      if (eStyleUnit_Auto == rightUnit) {
+        aAlign.mRightMargin = 0;
+      }
+    }
+
+    // Compute how much remaining space there is, and in special
+    // cases apply it (normally we should get zero here because of
+    // the logic in nsHTMLReflowState).
+    nscoord remainingSpace = mSpace.XMost() - (aAlign.mXOffset + aWidth +
+                             aAlign.mRightMargin);
+    if (remainingSpace > 0) {
+      // The block/table frame didn't use all of the available
+      // space. Synthesize margins for its horizontal placement.
+      if (eStyleUnit_Auto == leftUnit) {
+        if (eStyleUnit_Auto == rightUnit) {
+          // When both margins are auto, we center the block
+          aAlign.mXOffset += remainingSpace / 2;
+        }
+        else {
+          // When the left margin is auto we right align the block
+          aAlign.mXOffset += remainingSpace;
+        }
+      }
+      else if (eStyleUnit_Auto != rightUnit) {
+        // The block/table doesn't have auto margins.
+        PRBool doCSS = PR_TRUE;
+        if (mIsTable) {
+          const nsStyleText* styleText;
+          mOuterReflowState.frame->GetStyleData(eStyleStruct_Text,
+                                       (const nsStyleStruct*&)styleText);
+          // This is a navigator compatability case: tables are
+          // affected by the text alignment of the containing
+          // block. CSS doesn't do this, so we use special
+          // text-align attribute values to signal these
+          // compatability cases.
+          switch (styleText->mTextAlign) {
+            case NS_STYLE_TEXT_ALIGN_MOZ_RIGHT:
+              aAlign.mXOffset += remainingSpace;
+              doCSS = PR_FALSE;
+              break;
+            case NS_STYLE_TEXT_ALIGN_MOZ_CENTER:
+              aAlign.mXOffset += remainingSpace / 2;
+              doCSS = PR_FALSE;
+              break;
+          }
+        }
+        if (doCSS) {
+// XXX It's not clear we can ever get here because for normal blocks,
+// their size will be well defined by the nsHTMLReflowState logic
+// (maybe width=0 cases get here?)
+          // When neither margin is auto then the block is said to
+          // be over constrained, Depending on the direction, choose
+          // which margin to treat as auto.
+          PRUint8 direction = mOuterReflowState.mStyleDisplay->mDirection;
+          if (NS_STYLE_DIRECTION_RTL == direction) {
+            // The left margin becomes auto
+            aAlign.mXOffset += remainingSpace;
+          }
+          else {
+            // The right margin becomes auto which is a no-op
+          }
+        }
+      }
+    }
+  }
+}
+
 nsresult
 nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
                                   const nsRect& aSpace,
@@ -234,11 +343,30 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
   mX = x;
   mY = y;
 
+  // If it's an auto-width table, then it doesn't behave like other blocks
+  if (mIsTable && !reflowState.mStyleDisplay->IsFloating()) {
+    // If this isn't the table's initial reflow, then use its existing
+    // width to determine where it will be placed horizontally
+    if (reflowState.reason != eReflowReason_Initial) {
+      nsBlockHorizontalAlign  align;
+      nsSize                  size;
+
+      aFrame->GetSize(size);
+      align.mXOffset = x;
+      AlignBlockHorizontally(size.width, align);
+      // XXX Don't reset "mX". because PlaceBlock() will recompute the
+      // x-offset and expects "mX" to be at the left margin edge
+      x = align.mXOffset;
+    }
+  }
+
   // Let frame know that we are reflowing it
   aFrame->WillReflow(mPresContext);
 
   // Position it and its view (if it has one)
-  aFrame->MoveTo(mPresContext, mX, mY);
+  // Note: Use "x" and not "mX". "x" more accurately represents where we think
+  // it will be placed
+  aFrame->MoveTo(mPresContext, x, mY);
   nsIView*  view;
   aFrame->GetView(mPresContext, &view);
   if (view) {
@@ -529,96 +657,14 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
     // See if the frame fit. If its the first frame then it always
     // fits.
     if (aForceFit || (y + mMetrics.height <= mSpace.YMost())) {
-      // Get style unit associated with the left and right margins
-      nsStyleUnit leftUnit = mStyleSpacing->mMargin.GetLeftUnit();
-      if (eStyleUnit_Inherit == leftUnit) {
-        leftUnit = GetRealMarginLeftUnit();
-      }
-      nsStyleUnit rightUnit = mStyleSpacing->mMargin.GetRightUnit();
-      if (eStyleUnit_Inherit == rightUnit) {
-        rightUnit = GetRealMarginRightUnit();
-      }
-
-      // Apply post-reflow horizontal alignment. When a block element
-      // doesn't use it all of the available width then we need to
-      // align it using the text-align property.
-      if (NS_UNCONSTRAINEDSIZE != mSpace.width) {
-        // It is possible that the object reflowed was given a
-        // constrained width and ended up picking a different width
-        // (e.g. a table width a set width that ended up larger
-        // because its contents required it). When this happens we
-        // need to recompute auto margins because the reflow state's
-        // computations are no longer valid.
-        if (mMetrics.width != mComputedWidth) {
-          if (eStyleUnit_Auto == leftUnit) {
-            x = 0;
-            mMargin.left = 0;
-          }
-          if (eStyleUnit_Auto == rightUnit) {
-            mMargin.right = 0;
-          }
-        }
-
-        // Compute how much remaining space there is, and in special
-        // cases apply it (normally we should get zero here because of
-        // the logic in nsHTMLReflowState).
-        nscoord remainingSpace = mSpace.XMost() -
-          (x + mMetrics.width + mMargin.right);
-        if (remainingSpace > 0) {
-          // The block/table frame didn't use all of the available
-          // space. Synthesize margins for its horizontal placement.
-          if (eStyleUnit_Auto == leftUnit) {
-            if (eStyleUnit_Auto == rightUnit) {
-              // When both margins are auto, we center the block
-              x += remainingSpace / 2;
-            }
-            else {
-              // When the left margin is auto we right align the block
-              x += remainingSpace;
-            }
-          }
-          else if (eStyleUnit_Auto != rightUnit) {
-            // The block/table doesn't have auto margins.
-            PRBool doCSS = PR_TRUE;
-            if (mIsTable) {
-              const nsStyleText* styleText;
-              mOuterReflowState.frame->GetStyleData(eStyleStruct_Text,
-                                           (const nsStyleStruct*&)styleText);
-              // This is a navigator compatability case: tables are
-              // affected by the text alignment of the containing
-              // block. CSS doesn't do this, so we use special
-              // text-align attribute values to signal these
-              // compatability cases.
-              switch (styleText->mTextAlign) {
-                case NS_STYLE_TEXT_ALIGN_MOZ_RIGHT:
-                  x += remainingSpace;
-                  doCSS = PR_FALSE;
-                  break;
-                case NS_STYLE_TEXT_ALIGN_MOZ_CENTER:
-                  x += remainingSpace / 2;
-                  doCSS = PR_FALSE;
-                  break;
-              }
-            }
-            if (doCSS) {
-// XXX It's not clear we can ever get here because for normal blocks,
-// their size will be well defined by the nsHTMLReflowState logic
-// (maybe width=0 cases get here?)
-              // When neither margin is auto then the block is said to
-              // be over constrained, Depending on the direction, choose
-              // which margin to treat as auto.
-              PRUint8 direction = mOuterReflowState.mStyleDisplay->mDirection;
-              if (NS_STYLE_DIRECTION_RTL == direction) {
-                // The left margin becomes auto
-                x += remainingSpace;
-              }
-              else {
-                // The right margin becomes auto which is a no-op
-              }
-            }
-          }
-        }
-      }
+      // Calculate the actual x-offset and left and right margin
+      nsBlockHorizontalAlign  align;
+      
+      align.mXOffset = x;
+      AlignBlockHorizontally(mMetrics.width, align);
+      x = align.mXOffset;
+      mMargin.left = align.mLeftMargin;
+      mMargin.right = align.mRightMargin;
 
       // Update the in-flow bounds rectangle
       aInFlowBounds.SetRect(x, y,
@@ -675,10 +721,10 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
         nsSize* m = mMetrics.maxElementSize;
         // Do not allow auto margins to impact the max-element size
         // since they are springy and don't really count!
-        if (eStyleUnit_Auto != leftUnit) {
+        if (eStyleUnit_Auto != mStyleSpacing->mMargin.GetLeftUnit()) {
           m->width += mMargin.left;
         }
-        if (eStyleUnit_Auto != rightUnit) {
+        if (eStyleUnit_Auto != mStyleSpacing->mMargin.GetRightUnit()) {
           m->width += mMargin.right;
         }
 
