@@ -49,7 +49,7 @@ public:
                       nsIURLGroup* aURLGroup,
                       nsReconnectCB aReconnectCallback,
                       void* aReconnectArg);
-  ~ImageNetContextImpl();
+  virtual ~ImageNetContextImpl();
 
   NS_DECL_ISUPPORTS
 
@@ -104,7 +104,7 @@ public:
   static void KeepPumpingStream(nsITimer *aTimer, void *aClosure);
 
 protected:
-  ~ImageConsumer();
+  virtual ~ImageConsumer();
   ilIURL *mURL;
   PRBool mInterrupted;
   ImageNetContextImpl *mContext;

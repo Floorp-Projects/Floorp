@@ -29,7 +29,7 @@ public:
   static ImageSystemServicesImpl *sSS;
 
   ImageSystemServicesImpl();
-  ~ImageSystemServicesImpl();
+  virtual ~ImageSystemServicesImpl();
 
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 

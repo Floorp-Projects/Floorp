@@ -33,7 +33,7 @@ static NS_DEFINE_IID(kIImageURLIID, IL_IURL_IID);
 class ImageURLImpl : public ilIURL {
 public:
   ImageURLImpl(void);
-  ~ImageURLImpl();
+  virtual ~ImageURLImpl();
 
   NS_DECL_ISUPPORTS
 
