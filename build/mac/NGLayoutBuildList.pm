@@ -426,6 +426,12 @@ sub BuildLayoutProjects()
 	MakeAlias(":mozilla:webshell:tests:viewer:samples:test7.html", "$samples_dir");
 	MakeAlias(":mozilla:webshell:tests:viewer:samples:test8.html", "$samples_dir");
 	MakeAlias(":mozilla:webshell:tests:viewer:samples:test9.html", "$samples_dir");
+
+	MakeAlias(":mozilla:webshell:tests:viewer:samples:Anieyes.gif", "$samples_dir");
+	MakeAlias(":mozilla:webshell:tests:viewer:samples:bg.jpg", "$samples_dir");
+	MakeAlias(":mozilla:webshell:tests:viewer:samples:gear1.gif", "$samples_dir");
+	MakeAlias(":mozilla:webshell:tests:viewer:samples:raptor.jpg", "$samples_dir");
+	MakeAlias(":mozilla:webshell:tests:viewer:samples:rock_gra.gif", "$samples_dir");
 }
 
 sub BuildProjects()
