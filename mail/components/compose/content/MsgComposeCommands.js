@@ -45,6 +45,10 @@ var sPrefs = null;
 var sPrefBranchInternal = null;
 var sOther_headers = "";
 
+var sAccountManagerDataSource = null;
+var sRDF = null;
+var sNameProperty = null;
+
 /* Create message window object. This is use by mail-offline.js and therefore should not be renamed. We need to avoid doing 
    this kind of cross file global stuff in the future and instead pass this object as parameter when needed by function
    in the other js file.
@@ -81,7 +85,6 @@ var gMsgIdentityElement;
 var gMsgAddressingWidgetTreeElement;
 var gMsgSubjectElement;
 var gMsgAttachmentElement;
-var gMsgBodyFrame;
 var gMsgHeadersToolbarElement;
 
 // i18n globals
@@ -90,8 +93,7 @@ var gSendDefaultCharset;
 var gCharsetTitle;
 var gCharsetConvertManager;
 
-var gLastElementToHaveFocus;  
-var gSuppressCommandUpdating;
+var gLastWindowToHaveFocus;
 var gReceiptOptionChanged;
 
 var gMailSession;
@@ -135,8 +137,7 @@ function InitializeGlobalVariables()
   if (sMsgComposeService)
     gLogComposePerformance = sMsgComposeService.logComposePerformance;
 
-  gLastElementToHaveFocus = null;  
-  gSuppressCommandUpdating = false;
+  gLastWindowToHaveFocus = null;
   gReceiptOptionChanged = false;
 }
 InitializeGlobalVariables();
@@ -158,7 +159,7 @@ function ReleaseGlobalVariables()
 
 function disableEditableFields()
 {
-  editorShell.editor.flags |= nsIPlaintextEditorMail.eEditorReadonlyMask;
+  gMsgCompose.editor.flags |= nsIPlaintextEditorMail.eEditorReadonlyMask;
   var disableElements = document.getElementsByAttribute("disableonsend", "true");
   for (i=0;i<disableElements.length;i++)
   {
@@ -168,7 +169,7 @@ function disableEditableFields()
 
 function enableEditableFields()
 {
-  editorShell.editor.flags &= ~nsIPlaintextEditorMail.eEditorReadonlyMask;
+  gMsgCompose.editor.flags &= ~nsIPlaintextEditorMail.eEditorReadonlyMask;
   var enableElements = document.getElementsByAttribute("disableonsend", "true");
   for (i=0;i<enableElements.length;i++)
   {
@@ -182,7 +183,7 @@ var gComposeRecyclingListener = {
     awResetAllRows();
     RemoveAllAttachments();
 
-	  //We need to clear the identity popup menu in case the user will change them. It will be rebuilded later in ComposeStartup
+    // We need to clear the identity popup menu in case the user will change them. It will be rebuilded later in ComposeStartup
     ClearIdentityListPopup(document.getElementById("msgIdentityPopup"));
  
     //Clear the subject
@@ -224,23 +225,23 @@ var gComposeRecyclingListener = {
     var event = document.createEvent('Events');
     event.initEvent('compose-window-close', false, true);
     document.getElementById("msgcomposeWindow").dispatchEvent(event);
-	},
+  },
 
-	onReopen: function(params) {
+  onReopen: function(params) {
     //Reset focus to avoid undesirable visual effect when reopening the winodw
     var identityElement = document.getElementById("msgIdentity");
     if (identityElement)
       identityElement.focus();
 
     InitializeGlobalVariables();
-    window.editorShell.contentWindow.focus();
-    enableEditableFields();
+    window.content.focus();
     ComposeStartup(true, params);
+    enableEditableFields();
 
     var event = document.createEvent('Events');
     event.initEvent('compose-window-reopen', false, true);
     document.getElementById("msgcomposeWindow").dispatchEvent(event);
-	}
+  }
 };
 
 var stateListener = {
@@ -250,8 +251,8 @@ var stateListener = {
 
   ComposeProcessDone: function(aResult) {
     gWindowLocked = false;
-    CommandUpdate_MsgCompose();
     enableEditableFields();
+    updateComposeItems();
 
     if (aResult== Components.results.NS_OK)
     {
@@ -343,10 +344,12 @@ var progressListener = {
 
     QueryInterface : function(iid)
     {
-     if (iid.equals(Components.interfaces.nsIWebProgressListener) || iid.equals(Components.interfaces.nsISupportsWeakReference))
-      return this;
+      if (iid.equals(Components.interfaces.nsIWebProgressListener) ||
+          iid.equals(Components.interfaces.nsISupportsWeakReference) ||
+          iid.equals(Components.interfaces.nsISupports))
+        return this;
      
-     throw Components.results.NS_NOINTERFACE;
+      throw Components.results.NS_NOINTERFACE;
     }
 };
 
@@ -373,11 +376,8 @@ var defaultController =
       case "cmd_quit":
 
       //Edit Menu
-      case "cmd_pasteQuote":
       case "cmd_delete":
       case "cmd_selectAll":
-      case "cmd_find":
-      case "cmd_findNext":
       case "cmd_account":
       case "cmd_preferences":
 
@@ -385,73 +385,10 @@ var defaultController =
       case "cmd_showComposeToolbar":
       case "cmd_showFormatToolbar":
 
-      //Insert Menu
-      case "cmd_renderedHTMLEnabler":
-      case "cmd_insert":
-      case "cmd_link":
-      case "cmd_anchor":
-      case "cmd_image":
-      case "cmd_hline":
-      case "cmd_table":
-      case "cmd_insertHTML":
-      case "cmd_insertChars":
-      case "cmd_insertBreak":
-      case "cmd_insertBreakAll":
-
-      //Format Menu
-      case "cmd_decreaseFont":
-      case "cmd_increaseFont":
-      case "cmd_bold":
-      case "cmd_italic":
-      case "cmd_underline":
-      case "cmd_strikethrough":
-      case "cmd_superscript":
-      case "cmd_subscript":
-      case "cmd_nobreak":
-      case "cmd_em":
-      case "cmd_strong":
-      case "cmd_cite":
-      case "cmd_abbr":
-      case "cmd_acronym":
-      case "cmd_code":
-      case "cmd_samp":
-      case "cmd_var":
-      case "cmd_removeList":
-      case "cmd_ul":
-      case "cmd_ol":
-      case "cmd_dt":
-      case "cmd_dd":
-      case "cmd_listProperties":
-      case "cmd_indent":
-      case "cmd_outdent":
-      case "cmd_objectProperties":
-      case "cmd_InsertTable":
-      case "cmd_InsertRowAbove":
-      case "cmd_InsertRowBelow":
-      case "cmd_InsertColumnBefore":
-      case "cmd_InsertColumnAfter":
-      case "cmd_SelectTable":
-      case "cmd_SelectRow":
-      case "cmd_SelectColumn":
-      case "cmd_SelectCell":
-      case "cmd_SelectAllCells":
-      case "cmd_DeleteTable":
-      case "cmd_DeleteRow":
-      case "cmd_DeleteColumn":
-      case "cmd_DeleteCell":
-      case "cmd_DeleteCellContents":
-      case "cmd_NormalizeTable":
-      case "cmd_tableJoinCells":
-      case "cmd_tableSplitCell":
-      case "cmd_editTable":
-
       //Options Menu
       case "cmd_selectAddress":
-      case "cmd_spelling":
       case "cmd_outputFormat":
       case "cmd_quoteMessage":
-      case "cmd_rewrap":
-
         return true;
 
       default:
@@ -461,9 +398,6 @@ var defaultController =
   },
   isCommandEnabled: function(command)
   {
-    //For some reason, when editor has the focus, focusedElement is null!.
-    var focusedElement = top.document.commandDispatcher.focusedElement;
-
     var composeHTML = gMsgCompose && gMsgCompose.composeHTML;
 
     switch (command)
@@ -488,11 +422,6 @@ var defaultController =
         return true;
 
       //Edit Menu
-      case "cmd_pasteQuote":
-      case "cmd_find":
-      case "cmd_findNext":
-        //Disable the editor specific edit commands if the focus is not into the body
-        return !focusedElement;
       case "cmd_delete":
         return MessageHasSelectedAttachments();
       case "cmd_selectAll":
@@ -507,84 +436,16 @@ var defaultController =
       case "cmd_showFormatToolbar":
         return composeHTML;
 
-      //Insert Menu
-      case "cmd_renderedHTMLEnabler":
-      case "cmd_insert":
-        return !focusedElement;
-      case "cmd_link":
-      case "cmd_anchor":
-      case "cmd_image":
-      case "cmd_hline":
-      case "cmd_table":
-      case "cmd_insertHTML":
-      case "cmd_insertChars":
-      case "cmd_insertBreak":
-      case "cmd_insertBreakAll":
-        return !focusedElement;
-
       //Options Menu
       case "cmd_selectAddress":
         return !gWindowLocked;
-      case "cmd_spelling":
-        return (focusedElement == GetMsgBodyFrame());
       case "cmd_outputFormat":
         return composeHTML;
       case "cmd_quoteMessage":
-        try {
-          gMailSession.topmostMsgWindow;
+        var selectedURIs = GetSelectedMessages();
+        if (selectedURIs && selectedURIs.length > 0)
           return true;
-        } catch (ex) { return false; }
-      case "cmd_rewrap":
-        return !composeHTML && !focusedElement;
-
-      //Format Menu
-      case "cmd_decreaseFont":
-      case "cmd_increaseFont":
-      case "cmd_bold":
-      case "cmd_italic":
-      case "cmd_underline":
-      case "cmd_smiley":
-      case "cmd_strikethrough":
-      case "cmd_superscript":
-      case "cmd_subscript":
-      case "cmd_nobreak":
-      case "cmd_em":
-      case "cmd_strong":
-      case "cmd_cite":
-      case "cmd_abbr":
-      case "cmd_acronym":
-      case "cmd_code":
-      case "cmd_samp":
-      case "cmd_var":
-      case "cmd_removeList":
-      case "cmd_ul":
-      case "cmd_ol":
-      case "cmd_dt":
-      case "cmd_dd":
-      case "cmd_listProperties":
-      case "cmd_indent":
-      case "cmd_outdent":
-      case "cmd_objectProperties":
-      case "cmd_InsertTable":
-      case "cmd_InsertRowAbove":
-      case "cmd_InsertRowBelow":
-      case "cmd_InsertColumnBefore":
-      case "cmd_InsertColumnAfter":
-      case "cmd_SelectTable":
-      case "cmd_SelectRow":
-      case "cmd_SelectColumn":
-      case "cmd_SelectCell":
-      case "cmd_SelectAllCells":
-      case "cmd_DeleteTable":
-      case "cmd_DeleteRow":
-      case "cmd_DeleteColumn":
-      case "cmd_DeleteCell":
-      case "cmd_DeleteCellContents":
-      case "cmd_NormalizeTable":
-      case "cmd_tableJoinCells":
-      case "cmd_tableSplitCell":
-      case "cmd_editTable":
-        return !focusedElement;
+        return false;
 
       default:
 //        dump("##MsgCompose: command " + command + " disabled!\n");
@@ -616,8 +477,8 @@ var defaultController =
       case "cmd_sendNow"            : if (defaultController.isCommandEnabled(command)) SendMessage();          break;
       case "cmd_sendWithCheck"   : if (defaultController.isCommandEnabled(command)) SendMessageWithCheck();          break;
       case "cmd_sendLater"          : if (defaultController.isCommandEnabled(command)) SendMessageLater();     break;
-      case "cmd_printSetup"         : goPageSetup();                                                           break;
-      case "cmd_print"              : DoCommandPrint();                                                        break;
+      case "cmd_printSetup"         : NSPrintSetup(); break;
+      case "cmd_print"              : DoCommandPrint(); break;
 
       //Edit Menu
       case "cmd_delete"             : if (MessageHasSelectedAttachments()) RemoveSelectedAttachment();         break;
@@ -632,7 +493,6 @@ var defaultController =
       //Options Menu
       case "cmd_selectAddress"      : if (defaultController.isCommandEnabled(command)) SelectAddress();         break;
       case "cmd_quoteMessage"       : if (defaultController.isCommandEnabled(command)) QuoteSelectedMessage();  break;
-      case "cmd_rewrap"             : editorShell.Rewrap(false);                                                break;
       default:
 //        dump("##MsgCompose: don't know what to do with command " + command + "!\n");
         return;
@@ -647,17 +507,24 @@ var defaultController =
 
 function QuoteSelectedMessage()
 {
+  var selectedURIs = GetSelectedMessages();
+  if (selectedURIs)
+    for (i = 0; i < selectedURIs.length; i++)
+      gMsgCompose.quoteMessage(selectedURIs[i]);
+}
+
+function GetSelectedMessages()
+{
   if (gMsgCompose) {
     var mailWindow = Components.classes["@mozilla.org/appshell/window-mediator;1"].getService()
                      .QueryInterface(Components.interfaces.nsIWindowMediator)
                      .getMostRecentWindow("mail:3pane");
     if (mailWindow) {
-      var selectedURIs = mailWindow.GetSelectedMessages();
-      if (selectedURIs)
-        for (i = 0; i < selectedURIs.length; i++)
-          gMsgCompose.quoteMessage(selectedURIs[i]);
+      return mailWindow.GetSelectedMessages();
     }
   }
+
+  return null;
 }
 
 function SetupCommandUpdateHandlers()
@@ -668,34 +535,31 @@ function SetupCommandUpdateHandlers()
 
 function CommandUpdate_MsgCompose()
 {
-  if (gSuppressCommandUpdating) {
-    //dump("XXX supressing\n");
-    return;
-  }
-
-  var element = top.document.commandDispatcher.focusedElement;
+  var focusedWindow = top.document.commandDispatcher.focusedWindow;
 
   // we're just setting focus to where it was before
-  if (element == gLastElementToHaveFocus) {
+  if (focusedWindow == gLastWindowToHaveFocus) {
     //dump("XXX skip\n");
     return;
   }
 
-  gLastElementToHaveFocus = element;
+  gLastWindowToHaveFocus = focusedWindow;
 
-  //dump("XXX update, focus on " + element + "\n");
+  //dump("XXX update, focus on " + focusedWindow + "\n");
   
   updateComposeItems();
 }
 
 function updateComposeItems() {
   try {
+
   //Edit Menu
+  goUpdateCommand("cmd_rewrap");
 
   //Insert Menu
   if (gMsgCompose && gMsgCompose.composeHTML)
   {
-    goUpdateCommand("cmd_insert");
+    goUpdateCommand("cmd_renderedHTMLEnabler");
     goUpdateCommand("cmd_decreaseFont");
     goUpdateCommand("cmd_increaseFont");
     goUpdateCommand("cmd_bold");
@@ -722,6 +586,12 @@ function updateEditItems() {
   goUpdateCommand("cmd_selectAll");
   goUpdateCommand("cmd_find");
   goUpdateCommand("cmd_findNext");
+  goUpdateCommand("cmd_findPrev");
+}
+
+function updateOptionItems()
+{
+  goUpdateCommand("cmd_quoteMessage");
 }
 
 var messageComposeOfflineObserver = {
@@ -1126,11 +996,12 @@ function DoCommandClose()
     }
 
     MsgComposeCloseWindow(true);
-	  // at this point, we might be caching this window.
-	  // in which case, we don't want to close it
+
+    // at this point, we might be caching this window.
+    // in which case, we don't want to close it
     if (sMsgComposeService.isCachedWindow(window)) {
-	    retVal = false;
-	  }
+      retVal = false;
+    }
   }
 
   return retVal;
@@ -1138,15 +1009,9 @@ function DoCommandClose()
 
 function DoCommandPrint()
 {
-  if (gMsgCompose)
-  {
-    var editorShell = gMsgCompose.editor;
-    if (editorShell)
-      try {
-        editorShell.FinishHTMLSource();
-        editorShell.Print();
-      } catch(ex) {dump("#PRINT ERROR: " + ex + "\n");}
-  }
+  try {
+    NSPrint();
+  } catch(ex) {dump("#PRINT ERROR: " + ex + "\n");}
 }
 
 function DoCommandPreferences()
@@ -1157,7 +1022,7 @@ function DoCommandPreferences()
 function ToggleWindowLock()
 {
   gWindowLocked = !gWindowLocked;
-  CommandUpdate_MsgCompose();
+  updateComposeItems();
 }
 
 /* This function will go away soon as now arguments are passed to the window using a object of type nsMsgComposeParams instead of a string */
@@ -1231,10 +1096,11 @@ function ComposeFieldsReady(msgType)
   //If we are in plain text, we need to set the wrap column
   if (! gMsgCompose.composeHTML) {
     try {
-      window.editorShell.wrapColumn = gMsgCompose.wrapLength;
+      gMsgCompose.editor.QueryInterface(nsIPlaintextEditorMail).wrapWidth
+          = gMsgCompose.wrapLength;
     }
     catch (e) {
-      dump("### window.editorShell.wrapColumn exception text: " + e + " - failed\n");
+      dump("### textEditor.wrapWidth exception text: " + e + " - failed\n");
     }
   }
   CompFields2Recipients(gMsgCompose.compFields, gMsgCompose.type);
@@ -1316,42 +1182,15 @@ function ComposeStartup(recycled, aParams)
     }
   }
 
-  // when editor has focus, top.document.commandDispatcher.focusedElement is null,
-  // it's also null during a blur.
-  // if we are doing a new message, originalMsgURI is null, so
-  // we'll default gLastElementToHaveFocus to null, to skip blurs, since we're
-  // going to be setting focus to the addressing widget.
-  //
-  // for reply or fwd, originalMsgURI is non-null, so we'll
-  // default gLastElementToHaveFocus to 1, so that when focus gets set on editor
-  // we'll do an update.
-  if (params.originalMsgURI) {
-    gLastElementToHaveFocus = 1;
-  }
-  else {
-    gLastElementToHaveFocus = null;
-  }
-
   if (!params.identity) {
     // no pre selected identity, so use the default account
     var identities = gAccountManager.defaultAccount.identities;
-    if (identities.Count() >= 1)
-      params.identity = identities.QueryElementAt(0, Components.interfaces.nsIMsgIdentity);
-    else
-    {
-      identities = GetIdentities();
-      params.identity = identities[0];
-    }
+    if (identities.Count() == 0)
+      identities = gAccountManager.allIdentities;
+    params.identity = identities.QueryElementAt(0, Components.interfaces.nsIMsgIdentity);
   }
 
-  for (i = 0; i < identityListPopup.childNodes.length;i++) {
-    var item = identityListPopup.childNodes[i];
-    var id = item.getAttribute('id');
-    if (id == params.identity.key) {
-        identityList.selectedItem = item;
-        break;
-    }
-  }
+  identityList.value = params.identity.key;
   LoadIdentity(true);
   if (sMsgComposeService)
   {
@@ -1364,32 +1203,26 @@ function ComposeStartup(recycled, aParams)
       //Lets the compose object knows that we are dealing with a recycled window
       gMsgCompose.recycledWindow = recycled;
 
-      //Creating a Editor Shell
-      var editorElement = document.getElementById("content-frame");
+      // Get the <editor> element to startup an editor
+      var editorElement = GetCurrentEditorElement();
       if (!editorElement)
       {
         dump("Failed to get editor element!\n");
         return;
       }
-      var editorShell = editorElement.editorShell;
-      if (!editorShell)
-      {
-        dump("Failed to create editorShell!\n");
-        return;
-      }
-
       document.getElementById("returnReceiptMenu").setAttribute('checked', 
                                          gMsgCompose.compFields.returnReceipt);
 
-      if (!recycled) //The editor is already initialized and does not support to be re-initialized.
+      // If recycle, editor is already created
+      if (!recycled) 
       {
-        // save the editorShell in the window. The editor JS expects to find it there.
-        window.editorShell = editorShell;
+        try {
+          var editortype = gMsgCompose.composeHTML ? "htmlmail" : "textmail";
+          editorElement.makeEditable(editortype, true);
+        } catch (e) { dump(" FAILED TO START EDITOR: "+e+"\n"); }
 
         // setEditorType MUST be call before setContentWindow
-        if (gMsgCompose.composeHTML)
-          window.editorShell.editorType = "htmlmail";
-        else
+        if (!gMsgCompose.composeHTML)
         {
           //Remove HTML toolbar, format and insert menus as we are editing in plain text mode
           document.getElementById("outputFormatMenu").setAttribute("hidden", true);
@@ -1397,15 +1230,9 @@ function ComposeStartup(recycled, aParams)
           document.getElementById("formatMenu").setAttribute("hidden", true);
           document.getElementById("insertMenu").setAttribute("hidden", true);
           document.getElementById("menu_showFormatToolbar").setAttribute("hidden", true);
-
-          window.editorShell.editorType = "textmail";
         }
-        window.editorShell.webShellWindow = window;
-        window.editorShell.contentWindow = window._content;
-
         // Do setup common to Message Composer and Web Composer
         EditorSharedStartup();   
-   
       }
 
       var msgCompFields = gMsgCompose.compFields;
@@ -1434,10 +1261,54 @@ function ComposeStartup(recycled, aParams)
         if (attachments)
           for (i = 0; i < attachments.Count(); i ++)
             AddAttachment(attachments.QueryElementAt(i, Components.interfaces.nsIMsgAttachment));
-        }
+      }
 
       gMsgCompose.RegisterStateListener(stateListener);
-      gMsgCompose.editor = window.editorShell;      
+
+      if (recycled)
+      {
+        // This sets charset and does reply quote insertion
+        gMsgCompose.initEditor(GetCurrentEditor(), window.content);
+
+        if (gMsgCompose.composeHTML)
+        {
+          // Force color picker on toolbar to show document colors
+          onFontColorChange();
+          onBackgroundColorChange();
+        }
+      } 
+      else 
+      {
+        // Add an observer to be called when document is done loading,
+        //   which creates the editor
+        try {
+          GetCurrentCommandManager().
+                addCommandObserver(gMsgEditorCreationObserver, "obs_documentCreated");
+
+          // Load empty page to create the editor
+          editorElement.webNavigation.loadURI("about:blank", // uri string
+                               0,                            // load flags
+                               null,                         // referrer
+                               null,                         // post-data stream
+                               null);
+        } catch (e) {
+          dump(" Failed to startup editor: "+e+"\n");
+        }
+      }
+    }
+  }
+}
+
+// The new, nice, simple way of getting notified when a new editor has been created
+var gMsgEditorCreationObserver =
+{ 
+  observe: function(aSubject, aTopic, aData)
+  {
+    if (aTopic == "obs_documentCreated")
+    {
+      var editor = GetCurrentEditor();
+      if (editor && GetCurrentCommandManager() == aSubject)
+        gMsgCompose.initEditor(editor, window.content);
     }
   }
 }
@@ -1477,6 +1348,15 @@ function ComposeLoad()
     dump("failed to get the mail.compose.other.header pref\n");
   }
 
+  try {
+    sAccountManagerDataSource = Components.classes["@mozilla.org/rdf/datasource;1?name=msgaccountmanager"].createInstance(Components.interfaces.nsIRDFDataSource);
+    sRDF = Components.classes['@mozilla.org/rdf/rdf-service;1'].getService(Components.interfaces.nsIRDFService);
+    sNameProperty = sRDF.GetResource("http://home.netscape.com/NC-rdf#Name?sort=true");
+  }
+  catch (ex) {
+    dump("failed to get RDF\n");
+  }
+
   AddMessageComposeOfflineObserver();
   AddDirectoryServerObserver(true);
 
@@ -1498,9 +1378,10 @@ function ComposeLoad()
       ComposeStartup(false, null);
   }
   catch (ex) {
+    dump("EX: = " + ex + "\n");
     var errorTitle = sComposeMsgsBundle.getString("initErrorDlogTitle");
     var errorMsg = sComposeMsgsBundle.getFormattedString("initErrorDlogMessage",
-                                                         [ex]);
+                                                         [""]);
     if (gPromptService)
       gPromptService.alert(window, errorTitle, errorMsg);
     else
@@ -1515,6 +1396,13 @@ function ComposeLoad()
   window.tryToClose=ComposeCanClose;
   if (gLogComposePerformance)
     sMsgComposeService.TimeStamp("Done with the initialization (ComposeLoad). Waiting on editor to load about:blank", false);
+  
+  // initialize the customizeDone method on the customizeable toolbar
+  var toolbox = document.getElementById("compose-toolbox");
+  toolbox.customizeDone = MailToolboxCustomizeDone;
+
+  var toolbarset = document.getElementById('customToolbars');
+  toolbox.toolbarset = toolbarset;
 }
 
 function ComposeUnload()
@@ -1558,7 +1446,7 @@ function UpdateMailEditCharset()
 
   if (gCharsetConvertManager) {
     var charsetAtom = gCharsetConvertManager.GetCharsetAtom(compFieldsCharset);
-    if (charsetAtom && (charsetAtom.GetUnicode() == "us-ascii"))
+    if (charsetAtom && (charsetAtom.equals("us-ascii")))
       compFieldsCharset = "ISO-8859-1";   // no menu item for "us-ascii"
   }
 
@@ -1586,7 +1474,7 @@ function InitCharsetMenuCheckMark()
   UpdateMailEditCharset();
   // use setTimeout workaround to delay checkmark the menu
   // when onmenucomplete is ready then use it instead of oncreate
-  // see bug 78290 for the detail
+  // see bug #78290 for the details
   setTimeout("UpdateMailEditCharset()", 0);
 
 }
@@ -1668,11 +1556,11 @@ function GenericSendMessage( msgType )
         if (sPrefs.getBoolPref("mail.SpellCheckBeforeSend")){
         //We disable spellcheck for the following -subject line, attachment pane, identity and addressing widget
         //therefore we need to explicitly focus on the mail body when we have to do a spellcheck.
-          editorShell.contentWindow.focus();
+          window.content.focus();
           window.cancelSendMessage = false;
           try {
             window.openDialog("chrome://editor/content/EdSpellCheck.xul", "_blank",
-                    "chrome,close,titlebar,modal", true);
+                    "chrome,close,titlebar,modal", true, true);
           }
           catch(ex){}
           if(window.cancelSendMessage)
@@ -1765,8 +1653,8 @@ function GenericSendMessage( msgType )
       }
       try {
         gWindowLocked = true;
-        CommandUpdate_MsgCompose();
         disableEditableFields();
+        updateComposeItems();
 
         var progress = Components.classes["@mozilla.org/messenger/progress;1"].createInstance(Components.interfaces.nsIMsgProgress);
         if (progress)
@@ -1780,7 +1668,7 @@ function GenericSendMessage( msgType )
         dump("failed to SendMsg: " + ex + "\n");
         gWindowLocked = false;
         enableEditableFields();
-        CommandUpdate_MsgCompose();
+        updateComposeItems();
       }
     }
   }
@@ -1973,19 +1861,9 @@ function queryISupportsArray(supportsArray, iid) {
     var result = new Array;
     for (var i=0; i<supportsArray.Count(); i++) {
       // dump(i + "," + result[i] + "\n");
-      result[i] = supportsArray.GetElementAt(i).QueryInterface(iid);
+      result[i] = supportsArray.QueryElementAt(i, iid);
     }
     return result;
-}
-
-function GetIdentities()
-{
-    var idSupports = gAccountManager.allIdentities;
-    var identities = queryISupportsArray(idSupports,
-                                         Components.interfaces.nsIMsgIdentity);
-
-    dump(identities + "\n");
-    return identities;
 }
 
 function ClearIdentityListPopup(popup)
@@ -1995,34 +1873,60 @@ function ClearIdentityListPopup(popup)
       popup.removeChild(popup.childNodes[i]);
 }
 
+function compareAccountSortOrder(account1, account2)
+{
+  var sortValue1, sortValue2;
+
+  try {
+    var res1 = sRDF.GetResource(account1.incomingServer.serverURI);
+    sortValue1 = sAccountManagerDataSource.GetTarget(res1, sNameProperty, true).QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+  }
+  catch (ex) {
+    dump("XXX ex ");
+    if (account1 && account1.incomingServer && account1.incomingServer.serverURI)
+      dump(account1.incomingServer.serverURI + ",");
+    dump(ex + "\n");
+    sortValue1 = "";
+  }
+
+  try {
+    var res2 = sRDF.GetResource(account2.incomingServer.serverURI);
+    sortValue2 = sAccountManagerDataSource.GetTarget(res2, sNameProperty, true).QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+  }
+  catch (ex) {
+    dump("XXX ex ");
+    if (account2 && account2.incomingServer && account2.incomingServer.serverURI)
+      dump(account2.incomingServer.serverURI + ",");
+    dump(ex + "\n");
+    sortValue2 = "";
+  }
+
+  if (sortValue1 < sortValue2)
+    return -1;
+  else if (sortValue1 > sortValue2)
+    return 1;
+  else 
+    return 0;
+}
+
 function FillIdentityListPopup(popup)
 {
-    var identities = GetIdentities();
+  var accounts = queryISupportsArray(gAccountManager.accounts, Components.interfaces.nsIMsgAccount);
+  accounts.sort(compareAccountSortOrder);
 
-    for (var i=0; i<identities.length; i++)
-    {
-    var identity = identities[i];
-
-    //dump(i + " = " + identity.identityName + "," +identity.key + "\n");
-
-    //Get server prettyName for each identity
-
-    var serverSupports = gAccountManager.GetServersForIdentity(identity);
-
-    //dump(i + " = " + identity.identityName + "," +identity.key + "\n");
-
-    if(serverSupports.GetElementAt(0))
-      var result = serverSupports.GetElementAt(0).QueryInterface(Components.interfaces.nsIMsgIncomingServer);
-    //dump ("The account name is = "+result.prettyName+ "\n");
-    var accountName = " - "+result.prettyName;
-
-        var item=document.createElement('menuitem');
-        item.setAttribute('label', identity.identityName);
-        item.setAttribute('class', 'identity-popup-item');
-        item.setAttribute('accountname', accountName);
-        item.setAttribute('id', identity.key);
-        popup.appendChild(item);
+  for (var i in accounts) {
+    var server = accounts[i].incomingServer;
+    var identites = queryISupportsArray(accounts[i].identities, Components.interfaces.nsIMsgIdentity);
+    for (var j in identites) {
+      var identity = identites[j];
+      var item = document.createElement("menuitem");
+      item.className = "identity-popup-item";
+      item.setAttribute("label", identity.identityName);
+      item.setAttribute("value", identity.key);
+      item.setAttribute("accountname", " - " + server.prettyName);
+      popup.appendChild(item);
     }
+  }
 }
 
 function getCurrentIdentity()
@@ -2030,8 +1934,7 @@ function getCurrentIdentity()
     // fill in Identity combobox
     var identityList = document.getElementById("msgIdentity");
 
-    var item = identityList.selectedItem;
-    var identityKey = item.getAttribute('id');
+    var identityKey = identityList.value;
 
     //dump("Looking for identity " + identityKey + "\n");
     var identity = gAccountManager.getIdentity(identityKey);
@@ -2044,24 +1947,13 @@ function getIdentityForKey(key)
     return gAccountManager.getIdentity(key);
 }
 
-
-function SuppressComposeCommandUpdating(suppress)
-{
-  gSuppressCommandUpdating = suppress;
-  if (!gSuppressCommandUpdating)
-    CommandUpdate_MsgCompose();
-}
-
 function AdjustFocus()
 {
   //dump("XXX adjusting focus\n");
-  SuppressComposeCommandUpdating(true);
-
   var element = document.getElementById("addressCol2#" + awGetNumberOfRecipients());
   if (element.value == "") {
       //dump("XXX focus on address\n");
       awSetFocus(awGetNumberOfRecipients(), element);
-      //awSetFocus() will call SuppressComposeCommandUpdating(false);
   }
   else
   {
@@ -2072,9 +1964,8 @@ function AdjustFocus()
       }
       else {
         //dump("XXX focus on body\n");
-        editorShell.contentWindow.focus();
+        window.content.focus();
       }
-      SuppressComposeCommandUpdating(false);
   }
 }
 
@@ -2140,8 +2031,6 @@ function ComposeCanClose()
       switch (result)
       {
         case 0: //Save
-          if (LastToClose())
-          NotifyQuitApplication();
           gCloseWindowAfterSave = true;
           SaveAsDraft();
           return false;
@@ -2351,7 +2240,7 @@ function Attachments2CompFields(compFields)
 function RemoveAllAttachments()
 {
   var child;
-	var bucket = document.getElementById("attachmentBucket");
+  var bucket = document.getElementById("attachmentBucket");
   for (var i = bucket.childNodes.length - 1; i >= 0; i--)
   {
     child = bucket.removeChild(bucket.childNodes[i]);
@@ -2495,8 +2384,7 @@ function LoadIdentity(startup)
     var prevIdentity = gCurrentIdentity;
     
     if (identityElement) {
-        var item = identityElement.selectedItem;
-        var idKey = item.getAttribute('id');
+        var idKey = identityElement.value;
         gCurrentIdentity = gAccountManager.getIdentity(idKey);
 
         if (!startup && prevIdentity && idKey != prevIdentity.key)
@@ -2506,26 +2394,15 @@ function LoadIdentity(startup)
           var prevReplyTo = prevIdentity.replyTo;
           var prevBcc = "";
           var prevReceipt = prevIdentity.requestReturnReceipt;
-          if (prevIdentity.bccSelf)
-            prevBcc += prevIdentity.email;
-          if (prevIdentity.bccOthers)
-          {
-            if (prevBcc != "")
-              prevBcc += ","
-            prevBcc += prevIdentity.bccList;
-          }
+
+          if (prevIdentity.doBcc)
+            prevBcc += prevIdentity.doBccList;
 
           var newReplyTo = gCurrentIdentity.replyTo;
           var newBcc = "";
           var newReceipt = gCurrentIdentity.requestReturnReceipt;
-          if (gCurrentIdentity.bccSelf)
-            newBcc += gCurrentIdentity.email;
-          if (gCurrentIdentity.bccOthers)
-          {
-            if (newBcc != "")
-              newBcc += ","
-            newBcc += gCurrentIdentity.bccList;
-          }
+          if (gCurrentIdentity.doBcc)
+            newBcc += gCurrentIdentity.doBccList;          
 
           var needToCleanUp = false;
           var msgCompFields = gMsgCompose.compFields;
@@ -2634,12 +2511,12 @@ function subjectKeyPress(event)
   switch(event.keyCode) {
   case 9:
     if (!event.shiftKey) {
-      window._content.focus();
+      window.content.focus();
       event.preventDefault();
     }
     break;
   case 13:
-    window._content.focus();
+    window.content.focus();
     break;
   }
 }
@@ -2647,7 +2524,7 @@ function subjectKeyPress(event)
 function editorKeyPress(event)
 {
   if (event.keyCode == 9) {
-    if (event.shiftKey) {
+    if (event.shiftKey && !event.getPreventDefault()) {
       document.getElementById('msgSubject').focus();
       event.preventDefault();
     }
@@ -2709,11 +2586,33 @@ var attachmentBucketObserver = {
           }
           else 
           {
-            attachment = Components.classes["@mozilla.org/messengercompose/attachment;1"]
-                         .createInstance(Components.interfaces.nsIMsgAttachment);
-            attachment.url = rawData;
-            attachment.name = prettyName;
-            AddAttachment(attachment);
+            var isValid = true;
+            if (item.flavour.contentType == "text/x-moz-url") {
+              // if this is a url (or selected text)
+              // see if it's a valid url by checking 
+              // if we can extract a scheme
+              // using the ioservice
+              //
+              // also skip mailto:, since it doesn't make sense
+              // to attach and send mailto urls
+              try {
+                var scheme = gIOService.extractScheme(rawData);
+                // don't attach mailto: urls
+                if (scheme == "mailto")
+                  isValid = false;
+              }
+              catch (ex) {
+                isValid = false;
+              }
+            }
+
+            if (isValid) {
+              attachment = Components.classes["@mozilla.org/messengercompose/attachment;1"]
+                           .createInstance(Components.interfaces.nsIMsgAttachment);
+              attachment.url = rawData;
+              attachment.name = prettyName;
+              AddAttachment(attachment);
+            }
           }
         }
       }
@@ -2780,42 +2679,29 @@ function DisplaySaveFolderDlg(folderURI)
 
 function SetMsgAddressingWidgetTreeElementFocus()
 {
-  SuppressComposeCommandUpdating(true);
-
   var element = document.getElementById("msgRecipient#" + awGetNumberOfRecipients());
   awSetFocus(awGetNumberOfRecipients(), element);
-  //awSetFocus() will call SuppressComposeCommandUpdating(false);
 }
 
 function SetMsgIdentityElementFocus()
 {
-  // We're only changing focus from element to element.
-  // There's no need to update the composer commands.
-  SuppressComposeCommandUpdating(true);
   GetMsgIdentityElement().focus();
-  SuppressComposeCommandUpdating(false);
 }
 
 function SetMsgSubjectElementFocus()
 {
-  SuppressComposeCommandUpdating(true);
   GetMsgSubjectElement().focus();
-  SuppressComposeCommandUpdating(false);
 }
 
 function SetMsgAttachmentElementFocus()
 {
-  SuppressComposeCommandUpdating(true);
   GetMsgAttachmentElement().focus();
   FocusOnFirstAttachment();
-  SuppressComposeCommandUpdating(false);
 }
 
 function SetMsgBodyFrameFocus()
 {
-  SuppressComposeCommandUpdating(true);
-  editorShell.contentWindow.focus();
-  SuppressComposeCommandUpdating(false);
+  window.content.focus();
 }
 
 function GetMsgAddressingWidgetTreeElement()
@@ -2850,14 +2736,6 @@ function GetMsgAttachmentElement()
   return gMsgAttachmentElement;
 }
 
-function GetMsgBodyFrame()
-{
-  if (!gMsgBodyFrame)
-    gMsgBodyFrame = top.frames['browser.message.body'];
-
-  return gMsgBodyFrame;
-}
-
 function GetMsgHeadersToolbarElement()
 {
   if (!gMsgHeadersToolbarElement)
@@ -2866,25 +2744,15 @@ function GetMsgHeadersToolbarElement()
   return gMsgHeadersToolbarElement;
 }
 
-function IsMsgHeadersToolbarCollapsed()
-{
-  var element = GetMsgHeadersToolbarElement();
-  if(element)
-    return(element.getAttribute('moz-collapsed') == "true");
-
-  return(0);
-}
-
 function WhichElementHasFocus()
 {
   var msgIdentityElement             = GetMsgIdentityElement();
   var msgAddressingWidgetTreeElement = GetMsgAddressingWidgetTreeElement();
   var msgSubjectElement              = GetMsgSubjectElement();
   var msgAttachmentElement           = GetMsgAttachmentElement();
-  var msgBodyFrame                   = GetMsgBodyFrame();
 
-  if (top.document.commandDispatcher.focusedWindow == msgBodyFrame)
-    return msgBodyFrame;
+  if (top.document.commandDispatcher.focusedWindow == content)
+    return content;
 
   var currentNode = top.document.commandDispatcher.focusedElement;
   while (currentNode)
@@ -2916,13 +2784,11 @@ function SwitchElementFocus(event)
 
   if (event && event.shiftKey)
   {
-    if (IsMsgHeadersToolbarCollapsed())
-      SetMsgBodyFrameFocus();
-    else if (focusedElement == gMsgAddressingWidgetTreeElement)
+    if (focusedElement == gMsgAddressingWidgetTreeElement)
       SetMsgIdentityElementFocus();
     else if (focusedElement == gMsgIdentityElement)
       SetMsgBodyFrameFocus();
-    else if (focusedElement == gMsgBodyFrame)
+    else if (focusedElement == content)
     {
       // only set focus to the attachment element if there
       // are any attachments.
@@ -2938,9 +2804,7 @@ function SwitchElementFocus(event)
   }
   else
   {
-    if (IsMsgHeadersToolbarCollapsed())
-      SetMsgBodyFrameFocus();
-    else if (focusedElement == gMsgAddressingWidgetTreeElement)
+    if (focusedElement == gMsgAddressingWidgetTreeElement)
       SetMsgSubjectElementFocus();
     else if (focusedElement == gMsgSubjectElement)
     {
@@ -2953,10 +2817,21 @@ function SwitchElementFocus(event)
     }
     else if (focusedElement == gMsgAttachmentElement)
       SetMsgBodyFrameFocus();
-    else if (focusedElement == gMsgBodyFrame)
+    else if (focusedElement == content)
       SetMsgIdentityElementFocus();
     else
       SetMsgAddressingWidgetTreeElementFocus();
   }
 }
 
+// XXX hack, reuse the implementation in mailWindowOverlay.js by moving that method to an overlay that is included here too
+function loadThrobberUrl(urlPref)
+{
+    var url;
+    try {
+        url = sPrefs.getComplexValue(urlPref, Components.interfaces.nsIPrefLocalizedString).data;
+        var messenger = Components.classes["@mozilla.org/messenger;1"].createInstance();
+        messenger = messenger.QueryInterface(Components.interfaces.nsIMessenger);
+        messenger.loadURL(window, url);  
+    } catch (ex) {}
+}

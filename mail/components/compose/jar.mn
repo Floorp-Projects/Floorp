@@ -1,24 +1,13 @@
-mail.jar:
- content/mail/messengercompose/compose.xul                             (content/compose.xul)
- content/mail/messengercompose/MsgComposeCommands.js                   (content/MsgComposeCommands.js)
- content/mail/messengercompose/addressingWidgetOverlay.js              (content/addressingWidgetOverlay.js)
- content/mail/messengercompose/addressingWidgetOverlay.xul             (content/addressingWidgetOverlay.xul)
- content/mail/messengercompose/insertMenuSmileyOverlay.xul             (content/insertMenuSmileyOverlay.xul)
- content/mail/messengercompose/askSendFormat.js                        (content/askSendFormat.js)
- content/mail/messengercompose/askSendFormat.xul                       (content/askSendFormat.xul)
- content/mail/messengercompose/sendProgress.xul                        (content/sendProgress.xul)
- content/mail/messengercompose/sendProgress.js                         (content/sendProgress.js)
- content/mail/messengercompose/mailComposeBindings.xml                 (content/mailComposeBindings.xml)
- content/mail/messengercompose/mailComposeExtrasOverlay.xul            (content/mailComposeExtrasOverlay.xul)
- content/mail/addressbook/abCommon.js                                  (content/abCommon.js)
+classic.jar:
++   skin/classic/messenger/messengercompose/messengercompose.css   (skin/messengercompose.css)
 
-toolkit.jar:
-  content/global/autocomplete.xml                              (content/autocomplete.xml)
+messenger.jar:
++   content/messenger/messengercompose/messengercompose.xul        (content/messengercompose.xul)
++   content/messenger/messengercompose/MsgComposeCommands.js       (content/MsgComposeCommands.js)
+
 
 en-US.jar:
-  locale/en-US/mail/messengercompose/messengercompose.dtd        (locale/messengercompose.dtd)
-  locale/en-US/mail/messengercompose/addressingWidgetOverlay.dtd (locale/addressingWidgetOverlay.dtd)
-  locale/en-US/mail/messengercompose/askSendFormat.dtd           (locale/askSendFormat.dtd)
-  locale/en-US/mail/messengercompose/sendProgress.dtd            (locale/sendProgress.dtd)
-  locale/en-US/mail/messengercompose/composeMsgs.properties      (locale/composeMsgs.properties)
++   locale/en-US/messenger/messengercompose/messengercompose.dtd   (locale/messengercompose.dtd)
+
+
 

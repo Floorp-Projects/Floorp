@@ -1,0 +1,98 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+
+<!DOCTYPE page SYSTEM "chrome://messenger/locale/messengercompose/pref-composing_messages.dtd">
+
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      onload="parent.initPanel('chrome://messenger/content/messengercompose/pref-composing_messages.xul');"
+      headertitle="&pane.title;">
+    
+  <script type="application/x-javascript">
+  <![CDATA[
+    var _elementIDs = ["forwardMessageMode", "autoQuote", "replyOnTop", "spellCheckBeforeSend", "strictlyMime", 
+                       "wrapLength", "mailWarnOnSendAccelKey"];
+    var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+    observerService.notifyObservers(null, "charsetmenu-selected", "mailedit");
+
+    function Startup()
+    {
+      document.getElementById("spellCheckBeforeSend").hidden =
+        !("@mozilla.org/spellchecker;1" in Components.classes);
+
+      doEnabling();
+    }
+    
+    function doEnabling()
+    {
+      var quotebox = document.getElementById("thenBox");
+      var quotecheck = document.getElementById("autoQuote");
+      if( quotecheck.checked && !quotecheck.disabled ) {
+        quotebox.firstChild.removeAttribute("disabled");
+        quotebox.lastChild.removeAttribute("disabled");
+      }
+      else {
+        quotebox.firstChild.setAttribute("disabled","true");
+        quotebox.lastChild.setAttribute("disabled","true");
+      }
+    }
+  ]]>
+  </script>  
+
+  <groupbox>
+    <caption label="&forwardReply.label;"/>
+    
+    <hbox align="center">
+      <label value="&forwardMsg.label;" accesskey="&forwardMsg.accesskey;" control="forwardMessageMode"/>
+      <menulist id="forwardMessageMode" 
+                prefstring="mail.forward_message_mode">
+        <menupopup>
+          <menuitem value="2" label="&inline.label;" accesskey="&inline.accesskey;"/>
+          <menuitem value="0" label="&asAttachment.label;" accesskey="&asAttachment.accesskey;"/>
+        </menupopup>
+      </menulist>
+    </hbox>
+    <hbox align="center">
+      <checkbox id="autoQuote" label="&autoQuote.label;" 
+                prefstring="mail.auto_quote"
+                oncommand="doEnabling();"
+                accesskey="&autoQuote.accesskey;"/>
+    </hbox>
+    <hbox class="indent" align="center" id="thenBox">
+      <label value="&then.label;" accesskey="&then.accesskey;" control="replyOnTop"/>
+      <menulist id="replyOnTop" preftype="int" prefstring="mailnews.reply_on_top">
+        <menupopup>
+          <menuitem value="1" label="&aboveQuote.label;" accesskey="&aboveQuote.accesskey;"/>
+          <menuitem value="0" label="&belowQuote.label;" accesskey="&belowQuote.accesskey;"/>
+          <menuitem value="2" label="&selectAndQuote.label;" accesskey="&selectAndQuote.accesskey;"/>
+        </menupopup>
+      </menulist>        
+    </hbox>
+  </groupbox>
+
+  <!-- Composing Mail -->
+  <groupbox align="start">
+    <caption label="&sendingMessagesHeader.label;"/>
+        
+    <checkbox id="spellCheckBeforeSend" label="&spellCheck.label;"
+              prefstring="mail.SpellCheckBeforeSend"
+              accesskey="&spellCheck.accesskey;"/>
+  
+    <checkbox id="strictlyMime" label="&useMIME.label;"
+              prefstring="mail.strictly_mime"
+              accesskey="&useMIME.accesskey;"/>
+
+    <hbox align="center">
+      <checkbox id="mailWarnOnSendAccelKey" label="&warnOnSendAccelKey.label;"
+                prefstring="mail.warn_on_send_accel_key"
+                accesskey="&warnOnSendAccelKey.accesskey;" />
+    </hbox>
+    
+	<hbox align="center">
+        <label value="&wrapOutMsg.label;" accesskey="&wrapOutMsg.accesskey;" control="wrapLength"/>
+    <textbox id="wrapLength" size="3" preftype="int"
+               prefstring="mailnews.wraplength" prefattribute="value"/>
+    <label value="&char.label;"/>
+  </hbox>
+  </groupbox>  
+</page>

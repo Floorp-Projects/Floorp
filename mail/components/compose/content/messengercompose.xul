@@ -28,22 +28,22 @@
 <?xml-stylesheet href="chrome://messenger/skin/folderMenus.css" type="text/css"?> 
 <?xml-stylesheet href="chrome://editor/skin/editorFormatToolbar.css" type="text/css"?> 
 <?xml-stylesheet href="chrome://messenger/skin/addressingWidget.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/tasksOverlay.css" type="text/css"?> 
 
 <?xul-overlay href="chrome://global/content/charsetOverlay.xul"?>
-<?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/communicatorOverlay.xul"?>
 
-<?xul-overlay href="chrome://mail/content/messengercompose/addressingWidgetOverlay.xul"?>
+<?xul-overlay href="chrome://messenger/content/messengercompose/addressingWidgetOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 <?xul-overlay href="chrome://editor/content/editorOverlay.xul"?>
-<?xul-overlay href="chrome://mail/content/messengercompose/insertMenuSmileyOverlay.xul"?>
-<?xul-overlay href="chrome://mail/content/messengercompose/mailComposeExtrasOverlay.xul"?>
+<?xul-overlay href="chrome://editor/content/editorSmileyOverlay.xul"?>
+<?xul-overlay href="chrome://messenger/content/messengercompose/mailComposeExtrasOverlay.xul"?>
 
 <!DOCTYPE window [
-<!ENTITY % messengercomposeDTD SYSTEM "chrome://mail/locale/messengercompose/messengercompose.dtd" >
+<!ENTITY % messengercomposeDTD SYSTEM "chrome://messenger/locale/messengercompose/messengercompose.dtd" >
 %messengercomposeDTD;
-<!ENTITY % messengerDTD SYSTEM "chrome://mail/locale/messenger.dtd" >
+<!ENTITY % messengerDTD SYSTEM "chrome://messenger/locale/messenger.dtd" >
 %messengerDTD;
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
 %brandDTD;
@@ -62,17 +62,16 @@
         persist="screenX screenY width height sizemode"> 
 
 <stringbundleset id="stringbundleset">
-  <stringbundle id="bundle_composeMsgs" src="chrome://mail/locale/messengercompose/composeMsgs.properties"/>
-  <stringbundle id="bundle_messenger" src="chrome://mail/locale/messenger.properties"/>
-  <stringbundle id="bundle_offlinePrompts" src="chrome://mail/locale/offline.properties"/>
+  <stringbundle id="bundle_composeMsgs" src="chrome://messenger/locale/messengercompose/composeMsgs.properties"/>
+  <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
 </stringbundleset>
 
+<script type="application/x-javascript" src="chrome://communicator/content/printing.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/accountUtils.js"/>
-<script type="application/x-javascript" src="chrome://mail/content/widgetglue.js"/>
-<script type="application/x-javascript" src="chrome://mail/content/mail-offline.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/mailCore.js"/>
 <script type="application/x-javascript" src="chrome://editor/content/editor.js"/>
-<!--script type="application/x-javascript" src="chrome://editor/content/EditorCommandsDebug.js"/-->
-<script type="application/x-javascript" src="chrome://mail/content/messengercompose/MsgComposeCommands.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/messengercompose/MsgComposeCommands.js"/>
 
 <!-- drag and drop -->
 <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
@@ -95,11 +94,8 @@
   <commandset id="composerStyleMenuItems"/>
   <commandset id="composerTableMenuItems"/>
   <commandset id="composerListMenuItems"/>
-  <commandset id="tasksCommands"/>
   <command id="cmd_quit"/>
   <!-- File Menu -->
-  <command id="cmd_newNavigator"/>
-  <command id="cmd_newEditor"/>
   <command id="cmd_new" oncommand="goDoCommand('cmd_newMessage')"/>
   <command id="cmd_attachFile" oncommand="goDoCommand('cmd_attachFile')"/>
   <command id="cmd_attachPage" oncommand="goDoCommand('cmd_attachPage')"/>
@@ -119,6 +115,7 @@
   <!--command id="cmd_pasteQuote"/  DO NOT INCLUDE THOSE PBROCASTER ESLE THE EDIT MENU WILL BE BROKEN! -->
   <!--command id="cmd_find"/-->
   <!--command id="cmd_findNext"/-->
+  <command id="cmd_rewrap"  oncommand="goDoCommand('cmd_rewrap')"/>
   <command id="cmd_delete"/>
   <command id="cmd_selectAll"/>
   <command id="cmd_account" oncommand="goDoCommand('cmd_account')"/>
@@ -131,7 +128,6 @@
   <command id="cmd_selectAddress" oncommand="goDoCommand('cmd_selectAddress')"/>
   <command id="cmd_outputFormat" oncommand="OutputFormatMenuSelect(event.target)"/>
   <command id="cmd_quoteMessage" oncommand="goDoCommand('cmd_quoteMessage')"/>
-  <command id="cmd_rewrap" oncommand="goDoCommand('cmd_rewrap')"/>
   <command id="cmd_insert"/>
 </commandset>
 
@@ -143,8 +139,6 @@
 
 <keyset id="tasksKeys">
   <!-- File Menu -->
-  <key id="key_newNavigator"/>
-  <key id="key_newBlankPage"/>
   <key id="key_close"/>
   <key id="key_save"  key="&saveCmd.key;" command="cmd_saveDefault" modifiers="accel"/>
   <key id="key_send" keycode="&sendCmd.keycode;" observes="cmd_sendWithCheck" modifiers="accel"/>
@@ -170,6 +164,10 @@
   <!-- Options Menu -->
   <!-- key id="key_selectAddresses" xulkey="true" key="&selectAddressCmd.key;" command="cmd_selectAddress"/ -->
   <key id="key_checkspelling"  key="&checkSpellingCmd.key;" command="cmd_spelling"  modifiers="accel"/>
+
+   <!-- Tools Menu -->
+  <key id="key_mail"  key="&messengerCmd.commandkey;" oncommand="toMessengerWindow();" modifiers="accel"/>
+  <key id="key_addressbook"  key="&addressBookCmd.commandkey;" oncommand="toAddressBook();" modifiers="accel"/>
   
   <!-- Tab/F6 Keys -->
   <key keycode="VK_TAB" oncommand="SwitchElementFocus(event);" modifiers="control"/>
@@ -200,16 +198,20 @@
   <menuitem label="&addAttachment.label;" accesskey="&addAttachment.accesskey;" command="cmd_attachFile"/>
 </popup>
 
-  <toolbox class="toolbox-top" id="headers-box">
-    <menubar id="compose-menubar" grippytooltiptext="&menuBar.tooltip;">
+  <toolbox id="compose-toolbox" class="toolbox-top" mode="icons"> 
+  <!-- Menu -->
+  
+  <toolbar type="menubar" id="msgcompose-toolbar-menubar" class="chromeclass-menubar" customizable="false"
+     defaultset="menubar-items" mode="icons">
+
+     <toolbaritem id="menubar-items" align="center">
+      <menubar id="mail-menubar" style="border:0px;padding:0px;margin:0px;-moz-appearance:none">
       <menu id="menu_File">
         <menupopup id="menu_FilePopup">
           <menu id="menu_New">
             <menupopup id="menu_NewPopup">
               <menuitem label="&newMessage.label;" accesskey="&newMessage.accesskey;" key="key_newMessage" oncommand="goOpenNewMessage();"/>
               <menuseparator/>
-              <menuitem id="menu_newNavigator"/>
-              <menuitem id="menu_newEditor"/>
             </menupopup>
           </menu>
           <menuitem label="&attachFileCmd.label;" accesskey="&attachFileCmd.accesskey;" command="cmd_attachFile"/>
@@ -230,10 +232,11 @@
           <menuitem label="&sendNowCmd.label;" accesskey="&sendNowCmd.accesskey;" key="key_send" command="cmd_sendNow" id="menu-item-send-now"/>
           <menuitem label="&sendLaterCmd.label;" accesskey="&sendLaterCmd.accesskey;" key="key_sendLater" command="cmd_sendLater"/>
           <menuseparator/>
-          <!--Page setup gets overlaid here from platformGlobalOverlay.xul / -->
+          <menuitem id="printSetupMenuItem" label="&printSetupCmd.label;" accesskey="&printSetupCmd.accesskey;" command="cmd_printSetup"/>
           <menuitem id="printMenuItem" label="&printCmd.label;" accesskey="&printCmd.accesskey;" key="key_print" command="cmd_print"/>
         </menupopup>
       </menu>
+      
       <menu id="menu_Edit">
         <menupopup onpopupshowing="updateEditItems();">
           <menuitem id="menu_undo"/>
@@ -243,6 +246,7 @@
           <menuitem id="menu_copy"/>
           <menuitem id="menu_paste"/>
           <menuitem id="menu_pasteQuote"/>
+          <menuitem label="&editRewrapCmd.label;" accesskey="&editRewrapCmd.accesskey;" command="cmd_rewrap"/>
           <menuitem id="menu_delete"/>
           <menuseparator/>
           <menuitem id="menu_selectAll"/>
@@ -250,11 +254,9 @@
           <menuitem label="&findCmd.label;"      key="key_find"      accesskey="&findCmd.accesskey;"      command="cmd_find"/>
           <menuitem label="&findAgainCmd.label;" key="key_findNext" accesskey="&findAgainCmd.accesskey;" command="cmd_findNext"/>
           <menuitem label="&findPrevCmd.label;"  key="key_findPrev" accesskey="&findPrevCmd.accesskey;"  command="cmd_findPrev"/>
-          <menuseparator/>
-          <menuitem label="&accountManagerCmd.label;" accesskey="&accountManagerCmd.accesskey;" command="cmd_account"/>
-          <menuitem id="menu_preferences" oncommand="goDoCommand('cmd_preferences')"/>
         </menupopup>
       </menu>
+
       <menu id="menu_View">
         <menupopup id="menu_View_Popup">
           <menu id="menu_Toolbars">
@@ -262,7 +264,7 @@
               <menuitem id="menu_showComposeToolbar"
                         type="checkbox"
                         label="&showComposeToolbarCmd.label;"
-                        command="cmd_showComposeToolbar"
+                        oncommand="onViewToolbarCommand('composeToolbar', event);"
                         accesskey="&showComposeToolbarCmd.accesskey;"
                         checked="true"/>
               <menuitem id="menu_showFormatToolbar"
@@ -273,6 +275,9 @@
                         checked="true"/>
               <menuitem id="menu_showTaskbar"
                         type="checkbox"/>
+              <menuseparator/>
+              <menuitem id="menu_customizeToolbar" oncommand="CustomizeMailToolbar('compose-toolbox');" label="&customizeToolbar.label;" accesskey="&customizeToolbar.accesskey;"/>
+                    
             </menupopup>
           </menu>
           <menuseparator/>
@@ -280,9 +285,9 @@
         </menupopup>
       </menu>
   
-      <menu id="insertMenu" command="cmd_insert"/>
+      <menu id="insertMenu" command="cmd_renderedHTMLEnabler"/>
 
-      <menu id="formatMenu" label="&formatMenu.label;" accesskey="&formatMenu.accesskey;" command="cmd_insert">
+      <menu id="formatMenu" label="&formatMenu.label;" accesskey="&formatMenu.accesskey;" command="cmd_renderedHTMLEnabler">
         <menupopup id="formatMenuPopup">
           <menu id="tableMenu"/>
           <menuseparator/>
@@ -292,11 +297,10 @@
       </menu>
   
       <menu id="optionsMenu" label="&optionsMenu.label;" accesskey="&optionsMenu.accesskey;">
-        <menupopup id="optionsMenuPopup"> 
+        <menupopup id="optionsMenuPopup" onpopupshowing="updateOptionItems();"> 
           <menuitem label="&selectAddressCmd.label;" accesskey="&selectAddressCmd.accesskey;" command="cmd_selectAddress"/>
           <menuitem label="&checkSpellingCmd.label;" id="menu_checkspelling" accesskey="&checkSpellingCmd.accesskey;" key="key_checkspelling" command="cmd_spelling"/>
           <menuitem label="&quoteCmd.label;" accesskey="&quoteCmd.accesskey;" command="cmd_quoteMessage"/>
-          <menuitem label="&editRewrapCmd.label;" accesskey="&editRewrapCmd.accesskey;" command="cmd_rewrap" oncommand="editorShell.Rewrap(false)"/>
           <menuseparator/>
           <menuitem id="returnReceiptMenu" type="checkbox" label="&returnReceiptMenu.label;" accesskey="&returnReceiptMenu.accesskey;" checked="false" oncommand="ToggleReturnReceipt(event.target)"/>
           <menu id="outputFormatMenu" label="&outputFormatMenu.label;" accesskey="&outputFormatMenu.accesskey;" command="cmd_outputFormat">
@@ -374,15 +378,29 @@
           <menuitem label="&attachVCardCmd.label;" disabled="true" accesskey="&attachVCardCmd.accesskey;" oncommand="AttachVCard()"/-->     
         </menupopup>
       </menu>
-      <!--menu id="debugMenu"/-->
-      <menu id="tasksMenu"/>
-      <menu id="windowMenu"/>
-      <menu id="menu_Help"/>
-    </menubar>
 
-    <toolbar class="toolbar-primary chromeclass-toolbar" id="composeToolbar" persist="collapsed" grippytooltiptext="&mailToolbar.tooltip;">
-      <hbox id="toolbar_button_box">
-       <toolbarbutton class="toolbarbutton-1"
+      <menu id="tasksMenu" label="&tasksMenu.label;" accesskey="&tasksMenu.accesskey;">
+          <menupopup id="taskPopup">
+            <menuitem accesskey="&messengerCmd.accesskey;" label="&messengerCmd.label;"  key="key_mail" oncommand="toMessengerWindow();" id="tasksMenuMail" class="menuitem-iconic icon-mail16 menu-iconic"/>
+            <menuitem label="&addressBookCmd.label;" accesskey="&addressBookCmd.accesskey;" key="key_addressbook" oncommand="toAddressBook();" id="tasksMenuAddressBook" class="menuitem-iconic icon-addressbook16 menu-iconic"/>
+            <menuseparator/>
+            <menuitem label="&accountManagerCmd.label;" accesskey="&accountManagerCmd.accesskey;" command="cmd_account"/>
+            <menuitem id="menu_preferences" oncommand="goDoCommand('cmd_preferences')"/>
+         </menupopup>
+      </menu>
+      
+      <menu label="&helpMenu.label;" accesskey="&helpMenu.accesskey;">
+        <menupopup id="menu_HelpPopup">
+          <menuitem accesskey="&releaseCmd.accesskey;" label="&releaseCmd.label;" oncommand="loadThrobberUrl('mailnews.release_notes.url');"/>
+          <menuitem accesskey="&hintsAndTips.accesskey;" label="&hintsAndTips.label;" oncommand="loadThrobberUrl('mailnews.hints_and_tips.url');"/>
+        </menupopup>
+      </menu>
+    </menubar>
+   </toolbaritem>
+  </toolbar>
+
+  <toolbarpalette id="MsgComposeToolbarPalette">
+    <toolbarbutton class="toolbarbutton-1"
                id="button-send" label="&sendButton.label;"
                tooltiptext="&sendButton.tooltip;" 
                command="cmd_sendButton"
@@ -390,38 +408,57 @@
                now_tooltiptext="&sendButton.tooltip;"
                later_label="&sendLaterCmd.label;"
                later_tooltiptext="&sendlaterButton.tooltip;">
-        <observes element="Communicator:WorkMode" attribute="offline"/>
-       </toolbarbutton>
-       <toolbarseparator class="toolbarseparator-primary"/>
-       <toolbarbutton class="toolbarbutton-1"
+      <observes element="Communicator:WorkMode" attribute="offline"/>
+    </toolbarbutton>
+    <toolbarbutton class="toolbarbutton-1"
                id="button-address" label="&addressButton.label;" 
                tooltiptext="&addressButton.tooltip;" 
                command="cmd_selectAddress"/>
-       <toolbarbutton class="toolbarbutton-1"
+    <toolbarbutton class="toolbarbutton-1" type="menu-button"
                id="button-attach" label="&attachButton.label;" 
                tooltiptext="&attachButton.tooltip;" 
-               command="cmd_attachFile"/>
-       <toolbarbutton class="toolbarbutton-1"
+               command="cmd_attachFile">
+         <menupopup>
+           <menuitem label="&attachFileCmd.label;" accesskey="&attachFileCmd.accesskey;" command="cmd_attachFile"/>
+           <menuitem label="&attachPageCmd.label;" accesskey="&attachPageCmd.accesskey;" command="cmd_attachPage"/>
+         </menupopup>
+    </toolbarbutton>
+    <toolbarbutton class="toolbarbutton-1"
                id="spellingButton" label="&spellingButton.label;" 
                command="cmd_spelling"/>
-       <toolbarseparator id="saveSeparator" class="toolbarseparator-primary"/>
-       <toolbarbutton class="toolbarbutton-1"
+    <toolbarseparator id="saveSeparator" class="toolbarseparator-primary"/>
+    <toolbarbutton class="toolbarbutton-1" type="menu-button"
                id="button-save" label="&saveButton.label;" 
                tooltiptext="&saveButton.tooltip;" 
-               command="cmd_saveDefault"/>
-       <spacer flex="1"/>
-       <hbox id="throbber-box" align="center">
-         <button id="navigator-throbber" 
-               oncommand="goClickThrobber('compose.throbber.url')" tooltiptext="&throbber.tooltip;">
-           <observes element="broadcaster_throbber" attribute="busy"/>
-         </button>
-       </hbox>
-       </hbox>
-    </toolbar>
-  
+               command="cmd_saveDefault">
+         <menupopup>
+           <menuitem label="&saveAsFileCmd.label;" accesskey="&saveAsFileCmd.accesskey;" command="cmd_saveAsFile"/>
+           <menuseparator/>
+           <menuitem label="&saveAsDraftCmd.label;" accesskey="&saveAsDraftCmd.accesskey;" command="cmd_saveAsDraft"/>
+           <menuitem label="&saveAsTemplateCmd.label;" accesskey="&saveAsTemplateCmd.accesskey;" command="cmd_saveAsTemplate"/>
+         </menupopup>
+    </toolbarbutton>
+    <toolbaritem id="throbber-box" align="center" pack="center">
+      <button id="navigator-throbber" oncommand="loadThrobberUrl('compose.throbber.url')" tooltiptext="&throbber.tooltip;">
+          <observes element="broadcaster_throbber" attribute="busy"/>
+      </button>
+    </toolbaritem>
+  </toolbarpalette>
+
+  <toolbar id="composeToolbar" class="toolbar-primary chromeclass-toolbar"
+           toolbarname="Compose" 
+           fullscreentoolbar="true" mode="icons"
+           customizable="true"
+           defaultset="button-send,spacer,button-address,button-attach,button-security,spacer,button-save,spring,throbber-box">
+  </toolbar>
+
+  <toolbarset id="customToolbars" context="toolbar-context-menu"/>
+  </toolbox>
+
+  <toolbox id="headers-box" class="toolbox-top" mode="icons"> 
     <toolbar id="MsgHeadersToolbar" persist="collapsed" flex="1"
              tborient="vertical" tbalign="stretch"
-             grippytooltiptext="&addressBar.tooltip;">
+             customizable="true">
       <hbox id="msgheaderstoolbar-box" flex="1">
         <vbox flex="1" id="addresses-box">
           <hbox align="center">
@@ -454,7 +491,7 @@
     </toolbar>
   
     <!-- These toolbar items get filled out from the editorOverlay -->
-    <toolbar class="chromeclass-toolbar" id="FormatToolbar" persist="collapsed" tbautostretch="never" grippytooltiptext="&formatToolbar.tooltip;">
+    <toolbar class="chromeclass-toolbar" id="FormatToolbar" persist="collapsed" tbautostretch="never" customizable="true">
       <menulist id="ParagraphSelect"/>
       <menulist id="FontFaceSelect"/>
       <stack id="ColorButtons"/>
@@ -486,12 +523,10 @@
   </vbox>
 
   <statusbar id="status-bar" class="chromeclass-status">
-    <statusbarpanel id="component-bar"/>
     <statusbarpanel id="statusText" flex="1"/>
-    <statusbarpanel class="statusbarpanel-progress">
+    <statusbarpanel class="statusbarpanel-progress" id="statusbar-progresspanel">
       <progressmeter id="compose-progressmeter" class="progressmeter-statusbar" mode="normal" value="0"/>
     </statusbarpanel>
-    <statusbarpanel checkfunc="MailCheckBeforeOfflineChange()" id="offline-status" class="statusbarpanel-iconic"/> 
   </statusbar>
 
 </window>

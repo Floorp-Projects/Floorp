@@ -29,6 +29,15 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
+/* this toolbox declaration should not need to be here, but for some reason this is the only
+   way to get the toolbar to look right on win XP. Including toolbar.css isn't enought. 
+*/
+
+toolbox {
+  -moz-appearance: toolbox;
+  background-color: -moz-Dialog;
+}
+
 /* ::::: primary toolbar buttons ::::: */
  
 .toolbarbutton-1 {
@@ -71,11 +80,11 @@
   -moz-image-region: rect(252px 23px 273px 0px);
 }
 
-#button-attach:hover {
+#button-attach[buttonover="true"] {
   -moz-image-region: rect(252px 46px 273px 23px);
 } 
 
-#button-attach:hover:active {
+#button-attach[buttondown="true"] {
   -moz-image-region: rect(252px 69px 273px 46px);
 } 
 
@@ -104,11 +113,11 @@
   -moz-image-region: rect(273px 23px 294px 0px);
 }
 
-#button-save:hover {
+#button-save[buttonover="true"] {
   -moz-image-region: rect(273px 46px 294px 23px);
 } 
 
-#button-save:hover:active {
+#button-save[buttondown="true"] {
   -moz-image-region: rect(273px 69px 294px 46px);
 } 
 
@@ -175,69 +184,4 @@ treechildren:-moz-tree-image(remote-err) {
 .composemenu-text-2 {
   font-style: italic;
   color: GrayText;
-}
-
-/* new stuff, for blake's compose window */
-
-#button-sendlater {
-  list-style-image: url("chrome://messenger/skin/icons/sendlater-normal.gif");
-}
-
-#button-sendlater:hover {
-  list-style-image: url("chrome://messenger/skin/icons/sendlater-hover.gif");
-}
-
-#button-sendlater:hover:active {
-  list-style-image: url("chrome://messenger/skin/icons/sendlater-select.gif");
-}
-
-#button-sendlater[disabled="true"] {
-  list-style-image: url("chrome://messenger/skin/icons/sendlater-disabled.gif");
-}
-
-label, description {
-  color: #000000;
-}
-
-#MsgHeadersToolbar {
-  background: #F6F7CF;
-  padding: 10px 20px;
-}
-
-#FormatToolbar {
-  background: #F6F7CF;
-  padding: 2px 0px;
-}
-
-#button-more {
-  list-style-image: url("chrome://messenger/skin/icons/more-normal.gif");
-}
- 
-#button-more:hover {
-  list-style-image: url("chrome://messenger/skin/icons/more-hover.gif");
-}
- 
-#button-more:hover:active,
-#button-more[open] {
-  list-style-image: url("chrome://messenger/skin/icons/more-select.gif");
-}
- 
-#button-more[disabled] {
-  list-style-image: url("chrome://messenger/skin/icons/more-disabled.gif");
-}
-
-toolbarbutton[checked="true"] {
-  background-color: transparent !important;
-  -moz-border-top-colors: #000000 #02669E !important;
-  -moz-border-right-colors: #000000 #86AEFE !important;
-  -moz-border-bottom-colors: #000000 #86AEFE !important;
-  -moz-border-left-colors: #000000 #02669E !important;
-}
- 
-#abSplitter {
-  min-width: 13px;
-}
-
-#abResultsTree {
-  border-right: none !important;
 }

@@ -1,0 +1,10 @@
+<!ENTITY offlineMenu.label "Offline">
+<!ENTITY offlineMenu.accesskey "l">
+<!ENTITY synchronizeOfflineCmd.label "Download/Sync Now...">
+<!ENTITY synchronizeOfflineCmd.accesskey "S">
+<!ENTITY settingsOfflineCmd.label "Offline Settings">
+<!ENTITY settingsOfflineCmd.accesskey "e">
+<!ENTITY downloadSelectedCmd.label "Get Selected Messages">
+<!ENTITY downloadSelectedCmd.accesskey "M">
+<!ENTITY downloadFlaggedCmd.label "Get Flagged Messages">
+<!ENTITY downloadFlaggedCmd.accesskey "F">
