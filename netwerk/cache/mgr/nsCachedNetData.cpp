@@ -80,7 +80,7 @@ public:
                                 nsIStreamAsFileObserver *aObserver):
         mStreamAsFile(aStreamAsFile), mObserver(aObserver), mNext(0) {}
 
-    ~StreamAsFileObserverClosure() { if (mNext) delete mNext; }
+    ~StreamAsFileObserverClosure() { delete mNext; }
 
     // Weak link to nsIStreamAsFile which, indirectly, holds a strong link
     //   to this instance
@@ -156,8 +156,7 @@ class CacheMetaData {
     			
         if (mOpaqueBytes)
             nsAllocator::Free(mOpaqueBytes);
-        if (mNext)
-            delete mNext;
+        delete mNext;
     }
 
 protected:
@@ -258,16 +257,14 @@ nsCachedNetData::Release(void)
         SetFlag(DORMANT);
         
         // Free up some storage
-        if (mObservers)
-            delete mObservers;
+        delete mObservers;
         mObservers = 0;
         PRInt32 recordID;
         mRecord->GetRecordID(&recordID);
         NS_RELEASE(mRecord);
         mRecord = 0;
         mRecordID = recordID;
-        if (mMetaData)
-            delete mMetaData;
+        delete mMetaData;
         mMetaData = 0;
     }
     return count;
@@ -921,8 +918,7 @@ nsCachedNetData::RemoveObserver(nsIStreamAsFileObserver *aObserver)
         if (closure->mObserver == aObserver) {
             *closurep = closure->mNext;
             closure->mNext = 0;
-            if (closure)
-                delete closure;
+            delete closure;
         }
     }
     
