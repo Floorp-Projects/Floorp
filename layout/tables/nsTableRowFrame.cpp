@@ -1238,15 +1238,6 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
     rv = ReflowChild(aNextFrame, aPresContext, desiredSize, kidReflowState,
                      aReflowState.x, GetChildMaxTopMargin(), 0, aStatus);
     
-    //XXX: this is a hack, shouldn't it be the case that a min size is 
-    //     never larger than a desired size?
-#if 0
-    if (kidMaxElementSize.width>desiredSize.width)
-      desiredSize.width = kidMaxElementSize.width;
-    if (kidMaxElementSize.height>desiredSize.height)
-      desiredSize.height = kidMaxElementSize.height;
-#endif
-    
     // Update the cell layout data.. If the cell's maximum width changed,
     // then inform the table that its maximum width needs to be recomputed
     ((nsTableCellFrame *)aNextFrame)->SetPass1MaxElementSize(kidMaxElementSize);
