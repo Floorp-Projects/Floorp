@@ -129,7 +129,8 @@ function InitDialog()
 	  // TODO: We need to get the actual image dimensions.
 	  //       If different from attribute dimensions, then "custom" is checked.
 	  // For now, always check custom, so we don't trash existing values
-	  if ( dialog.widthInput.value.length && dialog.heightInput.value.length )
+	  if ( dialog.widthInput.value.length && dialog.heightInput.value.length 
+	    && dialog.widthInput.value != "0" && dialog.heightInput.value != "0")
 	  {
 	    dialog.isCustomSize = true; 
 	    dialog.customsizeRadio.checked = true;
@@ -140,6 +141,8 @@ function InitDialog()
 	    dialog.originalsizeRadio.checked = true;
 	  }
 
+    dump("custom size is: "+dialog.isCustomSize+"\n");
+    
 	  // set spacing editfields
 	  dialog.imagelrInput.value = globalElement.getAttribute("hspace");
 	  dialog.imagetbInput.value = globalElement.getAttribute("vspace");
@@ -287,10 +290,16 @@ function onMoreFewerImage()
     InitDialog();
     
     if (dialog.isCustomSize)
+    {
       dialog.customsizeRadio.checked = true;
+      dialog.originalsizeRadio.checked = false;
+    }
     else
+    {
+      dialog.customsizeRadio.checked = false;
       dialog.originalsizeRadio.checked = true;
-    
+    }
+
     if (dialog.doConstrain)
       dialog.constrainCheckbox.checked = true;
   }
