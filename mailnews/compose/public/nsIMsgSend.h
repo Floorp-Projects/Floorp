@@ -12,11 +12,6 @@
 #ifdef XPIDL_JS_STUBS
 #include "jsapi.h"
 #endif
-#include "nsDebug.h"
-#include "nsTraceRefcnt.h"
-#include "nsID.h"
-#include "nsError.h"
-
 
 /* starting interface nsIMsgSend */
 
@@ -33,8 +28,8 @@ class nsIMsgSend : public nsISupports {
     return iid;
   }
 
-  /* void SendMessage (in nsIMsgCompFields fields); */
-  NS_IMETHOD SendMessage(const nsIMsgCompFields *fields, const char *smtp) = 0;
+  /* void SendMessage (in nsIMsgCompFields fields, in string smtp); */
+  NS_IMETHOD SendMessage(nsIMsgCompFields *fields, const char *smtp) = 0;
 
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);

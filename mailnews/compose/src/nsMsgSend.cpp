@@ -343,7 +343,7 @@ nsMsgSendMimeDeliveryState::~nsMsgSendMimeDeliveryState()
 /* the following macro actually implement addref, release and query interface for our component. */
 NS_IMPL_ISUPPORTS(nsMsgSendMimeDeliveryState, nsIMsgSend::GetIID());
 
-nsresult nsMsgSendMimeDeliveryState::SendMessage(const nsIMsgCompFields *fields, const char *smtp)
+nsresult nsMsgSendMimeDeliveryState::SendMessage(nsIMsgCompFields *fields, const char *smtp)
 {
 	const char* pBody;
 	PRInt32 nBodyLength;

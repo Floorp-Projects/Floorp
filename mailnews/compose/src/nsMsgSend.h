@@ -80,7 +80,7 @@ public:
 	/* this macro defines QueryInterface, AddRef and Release for this class */
 	NS_DECL_ISUPPORTS
 
-	NS_IMETHOD SendMessage(const nsIMsgCompFields *fields, const char *smtp);
+	NS_IMETHOD SendMessage(nsIMsgCompFields *fields, const char *smtp);
 
     void	StartMessageDelivery(MSG_Pane *pane,
 									 void      *fe_data,
