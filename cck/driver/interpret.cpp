@@ -85,7 +85,7 @@ BOOL CInterpret::NewConfig(WIDGET *curWidget, CString globalsName, CString Dialo
 	CString newDir = CString(replaceVars("%Root%Configs\\",NULL)); 
 	
 	newDir += configField;
-	CString Template = CString(replaceVars("%Root%WS_Template",NULL));
+	CString Template = CString(replaceVars("%Root%WSTemplate",NULL));
 	CString FooCopy = CString(replaceVars("%Root%Configs\\%CustomizationList%",NULL));
 	d = FindFirstFile((const char *) newDir, &data);
 	if (d == INVALID_HANDLE_VALUE)
