@@ -63,8 +63,25 @@ nsTXTToHTMLConv::OnStartRequest(nsIChannel *aChannel, nsISupports *aContext) {
       mBuffer.AppendWithConversion("<pre>\n");
     }
 
-    return mListener->OnStartRequest(aChannel, aContext);
+    // Push mBuffer to the listener now, so the initial HTML will not
+    // be parsed in OnDataAvailable().
+
+    nsresult rv = mListener->OnStartRequest(aChannel, aContext);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIInputStream> inputData;
+    nsCOMPtr<nsISupports>    inputDataSup;
+    rv = NS_NewStringInputStream(getter_AddRefs(inputDataSup), mBuffer);
+    if (NS_FAILED(rv)) return rv;
+
+    inputData = do_QueryInterface(inputDataSup);
+    rv = mListener->OnDataAvailable(aChannel, aContext,
+                                    inputData, 0, mBuffer.Length());
+    if (NS_FAILED(rv)) return rv;
+    mBuffer.AssignWithConversion("");
+    return rv;
 }
+
 NS_IMETHODIMP
 nsTXTToHTMLConv::OnStopRequest(nsIChannel *aChannel, nsISupports *aContext,
                                nsresult aStatus, const PRUnichar *aMsg) {
