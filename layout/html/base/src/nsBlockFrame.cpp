@@ -4841,8 +4841,12 @@ nsBlockFrame::RemoveFrame(nsIPresContext* aPresContext,
     printf("\n");
 #endif
 
-  if (nsLayoutAtoms::absoluteList == aListName) {
-      return mAbsoluteContainer.RemoveFrame(this, aPresContext, aPresShell, aListName, aOldFrame);
+  if (nsnull == aListName) {
+    rv = DoRemoveFrame(aPresContext, aOldFrame);
+  }
+  else if (nsLayoutAtoms::absoluteList == aListName) {
+    return mAbsoluteContainer.RemoveFrame(this, aPresContext, aPresShell,
+                                          aListName, aOldFrame);
   }
   else if (nsLayoutAtoms::floaterList == aListName) {
     // Find which line contains the floater
@@ -4863,19 +4867,14 @@ nsBlockFrame::RemoveFrame(nsIPresContext* aPresContext,
   }
 #ifdef IBMBIDI
   else if (nsLayoutAtoms::nextBidi == aListName) {
-    rv = DoRemoveFrame(aPresContext, aOldFrame);
+    // Skip the call to |ReflowDirtyChild| below by returning now.
+    return DoRemoveFrame(aPresContext, aOldFrame);
   }
 #endif // IBMBIDI
-  else if (nsnull != aListName) {
+  else {
     rv = NS_ERROR_INVALID_ARG;
   }
-  else {
-    rv = DoRemoveFrame(aPresContext, aOldFrame);
-  }
 
-#ifdef IBMBIDI
-  if (nsLayoutAtoms::nextBidi != aListName)
-#endif // IBMBIDI
   if (NS_SUCCEEDED(rv)) {
     // Ask the parent frame to reflow me.
     ReflowDirtyChild(&aPresShell, nsnull);  
