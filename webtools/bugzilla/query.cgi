@@ -376,6 +376,8 @@ $default{'querytype'} = $deforder || 'Importance';
 $vars->{'default'} = \%default;
 
 # Generate and return the UI (HTML page) from the appropriate template.
+$::FORM{'format'} ||= "classic";
+my $format = ValidateOutputFormat($::FORM{'format'}, "search");
 print "Content-type: text/html\n\n";
-$template->process("search/search.html.tmpl", $vars)
+$template->process("search/$format->{'template'}", $vars)
   || ThrowTemplateError($template->error());
