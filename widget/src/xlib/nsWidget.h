@@ -125,6 +125,19 @@ protected:
   static void  DeleteWindowCallback(Window aWindow);
   static       nsHashtable *window_list;
 
+  // here's how we add children
+  // there's no geometry information here because that should be in the mBounds
+  // in the widget
+  void WidgetPut        (nsWidget *aWidget);
+  void WidgetMove       (nsWidget *aWidget);
+  void WidgetMoveResize (nsWidget *aWidget);
+  void WidgetResize     (nsWidget *aWidget);
+
+  PRUint32       mScrollX;
+  PRUint32       mScrollY;
+
+  PRBool         mIsShown;
+
   PRUint32       mPreferredWidth;
   PRUint32       mPreferredHeight;
 
@@ -145,4 +158,10 @@ protected:
 };
 
 #endif
+
+
+
+
+
+
 
