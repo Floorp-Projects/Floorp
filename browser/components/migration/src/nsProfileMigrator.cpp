@@ -57,7 +57,11 @@
 // nsIProfileMigrator
 
 #define MIGRATION_WIZARD_FE_URL "chrome://browser/content/migration/migration.xul"
+#ifdef XP_MACOSX
+#define MIGRATION_WIZARD_FE_FEATURES "chrome,dialog,centerscreen"
+#else
 #define MIGRATION_WIZARD_FE_FEATURES "chrome,dialog,modal,centerscreen"
+#endif
 NS_IMETHODIMP
 nsProfileMigrator::Migrate()
 {
