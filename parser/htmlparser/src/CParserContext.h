@@ -83,7 +83,6 @@ public:
 
     void*               mKey;
     PRUint32            mTransferBufferSize;
-    PRBool              mParserEnabled;
     PRBool              mCopyUnused;
 };
 

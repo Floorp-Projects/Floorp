@@ -606,11 +606,6 @@ nsresult nsHTMLTokenizer::ConsumeAttributes(PRUnichar aChar,CStartToken* aToken,
             done=PR_TRUE;
           }
           else if(aChar==kLessThan) {
-            eHTMLTags theEndTag = (eHTMLTags)aToken->GetTypeID();
-            if(result==NS_OK&&(gHTMLElements[theEndTag].mSkipTarget)){
-              CToken* theEndToken=theAllocator->CreateTokenOfType(eToken_end,theEndTag);
-              AddToken(theEndToken,NS_OK,&mTokenDeque,theAllocator); 
-            }
             done=PR_TRUE;
           }
         }//if

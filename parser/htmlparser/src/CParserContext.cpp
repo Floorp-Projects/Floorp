@@ -56,7 +56,6 @@ CParserContext::CParserContext(nsScanner* aScanner,
   mDTD=aDTD; 
   NS_IF_ADDREF(mDTD); 
   mTransferBufferSize=eTransferBufferSize; 
-  mParserEnabled=PR_TRUE; 
   mStreamListenerState=eNone; 
   mMultipart=PR_TRUE; 
   mContextType=eCTNone; 
@@ -90,7 +89,6 @@ CParserContext::CParserContext(const CParserContext &aContext) : mMimeType() {
   NS_IF_ADDREF(mDTD);
 
   mTransferBufferSize=eTransferBufferSize;
-  mParserEnabled=aContext.mParserEnabled;
   mStreamListenerState=aContext.mStreamListenerState;
   mMultipart=aContext.mMultipart;
   mContextType=aContext.mContextType;

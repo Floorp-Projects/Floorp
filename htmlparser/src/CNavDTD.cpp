@@ -730,7 +730,7 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
         eHTMLTags theParentTag=mBodyContext->Last();
         theTag=(eHTMLTags)theToken->GetTypeID();
         if((FindTagInSet(theTag,gLegalElements,sizeof(gLegalElements)/sizeof(theTag))) ||
-           (gHTMLElements[theParentTag].CanContain(theTag))) {
+          (gHTMLElements[theParentTag].CanContain(theTag)) && (theTag!=eHTMLTag_comment)) { // Added comment -> bug 40855
             
           mDTDState=NS_OK; // reset the state since all the misplaced tokens are about to get handled.
           result=HandleSavedTokens(mBodyContext->mContextTopIndex);
@@ -1928,6 +1928,12 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
           if(result==NS_OK) {
             eHTMLTags theTarget=FindAutoCloseTargetForEndTag(theChildTag,*mBodyContext);
             if(eHTMLTag_unknown!=theTarget) {
+              if (nsHTMLElement::IsResidualStyleTag(theChildTag)) {
+                result=OpenTransientStyles(theChildTag); 
+                if(NS_FAILED(result)) {
+                  return result;
+                }
+              }
               result=CloseContainersTo(theTarget,PR_FALSE);
             }
           }
@@ -3739,69 +3745,6 @@ nsresult CNavDTD::AddLeaf(const nsIParserNode *aNode){
     MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::AddLeaf(), this=%p\n", this));
     
     result=mSink->AddLeaf(*aNode);
-    
-    if(NS_SUCCEEDED(result)) {
-      PRBool done=PR_FALSE;
-      eHTMLTags thePrevTag=theTag;
-      //nsCParserNode theNode;
-
-      while(!done && NS_SUCCEEDED(result)) {
-        CToken*   theToken=mTokenizer->PeekToken();
-        if(theToken) {
-          nsIParserNode* theNode=mNodeAllocator.CreateNode(theToken,mLineNumber,0);
-          if(theNode) {
-            theTag=(eHTMLTags)theToken->GetTypeID();
-            switch(theTag) {
-              case eHTMLTag_newline:
-                mLineNumber++;
-              case eHTMLTag_whitespace:
-                {
-                  theToken=mTokenizer->PopToken();
-
-                  STOP_TIMER();
-                  MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::AddLeaf(), this=%p\n", this));
-              
-                  result=mSink->AddLeaf(*theNode);
-
-                  if((NS_SUCCEEDED(result))||(NS_ERROR_HTMLPARSER_BLOCK==result)) {
-                    IF_FREE(theToken);
-                  }
-                
-                  MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::AddLeaf(), this=%p\n", this));
-                  START_TIMER();
-                  thePrevTag=theTag;
-                }
-                break;
-              case eHTMLTag_text:
-                if((mHasOpenBody) && (!mHasOpenHead) &&
-                  !(nsHTMLElement::IsWhitespaceTag(thePrevTag))) {
-                  theToken=mTokenizer->PopToken();
-
-                  MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::AddLeaf(), this=%p\n", this));
-                  STOP_TIMER();
-
-                  mLineNumber += theToken->mNewlineCount;
-                  result=mSink->AddLeaf(*theNode);
-
-                  if((NS_SUCCEEDED(result))||(NS_ERROR_HTMLPARSER_BLOCK==result)) {
-                    IF_FREE(theToken);
-                  }
-              
-                  MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::AddLeaf(), this=%p\n", this));
-                  START_TIMER();
-                }
-                else done=PR_TRUE;
-                break;
-
-              default:
-                done=PR_TRUE;
-            } //switch
-            NS_IF_RELEASE(theNode);
-          } //if
-        }//if
-        else done=PR_TRUE;
-      } //while
-    } //if
 
     MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::AddLeaf(), this=%p\n", this));
     START_TIMER();
