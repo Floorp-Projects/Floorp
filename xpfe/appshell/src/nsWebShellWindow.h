@@ -21,6 +21,7 @@
 #define nsWebShellWindow_h__
 
 #include "nsISupports.h"
+#include "nsIWebShellWindow.h"
 #include "nsGUIEvent.h"
 #include "nsIWebShell.h"  
 #include "nsIDocumentLoaderObserver.h"
@@ -42,8 +43,10 @@ class nsIDOMCharacterData;
 class nsIDOMHTMLInputElement;
 class nsIDOMHTMLImageElement;
 class nsIDOMElement;
+class nsIStreamObserver;
 
-class nsWebShellWindow : public nsIWebShellContainer,
+class nsWebShellWindow : public nsIWebShellWindow,
+                         public nsIWebShellContainer,
                          public nsIDocumentLoaderObserver
 {
 public:
@@ -79,9 +82,13 @@ public:
   NS_IMETHOD FocusAvailable(nsIWebShell* aFocusedWebShell);
 
 
+  // nsIWebShellWindow methods...
+  NS_IMETHOD GetWebShell(nsIWebShell *& aWebShell);
+  NS_IMETHOD GetWidget(nsIWidget *& aWidget);
+
   // nsWebShellWindow methods...
-  nsresult Initialize(nsIAppShell* aShell, nsIURL* aUrl, nsString& aControllerIID);
-  
+  nsresult Initialize(nsIAppShell* aShell, nsIURL* aUrl, nsString& aControllerIID, nsIStreamObserver* anObserver);
+  nsresult Initialize(nsIWidget * aParent, nsIAppShell* aShell, nsIURL* aUrl, nsString& aControllerIID, nsIStreamObserver* anObserver);
   nsIWidget* GetWidget(void) { return mWindow; }
 
   // nsIDocumentLoaderObserver

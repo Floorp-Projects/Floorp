@@ -64,6 +64,7 @@ static NS_DEFINE_IID(kXULCommandCID,       NS_XULCOMMAND_CID);
 
 /* Define Interface IDs */
 static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kIWebShellWindowIID,     NS_IWEBSHELL_WINDOW_IID);
 static NS_DEFINE_IID(kIWidgetIID,             NS_IWIDGET_IID);
 static NS_DEFINE_IID(kIWebShellIID,           NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIWebShellContainerIID,  NS_IWEB_SHELL_CONTAINER_IID);
@@ -83,7 +84,7 @@ static NS_DEFINE_IID(kIMenuIID,     NS_IMENU_IID);
 static NS_DEFINE_IID(kIMenuBarIID,  NS_IMENUBAR_IID);
 static NS_DEFINE_IID(kIMenuItemIID, NS_IMENUITEM_IID);
 
-#define DEBUGCMDS 0
+#define DEBUGCMDS 1
 
 #include "nsIWebShell.h"
 
@@ -129,6 +130,11 @@ nsWebShellWindow::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
+  if ( aIID.Equals(kIWebShellWindowIID) ) {
+    *aInstancePtr = (void*) ((nsIWebShellWindow*)this);
+    NS_ADDREF_THIS();  
+    return NS_OK;
+  }
   if (aIID.Equals(kIWebShellContainerIID)) {
     *aInstancePtr = (void*)(nsIWebShellContainer*)this;
     NS_ADDREF_THIS();
@@ -149,7 +155,14 @@ nsWebShellWindow::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 
 nsresult nsWebShellWindow::Initialize(nsIAppShell* aShell, nsIURL* aUrl, 
-                                      nsString& aControllerIID)
+                                      nsString& aControllerIID, nsIStreamObserver* anObserver)
+{
+  return Initialize(nsnull, aShell, aUrl, aControllerIID, anObserver);
+}
+
+nsresult nsWebShellWindow::Initialize(nsIWidget* aParent,
+                                      nsIAppShell* aShell, nsIURL* aUrl, 
+                                      nsString& aControllerIID, nsIStreamObserver* anObserver)
 {
   nsresult rv;
 
@@ -158,8 +171,6 @@ nsresult nsWebShellWindow::Initialize(nsIAppShell* aShell, nsIURL* aUrl,
   nsIID iid;
   char str[40];
 
-  aUrl->GetSpec(&tmpStr);
-  urlString = tmpStr;
 
   // XXX: need to get the default window size from prefs...
   nsRect r(0, 0, 650, 618);
@@ -167,9 +178,13 @@ nsresult nsWebShellWindow::Initialize(nsIAppShell* aShell, nsIURL* aUrl,
   nsWidgetInitData initData;
 
 
-  if (nsnull == aUrl) {
-    rv = NS_ERROR_NULL_POINTER;
-    goto done;
+  //if (nsnull == aUrl) {
+  //  rv = NS_ERROR_NULL_POINTER;
+  //  goto done;
+  //}
+  if (nsnull != aUrl)  {
+    aUrl->GetSpec(&tmpStr);
+    urlString = tmpStr;
   }
 
   // Create top level window
@@ -182,7 +197,7 @@ nsresult nsWebShellWindow::Initialize(nsIAppShell* aShell, nsIURL* aUrl,
   initData.mBorderStyle = eBorderStyle_dialog;
 
   mWindow->SetClientData(this);
-  mWindow->Create((nsIWidget*)nsnull,                 // Parent nsIWidget
+  mWindow->Create((nsIWidget*)aParent,                // Parent nsIWidget
                   r,                                  // Widget dimensions
                   nsWebShellWindow::HandleEvent,      // Event handler function
                   nsnull,                             // Device context
@@ -207,7 +222,7 @@ nsresult nsWebShellWindow::Initialize(nsIAppShell* aShell, nsIURL* aUrl,
                        PR_TRUE,                     // Allow Plugins 
                        PR_TRUE);
   mWebShell->SetContainer(this);
-  //mWebShell->SetObserver((nsIStreamObserver*)this);
+  mWebShell->SetObserver((nsIStreamObserver*)anObserver);
 
   nsIDocumentLoader * docLoader;
   mWebShell->GetDocumentLoader(docLoader);
@@ -216,7 +231,9 @@ nsresult nsWebShellWindow::Initialize(nsIAppShell* aShell, nsIURL* aUrl,
   }
 ///  webShell->SetPrefs(aPrefs);
 
-  mWebShell->LoadURL(urlString);
+  if (nsnull != aUrl)  {
+    mWebShell->LoadURL(urlString);
+  }
   mWebShell->Show();
 
   mWindow->Show(PR_TRUE);
@@ -226,9 +243,9 @@ nsresult nsWebShellWindow::Initialize(nsIAppShell* aShell, nsIURL* aUrl,
   aControllerIID.ToCString(str, sizeof(str));
   iid.Parse(str);
 
-  rv = nsRepository::CreateInstance(iid, nsnull,
-                                    kIWidgetControllerIID,
-                                    (void**)&mController);
+  //rv = nsRepository::CreateInstance(iid, nsnull,
+  //                                  kIWidgetControllerIID,
+  //                                  (void**)&mController);
 done:
   return rv;
 }
@@ -367,7 +384,7 @@ nsWebShellWindow::ProgressLoadURL(nsIWebShell* aShell, const PRUnichar* aURL,
 }
 
 NS_IMETHODIMP 
-nsWebShellWindow::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL,
+nsWebShellWindow::EndLoadURL(nsIWebShell* aWebShell, const PRUnichar* aURL,
                              PRInt32 aStatus)
 {
   if (nsnull != mThrobber) {
@@ -380,6 +397,7 @@ nsWebShellWindow::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL,
     msg.Append(" :Stop");
     mStatusText->SetData(msg);
   }
+
   return NS_OK;
 }
 
@@ -710,6 +728,24 @@ nsWebShellWindow::FocusAvailable(nsIWebShell* aFocusedWebShell)
   return NS_OK;
 }
 
+//----------------------------------------
+// nsIWebShellWindow methods...
+//----------------------------------------
+NS_IMETHODIMP 
+nsWebShellWindow::GetWebShell(nsIWebShell *& aWebShell)
+{
+  aWebShell = mWebShell;
+  NS_ADDREF(mWebShell);
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsWebShellWindow::GetWidget(nsIWidget *& aWidget)
+{
+  aWidget = mWindow;
+  NS_ADDREF(mWindow); // XXX Why?
+  return NS_OK;
+}
 
 //----------------------------------------
 //----------------------------------------
@@ -717,7 +753,8 @@ nsWebShellWindow::FocusAvailable(nsIWebShell* aFocusedWebShell)
 //----------------------------------------
 // nsIDocumentLoaderObserver implementation
 //----------------------------------------
-NS_IMETHODIMP nsWebShellWindow::OnStartURLLoad(nsIURL* aURL, const char* aContentType, nsIContentViewer* aViewer)
+NS_IMETHODIMP 
+nsWebShellWindow::OnStartURLLoad(nsIURL* aURL, const char* aContentType, nsIContentViewer* aViewer)
 {
   return NS_OK;
 }
