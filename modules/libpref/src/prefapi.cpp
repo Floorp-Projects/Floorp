@@ -233,10 +233,6 @@ PR_EXTERN(PrefResult) PREF_SavePrefFileWith(const char *filename, PLHashEnumerat
 
 PRBool pref_VerifyLockFile(char* buf, long buflen);
 
-PrefResult pref_GetCharPref(const char *pref_name, char * return_buffer, int * length, PRBool get_default);
-PrefResult pref_CopyCharPref(const char *pref_name, char ** return_buffer, PRBool get_default);
-PrefResult pref_GetIntPref(const char *pref_name,PRInt32 * return_int, PRBool get_default);
-PrefResult pref_GetBoolPref(const char *pref_name, PRBool * return_value, PRBool get_default);
 
 JSBool PR_CALLBACK pref_BranchCallback(JSContext *cx, JSScript *script);
 void pref_ErrorReporter(JSContext *cx, const char *message,JSErrorReport *report);
@@ -1216,7 +1212,22 @@ PR_IMPLEMENT(PrefResult) PREF_SavePrefFileAs(const char *filename)
 }
 #endif /* PREF_SUPPORT_OLD_PATH_STRINGS */
 
-PrefResult pref_GetCharPref(const char *pref_name, char * return_buffer, int * length, PRBool get_default)
+PRBool PREF_HasUserPref(const char *pref_name)
+{
+    PrefNode *pref;
+    
+	if (!gHashTable && !pref_useDefaultPrefFile())
+		return PR_FALSE;
+
+    pref = (PrefNode*) PR_HashTableLookup(gHashTable, pref_name);
+
+    if (!pref) return PR_FALSE;
+    
+    // convert PREF_HAS_USER_VALUE to bool
+    return (PREF_HAS_USER_VALUE(pref) != 0);
+
+}
+PrefResult PREF_GetCharPref(const char *pref_name, char * return_buffer, int * length, PRBool get_default)
 {
 	PrefResult result = PREF_ERROR;
 	char* stringVal;
@@ -1250,7 +1261,8 @@ PrefResult pref_GetCharPref(const char *pref_name, char * return_buffer, int * l
 	return result;
 }
 
-PrefResult pref_CopyCharPref(const char *pref_name, char ** return_buffer, PRBool get_default)
+PrefResult
+PREF_CopyCharPref(const char *pref_name, char ** return_buffer, PRBool get_default)
 {
 	PrefResult result = PREF_ERROR;
 	char* stringVal;	
@@ -1276,7 +1288,7 @@ PrefResult pref_CopyCharPref(const char *pref_name, char ** return_buffer, PRBoo
 	return result;
 }
 
-PrefResult pref_GetIntPref(const char *pref_name,PRInt32 * return_int, PRBool get_default)
+PrefResult PREF_GetIntPref(const char *pref_name,PRInt32 * return_int, PRBool get_default)
 {
 	PrefResult result = PREF_ERROR;	
 	PrefNode* pref;
@@ -1301,7 +1313,7 @@ PrefResult pref_GetIntPref(const char *pref_name,PRInt32 * return_int, PRBool ge
 	return result;
 }
 
-PrefResult pref_GetBoolPref(const char *pref_name, PRBool * return_value, PRBool get_default)
+PrefResult PREF_GetBoolPref(const char *pref_name, PRBool * return_value, PRBool get_default)
 {
 	PrefResult result = PREF_ERROR;
 	PrefNode* pref;
@@ -1327,37 +1339,14 @@ PrefResult pref_GetBoolPref(const char *pref_name, PRBool * return_value, PRBool
 }
 
 
-PR_IMPLEMENT(PrefResult)
-PREF_GetCharPref(const char *pref_name, char * return_buffer, int * length)
-{
-	return pref_GetCharPref(pref_name, return_buffer, length, PR_FALSE);
-}
 
-PR_IMPLEMENT(PrefResult)
-PREF_CopyCharPref(const char *pref_name, char ** return_buffer)
-{
-	return pref_CopyCharPref(pref_name, return_buffer, PR_FALSE);
-}
-
-PR_IMPLEMENT(PrefResult)
-PREF_GetIntPref(const char *pref_name,PRInt32 * return_int)
-{
-	return pref_GetIntPref(pref_name, return_int, PR_FALSE);
-}
-
-PR_IMPLEMENT(PrefResult)
-PREF_GetBoolPref(const char *pref_name, PRBool * return_value)
-{
-	return pref_GetBoolPref(pref_name, return_value, PR_FALSE);
-}
-
-PR_IMPLEMENT(PrefResult)
-PREF_GetColorPref(const char *pref_name, PRUint8 *red, PRUint8 *green, PRUint8 *blue)
+PrefResult
+PREF_GetColorPref(const char *pref_name, PRUint8 *red, PRUint8 *green, PRUint8 *blue, PRBool isDefault)
 {
 	char colstr[8];
 	int iSize = 8;
 
-	PrefResult result = PREF_GetCharPref(pref_name, colstr, &iSize);
+	PrefResult result = PREF_GetCharPref(pref_name, colstr, &iSize, isDefault);
 	
 	if (result == PREF_NOERROR)
 	{
@@ -1372,44 +1361,28 @@ PREF_GetColorPref(const char *pref_name, PRUint8 *red, PRUint8 *green, PRUint8 *
 
 #define MYRGB(r, g ,b)  ((PRUint32) (((PRUint8) (r) | ((PRUint16) (g) << 8)) | (((PRUint32) (PRUint8) (b)) << 16))) 
 
-PR_IMPLEMENT(PrefResult)
-PREF_GetColorPrefDWord(const char *pref_name, PRUint32 *colorref)
+PrefResult
+PREF_GetColorPrefDWord(const char *pref_name, PRUint32 *colorref, PRBool isDefault)
 {
     PRUint8 red, green, blue;
     PrefResult   result;
     PR_ASSERT(colorref);
-    result = PREF_GetColorPref(pref_name, &red, &green, &blue);
+    result = PREF_GetColorPref(pref_name, &red, &green, &blue, isDefault);
     if (result == PREF_NOERROR)
     	*colorref = MYRGB(red,green,blue);
 	return result;
 }
 
-PR_IMPLEMENT(PrefResult)
-PREF_GetRectPref(const char *pref_name, PRInt16 *left, PRInt16 *top, PRInt16 *right, PRInt16 *bottom)
-{
-	char rectstr[64];
-	int iSize=64;
-	PrefResult result = PREF_GetCharPref(pref_name, rectstr, &iSize);
-	
-	if (result == PREF_NOERROR)
-	{
-		int l, t, r, b;
-		sscanf(rectstr, "%i,%i,%i,%i", &l, &t, &r, &b);
-		*left = l;	*top = t;
-		*right = r;	*bottom = b;
-	}
-	return result;
-}
 
-PR_IMPLEMENT(PrefResult)
-PREF_GetBinaryPref(const char *pref_name, void * return_value, int *size)
+PrefResult
+PREF_GetBinaryPref(const char *pref_name, void * return_value, int *size, PRBool isDefault)
 {
 	char* buf;
 	PrefResult result;
 
 	if (!gMochaPrefObject || !return_value) return PREF_ERROR;
 
-	result = PREF_CopyCharPref(pref_name, &buf);
+	result = PREF_CopyCharPref(pref_name, &buf, isDefault);
 
 	if (result == PREF_NOERROR)
 	{
@@ -1426,10 +1399,10 @@ PREF_GetBinaryPref(const char *pref_name, void * return_value, int *size)
 	return result;
 }
 
-typedef PrefResult (*CharPrefReadFunc)(const char*, char**);
+typedef PrefResult (*CharPrefReadFunc)(const char*, char**, PRBool);
 
 static PrefResult
-ReadCharPrefUsing(const char *pref_name, void** return_value, int *size, CharPrefReadFunc inFunc)
+ReadCharPrefUsing(const char *pref_name, void** return_value, int *size, CharPrefReadFunc inFunc, PRBool isDefault)
 {
 	char* buf;
 	PrefResult result;
@@ -1438,7 +1411,7 @@ ReadCharPrefUsing(const char *pref_name, void** return_value, int *size, CharPre
 		return PREF_ERROR;
 	*return_value = NULL;
 
-	result = inFunc(pref_name, &buf);
+	result = inFunc(pref_name, &buf, isDefault);
 
 	if (result == PREF_NOERROR)
 	{
@@ -1456,23 +1429,17 @@ ReadCharPrefUsing(const char *pref_name, void** return_value, int *size, CharPre
 	return result;
 }
 
-PR_IMPLEMENT(PrefResult)
-PREF_CopyBinaryPref(const char *pref_name, void  ** return_value, int *size)
+PrefResult
+PREF_CopyBinaryPref(const char *pref_name, void  ** return_value, int *size, PRBool isDefault)
 {
-	return ReadCharPrefUsing(pref_name, return_value, size, PREF_CopyCharPref);
-}
-
-PR_IMPLEMENT(PrefResult)
-PREF_CopyDefaultBinaryPref(const char *pref_name, void  ** return_value, int *size)
-{
-	return ReadCharPrefUsing(pref_name, return_value, size, PREF_CopyDefaultCharPref);
+	return ReadCharPrefUsing(pref_name, return_value, size, PREF_CopyCharPref, isDefault);
 }
 
 #ifndef XP_MAC
 PR_IMPLEMENT(PrefResult)
-PREF_CopyPathPref(const char *pref_name, char ** return_buffer)
+PREF_CopyPathPref(const char *pref_name, char ** return_buffer, PRBool isDefault)
 {
-	return PREF_CopyCharPref(pref_name, return_buffer);
+	return PREF_CopyCharPref(pref_name, return_buffer, isDefault);
 }
 
 PR_IMPLEMENT(PrefResult)
@@ -1487,37 +1454,7 @@ PREF_SetPathPref(const char *pref_name, const char *path, PRBool set_default)
 #endif /* XP_MAC */
 
 
-PR_IMPLEMENT(PrefResult)
-PREF_GetDefaultCharPref(const char *pref_name, char * return_buffer, int * length)
-{
-	return pref_GetCharPref(pref_name, return_buffer, length, PR_TRUE);
-}
-
-PR_IMPLEMENT(PrefResult)
-PREF_CopyDefaultCharPref(const char *pref_name, char  ** return_buffer)
-{
-	return pref_CopyCharPref(pref_name, return_buffer, PR_TRUE);
-}
-
-PR_IMPLEMENT(PrefResult)
-PREF_GetDefaultIntPref(const char *pref_name, PRInt32 * return_int)
-{
-	return pref_GetIntPref(pref_name, return_int, PR_TRUE);
-}
-
-PR_IMPLEMENT(PrefResult)
-PREF_GetDefaultBoolPref(const char *pref_name, PRBool * return_value)
-{
-	return pref_GetBoolPref(pref_name, return_value, PR_TRUE);
-}
-
-PR_IMPLEMENT(PrefResult)
-PREF_GetDefaultBinaryPref(const char *pref_name, void * return_value, int * length)
-{
-	PR_ASSERT( PR_FALSE );
-	return PREF_ERROR;
-}
-
+#if 0
 PR_IMPLEMENT(PrefResult)
 PREF_GetDefaultColorPref(const char *pref_name, PRUint8 *red, PRUint8 *green, PRUint8 *blue)
 {
@@ -1537,30 +1474,7 @@ PREF_GetDefaultColorPref(const char *pref_name, PRUint8 *red, PRUint8 *green, PR
 
 	return result;
 }
-
-PR_IMPLEMENT(PrefResult)
-PREF_GetDefaultColorPrefDWord(const char *pref_name, PRUint32 * colorref)
-{
-    PRUint8 red, green, blue;
-    PrefResult   result;
-    PR_ASSERT(colorref);
-    result = PREF_GetDefaultColorPref(pref_name, &red, &green, &blue);
-    if (result == PREF_NOERROR)
-    	*colorref = MYRGB(red,green,blue);
-	return result;
-}
-
-PR_IMPLEMENT(PrefResult)
-PREF_GetDefaultRectPref(const char *pref_name, PRInt16 *left, PRInt16 *top, PRInt16 *right, PRInt16 *bottom)
-{
-	char rectstr[256];
-	int iLen = 256;
-	PrefResult result = PREF_GetDefaultCharPref(pref_name, (char *)&rectstr, &iLen);
-	
-	if (result == PREF_NOERROR)
-		sscanf(rectstr, "%hd,%hd,%hd,%hd", left, top, right, bottom);
-	return result;
-}
+#endif
 
 /* Delete a branch. Used for deleting mime types */
 PR_IMPLEMENT(int)
@@ -2187,7 +2101,7 @@ PrefResult pref_copyTree(const char *srcPrefix, const char *destPrefix, const ch
 						{
 							char	*prefVal = NULL;
 							
-							result = PREF_CopyCharPref(child, &prefVal);
+							result = PREF_CopyCharPref(child, &prefVal, PR_FALSE);
 							if (result == PREF_NOERROR)
 								result = PREF_SetCharPref(destPrefName, prefVal);
 								
@@ -2199,7 +2113,7 @@ PrefResult pref_copyTree(const char *srcPrefix, const char *destPrefix, const ch
 							{
 							PRInt32 	prefValInt;
 							
-							result = PREF_GetIntPref(child, &prefValInt);
+							result = PREF_GetIntPref(child, &prefValInt, PR_FALSE);
 							if (result == PREF_NOERROR)
 								result = PREF_SetIntPref(destPrefName, prefValInt);
 						}
@@ -2209,7 +2123,7 @@ PrefResult pref_copyTree(const char *srcPrefix, const char *destPrefix, const ch
 						{
 							PRBool	prefBool;
 							
-							result = PREF_GetBoolPref(child, &prefBool);
+							result = PREF_GetBoolPref(child, &prefBool, PR_FALSE);
 							if (result == PREF_NOERROR)
 								result = PREF_SetBoolPref(destPrefName, prefBool);
 						}
@@ -2719,7 +2633,7 @@ static int pref_CountListMembers(char* list)
 
 
 /*--------------------------------------------------------------------------------------*/
-PR_IMPLEMENT(PrefResult) PREF_GetListPref(const char* pref, char*** list)
+PR_IMPLEMENT(PrefResult) PREF_GetListPref(const char* pref, char*** list, PRBool isDefault)
 /* Splits a comma separated string into an array of strings.
  * The array of strings is actually just an array of pointers into a copy
  * of the value returned by PREF_CopyCharPref().  So, we don't have to
@@ -2732,7 +2646,7 @@ PR_IMPLEMENT(PrefResult) PREF_GetListPref(const char* pref, char*** list)
 
 	*list = NULL;
 
-	if ( PREF_CopyCharPref(pref, &value) != PREF_OK || value == NULL )
+	if ( PREF_CopyCharPref(pref, &value, isDefault) != PREF_OK || value == NULL )
 		return PREF_ERROR;
 
 	nugmembers = pref_CountListMembers(value);
@@ -2796,7 +2710,7 @@ PREF_AppendListPref(const char* pref, const char* value)
 	char *pListPref = NULL, *pNewList = NULL;
     int nPrefLen = 0;
 
-	PREF_CopyCharPref(pref, &pListPref);
+	PREF_CopyCharPref(pref, &pListPref, PR_FALSE);
 
 	if (pListPref)
 	{

@@ -93,6 +93,7 @@ interface nsIPref : nsISupports {
   void SetBoolPref(in string pref, in boolean value);
   [noscript] void SetBinaryPref(in string pref, in voidStar value, in unsigned long size);
 
+    
   void ClearUserPref(in string pref_name);
   
   /* get defaults */
@@ -108,10 +109,13 @@ interface nsIPref : nsISupports {
   void SetDefaultBoolPref(in string pref, in boolean value);
   [noscript] void SetDefaultBinaryPref(in string pref, in voidStar value, in unsigned long size);
   
-  /* copy versions of getters */
+    // these are eventually changing from Copy->get
   string CopyCharPref(in string pref);
   wstring CopyUnicharPref(in string pref);
   [noscript] voidStar CopyBinaryPref(in string pref, out long size);
+    
+    // "localized" prefs - stored in the properties files
+    wstring getLocalizedUnicharPref(in string pref);
   
   string CopyDefaultCharPref(in string pref);
   wstring CopyDefaultUnicharPref(in string pref);
