@@ -66,6 +66,8 @@ public:
 
 	NS_IMETHOD GetNewMail(nsIUrlListener * aUrlListener, nsIURL ** aURL) = 0;
 
+	NS_IMETHOD CheckForNewMail(nsIUrlListener * aUrlListener, nsIURL ** aURL) = 0;
+
 };
 
 #endif /* nsIPop3Service_h___ */
