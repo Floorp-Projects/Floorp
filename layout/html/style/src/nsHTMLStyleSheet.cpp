@@ -656,6 +656,8 @@ PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
                           matchCount++;
                         }
                         break;
+                      default:
+                        break;
                     }
                   }
                   NS_RELEASE(htmlContent);
@@ -875,6 +877,16 @@ NS_IMETHODIMP HTMLStyleSheetImpl::Reset(nsIURI* aURL)
     mActiveRule->mSheet = nsnull;
     NS_RELEASE(mActiveRule);
   }
+  if (mDocumentColorRule) {
+    mDocumentColorRule->mSheet = nsnull;
+    NS_RELEASE(mDocumentColorRule);
+  }
+  if (mTableBackgroundRule) {
+    mTableBackgroundRule->mSheet = nsnull;
+    NS_RELEASE(mTableBackgroundRule);
+  }
+
+  mMappedAttrTable.Enumerate(MappedDropSheet);
   mMappedAttrTable.Reset();
 
   return NS_OK;
