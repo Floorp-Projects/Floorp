@@ -66,6 +66,7 @@
 #include "nsLayoutCID.h"
 #include "nsIDOMRange.h"
 #include "nsIFrameReflow.h"
+#include "stopwatch.h"
 
 #include "nsILocaleService.h"
 static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
@@ -484,6 +485,10 @@ protected:
 
   // if there is no mWindow, this will keep track of the bounds  --dwc0001
   nsRect  mBounds;
+
+#ifdef RAPTOR_PERF_METRICS
+  Stopwatch mTotalTime;
+#endif
 
 #ifdef DETECT_WEBSHELL_LEAKS
 private:
@@ -2084,6 +2089,20 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
 
   mProcessedEndDocumentLoad = PR_FALSE;
 
+#ifdef RAPTOR_PERF_METRICS
+  {
+     char* url;
+     nsresult rv = NS_OK;
+     rv = aUri->GetSpec(&url);
+     if (NS_SUCCEEDED(rv)) {
+       printf("*** Timing layout processes on url: '%s'\n", url);
+       delete [] url;
+     }
+  }
+
+  NS_RESET_AND_START_STOPWATCH(mTotalTime)
+#endif
+
  /* WebShell was primarily passing the buck when it came to streamObserver.
   * So, pass on the observer which is already a streamObserver to DocLoder.
   *  - Radha
@@ -3335,6 +3354,13 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
                               nsresult aStatus,
                               nsIDocumentLoaderObserver * aWebShell)
 {
+#ifdef RAPTOR_PERF_METRICS
+  NS_STOP_STOPWATCH(mTotalTime)
+  printf("Total Layout+Load Time: ");
+  mTotalTime.Print();
+  printf("\n");
+#endif
+
   nsresult rv = NS_ERROR_FAILURE;
   if (!channel) {
     return NS_ERROR_NULL_POINTER;
