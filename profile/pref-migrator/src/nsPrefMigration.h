@@ -9,8 +9,10 @@
 #include "nsIFactory.h"
 #include "nsISupports.h"
 #include "nsFileSpec.h"
+#include "nsIPref.h"
+#include "nsIServiceManager.h" 
 
-class nsPrefMigration: public nsIPrefMigration
+class nsPrefMigration: public nsIPrefMigration, public nsIShutdownListener
 {
     public:
       NS_DEFINE_STATIC_CID_ACCESSOR(NS_PrefMigration_CID) 
@@ -21,7 +23,10 @@ class nsPrefMigration: public nsIPrefMigration
       NS_DECL_ISUPPORTS
 
       NS_IMETHOD ProcessPrefs(char* , char*, nsresult *aResult );
-    
+
+	  /* nsIShutdownListener methods */
+	  NS_IMETHOD OnShutdown(const nsCID& aClass, nsISupports *service);
+	  
     private:
 
       nsresult CreateNewUser5Tree(char* oldProfilePath, 
@@ -51,7 +56,9 @@ class nsPrefMigration: public nsIPrefMigration
 
       nsresult DoSpecialUpdates(nsFileSpec profilePath);
 
-
+private:
+      nsIPref* m_prefs;
+      nsresult getPrefService();
 };
 
 #endif

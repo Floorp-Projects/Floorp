@@ -37,7 +37,6 @@ EXTRA_DSO_LDOPTS =	\
 	-L$(DIST)/lib	\
 	$(NSPR_LIBS)	\
 	-lxpcom			\
-	-lpref \
 	-lneckoutil_s	\
 	$(NULL)
 

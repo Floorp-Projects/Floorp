@@ -26,7 +26,7 @@
 #include "prio.h"
 #include "prerror.h"
 #include "prmem.h"
-#include "prefapi.h"
+#include "nsIPref.h"
 #include "plstr.h"
 #include "prprf.h"
 
@@ -66,6 +66,7 @@ static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 
 static NS_DEFINE_IID(kIPrefMigration_IID, NS_IPrefMigration_IID);
 static NS_DEFINE_IID(kPrefMigration_CID,  NS_PrefMigration_CID);
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 static PRInt32 gInstanceCnt = 0;
 static PRInt32 gLockCnt     = 0;
@@ -73,39 +74,54 @@ static PRInt32 gLockCnt     = 0;
 const char separator = '\\';  /* directory separator charater */
 const char eolnChar  = '\0';  /* end of line charater         */
 
-nsPrefMigration::nsPrefMigration()
+nsPrefMigration::nsPrefMigration() : m_prefs(0)
 {
   NS_INIT_REFCNT();
 }
 
 nsPrefMigration::~nsPrefMigration()
 {
+  if (m_prefs) nsServiceManager::ReleaseService(kPrefServiceCID, m_prefs);
+}
+
+nsresult
+nsPrefMigration::getPrefService()
+{
+  // get the prefs service
+  nsresult rv = NS_OK;
+
+  if (!m_prefs)
+  rv = nsServiceManager::GetService(kPrefServiceCID,
+                                      nsCOMTypeInfo<nsIPref>::GetIID(),
+                                      (nsISupports**)&m_prefs,
+                                      this);
+  if (NS_FAILED(rv)) return rv;
+
+  /* m_prefs is good now */
+  return NS_OK;   
 }
 
 NS_IMETHODIMP 
-nsPrefMigration::QueryInterface(REFNSIID aIID,void** aInstancePtr)
+nsPrefMigration::QueryInterface(const nsIID& iid,void** result)
 {
-  if (aInstancePtr == NULL)
-  {
+  nsresult rv = NS_NOINTERFACE;
+  if (! result)
     return NS_ERROR_NULL_POINTER;
+
+  void *res = nsnull;
+  if (iid.Equals(nsCOMTypeInfo<nsIPrefMigration>::GetIID()) ||
+      iid.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
+    res = NS_STATIC_CAST(nsIPrefMigration*, this);
+  else if (iid.Equals(nsCOMTypeInfo<nsIShutdownListener>::GetIID()))
+    res = NS_STATIC_CAST(nsIShutdownListener*, this);
+
+  if (res) {
+    NS_ADDREF(this);
+    *result = res;
+    rv = NS_OK;
   }
 
-  // Always NULL result, in case of failure
-  *aInstancePtr = NULL;
-
-  if ( aIID.Equals(kIPrefMigration_IID) )
-  {
-    *aInstancePtr = (void*)(nsIPrefMigration*)this;
-    AddRef();
-    return NS_OK;
-  }
-  else if ( aIID.Equals(kISupportsIID) )
-  {
-    *aInstancePtr = (void*)(nsISupports*)this;
-    AddRef();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
+  return rv;
 }
 
 NS_IMPL_ADDREF(nsPrefMigration)
@@ -128,7 +144,8 @@ nsPrefMigration::ProcessPrefs(char* oldProfilePathStr, char* newProfilePathStr, 
   char *oldPOPMailPathStr, *oldIMAPMailPathStr, *oldIMAPLocalMailPathStr, *oldNewsPathStr;
   char *newPOPMailPathStr, *newIMAPMailPathStr, *newIMAPLocalMailPathStr, *newNewsPathStr;
   char *popServerName;
-  
+  nsresult rv;
+
   nsFileSpec oldPOPMailPath, oldIMAPMailPath, oldIMAPLocalMailPath, oldNewsPath;
   nsFileSpec newPOPMailPath, newIMAPMailPath, newIMAPLocalMailPath, newNewsPath;
 
@@ -137,9 +154,7 @@ nsPrefMigration::ProcessPrefs(char* oldProfilePathStr, char* newProfilePathStr, 
            totalProfileSize = 0,
            totalRequired = 0;
 
-  PRInt32 serverType = 0, 
-    nameLength = MAXPATHLEN;
-  
+  PRInt32 serverType = POP_4X_MAIL_TYPE; 
   PRBool hasIMAP = PR_FALSE;
 
 #if defined(NS_DEBUG)
@@ -149,63 +164,63 @@ nsPrefMigration::ProcessPrefs(char* oldProfilePathStr, char* newProfilePathStr, 
 
   if((newPOPMailPathStr = (char*) PR_MALLOC(MAXPATHLEN)) == NULL)
   {
-    PR_Free(newPOPMailPathStr);
+    PR_FREEIF(newPOPMailPathStr);
     *aResult = NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
   }
   
   if((newIMAPMailPathStr = (char*) PR_MALLOC(MAXPATHLEN)) == NULL)
   {
-    PR_Free(newIMAPMailPathStr);
+    PR_FREEIF(newIMAPMailPathStr);
     *aResult = NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
   }
 
   if((newIMAPLocalMailPathStr = (char*) PR_MALLOC(MAXPATHLEN)) == NULL)
   {
-    PR_Free(newIMAPLocalMailPathStr);
+    PR_FREEIF(newIMAPLocalMailPathStr);
     *aResult = NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
   }
 
   if((newNewsPathStr = (char*) PR_MALLOC(MAXPATHLEN)) == NULL)
   {
-    PR_Free(newNewsPathStr);
+    PR_FREEIF(newNewsPathStr);
     *aResult = NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
   }
 
   if((oldPOPMailPathStr = (char*) PR_MALLOC(MAXPATHLEN)) == NULL)
   {
-    PR_Free(oldPOPMailPathStr);
+    PR_FREEIF(oldPOPMailPathStr);
     *aResult = NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
   }
 
   if((oldIMAPMailPathStr = (char*) PR_MALLOC(MAXPATHLEN)) == NULL)
   {
-    PR_Free(oldIMAPMailPathStr);
+    PR_FREEIF(oldIMAPMailPathStr);
     *aResult = NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
   }
   
   if((oldIMAPLocalMailPathStr = (char*) PR_MALLOC(MAXPATHLEN)) == NULL)
   {
-    PR_Free(oldIMAPLocalMailPathStr);
+    PR_FREEIF(oldIMAPLocalMailPathStr);
     *aResult = NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
   }
 
   if((oldNewsPathStr = (char*) PR_MALLOC(MAXPATHLEN)) == NULL)
   {
-    PR_Free(oldNewsPathStr);
+    PR_FREEIF(oldNewsPathStr);
     *aResult = NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
   }
 
   if((popServerName = (char*) PR_MALLOC(MAXPATHLEN)) == NULL)
   {
-    PR_Free(popServerName);
+    PR_FREEIF(popServerName);
     *aResult = NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
   }
@@ -218,8 +233,13 @@ nsPrefMigration::ProcessPrefs(char* oldProfilePathStr, char* newProfilePathStr, 
     return NS_OK;
   }
 
+  rv = getPrefService();
+  if (NS_FAILED(rv)) return rv;
+
   /* Create the new mail directory from the setting in prefs.js or a default */
-  PREF_GetIntPref("mail.server.type", &serverType);
+  rv = m_prefs->GetIntPref("mail.server.type", &serverType);
+  if (NS_FAILED(rv)) return rv;
+  
   if (serverType == POP_4X_MAIL_TYPE) 
     {
       if(GetDirFromPref(newProfilePathStr, "mail.directory", newPOPMailPathStr, oldPOPMailPathStr) == NS_OK)
@@ -237,7 +257,7 @@ nsPrefMigration::ProcessPrefs(char* oldProfilePathStr, char* newProfilePathStr, 
           newPOPMailPath += "Mail";
         }
       PR_MkDir(nsNSPRPath(newPOPMailPath), PR_RDWR);
-      PREF_GetCharPref("network.hosts.pop_server", popServerName, &nameLength);
+      m_prefs->CopyCharPref("network.hosts.pop_server", &popServerName);
       newPOPMailPath += popServerName;
       PR_MkDir(nsNSPRPath(newPOPMailPath), PR_RDWR);
     }
@@ -453,9 +473,9 @@ nsPrefMigration::ProcessPrefs(char* oldProfilePathStr, char* newProfilePathStr, 
     } /* else */
   } /* else */
 
-  PR_Free(profile_hd_name);
-  PR_Free(mail_hd_name);
-  PR_Free(news_hd_name);
+  PR_FREEIF(profile_hd_name);
+  PR_FREEIF(mail_hd_name);
+  PR_FREEIF(news_hd_name);
   
   success = DoTheCopy(oldProfilePath, newProfilePath, PR_FALSE);
   success = DoTheCopy(oldNewsPath, newNewsPath, PR_TRUE);
@@ -469,17 +489,17 @@ nsPrefMigration::ProcessPrefs(char* oldProfilePathStr, char* newProfilePathStr, 
   
   success = DoSpecialUpdates(newProfilePath);
 
-  PREF_SavePrefFile();
+  m_prefs->SavePrefFile();
 
-  PR_Free(oldPOPMailPathStr);
-  PR_Free(oldIMAPMailPathStr);
-  PR_Free(oldIMAPLocalMailPathStr);
-  PR_Free(oldNewsPathStr);
-  PR_Free(newPOPMailPathStr);
-  PR_Free(newIMAPMailPathStr);
-  PR_Free(newIMAPLocalMailPathStr);
-  PR_Free(newNewsPathStr);
-  PR_Free(popServerName);
+  PR_FREEIF(oldPOPMailPathStr);
+  PR_FREEIF(oldIMAPMailPathStr);
+  PR_FREEIF(oldIMAPLocalMailPathStr);
+  PR_FREEIF(oldNewsPathStr);
+  PR_FREEIF(newPOPMailPathStr);
+  PR_FREEIF(newIMAPMailPathStr);
+  PR_FREEIF(newIMAPLocalMailPathStr);
+  PR_FREEIF(newNewsPathStr);
+  PR_FREEIF(popServerName);
 
   *aResult = NS_OK;
 
@@ -495,6 +515,7 @@ nsPrefMigration::ProcessPrefs(char* oldProfilePathStr, char* newProfilePathStr, 
 nsresult
 nsPrefMigration::CreateNewUser5Tree(char* oldProfilePath, char* newProfilePath)
 {
+  nsresult rv;
   char* prefsFile;
   
   NS_ASSERTION((PL_strlen(PREF_FILE_NAME_IN_4x) > 0), "don't know how to migrate your platform");
@@ -505,7 +526,7 @@ nsPrefMigration::CreateNewUser5Tree(char* oldProfilePath, char* newProfilePath)
   /* Copy the old prefs.js file to the new profile directory for modification and reading */
   if ((prefsFile = (char*) PR_MALLOC(PL_strlen(oldProfilePath) + 32)) == NULL)
   {
-    PR_Free(prefsFile);
+    PR_FREEIF(prefsFile);
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -523,10 +544,13 @@ nsPrefMigration::CreateNewUser5Tree(char* oldProfilePath, char* newProfilePath)
 
   newPrefsFile += PREF_FILE_NAME_IN_4x;
   newPrefsFile.Rename(PREF_FILE_NAME_IN_5x);
+ 
+  rv = getPrefService();
+  if (NS_FAILED(rv)) return rv;
+  // magically, it will find newPrefsFile and use that. 
+  m_prefs->StartUp();
 
-  PREF_Init(newPrefsFile);
-
-  PR_Free(prefsFile);
+  PR_FREEIF(prefsFile);
 
   return NS_OK;
 }
@@ -548,16 +572,19 @@ nsPrefMigration::ComputeMailPath(nsFileSpec oldPath, nsFileSpec *newPath)
   const char *localMailString="Local Mail"; /* string used for new IMAP dirs */ 
   const char *mail = "Mail";
 
-  int  nameLength = MAXPATHLEN;
   PRInt32 serverType;
   char *popServerName = nsnull;
   char *mailPath = nsnull;
+  nsresult rv;
 
-  PREF_GetIntPref("mail.server_type", &serverType);
+  rv = getPrefService();
+  if (NS_FAILED(rv)) return rv;   
+
+  m_prefs->GetIntPref("mail.server_type", &serverType);
   if(serverType == POP_4X_MAIL_TYPE)
   {
-    PREF_GetCharPref("network.hosts.pop_server", popServerName, &nameLength);
-    PREF_GetCharPref("mail.directory", mailPath, &nameLength);
+    m_prefs->CopyCharPref("network.hosts.pop_server", &popServerName);
+    m_prefs->CopyCharPref("mail.directory", &mailPath);
     if (mailPath != NULL)
       {
         (newPath += *mailPath) += *popServerName;
@@ -597,11 +624,13 @@ nsPrefMigration::ComputeMailPath(nsFileSpec oldPath, nsFileSpec *newPath)
 nsresult
 nsPrefMigration::GetDirFromPref(char* newProfilePath, char* pref, char* newPath, char* oldPath)
 {
-  int oldDirLength = MAXPATHLEN;
   PRInt32 foundPref;
+  nsresult rv;
 
+  rv = getPrefService();
+  if (NS_FAILED(rv)) return rv;   
 
-  foundPref = PREF_GetCharPref(pref, oldPath, &oldDirLength);
+  foundPref = m_prefs->CopyCharPref(pref, &oldPath);
   if((foundPref == 0) && (*oldPath != 0))
   {
     PL_strcpy(newPath, oldPath);
@@ -613,10 +642,10 @@ nsPrefMigration::GetDirFromPref(char* newProfilePath, char* pref, char* newPath,
     char *premigration_pref = nsnull;
     premigration_pref = PR_smprintf("premigration.%s", pref);
     if (!premigration_pref) return NS_ERROR_FAILURE;
-    PREF_SetCharPref (premigration_pref, oldPath);
+    m_prefs->SetCharPref (premigration_pref, oldPath);
     PR_FREEIF(premigration_pref);
 
-    PREF_SetCharPref (pref, newPath); 
+    m_prefs->SetCharPref (pref, newPath); 
     return NS_OK;
   }
   else
@@ -872,6 +901,16 @@ NSGetFactory(nsISupports* serviceMgr,
 }
 
 
+/* called if the prefs service goes offline */
+NS_IMETHODIMP
+nsPrefMigration::OnShutdown(const nsCID& aClass, nsISupports *service)
+{
+  if (aClass.Equals(kPrefServiceCID)) {
+    if (m_prefs) nsServiceManager::ReleaseService(kPrefServiceCID, m_prefs);
+    m_prefs = nsnull;
+  }
 
+  return NS_OK;
+}
 
 
