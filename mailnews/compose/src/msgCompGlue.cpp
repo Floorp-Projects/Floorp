@@ -251,14 +251,13 @@ char * INTL_GetDefaultMailCharset()
   NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res); 
   if (nsnull != prefs && NS_SUCCEEDED(res))
   {
-	  char prefValue[kMAX_CSNAME+1];
-	  PRInt32 prefLength = kMAX_CSNAME;
-	  res = prefs->GetCharPref("intl.character_set_name", prefValue, &prefLength);
+      char *prefValue;
+	  res = prefs->CopyCharPref("intl.character_set_name", &prefValue);
 	  
-	  if (NS_SUCCEEDED(res) && prefLength > 0) 
+	  if (NS_SUCCEEDED(res)) 
 	  {
 		//TODO: map to mail charset (e.g. Shift_JIS -> ISO-2022-JP) bug#3941.
-		retVal = PL_strdup(prefValue);
+		retVal = prefValue;
 	  }
 	  else 
 		retVal = PL_strdup("us-ascii");

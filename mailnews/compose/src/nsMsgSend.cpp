@@ -3227,18 +3227,15 @@ static char * mime_generate_headers (nsMsgCompFields *fields,
 
 		if (bUseXSender) {
 			char *convbuf;
-			char tmpBuffer[256];
-			int bufSize = 256;
-
-			*tmpBuffer = 0;
+			char *tmpBuffer=nsnull;
 
 			PUSH_STRING ("X-Sender: ");
 
 			PUSH_STRING("\"");
 
       if (prefs) 
-  	    prefs->GetCharPref("mail.identity.username", tmpBuffer, &bufSize);
-			convbuf = INTL_EncodeMimePartIIStr((char *)tmpBuffer, charset,
+  	    prefs->CopyCharPref("mail.identity.username", &tmpBuffer);
+			convbuf = INTL_EncodeMimePartIIStr(tmpBuffer, charset,
 										mime_headers_use_quoted_printable_p);
 			if (convbuf) {     /* MIME-PartII conversion */
 				PUSH_STRING (convbuf);
@@ -3246,12 +3243,14 @@ static char * mime_generate_headers (nsMsgCompFields *fields,
 			}
 			else
 				PUSH_STRING (tmpBuffer);
-
+            if (tmpBuffer) PL_strfree(tmpBuffer);
+            tmpBuffer=nsnull;
+            
 			PUSH_STRING("\" <");
 
       if (NS_SUCCEEDED(rv) && prefs) 
-  	    prefs->GetCharPref("mail.smtp_name", tmpBuffer, &bufSize);
-			convbuf = INTL_EncodeMimePartIIStr((char *)tmpBuffer, charset,
+  	    prefs->CopyCharPref("mail.smtp_name", &tmpBuffer);
+			convbuf = INTL_EncodeMimePartIIStr(tmpBuffer, charset,
 											mime_headers_use_quoted_printable_p);
 			if (convbuf) {     /* MIME-PartII conversion */
 				PUSH_STRING (convbuf);
@@ -3259,12 +3258,14 @@ static char * mime_generate_headers (nsMsgCompFields *fields,
 			}
 			else
 				PUSH_STRING (tmpBuffer);
+            if (tmpBuffer) PL_strfree(tmpBuffer);
+            tmpBuffer=nsnull;
 
 			PUSH_STRING ("@");
 
       if (NS_SUCCEEDED(rv) && prefs) 
-  	    prefs->GetCharPref("network.hosts.smtp_server", tmpBuffer, &bufSize);
-			convbuf = INTL_EncodeMimePartIIStr((char *)tmpBuffer, charset,
+  	    prefs->CopyCharPref("network.hosts.smtp_server", &tmpBuffer);
+			convbuf = INTL_EncodeMimePartIIStr(tmpBuffer, charset,
 											mime_headers_use_quoted_printable_p);
 			if (convbuf) {     /* MIME-PartII conversion */
 				PUSH_STRING (convbuf);
@@ -3275,8 +3276,10 @@ static char * mime_generate_headers (nsMsgCompFields *fields,
 
 			PUSH_STRING(">");
 
-			convbuf = INTL_EncodeMimePartIIStr((char *)tmpBuffer, charset,
+			convbuf = INTL_EncodeMimePartIIStr(tmpBuffer, charset,
 											mime_headers_use_quoted_printable_p);
+            if (tmpBuffer) PL_strfree(tmpBuffer);
+            tmpBuffer=nsnull;
 
 			if (!fields->GetOwner()->GetMaster()->IsUserAuthenticated())
 				PUSH_STRING (" (Unverified)");
