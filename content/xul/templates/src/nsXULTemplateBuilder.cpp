@@ -729,6 +729,10 @@ RDFGenericBuilderImpl::OnUnassert(nsIRDFResource* aSubject,
 
 ////////////////////////////////////////////////////////////////////////
 // nsIDOMNodeObserver interface
+//
+//   XXX Any of these methods that can't be implemented in a generic
+//   way should become pure virtual on this class.
+//
 
 NS_IMETHODIMP
 RDFGenericBuilderImpl::OnSetNodeValue(nsIDOMNode* aNode, const nsString& aValue)
