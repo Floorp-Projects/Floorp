@@ -1410,9 +1410,17 @@ void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
   if (0 == border.bottom) aSkipSides |= (1 << NS_SIDE_BOTTOM);
   if (0 == border.left) aSkipSides |= (1 << NS_SIDE_LEFT);
 
+  // XXX These are misnamed. Why is it that 'outside' is inside of
+  // 'inside' (it's produced by deflating)?
   nsRect inside(aBorderArea);
   nsRect outside(inside);
   outside.Deflate(border);
+
+  // If the dirty rect is completely inside the border area (e.g., only the
+  // content is being painted), then we can skip out now
+  if (outside.Contains(aDirtyRect)) {
+    return;
+  }
  
   //see if any sides are dotted or dashed
   for (cnt = 0; cnt < 4; cnt++) {
