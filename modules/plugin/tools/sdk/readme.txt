@@ -1,4 +1,4 @@
-Last updated 12.05.2001
+Last updated 12.20.2001
 
 The current version of the Netscape Plugin API is designed to help
 the developers to start creating plugins for Mozilla based browsers.
@@ -45,6 +45,12 @@ there are no separate projects for different platforms in this sample.
 
 Yet another example of plugin scriptability. This plugin implements two
 native methods callable from the JavaScript and uses native window drawings.
+
+4. Windowless plugin
+
+Example of a plugin which does not use native window messaging mechanism
+and relies exclusively on NPP_HandleEvent to receive GUI messages such
+as for painting. This plugin simply draws gray rectangle in occupied area.
 
 Scriptable samples require generation of .xpt files which should reside
 in the Mozilla Components directory. To make sure Mozilla is aware of 
