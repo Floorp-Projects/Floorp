@@ -1680,7 +1680,7 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
     ip[mContentLength] = ip[mContentLength-1];
     if ((ip[mContentLength] - mContentOffset) < textLength) {
       // Must set up last one for selection beyond edge if in boundary
-      ip[mContentLength]++;
+      ip[mContentLength] = textLength + mContentOffset;
     }
   }
 
