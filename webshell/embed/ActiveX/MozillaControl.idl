@@ -23,9 +23,14 @@ library MOZILLACONTROLLib
 	importlib("stdole32.tlb");
 	importlib("stdole2.tlb");
 
+	// Stop interfaces and other bits from being redefined by the IE header file
+
+	cpp_quote("#ifndef __exdisp_h__")
+	cpp_quote("#define __exdisp_h__")
+
 	// NOTE: There is a very specific reason for repeating the IWebBrowser
-	//       verbatim rather than import'ing exdisp.idl - it stops MIDL
-	//       failing with a MIDL2020 error!
+	//       and other bits verbatim rather than import'ing exdisp.idl -
+	//       MIDL fails with a MIDL2020 error if we try that!
 
     [
         uuid(EAB22AC1-30C1-11CF-A7EB-0000C05BAE0B), // IID_IWebBrowser
@@ -423,4 +428,6 @@ library MOZILLACONTROLLib
 		[source] dispinterface DWebBrowserEvents;
 		[default, source] dispinterface DWebBrowserEvents2;
 	};
+
+	cpp_quote("#endif")
 };
