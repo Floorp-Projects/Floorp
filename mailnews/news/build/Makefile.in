@@ -32,15 +32,16 @@ EXPORTS		= nsMsgNewsCID.h
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libmsgnews_s.a
 
 EXTRA_DSO_LDOPTS = \
-	$(MKSHLIB_FORCE_ALL) \
-	$(SHARED_LIBRARY_LIBS) \
-	$(MKSHLIB_UNFORCE_ALL) \
-	-L$(DIST)/bin \
-	-lmozjs \
-	-lxpcom \
-	-lreg \
-	-lmsgbaseutil \
-	$(NULL)
+		$(MKSHLIB_FORCE_ALL) \
+		$(SHARED_LIBRARY_LIBS) \
+		$(MKSHLIB_UNFORCE_ALL) \
+		-L$(DIST)/bin \
+		-L$(DIST)/lib \
+		-lmozjs \
+		-lxpcom \
+		-lmozreg \
+		-lmsgbaseutil \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

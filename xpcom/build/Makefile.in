@@ -29,6 +29,20 @@ CPPSRCS		= nsXPComInit.cpp
 
 REQUIRES	= xpcom
 
+SHARED_LIBRARY_LIBS = \
+		$(DIST)/lib/libxpcomds_s.a \
+		$(DIST)/lib/libxpcomio_s.a \
+		$(DIST)/lib/libxpcomcomponents_s.a \
+		$(DIST)/lib/libxpcomthreads_s.a \
+		$(DIST)/lib/libxpcomproxy_s.a \
+		$(DIST)/lib/libxpcombase_s.a \
+		$(DIST)/lib/libxptcall.a \
+		$(DIST)/lib/libxptinfo.a \
+		$(DIST)/lib/libxpt.a \
+		$(DIST)/lib/libxptcmd.a \
+		$(DIST)/lib/libmozreg.a \
+		$(NULL)
+
 include $(topsrcdir)/config/config.mk
 
 LOCAL_INCLUDES	+= \
@@ -41,20 +55,6 @@ LOCAL_INCLUDES	+= \
 		$(NULL)
 
 DEFINES		+= -D_IMPL_NS_COM -D_IMPL_NS_BASE
-
-SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/libxpcomds_s.a \
-		$(DIST)/lib/libxpcomio_s.a \
-		$(DIST)/lib/libxpcomcomponents_s.a \
-		$(DIST)/lib/libxpcomthreads_s.a \
-		$(DIST)/lib/libxpcomproxy_s.a \
-		$(DIST)/lib/libxpcombase_s.a \
-		$(DIST)/lib/libxptcall.a \
-		$(DIST)/lib/libxptinfo.a \
-		$(DIST)/lib/libxpt.a \
-		$(DIST)/lib/libxptcmd.a \
-		$(DIST)/lib/libreg.a \
-		$(NULL)
 
 ifeq ($(OS_ARCH),HP-UX)
 EXTRA_DSO_LDOPTS = -c objs/objslist

@@ -1,4 +1,3 @@
-#!gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -14,6 +13,7 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
+#
 
 DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
@@ -22,25 +22,22 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+PROGRAM		= TestCookie
 CPPSRCS		= TestCookie.cpp
-
-LOCAL_INCLUDES  =
 
 REQUIRES	= js cookie pref xpcom include
 
 LIBS		= \
-	-lxpcom \
-	-lreg \
-	$(NSPR_LIBS) \
-	$(NULL)
-
-PROGRAM		= TestCookie
+		-lxpcom \
+		-lmozreg \
+		$(NSPR_LIBS) \
+		$(NULL)
 
 include $(topsrcdir)/config/config.mk
 
 # hack until necko lands
 ifndef NECKO
-PUBLIC=$(DEPTH)/netwerk/dist/include
+PUBLIC		= $(DEPTH)/netwerk/dist/include
 endif
 
 include $(topsrcdir)/config/rules.mk

@@ -30,20 +30,20 @@ CPPSRCS		= nsMsgLocalFactory.cpp
 EXPORTS		= nsMsgLocalCID.h
 
 SHARED_LIBRARY_LIBS = \
-	$(DIST)/lib/libmsglocal_s.a \
-	$(DIST)/lib/librdfutil_s.a \
-	$(NULL)
+		$(DIST)/lib/libmsglocal_s.a \
+		$(DIST)/lib/librdfutil_s.a \
+		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
-	$(MKSHLIB_FORCE_ALL) \
-	$(SHARED_LIBRARY_LIBS) \
-	$(MKSHLIB_UNFORCE_ALL) \
-	-L$(DIST)/bin \
-	-L$(DIST)/lib \
-	-lxpcom \
-	-lreg \
-	-lmsgbaseutil \
-	$(NULL)
+		$(MKSHLIB_FORCE_ALL) \
+		$(SHARED_LIBRARY_LIBS) \
+		$(MKSHLIB_UNFORCE_ALL) \
+		-L$(DIST)/bin \
+		-L$(DIST)/lib \
+		-lxpcom \
+		-lmozreg \
+		-lmsgbaseutil \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

@@ -1,4 +1,3 @@
-#!gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -14,6 +13,7 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
+#
 
 DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
@@ -22,65 +22,61 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+PROGRAM		= mimetest
 CPPSRCS		= mimetest.cpp
 
-LOCAL_INCLUDES  =
+BASE_LIBS	= \
+		-lpref \
+		$(ZLIB_LIBS) \
+		-lmozreg \
+		-l$(MOZ_LIB_JS_PREFIX)js \
+		-lxpcom \
+		-lsecfree \
+		-l$(MOZ_LIB_UTIL_PREFIX)util \
+		$(NULL)
 
-REQUIRES	= 
+GECKO_LIBS	= \
+		-lraptorhtmlpars \
+		-lexpat \
+		-lxmltok \
+		-ljsdom \
+		-lraptorplugin \
+		$(NULL)
 
-BASE_LIBS =	     \
-	-lpref	     \
-	$(ZLIB_LIBS) \
-	-lreg	     \
-	-l$(MOZ_LIB_JS_PREFIX)js	     \
-	-lxpcom	     \
-	-lsecfree    \
-	-l$(MOZ_LIB_UTIL_PREFIX)util    \
-	$(NULL)
+IMGLIB_LIBS	= \
+		-limg \
+		$(JPEG_LIBS) \
+		$(PNG_LIBS) \
+		$(NULL)
 
-GECKO_LIBS =		      \
-	-lraptorhtmlpars      \
-	-lexpat \
-	-lxmltok \
-	-ljsdom		      \
-	-lraptorplugin	      \
-	$(NULL)
-
-IMGLIB_LIBS =	     \
-	-limg	     \
-	$(JPEG_LIBS) \
-	$(PNG_LIBS)  \
-	$(NULL)
-
-NETLIB_LIBS =	      \
-	-labouturl    \
-	-lfileurl     \
-	-lftpurl      \
-	-lgophurl     \
-	-lhttpurl     \
-	-lremoturl    \
-	-lsockstuburl \
-	-lmimetype    \
-	-lnetcache    \
-	-lnetcnvts    \
-	-lnetlib      \
-	-lnetwork     \
-	-lxp	      \
-	-ljsurl	      \
-	-l$(MOZ_LIB_DBM_PREFIX)dbm      \
-	-lpwcac	      \
-	$(NULL)
+NETLIB_LIBS	= \
+		-labouturl \
+		-lfileurl \
+		-lftpurl \
+		-lgophurl \
+		-lhttpurl \
+		-lremoturl \
+		-lsockstuburl \
+		-lmimetype \
+		-lnetcache \
+		-lnetcnvts \
+		-lnetlib \
+		-lnetwork \
+		-lxp \
+		-ljsurl \
+		-l$(MOZ_LIB_DBM_PREFIX)dbm \
+		-lpwcac \
+		$(NULL)
 
 LIBS		= \
-	$(GECKO_LIBS) \
-	$(NETLIB_LIBS) \
-	$(TIMER_LIBS) \
-	$(IMGLIB_LIBS) \
-	$(BASE_LIBS) \
-	$(NSPR_LIBS) \
-	$(TK_LIBS) \
-	$(NULL)
-
-PROGRAM		= mimetest
+		$(GECKO_LIBS) \
+		$(NETLIB_LIBS) \
+		$(TIMER_LIBS) \
+		$(IMGLIB_LIBS) \
+		$(BASE_LIBS) \
+		$(NSPR_LIBS) \
+		$(TK_LIBS) \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
+

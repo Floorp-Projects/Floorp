@@ -30,20 +30,20 @@ CPPSRCS		= nsImapFactory.cpp
 EXPORTS		= nsMsgImapCID.h
 
 SHARED_LIBRARY_LIBS = \
-	$(DIST)/lib/libmsgimap_s.a \
-	$(NULL)
+		$(DIST)/lib/libmsgimap_s.a \
+		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
-	$(MKSHLIB_FORCE_ALL) \
-	$(SHARED_LIBRARY_LIBS) \
-	$(MKSHLIB_UNFORCE_ALL) \
-	-L$(DIST)/bin \
-	-L$(DIST)/lib \
-	-lxpcom \
-	-lreg \
-	-lrdfutil_s \
-	-lmsgbaseutil \
-	$(NULL)
+		$(MKSHLIB_FORCE_ALL) \
+		$(SHARED_LIBRARY_LIBS) \
+		$(MKSHLIB_UNFORCE_ALL) \
+		-L$(DIST)/bin \
+		-L$(DIST)/lib \
+		-lxpcom \
+		-lmozreg \
+		-lrdfutil_s \
+		-lmsgbaseutil \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

@@ -1,4 +1,3 @@
-#!gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -16,18 +15,37 @@
 # Reserved.
 #
 
-DEPTH=../../../..
-
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-include $(topsrcdir)/config/config.mk
+LIBRARY_NAME	= xpconnect
+MODULE		= xpconnect
 
-LIBRARY_NAME=xpconnect
-MODULE=xpconnect
+CPPSRCS		= \
+		nsXPConnect.cpp \
+		xpcarbitrary.cpp \
+		xpccomponents.cpp \
+		xpccontext.cpp \
+		xpcconvert.cpp \
+		xpcjsid.cpp \
+		xpclog.cpp \
+		xpcmaps.cpp \
+		xpcmodule.cpp \
+		xpcstack.cpp \
+		xpcthreadcontext.cpp \
+		xpcthrower.cpp \
+		xpcwrappedjs.cpp \
+		xpcwrappedjsclass.cpp \
+		xpcwrappednative.cpp \
+		xpcwrappednativeclass.cpp \
+		xpcwrappednativejsops.cpp \
+		$(NULL)
+
+include $(topsrcdir)/config/config.mk
 
 # XXX hackage!
 # only copy the .so to components dir on platforms where xptcall is supported
@@ -35,101 +53,78 @@ MODULE=xpconnect
 # Unixish x86
 ifneq (,$(filter SunOS Linux FreeBSD NetBSD BSD_OS,$(OS_ARCH)))
 ifeq (86,$(findstring 86,$(OS_TEST)))
-IS_COMPONENT =  1
+IS_COMPONENT	= 1
 endif
 endif
 
 # Neutrino Cross-Compiled for x86
 ifneq (,$(filter NTO,$(OS_TARGET)))
 ifeq (86,$(findstring 86,$(OS_TEST)))
-IS_COMPONENT =  1
+IS_COMPONENT	= 1
 endif
 endif
 
 # Solaris/sparc
-ifneq (,$(filter SunOS,$(OS_ARCH)))
+ifeq ($(OS_ARCH),SunOS)
 ifneq (86,$(findstring 86,$(OS_TEST)))
-IS_COMPONENT =  1
+IS_COMPONENT	= 1
 endif
 endif
 
 # NetBSD/m68k
-ifneq (,$(filter NetBSD,$(OS_ARCH)))
+ifeq ($(OS_ARCH),NetBSD)
 ifneq (,$(filter amiga atari hp300 mac68k mvme68k next68k sun3 sun3x x68k,$(OS_TEST)))
-IS_COMPONENT =  1
+IS_COMPONENT	= 1
 endif
 endif
 
 # BeOS/Intel
 ifeq ($(OS_ARCH),BeOS)
 ifeq ($(OS_TEST),BePC)
-IS_COMPONENT =  1
+IS_COMPONENT	= 1
 endif
 endif
 
 # AIX
 ifeq ($(OS_ARCH),AIX)
-IS_COMPONENT =  1
+IS_COMPONENT	= 1
 endif
 
 # IRIX
-ifeq ($(OS_ARCH), IRIX)
+ifeq ($(OS_ARCH),IRIX)
 ifneq ($(basename $(OS_RELEASE)),5)
-IS_COMPONENT =  1
+IS_COMPONENT	= 1
 endif
 endif
 
 # OpenVMS (Alpha only at this point)
 ifeq ($(OS_ARCH),OpenVMS)
 ifeq ($(CPU_ARCH),Alpha)
-IS_COMPONENT =  1
+IS_COMPONENT	= 1
 endif
 endif
 
-# Linux ARM
-ifeq ($(OS_ARCH),Linux)
+# Linux or NetBSD ARM
+ifneq (,$(filter Linux NetBSD,$(OS_ARCH)))
 ifeq (arm,$(findstring arm,$(OS_TEST)))
-IS_COMPONENT =  1
+IS_COMPONENT	= 1
 endif
 ifeq (sa110,$(findstring sa110,$(OS_TEST)))   
-IS_COMPONENT =  1
+IS_COMPONENT	= 1
 endif
 endif
 
-DEFINES	+= -DJSFILE -DJS_THREADSAFE
-
-CPPSRCS=		\
-	nsXPConnect.cpp		\
-	xpcarbitrary.cpp	\
-	xpccomponents.cpp	\
-	xpccontext.cpp		\
-	xpcconvert.cpp		\
-	xpcjsid.cpp	\
-	xpclog.cpp			\
-	xpcmaps.cpp			\
-	xpcmodule.cpp	\
-	xpcstack.cpp	\
-	xpcthreadcontext.cpp	\
-	xpcthrower.cpp		\
-	xpcwrappedjs.cpp	\
-	xpcwrappedjsclass.cpp	\
-	xpcwrappednative.cpp	\
-	xpcwrappednativeclass.cpp	\
-	xpcwrappednativejsops.cpp	\
-	$(NULL)
+include $(topsrcdir)/config/rules.mk
 
 # this is automatically discovered under BeOS
 ifneq ($(OS_ARCH),BeOS)
+LIBS		+= \
+		-l$(MOZ_LIB_JS_PREFIX)js \
+		-lxpcom \
+		-lmozreg \
+		$(NSPR_LIBS) \
+		$(NULL)
+endif
 
-EXTRA_DSO_LDOPTS = \
-	-L$(DIST)/bin \
-	-l$(MOZ_LIB_JS_PREFIX)js \
-	-lxpcom \
-	-lreg \
-	$(NSPR_LIBS) \
-	$(NULL)
-
-endif # BeOS
-
-include $(topsrcdir)/config/rules.mk
+DEFINES		+= -DJSFILE -DJS_THREADSAFE
 

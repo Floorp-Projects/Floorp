@@ -41,7 +41,7 @@ EXTRA_DSO_LDOPTS = \
 		$(MKSHLIB_UNFORCE_ALL) \
 		-L$(DIST)/bin \
 		-lxpcom \
-		-lreg \
+		-lmozreg \
 		-lmsgbaseutil \
 		$(NULL)
 

@@ -32,16 +32,15 @@ EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
 		-L$(DIST)/lib \
 		-lxpcom \
-		-lreg \
+		-lmozreg \
 		$(ZLIB_LIBS) \
 		$(NSPR_LIBS) \
 		-l$(MOZ_LIB_JS_PREFIX)js	\
 		$(NULL)
 
 ifndef NECKO
-EXTRA_DSO_LDOPTS += \
-		-lnetlib 	\
-		$(NULL)
+EXTRA_DSO_LDOPTS += -lnetlib
 endif
 
 include $(topsrcdir)/config/rules.mk
+

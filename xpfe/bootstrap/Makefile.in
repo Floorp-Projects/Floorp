@@ -20,72 +20,68 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
+include $(DEPTH)/config/autoconf.mk
+
 PROGRAM		= apprunner
 MODULE		= apprunner
 
-include $(DEPTH)/config/autoconf.mk
+CPPSRCS		= \
+		nsAppRunner.cpp \
+		nsSetupRegistry.cpp \
+		$(NULL)
+
+ifndef NECKO
+LIBS		= \
+		-labouturl \
+		-lhttpurl \
+		-lsockstuburl \
+		-lfileurl \
+		-lgophurl \
+		-lftpurl \
+		-lremoturl \
+		-lxp \
+		-lnetcache \
+		-lnetcnvts \
+		-lmimetype \
+		-lnetwork \
+		-lnetlib \
+		-lpwcac \
+		$(NULL)
+else
+LIBS		= -lneckoutil_s
+endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
 BEOS_PROGRAM_RESOURCE = $(srcdir)/apprunner-beos.rsrc
 endif
 
-ifndef NECKO
-LIBS = 		\
-	-labouturl	\
-	-lhttpurl	\
-	-lsockstuburl 	\
-	-lfileurl	\
-	-lgophurl	\
-	-lftpurl	\
-	-lremoturl	\
-	-lxp		\
-	-lnetcache	\
-	-lnetcnvts	\
-	-lmimetype	\
-	-lnetwork	\
-	-lnetlib	\
-	-lpwcac		\
-	$(NULL)
-else
-LIBS = 		\
-	-lneckoutil_s	\
-	$(NULL)
-endif
-
-LIBS += \
-	-L$(DIST)/bin	\
-	-lnsappshell	\
-	-lxpcom		\
-	$(MOZ_WIDGET_TOOLKIT_LDFLAGS) \
-	-lraptorgfx	\
-	$(MOZ_GFX_TOOLKIT_LDFLAGS) \
-	$(TIMER_LIBS) \
-	-lreg		\
-	-lraptorwebwidget	\
-	-lraptorhtmlpars	\
-	-lexpat \
-	-lxmltok \
-	-ljsdom		\
-	-lcaps      \
-	-ljsurl		\
-	-lsecfree	\
-	-l$(MOZ_LIB_JS_PREFIX)js		\
-	$(JSJ_LIB)	\
-	-lpref		\
-	-limg		\
-	-l$(MOZ_LIB_UTIL_PREFIX)util	\
-	-lxp		\
-	-lxpcom		\
-	$(ZLIB_LIBS)	\
-	$(NSPR_LIBS)	\
-	$(TK_LIBS)	\
-	$(NULL)
-
-
-CPPSRCS = \
-	nsAppRunner.cpp 	\
-	nsSetupRegistry.cpp	\
-	$(NULL)
+LIBS		+= \
+		-lnsappshell \
+		-lxpcom \
+		$(MOZ_WIDGET_TOOLKIT_LDFLAGS) \
+		-lraptorgfx \
+		$(MOZ_GFX_TOOLKIT_LDFLAGS) \
+		$(TIMER_LIBS) \
+		-lmozreg \
+		-lraptorwebwidget \
+		-lraptorhtmlpars \
+		-lexpat \
+		-lxmltok \
+		-ljsdom \
+		-lcaps \
+		-ljsurl \
+		-lsecfree \
+		-l$(MOZ_LIB_JS_PREFIX)js \
+		$(JSJ_LIB) \
+		-lpref \
+		-limg \
+		-l$(MOZ_LIB_UTIL_PREFIX)util \
+		-lxp \
+		-lxpcom \
+		$(ZLIB_LIBS) \
+		$(NSPR_LIBS) \
+		$(TK_LIBS) \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
@@ -93,3 +89,4 @@ CXXFLAGS	+= $(MOZ_TOOLKIT_REGISTRY_CFLAGS)
 
 install:: $(srcdir)/mozilla-apprunner.sh
 	$(INSTALL) $< $(DIST)/bin
+

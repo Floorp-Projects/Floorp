@@ -13,6 +13,7 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
+#
 
 DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
@@ -23,20 +24,17 @@ include $(DEPTH)/config/autoconf.mk
 
 CPPSRCS		= nsTestUConv.cpp 
 
-OBJS		= $(CPPSRCS:.cpp=.o)
-
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=)
-
-#TARGETS		= $(SIMPLE_PROGRAMS)
 
 include $(topsrcdir)/config/rules.mk
 
-INCLUDES	+= -I$(srcdir)/../ucvlatin  \
-                   -I$(srcdir)/../ucvja	\
-                   -I$(srcdir)/../ucvja2
+INCLUDES	+= \
+		-I$(srcdir)/../ucvlatin \
+		-I$(srcdir)/../ucvja \
+		-I$(srcdir)/../ucvja2 \
+		$(NULL)
 
-
-LIBS	        += $(NSPR_LIBS) -L$(DIST)/bin/ -lxpcom -lreg -luconv
+LIBS		+= $(NSPR_LIBS) -L$(DIST)/bin -lxpcom -lmozreg -luconv
 
 # needed for mac linux
 ifeq ($(OS_ARCH),Linux)
@@ -44,9 +42,3 @@ ifneq ($(OS_RELEASE),1.2)
 OS_LIBS		+= /usr/lib/libdl.so
 endif
 endif
-
-$(OBJDIR)/%.o: %.cpp
-	@$(MAKE_OBJDIR)
-	$(CCC) -o $@ $(CFLAGS) -c $<
-
-install:: $(SIMPLE_PROGRAMS)
