@@ -1120,8 +1120,65 @@ void nsWebShellWindow::ExecuteStartupCode()
 }
 
 
+/* A somewhat early version of window sizing code.  This simply reads attributes
+   from the window tag and blindly sets the size to whatever it finds within.
+*/
 void nsWebShellWindow::SetSizeFromXUL()
 {
+  nsCOMPtr<nsIDOMNode> webshellNode = GetDOMNodeFromWebShell(mWebShell);
+  nsIWidget *windowWidget = GetWidget();
+  nsCOMPtr<nsIDOMElement> webshellElement;
+  nsString sizeString;
+  PRInt32 errorCode,
+          specWidth, specHeight,
+          specSize;
+  nsRect  currentSize;
+
+  if (webshellNode)
+    webshellElement = do_QueryInterface(webshellNode);
+  if (!webshellElement || !windowWidget) // it's hopeless
+    return;
+
+  // first guess: use current size
+  mWindow->GetBounds(currentSize);
+  specWidth = currentSize.width;
+  specHeight = currentSize.height;
+
+  // read "height" attribute
+  if (NS_SUCCEEDED(webshellElement->GetAttribute("height", sizeString))) {
+    specSize = sizeString.ToInteger(&errorCode);
+    if (NS_SUCCEEDED(errorCode) && specSize > 0)
+      specHeight = specSize;
+  }
+
+  // read "width" attribute
+  if (NS_SUCCEEDED(webshellElement->GetAttribute("width", sizeString))) {
+    specSize = sizeString.ToInteger(&errorCode);
+    if (NS_SUCCEEDED(errorCode) || specSize > 0)
+      specWidth = specSize;
+  }
+
+  if (specWidth != currentSize.width || specHeight != currentSize.height)
+    windowWidget->Resize(specWidth, specHeight, PR_TRUE);
+
+#if 0
+  // adjust height to fit contents?
+  if (fitHeight == PR_TRUE) {
+    nsCOMPtr<nsIContentViewer> cv;
+    mWebShell->GetContentViewer(getter_AddRefs(cv));
+    if (cv) {
+      nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
+      if (docv) {
+        nsCOMPtr<nsIDocument> doc;
+        docv->GetDocument(*getter_AddRefs(doc));
+        if (doc)
+          specHeight = GetDocHeight(doc);
+      }
+    }
+    mWindow->GetBounds(currentSize);
+    windowWidget->Resize(currentSize.width, specHeight, PR_TRUE);
+  }
+#endif
 } // SetSizeFromXUL
 
 
