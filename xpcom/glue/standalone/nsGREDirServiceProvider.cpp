@@ -304,6 +304,9 @@ GRE_GetGREPath()
 #elif XP_WIN32
     if (!_fullpath(sGRELocation, env, MAXPATHLEN))
       strcpy(sGRELocation, env);
+#else
+    // hope for the best
+    strcpy(sGRELocation, env);
 #endif
     // xxxbsmedberg: it would help that other platforms had a "make absolute" function
     return sGRELocation;
