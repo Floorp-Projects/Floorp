@@ -180,8 +180,8 @@ nsClipboard :: GetNativeClipboardData(nsITransferable * aTransferable)
       nsXPIDLCString flavorStr;
       currentFlavor->ToString ( getter_Copies(flavorStr) );
       
-      // find MacOS flavor
-      ResType macOSFlavor = theMapper.MapMimeTypeToMacOSType(flavorStr);
+      // find MacOS flavor (don't add if not present)
+      ResType macOSFlavor = theMapper.MapMimeTypeToMacOSType(flavorStr, PR_FALSE);
     
       char* clipboardData = nsnull;
       long dataSize = 0L;
@@ -194,7 +194,7 @@ nsClipboard :: GetNativeClipboardData(nsITransferable * aTransferable)
         #ifdef NS_DEBUG
           if ( errCode != NS_OK ) printf("nsClipboard:: Error setting data into transferable\n");
         #endif
-        nsCRT::free ( clipboardData );
+        nsAllocator::Free ( clipboardData );
         
         // we found one, get out of this loop!
         break;        
@@ -213,7 +213,7 @@ nsClipboard :: GetNativeClipboardData(nsITransferable * aTransferable)
 nsresult
 nsClipboard :: GetDataOffClipboard ( ResType inMacFlavor, char** outData, long* outDataSize )
 {
-  if ( !outData )
+  if ( !outData || !outDataSize || !inMacFlavor )
     return NS_ERROR_FAILURE;
 
   // check if it is on the clipboard
@@ -249,3 +249,47 @@ nsClipboard :: GetDataOffClipboard ( ResType inMacFlavor, char** outData, long* 
   return NS_OK;
   
 } // GetDataOffClipboard
+
+
+//
+// HasDataMatchingFlavors
+//
+// Check the clipboard to see if we have any data that matches the given flavors. This
+// does NOT actually fetch the data. The items in the flavor list are nsISupportsString's.
+//
+NS_IMETHODIMP
+nsClipboard :: HasDataMatchingFlavors ( nsISupportsArray* aFlavorList, PRBool * outResult ) 
+{
+  *outResult = PR_FALSE;  // assume there is nothing there we want.
+  
+  // create a mime mapper. It's ok for this to fail because the data may come from
+  // another app which obviously wouldn't put our mime mapping data on the clipboard.
+  char* mimeMapperData = nsnull;
+  GetDataOffClipboard ( nsMimeMapperMac::MappingFlavor(), &mimeMapperData, nsnull );
+  nsMimeMapperMac theMapper ( mimeMapperData );
+  nsAllocator::Free ( mimeMapperData );
+  
+  PRUint32 length;
+  aFlavorList->Count(&length);
+  for ( PRUint32 i = 0; i < length; ++i ) {
+    nsCOMPtr<nsISupports> genericFlavor;
+    aFlavorList->GetElementAt ( i, getter_AddRefs(genericFlavor) );
+    nsCOMPtr<nsISupportsString> flavorWrapper ( do_QueryInterface(genericFlavor) );
+    if ( flavorWrapper ) {
+      nsXPIDLCString flavor;
+      flavorWrapper->ToString ( getter_Copies(flavor) );
+      
+      // now that we have the flavor (whew!), run it through the mime mapper. If we
+      // get something back, chances are good it's there on the clipboard (ignoring that
+      // there is zero length data, but i don't think we need to worry about that). If
+      // the mapper returns a null flavor, then it ain't there.
+      ResType macFlavor = theMapper.MapMimeTypeToMacOSType ( flavor, PR_FALSE );
+      if ( macFlavor ) {
+        *outResult = PR_TRUE;   // we found one!
+        break;
+      }
+    }  
+  } // foreach flavor
+  
+  return NS_OK;
+}
