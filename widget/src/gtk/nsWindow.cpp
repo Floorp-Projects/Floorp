@@ -178,7 +178,6 @@ NS_METHOD nsWindow::PreCreateWidget(nsWidgetInitData *aInitData)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
 {
-  gchar *name = NULL;
   mWidget = gtk_layout_new(PR_FALSE, PR_FALSE);
   GTK_WIDGET_SET_FLAGS(mWidget, GTK_CAN_FOCUS);
   gtk_widget_set_app_paintable(mWidget, PR_TRUE);
@@ -218,13 +217,8 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
   }
 
   // Force cursor to default setting
-  name = (char *)g_malloc(50);
-  memset(name, 0, 50);
-  if (mIsToplevel)
-    sprintf(name, "nsWindow (%p) (TopLevel)", this);
-  else
-    sprintf(name, "nsWindow (%p)", this);
-  gtk_widget_set_name(mWidget, name);
+  gtk_widget_set_name(mWidget, "nsWindow");
+  mIsToplevel = PR_TRUE;
   mCursor = eCursor_select;
   SetCursor(eCursor_standard);
   return NS_OK;

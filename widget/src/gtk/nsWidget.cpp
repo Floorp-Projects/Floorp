@@ -57,14 +57,6 @@ nsWidget::nsWidget()
   mIsDestroying = PR_FALSE;
   mOnDestroyCalled = PR_FALSE;
   mIsToplevel = PR_FALSE;
-  mRequestedSize.x = 0;
-  mRequestedSize.y = 0;
-  mRequestedSize.width = 0;
-  mRequestedSize.height = 0;
-  mOldSize.x = 0;
-  mOldSize.y = 0;
-  mOldSize.width = 0;
-  mOldSize.height = 0;
 }
 
 nsWidget::~nsWidget()
@@ -98,10 +90,16 @@ NS_METHOD nsWidget::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
 
 NS_IMETHODIMP nsWidget::Destroy(void)
 {
+  GtkAllocation *old_size = NULL;
   if (!mIsDestroying) {
     nsBaseWidget::Destroy();
   }
   if (mWidget) {
+    // see if we need to destroy the old size information
+    old_size = gtk_object_get_data(GTK_OBJECT(mWidget), "mozilla.old_size");
+    if (old_size) {
+      g_free(old_size);
+    }
     // prevent the widget from causing additional events
     mEventCallback = nsnull;
     ::gtk_widget_destroy(mWidget);
@@ -192,14 +190,6 @@ NS_METHOD nsWidget::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
          gtk_widget_get_name(mWidget), this,
          aWidth, aHeight);
 #endif
-  mOldSize.x = mBounds.x;
-  mOldSize.y = mBounds.y;
-  mOldSize.width = aWidth;
-  mOldSize.height = aWidth;
-  mRequestedSize.x = mBounds.x;
-  mRequestedSize.y = mBounds.y;
-  mRequestedSize.width = aWidth;
-  mRequestedSize.height = aHeight;
   mBounds.width  = aWidth;
   mBounds.height = aHeight;
   ::gtk_widget_set_usize(mWidget, aWidth, aHeight);
@@ -570,9 +560,6 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
   }
 
   mBounds = aRect;
-  // if we came from a native parent, make sure to catch the resize events.
-  if (aNativeParent == NULL)
-    mIsToplevel = PR_TRUE;
   CreateNative (parentWidget);
 
   Resize(aRect.width, aRect.height, PR_FALSE);
@@ -580,15 +567,6 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
   if (parentWidget)
     gtk_layout_put(GTK_LAYOUT(parentWidget), mWidget, aRect.x, aRect.y);
 
-  // this is handled now in the nsWindow class
-#if 0
-  // connect the size allocate to the
-  if (mIsToplevel)
-    gtk_signal_connect(GTK_OBJECT(mWidget),
-                       "size_allocate",
-                       GTK_SIGNAL_FUNC(handle_size_allocate),
-                       this);
-#endif
   gtk_widget_pop_colormap();
   gtk_widget_pop_visual();
 
