@@ -1068,8 +1068,7 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
           GetChecked(&checked);
           SetChecked(!checked);
           // Fire an event to notify accessibility
-          nsLocalString checkboxStateChange(NS_LITERAL_STRING("CheckboxStateChange"));
-          FireEventForAccessibility( aPresContext, checkboxStateChange);  
+          FireEventForAccessibility( aPresContext, NS_LITERAL_STRING("CheckboxStateChange"));
         }
         break;
 
@@ -1088,8 +1087,7 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
           SetChecked(PR_TRUE);
           // Fire an event to notify accessibility
           if ( selectedRadiobtn != this ) {
-            nsLocalString radiobuttonStateChange(NS_LITERAL_STRING("RadiobuttonStateChange"));
-            FireEventForAccessibility( aPresContext, radiobuttonStateChange);
+            FireEventForAccessibility( aPresContext, NS_LITERAL_STRING("RadiobuttonStateChange"));;
           }
         }
         break;
@@ -1682,10 +1680,9 @@ nsHTMLInputElement::FireEventForAccessibility(nsIPresContext* aPresContext,
 
   // Create the DOM event
   nsCOMPtr<nsIDOMEvent> domEvent;
-  nsLocalString mutationEvent(NS_LITERAL_STRING("MutationEvent"));
   rv = listenerManager->CreateEvent(aPresContext,
                                     nsnull, 
-                                    mutationEvent,
+                                    NS_LITERAL_STRING("MutationEvent"),
                                     getter_AddRefs(domEvent) );
   if ( !domEvent )
     return NS_ERROR_FAILURE;
