@@ -1382,7 +1382,8 @@ NS_IMETHODIMP nsXPrintContext::RenderPostScriptDataFragment(const unsigned char 
   PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, 
          ("nsXPrintContext::RenderPostScriptDataFragment(aData, aDatalen=%d)\n", aDatalen));
   
-  const char *embedded_formats_supported = XpGetOneAttribute(mPDisplay, mPContext,XPPrinterAttr, "xp-embedded-formats-supported");
+  char xp_formats_supported[] = "xp-embedded-formats-supported";
+  const char *embedded_formats_supported = XpGetOneAttribute(mPDisplay, mPContext,XPPrinterAttr, xp_formats_supported);
 
   /* Check whether "PostScript Level 2" is supported as embedding format
    * (The content of the "xp-embedded-formats-supported" attribute needs
