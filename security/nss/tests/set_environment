@@ -2,10 +2,10 @@
 
 ########################################################################
 #
-# /u/sonmi/bin/cron_environment
+# /u/sonmi/bin/set_environment
 #
 # sourced from the header if running from cron to get the full environment
-# to run nssqa	
+# to run nssqa	- also used to unify all nssqa environments
 #
 # This is derived from the .cshrc file for the svbld account.  
 #
@@ -156,7 +156,7 @@ else
 	PAGER=less
 	XMCD_LIBDIR=/usr/local/lib/xmcd
 	DISPLAY=:0.0
-	PATH=`$QASCRIPT_DIR/path_uniq "$PATH"`
+	PATH=`perl $QASCRIPT_DIR/path_uniq "$PATH"`
 fi
 
 BASEPATH=$PATH	# in  case we we set and reset DIST directories the PATH 
