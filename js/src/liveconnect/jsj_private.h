@@ -151,6 +151,13 @@ struct JavaMemberDescriptor {
     JSObject *              invoke_func_obj; /* If non-null, JSFunction obj to invoke method */
 };
 
+/* Status of Class member reflection.  See JavaClassDescriptor. */
+typedef enum {
+    REFLECT_NO,
+    REFLECT_IN_PROGRESS,
+    REFLECT_COMPLETE
+} ReflectStatus;
+
 /* This is the native portion of a reflected Java class */
 struct JavaClassDescriptor {
     const char *            name;       /* Name of class, e.g. "java.lang.Byte" */
@@ -158,9 +165,9 @@ struct JavaClassDescriptor {
     jclass                  java_class; /* Opaque JVM handle to corresponding java.lang.Class */
     int                     num_instance_members;
     int                     num_static_members;
-    JSBool                  instance_members_reflected;
+    volatile ReflectStatus  instance_members_reflected;
     JavaMemberDescriptor *  instance_members;
-    JSBool                  static_members_reflected;
+    volatile ReflectStatus  static_members_reflected;
     JavaMemberDescriptor *  static_members;
     JavaMemberDescriptor *  constructors;
     int                     modifiers;  /* Class declaration qualifiers,
@@ -204,7 +211,7 @@ struct JSJavaThreadState {
     JNIEnv *            jEnv;           /* Per-thread opaque handle to Java VM */
     CapturedJSError *   pending_js_errors; /* JS errors to be thrown as Java exceptions */
     JSContext *         cx;             /* current JS context for thread */
-    int			recursion_depth;/* # transitions into JS from Java */
+    int			recursion_depth;/* # transitions into Java from JS */
     JSJavaThreadState * next;           /* next thread state among all created threads */
 };
 
@@ -219,7 +226,7 @@ typedef struct JavaToJSSavedState JavaToJSSavedState;
    objects hold a reference to native JSObjects. */
 struct JSObjectHandle {
     JSObject *js_obj;
-    JSContext *cx;      /* Creating context, needed for finalization */
+    JSRuntime *rt;
 };
 typedef struct JSObjectHandle JSObjectHandle;
 
@@ -578,8 +585,11 @@ JavaStringToId(JSContext *cx, JNIEnv *jEnv, jstring jstr, jsid *idp);
 extern const char *
 jsj_DupJavaStringUTF(JSContext *cx, JNIEnv *jEnv, jstring jstr);
 
-JSJavaThreadState *
-jsj_MapJSContextToJSJThread(JSContext *cx, JNIEnv **envp);
+extern JSJavaThreadState *
+jsj_EnterJava(JSContext *cx, JNIEnv **envp);
+
+extern void
+jsj_ExitJava(JSJavaThreadState *jsj_env);
 
 #ifdef DEBUG
 #define DEBUG_LOG(args) printf args

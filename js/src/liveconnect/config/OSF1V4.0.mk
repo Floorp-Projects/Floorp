@@ -19,3 +19,5 @@ JDK = /share/builds/components/jdk/1.1.6/OSF1
 INCLUDES   += -I$(JDK)/include/java -I$(JDK)/include/java/alpha
 
 OTHER_LIBS += -L$(JDK)/lib/alpha -ljava
+
+XLDFLAGS += -taso

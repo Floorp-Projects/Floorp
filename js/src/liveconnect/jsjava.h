@@ -78,7 +78,9 @@ typedef struct JSJCallbacks {
        callback can call JSJ_SetJSContextForJavaThread() to avoid any further
        callbacks of this type for this Java thread. */
     JSContext *	        (*map_jsj_thread_to_js_context)(JSJavaThreadState *jsj_env,
+#ifdef OJI
                                                         void *java_applet_obj,
+#endif
                                                         JNIEnv *jEnv,
                                                         char **errp);
 
