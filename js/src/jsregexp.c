@@ -465,10 +465,11 @@ ParseRegExp(CompilerState *state)
         parenIndex = state->parenCount;
         if (state->cp == state->cpend) {
             /*
-             * If we are at the end of the regexp and we're short an operand,
-             * the regexp must have the form /x|/ or some such.
+             * If we are at the end of the regexp and we're short one or more
+             * operands, the regexp must have the form /x|/ or some such, with
+             * left parentheses making us short more than one operand.
              */
-            if (operatorSP == operandSP) {
+            if (operatorSP >= operandSP) {
                 operand = NewRENode(state, REOP_EMPTY);
                 if (!operand)
                     goto out;
