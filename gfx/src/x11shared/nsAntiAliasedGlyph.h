@@ -4,6 +4,11 @@
 
 #include "nscore.h"
 
+#ifdef MOZ_ENABLE_FREETYPE2
+#include <ft2build.h>
+#include FT_GLYPH_H
+#endif
+
 struct _XImage;
 
 #ifndef MIN
@@ -36,6 +41,10 @@ public:
 
   PRBool Init();                                      // alloc a buffer
   PRBool Init(PRUint8 *aBuffer, PRUint32 aBufferLen); // use this buffer
+#ifdef MOZ_ENABLE_FREETYPE2
+  PRBool WrapFreeType(FT_BBox *aBbox, FT_BitmapGlyph aSlot, 
+                      PRUint8 *aBuffer, PRUint32 aBufLen);
+#endif
 
   inline PRUint32 GetBorder()       { return mBorder; };
   inline PRUint8 *GetBuffer()       { return mBuffer; };

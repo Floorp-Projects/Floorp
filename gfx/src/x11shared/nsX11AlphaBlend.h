@@ -46,7 +46,19 @@
 class nsAntiAliasedGlyph;
 
 #ifdef DEBUG
+#ifndef DEBUG_SHOW_GLYPH_BOX
+# define DEBUG_SHOW_GLYPH_BOX 0
+#endif
 void AADrawBox(XImage *, PRInt32, PRInt32, PRInt32, PRInt32, nscolor, PRUint8);
+#if DEBUG_SHOW_GLYPH_BOX
+# define DEBUG_AADRAWBOX(i,x,y,w,h,r,g,b,a) \
+    PR_BEGIN_MACRO \
+      nscolor color NS_RGB((r),(g),(b)); \
+      AADrawBox((i), (x), (y), (w), (h), color, (a)); \
+    PR_END_MACRO
+#else
+# define DEBUG_AADRAWBOX(i,x,y,w,h,r,g,b,a)
+#endif
 #endif
 
 void     nsX11AlphaBlendFreeGlobals(void);
