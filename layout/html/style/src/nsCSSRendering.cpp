@@ -1764,11 +1764,29 @@ void nsCSSRendering::DrawCompositeSide(nsIRenderingContext& aRenderingContext,
   // up the -moz-border-radius gauntlet.
   // Alternatively we could add support for a -moz-border-diagonal property, which is
   // what this code actually draws (instead of a curve).
-  nscoord startRadius, endRadius;
-  startRadius = aBorderRadii[aWhichSide];
-  endRadius = (aWhichSide == NS_SIDE_LEFT) ? aBorderRadii[0] : aBorderRadii[aWhichSide+1];
-  PRInt32 level = 0;
-  while (currOuterRect.width > aInnerRect.width) {
+
+  // determine the the number of pixels we need to draw for this side
+  // and the start and end radii
+  nscoord shrinkage, startRadius, endRadius;
+  if (aWhichSide == NS_SIDE_TOP) {
+    shrinkage = aInnerRect.y - aOuterRect.y;
+    startRadius = aBorderRadii[0];
+    endRadius = aBorderRadii[1];
+  } else if (aWhichSide == NS_SIDE_BOTTOM) {
+    shrinkage = (aOuterRect.height+aOuterRect.y) - (aInnerRect.height+aInnerRect.y);
+    startRadius = aBorderRadii[3];
+    endRadius = aBorderRadii[2];
+  } else if (aWhichSide == NS_SIDE_RIGHT) {
+    shrinkage = (aOuterRect.width+aOuterRect.x) - (aInnerRect.width+aInnerRect.x);
+    startRadius = aBorderRadii[1];
+    endRadius = aBorderRadii[2];
+  } else if (aWhichSide == NS_SIDE_LEFT) {
+    shrinkage = aInnerRect.x - aOuterRect.x;
+    startRadius = aBorderRadii[0];
+    endRadius = aBorderRadii[3];
+  }
+
+  while (shrinkage) {
     nscoord xshrink = 0;
     nscoord yshrink = 0;
     nscoord widthshrink = 0;
@@ -1785,122 +1803,163 @@ void nsCSSRendering::DrawCompositeSide(nsIRenderingContext& aRenderingContext,
       }
     }
 
+    // subtract any rounded pixels from the outer rect
     nsRect newOuterRect(currOuterRect);
     newOuterRect.x += xshrink;
     newOuterRect.y += yshrink;
     newOuterRect.width -= widthshrink;
     newOuterRect.height -= heightshrink;
 
-    nsRect borderInside(newOuterRect.x+twipsPerPixel, newOuterRect.y+twipsPerPixel, 
-                        newOuterRect.width - 2*twipsPerPixel,
-                        newOuterRect.height - 2*twipsPerPixel);
-    nsPoint theSide[MAX_POLY_POINTS];
-    PRInt32 np = MakeSide(theSide, aRenderingContext, aWhichSide, newOuterRect, borderInside, 0,
-                          BORDER_FULL, 1.0f, twipsPerPixel);
-    NS_ASSERTION(np == 2, "Composite border should always be single pixel!");
-    aRenderingContext.SetColor(aCompositeColors->mColor);
-    DrawLine(aRenderingContext, theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y, aGap);
-  
-    if (aWhichSide == NS_SIDE_TOP) {
-      if (startRadius) {
-        // Connecting line between top/left
-        nscoord distance = (startRadius+twipsPerPixel)/2;
-        nscoord remainder = distance%twipsPerPixel;
-        if (remainder) 
-          distance += twipsPerPixel - remainder;
-        DrawLine(aRenderingContext, currOuterRect.x+startRadius, currOuterRect.y, 
-                 currOuterRect.x+(startRadius-distance), currOuterRect.y+distance, aGap);
-      }
-      if (endRadius) {
-        // Connecting line between top/right
-        nscoord distance = (endRadius+twipsPerPixel)/2;
-        nscoord remainder = distance%twipsPerPixel;
-        if (remainder) 
-          distance += twipsPerPixel - remainder;
-        DrawLine(aRenderingContext, currOuterRect.x+currOuterRect.width-endRadius-twipsPerPixel, currOuterRect.y, 
-                 currOuterRect.x+currOuterRect.width-endRadius-twipsPerPixel+distance,
-                 currOuterRect.y+distance, aGap);
-      }
-    }
-    else if (aWhichSide == NS_SIDE_BOTTOM) {
-      if (startRadius) {
-        // Connecting line between bottom/right
-        nscoord distance = (endRadius+twipsPerPixel)/2;
-        nscoord remainder = distance%twipsPerPixel;
-        if (remainder) 
-          distance += twipsPerPixel - remainder;
-        DrawLine(aRenderingContext, currOuterRect.x+currOuterRect.width-startRadius-twipsPerPixel, 
-                 currOuterRect.y+currOuterRect.height-twipsPerPixel, 
-                 currOuterRect.x+currOuterRect.width-(startRadius-distance)-twipsPerPixel, 
-                 currOuterRect.y+currOuterRect.height-distance-twipsPerPixel, aGap);
-      }
-      if (endRadius) {
-        nscoord distance = (startRadius+twipsPerPixel)/2;
-        nscoord remainder = distance%twipsPerPixel;
-        if (remainder) 
-          distance += twipsPerPixel - remainder;
-        DrawLine(aRenderingContext, currOuterRect.x+endRadius, 
-                 currOuterRect.y+currOuterRect.height-twipsPerPixel, currOuterRect.x+(endRadius-distance), 
-                 currOuterRect.y+currOuterRect.height-distance-twipsPerPixel, aGap);
-      }
+    nsRect borderInside(currOuterRect);
     
+    // try to subtract one pixel from each side of the outer rect, but only if 
+    // that side has any extra space left to shrink
+    if (aInnerRect.x > borderInside.x) { // shrink left
+      borderInside.x += twipsPerPixel;
+      borderInside.width -= twipsPerPixel;
     }
-    else if (aWhichSide == NS_SIDE_LEFT) {
-      if (startRadius) {
-        // Connecting line between left/bottom
-        nscoord distance = (endRadius-twipsPerPixel)/2;
-        nscoord remainder = distance%twipsPerPixel;
-        if (remainder)
-          distance -= remainder;
-        DrawLine(aRenderingContext, currOuterRect.x+distance, 
-                 currOuterRect.y+currOuterRect.height-twipsPerPixel-(startRadius-distance), 
-                 currOuterRect.x, currOuterRect.y+currOuterRect.height-twipsPerPixel-startRadius, aGap);
-      }
-      if (endRadius) {
-        // Connecting line between left/top
-        nscoord distance = (endRadius-twipsPerPixel)/2;
-        nscoord remainder = distance%twipsPerPixel;
-        if (remainder)
-          distance -= remainder;
-        DrawLine(aRenderingContext, currOuterRect.x+distance, currOuterRect.y+(endRadius-distance), 
-                 currOuterRect.x, currOuterRect.y+endRadius, aGap);
-      }
+    if (borderInside.x+borderInside.width > aInnerRect.x+aInnerRect.width) // shrink right
+      borderInside.width -= twipsPerPixel;
+    
+    if (aInnerRect.y > borderInside.y) { // shrink top
+      borderInside.y += twipsPerPixel;
+      borderInside.height -= twipsPerPixel;
     }
-    else if (aWhichSide == NS_SIDE_RIGHT) {
-     if (startRadius) {
-        // Connecting line between right/top
-        nscoord distance = (startRadius-twipsPerPixel)/2;
-        nscoord remainder = distance%twipsPerPixel;
-        if (remainder)
-          distance -= remainder;
-        DrawLine(aRenderingContext, currOuterRect.x+currOuterRect.width-distance-twipsPerPixel, 
-          //currOuterRect.y-2,     
-          currOuterRect.y+(startRadius-distance), 
-         currOuterRect.x+currOuterRect.width-twipsPerPixel, 
-         //currOuterRect.y-2, aGap);
-         currOuterRect.y+startRadius, aGap);
-      }
-      if (endRadius) {
-        // Connecting line between right/bottom
-        nscoord distance = (endRadius-twipsPerPixel)/2;
-        nscoord remainder = distance%twipsPerPixel;
-        if (remainder)
-          distance -= remainder;
-        DrawLine(aRenderingContext, currOuterRect.x+currOuterRect.width-twipsPerPixel-distance, 
-                 currOuterRect.y+currOuterRect.height-twipsPerPixel-(endRadius-distance), 
-                 currOuterRect.x+currOuterRect.width-twipsPerPixel, 
-                 currOuterRect.y+currOuterRect.height-twipsPerPixel-endRadius, aGap);
-      }
-    }
+    if (borderInside.y+borderInside.height > aInnerRect.y+aInnerRect.height) // shrink bottom
+      borderInside.height -= twipsPerPixel;
 
+    if (!aCompositeColors->mTransparent) {
+      nsPoint theSide[MAX_POLY_POINTS];
+      PRInt32 np = MakeSide(theSide, aRenderingContext, aWhichSide, newOuterRect, borderInside, 0,
+                            BORDER_FULL, 1.0f, twipsPerPixel);
+      NS_ASSERTION(np == 2, "Composite border should always be single pixel!");
+      aRenderingContext.SetColor(aCompositeColors->mColor);
+      DrawLine(aRenderingContext, theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y, aGap);
+    
+      if (aWhichSide == NS_SIDE_TOP) {
+        if (startRadius) {
+          // Connecting line between top/left
+          nscoord distance = (startRadius+twipsPerPixel)/2;
+          nscoord remainder = distance%twipsPerPixel;
+          if (remainder) 
+            distance += twipsPerPixel - remainder;
+          DrawLine(aRenderingContext,
+                   currOuterRect.x+startRadius,
+                   currOuterRect.y, 
+                   currOuterRect.x+startRadius-distance,
+                   currOuterRect.y+distance,
+                   aGap);
+        }
+        if (endRadius) {
+          // Connecting line between top/right
+          nscoord distance = (endRadius+twipsPerPixel)/2;
+          nscoord remainder = distance%twipsPerPixel;
+          if (remainder) 
+            distance += twipsPerPixel - remainder;
+          DrawLine(aRenderingContext,
+                   currOuterRect.x+currOuterRect.width-endRadius-twipsPerPixel,
+                   currOuterRect.y, 
+                   currOuterRect.x+currOuterRect.width-endRadius-twipsPerPixel+distance,
+                   currOuterRect.y+distance,
+                   aGap);
+        }
+      }
+      else if (aWhichSide == NS_SIDE_BOTTOM) {
+        if (startRadius) {
+          // Connecting line between bottom/left
+          nscoord distance = (startRadius+twipsPerPixel)/2;
+          nscoord remainder = distance%twipsPerPixel;
+          if (remainder) 
+            distance += twipsPerPixel - remainder;
+          DrawLine(aRenderingContext,
+                   currOuterRect.x+startRadius, 
+                   currOuterRect.y+currOuterRect.height-twipsPerPixel,
+                   currOuterRect.x+startRadius-distance, 
+                   currOuterRect.y+currOuterRect.height-twipsPerPixel-distance,
+                   aGap);
+        }
+        if (endRadius) {
+          // Connecting line between bottom/right
+          nscoord distance = (endRadius+twipsPerPixel)/2;
+          nscoord remainder = distance%twipsPerPixel;
+          if (remainder) 
+            distance += twipsPerPixel - remainder;
+          DrawLine(aRenderingContext,
+                   currOuterRect.x+currOuterRect.width-endRadius-twipsPerPixel, 
+                   currOuterRect.y+currOuterRect.height-twipsPerPixel, 
+                   currOuterRect.x+currOuterRect.width-endRadius-twipsPerPixel+distance, 
+                   currOuterRect.y+currOuterRect.height-twipsPerPixel-distance,
+                   aGap);
+        }
+      }
+      else if (aWhichSide == NS_SIDE_LEFT) {
+        if (startRadius) {
+          // Connecting line between left/top
+          nscoord distance = (startRadius-twipsPerPixel)/2;
+          nscoord remainder = distance%twipsPerPixel;
+          if (remainder)
+            distance -= remainder;
+          DrawLine(aRenderingContext,
+                   currOuterRect.x+distance,
+                   currOuterRect.y+startRadius-distance, 
+                   currOuterRect.x,
+                   currOuterRect.y+startRadius,
+                   aGap);
+        }
+        if (endRadius) {
+          // Connecting line between left/bottom
+          nscoord distance = (endRadius-twipsPerPixel)/2;
+          nscoord remainder = distance%twipsPerPixel;
+          if (remainder)
+            distance -= remainder;
+          DrawLine(aRenderingContext,
+                   currOuterRect.x+distance,
+                   currOuterRect.y+currOuterRect.height-twipsPerPixel-endRadius+distance,
+                   currOuterRect.x,
+                   currOuterRect.y+currOuterRect.height-twipsPerPixel-endRadius,
+                   aGap);
+        }
+      }
+      else if (aWhichSide == NS_SIDE_RIGHT) {
+       if (startRadius) {
+          // Connecting line between right/top
+          nscoord distance = (startRadius-twipsPerPixel)/2;
+          nscoord remainder = distance%twipsPerPixel;
+          if (remainder)
+            distance -= remainder;
+          DrawLine(aRenderingContext,
+                   currOuterRect.x+currOuterRect.width-twipsPerPixel-distance,
+                   currOuterRect.y+startRadius-distance, 
+                   currOuterRect.x+currOuterRect.width-twipsPerPixel,
+                   currOuterRect.y+startRadius,
+                   aGap);
+        }
+        if (endRadius) {
+          // Connecting line between right/bottom
+          nscoord distance = (endRadius-twipsPerPixel)/2;
+          nscoord remainder = distance%twipsPerPixel;
+          if (remainder)
+            distance -= remainder;
+          DrawLine(aRenderingContext,
+                   currOuterRect.x+currOuterRect.width-twipsPerPixel-distance, 
+                   currOuterRect.y+currOuterRect.height-twipsPerPixel-endRadius+distance,
+                   currOuterRect.x+currOuterRect.width-twipsPerPixel, 
+                   currOuterRect.y+currOuterRect.height-twipsPerPixel-endRadius,
+                   aGap);
+        }
+      }
+    }
+    
     if (aCompositeColors->mNext)
       aCompositeColors = aCompositeColors->mNext;
-    currOuterRect.x += twipsPerPixel;
-    currOuterRect.y += twipsPerPixel;
-    currOuterRect.width -= 2*twipsPerPixel;
-    currOuterRect.height -= 2*twipsPerPixel;
-    startRadius -= twipsPerPixel; if (startRadius < 0) startRadius = 0;
-    endRadius -= twipsPerPixel; if (endRadius < 0) endRadius = 0;
+
+    currOuterRect = borderInside;
+    shrinkage -= twipsPerPixel;
+    
+    startRadius -= twipsPerPixel;
+    if (startRadius < 0) startRadius = 0;
+    endRadius -= twipsPerPixel;
+    if (endRadius < 0) endRadius = 0;
   }
 }
 

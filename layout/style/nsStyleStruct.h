@@ -284,18 +284,20 @@ protected:
 struct nsBorderColors {
   nsBorderColors* mNext;
   nscolor mColor;
-  
+  PRBool mTransparent;
+
   nsBorderColors* CopyColors() {
     nsBorderColors* next = nsnull;
     if (mNext)
       next = mNext->CopyColors();
-    return new nsBorderColors(mColor, next);
+    return new nsBorderColors(mColor, mTransparent, next);
   }
 
   nsBorderColors() :mNext(nsnull) { mColor = NS_RGB(0,0,0); };
 
-  nsBorderColors(const nscolor& aColor, nsBorderColors* aNext=nsnull) {
+  nsBorderColors(const nscolor& aColor, PRBool aTransparent, nsBorderColors* aNext=nsnull) {
     mColor = aColor;
+    mTransparent = aTransparent;
     mNext = aNext;
   }
 
@@ -336,6 +338,13 @@ struct nsStyleBorder: public nsStyleStruct {
       if (mBorderColors)
         for (PRInt32 i = 0; i < 4; i++)
           mBorderColors[i] = nsnull;
+    }
+  }
+
+  void ClearBorderColors(PRUint8 aSide) {
+    if (mBorderColors[aSide]) {
+      delete mBorderColors[aSide];
+      mBorderColors[aSide] = nsnull;
     }
   }
 
@@ -391,10 +400,10 @@ struct nsStyleBorder: public nsStyleStruct {
       *aColors = mBorderColors[aIndex];
   }
 
-  void AppendBorderColor(PRInt32 aIndex, nscolor aColor)
+  void AppendBorderColor(PRInt32 aIndex, nscolor aColor, PRBool aTransparent)
   {
     NS_ASSERTION(aIndex >= 0 && aIndex <= 3, "bad side for composite border color");
-    nsBorderColors* colorEntry = new nsBorderColors(aColor);
+    nsBorderColors* colorEntry = new nsBorderColors(aColor, aTransparent);
     if (!mBorderColors[aIndex])
       mBorderColors[aIndex] = colorEntry;
     else {
