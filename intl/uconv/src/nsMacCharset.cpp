@@ -23,7 +23,13 @@
 #include "nsURLProperties.h"
 #include <Script.h>
 #include "nsUConvDll.h"
+#include "nsCOMPtr.h"
+#include "nsIComponentManager.h"
+#include "nsIMacLocale.h"
+#include "nsLocaleCID.h"
 
+NS_DEFINE_IID(kMacLocaleIID,NS_IMACLOCALE_IID);
+NS_DEFINE_CID(kMacLocaleFactoryCID,NS_MACLOCALEFACTORY_CID);
 
 
 class nsMacCharset : public nsIPlatformCharset
@@ -90,7 +96,35 @@ nsMacCharset::GetCharset(nsPlatformCharsetSel selector, nsString& oResult)
 NS_IMETHODIMP 
 nsMacCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar** _retValue)
 {
-	return NS_OK;
+	nsCOMPtr<nsIMacLocale>	pMacLocale;
+	nsString localeAsString(localeName), charset("x-mac-roman");
+	short script, language, region;
+	
+	nsresult rv = nsComponentManager::CreateInstance(kMacLocaleFactoryCID,nsnull,kMacLocaleIID,
+											getter_AddRefs(pMacLocale));
+	if (NS_FAILED(rv)) { *_retValue = charset.ToNewUnicode(); return rv; }
+	
+	rv = pMacLocale->GetPlatformLocale(&localeAsString,&script,&language,&region);
+	if (NS_FAILED(rv)) { *_retValue = charset.ToNewUnicode(); return rv; }
+	
+	nsAutoString property_url("resource:/res/maccharset.properties");
+	nsURLProperties *charset_properties = new nsURLProperties(property_url);
+	if (!charset_properties) { *_retValue = charset.ToNewUnicode(); return NS_ERROR_OUT_OF_MEMORY; }
+	
+	nsAutoString locale_key("region.");
+	locale_key.Append(region,10);
+	
+	rv = charset_properties->Get(locale_key,charset);
+	if (NS_FAILED(rv)) {
+		locale_key = "script.";
+		locale_key.Append(script,10);
+		rv = charset_properties->Get(locale_key,charset);
+		if (NS_FAILED(rv)) { charset="x-mac-roman";}
+	}
+	
+	delete charset_properties;
+	*_retValue = charset.ToNewUnicode();	
+	return rv;
 }
 
 class nsMacCharsetFactory : public nsIFactory {
