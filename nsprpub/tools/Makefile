@@ -131,7 +131,7 @@ EXTRA_LIBS = -lsocket -lnsl -ldl
 #export LD_RUN_PATH = $(PWD)/$(DIST)/lib
 endif
 
-ifeq ($(OS_ARCH), SCO_SV)
+ifeq ($(OS_ARCH), SCOOS)
 # SCO Unix needs to link against -lsocket again even though we
 # already linked with these system libraries when we built libnspr.so.
 EXTRA_LIBS = -lsocket
