@@ -984,8 +984,7 @@ mozJSComponentLoader::GlobalForLocation(const char *aLocation,
       return nsnull;
 
 #else
-    nsCOMPtr<nsIScriptObjectPrincipal> backstagePass =
-      new BackstagePass();
+    nsCOMPtr<nsISupports> backstagePass = new BackstagePass();
 #endif
 
     nsCOMPtr<nsIXPConnect> xpc = do_GetService(kXPConnectServiceProgID);
