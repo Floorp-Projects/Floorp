@@ -33,7 +33,7 @@ static CTokenDeallocator gTokenKiller;
  * @update	gess9/10/98
  */
 nsTagStack::nsTagStack(int aDefaultSize) {
-#ifdef _dynstack
+#ifndef rickgdebug
   mSize=aDefaultSize;
   mTags =new eHTMLTags[mSize];
   mBits =new PRBool[mSize];
@@ -51,13 +51,13 @@ nsTagStack::nsTagStack(int aDefaultSize) {
  * @update  gess7/9/98
  */
 nsTagStack::~nsTagStack() {
-#ifdef _dynstack
+#ifndef rickgdebug
     delete mTags;
     delete mBits;
     mTags=0;
     mBits=0;
 #endif
-    mSize=mCount=0;
+    mSize=mCount=0; 
   }
 
 /**
@@ -70,12 +70,12 @@ void nsTagStack::Empty(void) {
 
 /**
  * 
- * @update  gess7/9/98
+ * @update  gess7/9/98 
  */
 void nsTagStack::Push(eHTMLTags aTag) {
 
   if(mCount>=mSize) {
-#ifdef _dynstack
+#ifndef rickgdebug
       //regrow the dynamic stack... 
     eHTMLTags* tmp=new eHTMLTags[2*mSize];
     nsCRT::zero(tmp,2*mSize*sizeof(eHTMLTag_html));
