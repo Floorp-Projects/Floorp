@@ -3323,8 +3323,8 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
     }
 
     n =  tempOutfile.write(ibuffer, PL_strlen(ibuffer));
-    n += tempOutfile.write(NS_LINEBREAK, NS_LINEBREAK_LEN);
-	  if (n != (PRInt32) (PL_strlen(ibuffer) + NS_LINEBREAK_LEN)) // write failed 
+    n += tempOutfile.write(CRLF, 2);
+	  if (n != (PRInt32) (PL_strlen(ibuffer) + 2)) // write failed 
 		{
 		  status = NS_MSG_ERROR_WRITING_FILE;
 		  goto FAIL;
@@ -3334,8 +3334,8 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
   //
   // Terminate with a final newline. 
   //
-  n = tempOutfile.write(NS_LINEBREAK, NS_LINEBREAK_LEN);
-  if (n != NS_LINEBREAK_LEN) // write failed 
+  n = tempOutfile.write(CRLF, 2);
+  if (n != 2) // write failed 
 	{
 		status = NS_MSG_ERROR_WRITING_FILE;
     goto FAIL;
