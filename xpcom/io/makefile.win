@@ -38,7 +38,8 @@ EXPORTS =                          \
         nsIUnicharInputStream.h    \
         nsSpecialSystemDirectory.h \
         nsStorageStream.h          \
-        $(NULL)			
+        nsScriptableInputStream.h  \
+        $(NULL)                 
 
 NO_XPT_GEN=1
 XPIDL_MODULE = xpcom_io
@@ -53,6 +54,7 @@ XPIDLSRCS =                         \
         .\nsIOutputStream.idl       \
         .\nsIBufferInputStream.idl  \
         .\nsIBufferOutputStream.idl \
+        .\nsIScriptableInputStream.idl \
         .\nsIStorageStream.idl      \
         $(NULL)
 
@@ -62,10 +64,10 @@ XPIDLSRCS =                         \
 LIBRARY_NAME=xpcomio_s
 
 LINCS =                         \
-	-I$(PUBLIC)\xpcom       \
+        -I$(PUBLIC)\xpcom       \
         -I$(PUBLIC)\uconv       \
         -I$(PUBLIC)\unicharutil \
-	$(NULL)
+        $(NULL)
 
 LINCS = $(LINCS) -I$(PUBLIC)\raptor     # until we sort out the filespec/widgets dependency
 
@@ -86,12 +88,12 @@ CPP_OBJS =                                       \
         .\$(OBJDIR)\nsSpecialSystemDirectory.obj \
         .\$(OBJDIR)\nsStorageStream.obj          \
         .\$(OBJDIR)\nsUnicharInputStream.obj     \
+        .\$(OBJDIR)\nsScriptableInputStream.obj  \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(LIBRARY)
 	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
-
 clobber::
         rm -f $(DIST)\lib\$(LIBRARY_NAME).lib

@@ -47,6 +47,7 @@ CPPSRCS		= \
 		nsUnicharInputStream.cpp \
         nsBinaryStream.cpp \
         nsStorageStream.cpp \
+        nsScriptableInputStream.cpp \
 		$(NULL)
 
 EXPORTS		= \
@@ -59,6 +60,7 @@ EXPORTS		= \
 		nsIStringStream.h \
 		nsIUnicharInputStream.h \
 		nsSpecialSystemDirectory.h \
+        nsScriptableInputStream.h \
 		$(NULL)			
 
 XPIDLSRCS	= \
@@ -72,6 +74,7 @@ XPIDLSRCS	= \
         nsIBinaryInputStream.idl \
         nsIBinaryOutputStream.idl  \
         nsIStorageStream.idl \
+        nsIScriptableInputStream.idl \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
