@@ -27,6 +27,7 @@ EXPORTS =	 						\
 			nsMailDatabase.h				\
 			nsImapMailDatabase.h				\
 			nsNewsDatabase.h				\
+			nsDBFolderInfo.h	    \
 			nsMsgHdr.h	    \
 			$(NULL)
 

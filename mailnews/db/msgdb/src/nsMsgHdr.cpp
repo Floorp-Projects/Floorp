@@ -16,17 +16,26 @@
  * Reserved.
  */
 
-#include "nsmsghdr.h"
+#include "nsMsgHdr.h"
+#include "nsMsgDatabase.h"
 
 nsMsgHdr::nsMsgHdr()
 {
-	NS_INIT_REFCNT;
-	m_db = NULL;
+	mRefCnt = 0;
+	m_mdb = NULL;
 	m_mdbRow = NULL;
 }
 
 nsMsgHdr::~nsMsgHdr()
 {
+	if (m_mdbRow)
+	{
+		if (m_mdb)
+		{	// presumably, acquiring a row increments strong ref count
+			m_mdbRow->CutStrongRef(m_mdb->GetEnv());
+			m_mdb->Release();
+		}
+	}
 }
 
 // ref counting methods - if we inherit from nsISupports, we won't need these,

@@ -27,11 +27,13 @@ REQUIRES=rdf
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS=    nsMsgDatabase.cpp\
+			nsDBFolderInfo.cpp\
 			nsMailDatabase.cpp\
 			nsMsgHdr.cpp\
 			$(NULL)
 
 CPP_OBJS=   .\$(OBJDIR)\nsMsgDatabase.obj  \
+			.\$(OBJDIR)\nsDBFolderInfo.obj\
 			.\$(OBJDIR)\nsMailDatabase.obj\
 			.\$(OBJDIR)\nsMsgHdr.obj\
 			$(NULL)

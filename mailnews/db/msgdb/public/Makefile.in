@@ -25,6 +25,10 @@ include $(DEPTH)/config/autoconf.mk
 EXPORTS= \
 		nsMsgHdr.h \
 		nsMsgDatabase.h \
+		nsMailDatabase.h				\
+		nsImapMailDatabase.h				\
+		nsNewsDatabase.h				\
+		nsDBFolderInfo.h	    \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk

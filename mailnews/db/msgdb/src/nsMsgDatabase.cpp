@@ -18,6 +18,7 @@
 
 // this file implements the nsMsgDatabase interface using the MDB Interface.
 
+
 #include "nsMsgDatabase.h"
 
 #ifdef WE_HAVE_MDBINTERFACES
@@ -151,6 +152,7 @@ nsMsgDatabase::nsMsgDatabase() : m_dbName("")
 {
 	m_mdbEnv = NULL;
 	m_mdbStore = NULL;
+	m_mdbTokensInitialized = FALSE;
 }
 
 nsMsgDatabase::~nsMsgDatabase()
@@ -261,6 +263,40 @@ nsresult nsMsgDatabase::ForceClosed()
 		if (saveUseCount == 1)
 			break;
 	}
+	return err;
+}
+
+const char *kMsgHdrsScope = "ns:msg:db:row:scope:msgs:all";
+const char *kMsgHdrsTableKind = "ns:msg:db:table:kind:msgs";
+struct mdbOid gMsgHdrsOID;
+
+// initialize the various tokens in our db's env
+nsresult nsMsgDatabase::InitMDBInfo()
+{
+	nsresult err = NS_OK;
+
+	if (!m_mdbTokensInitialized && GetStore())
+	{
+		m_mdbTokensInitialized = TRUE;
+		err	= GetStore()->StringToToken(GetEnv(), kMsgHdrsScope, &m_hdrRowScopeToken); 
+		if (err == NS_OK)
+		{
+			err = GetStore()->StringToToken(GetEnv(), kMsgHdrsTableKind, &m_hdrTableKindToken); 
+		}
+	}
+	return err;
+}
+
+	// get a message header for the given key. Caller must release()!
+nsresult nsMsgDatabase::GetMsgHdrForKey(MessageKey messageKey, nsMsgHdr **msgHdr)
+{
+	nsresult	err = NS_OK;
+	return err;
+}
+
+nsresult nsMsgDatabase::CreateNewHdr(PRBool *newThread, nsMsgHdr **newHdr, PRBool notify /* = FALSE */)
+{
+	nsresult	err = NS_OK;
 	return err;
 }
 

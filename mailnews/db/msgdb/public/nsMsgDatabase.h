@@ -25,7 +25,7 @@
 #include "nsFileSpec.h"
 
 class ListContext;
-
+class nsDBFolderInfo;
 
 // used to cache open db's.
 class nsMsgDatabaseArray : public XPPtrArray
@@ -68,6 +68,7 @@ public:
 
 	nsrefcnt			AddRef(void);                                       
     nsrefcnt			Release(void);   
+	virtual nsresult	Close(PRBool forceCommit = TRUE);
 	virtual nsresult	OpenMDB(const char *dbName, PRBool create);
 	virtual nsresult	CloseMDB(PRBool commit = TRUE);
 	// Force closed is evil, and we should see if we can do without it.
@@ -87,6 +88,9 @@ public:
 	nsresult	ListNext(ListContext *pContext, nsMsgHdr **pResult);
 	nsresult	ListDone(ListContext *pContext);
 	static mdbFactory		*GetMDBFactory();
+	nsDBFolderInfo *GetDBFolderInfo() {return m_dbFolderInfo;}
+	mdbEnv		*GetEnv() {return m_mdbEnv;}
+	mdbStore	*GetStore() {return m_mdbStore;}
 
 	static nsMsgDatabase* FindInCache(nsFilePath &dbName);
 	static void		CleanupCache();
@@ -95,10 +99,12 @@ public:
 	static void		DumpCache();
 #endif
 protected:
-	mdbEnv		*m_mdbEnv;	// to be used in all the db calls.
-	mdbStore	*m_mdbStore;
-	nsFilePath	m_dbName;
-	nsrefcnt	mRefCnt;
+	nsDBFolderInfo 	*m_dbFolderInfo;
+	mdbEnv			*m_mdbEnv;	// to be used in all the db calls.
+	mdbStore		*m_mdbStore;
+	nsFilePath		m_dbName;
+
+	nsrefcnt		mRefCnt;
 
 	static void		AddToCache(nsMsgDatabase* pMessageDB) 
 						{GetDBCache()->Add(pMessageDB);}
@@ -107,6 +113,14 @@ protected:
 			PRBool	MatchDbName(nsFilePath &dbName);	// returns TRUE if they match
 	static nsMsgDatabaseArray*	GetDBCache();
 	static nsMsgDatabaseArray	*m_dbCache;
+
+	// mdb bookkeeping stuff
+	nsresult			InitMDBInfo();
+	PRBool				m_mdbTokensInitialized;
+
+	mdb_token			m_hdrRowScopeToken;
+	mdb_token			m_hdrTableKindToken;
+
 };
 
 #endif

@@ -26,13 +26,20 @@
 class nsOfflineImapOperation;
 class nsMsgKeyArray;
 class ChangeListener;
+class MSG_Master;
+class MSG_FolderInfo;
+
+// this is the version number for the mail db. If the file format changes, we 
+// just reparse the mail folder. 
+const int kMailDBVersion = 1;
 
 class nsMailDatabase : public nsMsgDatabase
 {
 public:
 			nsMailDatabase();
 	virtual ~nsMailDatabase();
-	static nsresult			Open(nsFilePath &dbName, PRBool create, nsMailDatabase** pMessageDB);
+	static nsresult			Open(nsFilePath &dbName, PRBool create, nsMailDatabase** pMessageDB,
+									XP_Bool upgrading = FALSE);
 
 	static  nsresult		CloneInvalidDBInfoIntoNewDB(nsFilePath &pathName, nsMailDatabase** pMailDB);
 
@@ -42,12 +49,13 @@ public:
 
 //	virtual int				GetCurVersion() {return kMailDBVersion;}
 	static  nsresult		SetFolderInfoValid(nsFilePath &pathname, int num, int numunread);
-	virtual const char		*GetFolderName() {return m_folderName;}
+	nsresult				GetFolderName(nsString &folderName);
 	virtual nsMailDatabase	*GetMailDB() {return this;}
-//			MSG_Master		*GetMaster() {return m_master;}
-//			void			SetMaster(MSG_Master *master) {m_master = master;}
+	MSG_Master		*GetMaster() {return m_master;}
+	void			SetMaster(MSG_Master *master) {m_master = master;}
 
-//	virtual MSG_FolderInfo *GetFolderInfo();
+	virtual int				GetCurVersion() {return kMailDBVersion;}
+	virtual MSG_FolderInfo *GetFolderInfo();
 	
 	// for offline imap queued operations
 	// these are in the base mail class (presumably) because offline moves between online and offline
@@ -70,6 +78,7 @@ protected:
 									 MsgFlags flag, PRFileDesc *fid);
 	virtual void			SetReparse(PRBool reparse);
 
+	MSG_Master		*m_master;
 	XP_Bool			m_reparse;
 	char			*m_folderName;
 	PRFileDesc		*m_folderFile;	/* this is a cache for loops which want file left open */

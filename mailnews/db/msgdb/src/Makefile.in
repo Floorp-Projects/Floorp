@@ -31,6 +31,8 @@ EXPORTS = \
 
 CPPSRCS = \
 	nsMsgDatabase.cpp\
+	nsDBFolderInfo.cpp\
+	nsMsgHdr.cpp\
 	nsMailDatabase.cpp\
 	$(NULL)
 
