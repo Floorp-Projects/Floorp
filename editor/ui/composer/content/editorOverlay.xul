@@ -810,7 +810,7 @@
            accesskey="&editpastequotation.accesskey;"
            oncommand="goDoCommand('cmd_pasteQuote')"/>
     <menuitem label="&editRewrapCmd.label;"
-           oncommand="editorShell.Rewrap(false)"/>
+           oncommand="editorShell.Rewrap(true)"/>
     <menuitem label="&editStripQuotesCmd.label;"
            oncommand="editorShell.StripCites()"/>
     <menuitem label="&insertTextCmd.label;"
