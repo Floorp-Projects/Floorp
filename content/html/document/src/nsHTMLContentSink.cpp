@@ -116,6 +116,8 @@
 #include "nsVoidArray.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIPrincipal.h"
+#include "nsICodebasePrincipal.h"
+#include "nsIAggregatePrincipal.h"
 #include "nsTextFragment.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptGlobalObjectOwner.h"
@@ -4547,11 +4549,31 @@ HTMLContentSink::ProcessHeaderData(nsIAtom* aHeader,const nsAString& aValue,nsIH
     if (NS_FAILED(rv)) return rv;
     nsCOMPtr<nsICookieService> cookieServ = do_GetService(NS_COOKIESERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
-    
-    nsCOMPtr<nsIURI> baseURI;
-    nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(docShell);
-    rv = webNav->GetCurrentURI(getter_AddRefs(baseURI));
+
+    // Get a URI from the document principal
+    // We use the original codebase in case the codebase was changed by SetDomain
+    nsCOMPtr<nsIPrincipal> docPrincipal;
+    rv = mDocument->GetPrincipal(getter_AddRefs(docPrincipal));
     if (NS_FAILED(rv)) return rv;
+    if (!docPrincipal) return NS_OK;
+
+    nsCOMPtr<nsIAggregatePrincipal> agg(do_QueryInterface(docPrincipal, &rv));
+    // Document principal should always be an aggregate
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIPrincipal> originalPrincipal;
+    rv = agg->GetOriginalCodebase(getter_AddRefs(originalPrincipal));
+    nsCOMPtr<nsICodebasePrincipal> originalCodebase(
+        do_QueryInterface(originalPrincipal, &rv));
+    if (NS_FAILED(rv)) {
+      // Document's principal is not a codebase (may be system), so can't set cookies
+      return NS_OK; 
+    }
+
+    nsCOMPtr<nsIURI> codebaseURI;
+    rv = originalCodebase->GetURI(getter_AddRefs(codebaseURI));
+    NS_ENSURE_SUCCESS(rv, rv);
+
     char *cookie = ToNewUTF8String(aValue);
     nsCOMPtr<nsIScriptGlobalObject> globalObj;
     nsCOMPtr<nsIPrompt> prompt;
@@ -4571,7 +4593,7 @@ HTMLContentSink::ProcessHeaderData(nsIAtom* aHeader,const nsAString& aValue,nsIH
       }
     }
 
-    rv = cookieServ->SetCookieString(baseURI, prompt, cookie, httpChannel);
+    rv = cookieServ->SetCookieString(codebaseURI, prompt, cookie, httpChannel);
     nsCRT::free(cookie);
     if (NS_FAILED(rv)) return rv;
   } // END set-cookie

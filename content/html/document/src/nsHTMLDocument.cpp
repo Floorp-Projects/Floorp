@@ -291,7 +291,8 @@ nsHTMLDocument::nsHTMLDocument()
     mBaseTarget(nsnull),
     mLastModified(nsnull),
     mReferrer(nsnull),
-    mIsWriting(0)
+    mIsWriting(0),
+    mDomainWasSet(PR_FALSE)
 {
   mImages = nsnull;
   mApplets = nsnull;
@@ -322,7 +323,6 @@ nsHTMLDocument::nsHTMLDocument()
     //nsCOMPtr<nsIRDFService> gRDF(do_GetService(kRDFServiceCID,
     //&rv));
   }
-  mDomainWasSet = PR_FALSE; // Bug 13871: Frameset spoofing
 }
 
 nsHTMLDocument::~nsHTMLDocument()
@@ -1950,8 +1950,9 @@ nsHTMLDocument::GetDomain(nsAString& aDomain)
 NS_IMETHODIMP    
 nsHTMLDocument::SetDomain(const nsAString& aDomain)
 {
-  // Check new domain
-  
+  // Check new domain - must be a superdomain of the current host
+  // For example, a page from foo.bar.com may set domain to bar.com,
+  // but not to ar.com, baz.com, or fi.foo.bar.com.
   nsAutoString current;
   if (NS_FAILED(GetDomain(current)))
     return NS_ERROR_FAILURE;
@@ -2228,11 +2229,30 @@ nsHTMLDocument::GetCookie(nsAString& aCookie)
   nsresult result = NS_OK;
   nsAutoString str;
 
-
   nsCOMPtr<nsICookieService> service = do_GetService(kCookieServiceCID, &result);
-  if (NS_SUCCEEDED(result) && service && mDocumentURL) {
+  if (NS_SUCCEEDED(result) && service) {
+
+    // Get a URI from the document principal
+    // We use the original codebase in case the codebase was changed by SetDomain
+    nsCOMPtr<nsIAggregatePrincipal> agg(do_QueryInterface(mPrincipal, &result));
+    // Document principal should always be an aggregate
+    NS_ENSURE_SUCCESS(result, result);
+
+    nsCOMPtr<nsIPrincipal> originalPrincipal;
+    result = agg->GetOriginalCodebase(getter_AddRefs(originalPrincipal));
+    nsCOMPtr<nsICodebasePrincipal> originalCodebase(
+        do_QueryInterface(originalPrincipal, &result));
+    if (NS_FAILED(result)) {
+      // Document's principal is not a codebase, so can't get cookies
+      return NS_OK; 
+    }
+
+    nsCOMPtr<nsIURI> codebaseURI;
+    result = originalCodebase->GetURI(getter_AddRefs(codebaseURI));
+    NS_ENSURE_SUCCESS(result, result);
+
     nsXPIDLCString cookie;
-    result = service->GetCookieString(mDocumentURL, getter_Copies(cookie));
+      result = service->GetCookieString(codebaseURI, getter_Copies(cookie));
     if (NS_SUCCEEDED(result) && cookie)
       CopyASCIItoUCS2(nsDependentCString(cookie), aCookie);
   }
@@ -2265,10 +2285,30 @@ nsHTMLDocument::SetCookie(const nsAString& aCookie)
         window->GetPrompter(getter_AddRefs(prompt));
       }
     }
+
+    // Get a URI from the document principal
+    // We use the original codebase in case the codebase was changed by SetDomain
+    nsCOMPtr<nsIAggregatePrincipal> agg(do_QueryInterface(mPrincipal, &result));
+    // Document principal should always be an aggregate
+    NS_ENSURE_SUCCESS(result, result);
+
+    nsCOMPtr<nsIPrincipal> originalPrincipal;
+    result = agg->GetOriginalCodebase(getter_AddRefs(originalPrincipal));
+    nsCOMPtr<nsICodebasePrincipal> originalCodebase(
+        do_QueryInterface(originalPrincipal, &result));
+    if (NS_FAILED(result)) {
+      // Document's principal is not a codebase, so can't set cookies
+      return NS_OK; 
+    }
+
+    nsCOMPtr<nsIURI> codebaseURI;
+    result = originalCodebase->GetURI(getter_AddRefs(codebaseURI));
+    NS_ENSURE_SUCCESS(result, result);
+
     result = NS_ERROR_OUT_OF_MEMORY;
     char* cookie = ToNewCString(aCookie);
     if (cookie) {
-      result = service->SetCookieString(mDocumentURL, prompt, cookie, mHttpChannel);
+      result = service->SetCookieString(codebaseURI, prompt, cookie, mHttpChannel);
       nsCRT::free(cookie);
     }
   }
