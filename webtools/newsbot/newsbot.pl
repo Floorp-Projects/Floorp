@@ -217,25 +217,18 @@ sub printarticle() {
 my ($artref) = @_;
 my %article = %{$artref};
       
-print "<DIV NAME=\"" . %article->{'Message-ID'} . "\" CLASS=\"newsarticle\">\n";
 print "<A NAME=\"" . %article->{'Message-ID'} . "\"></A>\n";
 print "<TABLE border=0 width=100%><TR><TD><B><FONT SIZE=+1>\n";
-print "<SPAN CLASS=\"subject\">\n";
 print %article->{'Subject'} ."\n";
-print "</SPAN>\n";
 print "</B></FONT>\n";
 print "</TD></TR><TR><TD>\n";
-print "<SPAN CLASS=\"summary\">\n";
 print %article->{'Summary'};
-print "</SPAN>\n";
 print "</TD></TR><TR ALIGN=RIGHT><TD>\n";
 print "<FONT SIZE=-1>\nPosted: " . %article->{'Date'} ."\n</FONT>";
 print "<BR>";
 print %article->{'Newsgroups'} . "\n";
 print "<BR>";
-print "<SPAN CLASS=\"articlelink\">\n";
 print "<A HREF=\"http://www.deja.com/[LB=http://www.mozilla.org/]/msgid.xp?MID=&lt;" . %article->{'Message-ID'} . "&gt;\">\n";
-print "</SPAN>\n";
 print "View Article</A> -\n";
 print "<A HREF=\"http://www.deja.com/[LB=http://www.mozilla.org/]/thread/%3c" . %article->{'Message-ID'} ."%3e%231/1\">\n";
 print "View Thread\n";
@@ -244,7 +237,6 @@ print "<!--Submitted to NewsBot by: " . %article->{'submitter'} . "-->\n";
 print "<!--" . %article->{'submitdate'} . "-->\n";
 print "</TD></TR>\n";
 print "</TABLE>\n";
-print "</DIV>\n\n\n";
 }
 
 
