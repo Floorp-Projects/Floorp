@@ -65,14 +65,12 @@
       parent.hPrefWindow.registerOKCallbackFunc( SwitchPacks );
     }
 
+    
+
+
     function SwitchPacks()
     {
-       SwitchContentPack();
-       SwitchLanguagePack();
-    }
-    
-    function SwitchContentPack()
-    {
+      //Switch the Content pack if necessary
       var oldContentPack = parent.hPrefWindow.getPref( "localizedstring", "general.useragent.contentlocale");
       var newContentPack;
 
@@ -102,18 +100,15 @@
           alertText = alertText.replace(/%brand%/g, brandBundle.getString("brandShortName"));
           var titleText = contentBundle.GetStringFromName("languageTitle");
           var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
-          promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService)
+          promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
           promptService.alert(window, titleText, alertText);
         }
         catch(e) {
           return false;
         }
       }
-      return true;	
-    }
 
-    function SwitchLanguagePack()
-    {
+      ///Switch the Language pack if necessary
       var oldLanguagePack = parent.hPrefWindow.getPref( "localizedstring", "general.useragent.locale");
       var newLanguagePack;
 
@@ -141,7 +136,6 @@
           return false;
         }
       }
-      return true;	
     }
 
     function SelectContentPack()
