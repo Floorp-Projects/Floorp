@@ -94,9 +94,10 @@ protected:
     BandRect* SplitHorizontally(nscoord aRight);
 
     // Accessor functions
-    PRBool  IsOccupiedBy(nsIFrame*);
-    void    AddFrame(nsIFrame*);
-    void    RemoveFrame(nsIFrame*);
+    PRBool  IsOccupiedBy(const nsIFrame*) const;
+    void    AddFrame(const nsIFrame*);
+    void    RemoveFrame(const nsIFrame*);
+    PRBool  HasSameFrameList(const BandRect* aBandRect) const;
   };
 
   nsIFrame* const mFrame;     // frame associated with the space manager
@@ -114,6 +115,7 @@ protected:
 
   BandRect*  GetNextBand(const BandRect* aBandRect) const;
   void       DivideBand(BandRect* aBand, nscoord aBottom);
+  PRBool     JoinBands(BandRect* aBand, BandRect* aPrevBand);
   void       AddRectToBand(BandRect* aBand, BandRect* aBandRect);
   void       InsertBandRect(BandRect* aBandRect);
 

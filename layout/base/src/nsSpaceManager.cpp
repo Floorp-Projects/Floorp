@@ -321,6 +321,18 @@ void SpaceManager::DivideBand(BandRect* aBandRect, nscoord aBottom)
 }
 
 /**
+ * Tries to join the two adjacent bands. Returns PR_TRUE if successful and
+ * PR_FALSE otherwise
+ *
+ * If the two bands are joined the previous band is the the band that's deleted
+ */
+PRBool SpaceManager::JoinBands(BandRect* aBandRect, BandRect* aPrevBand)
+{
+  NS_NOTYETIMPLEMENTED("joining bands");
+  return PR_FALSE;
+}
+
+/**
  * Adds a new rect to a band.
  *
  * @param aBand the first rect in the band
@@ -632,28 +644,91 @@ PRBool SpaceManager::OffsetRegion(nsIFrame* aFrame, nscoord dx, nscoord dy)
 
 PRBool SpaceManager::RemoveRegion(nsIFrame* aFrame)
 {
-  PRBool  result = PR_FALSE;
-#if 0
+  // Get the frame info associated with with aFrame
+  FrameInfo*  frameInfo = GetFrameInfoFor(aFrame);
 
-  // Walk the list of rects and remove those rects tagged with aFrame.
-  for (PRInt32 i = 0; i < mRectArray.mCount;) {
-    BandRect* r = &mRectArray.mRects[i];
+  if (nsnull == frameInfo) {
+    NS_WARNING("no region associated with aFrame");
+    return PR_FALSE;
+  }
 
-    if (r->IsOccupiedBy(aFrame)) {
-      if (r->numFrames > 1) {
-        r->RemoveFrame(aFrame);
-        i++;
-      } else {
-        mRectArray.RemoveAt(i);
+  if (!frameInfo->rect.IsEmpty()) {
+    BandRect* band = (BandRect*)PR_LIST_HEAD(&mBandList);
+    BandRect* prevBand = nsnull;
+    PRBool    prevFoundMatchingRect = PR_FALSE;
+    NS_ASSERTION(band != &mBandList, "no band rects");
+
+    // Iterate each band looking for rects tagged with aFrame
+    while (nsnull != band) {
+      BandRect* rect = band;
+      BandRect* prevRect = nsnull;
+      nscoord   topOfBand = band->top;
+      PRBool    foundMatchingRect = PR_FALSE;
+      PRBool    prevIsSharedRect = PR_FALSE;
+
+      // Iterate each rect in the band
+      do {
+        PRBool  isSharedRect = PR_FALSE;
+
+        if (rect->IsOccupiedBy(aFrame)) {
+          if (rect->numFrames > 1) {
+            // The band rect is occupied by more than one frame
+            rect->RemoveFrame(aFrame);
+
+            // Remember that this rect was being shared by more than one frame
+            // including aFrame
+            isSharedRect = PR_TRUE;
+          } else {
+            // The rect isn't shared so just delete it
+            PR_REMOVE_LINK(rect);
+          }
+
+          // Remember that we found a matching rect in this band
+          foundMatchingRect = PR_TRUE;
+        }
+           
+        // We need to try and coalesce adjacent rects iff we find a shared rect
+        // occupied by aFrame. If either this rect or the previous rect was
+        // shared and occupied by aFrame, then try and coalesce this rect and
+        // the previous rect
+        if (prevIsSharedRect || (isSharedRect && (nsnull != prevRect))) {
+          NS_ASSERTION(nsnull != prevRect, "no previous rect");
+          if ((prevRect->right == rect->left) && (prevRect->HasSameFrameList(rect))) {
+            // Modify the current rect's left edge, and delete the previous rect
+            rect->left = prevRect->left;
+            PR_REMOVE_LINK(prevRect);
+            delete prevRect;
+          }
+        }
+
+        // Get the next rect in the band
+        prevRect = rect;
+        prevIsSharedRect = isSharedRect;
+        rect = (BandRect*)PR_NEXT_LINK(rect);
+
+        if (rect == &mBandList) {
+          // No bands left
+          rect = nsnull;
+          break;
+        }
+      } while (rect->top == topOfBand);
+
+      // If we found a matching rect in this band or the previous band then try
+      // join the two bands
+      if (prevFoundMatchingRect || (foundMatchingRect && (nsnull != prevBand))) {
+        // Try and join this band with the previous band
+        NS_ASSERTION(nsnull != prevBand, "no previous band");
+        JoinBands(band, prevBand);
       }
-      result = PR_TRUE;
+
+      // Move to the next band
+      prevFoundMatchingRect = foundMatchingRect;
+      band = rect;
     }
   }
 
-  // XXX We should try and coalesce adjoining rects within a band, and
-  // adjacent bands as well...
-#endif
-  return result;
+  DestroyFrameInfo(frameInfo);
+  return PR_TRUE;
 }
 
 void SpaceManager::ClearRegions()
@@ -778,7 +853,7 @@ SpaceManager::BandRect* SpaceManager::BandRect::SplitHorizontally(nscoord aRight
   return rightBandRect;
 }
 
-PRBool SpaceManager::BandRect::IsOccupiedBy(nsIFrame* aFrame)
+PRBool SpaceManager::BandRect::IsOccupiedBy(const nsIFrame* aFrame) const
 {
   PRBool  result;
 
@@ -801,7 +876,7 @@ PRBool SpaceManager::BandRect::IsOccupiedBy(nsIFrame* aFrame)
   return result;
 }
 
-void SpaceManager::BandRect::AddFrame(nsIFrame* aFrame)
+void SpaceManager::BandRect::AddFrame(const nsIFrame* aFrame)
 {
   if (1 == numFrames) {
     nsIFrame* f = frame;
@@ -810,14 +885,14 @@ void SpaceManager::BandRect::AddFrame(nsIFrame* aFrame)
   }
 
   numFrames++;
-  frames->AppendElement(aFrame);
+  frames->AppendElement((void*)aFrame);
   NS_POSTCONDITION(frames->Count() == numFrames, "bad frame count");
 }
 
-void SpaceManager::BandRect::RemoveFrame(nsIFrame* aFrame)
+void SpaceManager::BandRect::RemoveFrame(const nsIFrame* aFrame)
 {
   NS_PRECONDITION(numFrames > 1, "only one frame");
-  frames->RemoveElement(aFrame);
+  frames->RemoveElement((void*)aFrame);
   numFrames--;
 
   if (1 == numFrames) {
@@ -825,5 +900,31 @@ void SpaceManager::BandRect::RemoveFrame(nsIFrame* aFrame)
 
     delete frames;
     frame = f;
+  }
+}
+
+PRBool SpaceManager::BandRect::HasSameFrameList(const BandRect* aBandRect) const
+{
+  // Check whether they're occupied by the same number of frames
+  if (numFrames != aBandRect->numFrames) {
+    return PR_FALSE;
+  }
+
+  // Check that the list of frames matches
+  if (1 == numFrames) {
+    return frame == aBandRect->frame;
+  } else {
+    // For each frame occupying this band rect check whether it also occupies
+    // aBandRect
+    PRInt32 count = frames->Count();
+    for (PRInt32 i = 0; i < count; i++) {
+      nsIFrame* f = (nsIFrame*)frames->ElementAt(i);
+
+      if (-1 == aBandRect->frames->IndexOf(f)) {
+        return PR_FALSE;
+      }
+    }
+
+    return PR_TRUE;
   }
 }
