@@ -60,9 +60,8 @@ Called when execution is ready to start bytecode interpretation for entered a pa
 Called when executed code reaches new line in the source.
 @param cx current Context for this thread
 @param lineNumber current line number in the script source
-@param breakpoint true if line marked as breakpoint
 */
-    public void onLineChange(Context cx, int lineNumber, boolean breakpoint);
+    public void onLineChange(Context cx, int lineNumber);
 
 /**
 Called when thrown exception is handled by the function or script.

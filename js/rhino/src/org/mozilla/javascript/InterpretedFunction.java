@@ -87,16 +87,16 @@ class InterpretedFunction extends NativeFunction
         return itsData.itsSourceFile;
     }
 
-    public int[] getLineNumbers() {
-        return itsData.itsLineNumberTable.getKeys();
+    public int getFirstLine() {
+        return itsData.itsFirstLine;
     }
 
-    public boolean placeBreakpoint(int line) { // XXX throw exn?
-        return itsData.placeBreakpoint(line);
+    public int getEndLine() {
+        return itsData.itsEndLine;
     }
 
-    public boolean removeBreakpoint(int line) {
-        return itsData.removeBreakpoint(line);
+    public void getInstructionLines(boolean[] array, int offset) {
+        Interpreter.getInstructionLines(itsData, array, offset);
     }
 
     InterpreterData itsData;

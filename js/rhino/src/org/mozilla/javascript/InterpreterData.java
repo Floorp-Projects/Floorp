@@ -58,40 +58,6 @@ class InterpreterData implements Serializable {
         this.securityDomain = securityDomain;
     }
 
-    public boolean placeBreakpoint(int line) { // XXX throw exn?
-        int offset = getOffset(line);
-        if (offset != -1) {
-            int icode = 0xFF & itsICode[offset];
-            if (icode == Interpreter.BREAKPOINT_ICODE) {
-                return true;
-            }else if (icode == Interpreter.LINE_ICODE) {
-                itsICode[offset] = (byte) Interpreter.BREAKPOINT_ICODE;
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public boolean removeBreakpoint(int line) {
-        int offset = getOffset(line);
-        if (offset != -1) {
-            int icode = 0xFF & itsICode[offset];
-            if (icode == Interpreter.BREAKPOINT_ICODE) {
-                itsICode[offset] = (byte) Interpreter.LINE_ICODE;
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private int getOffset(int line) {
-        int offset = itsLineNumberTable.getInt(line, -1);
-        if (0 <= offset && offset <= itsICode.length) {
-            return offset;
-        }
-        return -1;
-    }
-
     String itsName;
     String itsSource;
     String itsSourceFile;
@@ -117,6 +83,8 @@ class InterpreterData implements Serializable {
 
     int itsMaxCalleeArgs;
 
+    int itsFirstLine;
+    int itsEndLine;
     UintMap itsLineNumberTable;
 
     Object securityDomain;

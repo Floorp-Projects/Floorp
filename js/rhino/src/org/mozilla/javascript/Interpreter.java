@@ -45,23 +45,20 @@ import org.mozilla.javascript.debug.*;
 public class Interpreter {
 
 // Additional interpreter-specific codes
-    static final int
+    private static final int
     // To indicating a line number change in icodes.
         LINE_ICODE                      = TokenStream.LAST_TOKEN + 1,
         SOURCEFILE_ICODE                = TokenStream.LAST_TOKEN + 2,
 
-    // To place breakpoints
-        BREAKPOINT_ICODE                = TokenStream.LAST_TOKEN + 3;
-
-    private static final int
     // To store shorts and ints inline
-        SHORTNUMBER_ICODE               = TokenStream.LAST_TOKEN + 4,
-        INTNUMBER_ICODE                 = TokenStream.LAST_TOKEN + 5,
+        SHORTNUMBER_ICODE               = TokenStream.LAST_TOKEN + 3,
+        INTNUMBER_ICODE                 = TokenStream.LAST_TOKEN + 4,
 
     // To return undefined value
-        RETURN_UNDEF_ICODE              = TokenStream.LAST_TOKEN + 6,
+        RETURN_UNDEF_ICODE              = TokenStream.LAST_TOKEN + 5,
+
     // Last icode
-        END_ICODE                       = TokenStream.LAST_TOKEN + 7;
+        END_ICODE                       = TokenStream.LAST_TOKEN + 6;
 
     public IRFactory createIRFactory(TokenStream ts,
                                      ClassNameHelper nameHelper, Scriptable scope)
@@ -242,26 +239,31 @@ public class Interpreter {
                                    + itsData.itsMaxLocals
                                    + itsData.itsMaxTryDepth
                                    + itsData.itsMaxStack;
-
     }
 
     private int updateLineNumber(Node node, int iCodeTop) {
         Object datum = node.getDatum();
         if (datum == null || !(datum instanceof Number))
             return iCodeTop;
-        short lineNumber = ((Number) datum).shortValue();
-        if (lineNumber != itsLineNumber) {
-            itsLineNumber = lineNumber;
-            if (itsData.itsLineNumberTable == null &&
-                Context.getCurrentContext().isGeneratingDebug())
+        int lineno = ((Number) datum).intValue();
+        if (lineno != itsLineNumber && lineno >= 0) {
+            itsLineNumber = lineno;
+            iCodeTop = addByte(LINE_ICODE, iCodeTop);
+            iCodeTop = addShort(lineno, iCodeTop);
+            if (lineno < itsData.itsFirstLine) {
+                itsData.itsFirstLine = lineno;
+            }
+            if (lineno >= itsData.itsEndLine) {
+                itsData.itsEndLine = lineno + 1;
+            }
+            if (itsData.itsLineNumberTable == null
+                && Context.getCurrentContext().isGeneratingDebug())
             {
                 itsData.itsLineNumberTable = new UintMap();
             }
-            if (lineNumber > 0 && itsData.itsLineNumberTable != null) {
-                itsData.itsLineNumberTable.put(lineNumber, iCodeTop);
+            if (itsData.itsLineNumberTable != null) {
+                itsData.itsLineNumberTable.put(lineno, iCodeTop);
             }
-            iCodeTop = addByte(LINE_ICODE, iCodeTop);
-            iCodeTop = addShort(lineNumber, iCodeTop);
         }
 
         return iCodeTop;
@@ -1204,7 +1206,6 @@ public class Interpreter {
                 switch (icode) {
                     case LINE_ICODE:         return "line";
                     case SOURCEFILE_ICODE:   return "sourcefile";
-                    case BREAKPOINT_ICODE:   return "breakpoint";
                     case SHORTNUMBER_ICODE:  return "shortnumber";
                     case INTNUMBER_ICODE:    return "intnumber";
                     case RETURN_UNDEF_ICODE: return "return_undef";
@@ -1399,6 +1400,21 @@ public class Interpreter {
                 out.close();
             }
             catch (IOException x) {}
+        }
+    }
+
+    static void getInstructionLines(InterpreterData theData,
+                                    boolean[] array, int offset)
+    {
+        int first = theData.itsFirstLine;
+        int end = theData.itsEndLine;
+        if (offset < 0 || array.length - offset < end - first)
+            Context.codeBug();
+        int[] lines = theData.itsLineNumberTable.getKeys();
+        for (int i = 0; i != lines.length; ++i) {
+            int line = lines[i];
+            if (!(first <= line && line < end)) Context.codeBug();
+            array[offset + line - first] = true;
         }
     }
 
@@ -2335,14 +2351,11 @@ public class Interpreter {
                 case SOURCEFILE_ICODE :
                     cx.interpreterSourceFile = theData.itsSourceFile;
                     break;
-                case LINE_ICODE :
-                case BREAKPOINT_ICODE : {
+                case LINE_ICODE : {
                     int line = getShort(iCode, pc + 1);
                     cx.interpreterLine = line;
                     if (debuggerFrame != null) {
-                        boolean breakpoint
-                            = ((iCode[pc] & 0xff) == BREAKPOINT_ICODE);
-                        debuggerFrame.onLineChange(cx, line, breakpoint);
+                        debuggerFrame.onLineChange(cx, line);
                     }
                     pc += 2;
                     break;

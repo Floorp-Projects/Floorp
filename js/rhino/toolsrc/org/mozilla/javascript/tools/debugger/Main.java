@@ -639,14 +639,15 @@ class FindFunction extends JDialog implements ActionListener {
                 return;
             }
             setVisible(false);
-            Main.SourceEntry sourceEntry = (Main.SourceEntry)functionMap.get(value);
-            DebuggableScript script = sourceEntry.fnOrScript;
+            DebuggableScript script = (DebuggableScript)functionMap.get(value);
             if (script != null) {
                 String sourceName = script.getSourceName();
-                int lineNumber = FrameHelper.getFirstLine(script);
+                int lineNumber = script.getFirstLine();
                 FileWindow w = db.getFileWindow(sourceName);
                 if (w == null) {
-                    (new CreateFileWindow(db, sourceName, sourceEntry.source, lineNumber)).run();
+                    SourceInfo si = db.getSourceInfo(script);
+                    if (si == null) { return; }
+                    (new CreateFileWindow(db, sourceName, si.getSource(), lineNumber)).run();
                     w = db.getFileWindow(sourceName);
                     w.setPosition(-1);
                 }
@@ -2107,7 +2108,7 @@ class ContextData {
     }
 
     FrameHelper getFrame(int frameNumber) {
-        return (FrameHelper) frameStack.elementAt(frameStack.size() - frameNumber - 1);
+        return (FrameHelper) frameStack.get(frameStack.size() - frameNumber - 1);
     }
 
     void pushFrame(FrameHelper frame) {
@@ -2118,7 +2119,7 @@ class ContextData {
         frameStack.pop();
     }
 
-    Stack frameStack = new Stack();
+    ObjArray frameStack = new ObjArray();
     boolean breakNextLine;
 }
 
@@ -2129,22 +2130,10 @@ class FrameHelper implements DebugFrame {
         this.master = master;
         this.contextData = ContextData.get(cx);
         this.fnOrScript = fnOrScript;
-        this.lineNumber = getFirstLine(fnOrScript);
+        this.sourceInfo = master.getSourceInfo(fnOrScript);
+        this.lineNumber = fnOrScript.getFirstLine();
 
         contextData.pushFrame(this);
-    }
-
-    static int getFirstLine(DebuggableScript fnOrScript) {
-        int[] lns = fnOrScript.getLineNumbers();
-        int lineNumber = -1;
-        for (int i = 0; i != lns.length; ++i) {
-            if (lineNumber == -1) {
-                lineNumber = lns[i];
-            } else if (lns[i] < lineNumber) {
-                lineNumber = lns[i];
-            }
-        }
-        return lineNumber;
     }
 
     public void onEnter(Context cx, Scriptable activation,
@@ -2156,9 +2145,11 @@ class FrameHelper implements DebugFrame {
         }
     }
 
-    public void onLineChange(Context cx, int lineNumber, boolean breakpoint) {
-        this.lineNumber = lineNumber;
-        if (breakpoint || contextData.breakNextLine) {
+    public void onLineChange(Context cx, int lineno) {
+        this.lineNumber = lineno;
+        if (contextData.breakNextLine
+            || (sourceInfo != null && sourceInfo.hasBreakpoint(lineno)))
+        {
             master.handleBreakpointHit(cx);
         }
     }
@@ -2194,7 +2185,92 @@ class FrameHelper implements DebugFrame {
     private ContextData contextData;
     private Scriptable activation;
     private DebuggableScript fnOrScript;
+    private SourceInfo sourceInfo;
     private int lineNumber;
+}
+
+class SourceInfo {
+
+    SourceInfo(String source) {
+        this.source = source;
+    }
+
+    String getSource() {
+        return source;
+    }
+
+    void addScript(DebuggableScript fnOrScript) {
+        synchronized (entries) {
+            entries.addElement(fnOrScript);
+            updateLinesInfo(fnOrScript);
+        }
+    }
+
+    private void updateLinesInfo(DebuggableScript fnOrScript) {
+        int fnFirstLine = fnOrScript.getFirstLine();
+        int fnEndLine = fnOrScript.getEndLine();
+
+        if (endLine < fnEndLine) {
+            endLine = fnEndLine;
+        }
+        if (breakableLines == null) {
+            int newLength = 20;
+            if (newLength < endLine) { newLength = endLine; }
+            breakableLines = new boolean[newLength];
+            breakpoints = new boolean[newLength];
+        }else if (breakableLines.length < endLine) {
+            int newLength = breakableLines.length * 2;
+            if (newLength < endLine) { newLength = endLine; }
+            boolean[] tmp = new boolean[newLength];
+            System.arraycopy(breakableLines, 0, tmp, 0, breakableLines.length);
+            breakableLines = tmp;
+            tmp = new boolean[newLength];
+            System.arraycopy(breakpoints, 0, tmp, 0, breakpoints.length);
+            breakpoints = tmp;
+        }
+        fnOrScript.getInstructionLines(breakableLines, fnFirstLine);
+    }
+
+    boolean breakableLine(int line) {
+        if (breakableLines != null && line < breakableLines.length) {
+            return breakableLines[line];
+        }
+        return false;
+    }
+
+    boolean hasBreakpoint(int line) {
+        if (breakpoints != null && line < breakpoints.length) {
+            return breakpoints[line];
+        }
+        return false;
+    }
+
+    boolean placeBreakpoint(int line) {
+        synchronized (entries) {
+            if (breakableLine(line)) {
+                breakpoints[line] = true;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void removeBreakpoint(int line) {
+        synchronized (entries) {
+            if (breakpoints != null && line < breakpoints.length) {
+                breakpoints[line] = false;
+            }
+        }
+    }
+
+    private String source;
+
+    private final Vector entries = new Vector();
+
+    private int endLine;
+    private boolean[] breakableLines;
+    private boolean[] breakpoints;
+
 }
 
 public class Main extends JFrame implements Debugger, ContextListener {
@@ -2294,17 +2370,23 @@ public class Main extends JFrame implements Debugger, ContextListener {
     private String runToCursorFile;
     private Hashtable sourceNames = new Hashtable();
 
-    class SourceEntry {
-        SourceEntry(String source, DebuggableScript fnOrScript) {
-            this.source = source;
-            this.fnOrScript = fnOrScript;
-        }
-        String source;
-        DebuggableScript fnOrScript;
-    };
-
     Hashtable functionMap = new Hashtable();
     Hashtable breakpointsMap = new Hashtable();
+
+    SourceInfo getSourceInfo(DebuggableScript fnOrScript) {
+        String sourceName = fnOrScript.getSourceName();
+        if (sourceName == null) {
+            sourceName = "<stdin>";
+        }else if (sourceName.endsWith("(eval)")) {
+            String origSourceName =
+                sourceName.substring(0, sourceName.length() - 6);
+            SourceInfo si = (SourceInfo)sourceNames.get(origSourceName);
+            if (si != null) {
+                return si;
+            }
+        }
+        return (SourceInfo)sourceNames.get(sourceName);
+    }
 
     void doClearBreakpoints() {
         Enumeration e = breakpointsMap.keys();
@@ -2331,27 +2413,23 @@ public class Main extends JFrame implements Debugger, ContextListener {
         if (sourceName.endsWith("(eval)")) {
             String origSourceName =
                 sourceName.substring(0, sourceName.length() - 6);
-            Vector v = (Vector)sourceNames.get(origSourceName);
-            if (v != null) {
-                SourceEntry prev = (SourceEntry)v.elementAt(v.size() - 1);
-                source = prev.source;
-                SourceEntry entry = new SourceEntry(source, fnOrScript);
-                v.addElement(entry);
+            SourceInfo si = (SourceInfo)sourceNames.get(origSourceName);
+            if (si != null) {
+                si.addScript(fnOrScript);
                 return;
             }
         }
-        Vector v = (Vector) sourceNames.get(sourceName);
-        if (v == null) {
-            v = new Vector();
-            sourceNames.put(sourceName, v);
+        SourceInfo si = (SourceInfo)sourceNames.get(sourceName);
+        if (si == null) {
+            si = new SourceInfo(source);
+            sourceNames.put(sourceName, si);
         }
-        SourceEntry entry = new SourceEntry(source, fnOrScript);
-        v.addElement(entry);
+        si.addScript(fnOrScript);
         if (fnOrScript.getScriptable() instanceof NativeFunction) {
             NativeFunction f = (NativeFunction)fnOrScript.getScriptable();
             String name = f.getFunctionName();
             if (name.length() > 0 && !name.equals("anonymous")) {
-                functionMap.put(name, entry);
+                functionMap.put(name, fnOrScript);
             }
         }
         loadedFile(sourceName, source);
@@ -2657,8 +2735,8 @@ public class Main extends JFrame implements Debugger, ContextListener {
                     new SetFilePosition(this, w, lineNumber);
                 action.run();
             } else {
-                Vector v = (Vector)sourceNames.get(sourceName);
-                String source = ((SourceEntry)v.elementAt(0)).source;
+                SourceInfo si = (SourceInfo)sourceNames.get(sourceName);
+                String source = si.getSource();
                 CreateFileWindow action = new CreateFileWindow(this,
                                                                sourceName,
                                                                source,
@@ -2809,8 +2887,8 @@ public class Main extends JFrame implements Debugger, ContextListener {
                         new SetFilePosition(this, w, line);
                     swingInvoke(action);
                 } else {
-                    Vector v = (Vector)sourceNames.get(fileName);
-                    String source = ((SourceEntry)v.elementAt(0)).source;
+                    SourceInfo si = (SourceInfo)sourceNames.get(fileName);
+                    String source = si.getSource();
                     CreateFileWindow action = new CreateFileWindow(this,
                                                                    fileName,
                                                                    source,
@@ -3114,23 +3192,11 @@ public class Main extends JFrame implements Debugger, ContextListener {
     void runToCursor(String fileName,
                      int lineNumber,
                      ActionEvent evt) {
-        Vector v = (Vector) sourceNames.get(fileName);
-        if (v == null) {
+        SourceInfo si = (SourceInfo)sourceNames.get(fileName);
+        if (si == null) {
             System.out.println("debugger error: Couldn't find source: " + fileName);
         }
-        int i;
-        SourceEntry se = null;
-        for (i = v.size() -1; i >= 0; i--) {
-            se = (SourceEntry) v.elementAt(i);
-            if (se.fnOrScript.removeBreakpoint(lineNumber)) {
-                se.fnOrScript.placeBreakpoint(lineNumber);
-                break;
-            } else if (se.fnOrScript.placeBreakpoint(lineNumber)) {
-                se.fnOrScript.removeBreakpoint(lineNumber);
-                break;
-            }
-        }
-        if (i >= 0) {
+        if (si.breakableLine(lineNumber)) {
             runToCursorFile = fileName;
             runToCursorLine = lineNumber;
             actionPerformed(evt);
@@ -3138,27 +3204,19 @@ public class Main extends JFrame implements Debugger, ContextListener {
     }
 
     int setBreakPoint(String sourceName, int lineNumber) {
-        Vector v = (Vector) sourceNames.get(sourceName);
-        if (v == null) return -1;
-        int i=0;
+        SourceInfo si = (SourceInfo)sourceNames.get(sourceName);
+        if (si == null) return -1;
         int result = -1;
-        for (i = v.size() -1; i >= 0; i--) {
-            SourceEntry se = (SourceEntry) v.elementAt(i);
-            if (se.fnOrScript.placeBreakpoint(lineNumber)) {
-                result = lineNumber;
-            }
+        if (si.placeBreakpoint(lineNumber)) {
+            result = lineNumber;
         }
         return result;
     }
 
     void clearBreakPoint(String sourceName, int lineNumber) {
-        Vector v = (Vector) sourceNames.get(sourceName);
-        if (v == null) return;
-        int i=0;
-        for (; i < v.size(); i++) {
-            SourceEntry se = (SourceEntry) v.elementAt(i);
-            se.fnOrScript.removeBreakpoint(lineNumber);
-        }
+        SourceInfo si = (SourceInfo)sourceNames.get(sourceName);
+        if (si == null) return;
+        si.removeBreakpoint(lineNumber);
     }
 
     JMenu getWindowMenu() {
