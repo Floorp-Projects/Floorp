@@ -650,8 +650,6 @@ xpfe/components/directory/Makefile
 xpfe/components/download-manager/Makefile
 xpfe/components/download-manager/src/Makefile
 xpfe/components/download-manager/public/Makefile
-xpfe/components/timebomb/Makefile
-xpfe/components/timebomb/tools/Makefile
 xpfe/components/find/Makefile
 xpfe/components/find/public/Makefile
 xpfe/components/find/src/Makefile

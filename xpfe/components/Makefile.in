@@ -35,7 +35,6 @@ DIRS	= \
 			related \
 			prefwindow \
 			shistory \
-			timebomb \
 			console \
 			updates \
 			intl \
@@ -74,7 +73,6 @@ DIRS    = \
           history/public \
           shistory/public \
           bookmarks/public \
-          timebomb \
           $(NULL)
 
 ifeq ($(OS_ARCH),WINNT)

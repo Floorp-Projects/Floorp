@@ -57,7 +57,6 @@ en-US.jar:
 
 US.jar:
     locale/US/communicator-region/contents.rdf   	      (resources/locale/en-US/contents-region.rdf)
-    locale/US/communicator-region/region.dtd          	(resources/locale/en-US/region.dtd)
     locale/US/communicator-region/region.properties     (resources/locale/en-US/region.properties)
 
 en-win.jar:
