@@ -31,6 +31,9 @@ nsScrollbar::nsScrollbar(PRBool aIsVertical) : nsWidget(), nsIScrollbar()
   mLineIncrement = 1;
   mIsVertical = aIsVertical;
   mRenderingContext = nsnull;
+  mBackground = NS_RGB(192,192,192);
+  bg_pixel = xlib_rgb_xpixel_from_rgb(mBackground);
+  border_pixel = xlib_rgb_xpixel_from_rgb(mBackground);
 };
 
 nsScrollbar::~nsScrollbar()
@@ -149,7 +152,6 @@ PRBool nsScrollbar::OnPaint(nsPaintEvent &event)
       printf("Oh, dear.  I couldn't create an nsRenderingContext for this scrollbar.  All hell is about to break loose.\n");
     }
     mRenderingContext->Init(mContext, this);
-    SetBackgroundColor(NS_RGB(255, 255, 255));
   }
   // draw the scrollbar itself
   mRenderingContext->SetColor(NS_RGB(0,0,0));
@@ -183,3 +185,26 @@ PRBool nsScrollbar::DispatchMouseEvent(nsMouseEvent &aEvent)
 }
 
 
+void nsScrollbar::CreateNative(Window aParent, nsRect aRect)
+{
+  XSetWindowAttributes attr;
+  unsigned long attr_mask;
+  
+  // on a window resize, we don't want to window contents to
+  // be discarded...
+  attr.bit_gravity = SouthEastGravity;
+  // make sure that we listen for events
+  attr.event_mask = StructureNotifyMask | ExposureMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask;
+  // set the default background color and border to that awful gray
+  attr.background_pixel = bg_pixel;
+  attr.border_pixel = border_pixel;
+  // set the colormap
+  attr.colormap = xlib_rgb_get_cmap();
+  // here's what's in the struct
+  attr_mask = CWBitGravity | CWEventMask | CWBackPixel | CWBorderPixel;
+  // check to see if there was actually a colormap.
+  if (attr.colormap)
+    attr_mask |= CWColormap;
+
+  CreateNativeWindow(aParent, mBounds, attr, attr_mask);
+}

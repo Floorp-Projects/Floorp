@@ -30,8 +30,8 @@ class nsWindow : public nsWidget
   NS_IMETHOD Invalidate(const nsRect & aRect, PRBool aIsSynchronous);
   NS_IMETHOD Update();
 protected:
-  void CreateNative(Window aParent, nsRect aRect);
   void DestroyNative(void);
+  void CreateNative(Window aParent, nsRect aRect);
 };
 
 class ChildWindow : public nsWindow

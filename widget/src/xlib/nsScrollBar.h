@@ -52,7 +52,9 @@ public:
   NS_IMETHOD SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
 			   PRUint32 aPosition, PRUint32 aLineIncrement);
   
-  virtual PRBool    OnScroll(PRUint32 scrollCode, int cPos);
+  PRBool    OnScroll(PRUint32 scrollCode, int cPos);
+  void CreateNative(Window aParent, nsRect aRect);
+  
 private:
   PRUint32             mMaxRange;
   PRUint32             mPosition;
