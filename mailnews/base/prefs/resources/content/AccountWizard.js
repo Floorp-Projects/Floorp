@@ -126,6 +126,8 @@ function onAccountWizardLoad() {
     
 function onCancel() 
 {
+  if ("ActivationOnCancel" in this && ActivationOnCancel())
+    return false;
   var firstInvalidAccount = getFirstInvalidAccount();
   var closeWizard = true;
 
