@@ -83,6 +83,8 @@ extern int MK_MSG_SHOW_ALL_RECIPIENTS;
 extern int MK_MSG_SHOW_SHORT_RECIPIENTS;
 #endif /* RICHIE */
 
+extern char *MIME_DecodeMimePartIIStr(const char *header, char *charset);
+
 char *
 MIME_StripContinuations(char *original);
 
@@ -752,6 +754,8 @@ MimeHeaders_default_addbook_link_generator (const char *dest, void *closure,
   char* mouseOverText = NULL;
   int j;
   int num = MSG_ParseRFC822Addresses(dest, &names, &addresses);
+  char charsetName[128];
+  charsetName[0] = 0;
   PR_ASSERT(num >= 1);
   for (j=0 ; j<num ; j++) {
 	if (addr) {
@@ -772,13 +776,14 @@ MimeHeaders_default_addbook_link_generator (const char *dest, void *closure,
 		MSG_UnquotePhraseOrAddr (name, &unquotedName);
 
 	winCharSetID = INTL_DefaultWinCharSetID(0);
-	converted = INTL_DecodeMimePartIIStr((const char *) unquotedName, winCharSetID, PR_FALSE);
+	converted = MIME_DecodeMimePartIIStr((const char *) unquotedName, charsetName);
 	if (converted && (converted != unquotedName)) {
-		char charsetName[128];
-		charsetName[0] = 0;
 		PR_FREEIF(unquotedName);
 		unquotedName = converted;
-		INTL_CharSetIDToName(winCharSetID, charsetName);
+//TODO: naoki - After the decode, we may need to do a charset conversion.
+// If this is to handed to a widget then probably convert to unicode.
+// If this is put inside an HTML then convet to the content type charset of the HTML.
+    //		INTL_CharSetIDToName(winCharSetID, charsetName);
 		if (charsetName[0]) {
 			charset = PR_smprintf(";cs=%s", charsetName);
 		} else {
@@ -2751,7 +2756,9 @@ mime_decode_filename(char *name)
 	char *s = name, *d = name;
 	char *cvt, *returnVal = NULL;
 	PRInt16 mail_csid = CS_DEFAULT, win_csid = CS_DEFAULT;
-	
+  char charsetName[128];
+  charsetName[0] = 0;
+  
 	while (*s)
 	{
 		/* Remove backslashes when they are used to escape special characters. */
@@ -2776,12 +2783,13 @@ mime_decode_filename(char *name)
 		if (d) *d = '?';
 		win_csid = INTL_DocToWinCharSetID(mail_csid);
 		
-		cvt = INTL_DecodeMimePartIIStr(returnVal, win_csid, PR_FALSE);
+		cvt = MIME_DecodeMimePartIIStr(returnVal, charsetName);
 		if (cvt && cvt != returnVal)
 			returnVal = cvt;
 	}
 
-
+//TODO: naoki - We now have a charset name returned and no need for the hack.
+// Check if charset is JIS then apply the conversion.
 	/* Seriously ugly hack. If the first three characters of the filename 
 	   are <ESC>$B, then we know the filename is in JIS and should be 
 	   converted to either SJIS or EUC-JP. */ 

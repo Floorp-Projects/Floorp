@@ -88,6 +88,8 @@ extern NET_StreamClass *msg_MakeRebufferingStream (NET_StreamClass *next,
 												   MWContext *context);
 
 
+extern char *MIME_DecodeMimePartIIStr(const char *header, char *charset);
+
 /* Interface between netlib and the top-level message/rfc822 parser:
    MIME_MessageConverter()
  */
@@ -233,6 +235,9 @@ mime_convert_rfc1522 (const char *input_line, PRInt32 input_length,
   struct mime_stream_data *msd = (struct mime_stream_data *) stream_closure;
   char *converted;
   char *line;
+  char charset[128];
+  
+  charset[0] = '\0';
 
   if (input_line[input_length] == 0)  /* oh good, it's null-terminated */
     line = (char *) input_line;
@@ -244,8 +249,7 @@ mime_convert_rfc1522 (const char *input_line, PRInt32 input_length,
       line[input_length] = 0;
     }
 
-  converted = IntlDecodeMimePartIIStr(line, 
-      INTL_DocToWinCharSetID(INTL_DefaultDocCharSetID(msd->context)), PR_FALSE);
+  converted = MIME_DecodeMimePartIIStr(line, charset);
 
   if (line != input_line)
     PR_Free(line);
