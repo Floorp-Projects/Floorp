@@ -123,6 +123,7 @@ function SetupTextEditorCommands()
   commandManager.registerCommand("cmd_find",       nsFindCommand);
   commandManager.registerCommand("cmd_findNext",   new nsFindAgainCommand(false));
   commandManager.registerCommand("cmd_findPrev",   new nsFindAgainCommand(true));
+  commandManager.registerCommand("cmd_rewrap",     nsRewrapCommand);
   commandManager.registerCommand("cmd_spelling",   nsSpellingCommand);
   commandManager.registerCommand("cmd_validate",   nsValidateCommand);
   commandManager.registerCommand("cmd_checkLinks", nsCheckLinksCommand);
@@ -2376,6 +2377,24 @@ nsFindAgainCommand.prototype =
       findInst.findBackwards = findService.findBackwards; 
     }
     catch (ex) {}
+  }
+};
+
+//-----------------------------------------------------------------------------------
+var nsRewrapCommand =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    return (IsDocumentEditable() && !IsInHTMLSourceMode() &&
+            GetCurrentEditor() instanceof Components.interfaces.nsIEditorMailSupport);
+  },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
+  doCommand: function(aCommand)
+  {
+    GetCurrentEditor().QueryInterface(Components.interfaces.nsIEditorMailSupport).rewrap(false);
   }
 };
 
