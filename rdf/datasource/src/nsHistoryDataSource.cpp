@@ -25,6 +25,7 @@
 #include "nsIRDFObserver.h"
 #include "nsIRDFResourceFactory.h"
 #include "nsIServiceManager.h"
+#include "nsIComponentManager.h"
 #include "nsString.h"
 #include "nsVoidArray.h"  // XXX introduces dependency on raptorbase
 #include "nsRDFCID.h"
@@ -37,7 +38,7 @@
 #include "prprf.h"
 #include "prio.h"
 #include "prtime.h"
-
+#include "prlog.h"
 
 ////////////////////////////////////////////////////////////////////////
 // Interface IDs
@@ -272,9 +273,9 @@ NS_IMETHODIMP
 nsHistoryDataSource::Init(const char* uri)
 {
     nsresult rv;
-    if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFInMemoryDataSourceCID,
-                                                    nsnull, kIRDFDataSourceIID,
-                                                    (void**) &mInner)))
+    if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
+                                                          nsnull, kIRDFDataSourceIID,
+                                                          (void**) &mInner)))
         return rv;
 
     if (NS_FAILED(rv = mInner->Init(uri)))
