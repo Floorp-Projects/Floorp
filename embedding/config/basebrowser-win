@@ -9,7 +9,12 @@
 ; 
 ; Sample App:
 ; 
-winEmbed.exe
+; Which sample app gets copied is determined in makefile.win
+; by the args passed in to it. Both winembed and mfcembed
+; are copied by default.
+; Run "nmake -f makefile.win APP=winembed" to copy winembed 
+; Run "nmake -f makefile.win APP=mfcembed" to copy mfcembed
+
 
 ; 
 ; NSPR:
@@ -81,6 +86,10 @@ components\webBrowser_setup.xpt
 components\embedcomponents.dll
 components\windowwatcher.xpt
 
+; find functionality
+; Optional - only if your code uses nsIWebBrowserFind
+components\txtsvc.dll
+components\txtsvc.xpt
 
 ; gfx
 components\gfx.xpt                      
