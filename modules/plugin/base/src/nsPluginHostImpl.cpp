@@ -1238,6 +1238,9 @@ public:
 
   nsresult SetLocalFile(nsIFile* aFile);
 
+  nsresult ServeStreamAsFile(nsIRequest *request, nsISupports *ctxt,
+                              nsresult status);
+
 private:
   nsresult SetUpCache(nsIURI* aURL); // todo: see about removing this...
   nsresult SetUpStreamListener(nsIRequest* request, nsIURI* aURL);
@@ -1279,6 +1282,25 @@ public:
 
 };
 
+////////////////////////////////////////////////////////////////////////
+class nsPluginByteRangeStreamListener : public nsIStreamListener {
+public:
+  nsPluginByteRangeStreamListener(nsPluginStreamListenerPeer* aPluginStreamListenerPeer);
+  virtual ~nsPluginByteRangeStreamListener();
+
+  // nsISupports
+  NS_DECL_ISUPPORTS
+
+  // nsIRequestObserver methods:
+  NS_DECL_NSIREQUESTOBSERVER
+
+  // nsIStreamListener methods:
+  NS_DECL_NSISTREAMLISTENER
+
+private:
+  nsCOMPtr<nsIStreamListener> mStreamConverter;
+  nsPluginStreamListenerPeer* mFinalPluginStreamListener;
+};
 
 ////////////////////////////////////////////////////////////////////////
 nsPluginStreamInfo::nsPluginStreamInfo()
@@ -1468,26 +1490,23 @@ nsPluginStreamInfo::RequestRead(nsByteRange* rangeList)
   mPluginStreamListenerPeer->mAbort = PR_TRUE; // instruct old stream listener to cancel
                                                // the request on the next ODA. 
 
-  nsCOMPtr<nsIStreamListener> converter = mPluginStreamListenerPeer;
-
-  if (numRequests > 1) {
-    nsCOMPtr<nsIStreamConverterService> serv = do_GetService(kStreamConverterServiceCID, &rv);
-    if (NS_FAILED(rv))
-        return rv;
+  nsCOMPtr<nsIStreamListener> converter;
   
-    rv = serv->AsyncConvertData(NS_LITERAL_STRING(MULTIPART_BYTERANGES).get(),
-                                NS_LITERAL_STRING("*/*").get(),
-                                mPluginStreamListenerPeer,
-                                nsnull,
-                                getter_AddRefs(converter));
-    if (NS_FAILED(rv))
-        return rv;
-  }
+  if (numRequests == 1) {
+      converter = mPluginStreamListenerPeer;
 
-  // set current stream offset equal to the first offset in the range list
-  // it will work for single byte range request
-  // for multy range we'll reset it in ODA 
-  SetStreamOffset(rangeList->offset);
+    // set current stream offset equal to the first offset in the range list
+    // it will work for single byte range request
+    // for multy range we'll reset it in ODA 
+    SetStreamOffset(rangeList->offset);
+  } else {
+    nsPluginByteRangeStreamListener *brrListener = 
+      new nsPluginByteRangeStreamListener(mPluginStreamListenerPeer);
+    if (brrListener)
+      converter = brrListener;
+    else
+      return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   mPluginStreamListenerPeer->mPendingRequests += numRequests;
 
@@ -2289,15 +2308,14 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIRequest *request,
       return NS_OK;
   
   // we keep our connections around...
-  PRUint32 magicNumber = 0;  // set it to something that is not the magic number.
   nsCOMPtr<nsISupportsPRUint32> container = do_QueryInterface(aContext);
-  if (container)
+  if (container) {
+    PRUint32 magicNumber = 0;  // set it to something that is not the magic number.
     container->GetData(&magicNumber);
-      
-  if (magicNumber == MAGIC_REQUEST_CONTEXT)
-  {
-    // this is one of our range requests
-    return NS_OK;
+    if (magicNumber == MAGIC_REQUEST_CONTEXT) {
+      // this is one of our range requests
+      return NS_OK;
+    }
   }
   
   if(!mPStreamListener)
@@ -6523,4 +6541,130 @@ nsPluginHostImpl::ScanForRealInComponentsFolder(nsIComponentManager * aCompManag
 #endif
 
   return rv;
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+nsresult nsPluginStreamListenerPeer::ServeStreamAsFile(nsIRequest *request, 
+                                                        nsISupports* aContext,
+                                                        nsresult aStatus)
+{
+  if (!mInstance)
+    return NS_ERROR_FAILURE;
+
+  // mInstance->Stop calls mPStreamListener->CleanUpStream(), so stream will be properly clean up 
+  mInstance->Stop();
+  mInstance->Start();      
+  nsPluginInstancePeerImpl *peer;
+  mInstance->GetPeer(NS_REINTERPRET_CAST(nsIPluginInstancePeer **, &peer));
+  if (peer) {
+    nsCOMPtr<nsIPluginInstanceOwner> owner;
+    peer->GetOwner(*getter_AddRefs(owner));
+    if (owner) {
+      nsPluginWindow    *window = nsnull;
+      owner->GetWindow(window);
+      if (window->window)
+        mInstance->SetWindow(window);
+    }
+    // because we are starting plugin using existing peer 
+    // it'll get one extra RefCnt, release it here.
+    NS_RELEASE(peer);
+  }
+  
+  mPluginStreamInfo->SetSeekable(0);
+  mPStreamListener->OnStartBinding((nsIPluginStreamInfo*)mPluginStreamInfo);
+  mPluginStreamInfo->SetStreamOffset(0);
+
+#if !defined(CACHE_SUPPOPTS_FILE_EXTENSION)
+  // check out if we already saving the stream into plugins cache
+  nsCOMPtr<nsIOutputStream> outStream;
+  mPluginStreamInfo->GetLocalCachedFileStream(getter_AddRefs(outStream));
+  if (outStream) {
+    outStream->Close();
+    mPluginStreamInfo->SetLocalCachedFileStream(nsnull);
+  }
+  
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel);
+  if (httpChannel) {
+    SetupPluginCacheFile(channel);
+  }
+#endif
+
+  return NS_OK;
+}
+
+//////////////////////////////////////////////////////////////////////
+NS_IMPL_ISUPPORTS1(nsPluginByteRangeStreamListener, nsIStreamListener)
+
+nsPluginByteRangeStreamListener::nsPluginByteRangeStreamListener(nsPluginStreamListenerPeer* aPluginStreamListenerPeer)
+{
+  NS_INIT_REFCNT();
+  // don't addref
+  mFinalPluginStreamListener = aPluginStreamListenerPeer;
+}
+
+nsPluginByteRangeStreamListener::~nsPluginByteRangeStreamListener()
+{
+  mStreamConverter = 0;
+}
+
+NS_IMETHODIMP
+nsPluginByteRangeStreamListener::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIStreamConverterService> serv = do_GetService(kStreamConverterServiceCID, &rv);
+  if (NS_SUCCEEDED(rv)) {
+    rv = serv->AsyncConvertData(NS_LITERAL_STRING(MULTIPART_BYTERANGES).get(),
+                                NS_LITERAL_STRING("*/*").get(),
+                                mFinalPluginStreamListener,
+                                nsnull,
+                                getter_AddRefs(mStreamConverter));
+    if (NS_SUCCEEDED(rv)) {
+      rv = mStreamConverter->OnStartRequest(request, ctxt);
+      if (NS_SUCCEEDED(rv))
+        return rv;
+    }
+    mStreamConverter = 0;
+  }
+
+  // if server cannot continue with byte range (206 status) and sending us whole object (200 status)
+  // reset this seekable stream & try serve it to plugin instance as a file
+  rv = mFinalPluginStreamListener->ServeStreamAsFile(request, ctxt, rv);
+  // always use mFinalPluginStreamListener
+  mStreamConverter = mFinalPluginStreamListener;
+  return rv;
+}
+
+NS_IMETHODIMP
+nsPluginByteRangeStreamListener::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
+                              nsresult status)
+{
+  if (mStreamConverter == mFinalPluginStreamListener) {
+    // remove magic number from container
+    nsCOMPtr<nsISupportsPRUint32> container = do_QueryInterface(ctxt);
+    if (container) {
+      PRUint32 magicNumber = 0;
+      container->GetData(&magicNumber);
+      if (magicNumber == MAGIC_REQUEST_CONTEXT) {
+        // to allow properly finish mFinalPluginStreamListener->OnStopRequest()
+        // set it to something that is not the magic number.
+        container->SetData(0);
+        // also unset mPendingRequests 
+        mFinalPluginStreamListener->mPendingRequests = 0;
+     
+        return mFinalPluginStreamListener->OnStopRequest(request, ctxt, status);
+      }
+    }
+    NS_WARNING("Bad state of nsPluginByteRangeStreamListener");
+  }
+  
+  return mStreamConverter->OnStopRequest(request, ctxt, status);
+}
+
+NS_IMETHODIMP
+nsPluginByteRangeStreamListener::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
+                                nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count)
+{
+  return mStreamConverter->OnDataAvailable(request, ctxt, inStr, sourceOffset, count);
 }
