@@ -3187,10 +3187,10 @@ MOZ_ARG_HEADER(Components and Features)
 dnl =========================================================
 dnl = Calendar client
 dnl =========================================================
-MOZ_CALENDAR=
 MOZ_ARG_ENABLE_BOOL(calendar,
 [  --enable-calendar       Enable building of the calendar client],
-    MOZ_CALENDAR=1 )
+    MOZ_CALENDAR=1,
+    MOZ_CALENDAR= )
 AC_SUBST(MOZ_CALENDAR)
 
 dnl =========================================================
@@ -3209,16 +3209,6 @@ MOZ_LDAP_XPCOM=1
 MOZ_ARG_DISABLE_BOOL(ldap,
 [  --disable-ldap          Disable LDAP support],
     MOZ_LDAP_XPCOM=)
-
-dnl =========================================================
-dnl = Calendar
-dnl =========================================================
-if test "$MOZ_CALENDAR"; then
-    AC_CHECK_LIB(ical, icalproperty_new_location, [_dummy=foo],
-        AC_MSG_ERROR([Calendar requires libical]))
-fi
-
-AC_SUBST(MOZ_CALENDAR)
 
 dnl ========================================================
 dnl = Phoenix

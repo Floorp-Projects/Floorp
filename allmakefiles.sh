@@ -1183,6 +1183,10 @@ MAKEFILES_calendar="
         calendar/Makefile
         calendar/libxpical/Makefile
         calendar/resources/Makefile
+	other-licenses/libical/Makefile
+	other-licenses/libical/src/Makefile
+	other-licenses/libical/src/libical/Makefile
+	other-licenses/libical/src/libicalss/Makefile
        "
 
 add_makefiles "

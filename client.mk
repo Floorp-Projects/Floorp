@@ -281,6 +281,11 @@ endif
 CVSCO_IMGLIB2 = $(CVS) $(CVS_FLAGS) co $(IMGLIB2_CO_FLAGS) $(CVS_CO_DATE_FLAGS) $(IMGLIB2_CO_MODULE)
 
 ####################################
+# CVS defines for Calendar 
+#
+CVSCO_CALENDAR := $(CVSCO) $(CVS_CO_DATE_FLAGS) mozilla/calendar mozilla/other-licenses/libical
+
+####################################
 # CVS defines for standalone modules
 #
 ifneq ($(BUILD_MODULES),all)
@@ -310,6 +315,9 @@ endif
 ifeq (,$(filter modules/libpr0n, $(BUILD_MODULE_CVS)))
   CVSCO_IMGLIB2 :=
 endif
+ifeq (,$(filter calendar other-licenses/libical, $(BUILD_MODULE_CVS)))
+  CVSCO_CALENDAR :=
+endif
 endif
 
 ####################################
@@ -331,19 +339,6 @@ CHECKOUT_LIBART := cvs_co $(CVSCO_LIBART)
 else
 CHECKOUT_LIBART := true
 FASTUPDATE_LIBART := true
-endif
-
-####################################
-# CVS defines for Calendar (pulled and built if MOZ_CALENDAR is set)
-#
-CVSCO_CALENDAR := $(CVSCO) $(CVS_CO_DATE_FLAGS) mozilla/calendar
-
-ifdef MOZ_CALENDAR
-FASTUPDATE_CALENDAR := fast_update $(CVSCO_CALENDAR)
-CHECKOUT_CALENDAR := cvs_co $(CVSCO_CALENDAR)
-else
-CHECKOUT_CALENDAR := true
-FASTUPDATE_CALENDAR := true
 endif
 
 ####################################
@@ -435,7 +430,7 @@ real_checkout:
         cvs_co $(CVSCO_LDAPCSDK) && \
         cvs_co $(CVSCO_ACCESSIBLE) && \
         cvs_co $(CVSCO_IMGLIB2) && \
-	$(CHECKOUT_CALENDAR) && \
+	cvs_co $(CVSCO_CALENDAR) && \
 	$(CHECKOUT_LIBART) && \
 	$(CHECKOUT_PHOENIX) && \
 	$(CHECKOUT_CODESIGHS) && \
@@ -496,7 +491,7 @@ real_fast-update:
 	fast_update $(CVSCO_LDAPCSDK) && \
 	fast_update $(CVSCO_ACCESSIBLE) && \
 	fast_update $(CVSCO_IMGLIB2) && \
-	$(FASTUPDATE_CALENDAR) && \
+	fast_update $(CVSCO_CALENDAR) && \
 	$(FASTUPDATE_LIBART) && \
 	$(FASTUPDATE_PHOENIX) && \
 	$(FASTUPDATE_CODESIGHS) && \

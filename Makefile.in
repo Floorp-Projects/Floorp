@@ -239,7 +239,7 @@ tier_97_dirs	+= mailnews
 endif
 
 ifdef MOZ_CALENDAR
-tier_98_dirs	+= calendar
+tier_98_dirs	+= other-licenses/libical calendar
 endif
 
 #

@@ -5,7 +5,7 @@
   
   DESCRIPTION:
   
-  $Id: icallangbind.c,v 1.7 2002/11/06 21:22:28 mostafah%oeone.com Exp $
+  $Id: icallangbind.c,v 1.8 2002/12/11 04:14:41 seawood%netscape.com Exp $
   $Locker:  $
 
   (C) COPYRIGHT 1999 Eric Busboom 
@@ -26,6 +26,8 @@
 #ifdef XP_MAC
 #include <extras.h> /* for malloc */
 #include <stdlib.h> /* for free */
+#elif defined(XP_MACOSX)
+#include <stdlib.h>
 #else
 #include <malloc.h>
 #endif

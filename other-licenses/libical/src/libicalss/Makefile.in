@@ -35,12 +35,14 @@ include $(DEPTH)/config/autoconf.mk
 include $(srcdir)/objs.mk
 
 MODULE = icalss
-LIBRARY_NAME=icalss
+LIBRARY_NAME=mozicalss
+ifneq ($(OS_ARCH),WINNT)
+SHORT_LIBNAME=mozicals
+endif
 
 ifeq ($(OS_ARCH),WINNT)
 MAPFILE	= $(LIBRARY_NAME).map
-DEFFILE = $(srcdir)/$(LIBRARY_NAME).def
-LIBRARY_NAME = icalss
+DEFFILE = $(srcdir)/icalss.def
 endif
 
 ifeq ($(OS_ARCH),WINNT)
@@ -50,10 +52,10 @@ endif
 CSRCS		= $(ICALSS_SRC_LCSRCS)
 
 EXPORTS = $(ICALSS_SRC_LEXPORTS)
-FORCE_STATIC_LIB=1
+FORCE_SHARED_LIB=1
 LOCAL_INCLUDES = -I$(srcdir) -I$(srcdir)/../libical
 REQUIRES	= ical
-EXTRA_DSO_LIBS  = ical
+EXTRA_DSO_LIBS  = mozical
 EXTRA_DSO_LDOPTS = \
 		   $(LIBS_DIR) \
 		   $(EXTRA_DSO_LIBS) \

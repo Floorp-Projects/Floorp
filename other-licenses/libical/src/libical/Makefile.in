@@ -29,18 +29,17 @@ include $(DEPTH)/config/autoconf.mk
 include $(srcdir)/objs.mk
 
 MODULE = ical
-LIBRARY_NAME=ical
+LIBRARY_NAME=mozical
 
 ifeq ($(OS_ARCH),WINNT)
 MAPFILE	= $(LIBRARY_NAME).map
-DEFFILE = $(srcdir)/$(LIBRARY_NAME).def
-LIBRARY_NAME = ical
+DEFFILE = $(srcdir)/ical.def
 endif
 
 CSRCS		= $(ICAL_SRC_LCSRCS)
 
 EXPORTS = $(ICAL_SRC_LEXPORTS)
-FORCE_STATIC_LIB=1
+FORCE_SHARED_LIB=1
 GARBAGE += ical.h $(BUILT_COMBINEDHEADERS) $(BUILT_SOURCES)
 ifeq ($(OS_ARCH),WINNT)
 GARBAGE	+= $(LIBRARY_NAME).ilk
@@ -174,7 +173,7 @@ icalrestriction.c: $(RESTRICTIONDEPS) Makefile
 	$(PERL) $(ICALSCRIPTS)/mkrestrictiontable.pl  -i $(srcdir)/icalrestriction.c.in \
                 $(DESIGNDATA)/restrictions.csv > icalrestriction.c
 
-ifeq ($(OS_ARCH),BeOS)
+ifneq (,$(filter BeOS Darwin,$(OS_ARCH)))
 DEFINES	+= -D__USE_BSD=1
 endif
 

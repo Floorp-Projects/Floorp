@@ -41,14 +41,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MOZ_STATIC_COMPONENT_LIBS=
-BUILD_STATIC_LIBS=
-BUILD_SHARED_LIBS=1
-
 MODULE		= calendar
-#XPIDL_MODULE    = calendar
 LIBRARY_NAME	= xpical
-SHORT_LIBNAME	= xpical
 EXPORT_LIBRARY	= 1
 IS_COMPONENT	= 1
 MODULE_NAME	= oeICalModule
@@ -72,17 +66,18 @@ CPPSRCS		= \
 		oeICalImpl.cpp \
 		oeICalContainerImpl.cpp \
 		oeDateTimeImpl.cpp \
-      oeICalStartupHandler.cpp \
+		oeICalStartupHandler.cpp \
 		$(NULL)
 
-EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) -lical -licalss
+EXTRA_DSO_LDOPTS += \
+	$(LIBS_DIR) \
+	$(MOZ_COMPONENT_LIBS) \
+	-lmozicalss \
+	-lmozical \
+	$(NULL)
 
-OS_COMPILE_CXXFLAGS += -DICAL_DEBUG 
+DEFINES += -DICAL_DEBUG 
 #-DICAL_DEBUG_ALL
 
 include $(topsrcdir)/config/rules.mk
-
-ifeq ($(OS_ARCH),WINNT)
-DEFINES		+= -DWIN32_LEAN_AND_MEAN
-endif
 
