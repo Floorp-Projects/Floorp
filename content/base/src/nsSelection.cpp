@@ -4983,6 +4983,7 @@ nsTypedSelection::selectFrames(nsIPresContext* aPresContext,
       {
         result = mFrameSelection->GetTracker()->GetPrimaryFrameFor(innercontent, &frame);
         if (NS_SUCCEEDED(result) && frame)
+        {
           //NOTE: eSpreadDown is now IGNORED. Selected state is set only for given frame
           frame->SetSelected(aPresContext, nsnull,aFlags,eSpreadDown);//spread from here to hit all frames in flow
           frame->GetRect(frameRect);
@@ -5000,6 +5001,7 @@ nsTypedSelection::selectFrames(nsIPresContext* aPresContext,
               break;
           }
         //if the frame is splittable and this frame is 0,0 then set the next in flow frame to be selected also
+        }
       }
       result = aInnerIter->Next();
       if (NS_FAILED(result))
