@@ -29,16 +29,7 @@
 #include <gdk/gdkprivate.h>
 
 #ifdef NEED_USLEEP_PROTOTYPE
-extern int usleep(unsigned int);
-#endif
-#if defined(__osf__) && !defined(_XOPEN_SOURCE_EXTENDED)
-/*
-** DEC's compiler requires _XOPEN_SOURCE_EXTENDED to be defined in
-** order for it to see the prototype for usleep in unistd.h, but if
-** we define that the build breaks long before getting here.  So
-** put the prototype here explicitly.
-*/
-extern "C" int usleep(useconds_t);
+extern "C" int usleep(unsigned int);
 #endif
 #if defined(__QNX__)
 #define usleep(s)	sleep(s)
