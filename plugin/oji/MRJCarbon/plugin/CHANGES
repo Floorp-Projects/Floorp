@@ -1,3 +1,8 @@
+Changes since 1.0b2:
+
+1. Added call to SizeJavaControl() when processing window size changes. This causes the applet
+to be correctly resized before calling MoveAndClipJavaControl().
+
 Changes since 1.0b1:
 
 1. Repaired Security Context code that was broken by the checkin for bug 124042. This code now
