@@ -87,22 +87,6 @@ nsFileChannel::Init(PRInt32 ioFlags,
     mPerm = perm;
     mURI = uri;
     mGenerateHTMLDirs = generateHTMLDirs;
-
-    // if we support the nsIURL interface then use it to get just
-    // the file path with no other garbage!
-    nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(mURI, &rv);
-    if (NS_FAILED(rv)) {
-        // this URL doesn't denote a file
-        return NS_ERROR_MALFORMED_URI;
-    }
-
-    rv = fileURL->GetFile(getter_AddRefs(mFile));
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(mFile);
-    if (localFile)
-        localFile->SetFollowLinks(PR_TRUE);
-
     return rv;
 }
 
@@ -254,10 +238,34 @@ nsFileChannel::GetURI(nsIURI* *aURI)
 }
 
 nsresult
+nsFileChannel::EnsureFile()
+{
+    if (mFile)
+        return NS_OK;
+
+    nsresult rv;
+    // if we support the nsIURL interface then use it to get just
+    // the file path with no other garbage!
+    nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(mURI, &rv);
+    NS_ENSURE_TRUE(fileURL, NS_ERROR_UNEXPECTED);
+
+    rv = fileURL->GetFile(getter_AddRefs(mFile));
+    if (NS_FAILED(rv)) return NS_ERROR_FILE_NOT_FOUND;
+
+    nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(mFile);
+    if (localFile)
+        localFile->SetFollowLinks(PR_TRUE);
+
+}
+nsresult
 nsFileChannel::GetFileTransport(nsITransport **trans)
 {
     nsresult rv = NS_OK;
     
+    rv = EnsureFile();
+    if (NS_FAILED(rv))
+        return rv;
+
     nsCOMPtr<nsIFileTransportService> fts = 
              do_GetService(kFileTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
@@ -321,7 +329,8 @@ NS_IMETHODIMP
 nsFileChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
 {
     nsresult rv;
-
+    nsCOMPtr<nsIRequest> request;
+    
 #ifdef DEBUG
     NS_ASSERTION(mInitiator == nsnull || mInitiator == PR_GetCurrentThread(),
                  "wrong thread calling this routine");
@@ -331,11 +340,6 @@ nsFileChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
     if (mFileTransport)
         return NS_ERROR_IN_PROGRESS; // AsyncOpen in progress
 
-    nsCOMPtr<nsITransport> fileTransport;
-    rv = GetFileTransport(getter_AddRefs(fileTransport));
-    if (NS_FAILED(rv))
-        return rv;
-
     NS_ASSERTION(listener, "null listener");
     mRealListener = listener;
 
@@ -344,24 +348,39 @@ nsFileChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
         if (NS_FAILED(rv)) return rv;
     }
     
-    nsCOMPtr<nsIRequest> request;
-    if (mUploadStream)
-        rv = fileTransport->AsyncWrite(this, ctxt, 0, PRUint32(-1), 0,
-                                       getter_AddRefs(request));
-    else
-        rv = fileTransport->AsyncRead(this, ctxt, 0, PRUint32(-1), 0,
-                                      getter_AddRefs(request));
+    nsCOMPtr<nsITransport> fileTransport;
+    rv = GetFileTransport(getter_AddRefs(fileTransport));
 
-    if (NS_FAILED(rv)) {
-        if (mLoadGroup)
-            mLoadGroup->RemoveRequest(this, ctxt, rv);  
-        return rv;
+    if (NS_SUCCEEDED(rv)) {
+
+        if (mUploadStream)
+            rv = fileTransport->AsyncWrite(this, ctxt, 0, PRUint32(-1), 0,
+                                           getter_AddRefs(request));
+        else
+            rv = fileTransport->AsyncRead(this, ctxt, 0, PRUint32(-1), 0,
+                                          getter_AddRefs(request));
+    
+        // remember the transport and request; these will be released when
+        // OnStopRequest is called.
+        mFileTransport = fileTransport;
+        mCurrentRequest = request;
     }
 
-    // remember the transport and request; these will be released when
-    // OnStopRequest is called.
-    mFileTransport = fileTransport;
-    mCurrentRequest = request;
+    if (NS_FAILED(rv)) {
+        
+        mStatus = rv;
+
+        nsCOMPtr<nsIRequestObserver> asyncObserver;
+        NS_NewRequestObserverProxy(getter_AddRefs(asyncObserver), 
+                                   NS_STATIC_CAST(nsIRequestObserver*, /* Ambiguous conversion */
+                                   NS_STATIC_CAST(nsIStreamListener*, this)), 
+                                   NS_CURRENT_EVENTQ);
+        if(asyncObserver) {
+            (void) asyncObserver->OnStartRequest(this, ctxt);
+            (void) asyncObserver->OnStopRequest(this, ctxt, rv);
+        }
+    }
+    
     return NS_OK;
 }
 
@@ -383,6 +402,11 @@ NS_IMETHODIMP
 nsFileChannel::GetContentType(nsACString &aContentType)
 {
     aContentType.Truncate();
+
+    if (!mFile) {
+        return NS_ERROR_NOT_AVAILABLE;
+    }
+        
     if (mContentType.IsEmpty()) {
         PRBool directory;
 		mFile->IsDirectory(&directory);
@@ -435,9 +459,13 @@ nsFileChannel::SetContentCharset(const nsACString &aContentCharset)
 NS_IMETHODIMP
 nsFileChannel::GetContentLength(PRInt32 *aContentLength)
 {
-    nsresult rv;
+    if (!mFile) {
+        *aContentLength = -1;
+        return NS_ERROR_NOT_AVAILABLE;
+    }
+
     PRInt64 size;
-    rv = mFile->GetFileSize(&size);
+    nsresult rv = mFile->GetFileSize(&size);
     if (NS_SUCCEEDED(rv)) {
         *aContentLength = nsInt64(size);
     } else {
