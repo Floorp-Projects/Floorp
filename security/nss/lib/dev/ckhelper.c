@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.21 $ $Date: 2002/04/18 17:29:51 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.22 $ $Date: 2002/04/25 18:33:45 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKEPV_H
@@ -620,7 +620,7 @@ nssCryptokiCRL_GetAttributes
     PRUint32 i;
 
     NSS_CK_TEMPLATE_START(crl_template, attr, crl_size);
-    NSS_CK_SET_ATTRIBUTE_VAR(attr, CKA_TOKEN, isToken);
+    /* NSS_CK_SET_ATTRIBUTE_VAR(attr, CKA_TOKEN, isToken); */
     if (encodingOpt) {
 	NSS_CK_SET_ATTRIBUTE_NULL(attr, CKA_VALUE);
     }
