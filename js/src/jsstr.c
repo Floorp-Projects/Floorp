@@ -1791,50 +1791,6 @@ str_substr(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 #endif
 }
 
-#ifdef NOTYET
-/*
- * From "Programming perl", Larry Wall and Randall L. Schwartz, Copyright XXX
- * O'Reilly & Associates, Inc., but with Java primitive type sizes for i, l,
- * and so on:
- *
- *  a   An ASCII string, unstripped.
- *  A   An ASCII string, trailing nulls and spaces will be stripped.
- *  b   A bit string, low-to-high order.
- *  B   A bit string, high-to-low order.
- *  h   A hexadecimal string, low nybble first.
- *  H   A hexadecimal string, high nybble first.
- *  c   A signed char value.
- *  C   An unsigned char value.
- *  s   A signed short (16-bit) value.
- *  S   An unsigned short (16-bit) value.
- *  i   A signed integer (32-bit) value.
- *  I   An unsigned integer (32-bit) value.
- *  l   A signed long (64-bit) value.
- *  L   An unsigned long (64-bit) value.
- *  n   A short in "network" byte order.
- *  N   An integer in "network" byte order.
- *  f   A single-precision float in IEEE format.
- *  d   A double-precision float in IEEE format.
- *  p   A pointer to a string.
- *  x   Skip forward a byte.
- *  X   Back up one byte.
- *  @   Go to absolute position in string for next field.
- *  u   Uudecode a string.
- *
- * Each letter may be followed by a number giving the repeat count.  Together
- * the letter and repeat count make a field specifier.  Field specifiers may
- * be separated by whitespace, which will be ignored.
- */
-static JSBool
-str_unpack(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-#if JS_HAS_MORE_PERL_FUN
-#else
-    return str_nyi(cx, "unpack");
-#endif
-}
-#endif /* NOTYET */
-
 #if JS_HAS_SEQUENCE_OPS
 /*
  * Python-esque sequence operations.
@@ -2128,9 +2084,6 @@ static JSFunctionSpec string_methods[] = {
     {"replace",             str_replace,            2,0,0},
     {"split",               str_split,              1,0,0},
     {"substr",              str_substr,             2,0,0},
-#ifdef NOTYET
-    {"unpack",              str_unpack,             1,0,0},
-#endif
 
     /* Python-esque sequence methods. */
 #if JS_HAS_SEQUENCE_OPS
