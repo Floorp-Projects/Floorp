@@ -1964,7 +1964,9 @@ main(int argc, char **argv)
     glob = JS_NewObject(cx, &global_class, NULL, NULL);
     if (!glob)
 	return 1;
-#ifndef LAZY_STANDARD_CLASSES
+#ifdef LAZY_STANDARD_CLASSES
+    JS_SetGlobalObject(cx, glob);
+#else
     if (!JS_InitStandardClasses(cx, glob))
 	return 1;
 #endif
