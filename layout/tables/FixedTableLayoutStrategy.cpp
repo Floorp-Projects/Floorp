@@ -157,7 +157,7 @@ PRBool FixedTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aComputed
  
   nscoord lastColAllocated = -1;
   nscoord remainingWidth = availWidth - totalColWidth;
-  if (CRAZY_WIDTH(remainingWidth)) {
+  if (remainingWidth >= 500000) {
     // let's put a cap on the width so that it doesn't become insane.
     remainingWidth = 100;
   }
