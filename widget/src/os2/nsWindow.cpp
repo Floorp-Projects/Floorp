@@ -65,6 +65,10 @@
 #include <ctype.h>
 #include <unikbd.h>
 
+#ifdef DEBUG_sobotka
+static int WINDOWCOUNT = 0;
+#endif
+
 // HWNDs are mapped to nsWindow objects using a custom presentation parameter,
 // which is registered in nsModule -- thanks to Cindy Ross for explaining how
 // to do this.
@@ -152,6 +156,7 @@ nsresult nsWindow::Create( nsIWidget *aParent, const nsRect &aRect,
 {
    HWND hwndP = aParent ? (HWND)aParent->GetNativeData( NS_NATIVE_WINDOW)
                         : HWND_DESKTOP;
+
    DoCreate( hwndP, (nsWindow*) aParent, aRect, aHandleEventFunction,
              aContext, aAppShell, aToolkit, aInitData);
 
@@ -175,7 +180,7 @@ nsresult nsWindow::Create( nsNativeWidget aParent, const nsRect &aRect,
    // XXX WC_MOZILLA will probably need a change here
    //
    if( !hwndP)
-      hwndP = HWND_DESKTOP;
+     hwndP = HWND_DESKTOP;
 
    DoCreate( hwndP, pParent, aRect, aHandleEventFunction, aContext,
              aAppShell, aToolkit, aInitData);
@@ -239,6 +244,11 @@ void nsWindow::RealDoCreate( HWND              hwndP,
                              nsWidgetInitData *aInitData,
                              HWND              hwndOwner)
 {
+
+  // XXXX TEST HACK to get rid of window bunnies
+  //  if (!(aRect.height > 1) && !(aRect.width > 1))
+  //    return;
+
    // Set up parent data - don't addref to avoid circularity
    mParent = aParent;
 
@@ -282,6 +292,14 @@ void nsWindow::RealDoCreate( HWND              hwndP,
 
    NS_ASSERTION( mWnd, "Couldn't create window");
 
+#if DEBUG_sobotka
+   printf("\n+++++++++++In nsWindow::RealDoCreate created 0x%lx, %d x %d\n",
+	  mWnd, aRect.width, aRect.height);
+   printf("+++++++++++Location =  %d x %d\n", aRect.x, aRect.y);
+   printf("+++++++++++Parent = 0x%lx\n", GetParentHWND());
+   printf("+++++++++++WINDOWCOUNT+ = %d\n", ++WINDOWCOUNT);
+#endif
+
    // Make sure we have a device context from somewhere
    if( aContext)
    {
@@ -303,11 +321,9 @@ void nsWindow::RealDoCreate( HWND              hwndP,
          printf( "Couldn't find DC instance for nsWindow\n");
 #endif
    }
-   /* OS2TODO - Why is this NULL?  Had to add in checking to avoid trap. */
-   if (gModuleData.pszFontNameSize)
-      WinSetPresParam( mWnd, PP_FONTNAMESIZE,
-                       strlen( gModuleData.pszFontNameSize) + 1,
-                       gModuleData.pszFontNameSize);
+   WinSetPresParam( mWnd, PP_FONTNAMESIZE,
+		    strlen( gModuleData.pszFontNameSize) + 1,
+		    gModuleData.pszFontNameSize);
 
    Resize( aRect.x, aRect.y, aRect.width, aRect.height, PR_FALSE);
 
@@ -367,6 +383,10 @@ nsresult nsWindow::Destroy()
    }
    else
    {
+#if DEBUG_sobotka
+     printf("\n++++++++++nsWindow::Destroy trashing 0x%lx\n\n", mHackDestroyWnd ? mHackDestroyWnd : mWnd);
+     printf("+++++++++++WINDOWCOUNT- = %d\n\n", --WINDOWCOUNT);
+#endif
       // avoid calling into other objects if we're being deleted, 'cos
       // they must have no references to us.
       if( mWindowState == nsWindowState_eLive && mParent)
@@ -445,6 +465,11 @@ nsWindow::EventIsInsideWindow(nsWindow* aWindow)
 // the nsWindow procedure for all nsWindows in this toolkit
 MRESULT EXPENTRY fnwpNSWindow( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
 {
+#if DEBUG_sobotka
+  if (msg == WM_BUTTON1DOWN || msg == WM_BUTTON1DBLCLK)
+      printf("\n++++++++++fnwpNSWindow processing click for 0x%lx <-------CLICK\n", hwnd);
+#endif
+
    // Get the nsWindow for this hwnd
    nsWindow *wnd = NS_HWNDToWindow( hwnd);
 
@@ -732,15 +757,28 @@ void nsWindow::InitEvent( nsGUIEvent &event, PRUint32 aEventType, nsPoint * aPoi
       POINTL ptl;
       WinQueryMsgPos( 0/*hab*/, &ptl);
       WinMapWindowPoints( HWND_DESKTOP, mWnd, &ptl, 1);
+
+#if 0
+      printf("++++++++++nsWindow::InitEvent (!pt) mapped point = %ld, %ld\n", ptl.x, ptl.y);
+#endif
+
       PM2NS( ptl);
 
       event.point.x = ptl.x;
       event.point.y = ptl.y;
+
+#if 0
+      printf("++++++++++nsWindow::InitEvent (!pt) converted point = %ld, %ld\n", ptl.x, ptl.y);
+#endif
    }
    else
-   {                      // use the point override if provided
+   {                     // use the point override if provided
       event.point.x = aPoint->x;
       event.point.y = aPoint->y;
+
+#if 0
+      printf("++++++++++nsWindow::InitEvent point = %ld, %ld\n", aPoint->x, aPoint->y);
+#endif
    }
 
    event.time = WinQueryMsgTime( 0/*hab*/);
@@ -768,6 +806,10 @@ PRBool nsWindow::DispatchEventInternal( nsGUIEvent *event)
 NS_IMETHODIMP nsWindow::DispatchEvent( nsGUIEvent *event,
                                        nsEventStatus &aStatus)
 {
+#if defined(TRACE_EVENTS) && defined(DEBUG_sobotka)
+  DebugPrintEvent(*event, mWnd);
+#endif
+
    aStatus = nsEventStatus_eIgnore;
 
    // Filters: if state is eInCreate, only send out NS_CREATE
@@ -1439,6 +1481,9 @@ void nsWindow::NS2PM_PARENT( POINTL &ptl)
 void nsWindow::NS2PM( POINTL &ptl)
 {
    ptl.y = GetClientHeight() - ptl.y - 1;
+#if 0
+   printf("+++++++++In NS2PM client height = %ld\n", GetClientHeight());
+#endif
 }
 
 // --------------------------------------------------------------------------
@@ -1472,6 +1517,9 @@ nsresult nsWindow::Resize( PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 nsresult nsWindow::Resize( PRInt32 aX, PRInt32 aY, PRInt32 w, PRInt32 h,
                            PRBool aRepaint)
 {
+  //   NS_ASSERTION((w >=0 ), "Negative width passed to nsWindow::Resize");
+  //   NS_ASSERTION((h >=0 ), "Negative height passed to nsWindow::Resize");
+
    if( mWnd)
    {
       // work out real coords of top left
@@ -1483,6 +1531,11 @@ nsresult nsWindow::Resize( PRInt32 aX, PRInt32 aY, PRInt32 w, PRInt32 h,
       if( !SetWindowPos( 0, ptl.x, ptl.y, w, GetHeight(h), SWP_MOVE | SWP_SIZE))
          if( aRepaint)
             Update();
+
+#if DEBUG_sobotka
+   printf("+++++++++++Resized 0x%lx at %ld, %ld to %ld x %ld\n\n", mWnd, ptl.x, ptl.y, w, GetHeight(h));
+#endif
+
    }
    else
    {
@@ -1491,7 +1544,6 @@ nsresult nsWindow::Resize( PRInt32 aX, PRInt32 aY, PRInt32 w, PRInt32 h,
       mBounds.width = w;
       mBounds.height = h;
    }
-
    return NS_OK;
 }
 
@@ -2005,7 +2057,7 @@ nsresult nsWindow::GetWindowText( nsString &aStr, PRUint32 *rc)
       int length = WinQueryWindowTextLength( mWnd);
       char *tmp = new char [ length + 1 ];
       WinQueryWindowText( mWnd, length + 1, tmp);
-      aStr = tmp;
+      aStr.AssignWithConversion( tmp);
       delete [] tmp;
    }
    return NS_OK;
@@ -2218,19 +2270,42 @@ nsresult nsWindow::CallMethod(MethodInfo *info)
 
    switch( info->methodId)
    {
+
       case nsWindow::W_CREATE:
-         NS_ASSERTION(info->nArgs == 7, "Bad args to Create");
+  	 NS_ASSERTION(info->nArgs == 7, "Bad args to Create");
          DoCreate( (HWND)               info->args[0],
-                   (nsWindow*)          info->args[1],
-                   (const nsRect&)*(nsRect*) (info->args[2]),
-                   (EVENT_CALLBACK)    (info->args[3]), 
-                   (nsIDeviceContext*) (info->args[4]),
-                   (nsIAppShell*)      (info->args[5]),
-                   nsnull, /* toolkit */
-                   (nsWidgetInitData*) (info->args[6]));
+		   (nsWindow*)          info->args[1],
+		   (const nsRect&)*(nsRect*) (info->args[2]),
+		   (EVENT_CALLBACK)    (info->args[3]), 
+		   (nsIDeviceContext*) (info->args[4]),
+		   (nsIAppShell*)      (info->args[5]),
+		   nsnull, /* toolkit */
+		   (nsWidgetInitData*) (info->args[6]));
+	 rc = NS_OK;
+	 break;
+#if 0
+      case nsWindow::W_CREATE:
+         Create((nsIWidget*)(info->args[0]), 
+		(nsRect&)*(nsRect*)(info->args[1]), 
+		(EVENT_CALLBACK)(info->args[2]), 
+		(nsIDeviceContext*)(info->args[3]),
+		(nsIAppShell *)(info->args[4]),
+		(nsIToolkit*)(info->args[5]),
+		(nsWidgetInitData*)(info->args[6]));
          rc = NS_OK;
          break;
 
+      case nsWindow::W_CREATE_NATIVE:
+	 Create((nsNativeWidget)(info->args[0]), 
+		(nsRect&)*(nsRect*)(info->args[1]), 
+		(EVENT_CALLBACK)(info->args[2]), 
+		(nsIDeviceContext*)(info->args[3]),
+		(nsIAppShell *)(info->args[4]),
+		(nsIToolkit*)(info->args[5]),
+		(nsWidgetInitData*)(info->args[6]));
+         rc = NS_OK;
+         break;
+#endif
       case nsWindow::W_DESTROY:
          NS_ASSERTION(info->nArgs == 0, "Bad args to Destroy");
          Destroy();
@@ -2345,7 +2420,6 @@ PRUint32 WMChar2KeyCode( MPARAM mp1, MPARAM mp2)
 }
 
 
-// XXXX STUB FIX Find out what this is supposed to do
 NS_IMETHODIMP
 nsWindow::CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent)
 {

@@ -15,7 +15,7 @@
  * <john_fairhurst@iname.com>.  Portions created by John Fairhurst are
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s): Henry Sobotka <sobotka@axess.com> 2OOO/O2 update
  *
  */
 
@@ -55,9 +55,13 @@ nsDeviceContextOS2::nsDeviceContextOS2() : DeviceContextImpl()
    mPixelsToTwips = 0;
    mTwipsToPixels = 0;
    mPixelScale = 1.0f;
-   mWidth = 0;
-   mHeight = 0;
-   mDC = 0;
+   mWidthFloat = 0.0f;
+   mHeightFloat = 0.0f;
+   mWidth = -1;
+   mHeight = -1;
+   mDC = nsnull;
+   mClientRectConverted = PR_FALSE;
+   mSpec = nsnull;
    mPrintState = nsPrintState_ePreBeginDoc;
 
    // Init module if necessary (XXX find a better way of doing this!)
@@ -76,6 +80,8 @@ nsDeviceContextOS2::~nsDeviceContextOS2()
       GpiDestroyPS( mPS);
       PrnCloseDC( mDC);
    }
+
+   NS_IF_RELEASE(mSpec);
 }
 
 nsresult nsDeviceContextOS2::Init( nsNativeWidget aWidget)
@@ -118,8 +124,6 @@ nsresult nsDeviceContextOS2::Init( nsNativeDeviceContext aContext,
                       PU_PELS | GPIT_MICRO | GPIA_ASSOC);
  
    CommonInit( mDC);
-   // yech: we can't call nsDeviceContextImpl::Init() 'cos no widget.
-   DeviceContextImpl::CommonInit(); 
  
    GetTwipsToDevUnits( newscale);
    aOrigContext->GetTwipsToDevUnits( origscale);
@@ -148,6 +152,7 @@ nsresult nsDeviceContextOS2::Init( nsNativeDeviceContext aContext,
    return NS_OK;
 }
 
+// XXXX Reduce to one call to DevQueryCaps???
 void nsDeviceContextOS2::CommonInit( HDC aDC)
 {
    // Record palette-potential of device even if it is >8bpp
@@ -170,6 +175,22 @@ void nsDeviceContextOS2::CommonInit( HDC aDC)
 
    DevQueryCaps( aDC, CAPS_COLOR_BITCOUNT, 1, &lCap);
    mDepth = lCap;
+
+   DevQueryCaps( aDC, CAPS_HORIZONTAL_RESOLUTION, 1, &lCap);
+   mClientRect.width = lCap;
+   mWidthFloat = (float)lCap;
+   DevQueryCaps( aDC, CAPS_VERTICAL_RESOLUTION, 1, &lCap);
+   mClientRect.height = lCap;
+   mHeightFloat = (float)lCap;
+
+   DevQueryCaps( aDC, CAPS_TECHNOLOGY, 1, &lCap);
+   if (lCap & CAPS_TECH_RASTER_DISPLAY) {
+     mClientRect.x = mClientRect.y = 0;
+     mClientRect.width = WinQuerySysValue(HWND_DESKTOP, SV_CXFULLSCREEN);
+     mClientRect.height = WinQuerySysValue(HWND_DESKTOP, SV_CYFULLSCREEN);
+   }
+
+   DeviceContextImpl::CommonInit();
 }
 
 // Creation of other gfx objects malarky -------------------------------------
@@ -194,6 +215,7 @@ nsresult nsDeviceContextOS2::GetDeviceContextFor( nsIDeviceContextSpec *aDevice,
                                                   nsIDeviceContext *&aContext)
 {
    // Prolly want to clean this up xpCom-wise...
+
    nsDeviceContextOS2 *newCX = new nsDeviceContextOS2;
    nsDeviceContextSpecOS2 *spec = (nsDeviceContextSpecOS2*) aDevice;
 
@@ -315,7 +337,7 @@ static void FindSystemFont( nsFont *aFont, const char *aIniKey,
       // XXX through the rigamarole of working out precisely what's going
       // XXX on.  Just ensure that the right thing happens when this font
       // XXX gets passed to nsFontMetricsOS2 or nsWindow.
-      aFont->name = facename;
+      aFont->name.AssignWithConversion(facename);
       aFont->style = NS_FONT_STYLE_NORMAL;
       aFont->variant = NS_FONT_VARIANT_NORMAL;
       aFont->weight = NS_FONT_WEIGHT_NORMAL;
@@ -453,17 +475,23 @@ nsresult nsDeviceContextOS2::GetSystemAttribute( nsSystemAttrID anID,
 }
 
 //
-// (XXX) the screen object thinks these are in pels, duh.
+// (XXX) the screen object thinks these are in pels, duh. (jmf)
 //
 nsresult nsDeviceContextOS2::GetDeviceSurfaceDimensions( PRInt32 &aWidth, PRInt32 &aHeight)
 {
-   aWidth = NSToIntRound( mWidth * mDevUnitsToAppUnits);
-   aHeight = NSToIntRound( mHeight * mDevUnitsToAppUnits);
+   if (mWidth == -1)
+     mWidth = NSToIntRound(mWidthFloat * mDevUnitsToAppUnits);
+
+   if (mHeight == -1)
+     mHeight = NSToIntRound(mHeightFloat * mDevUnitsToAppUnits);
+
+   aWidth = mWidth;
+   aHeight = mHeight;
 
    return NS_OK;
 }
 
-nsresult nsDeviceContextOS2::GetClientRect(nsRect &aRect)
+NS_IMETHODIMP nsDeviceContextOS2::GetRect(nsRect &aRect)
 {
   PRInt32 width, height;
   nsresult rv;
@@ -473,6 +501,20 @@ nsresult nsDeviceContextOS2::GetClientRect(nsRect &aRect)
   aRect.width = width;
   aRect.height = height;
   return rv;
+}
+
+nsresult nsDeviceContextOS2::GetClientRect(nsRect &aRect)
+{
+  if (!mClientRectConverted) {
+    mClientRect.x = NSToIntRound(mClientRect.x * mDevUnitsToAppUnits);
+    mClientRect.y = NSToIntRound(mClientRect.y * mDevUnitsToAppUnits);
+    mClientRect.width = NSToIntRound(mClientRect.width * mDevUnitsToAppUnits);
+    mClientRect.height = NSToIntRound(mClientRect.height * mDevUnitsToAppUnits);
+    mClientRectConverted = PR_TRUE;
+  }
+
+  aRect = mClientRect;
+  return NS_OK;
 }
 
 nsresult nsDeviceContextOS2::GetDepth( PRUint32& aDepth)
@@ -513,6 +555,7 @@ nsresult nsDeviceContextOS2::CheckFontExistence( const nsString &aFontName)
    return lFonts > 0 ? NS_OK : NS_ERROR_FAILURE;
 }
 
+
 // Font setup - defaults aren't terribly helpful; this may be no better!
 nsresult nsDeviceContextOS2::CreateFontAliasTable()
 {
@@ -522,15 +565,30 @@ nsresult nsDeviceContextOS2::CreateFontAliasTable()
    {
       mFontAliasTable = new nsHashtable;
 
-      AliasFont( "Times", "Tms Rmn", "Times New Roman", PR_FALSE);
-      AliasFont( "Times Roman", "Tms Rmn", "Times New Roman", PR_FALSE);
-      AliasFont( "Arial", "Helv", "Helvetica", PR_FALSE);
-      AliasFont( "Helvetica", "Helv", "Arial", PR_FALSE);
-      AliasFont( "Courier", "Courier New", "", PR_FALSE); // why does base force this alias?
-      AliasFont( "Courier New", "Courier", "", PR_FALSE);
-      AliasFont( "Sans", "Helv", "Arial", PR_FALSE);
+      nsAutoString  times;              times.AssignWithConversion("Times");
+      nsAutoString  timesNewRoman;      timesNewRoman.AssignWithConversion("Times New Roman");
+      nsAutoString  timesRoman;         timesRoman.AssignWithConversion("Tms Rmn");
+      nsAutoString  arial;              arial.AssignWithConversion("Arial");
+      nsAutoString  helv;               helv.AssignWithConversion("Helv");
+      nsAutoString  helvetica;          helvetica.AssignWithConversion("Helvetica");
+      nsAutoString  courier;            courier.AssignWithConversion("Courier");
+      nsAutoString  courierNew;         courierNew.AssignWithConversion("Courier New");
+      nsAutoString  sans;               sans.AssignWithConversion("Sans");
+      nsAutoString  unicode;            unicode.AssignWithConversion("Unicode");
+      nsAutoString  timesNewRomanMT30;  timesNewRomanMT30.AssignWithConversion("Times New Roman MT 30");
+      nsAutoString  nullStr;
+
+      AliasFont(times, timesNewRoman, timesRoman, PR_FALSE);
+      AliasFont(timesRoman, timesNewRoman, times, PR_FALSE);
+      AliasFont(timesNewRoman, timesRoman, times, PR_FALSE);
+      AliasFont(arial, helv, helvetica, PR_FALSE);
+      AliasFont(helvetica, helv, arial, PR_FALSE);
+      AliasFont(courier, courierNew, nullStr, PR_TRUE);
+      AliasFont(courierNew, courier, nullStr, PR_FALSE);
+      AliasFont(sans, helv, arial, PR_FALSE);
+
       // Is this right?
-      AliasFont( "Unicode", "Times New Roman MT 30", "", PR_FALSE);
+      AliasFont(unicode, timesNewRomanMT30, nullStr, PR_FALSE);
    }
    return result;
 }

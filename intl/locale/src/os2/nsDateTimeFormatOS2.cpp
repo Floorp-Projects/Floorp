@@ -166,7 +166,7 @@ nsresult nsDateTimeFormatOS2::FormatTMTime( nsILocale     *aLocale,
       }
       else
       {
-         aStringOut.SetString( (const PRUnichar*) buffer);
+         aStringOut.Assign( (const PRUnichar*) buffer);
          rc = NS_OK;
       }
    }

@@ -67,7 +67,7 @@ nsresult nsTextArea::GetText( nsString &aTextBuffer, PRUint32 aBufferSize, PRUin
       mOS2Toolkit->SendMsg( mWnd, MLM_EXPORT, MPFROMP(&start), MPFROMP(&length));
    
       aTextBuffer.SetLength(0);
-      aTextBuffer.Append(buf);
+      aTextBuffer.AppendWithConversion(buf);
    
       NS_FREE_CHAR_BUF(buf)
    
@@ -111,7 +111,7 @@ nsresult nsTextArea::InsertText( const nsString &aText, PRUint32 aStartPos, PRUi
    nsString currentText;
    GetText( currentText, 256, dummy);
    nsString newText( aText);
-   currentText.Insert( newText, aStartPos, aText.Length());
+   currentText.Insert( newText, aStartPos);
    SetText( currentText, dummy);
    len = aText.Length();
    return NS_OK;

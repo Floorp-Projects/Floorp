@@ -69,43 +69,33 @@ nsContextMenu::~nsContextMenu()
 {
 }
 
-// Well, not real sure what kind of window we've got here.
-nsresult nsContextMenu::Create( nsISupports *aParent,
-                                const nsString &str1, const nsString &str2)
+NS_METHOD nsContextMenu::Create(nsISupports *aParent, const nsString& anAlignment,
+                                const nsString& anAnchorAlignment)
 {
-   nsresult rc = NS_ERROR_FAILURE;
-   nsCOMPtr<nsIWidget> pWidget = do_QueryInterface(aParent);
+  if(aParent)
+  {
+      nsIWidget * parent = nsnull;
+      aParent->QueryInterface(nsCOMTypeInfo<nsIWidget>::GetIID(), (void**) &parent); // This does the addref
+      if(parent)
+	  {
+        mParentWindow = parent;
+	  }
+  }
 
-   if( pWidget)
-   {
-      HWND wnd = (HWND) pWidget->GetNativeData( NS_NATIVE_WIDGET);
-      mOwner = NS_HWNDToWindow(wnd);
-   
-      if( !mOwner)
-         rc = NS_ERROR_NULL_POINTER;
-      else
-      {
-         nsToolkit *pToolkit = (nsToolkit*) pWidget->GetToolkit();
-      
-         nsMenuBase::Create( wnd, pToolkit);
-         NS_RELEASE(pToolkit);
-   
-         rc = NS_OK;
-      }
-   }
-
-   mAlignment = str1;
-   mAnchor = str2;
-
-   return rc;
+  mAlignment = anAlignment;
+  mAnchorAlignment = anAnchorAlignment;
+  //  mMenu = CreatePopupMenu();
+  return NS_OK;
 }
 
 nsresult nsContextMenu::GetParent( nsISupports *&aParent)
 {
-   NS_IF_RELEASE(aParent);
-   aParent = mOwner;
-   NS_IF_ADDREF(mOwner);
-   return NS_OK;
+  aParent = nsnull;
+  if (nsnull != mParentWindow) {
+    return mParentWindow->QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(),(void**)&aParent);
+  } 
+
+  return NS_ERROR_FAILURE;
 }
 
 nsresult nsContextMenu::SetLocation( PRInt32 aX, PRInt32 aY)
@@ -136,11 +126,11 @@ nsEventStatus nsContextMenu::MenuSelected( const nsMenuEvent &aMenuEvent)
    SIZEL szMenu;
    CalcMenuSize( mWnd, &szMenu);
 
-   if( mAlignment == "topleft") // most common case
+   if( mAlignment.EqualsWithConversion("topleft")) // most common case
       ptl.y -= szMenu.cy;
-   else if( mAlignment == "bottomright")
+   else if( mAlignment.EqualsWithConversion("bottomright"))
       ptl.x -= szMenu.cx;
-   else if( mAlignment == "topright")
+   else if( mAlignment.EqualsWithConversion("topright"))
    {
       ptl.x -= szMenu.cx;
       ptl.y -= szMenu.cy;

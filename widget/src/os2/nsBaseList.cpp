@@ -108,7 +108,7 @@ PRBool nsBaseList::GetItemAt( nsString& anItem, PRInt32 aPosition)
    
       // now get text & fill in string
       SendMsg( LM_QUERYITEMTEXT, MPFROM2SHORT(aPosition,len+1), MPFROMP(buf));
-      anItem.SetString(buf);
+      anItem.AssignWithConversion(buf);
    
       NS_FREE_CHAR_BUF(buf);
    }

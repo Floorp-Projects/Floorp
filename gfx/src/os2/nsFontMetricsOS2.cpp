@@ -84,16 +84,22 @@ static void MapGenericFamilyToFont( const nsString &aGenericFamily,
    // the CSS generic names (conversions from Nav for now)
    // XXX this  need to check availability with the dc
    PRBool aliased;
+   nsAutoString  timesRoman;         timesRoman.AssignWithConversion("Tms Rmn");
+   nsAutoString  helv;               helv.AssignWithConversion("Helv");
+   nsAutoString  script;             script.AssignWithConversion("Script");
+   nsAutoString  arial;              arial.AssignWithConversion("Arial");
+   nsAutoString  courier;            courier.AssignWithConversion("Courier");
+
    if( aGenericFamily.EqualsIgnoreCase( "serif"))
-      aDC->GetLocalFontName( nsString( "Tms Rmn"), aFontFace, aliased);
+      aDC->GetLocalFontName( timesRoman, aFontFace, aliased);
    else if( aGenericFamily.EqualsIgnoreCase( "sans-serif"))
-      aDC->GetLocalFontName( nsString( "Helv"), aFontFace, aliased);
+      aDC->GetLocalFontName( helv, aFontFace, aliased);
    else if( aGenericFamily.EqualsIgnoreCase( "Helv")) // !!
-      aDC->GetLocalFontName( nsString( "Script"), aFontFace, aliased);
+      aDC->GetLocalFontName( script, aFontFace, aliased);
    else if( aGenericFamily.EqualsIgnoreCase( "fantasy")) // !!
-      aDC->GetLocalFontName(nsString( "Arial"), aFontFace, aliased);
+      aDC->GetLocalFontName( arial, aFontFace, aliased);
    else if( aGenericFamily.EqualsIgnoreCase( "monospace"))
-      aDC->GetLocalFontName( nsString( "Courier"), aFontFace, aliased);
+      aDC->GetLocalFontName( courier, aFontFace, aliased);
    else
       aFontFace.Truncate();
 }
@@ -441,5 +447,40 @@ NS_IMETHODIMP nsFontMetricsOS2::GetLangGroup(nsIAtom** aLangGroup)
   *aLangGroup = mLangGroup;
   NS_IF_ADDREF(*aLangGroup);
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFontMetricsOS2::GetNormalLineHeight(nscoord &aHeight)
+{
+  aHeight = mEmHeight + mLeading;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFontMetricsOS2::GetEmHeight(nscoord &aHeight)
+{
+  aHeight = mEmHeight;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFontMetricsOS2::GetEmAscent(nscoord &aAscent)
+{
+  aAscent = mEmAscent;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFontMetricsOS2::GetEmDescent(nscoord &aDescent)
+{
+  aDescent = mEmDescent;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFontMetricsOS2::GetMaxHeight(nscoord &aHeight)
+{
+  aHeight = mMaxHeight;
   return NS_OK;
 }

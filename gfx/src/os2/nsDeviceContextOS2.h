@@ -76,10 +76,12 @@ public:
 
    NS_IMETHOD GetDeviceSurfaceDimensions( PRInt32 &aWidth, PRInt32 &aHeight);
 
+   NS_IMETHOD GetRect(nsRect &aRect);
+
    NS_IMETHOD GetClientRect(nsRect &aRect);
 
-    NS_IMETHOD GetDeviceContextFor( nsIDeviceContextSpec *aDevice,
-                                                        nsIDeviceContext *&aContext);
+   NS_IMETHOD GetDeviceContextFor( nsIDeviceContextSpec *aDevice,
+                                   nsIDeviceContext *&aContext);
 
    NS_IMETHOD BeginDocument(void);
    NS_IMETHOD EndDocument(void);
@@ -111,15 +113,21 @@ public:
 
    virtual nsresult CreateFontAliasTable();
 
-   nsDrawingSurfaceOS2 *mSurface;
-   PRUint32             mDepth;  // bit depth of device
-   nsPaletteInfo        mPaletteInfo;
-   float                mPixelScale;
-   nsIPaletteOS2       *mPalette;
-   PRInt32              mWidth;
-   PRInt32              mHeight;
-   HDC                  mDC;         // PrintDC.  Owned by libprint.
-   HPS                  mPS;         // PrintPS.
+   nsDrawingSurfaceOS2  *mSurface;
+   PRUint32              mDepth;  // bit depth of device
+   nsPaletteInfo         mPaletteInfo;
+   float                 mPixelScale;
+   nsIPaletteOS2        *mPalette;
+   PRInt32               mWidth;
+   PRInt32               mHeight;
+   float                 mWidthFloat;
+   float                 mHeightFloat;
+   nsRect                mClientRect;
+   PRBool                mClientRectConverted;
+   nsIDeviceContextSpec *mSpec;
+   HDC                   mDC;         // PrintDC.  Owned by libprint.
+   HPS                   mPS;         // PrintPS.
+
    enum nsPrintState
    {
       nsPrintState_ePreBeginDoc,

@@ -283,7 +283,7 @@ nsLocalFile::InitWithPath(const char *filePath)
     if(temp[len] == '\\')
         temp[len] = '\0';
 
-    mPath.SetString(nativeFilePath);
+    mPath.Assign(nativeFilePath);
     nsAllocator::Free( nativeFilePath );
     return NS_OK;
 }
@@ -429,6 +429,20 @@ nsLocalFile::Append(const char *node)
     nsAllocator::Free(newPath);
     return NS_OK;
 #endif
+}
+
+NS_IMETHODIMP  
+nsLocalFile::AppendRelativePath(const char *node)
+{
+    // Cannot start with a / or have .. or have / anywhere
+    if (!node || (*node == '/') || (strstr(node, "..") != nsnull) ||
+        (strchr(node, '/') != nsnull))
+    {
+        return NS_ERROR_FILE_UNRECOGNIZED_PATH;
+    }
+    mPath.Append("\\");
+    mPath.Append(node);
+    return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -55,15 +55,16 @@ nsresult nsEntryField::SetText( const nsString &aText, PRUint32 &len)
 }
 
 nsresult nsEntryField::InsertText( const nsString &aText, PRUint32 aStartPos,
-                                       PRUint32 aEndPos, PRUint32 &rc)
+                                       PRUint32 aEndPos, PRUint32& aActualSize)
 {
-   PRUint32 dummy;
+   PRUint32 actualSize;
    nsString currentText;
-   GetText( currentText, 256, dummy);
+   GetText( currentText, 256, actualSize);
    nsString newText( aText);
-   currentText.Insert( newText, aStartPos, aText.Length());
-   SetText( currentText, dummy);
-   rc = aText.Length();
+   currentText.Insert( newText, aStartPos);
+   SetText( currentText, actualSize);
+   aActualSize = aText.Length();
+   mText = currentText;
    return NS_OK;
 }
 
