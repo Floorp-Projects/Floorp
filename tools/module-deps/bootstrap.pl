@@ -15,13 +15,15 @@
 #  * Based on this resulting tree, allmakefiles.sh is generated
 #    on the fly with a module name "bootstrap".  modules.mk file
 #    generated with DIRS in leaf-first order.
-#  * A build is attemped with this configure option:
-#      --enable-standalone-modules=bootstrap
+#  * A build is attempted with this configure option:
+#      --enable-standalone-modules=bootstrap --disable-ldap --disable-tests
 #
-#  Bug: currently, the build descends into the nspr configure
-#  and never comes back, bailing with the error
-#  "configure: warning: Recreating autoconf.mk with updated nspr-config output"
+#  Example usage, to build xpcom:
+#  
+#    cvs co mozilla/tools/module-deps/bootstrap.pl
+#    mozilla/tools/module-deps/bootstrap.pl --module=xpcom
 #
+
 
 use strict;
 use File::Find();
@@ -303,14 +305,6 @@ sub FindMakefiles {
 
   # Add in our hack
   print MODULESMK "BUILD_MODULE_DIRS := config build include $dirs_string_no_mozilla\n";
-
-  # Recursively decend the tree looking for Makefiles
-  #File::Find::find(\&FindMakefiles, @dirs);
-  
-  # Write Makefiles out to allmakefiles.sh.
-  #foreach (@foundMakefiles) {
-  #  print MODULESMK "$_\n";
-  #}
 
   close MODULESMK;
 
