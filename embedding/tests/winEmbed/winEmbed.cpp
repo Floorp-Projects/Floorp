@@ -22,6 +22,9 @@
  *  Adam Lock <adamlock@netscape.com>
  */
 
+
+#include "WindowCreator.h" // won't compile if placed after stdafx.h (!?)
+
 #include <stdio.h>
 #include "stdafx.h"
 
@@ -35,6 +38,7 @@
 #include "nsIClipboardCommands.h"
 #include "nsXPIDLString.h"
 #include "nsIWebBrowserPersist.h"
+#include "nsIWindowWatcher.h"
 #include "nsIProfile.h"
 
 // Local header files
@@ -52,6 +56,7 @@ static LRESULT CALLBACK BrowserWndProc(HWND, UINT, WPARAM, LPARAM);
 static BOOL    CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static LRESULT CALLBACK GetURIDlgProc(HWND, UINT, WPARAM, LPARAM);
 
+static nsresult InitializeWindowCreator();
 static nsresult OpenWebPage(const char * url);
 static nsresult ResizeEmbedding(nsIWebBrowserChrome* chrome);
 
@@ -88,6 +93,8 @@ int main(int argc, char *argv[])
 
     // Init Embedding APIs
     NS_InitEmbedding(nsnull, nsnull);
+
+    InitializeWindowCreator();
 
     // Open the initial browser window
     OpenWebPage(szFirstURL);
@@ -131,10 +138,36 @@ end_msg_loop:
 	return msg.wParam;
 }
 
+/* InitializeWindowCreator creates and hands off an object with a callback
+   to a window creation function. This will be used by Gecko C++ code
+   (never JS) to create new windows when no previous window is handy
+   to begin with. This is done in a few exceptional cases, like PSM code.
+   Failure to set this callback will only disable the ability to create
+   new windows under these circumstances. */
+nsresult InitializeWindowCreator()
+{
+  // create an nsWindowCreator and give it to the WindowWatcher service
+  WindowCreator *creatorCallback = new WindowCreator();
+  if (creatorCallback) {
+    nsCOMPtr<nsIWindowCreator> windowCreator(dont_QueryInterface(NS_STATIC_CAST(nsIWindowCreator *, creatorCallback)));
+    if (windowCreator) {
+      nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+      if (wwatch) {
+        wwatch->SetWindowCreator(windowCreator);
+        return NS_OK;
+      }
+    }
+  }
+  return NS_ERROR_FAILURE;
+}
 
 class Win32ChromeUI : public WebBrowserChromeUI
 {
-    NS_DECL_WEBBROWSERCHROMEUI;
+public:
+  NS_DECL_WEBBROWSERCHROMEUI;
+
+protected:
+  void HandChromeOwnershipToNativeWindow(nsIWebBrowserChrome *aChrome);
 };
 
 
@@ -147,11 +180,11 @@ class Win32ChromeUI : public WebBrowserChromeUI
 nsresult OpenWebPage(const char *url)
 {
 
-  nsresult         rv;
-  WebBrowserChrome *chrome;
+  nsresult             rv;
+  nsCOMPtr<nsIWebBrowserChrome> chrome;
 
   rv = CreateBrowserWindow(nsIWebBrowserChrome::CHROME_ALL, nsnull,
-         &chrome);
+                           getter_AddRefs(chrome));
 
   if (NS_SUCCEEDED(rv)) {
     // Start loading a page
@@ -164,20 +197,21 @@ nsresult OpenWebPage(const char *url)
 }   
 
 
-nsresult CreateBrowserWindow(PRInt32 aChromeFlags,
-           WebBrowserChrome *aParent, WebBrowserChrome **aNewWindow)
+nsresult CreateBrowserWindow(PRUint32 aChromeFlags,
+           nsIWebBrowserChrome *aParent, nsIWebBrowserChrome **aNewWindow)
 {
   WebBrowserChrome * chrome = new WebBrowserChrome();
   if (!chrome)
     return NS_ERROR_FAILURE;
-  NS_ADDREF(chrome); // native window will hold the addref.
+
+  CallQueryInterface(NS_STATIC_CAST(nsIWebBrowserChrome*, chrome), aNewWindow);
 
   chrome->SetChromeFlags(aChromeFlags);
 
   // Note, the chrome owns the UI object once set & will delete it
   chrome->SetUI(new Win32ChromeUI);
-  
-  // Create the browser window
+
+  // Insert the browser
   nsCOMPtr<nsIWebBrowser> newBrowser;
   chrome->CreateBrowser(-1, -1, -1, -1, getter_AddRefs(newBrowser));
   if (!newBrowser)
@@ -185,7 +219,6 @@ nsresult CreateBrowserWindow(PRInt32 aChromeFlags,
 
   // Place it where we want it.
   ResizeEmbedding(NS_STATIC_CAST(nsIWebBrowserChrome*, chrome));
-  *aNewWindow = chrome;
   return NS_OK;
 }
 
@@ -718,7 +751,7 @@ LRESULT CALLBACK BrowserWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 	HDC hdc;
 	TCHAR szHello[MAX_LOADSTRING];
 	LoadString(ghInstanceResources, IDS_HELLO, szHello, MAX_LOADSTRING);
-    nsIWebBrowserChrome *chrome = (nsIWebBrowserChrome *) GetWindowLong(hWnd, GWL_USERDATA);
+  nsIWebBrowserChrome *chrome = (nsIWebBrowserChrome *) GetWindowLong(hWnd, GWL_USERDATA);
 
 	switch (message) 
 	{
@@ -753,6 +786,7 @@ LRESULT CALLBACK BrowserWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 		break;
 
 	case WM_DESTROY:
+        // release ownership taken by HandChromeOwnershipToNativeWindow
         NS_RELEASE(chrome);
 		break;
 
@@ -978,6 +1012,7 @@ nativeWindow Win32ChromeUI::CreateNativeWindow(nsIWebBrowserChrome* chrome)
   HWND hwndBrowser = GetDlgItem(hwndDialog, IDC_BROWSER);
   SetWindowLong(hwndBrowser, GWL_USERDATA, (LONG)chrome);  // save the browser LONG_PTR.
   SetWindowLong(hwndBrowser, GWL_STYLE, GetWindowLong(hwndBrowser, GWL_STYLE) | WS_CLIPCHILDREN);
+  HandChromeOwnershipToNativeWindow(chrome);
   return hwndBrowser;
 }
 
@@ -1083,4 +1118,11 @@ void Win32ChromeUI::GetResourceStringById(PRInt32 aID, char ** aReturn)
     PL_strncpy(*aReturn, (char *) resBuf, resLen);
   }
   return;
+}
+
+// this method is a kind of documentation that ownership of
+// the chrome object is given to the native window
+void Win32ChromeUI::HandChromeOwnershipToNativeWindow(nsIWebBrowserChrome *aChrome)
+{
+  NS_IF_ADDREF(aChrome);
 }

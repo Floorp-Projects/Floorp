@@ -22,9 +22,9 @@
 
 #include "prtypes.h"
 
-class WebBrowserChrome;
+class nsIWebBrowserChrome;
 
 // a little ooky, but new windows gotta come from somewhere
-nsresult CreateBrowserWindow(PRInt32 aChromeFlags,
-           WebBrowserChrome *aParent, WebBrowserChrome **aNewWindow);
+nsresult CreateBrowserWindow(PRUint32 aChromeFlags,
+           nsIWebBrowserChrome *aParent, nsIWebBrowserChrome **aNewWindow);
 
