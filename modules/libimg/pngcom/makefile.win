@@ -87,9 +87,9 @@ LINCS=-I$(DEPTH)/dist/public/xpcom -I. -I$(DEPTH)/dist/public/raptor \
       -I$(DEPTH)/dist/public/png -I$(DEPTH)/dist/public/zlib -I$(DEPTH)/dist/public/img
 
 REQUIRES=nspr xpcom util raptor png zlib
-CPPSRCS= dllcompat.cpp nsPNGDecoder.cpp nsPNGCallback.cpp ipng.cpp png_png.cpp 
+CPPSRCS= dllcompat.cpp nsPNGDecoder.cpp nsPNGCallback.cpp ipng.cpp
 CPP_OBJS=.\$(OBJDIR)\nsPNGDecoder.obj  .\$(OBJDIR)\nsPNGCallback.obj .\$(OBJDIR)\dllcompat.obj \
-          .\$(OBJDIR)\ipng.obj .\$(OBJDIR)\png_png.obj 
+          .\$(OBJDIR)\ipng.obj
 
 
 include <$(DEPTH)\config\rules.mak> 

@@ -33,7 +33,6 @@ EXTRA_LIBS =
 
 CPPSRCS		= \
 	ipng.cpp \
-	png_png.cpp \
 	nsPNGDecoder.cpp \
 	nsPNGCallback.cpp \
 	dllcompat.cpp \
