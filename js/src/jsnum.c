@@ -235,6 +235,34 @@ num_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 }
 #endif
 
+/* The buf must be big enough for MIN_INT to fit including '-' and '\0'. */
+static char *
+IntToString(jsint i, char *buf, size_t bufSize)
+{
+    char *cp;
+    jsuint u;
+    
+    u = (i < 0) ? -i : i;
+
+    cp = buf + bufSize; /* one past last buffer cell */
+    *--cp = '\0';       /* null terminate the string to be */
+    
+    /*
+     * Build the string from behind. We use multiply and subtraction
+     * instead of modulus because that's much faster.
+     */
+    do {
+        jsuint newu = u / 10;
+        *--cp = (char)(u - newu * 10) + '0';
+        u = newu;
+    } while (u != 0);
+    
+    if (i < 0)
+        *--cp = '-';
+
+    return cp;
+}
+
 static JSBool
 num_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
@@ -254,9 +282,9 @@ num_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	    return JS_FALSE;
 	if (base < 2 || base > 36) {
 	    char numBuf[12];
-	    JS_snprintf(numBuf, sizeof numBuf, "%ld", (long) base);
+	    char *numStr = IntToString(base, numBuf, sizeof numBuf);
 	    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_RADIX,
-	    			 numBuf);
+	    			 numStr);
 	    return JS_FALSE;
 	}
     }
@@ -583,10 +611,10 @@ js_NumberToString(JSContext *cx, jsdouble d)
 {
     jsint i;
     char buf[DTOSTR_STANDARD_BUFFER_SIZE];
-    char *numStr = buf;
+    char *numStr;
 
     if (JSDOUBLE_IS_INT(d, i))
-	JS_snprintf(buf, sizeof buf, "%ld", (long)i);
+	numStr = IntToString(i, buf, sizeof buf);
     else {
 	numStr = JS_dtostr(buf, sizeof buf, DTOSTR_STANDARD, 0, d);
 	if (!numStr) {
