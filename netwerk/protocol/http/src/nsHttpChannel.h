@@ -26,6 +26,7 @@
 
 #include "nsHttpRequestHead.h"
 #include "nsIHttpChannel.h"
+#include "nsIHttpHeaderVisitor.h"
 #include "nsIHttpEventSink.h"
 #include "nsIStreamListener.h"
 #include "nsIIOService.h"

@@ -57,6 +57,7 @@
 #include "nsIJVMManager.h"
 #include "nsIPluginStreamListener.h"
 #include "nsIHTTPHeaderListener.h" 
+#include "nsIHttpHeaderVisitor.h" 
 #include "nsIObserverService.h"
 #include "nsIHttpProtocolHandler.h"
 #include "nsIHttpChannel.h"

@@ -62,6 +62,7 @@
 #include "nsIResumableEntityID.h"
 #include "nsIURL.h"
 #include "nsIHttpChannel.h"
+#include "nsIHttpHeaderVisitor.h"
 #include "nsIHttpEventSink.h" 
 #include "nsIInterfaceRequestor.h" 
 #include "nsIInterfaceRequestorUtils.h"

@@ -1,4 +1,5 @@
 nsIHttpChannel.idl
+nsIHttpHeaderVisitor.idl
 nsIHttpProtocolHandler.idl
 nsIHttpAuthenticator.idl
 nsIHttpNotify.idl

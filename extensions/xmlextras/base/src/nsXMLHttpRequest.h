@@ -61,7 +61,7 @@
 #include "nsIScriptContext.h"
 #include "nsIHttpEventSink.h"
 #include "nsIInterfaceRequestor.h"
-
+#include "nsIHttpHeaderVisitor.h"
 class nsILoadGroup;
 
 enum nsXMLHttpRequestState {
