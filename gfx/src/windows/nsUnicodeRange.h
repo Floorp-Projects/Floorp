@@ -48,15 +48,17 @@ const PRUint8   kRangeTurkish  =    2;
 const PRUint8   kRangeHebrew   =    3;
 const PRUint8   kRangeArabic   =    4;
 const PRUint8   kRangeBaltic   =    5;
-const PRUint8   kRangeThaiLao  =    6;
+const PRUint8   kRangeThai     =    6;
 const PRUint8   kRangeKorean   =    7;
 const PRUint8   kRangeJapanese =    8;
 const PRUint8   kRangeSChinese =    9;
 const PRUint8   kRangeTChinese =   10;
+const PRUint8   kRangeDevanagari = 11;
+const PRUint8   kRangeTamil    =   12;
 
-const PRUint8   kRangeSpecificItemNum =11;  
+const PRUint8   kRangeSpecificItemNum = 13;
 
-//range/rangeSet grow to this place 8-29
+//range/rangeSet grow to this place 13-29
 
 const PRUint8   kRangeSetStart  =  30;    // range set definition starts from here
 const PRUint8   kRangeSetLatin  =  30;
@@ -68,32 +70,41 @@ const PRUint8   kRangeSurrogate            = 32;
 const PRUint8   kRangePrivate              = 33;
 const PRUint8   kRangeMisc                 = 34;
 const PRUint8   kRangeUnassigned           = 35;
-const PRUint8   kRangeSriacThaana          = 36;
-const PRUint8   kRangeDevanagariBengali    = 37;
-const PRUint8   kRangeGurmukhiGujarati     = 38;
-const PRUint8   kRangeOriyaTamil           = 39;
-const PRUint8   kRangeTeluguKannada        = 40;
-const PRUint8   kRangeMalayalamSinhala     = 41;
-const PRUint8   kRangeTibetan              = 42;
-const PRUint8   kRangeMyanmarGeorgian      = 43;
-const PRUint8   kRangeEthiopic             = 44;
-const PRUint8   kRangeEthiopicCherokee     = 45;
-const PRUint8   kRangeAboriginal           = 46;
-const PRUint8   kRangeAboriginalOghamRunic = 47;
-const PRUint8   kRangeKhmer                = 48;
-const PRUint8   kRangeMongolian            = 49;
-const PRUint8   kRangeMathOperators        = 50;
-const PRUint8   kRangeMiscTechical         = 51;
-const PRUint8   kRangeControlOpticalEnclose = 52;
-const PRUint8   kRangeBoxBlockGeometrics   = 53;
-const PRUint8   kRangeMiscSymbols          = 54;
-const PRUint8   kRangeDingbats             = 55;
-const PRUint8   kRangeBraillePattern       = 56;
-const PRUint8   kRangeYi                   = 57;
-const PRUint8   kRangeCombiningDiacriticalMarks = 58;
-const PRUint8   kRangeArmenian                = 59;
+const PRUint8   kRangeSyriac               = 36;
+const PRUint8   kRangeThaana               = 37;
+const PRUint8   kRangeBengali              = 38;
+const PRUint8   kRangeGurmukhi             = 39;
+const PRUint8   kRangeGujarati             = 40;
+const PRUint8   kRangeOriya                = 41;
+const PRUint8   kRangeTelugu               = 42;
+const PRUint8   kRangeKannada              = 43;
+const PRUint8   kRangeMalayalam            = 44;
+const PRUint8   kRangeSinhala              = 45;
+const PRUint8   kRangeLao                  = 46;
+const PRUint8   kRangeTibetan              = 47;
+const PRUint8   kRangeMyanmar              = 48;
+const PRUint8   kRangeGeorgian             = 49;
+const PRUint8   kRangeEthiopic             = 50;
+const PRUint8   kRangeCherokee             = 51;
+const PRUint8   kRangeAboriginal           = 52;
+const PRUint8   kRangeOghamRunic           = 53;
+const PRUint8   kRangeKhmer                = 54;
+const PRUint8   kRangeMongolian            = 55;
+const PRUint8   kRangeMathOperators        = 56;
+const PRUint8   kRangeMiscTechnical        = 57;
+const PRUint8   kRangeControlOpticalEnclose = 58;
+const PRUint8   kRangeBoxBlockGeometrics   = 59;
+const PRUint8   kRangeMiscSymbols          = 60;
+const PRUint8   kRangeDingbats             = 61;
+const PRUint8   kRangeBraillePattern       = 62;
+const PRUint8   kRangeYi                   = 63;
+const PRUint8   kRangeCombiningDiacriticalMarks = 64;
+const PRUint8   kRangeArmenian             = 65;
 
 const PRUint8   kRangeTableBase   = 128;    //values over 127 are reserved for internal use only
+const PRUint8   kRangeTertiaryTable  = 145; // leave room for 16 subtable 
+                                            // indices (kRangeTableBase + 1 ..
+                                            // kRangeTableBase + 16)
 
 
 
