@@ -1,0 +1,55 @@
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#ifdef DOM
+
+#ifndef LM_DOM_H
+#define LM_DOM_H
+
+#include "libmocha.h"
+#include "dom.h"
+#include "lo_ele.h"
+#include "pa_parse.h"
+
+typedef struct DOM_HTMLElementPrivate {
+    TagType 		tagtype;
+    LO_Element *	ele_start;
+    LO_Element *	ele_end;
+    DOM_AttributeList   attrs;
+} DOM_HTMLElementPrivate;
+
+#define ELEMENT_PRIV(e) ((DOM_HTMLElementPrivate *)(((DOM_Node *)(e))->data))
+
+DOM_Element *
+DOM_HTMLPopElementByType(TagType type, DOM_Element *node);
+
+JSBool
+DOM_HTMLPushElement(DOM_Element *element, DOM_Node *parent);
+
+JSBool
+lm_DOMInitNode(MochaDecoder *decoder);
+
+JSBool
+lm_DOMInitElement(MochaDecoder *decoder);
+
+JSBool
+lm_DOMInitAttribute(MochaDecoder *decoder);
+
+#endif /* DOM */
+
+#endif /* LM_DOM_H */

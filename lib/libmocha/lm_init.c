@@ -1184,6 +1184,11 @@ LM_PutMochaDecoder(MochaDecoder *decoder)
         CLEAR(decoder->rect_prototype);
         CLEAR(decoder->url_prototype);
 
+#ifdef DOM
+        CLEAR(decoder->span_prototype);
+        CLEAR(decoder->transclusion_prototype);
+#endif
+
         /* Clear window sub-object refs. */
         if (decoder->document)
             lm_CleanUpDocumentRoots(decoder, decoder->document);
@@ -1196,6 +1201,7 @@ LM_PutMochaDecoder(MochaDecoder *decoder)
         CLEAR(decoder->screen);
         CLEAR(decoder->hardware);
         CLEAR(decoder->pkcs11);
+
 
         /* Clear ad-hoc GC roots. */
         CLEAR(decoder->event_receiver);

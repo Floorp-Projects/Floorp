@@ -236,6 +236,8 @@ extern JSObject         *lm_GetSpanArray(MochaDecoder *decoder,
                                          JSObject *document);
 extern JSObject         *lm_GetTransclusionArray(MochaDecoder *decoder,
                                          JSObject *document);
+extern JSObject			*lm_DOMGetDocumentElement(MochaDecoder *decoder,
+                                                  JSObject *document);
 #endif
 extern JSObject         *lm_GetAppletArray(MochaDecoder *decoder,
                                            JSObject *document);
@@ -340,6 +342,7 @@ typedef struct JSDocument {
 #ifdef DOM
 	JSObject	        *spans;
 	JSObject	        *transclusions;
+    JSObject			*dom_documentElement;
 #endif
 } JSDocument;
 

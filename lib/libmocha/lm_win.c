@@ -3096,6 +3096,10 @@ lm_NewWindow(MWContext *context)
     HOLD(decoder->option_prototype);
     HOLD(decoder->rect_prototype);
     HOLD(decoder->url_prototype);
+#ifdef DOM
+    HOLD(decoder->span_prototype);
+    HOLD(decoder->transclusion_prototype);
+#endif
 
     /* Drop window sub-object refs. */
     HOLD(decoder->document);
@@ -3152,6 +3156,11 @@ lm_DestroyWindow(MochaDecoder *decoder)
     DROP(decoder->option_prototype);
     DROP(decoder->rect_prototype);
     DROP(decoder->url_prototype);
+#ifdef DOM
+    DROP(decoder->span_prototype);
+    DROP(decoder->transclusion_prototype);
+#endif
+
 
     /* Drop window sub-object refs. */
     DROP(decoder->document);
@@ -3277,8 +3286,10 @@ lm_DefineWindowProps(JSContext *cx, MochaDecoder *decoder)
            lm_InitImageClass(decoder) &&
            lm_InitAnchorClass(decoder) &&
 #ifdef DOM
-		   lm_InitSpanClass(decoder) &&
-		   lm_InitTransclusionClass(decoder) &&
+	   /* the order of lm_DOMInit* is significant -- be careful */
+           lm_DOMInit(decoder) &&
+           lm_InitSpanClass(decoder) &&
+           lm_InitTransclusionClass(decoder) &&
 #endif
            lm_InitInputClasses(decoder) &&
            lm_DefinePkcs11(decoder));
@@ -3370,6 +3381,11 @@ lm_FreeWindowContent(MochaDecoder *decoder, JSBool fromDiscard)
     CLEAR(decoder->screen);
     CLEAR(decoder->hardware);
     CLEAR(decoder->pkcs11);
+
+#ifdef DOM
+    CLEAR(decoder->span_prototype);
+    CLEAR(decoder->transclusion_prototype);
+#endif
 
     /* Drop ad-hoc GC roots, but not opener -- it survives unloads. */
     CLEAR(decoder->event_receiver);

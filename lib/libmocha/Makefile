@@ -23,7 +23,12 @@ MODULE		= mocha
 LIBRARY_NAME	= mocha
 
 REQUIRES	= lay parse img js style layer applet dbm nspr security \
-		  htmldlgs util jtools pref caps java libreg softupdt jsdebug netcache network httpurl plugin plugimpl
+		  htmldlgs util jtools pref caps java libreg softupdt jsdebug netcache network httpurl plugin plugimpl mocha
+
+ifdef DOM
+REQUIRES	+= dom
+endif
+
 
 ifdef MOZ_SECURITY
 REQUIRES       += jar
@@ -64,7 +69,16 @@ CSRCS +=             \
 		  $(NULL)
 endif
 
+ifdef DOM
+CSRCS +=	  lm_dom.c \
+		  $(NULL)
+endif
+
 include $(DEPTH)/config/rules.mk
+
+ifdef DOM
+DEFINES +=	-DDOM
+endif 
 
 DEFINES		+= -DDLL_SUFFIX=\"$(DLL_SUFFIX)\"
 

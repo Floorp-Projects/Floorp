@@ -83,23 +83,24 @@ enum doc_slot {
     DOC_EMBEDS          = -7,
 	DOC_SPANS			= -8,	/* Added for HTML SPAN DOM stuff */
 	DOC_TRANSCLUSIONS   = -9,	/* Added for XML Transclusion DOM stuff */
-    DOC_TITLE           = -10,
-    DOC_URL             = -11,
-    DOC_REFERRER        = -12,
-    DOC_LAST_MODIFIED   = -13,
-    DOC_COOKIE          = -14,
-    DOC_DOMAIN          = -15,
+    DOC_DOCELEMENT	    = -10,  /* Added for W3C DOM stuff */
+    DOC_TITLE           = -11,
+    DOC_URL             = -12,
+    DOC_REFERRER        = -13,
+    DOC_LAST_MODIFIED   = -14,
+    DOC_COOKIE          = -15,
+    DOC_DOMAIN          = -16,
     /* slots below this line are not secured */
-    DOC_IMAGES          = -16,
-    DOC_LAYERS          = -17,
-    DOC_LOADED_DATE     = -18,
-    DOC_BG_COLOR        = -19,
-    DOC_FG_COLOR        = -20,
-    DOC_LINK_COLOR      = -21,
-    DOC_VLINK_COLOR     = -22,
-    DOC_ALINK_COLOR     = -23,
-    DOC_WIDTH           = -24,
-    DOC_HEIGHT          = -25
+    DOC_IMAGES          = -17,
+    DOC_LAYERS          = -18,
+    DOC_LOADED_DATE     = -19,
+    DOC_BG_COLOR        = -20,
+    DOC_FG_COLOR        = -21,
+    DOC_LINK_COLOR      = -22,
+    DOC_VLINK_COLOR     = -23,
+    DOC_ALINK_COLOR     = -24,
+    DOC_WIDTH           = -25,
+    DOC_HEIGHT          = -26
 };
 	
 #endif
@@ -119,6 +120,7 @@ static JSPropertySpec doc_props[] = {
 #ifdef DOM
 	{lm_spans_str,   DOC_SPANS,         JSPROP_ENUMERATE|JSPROP_READONLY},
 	{lm_transclusions_str,   DOC_TRANSCLUSIONS,         JSPROP_ENUMERATE|JSPROP_READONLY},
+    {"documentElement",DOC_DOCELEMENT,	JSPROP_ENUMERATE|JSPROP_READONLY},
 #endif
     {"title",        DOC_TITLE,         JSPROP_ENUMERATE|JSPROP_READONLY},
     {"URL",          DOC_URL,           JSPROP_ENUMERATE|JSPROP_READONLY},
@@ -312,7 +314,15 @@ doc_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         LM_SetActiveLayer(context, active_layer_id); 
         LO_UnlockLayout();
         return JS_TRUE;
+        
+      case DOC_DOCELEMENT:
+#ifdef DEBUG_shaver
+        fprintf(stderr, "getting document.documentElement\n");
 #endif
+        *vp = OBJECT_TO_JSVAL(lm_DOMGetDocumentElement(decoder, obj));
+        LO_UnlockLayout();
+        return JS_TRUE;
+#endif /* DOM */
 
         /* XXX BUGBUG Need a story for some of these for a layer's document */
       case DOC_TITLE:
