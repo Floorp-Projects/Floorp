@@ -118,17 +118,20 @@ namespace JSTypes {
     extern const JSValue kUndefinedValue;
 
     /**
-     * Basic behavior of all JS objects, mapping a name to a value.
-     * This is provided mainly to avoid having an awkward implementation
-     * of JSObject & JSArray, which must each define its own
-     * gc_allocator. This is all in flux.
+     * Basic behavior of all JS objects, mapping a name to a value,
+     * with prototype-based inheritance.
      */
-    class JSMap : public gc_base {
+    class JSObject : public gc_base {
     protected:
         typedef std::map<String, JSValue, std::less<String>, gc_map_allocator> JSProperties;
         JSProperties mProperties;
-        JSMap* mPrototype;
+        JSObject* mPrototype;
     public:
+        bool hasProperty(const String& name)
+        {
+            return (mProperties.count(name) != 0);
+        }
+    
         const JSValue& getProperty(const String& name)
         {
         #ifdef XP_MAC
@@ -152,23 +155,23 @@ namespace JSTypes {
             return (mProperties[name] = value);
         }
 
-        void setPrototype(JSMap* prototype)
+        void setPrototype(JSObject* prototype)
         {
             mPrototype = prototype;
         }
         
-        JSMap* getPrototype()
+        JSObject* getPrototype()
         {
             return mPrototype;
         }
     };
-
+    
     /**
      * Private representation of a JS function. This simply
      * holds a reference to the iCode module that is the
      * compiled code of the function.
      */
-    class JSFunction : public JSMap {
+    class JSFunction : public JSObject {
         ICodeModule* mICode;
     public:
         JSFunction(ICodeModule* iCode) : mICode(iCode) {}
@@ -176,29 +179,9 @@ namespace JSTypes {
     };
         
     /**
-     * Private representation of a JavaScript object.
-     * This will change over time, so it is treated as an opaque
-     * type everywhere else but here.
-     */
-    class JSObject : public JSMap {
-    public:
-        JSValue& defineProperty(const String& name, const JSValue& value)
-        {
-            return (mProperties[name] = value);
-        }
-                
-        // FIXME:  need to copy the ICodeModule's instruction stream.    
-        JSValue& defineFunction(const String& name, ICodeModule* iCode)
-        {
-            JSValue value(new JSFunction(iCode));
-            return defineProperty(name, value);
-        }
-    };
-    
-    /**
      * Private representation of a JavaScript array.
      */
-    class JSArray : public JSMap {
+    class JSArray : public JSObject {
         JSValues elements;
     public:
         JSArray() : elements(1) {}
@@ -248,7 +231,46 @@ namespace JSTypes {
         JSException(JSValue v) : value(v) { }
         JSValue value;
     };
+    
+    /**
+     * Provides a set of nested scopes.
+     */
+    class JSNamespace : private JSObject {
+    protected:
+        JSNamespace* mParent;
+    public:
+        bool isDefined(const String& name)
+        {
+            if (hasProperty(name))
+                return true;
+            if (mParent)
+                return mParent->isDefined(name);
+            return false;
+        }
         
+        const JSValue& getVariable(const String& name)
+        {
+            return getProperty(name);
+        }
+        
+        JSValue& setVariable(const String& name, const JSValue& value)
+        {
+            return setProperty(name, value);
+        }
+        
+        JSValue& defineVariable(const String& name, const JSValue& value)
+        {
+            return setProperty(name, value);
+        }
+        
+        // FIXME:  need to copy the ICodeModule's instruction stream.    
+        JSValue& defineFunction(const String& name, ICodeModule* iCode)
+        {
+            JSValue value(new JSFunction(iCode));
+            return defineVariable(name, value);
+        }
+    };
+    
 } /* namespace JSTypes */    
 } /* namespace JavaScript */
 

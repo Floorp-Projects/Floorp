@@ -210,13 +210,13 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
             case LOAD_NAME:
                 {
                     LoadName* ln = static_cast<LoadName*>(instruction);
-                    (*registers)[dst(ln)] = mGlobal->getProperty(*src1(ln));
+                    (*registers)[dst(ln)] = mGlobal->getVariable(*src1(ln));
                 }
                 break;
             case SAVE_NAME:
                 {
                     SaveName* sn = static_cast<SaveName*>(instruction);
-                    mGlobal->setProperty(*dst(sn), (*registers)[src1(sn)]);
+                    mGlobal->setVariable(*dst(sn), (*registers)[src1(sn)]);
                 }
                 break;
             case NEW_OBJECT:

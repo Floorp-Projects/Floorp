@@ -35,16 +35,16 @@ namespace Interpreter {
     
     class Context : public gc_base {
     public:
-        explicit Context(World& world, JSObject* aGlobal)
+        explicit Context(World& world, JSNamespace* aGlobal)
             :   mWorld(world), mGlobal(aGlobal), mLinkage(0)
         {
         }
 
-        JSObject* getGlobalObject() { return mGlobal; }
+        JSNamespace* getGlobalObject() { return mGlobal; }
 
-        JSObject* setGlobalObject(JSObject* aGlobal)
+        JSNamespace* setGlobalObject(JSNamespace* aGlobal)
         {
-            JSObject* t = mGlobal;
+            JSNamespace* t = mGlobal;
             mGlobal = aGlobal;
             return t;
         }
@@ -72,7 +72,7 @@ namespace Interpreter {
 
     private:
         World& mWorld;
-        JSObject* mGlobal;
+        JSNamespace* mGlobal;
         Linkage* mLinkage;
         std::vector<Listener*> mListeners;
     }; /* class Context */
