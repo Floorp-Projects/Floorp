@@ -88,6 +88,8 @@ nsMsgDeliveryListener::nsMsgDeliveryListener(nsMsgDeliveryCompletionCallback cal
   mCompletionCallback = callback;
   mMsgSendObj = nsnull;
   mMsgSendLaterObj = nsnull;
+
+  NS_INIT_REFCNT();
 }
 
 nsMsgDeliveryListener::~nsMsgDeliveryListener()

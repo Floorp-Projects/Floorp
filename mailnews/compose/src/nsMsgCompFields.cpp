@@ -270,12 +270,12 @@ nsresult nsMsgCompFields::GetBcc(char **_retval)
 
 nsresult nsMsgCompFields::SetFcc(const char *value, PRInt32 *_retval)
 {
-	return SetHeader(MSG_NEWS_FCC_HEADER_MASK, value, _retval);
+	return SetHeader(MSG_FCC_HEADER_MASK, value, _retval);
 }
 
 nsresult nsMsgCompFields::GetFcc(char **_retval)
 {
-	return GetHeader(MSG_NEWS_FCC_HEADER_MASK, _retval);
+	return GetHeader(MSG_FCC_HEADER_MASK, _retval);
 }
 
 nsresult nsMsgCompFields::SetNewsFcc(const char *value, PRInt32 *_retval)

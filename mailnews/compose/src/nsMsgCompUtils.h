@@ -109,6 +109,7 @@ PRBool      nsMsgIsLocalFile(const char *url);
 char        *nsMsgGetLocalFileFromURL(char *url);
 char        *nsMsgPlatformFileToURL (const char *name);
 
+char        *nsMsgParseURL(const char *url, int part);
 
 NS_END_EXTERN_C
 

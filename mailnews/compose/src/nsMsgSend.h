@@ -131,9 +131,10 @@
 #include "nsMsgCompFields.h"
 #include "nsMsgComposeBE.h"
 #include "nsIMsgSendListener.h"
+#include "nsMsgCopy.h"
+#include "nsIMsgIdentity.h"
 
 #include "net.h" /* should be defined into msgCore.h? */
-// RICHIE   #include "intl_csi.h"
 
 
 //
@@ -141,9 +142,6 @@
 //
 #define TEN_K                 10240
 #define MIME_BUFFER_SIZE		  4096
-#define FCC_FAILURE				    0
-#define FCC_BLOCKING_SUCCESS	1
-#define FCC_ASYNC_SUCCESS		  2
 
 //
 // Utilities for string handling
@@ -153,122 +151,22 @@
 #define PUSH_NEWLINE() \
  do { *buffer_tail++ = CR; *buffer_tail++ = LF; *buffer_tail = '\0'; } while(0)
 
-
-
-
-  //
-  ////////////////////////////////////////////////////////////////////////////////
-  // REWORK THIS STUF!!!!!!!!!
-  // REWORK THIS STUF!!!!!!!!!
-  // REWORK THIS STUF!!!!!!!!!
-  ////////////////////////////////////////////////////////////////////////////////
-  //
-
-
-
 //
 // Forward declarations...
 //
-class ParseOutgoingMessage;
-class MailDB;
 class nsMsgSendPart;
+class nsMsgCopy;
 
 class nsMsgComposeAndSend : public nsIMsgSend
 {
 public:
-  int	GatherMimeAttachments();
-  void	DeliverMessage();
-  void	QueueForLater();
-  void  SaveAsDraft();
-  void  SaveAsTemplate();
-  PRBool IsSaveMode();
 
-  HJ77514
-
-  void    SendToMagicFolder (PRUint32 flag);
-  int	  SendToImapMagicFolder(PRUint32 flag);
-  void    ImapAppendAddBccHeadersIfNeeded(URL_Struct *url);
-  static  void PostSendToImapMagicFolder (URL_Struct *url,
-										  int status,
-										  MWContext *context);
-  static  void PostCreateImapMagicFolder (URL_Struct *url,
-										  int status,
-										  MWContext *context);
-  static void PostListImapMailboxFolder (URL_Struct *url,
-										 int status,
-										 MWContext *context);
-  static void PostSubscribeImapMailboxFolder (URL_Struct *url,
-											  int status,
-											  MWContext *context);
-  PRUint32 GetFolderFlagAndDefaultName(const char **defaultName);
-  /* caller needs to free the returned folder name */
-  char *GetOnlineFolderName(PRUint32 flag, const char **pDefaultName);
-
-  int InitImapOfflineDB(PRUint32 flag);
-  int SaveAsOfflineOp();
-
-
-  int HackAttachments(const struct nsMsgAttachmentData *attachments,
-					  const struct nsMsgAttachedFile *preloaded_attachments);
-
-
-  HJ58534
-
-  int SetMimeHeader(MSG_HEADER_SET header, const char *value);
-  void SetIMAPMessageUID(MessageKey key);
-
-  MSG_Pane *m_pane;			/* Pane to use when loading the URLs */
-
-  PRBool m_attachments_only_p;	/* If set, then we don't construct a complete
-								   MIME message; instead, we just retrieve the
-								   attachments from the network, store them in
-								   tmp files, and return a list of
-								   nsMsgAttachedFile structs which describe
-								   them. */
-
-  PRBool m_pre_snarfed_attachments_p;	/* If true, then the attachments were
-										   loaded by msg_DownloadAttachments()
-										   and therefore we shouldn't delete
-										   the tmp files (but should leave
-										   that to the caller.) */
-
-  PRBool m_digest_p;			/* Whether to be multipart/digest instead of
-								   multipart/mixed. */
-
-  PRBool m_be_synchronous_p;	/* If true, we will load one URL after another,
-								   rather than starting all URLs going at once
-								   and letting them load in parallel.  This is
-								   more efficient if (for example) all URLs are
-								   known to be coming from the same news server
-								   or mailbox: loading them in parallel would
-								   cause multiple connections to the news
-								   server to be opened, or would cause much
-								   seek()ing.
-								 */
-
-  void *m_crypto_closure;		/* State used by composec.c */
-
-  /* The first attachment, if any (typed in by the user.)
-   */
-  char *m_attachment1_type;
-  char *m_attachment1_encoding;
-  MimeEncoderData *m_attachment1_encoder_data;
-  char *m_attachment1_body;
-  PRUint32 m_attachment1_body_length;
-
-  // The plaintext form of the first attachment, if needed.
-  nsMsgAttachmentHandler* m_plaintext;
-
-	// The multipart/related save object for HTML text.
-  nsMsgSendPart *m_related_part;
-
-
-  /* Subsequent attachments, if any.
-   */
-  PRInt32 m_attachment_count;
-  PRInt32 m_attachment_pending_count;
-  nsMsgAttachmentHandler *m_attachments;
-  PRInt32 m_status; /* in case some attachments fail but not all */
+  //
+  ////////////////////////////////////////////////////////////////////////////////
+  // RICHIE - What is here must go away when I have the time to get rid of them!
+  ////////////////////////////////////////////////////////////////////////////////
+  //
+  MSG_Pane          *m_pane;			/* Pane to use when loading the URLs */
 
   //
   // The exit method used when downloading attachments only.
@@ -280,20 +178,7 @@ public:
 									   nsresult                 status,
 									   const char               *error_msg,
 									   struct nsMsgAttachedFile *attachments);
-
-
-  MSG_IMAPFolderInfoMail *m_imapFolderInfo;
-  ParseOutgoingMessage *m_imapOutgoingParser;
-  MailDB *m_imapLocalMailDB;
   
-  //
-  ////////////////////////////////////////////////////////////////////////////////
-  // RICHIE - These are all calls that have been converted to the new world order!
-  // Once all done, we will reorganize the layout of the class definition for readability.
-  // Please bear with me.
-  ////////////////////////////////////////////////////////////////////////////////
-  //
-
   //
   // Define QueryInterface, AddRef and Release for this class 
   //
@@ -303,23 +188,40 @@ public:
 	virtual     ~nsMsgComposeAndSend();
 
   // Delivery and completion callback routines...
-  void	      DeliverFileAsMail();
-  void	      DeliverFileAsNews();
-  void	      DeliverAsMailExit(nsIURI *aUrl, nsresult aExitCode);
-  void	      DeliverAsNewsExit(nsIURI *aUrl, nsresult aExitCode);
+  NS_IMETHOD  DeliverMessage();
+  NS_IMETHOD  DeliverFileAsMail();
+  NS_IMETHOD  DeliverFileAsNews();
+  void        DeliverAsMailExit(nsIURI *aUrl, nsresult aExitCode);
+  void        DeliverAsNewsExit(nsIURI *aUrl, nsresult aExitCode);
+  void        DoDeliveryExitProcessing(nsresult aExitCode, PRBool aCheckForMail);
 
-
-  void	      Fail(nsresult failure_code, char *error_msg);
   nsresult    DoFcc();
-  void	      Clear();
+  nsresult    StartMessageCopyOperation(nsIFileSpec        *aFileSpec, 
+                                        nsMsgDeliverMode   mode);
 
-  // Message creation routines
+  void	      Clear();
+  void	      Fail(nsresult failure_code, char *error_msg);
+
+  NS_METHOD   SendToMagicFolder (nsMsgDeliverMode flag);
+  nsresult    QueueForLater();
+  nsresult    SaveAsDraft();
+  nsresult    SaveInSentFolder();
+  nsresult    SaveAsTemplate();
+
   //
+  // FCC operations...
+  //
+  nsresult    MimeDoFCC (nsFileSpec           *input_file,  
+			                   nsMsgDeliverMode     mode,
+			                   const char           *bcc_header,
+			                   const char           *fcc_header,
+			                   const char           *news_url);
   
   // Init() will allow for either message creation without delivery or full
   // message creation and send operations
   //
   nsresult    Init(
+                   nsIMsgIdentity  *aUserIdentity,
 			             nsMsgCompFields  *fields,
                    nsFileSpec       *sendFileSpec,
 			             PRBool           digest_p,
@@ -336,25 +238,37 @@ public:
   // Setup the composition fields
   //
   nsresult    InitCompositionFields(nsMsgCompFields *fields);
+  int         SetMimeHeader(MSG_HEADER_SET header, const char *value);
+
+  // methods for listener array processing...
+  NS_IMETHOD  SetListenerArray(nsIMsgSendListener **aListener);
+  NS_IMETHOD  AddListener(nsIMsgSendListener *aListener);
+  NS_IMETHOD  RemoveListener(nsIMsgSendListener *aListener);
+  NS_IMETHOD  DeleteListeners();
+  NS_IMETHOD  NotifyListenersOnStartSending(const char *aMsgID, PRUint32 aMsgSize);
+  NS_IMETHOD  NotifyListenersOnProgress(const char *aMsgID, PRUint32 aProgress, PRUint32 aProgressMax);
+  NS_IMETHOD  NotifyListenersOnStatus(const char *aMsgID, const PRUnichar *aMsg);
+  NS_IMETHOD  NotifyListenersOnStopSending(const char *aMsgID, nsresult aStatus, const PRUnichar *aMsg, 
+                                           nsIFileSpec *returnFileSpec);
+
+  // If the listener has implemented the nsIMsgCopyServiceListener interface, I will drive it from 
+  // here
+  NS_IMETHOD  NotifyListenersOnStartCopy(nsISupports *listenerData); 
+  NS_IMETHOD  NotifyListenersOnProgressCopy(PRUint32 aProgress, PRUint32 aProgressMax, nsISupports *listenerData);
+  NS_IMETHOD  NotifyListenersOnStopCopy(nsresult aStatus, nsISupports *listenerData);
 
   //
-  ////////////////////////////////////////////////////////////////////////////////
-  // RICHIE - These are partly new world, but still need work...still they are better
-  // than before. Again...Please bear with me.
-  ////////////////////////////////////////////////////////////////////////////////
+  // Attachment processing...
   //
-  nsresult    MimeDoFCC (
-			                   nsFileSpec *input_file,  XP_FileType input_file_type,
-			                   const char *output_name, XP_FileType output_file_type,
-			                   nsMsgDeliverMode mode,
-			                   const char *bcc_header,
-			                   const char *fcc_header,
-			                   const char *news_url);
+  int	        GatherMimeAttachments();
+  int         HackAttachments(const struct nsMsgAttachmentData *attachments,
+					                    const struct nsMsgAttachedFile *preloaded_attachments);
 
   ////////////////////////////////////////////////////////////////////////////////
   // The current nsIMsgSend Interfaces exposed to the world!
   ////////////////////////////////////////////////////////////////////////////////
   NS_IMETHOD  CreateAndSendMessage(
+                          nsIMsgIdentity                    *aUserIdentity,
  						              nsIMsgCompFields                  *fields,
 						              PRBool                            digest_p,
 						              PRBool                            dont_deliver_p,
@@ -370,6 +284,7 @@ public:
                           nsIMsgSendListener                **aListenerArray);
 
   NS_IMETHOD  SendMessageFile(
+                          nsIMsgIdentity                    *aUserIdentity,
  						              nsIMsgCompFields                  *fields,
                           nsFileSpec                        *sendFileSpec,
                           PRBool                            deleteSendFileOnCompletion,
@@ -378,24 +293,16 @@ public:
                           nsIMsgSendListener                **aListenerArray);
 
   NS_IMETHOD  SendWebPage(
+                          nsIMsgIdentity                    *aUserIdentity,
  						              nsIMsgCompFields                  *fields,
                           nsIURI                            *url,
                           nsMsgDeliverMode                  mode,
                           nsIMsgSendListener                **aListenerArray);
 
-  // methods for listener array processing...
-  NS_IMETHOD  SetListenerArray(nsIMsgSendListener **aListener);
-  NS_IMETHOD  AddListener(nsIMsgSendListener *aListener);
-  NS_IMETHOD  RemoveListener(nsIMsgSendListener *aListener);
-  NS_IMETHOD  DeleteListeners();
-  NS_IMETHOD  NotifyListenersOnStartSending(const char *aMsgID, PRUint32 aMsgSize);
-  NS_IMETHOD  NotifyListenersOnProgress(const char *aMsgID, PRUint32 aProgress, PRUint32 aProgressMax);
-  NS_IMETHOD  NotifyListenersOnStatus(const char *aMsgID, const PRUnichar *aMsg);
-  NS_IMETHOD  NotifyListenersOnStopSending(const char *aMsgID, nsresult aStatus, const PRUnichar *aMsg, 
-                                           nsIFileSpec *returnFileSpec);
   //
   // All vars necessary for this implementation
   //
+  nsIMsgIdentity          *mUserIdentity;
   nsMsgCompFields         *mCompFields;         // All needed composition fields (header, etc...)
   nsFileSpec              *mTempFileSpec;       // our temporary file
   
@@ -415,6 +322,64 @@ public:
   // File where we stored our HTML so that we could make the plaintext form.
   nsFileSpec              *mHTMLFileSpec;
 
+  //
+  // These variables are needed for message Copy operations!
+  //
+  nsIFileSpec             *mCopyFileSpec;
+  nsMsgCopy               *mCopyObj;
+
+  //
+  // The first attachment, if any (typed in by the user.)
+  //
+  char                    *m_attachment1_type;
+  char                    *m_attachment1_encoding;
+  MimeEncoderData         *m_attachment1_encoder_data;
+  char                    *m_attachment1_body;
+  PRUint32                m_attachment1_body_length;
+
+  // The plaintext form of the first attachment, if needed.
+  nsMsgAttachmentHandler  *m_plaintext;
+
+	// The multipart/related save object for HTML text.
+  nsMsgSendPart           *m_related_part;
+
+  //
+  // Subsequent attachments, if any.
+  //
+  PRInt32                 m_attachment_count;
+  PRInt32                 m_attachment_pending_count;
+  nsMsgAttachmentHandler  *m_attachments;
+  PRInt32                 m_status; // in case some attachments fail but not all 
+
+  //
+  // attachment states and other info...
+  //
+  PRBool                  m_attachments_only_p;         // If set, then we don't construct a complete
+								                                        // MIME message; instead, we just retrieve the
+								                                        // attachments from the network, store them in
+								                                        // tmp files, and return a list of
+								                                        // nsMsgAttachedFile structs which describe them.
+
+  PRBool                  m_pre_snarfed_attachments_p;	// If true, then the attachments were
+										                                    // loaded by in the background and therefore 
+                                                        // we shouldn't delete the tmp files (but should 
+                                                        // leave that to the caller.)
+
+  PRBool                  m_digest_p;                   // Whether to be multipart/digest instead of
+								                                        // multipart/mixed. 
+
+  PRBool                  m_be_synchronous_p;	          // If true, we will load one URL after another,
+								                                        // rather than starting all URLs going at once
+								                                        // and letting them load in parallel.  This is
+								                                        // more efficient if (for example) all URLs are
+								                                        // known to be coming from the same news server
+								                                        // or mailbox: loading them in parallel would
+								                                        // cause multiple connections to the news
+								                                        // server to be opened, or would cause much seek()ing.
+
+  void                    *m_crypto_closure;
+  HJ77514
+  HJ58534
 };
 
 // 

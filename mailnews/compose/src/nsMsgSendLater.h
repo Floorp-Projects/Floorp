@@ -28,6 +28,7 @@
 #include "nsFileStream.h"
 #include "nsIMsgSendListener.h"
 #include "nsIMsgSendLaterListener.h"
+#include "nsMsgDeliveryListener.h"
 #include "nsIMsgSendLater.h"
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -35,6 +36,8 @@
 // to listen for message send completion and eventually notify the caller
 ////////////////////////////////////////////////////////////////////////////////////
 class nsMsgSendLater;
+class nsMsgDeliveryListener;
+
 class SendOperationListener : public nsIMsgSendListener
 {
 public:
@@ -144,6 +147,8 @@ private:
   PRBool                    mFirstTime;
  
   void                      *mTagData;
+
+  nsMsgDeliveryListener     *mSaveListener;
 
   // For building headers and stream parsing...
   char                      *m_to;

@@ -14,6 +14,7 @@
 #include "nsMsgBaseCID.h"
 #include "nsIFileLocator.h"
 #include "nsIMsgSendListener.h"
+#include "nsIMsgCopyServiceListener.h"
 
 #include <stdio.h>
 #ifdef XP_PC
@@ -50,13 +51,12 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 
-
 ////////////////////////////////////////////////////////////////////////////////////
 // This is the listener class for the send operation. We have to create this class 
 // to listen for message send completion and eventually notify the caller
 ////////////////////////////////////////////////////////////////////////////////////
 class nsMsgSendLater;
-class SendOperationListener : public nsIMsgSendListener
+class SendOperationListener : public nsIMsgSendListener, public nsIMsgCopyServiceListener
 {
 public:
   SendOperationListener(void);
@@ -77,7 +77,14 @@ public:
   /* void OnStopSending (in string aMsgID, in nsresult aStatus, in wstring aMsg, in nsIFileSpec returnFileSpec); */
   NS_IMETHOD OnStopSending(const char *aMsgID, nsresult aStatus, const PRUnichar *aMsg, 
                            nsIFileSpec *returnFileSpec);
+
+  // For the nsIMsgCopySerivceListener!
+  NS_IMETHOD OnStartCopy(nsISupports *listenerData);
   
+  NS_IMETHOD OnProgress(PRUint32 aProgress, PRUint32 aProgressMax, nsISupports *listenerData);
+  
+  NS_IMETHOD OnStopCopy(nsresult aStatus, nsISupports *listenerData);
+
 private:
   nsMsgSendLater    *mSendLater;
 };
@@ -86,7 +93,31 @@ private:
 // This is the listener class for the send operation. We have to create this class 
 // to listen for message send completion and eventually notify the caller
 ////////////////////////////////////////////////////////////////////////////////////
-NS_IMPL_ISUPPORTS(SendOperationListener, nsIMsgSendListener::GetIID());
+NS_IMPL_ADDREF(SendOperationListener)
+NS_IMPL_RELEASE(SendOperationListener)
+
+NS_IMETHODIMP 
+SendOperationListener::QueryInterface(const nsIID &aIID, void** aInstancePtr)
+{
+  if (NULL == aInstancePtr)
+    return NS_ERROR_NULL_POINTER;
+  *aInstancePtr = NULL;
+
+  if (aIID.Equals(nsIMsgSendListener::GetIID())) 
+  {
+	  *aInstancePtr = (nsIMsgSendListener *) this;                                                   
+	  NS_ADDREF_THIS();
+	  return NS_OK;
+  }
+  if (aIID.Equals(nsIMsgCopyServiceListener::GetIID()))
+  {
+	  *aInstancePtr = (nsIMsgCopyServiceListener *) this;
+	  NS_ADDREF_THIS();
+	  return NS_OK;
+  }
+
+  return NS_NOINTERFACE;
+}
 
 SendOperationListener::SendOperationListener(void) 
 { 
@@ -142,6 +173,40 @@ SendOperationListener::OnStopSending(const char *aMsgID, nsresult aStatus, const
 
   printf("Exit code = [%d]\n", aStatus);
   keepOnRunning = PR_FALSE;
+  return NS_OK;
+}
+
+nsresult
+SendOperationListener::OnStartCopy(nsISupports *listenerData)
+{
+#ifdef NS_DEBUG
+  printf("SendOperationListener::OnStartCopy()\n");
+#endif
+
+  return NS_OK;
+}
+
+nsresult
+SendOperationListener::OnProgress(PRUint32 aProgress, PRUint32 aProgressMax, nsISupports *listenerData)
+{
+#ifdef NS_DEBUG
+  printf("SendOperationListener::OnProgress() - COPY\n");
+#endif
+  return NS_OK;
+}
+  
+nsresult
+SendOperationListener::OnStopCopy(nsresult aStatus, nsISupports *listenerData)
+{
+  if (NS_SUCCEEDED(aStatus))
+  {
+    printf("SendOperationListener::OnStopCopy() Completed Successfully!\n");
+  }
+  else
+  {
+    printf("SendOperationListener::OnStopCopy() Completed FAILED!\n");
+  }
+
   return NS_OK;
 }
 
@@ -338,7 +403,7 @@ main(int argc, char *argv[])
         return NS_ERROR_FAILURE;
       }
 
-      pMsgSend->SendWebPage(pMsgCompFields, url, nsMsgDeliverNow, tArray);
+      pMsgSend->SendWebPage(nsnull, pMsgCompFields, url, nsMsgDeliverNow, tArray);
     }    
   }
 

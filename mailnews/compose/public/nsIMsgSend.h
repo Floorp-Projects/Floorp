@@ -8,6 +8,7 @@
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsIMsgCompFields.h" /* interface nsIMsgCompFields */
 #include "nsIMsgSendListener.h"
+#include "nsIMsgIdentity.h"
 #include "nsMsgComposeBE.h"
 
 #ifdef XPIDL_JS_STUBS
@@ -27,6 +28,7 @@ class nsIMsgSend : public nsISupports {
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMSGSEND_IID)
 
   NS_IMETHOD CreateAndSendMessage(
+                        nsIMsgIdentity                    *aUserIdentity,
  						            nsIMsgCompFields                  *fields,
 						            PRBool                            digest_p,
 						            PRBool                            dont_deliver_p,
@@ -40,6 +42,7 @@ class nsIMsgSend : public nsISupports {
                         nsIMsgSendListener                **aListenerArray) = 0;
   
   NS_IMETHOD  SendMessageFile(
+                          nsIMsgIdentity                    *aUserIdentity,
  						              nsIMsgCompFields                  *fields,
                           nsFileSpec                        *sendFileSpec,
                           PRBool                            deleteSendFileOnCompletion,
@@ -48,6 +51,7 @@ class nsIMsgSend : public nsISupports {
                           nsIMsgSendListener                **aListenerArray) = 0;
 
   NS_IMETHOD  SendWebPage(
+                          nsIMsgIdentity                    *aUserIdentity,
  						              nsIMsgCompFields                  *fields,
                           nsIURI                            *url,
                           nsMsgDeliverMode                  mode,

@@ -26,10 +26,12 @@
 #include "xp_time.h"
 #include "nsMsgCompPrefs.h"
 #include "nsIMsgHeaderParser.h"
+#include "nsIMimeURLUtils.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID); 
 static NS_DEFINE_CID(kMsgHeaderParserCID, NS_MSGHEADERPARSER_CID); 
+static NS_DEFINE_CID(kMimeURLUtilsCID, NS_IMIME_URLUTILS_CID);
 
 //
 // Hopefully, someone will write and XP call like this eventually!
@@ -1503,7 +1505,7 @@ nsMsgMIMEGenerateMailtoFormPostHeaders (const char *old_post_url,
 	goto FAIL;
   }
 
-  to = NET_ParseURL (old_post_url, GET_PATH_PART);
+  to = nsMsgParseURL (old_post_url, GET_PATH_PART);
   if (!to) {
 	status = MK_OUT_OF_MEMORY;
 	goto FAIL;
@@ -1515,21 +1517,22 @@ nsMsgMIMEGenerateMailtoFormPostHeaders (const char *old_post_url,
 	  goto FAIL;
 	}
 
-  search = NET_ParseURL (old_post_url, GET_SEARCH_PART);
+  search = nsMsgParseURL (old_post_url, GET_SEARCH_PART);
 
   rest = search;
   if (rest && *rest == '?')
 	{
 	  /* start past the '?' */
 	  rest++;
-	  rest = XP_STRTOK (rest, "&");
+
+    nsCRT::strtok(rest, "&", &rest);
 	  while (rest && *rest)
 		{
 		  char *token = rest;
 		  char *value = 0;
 		  char *eq;
 
-		  rest = XP_STRTOK (0, "&");
+      nsCRT::strtok(0, "&", &rest);
 
 		  eq = PL_strchr (token, '=');
 		  if (eq)
@@ -1648,7 +1651,7 @@ nsMsgMIMEGenerateMailtoFormPostHeaders (const char *old_post_url,
 		}
 	  /* If the URL didn't provide a subject, we will. */
 	  StrAllocCat (extra_headers, "Subject: Form posted from ");
-	  NS_ASSERTION (sAppName, "null XP_AppCodeName");
+	  NS_ASSERTION (sAppName, "null AppCodeName");
 	  StrAllocCat (extra_headers, sAppName);
 	  StrAllocCat (extra_headers, CRLF);
 	}
@@ -1972,3 +1975,21 @@ nsMsgPlatformFileToURL (const char *name)
 	return retVal;
 }
 
+char * 
+nsMsgParseURL(const char *url, int part)
+{
+  nsCOMPtr<nsIMimeURLUtils>   utilPtr;
+  char                        *retVal = nsnull;
+  
+  nsresult res = nsComponentManager::CreateInstance(kMimeURLUtilsCID, 
+                                                    nsnull, nsIMimeURLUtils::GetIID(), 
+                                                    (void **) getter_AddRefs(utilPtr)); 
+  if (NS_FAILED(res) || !utilPtr)
+    return nsnull;
+  
+  res = utilPtr->ParseURL(url, part, &retVal);
+  if (NS_FAILED(res))
+    return nsnull;
+  else
+    return retVal;
+}

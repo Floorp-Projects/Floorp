@@ -1000,9 +1000,11 @@ nsMessenger::SendUnsentMessages()
     SendLaterListener *sendLaterListener = new SendLaterListener();
     if (!sendLaterListener)
         return NS_ERROR_FAILURE;
-      
+
+    NS_ADDREF(sendLaterListener);
     pMsgSendLater->AddListener(sendLaterListener);
 		pMsgSendLater->SendUnsentMessages(nsnull, nsnull, nsnull); 
+    NS_RELEASE(sendLaterListener);
 	} 
 	return NS_OK;
 }

@@ -19,7 +19,78 @@
 #ifndef _nsMsgCopy_H_
 #define _nsMsgCopy_H_
 
+#include "nscore.h"
+#include "nsIFileSpec.h"
+#include "nsMsgComposeBE.h"
+#include "nsMsgSend.h"
+#include "nsIMsgFolder.h"
+#include "nsITransactionManager.h"
+#include "nsIMsgCopyServiceListener.h"
 
+// Forward declarations...
+class   nsMsgComposeAndSend;
 
+////////////////////////////////////////////////////////////////////////////////////
+// This is the listener class for the copy operation. We have to create this class 
+// to listen for message copy completion and eventually notify the caller
+////////////////////////////////////////////////////////////////////////////////////
+class CopyListener : public nsIMsgCopyServiceListener
+{
+public:
+  CopyListener(void);
+  virtual ~CopyListener(void);
+
+  // nsISupports interface
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD OnStartCopy(nsISupports *listenerData);
+  
+  NS_IMETHOD OnProgress(PRUint32 aProgress, PRUint32 aProgressMax, nsISupports *listenerData);
+  
+  NS_IMETHOD OnStopCopy(nsresult aStatus, nsISupports *listenerData);
+
+  NS_IMETHOD SetMsgComposeAndSendObject(nsMsgComposeAndSend *obj);
+
+private:
+  nsMsgComposeAndSend       *mComposeAndSend;
+};
+
+//
+// This is a class that deals with processing remote attachments. It implements
+// an nsIStreamListener interface to deal with incoming data
+//
+class nsMsgCopy
+{
+public:
+  nsMsgCopy();
+  ~nsMsgCopy();
+
+  //////////////////////////////////////////////////////////////////////
+  // Object methods...
+  //////////////////////////////////////////////////////////////////////
+  //
+  nsresult              StartCopyOperation(nsIMsgIdentity       *aUserIdentity,
+                                           nsIFileSpec          *aFileSpec, 
+                                           nsMsgDeliverMode     aMode,
+                                           nsMsgComposeAndSend  *aMsgSendObj);
+
+  nsresult              DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
+                               nsITransactionManager *txnMgr);
+
+  nsIMsgFolder          *GetUnsentMessagesFolder(nsIMsgIdentity *userIdentity);
+  nsIMsgFolder          *GetDraftsFolder(nsIMsgIdentity *userIdentity);
+  nsIMsgFolder          *GetTemplatesFolder(nsIMsgIdentity *userIdentity);
+  nsIMsgFolder          *GetSentFolder(nsIMsgIdentity *userIdentity);
+
+  //
+  // Vars for implementation...
+  //
+  nsIFileSpec           *mFileSpec;     // the file we are sending...
+  nsMsgComposeAndSend   *mMsgSendObj;
+  nsMsgDeliverMode      mMode;
+};
+
+// Useful function for the back end...
+nsIMsgFolder      *LocateMessageFolder(nsIMsgIdentity   *userIdentity, nsMsgDeliverMode aFolderType);
 
 #endif /* _nsMsgCopy_H_ */

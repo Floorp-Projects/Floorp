@@ -42,6 +42,7 @@
 #include "nsMsgPrompts.h"
 #include "nsIMsgSendListener.h"
 #include "nsIMsgSendLaterListener.h"
+#include "nsMsgCopy.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID);
@@ -108,6 +109,8 @@ nsMsgSendLater::nsMsgSendLater()
   m_position = 0;
   m_flagsPosition = 0;
   m_headersSize = 0;
+
+  mSaveListener = nsnull;
   NS_INIT_REFCNT();
 }
 
@@ -117,7 +120,8 @@ nsMsgSendLater::~nsMsgSendLater()
     NS_RELEASE(mEnumerator);
   if (mTempIFileSpec)
     NS_RELEASE(mTempIFileSpec);
-
+  if (mSaveListener)
+    NS_RELEASE(mSaveListener);
   PR_FREEIF(m_to);
   PR_FREEIF(m_fcc);
   PR_FREEIF(m_bcc);
@@ -126,7 +130,9 @@ nsMsgSendLater::~nsMsgSendLater()
   PR_FREEIF(m_headers);
   PR_FREEIF(mLeftoverBuffer);
 
-  NS_RELEASE(mSendListener);
+  if (mSendListener)
+    NS_RELEASE(mSendListener);
+  NS_RELEASE(mIdentity);
 }
 
 // Stream is done...drive on!
@@ -464,6 +470,7 @@ nsCOMPtr<nsIMsgSend>        pMsgSend = nsnull;
     return NS_ERROR_FAILURE;
   }
   
+  NS_ADDREF(mSendListener);
   // set this object for use on completion...
   mSendListener->SetSendLaterObject(this);
   nsIMsgSendListener **tArray = CreateListenerArray(mSendListener);
@@ -474,12 +481,14 @@ nsCOMPtr<nsIMsgSend>        pMsgSend = nsnull;
   }
 
   NS_ADDREF(this);  
-  rv = pMsgSend->SendMessageFile(compFields, // nsIMsgCompFields                  *fields,
+  rv = pMsgSend->SendMessageFile(mIdentity,
+                            compFields, // nsIMsgCompFields                  *fields,
                             mTempFileSpec,   // nsFileSpec                        *sendFileSpec,
                             PR_TRUE,         // PRBool                            deleteSendFileOnCompletion,
                             PR_FALSE,        // PRBool                            digest_p,
                             nsMsgDeliverNow, // nsMsgDeliverMode                  mode,
                             tArray); 
+  NS_RELEASE(mSendListener);
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
 
@@ -585,17 +594,24 @@ nsMsgSendLater::StartNextMailFileSend()
   // stream
   //
   NS_ADDREF(this);
-  nsMsgDeliveryListener *sendListener = new nsMsgDeliveryListener(SaveMessageCompleteCallback, 
-                                                                  nsFileSaveDelivery, this);
-  if (!sendListener)
+
+  // cleanup the save listener...
+  if (mSaveListener)
+    NS_RELEASE(mSaveListener);
+
+  mSaveListener = new nsMsgDeliveryListener(SaveMessageCompleteCallback, nsFileSaveDelivery, this);
+  if (!mSaveListener)
   {
     ReleaseMessageServiceFromURI(aMessageURI, messageService);
     return NS_ERROR_FAILURE;
   }
 
-  sendListener->SetMsgSendLaterObject(this);
-  rv = messageService->SaveMessageToDisk(aMessageURI, mHackTempIFileSpec, PR_FALSE, sendListener, nsnull);
+  NS_ADDREF(mSaveListener);
+  mSaveListener->SetMsgSendLaterObject(this);
+  rv = messageService->SaveMessageToDisk(aMessageURI, mHackTempIFileSpec, PR_FALSE, mSaveListener, nsnull);
   ReleaseMessageServiceFromURI(aMessageURI, messageService);
+
+  // RICHIE NS_RELEASE(mSendListener); - this is causing us grief! Looks like messageService is not addref'ing
 
 	if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;    
@@ -606,48 +622,7 @@ nsMsgSendLater::StartNextMailFileSend()
 nsIMsgFolder *
 nsMsgSendLater::GetUnsentMessagesFolder(nsIMsgIdentity *userIdentity)
 {
-  nsresult                  rv = NS_OK;
-  nsIMsgFolder              *msgFolder= nsnull;
-  
-  //
-  // get the current mail session....
-  //
-	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv); 
-  if (NS_FAILED(rv)) 
-    return nsnull;
-
-  nsCOMPtr<nsIMsgAccountManager> accountManager;
-  rv = mailSession->GetAccountManager(getter_AddRefs(accountManager));
-  if (NS_FAILED(rv)) 
-    return nsnull;
-  
-  nsISupportsArray *retval;
-  accountManager->GetServersForIdentity(userIdentity, &retval);
-  if (!retval) 
-    return nsnull;
-
-  // Now that we have the server...we need to get the named message folder
-  nsCOMPtr<nsIMsgIncomingServer> inServer; 
-  inServer = do_QueryInterface(retval->ElementAt(0));
-  if(NS_FAILED(rv) || (!inServer))
-    return nsnull;
-
-  nsIFolder *aFolder;
-  rv = inServer->GetRootFolder(&aFolder);
-  if (NS_FAILED(rv) || (!aFolder)) 
-    return nsnull;
-
-  nsCOMPtr<nsIMsgFolder> rootFolder;
-  rootFolder = do_QueryInterface(aFolder);
-  if(NS_FAILED(rv) || (!aFolder))
-    return nsnull;
-
-  PRUint32 numFolders = 0;
-  rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_QUEUE, &msgFolder, 1, &numFolders);
-
-  if (NS_FAILED(rv) || (!msgFolder)) 
-    return nsnull;
-  return msgFolder;
+  return LocateMessageFolder(userIdentity, nsMsgQueueForLater);
 }
 
 //
@@ -687,7 +662,8 @@ nsIMsgIdentity *GetHackIdentity();
     return NS_ERROR_FAILURE;
 
   // Set the listener array 
-  SetListenerArray(listenerArray);
+  if (listenerArray)
+    SetListenerArray(listenerArray);
 
   mTagData = tagData;
 
@@ -732,7 +708,9 @@ nsresult rv;
     return nsnull;
   }  
 
-  return identity;
+  nsIMsgIdentity *tPtr = identity;
+  NS_ADDREF(tPtr);
+  return tPtr;
 }
 
 nsresult

@@ -41,6 +41,8 @@ enum nsMsgDeliveryType
 //
 typedef nsresult (*nsMsgDeliveryCompletionCallback) (nsIURI *aUrl, nsresult aExitCode, void *tagData);
 
+class nsMsgSendLater;
+
 class nsMsgDeliveryListener: public nsIUrlListener
 {
 public:

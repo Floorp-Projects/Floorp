@@ -18,116 +18,264 @@
 #include "nsMsgCopy.h"
 #include "nsIPref.h"
 #include "nsMsgCompPrefs.h"
-#include "nsMsgCopy.h"
+#include "nsIMsgCopyService.h"
+#include "nsMsgBaseCID.h"
+#include "nsIMsgMailSession.h"
+#include "nsMsgFolderFlags.h"
+#include "nsIMsgFolder.h"
 
-//#include "nsCopyMessageStreamListener.h"
-#include "nsICopyMessageListener.h"
+static NS_DEFINE_CID(kMsgCopyServiceCID,		NS_MSGCOPYSERVICE_CID);
+static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
 
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+////////////////////////////////////////////////////////////////////////////////////
+// This is the listener class for the copy operation. We have to create this class 
+// to listen for message copy completion and eventually notify the caller
+////////////////////////////////////////////////////////////////////////////////////
+NS_IMPL_ISUPPORTS(CopyListener, nsIMsgCopyServiceListener::GetIID());
 
-/***
-nsresult rv;
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+CopyListener::CopyListener(void) 
+{ 
+  NS_INIT_REFCNT(); 
+}
 
-	nsMsgCompPrefs pCompPrefs;
-	char* result = NULL;
-	PRBool useBcc, mailBccSelf, newsBccSelf = PR_FALSE;
-
-	if (newsBcc)
-  {
-    if (NS_SUCCEEDED(rv) && prefs)
-    {
-  		prefs->GetBoolPref("news.use_default_cc", &useBcc);
-    }
-****/
-
-/*************
+CopyListener::~CopyListener(void) 
+{
+}
 
 nsresult
-CopyFileToFolder()
+CopyListener::OnStartCopy(nsISupports *listenerData)
 {
-  NS_IMETHODIMP
-nsMsgAppCore::CopyMessages(nsIDOMXULElement *srcFolderElement, nsIDOMXULElement *dstFolderElement,
-						   nsIDOMNodeList *nodeList, PRBool isMove)
-	nsresult rv;
+#ifdef NS_DEBUG
+  printf("CopyListener::OnStartCopy()\n");
+#endif
 
-	if(!srcFolderElement || !dstFolderElement || !nodeList)
-		return NS_ERROR_NULL_POINTER;
+  if (mComposeAndSend)
+    mComposeAndSend->NotifyListenersOnStartCopy(listenerData);
+  return NS_OK;
+}
+  
+nsresult
+CopyListener::OnProgress(PRUint32 aProgress, PRUint32 aProgressMax, nsISupports *listenerData)
+{
+#ifdef NS_DEBUG
+  printf("CopyListener::OnProgress() %d of %d\n", aProgress, aProgressMax);
+#endif
 
-	nsIRDFResource *srcResource, *dstResource;
-	nsICopyMessageListener *dstFolder;
-	nsIMsgFolder *srcFolder;
-	nsISupportsArray *resourceArray;
+  if (mComposeAndSend)
+    mComposeAndSend->NotifyListenersOnProgressCopy(aProgress, aProgressMax, listenerData);
 
-	if(NS_FAILED(rv = dstFolderElement->GetResource(&dstResource)))
-		return rv;
+  return NS_OK;
+}
 
-	if(NS_FAILED(rv = dstResource->QueryInterface(nsICopyMessageListener::GetIID(), (void**)&dstFolder)))
-		return rv;
+nsresult
+CopyListener::OnStopCopy(nsresult aStatus, nsISupports *listenerData)
+{
+  if (NS_SUCCEEDED(aStatus))
+  {
+#ifdef NS_DEBUG
+    printf("CopyListener: SUCCESSFUL ON THE COPY OPERATION!\n");
+#endif
+  }
+  else
+  {
+#ifdef NS_DEBUG
+    printf("CopyListener: COPY OPERATION FAILED!\n");
+#endif
+  }
 
-	if(NS_FAILED(rv = srcFolderElement->GetResource(&srcResource)))
-		return rv;
+  if (mComposeAndSend)
+    mComposeAndSend->NotifyListenersOnStopCopy(aStatus, listenerData);
 
-	if(NS_FAILED(rv = srcResource->QueryInterface(nsIMsgFolder::GetIID(), (void**)&srcFolder)))
-		return rv;
+  return NS_OK;
+}
 
-	if(NS_FAILED(rv =ConvertDOMListToResourceArray(nodeList, &resourceArray)))
-		return rv;
+nsresult
+CopyListener::SetMsgComposeAndSendObject(nsMsgComposeAndSend *obj)
+{
+  if (obj)
+  {
+    mComposeAndSend = obj;
+    NS_ADDREF(mComposeAndSend);
+  }
 
-	//Call the mailbox service to copy first message.  In the future we should call CopyMessages.
-	//And even more in the future we need to distinguish between the different types of URI's, i.e.
-	//local, imap, and news, and call the appropriate copy function.
+  return NS_OK;
+}
 
-	PRUint32 cnt;
-  rv = resourceArray->Count(&cnt);
-  if (NS_SUCCEEDED(rv) && cnt > 0)
+
+////////////////////////////////////////////////////////////////////////////////////
+// END  END  END  END  END  END  END  END  END  END  END  END  END  END  END 
+// This is the listener class for the copy operation. We have to create this class 
+// to listen for message copy completion and eventually notify the caller
+////////////////////////////////////////////////////////////////////////////////////
+
+nsMsgCopy::nsMsgCopy()
+{
+  mFileSpec = nsnull;
+  mMsgSendObj = nsnull;
+  mMode = nsMsgDeliverNow;
+}
+
+nsMsgCopy::~nsMsgCopy()
+{
+  if (mMsgSendObj)
+    NS_RELEASE(mMsgSendObj);
+}
+
+nsresult
+nsMsgCopy::StartCopyOperation(nsIMsgIdentity       *aUserIdentity,
+                              nsIFileSpec          *aFileSpec, 
+                              nsMsgDeliverMode     aMode,
+                              nsMsgComposeAndSend  *aMsgSendObj)
+{
+  nsCOMPtr<nsIMsgFolder>  dstFolder;
+
+  if (!aMsgSendObj)
+    return NS_ERROR_FAILURE;
+
+  //
+  // Vars for implementation...
+  //
+  if (aMode == nsMsgQueueForLater)       // QueueForLater (Outbox)
+  {
+    dstFolder = GetUnsentMessagesFolder(aUserIdentity); 
+  }
+  else if (aMode == nsMsgSaveAsDraft)    // SaveAsDraft (Drafts)
+  {
+    dstFolder = GetDraftsFolder(aUserIdentity);
+  }
+  else if (aMode == nsMsgSaveAsTemplate) // SaveAsTemplate (Templates)
+  {
+    dstFolder = GetTemplatesFolder(aUserIdentity);
+  }
+  else // SaveInSentFolder (Sent) -  nsMsgDeliverNow
+  {
+    dstFolder = GetSentFolder(aUserIdentity);
+  }
+
+  mMode = aMode;
+  
+  nsresult rv = DoCopy(aFileSpec, dstFolder, nsnull);
+  if (NS_SUCCEEDED(rv))
+  {
+    mMsgSendObj = aMsgSendObj;
+    NS_ADDREF(mMsgSendObj);
+  }
+
+  return rv;
+}
+
+
+nsresult 
+nsMsgCopy::DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
+                  nsITransactionManager *txnMgr)
+{
+  nsresult rv = NS_OK;
+
+  // Check sanity
+  if ((!aDiskFile) || (!dstFolder))
+    return NS_ERROR_FAILURE;
+
+	//Call copyservice with dstFolder, disk file, and txnManager
+	NS_WITH_SERVICE(nsIMsgCopyService, copyService, kMsgCopyServiceCID, &rv); 
+	if(NS_SUCCEEDED(rv))
 	{
-		nsIRDFResource * firstMessage = (nsIRDFResource*)resourceArray->ElementAt(0);
-		char *uri;
-		firstMessage->GetValue(&uri);
-		nsCopyMessageStreamListener* copyStreamListener = new nsCopyMessageStreamListener(srcFolder, dstFolder, nsnull);
+    CopyListener *copyListener = new CopyListener();
+    if (!copyListener)
+      return MK_OUT_OF_MEMORY;
 
-		nsIMsgMessageService * messageService = nsnull;
-		rv = GetMessageServiceFromURI(uri, &messageService);
-
-		if (NS_SUCCEEDED(rv) && messageService)
-		{
-			nsIURI * url = nsnull;
-			messageService->CopyMessage(uri, copyStreamListener, isMove, nsnull, &url);
-			ReleaseMessageServiceFromURI(uri, messageService);
-		}
-
+    copyListener->SetMsgComposeAndSendObject(mMsgSendObj);
+    rv = copyService->CopyFileMessage(aDiskFile, dstFolder, nsnull, PR_FALSE, 
+                                      copyListener, nsnull, txnMgr);
 	}
 
-	NS_RELEASE(srcResource);
-	NS_RELEASE(srcFolder);
-	NS_RELEASE(dstResource);
-	NS_RELEASE(dstFolder);
-	NS_RELEASE(resourceArray);
 	return rv;
 }
 
-FindFolderWithFlag
-nsIMsgHeader
+nsIMsgFolder *
+LocateMessageFolder(nsIMsgIdentity   *userIdentity, 
+                    nsMsgDeliverMode aFolderType)
+{
+  nsresult                  rv = NS_OK;
+  nsIMsgFolder              *msgFolder= nsnull;
+  
+  //
+  // get the current mail session....
+  //
+	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv); 
+  if (NS_FAILED(rv)) 
+    return nsnull;
 
-identity
-server (nsIMsgIncommingServer)
-folder (nsIMsgFolder)
-GetFolderWithFlags() - nsMsgFolderFlags.h (public)
+  nsCOMPtr<nsIMsgAccountManager> accountManager;
+  rv = mailSession->GetAccountManager(getter_AddRefs(accountManager));
+  if (NS_FAILED(rv)) 
+    return nsnull;
+  
+  nsCOMPtr<nsISupportsArray> retval; 
+  accountManager->GetServersForIdentity(userIdentity, getter_AddRefs(retval)); 
+  if (!retval) 
+    return nsnull; 
 
-GetMessages() on folder
+  // Now that we have the server...we need to get the named message folder
+  nsCOMPtr<nsIMsgIncomingServer> inServer; 
+  inServer = do_QueryInterface(retval->ElementAt(0));
+  if(NS_FAILED(rv) || (!inServer))
+    return nsnull;
 
-nsIMessages returned
-get URI, key, header (nsIMsgHdr - )
-get message key
+  nsIFolder *aFolder;
+  rv = inServer->GetRootFolder(&aFolder);
+  if (NS_FAILED(rv) || (!aFolder)) 
+    return nsnull;
 
-nsMsg
+  nsCOMPtr<nsIMsgFolder> rootFolder;
+  rootFolder = do_QueryInterface(aFolder);
+  if(NS_FAILED(rv) || (!rootFolder))
+    return nsnull;
 
-get POP service - extract from Berkely mail folder
+  NS_RELEASE(aFolder);
 
-nsIPop3Service 
+  PRUint32 numFolders = 0;
+  if (aFolderType == nsMsgQueueForLater)       // QueueForLater (Outbox)
+  {
+    rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_QUEUE, &msgFolder, 1, &numFolders);
+  }
+  else if (aFolderType == nsMsgSaveAsDraft)    // SaveAsDraft (Drafts)
+  {
+    rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_DRAFTS, &msgFolder, 1, &numFolders);
+  }
+  else if (aFolderType == nsMsgSaveAsTemplate) // SaveAsTemplate (Templates)
+  {
+    rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_TEMPLATES, &msgFolder, 1, &numFolders);
+  }
+  else // SaveInSentFolder (Sent) -  nsMsgDeliverNow
+  {
+    rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_SENTMAIL, &msgFolder, 1, &numFolders);
+  }
 
+  if (NS_FAILED(rv) || (!msgFolder)) 
+    return nsnull;
+  return msgFolder;
+}
 
-smtptest.cpp - setup as a url listener
+nsIMsgFolder *
+nsMsgCopy::GetUnsentMessagesFolder(nsIMsgIdentity   *userIdentity)
+{
+  return LocateMessageFolder(userIdentity, nsMsgQueueForLater);
+}
+ 
+nsIMsgFolder *
+nsMsgCopy::GetDraftsFolder(nsIMsgIdentity *userIdentity)
+{
+  return LocateMessageFolder(userIdentity, nsMsgSaveAsDraft);
+}
 
-********/
+nsIMsgFolder *
+nsMsgCopy::GetTemplatesFolder(nsIMsgIdentity *userIdentity)
+{
+  return LocateMessageFolder(userIdentity, nsMsgSaveAsTemplate);
+}
+
+nsIMsgFolder * 
+nsMsgCopy::GetSentFolder(nsIMsgIdentity *userIdentity)
+{
+  return LocateMessageFolder(userIdentity, nsMsgDeliverNow);
+}

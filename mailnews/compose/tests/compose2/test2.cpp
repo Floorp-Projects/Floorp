@@ -374,7 +374,8 @@ int main(int argc, char *argv[])
         return NS_ERROR_FAILURE;
       }
 
-      pMsgSend->SendMessageFile(pMsgCompFields, // nsIMsgCompFields                  *fields,
+      pMsgSend->SendMessageFile(nsnull,  // identity...
+                          pMsgCompFields, // nsIMsgCompFields                  *fields,
                           mailFile,             // nsFileSpec                        *sendFileSpec,
                           PR_TRUE,              // PRBool                            deleteSendFileOnCompletion,
 						              PR_FALSE,             // PRBool                            digest_p,
