@@ -1377,7 +1377,9 @@ static char *jar_choose_nickname (CERTCertificate *cert)
 char *JAR_cert_html
     (JAR *jar, int style, long keylen, void *key, int *result)
   {
+#ifdef notdef
   char *html;
+#endif
   CERTCertificate *cert;
 
   *result = -1;
