@@ -129,26 +129,33 @@ public class Kit
      */
     public static String[] semicolonSplit(String s)
     {
-        int count = 0;
-        for (int cursor = 0; ;) {
-            int next = s.indexOf(';', cursor) + 1;
-            if (next <= 0) {
-                // check for missing ;
-                if (cursor + 1 < s.length())
+        String[] array = null;
+        for (;;) {
+            // loop 2 times: first to count semicolons and then to fill array
+            int count = 0;
+            int cursor = 0;
+            for (;;) {
+                int next = s.indexOf(';', cursor);
+                if (next < 0) {
+                    break;
+                }
+                if (array != null) {
+                    array[count] = s.substring(cursor, next);
+                }
+                ++count;
+                cursor = next + 1;
+            }
+            // after the last semicolon
+            if (array == null) {
+                // array size counting state:
+                // check for required terminating ';'
+                if (cursor != s.length())
                     throw new IllegalArgumentException();
+                array = new String[count];
+            } else {
+                // array filling state: stop the loop
                 break;
             }
-            ++count;
-            cursor = next + 1;
-        }
-        String[] array = new String[count];
-        count = 0;
-        for (int cursor = 0; ;) {
-            int next = s.indexOf(';', cursor);
-            if (next < 0) { break; }
-            array[count] = s.substring(cursor, next);
-            ++count;
-            cursor = next + 1;
         }
         return array;
     }
