@@ -921,10 +921,14 @@ nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
     float p2t;
     aPresContext->GetScaledPixelsToTwips(&p2t);
     if (aMetrics.width == NS_UNCONSTRAINEDSIZE) {
-      aMetrics.width  = NSIntPixelsToTwips(EMBED_DEF_WIDTH,  p2t);
+      aMetrics.width = PR_MIN(PR_MAX(NSIntPixelsToTwips(EMBED_DEF_WIDTH, p2t),
+                                     aReflowState.mComputedMinWidth),
+                              aReflowState.mComputedMaxWidth);
     }
     if (aMetrics.height == NS_UNCONSTRAINEDSIZE) {
-      aMetrics.height = NSIntPixelsToTwips(EMBED_DEF_HEIGHT, p2t);
+      aMetrics.height = PR_MIN(PR_MAX(NSIntPixelsToTwips(EMBED_DEF_HEIGHT, p2t),
+                                      aReflowState.mComputedMinHeight),
+                               aReflowState.mComputedMaxHeight);
     }
   }
 
@@ -932,7 +936,9 @@ nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
   // nothing to go on (no width set, no information from the plugin, nothing).
   // Make up a number.
   if (aMetrics.width == NS_UNCONSTRAINEDSIZE) {
-    aMetrics.width = 0;
+    aMetrics.width =
+      (aReflowState.mComputedMinWidth != NS_UNCONSTRAINEDSIZE) ?
+        aReflowState.mComputedMinWidth : 0;
   }
 
   // At this point, the height has an unconstrained value only in two cases:
@@ -940,7 +946,9 @@ nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
   // b) We have no height information at all.
   // In either case, we have to make up a number.
   if (aMetrics.height == NS_UNCONSTRAINEDSIZE) {
-    aMetrics.height = 0;
+    aMetrics.height =
+      (aReflowState.mComputedMinHeight != NS_UNCONSTRAINEDSIZE) ?
+        aReflowState.mComputedMinHeight : 0;
   }
 
   // XXXbz don't add in the border and padding, because we screw up our
