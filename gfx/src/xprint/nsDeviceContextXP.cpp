@@ -347,7 +347,7 @@ NS_IMETHODIMP nsDeviceContextXP::BeginDocument(PRUnichar * aTitle)
 {  
   nsresult  rv = NS_OK;
   if (mPrintContext != nsnull) {
-      rv = mPrintContext->BeginDocument(aTitle);
+      rv = mPrintContext->BeginDocument();
   } 
   return rv;
 }
