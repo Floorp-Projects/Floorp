@@ -118,7 +118,8 @@ public:
   nsDeque       mSkipped; //each entry will hold a deque full of skipped tokens...
   nsDeque       mStyles;  //each entry will hold a tagstack full of style tags...
 #ifdef  NS_DEBUG
-  eHTMLTags   mTags[100];
+  enum { eMaxTags = 100 };
+  eHTMLTags   mTags[eMaxTags];
 #endif
 };
 

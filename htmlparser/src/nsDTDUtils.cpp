@@ -215,7 +215,7 @@ PRInt32 nsDTDContext::GetCount(void) {
  */
 void nsDTDContext::Push(eHTMLTags aTag) {
 #ifdef  NS_DEBUG
-  if(mStack.mCount<sizeof(mTags))
+  if(mStack.mCount < eMaxTags)
     mTags[mStack.mCount]=aTag;
 #endif
 
@@ -227,7 +227,7 @@ void nsDTDContext::Push(eHTMLTags aTag) {
  */
 eHTMLTags nsDTDContext::Pop() {
 #ifdef  NS_DEBUG
-  if(mStack.mCount>0)
+  if ((mStack.mCount>0) && (mStack.mCount <= eMaxTags))
     mTags[mStack.mCount-1]=eHTMLTag_unknown;
 #endif
 
@@ -665,7 +665,6 @@ void CObserverDictionary::UnregisterObservers() {
   nsObserverReleaser theReleaser;
   for(theIndex=0;theIndex<NS_HTML_TAG_MAX;theIndex++){
     if(mObservers[theIndex]){
-      nsIElementObserver* theElementObserver=0;
       mObservers[theIndex]->ForEach(theReleaser);
       delete mObservers[theIndex];
     }
