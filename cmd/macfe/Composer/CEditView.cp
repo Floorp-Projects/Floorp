@@ -1089,9 +1089,9 @@ int CEditView::FindQueuedKeys(char *keys_in_q)
 	Boolean foundAndClearedEvent;
 	while ( (curr_q_num < (MAX_Q_SIZE-2)) && ::EventAvail( everyEvent, &currEvent ) )
 	{
-		if ( (currEvent.what == keyDown) 	// its a backspace-keydown
+		if ( currEvent.what == autoKey || ( (currEvent.what == keyDown) 	// its a backspace-keydown
 		&& !((cmdKey | optionKey | controlKey) & currEvent.modifiers) // with no modKeys except maybe shift
-		&& ( IsPastable( static_cast<Char16>(currEvent.message & 0xFFFF) )) )
+		&& ( IsPastable( static_cast<Char16>(currEvent.message & 0xFFFF) )) ) )
 		{
         	keys_in_q[curr_q_num + 1] = static_cast<char>(currEvent.message & 0xFF);
 			++curr_q_num;
@@ -1198,9 +1198,9 @@ Boolean CEditView::HandleKeyPress( const EventRecord& inKeyEvent )
 
 					while ( ::EventAvail( everyEvent, &currEvent ) )
 					{
-						if ( (currEvent.what == keyDown) 	// its a backspace-keydown
+						if ( currEvent.what == autoKey || ( (currEvent.what == keyDown) 	// its a backspace-keydown
 						&& !((cmdKey | optionKey | controlKey) & currEvent.modifiers) // with no modKeys except maybe shift
-						&& ( (static_cast<Uchar>(currEvent.message & charCodeMask)) == char_Backspace ) )
+						&& ( (static_cast<Uchar>(currEvent.message & charCodeMask)) == char_Backspace ) ) )
 							++count;
 						else if ( currEvent.what != keyUp ) // it's _not_ a keyup; bail
 							break; 							// keyups don't stop us, everything else does
@@ -1733,6 +1733,20 @@ void CEditView::FindCommandStatus( CommandT inCommand, Boolean& outEnabled,
 	
 			outEnabled = EDT_IsInsertPointInTableCell( *GetContext() );
 			break;
+			
+		case cmd_Split_Cell:
+			if ( !IsDoneLoading() )
+				return;
+				
+			outEnabled = EDT_CanSplitTableCell( *GetContext() );
+				break;
+		
+		case cmd_Join_With_Next_Cell:
+			if (!IsDoneLoading() )
+				return;
+			
+			outEnabled = ( EDT_GetMergeTableCellsType (*GetContext() ) != ED_MERGE_NONE );
+				break;
 		
 #if 0
 		case cmd_DisplayTableBoundaries:
@@ -4732,7 +4746,7 @@ Boolean CEditView::ObeyCommand( CommandT inCommand, void *ioParam )
 		
 		case cmd_Select_Table:
 			FLUSH_JAPANESE_TEXT
-			EDT_SelectTable( *GetContext() );	// clu - this selects all cells instead of table -> WRONG!!
+			EDT_SelectTable( *GetContext() );
 			break;
 		
 		case cmd_Select_Row:
@@ -4747,12 +4761,12 @@ Boolean CEditView::ObeyCommand( CommandT inCommand, void *ioParam )
 			
 		case cmd_Select_Cell:
 			FLUSH_JAPANESE_TEXT
-			EDT_ChangeTableSelection( *GetContext(), ED_HIT_SEL_CELL, ED_MOVE_NONE, NULL  );
+			EDT_ChangeTableSelection( *GetContext(), ED_HIT_SEL_CELL, ED_MOVE_NONE, NULL );
 			break;
 			
 		case cmd_Select_All_Cells:
 			FLUSH_JAPANESE_TEXT
-			EDT_SelectTable( *GetContext() );
+			EDT_ChangeTableSelection( *GetContext(), ED_HIT_SEL_ALL_CELLS, ED_MOVE_NONE, NULL );
 			break;
 		
 		case cmd_Format_Table:
@@ -4855,6 +4869,17 @@ Boolean CEditView::ObeyCommand( CommandT inCommand, void *ioParam )
 		case cmd_Format_Cell:
 			CEditDialog::Start( EDITDLG_TABLE_INFO, *GetContext(), 3 );
 			break;
+			
+		case cmd_Join_With_Next_Cell:
+		    FLUSH_JAPANESE_TEXT
+		    EDT_MergeTableCells( *GetContext() );
+		    break;
+		
+		case cmd_Split_Cell:
+			FLUSH_JAPANESE_TEXT
+			EDT_SplitTableCell( *GetContext() );
+			break;
+
 					
 #if 0
 		case cmd_DisplayTableBoundaries:
