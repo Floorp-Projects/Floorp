@@ -1204,7 +1204,8 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(EventRecord&	aOSEvent)
 			if ( aOSEvent.modifiers & controlKey )
 			  mouseButton = NS_MOUSE_RIGHT_BUTTON_DOWN;
 			ConvertOSEventToMouseEvent(aOSEvent, mouseEvent, mouseButton);
-			nsWindow* widgetHit = (nsWindow*)mouseEvent.widget;
+			nsCOMPtr<nsIWidget> kungFuDeathGrip ( mouseEvent.widget );            // ensure widget doesn't go away
+			nsWindow* widgetHit = NS_STATIC_CAST(nsWindow*, mouseEvent.widget);   //   while we're processing event
 			if (widgetHit)
 			{
 				// set the activation and focus on the widget hit, if it accepts it
