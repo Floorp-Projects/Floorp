@@ -1324,7 +1324,7 @@ backtrace(int skip)
     site = calltree(skip);
     if (!site) {
         tmstats.backtrace_failures++;
-        //PR_ASSERT(tmstats.backtrace_failures < 100);
+        PR_ASSERT(tmstats.backtrace_failures < 100);
     }
     suppress_tracing--;
     return site;
