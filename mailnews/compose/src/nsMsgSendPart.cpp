@@ -58,7 +58,10 @@ nsMsgSendPart::nsMsgSendPart(nsMsgComposeAndSend* state, const char *part_charse
   m_numchildren = 0;
   
   SetMimeDeliveryState(state);
-  
+
+  mMHTMLPart = PR_FALSE;
+  mPartSeparator = nsnull;
+
   m_parent = NULL;
   m_filespec = NULL;
   m_filetype = (XP_FileType)0;
@@ -94,6 +97,30 @@ nsMsgSendPart::~nsMsgSendPart()
 	PR_FREEIF(m_type);
 }
 
+void
+nsMsgSendPart::SetMultipartRelatedFlag(PRBool aFlag)
+{
+  mMHTMLPart = aFlag;
+}
+
+void
+nsMsgSendPart::SetPartSeparator(char *aPartSeparator)
+{
+  mPartSeparator = aPartSeparator;
+}
+
+char *
+nsMsgSendPart::GetPartSeparator()
+{
+  return mPartSeparator;
+}
+
+PRBool
+nsMsgSendPart::IsMultipartRelatedPart()
+{
+  return mMHTMLPart;
+}
+
 int nsMsgSendPart::CopyString(char** dest, const char* src)
 {
   NS_ASSERTION(src, "src null");
@@ -120,7 +147,7 @@ int nsMsgSendPart::SetFile(nsFileSpec *filename)
 
 int nsMsgSendPart::SetBuffer(const char* buffer)
 {
-  NS_ASSERTION(m_buffer == NULL, "not-null m_buffer");
+  PR_FREEIF(m_buffer);
   return CopyString(&m_buffer, buffer);
 }
 
@@ -343,11 +370,12 @@ itself.  (This relies on the fact that all body-related headers begin with
 
   (How many header parsers are in this program now?)
   */
-  static int divide_content_headers(const char *headers,
-    char **message_headers,
-    char **content_headers,
-    char **content_type_header)
-  {
+static int 
+divide_content_headers(const char *headers,
+                        char **message_headers,
+                        char **content_headers,
+                        char **content_type_header)
+{
     const char *tail;
     char *message_tail, *content_tail, *type_tail;
     int L = 0;
@@ -460,24 +488,24 @@ itself.  (This relies on the fact that all body-related headers begin with
     return 0;
 }
 
-extern "C" {
-  extern char *mime_make_separator(const char *prefix);
-}
-
-int nsMsgSendPart::Write()
+int 
+nsMsgSendPart::Write(PRBool   aMultiPartRelatedWithAttachmentsMessage,
+                     char     *attachmentSeparator,
+                     char     *multipartRelatedSeparator)
 {
-  int status = 0;
-  char *separator = 0;
-  
+  int     status = 0;
+  PRBool  partOfMPARTMessage;
+
 #define PUSHLEN(str, length)									\
   do {														\
 		status = mime_write_message_body(m_state, str, length);	\
     if (status < 0) goto FAIL;								\
   } while (0)													\
-  
+
 #define PUSH(str) PUSHLEN(str, PL_strlen(str))
   
-  if (m_mainpart && m_type && PL_strcmp(m_type, TEXT_HTML) == 0) {		  
+  if (m_mainpart && m_type && PL_strcmp(m_type, TEXT_HTML) == 0) 
+  {		  
     if (m_filespec) 
     {
       // The "insert HTML links" code requires a memory buffer,
@@ -502,19 +530,21 @@ int nsMsgSendPart::Write()
           PR_Free(m_buffer);
       }
     }
+
     if (m_buffer) 
     {
       nsCOMPtr<nsIMimeURLUtils> myURLUtil;
       char                      *tmp = NULL;
       
       nsresult res = nsComponentManager::CreateInstance(kCMimeURLUtilsCID, 
-        NULL, nsCOMTypeInfo<nsIMimeURLUtils>::GetIID(), 
-        (void **) getter_AddRefs(myURLUtil)); 
+                                NULL, nsCOMTypeInfo<nsIMimeURLUtils>::GetIID(), 
+                                (void **) getter_AddRefs(myURLUtil)); 
       if (!NS_SUCCEEDED(res))
         goto FAIL;
       
       myURLUtil->ScanHTMLForURLs(m_buffer, &tmp);
-      if (tmp) {
+      if (tmp) 
+      {
         SetBuffer(tmp);
         PR_Free(tmp);
       }
@@ -525,27 +555,29 @@ int nsMsgSendPart::Write()
 				!PL_strcasecmp(m_parent->m_type, MULTIPART_DIGEST) &&
         m_type &&
         (!PL_strcasecmp(m_type, MESSAGE_RFC822) ||
-        !PL_strcasecmp(m_type, MESSAGE_NEWS))) {
-        /* If we're in a multipart/digest, and this document is of type
-        message/rfc822, then it's appropriate to emit no
-        headers.
-    */
+        !PL_strcasecmp(m_type, MESSAGE_NEWS))) 
+  {
+    // If we're in a multipart/digest, and this document is of type
+    // message/rfc822, then it's appropriate to emit no headers.
+    //
   }
-  else {
+  else 
+  {
     char *message_headers = 0;
     char *content_headers = 0;
     char *content_type_header = 0;
     status = divide_content_headers(m_other,
-      &message_headers,
-      &content_headers,
-      &content_type_header);
+                                    &message_headers,
+                                    &content_headers,
+                                    &content_type_header);
     if (status < 0)
       goto FAIL;
     
       /* First, write out all of the headers that refer to the message
       itself (From, Subject, MIME-Version, etc.)
     */
-    if (message_headers) {
+    if (message_headers) 
+    {
       PUSH(message_headers);
       PR_Free(message_headers);
       message_headers = 0;
@@ -560,20 +592,20 @@ int nsMsgSendPart::Write()
 		  
     /* Now make sure there's a Content-Type header.
     */
-    if (!content_type_header) {
+    if (!content_type_header) 
+    {
       NS_ASSERTION(m_type && *m_type, "null ptr");
       PRBool needsCharset = mime_type_needs_charset(m_type ? m_type : TEXT_PLAIN);
-      if (needsCharset) {
-        content_type_header =
-          PR_smprintf("Content-Type: %s; charset=%s" CRLF,
-          (m_type ? m_type : TEXT_PLAIN), m_charset_name);
+      if (needsCharset) 
+      {
+        content_type_header = PR_smprintf("Content-Type: %s; charset=%s" CRLF,
+                                          (m_type ? m_type : TEXT_PLAIN), m_charset_name);
       }
       else
-        content_type_header =
-        PR_smprintf("Content-Type: %s" CRLF,
-        (m_type ? m_type : TEXT_PLAIN));
-      
-      if (!content_type_header) {
+        content_type_header = PR_smprintf("Content-Type: %s" CRLF,
+                                          (m_type ? m_type : TEXT_PLAIN));
+      if (!content_type_header) 
+      {
         if (content_headers)
           PR_Free(content_headers);
         status = NS_ERROR_OUT_OF_MEMORY;
@@ -582,20 +614,14 @@ int nsMsgSendPart::Write()
     }
     
     /* If this is a compound object, tack a boundary string onto the
-    Content-Type header.
+    Content-Type header. this
     */
     if (m_numchildren > 0)
     {
       int L;
       char *ct2;
       NS_ASSERTION(m_type, "null ptr");
-      if (!separator) {
-        separator = mime_make_separator("");
-        if (!separator) {
-          status = NS_ERROR_OUT_OF_MEMORY;
-          goto FAIL;
-        }
-      }
+
       L = PL_strlen(content_type_header);
       
       if (content_type_header[L-1] == LF)
@@ -603,10 +629,10 @@ int nsMsgSendPart::Write()
       if (content_type_header[L-1] == CR)
         content_type_header[--L] = 0;
       
-      ct2 = PR_smprintf("%s;\r\n boundary=\"%s\"" CRLF,
-        content_type_header, separator);
+      ct2 = PR_smprintf("%s;\r\n boundary=\"%s\"" CRLF, content_type_header, attachmentSeparator);
       PR_Free(content_type_header);
-      if (!ct2) {
+      if (!ct2) 
+      {
         if (content_headers)
           PR_Free(content_headers);
         status = NS_ERROR_OUT_OF_MEMORY;
@@ -616,8 +642,7 @@ int nsMsgSendPart::Write()
       content_type_header = ct2;
     }
     
-    /* Now write out the Content-Type header...
-    */
+    // Now write out the Content-Type header...
     NS_ASSERTION(content_type_header && *content_type_header, "null ptr");
     PUSH(content_type_header);
     PR_Free(content_type_header);
@@ -626,20 +651,20 @@ int nsMsgSendPart::Write()
     /* ...followed by all of the other headers that refer to the body of
     the message (Content-Transfer-Encoding, Content-Dispositon, etc.)
     */
-    if (content_headers) {
+    if (content_headers) 
+    {
       PUSH(content_headers);
       PR_Free(content_headers);
       content_headers = 0;
     }
   }
-  
+
   PUSH(CRLF);					// A blank line, to mark the end of headers.
-  
+
   m_firstBlock = PR_TRUE;
   /* only convert if we need to tag charset */
   m_needIntlConversion = mime_type_needs_charset(m_type);
   m_intlDocToMailConverter = NULL;
-  
   
   if (m_buffer) 
   {
@@ -647,7 +672,8 @@ int nsMsgSendPart::Write()
     if (status < 0)
       goto FAIL;
   }
-  else if (m_filespec) {
+  else if (m_filespec) 
+  {
     nsIOFileStream  myStream(*m_filespec);
 
     if (!myStream.is_open())
@@ -657,20 +683,21 @@ int nsMsgSendPart::Write()
       goto FAIL;
     }
     /* Kludge to avoid having to allocate memory on the toy computers... */
-    if (!mime_mailto_stream_read_buffer) {
-      mime_mailto_stream_read_buffer = (char *)
-        PR_Malloc(MIME_BUFFER_SIZE);
-      if (!mime_mailto_stream_read_buffer) {
+    if (!mime_mailto_stream_read_buffer) 
+    {
+      mime_mailto_stream_read_buffer = (char *) PR_Malloc(MIME_BUFFER_SIZE);
+      if (!mime_mailto_stream_read_buffer) 
+      {
         status = NS_ERROR_OUT_OF_MEMORY;
         goto FAIL;
       }
     }
-    char* buffer = mime_mailto_stream_read_buffer;
-    
-    if (m_strip_sensitive_headers) {
-    /* We are attaching a message, so we should be careful to
-    strip out certain sensitive internal header fields.
-			   */
+
+    char    *buffer = mime_mailto_stream_read_buffer;
+    if (m_strip_sensitive_headers) 
+    {
+      // We are attaching a message, so we should be careful to
+      // strip out certain sensitive internal header fields.
       PRBool skipping = PR_FALSE;
       NS_ASSERTION(MIME_BUFFER_SIZE > 1000, "buffer size out of range"); /* SMTP (RFC821) limit */
       
@@ -743,35 +770,65 @@ int nsMsgSendPart::Write()
     }
   }
   
-  if (m_encoder_data) {
+  if (m_encoder_data) 
+  {
     status = MIME_EncoderDestroy(m_encoder_data, PR_FALSE);
     m_encoder_data = NULL;
     if (status < 0)
       goto FAIL;
   }
   
-  if (m_numchildren > 0) {
-    NS_ASSERTION(separator, "Null separator");
-    for (int i = 0 ; i < m_numchildren ; i ++) {
+  // 
+  // Ok, from here we loop and drive the the output of all children 
+  // for this message. Need to do write the correct separator depending
+  // on what kind of part it is
+  //
+  partOfMPARTMessage = PR_TRUE;
+  if (m_numchildren > 0) 
+  {
+    for (int i = 0 ; i < m_numchildren ; i ++) 
+    {
       PUSH(CRLF);
       PUSH("--");
-      PUSH(separator);
+
+      PUSH(m_children[i]->GetPartSeparator());
       PUSH(CRLF);
-      status = m_children[i]->Write();
+      status = m_children[i]->Write(aMultiPartRelatedWithAttachmentsMessage,
+                                    attachmentSeparator,
+                                    multipartRelatedSeparator);
       if (status < 0)
         goto FAIL;
+
+      // 
+      // If we are at a part that has a new separator, then 
+      // this is not part of the past the first entry, then we are at the
+      // end of the multipart related message and we need to
+      // mark the end of the multipart/related field.
+      //
+      if ( (aMultiPartRelatedWithAttachmentsMessage) &&
+           (partOfMPARTMessage) && 
+           (i+1 < m_numchildren) &&
+           (!m_children[i+1]->mMHTMLPart) )
+           //(i > 0) &&
+           // PL_strcasecmp(m_children[i]->GetPartSeparator(), m_children[i-1]->GetPartSeparator(), ) != 0 ) 
+      {
+        PUSH(CRLF);
+        PUSH("--");
+        PUSH(m_children[i]->GetPartSeparator());
+        PUSH("--");
+        PUSH(CRLF);
+        partOfMPARTMessage = PR_FALSE;
+      }
     }
+
     PUSH(CRLF);
     PUSH("--");
-    PUSH(separator);
+    PUSH(m_children[m_numchildren-1]->GetPartSeparator());
     PUSH("--");
     PUSH(CRLF);
   }	
   
-  
-  
 FAIL:
-  PR_FREEIF(separator);
   return status;
 }
 

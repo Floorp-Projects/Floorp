@@ -254,7 +254,8 @@ NS_IMETHODIMP ConsoleOutputStreamListener::OnDataAvailable(nsIChannel * aChannel
   inStr->Read(aBuf, count, &aCount);
 
   // If raw, don't postprocess...
-  if (mOutFormat == nsMimeOutput::nsMimeMessageRaw)
+  if ((mOutFormat == nsMimeOutput::nsMimeMessageRaw) || 
+      (mOutFormat == nsMimeOutput::nsMimeMessageXULDisplay) )
   {
     PR_Write(PR_GetSpecialFD(PR_StandardOutput), aBuf, aCount);
     return NS_OK;

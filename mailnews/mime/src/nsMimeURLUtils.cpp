@@ -1197,17 +1197,18 @@ nsMimeURLUtils::ScanHTMLForURLs(const char* input, char **retBuf)
                                         several URLs, which ought to be as many
                                         as most docs use. */
     output = (char *)PR_Malloc(output_max);
-    if (!output) goto FAIL;
+    if (!output) 
+      goto FAIL;
 
     tmpbuf_max = 1024;
     tmpbuf = (char *)PR_Malloc(tmpbuf_max);
-    if (!tmpbuf) goto FAIL;
+    if (!tmpbuf) 
+      goto FAIL;
 
     inputend = input + inputlength;
 
     linestart = input;
     curoutput = output;
-
 
     /* Here's the strategy.  We find a chunk of plainish looking text -- no
        embedded CR or LF, no "<" or "&".  We feed that off to ScanForURLs,
@@ -1216,8 +1217,6 @@ nsMimeURLUtils::ScanHTMLForURLs(const char* input, char **retBuf)
        "<", well, if it was a "<A>" tag, then skip to the closing "</A>".
        Otherwise, skip to the end of the tag.
        */
-
-
     lineend = linestart;
     while (linestart < inputend && lineend <= inputend) {
         switch (*lineend) {
@@ -1233,7 +1232,8 @@ nsMimeURLUtils::ScanHTMLForURLs(const char* input, char **retBuf)
                     tmpbuf_max = length * 3 + 512;
                     PR_Free(tmpbuf);
                     tmpbuf = (char *)PR_Malloc(tmpbuf_max);
-                    if (!tmpbuf) goto FAIL;
+                    if (!tmpbuf) 
+                      goto FAIL;
                 }
                 if (ScanForURLs(linestart, length,
                                 tmpbuf, tmpbuf_max, TRUE) != NS_OK) {
@@ -1241,8 +1241,8 @@ nsMimeURLUtils::ScanHTMLForURLs(const char* input, char **retBuf)
                 }
                 length = PL_strlen(tmpbuf);
                 Append(&output, &output_max, &curoutput, tmpbuf, length);
-                if (!output) goto FAIL;
-
+                if (!output) 
+                  goto FAIL;
             }
             linestart = lineend;
             lineend = NULL;
@@ -1276,7 +1276,8 @@ nsMimeURLUtils::ScanHTMLForURLs(const char* input, char **retBuf)
             if (!lineend) lineend = inputend;
             Append(&output, &output_max, &curoutput, linestart,
                    lineend - linestart);
-            if (!output) goto FAIL;
+            if (!output) 
+              goto FAIL;
             linestart = lineend;
             break;
         default:
@@ -1287,12 +1288,13 @@ nsMimeURLUtils::ScanHTMLForURLs(const char* input, char **retBuf)
     tmpbuf = NULL;
     *curoutput = '\0';
     *retBuf = output;
+    return NS_OK;
 
 FAIL:
     if (tmpbuf) PR_Free(tmpbuf);
     if (output) PR_Free(output);
     *retBuf = NULL;
-    return NS_OK;
+    return NS_ERROR_FAILURE;
 }
 
 //

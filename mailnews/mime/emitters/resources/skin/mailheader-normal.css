@@ -6,10 +6,10 @@ window          { overflow: auto; }
 mailheader      { display: block; }
 mailattachcount { display: none; }
 
-box[name=header-attachment] { background-color: #EFEFEF; border: 2px solid #EFEFEF }
-box[name=header-part1]      { background-color: #EFEFEF; border: 2px solid #EFEFEF }
-box[name=header-part2]      { background-color: #DEDEDE; border: 2px solid #DEDEDE }
-box[name=header-part3]      { background-color: #DEDEDE; border: 2px solid #DEDEDE }
+box[name=header-attachment] { background-color: #EFEFEF; border: 0px solid #EFEFEF; border-left-width: 4px; }
+box[name=header-part1]      { background-color: #EFEFEF; border: 0px solid #EFEFEF; border-left-width: 4px; }
+box[name=header-part2]      { background-color: #DEDEDE; border: 0px solid #DEDEDE; border-left-width: 4px; }
+box[name=header-part3]      { background-color: #DEDEDE; border: 0px solid #DEDEDE; border-left-width: 4px; }
 
 /**************************************************
  * These are all the headers that are displayed

@@ -280,6 +280,11 @@ public:
 						                   PRUint32    attachment1_body_length,
                                const char  *attachment1_type);
 
+  PRInt32     PreProcessPart(nsMsgAttachmentHandler  *ma,
+                             char                    *aSeparator,
+                             nsMsgSendPart           *toppart); // The very top most container of the message
+                                                                // For part processing
+
   ////////////////////////////////////////////////////////////////////////////////
   // The current nsIMsgSend Interfaces exposed to the world!
   ////////////////////////////////////////////////////////////////////////////////

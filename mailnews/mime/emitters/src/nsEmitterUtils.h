@@ -33,5 +33,7 @@ char        *nsMsgCreateTempFileName(char *tFileName);
 
 char        *nsMimePlatformFileToURL (const char *name);
 
+char        *GetTheTempDirectoryOnTheSystem(void);
+
 #endif // _nsEmitterUtils_h_
 

@@ -189,7 +189,7 @@ MimeGetStringByName(const char *aHeaderName)
 #include "windows.h"
 #endif
 
-static char *
+char *
 GetTheTempDirectoryOnTheSystem(void)
 {
   char *retPath = (char *)PR_Malloc(TPATH_LEN);

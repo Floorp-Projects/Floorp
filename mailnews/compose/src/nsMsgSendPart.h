@@ -28,89 +28,97 @@
 #include "nsMsgZapIt.h"
 #include "nsMsgSend.h"
 
-
 typedef int (*MSG_SendPartWriteFunc)(const char* line, PRInt32 size,
-									 PRBool isheader, void* closure);
+									                   PRBool isheader, void* closure);
 
 class nsMsgSendPart : public nsMsgZapIt {
 public:
     nsMsgSendPart(nsMsgComposeAndSend* state, const char *part_charset = NULL);
-    virtual ~nsMsgSendPart();	// Note that the destructor also destroys
-								// any children that were added.
+    virtual ~nsMsgSendPart();	  // Note that the destructor also destroys
+								                // any children that were added.
 
-    virtual int Write();
+    virtual int       Write(PRBool    aMultiPartRelatedWithAttachmentsMessage,
+                            char      *attachmentSeparator,
+                            char      *multipartRelatedSeparator);
 
-    virtual int SetFile(nsFileSpec *filename);
-    const nsFileSpec * GetFileSpec() {return m_filespec;}
-	XP_FileType GetFiletype() {return m_filetype;}
+    virtual int       SetFile(nsFileSpec *filename);
+    const nsFileSpec  *GetFileSpec() {return m_filespec;}
+	  XP_FileType       GetFiletype() {return m_filetype;}
 
-    virtual int SetBuffer(const char* buffer);
-    const char* GetBuffer() {return m_buffer;}
+    virtual int       SetBuffer(const char* buffer);
+    const char        *GetBuffer() {return m_buffer;}
 
-    virtual int SetType(const char* type);
-    const char* GetType() {return m_type;}
+    virtual int       SetType(const char* type);
+    const char        *GetType() {return m_type;}
     
-    const char* GetCharsetName() {return m_charset_name;}
+    const char        *GetCharsetName() {return m_charset_name;}
 
-    virtual int SetOtherHeaders(const char* other);
-    const char* SetOtherHeaders() {return m_other;}
-	virtual int AppendOtherHeaders(const char* moreother);
+    virtual int       SetOtherHeaders(const char* other);
+    const char        *SetOtherHeaders() {return m_other;}
+	  virtual int       AppendOtherHeaders(const char* moreother);
 
-	virtual int SetMimeDeliveryState(nsMsgComposeAndSend* state);
+	  virtual int       SetMimeDeliveryState(nsMsgComposeAndSend* state);
 
 	// Note that the nsMsgSendPart class will take over ownership of the
 	// MimeEncoderData* object, deleting it when it chooses.  (This is
 	// necessary because deleting these objects is the only current way to
 	// flush out the data in them.)
-	int SetEncoderData(MimeEncoderData* data);
-	MimeEncoderData *GetEncoderData() {return m_encoder_data;}
+	int                 SetEncoderData(MimeEncoderData* data);
+	MimeEncoderData     *GetEncoderData() {return m_encoder_data;}
 
-	int SetStripSensitiveHeaders(PRBool value) {
-		m_strip_sensitive_headers = value;
-		return 0;
-	}
-	PRBool GetStripSensitiveHeaders() {return m_strip_sensitive_headers;}
+	int                 SetStripSensitiveHeaders(PRBool value) 
+                      {
+		                    m_strip_sensitive_headers = value;
+		                    return 0;
+	                    }
+	PRBool              GetStripSensitiveHeaders() {return m_strip_sensitive_headers;}
 
-    virtual int AddChild(nsMsgSendPart* child);
+  virtual int         AddChild(nsMsgSendPart* child);
 
-	PRInt32 GetNumChildren() {return m_numchildren;}
-	nsMsgSendPart* GetChild(PRInt32 which);
-	nsMsgSendPart* DetachChild(PRInt32 which);
+	PRInt32             GetNumChildren() {return m_numchildren;}
+	nsMsgSendPart       *GetChild(PRInt32 which);
+	nsMsgSendPart       *DetachChild(PRInt32 which);
 
-	virtual int SetMainPart(PRBool value);
-	PRBool IsMainPart() {return m_mainpart;}
-
+	virtual int         SetMainPart(PRBool value);
+	PRBool              IsMainPart() 
+                      {
+                        return m_mainpart;
+                      }
+  void                SetMultipartRelatedFlag(PRBool aFlag);
+  PRBool              IsMultipartRelatedPart();
+  void                SetPartSeparator(char *aPartSeparator);
+  char                *GetPartSeparator();
 
 protected:
-	int CopyString(char** dest, const char* src);
-	int PushBody(char* buffer, PRInt32 length);
+	int                 CopyString(char** dest, const char* src);
+	int                 PushBody(char* buffer, PRInt32 length);
 
-	nsMsgComposeAndSend* m_state;
-	nsMsgSendPart* m_parent;
-    nsFileSpec *m_filespec;
-	XP_FileType m_filetype;
-	char* m_buffer;
-    char* m_type;
-    char* m_other;
-  char m_charset_name[64+1];        // charset name associated with this part
-	PRBool m_strip_sensitive_headers;
-	MimeEncoderData *m_encoder_data;  /* Opaque state for base64/qp encoder. */
+  char                *mPartSeparator;  // Don't Free this memory!
+  PRBool              mMHTMLPart;       // Is this an MHTML part?
+	nsMsgComposeAndSend *m_state;
+	nsMsgSendPart       *m_parent;
+  nsFileSpec          *m_filespec;
+	XP_FileType         m_filetype;
+	char                *m_buffer;
+  char                *m_type;
+  char                *m_other;
+  char                m_charset_name[64+1];        // charset name associated with this part
+	PRBool              m_strip_sensitive_headers;
+	MimeEncoderData     *m_encoder_data;  /* Opaque state for base64/qp encoder. */
 
-	nsMsgSendPart** m_children;
-	PRInt32 m_numchildren;
+	nsMsgSendPart       **m_children;
+	PRInt32             m_numchildren;
 
 	// Data used while actually writing.
-    PRBool m_firstBlock;
-    PRBool m_needIntlConversion;
-    CCCDataObject m_intlDocToMailConverter;
+  PRBool              m_firstBlock;
+  PRBool              m_needIntlConversion;
+  CCCDataObject       m_intlDocToMailConverter;
 
-	PRBool m_mainpart;
+	PRBool              m_mainpart;
 
-	PRBool m_just_hit_CR;
+	PRBool              m_just_hit_CR;
 
-	static PRInt32 M_counter;
+	static PRInt32      M_counter;
 };
-
-
 
 #endif /* _MsgSendPart_H_ */

@@ -337,23 +337,16 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 	PRInt32 status;
   PRUint32    i;
 	char *headers = 0;
-	char *separator = 0;
 	PRFileDesc  *in_file = 0;
 	PRBool multipart_p = PR_FALSE;
 	PRBool plaintext_is_mainbody_p = PR_FALSE; // only using text converted from HTML?
 	char *buffer = 0;
 	char *buffer_tail = 0;
 	char* error_msg = nsnull;
- 
-  // to news is true if we have a m_field and we have a Newsgroup and it is not empty
-	PRBool tonews = PR_FALSE;
-	if (mCompFields) 
-  {
-		const char* pstrzNewsgroup = mCompFields->GetNewsgroups();
-		if (pstrzNewsgroup && *pstrzNewsgroup)
-			tonews = PR_TRUE;
-	}
-
+  PRBool multiPartRelatedWithAttachments = PR_FALSE;
+  char  *attachmentSeparator = nsnull;
+  char  *multipartRelatedSeparator = nsnull;
+  PRBool tonews;
 	nsMsgSendPart* toppart = nsnull;			// The very top most container of the message
 											// that we are going to send.
 
@@ -376,6 +369,49 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 											// message body.)
 	char *hdrs = 0;
 	PRBool maincontainerISrelatedpart = PR_FALSE;
+
+
+  //
+  // First things first! What kind of message is this going to be when it grows up.
+  // We will need to know this as we start building the message...
+  //
+  multiPartRelatedWithAttachments = ( (mMultipartRelatedAttachmentCount > 0) &&
+                                      (m_attachment_count > mMultipartRelatedAttachmentCount) );
+  // If we have any attachments, we generate multipart.
+	multipart_p = (m_attachment_count > 0);
+
+  //
+  // Ok, we need to create the separators for the 
+  // multipart message...
+  //
+  if (multipart_p)
+  {
+    attachmentSeparator = mime_make_separator("");
+    if (!attachmentSeparator) 
+    {
+      status = NS_ERROR_OUT_OF_MEMORY;
+      goto FAILMEM;
+    }
+  
+    if (multiPartRelatedWithAttachments)
+    {
+      multipartRelatedSeparator = mime_make_separator("MPR");
+      if (!multipartRelatedSeparator) 
+      {
+        status = NS_ERROR_OUT_OF_MEMORY;
+        goto FAILMEM;
+      }
+    }
+  }
+
+  // to news is true if we have a m_field and we have a Newsgroup and it is not empty
+	tonews = PR_FALSE;
+	if (mCompFields) 
+  {
+		const char* pstrzNewsgroup = mCompFields->GetNewsgroups();
+		if (pstrzNewsgroup && *pstrzNewsgroup)
+			tonews = PR_TRUE;
+	}
 
 	status = m_status;
 	if (status < 0)
@@ -566,6 +602,16 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 	mainbody->SetMainPart(PR_TRUE);
 	mainbody->SetType(m_attachment1_type ? m_attachment1_type : TEXT_PLAIN);
 
+  if (multipart_p)
+  {
+    // Need to do this only for complex messages...
+    // Since the toppart is the body of the MHTML message, this needs the multipart
+    // related separator
+    //
+    mainbody->SetPartSeparator(attachmentSeparator);
+    mainbody->SetMultipartRelatedFlag(PR_TRUE); 
+  }
+
 	NS_ASSERTION(mainbody->GetBuffer() == nsnull, "not-null buffer");
 	status = mainbody->SetBuffer(m_attachment1_body ? m_attachment1_body : " ");
 	if (status < 0)
@@ -630,6 +676,13 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 			mainbody = maincontainer;
 
 		mainbody->SetMainPart(PR_TRUE);
+    //
+    // Need to do this only for complex messages...
+    // Since the toppart is the body of the MHTML message, this needs the multipart
+    // related separator
+    //
+    mainbody->SetPartSeparator(attachmentSeparator);
+    mainbody->SetMultipartRelatedFlag(PR_TRUE); 
 	}
 
 	if (m_plaintext) 
@@ -647,7 +700,21 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 		status = plainpart->SetFile(m_plaintext->mFileSpec);
 		if (status < 0)
 			goto FAIL;
-		m_plaintext->AnalyzeSnarfedFile(); // look for 8 bit text, long lines, etc.
+
+    if (multipart_p)
+    {
+      // Need to do this only for complex messages...
+      // Since the toppart is the body of the MHTML message, this needs the multipart
+      // related separator
+      //
+      if (multiPartRelatedWithAttachments)
+        plainpart->SetPartSeparator(multipartRelatedSeparator);      
+      else
+        plainpart->SetPartSeparator(attachmentSeparator);
+      plainpart->SetMultipartRelatedFlag(PR_TRUE); 
+    }
+
+    m_plaintext->AnalyzeSnarfedFile(); // look for 8 bit text, long lines, etc.
 		m_plaintext->PickEncoding(mCompFields->GetCharacterSet());
 		hdrs = mime_generate_attachment_headers(m_plaintext->m_type,
 											  m_plaintext->m_encoding,
@@ -667,7 +734,8 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 		if (status < 0)
 			goto FAIL;
 
-		if (mCompFields->GetUseMultipartAlternative()) {
+		if (mCompFields->GetUseMultipartAlternative()) 
+    {
 			nsMsgSendPart* htmlpart = maincontainer;
 			maincontainer = new nsMsgSendPart(this);
 			if (!maincontainer)
@@ -675,7 +743,18 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 			status = maincontainer->SetType(MULTIPART_ALTERNATIVE);
 			if (status < 0)
 				goto FAIL;
-			status = maincontainer->AddChild(plainpart);
+
+      if (multipart_p)
+      {
+        // Need to do this only for complex messages...
+        // Since the toppart is the body of the MHTML message, this needs the multipart
+        // related separator
+        //
+        maincontainer->SetPartSeparator(attachmentSeparator);
+        maincontainer->SetMultipartRelatedFlag(PR_TRUE); 
+      }
+
+      status = maincontainer->AddChild(plainpart);
 			if (status < 0)
 				goto FAIL;
 			status = maincontainer->AddChild(htmlpart);
@@ -718,20 +797,15 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 		}
 	}
 
-	// ###tw  This used to be this more complicated thing, but for now, if it we
-	// have any attachments, we generate multipart.
-	// multipart_p = (m_attachment_count > 1 ||
-	//				 (m_attachment_count == 1 &&
-	//				  m_attachment1_body_length > 0));
-	multipart_p = (m_attachment_count > 0);
-
 	if (multipart_p) 
   {
 		toppart = new nsMsgSendPart(this);
 		if (!toppart)
 			goto FAILMEM;
 
-    if (mMultipartRelatedAttachmentCount > 0)
+    // This is JUST multpart related!
+    if ( (mMultipartRelatedAttachmentCount > 0) &&
+         (m_attachment_count == mMultipartRelatedAttachmentCount) )
   		status = toppart->SetType(MULTIPART_RELATED);
     else
 	  	status = toppart->SetType(m_digest_p ? MULTIPART_DIGEST : MULTIPART_MIXED);
@@ -741,21 +815,57 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 		status = toppart->AddChild(maincontainer);
 		if (status < 0)
 			goto FAIL;
+
 		if (!m_crypto_closure) 
     {
-      status = toppart->SetBuffer(MIME_MULTIPART_BLURB);
-			if (status < 0)
-				goto FAIL;
+      //    This is a multi-part message in MIME format.
+      //    --------------C428B2F3369F2FBEBDD59897
+      //    Content-Type: multipart/related;
+      //      boundary="------------ACE298C3793AC965A3B99725"
+      if (multiPartRelatedWithAttachments)
+      {
+        char *newLine = PR_smprintf("%s%s--%s%sContent-Type: %s;%s boundary=\"%s\"%s%s",
+                                    MIME_MULTIPART_BLURB, CRLF,
+                                    attachmentSeparator, CRLF,
+                                    MULTIPART_RELATED, CRLF,
+                                    multipartRelatedSeparator, CRLF, CRLF);
+        status = toppart->SetBuffer(newLine);
+        PR_FREEIF(newLine);
+      }
+      else
+      {
+        status = toppart->SetBuffer(MIME_MULTIPART_BLURB);
+      }
+            
+      if (status < 0)
+        goto FAIL;
 		}
+
+    if (multiPartRelatedWithAttachments)
+    {
+      toppart->SetPartSeparator(multipartRelatedSeparator);      
+      maincontainer->SetPartSeparator(multipartRelatedSeparator);      
+    }
+    else
+    {
+      toppart->SetPartSeparator(attachmentSeparator);      
+      maincontainer->SetPartSeparator(attachmentSeparator);      
+    }
+
+    toppart->SetMultipartRelatedFlag(PR_TRUE);
+    maincontainer->SetMultipartRelatedFlag(PR_TRUE);
 	}
 	else
+  {
+    maincontainer->SetPartSeparator(attachmentSeparator);      
+    maincontainer->SetMultipartRelatedFlag(PR_FALSE);
 		toppart = maincontainer;
+  }
 
   /* Write out the message headers.
    */
-	headers = mime_generate_headers (mCompFields,
-								   mCompFields->GetCharacterSet(),
-								   m_deliver_mode);
+	headers = mime_generate_headers (mCompFields, mCompFields->GetCharacterSet(),
+								                   m_deliver_mode);
 	if (!headers)
 		goto FAILMEM;
 
@@ -838,12 +948,34 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 	if (status < 0)
 		goto FAIL;
 
-
-	/* Set up the subsequent parts.
-	*/
-	if (m_attachment_count > 0)
+  //
+  // Ok, I think I can do the magic here and make MHTML messages with
+  // attachments work. This is where we set up the subsequent parts, but
+  // what we need to do in our case is process all of the attachments in
+  // two blocks (i.e. multipart/related then the rest of the attachments with
+  // unique separators)
+  // 
+  // So an MHTML message with attachments should look like the following:
+  //
+  //   (In the main header)
+  //    Content-Type: multipart/mixed;
+  //        boundary="------------C428B2F3369F2FBEBDD59897"
+  //
+  //    (then the first thing after the headers should be:
+  //
+  //    This is a multi-part message in MIME format.
+  //    --------------C428B2F3369F2FBEBDD59897
+  //    Content-Type: multipart/related;
+  //      boundary="------------ACE298C3793AC965A3B99725"
+  //
+  //    all multipart related parts...
+  //
+  //    --------------C428B2F3369F2FBEBDD59897   {main message separator}
+  //    rest of the attached parts
+  //
+  if (m_attachment_count > 0)
 	{
-		/* Kludge to avoid having to allocate memory on the toy computers... */
+		// Kludge to avoid having to allocate memory on the toy computers...
 		if (! mime_mailto_stream_read_buffer)
 			mime_mailto_stream_read_buffer = (char *) PR_Malloc (MIME_BUFFER_SIZE);
 		buffer = mime_mailto_stream_read_buffer;
@@ -851,85 +983,51 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 			goto FAILMEM;
 		buffer_tail = buffer;
 
+    // do 2 loops here and count up the mpart related 
+    // and total count
+    PRInt32       multipartPartFound = 0;
+    PRInt32       attachmentFound = 0;
+
+    // First, gather all of the multipart related parts for this message!
 		for (i = 0; i < m_attachment_count; i++)
-		{
-			nsMsgAttachmentHandler *ma = &m_attachments[i];
-			hdrs = 0;
+    {
+      nsMsgAttachmentHandler *ma = &m_attachments[i];
+      if (!ma->mMHTMLPart)
+        continue;
 
-			nsMsgSendPart* part = nsnull;
+      if (multiPartRelatedWithAttachments)
+        multipartPartFound += PreProcessPart(ma, multipartRelatedSeparator, toppart);
+      else
+        multipartPartFound += PreProcessPart(ma, attachmentSeparator, toppart);
+    }
 
-			// If at this point we *still* don't have an content-type, then
-			// we're never going to get one.
-			if (ma->m_type == nsnull) {
-				ma->m_type = PL_strdup(UNKNOWN_CONTENT_TYPE);
-				if (ma->m_type == nsnull)
-					goto FAILMEM;
-			}
+    // Now, gather all of the attachments!
+		for (i = 0; i < m_attachment_count; i++)
+    {
+      nsMsgAttachmentHandler *ma = &m_attachments[i];
+      if (ma->mMHTMLPart)
+        continue;
 
-			ma->PickEncoding (mCompFields->GetCharacterSet());
-
-			part = new nsMsgSendPart(this);
-			if (!part)
-				goto FAILMEM;
-			status = toppart->AddChild(part);
-			if (status < 0)
-				goto FAIL;
-			status = part->SetType(ma->m_type);
-			if (status < 0)
-				goto FAIL;
-
-      nsXPIDLCString turl;
-      ma->mURL->GetSpec(getter_Copies(turl));
-	    hdrs = mime_generate_attachment_headers (ma->m_type, ma->m_encoding,
-												   ma->m_description,
-												   ma->m_x_mac_type,
-												   ma->m_x_mac_creator,
-												   ma->m_real_name,
-												   turl,
-												   m_digest_p,
-												   ma,
-                           ma->m_charset, // rhp - this needs to be the charset we determine from
-                                          // the file or none at all!
-                           ma->m_content_id);
-			if (!hdrs)
-				goto FAILMEM;
-
-			status = part->SetOtherHeaders(hdrs);
-			PR_FREEIF(hdrs);
-			if (status < 0)
-				goto FAIL;
-			status = part->SetFile(ma->mFileSpec);
-			if (status < 0)
-				goto FAIL;
-			if (ma->m_encoder_data) {
-				status = part->SetEncoderData(ma->m_encoder_data);
-				if (status < 0)
-					goto FAIL;
-				ma->m_encoder_data = nsnull;
-			}
-
-			ma->m_current_column = 0;
-
-			if (ma->m_type &&
-					(!PL_strcasecmp (ma->m_type, MESSAGE_RFC822) ||
-					!PL_strcasecmp (ma->m_type, MESSAGE_NEWS))) {
-				status = part->SetStripSensitiveHeaders(PR_TRUE);
-				if (status < 0)
-					goto FAIL;
-			}
-		}
+      attachmentFound += PreProcessPart(ma, attachmentSeparator, toppart);
+    }
 	}
 
 	// OK, now actually write the structure we've carefully built up.
-	status = toppart->Write();
+  // Pass in TRUE if this is a multipart message WITH Attachments, 
+  // false if not
+	status = toppart->Write(multiPartRelatedWithAttachments,
+                          attachmentSeparator,
+                          multipartRelatedSeparator);
 	if (status < 0)
 		goto FAIL;
 
 	HJ45609
 
-	if (mOutputFile) {
+	if (mOutputFile) 
+  {
 		/* If we don't do this check...ZERO length files can be sent */
-		if (mOutputFile->failed()) {
+		if (mOutputFile->failed()) 
+    {
 			status = NS_MSG_ERROR_WRITING_FILE;
 			goto FAIL;
 		}
@@ -970,9 +1068,12 @@ FAIL:
 	mainbody = nsnull;
 	maincontainer = nsnull;
 
+  PR_FREEIF(multipartRelatedSeparator);
+  PR_FREEIF(attachmentSeparator);
+
 	PR_FREEIF(headers);
-	PR_FREEIF(separator);
-	if (in_file) {
+	if (in_file) 
+  {
 		PR_Close (in_file);
 		in_file = nsnull;
 	}
@@ -992,6 +1093,90 @@ FAIL:
 FAILMEM:
 	status = NS_ERROR_OUT_OF_MEMORY;
 	goto FAIL;
+}
+
+PRInt32
+nsMsgComposeAndSend::PreProcessPart(nsMsgAttachmentHandler  *ma,
+                                    char                    *aSeparator,
+                                    nsMsgSendPart           *toppart) // The very top most container of the message
+{
+  nsresult        status;
+	char            *hdrs = 0;
+	nsMsgSendPart   *part = nsnull;
+
+  if (ma->mPartOrderProcessed)
+    return 0;
+
+  ma->mPartOrderProcessed = PR_TRUE;
+
+	// If at this point we *still* don't have an content-type, then
+	// we're never going to get one.
+	if (ma->m_type == nsnull) 
+  {
+		ma->m_type = PL_strdup(UNKNOWN_CONTENT_TYPE);
+		if (ma->m_type == nsnull)
+			return 0;
+	}
+
+	ma->PickEncoding (mCompFields->GetCharacterSet());
+
+	part = new nsMsgSendPart(this);
+	if (!part)
+		return 0;
+	status = toppart->AddChild(part);
+	if (status < 0)
+		return 0;
+	status = part->SetType(ma->m_type);
+	if (status < 0)
+		return 0;
+
+  // Set this so we know what to do with the separator when writing
+  // it to disk...
+  part->SetMultipartRelatedFlag(ma->mMHTMLPart);
+  part->SetPartSeparator(aSeparator);
+
+  nsXPIDLCString turl;
+  ma->mURL->GetSpec(getter_Copies(turl));
+	hdrs = mime_generate_attachment_headers (ma->m_type, ma->m_encoding,
+											 ma->m_description,
+											 ma->m_x_mac_type,
+											 ma->m_x_mac_creator,
+											 ma->m_real_name,
+											 turl,
+											 m_digest_p,
+											 ma,
+                       ma->m_charset, // rhp - this needs to be the charset we determine from
+                                      // the file or none at all!
+                       ma->m_content_id);
+	if (!hdrs)
+		return 0;
+
+	status = part->SetOtherHeaders(hdrs);
+	PR_FREEIF(hdrs);
+	if (status < 0)
+		return 0;
+	status = part->SetFile(ma->mFileSpec);
+	if (status < 0)
+		return 0;
+	if (ma->m_encoder_data) 
+  {
+		status = part->SetEncoderData(ma->m_encoder_data);
+		if (status < 0)
+			return 0;
+		ma->m_encoder_data = nsnull;
+	}
+
+	ma->m_current_column = 0;
+
+	if (ma->m_type &&
+			(!PL_strcasecmp (ma->m_type, MESSAGE_RFC822) ||
+			!PL_strcasecmp (ma->m_type, MESSAGE_NEWS))) {
+		status = part->SetStripSensitiveHeaders(PR_TRUE);
+		if (status < 0)
+			return 0;
+	}
+
+  return 1;
 }
 
 
@@ -1016,7 +1201,7 @@ HJ91531
 
 
 int
-mime_write_message_body (nsMsgComposeAndSend *state, char *buf, PRInt32 size)
+mime_write_message_body(nsMsgComposeAndSend *state, char *buf, PRInt32 size)
 {
   HJ62011
 
@@ -1031,7 +1216,7 @@ mime_write_message_body (nsMsgComposeAndSend *state, char *buf, PRInt32 size)
 }
 
 int
-mime_encoder_output_fn (const char *buf, PRInt32 size, void *closure)
+mime_encoder_output_fn(const char *buf, PRInt32 size, void *closure)
 {
   nsMsgComposeAndSend *state = (nsMsgComposeAndSend *) closure;
   return mime_write_message_body (state, (char *) buf, size);
@@ -1144,6 +1329,9 @@ PRUint32                  i;
   {
     // Reset this structure to null!
     nsCRT::memset(&attachment, 0, sizeof(nsMsgAttachmentData));
+
+    // MUST set this to get placed in the correct part of the message
+    m_attachments[i].mMHTMLPart = PR_TRUE;
 
     locCount++;
     m_attachments[i].mDeleteFile = PR_TRUE;
@@ -1398,7 +1586,7 @@ nsMsgComposeAndSend::CountCompFieldAttachments()
         mCompFieldLocalAttachments++;
 #ifdef NS_DEBUG
         printf("Counting LOCAL attachment %d: %s\n", 
-                mCompFieldLocalAttachments, str);
+                mCompFieldLocalAttachments, str.GetBuffer());
 #endif
       }
       else    // This is a remote URL...
@@ -1406,7 +1594,7 @@ nsMsgComposeAndSend::CountCompFieldAttachments()
         mCompFieldRemoteAttachments++;
 #ifdef NS_DEBUG
         printf("Counting REMOTE attachment %d: %s\n", 
-                mCompFieldRemoteAttachments, str);
+                mCompFieldRemoteAttachments, str.GetBuffer());
 #endif
       }
 
@@ -1455,7 +1643,7 @@ nsMsgComposeAndSend::AddCompFieldLocalAttachments()
       if (str.Compare("file://", PR_TRUE, 7) == 0)
       {
 #ifdef NS_DEBUG
-        printf("Adding LOCAL attachment %d: %s\n", newLoc, str);
+        printf("Adding LOCAL attachment %d: %s\n", newLoc, str.GetBuffer());
 #endif
         //
         // Now we have to setup the m_attachments entry for the file://
@@ -1558,7 +1746,7 @@ nsMsgComposeAndSend::AddCompFieldRemoteAttachments(PRUint32   aStartLocation,
       if (str.Compare("file://", PR_TRUE, 7) != 0)
       {
 #ifdef NS_DEBUG
-        printf("Adding REMOTE attachment %d: %s\n", newLoc, str);
+        printf("Adding REMOTE attachment %d: %s\n", newLoc, str.GetBuffer());
 #endif
 
         m_attachments[newLoc].mDeleteFile = PR_TRUE;
@@ -3021,7 +3209,7 @@ nsMsgGetEnvelopeLine(void)
   //
   PL_strcpy(result, "From - ");
   PL_strcpy(result + 7, buffer);
-  PL_strcpy(result + 7 + 24, MSG_LINEBREAK);
+  PL_strcpy(result + 7 + 24, CRLF);
   return result;
 }
 
@@ -3146,7 +3334,7 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
 	  flags |= MSG_FLAG_READ;
 	  if (mode == nsMsgQueueForLater)
   		flags |= MSG_FLAG_QUEUED;
-	  buf = PR_smprintf(X_MOZILLA_STATUS_FORMAT MSG_LINEBREAK, flags);
+	  buf = PR_smprintf(X_MOZILLA_STATUS_FORMAT CRLF, flags);
 	  if (buf)
 	  {
       PRInt32   len = PL_strlen(buf);
@@ -3162,7 +3350,7 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
 	  PRUint32 flags2 = 0;
 	  if (mode == nsMsgSaveAsTemplate)
 		  flags2 |= MSG_FLAG_TEMPLATE;
-	  buf = PR_smprintf(X_MOZILLA_STATUS2_FORMAT MSG_LINEBREAK, flags2);
+	  buf = PR_smprintf(X_MOZILLA_STATUS2_FORMAT CRLF, flags2);
 	  if (buf)
 	  {
       PRInt32   len = PL_strlen(buf);
@@ -3213,7 +3401,7 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
 		  goto FAIL;
 		}
 
-	  PR_snprintf(buf, L-1, "FCC: %s" MSG_LINEBREAK, fcc_header);
+	  PR_snprintf(buf, L-1, "FCC: %s" CRLF, fcc_header);
 
     PRInt32   len = PL_strlen(buf);
     n = tempOutfile.write(buf, len);
@@ -3239,7 +3427,7 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
 		  goto FAIL;
 		}
 
-	  PR_snprintf(buf, L-1, "BCC: %s" MSG_LINEBREAK, bcc_header);
+	  PR_snprintf(buf, L-1, "BCC: %s" CRLF, bcc_header);
     PRInt32   len = PL_strlen(buf);
     n = tempOutfile.write(buf, len);
 		if (n != len)
@@ -3279,7 +3467,7 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
 
 	  if ((host_and_port && *host_and_port) || !secure_p)
 		{
-		  char *line = PR_smprintf(X_MOZILLA_NEWSHOST ": %s%s" MSG_LINEBREAK,
+		  char *line = PR_smprintf(X_MOZILLA_NEWSHOST ": %s%s" CRLF,
 								   host_and_port ? host_and_port : "",
 								   secure_p ? "/secure" : "");
 		  PR_FREEIF(orig_hap);

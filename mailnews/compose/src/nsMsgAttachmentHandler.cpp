@@ -64,6 +64,9 @@ MacGetFileType(nsFileSpec *fs, PRBool *useDefault, char **type, char **encoding)
 //
 nsMsgAttachmentHandler::nsMsgAttachmentHandler()
 {
+  mMHTMLPart = PR_FALSE;
+  mPartOrderProcessed = PR_FALSE;
+
   m_charset = NULL;
 	m_override_type = NULL;
 	m_override_encoding = NULL;
@@ -683,7 +686,7 @@ nsMsgAttachmentHandler::UrlExit(nsresult status, const PRUnichar* aMsg)
   NS_ASSERTION (m_mime_delivery_state->m_attachment_pending_count > 0, "no more pending attachment");
   m_mime_delivery_state->m_attachment_pending_count--;
 
-  if (status >= 0 && m_mime_delivery_state->m_be_synchronous_p)
+  if (NS_SUCCEEDED(status) && m_mime_delivery_state->m_be_synchronous_p)
 	{
 	  /* Find the next attachment which has not yet been loaded,
 		 if any, and start it going.

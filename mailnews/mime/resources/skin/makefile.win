@@ -23,9 +23,13 @@ install::
 	$(MAKE_INSTALL) smile.gif $(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) wink.gif $(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) sick.gif $(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) more.gif $(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) less.gif $(DIST)\bin\chrome\messenger\skin\default
 
 clobber::
 	rm -f $(DIST)\bin\chrome\messenger\skin\default\frown.gif
 	rm -f $(DIST)\bin\chrome\messenger\skin\default\smile.gif
 	rm -f $(DIST)\bin\chrome\messenger\skin\default\wink.gif
 	rm -f $(DIST)\bin\chrome\messenger\skin\default\sick.gif
+	rm -f $(DIST)\bin\chrome\messenger\skin\default\more.gif
+	rm -f $(DIST)\bin\chrome\messenger\skin\default\less.gif

@@ -35,6 +35,7 @@
 #include "CNavDTD.h"
 #include "nsMsgCompUtils.h"
 #include "nsMsgComposeStringBundle.h"
+#include "nsMsgSend.h"
 
 // XXX temporary so we can use the current identity hack -alecf
 #include "nsIMsgMailSession.h"
@@ -140,7 +141,6 @@ nsMsgCompose::~nsMsgCompose()
 
 /* the following macro actually implement addref, release and query interface for our component. */
 NS_IMPL_ISUPPORTS(nsMsgCompose, nsCOMTypeInfo<nsMsgCompose>::GetIID());
-
 
 nsresult 
 nsMsgCompose::SetQuotingToFollow(PRBool aVal)
@@ -262,7 +262,7 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode,
     printf("----------------------------\n");
 #endif //DEBUG
 
-    nsIMsgSend *tMsgComp = new nsMsgComposeAndSend();
+    nsMsgComposeAndSend *tMsgComp = new nsMsgComposeAndSend();
     if (!tMsgComp)
       return NS_ERROR_OUT_OF_MEMORY;
 
@@ -806,7 +806,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel * /* aChanne
     tempFile.close();
 
     // Now load the URL...
-    nsString          urlStr = mComposeObj->mTempComposeFileSpec->GetNativePathCString();
+    nsString          urlStr = nsMsgPlatformFileToURL(mComposeObj->mTempComposeFileSpec->GetNativePathCString());
     nsIEditorShell    *editor;
 
     mComposeObj->GetEditor(&editor);
@@ -928,7 +928,7 @@ void nsMsgCompose::HackToGetBody(PRInt32 what)
       if (what == 1 && ! m_composeHTML)
         msgBody += "> ";
       msgBody += buffer;
-      msgBody += MSG_LINEBREAK;
+      msgBody += CRLF;
     }
     
     if (m_composeHTML)
@@ -962,22 +962,22 @@ void nsMsgCompose::HackToGetBody(PRInt32 what)
     		if (endBodyOffset == -1)
           endBodyOffset = lowerMsgBody.Length();
         
-        msgBody.Insert(MSG_LINEBREAK, endBodyOffset);
+        msgBody.Insert(CRLF, endBodyOffset);
         if (startBodyOffset == 0)
         {
           msgBody.Insert("</html>", endBodyOffset);
-          msgBody.Insert(MSG_LINEBREAK, endBodyOffset);
+          msgBody.Insert(CRLF, endBodyOffset);
         }
         msgBody.Insert("</blockquote>", endBodyOffset);
-        msgBody.Insert(MSG_LINEBREAK, endBodyOffset);
+        msgBody.Insert(CRLF, endBodyOffset);
         
-        msgBody.Insert(MSG_LINEBREAK, startBodyOffset);
+        msgBody.Insert(CRLF, startBodyOffset);
         msgBody.Insert("<blockquote TYPE=CITE>", startBodyOffset);
-        msgBody.Insert(MSG_LINEBREAK, startBodyOffset);
+        msgBody.Insert(CRLF, startBodyOffset);
         if (startBodyOffset == 0)
         {
           msgBody.Insert("<html>", startBodyOffset);
-          msgBody.Insert(MSG_LINEBREAK, startBodyOffset);
+          msgBody.Insert(CRLF, startBodyOffset);
           msgBody.Insert("<!doctype html public \"-//w3c//dtd html 4.0 transitional//en\">", startBodyOffset);
         }
     }
@@ -1511,13 +1511,13 @@ nsMsgCompose::ProcessSignature(nsOutputFileStream *aAppendFileStream)
         tempFile.write(htmlBreak, PL_strlen(htmlBreak));
       else
       {
-        tempFile.write(MSG_LINEBREAK, MSG_LINEBREAK_LEN);
+        tempFile.write(CRLF, 2);
         tempFile.write(dashes, PL_strlen(dashes));
       }
       if (m_composeHTML)
         tempFile.write(htmlBreak, PL_strlen(htmlBreak));
       else
-        tempFile.write(MSG_LINEBREAK, MSG_LINEBREAK_LEN);
+        tempFile.write(CRLF, 2);
 
       tempFile.write(nsAutoCString(sigData), sigData.Length());
       tempFile.close();
@@ -1535,13 +1535,13 @@ nsMsgCompose::ProcessSignature(nsOutputFileStream *aAppendFileStream)
       if (m_composeHTML)
         aAppendFileStream->write(htmlBreak, PL_strlen(htmlBreak));
       else
-        aAppendFileStream->write(MSG_LINEBREAK, MSG_LINEBREAK_LEN);
+        aAppendFileStream->write(CRLF, 2);
     
       aAppendFileStream->write(dashes, PL_strlen(dashes));
       if (m_composeHTML)
         aAppendFileStream->write(htmlBreak, PL_strlen(htmlBreak));
       else
-        aAppendFileStream->write(MSG_LINEBREAK, MSG_LINEBREAK_LEN);
+        aAppendFileStream->write(CRLF, 2);
     
       aAppendFileStream->write(nsAutoCString(sigData), sigData.Length());
     }

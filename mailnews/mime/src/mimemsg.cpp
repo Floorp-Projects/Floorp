@@ -564,12 +564,12 @@ MimeMessage_write_headers_html (MimeObject *obj)
   // Start the header parsing by the emitter
   char *msgID = MimeHeaders_get (msg->hdrs, HEADER_MESSAGE_ID,
 									                  PR_FALSE, PR_FALSE);
+  PRBool outer_p = !obj->headers; /* is this the outermost message? */
   mimeEmitterStartHeader(obj->options, 
-                            (obj == obj->options->state->root), 
+                            outer_p, 
                             (obj->options->headers == MimeHeadersOnly),
                             msgID,
-                            "UTF-8"
-                          );
+                            "UTF-8");
   PR_FREEIF(msgID);
 
 #ifdef MOZ_SECURITY

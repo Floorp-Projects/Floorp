@@ -295,7 +295,7 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char* 
 
     rv = compMgr->RegisterComponent(kCMsgSendLaterCID,
 										"Message Compose Send Later",
-										"Xcomponent://netscape/messengercompose/sendlater",
+										"component://netscape/messengercompose/sendlater",
 										path, PR_TRUE, PR_TRUE);
 	if (NS_FAILED(rv)) finalResult = rv;
 
@@ -322,7 +322,7 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char* 
   // For Drafts...
   rv = compMgr->RegisterComponent(kMsgDraftCID,
 										"Message Drafts",
-										"Xcomponent://netscape/messengercompose/drafts",
+										"component://netscape/messengercompose/drafts",
 										path, PR_TRUE, PR_TRUE);
 	if (NS_FAILED(rv)) finalResult = rv;
 

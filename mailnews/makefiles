@@ -99,6 +99,7 @@ mailnews/mime/public/Makefile
 mailnews/mime/src/Makefile
 mailnews/mime/resources/Makefile
 mailnews/mime/resources/skin/Makefile
+mailnews/mime/resources/content/Makefile
 mailnews/compose/Makefile
 mailnews/compose/public/Makefile
 mailnews/compose/src/Makefile

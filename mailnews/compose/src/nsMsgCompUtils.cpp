@@ -758,18 +758,18 @@ mime_generate_headers (nsMsgCompFields *fields,
 static void
 GenerateGlobalRandomBytes(unsigned char *buf, PRInt32 len)
 {
-  PRBool    firstTime = PR_TRUE;
-
+  static PRBool    firstTime = PR_TRUE;
+  
   if (firstTime)
   {
-   /* Seed the random-number generator with current time so that
-    * the numbers will be different every time we run.    */
-   PRInt32 aTime;
-   LL_L2I(aTime, PR_Now());
-   srand( (unsigned)aTime );
-   firstTime = PR_FALSE;
+    // Seed the random-number generator with current time so that
+    // the numbers will be different every time we run.
+    PRInt32 aTime;
+    LL_L2I(aTime, PR_Now());
+    srand( (unsigned)aTime );
+    firstTime = PR_FALSE;
   }
-
+  
   for( PRInt32 i = 0; i < len; i++ )
     buf[i] = rand() % 10;
 }

@@ -99,6 +99,9 @@ public:
   PRBool                mDeleteFile;      // If this is true, Delete the file...its 
                                           // NOT the original file!
 
+  PRBool                mMHTMLPart;           // This is true if its an MHTML part, otherwise, FALSE
+  PRBool                mPartOrderProcessed;  // This is a flag to see if we processed this in the final sweep
+
   //
   // Vars for analyzing file data...
   //

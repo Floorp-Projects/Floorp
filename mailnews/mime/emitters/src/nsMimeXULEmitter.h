@@ -30,6 +30,8 @@
 #include "nsVoidArray.h"
 #include "nsString.h"
 #include "nsFileSpec.h"
+#include "nsIMimeMiscStatus.h"
+#include "nsIMsgHeaderParser.h"
 
 //
 // Used for keeping track of the attachment information...
@@ -87,10 +89,17 @@ public:
 
     NS_IMETHOD    WriteXULHeader(const char *msgID);
     NS_IMETHOD    WriteXULTag(const char *tagName, const char *value);
+    NS_IMETHOD    WriteMiscXULTag(const char *tagName, const char *value);
+    NS_IMETHOD    WriteEmailAddrXULTag(const char *tagName, const char *value);
+    nsresult      OutputEmailAddresses(const char *aHeader, const char *aEmailAddrs);
+    nsresult      ProcessSingleEmailEntry(const char *curHeader, char *curName, char *curAddress);
+    nsresult      WriteXULTagPrefix(const char *tagName, const char *value);
+    nsresult      WriteXULTagPostfix(const char *tagName, const char *value);
+    nsresult      OhTheHumanityCleanupTempFileHack();
 
     // For Interesting XUL output!
     nsresult      DumpAttachmentMenu();
-    nsresult      DumpAddBookIcon();
+    nsresult      DumpAddBookIcon(char *fromLine);
     nsresult      DumpSubjectFromDate();
     nsresult      DumpToCC();
     nsresult      DumpRestOfHeaders();
@@ -99,6 +108,7 @@ public:
 
     // For storing recipient info in the history database...
     nsresult      DoSpecialSenderProcessing(const char *field, const char *value);
+    nsresult      DoGlobalStatusProcessing();
 
     char          *GetHeaderValue(const char *aHeaderName);
 
@@ -128,6 +138,7 @@ protected:
     // The setting for header output...
     nsIPref             *mPrefs;          /* Connnection to prefs service manager */
     PRInt32             mHeaderDisplayType; 
+    PRInt32             mCutoffValue;     
 
     // For attachment processing...
     PRInt32             mAttachCount;
@@ -141,6 +152,8 @@ protected:
 
     // For header caching...
     nsVoidArray         *mHeaderArray;
+    nsCOMPtr<nsIMimeMiscStatus>   mMiscStatus;
+    nsCOMPtr<nsIMsgHeaderParser>  mHeaderParser;
 };
 
 

@@ -24,7 +24,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MESSENGER_DIR = $(DIST)/bin/res/mailnews/messenger
 
-DIRS = skin
+DIRS = skin content
 
 EXPORT_RESOURCES = \
 	$(srcdir)/mime_en.properties \
