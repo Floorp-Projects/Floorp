@@ -5397,9 +5397,16 @@ from the network, or save to a file and then play from the file?
 *documentFonts.charsetlang*x-cns11643-1110:		Traditional Chinese
 *documentFonts.charsetlang*x-cns11643-1:		Traditional Chinese
 *documentFonts.charsetlang*x-cns11643-2:		Traditional Chinese
+*documentFonts.charsetlang*x-cns11643-3:		Traditional Chinese
+*documentFonts.charsetlang*x-cns11643-4:		Traditional Chinese
+*documentFonts.charsetlang*x-cns11643-5:		Traditional Chinese
+*documentFonts.charsetlang*x-cns11643-6:		Traditional Chinese
+*documentFonts.charsetlang*x-cns11643-7:		Traditional Chinese
 *documentFonts.charsetlang*x-gb2312-11:			Simplified Chinese
+*documentFonts.charsetlang*x-gb13000:			Simplified Chinese
 *documentFonts.charsetlang*x-jisx0208-11:		Japanese
 *documentFonts.charsetlang*x-ksc5601-11:		Korean
+*documentFonts.charsetlang*x-johabfont:			Korean
 *documentFonts.charsetlang*x-x-big5:			Traditional Chinese
 *documentFonts.charsetlang*unicode-2-0:			Unicode
 
@@ -5443,6 +5450,11 @@ from the network, or save to a file and then play from the file?
 *documentFonts.charset*cns11643.1992-2:				x-cns11643-2
 *documentFonts.charset*cns11643.1992.1-0:			x-cns11643-1
 *documentFonts.charset*cns11643.1992.2-0:			x-cns11643-2
+*documentFonts.charset*cns11643.1992.3-0:			x-cns11643-3
+*documentFonts.charset*cns11643.1992.4-0:			x-cns11643-4
+*documentFonts.charset*cns11643.1992.5-0:			x-cns11643-5
+*documentFonts.charset*cns11643.1992.6-0:			x-cns11643-6
+*documentFonts.charset*cns11643.1992.7-0:			x-cns11643-7
 *documentFonts.charset*dec-decctrl:				x-ignore
 *documentFonts.charset*dec-decksroman:				x-ignore
 *documentFonts.charset*dec-decmath_extension:			x-ignore
@@ -5461,6 +5473,7 @@ from the network, or save to a file and then play from the file?
 *documentFonts.charset*gb2312.80&gb8565.88-0:			gb_2312-80
 *documentFonts.charset*gb2312.1980-1:				x-gb2312-11
 *documentFonts.charset*gb2312.1980-udc:				x-ignore
+*documentFonts.charset*gb13000.1993-1:				x-gb13000
 *documentFonts.charset*hojo-h:					x-ignore
 *documentFonts.charset*hp-japanese15:				x-ignore
 *documentFonts.charset*hp-japaneseeuc:				x-ignore
@@ -5494,6 +5507,8 @@ from the network, or save to a file and then play from the file?
 *documentFonts.charset*jisx0208.1990-0:				jis_x0208-1983
 *documentFonts.charset*jisx0212.1990-0:				jis_x0212-1990
 *documentFonts.charset*jisx0212.1990-ocmp.1992:			jis_x0212-1990
+*documentFonts.charset*johab-1:					x-johabfont
+*documentFonts.charset*johabs-1:				x-johabfont
 *documentFonts.charset*koi8-1:					koi8-r
 *documentFonts.charset*koi8-r:					koi8-r
 *documentFonts.charset*koi-8:					koi8-r
@@ -5515,6 +5530,7 @@ from the network, or save to a file and then play from the file?
 *documentFonts.charset*symbol.adobe-fontspecific:		x-ignore
 *documentFonts.charset*symbol.sun-fontspecific:			x-ignore
 *documentFonts.charset*tis620.2533-1:				x-ignore
+*documentFonts.charset*tis620.2529-1:				x-tis620
 *documentFonts.charset*ucs2.cjk-rest:				x-ignore
 *documentFonts.charset*ucs2.cns11643.1986-1:			x-ignore
 *documentFonts.charset*ucs2.cns11643.1986-2:			x-ignore
