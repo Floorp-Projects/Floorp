@@ -905,8 +905,21 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
         else if (!suppressBlur)
           SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
 
-        if (activeContent)
-          SetContentState(activeContent, NS_EVENT_STATE_ACTIVE);
+        if (activeContent) {
+          // The nearest enclosing element goes into the
+          // :active state.  If we fail the QI to DOMElement,
+          // then we know we're only a node, and that we need
+          // to obtain our parent element and put it into :active
+          // instead.
+          nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(activeContent));
+          if (!elt) {
+            nsCOMPtr<nsIContent> par;
+            activeContent->GetParent(*getter_AddRefs(par));
+            activeContent = par;
+          }
+          if (activeContent)
+            SetContentState(activeContent, NS_EVENT_STATE_ACTIVE);
+        }
       }
       else {
         // if we're here, the event handler returned false, so stop
