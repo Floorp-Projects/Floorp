@@ -494,22 +494,13 @@ public:
   NS_IMETHOD GetFirstChild(nsIDOMNode** aFirstChild);
   NS_IMETHOD GetLastChild(nsIDOMNode** aLastChild);
   NS_IMETHOD InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
-                          nsIDOMNode** aReturn)
-  {
-    return doInsertBefore(this, aNewChild, aRefChild, aReturn);
-  }
+                          nsIDOMNode** aReturn);
   NS_IMETHOD ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
-                          nsIDOMNode** aReturn)
-  {
-    return doReplaceChild(this, aNewChild, aOldChild, aReturn);
-  }
-  NS_IMETHOD RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
-  {
-    return doRemoveChild(this, aOldChild, aReturn);
-  }
+                          nsIDOMNode** aReturn);
+  NS_IMETHOD RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn);
   NS_IMETHOD AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
   {
-    return doInsertBefore(this, aNewChild, nsnull, aReturn);
+    return InsertBefore(aNewChild, nsnull, aReturn);
   }
 
   // nsIDOMElement method implementation
