@@ -34,7 +34,7 @@ LIBRARY_NAME	= ctl
 Expcom_obsolete_LIBRARY = 1
 IS_COMPONENT	= 1
 
-REQUIRES	= xpobsolete \
+REQUIRES	= xpcom_obsolete \
 		  xpcom \
 		  string \
 		  uconv \
