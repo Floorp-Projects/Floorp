@@ -947,6 +947,7 @@ CSError_t ProcessService(CSLabel_t * pCSLabel, State_Parms_t * pParms, const cha
 void TL_SetTrustAuthority( TrustLabel *ALabel, char *TrustAuthority );
 void TL_SetByField( TrustLabel *ALabel, char *szBy );
 void TL_SetURLField( TrustLabel *ALabel, char *szURL );
+void TL_ProcessForAttrib( TrustLabel *ALabel, char *szFor);
 
 /*----------------------------------------------------------------------------------------------------
  *  Purpose: the call back get the options and the ratings for a single label.
