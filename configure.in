@@ -1924,9 +1924,10 @@ AC_CACHE_CHECK(
 
 if test "$ac_cv_func_res_ninit" = "yes"; then
     AC_DEFINE(HAVE_RES_NINIT)
-else
-    AC_CHECK_LIB(bind, res_ninit, AC_DEFINE(HAVE_RES_NINIT),
-        AC_CHECK_LIB(resolv, res_ninit, AC_DEFINE(HAVE_RES_NINIT)))
+dnl must add the link line we do something as foolish as this... dougt
+dnl else
+dnl    AC_CHECK_LIB(bind, res_ninit, AC_DEFINE(HAVE_RES_NINIT),
+dnl        AC_CHECK_LIB(resolv, res_ninit, AC_DEFINE(HAVE_RES_NINIT)))
 fi
 
 AC_LANG_CPLUSPLUS
