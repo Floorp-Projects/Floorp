@@ -26,7 +26,7 @@ class nsIStyleRule;
 class nsISupportsArray;
 class nsIPresContext;
 class nsIContent;
-class nsIFrame;
+class nsIStyleContext;
 
 // IID for the nsIStyleSheet interface {8c4a80a0-ad6a-11d1-8031-006008159b5a}
 #define NS_ISTYLE_SHEET_IID     \
@@ -40,12 +40,13 @@ public:
   // rules are ordered, those with higher precedence come last
   virtual PRInt32 RulesMatching(nsIPresContext* aPresContext,
                                 nsIContent* aContent,
-                                nsIFrame* aParentFrame,
+                                nsIStyleContext* aParentContext,
                                 nsISupportsArray* aResults) = 0;
 
   virtual PRInt32 RulesMatching(nsIPresContext* aPresContext,
+                                nsIContent* aParentContent,
                                 nsIAtom* aPseudoTag,
-                                nsIFrame* aParentFrame,
+                                nsIStyleContext* aParentContext,
                                 nsISupportsArray* aResults) = 0;
 
   // XXX style rule enumerations

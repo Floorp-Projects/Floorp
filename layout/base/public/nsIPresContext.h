@@ -88,29 +88,31 @@ public:
 
   /**
    * Resolve style for the given piece of content that will be a child
-   * of the aParentFrame frame. Don't use this for pseudo frames.
+   * of the aParentContext. Don't use this for pseudo frames.
    */
   virtual nsIStyleContext* ResolveStyleContextFor(nsIContent* aContent,
-                                                  nsIFrame* aParentFrame,
+                                                  nsIStyleContext* aParentContext,
                                                   PRBool aForceUnique = PR_FALSE) = 0;
 
   /**
-   * Resolve style for a pseudo frame within the given aParentFrame frame.
+   * Resolve style for a pseudo frame within the given aParentContent & aParentContext.
    * The tag should be uppercase and inclue the colon.
    * ie: NS_NewAtom(":FIRST-LINE");
    */
-  virtual nsIStyleContext* ResolvePseudoStyleContextFor(nsIAtom* aPseudoTag,
-                                                        nsIFrame* aParentFrame,
+  virtual nsIStyleContext* ResolvePseudoStyleContextFor(nsIContent* aParentContent,
+                                                        nsIAtom* aPseudoTag,
+                                                        nsIStyleContext* aParentContext,
                                                         PRBool aForceUnique = PR_FALSE) = 0;
 
   /**
-   * Probe style for a pseudo frame within the given aParentFrame frame.
+   * Probe style for a pseudo frame within the given aParentContent & aParentContext.
    * This will return nsnull id there are no explicit rules for the pseudo element.
    * The tag should be uppercase and inclue the colon.
    * ie: NS_NewAtom(":FIRST-LINE");
    */
-  virtual nsIStyleContext* ProbePseudoStyleContextFor(nsIAtom* aPseudoTag,
-                                                      nsIFrame* aParentFrame,
+  virtual nsIStyleContext* ProbePseudoStyleContextFor(nsIContent* aParentContent,
+                                                      nsIAtom* aPseudoTag,
+                                                      nsIStyleContext* aParentContext,
                                                       PRBool aForceUnique = PR_FALSE) = 0;
 
   /**
