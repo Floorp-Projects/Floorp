@@ -202,7 +202,7 @@ function OnLoadPrintEngine(){
     eval(HTMLViewFunction)(HTMLFunctionArgs);
     finishHTMLView() ;
 
-    // Fail-safe check to not init twoce, to prevent leaking files
+    // Fail-safe check to not init twice, to prevent leaking files
     if (!gTempFile) {
       const nsIFile = Components.interfaces.nsIFile;
       var dirService = Components.classes["@mozilla.org/file/directory_service;1"]
