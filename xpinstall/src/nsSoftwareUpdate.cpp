@@ -61,9 +61,6 @@
 #include "nsIEventQueueService.h"
 #include "nsProxyObjectManager.h"
 
-#ifdef XP_MAC
-#include <profiler.h>
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 // Globals
@@ -292,9 +289,6 @@ nsSoftwareUpdate::InstallJar(  nsIFileSpec* aLocalFile,
                                long flags,
                                nsIXPINotifier* aNotifier)
 {
-#ifdef __PROFILER__
-	ProfilerInit(collectDetailed, bestTimeBase, 2000, 2000);
-#endif
     if ( !aLocalFile )
         return NS_ERROR_NULL_POINTER;
 
@@ -309,10 +303,6 @@ nsSoftwareUpdate::InstallJar(  nsIFileSpec* aLocalFile,
     PR_Unlock(mLock);
     RunNextInstall();
 
-#ifdef __PROFILER__
-	ProfilerDump("\pXPI_PofileDump");
-	ProfilerTerm();
-#endif
     return NS_OK;
 }
 
