@@ -114,6 +114,7 @@ protected:
   nsresult SetTarget(nsILocalFile* aTarget);
   nsresult SetSource(nsIURI* aSource);
   nsresult SetPrettyName(const PRUnichar* aPrettyName);
+  nsresult GetTransferInformation(PRInt32* aCurr, PRInt32* aMax);
 private:
   nsDownloadManager* mDownloadManager;
 
@@ -128,6 +129,8 @@ private:
   nsCOMPtr<nsIObserver> mObserver;
 
   PRInt32 mPercentComplete;
+  PRInt32 mCurrBytes;
+  PRInt32 mMaxBytes;
   PRInt64 mStartTime;
 
   friend class nsDownloadManager;
