@@ -728,11 +728,11 @@ var contextTarget = null; // Content element to which context menu applies.
     <!-- type attribute is used by frame construction to locate iframes
          intended to hold (html) content -->
     <!-- id's use is a mystery -->
-    <html:iframe type="content-primary" id="content" src="about:blank"
-      flex="100%" />
+    <box context="context" flex="100%">
+    <html:iframe type="content-primary" id="content" src="about:blank" flex="100%"/>
+    </box>
       <box align="horizontal" id="status-bar" chromeclass="status">
-        <titledbutton value="&notifCom.label;" onclick="doTests()"
-          context="context"/>
+        <titledbutton value="&notifCom.label;" onclick="doTests()"/>
         <box id="state-box" align="horizontal" flex="100%">
           <box align="vertical" style="width:100px">
           <spring flex="100%"/>
