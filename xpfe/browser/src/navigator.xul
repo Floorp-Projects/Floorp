@@ -347,19 +347,29 @@
       <menuitem name="Close" onclick="BrowserClose();"/>
       <menuitem name="Quit" onclick="BrowserExit();"/>
     </menu>
-    <menu name="Edit">
-      <menuitem name="Undo" onclick="BrowserReload();"/>
-      <menuitem name="Redo" onclick="BrowserReload();"/>
-      <separator />
-      <menuitem name="Cut" onclick="BrowserReload();"/>
-      <menuitem name="Copy" onclick="BrowserReload();"/>
-      <menuitem name="Paste" onclick="BrowserReload();"/>
-      <menuitem name="Delete" onclick="BrowserReload();"/>
-      <separator />
-      <menuitem name="Select All" onclick="BrowserReload();"/>
-      <separator />
-      <menuitem name="Preferences..." onclick="BrowserReload();"/>
-    </menu>
+	<menu name="Edit"> 
+      <menuitem name="Undo" onclick="BrowserReload();"/> 
+      <menuitem name="Redo" onclick="BrowserReload();"/> 
+      <separator /> 
+      <menuitem name="Cut" onclick="BrowserReload();"/> 
+      <menuitem name="Copy" onclick="BrowserReload();"/> 
+      <menuitem name="Paste" onclick="BrowserReload();"/> 
+      <menuitem name="Delete" onclick="BrowserReload();"/> 
+      <separator /> 
+      <menu name="Wallet"> 
+          <menuitem name="Safe Form Fill" onclick="WalletSafeFillin();"/> 
+          <menuitem name="Quick Form Fill" onclick="WalletQuickFillin();"/> 
+          <separator /> 
+          <menuitem name="Wallet Contents" onclick="WalletEditor();"/> 
+          <separator /> 
+          <menuitem name="Samples" onclick="WalletSamples();"/> 
+	  </menu> 
+      <separator /> 
+      <menuitem name="Select All" onclick="BrowserReload();"/> 
+      <separator /> 
+      <menuitem name="Preferences..." onclick="BrowserReload();"/> 
+    </menu> 
+
     <menu name="View">
       <menuitem name="Toolbars" onclick="BrowserReload();"/>
       <menuitem name="Sidebar" onclick="BrowserReload();"/>
@@ -462,13 +472,7 @@
       <menuitem name="Window 2" onclick="BrowserReload();" />
       <menuitem name="Window 3" onclick="BrowserReload();" />
     </menu>
-    <menu name="Wallet">
-      <menuitem name="Wallet contents" onclick="WalletEditor();"/>
-      <menuitem name="Safe fillins" onclick="WalletSafeFillin();"/>
-      <menuitem name="Quick fillins" onclick="WalletQuickFillin();"/>
-      <separator />
-      <menuitem name="Samples" onclick="WalletSamples();"/>
-    </menu>
+    
      <menu name="Help">
       <menuitem name="Help Contents" onclick="BrowserReload();"/>
       <separator />
