@@ -10,7 +10,9 @@ $moz = "$ENV{'MOZ_SRC'}\\mozilla";
 $moz_dist = "$moz\\dist\\Embed";
 $moz_embedding_config = "$moz\\embedding\\config";
 $moz =~ s/\//$dir_sep/g;
-$moz_version = "v1.5";
+$moz_major_version=1;
+$moz_minor_version=5;
+$moz_version = "v$moz_major_version.$moz_minor_version";
 
 $makensis = "C:/Program Files/NSIS/makensis.exe";
 $control_nsi = "control.nsi";
@@ -36,6 +38,8 @@ print "Opening $local_nsh for writing\n";
 open(NSH, ">$local_nsh") or die("Can't write local settings to $local_nsh");
 print NSH "!define DISTDIR \"$moz_dist\"\n";
 print NSH "!define VERSION \"$moz_version\"\n";
+print NSH "!define MAJOR_VERSION \"$moz_major_version\"\n";
+print NSH "!define MINOR_VERSION \"$moz_minor_version\"\n";
 close(NSH);
 
 # Generate file manifest
