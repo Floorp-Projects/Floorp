@@ -1275,6 +1275,7 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
 
     PRBool widthSet = PR_FALSE;
     PRBool heightSet = PR_FALSE;
+    PRBool canOverride = PR_TRUE;
 
     nsIFrame* frame = nsnull;
     aBox->GetFrame(&frame);
@@ -1291,7 +1292,7 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
         const nsHTMLReflowState* reflowState = aState.GetReflowState();
         if (reflowState) {
           theme->GetMinimumWidgetSize(reflowState->rendContext, frame, 
-                                      display->mAppearance, &size);
+                                      display->mAppearance, &size, &canOverride);
           float p2t;
           aState.GetPresContext()->GetScaledPixelsToTwips(&p2t);
           aSize.width = NSIntPixelsToTwips(size.width, p2t);
@@ -1313,7 +1314,7 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
     // we will assume 0 means not set.
     if (position->mMinWidth.GetUnit() == eStyleUnit_Coord) {
         nscoord min = position->mMinWidth.GetCoordValue();
-        if (min && (!widthSet || min > aSize.width)) {
+        if (min && (!widthSet || (min > aSize.width && canOverride))) {
            aSize.width = min;
            widthSet = PR_TRUE;
         }
@@ -1321,7 +1322,7 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
 
     if (position->mMinHeight.GetUnit() == eStyleUnit_Coord) {
         nscoord min = position->mMinHeight.GetCoordValue();
-        if (min && (!heightSet || min > aSize.height)) {
+        if (min && (!heightSet || (min > aSize.height && canOverride))) {
            aSize.height = min;
            heightSet = PR_TRUE;
         }

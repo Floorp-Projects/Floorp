@@ -62,7 +62,8 @@ public:
 
   NS_IMETHOD GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
-                                  nsSize* aResult)=0;
+                                  nsSize* aResult,
+                                  PRBool* aIsOverridable)=0;
 
   NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType, 
                                 nsIAtom* aAttribute, PRBool* aShouldRepaint)=0;
