@@ -57,6 +57,7 @@
 #include "nsIThread.h"
 #include "nsIEventQueueService.h"
 #include "nsIProxyObjectManager.h"
+#include "nsIWalletService.h"
 
 // FIXME - Temporary include.  Delete this when cache is enabled on all 
 // platforms
@@ -66,6 +67,7 @@
 static NS_DEFINE_CID(kNetModuleMgrCID, NS_NETMODULEMGR_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
+static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 
 #if defined(PR_LOGGING)
 extern PRLogModuleInfo* gHTTPLog;
@@ -2080,12 +2082,39 @@ nsHTTPChannel::ProcessStatusCode(void)
                         mProxy, mProxyPort, authString);
             }
 
-            if ((statusCode != 401) && mAuthTriedWithPrehost)
-            {
-                rv = GetRequestHeader(nsHTTPAtoms::Authorization,
-                        getter_Copies(authString));
-                pEngine->SetAuthString(mURI, authString);
-            }
+			if (mAuthTriedWithPrehost) 
+			{
+				if (statusCode != 401)
+				{
+					rv = GetRequestHeader(nsHTTPAtoms::Authorization,
+							getter_Copies(authString));
+					pEngine->SetAuthString(mURI, authString);
+				}
+				else // clear out entry from single signon and our cache. 
+				{
+					pEngine->SetAuthString(mURI, 0);
+
+					NS_WITH_SERVICE(nsIWalletService, walletService, 
+						kWalletServiceCID, &rv);
+
+					if (NS_SUCCEEDED(rv))
+					{
+						NS_WITH_SERVICE(nsIProxyObjectManager, pom, 
+							kProxyObjectManagerCID, &rv);
+ 
+						nsCOMPtr<nsIWalletService> pWalletService;
+						if (NS_SUCCEEDED(pom->GetProxyForObject(NS_UI_THREAD_EVENTQ, 
+								 NS_GET_IID(nsIWalletService), walletService, 
+								 PROXY_SYNC, getter_AddRefs(pWalletService))))
+						{
+							nsXPIDLCString uri;
+							if (NS_SUCCEEDED(mURI->GetSpec(getter_Copies(uri))))
+								pWalletService->SI_RemoveUser(uri, nsnull);
+						}
+					}
+
+				}
+			}
         }
     }
 
