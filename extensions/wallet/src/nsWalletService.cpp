@@ -21,16 +21,34 @@
 #include "nsIServiceManager.h"
 #include "wallet.h"
 #include "singsign.h"
+#include "nsIObserverService.h"
+#include "nsIDOMHTMLCollection.h"
+#include "nsIDOMHTMLFormElement.h"
+#include "nsIContent.h"
+#include "nsIDocument.h"
 
 static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
+static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
+static NS_DEFINE_IID(kIFormSubmitObserverIID, NS_IFORMSUBMITOBSERVER_IID);
+
 
 nsWalletlibService::nsWalletlibService()
 {
     NS_INIT_REFCNT();
+    Init();
 }
 
 nsWalletlibService::~nsWalletlibService()
 {
+    nsIObserverService *svc = 0;
+    nsresult rv = nsServiceManager::GetService( NS_OBSERVERSERVICE_PROGID,
+                                                nsIObserverService::GetIID(),
+                                                (nsISupports**)&svc );
+    if ( NS_SUCCEEDED( rv ) && svc ) {
+        nsString  topic(NS_FORMSUBMIT_SUBJECT);
+        rv = svc->RemoveObserver( this, topic.GetUnicode());
+        nsServiceManager::ReleaseService( NS_OBSERVERSERVICE_PROGID, svc );
+    }
 }
 
 /* calls into the wallet module */
@@ -44,6 +62,11 @@ nsWalletlibService::QueryInterface(REFNSIID iid, void** result)
     *result = nsnull;
     if (iid.Equals(kIWalletServiceIID)) {
 	*result = NS_STATIC_CAST(nsIWalletService*, this);
+	AddRef();
+	return NS_OK;
+    }
+    if (iid.Equals(kIFormSubmitObserverIID)) {
+	*result = NS_STATIC_CAST(nsIFormSubmitObserver*, this);
 	AddRef();
 	return NS_OK;
     }
@@ -157,6 +180,31 @@ NS_IMETHODIMP nsWalletlibService::SI_Prompt
     *username = ::SINGSIGN_Prompt(prompt, *username, URLName);
     return NS_OK;
 }
+
+NS_IMETHODIMP nsWalletlibService::Observe(nsISupports*, const PRUnichar*, const PRUnichar*) 
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+#define CRLF "\015\012"   
+NS_IMETHODIMP nsWalletlibService::Notify(nsIContent* formNode) 
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+void nsWalletlibService::Init() 
+{
+    nsIObserverService *svc = 0;
+    nsresult rv = nsServiceManager::GetService( NS_OBSERVERSERVICE_PROGID,
+                                                nsIObserverService::GetIID(),
+                                                (nsISupports**)&svc );
+    if ( NS_SUCCEEDED( rv ) && svc ) {
+        nsString  topic(NS_FORMSUBMIT_SUBJECT);
+        rv = svc->AddObserver( this, topic.GetUnicode());
+        nsServiceManager::ReleaseService( NS_OBSERVERSERVICE_PROGID, svc );
+    }
+}
+
 
 /* call to create the wallet object */
 

@@ -21,8 +21,12 @@
 #define nsWalletService_h___
 
 #include "nsIWalletService.h"
+#include "nsIObserver.h"
+#include "nsIFormSubmitObserver.h"
 
-class nsWalletlibService : public nsIWalletService {
+class nsWalletlibService : public nsIWalletService,
+                           public nsIObserver,
+                           public nsIFormSubmitObserver {
 
 public:
     NS_DECL_ISUPPORTS
@@ -57,10 +61,17 @@ public:
     NS_IMETHOD SI_Prompt
         (char *prompt, char **username, char *URLName);
 
+    // nsIObserver
+    NS_DECL_IOBSERVER
+
+    NS_IMETHOD Notify(nsIContent* formNode);
+
+
 protected:
     virtual ~nsWalletlibService();
 
 private:
+    void    Init();
 };
 
 
