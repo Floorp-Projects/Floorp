@@ -21,6 +21,7 @@
 
 #include "nsWindow.h"
 #include "nsCheckButton.h"
+#include "nsFileWidget.h"
 #include "nsGUIEvent.h"
 
 #include "stdio.h"
@@ -313,9 +314,18 @@ void nsXtWidget_Text_Callback(Widget w, XtPointer p, XtPointer call_data)
 //==============================================================
 void nsXtWidget_FSBCancel_Callback(Widget w, XtPointer p, XtPointer call_data)
 {
+  nsFileWidget * widgetWindow = (nsFileWidget *) p ;
+  if (p != nsnull) {
+    printf("OnCancel\n");
+    widgetWindow->OnCancel();
+  }
 }
 
 //==============================================================
 void nsXtWidget_FSBOk_Callback(Widget w, XtPointer p, XtPointer call_data)
 {
+  nsFileWidget * widgetWindow = (nsFileWidget *) p ;
+  if (p != nsnull) {
+    widgetWindow->OnOk();
+  }
 }
