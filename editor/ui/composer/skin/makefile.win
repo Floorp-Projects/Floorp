@@ -14,7 +14,7 @@
 #
 # The Initial Developer of the Original Code is Netscape
 # Communications Corporation.  Portions created by Netscape are
-# Copyright (C) 1998 Netscape Communications Corporation. All
+# Copyright (C) 1998-2000 Netscape Communications Corporation. All
 # Rights Reserved.
 #
 # Contributor(s): 
@@ -32,10 +32,9 @@ install:: $(DLL)
   $(MAKE_INSTALL) images\center.gif    $(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\right.gif     $(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\justify.gif   $(DIST)\bin\chrome\editor\skin\default\images
-  $(MAKE_INSTALL) images\copy.gif			$(DIST)\bin\chrome\editor\skin\default\images
-  $(MAKE_INSTALL) images\cut.gif			  $(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\find.gif			$(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\hline.gif			$(DIST)\bin\chrome\editor\skin\default\images
+  $(MAKE_INSTALL) images\hover-teal.gif	$(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\image.gif			$(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\indent.gif		$(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\italic.gif		$(DIST)\bin\chrome\editor\skin\default\images
@@ -43,21 +42,17 @@ install:: $(DLL)
   $(MAKE_INSTALL) images\numbers.gif		$(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\object-popup.gif	$(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\outdent.gif		$(DIST)\bin\chrome\editor\skin\default\images
-  $(MAKE_INSTALL) images\paste.gif			$(DIST)\bin\chrome\editor\skin\default\images
-  $(MAKE_INSTALL) images\redo.gif			$(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\spell.gif			$(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\table.gif			$(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\anchor.gif         $(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\anchor-in-doc.gif  $(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\underline.gif	    $(DIST)\bin\chrome\editor\skin\default\images
-  $(MAKE_INSTALL) images\undo.gif			      $(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\color.gif     $(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\newfile.gif   $(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\openfile.gif  $(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\savefile.gif  $(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\savemod.gif   $(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\publish.gif   $(DIST)\bin\chrome\editor\skin\default\images
-  $(MAKE_INSTALL) images\preview.gif   $(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\print.gif     $(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\find.gif      $(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\img-align-bottom.gif $(DIST)\bin\chrome\editor\skin\default\images
@@ -82,24 +77,20 @@ clobber::
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\center.gif			
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\right.gif			
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\justify.gif			
-  rm -f $(DIST)\bin\chrome\editor\skin\default\images\copy.gif			
-  rm -f $(DIST)\bin\chrome\editor\skin\default\images\cut.gif			
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\outdent.gif			
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\find.gif			
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\hline.gif			
+  rm -f $(DIST)\bin\chrome\editor\skin\default\images\hover-teal.gif			
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\image.gif			
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\indent.gif			
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\italic.gif			
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\link.gif			
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\numbers.gif			
-  rm -f $(DIST)\bin\chrome\editor\skin\default\images\paste.gif			
-  rm -f $(DIST)\bin\chrome\editor\skin\default\images\redo.gif			
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\spell.gif			
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\table.gif			
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\anchor.gif
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\anchor-in-doc.gif
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\underline.gif
-  rm -f $(DIST)\bin\chrome\editor\skin\default\images\undo.gif
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\color.gif
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\object-popup.gif			
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\newfile.gif
@@ -107,7 +98,6 @@ clobber::
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\savefile.gif
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\savemod.gif
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\publish.gif 
-  rm -f $(DIST)\bin\chrome\editor\skin\default\images\preview.gif 
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\print.gif   
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\find.gif    
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\img-align-bottom.gif    
