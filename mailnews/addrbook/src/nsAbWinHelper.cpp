@@ -431,7 +431,7 @@ BOOL nsAbWinHelper::GetPropertiesUString(const nsMapiEntry& aObject, const ULONG
         ULONG i = 0 ;
 
         for (i = 0 ; i < valueCount ; ++ i) {
-            if (values [i].ulPropTag == aPropertyTags [i]) {
+            if (PROP_ID(values [i].ulPropTag) == PROP_ID(aPropertyTags [i])) {
                 if (PROP_TYPE(values [i].ulPropTag) == PT_STRING8) {
                     nsAutoString temp ;
 
