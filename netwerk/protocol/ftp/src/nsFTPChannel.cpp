@@ -62,7 +62,14 @@ nsFTPChannel::~nsFTPChannel() {
     PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("~nsFTPChannel() called"));
 }
 
-NS_IMPL_ISUPPORTS5(nsFTPChannel, nsPIFTPChannel, nsIChannel, nsIRequest, nsIInterfaceRequestor, nsIProgressEventSink);
+NS_IMPL_ISUPPORTS7(nsFTPChannel,
+                   nsPIFTPChannel, 
+                   nsIChannel, 
+                   nsIRequest, 
+                   nsIInterfaceRequestor, 
+                   nsIProgressEventSink,
+                   nsIStreamListener,
+                   nsIStreamObserver);
 
 nsresult
 nsFTPChannel::Init(const char* verb, 
@@ -92,6 +99,9 @@ nsFTPChannel::Init(const char* verb,
     mOriginalURI = originalURI ? originalURI : uri;
     mURL = uri;
 
+    rv = mURL->GetHost(getter_Copies(mHost));
+    if (NS_FAILED(rv)) return rv;
+
     rv = SetLoadAttributes(loadAttributes);
     if (NS_FAILED(rv)) return rv;
 
@@ -105,6 +115,13 @@ nsFTPChannel::Init(const char* verb,
     mBufferMaxSize = bufferMaxSize;
 
     return rv;
+}
+
+nsresult
+nsFTPChannel::SetProxyChannel(nsIChannel *aChannel) {
+    if (mConnected) return NS_ERROR_ALREADY_CONNECTED;
+    mProxyChannel = aChannel;
+    return NS_OK;
 }
 
 NS_METHOD
@@ -130,31 +147,45 @@ nsFTPChannel::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
 
 NS_IMETHODIMP
 nsFTPChannel::IsPending(PRBool *result) {
+    if (mProxyChannel)
+        return mProxyChannel->IsPending(result);
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsFTPChannel::Cancel(void) {
     nsresult rv = NS_OK;
+    
+    if (mProxyChannel)
+        return mProxyChannel->Cancel();
+
     // if we hit this assert, someone's hanging onto the channel too long.
     NS_ASSERTION(mConnThread, "lost the connection thread.");
 
     // it's ok for this method to *not* have the underlying thread because 
     // the user obviously want's the underlying channel/connection to go away.
-    if (mConnThread)
-        rv = mConnThread->Cancel();
-    return rv;
+    return mConnThread->Cancel();
 }
 
 NS_IMETHODIMP
 nsFTPChannel::Suspend(void) {
+    if (mProxyChannel)
+        return mProxyChannel->Suspend();
+
+    // if we hit this assert, someone's hanging onto the channel too long.
     NS_ASSERTION(mConnThread, "lost the connection thread.");
+
     return mConnThread->Suspend();
 }
 
 NS_IMETHODIMP
 nsFTPChannel::Resume(void) {
+    if (mProxyChannel)
+        return mProxyChannel->Resume();
+
+    // if we hit this assert, someone's hanging onto the channel too long.
     NS_ASSERTION(mConnThread, "lost the connection thread.");
+
     return mConnThread->Resume();
 }
 
@@ -184,6 +215,10 @@ nsFTPChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
     nsresult rv = NS_OK;
 
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::OpenInputStream() called\n"));
+
+    if (mProxyChannel) {
+        return mProxyChannel->OpenInputStream(startPosition, readCount, _retval);
+    }
 
     if (mConnected) return NS_ERROR_ALREADY_CONNECTED;
     
@@ -238,6 +273,8 @@ nsFTPChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
 NS_IMETHODIMP
 nsFTPChannel::OpenOutputStream(PRUint32 startPosition, nsIOutputStream **_retval)
 {
+    if (mProxyChannel)
+        return mProxyChannel->OpenOutputStream(startPosition, _retval);
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -247,6 +284,12 @@ nsFTPChannel::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
     nsresult rv;
 
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::AsyncOpen() called\n"));
+
+    mObserver = observer;
+
+    if (mProxyChannel) {
+        return mProxyChannel->AsyncOpen(this, ctxt);
+    }
 
     if (mConnected) return NS_ERROR_ALREADY_CONNECTED;
 
@@ -264,7 +307,7 @@ nsFTPChannel::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
         return rv;
     }
 
-    rv = mConnThread->SetStreamObserver(observer, ctxt);
+    rv = mConnThread->SetStreamObserver(this, ctxt);
     if (NS_FAILED(rv)) return rv;
 
     mConnected = PR_TRUE;
@@ -287,6 +330,8 @@ nsFTPChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
 
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::AsyncRead() called\n"));
 
+    mListener = listener;
+
     if (mEventSink) {
         nsAutoString statusMsg("Beginning FTP transaction.");
         rv = mEventSink->OnStatus(this, ctxt, statusMsg.GetUnicode());
@@ -298,6 +343,15 @@ nsFTPChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
     mSourceOffset = startPosition;
     mAmount = readCount;
 
+    if (mLoadGroup) {
+        rv = mLoadGroup->AddChannel(this, nsnull);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    if (mProxyChannel) {
+        return mProxyChannel->AsyncRead(startPosition, readCount, ctxt, this);
+    }
+
     if (mAsyncOpen) {
         NS_ASSERTION(mConnThread, "FTP: underlying connection thread went away");
         // we already initialized the connection thread via a prior call
@@ -305,7 +359,7 @@ nsFTPChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
         
         // The connection thread is suspended right now.
         // Set our AsyncRead pertinent state and then wake it up.
-        rv = mConnThread->SetStreamListener(listener);
+        rv = mConnThread->SetStreamListener(this);
         if (NS_FAILED(rv)) return rv;
 
         mConnThread->Resume();
@@ -326,15 +380,10 @@ nsFTPChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
             return rv;
         }
 
-        rv = mConnThread->SetStreamListener(listener, ctxt);
+        rv = mConnThread->SetStreamListener(this, ctxt);
         if (NS_FAILED(rv)) {
             NS_RELEASE(mConnThread);
             return rv;
-        }
-
-        if (mLoadGroup) {
-            rv = mLoadGroup->AddChannel(this, nsnull);
-            if (NS_FAILED(rv)) return rv;
         }
 
         rv = mPool->DispatchRequest((nsIRunnable*)mConnThread);
@@ -353,6 +402,12 @@ nsFTPChannel::AsyncWrite(nsIInputStream *fromStream,
                          nsIStreamObserver *observer)
 {
     nsresult rv = NS_OK;
+
+    mObserver = observer;
+
+    if (mProxyChannel) {
+        return mProxyChannel->AsyncOpen(this, ctxt);
+    }
 
     NS_ASSERTION(writeCount > 0, "FTP requires stream len info");
     if (writeCount < 1) return NS_ERROR_NOT_INITIALIZED;
@@ -374,7 +429,7 @@ nsFTPChannel::AsyncWrite(nsIInputStream *fromStream,
         return rv;
     }
 
-    rv = mConnThread->SetStreamObserver(observer, ctxt);
+    rv = mConnThread->SetStreamObserver(this, ctxt);
     if (NS_FAILED(rv))
         NS_RELEASE(mConnThread);
 
@@ -541,11 +596,68 @@ NS_IMETHODIMP
 nsFTPChannel::OnStatus(nsIChannel *aChannel,
                                 nsISupports *aContext,
                                 const PRUnichar *aMsg) {
-    return mEventSink ? mEventSink->OnStatus(this, aContext, aMsg) : NS_OK;
+    if (mProxyChannel) {
+        // XXX We're appending the *real* host to this string
+        // XXX coming from the proxy channel progress notifications.
+        // XXX This assumes the proxy channel was setup using a null host name
+        nsAutoString msg(aMsg);
+        msg += (const char*)mHost;
+        return mEventSink ? mEventSink->OnStatus(this, aContext, msg.GetUnicode()) : NS_OK;
+    } else {
+        return mEventSink ? mEventSink->OnStatus(this, aContext, aMsg) : NS_OK;
+    }
 }
 
 NS_IMETHODIMP
 nsFTPChannel::OnProgress(nsIChannel* aChannel, nsISupports* aContext,
                                   PRUint32 aProgress, PRUint32 aProgressMax) {
     return mEventSink ? mEventSink->OnProgress(this, aContext, aProgress, aProgressMax) : NS_OK;
+}
+
+
+// nsIStreamObserver methods.
+NS_IMETHODIMP
+nsFTPChannel::OnStopRequest(nsIChannel* aChannel, nsISupports* aContext,
+                                      nsresult aStatus, const PRUnichar* aMsg) {
+    nsresult rv = NS_OK;
+    if (mProxyChannel) {
+        if (mLoadGroup) {
+            rv = mLoadGroup->RemoveChannel(this, nsnull, aStatus, aMsg);        
+            if (NS_FAILED(rv)) return rv;
+        }
+    }
+    if (mObserver) {
+        rv = mObserver->OnStopRequest(this, aContext, aStatus, aMsg);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    if (mListener) {
+        rv = mListener->OnStopRequest(this, aContext, aStatus, aMsg);
+        if (NS_FAILED(rv)) return rv;
+    }
+    return rv;
+}
+
+NS_IMETHODIMP
+nsFTPChannel::OnStartRequest(nsIChannel *aChannel, nsISupports *aContext) {
+    nsresult rv = NS_OK;
+    if (mObserver) {
+        rv = mObserver->OnStartRequest(this, aContext);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    if (mListener) {
+        rv = mListener->OnStartRequest(this, aContext);
+        if (NS_FAILED(rv)) return rv;
+    }
+    return rv;
+}
+
+
+// nsIStreamListener method
+NS_IMETHODIMP
+nsFTPChannel::OnDataAvailable(nsIChannel* aChannel, nsISupports* aContext,
+                               nsIInputStream *aInputStream, PRUint32 aSourceOffset,
+                               PRUint32 aLength) {
+    return mListener->OnDataAvailable(this, aContext, aInputStream, aSourceOffset, aLength);
 }

@@ -30,6 +30,7 @@
 #include "nsConnectionCacheObj.h"
 #include "nsIThreadPool.h"
 #include "nsIObserverService.h"
+#include "nsIProtocolProxyService.h"
 
 // {25029490-F132-11d2-9588-00805F369F95}
 #define NS_FTPPROTOCOLHANDLER_CID \
@@ -37,16 +38,21 @@
 
 class nsFtpProtocolHandler : public nsIProtocolHandler,
                              public nsIConnectionCache,
-                             public nsIObserver
+                             public nsIObserver,
+                             public nsIProxy
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIPROTOCOLHANDLER
     NS_DECL_NSICONNECTIONCACHE
     NS_DECL_NSIOBSERVER
+    NS_DECL_NSIPROXY
 
     // nsFtpProtocolHandler methods:
-    nsFtpProtocolHandler();
+    nsFtpProtocolHandler() { 
+        NS_INIT_REFCNT();
+        mProxyPort = -1; 
+    };
     virtual ~nsFtpProtocolHandler();
 
     // Define a Create method to be used with a factory:
@@ -56,6 +62,9 @@ public:
 protected:
     nsHashtable*            mRootConnectionList;  // hash of FTP connections
     nsCOMPtr<nsIThreadPool> mPool;                // thread pool for FTP connections
+    nsCOMPtr<nsIProtocolProxyService>       mProxySvc;
+    nsCAutoString           mProxyHost;
+    PRInt32                 mProxyPort;
 };
 
 #define NS_FTP_MIN_CONNECTION_COUNT  1

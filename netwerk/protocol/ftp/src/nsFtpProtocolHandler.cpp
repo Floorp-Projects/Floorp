@@ -30,6 +30,11 @@
 #include "nsIProgressEventSink.h"
 #include "nsConnectionCacheObj.h"
 #include "prlog.h"
+#include "nsIProtocolProxyService.h"
+#include "nsIHTTPProtocolHandler.h"
+#include "nsIHTTPChannel.h"
+#include "nsNetUtil.h"
+
 
 #if defined(PR_LOGGING)
 //
@@ -47,49 +52,34 @@ PRLogModuleInfo* gFTPLog = nsnull;
 
 #endif /* PR_LOGGING */
 
-static NS_DEFINE_CID(kStandardURLCID,            NS_STANDARDURL_CID);
-static NS_DEFINE_CID(kAuthUrlParserCID,      NS_AUTHORITYURLPARSER_CID);
+static NS_DEFINE_CID(kStandardURLCID,       NS_STANDARDURL_CID);
+static NS_DEFINE_CID(kAuthUrlParserCID,     NS_AUTHORITYURLPARSER_CID);
+static NS_DEFINE_CID(kProtocolProxyServiceCID, NS_PROTOCOLPROXYSERVICE_CID);
+static NS_DEFINE_CID(kHTTPHandlerCID, NS_IHTTPHANDLER_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
-
-nsFtpProtocolHandler::nsFtpProtocolHandler() {
-    NS_INIT_REFCNT();
-}
 
 nsFtpProtocolHandler::~nsFtpProtocolHandler() {
     PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("~nsFtpProtocolHandler() called"));
 }
 
-NS_IMPL_ISUPPORTS3(nsFtpProtocolHandler, nsIProtocolHandler, nsIConnectionCache, nsIObserver)
-
-NS_METHOD
-nsFtpProtocolHandler::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
-{
-
-#if defined(PR_LOGGING)
-    //
-    // Initialize the global PRLogModule for FTP Protocol logging 
-    // if necessary...
-    //
-    if (nsnull == gFTPLog) {
-        gFTPLog = PR_NewLogModule("nsFTPProtocol");
-    }
-#endif /* PR_LOGGING */
-
-    nsFtpProtocolHandler* ph = new nsFtpProtocolHandler();
-    if (ph == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(ph);
-    nsresult rv = ph->Init();
-    if (NS_FAILED(rv)) return rv;
-    rv = ph->QueryInterface(aIID, aResult);
-    NS_RELEASE(ph);
-    return rv;
-}
+NS_IMPL_ISUPPORTS4(nsFtpProtocolHandler, 
+                   nsIProtocolHandler, 
+                   nsIConnectionCache, 
+                   nsIObserver,
+                   nsIProxy)
 
 nsresult
 nsFtpProtocolHandler::Init() {
-    nsresult rv;
+    nsresult rv = NS_OK;
+
+#if defined(PR_LOGGING)
+    if (!gFTPLog) gFTPLog = PR_NewLogModule("nsFTPProtocol");
+#endif /* PR_LOGGING */
+
+    mProxySvc = do_GetService(kProtocolProxyServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
     NS_NEWXPCOM(mRootConnectionList, nsHashtable);
     if (!mRootConnectionList) return NS_ERROR_OUT_OF_MEMORY;
     rv = NS_NewThreadPool(getter_AddRefs(mPool), 
@@ -98,13 +88,15 @@ nsFtpProtocolHandler::Init() {
                           NS_FTP_CONNECTION_STACK_SIZE);
     if (NS_FAILED(rv)) return rv;
 
-    NS_WITH_SERVICE(nsIObserverService, obsServ, NS_OBSERVERSERVICE_PROGID, &rv);
+    nsCOMPtr<nsIObserverService> obsServ = do_GetService(NS_OBSERVERSERVICE_PROGID, &rv);
     if (NS_SUCCEEDED(rv)) {
         nsAutoString topic(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
         obsServ->AddObserver(this, topic.GetUnicode());
     }
     return rv;
 }
+
+
     
 ////////////////////////////////////////////////////////////////////////////////
 // nsIProtocolHandler methods:
@@ -132,40 +124,35 @@ nsFtpProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
     nsresult rv;
     PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("FTP attempt at %s ", aSpec));
 
-    nsIURI* url = nsnull;
-    nsIURLParser* urlparser = nsnull;
+    nsCOMPtr<nsIURI> url;
+    nsCOMPtr<nsIURLParser> urlparser;
     if (aBaseURI) {
-        rv = aBaseURI->Clone(&url);
+        rv = aBaseURI->Clone(getter_AddRefs(url));
         if (NS_FAILED(rv)) return rv;
         rv = url->SetRelativePath(aSpec);
     }
     else {
         rv = nsComponentManager::CreateInstance(kAuthUrlParserCID, 
                                     nsnull, NS_GET_IID(nsIURLParser),
-                                    (void**)&urlparser);
+                                    getter_AddRefs(urlparser));
         if (NS_FAILED(rv)) return rv;
         rv = nsComponentManager::CreateInstance(kStandardURLCID, 
                                     nsnull, NS_GET_IID(nsIURI),
-                                    (void**)&url);
-        if (NS_FAILED(rv)) {
-            NS_RELEASE(urlparser);
-            return rv;
-        }
+                                    getter_AddRefs(url));
+        if (NS_FAILED(rv)) return rv;
+
         rv = url->SetURLParser(urlparser);
-        if (NS_FAILED(rv)) {
-            NS_RELEASE(urlparser);
-            NS_RELEASE(url);
-            return rv;
-        }
+        if (NS_FAILED(rv)) return rv;
+
         rv = url->SetSpec((char*)aSpec);
     }
     if (NS_FAILED(rv)) {
-        NS_RELEASE(url);
         PR_LOG(gFTPLog, PR_LOG_DEBUG, ("FAILED\n"));
         return rv;
     }
 
-    *result = url;
+    *result = url.get();
+    NS_ADDREF(*result);
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("SUCCEEDED\n"));
     return rv;
 }
@@ -180,8 +167,11 @@ nsFtpProtocolHandler::NewChannel(const char* verb, nsIURI* url,
                                  PRUint32 bufferMaxSize,
                                  nsIChannel* *result)
 {
-    nsresult rv;
-    
+    nsresult rv = NS_OK;
+
+    rv = mProxySvc->ExamineForProxy(url, this);
+    if (NS_FAILED(rv)) return rv;
+
     nsFTPChannel* channel;
     rv = nsFTPChannel::Create(nsnull, NS_GET_IID(nsPIFTPChannel), (void**)&channel);
     if (NS_FAILED(rv)) return rv;
@@ -194,8 +184,51 @@ nsFtpProtocolHandler::NewChannel(const char* verb, nsIURI* url,
         return rv;
     }
 
+    if (!mProxyHost.IsEmpty() || mProxyPort > 0) {
+        nsCOMPtr<nsIChannel> proxyChannel;
+        // if an FTP proxy is enabled, push things off to HTTP.
+
+        nsCOMPtr<nsIHTTPProtocolHandler> httpHandler = do_GetService(kHTTPHandlerCID, &rv);
+        if (NS_FAILED(rv)) return rv;
+
+        // Some dummy URI for the HTTP layer.
+        nsCOMPtr<nsIURI> uri;
+        rv = NS_NewURI(getter_AddRefs(uri), "http://");
+        if (NS_FAILED(rv)) return rv;
+
+        rv = httpHandler->NewChannel(verb, uri, aLoadGroup,
+                                     NS_STATIC_CAST(nsIInterfaceRequestor*, channel),
+                                     loadAttributes,
+                                     url,
+                                     bufferSegmentSize,
+                                     bufferMaxSize,
+                                     getter_AddRefs(proxyChannel));
+        if (NS_FAILED(rv)) return rv;
+
+        nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(proxyChannel, &rv);
+        if (NS_FAILED(rv)) return rv;
+
+        nsXPIDLCString spec;
+        rv = url->GetSpec(getter_Copies(spec));
+        if (NS_FAILED(rv)) return rv;
+
+        rv = httpChannel->SetProxyRequestURI((const char*)spec);
+        if (NS_FAILED(rv)) return rv;
+
+        nsCOMPtr<nsIProxy> proxyHTTP = do_QueryInterface(httpChannel, &rv);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = proxyHTTP->SetProxyHost(mProxyHost.GetBuffer());
+        if (NS_FAILED(rv)) return rv;
+
+        rv = proxyHTTP->SetProxyPort(mProxyPort);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = channel->SetProxyChannel(proxyChannel);
+    }
+
     *result = channel;
-    return NS_OK;
+    return rv;
 }
 
 // nsIConnectionCache methods
@@ -238,6 +271,33 @@ nsFtpProtocolHandler::Observe(nsISupports     *aSubject,
         nsAutoString topic(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
         obsServ->RemoveObserver(this, topic.GetUnicode());
     }
+    return NS_OK;
+}
+
+
+// nsIProxy methods
+NS_IMETHODIMP
+nsFtpProtocolHandler::GetProxyHost(char* *_retval) {
+    *_retval = mProxyHost.ToNewCString();
+    if (!*_retval) return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFtpProtocolHandler::SetProxyHost(const char *aProxyHost) {
+    mProxyHost = aProxyHost;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFtpProtocolHandler::GetProxyPort(PRInt32 *_retval) {
+    *_retval = mProxyPort;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFtpProtocolHandler::SetProxyPort(PRInt32 aProxyPort) {
+    mProxyPort = aProxyPort;
     return NS_OK;
 }
 ////////////////////////////////////////////////////////////////////////////////
