@@ -35,6 +35,7 @@
  */
 #include "nsBinaryStream.h"
 #include "nsIAllocator.h"
+#include <string.h>
 
 // Swap macros, used to convert to/from canonical (big-endian) format
 #ifdef IS_LITTLE_ENDIAN
@@ -67,6 +68,18 @@ nsBinaryOutputStream::Write(const char *aBuf, PRUint32 aCount, PRUint32 *aActual
     return mOutputStream->Write(aBuf, aCount, aActualBytes);
 }
 
+nsresult
+nsBinaryOutputStream::WriteFully(const char *aBuf, PRUint32 aCount)
+{
+    nsresult rv;
+    PRUint32 actualBytesWritten;
+    rv = mOutputStream->Write(aBuf, aCount, &actualBytesWritten);
+    if (NS_FAILED(rv)) return rv;
+    if (actualBytesWritten != aCount)
+        return NS_ERROR_FAILURE;
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 nsBinaryOutputStream::SetOutputStream(nsIOutputStream *aOutputStream)
 {
@@ -84,39 +97,21 @@ nsBinaryOutputStream::WriteBoolean(PRBool aBoolean)
 NS_IMETHODIMP
 nsBinaryOutputStream::Write8(PRUint8 aByte)
 {
-    nsresult rv;
-    PRUint32 bytesWritten;
-
-    rv = Write((const char*)&aByte, sizeof aByte, &bytesWritten);
-    if (bytesWritten != sizeof aByte)
-        return NS_ERROR_FAILURE;
-    return rv;
+    return WriteFully((const char*)&aByte, sizeof aByte);
 }
 
 NS_IMETHODIMP
 nsBinaryOutputStream::Write16(PRUint16 a16)
 {
-    nsresult rv;
-    PRUint32 bytesWritten;
-
     a16 = SWAP16(a16);
-    rv = Write((const char*)&a16, sizeof a16, &bytesWritten);
-    if (bytesWritten != sizeof a16)
-        return NS_ERROR_FAILURE;
-    return rv;
+    return WriteFully((const char*)&a16, sizeof a16);
 }
 
 NS_IMETHODIMP
 nsBinaryOutputStream::Write32(PRUint32 a32)
 {
-    nsresult rv;
-    PRUint32 bytesWritten;
-
     a32 = SWAP32(a32);
-    rv = Write((const char*)&a32, sizeof a32, &bytesWritten);
-    if (bytesWritten != sizeof a32)
-        return NS_ERROR_FAILURE;
-    return rv;
+    return WriteFully((const char*)&a32, sizeof a32);
 }
 
 NS_IMETHODIMP
@@ -155,7 +150,7 @@ nsBinaryOutputStream::WriteDouble(double aDouble)
 NS_IMETHODIMP
 nsBinaryOutputStream::WriteStringZ(const char *aString)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return WriteFully(aString, strlen(aString) + 1);
 }
 
 NS_IMETHODIMP
@@ -228,6 +223,7 @@ nsBinaryInputStream::Read8(PRUint8* aByte)
     PRUint32 bytesRead;
     
     rv = Read((char*)aByte, sizeof(*aByte), &bytesRead);
+    if (NS_FAILED(rv)) return rv;
     if (bytesRead != sizeof (*aByte))
         return NS_ERROR_FAILURE;
     return rv;
@@ -240,6 +236,7 @@ nsBinaryInputStream::Read16(PRUint16* a16)
     PRUint32 bytesRead;
 
     rv = Read((char*)a16, sizeof *a16, &bytesRead);
+    if (NS_FAILED(rv)) return rv;
     if (bytesRead != sizeof *a16)
         return NS_ERROR_FAILURE;
     *a16 = SWAP16(*a16);
@@ -253,6 +250,7 @@ nsBinaryInputStream::Read32(PRUint32* a32)
     PRUint32 bytesRead;
 
     rv = Read((char*)a32, sizeof *a32, &bytesRead);
+    if (NS_FAILED(rv)) return rv;
     if (bytesRead != sizeof *a32)
         return NS_ERROR_FAILURE;
     *a32 = SWAP32(*a32);
@@ -295,7 +293,21 @@ nsBinaryInputStream::ReadDouble(double* aDouble)
 NS_IMETHODIMP
 nsBinaryInputStream::ReadStringZ(char* *aString)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv;
+    nsAutoString result;
+    char c;
+
+    do {
+        PRUint32 actualBytesRead;
+        rv = Read(&c, 1, &actualBytesRead);
+        if (NS_FAILED(rv) || actualBytesRead != 1)
+            return NS_ERROR_FAILURE;
+        result += c;
+    } while (c);
+
+    *aString = result.ToNewCString();
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
