@@ -43,7 +43,6 @@
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIFormControl.h"
-#include "nsIImageMap.h"
 
 #include "nsRepository.h"
 
@@ -55,6 +54,7 @@
 #include "nsIHTMLDocument.h"
 #include "nsStyleConsts.h"
 #include "nsINameSpaceManager.h"
+#include "nsIDOMHTMLMapElement.h"
 
 // XXX Go through a factory for this one
 #include "nsICSSParser.h"
@@ -70,6 +70,7 @@ static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIHTMLContentIID, NS_IHTMLCONTENT_IID);
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
+static NS_DEFINE_IID(kIDOMHTMLMapElementIID, NS_IDOMHTMLMAPELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLTextAreaElementIID, NS_IDOMHTMLTEXTAREAELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLOptionElementIID, NS_IDOMHTMLOPTIONELEMENT_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
@@ -194,7 +195,8 @@ public:
   PRBool mDirty;
   PRBool mLayoutStarted;
   nsIDOMHTMLFormElement* mCurrentForm;
-  nsIImageMap* mCurrentMap;
+  nsIHTMLContent* mCurrentMap;
+  nsIDOMHTMLMapElement* mCurrentDOMMap;
 
   SinkContext** mContexts;
   PRInt32 mNumContexts;
@@ -255,6 +257,7 @@ public:
   nsresult OpenContainer(const nsIParserNode& aNode);
   nsresult CloseContainer(const nsIParserNode& aNode);
   nsresult AddLeaf(const nsIParserNode& aNode);
+  nsresult AddLeaf(nsIHTMLContent* aContent);
   nsresult End();
 
   nsresult GrowStack();
@@ -1066,13 +1069,8 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
       }
 
       // Add new leaf to its parent
-      NS_ASSERTION(mStackPos > 0, "leaf w/o container");
-      nsIHTMLContent* parent = mStack[mStackPos-1].mContent;
-      parent->AppendChildTo(content, PR_FALSE);
+      AddLeaf(content);
       NS_RELEASE(content);
-
-      // Mark sink dirty if it can safely reflow something
-      MaybeMarkSinkDirty();
     }
     break;
 
@@ -1097,6 +1095,18 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
   return rv;
 }
 
+nsresult
+SinkContext::AddLeaf(nsIHTMLContent* aContent)
+{
+  NS_ASSERTION(mStackPos > 0, "leaf w/o container");
+  nsIHTMLContent* parent = mStack[mStackPos-1].mContent;
+  parent->AppendChildTo(aContent, PR_FALSE);
+
+  // Mark sink dirty if it can safely reflow something
+  MaybeMarkSinkDirty();
+
+  return NS_OK;
+}
 
 nsresult
 SinkContext::End()
@@ -1293,6 +1303,7 @@ HTMLContentSink::~HTMLContentSink()
 
   NS_IF_RELEASE(mCurrentForm);
   NS_IF_RELEASE(mCurrentMap);
+  NS_IF_RELEASE(mCurrentDOMMap);
   NS_IF_RELEASE(mRefContent);
 
   for (PRInt32 i = 0; i < mNumContexts; i++) {
@@ -1735,33 +1746,48 @@ HTMLContentSink::CloseFrameset(const nsIParserNode& aNode)
 NS_IMETHODIMP
 HTMLContentSink::OpenMap(const nsIParserNode& aNode)
 {
-  mCurrentContext->FlushText();
-
-  SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "HTMLContentSink::OpenMap", aNode);
-
-  // Close out previous map if it's there
   NS_IF_RELEASE(mCurrentMap);
+  NS_IF_RELEASE(mCurrentDOMMap);
 
-  nsAutoString tmp("MAP");
-  nsIAtom* atom = NS_NewAtom(tmp);
-  nsresult rv = NS_NewImageMap(&mCurrentMap, atom);
-  NS_RELEASE(atom);
-  if (NS_OK == rv) {
-    // XXX rewrite to use AddAttributes and don't use FindAttribute
-    // Look for name attribute and set the map name
-    nsAutoString name;
-    if (FindAttribute(aNode, "name", name)) {
-      // XXX leading, trailing, interior non=-space ws is removed
-      name.StripWhitespace();
-      mCurrentMap->SetName(name);
-    }
-
-    // Add the map to the document
-    ((nsHTMLDocument*)mDocument)->AddImageMap(mCurrentMap);
-
-    // XXX Add a content object for the map too
+  nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
+  nsIHTMLContent* map;
+  nsresult rv = CreateContentObject(aNode, nodeType, nsnull, nsnull, &map);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
+
+  // Set the content's document and attributes
+  map->SetDocument(mDocument, PR_FALSE);
+  nsIScriptContextOwner* sco = mDocument->GetScriptContextOwner();
+  rv = AddAttributes(aNode, map, sco);
+  NS_IF_RELEASE(sco);
+  if (NS_FAILED(rv)) {
+    NS_RELEASE(map);
+    return rv;
+  }
+
+  nsIDOMHTMLMapElement* domMap;
+  rv = map->QueryInterface(kIDOMHTMLMapElementIID, (void**)&domMap);
+  if (NS_FAILED(rv)) {
+    NS_RELEASE(map);
+    return rv;
+  }
+
+  // Strip out whitespace in the name for navigator compatability
+  // XXX NAV QUIRK
+  nsAutoString name;
+  domMap->GetName(name);
+  name.StripWhitespace();
+  domMap->SetName(name);
+
+  // Add the map to the document
+  ((nsHTMLDocument*)mDocument)->AddImageMap(domMap);
+  mCurrentMap = map;
+  mCurrentDOMMap = domMap;
+
+  // Add the map content object to the document
+  rv = mCurrentContext->AddLeaf(map);
+
   return rv;
 }
 
@@ -1771,6 +1797,7 @@ HTMLContentSink::CloseMap(const nsIParserNode& aNode)
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
                   "HTMLContentSink::CloseMap", aNode);
   NS_IF_RELEASE(mCurrentMap);
+  NS_IF_RELEASE(mCurrentDOMMap);
   return NS_OK;
 }
 
@@ -1802,7 +1829,6 @@ HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
   nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
   switch (nodeType) {
   case eHTMLTag_area:
-    mCurrentContext->FlushText();
     rv = ProcessAREATag(aNode);
     break;
 
@@ -2035,41 +2061,30 @@ HTMLContentSink::ProcessATag(const nsIParserNode& aNode,
   return NS_OK;
 }
 
-// XXX add area content object to map content object instead
 nsresult
 HTMLContentSink::ProcessAREATag(const nsIParserNode& aNode)
 {
+  nsresult rv = NS_OK;
   if (nsnull != mCurrentMap) {
-    nsAutoString shape, coords, href, target(mBaseTarget), alt;
-    PRInt32 ac = aNode.GetAttributeCount();
-    PRBool suppress = PR_FALSE;
-    nsIScriptContextOwner* sco = mDocument->GetScriptContextOwner();
-    for (PRInt32 i = 0; i < ac; i++) {
-      // Get upper-cased key
-      const nsString& key = aNode.GetKeyAt(i);
-      if (key.EqualsIgnoreCase("shape")) {
-        GetAttributeValueAt(aNode, i, shape, sco);
-      }
-      else if (key.EqualsIgnoreCase("coords")) {
-        GetAttributeValueAt(aNode, i, coords, sco);
-      }
-      else if (key.EqualsIgnoreCase("href")) {
-        GetAttributeValueAt(aNode, i, href, sco);
-        href.StripWhitespace();
-      }
-      else if (key.EqualsIgnoreCase("target")) {
-        GetAttributeValueAt(aNode, i, target, sco);
-      }
-      else if (key.EqualsIgnoreCase("alt")) {
-        GetAttributeValueAt(aNode, i, alt, sco);
-      }
-      else if (key.EqualsIgnoreCase("suppress")) {
-        suppress = PR_TRUE;
-      }
+    nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
+    nsIHTMLContent* area;
+    nsresult rv = CreateContentObject(aNode, nodeType, nsnull, nsnull, &area);
+    if (NS_FAILED(rv)) {
+      return rv;
     }
-    NS_RELEASE(sco);
-    mCurrentMap->AddArea(mBaseHREF, shape, coords, href, target, alt,
-                         suppress);
+
+    // Set the content's document and attributes
+    area->SetDocument(mDocument, PR_FALSE);
+    nsIScriptContextOwner* sco = mDocument->GetScriptContextOwner();
+    rv = AddAttributes(aNode, area, sco);
+    NS_IF_RELEASE(sco);
+    if (NS_FAILED(rv)) {
+      NS_RELEASE(area);
+      return rv;
+    }
+
+    // Add AREA object to the current map
+    mCurrentMap->AppendChildTo(area, PR_FALSE);
   }
   return NS_OK;
 }
