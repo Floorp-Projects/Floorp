@@ -39,6 +39,18 @@
 
 #include "nsISupports.idl"
 
+%{ C++
+#include "nsMargin.h"
+#include "nsFont.h"
+%}
+
+/**
+ * Native types
+ */
+  [ref] native nsNativeMarginRef(nsMargin);
+  [ref] native nsNativeFontRef(nsFont);
+  [ref] native nsNativeStringRef(nsString);
+
 /**
  * Simplified graphics interface for JS rendering.
  *
@@ -51,9 +63,14 @@
 interface nsIPrintSettings : nsISupports
 {
   /* Print Option Flags for Bit Field*/
-  const long kOptPrintOddPages              = 0x00000001;
-  const long kOptPrintEvenPages             = 0x00000002;
-  const long kPrintOptionsEnableSelectionRB = 0x00000004;
+  const long kOptPrintOddPages    = 0x00000001;
+  const long kOptPrintEvenPages   = 0x00000002;
+  const long kOptPrintDocTitle    = 0x00000004;
+  const long kOptPrintDocLoc      = 0x00000008;
+  const long kOptPrintPageNums    = 0x00000010;
+  const long kOptPrintPageTotal   = 0x00000020;
+  const long kOptPrintDatePrinted = 0x00000040;
+  const long kPrintOptionsEnableSelectionRB = 0x00000080;
 
   /* Print Range Enums */
   const long kRangeAllPages           = 0;
@@ -76,18 +93,12 @@ interface nsIPrintSettings : nsISupports
   const short kA3PaperSize        = 4;
 
   /**
-   * Orientation Constants
-   */
-  const short kPortraitOrientation  = 0;
-  const short kLandscapeOrientation = 1;
-
-  /**
    * Print Frame Constants
    */
-  const short kNoFrames      = 0;
-  const short kFramesAsIs    = 1;
-  const short kSelectedFrame = 2;
-  const short kEachFrameSep  = 3;
+  const short kFramesAsIs    = 0;
+  const short kSelectedFrame = 1;
+  const short kEachFrameSep  = 2;
+
 
   /**
    * Set PrintOptions 
@@ -104,42 +115,44 @@ interface nsIPrintSettings : nsISupports
    */
   PRInt32 GetPrintOptionsBits();
 
+
   /**
    * Data Members
    */
   attribute long    startPageRange;    
   attribute long    endPageRange;    
 
+  attribute boolean printReversed;
+  attribute boolean printInColor;  /* a false means grayscale */
+  attribute long    paperSize;     /*  see page size consts */
+  attribute wstring printCommand;
+  attribute boolean printToFile;
+  attribute wstring toFileName;
+
   attribute double  marginTop;     /*  these are in inches */
   attribute double  marginLeft;
   attribute double  marginBottom;
   attribute double  marginRight;
 
-  attribute short   printRange; 
-
+  attribute long    printRange; 
+  attribute long    pageNumJust; 
   attribute wstring title;
   attribute wstring docURL;
 
-  attribute wstring headerStrLeft;
-  attribute wstring headerStrCenter;
-  attribute wstring headerStrRight;
+  attribute boolean isPrintFrame;
+  attribute long    printFrameType;
 
-  attribute wstring footerStrLeft;
-  attribute wstring footerStrCenter;
-  attribute wstring footerStrRight;
+  /* No Script Methods */
 
-  attribute short   printFrameType;
-  attribute boolean PrintSilent;	/* print without putting up the dialog */
+  [noscript] void SetFontNamePointSize(in nsNativeStringRef aName, in PRInt32 aPointSize);
 
-  /* Additional XP Related */
-  attribute boolean printReversed;
-  attribute boolean printInColor;  /* a false means grayscale */
-  attribute long    paperSize;     /*  see page size consts */
-  attribute long    orientation;   /*  see orientation consts */
-  attribute wstring printCommand;
-  attribute boolean printToFile;
-  attribute wstring toFileName;
+  [noscript] void SetMarginInTwips(in nsNativeMarginRef aMargin);
+  /* Purposely made this an "in" arg */
+  [noscript] void GetMarginInTwips(in nsNativeMarginRef aMargin);
 
-  attribute long    printPageDelay; /* in milliseconds */
+  [noscript] void SetDefaultFont(in nsNativeFontRef aMargin);
+  /* Purposely made this an "in" arg */
+  [noscript] void GetDefaultFont(in nsNativeFontRef aMargin);
+
 
 };

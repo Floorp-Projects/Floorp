@@ -32,7 +32,6 @@ XPIDLSRCS =               \
   .\nsIScreen.idl          \
   .\nsIScreenManager.idl          \
   .\nsIPrintOptions.idl     \
-  .\nsIPrintSettings.idl     \
   $(NULL)
 
 EXPORTS=                  \
