@@ -1360,11 +1360,6 @@ protected:
 
 private:
 
-  PRBool InZombieDocument(nsIContent *aContent);
-  nsresult RetargetEventToParent(nsIView *aView, nsGUIEvent* aEvent, 
-                                 nsEventStatus*  aEventStatus, PRBool aForceHandle,
-                                 PRBool& aHandled);
-
   void FreeDynamicStack();
 
   //helper funcs for disabing autoscrolling
@@ -5892,52 +5887,6 @@ PresShell::PopCurrentEventInfo()
   }
 }
 
-PRBool PresShell::InZombieDocument(nsIContent *aContent)
-{
-  // If a content node points to a null document, it is a
-  // zombie document, about to be replaced by a newly loading document.
-  // Such documents cannot handle DOM events.
-  nsCOMPtr<nsIDocument> doc;
-  mCurrentEventContent->GetDocument(*getter_AddRefs(doc));
-  return !doc;
-}
-
-nsresult PresShell::RetargetEventToParent(nsIView         *aView,
-                                          nsGUIEvent*     aEvent,
-                                          nsEventStatus*  aEventStatus,
-                                          PRBool          aForceHandle,
-                                          PRBool&         aHandled)
-{
-  // Sent this events straight up to the parent pres shell.
-  // We do this for non-mouse events in zombie documents.
-  // That way at least the UI key bindings can work.
-
-  nsCOMPtr<nsISupports> container;
-  mPresContext->GetContainer(getter_AddRefs(container));
-  nsCOMPtr<nsIDocShellTreeItem> treeItem = 
-    do_QueryInterface(container);
-  if (treeItem) {
-    nsCOMPtr<nsIDocShellTreeItem> parentTreeItem;
-    treeItem->GetParent(getter_AddRefs(parentTreeItem));
-    nsCOMPtr<nsIDocShell> parentDocShell = 
-      do_QueryInterface(parentTreeItem);
-    if (parentDocShell && treeItem != parentTreeItem) {
-      nsCOMPtr<nsIPresShell> parentPresShell;
-      parentDocShell->GetPresShell(getter_AddRefs(parentPresShell));
-      nsCOMPtr<nsIViewObserver> parentViewObserver = 
-        do_QueryInterface(parentPresShell);
-      if (parentViewObserver) {
-        PopCurrentEventInfo();
-        return parentViewObserver->HandleEvent(aView, aEvent, 
-                                             aEventStatus,
-                                             aForceHandle, 
-                                             aHandled);
-      }
-    }
-  }
-  return NS_ERROR_FAILURE;
-}
-
 NS_IMETHODIMP
 PresShell::HandleEvent(nsIView         *aView,
                        nsGUIEvent*     aEvent,
@@ -6016,7 +5965,8 @@ PresShell::HandleEvent(nsIView         *aView,
     if (mSelectionFlags && NS_SUCCEEDED(mSelection->HandleKeyEvent(mPresContext, aEvent)))
     {  
       return NS_OK;
-    }  }
+    }
+  }
 */
   if (nsnull != frame) {
     PushCurrentEventInfo(nsnull, nsnull);
@@ -6068,10 +6018,6 @@ PresShell::HandleEvent(nsIView         *aView,
           mDocument->GetRootContent(&mCurrentEventContent);
 #endif /* defined(MOZ_X11) */
           mCurrentEventFrame = nsnull;
-        }
-        if (mCurrentEventContent && InZombieDocument(mCurrentEventContent)) {
-          return RetargetEventToParent(aView, aEvent, aEventStatus, 
-                                       aForceHandle, aHandled);
         }
       }
       else if (!InClipRect(frame, aEvent->point)) {
