@@ -114,6 +114,9 @@ htmlparser/tests/grabpage/Makefile
 htmlparser/tests/logparse/Makefile
 include/Makefile
 intl/Makefile
+intl/chardet/Makefile
+intl/chardet/public/Makefile
+intl/chardet/src/Makefile
 intl/uconv/Makefile
 intl/uconv/public/Makefile
 intl/uconv/src/Makefile
