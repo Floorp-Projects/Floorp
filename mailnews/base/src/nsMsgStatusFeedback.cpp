@@ -84,7 +84,7 @@ nsMsgStatusFeedback::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aUR
 		  m_meteorsSpinning = PR_TRUE;
 
 		  // Enable the Stop buton
-//		  setAttribute( rootWebshell, "canStop", "disabled", "" );
+		  setAttribute( rootWebshell, "canStop", "disabled", "" );
 		}
 	}
 	return rv;
@@ -122,7 +122,7 @@ nsMsgStatusFeedback::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* c
 			setAttribute( rootWebshell, "Messenger:Status", "value", "Document: Done" );
 			m_meteorsSpinning = PR_FALSE;
 		  // Disable the Stop buton
-//		  setAttribute( rootWebshell, "canStop", "disabled", "true" );
+		  setAttribute( rootWebshell, "canStop", "disabled", "true" );
 		}
 	}
   return rv;
@@ -201,7 +201,7 @@ nsMsgStatusFeedback::StartMeteors()
 	if (!m_meteorsSpinning)
 	{
 		// meteors are horribly slow, so turn them off for now
-		setAttribute( mWebShell, "Messenger:Throbber", "busy", "true" );
+//		setAttribute( mWebShell, "Messenger:Throbber", "busy", "true" );
 		m_meteorsSpinning = PR_TRUE;
 	}
 	return NS_OK;
@@ -214,7 +214,7 @@ nsMsgStatusFeedback::StopMeteors()
 	if (m_meteorsSpinning)
 	{
 		// meteors are horribly slow, so turn them off for now
-		setAttribute( mWebShell, "Messenger:Throbber", "busy", "false" );
+//		setAttribute( mWebShell, "Messenger:Throbber", "busy", "false" );
 		m_meteorsSpinning = PR_FALSE;
 	}
 	return NS_OK;
