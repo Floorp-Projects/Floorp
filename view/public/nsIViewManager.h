@@ -290,6 +290,7 @@ public:
    * views (but not descendants through placeholder edges) must have their
    * bounds inside the bounds of this view
    *     if non-null, then we will clip this view's descendant views
+   * --- including descendants through placeholder edges ---
    * to the region. The region's bounds must be within the bounds of
    * this view. The descendant views' bounds need not be inside the bounds
    * of this view (because we're going to clip them anyway).
