@@ -224,6 +224,10 @@ protected:
   // Builds our cache of column info.
   void EnsureColumns(nsIPresContext* aContext);
 
+  // Use to auto-fill some of the common properties without the view having to do it.
+  // Examples include container, open, selected, and focused.
+  void PrefillPropertyArray(PRInt32 aRowIndex, const PRUnichar* aColID);
+
 protected: // Data Members
   // Our cached pres context.
   nsIPresContext* mPresContext;

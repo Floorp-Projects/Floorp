@@ -30,12 +30,14 @@ CPPSRCS=					\
 	nsOutlinerBoxObject.cpp \
 	nsOutlinerBodyFrame.cpp \
 	nsOutlinerColFrame.cpp \
+	nsOutlinerSelection.cpp \
 	$(NULL)
 
 CPP_OBJS=		\
     .\$(OBJDIR)\nsOutlinerBoxObject.obj \
 	.\$(OBJDIR)\nsOutlinerBodyFrame.obj \
 	.\$(OBJDIR)\nsOutlinerColFrame.obj \
+	.\$(OBJDIR)\nsOutlinerSelection.obj \
 	$(NULL)
 
 EXPORTS =					\

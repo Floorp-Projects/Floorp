@@ -23,7 +23,6 @@
  */
 
 interface nsIOutlinerBoxObject;
-interface nsIOutlinerRangeList;
 
 #include "nsISupports.idl"
 
@@ -32,9 +31,6 @@ interface nsIOutlinerSelection : nsISupports
 {
   // The outliner widget for this selection.
   attribute nsIOutlinerBoxObject outliner;
-
-  // The current selected indices.
-  attribute nsIOutlinerRangeList selectedRows;
 
   // Indicates whether or not the row at the specified index is
   // part of the selection.
@@ -57,6 +53,17 @@ interface nsIOutlinerSelection : nsISupports
 
   // Selects all rows.
   void selectAll();
+
+  // This attribute is a boolean indicating whether or not the
+  // "select" event should fire when the selection is changed using
+  // one of our methods.  A view can use this to temporarily suppress
+  // the selection while manipulating all of the indices, e.g., on 
+  // a sort.
+  attribute boolean selectEventsSuppressed;
+
+  // The current item (the one that gets a focus rect in addition to being
+  // selected).
+  attribute long currentIndex;
 };
 
 %{C++
