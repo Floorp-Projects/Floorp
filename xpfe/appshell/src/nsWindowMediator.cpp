@@ -490,7 +490,7 @@ NS_IMETHODIMP nsWindowMediator::GetMostRecentWindow( const PRUnichar* inType, ns
 	*outWindow = NULL;
 	PRInt32 lastTimeStamp = -1;
 	PRInt32 count = mWindowList.Count();
-	nsIWebShellWindow* mostRecentWindow;
+	nsIWebShellWindow* mostRecentWindow = NULL;
 	nsString typeString( inType );
 	// Find the most window with the highest time stamp that matches the requested type
 	for ( int32 i = 0; i< count; i++ )
@@ -517,10 +517,9 @@ NS_IMETHODIMP nsWindowMediator::GetMostRecentWindow( const PRUnichar* inType, ns
 				return NS_ERROR_FAILURE;
 			}
 	}
-	else
-	{
-		return NS_ERROR_FAILURE;
-	}
+	
+	return NS_OK;
+	
 }
 
 
