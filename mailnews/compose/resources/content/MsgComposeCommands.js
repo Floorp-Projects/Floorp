@@ -29,6 +29,8 @@ var currentAttachment = null;
 var tabIntoBodyPhase = 0;
 var documentLoaded = false;
 
+var Bundle = srGetStrBundle("chrome://messengercompose/locale/composeMsgs.properties"); 
+
 var other_header = "";
 var update_compose_title_as_you_type = true;
 var prefs = Components.classes["component://netscape/preferences"].getService();
@@ -282,7 +284,8 @@ function MigratePrefsIfNecessary()
             accountManager.UpgradePrefs(); 
 	}
 	catch (ex) {
-		alert("You don't have any email identities yet.   Create one with the Account Wizard.");
+		var alertText = Bundle.GetStringFromName("noIdentities");
+		window.alert(alertText);
 		MsgAccountWizard();
 	}
 }
