@@ -1451,7 +1451,7 @@ nsPresContext::BidiEnabled(PRBool& aBidiEnabled) const
     mShell->GetDocument(getter_AddRefs(doc) );
     NS_ASSERTION(doc, "PresShell has no document in nsPresContext::BidiEnabled");
     if (doc) {
-      doc->BidiEnabled(aBidiEnabled);
+      doc->GetBidiEnabled(&aBidiEnabled);
     }
   }
   return NS_OK;
@@ -1464,7 +1464,7 @@ nsPresContext::EnableBidi() const
     nsCOMPtr<nsIDocument> doc;
     mShell->GetDocument(getter_AddRefs(doc) );
     if (doc) {
-      doc->EnableBidi();
+      doc->SetBidiEnabled(PR_TRUE);
     }
   }
   return NS_OK;
