@@ -678,6 +678,7 @@ nsSetupTypeDlg::VerifyDestination()
                                  gCtx->opt->mDestination);
 
         gtk_dialog_run(GTK_DIALOG(noPermsDlg));
+        gtk_widget_destroy(noPermsDlg);
 
         return E_NO_PERMS;
       }
