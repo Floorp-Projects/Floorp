@@ -33,7 +33,7 @@
 #include "prenv.h"
 #include "nsCRT.h"
 
-#if defined(XP_MAC) /* || defined(XP_MACOSX) REMIND HACKING FOR MACOS X!!! */
+#if defined(XP_MAC) || defined(XP_MACOSX)
 #include <Folders.h>
 #include <Script.h>
 #include <Processes.h>
@@ -60,7 +60,7 @@
 // WARNING: These hard coded names need to go away. They need to
 // come from localizable resources
 
-#if defined(XP_MAC) /* || defined(XP_MACOSX) REMIND HACKING FOR MACOS X!!! */
+#if defined(XP_MAC) || defined(XP_MACOSX)
 #define APP_REGISTRY_NAME NS_LITERAL_CSTRING("Application Registry")
 #define ESSENTIAL_FILES   NS_LITERAL_CSTRING("Essential Files")
 #elif defined(XP_WIN) || defined(XP_OS2)
@@ -70,7 +70,7 @@
 #endif
 
 // define default product directory
-#if defined(XP_WIN) || defined(XP_MAC) || defined(XP_OS2) || defined(XP_BEOS)
+#if defined(XP_WIN) || defined(XP_MAC) || defined(XP_MACOSX) || defined(XP_OS2) || defined(XP_BEOS)
 #define DEFAULT_PRODUCT_DIR NS_LITERAL_CSTRING("Mozilla")
 #elif defined (XP_UNIX)
 #define DEFAULT_PRODUCT_DIR NS_LITERAL_CSTRING(".mozilla")
@@ -80,7 +80,7 @@
 #define NS_ENV_PLUGINS_DIR          "EnvPlugins"    // env var MOZ_PLUGIN_PATH
 #define NS_USER_PLUGINS_DIR         "UserPlugins"
 
-#if defined(XP_MAC)
+#if defined(XP_MAC) || defined(XP_MACOSX)
 #define NS_MACOSX_USER_PLUGIN_DIR   "OSXUserPlugins"
 #define NS_MACOSX_LOCAL_PLUGIN_DIR  "OSXLocalPlugins"
 #define NS_MAC_CLASSIC_PLUGIN_DIR   "MacSysPlugins"
@@ -137,7 +137,7 @@ nsAppFileLocationProvider::GetFile(const char *prop, PRBool *persistant, nsIFile
     *_retval = nsnull;
     *persistant = PR_TRUE;
 
-#if defined (XP_MAC)
+#if defined (XP_MAC) || defined(XP_MACOSX)
     short foundVRefNum;
     long foundDirID;
     FSSpec fileSpec;
@@ -201,7 +201,7 @@ nsAppFileLocationProvider::GetFile(const char *prop, PRBool *persistant, nsIFile
         if (NS_SUCCEEDED(rv))
             rv = localFile->AppendRelativeNativePath(PLUGINS_DIR_NAME);
     }
-#if defined(XP_MAC)
+#if defined(XP_MAC) || defined(XP_MACOSX)
     else if (nsCRT::strcmp(prop, NS_MACOSX_USER_PLUGIN_DIR) == 0)
     {
         if (!(::FindFolder(kUserDomain,
@@ -327,7 +327,7 @@ NS_METHOD nsAppFileLocationProvider::GetProductDirectory(nsILocalFile **aLocalFi
     PRBool exists;
     nsCOMPtr<nsILocalFile> localDir;
 
-#if defined(XP_MAC) /* || defined(XP_MACOSX) REMIND HACKING FOR MACOS X!!! */
+#if defined(XP_MAC)
     nsCOMPtr<nsIProperties> directoryService = 
              do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
@@ -336,7 +336,16 @@ NS_METHOD nsAppFileLocationProvider::GetProductDirectory(nsILocalFile **aLocalFi
     err = ::Gestalt(gestaltSystemVersion, &response);
     const char *prop = (!err && response >= 0x00001000) ? NS_MAC_USER_LIB_DIR : NS_MAC_DOCUMENTS_DIR;
     rv = directoryService->Get(prop, NS_GET_IID(nsILocalFile), getter_AddRefs(localDir));
-    if (NS_FAILED(rv)) return rv;   
+    if (NS_FAILED(rv)) return rv;
+#elif defined(XP_MACOSX)
+    FSRef fsRef;
+    OSErr err = ::FSFindFolder(kUserDomain, kDomainLibraryFolderType, kCreateFolder, &fsRef);
+    if (err) return NS_ERROR_FAILURE;
+    NS_NewLocalFile(nsString(), PR_TRUE, getter_AddRefs(localDir));
+    if (!localDir) return NS_ERROR_FAILURE;
+    nsCOMPtr<nsILocalFileMac> localDirMac(do_QueryInterface(localDir));
+    rv = localDirMac->InitWithFSRef(&fsRef);
+    if (NS_FAILED(rv)) return rv;
 #elif defined(XP_OS2)
     nsCOMPtr<nsIProperties> directoryService = 
              do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
@@ -450,7 +459,12 @@ class nsAppDirectoryEnumerator : public nsISimpleEnumerator
         while (!mNext && *mCurrentKey)
         {
             PRBool dontCare;
-            (void)mProvider->GetFile(*mCurrentKey++, &dontCare, getter_AddRefs(mNext));
+            nsCOMPtr<nsIFile> testFile;
+            (void)mProvider->GetFile(*mCurrentKey++, &dontCare, getter_AddRefs(testFile));
+            // Don't return a file which does not exist.
+            PRBool exists;
+            if (testFile && NS_SUCCEEDED(testFile->Exists(&exists)) && exists)
+                mNext = testFile;
         }
         *result = mNext != nsnull;
         return NS_OK;
@@ -494,7 +508,7 @@ nsAppFileLocationProvider::GetFiles(const char *prop, nsISimpleEnumerator **_ret
     
     if (!nsCRT::strcmp(prop, NS_APP_PLUGINS_DIR_LIST))
     {
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
         static const char* osXKeys[] = { NS_APP_PLUGINS_DIR, NS_MACOSX_USER_PLUGIN_DIR, NS_MACOSX_LOCAL_PLUGIN_DIR, nsnull };
         static const char* os9Keys[] = { NS_APP_PLUGINS_DIR, NS_MAC_CLASSIC_PLUGIN_DIR, nsnull };
         static const char** keys;

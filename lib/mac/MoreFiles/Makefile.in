@@ -35,29 +35,13 @@ LIBRARY_NAME	= macmorefiles_s
 REQUIRES	= 
 
 CSRCS		=				\
-		DirectoryCopy.c			\
-		FileCopy.c			\
-		FSpCompat.c			\
-		FullPath.c			\
-		IterateDirectory.c		\
-		MoreDesktopMgr.c		\
-		MoreFiles.c			\
-		MoreFilesExtras.c		\
-		MoreFilesSearch.c		\
+		MoreFilesX.c		\
+		FSCopyObject.c		\
 		$(NULL)
 
 EXPORTS		+=  \
-		DirectoryCopy.h			\
-		FileCopy.h			\
-		FSpCompat.h			\
-		FullPath.h			\
-		IterateDirectory.h		\
-		MoreDesktopMgr.h		\
-		MoreFiles.h			\
-		MoreFilesExtras.h		\
-		MoreFilesSearch.h		\
-		Optimization.h			\
-		OptimizationEnd.h		\
+		MoreFilesX.h		\
+		FSCopyObject.h		\
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a

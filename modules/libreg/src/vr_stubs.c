@@ -53,7 +53,7 @@
 
 #include "vr_stubs.h"
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#if defined(XP_MAC)
 #include <Folders.h>
 #include <Script.h>
 #include <stdlib.h>
@@ -62,9 +62,26 @@
 #include "FullPath.h"  /* For FSpLocationFromFullPath() */
 #endif
 
+#if defined(XP_MACOSX)
+#include <Folders.h>
+#include <stdlib.h>
+#endif
+
 #ifdef XP_BEOS
 #include <FindDirectory.h>
 #endif 
+
+#ifdef XP_MACOSX
+/* So that we're not dependent on the size of chars in a wide string literal */
+static const UniChar kOSXRegParentName[] =
+  { 'M', 'o', 'z', 'i', 'l', 'l', 'a' };
+static const UniChar kOSXRegName[] =
+  { 'G', 'l', 'o', 'b', 'a', 'l', '.', 'r', 'e', 'g', 's' };
+static const UniChar kOSXVersRegName[] =
+  { 'V', 'e', 'r', 's', 'i', 'o', 'n', 's', '.', 'r', 'e', 'g', 's' };
+
+#define UNICHAR_ARRAY_LEN(s) (sizeof(s) / sizeof(UniChar))
+#endif
 
 #define DEF_REG "/.mozilla/registry"
 #define WIN_REG "\\mozregistry.dat"
@@ -215,51 +232,71 @@ int FAR PASCAL _export WEP(int nParam)
 
 #if defined(XP_MAC) || defined(XP_MACOSX)
 #include <Files.h>
-#include "FullPath.h"
 
 #ifdef STANDALONE_REGISTRY
 extern XP_File vr_fileOpen(const char *name, const char * mode)
 {
     XP_File fh = NULL;
     struct stat st;
-    OSErr   anErr;
-    FSSpec  newFSSpec;
     
 #ifdef STANDALONE_REGISTRY
     errno = 0; /* reset errno (only if we're using stdio) */
 #endif
 
-    anErr = FSpLocationFromFullPath(strlen(name), name, &newFSSpec);
-    
-    if (anErr == -43)
-    { 
-        /* if file doesn't exist */
-        anErr = FSpCreate(&newFSSpec, 'MOSS', 'REGS', smSystemScript);
-    }
-    else
-    {
-        /* there is not much to do here.  if we got noErr, the file exists.  If we did not get
-           noErr or -43, we are pretty hosed.
-        */
-    }
-        
     if ( name != NULL ) {
         if ( stat( name, &st ) == 0 )
-            fh = fopen( name, XP_FILE_UPDATE_BIN ); /* If/when we switch to MSL C Lib (gromit uses this), we might have to take out the Macro per bug #62382 */
+            fh = fopen( name, XP_FILE_UPDATE_BIN );
         else 
         {
             /* should never get here! */
             fh = fopen( name, XP_FILE_TRUNCATE_BIN );
         }
     }
-#ifdef STANDALONE_REGISTRY
-    if (anErr != noErr)
-        errno = anErr;
-#endif
     return fh;
 }
 #endif /*STANDALONE_REGISTRY*/
 
+#if defined (XP_MACOSX)
+extern void vr_findGlobalRegName()
+{
+    OSErr   err;
+    FSRef   foundRef;
+    
+    err = FSFindFolder(kLocalDomain, kDomainLibraryFolderType, kDontCreateFolder, &foundRef);
+    if (err == noErr)
+    {
+        FSRef parentRef;
+        err = FSMakeFSRefUnicode(&foundRef, UNICHAR_ARRAY_LEN(kOSXRegParentName), kOSXRegParentName,
+                                 kTextEncodingUnknown, &parentRef);
+        if (err == fnfErr)
+        {
+            err = FSCreateDirectoryUnicode(&foundRef, UNICHAR_ARRAY_LEN(kOSXRegParentName), kOSXRegParentName,
+                                           kFSCatInfoNone, NULL, &parentRef, NULL, NULL);
+        }
+        if (err == noErr)
+        {
+            FSRef regRef;
+            err = FSMakeFSRefUnicode(&parentRef, UNICHAR_ARRAY_LEN(kOSXRegName), kOSXRegName,
+                                     kTextEncodingUnknown, &regRef);
+            if (err == fnfErr)
+            {
+                FSCatalogInfo catalogInfo;
+                FileInfo fileInfo = { 'REGS', 'MOSS', 0, { 0, 0 }, 0 };
+                BlockMoveData(&fileInfo, &(catalogInfo.finderInfo), sizeof(FileInfo));
+                err = FSCreateFileUnicode(&parentRef, UNICHAR_ARRAY_LEN(kOSXRegName), kOSXRegName,
+                                               kFSCatInfoFinderInfo, &catalogInfo, &regRef, NULL);
+            }
+            if (err == noErr)
+            {
+                UInt8 pathBuf[PATH_MAX];
+                err = FSRefMakePath(&regRef, pathBuf, sizeof(pathBuf));
+                if (err == noErr)
+                    globalRegName = XP_STRDUP(pathBuf);
+            }
+        }
+    }
+}
+#else
 extern void vr_findGlobalRegName()
 {
     FSSpec  regSpec;
@@ -270,7 +307,7 @@ extern void vr_findGlobalRegName()
     
     err = FindFolder(kOnSystemDisk,'pref', false, &foundVRefNum, &foundDirID);
 
-    if (!err)
+    if (err == noErr)
     {
         err = FSMakeFSSpec(foundVRefNum, foundDirID, MAC_REG, &regSpec);
 
@@ -314,7 +351,50 @@ extern void vr_findGlobalRegName()
         }
     }
 }
+#endif /* XP_MACOSX */
 
+#ifdef XP_MACOSX
+extern char* vr_findVerRegName()
+{
+    OSErr   err;
+    FSRef   foundRef;
+    
+    err = FSFindFolder(kLocalDomain, kDomainLibraryFolderType, kDontCreateFolder, &foundRef);
+    if (err == noErr)
+    {
+        FSRef parentRef;
+        err = FSMakeFSRefUnicode(&foundRef, UNICHAR_ARRAY_LEN(kOSXRegParentName), kOSXRegParentName,
+                                 kTextEncodingUnknown, &parentRef);
+        if (err == fnfErr)
+        {
+            err = FSCreateDirectoryUnicode(&foundRef, UNICHAR_ARRAY_LEN(kOSXRegParentName), kOSXRegParentName,
+                                           kFSCatInfoNone, NULL, &parentRef, NULL, NULL);
+        }
+        if (err == noErr)
+        {
+            FSRef regRef;
+            err = FSMakeFSRefUnicode(&parentRef, UNICHAR_ARRAY_LEN(kOSXVersRegName), kOSXVersRegName,
+                                     kTextEncodingUnknown, &regRef);
+            if (err == fnfErr)
+            {
+                FSCatalogInfo catalogInfo;
+                FileInfo fileInfo = { 'REGS', 'MOSS', 0, { 0, 0 }, 0 };
+                BlockMoveData(&fileInfo, &(catalogInfo.finderInfo), sizeof(FileInfo));
+                err = FSCreateFileUnicode(&parentRef, UNICHAR_ARRAY_LEN(kOSXVersRegName), kOSXVersRegName,
+                                               kFSCatInfoFinderInfo, &catalogInfo, &regRef, NULL);
+            }
+            if (err == noErr)
+            {
+                UInt8 pathBuf[PATH_MAX];
+                err = FSRefMakePath(&regRef, pathBuf, sizeof(pathBuf));
+                if (err == noErr)
+                    verRegName = XP_STRDUP(pathBuf);
+            }
+        }
+    }
+    return verRegName;
+}
+#else
 extern char* vr_findVerRegName()
 {
     FSSpec  regSpec;
@@ -329,7 +409,7 @@ extern char* vr_findVerRegName()
 
     err = FindFolder(kOnSystemDisk,'pref', false, &foundVRefNum, &foundDirID);
 
-    if (!err)
+    if (err == noErr)
     {
         err = FSMakeFSSpec(foundVRefNum, foundDirID, MAC_VERREG, &regSpec);
 
@@ -375,11 +455,12 @@ extern char* vr_findVerRegName()
 
     return verRegName;
 }
-
+#endif /* OS_MACOSX */
 
 /* Moves and renames a file or directory.
    Returns 0 on success, -1 on failure (errno contains mac error code).
  */
+#ifndef XP_MACOSX 
 extern int nr_RenameFile(char *from, char *to)
 {
     OSErr           err = -1;
@@ -422,6 +503,7 @@ extern int nr_RenameFile(char *from, char *to)
 #endif
     return (err == noErr ? 0 : -1);
 }
+#endif
 
 
 #ifdef STANDALONE_REGISTRY

@@ -32,6 +32,10 @@ LIBRARY_NAME	= xpcomio_s
 REQUIRES	= string \
 		  $(NULL)
 
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+REQUIRES		+= macmorefiles
+endif
+
 CPPSRCS		= \
 		nsAppFileLocationProvider.cpp \
 		nsBinaryStream.cpp \
@@ -60,17 +64,16 @@ CPPSRCS		= \
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 CPPSRCS		+= nsLocalFileOS2.cpp
-#else
-#ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-#CPPSRCS     += nsLocalFileMac.cpp
-#CSRCS       += macDirectoryCopy.c
+else
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+CPPSRCS		+= nsLocalFileOSX.cpp
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 CPPSRCS		+= nsLocalFileWin.cpp
 else
 CPPSRCS		+= nsLocalFileUnix.cpp
 endif # windows
-#endif
+endif # mac
 endif # OS2
 
 EXPORTS		= \
@@ -96,15 +99,15 @@ EXPORTS		= \
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 EXPORTS		+= nsLocalFileOS2.h
 else
-#ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-#EXPORTS     += nsLocalFileMac.h nsILocalFileMac.h
-#else
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+EXPORTS		+= nsLocalFileOSX.h
+else
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 EXPORTS		+= nsLocalFileWin.h
 else
 EXPORTS		+= nsLocalFileUnix.h
 endif # windows
-#endif
+endif # mac
 endif # os2
 
 XPIDLSRCS	= \
@@ -127,6 +130,10 @@ XPIDLSRCS	= \
 		nsIObservableInputStream.idl \
 		nsIObservableOutputStream.idl \
 		$(NULL)
+
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+XPIDLSRCS		+= nsILocalFileMac.idl
+endif
 
 SDK_XPIDLSRCS   = \
 		nsIDirectoryService.idl \

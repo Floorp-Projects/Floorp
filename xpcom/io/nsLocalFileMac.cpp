@@ -3130,6 +3130,82 @@ nsLocalFile::IsSpecial(PRBool *_retval)
 // Implementation of Mac specific finctions from nsILocalFileMac
 
 
+NS_IMETHODIMP nsLocalFile::InitWithCFURL(CFURLRef aCFURL)
+{
+    nsresult rv = NS_ERROR_FAILURE;
+    
+#if TARGET_CARBON
+    NS_ENSURE_ARG(aCFURL);
+    
+    // CFURLGetFSRef can only succeed if the entire path exists.
+    FSRef fsRef;
+    if (::CFURLGetFSRef(aCFURL, &fsRef) == PR_TRUE)
+        rv = InitWithFSRef(&fsRef);
+    else
+    {
+      CFURLRef parentURL = ::CFURLCreateCopyDeletingLastPathComponent(NULL, aCFURL);
+      if (!parentURL)
+        return NS_ERROR_FAILURE;
+
+      // Get the FSRef from the parent and the FSSpec from that
+      FSRef parentFSRef;
+      FSSpec parentFSSpec;
+      if (::CFURLGetFSRef(parentURL, &parentFSRef) == noErr &&
+          ::FSGetCatalogInfo(&parentFSRef, kFSCatInfoNone,
+                             nsnull, nsnull, &parentFSSpec, nsnull) == noErr)
+      {
+        // Get the leaf name of the file and turn it into a string HFS can use.
+        CFStringRef fileNameRef = ::CFURLCopyLastPathComponent(aCFURL);
+        if (fileNameRef)
+        {
+          TextEncoding theEncoding;
+          if (::UpgradeScriptInfoToTextEncoding(smSystemScript, 
+                                                kTextLanguageDontCare,
+                                                kTextRegionDontCare,
+                                                NULL,
+                                                &theEncoding) != noErr)
+            theEncoding = kTextEncodingMacRoman;
+
+          char  origName[256];
+          char  truncBuf[32];
+          if (::CFStringGetCString(fileNameRef, origName, sizeof(origName), theEncoding))
+          {
+            MakeDirty();
+            mSpec = parentFSSpec;
+            mAppendedPath = NS_TruncNodeName(origName, truncBuf);
+            rv = NS_OK;
+          }
+          ::CFRelease(fileNameRef);
+        }
+      }
+      ::CFRelease(parentURL);
+    }
+#endif
+
+    return rv;
+}
+
+
+NS_IMETHODIMP nsLocalFile::InitWithFSRef(const FSRef * aFSRef)
+{
+    nsresult rv = NS_ERROR_FAILURE;
+
+#if TARGET_CARBON
+    NS_ENSURE_ARG(aFSRef);
+    
+    FSSpec fsSpec;
+    OSErr err = ::FSGetCatalogInfo(aFSRef, kFSCatInfoNone, nsnull,
+                                   nsnull, &fsSpec, nsnull);
+    if (err == noErr)
+        rv = InitWithFSSpec(&fsSpec);
+    else
+        rv = MacErrorMapper(err);
+#endif
+
+    return rv;
+}
+
+
 NS_IMETHODIMP nsLocalFile::InitWithFSSpec(const FSSpec *fileSpec)
 {
     MakeDirty();
@@ -3179,6 +3255,22 @@ NS_IMETHODIMP nsLocalFile::InitToAppWithCreatorCode(OSType aAppCreator)
 
     // init with the spec here
     return InitWithFSSpec(&appSpec);
+}
+
+NS_IMETHODIMP nsLocalFile::GetFSRef(FSRef *_retval)
+{
+    nsresult rv = NS_ERROR_FAILURE;
+  
+#if TARGET_CARBON
+    NS_ENSURE_ARG_POINTER(_retval);
+    
+    FSSpec fsSpec;
+    rv = GetFSSpec(&fsSpec);
+    if (NS_SUCCEEDED(rv))
+        rv = MacErrorMapper(::FSpMakeFSRef(&fsSpec, _retval));
+#endif
+
+    return rv;
 }
 
 NS_IMETHODIMP nsLocalFile::GetFSSpec(FSSpec *fileSpec)
@@ -3556,7 +3648,7 @@ NS_NewLocalFile(const nsAString &path, PRBool followLinks, nsILocalFile* *result
 }
 
 nsresult 
-NS_NewLocalFileWithFSSpec(FSSpec* inSpec, PRBool followLinks, nsILocalFileMac* *result)
+NS_NewLocalFileWithFSSpec(const FSSpec* inSpec, PRBool followLinks, nsILocalFileMac* *result)
 {
     nsLocalFile* file = new nsLocalFile();
     if (file == nsnull)
