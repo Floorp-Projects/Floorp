@@ -36,91 +36,6 @@ static NS_DEFINE_IID(kIStyleSheetIID, NS_ISTYLE_SHEET_IID);
 static NS_DEFINE_IID(kICSSStyleRuleIID, NS_ICSS_STYLE_RULE_IID);
 static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
 
-class BodyFixupRule : public nsIStyleRule {
-public:
-  BodyFixupRule(nsIHTMLCSSStyleSheet* aSheet);
-  ~BodyFixupRule();
-
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD Equals(const nsIStyleRule* aRule, PRBool& aValue) const;
-  NS_IMETHOD HashValue(PRUint32& aValue) const;
-  NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
-  // Strength is an out-of-band weighting, always 0 here
-  NS_IMETHOD GetStrength(PRInt32& aStrength);
-
-  NS_IMETHOD MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
-
-  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-
-  nsIHTMLCSSStyleSheet* mSheet;
-};
-
-BodyFixupRule::BodyFixupRule(nsIHTMLCSSStyleSheet* aSheet)
-  : mSheet(aSheet)
-{
-  NS_INIT_REFCNT();
-}
-
-BodyFixupRule::~BodyFixupRule()
-{
-}
-
-NS_IMPL_ISUPPORTS(BodyFixupRule, kIStyleRuleIID);
-
-NS_IMETHODIMP
-BodyFixupRule::Equals(const nsIStyleRule* aRule, PRBool& aResult) const
-{
-  aResult = PRBool(this == aRule);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-BodyFixupRule::HashValue(PRUint32& aValue) const
-{
-  aValue = (PRUint32)(this);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-BodyFixupRule::GetStyleSheet(nsIStyleSheet*& aSheet) const
-{
-  NS_IF_ADDREF(mSheet);
-  aSheet = mSheet;
-  return NS_OK;
-}
-
-// Strength is an out-of-band weighting, always MaxInt here
-NS_IMETHODIMP
-BodyFixupRule::GetStrength(PRInt32& aStrength)
-{
-  aStrength = 2000000000;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-BodyFixupRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
-{
-  nsStyleColor* styleColor = (nsStyleColor*)(aContext->GetStyleData(eStyleStruct_Color));
-
-  if (nsnull != styleColor) {
-    aPresContext->SetDefaultColor(styleColor->mColor);
-    aPresContext->SetDefaultBackgroundColor(styleColor->mBackgroundColor);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-BodyFixupRule::List(FILE* out, PRInt32 aIndent) const
-{
-  // Indent
-  for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
- 
-  fputs("Special BODY tag fixup rule\n", out);
-  return NS_OK;
-}
-
-// -------------------------------------------------------------
 
 class HTMLCSSStyleSheetImpl : public nsIHTMLCSSStyleSheet {
 public:
@@ -139,7 +54,7 @@ public:
   NS_IMETHOD GetTitle(nsString& aTitle) const;
   NS_IMETHOD GetType(nsString& aType) const;
   NS_IMETHOD GetMediumCount(PRInt32& aCount) const;
-  NS_IMETHOD GetMediumAt(PRInt32 aIndex, nsString& aMedium) const;
+  NS_IMETHOD GetMediumAt(PRInt32 aIndex, nsIAtom*& aMedium) const;
 
   NS_IMETHOD GetEnabled(PRBool& aEnabled) const;
   NS_IMETHOD SetEnabled(PRBool aEnabled);
@@ -178,7 +93,6 @@ protected:
 
   nsIURL*         mURL;
   nsIDocument*    mDocument;
-  BodyFixupRule*  mBodyRule;
 };
 
 
@@ -221,8 +135,7 @@ void HTMLCSSStyleSheetImpl::operator delete(void* ptr)
 HTMLCSSStyleSheetImpl::HTMLCSSStyleSheetImpl(nsIURL* aURL, nsIDocument* aDocument)
   : nsIHTMLCSSStyleSheet(),
     mURL(aURL),
-    mDocument(aDocument),
-    mBodyRule(nsnull)
+    mDocument(aDocument)
 {
   NS_INIT_REFCNT();
   NS_ADDREF(mURL);
@@ -231,10 +144,6 @@ HTMLCSSStyleSheetImpl::HTMLCSSStyleSheetImpl(nsIURL* aURL, nsIDocument* aDocumen
 HTMLCSSStyleSheetImpl::~HTMLCSSStyleSheetImpl()
 {
   NS_RELEASE(mURL);
-  if (nsnull != mBodyRule) {
-    mBodyRule->mSheet = nsnull;
-    NS_RELEASE(mBodyRule);
-  }
 }
 
 NS_IMPL_ADDREF(HTMLCSSStyleSheetImpl)
@@ -280,37 +189,22 @@ PRInt32 HTMLCSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
   nsIHTMLContent* htmlContent;
   // just get the one and only style rule from the content's STYLE attribute
   if (NS_OK == aContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent)) {
-    nsHTMLValue value;
-    if (NS_CONTENT_ATTR_HAS_VALUE == htmlContent->GetAttribute(nsHTMLAtoms::style, value)) {
-      if (eHTMLUnit_ISupports == value.GetUnit()) {
-        nsISupports*  rule = value.GetISupportsValue();
-        if (nsnull != rule) {
-          aResults->AppendElement(rule);
-          matchCount++;
-          nsICSSStyleRule*  cssRule;
-          if (NS_OK == rule->QueryInterface(kICSSStyleRuleIID, (void**)&cssRule)) {
-            nsIStyleRule* important = cssRule->GetImportantRule();
-            if (nsnull != important) {
-              aResults->AppendElement(important);
-              matchCount++;
-              NS_RELEASE(important);
-            }
-            NS_RELEASE(cssRule);
-          }
-          NS_RELEASE(rule);
-        }
-      }
-    }
-    nsIAtom*  tag;
-    htmlContent->GetTag(tag);
-    if (tag == nsHTMLAtoms::body) {
-      if (nsnull == mBodyRule) {
-        mBodyRule = new BodyFixupRule(this);
-        NS_IF_ADDREF(mBodyRule);
-      }
-      if (nsnull != mBodyRule) {
-        aResults->AppendElement(mBodyRule);
+    nsIStyleRule* rule = nsnull;
+    if (NS_SUCCEEDED(htmlContent->GetInlineStyleRule(rule))) {
+      if (nsnull != rule) {
+        aResults->AppendElement(rule);
         matchCount++;
+        nsICSSStyleRule*  cssRule;
+        if (NS_SUCCEEDED(rule->QueryInterface(kICSSStyleRuleIID, (void**)&cssRule))) {
+          nsIStyleRule* important = cssRule->GetImportantRule();
+          if (nsnull != important) {
+            aResults->AppendElement(important);
+            matchCount++;
+            NS_RELEASE(important);
+          }
+          NS_RELEASE(cssRule);
+        }
+        NS_RELEASE(rule);
       }
     }
     NS_RELEASE(htmlContent);
@@ -361,9 +255,9 @@ HTMLCSSStyleSheetImpl::GetMediumCount(PRInt32& aCount) const
 }
 
 NS_IMETHODIMP
-HTMLCSSStyleSheetImpl::GetMediumAt(PRInt32 aIndex, nsString& aMedium) const
+HTMLCSSStyleSheetImpl::GetMediumAt(PRInt32 aIndex, nsIAtom*& aMedium) const
 {
-  aMedium.Truncate();
+  aMedium = nsnull;
   return NS_ERROR_INVALID_ARG;
 }
 
