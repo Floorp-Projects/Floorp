@@ -212,6 +212,7 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
   else if (CH_NBSP == firstChar) {
     firstChar = ' ';
   }
+  if (firstChar > MAX_UNIBYTE) mHasMultibyte = PR_TRUE;
   *bp++ = firstChar;
   if (offset == frag->GetLength()) {
     mCurrentFrag = ++frag;
