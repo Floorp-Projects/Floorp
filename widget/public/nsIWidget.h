@@ -92,8 +92,8 @@ enum nsCursor {   ///(normal cursor,       usually rendered as an arrow)
                 eCursor_hyperlink }; 
 
 /**
- * The base class for all the widgets. It provides the interface for all basic and
- * necessary functionality.
+ * The base class for all the widgets. It provides the interface for
+ * all basic and necessary functionality.
  */
 class nsIWidget : public nsISupports {
 
@@ -105,18 +105,18 @@ class nsIWidget : public nsISupports {
      * The widget represents a window that can be drawn into. It also is the 
      * base class for user-interface widgets such as buttons and text boxes.
      *
-     * All the arguments can be NULL in which case
-     * a top level window with size 0 is created. The event callback function has to
-     * be provided only if the caller wants to deal with the events this widget receives.
-     * The event callback is basically a preprocess hook called synchronously. The return
-     * value determines whether the event goes to the default window procedure or it is
-     * hidden to the os. The assumption is that if the event handler returns false the
-     * widget does not see the event.
+     * All the arguments can be NULL in which case a top level window
+     * with size 0 is created. The event callback function has to be
+     * provided only if the caller wants to deal with the events this
+     * widget receives.  The event callback is basically a preprocess
+     * hook called synchronously. The return value determines whether
+     * the event goes to the default window procedure or it is hidden
+     * to the os. The assumption is that if the event handler returns
+     * false the widget does not see the event.
      *
      * @param      parent or null if it's a top level window
      * @param     aRect     the widget dimension
      * @param     aHandleEventFunction the event handler callback function
-     *
      */
     virtual void Create(nsIWidget        *aParent,
                         const nsRect     &aRect,
@@ -130,18 +130,18 @@ class nsIWidget : public nsISupports {
      * The widget represents a window that can be drawn into. It also is the 
      * base class for user-interface widgets such as buttons and text boxes.
      *
-     * All the arguments can be NULL in which case
-     * a top level window with size 0 is created. The event callback function has to
-     * be provided only if the caller wants to deal with the events this widget receives.
-     * The event callback is basically a preprocess hook called synchronously. The return
-     * value determines whether the event goes to the default window procedure or it is
-     * hidden to the os. The assumption is that if the event handler returns false the
-     * widget does not see the event.
+     * All the arguments can be NULL in which case a top level window
+     * with size 0 is created. The event callback function has to be
+     * provided only if the caller wants to deal with the events this
+     * widget receives.  The event callback is basically a preprocess
+     * hook called synchronously. The return value determines whether
+     * the event goes to the default window procedure or it is hidden
+     * to the os. The assumption is that if the event handler returns
+     * false the widget does not see the event.
      *
      * @param     aParent   native window.
      * @param     aRect     the widget dimension
      * @param     aHandleEventFunction the event handler callback function
-     *
      */
     virtual void Create(nsNativeWindow aParent,
                         const nsRect &aRect,
@@ -377,7 +377,7 @@ class nsIWidget : public nsISupports {
      * @param aTitle string displayed as the title of the widget
      */
 
-    virtual void SetTitle(nsString aTitle) = 0;
+    virtual void SetTitle(const nsString& aTitle) = 0;
 
 
 };

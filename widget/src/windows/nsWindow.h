@@ -97,7 +97,7 @@ public:
     virtual void            Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
     virtual nsIToolkit*     GetToolkit();  
     virtual void            SetBorderStyle(nsBorderStyle aBorderStyle); 
-    virtual void            SetTitle(nsString aTitle); 
+    virtual void            SetTitle(const nsString& aTitle); 
     virtual void            AddMouseListener(nsIMouseListener * aListener);
     virtual void            AddEventListener(nsIEventListener * aListener);
 
@@ -362,7 +362,7 @@ protected:
     { \
       nsWindow::SetBorderStyle(aBorderStyle); \
     } \
-    void SetTitle(nsString aTitle) \
+    void SetTitle(const nsString& aTitle) \
     { \
       nsWindow::SetTitle(aTitle); \
     } 
