@@ -119,7 +119,7 @@ function ComposeStartup()
 			dump("Created editorShell\n");
 
 			SetupToolbarElements(); //defined into EditorCommands.js
-			contentWindow = window.frames[0]; //Patch to make EditorCommands.js happy...
+            contentWindow = window.content;
 
 			// setEditorType MUST be call before setContentWindow
 			if (msgCompose.composeHTML)
@@ -141,7 +141,7 @@ function ComposeStartup()
 				dump("editor initialized in PLAIN TEXT mode\n");
 			}
 
-			window.editorShell.SetContentWindow(window.frames[0]);
+			window.editorShell.SetContentWindow(contentWindow);
 			window.editorShell.SetWebShellWindow(window);
 			window.editorShell.SetToolbarWindow(window);
 

@@ -309,7 +309,7 @@ Rights Reserved.
 </toolbox>
 
     <!-- The main mail three pane frame -->
-    <html:iframe type="content" id="content-frame" src="about:blank" name="browser.message.body" flex="100%"/>
+    <html:iframe type="content-primary" id="content-frame" src="about:blank" name="browser.message.body" flex="100%"/>
 
     <!-- Ripped off from navigator.xul; this should be a XUL fragment! -->
     <box align="horizontal" id="status-bar">
