@@ -174,6 +174,26 @@ NS_COM PRBool IsASCII( const nsAString& aString );
 NS_COM PRBool IsASCII( const nsACString& aString );
 
 
+  /**
+   * Returns |PR_TRUE| if |aString| is a valid UTF-8 string.
+   * XXX This is not bullet-proof and nor an all-purpose UTF-8 validator. 
+   * It is mainly written to replace and roughly equivalent to
+   *
+   *    str.Equals(NS_ConvertUCS2toUTF8(NS_ConvertUTF8toUCS2(str)))
+   *
+   * (see bug 191541)
+   * As such,  it does not check for non-UTF-8 7bit encodings such as 
+   * ISO-2022-JP and HZ. However, it filters out  UTF-8 representation
+   * of surrogate codepoints and non-characters ( 0xFFFE and 0xFFFF
+   * in planes 0 through 16.) as well as overlong UTF-8 sequences. 
+   * Also note that it regards UTF-8 sequences corresponding to 
+   * codepoints above 0x10FFFF as invalid in accordance with 
+   * http://www.ietf.org/internet-drafts/draft-yergeau-rfc2279bis-04.txt
+   *
+   * @param aString an 8-bit wide string to scan
+   */
+NS_COM PRBool IsUTF8( const nsACString& aString );
+
 
   /**
    * Converts case in place in the argument string.

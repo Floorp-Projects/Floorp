@@ -191,9 +191,8 @@ nsresult nsTextToSubURI::convertURItoUnicode(const nsAFlatCString &aCharset,
   }
 
   if (!isStatefulCharset && aIRI) {
-    NS_ConvertUTF8toUCS2 ucs2(aURI);
-    if (aURI.Equals(NS_ConvertUCS2toUTF8(ucs2))) {
-      _retval.Assign(ucs2);
+    if (IsUTF8(aURI)) {
+      _retval.Assign(NS_ConvertUTF8toUCS2(aURI));
       return rv;
     }
   }

@@ -367,7 +367,102 @@ IsASCII( const nsACString& aString )
     return PR_TRUE;
   }
 
+NS_COM
+PRBool
+IsUTF8( const nsACString& aString )
+  {
+    nsReadingIterator<char> done_reading;
+    aString.EndReading(done_reading);
 
+    PRInt32 state = 0;
+    PRBool overlong = PR_FALSE;
+    PRBool surrogate = PR_FALSE;
+    PRBool nonchar = PR_FALSE;
+    PRUint16 olupper = 0; // overlong byte upper bound.
+    PRUint16 slower = 0;  // surrogate byte lower bound.
+
+      // for each chunk of |aString|...
+    PRUint32 fragmentLength = 0;
+    nsReadingIterator<char> iter;
+
+    for ( aString.BeginReading(iter); iter != done_reading; iter.advance( PRInt32(fragmentLength) ) )
+      {
+        fragmentLength = PRUint32(iter.size_forward());
+        const char* ptr = iter.get();
+        const char* fragmentEnd = ptr + fragmentLength;
+
+          // for each character in this chunk...
+        while ( ptr < fragmentEnd )
+          {
+            PRUint8 c;
+            
+            if (0 == state)
+              {
+                c = *ptr++;
+
+                if ( UTF8traits::isASCII(c) ) 
+                  continue;
+
+                if ( c <= 0xC1 ) // [80-BF] where not expected, [C0-C1] for overlong.
+                  return PR_FALSE;
+                else if ( UTF8traits::is2byte(c) ) 
+                    state = 1;
+                else if ( UTF8traits::is3byte(c) ) 
+                  {
+                    state = 2;
+                    if ( c == 0xE0 ) // to exclude E0[80-9F][80-BF] 
+                      {
+                        overlong = PR_TRUE;
+                        olupper = 0x9F;
+                      }
+                    else if ( c == 0xED ) // ED[A0-BF][80-BF] : surrogate codepoint
+                      {
+                        surrogate = PR_TRUE;
+                        slower = 0xA0;
+                      }
+                    else if ( c == 0xEF ) // EF BF [BE-BF] : non-character
+                      nonchar = PR_TRUE;
+                  }
+                else if ( c <= 0xF4 ) // XXX replace /w UTF8traits::is4byte when it's updated to exclude [F5-F7].(bug 199090)
+                  {
+                    state = 3;
+                    nonchar = PR_TRUE;
+                    if ( c == 0xF0 ) // to exclude F0[80-8F][80-BF]{2}
+                      {
+                        overlong = PR_TRUE;
+                        olupper = 0x8F;
+                      }
+                    else if ( c == 0xF4 ) // to exclude F4[90-BF][80-BF] 
+                      {
+                        // actually not surrogates but codepoints beyond 0x10FFFF
+                        surrogate = PR_TRUE;
+                        slower = 0x90;
+                      }
+                  }
+                else
+                  return PR_FALSE; // Not UTF8 string
+              }
+              
+              while (ptr < fragmentEnd && state)
+                {
+                  c = *ptr++;
+                  --state;
+
+                  // non-character : EF BF [BE-BF] or F[0-7] [89AB]F BF [BE-BF]
+                  if ( nonchar &&  ( !state &&  c < 0xBE ||
+                       state == 1 && c != 0xBF  ||
+                       state == 2 && 0x0F != (0x0F & c) ))
+                     nonchar = PR_FALSE;
+
+                  if ( !UTF8traits::isInSeq(c) || overlong && c <= olupper || 
+                       surrogate && slower <= c || nonchar && !state )
+                    return PR_FALSE; // Not UTF8 string
+                  overlong = surrogate = PR_FALSE;
+                }
+            }
+        }
+    return !state; // state != 0 at the end indicates an invalid UTF-8 seq. 
+  }
 
   /**
    * A character sink for in-place case conversion.
