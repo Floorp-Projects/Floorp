@@ -252,10 +252,11 @@ nsInlineFrame::DidFitChild(nsIPresContext* aPresContext,
  * @return  true if we successfully reflowed all the mapped children and false
  *            otherwise, e.g. we pushed children to the next in flow
  */
-PRBool nsInlineFrame::ReflowMappedChildrenFrom(nsIPresContext* aPresContext,
-                                               nsInlineState&  aState,
-                                               nsIFrame*       aChildFrame,
-                                               PRInt32         aChildIndex)
+PRBool
+nsInlineFrame::ReflowMappedChildrenFrom(nsIPresContext* aPresContext,
+                                        nsInlineState&  aState,
+                                        nsIFrame*       aChildFrame,
+                                        PRInt32         aChildIndex)
 {
 #ifdef NS_DEBUG
   if (GetVerifyTreeEnable()) {
@@ -438,9 +439,14 @@ PRBool nsInlineFrame::PullUpChildren(nsIPresContext* aPresContext,
       }
     }
 
+    // It's time to stop pulling up if our last child wants a break
+    if (NS_STYLE_CLEAR_NONE != aState.lineLayout->mPendingBreak) {
+      result = PR_FALSE;
+      break;
+    }
+
     // XXX if the frame being pulled up is not appropriate (e.g. a block
-    // frame) then we should stop! If we have an inline BR tag we should
-    // stop too!
+    // frame) then we should stop!
 
     // If there is no room, stop pulling up
     if (!CanFitChild(aPresContext, aState, kidFrame)) {
@@ -657,6 +663,12 @@ nsInlineFrame::ReflowUnmappedChildren(nsIPresContext* aPresContext,
       break;
     }
 
+    // It's time to stop pulling up if our previous child wants a line
+    // break
+    if (NS_STYLE_CLEAR_NONE != aState.lineLayout->mPendingBreak) {
+      break;
+    }
+
     // Make sure we still have room left
     if (!CanFitChild(aPresContext, aState, nsnull)) {
       // Note: return status was set to 0 above...
@@ -862,6 +874,7 @@ NS_METHOD nsInlineFrame::Reflow(nsIPresContext*      aPresContext,
       PRInt32 kidIndex = RecoverState(aPresContext, state, kidFrame);
   
       // Reflow the child into the available space
+      kidFrame->WillReflow(*aPresContext);
       aStatus = ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState);
   
       // Did the child fit?
