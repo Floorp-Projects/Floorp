@@ -45,12 +45,12 @@
 
     <spacer flex="1"/>
 
-    <label value="&name.label;" accesskey="&name.accesskey;" for="name"/>
+    <label value="&name.label;" accesskey="&name.accesskey;" control="name"/>
     <textbox tabindex="0" id="name" oninput="doEnabling();"/>
 
     <separator/>
 
-    <label value="&description.label;" accesskey="&description.accesskey;" for="msgNewFolderPicker"/>
+    <label value="&description.label;" accesskey="&description.accesskey;" control="msgNewFolderPicker"/>
 
     <menulist id="msgNewFolderPicker" oncommand="doEnabling();"/>
 
