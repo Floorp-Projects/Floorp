@@ -59,7 +59,6 @@ EXPORTS = \
 	nsIMenu.h \
 	nsIMenuItem.h \
 	nsIPopUpMenu.h \
-	nsIContentConnector.h \
 	nsIClipboard.h \
 	nsIClipboardOwner.h \
 	nsIFontNameIterator.h \
