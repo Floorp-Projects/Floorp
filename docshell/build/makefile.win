@@ -36,9 +36,7 @@ REQUIRES	= xpcom \
 		  intl \
 		  htmlparser \
 		  chardet \
-		  appcomps \
 		  find \
-		  raptor \
 		  gfx \
 		  history \
 		  $(NULL)

@@ -28,7 +28,6 @@ REQUIRES	= xpcom \
 		  js \
 		  xpconnect \
 		  caps \
-		  layout \
 		  content \
 		  necko \
 		  docshell \

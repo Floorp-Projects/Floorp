@@ -35,7 +35,6 @@ REQUIRES	= xpcom \
 		  timer \
 		  windowwatcher \
 		  wallet \
-		  appcomps \
 		  gfx \
 		  content \
 		  history \

@@ -33,7 +33,6 @@ REQUIRES	= xpcom \
 		  intl \
 		  webshell \
 		  xpconnect \
-		  raptor \
 		  content \
 		  gfx \
 		  $(NULL)

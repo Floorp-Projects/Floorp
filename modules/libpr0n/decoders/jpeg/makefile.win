@@ -25,7 +25,6 @@ DEPTH=..\..\..\..
 MODULE		= imgjpeg
 REQUIRES	= xpcom \
 		  string \
-		  necko \
 		  gfx \
 		  gfx2 \
 		  imglib2 \

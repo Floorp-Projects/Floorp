@@ -26,13 +26,8 @@ REQUIRES	= xpcom \
 		  widget \
 		  view \
 		  dom \
-		  necko \
-		  appshell \
 		  uriloader \
-		  layout \
-		  editor \
 		  intl \
-		  chrome \
 		  timer \
 		  gfx \
 		  appstartup \

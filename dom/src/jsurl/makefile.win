@@ -29,10 +29,8 @@ REQUIRES	= xpcom \
 		  caps \
 		  widget \
 		  appshell \
-		  rdf \
 		  xpconnect \
 		  jsconsole \
-		  raptor \
 		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 

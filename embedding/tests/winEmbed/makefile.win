@@ -34,7 +34,6 @@ REQUIRES	= xpcom \
 		  necko \
 		  docshell \
 		  dom \
-		  gfx \
 		  widget \
 		  layout \
 		  uriloader \

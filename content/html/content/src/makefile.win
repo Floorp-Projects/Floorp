@@ -29,7 +29,6 @@ REQUIRES	= xpcom \
 		  dom \
 		  js \
 		  locale \
-		  unicharutil \
 		  webshell \
 		  htmlparser \
 		  necko \

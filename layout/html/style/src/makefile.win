@@ -35,7 +35,6 @@ REQUIRES	= xpcom \
 		  pref \
 		  docshell \
 		  plugin \
-		  gkplugin \
 		  content_xul \
 		  imglib2 \
 		  gfx2 \

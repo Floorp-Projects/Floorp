@@ -30,11 +30,9 @@ REQUIRES	= xpcom \
 		  caps \
 		  timer \
 		  webBrowser_core \
-		  xuldoc \
 		  docshell \
 		  sidebar \
 		  plugin \
-		  gkplugin \
 		  necko \
 		  gfx \
 		  content \
@@ -43,7 +41,7 @@ REQUIRES	= xpcom \
 include <$(DEPTH)/config/config.mak>
 
 DEFINES=-D_IMPL_NS_DOM
-INCLUDES=-I..\base
+LINCS=-I..\base
 
 CPPSRCS = nsDOMFactory.cpp      	\
 	  nsScriptNameSpaceManager.cpp

@@ -41,7 +41,6 @@ REQUIRES	= xpcom \
 		  js \
 		  pref \
 		  widget \
-		  layout \
 		  uriloader \
 		  xpconnect \
 		  docshell \

@@ -31,7 +31,6 @@ DEPTH = ..\..\..\..
 MODULE=appcomps
 REQUIRES	= xpcom \
 		  string \
-		  layout \
 		  dom \
 		  mozldap \
 		  necko \

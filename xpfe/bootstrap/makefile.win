@@ -29,7 +29,6 @@ REQUIRES	= xpcom \
 		  necko \
 		  pref \
 		  appshell \
-		  layout \
 		  chrome \
 		  xpinstall \
 		  xpicleanup \
@@ -42,8 +41,6 @@ REQUIRES	= xpcom \
 		  mozbrwsr \
 		  appcomps \
 		  docshell \
-		  xremoteservice \
-		  raptor \
 		  gfx \
 		  intl \
 		  profile \

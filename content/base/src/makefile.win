@@ -85,7 +85,6 @@ REQUIRES	= xpcom \
 		  xpconnect \
 		  util \
 		  unicharutil \
-		  layout_xsl \
 		  layout \
 		  gfx \
 		  layout_xul \

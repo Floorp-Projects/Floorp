@@ -45,12 +45,10 @@ REQUIRES	= xpcom \
 		  webshell \
 		  chardet \
 		  uconv \
-		  appcomps \
 		  content_xul \
 		  find \
 		  nkcache \
 		  content \
-		  raptor \
 		  gfx \
 		  history \
 		  $(NULL)
