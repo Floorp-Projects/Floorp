@@ -276,7 +276,17 @@ For short definitions, click <a href="glossary.htm#1023462">certificate store</a
  
 Digital Signature Is Not Valid&#151;Message Is Encrypted</FONT></b></p><A NAME="1033885">
 If you click the lock icon when you are viewing a message that has an invalid digital signature but has been successfully encrypted, Personal Security Manager displays panels with these boldface headings:</P></A>
-<ul><P><A NAME="1034208"><LI><B>Digital Signature Is Not Valid. </B>If Personal Security Manager reports that the signature is invalid because the certificate authority that issued the sender's certificate is unknown, you can choose to trust just the sender's certificate by clicking the Edit button labeled "Edit trust settings for this certificate." This may be appropriate if you have other means of verifying the authenticity of the message and want to trust the sender's certificate in the future.</LI></A></ul><ul><P><A NAME="1034216">
+<ul><P><A NAME="1034208"><LI><B>Digital Signature Is Not Valid. </B>If Personal Security Manager reports that the signature is invalid because the certificate authority that issued the sender's certificate is unknown, you can choose to trust just the sender's certificate by clicking the Edit button labeled "Edit trust settings for this certificate." This may be appropriate if you have other means of verifying the authenticity of the message and want to trust the sender's certificate in the future.</LI></A></ul><ul><P><A NAME="1057030">
+If verification failed while OCSP was enabled, you should check the OCSP 
+settings. To do so, click the Advanced tab, then click Options, then click the 
+OCSP Settings button and confirm that OCSP is configured correctly. If you 
+are not familiar with OCSP, you may need to check with your system 
+administrator to confirm these settings. If your settings are correct, either 
+there is some problem with the OCSP service or the certificate used to create 
+the signature is no longer valid.
+
+</A></P>
+<P><A NAME="1034216">
 If Personal Security Manager reports that the signature is invalid because 
 the certificate authority (CA) that issued the sender's certificate is one that 
 you have not designated as trusted, you can take one of two actions:
@@ -320,13 +330,23 @@ For short definitions, click <a href="glossary.htm#1023462">certificate store</a
  
 Digital Signature Is Not Valid&#151;Message Not Encrypted</FONT></b></p><A NAME="1034461">
 If you click the Security button when you are viewing a message that has an invalid digital signature and has not been encrypted, Personal Security Manager displays panels with these boldface headings:</P></A>
-<ul><P><A NAME="1034402"><LI><B>Digital Signature Is Not Valid. </B>Personal Security Manager has determined that the message's digital signature is not valid. </LI></A></ul><ul><P><A NAME="1034406">
+<ul><P><A NAME="1034402"><LI><B>Digital Signature Is Not Valid. </B>Personal Security Manager has determined that the message's digital signature is not valid. </LI></A></ul><ul><P><A NAME="1056854">
 If Personal Security Manager reports that the signature is invalid because 
 the certificate authority that issued the sender's certificate is unknown, you 
 can choose to trust just the sender's certificate by clicking the Edit button. 
 This may be appropriate if you have other means of verifying the 
 authenticity of the message and want to trust the sender's certificate in the 
-future.
+future. 
+
+</A></P>
+<P><A NAME="1056944">
+If verification failed while OCSP was enabled, you should check the OCSP 
+settings. To do so, click the Advanced tab, then click Options, then click the 
+OCSP Settings button and confirm that OCSP is configured correctly. If you 
+are not familiar with OCSP, you may need to check with your system 
+administrator to confirm these settings. If your settings are correct, either 
+there is some problem with the OCSP service or the certificate used to create 
+the signature is no longer valid.
 
 </A></P>
 <P><A NAME="1034410">
