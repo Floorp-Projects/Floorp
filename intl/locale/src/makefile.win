@@ -55,7 +55,7 @@ MISCDEP		= $(LLIBS)
 LCFLAGS		= $(LCFLAGS) \
 			  $(DEFINES)
 
-include <$(DEPTH)\layout\config\rules.mak>
+include <$(DEPTH)\config\rules.mak>
 
 libs:: $(LIBRARY) 
 	@echo $(LIBRARY)
