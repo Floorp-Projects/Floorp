@@ -79,7 +79,7 @@ CSS_PROP(background-position, background_position, VISUAL)
 CSS_PROP(background-repeat, background_repeat, VISUAL)
 CSS_PROP(-x-background-x-position, background_x_position, VISUAL) // XXX bug 3935
 CSS_PROP(-x-background-y-position, background_y_position, VISUAL) // XXX bug 3935
-CSS_PROP(-moz-binding, behavior, FRAMECHANGE) // XXX bug 3935
+CSS_PROP(-moz-binding, behavior, REFLOW) // XXX bug 3935
 CSS_PROP(border, border, REFLOW)
 CSS_PROP(border-bottom, border_bottom, REFLOW)
 CSS_PROP(border-bottom-color, border_bottom_color, VISUAL)
