@@ -41,7 +41,7 @@ public class PlugletInputStream extends InputStream {
                    ((off + len) > b.length) || ((off + len) < 0)) {
             throw new IndexOutOfBoundsException();
         } else if (len == 0) {
-            return 0;
+            return -1;
         }
 	return nativeRead(b,off,len);
     }
