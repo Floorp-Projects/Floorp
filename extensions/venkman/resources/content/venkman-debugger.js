@@ -93,6 +93,10 @@ function vnk_exehook (frame, type, rv)
         cx = null;
     }
     
+    var targetWasEnabled = true;
+    var debuggerWasEnabled = console.debuggerWindow.enabled;
+    console.debuggerWindow.enabled = true;
+    
     if (cx)
     {
         cx.scriptsEnabled = false;
@@ -100,18 +104,12 @@ function vnk_exehook (frame, type, rv)
         if (glob)
         {
             console.targetWindow =
-                getXULWindowFromWindow(glob.getWrappedValue());
-                /*
-                targetWindow.enabled = false;
-                if (targetWindow.modalMien)
-                {
-                    wasModal = true;
-                    targetWindow.modalMien = false;
-                    }
-                */
+                getBaseWindowFromWindow(glob.getWrappedValue());
+            targetWasEnabled = console.targetWindow.enabled;
+            console.targetWindow.enabled = false;
         }
     }
-                  
+
     try
     {
         hookReturn = debugTrap(frame, type, rv);
@@ -133,6 +131,9 @@ function vnk_exehook (frame, type, rv)
         }
     }
     
+    if (console.targetWindow)
+        console.targetWindow.enabled = targetWasEnabled;
+    console.debuggerWindow.enabled = debuggerWasEnabled;
     delete console.frames;
     delete console.targetWindow;
     if ("__exitAfterContinue__" in console)

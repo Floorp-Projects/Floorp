@@ -131,6 +131,7 @@ function dbg()
 
 function dbg2()
 {
+    dd("dbg2");
     var nothere;
     var nope = null;
     var f = false;

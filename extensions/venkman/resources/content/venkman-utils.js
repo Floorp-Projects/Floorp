@@ -26,6 +26,7 @@
 var dumpln;
 var dd;
 
+const nsIBaseWindow         = Components.interfaces.nsIBaseWindow;
 const nsIXULWindow          = Components.interfaces.nsIXULWindow;
 const nsIInterfaceRequestor = Components.interfaces.nsIInterfaceRequestor;
 const nsIWebNavigation      = Components.interfaces.nsIWebNavigation;
@@ -280,6 +281,27 @@ function getXULWindowFromWindow (win)
         var owner = dsti.treeOwner;
         requestor = owner.QueryInterface(nsIInterfaceRequestor);
         return requestor.getInterface(nsIXULWindow);
+    }
+    catch (ex)
+    {
+        //dd ("not a nsIXULWindow: " + formatException(ex));
+        /* ignore no-interface exception */
+    }
+
+    return null;
+}
+
+function getBaseWindowFromWindow (win)
+{
+    var ex;
+    try
+    {
+        var requestor = win.QueryInterface(nsIInterfaceRequestor);
+        var nav = requestor.getInterface(nsIWebNavigation);
+        var dsti = nav.QueryInterface(nsIDocShellTreeItem);
+        var owner = dsti.treeOwner;
+        requestor = owner.QueryInterface(nsIInterfaceRequestor);
+        return requestor.getInterface(nsIBaseWindow);
     }
     catch (ex)
     {

@@ -460,6 +460,8 @@ function init()
     console.windowWatcher =
         Components.classes[WW_CTRID].getService(nsIWindowWatcher);
 
+    console.debuggerWindow = getBaseWindowFromWindow(window);
+
     initPrefs();
     initCommands();
     initMenus();
