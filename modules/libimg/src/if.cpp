@@ -276,7 +276,7 @@ il_description_notify(il_container *ic)
 }
 
 /* Notify observers of the target dimensions of the image. */
-static void
+void
 il_dimensions_notify(il_container *ic, int dest_width, int dest_height)
 {
     IL_MessageData message_data;
