@@ -45,7 +45,7 @@ CPPSRCS		= \
 		utils.cpp \
 		$(NULL)
 
-DEFINES		+= -D_IMPL_NS_PLUGIN -DWIN32_LEAN_AND_MEAN
+DEFINES		+= -DWIN32_LEAN_AND_MEAN
 
 # plugins should always be shared, even in the "static" build
 FORCE_SHARED_LIB = 1

@@ -20,8 +20,6 @@
  * Contributor(s): 
  */
 
-#define _IMPL_NS_PLUGINS 1
-
 #include "MacSharedPrefix.h"
 
 #undef TARGET_CARBON
