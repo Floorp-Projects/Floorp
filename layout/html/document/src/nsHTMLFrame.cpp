@@ -198,10 +198,15 @@ public:
   PRBool IsInline() { return mInline; }
 
   virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
+  PRInt32 GetMarginWidth(nsIPresContext* aPresContext);
+  PRInt32 GetMarginHeight(nsIPresContext* aPresContext);  
+
 
 protected:
   nsHTMLFrame(nsIAtom* aTag, PRBool aInline, nsIWebShell* aParentWebWidget);
   virtual  ~nsHTMLFrame();
+  PRInt32 GetMargin(nsIAtom* aType, nsIPresContext* aPresContext);
+
 
   PRBool mInline; // true for <IFRAME>, false for <FRAME>
   // this is held for a short time until the frame uses it, so it is not ref counted
@@ -502,6 +507,10 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
     return rv;
   }
 
+  // pass along marginwidth, marginheight so sub document can use it
+  mWebShell->SetMarginWidth(content->GetMarginWidth(&aPresContext));
+  mWebShell->SetMarginHeight(content->GetMarginHeight(&aPresContext));
+
   nsString frameName;
   if (content->GetName(frameName)) {
     mWebShell->SetName(frameName);
@@ -682,6 +691,34 @@ void nsHTMLFrame::MapAttributesInto(nsIStyleContext* aContext,
                                      nsIPresContext* aPresContext)
 {
   MapImagePropertiesInto(aContext, aPresContext);
+}
+
+PRInt32 nsHTMLFrame::GetMargin(nsIAtom* aType, nsIPresContext* aPresContext) 
+{
+  float p2t = aPresContext->GetPixelsToTwips();
+  nsAutoString strVal;
+  PRInt32 intVal;
+
+  if (eContentAttr_HasValue == (GetAttribute(aType, strVal))) {
+    PRInt32 status;
+    intVal = strVal.ToInteger(&status);
+    if (intVal < 0) {
+      intVal = 0;
+    }
+    return NSIntPixelsToTwips(intVal, p2t);
+  }
+
+  return -1;
+}
+
+PRInt32 nsHTMLFrame::GetMarginWidth(nsIPresContext* aPresContext)
+{
+  return GetMargin(nsHTMLAtoms::marginwidth, aPresContext);
+}
+
+PRInt32 nsHTMLFrame::GetMarginHeight(nsIPresContext* aPresContext)
+{
+  return GetMargin(nsHTMLAtoms::marginheight, aPresContext);
 }
 
 nsresult

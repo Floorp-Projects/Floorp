@@ -125,6 +125,12 @@ public:
   NS_IMETHOD FindChildWithName(const nsString& aName,
                                nsIWebShell*& aResult) = 0;
 
+  // XXX these are here until there a better way to pass along info to a sub doc
+  NS_IMETHOD GetMarginWidth (PRInt32& aWidth)  = 0;
+  NS_IMETHOD SetMarginWidth (PRInt32  aWidth)  = 0;
+  NS_IMETHOD GetMarginHeight(PRInt32& aWidth)  = 0;
+  NS_IMETHOD SetMarginHeight(PRInt32  aHeight) = 0;
+
   // History api's
   NS_IMETHOD Back() = 0;
   NS_IMETHOD Forward() = 0;

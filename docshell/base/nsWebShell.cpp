@@ -133,6 +133,11 @@ public:
   NS_IMETHOD SetTitle(const nsString& aTitle);
   NS_IMETHOD GetTitle(nsString& aResult);
 
+  NS_IMETHOD GetMarginWidth (PRInt32& aWidth);
+  NS_IMETHOD SetMarginWidth (PRInt32  aWidth);
+  NS_IMETHOD GetMarginHeight(PRInt32& aWidth);
+  NS_IMETHOD SetMarginHeight(PRInt32  aHeight);
+
   // nsIWebShellContainer
   NS_IMETHOD WillLoadURL(nsIWebShell* aShell, const nsString& aURL);
   NS_IMETHOD BeginLoadURL(nsIWebShell* aShell, const nsString& aURL);
@@ -192,6 +197,8 @@ protected:
   nsString mOverTarget;
 
   nsScrollPreference mScrollPref;
+  PRInt32 mMarginWidth;
+  PRInt32 mMarginHeight;
 
   void ReleaseChildren();
 
@@ -262,6 +269,8 @@ nsWebShell::nsWebShell()
   mScrollPref = nsScrollPreference_kAuto;
   mScriptGlobal = nsnull;
   mScriptContext = nsnull;
+  mMarginWidth  = -1;  
+  mMarginHeight = -1;
 }
 
 nsWebShell::~nsWebShell()
@@ -773,6 +782,34 @@ nsWebShell::FindChildWithName(const nsString& aName,
       }
     }
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShell::GetMarginWidth(PRInt32& aWidth)
+{
+  aWidth = mMarginWidth;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShell::SetMarginWidth(PRInt32 aWidth)
+{
+  mMarginWidth = aWidth;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShell::GetMarginHeight(PRInt32& aHeight)
+{
+  aHeight = mMarginHeight;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShell::SetMarginHeight(PRInt32 aHeight)
+{
+  mMarginHeight = aHeight;
   return NS_OK;
 }
 
