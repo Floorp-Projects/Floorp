@@ -40,7 +40,7 @@ namespace JavaScript {
 namespace MetaData {
 
 
-// forward definitions:
+// forward declarations:
 class JS2Object;
 class JS2Metadata;
 class JS2Class;
@@ -49,6 +49,8 @@ class Environment;
 class Context;
 class CompoundAttribute;
 class BytecodeContainer;
+class Pond;
+
 
 typedef void (Invokable)();
 typedef Invokable Callor;
@@ -68,17 +70,37 @@ enum ObjectKind {
     MultinameKind
 };
 
-#define POND_SIZE (8000)
+class PondScum {
+public:    
+    void resetMark()        { size &= 0x7FFFFFFF; }
+    void mark()             { size = -size; }
+    bool isMarked()         { return (size < 0); }
 
+    Pond *owner;
+    int32 size;
+};
+
+// A pond is a place to get chunks of PondScum from and to return them to
+#define POND_SIZE (8000)
+#define POND_SANITY (0xFADE2BAD)
 class Pond {
 public:
     Pond(size_t sz, Pond *nextPond);
     
-    void *allocFromPond(size_t t);
+    void *allocFromPond(int32 sz);
+    void returnToPond(PondScum *p);
+
+    void resetMarks();
+    void moveUnmarkedToFreeList();
+
+    uint32 sanity;
 
     size_t pondSize;
     uint8 *pondBase;
     uint8 *pondTop;
+
+    PondScum *freeHeader;
+
     Pond *nextPond;
 };
 
@@ -92,8 +114,16 @@ public:
 
     ObjectKind kind;
 
-    static Pond pond;    
-    void *operator new(size_t s);
+    static Pond pond;
+    static std::vector<PondScum **> rootList;
+    static void gc();
+    static void addRoot(void *t);   // pass the address of any JS2Object pointer
+
+    static void *alloc(size_t s);
+    static void unalloc(void *p);
+
+    void *operator new(size_t s)    { return alloc(s); }
+    void operator delete(void *p)   { unalloc(p); }
 
 
 #ifdef DEBUG
@@ -255,17 +285,18 @@ public:
 typedef std::map<String, js2val> DynamicPropertyMap;
 typedef DynamicPropertyMap::iterator DynamicPropertyIterator;
 
+
 // A STATICBINDING describes the member to which one qualified name is bound in a frame. Multiple 
 // qualified names may be bound to the same member in a frame, but a qualified name may not be 
 // bound to multiple members in a frame (except when one binding is for reading only and 
 // the other binding is for writing only).
 class StaticBinding {
 public:
-    StaticBinding(QualifiedName &qname, StaticMember *content) : qname(qname), content(content), xplicit(false) { }
+    StaticBinding(QualifiedName &qname, StaticMember *content) : qname(qname), xplicit(false), content(content) { }
 
     QualifiedName qname;        // The qualified name bound by this binding
-    StaticMember *content;      // The member to which this qualified name was bound
     bool xplicit;               // true if this binding should not be imported into the global scope by an import statement
+    StaticMember *content;      // The member to which this qualified name was bound
 };
 
 
@@ -435,9 +466,9 @@ public:
     bool strict;                    // The strict setting from the context in effect at the point where the reference was created
     
 
-    
-    virtual void emitReadBytecode(BytecodeContainer *bCon)      { variableMultiname->emitBytecode(bCon); bCon->emitOp(eLexicalRead); }
-    virtual void emitWriteBytecode(BytecodeContainer *bCon)     { variableMultiname->emitBytecode(bCon); bCon->emitOp(eLexicalWrite); }
+    void emitBindBytecode(BytecodeContainer *bCon)              { variableMultiname->emitBytecode(bCon);  }
+    virtual void emitReadBytecode(BytecodeContainer *bCon)      { bCon->emitOp(eLexicalRead); }
+    virtual void emitWriteBytecode(BytecodeContainer *bCon)     { bCon->emitOp(eLexicalWrite); }
 };
 
 class DotReference : public Reference {
@@ -642,6 +673,8 @@ public:
     
     // The one and only 'public' namespace
     Namespace *publicNamespace;
+
+    StaticMember *forbiddenMember;  // just need one of these hanging around
 
     // The base classes:
     JS2Class *undefinedClass;

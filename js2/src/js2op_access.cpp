@@ -31,6 +31,8 @@
 * file under either the NPL or the GPL.
 */
 
+        // Get a multiname literal and add the currently open namespaces from the context
+        // Push the resulting multiname object
         case eMultiname: {
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
@@ -39,6 +41,8 @@
         }
         break;
 
+        // Get a multiname literal and pop a namespace value to add to it
+        // Push the resulting multiname object
         case eQMultiname: {
             js2val nsVal = pop();
             if (!JS2VAL_IS_OBJECT(nsVal))
@@ -53,23 +57,38 @@
         }
         break;
 
+        // Pop a multiname object and read it's value from the environment on to the stack.
         case eLexicalRead: {
             js2val mnVal = pop();
             ASSERT(JS2VAL_IS_OBJECT(mnVal));
             JS2Object *obj = JS2VAL_TO_OBJECT(mnVal);
             Multiname *mn = checked_cast<Multiname *>(obj);
-            push(meta->env.lexicalRead(meta, mn, phase));
+            retval = meta->env.lexicalRead(meta, mn, phase);
+            push(retval);
 	}
         break;
 
+        // Pop a value and a multiname. Write the value to the multiname in the environment, leave
+        // the value on the stack top.
         case eLexicalWrite: {
+            retval = pop();
             js2val mnVal = pop();
             ASSERT(JS2VAL_IS_OBJECT(mnVal));
             JS2Object *obj = JS2VAL_TO_OBJECT(mnVal);
             Multiname *mn = checked_cast<Multiname *>(obj);
-            retval = pop();
             meta->env.lexicalWrite(meta, mn, retval, true, phase);
+            push(retval);
 	}
         break;
 
+        // Pop a namespace object and add it to the list of currently open namespaces in the context
+        case eUse: {
+            js2val nsVal = pop();
+            if (!JS2VAL_IS_OBJECT(nsVal))
+                meta->reportError(Exception::badValueError, "Expected a namespace", meta->errorPos);
+            JS2Object *obj = JS2VAL_TO_OBJECT(nsVal);
+            if ((obj->kind != AttributeObjectKind) || ((checked_cast<Attribute *>(obj))->attrKind != Attribute::NamespaceAttr))
+                meta->reportError(Exception::badValueError, "Expected a namespace", meta->errorPos);            
 
+        }
+        break;

@@ -62,6 +62,7 @@ enum JS2Op {
     eNewObject,         // <argCount:16>
     eMultiname,         // <multiname index>
     eQMultiname,        // <multiname index>
+    eUse,
 };
 
 

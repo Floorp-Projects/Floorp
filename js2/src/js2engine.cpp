@@ -88,7 +88,7 @@ js2val JS2Engine::interpreterLoop()
 // return a pointer to an 8 byte chunk in the gc heap
 void *JS2Engine::gc_alloc_8()
 {
-    return STD::malloc(8);
+    return JS2Object::alloc(8);
 }
 
 // See if the double value is in the hash table, return it's pointer if so
@@ -243,6 +243,8 @@ int JS2Engine::getStackEffect(JS2Op op)
     case eQMultiname:
         return 1;       // push the multiname object
 
+    case eUse:
+        return -1;      // consume a namespace object
 
     default:
         ASSERT(false);

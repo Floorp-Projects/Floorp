@@ -107,6 +107,7 @@ namespace MetaData {
         case StmtNode::Var:
         case StmtNode::Const:
             {
+                bool immutable = (p->getKind() == StmtNode::Const);
                 Attribute *attr = NULL;
                 VariableStmtNode *vs = checked_cast<VariableStmtNode *>(p);
 
@@ -118,14 +119,15 @@ namespace MetaData {
                 VariableBinding *v = vs->bindings;
                 Frame *regionalFrame = env->getRegionalFrame();
                 while (v)  {
+                    const StringAtom *name = v->name;
                     ValidateTypeExpression(v->type);
 
                     if (cxt->strict && ((regionalFrame->kind == GlobalObjectKind)
                                         || (regionalFrame->kind == FunctionKind))
-                                    && (p->getKind() == StmtNode::Var)  // !immutable
+                                    && !immutable
                                     && (vs->attributes == NULL)
                                     && (v->type == NULL)) {
-                        defineHoistedVar(env, *v->name, p);
+                        defineHoistedVar(env, *name, p);
                     }
                     else {
                         CompoundAttribute *a = Attribute::toCompoundAttribute(attr);
@@ -137,15 +139,18 @@ namespace MetaData {
                             memberMod = Attribute::Final;
                         switch (memberMod) {
                         case Attribute::NoModifier:
-                        case Attribute::Static:
+                        case Attribute::Static: {
+                                Variable *var = new Variable(NULL, JS2VAL_UNDEFINED, immutable);
+                                defineStaticMember(env, *name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, var, p->pos);
+                                // XXX - not done !!! XXX
+                                // the type and the value are 'future'
+                            }
                             break;
                         }
                     }
 
                     v = v->next;
                 }
-                if (attr)
-                    delete attr;
             }
             break;
         case StmtNode::expression:
@@ -171,6 +176,10 @@ namespace MetaData {
                 defineStaticMember(env, ns->name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, p->pos);
             }
             break;
+        case StmtNode::Use:
+            {
+            }
+            break;
         }   // switch (p->getKind())
     }
 
@@ -180,12 +189,16 @@ namespace MetaData {
      */
     js2val JS2Metadata::EvalStmtList(Phase phase, StmtNode *p)
     {
+        BytecodeContainer *saveBacon = bCon;
+        bCon = new BytecodeContainer();
         while (p) {
             EvalStmt(&env, phase, p);
             p = p->next;
         }
         bCon->emitOp(eReturnVoid);
-        return engine->interpret(this, phase, bCon);
+        js2val retval = engine->interpret(this, phase, bCon);
+        bCon = saveBacon;
+        return retval;
     }
 
     /*
@@ -234,6 +247,18 @@ namespace MetaData {
             break;
         case StmtNode::Namespace:
             {
+            }
+            break;
+        case StmtNode::Use:
+            {
+                UseStmtNode *u = checked_cast<UseStmtNode *>(p);
+                ExprList *eList = u->namespaces;
+                while (eList) {
+                    Reference *r = EvalExprNode(env, phase, eList->expr);
+                    if (r) r->emitReadBytecode(bCon);
+                    bCon->emitOp(eUse);
+                    eList = eList->next;
+                }
             }
             break;
         default:
@@ -358,10 +383,12 @@ namespace MetaData {
                 // anything else (just references of one kind or another) must
                 // be compile-time constant values that resolve to namespaces
                 js2val av = EvalExpression(env, CompilePhase, p);
-                if (JS2VAL_IS_NULL(av) || JS2VAL_IS_VOID(av) || !JS2VAL_IS_OBJECT(av))
+                if (JS2VAL_IS_NULL(av) || !JS2VAL_IS_OBJECT(av))
                     reportError(Exception::badValueError, "Namespace expected in attribute", p->pos);
                 JS2Object *obj = JS2VAL_TO_OBJECT(av);
-
+                if ((obj->kind != AttributeObjectKind) || (checked_cast<Attribute *>(obj)->attrKind != Attribute::NamespaceAttr))
+                    reportError(Exception::badValueError, "Namespace expected in attribute", p->pos);
+                return checked_cast<Attribute *>(obj);
             }
             break;
 
@@ -435,9 +462,13 @@ namespace MetaData {
     // add the namespace to our list, but only if it's not there already
     void CompoundAttribute::addNamespace(Namespace *n)
     {
-        for (NamespaceListIterator i = namespaces->begin(), end = namespaces->end(); (i != end); i++)
-            if (*i == n)
-                return;
+        if (namespaces) {
+            for (NamespaceListIterator i = namespaces->begin(), end = namespaces->end(); (i != end); i++)
+                if (*i == n)
+                    return;
+        }
+        else
+            namespaces = new NamespaceList();
         namespaces->push_back(n);
     }
 
@@ -538,11 +569,11 @@ namespace MetaData {
             {
                 if (phase == CompilePhase) reportError(Exception::compileExpressionError, "Inappropriate compile time expression", p->pos);
                 BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
-                returnRef = EvalExprNode(env, phase, b->op1);
-                if (returnRef) {
+                Reference *lVal = EvalExprNode(env, phase, b->op1);
+                if (lVal) {
                     Reference *rVal = EvalExprNode(env, phase, b->op2);
                     if (rVal) rVal->emitReadBytecode(bCon);
-                    returnRef->emitWriteBytecode(bCon);
+                    lVal->emitWriteBytecode(bCon);
                 }
                 else
                     reportError(Exception::semanticError, "Assignment needs an lValue", p->pos);
@@ -564,7 +595,7 @@ namespace MetaData {
                 if (phase == CompilePhase) reportError(Exception::compileExpressionError, "Inappropriate compile time expression", p->pos);
                 UnaryExprNode *u = checked_cast<UnaryExprNode *>(p);
                 Reference *lVal = EvalExprNode(env, phase, u->op);
-                    ASSERT(false);  // not an lvalue
+                    ASSERT(false);
             }
             break;
 
@@ -578,14 +609,17 @@ namespace MetaData {
             {
                 QualifyExprNode *qe = checked_cast<QualifyExprNode *>(p);
                 const StringAtom &name = checked_cast<IdentifierExprNode *>(p)->name;
-                EvalExprNode(env, phase, qe->qualifier);
+                Reference *rVal = EvalExprNode(env, phase, qe->qualifier);
+                if (rVal) rVal->emitReadBytecode(bCon);
                 returnRef = new LexicalReference(name, cxt.strict, true);
+                ((LexicalReference *)returnRef)->emitBindBytecode(bCon);
             }
             break;
         case ExprNode::identifier:
             {
                 IdentifierExprNode *i = checked_cast<IdentifierExprNode *>(p);
                 returnRef = new LexicalReference(i->name, cxt.strict);
+                ((LexicalReference *)returnRef)->emitBindBytecode(bCon);
             }
             break;
         case ExprNode::boolean:
@@ -826,7 +860,7 @@ namespace MetaData {
             while (fr != regionalFrame) {
                 for (b = fr->staticReadBindings.lower_bound(id),
                         end = fr->staticReadBindings.upper_bound(id); (b != end); b++) {
-                    if (mn->matches(b->second->qname) && (b->second->content->kind != StaticMember::Forbidden))
+                    if (mn->matches(b->second->qname) && (b->second->content->kind == StaticMember::Forbidden))
                         reportError(Exception::definitionError, "Duplicate definition {0}", pos, id);
                 }
                 fr = fr->nextFrame;
@@ -841,7 +875,7 @@ namespace MetaData {
         
         for (NamespaceListIterator nli = mn->nsList.begin(), nlend = mn->nsList.end(); (nli != nlend); nli++) {
             QualifiedName qName(*nli, id);
-            StaticBinding *sb = new StaticBinding(qName, new HoistedVar());
+            StaticBinding *sb = new StaticBinding(qName, m);
             const StaticBindingMap::value_type e(id, sb);
             if (access & ReadAccess)
                 regionalFrame->staticReadBindings.insert(e);
@@ -849,13 +883,12 @@ namespace MetaData {
                 regionalFrame->staticWriteBindings.insert(e);
         }
         
-        StaticMember *forbidden = new StaticMember(StaticMember::Forbidden);
         if (localFrame != regionalFrame) {
             Frame *fr = localFrame->nextFrame;
             while (fr != regionalFrame) {
                 for (NamespaceListIterator nli = mn->nsList.begin(), nlend = mn->nsList.end(); (nli != nlend); nli++) {
                     QualifiedName qName(*nli, id);
-                    StaticBinding *sb = new StaticBinding(qName, forbidden);
+                    StaticBinding *sb = new StaticBinding(qName, forbiddenMember);
                     const StaticBindingMap::value_type e(id, sb);
                     if (access & ReadAccess)
                         fr->staticReadBindings.insert(e);
@@ -1063,7 +1096,8 @@ namespace MetaData {
             reportError(Exception::propertyAccessError, "Forbidden access", errorPos);
             break;
         case StaticMember::Variable:
-            break;
+            *rval = (checked_cast<Variable *>(m))->value;
+            return true;
         case StaticMember::HoistedVariable:
             *rval = (checked_cast<HoistedVar *>(m))->value;
             return true;
@@ -1086,7 +1120,8 @@ namespace MetaData {
             reportError(Exception::propertyAccessError, "Forbidden access", errorPos);
             break;
         case StaticMember::Variable:
-            break;
+            (checked_cast<Variable *>(m))->value = newValue;
+            return true;
         case StaticMember::HoistedVariable:
             (checked_cast<HoistedVar *>(m))->value = newValue;
             return true;
@@ -1241,23 +1276,85 @@ namespace MetaData {
  *
  ************************************************************************************/
 
-    Pond::Pond(size_t sz, Pond *next) : pondSize(sz + POND_SIZE), pondBase(new uint8[pondSize]), pondTop(pondBase), nextPond(next) 
+    Pond::Pond(size_t sz, Pond *next) : sanity(POND_SANITY), pondSize(sz + POND_SIZE), pondBase(new uint8[pondSize]), pondTop(pondBase), freeHeader(NULL), nextPond(next) 
     { 
     }
     
-    void *Pond::allocFromPond(size_t sz)
+    // Allocate from this or the next Pond (make a new one if necessary)
+    void *Pond::allocFromPond(int32 sz)
     {
+        // Try scannning the free list...
+        PondScum *p = freeHeader;
+        PondScum *pre = NULL;
+        while (p) {
+            ASSERT(p->size > 0);
+            if (p->size >= sz) {
+                if (pre)
+                    pre->owner = p->owner;
+                else
+                    freeHeader = (PondScum *)(p->owner);
+                p->owner = this;
+                return (p + 1);
+            }
+            pre = p;
+            p = (PondScum *)(p->owner);
+        }
+
+        // See if there's room left...
         if (sz > (pondSize - (pondTop - pondBase))) {
             if (nextPond == NULL)
                 nextPond = new Pond(sz, nextPond);
             return nextPond->allocFromPond(sz);
         }
-        void *p = pondTop;
+        p = (PondScum *)pondTop;
+        p->owner = this;
+        p->size = sz;
         pondTop += sz;
-        return p;
+#ifdef DEBUG
+        memset((p + 1), 0xB7, p->size - sizeof(PondScum));
+#endif
+        return (p + 1);
     }
 
- 
+    // Stick the chunk at the start of the free list
+    void Pond::returnToPond(PondScum *p)
+    {
+        p->owner = (Pond *)freeHeader;
+        p->size &= 0x7FFFFFFF;      // might have lingering mark from previous gc
+        uint8 *t = (uint8 *)(p + 1);
+#ifdef DEBUG
+        memset(t, 0xB7, p->size - sizeof(PondScum));
+#endif
+        freeHeader = p;
+    }
+
+    // Clear the mark bit from all PondScums
+    void Pond::resetMarks()
+    {
+        uint8 *t = pondBase;
+        while (t != pondTop) {
+            PondScum *p = (PondScum *)t;
+            p->resetMark();
+            t += p->size;
+        }
+        if (nextPond)
+            nextPond->resetMarks();
+    }
+
+    // Anything left unmarked is now moved to the free list
+    void Pond::moveUnmarkedToFreeList()
+    {
+        uint8 *t = pondBase;
+        while (t != pondTop) {
+            PondScum *p = (PondScum *)t;
+            if (!p->isMarked())
+                returnToPond(p);
+            t += p->size;
+        }
+        if (nextPond)
+            nextPond->moveUnmarkedToFreeList();
+    }
+
  /************************************************************************************
  *
  *  JS2Object
@@ -1265,14 +1362,42 @@ namespace MetaData {
  ************************************************************************************/
 
     Pond JS2Object::pond(POND_SIZE, NULL);
+    std::vector<PondScum **> JS2Object::rootList;
 
-    void *JS2Object::operator new(size_t s)
+    void JS2Object::addRoot(void *t)
     {
+        PondScum **p = (PondScum **)t;
+        ASSERT(p);
+        rootList.push_back(p);
+    }
+
+    void JS2Object::gc()
+    {
+        pond.resetMarks();
+        for (std::vector<PondScum **>::iterator i = rootList.begin(), end = rootList.end(); (i != end); i++) {
+            PondScum *p = **i;
+            if (p) {
+                ASSERT(p->owner && (p->size >= sizeof(PondScum)) && (p->owner->sanity == POND_SANITY));
+                p->mark();
+            }
+        }
+        pond.moveUnmarkedToFreeList();
+    }
+
+    void *JS2Object::alloc(size_t s)
+    {
+        s += sizeof(PondScum);
         // make sure that the thing is 8-byte aligned
         if (s & 0x7) s += 8 - (s & 0x7);
+        ASSERT(s <= 0x7FFFFFFF);
+        return pond.allocFromPond((int32)s);
+    }
 
-        return pond.allocFromPond(s);
-
+    void JS2Object::unalloc(void *t)
+    {
+        PondScum *p = (PondScum *)t - 1;
+        ASSERT(p->owner && (p->size >= sizeof(PondScum)) && (p->owner->sanity == POND_SANITY));
+        p->owner->returnToPond(p);
     }
 
 }; // namespace MetaData
