@@ -111,6 +111,11 @@ protected:
   nsresult IsFirstEditableChild( nsIDOMNode *aNode, PRBool *aOutIsFirst);
   nsresult IsLastEditableChild( nsIDOMNode *aNode, PRBool *aOutIsLast);
 
+  nsresult JoinNodesSmart( nsIDOMNode *aNodeLeft, 
+                           nsIDOMNode *aNodeRight, 
+                           nsCOMPtr<nsIDOMNode> *aOutMergeParent, 
+                           PRInt32 *aOutMergeOffset);
+
 };
 
 #endif //nsHTMLEditRules_h__
