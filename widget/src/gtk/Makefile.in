@@ -39,7 +39,9 @@ INCLUDES += $(TK_CFLAGS)
 
 CPPSRCS= \
 	nsAppShell.cpp \
+	nsClipboard.cpp	\
 	nsComboBox.cpp \
+	nsDragService.cpp \
 	nsLabel.cpp \
 	nsScrollbar.cpp \
 	nsButton.cpp \
@@ -63,11 +65,6 @@ CPPSRCS= \
 	nsWidget.cpp \
 	nsWindow.cpp \
 	$(NULL)
-
-ifdef NEW_CLIPBOARD_SUPPORT
-	CPPSRCS+= nsClipboard.cpp nsDragService.cpp
-
-endif
 
 TARGETS = $(LIBRARY)
 
