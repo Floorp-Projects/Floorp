@@ -46,7 +46,7 @@
 <dialog id="plugins" title="&plugins.title;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="init();" ondialogaccept="onAccept();" style="width: 30em;"
-        persist="screenX screenY">
+        persist="screenX screenY width height">
 
   <script type="application/x-javascript" src="chrome://browser/content/pref/plugins.js"/>
 
@@ -65,14 +65,11 @@
                class="sortDirectionIndicator" persist="width"
                label="&enabledHeader.label;"/>
     </treecols>
-    
     <treechildren class="pluginTypesChildren"/>
   </tree>
   <separator class="thin"/>
   <description>&pluginInfo2.label;</description>
 
   <separator/>
-  
-</dialog>
 
-        
+</dialog>
