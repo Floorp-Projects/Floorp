@@ -1,7 +1,5 @@
-Build instructions from pschwartau@netscape.com as of 02 Dec 2001 ...
-Updated - rogerl@netscape.com 10 Jan 2002
-Updated - pschwartau@netscape.com 29 Mar 2002
-
+Build instructions for Epimetheus
+10/12/2002
 
 
 Building JS2 on WINNT:
@@ -11,50 +9,18 @@ Building JS2 on WINNT:
 
 Compiling in Visual C++:
 
-Workspace:    D:\JS_2\mozilla\js2\src\winbuild\dikdik.dsw
+Workspace:    D:\JS_2\mozilla\js2\src\winbuild\Epimetheus\Epimetheus.dsw
 
-Project Files:   D:\JS_2\mozilla\js2\src\winbuild\DikDik.dsp
-                 D:\JS_2\mozilla\js2\tests\cpp\winbuild\DikDik_shell.dsp  <---------- active project
+Project Files:   D:\JS_2\mozilla\js2\src\winbuild\Epimetheus.dsp  <---------- active project
                  D:\JS_2\mozilla\js2\src\winbuild\fdlibm.dsp
 
 
-RUNNING THE JS2 SHELL AFTER YOU'VE BUILT IT:
-cd  (path to)/mozilla/js2/tests/cpp/winbuild/Debug
-[(path to)/mozilla/js2/tests/cpp/winbuild/Debug] ./DikDik_shell.exe
+RUNNING EPIMETHEUS AFTER YOU'VE BUILT IT:
+>cd  (path to)\mozilla\js2\src\cpp\winbuild\Epimetheus\Debug
+>Epimetheus
+Welcome to Epimetheus.
+ep> (use ^z to exit)
 
-
-
-Building JS2 on LINUX:
----------------------------------------------------------------------------------------------
-[/d/JS_2] cvs -z3 co mozilla/js2
-          cvs -z3 co mozilla/js/src/fdlibm
-
-[/d/JS_2] cd mozilla/js2
-
-[/d/JS_2/mozilla/js2] automake    <--- FIRST TIME ONLY
-[/d/JS_2/mozilla/js2] autoconf    <--- FIRST TIME ONLY
-[/d/JS_2/mozilla/js2] ./configure --enable-debug    <--- FIRST TIME ONLY
-[/d/JS_2/mozilla/js2] make
-
-
-RUNNING THE JS2 SHELL AFTER YOU'VE BUILT IT:
-cd   (path to)/mozilla/js2/tests/cpp
-[ (path to)/mozilla/js2/tests/cpp] ./dikdik
-
-
-
-Building JS2 on MAC 9.1
----------------------------------------------------------------------------------------------
-Get updated CodeWarrior Pro 7 tools !
-
-Open (path to):mozilla:js2:tests:cpp:macbuild:js2_shell.mcp and build it.
-There is also (path to ):mozilla:js2:tests:cpp:macbuild:parser_test.mcp, if you just want to try out the full parser
-without getting complaints about unimplemented features from the back end.
-
-
-RUNNING THE JS2 SHELL AFTER YOU'VE BUILT IT:
-cd   (path to):mozilla:js2:tests:cpp:macbuild
-[ (path to):mozilla:js2:tests:cpp:macbuild] ./js2_shell
 
 
 
@@ -63,17 +29,14 @@ cd   (path to):mozilla:js2:tests:cpp:macbuild
 
 Files:
 
-bytecodegen.[cpp|h]
-    - Walks parse tree, emit byte code.
+js2metadata.[cpp|h]
+    - Walks parse tree, applies semantics analysis, emit byte code.
 
-collector.[cpp|h]
-    - GC
+bytecodecontainer.[cpp|h]
+    - Utility class for handling bytecode stream.
 
 exception.[cpp|h]
-    - exception object thrown internally
-
-fdlibm_ns.cpp
-    - wraps fdlibm in a namespace
+    - exception objec
 
 formatter.cpp formatter.h
     - "Formatter" class, iostream like wrapper around stdio.
@@ -81,16 +44,13 @@ formatter.cpp formatter.h
 hash.cpp hash.h
     - a hash
 
-js2execution.[cpp|h]
+js2engine.[cpp|h]
     - interpreter loop & runtime support routines
 
-js2runtime.[cpp|h]
-    - pre-bytecode passes over parse tree, build JSType objects
-
-jsarray.[cpp|h]
-jsdate.[cpp|h]
-jsmath.[cpp|h]
-jsstring.[cpp|h]
+js2date.[cpp|h]
+js2math.[cpp|h]
+js2string.[cpp|h]
+js2regexp.[cpp|h]
     - implementations of ECMAScript built-ins
 
 lexer.cpp lexer.h
