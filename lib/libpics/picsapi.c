@@ -21,7 +21,9 @@
  * Coded by Lou Montulli
  */
 #if defined(CookieManagement)
+#ifdef XP_WIN
 #define TRUST_LABELS 1
+#endif
 #endif
 
 
