@@ -1,5 +1,6 @@
 <search
 	name = "Lycos"
+	description="Your Personal Internet Guide"
 	method = "Get"
 	action = "http://www-partner.lycos.com/cgi-bin/pursuit"
 	>

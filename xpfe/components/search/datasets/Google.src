@@ -1,14 +1,9 @@
-# Copyright © 1999 by cricket
-# cricket@apple.com
-# Version 1.2 -- 15 December 1999
-
 <search 
 	name = "Google!"
+	description="Search the Internet with Google!"
 	method = get 
 	action = "http://www.google.com/search"
-	update = "http://mbay.net/~crickee/sherlock/Google.src.hqx"
-	updateCheckDays = 1
-    >
+>
 
 <INPUT NAME="q" user>
 <INPUT NAME="num" VALUE="25">

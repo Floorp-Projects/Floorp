@@ -1,13 +1,8 @@
-# Created by Gord Lacey
-# Visit www.apple-donuts.com
-# mailto:bluefrog@shaw.wave.ca
-
 <search
 	name = "Snap.com"
+	description="Search the Internet with Snap.com"
 	method = get
 	action = "http://www.snap.com/search/power/results/1,180,home-0,00.html"
-	update = "http://www.apple-donuts.com/sherlock/Snap.com.sit.hqx"
-	updateCheckDays = 3
 >
 
 <INPUT NAME="KW" user>

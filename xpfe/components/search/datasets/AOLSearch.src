@@ -2,10 +2,9 @@
 
 <SEARCH
 	name = "AOLSearch"
+	description = "AOL.com Search"
 	action = "http://search.aol.com/dirsearch.adp"
 	method = get
-	update = "http://www.aim.aol.com/sherlock/us/AOLSearch.src.hqx"
-	updateCheckDays = 10
 	routeType = internet>
 <INPUT name = "query" user>
 <INTERPRET

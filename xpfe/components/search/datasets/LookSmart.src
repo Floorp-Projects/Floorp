@@ -1,5 +1,6 @@
 <search 
 	name="LookSmart" 
+	description="Search the Internet with LookSmart"
 	method=Get
 	action="http://www.looksmart.com/r_search" 
 	>
