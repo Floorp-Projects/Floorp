@@ -21,9 +21,11 @@ LIBRARY_NAME = nglhtmlcon_s
 
 # Note the sophisticated alphabetical ordering :-|
 CPPSRCS =				\
+	nsHTMLApplet.cpp		\
 	nsHTMLComment.cpp		\
 	nsHTMLHead.cpp			\
 	nsHTMLMeta.cpp			\
+	nsHTMLObject.cpp		\
 	nsHTMLTitle.cpp			\
 	$(NULL)
 
