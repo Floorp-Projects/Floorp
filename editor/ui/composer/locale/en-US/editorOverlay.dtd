@@ -48,7 +48,7 @@
 <!ENTITY saveAsCmd.label "Save As...">
 <!ENTITY filesaveas.accesskey "a">
 <!ENTITY exportToTextCmd.label "Export to Text...">
-<!ENTITY fileexporttotext.accesskey "x">
+<!ENTITY fileexporttotext.accesskey "t">
 <!ENTITY saveAsCharsetCmd.label "Save As Charset...">
 <!ENTITY filesaveascharset.accesskey "h">
 <!ENTITY previewCmd.label "Browse Page">
