@@ -68,19 +68,24 @@ NS_IMPL_RELEASE(nsMenuBar)
 //-------------------------------------------------------------------------
 nsEventStatus nsMenuBar::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
-/*
   // Dispatch menu event
   nsEventStatus eventStatus = nsEventStatus_eIgnore;
-  for (int i = mMenuVoidArray.Count(); i >= 0; i--)
+  
+  //if( mMenuVoidArray )
   {
-    nsIMenuListener * menuListener = nsnull;
-    ((nsIMenu*)mMenuVoidArray[i-1])->QueryInterface(kIMenuListenerIID, &menuListener);
-    eventStatus = menuListener->MenuSelected(aMenuEvent);
-    //NS_RELEASE(menuListener);
-    if(nsEventStatus_eIgnore != eventStatus)
-      return eventStatus;
+	  for (int i = mMenuVoidArray.Count(); i > 0; i--)
+	  {
+	    nsIMenuListener * menuListener = nsnull;
+	    ((nsIMenu*)mMenuVoidArray[i-1])->QueryInterface(kIMenuListenerIID, &menuListener);
+	    if(menuListener){
+	      eventStatus = menuListener->MenuSelected(aMenuEvent);
+	      NS_IF_RELEASE(menuListener);
+	      if(nsEventStatus_eIgnore != eventStatus)
+	        return eventStatus;
+	    }
+	  }
   }
-  */
+  
   return nsEventStatus_eIgnore;
 }
 
@@ -148,6 +153,7 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
 {
 
   // XXX add to internal data structure
+  NS_IF_ADDREF(aMenu);
   mMenuVoidArray.AppendElement( aMenu );
   
   MenuHandle menuHandle = nsnull;

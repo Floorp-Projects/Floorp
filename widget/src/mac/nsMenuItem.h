@@ -76,7 +76,7 @@ protected:
   nsIPopUpMenu * mPopUpParent;
   nsIWidget    * mTarget;
 
-  //Widget mMenu; // native cascade widget
+  nsIMenuListener * mXULCommandListener;
 
 };
 

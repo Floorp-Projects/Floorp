@@ -210,6 +210,8 @@ NS_METHOD nsMenu::SetLabel(nsString &aText)
   mMacMenuHandle = ::NewMenu(mMacMenuIDCount, c2pstr(mLabel.ToNewCString()) );
   mMacMenuID = mMacMenuIDCount;
   mMacMenuIDCount++;
+  
+  ::InsertMenu(mMacMenuHandle, 0);
   /*
   Str255 test;
   strcpy((char*)&test, "test");
@@ -230,6 +232,7 @@ NS_METHOD nsMenu::AddItem(const nsString &aText)
 NS_METHOD nsMenu::AddMenuItem(nsIMenuItem * aMenuItem)
 {
   // XXX add aMenuItem to internal data structor list
+  NS_IF_ADDREF(aMenuItem);
   mMenuItemVoidArray.AppendElement(aMenuItem);
   
   nsString label;
@@ -314,23 +317,20 @@ NS_METHOD nsMenu::GetNativeData(void *& aData)
 //-------------------------------------------------------------------------
 nsEventStatus nsMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
-/*
+  nsEventStatus eventStatus = nsEventStatus_eIgnore;
+      
   // Determine if this is the correct menu to handle the event
   PRInt16 menuID = HiWord(((nsMenuEvent)aMenuEvent).mCommand);
   if(mMacMenuID == menuID)
   {
-    for (int i = mMenuItemVoidArray.Count(); i >= 0; i--)
-    {
-      nsEventStatus eventStatus = nsEventStatus_eIgnore;
-	  nsIMenuListener * menuListener = nsnull;
-	  ((nsIMenuItem*)mMenuItemVoidArray[i-1])->QueryInterface(kIMenuListenerIID, &menuListener);
+    // Call MenuSelected on the correct nsMenuItem
+    PRInt16 menuItemID = LoWord(((nsMenuEvent)aMenuEvent).mCommand);
+    nsIMenuListener * menuListener = nsnull;
+    ((nsIMenuItem*)mMenuItemVoidArray[menuItemID-1])->QueryInterface(kIMenuListenerIID, &menuListener);
+	if(menuListener) {
 	  eventStatus = menuListener->MenuSelected(aMenuEvent);
-	  //NS_RELEASE(menuListener);
-	  if(nsEventStatus_eIgnore != eventStatus)
-	    return eventStatus;
+	  NS_IF_RELEASE(menuListener);
 	}
   }
-  else
-  */
-    return nsEventStatus_eIgnore;
+  return eventStatus;
 }
