@@ -25,6 +25,7 @@
 #include "nsIFileSpec.idl"
 #include "nsISupportsArray.idl"
 #include "nsIDocumentStateListener.idl"
+#include "nsISelectionController.idl"
 
 %{C++
 
@@ -44,6 +45,7 @@ interface nsIEditorShell : nsISupports
 {
   readonly attribute nsIDOMDocument    editorDocument;
   readonly attribute nsIDOMSelection   editorSelection;
+  readonly attribute nsISelectionController   selectionController;
   
   [noscript] readonly attribute nsIEditor         editor;
   

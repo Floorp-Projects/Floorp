@@ -2620,6 +2620,26 @@ nsEditorShell::GetEditorSelection(nsIDOMSelection** aEditorSelection)
 }
 
 NS_IMETHODIMP
+nsEditorShell::GetSelectionController(nsISelectionController** aSelectionController)
+{
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
+  if (!editor)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  nsCOMPtr<nsIPresShell> presShell;
+  nsresult rv = editor->GetPresShell(getter_AddRefs(presShell));
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsISelectionController> selCont (do_QueryInterface(presShell));
+  if (!selCont)
+    return NS_ERROR_NO_INTERFACE;
+  *aSelectionController = selCont;
+  NS_IF_ADDREF(*aSelectionController);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsEditorShell::GetDocumentModified(PRBool *aDocumentModified)
 {
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
