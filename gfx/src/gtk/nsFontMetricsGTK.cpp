@@ -1013,40 +1013,40 @@ JISX02081983GenerateMap(nsFontCharSetInfo* aSelf)
     while (destLen > 0) {
       PRUint8 b = *d;
       if (b < 0x7f) {
-	printf("%x %x\n", c, b);
-	destLen--;
-	d++;
+        printf("%x %x\n", c, b);
+        destLen--;
+        d++;
       }
       else if (b < 0x8e) {
-	printf("%x %x\n", c, b);
-	destLen--;
-	d++;
+        printf("%x %x\n", c, b);
+        destLen--;
+        d++;
       }
       else if (b == 0x8e) {
-	printf("%x %x %x\n", c, b, d[1]);
+        printf("%x %x %x\n", c, b, d[1]);
         destLen -= 2;
-	d += 2;
+        d += 2;
       }
       else if (b == 0x8f) {
-	printf("%x %x %x %x\n", c, b, d[1], d[2]);
+        printf("%x %x %x %x\n", c, b, d[1], d[2]);
         destLen -= 3;
-	d += 3;
+        d += 3;
       }
       else if (b < 0xa1) {
-	printf("%x %x\n", c, b);
-	destLen--;
-	d++;
+        printf("%x %x\n", c, b);
+        destLen--;
+        d++;
       }
       else if (b < 0xff) {
-	printf("%x %x %x\n", c, b, d[1]);
+        printf("%x %x %x\n", c, b, d[1]);
         destLen -= 2;
-	d += 2;
+        d += 2;
         ADD_GLYPH(map, c);
       }
       else {
-	printf("%x %x\n", c, b);
-	destLen--;
-	d++;
+        printf("%x %x\n", c, b);
+        destLen--;
+        d++;
       }
       c++;
     }
@@ -1199,18 +1199,18 @@ DumpFamily(nsFontFamily* aFamily)
     if (style) {
       printf("  style: %s\n", gDumpStyles[styleIndex]);
       for (int weightIndex = 0; weightIndex < 8; weightIndex++) {
-	nsFontWeight* weight = style->mWeights[weightIndex];
+        nsFontWeight* weight = style->mWeights[weightIndex];
         if (weight) {
-	  printf("    weight: %d\n", (weightIndex + 1) * 100);
-	  for (int stretchIndex = 0; stretchIndex < 9; stretchIndex++) {
-	    nsFontStretch* stretch = weight->mStretches[stretchIndex];
-	    if (stretch) {
-	      printf("      stretch: %d\n", stretchIndex + 1);
-	      PL_HashTableEnumerateEntries(stretch->mCharSets, DumpCharSet,
-	        nsnull);
-	    }
-	  }
-	}
+          printf("    weight: %d\n", (weightIndex + 1) * 100);
+          for (int stretchIndex = 0; stretchIndex < 9; stretchIndex++) {
+            nsFontStretch* stretch = weight->mStretches[stretchIndex];
+            if (stretch) {
+              printf("      stretch: %d\n", stretchIndex + 1);
+              PL_HashTableEnumerateEntries(stretch->mCharSets, DumpCharSet,
+                nsnull);
+            }
+          }
+        }
       }
     }
   }
@@ -1340,15 +1340,15 @@ PickASizeAndLoad(nsFontSearch* aSearch, nsFontStretch* aStretch,
     for (; s >= begin; s--) {
       if (!s->mFont) {
         s->LoadFont(aCharSet, m);
-	if (!s->mFont) {
-	  return;
-	}
+        if (!s->mFont) {
+          return;
+        }
       }
       if (s->mActualSize <= desiredSize) {
-	if (((s + 1)->mActualSize - desiredSize) <=
-	    (desiredSize - s->mActualSize)) {
-	  s++;
-	}
+        if (((s + 1)->mActualSize - desiredSize) <=
+            (desiredSize - s->mActualSize)) {
+          s++;
+        }
         break;
       }
     }
@@ -1360,15 +1360,15 @@ PickASizeAndLoad(nsFontSearch* aSearch, nsFontStretch* aStretch,
     for (; s < end; s++) {
       if (!s->mFont) {
         s->LoadFont(aCharSet, m);
-	if (!s->mFont) {
-	  return;
-	}
+        if (!s->mFont) {
+          return;
+        }
       }
       if (s->mActualSize >= desiredSize) {
         if ((s->mActualSize - desiredSize) >
-	    (desiredSize - (s - 1)->mActualSize)) {
-	  s--;
-	}
+            (desiredSize - (s - 1)->mActualSize)) {
+          s--;
+        }
         break;
       }
     }
@@ -1384,13 +1384,13 @@ PickASizeAndLoad(nsFontSearch* aSearch, nsFontStretch* aStretch,
       end = &aStretch->mScaledFonts[aStretch->mScaledFontsCount];
       for (s = begin; s < end; s++) {
         if (s->mSize == desiredSize) {
-	  break;
-	}
+          break;
+        }
       }
       if (s == end) {
         if (aStretch->mScaledFontsCount == aStretch->mScaledFontsAlloc) {
           int newSize = 2 *
-	    (aStretch->mScaledFontsAlloc ? aStretch->mScaledFontsAlloc : 1);
+            (aStretch->mScaledFontsAlloc ? aStretch->mScaledFontsAlloc : 1);
           nsFontGTK* newPointer = new nsFontGTK[newSize];
           if (newPointer) {
             for (int i = aStretch->mScaledFontsAlloc - 1; i >= 0; i--) {
@@ -1403,19 +1403,19 @@ PickASizeAndLoad(nsFontSearch* aSearch, nsFontStretch* aStretch,
           else {
             return;
           }
-	}
-	s = &aStretch->mScaledFonts[aStretch->mScaledFontsCount++];
-	s->mName = PR_smprintf(aStretch->mScalable, desiredSize);
-	if (!s->mName) {
-	  return;
-	}
-	s->mSize = desiredSize;
-	s->mBaselineAdjust = 0;
-	s->mCharSetInfo = aCharSet->mInfo;
-	s->LoadFont(aCharSet, m);
-	if (!s->mFont) {
-	  return;
-	}
+        }
+        s = &aStretch->mScaledFonts[aStretch->mScaledFontsCount++];
+        s->mName = PR_smprintf(aStretch->mScalable, desiredSize);
+        if (!s->mName) {
+          return;
+        }
+        s->mSize = desiredSize;
+        s->mBaselineAdjust = 0;
+        s->mCharSetInfo = aCharSet->mInfo;
+        s->LoadFont(aCharSet, m);
+        if (!s->mFont) {
+          return;
+        }
       }
     }
   }
@@ -1683,8 +1683,8 @@ TryCharSet(nsFontSearch* aSearch, nsFontCharSet* aCharSet)
         nsFontWeight* prev = weights[weightIndex];
         for (weightIndex++; weightIndex < 9; weightIndex++) {
           if (weights[weightIndex] != prev) {
-	    break;
-	  }
+            break;
+          }
         }
         if (weightIndex >= 9) {
           weightIndex = 8;
@@ -1699,8 +1699,8 @@ TryCharSet(nsFontSearch* aSearch, nsFontCharSet* aCharSet)
         nsFontWeight* prev = weights[weightIndex];
         for (weightIndex--; weightIndex >= 0; weightIndex--) {
           if (weights[weightIndex] != prev) {
-	    break;
-	  }
+            break;
+          }
         }
         if (weightIndex < 0) {
           weightIndex = 0;
@@ -1861,7 +1861,7 @@ GetFontNames(char* aPattern)
       }
       nsString* copy = new nsString(familyName);
       if (!copy) {
-	delete family;
+        delete family;
         continue;
       }
       PL_HashTableAdd(gFamilies, copy, family);
@@ -2071,16 +2071,16 @@ nsFontMetricsGTK::FindFont(PRUnichar aChar)
       PR_snprintf(buf, sizeof(buf), "-*-%s-*-*-*-*-*-*-*-*-*-*-*-*", name);
       family = GetFontNames(buf);
       if (!family) {
-	family = new nsFontFamily; // dummy entry to avoid calling X again
-	if (family) {
-	  nsString* copy = new nsString(*xName);
-	  if (copy) {
-	    PL_HashTableAdd(gFamilies, copy, family);
-	  }
-	  else {
-	    delete family;
-	  }
-	}
+        family = new nsFontFamily; // dummy entry to avoid calling X again
+        if (family) {
+          nsString* copy = new nsString(*xName);
+          if (copy) {
+            PL_HashTableAdd(gFamilies, copy, family);
+          }
+          else {
+            delete family;
+          }
+        }
         continue;
       }
     }
