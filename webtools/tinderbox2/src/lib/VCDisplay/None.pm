@@ -6,8 +6,8 @@
 # cvsquery an we may need to generalize the interfaces in the future
 # to accomidate more VC systems.
 
-# $Revision: 1.5 $ 
-# $Date: 2001/07/20 19:05:22 $ 
+# $Revision: 1.6 $ 
+# $Date: 2002/12/10 19:34:34 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/VCDisplay/None.pm,v $ 
 # $Name:  $ 
@@ -41,7 +41,7 @@
 
 
 
-package VCDisplay;
+package VCDisplay::None;
 
 $VERSION = '#tinder_version#';
 
@@ -61,7 +61,7 @@ use HTMLPopUp;
 # create a Link to a VC file and its line number
 
 sub source {
-  my (%args) = @_;
+  my ($self, %args) = @_;
 
   if ($DEBUG) {
 
@@ -90,7 +90,7 @@ sub source {
 # who is looking at the error log.
 
 sub guess {
-  my (%args) = @_;
+  my ($self, %args) = @_;
 
   if ($DEBUG) {
 
@@ -115,7 +115,7 @@ sub guess {
 
 
 sub query {
-  my (%args) = @_;
+  my ($self, %args) = @_;
 
   if ($DEBUG) {
 
