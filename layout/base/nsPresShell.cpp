@@ -57,6 +57,11 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIScrollableView.h"
 #include "nsIDOMSelectionListener.h"
+#include "nsISelectionMgr.h"
+#include "nsIParser.h"
+#include "nsParserCIID.h"
+#include "nsHTMLContentSinkStream.h"
+#include "nsXIFDTD.h"
 
 
 static PRBool gsNoisyRefs = PR_FALSE;
@@ -292,6 +297,7 @@ public:
                                  PRUint32  aVFlags,
                                  PRInt32   aHOffsetPercent, 
                                  PRUint32  aHFlags) const;
+  NS_IMETHOD DoCopy(nsISelectionMgr* aSelectionMgr);
 
   //nsIViewObserver interface
 
@@ -1466,6 +1472,67 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
     }
   }
   return rv;
+}
+
+NS_IMETHODIMP
+PresShell::DoCopy(nsISelectionMgr* aSelectionMgr)
+{
+  nsCOMPtr<nsIDocument> doc;
+  GetDocument(getter_AddRefs(doc));
+  if (doc) {
+    nsString buffer;
+    
+    nsIDOMSelection* sel = nsnull;
+    GetSelection(&sel);
+      
+    if (sel != nsnull)
+      doc->CreateXIF(buffer,sel);
+    NS_IF_RELEASE(sel);
+
+    nsIParser* parser;
+
+    static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
+    static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+
+    nsresult rv = nsRepository::CreateInstance(kCParserCID, 
+                                               nsnull, 
+                                               kCParserIID, 
+                                               (void **)&parser);
+
+    if (NS_OK != rv)
+      return rv;
+
+    nsIHTMLContentSink* sink = nsnull;
+	
+    rv = NS_New_HTML_ContentSinkStream(&sink,PR_FALSE,PR_FALSE);
+
+    ostream* copyStream;
+    rv = aSelectionMgr->GetCopyOStream(&copyStream);
+    if (!NS_SUCCEEDED(rv))
+      return rv;
+
+    ((nsHTMLContentSinkStream*)sink)->SetOutputStream(*copyStream);
+
+    if (NS_OK == rv) {
+      parser->SetContentSink(sink);
+	  
+      nsIDTD* dtd = nsnull;
+      rv = NS_NewXIFDTD(&dtd);
+      if (NS_OK == rv) 
+      {
+        parser->RegisterDTD(dtd);
+        //dtd->SetContentSink(sink);
+        //dtd->SetParser(parser);
+        parser->Parse(buffer, 0, "text/xif",PR_FALSE,PR_TRUE);           
+      }
+      NS_IF_RELEASE(dtd);
+      NS_IF_RELEASE(sink);
+
+      aSelectionMgr->CopyToClipboard();
+    }
+    NS_RELEASE(parser);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
