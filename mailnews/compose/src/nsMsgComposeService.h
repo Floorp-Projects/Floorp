@@ -43,6 +43,7 @@
 #include "nsCOMPtr.h"
 #include "nsICmdLineHandler.h"
 #include "nsIDOMWindowInternal.h"
+#include "nsIObserver.h"
 
 class nsMsgCachedWindowInfo
 {
@@ -65,7 +66,7 @@ public:
   PRBool                                    htmlCompose;
 };
 
-class nsMsgComposeService : public nsIMsgComposeService, public nsICmdLineHandler
+class nsMsgComposeService : public nsIMsgComposeService, public nsIObserver ,public nsICmdLineHandler
 {
 public: 
 	nsMsgComposeService();
@@ -73,11 +74,13 @@ public:
 
 	NS_DECL_ISUPPORTS
   NS_DECL_NSIMSGCOMPOSESERVICE
-
+  NS_DECL_NSIOBSERVER
   NS_DECL_NSICMDLINEHANDLER
   CMDLINEHANDLER_REGISTERPROC_DECLS 
-  nsresult Init();
 
+  nsresult Init();
+  void Reset();
+  void DeleteCachedWindows();
 
 private:
   PRBool mLogComposePerformance;
@@ -86,6 +89,8 @@ private:
   nsMsgCachedWindowInfo *mCachedWindows;
   
   nsresult OpenWindow( const char *chrome, nsIMsgComposeParams *params);
+  void CloseWindow(nsIDOMWindowInternal *domWindow);
+
   nsresult ShowCachedComposeWindow(nsIDOMWindowInternal *aComposeWindow, PRBool aShow);
 
 #ifdef MSGCOMP_TRACE_PERFORMANCE

@@ -46,6 +46,7 @@
 #include "nsMsgCompCID.h"
 #include "nsISupportsArray.h"
 #include "nsIServiceManager.h"
+#include "nsIObserverService.h"
 #include "nsXPIDLString.h"
 #include "nsIMsgIdentity.h"
 #include "nsISmtpUrl.h"
@@ -66,13 +67,17 @@
 #include "nsIDOMElement.h"
 #include "nsIXULWindow.h"
 #include "nsIWindowMediator.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIDocShellTreeOwner.h"
+#include "nsIBaseWindow.h"
+#include "nsIPref.h"
+#include "nsIPrefBranchInternal.h"
 
 #include "nsMsgBaseCID.h"
 #include "nsIMsgAccountManager.h"
 
 #ifdef MSGCOMP_TRACE_PERFORMANCE
 #include "prlog.h"
-#include "nsIPref.h"
 #include "nsIMsgHdr.h"
 #include "nsIMsgMessageService.h"
 #include "nsMsgUtils.h"
@@ -83,6 +88,8 @@ static PRBool _just_to_be_sure_we_create_only_on_compose_service_ = PR_FALSE;
 #endif
 
 #define DEFAULT_CHROME  "chrome://messenger/content/messengercompose/messengercompose.xul"
+
+#define PREF_MAIL_COMPOSE_MAXRECYCLEDWINDOWS  "mail.compose.max_recycled_windows"
 
 #ifdef MSGCOMP_TRACE_PERFORMANCE
 static PRLogModuleInfo *MsgComposeLogModule = nsnull;
@@ -127,15 +134,16 @@ nsMsgComposeService::nsMsgComposeService()
 }
 
 /* the following macro actually implement addref, release and query interface for our component. */
-NS_IMPL_ISUPPORTS2(nsMsgComposeService, nsIMsgComposeService, nsICmdLineHandler);
+NS_IMPL_ISUPPORTS3(nsMsgComposeService, nsIMsgComposeService, nsIObserver, nsICmdLineHandler);
 
 nsMsgComposeService::~nsMsgComposeService()
 {
   if (mCachedWindows)
+  {
+    DeleteCachedWindows();
     delete [] mCachedWindows;
+  }
 }
-
-/* the following Init is to initialize the mLogComposePerformance variable */
 
 nsresult nsMsgComposeService::Init()
 {
@@ -144,8 +152,45 @@ nsresult nsMsgComposeService::Init()
   if (!prefs)
     return NS_ERROR_FAILURE;
 
-  rv = prefs->GetIntPref("mail.compose.max_recycled_windows", &mMaxRecycledWindows);
-  if (mMaxRecycledWindows > 0 && !mCachedWindows)
+  // Register observers
+
+  // register for profile change, we will need to clear the cache.
+  nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1", &rv);
+  if (NS_SUCCEEDED(rv))
+    rv = observerService->AddObserver(this, "profile-do-change", PR_FALSE);
+
+  nsCOMPtr<nsIPrefBranch> prefBranch;
+  rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
+  if (NS_SUCCEEDED(rv))
+  {
+    nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(prefBranch, &rv);
+    if (NS_SUCCEEDED(rv))
+      rv = pbi->AddObserver(PREF_MAIL_COMPOSE_MAXRECYCLEDWINDOWS, this, PR_FALSE);
+  }
+
+	Reset();
+	
+  return rv;
+}
+
+void nsMsgComposeService::Reset()
+{
+  nsresult rv = NS_OK;
+
+  if (mCachedWindows)
+  {
+    DeleteCachedWindows();
+    delete [] mCachedWindows;
+    mCachedWindows = nsnull;
+    mMaxRecycledWindows = 0;
+  }
+
+  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
+  if (!prefs)
+    return;
+
+  rv = prefs->GetIntPref(PREF_MAIL_COMPOSE_MAXRECYCLEDWINDOWS, &mMaxRecycledWindows);
+  if (NS_SUCCEEDED(rv) && mMaxRecycledWindows > 0)
   {
     mCachedWindows = new nsMsgCachedWindowInfo[mMaxRecycledWindows];
     if (!mCachedWindows)
@@ -154,9 +199,18 @@ nsresult nsMsgComposeService::Init()
   
   rv = prefs->GetBoolPref("mailnews.logComposePerformance", &mLogComposePerformance);
 
-  return rv;
+  return;
 }
 
+void nsMsgComposeService::DeleteCachedWindows()
+{
+  PRInt32 i;
+  for (i = 0; i < mMaxRecycledWindows; i ++)
+  {
+    CloseWindow(mCachedWindows[i].window);
+    mCachedWindows[i].Clear();
+  }
+}
 
 // Utility function to open a message compose window and pass an nsIMsgComposeParams parameter to it.
 nsresult nsMsgComposeService::OpenWindow(const char *chrome, nsIMsgComposeParams *params)
@@ -219,6 +273,49 @@ nsresult nsMsgComposeService::OpenWindow(const char *chrome, nsIMsgComposeParams
                  getter_AddRefs(newWindow));
 
   return rv;
+}
+
+void nsMsgComposeService::CloseWindow(nsIDOMWindowInternal *domWindow)
+{
+  if (domWindow)
+  {
+    nsCOMPtr<nsIDocShell> docshell;
+    nsCOMPtr<nsIScriptGlobalObject> globalObj(do_QueryInterface(domWindow));
+    if (globalObj)
+    {
+      globalObj->GetDocShell(getter_AddRefs(docshell));
+      nsCOMPtr<nsIDocShellTreeItem>  treeItem(do_QueryInterface(docshell));
+      nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+      treeItem->GetTreeOwner(getter_AddRefs(treeOwner));
+      if (treeItem)
+      {
+        nsCOMPtr<nsIBaseWindow> baseWindow;
+        baseWindow = do_QueryInterface(treeOwner);
+        if (baseWindow)
+          baseWindow->Destroy();
+      }
+    }
+  }
+}
+
+NS_IMETHODIMP
+nsMsgComposeService::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
+{
+  if (!nsCRT::strcmp(aTopic,"profile-do-change"))
+  {
+    DeleteCachedWindows();
+    return NS_OK;
+  }
+
+  if (!nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID))
+  {
+    nsDependentString prefName(someData);
+    if (prefName.Equals(NS_LITERAL_STRING(PREF_MAIL_COMPOSE_MAXRECYCLEDWINDOWS)))
+      Reset();
+    return NS_OK;
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
