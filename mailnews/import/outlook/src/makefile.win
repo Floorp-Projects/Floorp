@@ -38,6 +38,7 @@ CPP_OBJS=\
 		.\$(OBJDIR)\nsOutlookMail.obj			\
 		.\$(OBJDIR)\MapiMessage.obj				\
 		.\$(OBJDIR)\MapiMimeTypes.obj			\
+		.\$(OBJDIR)\nsOutlookCompose.obj		\
         $(NULL)
 
 LLIBS=\

@@ -283,6 +283,7 @@ BOOL CMapiMessage::GetAttachFileLoc( nsIFileSpec * pLoc)
 	if (m_attachPath.IsEmpty())
 		return( FALSE);
 	pLoc->SetNativePath( (const char *) m_attachPath);
+	m_ownsAttachFile = FALSE;
 	return( TRUE);
 }
 

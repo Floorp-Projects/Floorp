@@ -93,6 +93,7 @@ private:
 
 private:
 	nsOutlookMail	m_mail;
+	PRUint32		m_bytesDone;
 };
 
 
@@ -453,8 +454,10 @@ NS_IMETHODIMP ImportMailImpl::ImportMailbox(	nsIImportMailboxDescriptor *pSource
 	pSource->GetIdentifier( &index);
 	PRInt32	msgCount = 0;
     nsresult rv = NS_OK;
-	
-	rv = m_mail.ImportMailbox( &abort, (PRInt32)index, name.GetUnicode(), pDestination, &msgCount);
+
+	m_bytesDone = 0;
+
+	rv = m_mail.ImportMailbox( &m_bytesDone, &abort, (PRInt32)index, name.GetUnicode(), pDestination, &msgCount);
     
 	if (NS_SUCCEEDED( rv)) {
 		ReportSuccess( name, msgCount, &success);
@@ -475,9 +478,7 @@ NS_IMETHODIMP ImportMailImpl::GetImportProgress( PRUint32 *pDoneSoFar)
     if (! pDoneSoFar)
         return NS_ERROR_NULL_POINTER;
 	
-	// TLR: FIXME: Figure our how to update this from the import
-	// of the current mailbox.
-	*pDoneSoFar = 0;
+	*pDoneSoFar = m_bytesDone;
 	return( NS_OK);
 }
 

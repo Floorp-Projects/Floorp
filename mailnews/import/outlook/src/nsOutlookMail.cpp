@@ -31,15 +31,17 @@
 #include "nsIImportService.h"
 #include "nsIImportMailboxDescriptor.h"
 #include "nsIImportMimeEncode.h"
-
+#include "nsXPIDLString.h"
 #include "nsOutlookStringBundle.h"
 #include "OutlookDebugLog.h"
 #include "nsOutlookMail.h"
 
-
 static NS_DEFINE_CID(kImportServiceCID,		NS_IMPORTSERVICE_CID);
 static NS_DEFINE_CID(kImportMimeEncodeCID,	NS_IMPORTMIMEENCODE_CID);
 static NS_DEFINE_IID(kISupportsIID,			NS_ISUPPORTS_IID);
+
+
+#define	kCopyBufferSize		(16 * 1024)
 
 
 nsOutlookMail::nsOutlookMail()
@@ -52,6 +54,7 @@ nsOutlookMail::nsOutlookMail()
 nsOutlookMail::~nsOutlookMail()
 {
 	CMapiApi::UnloadMapi();
+	EmptyAttachments();
 }
 
 nsresult nsOutlookMail::GetMailFolders( nsISupportsArray **pArray)
@@ -162,7 +165,7 @@ void nsOutlookMail::OpenMessageStore( CMapiFolder *pNextFolder)
 	}
 }
 
-nsresult nsOutlookMail::ImportMailbox( PRBool *pAbort, PRInt32 index, const PRUnichar *pName, nsIFileSpec *pDest, PRInt32 *pMsgCount)
+nsresult nsOutlookMail::ImportMailbox( PRUint32 *pDoneSoFar, PRBool *pAbort, PRInt32 index, const PRUnichar *pName, nsIFileSpec *pDest, PRInt32 *pMsgCount)
 {
 	if ((index < 0) || (index >= m_folderList.GetSize())) {
 		IMPORT_LOG0( "*** Bad mailbox identifier, unable to import\n");
@@ -170,8 +173,11 @@ nsresult nsOutlookMail::ImportMailbox( PRBool *pAbort, PRInt32 index, const PRUn
 		return( NS_ERROR_FAILURE);
 	}
 	
+	PRInt32		dummyMsgCount = 0;
 	if (pMsgCount)
 		*pMsgCount = 0;
+	else
+		pMsgCount = &dummyMsgCount;
 
 	CMapiFolder *pFolder = m_folderList.GetItem( index);
 	OpenMessageStore( pFolder);
@@ -182,6 +188,17 @@ nsresult nsOutlookMail::ImportMailbox( PRBool *pAbort, PRInt32 index, const PRUn
 	
 	if (pFolder->IsStore())
 		return( NS_OK);
+	
+	nsCOMPtr<nsIFileSpec>	compositionFile;
+	nsresult	rv;
+	if (NS_FAILED( rv = NS_NewFileSpec( getter_AddRefs( compositionFile)))) {
+		return( rv);
+	}
+	
+	nsOutlookCompose		compose;
+	SimpleBuffer			copy;
+
+	copy.Allocate( kCopyBufferSize);
 
 	// now what?
 	CMapiFolderContents		contents( m_lpMdb, pFolder->GetCBEntryID(), pFolder->GetEntryID());
@@ -192,16 +209,30 @@ nsresult nsOutlookMail::ImportMailbox( PRBool *pAbort, PRInt32 index, const PRUn
 	ULONG		oType;
 	LPMESSAGE	lpMsg;
 	int			attachCount;
+	ULONG		totalCount;
+	PRFloat64	doneCalc;
+	nsCString	fromLine;
+	int			fromLen;
+	PRBool		lostAttach = PR_FALSE;
 
 	while (!done) {
-		if (pMsgCount)
-			(*pMsgCount)++;
+		(*pMsgCount)++;
 
 		if (!contents.GetNext( &cbEid, &lpEid, &oType, &done)) {
 			IMPORT_LOG1( "*** Error iterating mailbox: %S\n", pName);
 			return( NS_ERROR_FAILURE);
 		}
 		
+		totalCount = contents.GetCount();
+		doneCalc = *pMsgCount;
+		doneCalc /= totalCount;
+		doneCalc *= 1000;
+		if (pDoneSoFar) {
+			*pDoneSoFar = (PRUint32) doneCalc;
+			if (*pDoneSoFar > 1000)
+				*pDoneSoFar = 1000;
+		}
+
 		if (!done && (oType == MAPI_MESSAGE)) {
 			if (!m_mapi.OpenMdbEntry( m_lpMdb, cbEid, lpEid, (LPUNKNOWN *) &lpMsg)) {
 				IMPORT_LOG1( "*** Error opening messages in mailbox: %S\n", pName);
@@ -213,43 +244,84 @@ nsresult nsOutlookMail::ImportMailbox( PRBool *pAbort, PRInt32 index, const PRUn
 			BOOL bResult = msg.FetchHeaders();
 			if (bResult)
 				bResult = msg.FetchBody();
+			if (bResult)
+				fromLine = msg.GetFromLine( fromLen);
+
 			attachCount = msg.CountAttachments();
+			BuildAttachments( msg, attachCount);
 
 			if (!bResult) {
 				IMPORT_LOG1( "*** Error reading message from mailbox: %S\n", pName);
 				return( NS_ERROR_FAILURE);
 			}
+						
+			// --------------------------------------------------------------
+			compose.SetBody( msg.GetBody(), msg.GetBodyLen());
+			compose.SetHeaders( msg.GetHeaders(), msg.GetHeaderLen());
+			compose.SetAttachments( &m_attachments);
+
+			/*
+			if ((*pMsgCount) == 163)
+				NS_PRECONDITION( FALSE, "Manual breakpoint");
+			*/
 			
-			BOOL needsTerminate = FALSE;
-			if (!WriteMessage( pDest, &msg, attachCount, &needsTerminate)) {
-				IMPORT_LOG0( "*** Error writing message\n");
-				*pAbort = PR_TRUE;
-				return( NS_ERROR_FAILURE);
-			}
-			
-			if (attachCount) {
-				for (int i = 0; i < attachCount; i++) {
-					if (!msg.GetAttachmentInfo( i)) {
-						IMPORT_LOG1( "*** Error getting attachment info for #%d\n", i);
-						return( NS_ERROR_FAILURE);
-					}
-					
-					if (!WriteAttachment( pDest, &msg)) {
-						IMPORT_LOG1( "** Error writing attachment #%d\n", i);
-						return( NS_ERROR_FAILURE);
+			/*
+				If I can't get no headers,
+				I can't get no satisfaction
+			*/
+			if (msg.GetHeaderLen()) {
+				rv = compose.SendTheMessage( compositionFile);
+				if (NS_SUCCEEDED( rv)) {
+					rv = CopyComposedMessage( fromLine, compositionFile, pDest, copy);
+					DeleteFile( compositionFile);
+					if (NS_FAILED( rv)) {
+						IMPORT_LOG0( "*** Error copying composed message to destination mailbox\n");
+						return( rv);
 					}
 				}
 			}
+			else
+				rv = NS_OK;
 
-			if (needsTerminate) {
-				if (!WriteMimeBoundary( pDest, &msg, TRUE)) {
-					IMPORT_LOG0( "*** Error writing message mime boundary\n");
+			if (NS_FAILED( rv)) {
+				
+				/* NS_PRECONDITION( FALSE, "Manual breakpoint"); */
+
+				IMPORT_LOG1( "Message #%d failed.\n", (int) (*pMsgCount));
+				DumpAttachments();
+	
+				// --------------------------------------------------------------
+
+				// This is the OLD way of writing out the message which uses
+				// all kinds of crufty old crap for attachments.
+				// Since we now use Compose to send attachments, 
+				// this is only fallback error stuff.
+
+				// Attachments get lost.		
+
+				if (attachCount) {
+					lostAttach = PR_TRUE;
+					attachCount = 0;
+				}
+
+				BOOL needsTerminate = FALSE;
+				if (!WriteMessage( pDest, &msg, attachCount, &needsTerminate)) {
+					IMPORT_LOG0( "*** Error writing message\n");
 					*pAbort = PR_TRUE;
 					return( NS_ERROR_FAILURE);
 				}
+				
+				if (needsTerminate) {
+					if (!WriteMimeBoundary( pDest, &msg, TRUE)) {
+						IMPORT_LOG0( "*** Error writing message mime boundary\n");
+						*pAbort = PR_TRUE;
+						return( NS_ERROR_FAILURE);
+					}
+				}
 			}
-			needsTerminate = FALSE;
 
+			// Just for YUCKS, let's try an extra endline
+			WriteData( pDest, "\x0D\x0A", 2);
 		}
 	}
 
@@ -371,14 +443,14 @@ BOOL nsOutlookMail::WriteWithoutFrom( nsIFileSpec *pDest, const char *pData, int
 		len--;
 	}
 	else {
-		if ((len >= 5) && nsCRT::strncmp( pChar, "From ", 5)) {
+		if ((len >= 5) && !nsCRT::strncmp( pChar, "From ", 5)) {
 			if (!WriteStr( pDest, ">"))
 				return( FALSE);
 		}
 	}
 
 	while (len) {
-		if ((len >= 7) && nsCRT::strncmp( pChar, ("\x0D\x0A" "From "), 7)) {
+		if ((len >= 7) && !nsCRT::strncmp( pChar, ("\x0D\x0A" "From "), 7)) {
 			wLen += 2;
 			len -= 2;
 			pChar += 2;
@@ -436,6 +508,7 @@ BOOL nsOutlookMail::WriteMimeBoundary( nsIFileSpec *pDest, CMapiMessage *pMsg, B
 }
 
 
+/*
 PRBool nsOutlookMail::WriteAttachment( nsIFileSpec *pDest, CMapiMessage *pMsg)
 {
 	nsCOMPtr<nsIFileSpec> pSpec;
@@ -479,3 +552,220 @@ PRBool nsOutlookMail::WriteAttachment( nsIFileSpec *pDest, CMapiMessage *pMsg)
 
 	return( bResult);
 }
+*/
+
+
+
+nsresult nsOutlookMail::CopyComposedMessage( nsCString& fromLine, nsIFileSpec *pSrc, nsIFileSpec *pDst, SimpleBuffer& copy)
+{
+	copy.m_bytesInBuf = 0;
+	copy.m_writeOffset = 0;
+	ReadFileState	state;
+	state.pFile = pSrc;
+	state.offset = 0;
+	state.size = 0;
+	pSrc->GetFileSize( &state.size);
+	if (!state.size) {
+		IMPORT_LOG0( "*** Error, unexpected zero file size for composed message\n");
+		return( NS_ERROR_FAILURE);
+	}
+
+	nsresult rv = pSrc->OpenStreamForReading();
+	if (NS_FAILED( rv)) {
+		IMPORT_LOG0( "*** Error, unable to open composed message file\n");
+		return( NS_ERROR_FAILURE);
+	}
+	
+	PRInt32 written;
+	rv = pDst->Write( fromLine, fromLine.Length(), &written);
+
+	char	lastChar = 0;
+	while ((state.offset < state.size) && NS_SUCCEEDED( rv)) {
+		rv = FillMailBuffer( &state, copy);
+		if (NS_SUCCEEDED( rv)) {
+			rv = pDst->Write( copy.m_pBuffer, copy.m_bytesInBuf, &written);
+			lastChar = copy.m_pBuffer[copy.m_bytesInBuf - 1];
+			if (NS_SUCCEEDED( rv)) {
+				if (written != copy.m_bytesInBuf) {
+					rv = NS_ERROR_FAILURE;
+					IMPORT_LOG0( "*** Error writing to destination mailbox\n");
+				}
+				else
+					copy.m_writeOffset = copy.m_bytesInBuf;
+			}
+		}
+
+	}
+
+	pSrc->CloseStream();
+	
+	if (lastChar != 0x0A) {
+		rv = pDst->Write( "\x0D\x0A", 2, &written);
+		if (written != 2)
+			rv = NS_ERROR_FAILURE;
+	}
+
+	return( rv);
+}
+
+
+nsresult nsOutlookMail::DeleteFile( nsIFileSpec *pSpec)
+{
+	PRBool		result;
+	nsresult	rv = NS_OK;
+
+	result = PR_FALSE;
+	pSpec->IsStreamOpen( &result);
+	if (result)
+		pSpec->CloseStream();
+	result = PR_FALSE;
+	pSpec->Exists( &result);
+	if (result) {
+		result = PR_FALSE;
+		pSpec->IsFile( &result);
+		if (result) {
+			nsFileSpec	spec;
+			rv = pSpec->GetFileSpec( &spec);
+			if (NS_SUCCEEDED( rv))
+				spec.Delete( PR_FALSE);
+		}
+	}
+
+	return( rv);
+}
+
+void nsOutlookMail::EmptyAttachments( void)
+{
+	PRBool	exists;
+	PRBool	isFile;
+	PRInt32 max = m_attachments.Count();
+	OutlookAttachment *	pAttach;
+	for (PRInt32 i = 0; i < max; i++) {
+		pAttach = (OutlookAttachment *) m_attachments.ElementAt( i);
+		if (pAttach) {
+			if (pAttach->pAttachment) {
+				exists = PR_FALSE;
+				isFile = PR_FALSE;
+				pAttach->pAttachment->Exists( &exists);
+				if (exists)
+					pAttach->pAttachment->IsFile( &isFile);
+				if (exists && isFile)
+					DeleteFile( pAttach->pAttachment);
+				NS_RELEASE( pAttach->pAttachment);
+			}
+			nsCRT::free( pAttach->description);
+			nsCRT::free( pAttach->mimeType);
+			delete pAttach;
+		}
+	}
+
+	m_attachments.Clear();
+}
+
+void nsOutlookMail::BuildAttachments( CMapiMessage& msg, int count)
+{
+	EmptyAttachments();
+	if (count) {
+		nsIFileSpec *	pSpec;
+		nsresult rv;
+		for (int i = 0; i < count; i++) {
+			if (!msg.GetAttachmentInfo( i)) {
+				IMPORT_LOG1( "*** Error getting attachment info for #%d\n", i);
+			}
+
+			pSpec = nsnull;
+			rv = NS_NewFileSpec( &pSpec);
+			if (NS_FAILED( rv) || !pSpec) {
+				IMPORT_LOG0( "*** Error creating file spec for attachment\n");
+			}
+			else {
+				if (msg.GetAttachFileLoc( pSpec)) {
+					PRBool	isFile = PR_FALSE;
+					PRBool	exists = PR_FALSE;
+					pSpec->Exists( &exists);
+					pSpec->IsFile( &isFile);
+
+					if (!exists || !isFile) {
+						IMPORT_LOG0( "Attachment file does not exist\n");
+						NS_RELEASE( pSpec);
+					}
+					else {
+						// We have a file spec, now get the other info
+						OutlookAttachment *a = new OutlookAttachment;
+						a->mimeType = nsCRT::strdup( msg.GetMimeType());
+						a->description = nsCRT::strdup( msg.GetFileName());
+						if (!nsCRT::strlen( a->description)) {
+							nsCRT::free( a->description);
+							nsCString	str = "Attachment ";
+							str.Append( (PRInt32) i);
+							a->description = nsCRT::strdup( (const char *)str);
+						}
+						a->pAttachment = pSpec;
+						m_attachments.AppendElement( a);
+					}
+				}
+				else {
+					NS_RELEASE( pSpec);
+				}
+			}
+		}
+	}
+}
+
+void nsOutlookMail::DumpAttachments( void)
+{
+#ifdef IMPORT_DEBUG
+	PRInt32		count = 0;
+	count = m_attachments.Count();
+	if (!count) {
+		IMPORT_LOG0( "*** No Attachments\n");
+		return;
+	}
+	IMPORT_LOG1( "#%d attachments\n", (int) count);
+
+	OutlookAttachment *	pAttach;
+	
+	for (PRInt32 i = 0; i < count; i++) {
+		IMPORT_LOG1( "\tAttachment #%d ---------------\n", (int) i);
+		pAttach = (OutlookAttachment *) m_attachments.ElementAt( i);
+		if (pAttach->mimeType)
+			IMPORT_LOG1( "\t\tMime type: %s\n", pAttach->mimeType);
+		if (pAttach->description)
+			IMPORT_LOG1( "\t\tDescription: %s\n", pAttach->description);
+		if (pAttach->pAttachment) {
+			nsXPIDLCString	path;
+			pAttach->pAttachment->GetNativePath( getter_Copies( path));
+			IMPORT_LOG1( "\t\tFile: %s\n", (const char *)path);
+		}
+	}
+#endif
+}
+
+nsresult nsOutlookMail::FillMailBuffer( ReadFileState *pState, SimpleBuffer& read)
+{
+	if (read.m_writeOffset >= read.m_bytesInBuf) {
+		read.m_writeOffset = 0;
+		read.m_bytesInBuf = 0;
+	}
+	else if (read.m_writeOffset) {
+		nsCRT::memcpy( read.m_pBuffer, read.m_pBuffer + read.m_writeOffset, read.m_bytesInBuf - read.m_writeOffset);
+		read.m_bytesInBuf -= read.m_writeOffset;
+		read.m_writeOffset = 0;
+	}
+
+	PRInt32	count = read.m_size - read.m_bytesInBuf;
+	if (((PRUint32)count + pState->offset) > pState->size)
+		count = pState->size - pState->offset;
+	if (count) {
+		PRInt32		bytesRead = 0;
+		char *		pBuffer = read.m_pBuffer + read.m_bytesInBuf;
+		nsresult	rv = pState->pFile->Read( &pBuffer, count, &bytesRead);
+		if (NS_FAILED( rv)) return( rv);
+		if (bytesRead != count) return( NS_ERROR_FAILURE);
+		read.m_bytesInBuf += bytesRead;
+		pState->offset += bytesRead;
+	}
+
+	return( NS_OK);
+}
+

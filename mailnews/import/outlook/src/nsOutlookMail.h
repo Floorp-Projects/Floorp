@@ -25,7 +25,9 @@
 
 #include "nsISupportsArray.h"
 #include "nsIFileSpec.h"
-
+#include "nsString.h"
+#include "nsVoidArray.h"
+#include "nsOutlookCompose.h"
 #include "MapiApi.h"
 #include "MapiMessage.h"
 
@@ -35,7 +37,7 @@ public:
     ~nsOutlookMail();
 
 	nsresult GetMailFolders( nsISupportsArray **pArray);
-	nsresult ImportMailbox( PRBool *pAbort, PRInt32 index, const PRUnichar *pName, nsIFileSpec *pDest, PRInt32 *pMsgCount);
+	nsresult ImportMailbox( PRUint32 *pDoneSoFar, PRBool *pAbort, PRInt32 index, const PRUnichar *pName, nsIFileSpec *pDest, PRInt32 *pMsgCount);
 
 
 private:
@@ -46,7 +48,13 @@ private:
 	BOOL	WriteWithoutFrom( nsIFileSpec *pDest, const char * pData, int len, BOOL checkStart);
 	BOOL	WriteMimeMsgHeader( nsIFileSpec *pDest, CMapiMessage *pMsg);
 	BOOL	WriteMimeBoundary( nsIFileSpec *pDest, CMapiMessage *pMsg, BOOL terminate);
-	PRBool	WriteAttachment( nsIFileSpec *pDest, CMapiMessage *pMsg);
+
+	nsresult	CopyComposedMessage( nsCString& fromLine, nsIFileSpec *pSrc, nsIFileSpec *pDst, SimpleBuffer& copy);
+	nsresult	DeleteFile( nsIFileSpec *pSpec);
+	void		EmptyAttachments( void);
+	void		BuildAttachments( CMapiMessage& msg, int count);
+	nsresult	FillMailBuffer( ReadFileState *pState, SimpleBuffer& read);
+	void		DumpAttachments( void);
 
 private:
 	PRBool				m_gotFolders;
@@ -55,6 +63,7 @@ private:
 	CMapiFolderList		m_folderList;
 	CMapiFolderList		m_storeList;
 	LPMDB				m_lpMdb;
+	nsVoidArray			m_attachments;
 };
 
 #endif /* nsOutlookMail_h___ */

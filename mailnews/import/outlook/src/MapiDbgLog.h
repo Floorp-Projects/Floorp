@@ -23,9 +23,11 @@
 #ifndef MapiDbgLog_h___
 #define MapiDbgLog_h___
 
+/*
 #ifdef NS_DEBUG
 #define MAPI_DEBUG	1
 #endif
+*/
 
 #ifdef MAPI_DEBUG
 #include "stdio.h"

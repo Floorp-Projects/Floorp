@@ -80,6 +80,11 @@ public:
 	const char *GetFromLine( int& len) { if (m_fromLine.IsEmpty()) return( NULL); else { len = m_fromLine.Length(); return( (const char *)m_fromLine);}}
 	const char *GetHeaders( int& len) { if (m_headers.IsEmpty()) return( NULL); else { len = m_headers.Length(); return( (const char *)m_headers);}}
 	const char *GetBody( int& len) { if (m_body.IsEmpty()) return( NULL); else { len = m_body.Length(); return( (const char *)m_body);}}
+	const char *GetBody( void) { return( (const char *)m_body);}
+	const char *GetHeaders( void) { return( (const char *)m_headers);}
+	PRInt32		GetBodyLen( void) { return( m_body.Length());}
+	PRInt32		GetHeaderLen( void) { return( m_headers.Length());}
+
 
 	BOOL		IsMultipart( void);
 	BOOL		HasContentHeader( void) { return( !m_mimeContentType.IsEmpty());}
