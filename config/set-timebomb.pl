@@ -24,7 +24,7 @@ my $contents;
 # This is the preferences file that gets read and written.
 # So run this script with src/mozilla/build/ as the current directory.
 #
-my $prefs = "../modules/libpref/src/init/all.js";
+my $sourcefile = "../network/module/nsNetService.cpp";
 
 
 # from noah, who should be shot
@@ -54,7 +54,7 @@ sub ctime {
 
 sub read_file {
     $contents = "";
-    open(IN, "<$prefs");
+    open(IN, "<$sourcefile");
     while (<IN>) {
 	$contents .= $_;
     }
@@ -62,10 +62,10 @@ sub read_file {
 }
 
 sub write_file {
-    open(OUT, ">$prefs");
+    open(OUT, ">$sourcefile");
     print OUT $contents;
     close(OUT);
-    print STDERR "$progname: wrote $prefs\n";
+    print STDERR "$progname: wrote $sourcefile\n";
 }
 
 sub get_pref {
@@ -84,12 +84,6 @@ sub set_pref {
     $contents = $_;
 }
 
-# no longer used?
-sub set_indirected_bomb {
-    my ($bomb) = @_;
-    my ($secret) = get_pref("timebomb.relative_timebomb_secret_name");
-    set_pref($secret, $bomb);
-}
 
 sub set_bomb {
     my ($warning_days, $bomb_days) = @_;
@@ -110,12 +104,14 @@ sub set_bomb {
     my $bomb = $now + ($bomb_days * 24 * 60 * 60);
     my $warn = $now + ($warning_days * 24 * 60 * 60);
 
-    set_pref("timebomb.expiration_time", $bomb);
-    set_pref("timebomb.warning_time", $warn);
-    set_pref("timebomb.relative_timebomb_days", -1);
-    set_pref("timebomb.relative_timebomb_warning_days", -1);
+    $_ = $contents;
 
-    set_indirected_bomb(0);
+    s@\s+/\*\s+(#define TIMEBOMB_ON)\s+\*/@\n$1\n@;
+    s@#undef\s+TIMEBOMB_ON@@;
+    s@(TIME_BOMB_TIME\s+)\d+@$1$bomb@;
+    s@(TIME_BOMB_WARNING_TIME\s+)\d+@$1$warn@;
+
+    $contents = $_;
 
     print STDERR sprintf("%s: timebomb goes off in %2d days (%s)\n",
 			 $progname, $bomb_days, ctime($bomb));
