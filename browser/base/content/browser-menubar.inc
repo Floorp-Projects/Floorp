@@ -356,10 +356,6 @@
                         command="Tools:Extensions"/>
               <menuitem label="&themes.label;" accesskey="&themes.accesskey;" 
                         command="Tools:Themes"/>
-              <menuitem id="menu_showUpdates"
-                        label="&showUpdatesCmd.label;"
-                        accesskey="&showUpdatesCmd.accesskey;"
-                        oncommand="document.getElementById('statusbar-updates').showUpdates();"/>
               <menuseparator id="devToolsSeparator"/>
               <menuitem id="javascriptConsole" 
                         label="&javaScriptConsoleCmd.label;" accesskey="&javaScriptConsoleCmd.accesskey;" 

@@ -160,8 +160,6 @@
 <!ENTITY selectAllCmd.label         "Select All">  
 <!ENTITY selectAllCmd.key         "A">  
 <!ENTITY selectAllCmd.accesskey       "A"> 
-<!ENTITY showUpdatesCmd.label       "Check for Updates...">
-<!ENTITY showUpdatesCmd.accesskey   "U">
 <!ENTITY preferencesCmd.label       "Options...">
 <!ENTITY preferencesCmd.accesskey     "O"> 
 <!ENTITY preferencesCmdUnix.label       "Preferences">
