@@ -204,15 +204,25 @@ nsHTTPConnection::Open(void)
                                                nsnull, 
                                                nsIProxyObjectManager::GetIID(), 
                                                (void**)&proxyObjectManager);
-            nsNetModuleEntry *entry = nsnull;
+            nsINetModuleRegEntry *entry = nsnull;
             pModules->First(&entry);
             while (NS_SUCCEEDED(ret)) {
                 // send the SetHeaders event to each registered module,
                 // using the nsISupports Proxy service
                 nsIHttpNotify *pNotify = nsnull;
+                nsCID lCID;
+                nsIEventQueue* lEventQ = nsnull;
+
+                ret = entry->GetmCID(&lCID);
+                if (NS_FAILED(ret))
+                    return ret;
+
+                ret = entry->GetmEventQ(&lEventQ);
+                if (NS_FAILED(ret))
+                    return ret;
                 
-                ret = proxyObjectManager->GetProxyObject(entry->mEventQ, 
-                                                   kCookieModuleCID,
+                ret = proxyObjectManager->GetProxyObject(lEventQ, 
+                                                   lCID,
                                                    nsnull,
                                                    nsIHttpNotify::GetIID(),
                                                    (void**)&nsIHttpNotify);
