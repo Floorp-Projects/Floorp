@@ -1659,7 +1659,8 @@ nsresult CSSLoaderImpl::SetCharset(/*in*/ const nsString &aHTTPHeader,
     PRInt32 charsetOffset;
     static const char charsetStr[] = "charset=";
     if ((charsetOffset = aHTTPHeader.Find(charsetStr,PR_TRUE)) > 0) {
-      aHTTPHeader.Right(str, charsetOffset + sizeof(charsetStr)-1);
+      aHTTPHeader.Right(str, aHTTPHeader.Length() -
+                             (charsetOffset + sizeof(charsetStr)-1));
       setCharset = PR_TRUE;
     }
   } else if (aStyleSheetData.Length() > 0) {
@@ -1667,7 +1668,8 @@ nsresult CSSLoaderImpl::SetCharset(/*in*/ const nsString &aHTTPHeader,
     if (aStyleSheetData.Find(atCharsetStr) > -1) {
       nsString strValue;
       // skip past the ident
-      aStyleSheetData.Right(str,sizeof(atCharsetStr)-1);
+      aStyleSheetData.Right(str, aStyleSheetData.Length() -
+                                 (sizeof(atCharsetStr)-1));
       // strip any whitespace
       str.StripWhitespace();
       // truncate everything past the delimiter (semicolon)

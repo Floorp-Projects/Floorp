@@ -233,7 +233,9 @@ nsresult nsMailtoUrl::ParseUrl()
   {
     // now parse out the search field...
     nsCAutoString searchPart;
-    PRUint32 numExtraChars = m_toPart.Right(searchPart, startOfSearchPart);
+    PRUint32 numExtraChars = m_toPart.Right(searchPart,
+                                            m_toPart.Length() -
+                                            startOfSearchPart);
     if (!searchPart.IsEmpty())
     {
       ParseMailtoUrl(NS_CONST_CAST(char*, searchPart.get()));

@@ -580,7 +580,7 @@ nsInstall::AddSubcomponent(const nsString& aRegName,
         if ( pos == kNotFound )
             tempTargetName = aJarSource;
         else
-            aJarSource.Right(tempTargetName, pos+1);
+            aJarSource.Right(tempTargetName, aJarSource.Length() - (pos+1));
     }
     
     if (qualifiedVersion.IsEmpty())

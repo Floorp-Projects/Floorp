@@ -3129,7 +3129,8 @@ nsGenericHTMLElement::ParseStyleAttribute(const nsAReadableString& aValue, nsHTM
         PRInt32 charsetOffset = styleType.Find(charsetStr, PR_TRUE);
         if (charsetOffset > 0) {
           nsString charset;
-          styleType.Right(charset, charsetOffset + sizeof(charsetStr) - 1);
+          styleType.Right(charset, styleType.Length() -
+                                   (charsetOffset + sizeof(charsetStr) - 1));
           (void)cssLoader->SetCharset(charset);
         }
       }
