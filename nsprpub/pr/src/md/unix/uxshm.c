@@ -445,7 +445,7 @@ extern PRStatus _MD_DeleteSharedMemory( const char *name )
         PR_SetError( PR_UNKNOWN_ERROR , errno );
         PR_LOG( _pr_shm_lm, PR_LOG_DEBUG, 
             ("_MD_OpenSharedMemory(): _PR_MakeNativeIPCName() failed: %s", name ));
-        return( NULL );
+        return rc;
     }
 
     urc = shm_unlink( ipcname );
