@@ -2875,14 +2875,25 @@ PR_IMPLEMENT(PRInt32) PR_Poll(
     if (0 == npds) PR_Sleep(timeout);
     else
     {
+#define STACK_POLL_DESC_COUNT 4
+        struct pollfd stack_syspoll[STACK_POLL_DESC_COUNT];
+        struct pollfd *syspoll;
         PRIntn index, msecs;
-        struct pollfd *syspoll = NULL;
-        syspoll = (struct pollfd*)PR_MALLOC(npds * sizeof(struct pollfd));
-        if (NULL == syspoll)
+
+        if (npds <= STACK_POLL_DESC_COUNT)
         {
-            PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
-            return -1;
+            syspoll = stack_syspoll;
         }
+        else
+        {
+            syspoll = (struct pollfd*)PR_MALLOC(npds * sizeof(struct pollfd));
+            if (NULL == syspoll)
+            {
+                PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
+                return -1;
+            }
+        }
+
         for (index = 0; index < npds; ++index)
         {
             PRInt16 in_flags_read = 0, in_flags_write = 0;
@@ -3080,8 +3091,8 @@ retry:
             }
         }
 
-        PR_DELETE(syspoll);
-
+        if (syspoll != stack_syspoll)
+            PR_DELETE(syspoll);
     }
     return ready;
 
