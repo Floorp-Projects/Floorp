@@ -42,13 +42,13 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD Create(nsIMenu        *aParent, 
-                    const nsString &aLabel, 
-                    PRBool         isSeparator);
-    
+  // methods for nsIMenuBar
+  NS_IMETHOD Create(nsISupports    *aParent,
+                    const nsString &aLabel,
+                    PRBool          aIsSeparator);
   NS_IMETHOD Create(nsIPopUpMenu   *aParent, 
-                    const nsString &aLabel,  
-                    PRUint32        aCommand);
+                    const nsString &aLabel, 
+                    PRUint32        aCommand) ;
   NS_IMETHOD Create(nsIMenu * aParent);
   NS_IMETHOD Create(nsIPopUpMenu * aParent);
 
