@@ -694,7 +694,7 @@ function BrowserEditBookmarks()
     if (!gDisableBookmarks) {
       gDisableBookmarks = true;
 
-      open("chrome://communicator/content/bookmarks/bookmarks.xul", "_blank",
+      open("chrome://browser/content/bookmarks/bookmarks.xul", "_blank",
         "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar");
       setTimeout(enableBookmarks, 2000);
     }
