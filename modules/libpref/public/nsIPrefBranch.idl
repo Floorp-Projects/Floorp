@@ -39,12 +39,13 @@ interface nsIPrefBranch : nsISupports
   const long PREF_VALUE_TYPE_MASK = (PREF_STRING | PREF_INT | PREF_BOOL);
 
   /*
-   * the root of this branch, such as "browser."
+   * the root of this branch, such as "browser.startup."
    */
   readonly attribute string root;
 
   /*
    * standard methods for accessing preferences
+   * pass in a string to be added to the root such as "homepage"
    */
   long    getPrefType(in string aPrefName);
 
@@ -59,12 +60,18 @@ interface nsIPrefBranch : nsISupports
 
   /*
    * methods for accessing complex preferences (i.e. items beyond the simple bool, char, and int)
+   * Interfaces currently supported are:
+   *   - nsILocalFile
+   *   - nsISupportsWString (UniChar)
+   *   - nsIPrefLocalizedString (Localized UniChar)
+   *   - nsIFileSpec (depricated - support will be removed eventually)
    */
   void getComplexValue(in string aPrefName, in nsIIDRef aType, [iid_is(aType), retval] out nsQIResult aValue);
   void setComplexValue(in string aPrefName, in nsIIDRef aType, in nsISupports aValue);
 
   /*
    * methods for preference state manipulation
+   * pass in a string to be added to the root such as "homepage"
    */
   void    clearUserPref(in string aPrefName);
   void    lockPref(in string aPrefName);
@@ -74,6 +81,14 @@ interface nsIPrefBranch : nsISupports
 
   /*
    * branch-level operations
+   *
+   * These operations can effect multiple preferences.
+   *
+   * If the root is set to "mail.identity." and "vcard" is passed in all of the preferences
+   * related to "mail.identity.vcard" such as "mail.identity.vcard.adr" and
+   * "mail.identity.vcard.email.internet" will be manipulated but items such as
+   * "mail.identity.username" will be ignored. If null or "" is passed in all preferences in the
+   * "mail.identity." hierarchy will be manipulated.
    */
 
   /*
