@@ -147,7 +147,8 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Lock(PRInt32 aX, PRInt32 aY,
   mLockHeight = aHeight;
   mLockFlags = aFlags;
 
-  // Obtain an ximage from the pixmap.  
+  // Obtain an ximage from the pixmap.
+  g_print("gdk_get_use_xshm() = %i\n", gdk_get_use_xshm());
   mImage = ::gdk_image_get(mPixmap, mLockX, mLockY, mLockWidth, mLockHeight);
  
   // The bits will be in the ximage.
@@ -169,7 +170,7 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Lock(PRInt32 aX, PRInt32 aY,
 //   int width_in_pixels = *aWidthBytes << 8;
 
 
-//   int bitmap_pad = ((GdkImagePrivate*)mImage)->ximage->bitmap_pad;
+  //   int bitmap_pad = ((GdkImagePrivate*)mImage)->ximage->bitmap_pad;
 //   int depth = ((GdkImagePrivate*)mImage)->ximage->depth;
 
 // #define RASWIDTH8(width, bpp) (width)
@@ -199,7 +200,7 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Lock(PRInt32 aX, PRInt32 aY,
 //     }
 
 
-  //  *aStride = (*aWidthBytes) + ((bitmap_pad >> 3) - 1);
+  //   *aStride = (*aWidthBytes) + ((bitmap_pad >> 3) - 1);
 
   // ((GdkImagePrivate*)mImage)->ximage->bitmap_pad;
 

@@ -117,7 +117,52 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
 
 NS_IMETHODIMP nsDeviceContextGTK::CreateRenderingContext(nsIRenderingContext *&aContext)
 {
-  return NS_ERROR_FAILURE;
+  nsIRenderingContext *pContext;
+  nsresult             rv;
+  nsDrawingSurfaceGTK  *surf;
+
+  // to call init for this, we need to have a valid nsDrawingSurfaceGTK created
+  pContext = new nsRenderingContextGTK();
+
+  if (nsnull != pContext)
+  {
+    NS_ADDREF(pContext);
+
+    // create the nsDrawingSurfaceGTK
+    surf = new nsDrawingSurfaceGTK();
+
+    if (nsnull != surf)
+      {
+        GdkDrawable *win = nsnull;
+        // FIXME
+        if (GTK_IS_LAYOUT((GtkWidget*)mWidget))
+          win = (GdkDrawable*)gdk_window_ref(GTK_LAYOUT((GtkWidget*)mWidget)->bin_window);
+        else
+          win = (GdkDrawable*)gdk_window_ref(((GtkWidget*)mWidget)->window);
+
+        GdkGC *gc = gdk_gc_new(win);
+
+        // init the nsDrawingSurfaceGTK
+        rv = surf->Init(win,gc);
+
+        if (NS_OK == rv)
+          // Init the nsRenderingContextGTK
+          rv = pContext->Init(this, surf);
+      }
+    else
+      rv = NS_ERROR_OUT_OF_MEMORY;
+  }
+  else
+    rv = NS_ERROR_OUT_OF_MEMORY;
+
+  if (NS_OK != rv)
+  {
+    NS_IF_RELEASE(pContext);
+  }
+
+  aContext = pContext;
+
+  return rv;
 }
 
 NS_IMETHODIMP nsDeviceContextGTK::SupportsNativeWidgets(PRBool &aSupportsWidgets)
@@ -188,7 +233,7 @@ NS_IMETHODIMP nsDeviceContextGTK::GetSystemAttribute(nsSystemAttrID anID, System
     case eSystemAttr_Size_ScrollbarHeight:
         aInfo->mSize = mScrollbarHeight;
         break;
-    case eSystemAttr_Size_ScrollbarWidth : 
+    case eSystemAttr_Size_ScrollbarWidth: 
         aInfo->mSize = mScrollbarWidth;
         break;
     case eSystemAttr_Size_WindowTitleHeight:
