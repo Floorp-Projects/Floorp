@@ -21,6 +21,7 @@
 # Contributor(s):
 #   Michel Buijsman <michel@rubberchicken.nl> (Original Author)
 #   Peter Annema <jag@tty.nl>
+#   Chris Seawood <seawood@netscape.com>
 # 
 # Alternatively, the contents of this file may be used under the
 # terms of the GNU General Public License Version 2 or later (the
@@ -44,18 +45,10 @@
 #
 # The objdir is the directory where you ran |make| to build Mozilla
 #
-# Currently needs File::List
-# http://www.cpan.org/modules/by-module/File/File-List-0.1.tar.gz
-# We can probably get rid of this dependency
-
-# If you can't place File::List in your perl library path,
-# point this to where you've placed File::List:
-# use lib "/home/jag/utils/";
 use strict;
-use File::List;
+use IO::Handle;
 
-my $search = new File::List(".");
-my @files  = @{ $search->find("\\.pp\$") };
+my @files = rfind(".", "\\.pp\$");
 
 my $curdir = "";
 my %req;
@@ -96,7 +89,7 @@ sub domakefile {
 
   $srcdir or die "No srcdir found in file $dir/Makefile";
 
-  open MAKE, "<$srcdir/Makefile.in" or die "Couldn't find file 'Makefile.in' in $srcdir";
+  open MAKE, "<$curdir/$srcdir/Makefile.in" or die "Couldn't find file 'Makefile.in' in $srcdir";
 
   my @lastLines; # buffer to store last three lines in (to emulate diff -B3)
   my $i;
@@ -203,4 +196,36 @@ sub domakefile {
     }
   }
   close MAKE;
+}
+exit(0);
+
+
+sub rfind($,$) {
+    my ($dirname, $regexp) = @_;
+    my (@dirlist, @filelist, @sublist, $file, $dir);
+
+    # Create lists of current files and subdirectories
+    my $SDIR = new IO::Handle;
+    opendir($SDIR, "$dirname") || die "opendir($dirname): $!\n";
+    while ($file = readdir($SDIR)) {
+	next if ($file eq "." || $file eq "..");
+	if ( -d "$dirname/$file" ) {
+	    push @dirlist, "$file";
+	} else {
+	    push @filelist, "$dirname/$file" if ($file =~ m/$regexp/);
+	}
+    }
+    closedir($SDIR);
+
+    # Call rfind recursively
+    foreach $dir (@dirlist) {
+	#print "rfind(\"$dirname/$dir\") \n";
+	@sublist = rfind("$dirname/$dir", $regexp);
+	foreach $file (@sublist) {
+	    push @filelist, $file;
+	}
+    }
+
+    return @filelist;
+
 }
