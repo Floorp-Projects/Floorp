@@ -82,11 +82,13 @@
 <!ENTITY newevent.repeat.label       "Repeat every" >
 <!ENTITY newevent.until.label        "Until" >
 <!ENTITY newevent.forever.label      "Forever" >
+<!ENTITY newevent.numberoftimes.label "Number of times" >
 <!ENTITY newevent.category.label      "Category" >
 <!ENTITY newevent.exceptions.caption "Exceptions">
 <!ENTITY newevent.addexceptions.label "Add Exception">
 <!ENTITY newevent.deleteexceptions.label "Delete Exception">
 <!ENTITY newevent.endtime.warning    "Your start time is after your end time.">
+<!ENTITY newevent.enddate.warning    "Your start date is after your end date.">
 <!ENTITY newevent.repeatdate.tooltip    "Choose a date to end on" >
 <!ENTITY newevent.recurend.warning    "Your repeat time ends before your end time.">
 <!ENTITY newevent.endtime.tooltip    "Choose an end time for this event" >

@@ -241,7 +241,10 @@ function loadCalendarEventDialog()
 
    setFieldValue( "repeat-forever-radio", (gEvent.recurForever != undefined && gEvent.recurForever != false), "selected" );
    
-   setFieldValue( "repeat-until-radio", (gEvent.recurForever == undefined || gEvent.recurForever == false), "selected" );
+   setFieldValue( "repeat-until-radio", ( (gEvent.recurForever == undefined || gEvent.recurForever == false ) && gEvent.recurCount == 0), "selected" );
+
+   setFieldValue( "repeat-numberoftimes-radio", (gEvent.recurCount != 0), "selected" );
+   setFieldValue( "repeat-numberoftimes-textbox", gEvent.recurCount );
    
    
    /* Categories stuff */
@@ -396,7 +399,8 @@ function onOKCommand()
    gEvent.recur         = getFieldValue( "repeat-checkbox", "checked" );
    gEvent.recurUnits    = getFieldValue( "repeat-length-units", "value" );  
    gEvent.recurForever  = getFieldValue( "repeat-forever-radio", "selected" );
-   gEvent.recurInterval  = getFieldValue( "repeat-length-field" );
+   gEvent.recurInterval = getFieldValue( "repeat-length-field" );
+   gEvent.recurCount    = getFieldValue( "repeat-numberoftimes-textbox" );
    
    if( gEvent.recurInterval == 0 )
       gEvent.recur = false;
@@ -472,16 +476,22 @@ function onOKCommand()
     // Attach any specified contacts to the event
     if( gEventCardArray )
     {
-        // Remove any existing contacts
-        gEvent.removeContacts();
-    
-        // Add specified contacts
-        for( var cardId in gEventCardArray )
-        {
-            if( gEventCardArray[ cardId ] )
+        try{
+            // Remove any existing contacts
+            gEvent.removeContacts();
+        
+            // Add specified contacts
+            for( var cardId in gEventCardArray )
             {
-                gEvent.addContact( gEventCardArray[ cardId ] );
+                if( gEventCardArray[ cardId ] )
+                {
+                    gEvent.addContact( gEventCardArray[ cardId ] );
+                }
             }
+        }
+        catch( e )
+        {
+
         }
     }
 
@@ -505,52 +515,115 @@ function checkEndTime()
    
    if( endDate.getTime() < startDate.getTime() && !AllDayEvent )
    {
-      document.getElementById( "end-time-warning" ).removeAttribute( "collapsed" );
-      
-      return( false );
+      return( true );
    }
    else
    {
-      document.getElementById( "end-time-warning" ).setAttribute( "collapsed", "true" );
-
-      return( true );
+      return( false );
    }
 }
 
+/*
+ * Check that the end date is after the start date, if they are the same day
+ * then the checkEndTime function should catch the problem (if there is one).
+ */
 
-function checkRecurTime()
+function checkEndDate()
+{
+   // Bad to get into floats.
+   var startDate = Math.floor(document.getElementById( "start-date-picker" ).value.getTime()/86400000); 
+   var endDate = Math.floor(document.getElementById( "end-date-picker" ).value.getTime()/86400000); 
+   if ( endDate < startDate)
+      return -1;
+   else if (endDate > startDate)
+      return 1;
+   else 
+      return 0;
+}
+
+function checkSetTimeDate()
+{
+   var CheckEndDate = checkEndDate();
+   var CheckEndTime = checkEndTime();
+
+   if ( CheckEndDate < 0 )
+   {
+      // end before start
+      setDateError(true);
+      setTimeError(false);
+      return false;
+   }
+   else if ( CheckEndDate == 0 )
+   {
+      setDateError(false);
+      // start & end same
+      setTimeError(CheckEndTime);
+      return !CheckEndTime;
+   }
+   else
+   {
+      setDateError(false);
+      setTimeError(false);
+      return true;
+   }
+
+}
+
+/*
+ * Check that the recurrence end date is after the end date of the event.
+ * Unlike the time/date versions this one sets the error message too as is
+ * doesn't depend on the outcome of any of the other tests
+ */
+
+function checkSetRecurTime()
 {
    var recurEndDate = document.getElementById( "repeat-end-date-picker" ).value;
 
    var endDate = document.getElementById( "end-date-picker" ).value;
 
    var recurForever = getFieldValue( "repeat-forever-radio", "selected" );
-   
-   if( recurEndDate.getTime() < endDate.getTime() && recurForever == false )
-   {
-      document.getElementById( "repeat-time-warning" ).removeAttribute( "collapsed" );
-      
-      return( false );
-   }
-   else
-   {
-      document.getElementById( "repeat-time-warning" ).setAttribute( "collapsed", "true" );
 
-      return( true );
-   }
+   var recur = getFieldValue( "repeat-checkbox", "checked" );
+   
+   dump(recurForever+ " and "+ recur+ "\n"); 
+   var state = (recurEndDate.getTime() < endDate.getTime() && !recurForever && recur) ;
+   setRecurError(state);
+   return(!state );
+}
+
+function setRecurError(state)
+{
+   document.getElementById("repeat-time-warning" ).setAttribute( "collapsed", !state);
+}
+
+function setDateError(state)
+{ 
+   document.getElementById( "end-date-warning" ).setAttribute( "collapsed", !state );
+}
+
+function setTimeError(state)
+{ 
+   document.getElementById( "end-time-warning" ).setAttribute( "collapsed", !state );
+}
+
+function setOkButton(state)
+{
+   if (state == false)
+      document.getElementById( "calendar-new-eventwindow" ).getButton( "accept" ).setAttribute( "disabled", true );
+   else
+      document.getElementById( "calendar-new-eventwindow" ).getButton( "accept" ).removeAttribute( "disabled" );
+
+
 }
 
 function updateOKButton()
 {
-   var CheckEndTime = checkEndTime();
-
-   var CheckRecurTime = checkRecurTime();
-   
-   if( ( CheckEndTime && CheckRecurTime ) === false )
-      document.getElementById( "calendar-new-eventwindow" ).getButton( "accept" ).setAttribute( "disabled", true );
-   else
-      document.getElementById( "calendar-new-eventwindow" ).getButton( "accept" ).removeAttribute( "disabled" );
+   var checkRecur = checkSetRecurTime();
+   var checkTimeDate = checkSetTimeDate();
+   setOkButton(checkRecur && checkTimeDate);
+   this.sizeToContent();
 }
+
 
 /**
 *   Called when a datepicker is finished, and a date was picked.
@@ -659,9 +732,14 @@ function updateEndDate( datepicker )
    document.getElementById( "end-date-picker" ).value = newEndDate;
 }
 
+/*
+ * Called when the end date box has finished being editied
+ */
+ 
 function updateDateDifference( datepicker )
 {
    gDateDifference = ( datepicker.value.getTime() - document.getElementById( "start-date-picker" ).value.getTime() );
+   updateOKButton();
 }
 
 /**

@@ -175,10 +175,16 @@
                         </hbox>
                      </row>
               
-                     <!-- All Day -->    
+                     <!-- End Time Warning -->    
                      <row align="center">
                         <spacer />
                         <label id="end-time-warning" class="warning-text-class" value="&newevent.endtime.warning;" collapsed="true"/>
+                     </row>
+              
+                     <!-- End Date Warning -->    
+                     <row align="center">
+                        <spacer />
+                        <label id="end-date-warning" class="warning-text-class" value="&newevent.enddate.warning;" collapsed="true"/>
                      </row>
               
               
@@ -291,7 +297,7 @@
             <!-- Repeat -->    
                <vbox>
                   <hbox id="repeat-box" align="center">
-                     <checkbox id="repeat-checkbox" class="proper-align" label="&newevent.repeat.label;"  checked="false" oncommand="commandRepeat()"/>
+                     <checkbox id="repeat-checkbox" class="proper-align" label="&newevent.repeat.label;"  checked="false" oncommand="commandRepeat();commandUntil()"/>
                      <textbox id="repeat-length-field" class="cursor-pointer" disable-controller="repeat" value="1"  oninput="repeatLengthKeyDown( this )"/>
                               
                      <menulist crop="none" oncommand="repeatUnitCommand( this )" labelnumber="labelplural"  id="repeat-length-units" disable-controller="repeat">
@@ -330,17 +336,21 @@
                      <spacer class="repeat-left-spacer" />
                      <radiogroup id="repeat-until-group" disable-controller="repeat">
                         <radio id="repeat-forever-radio" disable-controller="repeat" label="&newevent.forever.label;" oncommand="commandUntil()"/>
-                        <hbox id="repeat-end-box" align="center">
-                           <vbox>
+                        <vbox id="repeat-end-box" align="center">
+									<hbox>
+										<radio id="repeat-numberoftimes-radio" disable-controller="repeat" label="&newevent.numberoftimes.label;" oncommand=""/>
+										<textbox id="repeat-numberoftimes-textbox" disable-controller="repeat"/>
+									</hbox>
+                        </vbox>
+								<vbox id="repeat-end-box" align="center">
                               <hbox>
                                  <radio id="repeat-until-radio" disable-controller="repeat" label="&newevent.until.label;" oncommand="commandUntil()"/>
                                  <spacer id="until-spacer"/>
-                                 <datepicker id="repeat-end-date-picker" value=""/>
+                                 <datepicker id="repeat-end-date-picker" value="" ondatepick="commandUntil()"/>
                               </hbox>
                               <label id="repeat-time-warning" class="warning-text-class" value="&newevent.recurend.warning;" collapsed="true"/>
-                           </vbox>
-                        </hbox>
-                     </radiogroup>
+                        </vbox>
+							</radiogroup>
                   </hbox>
                     
                   <hbox align="center">
