@@ -1046,6 +1046,7 @@ NS_IMETHODIMP nsWindow::SetCursor(nsCursor aCursor)
     if (nsnull != newCursor) {
       mCursor = aCursor;
       ::gdk_window_set_cursor(mSuperWin->shell_window, newCursor);
+      XFlush(GDK_DISPLAY());
     }
   }
   return NS_OK;

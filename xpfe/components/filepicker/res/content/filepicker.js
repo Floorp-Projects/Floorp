@@ -71,9 +71,7 @@ function filepickerLoad() {
   if ((filePickerMode == nsIFilePicker.modeOpen) ||
       (filePickerMode == nsIFilePicker.modeSave)) {
 
-    window.setCursor("wait");
     outlinerView.setFilter(filterTypes[0]);
-    window.setCursor("auto");
 
     /* build filter popup */
     var filterPopup = document.createElement("menupopup");
@@ -121,7 +119,22 @@ function filepickerLoad() {
 
   // setup the dialogOverlay.xul button handlers
   doSetOKCancel(onOK, onCancel);
+  retvals.buttonStatus = nsIFilePicker.returnCancel;
 
+  var outliner = document.getElementById("directoryOutliner");
+  outliner.outlinerBoxObject.view = outlinerView;
+
+  doEnabling();
+  textInput.focus();
+
+  // This allows the window to show onscreen before we begin
+  // loading the file list
+
+  setTimeout(setInitialDirectory, 0, directory);
+}
+
+function setInitialDirectory(directory)
+{
   // get the home dir
   var dirServiceProvider = Components.classes[nsIDirectoryServiceProvider_CONTRACTID]
                                      .getService(nsIDirectoryServiceProvider);
@@ -136,19 +149,19 @@ function filepickerLoad() {
     sfile.initWithUnicodePath(homeDir.unicodePath);
   }
 
-  retvals.buttonStatus = nsIFilePicker.returnCancel;
-
   gotoDirectory(sfile);
-  var outliner = document.getElementById("directoryOutliner");
-  outliner.outlinerBoxObject.view = outlinerView;
-
-  doEnabling();
-  textInput.focus();
 }
 
 function onFilterChanged(target)
 {
-  var filterTypes = target.getAttribute("filters");
+  // Do this on a timeout callback so the filter list can roll up
+  // and we don't keep the mouse grabbed while we are refiltering.
+
+  setTimeout(changeFilter, 0, target.getAttribute("filters"));
+}
+
+function changeFilter(filterTypes)
+{
   window.setCursor("wait");
   outlinerView.setFilter(filterTypes);
   window.setCursor("auto");
@@ -399,7 +412,10 @@ function onDirectoryChanged(target)
   file.initWithUnicodePath(path);
 
   if (!sfile.equals(file)) {
-    gotoDirectory(file);
+    // Do this on a timeout callback so the directory list can roll up
+    // and we don't keep the mouse grabbed while we are loading.
+
+    setTimeout(gotoDirectory, 0, file);
   }
 }
 
@@ -443,9 +459,11 @@ function goUp() {
 
 function gotoDirectory(directory) {
   addToHistory(directory.unicodePath);
+
   window.setCursor("wait");
   outlinerView.setDirectory(directory.unicodePath);
   window.setCursor("auto");
+
   sfile = directory;
 }
 
