@@ -269,7 +269,7 @@ CoaleseDirs(char* io_Path)
     {
 
 #if defined(XP_PC) && !defined(XP_OS2)
-        // At first, If this is DBCS charactor, it skips next charactor.
+        // At first, If this is DBCS character, it skips next character.
         if (::IsDBCSLeadByte(*fwdPtr) && *(fwdPtr+1) != '\0') {
             *urlPtr++ = *fwdPtr++;
             *urlPtr++ = *fwdPtr;
