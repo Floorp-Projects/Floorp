@@ -363,30 +363,29 @@ nsXFormsXPathScanner::ScanQName()
     second = ScanNCName();
   }
 
-  // TODO: nsSubString and .Equals() ?
   nsDependentSubstring image = Substring(mExpression, Offset());
 
   if (SolveDiambiguate()) {
-    if (image.EqualsASCII("and", 3))
+    if (StringBeginsWith(image, NS_LITERAL_STRING(" and")))
       return AND;
-    else if (image.EqualsASCII("or", 2))
+    else if (StringBeginsWith(image, NS_LITERAL_STRING(" or")))
       return OR;
-    else if (image.EqualsASCII("mod", 3))
+    else if (StringBeginsWith(image, NS_LITERAL_STRING(" mod")))
       return MOD;
-    else if (image.EqualsASCII("div", 3))
+    else if (StringBeginsWith(image, NS_LITERAL_STRING(" div")))
       return DIV;
     return ERRORXPATHTOKEN;
   }
 
   PRUnichar c = NextNonWhite();
   if (c == '(') {
-    if (image.EqualsASCII("comment", 7))
+    if (StringBeginsWith(image, NS_LITERAL_STRING(" comment")))
       return COMMENT;
-    else if (image.EqualsASCII("text", 4))
+    else if (StringBeginsWith(image, NS_LITERAL_STRING(" text")))
       return TEXT;
-    else if (image.EqualsASCII("processing-instruction", 22))
+    else if (StringBeginsWith(image, NS_LITERAL_STRING(" processing-instruction")))
       return PI;
-    else if (image.EqualsASCII("node", 4))
+    else if (StringBeginsWith(image, NS_LITERAL_STRING(" node")))
       return NODE;
 
     return FUNCTIONNAME;
@@ -394,31 +393,31 @@ nsXFormsXPathScanner::ScanQName()
 
   PRInt32 of = GetOffsetForNonWhite();
   if (PeekChar(of) == ':' && PeekChar(of + 1) == ':') {
-    if (image.EqualsASCII("ancestor", 8))
+    if (StringBeginsWith(image, NS_LITERAL_STRING(" ancestor")))
       return ANCESTOR;
-    else if (image.EqualsASCII("ancestor-or-self", 16))
+    else if (StringBeginsWith(image, NS_LITERAL_STRING(" ancestor-or-self")))
       return ANCESTOR_OR_SELF;
-    else if (image.EqualsASCII("attribute", 9))
+    else if (StringBeginsWith(image, NS_LITERAL_STRING(" attribute")))
       return ATTRIBUTE;
-    else if (image.EqualsASCII("child", 5))
+    else if (StringBeginsWith(image, NS_LITERAL_STRING(" child")))
       return CHILD;
-    else if (image.EqualsASCII("descendant", 10))
+    else if (StringBeginsWith(image, NS_LITERAL_STRING(" descendant")))
       return DESCENDANT;
-    else if (image.EqualsASCII("descendant-or-self", 18))
+    else if (StringBeginsWith(image, NS_LITERAL_STRING(" descendant-or-self")))
       return DESCENDANT_OR_SELF;
-    else if (image.EqualsASCII("following", 9))
+    else if (StringBeginsWith(image, NS_LITERAL_STRING(" following")))
       return FOLLOWING;
-    else if (image.EqualsASCII("following-sibling", 17))
+    else if (StringBeginsWith(image, NS_LITERAL_STRING(" following-sibling")))
       return FOLLOWING_SIBLING;
-    else if (image.EqualsASCII("namespace", 9))
+    else if (StringBeginsWith(image, NS_LITERAL_STRING(" namespace")))
       return NAMESPACE;
-    else if (image.EqualsASCII("parent", 6))
+    else if (StringBeginsWith(image, NS_LITERAL_STRING(" parent")))
       return PARENT;
-    else if (image.EqualsASCII("preceding", 9))
+    else if (StringBeginsWith(image, NS_LITERAL_STRING(" preceding")))
       return PRECEDING;
-    else if (image.EqualsASCII("preceding-sibling", 17))
+    else if (StringBeginsWith(image, NS_LITERAL_STRING(" preceding-sibling")))
       return PRECEDING_SIBLING;
-    else if (image.EqualsASCII("self", 4))
+    else if (StringBeginsWith(image, NS_LITERAL_STRING(" self")))
       return SELF;
     return ERRORXPATHTOKEN;
   }
