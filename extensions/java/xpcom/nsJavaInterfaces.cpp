@@ -58,8 +58,9 @@ GECKO_NATIVE(initEmbedding) (JNIEnv* env, jclass, jobject aMozBinDirectory,
                              jobject aAppFileLocProvider)
 {
   nsresult rv = NS_OK;
-  if (InitializeJavaGlobals(env))
-  {
+  if (!InitializeJavaGlobals(env)) {
+    rv = NS_ERROR_FAILURE;
+  } else {
     // Create an nsILocalFile from given java.io.File
     nsCOMPtr<nsILocalFile> directory;
     if (aMozBinDirectory) {
@@ -70,19 +71,23 @@ GECKO_NATIVE(initEmbedding) (JNIEnv* env, jclass, jobject aMozBinDirectory,
       nsAppFileLocProviderProxy* provider = nsnull;
       if (aAppFileLocProvider) {
         provider = new nsAppFileLocProviderProxy(env, aAppFileLocProvider);
+        if (!provider)
+          rv = NS_ERROR_OUT_OF_MEMORY;
       }
 
-      rv = NS_InitEmbedding(directory, provider);
-      if (provider) {
-        delete provider;
-      }
       if (NS_SUCCEEDED(rv)) {
-        return;
+        rv = NS_InitEmbedding(directory, provider);
+        if (provider) {
+          delete provider;
+        }
+        if (NS_SUCCEEDED(rv)) {
+          return;
+        }
       }
     }
   }
 
-  ThrowXPCOMException(env, rv, "Failure in initEmbedding");
+  ThrowException(env, rv, "Failure in initEmbedding");
   FreeJavaGlobals(env);
 }
 
@@ -91,7 +96,7 @@ GECKO_NATIVE(termEmbedding) (JNIEnv *env, jclass)
 {
   nsresult rv = NS_TermEmbedding();
   if (NS_FAILED(rv))
-    ThrowXPCOMException(env, rv, "NS_TermEmbedding failed");
+    ThrowException(env, rv, "NS_TermEmbedding failed");
 
   FreeJavaGlobals(env);
 }
@@ -101,8 +106,9 @@ XPCOM_NATIVE(initXPCOM) (JNIEnv* env, jclass, jobject aMozBinDirectory,
                          jobject aAppFileLocProvider)
 {
   nsresult rv = NS_OK;
-  if (InitializeJavaGlobals(env))
-  {
+  if (!InitializeJavaGlobals(env)) {
+    rv = NS_ERROR_FAILURE;
+  } else {
     // Create an nsILocalFile from given java.io.File
     nsCOMPtr<nsILocalFile> directory;
     if (aMozBinDirectory) {
@@ -113,36 +119,41 @@ XPCOM_NATIVE(initXPCOM) (JNIEnv* env, jclass, jobject aMozBinDirectory,
       nsAppFileLocProviderProxy* provider = nsnull;
       if (aAppFileLocProvider) {
         provider = new nsAppFileLocProviderProxy(env, aAppFileLocProvider);
+        if (!provider)
+          rv = NS_ERROR_OUT_OF_MEMORY;
       }
 
-      nsIServiceManager* servMan = nsnull;
-      rv = NS_InitXPCOM2(&servMan, directory, provider);
-      if (provider) {
-        delete provider;
-      }
-
-      jobject java_stub = nsnull;
       if (NS_SUCCEEDED(rv)) {
-        // wrap xpcom instance
-        JavaXPCOMInstance* inst;
-        inst = CreateJavaXPCOMInstance(servMan, &NS_GET_IID(nsIServiceManager));
-        NS_RELEASE(servMan);   // JavaXPCOMInstance has owning ref
+        nsIServiceManager* servMan = nsnull;
+        rv = NS_InitXPCOM2(&servMan, directory, provider);
+        if (provider) {
+          delete provider;
+        }
 
-        if (inst) {
-          // create java stub
-          java_stub = CreateJavaWrapper(env, "nsIServiceManager");
+        jobject java_stub = nsnull;
+        if (NS_SUCCEEDED(rv)) {
+          // wrap xpcom instance
+          JavaXPCOMInstance* inst;
+          rv = CreateJavaXPCOMInstance(servMan, &NS_GET_IID(nsIServiceManager),
+                                       &inst);
+          NS_RELEASE(servMan);   // JavaXPCOMInstance has owning ref
 
-          if (java_stub) {
-            // Associate XPCOM object w/ Java stub
-            AddJavaXPCOMBinding(env, java_stub, inst);
-            return java_stub;
+          if (NS_SUCCEEDED(rv)) {
+            // create java stub
+            java_stub = CreateJavaWrapper(env, "nsIServiceManager");
+
+            if (java_stub) {
+              // Associate XPCOM object w/ Java stub
+              AddJavaXPCOMBinding(env, java_stub, inst);
+              return java_stub;
+            }
           }
         }
       }
     }
   }
 
-  ThrowXPCOMException(env, rv, "Failure in initXPCOM");
+  ThrowException(env, rv, "Failure in initXPCOM");
   FreeJavaGlobals(env);
   return nsnull;
 }
@@ -155,20 +166,20 @@ XPCOM_NATIVE(shutdownXPCOM) (JNIEnv *env, jclass, jobject aServMgr)
     // Find corresponding XPCOM object
     void* xpcomObj = GetMatchingXPCOMObject(env, aServMgr);
     NS_ASSERTION(xpcomObj != nsnull, "Failed to get matching XPCOM object");
-    if (xpcomObj == nsnull) {
-      ThrowXPCOMException(env, 0,
-                          "No matching XPCOM obj for service manager proxy");
-      return;
-    }
 
-    NS_ASSERTION(!IsXPTCStub(xpcomObj),
-                 "Expected JavaXPCOMInstance, but got nsJavaXPTCStub");
-    servMgr = do_QueryInterface(((JavaXPCOMInstance*) xpcomObj)->GetInstance());
+    // Even if we failed to get the matching xpcom object, we don't abort this
+    // function.  Just call NS_ShutdownXPCOM with a null service manager.
+
+    if (xpcomObj) {
+      NS_ASSERTION(!IsXPTCStub(xpcomObj),
+                   "Expected JavaXPCOMInstance, but got nsJavaXPTCStub");
+      servMgr = do_QueryInterface(((JavaXPCOMInstance*) xpcomObj)->GetInstance());
+    }
   }
 
   nsresult rv = NS_ShutdownXPCOM(servMgr);
   if (NS_FAILED(rv))
-    ThrowXPCOMException(env, rv, "NS_ShutdownXPCOM failed");
+    ThrowException(env, rv, "NS_ShutdownXPCOM failed");
 
   FreeJavaGlobals(env);
 }
@@ -184,6 +195,8 @@ XPCOM_NATIVE(newLocalFile) (JNIEnv *env, jclass, jstring aPath,
   const PRUnichar* buf = nsnull;
   if (aPath) {
     buf = env->GetStringChars(aPath, &isCopy);
+    if (!buf)
+      return nsnull;  // exception already thrown
   }
 
   nsAutoString path_str(buf);
@@ -198,10 +211,10 @@ XPCOM_NATIVE(newLocalFile) (JNIEnv *env, jclass, jstring aPath,
   if (NS_SUCCEEDED(rv)) {
     // wrap xpcom instance
     JavaXPCOMInstance* inst;
-    inst = CreateJavaXPCOMInstance(file, &NS_GET_IID(nsILocalFile));
+    rv = CreateJavaXPCOMInstance(file, &NS_GET_IID(nsILocalFile), &inst);
     NS_RELEASE(file);   // JavaXPCOMInstance has owning ref
 
-    if (inst) {
+    if (NS_SUCCEEDED(rv)) {
       // create java stub
       java_stub = CreateJavaWrapper(env, "nsILocalFile");
 
@@ -213,7 +226,7 @@ XPCOM_NATIVE(newLocalFile) (JNIEnv *env, jclass, jstring aPath,
   }
 
   if (java_stub == nsnull)
-    ThrowXPCOMException(env, rv, "Failure in newLocalFile");
+    ThrowException(env, rv, "Failure in newLocalFile");
 
   return java_stub;
 }
@@ -230,10 +243,10 @@ XPCOM_NATIVE(getComponentManager) (JNIEnv *env, jclass)
   if (NS_SUCCEEDED(rv)) {
     // wrap xpcom instance
     JavaXPCOMInstance* inst;
-    inst = CreateJavaXPCOMInstance(cm, &NS_GET_IID(nsIComponentManager));
+    rv = CreateJavaXPCOMInstance(cm, &NS_GET_IID(nsIComponentManager), &inst);
     NS_RELEASE(cm);   // JavaXPCOMInstance has owning ref
 
-    if (inst) {
+    if (NS_SUCCEEDED(rv)) {
       // create java stub
       java_stub = CreateJavaWrapper(env, "nsIComponentManager");
 
@@ -245,7 +258,7 @@ XPCOM_NATIVE(getComponentManager) (JNIEnv *env, jclass)
   }
 
   if (java_stub == nsnull)
-    ThrowXPCOMException(env, rv, "Failure in getComponentManager");
+    ThrowException(env, rv, "Failure in getComponentManager");
 
   return java_stub;
 }
@@ -262,10 +275,10 @@ XPCOM_NATIVE(getComponentRegistrar) (JNIEnv *env, jclass)
   if (NS_SUCCEEDED(rv)) {
     // wrap xpcom instance
     JavaXPCOMInstance* inst;
-    inst = CreateJavaXPCOMInstance(cr, &NS_GET_IID(nsIComponentRegistrar));
+    rv = CreateJavaXPCOMInstance(cr, &NS_GET_IID(nsIComponentRegistrar), &inst);
     NS_RELEASE(cr);   // JavaXPCOMInstance has owning ref
 
-    if (inst) {
+    if (NS_SUCCEEDED(rv)) {
       // create java stub
       java_stub = CreateJavaWrapper(env, "nsIComponentRegistrar");
 
@@ -277,7 +290,7 @@ XPCOM_NATIVE(getComponentRegistrar) (JNIEnv *env, jclass)
   }
 
   if (java_stub == nsnull)
-    ThrowXPCOMException(env, rv, "Failure in getComponentRegistrar");
+    ThrowException(env, rv, "Failure in getComponentRegistrar");
 
   return java_stub;
 }
@@ -294,10 +307,10 @@ XPCOM_NATIVE(getServiceManager) (JNIEnv *env, jclass)
   if (NS_SUCCEEDED(rv)) {
     // wrap xpcom instance
     JavaXPCOMInstance* inst;
-    inst = CreateJavaXPCOMInstance(sm, &NS_GET_IID(nsIServiceManager));
+    rv = CreateJavaXPCOMInstance(sm, &NS_GET_IID(nsIServiceManager), &inst);
     NS_RELEASE(sm);   // JavaXPCOMInstance has owning ref
 
-    if (inst) {
+    if (NS_SUCCEEDED(rv)) {
       // create java stub
       java_stub = CreateJavaWrapper(env, "nsIServiceManager");
 
@@ -309,22 +322,26 @@ XPCOM_NATIVE(getServiceManager) (JNIEnv *env, jclass)
   }
 
   if (java_stub == nsnull)
-    ThrowXPCOMException(env, rv, "Failure in getServiceManager");
+    ThrowException(env, rv, "Failure in getServiceManager");
 
   return java_stub;
 }
 
 extern "C" JNIEXPORT void JNICALL
-XPCOMPRIVATE_NATIVE(CallXPCOMMethodVoid) (JNIEnv *env, jclass that, jobject aJavaObject,
-                                   jint aMethodIndex, jobjectArray aParams)
+XPCOMPRIVATE_NATIVE(CallXPCOMMethodVoid) (JNIEnv *env, jclass that,
+                                          jobject aJavaObject,
+                                          jint aMethodIndex,
+                                          jobjectArray aParams)
 {
   jvalue rc;
   CallXPCOMMethod(env, that, aJavaObject, aMethodIndex, aParams, rc);
 }
 
 extern "C" JNIEXPORT jboolean JNICALL
-XPCOMPRIVATE_NATIVE(CallXPCOMMethodBool) (JNIEnv *env, jclass that, jobject aJavaObject,
-                                   jint aMethodIndex, jobjectArray aParams)
+XPCOMPRIVATE_NATIVE(CallXPCOMMethodBool) (JNIEnv *env, jclass that,
+                                          jobject aJavaObject,
+                                          jint aMethodIndex,
+                                          jobjectArray aParams)
 {
   jvalue rc;
   CallXPCOMMethod(env, that, aJavaObject, aMethodIndex, aParams, rc);
@@ -332,8 +349,10 @@ XPCOMPRIVATE_NATIVE(CallXPCOMMethodBool) (JNIEnv *env, jclass that, jobject aJav
 }
 
 extern "C" JNIEXPORT jbooleanArray JNICALL
-XPCOMPRIVATE_NATIVE(CallXPCOMMethodBoolA) (JNIEnv *env, jclass that, jobject aJavaObject,
-                                    jint aMethodIndex, jobjectArray aParams)
+XPCOMPRIVATE_NATIVE(CallXPCOMMethodBoolA) (JNIEnv *env, jclass that,
+                                           jobject aJavaObject,
+                                           jint aMethodIndex,
+                                           jobjectArray aParams)
 {
   jvalue rc;
   CallXPCOMMethod(env, that, aJavaObject, aMethodIndex, aParams, rc);
@@ -341,8 +360,10 @@ XPCOMPRIVATE_NATIVE(CallXPCOMMethodBoolA) (JNIEnv *env, jclass that, jobject aJa
 }
 
 extern "C" JNIEXPORT jbyte JNICALL
-XPCOMPRIVATE_NATIVE(CallXPCOMMethodByte) (JNIEnv *env, jclass that, jobject aJavaObject,
-                                   jint aMethodIndex, jobjectArray aParams)
+XPCOMPRIVATE_NATIVE(CallXPCOMMethodByte) (JNIEnv *env, jclass that,
+                                          jobject aJavaObject,
+                                          jint aMethodIndex,
+                                          jobjectArray aParams)
 {
   jvalue rc;
   CallXPCOMMethod(env, that, aJavaObject, aMethodIndex, aParams, rc);
@@ -350,8 +371,10 @@ XPCOMPRIVATE_NATIVE(CallXPCOMMethodByte) (JNIEnv *env, jclass that, jobject aJav
 }
 
 extern "C" JNIEXPORT jbyteArray JNICALL
-XPCOMPRIVATE_NATIVE(CallXPCOMMethodByteA) (JNIEnv *env, jclass that, jobject aJavaObject,
-                                    jint aMethodIndex, jobjectArray aParams)
+XPCOMPRIVATE_NATIVE(CallXPCOMMethodByteA) (JNIEnv *env, jclass that,
+                                           jobject aJavaObject,
+                                           jint aMethodIndex,
+                                           jobjectArray aParams)
 {
   jvalue rc;
   CallXPCOMMethod(env, that, aJavaObject, aMethodIndex, aParams, rc);
@@ -359,8 +382,10 @@ XPCOMPRIVATE_NATIVE(CallXPCOMMethodByteA) (JNIEnv *env, jclass that, jobject aJa
 }
 
 extern "C" JNIEXPORT jchar JNICALL
-XPCOMPRIVATE_NATIVE(CallXPCOMMethodChar) (JNIEnv *env, jclass that, jobject aJavaObject,
-                                   jint aMethodIndex, jobjectArray aParams)
+XPCOMPRIVATE_NATIVE(CallXPCOMMethodChar) (JNIEnv *env, jclass that,
+                                          jobject aJavaObject,
+                                          jint aMethodIndex,
+                                          jobjectArray aParams)
 {
   jvalue rc;
   CallXPCOMMethod(env, that, aJavaObject, aMethodIndex, aParams, rc);
@@ -368,8 +393,10 @@ XPCOMPRIVATE_NATIVE(CallXPCOMMethodChar) (JNIEnv *env, jclass that, jobject aJav
 }
 
 extern "C" JNIEXPORT jcharArray JNICALL
-XPCOMPRIVATE_NATIVE(CallXPCOMMethodCharA) (JNIEnv *env, jclass that, jobject aJavaObject,
-                                    jint aMethodIndex, jobjectArray aParams)
+XPCOMPRIVATE_NATIVE(CallXPCOMMethodCharA) (JNIEnv *env, jclass that,
+                                           jobject aJavaObject,
+                                           jint aMethodIndex,
+                                           jobjectArray aParams)
 {
   jvalue rc;
   CallXPCOMMethod(env, that, aJavaObject, aMethodIndex, aParams, rc);
@@ -377,8 +404,10 @@ XPCOMPRIVATE_NATIVE(CallXPCOMMethodCharA) (JNIEnv *env, jclass that, jobject aJa
 }
 
 extern "C" JNIEXPORT jshort JNICALL
-XPCOMPRIVATE_NATIVE(CallXPCOMMethodShort) (JNIEnv *env, jclass that, jobject aJavaObject,
-                                    jint aMethodIndex, jobjectArray aParams)
+XPCOMPRIVATE_NATIVE(CallXPCOMMethodShort) (JNIEnv *env, jclass that,
+                                           jobject aJavaObject,
+                                           jint aMethodIndex,
+                                           jobjectArray aParams)
 {
   jvalue rc;
   CallXPCOMMethod(env, that, aJavaObject, aMethodIndex, aParams, rc);
@@ -386,8 +415,10 @@ XPCOMPRIVATE_NATIVE(CallXPCOMMethodShort) (JNIEnv *env, jclass that, jobject aJa
 }
 
 extern "C" JNIEXPORT jshortArray JNICALL
-XPCOMPRIVATE_NATIVE(CallXPCOMMethodShortA) (JNIEnv *env, jclass that, jobject aJavaObject,
-                                     jint aMethodIndex, jobjectArray aParams)
+XPCOMPRIVATE_NATIVE(CallXPCOMMethodShortA) (JNIEnv *env, jclass that,
+                                            jobject aJavaObject,
+                                            jint aMethodIndex,
+                                            jobjectArray aParams)
 {
   jvalue rc;
   CallXPCOMMethod(env, that, aJavaObject, aMethodIndex, aParams, rc);
@@ -395,8 +426,10 @@ XPCOMPRIVATE_NATIVE(CallXPCOMMethodShortA) (JNIEnv *env, jclass that, jobject aJ
 }
 
 extern "C" JNIEXPORT jint JNICALL
-XPCOMPRIVATE_NATIVE(CallXPCOMMethodInt) (JNIEnv *env, jclass that, jobject aJavaObject,
-                                  jint aMethodIndex, jobjectArray aParams)
+XPCOMPRIVATE_NATIVE(CallXPCOMMethodInt) (JNIEnv *env, jclass that,
+                                         jobject aJavaObject,
+                                         jint aMethodIndex,
+                                         jobjectArray aParams)
 {
   jvalue rc;
   CallXPCOMMethod(env, that, aJavaObject, aMethodIndex, aParams, rc);
@@ -404,8 +437,10 @@ XPCOMPRIVATE_NATIVE(CallXPCOMMethodInt) (JNIEnv *env, jclass that, jobject aJava
 }
 
 extern "C" JNIEXPORT jintArray JNICALL
-XPCOMPRIVATE_NATIVE(CallXPCOMMethodIntA) (JNIEnv *env, jclass that, jobject aJavaObject,
-                                   jint aMethodIndex, jobjectArray aParams)
+XPCOMPRIVATE_NATIVE(CallXPCOMMethodIntA) (JNIEnv *env, jclass that,
+                                          jobject aJavaObject,
+                                          jint aMethodIndex,
+                                          jobjectArray aParams)
 {
   jvalue rc;
   CallXPCOMMethod(env, that, aJavaObject, aMethodIndex, aParams, rc);
@@ -413,8 +448,10 @@ XPCOMPRIVATE_NATIVE(CallXPCOMMethodIntA) (JNIEnv *env, jclass that, jobject aJav
 }
 
 extern "C" JNIEXPORT jlong JNICALL
-XPCOMPRIVATE_NATIVE(CallXPCOMMethodLong) (JNIEnv *env, jclass that, jobject aJavaObject,
-                                   jint aMethodIndex, jobjectArray aParams)
+XPCOMPRIVATE_NATIVE(CallXPCOMMethodLong) (JNIEnv *env, jclass that,
+                                          jobject aJavaObject,
+                                          jint aMethodIndex,
+                                          jobjectArray aParams)
 {
   jvalue rc;
   CallXPCOMMethod(env, that, aJavaObject, aMethodIndex, aParams, rc);
@@ -422,8 +459,10 @@ XPCOMPRIVATE_NATIVE(CallXPCOMMethodLong) (JNIEnv *env, jclass that, jobject aJav
 }
 
 extern "C" JNIEXPORT jlongArray JNICALL
-XPCOMPRIVATE_NATIVE(CallXPCOMMethodLongA) (JNIEnv *env, jclass that, jobject aJavaObject,
-                                    jint aMethodIndex, jobjectArray aParams)
+XPCOMPRIVATE_NATIVE(CallXPCOMMethodLongA) (JNIEnv *env, jclass that,
+                                           jobject aJavaObject,
+                                           jint aMethodIndex,
+                                           jobjectArray aParams)
 {
   jvalue rc;
   CallXPCOMMethod(env, that, aJavaObject, aMethodIndex, aParams, rc);
@@ -431,8 +470,10 @@ XPCOMPRIVATE_NATIVE(CallXPCOMMethodLongA) (JNIEnv *env, jclass that, jobject aJa
 }
 
 extern "C" JNIEXPORT jfloat JNICALL
-XPCOMPRIVATE_NATIVE(CallXPCOMMethodFloat) (JNIEnv *env, jclass that, jobject aJavaObject,
-                                    jint aMethodIndex, jobjectArray aParams)
+XPCOMPRIVATE_NATIVE(CallXPCOMMethodFloat) (JNIEnv *env, jclass that,
+                                           jobject aJavaObject,
+                                           jint aMethodIndex,
+                                           jobjectArray aParams)
 {
   jvalue rc;
   CallXPCOMMethod(env, that, aJavaObject, aMethodIndex, aParams, rc);
@@ -440,8 +481,10 @@ XPCOMPRIVATE_NATIVE(CallXPCOMMethodFloat) (JNIEnv *env, jclass that, jobject aJa
 }
 
 extern "C" JNIEXPORT jfloatArray JNICALL
-XPCOMPRIVATE_NATIVE(CallXPCOMMethodFloatA) (JNIEnv *env, jclass that, jobject aJavaObject,
-                                     jint aMethodIndex, jobjectArray aParams)
+XPCOMPRIVATE_NATIVE(CallXPCOMMethodFloatA) (JNIEnv *env, jclass that,
+                                            jobject aJavaObject,
+                                            jint aMethodIndex,
+                                            jobjectArray aParams)
 {
   jvalue rc;
   CallXPCOMMethod(env, that, aJavaObject, aMethodIndex, aParams, rc);
@@ -449,8 +492,10 @@ XPCOMPRIVATE_NATIVE(CallXPCOMMethodFloatA) (JNIEnv *env, jclass that, jobject aJ
 }
 
 extern "C" JNIEXPORT jdouble JNICALL
-XPCOMPRIVATE_NATIVE(CallXPCOMMethodDouble) (JNIEnv *env, jclass that, jobject aJavaObject,
-                                     jint aMethodIndex, jobjectArray aParams)
+XPCOMPRIVATE_NATIVE(CallXPCOMMethodDouble) (JNIEnv *env, jclass that,
+                                            jobject aJavaObject,
+                                            jint aMethodIndex,
+                                            jobjectArray aParams)
 {
   jvalue rc;
   CallXPCOMMethod(env, that, aJavaObject, aMethodIndex, aParams, rc);
@@ -458,8 +503,10 @@ XPCOMPRIVATE_NATIVE(CallXPCOMMethodDouble) (JNIEnv *env, jclass that, jobject aJ
 }
 
 extern "C" JNIEXPORT jdoubleArray JNICALL
-XPCOMPRIVATE_NATIVE(CallXPCOMMethodDoubleA) (JNIEnv *env, jclass that, jobject aJavaObject,
-                                      jint aMethodIndex, jobjectArray aParams)
+XPCOMPRIVATE_NATIVE(CallXPCOMMethodDoubleA) (JNIEnv *env, jclass that,
+                                             jobject aJavaObject,
+                                             jint aMethodIndex,
+                                             jobjectArray aParams)
 {
   jvalue rc;
   CallXPCOMMethod(env, that, aJavaObject, aMethodIndex, aParams, rc);
@@ -467,8 +514,10 @@ XPCOMPRIVATE_NATIVE(CallXPCOMMethodDoubleA) (JNIEnv *env, jclass that, jobject a
 }
 
 extern "C" JNIEXPORT jobject JNICALL
-XPCOMPRIVATE_NATIVE(CallXPCOMMethodObj) (JNIEnv *env, jclass that, jobject aJavaObject,
-                                  jint aMethodIndex, jobjectArray aParams)
+XPCOMPRIVATE_NATIVE(CallXPCOMMethodObj) (JNIEnv *env, jclass that,
+                                         jobject aJavaObject,
+                                         jint aMethodIndex,
+                                         jobjectArray aParams)
 {
   jvalue rc;
   CallXPCOMMethod(env, that, aJavaObject, aMethodIndex, aParams, rc);
@@ -476,8 +525,10 @@ XPCOMPRIVATE_NATIVE(CallXPCOMMethodObj) (JNIEnv *env, jclass that, jobject aJava
 }
 
 extern "C" JNIEXPORT jobjectArray JNICALL
-XPCOMPRIVATE_NATIVE(CallXPCOMMethodObjA) (JNIEnv *env, jclass that, jobject aJavaObject,
-                                   jint aMethodIndex, jobjectArray aParams)
+XPCOMPRIVATE_NATIVE(CallXPCOMMethodObjA) (JNIEnv *env, jclass that,
+                                          jobject aJavaObject,
+                                          jint aMethodIndex,
+                                          jobjectArray aParams)
 {
   jvalue rc;
   CallXPCOMMethod(env, that, aJavaObject, aMethodIndex, aParams, rc);
@@ -485,7 +536,8 @@ XPCOMPRIVATE_NATIVE(CallXPCOMMethodObjA) (JNIEnv *env, jclass that, jobject aJav
 }
 
 extern "C" JNIEXPORT void JNICALL
-XPCOMPRIVATE_NATIVE(FinalizeStub) (JNIEnv *env, jclass that, jobject aJavaObject)
+XPCOMPRIVATE_NATIVE(FinalizeStub) (JNIEnv *env, jclass that,
+                                   jobject aJavaObject)
 {
 #ifdef DEBUG
   jboolean isCopy;
@@ -498,7 +550,8 @@ XPCOMPRIVATE_NATIVE(FinalizeStub) (JNIEnv *env, jclass that, jobject aJavaObject
 #endif
 
   void* obj = GetMatchingXPCOMObject(env, aJavaObject);
-  NS_ASSERTION(!IsXPTCStub(obj), "Expecting JavaXPCOMInstance, got nsJavaXPTCStub");
+  NS_ASSERTION(!IsXPTCStub(obj),
+               "Expecting JavaXPCOMInstance, got nsJavaXPTCStub");
   RemoveJavaXPCOMBinding(env, aJavaObject, nsnull);
   delete (JavaXPCOMInstance*) obj;
 }

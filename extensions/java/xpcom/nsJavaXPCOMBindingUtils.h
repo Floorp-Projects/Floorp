@@ -80,6 +80,7 @@ void FreeJavaGlobals(JNIEnv* env);
 /*************************
  *  JavaXPCOMInstance
  *************************/
+
 class JavaXPCOMInstance
 {
 public:
@@ -94,8 +95,19 @@ private:
   nsCOMPtr<nsIInterfaceInfo> mIInfo;
 };
 
-JavaXPCOMInstance* CreateJavaXPCOMInstance(nsISupports* aXPCOMObject,
-                                           const nsIID* aIID);
+/**
+ * Creates a new JavaXPCOMInstance which holds the xpcom object and its
+ * interface info based on the given IID.
+ *
+ * @param aXPCOMObject  xpcom object to wrap
+ * @param aIID          interface IID for aXPCOMObject
+ * @param aResult       pointer that will hold new JavaXPCOMInstance
+ *
+ * @return NS_ERROR_OUT_OF_MEMORY if out of memory;
+ *         NS_ERROR_FAILURE for any other error condition
+ */
+nsresult CreateJavaXPCOMInstance(nsISupports* aXPCOMObject, const nsIID* aIID,
+                                 JavaXPCOMInstance** aResult);
 
 
 /**************************************
@@ -123,7 +135,10 @@ nsresult GetIIDForMethodParam(nsIInterfaceInfo *iinfo,
  *******************************/
 
 /**
- * Constructs and throws an XPCOMException.
+ * Constructs and throws an exception.  Some error codes (such as
+ * NS_ERROR_OUT_OF_MEMORY) are handled by the appropriate Java exception/error.
+ * Otherwise, an instance of XPCOMException is created with the given error
+ * code and message.
  *
  * @param env         Java environment pointer
  * @param aErrorCode  The error code returned by an XPCOM/Gecko function. Pass
@@ -131,9 +146,12 @@ nsresult GetIIDForMethodParam(nsIInterfaceInfo *iinfo,
  * @param aMessage    A string that provides details for throwing this
  *                    exception. Pass in <code>nsnull</code> for the default
  *                    behaviour.
+ *
+ * @throws OutOfMemoryError if aErrorCode == NS_ERROR_OUT_OF_MEMORY
+ *         XPCOMException   for all other error codes
  */
-void ThrowXPCOMException(JNIEnv* env, const nsresult aErrorCode,
-                         const char* aMessage);
+void ThrowException(JNIEnv* env, const nsresult aErrorCode,
+                    const char* aMessage);
 
 /**
  * Helper functions for converting from java.lang.String to
@@ -142,7 +160,8 @@ void ThrowXPCOMException(JNIEnv* env, const nsresult aErrorCode,
  * @param env       Java environment pointer
  * @param aString   Java string to convert
  *
- * @return  nsAString/nsACString with same content as given Java string
+ * @return  nsAString/nsACString with same content as given Java string; or
+ *          <code>nsnull</code> if out of memory
  */
 nsAString* jstring_to_nsAString(JNIEnv* env, jstring aString);
 nsACString* jstring_to_nsACString(JNIEnv* env, jstring aString);
