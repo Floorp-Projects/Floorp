@@ -51,18 +51,27 @@
 #include "nsIEventQueueService.h"
 #include "nsIURLParser.h"
 #include "nsSupportsArray.h"
+#include "nsIObserver.h"
+#include "nsWeakReference.h"
 
 #define NS_N(x) (sizeof(x)/sizeof(*x))
 
 static const char *gScheme[] = {"chrome", "resource", "file", "http"};
 
+class nsIPrefBranch;
+
 class nsIOService : public nsIIOService
+                  , public nsIObserver
+                  , public nsSupportsWeakReference
 {
 public:
     NS_DECL_ISUPPORTS
 
     // nsIIOService methods:
     NS_DECL_NSIIOSERVICE
+
+    // nsIObserver methods:
+    NS_DECL_NSIOBSERVER
 
     // nsIOService methods:
     nsIOService();
@@ -88,6 +97,11 @@ protected:
 
     NS_METHOD CacheURLParser(const char *scheme,
                              nsIURLParser* hdlr);
+
+    // Prefs wrangling
+    void PrefsChanged(nsIPrefBranch *prefs, const char *pref = nsnull);
+    void GetPrefBranch(nsIPrefBranch **);
+    void ParsePortList(nsIPrefBranch *prefBranch, const char *pref, PRBool remove);
 
 protected:
     PRBool      mOffline;
