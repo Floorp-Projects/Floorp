@@ -78,7 +78,7 @@ sub DoOne {
             $table = "components";
         }
         push @cmds, "update $table set $name=" .
-            SqlQuote($::FORM{$field}) . "where $where";
+            SqlQuote($::FORM{$field}) . " where $where";
         print "Changed $name for $where <P>";
         if ($checkemail) {
             DBNameToIdAndCheck($::FORM{$field});
