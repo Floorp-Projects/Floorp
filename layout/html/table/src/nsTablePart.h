@@ -93,6 +93,11 @@ public:
   NS_IMETHOD_(nsrefcnt) AddRef();
   NS_IMETHOD_(nsrefcnt) Release();
 
+  virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
+
+  virtual void MapAttributesInto(nsIStyleContext* aContext,
+                                 nsIPresContext* aPresContext);
+
 /* public Table methods */
 
   /** ResetCellMap is called when the cell structure of the table is changed.
@@ -147,6 +152,11 @@ public:
     * this is a hook for future optimizations.
     */
   virtual void NotifyContentComplete();
+
+  static void GetTableBorder(nsIHTMLContent* aContent,
+                             nsIStyleContext* aContext,
+                             nsIPresContext* aPresContext,
+                             PRBool aForCell);
 
 protected:
   /** destructor 
