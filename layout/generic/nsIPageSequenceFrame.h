@@ -119,6 +119,15 @@ public:
                    nsIPrintOptions*        aPrintOptions,
                    nsIPrintStatusCallback* aStatusCallback) = 0;
 
+  NS_IMETHOD StartPrint(nsIPresContext*  aPresContext,
+                        nsIPrintOptions* aPrintOptions) = 0;
+  NS_IMETHOD PrintNextPage(nsIPresContext*  aPresContext,
+                           nsIPrintOptions* aPrintOptions) = 0;
+  NS_IMETHOD GetCurrentPageNum(PRInt32* aPageNum) = 0;
+  NS_IMETHOD GetNumPages(PRInt32* aNumPages) = 0;
+  NS_IMETHOD IsDoingPrintRange(PRBool* aDoing) = 0;
+  NS_IMETHOD GetPrintRange(PRInt32* aFromPage, PRInt32* aToPage) = 0;
+
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;
   NS_IMETHOD_(nsrefcnt) Release(void) = 0;

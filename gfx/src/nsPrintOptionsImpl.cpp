@@ -75,6 +75,7 @@ const char * kPrintPaperSize  = "print.print_paper_size";
 const char * kPrintCommand    = "print.print_command";
 const char * kPrintFile       = "print.print_file";
 const char * kPrintToFile     = "print.print_tofile";
+const char * kPrintPageDelay  = "print.print_pagedelay";
 
 // There are currently NOT supported
 //const char * kPrintBevelLines    = "print.print_bevellines";
@@ -104,7 +105,9 @@ nsPrintOptions::nsPrintOptions() :
   mPrintToFile(PR_FALSE),
   mPrintFrameType(kSelectedFrame),
   mHowToEnableFrameUI(kFrameEnableNone),
-  mPageNumJust(kJustLeft)
+  mPageNumJust(kJustLeft),
+  mIsCancelled(PR_FALSE),
+  mPrintPageDelay(500)
 {
   NS_INIT_ISUPPORTS();
 
@@ -281,6 +284,7 @@ nsPrintOptions::ReadPrefs()
     ReadPrefString(prefs, kPrintCommand, mPrintCommand);
     prefs->GetBoolPref(kPrintFile,       &mPrintToFile);
     ReadPrefString(prefs, kPrintToFile,  mToFileName);
+    prefs->GetIntPref(kPrintPageDelay,   &mPrintPageDelay);
 
     return NS_OK;
   }
@@ -318,6 +322,7 @@ nsPrintOptions::WritePrefs()
     WritePrefString(prefs, kPrintCommand, mPrintCommand);
     prefs->SetBoolPref(kPrintFile,        mPrintToFile);
     WritePrefString(prefs, kPrintToFile,  mToFileName);
+    prefs->SetIntPref(kPrintPageDelay,    mPrintPageDelay);
 
     return NS_OK;
   }
@@ -425,6 +430,18 @@ NS_IMETHODIMP nsPrintOptions::GetToFileName(PRUnichar * *aToFileName)
 NS_IMETHODIMP nsPrintOptions::SetToFileName(const PRUnichar * aToFileName)
 {
   mToFileName = aToFileName;
+  return NS_OK;
+}
+
+/* attribute long printPageDelay; */
+NS_IMETHODIMP nsPrintOptions::GetPrintPageDelay(PRInt32 *aPrintPageDelay)
+{
+  *aPrintPageDelay = mPrintPageDelay;
+  return NS_OK;
+}
+NS_IMETHODIMP nsPrintOptions::SetPrintPageDelay(PRInt32 aPrintPageDelay)
+{
+  mPrintPageDelay = aPrintPageDelay;
   return NS_OK;
 }
 
@@ -557,6 +574,19 @@ NS_IMETHODIMP nsPrintOptions::GetPrintFrameType(PRInt16 *aPrintFrameType)
 NS_IMETHODIMP nsPrintOptions::SetPrintFrameType(PRInt16 aPrintFrameType)
 {
   mPrintFrameType = aPrintFrameType;
+  return NS_OK;
+}
+
+/* attribute long isCancelled; */
+NS_IMETHODIMP nsPrintOptions::GetIsCancelled(PRBool *aIsCancelled)
+{
+  NS_ENSURE_ARG_POINTER(aIsCancelled);
+  *aIsCancelled = mIsCancelled;
+  return NS_OK;
+}
+NS_IMETHODIMP nsPrintOptions::SetIsCancelled(PRBool aIsCancelled)
+{
+  mIsCancelled = aIsCancelled;
   return NS_OK;
 }
 
