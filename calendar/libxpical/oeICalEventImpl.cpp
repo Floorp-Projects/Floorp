@@ -56,7 +56,7 @@ char *EmptyReturn() {
 }
 
 icaltimetype ConvertFromPrtime( PRTime indate ) {
-    icaltimetype outdate;
+    icaltimetype outdate = icaltime_null_time();
 
     PRExplodedTime ext;
     PRInt64 indateinusec, usecpermsec;
