@@ -29,7 +29,6 @@
 <!ENTITY widthEditField.label "Width">
 <!ENTITY pixelsPopup.value "pixels">
 <!ENTITY percentPopup.value "percent">
-
 <!ENTITY alignmentFieldset.label "Alignment">
 <!ENTITY leftPopup.value "Left">
 <!ENTITY centerPopup.value "Center">

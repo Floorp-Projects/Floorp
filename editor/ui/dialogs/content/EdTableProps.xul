@@ -33,44 +33,357 @@
 <window class="dialog" title="&tableWindow.title;"
     xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    onload = "Startup()"
+    onload="Startup()"
+    width="450" height="430"
     align="vertical">
 
   <!-- Methods common to all editor dialogs -->
-  <html:script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js">
-  </html:script>
-  <html:script language="JavaScript" src="chrome://editor/content/EdTableProps.js">
-  </html:script>
+  <html:script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
+  <html:script language="JavaScript" src="chrome://editor/content/EdTableProps.js"/>
   <html:script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
 
   <broadcaster id="args" value=""/>
-<tabcontrol align="vertical" >
-	<tabbox align="horizontal" >
-		<tab>&tableTab.label;</tab>
-		<tab>&cellTab.label;</tab>
-	</tabbox>
-   
-	<tabpanel flex="100%" >
-<!-- table tab -->
-		<box align="vertical">
-      <titledbutton value="TABLE PANEL"/> 
-      <html:div> WORK IN PROGRESS:  This is the TABLE Tab </html:div>
-      <!-- from EdDialogOverlay -->
-      <xul:box id="advancedEditButton"/>
-    </box>
-<!-- end of table tab -->
 
-<!-- cell tab -->
-		<box align="vertical">
-      <titledbutton value="CELL PANEL"/> 
-      <html:div> WORK IN PROGRESS:  This is the CELL Tab </html:div>
-      <!-- from EdDialogOverlay -->
-      <xul:box id="advancedEditButton"/>
-    </box>
-<!-- end of cell tab -->
-	 </tabpanel> 
-</tabcontrol>
-    <!-- from EdDialogOverlay -->
-    <xul:box id="advancedEditButton"/>
-	<box id="okCancelButtons"/> 
+      <tabcontrol align="vertical">
+	      <tabbox align="horizontal" flex="100%">
+		      <tab>&tableTab.label;</tab>
+		      <tab>&cellTab.label;</tab>
+	      </tabbox>
+   
+    	  <tabpanel flex="100%">
+          <!-- table tab -->
+    		  <box align="vertical" class="panel">
+            <html:fieldset class="holder">
+              <html:legend>&tableSize.label;</html:legend>
+              <html:table width="350">
+                <html:tr>
+                  <html:td>
+                    <html:label for="tableRows.text">&tableRows.label;</html:label>
+                  </html:td>
+                  <html:td>
+                    <html:input type="text" id="tableRows.text" size="3"/>
+                  </html:td>
+                  <html:td>
+                    <html:input type="checkbox" id="tableHeight.check"/>
+                  </html:td>
+                  <html:td>
+                    <html:label for="tableHeight.check">&tableHeight.label;</html:label>
+                  </html:td>
+                  <html:td>
+                    <html:input type="text" id="tableHeight.text" size="3"/>
+                  </html:td>
+                  <html:td>
+                    <html:select id="heightUnits">
+                      <html:option value="px">&tablePixels.label;</html:option>
+                      <html:option value="pc">&tablePercent.label;</html:option>
+                    </html:select>
+                  </html:td>
+                </html:tr>
+                <html:tr>
+                  <html:td>
+                    <html:label for="tableColumns.text">&tableColumns.label;</html:label>
+                  </html:td>
+                  <html:td>
+                    <html:input type="text" id="tableColumns.text" size="3"/>
+                  </html:td>
+                  <html:td>
+                    <html:input type="checkbox" id="tableWidth.check"/>
+                  </html:td>
+                  <html:td>
+                    <html:label for="tableWidth.check">&tableWidth.label;</html:label>
+                  </html:td>
+                  <html:td>
+                    <html:input type="text" id="tableWidth.text" size="3"/>
+                  </html:td>
+                  <html:td>
+                    <html:select id="widthUnits">
+                      <html:option value="px">&tablePixels.label;</html:option>
+                      <html:option value="pc">&tablePercent.label;</html:option>
+                    </html:select>
+                  </html:td>
+                </html:tr>
+              </html:table>
+            </html:fieldset>
+            <box align="horizontal">
+              <html:fieldset flex="100%">
+                <html:legend>&tableBorderSpacing.label;</html:legend>
+                <html:table>
+                  <html:tr>
+                    <html:td>
+                      <html:input type="checkbox" id="border.check"/> 
+                    </html:td>
+                    <html:td>
+                      <html:label for="border.check">&tableBorderWidth.label;</html:label>
+                    </html:td>
+                    <html:td>
+                      <html:input type="text" id="borderWidth.text" size="3"/>
+                    </html:td>
+                    <html:td>
+                      <html:div>&tablePixels.label;</html:div>
+                    </html:td>
+                  </html:tr>
+                </html:table>
+                <html:table>
+                  <html:tr>
+                    <html:td>
+                      <html:label for="spacing.text">&tableSpacing.label;</html:label>
+                    </html:td>
+                    <html:td>
+                      <html:input type="text" id="spacing.text" size="3"/>
+                    </html:td>
+                    <html:td>
+                      <html:div>&tablePxBetwCells.label;</html:div>
+                    </html:td>
+                  </html:tr>
+                  <html:tr>
+                    <html:td>
+                      <html:label for="padding.text">&tablePadding.label;</html:label>
+                    </html:td>
+                    <html:td>
+                      <html:input type="text" id="padding.text" size="3"/>
+                    </html:td>
+                    <html:td>
+                      <html:div>&tablePxBetwBrdrCellContent.label;</html:div>
+                    </html:td>
+                  </html:tr>
+                </html:table>
+              </html:fieldset>
+              <box align="vertical" flex="100%">
+                <spring flex="100%"/>
+                <html:table>
+                  <html:tr>
+                    <html:td>
+                      <html:label for="alignment.select">&tableAlignment.label;</html:label>
+                    </html:td>
+                    <html:td>
+                      <html:select id="alignment.select">
+                        <html:option value="left">&tableAlignLeft.label;</html:option>
+                        <html:option value="center">&tableAlignCenter.label;</html:option>
+                        <html:option value="right">&tableAlignRight.label;</html:option>
+                      </html:select>
+                    </html:td>
+                  </html:tr>
+                  <spring flex="100%"/>
+                  <html:tr>
+                    <html:td>
+                      <html:label for="caption.select">&tableCaption.label;</html:label>
+                    </html:td>
+                    <html:td>
+                      <html:select id="caption.select">
+                        <html:option value="none">&tableCaptionNone.label;</html:option>
+                        <html:option value="above">&tableCaptionAbove.label;</html:option>
+                        <html:option value="below">&tableCaptionBelow.label;</html:option>
+                      </html:select>
+                    </html:td>
+                  </html:tr>
+                </html:table>
+                <spring flex="100%"/>
+              </box>
+            </box>
+            <html:fieldset>
+              <html:legend>&tableBackground.label;</html:legend>
+              <html:table width="100%">
+                <html:tr>
+                  <html:td>
+                    <html:label for="bgcolor.select">&tableColor.label;</html:label>
+                  </html:td>
+                  <html:td>
+                    <html:select id="bgcolor.select">
+                      <html:option> </html:option>
+                    </html:select>
+                  </html:td>
+                </html:tr>
+                <html:tr>
+                  <html:td>
+                    <html:label for="bgimage.text">&tableImage.label;</html:label>
+                  </html:td>
+                  <html:td>
+                      <html:input type="text" id="bgimage.text" style="width: 70%;"/>
+                      <titledbutton value="&tableChooseImage.label;" id="bgimage.button"/>
+                  </html:td>
+                </html:tr>
+                <html:tr>
+                  <html:td/>
+                  <html:td>
+                    <html:input type="checkbox" id="leaveLoc.check"/>
+                    <html:label for="leaveLoc.check">&tableLeaveImageAtLocation.label;</html:label>
+                  </html:td>
+                </html:tr>
+              </html:table>
+            </html:fieldset>
+          </box>
+    
+          <!-- cell tab -->
+    		  <box align="vertical" class="panel">
+            <html:fieldset class="holder">
+              <html:legend>&cellSelection.label;</html:legend>
+              <html:table width="350">
+                <html:tr>
+                  <html:td>
+                    <html:select id="selection.select">
+                      <html:option value="cell">&cellSelectionCell.label;</html:option>
+                      <html:option value="row">&cellSelectionRow.label;</html:option>
+                      <html:option value="column">&cellSelectionColumn.label;</html:option>
+                    </html:select>
+                  </html:td>
+                  <html:td>
+                    <titledbutton value="&cellSelectionPrevious.label;" id="previous.button"/>
+                  </html:td>
+                  <html:td>
+                    <titledbutton value="&cellSelectionNext.label;" id="next.button"/>
+                  </html:td>
+                </html:tr>
+              </html:table>
+            </html:fieldset>
+            <!-- cell size fieldset -->
+            <html:fieldset>
+              <html:legend>&tableSize.label;</html:legend>
+              <html:table>
+                <html:tr>
+                  <html:td>
+                    <html:input type="checkbox" id="cellHeight.check"/>
+                  </html:td>
+                  <html:td>
+                    <html:label for="tableHeight.check">&tableHeight.label;</html:label>
+                  </html:td>
+                  <html:td>
+                    <html:input type="text" id="cellHeight.text" size="3"/>
+                  </html:td>
+                  <html:td>
+                    <html:select id="cellHeightUnits">
+                      <html:option value="px">&tablePixels.label;</html:option>
+                      <html:option value="pc">&tablePercent.label;</html:option>
+                    </html:select>
+                  </html:td>
+                  <html:td>
+                    <html:label for="rows.text">&cellSpans.label;</html:label>
+                  </html:td>
+                  <html:td>
+                    <html:input type="text" id="rows.text" size="3"/>
+                  </html:td>
+                  <html:td>
+                    <html:div>&cellSpanRows.label;</html:div>
+                  </html:td>
+                </html:tr>
+                <html:tr>
+                  <html:td>
+                    <html:input type="checkbox" id="tableWidth.check"/>
+                  </html:td>
+                  <html:td>
+                    <html:label for="tableWidth.check">&tableWidth.label;</html:label>
+                  </html:td>
+                  <html:td>
+                    <html:input type="text" id="tableWidth.text" size="3"/>
+                  </html:td>
+                  <html:td>
+                    <html:select id="cellWidthUnits">
+                      <html:option value="px">&tablePixels.label;</html:option>
+                      <html:option value="pc">&tablePercent.label;</html:option>
+                    </html:select>
+                  </html:td>
+                  <html:td> </html:td>
+                  <html:td>
+                    <html:input type="text" id="cols.text" size="3"/>
+                  </html:td>
+                  <html:td>
+                    <html:div>&cellSpanCells.label;</html:div>
+                  </html:td>
+                </html:tr>
+              </html:table>
+            </html:fieldset>
+            <box align="horizontal">
+              <html:fieldset flex="100%">
+                <html:legend>&cellContentAlignment.label;</html:legend>
+                <html:table>
+                  <html:tr>
+                    <html:td>
+                      <html:label for="horzAlignment.select">&cellHorizontal.label;</html:label>
+                    </html:td>
+                    <html:td>
+                      <html:select id="horzAlignment.select">
+                        <html:option value="left">&tableAlignLeft.label;</html:option>
+                        <html:option value="center">&tableAlignCenter.label;</html:option>
+                        <html:option value="right">&tableAlignRight.label;</html:option>
+                      </html:select>
+                    </html:td>
+                  </html:tr>
+                  <html:tr>
+                    <html:td>
+                      <html:label for="vertAlignment.select">&cellVertical.label;</html:label>
+                    </html:td>
+                    <html:td>
+                      <html:select id="vertAlignment.select">
+                        <html:option value="top">&cellAlignTop.label;</html:option>
+                        <html:option value="center">&cellAlignCenter.label;</html:option>
+                        <html:option value="bottom">&cellAlignBottom.label;</html:option>
+                      </html:select>
+                    </html:td>
+                  </html:tr>
+                </html:table>
+              </html:fieldset>
+              <box align="vertical">
+                <html:fieldset>
+                  <html:legend>&cellTextStyle.label;</html:legend>
+                  <html:table>
+                    <html:tr>
+                      <html:td>
+                        <html:input type="checkbox" id="header.check"/>
+                      </html:td>
+                      <html:td>
+                        <html:label for="header.check">&cellHeader.label;</html:label>
+                      </html:td>
+                      <html:td>
+                        <html:input type="checkbox" id="nonbreaking.check"/>
+                      </html:td>
+                      <html:td>
+                        <html:label for="nonbreaking.check">&cellNonbreaking.label;</html:label>
+                      </html:td>
+                    </html:tr>
+                  </html:table>
+                </html:fieldset>
+                <spring flex="100%"/>
+              </box>
+            </box>
+
+            <html:fieldset>
+              <html:legend>&tableBackground.label;</html:legend>
+              <html:table width="100%">
+                <html:tr>
+                  <html:td>
+                    <html:label for="cellbgcolor.select">&tableColor.label;</html:label>
+                  </html:td>
+                  <html:td>
+                    <html:select id="cellbgcolor.select">
+                      <html:option> </html:option>
+                    </html:select>
+                  </html:td>
+                </html:tr>
+                <html:tr>
+                  <html:td>
+                    <html:label for="cellbgimage.text">&tableImage.label;</html:label>
+                  </html:td>
+                  <html:td>
+                      <html:input type="text" id="cellbgimage.text" style="width: 70%;"/>
+                      <titledbutton value="&tableChooseImage.label;" id="cellbgimage.button"/>
+                  </html:td>
+                </html:tr>
+                <html:tr>
+                  <html:td/>
+                  <html:td>
+                    <html:input type="checkbox" id="cellleaveLoc.check"/>
+                    <html:label for="cellleaveLoc.check">&tableLeaveImageAtLocation.label;</html:label>
+                  </html:td>
+                </html:tr>
+              </html:table>
+            </html:fieldset>
+          </box>
+    	  </tabpanel> 
+      </tabcontrol>
+      <box align="horizontal">
+        <!-- from EdDialogOverlay -->
+        <box id="advancedEditButton"/>
+        <spring flex="100%"/>
+	      <box id="okCancelButtons"/> 
+      </box>
+
 </window>

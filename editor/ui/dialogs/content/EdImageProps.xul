@@ -609,17 +609,13 @@
         <xul:box align="vertical" flex="100%" style="border: 1px outset white;">
                 
         <xul:titledbutton 
-                class           = "dropdown" 
                 src             = "&topIcon.url;" 
-                align           = "left"
                 value           = "&topPopup.value;"  
                 onclick         = "opener.SetImageAlignment('top'); 
                                 opener.popupSelectedImage('&topIcon.url;', 'image.alignType', 'src'); 
                                 window.close();" />
 
         <titledbutton 
-                class           = "dropdown" 
-                align           = "left"
                 src             = "&centerIcon.url;"
                 value           ="&centerPopup.value;"
                 onclick         = "opener.SetImageAlignment('middle'); 
@@ -627,27 +623,21 @@
                                 window.close();" />
 
         <titledbutton 
-                class           = "dropdown" 
                 src             = "&bottomIcon.url;"
-                align           = "left"
                 value           = "&bottomPopup.value;"
                 onclick         = "opener.SetImageAlignment('bottom', 'image.alignType'); 
                                 opener.popupSelectedImage('&bottomIcon.url;', 'image.alignType', 'src'); 
                                 window.close();" />
 
         <titledbutton 
-                class           = "dropdown"
                 src             = "&wrapRightIcon.url;"
-                align           = "left"
                 value           = "&wrapRightPopup.value;"
                 onclick         = "opener.SetImageAlignment('left', 'image.alignType'); 
                                 opener.popupSelectedImage('&wrapRightIcon.url;', 'image.alignType', 'src'); 
                                 window.close();" />
 
         <titledbutton 
-                class           = "dropdown"
                 src             = "&wrapLeftIcon.url;"
-                align           = "left"
                 value           = "&wrapLeftPopup.value;"
                 onclick         = "opener.SetImageAlignment('right'); 
                                 opener.popupSelectedImage('&wrapLeftIcon.url;', 'image.alignType', 'src'); 

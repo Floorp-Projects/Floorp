@@ -100,14 +100,14 @@ function ValidateData()
 
   // Set attributes: these may be empty strings
   borderText = TrimString(dialog.borderInput.value);
-  if (StringExists(borderText)) {
+  if (borderText) {
     // Set the other attributes on the table
     if (ValidateNumberString(borderText, 0, maxPixels))
       globalElement.setAttribute("border", borderText);
   }
 
   widthText = TrimString(dialog.widthInput.value);
-  if (StringExists(widthText)) {
+  if (widthText) {
     var maxLimit;
     if (percentChar == "%") {
       maxLimit = 100;

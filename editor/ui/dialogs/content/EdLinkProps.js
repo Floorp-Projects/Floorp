@@ -179,7 +179,7 @@ function ChooseFile()
 {
   // Get a local file, converted into URL format
   fileName = editorShell.GetLocalFileURL(window, "html");
-  if (StringExists(fileName)) {
+  if (fileName) {
     hrefInput.value = fileName;
   }
   // Put focus into the input field
@@ -196,11 +196,12 @@ function RemoveLink()
 // Set attributes on globalElement so they can be accessed by AdvancedEdit()
 function ValidateData()
 {
-  href = TrimString(hrefInput.value);
+  href = hrefInput.value.trimString();
   if (href.length > 0) {
     // Set the HREF directly on the editor document's anchor node
     //  or on the newly-created node if insertNew is true
     globalElement.setAttribute("href",href);
+    dump("HREF:"+href+"|\n");
   } else if (insertNew) {
     // We must have a URL to insert a new link
     //NOTE: WE ACCEPT AN EMPTY HREF TO ALLOW REMOVING AN EXISTING LINK,
@@ -217,6 +218,7 @@ function ValidateData()
       return false;
     }
   }
+  window.sizeToContent();
   return true;
 }
 

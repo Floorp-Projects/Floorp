@@ -33,9 +33,11 @@ function Startup()
   // Message is wrapped in a <div>
   // We will add child text node(s)
   var messageParent = (document.getElementById("message"));
-  var messageText = String(window.arguments[1]);
+  var messageText = "";
+  if(window.arguments[1])
+    messageText = String(window.arguments[1]);
 
-  if (StringExists(messageText)) {
+  if (messageText != "") {
     var messageFragment;
 
     // Let the caller use "\n" to cause breaks
@@ -75,7 +77,7 @@ function Startup()
   }
 
   titleText = String(window.arguments[2]);
-  if (StringExists(titleText)) {
+  if (titleText) {
     dump(titleText+" is the message dialog title\n");
     window.title = titleText;
   }
@@ -93,14 +95,14 @@ function Startup()
 function InitButton(argIndex, buttonID, useOK)
 {
   var button = document.getElementById(buttonID);
-  var text = String(window.arguments[argIndex]);
-  var exists = StringExists(text);
-  if (!exists && useOK) {
+  var text = "";
+  if(window.arguments[argIndex])
+    text = String(window.arguments[argIndex]);
+  if (text == "" && useOK) {
     text = "OK";
-    exists = true;
   }
 
-  if (exists)
+  if (text != "")
   {
     dump(text+"\n");
     button.setAttribute("value", text);
