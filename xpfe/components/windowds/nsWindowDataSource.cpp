@@ -159,6 +159,12 @@ nsWindowDataSource::OnWindowTitleChange(nsIXULWindow *window,
     nsCOMPtr<nsISupports> sup =
         dont_AddRef(mWindowResources.Get(&key));
 
+    // oops, make sure this window is in the hashtable!
+    if (!sup) {
+        OnOpenWindow(window);
+        sup = dont_AddRef(mWindowResources.Get(&key));
+    }
+    
     NS_ENSURE_TRUE(sup, NS_ERROR_UNEXPECTED);
 
     nsCOMPtr<nsIRDFResource> windowResource =
