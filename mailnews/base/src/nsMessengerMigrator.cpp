@@ -1403,8 +1403,12 @@ nsresult
 nsMessengerMigrator::MigrateOldMailPrefs(nsIMsgIncomingServer * server)
 {
   nsresult rv;
-    
-  MIGRATE_SIMPLE_BOOL_PREF(PREF_4X_MAIL_REMEMBER_PASSWORD,server,SetRememberPassword)
+
+  // don't migrate the remember password pref.  see bug #42216 
+  //MIGRATE_SIMPLE_BOOL_PREF(PREF_4X_MAIL_REMEMBER_PASSWORD,server,SetRememberPassword)
+  rv = server->SetRememberPassword(PR_FALSE);
+  if (NS_FAILED(rv)) return rv;
+  
 #ifdef CAN_UPGRADE_4x_PASSWORDS
   MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_POP_PASSWORD,server,SetPassword)
 #else
@@ -1607,7 +1611,10 @@ nsMessengerMigrator::MigrateOldImapPrefs(nsIMsgIncomingServer *server, const cha
   if (NS_FAILED(rv)) return rv;
 
   // upgrade the msg incoming server prefs
-  MIGRATE_BOOL_PREF("mail.imap.server.%s.remember_password",hostAndPort,server,SetRememberPassword)
+  // don't migrate the remember password pref.  see bug #42216 
+  //MIGRATE_BOOL_PREF("mail.imap.server.%s.remember_password",hostAndPort,server,SetRememberPassword)
+  rv = server->SetRememberPassword(PR_FALSE);
+  if (NS_FAILED(rv)) return rv;
 #ifdef CAN_UPGRADE_4x_PASSWORDS
   MIGRATE_STR_PREF("mail.imap.server.%s.password",hostAndPort,server,SetPassword)
 #else 
