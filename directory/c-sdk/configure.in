@@ -1223,6 +1223,18 @@ case "$target" in
 	    DLL_SUFFIX=dll
         
         CFLAGS="$CFLAGS -W3 -nologo -GF -Gy"
+        DLLFLAGS='-OUT:"$@"'
+        _DEBUG_FLAGS=-Z7
+        _OPTIMIZE_FLAGS=-O2
+        if test -z "$MOZ_OPTIMIZE"; then
+            CFLAGS="$CFLAGS -Od"
+        fi
+
+        if test -n "$USE_DEBUG_RTL"; then
+            CFLAGS="$CFLAGS -MDd"
+        else
+            CFLAGS="$CFLAGS -MD"
+        fi
 
         if test -n "$MOZ_DEBUG"; then
             AC_DEFINE(_DEBUG)
@@ -1231,32 +1243,16 @@ case "$target" in
         fi
 
         if test -n "$MOZ_OPTIMIZE"; then
-            CFLAGS="$CFLAGS -MD"
-            _OPTIMIZE_FLAGS=-O2
-            DLLFLAGS='-OUT:"$@"'
-
             if test -n "$MOZ_PROFILE"; then
                 _OPTIMIZE_FLAGS="$_OPTIMIZE_FLAGS -Z7"
                 DLLFLAGS="$DLLFLAGS -DEBUG -DEBUGTYPE:CV"
                 LDFLAGS="$LDFLAGS -DEBUG -DEBUGTYPE:CV"
             fi
-        else
-            if test -n "$USE_DEBUG_RTL"; then
-                CFLAGS="$CFLAGS -MDd"
-            else
-                CFLAGS="$CFLAGS -MD"
-            fi
-            _DEBUG_FLAGS="-Od -Z7"
-            DLLFLAGS='-DEBUG -DEBUGTYPE:CV -OUT:"$@"'
-            if test -n "$GLOWCODE"; then
-                DLLFLAGS='-DEBUG -DEBUGTYPE:both -INCLUDE:_GlowCode -OUT:"$@"'
-                DLL_LIBS='$(GLOWDIR)/glowcode.lib'
-            fi
-            LDFLAGS="-DEBUG -DEBUGTYPE:CV"
-            if test -n "$PROFILE"; then
-                LDFLAGS="$LDFLAGS -PROFILE -MAP"
-                DLLFLAGS="$DLLFLAGS -PROFILE -MAP"
-            fi
+        fi
+
+        if test -n "$MOZ_DEBUG"; then
+            DLLFLAGS="$DLLFLAGS -DEBUG -DEBUGTYPE:CV"
+            LDFLAGS="$LDFLAGS -DEBUG -DEBUGTYPE:CV"
         fi
         
         if test "$OS_TARGET" = "WINNT"; then
