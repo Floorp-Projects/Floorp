@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.8 $ $Date: 2001/11/08 00:15:20 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.9 $ $Date: 2001/11/08 20:46:08 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -271,7 +271,7 @@ nssTrustDomain_AddCertsToCache
     for (i=0; i<numCerts && certs[i]; i++) {
 	if (add_cert_to_cache(td, certs[i]) != PR_SUCCESS) {
 	    return PR_FAILURE;
-	}
+	} 
     }
     return PR_SUCCESS;
 }

@@ -925,7 +925,7 @@ CERTCertificateList *
 CERT_CertChainFromCert(CERTCertificate *cert, SECCertUsage usage,
 		       PRBool includeRoot)
 {
-#ifndef NSS_SOFTOKEN_MODULE
+#ifdef NSS_CLASSIC
     CERTCertificateList *chain = NULL;
     CERTCertificate *c;
     SECItem *p;

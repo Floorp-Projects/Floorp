@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.13 $ $Date: 2001/11/08 00:15:19 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.14 $ $Date: 2001/11/08 20:46:08 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -57,6 +57,7 @@ static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.13 $
 
 #ifndef CKT_H
 #ifdef NSS_3_4_CODE
+#include "pki3hack.h"
 #define NSSCKT_H 
 #endif
 #include "ckt.h"
@@ -105,7 +106,12 @@ nssCertificate_AddRef
   NSSCertificate *c
 )
 {
+#ifdef NSS_3_4_CODE
+    CERTCertificate *cc = STAN_GetCERTCertificate(c);
+    CERT_DupCertificate(cc);
+#else
     c->refCount++;
+#endif
     return c;
 }
 
@@ -230,7 +236,8 @@ static void make_nss3_nickname(NSSCertificate *c)
     char *fullname;
     PRUint32 len, tlen;
     tokenName = nssToken_GetName(c->token);
-    label = c->nickname;
+    label = c->nickname ? c->nickname : c->email;
+    if (!label) return;
     tlen = nssUTF8_Length(tokenName, &utf8rv); /* token name */
     tlen += 1;                                 /* :          */
     len = nssUTF8_Length(label, &utf8rv);      /* label      */
@@ -267,7 +274,8 @@ nssCertificate_CreateFromHandle
 	{ CKA_LABEL,            NULL, 0 },
 	{ CKA_ISSUER,           NULL, 0 },
 	{ CKA_SUBJECT,          NULL, 0 },
-	{ CKA_SERIAL_NUMBER,    NULL, 0 }
+	{ CKA_SERIAL_NUMBER,    NULL, 0 },
+	{ CKA_NETSCAPE_EMAIL,   NULL, 0 }
     };
     template_size = sizeof(cert_template) / sizeof(cert_template[0]);
     rvCert = NSSCertificate_Create(arenaOpt);
@@ -294,11 +302,19 @@ nssCertificate_CreateFromHandle
     NSS_CK_ATTRIBUTE_TO_ITEM(&cert_template[4], &rvCert->issuer);
     NSS_CK_ATTRIBUTE_TO_ITEM(&cert_template[5], &rvCert->subject);
     NSS_CK_ATTRIBUTE_TO_ITEM(&cert_template[6], &rvCert->serial);
-    /* get the email from an attrib */
+    NSS_CK_ATTRIBUTE_TO_UTF8(&cert_template[7],  rvCert->email);
+    nssCertificate_GetCertTrust(rvCert, session);
 #ifdef NSS_3_4_CODE
+    /* nss 3.4 database doesn't associate email address with cert */
+    if (!rvCert->email) {
+	nssDecodedCert *dc;
+	NSSASCII7 *email;
+	dc = nssCertificate_GetDecoding(rvCert);
+	email = dc->getEmailAddress(dc);
+	if (email) rvCert->email = nssUTF8_Duplicate(email, rvCert->arena);
+    }
     make_nss3_nickname(rvCert);
 #endif
-    nssCertificate_GetCertTrust(rvCert, session);
     return rvCert;
 loser:
     NSSCertificate_Destroy(rvCert);
@@ -568,6 +584,7 @@ NSSCertificate_BuildChain
     nssDecodedCert *dc;
     chain = nssList_Create(NULL, PR_FALSE);
     nssList_Add(chain, c);
+    if (statusOpt) *statusOpt = PR_SUCCESS;
     if (rvLimit == 1) goto finish;
     while (!nssItem_Equal(&c->subject, &c->issuer, &nssrv)) {
 	dc = nssCertificate_GetDecoding(c);
@@ -602,7 +619,6 @@ NSSCertificate_BuildChain
 	nssList_Add(chain, c);
 	if (nssList_Count(chain) == rvLimit) goto finish;
     }
-    if (statusOpt) *statusOpt = PR_SUCCESS;
 finish:
     if (rvOpt) {
 	rvChain = rvOpt;

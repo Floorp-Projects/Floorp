@@ -1040,7 +1040,7 @@ pk11_FindTokenAttribute(PK11TokenObject *object,CK_ATTRIBUTE_TYPE type)
 	return (PK11Attribute *) &pk11_StaticTrueAttr;
     case CKA_LABEL:
 	if ((object->obj.objclass == CKO_CERTIFICATE) 
-				&& (object->obj.objclass == CKO_PRIVATE_KEY)) {
+				|| (object->obj.objclass == CKO_PRIVATE_KEY)) {
 	    break;
 	}
 	return (PK11Attribute *) &pk11_StaticNullAttr;

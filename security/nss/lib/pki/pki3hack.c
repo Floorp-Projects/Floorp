@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.3 $ $Date: 2001/11/08 05:39:52 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.4 $ $Date: 2001/11/08 20:46:08 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -242,7 +242,7 @@ nss3certificate_matchUsage(nssDecodedCert *dc, NSSUsage *usage)
     unsigned int requiredKeyUsage;
     unsigned int requiredCertType;
     unsigned int certType;
-    PRBool bad;
+    PRBool match;
     CERTCertificate *cc = (CERTCertificate *)dc->data;
     SECCertUsage secUsage = usage->nss3usage;
     PRBool ca = usage->nss3lookingForCA;
@@ -252,10 +252,10 @@ nss3certificate_matchUsage(nssDecodedCert *dc, NSSUsage *usage)
     if (secrv != SECSuccess) {
 	return PR_FALSE;
     }
-    bad = PR_FALSE;
+    match = PR_TRUE;
     secrv = CERT_CheckKeyUsage(cc, requiredKeyUsage);
     if (secrv != SECSuccess) {
-	bad = PR_TRUE;
+	match = PR_FALSE;
     }
     if (ca) {
 	(void)CERT_IsCACert(cc, &certType);
@@ -263,9 +263,16 @@ nss3certificate_matchUsage(nssDecodedCert *dc, NSSUsage *usage)
 	certType = cc->nsCertType;
     }
     if (!(certType & requiredCertType)) {
-	bad = PR_TRUE;
+	match = PR_FALSE;
     }
-    return bad;
+    return match;
+}
+
+static NSSASCII7 *
+nss3certificate_getEmailAddress(nssDecodedCert *dc)
+{
+    CERTCertificate *cc = (CERTCertificate *)dc->data;
+    return (NSSASCII7 *)cc->emailAddr;
 }
 
 NSS_IMPLEMENT nssDecodedCert *
@@ -288,6 +295,7 @@ nssDecodedPKIXCertificate_Create
     rvDC->isValidAtTime = nss3certificate_isValidAtTime;
     rvDC->isNewerThan = nss3certificate_isNewerThan;
     rvDC->matchUsage = nss3certificate_matchUsage;
+    rvDC->getEmailAddress = nss3certificate_getEmailAddress;
     return rvDC;
 }
 
@@ -367,6 +375,8 @@ fill_CERTCertificateFields(NSSCertificate *c, CERTCertificate *cc)
     /* subjectList ? */
     /* pkcs11ID */
     cc->pkcs11ID = c->handle;
+    /* database handle is now the trust domain */
+    cc->dbhandle = c->trustDomain;
     /* pointer back */
     cc->nssCertificate = c;
 }

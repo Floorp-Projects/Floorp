@@ -35,7 +35,7 @@
 #define PKITM_H
 
 #ifdef DEBUG
-static const char PKITM_CVS_ID[] = "@(#) $RCSfile: pkitm.h,v $ $Revision: 1.3 $ $Date: 2001/10/19 18:16:45 $ $Name:  $";
+static const char PKITM_CVS_ID[] = "@(#) $RCSfile: pkitm.h,v $ $Revision: 1.4 $ $Date: 2001/11/08 20:46:08 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -79,6 +79,8 @@ struct nssDecodedCertStr {
     PRBool     (*isNewerThan)(nssDecodedCert *dc, nssDecodedCert *cmpdc);
     /* does the usage for this cert match the requested usage? */
     PRBool     (*matchUsage)(nssDecodedCert *dc, NSSUsage *usage);
+    /* extract the email address */
+    NSSASCII7 *(*getEmailAddress)(nssDecodedCert *dc);
 };
 
 struct NSSUsageStr {

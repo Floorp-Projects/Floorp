@@ -317,7 +317,7 @@ done:
 CERTCertificate *
 CERT_FindCertIssuer(CERTCertificate *cert, int64 validTime, SECCertUsage usage)
 {
-#ifndef NSS_SOFTOKEN_MODULE
+#ifdef NSS_CLASSIC
     CERTAuthKeyID *   authorityKeyID = NULL;  
     CERTCertificate * issuerCert     = NULL;
     SECItem *         caName;
@@ -404,7 +404,7 @@ loser:
     NSSCertificate *me;
     NSSTime *nssTime;
     NSSUsage nssUsage;
-    NSSCertificate *issuer;
+    NSSCertificate *chain[2];
     PRStatus status;
     me = STAN_GetNSSCertificate(cert);
     nssTime = NSSTime_SetPRTime(NULL, validTime);
@@ -412,10 +412,10 @@ loser:
     nssUsage.nss3usage = usage;
     nssUsage.nss3lookingForCA = PR_TRUE;
     (void)NSSCertificate_BuildChain(me, nssTime, &nssUsage, NULL, 
-                                    &issuer, 1, NULL, &status);
+                                    chain, 2, NULL, &status);
     nss_ZFreeIf(nssTime);
     if (status == PR_SUCCESS) {
-	CERTCertificate *rvc = STAN_GetCERTCertificate(issuer);
+	CERTCertificate *rvc = STAN_GetCERTCertificate(chain[1]);
 	return rvc;
     }
     return NULL;
