@@ -2857,7 +2857,7 @@ function __display(message, msgtype, sourceObj, destObj)
                  "time-d": formatTimeNumber(d.getDate(), 2), 
                  "time-h": formatTimeNumber(d.getHours(), 2), 
                  "time-n": formatTimeNumber(d.getMinutes(), 2), 
-                 "time-s": formatTimeNumber(d.getSeconds(), 2),
+                 "time-s": formatTimeNumber(d.getSeconds(), 2)
                };
     setAttribs (msgTimestamp, "msg-timestamp", atts);
     if (isImportant)
