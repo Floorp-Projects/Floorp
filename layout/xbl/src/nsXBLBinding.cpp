@@ -644,10 +644,10 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement, nsIXBLBinding** aB
         mouse = key = focus = xul = scroll = form = PR_FALSE;
 
         if (!special) {
-          mouse = IsMouseHandler(type);
-          if (!mouse) {
-            key = IsKeyHandler(type);
-            if (!key) {
+          key = IsKeyHandler(type);
+          if (!key) {
+            mouse = IsMouseHandler(type);
+            if (!mouse) {
               focus = IsFocusHandler(type);
               if (!focus) {
                 xul = IsXULHandler(type);

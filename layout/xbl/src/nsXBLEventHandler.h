@@ -31,6 +31,7 @@
 #include "nsIDOMMenuListener.h"
 #include "nsIDOMFocusListener.h"
 #include "nsIDOMScrollListener.h"
+#include "nsIDOMFormListener.h"
 
 class nsIXBLBinding;
 class nsIDOMEvent;
@@ -46,7 +47,8 @@ class nsXBLEventHandler : public nsIDOMKeyListener,
                           public nsIDOMMouseListener,
                           public nsIDOMMenuListener,
                           public nsIDOMFocusListener,
-                          public nsIDOMScrollListener
+                          public nsIDOMScrollListener,
+                          public nsIDOMFormListener
 {
 public:
   nsXBLEventHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler, const nsString& aEventName);
@@ -85,6 +87,13 @@ public:
   NS_IMETHOD Underflow(nsIDOMEvent* aEvent);
   NS_IMETHOD OverflowChanged(nsIDOMEvent* aEvent);
 
+  // form
+  virtual nsresult Submit(nsIDOMEvent* aEvent);
+  virtual nsresult Reset(nsIDOMEvent* aEvent);
+  virtual nsresult Change(nsIDOMEvent* aEvent);
+  virtual nsresult Select(nsIDOMEvent* aEvent);
+  virtual nsresult Input(nsIDOMEvent* aEvent);
+  
   NS_DECL_ISUPPORTS
 
 public:
