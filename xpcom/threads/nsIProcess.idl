@@ -16,6 +16,16 @@ interface nsIProcess : nsISupports
 	readonly attribute string processName;
 	readonly attribute unsigned long processSignature;
 	readonly attribute long exitValue;
+
+        /**
+         * Called to get the value of environment variable
+         *
+         * @param aName     The string enviroment variable name 
+         * @exception       NS_ERROR_OUT_OF_MEMORY
+         *
+         * @return 	    The value of the requested string environment variable name
+         */ 
+        string getEnvironment(in string aName);
 };
 
 %{C++

@@ -197,3 +197,15 @@ function displayError(message) {
         promptService.alert(null, title, err);
     } 
 }
+
+function getenv(name) {
+	
+    try {
+        var currentProcess=Components.classes["@mozilla.org/process/util;1"].createInstance(Components.interfaces.nsIProcess);
+        return currentProcess.getEnvironment(name);
+    }
+    catch(e) {
+        displayError("getEnvironment failed with error: " + e);
+    }
+}
+
