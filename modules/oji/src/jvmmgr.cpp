@@ -42,7 +42,7 @@
 #include "ProxyJNI.h"
 #include "lcglue.h"
 #include "nsCSecurityContext.h"
-#include "nsISecurityContext.h"
+#include "nsIJSContextStack.h"
 
 static NS_DEFINE_CID(kJVMManagerCID, NS_JVMMANAGER_CID);
 static NS_DEFINE_IID(kIJVMConsoleIID, NS_IJVMCONSOLE_IID);
@@ -362,157 +362,12 @@ JVM_IsLiveConnectEnabled(void)
 }
 
 
-static
-JVMSecurityStack *
-findPrevNode(JSStackFrame  *pCurrentFrame)
-{
-	  JVMContext* context = GetJVMContext();
-   JVMSecurityStack *pSecInfoBottom = context->securityStack;
-   if (pSecInfoBottom == NULL)
-   {
-      return NULL;
-   }
-
-   JVMSecurityStack *pSecInfoTop = pSecInfoBottom->prev;
-   if (pCurrentFrame == NULL)
-   {
-      return pSecInfoTop;
-   }
-   if ( pSecInfoBottom->pJavaToJSFrame == pCurrentFrame )
-   {
-      return NULL;
-   }
-   JVMSecurityStack *pTempSecNode = pSecInfoTop;
-
-   while( pTempSecNode->pJSToJavaFrame != pCurrentFrame )
-   {
-      pTempSecNode = pTempSecNode->prev;
-      if ( pTempSecNode == pSecInfoTop )
-      {
-         break;
-      }
-   }
-   if( pTempSecNode->pJSToJavaFrame == pCurrentFrame )
-   {
-     return pTempSecNode;
-   }
-   return NULL;
-}
-
-PR_IMPLEMENT(PRBool)
-JVM_NSISecurityContextImplies(JSStackFrame  *pCurrentFrame, const char* target, const char* action)
-{
-    JVMSecurityStack *pSecInfo = findPrevNode(pCurrentFrame);
-
-    if (pSecInfo == NULL)
-    {
-       return PR_FALSE;
-    }
-
-    nsISecurityContext *pNSISecurityContext = (nsISecurityContext *)pSecInfo->pNSISecurityContext;
-    PRBool bAllowedAccess = PR_FALSE;
-    if (pNSISecurityContext != NULL)
-    {
-       pNSISecurityContext->Implies(target, action, &bAllowedAccess);
-    }
-    return bAllowedAccess;
-}
-
-PR_IMPLEMENT(void *)
-JVM_GetJavaPrincipalsFromStackAsNSVector(JSStackFrame  *pCurrentFrame)
-{
-    JVMSecurityStack *pSecInfo = findPrevNode(pCurrentFrame);
-
-    if (pSecInfo == NULL)
-    {
-       return NULL;
-    }
-
-    JVMContext* context = GetJVMContext();
-    JSContext *pJSCX = context->js_context;
-    if (pJSCX == NULL)
-    {
-       //TODO: Get to the new context from DOM.
-       //pJSCX = LM_GetCrippledContext();
-    }
-    /*
-    ** TODO: Get raman's help here. I don't know how we are going to give back a nsPrincipals array.
-    ** Tom's new code should now use a different signature and accept a nsIPrincipal vector object 
-    ** instead in lm_taint.c and then call into caps. Caps needs to change to accommodate this.
-    void *pNSPrincipalArray  = ConvertNSIPrincipalToNSPrincipalArray(NULL, pJSCX, pSecInfo->pNSIPrincipaArray, 
-                                                                     pSecInfo->numPrincipals, pSecInfo->pNSISecurityContext);
-    if (pNSPrincipalArray != NULL)
-    {
-       return pNSPrincipalArray;
-    }
-    */
-    return NULL;
-}
-
-
-PR_IMPLEMENT(JSPrincipals*)
-JVM_GetJavaPrincipalsFromStack(JSStackFrame  *pCurrentFrame)
-{
-    JVMSecurityStack *pSecInfo = findPrevNode(pCurrentFrame);
-
-    if (pSecInfo == NULL)
-    {
-       return NULL;
-    }
-
-    JVMContext* context = GetJVMContext();
-    JSContext *pJSCX = context->js_context;
-    if (pJSCX == NULL)
-    {
-       //TODO: Get to the new context from DOM.
-       //pJSCX = LM_GetCrippledContext();
-    }
-    /* TODO: 
-    ** Get raman's help here. We should not need to convert nsIPrincipal to nsPrincipal anymore.
-    ** But we should convert from nsIPrincipal array to a nsIPrincipal array object represented as
-    ** nsVector. Use this vector to pass into Tom's code to get to the JSPrinciapals
-    void *pNSPrincipalArray  = ConvertNSIPrincipalArrayToObject(NULL, pJSCX, pSecInfo->pNSIPrincipaArray, 
-                                                                     pSecInfo->numPrincipals, pSecInfo->pNSISecurityContext);
-    if (pNSPrincipalArray != NULL)
-    {
-        return LM_GetJSPrincipalsFromJavaCaller(pJSCX, pNSPrincipalArray, pSecInfo->pNSISecurityContext);
-    }
-    */
-    return NULL;
-}
-
-PR_IMPLEMENT(JSStackFrame*)
-JVM_GetEndJSFrameFromParallelStack(JSStackFrame  *pCurrentFrame)
-{
-    JVMSecurityStack *pSecInfo = findPrevNode(pCurrentFrame);
-
-    if (pSecInfo == NULL)
-    {
-       return NULL;
-    }
-    return pSecInfo->pJavaToJSFrame;
-}
-
-PR_IMPLEMENT(JSStackFrame**)
-JVM_GetStartJSFrameFromParallelStack()
-{
-	JVMContext* context = GetJVMContext();
-	return &context->js_startframe;
-}
-
 PR_IMPLEMENT(nsISecurityContext*) 
 JVM_GetJSSecurityContext()
 {
-    JVMContext* context = GetJVMContext();
-    JVMSecurityStack  *securityStack = context->securityStack; 
-    JVMSecurityStack  *securityStackTop = NULL;
-    JSContext         *cx = context->js_context;
-
-    if(securityStack != NULL) {
-	securityStackTop = securityStack->prev; 
-	JSStackFrame *fp = NULL;
-	securityStackTop->pJSToJavaFrame = JS_FrameIterator(cx, &fp);
-    }
+    JSContext *cx = nsnull;
+    nsCOMPtr<nsIJSContextStack> stack = do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+    if (stack) stack->Peek(&cx);
 
     nsCSecurityContext *securityContext = new nsCSecurityContext(cx);
     if (securityContext == nsnull) {
