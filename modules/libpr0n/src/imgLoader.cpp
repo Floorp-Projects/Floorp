@@ -48,8 +48,8 @@
 // until this point, we have an evil hack:
 #include "nsIHttpChannelInternal.h"  
 
-#ifdef DEBUG_pavlov
-#include "nsIEnumerator.h"
+#if defined(DEBUG_pavlov) || defined(DEBUG_timeless)
+#include "nsISimpleEnumerator.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsXPIDLString.h"
@@ -57,13 +57,18 @@
 
 static void PrintImageDecoders()
 {
-  nsCOMPtr<nsIEnumerator> enumer;
-  nsComponentManager::EnumerateContractIDs(getter_AddRefs(enumer));
-
+  nsCOMPtr<nsIComponentRegistrar> compMgr;
+  if (NS_FAILED(NS_GetComponentRegistrar(getter_AddRefs(compMgr))) || !compMgr)
+    return;
+  nsCOMPtr<nsISimpleEnumerator> enumer;
+  if (NS_FAILED(compMgr->EnumerateContractIDs(getter_AddRefs(enumer))) || !enumer)
+    return;
+  
   nsCString str;
   nsCOMPtr<nsISupports> s;
-  do {
-    enumer->CurrentItem(getter_AddRefs(s));
+  PRBool more = PR_FALSE;
+  while (NS_SUCCEEDED(enumer->HasMoreElements(&more)) && more) {
+    enumer->GetNext(getter_AddRefs(s));
     if (s) {
       nsCOMPtr<nsISupportsCString> ss(do_QueryInterface(s));
 
@@ -76,7 +81,7 @@ static void PrintImageDecoders()
         printf("Have decoder for mime type: %s\n", xcs.get()+decoderContract.Length());
       }
     }
-  } while(NS_SUCCEEDED(enumer->Next()));
+  }
 }
 #endif
 
