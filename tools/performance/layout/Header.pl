@@ -35,8 +35,8 @@ sub debug_print {
 }
 
 @ARGV;
-$buildIDFile = $ARGV[0];
-$buildIDFile = '< '.$buildIDFile.'\bin\chrome\navigator\locale\en-US\navigator.dtd';
+$buildRoot = $ARGV[0];
+$buildIDFile = '< '.$buildRoot.'\bin\chrome\navigator\locale\navigator.dtd';
 $pullDate = $ARGV[1];
 $useClockTime = $ARGV[2];
 
@@ -48,10 +48,8 @@ while (<XUL_FILE>)
   $ThisLine = $_;
   chop ($ThisLine);
   if (/Build ID/){
-    @LineList = split (/ /, $ThisLine);
-    $BuildNo = $LineList[3];
-    $BuildNo .= " ".$LineList[4];
-    $BuildNo .= " ".$LineList[5];
+    @LineList = split (/\"/, $ThisLine);
+    $BuildNo = $LineList[1];
   }
 }
 $BuildNo =~ s/"//g;

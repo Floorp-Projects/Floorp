@@ -42,6 +42,16 @@
 #  (most likely the index into the tokens will change. Search for SENSITIVE in teh script)
 #
 ##########################################################################################
+
+#------------------------------------------------------------------------------
+sub debug_print {
+  foreach $str (@_){
+#    print( $str );
+  }
+}
+#------------------------------------------------------------------------------
+
+
 @ARGV;
 $dir="Logs\\";
 $i=0;
@@ -50,6 +60,7 @@ $fileURL=0;
 $httpURL=0;
 $shellID;
 $infileName = $ARGV[0];
+$supportHTTP = 0; # set to 1 if HTTP URLs are to be supported
 
 open(COMBINEFILE, "< $infileName") or die "Unable to open $infileName\n";
 while(<COMBINEFILE>){
@@ -59,24 +70,26 @@ while(<COMBINEFILE>){
 	if($TimingBlockBegun == 0) {
 		# look for the start of a new block
 		if($_ =~ /Timing layout processes on url/){
-			#print( "Timing begin candidate: $_ \n" );
+			debug_print( "Timing begin candidate: $_ \n" );
 
 			# see if it is a file or http url. 
 			# If so, we are starting, otherwise it is probably a chrome url so ignore it
 			if( $_ =~ /url: \'file:/ ){
-				#printf( " - file URL\n" );
+				debug_print( " - file URL\n" );
 				$url = $tokens[6];
 				$TimingBlockBegun=1;
 				$httpURL=0;
 				$fileURL=1;
 			}
-			if( $_ =~ /url: \'http:/  ){
-				#printf( "http URL\n" );
-				$url = $tokens[6];			### SENSITIVE to installation path
-				$TimingBlockBegun=1;
-				$fileURL=0;
-				$httpURL=1;
-			}
+      if($supportHTTP > 0) {
+			  if( $_ =~ /url: \'http:/  ){
+				  debug_print( "http URL\n" );
+				  $url = $tokens[6];			### SENSITIVE to installation path
+				  $TimingBlockBegun=1;
+				  $fileURL=0;
+				  $httpURL=1;
+			  }
+      }
 
 			# if we got a valid block then extract the WebShellID 
 			# for matching the end-of-block later
@@ -84,7 +97,7 @@ while(<COMBINEFILE>){
 				chop($url);
 				$shellID = $tokens[8];
 				chop( $shellID );
-				#print( " - WebShellID: $shellID\n");
+				debug_print( " - WebShellID: $shellID\n");
 				@urlParts = split(/\//, $url);
 				if($fileURL > 0){
 					$urlName = $urlParts[9];	### SENSITIVE to installation path
@@ -106,9 +119,9 @@ while(<COMBINEFILE>){
 		if( $_ =~ /Layout \+ Page Load/ ){
 			# Match the WebShell ID - if it is a match then our block ended,
 			# otherwise it is the end of another block within our block
-			$webshellID = "\(webshell=".$shellID."\)";
+			$webshellID = "\(webBrowserChrome=".$shellID."\)";
 			if( $tokens[6] =~ /$webshellID/ ){
-				#print( "- WebShellID MATCH: $webshellID $tokens[6]\n" );
+				debug_print( "- WebShellID MATCH: $webshellID $tokens[6]\n" );
         $done=1;
 			} else {
         $keepLine=0; 
