@@ -24,9 +24,6 @@ if ($_SESSION["level"] == "user") {
 ?>
 <li><A HREF="usermanager.php?function=edituser&amp;userid=<?php echo"$_SESSION[uid]"; ?>">Your Profile</A></li>
 <li><A HREF="approval.php">Approval Queue <?php if ($skipqueue != "true") { echo"($queuenum)"; } ?></A></li>
-<li><A HREF="listmanager.php?type=T">Themes list</A></li>
-<li><A HREF="listmanager.php?type=E">Extensions list</A></li>
-<li><A HREF="usermanager.php">Users Manager</A></li>
 <li><a href="commentsmanger.php?function=flaggedcomments">Comments Manager <?php if ($skipcomments != "true") { echo"($commentsnum)"; } ?></a></li>
 <li><a href="reviewsmanager.php">Reviews Manager</a></li>
 <?php

@@ -12,9 +12,7 @@ include"$page_header";
 include"inc_sidebar.php";
 ?>
 <?php
-if ($_SESSION["level"]=="admin") {
-    //Do Nothing, they're good. :-)
-} else {
+if ($_SESSION["level"]!="admin") {
     echo"<h1>Access Denied</h1>\n";
     echo"You do not have access to the Application Manager";
     include"$page_footer";

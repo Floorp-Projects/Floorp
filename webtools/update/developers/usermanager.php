@@ -59,12 +59,10 @@ class PermissionsManager {
 $function = $_GET["function"];
 $perms=new PermissionsManager($function);
 
-//Access Level: "user" code, to keep user from altering other profiles but their own.
-if ($_SESSION["level"] !=="admin" and $_SESSION["level"] !=="editor") {
+//Access Level: only admins can edit somebody else's profile
+if ($_SESSION["level"] !=="admin") {
   //Kill access to add user.
-  if ($function=="adduser" or $function=="postnewuser") {unset($function);}
-
-  if (!$function) { $function="edituser"; }
+  $function="edituser";
   $userid=$_SESSION["uid"];
 }
 
