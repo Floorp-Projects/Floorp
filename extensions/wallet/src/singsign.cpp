@@ -1731,7 +1731,7 @@ SI_LoadSignonData(PRBool fullLoad) {
 
   nsKeyType readCount = 0;
 
-  if (si_FullyLoaded && fullLoad) {
+  if (si_FullyLoaded && fullLoad && !si_KeyTimedOut()) {
     return 0;
   }
 
