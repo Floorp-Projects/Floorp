@@ -25,11 +25,14 @@
 #include "nsIImage.h"
 #include "nsAFMObject.h"
 
- 
 extern "C" PS_FontInfo *PSFE_MaskToFI[N_FONTS];   // need fontmetrics.c
 
+// These set the location to standard C and back
+// which will keep the "." from converting to a "," 
+// in certain languages for floating point output to postscript
 #define XL_SET_NUMERIC_LOCALE() char* cur_locale = setlocale(LC_NUMERIC, "C")
 #define XL_RESTORE_NUMERIC_LOCALE() setlocale(LC_NUMERIC, cur_locale)
+
 #define NS_PS_RED(x) (((float)(NS_GET_R(x))) / 255.0) 
 #define NS_PS_GREEN(x) (((float)(NS_GET_G(x))) / 255.0) 
 #define NS_PS_BLUE(x) (((float)(NS_GET_B(x))) / 255.0) 
@@ -769,9 +772,7 @@ nsPostScriptObj::translate(int x, int y)
 {
     XL_SET_NUMERIC_LOCALE();
     y -= mPrintContext->prInfo->page_topy;
-    /*
-    ** Agh! Y inversion again !!
-    */
+    // Y inversion
     y = (mPrintContext->prInfo->page_height - y - 1) + mPrintContext->prSetup->bottom;
 
     XP_FilePrintf(mPrintContext->prSetup->out, "%g %g translate\n", PAGE_TO_POINT_F(x), PAGE_TO_POINT_F(y));
@@ -855,8 +856,10 @@ PRUint8 *theBits,*curline;
 void
 nsPostScriptObj::setcolor(nscolor aColor)
 {
+  XL_SET_NUMERIC_LOCALE();
   XP_FilePrintf(mPrintContext->prSetup->out,"%3.2f %3.2f %3.2f setrgbcolor\n", NS_PS_RED(aColor), NS_PS_GREEN(aColor),
 		  NS_PS_BLUE(aColor));
+  XL_RESTORE_NUMERIC_LOCALE();
 }
 
 
@@ -932,7 +935,7 @@ int postscriptFont = 0;
 }
 
 /** ---------------------------------------------------
- *  OSee documentation in nsPostScriptObj.h
+ *  See documentation in nsPostScriptObj.h
  *	@update 2/1/98 dwc
  */
 void 
