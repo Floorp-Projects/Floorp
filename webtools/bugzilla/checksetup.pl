@@ -376,7 +376,7 @@ $db_user = "bugs";              # user to attach to the MySQL database
 ');
 LocalVar('db_pass', '
 #
-# Enter your database password here. It's normally advisable to specify
+# Enter your database password here. It\'s normally advisable to specify
 # a password for your bugzilla database user.
 # If you use apostrophe (\') or a backslash (\\) in your password, you\'ll
 # need to escape it by preceding it with a \\ character. (\\\') or (\\\\)
