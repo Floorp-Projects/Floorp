@@ -163,7 +163,7 @@ function downloadCompleted(aDownload)
     gDownloadViewController.onCommandUpdate();
 
     if (gActiveDownloads.length == 0)
-      window.title = document.documentElement.getAttribute("statictitle");    
+      document.title = document.documentElement.getAttribute("statictitle");
   }
   catch (e) {
   }
@@ -410,7 +410,7 @@ function onUpdateProgress()
 {
   var numActiveDownloads = gActiveDownloads.length;
   if (numActiveDownloads == 0) {
-    window.title = document.documentElement.getAttribute("statictitle");
+    document.title = document.documentElement.getAttribute("statictitle");
     gLastComputedMean = 0;
     return;
   }
@@ -430,7 +430,7 @@ function onUpdateProgress()
   // mean progress will be zero but the last computed mean will be
   // greater than zero. 
   if (mean == 0 && gLastComputedMean > 0) {
-    window.title = document.documentElement.getAttribute("statictitle");
+    document.title = document.documentElement.getAttribute("statictitle");
     return;
   }
   if (mean != gLastComputedMean) {
@@ -443,7 +443,7 @@ function onUpdateProgress()
     else
       title = strings.getFormattedString("downloadsTitle", [mean]);
 
-    window.title = title;
+    document.title = title;
   }
 }
 
