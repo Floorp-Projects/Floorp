@@ -42,6 +42,7 @@ include <$(DEPTH)\config\rules.mak>
 install:: $(PROGRAMS)
 	$(MAKE_INSTALL) $(PROG0) $(DIST)\bin
 	$(MAKE_INSTALL) strres.properties $(DIST)\bin\res
+	$(MAKE_INSTALL) strres-test.html $(DIST)\bin\res
 
 clobber::
 	rm -f $(DIST)\bin\StringBundleTest.exe
