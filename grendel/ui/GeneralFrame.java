@@ -27,6 +27,8 @@ import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Rectangle;
 import java.awt.event.WindowAdapter;
@@ -75,7 +77,10 @@ import javax.swing.BoxLayout;
 import calypso.util.Preferences;
 import calypso.util.PreferencesFactory;
 
+import grendel.ui.ToolBarLayout;
 import grendel.widgets.Animation;
+import grendel.widgets.CollapsiblePanel;
+import grendel.widgets.GrendelToolBar;
 
 public class GeneralFrame extends JFrame
 {
@@ -86,9 +91,10 @@ public class GeneralFrame extends JFrame
   protected Container     fPanel;
   protected Animation     fAnimation;
   protected JMenuBar      fMenu;
-  //  protected CollapsibleToolbarPanel fToolBarPanel;
-  protected JPanel        fToolBarPanel;
-  protected JToolBar      fToolBar;
+  protected CollapsiblePanel        fToolBarPanel;
+  protected GridBagLayout fToolBarPanelLayout;
+  protected GridBagConstraints fToolBarPanelConstraints;
+  protected GrendelToolBar      fToolBar;
   protected Component     fStatusBar;
   protected String        fResourceBase = "grendel.ui";
   protected String        fID;
@@ -131,9 +137,11 @@ public class GeneralFrame extends JFrame
     fAnimation.setImageTemplate("/grendel/ui/images/animation/AnimHuge{0,number,00}.gif",
                                 40);
 
-    //   fToolBarPanel = new CollapsibleToolbarPanel(this);
-    fToolBarPanel = new JPanel(true);
-    fPanel.add(BorderLayout.NORTH, fToolBarPanel);
+    fToolBarPanel = new CollapsiblePanel(true);
+    fToolBarPanelLayout = new ToolBarLayout();
+    fToolBarPanelConstraints = new GridBagConstraints();
+    fToolBarPanel.setLayout(fToolBarPanelLayout);
+    fPanel.add(fToolBarPanel, BorderLayout.NORTH);
     //    fUIManager = new netscape.orion.uimanager.UIManager(fToolBarPanel);
 
     // We need to use Class.forName because getClass() might return a child
@@ -159,8 +167,9 @@ public class GeneralFrame extends JFrame
     super.dispose();
 
     if (!sExternalShell && fFrameList.size() == 0) {
-      // ActionFactory.GetExitAction().actionPerformed(null);
+      ActionFactory.GetExitAction().actionPerformed(null);
       System.out.println("Exiting...");
+
     }
 
     UIManager.removePropertyChangeListener(fLAFListener);
