@@ -29,6 +29,7 @@
 class nsIImageGroup;
 class nsIImage;
 
+enum nsHitLocation { eTriggerHit, eContentHit, eBackgroundHit };
 
 //------------------------------------------------------------
 // A tree view consists of several components: a title bar, a control strip,
@@ -118,7 +119,6 @@ protected:
 	void HandleMouseUp(nsGUIEvent* aEvent);
 
 	// Helper for determining hit locations.
-	enum nsHitLocation { eTriggerHit, eContentHit, eBackgroundHit };
 	void DetermineHitLocation(const nsPoint& point, 
 						      PRUint32& row, PRUint32& column, nsHitLocation& location);
 
