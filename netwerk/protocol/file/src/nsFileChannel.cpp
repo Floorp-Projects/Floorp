@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:set ts=4 sw=4 sts=4 et cin: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -68,7 +69,9 @@ nsFileChannel::nsFileChannel()
 nsresult
 nsFileChannel::Init(nsIURI *uri)
 {
-    nsresult rv;
+    nsresult rv = nsHashPropertyBag::Init();
+    if (NS_FAILED(rv))
+        return rv;
     mURL = do_QueryInterface(uri, &rv);
     return rv;
 }
@@ -124,15 +127,17 @@ nsFileChannel::EnsureStream()
 // nsISupports
 //-----------------------------------------------------------------------------
 
-// XXX this only needs to be threadsafe because of bug 101252
-NS_IMPL_THREADSAFE_ISUPPORTS7(nsFileChannel,
-                              nsIRequest,
-                              nsIChannel,
-                              nsIStreamListener,
-                              nsIRequestObserver,
-                              nsIUploadChannel,
-                              nsIFileChannel,
-                              nsITransportEventSink)
+NS_IMPL_ADDREF_INHERITED(nsFileChannel, nsHashPropertyBag)
+NS_IMPL_RELEASE_INHERITED(nsFileChannel, nsHashPropertyBag)
+NS_INTERFACE_MAP_BEGIN(nsFileChannel)
+    NS_INTERFACE_MAP_ENTRY(nsIRequest)
+    NS_INTERFACE_MAP_ENTRY(nsIChannel)
+    NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
+    NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
+    NS_INTERFACE_MAP_ENTRY(nsIUploadChannel)
+    NS_INTERFACE_MAP_ENTRY(nsIFileChannel)
+    NS_INTERFACE_MAP_ENTRY(nsITransportEventSink)
+NS_INTERFACE_MAP_END_INHERITING(nsHashPropertyBag)
 
 //-----------------------------------------------------------------------------
 // nsIRequest

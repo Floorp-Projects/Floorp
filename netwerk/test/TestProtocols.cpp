@@ -77,6 +77,9 @@
 #include "nsIAuthPrompt.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
+#include "nsIPropertyBag2.h"
+#include "nsIWritablePropertyBag2.h"
+#include "nsChannelProperties.h"
 
 #include "nsISimpleEnumerator.h"
 #include "nsXPIDLString.h"
@@ -393,15 +396,26 @@ InputTestConsumer::OnStartRequest(nsIRequest *request, nsISupports* context)
     LOG(("\tChannel Owner: %x\n", owner.get()));
   }
 
-  nsCOMPtr<nsIProperties> props = do_QueryInterface(request);
+  nsCOMPtr<nsIPropertyBag2> props = do_QueryInterface(request);
   if (props) {
       nsCOMPtr<nsIURI> foo;
-      props->Get("test.foo", NS_GET_IID(nsIURI), getter_AddRefs(foo));
+      props->GetPropertyAsInterface(NS_LITERAL_STRING("test.foo"),
+                                    NS_GET_IID(nsIURI),
+                                    getter_AddRefs(foo));
       if (foo) {
           nsCAutoString spec;
           foo->GetSpec(spec);
           LOG(("\ttest.foo: %s\n", spec.get()));
       }
+  }
+
+  nsCOMPtr<nsIPropertyBag2> propbag = do_QueryInterface(request);
+  if (propbag) {
+      PRInt64 len;
+      nsresult rv = propbag->GetPropertyAsInt64(NS_CHANNEL_PROP_CONTENT_LENGTH,
+                                                &len);
+      if (NS_SUCCEEDED(rv))
+          LOG(("\t64-bit length: %lli\n", len));
   }
 
   nsCOMPtr<nsIHttpChannelInternal> httpChannelInt(do_QueryInterface(request));
@@ -626,9 +640,11 @@ nsresult StartLoadingURL(const char* aUrlString)
             return rv;
         }
 
-        nsCOMPtr<nsIProperties> props = do_QueryInterface(pChannel);
+        nsCOMPtr<nsIWritablePropertyBag2> props = do_QueryInterface(pChannel);
         if (props) {
-            if (NS_SUCCEEDED(props->Set("test.foo", pURL)))
+            rv = props->SetPropertyAsInterface(NS_LITERAL_STRING("test.foo"),
+                                               pURL);
+            if (NS_SUCCEEDED(rv))
                 LOG(("set prop 'test.foo'\n"));
         }
 

@@ -58,6 +58,7 @@
 #include "nsIDocument.h"
 #include "nsIPrincipal.h"
 #include "nsIObserverService.h"
+#include "nsIPropertyBag2.h"
 
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
@@ -149,10 +150,10 @@ nsInstallTrigger::HandleContent(const char * aContentType,
 
 
     // Save the referrer if any, for permission checks
-    static const char kReferrerProperty[] = "docshell.internalReferrer";
+    NS_NAMED_LITERAL_STRING(referrerProperty, "docshell.internalReferrer");
     PRBool useReferrer = PR_FALSE;
     nsCOMPtr<nsIURI> referringURI;
-    nsCOMPtr<nsIProperties> channelprops(do_QueryInterface(channel));
+    nsCOMPtr<nsIPropertyBag2> channelprops(do_QueryInterface(channel));
 
     if (channelprops)
     {
@@ -160,18 +161,17 @@ nsInstallTrigger::HandleContent(const char * aContentType,
         // channels support our internal-referrer property).
         //
         // It's possible docshell explicitly set a null referrer in the case
-        // of typed, pasted, or bookmarked URLs and the like. In this null
-        // referrer case we get NS_ERROR_NO_INTERFACE rather than the usual
-        // NS_ERROR_FAILURE that indicates the property was not set at all.
+        // of typed, pasted, or bookmarked URLs and the like. In such a case
+        // we get a success return value with null pointer.
         //
         // A null referrer is automatically whitelisted as an explicit user
         // action (though they'll still get the confirmation dialog). For a
         // missing referrer we go to our fall-back plan of using the XPI
         // location for whitelisting purposes.
-        rv = channelprops->Get(kReferrerProperty,
-                               NS_GET_IID(nsIURI),
-                               getter_AddRefs(referringURI));
-        if (NS_SUCCEEDED(rv) || rv == NS_ERROR_NO_INTERFACE)
+        rv = channelprops->GetPropertyAsInterface(referrerProperty,
+                                                  NS_GET_IID(nsIURI),
+                                                  getter_AddRefs(referringURI));
+        if (NS_SUCCEEDED(rv))
             useReferrer = PR_TRUE;
     }
 

@@ -66,3 +66,5 @@ endif
 FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
+
+DEFINES += -DIMPL_NS_NET
