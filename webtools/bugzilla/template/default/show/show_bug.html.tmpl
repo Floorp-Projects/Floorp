@@ -24,7 +24,7 @@
     h1 = "Bugzilla Bug $bug.bug_id"
     h2 = bug.short_desc
     extra = navigation_links()
-  %]
+   %]
 [% END %]
 
 [% PROCESS show/navigate.html.tmpl %]
@@ -45,7 +45,7 @@
         <b>Bug#:</b>
       </td>
       <td>
-        <a href="[% urlbase %]show_bug.cgi?id=[% bug.bug_id %]">
+        <a href="[% Param('urlbase') %]show_bug.cgi?id=[% bug.bug_id %]">
           [% bug.bug_id %]</a>
       </td>
       
@@ -60,7 +60,7 @@
         <b>Reporter:</b>
       </td>
       <td>
-        [% bug.reporter %]
+        [% bug.reporter FILTER html %]
       </td>    
     </tr>
     
@@ -88,7 +88,7 @@
     <tr>
       <td align="right">
         <b>
-          <a href="describecomponents.cgi?product=[% bug.product %]">
+          <a href="describecomponents.cgi?product=[% bug.product FILTER uri %]">
             Component</a>:
         </b>
       </td>
@@ -96,7 +96,8 @@
         <select name="component">
           [% FOREACH x = component_ %]
             <option value="[% x %]"
-              [% " selected" IF x == bug.component %]>[% x %]</option>
+              [% " selected" IF x == bug.component %]>[% x FILTER html %]
+            </option>
           [% END %]
         </select>
       </td>
@@ -133,7 +134,7 @@
           <a href="bug_status.html">Status</a>:
         </b>
       </td>
-      <td>[% bug.bug_status %]</td>      
+      <td>[% bug.bug_status FILTER html %]</td>      
       <td>&nbsp;</td>
       
       <td align="right">
@@ -148,7 +149,7 @@
           <a href="bug_status.html">Resolution</a>:
         </b>
       </td>
-      <td>[% bug.resolution %]</td>      
+      <td>[% bug.resolution FILTER html %]</td>      
       <td>&nbsp;</td>
       
       <td align="right">
@@ -164,7 +165,7 @@
           <a href="bug_status.html#assigned_to">Assigned&nbsp;To</a>:
         </b>
       </td>
-      <td>[% bug.assigned_to %]</td>
+      <td>[% bug.assigned_to FILTER html %]</td>
       <td>&nbsp;</td>
  
       [% IF Param("usetargetmilestone") && bug.target_milestone %]
@@ -187,7 +188,8 @@
        <b>QA Contact:</b>
        </td>
        <td colspan="7">
-         <input name="qa_contact" value="[% bug.qa_contact %]" size="60">
+         <input name="qa_contact" 
+                value="[% bug.qa_contact FILTER html %]" size="60">
        </td>
      </tr>
    [% END %]
@@ -195,7 +197,7 @@
   <tr>
     <td align="right">
       <b>
-        [% IF bug.url %]
+        [% IF bug.bug_file_loc %]
           <a href="[% bug.bug_file_loc FILTER uri %]">URL:</a>
         [% ELSE %]
           URL:
@@ -203,7 +205,8 @@
       </b>
     </td>
     <td colspan="7">
-      <input name="bug_file_loc" value="[% bug.bug_file_loc %]" size="60">
+      <input name="bug_file_loc" 
+             value="[% bug.bug_file_loc FILTER html %]" size="60">
     </td>
   </tr>
   
@@ -212,7 +215,8 @@
       <b>Summary:</b>
     </td>
     <td colspan="7">
-      <input name="short_desc" value="[% bug.short_desc %]" size="60">
+      <input name="short_desc" 
+             value="[% bug.short_desc FILTER html %]" size="60">
     </td>
   </tr>
 
@@ -222,21 +226,21 @@
         <b>Status Whiteboard:</b>
       </td>
       <td colspan="7">
-        <input name="status_whiteboard" value="[% bug.status_whiteboard %]" 
-               size="60">
+        <input name="status_whiteboard" 
+               value="[% bug.status_whiteboard FILTER html %]" size="60">
       </td>
     </tr>
   [% END %]
 
   [% IF use_keywords %]
     <tr>
-      <td ALIGN="right">
+      <td align="right">
         <b>
-          <A HREF="describekeywords.cgi">Keywords:</A>
+          <a href="describekeywords.cgi">Keywords:</a>
         </b>
       <td colspan="7">
-        <input name="keywords" value="[% bug.keywords.join(', ') %]" 
-               size="60">
+        <input name="keywords" 
+               value="[% bug.keywords.join(', ') FILTER html %]" size="60">
       </td>
     </tr> 
   [% END %]
@@ -331,7 +335,7 @@
         <small>
           (The assignee                                                
           [% IF (Param('useqacontact')) %]
-             and qa contact
+             and QA contact
           [% END %]
           can always see a bug, and this section does not take effect unless 
           the bug is restricted to at least one group.)
@@ -351,7 +355,8 @@
 
   <br>
   <input type="radio" name="knob" value="none" checked>
-  Leave as <b>[% bug.bug_status %]&nbsp;[% bug.resolution %]</b>
+  Leave as <b>[% bug.bug_status FILTER html %]&nbsp;
+              [% bug.resolution FILTER html %]</b>
   <br>
 
   [% knum = 1 %]
@@ -383,11 +388,11 @@
       [% END %]
 
       <input type="radio" name="knob" value="resolve">
-      Resolve bug, changing <A HREF="bug_status.html">resolution</A> to
+      Resolve bug, changing <a href="bug_status.html">resolution</a> to
       <select name="resolution" 
               onchange="document.changeform.knob[[% knum %]].checked=true">
       [% FOREACH r = resolution %]
-        <option value="[% r %]">[% r %]</option>
+        <option value="[% r FILTER html %]">[% r FILTER html %]</option>
       [% END %]
       </select>
       <br>
@@ -404,11 +409,11 @@
       <input type="radio" name="knob" value="reassign"> 
       <a href="bug_status.html#assigned_to">Reassign</A> bug to
       <input name="assigned_to" size="32" 
-             onchange="if ((this.value != '[% bug.assigned_to_email %]') && 
+             onchange="if ((this.value != '[% bug.assigned_to_email FILTER js %]') && 
                             (this.value != '')) {
                          document.changeform.knob[[% knum %]].checked=true; 
                        }"  
-             value="[% bug.assigned_to_email %]">
+             value="[% bug.assigned_to_email FILTER html %]">
       <br>
       [% IF bug.isunconfirmed %]
         &nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="andconfirm">
@@ -453,9 +458,9 @@
   <p>
     <font size="+1">
       <b>
-        <A HREF="show_activity.cgi?id=[% bug.bug_id %]">View Bug Activity</A>
+        <a href="show_activity.cgi?id=[% bug.bug_id %]">View Bug Activity</a>
         &nbsp; | &nbsp;
-        <A HREF="long_list.cgi?buglist=[% bug.bug_id %]">Format For Printing</A>
+        <a href="long_list.cgi?buglist=[% bug.bug_id %]">Format For Printing</a>
       </b>
     </font>
 
@@ -520,8 +525,9 @@
   <td>
     <select name="[% selname %]">
       [% FOREACH x = ${selname} %]
-        <option value="[% x %]"
-          [% " selected" IF x == bug.${selname} %]>[% x %]</option>
+        <option value="[% x FILTER html %]"
+          [% " selected" IF x == bug.${selname} %]>[% x FILTER html %]
+        </option>
       [% END %]
     </select>
   </td>
