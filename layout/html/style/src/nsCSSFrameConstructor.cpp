@@ -5363,7 +5363,9 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsIPresContext*          aPresContex
            aTag == nsMathMLAtoms::mtext  ||
            aTag == nsMathMLAtoms::merror ||
            aTag == nsMathMLAtoms::ms     ||
-           aTag == nsMathMLAtoms::mn )
+           aTag == nsMathMLAtoms::mn     ||
+           aTag == nsMathMLAtoms::none   ||
+           aTag == nsMathMLAtoms::mprescripts )
      rv = NS_NewMathMLmrowFrame(&newFrame);
   // CONSTRUCTION of MTABLE elements
   else if (aTag == nsMathMLAtoms::mtable)  {
@@ -5438,7 +5440,7 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsIPresContext*          aPresContex
     // Process the child content if requested
     nsFrameItems childItems;
     if (processChildren) {
-      rv = ProcessChildren(aPresContext, aState, aContent, newFrame, PR_FALSE,
+      rv = ProcessChildren(aPresContext, aState, aContent, newFrame, PR_TRUE,
                            childItems, PR_FALSE);
     }
 
