@@ -35,6 +35,9 @@ const static char* kMOZEditorBogusNodeValue="TRUE";
 
 static NS_DEFINE_IID(kPlaceholderTxnIID,  PLACEHOLDER_TXN_IID);
 
+/********************************************************
+ *  Constructor/Destructor 
+ ********************************************************/
 
 nsHTMLEditRules::nsHTMLEditRules()
 {
@@ -44,6 +47,45 @@ nsHTMLEditRules::~nsHTMLEditRules()
 {
 }
 
+
+/********************************************************
+ *  Public methods 
+ ********************************************************/
+
+NS_IMETHODIMP 
+nsHTMLEditRules::WillDoAction(int aAction, nsIDOMSelection *aSelection, 
+                              void **aOtherInfo, PRBool *aCancel)
+{
+  if (!aSelection) 
+    return NS_ERROR_NULL_POINTER;
+    
+  switch (aAction)
+  {
+    case kInsertBreak:
+      return WillInsertBreak(aSelection, aCancel);
+  }
+  return nsTextEditRules::WillDoAction(aAction, aSelection, aOtherInfo, aCancel);
+}
+  
+NS_IMETHODIMP 
+nsHTMLEditRules::DidDoAction(int aAction, nsIDOMSelection *aSelection,
+                             void **aOtherInfo, nsresult aResult)
+{
+  if (!aSelection) 
+    return NS_ERROR_NULL_POINTER;
+    
+  switch (aAction)
+  {
+    case kInsertBreak:
+      return DidInsertBreak(aSelection, aResult);
+  }
+  return nsTextEditRules::DidDoAction(aAction, aSelection, aOtherInfo, aResult);
+}
+  
+
+/********************************************************
+ *  Protected methods 
+ ********************************************************/
 NS_IMETHODIMP
 nsHTMLEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel)
 {

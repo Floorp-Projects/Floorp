@@ -28,6 +28,18 @@ public:
   nsHTMLEditRules();
   virtual ~nsHTMLEditRules();
 
+  // nsEditRules methods
+  NS_IMETHOD WillDoAction(int aAction, nsIDOMSelection *aSelection, void **aOtherInfo, PRBool *aCancel);
+  NS_IMETHOD DidDoAction(int aAction, nsIDOMSelection *aSelection, void **aOtherInfo, nsresult aResult);
+
+  // nsHTMLEditRules action id's
+  enum 
+  {
+    kInsertBreak = 3000
+  };
+protected:
+
+  // nsHTMLEditRules implementation methods
   NS_IMETHOD WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel);
   NS_IMETHOD DidInsertBreak(nsIDOMSelection *aSelection, nsresult aResult);
 

@@ -650,12 +650,12 @@ NS_IMETHODIMP nsTextEditor::DeleteSelection(nsIEditor::Direction aDir)
 
   // pre-process
   nsEditor::GetSelection(getter_AddRefs(selection));
-  result = mRules->WillDeleteSelection(selection, &cancel);
+  result = mRules->WillDoAction(nsTextEditRules::kDeleteSelection, selection, nsnull, &cancel);
   if ((PR_FALSE==cancel) && (NS_SUCCEEDED(result)))
   {
     result = nsEditor::DeleteSelection(aDir);
     // post-process 
-    result = mRules->DidDeleteSelection(selection, result);
+    result = mRules->DidDoAction(nsTextEditRules::kDeleteSelection, selection, nsnull, result);
   }
 
   nsresult endTxnResult = nsEditor::EndTransaction();  // don't return this result!
@@ -683,13 +683,12 @@ NS_IMETHODIMP nsTextEditor::InsertText(const nsString& aStringToInsert)
   nsEditor::GetSelection(getter_AddRefs(selection));
   nsAutoString stringToInsert;
   PlaceholderTxn *placeholderTxn=nsnull;
-  nsresult result = mRules->WillInsertText(selection, aStringToInsert, &cancel, stringToInsert,
-                                           mTypeInState, &placeholderTxn);
+  nsresult result = mRules->WillDoAction(nsTextEditRules::kInsertText, selection, (void**)&placeholderTxn, &cancel);
   if ((PR_FALSE==cancel) && (NS_SUCCEEDED(result)))
   {
     result = nsEditor::InsertText(stringToInsert);
     // post-process 
-    result = mRules->DidInsertText(selection, stringToInsert, result);
+    result = mRules->DidDoAction(nsTextEditRules::kInsertText, selection, nsnull, result);
   }
   if (placeholderTxn)
     placeholderTxn->SetAbsorb(PR_FALSE);  // this ends the merging of txns into placeholderTxn
@@ -721,12 +720,12 @@ NS_IMETHODIMP nsTextEditor::Undo(PRUint32 aCount)
 
   // pre-process
   nsEditor::GetSelection(getter_AddRefs(selection));
-  nsresult result = mRules->WillUndo(selection, &cancel);
+  nsresult result = mRules->WillDoAction(nsTextEditRules::kUndo, selection, nsnull, &cancel);
   if ((PR_FALSE==cancel) && (NS_SUCCEEDED(result)))
   {
     result = nsEditor::Undo(aCount);
     nsEditor::GetSelection(getter_AddRefs(selection));
-    result = mRules->DidUndo(selection, result);
+    result = mRules->DidDoAction(nsTextEditRules::kUndo, selection, nsnull, result);
   }
   return result;
 }
@@ -743,12 +742,12 @@ NS_IMETHODIMP nsTextEditor::Redo(PRUint32 aCount)
 
   // pre-process
   nsEditor::GetSelection(getter_AddRefs(selection));
-  nsresult result = mRules->WillRedo(selection, &cancel);
+  nsresult result = mRules->WillDoAction(nsTextEditRules::kRedo, selection, nsnull, &cancel);
   if ((PR_FALSE==cancel) && (NS_SUCCEEDED(result)))
   {
     result = nsEditor::Redo(aCount);
     nsEditor::GetSelection(getter_AddRefs(selection));
-    result = mRules->DidRedo(selection, result);
+    result = mRules->DidDoAction(nsTextEditRules::kRedo, selection, nsnull, result);
   }
   return result;
 }

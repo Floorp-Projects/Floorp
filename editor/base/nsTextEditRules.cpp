@@ -36,9 +36,9 @@ const static char* kMOZEditorBogusNodeValue="TRUE";
 
 static NS_DEFINE_IID(kPlaceholderTxnIID,  PLACEHOLDER_TXN_IID);
 
-/*-------------------------------------------------------------------*
+/********************************************************
  *  Helper Functions 
- *-------------------------------------------------------------------*/
+ ********************************************************/
 
 PRBool nsTextEditRules::NodeIsType(nsIDOMNode *aNode, nsIAtom *aTag)
 {
@@ -96,10 +96,9 @@ PRBool nsTextEditRules::IsEditable(nsIDOMNode *aNode)
 }
 
 
-/*-------------------------------------------------------------------*
+/********************************************************
  *  Constructor/Destructor 
- *-------------------------------------------------------------------*/
-
+ ********************************************************/
 
 nsTextEditRules::nsTextEditRules()
 {
@@ -112,32 +111,66 @@ nsTextEditRules::~nsTextEditRules()
 }
 
 
-
-/*-------------------------------------------------------------------*
+/********************************************************
  *  Public methods 
- *-------------------------------------------------------------------*/
-
+ ********************************************************/
 
 NS_IMETHODIMP
-nsTextEditRules::Init(nsTextEditor *aEditor)
+nsTextEditRules::Init(nsIEditor *aEditor)
 {
   // null aNextRule is ok
   if (!aEditor) { return NS_ERROR_NULL_POINTER; }
-  mEditor = aEditor;  // we hold a non-refcounted reference back to our editor
+  mEditor = (nsTextEditor*)aEditor;  // we hold a non-refcounted reference back to our editor
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsTextEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel)
+NS_IMETHODIMP 
+nsTextEditRules::WillDoAction(int aAction, nsIDOMSelection *aSelection, 
+                              void **aOtherInfo, PRBool *aCancel)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (!aSelection) 
+    return NS_ERROR_NULL_POINTER;
+    
+  switch (aAction)
+  {
+    case kInsertText:
+      return WillInsertText(aSelection, aCancel, (PlaceholderTxn**)aOtherInfo);
+    case kDeleteSelection:
+      return WillDeleteSelection(aSelection, aCancel);
+    case kUndo:
+      return WillUndo(aSelection, aCancel);
+    case kRedo:
+      return WillRedo(aSelection, aCancel);
+  }
+  return NS_ERROR_FAILURE;
 }
+  
+NS_IMETHODIMP 
+nsTextEditRules::DidDoAction(int aAction, nsIDOMSelection *aSelection,
+                             void **aOtherInfo, nsresult aResult)
+{
+  if (!aSelection) 
+    return NS_ERROR_NULL_POINTER;
+    
+  switch (aAction)
+  {
+    case kInsertText:
+      return DidInsertText(aSelection, aResult);
+    case kDeleteSelection:
+      return DidDeleteSelection(aSelection, aResult);
+    case kUndo:
+      return DidUndo(aSelection, aResult);
+    case kRedo:
+      return DidRedo(aSelection, aResult);
+  }
+  return NS_ERROR_FAILURE;
+}
+  
 
-NS_IMETHODIMP
-nsTextEditRules::DidInsertBreak(nsIDOMSelection *aSelection, nsresult aResult)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
+/********************************************************
+ *  Protected methods 
+ ********************************************************/
+
 
 NS_IMETHODIMP
 nsTextEditRules::WillInsert(nsIDOMSelection *aSelection, PRBool *aCancel)
@@ -166,18 +199,13 @@ nsTextEditRules::DidInsert(nsIDOMSelection *aSelection, nsresult aResult)
 
 NS_IMETHODIMP
 nsTextEditRules::WillInsertText(nsIDOMSelection *aSelection, 
-                                const nsString  &aInputString,
-                                PRBool          *aCancel,
-                                nsString        &aOutputString,
-                                TypeInState     &aTypeInState,
+                                PRBool *aCancel,
                                 PlaceholderTxn **aTxn)
 {
   if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
   // initialize out param
   *aCancel = PR_FALSE;
-  // by default, we insert what we're told to insert
-  aOutputString = aInputString;
-  TypeInState typeInState = aTypeInState; // remember the initial type-in state
+  TypeInState typeInState = mEditor->GetTypeInState();
   if (mBogusNode || (PR_TRUE==typeInState.IsAnySet()))
   {
     nsresult result = TransactionFactory::GetNewTransaction(kPlaceholderTxnIID, (EditTxn **)aTxn);
@@ -199,7 +227,6 @@ nsTextEditRules::WillInsertText(nsIDOMSelection *aSelection,
 
 NS_IMETHODIMP
 nsTextEditRules::DidInsertText(nsIDOMSelection *aSelection, 
-                               const nsString& aStringToInsert, 
                                nsresult aResult)
 {
   return DidInsert(aSelection, aResult);

@@ -20,12 +20,13 @@
 #define nsTextEditRules_h__
 
 #include "nsIEditor.h"
+#include "nsEditRules.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMNode.h"
 #include "TypeInState.h"
 
-class nsTextEditor;
 class PlaceholderTxn;
+class nsTextEditor;
 
 /** Object that encapsulates HTML text-specific editing rules.
   *  
@@ -38,25 +39,34 @@ class PlaceholderTxn;
   * 2. Selection must not be explicitly set by the rule method.  
   *    Any manipulation of Selection must be done by the editor.
   */
-class nsTextEditRules
+class nsTextEditRules : public nsEditRules
 {
 public:
 
   nsTextEditRules();
   virtual ~nsTextEditRules();
 
-  NS_IMETHOD Init(nsTextEditor *aEditor);
+  // nsEditRules methods
+  NS_IMETHOD Init(nsIEditor *aEditor);
+  NS_IMETHOD WillDoAction(int aAction, nsIDOMSelection *aSelection, void **aOtherInfo, PRBool *aCancel);
+  NS_IMETHOD DidDoAction(int aAction, nsIDOMSelection *aSelection, void **aOtherInfo, nsresult aResult);
 
-  NS_IMETHOD WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel);
-  NS_IMETHOD DidInsertBreak(nsIDOMSelection *aSelection, nsresult aResult);
+  // nsTextEditRules action id's
+  enum 
+  {
+    kUndo            = 1000,
+    kRedo            = 1001,
+    kInsertText      = 2000,
+    kDeleteSelection = 2001
+  };
+  
+protected:
 
+  // nsTextEditRules implementation methods
   NS_IMETHOD WillInsertText(nsIDOMSelection  *aSelection, 
-                            const nsString  &aInputString, 
                             PRBool          *aCancel,
-                            nsString        &aOutputString,
-                            TypeInState     &aTypeInState,
                             PlaceholderTxn **aTxn);
-  NS_IMETHOD DidInsertText(nsIDOMSelection *aSelection, const nsString& aStringToInsert, nsresult aResult);
+  NS_IMETHOD DidInsertText(nsIDOMSelection *aSelection, nsresult aResult);
   NS_IMETHOD CreateStyleForInsertText(nsIDOMSelection *aSelection, TypeInState &aTypeInState);
 
   NS_IMETHOD WillInsert(nsIDOMSelection *aSelection, PRBool *aCancel);
@@ -71,8 +81,6 @@ public:
   NS_IMETHOD WillRedo(nsIDOMSelection *aSelection, PRBool *aCancel);
   NS_IMETHOD DidRedo(nsIDOMSelection *aSelection, nsresult aResult);
 
-protected:
-
   // helper functions
   static PRBool NodeIsType(nsIDOMNode *aNode, nsIAtom *aTag);
   static PRBool IsEditable(nsIDOMNode *aNode);
@@ -83,6 +91,7 @@ protected:
     */
   NS_IMETHOD InsertStyleNode(nsIDOMNode *aNode, nsIAtom *aTag, nsIDOMSelection *aSelection);
   
+  // data
   nsTextEditor *mEditor;  // note that we do not refcount the editor
   nsCOMPtr<nsIDOMNode> mBogusNode;  // magic node acts as placeholder in empty doc
 };

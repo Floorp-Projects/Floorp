@@ -161,17 +161,21 @@ protected:
 
 
   NS_IMETHOD SetTypeInStateForProperty(TypeInState &aTypeInState, nsIAtom *aPropName);
+  
+  TypeInState GetTypeInState() { return mTypeInState;}
 
 
 // Data members
 protected:
-  TypeInState      mTypeInState;
+  TypeInState      mTypeInState;  // xxx - isn't it wrong to have xpcom classes as members?  shouldn't it be a pointer?
   nsTextEditRules* mRules;
   nsCOMPtr<nsIDOMEventListener> mKeyListenerP;
   nsCOMPtr<nsIDOMEventListener> mMouseListenerP;
   nsCOMPtr<nsIDOMEventListener> mTextListenerP;
   nsCOMPtr<nsIDOMEventListener> mDragListenerP;
 
+// friends
+friend class nsTextEditRules;
 };
 
 #endif //nsTextEditor_h__
