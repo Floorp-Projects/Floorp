@@ -105,4 +105,6 @@ interface mozITXTToHTMLConv : nsIStreamConverter {
  */
   unsigned long   citeLevelTXT([const] in wstring line,
                                out unsigned long logLineStart);
+
+  void findURLInPlaintext([const] in wstring text, in long aLength, in long aPos, out long aStartPos, out long aEndPos);
 };

@@ -461,6 +461,19 @@ mozTXTToHTMLConv::CheckURLAndCreateHTML(
     return PR_FALSE;
 }
 
+NS_IMETHODIMP mozTXTToHTMLConv::FindURLInPlaintext(const PRUnichar * aInString, PRInt32 aInLength, PRInt32 aPos, PRInt32 * aStartPos, PRInt32 * aEndPos)
+{
+  // call FindURL on the passed in string
+  nsString outputHTML; // we'll ignore the generated output HTML
+  
+  *aStartPos = -1;
+  *aEndPos = -1;
+  
+  FindURL(aInString, aInLength, aPos, kURLs, outputHTML, *aStartPos, *aEndPos);
+
+  return NS_OK;
+}
+
 PRBool
 mozTXTToHTMLConv::FindURL(const PRUnichar * aInString, PRInt32 aInLength, const PRUint32 pos,
      const PRUint32 whathasbeendone,
