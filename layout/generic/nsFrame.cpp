@@ -4026,10 +4026,8 @@ nsFrame::GetFrameFromDirection(nsPresContext* aPresContext, nsPeekOffsetStruct *
   nsISupports *isupports = nsnull;
 #ifdef IBMBIDI
   nsIFrame *newFrame;
-  PRBool isBidiGhostFrame = PR_FALSE;
-  PRBool selectable =  PR_TRUE; //usually fine
 
-  do {
+  for (;;) {
     if (lineIsRTL && lineJump) 
       if (aPos->mDirection == eDirPrevious)
         result = frameTraversal->Next();
@@ -4066,14 +4064,21 @@ nsFrame::GetFrameFromDirection(nsPresContext* aPresContext, nsPeekOffsetStruct *
     if (nsLayoutAtoms::textFrame != newFrame->GetType())
       continue;  //we should NOT be getting stuck on the same piece of content on the same line. skip to next line.
   }
-  isBidiGhostFrame = (newFrame->GetRect().IsEmpty() &&
-                      (newFrame->GetStateBits() & NS_FRAME_IS_BIDI));
+  PRBool isBidiGhostFrame = (newFrame->GetRect().IsEmpty() &&
+                             (newFrame->GetStateBits() & NS_FRAME_IS_BIDI));
   if (isBidiGhostFrame)
   {
     // If the rectangle is empty and the NS_FRAME_IS_BIDI flag is set, this is most likely 
     // a non-renderable frame created at the end of the line by Bidi reordering.
     lineJump = PR_TRUE;
     aPos->mAmount = eSelectNoAmount;
+  }
+  else
+  {
+    PRBool selectable =  PR_TRUE; //usually fine
+    newFrame->IsSelectable(&selectable, nsnull);
+    if (selectable)
+      break; // for (;;)
   }
   PRBool newLineIsRTL = PR_FALSE;
   if (lineJump) {
@@ -4139,10 +4144,11 @@ nsFrame::GetFrameFromDirection(nsPresContext* aPresContext, nsPeekOffsetStruct *
         newFrame = lastFrame;
       }
     }
+    PRBool selectable =  PR_TRUE; //usually fine
     newFrame->IsSelectable(&selectable, nsnull);
     if (!selectable)
       lineJump = PR_FALSE;
-  } while (isBidiGhostFrame || !selectable);
+  } // for (;;) we will break from inside
 #endif // IBMBIDI
   if (aPos->mDirection == eDirNext)
     aPos->mStartOffset = 0;
