@@ -122,5 +122,13 @@ titledbutton#SaveButton[dirty="true"] {
   list-style-image:url(chrome://editor/skin/images/ED_SaveMod.gif); 
 }
 
+titledbutton[toggled="1"]:hover {
+    border:                     1px solid white;
+}
+
+titledbutton[toggled="1"] {
+    border:                     1px white inset;
+}
+
 // Override the browser's pointer cursor over links
 a { cursor: default; }

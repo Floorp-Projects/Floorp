@@ -405,7 +405,8 @@ function forceInteger(elementID)
 function onAdvancedEdit()
 {
   // First validate data from widgets in the "simpler" property dialog
-  if (ValidateData()) {
+  if (ValidateData()) 
+  {
     // Set true if OK is clicked in the Advanced Edit dialog
     window.AdvancedEditOK = false;
     // Open the AdvancedEdit dialog, passing in the element to be edited

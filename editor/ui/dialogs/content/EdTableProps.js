@@ -18,11 +18,12 @@
  * Rights Reserved.
  * 
  * Contributor(s): 
+ *    Ben Goodger
  */
 
 //Cancel() is in EdDialogCommon.js
 var tagname = "table"
-var element;
+var tableElement;
 
 // dialog initialization code
 function Startup()
@@ -33,42 +34,42 @@ function Startup()
   doSetOKCancel(onOK, null);
 
   // Create dialog object to store controls for easy access
-  dialog = new Object;
   // GET EACH CONTROL -- E.G.:
   //dialog.editBox = document.getElementById("editBox");
 
-/*
-  // Get the selected or enclosing table element
-  if(!element)
+  var table = editorShell.GetElementOrParentByTagName(tagname, null);
+  if(!tableElement)
   {
     dump("Failed to get selected element or create a new one!\n");
     window.close();
   }
-*/
-  InitDialog();
+
+  globalElement = tableElement.cloneNode(false);
   
-  var table = editorShell.GetElementOrParentByTagName("table", null);
-  if (!table)
-    window.close();
+  // This uses values set on globalElement
+  InitDialog();
 
   // SET FOCUS TO FIRST CONTROL
-  //dialog.editBox.focus();
+ }
 
-}
 
 function InitDialog()
 {
   dump{"Table Editing:InitDialog()\n");
 }
 
-function onAdvancedEdit()
+function ValidateData()
 {
-  dump("\n\n Need to write onAdvancedEdit for Table and Cell dialog\n\n");
+  dump{"Table Editing:ValidateData()\n");
+  return true;
 }
 
 function onOK()
 {
-// Set attribute example:
-//  imageElement.setAttribute("src",dialog.srcInput.value);
-  return true;
+  if (ValidateData())
+  {
+    editorShell.CloneAttributes(tableElement, globalElement);
+    return true;
+  }
+  return false;
 }

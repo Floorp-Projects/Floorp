@@ -41,7 +41,7 @@
   </html:script>
   <html:script language="JavaScript" src="chrome://editor/content/EdTableProps.js">
   </html:script>
-  <script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
+  <html:script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
 
   <broadcaster id="args" value=""/>
 <tabcontrol align="vertical" >
