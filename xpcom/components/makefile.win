@@ -68,8 +68,9 @@ LIBRARY_NAME=xpcomcomp_s
 
 LINCS =                    \
         -I..\base          \
+        -I..\ds            \
         -I..\threads       \
-        -I..\io       \
+        -I..\io            \
         $(NULL)
 
 LCFLAGS = -D_IMPL_NS_COM -D_IMPL_NS_BASE -DWIN32_LEAN_AND_MEAN
