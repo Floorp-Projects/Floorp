@@ -19,12 +19,18 @@
 #ifndef _nsHTTPResponseListener_h_
 #define _nsHTTPResponseListener_h_
 
+#define NSPIPE2
+
 #include "nsIChannel.h"
 #include "nsIStreamListener.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
 
+#ifndef NSPIPE2
 class nsIBuffer;
+#else
+class nsIBufferInputStream;
+#endif
 class nsHTTPResponse;
 class nsHTTPChannel;
 
@@ -72,11 +78,19 @@ protected:
     // nsHTTPResponseListener methods...
     nsresult FireOnHeadersAvailable();
 
+#ifndef NSPIPE2
     nsresult ParseStatusLine(nsIBuffer* aBuffer, PRUint32 aLength,
                              PRUint32 *aBytesRead);
 
     nsresult ParseHTTPHeader(nsIBuffer* aBuffer, PRUint32 aLength, 
                              PRUint32* aBytesRead);
+#else
+    nsresult ParseStatusLine(nsIBufferInputStream* in, PRUint32 aLength,
+                             PRUint32 *aBytesRead);
+
+    nsresult ParseHTTPHeader(nsIBufferInputStream* in, PRUint32 aLength, 
+                             PRUint32* aBytesRead);
+#endif
 
     nsresult FinishedResponseHeaders();
 

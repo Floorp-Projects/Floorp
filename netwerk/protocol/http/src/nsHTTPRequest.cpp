@@ -16,13 +16,20 @@
  * Reserved.
  */
 
+#define NSPIPE2
+
 #include "nspr.h"
 #include "nsIURL.h"
 #include "nsHTTPRequest.h"
 #include "nsHTTPAtoms.h"
 #include "nsHTTPEnums.h"
+#ifndef NSPIPE2
 #include "nsIBuffer.h"
+#else
+#include "nsIPipe.h"
+#endif
 #include "nsIBufferInputStream.h"
+#include "nsIBufferOutputStream.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsIChannel.h"
@@ -167,6 +174,7 @@ nsHTTPRequest::Build()
     }
 
     // Create the Input Stream for writing the request...
+#ifndef NSPIPE2
     nsCOMPtr<nsIBuffer> buf;
     rv = NS_NewBuffer(getter_AddRefs(buf), NS_HTTP_REQUEST_SEGMENT_SIZE,
                       NS_HTTP_REQUEST_BUFFER_SIZE, nsnull);
@@ -174,6 +182,12 @@ nsHTTPRequest::Build()
 
     rv = NS_NewBufferInputStream(&mRequest, buf);
     if (NS_FAILED(rv)) return rv;
+#else
+    nsCOMPtr<nsIBufferOutputStream> out;
+    rv = NS_NewPipe(&mRequest, getter_AddRefs(out), nsnull,
+                    NS_HTTP_REQUEST_SEGMENT_SIZE, NS_HTTP_REQUEST_BUFFER_SIZE);
+    if (NS_FAILED(rv)) return rv;
+#endif
 
     //
     // Write the request into the stream...
@@ -202,8 +216,8 @@ nsHTTPRequest::Build()
     PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
            ("\tnsHTTPRequest.\tFirst line: %s", lineBuffer.GetBuffer()));
 
-    rv = buf->Write(lineBuffer.GetBuffer(), lineBuffer.Length(), 
-                         &bytesWritten);
+    rv = out->Write(lineBuffer.GetBuffer(), lineBuffer.Length(), 
+                    &bytesWritten);
 #ifdef DEBUG_gagan    
     printf(lineBuffer.GetBuffer());
 #endif
@@ -263,7 +277,7 @@ nsHTTPRequest::Build()
                        ("\tnsHTTPRequest [this=%x].\t\t%s\n",
                         this, lineBuffer.GetBuffer()));
 
-                buf->Write(lineBuffer.GetBuffer(), lineBuffer.Length(), 
+                out->Write(lineBuffer.GetBuffer(), lineBuffer.Length(), 
                            &bytesWritten);
             }
             enumerator->HasMoreElements(&bMoreHeaders);
@@ -300,7 +314,7 @@ nsHTTPRequest::Build()
 		{
             tempBuff[length] = '\0';
             PRUint32 writtenLength;
-			buf->Write(tempBuff, length, &writtenLength);
+			out->Write(tempBuff, length, &writtenLength);
 #ifdef DEBUG_gagan    
     printf(tempBuff);
 #endif
@@ -313,7 +327,7 @@ nsHTTPRequest::Build()
     {
 
         // Write the final \r\n
-        rv = buf->Write(CRLF, PL_strlen(CRLF), &bytesWritten);
+        rv = out->Write(CRLF, PL_strlen(CRLF), &bytesWritten);
 #ifdef DEBUG_gagan    
     printf(CRLF);
 #endif

@@ -33,7 +33,7 @@
 #include "nsFileSpec.h"
 #include "prlock.h"
 #include "nsIEventQueueService.h"
-#include "nsIBuffer.h"
+#include "nsIPipe.h"
 #include "nsILoadGroup.h"
 #include "nsIStreamListener.h"
 #include "nsCOMPtr.h"
@@ -47,59 +47,27 @@ class nsIEventSinkGetter;
 class nsIStreamListener;
 class nsFileProtocolHandler;
 class nsIBaseStream;
-class nsIBuffer;
 class nsIBufferInputStream;
 class nsIBufferOutputStream;
 
 class nsFileChannel : public nsIFileChannel, 
                       public nsIRunnable,
-                      public nsIBufferObserver,
+                      public nsIPipeObserver,
                       public nsIStreamListener
 {
 public:
-
     NS_DECL_ISUPPORTS
-
-    ////////////////////////////////////////////////////////////////////////////
-    // from nsIRequest:
     NS_DECL_NSIREQUEST
-
-    ////////////////////////////////////////////////////////////////////////////
-    // from nsIChannel:
     NS_DECL_NSICHANNEL
-
-    ////////////////////////////////////////////////////////////////////////////
-    // from nsIFileChannel:
     NS_DECL_NSIFILECHANNEL
+    NS_DECL_NSIPIPEOBSERVER
+    NS_DECL_NSISTREAMOBSERVER
+    NS_DECL_NSISTREAMLISTENER
 
     ////////////////////////////////////////////////////////////////////////////
     // nsIRunnable methods:
 
     NS_IMETHOD Run(void);
-
-    ////////////////////////////////////////////////////////////////////////////
-    // nsIBufferObserver:
-
-    NS_IMETHOD OnFull(nsIBuffer* buffer);
-
-    NS_IMETHOD OnWrite(nsIBuffer* aBuffer, PRUint32 aCount);
-
-    NS_IMETHOD OnEmpty(nsIBuffer* buffer);
-
-    ////////////////////////////////////////////////////////////////////////////
-    // nsIStreamListener:
-
-    NS_IMETHOD OnDataAvailable(nsIChannel* channel, nsISupports* context,
-                               nsIInputStream *aIStream, 
-                               PRUint32 aSourceOffset,
-                               PRUint32 aLength);
-
-
-    NS_IMETHOD OnStartRequest(nsIChannel* channel, nsISupports* context);
-
-    NS_IMETHOD OnStopRequest(nsIChannel* channel, nsISupports* context,
-                            nsresult aStatus,
-                            const PRUnichar* aMsg);
 
     ////////////////////////////////////////////////////////////////////////////
     // nsFileChannel:

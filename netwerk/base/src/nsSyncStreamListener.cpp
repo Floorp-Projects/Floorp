@@ -20,7 +20,7 @@
 #include "nsCRT.h"
 #include "nsIBufferInputStream.h"
 #include "nsIBufferOutputStream.h"
-#include "nsIBuffer.h"
+#include "nsIPipe.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -61,8 +61,9 @@ nsSyncStreamListener::Init(nsIInputStream* *result)
     nsresult rv;
     nsIBufferInputStream* in;
 
-    rv = NS_NewPipe(&in, &mOutputStream, NS_SYNC_STREAM_LISTENER_SEGMENT_SIZE,
-                    NS_SYNC_STREAM_LISTENER_BUFFER_SIZE, PR_TRUE, nsnull);
+    rv = NS_NewPipe(&in, &mOutputStream, nsnull, 
+                    NS_SYNC_STREAM_LISTENER_SEGMENT_SIZE,
+                    NS_SYNC_STREAM_LISTENER_BUFFER_SIZE);
     if (NS_FAILED(rv)) return rv;
 
     *result = in;

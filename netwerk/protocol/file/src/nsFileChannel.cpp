@@ -110,7 +110,7 @@ nsFileChannel::Init(nsFileProtocolHandler* handler,
         return NS_ERROR_OUT_OF_MEMORY;
 
     if (getter) {
-        rv = getter->GetEventSink(verb, nsCOMTypeInfo<nsIStreamListener>::GetIID(), (nsISupports**)&mListener);
+        (void)getter->GetEventSink(verb, nsCOMTypeInfo<nsIStreamListener>::GetIID(), (nsISupports**)&mListener);
         // ignore the failure -- we can live without having an event sink
     }
 
@@ -303,8 +303,9 @@ nsFileChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
         return NS_ERROR_FAILURE;        // XXX probably need NS_BASE_STREAM_FILE_NOT_FOUND or something
 
     rv = NS_NewPipe(&mBufferInputStream, &mBufferOutputStream,
+                    this,     // nsIPipeObserver
                     NS_FILE_TRANSPORT_SEGMENT_SIZE,
-                    NS_FILE_TRANSPORT_BUFFER_SIZE, PR_TRUE, this);
+                    NS_FILE_TRANSPORT_BUFFER_SIZE);
     if (NS_FAILED(rv)) return rv;
 #if 0
     NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
@@ -431,8 +432,9 @@ nsFileChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
     if (NS_FAILED(rv)) return rv;
 
     rv = NS_NewPipe(&mBufferInputStream, &mBufferOutputStream,
+                    this,       // nsIPipeObserver
                     NS_FILE_TRANSPORT_SEGMENT_SIZE,
-                    NS_FILE_TRANSPORT_BUFFER_SIZE, PR_TRUE, this);
+                    NS_FILE_TRANSPORT_BUFFER_SIZE);
     if (NS_FAILED(rv)) return rv;
 
     rv = mBufferOutputStream->SetNonBlocking(PR_TRUE);
@@ -649,7 +651,7 @@ nsFileChannel::Process(void)
 			  mAmount -= amt;   // subtract off the amount we just read from mAmount.
           if (NS_FAILED(mStatus)) goto error;
           if (mStatus == NS_BASE_STREAM_WOULD_BLOCK || amt == 0) {
-              // Our nsIBufferObserver will have been called from WriteFrom
+              // Our nsIPipeObserver will have been called from WriteFrom
               // which in turn calls Suspend, so we should end up suspending
               // this file channel.
               Suspend();
@@ -753,23 +755,23 @@ nsFileChannel::Process(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsIBufferObserver methods:
+// nsIPipeObserver methods:
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
-nsFileChannel::OnFull(nsIBuffer* buffer)
+nsFileChannel::OnFull(nsIPipe* pipe)
 {
     return Suspend();
 }
 
 NS_IMETHODIMP
-nsFileChannel::OnWrite(nsIBuffer* aBuffer, PRUint32 aCount)
+nsFileChannel::OnWrite(nsIPipe* pipe, PRUint32 aCount)
 {
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFileChannel::OnEmpty(nsIBuffer* buffer)
+nsFileChannel::OnEmpty(nsIPipe* pipe)
 {
     return Resume();
 }
@@ -1094,6 +1096,7 @@ nsFileChannel::Execute(const char *args)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
 nsresult
 nsFileChannel::CreateFileChannelFromFileSpec(nsFileSpec& spec, nsIFileChannel **result)
 {

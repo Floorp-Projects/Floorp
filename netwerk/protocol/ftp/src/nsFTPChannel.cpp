@@ -27,7 +27,7 @@
 #include "nsIProgressEventSink.h"
 #include "nsIEventSinkGetter.h"
 #include "nsIIOService.h"
-#include "nsIBuffer.h"
+#include "nsIPipe.h"
 #include "nsILoadGroup.h"
 #include "nsIFTPContext.h"
 #include "nsIMIMEService.h"
@@ -270,9 +270,8 @@ nsFTPChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
     if (NS_FAILED(rv)) return rv;
     
     rv = NS_NewPipe(&mBufferInputStream, &mBufferOutputStream,
-                    NS_FTP_SEGMENT_SIZE,
-                    NS_FTP_BUFFER_SIZE, PR_TRUE, nsnull/*this*/); // XXX need channel to implement
-                                                                // nsIBufferObserver
+                    nsnull/*this*/, // XXX need channel to implement nsIPipeObserver
+                    NS_FTP_SEGMENT_SIZE, NS_FTP_BUFFER_SIZE);
     if (NS_FAILED(rv)) return rv;
 
     rv = mBufferOutputStream->SetNonBlocking(PR_TRUE);

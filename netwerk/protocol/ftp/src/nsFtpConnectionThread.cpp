@@ -22,7 +22,6 @@
 #include "nsIChannel.h"
 #include "nsISocketTransportService.h"
 #include "nsIURI.h"
-#include "nsIBuffer.h"
 #include "nsIBufferInputStream.h" // for our internal stream state
 #include "nsIInputStream.h"
 #include "nsIEventQueueService.h"
