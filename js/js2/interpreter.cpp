@@ -277,6 +277,21 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     }
                 }
                 break;
+/*
+versions below are not right, there is no 'array' type really, the index operation
+turns into a get_property call like this, only we need to be using JSString throughout.
+            case GET_ELEMENT:
+                {
+                    GetElement* ge = static_cast<GetElement*>(instruction);
+                    JSValue& base = (*registers)[src1(ge)];
+                    JSValue index = (*registers)[src2(ge)].toString();
+                    if (base.tag == JSValue::object_tag) {
+                        JSObject* object = base.object;
+                        (*registers)[dst(ge)] = object->getProperty(*index.string);
+                    }
+                }
+                break;
+*/
             case GET_ELEMENT:
                 {
                     GetElement* ge = static_cast<GetElement*>(instruction);
@@ -297,6 +312,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     }
                 }
                 break;
+
             case LOAD_IMMEDIATE:
                 {
                     LoadImmediate* li = static_cast<LoadImmediate*>(instruction);
@@ -307,6 +323,12 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                 {
                     LoadString* ls = static_cast<LoadString*>(instruction);
                     (*registers)[dst(ls)] = JSValue(src1(ls));
+                }
+                break;
+            case LOAD_VALUE:
+                {
+                    LoadValue* lv = static_cast<LoadValue*>(instruction);
+                    (*registers)[dst(lv)] = src1(lv);
                 }
                 break;
             case BRANCH:
@@ -357,6 +379,28 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     }
                 }
                 break;
+            case BRANCH_TRUE:
+                {
+                    GenericBranch* bc =
+                        static_cast<GenericBranch*>(instruction);
+                    ASSERT((*registers)[src1(bc)].isBoolean());
+                    if ((*registers)[src1(bc)].boolean) {
+                        mPC = begin_pc + ofs(bc);
+                        continue;
+                    }
+                }
+                break;
+            case BRANCH_FALSE:
+                {
+                    GenericBranch* bc =
+                        static_cast<GenericBranch*>(instruction);
+                    ASSERT((*registers)[src1(bc)].isBoolean());
+                    if (!(*registers)[src1(bc)].boolean) {
+                        mPC = begin_pc + ofs(bc);
+                        continue;
+                    }
+                }
+                break;
             case BRANCH_GE:
                 {
                     GenericBranch* bc =
@@ -377,6 +421,74 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     }
                 }
                 break;
+            case SHIFTLEFT:
+                {
+                    Arithmetic* shl = static_cast<Arithmetic*>(instruction);
+                    JSValue& dest = (*registers)[dst(shl)];
+                    JSValue& r1 = (*registers)[src1(shl)];
+                    JSValue& r2 = (*registers)[src2(shl)];
+                    JSValue num1(r1.toInt32());
+                    JSValue num2(r2.toUInt32());
+                    dest = num1.i32 << (num2.u32 & 0x1F);
+                }
+                break;
+            case SHIFTRIGHT:
+                {
+                    Arithmetic* shr = static_cast<Arithmetic*>(instruction);
+                    JSValue& dest = (*registers)[dst(shr)];
+                    JSValue& r1 = (*registers)[src1(shr)];
+                    JSValue& r2 = (*registers)[src2(shr)];
+                    JSValue num1(r1.toInt32());
+                    JSValue num2(r2.toUInt32());
+                    dest = num1.i32 >> (num2.u32 & 0x1F);
+                }
+                break;
+            case USHIFTRIGHT:
+                {
+                    Arithmetic* ushr = static_cast<Arithmetic*>(instruction);
+                    JSValue& dest = (*registers)[dst(ushr)];
+                    JSValue& r1 = (*registers)[src1(ushr)];
+                    JSValue& r2 = (*registers)[src2(ushr)];
+                    JSValue num1(r1.toUInt32());
+                    JSValue num2(r2.toUInt32());
+                    dest = num1.u32 >> (num2.u32 & 0x1F);
+                }
+                break;
+
+            case AND:
+                {
+                    Arithmetic* shr = static_cast<Arithmetic*>(instruction);
+                    JSValue& dest = (*registers)[dst(shr)];
+                    JSValue& r1 = (*registers)[src1(shr)];
+                    JSValue& r2 = (*registers)[src2(shr)];
+                    JSValue num1(r1.toInt32());
+                    JSValue num2(r2.toInt32());
+                    dest = num1.i32 & num2.i32;
+                }
+                break;
+            case OR:
+                {
+                    Arithmetic* shr = static_cast<Arithmetic*>(instruction);
+                    JSValue& dest = (*registers)[dst(shr)];
+                    JSValue& r1 = (*registers)[src1(shr)];
+                    JSValue& r2 = (*registers)[src2(shr)];
+                    JSValue num1(r1.toInt32());
+                    JSValue num2(r2.toInt32());
+                    dest = num1.i32 | num2.i32;
+                }
+                break;
+            case XOR:
+                {
+                    Arithmetic* shr = static_cast<Arithmetic*>(instruction);
+                    JSValue& dest = (*registers)[dst(shr)];
+                    JSValue& r1 = (*registers)[src1(shr)];
+                    JSValue& r2 = (*registers)[src2(shr)];
+                    JSValue num1(r1.toInt32());
+                    JSValue num2(r2.toInt32());
+                    dest = num1.i32 ^ num2.i32;
+                }
+                break;
+
             case ADD:
                 {
                     // could get clever here with Functional forms.
@@ -462,10 +574,9 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     JSValue r = mGlobal->getVariable(*src1(nx)).toNumber();
                     dest = r;
                     r.f64 += val3(nx);
-                    mGlobal->setVariable(*src1(nx), dest);
+                    mGlobal->setVariable(*src1(nx), r);
                 }
                 break;
-
 
             case COMPARE_LT:
             case COMPARE_LE:
@@ -475,11 +586,44 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
             case COMPARE_GE:
                 {
                     Arithmetic* cmp = static_cast<Arithmetic*>(instruction);
-                    float64 diff = 
-                        ((*registers)[src1(cmp)].f64 - 
-                         (*registers)[src2(cmp)].f64);
-                    (*registers)[dst(cmp)] = 
-                        JSValue(int32(diff == 0.0 ? 0 : (diff > 0.0 ? 1 : -1)));
+                    JSValue& dest = (*registers)[dst(cmp)];
+                    JSValue lv = (*registers)[src1(cmp)].toPrimitive(JSValue::Number);
+                    JSValue rv = (*registers)[src2(cmp)].toPrimitive(JSValue::Number);
+                    if (lv.isString() && rv.isString()) {
+                        // XXX FIXME urgh, call w_strcmp ??? on a JSString ???
+                    }
+                    else {
+                        lv = lv.toNumber();
+                        rv = rv.toNumber();
+                        if (lv.isNaN() || rv.isNaN())
+                            dest = JSValue();
+                        else {
+                            // FIXME, does this do the right thing for +/- infinity?
+                            switch (instruction->op()) {
+                            case COMPARE_LT:
+                                dest = JSValue(lv.f64 < rv.f64); break;
+                            case COMPARE_LE:
+                                dest = JSValue(lv.f64 <= rv.f64); break;
+                            case COMPARE_EQ:
+                                dest = JSValue(lv.f64 == rv.f64); break;
+                            case COMPARE_NE:
+                                dest = JSValue(lv.f64 != rv.f64); break;
+                            case COMPARE_GT:
+                                dest = JSValue(lv.f64 > rv.f64); break;
+                            case COMPARE_GE:
+                                dest = JSValue(lv.f64 >= rv.f64); break;
+                            }
+//                            float64 diff = lv.f64 - rv.f64;
+//                            dest = JSValue( (int32) (diff == 0.0 ? 0 : (diff > 0.0 ? 1 : -1)));
+                        }
+                    }
+
+                }
+                break;
+            case TEST:
+                {
+                    Test* tst = static_cast<Test*>(instruction);
+                    (*registers)[dst(tst)] = (*registers)[src1(tst)].toBoolean();
                 }
                 break;
             case NEGATE:
@@ -494,6 +638,13 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     (*registers)[dst(pos)] = (*registers)[src1(pos)].toNumber();
                 }
                 break;
+            case BITNOT:
+                {
+                    Bitnot* bn = static_cast<Bitnot*>(instruction);
+                    (*registers)[dst(bn)] = JSValue(~(*registers)[src1(bn)].toInt32().i32);
+                }
+                break;
+/*
             case NOT:
                 {
                     Not* nt = static_cast<Not*>(instruction);
@@ -501,7 +652,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                         JSValue(int32(!(*registers)[src1(nt)].i32));
                 }
                 break;
-            
+*/           
             case THROW:
                 {
                     Throw* thrw = static_cast<Throw*>(instruction);
@@ -610,7 +761,7 @@ void Context::addListener(Listener* listener)
 void Context::removeListener(Listener* listener)
 {
     ListenerIterator e = mListeners.end();
-    ListenerIterator l = find(mListeners.begin(), e, listener);
+    ListenerIterator l = std::find(mListeners.begin(), e, listener);
     if (l != e) mListeners.erase(l);
 }
 

@@ -40,18 +40,54 @@ namespace JSTypes {
 
 //    using JavaScript::StringAtom;
 
-// the canonical undefined value.
+// the canonical undefined value, etc.
 const JSValue kUndefinedValue;
-const JSValue kNaN(0.0, 0.0);
+const JSValue kNaN = JSValue(nan);
+const JSValue kTrue = JSValue(true);
+const JSValue kFalse = JSValue(false);
+
+#ifdef IS_LITTLE_ENDIAN
+#define JSDOUBLE_HI32(x)        (((uint32 *)&(x))[1])
+#define JSDOUBLE_LO32(x)        (((uint32 *)&(x))[0])
+#else
+#define JSDOUBLE_HI32(x)        (((uint32 *)&(x))[0])
+#define JSDOUBLE_LO32(x)        (((uint32 *)&(x))[1])
+#endif
+
+#define JSDOUBLE_HI32_SIGNBIT   0x80000000
+#define JSDOUBLE_HI32_EXPMASK   0x7ff00000
+#define JSDOUBLE_HI32_MANTMASK  0x000fffff
+
+#define JSDOUBLE_IS_NaN(x)                                                    \
+    ((JSDOUBLE_HI32(x) & JSDOUBLE_HI32_EXPMASK) == JSDOUBLE_HI32_EXPMASK &&   \
+     (JSDOUBLE_LO32(x) || (JSDOUBLE_HI32(x) & JSDOUBLE_HI32_MANTMASK)))
+
+#define JSDOUBLE_IS_INFINITE(x)                                               \
+    ((JSDOUBLE_HI32(x) & ~JSDOUBLE_HI32_SIGNBIT) == JSDOUBLE_HI32_EXPMASK &&   \
+     !JSDOUBLE_LO32(x))
+
+#define JSDOUBLE_IS_FINITE(x)                                                 \
+    ((JSDOUBLE_HI32(x) & JSDOUBLE_HI32_EXPMASK) != JSDOUBLE_HI32_EXPMASK)
+
+#define JSDOUBLE_IS_NEGZERO(d)  (JSDOUBLE_HI32(d) == JSDOUBLE_HI32_SIGNBIT && \
+				 JSDOUBLE_LO32(d) == 0)
 
 
-       
-JSValue::JSValue(float64 a, float64 b)
+bool JSValue::isNaN() const
 {
-    f64 = a/b;
-    tag = f64_tag;
+    ASSERT(isNumber());
+    switch (tag) {
+    case i32_tag:
+    case u32_tag:
+        return false;
+    case f64_tag:
+        return JSDOUBLE_IS_NaN(f64);
+    default:
+        NOT_REACHED("Broken compiler?");
+        return true;
+    }
 }
-       
+              
 int JSValue::operator==(const JSValue& value) const
 {
     if (this->tag == value.tag) {
@@ -62,6 +98,7 @@ int JSValue::operator==(const JSValue& value) const
         CASE(i32); CASE(u32); CASE(f32);
         CASE(i64); CASE(u64); CASE(f64);
         CASE(object); CASE(array); CASE(function); CASE(string);
+        CASE(boolean);
         #undef CASE
         // question:  are all undefined values equal to one another?
         case undefined_tag: return 1;
@@ -76,6 +113,9 @@ Formatter& operator<<(Formatter& f, const JSValue& value)
     case JSValue::i32_tag:
         f << float64(value.i32);
         break;
+    case JSValue::u32_tag:
+        f << float64(value.u32);
+        break;
     case JSValue::f64_tag:
         f << value.f64;
         break;
@@ -87,11 +127,44 @@ Formatter& operator<<(Formatter& f, const JSValue& value)
     case JSValue::string_tag:
         f << *value.string;
         break;
-    default:
+    case JSValue::boolean_tag:
+        f << ((value.boolean) ? "true" : "false");
+        break;
+    case JSValue::undefined_tag:
         f << "undefined";
         break;
+    default:
+        NOT_REACHED("Bad tag");
     }
     return f;
+}
+
+JSValue JSValue::toPrimitive(ECMA_type hint) const
+{
+    switch (tag) {
+    case i32_tag:
+    case u32_tag:
+    case f64_tag:
+    case string_tag:
+    case boolean_tag:
+    case undefined_tag:
+        return *this;
+
+    case object_tag:
+    case array_tag:
+    case function_tag:
+        if (hint == String) {
+            // FIXME
+        }
+        else {
+            // FIXME
+        }
+        break;
+
+    default:
+        NOT_REACHED("Bad tag");
+    }
+    return kUndefinedValue;
 }
 
 
@@ -100,26 +173,34 @@ JSValue JSValue::valueToString(const JSValue& value) // can assume value is not 
     char *chrp;
     char buf[dtosStandardBufferSize];
     switch (value.tag) {
-    case JSValue::i32_tag:
+    case i32_tag:
         chrp = doubleToStr(buf, dtosStandardBufferSize, value.i32, dtosStandard, 0);
         break;
-    case JSValue::f64_tag:
+    case u32_tag:
+        chrp = doubleToStr(buf, dtosStandardBufferSize, value.u32, dtosStandard, 0);
+        break;
+    case f64_tag:
         chrp = doubleToStr(buf, dtosStandardBufferSize, value.f64, dtosStandard, 0);
         break;
-    case JSValue::object_tag:
+    case object_tag:
         chrp = "object";
         break;
-    case JSValue::array_tag:
+    case array_tag:
         chrp = "array";
         break;
-    case JSValue::function_tag:
+    case function_tag:
         chrp = "function";
         break;
-    case JSValue::string_tag:
+    case string_tag:
         return value;
-    default:
+    case boolean_tag:
+        chrp = (value.boolean) ? "true" : "false";
+        break;
+    case undefined_tag:
         chrp = "undefined";
         break;
+    default:
+        NOT_REACHED("Bad tag");
     }
     return JSValue(new JSString(chrp));
 }
@@ -127,25 +208,142 @@ JSValue JSValue::valueToString(const JSValue& value) // can assume value is not 
 JSValue JSValue::valueToNumber(const JSValue& value) // can assume value is not a number
 {
     switch (value.tag) {
-    case JSValue::i32_tag:
-    case JSValue::f64_tag:
+    case i32_tag:
+        return JSValue((float64)value.i32);
+    case u32_tag:
+        return JSValue((float64)value.u32);
+    case f64_tag:
         return value;
-    case JSValue::string_tag: 
+    case string_tag: 
         {
             JSString* str = value.string;
             const char16 *numEnd;
 	        double d = stringToDouble(str->begin(), str->end(), numEnd);
             return JSValue(d);
         }
-    case JSValue::object_tag:
-    case JSValue::array_tag:
-    case JSValue::function_tag:
-        break;
-    default:
+    case object_tag:
+    case array_tag:
+    case function_tag:
+        // XXX more needed :
+        // toNumber(toPrimitive(hint Number))
+        return kUndefinedValue;
+    case boolean_tag:
+        return JSValue((value.boolean) ? 1.0 : 0.0);
+    case undefined_tag:
         return kNaN;
-        break;
+    default:
+        NOT_REACHED("Bad tag");
+        return kUndefinedValue;
     }
-    return kUndefinedValue;
+}
+
+JSValue JSValue::valueToBoolean(const JSValue& value)
+{
+    switch (value.tag) {
+    case i32_tag:
+        return JSValue(value.i32 != 0);
+    case u32_tag:
+        return JSValue(value.u32 != 0);
+    case f64_tag:
+        return JSValue(!(value.f64 == 0.0) || JSDOUBLE_IS_NaN(value.f64));
+    case string_tag: 
+        return JSValue(value.string->length() != 0);
+    case boolean_tag:
+        return value;
+    case object_tag:
+    case array_tag:
+    case function_tag:
+        return kTrue;
+    case undefined_tag:
+        return kFalse;
+    default:
+        NOT_REACHED("Bad tag");
+        return kUndefinedValue;
+    }
+}
+
+
+static const double two32 = 4294967296.0;
+static const double two31 = 2147483648.0;
+
+JSValue JSValue::valueToInt32(const JSValue& value)
+{
+    double d;
+    switch (value.tag) {
+    case i32_tag:
+        return value;
+    case u32_tag:
+        d = value.u32;
+        break;
+    case f64_tag:
+        d = value.f64;
+        break;
+    case string_tag: 
+        {
+            JSString* str = value.string;
+            const char16 *numEnd;
+	        d = stringToDouble(str->begin(), str->end(), numEnd);
+        }
+        break;
+    case boolean_tag:
+        return JSValue((int32)((value.boolean) ? 1 : 0));
+    case object_tag:
+    case array_tag:
+    case undefined_tag:
+        // toNumber(toPrimitive(hint Number))
+        return kUndefinedValue;
+    default:
+        NOT_REACHED("Bad tag");
+        return kUndefinedValue;
+    }
+    if ((d == 0.0) || !JSDOUBLE_IS_FINITE(d) )
+        return JSValue((int32)0);
+    d = fmod(d, two32);
+    d = (d >= 0) ? d : d + two32;
+    if (d >= two31)
+	    return JSValue((int32)(d - two32));
+    else
+	    return JSValue((int32)d);
+    
+}
+
+JSValue JSValue::valueToUInt32(const JSValue& value)
+{
+    double d;
+    switch (value.tag) {
+    case i32_tag:
+        return JSValue((uint32)value.i32);
+    case u32_tag:
+        return value;
+    case f64_tag:
+        d = value.f64;
+        break;
+    case string_tag: 
+        {
+            JSString* str = value.string;
+            const char16 *numEnd;
+	        d = stringToDouble(str->begin(), str->end(), numEnd);
+        }
+        break;
+    case boolean_tag:
+        return JSValue((uint32)((value.boolean) ? 1 : 0));
+    case object_tag:
+    case array_tag:
+    case undefined_tag:
+        // toNumber(toPrimitive(hint Number))
+        return kUndefinedValue;
+    default:
+        NOT_REACHED("Bad tag");
+        return kUndefinedValue;
+    }
+    if ((d == 0.0) || !JSDOUBLE_IS_FINITE(d))
+        return JSValue((uint32)0);
+    bool neg = (d < 0);
+    d = floor(neg ? -d : d);
+    d = neg ? -d : d;
+    d = fmod(d, two32);
+    d = (d >= 0) ? d : d + two32;
+    return JSValue((uint32)d);
 }
 
 JSFunction::~JSFunction()

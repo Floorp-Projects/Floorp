@@ -76,44 +76,66 @@ namespace JSTypes {
             JSArray* array;
             JSFunction *function;
             JSString *string;
+            bool boolean;
         };
         
+        /* These are the ECMA types, for use in 'toPrimitive' calls */
+        enum ECMA_type {
+            Undefined, Null, Boolean, Number, Object, String, 
+            NoHint
+        };
+
         enum {
             i8_tag, u8_tag,
             i16_tag, u16_tag,
             i32_tag, u32_tag,
             i64_tag, u64_tag,
             f32_tag, f64_tag,
-            object_tag, array_tag, function_tag, string_tag,
+            object_tag, array_tag, function_tag, string_tag, boolean_tag,
             undefined_tag
         } tag;
         
         JSValue() : f64(0.0), tag(undefined_tag) {}
         explicit JSValue(int32 i32) : i32(i32), tag(i32_tag) {}
+        explicit JSValue(uint32 u32) : u32(u32), tag(u32_tag) {}
         explicit JSValue(float64 f64) : f64(f64), tag(f64_tag) {}
         explicit JSValue(JSObject* object) : object(object), tag(object_tag) {}
         explicit JSValue(JSArray* array) : array(array), tag(array_tag) {}
         explicit JSValue(JSFunction* function) : function(function), tag(function_tag) {}
         explicit JSValue(JSString* string) : string(string), tag(string_tag) {}
+        explicit JSValue(bool boolean) : boolean(boolean), tag(boolean_tag) {}
 
-        JSValue(float64 a, float64 b);
-               
         int32& operator=(int32 i32)                     { return (tag = i32_tag, this->i32 = i32); }
+        uint32& operator=(uint32 u32)                   { return (tag = u32_tag, this->u32 = u32); }
         float64& operator=(float64 f64)                 { return (tag = f64_tag, this->f64 = f64); }
         JSObject*& operator=(JSObject* object)          { return (tag = object_tag, this->object = object); }
         JSArray*& operator=(JSArray* array)             { return (tag = array_tag, this->array = array); }
         JSFunction*& operator=(JSFunction* function)    { return (tag = function_tag, this->function = function); }
         JSString*& operator=(JSString* string)          { return (tag = string_tag, this->string = string); }
+        bool& operator=(bool boolean)                   { return (tag = boolean_tag, this->boolean = boolean); }
         
         bool isString() const                           { return (tag == string_tag); }
-        bool isNumber() const                           { return ((tag == f64_tag) || (tag == i32_tag)); }
+        bool isBoolean() const                          { return (tag == boolean_tag); }
+        bool isNumber() const                           { return (tag == f64_tag); }
+                                                        /* this is correct wrt ECMA, The i32 & u32 kinds
+                                                           will have to be converted to doubles anyway because
+                                                           we can't have overflow happening in generic arithmetic */
+        bool isNaN() const;
 
         JSValue toString() const                        { return (isString() ? *this : valueToString(*this)); }
         JSValue toNumber() const                        { return (isNumber() ? *this : valueToNumber(*this)); }
+        JSValue toInt32() const                         { return ((tag == i32_tag) ? *this : valueToInt32(*this)); }
+        JSValue toUInt32() const                        { return ((tag == u32_tag) ? *this : valueToUInt32(*this)); }
+        JSValue toBoolean() const                       { return ((tag == boolean_tag) ? *this : valueToBoolean(*this)); }
+
+        JSValue toPrimitive(ECMA_type hint = NoHint) const;
 
         
         static JSValue valueToString(const JSValue& value);
         static JSValue valueToNumber(const JSValue& value);
+        static JSValue valueToInt32(const JSValue& value);
+        static JSValue valueToUInt32(const JSValue& value);
+        static JSValue valueToBoolean(const JSValue& value);
 
         int operator==(const JSValue& value) const;
     };
@@ -140,6 +162,8 @@ namespace JSTypes {
 
     extern const JSValue kUndefinedValue;
     extern const JSValue kNaN;
+    extern const JSValue kTrue;
+    extern const JSValue kFalse;
 
     /**
      * Basic behavior of all JS objects, mapping a name to a value,

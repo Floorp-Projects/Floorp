@@ -131,6 +131,8 @@ namespace ICG {
         Register switchRegister;        // register containing switch control value for most 
                                         // recently in progress switch statement.
         VariableList *variableList;     // name|register pair for each variable
+
+        World *mWorld;                  // used to register strings
         
         
         
@@ -158,6 +160,8 @@ namespace ICG {
         void branch(Label *label);
         void branchConditional(Label *label, Register condition);
         void branchNotConditional(Label *label, Register condition);
+        void branchTrue(Label *label, Register condition);
+        void branchFalse(Label *label, Register condition);
         
         void beginTry(Label *catchLabel, Label *finallyLabel)
             { iCode->push_back(new Tryin(catchLabel, finallyLabel)); }
@@ -167,6 +171,8 @@ namespace ICG {
         void resetStatement()
         { if (labelSet) { delete labelSet; labelSet = NULL; } resetTopRegister(); }
 
+        ICodeOp mapExprNodeToICodeOp(ExprNode::Kind kind);
+    
     public:
         ICodeGenerator(World *world = NULL, 
                             bool hasTryStatement = false, 
@@ -182,14 +188,18 @@ namespace ICG {
         
         ICodeModule *complete();
 
+        Register ICodeGenerator::genExpr(ExprNode *p, bool needBoolValueInBranch = false,
+                    Label *trueBranch = NULL, 
+                    Label *falseBranch = NULL);
+
+
         Register allocateVariable(const StringAtom& name) 
         { Register result = getRegister(); (*variableList)[name] = result; 
             registerBase = topRegister; return result; }
 
         Register findVariable(const StringAtom& name)
         { VariableList::iterator i = variableList->find(name);
-        // What's map? // ASSERT(i != map.end()); 
-        return (*i).second; }
+          ASSERT(i != variableList->end()); return (*i).second; }
         
         Register allocateParameter(const StringAtom& name) 
         { parameterCount++; return allocateVariable(name); }
@@ -203,9 +213,11 @@ namespace ICG {
 
         void move(Register destination, Register source);
         void complement(Register destination, Register source);
+        Register test(Register source);
         
         Register compare(ICodeOp op, Register source1, Register source2);
         
+        Register loadValue(JSValue value);
         Register loadImmediate(double value);
         Register loadString(String &value);
                 
@@ -224,7 +236,9 @@ namespace ICG {
         
         Register getElement(Register base, Register index);
         void setElement(Register base, Register index, Register value);
-        
+        Register elementInc(Register base, Register index);
+        Register elementDec(Register base, Register index);
+       
         Register getRegisterBase()                  { return topRegister; }
         InstructionStream *get_iCode()              { return iCode; }
         StatementLabels *getStatementLabels()       { return labelSet; labelSet = NULL; }
@@ -285,7 +299,7 @@ namespace ICG {
 
         void beginLabelStatement(uint32 /* pos */, const StringAtom &label)
         { labelSet->push_back(&label); }
-        void endLabelStatement() { labelSet->pop_back(); }
+        void endLabelStatement() { if (labelSet) labelSet->pop_back(); }
 
         void continueStatement(uint32 pos);
         void breakStatement(uint32 pos);
