@@ -70,7 +70,7 @@
       var y = { };
       var w = { };
       var h = { };
-      obo.getCoordsForCellItem(row.value, col.value, "text", x, y, w, h);
+      obo.getCoordsForCellItem(row.value, col.value, elt.value, x, y, w, h);
       dump("*** (x,y) = (" + x.value + "," + y.value + "); (w,h) = (" + w.value + "," + h.value + ");\n");
     }
   ]]>
