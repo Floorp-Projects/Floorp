@@ -1680,6 +1680,7 @@ $(GENDIR)\config.rc:  $(DEPTH)\modules\libpref\src\init\config.js
 JAVAPARENT_DIR = $(OUTDIR)\plugins
 JAVABIN_DIR = $(OUTDIR)\plugins\nsjvm
 JAVACLS_DIR = $(OUTDIR)\plugins\nsjvm
+XJAVAPARENT_DIR = $(OUTDIR)\java
 XJAVACLS_DIR = $(OUTDIR)\java\classes
 !elseif defined(MOZ_JAVA)
 JAVAPARENT_DIR = $(OUTDIR)\java
@@ -2299,28 +2300,29 @@ $(OUTDIR)\nscnv3230.dll:   $(DIST)\bin\nscnv3230.dll
 $(OUTDIR)\java\classes\ifc11.jar:
     @IF NOT EXIST "$(JAVAPARENT_DIR)\$(NULL)" mkdir "$(JAVAPARENT_DIR)"
     @IF NOT EXIST "$(JAVACLS_DIR)\$(NULL)" mkdir "$(JAVACLS_DIR)"
+    @IF NOT EXIST "$(XJAVAPARENT_DIR)\$(NULL)" mkdir "$(XJAVAPARENT_DIR)"
     @IF NOT EXIST "$(XJAVACLS_DIR)\$(NULL)" mkdir "$(XJAVACLS_DIR)"
 !if defined(MOZ_JAVA)
 !ifdef MOZ_COPY_ALL_JARS
-    @copy $(JAVA_DESTPATH)\*.jar "$(JAVACLS_DIR)\"
+    @copy $(JAVA_DESTPATH)\*.jar "$(JAVACLS_DIR)"
 !else
-    @copy $(JAVA_DESTPATH)\java*.jar "$(JAVACLS_DIR)\"
-    @copy $(JAVA_DESTPATH)\ifc*.jar "$(JAVACLS_DIR)\"
-    @copy $(JAVA_DESTPATH)\jsj*.jar "$(JAVACLS_DIR)\"
+    @copy $(JAVA_DESTPATH)\java*.jar "$(JAVACLS_DIR)"
+    @copy $(JAVA_DESTPATH)\ifc*.jar "$(JAVACLS_DIR)"
+    @copy $(JAVA_DESTPATH)\jsj*.jar "$(JAVACLS_DIR)"
 !endif
 !elseif defined(MOZ_OJI)
-    @copy $(JAVA_DESTPATH)\ifc*.jar "$(XJAVACLS_DIR)\"
-    @copy $(JAVA_DESTPATH)\jsj*.jar "$(XJAVACLS_DIR)\"
-    @copy $(JAVA_DESTPATH)\nsplug*.jar "$(XJAVACLS_DIR)\"
-    @copy $(JAVA_DESTPATH)\nssec*.jar "$(XJAVACLS_DIR)\"
-    @copy $(JAVA_DESTPATH)\ldap*.jar "$(XJAVACLS_DIR)\"
+    @copy $(JAVA_DESTPATH)\ifc*.jar "$(XJAVACLS_DIR)"
+    @copy $(JAVA_DESTPATH)\jsj*.jar "$(XJAVACLS_DIR)"
+    @copy $(JAVA_DESTPATH)\nsplug*.jar "$(XJAVACLS_DIR)"
+    @copy $(JAVA_DESTPATH)\nssec*.jar "$(XJAVACLS_DIR)"
+    @copy $(JAVA_DESTPATH)\ldap*.jar "$(XJAVACLS_DIR)"
 !ifdef NSJVM
-    @copy $(JAVA_DESTPATH)\java*.jar "$(JAVACLS_DIR)\"
-    @copy $(JAVA_DESTPATH)\jae*.jar "$(JAVACLS_DIR)\"
-    @copy $(JAVA_DESTPATH)\jio*.jar "$(JAVACLS_DIR)\"
-    @copy $(JAVA_DESTPATH)\jsj*.jar "$(JAVACLS_DIR)\"
-    @copy $(JAVA_DESTPATH)\scd*.jar "$(JAVACLS_DIR)\"
-    @copy $(JAVA_DESTPATH)\nav*.jar "$(JAVACLS_DIR)\"
+    @copy $(JAVA_DESTPATH)\java*.jar "$(JAVACLS_DIR)"
+    @copy $(JAVA_DESTPATH)\jae*.jar "$(JAVACLS_DIR)"
+    @copy $(JAVA_DESTPATH)\jio*.jar "$(JAVACLS_DIR)"
+    @copy $(JAVA_DESTPATH)\jsj*.jar "$(JAVACLS_DIR)"
+    @copy $(JAVA_DESTPATH)\scd*.jar "$(JAVACLS_DIR)"
+    @copy $(JAVA_DESTPATH)\nav*.jar "$(JAVACLS_DIR)"
 !endif
 !endif
 
