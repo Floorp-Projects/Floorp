@@ -2713,7 +2713,7 @@ doProlog(XML_Parser parser,
 	  dtd.complete = 0;
 	  entity->open = 1;
 	  if (!externalEntityRefHandler(externalEntityRefHandlerArg,
-					0,
+					entity->name, /* Mozilla bug 191482 */
 					entity->base,
 					entity->systemId,
 					entity->publicId)) {
