@@ -78,6 +78,7 @@ sub setup_vars {
     my $jar_dbg_suffix = "_dbg";
     my $dbg_suffix     = "_DBG";
     $ENV{BUILD_OPT} and $dbg_suffix = "";
+    $ENV{BUILD_OPT} and $jar_dbg_suffix = "";
 
     $ENV{CLASSPATH}  = "";
     $ENV{$ld_lib_path} = "" if $truncate_lib_path;
