@@ -65,7 +65,10 @@ CPPSRCS = \
 
 LOCAL_INCLUDES += -I$(srcdir)/../public
 
-EXTRA_DSO_LDOPTS = $(ZLIB_LIBS)
+EXTRA_DSO_LDOPTS = \
+                   -L$(DIST)/lib \
+                   $(ZLIB_LIBS) \
+                   -lneckoutil_s
 
 include $(topsrcdir)/config/rules.mk
 
