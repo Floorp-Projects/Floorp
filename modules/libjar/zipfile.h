@@ -32,7 +32,6 @@
  *
  * Currently only compression mode 8 (or none) is supported.
  */
-#include "prtypes.h"
 
 
 #define ZIP_OK                 0
@@ -66,8 +65,10 @@ PR_EXTERN(PRInt32) ZIP_ExtractFile( void* hZip, const char * filename, const cha
 
 /* Functions to list the files contained in the archive
  *
- * FindInit() initializes the search with the pattern, then FindNext() is
- * called to get the matching filenames if any.
+ * FindInit() initializes the search with the pattern and returns a find token, 
+ * or NULL on an error.  Then FindNext() is called with the token to get the 
+ * matching filenames if any. When done you must call FindFree() with the 
+ * token to release memory.
  * 
  * a NULL pattern will find all the files in the archive, otherwise the 
  * pattern must be a shell regexp type pattern.
@@ -76,8 +77,9 @@ PR_EXTERN(PRInt32) ZIP_ExtractFile( void* hZip, const char * filename, const cha
  * will return ZIP_ERR_SMALLBUF. When no more matches can be found in
  * the archive it will return ZIP_ERR_FNF
  */
-PR_EXTERN(PRInt32) ZIP_FindInit( void* hZip, const char * pattern );
-PR_EXTERN(PRInt32) ZIP_FindNext( void* hZip, char * outbuf, PRUint16 bufsize );
+PR_EXTERN(void*) ZIP_FindInit( void* hZip, const char * pattern );
+PR_EXTERN(PRInt32) ZIP_FindNext( void* hFind, char * outbuf, PRUint16 bufsize );
+PR_EXTERN(PRInt32) ZIP_FindFree( void* hFind );
 
 
 PR_END_EXTERN_C

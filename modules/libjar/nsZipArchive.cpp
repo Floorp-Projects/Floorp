@@ -24,16 +24,26 @@
 
 /* 
  * This module implements a simple archive extractor for the PKZIP format.
+ *
+ * The underlying nsZipArchive is NOT thread-safe. Do not pass references
+ * or pointers to it across thread boundaries.
  */
-#include <string.h>
 
-#include "nscore.h"
-#include "prmem.h"
-#include "prio.h"
-#include "plstr.h"
-#include "prlog.h"
 
-#include "xp_regexp.h"
+#ifndef STANDALONE 
+  #include "nscore.h"
+  #include "prmem.h"
+  #include "prio.h"
+  #include "plstr.h"
+  #include "xp_regexp.h"
+  #define ZFILE_CREATE    PR_WRONLY | PR_CREATE_FILE
+  #define READTYPE  PRInt32
+#else
+  #include "zipstub.h"
+  #undef NETSCAPE       // undoes prtypes damage in zlib.h
+  #define ZFILE_CREATE  "wb"
+  #define READTYPE  PRUint32
+#endif /* STANDALONE */
 
 #include "zlib.h"
 
@@ -65,15 +75,15 @@ PR_PUBLIC_API(PRInt32) ZIP_OpenArchive( const char * zipname, void** hZip )
   PRInt32 status;
 
   /*--- error check args ---*/
-  if ( hZip == NULL )
+  if ( hZip == 0 )
     return ZIP_ERR_PARAM;
 
   /*--- NULL output to prevent use by bozos who don't check errors ---*/
-  *hZip = NULL;
+  *hZip = 0;
 
   /*--- create and open the archive ---*/
   nsZipArchive* zip = new nsZipArchive();
-  if ( zip == NULL )
+  if ( zip == 0 )
     return ZIP_ERR_MEMORY;
 
   status = zip->OpenArchive(zipname);
@@ -98,7 +108,7 @@ PR_PUBLIC_API(PRInt32) ZIP_OpenArchive( const char * zipname, void** hZip )
 PR_PUBLIC_API(PRInt32) ZIP_CloseArchive( void** hZip )
 {
   /*--- error check args ---*/
-  if ( hZip == NULL || *hZip == NULL )
+  if ( hZip == 0 || *hZip == 0 )
     return ZIP_ERR_PARAM;
 
   nsZipArchive* zip = NS_STATIC_CAST(nsZipArchive*,*hZip);
@@ -106,7 +116,7 @@ PR_PUBLIC_API(PRInt32) ZIP_CloseArchive( void** hZip )
     return ZIP_ERR_PARAM;   /* whatever it is isn't one of ours! */
 
   /*--- close the archive ---*/
-  *hZip = NULL;
+  *hZip = 0;
   delete zip;
 
   return ZIP_OK;
@@ -126,7 +136,7 @@ PR_PUBLIC_API(PRInt32) ZIP_CloseArchive( void** hZip )
 PR_PUBLIC_API(PRInt32) ZIP_ExtractFile( void* hZip, const char * filename, const char * outname )
 {
   /*--- error check args ---*/
-  if ( hZip == NULL )
+  if ( hZip == 0 )
     return ZIP_ERR_PARAM;
 
   nsZipArchive* zip = NS_STATIC_CAST(nsZipArchive*,hZip);
@@ -148,15 +158,15 @@ PR_PUBLIC_API(PRInt32) ZIP_ExtractFile( void* hZip, const char * filename, const
  * @param   pattern   regexp to match files in archive, the usual shell expressions.
  *                    NULL pattern also matches all files, faster than "*"
  */
-PR_EXTERN(PRInt32) ZIP_FindInit( void* hZip, const char * pattern )
+PR_PUBLIC_API(void*) ZIP_FindInit( void* hZip, const char * pattern )
 {
   /*--- error check args ---*/
-  if ( hZip == NULL )
-    return ZIP_ERR_PARAM;
+  if ( hZip == 0 )
+    return 0;
 
   nsZipArchive* zip = NS_STATIC_CAST(nsZipArchive*,hZip);
   if ( zip->kMagic != ZIP_MAGIC )
-    return ZIP_ERR_PARAM;   /* whatever it is isn't one of ours! */
+    return 0;   /* whatever it is isn't one of ours! */
 
   /*--- initialize the pattern search ---*/
   return zip->FindInit( pattern );
@@ -171,24 +181,46 @@ PR_EXTERN(PRInt32) ZIP_FindInit( void* hZip, const char * pattern )
  * the name is too large for the buffer, and ZIP_ERR_FNF when there are no 
  * more files that match the pattern
  *
- * @param   hZip      handle obtained from ZIP_OpenArchive
+ * @param   hFind     handle obtained from ZIP_FindInit
  * @param   outbuf    buffer to receive next filename
  * @param   bufsize   size of allocated buffer
  */
-PR_EXTERN(PRInt32) ZIP_FindNext( void* hZip, char * outbuf, PRUint16 bufsize )
+PR_PUBLIC_API(PRInt32) ZIP_FindNext( void* hFind, char * outbuf, PRUint16 bufsize )
 {
   /*--- error check args ---*/
-  if ( hZip == NULL )
+  if ( hFind == 0 )
     return ZIP_ERR_PARAM;
 
-  nsZipArchive* zip = NS_STATIC_CAST(nsZipArchive*,hZip);
-  if ( zip->kMagic != ZIP_MAGIC )
+  nsZipFind* find = NS_STATIC_CAST(nsZipFind*,hFind);
+  if ( find->kMagic != ZIPFIND_MAGIC )
     return ZIP_ERR_PARAM;   /* whatever it is isn't one of ours! */
 
   /*--- return next filename file ---*/
-  return zip->FindNext( outbuf, bufsize );
+  return find->mArchive->FindNext( find, outbuf, bufsize );
 }
 
+
+
+/**
+ * ZIP_FindFree
+ *
+ * Releases allocated memory associated with the find token
+ *
+ * @param   hFind     handle obtained from ZIP_FindInit
+ */
+PR_PUBLIC_API(PRInt32) ZIP_FindFree( void* hFind )
+{
+  /*--- error check args ---*/
+  if ( hFind == 0 )
+    return ZIP_ERR_PARAM;
+
+  nsZipFind* find = NS_STATIC_CAST(nsZipFind*,hFind);
+  if ( find->kMagic != ZIPFIND_MAGIC )
+    return ZIP_ERR_PARAM;   /* whatever it is isn't one of ours! */
+
+  /* free the find structure */
+  return find->mArchive->FindFree( find );
+}
 
 
 
@@ -205,16 +237,16 @@ PR_EXTERN(PRInt32) ZIP_FindNext( void* hZip, char * outbuf, PRUint16 bufsize )
 PRInt32 nsZipArchive::OpenArchive( const char * aArchiveName )
 {
   //-- validate arguments
-  if ( aArchiveName == NULL || *aArchiveName == '\0') 
+  if ( aArchiveName == 0 || *aArchiveName == '\0') 
     return ZIP_ERR_PARAM;
 
   //-- not allowed to do two opens on the same object!
-  if ( mFd != NULL )
+  if ( mFd != 0 )
     return ZIP_ERR_GENERAL;
 
   //-- open the physical file
   mFd = PR_Open( aArchiveName, PR_RDONLY, 0 );
-  if ( mFd == NULL )
+  if ( mFd == 0 )
     return ZIP_ERR_DISK;
 
   //-- get table of contents for archive
@@ -229,12 +261,12 @@ PRInt32 nsZipArchive::OpenArchive( const char * aArchiveName )
 PRInt32 nsZipArchive::ExtractFile(const char* aFilename, const char* aOutname)
 {
   //-- sanity check arguments
-  if ( aFilename == NULL || aOutname == NULL )
+  if ( aFilename == 0 || aOutname == 0 )
     return ZIP_ERR_PARAM;
 
   //-- find file information
   const nsZipItem* item = GetFileItem( aFilename );
-  if ( item == NULL )
+  if ( item == 0 )
     return ZIP_ERR_FNF;
 
   //-- extract the file using appropriate method
@@ -257,43 +289,39 @@ PRInt32 nsZipArchive::ExtractFile(const char* aFilename, const char* aOutname)
 //---------------------------------------------
 // nsZipArchive::FindInit
 //---------------------------------------------
-PRInt32 nsZipArchive::FindInit( const char * aPattern )
+nsZipFind* nsZipArchive::FindInit( const char * aPattern )
 {
+  PRBool  regExp;
+  char*   pattern = 0;
+
   // validate the pattern
-  if ( aPattern != NULL )
+  if ( aPattern )
+  {
     switch (XP_RegExpValid( (char*)aPattern ))
     {
       case INVALID_SXP:
-        return ZIP_ERR_PARAM;
+        return 0;
 
       case NON_SXP:
-        mPatternIsRegExp = PR_FALSE;
+        regExp = PR_FALSE;
         break;
 
       case VALID_SXP:
-        mPatternIsRegExp = PR_TRUE;
+        regExp = PR_TRUE;
         break;
 
       default:
-        // unexpected/undoc'ed return value
+        // undocumented return value from RegExpValid!
         PR_ASSERT( PR_FALSE );
-        return ZIP_ERR_GENERAL;
+        return 0;
     }
 
-  // clear the old pattern
-  if ( mPattern != NULL ) 
-  {
-    PL_strfree( mPattern );
-    mPattern = NULL;
+    pattern = PL_strdup( aPattern );
+    if ( !pattern )
+      return 0;
   }
 
-  // re-initialize pattern state
-  mPatternSlot = 0;
-  mPatternItem = NULL;
-  if ( aPattern != NULL )
-    mPattern = PL_strdup( aPattern );
-
-  return ZIP_OK;
+  return new nsZipFind( this, pattern, regExp );
 }
 
 
@@ -301,32 +329,35 @@ PRInt32 nsZipArchive::FindInit( const char * aPattern )
 //---------------------------------------------
 // nsZipArchive::FindNext
 //---------------------------------------------
-PRInt32 nsZipArchive::FindNext( char * aBuf, PRUint16 aSize )
+PRInt32 nsZipArchive::FindNext( nsZipFind* aFind, char * aBuf, PRUint16 aSize )
 {
   PRInt32    status;
   PRBool     found  = PR_FALSE;
-  PRUint32   slot   = mPatternSlot;
-  nsZipItem* item   = mPatternItem;
+  PRUint16   slot   = aFind->mSlot;
+  nsZipItem* item   = aFind->mItem;
+
+  if ( aFind->mArchive != this || aBuf == 0 )
+    return ZIP_ERR_PARAM;
 
   // we start from last match, look for next
   while ( slot < ZIP_TABSIZE && !found )
   {
-    if ( item != NULL ) 
+    if ( item != 0 ) 
       item = item->next;    // move to next in current chain
     else
       item = mFiles[slot];  // starting a new slot
 
-    if ( item == NULL )
+    if ( item == 0 )
     { // no more in this chain, move to next slot
       ++slot;
       continue;
     }
-    else if ( mPattern == NULL )  
+    else if ( aFind->mPattern == 0 )  
       found = PR_TRUE;            // always match
-    else if ( mPatternIsRegExp )
-      found = XP_RegExpMatch( item->name, mPattern, PR_FALSE );
+    else if ( aFind->mRegExp )
+      found = XP_RegExpMatch( item->name, aFind->mPattern, PR_FALSE );
     else
-      found = ( PL_strcmp( item->name, mPattern ) == 0 );
+      found = ( PL_strcmp( item->name, aFind->mPattern ) == 0 );
   }
 
   if ( found ) 
@@ -343,13 +374,28 @@ PRInt32 nsZipArchive::FindNext( char * aBuf, PRUint16 aSize )
     status = ZIP_ERR_FNF;
 
   // save state for next Find. For 'smallbuf' we give user another chance
+  // to find this same match.
   if ( status != ZIP_ERR_SMALLBUF ) 
   {
-    mPatternSlot = slot;
-    mPatternItem = item;
+    aFind->mSlot = slot;
+    aFind->mItem = item;
   }
 
   return status;
+}
+
+
+
+//---------------------------------------------
+// nsZipArchive::FindFree
+//---------------------------------------------
+PRInt32 nsZipArchive::FindFree( nsZipFind* aFind )
+{
+  if ( aFind->mArchive != this )
+    return ZIP_ERR_PARAM;
+
+  delete aFind;
+  return ZIP_OK;
 }
 
 
@@ -369,7 +415,7 @@ PRInt32 nsZipArchive::BuildFileList()
   PRInt32   status = ZIP_OK;
   PRUint32  sig = 0L;
   PRUint32  namelen, extralen;
-  PRUint16  hash;
+  PRUint32  hash;
 
   ZipLocal  Local;
 
@@ -417,13 +463,13 @@ PRInt32 nsZipArchive::BuildFileList()
     extralen = xtoint( Local.extrafield_len );
 
     item = new nsZipItem();
-    if ( item != NULL ) 
+    if ( item != 0 ) 
     {
       item->name = new char[namelen+1];
 
-      if ( item->name != NULL )
+      if ( item->name != 0 )
       {
-        if ( PR_Read( mFd, item->name, namelen ) == (PRInt32)namelen )
+        if ( PR_Read( mFd, item->name, namelen ) == (READTYPE)namelen )
         {
           item->name[namelen] = 0;
           item->namelen = namelen;
@@ -480,12 +526,12 @@ PRInt32 nsZipArchive::CopyItemToDisk( const nsZipItem* aItem, const char* aOutna
 {
   PRInt32     status = ZIP_OK;
   PRUint32    chunk, pos, size;
-  PRFileDesc* fOut = NULL;
+  PRFileDesc* fOut = 0;
 
-  PR_ASSERT( aItem != NULL && aOutname != NULL );
+  PR_ASSERT( aItem != 0 && aOutname != 0 );
 
   char* buf = (char*)PR_Malloc(ZIP_BUFLEN);
-  if ( buf == NULL )
+  if ( buf == 0 )
     return ZIP_ERR_MEMORY;
 
   //-- find start of file in archive
@@ -496,8 +542,8 @@ PRInt32 nsZipArchive::CopyItemToDisk( const nsZipItem* aItem, const char* aOutna
   }
 
   //-- open output file
-  fOut = PR_Open( aOutname, PR_WRONLY | PR_CREATE_FILE, 0644);
-  if ( fOut == NULL )
+  fOut = PR_Open( aOutname, ZFILE_CREATE , 0644);
+  if ( fOut == 0 )
   {
     status = ZIP_ERR_DISK;
     goto cleanup;
@@ -509,14 +555,14 @@ PRInt32 nsZipArchive::CopyItemToDisk( const nsZipItem* aItem, const char* aOutna
   {
     chunk = (pos+ZIP_BUFLEN <= size) ? ZIP_BUFLEN : size - pos;
 
-    if ( PR_Read( mFd, buf, chunk ) != (PRInt32)chunk ) 
+    if ( PR_Read( mFd, buf, chunk ) != (READTYPE)chunk ) 
     {
       //-- unexpected end of data in archive
       status = ZIP_ERR_CORRUPT;
       break;
     }
 
-    if ( PR_Write( fOut, buf, chunk ) < (PRInt32)chunk ) 
+    if ( PR_Write( fOut, buf, chunk ) < (READTYPE)chunk ) 
     {
       //-- Couldn't write all the data (disk full?)
       status = ZIP_ERR_DISK;
@@ -525,7 +571,7 @@ PRInt32 nsZipArchive::CopyItemToDisk( const nsZipItem* aItem, const char* aOutna
   }
 
 cleanup:
-  if ( fOut != NULL )
+  if ( fOut != 0 )
     PR_Close( fOut );
 
   PR_FREEIF( buf );
@@ -539,11 +585,11 @@ cleanup:
 //---------------------------------------------
 const nsZipItem*  nsZipArchive::GetFileItem( const char * aFilename )
 {
-  PR_ASSERT( aFilename != NULL );
+  PR_ASSERT( aFilename != 0 );
 
   nsZipItem* item = mFiles[ HashName(aFilename) ];
 
-  for ( ; item != NULL; item = item->next )
+  for ( ; item != 0; item = item->next )
   {
     if ( 0 == PL_strcmp( aFilename, item->name ) ) 
       break; //-- found it
@@ -557,12 +603,12 @@ const nsZipItem*  nsZipArchive::GetFileItem( const char * aFilename )
 //---------------------------------------------
 // nsZipArchive::HashName
 //---------------------------------------------
-PRUint16 nsZipArchive::HashName( const char* aName )
+PRUint32 nsZipArchive::HashName( const char* aName )
 {
-  PRUint16 val = 0;
+  PRUint32 val = 0;
   PRUint8* c;
 
-  PR_ASSERT( aName != NULL );
+  PR_ASSERT( aName != 0 );
 
   for ( c = (PRUint8*)aName; *c != 0; c++ ) {
     val = val*37 + *c;
@@ -580,17 +626,17 @@ PRInt32 nsZipArchive::InflateItemToDisk( const nsZipItem* aItem, const char* aOu
 {
   PRInt32     status = ZIP_OK;    
   PRUint32    chunk, inpos, outpos, size;
-  PRFileDesc* fOut = NULL;
+  PRFileDesc* fOut = 0;
   z_stream    zs;
   int         zerr;
   PRBool      bInflating = PR_FALSE;
 
-  PR_ASSERT( aItem != NULL && aOutname != NULL );
+  PR_ASSERT( aItem != 0 && aOutname != 0 );
 
   //-- allocate deflation buffers
   Bytef *inbuf  = (Bytef*)PR_Malloc(ZIP_BUFLEN);
   Bytef *outbuf = (Bytef*)PR_Malloc(ZIP_BUFLEN);
-  if ( inbuf == NULL || outbuf == NULL )
+  if ( inbuf == 0 || outbuf == 0 )
   {
     status = ZIP_ERR_MEMORY;
     goto cleanup;
@@ -604,8 +650,8 @@ PRInt32 nsZipArchive::InflateItemToDisk( const nsZipItem* aItem, const char* aOu
   }
 
   //-- open output file
-  fOut = PR_Open( aOutname, PR_WRONLY | PR_CREATE_FILE, 0644);
-  if ( fOut == NULL )
+  fOut = PR_Open( aOutname, ZFILE_CREATE, 0644);
+  if ( fOut == 0 )
   {
     status = ZIP_ERR_DISK;
     goto cleanup;
@@ -637,7 +683,7 @@ PRInt32 nsZipArchive::InflateItemToDisk( const nsZipItem* aItem, const char* aOu
       inpos = zs.total_in;  // input position
       chunk = ( inpos + ZIP_BUFLEN <= size ) ? ZIP_BUFLEN : size - inpos;
 
-      if ( PR_Read( mFd, inbuf, chunk ) != (PRInt32)chunk )
+      if ( PR_Read( mFd, inbuf, chunk ) != (READTYPE)chunk )
       {
         //-- unexpected end of data
         status = ZIP_ERR_CORRUPT;
@@ -670,7 +716,7 @@ PRInt32 nsZipArchive::InflateItemToDisk( const nsZipItem* aItem, const char* aOu
   if ( zerr == Z_STREAM_END && outpos < zs.total_out )
   {
     chunk = zs.total_out - outpos;
-    if ( PR_Write( fOut, outbuf, chunk ) < (PRInt32)chunk ) 
+    if ( PR_Write( fOut, outbuf, chunk ) < (READTYPE)chunk ) 
     {
       status = ZIP_ERR_DISK;
     }
@@ -693,7 +739,7 @@ cleanup:
     inflateEnd( &zs );
   }
 
-  if ( fOut != NULL )
+  if ( fOut != 0 )
     PR_Close( fOut );
 
   PR_FREEIF( inbuf );
@@ -709,19 +755,18 @@ cleanup:
 //------------------------------------------
 
 nsZipArchive::nsZipArchive()
-  : kMagic(ZIP_MAGIC), mFd(NULL), mPattern(NULL), 
-    mPatternSlot(ZIP_TABSIZE), mPatternItem(NULL)
+  : kMagic(ZIP_MAGIC), mFd(0)
 {
   // initialize the table to NULL
   for ( int i = 0; i < ZIP_TABSIZE; ++i) {
-    mFiles[i] = NULL;
+    mFiles[i] = 0;
   }
 }
 
 nsZipArchive::~nsZipArchive()
 {
   // close the file if open
-  if ( mFd != NULL ) {
+  if ( mFd != 0 ) {
     PR_Close(mFd);
   }
 
@@ -730,18 +775,15 @@ nsZipArchive::~nsZipArchive()
   for ( int i = 0; i < ZIP_TABSIZE; ++i)
   {
     pItem = mFiles[i];
-    while ( pItem != NULL )
+    while ( pItem != 0 )
     {
       mFiles[i] = pItem->next;
       delete pItem;
       pItem = mFiles[i];
     }
   }
-
-  if ( mPattern != NULL ) {
-    PL_strfree(mPattern);
-  }
 }
+
 
 
 
@@ -749,13 +791,36 @@ nsZipArchive::~nsZipArchive()
 // nsZipItem constructor and destructor
 //------------------------------------------
 
-nsZipItem::nsZipItem() : name(NULL),next(NULL) {}
+nsZipItem::nsZipItem() : name(0),next(0) {}
 
 nsZipItem::~nsZipItem()
 {
-  if (name != NULL )
+  if (name != 0 )
     delete [] name;
 }
+
+
+
+
+//------------------------------------------
+// nsZipFind constructor and destructor
+//------------------------------------------
+
+nsZipFind::nsZipFind( nsZipArchive* aZip, char* aPattern, PRBool aRegExp )
+: kMagic(ZIPFIND_MAGIC), 
+  mArchive(aZip), 
+  mPattern(aPattern), 
+  mSlot(0), 
+  mItem(0), 
+  mRegExp(aRegExp) 
+{}
+
+nsZipFind::~nsZipFind()
+{
+  if (mPattern != 0 )
+    PL_strfree( mPattern );
+}
+
 
 
 
@@ -771,7 +836,7 @@ nsZipItem::~nsZipItem()
  */
 static PRUint16 xtoint (unsigned char *ii)
 {
-  return (PRUint16) (ii [0]) | ((PRUint16) ii [1] << 8);
+  return (PRUint16) ((ii [0]) | (ii [1] << 8));
 }
 
 /*
