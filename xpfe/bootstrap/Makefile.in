@@ -23,7 +23,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= apprunner
-PROGRAM		= mozilla
+PROGRAM		= apprunner
 
 CPPSRCS		= \
 		nsAppRunner.cpp \
