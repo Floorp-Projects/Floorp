@@ -135,9 +135,16 @@ void nsWindow::Create(nsNativeWidget aParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
-
+	if (0==aParent)
+	{
+		mParent = nsnull;
 		CreateMainWindow(aParent,0 , aRect, aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData);
-		
+	}
+	else
+	{
+		mParent = (nsWindow*)(((WindowPeek)aParent)->refCon);
+		CreateChildWindow(aParent, mParent, aRect,aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData);
+	}		
 }
 
 //-------------------------------------------------------------------------
@@ -192,6 +199,7 @@ Rect		bounds;
 
   mBounds = aRect;
   mAppShell = aAppShell;
+  NS_IF_ADDREF(mAppShell);
 	
 	InitToolkit(aToolkit, aWidgetParent);
 	
@@ -247,6 +255,7 @@ void nsWindow::CreateChildWindow(nsNativeWidget  aNativeParent,
 	// bounds of this child
   mBounds = aRect;
   mAppShell = aAppShell;
+  NS_IF_ADDREF(mAppShell);
   mIsMainWindow = PR_FALSE;
   mWindowMadeHere = PR_TRUE;
 
@@ -350,6 +359,7 @@ NS_IMETHODIMP nsWindow::SetClientData(void* aClientData)
 //-------------------------------------------------------------------------
 nsIWidget* nsWindow::GetParent(void)
 {
+  NS_IF_ADDREF(mParent);
   return  mParent;
 }
 
@@ -361,6 +371,23 @@ nsIWidget* nsWindow::GetParent(void)
 //-------------------------------------------------------------------------
 nsIEnumerator* nsWindow::GetChildren()
 {
+  if (mChildren) {
+    // Reset the current position to 0
+    mChildren->Reset();
+
+    // XXX Does this copy of our enumerator work? It looks like only
+    // the first widget in the list is added...
+    Enumerator * children = new Enumerator;
+    nsISupports   * next = mChildren->Next();
+    if (next) {
+      nsIWidget *widget;
+      if (NS_OK == next->QueryInterface(kIWidgetIID, (void**)&widget)) {
+        children->Append(widget);
+      }
+    }
+
+    return (nsIEnumerator*)children;
+  }
 	return NULL;
 }
 
@@ -446,8 +473,11 @@ void nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
                   gInstanceClassName, aWidth, aHeight, (aRepaint?"true":"false"));
   mBounds.width  = aWidth;
   mBounds.height = aHeight;
-//  UpdateVisibilityFlag();
-//  UpdateDisplay();
+  if (aRepaint)
+  {
+  	UpdateVisibilityFlag();
+  	UpdateDisplay();
+  }
   //XtVaSetValues(mWidget, XmNx, mBounds.x, XmNy, mBounds.y, XmNwidth, aWidth, XmNheight, aHeight, nsnull);
 
 //    XtResizeWidget(mWidget, aWidth, aHeight, 0);
@@ -465,8 +495,11 @@ void nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 aHeigh
   mBounds.y      = aY;
   mBounds.width  = aWidth;
   mBounds.height = aHeight;
-//  UpdateVisibilityFlag();
-//  UpdateDisplay();
+  if (aRepaint)
+  {
+  	UpdateVisibilityFlag();
+  	UpdateDisplay();
+  }
  // XtVaSetValues(mWidget, XmNx, aX, XmNy, GetYCoord(aY),XmNwidth, aWidth, XmNheight, aHeight, nsnull);
 }
 
@@ -754,7 +787,8 @@ nsIRenderingContext* nsWindow::GetRenderingContext()
 //-------------------------------------------------------------------------
 nsIToolkit* nsWindow::GetToolkit()
 {
-  return nsnull;
+  NS_IF_ADDREF(mToolkit);
+  return mToolkit;
 }
 
 
@@ -1025,6 +1059,7 @@ PRBool nsWindow::OnResize(nsSizeEvent &aEvent)
   if (mEventCallback && !mIgnoreResize) {
     return(DispatchEvent(&aEvent));
   }
+
   return FALSE;
 }
 
@@ -1288,6 +1323,34 @@ nsPaintEvent 	pevent;
 			}
 		}
 	DisposeRgn(thergn);
+}
+
+//-------------------------------------------------------------------------
+/*  Go thru this widget and its children and generate resize event.
+ *  @update  ps 09/17/98
+ *  @param   aEvent -- The resize event
+ *  @return  nothing is returned
+ */
+void 
+nsWindow::DoResizeWidgets(nsSizeEvent &aEvent)
+{
+		nsWindow	*child = this;
+
+	// traverse through all the nsWindows to resize them
+	if (mChildren) 
+	{
+	    mChildren->Reset();
+	    child = (nsWindow*)mChildren->Next();
+	    while (child)
+	    { 
+			aEvent.widget = child;
+			child->OnResize(aEvent);
+				    
+			// now go check out the childern
+			child->DoResizeWidgets(aEvent);
+		    child = (nsWindow*)mChildren->Next();	
+		}
+	}
 }
 
 //-------------------------------------------------------------------------
