@@ -1686,22 +1686,14 @@ var attachmentBucketObserver = {
   onDrop: function (aEvent, aData, aDragSession)
     {
       aData = aData.length ? aData[0] : aData;
-      if (aData.flavour != "application/x-moz-file") 
-        return;
-    
-      var dataObj = aData.data.data.QueryInterface(Components.interfaces.nsIFile);
-      if (!dataObj) 
-        return;
-        
-      var fileURL = nsJSComponentManager.createInstance("@mozilla.org/network/standard-url;1", "nsIFileURL");
-      fileURL.file = dataObj;
-	    AddAttachment(fileURL.spec);
+      if (aData.flavour == "text/x-moz-url") {
+        aData = aData.data.data;
+        AddAttachment(aData);
+      }
     },
     
   onDragOver: function (aEvent, aFlavour, aDragSession)
     {
-      if (aFlavour != "application/x-moz-file")
-        return;
       var attachmentBucket = document.getElementById("attachmentBucket");
       attachmentBucket.setAttribute("dragover", "true");
     },
@@ -1715,6 +1707,7 @@ var attachmentBucketObserver = {
   getSupportedFlavours: function ()
     {
       var flavourList = { };
+      flavourList["text/x-moz-url"] = { width: 2, iid: "nsISupportsWString" };
       flavourList["application/x-moz-file"] = { width: 2, iid: "nsIFile" };
       return flavourList;
     }  

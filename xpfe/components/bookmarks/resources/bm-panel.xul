@@ -50,10 +50,10 @@
     <tree id="bookmarksTree" class="bookmarks-panel-tree" context="contextual" ref="NC:BookmarksRoot"
       flex="1" multiple="true" flags="dont-test-empty"
       ondragover="return DragOverTree(event);"
-      ondraggesture="return BeginDragTree(event);"
+      ondraggesture="event.preventBubble(); return BeginDragTree(event);"
       ondragdrop="return DropOnTree(event);"
       datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch rdf:httpindex" 
-      onclick="return clicked(event, event.target.parentNode.parentNode)">
+      onclick="event.preventBubble(); return clicked(event, event.target.parentNode.parentNode)">
 
       <template>
         <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">

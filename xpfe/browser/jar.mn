@@ -4,7 +4,6 @@ comm.jar:
         content/navigator/openLocation.xul             (resources/content/openLocation.xul)
         content/navigator/viewsource.js                (resources/content/viewsource.js)
         content/navigator/viewSource.xul               (resources/content/viewSource.xul)
-        content/navigator/viewSourceDD.js              (resources/content/viewSourceDD.js)        
         content/navigator/pageInfo.js                  (resources/content/pageInfo.js)
         content/navigator/pageInfo.xul                 (resources/content/pageInfo.xul)
         content/navigator/navigator.xul                (resources/content/navigator.xul)

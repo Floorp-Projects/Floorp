@@ -14,6 +14,8 @@ comm.jar:
     content/communicator/platformEditorBindings.xul      (resources/content/win/platformEditorBindings.xul) 
     content/communicator/platformGlobalOverlay.xul       (resources/content/win/platformGlobalOverlay.xul) 
     content/communicator/builtinURLs.js                  (resources/content/builtinURLs.js)
+    content/communicator/contentAreaUtils.js             (resources/content/contentAreaUtils.js) 
+    content/communicator/contentAreaDD.js                (resources/content/contentAreaDD.js) 
 
 en-US.jar:
         locale/en-US/communicator/contents.rdf               (resources/locale/en-US/contents.rdf)

@@ -50,19 +50,25 @@ Rights Reserved.
 		windowtype="mail:3pane">
 
 
-<script src="chrome://global/content/strres.js"/>
-<script src="chrome://messenger/content/widgetglue.js"/>
-<script src="chrome://messenger/content/commandglue.js"/>
-<script src="chrome://messenger/content/shareglue.js"/>
-<script src="chrome://messenger/content/msgViewNavigation.js"/>
-<script src="chrome://messenger/content/mailWindow.js"/>
-<script src="chrome://messenger/content/msgMail3PaneWindow.js"/>
-<script src="chrome://messenger/content/mail3PaneWindowCommands.js"/>
-<script src="chrome://messenger/content/mailContextMenus.js"/>
-<script src="chrome://messenger/content/messengerdnd.js"/>
-<script src="chrome://messenger/content/accountUtils.js"/>
-<script src="chrome://navigator/content/nsContextMenu.js"/>
-<script src="chrome://navigator/content/navigator.js"/>
+<script type="text/javascript" src="chrome://global/content/strres.js"/>
+<script type="text/javascript" src="chrome://messenger/content/widgetglue.js"/>
+<script type="text/javascript" src="chrome://messenger/content/commandglue.js"/>
+<script type="text/javascript" src="chrome://messenger/content/shareglue.js"/>
+<script type="text/javascript" src="chrome://messenger/content/msgViewNavigation.js"/>
+<script type="text/javascript" src="chrome://messenger/content/mailWindow.js"/>
+<script type="text/javascript" src="chrome://messenger/content/msgMail3PaneWindow.js"/>
+<script type="text/javascript" src="chrome://messenger/content/mail3PaneWindowCommands.js"/>
+<script type="text/javascript" src="chrome://messenger/content/mailContextMenus.js"/>
+<script type="text/javascript" src="chrome://messenger/content/messengerdnd.js"/>
+<script type="text/javascript" src="chrome://messenger/content/accountUtils.js"/>
+<script type="text/javascript" src="chrome://navigator/content/nsContextMenu.js"/>
+<script type="text/javascript" src="chrome://navigator/content/navigator.js"/>
+<script type="text/javascript" src="chrome://communicator/content/contentAreaUtils.js"/>
+<script type="text/javascript" src="chrome://communicator/content/contentAreaDD.js"/>
+<script type="text/javascript" src="chrome://global/content/nsJSSupportsUtils.js"/>
+<script type="text/javascript" src="chrome://global/content/nsJSComponentManager.js"/>
+<script type="text/javascript" src="chrome://global/content/nsTransferable.js"/>
+<script type="text/javascript" src="chrome://global/content/nsDragAndDrop.js"/>
 
 <commands id="commands">
 	<commandset id="CommandUpdate_Mail"
@@ -130,7 +136,7 @@ Rights Reserved.
 				<splitter id="gray_vertical_splitter" collapse="before"  persist="state"/>
 				<tree id="threadTree" flex="2" persist="width" style="width:0px" context="threadPaneContext" class="window-focusborder" focusring="false"/>
 			</box>
-			<!-- if you change this id, please change GetThreadAndMessagePaneSplitter() and MsgToggleMessagePnae() -->
+			<!-- if you change this id, please change GetThreadAndMessagePaneSplitter() and MsgToggleMessagePane() -->
 			<splitter id="threadpane-splitter" collapse="after" persist="state"
 			 onclick="OnClickThreadAndMessagePaneSplitter()" orient="vertical" autostretch="never">
 			<grippy/>
@@ -140,7 +146,7 @@ Rights Reserved.
 				<toolbox id="msgHeaderView"/>
     
 				<!-- message view -->
-				<iframe id="messagepane" context="messagePaneContext" style="height: 0px" flex="1" name="messagepane" type="content-primary" src="about:blank"/>
+				<iframe id="messagepane" context="messagePaneContext" style="height: 0px" flex="1" name="messagepane" type="content-primary" src="about:blank" onclick="contentAreaClick(event);" ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);"/>
 			</box>	
 			<statusbar id="status-bar">
 				<statusbarpanel id="unreadMessageCount" style="min-width: 5px"/>

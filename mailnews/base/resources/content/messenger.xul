@@ -56,19 +56,25 @@ Rights Reserved.
         windowtype="mail:3pane">
 
 
-<script src="chrome://global/content/strres.js"></script>
-<script src="chrome://messenger/content/widgetglue.js"></script>
-<script src="chrome://messenger/content/commandglue.js"></script>
-<script src="chrome://messenger/content/shareglue.js"></script>
-<script src="chrome://messenger/content/msgViewNavigation.js"></script>
-<script src="chrome://messenger/content/mailWindow.js"></script>
-<script src="chrome://messenger/content/msgMail3PaneWindow.js"></script>
-<script src="chrome://messenger/content/mail3PaneWindowCommands.js"></script>
-<script src="chrome://messenger/content/mailContextMenus.js"></script>
-<script src="chrome://messenger/content/messengerdnd.js"></script>
-<script src="chrome://messenger/content/accountUtils.js"></script>
-<script src="chrome://navigator/content/nsContextMenu.js"></script>
-<script src="chrome://navigator/content/navigator.js"></script>
+<script type="text/javascript" src="chrome://global/content/strres.js"/>
+<script type="text/javascript" src="chrome://messenger/content/widgetglue.js"/>
+<script type="text/javascript" src="chrome://messenger/content/commandglue.js"/>
+<script type="text/javascript" src="chrome://messenger/content/shareglue.js"/>
+<script type="text/javascript" src="chrome://messenger/content/msgViewNavigation.js"/>
+<script type="text/javascript" src="chrome://messenger/content/mailWindow.js"/>
+<script type="text/javascript" src="chrome://messenger/content/msgMail3PaneWindow.js"/>
+<script type="text/javascript" src="chrome://messenger/content/mail3PaneWindowCommands.js"/>
+<script type="text/javascript" src="chrome://messenger/content/mailContextMenus.js"/>
+<script type="text/javascript" src="chrome://messenger/content/messengerdnd.js"/>
+<script type="text/javascript" src="chrome://messenger/content/accountUtils.js"/>
+<script type="text/javascript" src="chrome://navigator/content/nsContextMenu.js"/>
+<script type="text/javascript" src="chrome://navigator/content/navigator.js"/>
+<script type="text/javascript" src="chrome://communicator/content/contentAreaUtils.js"/>
+<script type="text/javascript" src="chrome://communicator/content/contentAreaDD.js"/>
+<script type="text/javascript" src="chrome://global/content/nsJSSupportsUtils.js"/>
+<script type="text/javascript" src="chrome://global/content/nsJSComponentManager.js"/>
+<script type="text/javascript" src="chrome://global/content/nsTransferable.js"/>
+<script type="text/javascript" src="chrome://global/content/nsDragAndDrop.js"/>
 
 <commands id="commands">
 
@@ -144,7 +150,7 @@ Rights Reserved.
         <grippy/>
       </splitter>
 			
-			<box id="messagepanebox" align="vertical" flex="3" persist="collapsed height" class="window-focusborder" focusring="false">
+			<box id="messagepanebox" align="vertical" flex="3" persist="collapsed height" class="window-focusborder" focusring="false" onclick="contentAreaClick(event);" ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);">
 				<toolbox id="msgHeaderView"/>
     
 				<iframe id="messagepane" context="messagePaneContext" style="height: 0px" flex="1" name="messagepane" type="content-primary" src="about:blank"/>
