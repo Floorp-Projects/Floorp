@@ -87,7 +87,9 @@ clobber::
         $(INCS)
         $(LLIBS)
         $(OS_LIBS)
+!ifdef MOZ_DEBUG
         -Fd.\$(OBJDIR)\$(CURDIR)$(*B)
+!endif
         -Fe.\$(OBJDIR)\
         -Fo.\$(OBJDIR)\
         $(CURDIR)$(*B).cpp
