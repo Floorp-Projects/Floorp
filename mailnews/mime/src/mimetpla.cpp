@@ -119,21 +119,25 @@ MimeInlineTextPlain_parse_begin (MimeObject *obj)
 
   if (!obj->output_p) return 0;
 
-  if (nsMimeOutput::nsMimeMessageBodyDisplay == obj->options->format_out ||
-      nsMimeOutput::nsMimeMessagePrintOutput == obj->options->format_out)
-    status = BeginMailNewsFont(obj);  
-
   if (obj->options &&
 	  obj->options->write_html_p &&
 	  obj->options->output_fn)
 	{
+    char buf[256];          // local buffer for html tag
+    char fontName[128];     // default font name
+    PRInt32 fontSize;       // default font size
+    PRBool setDefaultFont = PR_FALSE;
+    nsresult rv;
+    
+    // Use a default font (otherwise unicode font will be used since the data is UTF-8).
+    if (nsMimeOutput::nsMimeMessageBodyDisplay == obj->options->format_out ||
+        nsMimeOutput::nsMimeMessagePrintOutput == obj->options->format_out)
+    {
+      rv = GetMailNewsFont(obj, !obj->options->variable_width_plaintext_p, fontName, 128, &fontSize);
+      setDefaultFont = NS_SUCCEEDED(rv);
+    }
+
     MimeInlineTextPlain *text = (MimeInlineTextPlain *) obj;
-	  char* strs[4];
-	  char* s;
-	  strs[0] = "<PRE>";
-	  strs[1] = "<PRE style=\"font-family: serif;\">";
-	  strs[2] = "<PRE WRAP>";
-	  strs[3] = "<PRE WRAP style=\"font-family: serif;\">";
 
     // Ok, first get the quoting settings.
     text->mInsideQuote = PR_FALSE;
@@ -149,24 +153,43 @@ MimeInlineTextPlain_parse_begin (MimeObject *obj)
       prefs->CopyCharPref("mail.citation_color", &(text->mCitationColor));
     }
 
-    // For quoting, keep it simple...
-    if ( (obj->options->format_out == nsMimeOutput::nsMimeMessageQuoting) ||
-         (obj->options->format_out == nsMimeOutput::nsMimeMessageBodyQuoting) )
+    if (setDefaultFont) 
     {
-      if (obj->options->wrap_long_lines_p)
-        s = nsCRT::strdup(strs[2]);
+      // For quoting, keep it simple...
+      if ( (obj->options->format_out == nsMimeOutput::nsMimeMessageQuoting) ||
+           (obj->options->format_out == nsMimeOutput::nsMimeMessageBodyQuoting) )
+        PR_snprintf(buf, 256, "<pre %s style=\"font-family: %s; font-size: %dpt;\">", 
+                    obj->options->wrap_long_lines_p ? "wrap" : "",
+                    (const char *) fontName, fontSize);
       else
-        s = nsCRT::strdup(strs[0]);
+        PR_snprintf(buf, 256, "<pre %s style=\"font-family: %s; font-size: %dpt;\">", 
+                    obj->options->wrap_long_lines_p ? "wrap" : "",
+                    (const char *) fontName, fontSize);
     }
-    else
+    else 
     {
-  	  s = nsCRT::strdup(strs[(obj->options->variable_width_plaintext_p ? 1 : 0) +
-	  					(obj->options->wrap_long_lines_p ? 2 : 0)]);
+	    char* strs[4];
+      strs[0] = "<PRE>";
+	    strs[1] = "<PRE style=\"font-family: serif;\">";
+	    strs[2] = "<PRE WRAP>";
+	    strs[3] = "<PRE WRAP style=\"font-family: serif;\">";
+      // For quoting, keep it simple...
+      if ( (obj->options->format_out == nsMimeOutput::nsMimeMessageQuoting) ||
+           (obj->options->format_out == nsMimeOutput::nsMimeMessageBodyQuoting) )
+      {
+        if (obj->options->wrap_long_lines_p)
+          PL_strcpy(buf, strs[2]);
+        else
+          PL_strcpy(buf, strs[0]);
+      }
+      else
+      {
+  	    PL_strcpy(buf, strs[(obj->options->variable_width_plaintext_p ? 1 : 0) +
+	  					   (obj->options->wrap_long_lines_p ? 2 : 0)]);
+      }
     }
 
-	  if (!s) return MIME_OUT_OF_MEMORY;
-	  status = MimeObject_write(obj, s, nsCRT::strlen(s), PR_FALSE);
-	  PR_Free(s);
+	  status = MimeObject_write(obj, buf, nsCRT::strlen(buf), PR_FALSE);
 	  if (status < 0) return status;
 
 	  /* text/plain objects always have separators before and after them.
@@ -216,10 +239,6 @@ MimeInlineTextPlain_parse_eof (MimeObject *obj, PRBool abort_p)
 	  status = MimeObject_write_separator(obj);
 	  if (status < 0) return status;
 	}
-
-  if (nsMimeOutput::nsMimeMessageBodyDisplay == obj->options->format_out ||
-      nsMimeOutput::nsMimeMessagePrintOutput == obj->options->format_out)
-    status = EndMailNewsFont(obj);
 
   return 0;
 }
