@@ -197,6 +197,7 @@ nsImapMailFolder::~nsImapMailFolder()
 
   if (m_moveCoalescer)
     delete m_moveCoalescer;
+  delete m_pathName;
 }
 
 NS_IMPL_ADDREF_INHERITED(nsImapMailFolder, nsMsgDBFolder)
