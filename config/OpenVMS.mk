@@ -30,19 +30,23 @@ DSO_PIC_CFLAGS	=
 OS_LIBS		=
 
 # Define VMS
-OS_CFLAGS	+= -DVMS
-OS_CXXFLAGS	+= -DVMS
+OS_CFLAGS	+= -DVMS -DVMS_AS_IS -Wc,names=\(short,as\)
+OS_CXXFLAGS	+= -DVMS -DVMS_AS_IS -Wc,names=\(short,as\)
 
-# If we are building POSIX images, then force it.
-ifdef INTERNAL_TOOLS
-CC		= c89
-CCC		= cxx
+# If we are building POSIX images, then these HOST symbols get used.
+# We don't want to compile any POSIX image debug, so always remove -g.
+# xpild accvio's if built with -O, so don't.
+HOST_CC		= c89
+HOST_CXX	= cxx
 ifeq ($(PROGRAM),xpidl)
-OS_CFLAGS	= $(ACDEFINES) -Wc,names=\(short,as\) -DAS_IS
+HOST_CFLAGS	= $(filter-out -g -O,$(OS_CFLAGS)) -DGETCWD_CANT_MALLOC
 else
-OS_CFLAGS	= $(ACDEFINES) -O -Wc,names=\(short,as\) -DAS_IS
+HOST_CFLAGS	= $(filter-out -g -O,$(OS_CFLAGS)) -DGETCWD_CANT_MALLOC -O
 endif
-OS_CXXFLAGS	= $(ACDEFINES) -O -Wc,names=\(short,as\) -DAS_IS
+HOST_CXXFLAGS	= (filter-out -g -O,$(OS_CXXFLAGS)) -O
+
+# In addition, we want to lose the OS_FLAGS for POSIX builds.
+ifdef INTERNAL_TOOLS
 OS_LDFLAGS	=
 endif
 
