@@ -36,12 +36,7 @@ class nsView : public nsIView
 public:
   nsView();
 
-  // Overloaded new operator. Initializes the memory to 0
-  void* operator new(size_t sz) {
-    void* rv = new char[sz];
-    nsCRT::zero(rv, sz);
-    return rv;
-  }
+  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
   // nsISupports
   NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);

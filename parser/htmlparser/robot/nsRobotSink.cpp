@@ -42,11 +42,7 @@ public:
   RobotSink();
   ~RobotSink();
 
-  void* operator new(size_t size) {
-    void* rv = ::operator new(size);
-    nsCRT::zero(rv, size);
-    return (void*) rv;
-  }
+  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
   // nsISupports
   NS_DECL_ISUPPORTS
