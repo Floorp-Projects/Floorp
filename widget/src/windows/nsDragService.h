@@ -51,33 +51,37 @@ class  nsDataObjCollection;
 
 class nsDragService : public nsBaseDragService
 {
-
 public:
   nsDragService();
   virtual ~nsDragService();
   
   // nsIDragService
-  NS_IMETHOD InvokeDragSession (nsIDOMNode *aDOMNode, nsISupportsArray * anArrayTransferables, nsIScriptableRegion * aRegion, PRUint32 aActionType);
+  NS_IMETHOD InvokeDragSession(nsIDOMNode *aDOMNode,
+                               nsISupportsArray *anArrayTransferables,
+                               nsIScriptableRegion *aRegion,
+                               PRUint32 aActionType);
 
   // nsIDragSession
-  NS_IMETHOD GetData (nsITransferable * aTransferable, PRUint32 anItem);
-  NS_IMETHOD GetNumDropItems (PRUint32 * aNumItems);
+  NS_IMETHOD GetData(nsITransferable * aTransferable, PRUint32 anItem);
+  NS_IMETHOD GetNumDropItems(PRUint32 * aNumItems);
   NS_IMETHOD IsDataFlavorSupported(const char *aDataFlavor, PRBool *_retval);
-  NS_IMETHOD EndDragSession ( ) ;
+  NS_IMETHOD EndDragSession();
 
   // native impl.
-  NS_IMETHOD SetIDataObject (IDataObject * aDataObj);
-  NS_IMETHOD StartInvokingDragSession(IDataObject * aDataObj, PRUint32 aActionType);
+  NS_IMETHOD SetIDataObject(IDataObject * aDataObj);
+  NS_IMETHOD StartInvokingDragSession(IDataObject * aDataObj,
+                                      PRUint32 aActionType);
 
 protected:
-  nsDataObjCollection* GetDataObjCollection(IDataObject* aDataObj);
+  nsDataObjCollection* GetDataObjCollection(IDataObject * aDataObj);
 
-    // determine if we have a single data object or one of our private collections
-  PRBool IsCollectionObject ( IDataObject* inDataObj ) ;
+  // determine if we have a single data object or one of our private
+  // collections
+  PRBool IsCollectionObject(IDataObject* inDataObj);
 
-  IDropSource        * mNativeDragSrc;
+  IDropSource * mNativeDragSrc;
   nsNativeDragTarget * mNativeDragTarget;
-  IDataObject *        mDataObject;
+  IDataObject * mDataObject;
 };
 
 #endif // nsDragService_h__
