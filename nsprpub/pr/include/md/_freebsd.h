@@ -125,6 +125,7 @@ struct _MDCPU {
 
 #endif /* ! _PR_PTHREADS */
 
+PR_EXTERN(void) _MD_EarlyInit(void);
 #define _MD_EARLY_INIT                  _MD_EarlyInit
 #define _MD_FINAL_INIT			_PR_UnixInit
 #define _MD_GET_INTERVAL                  _PR_UNIX_GetInterval
