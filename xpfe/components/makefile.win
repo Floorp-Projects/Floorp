@@ -17,6 +17,6 @@
 
 DEPTH=..\..
 
-DIRS= public bookmarks find history prefwindow sidebar related ucth xfer 
+DIRS= public bookmarks find history prefwindow search sidebar related ucth xfer 
 
 include <$(DEPTH)\config\rules.mak>
