@@ -228,11 +228,14 @@ function Startup()
   lastRowIndex = rowCount-1;
   colCount = editorShell.GetTableColumnCount(TableElement);
   lastColIndex = colCount-1;
-  
-  // If only one cell, disable change-selection widgets
-  dialog.SelectionList.setAttribute("disabled", "true");
-  dialog.PreviousButton.setAttribute("disabled", "true");
-  dialog.NextButton.setAttribute("disabled", "true");
+
+  // If only one cell in table, disable change-selection widgets
+  if (rowCount == 1 && colCount == 1)
+  {
+    dialog.SelectionList.setAttribute("disabled", "true");
+    dialog.PreviousButton.setAttribute("disabled", "true");
+    dialog.NextButton.setAttribute("disabled", "true");
+  }
 
   // User can change these via textfields  
   newRowCount = rowCount;
@@ -305,7 +308,7 @@ function InitCellPanel()
     dialog.SelectionList.selectedIndex = SelectedCellsType-1;
 
     var previousValue = dialog.CellHeightInput.value;
-    dialog.CellHeightInput.value = InitPixelOrPercentMenulist(globalCellElement, CellElement, "height", "CellHeightUnits", gPercent);
+    dialog.CellHeightInput.value = InitPixelOrPercentMenulist(globalCellElement, CellElement, "height", "CellHeightUnits", gPixel);
     dialog.CellHeightCheckbox.checked = AdvancedEditUsed && previousValue != dialog.CellHeightInput.value;
 
     previousValue= dialog.CellWidthInput.value;
