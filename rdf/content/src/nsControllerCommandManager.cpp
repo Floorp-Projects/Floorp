@@ -118,7 +118,39 @@ nsControllerCommandManager::IsCommandEnabled(const PRUnichar *aCommandName, nsIS
   return commandHandler->IsCommandEnabled(aCommandName, aCommandRefCon, aResult);
 }
 
-/* boolean supportsCommand (in wstring command); */
+
+NS_IMETHODIMP
+nsControllerCommandManager::UpdateCommandState(const PRUnichar *aCommandName, nsISupports *aCommandRefCon)
+{
+  NS_ENSURE_ARG_POINTER(aCommandName);
+      
+  // find the command  
+  nsCOMPtr<nsIControllerCommand> commandHandler;
+  FindCommandHandler(aCommandName, getter_AddRefs(commandHandler));  
+  if (!commandHandler)
+  {
+#if DEBUG
+    nsCAutoString msg("Controller command manager asked to update the state of a command that it does not handle -- ");
+    msg.AppendWithConversion(aCommandName);
+    NS_WARNING(msg);
+#endif
+    return NS_OK;    // we don't handle this command
+  }
+  
+  nsCOMPtr<nsIStateUpdatingControllerCommand> stateCommand = do_QueryInterface(commandHandler);
+  if (!stateCommand)
+  {
+#if DEBUG
+    nsCAutoString msg("Controller command manager asked to update the state of a command that doesn't do state updating -- ");
+    msg.AppendWithConversion(aCommandName);
+    NS_WARNING(msg);
+#endif
+    return NS_ERROR_NO_INTERFACE;
+  }
+  
+  return stateCommand->UpdateCommandState(aCommandName, aCommandRefCon);
+}
+
 NS_IMETHODIMP
 nsControllerCommandManager::SupportsCommand(const PRUnichar *aCommandName, nsISupports *aCommandRefCon, PRBool *aResult)
 {
