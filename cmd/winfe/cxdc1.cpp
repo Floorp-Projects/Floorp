@@ -1149,7 +1149,7 @@ void CDCCX::FloodRect(LTRB& Rect, HBRUSH hColor)
 }
 BITMAPINFO* CDCCX::FillBitmapInfoHeader(NI_Pixmap* pImage)
 {
-	BITMAPINFO *pBMInfo;
+	BITMAPINFO *pBMInfo = NULL;
 
 	NI_PixmapHeader* imageHeader = &pImage->header;
 	int pixmap_depth = imageHeader->color_space->pixmap_depth;

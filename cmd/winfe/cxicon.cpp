@@ -380,6 +380,8 @@ int CXIcon::DisplayPixmap(NI_Pixmap* image, NI_Pixmap* mask, int32 x, int32 y, i
 
 	// Fill in our header.
 	m_icon->bmpInfo = FillBitmapInfoHeader(image);
+	if (!m_icon->bmpInfo)
+		return 1;
 
 	// Copy our bits if we have any.
 	if (m_image->bits)
