@@ -43,6 +43,8 @@
 #include "nsIDocShell.h"
 #include "nsIDocShellLoadInfo.h"
 #include "nsIWebNavigation.h"
+#include "nsCDefaultURIFixup.h"
+#include "nsIURIFixup.h"
 #include "nsIURL.h"
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
@@ -211,7 +213,14 @@ LocationImpl::GetURI(nsIURI** aURI)
     return rv;
   }
 
-  return webNav->GetCurrentURI(aURI);
+  nsCOMPtr<nsIURI> uri;
+  rv = webNav->GetCurrentURI(getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIURIFixup> urifixup(do_GetService(NS_URIFIXUP_CONTRACTID, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return urifixup->CreateExposableURI(uri, aURI);
 }
 
 nsresult
