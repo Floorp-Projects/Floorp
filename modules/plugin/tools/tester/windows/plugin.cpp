@@ -194,31 +194,34 @@ void CPlugin::getLogFileName(LPSTR szLogFileName, int iSize)
 
 BOOL CALLBACK NP_LOADDS TesterDlgProc(HWND, UINT, WPARAM, LPARAM);
 
-static BOOL bStandAlone = TRUE;
 static char szStandAlonePluginWindowClassName[] = "StandAloneWindowClass";
 
 BOOL CPlugin::initStandAlone()
 {
   HWND hWndParent = NULL;
 
+  // ensure window class
   WNDCLASS wc;
   wc.style         = 0; 
   wc.lpfnWndProc   = DefWindowProc; 
   wc.cbClsExtra    = 0; 
   wc.cbWndExtra    = 0; 
-  wc.hInstance     = m_hInst; 
+  wc.hInstance     = hInst; 
   wc.hIcon         = LoadIcon(hInst, MAKEINTRESOURCE(IDI_ICON_APP)); 
   wc.hCursor       = LoadCursor(0, IDC_ARROW); 
   wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
   wc.lpszMenuName  = NULL; 
   wc.lpszClassName = szStandAlonePluginWindowClassName;
 
-  if(RegisterClass(&wc))
-    hWndParent = CreateWindow(szStandAlonePluginWindowClassName, 
-                              "The Tester Plugin", 
-                              WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE | WS_MINIMIZEBOX, 
-                              0, 0, 800, 600, 
-                              GetDesktopWindow(), NULL, m_hInst, NULL);
+  // just register the window class, if class already exists GetLastError() 
+  // will return ERROR_CLASS_ALREADY_EXISTS, let's not care about it
+  RegisterClass(&wc);
+
+  hWndParent = CreateWindow(szStandAlonePluginWindowClassName, 
+                            "The Tester Plugin", 
+                            WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE | WS_MINIMIZEBOX, 
+                            0, 0, 800, 600, 
+                            GetDesktopWindow(), NULL, m_hInst, NULL);
 
 //  m_hWndStandAloneLogWindow = CreateWindow("LISTBOX", "", 
   //                                          WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL | LBS_NOINTEGRALHEIGHT, 
@@ -246,11 +249,10 @@ BOOL CPlugin::initStandAlone()
 
 void CPlugin::shutStandAlone()
 {
+  // we don't care  about unregistering window class, let it be in the system
+
   if (isStandAlone() && m_hWndParent) 
-  {
     DestroyWindow(m_hWndParent);
-    UnregisterClass(szStandAlonePluginWindowClassName, m_hInst);
-  }
 
   m_bPluginReady = FALSE;
 }
