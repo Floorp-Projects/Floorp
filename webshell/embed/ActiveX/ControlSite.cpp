@@ -39,6 +39,7 @@ CControlSite::CControlSite()
 	m_bInPlaceLocked = FALSE;
 	m_bWindowless = FALSE;
 	m_bSupportWindowlessActivation = TRUE;
+	m_bSafeForScriptingObjectsOnly = FALSE;
 
 	// Initialise ambient properties
 	m_nAmbientLocale = 0;
@@ -62,6 +63,12 @@ CControlSite::~CControlSite()
 }
 
 
+#if 0
+// For use when the SDK does not define it (which isn't the case these days)
+static const CATID CATID_SafeForScripting = 
+{ 0x7DD95801, 0x9882, 0x11CF, { 0x9F, 0xA9, 0x00, 0xAA, 0x00, 0x6C, 0x42, 0xC4 } };
+#endif
+
 // Create the specified control, optionally providing properties to initialise
 // it with and a name.
 HRESULT CControlSite::Create(REFCLSID clsid, PropertyList &pl, const tstring szName)
@@ -72,7 +79,41 @@ HRESULT CControlSite::Create(REFCLSID clsid, PropertyList &pl, const tstring szN
 	m_ParameterList = pl;
 	m_szName = szName;
 
-	// TODO see if object is script safe
+	// See if object is script safe
+	if (m_bSafeForScriptingObjectsOnly)
+	{
+		const CATID &catid = CATID_SafeForScripting;
+		CIPtr(ICatInformation) spCatInfo;
+		HRESULT hr = CoCreateInstance(CLSID_StdComponentCategoriesMgr, NULL, CLSCTX_INPROC_SERVER, IID_ICatInformation, (LPVOID*) &spCatInfo);
+		if (spCatInfo == NULL)
+		{
+			// Must fail if we can't open the category manager
+			return E_FAIL;
+		}
+		
+		// See what categories the class implements
+		CIPtr(IEnumCATID) spEnumCATID;
+		if (FAILED(spCatInfo->EnumImplCategoriesOfClass(clsid, &spEnumCATID)))
+		{
+			// Can't enumerate classes in category so fail
+			return E_FAIL;
+		}
+
+		// Search for matching categories
+		BOOL bFound = FALSE;
+		CATID catidNext = GUID_NULL;
+		while (spEnumCATID->Next(1, &catidNext, NULL) == S_OK)
+		{
+			if (memcmp(&catid, &catidNext, sizeof(CATID)) == 0)
+			{
+				bFound = TRUE;
+			}
+		}
+		if (!bFound)
+		{
+			return E_FAIL;
+		}
+	}
 
 	// Create the object
 	HRESULT hr = CoCreateInstance(clsid, NULL, CLSCTX_ALL, IID_IUnknown, (void **) &m_spObject);
@@ -102,6 +143,7 @@ HRESULT CControlSite::Attach(HWND hwndParent, const RECT &rcPos, IUnknown *pInit
 	// Object must have been created
 	if (m_spObject == NULL)
 	{
+		NG_ASSERT(0);
 		return E_UNEXPECTED;
 	}
 
