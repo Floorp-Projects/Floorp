@@ -22,7 +22,7 @@ MODULE=rdfsink
 MAKE_OBJ_TYPE=EXE
 
 EXENAME=rdfsink
-PDBFILE=rdfsink.pdb
+PDBFILE=rdfsink
 MAPFILE=rdfsink.map
 
 PROGRAM=        .\$(OBJDIR)\$(EXENAME).exe

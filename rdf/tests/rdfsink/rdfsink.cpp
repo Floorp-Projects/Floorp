@@ -21,6 +21,7 @@
 #include "nsINetService.h"
 #include "nsINetService.h"
 #include "nsIOutputStream.h"
+#include "nsIGenericFactory.h"
 #include "nsIPostToServer.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFXMLDataSource.h"
@@ -40,11 +41,6 @@
 #include "nsXPComCIID.h"
 #include "plevent.h"
 #include "plstr.h"
-
-#define RDF_DB "rdf:bookmarks"
-#define SUCCESS 0
-#define FAILURE -1
-
 
 #if defined(XP_PC)
 #define DOM_DLL    "jsdom.dll"
@@ -73,29 +69,13 @@
 ////////////////////////////////////////////////////////////////////////
 // CIDs
 
-// netlib
-static NS_DEFINE_CID(kNetServiceCID,            NS_NETSERVICE_CID);
-
 // rdf
-static NS_DEFINE_CID(kRDFBookMarkDataSourceCID, NS_RDFBOOKMARKDATASOURCE_CID);
-static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
-static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kRDFCompositeDataSourceCID, NS_RDFCOMPOSITEDATASOURCE_CID);
-static NS_DEFINE_CID(kRDFContentSinkCID,        NS_RDFCONTENTSINK_CID);
-static NS_DEFINE_CID(kRDFXMLDataSourceCID,      NS_RDFXMLDATASOURCE_CID);
-
-// parser
-static NS_DEFINE_CID(kParserCID,                NS_PARSER_IID);
-static NS_DEFINE_CID(kWellFormedDTDCID,         NS_WELLFORMEDDTD_CID);
-
-// layout
-static NS_DEFINE_CID(kNameSpaceManagerCID,      NS_NAMESPACEMANAGER_CID);
-
-// dom
-static NS_DEFINE_IID(kScriptNameSetRegistryCID, NS_SCRIPT_NAMESET_REGISTRY_CID);
+static NS_DEFINE_CID(kRDFServiceCID,        NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kRDFXMLDataSourceCID,  NS_RDFXMLDATASOURCE_CID);
 
 // xpcom
-static NS_DEFINE_CID(kEventQueueServiceCID,     NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_CID(kGenericFactoryCID,    NS_GENERICFACTORY_CID);
 
 ////////////////////////////////////////////////////////////////////////
 // IIDs
@@ -110,20 +90,25 @@ static nsresult
 SetupRegistry(void)
 {
     // netlib
+    static NS_DEFINE_CID(kNetServiceCID,            NS_NETSERVICE_CID);
+
     nsComponentManager::RegisterComponent(kNetServiceCID,            NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
 
     // parser
+    static NS_DEFINE_CID(kParserCID,                NS_PARSER_IID);
+    static NS_DEFINE_CID(kWellFormedDTDCID,         NS_WELLFORMEDDTD_CID);
+
     nsComponentManager::RegisterComponent(kParserCID,                NULL, NULL, PARSER_DLL, PR_FALSE, PR_FALSE);
     nsComponentManager::RegisterComponent(kWellFormedDTDCID,         NULL, NULL, PARSER_DLL, PR_FALSE, PR_FALSE);
 
     // layout
-    nsComponentManager::RegisterComponent(kNameSpaceManagerCID,      NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
+    static NS_DEFINE_CID(kNameSpaceManagerCID,      NS_NAMESPACEMANAGER_CID);
 
-    // dom
-    nsComponentManager::RegisterComponent(kScriptNameSetRegistryCID, NULL, NULL, DOM_DLL,    PR_FALSE, PR_FALSE);
+    nsComponentManager::RegisterComponent(kNameSpaceManagerCID,      NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
 
     // xpcom
     nsComponentManager::RegisterComponent(kEventQueueServiceCID,     NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
+    nsComponentManager::RegisterComponent(kGenericFactoryCID,        NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
 
     return NS_OK;
 }
@@ -146,8 +131,8 @@ public:
     }
 
     // nsIOutputStream interface
-    NS_IMETHOD Write(const char* aBuf, PRUint32 aOffset, PRUint32 aCount, PRUint32 *aWriteCount) {
-        PR_Write(PR_GetSpecialFD(PR_StandardOutput), aBuf + aOffset, aCount);
+    NS_IMETHOD Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount) {
+        PR_Write(PR_GetSpecialFD(PR_StandardOutput), aBuf, aCount);
         *aWriteCount = aCount;
         return NS_OK;
     }
@@ -200,9 +185,9 @@ main(int argc, char** argv)
     // is hopefully a "file:" URL. (Actually, we can do _any_ kind of
     // URL, but only a "file:" URL will be written back to disk.)
     if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFXMLDataSourceCID,
-                                                    nsnull,
-                                                    kIRDFXMLDataSourceIID,
-                                                    (void**) &ds))) {
+                                                          nsnull,
+                                                          kIRDFXMLDataSourceIID,
+                                                          (void**) &ds))) {
         NS_ERROR("unable to create RDF/XML data source");
         goto done;
     }
@@ -236,6 +221,9 @@ main(int argc, char** argv)
         NS_ERROR("error serializing");
         goto done;
     }
+
+    extern void foobar();
+    foobar();
 
 done:
     NS_IF_RELEASE(out);
