@@ -1917,18 +1917,17 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
             nsView *parent;
 
             parent = baseView;
-            while (mRootView != parent) {
+            while (parent) {
               parent->ConvertToParentCoords(&offset.x, &offset.y);
               parent = parent->GetParent();
             }
 
             //Subtract back offset from root of view
             parent = view;
-            while (mRootView != parent) {
+            while (parent) {
               parent->ConvertFromParentCoords(&offset.x, &offset.y);
               parent = parent->GetParent();
             }
-      
           }
 
           //Dispatch the event
