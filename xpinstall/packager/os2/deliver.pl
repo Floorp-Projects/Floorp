@@ -60,6 +60,7 @@ if($inRedirIniURL eq "")
 }
 
 $DEPTH         = "$ENV{MOZ_SRC}/mozilla";
+$DEPTH         =~ s/\\/\//g;
 $cwdBuilder    = "$DEPTH/xpinstall/wizard/os2/builder";
 $cwdDist       = GetCwd("dist",     $DEPTH, $ENV{MOZ_OBJDIR}, $cwdBuilder);
 $cwdInstall    = GetCwd("install",  $DEPTH, $ENV{MOZ_OBJDIR}, $cwdBuilder);
