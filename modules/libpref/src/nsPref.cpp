@@ -74,13 +74,16 @@ public:
 
 #ifdef PREF_SUPPORT_OLD_PATH_STRINGS
     NS_IMETHOD ReadUserJSFile(const char *filename); // deprecated
-    NS_IMETHOD ReadLIJSFile(const char *filename); // deprecated
     NS_IMETHOD EvaluateConfigScript(const char * js_buffer, PRUint32 length,
                     const char* filename, 
                     PRBool bGlobalContext, 
                     PRBool bCallbacks); // deprecated
     NS_IMETHOD SavePrefFileAs(const char *filename);
+
+#ifdef MOZ_OLD_LI_STUFF
+    NS_IMETHOD ReadLIJSFile(const char *filename); // deprecated
     NS_IMETHOD SaveLIPrefFile(const char *filename);
+#endif
 
     // Path prefs
     NS_IMETHOD CopyPathPref(const char *pref, char ** return_buf);
@@ -322,12 +325,14 @@ NS_IMETHODIMP nsPref::ReadUserJSFile(const char *filename)
     return _convertRes(PREF_ReadUserJSFile(filename));
 }
 
+#ifdef MOZ_OLD_LI_STUFF
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsPref::ReadLIJSFile(const char *filename)
 //----------------------------------------------------------------------------------------
 {
     return _convertRes(PREF_ReadLIJSFile(filename));
 }
+#endif
 
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsPref::EvaluateConfigScript(const char * js_buffer,
@@ -352,12 +357,14 @@ NS_IMETHODIMP nsPref::SavePrefFileAs(const char *filename)
     return _convertRes(PREF_SavePrefFileAs(filename));
 }
 
+#ifdef MOZ_OLD_LI_STUFF
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsPref::SaveLIPrefFile(const char *filename)
 //----------------------------------------------------------------------------------------
 {
     return _convertRes(PREF_SaveLIPrefFile(filename));
 }
+#endif
 
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsPref::CopyPathPref(const char *pref_name, char ** return_buffer)
@@ -382,6 +389,7 @@ NS_IMETHODIMP nsPref::ReadUserJSFile(nsIFileSpec* fileSpec)
     return pref_OpenFileSpec(fileSpec, PR_FALSE, PR_FALSE, PR_TRUE, PR_FALSE);
 }
 
+#ifdef MOZ_OLD_LI_STUFF
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsPref::ReadLIJSFile(nsIFileSpec* fileSpec)
 //----------------------------------------------------------------------------------------
@@ -391,6 +399,7 @@ NS_IMETHODIMP nsPref::ReadLIJSFile(nsIFileSpec* fileSpec)
     NS_IF_ADDREF(mLIFileSpec);
     return pref_OpenFileSpec(fileSpec, PR_FALSE, PR_FALSE, PR_FALSE, PR_FALSE);
 }
+#endif
 
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsPref::EvaluateConfigScript(const char * js_buffer,
@@ -432,6 +441,8 @@ NS_IMETHODIMP nsPref::SavePrefFileAs(nsIFileSpec* fileSpec)
     return _convertRes(PREF_SavePrefFileSpecWith(fileSpec, (PLHashEnumerator)pref_savePref));
 }
 
+
+#ifdef MOZ_OLD_LI_STUFF
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsPref::SaveLIPrefFile(nsIFileSpec* fileSpec)
 //----------------------------------------------------------------------------------------
@@ -441,6 +452,7 @@ NS_IMETHODIMP nsPref::SaveLIPrefFile(nsIFileSpec* fileSpec)
     PREF_SetSpecialPrefsLocal();
     return _convertRes(PREF_SavePrefFileSpecWith(fileSpec, (PLHashEnumerator)pref_saveLIPref));
 }
+#endif /* MOZ_OLD_LI_STUFF */
 
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsPref::SavePrefFile()

@@ -49,7 +49,11 @@ PR_EXTERN(JSBool) PR_CALLBACK pref_BranchCallback(JSContext *cx, JSScript *scrip
 PR_EXTERN(PrefResult) pref_savePref(PLHashEntry *he, int i, void *arg);
 PR_EXTERN(PrefResult) pref_saveLIPref(PLHashEntry *he, int i, void *arg);
 PR_EXTERN(PRBool) pref_VerifyLockFile(char* buf, long buflen);
+
+#ifdef MOZ_OLD_UI_STUFF
 PR_EXTERN(PrefResult) PREF_SetSpecialPrefsLocal(void);
+#endif /* MOZ_OLD_UI_STUFF */
+
 PR_EXTERN(int) pref_CompareStrings(const void *v1, const void *v2, void* unused);
 extern JSBool pref_InitInitialObjects(void);
 

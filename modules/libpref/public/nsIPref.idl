@@ -73,7 +73,9 @@ interface nsIPref : nsISupports {
 
   // Config file input
   void ReadUserJSFile(in nsIFileSpec filename);
-  void ReadLIJSFile(in nsIFileSpec filename);
+
+  // Commenting out: #ifdef MOZ_OLD_LI_STUFF
+  // void ReadLIJSFile(in nsIFileSpec filename);
 
   void EvaluateConfigScript(in string js_buffer, in PRUint32 length,
                             in boolean bGlobalContext,
@@ -85,7 +87,10 @@ interface nsIPref : nsISupports {
                                 in boolean bCallbacks);
   
   void SavePrefFileAs(in nsIFileSpec filename);
-  void SaveLIPrefFile(in nsIFileSpec filename);
+
+
+  // Commenting out: #ifdef MOZ_OLD_LI_STUFF
+  // void SaveLIPrefFile(in nsIFileSpec filename);
   
   /* JS Stuff - don't allow this to be scriptable */
   [noscript] readonly attribute JSContext configContext;
