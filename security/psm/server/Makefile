@@ -186,6 +186,11 @@ EXTRA_LIBS = \
 	advapi32.lib \
 	$(NULL)
 
+
+ifeq ($(BUILD_OPT), 1)
+EXTRA_LIBS += $(DIST)/lib/xpcombase_s.lib
+endif
+
 else
 
 # Removing Hardcoded shared lib suffixes so that HP-UX Builds
