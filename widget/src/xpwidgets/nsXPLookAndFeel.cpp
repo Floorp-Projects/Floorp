@@ -176,7 +176,7 @@ nsXPLookAndFeel::nsXPLookAndFeel() : nsILookAndFeel()
   NS_INIT_REFCNT();
 }
 
-static int intPrefChanged (const char *newpref, void *data)
+static int PR_CALLBACK intPrefChanged (const char *newpref, void *data)
 {
   nsLookAndFeelIntPref* np = (nsLookAndFeelIntPref*)data;
   if (np)
@@ -200,7 +200,7 @@ static int intPrefChanged (const char *newpref, void *data)
   return 0;
 }
 
-static int floatPrefChanged (const char *newpref, void *data)
+static int PR_CALLBACK floatPrefChanged (const char *newpref, void *data)
 {
   nsLookAndFeelFloatPref* np = (nsLookAndFeelFloatPref*)data;
   if (np)
