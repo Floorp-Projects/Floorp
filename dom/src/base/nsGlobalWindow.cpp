@@ -315,6 +315,7 @@ NS_IMETHODIMP GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument)
         if (xblService) {
           nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(mChromeEventHandler));
           xblService->AttachGlobalKeyHandler(rec);
+          xblService->AttachGlobalDragHandler(rec);
         }
       }
     }

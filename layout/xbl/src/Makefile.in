@@ -34,7 +34,9 @@ CPPSRCS		= \
     nsXBLBinding.cpp \
     nsXBLPrototypeBinding.cpp \
     nsXBLEventHandler.cpp \
+    nsXBLWindowHandler.cpp \
     nsXBLWindowKeyHandler.cpp \
+    nsXBLWindowDragHandler.cpp \
     nsXBLPrototypeHandler.cpp \
     nsXBLFocusHandler.cpp \
     nsXBLDragHandler.cpp \

@@ -194,14 +194,14 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver, nsIDOMEven
   mHandlerElement->GetAttribute(kNameSpaceID_None, kCommandAtom, command);
   
   if (!command.IsEmpty()) {
-    // Make sure the XBL doc is chrome.
+    // Make sure the XBL doc is chrome or resource
     // Fix for bug #45989
     nsCOMPtr<nsIDocument> document;
     mHandlerElement->GetDocument(*getter_AddRefs(document));
     nsCOMPtr<nsIURI> url = getter_AddRefs(document->GetDocumentURL());
     nsXPIDLCString scheme;
     url->GetScheme(getter_Copies(scheme));
-    if (PL_strcmp(scheme, "chrome") != 0)
+    if (PL_strcmp(scheme, "chrome") != 0 && PL_strcmp(scheme, "resource") != 0)
       return NS_OK;
 
     // We are the default action for this command.

@@ -134,7 +134,7 @@ static const PRInt32 kInitialSize = (NS_SIZE_IN_HEAP(sizeof(nsXBLAttributeEntry)
 NS_IMPL_ISUPPORTS1(nsXBLPrototypeBinding, nsIXBLPrototypeBinding)
 
 // Constructors/Destructors
-nsXBLPrototypeBinding::nsXBLPrototypeBinding(const nsCString& aID, nsIContent* aElement,
+nsXBLPrototypeBinding::nsXBLPrototypeBinding(const nsAReadableCString& aID, nsIContent* aElement,
                                              nsIXBLDocumentInfo* aInfo)
 : mID(aID), 
   mInheritStyle(PR_TRUE), 
@@ -828,7 +828,7 @@ nsXBLPrototypeBinding::GetNestedChildren(nsIAtom* aTag, nsIContent* aContent, ns
 // Creation Routine ///////////////////////////////////////////////////////////////////////
 
 nsresult
-NS_NewXBLPrototypeBinding(const nsCString& aRef, nsIContent* aElement, 
+NS_NewXBLPrototypeBinding(const nsAReadableCString& aRef, nsIContent* aElement, 
                           nsIXBLDocumentInfo* aInfo, nsIXBLPrototypeBinding** aResult)
 {
   *aResult = new nsXBLPrototypeBinding(aRef, aElement, aInfo);

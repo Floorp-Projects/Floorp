@@ -19,7 +19,9 @@
  *
  * Original Author: David W. Hyatt (hyatt@netscape.com)
  *
- * Contributor(s): Brendan Eich (brendan@mozilla.org)
+ * Contributor(s): 
+ *  - Brendan Eich (brendan@mozilla.org)
+ *  - Mike Pinkerton (pinkerton@netscape.com)
  */
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -80,6 +82,7 @@ class nsXBLService : public nsIXBLService, public nsIObserver, public nsSupports
 
   // Used by XUL key bindings and for window XBL.
   NS_IMETHOD AttachGlobalKeyHandler(nsIDOMEventReceiver* aElement);
+  NS_IMETHOD AttachGlobalDragHandler(nsIDOMEventReceiver* aElement);
 
   NS_DECL_NSIOBSERVER
 

@@ -85,7 +85,7 @@ class nsXBLPrototypeBinding: public nsIXBLPrototypeBinding
   NS_IMETHOD SetBaseTag(PRInt32 aNamespaceID, nsIAtom* aTag);
 
 public:
-  nsXBLPrototypeBinding(const nsCString& aRef, nsIContent* aElement, 
+  nsXBLPrototypeBinding(const nsAReadableCString& aRef, nsIContent* aElement, 
                         nsIXBLDocumentInfo* aInfo);
   virtual ~nsXBLPrototypeBinding();
 
