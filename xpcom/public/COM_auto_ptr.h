@@ -428,7 +428,12 @@ class func_AddRefs_t
 					return &ptr_;
 				}
 
-		private:
+			operator void**()
+				{
+					return REINTERPRET_CAST(void **,&ptr_);
+				}
+
+    private:
 			T* ptr_;
 			COM_auto_ptr<T>& new_owner_;
 	};
@@ -476,7 +481,12 @@ class func_doesnt_AddRef_t
 					return &ptr_;
 				}
 
-		private:
+			operator void**()
+				{
+					return REINTERPRET_CAST(void **,&ptr_);
+				}
+
+    private:
 			T* ptr_;
 			COM_auto_ptr<T>& new_owner_;
 	};
