@@ -39,6 +39,8 @@ class nsString;
 
 class nsIFormSubmitObserver : public nsISupports {
 public:
+  static const nsIID& GetIID() { static nsIID iid = NS_IFORMSUBMITOBSERVER_IID; return iid; }
+
   /*
    *   Subject calls the observer when the form is submitted
    *   @param formNode- the dom node corresonding to this form.

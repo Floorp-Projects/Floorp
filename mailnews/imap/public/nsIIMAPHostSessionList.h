@@ -34,6 +34,7 @@ class nsIMAPBodyShell;
 class nsIImapHostSessionList : public nsISupports
 {
 public:
+   static const nsIID& GetIID() { static nsIID iid = NS_IIMAPHOSTSESSIONLIST_IID; return iid; }
 
 	// Host List
 	 NS_IMETHOD	AddHostToList(const char *hostname, const char *userName) = 0;

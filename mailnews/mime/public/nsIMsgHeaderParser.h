@@ -44,7 +44,7 @@
 class nsIMsgHeaderParser: public nsISupports { 
 public: 
 
-  static const nsIID& IID(void) { static nsIID iid = NS_IMSGHEADERPARSER_IID; return iid; }
+  static const nsIID& GetIID(void) { static nsIID iid = NS_IMSGHEADERPARSER_IID; return iid; }
   
 	/* Given a string which contains a list of Header addresses, parses it into
 	   their component names and mailboxes.

@@ -36,6 +36,8 @@ class nsIInputStream;
 /** Interface to a buffer that holds bytes */
 class nsIByteBuffer : public nsISupports {
 public:
+	static const nsIID& GetIID() { static nsIID iid = NS_IBYTEBUFFER_IID; return iid; }
+
   NS_IMETHOD Init(PRUint32 aBufferSize) = 0;
 
   /** @return length of buffer, i.e. how many bytes are currently in it. */

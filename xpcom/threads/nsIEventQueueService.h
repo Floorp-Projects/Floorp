@@ -41,6 +41,8 @@
 class nsIEventQueueService : public nsISupports
 {
 public:
+	static const nsIID& GetIID() { static nsIID iid = NS_IEVENTQUEUESERVICE_IID; return iid; }
+
   NS_IMETHOD CreateThreadEventQueue(void) = 0;
   NS_IMETHOD DestroyThreadEventQueue(void) = 0;
 

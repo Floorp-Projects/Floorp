@@ -30,6 +30,8 @@ class nsIScriptContext;
 
 class nsIDOMScriptObjectFactory : public nsISupports {
 public:  
+  static const nsIID& GetIID() { static nsIID iid = NS_IDOM_SCRIPT_OBJECT_FACTORY_IID; return iid; }
+
   NS_IMETHOD    NewScriptAttr(nsIScriptContext *aContext, 
                               nsISupports *aAttribute, 
                               nsISupports *aParent, 

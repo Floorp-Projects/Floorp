@@ -34,6 +34,8 @@ class nsIDocument;
 // Document observer interface
 class nsIDocumentObserver : public nsISupports {
 public:
+  static const nsIID& GetIID() { static nsIID iid = NS_IDOCUMENT_OBSERVER_IID; return iid; }
+
   /**
    * Notify that a content model update is beginning. This call can be
    * nested.
