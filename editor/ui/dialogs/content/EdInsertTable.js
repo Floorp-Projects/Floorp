@@ -86,7 +86,8 @@ function InitDialog()
   // Get default attributes set on the created table:
   // Get the width attribute of the element, stripping out "%"
   // This sets contents of menu combobox list
-  gDialog.widthInput.value = InitPixelOrPercentMenulist(globalElement, tableElement, "width", "widthPixelOrPercentMenulist", gPercent);
+  // 2nd param = null: Use current selection to find if parent is table cell or window
+  gDialog.widthInput.value = InitPixelOrPercentMenulist(globalElement, null, "width", "widthPixelOrPercentMenulist", gPercent);
   gDialog.borderInput.value = globalElement.getAttribute("border");
 }
 
@@ -96,10 +97,13 @@ function ChangeRowOrColumn(id)
   forceInteger(id);
 
   // Enable OK only if both rows and columns have a value > 0
-  SetElementEnabledById("ok", gDialog.rowsInput.value.length > 0 && 
+  var enable = gDialog.rowsInput.value.length > 0 && 
                               gDialog.rowsInput.value > 0 &&
                               gDialog.columnsInput.value.length > 0 &&
-                              gDialog.columnsInput.value > 0);
+                              gDialog.columnsInput.value > 0;
+
+  SetElementEnabledById("ok", enable);
+  SetElementEnabledById("AdvancedEditButton1", enable);
 }
 
 
