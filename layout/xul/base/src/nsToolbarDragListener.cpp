@@ -447,6 +447,14 @@ nsToolbarDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
 nsresult
 nsToolbarDragListener::MouseMove(nsIDOMEvent* aMouseEvent)
 {
+//XXX people are complaining that the drag start is too sensitive and it's keeping
+//XXX them from clicking on buttons. Pooh. Disable this until I can get a better
+//XXX heuristic than 1-pixel mouse move -> drag start.
+#define UNTIL_NOT_SO_TWITCHY 1
+#if UNTIL_NOT_SO_TWITCHY
+  return NS_OK;
+#endif
+
   // XXX At the moment toolbar drags contain "text"
   // in the future they will probably contain some form of content
   // that will be translated into some RDF form
