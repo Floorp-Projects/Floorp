@@ -22,6 +22,7 @@
 
 #include "plevent.h"
 #include "nscore.h"
+#include "nsString.h"
 
 
 class nsFtpStreamListenerEvent : public PLEvent {
