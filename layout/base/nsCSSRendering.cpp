@@ -3113,16 +3113,21 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
       y1 = y0 + tileHeight;
     }
 
+    // Take the intersection again to paint only the required area
     nsRect tileRect(x0,y0,(x1-x0),(y1-y0));
+#ifdef XP_WIN
+    PRInt32 xOffset = tileRect.x - x0,
+            yOffset = tileRect.y - y0;
+    aRenderingContext.DrawTile(image,xOffset,yOffset,&tileRect);
+#else
     nsRect drawRect;
 
     if (drawRect.IntersectRect(tileRect, dirtyRect)) {
-      PRInt32 xOffset, yOffset;
-  
-      xOffset = drawRect.x - x0,
-      yOffset = drawRect.y - y0;
+      PRInt32 xOffset = drawRect.x - x0,
+              yOffset = drawRect.y - y0;
       aRenderingContext.DrawTile(image,xOffset,yOffset,&drawRect);
     }
+#endif
 
 #if (!defined(XP_UNIX) && !defined(XP_BEOS)) || defined(XP_MACOSX)
     // Restore clipping
