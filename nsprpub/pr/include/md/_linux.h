@@ -134,11 +134,13 @@ extern void _MD_CleanupBeforeExit(void);
 #define _MD_SET_FP(_t, val)
 #define _MD_GET_SP_PTR(_t) &(_MD_GET_SP(_t))
 #define _MD_GET_FP_PTR(_t) ((void *) 0)
+#define _MD_SP_TYPE int
 #else
 #define _MD_GET_SP(_t) (_t)->md.context[0].__jmpbuf[0].__sp
 #define _MD_SET_FP(_t, val)
 #define _MD_GET_SP_PTR(_t) &(_MD_GET_SP(_t))
 #define _MD_GET_FP_PTR(_t) ((void *) 0)
+#define _MD_SP_TYPE __ptr_t
 #endif /* defined(__GLIBC__) && __GLIBC__ >= 2 */
 
 /* XXX not sure if this is correct, or maybe it should be 17? */
