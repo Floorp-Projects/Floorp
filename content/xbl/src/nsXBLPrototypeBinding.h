@@ -132,8 +132,8 @@ public:
   static nsIAtom* kImplementationAtom;
   static nsIAtom* kImplementsAtom;
 
-  static nsFixedSizeAllocator kAttrPool;
-  static nsFixedSizeAllocator kInsPool;
+  static nsFixedSizeAllocator* kAttrPool;
+  static nsFixedSizeAllocator* kInsPool;
 
 // Internal member functions
 public:
