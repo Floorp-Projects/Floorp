@@ -656,13 +656,23 @@ js_Invoke(JSContext *cx, uintN argc, uintN flags)
      * Once vp is set, control should flow through label out2: to return.
      * Set frame.rval early so native class and object ops can throw and
      * return false, causing a goto out2 with ok set to false.  Also set
-     * frame.flags to flags so that ComputeThis can test bits in it.
+     * frame.flags and frame.argv so that ComputeThis can use them.
      */
     vp = sp - (2 + argc);
     v = *vp;
     frame.rval = JSVAL_VOID;
     frame.flags = flags;
-    thisp = JSVAL_TO_OBJECT(vp[1]);
+    frame.argv = sp - argc;
+
+    /*
+     * Compute the 'this' parameter and store it in frame as frame.thisp.
+     * Do this early for the JS_HAS_NO_SUCH_METHOD special case.  We "know"
+     * that ComputeThis depends on only frame.{argv,flags}.
+     */
+    ok = ComputeThis(cx, JSVAL_TO_OBJECT(vp[1]), &frame);
+    if (!ok)
+        goto out2;
+    thisp = frame.thisp;
 
     /*
      * A callee must be an object reference, unless its |this| parameter
@@ -722,6 +732,7 @@ js_Invoke(JSContext *cx, uintN argc, uintN flags)
                     }
                     newsp[1] = OBJECT_TO_JSVAL(thisp);
                     sp = newsp + 4;
+                    frame.argv = newsp + 2;
                 } else if ((jsuword)sp > a->avail) {
                     /*
                      * Inline, optimized version of JS_ARENA_ALLOCATE to claim
@@ -800,13 +811,16 @@ have_fun:
             thisp = parent;
     }
 
-    /* Initialize frame except for varobj, thisp, sp, spbase, and scopeChain. */
+    /* Initialize frame except for the already-initialized rval, flags, argv,
+     * thisp, and sp members.  Null varobj, spbase, and other pointer members
+     * which will be set conditionally.
+     */
     frame.varobj = NULL;
     frame.callobj = frame.argsobj = NULL;
     frame.script = script;
     frame.fun = fun;
     frame.argc = argc;
-    frame.argv = sp - argc;
+    JS_ASSERT(frame.argv == sp - argc);
     frame.nvars = nvars;
     frame.vars = sp;
     frame.down = fp;
@@ -818,11 +832,6 @@ have_fun:
     frame.sharpArray = NULL;
     frame.dormantNext = NULL;
     frame.objAtomMap = NULL;
-
-    /* Compute the 'this' parameter and store it in frame as frame.thisp. */
-    ok = ComputeThis(cx, thisp, &frame);
-    if (!ok)
-        goto out2;
 
     /* From here on, control must flow through label out: to return. */
     cx->fp = &frame;
