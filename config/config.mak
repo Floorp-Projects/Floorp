@@ -298,6 +298,11 @@ CFLAGS=$(CFLAGS) -DXPCONNECT_STANDALONE
 CFLAGS=$(CFLAGS) -DMOZ_PERF_METRICS
 !endif
 
+# Enable the building of certain toolkit calls that require the newer SDK
+!ifdef MOZ_REQUIRE_CURRENT_SDK
+CFLAGS=$(CFLAGS) -DMOZ_REQUIRE_CURRENT_SDK
+!endif
+
 # Enable timeline service if MOZ_TIMELINE is set
 !ifdef MOZ_TIMELINE
 CFLAGS=$(CFLAGS) -DMOZ_TIMELINE
