@@ -1462,10 +1462,10 @@ function handleURLBarRevert()
     if (url != "about:blank") { 
       gURLBar.value = url;
       gURLBar.select();
+      SetPageProxyState("valid");
     } else { //if about:blank, urlbar becomes ""
       gURLBar.value = "";
     }
-    SetPageProxyState("valid");
   }
 
   // tell widget to revert to last typed text only if the user
