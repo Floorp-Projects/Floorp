@@ -509,7 +509,6 @@ nsDOMScriptObjectFactory::NewScriptElement(const nsString &aTagName,
       return NS_NewScriptHTMLUListElement(aContext, aElement, aParent, aReturn);
     case DOMHTMLTag_ilayer:
     case DOMHTMLTag_layer:
-      return NS_NewScriptHTMLLayerElement(aContext, aElement, aParent, aReturn);
     case DOMHTMLTag_fieldset:
     case DOMHTMLTag_multicol:
     case DOMHTMLTag_spacer:
