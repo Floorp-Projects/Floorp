@@ -61,6 +61,10 @@
 <!ENTITY certmgr.editsslcert.edittrust "Edit certificate trust settings:">
 <!ENTITY certmgr.editsslcert.dotrust "Trust the authenticity of this certificate.">
 <!ENTITY certmgr.editsslcert.donttrust "Do not trust the authenticity of this certificate.">
+<!ENTITY certmgr.editemailcert.title "Edit email certificate trust settings">
+<!ENTITY certmgr.editemailcert.edittrust "Edit certificate trust settings:">
+<!ENTITY certmgr.editemailcert.dotrust "Trust the authenticity of this certificate.">
+<!ENTITY certmgr.editemailcert.donttrust "Do not trust the authenticity of this certificate.">
 
 <!ENTITY certmgr.deletecert.title "Delete Certificate">
 <!ENTITY certmgr.deletecert.beforename "You have requested to delete this certificate:">
