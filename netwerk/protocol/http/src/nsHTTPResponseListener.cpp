@@ -19,7 +19,7 @@
 #include "nsIString.h"
 #include "nsIStreamListener.h"
 #include "nsHTTPResponseListener.h"
-#include "nsITransport.h"
+#include "nsIChannel.h"
 #include "nsIInputStream.h"
 #include "nsHTTPChannel.h"
 #include "nsHTTPResponse.h"

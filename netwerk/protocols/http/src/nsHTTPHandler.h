@@ -43,7 +43,7 @@
 
 //Forward decl.
 class nsHashtable;
-class nsITransport;
+class nsIChannel;
 
 class nsHTTPHandler : public nsIHTTPHandler, public nsIProtocolHandler
 		//, public nsIProxy 
@@ -123,11 +123,11 @@ public:
         Pull out an existing transport from the hashtable, or if none exists
         create one. 
     */
-    NS_IMETHOD       GetTransport(const char* i_Host, PRUint32& i_Port, nsITransport* *o_pTrans);
+    NS_IMETHOD       GetTransport(const char* i_Host, PRUint32& i_Port, nsIChannel* *o_pTrans);
     /*
         Remove this transport from the hashtable.
     */
-    NS_IMETHOD       ReleaseTransport(const char* i_Host, PRUint32& i_Port, nsITransport* i_pTrans);
+    NS_IMETHOD       ReleaseTransport(const char* i_Host, PRUint32& i_Port, nsIChannel* i_pTrans);
 
 protected:
     // None

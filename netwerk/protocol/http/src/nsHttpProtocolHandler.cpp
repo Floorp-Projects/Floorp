@@ -23,7 +23,7 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsISocketTransportService.h"
-#include "nsITransport.h"
+#include "nsIChannel.h"
 
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kStandardUrlCID,            NS_STANDARDURL_CID);
@@ -143,10 +143,10 @@ nsHttpProtocolHandler::NewConnection(nsIUrl* url,
 
 nsresult
 nsHttpProtocolHandler::GetTransport(const char* host, PRInt32 port,
-                                    nsITransport* *result)
+                                    nsIChannel* *result)
 {
     nsSocketTransportKey key(host, port);
-    nsITransport* trans = (nsITransport*)mConnectionPool->Get(&key);
+    nsIChannel* trans = (nsIChannel*)mConnectionPool->Get(&key);
     if (trans) {
         *result = trans;
         return NS_OK;
@@ -168,10 +168,10 @@ nsHttpProtocolHandler::GetTransport(const char* host, PRInt32 port,
 
 nsresult
 nsHttpProtocolHandler::ReleaseTransport(const char* host, PRInt32 port,
-                                        nsITransport* trans)
+                                        nsIChannel* trans)
 {
     nsSocketTransportKey key(host, port);
-    nsITransport* value = (nsITransport*)mConnectionPool->Remove(&key);
+    nsIChannel* value = (nsIChannel*)mConnectionPool->Remove(&key);
     if (value == nsnull)
         return NS_ERROR_FAILURE;
     NS_ASSERTION(trans == value, "mConnectionPool out of sync");

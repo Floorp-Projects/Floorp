@@ -20,7 +20,7 @@
 #define _nsHTTPResponseListener_h_
 
 #include "nsIStreamListener.h"
-class nsITransport;
+class nsIChannel;
 class nsIString;
 class nsHTTPResponse;
 class nsIHTTPConnection;

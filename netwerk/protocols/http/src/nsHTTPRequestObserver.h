@@ -20,7 +20,7 @@
 #define _nsHTTPRequestObserver_h_
 
 #include "nsIStreamObserver.h"
-class nsITransport;
+class nsIChannel;
 class nsIString;
 
 /* 
@@ -45,7 +45,7 @@ class nsHTTPRequestObserver : public nsIStreamObserver
 
 public:
 
-    nsHTTPRequestObserver(nsITransport* i_pTransport);
+    nsHTTPRequestObserver(nsIChannel* i_pTransport);
     virtual ~nsHTTPRequestObserver();
 
     // nsISupports functions
@@ -60,7 +60,7 @@ public:
 
 protected:
 
-    nsITransport* m_pTransport;
+    nsIChannel* m_pTransport;
 
 };
 

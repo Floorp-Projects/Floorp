@@ -22,7 +22,8 @@
 #include "nsIHTTPHandler.h"
 #include "nsHTTPRequest.h"
 #include "nsHTTPResponse.h"
-#include "nsITransport.h"
+#include "nsIChannel.h"
+#include "nsIInputStream.h"
 
 nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL, 
                              nsIEventQueue* i_EQ, 

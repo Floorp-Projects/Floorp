@@ -23,7 +23,7 @@
 #include "plstr.h" // For PL_strcasecmp maybe DEBUG only... TODO check
 #include "nsIUrl.h"
 #include "nsSocketKey.h"
-#include "nsITransport.h"
+#include "nsIChannel.h"
 #include "nsISocketTransportService.h"
 #include "nsIServiceManager.h"
 #include "nsStandardUrl.h"
@@ -190,11 +190,11 @@ nsHTTPHandler::NewUrl(const char* i_URL,
 NS_METHOD
 nsHTTPHandler::GetTransport(const char* i_Host, 
                             PRUint32& i_Port, 
-                            nsITransport** o_pTrans)
+                            nsIChannel** o_pTrans)
 {
     // Check in the table...
     nsSocketKey key(i_Host, i_Port);
-    nsITransport* trans = (nsITransport*) m_pTransportTable->Get(&key);
+    nsIChannel* trans = (nsIChannel*) m_pTransportTable->Get(&key);
     if (trans)
     {
         *o_pTrans = trans;
@@ -221,10 +221,10 @@ nsHTTPHandler::GetTransport(const char* i_Host,
 NS_METHOD
 nsHTTPHandler::ReleaseTransport(const char* i_Host, 
                                 PRUint32& i_Port, 
-                                nsITransport* i_pTrans)
+                                nsIChannel* i_pTrans)
 {
     nsSocketKey key(i_Host, i_Port);
-    nsITransport* value = (nsITransport*) m_pTransportTable->Remove(&key);
+    nsIChannel* value = (nsIChannel*) m_pTransportTable->Remove(&key);
     if (value == nsnull)
         return NS_ERROR_FAILURE;
     NS_ASSERTION(i_pTrans == value, "m_pTransportTable is out of sync");

@@ -18,7 +18,7 @@
 
 #include "nsIString.h"
 #include "nsHTTPResponseListener.h"
-#include "nsITransport.h"
+#include "nsIChannel.h"
 #include "nsIInputStream.h"
 #include "nsIHTTPConnection.h"
 #include "nsHTTPResponse.h"
