@@ -67,6 +67,8 @@ nsDeviceContextUnix :: nsDeviceContextUnix()
 
   mNativeDisplay = nsnull;
 
+  mDepth = 0 ;
+  mColormap = 0 ;
 }
 
 nsDeviceContextUnix :: ~nsDeviceContextUnix()
@@ -110,7 +112,6 @@ nsresult nsDeviceContextUnix :: Init(nsNativeDeviceContext aNativeDeviceContext)
   if (mNativeDisplay == nsnull) {
     mNativeDisplay = gNativeDeviceContext;
   }
-fprintf(stderr, "mNativeDisplay 0x%x\n", mNativeDisplay);
 
   mTwipsToPixels = (((float)::XDisplayWidth((Display *)mNativeDisplay, DefaultScreen((Display *)mNativeDisplay))) /
 		    ((float)::XDisplayWidthMM((Display *)mNativeDisplay,DefaultScreen((Display *)mNativeDisplay) )) * 25.4) / 
@@ -335,6 +336,11 @@ void nsDeviceContextUnix :: InstallColormap()
    */
 
   XWindowAttributes wa;
+
+
+  /* Already installed? */
+  if (0 != mColormap)
+    return;
 
   // Find the depth of this visual
   ::XGetWindowAttributes(mSurface->display,
