@@ -50,6 +50,7 @@
 #include "nsIURL.h"
 #include "nsCRT.h"
 #include "nsRect.h"
+#include "nsINetSupport.h"
 
 #include "jsapi.h"
 
@@ -77,6 +78,7 @@ static NS_DEFINE_IID(kIScriptContextOwnerIID, NS_ISCRIPTCONTEXTOWNER_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
 static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
+static NS_DEFINE_IID(kINetSupportIID, NS_INETSUPPORT_IID);
 
 GlobalWindowImpl::GlobalWindowImpl()
 {
@@ -666,8 +668,26 @@ GlobalWindowImpl::Dump(const nsString& aStr)
 NS_IMETHODIMP
 GlobalWindowImpl::Alert(const nsString& aStr)
 {
+  nsresult ret;
+  
+  nsIWebShell *rootWebShell;
+  ret = mWebShell->GetRootWebShell(rootWebShell);
+  if (nsnull != rootWebShell) {
+    nsIWebShellContainer *rootContainer;
+    ret = rootWebShell->GetContainer(rootContainer);
+    if (nsnull != rootContainer) {
+      nsINetSupport *support;
+        if (NS_OK == (ret = rootContainer->QueryInterface(kINetSupportIID, (void**)&support))) {
+          support->Alert(aStr);
+          NS_RELEASE(support);
+        }
+      NS_RELEASE(rootContainer);
+    }
+    NS_RELEASE(rootWebShell);
+  }
+  return ret;
   // XXX Temporary
-  return Dump(aStr);
+  //return Dump(aStr);
 }
 
 NS_IMETHODIMP
