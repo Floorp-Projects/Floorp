@@ -54,11 +54,11 @@ nsAbAddressCollecter::nsAbAddressCollecter()
 {
 	NS_INIT_REFCNT();
 	maxCABsize = -1;
-	collectAddresses = -1;
+	collectAddresses = PR_FALSE;
 	sizeLimitEnabled = -1;
 
 	//set up the pref callbacks:
-	registerPrefCallbacks();
+	setupPrefs();
 }
 
 nsAbAddressCollecter::~nsAbAddressCollecter()
@@ -91,18 +91,14 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectUnicodeAddress(const PRUnichar * aAdd
 NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address)
 {
 	nsresult rv;
-	//collectAddresses = PR_TRUE;
-	//sizeLimitEnabled = PR_TRUE;
+
+
+	if(!collectAddresses)
+		return NS_OK;
 
 	NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
-	if (NS_FAILED(rv) || !pPref) 
-		return NS_ERROR_FAILURE;
-
-	if(collectAddresses == -1){
-		rv = pPref->GetBoolPref(PREF_COLLECT_EMAIL_ADDRESS, &collectAddresses);
-		if (!NS_SUCCEEDED(rv) || !collectAddresses)
-			return rv;
-	}
+	if (NS_FAILED(rv) || !pPref)
+		return NS_ERROR_FAILURE;    
 
 	if(sizeLimitEnabled == -1){
 		rv = pPref->GetBoolPref(PREF_COLLECT_EMAIL_ADDRESS_ENABLE_SIZE_LIMIT, &sizeLimitEnabled);
@@ -414,9 +410,17 @@ nsAbAddressCollecter::collectEmailAddressSizeLimitPrefChanged(const char *newpre
 	return 0;
 }
 
-void nsAbAddressCollecter::registerPrefCallbacks(void){
+void nsAbAddressCollecter::setupPrefs(void){
 	nsresult rv;
 	NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
+
+	if (NS_FAILED(rv)) 
+		return;
+
+	rv = pPref->GetBoolPref(PREF_COLLECT_EMAIL_ADDRESS, &collectAddresses);
+	if (NS_FAILED(rv))
+		return;
+
 	pPref->RegisterCallback(PREF_COLLECT_EMAIL_ADDRESS, collectEmailAddressPrefChanged, this);
 	pPref->RegisterCallback(PREF_COLLECT_EMAIL_ADDRESS_ENABLE_SIZE_LIMIT, collectEmailAddressEnableSizeLimitPrefChanged, this);
 	pPref->RegisterCallback(PREF_COLLECT_EMAIL_ADDRESS_SIZE_LIMIT, collectEmailAddressSizeLimitPrefChanged, this);

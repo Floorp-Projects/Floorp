@@ -48,12 +48,12 @@ private:
 	static int PR_CALLBACK collectEmailAddressPrefChanged(const char *newpref, void *data);
 	static int PR_CALLBACK collectEmailAddressEnableSizeLimitPrefChanged(const char *newpref, void *data);
 	static int PR_CALLBACK collectEmailAddressSizeLimitPrefChanged(const char *newpref, void *data);
-	void registerPrefCallbacks(void);
+	void setupPrefs(void);
 protected:
 	nsCOMPtr <nsIAddrDatabase> m_historyAB;
 	nsCOMPtr <nsIAbDirectory> m_historyDirectory;
 	PRInt32 maxCABsize;
-	PRInt32 collectAddresses;
+	PRBool collectAddresses;
 	PRInt32 sizeLimitEnabled;
 
 };
