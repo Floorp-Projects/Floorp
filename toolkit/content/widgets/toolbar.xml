@@ -22,6 +22,12 @@
       <method name="buildItemsFromPalette">
         <body>
           <![CDATA[
+            var currentSet = this.getAttribute("currentset");
+            if (!currentSet)
+              currentSet = this.getAttribute("defaultset");
+            if (!currentSet)
+              return;
+
             var node = this.firstChild;
             while (node) {
               if (node.localName == "toolbarpalette")
@@ -35,12 +41,6 @@
             this.palette = node;
             this.removeChild(node);
             
-            var currentSet = node.getAttribute("currentset");
-            if (!currentSet)
-              currentSet = node.getAttribute("defaultset");
-            if (!currentSet)
-              return;
-
             var items = currentSet.split(",");
             for (var i = 0; i < items.length; i++) {
               var item = items[i];

@@ -23,6 +23,8 @@
 
 */
 
+var gToolbarChanged = false;
+
 var gCurrentDragOverItem = null;
 
 function buildDialog()
@@ -191,6 +193,8 @@ var dropObserver = {
     toolbar.insertBefore(enclosure, gCurrentDragOverItem);
     gCurrentDragOverItem.removeAttribute("dragactive");
     gCurrentDragOverItem = null;
+
+    gToolbarChanged = true;
   },
   _flavourSet: null,
   getSupportedFlavours: function ()
@@ -219,4 +223,26 @@ function cleanUpItemForAdding(aPaletteItem)
     else
       aPaletteItem.firstChild.removeAttribute("disabled");
   }
+}
+
+// Save the changes to the toolbar and update all windows
+function updateToolbar()
+{
+  if (!gToolbarChanged)
+    return;
+
+  var toolbar = document.getElementById("cloneToolbar");
+  var node = toolbar.firstChild;
+  
+  var newSet = "";
+  while (node) {
+    newSet += node.firstChild.id;
+    node = node.nextSibling;
+    if (node)
+      newSet += ",";
+  }
+
+  var toolbar = window.opener.document.getElementById("nav-bar");
+  toolbar.setAttribute("currentset", newSet);
+  window.opener.document.persist("nav-bar", "currentset");
 }
