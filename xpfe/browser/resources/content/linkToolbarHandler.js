@@ -65,9 +65,8 @@ function(element)
     linkToolbarUI.activate();
   }
 
-  var relAttributes = linkElement.rel.split(" ");
-  for (var i = 0; i < relAttributes.length; i++) {
-    var linkType = LinkToolbarHandler.getLinkType(relAttributes[i]);
+  for (var i = 0; i < linkElement.relValues.length; i++) {
+    var linkType = LinkToolbarHandler.getLinkType(linkElement.relValues[i]);
     this.getItemForLinkType(linkType).displayLink(linkElement);
   }
 }
@@ -179,6 +178,8 @@ function LinkElementDecorator(element) {
   this.element = element;
   
   this.rel = LinkElementDecorator.convertRevMade(element.rel, element.rev);
+  if (this.rel)
+    this.relValues = this.rel.split(" ");
   this.rev = element.rev;
   this.title = element.title;
   this.href = element.href;
@@ -191,27 +192,14 @@ LinkElementDecorator.prototype.isIgnored =
 function()
 {
   if (!this.rel) return true;
-  if (this.isStylesheet()) return true;
-  if (this.isIcon()) return true;
-
-  return false;
-}
-
-LinkElementDecorator.prototype.isStylesheet =
-function() {
-  if (LinkElementDecorator.findWord("stylesheet", this.rel.toLowerCase()))
-    return true;
-  else
-    return false;
-}
-
-LinkElementDecorator.prototype.isIcon =
-function() {
-  if (LinkElementDecorator.findWord("icon", this.rel.toLowerCase()))
-    return true;
-  else
-    return false;
-
+  for (var i = 0; i < this.relValues.length; i++) {
+    var testVal = this.relValues[i].toLowerCase();
+    if ((testVal == "stylesheet") || 
+      (testVal == "icon") ||
+      (testVal.match(/^p3pv/)) ||
+      (testVal.match(/^schema./)))
+      return true;
+  }
   return false;
 }
 
