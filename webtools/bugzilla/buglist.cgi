@@ -1313,7 +1313,7 @@ if (length($buglist) < 4000) {
     print "Set-Cookie: BUGLIST=\n\n";
     $toolong = 1;
 }
-PutHeader($::querytitle);
+PutHeader($::querytitle, undef, "", "", navigation_links($buglist));
 
 
 print "

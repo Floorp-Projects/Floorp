@@ -22,6 +22,7 @@
 #                 Joe Robins <jmrobins@tgix.com>
 #                 Dave Miller <justdave@syndicomm.com>
 #                 Christopher Aillon <christopher@aillon.com>
+#                 Gervase Markham <gerv@gerv.net>
 
 # Contains some global routines used throughout the CGI scripts of Bugzilla.
 
@@ -407,6 +408,48 @@ sub navigation_header {
     print "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF=query.cgi>Query page</A>\n";
     print "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF=enter_bug.cgi>Enter new bug</A>\n"
 }
+
+# Adds <link> elements for bug lists. These can be inserted into the header by
+# (ab)using the "jscript" parameter to PutHeader, which inserts an arbitrary
+# string into the header. This function is modelled on the one above.
+sub navigation_links($) {
+    my ($buglist) = @_;
+    
+    my $retval = "";
+    
+    # We need to be able to pass in a buglist because when you sort on a column
+    # the bugs in the cookie you are given will still be in the old order.
+    # If a buglist isn't passed, we just use the cookie.
+    $buglist ||= $::COOKIE{"BUGLIST"};
+    
+    if (defined $buglist && $buglist ne "") {
+    my @bugs = split(/:/, $buglist);
+        
+        if (defined $::FORM{'id'}) {
+            # We are on an individual bug
+            my $cur = lsearch(\@bugs, $::FORM{"id"});
+
+            if ($cur > 0) {
+                $retval .= "<link rel=\"First\" href=\"show_bug.cgi?id=$bugs[0]\" />\n";
+                $retval .= "<link rel=\"Prev\" href=\"show_bug.cgi?id=$bugs[$cur - 1]\" />\n";
+            } 
+            if ($cur < $#bugs) {
+                $retval .= "<link rel=\"Next\" href=\"show_bug.cgi?id=$bugs[$cur + 1]\" />\n";
+                $retval .= "<link rel=\"Last\" href=\"show_bug.cgi?id=$bugs[$#bugs]\" />\n";
+            }
+
+            $retval .= "<link rel=\"Up\" href=\"buglist.cgi?regetlastlist=1\" />\n";
+            $retval .= "<link rel=\"Contents\" href=\"buglist.cgi?regetlastlist=1\" />\n";
+        } else {
+            # We are on a bug list
+            $retval .= "<link rel=\"First\" href=\"show_bug.cgi?id=$bugs[0]\" />\n";
+            $retval .= "<link rel=\"Next\" href=\"show_bug.cgi?id=$bugs[0]\" />\n";
+            $retval .= "<link rel=\"Last\" href=\"show_bug.cgi?id=$bugs[$#bugs]\" />\n";
+        }
+    }
+    
+    return $retval;
+} 
 
 sub make_checkboxes {
     my ($src,$default,$isregexp,$name) = (@_);

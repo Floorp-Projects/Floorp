@@ -68,7 +68,7 @@ GetVersionTable();
 SendSQL("SELECT short_desc FROM bugs WHERE bug_id = $::FORM{'id'}");
 my ($summary) = FetchSQLData();
 $summary = html_quote($summary);
-PutHeader("Bug $::FORM{'id'} - $summary", "Bugzilla Bug $::FORM{'id'}", $summary );
+PutHeader("Bug $::FORM{'id'} - $summary", "Bugzilla Bug $::FORM{'id'}", $summary, "", navigation_links() );
 
 navigation_header();
 
