@@ -1310,7 +1310,6 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
   PrepareUnicodeText(tx,
                      displaySelection ? ip : nsnull,
                      rawPaintBuf, textLength, width);
-  ip[mContentLength] = ip[mContentLength-1]+1; //must set up last one for selection beyond edge
   // Translate unicode data into ascii for rendering
   char* dst = paintBuf;
   char* end = dst + textLength;
@@ -1330,6 +1329,7 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
                            dx, dy, width);
     }
     else {
+      ip[mContentLength] = ip[mContentLength-1]+1; //must set up last one for selection beyond edge
 /*      SelectionInfo si;
       ComputeSelectionInfo(aRenderingContext, doc, ip, textLength, si);*/
 
