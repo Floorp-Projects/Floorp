@@ -40,6 +40,16 @@ CPPSRCS =				\
 	nsHTMLValue.cpp			\
 	$(NULL)
 
+EXPORTS =				\
+  nsCSSProps.h  \
+  nsCSSPropIDs.h \
+  nsICSSStyleSheet.h \
+  nsICSSStyleRule.h \
+	nsICSSDeclaration.h \ 
+  nsHTMLValue.h \
+  nsIHTMLCSSStyleSheet.h
+	$(NULL)
+
 MODULE = raptor
 
 INCLUDES += -I../../base/src -I../../../base/src -I.
