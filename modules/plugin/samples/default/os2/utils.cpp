@@ -36,44 +36,29 @@
  * ***** END LICENSE BLOCK ***** */
 
 #define INCL_GPI
+#define INCL_WIN
 #include <os2.h>
 #include <string.h>
 
 #include "plugin.h"
 
-#ifdef OLDCODE
-// open the registry, create if necessary
-HKEY openRegistry()      
-{
-  HKEY phkResult;
-
-  if(RegCreateKey(HKEY_CURRENT_USER, REGISTRY_PLACE, &phkResult) != ERROR_SUCCESS)
-    MessageBox(0, "Error creating Default Plugin registry key", "Default Plugin", MB_OK);
-
-  return phkResult;
-}
-
 // return TRUE if we've never seen this MIME type before
 BOOL IsNewMimeType(PSZ mime)   
 {
-  HKEY hkey = openRegistry();
-  DWORD dwType, keysize = 512;
+  ULONG keysize = 512;
   char keybuf[512];
 
-  if(RegQueryValueEx(hkey, mime, 0, &dwType, (LPBYTE) &keybuf, &keysize) == ERROR_SUCCESS)
-  {
-    // key exists, must have already been here...
+  PrfQueryProfileString(HINI_USERPROFILE, OS2INI_PLACE, mime, "", keybuf, keysize);
+  if (keybuf[0] != '\0') {
     return FALSE;
   }
   else 
   {
-    if(RegSetValueEx(hkey, mime, 0,  REG_SZ, (LPBYTE) "(none)", 7) != ERROR_SUCCESS)
-      MessageBox(0, "Error adding MIME type value", "Default Plugin", MB_OK);
-
+    if (!(PrfWriteProfileString(HINI_USERPROFILE, OS2INI_PLACE, mime, "(none)")))
+      WinMessageBox(HWND_DESKTOP, HWND_DESKTOP, "Error adding MIME type value", "Default Plugin", 0, MB_OK);
     return TRUE;
   }
 }
-#endif
 
 // string length in pixels for the specific window (selected font)
 static int getWindowStringLength(HWND hWnd, PSZ lpsz)
