@@ -1,4 +1,4 @@
-README for libpng 1.0.9 - January 31, 2001 (shared library 2.1)
+README for libpng 1.2.5 - October 2, 2002 (shared library 12.0)
 See the note about version numbers near the top of png.h
 
 See INSTALL for instructions on how to install libpng.
@@ -172,19 +172,24 @@ Files in this distribution:
        pngsuite     =>  Test images
        visupng      =>  Contains a MSVC workspace for VisualPng
       projects      =>  Contains project files and workspaces for building DLL
+       beos             =>  Contains a Beos workspace for building libpng
        borland          =>  Contains a Borland workspace for building libpng
                             and zlib
        msvc             =>  Contains a Microsoft Visual C++ (MSVC) workspace
                             for building libpng and zlib
-       wince            =>  Contains a Microsoft Visual C++ (Windows CD Toolkit)
-                            workspace for building libpng and zlib on WindowsCE
+       netware.txt      =>  Contains instructions for downloading a set of
+                            project files for building libpng and zlib on
+                            Netware.
+       wince.txt        =>  Contains instructions for downloading a Microsoft
+                            Visual C++ (Windows CD Toolkit) workspace for
+                            building libpng and zlib on WindowsCE
       scripts       =>  Directory containing scripts for building libpng:
        descrip.mms      =>  VMS makefile for MMS or MMK
        makefile.std     =>  Generic UNIX makefile (cc, creates static libpng.a)
        makefile.linux   =>  Linux/ELF makefile
-                            (gcc, creates libpng.so.2.1.0.9)
+                            (gcc, creates libpng12.so.0.1.2.5)
        makefile.gcmmx   =>  Linux/ELF makefile (gcc, creates
-                            libpng.so.2.1.0.9, uses assembler code
+                            libpng12.so.0.1.2.5, uses assembler code
                             tuned for Intel MMX platform)
        makefile.gcc     =>  Generic makefile (gcc, creates static libpng.a)
        makefile.knr     =>  Archaic UNIX Makefile that converts files with
@@ -192,17 +197,27 @@ Files in this distribution:
                             ftp://ftp.cs.wisc.edu/ghost)
        makefile.aix     =>  AIX makefile
        makefile.cygwin  =>  Cygwin/gcc makefile
+       makefile.darwin  =>  Darwin makefile
        makefile.dec     =>  DEC Alpha UNIX makefile
+       makefile.freebsd =>  FreeBSD makefile
+       makefile.hpgcc   =>  HPUX makefile using gcc
        makefile.hpux    =>  HPUX (10.20 and 11.00) makefile
        makefile.ibmc    =>  IBM C/C++ version 3.x for Win32 and OS/2 (static)
        makefile.intel   =>  Intel C/C++ version 4.0 and later
        libpng.icc       =>  Project file, IBM VisualAge/C++ 4.0 or later
        makefile.macosx  =>  MACOS X Makefile
+       makefile.netbsd  =>  NetBSD/cc makefile, PNGGCCRD, makes libpng.so.
+       makefile.ne0bsd =>  NetBSD/cc makefile, PNGGCCRD, makes libpng0.so
+       makefile.openbsd =>  OpenBSD makefile
        makefile.sgi     =>  Silicon Graphics IRIX (cc, creates static lib)
-       makefile.sggcc   =>  Silicon Graphics (gcc, creates libpng.so.2.1.0.9)
+       makefile.sggcc   =>  Silicon Graphics (gcc, creates libpng12.so.0.1.2.5)
        makefile.sunos   =>  Sun makefile
        makefile.solaris =>  Solaris 2.X makefile
-                            (gcc, creates libpng.so.2.1.0.9)
+                            (gcc, creates libpng12.so.0.1.2.5)
+       makefile.so9     =>  Solaris 9 makefile
+                            (gcc, creates libpng12.so.0.1.2.5)
+       makefile.32sunu  =>  Sun Ultra 32-bit makefile
+       makefile.64sunu  =>  Sun Ultra 64-bit makefile
        makefile.sco     =>  For SCO OSr5  ELF and Unixware 7 with Native cc
        makefile.mips    =>  MIPS makefile
        makefile.acorn   =>  Acorn makefile
@@ -229,6 +244,16 @@ Files in this distribution:
        makevms.com      =>  VMS build script
        pngdef.pas       =>  Defines for a png32bd.dll with Borland C++ 4.5
        SCOPTIONS.ppc    =>  Used with smakefile.ppc
+      mangle        =>  Directory containing scripts to build libpng12m.so:
+       mangle.in        =>  Function-decoration macros added to png.h by the
+                            makefiles.
+       makefile.linux   =>  Linux/ELF makefile
+                            (gcc, creates libpng12m.so.0.1.2.5)
+       makefile.gcmmx   =>  Linux/ELF makefile (gcc, creates
+                            libpng12.so.0m.1.2.5, uses assembler code
+                            tuned for Intel MMX platform)
+       makefile.sgi     =>  Silicon Graphics (cc, creates libpng12m.so)
+       makefile.sggcc   =>  Silicon Graphics (gcc, creates libpng12m.so)
 
 Good luck, and happy coding.
 

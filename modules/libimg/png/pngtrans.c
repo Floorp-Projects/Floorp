@@ -1,9 +1,9 @@
 
 /* pngtrans.c - transforms the data in a row (used by both readers and writers)
  *
- * libpng 1.0.9 - January 31, 2001
+ * libpng 1.2.5 - October 2, 2002
  * For conditions of distribution and use, see copyright notice in png.h
- * Copyright (c) 1998-2001 Glenn Randers-Pehrson
+ * Copyright (c) 1998-2002 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  */
@@ -153,11 +153,14 @@ void /* PRIVATE */
 png_do_invert(png_row_infop row_info, png_bytep row)
 {
    png_debug(1, "in png_do_invert\n");
-   if (row_info->bit_depth == 1 &&
+  /* This test removed from libpng version 1.0.13 and 1.2.0:
+   *   if (row_info->bit_depth == 1 &&
+   */
 #if defined(PNG_USELESS_TESTS_SUPPORTED)
-       row != NULL && row_info != NULL &&
+   if (row == NULL || row_info == NULL)
+     return;
 #endif
-       row_info->color_type == PNG_COLOR_TYPE_GRAY)
+   if (row_info->color_type == PNG_COLOR_TYPE_GRAY)
    {
       png_bytep rp = row;
       png_uint_32 i;
@@ -167,6 +170,33 @@ png_do_invert(png_row_infop row_info, png_bytep row)
       {
          *rp = (png_byte)(~(*rp));
          rp++;
+      }
+   }
+   else if (row_info->color_type == PNG_COLOR_TYPE_GRAY_ALPHA &&
+      row_info->bit_depth == 8)
+   {
+      png_bytep rp = row;
+      png_uint_32 i;
+      png_uint_32 istop = row_info->rowbytes;
+
+      for (i = 0; i < istop; i+=2)
+      {
+         *rp = (png_byte)(~(*rp));
+         rp+=2;
+      }
+   }
+   else if (row_info->color_type == PNG_COLOR_TYPE_GRAY_ALPHA &&
+      row_info->bit_depth == 16)
+   {
+      png_bytep rp = row;
+      png_uint_32 i;
+      png_uint_32 istop = row_info->rowbytes;
+
+      for (i = 0; i < istop; i+=4)
+      {
+         *rp = (png_byte)(~(*rp));
+         *(rp+1) = (png_byte)(~(*(rp+1)));
+         rp+=4;
       }
    }
 }
@@ -392,11 +422,12 @@ png_do_strip_filler(png_row_infop row_info, png_bytep row, png_uint_32 flags)
                sp += 8; dp += 6;
                for (i = 1; i < row_width; i++)
                {
-                  /* This could be (although memcpy is probably slower):
+                  /* This could be (although png_memcpy is probably slower):
                   png_memcpy(dp, sp, 6);
                   sp += 8;
                   dp += 6;
                   */
+
                   *dp++ = *sp++;
                   *dp++ = *sp++;
                   *dp++ = *sp++;
@@ -411,11 +442,12 @@ png_do_strip_filler(png_row_infop row_info, png_bytep row, png_uint_32 flags)
                /* This converts from XXRRGGBB or AARRGGBB to RRGGBB */
                for (i = 0; i < row_width; i++)
                {
-                  /* This could be (although memcpy is probably slower):
+                  /* This could be (although png_memcpy is probably slower):
                   png_memcpy(dp, sp, 6);
                   sp += 8;
                   dp += 6;
                   */
+
                   sp+=2;
                   *dp++ = *sp++;
                   *dp++ = *sp++;
@@ -606,4 +638,3 @@ png_get_user_transform_ptr(png_structp png_ptr)
    return (NULL);
 #endif
 }
-
