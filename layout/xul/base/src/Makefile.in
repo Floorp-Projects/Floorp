@@ -48,6 +48,7 @@ CPPSRCS =				\
 	nsToolbarFrame.cpp        \
 	nsToolbarDragListener.cpp \
 	nsToolboxFrame.cpp        \
+	nsTreeOuterFrame.cpp \
 	nsTreeFrame.cpp \
 	nsTreeRowGroupFrame.cpp \
 	nsTreeIndentationFrame.cpp \

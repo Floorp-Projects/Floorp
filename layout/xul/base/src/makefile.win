@@ -36,6 +36,7 @@ CPPSRCS=					\
         nsTitledButtonFrame.cpp        \
 	nsToolboxFrame.cpp		\
 	nsToolbarFrame.cpp		\
+	nsTreeOuterFrame.cpp \
 	nsTreeFrame.cpp			\
 	nsTreeRowGroupFrame.cpp \
 	nsTreeIndentationFrame.cpp \
@@ -67,6 +68,7 @@ CPP_OBJS=					\
         .\$(OBJDIR)\nsTitledButtonFrame.obj    \
 	.\$(OBJDIR)\nsToolboxFrame.obj		\
 	.\$(OBJDIR)\nsToolbarFrame.obj		\
+	.\$(OBJDIR)\nsTreeOuterFrame.obj \
 	.\$(OBJDIR)\nsTreeFrame.obj	\
 	.\$(OBJDIR)\nsTreeRowGroupFrame.obj \
 	.\$(OBJDIR)\nsTreeIndentationFrame.obj \
