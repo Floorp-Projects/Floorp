@@ -295,10 +295,10 @@ extern HINSTANCE g_hinst;
     hIMC = theIMM.GetContext(hWnd); \
   }
 
-#define NS_IMM_GETCONVERSIONSTATUS(hIMC, lpfdwConversion, lpfdwSentence) \
+#define NS_IMM_GETCONVERSIONSTATUS(hIMC, lpfdwConversion, lpfdwSentence, bRet) \
   { \
     nsIMM &theIMM = nsIMM::LoadModule(); \
-    theIMM.GetConversionStatus(hIMC, (lpfdwConversion), (lpfdwSentence)); \
+    bRet = theIMM.GetConversionStatus(hIMC, (lpfdwConversion), (lpfdwSentence)); \
   }
 
 #define NS_IMM_RELEASECONTEXT(hWnd, hIMC) \
@@ -307,10 +307,10 @@ extern HINSTANCE g_hinst;
     theIMM.ReleaseContext(hWnd, hIMC); \
   }
 
-#define NS_IMM_NOTIFYIME(hIMC, dwAction, dwIndex, dwValue) \
+#define NS_IMM_NOTIFYIME(hIMC, dwAction, dwIndex, dwValue, bRtn) \
   { \
     nsIMM &theIMM = nsIMM::LoadModule(); \
-    theIMM.NotifyIME(hIMC, dwAction, dwIndex, dwValue); \
+    bRtn = theIMM.NotifyIME(hIMC, dwAction, dwIndex, dwValue); \
   }
 
 #define NS_IMM_SETCANDIDATEWINDOW(hIMC, candForm) \
@@ -319,10 +319,10 @@ extern HINSTANCE g_hinst;
     theIMM.SetCandidateWindow(hIMC, candForm); \
   }
 
-#define NS_IMM_SETCONVERSIONSTATUS(hIMC, lpfdwConversion, lpfdwSentence) \
+#define NS_IMM_SETCONVERSIONSTATUS(hIMC, lpfdwConversion, lpfdwSentence, bRet) \
   { \
     nsIMM &theIMM = nsIMM::LoadModule(); \
-    theIMM.SetConversionStatus(hIMC, (lpfdwConversion), (lpfdwSentence)); \
+    bRet = theIMM.SetConversionStatus(hIMC, (lpfdwConversion), (lpfdwSentence)); \
   }
 
 #endif /* MOZ_AIMM */
@@ -918,7 +918,7 @@ LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
     // why we are hitting this assert
     if (nsnull == someWindow) {
       NS_ASSERTION(someWindow, "someWindow is null, cannot call any CallWindowProc");      
-      return ::DefWindowProc(hWnd, msg, wParam, lParam);
+      return nsToolkit::nsDefWindowProc(hWnd, msg, wParam, lParam);
     }
 
     // hold on to the window for the life of this method, in case it gets
@@ -965,7 +965,7 @@ LRESULT CALLBACK nsWindow::DefaultWindowProc(HWND hWnd, UINT msg, WPARAM wParam,
     if (nsToolkit::gAIMMApp->OnDefWindowProc(hWnd, msg, wParam, lParam, &lResult) == S_OK)
       return lResult;
   }
-  return ::DefWindowProc(hWnd, msg, wParam, lParam);
+  return nsToolkit::nsDefWindowProc(hWnd, msg, wParam, lParam);
 }
 #endif
 
@@ -1087,7 +1087,7 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
                                          (DLGPROC)DummyDialogProc,
                                          NULL);
     } else {
-      mWnd = ::CreateWindowEx(extendedStyle,
+      mWnd = nsToolkit::nsCreateWindowEx(extendedStyle,
                               WindowClass(),
                               "",
                               style,
@@ -2434,6 +2434,35 @@ BOOL nsWindow::OnChar( UINT mbcsCharCode, UINT virtualKeyCode, bool isMultiByte 
 }
 
 
+BOOL nsWindow::OnUniChar( UINT uniCharCode, UINT virtualKeyCode)
+{
+  if(mIsControlDown && (virtualKeyCode <= 0x1A)) // Ctrl+A Ctrl+Z, see Programming Windows 3.1 page 110 for details  
+  { 
+    // need to account for shift here.  bug 16486 
+    if ( mIsShiftDown ) 
+      uniCharCode = virtualKeyCode - 1 + 'A' ; 
+    else 
+      uniCharCode = virtualKeyCode - 1 + 'a' ; 
+    virtualKeyCode = 0;
+  } 
+  else 
+  { // 0x20 - SPACE, 0x3D - EQUALS
+    if(virtualKeyCode < 0x20 || (virtualKeyCode == 0x3D && mIsControlDown)) 
+    {
+      uniCharCode = 0;
+    } 
+    else 
+    {
+      virtualKeyCode = 0;
+      mIsShiftDown = PR_FALSE;
+    }
+  }
+  return DispatchKeyEvent(NS_KEY_PRESS, uniCharCode, virtualKeyCode);
+
+  //return FALSE;
+}
+
+
 void nsWindow::ConstrainZLevel(HWND *aAfter) {
 
   nsZLevelEvent  event;
@@ -2853,12 +2882,20 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             //
             // check first for backspace or return, handle them specially 
             //
-            if (ch==0x0d || ch==0x08) {
+            if ((wParam <= 0xff) && (ch==0x0d || ch==0x08)) {
 
                 result = OnChar(ch,ch==0x0d ? VK_RETURN : VK_BACK,true);
                 break;
             }
-  
+
+            // If Mozilla run on Windows NT / 2000, it uses Unicode window class due to #55256.
+            // So wParam is Unicode.
+            if(nsToolkit::mIsNT)
+            {
+                char_result = wParam;
+                result = OnUniChar(char_result,ch);
+            }
+            else
             {
                 char_result = ch;
                 result = OnChar(char_result,ch,false);
@@ -3384,7 +3421,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             break;
           }
           
-          LONG proc = ::GetWindowLong(destWnd, GWL_WNDPROC);
+          LONG proc = nsToolkit::nsGetWindowLong(destWnd, GWL_WNDPROC);
           if (proc != (LONG)&nsWindow::WindowProc)  {
             // Some other app
             break;
@@ -3473,7 +3510,7 @@ LPCTSTR nsWindow::WindowClass()
 #ifdef MOZ_AIMM
         wc.lpfnWndProc      = nsWindow::DefaultWindowProc;
 #else
-        wc.lpfnWndProc      = ::DefWindowProc;
+        wc.lpfnWndProc      = nsToolkit::nsDefWindowProc;
 #endif
         wc.cbClsExtra       = 0;
         wc.cbWndExtra       = 0;
@@ -3484,7 +3521,7 @@ LPCTSTR nsWindow::WindowClass()
         wc.lpszMenuName     = NULL;
         wc.lpszClassName    = className;
     
-        nsWindow::sIsRegistered = ::RegisterClass(&wc);
+        nsWindow::sIsRegistered = nsToolkit::nsRegisterClass(&wc);
 #ifdef MOZ_AIMM
         // Call FilterClientWindows method since it enables ActiveIME on CJK Windows
         if(nsToolkit::gAIMMApp)
@@ -3612,14 +3649,14 @@ void nsWindow::SubclassWindow(BOOL bState)
     
     if (bState) {
         // change the nsWindow proc
-        mPrevWndProc = (WNDPROC)::SetWindowLong(mWnd, GWL_WNDPROC, 
+        mPrevWndProc = (WNDPROC)nsToolkit::nsSetWindowLong(mWnd, GWL_WNDPROC, 
                                                  (LONG)nsWindow::WindowProc);
         NS_ASSERTION(mPrevWndProc, "Null standard window procedure");
         // connect the this pointer to the nsWindow handle
         SetNSWindowPtr(mWnd, this);
     } 
     else {
-        ::SetWindowLong(mWnd, GWL_WNDPROC, (LONG)mPrevWndProc);
+        nsToolkit::nsSetWindowLong(mWnd, GWL_WNDPROC, (LONG)mPrevWndProc);
         SetNSWindowPtr(mWnd, NULL);
         mPrevWndProc = NULL;
     }
@@ -4182,6 +4219,12 @@ static char* GetACPString(const nsString& aStr)
 
 NS_METHOD nsWindow::SetTitle(const nsString& aTitle) 
 {
+  if(nsToolkit::mIsNT) {
+    // Windows NT / 2000 use Unicode API due to bug #55256
+    ::SendMessageW(mWnd, WM_SETTEXT, (WPARAM)0, (LPARAM)aTitle.GetUnicode());
+    return NS_OK;
+  }
+
   char* title = GetACPString(aTitle);
   if (title) {
     ::SendMessage(mWnd, WM_SETTEXT, (WPARAM)0, (LPARAM)(LPCTSTR)title);
