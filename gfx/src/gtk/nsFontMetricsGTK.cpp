@@ -1626,7 +1626,8 @@ PickASizeAndLoad(nsFontSearch* aSearch, nsFontStretch* aStretch,
     }
   }
 
-#ifdef MOZ_MATHML
+// XXX remove the else part after testing this for a while -- erik
+#if 1
   // CSS font-family bug fix 
   // CSS font-family order is not respected without the following fix.
   // The idea is to ensure that even though the character being searched
@@ -1677,7 +1678,7 @@ PickASizeAndLoad(nsFontSearch* aSearch, nsFontStretch* aStretch,
   if (fontHasGlyph) {
     aSearch->mFont = s;
   }
-#else /* MOZ_MATHML */
+#else /* 1 */
   if (!aCharSet->mInfo->mCharSet) {
     if (!IS_REPRESENTABLE(s->mMap, aSearch->mChar)) {
       return;
@@ -1704,7 +1705,7 @@ PickASizeAndLoad(nsFontSearch* aSearch, nsFontStretch* aStretch,
   }
   m->mLoadedFonts[m->mLoadedFontsCount++] = s;
   aSearch->mFont = s;
-#endif /* !MOZ_MATHML */
+#endif /* 1 */
 
 #ifdef REALLY_NOISY_FONTS
   nsFontGTK* result = s;
@@ -2002,7 +2003,8 @@ SearchCharSet(PLHashEntry* he, PRIntn i, void* arg)
   nsFontCharSetInfo* charSetInfo = charSet->mInfo;
   PRUint32* map = charSetInfo->mMap;
   nsFontSearch* search = (nsFontSearch*) arg;
-#ifdef MOZ_MATHML
+// XXX remove the if and endif lines after testing for a while -- erik
+#if 1
   nsFontMetricsGTK* m = search->mMetrics;
 #endif
   PRUnichar c = search->mChar;
@@ -2019,7 +2021,8 @@ SearchCharSet(PLHashEntry* he, PRIntn i, void* arg)
       charSetInfo->mMap = map;
       SetUpFontCharSetInfo(charSetInfo);
     }
-#ifdef MOZ_MATHML
+// XXX remove the else part after testing for a while -- erik
+#if 1
     // CSS font-family bug fix 
     // Check if font has been requested from CSS font-family, 
     // if so ignore IS_REPRESENTABLE. It gets tested again 
@@ -2033,11 +2036,11 @@ SearchCharSet(PLHashEntry* he, PRIntn i, void* arg)
          return HT_ENUMERATE_NEXT;
        }
     }
-#else /* MOZ_MATHML */
+#else /* 1 */
        if (!IS_REPRESENTABLE(map, c)) {
          return HT_ENUMERATE_NEXT;
        }
-#endif /* !MOZ_MATHML */
+#endif /* 1 */
   }
 
   TryCharSet(search, charSet);
