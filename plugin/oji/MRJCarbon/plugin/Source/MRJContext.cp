@@ -34,14 +34,6 @@
  *
  * ----- END LICENSE BLOCK ----- */
 
-/*
-    MRJContext.cp
-    
-    Manages Java content using the MacOS Runtime for Java.
-    
-    by Patrick C. Beard.
- */
-
 #include <string.h>
 #include <stdlib.h>
 #include <Appearance.h>
@@ -52,6 +44,29 @@
 #include <CarbonEvents.h>
 #include <JavaControl.h>
 #include <JavaApplet.h>
+
+template<class RefType>
+class cfref {
+    RefType mRef;
+public:
+    cfref() : mRef(NULL) {}
+    cfref(RefType ref) : mRef(ref) {}
+    ~cfref() { if(mRef) ::CFRelease(mRef); }
+    
+    RefType operator=(RefType ref)
+    {
+        if (mRef && mRef != ref)
+            ::CFRelease(mRef);
+        return (mRef = ref);
+    }
+    
+    operator RefType() { return mRef; }
+    operator int() { return (mRef != NULL); }
+
+private:
+    cfref(const cfref& other) {}
+};
+
 #endif
 
 #include "MRJSession.h"
@@ -418,12 +433,10 @@ static CFDictionaryRef getAttributes(nsIPluginTagInfo* tagInfo)
         CFMutableDictionaryRef attributes = createStringDictionary(count);
         if (attributes != NULL) {
             for (PRUint16 i = 0; i < count; ++i) {
-                CFStringRef name = CFStringCreateWithCString(NULL, names[i], kCFStringEncodingUTF8);
-                CFStringRef value = CFStringCreateWithCString(NULL, values[i], kCFStringEncodingUTF8);
+                cfref<CFStringRef> name = CFStringCreateWithCString(NULL, names[i], kCFStringEncodingUTF8);
+                cfref<CFStringRef> value = CFStringCreateWithCString(NULL, values[i], kCFStringEncodingUTF8);
                 if (name && value)
                     CFDictionaryAddValue(attributes, name, value);
-                CFRelease(name);
-                CFRelease(value);
             }
             return attributes;
         }
@@ -440,12 +453,10 @@ static CFDictionaryRef getParameters(nsIPluginTagInfo2* tagInfo2)
         CFMutableDictionaryRef parameters = createStringDictionary(count);
         if (parameters) {
             for (PRUint16 i = 0; i < count; ++i) {
-                CFStringRef name = CFStringCreateWithCString(NULL, names[i], kCFStringEncodingUTF8);
-                CFStringRef value = CFStringCreateWithCString(NULL, values[i], kCFStringEncodingUTF8);
+                cfref<CFStringRef> name = CFStringCreateWithCString(NULL, names[i], kCFStringEncodingUTF8);
+                cfref<CFStringRef> value = CFStringCreateWithCString(NULL, values[i], kCFStringEncodingUTF8);
                 if (name && value)
                     CFDictionaryAddValue(parameters, name, value);
-                CFRelease(name);
-                CFRelease(value);
             }
             return parameters;
         }
@@ -1271,7 +1282,7 @@ Boolean MRJContext::loadApplet()
     // Use whizzy new JavaEmbedding APIs to construct an AppletDescriptor.
     
     // gather all attributes and parameters.
-    CFDictionaryRef attributes = NULL, parameters = NULL;
+    cfref<CFDictionaryRef> attributes, parameters;
     nsIPluginTagInfo2* tagInfo2 = NULL;
     if (mPeer->QueryInterface(NS_GET_IID(nsIPluginTagInfo2), (void**)&tagInfo2) == NS_OK) {
         attributes = getAttributes(tagInfo2);
@@ -1279,7 +1290,7 @@ Boolean MRJContext::loadApplet()
         NS_RELEASE(tagInfo2);
     }
 
-    CFURLRef documentBase;
+    cfref<CFURLRef> documentBase;
     if (::strncmp(mDocumentBase, "file:", 5) == 0) {
         // file: URLs. Need to create the URL from HFS+ style using CFURLCreateWithFileSystemPath.
         // this is to workaround the same problem in bug #108519, Mozilla uses HFS+ paths that are
@@ -1295,10 +1306,10 @@ Boolean MRJContext::loadApplet()
                 *slash = ':';
                 slash = strchr(slash + 1, '/');
             }
-            CFStringRef pathRef = CFStringCreateWithCString(NULL, path, kCFStringEncodingUTF8);
+            cfref<CFStringRef> pathRef = CFStringCreateWithCString(NULL, path, kCFStringEncodingUTF8);
             delete[] path;
-            documentBase = CFURLCreateWithFileSystemPath(NULL, pathRef, kCFURLHFSPathStyle, false);
-            CFRelease(pathRef);
+            if (pathRef)
+                documentBase = CFURLCreateWithFileSystemPath(NULL, pathRef, kCFURLHFSPathStyle, false);
         }
     } else {
         documentBase = CFURLCreateWithBytes(NULL, (const UInt8*)mDocumentBase,
@@ -1327,11 +1338,6 @@ Boolean MRJContext::loadApplet()
             }
         }
     }
-
-error:
-   CFRelease(attributes);
-   CFRelease(parameters);
-   CFRelease(documentBase);
 #else
     static JMAppletSecurity security = {
         kJMVersion,                     /* should be set to kJMVersion */
