@@ -61,8 +61,13 @@ NS_IMETHODIMP nsWBURIContentListener::OnStartURIOpen(nsIURI* aURI,
    const char* aWindowTarget, PRBool* aAbortOpen)
 {
    if(mParentContentListener)
-      return mParentContentListener->OnStartURIOpen(aURI, aWindowTarget, 
+      {
+      nsresult rv = mParentContentListener->OnStartURIOpen(aURI, aWindowTarget,
          aAbortOpen);
+
+      if(NS_ERROR_NOT_IMPLEMENTED != rv)
+         return rv;
+      }
 
    return NS_OK;
 }
@@ -73,10 +78,15 @@ NS_IMETHODIMP nsWBURIContentListener::GetProtocolHandler(nsIURI* aURI,
    NS_ENSURE_ARG_POINTER(aProtocolHandler);
    NS_ENSURE_ARG(aURI);
                                 
-   if(mParentContentListener) 
-      return mParentContentListener->GetProtocolHandler(aURI, aProtocolHandler);
-   else
-      *aProtocolHandler = nsnull;
+   if(mParentContentListener)
+      {
+      nsresult rv = mParentContentListener->GetProtocolHandler(aURI,
+         aProtocolHandler);
+
+      if(NS_ERROR_NOT_IMPLEMENTED != rv)
+         return rv;
+      }
+   *aProtocolHandler = nsnull;
 
    return NS_OK;
 }
@@ -86,7 +96,7 @@ NS_IMETHODIMP nsWBURIContentListener::DoContent(const char* aContentType,
    nsIChannel* aOpenedChannel, nsIStreamListener** aContentHandler,
    PRBool* aAbortProcess)
 {     
-   NS_ERROR("Hmmmm, why is this getting called?");
+   NS_ERROR("Hmmmm, why is this getting called on this object?");
    return NS_OK;
 }
 
@@ -98,42 +108,45 @@ NS_IMETHODIMP nsWBURIContentListener::IsPreferred(const char* aContentType,
    NS_ENSURE_ARG_POINTER(aDesiredContentType);
 
    if(mParentContentListener)
-      return mParentContentListener->IsPreferred(aContentType, aCommand, 
-         aWindowTarget, aDesiredContentType, aCanHandle);
-   else
       {
-      *aCanHandle = PR_FALSE;
-      // the webbrowser object is the primary content handler for the following types:
-      // If we are asked to handle any of these types, we will always say Yes!
-      // regardlesss of the uri load command.
-      //    incoming Type                     Preferred type
-      //      text/html
-      //      text/xul
-      //      text/rdf
-      //      text/xml
-      //      text/css
-      //      image/gif
-      //      image/jpeg
-      //      image/png
-      //      image/tiff
-      //      application/http-index-format
+      nsresult rv = mParentContentListener->IsPreferred(aContentType,
+         aCommand, aWindowTarget, aDesiredContentType, aCanHandle);
+      
+      if(NS_ERROR_NOT_IMPLEMENTED != rv)
+         return rv;
+      }
 
-      if(aContentType)
-         {
-         // (1) list all content types we want to  be the primary handler for....
-         // and suggest a desired content type if appropriate...
-         if(nsCRT::strcasecmp(aContentType,  "text/html") == 0
-            || nsCRT::strcasecmp(aContentType, "text/xul") == 0
-            || nsCRT::strcasecmp(aContentType, "text/rdf") == 0 
-            || nsCRT::strcasecmp(aContentType, "text/xml") == 0
-            || nsCRT::strcasecmp(aContentType, "text/css") == 0
-            || nsCRT::strcasecmp(aContentType, "image/gif") == 0
-            || nsCRT::strcasecmp(aContentType, "image/jpeg") == 0
-            || nsCRT::strcasecmp(aContentType, "image/png") == 0
-            || nsCRT::strcasecmp(aContentType, "image/tiff") == 0
-            || nsCRT::strcasecmp(aContentType, "application/http-index-format") == 0)
-            *aCanHandle = PR_TRUE;
-         }
+   *aCanHandle = PR_FALSE;
+   // the webbrowser object is the primary content handler for the following types:
+   // If we are asked to handle any of these types, we will always say Yes!
+   // regardlesss of the uri load command.
+   //    incoming Type                     Preferred type
+   //      text/html
+   //      text/xul
+   //      text/rdf
+   //      text/xml
+   //      text/css
+   //      image/gif
+   //      image/jpeg
+   //      image/png
+   //      image/tiff
+   //      application/http-index-format
+
+   if(aContentType)
+      {
+      // (1) list all content types we want to  be the primary handler for....
+      // and suggest a desired content type if appropriate...
+      if(nsCRT::strcasecmp(aContentType,  "text/html") == 0
+         || nsCRT::strcasecmp(aContentType, "text/xul") == 0
+         || nsCRT::strcasecmp(aContentType, "text/rdf") == 0 
+         || nsCRT::strcasecmp(aContentType, "text/xml") == 0
+         || nsCRT::strcasecmp(aContentType, "text/css") == 0
+         || nsCRT::strcasecmp(aContentType, "image/gif") == 0
+         || nsCRT::strcasecmp(aContentType, "image/jpeg") == 0
+         || nsCRT::strcasecmp(aContentType, "image/png") == 0
+         || nsCRT::strcasecmp(aContentType, "image/tiff") == 0
+         || nsCRT::strcasecmp(aContentType, "application/http-index-format") == 0)
+         *aCanHandle = PR_TRUE;
       }
 
    return NS_OK;
