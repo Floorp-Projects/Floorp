@@ -134,22 +134,22 @@ BOOL CDlgEditPrefStr::OnInitDialog()
 // Caller only has to get value from m_strValue for all types.
 void CDlgEditPrefStr::OnOK() 
 {
-  // For bool types, convert back to the data string.
-  if (m_strType.CompareNoCase("bool") == 0)
-  {
-    if (m_checkValue.GetCheck())
-      m_editValue.SetWindowText("true");
-    else
-      m_editValue.SetWindowText("false");
-  }	  
   // For choose, return the selected list string.
-  else if (m_bChoose)
+  if (m_bChoose)
   {
     CString strSelectString;
     m_listValue.GetLBText(m_listValue.GetCurSel(), strSelectString);
     m_editValue.SetWindowText(strSelectString);
   }
 	
+  // For bool types, convert back to the data string.
+  else if (m_strType.CompareNoCase("bool") == 0)
+  {
+    if (m_checkValue.GetCheck())
+      m_editValue.SetWindowText("true");
+    else
+      m_editValue.SetWindowText("false");
+  }	  
   else // string, int type
   {
     
