@@ -91,6 +91,7 @@ protected:
 	virtual void SetCellExpansion( const STableCell& inCell, Boolean inExpand);
 	virtual Boolean	CellHasDropFlag(const STableCell& inCell, Boolean& outIsExpanded) const;
 	virtual Boolean TableSupportsNaturalOrderSort ( ) const ;
+	virtual Boolean CellWantsClick( const STableCell & /*inCell*/ ) const ;
 		
 		// Stuff related to hiliting
 	virtual TableIndexT	GetHiliteColumn() const { return 1; } ;
@@ -124,15 +125,21 @@ protected:
 	virtual void FindTooltipForMouseLocation ( const EventRecord& inMacEvent,
 													StringPtr outTip ) ;
 
+		// Tree behavior properties
+	virtual Uint16 ClickCountToOpen ( ) const ;
+	virtual Boolean CanDoInlineEditing ( ) const;
+	virtual Boolean TableDesiresSelectionTracking( ) const;
+
 		// for inline editing
 	virtual void InlineEditorDone ( ) ;
-	virtual Boolean CanDoInlineEditing ( ) ;
 
 		// command stuff
 	virtual void	DeleteSelection ( );
 	virtual void	FindCommandStatus ( CommandT inCommand, Boolean &outEnabled,
 										Boolean &outUsesMark, Char16 &outMark, Str255 outName) ;
 
+	HT_Resource		TopNode ( ) const { return HT_TopNode(GetHTView()); } 
+	
 //-----------------------------------
 // Data
 //-----------------------------------
