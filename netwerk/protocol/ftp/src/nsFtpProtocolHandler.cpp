@@ -331,6 +331,7 @@ nsFtpProtocolHandler::InsertConnection(nsIURI *aKey, nsFtpControlConnection *aCo
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
+    NS_ADDREF(aConn);
     ts->conn = aConn;
     ts->timer = timer;
 
