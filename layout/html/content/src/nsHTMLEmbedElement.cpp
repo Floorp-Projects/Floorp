@@ -43,12 +43,9 @@
 #include "nsIPluginInstance.h"
 #include "nsIXPConnect.h"
 #include "nsIServiceManager.h"
+#include "nsIDOMHTMLEmbedElement.h"
 
-// XXX define nsIDOMHTMLEmbedElement; add in nav attrs
-
-//static NS_DEFINE_IID(kIDOMHTMLEmbedElementIID, NS_IDOMHTMLEmbedELEMENT_IID);
-
-class nsHTMLEmbedElement : public nsIDOMHTMLElement,
+class nsHTMLEmbedElement : public nsIDOMHTMLEmbedElement,
                            public nsIJSScriptObject,
                            public nsIHTMLContent
 {
@@ -69,6 +66,7 @@ public:
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
 
   // nsIDOMHTMLEmbedElement
+  NS_DECL_IDOMHTMLEMBEDELEMENT
 
   // nsIJSScriptObject
   NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
@@ -92,7 +90,7 @@ public:
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
 protected:
-    nsresult GetPluginInstance(nsIPluginInstance** aPluginInstance);
+  nsresult GetPluginInstance(nsIPluginInstance** aPluginInstance);
 
 protected:
   nsGenericHTMLLeafElement mInner;
@@ -112,7 +110,6 @@ NS_NewHTMLEmbedElement(nsIHTMLContent** aInstancePtrResult,
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
-
 nsHTMLEmbedElement::nsHTMLEmbedElement(nsINodeInfo *aNodeInfo)
 {
   NS_INIT_REFCNT();
@@ -124,21 +121,19 @@ nsHTMLEmbedElement::~nsHTMLEmbedElement()
 }
 
 NS_IMPL_ADDREF(nsHTMLEmbedElement)
-
 NS_IMPL_RELEASE(nsHTMLEmbedElement)
 
 nsresult
 nsHTMLEmbedElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-#if XXX
-  if (aIID.Equals(kIDOMHTMLEmbedElementIID)) {
-    nsIDOMHTMLEmbedElement* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-#endif
+    if (aIID.Equals(NS_GET_IID(nsIDOMHTMLEmbedElement))) {
+      nsIDOMHTMLEmbedElement* tmp = this;
+      *aInstancePtr = (void*) tmp;
+      NS_ADDREF_THIS();
+      return NS_OK;
+    }
+
   return NS_NOINTERFACE;
 }
 
@@ -381,4 +376,12 @@ nsHTMLEmbedElement::Finalize(JSContext *aContext, JSObject *aObj)
   mInner.Finalize(aContext, aObj);
 }
 
+/////////////////////////////////////////////
+// Implement nsIDOMHTMLEmbedElement interface
+NS_IMPL_STRING_ATTR(nsHTMLEmbedElement, Align, align)
+NS_IMPL_STRING_ATTR(nsHTMLEmbedElement, Height, height)
+NS_IMPL_STRING_ATTR(nsHTMLEmbedElement, Width, width)
+NS_IMPL_STRING_ATTR(nsHTMLEmbedElement, Name, name)
+NS_IMPL_STRING_ATTR(nsHTMLEmbedElement, Type, type)
+NS_IMPL_STRING_ATTR(nsHTMLEmbedElement, Src, src)
 
