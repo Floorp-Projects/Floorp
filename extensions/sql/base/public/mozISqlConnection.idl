@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Jan Varga <varga@utcru.sk>
+ *   Neil Deakin <enndeakin@sympatico.ca>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -42,13 +43,20 @@ interface mozISqlRequest;
 interface mozISqlRequestObserver;
 
 /**
+ * A connection to a SQL database. This interface may be further extended
+ * by a particular database implementation. The SQL service is responsible
+ * for creating and maintaining connections, so there isn't a means to create
+ * one directly via this interface.
+ *
  * @status UNDER_REVIEW
  */
 
 [scriptable, uuid(f16397a4-1ecb-4e08-84f8-27750c04b779)]
 interface mozISqlConnection : nsISupports
 {
-
+  /**
+   * A string holding the name and/or version info of the database.
+   */
   readonly attribute AString serverVersion;
 
   /**
@@ -62,13 +70,14 @@ interface mozISqlConnection : nsISupports
   readonly attribute long lastID;
 
   /**
-   * Set up the connection.
+   * Set up the connection. This is called by the SQL service. There is no
+   * need to call this method directly.
    *
-   * @param aHost       The host name.
-   * @param aPort       The port at which the host is listening.
-   * @param aDatabase   The real database name to connect to.
-   * @param aUsername   The username to connect as.
-   * @param aPassword   The password to use in authentification phase.   
+   * @param aHost       the host name.
+   * @param aPort       the port at which the host is listening.
+   * @param aDatabase   the real database name to connect to.
+   * @param aUsername   the username to connect as.
+   * @param aPassword   the password to use in authentification phase.   
    */
   void init(in AString aHost,
             in long aPort,
@@ -77,47 +86,70 @@ interface mozISqlConnection : nsISupports
             in AString aPassword);
 
   /**
-   * Execute the query synchronously and return database result.
+   * Execute an SQL query synchronously and return the query result.
    *
-   * @param aQuery      The query to execute.
+   * @param aQuery      the SQL string of the query to execute
+   * @return            the result of the query
    */
   mozISqlResult executeQuery(in AString aQuery);
 
   /**
-   * Execute the update synchronously and return number of updated rows.
+   * Execute an SQL update synchronously and return the number of updated
+   * rows.
    *
-   * @param aUpdate     The update to execute.
+   * @param aUpdate     the update to execute
+   * @return            the result of the query
    */
   long executeUpdate(in AString aUpdate);
 
+  /**
+   * Execute an SQL query asynchronously and return a request. An observer
+   * may be used to track when the query has completed.
+   *
+   * @param aQuery      the SQL string of the query to execute
+   * @param aContext    extra argument that will be passed to the observer
+   * @param aObserver   observer that will be notified when the query is done
+   * @return            a request object
+   */
   mozISqlRequest asyncExecuteQuery(in AString aQuery,
                                    in nsISupports aContext,
                                    in mozISqlRequestObserver aObserver);
 
+  /**
+   * Execute an SQL update asynchronously and return a request. An observer
+   * may be used to track when the query has completed.
+   *
+   * @param aQuery      the SQL string of the update to execute
+   * @param aContext    extra argument that will be passed to the observer
+   * @param aObserver   observer that will be notified when the update is done
+   * @return            a request object
+   */
   mozISqlRequest asyncExecuteUpdate(in AString aQuery,
-                                    in nsISUpports aContext,
+                                    in nsISupports aContext,
                                     in mozISqlRequestObserver aObserver);
 
   /**
-   * Begin transaction.
+   * Begin a transaction. Updates made during the transaction will not be
+   * made permanent until it is committed using commitTransaction.
    */
   void beginTransaction();
 
   /**
-   * Commit transaction.
+   * Commit the current transaction
    */
   void commitTransaction();
 
   /**
-   * Rollback transaction.
+   * Rollback (cancel) the current transaction
    */
   void rollbackTransaction();
 
   /**
-   * Get primary keys.
+   * Return the primary keys of a given table.
    *
-   * @param aSchema     The schema.
-   * @param aTable      The table name.
+   * @param aSchema     the schema
+   * @param aTable      the table name of the keys to retrieve
+   * @return            the result which holds the keys
    */
   mozISqlResult getPrimaryKeys(in AString aSchema, in AString aTable);
 

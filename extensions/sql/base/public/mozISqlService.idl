@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Jan Varga <varga@utcru.sk>
+ *   Neil Deakin <enndeakin@sympatico.ca>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,21 +42,62 @@ interface nsIRDFResource;
 interface mozISqlConnection;
 
 /**
+ * The SQL service is used to construct direct connections to SQL-based
+ * databases. The service maintains a set of aliases, one for each database
+ * to connect to. Methods are provided for adding, retrieving and removing
+ * aliases. Once an alias has been added, it is persistent, so it does not need
+ * to be added again. The aliases are stored in user preferences.
+ * Aliases are identfied using an RDF resource.
+ *
+ * Once an alias has been added, a connection may be opened to a database using
+ * the RDF resource.
+ *
  * @status UNDER_DEVELOPMENT
  */
 
 [scriptable, uuid(1ceb35b7-daa8-4ce4-ac67-125fb17cb019)]
 interface mozISqlService : nsISupports
 {
-
+  /**
+   * Holds the string message of the last error that occured when a connection
+   * was opened.
+   */
   readonly attribute AString errorMessage;
 
-  nsIRDFResource addAlias(in AString aName,
-                          in AString aType,
-                          in AString aHostname,
-                          in long aPort,
-                          in AString aDatabase);
+  /**
+   * Add an alias for a database connection. An alias must be added before a
+   * connection can be made.
+   *
+   * Different types of databases may be connected to using the |aType|
+   * argument. For instance 'pgsql' or 'mysql'. When a connection is made, a
+   * component of the form '@mozilla.org/sql/connection;1?type=<type>' will be
+   * looked up using the component manager. This allows additional database
+   * implementations to be provided separately of mozSQL.
+   *
+   * @param aName       human-readable name of the alias
+   * @param aType       database type (such as pgsql)
+   * @param aHostname   hostname for the database
+   * @param aPort       port for the database
+   * @param aDatabase   database name
+   * @return            an RDF resource representing the alias
+   */
+   nsIRDFResource addAlias(in AString aName,
+                           in AString aType,
+                           in AString aHostname,
+                           in long aPort,
+                           in AString aDatabase);
 
+  /**
+   * Retrieves alias information. The out parameters are filled in with
+   * the corresponding information.
+   *
+   * @param aAlias      the alias to retrieve
+   * @param aName       human-readable name of the alias
+   * @param aType       database type
+   * @param aHostname   hostname of the database
+   * @param aPort       port of the database
+   * @param aDatabase   database name
+   */
   void fetchAlias(in nsIRDFResource aAlias,
                   out AString aName,
                   out AString aType,
@@ -63,6 +105,18 @@ interface mozISqlService : nsISupports
                   out long aPort,
                   out AString aDatabase);
 
+  /**
+   * Update the information of an alias that has already been added. The new
+   * information replaces the old information.
+   *
+   *
+   * @param aAlias      the alias to update
+   * @param aName       human-readable name of the alias
+   * @param aType       database type (such as pgsql)
+   * @param aHostname   hostname for the database
+   * @param aPort       port for the database
+   * @param aDatabase   database name
+   */
   void updateAlias(in nsIRDFResource aAlias,
                    in AString aName,
                    in AString aType,
@@ -70,12 +124,37 @@ interface mozISqlService : nsISupports
                    in long aPort,
                    in AString aDatabase);
 
+  /**
+   * Removes an alias that already exists.
+   *
+   * @param aAlias      the alias to remove
+   */
   void removeAlias(in nsIRDFResource aAlias);
 
+  /**
+   * Get the alias resource with the given name.
+   *
+   * @param aName      the name of the alias to retrieve
+   * @return           the RDF resource for the alias, or null if it doesn't exist.
+   */
   nsIRDFResource getAlias(in AString aName);
 
+  /**
+   * Retrieves an SQL connection to a database given its alias. If a
+   * connection is already open, that connection is returned. Otherwise,
+   * a new connection is opened and returned.
+   *
+   * @param aAlias      the alias to use to open a connection
+   * @return            a connection
+   */
   mozISqlConnection getConnection(in nsIRDFResource aAlias);
 
+  /**
+   * Opens and returns a new connection to a database. The user will be
+   * prompted for a username and password.
+   *
+   * @param aAlias      the alias to use to open a connection
+   * @return            a newly opened connection
+   */
   mozISqlConnection getNewConnection(in nsIRDFResource aAlias);
-
 };

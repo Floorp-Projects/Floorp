@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Jan Varga <varga@utcru.sk>
+ *   Neil Deakin <enndeakin@sympatico.ca>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -40,16 +41,31 @@
 interface mozISqlRequest;
 
 /**
+ * This observer interface is used to listen to asynchronous SQL query or
+ * update requests.
+ *
  * @status UNDER_REVIEW
  */
 
 [scriptable, uuid(9e950bc0-e252-41ef-ac6f-3e3c4acd9dd8)]
 interface mozISqlRequestObserver : nsISupports
 {
-
+  /**
+   * This method will be called when the request is started.
+   *
+   * @param aRequest the request that has started
+   * @param aContext a context that was supplied in the query/update call
+   */
   void onStartRequest(in mozISqlRequest aRequest,
                       in nsISupports aContext);
 
+  /**
+   * This method will be called when the request has finished. This function
+   * will be called in both success and error cases.
+   *
+   * @param aRequest the request that has started
+   * @param aContext a context that was supplied in the query/update call
+   */
   void onStopRequest(in mozISqlRequest aRequest,
                      in nsISupports aContext);
 

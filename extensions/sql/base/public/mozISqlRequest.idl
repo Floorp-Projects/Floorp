@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Jan Varga <varga@utcru.sk>
+ *   Neil Deakin <enndeakin@sympatico.ca>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -42,36 +43,68 @@ interface mozISqlRequestObserver;
 interface mozISqlResult;
 
 /**
+ * A request interface used during an asynchronous SQL query or update operation.
+ *
  * @status UNDER_REVIEW
  */
 
 [scriptable, uuid(f67cb817-5e07-49ff-aacc-5c80585c5031)]
 interface mozISqlRequest : nsISupports
 {
+  /**
+   * The most recent error message.
+   */
   readonly attribute AString errorMessage;
 
+  /**
+   * The result of the operation.
+   */
   readonly attribute mozISqlResult result;
 
+  /**
+   * The number of rows that were affected during an update.
+   */
   readonly attribute long affectedRows;
 
+  /**
+   * The ID of the most recently added record.
+   */
   readonly attribute long lastID;
 
-
+  /**
+   * The SQL query
+   */
   readonly attribute AString query;
 
+  /**
+   * The context passed to the connection's asyncExecuteQuery or
+   * asyncExecuteUpdate method.
+   */
   readonly attribute nsISupports ctxt;
 
+  /**
+   * The observer that listens for when the request is finished.
+   * Methods of the observer should be called by the request.
+   */
   readonly attribute mozISqlRequestObserver observer;
 
-
+  /**
+   * Status codes
+   */
   const long STATUS_NONE        = 0;
   const long STATUS_EXECUTED    = 1;
   const long STATUS_COMPLETE    = 2;
   const long STATUS_ERROR       = 3;
   const long STATUS_CANCELLED   = 4;
   
+  /**
+   * The status of the request.
+   */
   readonly attribute long status;
   
+  /**
+   * Cancels the operation.
+   */
   void cancel();
 
 };
