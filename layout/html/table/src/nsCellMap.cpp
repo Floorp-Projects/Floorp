@@ -34,6 +34,17 @@ CellData::CellData()
   mColSpanData = nsnull;
 }
 
+#ifdef NS_BUILD_REFCNT_LOGGING
+CellData::CellData(nsTableCellFrame* aOrigCell, CellData* aRowSpanData,
+                   CellData* aColSpanData)
+  : mOrigCell(aOrigCell),
+    mRowSpanData(aRowSpanData),
+    mColSpanData(aColSpanData)
+{
+  MOZ_COUNT_CTOR(CellData);
+}
+#endif
+
 CellData::~CellData()
 {
   MOZ_COUNT_DTOR(CellData);

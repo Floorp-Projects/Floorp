@@ -18,6 +18,8 @@
 #ifndef CellData_h__
 #define CellData_h__
 
+#include "nsISupports.h"
+
 class nsTableCellFrame;
 
 /** Data stored by nsCellMap to rationalize rowspan and colspan cells.
@@ -33,9 +35,16 @@ class CellData
 {
 public:
   CellData();
+
+#ifndef NS_BUILD_REFCNT_LOGGING
   CellData(nsTableCellFrame* aOrigCell, CellData* aRowSpanData, CellData* aColSpanData)
     : mOrigCell(aOrigCell), mRowSpanData(aRowSpanData), mColSpanData(aColSpanData)
-  {}
+  {
+  }
+#else
+  CellData(nsTableCellFrame* aOrigCell, CellData* aRowSpanData,
+           CellData* aColSpanData);
+#endif
 
   ~CellData();
 
