@@ -30,6 +30,12 @@
 #include "nsIRegion.h"
 #include "nsISupportsPrimitives.h"
 #include "nsCOMPtr.h"
+#include "nsIFrame.h"
+#include "nsIDocument.h"
+#include "nsIContent.h"
+#include "nsIPresShell.h"
+#include "nsIDOMNode.h"
+#include "nsIPresContext.h"
 
 
 NS_IMPL_ADDREF(nsBaseDragService)
@@ -147,11 +153,21 @@ NS_IMETHODIMP nsBaseDragService::IsDataFlavorSupported(const char *aDataFlavor, 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsBaseDragService::InvokeDragSession (nsIDOMNode *aDOMNode, nsISupportsArray * anArrayTransferables, nsIScriptableRegion * aRegion, PRUint32 aActionType)
 {
-  // stash the document of the dom node. if one isn't provided, warn.
   NS_WARN_IF_FALSE ( aDOMNode, "No node provided to InvokeDragSession, you should provide one" );
-  if ( aDOMNode )
+  if ( aDOMNode ) {
+    // stash the document of the dom node
     aDOMNode->GetOwnerDocument ( getter_AddRefs(mSourceDocument) );
 
+    // When the mouse goes down, the selection code starts a mouse capture. However,
+    // this gets in the way of determining drag feedback for things like trees because
+    // the event coordinates are in the wrong coord system. Turn off capture by 
+    // getting the frame associated with the DOM Node.
+    nsIFrame* dragFrame = nsnull;
+    nsCOMPtr<nsIPresContext> context;
+    GetFrameFromNode ( aDOMNode, &dragFrame, getter_AddRefs(context) );
+    if ( dragFrame && context )
+      dragFrame->CaptureMouse ( context, PR_FALSE );
+  }
   return NS_OK;
 }
 
@@ -196,3 +212,33 @@ NS_IMETHODIMP nsBaseDragService::EndDragSession ()
   return NS_OK;
 }
 
+
+//
+// GetFrameFromNode
+//
+// Get the frame for this content node (note: frames are not refcounted).
+//
+void
+nsBaseDragService :: GetFrameFromNode ( nsIDOMNode* inNode, nsIFrame** outFrame,
+                                           nsIPresContext** outContext )
+{
+  *outFrame = nsnull;
+  *outContext = nsnull;
+  if ( !inNode || !outContext )
+    return;
+
+  nsCOMPtr<nsIDocument>	doc;
+  nsCOMPtr<nsIContent> contentNode = do_QueryInterface(inNode);
+  if (contentNode) {
+    contentNode->GetDocument(*getter_AddRefs(doc));
+    if (doc) {
+      nsCOMPtr<nsIPresShell> presShell ( getter_AddRefs(doc->GetShellAt(0)) );
+      if (presShell) 	{
+      	presShell->GetPresContext(outContext);
+      	presShell->GetPrimaryFrameFor(contentNode, outFrame);
+        NS_ASSERTION ( *outFrame, "Can't get frame for this dom node" );
+      }
+    }
+  }
+  
+} // GetFrameFromNode
