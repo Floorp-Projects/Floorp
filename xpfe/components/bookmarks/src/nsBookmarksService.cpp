@@ -2653,8 +2653,16 @@ nsBookmarksService::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 			// show an alert?
 			if (schedule.Find(NS_ConvertASCIItoUCS2("alert"), PR_TRUE, 0) >= 0)
 			{
-				NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
-				if (NS_SUCCEEDED(rv))
+				nsCOMPtr<nsIInterfaceRequestor> interfaces;
+				nsCOMPtr<nsIPrompt> prompter;
+
+				channel->GetNotificationCallbacks(getter_AddRefs(interfaces));
+				if (interfaces)
+					interfaces->GetInterface(NS_GET_IID(nsIPrompt), getter_AddRefs(prompter));
+				if (!prompter)
+					prompter = do_GetService(kNetSupportDialogCID);
+
+				if (prompter)
 				{
 					nsAutoString	promptStr;
 					getLocaleString("WebPageUpdated", promptStr);
@@ -2696,7 +2704,7 @@ nsBookmarksService::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 					nsAutoString	stopOption;
 					getLocaleString("WebPageAskStopOption", stopOption);
 					PRBool		stopCheckingFlag = PR_FALSE;
-					rv = dialog->ConfirmCheck(nsnull, promptStr.GetUnicode(), stopOption.GetUnicode(),
+					rv = prompter->ConfirmCheck(nsnull, promptStr.GetUnicode(), stopOption.GetUnicode(),
 								  &stopCheckingFlag, &openURLFlag);
 					if (NS_FAILED(rv))
 					{
