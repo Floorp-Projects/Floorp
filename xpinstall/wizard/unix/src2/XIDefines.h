@@ -76,8 +76,8 @@
  *--------------------------------------------------------------------*/
 #define XI_WIN_HEIGHT 320
 #define XI_WIN_WIDTH  550
-#define README_FONT "-misc-fixed-medium-r-*-*-*-80-*-*-*-*-*-*"
-#define LICENSE_FONT "-misc-fixed-medium-r-*-*-*-80-*-*-*-*-*-*"
+#define README_FONT "-misc-fixed-medium-r-normal--8-100-75-75-c-50-iso8859-1"
+#define LICENSE_FONT "-misc-fixed-medium-r-normal--8-100-75-75-c-50-iso8859-1"
 
 
 /*--------------------------------------------------------------------*
