@@ -944,7 +944,7 @@ NS_IMETHODIMP nsConverterFactory::LockFactory(PRBool aLock)
 //----------------------------------------------------------------------------
 // Class nsConverterModule [implementation]
 
-NS_IMPL_ISUPPORTS(nsConverterModule, NS_GET_IID(nsIModule))
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsConverterModule, nsIModule);
 
 nsConverterModule::nsConverterModule()
 : mInitialized(PR_FALSE)
