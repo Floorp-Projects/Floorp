@@ -43,6 +43,9 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  windowwatcher \
 		  locale \
+		  content \
+		  layout \
+		  necko \
 		  $(NULL)
 
 # Sun's Complex Text Layout support
@@ -50,7 +53,13 @@ ifdef SUNCTL
 REQUIRES	+= ctl
 endif
 
+#NATIVE_THEME_SUPPORT = 1
+
 CSRCS		= nsPrintdGTK.c
+
+ifdef NATIVE_THEME_SUPPORT
+CSRCS		+= gtkdrawing.c
+endif
 
 # Code shared between GTK+, Xlib and Xprint gfx modules
 X11SHARED_LCPPSRCS = \
@@ -77,6 +86,10 @@ CPPSRCS		= \
 		nsScreenManagerGtk.cpp \
 		nsPrintOptionsGTK.cpp \
 		$(NULL)
+
+ifdef NATIVE_THEME_SUPPORT
+CPPSRCS		+= nsNativeThemeGTK.cpp
+endif
 
 # If not primary toolkit, install in secondary path
 ifneq (gtk,$(MOZ_GFX_TOOLKIT))
@@ -126,6 +139,10 @@ ifdef MOZ_ENABLE_XPRINT
 DEFINES         += -DUSE_XPRINT -DUSE_MOZILLA_TYPES
 INCLUDES	+= -I$(srcdir)/../xprint
 EXTRA_DSO_LDOPTS += $(MOZ_XPRINT_LDFLAGS)
+endif
+
+ifdef NATIVE_THEME_SUPPORT
+DEFINES		+= -DNATIVE_THEME_SUPPORT
 endif
 
 LOCAL_INCLUDES	= \

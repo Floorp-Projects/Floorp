@@ -59,6 +59,9 @@
 #include "nsFontList.h"
 #include "nsRegionGTK.h"
 #include "nsGCCache.h"
+#ifdef NATIVE_THEME_SUPPORT
+#include "nsNativeThemeGTK.h"
+#endif
 
 // objects that just require generic constructors
 
@@ -75,6 +78,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontList);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerGtk)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrintOptionsGTK)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterEnumeratorGTK)
+#ifdef NATIVE_THEME_SUPPORT
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeThemeGTK)
+#endif
 
 // our custom constructors
 
@@ -189,7 +195,13 @@ static nsModuleComponentInfo components[] =
     NS_PRINTER_ENUMERATOR_CID,
     //    "@mozilla.org/gfx/printer_enumerator/gtk;1",
     "@mozilla.org/gfx/printerenumerator;1",
-    nsPrinterEnumeratorGTKConstructor }    
+    nsPrinterEnumeratorGTKConstructor }
+#ifdef NATIVE_THEME_SUPPORT
+  ,{ "Native Theme Renderer",
+    NS_THEMERENDERER_CID,
+    "@mozilla.org/chrome/chrome-native-theme;1",
+    nsNativeThemeGTKConstructor }
+#endif
 };
 
 PR_STATIC_CALLBACK(void)
