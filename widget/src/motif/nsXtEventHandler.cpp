@@ -28,8 +28,6 @@
 
 #define DBG 0
 
-nsRect gResizeRect;
-int gResized = 0;
 
 //==============================================================
 void nsXtWidget_InitNSEvent(XEvent   * anXEv,
@@ -517,16 +515,13 @@ void nsXtWidget_Resize_Callback(Widget w, XtPointer p, XtPointer call_data)
 
 extern XtAppContext gAppContext;
 
-      if (! gResized) {
-        printf("Adding timeout\n");
-        XtAppAddTimeOut(gAppContext, 1000, (XtTimerCallbackProc)nsXtWidget_Refresh_Callback, widgetWindow);
+      if (! widgetWindow->GetResized()) {
+        printf("Adding timeout for %d\n", widgetWindow);
+        XtAppAddTimeOut(gAppContext, 100, (XtTimerCallbackProc)nsXtWidget_Refresh_Callback, widgetWindow);
       }
 
-      gResizeRect.x = rect.x;
-      gResizeRect.y = rect.y;
-      gResizeRect.width = rect.width;
-      gResizeRect.height = rect.height;
-      gResized = 1;
+      widgetWindow->SetResizeRect(rect);
+      widgetWindow->SetResized(PR_TRUE);
 
 #if 0
       //doResize = PR_TRUE;
@@ -603,15 +598,18 @@ void nsXtWidget_FSBOk_Callback(Widget w, XtPointer p, XtPointer call_data)
 
 void nsXtWidget_Refresh_Callback(XtPointer call_data)
 {
+    printf("In timer\n");
+    nsWindow* widgetWindow = (nsWindow*)call_data;
+    nsRect bounds;
+    widgetWindow->GetResizeRect(&bounds); 
+
     nsSizeEvent event;
     event.message = NS_SIZE;
-    event.widget  = (nsWindow *) call_data;
+    event.widget  = widgetWindow;
     event.time    = 0; //TBD
-    event.windowSize = (nsRect *)&gResizeRect;
+    event.windowSize = &bounds;
 
- printf("In timer\n");
- nsWindow* widgetWindow = (nsWindow*)call_data;
- widgetWindow->SetBounds(gResizeRect); // This needs to be done inside OnResize
- widgetWindow->OnResize(event);
- gResized = 0;
+    widgetWindow->SetBounds(bounds); 
+    widgetWindow->OnResize(event);
+    widgetWindow->SetResized(PR_FALSE);
 }

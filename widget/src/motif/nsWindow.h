@@ -126,6 +126,12 @@ public:
     virtual void            SetIgnoreResize(PRBool aIgnore);
     virtual PRBool          IgnoreResize();
 
+     // Resize event management
+    void SetResizeRect(nsRect& aRect);
+    void SetResized(PRBool aResized);
+    void GetResizeRect(nsRect* aRect);
+    PRBool GetResized();
+
     char gInstanceClassName[256];
 protected:
   void InitCallbacks(char * aName = nsnull);
@@ -152,6 +158,10 @@ protected:
   nsRect      mBounds;
 
   PRBool      mIgnoreResize;
+
+  // Resize event management
+  nsRect mResizeRect;
+  int mResized;
 
   nsISupports* mOuter;
 

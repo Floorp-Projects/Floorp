@@ -175,6 +175,7 @@ nsWindow::nsWindow(nsISupports *aOuter):
   mBounds.y = 0;
   mBounds.width = 0;
   mBounds.height = 0;
+  mResized = PR_FALSE;
   if (aOuter)
     mOuter = aOuter;
   else
@@ -1097,6 +1098,29 @@ void nsWindow::SetIgnoreResize(PRBool aIgnore)
 PRBool nsWindow::IgnoreResize()
 {
   return mIgnoreResize;
+}
+
+void nsWindow::SetResizeRect(nsRect& aRect) 
+{
+  mResizeRect = aRect;
+}
+
+void nsWindow::GetResizeRect(nsRect* aRect)
+{
+  aRect->x = mResizeRect.x;
+  aRect->y = mResizeRect.y;
+  aRect->width = mResizeRect.width;
+  aRect->height = mResizeRect.height;
+} 
+
+void nsWindow::SetResized(PRBool aResized)
+{
+  mResized = aResized;
+}
+
+PRBool nsWindow::GetResized()
+{
+  return(mResized);
 }
 
 
