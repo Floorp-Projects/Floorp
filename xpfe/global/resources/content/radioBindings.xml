@@ -81,33 +81,13 @@
       </method>
     </implementation>
     <handlers>
-      <handler event="click">
-       <![CDATA[
-        try
-          {
-            if (!event.target.disabled && 
-                event.target.localName == "radio" &&
-                event.button == 1)
-              this.selectedItem = event.target;
-          }
-        catch(e)
-          {
-          }
-       ]]>
+      <handler event="command">
+        <![CDATA[
+          if (event.target.localName == "radio")
+            this.selectedItem = event.target;
+         ]]>
       </handler>
-      <handler event="keypress" key=" ">
-       <![CDATA[
-        try
-          {
-            if (!event.target.disabled && event.target.localName == "radio")
-              this.selectedItem = event.target;
-          }
-        catch(e)
-          {
-          }
-       ]]>
-      </handler>    
-      
+     
       <!-- keyboard navigation -->
       <!-- Here's how keyboard navigation works in radio groups on Windows:
            The group takes 'focus'
