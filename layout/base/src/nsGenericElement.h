@@ -28,6 +28,7 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIJSScriptObject.h"
 #include "nsILinkHandler.h"
+#include "nsGenericDOMNodeList.h"
 
 extern const nsIID kIDOMNodeIID;
 extern const nsIID kIDOMElementIID;
@@ -51,18 +52,12 @@ class nsIURL;
 
 // Class that holds the child list of a content element and also
 // implements the nsIDOMNodeList interface.
-class nsChildContentList : public nsIDOMNodeList, 
-                           public nsIScriptObjectOwner 
+class nsChildContentList : public nsGenericDOMNodeList 
 {
 public:
   nsChildContentList(nsIContent *aContent);
-  ~nsChildContentList() {}
-  
-  NS_DECL_ISUPPORTS
-  
-  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void *aScriptObject);
-  
+  ~nsChildContentList() {}  
+
   // nsIDOMNodeList interface
   NS_DECL_IDOMNODELIST
   
@@ -70,7 +65,6 @@ public:
 
 private:
   nsIContent *mContent;
-  void *mScriptObject;
 };
 
 // There are a set of DOM- and scripting-specific instance variables

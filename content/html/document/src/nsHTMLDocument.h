@@ -86,29 +86,10 @@ public:
                             PRInt32 aIndexInContainer);
 
   // nsIDOMDocument interface
-  NS_IMETHOD    GetDoctype(nsIDOMDocumentType** aDocumentType);
-  NS_IMETHOD    GetImplementation(nsIDOMDOMImplementation** aImplementation)
-  { return nsDocument::GetImplementation(aImplementation); }
-  NS_IMETHOD    GetDocumentElement(nsIDOMElement** aDocumentElement)
-  { return nsDocument::GetDocumentElement(aDocumentElement); }
-  NS_IMETHOD    CreateCDATASection(const nsString& aData, nsIDOMCDATASection** aReturn);
-  NS_IMETHOD    CreateEntityReference(const nsString& aName, nsIDOMEntityReference** aReturn);
-  NS_IMETHOD    CreateDocumentFragment(nsIDOMDocumentFragment** aReturn)
-  { return nsDocument::CreateDocumentFragment(aReturn); }
-  NS_IMETHOD    CreateComment(const nsString& aData, nsIDOMComment** aReturn)
-  { return nsDocument::CreateComment(aData, aReturn); }
-  NS_IMETHOD    CreateProcessingInstruction(const nsString& aTarget, const nsString& aData, nsIDOMProcessingInstruction** aReturn);
-  NS_IMETHOD    CreateAttribute(const nsString& aName, nsIDOMAttr** aReturn)
-  { return nsDocument::CreateAttribute(aName, aReturn); }
-  NS_IMETHOD    CreateElement(const nsString& aTagName, 
-                              nsIDOMElement** aReturn);
-  NS_IMETHOD    CreateTextNode(const nsString& aData, nsIDOMText** aReturn)
-  { return nsDocument::CreateTextNode(aData, aReturn); }
-  NS_IMETHOD    GetElementsByTagName(const nsString& aTagname, nsIDOMNodeList** aReturn)
-  { return nsDocument::GetElementsByTagName(aTagname, aReturn); }
+  NS_DECL_IDOMDOCUMENT
 
   // nsIDOMNode interface
-  NS_FORWARD_IDOMNODE(nsDocument::)
+  NS_DECL_IDOMNODE
 
   // nsIDOMHTMLDocument interface
   NS_DECL_IDOMHTMLDOCUMENT

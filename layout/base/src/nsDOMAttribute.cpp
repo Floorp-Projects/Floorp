@@ -395,47 +395,14 @@ nsDOMAttribute::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 
 nsAttributeChildList::nsAttributeChildList(nsDOMAttribute* aAttribute)
 {
-  NS_INIT_REFCNT();
   // Don't increment the reference count. The attribute will tell
   // us when it's going away
   mAttribute = aAttribute;
-  mScriptObject = nsnull;
 }
 
 nsAttributeChildList::~nsAttributeChildList()
 {
 }
-
-nsresult
-nsAttributeChildList::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kIDOMNodeListIID)) {
-    nsIDOMNodeList* tmp = this;
-    *aInstancePtr = (void*)tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIScriptObjectOwnerIID)) {
-    nsIScriptObjectOwner* tmp = this;
-    *aInstancePtr = (void*)tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    nsIDOMNodeList* tmp1 = this;
-    nsISupports* tmp2 = tmp1;
-    *aInstancePtr = (void*)tmp2;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
-
-NS_IMPL_ADDREF(nsAttributeChildList)
-NS_IMPL_RELEASE(nsAttributeChildList)
 
 NS_IMETHODIMP    
 nsAttributeChildList::GetLength(PRUint32* aLength)
@@ -461,36 +428,6 @@ nsAttributeChildList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
     mAttribute->GetFirstChild(aReturn);
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsAttributeChildList::GetScriptObject(nsIScriptContext* aContext, 
-                                      void** aScriptObject)
-{
-  nsresult res = NS_OK;
-  if (nsnull == mScriptObject) {
-    nsIDOMScriptObjectFactory *factory;
-    
-    res = nsGenericElement::GetScriptObjectFactory(&factory);
-    if (NS_OK != res) {
-      return res;
-    }
-
-    res = factory->NewScriptNodeList(aContext, 
-                                     (nsISupports *)(nsIDOMNodeList *)this, 
-                                     (nsISupports *)(nsIDOMAttr*)mAttribute,
-                                     (void **)&mScriptObject);
-    NS_RELEASE(factory);
-  }
-  *aScriptObject = mScriptObject;
-  return res;  
-}
-
-NS_IMETHODIMP 
-nsAttributeChildList::SetScriptObject(void *aScriptObject)
-{
-  mScriptObject = aScriptObject;
   return NS_OK;
 }
 

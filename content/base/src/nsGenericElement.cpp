@@ -77,72 +77,9 @@ static NS_DEFINE_IID(kIDOMDocumentFragmentIID, NS_IDOMDOCUMENTFRAGMENT_IID);
 
 nsChildContentList::nsChildContentList(nsIContent *aContent)
 {
-  NS_INIT_REFCNT();
   // This reference is not reference-counted. The content
   // object tells us when its about to go away.
   mContent = aContent;
-  mScriptObject = nsnull;
-}
-
-NS_IMPL_ADDREF(nsChildContentList);
-NS_IMPL_RELEASE(nsChildContentList);
-
-nsresult
-nsChildContentList::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kIDOMNodeListIID)) {
-    nsIDOMNodeList* tmp = this;
-    *aInstancePtr = (void*)tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIScriptObjectOwnerIID)) {
-    nsIScriptObjectOwner* tmp = this;
-    *aInstancePtr = (void*)tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    nsIDOMNodeList* tmp1 = this;
-    nsISupports* tmp2 = tmp1;
-    *aInstancePtr = (void*)tmp2;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
-
-nsresult 
-nsChildContentList::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
-{
-  nsresult res = NS_OK;
-  if (nsnull == mScriptObject) {
-    nsIDOMScriptObjectFactory *factory;
-    
-    res = nsGenericElement::GetScriptObjectFactory(&factory);
-    if (NS_OK != res) {
-      return res;
-    }
-
-    res = factory->NewScriptNodeList(aContext, 
-                                     (nsISupports *)(nsIDOMNodeList *)this, 
-                                     mContent, 
-                                     (void**)&mScriptObject);
-
-    NS_RELEASE(factory);
-  }
-  *aScriptObject = mScriptObject;
-  return res;
-}
-
-nsresult 
-nsChildContentList::SetScriptObject(void *aScriptObject)
-{
-  mScriptObject = aScriptObject;
-  return NS_OK;
 }
 
 NS_IMETHODIMP    
