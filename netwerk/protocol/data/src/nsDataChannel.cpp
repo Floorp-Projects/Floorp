@@ -538,3 +538,4 @@ nsDataChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
 
     return mStatus;
 }
+
