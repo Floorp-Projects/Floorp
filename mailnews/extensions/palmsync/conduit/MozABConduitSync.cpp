@@ -131,7 +131,7 @@ long CMozABConduitSync::Perform(void)
                     m_remoteDB->m_DbType,
                     m_remoteDB->m_DbFlags,
                     0,
-					m_remoteDB->m_CardNum,
+					          m_remoteDB->m_CardNum,
                     m_rSyncProperties.m_SyncType);
         if(!m_dbHH)
             return GEN_ERR_LOW_MEMORY;
@@ -584,7 +584,7 @@ long CMozABConduitSync::PerformFastSync()
 
 long CMozABConduitSync::PerformSlowSync()
 {
-    // we take care of fist time sync in fast sync in an optimized way
+    // we take care of first time sync in fast sync in an optimized way
     return PerformFastSync();
 }
 

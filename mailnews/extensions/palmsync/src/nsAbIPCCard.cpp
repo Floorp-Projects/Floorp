@@ -43,6 +43,7 @@
 #include "nsAbMDBCard.h"
 #include "nsAddrDatabase.h"
 #include "prdtoa.h"
+#include "PalmSyncImp.h"
 
 #define CONVERT_ASSIGNTO_UNICODE(d, s, convertCRLF)  d.SetLength(0);\
                                         if((char*) s) d=NS_ConvertASCIItoUCS2((char*)s);\
@@ -851,7 +852,11 @@ nsresult nsAbIPCCard::GetABCOMCardStruct(PRBool isUnicode, nsABCOMCardStruct * c
 
     card->lastModifiedDate = m_LastModDate;
     card->preferMailFormat = m_PreferMailFormat;
-
+    card->addressToUse = CPalmSyncImp::nsUseABHomeAddressForPalmAddress(); // 0 == work, 1 == home
+    if (CPalmSyncImp::nsPreferABHomePhoneForPalmPhone())
+      card->preferredPhoneNum = (m_HomePhone.IsEmpty()) ? 1 : 2;
+    else
+      card->preferredPhoneNum = (m_WorkPhone.IsEmpty()) ? 2 : 1;
     card->isMailList = m_IsMailList;
     // Can't use ToNewCString() call here becasue MSCOM will complaint about
     // memory deallocation (ie, NdrPointerFree()) use CoTaskMemAlloc() instead.

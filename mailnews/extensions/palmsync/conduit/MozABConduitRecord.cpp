@@ -44,12 +44,12 @@
 #include <TCHAR.H>
 
 #include "MozABConduitRecord.h"
-
 #define  STR_CRETURN  "\r" 
 #define  STR_NEWLINE  "\n" 
 
 #define  CH_CRETURN  0x0D 
 #define  CH_NEWLINE  0x0A 
+
 
 // constructor
 CMozABConduitRecord::CMozABConduitRecord(void)
@@ -91,7 +91,10 @@ CMozABConduitRecord::CMozABConduitRecord(nsABCOMCardStruct &rec)
     m_csPhone4 = rec.cellularNumber;
     m_csPhone5 = rec.primaryEmail;
 
-    m_csAddress = rec.homeAddress;
+    m_csAddress = (rec.addressToUse == 0)
+                    ? rec.workAddress : rec.homeAddress;
+
+    m_dwDisplayPhone = rec.preferredPhoneNum;
     m_csCity = rec.homeCity;
     m_csState = rec.homeState;
     m_csZipCode = rec.homeZipCode;
@@ -126,7 +129,7 @@ void CMozABConduitRecord::Reset(void)
     m_dwPhone5LabelID = 0;
     m_dwPrivate = 0;
     m_dwCategoryID = 0;
-    m_dwDisplayPhone = 0; 
+    m_dwDisplayPhone = 1; // work 
     m_csName.Empty();
     m_csFirst.Empty();
     m_csTitle.Empty();
@@ -232,7 +235,7 @@ long CMozABConduitRecord::ConvertFromGeneric(CPalmRecord &rec)
     m_dwPhone3LabelID = PHONE_LABEL_FAX;
     m_dwPhone4LabelID = PHONE_LABEL_MOBILE;
     m_dwPhone5LabelID = PHONE_LABEL_EMAIL;
-    m_dwDisplayPhone = 0;
+    m_dwDisplayPhone = m_nsCard.preferredPhoneNum;
 
     DWORD dwRawSize = rec.GetRawDataSize();
     if (!dwRawSize) {
@@ -276,7 +279,9 @@ long CMozABConduitRecord::ConvertFromGeneric(CPalmRecord &rec)
     if (flags.phone4) COPY_PHONE_FROM_GENERIC(m_csPhone4, m_dwPhone4LabelID)
     if (flags.phone5) COPY_PHONE_FROM_GENERIC(m_csPhone5, m_dwPhone5LabelID)
     // Address
-    if (flags.address) COPY_FROM_GENERIC(m_csAddress, m_nsCard.homeAddress)
+    if (flags.address) COPY_FROM_GENERIC(m_csAddress, 
+          (m_nsCard.addressToUse == 0) 
+            ? m_nsCard.workAddress : m_nsCard.homeAddress);
     // City
     if (flags.city) COPY_FROM_GENERIC(m_csCity, m_nsCard.homeCity)
     // State
@@ -355,12 +360,9 @@ long CMozABConduitRecord::ConvertToGeneric(CPalmRecord &rec)
 
     rec.SetCategory(m_dwCategoryID);
 
-    if (m_dwPrivate)
-        rec.SetPrivate(TRUE);
-    else
-        rec.SetPrivate(FALSE);
+    rec.SetPrivate(m_dwPrivate);
 
-	rec.SetAttribs(m_dwStatus);
+  	rec.SetAttribs(m_dwStatus);
 
     pBuff = (char*)szRawData;
 

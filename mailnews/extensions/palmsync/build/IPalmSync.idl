@@ -100,7 +100,8 @@ typedef struct
     LPTSTR          custom4;
     LPTSTR          notes;
     unsigned long   lastModifiedDate;
-
+	unsigned long   addressToUse; // home, work, ... 
+    unsigned long   preferredPhoneNum; // this is displayed in the contact list
     unsigned long   preferMailFormat;
     boolean         isMailList;
     /**

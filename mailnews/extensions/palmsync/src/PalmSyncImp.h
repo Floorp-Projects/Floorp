@@ -88,10 +88,12 @@ public :
     STDMETHODIMP nsDeleteAB(BOOL aIsUnicode, long aCategoryIndex, LPTSTR aABName, LPTSTR aABUrl);
  
     STDMETHODIMP nsRenameAB(BOOL aIsUnicode, long aCategoryIndex, LPTSTR aABName, LPTSTR aABUrl);
- 
+
+    static PRBool GetBoolPref(const char *prefName, PRBool defaultVal);
+    static PRBool nsUseABHomeAddressForPalmAddress();
+    static PRBool nsPreferABHomePhoneForPalmPhone();
 private :
     PRInt32 m_cRef;
-
     void * m_PalmHotSync;
     void CopyUnicodeString(LPTSTR *destStr, nsString srcStr);
     void CopyCString(LPTSTR *destStr, nsCString srcStr);

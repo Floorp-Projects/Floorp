@@ -141,7 +141,7 @@ nsAbPalmHotSync::nsAbPalmHotSync(PRBool aIsUnicode, PRUnichar * aAbDescUnicode, 
 
 nsAbPalmHotSync::~nsAbPalmHotSync()
 {
-    // clear the nsVoidArray, donot free the stored pointers since it is freed by calling app (Conduit)
+    // clear the nsVoidArray, don't free the stored pointers since they are freed by calling app (Conduit)
     mPalmRecords.Clear();
 
     if(mDBOpen && mABDB)

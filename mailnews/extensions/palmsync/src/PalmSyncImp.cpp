@@ -51,6 +51,12 @@
 #include "nsIRDFService.h"
 #include "nsIAbDirectory.h"
 
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
+#include "nsIPref.h"
+#include "nsIPrefBranchInternal.h"
+
+
 #define  kPABDirectory  2  // defined in nsDirPrefs.h
 
 CPalmSyncImp::CPalmSyncImp()
@@ -184,9 +190,12 @@ STDMETHODIMP CPalmSyncImp::nsGetABList(BOOL aIsUnicode, short * aABListCount,
             if(NS_FAILED(rv)) return E_FAIL;
             rv = properties->GetCategoryId(&palmCategoryIndex);
             if(NS_FAILED(rv)) return E_FAIL;
-
+            nsCAutoString prefName;
+            directory->GetDirPrefId(prefName);
+            prefName.Append(".disablePalmSync");
+            PRBool disableThisAB = GetBoolPref(prefName.get(), PR_FALSE);
             // Skip/Ignore 4.X addrbooks (ie, with ".na2" extension).
-            if (((fileName.Length() > kABFileName_PreviousSuffixLen) && 
+            if (disableThisAB || ((fileName.Length() > kABFileName_PreviousSuffixLen) && 
                  strcmp(fileName.get() + fileName.Length() - kABFileName_PreviousSuffixLen, kABFileName_PreviousSuffix) == 0) &&
                   (dirType == kPABDirectory))
               continue;
@@ -389,3 +398,47 @@ void CPalmSyncImp::CopyCString(LPTSTR *destStr, nsCString srcStr)
 }
 
 
+PRBool CPalmSyncImp::GetBoolPref(const char *prefName, PRBool defaultVal)
+{
+  PRBool boolVal = defaultVal;
+  
+  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
+  if (prefs) 
+  {
+
+    nsCOMPtr<nsIPrefBranch> prefBranch;
+
+    (void) prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
+    if (prefBranch)
+    {
+
+      PRBool bVal = PR_FALSE;
+      prefBranch->GetBoolPref(prefName, &boolVal);
+    }
+  }
+  return boolVal;
+}
+
+/* static */ PRBool CPalmSyncImp::nsUseABHomeAddressForPalmAddress()
+{
+  static PRBool gGotAddressPref = PR_FALSE;
+  static PRBool gUseHomeAddress;
+  if (!gGotAddressPref)
+  {
+    gUseHomeAddress = GetBoolPref("mail.palmsync.useHomeAddress", PR_TRUE);
+    gGotAddressPref = PR_TRUE;
+  }
+  return gUseHomeAddress;
+}
+
+/* static */ PRBool CPalmSyncImp::nsPreferABHomePhoneForPalmPhone()
+{
+  static PRBool gGotPhonePref = PR_FALSE;
+  static PRBool gPreferHomePhone;
+  if (!gGotPhonePref)
+  {
+    gPreferHomePhone = GetBoolPref("mail.palmsync.preferHomePhone", PR_TRUE);
+    gGotPhonePref = PR_TRUE;
+  }
+  return gPreferHomePhone;
+}
