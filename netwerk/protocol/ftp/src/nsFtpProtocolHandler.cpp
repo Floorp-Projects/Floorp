@@ -48,6 +48,7 @@
 #include "nsIErrorService.h" 
 #include "nsIPrefService.h"
 #include "nsIPrefBranchInternal.h"
+#include "nsIObserverService.h"
 
 #if defined(PR_LOGGING)
 //
@@ -80,13 +81,9 @@ nsFtpProtocolHandler::nsFtpProtocolHandler() {
 
 nsFtpProtocolHandler::~nsFtpProtocolHandler() {
     PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("~nsFtpProtocolHandler() called"));
-    if (mRootConnectionList) {
-        PRInt32 i;
-        for (i=0;i<mRootConnectionList->Count();++i)
-            delete (timerStruct*)mRootConnectionList->ElementAt(i);
-        NS_DELETEXPCOM(mRootConnectionList);
-        mRootConnectionList = nsnull;
-    }
+
+    NS_ASSERTION(!mRootConnectionList, "why wasn't Observe called?");
+
     mIdleTimeout = -1;
     mIOSvc = 0;
 }
@@ -136,6 +133,13 @@ nsFtpProtocolHandler::Init() {
         rv = pbi->AddObserver(IDLE_TIMEOUT_PREF, this, PR_TRUE);
         if (NS_FAILED(rv)) return rv;
     }
+
+    nsCOMPtr<nsIObserverService> observerService =
+        do_GetService("@mozilla.org/observer-service;1");
+    if (observerService)
+        observerService->AddObserver(this,
+                                     "network:offline-about-to-go-offline",
+                                     PR_FALSE);
     
     return NS_OK;
 }
@@ -349,18 +353,28 @@ nsFtpProtocolHandler::Observe(nsISupports* aSubject,
                               const PRUnichar* aData)
 {
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFtpProtocolHandler::Observe\n"));
-    nsCOMPtr<nsIPrefBranch> branch = do_QueryInterface(aSubject);
-    NS_ASSERTION(branch, "Didn't get a prefBranch in Observe");
-    if (!branch)
-        return NS_ERROR_UNEXPECTED;
 
-    NS_ASSERTION(!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID),
-                 "Wrong aTopic passed to Observer");
+    if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
+        nsCOMPtr<nsIPrefBranch> branch = do_QueryInterface(aSubject);
+        NS_ASSERTION(branch, "Didn't get a prefBranch in Observe");
+        if (!branch)
+            return NS_ERROR_UNEXPECTED;
 
-    PRInt32 timeout;
-    nsresult rv = branch->GetIntPref(IDLE_TIMEOUT_PREF, &timeout);
-    if (NS_SUCCEEDED(rv))
-        mIdleTimeout = timeout;
+        PRInt32 timeout;
+        nsresult rv = branch->GetIntPref(IDLE_TIMEOUT_PREF, &timeout);
+        if (NS_SUCCEEDED(rv))
+            mIdleTimeout = timeout;
+    } else if (!strcmp(aTopic, "network:offline-about-to-go-offline")) {
+        if (mRootConnectionList) {
+            PRInt32 i;
+            for (i=0;i<mRootConnectionList->Count();++i)
+                delete (timerStruct*)mRootConnectionList->ElementAt(i);
+            delete mRootConnectionList;
+            mRootConnectionList = nsnull;
+        }
+    } else {
+        NS_NOTREACHED("wrong topic in nsFtpProtocolHandler::Observe");
+    }
 
     return NS_OK;
 }
