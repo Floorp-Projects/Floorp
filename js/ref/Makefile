@@ -38,7 +38,11 @@ endif
 ifeq ($(OS_ARCH),Linux)
 OS_CONFIG      := Linux_All
 else
+ifeq ($(OS_ARCH),dgux)
+OS_CONFIG      := dgux
+else
 OS_CONFIG       := $(OS_ARCH)$(OS_OBJTYPE)$(OS_RELEASE)
+endif
 endif
 
 ASFLAGS         =
