@@ -37,6 +37,11 @@
 #include "nsIAllocator.h"
 #include "nsXPIDLString.h"
 #include "nsIWebNavigation.h"
+#include "nsIURIContentListener.h"
+#include "nsIChannel.h"
+#include "nsIURILoader.h"
+#include "nsCURILoader.h"
+#include "nsNetUtil.h"
 
 #ifdef MOZ_MAIL_NEWS
 
@@ -68,6 +73,126 @@ static char *s509InternalError       = "509 internal error";
 
 static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
+
+class RemoteHelperContentListener : public nsIURIContentListener,
+				    public nsIInterfaceRequestor
+{
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIURICONTENTLISTENER
+  NS_DECL_NSIINTERFACEREQUESTOR
+
+  RemoteHelperContentListener();
+  virtual ~RemoteHelperContentListener();
+
+private:
+  nsCOMPtr<nsISupports> mLoadCookie;
+};
+
+NS_INTERFACE_MAP_BEGIN(RemoteHelperContentListener)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIURIContentListener)
+  NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_ADDREF(RemoteHelperContentListener)
+NS_IMPL_RELEASE(RemoteHelperContentListener)
+
+RemoteHelperContentListener::RemoteHelperContentListener()
+{
+  NS_INIT_ISUPPORTS();
+}
+
+RemoteHelperContentListener::~RemoteHelperContentListener()
+{
+}
+
+// nsIURIContentListener
+
+NS_IMETHODIMP
+RemoteHelperContentListener::OnStartURIOpen(nsIURI *aURI, 
+					    const char *aWindowTarget,
+					    PRBool *aAbortOpen)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+RemoteHelperContentListener::GetProtocolHandler(nsIURI *aURI, 
+						nsIProtocolHandler **aProtocolHandler)
+{
+  *aProtocolHandler = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+RemoteHelperContentListener::DoContent(const char *aContentType,
+				       nsURILoadCommand aCommand,
+				       const char *aWindowTarget,
+				       nsIChannel *aOpenedChannel,
+				       nsIStreamListener **aContentHandler,
+				       PRBool *aAbortProcess)
+{
+  NS_NOTREACHED("RemoteHelperContentListener::DoContent");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+RemoteHelperContentListener::IsPreferred(const char *aContentType,
+					 nsURILoadCommand aCommand,
+					 const char *aWindowTarget,
+					 char **aDesiredContentType,
+					 PRBool *_retval)
+{
+  NS_NOTREACHED("RemoteHelperContentListener::IsPreferred");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+RemoteHelperContentListener::CanHandleContent(const char *aContentType,
+					      nsURILoadCommand aCommand,
+					      const char *aWindowTarget,
+					      char **aDesiredContentType,
+					      PRBool *_retval)
+{
+  NS_NOTREACHED("RemoteHelperContentListener::CanHandleContent");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+RemoteHelperContentListener::GetLoadCookie(nsISupports * *aLoadCookie)
+{
+  *aLoadCookie = mLoadCookie;
+  NS_IF_ADDREF(*aLoadCookie);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+RemoteHelperContentListener::SetLoadCookie(nsISupports * aLoadCookie)
+{
+  mLoadCookie = aLoadCookie;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+RemoteHelperContentListener::GetParentContentListener(nsIURIContentListener * *aParentContentListener)
+{
+  *aParentContentListener = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+RemoteHelperContentListener::SetParentContentListener(nsIURIContentListener * aParentContentListener)
+{
+  return NS_OK;
+}
+
+// nsIInterfaceRequestor
+NS_IMETHODIMP
+RemoteHelperContentListener::GetInterface(const nsIID & aIID,
+					  void * *aInstancePtr)
+{
+  NS_ENSURE_ARG_POINTER(aInstancePtr);
+  return QueryInterface(aIID, aInstancePtr);
+}
 
 nsGtkMozRemoteHelper::nsGtkMozRemoteHelper()
 {
@@ -558,44 +683,39 @@ nsGtkMozRemoteHelper::OpenURL        (const char *aURL, PRBool aNewWindow, PRBoo
     if (NS_FAILED(rv))
       return NS_ERROR_FAILURE;
   }
+  // otherwise, pass it off to the default handler
   else
   {
-    nsCOMPtr<nsIDOMWindowInternal>          lastUsedWindow;
-    nsCOMPtr<nsIDOMWindowInternal>          innerWindow;
-    nsCOMPtr<nsIScriptGlobalObject> globalObject;
-    nsCOMPtr<nsIDocShell>           docShell;
-    nsCOMPtr<nsIURI>                uri;
-    // get the most recently used window
-    rv = GetLastBrowserWindow(getter_AddRefs(lastUsedWindow));
-    if (NS_FAILED(rv))
+    // get our uri loader service
+    nsCOMPtr<nsIURILoader> loader (do_GetService(NS_URI_LOADER_CONTRACTID));
+    NS_ENSURE_TRUE(loader, NS_ERROR_FAILURE);
+    
+    RemoteHelperContentListener *listener;
+    listener = new RemoteHelperContentListener();
+    if (!listener)
       return NS_ERROR_FAILURE;
-    // get the content area for that window
-    rv = lastUsedWindow->Get_content(getter_AddRefs(innerWindow));
-    if (NS_FAILED(rv))
-      return NS_ERROR_FAILURE;
-    // get the script global object for that window
-    globalObject = do_QueryInterface(innerWindow);
-    if (!globalObject)
-      return NS_ERROR_FAILURE;
-    // get the docshell for that window
-    globalObject->GetDocShell(getter_AddRefs(docShell));
-    if (!docShell)
-      return NS_ERROR_FAILURE;
-    // load the url
+
+    // we own it
+    NS_ADDREF(listener);
+    nsCOMPtr<nsISupports> listenerRef(do_QueryInterface((nsIURIContentListener *)listener));
+    // now the listenerRef is the only reference
+    NS_RELEASE(listener);
+
+    // create our uri object
+    nsCOMPtr<nsIURI> uri;
     rv = NS_NewURI(getter_AddRefs(uri), aURL);
-    if (NS_FAILED(rv))
-      return NS_ERROR_FAILURE;
-    // go, baby, go!
-    rv = docShell->LoadURI(uri, nsnull, nsIWebNavigation::LOAD_FLAGS_NONE);
-    if (NS_FAILED(rv))
-      return NS_ERROR_FAILURE;
-    // raise the window, if requested
-    if (raiseWindow)
-    {
-      rv = lastUsedWindow->GetAttention();
-      if (NS_FAILED(rv))
-        return NS_ERROR_FAILURE;
-    }
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+
+    // open a channel
+    nsCOMPtr<nsIChannel> channel;
+    rv = NS_OpenURI (getter_AddRefs(channel), uri);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+
+    // load it
+    loader->OpenURI(channel, nsIURILoader::viewUserClick,
+		    nsnull,  /* target */
+		    listenerRef); /* window */
+    
   }
   return NS_OK;
 }
