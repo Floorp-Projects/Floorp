@@ -35,7 +35,10 @@ EXPORTS 	= \
 	BCTest.h \
 	ProceedResults.h \
 	Values.h \
-	VarContainer.h
+	VarContainer.h \
+	PseudoHash.h \
+	$(NULL)
+	
 CPPSRCS		= \
         BCTestLoader.cpp \
         BCTestLoaderFactory.cpp \
