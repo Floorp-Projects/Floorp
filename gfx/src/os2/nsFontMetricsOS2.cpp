@@ -113,7 +113,7 @@ static nsCharSetInfo gCharSetInfo[eCharSet_COUNT] =
   { "THAI",        FM_DEFN_THAI,     874,  "th" },
   { "SHIFTJIS",    FM_DEFN_KANA,     932,  "ja" },
 //  { "GB2312",      FM_DEFN_KANA,     936,  "zh-CN" },
-  { "GB2312",      FM_DEFN_KANA,     1386,  "zh-CN" },
+  { "GB2312",      FM_DEFN_KANA,     1381, "zh-CN" },
   { "HANGEUL",     FM_DEFN_KANA,     949,  "ko" },
   { "CHINESEBIG5", FM_DEFN_KANA,     950,  "zh-TW" },
   { "JOHAB",       FM_DEFN_KANA,     1361, "ko-XXX", }
@@ -174,6 +174,20 @@ InitGlobals(void)
   if (!gUserDefined) {
     FreeGlobals();
     return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  ULONG numCP = WinQueryCpList((HAB)0, 0, NULL);
+  if (numCP > 0) {
+     ULONG * pCPList = (ULONG*)malloc(numCP*sizeof(ULONG));
+     if (WinQueryCpList( (HAB)0, numCP, pCPList)) {
+        for (int i = 0;i<numCP ;i++ ) {
+           if (pCPList[i] == 1386) {
+              gCharSetInfo[11].mCodePage = 1386;
+              break;
+           }
+        }
+     }
+     free(pCPList);
   }
 
   gInitialized = 1;
