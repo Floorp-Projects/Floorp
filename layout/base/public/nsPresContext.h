@@ -21,6 +21,7 @@
 #include "nslayout.h"
 #include "nsISupports.h"
 #include "nsRect.h"
+#include "nsColor.h"
 
 struct nsFont;
 
@@ -102,15 +103,21 @@ public:
 
   /**
    * Load an image for the target frame. This call can be made
-   * repeated with only a single image every being loaded. If
-   * aNeedSizeUpdate is PR_TRUE then when the image's size is
+   * repeated with only a single image ever being loaded. If
+   * aNeedSizeUpdate is PR_TRUE, then when the image's size is
    * determined the target frame will be reflowed (via a
    * ContentChanged notification on the presentation shell). When the
-   * image's data is ready for rendering the target frames Paint
-   * method will be invoked (via the ViewManager so that the
-   * appropriate damage repair is done).
+   * image's data is ready for rendering the target frame's Paint()
+   * method will be invoked (via the ViewManager) so that the
+   * appropriate damage repair is done.
+   *
+   * @param aBackgroundColor - If the background color is NULL, a mask
+   *      will be generated for transparent images. If the background
+   *      color is non-NULL, it indicates the RGB value to be folded
+   *      into the transparent areas of the image and no mask is created.
    */
   NS_IMETHOD LoadImage(const nsString& aURL,
+                       const nscolor* aBackgroundColor,
                        nsIFrame* aTargetFrame,
                        PRBool aNeedSizeUpdate,
                        nsIFrameImageLoader*& aLoader) = 0;

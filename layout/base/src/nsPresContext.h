@@ -47,6 +47,7 @@ public:
   virtual const nsFont& GetDefaultFont(void);
   NS_IMETHOD GetImageGroup(nsIImageGroup*& aGroupResult);
   NS_IMETHOD LoadImage(const nsString& aURL,
+                       const nscolor* aBackgroundColor,
                        nsIFrame* aTargetFrame,
                        PRBool aNeedSizeUpdate,
                        nsIFrameImageLoader*& aLoader);

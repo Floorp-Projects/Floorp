@@ -103,6 +103,7 @@ nsresult
 nsFrameImageLoader::Init(nsIPresContext* aPresContext,
                          nsIImageGroup* aGroup,
                          const nsString& aURL,
+                         const nscolor* aBackgroundColor,
                          nsIFrame* aTargetFrame,
                          PRBool aNeedSizeUpdate)
 {
@@ -131,6 +132,7 @@ nsFrameImageLoader::Init(nsIPresContext* aPresContext,
      cp ? cp : "(null)", mTargetFrame, mImageLoadStatus));
 
   // Start image load request
+  // XXX Use aBackgroundColor
   nscolor bgcolor = NS_RGB(255,255,255);
   mImageRequest = aGroup->GetImage(cp, this, &bgcolor, 0, 0, 0);
   delete cp;
