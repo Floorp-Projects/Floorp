@@ -4832,7 +4832,8 @@
 
 
 ; (/* . <styled-text>)
-; A one-paragraph comment using the given <styled-text>.  The subsequent statements are hidden until the next (*/) statement.
+; A one-paragraph comment using the given <styled-text>.  The subsequent statements are hidden until the next (*/) statement
+; or until the end of the subsequent statements if they cannot fall through.
 ; These comments cannot nest.
 (defun scan-/* (world type-env rest-statements last special-form &rest text)
   (unless text
@@ -4842,7 +4843,9 @@
       (let ((end-special-form (assert-non-null (world-find-symbol world '*/))))
         (loop
           (when (endp rest-annotated-stmts)
-            (error "Missing */"))
+            (if (eq rest-live :dead)
+              (return)
+              (error "Missing */")))
           (let* ((annotated-stmt (pop rest-annotated-stmts))
                  (stmt-keyword (first annotated-stmt)))
             (cond
