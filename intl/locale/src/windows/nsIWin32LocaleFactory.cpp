@@ -77,36 +77,10 @@ nsIWin32LocaleFactory::CreateInstance(nsISupports* aOuter, REFNSIID aIID,
   return NS_OK;   
 }
 
-nsresult nsIWin32LocaleFactory::QueryInterface(const nsIID &aIID,   
-                                      void **aResult)   
-{   
-  if (aResult == NULL) {   
-    return NS_ERROR_NULL_POINTER;   
-  }   
-
-  // Always NULL result, in case of failure   
-  *aResult = NULL;   
-
-  if (aIID.Equals(kISupportsIID)) {   
-    *aResult = (void *)(nsISupports*)this;   
-  } else if (aIID.Equals(kIFactoryIID)) {   
-    *aResult = (void *)(nsIFactory*)this;   
-  }   
-
-  if (*aResult == NULL) {   
-    return NS_NOINTERFACE;   
-  }   
-
-  NS_ADDREF_THIS(); // Increase reference count for caller   
-  return NS_OK;   
-}   
-
-
 NS_IMETHODIMP
 nsIWin32LocaleFactory::LockFactory(PRBool	aBool)
 {
 	return NS_OK;
 }
 
-NS_IMPL_ADDREF(nsIWin32LocaleFactory);
-NS_IMPL_RELEASE(nsIWin32LocaleFactory);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsIWin32LocaleFactory,nsIFactory)
