@@ -64,7 +64,7 @@ static int read_int(FILE* f)
 static void copy_range(FILE* input, size_t offset, size_t length,
 		       const char* output_name)
 {
-  FILE* output = fopen(output_name, "rw");
+  FILE* output = fopen(output_name, "wb");
   EXIT_IF_FALSE(output != NULL);
   fseek(input, offset, SEEK_SET);
   while (length != 0) {
