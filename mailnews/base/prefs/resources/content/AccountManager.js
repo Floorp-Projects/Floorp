@@ -377,11 +377,19 @@ function showPage(serverId, pageId) {
 // page has loaded
 function onPanelLoaded(pageId) {
   if (pageId != pendingPageId) {
-    dump("ERROR: page " + pageId + " was loaded, but " + pendingPageId + " was expected!\n");
-    return;
+    
+    // if we're reloading the current page, we'll assume the
+    // page has asked itself to be completely reloaded from
+    // the prefs. to do this, clear out the the old entry in
+    // the account data, and then restore theh page
+    if (pageId == currentPageId) {
+      clearAccountData(currentServerId, currentPageId);
+      restorePage(currentServerId, currentPageId);
+    }
+  } else {
+
+    restorePage(pendingPageId, pendingServerId);
   }
-  
-  restorePage(pendingPageId, pendingServerId);
 
   // probably unnecessary, but useful for debugging
   pendingServerId = null;
@@ -639,6 +647,11 @@ function getValueArrayFor(serverId) {
   }
   
   return accountArray[serverId];
+}
+
+function clearAccountData(serverId, pageId)
+{
+  getValueArrayFor(serverId)[pageId] = null;
 }
 
 function getServerIdAndPageIdFromTree(tree)
