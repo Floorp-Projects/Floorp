@@ -66,8 +66,24 @@ class nsGfxFactoryWin : public nsIFactory
     nsCID     mClassID;
 };   
 
+static int gUseAFunctions = 0;
+
 nsGfxFactoryWin::nsGfxFactoryWin(const nsCID &aClass)   
 {   
+  static int init = 0;
+  if (!init) {
+    init = 1;
+    OSVERSIONINFO os;
+    os.dwOSVersionInfoSize = sizeof(os);
+    ::GetVersionEx(&os);
+    if ((os.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) &&
+        (os.dwMajorVersion == 4) &&
+        (os.dwMinorVersion == 0) &&    // Windows 95 (not 98)
+        (::GetACP() == 932)) {         // Shift-JIS (Japanese)
+      gUseAFunctions = 1;
+    }
+  }
+
   mRefCnt = 0;
   mClassID = aClass;
 }   
@@ -129,7 +145,12 @@ nsresult nsGfxFactoryWin::CreateInstance(nsISupports *aOuter,
 
   if (mClassID.Equals(kCFontMetrics)) {
     nsFontMetricsWin* fm;
-    NS_NEWXPCOM(fm, nsFontMetricsWin);
+    if (gUseAFunctions) {
+      NS_NEWXPCOM(fm, nsFontMetricsWinA);
+    }
+    else {
+      NS_NEWXPCOM(fm, nsFontMetricsWin);
+    }
     inst = (nsISupports *)fm;
   }
   else if (mClassID.Equals(kCDeviceContext)) {
@@ -139,7 +160,12 @@ nsresult nsGfxFactoryWin::CreateInstance(nsISupports *aOuter,
   }
   else if (mClassID.Equals(kCRenderingContext)) {
     nsRenderingContextWin*  rc;
-    NS_NEWXPCOM(rc, nsRenderingContextWin);
+    if (gUseAFunctions) {
+      NS_NEWXPCOM(rc, nsRenderingContextWinA);
+    }
+    else {
+      NS_NEWXPCOM(rc, nsRenderingContextWin);
+    }
     inst = (nsISupports *)((nsIRenderingContext*)rc);
   }
   else if (mClassID.Equals(kCImage)) {
