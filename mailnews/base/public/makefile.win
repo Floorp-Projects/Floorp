@@ -29,6 +29,7 @@ IDLSRCS =                                       \
 			nsIMsgIncomingServer.idl			\
 			nsIMsgThread.idl					\
 			nsIMsgMessageService.idl			\
+			nsIMessage.idl						\
 			$(NULL)
 
 EXPORTS =                           \
@@ -61,6 +62,7 @@ EXPORTS =                           \
 			nsIMsgIncomingServer.h	\
 			nsIMsgThread.h			\
 			nsIMsgMessageService.h	\
+			nsIMessage.h			\
 			$(NULL)
 
 MODULE=mailnews

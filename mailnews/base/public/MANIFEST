@@ -45,3 +45,4 @@ nsIMsgIdentity.h
 nsIMsgIncomingServer.h
 nsIMsgThread.h
 nsIMsgMessageService.h
+nsIMessage.h

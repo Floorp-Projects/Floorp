@@ -64,6 +64,7 @@ EXPORTS =				\
 		nsIMessageView.h	\
 		nsIMsgThread.h		\
 		nsIMsgMessageService.h \
+		nsIMessage.h		\
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk
