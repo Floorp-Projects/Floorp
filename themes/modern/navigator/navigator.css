@@ -43,14 +43,12 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
  */
 #back-button 
   {
-    behavior              : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-dual-foo");
 	  list-style-image      : url("chrome://navigator/skin/back.gif");
     margin                : 0px;
   }
 
 #forward-button 
   {
-    behavior              : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-dual-foo");
 	  list-style-image      : url("chrome://navigator/skin/forward.gif");
     margin                : 0px;
   }
@@ -81,12 +79,11 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 
 #ubhist
   {
-    margin                : 0px 2px 0px 0px;
+    margin                : 3px 1px 3px 0px;
     width                 : 10px; 
     list-style-image      : url("chrome://global/skin/scroll-down.gif"); 
     border                : none;
-    border-right          : 1px solid #336699;
-    padding               : 0px 2px 0px 0px;
+    padding               : 0px;
   }
 
 #ubhist-popup
@@ -146,5 +143,3 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
   {
     padding               : 2px;
   }
-
-#

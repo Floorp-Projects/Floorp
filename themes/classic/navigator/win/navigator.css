@@ -16,9 +16,34 @@
 #browser
   {
     border-left           : 1px solid threedshadow;
-    border-top            : 1px solid threedshadow;
     border-right          : 1px solid threedhighlight;
-    border-bottom         : 1px solid threedhighlight;
+  }  
+  
+#ubhist 
+  {
+    margin                : 0px;
+    background-color      : threedface;
+    list-style-image      : url("chrome://global/skin/scroll-down.gif");
+  }
+
+#ubhist > .menubutton-icon-internal-box
+  {
+    border-left           : 1px solid threedhighlight;
+    border-top            : 1px solid threedhighlight;
+    border-right          : 1px solid threedshadow;
+    border-bottom         : 1px solid threedshadow;
+  }  
+
+#ubhist:hover:active > .menubutton-icon-internal-box,
+#ubhist[open="true"] > .menubutton-icon-internal-box
+  {
+    border                : 1px solid threedshadow;
+  }  
+  
+  
+#urlbar-container
+  {
+    padding               : 3px 2px 2px 3px;
   }  
   
 /*
@@ -58,18 +83,22 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
   }
 
 #back-button[disabled="true"],
-#back-button[disabled="true"][buttonover="true"],
-#back-button[disabled="true"][buttondown="true"]
+#back-button[disabled="true"]:hover,
+#back-button[disabled="true"]:hover:active,
+#back-button[disabled="true"] > .classic-simplebutton-box > .classic-simplebutton:hover,
+#back-button[disabled="true"] > .classic-simplebutton-box > .classic-simplebutton:hover:active
   {
     list-style-image      : url("chrome://navigator/skin/back-disabled.gif");
   }
 
-#back-button[buttonover="true"]
+#back-button:hover,
+#back-button > .classic-simplebutton-box > .classic-simplebutton:hover
   {
     list-style-image      : url("chrome://navigator/skin/back-hover.gif");
   }
 
-#back-button[buttondown="true"]
+#back-button:hover:active,
+#back-button > .classic-simplebutton-box > .classic-simplebutton:hover:active
   {
     list-style-image      : url("chrome://navigator/skin/back-hover-active.gif");
   }
@@ -81,18 +110,22 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
   }
 
 #forward-button[disabled="true"],
-#forward-button[disabled="true"][buttonover="true"],
-#forward-button[disabled="true"][buttondown="true"]
+#forward-button[disabled="true"]:hover,
+#forward-button[disabled="true"]:hover:active,
+#forward-button[disabled="true"] > .classic-simplebutton-box > .classic-simplebutton:hover,
+#forward-button[disabled="true"] > .classic-simplebutton-box > .classic-simplebutton:hover:active
   {
     list-style-image      : url("chrome://navigator/skin/forward-disabled.gif");
   }
 
-#forward-button[buttonover="true"]
+#forward-button:hover,
+#forward-button > .classic-simplebutton-box > .classic-simplebutton:hover
   {
     list-style-image      : url("chrome://navigator/skin/forward-hover.gif");
   }
 
-#forward-button[buttondown="true"]
+#forward-button:hover:active,
+#forward-button > .classic-simplebutton-box > .classic-simplebutton:hover:active
   {
     list-style-image      : url("chrome://navigator/skin/forward-hover-active.gif");
   }
@@ -142,27 +175,13 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 	  list-style-image      : url("chrome://navigator/skin/reload.gif");
   }
   
-  
 /*all the urlbar stuff*/
 #page-proxy-button 
   {
-	  list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-item.gif"); 
+	  list-style-image      : url("chrome://communicator/skin/bookmarks/location.gif"); 
 	  cursor                : grab;
+    margin                : 0px 2px 0px 0px;
   } 
-
-#ubhist-keyword-popup 
-  {
-	  margin                : 0px 4px 0px 0px;
-	  width                 : 10px; 
-	  list-style-image      : url("chrome://global/skin/scroll-down.gif"); 
-  } 
-
-#action-popup 
-  {
-    list-style-image      : url("chrome://global/skin/scroll-down.gif"); 
-	  margin                : 0px; 
-	  -moz-border-radius    : 4px;
-  }
 
 #content-frame 
   {
@@ -183,8 +202,19 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 #search-button
   {
     margin-right          : 1px;
+    list-style-image      : url("chrome://communicator/skin/search.gif");
+  }
+
+#search-button:hover
+  {
+    list-style-image      : url("chrome://communicator/skin/search-hover.gif");
   }
   
+#search-button:hover:active
+  {
+    list-style-image      : url("chrome://communicator/skin/search-active.gif");
+  }
+
 #homebutton
   {
     list-style-image      : url("chrome://communicator/skin/bookmarks/home.gif");
@@ -195,7 +225,3 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
     padding               : 2px;
   }
 
-#statusbar-icon
-  {
-    margin-left           : 0px;
-  }

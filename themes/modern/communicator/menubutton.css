@@ -55,15 +55,17 @@
 /** 
  * Navigation bar style menubuttons 
  **/
-.toolbar.menubutton-dual,
-.toolbar.menubutton-dual
+
+.menubutton-dual.toolbar
   {
+    behavior                : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-dual-foo");
     border                  : none ! important;
   }
 
 .button-toolbar-1.menubutton-dual-button
   {
     list-style-image        : inherit;
+    min-height              : 0px;
   }
 
 .button-toolbar-2.menubutton-dual-button

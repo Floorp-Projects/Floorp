@@ -509,6 +509,6 @@ These also need to call goDoCommand(), not editor JS functions. - - smfr
     </box>
 
 <!-- /box -->
-	<toolbox id="taskbar" class="toolbox-bottom"/>
+	<box id="taskbar" class="toolbox-bottom"/>
 </window>
 

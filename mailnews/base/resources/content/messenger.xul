@@ -358,7 +358,7 @@ Rights Reserved.
 		</box>
 	</box>
 
-	<toolbox id="taskbar" class="toolbox-bottom"/>
+	<box id="taskbar" class="toolbox-bottom"/>
 
 </window>
 

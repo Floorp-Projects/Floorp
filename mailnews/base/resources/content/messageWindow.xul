@@ -87,6 +87,6 @@ Rights Reserved.
 
 
 	<statusbar id="status-bar" class="chromeclass-status"/>
-	<toolbox id="taskbar" class="toolbox-bottom"/>
+	<box id="taskbar" class="toolbox-bottom"/>
 
 </window>

@@ -1,35 +1,3 @@
-
-/** Styles applying to items in a button-toolbar-3 style menu
- *  menuitem class="button-toolbar-3"
- **/
-  .button-toolbar-3 > .menubutton-icon-internal-box
-    {
-      border                : 1px outset #99CCCC;
-    }
-
-  .button-toolbar-3[open="true"] > .menubutton-icon-internal-box,
-  .button-toolbar-3:hover:active > .menubutton-icon-internal-box
-    {
-      border                : 1px inset #99CCCC;
-    }
-  
-  menupopup.button-toolbar-3 
-    {
-      border                : 1px solid #000000;
-    }
-  
-  menuitem.button-toolbar-3 
-    {
-      font-weight           : normal;
-    }
-   
-  .button-toolbar-3[menuactive="true"]
-    {
-      background-color      : #669999;
-      color                 : #FFFFFF;
-      font-weight           : normal;
-    } 
-    
 /** menubuttons on generic grey toolbars
  *  class="button-toolbar"
  **/ 
@@ -39,37 +7,35 @@
       padding               : 1px 3px 1px 3px;
     }
  
- .button-toolbar[open="true"] > .menubutton-internal-box,
- .button-toolbar:hover:active > .menubutton-internal-box
-    {
-      border                : none;
-      padding               : 1px 3px 1px 3px;
-    }
- 
- .button-toolbar[open="true"]
-   {
-     border                 : 1px solid threedface;
-   }
-
 /* toolbar menubuttons */   
-menubutton.button-toolbar, menubutton.button-toolbar-4
+menubutton.button-toolbar-4
   {
     behavior                : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-toolbar-single");
-    border                  : 1px solid threedface;
+    border                  : 1px solid transparent;
   }
   
-menubutton.button-toolbar:hover, menubutton.button-toolbar-4:hover
+menubutton.button-toolbar  
+  {
+    behavior                : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-toolbar-single");
+  }
+    
+menubutton.button-toolbar-4:hover
   {
     border                  : 1px solid threeddarkshadow;
   }
-  
+
 .menubutton-toolbar-single-internal-box
   {
-    border                  : 1px solid threedface;
-    padding                 : 1px 4px 1px 4px;
+    border                  : 1px solid transparent;
+    padding                 : 0px 4px 0px 4px;
   }  
   
-menubutton.button-toolbar:hover > .menubutton-toolbar-single-internal-box,
+menubutton.button-toolbar > .menubutton-toolbar-single-internal-box
+  {
+    border                  : none;
+    padding                 : 0px 4px 0px 4px;
+  }  
+  
 menubutton.button-toolbar-4:hover > .menubutton-toolbar-single-internal-box
   {
     border-left             : 1px solid threedhighlight;
@@ -78,8 +44,6 @@ menubutton.button-toolbar-4:hover > .menubutton-toolbar-single-internal-box
     border-bottom           : 1px solid threedshadow;
   }  
   
-menubutton.button-toolbar:hover:active > .menubutton-toolbar-single-internal-box,
-menubutton.button-toolbar[open="true"] > .menubutton-toolbar-single-internal-box,
 menubutton.button-toolbar-4:hover:active > .menubutton-toolbar-single-internal-box,
 menubutton.button-toolbar-4[open="true"] > .menubutton-toolbar-single-internal-box
   {
@@ -87,7 +51,7 @@ menubutton.button-toolbar-4[open="true"] > .menubutton-toolbar-single-internal-b
     border-top              : 1px solid threedshadow;
     border-right            : 1px solid threedhighlight;
     border-bottom           : 1px solid threedhighlight;
-    padding                 : 2px 3px 0px 5px;
+    padding                 : 0px 4px 0px 4px;
   }  
   
 .menubutton-toolbar-single-dropmarker

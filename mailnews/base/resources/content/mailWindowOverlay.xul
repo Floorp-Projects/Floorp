@@ -789,6 +789,6 @@ Rights Reserved.
 	</box>
 	<statusbarpanel id="security-button"/>
 </statusbar> 
-<toolbox id="taskbar" class="chromeclass-extrachrome toolbox-bottom"/>
+<box id="taskbar" class="chromeclass-extrachrome toolbox-bottom"/>
 
 </overlay>

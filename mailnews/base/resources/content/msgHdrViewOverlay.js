@@ -509,40 +509,43 @@ function ShowMessageHeaderPane()
   if (gViewAllHeaders)
   {
     HideMessageHeaderPane();
-    msgPaneData.ViewAllHeadersToolbar.removeAttribute("hide");
+    msgPaneData.ViewAllHeadersToolbar.removeAttribute("hidden");
     msgPaneData.ViewAllHeadersBox.removeAttribute("collapsed");
   }
   else
   {
-    msgPaneData.ViewAllHeadersToolbar.setAttribute("hide", "true");
+    msgPaneData.ViewAllHeadersToolbar.setAttribute("hidden", "true");
     msgPaneData.ViewAllHeadersBox.setAttribute("collapsed", "true");
     
     var node = document.getElementById("headerPart1");
     if (node)
-      node.removeAttribute("hide");
+      node.removeAttribute("hidden");
     node = document.getElementById("headerPart2");
     if (node)
-      node.removeAttribute("hide");
+      node.removeAttribute("hidden");
+
+/*
     node = document.getElementById("headerPart3");
     if (node)
-      node.removeAttribute("hide");
+      node.removeAttribute("hidden");
+*/
   }
 }
 
 function HideMessageHeaderPane()
 {
-  msgPaneData.ViewAllHeadersToolbar.setAttribute("hide", "true");
+  msgPaneData.ViewAllHeadersToolbar.setAttribute("hidden", "true");
   msgPaneData.ViewAllHeadersBox.setAttribute("collapsed", "true");
 
   var node = document.getElementById("headerPart1");
   if (node)
-    node.setAttribute("hide", "true");
+    node.setAttribute("hidden", "true");
   node = document.getElementById("headerPart2");
   if (node)
-    node.setAttribute("hide", "true");
+    node.setAttribute("hidden", "true");
   node = document.getElementById("headerPart3");
   if (node)
-    node.setAttribute("hide", "true");
+    node.setAttribute("hidden", "true");
 
 }
 

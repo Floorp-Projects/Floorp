@@ -71,8 +71,3 @@ treeitem[container="true"][open="true"][id="NC:SiteMapRoot"] > treerow > .treece
     list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-item.gif");
   }
 
-.tree-cell-twisty
-  {
-    display               : none;
-  }
-  

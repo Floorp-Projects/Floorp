@@ -246,6 +246,6 @@
     </box><!-- status-bar -->
   </box> <!-- appcontent -->
 </box><!-- sidebar-parent -->
-<toolbox id="taskbar" class="toolbox-bottom"/>
+<box id="taskbar" class="toolbox-bottom"/>
 
 </window>

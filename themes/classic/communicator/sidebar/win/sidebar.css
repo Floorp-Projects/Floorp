@@ -1,8 +1,12 @@
 
+#sidebar-splitter 
+  {
+    border-top            : 1px solid threedhighlight;
+  }
+
 #sidebar-box 
   {
     border-left           : 1px solid threedshadow;
-    border-top            : 1px solid threedshadow;
     border-right          : 1px solid threedhighlight;
     border-bottom         : 1px solid threedhighlight;
     background-color      : appworkspace;
@@ -27,7 +31,7 @@
     border-bottom         : 1px solid threedshadow;
     background-color      : threedface;
     padding               : 3px 5px 3px 6px;
-    background-image      : url("chrome://communicator/skin/smallheader-bg.gif");
+    background-image      : url("chrome://communicator/skin/toolbar-bg.gif");
   }
 
 .sidebar-header-text  

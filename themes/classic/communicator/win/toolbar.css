@@ -1,57 +1,10 @@
  
 /******* ToolBox & ToolBar *******/
 
-toolbar
+/* comment out until we get the bg looking right
+.toolbar-primary, menubar
   {
-    background-color      : #CCCCCC;
-    border-bottom         : 1px solid #003366;
-  }
-
-toolbargrippy 
-  { 
-    background-image      : url("chrome://global/skin/taskbar-tab-trans.gif"); 
-    background-repeat     : no-repeat;
-    border-right          : 1px solid #003366;
-    width                 : 10px;
-    height                : 10px;
-  } 
-
-toolbar[collapsed="true"] > toolbargrippy 
-  {
-    width                 : 30px;
-  }
-
-toolbargrippy:hover 
-  {
-    background-color      : #99cccc !important; 
-    background-image      : url("chrome://global/skin/taskbar-tab-hover.gif") !important;  
-  } 
-
-  
-.toolbar-primary 
-  {
-    background-image      : url("chrome://global/skin/navbar-bg.gif");
-    background-color      : #CCCCCC;
-    padding               : 0px;
-    min-height            : 47px;
-    border                : none;
+    background-image      : url("chrome://communicator/skin/toolbar-bg.gif");
   }
   
-.toolbar-primary > toolbargrippy, .toolbar-standard > toolbargrippy
-  {
-    background-color      : #003366; 
-    background-image      : url("chrome://global/skin/taskbar-tab.gif"); 
-    background-repeat     : no-repeat;
-  }
-  
-.toolbar-standard 
-  {
-	  color                 : white;
-	  background-color      : #003366;
-	  padding               : 0px;
-	  margin                : 0px;
-	  border                : none;
-	  min-height            : 46px;
-  }
-
-
+*/

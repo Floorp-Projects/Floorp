@@ -29,6 +29,8 @@ include <$(THEME_ROOT_DEPTH)\theme.mk>
 
 install:: 
 	$(MAKE_INSTALL) navbar-endbox.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
+	$(MAKE_INSTALL) toolbar-bg.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
+	$(MAKE_INSTALL) toolbar-bg.png $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
 	$(MAKE_INSTALL) broken.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
 	$(MAKE_INSTALL) lock.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
 	$(MAKE_INSTALL) unlock.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
@@ -39,6 +41,9 @@ install::
 	$(MAKE_INSTALL) online.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
 	$(MAKE_INSTALL) securityOverlay.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
 	$(MAKE_INSTALL) smallheader-bg.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
+	$(MAKE_INSTALL) search.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
+	$(MAKE_INSTALL) search-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
+	$(MAKE_INSTALL) search-active.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
 
 clobber::
 	rm -f $(DIST)\chrome\$(THEME)\communicator\skin\*.*

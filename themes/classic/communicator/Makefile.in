@@ -40,6 +40,11 @@ EXPORT_RESOURCE = \
 		$(srcdir)/online.gif \
 		$(srcdir)/smallheader-bg.gif \
 		$(srcdir)/securityOverlay.css \
+		$(srcdir)/toolbar-bg.gif \
+		$(srcdir)/toolbar-bg.png \
+		$(srcdir)/search.gif \
+		$(srcdir)/search-active.gif \
+		$(srcdir)/search-hover.gif \
 		$(NULL)
 
 DIRS = bookmarks directory profile regviewer related search sidebar unix wallet xpinstall

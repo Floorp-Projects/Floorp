@@ -203,13 +203,13 @@
   .button-toolbar-3 > .button-internal-box
     {
       border                : 1px outset #99CCCC;
-      padding               : 1px;
+      padding               : 2px 4px 2px 4px;
     }
     
   .button-toolbar-3:hover:active > .button-internal-box 
     {
       border                : 1px inset #99CCCC;
-      padding               : 2px 0px 0px 2px;
+      padding               : 3px 3px 1px 5px;
     } 
 
 /** Expanding Region Button **/

@@ -31,12 +31,12 @@ Rights Reserved.
 <script src="chrome://messenger/content/mime.js"/>
 
 	<toolbox id="msgHeaderView">
-        <toolbar id="viewAllHeadersToolbar" hide="true">
+        <toolbar id="viewAllHeadersToolbar" hidden="true">
             <box id="viewAllHeadersBox" class="header-part1" align="vertical" flex="1" collapsed="true">
             </box>
         </toolbar>
 
-		<toolbar id="headerPart1" hide="true">
+		<toolbar id="headerPart1" hidden="true">
 			<box class="header-splitter" align="horizontal" flex="1">
 				<box class="header-part1" align="vertical" flex="1">
 					<box id="SubjectBox" class="headerBox" align="horizontal" collapsed="true">
@@ -71,7 +71,7 @@ Rights Reserved.
       </box>
 		</toolbar>
 
-		<toolbar id="headerPart2" hide="true">
+		<toolbar id="headerPart2" hidden="true">
 			<box class="header-part2" align="vertical" flex="1">
 				<box id="ToBox" class="headerBox" align="horizontal" collapsed="true">
             <text class="headerdisplayname" value="&toField.label;" popup="allHeadersPopup"/>
@@ -106,7 +106,7 @@ Rights Reserved.
 			</box>
 		</toolbar>
     
-    <toolbar id="headerPart3" hide="true">
+    <toolbar id="headerPart3" hidden="true">
       <box class="header-part3" align="vertical" flex="1">
         <box id="UserAgentBox" class="headerBox" align="horizontal" collapsed="true">
           <text class="headerdisplayname" value="&userAgentField.label;" popup="allHeadersPopup"/>

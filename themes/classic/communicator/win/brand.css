@@ -2,17 +2,12 @@
 #navigator-throbber
   {
     behavior              : url("chrome://global/content/xulBindings.xml#buttontop");
-    border                : 1px solid threedface;
+    border                : 1px solid threeddarkshadow;
     list-style-image      : url("chrome://global/skin/animthrob_single.gif");
-    margin                : 0px;
+    margin                : 0px 2px 0px 10px;
     min-width             : 0px;
     cursor                : pointer;
   }  
-  
-#navigator-throbber:hover
-  {
-    border                : 1px solid threeddarkshadow;
-  }
   
 #navigator-throbber > .button-internal-box
   {
@@ -21,15 +16,20 @@
     border-right          : 1px solid threedshadow;
     border-bottom         : 1px solid threedshadow;
     padding               : 1px;
+  }
+  
+#navigator-throbber > .button-internal-box > .button-text-container
+  {
+    display               : none;
   }  
 
 #navigator-throbber:hover:active > .button-internal-box
   {
-    border-left           : 1px solid threedshadow;
-    border-top            : 1px solid threedshadow;
-    border-right          : 1px solid threedhighlight;
-    border-bottom         : 1px solid threedhighlight;
-    padding               : 2px 0xp 0xp 2px;
+    border-left           : 1px solid threedshadow !important;
+    border-top            : 1px solid threedshadow !important;
+    border-right          : 1px solid threedhighlight !important;
+    border-bottom         : 1px solid threedhighlight !important;
+    padding               : 2px 0xp 0xp 2px !important;
   }  
   
 #navigator-throbber[busy="true"]
