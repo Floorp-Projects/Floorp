@@ -64,11 +64,15 @@ public:
      NS_IMETHOD CreateAnonymousContent(nsIPresContext* aPresContext,
                                        nsISupportsArray& aAnonymousItems)=0;
 
-     // If the creator doesn't want to create special fframe ro frame hierarchy
-     // then it should null out the style content arg and return NS_ERROR_FAILURE
+     // If the creator doesn't want to create a special frame or frame hierarchy
+     // then it should null out aFrame and return NS_ERROR_FAILURE
      NS_IMETHOD CreateFrameFor(nsIPresContext*   aPresContext,
                                nsIContent *      aContent,
                                nsIFrame**        aFrame)=0;
+
+     // This gets called after the frames for the anonymous content have been
+     // created and added to the frame tree. By default it does nothing.
+     virtual void PostCreateFrames() {}
 };
 
 nsresult NS_CreateAnonymousNode(nsIContent* aParent, nsIAtom* aTag, PRInt32 aNameSpaceId, nsCOMPtr<nsIContent>& aNewNode);

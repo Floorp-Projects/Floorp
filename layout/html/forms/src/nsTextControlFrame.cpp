@@ -1526,13 +1526,16 @@ nsTextControlFrame::CalculateSizeStandard(nsIPresContext*       aPresContext,
   return NS_OK;
 }
 
-//------------------------------------------------------------------
+void nsTextControlFrame::PostCreateFrames() {
+  InitEditor();
+}
+
 NS_IMETHODIMP
 nsTextControlFrame::CreateFrameFor(nsIPresContext*   aPresContext,
                                        nsIContent *      aContent,
                                        nsIFrame**        aFrame)
 {
-  aContent = nsnull;
+  *aFrame = nsnull;
   return NS_ERROR_FAILURE;
 }
 
@@ -1951,8 +1954,6 @@ nsTextControlFrame::Reflow(nsIPresContext*   aPresContext,
   DO_GLOBAL_REFLOW_COUNT("nsTextControlFrame", aReflowState.reason);
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
 
-  InitEditor();
-
   // make sure the the form registers itself on the initial/first reflow
   if (mState & NS_FRAME_FIRST_REFLOW) {
     nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
@@ -2044,8 +2045,6 @@ nsTextControlFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
 
   if (!reflowState)
     return NS_OK;
-
-  InitEditor();
 
   if (mState & NS_FRAME_FIRST_REFLOW)
     mNotifyOnInput = PR_TRUE; //its ok to notify now. all has been prepared.
