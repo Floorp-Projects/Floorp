@@ -35,7 +35,6 @@ CPP_OBJS=                               \
  .\$(OBJDIR)\nsWebShellWindow.obj       \
  .\$(OBJDIR)\nsAppShellFactory.obj      \
  .\$(OBJDIR)\nsCommandLineService.obj   \
- .\$(OBJDIR)\nsFileLocations.obj        \
      .\$(OBJDIR)\nsWindowMediator.obj        \
 	.\$(OBJDIR)\nsAbout.obj \
 	.\$(OBJDIR)\nsUserInfoWin.obj \

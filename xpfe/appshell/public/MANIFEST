@@ -5,7 +5,6 @@
 nsAppleEvents.h
 nsAppShellCIDs.h
 nsIWebShellWindow.h
-nsFileLocations.h
 nsIDOMXPConnectFactory.h
 nsINetSupportDialogService.h
 nsISplashScreen.h

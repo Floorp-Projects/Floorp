@@ -32,7 +32,6 @@ XPIDL_MODULE	= appshell
 EXPORTS		= \
 		nsIWebShellWindow.h \
 		nsAppShellCIDs.h \
-		nsFileLocations.h \
 		nsIDOMXPConnectFactory.h \
 		nsISplashScreen.h \
 		nsINativeAppSupport.h \
@@ -42,7 +41,6 @@ XPIDLSRCS	= \
 		nsIAppShellService.idl \
 		nsICmdLineService.idl \
 		nsICmdLineHandler.idl \
-		nsIFileLocator.idl \
 		nsIWindowMediator.idl \
 		nsIXULWindow.idl \
 		nsIUserInfo.idl \

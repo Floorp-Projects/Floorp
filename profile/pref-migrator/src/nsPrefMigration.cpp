@@ -43,8 +43,6 @@
 #include "plstr.h"
 #include "prprf.h"
 #include "nsXPIDLString.h"
-#include "nsIFileLocator.h"
-#include "nsFileLocations.h"
 #include "nsIStringBundle.h"
 #include "nsISupportsPrimitives.h"
 #include "nsProxiedService.h"
@@ -221,7 +219,6 @@ typedef struct
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID );
-static NS_DEFINE_IID(kIFileLocatorIID,      NS_IFILELOCATOR_IID);
 static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 static NS_DEFINE_IID(kIPrefMigrationIID, NS_IPREFMIGRATION_IID);
 static NS_DEFINE_IID(kPrefMigrationCID,  NS_PREFMIGRATION_CID);
@@ -229,7 +226,6 @@ static NS_DEFINE_IID(kPrefMigrationCID,  NS_PREFMIGRATION_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
-static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);

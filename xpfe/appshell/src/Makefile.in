@@ -40,7 +40,6 @@ CPPSRCS		= \
 		nsAppShellService.cpp \
 		nsWebShellWindow.cpp \
 		nsCommandLineService.cpp \
-		nsFileLocations.cpp \
 		nsWindowMediator.cpp \
 		nsAbout.cpp \
 		nsAppShellFactory.cpp \

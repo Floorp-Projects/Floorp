@@ -32,7 +32,6 @@
 #include "nsIFileTransportService.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
-#include "nsFileLocations.h"
 #include "nsILocalFile.h"
 #include "nsMimeTypes.h"
 

@@ -29,7 +29,6 @@ XPIDLSRCS =                        \
 		.\nsIAppShellService.idl   \
 		.\nsICmdLineService.idl	\
 		.\nsICmdLineHandler.idl	\
-		.\nsIFileLocator.idl       \
 		.\nsIWindowMediator.idl	   \
 		.\nsIXULWindow.idl       \
         .\nsIUserInfo.idl   \
@@ -39,7 +38,6 @@ XPIDLSRCS =                        \
 EXPORTS =                         \
         nsIWebShellWindow.h       \
         nsAppShellCIDs.h          \
-        nsFileLocations.h         \
         nsISplashScreen.h         \
         nsINativeAppSupport.h     \
         $(NULL)

@@ -37,8 +37,6 @@
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 //
-#include "nsFileLocations.h"
-#include "nsIFileLocator.h"
 #include "nsIFileSpec.h"
 
 #define TEST_URL "resource:/res/strres.properties"

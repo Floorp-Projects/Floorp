@@ -92,7 +92,6 @@
 
 #include "nsIDocumentLoader.h"
 #include "nsIObserverService.h"
-#include "nsFileLocations.h"
 
 #include "nsIFileSpec.h"
 

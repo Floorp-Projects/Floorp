@@ -25,7 +25,6 @@
 #include "nsIComponentManager.h"
 #include "nsAppShellCIDs.h"
 #include "nsICmdLineService.h"
-#include "nsIFileLocator.h"
 #include "nsIWindowMediator.h"
 #include "rdf.h"
 #include "nsAbout.h"
@@ -36,7 +35,6 @@
 #include "nsCommandLineService.h"  
 #include "nsAppShellService.h"
 #include "nsWindowMediator.h"
-#include "nsFileLocations.h"
 #include "nsTimingService.h"
 
 #ifdef XP_MAC
@@ -54,7 +52,6 @@ nsresult NS_NewAppShellServiceFactory(nsIFactory** aFactory);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCmdLineService);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShellService);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowMediator);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsFileLocator);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUserInfo);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimingService);
 
@@ -79,11 +76,6 @@ static nsModuleComponentInfo gAppShellModuleInfo[] =
     NS_ABOUT_CID,
     NS_ABOUT_MODULE_CONTRACTID_PREFIX,
     nsAbout::Create,
-  },
-  { "File Locator Service",
-    NS_FILELOCATOR_CID,
-    NS_FILELOCATOR_CONTRACTID,
-    nsFileLocatorConstructor,
   },
   { "User Info Service",
     NS_USERINFO_CID,
