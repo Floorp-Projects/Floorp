@@ -48,6 +48,8 @@
 #include "nsICategoryManager.h"
 #include "nsISupportsPrimitives.h"
 
+#include "nsHTTPRequest.h"
+
 #ifdef XP_UNIX
 #include <sys/utsname.h>
 #endif /* XP_UNIX */
@@ -767,6 +769,9 @@ nsHTTPHandler::Init()
     rv = NS_NewISupportsArray(getter_AddRefs(mIdleTransports));
     if (NS_FAILED(rv)) return rv;
 
+    rv = NS_NewISupportsArray(getter_AddRefs(mPipelinedRequests));
+    if (NS_FAILED(rv)) return rv;
+
 
     // Startup the http category
     // Bring alive the objects in the http-protocol-startup category
@@ -781,10 +786,11 @@ nsHTTPHandler::~nsHTTPHandler()
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("Deleting nsHTTPHandler [this=%x].\n", this));
 
-    mConnections->Clear();
-    mIdleTransports->Clear();
-    mPendingChannelList->Clear();
-    mTransportList->Clear();
+    mConnections        -> Clear ();
+    mIdleTransports     -> Clear ();
+    mPendingChannelList -> Clear ();
+    mTransportList      -> Clear ();
+    mPipelinedRequests  -> Clear ();
 
     // Release the Atoms used by the HTTP protocol...
     nsHTTPAtoms::ReleaseAtoms();
@@ -802,7 +808,6 @@ nsresult nsHTTPHandler::RequestTransport (nsIURI* i_Uri,
                                          PRUint32 bufferSegmentSize,
                                          PRUint32 bufferMaxSize,
                                          nsIChannel** o_pTrans,
-                                         PRUint32 * o_Capabilities,
                                          PRUint32 flags)
 {
     nsresult rv;
@@ -826,9 +831,6 @@ nsresult nsHTTPHandler::RequestTransport (nsIURI* i_Uri,
         
         rv = i_Channel -> GetProxyPort (&proxyPort);
         if (NS_FAILED (rv)) return rv;
-
-        if (o_Capabilities != NULL)
-            *o_Capabilities = getCapabilities (proxy, proxyPort, DEFAULT_PROXY_CAPABILITIES);
     }
     else
     {
@@ -840,9 +842,6 @@ nsresult nsHTTPHandler::RequestTransport (nsIURI* i_Uri,
         
         if (port == -1)
             GetDefaultPort (&port);
-
-        if (o_Capabilities != NULL)
-            *o_Capabilities = getCapabilities (host, port, DEFAULT_SERVER_CAPABILITIES);
     }
 
     nsIChannel* trans = nsnull;
@@ -855,57 +854,64 @@ nsresult nsHTTPHandler::RequestTransport (nsIURI* i_Uri,
 
         // remove old and dead transports first
 
-        for (index = count - 1; index >= 0; --index)
+        if (count > 0)
         {
-            nsIChannel* cTrans = (nsIChannel*) mIdleTransports -> ElementAt (index);
-
-            if (cTrans)
+            for (index = count - 1; index >= 0; --index)
             {
-                nsresult rv;
-                nsCOMPtr<nsISocketTransport> sTrans = do_QueryInterface (cTrans, &rv);
-                PRBool isAlive = PR_TRUE;
+                nsCOMPtr<nsIChannel> cTrans = dont_AddRef ((nsIChannel*) mIdleTransports -> ElementAt (index) );
 
-                if (NS_FAILED (rv) || NS_FAILED (sTrans -> IsAlive (mKeepAliveTimeout, &isAlive))
-                    || !isAlive)
-                    mIdleTransports -> RemoveElement (cTrans);
+                if (cTrans)
+                {
+                    nsresult rv;
+                    nsCOMPtr<nsISocketTransport> sTrans = do_QueryInterface (cTrans, &rv);
+                    PRBool isAlive = PR_TRUE;
+
+                    if (NS_FAILED (rv) || NS_FAILED (sTrans -> IsAlive (mKeepAliveTimeout, &isAlive))
+                        || !isAlive)
+                        mIdleTransports -> RemoveElement (cTrans);
+
+                }
             }
         }
 
         mIdleTransports -> Count (&count);
 
-        for (index = count - 1; index >= 0; --index)
+        if (count > 0)
         {
-            nsCOMPtr<nsIURI> uri;
-            nsIChannel* cTrans = (nsIChannel*) mIdleTransports -> ElementAt (index);
-            
-            if (cTrans && 
-                    (NS_SUCCEEDED (cTrans -> GetURI (getter_AddRefs (uri)))))
+            for (index = count - 1; index >= 0; --index)
             {
-                nsXPIDLCString idlehost;
-                if (NS_SUCCEEDED (uri -> GetHost (getter_Copies (idlehost))))
+                nsCOMPtr<nsIURI> uri;
+                nsCOMPtr<nsIChannel> cTrans = dont_AddRef ((nsIChannel*) mIdleTransports -> ElementAt (index) );
+            
+                if (cTrans && 
+                        (NS_SUCCEEDED (cTrans -> GetURI (getter_AddRefs (uri)))))
                 {
-                    if (!PL_strcasecmp (usingProxy ? proxy : host, idlehost))
+                    nsXPIDLCString idlehost;
+                    if (NS_SUCCEEDED (uri -> GetHost (getter_Copies (idlehost))))
                     {
-                        PRInt32 idleport;
-                        if (NS_SUCCEEDED (uri -> GetPort (&idleport)))
+                        if (!PL_strcasecmp (usingProxy ? proxy : host, idlehost))
                         {
-                            if (idleport == -1)
-                                GetDefaultPort (&idleport);
-
-                            if (idleport == usingProxy ? proxyPort : port)
+                            PRInt32 idleport;
+                            if (NS_SUCCEEDED (uri -> GetPort (&idleport)))
                             {
-                                // Addref it before removing it!
-                                NS_ADDREF (cTrans);
-                                // Remove it from the idle
-                                mIdleTransports -> RemoveElement (cTrans);
-                                trans = cTrans;
-                                break;// break out of the for loop 
+                                if (idleport == -1)
+                                    GetDefaultPort (&idleport);
+
+                                if (idleport == usingProxy ? proxyPort : port)
+                                {
+                                    // Addref it before removing it!
+                                    trans = cTrans;
+                                    NS_ADDREF (trans);
+                                    // Remove it from the idle
+                                    mIdleTransports -> RemoveElement (trans);
+                                    break;// break out of the for loop 
+                                }
                             }
                         }
                     }
                 }
-            }
-        } /* for */
+            } /* for */
+        } /* count > 0 */
     }
     // if we didn't find any from the keep-alive idlelist
     if (trans == nsnull)
@@ -1288,4 +1294,82 @@ nsHTTPHandler::getCapabilities (const char *host, PRInt32 port, PRUint32 defCap)
         capabilities = mCapabilities & ((PRUint32) p);
 
     return capabilities;
+}
+
+
+nsresult
+nsHTTPHandler::GetPipelinedRequest (nsIHTTPChannel* i_Channel, nsHTTPPipelinedRequest ** o_Req, PRBool checkExists)
+{
+    if (o_Req == NULL)
+        return NS_ERROR_NULL_POINTER;
+
+    nsCOMPtr<nsIURI> uri;
+    nsXPIDLCString  host;
+    PRInt32         port = -1;
+    nsresult rv = i_Channel -> GetURI (getter_AddRefs (uri));
+
+    if (NS_SUCCEEDED (rv))
+    {
+        rv = uri -> GetHost (getter_Copies (host));
+        if (NS_SUCCEEDED (rv) && host)
+        {
+            uri -> GetPort (&port);
+            if (port == -1)
+                GetDefaultPort (&port);
+        }
+    }
+
+    PRUint32 count = 0;
+    PRUint32 index = 0;
+    mPipelinedRequests -> Count (&count);
+    
+    nsHTTPPipelinedRequest *pReq = nsnull;
+
+    for (index = 0; index < count; index++)
+    {
+        nsHTTPPipelinedRequest *pReq = (nsHTTPPipelinedRequest *)mPipelinedRequests -> ElementAt (index);
+        if (pReq != NULL)
+        {
+            PRBool same = PR_TRUE;
+            pReq -> GetSameRequest (host, port, &same);
+            if (same)
+            {
+                mPipelinedRequests -> RemoveElement (pReq);
+                break;
+            }
+            else
+            {
+                NS_RELEASE (pReq);
+            }
+        }
+    } /* for */
+
+    if (!checkExists && pReq == nsnull)
+    {
+        PRBool usingProxy = PR_FALSE;
+        i_Channel -> GetUsingProxy (&usingProxy);
+        PRUint32 capabilities;
+
+        if (usingProxy)
+            capabilities = getCapabilities (host, port, DEFAULT_PROXY_CAPABILITIES );
+        else
+            capabilities = getCapabilities (host, port, DEFAULT_SERVER_CAPABILITIES);
+
+        pReq = new nsHTTPPipelinedRequest (this, host, port, capabilities);
+        NS_ADDREF (pReq);
+    }
+    *o_Req = pReq;
+
+    return NS_OK;
+}
+
+nsresult
+nsHTTPHandler::AddPipelinedRequest (nsHTTPPipelinedRequest *pReq)
+{
+    if (pReq == NULL)
+        return NS_ERROR_NULL_POINTER;
+
+    mPipelinedRequests -> AppendElement (pReq);
+
+    return NS_OK;
 }
