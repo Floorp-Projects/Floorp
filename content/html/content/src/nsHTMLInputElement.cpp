@@ -97,6 +97,21 @@ static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
 
 typedef nsIGfxTextControlFrame2 textControlPlace;
 
+//
+// Accessors for mBitField
+//
+#define BF_SKIP_FOCUS_EVENT 0
+#define BF_HANDLING_CLICK 1
+#define BF_VALUE_CHANGED 2
+#define BF_CHECKED_CHANGED 3
+#define BF_CHECKED 4
+
+#define GET_BOOLBIT(bitfield, field) (((bitfield) & (0x01 << (field))) \
+                                        ? PR_TRUE : PR_FALSE)
+#define SET_BOOLBIT(bitfield, field, b) ((b) \
+                                        ? ((bitfield) |=  (0x01 << (field))) \
+                                        : ((bitfield) &= ~(0x01 << (field))))
+
 class nsHTMLInputElement : public nsGenericHTMLLeafFormElement,
                            public nsIDOMHTMLInputElement,
                            public nsIDOMNSHTMLInputElement,
@@ -160,14 +175,16 @@ public:
                      const nsAReadableString& aValue, PRBool aNotify) {
     nsresult rv = nsGenericHTMLLeafFormElement::SetAttr(aNameSpaceID, aName,
                                                         aValue, aNotify);
-    if (aName == nsHTMLAtoms::value && !mValueChanged
+    if (aName == nsHTMLAtoms::value
+        && !GET_BOOLBIT(mBitField, BF_VALUE_CHANGED)
         && (mType == NS_FORM_INPUT_TEXT
             || mType == NS_FORM_INPUT_PASSWORD
             || mType == NS_FORM_INPUT_FILE
             || mType == NS_FORM_INPUT_HIDDEN)) {
       Reset();
     }
-    if (aName == nsHTMLAtoms::checked && !mCheckedChanged
+    if (aName == nsHTMLAtoms::checked
+        && !GET_BOOLBIT(mBitField, BF_CHECKED_CHANGED)
         && (mType == NS_FORM_INPUT_CHECKBOX || mType == NS_FORM_INPUT_RADIO)) {
       Reset();
     }
@@ -184,10 +201,12 @@ public:
     nsresult rv = nsGenericHTMLLeafElement::UnsetAttr(aNameSpaceID,
                                                       aAttribute,
                                                       aNotify);
-    if (aAttribute == nsHTMLAtoms::value && !mValueChanged) {
+    if (aAttribute == nsHTMLAtoms::value
+        && !GET_BOOLBIT(mBitField, BF_VALUE_CHANGED)) {
       Reset();
     }
-    if (aAttribute == nsHTMLAtoms::checked && !mCheckedChanged) {
+    if (aAttribute == nsHTMLAtoms::checked
+        && !GET_BOOLBIT(mBitField, BF_CHECKED_CHANGED)) {
       Reset();
     }
     return rv;
@@ -228,15 +247,14 @@ protected:
   nsCOMPtr<nsIControllers> mControllers;
 
   PRInt8                   mType;
-  PRPackedBool             mSkipFocusEvent;
-  PRPackedBool             mHandlingClick;
-  PRPackedBool             mValueChanged;
-  PRPackedBool             mCheckedChanged;
-  PRPackedBool             mChecked;
+  // See GET_BOOLBIT / SET_BOOLBIT macros and BF_* field identifiers
+  PRInt8                   mBitField;
   char*                    mValue;
 };
 
+//
 // construction, destruction
+//
 
 nsresult
 NS_NewHTMLInputElement(nsIHTMLContent** aInstancePtrResult,
@@ -268,12 +286,8 @@ NS_NewHTMLInputElement(nsIHTMLContent** aInstancePtrResult,
 nsHTMLInputElement::nsHTMLInputElement()
 {
   mType = NS_FORM_INPUT_TEXT; // default value
-  mSkipFocusEvent = PR_FALSE;
-  mHandlingClick = PR_FALSE;
-  mValueChanged = PR_FALSE;
+  mBitField = 0;
   mValue = nsnull;
-  mCheckedChanged = PR_FALSE;
-  mChecked = PR_FALSE;
 }
 
 nsHTMLInputElement::~nsHTMLInputElement()
@@ -445,7 +459,7 @@ nsHTMLInputElement::GetValue(nsAWritableString& aValue)
     if (frameOwnsValue) {
       formControlFrame->GetProperty(nsHTMLAtoms::value, aValue);
     } else {
-      if (!mValueChanged || !mValue) {
+      if (!GET_BOOLBIT(mBitField, BF_VALUE_CHANGED) || !mValue) {
         GetDefaultValue(aValue);
       } else {
         aValue = NS_ConvertUTF8toUCS2(mValue);
@@ -557,7 +571,7 @@ nsHTMLInputElement::SetValueSecure(const nsAReadableString& aValue,
 NS_IMETHODIMP
 nsHTMLInputElement::SetValueChanged(PRBool aValueChanged)
 {
-  mValueChanged = aValueChanged;
+  SET_BOOLBIT(mBitField, BF_VALUE_CHANGED, aValueChanged);
   if (!aValueChanged) {
     if (mValue) {
       nsMemory::Free(mValue);
@@ -599,10 +613,10 @@ nsHTMLInputElement::GetChecked(PRBool* aChecked)
       *aChecked = PR_FALSE;
     }
   } else {
-    if (!mCheckedChanged) {
+    if (!GET_BOOLBIT(mBitField, BF_CHECKED_CHANGED)) {
       GetDefaultChecked(aChecked);
     } else {
-      *aChecked = mChecked;
+      *aChecked = GET_BOOLBIT(mBitField, BF_CHECKED);
     }
   }
 
@@ -626,12 +640,12 @@ nsHTMLInputElement::SetPresStateChecked(nsIHTMLContent * aHTMLContent,
 NS_IMETHODIMP 
 nsHTMLInputElement::SetChecked(PRBool aValue)
 {
-  mCheckedChanged = PR_TRUE;
+  SET_BOOLBIT(mBitField, BF_CHECKED_CHANGED, PR_TRUE);
 
   //
   // Set the value
   //
-  mChecked = aValue;
+  SET_BOOLBIT(mBitField, BF_CHECKED, aValue);
 
   //
   // Notify the frame
@@ -707,7 +721,7 @@ nsHTMLInputElement::SetChecked(PRBool aValue)
     }
   }
   else if (type == NS_FORM_INPUT_CHECKBOX) {
-    if (mChecked)
+    if (GET_BOOLBIT(mBitField, BF_CHECKED))
       SetAttr(kNameSpaceID_None, nsHTMLAtoms::inputCheckedPseudo,
               NS_LITERAL_STRING(""), PR_TRUE);
     else
@@ -916,8 +930,8 @@ nsHTMLInputElement::Click()
 {
   nsresult rv = NS_OK;
 
-  if (mHandlingClick)   // Fixes crash as in bug 41599 --heikki@netscape.com
-      return rv;
+  if (GET_BOOLBIT(mBitField, BF_HANDLING_CLICK)) // Fixes crash as in bug 41599
+      return rv;                      // --heikki@netscape.com
 
   // first see if we are disabled or not. If disabled then do nothing.
   nsAutoString disabled;
@@ -959,12 +973,12 @@ nsHTMLInputElement::Click()
             event.clickCount = 0;
             event.widget = nsnull;
             
-            mHandlingClick = PR_TRUE;
+            SET_BOOLBIT(mBitField, BF_HANDLING_CLICK, PR_TRUE);
 
             rv = HandleDOMEvent(context, &event, nsnull, NS_EVENT_FLAG_INIT,
                                 &status);
 
-            mHandlingClick = PR_FALSE;
+            SET_BOOLBIT(mBitField, BF_HANDLING_CLICK, PR_FALSE);
           }
         }
       }
@@ -1014,8 +1028,10 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                    nsEventStatus* aEventStatus)
 {
   NS_ENSURE_ARG_POINTER(aEventStatus);
-  if ((aEvent->message == NS_FOCUS_CONTENT && mSkipFocusEvent) ||
-      (aEvent->message == NS_BLUR_CONTENT && mSkipFocusEvent)) {
+  if ((aEvent->message == NS_FOCUS_CONTENT
+       && GET_BOOLBIT(mBitField, BF_SKIP_FOCUS_EVENT))
+      || (aEvent->message == NS_BLUR_CONTENT
+          && GET_BOOLBIT(mBitField, BF_SKIP_FOCUS_EVENT))) {
     return NS_OK;
   }
 
@@ -1249,9 +1265,9 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
       case NS_FOCUS_CONTENT:
       {
         if (formControlFrame) {
-          mSkipFocusEvent = PR_TRUE;
+          SET_BOOLBIT(mBitField, BF_SKIP_FOCUS_EVENT, PR_TRUE);
           formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
-          mSkipFocusEvent = PR_FALSE;
+          SET_BOOLBIT(mBitField, BF_SKIP_FOCUS_EVENT, PR_FALSE);
           return NS_OK;
         }
       }                                                                         
@@ -1793,7 +1809,7 @@ nsHTMLInputElement::Reset()
       PRBool resetVal;
       GetDefaultChecked(&resetVal);
       rv = SetChecked(resetVal);
-      mCheckedChanged = PR_FALSE;
+      SET_BOOLBIT(mBitField, BF_CHECKED_CHANGED, PR_FALSE);
       break;
     }
     case NS_FORM_INPUT_HIDDEN:
