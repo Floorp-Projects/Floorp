@@ -203,7 +203,7 @@ protected:
   nsString*   mLastModified;
   nsString*   mReferrer;
   nsDTDMode mDTDMode;
-  nsVoidArray mImageMaps;
+  nsSupportsArray mImageMaps;
 
   nsContentList *mImages;
   nsContentList *mApplets;
