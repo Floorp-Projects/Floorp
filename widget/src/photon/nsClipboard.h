@@ -43,13 +43,14 @@ public:
   virtual ~nsClipboard();
 
   // nsIClipboard  
-  NS_IMETHOD ForceDataToClipboard();
-  NS_IMETHOD HasDataMatchingFlavors(nsISupportsArray* aFlavorList, PRBool * outResult);
-
+  NS_IMETHOD ForceDataToClipboard ( PRInt32 aWhichClipboard );
+  NS_IMETHOD HasDataMatchingFlavors(nsISupportsArray* aFlavorList, 
+                                      PRInt32 aWhichClipboard, 
+                                      PRBool * outResult);
 protected:
-  NS_IMETHOD SetNativeClipboardData();
-  NS_IMETHOD GetNativeClipboardData(nsITransferable * aTransferable);
-
+ NS_IMETHOD SetNativeClipboardData(PRInt32 aWhichClipboard);
+  NS_IMETHOD GetNativeClipboardData(nsITransferable * aTransferable, 
+                                    PRInt32 aWhichClipboard );
   nsresult GetFormat(const char* aMimeStr, PhClipHeader *cliphdr );
 };
 

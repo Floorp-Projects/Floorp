@@ -65,7 +65,7 @@ nsClipboard::~nsClipboard()
 
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsClipboard::ForceDataToClipboard()
+NS_IMETHODIMP nsClipboard::ForceDataToClipboard(PRInt32 aWhichClipboard)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsClipboard::ForceDataToClipboard this=<%p>\n", this));
 
@@ -83,7 +83,7 @@ NS_IMETHODIMP nsClipboard::ForceDataToClipboard()
 
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsClipboard::SetNativeClipboardData()
+NS_IMETHODIMP nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsClipboard::SetNativeClipboardData this=<%p>\n", this));
 
@@ -215,7 +215,9 @@ printf("nsClipboard::setNativeClipboardData 2 mbsbuffer=<%s> dataLen=<%d> len=<%
 
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable)
+NS_IMETHODIMP
+nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable, 
+                                    PRInt32 aWhichClipboard)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsClipboard::GetNativeClipboardData this=<%p>\n", this));
 #ifdef DEBUG_CLIPBOARD
@@ -344,7 +346,9 @@ printf("nsClipboard::GetNativeClipboardData 2 data=<%s> dataLen=<%d>\n", data, d
 }
 
 NS_IMETHODIMP
-nsClipboard::HasDataMatchingFlavors(nsISupportsArray* aFlavorList, PRBool * outResult)
+nsClipboard::HasDataMatchingFlavors(nsISupportsArray* aFlavorList, 
+                                    PRInt32 aWhichClipboard, 
+                                    PRBool * outResult)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsClipboard::HasDataMatchingFlavors this=<%p>\n", this));
 
