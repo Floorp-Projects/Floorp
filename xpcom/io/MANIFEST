@@ -1,6 +1,5 @@
 nsEscape.h
 nsFileSpec.h
-nsFileSpecImpl.h
 nsFileSpecStreaming.h
 nsFileStream.h
 nsIByteBufferInputStream.h

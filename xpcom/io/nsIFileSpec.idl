@@ -42,7 +42,8 @@ interface nsIInputStream;
 
 %}
 
-native nsFileSpec(nsFileSpec);
+      native nsFileSpec(nsFileSpec);
+[ref] native nsFileSpecRef(nsFileSpec);
 
 [scriptable, uuid(d8c0a080-0868-11d3-915f-d9d889d48e3c)]
 interface nsIFileSpec : nsISupports
@@ -67,6 +68,7 @@ interface nsIFileSpec : nsISupports
 	readonly attribute nsIInputStream InputStream;
 	readonly attribute nsIOutputStream OutputStream;
 	[nonscriptable] readonly attribute nsFileSpec FileSpec;
+	[nonscriptable] void setFromFileSpec([const] in nsFileSpecRef spec);
 	
 	attribute string FileContents;
 
@@ -135,7 +137,7 @@ interface nsIDirectoryIterator : nsISupports
 
 %{C++
 // Factory methods if you link with xpcom
-NS_COM nsresult NS_NewFileSpecWithSpec(nsFileSpec aSrcFileSpec, nsIFileSpec **result);
+NS_COM nsresult NS_NewFileSpecWithSpec(const nsFileSpec& aSrcFileSpec, nsIFileSpec **result);
 NS_COM nsresult NS_NewFileSpec(nsIFileSpec** result);
 NS_COM nsresult NS_NewDirectoryIterator(nsIDirectoryIterator** result);
 

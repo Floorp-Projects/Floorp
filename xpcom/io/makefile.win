@@ -26,7 +26,6 @@ MODULE = xpcom
 EXPORTS =                          \
         nsEscape.h                 \
         nsFileSpec.h               \
-        nsFileSpecImpl.h           \
         nsFileSpecStreaming.h      \
         nsFileStream.h             \
         nsIFileStream.h            \
