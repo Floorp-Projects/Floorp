@@ -31,7 +31,7 @@ EXPORTS =                               \
         nsILinkHandler.h                \
         nsIThrobber.h                   \
         nsIWebShell.h                   \
-        nsIClipboardCommands            \
+        nsIClipboardCommands.h          \
         nsweb.h                         \
         $(NULL)
 
