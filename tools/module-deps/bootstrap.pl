@@ -298,13 +298,13 @@ sub FindMakefiles {
 
   #print "Configuring nspr ... \n";
   #chdir("$basedir/mozilla/nsprpub");
-  #my $nspr_configure_cmd = "./configure";
+  #my $nspr_configure_cmd = "sh ./configure";
   #system("$nspr_configure_cmd");
 
   print "\nConfiguring ... \n";
   unlink("$basedir/mozilla/config.cache");
   chdir("$basedir/mozilla");
-  my $configure_cmd = "./configure --enable-standalone-modules=$root_modules --disable-ldap --disable-tests --disable-installer";
+  my $configure_cmd = "sh ./configure --enable-standalone-modules=$root_modules --disable-ldap --disable-tests --disable-installer";
   $rv = run_shell_command("$configure_cmd");
 
   #
