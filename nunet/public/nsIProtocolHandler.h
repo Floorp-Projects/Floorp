@@ -72,4 +72,7 @@ public:
 
 };
 
+// Base Prog ID! Looks like a url but don't be fooled by its looks... it can kreate ya.
+#define NS_COMPONENT_NETSCAPE_NETWORK_PROTOCOLS "component://netscape/network/protocols&name="
+
 #endif /* _nsIProtocolHandler_h_ */
