@@ -936,18 +936,26 @@ nsresult nsScanner::ReadWhitespace(nsString& aString,
   while(!done && current != end) {
     switch(theChar) {
       case '\n':
-      case '\r': ++aNewlinesSkipped;
-      case ' ' :
-      case '\b':
-      case '\t':
+      case '\r':
         {
+          ++aNewlinesSkipped;
           PRUnichar thePrevChar = theChar;
           theChar = (++current != end) ? *current : '\0';
           if ((thePrevChar == '\r' && theChar == '\n') ||
               (thePrevChar == '\n' && theChar == '\r')) {
             theChar = (++current != end) ? *current : '\0'; // CRLF == LFCR => LF
+          } else if (thePrevChar == '\r') {
+            // Lone CR becomes CRLF; callers should know to remove extra CRs
+            AppendUnicodeTo(origin, current, aString);
+            aString.Append(PRUnichar('\n'));
+            origin = current;
           }
         }
+        break;
+      case ' ' :
+      case '\b':
+      case '\t':
+        theChar = (++current != end) ? *current : '\0';
         break;
       default:
         done = PR_TRUE;
@@ -965,6 +973,8 @@ nsresult nsScanner::ReadWhitespace(nsString& aString,
   return result;
 }
 
+//XXXbz callers of this have to manage their lone '\r' themselves if they want
+//it to work.  Good thing they're all in view-source and it deals.
 nsresult nsScanner::ReadWhitespace(nsScannerIterator& aStart, 
                                    nsScannerIterator& aEnd,
                                    PRInt32& aNewlinesSkipped) {
