@@ -22,23 +22,27 @@
 
 */
 
-treeitem[container="true"][open="true"][loading="true"] > treerow > treecell > titledbutton
+treeitem[container="true"][open="true"][loading="true"] > treerow > treecell > .tree-icon
 {
     list-style-image: url("resource:/res/rdf/loading.gif") ! important ;
 }
 
-treeitem[id="NC:SiteMapRoot"] > treerow > treecell > titledbutton {
-    list-style-image: url("chrome://related/skin/sitemap.gif");
-}
-
-treeitem[container="true"][open="true"] > treerow > treecell > titledbutton {
+treeitem[container="true"][open="true"] > treerow > treecell > .tree-icon {
     list-style-image: url("resource:/res/rdf/folder-open.gif");
 }
 
-treeitem[container="true"] > treerow > treecell > titledbutton {
+treeitem[container="true"] > treerow > treecell > .tree-icon {
     list-style-image: url("resource:/res/rdf/folder-closed.gif");
 }
 
-treeitem > treerow > treecell > titledbutton {
+treeitem[container="true"][id="NC:SiteMapRoot"] > treerow > treecell > .tree-icon {
+    list-style-image: url("chrome://related/skin/sitemap.gif");
+}
+
+treeitem[container="true"][open="true"][id="NC:SiteMapRoot"] > treerow > treecell > .tree-icon {
+    list-style-image: url("chrome://related/skin/sitemap.gif");
+}
+
+treeitem > treerow > treecell > .tree-icon {
     list-style-image: url("resource:/res/rdf/document.gif");
 }
