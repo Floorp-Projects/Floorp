@@ -144,6 +144,9 @@ public:
 
   /**
    * Get the index in parent of the frame's content object
+   * XXX This really doesn't belong in nsIFrame. It's just a helper
+   * function that asks the content parent for the index-in-container of
+   * this frame's content object...
    */
   NS_IMETHOD  GetContentIndex(PRInt32& aIndexInParent) const = 0;
 
@@ -159,7 +162,7 @@ public:
                               nsIStyleContext* aContext) = 0;
 
   /**
-   * Get the style data associated with this frame
+   * Get the style data associated with this frame.
    */
   NS_IMETHOD  GetStyleData(nsStyleStructID aSID, const nsStyleStruct*& aStyleStruct) const = 0;
 
@@ -196,23 +199,23 @@ public:
                     const nsRect&        aDirtyRect) = 0;
 
   /**
-   * Handle an event. 
+   * Event handling of GUI events.
+   *
+   * @param   aEvent event structure describing the type of event and rge widget
+   *            where the event originated
+   * @param   aEventStatus a return value indicating whether the event was handled
+   *            and whether default processing should be done
+   *
+   * XXX From a frame's perspective it's unclear what the effect of the event status
+   * is. Does it cause the event to continue propagating through the frame hierarchy
+   * or is it just returned to the widgets?
+   *
+   * @see     nsGUIEvent
+   * @see     nsEventStatus
    */
   NS_IMETHOD  HandleEvent(nsIPresContext& aPresContext,
                           nsGUIEvent*     aEvent,
                           nsEventStatus&  aEventStatus) = 0;
-
-  NS_IMETHOD HandlePress(nsIPresContext& aPresContext,
-                   nsGUIEvent *    aEvent,
-                   nsEventStatus&  aEventStatus) = 0;
-
-  NS_IMETHOD HandleDrag(nsIPresContext& aPresContext,
-                   nsGUIEvent *    aEvent,
-                   nsEventStatus&  aEventStatus) = 0;
-
-  NS_IMETHOD HandleRelease(nsIPresContext& aPresContext,
-                   nsGUIEvent *    aEvent,
-                   nsEventStatus&  aEventStatus) = 0;
 
   NS_IMETHOD GetPosition(nsIPresContext&       aPresContext,
                          nsIRenderingContext * aRendContext,
