@@ -51,7 +51,30 @@ public:
   nsDrawingSurfaceGTK();
   virtual ~nsDrawingSurfaceGTK();
 
+  /**
+   * Initialize a drawing surface using a windows DC.
+   * aDC is "owned" by the drawing surface until the drawing
+   * surface is destroyed.
+   * @param  aDC HDC to initialize drawing surface with
+   * @return error status
+   **/
+
   nsresult Init(GdkDrawable *aDrawable, GdkGC *aGC);
+
+  /**
+   * Initialize an offscreen drawing surface using a
+   * windows DC. aDC is not "owned" by this drawing surface, instead
+   * it is used to create a drawing surface compatible
+   * with aDC. if width or height are less than zero, aDC will
+   * be created with no offscreen bitmap installed.
+   * @param  aDC HDC to initialize drawing surface with
+   * @param  aWidth width of drawing surface
+   * @param  aHeight height of drawing surface
+   * @param  aFlags flags used to control type of drawing
+   *         surface created
+   * @return error status
+   **/
+
   nsresult Init(GdkGC *aGC, PRUint32 aWidth, PRUint32 aHeight,
                 PRUint32 aFlags);
   
