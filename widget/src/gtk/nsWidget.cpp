@@ -2303,13 +2303,13 @@ nsWidget::DragMotionSignal(GtkWidget *      aWidget,
                            GdkDragContext   *aDragContext,
                            gint             x,
                            gint             y,
-                           guint            time,
+                           guint            aTime,
                            void             *aData)
 {
   nsWidget * widget = (nsWidget *) aData;
   NS_ASSERTION( nsnull != widget, "instance pointer is null");
 
-  widget->OnDragMotionSignal(aDragContext, x, y, time);
+  widget->OnDragMotionSignal(aDragContext, x, y, aTime);
 
   return PR_TRUE;
 }
@@ -2317,13 +2317,13 @@ nsWidget::DragMotionSignal(GtkWidget *      aWidget,
 /* static */ void
 nsWidget::DragLeaveSignal(GtkWidget *      aWidget,
                           GdkDragContext   *aDragContext,
-                          guint            time,
+                          guint            aTime,
                           void             *aData)
 {
   nsWidget * widget = (nsWidget *) aData;
   NS_ASSERTION( nsnull != widget, "instance pointer is null");
 
-  widget->OnDragLeaveSignal(aDragContext, time);
+  widget->OnDragLeaveSignal(aDragContext, aTime);
 }
 
 /* static */ gint
@@ -2331,7 +2331,7 @@ nsWidget::DragBeginSignal(GtkWidget *      aWidget,
                           GdkDragContext   *aDragContext,
                           gint             x,
                           gint             y,
-                          guint            time,
+                          guint            aTime,
                           void             *aData)
 {
   printf("nsWidget::DragBeginSignal\n");
@@ -2345,7 +2345,7 @@ nsWidget::DragDropSignal(GtkWidget *      aWidget,
                          GdkDragContext   *aDragContext,
                          gint             x,
                          gint             y,
-                         guint            time,
+                         guint            aTime,
                          void             *aData)
 {
   NS_ASSERTION( nsnull != aWidget, "widget is null");
@@ -2360,7 +2360,7 @@ nsWidget::DragDropSignal(GtkWidget *      aWidget,
   }
 #endif
 
-  widget->OnDragDropSignal(aDragContext, x, y, time);
+  widget->OnDragDropSignal(aDragContext, x, y, aTime);
 
   return PR_TRUE;
 }

@@ -310,7 +310,9 @@ void
 nsDragService::SelectionReceiver (GtkWidget *aWidget,
                                   GtkSelectionData *aSD)
 {
+#if 0
   gint type;
+#endif
 
   g_print("nsDragService::SelectionReceiver\n");
 
