@@ -241,11 +241,13 @@ nsDocShell::nsDocShell():
     mUseExternalProtocolHandler(PR_FALSE),
     mDisallowPopupWindows(PR_FALSE),
     mIsBeingDestroyed(PR_FALSE),
+    mIsExecutingOnLoadHandler(PR_FALSE),
+    mEditorData(nsnull),
+    mTransferableHookData(nsnull),
     mParent(nsnull),
     mTreeOwner(nsnull),
     mChromeEventHandler(nsnull),
-    mIsPrintingOrPP(PR_FALSE),
-    mIsExecutingOnLoadHandler(PR_FALSE)
+    mIsPrintingOrPP(PR_FALSE)
 {
 #ifdef PR_LOGGING
     if (! gDocShellLog)
@@ -424,6 +426,19 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID & aIID, void **aSink)
         NS_ADDREF((nsISupports *)*aSink);
         return NS_OK;
       }  
+
+      return NS_NOINTERFACE;   
+    }
+    else if (aIID.Equals(NS_GET_IID(nsIClipboardDragDropHookList)) 
+            && NS_SUCCEEDED(EnsureTransferableHookData())) {
+        nsCOMPtr<nsIClipboardDragDropHookList> hook =
+               NS_STATIC_CAST(nsIClipboardDragDropHookList *, mTransferableHookData);
+        if (hook)
+        {
+            *aSink = hook;
+            NS_ADDREF((nsISupports *)*aSink);
+            return NS_OK;
+        }
 
       return NS_NOINTERFACE;   
     }
@@ -2975,6 +2990,10 @@ nsDocShell::Destroy()
 
     delete mEditorData;
     mEditorData = 0;
+
+    NS_IF_RELEASE(NS_STATIC_CAST(nsIClipboardDragDropHookList *, mTransferableHookData));
+    delete mTransferableHookData;
+    mTransferableHookData = nsnull;
 
     // Save the state of the current document, before destroying the window.
     // This is needed to capture the state of a frameset when the new document
@@ -6716,6 +6735,18 @@ nsDocShell::EnsureEditorData()
   }
   
   return mEditorData ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsDocShell::EnsureTransferableHookData()
+{
+    if (!mTransferableHookData) {
+        mTransferableHookData = new nsTransferableHookData();
+        if (!mTransferableHookData) return NS_ERROR_OUT_OF_MEMORY;
+        NS_ADDREF(NS_STATIC_CAST(nsIClipboardDragDropHookList *, mTransferableHookData));
+    }
+
+    return NS_OK;
 }
 
 
