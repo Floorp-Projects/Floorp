@@ -102,7 +102,7 @@ nsresult imgRequestProxy::Init(imgRequest *request, nsILoadGroup *aLoadGroup, im
 /* readonly attribute wstring name; */
 NS_IMETHODIMP imgRequestProxy::GetName(PRUnichar * *aName)
 {
-  nsAutoString name(NS_LITERAL_STRING("imgRequestProxy["));
+  nsAutoString name;
   if (mOwner) {
     nsCOMPtr<nsIURI> uri;
     mOwner->GetURI(getter_AddRefs(uri));
@@ -112,10 +112,7 @@ NS_IMETHODIMP imgRequestProxy::GetName(PRUnichar * *aName)
       if (spec)
         name.Append(NS_ConvertUTF8toUCS2(spec));
     }
-  } else {
-    name.Append(NS_LITERAL_STRING("(null)"));
   }
-  name.Append(PRUnichar(']'));
 
   *aName = nsCRT::strdup(name.get());
   return NS_OK;
