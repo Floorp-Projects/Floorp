@@ -79,6 +79,7 @@ nsMathMLmstyleFrame::Init(nsIPresContext&  aPresContext,
   nsresult rv = nsMathMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
   mFlags = 0;
+  mInnerScriptLevelIncrement = 0;
 
   // see if the displaystyle attribute is there
   nsAutoString value;
@@ -105,15 +106,15 @@ nsMathMLmstyleFrame::Init(nsIPresContext&  aPresContext,
         mScriptLevel = aUserValue; // explicit value...
       }
       else {
-        mScriptLevel += aUserValue; // incremental value...
+//        mScriptLevel += aUserValue; // incremental value...
+        mInnerScriptLevelIncrement = aUserValue;
       }
     }
   }
 
 
 // TODO:
-// Examine all other attributes and update the style context to be 
-// inherited by all children.
+// Examine all other attributes
 
   return rv;
 }
@@ -122,7 +123,9 @@ NS_IMETHODIMP
 nsMathMLmstyleFrame::UpdatePresentationData(PRInt32 aScriptLevelIncrement, 
                                             PRBool  aDisplayStyle)
 {
-  // The scriptlevel and displaystyle attributes of mstyle take precedence.
+  // mstyle is special...
+  // Since UpdatePresentationData() can be called by a parent frame, the
+  // scriptlevel and displaystyle attributes of mstyle must take precedence.
   // Update only if attributes are not there
   if (!(NS_MATHML_MSTYLE_HAS_DISPLAYSTYLE(mFlags))) {
     mDisplayStyle = aDisplayStyle;

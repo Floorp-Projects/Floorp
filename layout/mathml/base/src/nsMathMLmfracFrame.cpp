@@ -114,7 +114,7 @@ nsMathMLmfracFrame::Init(nsIPresContext&  aPresContext,
   mLineOrigin.x = 0;
   mLineOrigin.y = 0;  
 
-  // TODO: other attributes like displaystyle...
+  // TODO: other attributes...
   return rv;
 }
 
@@ -183,7 +183,7 @@ nsMathMLmfracFrame::Reflow(nsIPresContext&          aPresContext,
     //////////////
     // WHITESPACE: don't forget that whitespace doesn't count in MathML!
     if (IsOnlyWhitespace(childFrame)) {
-      childFrame->SetRect(nsRect(0,0,0,0));
+      ReflowEmptyChild(childFrame);
     }
     else if (2 > count)  {
 

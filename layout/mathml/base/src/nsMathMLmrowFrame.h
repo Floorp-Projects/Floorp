@@ -41,19 +41,6 @@ public:
        nsIStyleContext* aContext,
        nsIFrame*        aPrevInFlow);
 
-  // We override the nsMathMLContainerFrame::ReResolveStyleContext() method
-  // because this container <tag>base arguments</tag> does not need its
-  // 'arguments' in a smaller font size that the 'base'.
-  NS_IMETHOD
-  ReResolveStyleContext(nsIPresContext*    aPresContext, 
-                        nsIStyleContext*   aParentContext,
-                        PRInt32            aParentChange, 
-                        nsStyleChangeList* aChangeList,
-                        PRInt32*           aLocalChange)
-  {
-    return nsHTMLContainerFrame::ReResolveStyleContext(aPresContext, aParentContext, aParentChange, aChangeList, aLocalChange);
-  }
-
 protected:
   nsMathMLmrowFrame();
   virtual ~nsMathMLmrowFrame();

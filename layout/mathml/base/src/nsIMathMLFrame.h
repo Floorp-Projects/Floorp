@@ -37,10 +37,10 @@ public:
  /* SUPPORT FOR STRETCHY ELEMENTS: <mo> */
  /*====================================================================*/
 
- /* method used to ask a stretchy MathML frame to stretch 
+ /* Stretch :
+  * method used to ask a stretchy MathML frame to stretch 
   * itself depending on its context
   */
-
   NS_IMETHOD 
   Stretch(nsIPresContext&    aPresContext,
           nsStretchDirection aStretchDirection,
@@ -52,13 +52,14 @@ public:
  /*====================================================================*/
 
  /* GetPresentationData :
- /* returns the scriptlevel and displaystyle of the frame */
+  * returns the scriptlevel and displaystyle of the frame
+  */
   NS_IMETHOD
   GetPresentationData(PRInt32* aScriptLevel, 
                       PRBool*  aDisplayStyle) = 0;
 
  /* UpdatePresentationData :
- /* Increment the scriptlevel of the frame, and set its displaystyle. 
+  * Increments the scriptlevel of the frame, and set its displaystyle. 
   * Note that <mstyle> is the only tag which allows to set
   * <mstyle displaystyle="true|false" scriptlevel="[+|-]number">
   * Therefore <mstyle> has its peculiar version of this method.
@@ -67,9 +68,8 @@ public:
   UpdatePresentationData(PRInt32 aScriptLevelIncrement, 
                          PRBool  aDisplayStyle) = 0;
 
-
  /* UpdatePresentationDataFromChildAt :
- /* Increments the scriplevel and set the display level on the whole tree.
+  * Increments the scriplevel and set the display level on the whole tree.
   * For child frames at: aIndex, aIndex+1, aIndex+2, etc, this method set 
   * their mDisplayStyle to aDisplayStyle and increment their mScriptLevel
   * with aScriptLevelIncrement. The increment is propagated down to the 

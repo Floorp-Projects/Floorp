@@ -42,23 +42,9 @@ public:
        nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD
-  ReResolveStyleContext(nsIPresContext*    aPresContext, 
-                        nsIStyleContext*   aParentContext,
-                        PRInt32            aParentChange, 
-                        nsStyleChangeList* aChangeList,
-                        PRInt32*           aLocalChange);
-
-  NS_IMETHOD
   SetInitialChildList(nsIPresContext& aPresContext,
                       nsIAtom*        aListName,
-                      nsIFrame*       aChildList)
-  {
-    nsresult rv;
-    rv = nsMathMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
-    ReResolveStyleContext(&aPresContext, mStyleContext, NS_STYLE_HINT_REFLOW, nsnull, nsnull);
-    return rv;
-  }
-
+                      nsIFrame*       aChildList);
 protected:
   nsMathMLmiFrame();
   virtual ~nsMathMLmiFrame();
