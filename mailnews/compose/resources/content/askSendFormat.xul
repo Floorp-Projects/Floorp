@@ -9,37 +9,38 @@
 <window title="&windowTitle.label;"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload="Startup()"
-    align="vertical"
+    orient="vertical"
+	  style="width: 40em; user-focus: ignore;"
     class="dialog"
     > 
 
 <script language="JavaScript" src="chrome://messenger/content/messengercompose/askSendFormat.js"/> 
 
-	<keyset id="keyset"/>
+<keyset id="keyset"/>
 
-    <spring style="height:0.5em"/>
-    <box align="horizontal">
-        <spring style="width:10px"/>
-        <box align="vertical">
-            <text value="&question.label;" />
-            
-            <spring style="height:1em"/>
+  <spring style="height:0.5em"/>
+  <box align="horizontal">
+    <spring style="width:10px"/>
+    <box align="vertical">
+      <box id="info.box" flex="1" orient="vertical" style="max-width: 45em;" value="&question.label;"/>
+      <spring style="height:1em"/>
 
-			<radiogroup id="mailDefaultHTMLAction" orient="vertical" autostretch="never">
-				<radio group="mailDefaultHTMLAction" id="SendPlainTextAndHtml" data="0" value="&plainTextAndHtml.label;"/>                
-				<radio group="mailDefaultHTMLAction" id="SendPlainTextOnly" data="1" value="&plainTextOnly.label;"/>
-				<radio group="mailDefaultHTMLAction" id="SendHtmlOnly" data="2" value="&htmlOnly.label;"/>
-			</radiogroup>
-        </box>
-        <spring style="width:10px"/>
+      <radiogroup id="mailDefaultHTMLAction" orient="vertical" autostretch="never">
+        <radio group="mailDefaultHTMLAction" id="SendPlainTextAndHtml" data="0" value="&plainTextAndHtml.label;"/>                
+        <radio group="mailDefaultHTMLAction" id="SendPlainTextOnly" data="1" value="&plainTextOnly.label;"/>
+        <radio group="mailDefaultHTMLAction" id="SendHtmlOnly" data="2" value="&htmlOnly.label;"/>
+      </radiogroup>
     </box>
-	    
-    <spring style="height:1em"/>
-	<box id="okCancelButtons"
-        button1Label="&send.label;"
-        button2Label="&dontSend.label;"
-	    button3Label="&recipients.label;"
-	    button4Label="&help.label;"
-	/>
-    <spring style="height:0.5em" />
+    <spring style="width:10px"/>
+  </box>
+
+  <spring style="height:1em"/>
+  <box id="okCancelButtons"
+    button1Label="&send.label;"
+    button2Label="&dontSend.label;"
+    button3Label="&recipients.label;"
+    button4Label="&help.label;"
+  />
+  <spring style="height:0.5em" />
+
 </window>
