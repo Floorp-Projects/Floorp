@@ -314,6 +314,7 @@ struct LineData {
     mNext = nsnull;
     mInnerBottomMargin = 0;
     mOuterBottomMargin = 0;
+    mBounds.SetRect(0,0,0,0);
   }
 
   ~LineData();
