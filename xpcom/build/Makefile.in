@@ -72,6 +72,7 @@ endif
 CPPSRCS		= \
 		$(XPCOM_GLUE_SRC_LCSRCS) \
 		nsXPComInit.cpp \
+		nsStringAPI.cpp \
 		$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)

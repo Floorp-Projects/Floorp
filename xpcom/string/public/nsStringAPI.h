@@ -46,10 +46,32 @@
  * dependency on the implementation details of the abstract string types.
  */
 
+// Map frozen functions to private symbol names if not using strict API.
+#ifndef MOZILLA_STRICT_API
+# define NS_StringContainerInit           NS_StringContainerInit_P
+# define NS_StringContainerInit2          NS_StringContainerInit2_P
+# define NS_StringContainerFinish         NS_StringContainerFinish_P
+# define NS_StringGetData                 NS_StringGetData_P
+# define NS_StringCloneData               NS_StringCloneData_P
+# define NS_StringSetData                 NS_StringSetData_P
+# define NS_StringSetDataRange            NS_StringSetDataRange_P
+# define NS_StringCopy                    NS_StringCopy_P
+# define NS_CStringContainerInit          NS_CStringContainerInit_P
+# define NS_CStringContainerInit2         NS_CStringContainerInit2_P
+# define NS_CStringContainerFinish        NS_CStringContainerFinish_P
+# define NS_CStringGetData                NS_CStringGetData_P
+# define NS_CStringCloneData              NS_CStringCloneData_P
+# define NS_CStringSetData                NS_CStringSetData_P
+# define NS_CStringSetDataRange           NS_CStringSetDataRange_P
+# define NS_CStringCopy                   NS_CStringCopy_P
+# define NS_CStringToUTF16                NS_CStringToUTF16_P
+# define NS_UTF16ToCString                NS_UTF16ToCString_P
+#endif
+
 #include "nscore.h"
 
 #if defined( XPCOM_GLUE )
-#define NS_STRINGAPI(type) extern "C" type
+#define NS_STRINGAPI(type) extern "C" NS_HIDDEN_(type)
 #elif defined( _IMPL_NS_STRINGAPI )
 #define NS_STRINGAPI(type) extern "C" NS_EXPORT type
 #else
