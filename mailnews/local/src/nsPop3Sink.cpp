@@ -359,8 +359,8 @@ nsPop3Sink::IncorporateWrite(void* closure,
     {
 		if (blockOffset == 1)
 			*m_outputBuffer = '>';
-        memcpy(m_outputBuffer + blockOffset, block, length - blockOffset);
-        *(m_outputBuffer + length) = 0;
+    nsCRT::memcpy(m_outputBuffer + blockOffset, block, length - blockOffset);
+    *(m_outputBuffer + length) = 0;
 		WriteLineToMailbox (m_outputBuffer);
 		// Is this where we should hook up the new mail parser? Is this block a line, or a real block?
 		// I think it's a real line. We're also not escaping lines that start with "From ", which is
