@@ -124,8 +124,8 @@ nsHTTPHandler::GetScheme(char * *o_Scheme)
  * @category: Input category
  * @return: returns error if any CID or ContractID registered failed to create.
  */
-static nsresult
-CategoryCreateService( const char *category )
+nsresult
+nsHTTPHandler::CategoryCreateService(const char *category)
 {
     nsresult rv = NS_OK;
 
@@ -173,6 +173,13 @@ CategoryCreateService( const char *category )
         {
             nFailed++;
         }
+
+        // try an observer, if it implements it.
+        nsCOMPtr<nsIObserver> observer = do_QueryInterface(instance, &rv);
+        if (NS_SUCCEEDED(rv) && observer)
+            observer->Observe(NS_STATIC_CAST(nsISupports*,NS_STATIC_CAST(void*,this)),
+                              NS_HTTP_STARTUP_TOPIC,
+                              NS_LITERAL_STRING("").get());
     }
     return (nFailed ? NS_ERROR_FAILURE : NS_OK);
 }

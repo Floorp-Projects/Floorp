@@ -175,4 +175,5 @@ interface nsIHTTPProtocolHandler : nsIProtocolHandler
 // HTTP protocol handler will do_GetService() each CID or Contractid that is registered
 // under this category when it comes alive.
 #define NS_HTTP_STARTUP_CATEGORY "http-startup-category"
+#define NS_HTTP_STARTUP_TOPIC (NS_LITERAL_STRING("http-startup").get())
 %}
