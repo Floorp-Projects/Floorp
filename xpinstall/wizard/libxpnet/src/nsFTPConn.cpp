@@ -47,6 +47,7 @@ const int kRespBufSize = 1024;
 const int kKilobyte = 1024;
 const int kUsecsPerSec = 1000000;
 const int kDlBufSize = 1024;
+const int kMaxBailOnTimeOut = 50;
 
 nsFTPConn::nsFTPConn(char *aHost, int (*aEventPumpCB)(void)) :
     mEventPumpCB(aEventPumpCB),
@@ -279,10 +280,23 @@ BAIL:
     /* kill data connection if it exists */
     if (mDataSock)
     {
+        /* err != OK means that the file attempted to be downloaded
+         * was not successfully initiated.  This means that the server
+         * will not post a response when the data socket is closed.
+         * Since it's not going to post a response, we don't have to
+         * wait kMaxBailOnTimeOut. */
+        int bailOnTimeOut = err != OK ? 1 : kMaxBailOnTimeOut;
+
         mDataSock->Close();
         delete mDataSock;
         mDataSock = NULL;
-        FlushCntlSock(mCntlSock);
+
+        /* We are expecting a response from this call to FlushCntlSock()
+         * _only_ if err == OK (meaning that a file was downloaded).
+         * We return only when a responce has been received, or else the next
+         * file that is to be downloaded will catch this response
+         * and fail. */
+        FlushCntlSock(mCntlSock, bailOnTimeOut);
     }
 
     mState = OPEN;
@@ -322,12 +336,13 @@ nsFTPConn::Close()
 }
 
 int
-nsFTPConn::FlushCntlSock(nsSocket *aSock)
+nsFTPConn::FlushCntlSock(nsSocket *aSock, int bailOnTimeOut)
 {
     int err = OK;
     char resp[kRespBufSize];
     int respSize;
     int timeout = 300000; /* Time out value is in Usecs.  This should give us 3 tries */
+    int bailOnTimeOutCount = 0;
 
     /* param check */
     if (!aSock)
@@ -335,12 +350,21 @@ nsFTPConn::FlushCntlSock(nsSocket *aSock)
 
     do
     {
+        ++bailOnTimeOutCount;
         respSize = kRespBufSize;
         err = aSock->Recv((unsigned char *)resp, &respSize, timeout);
         if (err != nsSocket::OK && 
             err != nsSocket::E_READ_MORE && 
             err != nsSocket::E_EOF_FOUND)
-            goto BAIL;
+        {
+            if((err == nsSocket::E_TIMEOUT) &&
+               (bailOnTimeOutCount < bailOnTimeOut))
+                // wait a little longer for response
+                err = nsSocket::E_READ_MORE;
+            else
+                goto BAIL;
+        }
+
         DUMP(resp);
         if ( mEventPumpCB )
             if (mEventPumpCB() == E_USER_CANCEL)
