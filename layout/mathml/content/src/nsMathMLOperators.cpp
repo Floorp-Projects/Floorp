@@ -492,43 +492,73 @@ nsMathMLOperators::LookupOperator(const nsString&       aOperator,
   return PR_FALSE;
 }
 
+void
+nsMathMLOperators::LookupOperators(const nsString&       aOperator,
+                                   nsOperatorFlags*      aFlags,
+                                   float*                aLeftSpace,
+                                   float*                aRightSpace)
+{
+  if (!gInitialized) {
+    InitGlobals();
+  }
+
+  aFlags[NS_MATHML_OPERATOR_FORM_INFIX] = 0;
+  aLeftSpace[NS_MATHML_OPERATOR_FORM_INFIX] = 0.0f;
+  aRightSpace[NS_MATHML_OPERATOR_FORM_INFIX] = 0.0f;
+
+  aFlags[NS_MATHML_OPERATOR_FORM_POSTFIX] = 0;
+  aLeftSpace[NS_MATHML_OPERATOR_FORM_POSTFIX] = 0.0f;
+  aRightSpace[NS_MATHML_OPERATOR_FORM_POSTFIX] = 0.0f;
+
+  aFlags[NS_MATHML_OPERATOR_FORM_PREFIX] = 0;
+  aLeftSpace[NS_MATHML_OPERATOR_FORM_PREFIX] = 0.0f;
+  aRightSpace[NS_MATHML_OPERATOR_FORM_PREFIX] = 0.0f;
+
+  if (gOperatorTable) {
+    // a lookup with form=0 will put all the variants in gOperatorFound[]
+    float dummy;
+    nsOperatorFlags flags = 0;
+    LookupOperator(aOperator, /*form=*/0, &flags, &dummy, &dummy);
+    // if the operator was found, gOperatorFound contains all its variants
+    OperatorData* found;
+    found = gOperatorFound[NS_MATHML_OPERATOR_FORM_INFIX];
+    if (found) {
+      aFlags[NS_MATHML_OPERATOR_FORM_INFIX] = found->mFlags;
+      aLeftSpace[NS_MATHML_OPERATOR_FORM_INFIX] = found->mLeftSpace;
+      aRightSpace[NS_MATHML_OPERATOR_FORM_INFIX] = found->mRightSpace;
+    }
+    found = gOperatorFound[NS_MATHML_OPERATOR_FORM_POSTFIX];
+    if (found) {
+      aFlags[NS_MATHML_OPERATOR_FORM_POSTFIX] = found->mFlags;
+      aLeftSpace[NS_MATHML_OPERATOR_FORM_POSTFIX] = found->mLeftSpace;
+      aRightSpace[NS_MATHML_OPERATOR_FORM_POSTFIX] = found->mRightSpace;
+    }
+    found = gOperatorFound[NS_MATHML_OPERATOR_FORM_PREFIX];
+    if (found) {
+      aFlags[NS_MATHML_OPERATOR_FORM_PREFIX] = found->mFlags;
+      aLeftSpace[NS_MATHML_OPERATOR_FORM_PREFIX] = found->mLeftSpace;
+      aRightSpace[NS_MATHML_OPERATOR_FORM_PREFIX] = found->mRightSpace;
+    }
+  }
+}
+
 PRBool
 nsMathMLOperators::IsMutableOperator(const nsString& aOperator)
 {
   if (!gInitialized) {
     InitGlobals();
   }
-  if (gOperatorTable) {
-    // Lookup with form=0 will put all the variants in gOperatorFound[]
-    float dummy;
-    nsOperatorFlags flags = 0;
-    LookupOperator(aOperator, 0, &flags, &dummy, &dummy);
-    // if the operator was found, gOperatorFound contains all the variants
-    // of the operator. check if there is one that meets the criteria
-    OperatorData* found;
-    found = gOperatorFound[NS_MATHML_OPERATOR_FORM_INFIX];
-    if (found &&
-        (NS_MATHML_OPERATOR_IS_STRETCHY(found->mFlags) ||
-         NS_MATHML_OPERATOR_IS_LARGEOP(found->mFlags)))
-    {
-      return PR_TRUE;
-    }
-    found = gOperatorFound[NS_MATHML_OPERATOR_FORM_POSTFIX];
-    if (found &&
-        (NS_MATHML_OPERATOR_IS_STRETCHY(found->mFlags) ||
-         NS_MATHML_OPERATOR_IS_LARGEOP(found->mFlags)))
-    {
-      return PR_TRUE;
-    }
-    found = gOperatorFound[NS_MATHML_OPERATOR_FORM_PREFIX];
-    if (found &&
-        (NS_MATHML_OPERATOR_IS_STRETCHY(found->mFlags) ||
-         NS_MATHML_OPERATOR_IS_LARGEOP(found->mFlags)))
-    {
-      return PR_TRUE;
-    }
-  }
-  return PR_FALSE;
+  // lookup all the variants of the operator and return true if there
+  // is a variant that is stretchy or largeop
+  nsOperatorFlags flags[4];
+  float lspace[4], rspace[4];
+  nsMathMLOperators::LookupOperators(aOperator, flags, lspace, rspace);
+  nsOperatorFlags allFlags =
+    flags[NS_MATHML_OPERATOR_FORM_INFIX] |
+    flags[NS_MATHML_OPERATOR_FORM_POSTFIX] |
+    flags[NS_MATHML_OPERATOR_FORM_PREFIX];
+  return NS_MATHML_OPERATOR_IS_STRETCHY(allFlags) ||
+         NS_MATHML_OPERATOR_IS_LARGEOP(allFlags);
 }
 
 PRInt32
