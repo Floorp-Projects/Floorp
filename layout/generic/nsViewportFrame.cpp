@@ -96,6 +96,8 @@ public:
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
+
+  virtual PRBool CanPaintBackground() { return PR_FALSE; }
   
   /**
    * Get the "type" of the frame

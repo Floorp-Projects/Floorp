@@ -1146,6 +1146,9 @@ nsHTMLFrameInnerFrame::CreateViewAndWidget(nsIPresContext* aPresContext,
   rv = view->CreateWidget(kCChildCID, &initData);
   SetView(aPresContext, view);
 
+  nsContainerFrame::SyncFrameViewProperties(aPresContext, this, nsnull, view);
+
+  // XXX the following should be unnecessary, given the above Sync call
   // if the visibility is hidden, reflect that in the view
   const nsStyleVisibility* vis;
   GetStyleData(eStyleStruct_Visibility, ((const nsStyleStruct *&)vis));
