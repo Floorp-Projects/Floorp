@@ -20,9 +20,7 @@
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
-#ifdef DEBUG_bienvenu
 #define DOING_PSEUDO_MAILBOXES
-#endif
 
 // sorry, this has to be before the pre-compiled header
 #define FORCE_PR_LOG /* Allow logging in the release build */
