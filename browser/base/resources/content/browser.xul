@@ -140,21 +140,14 @@ Contributor(s): ______________________________________. -->
              disabled="true"
              observes="isImage"/>
 
-    <!-- View Menu -->
     <command id="View:PageSource" oncommand="BrowserViewSourceOfDocument(_content.document);"/>
     <command id="View:PageInfo"   oncommand="BrowserPageInfo();"/>
     <command id="View:FullScreen" oncommand="BrowserFullScreen();"/>
-  
-    <!-- Search Menu -->
     <command id="Browser:Find" oncommand="BrowserFind();" observes="isImage"/>
     <command id="Browser:FindAgain" oncommand="BrowserFindAgain();" observes="isImage"/>
-  
-    <!-- Bookmarks Menu -->
     <command id="Browser:AddBookmark" oncommand="BookmarksUtils.addBookmarkForBrowser(document.getElementById('content').webNavigation, false);"/>
     <command id="Browser:AddBookmarkAs" oncommand="BookmarksUtils.addBookmarkForBrowser(document.getElementById('content').webNavigation, true);"/>
     <command id="Browser:ManageBookmark" oncommand="BrowserEditBookmarks();" />
-  
-    <!-- Go Menu -->  
     <command id="Browser:Home"    oncommand="BrowserHome();"/>
     <command id="Browser:Back"    oncommand="BrowserBack();"    observes="canGoBack"/>
     <command id="Browser:Forward" oncommand="BrowserForward();" observes="canGoForward"/>
