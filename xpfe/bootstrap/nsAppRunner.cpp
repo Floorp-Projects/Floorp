@@ -267,7 +267,7 @@ int main(int argc, char* argv[])
     if (NS_SUCCEEDED(rv))
     {
       if (cmdResult && (strcmp("1",cmdResult)==0))
-        urlstr = "resource:/res/samples/EditorAppShell.xul";
+        urlstr = "chrome://editor/content/";
     }
     if (nsnull == urlstr)
     {
