@@ -289,7 +289,7 @@ nsresult testStressDecoder(nsIUnicodeDecoder * aDec,
 
   // get estimated length
   PRInt32 estimatedLength;
-  res = aDec->Length(aSrc, 0, aSrcLength, &estimatedLength);
+  res = aDec->GetMaxLength(aSrc, aSrcLength, &estimatedLength);
   if (NS_FAILED(res)) {
     printf("ERROR at %s.stress.Length() code=0x%x.\n",aTestName,res);
     return res;
