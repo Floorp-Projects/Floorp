@@ -24,11 +24,11 @@ include $(DEPTH)/config/autoconf.mk
 
 PROGRAM		= FlatFile
 
-CPPSRCS		= FlatFileTest.cpp
-
 REQUIRES	= cache
 
-LOCAL_INCLUDES	+= -I../../include
+CPPSRCS		= FlatFileTest.cpp
+
+LOCAL_INCLUDES	= -I../../include
 
 LIBS		= \
 		-lcache \
