@@ -38,6 +38,8 @@
 #include "nsIHTMLContent.h"
 #include "nsHTMLParts.h"
 #include "nsHTMLFrame.h"
+#include "nsScrollFrame.h"
+#include "nsIView.h"
 
 NS_DEF_PTR(nsIStyleContext);
 
@@ -58,7 +60,7 @@ NS_METHOD nsHTMLContainerFrame::Paint(nsIPresContext& aPresContext,
   nsStyleDisplay* disp =
     (nsStyleDisplay*)mStyleContext->GetData(eStyleStruct_Display);
 
-  if (disp->mVisible) {
+  if (disp->mVisible && mRect.width && mRect.height) {
     PRIntn skipSides = GetSkipSides();
     nsStyleColor* color =
       (nsStyleColor*)mStyleContext->GetData(eStyleStruct_Color);
@@ -73,7 +75,15 @@ NS_METHOD nsHTMLContainerFrame::Paint(nsIPresContext& aPresContext,
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect);
 
   if (nsIFrame::GetShowFrameBorders()) {
-    aRenderingContext.SetColor(NS_RGB(255,0,0));
+    nsIView* view;
+    GetView(view);
+    if (nsnull != view) {
+      aRenderingContext.SetColor(NS_RGB(0,0,255));
+      NS_RELEASE(view);
+    }
+    else {
+      aRenderingContext.SetColor(NS_RGB(255,0,0));
+    }
     aRenderingContext.DrawRect(0, 0, mRect.width, mRect.height);
   }
   return NS_OK;
@@ -300,17 +310,27 @@ nsHTMLContainerFrame::CreateFrameFor(nsIPresContext*  aPresContext,
     if (NS_OK == rv) {
       frame->SetStyleContext(aPresContext, aStyleContext);
     }
-  } else if (display->mFloats != NS_STYLE_FLOAT_NONE) {
+  }
+  else if (display->mFloats != NS_STYLE_FLOAT_NONE) {
     rv = nsPlaceholderFrame::NewFrame(&frame, aContent, this);
     if (NS_OK == rv) {
       frame->SetStyleContext(aPresContext, aStyleContext);
     }
-  } else if (NS_STYLE_DISPLAY_NONE == display->mDisplay) {
+  }
+  else if ((NS_STYLE_OVERFLOW_SCROLL == display->mOverflow) ||
+           (NS_STYLE_OVERFLOW_AUTO == display->mOverflow)) {
+    rv = NS_NewScrollFrame(&frame, aContent, this);
+    if (NS_OK == rv) {
+      frame->SetStyleContext(aPresContext, aStyleContext);
+    }
+  }
+  else if (NS_STYLE_DISPLAY_NONE == display->mDisplay) {
     rv = nsFrame::NewFrame(&frame, aContent, this);
     if (NS_OK == rv) {
       frame->SetStyleContext(aPresContext, aStyleContext);
     }
-  } else {
+  }
+  else {
     // Ask the content delegate to create the frame
     nsIContentDelegate* delegate = aContent->GetDelegate(aPresContext);
     rv = delegate->CreateFrame(aPresContext, aContent, this,
