@@ -1,4 +1,25 @@
 
+Release 0.9
+
+Add full Bonsai integration functionality.
+
+Allow users to define a display order for the buildnames on a per tree basis.
+This adds a new function into TreeData.pm check your local files.
+	
+Fix computation of 'deadtime' for eazel.com's build setup,
+	this will improve their estimate of when the next build 
+	will be complete.
+
+Develop portable client build scripts.
+
+Add RPM specfiles.
+
+Relax check of root id for all redhat users.  
+	uid nobody is 99 and by default redhat apache runs all cgi as nobody.
+
+VC_CVS.pm was not removing excess treestates from the Database correctly, 
+		now fixed.
+	
 Release 0.8
 
 This release moved some files into new directories update with
