@@ -32,6 +32,16 @@ CHROME_DEPS	= build.dtd
 
 include $(topsrcdir)/config/rules.mk
 
+ifeq (mac,$(MOZ_WIDGET_TOOLKIT))
+CHROME_PLATFORM = mac
+else
+ifeq ($(OS_ARCH),OS2)
+CHROME_PLATFORM = win
+else
+CHROME_PLATFORM = unix
+endif
+endif
+
 GARBAGE		+= build.dtd
 
 build.dtd: build.dtd.in $(DEPTH)/config/build_number
@@ -44,9 +54,4 @@ install::
 	@$(REGCHROME) content global-platform toolkit.jar
 	@$(REGCHROME) locale en-US/global en-US.jar
 	@$(REGCHROME) locale US/global-region US.jar
-ifeq ($(OS_ARCH),OS2)
-	@$(REGCHROME) locale en-US/global-platform en-win.jar
-else
-	@$(REGCHROME) locale en-US/global-platform en-unix.jar
-endif
-
+	@$(REGCHROME) locale en-US/global-platform en-$(CHROME_PLATFORM).jar
