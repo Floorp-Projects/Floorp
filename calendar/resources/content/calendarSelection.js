@@ -134,12 +134,19 @@ CalendarEventSelection.prototype.onSelectionChanged = function ( )
       document.getElementById( "delete_command" ).removeAttribute( "disabled" );
 
       document.getElementById( "modify_command" ).removeAttribute( "disabled" );
+	  
+		if (gMailAccounts)
+		{
+			document.getElementById("send_event_command").removeAttribute("disabled");
+		}
    }
    else
    {
       document.getElementById( "delete_command" ).setAttribute( "disabled", "true" );
 
       document.getElementById( "modify_command" ).setAttribute( "disabled", "true" );
+
+		document.getElementById("send_event_command").setAttribute("disabled", "true");
    }
 
    for( var index in this.observerList )
@@ -151,6 +158,4 @@ CalendarEventSelection.prototype.onSelectionChanged = function ( )
          observer.onSelectionChanged( this.selectedEvents );
       }
    }
-   
 }
-
