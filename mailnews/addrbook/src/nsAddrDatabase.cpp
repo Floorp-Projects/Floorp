@@ -45,6 +45,7 @@
 #include "nsReadableUtils.h"
 #include "nsRDFCID.h"
 #include "nsUnicharUtils.h"
+#include "nsMsgUtils.h"
 #include "nsAbBaseCID.h"
 #include "nsIAbCard.h"
 #include "nsIAbMDBCard.h"
@@ -3276,16 +3277,6 @@ NS_IMETHODIMP nsListAddressEnumerator::IsDone(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-void nsAddrDatabase::PRTime2Seconds(PRTime prTime, PRUint32 *seconds)
-{
-  PRInt64 microSecondsPerSecond, intermediateResult;
-  
-  LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
-  LL_DIV(intermediateResult, prTime, microSecondsPerSecond);
-  LL_L2UI((*seconds), intermediateResult);
-}
-
 
 NS_IMETHODIMP nsAddrDatabase::EnumerateCards(nsIAbDirectory *directory, nsIEnumerator **result)
 {

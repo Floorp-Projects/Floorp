@@ -319,9 +319,6 @@ public:
 	PRUint32 GetListAddressTotal(nsIMdbRow* listRow);
 	nsresult GetAddressRowByPos(nsIMdbRow* listRow, PRUint16 pos, nsIMdbRow** cardRow);
 
-  static void PRTime2Seconds(PRTime prTime, PRUint32 *seconds);
-  
-
     NS_IMETHOD AddListCardColumnsToRow(nsIAbCard *aPCard, nsIMdbRow *aPListRow, PRUint32 aPos, nsIAbCard** aPNewCard, PRBool aInMailingList);
     NS_IMETHOD InitCardFromRow(nsIAbCard *aNewCard, nsIMdbRow* aCardRow);
     NS_IMETHOD SetListAddressTotal(nsIMdbRow* aListRow, PRUint32 aTotal);

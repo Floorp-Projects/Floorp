@@ -60,8 +60,10 @@ REQUIRES    = xpcom \
           unicharutil \
           MapiProxy \
           locale \
+          mailnews \
           msgbase \
           msgbaseutil \
+          necko \
           addrbook \
           $(NULL)
 

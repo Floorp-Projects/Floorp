@@ -46,6 +46,7 @@
 
 // as does this
 #include "msgCore.h"  // for pre-compiled headers
+#include "nsMsgUtils.h"
 
 #include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
@@ -2601,15 +2602,6 @@ nsImapProtocol::GetArbitraryHeadersToDownload(char **aResult)
 {
   if (m_imapServerSink)
     m_imapServerSink->GetArbitraryHeaders(aResult);
-}
-
-static void PRTime2Seconds(PRTime prTime, PRInt32 *seconds)
-{
-	PRInt64 microSecondsPerSecond, intermediateResult;
-	
-	LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
-	LL_DIV(intermediateResult, prTime, microSecondsPerSecond);
-  LL_L2I((*seconds), intermediateResult);
 }
 
 void

@@ -39,15 +39,18 @@
 #define _NSMSGUTILS_H
 
 #include "nsIURL.h"
-#include "nsIMsgMessageService.h"
 #include "nsString.h"
 #include "nsIEnumerator.h"
-#include "nsIMsgFolder.h"
 #include "msgCore.h"
 #include "nsCOMPtr.h"
+#include "MailNewsTypes2.h"
 
+class nsIFileSpec;
 class nsILocalFile;
 class nsIPrefBranch;
+class nsIMsgFolder;
+class nsIMsgMessageService;
+class nsIUrlListener;
 
 //These are utility functions that can used throughout the mailnews code
 
@@ -125,5 +128,11 @@ NS_MSG_BASE nsresult IsRSSArticle(nsIURI * aMsgURI, PRBool *aIsRSSArticle);
 
 NS_MSG_BASE nsresult MSGCramMD5(const char *text, PRInt32 text_len, const char *key, PRInt32 key_len, unsigned char *digest);
 NS_MSG_BASE nsresult MSGApopMD5(const char *text, PRInt32 text_len, const char *password, PRInt32 password_len, unsigned char *digest);
+
+// helper functions to convert a 64bits PRTime into a 32bits value (compatible time_t) and vice versa.
+NS_MSG_BASE void PRTime2Seconds(PRTime prTime, PRUint32 *seconds);
+NS_MSG_BASE void PRTime2Seconds(PRTime prTime, PRInt32 *seconds);
+NS_MSG_BASE void Seconds2PRTime(PRUint32 seconds, PRTime *prTime);
+
 #endif
 

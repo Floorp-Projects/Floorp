@@ -3363,25 +3363,6 @@ nsresult nsMsgDatabase::RowCellColumnToCharPtr(nsIMdbRow *row, mdb_token columnT
   }
 }
 
-/* static */void nsMsgDatabase::PRTime2Seconds(PRTime prTime, PRUint32 *seconds)
-{
-  PRInt64 microSecondsPerSecond, intermediateResult;
-  
-  LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
-  LL_DIV(intermediateResult, prTime, microSecondsPerSecond);
-  LL_L2UI((*seconds), intermediateResult);
-}
-
-/* static */void nsMsgDatabase::Seconds2PRTime(PRUint32 seconds, PRTime *prTime)
-{
-  PRInt64 microSecondsPerSecond, intermediateResult;
-  
-  LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
-  LL_UI2L(intermediateResult, seconds);
-  LL_MUL((*prTime), intermediateResult, microSecondsPerSecond);
-}
-
-
 nsresult nsMsgDatabase::GetProperty(nsIMdbRow *row, const char *propertyName, char **result)
 {
   nsresult err = NS_OK;

@@ -151,11 +151,6 @@ public:
   static void YarnTonsCString(struct mdbYarn *yarn, nsACString &str);
   static void YarnToUInt32(struct mdbYarn *yarn, PRUint32 *i);
   
-  
-  // helper functions to convert a 64bits PRTime into a 32bits value (compatible time_t) and vice versa.
-  static void   PRTime2Seconds(PRTime prTime, PRUint32 *seconds);
-  static void   Seconds2PRTime(PRUint32 seconds, PRTime *prTime);
-  
   static void   CleanupCache();
 #ifdef DEBUG
   static int    GetNumInCache(void) {return(GetDBCache()->Count());}

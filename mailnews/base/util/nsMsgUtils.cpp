@@ -71,6 +71,8 @@
 #include "nsISignatureVerifier.h"
 #include "nsNativeCharsetUtils.h"
 #include "nsIRssIncomingServer.h"
+#include "nsIMsgFolder.h"
+#include "nsIMsgMessageService.h"
 
 static NS_DEFINE_CID(kImapUrlCID, NS_IMAPURL_CID);
 static NS_DEFINE_CID(kCMailboxUrl, NS_MAILBOXURL_CID);
@@ -1075,4 +1077,31 @@ NS_MSG_BASE nsresult NS_GetLocalizedUnicharPreferenceWithDefault(nsIPrefBranch *
     else
         prefValue = defValue;
     return NS_OK;
+}
+
+void PRTime2Seconds(PRTime prTime, PRUint32 *seconds)
+{
+  PRInt64 microSecondsPerSecond, intermediateResult;
+  
+  LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
+  LL_DIV(intermediateResult, prTime, microSecondsPerSecond);
+  LL_L2UI((*seconds), intermediateResult);
+}
+
+void PRTime2Seconds(PRTime prTime, PRInt32 *seconds)
+{
+  PRInt64 microSecondsPerSecond, intermediateResult;
+  
+  LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
+  LL_DIV(intermediateResult, prTime, microSecondsPerSecond);
+  LL_L2I((*seconds), intermediateResult);
+}
+
+void Seconds2PRTime(PRUint32 seconds, PRTime *prTime)
+{
+  PRInt64 microSecondsPerSecond, intermediateResult;
+  
+  LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
+  LL_UI2L(intermediateResult, seconds);
+  LL_MUL((*prTime), intermediateResult, microSecondsPerSecond);
 }

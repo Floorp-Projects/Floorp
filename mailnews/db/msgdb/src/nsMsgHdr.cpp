@@ -101,7 +101,7 @@ nsresult nsMsgHdr::InitCachedValues()
     err = GetUInt32Column(m_mdb->m_messageSizeColumnToken, &m_messageSize);
     
     err = GetUInt32Column(m_mdb->m_dateColumnToken, &uint32Value);
-    nsMsgDatabase::Seconds2PRTime(uint32Value, &m_date);
+    Seconds2PRTime(uint32Value, &m_date);
     
     err = GetUInt32Column(m_mdb->m_messageThreadIdColumnToken, &m_threadId);
     err = GetUInt32Column(m_mdb->m_numReferencesColumnToken, &uint32Value);
@@ -526,7 +526,7 @@ NS_IMETHODIMP nsMsgHdr::SetDate(PRTime date)
 {
   m_date = date;
   PRUint32 seconds;
-  nsMsgDatabase::PRTime2Seconds(date, &seconds);
+  PRTime2Seconds(date, &seconds);
   return SetUInt32Column((PRUint32) seconds, m_mdb->m_dateColumnToken);
 }
 

@@ -48,6 +48,7 @@
 #include "nsICopyMsgStreamListener.h"
 #include "nsMsgUtils.h"
 #include "nsITreeColumns.h"
+#include "nsIMsgMessageService.h"
 
 nsMsgSearchDBView::nsMsgSearchDBView()
 {
