@@ -1029,37 +1029,8 @@ nsFontMetricsXft::SetupFCPattern(void)
     // If there's a generic add a pref for the generic if there's one
     // set.
     if (mGenericFont && !mFont->systemFont) {
-        nsCString name;
-        name += "font.name.";
-        name += mGenericFont->get();
-        name += ".";
-
-        nsString langGroup;
-        mLangGroup->ToString(langGroup);
-
-        name.AppendWithConversion(langGroup);
-
-        nsCOMPtr<nsIPref> pref;
-        pref = do_GetService(NS_PREF_CONTRACTID);
-        if (pref) {
-            nsresult rv;
-            nsXPIDLCString value;
-            rv = pref->GetCharPref(name.get(), getter_Copies(value));
-
-            // we ignore prefs that have three hypens since they are X
-            // style prefs.
-            if (NS_FFRECountHyphens(value) < 3) {
-                nsCString tmpstr;
-                tmpstr.Append(value);
-
-                if (PR_LOG_TEST(gXftFontLoad, PR_LOG_DEBUG)) {
-                    printf("\tadding generic font from preferences: %s\n",
-                           tmpstr.get());
-                }
-
-                NS_AddFFRE(mPattern, &tmpstr, PR_FALSE);
-            }
-        }
+        NS_AddGenericFontFromPref(mGenericFont, mLangGroup, mPattern,
+                                  gXftFontLoad);
     }
 
     // Add the generic if there is one.

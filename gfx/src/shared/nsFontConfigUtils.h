@@ -41,6 +41,7 @@
 #include "nsString.h"
 #include "nsIAtom.h"
 #include "nsFont.h"
+#include "prlog.h"
 
 #include <fontconfig/fontconfig.h>
 
@@ -50,5 +51,9 @@ extern void    NS_AddLangGroup     (FcPattern *aPattern, nsIAtom *aLangGroup);
 extern void    NS_AddFFRE          (FcPattern *aPattern, nsCString *aFamily,
                                     PRBool aWeak);
 extern int     NS_FFRECountHyphens (nsACString &aFFREName);
+extern void    NS_AddGenericFontFromPref (const nsCString *aGenericFont,
+                                          nsIAtom *aLangGroup,
+                                          FcPattern *aPattern, 
+                                          const PRLogModuleInfo *aLogModule);
 #endif
 
