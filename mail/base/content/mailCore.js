@@ -84,20 +84,7 @@ function toOpenWindowByType( inType, uri )
 
 function toMessengerWindow()
 {
-  var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                       .getService(Components.interfaces.nsIPrefBranch);
-  var windowDoc = "chrome://messenger/content/messenger.xul";
-  try
-  {
-    var layoutType = pref.getIntPref("mail.pane_config");
-    windowDoc = !layoutType ? "chrome://messenger/content/messenger.xul" : 
-                              "chrome://messenger/content/mail3PaneWindowVertLayout.xul";
-   }
-   catch(ex)
-   {
-   }    
-   
-   toOpenWindowByType("mail:3pane", windowDoc);
+  toOpenWindowByType("mail:3pane", "chrome://messenger/content/messenger.xul");
 }
     
 function toAddressBook() 
@@ -114,4 +101,19 @@ function toImport()
 function CheckOnline()
 {
   return true; 
+}
+
+function openOptionsDialog(containerID, paneURL, itemID)
+{
+  //check for an existing pref window and focus it; it's not application modal
+  const kWindowMediatorContractID = "@mozilla.org/appshell/window-mediator;1";
+  const kWindowMediatorIID = Components.interfaces.nsIWindowMediator;
+  const kWindowMediator = Components.classes[kWindowMediatorContractID].getService(kWindowMediatorIID);
+  var lastPrefWindow = kWindowMediator.getMostRecentWindow("mozilla:preferences");
+  
+  if (lastPrefWindow)
+    lastPrefWindow.focus();
+  else 
+    openDialog("chrome://communicator/content/pref/pref.xul","PrefWindow", 
+               "chrome,titlebar,resizable=yes", paneURL, containerID, itemID);
 }
