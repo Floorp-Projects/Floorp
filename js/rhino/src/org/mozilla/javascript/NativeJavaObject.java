@@ -219,7 +219,7 @@ public class NativeJavaObject implements Scriptable, Wrapper {
     public static boolean canConvert(Object fromObj, Class to) {
         int weight = NativeJavaObject.getConversionWeight(fromObj, to);
 
-        return (weight != CONVERSION_NONE);
+        return (weight < CONVERSION_NONE);
     }
 
     static final int JSTYPE_UNDEFINED   = 0; // undefined type
@@ -286,10 +286,7 @@ public class NativeJavaObject implements Scriptable, Wrapper {
                 if (to == Double.TYPE) {
                     result = 1;
                 }
-                else if (to == Boolean.TYPE) {
-                    result = CONVERSION_NONE;
-                }
-                else {
+                else if (to != Boolean.TYPE) {
                     result = 1 + NativeJavaObject.getSizeRank(to);
                 }
             }
@@ -315,7 +312,7 @@ public class NativeJavaObject implements Scriptable, Wrapper {
             else if (to == ScriptRuntime.ObjectClass) {
                 result = 2;
             }
-            else if (to.isPrimitive()) {
+            else if (to.isPrimitive() && to != Boolean.TYPE) {
                 if (to == Character.TYPE) {
                     result = 3;
                 }
@@ -329,7 +326,7 @@ public class NativeJavaObject implements Scriptable, Wrapper {
             if (to == ScriptRuntime.ClassClass) {
                 result = 1;
             }
-            if (Context.useJSObject && jsObjectClass != null && 
+            else if (Context.useJSObject && jsObjectClass != null && 
                 jsObjectClass.isAssignableFrom(to)) {
                 result = 2;
             }
@@ -346,7 +343,7 @@ public class NativeJavaObject implements Scriptable, Wrapper {
             if (to == ScriptRuntime.StringClass) {
                 result = 2;
             }
-            else if (to.isPrimitive()) {
+            else if (to.isPrimitive() && to != Boolean.TYPE) {
                 result = 
                     (fromCode == JSTYPE_JAVA_ARRAY) ?
                     CONVERSION_NONTRIVIAL :
@@ -375,7 +372,7 @@ public class NativeJavaObject implements Scriptable, Wrapper {
             else if (to == ScriptRuntime.StringClass) {
                 result = 3;
             }
-            else if (to.isPrimitive()) {
+            else if (to.isPrimitive() || to != Boolean.TYPE) {
                 result = 3 + NativeJavaObject.getSizeRank(to);
             }
             break;
@@ -407,6 +404,9 @@ public class NativeJavaObject implements Scriptable, Wrapper {
         else if (aType == Byte.TYPE) {
             return 7;
         }
+        else if (aType == Boolean.TYPE) {
+            return CONVERSION_NONE;
+        }
         else {
             return 8;
         }
@@ -425,6 +425,9 @@ public class NativeJavaObject implements Scriptable, Wrapper {
             }
             else if (value instanceof NativeJavaArray) {
                 return JSTYPE_JAVA_ARRAY;
+            }
+            else if (value instanceof NativeString) {
+                return JSTYPE_STRING;
             }
             else if (value instanceof NativeJavaObject) {
                 return JSTYPE_JAVA_OBJECT;
@@ -459,14 +462,41 @@ public class NativeJavaObject implements Scriptable, Wrapper {
 
     /**
      * Type-munging for field setting and method invocation.
+     * Conforms to LC3 specification
      */
     public static Object coerceType(Class type, Object value) {
         // Don't coerce null to a string (or other object)
         if (value == null) {
+            // raise error if type.isPrimitive()
+            if (type.isPrimitive()) {
+                reportConversionError(value, type);
+            }
             return null;
         }
+        else if (value == Undefined.instance) {
+            if (type == ScriptRuntime.StringClass || 
+                type == ScriptRuntime.ObjectClass) {
+                return "undefined";
+            }
+            else {
+                // report conversion error
+                reportConversionError("undefined", type);
+            }
+        }
 
-        // For ScriptRuntime.finalClasses we can compare valueClass to ScriptRuntime.aClass object
+        // Special case: converting JS numbers to Objects
+        // Done before we unwrap, to distinguish from a 
+        // wrapped java.lang.Number.
+        if (type == ScriptRuntime.ObjectClass && value instanceof Number) {
+            return new Double(((Number)value).doubleValue());
+        }
+
+        // Unwrap at this point; callers do not need to unwrap
+        if (value instanceof Wrapper) {
+            value = ((Wrapper)value).unwrap();
+        }
+
+        // For final classes we can compare valueClass to a Class object
         // rather than using instanceof
         Class valueClass = value.getClass();
         
@@ -479,28 +509,42 @@ public class NativeJavaObject implements Scriptable, Wrapper {
             return ScriptRuntime.toString(value);
         
         // Boolean
-        if (type == Boolean.TYPE || type == ScriptRuntime.BooleanClass)
-            return new Boolean(ScriptRuntime.toBoolean(value));
+        if (type == Boolean.TYPE || type == ScriptRuntime.BooleanClass) {
+            // Under LC3, only JS Booleans can be coerced into a Boolean value
+            if (valueClass == ScriptRuntime.BooleanClass) {
+                return value;
+            }
+            else {
+                reportConversionError(value, type);
+            }
+        }
 
+        // Character
         if (type == Character.TYPE || type == ScriptRuntime.CharacterClass) {
             // Special case for converting a single char string to a character
             if (valueClass == ScriptRuntime.StringClass && ((String) value).length() == 1)
                 return new Character(((String) value).charAt(0));
-            return new Character((char)ScriptRuntime.toInteger(value));
+            /*
+            if (valueClass == ScriptRuntime.StringClass) {
+                String string = (String)value;
+                if (string.length() == 1) {
+                    char ch = string.charAt(0);
+                    // XXX: Next test not in LC3 spec, but is backwardly 
+                    // compatible and satisfies regression tests
+                    if (!Character.isDigit(ch)) {
+                        return new Character(ch);
+                    }
+                }
+            }
+            */
+            if (valueClass == ScriptRuntime.CharacterClass) {
+                return value;
+            }
+            return new Character((char)toInteger(value, 
+                                                 ScriptRuntime.CharacterClass,
+                                                 Character.MIN_VALUE,
+                                                 Character.MAX_VALUE));
         }
-
-        // Integer, Long, Char, Byte
-        if (type == ScriptRuntime.IntegerClass || type == Integer.TYPE)
-            return new Integer((int)ScriptRuntime.toInteger(value));
-
-        if (type == ScriptRuntime.LongClass || type == Long.TYPE)
-            return new Long((long)ScriptRuntime.toInteger(value));
-
-        if (type == ScriptRuntime.ByteClass || type == Byte.TYPE)
-            return new Byte((byte)ScriptRuntime.toInteger(value));
-
-        if (type == ScriptRuntime.ShortClass || type == Short.TYPE)
-            return new Short((short)ScriptRuntime.toInteger(value));
 
         // Double, Float
         if (type == ScriptRuntime.DoubleClass || type == Double.TYPE) {
@@ -510,14 +554,81 @@ public class NativeJavaObject implements Scriptable, Wrapper {
         }
 
         if (type == ScriptRuntime.FloatClass || type == Float.TYPE) {
-            return valueClass == ScriptRuntime.FloatClass
-                ? value
-                : new Float(ScriptRuntime.toNumber(value));
+            if (valueClass == ScriptRuntime.FloatClass) {
+                return value;
+            }
+            else {
+                double number = ScriptRuntime.toNumber(value);
+                if (Double.isInfinite(number) || Double.isNaN(number)
+                    || number == 0.0) {
+                    return new Float((float)number);
+                }
+                else {
+                    double absNumber = Math.abs(number);
+                    if (absNumber < (double)Float.MIN_VALUE) {
+                        return new Float((number > 0.0) ? +0.0 : -0.0);
+                    }
+                    else if (absNumber > (double)Float.MAX_VALUE) {
+                        return new Float((number > 0.0) ?
+                                         Float.POSITIVE_INFINITY : 
+                                         Float.NEGATIVE_INFINITY);
+                    }
+                    else {
+                        return new Float((float)number);
+                    }
+                }
+            }
         }
 
-        if (valueClass == ScriptRuntime.DoubleClass)
-            return value;
-            
+        // Integer, Long, Short, Byte
+        if (type == ScriptRuntime.IntegerClass || type == Integer.TYPE) {
+            if (valueClass == ScriptRuntime.IntegerClass) {
+                return value;
+            }
+            else {
+                return new Integer((int)toInteger(value, 
+                                                  ScriptRuntime.IntegerClass,
+                                                  Integer.MIN_VALUE,
+                                                  Integer.MAX_VALUE));
+            }
+        }
+
+        if (type == ScriptRuntime.LongClass || type == Long.TYPE) {
+            if (valueClass == ScriptRuntime.LongClass) {
+                return value;
+            }
+            else {
+                return new Long(toInteger(value, 
+                                          ScriptRuntime.LongClass,
+                                          Long.MIN_VALUE,
+                                          Long.MAX_VALUE));
+            }
+        }
+
+        if (type == ScriptRuntime.ShortClass || type == Short.TYPE) {
+            if (valueClass == ScriptRuntime.ShortClass) {
+                return value;
+            }
+            else {
+                return new Short((short)toInteger(value, 
+                                                  ScriptRuntime.ShortClass,
+                                                  Short.MIN_VALUE,
+                                                  Short.MAX_VALUE));
+            }
+        }
+
+        if (type == ScriptRuntime.ByteClass || type == Byte.TYPE) {
+            if (valueClass == ScriptRuntime.ByteClass) {
+                return value;
+            }
+            else {
+                return new Byte((byte)toInteger(value, 
+                                                ScriptRuntime.ByteClass,
+                                                Byte.MIN_VALUE,
+                                                Byte.MAX_VALUE));
+            }
+        }
+
         // If JSObject compatibility is enabled, and the method wants it,
         // wrap the Scriptable value in a JSObject.
         if (Context.useJSObject && jsObjectClass != null && 
@@ -540,12 +651,50 @@ public class NativeJavaObject implements Scriptable, Wrapper {
                 }
             }
         
-        if (ScriptRuntime.NumberClass.isInstance(value))
-            return new Double(((Number) value).doubleValue());
-
         return value;
     }
-    
+
+    static long toInteger(Object value, Class type, long min, long max) {
+        double d;
+
+        if (value instanceof Number) {
+            d = ((Number)value).doubleValue();
+        }
+        else if (value instanceof String) {
+            d = ScriptRuntime.toNumber((String)value);
+        }
+        else if (value instanceof Scriptable) {
+            d = ScriptRuntime.toNumber(value);
+        }
+        else {
+            // XXX: is this correct?
+            d = ScriptRuntime.toNumber(value.toString());
+        }
+
+        if (Double.isInfinite(d) || Double.isNaN(d)) {
+            // Convert to string first, for more readable message
+            reportConversionError(value.toString(), type);
+        }
+
+        if (d > 0.0) {
+            d = Math.floor(d);
+        }
+        else {
+            d = Math.ceil(d);
+        }
+
+        if (d < (double)min || d > (double)max) {
+            // Convert to string first, for more readable message
+            reportConversionError(value.toString(), type);
+        }
+        return (long)d;
+    }
+
+    static void reportConversionError(Object value, Class type) {
+        Object[] args = {value, type};
+        throw Context.reportRuntimeError(Context.getMessage("msg.conversion.not.allowed", args));
+    }
+
     public static void initJSObject() {
         if (!Context.useJSObject)
             return;

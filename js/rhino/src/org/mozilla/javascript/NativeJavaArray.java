@@ -82,8 +82,6 @@ public class NativeJavaArray extends NativeJavaObject {
     
     public void put(int index, Scriptable start, Object value) {
         if (0 <= index && index < length) {
-            if (value instanceof Wrapper)
-                value = ((Wrapper)value).unwrap();
             Array.set(array, index, NativeJavaObject.coerceType(cls, value));
             return;
         }

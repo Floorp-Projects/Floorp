@@ -129,16 +129,11 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
     	if (! (Modifier.isInterface(modifiers) || 
                Modifier.isAbstract(modifiers))) 
         {
-	        for (int i = 0; i < args.length; i++) {
-	            if (args[i] instanceof Wrapper)
-	                args[i] = ((Wrapper)args[i]).unwrap();
-	        }
-
 	        Constructor[] ctors = members.getConstructors();
 	        Member member = NativeJavaMethod.findFunction(ctors, args);
 	        Constructor ctor = (Constructor) member;
 	        if (ctor == null) {
-	            String sig = NativeJavaMethod.signature(args);
+	            String sig = NativeJavaMethod.scriptSignature(args);
 	            Object errArgs[] = { classObject.getName(), sig };
 	            throw Context.reportRuntimeError(Context.getMessage(
 	                "msg.no.java.ctor", errArgs));
@@ -187,8 +182,8 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
             args[i] = NativeJavaObject.coerceType(paramTypes[i], args[i]);
         }
         try {
-            /* we need to force this to be wrapped, because construct _has_
-             * to return a scriptable */
+            // we need to force this to be wrapped, because construct _has_
+            // to return a scriptable 
             return 
                 (Scriptable) NativeJavaObject.wrap(topLevel, 
                                                    ctor.newInstance(args),
@@ -201,7 +196,7 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
                                              ("msg.cant.instantiate",
                                               errArgs));
         } catch (IllegalArgumentException argEx) {
-            String signature = NativeJavaMethod.signature(args);
+            String signature = NativeJavaMethod.scriptSignature(args);
             String ctorString = ctor.toString();
             Object[] errArgs = { argEx.getMessage(),ctorString,signature };
             throw Context.reportRuntimeError(Context.getMessage
@@ -222,11 +217,16 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
 
     /**
      * Determines if prototype is a wrapped Java object and performs
-     * a Java "instanceof"
+     * a Java "instanceof".
+     * Exception: if value is an instance of NativeJavaClass, it isn't 
+     * considered an instance of the Java class; this forestalls any 
+     * name conflicts between java.lang.Class's methods and the 
+     * static methods exposed by a JavaNativeClass.
      */
     public boolean hasInstance(Scriptable value) {
 
-        if (value instanceof NativeJavaObject) {
+        if (value instanceof NativeJavaObject && 
+            !(value instanceof NativeJavaClass)) {
             Object instance = ((NativeJavaObject)value).unwrap();
 
             return getClassObject().isInstance(instance);

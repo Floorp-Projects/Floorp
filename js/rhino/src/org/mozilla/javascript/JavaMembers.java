@@ -166,6 +166,10 @@ class JavaMembers {
     {
         Hashtable ht = isStatic ? staticMembers : members;
         Object member = ht.get(name);
+        if (!isStatic && member == null) {
+            // Try to get static member from instance (LC3)
+            member = staticMembers.get(name);
+        }
         if (member == null)
             throw reportMemberNotFound(name);
         if (member instanceof FieldAndMethods) {
@@ -174,9 +178,6 @@ class JavaMembers {
         Field field = null;
         try {
             field = (Field) member;
-            // XXX what was this for?
-            //if (obj instanceof Wrapper)
-            //    obj = ((Wrapper)obj).unwrap();
             field.set(javaObject, NativeJavaObject.coerceType(field.getType(),
                                                               value));
         } catch (ClassCastException e) {

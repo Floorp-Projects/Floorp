@@ -67,55 +67,58 @@ public class NativeJavaMethod extends NativeFunction implements Function {
         methods = newMeths;
     }
 
-    static String signature(Class type) {
-        if (type == null)
+    static String scriptSignature(Object value) {
+        if (value == null) {
             return "null";
-        if (type == ScriptRuntime.BooleanClass)
-            return "boolean";
-        if (type == ScriptRuntime.ByteClass)
-            return "byte";
-        if (type == ScriptRuntime.ShortClass)
-            return "short";
-        if (type == ScriptRuntime.IntegerClass)
-            return "int";
-        if (type == ScriptRuntime.LongClass)
-            return "long";
-        if (type == ScriptRuntime.FloatClass)
-            return "float";
-        if (type == ScriptRuntime.DoubleClass)
-            return "double";
-        if (type == ScriptRuntime.StringClass)
-            return "string";
-        if (ScriptRuntime.ScriptableClass.isAssignableFrom(type)) {
-            if (ScriptRuntime.FunctionClass.isAssignableFrom(type))
-                return "function";
+        }
+        else {
+            Class type = value.getClass();
             if (type == ScriptRuntime.UndefinedClass)
                 return "undefined";
-            return "object";
+            if (type == ScriptRuntime.BooleanClass)
+                return "boolean";
+            if (type == ScriptRuntime.StringClass)
+                return "string";
+            if (ScriptRuntime.NumberClass.isAssignableFrom(type))
+                return "number";
+            if (value instanceof NativeJavaObject) {
+                return ((NativeJavaObject)value).unwrap().getClass().getName();
+            }
+            if (value instanceof Scriptable) {
+                if (value instanceof Function)
+                    return "function";
+                return "object";
+            }
+            return javaSignature(type);
         }
-        if (type.isArray()) {
-            return signature(type.getComponentType()) + "[]";
-        }
-        return type.getName();
     }
 
-    static String signature(Object[] values) {
+    static String scriptSignature(Object[] values) {
         StringBuffer sig = new StringBuffer();
         for (int i = 0; i < values.length; i++) {
             if (i != 0)
                 sig.append(',');
-            sig.append(values[i] == null ? "null"
-                                         : signature(values[i].getClass()));
+            sig.append(scriptSignature(values[i]));
         }
         return sig.toString();
     }
 
-    static String signature(Class[] types) {
+    static String javaSignature(Class type) {
+        if (type == null) {
+            return "null";
+        }
+        else if (type.isArray()) {
+            return javaSignature(type.getComponentType()) + "[]";
+        }
+        return type.getName();
+    }
+
+    static String javaSignature(Class[] types) {
         StringBuffer sig = new StringBuffer();
         for (int i = 0; i < types.length; i++) {
             if (i != 0)
                 sig.append(',');
-            sig.append(signature(types[i]));
+            sig.append(javaSignature(types[i]));
         }
         return sig.toString();
     }
@@ -125,11 +128,11 @@ public class NativeJavaMethod extends NativeFunction implements Function {
 
         if (member instanceof Method) {
             paramTypes = ((Method) member).getParameterTypes();
-            return member.getName() + "(" + signature(paramTypes) + ")";
+            return member.getName() + "(" + javaSignature(paramTypes) + ")";
         }
         else {
             paramTypes = ((Constructor) member).getParameterTypes();
-            return "(" + signature(paramTypes) + ")";
+            return "(" + javaSignature(paramTypes) + ")";
         }
     }
 
@@ -142,16 +145,11 @@ public class NativeJavaMethod extends NativeFunction implements Function {
             throw new RuntimeException("No methods defined for call");
         }
 
-        // Eliminate useless args[0] and unwrap if required
-        for (int i = 0; i < args.length; i++)
-            if (args[i] instanceof Wrapper)
-                args[i] = ((Wrapper)args[i]).unwrap();
-
         Method meth = (Method) findFunction(methods, args);
         if (meth == null) {
             Class c = methods[0].getDeclaringClass();
             String sig = c.getName() + "." + names[0] + "(" +
-                         signature(args) + ")";
+                         scriptSignature(args) + ")";
             Object errArgs[] = { sig };
             throw Context.reportRuntimeError(
                 Context.getMessage("msg.java.no_such_method", errArgs));
@@ -179,9 +177,28 @@ public class NativeJavaMethod extends NativeFunction implements Function {
             }
         }
         try {
+            if (debug) {
+                printDebug("Calling", meth, args);
+            }
+
             Object retval = meth.invoke(javaObject, args);
             Class staticType = meth.getReturnType();
+
+            if (debug) {
+                Class actualType = (retval == null) ? null : retval.getClass();
+                System.err.println(" ----- Returned " + retval + 
+                                   " actual = " + actualType +
+                                   " expect = " + staticType);
+            }
+
             Object wrapped = NativeJavaObject.wrap(scope, retval, staticType);
+
+            if (debug) {
+                Class actualType = (wrapped == null) ? null : wrapped.getClass();
+                System.err.println(" ----- Wrapped as " + wrapped + 
+                                   " class = " + actualType);
+            }
+
             // XXX set prototype && parent
             if (wrapped == Undefined.instance)
                 return wrapped;
@@ -202,12 +219,6 @@ public class NativeJavaMethod extends NativeFunction implements Function {
         }
     }
 
-    /*
-    public Object getDefaultValue(Class hint) {
-        return this;
-    }
-    */
-    
     /** 
      * Find the correct function to call given the set of methods
      * or constructors and the arguments.
@@ -339,7 +350,7 @@ public class NativeJavaMethod extends NativeFunction implements Function {
             if (isCtor) {
                 Object errArgs[] = { 
                     bestFit.getName(), 
-                    NativeJavaMethod.signature(args),
+                    NativeJavaMethod.scriptSignature(args),
                     buf.toString()
                 };
                 errMsg = 
@@ -349,7 +360,7 @@ public class NativeJavaMethod extends NativeFunction implements Function {
                 Object errArgs[] = { 
                     bestFit.getDeclaringClass().getName(), 
                     bestFit.getName(), 
-                    NativeJavaMethod.signature(args),
+                    NativeJavaMethod.scriptSignature(args),
                     buf.toString()
                 };
                 errMsg = Context.getMessage("msg.method.ambiguous", errArgs);
@@ -417,10 +428,10 @@ public class NativeJavaMethod extends NativeFunction implements Function {
             rank2 == NativeJavaObject.CONVERSION_NONTRIVIAL) {
 
             if (toClass1.isAssignableFrom(toClass2)) {
-                return PREFERENCE_FIRST_ARG;
+                return PREFERENCE_SECOND_ARG;
             }
             else if (toClass2.isAssignableFrom(toClass1)) {
-                return PREFERENCE_SECOND_ARG;
+                return PREFERENCE_FIRST_ARG;
             }
         }
         else {
@@ -445,7 +456,7 @@ public class NativeJavaMethod extends NativeFunction implements Function {
             System.err.println(" ----- " + msg + 
                                member.getDeclaringClass().getName() +
                                "." + signature(member) +
-                               " for arguments (" + signature(args) + ")");
+                               " for arguments (" + scriptSignature(args) + ")");
         }
     }
 
