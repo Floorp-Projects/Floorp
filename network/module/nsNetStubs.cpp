@@ -29,6 +29,27 @@
 #include "nsString.h"
 #include "nsNetStream.h"
 
+#ifdef NS_NET_FILE
+
+// For xp to ns file translation
+#include "nsINetFile.h"
+#include "nsVoidArray.h"
+
+// The nsINetfile
+static nsINetFile *fileMgr = nsnull;
+
+typedef struct _xp_to_nsFile {
+    nsFile *nsFp;
+    XP_File xpFp;
+} xpNSFile;
+
+// Array of translation structs from xp to ns file.
+static nsVoidArray switchBack;
+
+// end xp to ns file translation
+
+#endif // NS_NET_FILE
+
 extern "C" {
 #include "secnav.h"
 #include "preenc.h"
@@ -367,7 +388,7 @@ char *WH_FilePlatformName(const char *pName)
 
 NS_DEFINE_IID(kRefreshURLIID,       NS_IREFRESHURL_IID);
 
-void FE_SetRefreshURLTimer(MWContext *pContext, URL_Struct *URL_s)
+void FE_SetRefreshURLTimer(MWContext *pContext, URL_Struct *URL_s) 
 {
     nsresult rv;
     nsIRefreshUrl* IRefreshURL=nsnull;
@@ -773,23 +794,53 @@ SHIST_GetCurrent(History * hist)
     return NULL;
 }
 
+#ifdef NS_NET_FILE
+// XXXXXXXXXXXXXXXXXXXXXXXXX NS_NET_FILE BEGIN XXXXXXXXXXXXXXXXXXXXXXXXX 
 
-#ifdef XP_MAC
-char *
-WH_TempName(XP_FileType type, const char * prefix)
-{
-    MOZ_FUNCTION_STUB;
-    return NULL;
+// Begin nsNetFile versions of xp_file routines. These stubs utilize the new
+// nsINetFile interface to do file i/o type things.
+
+
+// Utility routine to remove a transator object from the array and free it.
+nsresult deleteTrans(nsFile *nsFp) {
+    xpNSFile *trans = nsnull;
+
+    if (!nsFp)
+        return NS_OK;
+
+    for (PRInt32 i = switchBack.Count(); i > 0; i--) {
+        trans = (xpNSFile*)switchBack.ElementAt(i-1);
+        if (trans && trans->nsFp == nsFp) {
+            switchBack.RemoveElement(trans);
+            if (trans->xpFp) {
+                PR_Free(trans->xpFp);
+                trans->xpFp = nsnull;
+            }
+            PR_Free(trans);
+            return NS_OK;
+        }
+    }
+    return NS_ERROR_FAILURE;
+
 }
-#endif
 
+// Utility routine to convert an xpFile pointer to a ns file pointer.
+nsFile * XpToNsFp(XP_File xpFp) {
+    nsFile *nsFp = nsnull;
+    xpNSFile *trans = nsnull;
 
-/*
- *---------------------------------------------------------------------------
- * From ns/cmd/winfe/fegui.cpp
- *---------------------------------------------------------------------------
- */
-#ifdef XP_PC
+    if (!xpFp)
+        return nsnull;
+    for (PRInt32 i = switchBack.Count(); i > 0; i--) {
+        trans = (xpNSFile*)switchBack.ElementAt(i-1);
+        if (trans && trans->xpFp == xpFp) {
+            nsFp = trans->nsFp;
+            break;
+        }
+    }
+    return nsFp;
+}
+
 /*
 //
 // Open a file with the given name
@@ -797,31 +848,322 @@ WH_TempName(XP_FileType type, const char * prefix)
 //  out of the preferences list
 //
 */
-PUBLIC XP_File 
-XP_FileOpen(const char * name, XP_FileType type, const XP_FilePerm perm)
-{
-    MOZ_FUNCTION_STUB;
 
+/* List of old xpFile enums we need to support 
+ * Don't need cache stuff as new cache module will do it's own disk i/o
+xpCacheFAT
+xpCache
+xpSARCache
+xpExtCacheIndex
+
+xpProxyConfig
+xpURL
+xpJSConfig
+xpTemporary
+xpJSCookieFilters
+xpFileToPost
+xpMimeTypes
+xpHTTPCookie
+*/
+
+// Caller is repsonsible for freeing string.
+
+PRIVATE
+char *xpFileTypeToName(XP_FileType type) {
+    char *name = nsnull;
     switch (type) {
-        case xpURL:
-        case xpFileToPost:
-        case xpHTTPCookie:
-        {
-            XP_File fp;
-            char* newName = WH_FileName(name, type);
+        case (xpCache):
+            return PL_strdup(CACHE_DIR_TOK);
+            break;
+        case (xpCacheFAT):
+            return PL_strdup(CACHE_DIR_TOK CACHE_DB_F_TOK);
+            break;
+        case (xpProxyConfig):
+            break;
+        case (xpURL):
+            break;
+        case (xpJSConfig):
+            break;
+        case (xpTemporary):
+            break;
+        case (xpJSCookieFilters):
+            break;
+        case (xpFileToPost):
+            break;
+        case (xpMimeTypes):
+            break;
+        case (xpHTTPCookie):
+            return PL_strdup("%USER%%COOKIE_F%");
 
-            if (!newName) return NULL;
-
-        	fp = fopen(newName, (char *) perm);
-            XP_FREE(newName);
-
-            return fp;
-        }
         default:
             break;
     }
+    return nsnull;
+}
 
-    return NULL;
+/*
+// The caller is responsible for XP_FREE()ing the return string
+*/
+PUBLIC char *
+WH_FileName (const char *NetName, XP_FileType type)
+{
+    char *path = nsnull, *aName = nsnull;
+    nsresult rv;
+
+    if (!NetName || !*NetName) {
+        aName = xpFileTypeToName(type);
+        if (!aName) {
+            return NULL;
+        }
+    }
+
+    if (!fileMgr) {
+        if (NS_NewINetFile(&fileMgr, nsnull) != NS_OK) {
+            return NULL;
+        }
+    }
+
+    rv = fileMgr->GetFilePath( (aName ? aName : NetName), &path);
+    if (rv != NS_OK)
+        return NULL;
+
+    return path;
+}
+
+char *
+WH_TempName(XP_FileType type, const char * prefix)
+{
+    char *path = nsnull, *aName = nsnull;
+    nsresult rv;
+
+    aName = xpFileTypeToName(type);
+    if (!aName) {
+        return NULL;
+    }
+
+
+    if (!fileMgr) {
+        if (NS_NewINetFile(&fileMgr, nsnull) != NS_OK) {
+            return NULL;
+        }
+    }
+
+    rv = fileMgr->GetCacheFileName(aName, &path);
+    if (rv != NS_OK)
+        return NULL;
+
+    return PL_strdup(path);
+}
+
+PUBLIC int
+NET_I_XP_Fileno(XP_File fp) {
+    nsFile *nsFp = XpToNsFp(fp); // nsnull ok.
+
+    NS_PRECONDITION( (nsFp != nsnull), "Null pointer.");
+
+    return (int) nsFp->fd;
+}
+
+PUBLIC int
+NET_I_XP_FileSeek(XP_File fp, long offset, int origin) {
+    nsFile *nsFp = XpToNsFp(fp); // nsnull ok.
+    PRSeekWhence sw;
+
+    NS_PRECONDITION( (nsFp != nsnull), "Null pointer.");
+
+    /* Need to confirm the origin to PRSeekWhence mapping */
+
+    switch (origin) {
+        case (0):
+            sw = PR_SEEK_SET;
+            break;
+        case (1):
+            sw = PR_SEEK_CUR;
+            break;
+        case (2):
+            sw = PR_SEEK_END;
+            break;
+        default:
+            sw = PR_SEEK_SET;
+    }
+
+    return PR_Seek(nsFp->fd, offset, sw);
+}
+
+// Initialization routine for nsNetFile. This registers all the directories
+// and files in the nsNetFile instance. Use the form:
+// token = %token%
+// value = opaque string
+//
+// Directories and files are platform specific.
+PUBLIC PRBool
+NET_InitFilesAndDirs(void) {
+
+    if (!fileMgr) {
+        if (NS_NewINetFile(&fileMgr, nsnull) != NS_OK) {
+            return FALSE;
+        }
+    }
+
+    // Setup directories.
+    fileMgr->SetDirectory(USER_DIR_TOK, USER_DIR);
+    fileMgr->SetDirectory(CACHE_DIR_TOK, CACHE_DIR);
+    fileMgr->SetDirectory(DEF_DIR_TOK, DEF_DIR);
+
+    // Setup files.
+    fileMgr->SetFileAssoc(COOKIE_FILE_TOK, COOKIE_FILE, USER_DIR_TOK);
+    fileMgr->SetFileAssoc(CACHE_DB_F_TOK, CACHE_DB_FILE, CACHE_DIR_TOK);
+    return TRUE;
+}
+
+PUBLIC XP_File 
+NET_I_XP_FileOpen(const char * name, XP_FileType type, const XP_FilePerm perm)
+{
+    XP_File xpFp;
+    xpNSFile *trans = (xpNSFile*)PR_Malloc(sizeof(xpNSFile));
+    nsFile *nsFp = nsnull;
+    nsresult rv;
+    nsFileMode mode;
+    char *aName = nsnull;
+
+    if (!fileMgr) {
+        if (NS_NewINetFile(&fileMgr, nsnull) != NS_OK) {
+            return NULL;
+        }
+    }
+
+    // Just get some random address.
+    xpFp = (XP_File) PR_Malloc(1);
+
+    trans->xpFp= xpFp;
+
+    if (!PL_strcasecmp(perm,XP_FILE_READ)) {
+        mode = nsRead;
+    } else if (!PL_strcasecmp(perm,XP_FILE_WRITE)) {
+        mode = nsOverWrite;
+    } else if (!PL_strcasecmp(perm,XP_FILE_WRITE_BIN)) {
+        mode = nsOverWrite;
+    } else {
+        mode = nsReadWrite;
+    }
+
+    /* call OpenFile with nsNetFile syntax if necesary. */
+    if ( (!name || !*name) 
+         || type == xpCache ) {
+        nsString newName;
+        newName = xpFileTypeToName(type);
+        if (newName.Length() < 1) {
+            PR_Free(trans);
+            PR_Free(xpFp);
+            return NULL;
+        }
+        newName.Append(name);
+        aName = newName.ToNewCString();
+    }
+
+    rv = fileMgr->OpenFile( (aName ? aName : name), mode, &nsFp);
+    PR_Free(aName);
+    if (NS_OK != rv) {
+        return NULL;
+    }
+
+    trans->nsFp = nsFp;
+
+    switchBack.AppendElement(trans);
+
+    return xpFp;
+}
+
+PUBLIC char *
+NET_I_XP_FileReadLine(char *outBuf, int outBufLen, XP_File fp) {
+    nsFile *nsFp = XpToNsFp(fp); // nsnull ok.
+    PRInt32 readBytes;
+    nsresult rv;
+
+    NS_PRECONDITION( (nsFp != nsnull), "Null pointer");
+
+    if (!nsFp)
+        return NULL;
+
+    if (!fileMgr)
+        return NULL;
+
+    rv = fileMgr->FileReadLine( nsFp, &outBuf, &outBufLen, &readBytes);
+    if (NS_OK != rv) {
+        return NULL;
+    }
+
+    return outBuf;
+}
+
+PUBLIC int
+NET_I_XP_FileRead(char *outBuf, int outBufLen, XP_File fp) {
+    nsFile *nsFp = XpToNsFp(fp); // nsnull ok.
+    PRInt32 readBytes;
+    nsresult rv;
+
+    NS_PRECONDITION( (nsFp != nsnull), "Null pointer");
+
+    if (!nsFp)
+        return -1;
+
+    if (!fileMgr)
+        return -1;
+
+    rv = fileMgr->FileRead( nsFp, &outBuf, &outBufLen, &readBytes);
+    if (NS_OK != rv) {
+        return -1;
+    }
+
+    return (int) readBytes;
+}
+
+PUBLIC int
+NET_I_XP_FileWrite(const char *buf, int bufLen, XP_File fp) {
+    nsFile *nsFp = XpToNsFp(fp); // nsnull ok.
+    PRInt32 wroteBytes;
+    PRInt32 len;
+    nsresult rv;
+
+    if (bufLen < 0)
+        len = PL_strlen(buf);
+    else
+        len = bufLen;
+
+    if (!nsFp)
+        return -1;
+
+    if (!fileMgr)
+        return NULL;
+
+    rv = fileMgr->FileWrite(nsFp, buf, &len, &wroteBytes);;
+    if (rv != NS_OK)
+        return NULL;
+
+    return (int) wroteBytes;
+}
+
+PUBLIC int
+NET_I_XP_FileClose(XP_File fp) {
+    nsFile *nsFp = XpToNsFp(fp); // nsnull ok.
+    nsresult rv;
+
+    NS_PRECONDITION( (nsFp != nsnull), "Null pointer");
+
+    if (!fileMgr) {
+        if (NS_NewINetFile(&fileMgr, nsnull) != NS_OK) {
+            return 0;
+        }
+    }
+
+    rv = fileMgr->CloseFile(nsFp);
+    if (rv != NS_OK)
+        return 0;
+
+    deleteTrans(nsFp);
+    fp = nsnull;
+
+    return 1;
 }
 
 
@@ -831,38 +1173,124 @@ XP_FileOpen(const char * name, XP_FileType type, const XP_FilePerm perm)
 //
 */
 PUBLIC int 
-XP_FileRemove(const char * name, XP_FileType type)
+NET_I_XP_FileRemove(const char * name, XP_FileType type)
 {
-    MOZ_FUNCTION_STUB;
-    return -1;
+    char *path = nsnull, *aName = nsnull;
+    nsresult rv;
+
+    if ( (!name || !*name) 
+         || type == xpCache ) {
+        nsString newName;
+        newName = xpFileTypeToName(type);
+        if (newName.Length() < 1) {
+            return NULL;
+        }
+        newName.Append(name);
+        aName = newName.ToNewCString();
+    }
+
+    if (!fileMgr) {
+        if (NS_NewINetFile(&fileMgr, nsnull) != NS_OK) {
+            return NULL;
+        }
+    }
+
+    rv = fileMgr->FileRemove((aName ? aName : name));
+    if (rv != NS_OK)
+        return -1;
+
+    return 0;
 }
 
-/*
-//
-// Mimic unix stat call
-// Return -1 on error
-//
-*/
 PUBLIC int 
-XP_Stat(const char * name, XP_StatStruct * info, XP_FileType type)
+NET_I_XP_Stat(const char * name, XP_StatStruct * info, XP_FileType type)
 {
     int result = -1;
-    MOZ_FUNCTION_STUB;
+    PRFileInfo fileInfo;
+    PRStatus status;
+    char *newName;
+    nsString ourName;
+    char *path;
+    nsresult rv;
 
     switch (type) {
+        case xpCache:
+            ourName = xpFileTypeToName(type);
+            if (ourName.Length() < 1) {
+                return NULL;
+            }
+            ourName.Append(name);
+            newName = ourName.ToNewCString();
+
+            if (!fileMgr) {
+                if (NS_NewINetFile(&fileMgr, nsnull) != NS_OK) {
+                    return NULL;
+                }
+            }
+
+            rv = fileMgr->GetFilePath(newName, &path);
+            if (rv != NS_OK)
+                return -1;
+            status = PR_GetFileInfo(path, &fileInfo);
+            delete path;
+            delete newName;
+            if (status == PR_SUCCESS) {
+                // transfer the pr stat info over to the xp stat object.
+                // right now just moving over the size.
+                info->st_size = fileInfo.size;
+                return 0;              
+            }
+            break;
         case xpURL:
         case xpFileToPost: {
-            char *newName = WH_FileName(name, type);
+            newName = WH_FileName(name, type);
     	
             if (!newName) return -1;
             result = _stat( newName, info );
-            XP_FREE(newName);
+            delete newName;
             break;
         }
         default:
             break;
     }
     return result;
+}
+
+PUBLIC XP_Dir 
+NET_I_XP_OpenDir(const char * name, XP_FileType type)
+{
+    MOZ_FUNCTION_STUB;
+    return NULL;
+}
+
+PUBLIC void 
+NET_I_XP_CloseDir(XP_Dir dir)
+{
+    MOZ_FUNCTION_STUB;
+}
+/*
+//
+// Close the directory
+//
+*/
+
+PUBLIC XP_DirEntryStruct * 
+NET_I_XP_ReadDir(XP_Dir dir)
+{                                         
+    MOZ_FUNCTION_STUB;
+    return NULL;
+}
+// XXXXXXXXXXXXXXXXXXXXXXXXX NS_NET_FILE END XXXXXXXXXXXXXXXXXXXXXXXXX 
+#endif /* NS_NET_FILE */
+
+// Begin vanilla versions of xp_file routines. These are simply stubs.
+
+#ifndef NS_NET_FILE
+char *
+WH_TempName(XP_FileType type, const char * prefix)
+{
+    MOZ_FUNCTION_STUB;
+    return NULL;
 }
 
 /*
@@ -879,6 +1307,9 @@ WH_FileName (const char *NetName, XP_FileType type)
 #else
         return PL_strdup("cookies");
 #endif
+    } else if (type == xpCacheFAT) {
+;//		sprintf(newName, "%s\\fat.db", (const char *)theApp.m_pCacheDir);
+        
     } else if ((type == xpURL) || (type == xpFileToPost)) {
         /*
          * This is the body of XP_NetToDosFileName(...) which is implemented 
@@ -924,15 +1355,69 @@ WH_FileName (const char *NetName, XP_FileType type)
 
     return NULL;
 }
+#endif // !NS_NET_FILE
 
-
-char *
-WH_TempName(XP_FileType type, const char * prefix)
+PUBLIC XP_File 
+XP_FileOpen(const char * name, XP_FileType type, const XP_FilePerm perm)
 {
     MOZ_FUNCTION_STUB;
+    switch (type) {
+        case xpURL:
+        case xpFileToPost:
+        case xpHTTPCookie:
+        {
+            XP_File fp;
+            char* newName = WH_FileName(name, type);
+
+            if (!newName) return NULL;
+
+        	fp = fopen(newName, (char *) perm);
+            XP_FREE(newName);
+            return fp;
+
+        }
+        default:
+            break;
+    }
+
     return NULL;
 }
 
+PUBLIC int 
+XP_FileRemove(const char * name, XP_FileType type)
+{
+    if (PR_Delete(name) == PR_SUCCESS)
+        return 0;
+    return -1;
+}
+
+/*
+//
+// Mimic unix stat call
+// Return -1 on error
+//
+*/
+PUBLIC int 
+XP_Stat(const char * name, XP_StatStruct * info, XP_FileType type)
+{
+    int result = -1;
+    MOZ_FUNCTION_STUB;
+
+    switch (type) {
+        case xpURL:
+        case xpFileToPost: {
+            char *newName = WH_FileName(name, type);
+    	
+            if (!newName) return -1;
+            result = _stat( newName, info );
+            XP_FREE(newName);
+            break;
+        }
+        default:
+            break;
+    }
+    return result;
+}
 
 PUBLIC XP_Dir 
 XP_OpenDir(const char * name, XP_FileType type)
@@ -940,12 +1425,6 @@ XP_OpenDir(const char * name, XP_FileType type)
     MOZ_FUNCTION_STUB;
     return NULL;
 }
-
-/*
-//
-// Close the directory
-//
-*/
 
 PUBLIC void 
 XP_CloseDir(XP_Dir dir)
@@ -959,8 +1438,6 @@ XP_ReadDir(XP_Dir dir)
     MOZ_FUNCTION_STUB;
     return NULL;
 }
-
-#endif /* XP_PC */
 
 PUBLIC void *
 FE_AboutData (const char *which,

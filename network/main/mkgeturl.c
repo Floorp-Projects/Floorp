@@ -698,12 +698,23 @@ MODULE_PRIVATE int PR_CALLBACK NET_PrefChangedFunc(const char *pref, void *data)
 	return TRUE;
 } 
 
+
+#ifdef NS_NET_FILE
+extern PRBool NET_InitFilesAndDirs(void);
+#endif
 /* finish the init of 'netlib'.  inits cookies, cache, history
  *
  */
 PUBLIC void 
 NET_FinishInitNetLib()
 {
+#ifdef NS_NET_FILE
+    // Initialize all the directories and files that netlib needs.
+    if (!NET_InitFilesAndDirs())
+        ; // do something.
+#endif
+
+
 #ifdef MOZILLA_CLIENT
     NET_CacheInit();
     NET_ReadCookies("");

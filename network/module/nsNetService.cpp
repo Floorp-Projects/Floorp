@@ -21,6 +21,7 @@
 #include "nsNetService.h"
 #include "nsNetStream.h"
 #include "net.h"
+#include "nsNetFile.h"
 extern "C" {
 #include "mkutils.h"
 #include "mkgeturl.h"
@@ -35,6 +36,21 @@ extern "C" {
 #include "nsString.h"
 #include "nsIProtocolConnection.h"
 #include "nsINetContainerApplication.h"
+
+
+// Declare the nsFile struct here so it's state is initialized before
+// we initialize netlib.
+#ifdef NS_NET_FILE
+
+#include "nsNetFile.h"
+#ifdef XP_MAC
+static nsNetFileInit* netFileInit = nsnull;
+#else
+static nsNetFileInit netFileInit;
+#endif
+
+#endif // NS_NET_FILE
+// End nsFile specific
 
 /* XXX: Legacy definitions... */
 // Global count of active urls from mkgeturl.c

@@ -31,7 +31,8 @@ EXPORTS = nsIStreamListener.h           \
           nsIRelatedLinks.h             \
           nsINetContainerApplication.h  \
           nsIRefreshUrl.h               \
-	  nsIConnectionInfo.h		\
+    	  nsIConnectionInfo.h		    \
+          nsINetFile.h                  \
           $(NULL)
 
 DIRS = tests
@@ -67,7 +68,8 @@ OBJS=                                   \
         .\$(OBJDIR)\nsHttpUrl.obj       \
         .\$(OBJDIR)\nsStubContext.obj   \
         .\$(OBJDIR)\nsNetStubs.obj      \
-	.\$(OBJDIR)\nsNetIDs.obj	\
+	    .\$(OBJDIR)\nsNetIDs.obj	    \
+        .\$(OBJDIR)\nsNetFile.obj       \
         $(NULL)
 
 #//------------------------------------------------------------------------
