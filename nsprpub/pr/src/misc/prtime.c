@@ -64,7 +64,7 @@
  * each month, where index 1 is January, and day 0 is January 1.
  */
 
-static int lastDayOfMonth[2][13] = {
+static const int lastDayOfMonth[2][13] = {
     {-1, 30, 58, 89, 119, 150, 180, 211, 242, 272, 303, 333, 364},
     {-1, 30, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365}
 };
@@ -73,7 +73,7 @@ static int lastDayOfMonth[2][13] = {
  * The number of days in a month
  */
 
-static PRInt8 nDays[2][12] = {
+static const PRInt8 nDays[2][12] = {
     {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31},
     {31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}
 };
