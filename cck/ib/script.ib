@@ -1,5 +1,8 @@
 configure(GENERAL,Product Name,%InstallerScreenText1%)
 configure(GENERAL,Setup Title1,%InstallerScreenText1%)
+configure(GENERAL,Setup Title1 Font Size,%DefaultFontSize%)
+configure(GENERAL,Setup Title1 Font Color,%DefaultFontColor%)
+configure(GENERAL,Setup Title1 Font Shadow,%DefaultFontShadow%)
 configure(GENERAL,Setup Title2,%InstallerScreenText2%)
 configure(GENERAL,Program Folder Name,%ProgramFolderName%)
 configure(Dialog Setup Type,Readme Filename,%ReadMeFile%)
