@@ -51,7 +51,6 @@
 #include "nsIWindowsHooks.h"
 #include "nsIPromptService.h"
 #include "nsNetCID.h"
-#include "nsIHttpProtocolHandler.h"
 
 // These are needed to load a URL in a browser window.
 #include "nsIDOMLocation.h"
@@ -74,7 +73,6 @@
 #define TURBO_EXIT 6
 
 static HWND hwndForDOMWindow( nsISupports * );
-static NS_DEFINE_CID(kHttpHandlerCID, NS_HTTPPROTOCOLHANDLER_CID);
 
 static
 nsresult
@@ -925,29 +923,24 @@ nsNativeAppSupportWin::Start( PRBool *aResult ) {
 
     PRBool serverMode = PR_FALSE;
     GetIsServerMode( &serverMode );
-#if 0
-/* temporarily disabling to clear smoketest blocker 99286
-   don't create an http protocol handler service before XPCOM is initialized
-   (danm for dp) */
-
+	// This code CANNOT be enabled here. This happens before XPCOM is initialized.
+	// SetIsServerMode() requires string bundle which requires XPCOM
+	// We should have this happen on a callback on first page load complete
+	// or some such thing.
     if ( !serverMode ) {  // okay, so it's not -turbo
         HKEY key;
         LONG result = ::RegOpenKeyEx( HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Run", 0, KEY_QUERY_VALUE, &key );
         if ( result == ERROR_SUCCESS ) {
-            nsresult res;
-            nsCOMPtr<nsIHttpProtocolHandler> http ( do_GetService( kHttpHandlerCID, &res ) );
-            if ( NS_FAILED( res ) ) return rv;
-            nsXPIDLCString appName;
-            http->GetAppName( getter_Copies( appName ) );
-            nsCString fullValue; fullValue.Assign( appName );
-            fullValue.Append( " Quick Launch" );
-            result = ::RegQueryValueEx( key, fullValue, NULL, NULL, NULL, NULL );
+            result = ::RegQueryValueEx( key, NS_QUICKLAUNCH_RUN_KEY, NULL, NULL, NULL, NULL );
             ::RegCloseKey( key );
-            if ( result == ERROR_SUCCESS )
-                SetIsServerMode( PR_TRUE );
+            if ( result == ERROR_SUCCESS ) {
+              // XXX To make absolutely sure, we should check the value to see if this is
+              // XXX us or one of our predecessors - bascially distinguish betn mozilla and
+              // XXX mozilla based browsers
+              SetIsServerMode( PR_TRUE );
+            }
         }
     }
-#endif
 
     return rv;
 }
