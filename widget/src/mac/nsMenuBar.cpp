@@ -68,6 +68,7 @@ NS_IMPL_RELEASE(nsMenuBar)
 //-------------------------------------------------------------------------
 nsEventStatus nsMenuBar::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
+/*
   // Dispatch menu event
   nsEventStatus eventStatus = nsEventStatus_eIgnore;
   for (int i = mMenuVoidArray.Count(); i >= 0; i--)
@@ -79,7 +80,7 @@ nsEventStatus nsMenuBar::MenuSelected(const nsMenuEvent & aMenuEvent)
     if(nsEventStatus_eIgnore != eventStatus)
       return eventStatus;
   }
-  
+  */
   return nsEventStatus_eIgnore;
 }
 
