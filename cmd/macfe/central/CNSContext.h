@@ -256,7 +256,8 @@ class CNSContext : public LBroadcaster, public LSharable
 
 		virtual	void 				GetFormElementValue(
 											LO_FormElementStruct* 	inElement,
-											XP_Bool 				inHide);
+											XP_Bool 				inHide,
+											XP_Bool 				inSubmit);
 
 		virtual	void 				ResetFormElement(
 											LO_FormElementStruct* 	inElement);

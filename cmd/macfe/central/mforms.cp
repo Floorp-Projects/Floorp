@@ -3435,7 +3435,7 @@ LFormElement::ReflectData()	// reflect to XP data structures
 	if (!XP_IsContextInList(fContext))
 		return;
 	
-	UFormElementFactory::GetFormElementValue(&(fLayoutElement->lo_form), false);
+	UFormElementFactory::GetFormElementValue(&(fLayoutElement->lo_form), false, false);
 }
 
 

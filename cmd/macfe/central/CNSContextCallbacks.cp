@@ -140,11 +140,12 @@ void CNSContextCallbacks::GetFormElementInfo(
 void CNSContextCallbacks::GetFormElementValue(
 	MWContext* 				inContext,
 	LO_FormElementStruct* 	inElement,
-	XP_Bool 				inHide)
+	XP_Bool 				inHide,
+	XP_Bool					inSubmit)
 {
 	CNSContext* theNSContext = ExtractNSContext(inContext);
 	Assert_(theNSContext != NULL);
-	theNSContext->GetFormElementValue(inElement, inHide);
+	theNSContext->GetFormElementValue(inElement, inHide, inSubmit);
 }
 
 void CNSContextCallbacks::ResetFormElement(

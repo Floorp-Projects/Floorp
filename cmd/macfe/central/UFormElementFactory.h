@@ -143,7 +143,8 @@ public:
 							);
 	static	void	GetFormElementValue(
 							LO_FormElementStruct *formElem,
-							Boolean hide
+							Boolean hide,
+							Boolean submit
 							);
 	static	void	HideFormElement(
 							LO_FormElementStruct* formElem

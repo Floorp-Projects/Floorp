@@ -46,11 +46,15 @@
 #include "CAutoPtr.h"
 
 // Backend
+#include "ntypes.h"
 #include "lo_ele.h"	// for struct def'n
 #include "xlate.h"
 #include "fe_proto.h"
 #include "prefapi.h"
 #include "edt.h"
+#ifdef MOZ_ENDER_MIME
+#include "mhtmlstm.h"
+#endif /*MOZ_ENDER_MIME*/
 
 // macros
 #define FEDATAPANE	((FormFEData *)formElem->element_data->ele_minimal.FE_Data)->fPane	
@@ -74,8 +78,6 @@ void FE_FreeFormElement(
 	UFormElementFactory::FreeFormElement(inFormData);
 }
 
-// moose: temporary hack until we fix up lo_ele.h and ntypes.h to have an HTMLarea struct
-typedef struct lo_FormElementTextareaData_struct lo_FormElementHTMLareaData;
 
 // prototypes
 static Boolean HasFormWidget(LO_FormElementStruct *formElem);
@@ -611,7 +613,7 @@ LPane* UFormElementFactory::MakeHTMLArea(
 	FontInfo fontInfo;
 	if (!HasFormWidget(formElem))				// If there is no form, create it
 	{	
-		lo_FormElementHTMLareaData * htmlAreaData = (lo_FormElementHTMLareaData *) formElem->element_data;
+		lo_FormElementTextareaData * htmlAreaData = (lo_FormElementTextareaData *) formElem->element_data;
 	
 		// Create the view
 		LCommander::SetDefaultCommander(inHTMLView);
@@ -663,6 +665,7 @@ LPane* UFormElementFactory::MakeHTMLArea(
 								   
 	// Set the default values.
 		ResetFormElement(formElem, FALSE, InitFE_Data((MWContext*)*inNSContext, formElem, theView, theHTMLAreaView, theHTMLAreaView));
+		EDT_SetEmbeddedEditorData(context, (void*)htmlAreaData);
 
 		theView->Show();
 	}
@@ -1485,7 +1488,8 @@ static char* ConvertDataInTextEnginToUTF8(CWASTEEdit* engine)
 
 void UFormElementFactory::GetFormElementValue(
 	LO_FormElementStruct *formElem,
-	Boolean hide)
+	Boolean hide,
+	Boolean submit)
 {
 	if (!formElem->element_data)
 		return;
@@ -1584,7 +1588,7 @@ void UFormElementFactory::GetFormElementValue(
 				{
 				if ( !GetFEData( formElem ) )
 					return;
-				lo_FormElementHTMLareaData * htmlAreaData = (lo_FormElementHTMLareaData *) formElem->element_data;
+				lo_FormElementTextareaData * htmlAreaData = (lo_FormElementTextareaData *) formElem->element_data;
 				if (htmlAreaData->current_text)		// Free up the old memory
 					PA_FREE(htmlAreaData->current_text);
 				htmlAreaData->current_text = NULL;
@@ -1595,9 +1599,49 @@ void UFormElementFactory::GetFormElementValue(
 				CFormHTMLArea*  htmlEdit = (CFormHTMLArea*)scroller->FindPaneByID(formHTMLAreaID);
 				Assert_(htmlEdit != NULL);
 				// Copy the text over
-				char* newTextPtr = 0;
-				EDT_SaveToBuffer(*(((CHTMLView*)htmlEdit)->GetContext()), (XP_HUGE_CHAR_PTR*) &newTextPtr);
-				htmlAreaData->current_text = (PA_Block)newTextPtr;
+				char* t_oldbuffer = 0;
+				MWContext *t_context = *(((CHTMLView*)htmlEdit)->GetContext());
+				
+#ifdef MOZ_ENDER_MIME 
+				lo_FormElementHtmlareaData *t_htmldata = (lo_FormElementHtmlareaData*)htmlAreaData;
+                if(t_htmldata->mime_bits) 
+                { 
+                    XP_FREE(t_htmldata->mime_bits); 
+                    t_htmldata->mime_bits = NULL; 
+                } 
+#endif /*MOZ_ENDER_MIME*/
+				EDT_SaveToBuffer(t_context, (XP_HUGE_CHAR_PTR*) &t_oldbuffer);
+				if (!submit)
+				{
+					htmlAreaData->current_text = (PA_Block)t_oldbuffer;
+				}
+#ifdef MOZ_ENDER_MIME 
+				else
+				{
+	                char *pRootPartName = NULL; 
+	                //fs will be deleted in the UrlExitRoutine called from the ::Complete function. 
+	                MSG_MimeRelatedStreamSaver *fs = new MSG_MimeRelatedStreamSaver(NULL, t_context, NULL, 
+	                    FALSE, MSG_DeliverNow, 
+	                    NULL, 0, 
+	                    NULL, 
+	                    NULL, 
+	                    &pRootPartName,(char **)&t_htmldata->mime_bits); 
+	                EDT_SaveFileTo(t_context, 
+	                    ED_FINISHED_MAIL_SEND, 
+	                    pRootPartName,fs, TRUE, TRUE); 
+	                // Spin here until temp file saving is finished 
+	                while(  t_context->edit_saving_url ) 
+	                { 
+	                    FEU_StayingAlive(); 
+	                } 
+	                if (t_oldbuffer) 
+	                { 
+	                    EDT_SetDefaultMimeHTML( t_context, t_oldbuffer ); 
+	                    XP_FREE(t_oldbuffer); 
+	                } 
+					
+				}
+#endif /*MOZ_ENDER_MIME*/
 				}
 				break;
 #endif /*ENDER*/
@@ -1961,7 +2005,7 @@ void UFormElementFactory::ResetFormElementData(
 		{		
 			if ( !GetFEData( formElem ) )
 				return;
-			lo_FormElementHTMLareaData* htmlAreaData = (lo_FormElementHTMLareaData*) formElem->element_data;
+			lo_FormElementTextareaData* htmlAreaData = (lo_FormElementTextareaData*) formElem->element_data;
 			LView* scroller = (LView*)FEDATAPANE;
 			if (!scroller)
 				return;

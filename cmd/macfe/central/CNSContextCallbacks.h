@@ -92,7 +92,8 @@ class CNSContextCallbacks
 		static	void 				GetFormElementValue(
 											MWContext* 				inContext,
 											LO_FormElementStruct* 	inElement,
-											XP_Bool 				inHide);
+											XP_Bool 				inHide,
+											XP_Bool 				inSubmit);
 
 		static	void 				ResetFormElement(
 											MWContext* 				inContext,

@@ -1226,7 +1226,8 @@ void CNSContext::GetJavaAppSize(
 void CNSContext::GetFormElementInfo(LO_FormElementStruct* /* inElement */) {}
 void CNSContext::GetFormElementValue(
 	LO_FormElementStruct* /* inElement */,
-	XP_Bool /*inHide */) {}
+	XP_Bool /*inHide */,
+	XP_Bool /*inSubmit */) {}
 void CNSContext::ResetFormElement(LO_FormElementStruct* /* inElement */) {}
 void CNSContext::SetFormElementToggle(
 	LO_FormElementStruct* /* inElement */,

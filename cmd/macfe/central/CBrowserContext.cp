@@ -1289,7 +1289,8 @@ void CBrowserContext::GetFormElementInfo(
 
 void CBrowserContext::GetFormElementValue(
 	LO_FormElementStruct* 	inElement,
-	XP_Bool 				inHide)
+	XP_Bool 				inHide,
+	XP_Bool 				inSubmit)
 {
 	/*
 	CHTMLView* theCurrentView = ExtractHyperView(*this);
@@ -1300,7 +1301,7 @@ void CBrowserContext::GetFormElementValue(
 	// try to access panes within that view.
 	CHTMLView* theCurrentView = ExtractHyperView(*this);
 	if (theCurrentView)
-		UFormElementFactory::GetFormElementValue(inElement, inHide);
+		UFormElementFactory::GetFormElementValue(inElement, inHide, inSubmit);
 }
 
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
