@@ -449,6 +449,7 @@ NSPR_API(PRFileDesc*) PR_GetSpecialFD(PRSpecialFD id);
  **************************************************************************
  */
 
+#define PR_IO_LAYER_HEAD (PRDescIdentity)-3
 #define PR_INVALID_IO_LAYER (PRDescIdentity)-1
 #define PR_TOP_IO_LAYER (PRDescIdentity)-2
 #define PR_NSPR_IO_LAYER (PRDescIdentity)0
@@ -479,6 +480,22 @@ NSPR_API(const PRIOMethods *) PR_GetDefaultIOMethods(void);
  */
 NSPR_API(PRFileDesc*) PR_CreateIOLayerStub(
     PRDescIdentity ident, const PRIOMethods *methods);
+
+/*
+ **************************************************************************
+ * Creating a layer
+ *
+ * A new stack may be created by calling PR_CreateIOLayer(). The
+ * file descriptor returned will point to the top of the stack, which has
+ * the layer 'fd' as the topmost layer.
+ * 
+ * NOTE: This function creates a new style stack, which has a fixed, dummy
+ * header. The old style stack, created by a call to PR_PushIOLayer,
+ * results in modifying contents of the top layer of the stack, when
+ * pushing and popping layers of the stack.
+ **************************************************************************
+ */
+NSPR_API(PRFileDesc*) PR_CreateIOLayer(PRFileDesc* fd);
 
 /*
  **************************************************************************
