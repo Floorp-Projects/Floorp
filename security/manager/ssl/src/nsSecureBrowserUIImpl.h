@@ -41,6 +41,7 @@
 #include "nsIFormSubmitObserver.h"
 #include "nsIURI.h"
 #include "nsISecurityEventSink.h"
+#include "nsWeakReference.h"
 
 #define NS_SECURE_BROWSER_DOCOBSERVER_CLASSNAME "Mozilla Secure Browser Doc Observer"
 
@@ -54,7 +55,8 @@
 class nsSecureBrowserUIImpl : public nsSecureBrowserUI,
                               public nsIWebProgressListener,
                               public nsIFormSubmitObserver,
-                              public nsIObserver
+                              public nsIObserver,
+                              public nsSupportsWeakReference
 {
 public:
   

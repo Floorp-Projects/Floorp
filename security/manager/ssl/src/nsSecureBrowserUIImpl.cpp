@@ -27,6 +27,7 @@
 
 #include "nspr.h"
 #include "prlog.h"
+#include "prmem.h"
 
 #include "nsISecureBrowserUI.h"
 #include "nsSecureBrowserUIImpl.h"
@@ -34,7 +35,6 @@
 #include "nsCOMPtr.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIServiceManager.h"
-
 #include "nsIScriptGlobalObject.h"
 #include "nsIObserverService.h"
 #include "nsIDocumentLoader.h"
@@ -51,17 +51,10 @@
 #include "nsIWebProgress.h"
 #include "nsIChannel.h"
 #include "nsIChannelSecurityInfo.h"
-
 #include "nsIURI.h"
-
-#include "prmem.h"
-
 #include "nsISecurityEventSink.h"
-
-#include "nsINetSupportDialogService.h"
 #include "nsIPrompt.h"
 #include "nsIPref.h"
-
 #include "nsIFormSubmitObserver.h"
 
 static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
@@ -104,11 +97,12 @@ nsSecureBrowserUIImpl::~nsSecureBrowserUIImpl()
 {
 }
 
-NS_IMPL_ISUPPORTS4(nsSecureBrowserUIImpl,
+NS_IMPL_ISUPPORTS5(nsSecureBrowserUIImpl,
                    nsSecureBrowserUI,
                    nsIWebProgressListener,
                    nsIFormSubmitObserver,
-                   nsIObserver);
+                   nsIObserver,
+                   nsISupportsWeakReference);
 
 
 NS_IMETHODIMP
