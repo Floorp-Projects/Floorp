@@ -3485,20 +3485,13 @@ MOZ_ARG_ENABLE_BOOL(ultrasparc,
     solaris*)   
         case $OS_TEST in
         sun4u)
-            if test -z "$GNU_CC"; then
-                ASFLAGS='-xarch=v8plus -DULTRA_SPARC -P -L -D_ASM -D__STDC__=0 -K PIC'
-                AC_DEFINE(ULTRA_SPARC)
-            else
-                CFLAGS="${CFLAGS} -Wa,-xarch=v8plus,-DULTRA_SPARC,-P,-L,-D_ASM,-D__STDC__=0"
-                CXXFLAGS="${CXXFLAGS} -Wa,-xarch=v8plus,-DULTRA_SPARC,-P,-L,-D_ASM,-D__STDC__=0,-K,PIC"
-                AC_DEFINE(ULTRA_SPARC)
-            fi
+            JS_ULTRASPARC_OPTS=1
             ;;
         esac
         ;;
     esac
 ])
-
+AC_SUBST(JS_ULTRASPARC_OPTS)
 dnl ========================================================
 dnl =
 dnl = Profiling and Instrumenting
