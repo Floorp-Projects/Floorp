@@ -19,14 +19,14 @@ DEPTH=../..
 
 LIBRARY_NAME = privacy
 
-DEFINES = -DPRIVACY_POLICIES -DTRANSACTION_RECEIPTS
+CSRCS = privacy.c 
+
+ifdef MOZ_TRANSACTION_RECEIPTS
+DEFINES += -DTRANSACTION_RECEIPTS
+CSRCS += receipt.c
+endif
 
 CPPSRCS =				\
-	$(NULL)
-
-CSRCS = 				\
-	privacy.c \
-	receipt.c \
 	$(NULL)
 
 MODULE = privacy

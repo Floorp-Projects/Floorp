@@ -18,7 +18,14 @@
 DEPTH=..\..
 
 LIBRARY_NAME=privacy 
-DEFINES=-DPRIVACY_POLICIES -DTRANSACTION_RECEIPTS
+CPP_OBJS= .\$(OBJDIR)\privacy.obj
+CSRCS = privacy.c
+
+!ifdef MOZ_TRANSACTION_RECEIPTS
+DEFINES += -DTRANSACTION_RECEIPTS
+CSRCS += receipt.c
+CPP_OBJS += .\$(OBJDIR)\receipt.obj
+!endif
 
 CPPSRCS =				\
 	$(NULL)
@@ -26,11 +33,6 @@ CPPSRCS =				\
 MODULE=privacy 
 REQUIRES=privacy style lay layer rdf network pref nspr util img js
 EXPORTS= $(NULL)
-
-CPP_OBJS=					\
-	.\$(OBJDIR)\receipt.obj			\
-	.\$(OBJDIR)\privacy.obj			\
-	$(NULL)
 
 LINCS=-I$(PUBLIC)\lay -I$(PUBLIC)\style -I$(PUBLIC)\pref \
     -I$(PUBLIC)\layer -I$(PUBLIC)\rdf -I$(PUBLIC)\network \
