@@ -19,7 +19,7 @@
 	<key>CFBundleSignature</key>
 	<string>MOZZ</string>
 	<key>CFBundleIconFile</key>
-	<string>mach</string>
+	<string>mozilla.icns</string>
 	<key>CFBundleShortVersionString</key>
 	<string>1.5a</string>
 	<key>CFBundleGetInfoString</key>
@@ -28,66 +28,175 @@
         <true/>
 	<key>CFBundleDocumentTypes</key>
 	<array>
-		<dict>
-			<key>CFBundleTypeExtensions</key>
-			<array>
-				<string>html</string>
-				<string>htm</string>
-				<string>shtml</string>
-				<string>xml</string>
-				<string>xhtml</string>
-			</array>
-			<key>CFBundleTypeIconFile</key>
-			<string>fileHtml.icns</string>
-			<key>CFBundleTypeName</key>
-			<string>HTML Document</string>
-			<key>CFBundleTypeOSTypes</key>
-			<array>
-				<string>HTML</string>
-			</array>
-			<key>CFBundleTypeRole</key>
-			<string>Viewer</string>
-		</dict>
-		<dict>
-			<key>CFBundleTypeExtensions</key>
-			<array>
-				<string>txt</string>
-				<string>text</string>
-			</array>
-			<key>CFBundleTypeIconFile</key>
-			<string>fileBookmark.icns</string>
-			<key>CFBundleTypeName</key>
-			<string>Text Document</string>
-			<key>CFBundleTypeOSTypes</key>
-			<array>
-				<string>TEXT</string>
-				<string>utxt</string>
-			</array>
-			<key>CFBundleTypeRole</key>
-			<string>Viewer</string>
-		</dict>
-		<dict>
-			<key>CFBundleTypeExtensions</key>
-			<array>
-				<string>jpeg</string>
-				<string>jpg</string>
-				<string>png</string>
-				<string>gif</string>
-				<string>mng</string>
-			</array>
-			<key>CFBundleTypeIconFile</key>
-			<string>fileBookmark.icns</string>
-			<key>CFBundleTypeName</key>
-			<string>Image Document</string>
-			<key>CFBundleTypeOSTypes</key>
-			<array>
-				<string>GIFf</string>
-				<string>JPEG</string>
-				<string>PNGf</string>
-			</array>
-			<key>CFBundleTypeRole</key>
-			<string>Viewer</string>
-		</dict>
+	
+	<!--Updated Metadata begins here-->
+			
+			<dict>
+				<key>CFBundleTypeName</key>
+				<string>Text Document</string>
+				<key>CFBundleTypeRole</key>
+				<string>Viewer</string>
+				<key>CFBundleTypeOSTypes</key>
+				<array>
+					<string>TEXT</string>
+					<string>utxt</string>
+				</array>
+				<key>CFBundleTypeExtensions</key>
+				<array>
+					<string>text</string>
+					<string>txt</string>
+					<string>css</string>
+					<string>xul</string>
+					<string>js</string>
+					<string>rdf</string>
+					<string>log</string>
+					</array>
+				<key>CFBundleTypeIconFile</key>
+				<string>text.icns</string>
+			</dict>
+
+			<dict>
+				<key>CFBundleTypeName</key>
+				<string>Mozilla Preferences File</string>
+				<key>CFBundleTypeRole</key>
+				<string>None</string>
+				<key>CFBundleTypeOSTypes</key>
+				<array>
+					<string>pref</string>
+				</array>
+				<key>CFBundleTypeIconFile</key>
+				<string>pref.icns</string>
+			</dict>
+			
+			<dict>
+				<key>CFBundleTypeName</key>
+				<string>Mozilla Plugin</string>
+				<key>CFBundleTypeRole</key>
+				<string>None</string>
+				<key>CFBundleTypeOSTypes</key>
+				<array>
+					<string>NSPL</string>
+					<string>IEPL</string> 
+					<string>BRPL</string>
+				</array>
+				<key>CFBundleTypeExtensions</key>
+				<array>
+					<string>plugin</string>
+				</array>
+				<key>CFBundleTypeIconFile</key>
+				<string>plugin.icns</string>
+			</dict>
+			
+			<dict>
+				<key>CFBundleTypeName</key>
+				<string>Mozilla Command Line File</string>
+				<key>CFBundleTypeRole</key>
+				<string>Viewer</string>
+				<key>CFBundleTypeOSTypes</key>
+				<array>
+					<string>CMDL</string>
+				</array>
+				<key>CFBundleTypeIconFile</key>
+				<string>command.icns</string>
+			</dict>	
+			
+			<dict>
+				<key>CFBundleTypeName</key>
+				<string>Mozilla Shared Library</string>
+				<key>CFBundleTypeRole</key>
+				<string>None</string>
+				<key>CFBundleTypeOSTypes</key>
+				<array>
+					<string>shlb</string>
+				</array>
+				<key>CFBundleTypeExtensions</key>
+				<array>
+					<string>shlb</string>
+					<string>dylib</string>
+					</array>
+				<key>CFBundleTypeIconFile</key>
+				<string>component.icns</string>
+			</dict>
+
+			<dict>
+				<key>CFBundleTypeName</key>
+				<string>Mozilla Binary File</string>
+				<key>CFBundleTypeRole</key>
+				<string>None</string>
+				<key>CFBundleTypeOSTypes</key>
+				<array>
+					<string>BiNA</string>
+				</array>
+				<key>CFBundleTypeExtensions</key>
+				<array>
+					<string>mab</string>
+					<string>bag</string>
+					<string>na2</string>
+					<string>msf</string>
+					<string>sbd</string>
+					<string>regs</string>
+				</array>
+				<key>CFBundleTypeIconFile</key>
+				<string>component.icns</string>
+			</dict>
+			
+			<dict>
+				<key>CFBundleTypeName</key>
+				<string>HTML Document</string>
+				<key>CFBundleTypeRole</key>
+				<string>Viewer</string>
+				<key>CFBundleTypeOSTypes</key>
+				<array>
+					<string>HTML</string>
+				</array>
+				<key>CFBundleTypeExtensions</key>
+				<array>
+					<string>html</string>
+					<string>htm</string>
+					<string>shtml</string>
+					<string>xml</string>
+					<string>xhtml</string>
+					</array>
+				<key>CFBundleTypeIconFile</key>
+				<string>html.icns</string>
+			</dict>
+			
+	<!--Image Icon img.icns does not yet exist, but associating Images with Mozilla here-->
+			
+			<dict>
+				<key>CFBundleTypeName</key>
+				<string>Image Document</string>
+				<key>CFBundleTypeRole</key>
+				<string>Viewer</string>
+				<key>CFBundleTypeOSTypes</key>
+				<array>
+					<string>GIFf</string>
+					<string>JPEG</string>
+					<string>PNGf</string>
+				</array>
+				<key>CFBundleTypeExtensions</key>
+				<array>
+					<string>jpeg</string>
+					<string>jpg</string>
+					<string>jpe</string>
+					<string>png</string>
+					<string>gif</string>
+					<string>mng</string>
+					<string>bmp</string>
+					<string>ico</string>
+					<string>xbm</string>
+					<string>jfif</string>
+					<string>jng</string>
+					<string>ppm</string>
+					<string>ppm6</string>
+				</array>
+				<key>CFBundleTypeIconFile</key>
+				<string>image.icns</string>
+			</dict>
+			
+	<!--Updated Metadata ends here-->
+
+
 	</array>
 	<key>CFBundleURLTypes</key>
 	<array>
