@@ -167,13 +167,8 @@ function loadHelpRDF() {
 
         // cache toc datasources for use by ID lookup.
         var tree = document.getElementById("help-" + panelID + "-panel");
+        loadDatabasesBlocking(datasources);
         tree.setAttribute("datasources", datasources);
-        //if (panelID == "toc") {
-          if (tree.database) {
-            loadDatabases(tree.database, datasources);
-            tree.builder.rebuild();
-          }
-        //}
       }  
     }
     catch (e) {
@@ -181,7 +176,8 @@ function loadHelpRDF() {
     }
   }
 }
-function loadDatabases(compositeDatabase, datasources) {
+
+function loadDatabasesBlocking(datasources) {
   var ds = datasources.split(/\s+/);
   for (var i=0; i < ds.length; ++i) {
     if (ds[i] == "rdf:null" || ds[i] == "")
@@ -189,8 +185,6 @@ function loadDatabases(compositeDatabase, datasources) {
     try {  
       // we need blocking here to ensure the database is loaded so getLink(topic) works.
       var datasource = RDF.GetDataSourceBlocking(ds[i]);
-      if (datasource)  
-        compositeDatabase.AddDataSource(datasource);
     }
     catch (e) {
       log("Datasource: " + ds[i] + " was not found.");
