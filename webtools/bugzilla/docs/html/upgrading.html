@@ -1,0 +1,178 @@
+<HTML
+><HEAD
+><TITLE
+>Upgrading to New Releases</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
+"><LINK
+REL="HOME"
+TITLE="The Bugzilla Guide"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Administering Bugzilla"
+HREF="administration.html"><LINK
+REL="PREVIOUS"
+TITLE="Template Customisation"
+HREF="cust-templates.html"><LINK
+REL="NEXT"
+TITLE="Integrating Bugzilla with Third-Party Tools"
+HREF="integration.html"></HEAD
+><BODY
+CLASS="section"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>The Bugzilla Guide</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="cust-templates.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 5. Administering Bugzilla</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="integration.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="section"
+><H1
+CLASS="section"
+><A
+NAME="upgrading">5.8. Upgrading to New Releases</H1
+><P
+>A plain Bugzilla is fairly easy to upgrade from one version to a
+    newer one. Always read the release notes to see if there are any issues
+    that you might need to take note of. It is recommended that you take a 
+    backup of your database and your entire Bugzilla installation before attempting an
+    upgrade. You can upgrade a 'clean' installation by untarring a new
+    tarball over the old installation. If you are upgrading from 2.12 or
+    later, and have cvs installed, you can type <TT
+CLASS="filename"
+>cvs -z3 update</TT
+>, 
+    and resolve conflicts if there are any.
+    </P
+><P
+>However, things get a bit more complicated if you've made
+    changes to Bugzilla's code. In this case, you may have to re-make or
+    reapply those changes. One good method is to take a diff of your customised
+    version against the original, so you can survey all that you've changed.
+    Hopefully, templatisation will reduce the need for
+    this in the future.</P
+><P
+>From version 2.8 onwards, Bugzilla databases can be automatically
+    carried forward during an upgrade. However, because the developers of
+    Bugzilla are constantly adding new
+    tables, columns and fields, you'll probably get SQL errors if you just
+    update the code and attempt to use Bugzilla. Always run the
+    <TT
+CLASS="filename"
+>checksetup.pl</TT
+> 
+    script whenever you upgrade your installation.</P
+><P
+>If you are running Bugzilla version 2.8 or lower, and wish to
+    upgrade to the latest version, please consult the file,
+    "UPGRADING-pre-2.8" in the Bugzilla root directory after untarring the
+    archive.</P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="cust-templates.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="integration.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Template Customisation</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="administration.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Integrating Bugzilla with Third-Party Tools</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

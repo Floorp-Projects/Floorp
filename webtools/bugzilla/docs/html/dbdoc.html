@@ -16,8 +16,8 @@ REL="PREVIOUS"
 TITLE="Database Schema Chart"
 HREF="dbschema.html"><LINK
 REL="NEXT"
-TITLE="MySQL Permissions & Grant Tables"
-HREF="granttables.html"></HEAD
+TITLE="Useful Patches and Utilities for Bugzilla"
+HREF="patches.html"></HEAD
 ><BODY
 CLASS="section"
 BGCOLOR="#FFFFFF"
@@ -53,13 +53,13 @@ ACCESSKEY="P"
 WIDTH="80%"
 ALIGN="center"
 VALIGN="bottom"
->Appendix C. The Bugzilla Database</TD
+>Appendix B. The Bugzilla Database</TD
 ><TD
 WIDTH="10%"
 ALIGN="right"
 VALIGN="bottom"
 ><A
-HREF="granttables.html"
+HREF="patches.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -73,183 +73,171 @@ CLASS="section"
 ><H1
 CLASS="section"
 ><A
-NAME="dbdoc">C.2. MySQL Bugzilla Database Introduction</H1
+NAME="dbdoc">B.2. MySQL Bugzilla Database Introduction</H1
 ><P
->&#13;      This information comes straight from my life.  I was forced to learn how
-      Bugzilla organizes database because of nitpicky requests from users for tiny
-      changes in wording, rather than having people re-educate themselves or
-      figure out how to work our procedures around the tool.  It sucks, but it can
-      and will happen to you, so learn how the schema works and deal with it when it
-      comes.
-    </P
+>This information comes straight from my life. I was forced to learn
+    how Bugzilla organizes database because of nitpicky requests from users
+    for tiny changes in wording, rather than having people re-educate
+    themselves or figure out how to work our procedures around the tool. It
+    sucks, but it can and will happen to you, so learn how the schema works
+    and deal with it when it comes.</P
 ><P
->&#13;      So, here you are with your brand-new installation of Bugzilla.  You've got
-      MySQL set up, Apache working right, Perl DBI and DBD talking to the database
-      flawlessly.  Maybe you've even entered a few test bugs to make sure email's
-      working; people seem to be notified of new bugs and changes, and you can
-      enter and edit bugs to your heart's content.  Perhaps you've gone through the
-      trouble of setting up a gateway for people to submit bugs to your database via
-      email, have had a few people test it, and received rave reviews from your beta
-      testers.
-    </P
+>So, here you are with your brand-new installation of Bugzilla.
+    You've got MySQL set up, Apache working right, Perl DBI and DBD talking
+    to the database flawlessly. Maybe you've even entered a few test bugs to
+    make sure email's working; people seem to be notified of new bugs and
+    changes, and you can enter and edit bugs to your heart's content. Perhaps
+    you've gone through the trouble of setting up a gateway for people to
+    submit bugs to your database via email, have had a few people test it,
+    and received rave reviews from your beta testers.</P
 ><P
->&#13;      What's the next thing you do?  Outline a training strategy for your
-      development team, of course, and bring them up to speed on the new tool you've
-      labored over for hours.
-    </P
+>What's the next thing you do? Outline a training strategy for your
+    development team, of course, and bring them up to speed on the new tool
+    you've labored over for hours.</P
 ><P
->&#13;      Your first training session starts off very well!  You have a captive
-      audience which seems enraptured by the efficiency embodied in this thing called
-      "Bugzilla".  You are caught up describing the nifty features, how people can
-      save favorite queries in the database, set them up as headers and footers on
-      their pages, customize their layouts, generate reports, track status with
-      greater efficiency than ever before, leap tall buildings with a single bound
-      and rescue Jane from the clutches of Certain Death!
-    </P
+>Your first training session starts off very well! You have a
+    captive audience which seems enraptured by the efficiency embodied in
+    this thing called "Bugzilla". You are caught up describing the nifty
+    features, how people can save favorite queries in the database, set them
+    up as headers and footers on their pages, customize their layouts,
+    generate reports, track status with greater efficiency than ever before,
+    leap tall buildings with a single bound and rescue Jane from the clutches
+    of Certain Death!</P
 ><P
->&#13;      But Certain Death speaks up -- a tiny voice, from the dark corners of the
-      conference room.  "I have a concern," the voice hisses from the darkness,
-      "about the use of the word 'verified'.
-    </P
+>But Certain Death speaks up -- a tiny voice, from the dark corners
+    of the conference room. "I have a concern," the voice hisses from the
+    darkness, "about the use of the word 'verified'.</P
 ><P
->&#13;      The room, previously filled with happy chatter, lapses into reverential
-      silence as Certain Death (better known as the Vice President of Software
-      Engineering) continues.  "You see, for two years we've used the word 'verified'
-      to indicate that a developer or quality assurance engineer has confirmed that,
-      in fact, a bug is valid. I don't want to lose two years of training to a
-      new software product.  You need to change the bug status of 'verified' to
-      'approved' as soon as possible. To avoid confusion, of course."
-    </P
+>The room, previously filled with happy chatter, lapses into
+    reverential silence as Certain Death (better known as the Vice President
+    of Software Engineering) continues. "You see, for two years we've used
+    the word 'verified' to indicate that a developer or quality assurance
+    engineer has confirmed that, in fact, a bug is valid. I don't want to
+    lose two years of training to a new software product. You need to change
+    the bug status of 'verified' to 'approved' as soon as possible. To avoid
+    confusion, of course."</P
 ><P
->&#13;      Oh no!  Terror strikes your heart, as you find yourself mumbling "yes, yes, I
-      don't think that would be a problem," You review the changes with Certain
-      Death, and continue to jabber on, "no, it's not too big a change. I mean, we
-      have the source code, right? You know, 'Use the Source, Luke' and all that...
-      no problem," All the while you quiver inside like a beached jellyfish bubbling,
-      burbling, and boiling on a hot Jamaican sand dune...
-    </P
+>Oh no! Terror strikes your heart, as you find yourself mumbling
+    "yes, yes, I don't think that would be a problem," You review the changes
+    with Certain Death, and continue to jabber on, "no, it's not too big a
+    change. I mean, we have the source code, right? You know, 'Use the
+    Source, Luke' and all that... no problem," All the while you quiver
+    inside like a beached jellyfish bubbling, burbling, and boiling on a hot
+    Jamaican sand dune...</P
 ><P
->&#13;      Thus begins your adventure into the heart of Bugzilla.  You've been forced
-      to learn about non-portable enum() fields, varchar columns, and tinyint
-      definitions. The Adventure Awaits You!
-    </P
+>Thus begins your adventure into the heart of Bugzilla. You've been
+    forced to learn about non-portable enum() fields, varchar columns, and
+    tinyint definitions. The Adventure Awaits You!</P
 ><DIV
 CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN2272">C.2.1. Bugzilla Database Basics</H2
+NAME="AEN2077">B.2.1. Bugzilla Database Basics</H2
 ><P
->&#13;	If you were like me, at this point you're totally clueless
-	about the internals of MySQL, and if it weren't for this
-	executive order from the Vice President you couldn't care less
-	about the difference between a <SPAN
+>If you were like me, at this point you're totally clueless about
+      the internals of MySQL, and if it weren't for this executive order from
+      the Vice President you couldn't care less about the difference between
+      a 
+      <SPAN
 CLASS="QUOTE"
 >"bigint"</SPAN
-> and a
-	<SPAN
+>
+
+      and a 
+      <SPAN
 CLASS="QUOTE"
 >"tinyint"</SPAN
-> entry in MySQL.   I recommend you refer
-	to the MySQL documentation, available at <A
+>
+
+      entry in MySQL. I recommend you refer to the MySQL documentation,
+      available at 
+      <A
 HREF="http://www.mysql.com/doc.html"
 TARGET="_top"
 >MySQL.com</A
->.  Below are the basics you need to know about the Bugzilla database.  Check the chart above for more details.
-      </P
+>
+
+      . Below are the basics you need to know about the Bugzilla database.
+      Check the chart above for more details.</P
 ><P
-><P
+>&#13;        <P
 ></P
 ><OL
 TYPE="1"
 ><LI
 ><P
->&#13;	      To connect to your database:
-	    </P
+>To connect to your database:</P
 ><P
->&#13;	      <TT
+>&#13;              <TT
 CLASS="prompt"
 >bash#</TT
-><B
+>
+
+              <B
 CLASS="command"
 >mysql</B
-><TT
+>
+
+              <TT
 CLASS="parameter"
 ><I
 >-u root</I
 ></TT
 >
-	    </P
+            </P
 ><P
->&#13;	      If this works without asking you for a password,
-	      <EM
+>If this works without asking you for a password, 
+            <EM
 >shame on you</EM
->!  You should have
-	      locked your security down like the installation
-	      instructions told you to.  You can find details on
-	      locking down your database in the Bugzilla FAQ in this
-	      directory (under "Security"), or more robust security
-	      generalities in the MySQL searchable documentation at
-	      http://www.mysql.com/php/manual.php3?section=Privilege_system .
-	    </P
+>
+
+            ! You should have locked your security down like the installation
+            instructions told you to. You can find details on locking down
+            your database in the Bugzilla FAQ in this directory (under
+            "Security"), or more robust security generalities in the 
+            <A
+HREF="http://www.mysql.com/php/manual.php3?section=Privilege_system"
+TARGET="_top"
+>MySQL
+            searchable documentation</A
+>.            
+            </P
 ></LI
 ><LI
 ><P
->You should now be at a prompt that looks like
-	      this:</P
+>You should now be at a prompt that looks like this:</P
 ><P
-><TT
+>&#13;              <TT
 CLASS="prompt"
 >mysql&#62;</TT
-></P
+>
+            </P
 ><P
->At the prompt, if <SPAN
+>At the prompt, if 
+            <SPAN
 CLASS="QUOTE"
 >"bugs"</SPAN
-> is the name
-	      you chose in the<TT
+>
+
+            is the name you chose in the
+            <TT
 CLASS="filename"
 >localconfig</TT
-> file
-	      for your Bugzilla database, type:</P
+>
+
+            file for your Bugzilla database, type:</P
 ><P
-><TT
+>&#13;              <TT
 CLASS="prompt"
 >mysql</TT
-><B
+>
+
+              <B
 CLASS="command"
 >use bugs;</B
-></P
-><DIV
-CLASS="note"
-><P
-></P
-><TABLE
-CLASS="note"
-WIDTH="100%"
-BORDER="0"
-><TR
-><TD
-WIDTH="25"
-ALIGN="CENTER"
-VALIGN="TOP"
-><IMG
-SRC="../images/note.gif"
-HSPACE="5"
-ALT="Note"></TD
-><TD
-ALIGN="LEFT"
-VALIGN="TOP"
-><P
->Don't forget the <SPAN
-CLASS="QUOTE"
->";"</SPAN
-> at the end of
-		each line, or you'll be kicking yourself later.</P
-></TD
-></TR
-></TABLE
-></DIV
+>
+            </P
 ></LI
 ></OL
 >
@@ -259,31 +247,31 @@ CLASS="section"
 ><H3
 CLASS="section"
 ><A
-NAME="AEN2301">C.2.1.1. Bugzilla Database Tables</H3
+NAME="AEN2104">B.2.1.1. Bugzilla Database Tables</H3
 ><P
->  Imagine your MySQL database as a series of
-	  spreadsheets, and you won't be too far off.  If you use this
-	  command:</P
+>Imagine your MySQL database as a series of spreadsheets, and
+        you won't be too far off. If you use this command:</P
 ><P
-><TT
+>&#13;          <TT
 CLASS="prompt"
 >mysql&#62;</TT
-><B
+>
+          <B
 CLASS="command"
 >show tables from bugs;</B
-></P
+>
+        </P
 ><P
->you'll be able to see all the
-	  <SPAN
+>you'll be able to see the names of all the 
+        <SPAN
 CLASS="QUOTE"
 >"spreadsheets"</SPAN
-> (tables) in your database.  It
-	  is similar to a file system, only faster and more robust for
-	  certain types of operations.</P
+>
+        (tables) in your database.</P
 ><P
 >From the command issued above, ou should have some
 	  output that looks like this:
-	  <TABLE
+<TABLE
 BORDER="0"
 BGCOLOR="#E0E0E0"
 WIDTH="100%"
@@ -319,16 +307,16 @@ CLASS="programlisting"
 | votes             |
 | watch             |
 +-------------------+
-	  </PRE
+</PRE
 ></FONT
 ></TD
 ></TR
 ></TABLE
-></P
+>
+</P
 ><P
 CLASS="literallayout"
 ><br>
-<br>
 &nbsp;&nbsp;Here's&nbsp;an&nbsp;overview&nbsp;of&nbsp;what&nbsp;each&nbsp;table&nbsp;does.&nbsp;&nbsp;Most&nbsp;columns&nbsp;in&nbsp;each&nbsp;table&nbsp;have<br>
 descriptive&nbsp;names&nbsp;that&nbsp;make&nbsp;it&nbsp;fairly&nbsp;trivial&nbsp;to&nbsp;figure&nbsp;out&nbsp;their&nbsp;jobs.<br>
 <br>
@@ -490,21 +478,6 @@ Although&nbsp;you&nbsp;can&nbsp;query&nbsp;by&nbsp;the&nbsp;enum&nbsp;field,&nbs
 of&nbsp;"APPROVED"&nbsp;until&nbsp;you&nbsp;make&nbsp;the&nbsp;perl&nbsp;changes.&nbsp;&nbsp;&nbsp;Note&nbsp;that&nbsp;this&nbsp;change&nbsp;I<br>
 mentioned&nbsp;can&nbsp;also&nbsp;be&nbsp;done&nbsp;by&nbsp;editing&nbsp;checksetup.pl,&nbsp;which&nbsp;automates&nbsp;a&nbsp;lot&nbsp;of<br>
 this.&nbsp;&nbsp;But&nbsp;you&nbsp;need&nbsp;to&nbsp;know&nbsp;this&nbsp;stuff&nbsp;anyway,&nbsp;right?<br>
-<br>
-&nbsp;&nbsp;I&nbsp;hope&nbsp;this&nbsp;database&nbsp;tutorial&nbsp;has&nbsp;been&nbsp;useful&nbsp;for&nbsp;you.&nbsp;&nbsp;If&nbsp;you&nbsp;have&nbsp;comments<br>
-to&nbsp;add,&nbsp;questions,&nbsp;concerns,&nbsp;etc.&nbsp;please&nbsp;direct&nbsp;them&nbsp;to<br>
-mbarnson@excitehome.net.&nbsp;&nbsp;Please&nbsp;direct&nbsp;flames&nbsp;to&nbsp;/dev/null&nbsp;:)&nbsp;&nbsp;Have&nbsp;a&nbsp;nice<br>
-day!<br>
-<br>
-<br>
-<br>
-===<br>
-LINKS<br>
-===<br>
-<br>
-Great&nbsp;MySQL&nbsp;tutorial&nbsp;site:<br>
-http://www.devshed.com/Server_Side/MySQL/<br>
-<br>
 	</P
 ></DIV
 ></DIV
@@ -543,7 +516,7 @@ WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
 ><A
-HREF="granttables.html"
+HREF="patches.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -567,7 +540,7 @@ ACCESSKEY="U"
 WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
->MySQL Permissions &#38; Grant Tables</TD
+>Useful Patches and Utilities for Bugzilla</TD
 ></TR
 ></TABLE
 ></DIV

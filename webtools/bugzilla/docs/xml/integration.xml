@@ -1,6 +1,6 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook V4.1//EN" > -->
 <!-- Keep these tools listings in alphabetical order please. -MPB -->
-<chapter id="integration">
+<section id="integration">
   <title>Integrating Bugzilla with Third-Party Tools</title>
 
   <section id="bonsai"
@@ -13,43 +13,32 @@
     . Using Bonsai, administrators can control open/closed status of trees,
     query a fast relational database back-end for change, branch, and comment
     information, and view changes made since the last time the tree was
-    closed. These kinds of changes cause the engineer responsible to be 
-    <quote>on the hook</quote>
-
-    (include cool URL link here for Hook policies at mozilla.org). Bonsai
-    also includes gateways to 
-    <xref linkend="tinderbox" />
-
-    and Bugzilla</para>
+    closed. Bonsai
+    also integrates with  
+    <xref linkend="tinderbox" />.
+    </para>
   </section>
 
   <section id="cvs" xreflabel="CVS, the Concurrent Versioning System">
     <title>CVS</title>
 
     <para>CVS integration is best accomplished, at this point, using the
-    Bugzilla Email Gateway. There have been some files submitted to allow
-    greater CVS integration, but we need to make certain that Bugzilla is not
-    tied into one particular software management package.</para>
+    Bugzilla Email Gateway.</para>
 
-    <para>Follow the instructions in the FAQ for enabling Bugzilla e-mail
+    <para>Follow the instructions in this Guide for enabling Bugzilla e-mail
     integration. Ensure that your check-in script sends an email to your
     Bugzilla e-mail gateway with the subject of 
-    <quote>[Bug XXXX]</quote>
-
-    , and you can have CVS check-in comments append to your Bugzilla bug. If
+    <quote>[Bug XXXX]</quote>, 
+    and you can have CVS check-in comments append to your Bugzilla bug. If
     you have your check-in script include an @resolution field, you can even
     change the Bugzilla bug state.</para>
 
-    <para>There is also a project, based upon somewhat dated Bugzilla code,
-    to integrate CVS and Bugzilla through CVS' ability to email. Check it out
-    at: 
+    <para>There is also a CVSZilla project, based upon somewhat dated 
+    Bugzilla code, to integrate CVS and Bugzilla through CVS' ability to 
+    email. Check it out at: 
     <ulink url="http://homepages.kcbbs.gen.nz/~tonyg/">
-    http://homepages.kcbbs.gen.nz/~tonyg/</ulink>
-
-    , under the 
-    <quote>cvszilla</quote>
-
-    link.</para>
+    http://homepages.kcbbs.gen.nz/~tonyg/</ulink>.
+    </para>
   </section>
 
   <section id="scm"
@@ -86,7 +75,7 @@
 
     <para>We need Tinderbox integration information.</para>
   </section>
-</chapter>
+</section>
 
 <!-- Keep this comment at the end of the file
 Local variables:

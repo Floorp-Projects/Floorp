@@ -1,0 +1,308 @@
+<HTML
+><HEAD
+><TITLE
+>Hints and Tips</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
+"><LINK
+REL="HOME"
+TITLE="The Bugzilla Guide"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Using Bugzilla"
+HREF="using.html"><LINK
+REL="PREVIOUS"
+TITLE="How do I use Bugzilla?"
+HREF="how.html"><LINK
+REL="NEXT"
+TITLE="User Preferences"
+HREF="userpreferences.html"></HEAD
+><BODY
+CLASS="section"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>The Bugzilla Guide</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="how.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 3. Using Bugzilla</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="userpreferences.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="section"
+><H1
+CLASS="section"
+><A
+NAME="hintsandtips">3.2. Hints and Tips</H1
+><P
+>This section distills some Bugzilla tips and best practices
+    that have been developed.</P
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="AEN434">3.2.1. Autolinkification</H2
+><P
+>Bugzilla comments are plain text - so posting HTML will result
+      in literal HTML tags rather than being interpreted by a browser.
+      However, Bugzilla will automatically make hyperlinks out of certain
+      sorts of text in comments. For example, the text 
+      http://www.bugzilla.org will be turned into
+      <A
+HREF="http://www.bugzilla.org"
+TARGET="_top"
+>http://www.bugzilla.org</A
+>.
+      Other strings which get linkified in the obvious manner are:
+      <P
+></P
+><TABLE
+BORDER="0"
+><TBODY
+><TR
+><TD
+>bug 12345</TD
+></TR
+><TR
+><TD
+>bug 23456, comment 53</TD
+></TR
+><TR
+><TD
+>attachment 4321</TD
+></TR
+><TR
+><TD
+>mailto:george@example.com</TD
+></TR
+><TR
+><TD
+>george@example.com</TD
+></TR
+><TR
+><TD
+>ftp://ftp.mozilla.org</TD
+></TR
+><TR
+><TD
+>Most other sorts of URL</TD
+></TR
+></TBODY
+></TABLE
+><P
+></P
+>
+      </P
+><P
+>A corollary here is that if you type a bug number in a comment,
+      you should put the word "bug" before it, so it gets autolinkified
+      for the convenience of others.
+      </P
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="quicksearch">3.2.2. Quicksearch</H2
+><P
+>Quicksearch is a single-text-box query tool which uses
+      metacharacters to indicate what is to be searched. For example, typing
+      "<TT
+CLASS="filename"
+>foo|bar</TT
+>" 
+      into Quicksearch would search for "foo" or "bar" in the 
+      summary and status whiteboard of a bug; adding 
+      "<TT
+CLASS="filename"
+>:BazProduct</TT
+>" would
+      search only in that product.
+      </P
+><P
+>You'll find the Quicksearch box on Bugzilla's
+      front page, along with a 
+      <A
+HREF="../../quicksearch.html"
+TARGET="_top"
+>Help</A
+> 
+      link which details how to use it.</P
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="commenting">3.2.3. Comments</H2
+><P
+>If you are changing the fields on a bug, only comment if
+      either you have something pertinent to say, or Bugzilla requires it.
+      Otherwise, you may spam people unnecessarily with bug mail.
+      To take an example: a user can set up their account to filter out messages
+      where someone just adds themselves to the CC field of a bug
+      (which happens a lot.) If you come along, add yourself to the CC field,
+      and add a comment saying "Adding self to CC", then that person
+      gets a pointless piece of mail they would otherwise have avoided.
+      </P
+><P
+>&#13;      Don't use sigs in comments. Signing your name ("Bill") is acceptable,
+      particularly if you do it out of habit, but full mail/news-style
+      four line ASCII art creations are not.
+      </P
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="attachments">3.2.4. Attachments</H2
+><P
+>&#13;      Use attachments, rather than comments, for large chunks of ASCII data,
+      such as trace, debugging output files, or log files. That way, it doesn't
+      bloat the bug for everyone who wants to read it, and cause people to
+      receive fat, useless mails.
+      </P
+><P
+>Trim screenshots. There's no need to show the whole screen if
+      you are pointing out a single-pixel problem.
+      </P
+><P
+>Don't attach simple test cases (e.g. one HTML file, one 
+      CSS file and an image) as a ZIP file. Instead, upload them in 
+      reverse order and edit the referring file so that they point to the
+      attached files. This way, the test case works immediately 
+      out of the bug.
+      </P
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="AEN463">3.2.5. Filing Bugs</H2
+><P
+>Try to make sure that everything said in the summary is also 
+      said in the first comment. Summaries are often updated and this will
+      ensure your original information is easily accessible.
+      </P
+><P
+>&#13;      You do not need to put "any" or similar strings in the URL field.
+      If there is no specific URL associated with the bug, leave this 
+      field blank.
+      </P
+><P
+>If you feel a bug you filed was incorrectly marked as a
+      DUPLICATE of another, please question it in your bug, not      
+      the bug it was duped to. Feel free to CC the person who duped it 
+      if they are not already CCed.
+      </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="how.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="userpreferences.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>How do I use Bugzilla?</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="using.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>User Preferences</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

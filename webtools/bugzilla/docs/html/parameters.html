@@ -1,0 +1,435 @@
+<HTML
+><HEAD
+><TITLE
+>Bugzilla Configuration</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
+"><LINK
+REL="HOME"
+TITLE="The Bugzilla Guide"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Administering Bugzilla"
+HREF="administration.html"><LINK
+REL="PREVIOUS"
+TITLE="Administering Bugzilla"
+HREF="administration.html"><LINK
+REL="NEXT"
+TITLE="User Administration"
+HREF="useradmin.html"></HEAD
+><BODY
+CLASS="section"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>The Bugzilla Guide</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="administration.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 5. Administering Bugzilla</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="useradmin.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="section"
+><H1
+CLASS="section"
+><A
+NAME="parameters">5.1. Bugzilla Configuration</H1
+><P
+>Bugzilla is configured by changing various parameters, accessed
+    from the "Edit parameters" link in the page footer. Here are
+    some of the key parameters on that page. You should run down this
+    list and set them appropriately after installing Bugzilla.</P
+><DIV
+CLASS="procedure"
+><OL
+TYPE="1"
+><LI
+><P
+> 
+        <B
+CLASS="command"
+>maintainer</B
+>:
+        The maintainer parameter is the email address of the person 
+        responsible for maintaining this
+        Bugzilla installation. The address need not be that of a valid Bugzilla
+        account.</P
+></LI
+><LI
+><P
+>&#13;        <B
+CLASS="command"
+>urlbase</B
+>:
+        This parameter defines the fully qualified domain name and web 
+        server path to your Bugzilla installation.</P
+><P
+>For example, if your Bugzilla query page is
+        <TT
+CLASS="filename"
+>http://www.foo.com/bugzilla/query.cgi</TT
+>, 
+        set your <SPAN
+CLASS="QUOTE"
+>"urlbase"</SPAN
+>
+        to <TT
+CLASS="filename"
+>http://www.foo.com/bugzilla/</TT
+>.</P
+></LI
+><LI
+><P
+>&#13;        <B
+CLASS="command"
+>usebuggroups</B
+>:
+        This dictates whether or not to implement group-based security for
+        Bugzilla. If set, Bugzilla bugs can have an associated 'group',
+        defining which users are allowed to see and edit the
+        bug.</P
+><P
+>Set "usebuggroups" to "on" 
+        <EM
+>only</EM
+>
+        if you may wish to restrict access to particular bugs to certain
+        groups of users. I suggest leaving
+        this parameter <EM
+>off</EM
+>
+        while initially testing your Bugzilla.</P
+></LI
+><LI
+><P
+>&#13;        <B
+CLASS="command"
+>usebuggroupsentry</B
+>:
+        Bugzilla Products can have a group associated with them, so that
+        certain users can only see bugs in certain products. When this parameter
+        is set to <SPAN
+CLASS="QUOTE"
+>"on"</SPAN
+>, this places all newly-created bugs in the
+        group for their product immediately.</P
+></LI
+><LI
+><P
+>&#13;        <B
+CLASS="command"
+>shadowdb</B
+>:
+        You run into an interesting problem when Bugzilla reaches a
+        high level of continuous activity. MySQL supports only table-level
+        write locking. What this means is that if someone needs to make a
+        change to a bug, they will lock the entire table until the operation
+        is complete. Locking for write also blocks reads until the write is
+        complete. The 
+        <SPAN
+CLASS="QUOTE"
+>"shadowdb"</SPAN
+>
+        parameter was designed to get around this limitation. While only a
+        single user is allowed to write to a table at a time, reads can
+        continue unimpeded on a read-only shadow copy of the database.
+        Although your database size will double, a shadow database can cause
+        an enormous performance improvement when implemented on extremely
+        high-traffic Bugzilla databases.</P
+><P
+>&#13;        As a guide, mozilla.org began needing 
+        <SPAN
+CLASS="QUOTE"
+>"shadowdb"</SPAN
+>
+        when they reached around 40,000 Bugzilla users with several hundred
+        Bugzilla bug changes and comments per day.</P
+><P
+>The value of the parameter defines the name of the 
+        shadow bug database. 
+        Set "shadowdb" to e.g. "bug_shadowdb" if you will be running a
+        *very* large installation of Bugzilla. 
+        <DIV
+CLASS="note"
+><P
+></P
+><TABLE
+CLASS="note"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>Enabling "shadowdb" can adversely affect the stability of
+          your installation of Bugzilla. You should regularly check that your
+          database is in sync. It is often advisable to force a shadow
+          database sync nightly via 
+          <SPAN
+CLASS="QUOTE"
+>"cron"</SPAN
+>.
+          </P
+></TD
+></TR
+></TABLE
+></DIV
+>
+        </P
+><P
+>If you use the "shadowdb" option, it is only natural that you
+        should turn the "queryagainstshadowdb" option on as well. Otherwise
+        you are replicating data into a shadow database for no reason!</P
+></LI
+><LI
+><P
+>&#13;        <B
+CLASS="command"
+>shutdownhtml</B
+>:
+
+        If you need to shut down Bugzilla to perform administration, enter
+        some descriptive HTML here and anyone who tries to use Bugzilla will
+        receive a page to that effect. Obviously, editparams.cgi will
+        still be accessible so you can remove the HTML and re-enable Bugzilla.
+        :-)
+        </P
+></LI
+><LI
+><P
+>&#13;        <B
+CLASS="command"
+>passwordmail</B
+>:
+
+        Every time a user creates an account, the text of
+        this parameter (with substitutions) is sent to the new user along with
+        their password message.</P
+><P
+>Add any text you wish to the "passwordmail" parameter box. For
+        instance, many people choose to use this box to give a quick training
+        blurb about how to use Bugzilla at your site.</P
+></LI
+><LI
+><P
+>&#13;        <B
+CLASS="command"
+>useqacontact</B
+>:
+
+        This allows you to define an email address for each component, in
+        addition
+        to that of the default owner, who will be sent carbon copies of
+        incoming bugs.</P
+></LI
+><LI
+><P
+>&#13;        <B
+CLASS="command"
+>usestatuswhiteboard</B
+>:
+        This defines whether you wish to have a free-form, overwritable field
+        associated with each bug. The advantage of the Status Whiteboard is
+        that it can be deleted or modified with ease, and provides an
+        easily-searchable field for indexing some bugs that have some trait
+        in common.         
+        </P
+></LI
+><LI
+><P
+>&#13;        <B
+CLASS="command"
+>whinedays</B
+>:
+        Set this to the number of days you want to let bugs go
+        in the NEW or REOPENED state before notifying people they have
+        untouched new bugs. If you do not plan to use this feature, simply do
+        not set up the whining cron job described in the installation
+        instructions, or set this value to "0" (never whine).</P
+></LI
+><LI
+><P
+>&#13;        <B
+CLASS="command"
+>commenton*</B
+>:
+        All these
+        fields allow you to dictate what changes can pass without comment,
+        and which must have a comment from the person who changed them.
+        Often, administrators will allow users to add themselves to the CC
+        list, accept bugs, or change the Status Whiteboard without adding a
+        comment as to their reasons for the change, yet require that most
+        other changes come with an explanation.</P
+><P
+>Set the "commenton" options according to your site policy. It
+        is a wise idea to require comments when users resolve, reassign, or
+        reopen bugs at the very least. 
+        <DIV
+CLASS="note"
+><P
+></P
+><TABLE
+CLASS="note"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>It is generally far better to require a developer comment
+          when resolving bugs than not. Few things are more annoying to bug
+          database users than having a developer mark a bug "fixed" without
+          any comment as to what the fix was (or even that it was truly
+          fixed!)</P
+></TD
+></TR
+></TABLE
+></DIV
+>
+        </P
+></LI
+><LI
+><P
+>&#13;        <B
+CLASS="command"
+>supportwatchers</B
+>:
+
+        Turning on this option allows users to ask to receive copies of 
+        all a particular other user's bug email. This is, of
+        course, subject to the groupset restrictions on the bug; if the 
+        <SPAN
+CLASS="QUOTE"
+>"watcher"</SPAN
+>
+        would not normally be allowed to view a bug, the watcher cannot get
+        around the system by setting herself up to watch the bugs of someone
+        with bugs outside her privileges. They would still only receive email
+        updates for those bugs she could normally view.</P
+></LI
+></OL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="administration.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="useradmin.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Administering Bugzilla</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="administration.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>User Administration</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

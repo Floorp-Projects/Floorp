@@ -10,11 +10,11 @@ REL="HOME"
 TITLE="The Bugzilla Guide"
 HREF="index.html"><LINK
 REL="PREVIOUS"
-TITLE="Win32 Installation Notes"
-HREF="win32.html"><LINK
+TITLE="Troubleshooting"
+HREF="troubleshooting.html"><LINK
 REL="NEXT"
-TITLE="Post-Installation Checklist"
-HREF="postinstall-check.html"></HEAD
+TITLE="Bugzilla Configuration"
+HREF="parameters.html"></HEAD
 ><BODY
 CLASS="chapter"
 BGCOLOR="#FFFFFF"
@@ -42,7 +42,7 @@ WIDTH="10%"
 ALIGN="left"
 VALIGN="bottom"
 ><A
-HREF="win32.html"
+HREF="troubleshooting.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -56,7 +56,7 @@ WIDTH="10%"
 ALIGN="right"
 VALIGN="bottom"
 ><A
-HREF="postinstall-check.html"
+HREF="parameters.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -69,7 +69,7 @@ WIDTH="100%"></DIV
 CLASS="chapter"
 ><H1
 ><A
-NAME="administration">Chapter 4. Administering Bugzilla</H1
+NAME="administration">Chapter 5. Administering Bugzilla</H1
 ><DIV
 CLASS="TOC"
 ><DL
@@ -78,97 +78,138 @@ CLASS="TOC"
 >Table of Contents</B
 ></DT
 ><DT
->4.1. <A
-HREF="postinstall-check.html"
->Post-Installation Checklist</A
+>5.1. <A
+HREF="parameters.html"
+>Bugzilla Configuration</A
 ></DT
 ><DT
->4.2. <A
+>5.2. <A
 HREF="useradmin.html"
 >User Administration</A
 ></DT
 ><DD
 ><DL
 ><DT
->4.2.1. <A
+>5.2.1. <A
 HREF="useradmin.html#defaultuser"
 >Creating the Default User</A
 ></DT
 ><DT
->4.2.2. <A
+>5.2.2. <A
 HREF="useradmin.html#manageusers"
 >Managing Other Users</A
 ></DT
 ></DL
 ></DD
 ><DT
->4.3. <A
+>5.3. <A
 HREF="programadmin.html"
->Product, Component, Milestone, and Version
-      Administration</A
+>Product, Component, Milestone, and Version Administration</A
 ></DT
 ><DD
 ><DL
 ><DT
->4.3.1. <A
+>5.3.1. <A
 HREF="programadmin.html#products"
 >Products</A
 ></DT
 ><DT
->4.3.2. <A
+>5.3.2. <A
 HREF="programadmin.html#components"
 >Components</A
 ></DT
 ><DT
->4.3.3. <A
+>5.3.3. <A
 HREF="programadmin.html#versions"
 >Versions</A
 ></DT
 ><DT
->4.3.4. <A
+>5.3.4. <A
 HREF="programadmin.html#milestones"
 >Milestones</A
-></DT
-><DT
->4.3.5. <A
-HREF="programadmin.html#voting"
->Voting</A
-></DT
-><DT
->4.3.6. <A
-HREF="programadmin.html#groups"
->Groups and Group Security</A
 ></DT
 ></DL
 ></DD
 ><DT
->4.4. <A
+>5.4. <A
+HREF="voting.html"
+>Voting</A
+></DT
+><DT
+>5.5. <A
+HREF="groups.html"
+>Groups and Group Security</A
+></DT
+><DT
+>5.6. <A
 HREF="security.html"
 >Bugzilla Security</A
 ></DT
+><DT
+>5.7. <A
+HREF="cust-templates.html"
+>Template Customisation</A
+></DT
+><DD
+><DL
+><DT
+>5.7.1. <A
+HREF="cust-templates.html#AEN1539"
+>What to Edit</A
+></DT
+><DT
+>5.7.2. <A
+HREF="cust-templates.html#AEN1558"
+>How To Edit Templates</A
+></DT
+><DT
+>5.7.3. <A
+HREF="cust-templates.html#AEN1568"
+>Template Formats</A
+></DT
+><DT
+>5.7.4. <A
+HREF="cust-templates.html#AEN1581"
+>Particular Templates</A
+></DT
+></DL
+></DD
+><DT
+>5.8. <A
+HREF="upgrading.html"
+>Upgrading to New Releases</A
+></DT
+><DT
+>5.9. <A
+HREF="integration.html"
+>Integrating Bugzilla with Third-Party Tools</A
+></DT
+><DD
+><DL
+><DT
+>5.9.1. <A
+HREF="integration.html#bonsai"
+>Bonsai</A
+></DT
+><DT
+>5.9.2. <A
+HREF="integration.html#cvs"
+>CVS</A
+></DT
+><DT
+>5.9.3. <A
+HREF="integration.html#scm"
+>Perforce SCM</A
+></DT
+><DT
+>5.9.4. <A
+HREF="integration.html#tinderbox"
+>Tinderbox/Tinderbox2</A
+></DT
+></DL
+></DD
 ></DL
 ></DIV
-><FONT
-COLOR="RED"
->&#13;    Or, I just got this cool thing installed.  Now what the heck do I
-    do with it?
-  </FONT
-><P
->&#13;    So you followed <SPAN
-CLASS="QUOTE"
->"<A
-HREF="installation.html"
->Bugzilla Installation</A
->"</SPAN
-> to the
-    letter, and logged into Bugzilla for the very first time with your
-    super-duper god account.  You sit, contentedly staring at the
-    Bugzilla Query Screen, the worst of the whole mad business of
-    installing this terrific program behind you. It seems, though, you
-    have nothing yet to query! Your first act of business should be to
-    setup the operating parameters for Bugzilla so you can get busy
-    getting data into your bug tracker.
-  </P
 ></DIV
 ><DIV
 CLASS="NAVFOOTER"
@@ -186,7 +227,7 @@ WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
 ><A
-HREF="win32.html"
+HREF="troubleshooting.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -204,7 +245,7 @@ WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
 ><A
-HREF="postinstall-check.html"
+HREF="parameters.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -214,7 +255,7 @@ ACCESSKEY="N"
 WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
->Win32 Installation Notes</TD
+>Troubleshooting</TD
 ><TD
 WIDTH="34%"
 ALIGN="center"
@@ -224,7 +265,7 @@ VALIGN="top"
 WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
->Post-Installation Checklist</TD
+>Bugzilla Configuration</TD
 ></TR
 ></TABLE
 ></DIV

@@ -1,0 +1,309 @@
+<HTML
+><HEAD
+><TITLE
+>Troubleshooting</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
+"><LINK
+REL="HOME"
+TITLE="The Bugzilla Guide"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Installation"
+HREF="installation.html"><LINK
+REL="PREVIOUS"
+TITLE="Mac OS X Installation Notes"
+HREF="osx.html"><LINK
+REL="NEXT"
+TITLE="Administering Bugzilla"
+HREF="administration.html"></HEAD
+><BODY
+CLASS="section"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>The Bugzilla Guide</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="osx.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 4. Installation</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="administration.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="section"
+><H1
+CLASS="section"
+><A
+NAME="troubleshooting">4.5. Troubleshooting</H1
+><P
+>This section gives solutions to common Bugzilla installation
+    problems.
+    </P
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="AEN1218">4.5.1. Bundle::Bugzilla makes me upgrade to Perl 5.6.1</H2
+><P
+>&#13;      Try executing <B
+CLASS="command"
+>perl -MCPAN -e 'install CPAN'</B
+>
+      and then continuing.
+      </P
+><P
+>&#13;      Certain older versions of the CPAN toolset were somewhat naive about how
+      to upgrade Perl modules. When a couple of modules got rolled into the core
+      Perl distribution for 5.6.1, CPAN thought that the best way to get those
+      modules up to date was to haul down the Perl distribution itself and
+      build it. Needless to say, this has caused headaches for just about
+      everybody. Upgrading to a newer version of CPAN with the
+      commandline above should fix things.
+      </P
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="AEN1223">4.5.2. DBD::Sponge::db prepare failed</H2
+><P
+>&#13;        The following error message may appear due to a bug in DBD::mysql
+        (over which the Bugzilla team have no control):
+      </P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+> DBD::Sponge::db prepare failed: Cannot determine NUM_OF_FIELDS at D:/Perl/site/lib/DBD/mysql.pm line 248.
+  SV = NULL(0x0) at 0x20fc444
+  REFCNT = 1
+  FLAGS = (PADBUSY,PADMY)
+</PRE
+></FONT
+></TD
+></TR
+></TABLE
+><P
+>&#13;        To fix this, go to 
+        <TT
+CLASS="filename"
+>&#60;path-to-perl&#62;/lib/DBD/sponge.pm</TT
+> 
+        in your Perl installation and replace
+      </P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+> my $numFields;
+ if ($attribs-&#62;{'NUM_OF_FIELDS'}) {
+     $numFields = $attribs-&#62;{'NUM_OF_FIELDS'};
+ } elsif ($attribs-&#62;{'NAME'}) {
+     $numFields = @{$attribs-&#62;{NAME}};
+</PRE
+></FONT
+></TD
+></TR
+></TABLE
+><P
+>&#13;        by
+      </P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+> my $numFields;
+ if ($attribs-&#62;{'NUM_OF_FIELDS'}) {
+     $numFields = $attribs-&#62;{'NUM_OF_FIELDS'};
+ } elsif ($attribs-&#62;{'NAMES'}) {
+     $numFields = @{$attribs-&#62;{NAMES}};
+</PRE
+></FONT
+></TD
+></TR
+></TABLE
+><P
+>&#13;        (note the S added to NAME.)      
+      </P
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="paranoid-security">4.5.3. cannot chdir(/var/spool/mqueue)</H2
+><P
+>If you are installing Bugzilla on SuSE Linux, or some other
+      distributions with 
+      <SPAN
+CLASS="QUOTE"
+>"paranoid"</SPAN
+>
+      security options, it is possible that the checksetup.pl script may fail
+      with the error: 
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>cannot chdir(/var/spool/mqueue): Permission denied
+</PRE
+></FONT
+></TD
+></TR
+></TABLE
+>
+      </P
+><P
+>&#13;      This is because your 
+      <TT
+CLASS="filename"
+>/var/spool/mqueue</TT
+>
+      directory has a mode of 
+      <SPAN
+CLASS="QUOTE"
+>"drwx------"</SPAN
+>. Type 
+      <B
+CLASS="command"
+>chmod 755 
+      <TT
+CLASS="filename"
+>/var/spool/mqueue</TT
+>
+      </B
+>
+      as root to fix this problem.
+      </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="osx.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="administration.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Mac OS X Installation Notes</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="installation.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Administering Bugzilla</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

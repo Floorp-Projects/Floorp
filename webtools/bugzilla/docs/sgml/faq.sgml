@@ -3,6 +3,10 @@
 <appendix id="faq">
   <title>The Bugzilla FAQ</title>
 
+  <para>
+    This FAQ includes questions not covered elsewhere in the Guide.
+  </para>
+  
   <qandaset>
 
 
@@ -121,9 +125,9 @@
 	</question>
 	<answer>
 	  <para>
-	    A year has gone by, and I <emphasis>still</emphasis> can't
-	    find any head-to-head comparisons of Bugzilla against
-	    other defect-tracking software.  However, from my personal
+	    We can't find any head-to-head comparisons of Bugzilla against
+	    other defect-tracking software. If you know of one, please
+      get in touch. However, from the author's personal
 	    experience with other bug-trackers, Bugzilla offers
 	    superior performance on commodity hardware, better price
 	    (free!), more developer- friendly features (such as stored
@@ -133,24 +137,9 @@
 	  </para>
 	  <para>
 	    If you happen to be a commercial bug-tracker vendor, please
-	    step forward with a rebuttal so I can include it in the
-	    FAQ.  We're not in pursuit of Bugzilla ueber alles; we
-	    simply love having a powerful, open-source tool to get our
-	    jobs done.
-	  </para>
-	</answer>
-      </qandaentry>
-
-      <qandaentry>
-	<question>
-	  <para>
-	    How do I change my user name (email address) in Bugzilla?
-	  </para>
-	</question>
-	<answer>
-	  <para>
-	    New in 2.16 - go to the Account section of the Preferences. You will
-      be emailed at both addresses for confirmation.
+	    step forward with a list of advantages your product has over
+      Bugzilla. We'd be happy to include it in the "Competitors"
+      section.
 	  </para>
 	</answer>
       </qandaentry>
@@ -184,7 +173,7 @@
 	<question>
 	  <para>
 	    Why MySQL?  I'm interested in seeing Bugzilla run on
-	    Oracle/Sybase/Msql/PostgreSQL/MSSQL?
+	    Oracle/Sybase/Msql/PostgreSQL/MSSQL.
 	  </para>
 	</question>
 	<answer>
@@ -204,42 +193,41 @@
 	</question>
 	<answer>
 	  <para>
-	     Mozilla.org uses /usr/bonsaitools/bin/perl. The prime rule in making
-	    submissions is "don't break bugzilla.mozilla.org". If it breaks it, your
-	    patch will be reverted faster than you can do a diff.
-	  </para>
-	  <para>
-	    Here's Terry Weissman's comment, for some historical context:
-	    <blockquote>
-	      <para>
-		[This was] purely my own convention. I wanted a place to put a version of
-		Perl and other tools that was strictly under my control for the
-		various webtools, and not subject to anyone else. Edit it to point
-		to whatever you like.
-	      </para>
-	      <note>
+	     Mozilla.org uses /usr/bonsaitools/bin/perl, because originally
+       Terry wanted a place to put a version of Perl and other tools 
+       that was strictly under his control. 
+    </para>
 		<para>
 		  We always recommend that, if possible, you keep the path
-		  as /usr/bonsaitools/bin/perl, and simply add a /usr/bonsaitools
-		  and /usr/bonsaitools/bin directory, then symlink your version
-		  of perl to /usr/bonsaitools/bin/perl.  This will make upgrading
+		  as /usr/bonsaitools/bin/perl, and simply add symlink.  
+      This will make upgrading
 		  your Bugzilla much easier in the future.
 		</para>
-	      </note>
-	    </blockquote>
-	  </para>
 	</answer>
       </qandaentry>
 
+
+      <qandaentry>
+	<question>
+	  <para>
+	    Is there an easy way to change the Bugzilla cookie name?
+	  </para>
+	</question>
+	<answer>
+	  <para>
+	    At present, no.
+	  </para>
+	</answer>
+      </qandaentry>
+      
     </qandadiv>
 
     <qandadiv id="faq-phb">
-      <title>Pointy-Haired-Boss Questions</title>
+      <title>Managerial Questions</title>
       <para>
 	<note>
 	  <para>
-	    The title of this section doesn't mean you're a PHB -- it just means
-	    you probably HAVE a PHB who wants to know this :)
+	    Questions likely to be asked by managers. :-)
 	  </para>
 	</note>
       </para>
@@ -247,8 +235,8 @@
       <qandaentry>
 	<question>
 	  <para>
-	    Is Bugzilla web-based or do you have to have specific software or
-	    specific operating system on your machine?
+	    Is Bugzilla web-based, or do you have to have specific software or
+	    a specific operating system on your machine?
 	  </para>
 	</question>
 	<answer>
@@ -262,7 +250,7 @@
       <qandaentry>
 	<question>
 	  <para>
-	    Has anyone you know of already done any Bugzilla integration with
+	    Can Bugzilla integrate with
 	    Perforce (SCM software)?
 	  </para>
 	</question>
@@ -282,11 +270,10 @@
 	</question>
 	<answer>
 	  <para>
-	    Absolutely!  You can track up to a "soft-limit" of around
-	    64 individual "Products", that can each be composed of as
-	    many "Components" as you want.  Check the Administration
-	    section of the Bugzilla Guide for more information regarding
-	    setting up Products and Components.
+	    Absolutely!  You can track any number of Products (although you
+      are limited to about 55 or so if
+      you are using Product-Based Groups), that can each be composed of any
+      number of Components.
 	  </para>
 	</answer>
       </qandaentry>
@@ -308,7 +295,7 @@
       <qandaentry>
 	<question>
 	  <para>
-	    Does Bugzilla allow attachments (text, screenshots, urls etc)? If yes,
+	    Does Bugzilla allow attachments (text, screenshots, URLs etc)? If yes,
 	    are there any that are NOT allowed?
 	  </para>
 	</question>
@@ -346,19 +333,6 @@
 	</answer>
       </qandaentry>
 
-
-      <qandaentry>
-	<question>
-	  <para>
-	    The index.html page doesn't show the footer.  It's really annoying to have
-	    to go to the querypage just to check my "my bugs" link.
-	  </para>
-	</question>
-	<answer>
-          <para>If you upgrade to 2.16, the index page has a footer.
-          </para>
-	</answer>
-      </qandaentry>
       <qandaentry>
 	<question>
 	  <para>
@@ -370,7 +344,7 @@
 	  <para>
 	    Yes.  Look at <ulink url="http://bugzilla.mozilla.org/reports.cgi">
 	    http://bugzilla.mozilla.org/reports.cgi</ulink> for basic reporting
-	    facilities.
+	    and graphing facilities.
 	  </para>
 	  <para>
 	    For more advanced reporting, I recommend hooking up a professional
@@ -387,7 +361,7 @@
 	<question>
 	  <para>
 	    Is there email notification and if so, what do you see when you get an
-	    email? Do you see bug number and title or is it only the number?
+	    email?
 	  </para>
 	</question>
 	<answer>
@@ -416,7 +390,7 @@
       <qandaentry>
 	<question>
 	  <para>
-	    If there is email notification, do users have to have any particular
+	    Do users have to have any particular
 	    type of email application?
 	  </para>
 	</question>
@@ -434,24 +408,6 @@
 		email into Bugzilla the resulting comment looks downright awful.
 	      </para>
 	    </note>
-	  </para>
-	</answer>
-      </qandaentry>
-
-      <qandaentry>
-	<question>
-	  <para>
-	     If I just wanted to track certain bugs, as they go through life, can I
-	    set it up to alert me via email whenever that bug changes, whether it be
-	    owner, status or description etc.?
-	  </para>
-	</question>
-	<answer>
-	  <para>
-	    Yes.  Place yourself in the "cc" field of the bug you wish to monitor.
-	    Then change your "Notify me of changes to" field in the Email Settings
-	    tab of the User Preferences screen in Bugzilla to the "Only those
-	    bugs which I am listed on the CC line" option.
 	  </para>
 	</answer>
       </qandaentry>
@@ -523,33 +479,6 @@
       <qandaentry>
 	<question>
 	  <para>
-	    Can a user re-run a report with a new project, same query?
-	  </para>
-	</question>
-	<answer>
-	  <para>
-	    Yes.
-	  </para>
-	</answer>
-      </qandaentry>
-
-      <qandaentry>
-	<question>
-	  <para>
-	    Can a user modify an existing report and then save it into another name?
-	  </para>
-	</question>
-	<answer>
-	  <para>
-	    You can save an unlimited number of queries in Bugzilla.  You are free
-	    to modify them and rename them to your heart's desire.
-	  </para>
-	</answer>
-      </qandaentry>
-
-      <qandaentry>
-	<question>
-	  <para>
 	    Does Bugzilla have the ability to search by word, phrase, compound
 	    search?
 	  </para>
@@ -558,20 +487,6 @@
 	  <para>
 	    You have no idea.  Bugzilla's query interface, particularly with the
 	    advanced Boolean operators, is incredibly versatile.
-	  </para>
-	</answer>
-      </qandaentry>
-
-      <qandaentry>
-	<question>
-	  <para>
-	    Can the admin person establish separate group and individual user
-	    privileges?
-	  </para>
-	</question>
-	<answer>
-	  <para>
-	    Yes.
 	  </para>
 	</answer>
       </qandaentry>
@@ -635,9 +550,8 @@
 	</question>
 	<answer>
 	  <para>
-	    If Bugzilla is set up correctly from the start, continuing maintenance needs
-	    are minimal and can be completed by unskilled labor.  Things like rotate
-	    backup tapes and check log files for the word "error".
+	    If Bugzilla is set up correctly from the start, continuing maintenance
+      needs are minimal and can be done easily using the web interface.
 	  </para>
 	  <para>
 	    Commercial Bug-tracking software typically costs somewhere upwards
@@ -686,52 +600,6 @@
       </qandaentry>
     </qandadiv>
 
-    <qandadiv id="faq-install">
-      <title>Bugzilla Installation</title>
-      <qandaentry>
-	<question>
-	  <para>
-	    How do I download and install Bugzilla?
-	  </para>
-	</question>
-	<answer>
-	  <para>
-	    Check <ulink url="http://www.bugzilla.org/">
-	    http://www.bugzilla.org/</ulink> for details.
-	    Read the other parts of this Guide for installation instructions.
-	  </para>
-	</answer>
-      </qandaentry>
-
-      <qandaentry>
-	<question>
-	  <para>
-	    How do I install Bugzilla on Windows NT?
-	  </para>
-	</question>
-	<answer>
-	  <para>
-	    Installation on Windows NT has its own section in
-	    this document.
-	  </para>
-	</answer>
-      </qandaentry>
-
-      <qandaentry>
-	<question>
-	  <para>
-	    Is there an easy way to change the Bugzilla cookie name?
-	  </para>
-	</question>
-	<answer>
-	  <para>
-	    At present, no.
-	  </para>
-	</answer>
-      </qandaentry>
-
-    </qandadiv>
-
     <qandadiv id="faq-security">
       <title>Bugzilla Security</title>
 
@@ -739,15 +607,14 @@
 	<question>
 	  <para>
 	    How do I completely disable MySQL security if it's giving me problems
-	    (I've followed the instructions in the installation section of this guide!)?
+	    (I've followed the instructions in the installation section of this guide)?
 	  </para>
 	</question>
 	<answer>
 	  <para>
 	    Run MySQL like this: "mysqld --skip-grant-tables".  Please remember <emphasis>this
 	    makes MySQL as secure as taping a $100 to the floor of a football stadium
-	    bathroom for safekeeping.</emphasis>  Please read the Security section of the
-	    Administration chapter of "The Bugzilla Guide" before proceeding.
+	    bathroom for safekeeping.</emphasis> 
 	  </para>
 	</answer>
       </qandaentry>
@@ -815,8 +682,8 @@
 	</question>
 	<answer>
 	  <para>
-	    Edit the "changedmail" param. Replace "To:" with "X-Real-To:",
-	    replace "Cc:" with "X-Real-CC:", and add a "To: (myemailaddress)".
+	    Edit the "changedmail" Param. Replace "To:" with "X-Real-To:",
+	    replace "Cc:" with "X-Real-CC:", and add a "To: &lt;youremailaddress&gt;".
 	  </para>
 	</answer>
       </qandaentry>
@@ -1002,7 +869,7 @@
       <qandaentry>
 	<question>
 	  <para>
-	    I think I've set up MySQL permissions correctly, but bugzilla still can't
+	    I think I've set up MySQL permissions correctly, but Bugzilla still can't
 	    connect.
 	  </para>
 	</question>
@@ -1162,6 +1029,20 @@
       <qandaentry>
 	<question>
 	  <para>
+	    How do I change my user name (email address) in Bugzilla?
+	  </para>
+	</question>
+	<answer>
+	  <para>
+	    New in 2.16 - go to the Account section of the Preferences. You will
+      be emailed at both addresses for confirmation.
+	  </para>
+	</answer>
+      </qandaentry>
+
+      <qandaentry>
+	<question>
+	  <para>
 	    The query page is very confusing.  Isn't there a simpler way to query?
 	  </para>
 	</question>
@@ -1184,7 +1065,7 @@
 	<answer>
 	  <para>
 	    The current behavior is acceptable to bugzilla.mozilla.org and most
-	    users.  I personally don't like it.  You have your choice of patches
+	    users.  You have your choice of patches
 	    to change this behavior, however.
 	    <simplelist>
 	      <member><ulink url="http://bugzilla.mozilla.org/showattachment.cgi?attach_id=8029">
@@ -1192,8 +1073,8 @@
 	      <member><ulink url="http://bugzilla.mozilla.org/showattachment.cgi?attach_id=8153">
 		"Accept" button automatically assigns to you</ulink></member>
 	    </simplelist>
-	    Note that these patches are somewhat dated.  You will need to do the find
-	    and replace manually to apply them.  They are very small, though.  It is easy.
+	    Note that these patches are somewhat dated.  You will need to apply
+      them manually.  
 	  </para>
 	</answer>
       </qandaentry>
@@ -1224,7 +1105,7 @@
 	<answer>
 	  <para>
 	    Yup.  Just rename it once you download it, or save it under a different
-	    filename.  This will not be fixed anytime too soon, because it would
+	    filename.  This will not be fixed anytime soon, because it would
 	    cripple some other functionality.
 	  </para>
 	</answer>
@@ -1288,9 +1169,7 @@
 	    http://bugzilla.mozilla.org/show_bug.cgi?id=49862</ulink>.  Ultimately, it's as easy
 	    as adding the "---" priority field to your localconfig file in the appropriate area,
 	    re-running checksetup.pl, and then changing the default priority in your browser using
-	    "editparams.cgi".  Hmm, now that I think about it, that is kind of a klunky way to handle
-	    it, but for now it's what we have!  Although the bug has been closed "RESOLVED WONTFIX",
-	    there may be a better way to handle this...
+	    "editparams.cgi". 
 	  </para>
 	</answer>
       </qandaentry>
@@ -1325,7 +1204,7 @@
 	      <listitem>
 		<para>
 		  Announce your patch and the associated URL
-		  (http://bugzilla.mozilla.org/show_bug.cgi?id=XXXX) for discussion in
+		  (http://bugzilla.mozilla.org/show_bug.cgi?id=XXXXXX) for discussion in
 		  the newsgroup (netscape.public.mozilla.webtools).  You'll get a really
 		  good, fairly immediate reaction to the implications of your patch,
 		  which will also give us an idea how well-received the change would

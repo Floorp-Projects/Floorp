@@ -16,7 +16,7 @@
 <!ENTITY database SYSTEM "database.sgml">
 <!ENTITY patches SYSTEM "patches.sgml">
 <!ENTITY variants SYSTEM "variants.sgml">
-<!ENTITY requiredsoftware SYSTEM "requiredsoftware.sgml">
+<!ENTITY introduction SYSTEM "introduction.sgml">
 <!ENTITY revhistory SYSTEM "revhistory.sgml">
 
 <!ENTITY bz "http://www.bugzilla.org/">
@@ -61,32 +61,34 @@ try to avoid clutter and feel free to waste space in the code to make it more re
     <title>The Bugzilla Guide</title>
 
     <authorgroup>
-
       <author>
-	<firstname>Matthew</firstname>
-	<othername>P.</othername>
-	<surname>Barnson</surname>
-	<affiliation>
-	  <address><email>mbarnson@sisna.com</email></address>
-	</affiliation>
+        <firstname>Matthew</firstname>
+        <othername>P.</othername>
+        <surname>Barnson</surname>
+      </author>
+      <author>
+        <firstname>The</firstname>
+        <othername>Bugzilla</othername>
+        <surname>Team</surname>
       </author>
     </authorgroup>
 
     <abstract>
       <para>
-	This is the documentation for Bugzilla, the mozilla.org
-	bug-tracking system.
-	Bugzilla is an enterprise-class piece of software
-	that powers issue-tracking for hundreds of
-	organizations around the world, tracking millions of bugs.
+	      This is the documentation for Bugzilla, the mozilla.org
+	      bug-tracking system.
+	      Bugzilla is an enterprise-class piece of software
+	      that powers issue-tracking for hundreds of
+	      organizations around the world, tracking millions of bugs.
       </para>
-      <para>
-	This documentation is maintained in DocBook 4.1.2 XML format.
-  Changes are best submitted as plain text or SGML diffs, attached
-  to a Bugzilla bug.
+
+      <para>  
+	      This documentation is maintained in DocBook 4.1.2 XML format.
+        Changes are best submitted as plain text or SGML diffs, attached
+        to a bug filed in
+        <ulink url="http://bugzilla.mozilla.org/enter_bug.cgi?product=Bugzilla&amp;component=Documentation">mozilla.org's Bugzilla</ulink>.
       </para>
     </abstract>
-
 
     <keywordset>
       <keyword>Bugzilla</keyword>
@@ -104,6 +106,9 @@ try to avoid clutter and feel free to waste space in the code to make it more re
 <!-- About This Guide -->
 &about;
 
+<!-- Introduction -->
+&introduction;
+
 <!-- Using Bugzilla -->
 &using;
 
@@ -113,17 +118,8 @@ try to avoid clutter and feel free to waste space in the code to make it more re
 <!-- Administering Bugzilla -->
 &administration;
 
-<!-- Integrating Bugzilla with Third-Party Tools -->
-&integration;
-
-<!-- Major Bugzilla Variants -->
-&variants;
-
 <!-- Appendix: The Frequently Asked Questions -->
 &faq;
-
-<!-- Appendix: Required Bugzilla Software Links -->
-&requiredsoftware;
 
 <!-- Appendix: The Database Schema -->
 &database;
@@ -131,8 +127,8 @@ try to avoid clutter and feel free to waste space in the code to make it more re
 <!-- Appendix: Custom Patches -->
 &patches;
 
-<!-- Appendix: The GNU Free Documentation License -->
-&gfdl;
+<!-- Appendix: Major Bugzilla Variants -->
+&variants;
 
 <!-- Glossary -->
 &glossary;

@@ -2,28 +2,13 @@
 <chapter id="administration">
   <title>Administering Bugzilla</title>
 
-  <subtitle>Or, I just got this cool thing installed. Now what the heck do I
-  do with it?</subtitle>
+  <section id="parameters">
+    <title>Bugzilla Configuration</title>
 
-  <para>So you followed 
-  <quote>
-    <xref linkend="installation" />
-  </quote>
-
-  to the letter, and logged into Bugzilla for the very first time with your
-  super-duper god account. You sit, contentedly staring at the Bugzilla Query
-  Screen, the worst of the whole mad business of installing this terrific
-  program behind you. It seems, though, you have nothing yet to query! Your
-  first act of business should be to setup the operating parameters for
-  Bugzilla so you can get busy getting data into your bug tracker.</para>
-
-  <section id="postinstall-check">
-    <title>Post-Installation Checklist</title>
-
-    <para>After installation, follow the checklist below to help ensure that
-    you have a successful installation. If you do not see a recommended
-    setting for a parameter, consider leaving it at the default while you
-    perform your initial tests on your Bugzilla setup.</para>
+    <para>Bugzilla is configured by changing various parameters, accessed
+    from the "Edit parameters" link in the page footer. Here are
+    some of the key parameters on that page. You should run down this
+    list and set them appropriately after installing Bugzilla.</para>
 
     <indexterm>
       <primary>checklist</primary>
@@ -31,185 +16,112 @@
 
     <procedure>
       <step>
-        <para>Bring up 
-        <filename>editparams.cgi</filename>
-
-        in your web browser. This should be available as the 
-        <quote>edit parameters</quote>
-
-        link from any Bugzilla screen once you have logged in.</para>
-      </step>
-
-      <step>
-        <para>The 
-        <quote>maintainer</quote>
-
-        is the email address of the person responsible for maintaining this
-        Bugzilla installation. The maintainer need not be a valid Bugzilla
-        user. Error pages, error emails, and administrative mail will be sent
-        with the maintainer as the return email address.</para>
-
-        <para>Set 
-        <quote>maintainer</quote>
-
-        to 
-        <emphasis>your</emphasis>
-
-        email address. This allows Bugzilla's error messages to display your
-        email address and allow people to contact you for help.</para>
-      </step>
-
-      <step>
-        <para>The 
-        <quote>urlbase</quote>
-
-        parameter defines the fully qualified domain name and web server path
-        to your Bugzilla installation.</para>
-
-        <para>For example, if your bugzilla query page is
-        http://www.foo.com/bugzilla/query.cgi, set your 
-        <quote>urlbase</quote>
-
-        is http://www.foo.com/bugzilla/.</para>
+        <para> 
+        <command>maintainer</command>:
+        The maintainer parameter is the email address of the person 
+        responsible for maintaining this
+        Bugzilla installation. The address need not be that of a valid Bugzilla
+        account.</para>
       </step>
 
       <step>
         <para>
-        <quote>usebuggroups</quote>
+        <command>urlbase</command>:
+        This parameter defines the fully qualified domain name and web 
+        server path to your Bugzilla installation.</para>
 
-        dictates whether or not to implement group-based security for
-        Bugzilla. If set, Bugzilla bugs can have an associated groupmask
-        defining which groups of users are allowed to see and edit the
+        <para>For example, if your Bugzilla query page is
+        <filename>http://www.foo.com/bugzilla/query.cgi</filename>, 
+        set your <quote>urlbase</quote>
+        to <filename>http://www.foo.com/bugzilla/</filename>.</para>
+      </step>
+
+      <step>
+        <para>
+        <command>usebuggroups</command>:
+        This dictates whether or not to implement group-based security for
+        Bugzilla. If set, Bugzilla bugs can have an associated 'group',
+        defining which users are allowed to see and edit the
         bug.</para>
 
         <para>Set "usebuggroups" to "on" 
         <emphasis>only</emphasis>
-
-        if you may wish to restrict access to products. I suggest leaving
-        this parameter 
-        <emphasis>off</emphasis>
-
+        if you may wish to restrict access to particular bugs to certain
+        groups of users. I suggest leaving
+        this parameter <emphasis>off</emphasis>
         while initially testing your Bugzilla.</para>
       </step>
 
       <step>
         <para>
-        <quote>usebuggroupsentry</quote>
-
-        , when set to 
-        <quote>on</quote>
-
-        , requires that all bugs have an associated groupmask when submitted.
-        This parameter is made for those installations where product
-        isolation is a necessity.</para>
-
-        <para>Set "usebuggroupsentry" to "on" if you absolutely need to
-        restrict access to bugs from the moment they are submitted through
-        resolution. Once again, if you are simply testing your installation,
-        I suggest against turning this parameter on; the strict security
-        checking may stop you from being able to modify your new
-        entries.</para>
+        <command>usebuggroupsentry</command>:
+        Bugzilla Products can have a group associated with them, so that
+        certain users can only see bugs in certain products. When this parameter
+        is set to <quote>on</quote>, this places all newly-created bugs in the
+        group for their product immediately.</para>
       </step>
 
       <step>
-        <para>You run into an interesting problem when Bugzilla reaches a
+        <para>
+        <command>shadowdb</command>:
+        You run into an interesting problem when Bugzilla reaches a
         high level of continuous activity. MySQL supports only table-level
         write locking. What this means is that if someone needs to make a
         change to a bug, they will lock the entire table until the operation
         is complete. Locking for write also blocks reads until the write is
         complete. The 
         <quote>shadowdb</quote>
-
         parameter was designed to get around this limitation. While only a
         single user is allowed to write to a table at a time, reads can
         continue unimpeded on a read-only shadow copy of the database.
         Although your database size will double, a shadow database can cause
         an enormous performance improvement when implemented on extremely
         high-traffic Bugzilla databases.</para>
+        
+        <para>
+        As a guide, mozilla.org began needing 
+        <quote>shadowdb</quote>
+        when they reached around 40,000 Bugzilla users with several hundred
+        Bugzilla bug changes and comments per day.</para>
 
-        <para>Set "shadowdb" to "bug_shadowdb" if you will be running a
-        *very* large installation of Bugzilla. The shadow database enables
-        many simultaneous users to read and write to the database without
-        interfering with one another. 
+        <para>The value of the parameter defines the name of the 
+        shadow bug database. 
+        Set "shadowdb" to e.g. "bug_shadowdb" if you will be running a
+        *very* large installation of Bugzilla. 
         <note>
           <para>Enabling "shadowdb" can adversely affect the stability of
           your installation of Bugzilla. You should regularly check that your
           database is in sync. It is often advisable to force a shadow
           database sync nightly via 
-          <quote>cron</quote>
-
-          .</para>
+          <quote>cron</quote>.
+          </para>
         </note>
-
-        Once again, in testing you should avoid this option -- use it if or
-        when you 
-        <emphasis>need</emphasis>
-
-        to use it, and have repeatedly run into the problem it was designed
-        to solve -- very long wait times while attempting to commit a change
-        to the database. Mozilla.org began needing 
-        <quote>shadowdb</quote>
-
-        when they reached around 40,000 Bugzilla users with several hundred
-        Bugzilla bug changes and comments per day.</para>
-
+        </para>
+        
         <para>If you use the "shadowdb" option, it is only natural that you
-        should turn the "queryagainstshadowdb" option "On" as well. Otherwise
+        should turn the "queryagainstshadowdb" option on as well. Otherwise
         you are replicating data into a shadow database for no reason!</para>
+
       </step>
 
       <step>
         <para>
-        <quote>headerhtml</quote>
+        <command>shutdownhtml</command>:
 
-        , 
-        <quote>footerhtml</quote>
-
-        , 
-        <quote>errorhtml</quote>
-
-        , 
-        <quote>bannerhtml</quote>
-
-        , and 
-        <quote>blurbhtml</quote>
-
-        are all templates which control display of headers, footers, errors,
-        banners, and additional data. We could go into some detail regarding
-        the usage of these, but it is really best just to monkey around with
-        them a bit to see what they do. I strongly recommend you copy your 
-        <filename>data/params</filename>
-
-        file somewhere safe before playing with these values, though. If they
-        are changed dramatically, it may make it impossible for you to
-        display Bugzilla pages to fix the problem until you have restored
-        your 
-        <filename>data/params</filename>
-
-        file.</para>
-
-        <para>If you have custom logos or HTML you must put in place to fit
-        within your site design guidelines, place the code in the
-        "headerhtml", "footerhtml", "errorhtml", "bannerhtml", or "blurbhtml"
-        text boxes. 
-        <note>
-          <para>The "headerhtml" text box is the HTML printed out 
-          <emphasis>before</emphasis>
-
-          any other code on the page, except the CONTENT-TYPE header sent by
-          the Bugzilla engine. If you have a special banner, put the code for
-          it in "bannerhtml". You may want to leave these settings at the
-          defaults initially.</para>
-        </note>
+        If you need to shut down Bugzilla to perform administration, enter
+        some descriptive HTML here and anyone who tries to use Bugzilla will
+        receive a page to that effect. Obviously, editparams.cgi will
+        still be accessible so you can remove the HTML and re-enable Bugzilla.
+        :-)
         </para>
       </step>
 
       <step>
         <para>
-        <quote>passwordmail</quote>
+        <command>passwordmail</command>:
 
-        is rather simple. Every time a user creates an account, the text of
-        this parameter is read as the text to send to the new user along with
+        Every time a user creates an account, the text of
+        this parameter (with substitutions) is sent to the new user along with
         their password message.</para>
 
         <para>Add any text you wish to the "passwordmail" parameter box. For
@@ -219,45 +131,29 @@
 
       <step>
         <para>
-        <quote>useqacontact</quote>
+        <command>useqacontact</command>:
 
-        allows you to define an email address for each component, in addition
+        This allows you to define an email address for each component, in
+        addition
         to that of the default owner, who will be sent carbon copies of
-        incoming bugs. The critical difference between a QA Contact and an
-        Owner is that the QA Contact follows the component. If you reassign a
-        bug from component A to component B, the QA Contact for that bug will
-        change with the reassignment, regardless of owner.</para>
-
+        incoming bugs.</para>
+      </step>
+      <step>
         <para>
-        <quote>usestatuswhiteboard</quote>
-
-        defines whether you wish to have a free-form, overwritable field
+        <command>usestatuswhiteboard</command>:
+        This defines whether you wish to have a free-form, overwritable field
         associated with each bug. The advantage of the Status Whiteboard is
         that it can be deleted or modified with ease, and provides an
         easily-searchable field for indexing some bugs that have some trait
-        in common. Many people will put 
-        <quote>help wanted</quote>
-
-        , 
-        <quote>stalled</quote>
-
-        , or 
-        <quote>waiting on reply from somebody</quote>
-
-        messages into the Status Whiteboard field so those who peruse the
-        bugs are aware of their status even more than that which can be
-        indicated by the Resolution fields.</para>
-
-        <para>Do you want to use the QA Contact ("useqacontact") and status
-        whiteboard ("usestatuswhiteboard") fields? These fields are useful
-        because they allow for more flexibility, particularly when you have
-        an existing Quality Assurance and/or Release Engineering team, but
-        they may not be needed for many smaller installations.</para>
+        in common.         
+        </para>
       </step>
 
       <step>
-        <para>Set "whinedays" to the amount of days you want to let bugs go
-        in the "New" or "Reopened" state before notifying people they have
+        <para>
+        <command>whinedays</command>:
+        Set this to the number of days you want to let bugs go
+        in the NEW or REOPENED state before notifying people they have
         untouched new bugs. If you do not plan to use this feature, simply do
         not set up the whining cron job described in the installation
         instructions, or set this value to "0" (never whine).</para>
@@ -265,8 +161,8 @@
 
       <step>
         <para>
-        <quote>commenton</quote>
-
+        <command>commenton*</command>:
+        All these
         fields allow you to dictate what changes can pass without comment,
         and which must have a comment from the person who changed them.
         Often, administrators will allow users to add themselves to the CC
@@ -288,30 +184,17 @@
       </step>
 
       <step>
-        <para>The 
-        <quote>supportwatchers</quote>
+        <para>
+        <command>supportwatchers</command>:
 
-        option can be an exceptionally powerful tool in the hands of a power
-        Bugzilla user. By enabling this option, you allow users to receive
-        email updates whenever other users receive email updates. This is, of
+        Turning on this option allows users to ask to receive copies of 
+        all a particular other user's bug email. This is, of
         course, subject to the groupset restrictions on the bug; if the 
         <quote>watcher</quote>
-
         would not normally be allowed to view a bug, the watcher cannot get
         around the system by setting herself up to watch the bugs of someone
-        with bugs outside her privileges. She would still only receive email
-        updates for those bugs she could normally view.</para>
-
-        <para>For Bugzilla sites which require strong inter-Product security
-        to prevent snooping, watchers are not a good idea.</para>
-
-        <para>However, for most sites you should set 
-        <quote>supportwatchers</quote>
-
-        to "On". This feature is helpful for team leads to monitor progress
-        in their respective areas, and can offer many other benefits, such as
-        allowing a developer to pick up a former engineer's bugs without
-        requiring her to change all the information in the bug.</para>
+        with bugs outside her privileges. They would still only receive email
+        updates for those bugs she could normally view.</para>        
       </step>
     </procedure>
   </section>
@@ -319,34 +202,34 @@
   <section id="useradmin">
     <title>User Administration</title>
 
-    <para>User administration is one of the easiest parts of Bugzilla.
-    Keeping it from getting out of hand, however, can become a
-    challenge.</para>
-
     <section id="defaultuser">
       <title>Creating the Default User</title>
 
       <para>When you first run checksetup.pl after installing Bugzilla, it
       will prompt you for the administrative username (email address) and
-      password for this "super user". If for some reason you were to delete
+      password for this "super user". If for some reason you delete
       the "super user" account, re-running checksetup.pl will again prompt
       you for this username and password.</para>
 
       <tip>
         <para>If you wish to add more administrative users, you must use the
         MySQL interface. Run "mysql" from the command line, and use these
-        commands ("mysql&gt;" denotes the mysql prompt, not something you
-        should type in): 
-        <command>
-        <prompt>mysql&gt;</prompt>
+        commands: 
+        <simplelist>
+          <member>
+            <prompt>mysql&gt;</prompt>
+            <command>use bugs;</command>
+          </member>
 
-        use bugs;</command>
+          <member>
+            <prompt>mysql&gt;</prompt>
 
-        <command>
-        <prompt>mysql&gt;</prompt>
-
-        update profiles set groupset=0x7ffffffffffffff where login_name =
-        "(user's login name)";</command>
+            <command>
+              update profiles set groupset=0x7ffffffffffffff where login_name =
+              "(user's login name)";
+            </command>
+          </member>
+        </simplelist>
         </para>
 
         <para>Yes, that is 
@@ -362,77 +245,24 @@
     <section id="manageusers">
       <title>Managing Other Users</title>
 
-      <section id="login">
-        <title>Logging In</title>
-
-        <orderedlist>
-          <listitem>
-            <para>Open the index.html page for your Bugzilla installation in
-            your browser window.</para>
-          </listitem>
-
-          <listitem>
-            <para>Click the "Query Existing Bug Reports" link.</para>
-          </listitem>
-
-          <listitem>
-            <para>Click the "Log In" link at the foot of the page.</para>
-          </listitem>
-
-          <listitem>
-            <para>Type your email address, and the password which was emailed
-            to you when you created your Bugzilla account, into the spaces
-            provided.</para>
-          </listitem>
-        </orderedlist>
-
-        <para>Congratulations, you are logged in!</para>
-      </section>
-
       <section id="createnewusers">
         <title>Creating new users</title>
 
         <para>Your users can create their own user accounts by clicking the
-        "New Account" link at the bottom of each page. However, should you
+        "New Account" link at the bottom of each page (assuming they
+        aren't logged in as someone else already.) However, should you
         desire to create user accounts ahead of time, here is how you do
         it.</para>
 
         <orderedlist>
           <listitem>
             <para>After logging in, click the "Users" link at the footer of
-            the query page.</para>
-          </listitem>
-
-          <listitem>
-            <para>To see a specific user, type a portion of their login name
-            in the box provided and click "submit". To see all users, simply
-            click the "submit" button. You must click "submit" here to be
-            able to add a new user.</para>
-
-            <tip>
-              <para>More functionality is available via the list on the
-              right-hand side of the text entry box. You can match what you
-              type as a case-insensitive substring (the default) of all users
-              on your system, a case-sensitive regular expression (please see
-              the 
-              <command>man regexp</command>
-
-              manual page for details on regular expression syntax), or a 
-              <emphasis>reverse</emphasis>
-
-              regular expression match, where every user name which does NOT
-              match the regular expression is selected.</para>
-            </tip>
-          </listitem>
-
-          <listitem>
-            <para>Click the "Add New User" link at the bottom of the user
-            list</para>
+            the query page, and then click "Add a new user".</para>
           </listitem>
 
           <listitem>
             <para>Fill out the form presented. This page is self-explanatory.
-            When done, click "submit".</para>
+            When done, click "Submit".</para>
 
             <note>
               <para>Adding a user this way will 
@@ -453,84 +283,71 @@
         </orderedlist>
       </section>
 
-      <section id="disableusers">
-        <title>Disabling Users</title>
-
-        <para>I bet you noticed that big "Disabled Text" entry box available
-        from the "Add New User" screen, when you edit an account? By entering
-        any text in this box and selecting "submit", you have prevented the
-        user from using Bugzilla via the web interface. Your explanation,
-        written in this text box, will be presented to the user the next time
-        she attempts to use the system. 
-        <warning>
-          <para>Don't disable your own administrative account, or you will
-          hate life!</para>
-
-          <para>At this time, 
-          <quote>Disabled Text</quote>
-
-          does not prevent a user from using the email interface. If you have
-          the email interface enabled, they can still continue to submit bugs
-          and comments that way. We need a patch to fix this.</para>
-        </warning>
-        </para>
-      </section>
-
       <section id="modifyusers">
         <title>Modifying Users</title>
 
-        <para>Here I will attempt to describe the function of each option on
-        the Edit User screen.</para>
+        <para>To see a specific user, search for their login name
+        in the box provided on the "Edit Users" page. To see all users, 
+        leave the box blank.</para>
+
+        <para>You can search in different ways the listbox to the right
+        of the text entry box. You can match by 
+        case-insensitive substring (the default),
+        regular expression, or a 
+        <emphasis>reverse</emphasis>
+        regular expression match, which finds every user name which does NOT
+        match the regular expression. (Please see
+        the <command>man regexp</command>
+        manual page for details on regular expression syntax.)
+        </para>
+
+        <para>Once you have found your user, you can change the following
+        fields:</para>
 
         <itemizedlist>
           <listitem>
             <para>
-            <emphasis>Login Name</emphasis>
-
-            : This is generally the user's email address. However, if you
-            have edited your system parameters, this may just be the user's
-            login name or some other identifier. 
-            <tip>
-              <para>For compatability reasons, you should probably stick with
-              email addresses as user login names. It will make your life
-              easier.</para>
-            </tip>
+            <emphasis>Login Name</emphasis>: 
+            This is generally the user's full email address. However, if you
+            have are using the emailsuffix Param, this may just be the user's
+            login name. Note that users can now change their login names
+            themselves (to any valid email address.)
             </para>
           </listitem>
 
           <listitem>
             <para>
-            <emphasis>Real Name</emphasis>
-
-            : Duh!</para>
+            <emphasis>Real Name</emphasis>: The user's real name. Note that
+            Bugzilla does not require this to create an account.</para>
           </listitem>
 
           <listitem>
             <para>
-            <emphasis>Password</emphasis>
-
-            : You can change the user password here. It is normal to only see
-            asterisks.</para>
+            <emphasis>Password</emphasis>: 
+            You can change the user's password here. Users can automatically
+            request a new password, so you shouldn't need to do this often.
+            If you want to disable an account, see Disable Text below.
+            </para>
           </listitem>
 
           <listitem>
             <para>
-            <emphasis>Disable Text</emphasis>
-
-            : If you type anything in this box, including just a space, the
-            user account is disabled from making any changes to bugs via the
-            web interface, and what you type in this box is presented as the
-            reason. 
+            <emphasis>Disable Text</emphasis>: 
+            If you type anything in this box, including just a space, the
+            user is prevented from logging in, or making any changes to 
+            bugs via the web interface. 
+            The HTML you type in this box is presented to the user when
+            they attempt to perform these actions, and should explain
+            why the account was disabled.
             <warning>
               <para>Don't disable the administrator account!</para>
             </warning>
 
             <note>
-              <para>As of this writing, the user can still submit bugs via
-              the e-mail gateway, if you set it up, despite the disabled text
-              field. The e-mail gateway should 
+              <para>The user can still submit bugs via
+              the e-mail gateway, if you set it up, even if the disabled text
+              field is filled in. The e-mail gateway should 
               <emphasis>not</emphasis>
-
               be enabled for secure installations of Bugzilla.</para>
             </note>
             </para>
@@ -538,90 +355,82 @@
 
           <listitem>
             <para>
-            <emphasis>CanConfirm</emphasis>
-
-            : This field is only used if you have enabled "unconfirmed"
-            status in your parameters screen. If you enable this for a user,
-            that user can then move bugs from "Unconfirmed" to "Confirmed"
-            status (e.g.: "New" status). Be judicious about allowing users to
-            turn this bit on for other users.</para>
-          </listitem>
-
-          <listitem>
-            <para>
-            <emphasis>Creategroups</emphasis>
-
-            : This option will allow a user to create and destroy groups in
-            Bugzilla. Unless you are using the Bugzilla GroupSentry security
-            option "usebuggroupsentry" in your parameters, this setting has
-            no effect.</para>
-          </listitem>
-
-          <listitem>
-            <para>
-            <emphasis>Editbugs</emphasis>
-
-            : Unless a user has this bit set, they can only edit those bugs
-            for which they are the assignee or the reporter. 
-            <note>
-              <para>Leaving this option unchecked does not prevent users from
-              adding comments to a bug! They simply cannot change a bug
-              priority, severity, etc. unless they are the assignee or
-              reporter.</para>
-            </note>
+            <emphasis>&lt;groupname&gt;</emphasis>: 
+            If you have created some groups, e.g. "securitysensitive", then
+            checkboxes will appear here to allow you to add users to, or
+            remove them from, these groups.
             </para>
           </listitem>
 
           <listitem>
             <para>
-            <emphasis>Editcomponents</emphasis>
+            <emphasis>canconfirm</emphasis>: 
+            This field is only used if you have enabled the "unconfirmed"
+            status. If you enable this for a user,
+            that user can then move bugs from "Unconfirmed" to a "Confirmed"
+            status (e.g.: "New" status).</para>
+          </listitem>
 
-            : This flag allows a user to create new products and components,
+          <listitem>
+            <para>
+            <emphasis>creategroups</emphasis>: 
+            This option will allow a user to create and destroy groups in
+            Bugzilla.</para>
+          </listitem>
+
+          <listitem>
+            <para>
+            <emphasis>editbugs</emphasis>: 
+            Unless a user has this bit set, they can only edit those bugs
+            for which they are the assignee or the reporter. Even if this
+            option is unchecked, users can still add comments to bugs.
+            </para>
+          </listitem>
+
+          <listitem>
+            <para>
+            <emphasis>editcomponents</emphasis>: 
+            This flag allows a user to create new products and components,
             as well as modify and destroy those that have no bugs associated
             with them. If a product or component has bugs associated with it,
             those bugs must be moved to a different product or component
-            before Bugzilla will allow them to be destroyed. The name of a
-            product or component can be changed without affecting the
-            associated bugs, but it tends to annoy the hell out of your users
-            when these change a lot.</para>
+            before Bugzilla will allow them to be destroyed.
+            </para>
           </listitem>
 
           <listitem>
             <para>
-            <emphasis>Editkeywords</emphasis>
-
-            : If you use Bugzilla's keyword functionality, enabling this
-            feature allows a user can create and destroy keywords. As always,
+            <emphasis>editkeywords</emphasis>: 
+            If you use Bugzilla's keyword functionality, enabling this
+            feature allows a user to create and destroy keywords. As always,
             the keywords for existing bugs containing the keyword the user
             wishes to destroy must be changed before Bugzilla will allow it
-            to die. You must be very careful about creating too many new
-            keywords if you run a very large Bugzilla installation; keywords
-            are global variables across products, and you can often run into
-            a phenomenon called "keyword bloat". This confuses users, and
-            then the feature goes unused.</para>
+            to die.</para>
           </listitem>
 
           <listitem>
             <para>
-            <emphasis>Editusers</emphasis>
-
-            : This flag allows a user do what you're doing right now: edit
+            <emphasis>editusers</emphasis>: 
+            This flag allows a user to do what you're doing right now: edit
             other users. This will allow those with the right to do so to
             remove administrator privileges from other users or grant them to
             themselves. Enable with care.</para>
           </listitem>
 
+
           <listitem>
             <para>
-            <emphasis>PRODUCT</emphasis>
+            <emphasis>tweakparams</emphasis>: 
+            This flag allows a user to change Bugzilla's Params 
+            (using <filename>editparams.cgi</filename>.)</para>
+          </listitem>
 
-            : PRODUCT bugs access. This allows an administrator, with
-            product-level granularity, to specify in which products a user
-            can edit bugs. The user must still have the "editbugs" privelege
-            to edit bugs in this area; this simply restricts them from even
-            seeing bugs outside these boundaries if the administrator has
-            enabled the group sentry parameter "usebuggroupsentry". Unless
-            you are using bug groups, this option has no effect.</para>
+          <listitem>
+            <para>
+            <emphasis>&lt;productname&gt;</emphasis>: 
+            This allows an administrator to specify the products in which 
+            a user can see bugs. The user must still have the 
+            "editbugs" privilege to edit bugs in these products.</para>
           </listitem>
         </itemizedlist>
       </section>
@@ -631,83 +440,63 @@
   <section id="programadmin">
     <title>Product, Component, Milestone, and Version Administration</title>
 
-    <epigraph>
-      <para>Dear Lord, we have to get our users to do WHAT?</para>
-    </epigraph>
-
     <section id="products">
       <title>Products</title>
-
-      <subtitle>Formerly, and in some spots still, called
-      "Programs"</subtitle>
 
       <para>
       <glossterm linkend="gloss-product" baseform="product">
       Products</glossterm>
 
-      are the broadest category in Bugzilla, and you should have the least of
-      these. If your company makes computer games, you should have one
-      product per game, and possibly a few special products (website,
-      meetings...)</para>
+      are the broadest category in Bugzilla, and tend to represent real-world
+      shipping products. E.g. if your company makes computer games, 
+      you should have one product per game, perhaps a "Common" product for 
+      units of technology used in multiple games, and maybe a few special
+       products (Website, Administration...)</para>
 
-      <para>A Product (formerly called "Program", and still referred to that
-      way in some portions of the source code) controls some very important
-      functions. The number of "votes" available for users to vote for the
-      most important bugs is set per-product, as is the number of votes
+      <para>Many of Bugzilla's settings are configurable on a per-product
+      basis. The number of "votes" available to users is set per-product, 
+      as is the number of votes
       required to move a bug automatically from the UNCONFIRMED status to the
-      NEW status. One can close a Product for further bug entry and define
-      various Versions available from the Edit product screen.</para>
+      NEW status.</para>
 
       <para>To create a new product:</para>
 
       <orderedlist>
         <listitem>
-          <para>Select "components" from the yellow footer</para>
+          <para>Select "products" from the footer</para>
 
-          <tip>
-            <para>It may seem counterintuitive to click "components" when you
-            want to edit the properties associated with Products. This is one
-            of a long list of things we want in Bugzilla 3.0...</para>
-          </tip>
         </listitem>
 
         <listitem>
-          <para>Select the "Add" link to the right of "Add a new
-          product".</para>
+          <para>Select the "Add" link in the bottom right</para>
         </listitem>
 
         <listitem>
           <para>Enter the name of the product and a description. The
-          Description field is free-form.</para>
+          Description field may contain HTML.</para>
         </listitem>
       </orderedlist>
 
-      <tip>
-        <para>Don't worry about the "Closed for bug entry", "Maximum Votes
-        per person", "Maximum votes a person can put on a single bug",
-        "Number of votes a bug in this Product needs to automatically get out
-        of the UNCOMFIRMED state", and "Version" options yet. We'll cover
-        those in a few moments.</para>
-      </tip>
+      <para>Don't worry about the "Closed for bug entry", "Maximum Votes
+      per person", "Maximum votes a person can put on a single bug",
+      "Number of votes a bug in this Product needs to automatically get out
+      of the UNCOMFIRMED state", and "Version" options yet. We'll cover
+      those in a few moments.
+      </para>
     </section>
 
     <section id="components">
       <title>Components</title>
 
-      <para>Components are subsections of a Product. 
-      <example>
-        <title>Creating some Components</title>
-
-        <informalexample>
-          <para>The computer game you are designing may have a "UI"
-          component, an "API" component, a "Sound System" component, and a
-          "Plugins" component, each overseen by a different programmer. It
-          often makes sense to divide Components in Bugzilla according to the
-          natural divisions of responsibility within your Product or
-          company.</para>
-        </informalexample>
-      </example>
-
+      <para>Components are subsections of a Product. E.g. the computer game 
+      you are designing may have a "UI"
+      component, an "API" component, a "Sound System" component, and a
+      "Plugins" component, each overseen by a different programmer. It
+      often makes sense to divide Components in Bugzilla according to the
+      natural divisions of responsibility within your Product or
+      company.</para>
+      
+      <para>
       Each component has a owner and (if you turned it on in the parameters),
       a QA Contact. The owner should be the primary person who fixes bugs in
       that component. The QA Contact should be the person who will ensure
@@ -715,10 +504,9 @@
       will get email when new bugs are created in this Component and when
       these bugs change. Default Owner and Default QA Contact fields only
       dictate the 
-      <emphasis>default assignments</emphasis>
-
-      ; the Owner and QA Contact fields in a bug are otherwise unrelated to
-      the Component.</para>
+      <emphasis>default assignments</emphasis>; 
+      these can be changed on bug submission, or at any later point in
+      a bug's life.</para>
 
       <para>To create a new Component:</para>
 
@@ -729,52 +517,16 @@
         </listitem>
 
         <listitem>
-          <para>Select the "Add" link to the right of the "Add a new
-          component" text on the "Select Component" page.</para>
+          <para>Select the "Add" link in the bottom right.</para>
         </listitem>
 
         <listitem>
-          <para>Fill out the "Component" field, a short "Description", and
-          the "Initial Owner". The Component and Description fields are
-          free-form; the "Initial Owner" field must be that of a user ID
-          already existing in the database. If the initial owner does not
-          exist, Bugzilla will refuse to create the component. 
-          <tip>
-            <para>Is your "Default Owner" a user who is not yet in the
-            database? No problem. 
-            <orderedlist>
-              <listitem>
-                <para>Select the "Log out" link on the footer of the
-                page.</para>
-              </listitem>
-
-              <listitem>
-                <para>Select the "New Account" link on the footer of the
-                "Relogin" page</para>
-              </listitem>
-
-              <listitem>
-                <para>Type in the email address of the default owner you want
-                to create in the "E-mail address" field, and her full name in
-                the "Real name" field, then select the "Submit Query"
-                button.</para>
-              </listitem>
-
-              <listitem>
-                <para>Now select "Log in" again, type in your login
-                information, and you can modify the product to use the
-                Default Owner information you require.</para>
-              </listitem>
-            </orderedlist>
-            </para>
-          </tip>
+          <para>Fill out the "Component" field, a short "Description", 
+          the "Initial Owner" and "Initial QA Contact" (if enabled.) 
+          The Component and Description fields may contain HTML; 
+          the "Initial Owner" field must be a login name
+          already existing in the database. 
           </para>
-        </listitem>
-
-        <listitem>
-          <para>Either Edit more components or return to the Bugzilla Query
-          Page. To return to the Product you were editing, you must select
-          the Components link as before.</para>
         </listitem>
       </orderedlist>
     </section>
@@ -783,36 +535,9 @@
       <title>Versions</title>
 
       <para>Versions are the revisions of the product, such as "Flinders
-      3.1", "Flinders 95", and "Flinders 2000". Using Versions helps you
-      isolate code changes and are an aid in reporting. 
-      <example>
-        <title>Common Use of Versions</title>
-
-        <informalexample>
-          <para>A user reports a bug against Version "Beta 2.0" of your
-          product. The current Version of your software is "Release Candidate
-          1", and no longer has the bug. This will help you triage and
-          classify bugs according to their relevance. It is also possible
-          people may report bugs against bleeding-edge beta versions that are
-          not evident in older versions of the software. This can help
-          isolate code changes that caused the bug</para>
-        </informalexample>
-      </example>
-
-      <example>
-        <title>A Different Use of Versions</title>
-
-        <informalexample>
-          <para>This field has been used to good effect by an online service
-          provider in a slightly different way. They had three versions of
-          the product: "Production", "QA", and "Dev". Although it may be the
-          same product, a bug in the development environment is not normally
-          as critical as a Production bug, nor does it need to be reported
-          publicly. When used in conjunction with Target Milestones, one can
-          easily specify the environment where a bug can be reproduced, and
-          the Milestone by which it will be fixed.</para>
-        </informalexample>
-      </example>
+      3.1", "Flinders 95", and "Flinders 2000". Version is not a multi-select
+      field; the usual practice is to select the most recent version with
+      the bug.
       </para>
 
       <para>To create and edit Versions:</para>
@@ -824,27 +549,14 @@
 
         <listitem>
           <para>You will notice that the product already has the default
-          version "undefined". If your product doesn't use version numbers,
-          you may want to leave this as it is or edit it so that it is "---".
-          You can then go back to the edit versions page and add new versions
-          to your product.</para>
-
-          <para>Otherwise, click the "Add" button to the right of the "Add a
-          new version" text.</para>
+          version "undefined". Click the "Add" link in the bottom right.</para>
         </listitem>
 
         <listitem>
-          <para>Enter the name of the Version. This can be free-form
-          characters up to the limit of the text box. Then select the "Add"
-          button.</para>
+          <para>Enter the name of the Version. This field takes text only. 
+          Then click the "Add" button.</para>
         </listitem>
 
-        <listitem>
-          <para>At this point you can select "Edit" to edit more Versions, or
-          return to the "Query" page, from which you can navigate back to the
-          product through the "components" link at the foot of the Query
-          page.</para>
-        </listitem>
       </orderedlist>
     </section>
 
@@ -853,13 +565,12 @@
 
       <para>Milestones are "targets" that you plan to get a bug fixed by. For
       example, you have a bug that you plan to fix for your 3.0 release, it
-      would be assigned the milestone of 3.0. Or, you have a bug that you
-      plan to fix for 2.8, this would have a milestone of 2.8.</para>
+      would be assigned the milestone of 3.0.</para>
 
       <note>
         <para>Milestone options will only appear for a Product if you turned
-        the "usetargetmilestone" field in the "Edit Parameters" screen
-        "On".</para>
+        on the "usetargetmilestone" Param in the "Edit Parameters" screen.
+        </para>
       </note>
 
       <para>To create new Milestones, set Default Milestones, and set
@@ -867,345 +578,188 @@
 
       <orderedlist>
         <listitem>
-          <para>Select "edit milestones"</para>
+          <para>Select "Edit milestones" from the "Edit product" page.</para>
         </listitem>
 
         <listitem>
-          <para>Select "Add" to the right of the "Add a new milestone"
+          <para>Select "Add" in the bottom right corner.
           text</para>
         </listitem>
 
         <listitem>
           <para>Enter the name of the Milestone in the "Milestone" field. You
-          can optionally set the "Sortkey", which is a positive or negative
+          can optionally set the "sortkey", which is a positive or negative
           number (-255 to 255) that defines where in the list this particular
-          milestone appears. Select "Add".</para>
-
-          <example>
-            <title>Using SortKey with Target Milestone</title>
-
-            <informalexample>
-              <para>Let's say you create a target milestone called "Release
-              1.0", with Sortkey set to "0". Later, you realize that you will
-              have a public beta, called "Beta1". You can create a Milestone
-              called "Beta1", with a Sortkey of "-1" in order to ensure
-              people will see the Target Milestone of "Beta1" earlier on the
-              list than "Release 1.0"</para>
-            </informalexample>
-          </example>
+          milestone appears. This is because milestones often do not 
+          occur in alphanumeric order For example, "Future" might be
+          after "Release 1.2". Select "Add".</para>
         </listitem>
 
         <listitem>
-          <para>If you want to add more milestones, select the "Edit" link.
-          If you don't, well shoot, you have to go back to the "query" page
-          and select "components" again, and make your way back to the
-          Product you were editing. 
-          <note>
-            <para>This is another in the list of unusual user interface
-            decisions that we'd like to get cleaned up. Shouldn't there be a
-            link to the effect of "edit the Product I was editing when I
-            ended up here"? In any case, clicking "components" in the footer
-            takes you back to the "Select product" screen, from which you can
-            begin editing your product again.</para>
-          </note>
-          </para>
-        </listitem>
+          <para>From the Edit product screen, you can enter the URL of a 
+          page which gives information about your milestones and what
+          they mean. </para>
 
-        <listitem>
-          <para>From the Edit product screen again (once you've made your way
-          back), enter the URL for a description of what your milestones are
-          for this product in the "Milestone URL" field. It should be of the
-          format "http://www.foo.com/bugzilla/product_milestones.html"</para>
-
-          <para>Some common uses of this field include product descriptions,
-          product roadmaps, and of course a simple description of the meaning
-          of each milestone.</para>
-        </listitem>
-
-        <listitem>
-          <para>If you're using Target Milestones, the "Default Milestone"
-          field must have some kind of entry. If you really don't care if
-          people set coherent Target Milestones, simply leave this at the
-          default, "---". However, controlling and regularly updating the
-          Default Milestone field is a powerful tool when reporting the
-          status of projects.</para>
-
-          <para>Select the "Update" button when you are done.</para>
+        <tip>
+          <para>If you want your milestone document to be restricted so
+          that it can only be viewed by people in a particular Bugzilla
+          group, the best way is to attach the document to a bug in that
+          group, and make the URL the URL of that attachment.</para>
+        </tip>
         </listitem>
       </orderedlist>
-    </section>
-
-    <section id="voting">
-      <title>Voting</title>
-
-      <para>The concept of "voting" is a poorly understood, yet powerful
-      feature for the management of open-source projects. Each user is
-      assigned so many Votes per product, which they can freely reassign (or
-      assign multiple votes to a single bug). This allows developers to gauge
-      user need for a particular enhancement or bugfix. By allowing bugs with
-      a certain number of votes to automatically move from "UNCONFIRMED" to
-      "NEW", users of the bug system can help high-priority bugs garner
-      attention so they don't sit for a long time awaiting triage.</para>
-
-      <para>The daunting challenge of Votes is deciding where you draw the
-      line for a "vocal majority". If you only have a user base of 100 users,
-      setting a low threshold for bugs to move from UNCONFIRMED to NEW makes
-      sense. As the Bugzilla user base expands, however, these thresholds
-      must be re-evaluated. You should gauge whether this feature is worth
-      the time and close monitoring involved, and perhaps forego
-      implementation until you have a critical mass of users who demand
-      it.</para>
-
-      <para>To modify Voting settings:</para>
-
-      <orderedlist>
-        <listitem>
-          <para>Navigate to the "Edit product" screen for the Product you
-          wish to modify</para>
-        </listitem>
-
-        <listitem>
-          <para>Set "Maximum Votes per person" to your calculated value.
-          Setting this field to "0" disables voting.</para>
-        </listitem>
-
-        <listitem>
-          <para>Set "Maximum Votes a person can put on a single bug" to your
-          calculated value. It should probably be some number lower than the
-          "Maximum votes per person". Setting this field to "0" disables
-          voting, but leaves the voting options open to the user. This is
-          confusing.</para>
-        </listitem>
-
-        <listitem>
-          <para>Set "Number of votes a bug in this product needs to
-          automatically get out of the UNCONFIRMED state" to your calculated
-          number. Setting this field to "0" disables the automatic move of
-          bugs from UNCONFIRMED to NEW. Some people advocate leaving this at
-          "0", but of what use are Votes if your Bugzilla user base is unable
-          to affect which bugs appear on Development radar? 
-          <tip>
-            <para>You should probably set this number to higher than a small
-            coalition of Bugzilla users can influence it. Most sites use this
-            as a "referendum" mechanism -- if users are able to vote a bug
-            out of UNCONFIRMED, it is a 
-            <emphasis>really</emphasis>
-
-            bad bug!</para>
-          </tip>
-          </para>
-        </listitem>
-
-        <listitem>
-          <para>Once you have adjusted the values to your preference, select
-          the "Update" button.</para>
-        </listitem>
-      </orderedlist>
-    </section>
-
-    <section id="groups">
-      <title>Groups and Group Security</title>
-
-      <para>Groups can be very useful in bugzilla, because they allow users
-      to isolate bugs or products that should only be seen by certain people.
-      Groups can also be a complicated minefield of interdependencies and
-      weirdness if mismanaged. 
-      <example>
-        <title>When to Use Group Security</title>
-
-        <informalexample>
-          <para>Many Bugzilla sites isolate "Security-related" bugs from all
-          other bugs. This way, they can have a fix ready before the security
-          vulnerability is announced to the world. You can create a
-          "Security" product which, by default, has no members, and only add
-          members to the group (in their individual User page, as described
-          under User Administration) who should have priveleged access to
-          "Security" bugs. Alternately, you may create a Group independently
-          of any Product, and change the Group mask on individual bugs to
-          restrict access to members only of certain Groups.</para>
-        </informalexample>
-      </example>
-
-      Groups only work if you enable the "usebuggroups" paramater. In
-      addition, if the "usebuggroupsentry" parameter is "On", one can
-      restrict access to products by groups, so that only members of a
-      product group are able to view bugs within that product. Group security
-      in Bugzilla can be divided into two categories: Generic and
-      Product-Based.</para>
-
-      <note>
-        <para>Groups in Bugzilla are a complicated beast that evolved out of
-        very simple user permission bitmasks, apparently itself derived from
-        common concepts in UNIX access controls. A "bitmask" is a
-        fixed-length number whose value can describe one, and only one, set
-        of states. For instance, UNIX file permissions are assigned bitmask
-        values: "execute" has a value of 1, "write" has a value of 2, and
-        "read" has a value of 4. Add them together, and a file can be read,
-        written to, and executed if it has a bitmask of "7". (This is a
-        simplified example -- anybody who knows UNIX security knows there is
-        much more to it than this. Please bear with me for the purpose of
-        this note.) The only way a bitmask scheme can work is by doubling the
-        bit count for each value. Thus if UNIX wanted to offer another file
-        permission, the next would have to be a value of 8, then the next 16,
-        the next 32, etc.</para>
-
-        <para>Similarly, Bugzilla offers a bitmask to define group
-        permissions, with an internal limit of 64. Several are already
-        occupied by built-in permissions. The way around this limitation is
-        to avoid assigning groups to products if you have many products,
-        avoid bloating of group lists, and religiously prune irrelevant
-        groups. In reality, most installations of Bugzilla support far fewer
-        than 64 groups, so this limitation has not hit for most sites, but it
-        is on the table to be revised for Bugzilla 3.0 because it interferes
-        with the security schemes of some administrators.</para>
-      </note>
-
-      <para>To enable Generic Group Security ("usebuggroups"):</para>
-
-      <orderedlist>
-        <listitem>
-          <para>Turn "On" "usebuggroups" in the "Edit Parameters"
-          screen.</para>
-        </listitem>
-
-        <listitem>
-          <para>You will generally have no groups set up. Select the "groups"
-          link in the footer.</para>
-        </listitem>
-
-        <listitem>
-          <para>Take a moment to understand the instructions on the "Edit
-          Groups" screen. Once you feel confident you understand what is
-          expected of you, select the "Add Group" link.</para>
-        </listitem>
-
-        <listitem>
-          <para>Fill out the "New Name" (remember, no spaces!), "New
-          Description", and "New User RegExp" fields. "New User RegExp"
-          allows you to automatically place all users who fulfill the Regular
-          Expression into the new group. 
-          <example>
-            <title>Creating a New Group</title>
-
-            <informalexample>
-              <para>I created a group called DefaultGroup with a description
-              of 
-              <quote>This is simply a group to play with</quote>
-
-              , and a New User RegExp of 
-              <quote>.*@mydomain.tld</quote>
-
-              . This new group automatically includes all Bugzilla users with
-              "@mydomain.tld" at the end of their user id. When I finished,
-              my new group was assigned bit #128.</para>
-            </informalexample>
-          </example>
-
-          When you have finished, select the Add button.</para>
-        </listitem>
-      </orderedlist>
-
-      <para>To enable Product-Based Group Security
-      (usebuggroupsentry):</para>
-
-      <warning>
-        <para>Don't forget that you only have 64 groups masks available,
-        total, for your installation of Bugzilla! If you plan on having more
-        than 50 products in your individual Bugzilla installation, and
-        require group security for your products, you should consider either
-        running multiple Bugzillas or using Generic Group Security instead of
-        Product-Based ("usebuggroupsentry") Group Security.</para>
-      </warning>
-
-      <orderedlist>
-        <listitem>
-          <para>Turn "On" "usebuggroups" and "usebuggroupsentry" in the "Edit
-          Parameters" screen.</para>
-
-          <warning>
-            <para>"usebuggroupsentry" has the capacity to prevent the
-            administrative user from directly altering bugs because of
-            conflicting group permissions. If you plan on using
-            "usebuggroupsentry", you should plan on restricting
-            administrative account usage to administrative duties only. In
-            other words, manage bugs with an unpriveleged user account, and
-            manage users, groups, Products, etc. with the administrative
-            account.</para>
-          </warning>
-        </listitem>
-
-        <listitem>
-          <para>You will generally have no Groups set up, unless you enabled
-          "usebuggroupsentry" prior to creating any Products. To create
-          "Generic Group Security" groups, follow the instructions given
-          above. To create Product-Based Group security, simply follow the
-          instructions for creating a new Product. If you need to add users
-          to these new groups as you create them, you will find the option to
-          add them to the group available under the "Edit User"
-          screens.</para>
-        </listitem>
-      </orderedlist>
-
-      <para>You may find this example illustrative for how bug groups work. 
-      <example>
-        <title>Bugzilla Groups</title>
-
-        <literallayout>Bugzilla Groups example ----------------------- For
-        this example, let us suppose we have four groups, call them Group1,
-        Group2, Group3, and Group4. We have 5 users, User1, User2, User3,
-        User4, User5. We have 8 bugs, Bug1, ..., Bug8. Group membership is
-        defined by this chart: (X denotes that user is in that group.) (I
-        apologize for the nasty formatting of this table. Try viewing it in a
-        text-based browser or something for now. -MPB) G G G G r r r r o o o
-        o u u u u p p p p 1 2 3 4 +-+-+-+-+ User1|X| | | | +-+-+-+-+ User2|
-        |X| | | +-+-+-+-+ User3|X| |X| | +-+-+-+-+ User4|X|X|X| | +-+-+-+-+
-        User5| | | | | +-+-+-+-+ Bug restrictions are defined by this chart:
-        (X denotes that bug is restricted to that group.) G G G G r r r r o o
-        o o u u u u p p p p 1 2 3 4 +-+-+-+-+ Bug1| | | | | +-+-+-+-+ Bug2|
-        |X| | | +-+-+-+-+ Bug3| | |X| | +-+-+-+-+ Bug4| | | |X| +-+-+-+-+
-        Bug5|X|X| | | +-+-+-+-+ Bug6|X| |X| | +-+-+-+-+ Bug7|X|X|X| |
-        +-+-+-+-+ Bug8|X|X|X|X| +-+-+-+-+ Who can see each bug? Bug1 has no
-        group restrictions. Therefore, Bug1 can be seen by any user, whatever
-        their group membership. This is going to be the only bug that User5
-        can see, because User5 isn't in any groups. Bug2 can be seen by
-        anyone in Group2, that is User2 and User4. Bug3 can be seen by anyone
-        in Group3, that is User3 and User4. Bug4 can be seen by anyone in
-        Group4. Nobody is in Group4, so none of these users can see Bug4.
-        Bug5 can be seen by anyone who is in _both_ Group1 and Group2. This
-        is only User4. User1 cannot see it because he is not in Group2, and
-        User2 cannot see it because she is not in Group1. Bug6 can be seen by
-        anyone who is in both Group1 and Group3. This would include User3 and
-        User4. Similar to Bug5, User1 cannot see Bug6 because he is not in
-        Group3. Bug7 can be seen by anyone who is in Group1, Group2, and
-        Group3. This is only User4. All of the others are missing at least
-        one of those group privileges, and thus cannot see the bug. Bug8 can
-        be seen by anyone who is in Group1, Group2, Group3, and Group4. There
-        is nobody in all four of these groups, so nobody can see Bug8. It
-        doesn't matter that User4 is in Group1, Group2, and Group3, since he
-        isn't in Group4.</literallayout>
-      </example>
-      </para>
     </section>
   </section>
+  
+  <section id="voting">
+    <title>Voting</title>
+
+    <para>Voting allows users to be given a pot of votes which they can allocate
+    to bugs, to indicate that they'd like them fixed. 
+    This allows developers to gauge
+    user need for a particular enhancement or bugfix. By allowing bugs with
+    a certain number of votes to automatically move from "UNCONFIRMED" to
+    "NEW", users of the bug system can help high-priority bugs garner
+    attention so they don't sit for a long time awaiting triage.</para>
+
+    <para>To modify Voting settings:</para>
+
+    <orderedlist>
+      <listitem>
+        <para>Navigate to the "Edit product" screen for the Product you
+        wish to modify</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis>Maximum Votes per person</emphasis>:
+        Setting this field to "0" disables voting.</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis>Maximum Votes a person can put on a single
+         bug"</emphasis>: 
+         It should probably be some number lower than the
+        "Maximum votes per person". Don't set this field to "0" if
+        "Maximum votes per person" is non-zero; that doesn't make
+        any sense.</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis>Number of votes a bug in this product needs to
+        automatically get out of the UNCONFIRMED state</emphasis>: 
+        Setting this field to "0" disables the automatic move of
+        bugs from UNCONFIRMED to NEW. 
+        </para>
+      </listitem>
+
+      <listitem>
+        <para>Once you have adjusted the values to your preference, click
+        "Update".</para>
+      </listitem>
+    </orderedlist>
+  </section>
+
+  <section id="groups">
+    <title>Groups and Group Security</title>
+
+    <para>Groups allow the administrator
+    to isolate bugs or products that should only be seen by certain people.
+    There are two types of group - Generic Groups, and Product-Based Groups.
+    </para>
+    
+    <para>
+    Product-Based Groups are matched with products, and allow you to restrict
+    access to bugs on a per-product basis. They are enabled using the 
+    usebuggroups Param. Turning on the usebuggroupsentry
+    Param will mean bugs automatically get added to their product group when 
+    filed.   
+    </para>
+    
+    <para>
+    Generic Groups have no special relationship to products; 
+    you create them, and put bugs in them
+    as required. One example of the use of Generic Groups 
+    is Mozilla's "Security" group,
+    into which security-sensitive bugs are placed until fixed. Only the
+    Mozilla Security Team are members of this group.
+    </para>
+    
+    <para>To create Generic Groups:</para>
+
+    <orderedlist>
+      <listitem>
+        <para>Select the "groups"
+        link in the footer.</para>
+      </listitem>
+
+      <listitem>
+        <para>Take a moment to understand the instructions on the "Edit
+        Groups" screen, then select the "Add Group" link.</para>
+      </listitem>
+
+      <listitem>
+        <para>Fill out the "New Name", "New Description", and 
+        "New User RegExp" fields. "New User RegExp" allows you to automatically
+         place all users who fulfill the Regular Expression into the new group. 
+         When you have finished, click "Add".</para>
+      </listitem>
+    </orderedlist>
+
+    <para>To use Product-Based Groups:</para>
+
+    <orderedlist>
+      <listitem>
+        <para>Turn on "usebuggroups" and "usebuggroupsentry" in the "Edit
+        Parameters" screen.</para>
+
+        <warning>
+          <para>XXX is this still true?
+          "usebuggroupsentry" has the capacity to prevent the
+          administrative user from directly altering bugs because of
+          conflicting group permissions. If you plan on using
+          "usebuggroupsentry", you should plan on restricting
+          administrative account usage to administrative duties only. In
+          other words, manage bugs with an unpriveleged user account, and
+          manage users, groups, Products, etc. with the administrative
+          account.</para>
+        </warning>
+      </listitem>
+
+      <listitem>
+        <para>In future, when you create a Product, a matching group will be
+        automatically created. If you need to add a Product Group to
+        a Product which was created before you turned on usebuggroups,
+        then simply create a new group, as outlined above, with the
+        same name as the Product.</para>
+      </listitem>
+    </orderedlist>
+
+    <warning>
+      <para>Bugzilla currently has a limit of 64 groups per installation. If
+      you have more than about 50 products, you should consider
+      running multiple Bugzillas. Ask in the newsgroup for other
+      suggestions for working around this restriction.</para>
+    </warning>
+
+    <para>
+      Note that group permissions are such that you need to be a member
+      of <emphasis>all</emphasis> the groups a bug is in, for whatever
+      reason, to see that bug.
+    </para>    
+  </section>
+
 
   <section id="security">
     <title>Bugzilla Security</title>
 
-    <epigraph>
-      <para>Putting your money in a wall safe is better protection than
-      depending on the fact that no one knows that you hide your money in a
-      mayonnaise jar in your fridge.</para>
-    </epigraph>
-
-    <note>
-      <para>Poorly-configured MySQL, Bugzilla, and FTP installations have
+    <warning>
+      <para>Poorly-configured MySQL and Bugzilla installations have
       given attackers full access to systems in the past. Please take these
       guidelines seriously, even for Bugzilla machines hidden away behind
       your firewall. 80% of all computer trespassers are insiders, not
       anonymous crackers.</para>
-    </note>
+    </warning>
 
-    <para>Secure your installation. 
     <note>
       <para>These instructions must, of necessity, be somewhat vague since
       Bugzilla runs on so many different platforms. If you have refinements
@@ -1215,11 +769,13 @@
       </para>
     </note>
 
+    <para>To secure your installation:
+     
     <orderedlist>
       <listitem>
         <para>Ensure you are running at least MysQL version 3.22.32 or newer.
-        Earlier versions had notable security holes and poorly secured
-        default configuration choices.</para>
+        Earlier versions had notable security holes and (from a security
+        point of view) poor default configuration choices.</para>
       </listitem>
 
       <listitem>
@@ -1228,18 +784,9 @@
         system!</emphasis>
 
         Read 
-        <ulink
-        url="http://www.mysql.com/documentation/mysql/bychapter/manual_Privilege_system.html">
+        <ulink url="http://www.mysql.com/doc/P/r/Privilege_system.html">
         The MySQL Privilege System</ulink>
-
         until you can recite it from memory!</para>
-
-        <para>At the very least, ensure you password the "mysql -u root"
-        account and the "bugs" account, establish grant table rights (consult
-        the Keystone guide in Appendix C: The Bugzilla Database for some
-        easy-to-use details) that do not allow CREATE, DROP, RELOAD,
-        SHUTDOWN, and PROCESS for user "bugs". I wrote up the Keystone advice
-        back when I knew far less about security than I do now : )</para>
       </listitem>
 
       <listitem>
@@ -1273,42 +820,35 @@
 
       <listitem>
         <para>Ensure you have adequate access controls for the
-        $BUGZILLA_HOME/data/ and $BUGZILLA_HOME/shadow/ directories, as well
-        as the $BUGZILLA_HOME/localconfig and $BUGZILLA_HOME/globals.pl
-        files. The localconfig file stores your "bugs" user password, which
-        would be terrible to have in the hands of a criminal, while the
-        "globals.pl" stores some default information regarding your
-        installation which could aid a system cracker. In addition, some
-        files under $BUGZILLA_HOME/data/ store sensitive information, and
-        $BUGZILLA_HOME/shadow/ stores bug information for faster retrieval.
-        If you fail to secure these directories and this file, you will
-        expose bug information to those who may not be allowed to see
-        it.</para>
+        $BUGZILLA_HOME/data/ directory, as well as the
+        $BUGZILLA_HOME/localconfig file.
+        The localconfig file stores your "bugs" database account password. 
+        In addition, some
+        files under $BUGZILLA_HOME/data/ store sensitive information.
+        </para>
 
-        <note>
-          <para>Bugzilla provides default .htaccess files to protect the most
-          common Apache installations. However, you should verify these are
-          adequate according to the site-wide security policy of your web
-          server, and ensure that the .htaccess files are allowed to
-          "override" default permissions set in your Apache configuration
-          files. Covering Apache security is beyond the scope of this Guide;
-          please consult the Apache documentation for details.</para>
+        <para>Bugzilla provides default .htaccess files to protect the most
+        common Apache installations. However, you should verify these are
+        adequate according to the site-wide security policy of your web
+        server, and ensure that the .htaccess files are allowed to
+        "override" default permissions set in your Apache configuration
+        files. Covering Apache security is beyond the scope of this Guide;
+        please consult the Apache documentation for details.</para>
 
-          <para>If you are using a web server that does not support the
-          .htaccess control method, 
-          <emphasis>you are at risk!</emphasis>
+        <para>If you are using a web server that does not support the
+        .htaccess control method, 
+        <emphasis>you are at risk!</emphasis>
 
-          After installing, check to see if you can view the file
-          "localconfig" in your web browser (e.g.: 
-          <ulink url="http://bugzilla.mozilla.org/localconfig">
-          http://bugzilla.mozilla.org/localconfig</ulink>
+        After installing, check to see if you can view the file
+        "localconfig" in your web browser (e.g.: 
+        <ulink url="http://bugzilla.mozilla.org/localconfig">
+        http://bugzilla.mozilla.org/localconfig</ulink>
 
-          ). If you can read the contents of this file, your web server has
-          not secured your bugzilla directory properly and you must fix this
-          problem before deploying Bugzilla. If, however, it gives you a
-          "Forbidden" error, then it probably respects the .htaccess
-          conventions and you are good to go.</para>
-        </note>
+        ). If you can read the contents of this file, your web server has
+        not secured your bugzilla directory properly and you must fix this
+        problem before deploying Bugzilla. If, however, it gives you a
+        "Forbidden" error, then it probably respects the .htaccess
+        conventions and you are good to go.</para>
 
         <para>When you run checksetup.pl, the script will attempt to modify
         various permissions on files which Bugzilla uses. If you do not have
@@ -1335,7 +875,7 @@
         <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=65572">Bug
         65572</ulink>
 
-        for adequate protection in your data/ and shadow/ directories.</para>
+        for adequate protection in your data/ directory.</para>
 
         <para>Note the instructions which follow are Apache-specific. If you
         use IIS, Netscape, or other non-Apache web servers, please consult
@@ -1354,15 +894,325 @@
         allow from all</literallayout>
         </para>
 
-        <para>Place the following text into a file named ".htaccess",
-        readable by your web server, in your $BUGZILLA_HOME/shadow directory.
-        
-        <literallayout>deny from all</literallayout>
-        </para>
       </listitem>
     </orderedlist>
     </para>
   </section>
+
+  <section id="cust-templates">
+    <title>Template Customisation</title>
+    
+    <para>
+      One of the large changes for 2.16 was the templatisation of the
+      entire user-facing UI, using the 
+      <ulink url="http://www.template-toolkit.org">Template Toolkit</ulink>.
+      Administrators can now configure the look and feel of Bugzilla without
+      having to edit Perl files or face the nightmare of massive merge
+      conflicts when they upgrade to a newer version in the future.
+    </para>
+    
+    <para>
+      Templatisation also makes localised versions of Bugzilla possible, 
+      for the first time. In the future, a Bugzilla installation may
+      have templates installed for multiple localisations, and select
+      which ones to use based on the user's browser language setting.      
+    </para>
+    
+    <section>
+      <title>What to Edit</title>
+      <para>
+        There are two different ways of editing of Bugzilla's templates,
+        and which you use depends mainly on how you upgrade Bugzilla. The
+        template directory structure is that there's a top level directory,
+        <filename>template</filename>, which contains a directory for
+        each installed localisation. The default English templates are
+        therefore in <filename>en</filename>. Underneath that, there
+        is the <filename>default</filename> directory and optionally the 
+        <filename>custom</filename> directory. The <filename>default</filename>
+        directory contains all the templates shipped with Bugzilla, whereas
+        the <filename>custom</filename> directory does not exist at first and
+        must be created if you want to use it.
+      </para>
+
+      <para>
+        The first method of making customisations is to directly edit the
+        templates in <filename>template/en/default</filename>. This is
+        probably the best method for small changes if you are going to use
+        the CVS method of upgrading, because if you then execute a
+        <command>cvs update</command>, any template fixes will get
+        automagically merged into your modified versions.
+      </para>
+
+      <para>
+        If you use this method, your installation will break if CVS conflicts
+        occur.
+      </para>
+
+      <para>
+        The other method is to copy the templates into a mirrored directory
+        structure under <filename>template/en/custom</filename>.  The templates
+        in this directory automatically override those in default.  
+        This is the technique you
+        need to use if you use the overwriting method of upgrade, because
+        otherwise your changes will be lost.  This method is also better if
+        you are using the CVS method of upgrading and are going to make major
+        changes, because it is guaranteed that the contents of this directory
+        will not be touched during an upgrade, and you can then decide whether
+        to continue using your own templates, or make the effort to merge your
+        changes into the new versions by hand.
+      </para>
+
+      <para>
+        If you use this method, your installation may break if incompatible
+        changes are made to the template interface.  If such changes are made
+        they will be documented in the release notes, provided you are using a
+        stable release of Bugzilla.  If you use using unstable code, you will
+        need to deal with this one yourself, although if possible the changes
+        will be mentioned before they occur in the deprecations section of the
+        previous stable release's release notes.
+      </para>
+
+      <note>
+        <para>
+          Don't directly edit the compiled templates in 
+          <filename class="directory">data/template/*</filename> - your
+          changes will be lost when Template Toolkit recompiles them.
+        </para>
+      </note>
+    </section>
+    
+    <section>
+      <title>How To Edit Templates</title>
+      
+     <para>
+        The syntax of the Template Toolkit language is beyond the scope of
+        this guide. It's reasonably easy to pick up by looking at the current 
+        templates; or, you can read the manual, available on the
+        <ulink url="http://www.template-toolkit.org">Template Toolkit home
+        page</ulink>. However, you should particularly remember (for security
+        reasons) to always HTML filter things which come from the database or
+        user input, to prevent cross-site scripting attacks.
+      </para>
+      
+      <para>
+        However, one thing you should take particular care about is the need
+        to properly HTML filter data that has been passed into the template.
+        This means that if the data can possibly contain special HTML characters
+        such as &lt;, and the data was not intended to be HTML, they need to be
+        converted to entity form, ie &amp;lt;.  You use the 'html' filter in the
+        Template Toolkit to do this.  If you fail to do this, you may open up
+        your installation to cross-site scripting attacks.
+      </para>
+
+      <para>
+        Also note that Bugzilla adds a few filters of its own, that are not
+        in standard Template Toolkit.  In particular, the 'url_quote' filter
+        can convert characters that are illegal or have special meaning in URLs,
+        such as &amp;, to the encoded form, ie %26.  This actually encodes most
+        characters (but not the common ones such as letters and numbers and so
+        on), including the HTML-special characters, so there's never a need to
+        HTML filter afterwards.
+      </para>
+ 
+      <para>
+        Editing templates is a good way of doing a "poor man's custom fields".
+        For example, if you don't use the Status Whiteboard, but want to have
+        a free-form text entry box for "Build Identifier", then you can just
+        edit the templates to change the field labels. It's still be called
+        status_whiteboard internally, but your users don't need to know that.
+      </para>
+      
+      <note>
+        <para>
+          If you are making template changes that you intend on submitting back
+          for inclusion in standard Bugzilla, you should read the relevant
+          sections of the 
+          <ulink url="http://www.bugzilla.org/developerguide.html">Developers'
+          Guide</ulink>.
+        </para>
+      </note>
+    </section>
+            
+    
+    <section>
+      <title>Template Formats</title>
+      
+      <para>
+        Some CGIs have the ability to use more than one template. For
+        example, buglist.cgi can output bug lists as RDF or two
+        different forms of HTML (complex and simple). (Try this out
+        by appending <filename>&amp;format=simple</filename> to a buglist.cgi
+        URL on your Bugzilla installation.) This
+        mechanism, called template 'formats', is extensible.
+      </para>
+      
+      <para>
+        To see if a CGI supports multiple output formats, grep the
+        CGI for "ValidateOutputFormat". If it's not present, adding
+        multiple format support isn't too hard - see how it's done in
+        other CGIs.
+      </para>
+      
+      <para>
+        To make a new format template for a CGI which supports this, 
+        open a current template for
+        that CGI and take note of the INTERFACE comment (if present.) This 
+        comment defines what variables are passed into this template. If 
+        there isn't one, I'm afraid you'll have to read the template and
+        the code to find out what information you get. 
+      </para>     
+  
+      <para>
+        Write your template in whatever markup or text style is appropriate.
+      </para>
+      
+      <para>
+        You now need to decide what content type you want your template
+        served as. Open up the <filename>localconfig</filename> file and find the 
+        <filename>$contenttypes</filename>
+        variable. If your content type is not there, add it. Remember
+        the three- or four-letter tag assigned to you content type. 
+        This tag will be part of the template filename.
+      </para>
+      
+      <para>
+        Save the template as <filename>&lt;stubname&gt;-&lt;formatname&gt;.&lt;contenttypetag&gt;.tmpl</filename>. 
+        Try out the template by calling the CGI as 
+        <filename>&lt;cginame&gt;.cgi?format=&lt;formatname&gt;</filename> .
+      </para>       
+    </section>
+    
+    
+    <section>
+      <title>Particular Templates</title>
+      
+      <para>
+        There are a few templates you may be particularly interested in
+        customising for your installation.
+      </para>
+      
+      <para>
+        <command>index.html.tmpl</command>:
+        This is the Bugzilla front page.
+      </para>      
+
+      <para>
+        <command>global/header.html.tmpl</command>:
+        This defines the header that goes on all Bugzilla pages.
+        The header includes the banner, which is what appears to users
+        and is probably what you want to edit instead.  However the
+        header also includes the HTML HEAD section, so you could for
+        example add a stylesheet or META tag by editing the header.
+      </para>
+
+      <para>
+        <command>global/banner.html.tmpl</command>:
+        This contains the "banner", the part of the header that appears
+        at the top of all Bugzilla pages.  The default banner is reasonably
+        barren, so you'll probably want to customise this to give your
+        installation a distinctive look and feel.  It is recommended you
+        preserve the Bugzilla version number in some form so the version 
+        you are running can be determined, and users know what docs to read.
+      </para>
+
+      <para>
+        <command>global/footer.html.tmpl</command>:
+        This defines the footer that goes on all Bugzilla pages.  Editing
+        this is another way to quickly get a distinctive look and feel for
+        your Bugzilla installation.
+      </para>
+
+      <para>
+        <command>bug/create/user-message.html.tmpl</command>:
+        This is a message that appears near the top of the bug reporting page.
+        By modifying this, you can tell your users how they should report
+        bugs.
+      </para>
+        
+      <para>
+        <command>bug/create/create.html.tmpl</command> and
+        <command>bug/create/comment.txt.tmpl</command>:
+        You may wish to get bug submitters to give certain bits of structured
+        information, each in a separate input widget, for which there is not a
+        field in the database. The bug entry system has been designed in an
+        extensible fashion to enable you to define arbitrary fields and widgets,
+        and have their values appear formatted in the initial
+        Description, rather than in database fields. An example of this
+        is the mozilla.org 
+        <ulink url="http://bugzilla.mozilla.org/enter_bug.cgi?format=guided">guided 
+        bug submission form</ulink>.
+      </para>
+
+      <para>
+        To make this work, create a custom template for 
+        <filename>enter_bug.cgi</filename> (the default template, on which you
+        could base it, is <filename>create.html.tmpl</filename>),
+        and either call it <filename>create.html.tmpl</filename> or use a format and
+        call it <filename>create-&lt;formatname&gt;.html.tmpl</filename>.
+        Put it in the <filename class="directory">custom/bug/create</filename>
+        directory. In it, add widgets for each piece of information you'd like
+        collected - such as a build number, or set of steps to reproduce.
+      </para>
+
+      <para>
+        Then, create a template like 
+        <filename>custom/bug/create/comment.txt.tmpl</filename>, also named
+        after your format if you are using one, which
+        references the form fields you have created. When a bug report is
+        submitted, the initial comment attached to the bug report will be
+        formatted according to the layout of this template.
+      </para> 
+
+      <para>
+        For example, if your enter_bug template had a field
+        <programlisting>&lt;input type="text" name="buildid" size="30"&gt;</programlisting>
+        and then your comment.txt.tmpl had
+        <programlisting>BuildID: [% form.buildid %]</programlisting>
+        then
+        <programlisting>BuildID: 20020303</programlisting>
+        would appear in the initial checkin comment.
+      </para>        
+    </section>          
+    
+  </section>
+
+  <section id="upgrading">
+    <title>Upgrading to New Releases</title>
+
+    <para>A plain Bugzilla is fairly easy to upgrade from one version to a
+    newer one. Always read the release notes to see if there are any issues
+    that you might need to take note of. It is recommended that you take a 
+    backup of your database and your entire Bugzilla installation before attempting an
+    upgrade. You can upgrade a 'clean' installation by untarring a new
+    tarball over the old installation. If you are upgrading from 2.12 or
+    later, and have cvs installed, you can type <filename>cvs -z3 update</filename>, 
+    and resolve conflicts if there are any.
+    </para>
+    
+    <para>However, things get a bit more complicated if you've made
+    changes to Bugzilla's code. In this case, you may have to re-make or
+    reapply those changes. One good method is to take a diff of your customised
+    version against the original, so you can survey all that you've changed.
+    Hopefully, templatisation will reduce the need for
+    this in the future.</para>
+
+    <para>From version 2.8 onwards, Bugzilla databases can be automatically
+    carried forward during an upgrade. However, because the developers of
+    Bugzilla are constantly adding new
+    tables, columns and fields, you'll probably get SQL errors if you just
+    update the code and attempt to use Bugzilla. Always run the
+    <filename>checksetup.pl</filename> 
+    script whenever you upgrade your installation.</para>
+
+    <para>If you are running Bugzilla version 2.8 or lower, and wish to
+    upgrade to the latest version, please consult the file,
+    "UPGRADING-pre-2.8" in the Bugzilla root directory after untarring the
+    archive.</para>
+  </section>
+
+  <!-- Integrating Bugzilla with Third-Party Tools -->
+  &integration;
+
 </chapter>
 
 <!-- Keep this comment at the end of the file

@@ -10,11 +10,11 @@ REL="HOME"
 TITLE="The Bugzilla Guide"
 HREF="index.html"><LINK
 REL="PREVIOUS"
-TITLE="Using Bugzilla-Conclusion"
-HREF="usingbz-conc.html"><LINK
+TITLE="User Preferences"
+HREF="userpreferences.html"><LINK
 REL="NEXT"
-TITLE="ERRATA"
-HREF="errata.html"></HEAD
+TITLE="Step-by-step Install"
+HREF="stepbystep.html"></HEAD
 ><BODY
 CLASS="chapter"
 BGCOLOR="#FFFFFF"
@@ -42,7 +42,7 @@ WIDTH="10%"
 ALIGN="left"
 VALIGN="bottom"
 ><A
-HREF="usingbz-conc.html"
+HREF="userpreferences.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -56,7 +56,7 @@ WIDTH="10%"
 ALIGN="right"
 VALIGN="bottom"
 ><A
-HREF="errata.html"
+HREF="stepbystep.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -69,7 +69,7 @@ WIDTH="100%"></DIV
 CLASS="chapter"
 ><H1
 ><A
-NAME="installation">Chapter 3. Installation</H1
+NAME="installation">Chapter 4. Installation</H1
 ><DIV
 CLASS="TOC"
 ><DL
@@ -78,205 +78,176 @@ CLASS="TOC"
 >Table of Contents</B
 ></DT
 ><DT
->3.1. <A
-HREF="errata.html"
->ERRATA</A
-></DT
-><DT
->3.2. <A
+>4.1. <A
 HREF="stepbystep.html"
 >Step-by-step Install</A
 ></DT
 ><DD
 ><DL
 ><DT
->3.2.1. <A
-HREF="stepbystep.html#AEN441"
+>4.1.1. <A
+HREF="stepbystep.html#AEN492"
 >Introduction</A
 ></DT
 ><DT
->3.2.2. <A
-HREF="stepbystep.html#AEN447"
->Installing the Prerequisites</A
+>4.1.2. <A
+HREF="stepbystep.html#AEN496"
+>Package List</A
 ></DT
 ><DT
->3.2.3. <A
+>4.1.3. <A
 HREF="stepbystep.html#install-mysql"
->Installing MySQL Database</A
+>MySQL</A
 ></DT
 ><DT
->3.2.4. <A
+>4.1.4. <A
 HREF="stepbystep.html#install-perl"
->Perl (5.004 or greater)</A
+>Perl</A
 ></DT
 ><DT
->3.2.5. <A
-HREF="stepbystep.html#AEN534"
->DBI Perl Module</A
+>4.1.5. <A
+HREF="stepbystep.html#perl-modules"
+>Perl Modules</A
 ></DT
 ><DT
->3.2.6. <A
-HREF="stepbystep.html#AEN572"
->Data::Dumper Perl Module</A
-></DT
-><DT
->3.2.7. <A
-HREF="stepbystep.html#AEN577"
->MySQL related Perl Module Collection</A
-></DT
-><DT
->3.2.8. <A
-HREF="stepbystep.html#AEN586"
->TimeDate Perl Module Collection</A
-></DT
-><DT
->3.2.9. <A
-HREF="stepbystep.html#AEN590"
->GD Perl Module (1.8.3)</A
-></DT
-><DT
->3.2.10. <A
-HREF="stepbystep.html#AEN599"
->Chart::Base Perl Module (0.99c)</A
-></DT
-><DT
->3.2.11. <A
-HREF="stepbystep.html#AEN603"
->DB_File Perl Module</A
-></DT
-><DT
->3.2.12. <A
-HREF="stepbystep.html#AEN606"
+>4.1.6. <A
+HREF="stepbystep.html#AEN669"
 >HTTP Server</A
 ></DT
 ><DT
->3.2.13. <A
-HREF="stepbystep.html#AEN625"
->Installing the Bugzilla Files</A
+>4.1.7. <A
+HREF="stepbystep.html#AEN688"
+>Bugzilla</A
 ></DT
 ><DT
->3.2.14. <A
-HREF="stepbystep.html#AEN654"
+>4.1.8. <A
+HREF="stepbystep.html#AEN705"
 >Setting Up the MySQL Database</A
 ></DT
 ><DT
->3.2.15. <A
-HREF="stepbystep.html#AEN701"
->Tweaking <TT
+>4.1.9. <A
+HREF="stepbystep.html#AEN741"
+><TT
 CLASS="filename"
->localconfig</TT
+>checksetup.pl</TT
 ></A
 ></DT
 ><DT
->3.2.16. <A
-HREF="stepbystep.html#AEN739"
->Setting Up Maintainers Manually (Optional)</A
-></DT
-><DT
->3.2.17. <A
-HREF="stepbystep.html#AEN750"
->The Whining Cron (Optional)</A
-></DT
-><DT
->3.2.18. <A
-HREF="stepbystep.html#AEN760"
->Bug Graphs (Optional)</A
-></DT
-><DT
->3.2.19. <A
-HREF="stepbystep.html#AEN772"
+>4.1.10. <A
+HREF="stepbystep.html#AEN773"
 >Securing MySQL</A
+></DT
+><DT
+>4.1.11. <A
+HREF="stepbystep.html#AEN839"
+>Configuring Bugzilla</A
 ></DT
 ></DL
 ></DD
 ><DT
->3.3. <A
-HREF="osx.html"
->Mac OS X Installation Notes</A
-></DT
-><DT
->3.4. <A
-HREF="bsdinstall.html"
->BSD Installation Notes</A
-></DT
-><DT
->3.5. <A
-HREF="geninstall.html"
->Installation General Notes</A
+>4.2. <A
+HREF="extraconfig.html"
+>Optional Additional Configuration</A
 ></DT
 ><DD
 ><DL
 ><DT
->3.5.1. <A
-HREF="geninstall.html#AEN874"
->Modifying Your Running System</A
+>4.2.1. <A
+HREF="extraconfig.html#AEN845"
+>Dependency Charts</A
 ></DT
 ><DT
->3.5.2. <A
-HREF="geninstall.html#AEN881"
->Upgrading From Previous Versions</A
+>4.2.2. <A
+HREF="extraconfig.html#AEN860"
+>Bug Graphs</A
 ></DT
 ><DT
->3.5.3. <A
-HREF="geninstall.html#htaccess"
+>4.2.3. <A
+HREF="extraconfig.html#AEN873"
+>The Whining Cron</A
+></DT
+><DT
+>4.2.4. <A
+HREF="extraconfig.html#bzldap"
+>LDAP Authentication</A
+></DT
+><DT
+>4.2.5. <A
+HREF="extraconfig.html#content-type"
+>Preventing untrusted Bugzilla content from executing malicious
+      Javascript code</A
+></DT
+><DT
+>4.2.6. <A
+HREF="extraconfig.html#htaccess"
 ><TT
 CLASS="filename"
 >.htaccess</TT
-> files and security</A
+>
+      files and security</A
 ></DT
 ><DT
->3.5.4. <A
-HREF="geninstall.html#mod-throttle"
+>4.2.7. <A
+HREF="extraconfig.html#mod-throttle"
 ><TT
 CLASS="filename"
 >mod_throttle</TT
-> and Security</A
-></DT
-><DT
->3.5.5. <A
-HREF="geninstall.html#content-type"
->Preventing untrusted Bugzilla content from executing malicious Javascript code</A
-></DT
-><DT
->3.5.6. <A
-HREF="geninstall.html#unixhistory"
->UNIX Installation Instructions History</A
+>
+
+      and Security</A
 ></DT
 ></DL
 ></DD
 ><DT
->3.6. <A
+>4.3. <A
 HREF="win32.html"
 >Win32 Installation Notes</A
 ></DT
 ><DD
 ><DL
 ><DT
->3.6.1. <A
+>4.3.1. <A
 HREF="win32.html#wininstall"
 >Win32 Installation: Step-by-step</A
 ></DT
 ><DT
->3.6.2. <A
+>4.3.2. <A
 HREF="win32.html#addlwintips"
 >Additional Windows Tips</A
 ></DT
+></DL
+></DD
 ><DT
->3.6.3. <A
-HREF="win32.html#bzldap"
->Bugzilla LDAP Integration</A
+>4.4. <A
+HREF="osx.html"
+>Mac OS X Installation Notes</A
+></DT
+><DT
+>4.5. <A
+HREF="troubleshooting.html"
+>Troubleshooting</A
+></DT
+><DD
+><DL
+><DT
+>4.5.1. <A
+HREF="troubleshooting.html#AEN1218"
+>Bundle::Bugzilla makes me upgrade to Perl 5.6.1</A
+></DT
+><DT
+>4.5.2. <A
+HREF="troubleshooting.html#AEN1223"
+>DBD::Sponge::db prepare failed</A
+></DT
+><DT
+>4.5.3. <A
+HREF="troubleshooting.html#paranoid-security"
+>cannot chdir(/var/spool/mqueue)</A
 ></DT
 ></DL
 ></DD
 ></DL
 ></DIV
-><P
->&#13;      These installation instructions are presented assuming you are
-      installing on a UNIX or completely POSIX-compliant system.  If
-      you are installing on Microsoft Windows or another oddball
-      operating system, please consult the appropriate sections in
-      this installation guide for notes on how to be successful.
-    </P
 ></DIV
 ><DIV
 CLASS="NAVFOOTER"
@@ -294,7 +265,7 @@ WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
 ><A
-HREF="usingbz-conc.html"
+HREF="userpreferences.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -312,7 +283,7 @@ WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
 ><A
-HREF="errata.html"
+HREF="stepbystep.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -322,7 +293,7 @@ ACCESSKEY="N"
 WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
->Using Bugzilla-Conclusion</TD
+>User Preferences</TD
 ><TD
 WIDTH="34%"
 ALIGN="center"
@@ -332,7 +303,7 @@ VALIGN="top"
 WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
->ERRATA</TD
+>Step-by-step Install</TD
 ></TR
 ></TABLE
 ></DIV

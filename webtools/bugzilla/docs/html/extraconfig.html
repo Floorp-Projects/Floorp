@@ -1,0 +1,726 @@
+<HTML
+><HEAD
+><TITLE
+>Optional Additional Configuration</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
+"><LINK
+REL="HOME"
+TITLE="The Bugzilla Guide"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Installation"
+HREF="installation.html"><LINK
+REL="PREVIOUS"
+TITLE="Step-by-step Install"
+HREF="stepbystep.html"><LINK
+REL="NEXT"
+TITLE="Win32 Installation Notes"
+HREF="win32.html"></HEAD
+><BODY
+CLASS="section"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>The Bugzilla Guide</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="stepbystep.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 4. Installation</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="win32.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="section"
+><H1
+CLASS="section"
+><A
+NAME="extraconfig">4.2. Optional Additional Configuration</H1
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="AEN845">4.2.1. Dependency Charts</H2
+><P
+>As well as the text-based dependency graphs, Bugzilla also
+      supports dependency graphing, using a package called 'dot'.
+      Exactly how this works is controlled by the 'webdotbase' parameter,
+      which can have one of three values:
+      </P
+><P
+>&#13;        <P
+></P
+><OL
+TYPE="1"
+><LI
+><P
+>&#13;            A complete file path to the command 'dot' (part of 
+            <A
+HREF="http://www.graphviz.org/"
+TARGET="_top"
+>GraphViz</A
+>) 
+            will generate the graphs locally
+            </P
+></LI
+><LI
+><P
+>&#13;            A URL prefix pointing to an installation of the webdot package will
+            generate the graphs remotely
+            </P
+></LI
+><LI
+><P
+>&#13;            A blank value will disable dependency graphing.
+            </P
+></LI
+></OL
+>
+      </P
+><P
+>So, to get this working, install
+      <A
+HREF="http://www.graphviz.org/"
+TARGET="_top"
+>GraphViz</A
+>. If you
+      do that, you need to
+      <A
+HREF="http://httpd.apache.org/docs/mod/mod_imap.html"
+TARGET="_top"
+>enable
+      server-side image maps</A
+> in Apache.
+      Alternatively, you could set up a webdot server, or use the AT&#38;T 
+      public webdot server (the
+      default for the webdotbase param). Note that AT&#38;T's server won't work
+      if Bugzilla is only accessible using HTTPS.
+      </P
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="AEN860">4.2.2. Bug Graphs</H2
+><P
+>As long as you installed the GD and Graph::Base Perl modules you
+      might as well turn on the nifty Bugzilla bug reporting graphs.</P
+><P
+>Add a cron entry like this to run 
+      <TT
+CLASS="filename"
+>collectstats.pl</TT
+> 
+      daily at 5 after midnight: 
+      <P
+></P
+><TABLE
+BORDER="0"
+><TBODY
+><TR
+><TD
+>&#13;          <TT
+CLASS="computeroutput"
+>&#13;            <TT
+CLASS="prompt"
+>bash#</TT
+>
+
+            <B
+CLASS="command"
+>crontab -e</B
+>
+          </TT
+>
+        </TD
+></TR
+><TR
+><TD
+>&#13;          <TT
+CLASS="computeroutput"
+>5 0 * * * cd &#60;your-bugzilla-directory&#62; ;
+          ./collectstats.pl</TT
+>
+        </TD
+></TR
+></TBODY
+></TABLE
+><P
+></P
+>
+      </P
+><P
+>After two days have passed you'll be able to view bug graphs from
+      the Bug Reports page.</P
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="AEN873">4.2.3. The Whining Cron</H2
+><P
+>By now you have a fully functional Bugzilla, but what good are
+      bugs if they're not annoying? To help make those bugs more annoying you
+      can set up Bugzilla's automatic whining system to complain at engineers
+      which leave their bugs in the NEW state without triaging them.
+      </P
+><P
+>&#13;      This can be done by
+      adding the following command as a daily crontab entry (for help on that
+      see that crontab man page): 
+      <P
+></P
+><TABLE
+BORDER="0"
+><TBODY
+><TR
+><TD
+>&#13;          <TT
+CLASS="computeroutput"
+>&#13;            <B
+CLASS="command"
+>cd &#60;your-bugzilla-directory&#62; ;
+            ./whineatnews.pl</B
+>
+          </TT
+>
+        </TD
+></TR
+></TBODY
+></TABLE
+><P
+></P
+>
+      </P
+><DIV
+CLASS="tip"
+><P
+></P
+><TABLE
+CLASS="tip"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/tip.gif"
+HSPACE="5"
+ALT="Tip"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>Depending on your system, crontab may have several manpages.
+        The following command should lead you to the most useful page for
+        this purpose: 
+        <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>man 5 crontab</PRE
+></FONT
+></TD
+></TR
+></TABLE
+>
+        </P
+></TD
+></TR
+></TABLE
+></DIV
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="bzldap">4.2.4. LDAP Authentication</H2
+><P
+>&#13;        <DIV
+CLASS="warning"
+><P
+></P
+><TABLE
+CLASS="warning"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/warning.gif"
+HSPACE="5"
+ALT="Warning"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>This information on using the LDAP
+            authentication options with Bugzilla is old, and the authors do
+            not know of anyone who has tested it. Approach with caution.
+          </P
+></TD
+></TR
+></TABLE
+></DIV
+>
+      </P
+><P
+>&#13;      The existing authentication
+      scheme for Bugzilla uses email addresses as the primary user ID, and a
+      password to authenticate that user. All places within Bugzilla where
+      you need to deal with user ID (e.g assigning a bug) use the email
+      address. The LDAP authentication builds on top of this scheme, rather
+      than replacing it. The initial log in is done with a username and
+      password for the LDAP directory. This then fetches the email address
+      from LDAP and authenticates seamlessly in the standard Bugzilla
+      authentication scheme using this email address. If an account for this
+      address already exists in your Bugzilla system, it will log in to that
+      account. If no account for that email address exists, one is created at
+      the time of login. (In this case, Bugzilla will attempt to use the
+      "displayName" or "cn" attribute to determine the user's full name.)
+      After authentication, all other user-related tasks are still handled by
+      email address, not LDAP username. You still assign bugs by email
+      address, query on users by email address, etc.
+      </P
+><P
+>Using LDAP for Bugzilla authentication requires the 
+      Mozilla::LDAP (aka PerLDAP) Perl module. The
+      Mozilla::LDAP module in turn requires Netscape's Directory SDK for C.
+      After you have installed the SDK, then install the PerLDAP module.
+      Mozilla::LDAP and the Directory SDK for C are both 
+      <A
+HREF="http://www.mozilla.org/directory/"
+TARGET="_top"
+>available for
+      download</A
+> from mozilla.org. 
+      </P
+><P
+>&#13;      Set the Param 'useLDAP' to "On" **only** if you will be using an LDAP
+      directory for
+      authentication. Be very careful when setting up this parameter; if you
+      set LDAP authentication, but do not have a valid LDAP directory set up,
+      you will not be able to log back in to Bugzilla once you log out. (If
+      this happens, you can get back in by manually editing the data/params
+      file, and setting useLDAP back to 0.)
+      </P
+><P
+>If using LDAP, you must set the
+      three additional parameters: Set LDAPserver to the name (and optionally
+      port) of your LDAP server. If no port is specified, it defaults to the
+      default port of 389. (e.g "ldap.mycompany.com" or
+      "ldap.mycompany.com:1234") Set LDAPBaseDN to the base DN for searching
+      for users in your LDAP directory. (e.g. "ou=People,o=MyCompany") uids
+      must be unique under the DN specified here. Set LDAPmailattribute to
+      the name of the attribute in your LDAP directory which contains the
+      primary email address. On most directory servers available, this is
+      "mail", but you may need to change this.
+      </P
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="content-type">4.2.5. Preventing untrusted Bugzilla content from executing malicious
+      Javascript code</H2
+><P
+>It is possible for a Bugzilla to execute malicious Javascript
+      code. Due to internationalization concerns, we are unable to
+      incorporate the code changes necessary to fulfill the CERT advisory
+      requirements mentioned in 
+      <A
+HREF="http://www.cet.org/tech_tips/malicious_code_mitigation.html/#3"
+TARGET="_top"
+>&#13;      http://www.cet.org/tech_tips/malicious_code_mitigation.html/#3</A
+>.
+      Executing the following code snippet from a UNIX command shell will
+      rectify the problem if your Bugzilla installation is intended for an
+      English-speaking audience. As always, be sure your Bugzilla
+      installation has a good backup before making changes, and I recommend
+      you understand what the script is doing before executing it.</P
+><P
+>&#13;        <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>bash# perl -pi -e "s/Content-Type\: text\/html/Content-Type\: text\/html\; charset=ISO-8859-1/i" *.cgi *.pl
+        </PRE
+></FONT
+></TD
+></TR
+></TABLE
+>
+      </P
+><P
+>All this one-liner command does is search for all instances of 
+      <SPAN
+CLASS="QUOTE"
+>"Content-type: text/html"</SPAN
+>
+
+      and replaces it with 
+      <SPAN
+CLASS="QUOTE"
+>"Content-Type: text/html; charset=ISO-8859-1"</SPAN
+>
+
+      . This specification prevents possible Javascript attacks on the
+      browser, and is suggested for all English-speaking sites. For
+      non-English-speaking Bugzilla sites, I suggest changing 
+      <SPAN
+CLASS="QUOTE"
+>"ISO-8859-1"</SPAN
+>, above, to 
+      <SPAN
+CLASS="QUOTE"
+>"UTF-8"</SPAN
+>.</P
+><P
+>Note: using &#60;meta&#62; tags to set the charset is not
+      recommended, as there's a bug in Netscape 4.x which causes pages
+      marked up in this way to load twice.</P
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="htaccess">4.2.6. <TT
+CLASS="filename"
+>.htaccess</TT
+>
+      files and security</H2
+><P
+>To enhance the security of your Bugzilla installation, Bugzilla's
+      <TT
+CLASS="filename"
+>checksetup.pl</TT
+> script will generate 
+      <I
+CLASS="glossterm"
+>&#13;        <TT
+CLASS="filename"
+>.htaccess</TT
+>
+      </I
+>
+
+      files which the Apache webserver can use to restrict access to the
+      bugzilla data files. 
+      These .htaccess files will not work with Apache 1.2.x - but this
+      has security holes, so you shouldn't be using it anyway. 
+      <DIV
+CLASS="note"
+><P
+></P
+><TABLE
+CLASS="note"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>If you are using an alternate provider of 
+        <SPAN
+CLASS="productname"
+>webdot</SPAN
+>
+
+        services for graphing (as described when viewing 
+        <TT
+CLASS="filename"
+>editparams.cgi</TT
+>
+
+        in your web browser), you will need to change the ip address in 
+        <TT
+CLASS="filename"
+>data/webdot/.htaccess</TT
+>
+
+        to the ip address of the webdot server that you are using.</P
+></TD
+></TR
+></TABLE
+></DIV
+>
+      </P
+><P
+>The default .htaccess file may not provide adequate access
+      restrictions, depending on your web server configuration. Be sure to
+      check the &#60;Directory&#62; entries for your Bugzilla directory so that
+      the 
+      <TT
+CLASS="filename"
+>.htaccess</TT
+>
+
+      file is allowed to override web server defaults. For instance, let's
+      assume your installation of Bugzilla is installed to 
+      <TT
+CLASS="filename"
+>/usr/local/bugzilla</TT
+>
+
+      . You should have this &#60;Directory&#62; entry in your 
+      <TT
+CLASS="filename"
+>httpd.conf</TT
+>
+
+      file:</P
+><P
+>&#13;      
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>&#13;  &#60;Directory /usr/local/bugzilla/&#62;
+  Options +FollowSymLinks +Indexes +Includes +ExecCGI
+  AllowOverride All
+&#60;/Directory&#62;
+</PRE
+></FONT
+></TD
+></TR
+></TABLE
+>
+
+      </P
+><P
+>The important part above is 
+      <SPAN
+CLASS="QUOTE"
+>"AllowOverride All"</SPAN
+>
+
+      . Without that, the 
+      <TT
+CLASS="filename"
+>.htaccess</TT
+>
+
+      file created by 
+      <TT
+CLASS="filename"
+>checksetup.pl</TT
+>
+
+      will not have sufficient permissions to protect your Bugzilla
+      installation.</P
+><P
+>If you are using Internet Information Server (IIS) or another 
+      web server which does not observe 
+      <TT
+CLASS="filename"
+>.htaccess</TT
+>
+      conventions, you can disable their creation by editing 
+      <TT
+CLASS="filename"
+>localconfig</TT
+>
+      and setting the 
+      <TT
+CLASS="varname"
+>$create_htaccess</TT
+>
+      variable to 
+      <TT
+CLASS="parameter"
+><I
+>0</I
+></TT
+>.
+      </P
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="mod-throttle">4.2.7. <TT
+CLASS="filename"
+>mod_throttle</TT
+>
+
+      and Security</H2
+><P
+>It is possible for a user, by mistake or on purpose, to access
+      the database many times in a row which can result in very slow access
+      speeds for other users. If your Bugzilla installation is experiencing
+      this problem , you may install the Apache module 
+      <TT
+CLASS="filename"
+>mod_throttle</TT
+>
+
+      which can limit connections by ip-address. You may download this module
+      at 
+      <A
+HREF="http://www.snert.com/Software/Throttle/"
+TARGET="_top"
+>&#13;      http://www.snert.com/Software/Throttle/</A
+>. 
+      Follow the instructions to install into your Apache install. 
+      <EM
+>This module only functions with the Apache web
+      server!</EM
+>
+      You may use the 
+      <B
+CLASS="command"
+>ThrottleClientIP</B
+>
+
+      command provided by this module to accomplish this goal. See the 
+      <A
+HREF="http://www.snert.com/Software/Throttle/"
+TARGET="_top"
+>Module
+      Instructions</A
+>
+      for more information.</P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="stepbystep.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="win32.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Step-by-step Install</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="installation.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Win32 Installation Notes</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

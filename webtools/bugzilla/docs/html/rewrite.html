@@ -1,7 +1,10 @@
 <HTML
 ><HEAD
 ><TITLE
->Apache mod_rewrite magic</TITLE
+>Apache 
+    mod_rewrite
+
+    magic</TITLE
 ><META
 NAME="GENERATOR"
 CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
@@ -16,8 +19,8 @@ REL="PREVIOUS"
 TITLE="Useful Patches and Utilities for Bugzilla"
 HREF="patches.html"><LINK
 REL="NEXT"
-TITLE="The setperl.csh Utility"
-HREF="setperl.html"></HEAD
+TITLE="Command-line Bugzilla Queries"
+HREF="cmdline.html"></HEAD
 ><BODY
 CLASS="section"
 BGCOLOR="#FFFFFF"
@@ -53,13 +56,13 @@ ACCESSKEY="P"
 WIDTH="80%"
 ALIGN="center"
 VALIGN="bottom"
->Appendix D. Useful Patches and Utilities for Bugzilla</TD
+>Appendix C. Useful Patches and Utilities for Bugzilla</TD
 ><TD
 WIDTH="10%"
 ALIGN="right"
 VALIGN="bottom"
 ><A
-HREF="setperl.html"
+HREF="cmdline.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -73,30 +76,37 @@ CLASS="section"
 ><H1
 CLASS="section"
 ><A
-NAME="rewrite">D.1. Apache <TT
+NAME="rewrite">C.1. Apache 
+    <TT
 CLASS="filename"
 >mod_rewrite</TT
-> magic</H1
+>
+
+    magic</H1
 ><P
->Apache's <TT
+>Apache's 
+    <TT
 CLASS="filename"
 >mod_rewrite</TT
-> module lets you do some truly amazing things with URL rewriting.  Here are a couple of examples of what you can do.</P
+>
+
+    module lets you do some truly amazing things with URL rewriting. Here are
+    a couple of examples of what you can do.</P
 ><P
 ></P
 ><OL
 TYPE="1"
 ><LI
 ><P
->&#13;	  Make it so if someone types
-	  <TT
+>Make it so if someone types 
+        <TT
 CLASS="computeroutput"
 >http://www.foo.com/12345</TT
->,
-	  Bugzilla spits back
-	  http://www.foo.com/show_bug.cgi?id=12345. Try setting up
-	  your VirtualHost section for Bugzilla with a rule like
-	  this:</P
+>
+
+        , Bugzilla spits back http://www.foo.com/show_bug.cgi?id=12345. Try
+        setting up your VirtualHost section for Bugzilla with a rule like
+        this:</P
 ><TABLE
 BORDER="0"
 BGCOLOR="#E0E0E0"
@@ -107,13 +117,11 @@ WIDTH="100%"
 COLOR="#000000"
 ><PRE
 CLASS="programlisting"
->&#13;
-&#60;VirtualHost 12.34.56.78&#62;
+>&#13;&#60;VirtualHost 12.34.56.78&#62;
 RewriteEngine On
 RewriteRule ^/([0-9]+)$ http://foo.bar.com/show_bug.cgi?id=$1 [L,R]
 &#60;/VirtualHost&#62;
-
-	</PRE
+</PRE
 ></FONT
 ></TD
 ></TR
@@ -121,14 +129,14 @@ RewriteRule ^/([0-9]+)$ http://foo.bar.com/show_bug.cgi?id=$1 [L,R]
 ></LI
 ><LI
 ><P
->There are many, many more things you can do with
-	  mod_rewrite.  As time goes on, I will include many more in
-	  the Guide.  For now, though, please refer to the mod_rewrite
-	  documentation at <A
+>There are many, many more things you can do with mod_rewrite.
+        Please refer to the mod_rewrite documentation at 
+        <A
 HREF="http://www.apache.org"
 TARGET="_top"
 >http://www.apache.org</A
-></P
+>.
+        </P
 ></LI
 ></OL
 ></DIV
@@ -166,7 +174,7 @@ WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
 ><A
-HREF="setperl.html"
+HREF="cmdline.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -190,7 +198,7 @@ ACCESSKEY="U"
 WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
->The setperl.csh Utility</TD
+>Command-line Bugzilla Queries</TD
 ></TR
 ></TABLE
 ></DIV

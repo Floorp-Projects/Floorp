@@ -13,12 +13,11 @@ REL="UP"
 TITLE="Administering Bugzilla"
 HREF="administration.html"><LINK
 REL="PREVIOUS"
-TITLE="Product, Component, Milestone, and Version
-      Administration"
-HREF="programadmin.html"><LINK
+TITLE="Groups and Group Security"
+HREF="groups.html"><LINK
 REL="NEXT"
-TITLE="Integrating Bugzilla with Third-Party Tools"
-HREF="integration.html"></HEAD
+TITLE="Template Customisation"
+HREF="cust-templates.html"></HEAD
 ><BODY
 CLASS="section"
 BGCOLOR="#FFFFFF"
@@ -46,7 +45,7 @@ WIDTH="10%"
 ALIGN="left"
 VALIGN="bottom"
 ><A
-HREF="programadmin.html"
+HREF="groups.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -54,13 +53,13 @@ ACCESSKEY="P"
 WIDTH="80%"
 ALIGN="center"
 VALIGN="bottom"
->Chapter 4. Administering Bugzilla</TD
+>Chapter 5. Administering Bugzilla</TD
 ><TD
 WIDTH="10%"
 ALIGN="right"
 VALIGN="bottom"
 ><A
-HREF="integration.html"
+HREF="cust-templates.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -74,32 +73,37 @@ CLASS="section"
 ><H1
 CLASS="section"
 ><A
-NAME="security">4.4. Bugzilla Security</H1
+NAME="security">5.6. Bugzilla Security</H1
+><DIV
+CLASS="warning"
+><P
+></P
 ><TABLE
-BORDER="0"
+CLASS="warning"
 WIDTH="100%"
-CELLSPACING="0"
-CELLPADDING="0"
-CLASS="EPIGRAPH"
+BORDER="0"
 ><TR
 ><TD
-WIDTH="45%"
->&nbsp;</TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/warning.gif"
+HSPACE="5"
+ALT="Warning"></TD
 ><TD
-WIDTH="45%"
 ALIGN="LEFT"
 VALIGN="TOP"
-><I
 ><P
-><I
->Putting your money in a wall safe is better protection than
-	depending on the fact that no one knows that you hide your
-	money in a mayonnaise jar in your fridge.</I
-></P
-></I
+>Poorly-configured MySQL and Bugzilla installations have
+      given attackers full access to systems in the past. Please take these
+      guidelines seriously, even for Bugzilla machines hidden away behind
+      your firewall. 80% of all computer trespassers are insiders, not
+      anonymous crackers.</P
 ></TD
 ></TR
 ></TABLE
+></DIV
 ><DIV
 CLASS="note"
 ><P
@@ -121,101 +125,65 @@ ALT="Note"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->&#13;	Poorly-configured MySQL, Bugzilla, and FTP installations have
-	given attackers full access to systems in the past.  Please
-	take these guidelines seriously, even for Bugzilla machines
-	hidden away behind your firewall.  80% of all computer
-	trespassers are insiders, not anonymous crackers.
+>These instructions must, of necessity, be somewhat vague since
+      Bugzilla runs on so many different platforms. If you have refinements
+      of these directions for specific platforms, please submit them to 
+      <A
+HREF="mailto://mozilla-webtools@mozilla.org"
+TARGET="_top"
+>&#13;      mozilla-webtools@mozilla.org</A
+>
       </P
 ></TD
 ></TR
 ></TABLE
 ></DIV
 ><P
->&#13;      Secure your installation.
-      <DIV
-CLASS="note"
-><P
-></P
-><TABLE
-CLASS="note"
-WIDTH="100%"
-BORDER="0"
-><TR
-><TD
-WIDTH="25"
-ALIGN="CENTER"
-VALIGN="TOP"
-><IMG
-SRC="../images/note.gif"
-HSPACE="5"
-ALT="Note"></TD
-><TD
-ALIGN="LEFT"
-VALIGN="TOP"
-><P
->&#13;	  These instructions must, of necessity, be somewhat vague
-	  since Bugzilla runs on so many different platforms.  If you
-	  have refinements of these directions for specific platforms,
-	  please submit them to <A
-HREF="mailto://mozilla-webtools@mozilla.org"
-TARGET="_top"
->mozilla-webtools@mozilla.org</A
->
-	</P
-></TD
-></TR
-></TABLE
-></DIV
->
-      <P
+>To secure your installation:
+     
+    <P
 ></P
 ><OL
 TYPE="1"
 ><LI
 ><P
->&#13;	    Ensure you are running at least MysQL version 3.22.32 or
-	    newer.  Earlier versions had notable security holes and
-	    poorly secured default configuration choices.
-	  </P
+>Ensure you are running at least MysQL version 3.22.32 or newer.
+        Earlier versions had notable security holes and (from a security
+        point of view) poor default configuration choices.</P
 ></LI
 ><LI
 ><P
-><EM
->There is no substitute for understanding the
-	      tools on your system!</EM
-> Read <A
-HREF="http://www.mysql.com/documentation/mysql/bychapter/manual_Privilege_system.html"
+>&#13;        <EM
+>There is no substitute for understanding the tools on your
+        system!</EM
+>
+
+        Read 
+        <A
+HREF="http://www.mysql.com/doc/P/r/Privilege_system.html"
 TARGET="_top"
-> The MySQL Privilege System</A
-> until you can recite it from memory!</P
-><P
->&#13;	    At the very least, ensure you password the "mysql -u root"
-	    account and the "bugs" account, establish grant table
-	    rights (consult the Keystone guide in Appendix C: The
-	    Bugzilla Database for some easy-to-use details) that do
-	    not allow CREATE, DROP, RELOAD, SHUTDOWN, and PROCESS for
-	    user "bugs".  I wrote up the Keystone advice back when I
-	    knew far less about security than I do now : )
-	  </P
+>&#13;        The MySQL Privilege System</A
+>
+        until you can recite it from memory!</P
 ></LI
 ><LI
 ><P
->&#13;	    Lock down /etc/inetd.conf.  Heck, disable inet entirely on
-	    this box.  It should only listen to port 25 for Sendmail
-	    and port 80 for Apache.
-	  </P
+>Lock down /etc/inetd.conf. Heck, disable inet entirely on this
+        box. It should only listen to port 25 for Sendmail and port 80 for
+        Apache.</P
 ></LI
 ><LI
 ><P
->&#13;	    Do not run Apache as <SPAN
+>Do not run Apache as 
+        <SPAN
 CLASS="QUOTE"
 >"nobody"</SPAN
->.  This will
-	    require very lax permissions in your Bugzilla directories.
-	    Run it, instead, as a user with a name, set via your
-	    httpd.conf file.
-	    <DIV
+>
+
+        . This will require very lax permissions in your Bugzilla
+        directories. Run it, instead, as a user with a name, set via your
+        httpd.conf file. 
+        <DIV
 CLASS="note"
 ><P
 ></P
@@ -236,102 +204,77 @@ ALT="Note"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->&#13;		<SPAN
-CLASS="QUOTE"
->"nobody"</SPAN
-> is a real user on UNIX systems.
-		Having a process run as user id <SPAN
+>&#13;          <SPAN
 CLASS="QUOTE"
 >"nobody"</SPAN
 >
-		is absolutely no protection against system crackers
-		versus using any other user account.  As a general
-		security measure, I recommend you create unique user
-		ID's for each daemon running on your system and, if
-		possible, use "chroot" to jail that process away from
-		the rest of your system.
-	      </P
+
+          is a real user on UNIX systems. Having a process run as user id 
+          <SPAN
+CLASS="QUOTE"
+>"nobody"</SPAN
+>
+
+          is absolutely no protection against system crackers versus using
+          any other user account. As a general security measure, I recommend
+          you create unique user ID's for each daemon running on your system
+          and, if possible, use "chroot" to jail that process away from the
+          rest of your system.</P
 ></TD
 ></TR
 ></TABLE
 ></DIV
 >
-	  </P
+        </P
 ></LI
 ><LI
 ><P
->&#13;	    Ensure you have adequate access controls for the
-	    $BUGZILLA_HOME/data/ and $BUGZILLA_HOME/shadow/
-	    directories, as well as the $BUGZILLA_HOME/localconfig and
-	    $BUGZILLA_HOME/globals.pl files. The localconfig file
-	    stores your "bugs" user password, which would be terrible
-	    to have in the hands of a criminal, while the "globals.pl"
-	    stores some default information regarding your
-	    installation which could aid a system cracker. In
-	    addition, some files under $BUGZILLA_HOME/data/ store
-	    sensitive information, and $BUGZILLA_HOME/shadow/ stores
-	    bug information for faster retrieval.  If you fail to
-	    secure these directories and this file, you will expose
-	    bug information to those who may not be allowed to see it.
-	  </P
-><DIV
-CLASS="note"
+>Ensure you have adequate access controls for the
+        $BUGZILLA_HOME/data/ directory, as well as the
+        $BUGZILLA_HOME/localconfig file.
+        The localconfig file stores your "bugs" database account password. 
+        In addition, some
+        files under $BUGZILLA_HOME/data/ store sensitive information.
+        </P
 ><P
-></P
-><TABLE
-CLASS="note"
-WIDTH="100%"
-BORDER="0"
-><TR
-><TD
-WIDTH="25"
-ALIGN="CENTER"
-VALIGN="TOP"
-><IMG
-SRC="../images/note.gif"
-HSPACE="5"
-ALT="Note"></TD
-><TD
-ALIGN="LEFT"
-VALIGN="TOP"
+>Bugzilla provides default .htaccess files to protect the most
+        common Apache installations. However, you should verify these are
+        adequate according to the site-wide security policy of your web
+        server, and ensure that the .htaccess files are allowed to
+        "override" default permissions set in your Apache configuration
+        files. Covering Apache security is beyond the scope of this Guide;
+        please consult the Apache documentation for details.</P
 ><P
->&#13;	      Bugzilla provides default .htaccess files to protect the
-	      most common Apache installations.  However, you should
-	      verify these are adequate according to the site-wide
-	      security policy of your web server, and ensure that the
-	      .htaccess files are allowed to "override" default
-	      permissions set in your Apache configuration files.
-	      Covering Apache security is beyond the scope of this
-	      Guide; please consult the Apache documentation for
-	      details.
-	    </P
-><P
->&#13;	      If you are using a web server that does not support the
-	      .htaccess control method, <EM
->you are at
-		risk!</EM
->  After installing, check to see if
-	      you can view the file "localconfig" in your web browser
-	      (e.g.:  <A
+>If you are using a web server that does not support the
+        .htaccess control method, 
+        <EM
+>you are at risk!</EM
+>
+
+        After installing, check to see if you can view the file
+        "localconfig" in your web browser (e.g.: 
+        <A
 HREF="http://bugzilla.mozilla.org/localconfig"
 TARGET="_top"
-> http://bugzilla.mozilla.org/localconfig</A
->).  If you can read the contents of this file, your web server has not secured your bugzilla directory properly and you must fix this problem before deploying Bugzilla.  If, however, it gives you a "Forbidden" error, then it probably respects the .htaccess conventions and you are good to go.
-	    </P
-></TD
-></TR
-></TABLE
-></DIV
+>&#13;        http://bugzilla.mozilla.org/localconfig</A
+>
+
+        ). If you can read the contents of this file, your web server has
+        not secured your bugzilla directory properly and you must fix this
+        problem before deploying Bugzilla. If, however, it gives you a
+        "Forbidden" error, then it probably respects the .htaccess
+        conventions and you are good to go.</P
 ><P
->&#13;        When you run checksetup.pl, the script will attempt to modify various
-        permissions on files which Bugzilla uses. If you do not have a
-        webservergroup set in the localconfig file, then Bugzilla will have to
-        make certain files world readable and/or writable. <EM
->THIS IS
-        INSECURE!</EM
->. This means that anyone who can get access to
-        your system can do whatever they want to your Bugzilla installation.
-      </P
+>When you run checksetup.pl, the script will attempt to modify
+        various permissions on files which Bugzilla uses. If you do not have
+        a webservergroup set in the localconfig file, then Bugzilla will have
+        to make certain files world readable and/or writable. 
+        <EM
+>THIS IS INSECURE!</EM
+>
+
+        . This means that anyone who can get access to your system can do
+        whatever they want to your Bugzilla installation.</P
 ><DIV
 CLASS="note"
 ><P
@@ -353,58 +296,56 @@ ALT="Note"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->&#13;          This also means that if your webserver runs all cgi scripts as the
-          same user/group, anyone on the system who can run cgi scripts will
-          be able to take control of your Bugzilla installation.
-        </P
+>This also means that if your webserver runs all cgi scripts
+          as the same user/group, anyone on the system who can run cgi
+          scripts will be able to take control of your Bugzilla
+          installation.</P
 ></TD
 ></TR
 ></TABLE
 ></DIV
 ><P
->&#13;	    On Apache, you can use .htaccess files to protect access
-	    to these directories, as outlined in <A
+>On Apache, you can use .htaccess files to protect access to
+        these directories, as outlined in 
+        <A
 HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=57161"
 TARGET="_top"
->Bug 57161</A
-> for the localconfig file, and <A
+>Bug
+        57161</A
+>
+
+        for the localconfig file, and 
+        <A
 HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=65572"
 TARGET="_top"
-> Bug 65572</A
-> for adequate protection in your data/ and shadow/ directories.
-	  </P
-><P
->&#13;	    Note the instructions which follow are Apache-specific.
-	    If you use IIS, Netscape, or other non-Apache web servers,
-	    please consult your system documentation for how to secure
-	    these files from being transmitted to curious users.
-	  </P
-><P
->&#13;	    Place the following text into a file named ".htaccess",
-	    readable by your web server, in your $BUGZILLA_HOME/data
-	    directory. <P
-CLASS="literallayout"
->&nbsp;&#60;Files&nbsp;comments&#62;&nbsp;allow<br>
-	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;from&nbsp;all&nbsp;&#60;/Files&#62;&nbsp;deny&nbsp;from&nbsp;all&nbsp;</P
+>Bug
+        65572</A
 >
-	  </P
+
+        for adequate protection in your data/ directory.</P
 ><P
->&#13;	    Place the following text into a file named ".htaccess",
-	    readable by your web server, in your $BUGZILLA_HOME/
-	    directory. <P
-CLASS="literallayout"
->&nbsp;&#60;Files&nbsp;localconfig&#62;&nbsp;deny<br>
-	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;from&nbsp;all&nbsp;&#60;/Files&#62;&nbsp;allow&nbsp;from&nbsp;all&nbsp;</P
->
-	  </P
+>Note the instructions which follow are Apache-specific. If you
+        use IIS, Netscape, or other non-Apache web servers, please consult
+        your system documentation for how to secure these files from being
+        transmitted to curious users.</P
 ><P
->&#13;	    Place the following text into a file named ".htaccess",
-	    readable by your web server, in your $BUGZILLA_HOME/shadow
-	    directory. <P
+>Place the following text into a file named ".htaccess",
+        readable by your web server, in your $BUGZILLA_HOME/data directory. 
+        <P
 CLASS="literallayout"
->&nbsp;deny&nbsp;from&nbsp;all&nbsp;</P
+>&#60;Files&nbsp;comments&#62;&nbsp;allow&nbsp;from&nbsp;all&nbsp;&#60;/Files&#62;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;deny&nbsp;from&nbsp;all</P
 >
-	  </P
+        </P
+><P
+>Place the following text into a file named ".htaccess",
+        readable by your web server, in your $BUGZILLA_HOME/ directory. 
+        <P
+CLASS="literallayout"
+>&#60;Files&nbsp;localconfig&#62;&nbsp;deny&nbsp;from&nbsp;all&nbsp;&#60;/Files&#62;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;allow&nbsp;from&nbsp;all</P
+>
+        </P
 ></LI
 ></OL
 >
@@ -426,7 +367,7 @@ WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
 ><A
-HREF="programadmin.html"
+HREF="groups.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -444,7 +385,7 @@ WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
 ><A
-HREF="integration.html"
+HREF="cust-templates.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -454,8 +395,7 @@ ACCESSKEY="N"
 WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
->Product, Component, Milestone, and Version
-      Administration</TD
+>Groups and Group Security</TD
 ><TD
 WIDTH="34%"
 ALIGN="center"
@@ -469,7 +409,7 @@ ACCESSKEY="U"
 WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
->Integrating Bugzilla with Third-Party Tools</TD
+>Template Customisation</TD
 ></TR
 ></TABLE
 ></DIV

@@ -13,11 +13,11 @@ REL="UP"
 TITLE="Installation"
 HREF="installation.html"><LINK
 REL="PREVIOUS"
-TITLE="Step-by-step Install"
-HREF="stepbystep.html"><LINK
+TITLE="Win32 Installation Notes"
+HREF="win32.html"><LINK
 REL="NEXT"
-TITLE="BSD Installation Notes"
-HREF="bsdinstall.html"></HEAD
+TITLE="Troubleshooting"
+HREF="troubleshooting.html"></HEAD
 ><BODY
 CLASS="section"
 BGCOLOR="#FFFFFF"
@@ -45,7 +45,7 @@ WIDTH="10%"
 ALIGN="left"
 VALIGN="bottom"
 ><A
-HREF="stepbystep.html"
+HREF="win32.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -53,13 +53,13 @@ ACCESSKEY="P"
 WIDTH="80%"
 ALIGN="center"
 VALIGN="bottom"
->Chapter 3. Installation</TD
+>Chapter 4. Installation</TD
 ><TD
 WIDTH="10%"
 ALIGN="right"
 VALIGN="bottom"
 ><A
-HREF="bsdinstall.html"
+HREF="troubleshooting.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -73,160 +73,122 @@ CLASS="section"
 ><H1
 CLASS="section"
 ><A
-NAME="osx">3.3. Mac OS X Installation Notes</H1
+NAME="osx">4.4. Mac OS X Installation Notes</H1
 ><P
->&#13;      There are a lot of common libraries and utilities out there
-      that Apple did not include with Mac OS X, but which run
-      perfectly well on it.  The GD library, which Bugzilla needs to
-      do bug graphs, is one of these.
-    </P
+>There are a lot of common libraries and utilities out there that
+    Apple did not include with Mac OS X, but which run perfectly well on it.
+    The GD library, which Bugzilla needs to do bug graphs, is one of
+    these.</P
 ><P
->&#13;      The easiest way to get a lot of these is with a program called
-      Fink, which is similar in nature to the CPAN installer, but
-      installs common GNU utilities.  Fink is available from
-      &#60;http://sourceforge.net/projects/fink/&#62;.
-    </P
+>The easiest way to get a lot of these is with a program called
+    Fink, which is similar in nature to the CPAN installer, but installs
+    common GNU utilities. Fink is available from
+    &#60;http://sourceforge.net/projects/fink/&#62;.</P
 ><P
->&#13;      Follow the instructions for setting up Fink.  Once it's
-      installed, you'll want to run the following as root:
-      <B
+>Follow the instructions for setting up Fink. Once it's installed,
+    you'll want to run the following as root: 
+    <B
 CLASS="command"
 >fink install gd</B
 >
     </P
 ><P
->&#13;      It will prompt you for a number of dependencies, type 'y' and
-      hit enter to install all of the dependencies.  Then watch it
-      work.
-    </P
+>It will prompt you for a number of dependencies, type 'y' and hit
+    enter to install all of the dependencies. Then watch it work.</P
 ><P
->&#13;      To prevent creating conflicts with the software that Apple
-      installs by default, Fink creates its own directory tree at
-      /sw where it installs most of the software that it installs.
-      This means your libraries and headers for libgd will be at
-      /sw/lib and /sw/include instead of /usr/lib and
-      /usr/local/include.  Because of these changed locations for
-      the libraries, the Perl GD module will not install directly
-      via CPAN (it looks for the specific paths instead of getting
-      them from your environment).  But there's a way around that
-      :-)
-    </P
+>To prevent creating conflicts with the software that Apple installs
+    by default, Fink creates its own directory tree at /sw where it installs
+    most of the software that it installs. This means your libraries and
+    headers for libgd will be at /sw/lib and /sw/include instead of /usr/lib
+    and /usr/local/include. Because of these changed locations for the
+    libraries, the Perl GD module will not install directly via CPAN, because it
+    looks for the specific paths instead of getting them from your
+    environment. But there's a way around that :-)</P
 ><P
->&#13;      Instead of typing <SPAN
+>Instead of typing 
+    <SPAN
 CLASS="QUOTE"
 >"install GD"</SPAN
-> at the
-      <TT
+>
+    at the 
+    <TT
 CLASS="prompt"
 >cpan&#62;</TT
-> prompt, type <B
-CLASS="command"
->look
-	GD</B
->.  This should go through the motions of
-      downloading the latest version of the GD module, then it will
-      open a shell and drop you into the build directory. Apply the
-      following patch to the Makefile.PL file (save the patch into a
-      file  and use the command <B
-CLASS="command"
->patch &#60;
-	patchfile</B
->:
-    </P
-><P
->&#13;      <TABLE
-BORDER="0"
-BGCOLOR="#E0E0E0"
-WIDTH="100%"
-><TR
-><TD
-><FONT
-COLOR="#000000"
-><PRE
-CLASS="programlisting"
->&#13;
-	
---- GD-1.33/Makefile.PL Fri Aug  4 16:59:22 2000
-+++ GD-1.33-darwin/Makefile.PL  Tue Jun 26 01:29:32 2001
-@@ -3,8 +3,8 @@
- warn "NOTICE: This module requires libgd 1.8.3 or higher (shared library version 4.X).\n";
- 
- # =====&#62; PATHS: CHECK AND ADJUST &#60;=====
--my @INC     = qw(-I/usr/local/include -I/usr/local/include/gd); 
--my @LIBPATH = qw(-L/usr/lib/X11 -L/usr/X11R6/lib -L/usr/X11/lib -L/usr/local/lib );
-+my @INC     = qw(-I/sw/include -I/sw/include/gd -I/usr/local/include -I/usr/local/include/gd);
-+my @LIBPATH = qw(-L/usr/lib/X11 -L/usr/X11R6/lib -L/usr/X11/lib -L/sw/lib -L/usr/local/lib);
- my @LIBS    = qw(-lgd -lpng -lz);
- 
- # FEATURE FLAGS
-@@ -23,7 +23,7 @@
- 
- push @LIBS,'-lttf' if $TTF;
- push @LIBS,'-ljpeg' if $JPEG;
--push @LIBS, '-lm' unless $^O eq 'MSWin32';
-+push @LIBS, '-lm' unless ($^O =~ /^MSWin32|darwin$/);
- 
- # FreeBSD 3.3 with libgd built from ports croaks if -lXpm is specified 
- if ($^O ne 'freebsd' &#38;&#38; $^O ne 'MSWin32') {
-
- 
-      </PRE
-></FONT
-></TD
-></TR
-></TABLE
 >
+    prompt, type 
+    <B
+CLASS="command"
+>look GD</B
+>. 
+    This should go through the motions of downloading the latest version of
+    the GD module, then it will open a shell and drop you into the build
+    directory. Apply <A
+HREF="../sgml/gd-makefile.patch"
+TARGET="_top"
+>this patch</A
+> 
+    to the Makefile.PL file (save the
+    patch into a file and use the command 
+    <B
+CLASS="command"
+>patch &#60; patchfile</B
+>.)
     </P
 ><P
->&#13;      Then, run these commands to finish the installation of the perl module:
-      <P
+>Then, run these commands to finish the installation of the GD
+    module: 
+    <P
 ></P
 ><TABLE
 BORDER="0"
 ><TBODY
 ><TR
 ><TD
-><B
+>&#13;        <B
 CLASS="command"
 >perl Makefile.PL</B
-></TD
+>
+      </TD
 ></TR
 ><TR
 ><TD
-><B
+>&#13;        <B
 CLASS="command"
 >make</B
-></TD
+>
+      </TD
 ></TR
 ><TR
 ><TD
-><B
+>&#13;        <B
 CLASS="command"
 >make test</B
-></TD
+>
+      </TD
 ></TR
 ><TR
 ><TD
-><B
+>&#13;        <B
 CLASS="command"
 >make install</B
-></TD
+>
+      </TD
 ></TR
 ><TR
 ><TD
->And don't forget to run <B
+>And don't forget to run 
+      <B
 CLASS="command"
 >exit</B
-> to get back to cpan.</TD
+>
+
+      to get back to CPAN.</TD
 ></TR
 ></TBODY
 ></TABLE
 ><P
 ></P
 >
-    </P
-><P
->&#13;      Happy Hacking!
     </P
 ></DIV
 ><DIV
@@ -245,7 +207,7 @@ WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
 ><A
-HREF="stepbystep.html"
+HREF="win32.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -263,7 +225,7 @@ WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
 ><A
-HREF="bsdinstall.html"
+HREF="troubleshooting.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -273,7 +235,7 @@ ACCESSKEY="N"
 WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
->Step-by-step Install</TD
+>Win32 Installation Notes</TD
 ><TD
 WIDTH="34%"
 ALIGN="center"
@@ -287,7 +249,7 @@ ACCESSKEY="U"
 WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
->BSD Installation Notes</TD
+>Troubleshooting</TD
 ></TR
 ></TABLE
 ></DIV

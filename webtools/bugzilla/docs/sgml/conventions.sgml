@@ -6,7 +6,7 @@
     <primary>conventions</primary>
   </indexterm>
 
-  <para>This document uses the following conventions</para>
+  <para>This document uses the following conventions:</para>
 
   <informaltable frame="none">
     <tgroup cols="2">
@@ -34,7 +34,7 @@
 
           <entry>
             <tip>
-              <para>Warm jar lids under the hot tap to loosen them.</para>
+              <para>Would you like a breath mint?</para>
             </tip>
           </entry>
         </row>
@@ -63,7 +63,7 @@
           <entry>File Names</entry>
 
           <entry>
-            <filename>file.extension</filename>
+            <filename>filename</filename>
           </entry>
         </row>
 
@@ -138,12 +138,9 @@
           <entry>Code Example</entry>
 
           <entry>
-            <programlisting>
-            <sgmltag class="starttag">para</sgmltag>
-
-            Beginning and end of paragraph
-            <sgmltag class="endtag">para</sgmltag>
-            </programlisting>
+            <programlisting><sgmltag class="starttag">para</sgmltag>
+Beginning and end of paragraph
+<sgmltag class="endtag">para</sgmltag></programlisting>
           </entry>
         </row>
       </tbody>

@@ -13,11 +13,10 @@ REL="UP"
 TITLE="Administering Bugzilla"
 HREF="administration.html"><LINK
 REL="PREVIOUS"
-TITLE="Post-Installation Checklist"
-HREF="postinstall-check.html"><LINK
+TITLE="Bugzilla Configuration"
+HREF="parameters.html"><LINK
 REL="NEXT"
-TITLE="Product, Component, Milestone, and Version
-      Administration"
+TITLE="Product, Component, Milestone, and Version Administration"
 HREF="programadmin.html"></HEAD
 ><BODY
 CLASS="section"
@@ -46,7 +45,7 @@ WIDTH="10%"
 ALIGN="left"
 VALIGN="bottom"
 ><A
-HREF="postinstall-check.html"
+HREF="parameters.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -54,7 +53,7 @@ ACCESSKEY="P"
 WIDTH="80%"
 ALIGN="center"
 VALIGN="bottom"
->Chapter 4. Administering Bugzilla</TD
+>Chapter 5. Administering Bugzilla</TD
 ><TD
 WIDTH="10%"
 ALIGN="right"
@@ -74,26 +73,19 @@ CLASS="section"
 ><H1
 CLASS="section"
 ><A
-NAME="useradmin">4.2. User Administration</H1
-><P
->&#13;      User administration is one of the easiest parts of Bugzilla.
-      Keeping it from getting out of hand, however, can become a
-      challenge.
-    </P
+NAME="useradmin">5.2. User Administration</H1
 ><DIV
 CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="defaultuser">4.2.1. Creating the Default User</H2
+NAME="defaultuser">5.2.1. Creating the Default User</H2
 ><P
->&#13;	When you first run checksetup.pl after installing Bugzilla, it
-	will prompt you for the administrative username (email
-	address) and password for this "super user". If for some
-	reason you were to delete the "super user" account, re-running
-	checksetup.pl will again prompt you for this username and
-	password.
-      </P
+>When you first run checksetup.pl after installing Bugzilla, it
+      will prompt you for the administrative username (email address) and
+      password for this "super user". If for some reason you delete
+      the "super user" account, re-running checksetup.pl will again prompt
+      you for this username and password.</P
 ><DIV
 CLASS="tip"
 ><P
@@ -115,36 +107,60 @@ ALT="Tip"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->&#13;       If you wish to add more administrative users, you must use the
-	  MySQL interface. Run "mysql" from the command line, and use
-	  these commands ("mysql&#62;" denotes the  mysql prompt, not
-	  something you should type in):
-	  <B
-CLASS="command"
-><TT
+>If you wish to add more administrative users, you must use the
+        MySQL interface. Run "mysql" from the command line, and use these
+        commands: 
+        <P
+></P
+><TABLE
+BORDER="0"
+><TBODY
+><TR
+><TD
+>&#13;            <TT
 CLASS="prompt"
 >mysql&#62;</TT
-> use bugs;</B
 >
-	  <B
+            <B
 CLASS="command"
-><TT
+>use bugs;</B
+>
+          </TD
+></TR
+><TR
+><TD
+>&#13;            <TT
 CLASS="prompt"
 >mysql&#62;</TT
-> update profiles set
-	    groupset=0x7ffffffffffffff where login_name = "(user's
-	    login name)"; </B
 >
-	</P
+
+            <B
+CLASS="command"
+>&#13;              update profiles set groupset=0x7ffffffffffffff where login_name =
+              "(user's login name)";
+            </B
+>
+          </TD
+></TR
+></TBODY
+></TABLE
 ><P
->Yes, that is <EM
+></P
+>
+        </P
+><P
+>Yes, that is 
+        <EM
 >fourteen</EM
 >
-	  <SPAN
+
+        <SPAN
 CLASS="QUOTE"
 >"f"</SPAN
->'s.  A whole lot of f-ing going on if you
-	  want to create a new administator.</P
+>
+
+        's. A whole lot of f-ing going on if you want to create a new
+        administator.</P
 ></TD
 ></TR
 ></TABLE
@@ -155,125 +171,32 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="manageusers">4.2.2. Managing Other Users</H2
+NAME="manageusers">5.2.2. Managing Other Users</H2
 ><DIV
 CLASS="section"
 ><H3
 CLASS="section"
 ><A
-NAME="login">4.2.2.1. Logging In</H3
+NAME="createnewusers">5.2.2.1. Creating new users</H3
+><P
+>Your users can create their own user accounts by clicking the
+        "New Account" link at the bottom of each page (assuming they
+        aren't logged in as someone else already.) However, should you
+        desire to create user accounts ahead of time, here is how you do
+        it.</P
 ><P
 ></P
 ><OL
 TYPE="1"
 ><LI
 ><P
->&#13;	      Open the index.html page for your Bugzilla installation
-	      in your browser window.
-	    </P
+>After logging in, click the "Users" link at the footer of
+            the query page, and then click "Add a new user".</P
 ></LI
 ><LI
 ><P
->&#13;	      Click the "Query Existing Bug Reports" link.
-	    </P
-></LI
-><LI
-><P
->&#13;	      Click the "Log In" link at the foot of the page.
-	    </P
-></LI
-><LI
-><P
->&#13;	      Type your email address, and the password which was
-	      emailed to you when you created your Bugzilla account,
-	      into the spaces provided.
-	    </P
-></LI
-></OL
-><P
->Congratulations, you are logged in!</P
-></DIV
-><DIV
-CLASS="section"
-><H3
-CLASS="section"
-><A
-NAME="createnewusers">4.2.2.2. Creating new users</H3
-><P
->&#13;	  Your users can create their own user accounts by clicking
-	  the "New Account" link at the bottom of each page. However,
-	  should you desire to create user accounts ahead of time,
-	  here is how you do it.
-	</P
-><P
-></P
-><OL
-TYPE="1"
-><LI
-><P
->&#13;	      After logging in, click the "Users" link at the footer
-	      of the query page.
-	    </P
-></LI
-><LI
-><P
->&#13;	      To see a specific user, type a portion of their login
-	      name in the box provided and click "submit". To see all
-	      users, simply click the "submit" button. You must click
-	      "submit" here to be able to add a new user.
-	    </P
-><DIV
-CLASS="tip"
-><P
-></P
-><TABLE
-CLASS="tip"
-WIDTH="100%"
-BORDER="0"
-><TR
-><TD
-WIDTH="25"
-ALIGN="CENTER"
-VALIGN="TOP"
-><IMG
-SRC="../images/tip.gif"
-HSPACE="5"
-ALT="Tip"></TD
-><TD
-ALIGN="LEFT"
-VALIGN="TOP"
-><P
->&#13;		More functionality is available via the list on the
-		right-hand side of the text entry box. You can match
-		what you type as a case-insensitive substring (the
-		default) of all users on your system, a case-sensitive
-		regular expression (please see the <B
-CLASS="command"
->man
-		  regexp</B
-> manual page for details on regular
-		expression syntax), or a <EM
->reverse</EM
->
-		regular expression match, where every user name which
-		does NOT match the regular expression is selected.
-	      </P
-></TD
-></TR
-></TABLE
-></DIV
-></LI
-><LI
-><P
->&#13;	      Click the "Add New User" link at the bottom of the user
-	      list
-	    </P
-></LI
-><LI
-><P
->&#13;	      Fill out the form presented.  This page is
-	      self-explanatory.  When done, click "submit".
-	    </P
+>Fill out the form presented. This page is self-explanatory.
+            When done, click "Submit".</P
 ><DIV
 CLASS="note"
 ><P
@@ -295,22 +218,24 @@ ALT="Note"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->&#13;		Adding a user this way will <EM
+>Adding a user this way will 
+              <EM
 >not</EM
 >
-		send an email informing them of their username and
-		password. While useful for creating dummy accounts
-		(watchers which shuttle mail to another system, for
-		instance, or email addresses which are a mailing
-		list), in general it is preferable to log out and use
-		the <SPAN
+
+              send an email informing them of their username and password.
+              While useful for creating dummy accounts (watchers which
+              shuttle mail to another system, for instance, or email
+              addresses which are a mailing list), in general it is
+              preferable to log out and use the 
+              <SPAN
 CLASS="QUOTE"
 >"New Account"</SPAN
-> button to create users,
-		as it will pre-populate all the required fields and
-		also notify  the user of her account name and
-		password.
-	      </P
+>
+
+              button to create users, as it will pre-populate all the
+              required fields and also notify the user of her account name
+              and password.</P
 ></TD
 ></TR
 ></TABLE
@@ -323,133 +248,73 @@ CLASS="section"
 ><H3
 CLASS="section"
 ><A
-NAME="disableusers">4.2.2.3. Disabling Users</H3
+NAME="modifyusers">5.2.2.2. Modifying Users</H3
 ><P
->&#13;	  I bet you noticed that big "Disabled Text" entry box
-	  available from the "Add New User" screen, when you edit an
-	  account? By entering any text in this box and selecting
-	  "submit", you have prevented the user from using Bugzilla
-	  via the web interface. Your explanation, written in this
-	  text box, will be presented to the user the next time she
-	  attempts to use the system.
-	  <DIV
-CLASS="warning"
+>To see a specific user, search for their login name
+        in the box provided on the "Edit Users" page. To see all users, 
+        leave the box blank.</P
 ><P
-></P
-><TABLE
-CLASS="warning"
-WIDTH="100%"
-BORDER="0"
-><TR
-><TD
-WIDTH="25"
-ALIGN="CENTER"
-VALIGN="TOP"
-><IMG
-SRC="../images/warning.gif"
-HSPACE="5"
-ALT="Warning"></TD
-><TD
-ALIGN="LEFT"
-VALIGN="TOP"
-><P
->&#13;	      Don't disable your own administrative account, or you
-	      will hate life!
-	    </P
-><P
->At this time, <SPAN
-CLASS="QUOTE"
->"Disabled Text"</SPAN
-> does not
-	      prevent a user from using the email interface.  If you
-	      have the email interface enabled, they can still
-	      continue to submit bugs and comments that way.  We need
-	      a patch to fix this.</P
-></TD
-></TR
-></TABLE
-></DIV
+>You can search in different ways the listbox to the right
+        of the text entry box. You can match by 
+        case-insensitive substring (the default),
+        regular expression, or a 
+        <EM
+>reverse</EM
 >
-	</P
-></DIV
-><DIV
-CLASS="section"
-><H3
-CLASS="section"
-><A
-NAME="modifyusers">4.2.2.4. Modifying Users</H3
+        regular expression match, which finds every user name which does NOT
+        match the regular expression. (Please see
+        the <B
+CLASS="command"
+>man regexp</B
+>
+        manual page for details on regular expression syntax.)
+        </P
 ><P
->&#13;	  Here I will attempt to describe the function of each option
-	  on the Edit User screen.
-	</P
+>Once you have found your user, you can change the following
+        fields:</P
 ><P
 ></P
 ><UL
 ><LI
 ><P
->&#13;	      <EM
+>&#13;            <EM
 >Login Name</EM
->: This is generally the
-	      user's email address. However, if you have edited your
-	      system parameters, this may just be the user's login
-	      name or some other identifier.
-	      <DIV
-CLASS="tip"
-><P
-></P
-><TABLE
-CLASS="tip"
-WIDTH="100%"
-BORDER="0"
-><TR
-><TD
-WIDTH="25"
-ALIGN="CENTER"
-VALIGN="TOP"
-><IMG
-SRC="../images/tip.gif"
-HSPACE="5"
-ALT="Tip"></TD
-><TD
-ALIGN="LEFT"
-VALIGN="TOP"
-><P
->&#13;		  For compatability reasons, you should probably stick
-		  with email addresses as user login names.  It will
-		  make your life easier.
-		</P
-></TD
-></TR
-></TABLE
-></DIV
->
-	    </P
+>: 
+            This is generally the user's full email address. However, if you
+            have are using the emailsuffix Param, this may just be the user's
+            login name. Note that users can now change their login names
+            themselves (to any valid email address.)
+            </P
 ></LI
 ><LI
 ><P
->&#13;	      <EM
+>&#13;            <EM
 >Real Name</EM
->: Duh!
-	    </P
+>: The user's real name. Note that
+            Bugzilla does not require this to create an account.</P
 ></LI
 ><LI
 ><P
->&#13;	      <EM
+>&#13;            <EM
 >Password</EM
->:  You can change the user
-	      password here.  It is normal to only see asterisks.
-	    </P
+>: 
+            You can change the user's password here. Users can automatically
+            request a new password, so you shouldn't need to do this often.
+            If you want to disable an account, see Disable Text below.
+            </P
 ></LI
 ><LI
 ><P
->&#13;	      <EM
+>&#13;            <EM
 >Disable Text</EM
->: If you type anything
-	      in this box, including just a space, the user account is
-	      disabled from making any changes to bugs via the web
-	      interface, and what you type in this box is presented as
-	      the reason.
-	      <DIV
+>: 
+            If you type anything in this box, including just a space, the
+            user is prevented from logging in, or making any changes to 
+            bugs via the web interface. 
+            The HTML you type in this box is presented to the user when
+            they attempt to perform these actions, and should explain
+            why the account was disabled.
+            <DIV
 CLASS="warning"
 ><P
 ></P
@@ -476,7 +341,8 @@ VALIGN="TOP"
 ></TABLE
 ></DIV
 >
-	      <DIV
+
+            <DIV
 CLASS="note"
 ><P
 ></P
@@ -497,143 +363,110 @@ ALT="Note"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->&#13;		  As of this writing, the user can still submit bugs
-		  via the e-mail gateway, if you set it up, despite
-		  the disabled text field.  The e-mail gateway should
-		  <EM
+>The user can still submit bugs via
+              the e-mail gateway, if you set it up, even if the disabled text
+              field is filled in. The e-mail gateway should 
+              <EM
 >not</EM
-> be enabled for secure
-		  installations of Bugzilla.
-		</P
+>
+              be enabled for secure installations of Bugzilla.</P
 ></TD
 ></TR
 ></TABLE
 ></DIV
 >
-	    </P
+            </P
 ></LI
 ><LI
 ><P
->&#13;	      <EM
->CanConfirm</EM
->: This field is only used
-	      if you have enabled "unconfirmed" status in your
-	      parameters screen.  If you enable this for a user, that
-	      user can then move bugs from "Unconfirmed" to
-	      "Confirmed" status (e.g.: "New" status). Be judicious
-	      about allowing users to turn this bit on for other
-	      users.
-	    </P
+>&#13;            <EM
+>&#60;groupname&#62;</EM
+>: 
+            If you have created some groups, e.g. "securitysensitive", then
+            checkboxes will appear here to allow you to add users to, or
+            remove them from, these groups.
+            </P
 ></LI
 ><LI
 ><P
->&#13;	      <EM
->Creategroups</EM
->: This option will
-	      allow a user to create and destroy groups in Bugzilla.
-	      Unless you are using the Bugzilla GroupSentry security
-	      option "usebuggroupsentry" in your parameters, this
-	      setting has no effect.
-	    </P
+>&#13;            <EM
+>canconfirm</EM
+>: 
+            This field is only used if you have enabled the "unconfirmed"
+            status. If you enable this for a user,
+            that user can then move bugs from "Unconfirmed" to a "Confirmed"
+            status (e.g.: "New" status).</P
 ></LI
 ><LI
 ><P
->&#13;	      <EM
->Editbugs</EM
->: Unless a user has this
-	      bit set, they can only edit those bugs for which they
-	      are the assignee or the reporter.  
-	      <DIV
-CLASS="note"
-><P
-></P
-><TABLE
-CLASS="note"
-WIDTH="100%"
-BORDER="0"
-><TR
-><TD
-WIDTH="25"
-ALIGN="CENTER"
-VALIGN="TOP"
-><IMG
-SRC="../images/note.gif"
-HSPACE="5"
-ALT="Note"></TD
-><TD
-ALIGN="LEFT"
-VALIGN="TOP"
-><P
->&#13;		  Leaving this option unchecked does not prevent users
-		  from adding comments to a bug!  They simply cannot
-		  change a bug priority, severity, etc. unless they
-		  are the assignee or reporter.
-		</P
-></TD
-></TR
-></TABLE
-></DIV
->
-	    </P
+>&#13;            <EM
+>creategroups</EM
+>: 
+            This option will allow a user to create and destroy groups in
+            Bugzilla.</P
 ></LI
 ><LI
 ><P
->&#13;	      <EM
->Editcomponents</EM
->: This flag allows a
-	      user to create new  products and components, as well as
-	      modify and destroy those that have no bugs associated
-	      with them.  If a product or component has bugs
-	      associated with it, those bugs must be moved to a
-	      different product or component before Bugzilla will
-	      allow them to be destroyed.  The name of a product or
-	      component can be changed without affecting the
-	      associated bugs, but it tends to annoy the hell out of
-	      your users when these change a lot.
-	    </P
+>&#13;            <EM
+>editbugs</EM
+>: 
+            Unless a user has this bit set, they can only edit those bugs
+            for which they are the assignee or the reporter. Even if this
+            option is unchecked, users can still add comments to bugs.
+            </P
 ></LI
 ><LI
 ><P
->&#13;	      <EM
->Editkeywords</EM
->: If you use Bugzilla's
-	      keyword functionality, enabling this feature allows a
-	      user can create and destroy keywords. As always, the
-	      keywords for existing bugs containing the keyword the
-	      user wishes to destroy must be changed before Bugzilla
-	      will allow it to die. You must be very careful about
-	      creating too many new keywords if you run a very large
-	      Bugzilla installation; keywords are global variables
-	      across products, and you can often run into a phenomenon
-	      called "keyword bloat". This confuses users, and then
-	      the feature goes unused.
-	    </P
+>&#13;            <EM
+>editcomponents</EM
+>: 
+            This flag allows a user to create new products and components,
+            as well as modify and destroy those that have no bugs associated
+            with them. If a product or component has bugs associated with it,
+            those bugs must be moved to a different product or component
+            before Bugzilla will allow them to be destroyed.
+            </P
 ></LI
 ><LI
 ><P
->&#13;	      <EM
->Editusers</EM
->: This flag allows a user
-	      do what you're doing right now: edit other users. This
-	      will allow those with the right to do so to remove
-	      administrator privileges from other users or grant them
-	      to themselves.  Enable with care.
-	    </P
+>&#13;            <EM
+>editkeywords</EM
+>: 
+            If you use Bugzilla's keyword functionality, enabling this
+            feature allows a user to create and destroy keywords. As always,
+            the keywords for existing bugs containing the keyword the user
+            wishes to destroy must be changed before Bugzilla will allow it
+            to die.</P
 ></LI
 ><LI
 ><P
->&#13;	      <EM
->PRODUCT</EM
->: PRODUCT bugs access.  This
-	      allows an administrator, with product-level granularity,
-	      to specify in which products a user can edit bugs.  The
-	      user must still have the "editbugs" privelege to edit
-	      bugs in this area; this simply restricts them from even
-	      seeing bugs outside these boundaries if the
-	      administrator has enabled the group sentry parameter
-	      "usebuggroupsentry".  Unless you are using bug groups,
-	      this option has no effect.
-	    </P
+>&#13;            <EM
+>editusers</EM
+>: 
+            This flag allows a user to do what you're doing right now: edit
+            other users. This will allow those with the right to do so to
+            remove administrator privileges from other users or grant them to
+            themselves. Enable with care.</P
+></LI
+><LI
+><P
+>&#13;            <EM
+>tweakparams</EM
+>: 
+            This flag allows a user to change Bugzilla's Params 
+            (using <TT
+CLASS="filename"
+>editparams.cgi</TT
+>.)</P
+></LI
+><LI
+><P
+>&#13;            <EM
+>&#60;productname&#62;</EM
+>: 
+            This allows an administrator to specify the products in which 
+            a user can see bugs. The user must still have the 
+            "editbugs" privilege to edit bugs in these products.</P
 ></LI
 ></UL
 ></DIV
@@ -655,7 +488,7 @@ WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
 ><A
-HREF="postinstall-check.html"
+HREF="parameters.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -683,7 +516,7 @@ ACCESSKEY="N"
 WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
->Post-Installation Checklist</TD
+>Bugzilla Configuration</TD
 ><TD
 WIDTH="34%"
 ALIGN="center"
@@ -697,8 +530,7 @@ ACCESSKEY="U"
 WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
->Product, Component, Milestone, and Version
-      Administration</TD
+>Product, Component, Milestone, and Version Administration</TD
 ></TR
 ></TABLE
 ></DIV

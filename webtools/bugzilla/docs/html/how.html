@@ -13,11 +13,11 @@ REL="UP"
 TITLE="Using Bugzilla"
 HREF="using.html"><LINK
 REL="PREVIOUS"
-TITLE="Why Should We Use Bugzilla?"
-HREF="why.html"><LINK
+TITLE="Using Bugzilla"
+HREF="using.html"><LINK
 REL="NEXT"
-TITLE="Where can I find my user preferences?"
-HREF="init4me.html"></HEAD
+TITLE="Hints and Tips"
+HREF="hintsandtips.html"></HEAD
 ><BODY
 CLASS="section"
 BGCOLOR="#FFFFFF"
@@ -45,7 +45,7 @@ WIDTH="10%"
 ALIGN="left"
 VALIGN="bottom"
 ><A
-HREF="why.html"
+HREF="using.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -53,13 +53,13 @@ ACCESSKEY="P"
 WIDTH="80%"
 ALIGN="center"
 VALIGN="bottom"
->Chapter 2. Using Bugzilla</TD
+>Chapter 3. Using Bugzilla</TD
 ><TD
 WIDTH="10%"
 ALIGN="right"
 VALIGN="bottom"
 ><A
-HREF="init4me.html"
+HREF="hintsandtips.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -73,62 +73,35 @@ CLASS="section"
 ><H1
 CLASS="section"
 ><A
-NAME="how">2.3. How do I use Bugzilla?</H1
-><TABLE
-BORDER="0"
-WIDTH="100%"
-CELLSPACING="0"
-CELLPADDING="0"
-CLASS="EPIGRAPH"
-><TR
-><TD
-WIDTH="45%"
->&nbsp;</TD
-><TD
-WIDTH="45%"
-ALIGN="LEFT"
-VALIGN="TOP"
-><I
+NAME="how">3.1. How do I use Bugzilla?</H1
 ><P
-><I
->Hey!  I'm Woody!  Howdy, Howdy, Howdy!</I
-></P
-></I
-></TD
-></TR
-></TABLE
-><P
->&#13;      This section contains information for end-users of Bugzilla. 
-      If you are administering a Bugzilla installation, please consult the
-      Installing and Administering Bugzilla portions of this Guide.
-    </P
-><P
->&#13;      There is a Bugzilla test installation, called
-      <A
-HREF="http://landfill.tequilarista.org/"
+>This section contains information for end-users of Bugzilla. 
+    There is a Bugzilla test installation, called 
+    <A
+HREF="http://landfill.bugzilla.org/"
 TARGET="_top"
->&#13;	    Landfill</A
->, which you are welcome to play with.
-      However, it does not necessarily have all Bugzilla features
-      enabled, and often runs cutting-edge versions of Bugzilla for
-      testing, so some things may work slightly differently than
-      mentioned here.
-    </P
+>Landfill</A
+>, 
+    which you are welcome to play with (if it's up.) 
+    However, it does not necessarily
+    have all Bugzilla features enabled, and often runs cutting-edge versions
+    of Bugzilla for testing, so some things may work slightly differently
+    than mentioned here.</P
 ><DIV
 CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="myaccount">2.3.1. Create a Bugzilla Account</H2
+NAME="myaccount">3.1.1. Create a Bugzilla Account</H2
 ><P
->&#13;	If you want to use Bugzilla, first you
-	need to create an account.  Consult with the administrator
-	responsible for your installation of Bugzilla for the URL you
-	should use to access it. If you're test-driving Bugzilla, 
-  use this URL: <A
-HREF="http://landfill.tequilarista.org/bugzilla-tip/"
+>If you want to use Bugzilla, first you need to create an account.
+      Consult with the administrator responsible for your installation of
+      Bugzilla for the URL you should use to access it. If you're
+      test-driving Bugzilla, use this URL: 
+      <A
+HREF="http://landfill.bugzilla.org/bugzilla-tip/"
 TARGET="_top"
-> http://landfill.tequilarista.org/bugzilla-tip/</A
+>&#13;      http://landfill.bugzilla.org/bugzilla-tip/</A
 >
       </P
 ><P
@@ -137,405 +110,313 @@ TARGET="_top"
 TYPE="1"
 ><LI
 ><P
->&#13;	    Click the <SPAN
+>Click the 
+          <SPAN
 CLASS="QUOTE"
 >"Open a new Bugzilla account"</SPAN
-> link, enter your 
-      email address and, optionally, your name in the spaces provided,
-	    then click <SPAN
+>
+
+          link, enter your email address and, optionally, your name in the
+          spaces provided, then click 
+          <SPAN
 CLASS="QUOTE"
 >"Create Account"</SPAN
->.
-	  </P
+>
+
+          .</P
 ></LI
 ><LI
 ><P
->&#13;	    Within moments, you should receive an email to the address
-	    you provided above, which contains your login name
-	    (generally the same as the email address), and a password
-	    you can use to access your account.  This password is
-	    randomly generated, and can be changed to something more memorable.
-	  </P
+>Within moments, you should receive an email to the address
+          you provided above, which contains your login name (generally the
+          same as the email address), and a password you can use to access
+          your account. This password is randomly generated, and can be
+          changed to something more memorable.</P
 ></LI
 ><LI
 ><P
->&#13;	    Click the <SPAN
+>Click the 
+          <SPAN
 CLASS="QUOTE"
 >"Log In"</SPAN
-> link in the yellow area at
-	    the bottom of the page in your browser, enter your
-	    email address and password into the spaces provided, and click
-	    <SPAN
+>
+          link in the yellow area at the bottom of the page in your browser,
+          enter your email address and password into the spaces provided, and
+          click 
+          <SPAN
 CLASS="QUOTE"
 >"Login"</SPAN
 >.
-	  </P
+          </P
 ></LI
 ></OL
 ><P
->&#13;	You are now logged in. Bugzilla uses cookies for authentication, so
-  (unless your IP address changes) you should not have to log in again.
-      </P
+>You are now logged in. Bugzilla uses cookies for authentication
+      so, unless your IP address changes, you should not have to log in
+      again.</P
 ></DIV
 ><DIV
 CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="bug_page">2.3.2. Anatomy of a Bug</H2
+NAME="bug_page">3.1.2. Anatomy of a Bug</H2
 ><P
->&#13;        The core of Bugzilla is the screen which displays a particular bug.
-        It's a good place to explain some Bugzilla concepts. 
-        <A
-HREF="http://landfill.tequilarista.org/bugzilla-tip/show_bug.cgi?id=1"
+>The core of Bugzilla is the screen which displays a particular
+      bug. It's a good place to explain some Bugzilla concepts. 
+      <A
+HREF="http://landfill.bugzilla.org/bugzilla-tip/show_bug.cgi?id=1"
 TARGET="_top"
->Bug 1 on Landfill</A
-> is a good example. Note that the names of most fields
-        are hyperlinks; clicking them will take you to context-sensitive
-        help on that particular field.
-      </P
-><P
-></P
-><OL
-TYPE="1"
-><LI
-><P
->&#13;      <EM
->Product and Component</EM
->:
-      Bugs are divided up by Product and Component, with a Product having one
-      or more Components in it. For example, bugzilla.mozilla.org's 
-      "Bugzilla" Product is composed of several Components:
-		  <P
-></P
-><TABLE
-BORDER="0"
-><TBODY
-><TR
-><TD
-><EM
->Administration</EM
->,
-          Administration of a bugzilla installation, including 
-          <TT
-CLASS="filename"
->editcomponents.cgi</TT
->,
-          <TT
-CLASS="filename"
->editgroups.cgi</TT
->, 
-          <TT
-CLASS="filename"
->editkeywords.cgi</TT
->, 
-          <TT
-CLASS="filename"
->editparams.cgi</TT
->,
-          <TT
-CLASS="filename"
->editproducts.cgi</TT
->,
-          <TT
-CLASS="filename"
->editusers.cgi</TT
->,
-          <TT
-CLASS="filename"
->editversions.cgi,</TT
-> and
-          <TT
-CLASS="filename"
->sanitycheck.cgi</TT
->.
-        </TD
-></TR
-><TR
-><TD
-><EM
->Bugzilla-General</EM
->,
-          Anything that doesn't fit in the other components, or spans
-          multiple components.
-        </TD
-></TR
-><TR
-><TD
-><EM
->Creating/Changing Bugs</EM
->,
-          Creating, changing, and viewing bugs.
-          <TT
-CLASS="filename"
->enter_bug.cgi</TT
->,
-          <TT
-CLASS="filename"
->post_bug.cgi</TT
->,
-          <TT
-CLASS="filename"
->show_bug.cgi</TT
-> and
-          <TT
-CLASS="filename"
->process_bug.cgi</TT
->.
-        </TD
-></TR
-><TR
-><TD
-><EM
->Documentation</EM
->,
-          The bugzilla documentation, including anything in the
-          <TT
-CLASS="filename"
->docs/</TT
-> directory and The Bugzilla Guide
+>&#13;      Bug 1 on Landfill</A
+>
 
-        </TD
-></TR
+      is a good example. Note that the labels for most fields are hyperlinks;
+      clicking them will take you to context-sensitive help on that
+      particular field. Fields marked * may not be present on every
+      installation of Bugzilla.</P
+><P
+></P
+><OL
+TYPE="1"
+><LI
+><P
+>&#13;          <EM
+>Product and Component</EM
+>: 
+          Bugs are divided up by Product and Component, with a Product
+          having one or more Components in it. For example,
+          bugzilla.mozilla.org's "Bugzilla" Product is composed of several
+          Components: 
+          <P
+></P
+><TABLE
+BORDER="0"
+><TBODY
 ><TR
 ><TD
-><EM
->Email</EM
->,
-          Anything to do with email sent by Bugzilla.
-          <TT
-CLASS="filename"
->processmail</TT
+>&#13;          <EM
+>Administration:</EM
 >
-        </TD
+          Administration of a Bugzilla installation.</TD
 ></TR
 ><TR
 ><TD
-><EM
->Installation</EM
->,
-          The installation process of Bugzilla. This includes
-          <TT
-CLASS="filename"
->checksetup.pl</TT
-> and whatever else it evolves into.
-        </TD
-></TR
-><TR
-><TD
-><EM
->Query/Buglist</EM
->,
-          Anything to do with searching for bugs and viewing the buglists.
-          <TT
-CLASS="filename"
->query.cgi</TT
-> and
-          <TT
-CLASS="filename"
->buglist.cgi</TT
+>&#13;          <EM
+>Bugzilla-General:</EM
 >
-        </TD
+          Anything that doesn't fit in the other components, or spans
+          multiple components.</TD
 ></TR
 ><TR
 ><TD
-><EM
->Reporting/Charting</EM
->,
-          Getting reports from Bugzilla.
-          <TT
-CLASS="filename"
->reports.cgi</TT
-> and
-          <TT
-CLASS="filename"
->duplicates.cgi</TT
+>&#13;          <EM
+>Creating/Changing Bugs:</EM
 >
-        </TD
+          Creating, changing, and viewing bugs.</TD
 ></TR
 ><TR
 ><TD
-><EM
->User Accounts</EM
->,
+>&#13;          <EM
+>Documentation:</EM
+>
+          The Bugzilla documentation, including The Bugzilla Guide.</TD
+></TR
+><TR
+><TD
+>&#13;          <EM
+>Email:</EM
+>
+          Anything to do with email sent by Bugzilla.</TD
+></TR
+><TR
+><TD
+>&#13;          <EM
+>Installation:</EM
+>
+          The installation process of Bugzilla.</TD
+></TR
+><TR
+><TD
+>&#13;          <EM
+>Query/Buglist:</EM
+>
+          Anything to do with searching for bugs and viewing the
+          buglists.</TD
+></TR
+><TR
+><TD
+>&#13;          <EM
+>Reporting/Charting:</EM
+>
+          Getting reports from Bugzilla.</TD
+></TR
+><TR
+><TD
+>&#13;          <EM
+>User Accounts:</EM
+>
           Anything about managing a user account from the user's perspective.
-          <TT
-CLASS="filename"
->userprefs.cgi</TT
->, saved queries, creating accounts,
-          changing passwords, logging in, etc. 
-        </TD
+          Saved queries, creating accounts, changing passwords, logging in,
+          etc.</TD
 ></TR
 ><TR
 ><TD
-><EM
->User Interface</EM
->,
+>&#13;          <EM
+>User Interface:</EM
+>
           General issues having to do with the user interface cosmetics (not
-          functionality) including cosmetic issues, HTML templates, etc.
-        </TD
+          functionality) including cosmetic issues, HTML templates,
+          etc.</TD
 ></TR
 ></TBODY
 ></TABLE
 ><P
 ></P
 >
-		</P
+          </P
 ></LI
 ><LI
 ><P
->&#13;      <EM
->Status and Resolution</EM
->: 
-      A bug passes through several Statuses in its lifetime, and ends up in the
-      RESOLVED status, with one of a set of Resolutions (e.g. FIXED, INVALID.)
-      The different possible
-      values for Status and Resolution on your installation will be documented
-      in the context-sensitive help for those items.
-		</P
+>&#13;          <EM
+>Status and Resolution:</EM
+>
+
+          These define exactly what state the bug is in - from not even
+          being confirmed as a bug, through to being fixed and the fix
+          confirmed by Quality Assurance. The different possible values for
+          Status and Resolution on your installation should be documented in the
+          context-sensitive help for those items.</P
 ></LI
 ><LI
 ><P
->&#13;      <EM
->Assigned To</EM
->:
-      The person responsible for fixing the bug.
-	  </P
+>&#13;          <EM
+>Assigned To:</EM
+>
+          The person responsible for fixing the bug.</P
 ></LI
 ><LI
 ><P
->&#13;      <EM
->URL</EM
->:
-      A URL associated with the bug, if any.
-	  </P
+>&#13;          <EM
+>*URL:</EM
+>
+          A URL associated with the bug, if any.</P
 ></LI
 ><LI
 ><P
->&#13;      <EM
->Summary</EM
->:
-      A one-sentence summary of the problem.
-	  </P
+>&#13;          <EM
+>Summary:</EM
+>
+          A one-sentence summary of the problem.</P
 ></LI
 ><LI
 ><P
->&#13;	    <EM
->Status Whiteboard</EM
->: (a.k.a. Whiteboard) A
-      free-form text area for adding short notes and tags to a bug.
-	  </P
+>&#13;          <EM
+>*Status Whiteboard:</EM
+>
+          (a.k.a. Whiteboard) A free-form text area for adding short notes
+          and tags to a bug.</P
 ></LI
 ><LI
 ><P
->&#13;      <EM
->Keywords</EM
->:
-      The administrator can define keywords which you can use to tag and
-      categorise bugs - e.g. The Mozilla Project has keywords like crash
-      and regression.
-	  </P
+>&#13;          <EM
+>*Keywords:</EM
+>
+          The administrator can define keywords which you can use to tag and
+          categorise bugs - e.g. The Mozilla Project has keywords like crash
+          and regression.</P
 ></LI
 ><LI
 ><P
->&#13;      <EM
->Platform and OS</EM
->:
-      These indicate the computing environment where the bug was found.
-	  </P
+>&#13;          <EM
+>Platform and OS:</EM
+>
+          These indicate the computing environment where the bug was
+          found.</P
 ></LI
 ><LI
 ><P
->&#13;      <EM
->Version</EM
->:
-      The "Version" field is usually used for versions of a product which have
-      been released, and is set to indicate which versions of a Component
-      have the particular problem the bug report is about.
-	  </P
+>&#13;          <EM
+>Version:</EM
+>
+          The "Version" field is usually used for versions of a product which
+          have been released, and is set to indicate which versions of a
+          Component have the particular problem the bug report is
+          about.</P
 ></LI
 ><LI
 ><P
->&#13;      <EM
->Priority</EM
->:
-      The bug assignee uses this field to prioritise his or her bugs. It's
-      a good idea not to change this on other people's bugs.
-	  </P
+>&#13;          <EM
+>Priority:</EM
+>
+          The bug assignee uses this field to prioritise his or her bugs.
+          It's a good idea not to change this on other people's bugs.</P
 ></LI
 ><LI
 ><P
->&#13;      <EM
->Severity</EM
->:
-      This indicates how severe the problem is - from blocker ("application
-      unusable") to trivial ("minor cosmetic issue"). You can also use this
-      field to indicate whether a bug is an enhancement request.
-	  </P
+>&#13;          <EM
+>Severity:</EM
+>
+          This indicates how severe the problem is - from blocker
+          ("application unusable") to trivial ("minor cosmetic issue"). You
+          can also use this field to indicate whether a bug is an enhancement
+          request.</P
 ></LI
 ><LI
 ><P
->&#13;      <EM
->Target</EM
->:
-	    (a.k.a. Target Milestone) A future version by which the bug is to be
-      fixed. e.g. The Bugzilla Project's milestones for future
-	    Bugzilla versions are 2.18, 2.20, 3.0, etc. Milestones are 
-      not restricted to numbers, thought - you can use any text strings, 
-      such as dates.  
-	  </P
+>&#13;          <EM
+>*Target:</EM
+>
+          (a.k.a. Target Milestone) A future version by which the bug is to
+          be fixed. e.g. The Bugzilla Project's milestones for future
+          Bugzilla versions are 2.18, 2.20, 3.0, etc. Milestones are not
+          restricted to numbers, thought - you can use any text strings, such
+          as dates.</P
 ></LI
 ><LI
 ><P
->&#13;      <EM
->Reporter</EM
->:
-      The person who filed the bug.
-	  </P
+>&#13;          <EM
+>Reporter:</EM
+>
+          The person who filed the bug.</P
 ></LI
 ><LI
 ><P
->&#13;      <EM
->CC list</EM
->:
-      A list of people who get mail when the bug changes.
-	  </P
+>&#13;          <EM
+>CC list:</EM
+>
+          A list of people who get mail when the bug changes.</P
 ></LI
 ><LI
 ><P
->&#13;      <EM
->Attachments</EM
->:
-      You can attach files (e.g. testcases or patches) to bugs. If there are
-      any attachments, they are listed in this section.
-	  </P
+>&#13;          <EM
+>Attachments:</EM
+>
+          You can attach files (e.g. testcases or patches) to bugs. If there
+          are any attachments, they are listed in this section.</P
 ></LI
 ><LI
 ><P
->&#13;      <EM
->Dependencies</EM
->:
-      If this bug cannot be fixed unless other bugs are fixed (depends on), or
-      this bug stops other bugs being fixed (blocks), their numbers are 
-      recorded here.
-	  </P
+>&#13;          <EM
+>*Dependencies:</EM
+>
+          If this bug cannot be fixed unless other bugs are fixed (depends
+          on), or this bug stops other bugs being fixed (blocks), their
+          numbers are recorded here.</P
 ></LI
 ><LI
 ><P
->&#13;      <EM
->Votes</EM
->:
-      Whether this bug has any votes.
-	  </P
+>&#13;          <EM
+>*Votes:</EM
+>
+          Whether this bug has any votes.</P
 ></LI
 ><LI
 ><P
->&#13;      <EM
->Additional Comments</EM
->:
-      You can add your two cents to the bug discussion here, if you have 
-      something worthwhile to say.
-	  </P
+>&#13;          <EM
+>Additional Comments:</EM
+>
+          You can add your two cents to the bug discussion here, if you have
+          something worthwhile to say.</P
 ></LI
 ></OL
 ></DIV
@@ -544,92 +425,98 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="query">2.3.3. Searching for Bugs</H2
+NAME="query">3.1.3. Searching for Bugs</H2
 ><P
->&#13;	The Bugzilla Search page is is the interface where you can
-	find any bug report, comment, or patch currently in the
-	Bugzilla system. You can play with it here:
-	<A
-HREF="http://landfill.tequilarista.org/bugzilla-tip/query.cgi"
+>The Bugzilla Search page is is the interface where you can find
+      any bug report, comment, or patch currently in the Bugzilla system. You
+      can play with it here: 
+      <A
+HREF="http://landfill.bugzilla.org/bugzilla-tip/query.cgi"
 TARGET="_top"
->&#13;	landfill.tequilarista.org/bugzilla-tip/query.cgi</A
->.
-  </P
+>&#13;      landfill.bugzilla.org/bugzilla-tip/query.cgi</A
+>
+
+      .</P
 ><P
->&#13;    The Search page has controls for selecting different possible values
-    for all of the fields in a bug, as described above. Once you've defined
-    a search, you can either run it, or save it as a Remembered Query, which
-    can optionally appear in the footer of your pages.
-  </P
+>The Search page has controls for selecting different possible
+      values for all of the fields in a bug, as described above. Once you've
+      defined a search, you can either run it, or save it as a Remembered
+      Query, which can optionally appear in the footer of your pages.</P
 ><P
->&#13;    Highly advanced querying is done using Boolean Charts, which have their
-    own <A
-HREF="http://landfill.tequilarista.org/bugzilla-tip/booleanchart.html"
+>Highly advanced querying is done using Boolean Charts, which have
+      their own 
+      <A
+HREF="http://landfill.bugzilla.org/bugzilla-tip/booleanchart.html"
 TARGET="_top"
->context-sensitive help</A
->.
-  </P
+>&#13;      context-sensitive help</A
+>
+
+      .</P
 ></DIV
 ><DIV
 CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="list">2.3.4. Bug Lists</H2
+NAME="list">3.1.4. Bug Lists</H2
 ><P
->&#13;        If you run a search, a list of matching bugs will be returned. 
-        The default search is to return all open bugs on the system -
-        don't try running this search on a Bugzilla installation with
-        a lot of bugs!
-      </P
+>If you run a search, a list of matching bugs will be returned.
+      The default search is to return all open bugs on the system - don't try
+      running this search on a Bugzilla installation with a lot of
+      bugs!</P
 ><P
->&#13;        The format of the list is configurable. For example, it can be 
-        sorted by clicking the column headings. Other useful features
-        can be accessed using the links at the bottom of the list:
-	<P
+>The format of the list is configurable. For example, it can be
+      sorted by clicking the column headings. Other useful features can be
+      accessed using the links at the bottom of the list: 
+      <P
 ></P
 ><TABLE
 BORDER="0"
 ><TBODY
 ><TR
 ><TD
-><EM
->Long Format</EM
->: this gives you a large page
-    with a non-editable summary of the fields of each bug.</TD
+>&#13;        <EM
+>Long Format:</EM
+>
+
+        this gives you a large page with a non-editable summary of the fields
+        of each bug.</TD
 ></TR
 ><TR
 ><TD
-><EM
->Change Columns</EM
->: change the bug 
-    attributes which appear in the list.</TD
+>&#13;        <EM
+>Change Columns:</EM
+>
+
+        change the bug attributes which appear in the list.</TD
 ></TR
 ><TR
 ><TD
-><EM
->Change several bugs at once</EM
->: If
-	    your account is sufficiently empowered, you can make the same
-      change to all the bugs in the list - for example, changing their
-      owner.</TD
+>&#13;        <EM
+>Change several bugs at once:</EM
+>
+
+        If your account is sufficiently empowered, you can make the same
+        change to all the bugs in the list - for example, changing their
+        owner.</TD
 ></TR
 ><TR
 ><TD
-><EM
->Send mail to bug owners</EM
->: Sends mail
-    to the owners of all bugs on the list.</TD
+>&#13;        <EM
+>Send mail to bug owners:</EM
+>
+
+        Sends mail to the owners of all bugs on the list.</TD
 ></TR
 ><TR
 ><TD
-><EM
->Edit this query</EM
->: If you didn't
-	    get exactly the results you were looking for, you can
-	    return to the Query page through this link and make small
-	    revisions to the query you just made so you get more
-	    accurate results.</TD
+>&#13;        <EM
+>Edit this query:</EM
+>
+
+        If you didn't get exactly the results you were looking for, you can
+        return to the Query page through this link and make small revisions
+        to the query you just made so you get more accurate results.</TD
 ></TR
 ></TBODY
 ></TABLE
@@ -643,80 +530,56 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="bugreports">2.3.5. Filing Bugs</H2
-><TABLE
-BORDER="0"
-WIDTH="100%"
-CELLSPACING="0"
-CELLPADDING="0"
-CLASS="EPIGRAPH"
-><TR
-><TD
-WIDTH="45%"
->&nbsp;</TD
-><TD
-WIDTH="45%"
-ALIGN="LEFT"
-VALIGN="TOP"
-><I
+NAME="bugreports">3.1.5. Filing Bugs</H2
 ><P
-><I
->And all this time, I thought we were taking bugs <EM
->out</EM
->...</I
-></P
-></I
-></TD
-></TR
-></TABLE
-><P
->&#13;	  Years of bug writing experience has been distilled for your reading
-    pleasure into the <A
-HREF="http://landfill.tequilarista.org/bugzilla-tip/bugwritinghelp.html"
+>Years of bug writing experience has been distilled for your
+      reading pleasure into the 
+      <A
+HREF="http://landfill.bugzilla.org/bugzilla-tip/bugwritinghelp.html"
 TARGET="_top"
->&#13;    Bug Writing Guidelines</A
->.  
-While some of the advice is Mozilla-specific, the basic principles of reporting Reproducible, Specific bugs, isolating the Product you are using, the Version of the Product, the Component which failed, the Hardware Platform, and Operating System you were using at the time of the failure go a long way toward ensuring accurate, responsible fixes for the bug that bit you.
-	</P
+>&#13;      Bug Writing Guidelines</A
+>. 
+      While some of the advice is Mozilla-specific, the basic principles of
+      reporting Reproducible, Specific bugs, isolating the Product you are
+      using, the Version of the Product, the Component which failed, the
+      Hardware Platform, and Operating System you were using at the time of
+      the failure go a long way toward ensuring accurate, responsible fixes
+      for the bug that bit you.</P
 ><P
->&#13;    The procedure for filing a test bug is as follows:
-  </P
+>The procedure for filing a test bug is as follows:</P
 ><P
 ></P
 ><OL
 TYPE="1"
 ><LI
 ><P
->&#13;	      Go to <A
-HREF="http://landfill.tequilarista.org/bugzilla-tip/"
+>Go to 
+          <A
+HREF="http://landfill.bugzilla.org/bugzilla-tip/"
 TARGET="_top"
->Landfill</A
-> 
-        in your browser and click  
-        <A
-HREF="http://landfill.tequilarista.org/bugzilla-tip/enter_bug.cgi"
+>&#13;          Landfill</A
+>
+          in your browser and click 
+          <A
+HREF="http://landfill.bugzilla.org/bugzilla-tip/enter_bug.cgi"
 TARGET="_top"
-> Enter a new bug report</A
+>&#13;          Enter a new bug report</A
 >.
-	    </P
+          </P
 ></LI
 ><LI
 ><P
->&#13;	      Select a product - any one will do.
-	    </P
+>Select a product - any one will do.</P
 ></LI
 ><LI
 ><P
->&#13;        Fill in the fields.
-	      Bugzilla should have made reasonable guesses, based upon
-	      your browser, for the "Platform" and "OS" drop-down
-	      boxes. If they are wrong, change them.
-	    </P
+>Fill in the fields. Bugzilla should have made reasonable
+          guesses, based upon your browser, for the "Platform" and "OS"
+          drop-down boxes. If they are wrong, change them.</P
 ></LI
 ><LI
 ><P
->&#13;	      Select "Commit" and send in your bug report. 
-	    </P
+>Select "Commit" and send in your bug report.</P
 ></LI
 ></OL
 ></DIV
@@ -737,7 +600,7 @@ WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
 ><A
-HREF="why.html"
+HREF="using.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -755,7 +618,7 @@ WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
 ><A
-HREF="init4me.html"
+HREF="hintsandtips.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -765,7 +628,7 @@ ACCESSKEY="N"
 WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
->Why Should We Use Bugzilla?</TD
+>Using Bugzilla</TD
 ><TD
 WIDTH="34%"
 ALIGN="center"
@@ -779,7 +642,7 @@ ACCESSKEY="U"
 WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
->Where can I find my user preferences?</TD
+>Hints and Tips</TD
 ></TR
 ></TABLE
 ></DIV

@@ -13,11 +13,11 @@ REL="UP"
 TITLE="Installation"
 HREF="installation.html"><LINK
 REL="PREVIOUS"
-TITLE="Installation General Notes"
-HREF="geninstall.html"><LINK
+TITLE="Optional Additional Configuration"
+HREF="extraconfig.html"><LINK
 REL="NEXT"
-TITLE="Administering Bugzilla"
-HREF="administration.html"></HEAD
+TITLE="Mac OS X Installation Notes"
+HREF="osx.html"></HEAD
 ><BODY
 CLASS="section"
 BGCOLOR="#FFFFFF"
@@ -45,7 +45,7 @@ WIDTH="10%"
 ALIGN="left"
 VALIGN="bottom"
 ><A
-HREF="geninstall.html"
+HREF="extraconfig.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -53,13 +53,13 @@ ACCESSKEY="P"
 WIDTH="80%"
 ALIGN="center"
 VALIGN="bottom"
->Chapter 3. Installation</TD
+>Chapter 4. Installation</TD
 ><TD
 WIDTH="10%"
 ALIGN="right"
 VALIGN="bottom"
 ><A
-HREF="administration.html"
+HREF="osx.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -73,33 +73,84 @@ CLASS="section"
 ><H1
 CLASS="section"
 ><A
-NAME="win32">3.6. Win32 Installation Notes</H1
+NAME="win32">4.3. Win32 Installation Notes</H1
 ><P
->This section covers installation on Microsoft Windows 95,
-      98, ME, NT, and 2000.  Bugzilla works fine on Win32 platforms,
-      but please remember that the Bugzilla team and the author of the
-      Guide neither endorse nor support installation on Microsoft
-      Windows.  Bugzilla installs and runs <EM
->best</EM
->
-      and <EM
->easiest</EM
-> on UNIX-like operating systems,
-      and that is the way it will stay for the foreseeable future. The
-      Bugzilla team is considering supporting Win32 for the 2.16
-      release and later.</P
+>This section covers installation on Microsoft Windows. 
+    Bugzilla has been made to work on Win32 platforms, but the Bugzilla team
+    wish to emphasise that The easiest way to install Bugzilla on
+    Intel-archiecture machines
+    is to install some variant of GNU/Linux, then follow the UNIX
+    installation instructions in this Guide. If you have any influence in the
+    platform choice for running this system, please choose GNU/Linux instead
+    of Microsoft Windows.</P
+><DIV
+CLASS="warning"
 ><P
->The easiest way to install Bugzilla on Intel-archiecture
-      machines is to install some variant of GNU/Linux, then follow
-      the UNIX installation instructions in this Guide.  If you have
-      any influence in the platform choice for running this system,
-      please choose GNU/Linux instead of Microsoft Windows.</P
+></P
+><TABLE
+CLASS="warning"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/warning.gif"
+HSPACE="5"
+ALT="Warning"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>After that warning, here's the situation for 2.16
+      and Windows. It doesn't work at all out of the box. 
+      You are almost certainly better off getting
+      the 2.17 version from CVS (after consultation with the Bugzilla Team to
+      make sure you are pulling on a stable day) because we'll be doing a load
+      of work to make the Win32 experience more pleasant than it is now.
+      </P
+></TD
+></TR
+></TABLE
+></DIV
+><P
+>&#13;    If you still want to try this, to have any hope of getting it to work,
+    you'll need to apply the 
+    <A
+HREF=""
+TARGET="_top"
+>mail patch</A
+> from 
+    <A
+HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=124174"
+TARGET="_top"
+>bug 124174</A
+>.
+    After that, you'll need to read the (outdated) installation 
+    instructions below, some (probably a lot better) <A
+HREF="http://bugzilla.mozilla.org/attachment.cgi?id=84430&action=view"
+TARGET="_top"
+>more
+     recent ones</A
+> kindly provided by Toms Baugis and Jean-Sebastien 
+     Guay, and also check the 
+     <A
+HREF="http://www.bugzilla.org/releases/2.16/docs/win32.html"
+TARGET="_top"
+>Bugzilla 2.16 Win32 update page
+     </A
+>. If we get time,
+     we'll write some better installation instructions for 2.16 and put
+     them up there. But no promises.
+    </P
 ><DIV
 CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="wininstall">3.6.1. Win32 Installation: Step-by-step</H2
+NAME="wininstall">4.3.1. Win32 Installation: Step-by-step</H2
 ><DIV
 CLASS="note"
 ><P
@@ -121,31 +172,33 @@ ALT="Note"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->&#13;	  You should be familiar with, and cross-reference, the rest
-	  of the  
-	  <A
+>You should be familiar with, and cross-reference, the rest of
+        the 
+        <A
 HREF="installation.html"
 >Bugzilla Installation</A
-> section while performing your
-	  Win32 installation.
-	</P
+>
+
+        section while performing your Win32 installation.</P
 ><P
->  Making Bugzilla work on Microsoft Windows is no
-	  picnic.  Support for Win32 has improved dramatically in the
-	  last few releases, but, if you choose to proceed, you should
-	  be a <EM
+>Making Bugzilla work on Microsoft Windows is no picnic. Support
+        for Win32 has improved dramatically in the last few releases, but, if
+        you choose to proceed, you should be a 
+        <EM
 >very</EM
-> skilled Windows Systems
-	  Administrator with strong troubleshooting abilities, a high
-	  tolerance for pain, and moderate perl skills. Bugzilla on NT
-	  requires hacking source code and implementing some advanced
-	  utilities.  What follows is the recommended installation
-	  procedure for Win32; additional suggestions are provided in
-	  <A
+>
+
+        skilled Windows Systems Administrator with strong troubleshooting
+        abilities, a high tolerance for pain, and moderate perl skills.
+        Bugzilla on NT requires hacking source code and implementing some
+        advanced utilities. What follows is the recommended installation
+        procedure for Win32; additional suggestions are provided in 
+        <A
 HREF="faq.html"
 >Appendix A</A
->.
-	</P
+>
+
+        .</P
 ></TD
 ></TR
 ></TABLE
@@ -156,27 +209,34 @@ CLASS="procedure"
 TYPE="1"
 ><LI
 ><P
->&#13;	    Install <A
+>Install 
+          <A
 HREF="http://www.apache.org/"
 TARGET="_top"
->Apache Web
-	      Server</A
-> for Windows, and copy the Bugzilla files
-	    somewhere Apache can serve them.  Please follow all the
-	    instructions referenced in <A
+>Apache Web Server</A
+>
+
+          for Windows, and copy the Bugzilla files somewhere Apache can serve
+          them. Please follow all the instructions referenced in 
+          <A
 HREF="installation.html"
 >Bugzilla Installation</A
 >
-	    regarding your Apache configuration, particularly
-	    instructions regarding the <SPAN
+
+          regarding your Apache configuration, particularly instructions
+          regarding the 
+          <SPAN
 CLASS="QUOTE"
 >"AddHandler"</SPAN
 >
-	    parameter and <SPAN
+
+          parameter and 
+          <SPAN
 CLASS="QUOTE"
 >"ExecCGI"</SPAN
->.
-	  </P
+>
+
+          .</P
 ><DIV
 CLASS="note"
 ><P
@@ -198,20 +258,20 @@ ALT="Note"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->&#13;	      You may also use Internet Information Server or Personal
-	      Web Server for this purpose.  However, setup is quite
-	      different.  If ActivePerl doesn't seem to handle your
-	      file associations correctly (for .cgi and .pl files),
-	      please consult <A
+>You may also use Internet Information Server or Personal
+            Web Server for this purpose. However, setup is quite different.
+            If ActivePerl doesn't seem to handle your file associations
+            correctly (for .cgi and .pl files), please consult 
+            <A
 HREF="faq.html"
 >Appendix A</A
->.
-	    </P
+>
+
+            .</P
 ><P
->&#13;	      If you are going to use IIS, if on Windows NT you must
-	      be updated to at least Service Pack 4.  Windows 2000
-	      ships with a sufficient version of IIS.
-	    </P
+>If you are going to use IIS, if on Windows NT you must be
+            updated to at least Service Pack 4. Windows 2000 ships with a
+            sufficient version of IIS.</P
 ></TD
 ></TR
 ></TABLE
@@ -219,46 +279,54 @@ HREF="faq.html"
 ></LI
 ><LI
 ><P
->&#13;	    Install <A
+>Install 
+          <A
 HREF="http://www.activestate.com/"
 TARGET="_top"
 >ActivePerl</A
-> for Windows.  Check <A
+>
+
+          for Windows. Check 
+          <A
 HREF="http://aspn.activestate.com/ASPN/Downloads/ActivePerl/"
 TARGET="_top"
->http://aspn.activestate.com/ASPN/Downloads/ActivePerl</A
-> for a current compiled binary.
-	  </P
+>&#13;          http://aspn.activestate.com/ASPN/Downloads/ActivePerl</A
+>
+
+          for a current compiled binary.</P
 ><P
->&#13;	    Please also check the following links to fully understand the status
-	    of ActivePerl on Win32:
-	    <A
+>Please also check the following links to fully understand the
+          status of ActivePerl on Win32: 
+          <A
 HREF="http://language.perl.com/newdocs/pod/perlport.html"
 TARGET="_top"
->&#13;	      Perl Porting</A
->, and
-	    <A
+>&#13;          Perl Porting</A
+>
+
+          , and 
+          <A
 HREF="http://ftp.univie.ac.at/packages/perl/ports/nt/FAQ/perlwin32faq5.html"
 TARGET="_top"
->&#13;	      Perl on Win32 FAQ</A
+>&#13;          Perl on Win32 FAQ</A
 >
-	  </P
+          </P
 ></LI
 ><LI
 ><P
->&#13;            Use ppm from your perl\bin directory to install the following
-            packs:  DBI, DBD-Mysql, TimeDate, Chart, Date-Calc, Date-Manip,
-            GD, AppConfig, and Template. You may need to extract them from
-            .zip format using Winzip or other unzip program first. Most of
-            these additional ppm modules can be downloaded from ActiveState,
-            but AppConfig and Template should be obtained from OpenInteract
-            using <A
+>Use ppm from your perl\bin directory to install the following
+          packs: DBI, DBD-Mysql, TimeDate, Chart, Date-Calc, Date-Manip, GD,
+          AppConfig, and Template. You may need to extract them from .zip
+          format using Winzip or other unzip program first. Most of these
+          additional ppm modules can be downloaded from ActiveState, but
+          AppConfig and Template should be obtained from OpenInteract using 
+          <A
 HREF="http://openinteract.sourceforge.net/"
 TARGET="_top"
->the instructions on
-            the Template Toolkit web site</A
->.
-          </P
+>the
+          instructions on the Template Toolkit web site</A
+>
+
+          .</P
 ><DIV
 CLASS="note"
 ><P
@@ -280,116 +348,129 @@ ALT="Note"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->&#13;	      You can find a list of modules at
-	      <A
+>You can find a list of modules at 
+            <A
 HREF="http://www.activestate.com/PPMPackages/zips/5xx-builds-only"
 TARGET="_top"
->&#13;		http://www.activestate.com/PPMPackages/zips/5xx-builds-only/</A
+>&#13;            http://www.activestate.com/PPMPackages/zips/5xx-builds-only/</A
 >
-		or <A
+
+            or 
+            <A
 HREF="http://www.activestate.com/PPMPackages/5.6plus"
 TARGET="_top"
->http://www.activestate.com/PPMPackages/5.6plus</A
+>&#13;            http://www.activestate.com/PPMPackages/5.6plus</A
 >
-	    </P
+            </P
 ></TD
 ></TR
 ></TABLE
 ></DIV
 ><P
->&#13;	    The syntax for ppm is:
-	    <TT
+>The syntax for ppm is: 
+          <TT
 CLASS="computeroutput"
->&#13;	      <TT
+>&#13;            <TT
 CLASS="prompt"
->C:&#62; </TT
-><B
+>C:&#62;</TT
+>
+
+            <B
 CLASS="command"
 >ppm &#60;modulename&#62;</B
 >
-	    </TT
+          </TT
 >
-	  </P
+          </P
 ><DIV
 CLASS="example"
 ><A
-NAME="AEN985"><P
+NAME="AEN989"><P
 ><B
->Example 3-3. Installing ActivePerl ppd Modules on Microsoft Windows</B
+>Example 4-1. Installing ActivePerl ppd Modules on Microsoft
+            Windows</B
 ></P
 ><P
-><TT
+>&#13;              <TT
 CLASS="prompt"
 >C:&#62;</TT
-><B
+>
+
+              <B
 CLASS="command"
->ppm
-		<TT
+>ppm 
+              <TT
 CLASS="option"
 >DBD-Mysql</TT
-></B
-></P
+>
+              </B
+>
+            </P
 ><P
 >Watch your capitalization!</P
 ></DIV
 ><P
->&#13;            ActiveState's 5.6Plus directory also contains an AppConfig ppm, so
-            you might see the following error when trying to install the
-            version at OpenInteract:
-          </P
+>ActiveState's 5.6Plus directory also contains an AppConfig
+          ppm, so you might see the following error when trying to install
+          the version at OpenInteract:</P
 ><P
 >&#13;            <TT
 CLASS="computeroutput"
->&#13;              Error installing package 'AppConfig': Read a PPD for
-              'AppConfig', but it is not intended for this build of Perl
-              (MSWin32-x86-multi-thread)
-            </TT
+>Error installing package 'AppConfig': Read a PPD
+            for 'AppConfig', but it is not intended for this build of Perl
+            (MSWin32-x86-multi-thread)</TT
 >
-	  </P
+          </P
 ><P
->&#13;            If so, download both <A
+>If so, download both 
+          <A
 HREF="http://openinteract.sourceforge.net/ppmpackages/AppConfig.tar.gz"
 TARGET="_top"
->the
-            tarball</A
-> and <A
+>&#13;          the tarball</A
+>
+
+          and 
+          <A
 HREF="http://openinteract.sourceforge.net/ppmpackages/AppConfig.ppd"
 TARGET="_top"
->the
-            ppd</A
-> directly from OpenInteract, then run ppm from within
-            the same directory  to which you downloaded those files and
-            install the package by referencing  the ppd file explicitly via in
-            the install command, f.e.: 
-            <DIV
+>&#13;          the ppd</A
+>
+
+          directly from OpenInteract, then run ppm from within the same
+          directory to which you downloaded those files and install the
+          package by referencing the ppd file explicitly via in the install
+          command, f.e.: 
+          <DIV
 CLASS="example"
 ><A
-NAME="AEN998"><P
+NAME="AEN1002"><P
 ><B
->Example 3-4. Installing OpenInteract ppd Modules manually on Microsoft
-              Windows</B
+>Example 4-2. Installing OpenInteract ppd Modules manually on Microsoft
+            Windows</B
 ></P
 ><P
->&#13;                <TT
+>&#13;              <TT
 CLASS="computeroutput"
-><B
+>&#13;                <B
 CLASS="command"
->install
+>install 
                 <TT
 CLASS="filename"
 >C:\AppConfig.ppd</TT
-></B
-></TT
 >
-              </P
+                </B
+>
+              </TT
+>
+            </P
 ></DIV
 >
           </P
 ></LI
 ><LI
 ><P
->&#13;	    Install MySQL for NT.
-	    <DIV
+>Install MySQL for NT. 
+          <DIV
 CLASS="note"
 ><P
 ></P
@@ -410,193 +491,211 @@ ALT="Note"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->&#13;		You can download MySQL for Windows NT from <A
+>You can download MySQL for Windows NT from 
+            <A
 HREF="http://www.mysql.com/"
 TARGET="_top"
 >MySQL.com</A
->.  Some find it helpful to use the WinMySqlAdmin utility, included with the download, to set up the database.
-	      </P
+>
+
+            . Some find it helpful to use the WinMySqlAdmin utility, included
+            with the download, to set up the database.</P
 ></TD
 ></TR
 ></TABLE
 ></DIV
 >
-	  </P
+          </P
 ></LI
 ><LI
 ><P
->&#13;	    Setup MySQL
-	  </P
+>Setup MySQL</P
 ><OL
 CLASS="SUBSTEPS"
 TYPE="a"
 ><LI
 ><P
->&#13;		<TT
+>&#13;                <TT
 CLASS="computeroutput"
->&#13;		  <TT
+>&#13;                  <TT
 CLASS="prompt"
->C:&#62; </TT
+>C:&#62;</TT
 >
-		  <B
+
+                  <B
 CLASS="command"
 >C:\mysql\bin\mysql -u root mysql</B
 >
-		</TT
+                </TT
 >
-	      </P
+              </P
 ></LI
 ><LI
 ><P
->&#13;		<TT
+>&#13;                <TT
 CLASS="computeroutput"
->&#13;		  <TT
+>&#13;                  <TT
 CLASS="prompt"
 >mysql&#62;</TT
 >
-		  <B
+
+                  <B
 CLASS="command"
->DELETE FROM user WHERE Host='localhost' AND User='';</B
+>DELETE FROM user WHERE Host='localhost' AND
+                  User='';</B
 >
-		</TT
+                </TT
 >
-	      </P
+              </P
 ></LI
 ><LI
 ><P
->&#13;		<TT
+>&#13;                <TT
 CLASS="computeroutput"
->&#13;		  <TT
+>&#13;                  <TT
 CLASS="prompt"
 >mysql&#62;</TT
 >
-		  <B
+
+                  <B
 CLASS="command"
 >UPDATE user SET Password=PASSWORD ('new_password')
-		    WHERE user='root';</B
+                  WHERE user='root';</B
 >
-		</TT
+                </TT
 >
-	      </P
+              </P
 ><P
-><SPAN
+>&#13;              <SPAN
 CLASS="QUOTE"
 >"new_password"</SPAN
->, above, indicates
-		whatever password you wish to use for your
-		<SPAN
+>
+
+              , above, indicates whatever password you wish to use for your 
+              <SPAN
 CLASS="QUOTE"
 >"root"</SPAN
-> user.</P
+>
+
+              user.</P
 ></LI
 ><LI
 ><A
 NAME="ntbugs-password"
 ></A
 ><P
->&#13;		<TT
+>&#13;                <TT
 CLASS="computeroutput"
->&#13;		  <TT
+>&#13;                  <TT
 CLASS="prompt"
 >mysql&#62;</TT
 >
-		  <B
+
+                  <B
 CLASS="command"
->GRANT SELECT, INSERT, UPDATE, DELETE,
-		    INDEX, ALTER, CREATE, DROP, REFERENCES
-		    ON bugs.* to bugs@localhost
-		    IDENTIFIED BY 'bugs_password';</B
+>GRANT SELECT, INSERT, UPDATE, DELETE, INDEX,
+                  ALTER, CREATE, DROP, REFERENCES ON bugs.* to bugs@localhost
+                  IDENTIFIED BY 'bugs_password';</B
 >
-		</TT
+                </TT
 >
-	      </P
+              </P
 ><P
-><SPAN
+>&#13;              <SPAN
 CLASS="QUOTE"
 >"bugs_password"</SPAN
->, above, indicates
-		whatever password you wish to use for your
-		<SPAN
+>
+
+              , above, indicates whatever password you wish to use for your 
+              <SPAN
 CLASS="QUOTE"
 >"bugs"</SPAN
-> user.</P
+>
+
+              user.</P
 ></LI
 ><LI
 ><P
->&#13;		<TT
+>&#13;                <TT
 CLASS="computeroutput"
->&#13;		  <TT
+>&#13;                  <TT
 CLASS="prompt"
 >mysql&#62;</TT
 >
-		  <B
+
+                  <B
 CLASS="command"
 >FLUSH PRIVILEGES;</B
 >
-		</TT
+                </TT
 >
-	      </P
+              </P
 ></LI
 ><LI
 ><P
->&#13;		<TT
+>&#13;                <TT
 CLASS="computeroutput"
->&#13;		  <TT
+>&#13;                  <TT
 CLASS="prompt"
 >mysql&#62;</TT
 >
-		  <B
+
+                  <B
 CLASS="command"
 >create database bugs;</B
 >
-		</TT
+                </TT
 >
-	      </P
+              </P
 ></LI
 ><LI
 ><P
->&#13;		<TT
+>&#13;                <TT
 CLASS="computeroutput"
->&#13;		  <TT
+>&#13;                  <TT
 CLASS="prompt"
 >mysql&#62;</TT
 >
-		  <B
+
+                  <B
 CLASS="command"
 >exit;</B
 >
-		</TT
+                </TT
 >
-	      </P
+              </P
 ></LI
 ><LI
 ><P
->&#13;		<TT
+>&#13;                <TT
 CLASS="computeroutput"
->&#13;		  <TT
+>&#13;                  <TT
 CLASS="prompt"
 >C:&#62;</TT
 >
-		  <B
+
+                  <B
 CLASS="command"
->C:\mysql\bin\mysqladmin -u root -p reload</B
+>C:\mysql\bin\mysqladmin -u root -p
+                  reload</B
 >
-		</TT
+                </TT
 >
-	      </P
+              </P
 ></LI
 ></OL
 ></LI
 ><LI
 ><P
->&#13;	    Edit <TT
+>Edit 
+          <TT
 CLASS="filename"
 >checksetup.pl</TT
-> in your Bugzilla directory.  Change
-	    this line:
-	  </P
+>
+
+          in your Bugzilla directory. Change this line:</P
 ><P
->&#13;	    <TABLE
+>&#13;            <TABLE
 BORDER="0"
 BGCOLOR="#E0E0E0"
 WIDTH="100%"
@@ -606,19 +705,18 @@ WIDTH="100%"
 COLOR="#000000"
 ><PRE
 CLASS="programlisting"
->&#13;my $webservergid = getgrnam($my_webservergroup);
-	    </PRE
+>my $webservergid =
+            getgrnam($my_webservergroup);</PRE
 ></FONT
 ></TD
 ></TR
 ></TABLE
 >
-	  </P
+          </P
 ><P
->&#13;	    to
-	  </P
+>to</P
 ><P
->&#13;	    <TABLE
+>&#13;          <TABLE
 BORDER="0"
 BGCOLOR="#E0E0E0"
 WIDTH="100%"
@@ -628,15 +726,16 @@ WIDTH="100%"
 COLOR="#000000"
 ><PRE
 CLASS="programlisting"
->&#13;my $webservergid = $my_webservergroup;
-	    </PRE
+>my $webservergid =
+          $my_webservergroup;</PRE
 ></FONT
 ></TD
 ></TR
 ></TABLE
 >
-or the name of the group you wish to own the files explicitly:
-	    <TABLE
+
+          or the name of the group you wish to own the files explicitly: 
+          <TABLE
 BORDER="0"
 BGCOLOR="#E0E0E0"
 WIDTH="100%"
@@ -646,46 +745,64 @@ WIDTH="100%"
 COLOR="#000000"
 ><PRE
 CLASS="programlisting"
->&#13;my $webservergid = 'Administrators'
-	    </PRE
+>my $webservergid =
+          'Administrators'</PRE
 ></FONT
 ></TD
 ></TR
 ></TABLE
 >
-	  </P
+          </P
 ></LI
 ><LI
 ><P
->&#13;	    Run <TT
+>Run 
+          <TT
 CLASS="filename"
 >checksetup.pl</TT
-> from the Bugzilla directory.
-	  </P
+>
+
+          from the Bugzilla directory.</P
 ></LI
 ><LI
 ><P
->Edit <TT
+>Edit 
+          <TT
 CLASS="filename"
 >localconfig</TT
-> to suit your
-	    requirements.  Set <TT
+>
+
+          to suit your requirements. Set 
+          <TT
 CLASS="varname"
 >$db_pass</TT
-> to your
-	    <SPAN
+>
+
+          to your 
+          <SPAN
 CLASS="QUOTE"
 >"bugs_password"</SPAN
-> from <A
+>
+
+          from 
+          <A
 HREF="win32.html#ntbugs-password"
 >step 5.d</A
->, and <TT
+>
+
+          , and 
+          <TT
 CLASS="varname"
 >$webservergroup</TT
-> to <SPAN
+>
+
+          to 
+          <SPAN
 CLASS="QUOTE"
 >"8"</SPAN
->.</P
+>
+
+          .</P
 ><DIV
 CLASS="note"
 ><P
@@ -707,15 +824,19 @@ ALT="Note"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->Not sure on the <SPAN
+>Not sure on the 
+            <SPAN
 CLASS="QUOTE"
 >"8"</SPAN
-> for
-	      <TT
+>
+
+            for 
+            <TT
 CLASS="varname"
 >$webservergroup</TT
-> above.  If it's
-	      wrong, please send corrections.</P
+>
+
+            above. If it's wrong, please send corrections.</P
 ></TD
 ></TR
 ></TABLE
@@ -723,21 +844,24 @@ CLASS="varname"
 ></LI
 ><LI
 ><P
->&#13;	    Edit <TT
+>Edit 
+          <TT
 CLASS="filename"
 >defparams.pl</TT
-> to suit your
-	    requirements.  Particularly, set
-	    <TT
+>
+
+          to suit your requirements. Particularly, set 
+          <TT
 CLASS="varname"
 >DefParam("maintainer")</TT
-> and
-	    <TT
-CLASS="varname"
->DefParam("urlbase") to match your
-	      install.</TT
 >
-	  </P
+
+          and 
+          <TT
+CLASS="varname"
+>DefParam("urlbase") to match your install.</TT
+>
+          </P
 ><DIV
 CLASS="note"
 ><P
@@ -760,9 +884,9 @@ ALIGN="LEFT"
 VALIGN="TOP"
 ><P
 >This is yet another step I'm not sure of, since the
-	      maintainer of this documentation does not maintain
-	      Bugzilla on NT.  If you can confirm or deny that this
-	      step is required, please let me know.</P
+            maintainer of this documentation does not maintain Bugzilla on
+            NT. If you can confirm or deny that this step is required, please
+            let me know.</P
 ></TD
 ></TR
 ></TABLE
@@ -790,30 +914,38 @@ ALT="Note"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->&#13;	      There are several alternatives to Sendmail that will work on Win32.
-	      The one mentioned here is a <EM
+>There are several alternatives to Sendmail that will work
+            on Win32. The one mentioned here is a 
+            <EM
 >suggestion</EM
->, not
-	      a requirement.  Some other mail packages that can work include
-	      <A
+>
+
+            , not a requirement. Some other mail packages that can work
+            include 
+            <A
 HREF="http://www.blat.net/"
 TARGET="_top"
 >BLAT</A
->,
-	      <A
+>
+
+            , 
+            <A
 HREF="http://www.geocel.com/windmail/"
 TARGET="_top"
 >Windmail</A
->,
-	      <A
+>
+
+            , 
+            <A
 HREF="http://www.dynamicstate.com/"
 TARGET="_top"
->Mercury Sendmail</A
->,
-	      and the CPAN Net::SMTP Perl module (available in .ppm).
-	      Every option requires some hacking of the Perl scripts for Bugzilla
-	      to make it work.  The option here simply requires the least.
-	    </P
+>Mercury
+            Sendmail</A
+>
+
+            , and the CPAN Net::SMTP Perl module (available in .ppm). Every
+            option requires some hacking of the Perl scripts for Bugzilla to
+            make it work. The option here simply requires the least.</P
 ></TD
 ></TR
 ></TABLE
@@ -824,12 +956,16 @@ CLASS="procedure"
 TYPE="1"
 ><LI
 ><P
->&#13;		Download NTsendmail, available from<A
+>Download NTsendmail, available from
+              <A
 HREF="http://www.ntsendmail.com/"
 TARGET="_top"
-> www.ntsendmail.com</A
->. You must have a "real" mail server which allows you to relay off it in your $ENV{"NTsendmail"} (which you should probably place in globals.pl)
-	      </P
+>&#13;              www.ntsendmail.com</A
+>
+
+              . You must have a "real" mail server which allows you to relay
+              off it in your $ENV{"NTsendmail"} (which you should probably
+              place in globals.pl)</P
 ></LI
 ><LI
 ><P
@@ -848,12 +984,11 @@ WIDTH="100%"
 COLOR="#000000"
 ><PRE
 CLASS="programlisting"
->&#13;# these settings configure the NTsendmail process
-use NTsendmail;
-$ENV{"NTsendmail"}="your.smtpserver.box";
-$ENV{"NTsendmail_debug"}=1;
-$ENV{"NTsendmail_max_tries"}=5;
-	      </PRE
+># these settings configure the NTsendmail
+              process use NTsendmail;
+              $ENV{"NTsendmail"}="your.smtpserver.box";
+              $ENV{"NTsendmail_debug"}=1;
+              $ENV{"NTsendmail_max_tries"}=5;</PRE
 ></FONT
 ></TD
 ></TR
@@ -879,28 +1014,34 @@ ALT="Note"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->&#13;		  Some mention to also edit
-		  <TT
+>Some mention to also edit 
+                <TT
 CLASS="varname"
 >$db_pass</TT
-> in
-		  <TT
+>
+
+                in 
+                <TT
 CLASS="filename"
 >globals.pl</TT
-> to be your
-		  <SPAN
+>
+
+                to be your 
+                <SPAN
 CLASS="QUOTE"
 >"bugs_password"</SPAN
->.  Although this may get
-		  you around some problem authenticating to your
-		  database, since globals.pl is not normally
-		  restricted by <TT
+>
+
+                . Although this may get you around some problem
+                authenticating to your database, since globals.pl is not
+                normally restricted by 
+                <TT
 CLASS="filename"
 >.htaccess</TT
->, your
-		  database password is exposed to whoever uses your
-		  web server.
-		</P
+>
+
+                , your database password is exposed to whoever uses your web
+                server.</P
 ></TD
 ></TR
 ></TABLE
@@ -908,16 +1049,19 @@ CLASS="filename"
 ></LI
 ><LI
 ><P
->&#13;		Find and comment out all occurences of
-		<SPAN
+>Find and comment out all occurences of 
+              <SPAN
 CLASS="QUOTE"
->"<B
+>"
+                <B
 CLASS="command"
 >open(SENDMAIL</B
->"</SPAN
-> in
-		your Bugzilla directory.  Then replace them with:
-		<TABLE
+>
+              "</SPAN
+>
+
+              in your Bugzilla directory. Then replace them with: 
+              <TABLE
 BORDER="0"
 BGCOLOR="#E0E0E0"
 WIDTH="100%"
@@ -927,19 +1071,16 @@ WIDTH="100%"
 COLOR="#000000"
 ><PRE
 CLASS="programlisting"
->&#13;# new sendmail functionality
-my $mail=new NTsendmail;
-my $from="bugzilla\@your.machine.name.tld";
-my $to=$login;
-my $subject=$urlbase;
-$mail-&#62;send($from,$to,$subject,$msg);
-		</PRE
+># new sendmail functionality my $mail=new
+              NTsendmail; my $from="bugzilla\@your.machine.name.tld"; my
+              $to=$login; my $subject=$urlbase;
+              $mail-&#62;send($from,$to,$subject,$msg);</PRE
 ></FONT
 ></TD
 ></TR
 ></TABLE
 >
-	      </P
+              </P
 ><DIV
 CLASS="note"
 ><P
@@ -961,13 +1102,14 @@ ALT="Note"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->&#13;		  Some have found success using the commercial product, 
-		  <SPAN
+>Some have found success using the commercial product, 
+                <SPAN
 CLASS="productname"
 >Windmail</SPAN
->.
-		  You could try replacing your sendmail calls with:
-		  <TABLE
+>
+
+                . You could try replacing your sendmail calls with: 
+                <TABLE
 BORDER="0"
 BGCOLOR="#E0E0E0"
 WIDTH="100%"
@@ -977,15 +1119,16 @@ WIDTH="100%"
 COLOR="#000000"
 ><PRE
 CLASS="programlisting"
->&#13;open SENDMAIL, "|\"C:/General/Web/tools/Windmail 4.0 Beta/windmail\" -t &#62; mail.log";
-		  </PRE
+>open SENDMAIL,
+                "|\"C:/General/Web/tools/Windmail 4.0 Beta/windmail\" -t &#62;
+                mail.log";</PRE
 ></FONT
 ></TD
 ></TR
 ></TABLE
 >
-		or something to that effect.
-		</P
+
+                or something to that effect.</P
 ></TD
 ></TR
 ></TABLE
@@ -996,24 +1139,31 @@ CLASS="programlisting"
 ></LI
 ><LI
 ><P
->&#13;	    Change all references in all files from
-	    <TT
+>Change all references in all files from 
+          <TT
 CLASS="filename"
 >processmail</TT
-> to
-	    <TT
+>
+
+          to 
+          <TT
 CLASS="filename"
 >processmail.pl</TT
->, and
-	    rename <TT
+>
+
+          , and rename 
+          <TT
 CLASS="filename"
 >processmail</TT
-> to
-	    <TT
+>
+
+          to 
+          <TT
 CLASS="filename"
 >processmail.pl</TT
->.
-	  </P
+>
+
+          .</P
 ><DIV
 CLASS="note"
 ><P
@@ -1035,10 +1185,9 @@ ALT="Note"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->&#13;	      Many think this may be a change we want to make for
-	      main-tree Bugzilla.  It's painless for the UNIX folks,
-	      and will make the Win32 people happier.
-	    </P
+>Many think this may be a change we want to make for
+            main-tree Bugzilla. It's painless for the UNIX folks, and will
+            make the Win32 people happier.</P
 ></TD
 ></TR
 ></TABLE
@@ -1064,8 +1213,10 @@ ALT="Note"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->&#13;	      Some people have suggested using the Net::SMTP Perl module instead of NTsendmail or the other options listed here.  You can change processmail.pl to make this work.
-	    <TABLE
+>Some people have suggested using the Net::SMTP Perl module
+            instead of NTsendmail or the other options listed here. You can
+            change processmail.pl to make this work. 
+            <TABLE
 BORDER="0"
 BGCOLOR="#E0E0E0"
 WIDTH="100%"
@@ -1088,14 +1239,15 @@ $logstr = "$logstr; mail sent to $tolist $cclist";
 }
 
 
-</PRE
+            </PRE
 ></FONT
 ></TD
 ></TR
 ></TABLE
 >
-here is a test mail program for Net::SMTP:
-<TABLE
+
+            here is a test mail program for Net::SMTP: 
+            <TABLE
 BORDER="0"
 BGCOLOR="#E0E0E0"
 WIDTH="100%"
@@ -1122,13 +1274,13 @@ recipient's address
 exit;
 
 
-</PRE
+            </PRE
 ></FONT
 ></TD
 ></TR
 ></TABLE
 >
-	    </P
+            </P
 ></TD
 ></TR
 ></TABLE
@@ -1156,50 +1308,58 @@ ALT="Note"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->&#13;	      This step is optional if you are using IIS or another
-	      web server which only decides on an interpreter based
-	      upon the file extension (.pl), rather than the
-	      <SPAN
+>This step is optional if you are using IIS or another web
+            server which only decides on an interpreter based upon the file
+            extension (.pl), rather than the 
+            <SPAN
 CLASS="QUOTE"
 >"shebang"</SPAN
-> line (#/usr/bonsaitools/bin/perl)
-	    </P
+>
+
+            line (#/usr/bonsaitools/bin/perl)</P
 ></TD
 ></TR
 ></TABLE
 ></DIV
 ><P
->&#13;	    Modify the path to perl on the first line (#!) of all
-	    files to point to your Perl installation, and add
-	    <SPAN
+>Modify the path to perl on the first line (#!) of all files
+          to point to your Perl installation, and add 
+          <SPAN
 CLASS="QUOTE"
 >"perl"</SPAN
-> to the beginning of all Perl system
-	    calls that use a perl script as an argument.  This may
-	    take you a while. There is a <SPAN
+>
+
+          to the beginning of all Perl system calls that use a perl script as
+          an argument. This may take you a while. There is a 
+          <SPAN
 CLASS="QUOTE"
 >"setperl.csh"</SPAN
 >
-	    utility to speed part of this procedure, available in the
-	    <A
+
+          utility to speed part of this procedure, available in the 
+          <A
 HREF="patches.html"
 >Useful Patches and Utilities for Bugzilla</A
-> section of The Bugzilla Guide.
-	    However, it requires the Cygwin GNU-compatible environment
-	    for Win32 be set up in order to work.  See <A
+>
+
+          section of The Bugzilla Guide. However, it requires the Cygwin
+          GNU-compatible environment for Win32 be set up in order to work.
+          See 
+          <A
 HREF="http://www.cygwin.com/"
 TARGET="_top"
 >http://www.cygwin.com/</A
-> for details on obtaining Cygwin.
-	  </P
+>
+
+          for details on obtaining Cygwin.</P
 ></LI
 ><LI
 ><P
->&#13;	    Modify the invocation of all system() calls in all perl
-	    scripts in your Bugzilla directory.  You should specify the
-	    full path to perl for each system() call.  For instance, change
-	    this line in processmail: 
-	    <TABLE
+>Modify the invocation of all system() calls in all perl
+          scripts in your Bugzilla directory. You should specify the full
+          path to perl for each system() call. For instance, change this line
+          in processmail: 
+          <TABLE
 BORDER="0"
 BGCOLOR="#E0E0E0"
 WIDTH="100%"
@@ -1209,50 +1369,61 @@ WIDTH="100%"
 COLOR="#000000"
 ><PRE
 CLASS="programlisting"
-> 
+>&#13; 
 system ("./processmail",@ARGLIST); 
-	    &#60;/programlisting&#62; to
-	    &#60;programlisting&#62; 
+        &#60;/programlisting&#62; to
+        &#60;programlisting&#62; 
 system ("C:\\perl\\bin\\perl", "processmail", @ARGLIST);
-	    </PRE
+
+          </PRE
 ></FONT
 ></TD
 ></TR
 ></TABLE
 >
-	  </P
+          </P
 ></LI
 ><LI
 ><P
->&#13;            Add <TT
+>Add 
+          <TT
 CLASS="function"
 >binmode()</TT
-> calls so attachments
-	    will work (<A
+>
+
+          calls so attachments will work (
+          <A
 HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=62000"
 TARGET="_top"
->bug 62000</A
->).
-          </P
+>bug
+          62000</A
+>
+
+          ).</P
 ><P
->&#13;            Because Microsoft Windows based systems handle binary
-	    files different than Unix based systems, you need to add
-	    the following lines to
-	    <TT
+>Because Microsoft Windows based systems handle binary files
+          different than Unix based systems, you need to add the following
+          lines to 
+          <TT
 CLASS="filename"
 >createattachment.cgi</TT
->  and
-	    <TT
+>
+
+          and 
+          <TT
 CLASS="filename"
 >showattachment.cgi</TT
-> before the
-	    <TT
+>
+
+          before the 
+          <TT
 CLASS="function"
 >require 'CGI.pl';</TT
-> line.
-</P
+>
+
+          line.</P
 ><P
->&#13;<TABLE
+>&#13;            <TABLE
 BORDER="0"
 BGCOLOR="#E0E0E0"
 WIDTH="100%"
@@ -1266,7 +1437,7 @@ CLASS="programlisting"
 binmode(STDIN);
 binmode(STDOUT);
 
-</PRE
+            </PRE
 ></FONT
 ></TD
 ></TR
@@ -1294,28 +1465,35 @@ ALT="Note"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->&#13;              According to <A
+>According to 
+            <A
 HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=62000"
 TARGET="_top"
->bug 62000</A
->,
-              the perl documentation says that you should always use
-              <TT
+>&#13;            bug 62000</A
+>
+
+            , the perl documentation says that you should always use 
+            <TT
 CLASS="function"
 >binmode()</TT
-> when dealing with binary
-              files, but never when dealing with text files.  That seems
-              to suggest that rather than arbitrarily putting
-              <TT
+>
+
+            when dealing with binary files, but never when dealing with text
+            files. That seems to suggest that rather than arbitrarily putting
+            
+            <TT
 CLASS="function"
 >binmode()</TT
-> at the beginning of the
-              attachment files, there should be logic to determine if
-              <TT
+>
+
+            at the beginning of the attachment files, there should be logic
+            to determine if 
+            <TT
 CLASS="function"
 >binmode()</TT
-> is needed or not.
-            </P
+>
+
+            is needed or not.</P
 ></TD
 ></TR
 ></TABLE
@@ -1344,13 +1522,12 @@ ALT="Tip"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->&#13;	  If you are using IIS or Personal Web Server, you must add cgi
-	  relationships to Properties -&#62; Home directory (tab) -&#62;
-	  Application Settings (section) -&#62; Configuration (button),
-	  such as: 
-	</P
+>If you are using IIS or Personal Web Server, you must add cgi
+        relationships to Properties -&#62; Home directory (tab) -&#62;
+        Application Settings (section) -&#62; Configuration (button), such
+        as:</P
 ><P
->&#13;	  <TABLE
+>&#13;        <TABLE
 BORDER="0"
 BGCOLOR="#E0E0E0"
 WIDTH="100%"
@@ -1360,19 +1537,16 @@ WIDTH="100%"
 COLOR="#000000"
 ><PRE
 CLASS="programlisting"
-> 
-.cgi to: &#60;perl install directory&#62;\perl.exe %s %s
-.pl to: &#60;perl install directory&#62;\perl.exe %s %s
-GET,HEAD,POST
-	  </PRE
+>.cgi to: &#60;perl install directory&#62;\perl.exe %s
+        %s .pl to: &#60;perl install directory&#62;\perl.exe %s %s
+        GET,HEAD,POST</PRE
 ></FONT
 ></TD
 ></TR
 ></TABLE
-> 
-	  Change the path to Perl to match your
-	  install, of course.
-	</P
+>
+
+        Change the path to Perl to match your install, of course.</P
 ></TD
 ></TR
 ></TABLE
@@ -1383,7 +1557,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="addlwintips">3.6.2. Additional Windows Tips</H2
+NAME="addlwintips">4.3.2. Additional Windows Tips</H2
 ><DIV
 CLASS="tip"
 ><P
@@ -1405,25 +1579,25 @@ ALT="Tip"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->&#13;	  From Andrew Pearson:
-	  <A
-NAME="AEN1168"><BLOCKQUOTE
+>From Andrew Pearson: 
+        <A
+NAME="AEN1172"><BLOCKQUOTE
 CLASS="BLOCKQUOTE"
 ><P
->&#13;	      You can make Bugzilla work with Personal Web Server for
-	      Windows 98 and higher, as well as for IIS 4.0.
-	      Microsoft has information available at <A
-HREF="            http://support.microsoft.com/support/kb/articles/Q231/9/98.ASP"
+>You can make Bugzilla work with Personal Web Server for
+          Windows 98 and higher, as well as for IIS 4.0. Microsoft has
+          information available at 
+          <A
+HREF=" http://support.microsoft.com/support/kb/articles/Q231/9/98.ASP"
 TARGET="_top"
-> http://support.microsoft.com/support/kb/articles/Q231/9/98.ASP</A
+>&#13;          http://support.microsoft.com/support/kb/articles/Q231/9/98.ASP</A
 >
-	    </P
+          </P
 ><P
->&#13;	      Basically you need to add two String Keys in the
-	      registry at the following location:
-	    </P
+>Basically you need to add two String Keys in the registry at
+          the following location:</P
 ><P
->&#13;	      <TABLE
+>&#13;            <TABLE
 BORDER="0"
 BGCOLOR="#E0E0E0"
 WIDTH="100%"
@@ -1433,29 +1607,27 @@ WIDTH="100%"
 COLOR="#000000"
 ><PRE
 CLASS="programlisting"
->&#13;HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\W3SVC\Parameters\ScriptMap
-	      </PRE
+>&#13;            HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\W3SVC\Parameters\ScriptMap</PRE
 ></FONT
 ></TD
 ></TR
 ></TABLE
 >
-	    </P
+          </P
 ><P
->&#13;	      The keys should be called ".pl" and ".cgi", and both
-	      should have a value something like:
-	      <B
+>The keys should be called ".pl" and ".cgi", and both should
+          have a value something like: 
+          <B
 CLASS="command"
 >c:/perl/bin/perl.exe "%s" "%s"</B
 >
-	    </P
+          </P
 ><P
->&#13;	      The KB article only talks about .pl, but it goes into
-	      more detail and provides a perl test script.
-	    </P
+>The KB article only talks about .pl, but it goes into more
+          detail and provides a perl test script.</P
 ></BLOCKQUOTE
 >
-	</P
+        </P
 ></TD
 ></TR
 ></TABLE
@@ -1481,24 +1653,25 @@ ALT="Tip"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->&#13;	  If attempting to run Bugzilla 2.12 or older, you will need
-	  to remove encrypt() calls from the Perl source. This is
-	  <EM
+>If attempting to run Bugzilla 2.12 or older, you will need to
+        remove encrypt() calls from the Perl source. This is 
+        <EM
 >not necessary</EM
-> for Bugzilla 2.13 and
-	  later, which includes the current release, Bugzilla
-	  2.16.
-	  <DIV
+>
+
+        for Bugzilla 2.13 and later, which includes the current release,
+        Bugzilla &#38;bz-ver;. 
+        <DIV
 CLASS="example"
 ><A
-NAME="AEN1180"><P
+NAME="AEN1184"><P
 ><B
->Example 3-5. Removing encrypt() for Windows NT Bugzilla version
-	      2.12 or earlier</B
+>Example 4-3. Removing encrypt() for Windows NT Bugzilla version 2.12 or
+          earlier</B
 ></P
 ><P
->&#13;	      Replace this:   
-	      <TABLE
+>Replace this: 
+          <TABLE
 BORDER="0"
 BGCOLOR="#E0E0E0"
 WIDTH="100%"
@@ -1508,17 +1681,17 @@ WIDTH="100%"
 COLOR="#000000"
 ><PRE
 CLASS="programlisting"
->  
-SendSQL("SELECT encrypt(" . SqlQuote($enteredpwd) . ", " . SQLQuote(substr($realcryptpwd, 0, 2)) . ")");
-my $enteredcryptpwd = FetchOneColumn();
-	      </PRE
+>SendSQL("SELECT encrypt(" . SqlQuote($enteredpwd) .
+          ", " . SQLQuote(substr($realcryptpwd, 0, 2)) . ")"); my
+          $enteredcryptpwd = FetchOneColumn();</PRE
 ></FONT
 ></TD
 ></TR
 ></TABLE
-> 
-with this:   
-	      <TABLE
+>
+
+          with this: 
+          <TABLE
 BORDER="0"
 BGCOLOR="#E0E0E0"
 WIDTH="100%"
@@ -1528,103 +1701,21 @@ WIDTH="100%"
 COLOR="#000000"
 ><PRE
 CLASS="programlisting"
->  
-my $enteredcryptpwd = $enteredpwd   
-	      </PRE
+>my $enteredcryptpwd = $enteredpwd</PRE
 ></FONT
 ></TD
 ></TR
 ></TABLE
-> 
-	      in cgi.pl.
-	    </P
+>
+
+          in cgi.pl.</P
 ></DIV
 >
-	</P
+        </P
 ></TD
 ></TR
 ></TABLE
 ></DIV
-></DIV
-><DIV
-CLASS="section"
-><H2
-CLASS="section"
-><A
-NAME="bzldap">3.6.3. Bugzilla LDAP Integration</H2
-><P
->&#13;	What follows is some late-breaking information on using the
-	LDAP authentication options with Bugzilla.  The author has not
-	tested these (nor even formatted this section!) so please
-	contribute feedback to the newsgroup.
-      </P
-><P
-CLASS="literallayout"
-><br>
-Mozilla::LDAP&nbsp;module<br>
-<br>
-The&nbsp;Mozilla::LDAP&nbsp;module&nbsp;allows&nbsp;you&nbsp;to&nbsp;use&nbsp;LDAP&nbsp;for&nbsp;authentication&nbsp;to<br>
-the&nbsp;Bugzilla&nbsp;system.&nbsp;&nbsp;This&nbsp;module&nbsp;is&nbsp;not&nbsp;required&nbsp;if&nbsp;you&nbsp;are&nbsp;not&nbsp;using<br>
-LDAP.<br>
-<br>
-Mozilla::LDAP&nbsp;(aka&nbsp;PerLDAP)&nbsp;is&nbsp;available&nbsp;for&nbsp;download&nbsp;from<br>
-http://www.mozilla.org/directory.<br>
-<br>
-NOTE:&nbsp;The&nbsp;Mozilla::LDAP&nbsp;module&nbsp;requires&nbsp;Netscape's&nbsp;Directory&nbsp;SDK.<br>
-Follow&nbsp;the&nbsp;link&nbsp;for&nbsp;"Directory&nbsp;SDK&nbsp;for&nbsp;C"&nbsp;on&nbsp;that&nbsp;same&nbsp;page&nbsp;to<br>
-download&nbsp;the&nbsp;SDK&nbsp;first.&nbsp;&nbsp;After&nbsp;you&nbsp;have&nbsp;installed&nbsp;this&nbsp;SDK,&nbsp;then<br>
-install&nbsp;the&nbsp;PerLDAP&nbsp;module.<br>
-----------------------------------------------------------------------<br>
-<br>
-Post-Installation&nbsp;Checklist<br>
-----------------------------------------------------------------------<br>
-Set&nbsp;useLDAP&nbsp;to&nbsp;"On"&nbsp;**only**&nbsp;if&nbsp;you&nbsp;will&nbsp;be&nbsp;using&nbsp;an&nbsp;LDAP&nbsp;directory<br>
-for&nbsp;authentication.&nbsp;&nbsp;Be&nbsp;very&nbsp;careful&nbsp;when&nbsp;setting&nbsp;up&nbsp;this&nbsp;parameter;<br>
-if&nbsp;you&nbsp;set&nbsp;LDAP&nbsp;authentication,&nbsp;but&nbsp;do&nbsp;not&nbsp;have&nbsp;a&nbsp;valid&nbsp;LDAP&nbsp;directory<br>
-set&nbsp;up,&nbsp;you&nbsp;will&nbsp;not&nbsp;be&nbsp;able&nbsp;to&nbsp;log&nbsp;back&nbsp;in&nbsp;to&nbsp;Bugzilla&nbsp;once&nbsp;you&nbsp;log<br>
-out.&nbsp;&nbsp;(If&nbsp;this&nbsp;happens,&nbsp;you&nbsp;can&nbsp;get&nbsp;back&nbsp;in&nbsp;by&nbsp;manually&nbsp;editing&nbsp;the<br>
-data/params&nbsp;file,&nbsp;and&nbsp;setting&nbsp;useLDAP&nbsp;back&nbsp;to&nbsp;0.)<br>
-<br>
-If&nbsp;using&nbsp;LDAP,&nbsp;you&nbsp;must&nbsp;set&nbsp;the&nbsp;three&nbsp;additional&nbsp;parameters:<br>
-<br>
-Set&nbsp;LDAPserver&nbsp;to&nbsp;the&nbsp;name&nbsp;(and&nbsp;optionally&nbsp;port)&nbsp;of&nbsp;your&nbsp;LDAP&nbsp;server.<br>
-If&nbsp;no&nbsp;port&nbsp;is&nbsp;specified,&nbsp;it&nbsp;defaults&nbsp;to&nbsp;the&nbsp;default&nbsp;port&nbsp;of&nbsp;389.&nbsp;&nbsp;(e.g<br>
-"ldap.mycompany.com"&nbsp;or&nbsp;"ldap.mycompany.com:1234")<br>
-<br>
-Set&nbsp;LDAPBaseDN&nbsp;to&nbsp;the&nbsp;base&nbsp;DN&nbsp;for&nbsp;searching&nbsp;for&nbsp;users&nbsp;in&nbsp;your&nbsp;LDAP<br>
-directory.&nbsp;&nbsp;(e.g.&nbsp;"ou=People,o=MyCompany")&nbsp;&nbsp;uids&nbsp;must&nbsp;be&nbsp;unique&nbsp;under<br>
-the&nbsp;DN&nbsp;specified&nbsp;here.<br>
-<br>
-Set&nbsp;LDAPmailattribute&nbsp;to&nbsp;the&nbsp;name&nbsp;of&nbsp;the&nbsp;attribute&nbsp;in&nbsp;your&nbsp;LDAP<br>
-directory&nbsp;which&nbsp;contains&nbsp;the&nbsp;primary&nbsp;email&nbsp;address.&nbsp;&nbsp;On&nbsp;most&nbsp;directory<br>
-servers&nbsp;available,&nbsp;this&nbsp;is&nbsp;"mail",&nbsp;but&nbsp;you&nbsp;may&nbsp;need&nbsp;to&nbsp;change&nbsp;this.<br>
-----------------------------------------------------------------------<br>
-<br>
-(Not&nbsp;sure&nbsp;where&nbsp;this&nbsp;bit&nbsp;should&nbsp;go,&nbsp;but&nbsp;it's&nbsp;important&nbsp;that&nbsp;it&nbsp;be&nbsp;in<br>
-there&nbsp;somewhere...)<br>
-----------------------------------------------------------------------<br>
-Using&nbsp;LDAP&nbsp;authentication&nbsp;for&nbsp;Bugzilla:<br>
-<br>
-The&nbsp;existing&nbsp;authentication&nbsp;scheme&nbsp;for&nbsp;Bugzilla&nbsp;uses&nbsp;email&nbsp;addresses<br>
-as&nbsp;the&nbsp;primary&nbsp;user&nbsp;ID,&nbsp;and&nbsp;a&nbsp;password&nbsp;to&nbsp;authenticate&nbsp;that&nbsp;user.&nbsp;&nbsp;All<br>
-places&nbsp;within&nbsp;Bugzilla&nbsp;where&nbsp;you&nbsp;need&nbsp;to&nbsp;deal&nbsp;with&nbsp;user&nbsp;ID&nbsp;(e.g<br>
-assigning&nbsp;a&nbsp;bug)&nbsp;use&nbsp;the&nbsp;email&nbsp;address.<br>
-<br>
-The&nbsp;LDAP&nbsp;authentication&nbsp;builds&nbsp;on&nbsp;top&nbsp;of&nbsp;this&nbsp;scheme,&nbsp;rather&nbsp;than<br>
-replacing&nbsp;it.&nbsp;&nbsp;The&nbsp;initial&nbsp;log&nbsp;in&nbsp;is&nbsp;done&nbsp;with&nbsp;a&nbsp;username&nbsp;and&nbsp;password<br>
-for&nbsp;the&nbsp;LDAP&nbsp;directory.&nbsp;&nbsp;This&nbsp;then&nbsp;fetches&nbsp;the&nbsp;email&nbsp;address&nbsp;from&nbsp;LDAP<br>
-and&nbsp;authenticates&nbsp;seamlessly&nbsp;in&nbsp;the&nbsp;standard&nbsp;Bugzilla&nbsp;authentication<br>
-scheme&nbsp;using&nbsp;this&nbsp;email&nbsp;address.&nbsp;&nbsp;If&nbsp;an&nbsp;account&nbsp;for&nbsp;this&nbsp;address<br>
-already&nbsp;exists&nbsp;in&nbsp;your&nbsp;Bugzilla&nbsp;system,&nbsp;it&nbsp;will&nbsp;log&nbsp;in&nbsp;to&nbsp;that<br>
-account.&nbsp;&nbsp;If&nbsp;no&nbsp;account&nbsp;for&nbsp;that&nbsp;email&nbsp;address&nbsp;exists,&nbsp;one&nbsp;is&nbsp;created<br>
-at&nbsp;the&nbsp;time&nbsp;of&nbsp;login.&nbsp;&nbsp;(In&nbsp;this&nbsp;case,&nbsp;Bugzilla&nbsp;will&nbsp;attempt&nbsp;to&nbsp;use&nbsp;the<br>
-"displayName"&nbsp;or&nbsp;"cn"&nbsp;attribute&nbsp;to&nbsp;determine&nbsp;the&nbsp;user's&nbsp;full&nbsp;name.)<br>
-<br>
-After&nbsp;authentication,&nbsp;all&nbsp;other&nbsp;user-related&nbsp;tasks&nbsp;are&nbsp;still&nbsp;handled<br>
-by&nbsp;email&nbsp;address,&nbsp;not&nbsp;LDAP&nbsp;username.&nbsp;&nbsp;You&nbsp;still&nbsp;assign&nbsp;bugs&nbsp;by&nbsp;email<br>
-address,&nbsp;query&nbsp;on&nbsp;users&nbsp;by&nbsp;email&nbsp;address,&nbsp;etc.<br>
-----------------------------------------------------------------------<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</P
 ></DIV
 ></DIV
 ><DIV
@@ -1643,7 +1734,7 @@ WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
 ><A
-HREF="geninstall.html"
+HREF="extraconfig.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -1661,7 +1752,7 @@ WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
 ><A
-HREF="administration.html"
+HREF="osx.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -1671,7 +1762,7 @@ ACCESSKEY="N"
 WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
->Installation General Notes</TD
+>Optional Additional Configuration</TD
 ><TD
 WIDTH="34%"
 ALIGN="center"
@@ -1685,7 +1776,7 @@ ACCESSKEY="U"
 WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
->Administering Bugzilla</TD
+>Mac OS X Installation Notes</TD
 ></TR
 ></TABLE
 ></DIV

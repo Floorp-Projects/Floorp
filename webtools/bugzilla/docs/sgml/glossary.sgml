@@ -15,10 +15,7 @@
         to keep secret files which would otherwise
         compromise your installation - e.g. the 
         <filename>localconfig</filename>
-
-        file contains the password to your database. If this information were
-        generally available, and remote access to your database turned on,
-        you risk corruption of your database by computer criminals or the
+        file contains the password to your database.
         curious.</para>
       </glossdef>
     </glossentry>
@@ -56,7 +53,7 @@
 
       <glossdef>
         <para>A 
-        <quote>Bug</quote>
+        <quote>bug</quote>
 
         in Bugzilla refers to an issue entered into the database which has an
         associated number, assignments, comments, etc. Some also refer to a 
@@ -71,24 +68,10 @@
       <glossterm>Bug Number</glossterm>
 
       <glossdef>
-        <para>Each Bugzilla Bug is assigned a number that uniquely identifies
-        that Bug. The Bug associated with a Bug Number can be pulled up via a
+        <para>Each Bugzilla bug is assigned a number that uniquely identifies
+        that bug. The bug associated with a bug number can be pulled up via a
         query, or easily from the very front page by typing the number in the
         "Find" box.</para>
-      </glossdef>
-    </glossentry>
-
-    <glossentry>
-      <glossterm>Bug Life Cycle</glossterm>
-
-      <glossdef>
-        <para>A Bug has stages through which it must pass before becoming a 
-        <quote>closed bug</quote>, 
-        including acceptance, resolution, and verification. The 
-        <quote>Bug Life Cycle</quote>
-
-        is moderately flexible according to the needs of the organization
-        using it, though.</para>
       </glossdef>
     </glossentry>
 
@@ -96,8 +79,8 @@
       <glossterm>Bugzilla</glossterm>
 
       <glossdef>
-        <para>Bugzilla is the industry-standard bug tracking system. It is
-        quite popular among Open Source enthusiasts.</para>
+        <para>Bugzilla is the world-leading free software bug tracking system.
+        </para>
       </glossdef>
     </glossentry>
   </glossdiv>
@@ -127,14 +110,11 @@
         <acronym>CPAN</acronym>
 
         stands for the 
-        <quote>Comprehensive Perl Archive Network</quote>
-
-        . CPAN maintains a large number of extremely useful 
+        <quote>Comprehensive Perl Archive Network</quote>. 
+        CPAN maintains a large number of extremely useful 
         <glossterm>Perl</glossterm>
-
-        modules. By themselves, Perl modules generally do nothing, but when
-        used as part of a larger program, they provide much-needed algorithms
-        and functionality.</para>
+        modules - encapsulated chunks of code for performing a
+        particular task.</para>
       </glossdef>
     </glossentry>
   </glossdiv>
@@ -169,29 +149,12 @@
         <quote>Groups</quote>
 
         has a very special meaning to Bugzilla. Bugzilla's main security
-        mechanism comes by lumping users into groups, and assigning those
-        groups certain privileges to 
+        mechanism comes by placing users in groups, and assigning those
+        groups certain privileges to view bugs in particular
         <glossterm>Products</glossterm>
-
-        and 
-        <glossterm>Components</glossterm>
-
         in the 
         <glossterm>Bugzilla</glossterm>
-
         database.</para>
-      </glossdef>
-    </glossentry>
-  </glossdiv>
-
-  <glossdiv id="gloss-i">
-    <title>I</title>
-
-    <glossentry id="gloss-infiniteloop">
-      <glossterm>Infinite Loop</glossterm>
-
-      <glossdef>
-        <para>A loop of information that never ends; see recursion.</para>
       </glossdef>
     </glossentry>
   </glossdiv>
@@ -221,10 +184,11 @@
       <glossterm id="gloss-product">Product</glossterm>
 
       <glossdef>
-        <para>A Product is a broad category of types of bugs. In general,
-        there are several Components to a Product. A Product may also define a
+        <para>A Product is a broad category of types of bugs, normally
+        representing a single piece of software or entity. In general,
+        there are several Components to a Product. A Product may define a
         group (used for security) for all bugs entered into
-        components beneath it.</para>
+        its Components.</para>
       </glossdef>
     </glossentry>
 
@@ -262,24 +226,7 @@
         bugs over their life cycle, thus the need for the 
         <quote>QA Contact</quote>
 
-        field in a Bug.</para>
-      </glossdef>
-    </glossentry>
-  </glossdiv>
-
-  <glossdiv id="gloss-r">
-    <title>R</title>
-
-    <glossentry id="gloss-recursion" xreflabel="Recursion">
-      <glossterm>Recursion</glossterm>
-
-      <glossdef>
-        <para>The property of a function looking back at itself for
-        something. 
-        <quote>GNU</quote>, for instance, stands for 
-        <quote>GNU's Not UNIX</quote>, 
-        thus recursing upon itself for definition. For further clarity, see
-        Infinite Loop.</para>
+        field in a bug.</para>
       </glossdef>
     </glossentry>
   </glossdiv>
