@@ -25,7 +25,6 @@
 #include "nsCOMPtr.h"
 
 static NS_DEFINE_IID(kICodebasePrincipalIID, NS_ICODEBASEPRINCIPAL_IID);
-static char gFileScheme[] = "file";
 
 NS_IMPL_ISUPPORTS(nsCodebasePrincipal, kICodebasePrincipalIID);
 
@@ -128,7 +127,7 @@ nsCodebasePrincipal::SameOrigin(nsIPrincipal *other, PRBool *result)
         rv = mURI->GetScheme(&scheme2);
     if (NS_SUCCEEDED(rv) && PL_strcmp(scheme1, scheme2) == 0) {
 
-        if (PL_strcmp(scheme1, gFileScheme) == 0) {
+        if (PL_strcmp(scheme1, "file") == 0) {
             // All file: urls are considered to have the same origin.
             *result = PR_TRUE;
         } else {
@@ -172,8 +171,11 @@ nsCodebasePrincipal::Init(nsIURI *uri)
     char *codebase;
     if (NS_FAILED(uri->GetSpec(&codebase))) 
         return NS_ERROR_FAILURE;
-    if (NS_FAILED(mJSPrincipals.Init(codebase))) 
+    if (NS_FAILED(mJSPrincipals.Init(codebase))) {
+        nsCRT::free(codebase);
         return NS_ERROR_FAILURE;
+    }
+    // JSPrincipals::Init adopts codebase, so no need to free now
     NS_ADDREF(this);
     mURI = uri;
     NS_ADDREF(mURI);
