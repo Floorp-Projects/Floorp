@@ -40,7 +40,6 @@
 #include "nsMsgMdnGenerator.h"
 #include "nsImapCore.h"
 #include "nsIMsgImapMailFolder.h"
-#include "nsIMIMEService.h"
 #include "nsMsgMimeCID.h"
 #include "nsIMsgAccountManager.h"
 #include "nsMsgBaseCID.h"

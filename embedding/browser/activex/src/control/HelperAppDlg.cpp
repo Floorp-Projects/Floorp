@@ -118,18 +118,8 @@ void AppLauncherDlg::OnInitDialog()
     if (mimeInfo)
     {
         mimeInfo->GetPreferredAction(&prefAction);
-        nsXPIDLString appDesc;
-        nsresult rv = mimeInfo->GetApplicationDescription(getter_Copies(appDesc));
-        if (NS_SUCCEEDED(rv)) 
-        {
-            appName = appDesc.get();
-        }
-        nsXPIDLCString mimeType;
-        rv = mimeInfo->GetMIMEType(getter_Copies(mimeType));
-        if (NS_SUCCEEDED(rv))
-        {
-            contentType = mimeType;
-        }
+        mimeInfo->GetApplicationDescription(appName);
+        mimeInfo->GetMIMEType(contentType);
     }
     if (prefAction == nsIMIMEInfo::saveToDisk)
     {

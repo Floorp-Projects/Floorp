@@ -3372,11 +3372,11 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, PRBool aQuoted, nsStrin
 
         // Now, most importantly, we need to figure out what the content type is for
         // this signature...if we can't, we assume text
-        nsXPIDLCString sigContentType;
+        nsCAutoString sigContentType;
         nsresult rv2; // don't want to clobber the other rv
         nsCOMPtr<nsIMIMEService> mimeFinder (do_GetService(NS_MIMESERVICE_CONTRACTID, &rv2));
         if (NS_SUCCEEDED(rv2)) {
-          rv2 = mimeFinder->GetTypeFromFile(sigFile, getter_Copies(sigContentType));
+          rv2 = mimeFinder->GetTypeFromFile(sigFile, sigContentType);
           if (NS_SUCCEEDED(rv2)) {
             if (StringBeginsWith(sigContentType, NS_LITERAL_CSTRING("image/"), nsCaseInsensitiveCStringComparator()))
               imageSig = PR_TRUE;

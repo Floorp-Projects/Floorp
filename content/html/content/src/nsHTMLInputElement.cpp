@@ -2221,13 +2221,9 @@ nsHTMLInputElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
             do_GetService(NS_MIMESERVICE_CONTRACTID, &rv);
           NS_ENSURE_SUCCESS(rv, rv);
 
-          char * contentTypeChars = nsnull;
-          rv = MIMEService->GetTypeFromFile(file, &contentTypeChars);
-
           nsCAutoString contentType;
-          if (contentTypeChars) {
-            contentType.Adopt(contentTypeChars);
-          } else {
+          rv = MIMEService->GetTypeFromFile(file, contentType);
+          if (NS_FAILED(rv)) {
             contentType = NS_LITERAL_CSTRING("application/octet-stream");
           }
 

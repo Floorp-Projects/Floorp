@@ -1338,12 +1338,12 @@ NS_IMETHODIMP nsOSHelperAppService::LoadUrl(nsIURI * aURL)
 }
 
 already_AddRefed<nsMIMEInfoOS2>
-nsOSHelperAppService::GetFromExtension(const char *aFileExt) {
-  // if the extension is null, return immediately
-  if (!aFileExt || !*aFileExt)
+nsOSHelperAppService::GetFromExtension(const nsCString& aFileExt) {
+  // if the extension is empty, return immediately
+  if (aFileExt.IsEmpty())
     return nsnull;
   
-  LOG(("Here we do an extension lookup for '%s'\n", aFileExt));
+  LOG(("Here we do an extension lookup for '%s'\n", aFileExt.get()));
 
   nsresult rv;
 
@@ -1402,9 +1402,9 @@ nsOSHelperAppService::GetFromExtension(const char *aFileExt) {
   mailcap_description.Trim(" \t\"");
   mozillaFlags.Trim(" \t");
   if (!mime_types_description.IsEmpty()) {
-    mimeInfo->SetDescription(mime_types_description.get());
+    mimeInfo->SetDescription(mime_types_description);
   } else {
-    mimeInfo->SetDescription(mailcap_description.get());
+    mimeInfo->SetDescription(mailcap_description);
   }
   if (NS_SUCCEEDED(rv) && !handler.IsEmpty()) {
     nsCOMPtr<nsIFile> handlerFile;
@@ -1413,7 +1413,7 @@ nsOSHelperAppService::GetFromExtension(const char *aFileExt) {
     if (NS_SUCCEEDED(rv)) {
       mimeInfo->SetDefaultApplication(handlerFile);
       mimeInfo->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
-      mimeInfo->SetDefaultDescription(handler.get());
+      mimeInfo->SetDefaultDescription(handler);
     }
   } else {
     mimeInfo->SetPreferredAction(nsIMIMEInfo::saveToDisk);
@@ -1423,12 +1423,12 @@ nsOSHelperAppService::GetFromExtension(const char *aFileExt) {
 }
 
 already_AddRefed<nsMIMEInfoOS2>
-nsOSHelperAppService::GetFromType(const char *aMIMEType) {
-  // if the extension is null, return immediately
-  if (!aMIMEType || !*aMIMEType)
+nsOSHelperAppService::GetFromType(const nsCString& aMIMEType) {
+  // if the extension is empty, return immediately
+  if (aMIMEType.IsEmpty())
     return nsnull;
   
-  LOG(("Here we do a mimetype lookup for '%s'\n", aMIMEType));
+  LOG(("Here we do a mimetype lookup for '%s'\n", aMIMEType.get()));
   nsresult rv;
   nsAutoString extensions,
     mime_types_description, mailcap_description,
@@ -1437,8 +1437,7 @@ nsOSHelperAppService::GetFromType(const char *aMIMEType) {
   nsHashtable typeOptions;
   
   // extract the major and minor types
-  nsAutoString mimeType;
-  mimeType.AssignWithConversion(aMIMEType);
+  NS_ConvertASCIItoUTF16 mimeType(aMIMEType);
   nsAString::const_iterator start_iter, end_iter,
                             majorTypeStart, majorTypeEnd,
                             minorTypeStart, minorTypeEnd;
@@ -1495,16 +1494,16 @@ nsOSHelperAppService::GetFromType(const char *aMIMEType) {
                                  extensions,
                                  mime_types_description);
 
-  nsMIMEInfoOS2* mimeInfo = new nsMIMEInfoOS2(aMIMEType);
+  nsMIMEInfoOS2* mimeInfo = new nsMIMEInfoOS2(aMIMEType.get());
   if (!mimeInfo)
     return nsnull;
   NS_ADDREF(mimeInfo);
 
-  mimeInfo->SetFileExtensions(NS_ConvertUCS2toUTF8(extensions).get());
+  mimeInfo->SetFileExtensions(NS_ConvertUCS2toUTF8(extensions));
   if (! mime_types_description.IsEmpty()) {
-    mimeInfo->SetDescription(mime_types_description.get());
+    mimeInfo->SetDescription(mime_types_description);
   } else {
-    mimeInfo->SetDescription(mailcap_description.get());
+    mimeInfo->SetDescription(mailcap_description);
   }
 
   nsCOMPtr<nsIFile> handlerFile;
@@ -1513,7 +1512,7 @@ nsOSHelperAppService::GetFromType(const char *aMIMEType) {
   if (NS_SUCCEEDED(rv)) {
     mimeInfo->SetDefaultApplication(handlerFile);
     mimeInfo->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
-    mimeInfo->SetDefaultDescription(handler.get());
+    mimeInfo->SetDefaultDescription(handler);
   } else {
     mimeInfo->SetPreferredAction(nsIMIMEInfo::saveToDisk);
   }
@@ -1523,23 +1522,23 @@ nsOSHelperAppService::GetFromType(const char *aMIMEType) {
 
 
 already_AddRefed<nsIMIMEInfo>
-nsOSHelperAppService::GetMIMEInfoFromOS(const char *aType,
-                                        const char *aFileExt,
+nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aType,
+                                        const nsACString& aFileExt,
                                         PRBool     *aFound) {
   *aFound = PR_TRUE;
-  nsMIMEInfoOS2* retval = GetFromType(aType).get();
+  nsMIMEInfoOS2* retval = GetFromType(PromiseFlatCString(aType)).get();
   PRBool hasDefault = PR_FALSE;
   if (retval)
     retval->GetHasDefaultHandler(&hasDefault);
   if (!retval || !hasDefault) {
-    nsRefPtr<nsMIMEInfoOS2> miByExt = GetFromExtension(aFileExt);
+    nsRefPtr<nsMIMEInfoOS2> miByExt = GetFromExtension(PromiseFlatCString(aFileExt));
     // If we had no extension match, but a type match, use that
     if (!miByExt && retval)
       return retval;
     // If we had an extension match but no type match, set the mimetype and use
     // it
     if (!retval && miByExt) {
-      if (aType)
+      if (!aType.IsEmpty())
         miByExt->SetMIMEType(aType);
       miByExt.swap(retval);
 
@@ -1548,12 +1547,10 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const char *aType,
     // If we got nothing, make a new mimeinfo
     if (!retval) {
       *aFound = PR_FALSE;
-      retval = new nsMIMEInfoOS2();
+      retval = new nsMIMEInfoOS2(PromiseFlatCString(aType).get());
       if (retval) {
         NS_ADDREF(retval);
-        if (aType && *aType)
-          retval->SetMIMEType(aType);
-        if (aFileExt && *aFileExt)
+        if (!aFileExt.IsEmpty())
           retval->AppendExtension(aFileExt);
       }
       

@@ -280,7 +280,7 @@ nsresult nsOSHelperAppService::GetMIMEInfoFromRegistry( const nsAFlatString& fil
     nsAutoString description;
     PRBool found = GetValueString(fileTypeKey, NULL, description);
     if (found)
-        pInfo->SetDescription(description.get());
+        pInfo->SetDescription(description);
     ::RegCloseKey(fileTypeKey);
 
     return NS_OK;
@@ -349,14 +349,12 @@ already_AddRefed<nsMIMEInfoWin> nsOSHelperAppService::GetByExtension(const char 
     nsAutoString description;
     PRBool found = GetValueString(hKey, NULL, description);
 
-    nsMIMEInfoWin* mimeInfo = new nsMIMEInfoWin();
+    nsMIMEInfoWin* mimeInfo = new nsMIMEInfoWin(typeToUse.get());
     if (mimeInfo)
     {
       NS_ADDREF(mimeInfo);
-      if (!typeToUse.IsEmpty())
-        mimeInfo->SetMIMEType(typeToUse.get());
       // don't append the '.'
-      mimeInfo->AppendExtension(fileExtToUse.get() + 1);
+      mimeInfo->AppendExtension(Substring(fileExtToUse, 1));
 
       mimeInfo->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
 
@@ -367,7 +365,7 @@ already_AddRefed<nsMIMEInfoWin> nsOSHelperAppService::GetByExtension(const char 
       // the format of the description usually looks like appname.version.something.
       // for now, let's try to make it pretty and just show you the appname.
 
-      mimeInfo->SetDefaultDescription(visibleDesc.get());
+      mimeInfo->SetDefaultDescription(visibleDesc);
 
       // Get other nsIMIMEInfo fields from registry, if possible.
       if ( found )
@@ -389,11 +387,15 @@ already_AddRefed<nsMIMEInfoWin> nsOSHelperAppService::GetByExtension(const char 
   return nsnull;
 }
 
-already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(const char *aMIMEType, const char *aFileExt, PRBool *aFound)
+already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType, const nsACString& aFileExt, PRBool *aFound)
 {
   *aFound = PR_TRUE;
+
+  const nsCString& flatType = PromiseFlatCString(aMIMEType);
+  const nsCString& flatExt = PromiseFlatCString(aFileExt);
+
   nsCAutoString fileExtension;
-  /* XXX The strcasecmp is a gross hack to wallpaper over the most common Win32
+  /* XXX The Equals is a gross hack to wallpaper over the most common Win32
    * extension issues caused by the fix for bug 116938.  See bug
    * 120327, comment 271 for why this is needed.  Not even sure we
    * want to remove this once we have fixed all this stuff to work
@@ -401,20 +403,20 @@ already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(const char
    * useless....
    * We'll do extension-based lookup for this type later in this function.
    */
-  if (aMIMEType && *aMIMEType && PL_strcasecmp(aMIMEType, APPLICATION_OCTET_STREAM) != 0) {
+  if (!aMIMEType.Equals(APPLICATION_OCTET_STREAM, nsCaseInsensitiveCStringComparator())) {
     // (1) try to use the windows mime database to see if there is a mapping to a file extension
     // (2) try to see if we have some left over 4.x registry info we can peek at...
-    GetExtensionFromWindowsMimeDatabase(aMIMEType, fileExtension);
+    GetExtensionFromWindowsMimeDatabase(flatType.get(), fileExtension);
     LOG(("Windows mime database: extension '%s'\n", fileExtension.get()));
     if (fileExtension.IsEmpty()) {
-      GetExtensionFrom4xRegistryInfo(aMIMEType, fileExtension);
+      GetExtensionFrom4xRegistryInfo(flatType.get(), fileExtension);
       LOG(("4.x Registry: extension '%s'\n", fileExtension.get()));
     }
   }
   // If we found an extension for the type, do the lookup
   nsMIMEInfoWin* mi = nsnull;
   if (!fileExtension.IsEmpty())
-    mi = GetByExtension(fileExtension.get(), aMIMEType).get();
+    mi = GetByExtension(fileExtension.get(), flatType.get()).get();
   LOG(("Extension lookup on '%s' found: 0x%p\n", fileExtension.get(), mi));
 
   PRBool hasDefault = PR_FALSE;
@@ -425,9 +427,9 @@ already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(const char
     // to the mimeinfo that we have. (E.g.: We are asked for video/mpeg and
     // .mpg, but the primary extension for video/mpeg is .mpeg. But because
     // .mpg is an extension for video/mpeg content, we want to append it)
-    if (aFileExt && *aFileExt && typeFromExtEquals(aFileExt, aMIMEType)) {
+    if (!aFileExt.IsEmpty() && typeFromExtEquals(flatExt.get(), flatType.get())) {
       LOG(("Appending extension '%s' to mimeinfo, because its mimetype is '%s'\n",
-           aFileExt, aMIMEType));
+           flatExt.get(), flatType.get()));
       PRBool extExist = PR_FALSE;
       mi->ExtensionExists(aFileExt, &extExist);
       if (!extExist)
@@ -435,8 +437,8 @@ already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(const char
     }
   }
   if (!mi || !hasDefault) {
-    nsRefPtr<nsMIMEInfoWin> miByExt = GetByExtension(aFileExt, aMIMEType);
-    LOG(("Ext. lookup for '%s' found 0x%p\n", aFileExt, miByExt.get()));
+    nsRefPtr<nsMIMEInfoWin> miByExt = GetByExtension(flatExt.get(), flatType.get());
+    LOG(("Ext. lookup for '%s' found 0x%p\n", flatExt.get(), miByExt.get()));
     if (!miByExt && mi)
       return mi;
     if (miByExt && !mi) {
@@ -445,12 +447,10 @@ already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(const char
     }
     if (!miByExt && !mi) {
       *aFound = PR_FALSE;
-      mi = new nsMIMEInfoWin();
+      mi = new nsMIMEInfoWin(flatType.get());
       if (mi) {
         NS_ADDREF(mi);
-        if (aMIMEType && *aMIMEType)
-          mi->SetMIMEType(aMIMEType);
-        if (aFileExt && *aFileExt)
+        if (!aFileExt.IsEmpty())
           mi->AppendExtension(aFileExt);
       }
       
@@ -459,10 +459,10 @@ already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(const char
 
     // if we get here, mi has no default app. copy from extension lookup.
     nsCOMPtr<nsIFile> defaultApp;
-    nsXPIDLString desc;
-    miByExt->GetDefaultDescription(getter_Copies(desc));
+    nsAutoString desc;
+    miByExt->GetDefaultDescription(desc);
 
-    mi->SetDefaultDescription(desc.get());
+    mi->SetDefaultDescription(desc);
   }
   return mi;
 }

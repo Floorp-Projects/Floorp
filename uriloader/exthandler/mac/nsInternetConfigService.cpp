@@ -371,22 +371,22 @@ nsresult nsInternetConfigService::FillMIMEInfoForICEntry(ICMapEntry& entry, nsIM
       // get a file of type 'TEXT' with no mime type mapping so that we'll display the
       // file rather than trying to download it.
       if (entry.fileType == 'TEXT')
-        info->SetMIMEType(TEXT_PLAIN);
+        info->SetMIMEType(NS_LITERAL_CSTRING(TEXT_PLAIN));
       else
-        info->SetMIMEType(APPLICATION_OCTET_STREAM);
+        info->SetMIMEType(NS_LITERAL_CSTRING(APPLICATION_OCTET_STREAM));
     }
     
     // convert entry.extension which is a Str255 
     // don't forget to remove the '.' in front of the file extension....
     nsCAutoString temp((char *)&entry.extension[2], entry.extension[0] > 0 ? (int)entry.extension[0]-1 : 0);
-    info->AppendExtension(temp.get());
+    info->AppendExtension(temp);
     info->SetMacType(entry.fileType);
     info->SetMacCreator(entry.fileCreator);
     temp.Assign((char *) &entry.entryName[1], entry.entryName[0]);
-    info->SetDescription(NS_ConvertASCIItoUCS2(temp.get()).get());
+    info->SetDescription(NS_ConvertASCIItoUCS2(temp));
     
     temp.Assign((char *) &entry.postAppName[1], entry.postAppName[0]);
-    info->SetDefaultDescription(NS_ConvertASCIItoUCS2(temp.get()).get());
+    info->SetDefaultDescription(NS_ConvertASCIItoUCS2(temp));
     
     if (entry.flags & kICMapPostMask)
     {

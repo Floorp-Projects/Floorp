@@ -3885,12 +3885,13 @@ nsresult nsPluginHostImpl::SetUpDefaultPluginInstance(const char *aMimeType, nsI
   nsresult result = NS_ERROR_FAILURE;
   nsIPluginInstance* instance = NULL;
   nsCOMPtr<nsIPlugin> plugin = NULL;
-  const char* mimetype;
 
   if(!aURL)
     return NS_ERROR_FAILURE;
 
-  mimetype = aMimeType;
+  nsCAutoString mimetype;
+  if (aMimeType)
+    mimetype = aMimeType;
 
   GetPluginFactory("*", getter_AddRefs(plugin));
 
@@ -3917,21 +3918,21 @@ nsresult nsPluginHostImpl::SetUpDefaultPluginInstance(const char *aMimeType, nsI
 
   // if we don't have a mimetype, check by file extension
   nsXPIDLCString mt;
-  if(mimetype == nsnull)
+  if(mimetype.IsEmpty())
   {
     nsresult res = NS_OK;
     nsCOMPtr<nsIMIMEService> ms (do_GetService(NS_MIMESERVICE_CONTRACTID, &res));
     if(NS_SUCCEEDED(res))
     {
-      nsXPIDLCString mt;
-      res = ms->GetTypeFromURI(aURL, getter_Copies(mt));
+      nsCAutoString mt;
+      res = ms->GetTypeFromURI(aURL, mt);
       if(NS_SUCCEEDED(res))
         mimetype = mt;
     }
   }
 
   // set up the peer for the instance
-  peer->Initialize(aOwner, mimetype);   
+  peer->Initialize(aOwner, mimetype.get());   
 
   nsCOMPtr<nsIPluginInstancePeer> pIpeer;
   peer->QueryInterface(kIPluginInstancePeerIID, getter_AddRefs(pIpeer));

@@ -1823,7 +1823,7 @@ nsresult nsSaveMsgListener::InitializeDownload(nsIRequest * aRequest, PRInt32 aB
       nsCOMPtr<nsIMIMEService> mimeService (do_GetService(NS_MIMESERVICE_CONTRACTID));
       nsCOMPtr<nsIMIMEInfo> mimeinfo;
 
-      mimeService->GetFromTypeAndExtension(m_contentType.get(), nsnull, getter_AddRefs(mimeinfo)); 
+      mimeService->GetFromTypeAndExtension(m_contentType, EmptyCString(), getter_AddRefs(mimeinfo)); 
       nsFileSpec realSpec;
       m_fileSpec->GetFileSpec(&realSpec);
 

@@ -39,7 +39,6 @@
 #include "nsFTPChannel.h"
 #include "nsIStreamListener.h"
 #include "nsIServiceManager.h"
-#include "nsIMIMEService.h"
 #include "nsNetUtil.h"
 #include "nsMimeTypes.h"
 #include "nsIProxyObjectManager.h"

@@ -112,12 +112,11 @@ nsresult nsOSHelperAppService::SetMIMEInfoForType(const char *aMIMEType, nsIMIME
 
 	nsresult rv = NS_ERROR_FAILURE;
 
-	nsMIMEInfoBeOS* mimeInfo = new nsMIMEInfoBeOS();
+	nsMIMEInfoBeOS* mimeInfo = new nsMIMEInfoBeOS(aMIMEType);
 	if (mimeInfo) {
 		NS_ADDREF(mimeInfo);
 		BMimeType mimeType(aMIMEType);
 		BMessage data;
-		mimeInfo->SetMIMEType(aMIMEType);
 		int32 index = 0;
 		BString strData;
 		LOG(("   Adding extensions:\n"));
@@ -127,7 +126,7 @@ nsresult nsOSHelperAppService::SetMIMEInfoForType(const char *aMIMEType, nsIMIME
 				// it to the mime info object.
 				if (strData.ByteAt(0) == '.')
 					strData.RemoveFirst(".");
-				mimeInfo->AppendExtension(strData.String());
+				mimeInfo->AppendExtension(nsDependentCString(strData.String()));
 				LOG(("      %s\n",strData.String()));
 				index++;
 			}
@@ -135,12 +134,12 @@ nsresult nsOSHelperAppService::SetMIMEInfoForType(const char *aMIMEType, nsIMIME
 
 		char desc[B_MIME_TYPE_LENGTH + 1];
 		if (mimeType.GetShortDescription(desc) == B_OK) {
-			mimeInfo->SetDescription(NS_ConvertUTF8toUCS2(desc).get());
+			mimeInfo->SetDescription(NS_ConvertUTF8toUCS2(desc));
 		} else {
 			if (mimeType.GetLongDescription(desc) == B_OK) {
-				mimeInfo->SetDescription(NS_ConvertUTF8toUCS2(desc).get());
+				mimeInfo->SetDescription(NS_ConvertUTF8toUCS2(desc));
 			} else {
-				mimeInfo->SetDescription(NS_ConvertUTF8toUCS2(aMIMEType).get());
+				mimeInfo->SetDescription(NS_ConvertUTF8toUCS2(aMIMEType));
 			}
 		}
 		
@@ -166,7 +165,7 @@ nsresult nsOSHelperAppService::SetMIMEInfoForType(const char *aMIMEType, nsIMIME
 				if (NS_SUCCEEDED(rv)) {
 					mimeInfo->SetDefaultApplication(handlerFile);
 					mimeInfo->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
-					mimeInfo->SetDefaultDescription(NS_ConvertUTF8toUCS2(path.Leaf()).get());
+					mimeInfo->SetDefaultDescription(NS_ConvertUTF8toUCS2(path.Leaf()));
 					LOG(("    Preferred App: %s\n",path.Leaf()));
 					doSave = false;
 				}
@@ -264,28 +263,28 @@ nsresult nsOSHelperAppService::GetMimeInfoFromMIMEType(const char *aMIMEType,
 }
 
 already_AddRefed<nsIMIMEInfo>
-nsOSHelperAppService::GetMIMEInfoFromOS(const char *aMIMEType, const char *aFileExt, PRBool* aFound)
+nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType, const nsACString& aFileExt, PRBool* aFound)
 {
   *aFound = PR_TRUE;
   nsIMIMEInfo* mi = nsnull;
-  GetMimeInfoFromMIMEType(aMIMEType, &mi);
+  const nsCString& flatType = PromiseFlatCString(aMIMEType);
+  const nsCString& flatExt = PromiseFlatCString(aFileExt);
+  GetMimeInfoFromMIMEType(flatType.get(), &mi);
   if (mi)
     return mi;
 
-  GetMimeInfoFromExtension(aFileExt, &mi);
-  if (mi && aMIMEType && *aMIMEType)
+  GetMimeInfoFromExtension(flatExt.get(), &mi);
+  if (mi && !aMIMEType.IsEmpty())
     mi->SetMIMEType(aMIMEType);
   if (mi)
     return mi;
 
   *aFound = PR_FALSE;
-  mi = new nsMIMEInfoBeOS();
+  mi = new nsMIMEInfoBeOS(flatType.get());
   if (!mi)
     return nsnull;
   NS_ADDREF(mi);
-  if (aMIMEType && *aMIMEType)
-    mi->SetMIMEType(aMIMEType);
-  if (aFileExt && *aFileExt)
+  if (!aFileExt.IsEmpty())
     mi->AppendExtension(aFileExt);
 
   return mi;

@@ -33,7 +33,7 @@ interface nsIWebProgressListener;
  * The external helper app service is used for finding and launching
  * platform specific external applications for a given mime content type.
  */
-[scriptable, uuid(663CC0AA-42EA-11d4-98D0-001083010E9B)]
+[scriptable, uuid(8a902933-d1a2-48a1-93a5-da64d6a2786f)]
 interface nsIExternalHelperAppService : nsISupports
 {
   /**
@@ -48,7 +48,7 @@ interface nsIExternalHelperAppService : nsISupports
    *                       The service might need this in order to bring up dialogs.
    * @return A nsIStreamListener which the caller should pump the data into.
    */
-  nsIStreamListener doContent (in string aMimeContentType, in nsIRequest aRequest,
+  nsIStreamListener doContent (in ACString aMimeContentType, in nsIRequest aRequest,
                                in nsISupports aWindowContext); 
 
   /**
@@ -56,8 +56,8 @@ interface nsIExternalHelperAppService : nsISupports
    * is to be decoded from aEncodingType prior to saving or passing
    * off to helper apps, false otherwise.
    */
-  boolean applyDecodingForExtension(in string aExtension,
-                                    in string aEncodingType);
+  boolean applyDecodingForExtension(in ACString aExtension,
+                                    in ACString aEncodingType);
 
 };
 
@@ -80,7 +80,7 @@ interface nsPIExternalAppLauncher : nsISupports
  * A helper app launcher is a small object created to handle the launching
  * of an external application.
  */
-[scriptable, uuid(9503D0FE-4C9D-11d4-98D0-001083010E9B)]
+[scriptable, uuid(15437993-9732-4aaf-977b-69a16b6334ff)]
 interface nsIHelperAppLauncher : nsISupports
 {
   /**
@@ -97,7 +97,7 @@ interface nsIHelperAppLauncher : nsISupports
   /**
    * The suggested name for this file
    */
-  readonly attribute wstring suggestedFileName;
+  readonly attribute AString suggestedFileName;
 
   /**
    * Called when we want to just save the content to a particular file.

@@ -135,7 +135,7 @@ MimeTypeArrayImpl::NamedItem(const nsAString& aName,
   nsCOMPtr<nsIMIMEService> mimeSrv = do_GetService("@mozilla.org/mime;1");
   if (mimeSrv) {
     nsCOMPtr<nsIMIMEInfo> mimeInfo;
-    mimeSrv->GetFromTypeAndExtension(NS_ConvertUCS2toUTF8(aName).get(), nsnull,
+    mimeSrv->GetFromTypeAndExtension(NS_ConvertUCS2toUTF8(aName), EmptyCString(),
                                      getter_AddRefs(mimeInfo));
     if (mimeInfo) {
       // Now we check whether we can really claim to support this type
@@ -150,8 +150,8 @@ MimeTypeArrayImpl::NamedItem(const nsAString& aName,
           if (!helper) {
             // mime info from the OS may not have a PreferredApplicationHandler
             // so just check for an empty default description
-            nsXPIDLString defaultDescription;
-            mimeInfo->GetDefaultDescription(getter_Copies(defaultDescription));
+            nsAutoString defaultDescription;
+            mimeInfo->GetDefaultDescription(defaultDescription);
             if (defaultDescription.IsEmpty()) {
               // no support; just leave
               return NS_OK;

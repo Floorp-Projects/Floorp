@@ -253,8 +253,8 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
     nsCOMPtr<nsIMIMEService> mimeService (do_GetService(NS_MIMESERVICE_CONTRACTID, &rv));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsXPIDLCString fileExt;
-    mimeService->GetPrimaryExtension(contentType.get(), nsnull, getter_Copies(fileExt));
+    nsCAutoString fileExt;
+    mimeService->GetPrimaryExtension(contentType, EmptyCString(), fileExt);
     // If the mime service does not know about this mime type, we show
     // the generic icon.
     // In any case, we need to insert a '.' before the extension.

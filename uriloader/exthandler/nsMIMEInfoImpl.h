@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -56,15 +57,15 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
 
     // I'd use NS_DECL_NSIMIMEINFO, but I don't want GetHasDefaultHandler
     NS_IMETHOD GetFileExtensions(nsIUTF8StringEnumerator **_retval);
-    NS_IMETHOD SetFileExtensions(const char *aExtensions);
-    NS_IMETHOD ExtensionExists(const char *aExtension, PRBool *_retval);
-    NS_IMETHOD AppendExtension(const char *aExtension);
-    NS_IMETHOD GetPrimaryExtension(char * *aPrimaryExtension);
-    NS_IMETHOD SetPrimaryExtension(const char * aPrimaryExtension);
-    NS_IMETHOD GetMIMEType(char * *aMIMEType);
-    NS_IMETHOD SetMIMEType(const char * aMIMEType);
-    NS_IMETHOD GetDescription(PRUnichar * *aDescription);
-    NS_IMETHOD SetDescription(const PRUnichar * aDescription);
+    NS_IMETHOD SetFileExtensions(const nsACString & aExtensions);
+    NS_IMETHOD ExtensionExists(const nsACString & aExtension, PRBool *_retval);
+    NS_IMETHOD AppendExtension(const nsACString & aExtension);
+    NS_IMETHOD GetPrimaryExtension(nsACString & aPrimaryExtension);
+    NS_IMETHOD SetPrimaryExtension(const nsACString & aPrimaryExtension);
+    NS_IMETHOD GetMIMEType(nsACString & aMIMEType);
+    NS_IMETHOD SetMIMEType(const nsACString & aMIMEType);
+    NS_IMETHOD GetDescription(nsAString & aDescription);
+    NS_IMETHOD SetDescription(const nsAString & aDescription);
     NS_IMETHOD GetMacType(PRUint32 *aMacType);
     NS_IMETHOD SetMacType(PRUint32 aMacType);
     NS_IMETHOD GetMacCreator(PRUint32 *aMacCreator);
@@ -72,20 +73,20 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
     NS_IMETHOD Equals(nsIMIMEInfo *aMIMEInfo, PRBool *_retval);
     NS_IMETHOD GetPreferredApplicationHandler(nsIFile * *aPreferredApplicationHandler);
     NS_IMETHOD SetPreferredApplicationHandler(nsIFile * aPreferredApplicationHandler);
-    NS_IMETHOD GetApplicationDescription(PRUnichar * *aApplicationDescription);
-    NS_IMETHOD SetApplicationDescription(const PRUnichar * aApplicationDescription);
-    NS_IMETHOD GetDefaultDescription(PRUnichar * *aDefaultDescription);
+    NS_IMETHOD GetApplicationDescription(nsAString & aApplicationDescription);
+    NS_IMETHOD SetApplicationDescription(const nsAString & aApplicationDescription);
+    NS_IMETHOD GetDefaultDescription(nsAString & aDefaultDescription);
     NS_IMETHOD LaunchWithFile(nsIFile *aFile);
     NS_IMETHOD GetPreferredAction(nsMIMEInfoHandleAction *aPreferredAction);
     NS_IMETHOD SetPreferredAction(nsMIMEInfoHandleAction aPreferredAction);
     NS_IMETHOD GetAlwaysAskBeforeHandling(PRBool *aAlwaysAskBeforeHandling);
-    NS_IMETHOD SetAlwaysAskBeforeHandling(PRBool aAlwaysAskBeforeHandling);
+    NS_IMETHOD SetAlwaysAskBeforeHandling(PRBool aAlwaysAskBeforeHandling); 
 
     // nsMIMEInfoBase methods
     nsMIMEInfoBase(const char *aMIMEType = "") NS_HIDDEN;
     virtual ~nsMIMEInfoBase();        // must be virtual, as the the base class's Release should call the subclass's destructor
 
-    void SetDefaultDescription(const PRUnichar* aDesc) { mDefaultAppDescription = aDesc; }
+    void SetDefaultDescription(const nsString& aDesc) { mDefaultAppDescription = aDesc; }
 
     /**
      * Copies basic data of this MIME Info Implementation to the given other
@@ -146,7 +147,7 @@ class nsMIMEInfoImpl : public nsMIMEInfoBase {
 
     // nsIMIMEInfo methods
     NS_IMETHOD GetHasDefaultHandler(PRBool *_retval);
-    NS_IMETHOD GetDefaultDescription(PRUnichar ** aDefaultDescription);
+    NS_IMETHOD GetDefaultDescription(nsAString& aDefaultDescription);
 
     // additional methods
     void SetDefaultApplication(nsIFile* aApp) { mDefaultApplication = aApp; }

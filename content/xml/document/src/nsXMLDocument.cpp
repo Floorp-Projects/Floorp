@@ -80,7 +80,6 @@
 #include "nsIFIXptr.h"
 #include "nsIXPointer.h"
 #include "nsCExternalHandlerService.h"
-#include "nsIMIMEService.h"
 #include "nsNetUtil.h"
 #include "nsMimeTypes.h"
 #include "nsIEventListenerManager.h"

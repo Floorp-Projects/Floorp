@@ -569,7 +569,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
     do_GetService(NS_EXTERNALHELPERAPPSERVICE_CONTRACTID, &rv);
   if (helperAppService) {
     LOG(("  Passing load off to helper app service"));
-    rv = helperAppService->DoContent(mContentType.get(),
+    rv = helperAppService->DoContent(mContentType,
                                      request,
                                      m_originalContext,
                                      getter_AddRefs(m_targetStreamListener));

@@ -51,7 +51,7 @@ public:
 	nsOSHelperAppService();
 	virtual ~nsOSHelperAppService();
 
-	already_AddRefed<nsIMIMEInfo> GetMIMEInfoFromOS(const char *aMIMEType, const char * aFileExt, PRBool *aFound);
+	already_AddRefed<nsIMIMEInfo> GetMIMEInfoFromOS(const nsACString& aMIMEType, const nsACString& aFileExt, PRBool *aFound);
 
 	// override nsIExternalProtocolService methods
 	NS_IMETHOD ExternalProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists);

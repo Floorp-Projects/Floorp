@@ -295,15 +295,12 @@ nsFileChannel::GetContentType(nsACString &aContentType)
             nsresult rv = mURL->GetFile(getter_AddRefs(file));
             if (NS_FAILED(rv)) return rv;
             
-            nsXPIDLCString mimeType;
             nsCOMPtr<nsIMIMEService> mime = do_GetService("@mozilla.org/mime;1", &rv);
             if (NS_SUCCEEDED(rv))
-                mime->GetTypeFromFile(file, getter_Copies(mimeType));
+                mime->GetTypeFromFile(file, mContentType);
 
-            if (mimeType.IsEmpty())
+            if (mContentType.IsEmpty())
                 mContentType = NS_LITERAL_CSTRING(UNKNOWN_CONTENT_TYPE);
-            else
-                mContentType = mimeType;
         }
     }
     

@@ -2305,8 +2305,11 @@ nsMsgComposeAndSend::AddCompFieldLocalAttachments()
               if (NS_SUCCEEDED(rv))
               {
                 rv = fileUrl->GetFileExtension(fileExt);
-                if (NS_SUCCEEDED(rv) && !fileExt.IsEmpty())
-                  mimeFinder->GetTypeFromExtension(fileExt.get(), &(m_attachments[newLoc].m_type));
+                if (NS_SUCCEEDED(rv) && !fileExt.IsEmpty()) {
+                  nsCAutoString type;
+                  mimeFinder->GetTypeFromExtension(fileExt, type);
+                  m_attachments[newLoc].m_type = ToNewCString(type);
+                }
               }
 
               //Then try using the url if we still haven't figured out the content type
@@ -2316,8 +2319,11 @@ nsMsgComposeAndSend::AddCompFieldLocalAttachments()
                 if (NS_SUCCEEDED(rv))
                 {
                   rv = fileUrl->GetFileExtension(fileExt);
-                  if (NS_SUCCEEDED(rv) && !fileExt.IsEmpty())
-                    mimeFinder->GetTypeFromExtension(fileExt.get(), &(m_attachments[newLoc].m_type));
+                  if (NS_SUCCEEDED(rv) && !fileExt.IsEmpty()) {
+                    nsCAutoString type;
+                    mimeFinder->GetTypeFromExtension(fileExt, type);
+                    m_attachments[newLoc].m_type = ToNewCString(type);
+                  }
                 }
               }
             }

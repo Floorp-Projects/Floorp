@@ -45,7 +45,7 @@ public:
   NS_IMETHOD LoadUrl(nsIURI * aURL);
 
   // method overrides for windows registry look up steps....
-  already_AddRefed<nsIMIMEInfo> GetMIMEInfoFromOS(const char *aMIMEType, const char *aFileExt, PRBool *aFound);
+  already_AddRefed<nsIMIMEInfo> GetMIMEInfoFromOS(const nsACString& aMIMEType, const nsACString& aFileExt, PRBool *aFound);
 
 protected:
   // Lookup a mime info by extension, using an optional type hint

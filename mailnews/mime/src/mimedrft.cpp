@@ -1891,8 +1891,8 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
     nsCOMPtr<nsIMIMEService> mimeFinder (do_GetService(NS_MIMESERVICE_CONTRACTID, &rv));
     if (NS_SUCCEEDED(rv) && mimeFinder) 
     {
-      nsXPIDLCString fileExtension;
-      rv = mimeFinder->GetPrimaryExtension(contentType.get(), nsnull, getter_Copies(fileExtension));
+      nsCAutoString fileExtension;
+      rv = mimeFinder->GetPrimaryExtension(contentType, EmptyCString(), fileExtension);
 
       if (NS_SUCCEEDED(rv) && !fileExtension.IsEmpty())
       {

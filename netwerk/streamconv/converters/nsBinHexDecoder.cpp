@@ -508,7 +508,7 @@ nsresult nsBinHexDecoder::SetContentType(nsIRequest* aRequest,
   nsCOMPtr<nsIMIMEService> mimeService(do_GetService("@mozilla.org/mime;1", &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsXPIDLCString contentType;
+  nsCAutoString contentType;
 
   // extract the extension from fileName and look it up.
   const char * fileExt = strrchr(fileName, '.');
@@ -516,7 +516,7 @@ nsresult nsBinHexDecoder::SetContentType(nsIRequest* aRequest,
     return NS_OK;
   }
 
-  mimeService->GetTypeFromExtension(fileExt, getter_Copies(contentType));
+  mimeService->GetTypeFromExtension(nsDependentCString(fileExt), contentType);
 
   // Only set the type if it's not empty and, to prevent recursive loops, not the binhex type
   if (!contentType.IsEmpty() && !contentType.Equals(APPLICATION_BINHEX)) {

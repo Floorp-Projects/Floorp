@@ -281,8 +281,8 @@ ValidateRealName(nsMsgAttachmentData *aAttach, MimeHeaders *aHdrs)
     nsCOMPtr<nsIMIMEService> mimeFinder (do_GetService(NS_MIMESERVICE_CONTRACTID, &rv));
     if (NS_SUCCEEDED(rv)) 
     {
-      nsXPIDLCString fileExtension;
-      rv = mimeFinder->GetPrimaryExtension(contentType.get(), nsnull, getter_Copies(fileExtension));
+      nsCAutoString fileExtension;
+      rv = mimeFinder->GetPrimaryExtension(contentType, EmptyCString(), fileExtension);
 
       if (NS_SUCCEEDED(rv) && !fileExtension.IsEmpty())
       {
@@ -724,8 +724,11 @@ mime_file_type (const char *filename, void *stream_closure)
   {
     ext++;
     nsCOMPtr<nsIMIMEService> mimeFinder (do_GetService(NS_MIMESERVICE_CONTRACTID, &rv));
-    if (NS_SUCCEEDED(rv) && mimeFinder) 
-      mimeFinder->GetTypeFromExtension(ext, &retType);
+    if (mimeFinder) {
+      nsCAutoString type;
+      mimeFinder->GetTypeFromExtension(nsDependentCString(ext), type);
+      retType = ToNewCString(type);
+    }
   }
 
   return retType;
