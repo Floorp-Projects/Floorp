@@ -141,6 +141,10 @@ fi
 
 AC_PROG_MAKE_SET
 
+dnl Support for X11 makedepend, if found on the system
+dnl ========================================================
+AC_PATH_PROG(SYSTEM_MAKEDEPEND,makedepend)
+
 AC_PATH_PROGS(EMACS, xemacs lemacs emacs, :)
 AC_PATH_PROGS(PERL, perl5 perl, :)
 AC_PATH_PROG(WHOAMI, whoami, :)
@@ -1165,6 +1169,12 @@ MOZ_ARG_ENABLE_BOOL(java,
 [  --enable-java           Enable use of java applets (untested)],
   [MOZ_JAVA=1 FULL_STATIC_BUILD= NO_SHARED_LIB=])
 
+if test ${MOZ_OJI} -eq 1 -a ${MOZ_JAVA} -eq 1
+then
+	echo "configure: error: Simultaneous use of --enable-java and --enable-oji is no longer supported." 1>&2
+	exit 1
+fi
+
 MOZ_ARG_ENABLE_BOOL(mail-compose,
 [  --enable-mail-compose   Enable old Messenger mail composer],
   [ MOZ_MAIL_COMPOSE=1 MOZ_EDITOR=1 ])
@@ -1574,7 +1584,7 @@ dnl
 dnl Otherwise, we are using an NSPR installed in the system.
 dnl
 dnl We need to set MOZ_NATIVE_NSPR so that mozilla/nsprpub 
-dnl is not build.
+dnl is not built.
 dnl
 else
    MOZ_NATIVE_NSPR=1
@@ -1617,12 +1627,7 @@ dnl   LDFLAGS=`echo  $LDFLAGS  | sed 's/ *-O[^ ]*//g;'`
 dnl   changequote([,])dnl
 dnl fi
 
-dnl Support for X11 makedepend, if found on the system
-dnl ========================================================
-AC_PATH_PROG(SYSTEM_MAKEDEPEND,makedepend)
-
 AC_SUBST(SYSTEM_MAKEDEPEND)
-
 AC_SUBST(SYSTEM_JPEG)
 AC_SUBST(SYSTEM_PNG)
 AC_SUBST(SYSTEM_ZLIB)
@@ -1846,7 +1851,7 @@ MOZ_NSPRENV_NO_MDUPDATE=1
 dnl 
 dnl DIST
 dnl
-dnl Where the NSPR sutff gets installed: $DIST/{bin,lib,include}
+dnl Where the NSPR stuff gets installed: $DIST/{bin,lib,include}
 dnl 
 MOZ_NSPRENV_DIST=`pwd`/dist
 
@@ -1858,7 +1863,7 @@ dnl in NSPR to be 'make -j1' - or just 'make'
 dnl 
 case "$target" in
 	*-linux*)
-		MOZ_NSPRENV_OVERRIDE_MAKE=make
+		MOZ_NSPRENV_OVERRIDE_MAKE=`echo $MAKE | $AWK '{print \$1}'`
 	;;
 
 	*)
