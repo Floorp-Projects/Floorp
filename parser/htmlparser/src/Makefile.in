@@ -61,6 +61,7 @@ EXPORTS =     \
 	nshtmlpars.h    \
 	nsIContentSink.h  \
 	nsITokenizer.h \
+	nsIExpatTokenizer.h \
 	nsIHTMLContentSink.h  \
 	nsHTMLContentSinkStream.h \
 	nsHTMLEntities.h \
