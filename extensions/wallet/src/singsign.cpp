@@ -133,7 +133,9 @@ si_SelectDialog(const PRUnichar* szMessage, PRUnichar** pList, PRInt32* pCount) 
   nsCOMPtr<nsIPrompt> prompter(do_QueryInterface(webshellwindow));
   PRInt32 selectedIndex;
   PRBool rtnValue;
-  rv = prompter->Select( NULL, szMessage, *pCount, NS_CONST_CAST(const PRUnichar**, pList), &selectedIndex, &rtnValue );
+  PRUnichar * title_string = Wallet_Localize("SelectUserTitleLine");
+  rv = prompter->Select( title_string, szMessage, *pCount, NS_CONST_CAST(const PRUnichar**, pList), &selectedIndex, &rtnValue );
+  Recycle(title_string);
   *pCount = selectedIndex;
   si_UserHasBeenSelected = PR_TRUE;
   return rtnValue;  
