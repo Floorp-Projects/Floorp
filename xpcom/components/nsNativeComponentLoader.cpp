@@ -129,7 +129,7 @@ nsNativeComponentLoader::GetFactory(const nsIID & aCID,
         }
     }
 
-#ifdef MOZ_TRACE_XPCOM_REFCNT
+#ifdef NS_BUILD_REFCNT_LOGGING
     // Inform refcnt tracer of new library so that calls through the
     // new library can be traced.
     nsTraceRefcnt::LoadLibrarySymbols(dll->GetNativePath(),
