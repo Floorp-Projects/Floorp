@@ -48,11 +48,13 @@
 
 nsObserverList::nsObserverList()
 {
+    MOZ_COUNT_CTOR(nsObserverList);
     mLock = PR_NewLock();
 }
 
 nsObserverList::~nsObserverList(void)
 {
+    MOZ_COUNT_DTOR(nsObserverList);
     PR_DestroyLock(mLock);
 }
 
@@ -79,7 +81,7 @@ nsObserverList::AddObserver(nsIObserver* anObserver, PRBool ownsWeak)
         if ( weakRefFactory )
             observerRef = getter_AddRefs(NS_STATIC_CAST(nsISupports*, NS_GetWeakReference(weakRefFactory)));
     } else {
-#if DEBUG
+#if DEBUG_dougt
         // if you are hitting this assertion, contact dougt@netscape.com.  There may be a ownership problem caused by his checkin to freeze nsIObserver
         nsCOMPtr<nsISupportsWeakReference> weakRefFactory = do_QueryInterface(anObserver);
         NS_ASSERTION(!weakRefFactory, "Your object supports weak references, but is being added with a strong reference");
