@@ -183,13 +183,6 @@ NS_IMETHODIMP imgContainer::DecodingComplete(void)
 }
 
 //******************************************************************************
-/* nsIEnumerator enumerate (); */
-NS_IMETHODIMP imgContainer::Enumerate(nsIEnumerator **_retval)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-//******************************************************************************
 /* void clear (); */
 NS_IMETHODIMP imgContainer::Clear()
 {
