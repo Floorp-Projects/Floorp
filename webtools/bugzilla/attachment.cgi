@@ -877,9 +877,13 @@ sub insert
   my $thedata = SqlQuote($data);
   my $isprivate = $::FORM{'isprivate'} ? 1 : 0;
 
+  # Figure out when the changes were made.
+  my ($timestamp) = Bugzilla->dbh->selectrow_array("SELECT NOW()"); 
+  my $sql_timestamp = SqlQuote($timestamp); 
+
   # Insert the attachment into the database.
   SendSQL("INSERT INTO attachments (bug_id, creation_ts, filename, description, mimetype, ispatch, isprivate, submitter_id, thedata) 
-           VALUES ($::FORM{'bugid'}, now(), $filename, $description, $contenttype, $::FORM{'ispatch'}, $isprivate, $::userid, $thedata)");
+           VALUES ($::FORM{'bugid'}, $sql_timestamp, $filename, $description, $contenttype, $::FORM{'ispatch'}, $isprivate, $::userid, $thedata)");
 
   # Retrieve the ID of the newly created attachment record.
   SendSQL("SELECT LAST_INSERT_ID()");
@@ -897,19 +901,20 @@ sub insert
   AppendComment($::FORM{'bugid'}, 
                 Bugzilla->user->login,
                 $comment,
-                $isprivate);
+                $isprivate,
+                $timestamp);
 
   # Make existing attachments obsolete.
   my $fieldid = GetFieldID('attachments.isobsolete');
   foreach my $obsolete_id (@{$::MFORM{'obsolete'}}) {
       SendSQL("UPDATE attachments SET isobsolete = 1 WHERE attach_id = $obsolete_id");
       SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when, fieldid, removed, added) 
-               VALUES ($::FORM{'bugid'}, $obsolete_id, $::userid, NOW(), $fieldid, '0', '1')");
+               VALUES ($::FORM{'bugid'}, $obsolete_id, $::userid, $sql_timestamp, $fieldid, '0', '1')");
       # If the obsolete attachment has pending flags, migrate them to the new attachment.
       if (Bugzilla::Flag::count({ 'attach_id' => $obsolete_id , 
                                   'status' => 'pending',
                                   'is_active' => 1 })) {
-        Bugzilla::Flag::migrate($obsolete_id, $attachid);
+        Bugzilla::Flag::migrate($obsolete_id, $attachid, $timestamp);
       }
   }
 
@@ -917,8 +922,6 @@ sub insert
   my $owner = "";
   
   if ($::FORM{'takebug'} && UserInGroup("editbugs")) {
-      SendSQL("select NOW()");
-      my $timestamp = FetchOneColumn();
       
       my @fields = ("assigned_to", "bug_status", "resolution", "login_name");
       
@@ -952,15 +955,12 @@ sub insert
               SendSQL("INSERT INTO bugs_activity " .
                       "(bug_id, who, bug_when, fieldid, removed, added) " .
                       " VALUES ($::FORM{'bugid'}, $::userid, " . 
-                      SqlQuote($timestamp) . 
+                      "$sql_timestamp " . 
                       ", $fieldid, $oldvalues[$i], $newvalues[$i])");
           }
       }      
   }   
   
-  # Figure out when the changes were made.
-  my ($timestamp) = Bugzilla->dbh->selectrow_array("SELECT NOW()"); 
-
   # Create flags.
   my $target = Bugzilla::Flag::GetTarget(undef, $attachid);
   Bugzilla::Flag::process($target, $timestamp, \%::FORM);
@@ -1122,7 +1122,7 @@ sub update
     my $quotedoldfilename = SqlQuote($oldfilename);
     my $fieldid = GetFieldID('attachments.filename');
     SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when, fieldid, removed, added) 
-             VALUES ($bugid, $::FORM{'id'}, $::userid, NOW(), $fieldid, $quotedoldfilename, $quotedfilename)");
+             VALUES ($bugid, $::FORM{'id'}, $::userid, $sql_timestamp, $fieldid, $quotedoldfilename, $quotedfilename)");
   }
   if ($oldispatch ne $::FORM{'ispatch'}) {
     my $fieldid = GetFieldID('attachments.ispatch');
@@ -1137,7 +1137,7 @@ sub update
   if ($oldisprivate ne $::FORM{'isprivate'}) {
     my $fieldid = GetFieldID('attachments.isprivate');
     SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when, fieldid, removed, added) 
-             VALUES ($bugid, $::FORM{'id'}, $::userid, NOW(), $fieldid, $oldisprivate, $::FORM{'isprivate'})");
+             VALUES ($bugid, $::FORM{'id'}, $::userid, $sql_timestamp, $fieldid, $oldisprivate, $::FORM{'isprivate'})");
   }
   
   # Update flags.

@@ -360,12 +360,16 @@ sub migrate {
     # Moves a flag from one attachment to another.  Useful for migrating
     # a flag from an obsolete attachment to the attachment that obsoleted it.
 
-    my ($old_attach_id, $new_attach_id) = @_;
+    my ($old_attach_id, $new_attach_id, $timestamp) = @_;
+
+    # Use the date/time we were given if possible (allowing calling code
+    # to synchronize the comment's timestamp with those of other records).
+    $timestamp = ($timestamp ? &::SqlQuote($timestamp) : "NOW()");
 
     # Update the record in the flags table to point to the new attachment.
     &::SendSQL("UPDATE flags " . 
                "SET    attach_id = $new_attach_id , " . 
-               "       modification_date = NOW() " . 
+               "       modification_date = $timestamp " . 
                "WHERE  attach_id = $old_attach_id");
 }
 
