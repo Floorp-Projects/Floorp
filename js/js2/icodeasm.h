@@ -118,7 +118,7 @@ namespace ICodeASM {
                             double *rval);
         string8_citer
         parseICodeModuleOperand (string8_citer begin, string8_citer end,
-                                 string8 **rval);
+                                 VM::ICodeModule **rval);
         string8_citer
         parseJSClassOperand (string8_citer begin, string8_citer end,
                              JSTypes::JSType **rval);

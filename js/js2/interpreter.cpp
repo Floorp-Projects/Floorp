@@ -542,6 +542,12 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     (*registers)[dst(c).first] = (*registers)[src1(c).first].convert(toType);
                 }
                 break;
+            case CLASS:
+                {
+                    Class* c = static_cast<Class*>(instruction);
+                    ASSERT((*registers)[src1(c).first].isObject());
+                    (*registers)[dst(c).first] = (*registers)[src1(c).first].object->getType();
+                }
             case SUPER:
                 {
                     Super* su = static_cast<Super*>(instruction);
@@ -1104,10 +1110,16 @@ using JSString throughout.
                     (*registers)[dst(ls).first] = src1(ls);
                 }
                 break;
-            case LOAD_BOOLEAN:
+            case LOAD_TRUE:
                 {
-                    LoadBoolean* lb = static_cast<LoadBoolean*>(instruction);
-                    (*registers)[dst(lb).first] = src1(lb);
+                    LoadTrue* lt = static_cast<LoadTrue*>(instruction);
+                    (*registers)[dst(lt).first] = true;
+                }
+                break;
+            case LOAD_FALSE:
+                {
+                    LoadFalse* lf = static_cast<LoadFalse*>(instruction);
+                    (*registers)[dst(lf).first] = false;
                 }
                 break;
             case BRANCH:

@@ -169,7 +169,7 @@ ICodeModule *ICodeGenerator::complete(JSType *resultType)
             }
     }
     */
-    ICodeModule* module = new ICodeModule(iCode, 
+    ICodeModule* module = new ICodeModule(iCode,
                                             variableList, 
                                             parameterList,
                                             mPermanentRegister.size(), 
@@ -218,8 +218,10 @@ TypedRegister ICodeGenerator::loadString(const StringAtom &value)
 TypedRegister ICodeGenerator::loadBoolean(bool value)
 {
     TypedRegister dest(getTempRegister(), &Boolean_Type);
-    LoadBoolean *instr = new LoadBoolean(dest, value);
-    iCode->push_back(instr);
+    if (value) 
+        iCode->push_back(new LoadTrue(dest));
+    else
+        iCode->push_back(new LoadFalse(dest));
     return dest;
 }
 
