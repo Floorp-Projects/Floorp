@@ -118,7 +118,7 @@ XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report
 // Function name	: GetInstallScriptFromJarfile
 // Description	    : Extracts and reads in a install.js file from a passed jar file.
 // Return type		: static nsresult 
-// Argument         : const char* jarFile     - native filepath
+// Argument         : const char* jarFile     - **NSPR** filepath
 // Argument         : char** scriptBuffer     - must be deleted via delete []
 // Argument         : PRUint32 *scriptLength
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -209,15 +209,15 @@ static nsresult SetupInstallContext(const char* jarFile,
     // JS init
 	rt = JS_Init(8L * 1024L * 1024L);
 	if (!rt)
+        return NS_ERROR_OUT_OF_MEMORY;
+    else
     {
-        return -1;
-    }
-
-    // new context
-    cx = JS_NewContext(rt, 8192);
-	if (!rt)
-    {
-        return -1;
+        cx = JS_NewContext(rt, 8192);
+	    if (!cx)
+        {
+            JS_DestroyRuntime(rt);
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
     }
 
     JS_SetErrorReporter(cx, XPInstallErrorReporter);
@@ -295,7 +295,7 @@ extern "C" void RunInstallOnThread(void *data)
                                                 kISoftwareUpdateIID,
                                                 (nsISupports**)&softwareUpdate);
     
-    nsIXPInstallProgress *notifier;
+    nsIXPINotifier *notifier;
 
     if (NS_SUCCEEDED(rv))
     {
@@ -314,49 +314,46 @@ extern "C" void RunInstallOnThread(void *data)
     installInfo->GetArguments(args);
 
 
-    rv = GetInstallScriptFromJarfile( nsAutoCString( installInfo->GetLocalFile() ), 
+    char *jarpath;
+    installInfo->GetLocalFile(&jarpath);
+
+    if (!jarpath)
+        goto bail;
+
+    rv = GetInstallScriptFromJarfile( jarpath, 
                                       &scriptBuffer, 
                                       &scriptLength);
-    
+
+    // XXX memory leaks!
     if (NS_FAILED(rv) || scriptBuffer == nsnull)
-    {
         goto bail;
-    }
 
-    
-
-    rv = SetupInstallContext(   nsAutoCString( installInfo->GetLocalFile() ), 
+    rv = SetupInstallContext(   jarpath, 
                                 nsAutoCString( args ), 
                                 &rt, &cx, &glob);
     if (NS_FAILED(rv))
-    {
-        delete [] scriptBuffer;
         goto bail;
-    }
     
     // Go ahead and run!!
     jsval rval;
 
     JS_EvaluateScript(cx, 
                       glob,
-		              scriptBuffer, 
+                      scriptBuffer, 
                       scriptLength,
                       nsnull,
                       0,
-		              &rval);
-        
-    
-    
-    delete [] scriptBuffer;
-    
-    JS_DestroyContext(cx);
-	JS_DestroyRuntime(rt);
-	          
+                      &rval);
 
+    JS_DestroyContext(cx);
+    JS_DestroyRuntime(rt);
+
+bail:
     if(notifier)
         notifier->AfterJavascriptEvaluation();
 
+    if (scriptBuffer) delete [] scriptBuffer;
+    if (jarpath) nsCRT::free(jarpath);
 
-bail:
     softwareUpdate->InstallJarCallBack();
 }

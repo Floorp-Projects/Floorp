@@ -26,17 +26,20 @@ MODULE=xpinstall
 DEPTH=..\..
 
 EXPORTS=    nsIDOMInstallTriggerGlobal.h \
-			nsIDOMInstallVersion.h       \
+            nsIDOMInstallVersion.h       \
             nsSoftwareUpdateIIDs.h       \
-			nsISoftwareUpdate.h
+            nsISoftwareUpdate.h          \
+            $(NULL)
 
-XPIDLSRCS = .\nsIXPInstallProgress.idl        
+XPIDLSRCS =                              \
+            .\nsIXPINotifier.idl         \
+            .\nsIXPIProgressDlg.idl      \
+            $(NULL) 
 
 include <$(DEPTH)\config\config.mak>
 include <$(DEPTH)\config\rules.mak>
 
 libs::
     $(MAKE_INSTALL) .\xpinstall.js $(DIST)\bin\components\
-
 
 

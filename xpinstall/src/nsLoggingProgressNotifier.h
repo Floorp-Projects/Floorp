@@ -27,11 +27,11 @@
 #ifndef nsLoggingProgressNotifier_H__
 #define nsLoggingProgressNotifier_H__
 
-#include "nsIXPInstallProgress.h"
+#include "nsIXPINotifier.h"
 #include "nsFileStream.h"
 
 
-class nsLoggingProgressNotifier : public nsIXPInstallProgress
+class nsLoggingProgressNotifier : public nsIXPINotifier
 {
     public:
         

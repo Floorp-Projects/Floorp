@@ -26,6 +26,7 @@
 #include "nsCOMPtr.h"
 
 #include "nspr.h"
+#include "prlock.h"
 #include "nsVector.h"
 #include "VerReg.h"
 #include "nsSpecialSystemDirectory.h"
@@ -81,7 +82,7 @@ static NS_DEFINE_IID(kInstallTrigger_CID, NS_SoftwareUpdateInstallTrigger_CID);
 static NS_DEFINE_IID(kIInstallVersion_IID, NS_IDOMINSTALLVERSION_IID);
 static NS_DEFINE_IID(kInstallVersion_CID, NS_SoftwareUpdateInstallVersion_CID);
 
-static NS_DEFINE_IID(kProxyObjectManagerIID, NS_IPROXYEVENT_MANAGER_IID);
+static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 static NS_DEFINE_IID(kEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 
 
@@ -96,8 +97,8 @@ nsSoftwareUpdate::nsSoftwareUpdate()
      /***************************************/
     /* Create us a queue                   */
     /***************************************/
-    mInstalling = nsnull;
-
+    mLock = PR_NewLock();
+    mInstalling = PR_FALSE;
     mJarInstallQueue = new nsVector();
 
     /***************************************/
@@ -115,28 +116,17 @@ nsSoftwareUpdate::nsSoftwareUpdate()
     /***************************************/
     /* Startup the Version Registry        */
     /***************************************/
-    
+
     NR_StartupRegistry();   /* startup the registry; if already started, this will essentially be a noop */
 
     nsSpecialSystemDirectory appDir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
     VR_SetRegDirectory( appDir.GetNativePathCString() );
-    
-    /***************************************/
-    /* Stupid Hack to test js env*/
-    /***************************************/
-    // FIX:  HACK HACK HACK!
-#if 0  
-    nsSpecialSystemDirectory jarFile(nsSpecialSystemDirectory::OS_TemporaryDirectory);
-    jarFile += "test.jar";
-    if (jarFile.Exists())
-    {
-        InstallJar(nsString(nsFileURL(jarFile)), "", "");
-    }
-#endif    
+
+
     /***************************************/
     /* Perform Scheduled Tasks             */
     /***************************************/
-    
+
     PR_CreateThread(PR_USER_THREAD,
                     PerformScheduledTasks,
                     nsnull, 
@@ -144,7 +134,8 @@ nsSoftwareUpdate::nsSoftwareUpdate()
                     PR_GLOBAL_THREAD, 
                     PR_UNJOINABLE_THREAD,
                     0);  
-    
+
+
     /***************************************/
     /* Create a top level observer         */
     /***************************************/
@@ -154,7 +145,7 @@ nsSoftwareUpdate::nsSoftwareUpdate()
     nsLoggingProgressNotifier *logger = new nsLoggingProgressNotifier();
     RegisterNotifier(logger);
 
-    nsIProxyObjectManager *manager;
+//#if 0
     nsInstallProgressDialog *dialog = new nsInstallProgressDialog();
     nsInstallProgressDialog *proxy; 
     nsISupports *dialogBase;
@@ -163,37 +154,21 @@ nsSoftwareUpdate::nsSoftwareUpdate()
 
     if (NS_SUCCEEDED(rv))
     {
-        rv = nsServiceManager::GetService( NS_XPCOMPROXY_PROGID, 
-                                                kProxyObjectManagerIID,
-                                                (nsISupports **)&manager);
+        NS_WITH_SERVICE(nsIProxyObjectManager, manager, kProxyObjectManagerCID, &rv);
 
         if (NS_SUCCEEDED(rv))
         {
-            // I am assuming that the thread that starts us up is the UI thread.  this will/may break
-            // I need to make a generic way of getting at the UI event queue.
-        
-            nsIEventQueueService *eventQService;
-            rv = nsServiceManager::GetService(NS_EVENTQUEUESERVICE_PROGID, 
-                                            kEventQueueServiceIID,
-                                            (nsISupports **)&eventQService);
-
-                                
+            rv = manager->GetProxyObject(nsnull, nsIXPINotifier::GetIID(), dialogBase, PROXY_SYNC, (void**)&proxy);
             if (NS_SUCCEEDED(rv))
             {
-                nsIEventQueue *eventQ;
-                eventQService->GetThreadEventQueue(PR_GetCurrentThread(), &eventQ);
-
-                rv = manager->GetProxyObject(eventQ, nsIXPInstallProgress::GetIID(), dialogBase, PROXY_SYNC, (void**)&proxy);
-                if (NS_SUCCEEDED(rv))
-                {
-                    RegisterNotifier(proxy);
-                }
+                RegisterNotifier(proxy);
             }
         }
     }
 
     if (dialog)
         dialog->Release();
+//#endif
 }
 
 
@@ -206,6 +181,7 @@ nsSoftwareUpdate::~nsSoftwareUpdate()
     printf("*** XPInstall Component destroyed\n");
 #endif
 
+    PR_Lock(mLock);
     if (mJarInstallQueue != nsnull)
     {
         PRUint32 i=0;
@@ -220,7 +196,9 @@ nsSoftwareUpdate::~nsSoftwareUpdate()
         delete (mJarInstallQueue);
         mJarInstallQueue = nsnull;
     }
+    PR_Unlock(mLock);
 
+    PR_DestroyLock(mLock);
     NR_ShutdownRegistry();
 }
 
@@ -228,16 +206,16 @@ NS_IMPL_ADDREF( nsSoftwareUpdate );
 NS_IMPL_RELEASE( nsSoftwareUpdate );
 
 NS_IMETHODIMP
-nsSoftwareUpdate::QueryInterface( REFNSIID anIID, void **anInstancePtr ) 
+nsSoftwareUpdate::QueryInterface( REFNSIID anIID, void **anInstancePtr )
 {
     nsresult rv = NS_OK;
     /* Check for place to return result. */
     
-    if ( !anInstancePtr ) 
+    if ( !anInstancePtr )
     {
         rv = NS_ERROR_NULL_POINTER;
-    } 
-    else 
+    }
+    else
     {
         /* Initialize result. */
         *anInstancePtr = 0;
@@ -246,18 +224,18 @@ nsSoftwareUpdate::QueryInterface( REFNSIID anIID, void **anInstancePtr )
         {
             *anInstancePtr = (void*) ( (nsISoftwareUpdate*)this );
             NS_ADDREF_THIS();
-        } 
+        }
         else if ( anIID.Equals( nsIAppShellComponent::GetIID() ) ) 
         {
             *anInstancePtr = (void*) ( (nsIAppShellComponent*)this );
             NS_ADDREF_THIS();
-        } 
+        }
         else if ( anIID.Equals( kISupportsIID ) )
         {
             *anInstancePtr = (void*) ( (nsISupports*) (nsISoftwareUpdate*) this );
             NS_ADDREF_THIS();
         }
-        else 
+        else
         {
             /* Not an interface we support. */\
             rv = NS_NOINTERFACE;
@@ -271,9 +249,9 @@ NS_IMETHODIMP
 nsSoftwareUpdate::Initialize( nsIAppShellService *anAppShell, nsICmdLineService  *aCmdLineService ) 
 {
     nsresult rv;
-    
+
     rv = nsServiceManager::RegisterService( NS_IXPINSTALLCOMPONENT_PROGID, ( (nsISupports*) (nsISoftwareUpdate*) this ) );
-    
+
     return rv;
 }
 
@@ -283,13 +261,13 @@ nsSoftwareUpdate::Shutdown()
     nsresult rv;
 
     rv = nsServiceManager::ReleaseService( NS_IXPINSTALLCOMPONENT_PROGID, ( (nsISupports*) (nsISoftwareUpdate*) this ) );
-    
+
     return rv;
 }
 
 
 NS_IMETHODIMP 
-nsSoftwareUpdate::RegisterNotifier(nsIXPInstallProgress *notifier)
+nsSoftwareUpdate::RegisterNotifier(nsIXPINotifier *notifier)
 {
     // we are going to ignore the returned ID and enforce that once you 
     // register a notifier, you can not remove it.  This should at some
@@ -301,27 +279,38 @@ nsSoftwareUpdate::RegisterNotifier(nsIXPInstallProgress *notifier)
 }
 
 NS_IMETHODIMP
-nsSoftwareUpdate::GetTopLevelNotifier(nsIXPInstallProgress **notifier)
+nsSoftwareUpdate::GetTopLevelNotifier(nsIXPINotifier **notifier)
 {
     *notifier = mTopLevelObserver;
+    NS_ADDREF(*notifier);
     return NS_OK;
 }
 
 
 NS_IMETHODIMP
-nsSoftwareUpdate::InstallJar(  const nsString& fromURL,
-                               const nsString& localFile, 
-                               long flags)
+nsSoftwareUpdate::InstallJar(  nsIFileSpec* aLocalFile,
+                               const PRUnichar* aArguments,
+                               long flags,
+                               nsIXPINotifier* aNotifier)
 {
-    nsInstallInfo *installInfo = new nsInstallInfo(fromURL, localFile, flags);
+    if ( !aLocalFile )
+        return NS_ERROR_NULL_POINTER;
+
+    nsInstallInfo *info =
+        new nsInstallInfo( aLocalFile, aArguments, flags, aNotifier );
     
-    mJarInstallQueue->Add( installInfo );
-    
+    if (!info)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    PR_Lock(mLock);
+    mJarInstallQueue->Add( info );
+    PR_Unlock(mLock);
     RunNextInstall();
 
     return NS_OK;
 }
 
+#if 0   // Can't see why we need this one
 NS_IMETHODIMP
 nsSoftwareUpdate::InstallPending(void)
 {
@@ -334,10 +323,12 @@ nsSoftwareUpdate::InstallPending(void)
         return 0;
     }
 }
+#endif
 
 NS_IMETHODIMP
 nsSoftwareUpdate::InstallJarCallBack()
 {
+    PR_Lock(mLock);
     nsInstallInfo *nextInstall = (nsInstallInfo*)mJarInstallQueue->Get(0);
     
     if (nextInstall != nsnull)
@@ -346,6 +337,7 @@ nsSoftwareUpdate::InstallJarCallBack()
     mJarInstallQueue->Remove(0);
     
     mInstalling = PR_FALSE;
+    PR_Unlock(mLock);
 
     return RunNextInstall();
 
@@ -355,30 +347,29 @@ nsSoftwareUpdate::InstallJarCallBack()
 nsresult
 nsSoftwareUpdate::RunNextInstall()
 {
-    if (mInstalling == PR_TRUE)
-        return NS_OK;
+    nsresult rv = NS_OK;
 
-    mInstalling = PR_TRUE;
+    PR_Lock(mLock);
+    if (!mInstalling)
+    {
+        if ( mJarInstallQueue->GetSize() > 0 )
+        {
+            nsInstallInfo *info = (nsInstallInfo*)mJarInstallQueue->Get(0);
 
-    //  check to see if there is anything in our queue
-    if (mJarInstallQueue->GetSize() <= 0)
-    {
-        mInstalling = PR_FALSE;
-        return NS_OK;
+            if ( info )
+            {
+                mInstalling = PR_TRUE;
+                RunInstall( info );
+            }
+            else
+                rv = NS_ERROR_NULL_POINTER;
+        }
+        else
+            ; // nothing more to do
     }
-    
-    nsInstallInfo *nextInstall = (nsInstallInfo*)mJarInstallQueue->Get(0);
-        
-    if (nextInstall->IsMultipleTrigger() == PR_FALSE)
-    {
-        RunInstall( nextInstall );
-    }
-    else
-    {
-        ; // should we do something different?! 
-    }
-    
-    return NS_OK;
+    PR_Unlock(mLock);
+
+    return rv;
 }
 
 

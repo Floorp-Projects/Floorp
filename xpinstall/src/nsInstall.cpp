@@ -75,108 +75,34 @@
 #endif
 
 
-nsInstallInfo::nsInstallInfo(const nsString& fromURL, const nsString& localFile, long flags)
-{
-    mError              =  0;        // Set error to zero
-    
-    mMultipleTrigger    = PR_FALSE;  // This is not a Multiple trigger
-    
-    mFlags              = flags;
-    mLocalFiles         = new nsVector();
-    mFromURLs           = new nsVector();
-    
-    nsString *tempString;
+nsInstallInfo::nsInstallInfo(nsIFileSpec* aFile, 
+                             const PRUnichar* aArgs, 
+                             long flags, 
+                             nsIXPINotifier* aNotifier)
+: mError(0), 
+  mFlags(flags), 
+  mArgs(aArgs), 
+  mFile(aFile), 
+  mNotifier(aNotifier)
+{}
 
-    tempString = new nsString(fromURL);
-    mFromURLs->Add((void*) tempString);
-
-    tempString = new nsString(localFile);
-    mLocalFiles->Add((void*) tempString);
-
-}
-
-nsInstallInfo::nsInstallInfo(nsVector* fromURL, nsVector* localFiles, long flags)
-{
-    mError              =  0;        // Set error to zero
-
-    mMultipleTrigger    = PR_TRUE;   // This is a Multiple trigger
-    
-    
-    mFlags              = flags;
-    mLocalFiles         = new nsVector();
-
-    mFromURLs           = fromURL;
-    mLocalFiles         = localFiles;
-
-}
-
-void
-nsInstallInfo::DeleteVector(nsVector* vector)
-{
-    if (vector != nsnull)
-    {
-        PRUint32 i=0;
-        for (; i < vector->GetSize(); i++) 
-        {
-            nsString* element = (nsString*)vector->Get(i);
-            if (element != nsnull)
-                delete element;
-        }
-
-        vector->RemoveAll();
-        delete (vector);
-        vector = nsnull;
-    }
-}
 
 
 nsInstallInfo::~nsInstallInfo()
 {
-    DeleteVector(mFromURLs);
-    DeleteVector(mLocalFiles);
     VR_Close();
 }
 
-nsString& 
-nsInstallInfo::GetFromURL(PRUint32 index)
-{
-    nsString* element = (nsString*)mFromURLs->Get(index);
-    return *element;
-}
-
-nsString& 
-nsInstallInfo::GetLocalFile(PRUint32 index)
-{
-    nsString* element = (nsString*)mLocalFiles->Get(index);
-    return *element;
-}
-
 void 
-nsInstallInfo::GetArguments(nsString& args, PRUint32 index)
+nsInstallInfo::GetLocalFile(char **aPath)
 {
-    nsString aURL = GetFromURL(index);
-
-    PRInt32 result = aURL.RFind("?");
-    if (result != -1)
-    {            
-        aURL.Right(args, (aURL.Length() - result - 1) );  
-        return;
-    }
-    
-    args = "";
-}
-
-long nsInstallInfo::GetFlags()
-{
-    return mFlags;
+    if (mFile)
+        mFile->GetNSPRPath(aPath);
+    else
+        *aPath = 0;
 }
 
 
-PRBool
-nsInstallInfo::IsMultipleTrigger()
-{
-    return mMultipleTrigger;
-}
 
 
 static NS_DEFINE_IID(kISoftwareUpdateIID, NS_ISOFTWAREUPDATE_IID);
@@ -304,9 +230,6 @@ nsInstall::AddDirectory(const nsString& aRegName,
         return NS_OK;
     }
 
-    nsString jarsrc(aJarSource);
-    jarsrc.Append("/*");
-    
     result = SanityCheck();
     
     if (result != nsInstall::SUCCESS)
@@ -342,14 +265,14 @@ nsInstall::AddDirectory(const nsString& aRegName,
     
     nsVector *paths = new nsVector();
     
-    result = ExtractDirEntries(jarsrc, paths);
+    result = ExtractDirEntries(aJarSource, paths);
     if (result != nsInstall::SUCCESS)
     {
         *aReturn = SaveError( result );
         return NS_OK;
     }
     
-    for (PRUint32 i=0; i <= paths->GetUpperBound(); i++)
+    for (PRUint32 i=0; i < paths->GetSize(); i++)
     {
         nsString *thisPath = (nsString *)paths->Get(i);
 
@@ -391,7 +314,7 @@ nsInstall::AddDirectory(const nsString& aRegName,
     
     }
     
-    nsInstallInfo::DeleteVector(paths);
+    DeleteVector(paths);
 
     *aReturn = SaveError( result );
     return NS_OK;
@@ -1467,7 +1390,7 @@ nsInstall::ScheduleForInstall(nsInstallObject* ob)
     // flash current item
 
     if (mNotifier)
-        if ( mNotifier->ItemScheduled(objString) != 0 )
+        if ( !NS_SUCCEEDED(mNotifier->ItemScheduled(objString)) )
             mUserCancelled = PR_TRUE;
 
     delete [] objString;
@@ -1824,11 +1747,14 @@ nsInstall::ExtractDirEntries(const nsString& directory, nsVector *paths)
 
     if ( paths )
     {
-        void* find = ZIP_FindInit( mJarFileData, nsAutoCString(directory) );
+        nsString pattern(directory);
+        pattern += "/?*";
+
+        void* find = ZIP_FindInit( mJarFileData, nsAutoCString(pattern) );
 
         if ( find ) 
         {
-            PRInt32 prefix_length = directory.Length() - 1;
+            PRInt32 prefix_length = directory.Length();
             if ( prefix_length >= sizeof(buf)-1 )
                 return UNEXPECTED_ERROR;
 
@@ -1848,4 +1774,23 @@ nsInstall::ExtractDirEntries(const nsString& directory, nsVector *paths)
     }
 
     return UNEXPECTED_ERROR;
+}
+
+void
+nsInstall::DeleteVector(nsVector* vector)
+{
+    if (vector != nsnull)
+    {
+        PRUint32 i=0;
+        for (; i < vector->GetSize(); i++) 
+        {
+            nsString* element = (nsString*)vector->Get(i);
+            if (element != nsnull)
+                delete element;
+        }
+
+        vector->RemoveAll();
+        delete (vector);
+        vector = nsnull;
+    }
 }

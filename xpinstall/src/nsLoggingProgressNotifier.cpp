@@ -22,7 +22,7 @@
  *     Douglas Turner <dougt@netscape.com>
  */
 
-#include "nsIXPInstallProgress.h"
+#include "nsIXPINotifier.h"
 #include "nsLoggingProgressNotifier.h"
 
 #include "nsFileSpec.h"
@@ -42,7 +42,7 @@ nsLoggingProgressNotifier::~nsLoggingProgressNotifier()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsLoggingProgressNotifier, nsIXPInstallProgress::GetIID());
+NS_IMPL_ISUPPORTS(nsLoggingProgressNotifier, nsIXPINotifier::GetIID());
 
 NS_IMETHODIMP
 nsLoggingProgressNotifier::BeforeJavascriptEvaluation()

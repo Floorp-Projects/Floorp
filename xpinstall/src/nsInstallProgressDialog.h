@@ -24,7 +24,9 @@
 #ifndef __nsInstallProgressDialog_h__
 #define __nsInstallProgressDialog_h__
 
-#include "nsIXPInstallProgress.h"
+#include "nscore.h"
+#include "nsIXPINotifier.h"
+#include "nsIXPIProgressDlg.h"
 #include "nsISupports.h"
 #include "nsISupportsUtils.h"
 
@@ -38,7 +40,8 @@
 #include "nsIDOMXULDocument.h"
 
 
-class nsInstallProgressDialog : public nsIXPInstallProgress, public nsIXULWindowCallbacks
+class nsInstallProgressDialog : public nsIXPINotifier,
+    public nsIXULWindowCallbacks, public nsIXPIProgressDlg
 {
     public: 
 
@@ -47,7 +50,7 @@ class nsInstallProgressDialog : public nsIXPInstallProgress, public nsIXULWindow
         
         NS_DECL_ISUPPORTS
 
-        
+        // implement nsIXPINotifier  
         NS_IMETHOD BeforeJavascriptEvaluation();
         NS_IMETHOD AfterJavascriptEvaluation();
         NS_IMETHOD InstallStarted(const char *UIPackageName);
@@ -55,9 +58,22 @@ class nsInstallProgressDialog : public nsIXPInstallProgress, public nsIXULWindow
         NS_IMETHOD InstallFinalization(const char *message, PRInt32 itemNum, PRInt32 totNum);
         NS_IMETHOD InstallAborted();
 
+        // implement nsIXPIProgressDlg
+        NS_IMETHOD Open();
+        NS_IMETHOD Close();
+        NS_IMETHOD SetTitle(const PRUnichar * aTitle);
+        NS_IMETHOD SetHeading(const PRUnichar * aHeading);
+        NS_IMETHOD SetActionText(const PRUnichar * aActionText);
+        NS_IMETHOD SetProgress(PRInt32 aValue, PRInt32 aMax);
+        NS_IMETHOD GetCancelStatus(PRBool *_retval);
+
         // Declare implementations of nsIXULWindowCallbacks interface functions.
         NS_IMETHOD ConstructBeforeJavaScript(nsIWebShell *aWebShell);
         NS_IMETHOD ConstructAfterJavaScript(nsIWebShell *aWebShell) { return NS_OK; }
+
+    protected:
+        nsresult setDlgAttribute(const char *id, const char *name, const nsString &value);
+        nsresult getDlgAttribute(const char *id, const char *name, nsString &value);
 
     private:
 

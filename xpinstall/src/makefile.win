@@ -81,7 +81,6 @@ OBJS =                                          \
        .\$(OBJDIR)\nsJSInstallVersion.obj       \
        .\$(OBJDIR)\nsSoftwareUpdate.obj         \
        .\$(OBJDIR)\nsSoftwareUpdateRun.obj      \
-       .\$(OBJDIR)\nsSoftwareUpdateStream.obj   \
        .\$(OBJDIR)\nsInstallFile.obj            \
        .\$(OBJDIR)\nsInstallDelete.obj          \
        .\$(OBJDIR)\nsInstallExecute.obj         \
@@ -99,6 +98,8 @@ OBJS =                                          \
        .\$(OBJDIR)\nsJSWinProfile.obj           \
        .\$(OBJDIR)\nsWinProfileItem.obj         \
        .\$(OBJDIR)\nsInstallProgressDialog.obj  \
+       .\$(OBJDIR)\nsXPITriggerInfo.obj         \
+       .\$(OBJDIR)\nsXPInstallManager.obj       \
        .\$(OBJDIR)\nsInstallFileOpItem.obj      \
        $(NULL)
 

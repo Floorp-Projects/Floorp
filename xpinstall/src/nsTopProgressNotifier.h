@@ -25,18 +25,18 @@
 #ifndef nsTopProgressNotifier_h__
 #define nsTopProgressNotifier_h__
 
-#include "nsIXPInstallProgress.h"
+#include "nsIXPINotifier.h"
 #include "nsVector.h"
 
 
-class nsTopProgressNotifier : public nsIXPInstallProgress
+class nsTopProgressNotifier : public nsIXPINotifier
 {
     public:
 
         nsTopProgressNotifier();
         virtual ~nsTopProgressNotifier();
 
-        long RegisterNotifier(nsIXPInstallProgress * newNotifier);
+        long RegisterNotifier(nsIXPINotifier * newNotifier);
         void UnregisterNotifier(long id);
 
         NS_DECL_ISUPPORTS

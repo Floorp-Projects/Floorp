@@ -18,7 +18,7 @@
  */
 
 #include "nsSoftwareUpdate.h"
-#include "nsSoftwareUpdateStream.h"
+#include "nsXPInstallManager.h"
 #include "nsInstallTrigger.h"
 #include "nsIDOMInstallTriggerGlobal.h"
 
@@ -152,35 +152,66 @@ nsInstallTrigger::UpdateEnabled(PRBool* aReturn)
     {
         *aReturn = PR_FALSE;  /* no prefs manager.  set to false */
     }
- 
+
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsInstallTrigger::Install(nsXPITriggerInfo* aTrigger, PRBool* aReturn)
+{
+    nsresult rv;
+
+    *aReturn = PR_FALSE;
+
+    nsXPInstallManager *mgr = new nsXPInstallManager();
+    if (mgr)
+    {
+        // The Install manager will delete itself when done
+        rv = mgr->InitManager( aTrigger );
+        if (NS_SUCCEEDED(rv))
+            *aReturn = PR_TRUE;
+    }
+    else
+        rv = NS_ERROR_OUT_OF_MEMORY;
+
+
+    return rv;
 }
 
 
 NS_IMETHODIMP    
 nsInstallTrigger::StartSoftwareUpdate(const nsString& aURL, PRInt32 aFlags, PRInt32* aReturn)
 {
-    nsString localFile;
-    CreateTempFileFromURL(aURL, localFile);
+    nsresult rv = NS_ERROR_OUT_OF_MEMORY;
 
-    // start the download (this will clean itself up)
-    nsSoftwareUpdateListener *downloader = new nsSoftwareUpdateListener(aURL, localFile, aFlags);
+    // The Install manager will delete itself when done
+    nsXPInstallManager *mgr = new nsXPInstallManager();
+    if (mgr)
+    {
+        nsXPITriggerInfo* trigger = new nsXPITriggerInfo();
+        if ( trigger )
+        {
+            nsXPITriggerItem* item = new nsXPITriggerItem(0,aURL.GetUnicode());
+            if (item)
+            {
+                trigger->Add( item );
+                // The Install manager will delete itself when done
+                rv = mgr->InitManager( trigger );
+            }
+            else
+            {
+                rv = NS_ERROR_OUT_OF_MEMORY;
+                delete trigger;
+            }
+        }
+        else
+            rv = NS_ERROR_OUT_OF_MEMORY;
+    }
+    else
+        rv = NS_ERROR_OUT_OF_MEMORY;
 
     *aReturn = NS_OK;  // maybe we should do something more.
-    return NS_OK;
-}
-
-NS_IMETHODIMP    
-nsInstallTrigger::StartSoftwareUpdate(const nsString& aURL, PRInt32* aReturn)
-{
-    nsString localFile;
-    CreateTempFileFromURL(aURL, localFile);
-
-    // start the download (this will clean itself up)
-    nsSoftwareUpdateListener *downloader = new nsSoftwareUpdateListener(aURL, localFile, 0);
-
-    *aReturn = NS_OK;  // maybe we should do something more.
-    return NS_OK;
+    return rv;
 }
 
 NS_IMETHODIMP    
