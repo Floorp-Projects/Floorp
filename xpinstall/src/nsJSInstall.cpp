@@ -1790,8 +1790,9 @@ static JSConstDoubleSpec install_constants[] =
     { nsInstall::REBOOT_NEEDED,              "REBOOT_NEEDED"                },
 
     // these are bitwise values supported by addFile
-    { nsInstall::DO_NOT_UNINSTALL,           "DO_NOT_UNINSTALL"             },
-    { nsInstall::WIN_SHARED_FILE,            "WIN_SHARED_FILE"              },
+    { DO_NOT_UNINSTALL,                      "DO_NOT_UNINSTALL"             },
+    { WIN_SHARED_FILE,                       "WIN_SHARED_FILE"              },
+    { WIN_SYSTEM_FILE,                       "WIN_SYSTEM_FILE"              },
 
     { CHROME_SKIN,                           "SKIN"                         },
     { CHROME_LOCALE,                         "LOCALE"                       },

@@ -62,30 +62,20 @@ GetPersistentStringFromSpec(nsIFile* inSpec, char **string)
 #include <sys/stat.h>
 #include <windows.h>
 
-PRInt32 ReplaceExistingWindowsFile(nsIFile* currentSpec, nsIFile* finalSpec)
+PRInt32 ReplaceWindowsSystemFile(nsIFile* currentSpec, nsIFile* finalSpec)
 {
-    // this routine is now for DOS-based windows only. WinNT should 
-    // be taken care of by the XP code
-    //
-    // NOTE for WINNT:
-    //
-    // the MOVEFILE_DELAY_UNTIL_REBOOT option doesn't work on
-    // NT 3.51 SP4 or on NT 4.0 until SP2. On the broken versions
-    // of NT 4.0 Microsoft warns using it can lead to an irreparably 
-    // corrupt  windows' registry "after an unknown number of calls".
-    // Time to reinstall windows when that happens.
-    //
-    // I don't want to risk it, I also don't want two separate code
-    // paths to test, so we do it the lame way on all NT systems
-    // until such time as there are few enough old revs around to
-    // make it worth switching back to MoveFileEx().
-
     PRInt32 err = -1;
 
-    /* Get OS version info */
+    // Get OS version info 
     DWORD dwVersion = GetVersion();
 
-    /* Get build numbers for Windows NT or Win32s */
+    char *final;
+    char *current;
+
+    finalSpec->GetPath(&final);
+    currentSpec->GetPath(&current);
+ 
+    // Get build numbers for Windows NT or Win32s 
 
     if (dwVersion > 0x80000000)
     {
@@ -97,41 +87,39 @@ PRInt32 ReplaceExistingWindowsFile(nsIFile* currentSpec, nsIFile* finalSpec)
         int     strlen;
         char    Src[_MAX_PATH];   // 8.3 name
         char    Dest[_MAX_PATH];  // 8.3 name
-
-        
-        char* final;
-        char* current;
-
-        finalSpec->GetPath(&final);
-        currentSpec->GetPath(&current);
         
         strlen = GetShortPathName( (LPCTSTR)current, (LPTSTR)Src, (DWORD)sizeof(Src) );
         if ( strlen > 0 ) 
         {
             free(current);
-            current   = strdup(Src);
+            current = strdup(Src);
         }
 
         strlen = GetShortPathName( (LPCTSTR) final, (LPTSTR) Dest, (DWORD) sizeof(Dest));
         if ( strlen > 0 ) 
         {
             free(final);
-            final   = strdup(Dest);
+            final = strdup(Dest);
         }
         
-        /* NOTE: use OEM filenames! Even though it looks like a Windows
-         *       .INI file, WININIT.INI is processed under DOS 
-         */
+        // NOTE: use OEM filenames! Even though it looks like a Windows
+        //       .INI file, WININIT.INI is processed under DOS 
         
         AnsiToOem( final, final );
         AnsiToOem( current, current );
 
         if ( WritePrivateProfileString( "Rename", final, current, "WININIT.INI" ) )
             err = 0;
-
-        free(final);
-        free(current);
     }
+    else
+    {
+       // Windows NT
+        if ( MoveFileEx(final, current, MOVEFILE_DELAY_UNTIL_REBOOT) )
+          err = 0;
+    }
+
+    free(final);
+    free(current);
     
     return err;
 }
@@ -348,7 +336,7 @@ PRInt32 ReplaceFileNow(nsIFile* replacementFile, nsIFile* doomedFile )
 
 
 
-PRInt32 ReplaceFileNowOrSchedule(nsIFile* replacementFile, nsIFile* doomedFile )
+PRInt32 ReplaceFileNowOrSchedule(nsIFile* replacementFile, nsIFile* doomedFile, PRInt32 aMode)
 {
     PRInt32 result = ReplaceFileNow( replacementFile, doomedFile );
 
@@ -356,8 +344,9 @@ PRInt32 ReplaceFileNowOrSchedule(nsIFile* replacementFile, nsIFile* doomedFile )
     {
         // if we couldn't replace the file schedule it for later
 #ifdef _WINDOWS
-        if ( ReplaceExistingWindowsFile(replacementFile, doomedFile) == 0 )
-            return nsInstall::REBOOT_NEEDED;
+        if ( (aMode & WIN_SYSTEM_FILE) && 
+             (ReplaceWindowsSystemFile(replacementFile, doomedFile) == 0) )
+                return nsInstall::REBOOT_NEEDED;
 #endif
 
         RKEY    listkey;
@@ -450,7 +439,7 @@ void DeleteScheduledFiles( HREG reg )
     REGENUM state = 0;
     nsresult rv = NS_OK;
 
-    /* perform scheduled file deletions  */
+    // perform scheduled file deletions  
     if (REGERR_OK == NR_RegGetKey(reg,ROOTKEY_PRIVATE,REG_DELETE_LIST_KEY,&key))
     {
         // the delete key exists, so we loop through its children
@@ -490,7 +479,7 @@ void DeleteScheduledFiles( HREG reg )
                 }
             }
 
-            /* delete list node if empty */
+            // delete list node if empty 
             state = 0;
             err = NR_RegEnumEntries(reg, key, &state, namebuf, sizeof(namebuf), 0);
             if ( err == REGERR_NOMORE )
@@ -507,7 +496,7 @@ void ReplaceScheduledFiles( HREG reg )
 {
     RKEY    key;
 
-    /* replace files if any listed */
+    // replace files if any listed 
     if (REGERR_OK == NR_RegGetKey(reg,ROOTKEY_PRIVATE,REG_REPLACE_LIST_KEY,&key))
     {
         char keyname[MAXREGNAMELEN];
@@ -557,7 +546,7 @@ void ReplaceScheduledFiles( HREG reg )
         }
 
 
-        /* delete list node if empty */
+        // delete list node if empty 
         state = 0;
         if (REGERR_NOMORE == NR_RegEnumSubkeys( reg, key, &state, keyname,
                                      sizeof(keyname), REGENUM_CHILDREN ))

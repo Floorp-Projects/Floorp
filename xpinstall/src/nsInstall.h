@@ -117,6 +117,11 @@ class nsInstallInfo
 #define FILESEP '/'
 #endif
 
+// not using 0x1 in this bitfield because it causes problems with legacy code
+#define DO_NOT_UNINSTALL  0x2
+#define WIN_SHARED_FILE   0x4
+#define WIN_SYSTEM_FILE   0x8
+
 class nsInstall
 {
     friend class nsWinReg;
@@ -182,10 +187,7 @@ class nsInstall
             GESTALT_INVALID_ARGUMENT    = -5551,
 
             SUCCESS                     = 0,
-            REBOOT_NEEDED               = 999,
-
-            DO_NOT_UNINSTALL            = 2,
-            WIN_SHARED_FILE             = 4
+            REBOOT_NEEDED               = 999
         };
 
 
