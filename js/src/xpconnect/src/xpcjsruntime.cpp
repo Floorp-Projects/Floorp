@@ -269,29 +269,33 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
                 // Skip this part if XPConnect is shutting down. We get into
                 // bad locking problems with the thread iteration otherwise.
                 if(!self->GetXPConnect()->IsShuttingDown())
-                { // scoped lock
-                    nsAutoLock lock(XPCPerThreadData::GetLock());
+                {
+                    PRLock* threadLock = XPCPerThreadData::GetLock();
+                    if(threadLock)
+                    { // scoped lock
+                        nsAutoLock lock(threadLock);
 
-                    XPCPerThreadData* iterp = nsnull;
-                    XPCPerThreadData* thread;
+                        XPCPerThreadData* iterp = nsnull;
+                        XPCPerThreadData* thread;
 
-                    while(nsnull != (thread =
+                        while(nsnull != (thread =
                                      XPCPerThreadData::IterateThreads(&iterp)))
-                    {
-                        XPCCallContext* ccxp = thread->GetCallContext();
-                        while(ccxp)
                         {
-                            // Deal with the strictness of callcontext that
-                            // complains if you ask for a set when
-                            // it is in a state where the set could not
-                            // possibly be valid.
-                            if(ccxp->CanGetSet())
-                            {
-                                XPCNativeSet* set = ccxp->GetSet();
-                                if(set)
-                                    set->Mark();
+                            XPCCallContext* ccxp = thread->GetCallContext();
+                            while(ccxp)
+                                {
+                                // Deal with the strictness of callcontext that
+                                // complains if you ask for a set when
+                                // it is in a state where the set could not
+                                // possibly be valid.
+                                if(ccxp->CanGetSet())
+                                {
+                                    XPCNativeSet* set = ccxp->GetSet();
+                                    if(set)
+                                        set->Mark();
+                                }
+                                ccxp = ccxp->GetPrevCallContext();
                             }
-                            ccxp = ccxp->GetPrevCallContext();
                         }
                     }
                 }
@@ -353,37 +357,42 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
                 // bad locking problems with the thread iteration otherwise.
                 if(!self->GetXPConnect()->IsShuttingDown())
                 {
-                    // Do the marking...
+                    PRLock* threadLock = XPCPerThreadData::GetLock();
+                    if(threadLock)
+                    {
+                        // Do the marking...
+                        
+                        { // scoped lock
+                            nsAutoLock lock(threadLock);
 
-                    { // scoped lock
-                        nsAutoLock lock(XPCPerThreadData::GetLock());
+                            XPCPerThreadData* iterp = nsnull;
+                            XPCPerThreadData* thread;
 
-                        XPCPerThreadData* iterp = nsnull;
-                        XPCPerThreadData* thread;
-
-                        while(nsnull != (thread =
+                            while(nsnull != (thread =
                                      XPCPerThreadData::IterateThreads(&iterp)))
-                        {
-                            XPCCallContext* ccxp = thread->GetCallContext();
-                            while(ccxp)
                             {
-                            // Deal with the strictness of callcontext that
-                                // complains if you ask for a tearoff when
-                                // it is in a state where the tearoff could not
-                                // possibly be valid.
-                                if(ccxp->CanGetTearOff())
+                                XPCCallContext* ccxp = thread->GetCallContext();
+                                while(ccxp)
                                 {
-                                    XPCWrappedNativeTearOff* to = ccxp->GetTearOff();
-                                    if(to)
-                                        to->Mark();
+                                    // Deal with the strictness of callcontext that
+                                    // complains if you ask for a tearoff when
+                                    // it is in a state where the tearoff could not
+                                    // possibly be valid.
+                                    if(ccxp->CanGetTearOff())
+                                    {
+                                        XPCWrappedNativeTearOff* to = 
+                                            ccxp->GetTearOff();
+                                        if(to)
+                                            to->Mark();
+                                    }
+                                    ccxp = ccxp->GetPrevCallContext();
                                 }
-                                ccxp = ccxp->GetPrevCallContext();
                             }
                         }
+    
+                        // Do the sweeping...
+                        XPCWrappedNativeScope::SweepAllWrappedNativeTearOffs();
                     }
-
-                    // Do the sweeping...
-                    XPCWrappedNativeScope::SweepAllWrappedNativeTearOffs();
                 }
 
                 // Now we need to kill the 'Dying' XPCWrappedNativeProtos.
