@@ -304,7 +304,8 @@ public:
 
   void RecoverStateFrom(nsLineBox* aLine,
                         PRBool aApplyTopMargin,
-                        nscoord aDeltaY);
+                        nscoord aDeltaY,
+                        nsRect* aDamageRect);
 
   //----------------------------------------
 
@@ -661,7 +662,8 @@ nsBlockReflowState::RecoverVerticalMargins(nsLineBox* aLine,
 void
 nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
                                      PRBool aApplyTopMargin,
-                                     nscoord aDeltaY)
+                                     nscoord aDeltaY,
+                                     nsRect* aDamageRect)
 {
   // Make the line being recovered the current line
   mCurrentLine = aLine;
@@ -725,6 +727,7 @@ nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
     newLineY += collapsedTopMargin;
     mPrevBottomMargin = bottomMargin;
   }
+  nsRect  oldCombinedArea = aLine->mCombinedArea;
   nscoord finalDeltaY = newLineY - aLine->mBounds.y;
   if (0 != finalDeltaY) {
     // Slide the frames in the line by the computed delta. This also
@@ -752,6 +755,17 @@ nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
 
   // Recover mY
   mY = aLine->mBounds.YMost();
+
+  // Compute the damage area
+  // XXX Currently just use the union of the old and new combined area, but
+  // at some point we need to bitblt instead...
+  if (aDamageRect) {
+    if (0 == finalDeltaY) {
+      aDamageRect->Empty();
+    } else {
+      aDamageRect->UnionRect(oldCombinedArea, aLine->mCombinedArea);
+    }
+  }
 
   // It's possible that the line has clear after semantics
   if (!aLine->IsBlock() && (NS_STYLE_CLEAR_NONE != aLine->mBreakType)) {
@@ -1214,6 +1228,59 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
 
   // Compute our final size
   ComputeFinalSize(aReflowState, state, aMetrics);
+
+  // If this is an incremental reflow and we changed size, then make sure our
+  // border is repainted if necessary
+  if (eReflowReason_Incremental == aReflowState.reason) {
+    nsMargin  border = aReflowState.mComputedBorderPadding -
+                       aReflowState.mComputedPadding;
+
+    // See if our width changed
+    if ((aMetrics.width != mRect.width) && (border.right > 0)) {
+      nsRect  damageRect;
+
+      if (aMetrics.width < mRect.width) {
+        // Our new width is smaller, so we need to make sure that
+        // we paint our border in its new position
+        damageRect.x = aMetrics.width - border.right;
+        damageRect.width = border.right;
+        damageRect.y = 0;
+        damageRect.height = aMetrics.height;
+
+      } else {
+        // Our new width is larger, so we need to erase our border in its
+        // old position
+        damageRect.x = mRect.width - border.right;
+        damageRect.width = border.right;
+        damageRect.y = 0;
+        damageRect.height = mRect.height;
+      }
+      Invalidate(damageRect);
+    }
+
+    // See if our height changed
+    if ((aMetrics.height != mRect.height) && (border.bottom > 0)) {
+      nsRect  damageRect;
+      
+      if (aMetrics.height < mRect.height) {
+        // Our new height is smaller, so we need to make sure that
+        // we paint our border in its new position
+        damageRect.x = 0;
+        damageRect.width = aMetrics.width;
+        damageRect.y = aMetrics.height - border.bottom;
+        damageRect.height = border.bottom;
+
+      } else {
+        // Our new height is larger, so we need to erase our border in its
+        // old position
+        damageRect.x = 0;
+        damageRect.width = mRect.width;
+        damageRect.y = mRect.height - border.bottom;
+        damageRect.height = border.bottom;
+      }
+      Invalidate(damageRect);
+    }
+  }
 
 #ifdef DEBUG
   if (gShowDirtyLines && (eReflowReason_Resize == aReflowState.reason)) {
@@ -1713,7 +1780,8 @@ nsBlockFrame::FindLineFor(nsIFrame* aFrame,
 void
 nsBlockFrame::RecoverStateFrom(nsBlockReflowState& aState,
                                nsLineBox* aLine,
-                               nscoord aDeltaY)
+                               nscoord aDeltaY,
+                               nsRect* aDamageRect)
 {
   PRBool applyTopMargin = PR_FALSE;
   if (aLine->IsBlock()) {
@@ -1724,7 +1792,7 @@ nsBlockFrame::RecoverStateFrom(nsBlockReflowState& aState,
     }
   }
 
-  aState.RecoverStateFrom(aLine, applyTopMargin, aDeltaY);
+  aState.RecoverStateFrom(aLine, applyTopMargin, aDeltaY, aDamageRect);
 }
 
 /**
@@ -1798,6 +1866,10 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
   }
 #endif
 
+  // Check whether this is an incremental reflow
+  PRBool  incrementalReflow = aState.mReflowState.reason ==
+                              eReflowReason_Incremental;
+  
   // Reflow the lines that are already ours
   aState.mPrevLine = nsnull;
   nsLineBox* line = mLines;
@@ -1821,7 +1893,9 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       nscoord oldHeight = line->mBounds.height;
 
       // Reflow the dirty line
-      rv = ReflowLine(aState, line, &keepGoing);
+      nsRect  damageRect;
+      rv = ReflowLine(aState, line, &keepGoing, incrementalReflow ?
+                      &damageRect : 0);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -1833,6 +1907,12 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
         break;
       }
       nscoord newHeight = line->mBounds.height;
+
+      // If it's an incremental reflow, then invalidate the damaged
+      // line
+      if (incrementalReflow && !damageRect.IsEmpty()) {
+        Invalidate(damageRect);
+      }
       deltaY += newHeight - oldHeight;
 
       // If the next line is clean then check and see if reflowing the
@@ -1848,7 +1928,12 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       // XXX what if the slid line doesn't fit because we are in a
       // vertically constrained situation?
       // Recover state as if we reflowed this line
-      RecoverStateFrom(aState, line, deltaY);
+      nsRect  damageRect;
+      RecoverStateFrom(aState, line, deltaY, incrementalReflow ?
+                       &damageRect : 0);
+      if (incrementalReflow && !damageRect.IsEmpty()) {
+        Invalidate(damageRect);
+      }
     }
 #ifdef NOISY_INCREMENTAL_REFLOW
     if (aState.mReflowState.reason == eReflowReason_Incremental) {
@@ -1918,7 +2003,12 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
     // line to be created; see SplitLine's callers for examples of
     // when this happens).
     while (nsnull != line) {
-      rv = ReflowLine(aState, line, &keepGoing);
+      nsRect  damageRect;
+      rv = ReflowLine(aState, line, &keepGoing, incrementalReflow ?
+                      &damageRect : 0);
+      if (incrementalReflow && !damageRect.IsEmpty()) {
+        Invalidate(damageRect);
+      }
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -1976,7 +2066,8 @@ nsBlockFrame::DeleteLine(nsBlockReflowState& aState,
 nsresult
 nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
                          nsLineBox* aLine,
-                         PRBool* aKeepReflowGoing)
+                         PRBool* aKeepReflowGoing,
+                         nsRect* aDamageRect)
 {
   nsresult rv = NS_OK;
 
@@ -2009,12 +2100,59 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
   aLine->SetNeedDidReflow();
 
   // Now that we know what kind of line we have, reflow it
+  nsRect  oldCombinedArea = aLine->mCombinedArea;
+
   if (aLine->IsBlock()) {
     NS_ASSERTION(nsnull == aLine->mFloaters, "bad line");
     rv = ReflowBlockFrame(aState, aLine, aKeepReflowGoing);
+    
+    // We expect blocks to damage any area inside their bounds that is
+    // dirty; however, if the frame changes size or position then we
+    // need to do some repainting
+    if (aDamageRect) {
+      if ((oldCombinedArea.x != aLine->mCombinedArea.x) ||
+          (oldCombinedArea.y != aLine->mCombinedArea.y)) {
+        // The block has moved, and so do be safe we need to repaint
+        // XXX We need to improve on this...
+        aDamageRect->UnionRect(oldCombinedArea, aLine->mCombinedArea);
+
+      } else {
+        aDamageRect->Empty();
+        if (oldCombinedArea.width != aLine->mCombinedArea.width) {
+          // Just damage the vertical strip that was either added or went
+          // away
+          aDamageRect->x = PR_MIN(oldCombinedArea.XMost(),
+                                  aLine->mCombinedArea.XMost());
+          aDamageRect->y = aLine->mCombinedArea.y;
+          aDamageRect->width = PR_MAX(oldCombinedArea.XMost(),
+                                      aLine->mCombinedArea.XMost()) -
+                               aDamageRect->x;
+          aDamageRect->height = PR_MAX(oldCombinedArea.height,
+                                       aLine->mCombinedArea.height);
+        }
+        if (oldCombinedArea.height != aLine->mCombinedArea.height) {
+          // Just damage the horizontal strip that was either added or went
+          // away
+          aDamageRect->x = aLine->mCombinedArea.x;
+          aDamageRect->y = PR_MIN(oldCombinedArea.YMost(),
+                                  aLine->mCombinedArea.YMost());
+          aDamageRect->width = PR_MAX(oldCombinedArea.width,
+                                      aLine->mCombinedArea.width);
+          aDamageRect->height = PR_MAX(oldCombinedArea.YMost(),
+                                       aLine->mCombinedArea.YMost()) -
+                                aDamageRect->y;
+        }
+      }
+    }
   }
   else {
     rv = ReflowInlineFrames(aState, aLine, aKeepReflowGoing);
+
+    // We don't really know what changed in the line, so use the union
+    // of the old and new combined areas
+    if (aDamageRect) {
+      aDamageRect->UnionRect(oldCombinedArea, aLine->mCombinedArea);
+    }
   }
 
   return rv;
@@ -3671,7 +3809,7 @@ nsBlockFrame::InsertFrames(nsIPresContext& aPresContext,
 {
   if (nsLayoutAtoms::floaterList == aListName) {
     // XXX we don't *really* care about this right now because we are
-    // BuildFloaterList ing still
+    // BuildFloaterList'ing still
     mFloaters.AppendFrames(nsnull, aFrameList);
     return NS_OK;
   }

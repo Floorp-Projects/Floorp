@@ -208,7 +208,8 @@ protected:
 
   void RecoverStateFrom(nsBlockReflowState& aState,
                         nsLineBox* aLine,
-                        nscoord aDeltaY);
+                        nscoord aDeltaY,
+                        nsRect* aDamageRect);
 
   //----------------------------------------
   // Methods for line reflow
@@ -216,7 +217,8 @@ protected:
 
   nsresult ReflowLine(nsBlockReflowState& aState,
                       nsLineBox* aLine,
-                      PRBool* aKeepReflowGoing);
+                      PRBool* aKeepReflowGoing,
+                      nsRect* aDamageRect);
 
   virtual void DidReflowLine(nsBlockReflowState& aState,
                              nsLineBox* aLine,
