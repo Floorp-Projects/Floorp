@@ -2946,10 +2946,9 @@
       (production (:annotatable-directive :omega_2) (:namespace-definition (:semicolon :omega_2)) annotatable-directive-namespace-definition
         ((validate (cxt :unused) (env :unused) (pl :unused) (attr :unused)) (todo))
         ((eval (env :unused) (d :unused)) (todo)))
-      (? js2
-        (production (:annotatable-directive :omega_2) ((:interface-definition :omega_2)) annotatable-directive-interface-definition
-          ((validate (cxt :unused) (env :unused) (pl :unused) (attr :unused)) (todo))
-          ((eval (env :unused) (d :unused)) (todo))))
+      ;(production (:annotatable-directive :omega_2) ((:interface-definition :omega_2)) annotatable-directive-interface-definition
+      ;  ((validate (cxt :unused) (env :unused) (pl :unused) (attr :unused)) (todo))
+      ;  ((eval (env :unused) (d :unused)) (todo)))
       (production (:annotatable-directive :omega_2) (:import-directive (:semicolon :omega_2)) annotatable-directive-import-directive
         ((validate (cxt :unused) (env :unused) (pl :unused) (attr :unused)) (todo))
         ((eval (env :unused) (d :unused)) (todo)))
@@ -3496,25 +3495,24 @@
         ((validate cxt env)
          ((validate :type-expression) cxt env)
          (return ((eval :type-expression) env))))
-      (? js2
-        (production :inheritance (implements :type-expression-list) inheritance-implements
-          ((validate (cxt :unused) (env :unused)) (return object-class)))
-        (production :inheritance (extends (:type-expression allow-in) implements :type-expression-list) inheritance-extends-implements
-          ((validate (cxt :unused) (env :unused)) (return object-class)))))
+      #|(production :inheritance (implements :type-expression-list) inheritance-implements
+        ((validate (cxt :unused) (env :unused)) (return object-class)))
+      (production :inheritance (extends (:type-expression allow-in) implements :type-expression-list) inheritance-extends-implements
+        ((validate (cxt :unused) (env :unused)) (return object-class)))|#)
     (%print-actions ("Validation" class validate) ("Evaluation" eval))
     
     
-    (? js2
-      (%heading 2 "Interface Definition")
-      (production (:interface-definition :omega_2) (interface :identifier :extends-list :block) interface-definition-definition)
-      (production (:interface-definition :omega_2) (interface :identifier (:semicolon :omega_2)) interface-definition-declaration)
-      ;***** Clear break and continue inside validate
-      
-      (production :extends-list () extends-list-none)
-      (production :extends-list (extends :type-expression-list) extends-list-one)
-      
-      (production :type-expression-list ((:type-expression allow-in)) type-expression-list-one)
-      (production :type-expression-list (:type-expression-list \, (:type-expression allow-in)) type-expression-list-more))
+    #|
+    (%heading 2 "Interface Definition")
+    (production (:interface-definition :omega_2) (interface :identifier :extends-list :block) interface-definition-definition)
+    (production (:interface-definition :omega_2) (interface :identifier (:semicolon :omega_2)) interface-definition-declaration)
+    ;***** Clear break and continue inside validate
+    
+    (production :extends-list () extends-list-none)
+    (production :extends-list (extends :type-expression-list) extends-list-one)
+    
+    (production :type-expression-list ((:type-expression allow-in)) type-expression-list-one)
+    (production :type-expression-list (:type-expression-list \, (:type-expression allow-in)) type-expression-list-more)|#
     
     
     (%heading 2 "Namespace Definition")
