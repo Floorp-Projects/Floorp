@@ -39,10 +39,11 @@
 
 class nsVoidArray;
 
-class nsURILoader : public nsIURILoader
+class nsURILoader : public nsIURILoader, public nsPIURILoaderWithPostData
 {
 public:
   NS_DECL_NSIURILOADER
+  NS_DECL_NSPIURILOADERWITHPOSTDATA
   NS_DECL_ISUPPORTS
 
   nsURILoader();
