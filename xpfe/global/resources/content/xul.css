@@ -438,6 +438,16 @@ progressmeter {
   -moz-binding: url("chrome://global/content/bindings/progressmeter.xml#progressmeter");
 }
 
+/********** basic rule for anonymous content that needs to pass box properties through
+ ********** to an insertion point parent that holds the real kids **************/
+
+ .box-inherit {
+   -moz-box-orient: inherit;
+   -moz-box-pack: inherit;
+   -moz-box-align: inherit;
+   -moz-box-direction: inherit;
+}
+
 /********** label **********/
 
 /* XXXdwh <text>, <html> and <spring> are deprecated. */

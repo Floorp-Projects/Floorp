@@ -138,7 +138,7 @@ public:
 // Internal member functions
 public:
   void GetImmediateChild(nsIAtom* aTag, nsIContent** aResult);
-  void LocateInstance(nsIContent* aTemplRoot, nsIContent* aCopyRoot,
+  void LocateInstance(nsIContent* aBoundElt, nsIContent* aTemplRoot, nsIContent* aCopyRoot,
                       nsIContent* aTemplChild, nsIContent** aCopyResult);
 
 protected:  

@@ -264,6 +264,13 @@ nsTextBoxFrame::PaintTitle(nsIPresContext*      aPresContext,
     nsRect textRect(aRect);
     textRect.width = mTitleWidth;
 
+    // Align our text within the overall rect by checking our text-align property.
+    const nsStyleText* textStyle = (const nsStyleText*)mStyleContext->GetStyleData(eStyleStruct_Text);
+    if (textStyle->mTextAlign == NS_STYLE_TEXT_ALIGN_CENTER)
+      textRect.x += (aRect.width - textRect.width)/2;
+    else if (textStyle->mTextAlign == NS_STYLE_TEXT_ALIGN_RIGHT)
+      textRect.x += (aRect.width - textRect.width);
+
     // don't draw if the title is not dirty
     if (PR_FALSE == aDirtyRect.Intersects(textRect))
         return NS_OK;
