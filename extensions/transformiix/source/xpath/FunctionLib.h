@@ -24,7 +24,7 @@
  * Olivier Gerardin, ogerardin@vo.lu
  *   -- added number functions
  *    
- * $Id: FunctionLib.h,v 1.1 2000/04/06 07:45:30 kvisco%ziplink.net Exp $
+ * $Id: FunctionLib.h,v 1.2 2000/04/06 22:35:20 Peter.VanderBeken%pandora.be Exp $
  */
 
 
@@ -166,7 +166,7 @@ protected:
      * Evaluates the given Expression and converts it's result to a String.
      * The value is appended to the given destination String
     **/
-    void FunctionCall::evaluateToString
+    void evaluateToString
         (Expr* expr, Node* context, ContextState* cs, String& dest);
 
     /**
