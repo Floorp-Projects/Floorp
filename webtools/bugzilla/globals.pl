@@ -1276,13 +1276,6 @@ sub RemoveVotes {
     }
 }
 
-sub PerformSubsts {
-    my ($str, $substs) = (@_);
-    $str =~ s/%([a-z]*)%/(defined $substs->{$1} ? $substs->{$1} : Param($1))/eg;
-    return $str;
-}
-
-
 ###############################################################################
 
 # Constructs a format object from URL parameters. You most commonly call it 

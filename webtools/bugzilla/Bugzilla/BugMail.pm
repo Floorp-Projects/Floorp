@@ -30,6 +30,11 @@ use strict;
 
 package Bugzilla::BugMail;
 
+use base qw(Exporter);
+@Bugzilla::BugMail::EXPORT = qw(
+    PerformSubsts
+);
+
 use Bugzilla::RelationSet;
 
 use Bugzilla::Config qw(:DEFAULT $datadir);
@@ -901,6 +906,27 @@ sub MessageToMTA ($) {
     $mailer->open($headers->header_hashref);
     print $mailer $msg;
     $mailer->close;
+}
+
+# Performs substitutions for sending out email with variables in it,
+# or for inserting a parameter into some other string.
+#
+# Takes a string and a reference to a hash containing substitution 
+# variables and their values.
+#
+# If the hash is not specified, or if we need to substitute something
+# that's not in the hash, then we will use parameters to do the 
+# substitution instead.
+#
+# Substitutions are always enclosed with '%' symbols. So they look like:
+# %some_variable_name%. If "some_variable_name" is a key in the hash, then
+# its value will be placed into the string. If it's not a key in the hash,
+# then the value of the parameter called "some_variable_name" will be placed
+# into the string.
+sub PerformSubsts ($;$) {
+    my ($str, $substs) = (@_);
+    $str =~ s/%([a-z]*)%/(defined $substs->{$1} ? $substs->{$1} : Param($1))/eg;
+    return $str;
 }
 
 1;

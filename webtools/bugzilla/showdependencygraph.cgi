@@ -29,6 +29,7 @@ use File::Temp;
 use Bugzilla;
 use Bugzilla::Config qw(:DEFAULT $webdotdir);
 use Bugzilla::Util;
+use Bugzilla::BugMail;
 
 require "CGI.pl";
 
