@@ -535,7 +535,7 @@ js_LeaveSharpObject(JSContext *cx, JSIdArray **idap)
     }
 }
 
-#define OBJ_TOSTRING_EXTRA	3	/* for 3 local GC roots */
+#define OBJ_TOSTRING_EXTRA      3       /* for 3 local GC roots */
 
 #if JS_HAS_INITIALIZERS || JS_HAS_TOSOURCE
 JSBool
@@ -844,7 +844,7 @@ js_obj_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 #endif
 
     clazz = OBJ_GET_CLASS(cx, obj)->name;
-    nchars = 9 + strlen(clazz);		/* 9 for "[object ]" */
+    nchars = 9 + strlen(clazz);         /* 9 for "[object ]" */
     chars = (jschar *) JS_malloc(cx, (nchars + 1) * sizeof(jschar));
     if (!chars)
         return JS_FALSE;
@@ -1550,6 +1550,10 @@ js_DropObjectMap(JSContext *cx, JSObjectMap *map, JSObject *obj)
     return map;
 }
 
+static JSBool
+GetClassPrototype(JSContext *cx, JSObject *scope, const char *name,
+                  JSObject **protop);
+
 JSObject *
 js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
 {
@@ -1567,9 +1571,9 @@ js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
 
     /* Bootstrap the ur-object, and make it the default prototype object. */
     if (!proto) {
-        if (!js_GetClassPrototype(cx, clasp->name, &proto))
+        if (!GetClassPrototype(cx, parent, clasp->name, &proto))
             goto bad;
-        if (!proto && !js_GetClassPrototype(cx, js_ObjectClass.name, &proto))
+        if (!proto && !GetClassPrototype(cx, parent, js_Object_str, &proto))
             goto bad;
     }
 
@@ -1636,10 +1640,10 @@ bad:
 }
 
 static JSBool
-FindConstructor(JSContext *cx, const char *name, jsval *vp)
+FindConstructor(JSContext *cx, JSObject *scope, const char *name, jsval *vp)
 {
     JSAtom *atom;
-    JSObject *obj, *tmp;
+    JSObject *obj;
     JSObject *pobj;
     JSScopeProperty *sprop;
 
@@ -1647,12 +1651,12 @@ FindConstructor(JSContext *cx, const char *name, jsval *vp)
     if (!atom)
         return JS_FALSE;
 
-    if (cx->fp && (tmp = cx->fp->scopeChain) != NULL) {
+    if (scope || (cx->fp && (scope = cx->fp->scopeChain) != NULL)) {
         /* Find the topmost object in the scope chain. */
         do {
-            obj = tmp;
-            tmp = OBJ_GET_PARENT(cx, obj);
-        } while (tmp);
+            obj = scope;
+            scope = OBJ_GET_PARENT(cx, obj);
+        } while (scope);
     } else {
         obj = cx->globalObject;
         if (!obj) {
@@ -1682,7 +1686,7 @@ js_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
     jsval cval, rval;
     JSObject *obj, *ctor;
 
-    if (!FindConstructor(cx, clasp->name, &cval))
+    if (!FindConstructor(cx, parent, clasp->name, &cval))
         return NULL;
 
     /*
@@ -2051,7 +2055,7 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
         }
         if (sym && (sprop = sym_property(sym)) != NULL) {
             JS_ASSERT(OBJ_SCOPE(obj) == scope);
-            *objp = scope->object;	/* XXXbe hide in jsscope.[ch] */
+            *objp = scope->object;      /* XXXbe hide in jsscope.[ch] */
 #ifdef JS_THREADSAFE
             js_HoldScopeProperty(cx, scope, sprop);
 #endif
@@ -3042,10 +3046,17 @@ js_DropProperty(JSContext *cx, JSObject *obj, JSProperty *prop)
 JSBool
 js_GetClassPrototype(JSContext *cx, const char *name, JSObject **protop)
 {
+    return GetClassPrototype(cx, NULL, name, protop);
+}
+
+static JSBool
+GetClassPrototype(JSContext *cx, JSObject *scope, const char *name,
+                  JSObject **protop)
+{
     jsval v;
     JSObject *ctor;
 
-    if (!FindConstructor(cx, name, &v))
+    if (!FindConstructor(cx, scope, name, &v))
         return JS_FALSE;
     if (JSVAL_IS_FUNCTION(cx, v)) {
         ctor = JSVAL_TO_OBJECT(v);
