@@ -875,7 +875,18 @@ NS_IMETHODIMP nsRenderingContextWin :: SetClipRegion(const nsIRegion& aRegion, n
  */
 NS_IMETHODIMP nsRenderingContextWin::CopyClipRegion(nsIRegion &aRegion)
 {
-  return NS_ERROR_FAILURE;
+  int rstat = ::GetClipRgn(mDC, ((nsRegionWin *)&aRegion)->mRegion);
+
+  if (rstat == 1)
+  {
+    //i can't find a way to get the actual complexity
+    //of the region without actually messing with it, so
+    //if the region is non-empty, we'll call it complex. MMP
+
+    ((nsRegionWin *)&aRegion)->mRegionType = eRegionComplexity_complex;
+  }
+ 
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextWin :: GetClipRegion(nsIRegion **aRegion)
@@ -903,18 +914,8 @@ NS_IMETHODIMP nsRenderingContextWin :: GetClipRegion(nsIRegion **aRegion)
       rv = NS_ERROR_OUT_OF_MEMORY;
   }
 
-  if (rv == NS_OK)
-  {
-    int rstat = ::GetClipRgn(mDC, (*(nsRegionWin **)aRegion)->mRegion);
-
-    if (rstat == 1)
-    {
-      //i can't find a way to get the actual complexity
-      //of the region without actually messing with it, so
-      //if the region is non-empty, we'll call it complex. MMP
-
-      (*(nsRegionWin **)aRegion)->mRegionType = eRegionComplexity_complex;
-    }
+  if (rv == NS_OK) {
+    rv = CopyClipRegion(**aRegion);
   }
 
   return rv;
