@@ -73,6 +73,12 @@ XML::Parser (any)
 
 *** Outstanding Issues Of Note ***
 
+These issues may have been fixed in later stable or development
+versions of Bugzilla.  If you are interested in tracking these
+bugs, please see the bug report numbers listed to find out the
+status of the fix for these bugs, or to obtain a patch that can
+fix the problem on your installation.
+
 - Renaming or removing keywords that are in use will not update
   the "keyword cache" on bugs, and queries on keywords may not work
   properly, until you rebuild the cache on the sanity check page
@@ -113,6 +119,11 @@ XML::Parser (any)
 
 - Attachment changes have no midair collision detection, unlike bug changes.
   (bug 99215)
+
+- The email preferences option "Priority, status, severity, and/or milestone
+  changes" does not actually report status changes.  You can however use the
+  option "The bug is resolved or verified" to achieve part of this.
+  (bug 130821)
 
 *********************************************
 *** USERS UPGRADING FROM 2.16 OR EARLIER  ***
@@ -193,11 +204,9 @@ XML::Parser (any)
   requires 5.005.
   (bug 97721)
 
-- New requirements: Text::Wrap, Template [requires AppConfig], File::Spec.
+- New module requirements: Text::Wrap, Template [requires AppConfig],
+                           File::Spec.
   (bugs 97784, 84338, 103778)
-
-- New version required: Perl v5.005
-  (bugs 97721)
 
 - The index page is now a CGI instead of an HTML page.  You should remove
   any existing index.html file and make sure your web server allows index.cgi
@@ -247,8 +256,8 @@ XML::Parser (any)
 - Users can now change their email account.
   (bug 23067)
 - "Dependent Bug Changed" notification emails now contain the
-  dependent bug's summary.
-  (bug 28736)
+  dependent bug's summary and URL.
+  (bug 28736, 113383)
 - Bugs with severity "critical", "blocker", and "enhancement" are
   visually differentiated on bug lists for browsers with sufficient
   CSS support.
@@ -270,7 +279,7 @@ XML::Parser (any)
   and properly shuts down Bugzilla while running.
   (bug 75840)
 - Dependency tree now lets you exclude resolved bugs and bugs
-  below a specific depth.
+  below a specified depth.
   (bugs 83058)
 - The "strictvaluechecks" parameter has gone away.  These checks
   are now always done.
@@ -381,6 +390,11 @@ XML::Parser (any)
 - Mass change would set the groupset of every bug to be the
   groupset of the first bug.
   (bug 107718)
+
+- Some browsers (eg NetPositive) interacted with Bugzilla
+  badly and could have various form problems, including
+  removing group restrictions on bugs.
+  (bug 148674)
 
 - It was possible for random confidential information to be
   divulged, if the shadow database was in use and became
