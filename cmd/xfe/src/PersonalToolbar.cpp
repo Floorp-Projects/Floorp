@@ -55,6 +55,8 @@
 /* static */ MenuSpec 
 XFE_PersonalToolbar::m_popupMenuSpec[] = 
 {
+	{ xfeCmdPersonalToolbarAddBookmark,		PUSHBUTTON },
+	{ xfeCmdPersonalToolbarEditItem,		PUSHBUTTON },
 	{ xfeCmdPersonalToolbarRemoveItem,		PUSHBUTTON },
 	{ NULL }
 };

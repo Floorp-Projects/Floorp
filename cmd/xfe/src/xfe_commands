@@ -519,6 +519,8 @@ xfeCmdProfileHtmlReport profileHtmlReport
 xfeCmdCleanUpDisk       cleanUpDisk
 
 # Personal toolbar popup menu
+xfeCmdPersonalToolbarAddBookmark                                   personalToolbarAddBookmark
+xfeCmdPersonalToolbarEditItem                                      personalToolbarEditItem
 xfeCmdPersonalToolbarRemoveItem                                    personalToolbarRemoveItem
 
 # Nav Center
