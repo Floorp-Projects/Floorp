@@ -321,6 +321,10 @@ private:
     guint              mDragMotionTimerID;
     nsCOMPtr<nsITimer> mDragLeaveTimer;
 
+    static PRBool      sIsDraggingOutOf;
+    // drag in progress
+    static PRBool DragInProgress(void);
+
     void         ResetDragMotionTimer     (GtkWidget      *aWidget,
                                            GdkDragContext *aDragContext,
                                            gint           aX,
