@@ -311,10 +311,16 @@ sub RunBuild($$$$)
     DoPrebuildCheck();
     
     if ($do_pull) {
+        my($start_time) = TimeStart();
+        
         Checkout($input_files->{"checkoutdata"});
+        
+        TimeEnd($start_time, "Checkout");
     }
     
     unless ($do_build) { return; }
+
+    my($build_start) = TimeStart();
 
     # create generated headers
     ConfigureBuildSystem();
@@ -327,7 +333,9 @@ sub RunBuild($$$$)
     BuildProjects();
     
     # the build finished, so clear the build progress state
-    ClearBuildProgress();    
+    ClearBuildProgress();
+    
+    TimeEnd($build_start, "Build");
     print "Build complete\n";
 }
 

@@ -31,6 +31,8 @@ use vars qw(@ISA @EXPORT);
                BuildFolderResourceAliases
                AskAndPersistFile
                DelayFor
+               TimeStart
+               TimeEnd
                EmptyTree
                SetupBuildLog
                SetBuildNumber
@@ -238,6 +240,37 @@ sub DelayFor($)
   STDOUT->autoflush(0);
 }
 
+
+#//--------------------------------------------------------------------------------------------------
+#// TimeStart
+#//--------------------------------------------------------------------------------------------------
+sub TimeStart()
+{
+    return time();
+}
+
+#//--------------------------------------------------------------------------------------------------
+#// TimeEnd
+#//--------------------------------------------------------------------------------------------------
+sub TimeEnd($$)
+{
+    use integer;
+    
+    my($start_time, $operation_name) = @_;
+    my($end_time) = time();
+    
+    my($tot_sec) = $end_time - $start_time;
+    
+    my($seconds) = $tot_sec;
+    
+    my($hours) = $seconds / (60 * 60);
+    $seconds -= $hours * (60 * 60);
+    
+    my($minutes) = $seconds / 60;
+    $seconds -= $minutes * 60;
+        
+    print "$operation_name took $hours hours $minutes minutes and $seconds seconds\n";
+}
 
 #//--------------------------------------------------------------------------------------------------
 #// Remove all files from a tree, leaving directories intact (except "CVS").
