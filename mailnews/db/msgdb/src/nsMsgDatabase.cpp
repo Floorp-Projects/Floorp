@@ -2502,7 +2502,7 @@ nsMsgReadFilter(nsIMsgDBHdr* msg, void* closure)
     return wasRead ? NS_OK : NS_COMFALSE;
 }
 
-NS_IMETHODIMP
+nsresult
 nsMsgDatabase::EnumerateReadMessages(nsISimpleEnumerator* *result)
 {
     nsMsgDBEnumerator* e = new nsMsgDBEnumerator(this, nsMsgReadFilter, this);
