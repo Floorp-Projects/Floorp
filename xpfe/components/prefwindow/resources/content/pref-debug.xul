@@ -37,7 +37,8 @@
                    "debugXULBoxes", "nglayoutDebugPaintFlashing", "nglayoutDebugPaintDumping",
                    "nglayoutDebugInvalidateDumping", "nglayoutDebugEventDumping", "nglayoutDebugMotionEventDumping",
                    "nglayoutDebugCrossingEventDumping", "nglayoutDebugDisableXULCache", "browserEnableCache",
-                   "browserEnableDiskCache", "nglayoutDebugEnableXPCOMRefcntLog", "showAboutAsStupidModalWindow"];
+                   "browserEnableDiskCache", "nglayoutDebugEnableXPCOMRefcntLog", "showAboutAsStupidModalWindow",
+                   "browserEnableTBDnD"];
   ]]>
   </script>
         
@@ -48,33 +49,6 @@
 
 <box>  
   <titledbox orient="vertical" autostretch="never" flex="1">
-  	<title><text value="&widgetRendering.label;"/></title>
-
-    <checkbox id="nglayoutWidgetGFXScrollbars" value="&gfxScrollbars.label;"
-              pref="true" preftype="bool" prefstring="nglayout.widget.gfxscrollbars"
-              prefattribute="checked"/>
-    <checkbox id="viewUseViewManager2" value="&useViewManager2.label;"
-              pref="true" preftype="bool" prefstring="nglayout.view.useViewManager2"
-              prefattribute="checked"/>    
-    <checkbox id="nglayoutDebugWindow" value="&debugWindow.label;"
-              pref="true" preftype="bool" prefstring="nglayout.widget.debugWindow"
-              prefattribute="checked"/>
-    <checkbox id="debugXULBoxes" value="&debugXULBox.label;"
-              pref="true" preftype="bool" prefstring="xul.debug.box"
-              prefattribute="checked"/>
-  </titledbox>
-  <titledbox orient="vertical" autostretch="never" flex="1">
-    <title><text value="&debugMiscellaneous.label;"/></title>
-
-    <checkbox id="nglayoutDebugDisableXULCache" value="&debugDisableXULCache.label;"
-              pref="true" preftype="bool" prefstring="nglayout.debug.disable_xul_cache"
-              prefattribute="checked"/>
-    <checkbox id="browserEnableCache" value="&debugEnableMemCache.label;"
-              pref="true" preftype="bool" prefstring="browser.enable.cache"
-              prefattribute="checked"/>
-    <checkbox id="browserEnableDiskCache" value="&debugEnableDiskCache.label;"
-              pref="true" preftype="bool" prefstring="browser.cache.disk.enable"
-              prefattribute="checked"/>
     <checkbox id="browserEnableKeepAlive" value="&debugEnableKeepAlive.label;"
               pref="true" preftype="bool" prefstring="network.http.keep-alive"
               prefattribute="checked"/>
@@ -89,6 +63,22 @@
     <textfield id="acceptEncodingString" flex="1" wsm_persist="true"
               pref="true" preftype="string" prefstring="network.http.accept-encoding"
               prefattribute="value"/> 
+  </titledbox>
+  <titledbox orient="vertical" autostretch="never" flex="1">
+    <title><text value="&debugMiscellaneous.label;"/></title>
+
+    <checkbox id="nglayoutDebugDisableXULCache" value="&debugDisableXULCache.label;"
+              pref="true" preftype="bool" prefstring="nglayout.debug.disable_xul_cache"
+              prefattribute="checked"/>
+    <checkbox id="browserEnableCache" value="&debugEnableMemCache.label;"
+              pref="true" preftype="bool" prefstring="browser.enable.cache"
+              prefattribute="checked"/>
+    <checkbox id="browserEnableTBDnD" value="&debugEnableTBDnD.label;"
+              pref="true" preftype="bool" prefstring="browser.enable.tb_dnd"
+              prefattribute="checked"/>
+    <checkbox id="browserEnableDiskCache" value="&debugEnableDiskCache.label;"
+              pref="true" preftype="bool" prefstring="browser.cache.disk.enable"
+              prefattribute="checked"/>
     <checkbox id="nglayoutDebugEnableXPCOMRefcntLog" value="&debugEnableXPCOMRefcntLog.label;"
               pref="true" preftype="bool" prefstring="nglayout.debug.enable_xpcom_refcnt_log"
               prefattribute="checked"/>
@@ -98,9 +88,9 @@
   </titledbox>              
 </box>
 
-
+<box>
   <!-- Event Debugging -->  
-  <titledbox orient="vertical" autostretch="never">
+  <titledbox orient="vertical" autostretch="never" flex="1">
     <title><text value="&debugEventDebugging.label;"/></title>
 
     <checkbox id="nglayoutDebugPaintFlashing" value="&debugPaintFlashing.label;"
@@ -122,6 +112,23 @@
               pref="true" preftype="bool" prefstring="nglayout.debug.motion_event_dumping"
               prefattribute="checked"/>
   </titledbox>
+  <titledbox orient="vertical" autostretch="never" flex="1" valign="top">
+  	<title><text value="&widgetRendering.label;"/></title>
 
+    <checkbox id="nglayoutWidgetGFXScrollbars" value="&gfxScrollbars.label;"
+              pref="true" preftype="bool" prefstring="nglayout.widget.gfxscrollbars"
+              prefattribute="checked"/>
+    <checkbox id="viewUseViewManager2" value="&useViewManager2.label;"
+              pref="true" preftype="bool" prefstring="nglayout.view.useViewManager2"
+              prefattribute="checked"/>    
+    <checkbox id="nglayoutDebugWindow" value="&debugWindow.label;"
+              pref="true" preftype="bool" prefstring="nglayout.widget.debugWindow"
+              prefattribute="checked"/>
+    <checkbox id="debugXULBoxes" value="&debugXULBox.label;"
+              pref="true" preftype="bool" prefstring="xul.debug.box"
+              prefattribute="checked"/>
+  </titledbox>
+</box>
+  
 </window>
 
