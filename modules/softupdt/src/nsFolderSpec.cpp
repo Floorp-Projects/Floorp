@@ -71,6 +71,12 @@ PR_BEGIN_EXTERN_C
 nsFolderSpec::nsFolderSpec(char* inFolderID , char* inVRPath, char* inPackageName)
 {
   urlPath = folderID = versionRegistryPath = userPackageName = NULL;
+
+  /* May be we should return an error message */
+  if ((inFolderID == NULL) || (inVRPath == NULL) || (inPackageName == NULL)) {
+    return;
+  }
+
   folderID = XP_STRDUP(inFolderID);
   versionRegistryPath = XP_STRDUP(inVRPath);
   userPackageName = XP_STRDUP(inPackageName);
@@ -91,9 +97,18 @@ nsFolderSpec::~nsFolderSpec(void)
 /*
  * GetDirectoryPath
  * returns full path to the directory in the standard URL form
+ *
+ * Caller shouldn't free the returned value. It returns it copy.
+ *
  */
 char* nsFolderSpec::GetDirectoryPath(char* *errorMsg)
 {
+  if ((folderID == NULL) || (versionRegistryPath == NULL)) {
+    *errorMsg = SU_GetErrorMsg3("Invalid arguments to the constructor", 
+                               nsSoftUpdateError_INVALID_ARGUMENTS);
+    return NULL;
+  }
+
   if (urlPath == NULL) {
     if (XP_STRCMP(folderID, "User Pick") == 0)  {
       // Default package folder
@@ -143,15 +158,19 @@ char* nsFolderSpec::MakeFullPath(char* relativePath, char* *errorMsg)
   return fullPath;
 }
 
-/* The caller is not supposed to free the memory. 
- * XXX: Should we give a copy of the string??
+/* 
+ * The caller is supposed to free the memory. 
  */
 char* nsFolderSpec::toString()
 {
   char *errorMsg = NULL;
   char* path = GetDirectoryPath(&errorMsg);
-  if (errorMsg != NULL) 
+  if (errorMsg != NULL) {
     path = NULL;
+  } else {
+    PR_ASSERT(path != NULL);
+    XP_STRDUP(path);
+  }
   return path;
 }
 
@@ -305,16 +324,14 @@ PRBool nsFolderSpec::NativeIsJavaDir()
   /* Get the name of the package to prompt for */
   folderName = folderID;
 
-#ifdef XXX
   PR_ASSERT( folderName );
   if ( folderName != NULL) {
     int i;
     for (i=0; DirectoryTable[i].directoryName[0] != 0; i++ ) {
-      if ( strcmp(folderName, DirectoryTable[i].directoryName) == 0 )
+      if ( XP_STRCMP(folderName, DirectoryTable[i].directoryName) == 0 )
         return DirectoryTable[i].bJavaDir;
     }
   }
-#endif
 
   return PR_FALSE;
 }

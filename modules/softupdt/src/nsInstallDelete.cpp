@@ -59,6 +59,12 @@ nsInstallDelete::nsInstallDelete(nsSoftwareUpdate* inSoftUpdate,
   FILE_READ_ONLY = nsSoftUpdateError_FILE_READ_ONLY;
   FILE_IS_DIRECTORY = nsSoftUpdateError_FILE_IS_DIRECTORY;
 
+  if ((inFolder == NULL) || (inSoftUpdate == NULL)) {
+    *errorMsg = SU_GetErrorMsg3("Invalid arguments to the constructor", 
+                               nsSoftUpdateError_INVALID_ARGUMENTS);
+    return;
+  }
+
   finalFile =	inFolder->MakeFullPath(inRelativeFileName, errorMsg);
   if (*errorMsg != NULL) {
     return;
@@ -78,6 +84,13 @@ nsInstallDelete::nsInstallDelete(nsSoftwareUpdate* inSoftUpdate,
   FILE_DOES_NOT_EXIST = nsSoftUpdateError_FILE_DOES_NOT_EXIST;
   FILE_READ_ONLY = nsSoftUpdateError_FILE_READ_ONLY;
   FILE_IS_DIRECTORY = nsSoftUpdateError_FILE_IS_DIRECTORY;
+
+  if ((inRegistryName == NULL) || (inSoftUpdate == NULL)) {
+    *errorMsg = SU_GetErrorMsg3("Invalid arguments to the constructor", 
+                               nsSoftUpdateError_INVALID_ARGUMENTS);
+    return;
+  }
+
   registryName = XP_STRDUP(inRegistryName);
   processInstallDelete(errorMsg);
 }
@@ -104,13 +117,15 @@ char* nsInstallDelete::Complete()
   int err = -1;
   nsTarget* execTarget = NULL;
 
+  if (softUpdate == NULL) {
+    return SU_GetErrorMsg3("Invalid arguments to the constructor", 
+                           nsSoftUpdateError_INVALID_ARGUMENTS);
+  }
+
   nsPrivilegeManager* privMgr = nsPrivilegeManager::getPrivilegeManager();
   nsTarget* impersonation = nsTarget::findTarget(IMPERSONATOR);
 
   if ((privMgr != NULL) && (impersonation != NULL)) {
-    /* XXX: We should get the SystemPrincipal and enablePrivilege on that. 
-     * Or may be we should get rid of impersonation
-     */
     privMgr->enablePrivilege(impersonation, 1);
     execTarget = nsTarget::findTarget(INSTALL_PRIV);
     if (execTarget != NULL) {
@@ -139,7 +154,7 @@ char* nsInstallDelete::Complete()
   }
   if (msg != NULL) {
     errorMsg = SU_GetErrorMsg3(msg, err);
-    PR_FREEIF(msg);
+    XP_FREE(msg);
   }
   return errorMsg;
 }
@@ -169,9 +184,6 @@ void nsInstallDelete::processInstallDelete(char* *errorMsg)
   nsTarget* impersonation = nsTarget::findTarget(IMPERSONATOR);
 
   if ((privMgr != NULL) && (impersonation != NULL)) {
-    /* XXX: We should get the SystemPrincipal and enablePrivilege on that. 
-     * Or may be we should get rid of impersonation
-     */
     privMgr->enablePrivilege(impersonation, 1);
     target = nsTarget::findTarget(INSTALL_PRIV);
     if (target != NULL) {
@@ -190,7 +202,7 @@ void nsInstallDelete::processInstallDelete(char* *errorMsg)
       char *msg = NULL;
       msg = SU_GetString1(SU_ERROR_NOT_IN_REGISTRY, registryName);
       *errorMsg = SU_GetErrorMsg3(msg, nsSoftUpdateError_NO_SUCH_COMPONENT);
-      PR_FREEIF(msg);
+      XP_FREEIF(msg);
       return;
     } else {
       finalFile = nsVersionRegistry::componentPath(registryName);
@@ -214,7 +226,7 @@ void nsInstallDelete::processInstallDelete(char* *errorMsg)
     }
     if (msg != NULL) {
       *errorMsg = SU_GetErrorMsg3(msg, err);
-      PR_FREEIF(msg);
+      XP_FREE(msg);
     }
   }
 }
@@ -229,7 +241,7 @@ int nsInstallDelete::NativeComplete()
   if (fileName != NULL)
 	{
       char * temp = XP_STRDUP(&fileName[7]);
-      XP_FREEIF(fileName);
+      XP_FREE(fileName);
       fileName = temp;
       if (fileName)
 		{
@@ -284,7 +296,7 @@ int nsInstallDelete::NativeCheckFileStatus()
   if (fileName != NULL)
 	{
       char * temp = XP_STRDUP(&fileName[7]);
-      XP_FREEIF(fileName);
+      XP_FREE(fileName);
       fileName = temp;
       
       if (fileName)

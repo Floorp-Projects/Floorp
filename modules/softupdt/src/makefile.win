@@ -136,6 +136,9 @@ LINCS= $(LINCS) \
 		-I$(PUBLIC)/rdf		\
 		-I$(PUBLIC)/network	\
 		-I$(PUBLIC)/zlib	\
+		-I$(PUBLIC)/plugin	\
+		-I$(PUBLIC)/oji		\
+		-I$(PUBLIC)/ojiimpl	\
 		$(NULL)
 !endif
 

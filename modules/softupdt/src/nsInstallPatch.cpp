@@ -72,11 +72,19 @@ nsInstallPatch::nsInstallPatch(nsSoftwareUpdate* inSoftUpdate,
     return;
   targetfile = nsVersionRegistry::componentPath( vrName );
   if ( targetfile == NULL ) {
-    *errorMsg = SU_GetErrorMsg4(SU_ERROR_NO_SUCH_COMPONENT, nsSoftUpdateError_NO_SUCH_COMPONENT);
+    *errorMsg = SU_GetErrorMsg4(SU_ERROR_NO_SUCH_COMPONENT, 
+                                nsSoftUpdateError_NO_SUCH_COMPONENT);
     return;
   }
+
+  if ((inVRName == NULL) || (inJarLocation == NULL)) {
+    *errorMsg = SU_GetErrorMsg3("Invalid arguments to the constructor", 
+                                nsSoftUpdateError_INVALID_ARGUMENTS);
+    return;
+  }
+
   vrName      = XP_STRDUP(inVRName);
-  versionInfo = inVInfo;
+  versionInfo = inVInfo; /* Who owns this object? May be we should make a copy of it */
   jarLocation = XP_STRDUP(inJarLocation);
 }
 
@@ -95,9 +103,17 @@ nsInstallPatch::nsInstallPatch(nsSoftwareUpdate* inSoftUpdate,
   patchURL = NULL;
   targetfile = NULL;
   patchedfile = NULL;
+
+  if ((inVRName == NULL) || (inJarLocation == NULL) || (folderSpec == NULL)) {
+    *errorMsg = SU_GetErrorMsg3("Invalid arguments to the constructor", 
+                                nsSoftUpdateError_INVALID_ARGUMENTS);
+    return;
+  }
+
   *errorMsg = checkPrivileges();
   if (*errorMsg != NULL)
     return;
+
   targetfile = folderSpec->MakeFullPath( inPartialPath, errorMsg );
   if ( errorMsg != NULL ) {
     return;
@@ -113,8 +129,8 @@ nsInstallPatch::~nsInstallPatch()
   XP_FREEIF(vrName);
   XP_FREEIF(jarLocation);
   XP_FREEIF(patchURL);
-  XP_FREEIF(patchedfile);
   XP_FREEIF(targetfile);
+  XP_FREEIF(patchedfile);
   /* Raman: Fix it. How do we delete versionInfo. If we have copy on our side it is easy. */
   // ?? delete versionInfo;
 }
@@ -124,8 +140,12 @@ char* nsInstallPatch::Prepare(void)
   char* errorMsg = NULL;
   char* srcname;
   PRBool deleteOldSrc;
-
   nsTarget* priv = NULL;
+
+  if ((softUpdate == NULL) || (jarLocation == NULL) || (targetfile == NULL)) {
+    return SU_GetErrorMsg3("Invalid arguments to the constructor", 
+                           nsSoftUpdateError_INVALID_ARGUMENTS);
+  }
 
   nsPrivilegeManager* privMgr = nsPrivilegeManager::getPrivilegeManager();
   nsTarget* impersonation = nsTarget::findTarget(IMPERSONATOR);
@@ -162,7 +182,7 @@ char* nsInstallPatch::Prepare(void)
     softUpdate->patchList->Put( &ikey, patchedfile );
   } else {
     char *msg = XP_Cat(targetfile, " not patched");
-    errorMsg = SU_GetErrorMsg3(msg, nsSoftUpdateError_UNEXPECTED_ERROR);
+    errorMsg = SU_GetErrorMsg3(msg, nsSoftUpdateError_INVALID_ARGUMENTS);
   }
 
   if ( deleteOldSrc ) {
@@ -181,12 +201,18 @@ char* nsInstallPatch::Complete(void)
   int err;
   char* errorMsg = NULL;
 
+  if ((softUpdate == NULL) || (targetfile == NULL) || 
+      (patchedfile == NULL) || (vrName == NULL)) {
+    return SU_GetErrorMsg3("Invalid arguments to the complete method", 
+                           nsSoftUpdateError_INVALID_ARGUMENTS);
+  }
+
   if ((errorMsg = checkPrivileges()) != NULL)
     return errorMsg;
 
   IntegerKey ikey(PL_HashString(targetfile));
   char* tmp = (char *)softUpdate->patchList->Get( &ikey );
-  if ( XP_STRCMP(tmp, patchedfile ) == 0 ) {
+  if (tmp && ( XP_STRCMP(tmp, patchedfile ) == 0 )) {
 
     // the patch has not been superceded--do final replacement
             
@@ -217,10 +243,15 @@ void nsInstallPatch::Abort(void)
   // clean up patched file unless it has been already
   // deleted by a superceding patch
   
+  if ((softUpdate == NULL) || (targetfile == NULL) || 
+      (patchedfile == NULL)) {
+    return;
+  }
+
   IntegerKey ikey(PL_HashString(targetfile));
   
   char* tmp = (char *)softUpdate->patchList->Get( &ikey );
-  if ( XP_STRCMP(tmp, patchedfile ) == 0 ) {
+  if (tmp && ( XP_STRCMP(tmp, patchedfile ) == 0 )) {
     NativeDeleteFile( patchedfile );
   }
 }
@@ -272,7 +303,8 @@ char* nsInstallPatch::NativePatch( char* srcfile, char* diffURL, char* *errorMsg
   
   if ( srcfile != NULL && diffURL != NULL ) {
     fullSrcURL = XP_PlatformFileToURL( srcfile );
-    if ( fullSrcURL != NULL ) {
+    /* skip "file://" part */
+    if ( ( fullSrcURL != NULL ) && (XP_STRLEN(fullSrcURL) > 7)) {
       char ch;
       char *p;
       
@@ -294,7 +326,7 @@ char* nsInstallPatch::NativePatch( char* srcfile, char* diffURL, char* *errorMsg
     err = SU_PatchFile( srcURL, xpURL, diffURL, xpURL, newfileURL, xpURL );
   } else {
     /* String conversions failed -- probably out of memory */
-    err = nsSoftUpdateError_UNEXPECTED_ERROR;
+    err = nsSoftUpdateError_INVALID_ARGUMENTS;
   }
   
   

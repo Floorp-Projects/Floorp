@@ -51,6 +51,13 @@ nsInstallExecute::nsInstallExecute(nsSoftwareUpdate* inSoftUpdate,
   args = NULL;
   cmdline = NULL;
 
+  if ((inArgs == NULL) || (inJarLocation == NULL) || 
+      (inSoftUpdate == NULL)) {
+    *errorMsg = SU_GetErrorMsg3("Invalid arguments to the constructor", 
+                               nsSoftUpdateError_INVALID_ARGUMENTS);
+    return;
+  }
+
   /* Request impersonation privileges */
   nsTarget* target = NULL;
 
@@ -59,9 +66,6 @@ nsInstallExecute::nsInstallExecute(nsSoftwareUpdate* inSoftUpdate,
   nsTarget* impersonation = nsTarget::findTarget(IMPERSONATOR);
 
   if ((privMgr != NULL) && (impersonation != NULL)) {
-    /* XXX: We should get the SystemPrincipal and enablePrivilege on that. 
-     * Or may be we should get rid of impersonation
-     */
     privMgr->enablePrivilege(impersonation, 1);
 
     /* check the security permissions */
@@ -95,13 +99,14 @@ char* nsInstallExecute::Prepare(void)
   char *errorMsg = NULL;
   nsTarget* execTarget = NULL;
 
+  if (softUpdate == NULL) {
+    return SU_GetErrorMsg3("Invalid arguments to the constructor", 
+                           nsSoftUpdateError_INVALID_ARGUMENTS);
+  }
   nsPrivilegeManager* privMgr = nsPrivilegeManager::getPrivilegeManager();
   nsTarget* impersonation = nsTarget::findTarget(IMPERSONATOR);
 
   if ((privMgr != NULL) && (impersonation != NULL)) {
-    /* XXX: We should get the SystemPrincipal and enablePrivilege on that. 
-     * Or may be we should get rid of impersonation
-     */
     privMgr->enablePrivilege(impersonation, 1);
     execTarget = nsTarget::findTarget(INSTALL_PRIV);
     if (execTarget != NULL) {
@@ -112,9 +117,15 @@ char* nsInstallExecute::Prepare(void)
   }
 
   tempFile = softUpdate->ExtractJARFile( jarLocation, NULL, &errorMsg );
-  if (errorMsg != NULL) 
+  if (errorMsg != NULL) {
+    PR_ASSERT(tempFile == NULL);
     return errorMsg;
+  }
 
+  if (tempFile == NULL) {
+    return SU_GetErrorMsg3("Extraction of JAR file failed", nsSoftUpdateError_ACCESS_DENIED);
+  }
+  
 #ifdef XP_MAC
     cmdline = XP_STRDUP(tempFile);
 #else
@@ -123,6 +134,7 @@ char* nsInstallExecute::Prepare(void)
   else
     cmdline = XP_Cat(tempFile, " ", args);
 #endif /* XP_MAC */
+  XP_FREE(tempFile);
   return NULL;
 }
 
@@ -135,13 +147,14 @@ char* nsInstallExecute::Complete(void)
   char* errorMsg = NULL;
   nsTarget* execTarget = NULL;
 
+  if (softUpdate == NULL) {
+    return SU_GetErrorMsg3("Invalid arguments to the constructor", 
+                           nsSoftUpdateError_INVALID_ARGUMENTS);
+  }
   nsPrivilegeManager* privMgr = nsPrivilegeManager::getPrivilegeManager();
   nsTarget* impersonation = nsTarget::findTarget(IMPERSONATOR);
 
   if ((privMgr != NULL) && (impersonation != NULL)) {
-    /* XXX: We should get the SystemPrincipal and enablePrivilege on that. 
-     * Or may be we should get rid of impersonation
-     */
     privMgr->enablePrivilege(impersonation, 1);
     execTarget = nsTarget::findTarget(INSTALL_PRIV);
     if (execTarget != NULL) {
@@ -174,7 +187,7 @@ char* nsInstallExecute::toString()
   } else {
     ret_val = SU_GetString1(SU_DETAILS_EXECUTE_PROGRESS2, msg);
   }
-  XP_FREEIF(msg);
+  XP_FREE(msg);
   return ret_val;
 }
 
@@ -196,6 +209,9 @@ void nsInstallExecute::NativeAbort(void)
 {
   char * currentName;
   int result;
+
+  if (tempFile == NULL)
+    return;
 
   /* Get the names */
   currentName = (char*)tempFile;

@@ -52,7 +52,8 @@ PRBool nsTrigger::UpdateEnabled(void)
 
 /**
  * @param componentName     version registry name of the component
- * @return  version of the package. null if not installed, or SmartUpdate disabled
+ * @return  version of the package. null if not installed, or 
+ *          SmartUpdate disabled
  */
 nsVersionInfo* nsTrigger::GetVersionInfo( char* componentName )
 {
@@ -72,15 +73,15 @@ PRBool nsTrigger::StartSoftwareUpdate( char* url, PRInt32 flags )
 {
   if (url != NULL) {
     /* This is a potential problem */
-		/* We are grabbing any context, but we really need ours */
+    /* We are grabbing any context, but we really need ours */
     /* The problem is that Java does not have access to MWContext */
-		MWContext * cx;
-		cx = XP_FindSomeContext();
-		if (cx)
-          return SU_StartSoftwareUpdate(cx, url, NULL, NULL, NULL, flags);
-	    else
-          return PR_FALSE;
-    }
+    MWContext * cx;
+    cx = XP_FindSomeContext();
+    if (cx)
+      return SU_StartSoftwareUpdate(cx, url, NULL, NULL, NULL, flags);
+    else
+      return PR_FALSE;
+  }
   return PR_FALSE;
 }
 
@@ -114,12 +115,12 @@ PRBool
 nsTrigger::ConditionalSoftwareUpdate(char* url,
                                      char* componentName,
                                      PRInt32 diffLevel,
-                                     nsVersionInfo* version,
+                                     nsVersionInfo* versionInfo,
                                      PRInt32 flags)
 {
   PRBool needJar = PR_FALSE;
 
-  if ((version == NULL) || (componentName == NULL))
+  if ((versionInfo == NULL) || (componentName == NULL))
     needJar = PR_TRUE;
   else {
     int stat = nsVersionRegistry::validateComponent( componentName );
@@ -135,9 +136,10 @@ nsTrigger::ConditionalSoftwareUpdate(char* url,
       if ( oldVer == NULL )
         needJar = PR_TRUE;
       else if ( diffLevel < 0 )
-        needJar = (version->compareTo( oldVer ) <= diffLevel);
+        needJar = (versionInfo->compareTo( oldVer ) <= diffLevel);
       else
-        needJar = (version->compareTo( oldVer ) >= diffLevel);
+        needJar = (versionInfo->compareTo( oldVer ) >= diffLevel);
+      delete oldVer;
     }
   }
 
@@ -152,10 +154,14 @@ nsTrigger::ConditionalSoftwareUpdate(char* url,
                                      char* componentName,
                                      char* version)
 {
-  return ConditionalSoftwareUpdate( url, componentName,
-                                    BLD_DIFF, 
-                                    new nsVersionInfo(version), 
-                                    DEFAULT_MODE );
+  nsVersionInfo* versionInfo = new nsVersionInfo(version);
+  PRBool ret_val = ConditionalSoftwareUpdate( url, 
+                                              componentName,
+                                              BLD_DIFF, 
+                                              versionInfo, 
+                                              DEFAULT_MODE );
+  delete versionInfo;
+  return ret_val;
 }
 
 /**
@@ -171,6 +177,7 @@ nsTrigger::ConditionalSoftwareUpdate(char* url,
  */
 PRInt32 nsTrigger::CompareVersion( char* regName, nsVersionInfo* version )
 {
+  PRInt32 ret_val;
   if (!UpdateEnabled())
     return EQUAL;
 
@@ -179,15 +186,23 @@ PRInt32 nsTrigger::CompareVersion( char* regName, nsVersionInfo* version )
   if ( regVersion == NULL ||
        nsVersionRegistry::validateComponent( regName ) == REGERR_NOFILE ) {
 
+    if (regVersion) delete regVersion;
     regVersion = new nsVersionInfo(0,0,0,0,0);
   }
 
-  return regVersion->compareTo( version );
+  PR_ASSERT(regVersion != NULL);
+
+  ret_val = regVersion->compareTo( version );
+  delete regVersion;
+  return ret_val;
 }
 
 PRInt32 nsTrigger::CompareVersion( char* regName, char* version )
 {
-  return CompareVersion( regName, new nsVersionInfo( version ) );
+  nsVersionInfo* versionInfo = new nsVersionInfo( version );
+  PRInt32 ret_val = CompareVersion( regName, versionInfo );
+  delete versionInfo;
+  return ret_val;
 }
 
 PRInt32 
@@ -195,7 +210,10 @@ nsTrigger::CompareVersion( char* regName, PRInt32 maj,
                            PRInt32 min, PRInt32 rel, 
                            PRInt32 bld )
 {
-  return CompareVersion( regName, new nsVersionInfo(maj, min, rel, bld, 0) );
+  nsVersionInfo* versionInfo = new nsVersionInfo(maj, min, rel, bld, 0);
+  PRInt32 ret_val = CompareVersion( regName, versionInfo );
+  delete versionInfo;
+  return ret_val;
 }
 
 PR_END_EXTERN_C

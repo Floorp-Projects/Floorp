@@ -30,7 +30,7 @@ MODULE		= softupdate
 LIBRARY_NAME	= softupdate
 
 REQUIRES	= softupdt js java net dbm nspr img util layer pref \
-		  jar security lay style libreg network progress base xpcom caps zlib
+		  jar security lay style libreg network progress base xpcom caps zlib plugin oji ojiimpl
 
 INCLUDES	+= -I$(topsrcdir)/base/src
 

@@ -29,41 +29,51 @@ extern "C" {
 
 char * SU_GetErrorMsg1(int id, char* arg1) 
 {
-  char* errorMsg=NULL;
+  char* errorMsg;
   char* tag = XP_GetString(id);
   PR_ASSERT(tag != NULL);
-  errorMsg = PR_sprintf_append(errorMsg, "%s %s", tag, arg1);
+  errorMsg = XP_Cat(tag, arg1);
   return errorMsg;
 }
 
 char * SU_GetErrorMsg2(int id, nsString* arg1, int reason) 
 {
-  char* errorMsg=NULL;
+  char* errorMsg;
+  char* ptr;
   char* tag = XP_GetString(id);
   PR_ASSERT(tag != NULL);
-  char* argMsg = arg1->ToNewCString();
-  errorMsg = PR_sprintf_append(errorMsg, "%s %s %d", tag, argMsg, reason);
+  char* argMsg = "";
+  if (argMsg)
+    argMsg = arg1->ToNewCString();
+  ptr = PR_sprintf_append(errorMsg, "%s %s %d", tag, argMsg, reason);
   delete argMsg;
+  errorMsg = XP_STRDUP(ptr);
+  delete ptr;
   return errorMsg;
 }
 
 char * SU_GetErrorMsg3(char *str, int err) 
 {
-  char* errorMsg=NULL;
+  char* errorMsg;
+  char* ptr;
   PR_ASSERT(str != NULL);
-  errorMsg = PR_sprintf_append(errorMsg, "%s %d", str, err);
+  ptr = PR_sprintf_append(errorMsg, "%s %d", str, err);
+  errorMsg = XP_STRDUP(ptr);
+  delete ptr;
   return errorMsg;
 }
 
 char * SU_GetErrorMsg4(int id, int reason) 
 {
-  char* msg=NULL;
+  char* msg;
+  char* ptr;
   char* tag = XP_GetString(id);
   PR_ASSERT(tag != NULL);
-  msg = PR_sprintf_append(msg, "%s %d", tag, reason);
+  ptr = PR_sprintf_append(msg, "%s %d", tag, reason);
+  msg = XP_STRDUP(ptr);
+  delete ptr;
   return msg;
 }
-
 
 
 char * SU_GetString(int id) 
@@ -78,7 +88,11 @@ char * SU_GetString1(int id, char* arg1)
   char* msg=NULL;
   char* tag = XP_GetString(id);
   PR_ASSERT(tag != NULL);
-  msg = PR_sprintf_append(msg, "%s %s", tag, arg1);
+  if (arg1) {
+    msg = XP_Cat(msg, tag, arg1);
+  } else {
+    msg = XP_Cat(msg, tag);
+  }
   return msg;
 }
 
@@ -87,8 +101,10 @@ char * SU_GetString2(int id, nsString* arg1)
   char* msg=NULL;
   char* tag = XP_GetString(id);
   PR_ASSERT(tag != NULL);
-  char* argMsg = arg1->ToNewCString();
-  msg = PR_sprintf_append(msg, "%s %s", tag, argMsg);
+  char* argMsg = "";
+  if (arg1)
+   argMsg = arg1->ToNewCString();
+  msg = XP_Cat(msg, tag, argMsg);
   delete argMsg;
   return msg;
 }

@@ -30,6 +30,9 @@ PR_BEGIN_EXTERN_C
 
 /**
  * Return the physical disk path for the specified component.
+ *
+ * Caller should free the returned string 
+ *
  * @param   component  Registry path of the item to look up in the Registry
  * @return  The disk path for the specified component; NULL indicates error
  * @see     VersionRegistry#checkComponent
@@ -56,7 +59,8 @@ char* nsVersionRegistry::componentPath( char* component )
 /**
  * Return the version information for the specified component.
  * @param   component  Registry path of the item to look up in the Registry
- * @return  A VersionInfo object for the specified component; NULL indicates error
+ * @return  A VersionInfo object for the specified component; 
+ *          NULL indicates error
  * @see     VersionRegistry#checkComponent
  */
 nsVersionInfo* nsVersionRegistry::componentVersion( char* component )
@@ -82,6 +86,12 @@ nsVersionInfo* nsVersionRegistry::componentVersion( char* component )
   return verInfo;
 }
 
+/**
+ * Return the default directory.
+ *
+ * Caller should free the returned string 
+ *
+ */
 char* nsVersionRegistry::getDefaultDirectory( char* component )
 {
   char     pathbuf[MAXREGPATHLEN];
@@ -101,7 +111,8 @@ char* nsVersionRegistry::getDefaultDirectory( char* component )
   return ret_val;
 }
 
-PRInt32 nsVersionRegistry::setDefaultDirectory( char* component, char* directory )
+PRInt32 nsVersionRegistry::setDefaultDirectory( char* component, 
+                                                char* directory )
 {
   REGERR   status = REGERR_FAIL;
   
@@ -114,7 +125,9 @@ PRInt32 nsVersionRegistry::setDefaultDirectory( char* component, char* directory
   return (status);
 }
 
-PRInt32 nsVersionRegistry::installComponent( char* component, char* path, nsVersionInfo* version )
+PRInt32 nsVersionRegistry::installComponent( char* component, 
+                                             char* path, 
+                                             nsVersionInfo* version )
 {
   char *   szVersion = NULL;
   REGERR   status = REGERR_FAIL;
@@ -133,7 +146,10 @@ PRInt32 nsVersionRegistry::installComponent( char* component, char* path, nsVers
   return (status);
 }
 
-PRInt32 nsVersionRegistry::installComponent( char* name, char* path, nsVersionInfo* version, PRInt32 refCount )
+PRInt32 nsVersionRegistry::installComponent( char* name, 
+                                             char* path, 
+                                             nsVersionInfo* version, 
+                                             PRInt32 refCount )
 {
   int  err = installComponent( name, path, version );
   
@@ -256,7 +272,8 @@ PRInt32 nsVersionRegistry::getRefCount( char* component )
  * @return  userPackagename User-readable package name
  * @return  Error code
  */
-PRInt32 nsVersionRegistry::uninstallCreate( char* regPackageName, char* userPackageName )
+PRInt32 nsVersionRegistry::uninstallCreate( char* regPackageName, 
+                                            char* userPackageName )
 {
   char* temp = convertPackageName(regPackageName);
   regPackageName = temp;
@@ -342,8 +359,7 @@ char* nsVersionRegistry::getUninstallUserName( char* regName )
   char*   ret_val = NULL;
   
   if ( regName != NULL ) {
-    /* XXX: uncomment the following code, when we merge Nav 4.5 into 5.0 */
-    //status = VR_GetUninstallUserName( regName, buf, sizeof(buf) );
+    status = VR_GetUninstallUserName( regName, buf, sizeof(buf) );
     PR_ASSERT(PR_FALSE);
     
     if ( status == REGERR_OK )
@@ -371,6 +387,8 @@ nsVersionRegistry::nsVersionRegistry()
  */
 char* nsVersionRegistry::convertPackageName( char* regPackageName )
 {
+  if (regPackageName == NULL)
+    return regPackageName;
   char* convertedPackageName;
   PRBool bSharedUninstall = PR_FALSE;
   PRUint32 i=0;

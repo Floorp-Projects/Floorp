@@ -89,8 +89,8 @@ typedef enum su_SecurityLevel {
 struct su_DirectoryTable
 {
 	char * directoryName;			/* The formal directory name */
-	su_SecurityLevel securityLevel;	/* Security level */
 	su_DirSpecID folderEnum;		/* Directory ID */
+	XP_Bool bJavaDir;               /* TRUE is a Java-capable directory */
 };
 
 extern struct su_DirectoryTable DirectoryTable[];

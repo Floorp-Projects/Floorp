@@ -83,7 +83,6 @@ private:
   nsString* finalFile;		/* final file destination */
   nsString* regPackageName;     /* Name of the package we are installing */
   nsString* userPackageName;    /* User-readable package name */
-  nsTarget* target;             /* security target */
   PRBool force;                 /* whether install is forced */
   PRBool bJavaDir;              /* whether file is installed to a Java directory */
   PRBool replace;               /* whether file exists */

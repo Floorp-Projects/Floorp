@@ -34,6 +34,8 @@
 #include "VerReg.h"
 #include "libi18n.h"
 
+#include "jvmmgr.h"
+
 extern int MK_OUT_OF_MEMORY;
 
 #define MOCHA_CONTEXT_PREFIX "autoinstall:"
@@ -851,7 +853,7 @@ void su_HandleCompleteJavaScript (su_DownloadStream* realStream)
     /* add installer .JAR to the classpath */
     nativeJar = WH_FileName( realStream->fJarFile, xpURL );
     if ( nativeJar != NULL ) {
-        LJ_AddToClassPath( nativeJar );
+        JVM_AddToClassPath( nativeJar );
         XP_FREE( nativeJar );
     }
 

@@ -29,6 +29,7 @@
 
 #include "nsPrivilegeManager.h"
 #include "nsTarget.h"
+#include "jvmmgr.h"
 
 extern int SU_ERROR_INSTALL_FILE_UNEXPECTED;
 extern int SU_DETAILS_REPLACE_FILE_MSG_ID;
@@ -39,6 +40,21 @@ XP_Bool	utilityScheduled = FALSE;
 #endif
 
 PR_BEGIN_EXTERN_C
+
+static PRBool endsWith(nsString* str, char* string_to_find);
+
+static PRBool endsWith(nsString* str, char* string_to_find) 
+{
+  PRBool found = PR_FALSE;
+  if (str) {
+    int len = strlen(".zip");
+    int size = str->Length();
+    int offset = str->RFind(string_to_find, PR_FALSE);
+    if (offset == (size - len))
+      found = PR_TRUE;
+  }
+  return found;
+}
 
 /* Public Methods */
 
@@ -65,20 +81,27 @@ nsInstallFile::nsInstallFile(nsSoftwareUpdate* inSoftUpdate,
   finalFile = NULL;
   regPackageName = NULL;
   userPackageName = NULL;
-  target = NULL;
   force = PR_FALSE;
   bJavaDir = PR_FALSE;
   replace = PR_FALSE;
   bChild = PR_FALSE;
   bUpgrade = PR_FALSE;
 
+  if ((inVRName == NULL) || (inJarLocation == NULL) || 
+      (folderSpec == NULL) || (inSoftUpdate == NULL) ||
+      (inVInfo == NULL)) {
+    *errorMsg = SU_GetErrorMsg3("Invalid arguments to the constructor", 
+                               nsSoftUpdateError_INVALID_ARGUMENTS);
+    return;
+  }
   vrName = new nsString(inVRName);
-  versionInfo	= inVInfo;
+  versionInfo	= inVInfo; /* XXX: Who owns and who free's this object. Is it nsSoftwareUpdate?? */
   jarLocation = new nsString(inJarLocation);
   force = forceInstall;
   char* temp = folderSpec->MakeFullPath( inPartialPath, errorMsg );
   if (temp != NULL) {
     finalFile = new nsString(temp);
+    XP_FREE(temp);
   }
   bJavaDir = folderSpec->IsJavaCapable();
 
@@ -87,15 +110,12 @@ nsInstallFile::nsInstallFile(nsSoftwareUpdate* inSoftUpdate,
   nsPrivilegeManager* privMgr = nsPrivilegeManager::getPrivilegeManager();
 
   if ((privMgr != NULL) && (impersonation != NULL)) {
-    /* XXX: We should get the SystemPrincipal and enablePrivilege on that. 
-     * Or may be we should get rid of impersonation
-     */
     privMgr->enablePrivilege(impersonation, 1);
 
     /* check the security permissions */
-    target = nsTarget::findTarget(INSTALL_PRIV);
-    if (target != NULL) {
-      if (!privMgr->enablePrivilege(target, softUpdate->GetPrincipal(), 1)) {
+    nsTarget* install_target = nsTarget::findTarget(INSTALL_PRIV);
+    if (install_target != NULL) {
+      if (!privMgr->enablePrivilege(install_target, softUpdate->GetPrincipal(), 1)) {
         *errorMsg = SU_GetErrorMsg3("Permssion was denied", nsSoftUpdateError_ACCESS_DENIED);
         return;
       }
@@ -132,14 +152,14 @@ nsInstallFile::~nsInstallFile()
 {
   delete vrName;
   delete jarLocation;
-  if (finalFile)
-    delete finalFile;
-  if (userPackageName)
-    delete userPackageName;
-  if (regPackageName)
-    delete regPackageName;
   if (tempFile)
     delete tempFile;
+  if (finalFile)
+    delete finalFile;
+  if (regPackageName)
+    delete regPackageName;
+  if (userPackageName)
+    delete userPackageName;
 }
 
 /* Prepare
@@ -149,6 +169,22 @@ char* nsInstallFile::Prepare()
 {
   char *errorMsg = NULL;
 
+  if (softUpdate == NULL) {
+    errorMsg = SU_GetErrorMsg3("nsSoftwareUpdate object is null", 
+                               nsSoftUpdateError_INVALID_ARGUMENTS);
+    return errorMsg;
+  }
+  if (jarLocation == NULL) {
+    errorMsg = SU_GetErrorMsg3("JAR file is null", 
+                               nsSoftUpdateError_INVALID_ARGUMENTS);
+    return errorMsg;
+  }
+  if (finalFile == NULL) {
+    errorMsg = SU_GetErrorMsg3("folderSpec's full path (finalFile) was null", 
+                               nsSoftUpdateError_INVALID_ARGUMENTS);
+    return errorMsg;
+  }
+
   // XXX: Make the following security code into a function.
 
   /* Request impersonation privileges */
@@ -156,9 +192,6 @@ char* nsInstallFile::Prepare()
   nsPrivilegeManager* privMgr = nsPrivilegeManager::getPrivilegeManager();
 
   if ((privMgr != NULL) && (impersonation != NULL)) {
-    /* XXX: We should get the SystemPrincipal and enablePrivilege on that. 
-     * Or may be we should get rid of impersonation
-     */
     PRBool allowed = privMgr->enablePrivilege(impersonation, 1);
     if (allowed == PR_FALSE) {
       errorMsg = SU_GetErrorMsg3("Permssion was denied", nsSoftUpdateError_ACCESS_DENIED);
@@ -166,8 +199,9 @@ char* nsInstallFile::Prepare()
     }
 
     /* check the security permissions */
-    if (target != NULL) {
-      PRBool allowed = privMgr->enablePrivilege(target, softUpdate->GetPrincipal(), 1);
+    nsTarget* install_target = nsTarget::findTarget(INSTALL_PRIV);
+    if (install_target != NULL) {
+      PRBool allowed = privMgr->enablePrivilege(install_target, softUpdate->GetPrincipal(), 1);
       if (allowed == PR_FALSE) {
         errorMsg = SU_GetErrorMsg3("Permssion was denied", nsSoftUpdateError_ACCESS_DENIED);
         return errorMsg;
@@ -181,6 +215,7 @@ char* nsInstallFile::Prepare()
   delete jarLocationCharPtr;
   delete finalFileCharPtr;
   if (errorMsg != NULL) {
+    PR_ASSERT(temp == NULL);
     return errorMsg;
   }
   if (temp != NULL) {
@@ -201,48 +236,56 @@ char* nsInstallFile::Complete()
   int refCount;
   int rc;
 
+  if (softUpdate == NULL) {
+    return SU_GetErrorMsg3("nsSoftwareUpdate object is null", 
+                           nsSoftUpdateError_INVALID_ARGUMENTS);
+  }
+  if (vrName == NULL) {
+    return SU_GetErrorMsg3("version registry name is null", 
+                           nsSoftUpdateError_INVALID_ARGUMENTS);
+  }
+  if (finalFile == NULL) {
+    return  SU_GetErrorMsg3("folderSpec's full path (finalFile) is null", 
+                            nsSoftUpdateError_INVALID_ARGUMENTS);
+  }
+
   /* Check the security for our target */
   // XXX: Make the following security code into a function.
 
   /* Request impersonation privileges */
   nsTarget* impersonation = nsTarget::findTarget(IMPERSONATOR);
   nsPrivilegeManager* privMgr = nsPrivilegeManager::getPrivilegeManager();
+  nsTarget* install_target = NULL;
 
   if ((privMgr != NULL) && (impersonation != NULL)) {
-    /* XXX: We should get the SystemPrincipal and enablePrivilege on that. 
-     * Or may be we should get rid of impersonation
-     */
     privMgr->enablePrivilege(impersonation, 1);
     
     /* check the security permissions */
-    if (target != NULL) {
-      if (!privMgr->enablePrivilege(target, softUpdate->GetPrincipal(), 1)) {
-        return SU_GetErrorMsg3("Permssion was denied", nsSoftUpdateError_ACCESS_DENIED);
+    install_target = nsTarget::findTarget(INSTALL_PRIV);
+    if (install_target != NULL) {
+      if (!privMgr->enablePrivilege(install_target, 
+                                    softUpdate->GetPrincipal(), 1)) {
+        return SU_GetErrorMsg3("Permssion was denied", 
+                               nsSoftUpdateError_ACCESS_DENIED);
       }
     }
   }
   
   err = NativeComplete();
   
-  if ((privMgr != NULL) && (target != NULL)) {
-    privMgr->revertPrivilege(target, 1);
+  if ((privMgr != NULL) && (install_target != NULL)) {
+    privMgr->revertPrivilege(install_target, 1);
   }
-  
+
+  char *vr_name = vrName->ToNewCString();
+  char *final_file = finalFile->ToNewCString();
   
   // Add java archives to the classpath. Don't add if we're
   // replacing an existing file -- it'll already be there.
   
   if ( bJavaDir && !replace ) {
-    PRBool found_zip = PR_FALSE;
-    PRBool found_jar = PR_FALSE;
-    int len = strlen(".zip");
-    int size = finalFile->Length();
-    int offset = finalFile->RFind(".zip", PR_FALSE);
-    if (offset == (size - len))
-      found_zip = PR_TRUE;
-    offset = finalFile->RFind(".jar", PR_FALSE);
-    if (offset == (size - len))
-      found_jar = PR_TRUE;
+    PRBool found_zip = endsWith(finalFile, ".zip");
+    PRBool found_jar = endsWith(finalFile, ".jar");;
     if (found_zip || found_jar) {
       AddToClasspath( finalFile );
     }
@@ -256,41 +299,54 @@ char* nsInstallFile::Complete()
     // important enough to abort an otherwise OK install.
     if (!bChild) {
       int found;
-      /* XXX: Fix it. memeory leak */
-      found = nsVersionRegistry::uninstallFileExists(regPackageName->ToNewCString(), vrName->ToNewCString());
+      if (regPackageName) {
+        char *reg_package_name = regPackageName->ToNewCString();
+        found = nsVersionRegistry::uninstallFileExists(reg_package_name, vr_name);
+        delete reg_package_name;
+      } else {
+        found = nsVersionRegistry::uninstallFileExists("", vr_name);
+      }
       if (found != REGERR_OK)
         bUpgrade = PR_FALSE;
       else
         bUpgrade = PR_TRUE;
-    } else if (REGERR_OK == nsVersionRegistry::inRegistry(vrName->ToNewCString())) {
+    } else if (REGERR_OK == nsVersionRegistry::inRegistry(vr_name)) {
       bUpgrade = PR_TRUE;
     } else {
       bUpgrade = PR_FALSE;
     }
     
-    refCount = nsVersionRegistry::getRefCount(vrName->ToNewCString());
+    refCount = nsVersionRegistry::getRefCount(vr_name);
     if (!bUpgrade) {
       if (refCount != 0) {
         rc = 1 + refCount;
-        nsVersionRegistry::installComponent(vrName->ToNewCString(), finalFile->ToNewCString(), versionInfo, rc );
+        nsVersionRegistry::installComponent(vr_name, final_file, versionInfo, rc );
       } else {
         if (replace)
-          nsVersionRegistry::installComponent(vrName->ToNewCString(), finalFile->ToNewCString(), versionInfo, 2);
+          nsVersionRegistry::installComponent(vr_name, final_file, versionInfo, 2);
         else
-          nsVersionRegistry::installComponent(vrName->ToNewCString(), finalFile->ToNewCString(), versionInfo, 1);
+          nsVersionRegistry::installComponent(vr_name, final_file, versionInfo, 1);
       }
     } else if (bUpgrade) {
       if (refCount == 0) {
-        nsVersionRegistry::installComponent(vrName->ToNewCString(), finalFile->ToNewCString(), versionInfo, 1);
+        nsVersionRegistry::installComponent(vr_name, final_file, versionInfo, 1);
       } else {
-        nsVersionRegistry::installComponent(vrName->ToNewCString(), finalFile->ToNewCString(), versionInfo );
+        nsVersionRegistry::installComponent(vr_name, final_file, versionInfo );
       }
     }
     
     if ( !bChild && !bUpgrade ) {
-      nsVersionRegistry::uninstallAddFile(regPackageName->ToNewCString(), vrName->ToNewCString());
+      if (regPackageName) {
+        char *reg_package_name = regPackageName->ToNewCString();
+        nsVersionRegistry::uninstallAddFile(reg_package_name, vr_name);
+        delete reg_package_name;
+      } else {
+        nsVersionRegistry::uninstallAddFile("", vr_name);
+      }
     }
   }
+  delete vr_name;
+  delete final_file;
   
   if ( err != 0 ) {
     return SU_GetErrorMsg2(SU_ERROR_INSTALL_FILE_UNEXPECTED, finalFile, err);
@@ -322,6 +378,8 @@ void nsInstallFile::NativeAbort()
   int result;
 
   /* Get the names */
+  if (tempFile == NULL) 
+    return;
   currentName = tempFile->ToNewCString();
 
   result = XP_FileRemove(currentName, xpURL);
@@ -335,14 +393,18 @@ void nsInstallFile::NativeAbort()
  */
 int nsInstallFile::NativeComplete()
 {
-  char* currentName;
+  char* currentName = NULL;
   char* finalName = NULL;
   char* finalNamePlatform;
   int result = 0;
 
+  if (tempFile == NULL) {
+    return -1;
+  }
   /* Get the names */
   currentName = tempFile->ToNewCString();
-  
+
+  PR_ASSERT(finalFile != NULL);
   finalNamePlatform = finalFile->ToNewCString();
   finalName = XP_PlatformFileToURL(finalNamePlatform);
 	
@@ -431,6 +493,7 @@ PRBool nsInstallFile::NativeDoesFileExist()
   XP_StatStruct statinfo;
   XP_Bool exists = FALSE;
 
+  PR_ASSERT(finalFile != NULL);
   fileNamePlatform = finalFile->ToNewCString();
   fileName = XP_PlatformFileToURL(fileNamePlatform);
   if (fileName != NULL) {
@@ -454,9 +517,9 @@ PRBool nsInstallFile::NativeDoesFileExist()
 void nsInstallFile::AddToClasspath(nsString* file)
 {
   if ( file != NULL ) {
-    /* XXX: What should we do?
-    LJ_AddToClassPath((PRUnichar*)file);
-    */
+    char *final_file = file->ToNewCString();
+    JVM_AddToClassPath(final_file);
+    delete final_file;
   }
 }
 

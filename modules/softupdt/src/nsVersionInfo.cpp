@@ -41,6 +41,9 @@ nsVersionInfo::nsVersionInfo(PRInt32 maj, PRInt32 min, PRInt32 rel, PRInt32 bld,
 nsVersionInfo::nsVersionInfo(char* versionArg)
 {
   PRInt32 errorCode;
+  if (versionArg == NULL) {
+    versionArg = "0.0.0.0";
+  }
   nsString version(versionArg);
   int dot = version.Find('.', 0);
   
@@ -140,12 +143,18 @@ nsVersionEnum nsVersionInfo::compareTo(nsVersionInfo* vi)
 
 nsVersionEnum nsVersionInfo::compareTo(char* version)
 {
-  return compareTo(new nsVersionInfo(version));
+  nsVersionInfo* versionInfo = new nsVersionInfo(version);
+  nsVersionEnum ret_val = compareTo(versionInfo);
+  delete versionInfo;
+  return ret_val;
 }
 
 nsVersionEnum nsVersionInfo::compareTo(PRInt32 maj, PRInt32 min, PRInt32 rel, PRInt32 bld)
 {
-  return compareTo(new nsVersionInfo(maj, min, rel, bld, 0));
+  nsVersionInfo* versionInfo = new nsVersionInfo(maj, min, rel, bld, 0);
+  nsVersionEnum ret_val = compareTo(versionInfo);
+  delete versionInfo;
+  return ret_val;
 }
 
 PR_END_EXTERN_C

@@ -41,10 +41,17 @@ nsUninstallObject::nsUninstallObject(nsSoftwareUpdate* inSoftUpdate,
 {
   regName = NULL;
   userName = NULL;
-  if ( regName == NULL || XP_STRLEN(regName) == 0 ) {
+  if ( (inRegName == NULL) || (XP_STRLEN(inRegName) == 0) ) {
     *errorMsg = SU_GetErrorMsg3("RegName is NULL ", nsSoftUpdateError_INVALID_ARGUMENTS );
     return;
   }
+
+  if (inSoftUpdate == NULL) {
+    *errorMsg = SU_GetErrorMsg3("SoftwareUpdate object is NULL ", 
+                                nsSoftUpdateError_INVALID_ARGUMENTS);
+    return;
+  }
+
   regName = XP_STRDUP(inRegName);
 
   /* Request impersonation privileges */
@@ -90,6 +97,12 @@ nsUninstallObject::~nsUninstallObject()
 char* nsUninstallObject::Complete()
 {
   nsTarget* execTarget = NULL;
+
+  if ((softUpdate == NULL) || (regName == NULL)) {
+    *errorMsg = SU_GetErrorMsg3("Invalid arguments to UninstallObject ", 
+                                nsSoftUpdateError_INVALID_ARGUMENTS);
+    return;
+  }
 
   nsPrivilegeManager* privMgr = nsPrivilegeManager::getPrivilegeManager();
   nsTarget* impersonation = nsTarget::findTarget(IMPERSONATOR);
