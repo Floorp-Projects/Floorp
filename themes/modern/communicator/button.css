@@ -61,6 +61,11 @@
   color: #FFFFFF;
 }
 
+.toolbarbutton-1[disabled="true"],
+.toolbarbutton-1[disabled="true"]:hover:active {
+  color: #9399AB;
+}
+
 .toolbarbutton-1,
 .toolbarbutton-1 > .toolbarbutton-menubutton-stack > .toolbarbutton-menubutton-button {
   border: none !important;

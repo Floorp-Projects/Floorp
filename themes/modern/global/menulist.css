@@ -235,25 +235,25 @@ menulist:hover:active > .menulist-stack > .menulist-box-mid
   background-image: url("chrome://global/skin/menulist/mlist-dis-mid-btm.gif");
 }
 
-menulist:hover:active > .menulist-box-right > stack > box 
+menulist:hover:active > .menulist-box-right > stack > vbox 
     > .menulist-right-mid[disabled="true"],
 .menulist-right-mid[disabled="true"] {
   background-image: url("chrome://global/skin/menulist/mlist-dis-rit-mid.gif");
 }
 
-menulist:hover:active > .menulist-box-right > stack > box 
+menulist:hover:active > .menulist-box-right > stack > vbox 
     > .menulist-right-top[disabled="true"],
 .menulist-right-top[disabled="true"] {
   background-image: url("chrome://global/skin/menulist/mlist-dis-rit-top.gif");
 }
 
-menulist:hover:active > .menulist-box-right > stack > box 
+menulist:hover:active > .menulist-box-right > stack > vbox 
     > .menulist-right-btm[disabled="true"],
 .menulist-right-btm[disabled="true"] {
   background-image: url("chrome://global/skin/menulist/mlist-dis-rit-btm.gif");
 }
 
-menulist:hover:active > .menulist-box-right > stack > box 
+menulist:hover:active > .menulist-box-right > stack > hbox 
     > .menulist-dropmarker[disabled="true"],
 .menulist-dropmarker[disabled="true"] {
   list-style-image: url("chrome://global/skin/menulist/mlist-dis-arrow.gif");
