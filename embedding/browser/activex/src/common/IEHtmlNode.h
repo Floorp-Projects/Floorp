@@ -43,6 +43,86 @@
 #include "nsCOMPtr.h"
 #include "nsIDOMNode.h"
 
+// NOTE: Nasty hack in case arcane SDK doesn't define IHTMLDOMNode
+#ifndef __IHTMLDOMNode_INTERFACE_DEFINED__
+#define __IHTMLDOMNode_INTERFACE_DEFINED__
+    MIDL_INTERFACE("3050f5da-98b5-11cf-bb82-00aa00bdce0b")
+    IHTMLDOMNode : public IDispatch
+    {
+    public:
+        virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_nodeType( 
+            /* [out][retval] */ long *p) = 0;
+        
+        virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_parentNode( 
+            /* [out][retval] */ IHTMLDOMNode **p) = 0;
+        
+        virtual /* [id] */ HRESULT STDMETHODCALLTYPE hasChildNodes( 
+            /* [out][retval] */ VARIANT_BOOL *fChildren) = 0;
+        
+        virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_childNodes( 
+            /* [out][retval] */ IDispatch **p) = 0;
+        
+        virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_attributes( 
+            /* [out][retval] */ IDispatch **p) = 0;
+        
+        virtual /* [id] */ HRESULT STDMETHODCALLTYPE insertBefore( 
+            /* [in] */ IHTMLDOMNode *newChild,
+            /* [in][optional] */ VARIANT refChild,
+            /* [out][retval] */ IHTMLDOMNode **node) = 0;
+        
+        virtual /* [id] */ HRESULT STDMETHODCALLTYPE removeChild( 
+            /* [in] */ IHTMLDOMNode *oldChild,
+            /* [out][retval] */ IHTMLDOMNode **node) = 0;
+        
+        virtual /* [id] */ HRESULT STDMETHODCALLTYPE replaceChild( 
+            /* [in] */ IHTMLDOMNode *newChild,
+            /* [in] */ IHTMLDOMNode *oldChild,
+            /* [out][retval] */ IHTMLDOMNode **node) = 0;
+        
+        virtual /* [id] */ HRESULT STDMETHODCALLTYPE cloneNode( 
+            /* [in] */ VARIANT_BOOL fDeep,
+            /* [out][retval] */ IHTMLDOMNode **clonedNode) = 0;
+        
+        virtual /* [id] */ HRESULT STDMETHODCALLTYPE removeNode( 
+            /* [in][defaultvalue] */ VARIANT_BOOL fDeep,
+            /* [out][retval] */ IHTMLDOMNode **removed) = 0;
+        
+        virtual /* [id] */ HRESULT STDMETHODCALLTYPE swapNode( 
+            /* [in] */ IHTMLDOMNode *otherNode,
+            /* [out][retval] */ IHTMLDOMNode **swappedNode) = 0;
+        
+        virtual /* [id] */ HRESULT STDMETHODCALLTYPE replaceNode( 
+            /* [in] */ IHTMLDOMNode *replacement,
+            /* [out][retval] */ IHTMLDOMNode **replaced) = 0;
+        
+        virtual /* [id] */ HRESULT STDMETHODCALLTYPE appendChild( 
+            /* [in] */ IHTMLDOMNode *newChild,
+            /* [out][retval] */ IHTMLDOMNode **node) = 0;
+        
+        virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_nodeName( 
+            /* [out][retval] */ BSTR *p) = 0;
+        
+        virtual /* [id][propput] */ HRESULT STDMETHODCALLTYPE put_nodeValue( 
+            /* [in] */ VARIANT v) = 0;
+        
+        virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_nodeValue( 
+            /* [out][retval] */ VARIANT *p) = 0;
+        
+        virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_firstChild( 
+            /* [out][retval] */ IHTMLDOMNode **p) = 0;
+        
+        virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_lastChild( 
+            /* [out][retval] */ IHTMLDOMNode **p) = 0;
+        
+        virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_previousSibling( 
+            /* [out][retval] */ IHTMLDOMNode **p) = 0;
+        
+        virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_nextSibling( 
+            /* [out][retval] */ IHTMLDOMNode **p) = 0;
+        
+    };
+#endif
+
 class CNode :
     public CComObjectRootEx<CComMultiThreadModel>
 {
@@ -61,7 +141,7 @@ public:
 
 class CIEHtmlDomNode :
     public CNode,
-    public IDispatchImpl<IHTMLDOMNode, &IID_IHTMLDOMNode, &LIBID_MSHTML>
+    public IDispatchImpl<IHTMLDOMNode, &__uuidof(IHTMLDOMNode), &LIBID_MSHTML>
 {
 public:
     DECLARE_AGGREGATABLE(CIEHtmlDomNode)

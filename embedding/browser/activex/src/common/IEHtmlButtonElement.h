@@ -46,9 +46,52 @@
 
 class CIEHtmlElement;
 
+// NOTE: Nasty hack in case arcane SDK does not define IHTMLButtonElement
+
+#ifndef __IHTMLButtonElement_INTERFACE_DEFINED__
+    MIDL_INTERFACE("3050f2bb-98b5-11cf-bb82-00aa00bdce0b")
+    IHTMLButtonElement : public IDispatch
+    {
+    public:
+        virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_type( 
+            /* [out][retval] */ BSTR *p) = 0;
+        
+        virtual /* [bindable][displaybind][id][propput] */ HRESULT STDMETHODCALLTYPE put_value( 
+            /* [in] */ BSTR v) = 0;
+        
+        virtual /* [bindable][displaybind][id][propget] */ HRESULT STDMETHODCALLTYPE get_value( 
+            /* [out][retval] */ BSTR *p) = 0;
+        
+        virtual /* [bindable][displaybind][id][propput] */ HRESULT STDMETHODCALLTYPE put_name( 
+            /* [in] */ BSTR v) = 0;
+        
+        virtual /* [bindable][displaybind][id][propget] */ HRESULT STDMETHODCALLTYPE get_name( 
+            /* [out][retval] */ BSTR *p) = 0;
+        
+        virtual /* [id][propput] */ HRESULT STDMETHODCALLTYPE put_status( 
+            /* [in] */ VARIANT v) = 0;
+        
+        virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_status( 
+            /* [out][retval] */ VARIANT *p) = 0;
+        
+        virtual /* [bindable][displaybind][id][propput] */ HRESULT STDMETHODCALLTYPE put_disabled( 
+            /* [in] */ VARIANT_BOOL v) = 0;
+        
+        virtual /* [bindable][displaybind][id][propget] */ HRESULT STDMETHODCALLTYPE get_disabled( 
+            /* [out][retval] */ VARIANT_BOOL *p) = 0;
+        
+        virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_form( 
+            /* [out][retval] */ IHTMLFormElement **p) = 0;
+        
+        virtual /* [id] */ HRESULT STDMETHODCALLTYPE createTextRange( 
+            /* [out][retval] */ IHTMLTxtRange **range) = 0;
+        
+    };
+#endif
+
 class CIEHtmlButtonElement :
     public CNode,
-    public IDispatchImpl<IHTMLButtonElement, &IID_IHTMLButtonElement, &LIBID_MSHTML>
+    public IDispatchImpl<IHTMLButtonElement, &__uuidof(IHTMLButtonElement), &LIBID_MSHTML>
 {
 public:
     CIEHtmlButtonElement() {
