@@ -1,0 +1,209 @@
+<?xml version="1.0"?> 
+<?xml-stylesheet href="resource:/res/samples/xul.css" type="text/css"?> 
+
+<!DOCTYPE window> 
+
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="startup()"
+		style="width:100%;height:100%"> 
+  
+<html:script src="resource:/res/mailnews/messenger/widgetglue.js"></html:script>
+
+<html:script>
+	var editorAppCore;
+	var composeAppCore;
+
+	function startup()
+	{
+	  dump("Compose: StartUp\n");
+
+	  editorAppCore = XPAppCoresManager.Find("EditorAppCore");  
+	  dump("Looking up EditorAppCore...\n");
+	  if (editorAppCore == null) {
+	    dump("Creating EditorAppCore...\n");
+	    editorAppCore = new EditorAppCore();
+	    editorAppCore.Init("EditorAppCore");
+		dump("editor app core correctly added to app cores manager");
+	  }
+	  if (editorAppCore != null) {
+		dump("initalizing the editor app core");
+	    editorAppCore.setContentWindow(window.frames[0]);
+	    editorAppCore.setWebShellWindow(window);
+	    editorAppCore.setToolbarWindow(window);
+	  }
+
+	  composeAppCore = XPAppCoresManager.Find("ComposeAppCore");
+	  if (composeAppCore == null) {
+		dump("creating new compose app core with new editor");
+	    composeAppCore = new ComposeAppCore();
+	    if (composeAppCore != null) {
+	      dump("ComposeAppCore was created!\n");
+	      composeAppCore.Init("ComposeAppCore");
+	    }
+	  }
+	  if(composeAppCore != null) {
+	    dump("setting window & editor for compose app core");
+	    composeAppCore.SetWindow(window);
+	    composeAppCore.SetEditor(editorAppCore);
+	    composeAppCore.CompleteCallback("MessageSent();");
+	  }
+	}
+
+        function EditorGetText()
+	{
+		if (editorAppCore != null) {
+			var	outputText = editorAppCore.contentsAsText;
+			dump(outputText + "\n");
+			return outputText;
+		} else
+			dump("EditorAppCore has not been created!\n");
+	}
+
+
+	function SendMessage()
+	{
+		dump("SendMessage!\n");
+		if (composeAppCore != null) {
+//			composeAppCore.SendMessage(document.getElementById('msgTo').value, 
+//					   document.getElementById('msgCc').value, 
+//					   document.getElementById('msgBcc').value, 
+//					   document.getElementById('msgSubject').value, 
+//					   window.parent.frames[0].document.forms["fbody"].elements["body"].value);
+//					   EditorGetText());
+			composeAppCore.SendMessage2();
+		}
+	}
+
+	function MessageSent()
+	{
+		dump("MessageSent Callback!\n");
+
+		// Clear Them
+		document.getElementById('msgTo').value = "";
+		document.getElementById('msgCc').value = "";
+		document.getElementById('msgBcc').value = "";
+		document.getElementById('msgSubject').value = "";
+//		window.parent.frames[0].document.forms["fbody"].elements["body"].value = "";
+	}
+
+	function ComposeExit()
+	{
+		dump("\nExit from XUL\n");
+		composeAppCore = XPAppCoresManager.Find("ComposeAppCore");
+		if (composeAppCore != null) {
+			dump("\nClosing compose app core\n");
+			composeAppCore.SetWindow(window);
+			composeAppCore.exit();
+		}
+	}
+</html:script>
+
+<menubar>
+	<menu name="File">
+		<menuitem name="New" cmd="nsCmd:ComposeNew"/>
+		<menuitem name="Save" cmd="nsCmd:ComposeSave"/>
+		<menuitem name="Save As" cmd="nsCmd:ComposeSaveAs"/>
+		<menuitem name="Attach" cmd="nsCmd:ComposeAttach"/>
+		<separator/>
+		<menuitem name="Send Now" cmd="nsCmd:ComposeSend"/>
+		<menuitem name="Send Later" cmd="nsCmd:ComposeSendLater"/>
+		<menuitem name="Quote Original Message" cmd="nsCmd:ComposeQuote"/>
+		<menuitem name="Select Addresses..." cmd="nsCmd:ComposeAddress"/>
+		<separator/>
+		<menuitem name="Print Setup" cmd="nsCmd:BrowserPrintSetup"/>
+		<menuitem name="Print Preview" cmd="nsCmd:BrowserPrintPreview"/>
+		<menuitem name="Print" cmd="nsCmd:BrowserPrint"/>
+		<separator/>
+		<menuitem name="Close" cmd="nsCmd:BrowserClose"/>
+		<menuitem name="Exit" onclick="ComposeExit()"/>
+	</menu>
+    <menu name="Edit">
+		<menuitem name="Undo" cmd="nsCmd:ComposeNYI"/>
+		<separator/>
+		<menuitem name="Cut" cmd="nsCmd:ComposeNYI"/>
+		<menuitem name="Copy" cmd="nsCmd:ComposeNYI"/>
+		<menuitem name="Paste" cmd="nsCmd:ComposeNYI"/>
+		<menuitem name="Paste as Quotation" cmd="nsCmd:ComposeNYI"/>
+		<menuitem name="Delete" cmd="nsCmd:ComposeNYI"/>
+		<menuitem name="Select All" cmd="nsCmd:ComposeNYI"/>
+		<separator/>
+		<menuitem name="Find" cmd="nsCmd:ComposeNYI"/>
+		<menuitem name="FInd Again" cmd="nsCmd:ComposeNYI"/>
+		<separator/>
+		<menuitem name="Do Not Complete Address" cmd="nsCmd:ComposeNYI"/>
+		<menuitem name="Show Matching Addresses" cmd="nsCmd:ComposeNYI"/>
+		<separator/>
+		<menuitem name="Preferences..." cmd="nsCmd:ComposeNYI"/>
+    </menu>
+    <menu name="View">
+		<menuitem name="Show" cmd="nsCmd:ComposeNYI"/>
+		<separator/>
+		<menuitem name="Address" cmd="nsCmd:ComposeNYI"/>
+		<menuitem name="Attachments" cmd="nsCmd:ComposeNYI"/>
+		<separator/>
+		<menuitem name="Wrap Long Lines" cmd="nsCmd:ComposeNYI"/>
+		<separator/>
+		<menuitem name="Character Set" cmd="nsCmd:ComposeNYI"/>
+    </menu>
+    <menu name="Tools">
+		<menuitem name="Check Spelling..." cmd="nsCmd:ComposeSpelling"/>
+    </menu>
+</menubar>
+
+<box id="toolbar" align="vertical" style="width:100%;height:100%">
+<toolbox>
+	<toolbar>
+ 		<titledbutton src="resource:/res/mailnews/compose/send.gif" align="bottom" value="Send" onClick="SendMessage()"/>
+ 		<titledbutton src="resource:/res/mailnews/compose/quote.gif" align="bottom" value="Quote" onClick="QuoteMessage()"/>
+ 		<titledbutton src="resource:/res/mailnews/compose/address.gif" align="bottom" value="Address" onClick="SelectAddress()"/>
+ 		<titledbutton src="resource:/res/mailnews/compose/attach.gif" align="bottom" value="Attach" onClick="AttachFile()"/>
+ 		<titledbutton src="resource:/res/mailnews/compose/spelling.gif" align="bottom" value="Spelling" onClick="Spelling()"/>
+ 		<titledbutton src="resource:/res/mailnews/compose/save.gif" align="bottom" value="Save" onClick="SaveMessage()"/>
+ 		<titledbutton src="resource:/res/mailnews/compose/stop.gif" align="bottom" value="Stop" onClick="Stop()"/>
+	    <spring flex="100%"/>
+		<titledbutton src="resource:/res/throbber/anims00.gif" align="bottom" onclick="MsgHome('http://home.netscape.com/')"/>
+	</toolbar>
+
+	<toolbar>
+		<html:p>To:</html:p>
+		<html:input id="msgTo" style="vertical-align: center" type="text" style="width:200px;" /> 
+	</toolbar>
+
+	<toolbar>
+		<html:p>Cc:</html:p>
+		<html:input id="msgCc" style="vertical-align: center" type="text" style="width:200px;" />   
+	</toolbar>
+
+	<toolbar>
+		<html:p>Bcc:</html:p>
+		<html:input id="msgBcc" style="vertical-align: center" type="text" style="width:200px;" />   
+	</toolbar>
+	
+	<toolbar>
+		<html:p>Subject:</html:p>
+		<html:input id="msgSubject" style="vertical-align: center" type="text" style="width:500px;" /> 
+	</toolbar>
+</toolbox>
+
+    <!-- The main mail three pane frame -->
+    <html:iframe src="resource:/res/mailnews/compose/msgcomposebody.html" name="browser.message.body" flex="100%" />
+
+    <!-- Ripped off from navigator.xul; this should be a XUL fragment! -->
+    <box align="horizontal" id="status-bar">
+ 
+    <titledbutton value="[Notification Component]" onclick="doTests()"/>
+	<box align="vertical" style="width:100px">
+		<spring flex="100%"/>
+		<progressmeter mode="normal" value="0">
+		</progressmeter>
+		<spring flex="100%"/>
+	</box>
+
+	<titledbutton id="statusText" align="right" flex="100%" value="Document: Done" style="font-family:sans-serif;font-size:2.5mm">
+	</titledbutton>
+    </box>
+
+</box>
+</window>
+
