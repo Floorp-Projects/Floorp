@@ -108,7 +108,7 @@ then
     then
         echo "MKS special - killing the tail -f"
         kill `ps | grep "tail -f ${LOGFILE}" | grep -v grep | 
-            sed -e "s/^ *//" -e "s/ *//"`
+            sed -e "s/^ *//" -e "s/ .*//"`
     fi
 fi
 
