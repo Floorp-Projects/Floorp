@@ -22,7 +22,7 @@ IGNORE_MANIFEST=1
 MODULE=appcores 
 
 EXPORTS=  \
-		nsIDOMAppCores.h		\
+		nsIDOMAppCoresManager.h		\
 		nsIDOMBaseAppCore.h		\
 		nsIDOMMailCore.h		\
 		nsIDOMToolbarCore.h		\

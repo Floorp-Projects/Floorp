@@ -22,7 +22,7 @@
 #include "nsString.h"
 #include "nsISupports.h"
 #include "nsIScriptObjectOwner.h"
-#include "nsIDOMAppCores.h"
+#include "nsIDOMAppCoresManager.h"
 #include "prio.h"
 
 class nsIScriptContext;
@@ -40,7 +40,7 @@ typedef struct _SDL_TaskList
 
 } SDL_TaskList;
 
-class nsAppCoresManager : public nsIScriptObjectOwner, public nsIDOMAppCores
+class nsAppCoresManager : public nsIScriptObjectOwner, public nsIDOMAppCoresManager
 {
   public:
 

@@ -42,7 +42,7 @@ CPPSRCS= \
 	nsAppCoresManager.cpp       \
 	nsAppCoresManagerFactory.cpp       \
 	nsJSBaseAppCore.cpp       \
-	nsJSAppCores.cpp       \
+	nsJSAppCoresManager.cpp       \
 	nsJSMailCore.cpp   \
 	nsJSToolbarCore.cpp   \
 	nsJSToolkitCore.cpp     \

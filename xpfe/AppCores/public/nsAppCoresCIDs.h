@@ -1,22 +1,22 @@
 #ifndef nsAppCoresCIDs_h___
 #define nsAppCoresCIDs_h___
 
-#define NS_AppCores_CID                        \
+#define NS_APPCORESMANAGER_CID                        \
 { /* B2A68893-BFA2-11d2-96C8-0060B0FB9956 */         \
     0xb2a68893, 0xbfa2, 0x11d2, { 0x96, 0xc8, 0x0, 0x60, 0xb0, 0xfb, 0x99, 0x56 } \
 }
 
-#define NS_AppCoresFactory_CID                 \
+#define NS_APPCORESFACTORY_CID                 \
 { /* B2A68894-BFA2-11d2-96C8-0060B0FB9956 */         \
     0xb2a68894, 0xbfa2, 0x11d2, { 0x96, 0xc8, 0x0, 0x60, 0xb0, 0xfb, 0x99, 0x56} \
 }
 
-#define NS_MailCore_CID                    \
+#define NS_MAILCORE_CID                    \
 { /* B2A68895-BFA2-11d2-96C8-0060B0FB9956 */         \
     0xb2a68895, 0xbfa2, 0x11d2, { 0x96, 0xc8, 0x0, 0x60, 0xb0, 0xfb, 0x99, 0x56} \
 }
 
-#define NS_MailCoreFactory_CID             \
+#define NS_MAILCOREFACTORY_CID             \
 { /* B2A68896-BFA2-11d2-96C8-0060B0FB9956 */         \
     0xb2a68896, 0xbfa2, 0x11d2, { 0x96, 0xc8, 0x0, 0x60, 0xb0, 0xfb, 0x99, 0x56 }  \
 }

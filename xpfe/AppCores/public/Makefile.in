@@ -24,7 +24,7 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/config.mk
 
 EXPORTS =                         \
-		nsIDOMAppCores.h          \
+		nsIDOMAppCoresManager.h          \
 		nsIDOMBaseAppCore.h          \
 		nsIDOMMailCore.h      \
 		nsIDOMToolbarCore.h	  \

@@ -41,7 +41,7 @@ static NS_DEFINE_IID(kIMailCoreIID,              NS_IDOMMAILCORE_IID);
 static NS_DEFINE_IID(kIDOMDocumentIID,           nsIDOMDocument::IID());
 static NS_DEFINE_IID(kIDocumentIID,              nsIDocument::IID());
 
-static NS_DEFINE_IID(kMailCoreCID,               NS_MailCore_CID);
+static NS_DEFINE_IID(kMailCoreCID,               NS_MAILCORE_CID);
 static NS_DEFINE_IID(kBrowserWindowCID,          NS_BROWSER_WINDOW_CID);
 
 
