@@ -707,6 +707,9 @@
               }
             }
 
+            if (!this.noMatch)
+              this.autoComplete();
+
             this.closeResultPopup();
           }
           
@@ -738,6 +741,9 @@
                                              this.resultsPopup.selectedIndex);
             }
           }
+
+          if (!this.noMatch)
+            this.autoComplete();
 
           this.mNeedToFinish = false;
           this.mNeedToComplete = false;

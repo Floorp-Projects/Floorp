@@ -260,7 +260,7 @@ PRBool xptiInterfaceInfoManager::BuildFileSearchPath(nsISupportsArray** aPath)
     nsCOMPtr<nsILocalFile> greComponentDirectory;
     nsresult rv = GetDirectoryFromDirService(NS_GRE_COMPONENT_DIR, 
                                     getter_AddRefs(greComponentDirectory));
-    if (NS_SUCCEEDED(rv))
+    if (NS_SUCCEEDED(rv) && greComponentDirectory)
     {
         // make sure we only append a directory if its a different one
         PRBool equalsCompDir = PR_FALSE;
