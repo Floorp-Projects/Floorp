@@ -2152,10 +2152,8 @@ nsDocument::GetWidth(PRInt32* aWidth)
 {
   NS_ENSURE_ARG_POINTER(aWidth);
 
-  *aWidth = 0;
-
-  nsresult result = NS_OK;
   nsCOMPtr<nsIPresShell> shell;
+  nsresult result = NS_OK;
 
   // We make the assumption that the first presentation shell
   // is the one for which we need information.
@@ -2165,7 +2163,8 @@ nsDocument::GetWidth(PRInt32* aWidth)
 
     result = GetPixelDimensions(shell, &width, &height);
     *aWidth = width;
-  }
+  } else
+    *aWidth = 0;
 
   return result;
 }
@@ -2173,8 +2172,10 @@ nsDocument::GetWidth(PRInt32* aWidth)
 NS_IMETHODIMP    
 nsDocument::GetHeight(PRInt32* aHeight)
 {
-  nsresult result;
+  NS_ENSURE_ARG_POINTER(aHeight);
+
   nsCOMPtr<nsIPresShell> shell;
+  nsresult result = NS_OK;
 
   // We make the assumption that the first presentation shell
   // is the one for which we need information.
@@ -2184,7 +2185,8 @@ nsDocument::GetHeight(PRInt32* aHeight)
 
     result = GetPixelDimensions(shell, &width, &height);
     *aHeight = height;
-  }
+  } else
+    *aHeight = 0;
 
   return result;
 }
