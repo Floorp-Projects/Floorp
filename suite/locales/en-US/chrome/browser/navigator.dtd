@@ -65,6 +65,7 @@
 <!ENTITY copyCmd.label "Copy">
 <!ENTITY pasteCmd.label "Paste">
 <!ENTITY deleteCmd.label "Delete">
+<!-- LOCALIZATION NOTE   walletMenu.label: Do NOT localize below line -->
 <!ENTITY walletMenu.label "Wallet">
 <!ENTITY walletSafeFillCmd.label "Safe Form Fill">
 <!ENTITY walletQuickFillCmd.label "Quick Form Fill">
@@ -77,6 +78,7 @@
 <!ENTITY selectAllCmd.label "Select All">
 <!ENTITY viewMenu.label "View">
 <!ENTITY toolbarsCmd.label "Toolbars">
+<!-- LOCALIZATION NOTE   sidebarCmd.label: Do NOT localize below line -->
 <!ENTITY sidebarCmd.label "Sidebar">
 <!ENTITY enlargeTextSizeCmd.label "Enlarge Text Size">
 <!ENTITY reduceTextSizeCmd.label "Reduce Text Size">

@@ -1,9 +1,12 @@
 <!-- extracted from content/viewSource.xul -->
 
+<!-- LOCALIZATION NOTE  mainWindow.title: Do NOT localize "Mozilla" -->
 <!ENTITY mainWindow.title "Mozilla"> 
 <!ENTITY mainWindow.titlemodifier "Mozilla"> 
 <!ENTITY mainWindow.titlemodifierseperator " - ">
 <!ENTITY mainWindow.preface "Source for"> 
+
+<!-- LOCALIZATION NOTE  fileMenu.label: Localize all the menu labels with accesskeys if any but not commandkeys. e.g.  "File" -> "XXXX(F)" in Japanese -->
 <!ENTITY fileMenu.label "File">
 <!ENTITY browserCmd.label "New Browser Window">
 <!ENTITY newMenu.label "New">
@@ -29,6 +32,7 @@
 <!ENTITY copyCmd.label "Copy">
 <!ENTITY pasteCmd.label "Paste">
 <!ENTITY deleteCmd.label "Delete">
+<!-- LOCALIZATION NOTE   walletMenu.label: Do NOT localize below line -->
 <!ENTITY walletMenu.label "Wallet">
 <!ENTITY walletSafeFillCmd.label "Safe Form Fill">
 <!ENTITY walletQuickFillCmd.label "Quick Form Fill">
@@ -42,6 +46,7 @@
 <!ENTITY preferences.label "Preferences">
 <!ENTITY viewMenu.label "View">
 <!ENTITY toolbarsCmd.label "Toolbars">
+<!-- LOCALIZATION NOTE   sidebarCmd.label: Do NOT localize below line -->
 <!ENTITY sidebarCmd.label "Sidebar">
 <!ENTITY enlargeTextSizeCmd.label "Enlarge Text Size">
 <!ENTITY reduceTextSizeCmd.label "Reduce Text Size">
