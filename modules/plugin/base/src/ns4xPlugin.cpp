@@ -153,7 +153,7 @@ ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary, NP_PLUGINS
   NS_TRY_SAFE_CALL_RETURN(error, CallNPP_MainEntryProc(pfnMain, 
                                                        &(ns4xPlugin::CALLBACKS), 
                                                        &fCallbacks, 
-                                                       &fShutdownEntry), aLibrary);
+                                                       (void**)&fShutdownEntry), aLibrary);
 
   if(error != NPERR_NO_ERROR 	|| ((fCallbacks.version >> 8) < NP_VERSION_MAJOR))
   {
