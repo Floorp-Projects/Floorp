@@ -7,6 +7,11 @@ implementation
 
 housecleaning
 ------------- 
+* I have a sneaking suspicion that the thread might be getting killed
+  but not cleaned up when the last nsILDAPConnection::Release is
+  called.  But I don't know if that's really the case.  Need to check
+  this out.
+
 * currently nsILDAPOperation::SimpleBind is called as though it were
   asynchronous (ie from the UI thread), which it mostly is -- the call
   to connect() can stall.  We could use the ASYNC_CONNECT flag,
