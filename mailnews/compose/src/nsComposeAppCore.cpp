@@ -80,11 +80,11 @@ public:
 	NS_IMETHOD SetScriptObject(void* aScriptObject);
 
 	// nsIComposeAppCore
-	NS_IMETHOD CompleteCallback(const nsString& aScript);
+	NS_IMETHOD CompleteCallback(nsAutoString& aScript);
 	NS_IMETHOD SetWindow(nsIDOMWindow* aWin);
-	NS_IMETHOD NewMessage(const nsString& aUrl);
-	NS_IMETHOD SendMessage(const nsString& aAddrTo, const nsString& aAddrCc,
-		const nsString& aAddrBcc, const nsString& aSubject, const nsString& aMsg);
+	NS_IMETHOD NewMessage(nsAutoString& aUrl);
+	NS_IMETHOD SendMessage(nsAutoString& aAddrTo, nsAutoString& aAddrCc,
+		nsAutoString& aAddrBcc, nsAutoString& aSubject, nsAutoString& aMsg);
 
 protected:
   
@@ -274,14 +274,14 @@ nsComposeAppCore::SetWindow(nsIDOMWindow* aWin)
 
 
 NS_IMETHODIMP    
-nsComposeAppCore::CompleteCallback(const nsString& aScript)
+nsComposeAppCore::CompleteCallback(nsAutoString& aScript)
 {
-	mScript = aScript;
+	mScript = *aScript;
 	return NS_OK;
 }
 
 NS_IMETHODIMP    
-nsComposeAppCore::NewMessage(const nsString& aUrl)
+nsComposeAppCore::NewMessage(nsAutoString& aUrl)
 {
 	static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 
@@ -318,8 +318,8 @@ done:
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsComposeAppCore::SendMessage(const nsString& aAddrTo, const nsString& aAddrCc,
-									const nsString& aAddrBcc, const nsString& aSubject, const nsString& aMsg)
+NS_IMETHODIMP nsComposeAppCore::SendMessage(nsAutoString& aAddrTo, nsAutoString& aAddrCc,
+									nsAutoString& aAddrBcc, nsAutoString& aSubject, nsAutoString& aMsg)
 {
 	if (nsnull == mScriptContext)
 		return NS_ERROR_FAILURE;
@@ -371,7 +371,8 @@ NS_IMETHODIMP nsComposeAppCore::SendMessage(const nsString& aAddrTo, const nsStr
 													NULL, 
 													kIMsgCompFieldsIID, 
 													(void **) &pMsgCompFields); 
-		if (res == NS_OK && pMsgCompFields) { 
+		if (res == NS_OK && pMsgCompFields) {
+            
 			pMsgCompFields->SetFrom("qatest02@netscape.com", NULL);	//JFD Need to use the prefs
 			pMsgCompFields->SetTo(aAddrTo.ToNewCString(), NULL);
 			pMsgCompFields->SetCc(aAddrCc.ToNewCString(), NULL);
