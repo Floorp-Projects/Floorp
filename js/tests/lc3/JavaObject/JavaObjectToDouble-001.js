@@ -114,7 +114,7 @@
 function TestObject( description, javaField, javaMethod, javaType,
     jsValue, jsType )
 {
-    eval (description );
+	eval (description );
 
     this.description = description;
     this.javaFieldName = javaField;

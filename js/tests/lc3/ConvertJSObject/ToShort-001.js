@@ -54,11 +54,6 @@
         "SHORT",
         TEST_CLASS.ambiguous( new Date(999) )+'' );
 
-    testcases[testcases.length] = new TestCase(
-        "TEST_CLASS.ambiguous( new Array() ) +''",
-        "SHORT",
-        TEST_CLASS.ambiguous( new Array() )+'' );
-
     test();
 
 

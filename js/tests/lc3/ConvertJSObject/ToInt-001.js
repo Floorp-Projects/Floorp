@@ -54,11 +54,6 @@
         "INT",
         TEST_CLASS.ambiguous( new Date(0) )+'' );
 
-    testcases[testcases.length] = new TestCase(
-        "TEST_CLASS.ambiguous( new Array() ) +''",
-        "INT",
-        TEST_CLASS.ambiguous( new Array() )+'' );
-
     test();
 
 

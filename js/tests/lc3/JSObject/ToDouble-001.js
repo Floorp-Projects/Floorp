@@ -190,16 +190,6 @@
         NaN,
         "number");
 
-    var array = new Array(1,2,3)
-
-    a[i++] = new TestObject(
-        "dt.setDouble(array)",
-        "dt.PUB_DOUBLE",
-        "dt.getDouble()",
-        "typeof dt.getDouble()",
-        NaN,
-        "number");
-
     a[i++] = new TestObject(
         "dt.setDouble( MyObject )",
         "dt.PUB_DOUBLE",

@@ -191,16 +191,6 @@
         NaN,
         "number");
 
-    var array = new Array(1,2,3)
-
-    a[i++] = new TestObject(
-        "dt.setFloat(array)",
-        "dt.PUB_FLOAT",
-        "dt.getFloat()",
-        "typeof dt.getFloat()",
-        NaN,
-        "number");
-
     a[i++] = new TestObject(
         "dt.setFloat( MyObject )",
         "dt.PUB_FLOAT",

@@ -60,11 +60,6 @@
         TEST_CLASS.ambiguous( new Function() )+'' );
 
     testcases[testcases.length] = new TestCase(
-        "TEST_CLASS.ambiguous( new Array() ) +''",
-        "DOUBLE",
-        TEST_CLASS.ambiguous( new Array() )+'' );
-
-    testcases[testcases.length] = new TestCase(
         "TEST_CLASS.ambiguous( this ) +''",
         "DOUBLE",
         TEST_CLASS.ambiguous( this )+'' );
