@@ -811,21 +811,9 @@ struct ChildIterator
     doc->GetBindingManager(getter_AddRefs(mBindingManager));
 
     // Retrieve the anonymous content that we should build.
-    mBindingManager->GetAnonymousNodesFor(mContent, getter_AddRefs(mNodes));
-    if (mNodes) {
+    mBindingManager->GetXBLChildNodesFor(mContent, getter_AddRefs(mNodes));
+    if (mNodes)
       mNodes->GetLength(&mLength);
-      if (mLength == 0)
-        mNodes = nsnull;
-    }
-    
-    // We may have an altered list of children from XBL insertion points.
-    // If we don't have any anonymous kids, we next check to see if we have 
-    // insertion points.
-    if (!mNodes) {
-      mBindingManager->GetContentListFor(mContent, getter_AddRefs(mNodes));
-      if (mNodes)
-        mNodes->GetLength(&mLength);
-    }
   }
 
   PRBool HasMoreChildren() {
