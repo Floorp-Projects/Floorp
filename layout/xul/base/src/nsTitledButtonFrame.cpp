@@ -1105,6 +1105,13 @@ nsTitledButtonFrame::SetCurrentCheckState(CheckState aState)
 void 
 nsTitledButtonFrame::MouseClicked (nsIPresContext & aPresContext) 
 {
+  // Execute the oncommand event handler.
+  nsEventStatus status = nsEventStatus_eIgnore;
+  nsMouseEvent event;
+  event.eventStructType = NS_EVENT;
+  event.message = NS_MENU_ACTION;
+  mContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+
   // if we are not toggling then do nothing
   CheckState oldState = GetCurrentCheckState();
   if (oldState == eUnset)
