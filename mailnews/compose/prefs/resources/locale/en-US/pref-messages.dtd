@@ -20,8 +20,8 @@ Rights Reserved.
 
 <!ENTITY pane.title "Messages">
 <!ENTITY pane.description "Settings for messages">
-<!ENTITY forwardReply.label "Forwarding and Replying to Messages">
-<!ENTITY forwardMsg.label "By default, forward messages:">
+<!ENTITY forwardReply.label "Forwarding and replying to messages">
+<!ENTITY forwardMsg.label "Forward messages:">
 <!ENTITY inline.label "Inline">
 <!ENTITY quoted.label "Quoted">
 <!ENTITY asAttachment.label "As Attachment">
@@ -31,25 +31,24 @@ Rights Reserved.
 <!ENTITY belowQuote.label "start my reply below the quoted text">
 <!ENTITY selectAndAboveQuote.label "start my reply above, and select the quoted text">
 <!ENTITY selectAndBelowQuote.label "start my reply below, and select the quoted text">
-<!ENTITY spellCheckHeader.label "Spell checking">
-<!ENTITY spellCheck.label "Spell check messages before sending">
-<!ENTITY msgWrapping.label "Message Wrapping">
-<!ENTITY wrapInMsg.label "Wrap incoming, plain text messages to window width">
-<!ENTITY wrapOutMsg.label "Wrap outgoing, plain text messages at">
+
+<!ENTITY readingMessagesHeader.label "For incoming messages">
+<!ENTITY wrapInMsg.label "Wrap plain text messages to fit window width">
+<!-- LOCALIZATION NOTE : (emoticonsAndStructs.label) 'Emoticons' are also known as 'Smileys', e.g. :-)   -->
+<!ENTITY convertEmoticons.label1 'Convert emoticons to graphics.  For example, convert " :-) " to "'>
+<!ENTITY convertEmoticons.label2 '"'>
+<!ENTITY convertStructs.label1 'Add html styles to structured phrases.'>
+<!ENTITY convertStructs.label2 'For example, convert "*test*" to "'>
+<!ENTITY convertStructs.label3 '*test*'>
+<!ENTITY convertStructs.label4 '"'>
+
+<!ENTITY sendingMessagesHeader.label "For outgoing messages">
+<!ENTITY spellCheck.label "Check spelling before sending">
+<!ENTITY wrapOutMsg.label "Wrap plain text messages at">
 <!ENTITY char.label "characters">
 <!ENTITY use8Bits.label "Send messages that use 8-bit characters">
-<!ENTITY cleanupMsg.label "When it's time to clean up messages:">
 <!ENTITY asIs.label "As is (does not work well with some mail servers)">
 <!-- LOCALIZATION NOTE (useMIMEpart1.label): Concatenates with useMIMEpart2.label -->
-<!ENTITY useMIMEpart1.label "Using the 'quoted printable' MIME encoding">
+<!ENTITY useMIMEpart1.label 'Using the "quoted printable" MIME encoding (does not work'>
 <!-- LOCALIZATION NOTE (useMIMEpart2.label): Concatenates with useMIMEpart1.label -->
-<!ENTITY useMIMEpart2.label "(does not work well with some mail or newsgroups readers)">
-<!-- LOCALIZATION NOTE : (emoticonsAndStructs.label) 'Emoticons' are also known as 'Smileys', e.g. :-)   -->
-<!ENTITY emoticonsAndStructs.label "Emoticons And Structs">
-<!ENTITY convertEmoticons.label "When viewing a text message, convert emoticons to glyphs.">
-<!ENTITY convertStructs.label "When viewing a text message, convert structs to styles.">
-<!ENTITY to.label " to ">
-<!ENTITY example1.label "For example, convert ">
-<!ENTITY example2.label ":)">
-<!ENTITY example3.label "*">
-<!ENTITY example4.label "text">
+<!ENTITY useMIMEpart2.label "well with some mail or newsgroups readers)">

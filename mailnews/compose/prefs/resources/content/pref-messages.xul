@@ -44,39 +44,54 @@
 		</html:div>
 	</titledbox>
 
+	<!-- Reading -->
 	<titledbox orient="vertical">
 		<title>
-                        <text value="&spellCheckHeader.label;"/>
+			<text value="&readingMessagesHeader.label;"/>
         </title>
 
-        <html:div>
-			<html:input pref="true" preftype="bool" prefstring="mail.SpellCheckBeforeSend" id="mail.SpellCheckBeforeSend" type="checkbox"/>
-			<html:label for="mail.SpellCheckBeforeSend">&spellCheck.label;</html:label>
-         </html:div>
-	</titledbox>
-
-	<titledbox orient="vertical">
-		<title>
-			<text value="&msgWrapping.label;"/>
-		</title>
-		
 		<html:div>
 			<html:input pref="true" preftype="bool" prefstring="mail.wrap_long_lines" id="mail.wrap_long_lines" type="checkbox"/>
 			<html:label for="mail.wrap_long_lines">&wrapInMsg.label;</html:label>
 		</html:div>
 		
 		<html:div>
+			<html:input pref="true" preftype="bool" prefstring="mail.display_glyph" id="mail.display_glyph" type="checkbox"/>
+			<html:label for="mail.display_glyph" style="vertical-align: bottom">&convertEmoticons.label1;<html:img src="chrome://messenger/skin/smile.gif" style="vertical-align: bottom"/>&convertEmoticons.label2;</html:label>
+		</html:div>
+		
+		<html:div>
+			<html:input pref="true" preftype="bool" prefstring="mail.display_struct" id="mail.display_struct" type="checkbox"/>
+			<html:label for="mail.display_struct">&convertStructs.label1;</html:label>
+		</html:div>
+		<html:label for="mail.display_struct" class="indent-second-label">&convertStructs.label2;<html:b>&convertStructs.label3;</html:b>&convertStructs.label4;</html:label>
+	
+	</titledbox>
+
+	<!-- Sending -->
+	<titledbox orient="vertical">
+		<title>
+			<text value="&sendingMessagesHeader.label;"/>
+        </title>
+        
+        <html:div>
+			<html:input pref="true" preftype="bool" prefstring="mail.SpellCheckBeforeSend" id="mail.SpellCheckBeforeSend" type="checkbox"/>
+			<html:label for="mail.SpellCheckBeforeSend">&spellCheck.label;</html:label>
+         </html:div>
+	
+		<html:div>
+			<html:input pref="true" preftype="bool" prefstring="mail.send_struct" id="mail.send_struct" type="checkbox"/>
+			<html:label for="mail.send_struct">&convertStructs.label1;</html:label>
+		</html:div>
+		<html:label for="mail.send_struct" class="indent-second-label">&convertStructs.label2;<html:b>&convertStructs.label3;</html:b>&convertStructs.label4;</html:label>
+	
+		<html:div>
 			<html:label for="mailnews.wraplength">&wrapOutMsg.label;</html:label>
 			<html:input pref="true" preftype="int" prefstring="mailnews.wraplength" id="mailnews.wraplength" name="wraplength" type="text" size="3"/>
 			<html:label for="mailnews.wraplength">&char.label;</html:label>
 		</html:div>
-	</titledbox>
 
-	<titledbox orient="vertical">
-		<title>
-			<text value="&use8Bits.label;"/>
-		</title>
-
+		<text value="&use8Bits.label;" class="vspace"/>
 		<html:div>
 			<html:input pref="true" preftype="bool" prefstring="mail.strictly_mime" prefindex="false" id="mail.strictly_mime0" name="strictly_mime" type="radio"/>
 			<html:label for="mail.strictly_mime0">&asIs.label;</html:label>
@@ -86,21 +101,7 @@
 			<html:input pref="true" preftype="bool" prefstring="mail.strictly_mime" prefindex="true" id="mail.strictly_mime1" name="strictly_mime" type="radio"/>
 			<html:label for="mail.strictly_mime1">&useMIMEpart1.label;</html:label>
 		</html:div>
-		<html:div class="indent">&useMIMEpart2.label;</html:div>
-
-	</titledbox>
-	 <titledbox orient="vertical">
-                <title>
-                        <text value="&emoticonsAndStructs.label;"/>
-                </title>
-		<html:div>
-			<html:input pref="true" preftype="bool" prefstring="mail.convert_emoticons" id="mail.convert_emoticons" type="checkbox"/>
-			<html:label for="mail.convert_emoticons">&convertEmoticons.label;</html:label><html:label for="mail.convert_emoticons">&example1.label;&example2.label;&to.label;<html:img src="chrome://messenger/skin/smile.gif"/></html:label>
-		</html:div>
-		<html:div>
-			<html:input pref="true" preftype="bool" prefstring="mail.convert_structs" id="mail.convert_structs" type="checkbox"/>
-			<html:label for="mail.convert_structs">&convertStructs.label;</html:label><html:label for="mail.convert_structs">&example1.label;&example3.label;&example4.label;&example3.label; &to.label; <html:b> &example4.label;</html:b></html:label>
-		</html:div>
+		<html:label for="mail.strictly_mime1" class="indent-second-label">&useMIMEpart2.label;</html:label>
 	</titledbox>
 
 </window>
