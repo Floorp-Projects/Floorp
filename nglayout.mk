@@ -27,7 +27,7 @@ THIS_MAKEFILE = nglayout.mk
 # Branch tags we use
 NETLIB_BRANCH = 
 LIBPREF_BRANCH = XPCOM_BRANCH
-PLUGIN_BRANCH = OJI_19980618_BRANCH
+PLUGIN_BRANCH =
 
 # CVS commands to pull the appropriate branch versions
 CVSCO_LIBPREF = $(CVSCO) -r $(LIBPREF_BRANCH)
@@ -35,7 +35,7 @@ CVSCO_IMGLIB = $(CVSCO)
 CVSCO_NETLIB = $(CVSCO)
 CVSCO_NGLAYOUT = $(CVSCO)
 CVSCO_LIZARD = $(CVSCO)
-CVSCO_PLUGIN = $(CVSCO) -r $(PLUGIN_BRANCH)
+CVSCO_PLUGIN = $(CVSCO) -A
 
 # The list of directories that need to be built to build the standalone
 # nglayout test program. The order is important.
