@@ -2071,10 +2071,10 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetWidth(PRUint32 *result)
     {
       *result = 0;
 
-      PRUint32 attr = (PRUint32)atol(width);
+      PRInt32 attr = atol(width);
 
       if(nsnull == strchr(width, '%'))
-        *result = attr;
+        *result = (PRUint32)attr;
       else
       {
         if(mContext == nsnull)
@@ -2130,10 +2130,10 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetHeight(PRUint32 *result)
     {
       *result = 0;
 
-      PRUint32 attr = (PRUint32)atol(height);
+      PRInt32 attr = atol(height);
 
       if(nsnull == strchr(height, '%'))
-        *result = attr;
+        *result = (PRUint32)attr;
       else
       {
         if(mContext == nsnull)
