@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.7 2001/12/17 13:43:10 ian.mcgreer%sun.com Exp $
+ * $Id: pcertdb.c,v 1.8 2002/01/15 15:43:35 ian.mcgreer%sun.com Exp $
  */
 #include "prtime.h"
 
@@ -4162,6 +4162,11 @@ nsslowcert_FindCertByIssuerAndSN(NSSLOWCERTCertDBHandle *handle, NSSLOWCERTIssue
 		}
 	    } 
 	}
+	while (sn->data[index] == 0) {
+	    index++;
+	    data_len--;
+	    data_left--;
+	}
 	/* not a valid der, must be just an unlucky serial number value */
 	if (data_len != data_left) {
 	    data_len = sn->len;
@@ -4176,7 +4181,7 @@ nsslowcert_FindCertByIssuerAndSN(NSSLOWCERTCertDBHandle *handle, NSSLOWCERTIssue
 	return(0);
     }
 
-    /* first try the der encoded serial number */
+    /* first try the serial number as hand-decoded above*/
     /* copy the serialNumber */
     PORT_Memcpy(certKey.data, &sn->data[index], data_len);
 
@@ -4189,7 +4194,7 @@ nsslowcert_FindCertByIssuerAndSN(NSSLOWCERTCertDBHandle *handle, NSSLOWCERTIssue
 	return (cert);
     }
 
-    /* didn't find it, try by old serial number */
+    /* didn't find it, try by der encoded serial number */
     /* copy the serialNumber */
     PORT_Memcpy(certKey.data, sn->data, sn->len);
 
