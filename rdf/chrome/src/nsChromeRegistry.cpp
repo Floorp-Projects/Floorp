@@ -1862,7 +1862,6 @@ NS_IMETHODIMP nsChromeRegistry::IsProviderSelected(const nsCString& aProvider,
   resourceStr += aProvider;
   resourceStr += ":";
   resourceStr.AppendWithConversion(aProviderName);
-
   // Obtain the provider resource.
   nsresult rv = NS_OK;
   nsCOMPtr<nsIRDFResource> resource;
@@ -1896,6 +1895,8 @@ NS_IMETHODIMP nsChromeRegistry::IsProviderSelected(const nsCString& aProvider,
   // For each skin/package entry, follow the arcs to the real package
   // resource.
   PRBool more;
+  PRInt32 numSet = 0;
+  PRInt32 numPackages = 0;
   rv = arcs->HasMoreElements(&more);
   if (NS_FAILED(rv)) return rv;
   while (more) {
@@ -1921,19 +1922,19 @@ NS_IMETHODIMP nsChromeRegistry::IsProviderSelected(const nsCString& aProvider,
              NS_ERROR("Unable to set provider for package resource.");
              return rv;
            }
-           if (isSet && !*aResult)
-             *aResult = FULL;
-           else if (!isSet && *aResult) {
-             *aResult = PARTIAL;
-             return NS_OK;
-           }
+           ++numPackages;
+           if (isSet)
+             ++numSet;
          }
       }
     }
     rv = arcs->HasMoreElements(&more);
     if (NS_FAILED(rv)) return rv;
   }
-
+  if (numPackages == numSet)
+    *aResult = FULL;
+  else if (numSet)
+    *aResult = PARTIAL;
   return NS_OK;
 }
 
