@@ -191,11 +191,11 @@ static const String interpretDollar(Context *cx, const String *replaceStr, uint3
     case '8':
     case '9':
 	{
-	    uint32 num = (uint32)(*dollarValue - '0');
+	    int32 num = (uint32)(*dollarValue - '0');
 	    if (num <= regexp_result->n) {
 		if ((dollarPos < (replaceStr->length() - 2))
 			&& (dollarValue[1] >= '0') && (dollarValue[1] <= '9')) {
-		    uint32 tmp = (num * 10) + (dollarValue[1] - '0');
+		    int32 tmp = (num * 10) + (dollarValue[1] - '0');
 		    if (tmp <= regexp_result->n) {
 			num = tmp;
 			skip = 3;
@@ -265,9 +265,10 @@ static JSValue String_replace(Context *cx, const JSValue& thisValue, JSValue *ar
     else {
 	const String *searchStr = searchValue.toString(cx).string;
 	REState regexp_result;
-	regexp_result.startIndex = S.string->find(*searchStr, 0);
-	if (regexp_result.startIndex == String::npos)
+        uint32 pos = S.string->find(*searchStr, 0);
+	if (pos == String::npos)
 	    return JSValue(S.string);
+	regexp_result.startIndex = (int32)pos;
 	regexp_result.endIndex = regexp_result.startIndex + searchStr->length();
 	regexp_result.n = 0;
 	String insertString;
@@ -332,7 +333,7 @@ static void regexpSplitMatch(const String *S, uint32 q, REParseState *RE, MatchR
         result.capturesCount = regexp_result->n;
         if (regexp_result->n) {
             result.captures = new JSValue[regexp_result->n];
-            for (uint32 i = 0; i < regexp_result->n; i++) {
+            for (int32 i = 0; i < regexp_result->n; i++) {
                 if (regexp_result->parens[i].index != -1) {
                     String *parenStr = new String(S->substr((uint32)(regexp_result->parens[i].index + q), 
                                                     (uint32)(regexp_result->parens[i].length)));
@@ -676,7 +677,7 @@ Context::PrototypeFunctions *getStringProtos()
         { "charAt",             String_Type, 1, String_charAt },
         { "charCodeAt",         Number_Type, 1, String_charCodeAt },
         { "concat",             String_Type, 1, String_concat },
-        { "indexOf",            Number_Type, 1, String_indexOf },
+        { "indexOf",            Number_Type, 2, String_indexOf },   // XXX ECMA spec says 1, but tests want 2 XXX
         { "lastIndexOf",        Number_Type, 2, String_lastIndexOf },   // XXX ECMA spec says 1, but tests want 2 XXX
         { "localeCompare",      Number_Type, 1, String_localeCompare },
         { "match",              Array_Type,  1, String_match },

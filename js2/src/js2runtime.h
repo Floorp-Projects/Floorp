@@ -152,10 +152,10 @@ static const double two31 = 2147483648.0;
         
         JSValue() : f64(0.0), tag(undefined_tag) {}
         explicit JSValue(float64 f64) : f64(f64), tag(f64_tag) {}
-        explicit JSValue(JSObject *object) : object(object), tag(object_tag) {}
-        explicit JSValue(JSFunction *function) : function(function), tag(function_tag) {}
-        explicit JSValue(JSType *type) : type(type), tag(type_tag) {}
-        explicit JSValue(const String *string) : string(string), tag(string_tag) {}
+        explicit JSValue(JSObject *object) : object(object), tag(object_tag) { ASSERT(object); }
+        explicit JSValue(JSFunction *function) : function(function), tag(function_tag) { ASSERT(function); }
+        explicit JSValue(JSType *type) : type(type), tag(type_tag) { ASSERT(type); }
+        explicit JSValue(const String *string) : string(string), tag(string_tag) { ASSERT(string); }
         explicit JSValue(bool boolean) : boolean(boolean), tag(boolean_tag) {}
         explicit JSValue(Tag tag) : tag(tag) {}
 
@@ -947,7 +947,10 @@ XXX ...couldn't get this to work...
         void operator delete(void* t)   { trace_release("JSStringInstance", t); STD::free(t); }
 #endif
 
+        void setProperty(Context *cx, const String &name, NamespaceList *names, const JSValue &v);
         void getProperty(Context *cx, const String &name, NamespaceList *names);
+        bool hasOwnProperty(Context *cx, const String &name, NamespaceList *names, Access acc, PropertyIterator *p);
+        bool deleteProperty(Context *cx, const String &name, NamespaceList *names);
 
 
         uint32 mLength;

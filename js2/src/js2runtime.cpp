@@ -609,6 +609,31 @@ void JSStringInstance::getProperty(Context *cx, const String &name, NamespaceLis
         JSInstance::getProperty(cx, name, names);
 }
 
+void JSStringInstance::setProperty(Context *cx, const String &name, NamespaceList *names, const JSValue &v)
+{
+    if (name.compare(cx->Length_StringAtom) == 0) {
+    }
+    else
+        JSInstance::setProperty(cx, name, names, v);
+}
+
+bool JSStringInstance::hasOwnProperty(Context *cx, const String &name, NamespaceList *names, Access acc, PropertyIterator *p)
+{
+    if (name.compare(cx->Length_StringAtom) == 0)
+        return true;
+    else
+        return JSInstance::hasOwnProperty(cx, name, names, acc, p);
+}
+
+bool JSStringInstance::deleteProperty(Context *cx, const String &name, NamespaceList *names)
+{
+    if (name.compare(cx->Length_StringAtom) == 0)
+        return false;
+    else
+        return JSInstance::deleteProperty(cx, name, names);
+}
+
+
 // construct an instance of a type
 // - allocate memory for the slots, load the instance variable names into the 
 // property map - in order to provide dynamic access to those properties.
@@ -1591,11 +1616,11 @@ JSType::JSType(Context *cx, const StringAtom *name, JSType *super, JSObject *pro
     }
     if (mSuperType) {
         defineVariable(cx, cx->UnderbarPrototype_StringAtom, NULL, 0, Object_Type, JSValue(mPrototype));
-        defineVariable(cx, cx->Constructor_StringAtom, (NamespaceList *)NULL, 0, Object_Type, JSValue(this));
+        mPrototypeObject->defineVariable(cx, cx->Constructor_StringAtom, (NamespaceList *)NULL, 0, Object_Type, JSValue(this));
     }
     else { // must be Object_Type being initialized
         defineVariable(cx, cx->UnderbarPrototype_StringAtom, NULL, 0, this, JSValue(mPrototype));
-        defineVariable(cx, cx->Constructor_StringAtom, (NamespaceList *)NULL, 0, this, JSValue(this));
+        mPrototypeObject->defineVariable(cx, cx->Constructor_StringAtom, (NamespaceList *)NULL, 0, this, JSValue(this));
     }
 }
 
@@ -2075,6 +2100,7 @@ static JSValue Function_Constructor(Context *cx, const JSValue& thisValue, JSVal
             cx->reportError(Exception::syntaxError, "Unexpected stuff after the function body");
 
         fnc = new JSFunction(cx, NULL, cx->mScopeChain);
+        fnc->setResultType(Object_Type);
 
         fnc->countParameters(cx, f->function);    
 
@@ -2432,7 +2458,7 @@ JSValue RegExp_exec(Context *cx, const JSValue& thisValue, JSValue *argv, uint32
             String *matchStr = new String(str->substr(regexp_result->startIndex, regexp_result->endIndex - regexp_result->startIndex));
             resultArray->setProperty(cx, *numberToString(0), NULL, JSValue(matchStr));
             String *parenStr = &cx->Empty_StringAtom;
-            for (uint32 i = 0; i < regexp_result->n; i++) {
+            for (int32 i = 0; i < regexp_result->n; i++) {
                 if (regexp_result->parens[i].index != -1) {
                     String *parenStr = new String(str->substr((uint32)(regexp_result->parens[i].index), (uint32)(regexp_result->parens[i].length)));
                     resultArray->setProperty(cx, *numberToString(i + 1), NULL, JSValue(parenStr));
@@ -2774,7 +2800,8 @@ JSFunction::JSFunction(Context *cx, JSType *resultType, ScopeChain *scopeChain)
         mPrototype = Function_Type->mPrototypeObject;
     mActivation.mContainer = this;
     defineVariable(cx, cx->Prototype_StringAtom, (NamespaceList *)NULL, 0, Object_Type, JSValue(Object_Type->newInstance(cx)));
-    defineVariable(cx, cx->UnderbarPrototype_StringAtom, (NamespaceList *)NULL, 0, Object_Type, JSValue(mPrototype));
+    if (mPrototype)
+        defineVariable(cx, cx->UnderbarPrototype_StringAtom, (NamespaceList *)NULL, 0, Object_Type, JSValue(mPrototype));
 }
 
 JSFunction::JSFunction(Context *cx, NativeCode *code, JSType *resultType) 
@@ -2944,26 +2971,28 @@ void Context::initBuiltins()
 
     // now we can bootstrap the Object prototype (__proto__) to be the Function prototype
     Object_Type->mPrototype = Function_Type->mPrototypeObject;
+    Object_Type->setProperty(this, UnderbarPrototype_StringAtom, (NamespaceList *)NULL, JSValue(Object_Type->mPrototype));
 
     
-    JSObject *numProto  = new JSObject();
-    Number_Type         = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[3].name)], Object_Type, numProto);
+    JSObject *numProto  = Object_Type->newInstance(this);
+    Number_Type         = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[3].name)], Object_Type, numProto, Function_Type->mPrototypeObject);
     numProto->mType = Number_Type;
     numProto->mPrivate = (void *)(new float64(0.0));
 
     Integer_Type        = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[4].name)], Object_Type);
 
     JSObject *strProto  = new JSStringInstance(this, NULL);
-    String_Type         = new JSStringType(this, &mWorld.identifiers[widenCString(builtInClasses[5].name)], Object_Type, strProto);
+    String_Type         = new JSStringType(this, &mWorld.identifiers[widenCString(builtInClasses[5].name)], Object_Type, strProto, Function_Type->mPrototypeObject);
     strProto->mType = String_Type;
     strProto->mPrivate = (void *)(&Empty_StringAtom);
+    strProto->mPrototype = Function_Type->mPrototypeObject;
     
     JSArrayInstance *arrayProto = new JSArrayInstance(this, NULL);
     Array_Type          = new JSArrayType(this, Object_Type, &mWorld.identifiers[widenCString(builtInClasses[6].name)], Object_Type, arrayProto, Function_Type->mPrototypeObject);
     arrayProto->mType = Array_Type;
 
-    JSObject *boolProto = new JSObject();
-    Boolean_Type        = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[7].name)], Object_Type, boolProto);
+    JSObject *boolProto = Object_Type->newInstance(this);
+    Boolean_Type        = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[7].name)], Object_Type, boolProto, Function_Type->mPrototypeObject);
     boolProto->mType = Boolean_Type;
     boolProto->mPrivate = 0;
 
@@ -2971,7 +3000,7 @@ void Context::initBuiltins()
     Unit_Type           = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[9].name)], Object_Type);
     Attribute_Type      = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[10].name)], Object_Type);
     NamedArgument_Type  = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[11].name)], Object_Type);
-    Date_Type           = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[12].name)], Object_Type);
+    Date_Type           = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[12].name)], Object_Type, NULL, Function_Type->mPrototypeObject);
     Null_Type           = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[13].name)], Object_Type);
     Error_Type          = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[14].name)], Object_Type);
     EvalError_Type      = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[15].name)], Error_Type);
@@ -3082,13 +3111,17 @@ void Context::initBuiltins()
     Array_Type->defineVariable(this, Length_StringAtom, NULL, Property::NoAttribute, Number_Type, JSValue(1.0));
 
     Boolean_Type->mTypeCast = new JSFunction(this, Boolean_TypeCast, Boolean_Type);
+    Boolean_Type->defineVariable(this, Length_StringAtom, NULL, Property::NoAttribute, Number_Type, JSValue(1.0));
 
     Date_Type->mTypeCast = new JSFunction(this, Date_TypeCast, String_Type);
     Date_Type->defineStaticMethod(this, widenCString("parse"), NULL, new JSFunction(this, Date_parse, Number_Type));
     Date_Type->defineStaticMethod(this, widenCString("UTC"), NULL, new JSFunction(this, Date_UTC, Number_Type));
 
-    String_Type->defineVariable(this, FromCharCode_StringAtom, NULL, String_Type, JSValue(new JSFunction(this, String_fromCharCode, String_Type)));
+    JSFunction *fromCharCode = new JSFunction(this, String_fromCharCode, String_Type);
+    fromCharCode->defineVariable(this, Length_StringAtom, (NamespaceList *)NULL, Property::DontDelete | Property::ReadOnly, Number_Type, JSValue(1.0)); 
+    String_Type->defineVariable(this, FromCharCode_StringAtom, NULL, String_Type, JSValue(fromCharCode));
     String_Type->mTypeCast = new JSFunction(this, String_TypeCast, String_Type);
+    String_Type->defineVariable(this, Length_StringAtom, NULL, Property::NoAttribute, Number_Type, JSValue(1.0));
 
     Error_Type->mTypeCast = new JSFunction(this, Error_Constructor, Error_Type);
     RegExp_Type->mTypeCast = new JSFunction(this, RegExp_TypeCast, Error_Type);
@@ -3251,7 +3284,7 @@ Context::Context(JSObject **global, World &world, Arena &a, Pragma::Flags flags)
         initBuiltins();
     }
     
-    JSType *MathType = new JSType(this, &mWorld.identifiers[widenCString("Math")], Object_Type);
+    JSType *MathType = new JSType(this, &mWorld.identifiers[widenCString("Math")], Object_Type, Object_Type->mPrototypeObject);
     JSObject *mathObj = MathType->newInstance(this);
 
     getGlobalObject()->defineVariable(this, Math_StringAtom, (NamespaceList *)(NULL), Property::NoAttribute, Object_Type, JSValue(mathObj));
