@@ -30,6 +30,9 @@ class nsVoidArray;
 
 class nsMIMEService : public nsIMIMEService {
 
+    // nsISupports methods
+    NS_DECL_ISUPPORTS
+
     // nsMIMEService methods
     nsMIMEService();
     ~nsMIMEService();

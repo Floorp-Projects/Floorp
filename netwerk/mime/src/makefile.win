@@ -37,6 +37,7 @@ LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET
 CPP_OBJS =                                         \
         nsMIMEInfoImpl.obj          \
         nsMIMEService.obj           \
+        nsMIMEServiceFactory.obj    \
         $(NULL)
 
 LOCAL_INCLUDES=-I.
