@@ -27,15 +27,9 @@ tree {
 }
 
 
-treecell > titledbutton {
-  border: none;
-  padding: 0px;
-  margin: 0px;
-}
-
-/* Hide the twisty when type != DIRECTORY (XXX is there a != in CSS)*/
-treeitem[type="FILE"] > treerow > treecell > titledbutton.twisty {
-  visibility: hidden;
+/* Hide the twisty when type != DIRECTORY (XXX is there a != in CSS) */
+treeitem[type="FILE"] > treerow > treecell > .tree-icon > .twisty {
+  list-style-image: none;
 }
 
 /* Make a file look like a link */
