@@ -82,6 +82,7 @@ interface nsIFileSpec : nsISupports
 	boolean isDirectory();
 	boolean isFile();
 	boolean exists();
+    boolean isHidden();
 
 	readonly attribute unsigned long FileSize;
 	readonly attribute unsigned long DiskSpaceAvailable;

@@ -221,6 +221,21 @@ PRBool nsFileSpec::IsDirectory() const
 } // nsFileSpec::IsDirectory
 
 //----------------------------------------------------------------------------------------
+PRBool nsFileSpec::IsHidden() const
+//----------------------------------------------------------------------------------------
+{
+    PRBool hidden = PR_FALSE;
+    if (!mPath.IsEmpty())
+    {
+        DWORD attr = GetFileAttributes(mPath);
+        if (FILE_ATTRIBUTE_HIDDEN & attr)
+            hidden = PR_TRUE;
+    }
+    return hidden;
+}
+// nsFileSpec::IsHidden
+
+//----------------------------------------------------------------------------------------
 void nsFileSpec::GetParent(nsFileSpec& outSpec) const
 //----------------------------------------------------------------------------------------
 {

@@ -456,6 +456,8 @@ class NS_COM nsFileSpec
                                     // More stringent than Exists()
         PRBool                  Exists() const;
 
+        PRBool                  IsHidden() const;
+        
     //--------------------------------------------------
     // Creation and deletion of objects.  These can modify the disk.
     //--------------------------------------------------

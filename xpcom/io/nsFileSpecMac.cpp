@@ -822,6 +822,20 @@ PRBool nsFileSpec::IsDirectory() const
 } // nsFileSpec::IsDirectory
 
 //----------------------------------------------------------------------------------------
+PRBool nsFileSpec::IsHidden() const
+//----------------------------------------------------------------------------------------
+{
+    CInfoPBRec      cInfo;
+    PRBool          hidden = PR_FALSE;
+
+    if (noErr = GetCatInfo(cInfo))
+        if (cInfo.hFileInfo.ioFlFndrInfo.fdFlags & kIsInvisible)
+            hidden = PR_TRUE;
+    
+    return hidden;
+} // nsFileSpec::IsHidden
+
+//----------------------------------------------------------------------------------------
 void nsFileSpec::GetParent(nsFileSpec& outSpec) const
 //----------------------------------------------------------------------------------------
 {
