@@ -5929,6 +5929,13 @@ nsBlockFrame::Paint(nsIPresContext*      aPresContext,
   const nsStyleDisplay* disp = (const nsStyleDisplay*)
     mStyleContext->GetStyleData(eStyleStruct_Display);
 
+  // If overflow is hidden then set the clip rect so that children
+  // don't leak out of us
+  if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
+    aRenderingContext.PushState();
+    SetClipRect(aRenderingContext);
+  }
+
   // Only paint the border and background if we're visible
   if (disp->IsVisible() && (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) &&
       (0 != mRect.width) && (0 != mRect.height)) {
@@ -5947,14 +5954,6 @@ nsBlockFrame::Paint(nsIPresContext*      aPresContext,
                                 skipSides);
     nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
                                  aDirtyRect, rect, *spacing, mStyleContext, 0);
-  }
-
-  // If overflow is hidden then set the clip rect so that children don't
-  // leak out of us. Note that because overflow'-clip' only applies to
-  // the content area we do this after painting the border and background
-  if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
-    aRenderingContext.PushState();
-    SetOverflowClipRect(aRenderingContext);
   }
 
   // Child elements have the opportunity to override the visibility

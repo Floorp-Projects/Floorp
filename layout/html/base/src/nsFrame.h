@@ -423,11 +423,10 @@ protected:
 
   virtual PRBool ParentDisablesSelection() const;
 
-  // Set the overflow clip rect into the rendering-context. Used for block-level
-  // elements and replaced elements that have 'overflow' set to 'hidden'. This
-  // member function assumes that the caller has checked that the clip property
-  // applies to its situation.
-  void SetOverflowClipRect(nsIRenderingContext& aRenderingContext);
+  // Set the clip rect into the rendering-context after applying CSS's
+  // clip property. This method assumes that the caller has checked
+  // that the clip property applies to its situation.
+  void SetClipRect(nsIRenderingContext& aRenderingContext);
 
   nsRect           mRect;
   nsIContent*      mContent;

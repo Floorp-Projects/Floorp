@@ -559,6 +559,11 @@ nsImageFrame::Paint(nsIPresContext* aPresContext,
   const nsStyleDisplay* disp = (const nsStyleDisplay*)
     mStyleContext->GetStyleData(eStyleStruct_Display);
   if (disp->IsVisible() && mRect.width && mRect.height) {
+    if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
+      aRenderingContext.PushState();
+      SetClipRect(aRenderingContext);
+    }
+
     // First paint background and borders
     nsLeafFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
                        aWhichLayer);
@@ -634,6 +639,11 @@ nsImageFrame::Paint(nsIPresContext* aPresContext,
 
     NS_IF_RELEASE(lowImage);
     NS_IF_RELEASE(image);
+
+    if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
+      PRBool clipState;
+      aRenderingContext.PopState(clipState);
+    }
   }
   
   return nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);

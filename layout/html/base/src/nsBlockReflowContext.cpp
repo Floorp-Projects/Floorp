@@ -449,23 +449,10 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
     // width
     reflowState.availableWidth = oldAvailableWidth;
     reflowState.mComputedWidth = oldComputedWidth;
-
-    // We don't need to do this second reflow if we're being reflowed
-    // with an unconstrained reflow
-    if (NS_UNCONSTRAINEDSIZE != reflowState.availableWidth) {
-      reason = eReflowReason_Resize;
-      // Don't bother having the frame compute its max-element-size again
-      nsSize* oldMaxElementSize = mMetrics.maxElementSize;
-      mMetrics.maxElementSize = nsnull;
-      rv = aFrame->Reflow(mPresContext, mMetrics, reflowState,
-                          aFrameReflowStatus);
-      mMetrics.maxElementSize = oldMaxElementSize;
-    }
-
-  } else {
-    rv = aFrame->Reflow(mPresContext, mMetrics, reflowState,
-                        aFrameReflowStatus);
+    reason = eReflowReason_Resize;
   }
+  rv = aFrame->Reflow(mPresContext, mMetrics, reflowState,
+                      aFrameReflowStatus);
   mOuterReflowState.mSpaceManager->Translate(-tx, -ty);
 
 #ifdef DEBUG

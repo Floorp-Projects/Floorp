@@ -615,30 +615,33 @@ nsFrame::DisplaySelection(nsIPresContext* aPresContext, PRBool isOkToTurnOn)
 }
 
 void
-nsFrame::SetOverflowClipRect(nsIRenderingContext& aRenderingContext)
+nsFrame::SetClipRect(nsIRenderingContext& aRenderingContext)
 {
-  // 'overflow-clip' only applies to block-level elements and replaced
-  // elements that have 'overflow' set to 'hidden', and it is relative
-  // to the content area and applies to content only (not border or background)
-  const nsStyleSpacing* spacing;
-  GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)spacing);
-  
-  // Start with the 'auto' values and then factor in user specified values
-  nsRect  clipRect(0, 0, mRect.width, mRect.height);
+  PRBool clipState;
+  const nsStyleDisplay* display;
+  GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) display);
 
-  // XXX We don't support the 'overflow-clip' property yet, so just use the
-  // content area (which is the default value) as the clip shape
-  nsMargin  border, padding;
-
-  spacing->GetBorder(border);
-  clipRect.Deflate(border);
-  // XXX We need to handle percentage padding
-  if (spacing->GetPadding(padding)) {
-    clipRect.Deflate(padding);
+  // Start with the auto version of the clip rect. Then overlay on top
+  // of it specific offsets.
+  nscoord top = 0;
+  nscoord right = mRect.width;
+  nscoord bottom = mRect.height;
+  nscoord left = 0;
+  if (0 == (NS_STYLE_CLIP_TOP_AUTO & display->mClipFlags)) {
+    top += display->mClip.top;
+  }
+  if (0 == (NS_STYLE_CLIP_RIGHT_AUTO & display->mClipFlags)) {
+    right -= display->mClip.right;
+  }
+  if (0 == (NS_STYLE_CLIP_BOTTOM_AUTO & display->mClipFlags)) {
+    bottom -= display->mClip.bottom;
+  }
+  if (0 == (NS_STYLE_CLIP_LEFT_AUTO & display->mClipFlags)) {
+    left += display->mClip.left;
   }
 
   // Set updated clip-rect into the rendering context
-  PRBool clipState;
+  nsRect clipRect(left, top, right - left, bottom - top);
   aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect, clipState);
 }
 
