@@ -617,6 +617,12 @@ void StyleTableImpl::ResetFrom(const nsStyleTable* aParent, nsIPresContext* aPre
   mRules = NS_STYLE_TABLE_RULES_NONE;
   mCellPadding.Reset();
   mCellSpacing.Reset();
+  if (nsnull!=aPresContext)
+  {
+    float p2t = aPresContext->GetPixelsToTwips();
+    mCellPadding.SetCoordValue(NSIntPixelsToTwips(1, p2t));
+    mCellSpacing.SetCoordValue(NSIntPixelsToTwips(1, p2t));
+  }
   mSpan=1;
 }
 
