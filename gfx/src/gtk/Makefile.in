@@ -93,6 +93,7 @@ X11SHARED_LCPPSRCS += \
 		nsFontFreeType.cpp \
 		nsFT2FontNode.cpp \
 		nsFT2FontCatalog.cpp \
+		nsNameValuePairDB.cpp \
 		$(NULL)
 endif
                 
