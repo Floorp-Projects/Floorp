@@ -100,7 +100,7 @@ sub setField {
     my $self = shift;
     my($app, $fieldID, $category, $name, $type, $data) = @_;
     # if fieldID is undefined, then add a new entry and return the
-    # fieldID.
+    # fieldID. Typically data will be undefined then too.
     $self->notImplemented();
 }
 

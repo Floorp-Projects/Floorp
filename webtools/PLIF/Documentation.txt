@@ -193,7 +193,10 @@ five debugging aids:
    it, not the people who use it on a daily basis) can change the
    debugging level that is printed, so if you have a lot of
    dump(9,'verbose debugging information') calls they can easily turn
-   them off. 0 is the most serious, 9 is the most trivial.
+   them off. 0 is the most serious, 9 is the most trivial. Actually,
+   10 is the most trivial, but 10 is so trivial as to be unusable
+   unless you are trying to get a headache -- the core PLIF code calls
+   dump(10,'...')  for almost every method call that goes through it.
 
    warn(level, message)
    Same as dump(), but includes a stack trace.
@@ -220,6 +223,12 @@ liners while supporting decent amounts of debugging information.
 They also allow us to later reimplement the debugging code to add
 better support for debuggers or pretty printing or mailing errors to
 admins or whatever.
+
+If you've been paying attention you'll notice there were actually six
+debugging aids, and not five. This is just to demonstrate that they
+will only actually help if you use them, not just if you look at
+them. Clearly here I should have been using them if I wanted to catch
+that fence-post error.
 
 Unfortunately, using these utility methods to report errors can result
 in suboptimal feedback to the user, and so should only be used to
@@ -364,7 +373,7 @@ initialise the amount of money to zero (as opposed to undefined).
 
 Wowee, lots of PLIFisms there! Let's look at each one in turn. The
 first line of the body sets the $self variable to be the reference to
-the object. If you are familiar with JavaScript, think "this".
+the object. If you are familiar with JavaScript or C++, think "this".
 
 The second line calls the inherited constructor with the same
 arguments as was passed to _this_ constructor.

@@ -33,6 +33,11 @@ use PLIF::Service::Session;
 @ISA = qw(PLIF::Service::Session);
 1;
 
+# XXX It would be interesting to implement crack detection (time since
+# last incorrect login, number of login attempts performed with time
+# since last incorrect login < a global delta, address changing
+# timeout, etc).
+
 sub provides {
     my $class = shift;
     my($service) = @_;
@@ -91,11 +96,10 @@ sub objectInit {
     $self->newFieldPassword($newFieldPassword);
     $self->fields({});
     $self->fieldsByID({});
-    my $fieldFactory = $self->app->getService('user.field.factory');
+    # don't forget to update the 'hash' function if you add more fields
+    my $fieldFactory = $app->getService('user.field.factory');
     foreach my $fieldID (keys($fields)) {
-        my $field = $fieldFactory->createFieldByID($app, $self, $fieldID, $fields->{$fieldID});
-        $self->fields->{$field->category}->{$field->name} = $field;
-        $self->fieldsByID->{$field->fieldID} = $field;
+        $self->insertField($fieldFactory->createFieldByID($app, $self, $fieldID, $fields->{$fieldID}));
     }
     $self->groups({%$groups}); # hash of groupID => groupName
     $self->rights(map {$_ => 1} @$rights); # map a list of strings into a hash for easy access
@@ -129,6 +133,14 @@ sub getField {
     return $field;
 }
 
+sub insertField {
+    my $self = shift;
+    my($field) = @_;
+    $self->fields->{$field->category}->{$field->name} = $field;
+    $self->fieldsByID->{$field->fieldID} = $field;
+    return $field;
+}
+
 sub getAddress {
     my $self = shift;
     my($protocol) = @_;
@@ -155,16 +167,33 @@ sub prepareAddressChange {
     }
 }
 
+sub prepareAddressAddition {
+    my $self = shift;
+    my($fieldName, $newAddress, $password) = @_;
+    my $field = $self->insertField($self->app->getService('user.field.factory')->createFieldByName($self->app, $self, 'contact', $fieldName, undef));
+
+    if ($field->validate($newAddress)) {
+        $self->newFieldID($field->fieldID);
+        $self->newFieldValue($newAddress);
+        $self->newFieldPassword($password);
+        return $self->objectCreate($self->app, $self->userID, $self->disabled, $self->adminMessage, 
+                                   $self->newFieldID, $self->newFieldValue, $self->newFieldPassword,
+                                   {$field->FieldID => $newAddress}, $self->{'groups'}, keys(%{$self->rights}));
+    } else {
+        return undef;
+    }
+}
+
 sub doAddressChange {
     my $self = shift;
     my($password) = @_;
-    if ($self->newFieldID and $self->newFieldValue) {
-        my $field;
-        if ($self->app->getService('service.passwords')->checkPassword($self->newFieldPassword, $password)) {
-            $field = $self->fieldsByID->{$self->newFieldID};
-            if (defined($field)) {
-                $field->data = $self->newFieldValue;
-            } # else XXX create it? How do we enable the user to add contact fields?
+    if ($self->newFieldID) {
+        my $field = $self->fieldsByID->{$self->newFieldID};
+        $self->assert(defined($field), 1, 'Database integrity error: newFieldID doesn\'t map to a field!');
+        if (defined($password) and ($self->app->getService('service.passwords')->checkPassword($self->newFieldPassword, $password))) {
+            $field->data = $self->newFieldValue;
+        } elsif (not defined($field->data)) {
+            $field->remove();
         }
         $self->newFieldID(undef);
         $self->newFieldValue(undef);
@@ -173,6 +202,14 @@ sub doAddressChange {
     } else {
         return 0;
     }
+}
+
+sub resetAddressChange {
+    my $self = shift;
+    # calling the doAddressChange() function with no arguments is the
+    # same as calling doAddressChange() with the wrong password, which
+    # resets the fields (to prevent multiple attempts)
+    return defined($self->doAddressChange());
 }
 
 sub hash {

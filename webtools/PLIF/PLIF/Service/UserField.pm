@@ -48,6 +48,7 @@ sub init {
     $self->typeData($fieldTypeData); # change this at your peril
     $self->name($fieldName); # change this at your peril
     $self->data($fieldData); # this is the only thing you should be changing
+    # don't forget to update the user's 'hash' function if you add more fields
     $self->{'_DIRTY'} = 0;
 }
 
@@ -63,6 +64,13 @@ sub type {
 
 sub validate {
     return 1;
+}
+
+# deletes this field from the database
+sub remove {
+    my $self = shift;
+    $self->{'_DELETE'} = 1;
+    $self->{'_DIRTY'} = 1;
 }
 
 # Contact fields should generate usernames (for their 'username'
@@ -85,8 +93,11 @@ sub DESTROY {
     if ($self->{'_DIRTY'}) {
         $self->write();
     }
+    $self->SUPER::DESTROY(@_);
 }
 
 sub write {
     # XXX
+    # check $self->{'_DELETE'} to see if we have to remove it altogether
+    # otherwise, commit the changes
 }
