@@ -109,6 +109,9 @@
 #include "nsIDOMWindowCollection.h"
 #include "imgICache.h"
 #include "nsIAtom.h"
+#include "nsNetCID.h"
+#include "nsIJARURI.h"
+#include "nsIFileURL.h"
 
 static char kChromePrefix[] = "chrome://";
 static char kUseXBLFormsPref[] = "nglayout.debug.enable_xbl_forms";
@@ -481,6 +484,40 @@ SplitURL(nsIURI *aChromeURI, nsCString& aPackage, nsCString& aProvider, nsCStrin
   return NS_OK;
 }
 
+static nsresult
+GetBaseURLFile(const nsACString& aBaseURL, nsIFile** aFile)
+{
+  NS_ENSURE_ARG_POINTER(aFile);
+  *aFile = nsnull;
+
+  nsresult rv;
+  nsCOMPtr<nsIIOService> ioServ(do_GetService(NS_IOSERVICE_CONTRACTID, &rv));
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIURI> uri;
+  rv = ioServ->NewURI(aBaseURL, nsnull, nsnull, getter_AddRefs(uri));
+  if (NS_FAILED(rv)) return rv;
+
+  // Loop, jar: URIs can nest (e.g. jar:jar:A.jar!B.jar!C.xml).
+  // Often, however, we have jar:resource:/chrome/A.jar!C.xml.
+  nsCOMPtr<nsIJARURI> jarURI;
+  while ((jarURI = do_QueryInterface(uri)) != nsnull)
+    jarURI->GetJARFile(getter_AddRefs(uri));
+
+  // Here we must have a URL of the form resource:/chrome/A.jar
+  // or file:/some/path/to/A.jar.
+  nsCOMPtr<nsIFileURL> fileURL(do_QueryInterface(uri));
+  if (fileURL) {
+    nsCOMPtr<nsIFile> file;
+    fileURL->GetFile(getter_AddRefs(file));
+    if (file) {
+      NS_ADDREF(*aFile = file);
+      return NS_OK;
+    }
+  }
+  NS_ERROR("GetBaseURLFile() failed. Remote chrome?");
+  return NS_ERROR_FAILURE;
+}
 
 NS_IMETHODIMP
 nsChromeRegistry::Canonify(nsIURI* aChromeURI)
@@ -649,10 +686,30 @@ nsChromeRegistry::GetBaseURL(const nsACString& aPackage,
         if (!providerVersion.Equals(packageVersion))
           selectedProvider = nsnull;
       }
+      
+      if (selectedProvider) {
+        // Ensure that the provider actually exists.
+        // XXX This will have to change if we handle remote chrome.
+        rv =  FollowArc(mChromeDataSource, aBaseURL, resource, mBaseURL);
+        if (NS_FAILED(rv))
+          return rv;
+        nsCOMPtr<nsIFile> baseURLFile;
+        rv = GetBaseURLFile(aBaseURL, getter_AddRefs(baseURLFile));
+        if (NS_SUCCEEDED(rv)) {
+          PRBool exists;
+          rv = baseURLFile->Exists(&exists);
+          if (NS_SUCCEEDED(rv) && exists)
+            return NS_OK;
+#if DEBUG
+          printf("BaseURL %s cannot be found.\n", PromiseFlatCString(aBaseURL).get());
+#endif
+          selectedProvider = nsnull;
+        }
+      }
     }
 
     if (!selectedProvider) {
-      // Find provider will attempt to auto-select a version-compatible provider (skin).  If none
+      // FindProvider will attempt to auto-select a version-compatible provider (skin).  If none
       // exist it will return nsnull in the selectedProvider variable.
       FindProvider(aPackage, aProvider, arc, getter_AddRefs(selectedProvider));
       resource = do_QueryInterface(selectedProvider);
@@ -2057,6 +2114,25 @@ nsChromeRegistry::SelectProviderForPackage(const nsACString& aProviderType,
     nsChromeRegistry::FollowArc(mChromeDataSource, providerVersion, providerResource, versionArc);
     if (!providerVersion.Equals(packageVersion))
       return NS_ERROR_FAILURE;
+  }
+  
+  // Ensure that the provider actually exists.
+  // XXX This will have to change if we handle remote chrome.
+  nsCAutoString providerBaseURL;
+  rv =  FollowArc(mChromeDataSource, providerBaseURL, providerResource, mBaseURL);
+  if (NS_FAILED(rv))
+    return rv;
+  nsCOMPtr<nsIFile> baseURLFile;
+  rv = GetBaseURLFile(providerBaseURL, getter_AddRefs(baseURLFile));
+  if (NS_FAILED(rv))
+    return rv;
+  PRBool exists;
+  rv = baseURLFile->Exists(&exists);
+  if (NS_FAILED(rv) || !exists) {
+#if DEBUG
+    printf("BaseURL %s cannot be found.\n", PromiseFlatCString(providerBaseURL).get());
+#endif
+    return NS_ERROR_FAILURE;
   }
 
   return SetProviderForPackage(aProviderType, packageResource, providerResource, aSelectionArc,
