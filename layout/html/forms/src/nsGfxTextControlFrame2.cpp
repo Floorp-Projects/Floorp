@@ -82,33 +82,6 @@ static void RemoveNewlines(nsString &aString)
 }
 
 
-class nsEnderEventListener   : public nsIDOMFocusListener , public nsSupportsWeakReference
-{
-public:
-  nsEnderEventListener(){ NS_INIT_REFCNT();}
-
-  /** the default destructor */
-  virtual ~nsEnderEventListener();
-
-  /** interfaces for addref and release and queryinterface*/
-  NS_DECL_ISUPPORTS
-
-  /** nsIDOMFocusListener interfaces 
-    * used to propogate focus, blur, and change notifications
-    * @see nsIDOMFocusListener
-    */
-  virtual nsresult Focus(nsIDOMEvent* aEvent);
-  virtual nsresult Blur (nsIDOMEvent* aEvent);
-  /* END interfaces from nsIDOMFocusListener*/
-protected:
-  nsCWeakReference<nsGfxTextControlFrame> mFrame;
-  nsString                  mTextValue; // the value of the text field at focus
-};
-
-
-//END ENDEREVENTLISTENER
-
-
 
 
 class nsTextAreaSelectionImpl : public nsSupportsWeakReference, public nsISelectionController, public nsIFrameSelection
@@ -1885,51 +1858,3 @@ nsGfxTextControlFrame2::GetWidthInCharacters() const
 
 /*=============== nsIFocusListener ======================*/
 
-nsresult
-nsEnderEventListener::Focus(nsIDOMEvent* aEvent)
-{
-  //Need to set text value for onchange
-  nsGfxTextControlFrame *gfxFrame = mFrame.Reference();
-
-  if (gfxFrame && mContent && mView) {
-    mTextValue.SetLength(0);
-    gfxFrame->GetText(&mTextValue, PR_FALSE);
-  }
-
-  return NS_OK;
-}
-
-nsresult
-nsEnderEventListener::Blur(nsIDOMEvent* aEvent)
-{
-
-  nsCOMPtr<nsIDOMUIEvent>uiEvent;
-  uiEvent = do_QueryInterface(aEvent);
-  if (!uiEvent) {
-    return NS_OK;
-  }
-
-  nsGfxTextControlFrame *gfxFrame = mFrame.Reference();
-
-  if (gfxFrame && mContent && mView) {
-    nsString currentValue;
-    gfxFrame->GetText(&currentValue, PR_FALSE);
-    if (PR_FALSE==currentValue.Equals(mTextValue)) {
-      // Dispatch the change event
-      nsEventStatus status = nsEventStatus_eIgnore;
-      nsInputEvent event;
-      event.eventStructType = NS_INPUT_EVENT;
-      event.widget = nsnull;
-      event.message = NS_FORM_CHANGE;
-      event.flags = NS_EVENT_FLAG_INIT;
-      event.isShift = PR_FALSE;
-      event.isControl = PR_FALSE;
-      event.isAlt = PR_FALSE;
-      event.isMeta = PR_FALSE;
-
-      // Have the content handle the event.
-      mContent->HandleDOMEvent(mContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
-    }
-  }
-  return NS_OK;
-}
