@@ -2,8 +2,8 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# $Revision: 1.18 $ 
-# $Date: 2001/10/18 16:19:59 $ 
+# $Revision: 1.19 $ 
+# $Date: 2001/12/03 19:50:00 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/tinder.cgi,v $ 
 # $Name:  $ 
@@ -286,6 +286,8 @@ sub HTML_status_page {
 
   my ($times_vec, $tree, ) = @_;
 
+  my ($status_page_url) = (FileStructure::get_filename($tree, 'tree_URL').
+                           "/status.html");
 
   my ($out) = '';
 
@@ -367,6 +369,11 @@ sub HTML_status_page {
                              "tree=$tree\&".
                              "start-time=$next_date\&".
                              "display-hours=$display_8hours"),
+                   ).
+   "<br>\n".
+    HTMLPopUp::Link(
+                    "linktxt"=>"Show current status", 
+                    "href"=>$status_page_url,
                    ).
    "<br><p>\n\n".
     HTMLPopUp::Link(
