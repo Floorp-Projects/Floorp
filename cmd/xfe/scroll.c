@@ -1283,7 +1283,7 @@ fe_scroller_resize (Widget widget, XtPointer closure)
 	  {
 	    int32 margin_w, margin_h;
 	    
-	    fe_GetMargin(context, &margin_w, &margin_h);
+            LO_GetDocumentMargins(context, &margin_w, &margin_h);
 	    
 	    LO_RelayoutOnResize(context, w, h, margin_w, margin_h);
 	  }
