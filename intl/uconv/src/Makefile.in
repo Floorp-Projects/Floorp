@@ -38,7 +38,6 @@ REQUIRES	= xpcom \
 		  string \
 		  intl \
 		  locale \
-		  chardet \
 		  unicharutil \
 		  necko \
 		  $(NULL)
@@ -68,6 +67,7 @@ CPPSRCS		= \
 		nsUnicodeToUTF8.cpp \
 		nsUCvMinSupport.cpp \
 		nsScriptableUConv.cpp \
+		nsConverterInputStream.cpp \
 		$(NULL)
 
 EXPORT_RESOURCE	= \
