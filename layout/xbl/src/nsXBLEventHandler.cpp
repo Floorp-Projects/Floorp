@@ -408,7 +408,7 @@ nsXBLEventHandler::ExecuteHandler(const nsString& aEventName, nsIDOMEvent* aEven
 
   // Look for a compiled handler on the element. 
   // Should be compiled and bound with "on" in front of the name.
-  nsAutoString onEvent = "on";
+  nsAutoString onEvent = "onxbl";
   onEvent += aEventName;
   nsCOMPtr<nsIAtom> onEventAtom = getter_AddRefs(NS_NewAtom(onEvent));
 
@@ -443,6 +443,9 @@ nsXBLEventHandler::ExecuteHandler(const nsString& aEventName, nsIDOMEvent* aEven
   // Execute it.
   nsCOMPtr<nsIDOMEventListener> eventListener;
   NS_NewJSEventListener(getter_AddRefs(eventListener), boundContext, owner);
+
+  nsCOMPtr<nsIJSEventListener> jsListener(do_QueryInterface(eventListener));
+  jsListener->SetEventName(onEventAtom);
   eventListener->HandleEvent(aEvent);
 
   // Now unbind it.

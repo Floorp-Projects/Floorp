@@ -1230,7 +1230,7 @@ nsXBLBinding::ConstructAttributeTable(nsIContent* aElement)
                             result == NS_CONTENT_ATTR_HAS_VALUE);
 
       if (attrPresent) {
-        aElement->SetAttribute(kNameSpaceID_None, attribute, value, PR_TRUE);
+        aElement->SetAttribute(kNameSpaceID_None, attribute, value, PR_FALSE);
         nsCOMPtr<nsIAtom> tag;
         aElement->GetTag(*getter_AddRefs(tag));
         if ((tag.get() == kHTMLAtom) && (attribute.get() == kValueAtom) && !value.IsEmpty()) {
