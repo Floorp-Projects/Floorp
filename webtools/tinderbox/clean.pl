@@ -25,7 +25,7 @@ if ($tinderboxdir eq "") {
     $tinderboxdir = ".";
 }
 
-print "tinderbox = $tinderboxdir\n"; 
+#print "tinderbox = $tinderboxdir\n"; 
 
 chdir $tinderboxdir || die "Couldn't chdir to $tinderboxdir"; 
 
