@@ -101,6 +101,9 @@ typedef PRUint32  nsCSSFrameType;
 #define NS_AUTOHEIGHT       NS_UNCONSTRAINEDSIZE
 #define NS_AUTOMARGIN       NS_UNCONSTRAINEDSIZE
 #define NS_AUTOOFFSET       NS_UNCONSTRAINEDSIZE
+// NOTE: there are assumptions all over that these have the same value, namely NS_UNCONSTRAINEDSIZE
+//       if any are changed to be a value other than NS_UNCONSTRAINEDSIZE
+//       at least update AdjustComputedHeight/Width and test ad nauseum
 
 /**
  * Reflow state passed to a frame during reflow.
@@ -391,6 +394,13 @@ protected:
                            const nsHTMLReflowState* aContainingBlockRS);
 
   nscoord CalculateHorizBorderPaddingMargin(nscoord aContainingBlockWidth);
+
+  // Adjust Computed sizes for Min/Max Width and box-Sizing
+  // - guarantees that the computed height/width will be non-negative
+  //   If the value goes negative (because the padding or border is greater than
+  //   the width/height and it is removed due to box sizing) then it is driven to 0
+  void AdjustComputedHeight(void);
+  void AdjustComputedWidth(void);
 };
 
 #endif /* nsHTMLReflowState_h___ */
