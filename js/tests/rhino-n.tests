@@ -76,3 +76,5 @@ ecma_3/Statements/regress-74474-003.js
 js1_5/Regress/regress-96128-n.js
 #Rhino doesn't implement (non-ECMA) fileName, lineNumber properties of Error objects
 js1_5/Exceptions/regress-50447.js
+#This test uses the (non-ECMA) 'it' object of SpiderMonkey
+js1_2/version120/regress-99663.js
