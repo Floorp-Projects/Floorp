@@ -1344,7 +1344,7 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
     nsWindow *containerWindow;
     GetContainerWindow(&containerWindow);
 
-    if (containerWindow->mActivatePending) {
+    if (!gFocusWindow) {
         containerWindow->mActivatePending = PR_FALSE;
         DispatchActivateEvent();
     }
