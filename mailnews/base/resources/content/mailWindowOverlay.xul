@@ -62,10 +62,11 @@ Rights Reserved.
 
     <command id="cmd_emptyTrash" oncommand="goDoCommand('cmd_emptyTrash')" disabled="true"/>
     <command id="cmd_compactFolder" oncommand="goDoCommand('cmd_compactFolder')" disabled="true"/>
-    <command id="cmd_toggleWorkOffline" oncommand="goDoCommand('cmd_toggleWorkOffline')" />
+    <command id="cmd_toggleWorkOffline" oncommand="goDoCommand('cmd_toggleWorkOffline')" disabled="true" />
     <command id="cmd_synchronizeOffline" oncommand="goDoCommand('cmd_synchronizeOffline')" disabled="true"/>
     <command id="cmd_downloadFlagged" oncommand="goDoCommand('cmd_downloadFlagged')" disabled="true"/>
     <command id="cmd_downloadSelected" oncommand="goDoCommand('cmd_downloadSelected')" disabled="true"/>
+    <command id="cmd_settingsOffline" oncommand="goDoCommand('cmd_settingsOffline')" disabled="true"/>
     <command id="cmd_getMsgsForAuthAccounts" 
              oncommand="goDoCommand('cmd_getMsgsForAuthAccounts'); event.preventBubble()" 
              disabled="true"/>
@@ -77,6 +78,12 @@ Rights Reserved.
     <command id="cmd_getNextNMessages" oncommand="goDoCommand('cmd_getNextNMessages')" disabled="true"/>
     <command id="cmd_renameFolder" oncommand="goDoCommand('cmd_renameFolder')" />
 </commandset>
+
+<broadcasterset id="broadcasterset">
+	<broadcaster id="cmd_toggleWorkOffline" oncommand="goDoCommand('cmd_toggleWorkOffline')" disabled="true"/>
+</broadcasterset>
+
+<statusbarpanel id="offline-status" tooltip="aTooltip" observes="cmd_toggleWorkOffline"/> 
 
 <commandset id="mailCommands">
   <command id="cmd_newNavigator"/>
@@ -787,22 +794,19 @@ Rights Reserved.
       <menuseparator id="trashMenuSeparator"/>
       <menuitem label="&importCmd.label;" accesskey="&importCmd.accesskey;" oncommand="toImport();"/>
       <menuseparator/>
+
       <menu label="&offlineMenu.label;" accesskey="&offlineMenu.accesskey;">
         <menupopup>
-          <menuitem label="&workOfflineCmd.label;"
-           accesskey="&workOfflineCmd.accesskey;"
-           observes="cmd_toggleWorkOffline"/>
-          <menuitem label="&synchronizeOfflineCmd.label;" 
-           accesskey="&synchronizeOfflineCmd.accesskey;"
-           observes="cmd_synchronizeOffline"/>
-          <menuitem label="&downloadFlaggedCmd.label;"
-           accesskey="&downloadFlaggedCmd.accesskey;"
-           observes="cmd_downloadFlagged"/>
-          <menuitem label="&downloadSelectedCmd.label;"
-           accesskey="&downloadSelectedCmd.accesskey;"
-           observes="cmd_downloadSelected"/>
+           <menuitem label="&workOfflineCmd.label;" accesskey="&workOfflineCmd.accesskey;"  observes="cmd_toggleWorkOffline"/>
+		   <menuseparator/>
+		   <menuitem label="&synchronizeOfflineCmd.label;"  accesskey="&synchronizeOfflineCmd.accesskey;" observes="cmd_synchronizeOffline"/>
+		   <menuitem label="&settingsOfflineCmd.label;"     accesskey="&settingsOfflineCmd.accesskey;"    observes="cmd_settingsOffline"/>
+           <menuseparator/>
+           <menuitem label="&downloadFlaggedCmd.label;"     accesskey="&downloadFlaggedCmd.accesskey;"    observes="cmd_downloadFlagged"/>
+           <menuitem label="&downloadSelectedCmd.label;"    accesskey="&downloadSelectedCmd.accesskey;"   observes="cmd_downloadSelected"/>
         </menupopup>
       </menu>
+
       <menuseparator/>
       <menuitem id="printMenuItem" key="key_print" label="&printCmd.label;" accesskey="&printCmd.accesskey;" observes="cmd_print"/>
       <menuseparator/>

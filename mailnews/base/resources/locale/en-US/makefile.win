@@ -41,7 +41,10 @@ CHROME_L10N = \
 	.\mailNavigatorOverlay.dtd \
 	.\mailEditorOverlay.dtd \
 	.\mailOverlay.dtd \
-  .\folderProps.dtd \
+      .\folderProps.dtd \
+      .\sendMsgs.dtd \
+      .\downloadMsgs.dtd \
+      .\msgSynchronize.dtd \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

@@ -123,6 +123,7 @@ protected:
   static nsIRDFResource* kNC_PageTitleMain;
   static nsIRDFResource* kNC_PageTitleServer;
   static nsIRDFResource* kNC_PageTitleCopies;
+  static nsIRDFResource* kNC_PageTitleOffline;
   static nsIRDFResource* kNC_PageTitleAdvanced;
   static nsIRDFResource* kNC_PageTitleSMTP;
 

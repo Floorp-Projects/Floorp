@@ -1036,6 +1036,14 @@ function getMarkupDocumentViewer()
   return getMessageBrowser().markupDocumentViewer;
 }
 
+function MsgSynchronizeOffline()
+{
+    dump("in MsgSynchronize() \n"); 
+    window.openDialog("chrome://messenger/content/msgSynchronize.xul",
+          "", "chrome,titlebar,resizable=yes",{msgWindow:msgWindow}); 		     
+}
+
+
 function MsgMarkByDate() {}
 function MsgOpenAttachment() {}
 function MsgUpdateMsgCount() {}

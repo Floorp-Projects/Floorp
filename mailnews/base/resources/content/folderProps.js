@@ -1,29 +1,32 @@
 var gMsgFolder;
-var preselectedFolderURI = null;
+var gServerTypeFolder = null;
+var gPreselectedFolderURI = null;
 
 // services used
 var RDF;
 
 // corresponds to MSG_FOLDER_FLAG_OFFLINE
-const FOLDER_FLAG_OFFLINE = 0x8000000
+const MSG_FOLDER_FLAG_OFFLINE = 0x8000000
 
 function folderPropsOKButtonCallback()
 {
   if (gMsgFolder)
   {
-    if (document.getElementById("selectForDownload").checked)	
-      gMsgFolder.setFlag(FOLDER_FLAG_OFFLINE);
-    else
-      gMsgFolder.clearFlag(FOLDER_FLAG_OFFLINE);
 
     // set charset attributes
     var folderCharsetList = document.getElementById("folderCharsetList");
     gMsgFolder.charset = folderCharsetList.getAttribute("value");
     gMsgFolder.charsetOverride = document.getElementById("folderCharsetOverride").checked;
+
+    if(document.getElementById("selectForDownload").checked ||
+       document.getElementById("offline.selectForOfflineFolder").checked ||
+       document.getElementById("offline.selectForOfflineNewsgroup").checked)
+          gMsgFolder.setFlag(MSG_FOLDER_FLAG_OFFLINE);
+    else
+          gMsgFolder.clearFlag(MSG_FOLDER_FLAG_OFFLINE);
   }
   window.close();
 }
-
 
 function folderPropsOnLoad()
 {
@@ -32,13 +35,13 @@ function folderPropsOnLoad()
 	moveToAlertPosition();
 
   RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
+
 	// look in arguments[0] for parameters
 	if (window.arguments && window.arguments[0]) {
 		if ( window.arguments[0].title ) {
-			// dump("title = " + window.arguments[0].title + "\n");
+       dump("title = " + window.arguments[0].title + "\n");
 			top.window.title = window.arguments[0].title;
 		}
-		
 		if ( window.arguments[0].okCallback ) {
 			top.okCallback = window.arguments[0].okCallback;
 		}
@@ -47,7 +50,7 @@ function folderPropsOnLoad()
 	// fill in folder name, based on what they selected in the folder pane
 	if (window.arguments[0].preselectedURI) {
 		try {
-			preselectedFolderURI = window.arguments[0].preselectedURI;
+			gPreselectedFolderURI = window.arguments[0].preselectedURI;
 		}
 		catch (ex) {
 		}
@@ -60,21 +63,41 @@ function folderPropsOnLoad()
 	{
 		var name = document.getElementById("name");
 		name.value = window.arguments[0].name;
-//		name.setSelectionRange(0,-1);
-//		name.focusTextBox();
 
+//    name.setSelectionRange(0,-1);
+//    name.focusTextField();
 	}
+
+    gServerTypeFolder = window.arguments[0].serverType;
+
+    dump("preselectfolder uri = "+gPreselectedFolderURI+'\n');
+    dump("serverType = "+gServerTypeFolder+'\n');
+
 	// this hex value come from nsMsgFolderFlags.h
-		var folderResource = RDF.GetResource(preselectedFolderURI);
+	var folderResource = RDF.GetResource(gPreselectedFolderURI);
     
 		if(folderResource)
 			gMsgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
   if (!gMsgFolder)
-    dump("no gMsgFolder preselectfolder uri = "+preselectedFolderURI+'\n');
+       dump("no gMsgFolder preselectfolder uri = "+gPreselectedFolderURI+'\n');
 
   if (gMsgFolder) {
-    if (gMsgFolder.flags & FOLDER_FLAG_OFFLINE) {
+        if (gMsgFolder.flags & MSG_FOLDER_FLAG_OFFLINE) {
   	  document.getElementById("selectForDownload").checked = true;
+
+            if(gServerTypeFolder == "imap" || gServerTypeFolder == "pop3")
+               document.getElementById("offline.selectForOfflineFolder").checked = true;
+
+            if(gServerTypeFolder == "nntp")
+               document.getElementById("offline.selectForOfflineNewsgroup").checked = true;
+        }
+        else {
+  	        document.getElementById("selectForDownload").checked = false;
+            if(gServerTypeFolder == "imap" || gServerTypeFolder == "pop3")
+               document.getElementById("offline.selectForOfflineFolder").checked = false;
+
+            if(gServerTypeFolder == "nntp")
+               document.getElementById("offline.selectForOfflineNewsgroup").checked = false;
     }
 
     // get charset title (i.e. localized name), needed in order to set value for the menu
@@ -95,13 +118,83 @@ function folderPropsOnLoad()
 
   // select the initial tab
   if (window.arguments[0].tabID) {
-    // set index for starting panel on the <tabpanels> element
-    var folderPropTabPanels = document.getElementById("folderPropTabPanels");
-    folderPropTabPanels.setAttribute("index", window.arguments[0].tabIndex);
+    // set index for starting panel on the <tabpanel> element
+    var folderPropTabPanel = document.getElementById("folderPropTabPanel");
+    folderPropTabPanel.setAttribute("index", window.arguments[0].tabIndex);
 
     var tab = document.getElementById(window.arguments[0].tabID);
     tab.setAttribute("selected", "true");
     tab = document.getElementById("GeneralTab");
-    tab.setAttribute("selected", "false");
+    // tab.setAttribute("selected", "false");
   }
+  hideShowControls(gServerTypeFolder);
+}
+
+
+function hideShowControls(serverType)
+{
+    var controls = document.getElementsByAttribute("hidable", "true");
+    var len = controls.length;
+    for (var i=0; i<len; i++) {
+        var control = controls[i];
+        var hideFor = control.getAttribute("hidefor");
+        if (!hideFor)
+            throw "this should not happen, things that are hidable should have hidefor set";
+
+        var box = getEnclosingContainer(control);
+
+        if (!box)
+            throw "this should not happen, things that are hidable should be in a box";
+
+        // hide unsupported server type
+        // adding support for hiding multiple server types using hideFor="server1,server2"
+        var hideForBool = false;
+        var hideForTokens = hideFor.split(",");
+        for (var j = 0; j < hideForTokens.length; j++) {
+            if (hideForTokens[j] == serverType) {
+                hideForBool = true;
+                break;
+  }
+        }
+
+        if (hideForBool) {
+            box.setAttribute("hidden", "true");
+        }
+        else {
+            box.removeAttribute("hidden");
+        }
+    }
+}
+
+function getEnclosingContainer(startNode) 
+{
+    var parent = startNode;
+    var box; 
+    while (parent && parent != document) 
+	{
+        var isContainer = (parent.getAttribute("iscontrolcontainer") == "true");
+
+        // remember the FIRST container we encounter, or the first controlcontainer
+        if (!box || isContainer) box=parent;
+        
+        // break out with a controlcontainer
+        if (isContainer) break;
+        parent = parent.parentNode;
+    }
+    return box;
+}
+
+function onOfflineFolderDownload()
+{
+    var offlineManager = Components.classes["@mozilla.org/messenger/offline-manager;1"].getService(Components.interfaces.nsIMsgOfflineManager);
+    offlineManager.synchronizeForOffline(false, true, false, false, null);
+    window.close();
+}
+
+function onOfflineNewsgroupDownload()
+{
+    var offlineManager = Components.classes["@mozilla.org/messenger/offline-manager;1"].getService(Components.interfaces.nsIMsgOfflineManager);
+    // download news, download mail, send unsent messages, go offline when done, msg window
+    offlineManager.synchronizeForOffline(true, false, false, false, null);
+    window.close();
 }

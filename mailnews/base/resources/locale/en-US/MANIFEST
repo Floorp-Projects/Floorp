@@ -14,3 +14,6 @@ mailTasksOverlay.dtd
 mailNavigatorOverlay.dtd
 mailEditorOverlay.dtd
 mailOverlay.dtd
+sendMsgs.dtd
+downloadMsgs.dtd
+msgSynchronize.dtd

@@ -231,6 +231,7 @@ function MsgCompactFolder(isAll)
 function MsgFolderProperties() 
 {
 	var preselectedURI = GetSelectedFolderURI();
+	var serverType = GetMsgFolderFromUri(preselectedURI).server.type;
 	var folderTree = GetFolderTree();
 
 	var name = GetFolderNameFromUri(preselectedURI, folderTree);
@@ -241,7 +242,8 @@ function MsgFolderProperties()
                     "chrome://messenger/content/imapFolderProps.xul",
                     "",
                     "chrome,centerscreen,titlebar,modal",
-                    {preselectedURI:preselectedURI, title:windowTitle,
+                    {preselectedURI:preselectedURI, serverType:serverType,
+					title:windowTitle,
                     okCallback:FolderProperties, 
                     tabID:"", tabIndex:0, name:name});
 }

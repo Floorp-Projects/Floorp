@@ -51,6 +51,7 @@ CHROME_L10N = \
 	.\SmtpServerList.dtd \
 	.\smtpEditOverlay.dtd \
 	.\mailPrefsOverlay.dtd \
+      .\am-offline.dtd \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

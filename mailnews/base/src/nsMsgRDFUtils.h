@@ -80,6 +80,8 @@ typedef struct _nsMsgRDFNotification {
 #define NC_RDF_SUBFOLDERSHAVEUNREADMESSAGES NC_NAMESPACE_URI "SubfoldersHaveUnreadMessages"
 #define NC_RDF_NOSELECT       NC_NAMESPACE_URI "NoSelect"
 #define NC_RDF_NEWMESSAGES			NC_NAMESPACE_URI "NewMessages"
+#define NC_RDF_SYNCHRONIZE          NC_NAMESPACE_URI "Synchronize"
+#define NC_RDF_SYNCDISABLED         NC_NAMESPACE_URI "SyncDisabled"
 #define NC_RDF_KEY                      NC_NAMESPACE_URI "Key"
 
 //Sort Properties

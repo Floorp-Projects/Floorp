@@ -19,6 +19,7 @@
   Rights Reserved.
  
    - Contributor(s): David Bienvenu          <bienvenu@netscape.com>
+
 -->
 
 <?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
@@ -45,20 +46,18 @@
     <tab id="GeneralTab" label="&generalInfo.label;" accesskey="&generalInfo.accesskey;"/>
     <tab id="DownloadTab" label="&download.label;" accesskey="&download.accesskey;"/>
     <tab id="folderCharsetTab" label="&folderCharsetTab.label;" accesskey="&folderCharsetTab.accesskey;"/>
+    <tab id="OfflineTab" label="&folderOfflineTab.label;" accesskey="&folderOfflineTab.accesskey;"/>
   </tabs>
-  <tabpanels id="folderPropTabPanels">
+  <tabpanels id="folderPropTabPanel">
   	<box orient="vertical">
   		<box id="nameBox" orient="vertical">
   			<text class="label" value="&folderProps.name.label;" />
   			<textbox id="name" readonly="true" />
   		</box>
-  
     </box>
 
   <titledbox orient="vertical">
-
     <titledbox orient="vertical">
-
       <checkbox id="selectForDownload" label="&download.check.label;" />
     </titledbox>
   </titledbox>
@@ -74,9 +73,23 @@
       <checkbox id="folderCharsetOverride" label="&folderCharsetOverride.label;" />
     </box>
  
+    <titledbox orient="vertical">
+        <titledbox orient="vertical">
+            <checkbox iscontrolcontainer="true" hidable="true"  
+                    wsm_persist="true" id="offline.selectForOfflineFolder"  
+                    hidefor="nntp" label="&offlineFolder.check.label;" />
+            <checkbox iscontrolcontainer="true" hidable="true" 
+                    wsm_persist="true" id="offline.selectForOfflineNewsgroup" 
+                    hidefor="pop3,imap" label="&selectofflineNewsgroup.check.label;" />
+        </titledbox>
+            <button iscontrolcontainer="true" hidable="true" label="&offlineFolder.button.label;" 
+                    class="dialog" oncommand="onOfflineFolderDownload();" 
+                    id="offline.offlineFolderDownloadButton" hidefor="nntp" orient="right"/>
+            <button iscontrolcontainer="true" hidable="true" label="&offlineNewsgroup.button.label;" 
+                    class="dialog" oncommand="onOfflineNewsgroupDownload();" 
+                    id="offline.offlineNewsgroupDownloadButton" hidefor="pop3,imap" orient="right"/>
+    </titledbox>
   </tabpanels>
 </tabbox>
-  
 <box id="okCancelButtonsRight"/>
-
 </window>

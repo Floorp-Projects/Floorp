@@ -1,0 +1,32 @@
+<!ENTITY offlineSettings.label "Offline &amp; Disk Space">
+<!ENTITY offlineDesc.label "Offline enables you to download your messages locally so that they are available when you are disconnected from the server. Use the &quot;Select&quot; button to choose which messages will be available when you are offline.">
+<!ENTITY offlinePopDesc.label "Message are stored locally on your computer. Use the following settings to save disk space.">
+<!ENTITY offlineMsg.label "Offline messages are downloaded and stored locally on your computer. Use the following settings to save download time and disk space.">
+<!ENTITY offlineNewFolder.label "When I create new folders, select them for offline">
+<!ENTITY offlineNewFolder.accesskey "h">
+<!ENTITY offlineRemove.label "Remove message bodies only older than">
+<!ENTITY offlineRemove.accesskey "r">
+<!ENTITY offlineNotDownload.label "Do not download message bodies locally that are larger than">
+<!ENTITY offlineNotDownload.accesskey "d">
+<!ENTITY offlineCompact.label "Compact folders when it will save over">
+<!ENTITY offlineCompact.accesskey "c">
+<!ENTITY kb.label "kB">
+<!ENTITY days.label "days">
+<!ENTITY daysAgo.label "days ago">
+<!ENTITY message.label "messages">
+<!ENTITY nntpDownloadUnread.label "Download only unread messages">
+<!ENTITY nntpDownloadUnread.accesskey "u">
+<!ENTITY nntpDownloadMsg.label "Download only messages since">
+<!ENTITY nntpDownloadMsg.accesskey "o">
+<!ENTITY nntpCleanup.label "When it is time to clean up messages:">
+<!ENTITY nntpKeepMsg.label "Keep messages which have arrived within the past">
+<!ENTITY nntpKeepMsg.accesskey "p">
+<!ENTITY nntpKeepAll.label "Keep all messages">
+<!ENTITY nntpKeepAll.accesskey "a">
+<!ENTITY nntpKeepNew.label "Keep the newest">
+<!ENTITY nntpKeepNew.accesskey "n">
+<!ENTITY nntpKeepUnread.label "Keep only unread messages">
+<!ENTITY nntpKeepUnread.accesskey "e">
+<!ENTITY nntpRemoveBody.label "Remove message bodies only older than">
+<!ENTITY nntpRemoveBody.accesskey "m">
+<!ENTITY offlineSelect.label "Select...">

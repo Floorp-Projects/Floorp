@@ -62,3 +62,10 @@ mailMessengerOverlay.xul
 mailMessengerComposeOverlay.xul
 mailOverlay.xul
 mailWidgets.xml
+sendMsgs.xul
+sendMsgs.js
+downloadMsgs.xul
+downloadMsgs.js
+msgSynchronize.xul
+msgSynchronize.js
+msgSelectOffline.xul

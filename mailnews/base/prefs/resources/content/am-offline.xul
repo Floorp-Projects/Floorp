@@ -1,0 +1,120 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://messenger/skin/messenger.css" type="text/css"?>
+
+<!--
+
+The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+ Copyright (C) 1998-2001 Netscape Communications Corporation. All
+Rights Reserved.
+
+Contributors:
+    dianesun@netscape.com
+
+-->
+
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<?xul-overlay href="chrome://messenger/content/msgFolderPickerOverlay.xul"?>
+
+
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/am-offline.dtd">
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        class="color-dialog"
+        onload="parent.onPanelLoaded('am-offline.xul');"
+        orient="vertical">
+  
+    <script type="text/javascript" src="chrome://messenger/content/AccountManager.js"/>
+    <script type="text/javascript" src="chrome://messenger/content/am-offline.js"/>
+
+    <text hidden="true" wsm_persist="true" id="server.type"/>  
+
+    <box class="box-smallheader" title="&offlineSettings.label;"/>
+
+    <titledbox orient="vertical" id="offline.titlebox">
+
+    <html iscontrolcontainer="true" hidable="true" hidefor="pop3">&offlineDesc.label;</html>
+    <html iscontrolcontainer="true" hidable="true" hidefor="imap,nntp">&offlinePopDesc.label;</html>
+
+    <box iscontrolcontainer="true" hidable="true" hidefor="pop3" orient="horizontal" align="right">
+        <button label="&offlineSelect.label;" oncommand="onClickSelect()"/>
+    </box>
+
+    <separator class="thin"/>
+
+    <checkbox iscontrolcontainer="true" hidable="true" hidefor="pop3,nntp" id="offline.newFolder" 
+        label="&offlineNewFolder.label;" accesskey="&offlineNewFolder.accesskey;"/>
+
+    <separator class="thin"/>
+    <html iscontrolcontainer="true" hidable="true" hidefor="pop3">&offlineMsg.label;</html>
+
+    <box iscontrolcontainer="true" hidable="true" hidefor="pop3,nntp" orient="horizontal">
+        <checkbox  wsm_persist="true" id="offline.removeMsg" 
+            label="&offlineRemove.label;" accesskey="&offlineRemove.accesskey;"/> 
+        <textbox wsm_persist="true" id="offline.removeMsgMin" size="5" value="30"/>
+        <text class="label" value="&days.label;"/>
+    </box>
+
+    <box iscontrolcontainer="true" orient="horizontal" autostretch="never">
+        <checkbox  wsm_persist="true" id="offline.notDownload" 
+            label="&offlineNotDownload.label;" accesskey="&offlineNotDownload.accesskey;"/>
+        <textbox wsm_persist="true" id="offline.notDownloadMin" size="5" value="50"/> 
+        <text class="label" value="&kb.label;"/>
+    </box>
+
+    <box iscontrolcontainer="true" orient="horizontal" autostretch="never">
+        <checkbox wsm_persist="true" id="offline.compactFolder" 
+            label="&offlineCompact.label;" accesskey="&offlineCompact.accesskey;"/> 
+        <textbox wsm_persist="true" id="offline.compactFolderMin" size="5" value="100"/>
+        <text class="label" value="&kb.label;"/>
+    </box>
+
+    <checkbox iscontrolcontainer="true" hidable="true" hidefor="pop3,imap" 
+         wsm_persist="true" id="nntp.downloadUnread" label="&nntpDownloadUnread.label;" accesskey="&nntpDownloadUnread.accesskey;"/>
+    <box iscontrolcontainer="true" hidable="true" hidefor="pop3,imap" orient="horizontal" autostretch="never">
+        <checkbox wsm_persist="true" id="nntp.downloadMsg" label="&nntpDownloadMsg.label;" accesskey="&nntpDownloadMsg.accesskey;"/>
+        <textbox wsm_persist="true" id="nntp.downloadMsgMin" size="5" value="30"/>
+        <text class="label" value="&daysAgo.label;"/>
+    </box>
+
+    <separator/>
+    <box orient="vertical" iscontrolcontainer="true" hidable="true" hidefor="pop3,imap"  autostretch="never">  
+    <html class="desc">&nntpCleanup.label;</html>
+
+    <radiogroup orient="vertical"  wsm_persist="true" id="nntp.keepMsg" pref="true" preftype="int" prefattribute="data">
+        <box orient="horizontal" flex="1">
+            <radio group="nntp.keepMsg" wsm_persist="true" id="nntp.keepOldMsg" data="2" label="&nntpKeepMsg.label;"/>
+            <textbox wsm_persist="true" id="nntp.keepOldMsgMin" size="5" value="30"/>
+            <text class="label" value="&days.label;"/>
+        </box>
+        <radio group="nntp.keepMsg" wsm_persist="true" id="nntp.keepAllMsg" data="1" label="&nntpKeepAll.label;"/>
+        <box orient="horizontal" flex="1">
+            <radio group="nntp.keepMsg" wsm_persist="true" id="nntp.keepNewMsg" data="3" label="&nntpKeepNew.label;"/>
+            <textbox wsm_persist="true" id="nntp.keepNewMsgMin" size="5" value="30"/>
+            <text class="label" value="&message.label;"/>
+        </box>
+    </radiogroup>
+
+    <checkbox  wsm_persist="true" id="nntp.keepUnread" label="&nntpKeepUnread.label;" checked="true"/>
+    <box orient="horizontal" flex="1">
+        <checkbox wsm_persist="true" id="nntp.removeBody" label="&nntpRemoveBody.label;"/>
+        <textbox wsm_persist="true" id="nntp.removeBodyMin" size="5" value="30"/>
+        <text class="label" value="&days.label;"/>
+    </box>
+    <separator/>
+    </box>
+
+    </titledbox>
+   
+</window>

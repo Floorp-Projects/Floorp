@@ -139,6 +139,8 @@ protected:
 	nsresult createSubfoldersHaveUnreadMessagesNode(nsIMsgFolder *folder, nsIRDFNode **target);
   nsresult createFolderNoSelectNode(nsIMsgFolder *folder,
                                     nsIRDFNode **target);
+    nsresult createFolderSynchronizeNode(nsIMsgFolder *folder, nsIRDFNode **target);
+    nsresult createFolderSyncDisabledNode(nsIMsgFolder *folder, nsIRDFNode **target);
 
 	nsresult createFolderChildNode(nsIMsgFolder *folder, nsIRDFNode **target);
 
@@ -207,6 +209,8 @@ protected:
   static nsIRDFResource* kNC_NewMessages;
   static nsIRDFResource* kNC_SubfoldersHaveUnreadMessages;
   static nsIRDFResource* kNC_NoSelect;
+  static nsIRDFResource* kNC_Synchronize;
+  static nsIRDFResource* kNC_SyncDisabled;
 
   // commands
   static nsIRDFResource* kNC_Delete;

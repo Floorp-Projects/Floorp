@@ -17,6 +17,7 @@
    - Rights Reserved.
    - 
    - Contributor(s): David Bienvenu          <bienvenu@netscape.com>
+					 Mohan Bhamidipati       <mohanb@netscape.com>
   --> 
 
 <!ENTITY folderProps.windowtitle.label  "Properties">
@@ -29,6 +30,16 @@
 <!ENTITY folderCharsetTab.label       "Character coding">
 <!ENTITY folderCharsetOverride.label  "Apply default to all messages (ignore charset specified by MIME header)">
 <!ENTITY folderCharsetTab.accesskey   "c">
+
+<!ENTITY folderOfflineTab.label                             "Offline">
+<!ENTITY folderOfflineTab.accesskey                         "o">
+
+<!ENTITY offlineFolder.check.label                          "Select this folder for offline use">
+<!ENTITY offlineFolder.button.label                         "Download Now">
+
+<!ENTITY selectofflineNewsgroup.check.label                 "Select this newsgroup for offline use">
+<!ENTITY UseDefaultofflineNewsgroup.check.label             "Use the default from account settings ">
+<!ENTITY offlineNewsgroup.button.label                      "Download Now">
 
 <!ENTITY folderProps.information.label  "Information:">
 <!ENTITY folderProps.name.label         "Name:">

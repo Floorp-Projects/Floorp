@@ -229,6 +229,7 @@ pref("image.animation_mode",                "normal");
 
 pref("offline.startup_state",            0);
 pref("offline.send.unsent_messages",            0);
+pref("offline.download.download_messages",  0);
 pref("offline.prompt_synch_on_exit",            true);
 pref("offline.news.download.use_days",          0);
 

@@ -75,6 +75,8 @@ CHROME_CONTENT = \
 	.\smtpEditOverlay.xul \
 	.\smtpEditOverlay.js \
 	.\mailPrefsOverlay.xul \
+      .\am-offline.xul \
+      .\am-offline.js \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

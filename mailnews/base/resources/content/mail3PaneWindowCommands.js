@@ -242,6 +242,7 @@ var DefaultController =
 			case "cmd_sortByThread":
       case "cmd_downloadFlagged":
       case "cmd_downloadSelected":
+	  case "cmd_settingsOffline":
       case "cmd_toggleWorkOffline":
       case "cmd_synchronizeOffline":
       case "cmd_close":
@@ -340,7 +341,6 @@ var DefaultController =
       case "cmd_previousMsg":
       case "cmd_previousUnreadMsg":
         return MailAreaHasFocus() && IsViewNavigationItemEnabled();
-      case "cmd_downloadSelected":
       case "button_mark":
       case "cmd_markAsRead":
         if(!MailAreaHasFocus())
@@ -348,8 +348,6 @@ var DefaultController =
         else
           return(GetNumSelectedMessages() > 0);
       case "cmd_markAllRead":
-      case "cmd_downloadFlagged":
-        return(MailAreaHasFocus() && IsFolderSelected());
       case "cmd_find":
       case "cmd_findAgain":
         return IsFindEnabled();
@@ -391,7 +389,13 @@ var DefaultController =
         return IsFolderCharsetEnabled();
       case "cmd_close":
       case "cmd_toggleWorkOffline":
+                return true;
+            case "cmd_downloadFlagged":
+				return(MailAreaHasFocus() && IsFolderSelected() && CheckOnline());
+            case "cmd_downloadSelected":
+                return(MailAreaHasFocus() && IsFolderSelected() && CheckOnline());
       case "cmd_synchronizeOffline":
+            case "cmd_settingsOffline":
         return true;
             case "cmd_selectFlagged":
                 // disable select flagged until I finish the code in nsMsgDBView.cpp
@@ -554,24 +558,27 @@ var DefaultController =
 			case "cmd_markAsFlagged":
 				MsgMarkAsFlagged(null);
 				return;
-      case "cmd_downloadFlagged":
-        MsgDownloadFlagged();
-        return;
-      case "cmd_downloadSelected":
-        MsgDownloadSelected();
-        return;
 			case "cmd_emptyTrash":
 				MsgEmptyTrash();
 				return;
 			case "cmd_compactFolder":
 				MsgCompactFolder(true);
 				return;
+            case "cmd_downloadFlagged":
+                MsgDownloadFlagged();
+                break;
+            case "cmd_downloadSelected":
+                MsgDownloadSelected();
+                break;
       case "cmd_toggleWorkOffline":
         MsgToggleWorkOffline();
-        return;
+                break;
       case "cmd_synchronizeOffline":
         MsgSynchronizeOffline();
         return;
+            case "cmd_settingsOffline":
+                MsgSettingsOffline();
+                break;
             case "cmd_selectThread":
                 gDBView.doCommand(nsMsgViewCommandType.selectThread);
                 break;
@@ -1093,3 +1100,10 @@ function is_collapsed(element)
   return (element.getAttribute('state') == 'collapsed');
 }
 
+function CheckOnline()
+{
+  var ioService = nsJSComponentManager.getServiceByID("{9ac9e770-18bc-11d3-9337-00104ba0fd40}", "nsIIOService");
+  if(ioService.offline) return false;
+  else return true;
+	
+}

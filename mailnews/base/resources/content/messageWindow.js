@@ -439,9 +439,11 @@ var MessageWindowController =
 			case "cmd_markAsFlagged":
       case "button_file":
 			case "cmd_file":
-      case "cmd_downloadFlagged":
       case "cmd_toggleWorkOffline":
       case "cmd_synchronizeOffline":
+			case "cmd_downloadFlagged":
+			case "cmd_downloadSelected":
+			case "cmd_settingsOffline":
 			case "cmd_nextMsg":
       case "button_next":
 			case "cmd_nextUnreadMsg":
@@ -515,8 +517,12 @@ var MessageWindowController =
 				return IsGetNewMessagesEnabled();
 			case "cmd_getNextNMessages":
 				return IsGetNextNMessagesEnabled();
-      case "cmd_synchronizeOffline":
       case "cmd_toggleWorkOffline":
+			case "cmd_synchronizeOffline":
+			case "cmd_downloadFlagged":
+			case "cmd_downloadSelected":
+			case "cmd_settingsOffline":
+				return true;
 			case "cmd_close":
 			case "cmd_nextMsg":
       case "button_next":
@@ -631,6 +637,9 @@ var MessageWindowController =
       case "cmd_synchronizeOffline":
         MsgSynchronizeOffline();
         return;
+			case "cmd_settingsOffline":
+				MsgSettingsOffline();
+				return;
 			case "cmd_nextUnreadMsg":
         performNavigation(nsMsgNavigationType.nextUnreadMessage);
 				break;
