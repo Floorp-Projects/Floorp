@@ -942,8 +942,8 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
 				AddFirstName(cardRow, pUTF8Str);
 				PR_FREEIF(pUTF8Str);
 			}
-			PR_FREEIF(pUnicodeStr);
 		}
+		PR_FREEIF(pUnicodeStr);
 		card->GetLastName(&pUnicodeStr);
 		unicharLength = nsCRT::strlen(pUnicodeStr);
 		if (pUnicodeStr && unicharLength)
@@ -954,8 +954,8 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
 				AddLastName(cardRow, pUTF8Str);
 				PR_FREEIF(pUTF8Str);
 			}
-			PR_FREEIF(pUnicodeStr);
 		}
+		PR_FREEIF(pUnicodeStr);
 		card->GetDisplayName(&pUnicodeStr);
 		unicharLength = nsCRT::strlen(pUnicodeStr);
 		if (pUnicodeStr && unicharLength)
@@ -966,8 +966,8 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
 				AddDisplayName(cardRow, pUTF8Str);
 				PR_FREEIF(pUTF8Str);
 			}
-			PR_FREEIF(pUnicodeStr);
 		}
+		PR_FREEIF(pUnicodeStr);
 		card->GetNickName(&pUnicodeStr);
 		unicharLength = nsCRT::strlen(pUnicodeStr);
 		if (pUnicodeStr && unicharLength)
@@ -978,8 +978,8 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
 				AddNickName(cardRow, pUTF8Str);
 				PR_FREEIF(pUTF8Str);
 			}
-			PR_FREEIF(pUnicodeStr);
 		}
+		PR_FREEIF(pUnicodeStr);
 		card->GetPrimaryEmail(&pUnicodeStr);
 		unicharLength = nsCRT::strlen(pUnicodeStr);
 		if (pUnicodeStr && unicharLength)
@@ -990,8 +990,8 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
 				AddPrimaryEmail(cardRow, pUTF8Str);
 				PR_FREEIF(pUTF8Str);
 			}
-			PR_FREEIF(pUnicodeStr);
 		}
+		PR_FREEIF(pUnicodeStr);
 		card->GetSecondEmail(&pUnicodeStr);
 		unicharLength = nsCRT::strlen(pUnicodeStr);
 		if (pUnicodeStr && unicharLength)
@@ -1002,8 +1002,8 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
 				Add2ndEmail(cardRow, pUTF8Str);
 				PR_FREEIF(pUTF8Str);
 			}
-			PR_FREEIF(pUnicodeStr);
 		}
+		PR_FREEIF(pUnicodeStr);
 		card->GetWorkPhone(&pUnicodeStr);
 		unicharLength = nsCRT::strlen(pUnicodeStr);
 		if (pUnicodeStr && unicharLength)
@@ -1014,8 +1014,8 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
 				AddWorkPhone(cardRow, pUTF8Str);
 				PR_FREEIF(pUTF8Str);
 			}
-			PR_FREEIF(pUnicodeStr);
 		}
+		PR_FREEIF(pUnicodeStr);
 		card->GetHomePhone(&pUnicodeStr);
 		unicharLength = nsCRT::strlen(pUnicodeStr);
 		if (pUnicodeStr && unicharLength)
@@ -1026,8 +1026,8 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
 				AddHomePhone(cardRow, pUTF8Str);
 				PR_FREEIF(pUTF8Str);
 			}
-			PR_FREEIF(pUnicodeStr);
 		}
+		PR_FREEIF(pUnicodeStr);
 		card->GetFaxNumber(&pUnicodeStr);
 		unicharLength = nsCRT::strlen(pUnicodeStr);
 		if (pUnicodeStr && unicharLength)
@@ -1038,8 +1038,8 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
 				AddFaxNumber(cardRow, pUTF8Str);
 				PR_FREEIF(pUTF8Str);
 			}
-			PR_FREEIF(pUnicodeStr);
 		}
+		PR_FREEIF(pUnicodeStr);
 		card->GetPagerNumber(&pUnicodeStr);
 		unicharLength = nsCRT::strlen(pUnicodeStr);
 		if (pUnicodeStr && unicharLength)
@@ -1050,8 +1050,8 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
 				AddPagerNumber(cardRow,pUTF8Str);
 				PR_FREEIF(pUTF8Str);
 			}
-			PR_FREEIF(pUnicodeStr);
 		}
+		PR_FREEIF(pUnicodeStr);
 		card->GetCellularNumber(&pUnicodeStr);
 		unicharLength = nsCRT::strlen(pUnicodeStr);
 		if (pUnicodeStr && unicharLength)
@@ -1062,8 +1062,8 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
 				AddCellularNumber(cardRow,pUTF8Str);
 				PR_FREEIF(pUTF8Str);
 			}
-			PR_FREEIF(pUnicodeStr);
 		}
+		PR_FREEIF(pUnicodeStr);
 		card->GetHomeAddress(&pUnicodeStr);
 		unicharLength = nsCRT::strlen(pUnicodeStr);
 		if (pUnicodeStr && unicharLength)
@@ -1074,8 +1074,8 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
 				AddHomeAddress(cardRow, pUTF8Str);
 				PR_FREEIF(pUTF8Str);
 			}
-			PR_FREEIF(pUnicodeStr);
 		}
+		PR_FREEIF(pUnicodeStr);
 		card->GetHomeAddress2(&pUnicodeStr); 
 		unicharLength = nsCRT::strlen(pUnicodeStr);
 		if (pUnicodeStr && unicharLength)
@@ -1086,8 +1086,8 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
 				AddHomeAddress2(cardRow, pUTF8Str);
 				PR_FREEIF(pUTF8Str);
 			}
-			PR_FREEIF(pUnicodeStr);
 		}
+		PR_FREEIF(pUnicodeStr);
 		card->GetHomeCity(&pUnicodeStr); 
 		unicharLength = nsCRT::strlen(pUnicodeStr);
 		if (pUnicodeStr && unicharLength)
@@ -1098,8 +1098,8 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
 				AddHomeCity(cardRow, pUTF8Str);
 				PR_FREEIF(pUTF8Str);
 			}
-			PR_FREEIF(pUnicodeStr);
 		}
+		PR_FREEIF(pUnicodeStr);
 		card->GetHomeState(&pUnicodeStr); 
 		unicharLength = nsCRT::strlen(pUnicodeStr);
 		if (pUnicodeStr && unicharLength)
@@ -1110,8 +1110,8 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
 				AddHomeState(cardRow, pUTF8Str);
 				PR_FREEIF(pUTF8Str);
 			}
-			PR_FREEIF(pUnicodeStr);
 		}
+		PR_FREEIF(pUnicodeStr);
 		card->GetHomeZipCode(&pUnicodeStr); 
 		unicharLength = nsCRT::strlen(pUnicodeStr);
 		if (pUnicodeStr && unicharLength)
@@ -1122,8 +1122,8 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
 				AddHomeZipCode(cardRow, pUTF8Str);
 				PR_FREEIF(pUTF8Str);
 			}
-			PR_FREEIF(pUnicodeStr);
 		}
+		PR_FREEIF(pUnicodeStr);
 		card->GetHomeCountry(&pUnicodeStr); 
 		unicharLength = nsCRT::strlen(pUnicodeStr);
 		if (pUnicodeStr && unicharLength)
@@ -1134,8 +1134,8 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
 				AddHomeCountry(cardRow, pUTF8Str);
 				PR_FREEIF(pUTF8Str);
 			}
-			PR_FREEIF(pUnicodeStr);
 		}
+		PR_FREEIF(pUnicodeStr);
 		card->GetWorkAddress(&pUnicodeStr);  
 		unicharLength = nsCRT::strlen(pUnicodeStr);
 		if (pUnicodeStr && unicharLength)
@@ -1146,8 +1146,8 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
 				AddWorkAddress(cardRow, pUTF8Str);
 				PR_FREEIF(pUTF8Str);
 			}
-			PR_FREEIF(pUnicodeStr);
 		}
+		PR_FREEIF(pUnicodeStr);
 		card->GetWorkAddress2(&pUnicodeStr); 
 		unicharLength = nsCRT::strlen(pUnicodeStr);
 		if (pUnicodeStr && unicharLength)
@@ -1158,8 +1158,8 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
 				AddWorkAddress2(cardRow, pUTF8Str);
 				PR_FREEIF(pUTF8Str);
 			}
-			PR_FREEIF(pUnicodeStr);
 		}
+		PR_FREEIF(pUnicodeStr);
 		card->GetWorkCity(&pUnicodeStr); 
 		unicharLength = nsCRT::strlen(pUnicodeStr);
 		if (pUnicodeStr && unicharLength)
@@ -1170,8 +1170,8 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
 				AddWorkCity(cardRow, pUTF8Str);
 				PR_FREEIF(pUTF8Str);
 			}
-			PR_FREEIF(pUnicodeStr);
 		}
+		PR_FREEIF(pUnicodeStr);
 		card->GetWorkState(&pUnicodeStr); 
 		unicharLength = nsCRT::strlen(pUnicodeStr);
 		if (pUnicodeStr && unicharLength)
@@ -1182,8 +1182,8 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
 				AddWorkState(cardRow, pUTF8Str);
 				PR_FREEIF(pUTF8Str);
 			}
-			PR_FREEIF(pUnicodeStr);
 		}
+		PR_FREEIF(pUnicodeStr);
 		card->GetWorkZipCode(&pUnicodeStr); 
 		unicharLength = nsCRT::strlen(pUnicodeStr);
 		if (pUnicodeStr && unicharLength)
@@ -1194,8 +1194,8 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
 				AddWorkZipCode(cardRow, pUTF8Str);
 				PR_FREEIF(pUTF8Str);
 			}
-			PR_FREEIF(pUnicodeStr);
 		}
+		PR_FREEIF(pUnicodeStr);
 		card->GetWorkCountry(&pUnicodeStr); 
 		unicharLength = nsCRT::strlen(pUnicodeStr);
 		if (pUnicodeStr && unicharLength)
@@ -1206,8 +1206,8 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
 				AddWorkCountry(cardRow, pUTF8Str);
 				PR_FREEIF(pUTF8Str);
 			}
-			PR_FREEIF(pUnicodeStr);
 		}
+		PR_FREEIF(pUnicodeStr);
 		card->GetJobTitle(&pUnicodeStr); 
 		unicharLength = nsCRT::strlen(pUnicodeStr);
 		if (pUnicodeStr && unicharLength)
@@ -1218,8 +1218,8 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
 				AddJobTitle(cardRow, pUTF8Str);
 				PR_FREEIF(pUTF8Str);
 			}
-			PR_FREEIF(pUnicodeStr);
 		}
+		PR_FREEIF(pUnicodeStr);
 		card->GetDepartment(&pUnicodeStr); 
 		unicharLength = nsCRT::strlen(pUnicodeStr);
 		if (pUnicodeStr && unicharLength)
@@ -1230,8 +1230,8 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
 				AddDepartment(cardRow, pUTF8Str);
 				PR_FREEIF(pUTF8Str);
 			}
-			PR_FREEIF(pUnicodeStr);
 		}
+		PR_FREEIF(pUnicodeStr);
 		card->GetCompany(&pUnicodeStr); 
 		unicharLength = nsCRT::strlen(pUnicodeStr);
 		if (pUnicodeStr && unicharLength)
@@ -1242,8 +1242,8 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
 				AddCompany(cardRow, pUTF8Str);
 				PR_FREEIF(pUTF8Str);
 			}
-			PR_FREEIF(pUnicodeStr);
 		}
+		PR_FREEIF(pUnicodeStr);
 		card->GetWebPage1(&pUnicodeStr); 
 		unicharLength = nsCRT::strlen(pUnicodeStr);
 		if (pUnicodeStr && unicharLength)
@@ -1254,8 +1254,8 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
 				AddWebPage1(cardRow,pUTF8Str);
 				PR_FREEIF(pUTF8Str);
 			}
-			PR_FREEIF(pUnicodeStr);
 		}
+		PR_FREEIF(pUnicodeStr);
 		card->GetWebPage2(&pUnicodeStr); 
 		unicharLength = nsCRT::strlen(pUnicodeStr);
 		if (pUnicodeStr && unicharLength)
@@ -1266,8 +1266,8 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
 				AddWebPage2(cardRow, pUTF8Str);
 				PR_FREEIF(pUTF8Str);
 			}
-			PR_FREEIF(pUnicodeStr);
 		}
+		PR_FREEIF(pUnicodeStr);
 		card->GetBirthYear(&pUnicodeStr); 
 		unicharLength = nsCRT::strlen(pUnicodeStr);
 		if (pUnicodeStr && unicharLength)
@@ -1278,8 +1278,8 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
 				AddBirthYear(cardRow, pUTF8Str);
 				PR_FREEIF(pUTF8Str);
 			}
-			PR_FREEIF(pUnicodeStr);
 		}
+		PR_FREEIF(pUnicodeStr);
 		card->GetBirthMonth(&pUnicodeStr); 
 		unicharLength = nsCRT::strlen(pUnicodeStr);
 		if (pUnicodeStr && unicharLength)
@@ -1290,8 +1290,8 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
 				AddBirthMonth(cardRow, pUTF8Str);
 				PR_FREEIF(pUTF8Str);
 			}
-			PR_FREEIF(pUnicodeStr);
 		}
+		PR_FREEIF(pUnicodeStr);
 		card->GetBirthDay(&pUnicodeStr); 
 		unicharLength = nsCRT::strlen(pUnicodeStr);
 		if (pUnicodeStr && unicharLength)
@@ -1302,8 +1302,8 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
 				AddBirthDay(cardRow, pUTF8Str);
 				PR_FREEIF(pUTF8Str);
 			}
-			PR_FREEIF(pUnicodeStr);
 		}
+		PR_FREEIF(pUnicodeStr);
 		card->GetCustom1(&pUnicodeStr); 
 		unicharLength = nsCRT::strlen(pUnicodeStr);
 		if (pUnicodeStr && unicharLength)
@@ -1314,8 +1314,8 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
 				AddCustom1(cardRow,pUTF8Str);
 				PR_FREEIF(pUTF8Str);
 			}
-			PR_FREEIF(pUnicodeStr);
 		}
+		PR_FREEIF(pUnicodeStr);
 		card->GetCustom2(&pUnicodeStr); 
 		unicharLength = nsCRT::strlen(pUnicodeStr);
 		if (pUnicodeStr && unicharLength)
@@ -1326,8 +1326,8 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
 				AddCustom2(cardRow, pUTF8Str);
 				PR_FREEIF(pUTF8Str);
 			}
-			PR_FREEIF(pUnicodeStr);
 		}
+		PR_FREEIF(pUnicodeStr);
 		card->GetCustom3(&pUnicodeStr); 
 		unicharLength = nsCRT::strlen(pUnicodeStr);
 		if (pUnicodeStr && unicharLength)
@@ -1338,8 +1338,8 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
 				AddCustom3(cardRow, pUTF8Str);
 				PR_FREEIF(pUTF8Str);
 			}
-			PR_FREEIF(pUnicodeStr);
 		}
+		PR_FREEIF(pUnicodeStr);
 		card->GetCustom4(&pUnicodeStr); 
 		unicharLength = nsCRT::strlen(pUnicodeStr);
 		if (pUnicodeStr && unicharLength)
@@ -1350,8 +1350,8 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
 				AddCustom4(cardRow, pUTF8Str);
 				PR_FREEIF(pUTF8Str);
 			}
-			PR_FREEIF(pUnicodeStr);
 		}
+		PR_FREEIF(pUnicodeStr);
 		card->GetNotes(&pUnicodeStr); 
 		unicharLength = nsCRT::strlen(pUnicodeStr);
 		if (pUnicodeStr && unicharLength)
@@ -1362,8 +1362,8 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
 				AddNotes(cardRow, pUTF8Str);
 				PR_FREEIF(pUTF8Str);
 			}
-			PR_FREEIF(pUnicodeStr);
 		}
+		PR_FREEIF(pUnicodeStr);
 	}
 	return NS_OK;
 }
