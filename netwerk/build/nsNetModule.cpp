@@ -148,6 +148,11 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsResumableEntityID)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+#include "nsIDNService.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsIDNService)
+
+///////////////////////////////////////////////////////////////////////////////
+
 #include "nsFileChannel.h"
 #include "nsFileProtocolHandler.h"
 #include "nsDataHandler.h"
@@ -516,6 +521,10 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       NS_DNSSERVICE_CID,
       "@mozilla.org/network/dns-service;1",
       nsDNSService::Create },
+    { NS_IDNSERVICE_CLASSNAME,
+      NS_IDNSERVICE_CID,
+      NS_IDNSERVICE_CONTRACTID,
+      nsIDNServiceConstructor },
     { NS_SIMPLEURI_CLASSNAME,
       NS_SIMPLEURI_CID,
       NS_SIMPLEURI_CONTRACTID,

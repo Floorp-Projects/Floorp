@@ -33,7 +33,8 @@ REQUIRES	= xpcom \
 		  pref \
 		  $(NULL)
 
-CPPSRCS		= nsDnsService.cpp
+CPPSRCS   = nsDnsService.cpp \
+            nsIDNService.cpp
 
 
 # we don't want the shared lib, but we want to force the creation of a
