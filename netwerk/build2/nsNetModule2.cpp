@@ -35,44 +35,65 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "necko-config.h"
 #include "nsIGenericFactory.h"
 
+#ifdef NECKO_PROTOCOL_gopher
 #include "nsGopherHandler.h"
+#endif
+
+#ifdef NECKO_PROTOCOL_viewsource
 #include "nsViewSourceHandler.h"
+#endif
+
+#ifdef NECKO_PROTOCOL_data
 #include "nsDataHandler.h"
+#endif
+
+#ifdef NECKO_PROTOCOL_keyword
 #include "nsKeywordProtocolHandler.h"
+#endif
+
 #include "nsNetCID.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Module implementation for the net library
 
 static const nsModuleComponentInfo gNetModuleInfo[] = {
+#ifdef NECKO_PROTOCOL_gopher
     //gopher:
     { "The Gopher Protocol Handler", 
       NS_GOPHERHANDLER_CID,
       NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "gopher",
       nsGopherHandler::Create
     },
+#endif
 
+#ifdef NECKO_PROTOCOL_data
     // from netwerk/protocol/data:
     { "Data Protocol Handler", 
       NS_DATAPROTOCOLHANDLER_CID,
       NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "data", 
       nsDataHandler::Create},
+#endif
 
+#ifdef NECKO_PROTOCOL_keyword
     // from netwerk/protocol/keyword:
     { "The Keyword Protocol Handler", 
       NS_KEYWORDPROTOCOLHANDLER_CID,
       NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "keyword",
       nsKeywordProtocolHandler::Create
     },
+#endif
     
+#ifdef NECKO_PROTOCOL_viewsource
     // from netwerk/protocol/viewsource:
     { "The ViewSource Protocol Handler", 
       NS_VIEWSOURCEHANDLER_CID,
       NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "view-source",
       nsViewSourceHandler::Create
     }
+#endif
 };
 
 NS_IMPL_NSGETMODULE(necko_secondary_protocols, gNetModuleInfo)

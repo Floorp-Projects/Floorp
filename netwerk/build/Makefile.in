@@ -51,6 +51,9 @@ REQUIRES	= xpcom \
 CPPSRCS		= nsNetModule.cpp
 EXPORTS		= nsNetCID.h
 
+# core necko protocols (about:blank is mandatory)
+PROTOCOLS = $(filter file ftp http jar res,$(NECKO_PROTOCOLS))
+
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/$(LIB_PREFIX)neckobase_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)neckodns_s.$(LIB_SUFFIX) \
@@ -58,13 +61,10 @@ SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/$(LIB_PREFIX)nkconv_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)nkcnvts_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)nkmime_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)nkhttp_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)nkfile_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)nkftp_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)nkjar_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)nkres_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)nkabout_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)nkcache_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)nkabout_s.$(LIB_SUFFIX) \
+		$(foreach d,$(PROTOCOLS), \
+			$(DIST)/lib/$(LIB_PREFIX)nk${d}_s.$(LIB_SUFFIX)) \
 		$(NULL)
 
 LOCAL_INCLUDES	= \
@@ -75,12 +75,9 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../streamconv/converters \
 		-I$(srcdir)/../mime/src \
 		-I$(srcdir)/../cache/src \
-		-I$(srcdir)/../protocol/http/src \
-		-I$(srcdir)/../protocol/file/src \
-		-I$(srcdir)/../protocol/ftp/src \
-		-I$(srcdir)/../protocol/jar/src \
-		-I$(srcdir)/../protocol/res/src \
 		-I$(srcdir)/../protocol/about/src \
+		$(foreach d,$(PROTOCOLS), \
+			-I$(srcdir)/../protocol/${d}/src) \
 		$(NULL)
 
 ifdef MOZ_PERF_METRICS
@@ -108,4 +105,3 @@ ifdef GNU_CC
 OS_LIBS		+= -lws2_32
 endif
 endif
-
