@@ -35,6 +35,8 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#ifndef nsURIHashKey_h__
+#define nsURIHashKey_h__
 
 #include "pldhash.h"
 #include "nsCOMPtr.h"
@@ -79,3 +81,5 @@ public:
 private:
     nsCOMPtr<nsIURI> mKey;
 };
+
+#endif // nsURIHashKey_h__
