@@ -20,6 +20,7 @@
  * Contributor(s): 
  *   Peter Hartshorn <peter@igelaus.com.au>
  *   Ken Faulkner <faulkner@igelaus.com.au>
+ *   B.J. Rossiter <bj@igelaus.com.au>
  */
 
 #include "nsWindow.h"
@@ -135,6 +136,15 @@ nsWindow::UpdateIdle (void *data)
     }
     delete old_queue;
   }
+}
+
+// Just raises the window.
+// There should probably be checks on this.
+// FIXME KenF
+NS_IMETHODIMP nsWindow::GetAttention(void)
+{
+  XRaiseWindow(mDisplay, mBaseWindow);
+  return NS_OK;
 }
 
 void
@@ -551,6 +561,42 @@ NS_IMETHODIMP nsWindow::Update()
       }
     } while (NS_SUCCEEDED(children->Next()));
   }
+  return NS_OK;
+}
+
+
+/* This called when a popup is generated so that if a mouse down event occurs,
+ * the passed listener can be informed (see nsWidget::HandlePopup). It is also
+ * called with aDoCapture == PR_FALSE when a popup is no longer visible
+ */
+NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
+																						PRBool aDoCapture,
+																						PRBool aConsumeRollupEvent)
+{
+	if (aDoCapture) {
+		/*if (mSuperWin) {*/
+			
+			// Gtk also has functionality to handle "grabbing"
+		
+			//fprintf(stderr, "Received listener from generated popup\n");
+			gRollupListener = aListener;
+			
+			// Get assertion error:
+			// ###!!! ASSERTION: Did you know you were calling |NS_GetWeakReference()| on 
+			// something that doesn't support weak references?: 'factoryPtr', file 
+			// nsWeakReference.cpp, line 55
+			//gRollupWidget = getter_AddRefs(NS_GetWeakReference(NS_STATIC_CAST(nsIWidget*,this)));
+			gRollupWidget = NS_STATIC_CAST(nsIWidget*,this);
+			
+			// GTK does not seem to use this but other window toolkits do
+			gRollupConsumeRollupEvent = PR_TRUE;
+		//}
+	}else{
+		// Gtk also has functionality to handle "ungrabbing"
+					
+		gRollupListener = nsnull;
+		gRollupWidget = nsnull;
+	}
   return NS_OK;
 }
 

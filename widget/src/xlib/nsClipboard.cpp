@@ -20,6 +20,7 @@
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Peter Hartshorn <peter@igelaus.com.au>
+ *   Ken Faulkner ><faulkner@igelaus.com.au>
  */
 
 /* TODO:
@@ -158,6 +159,72 @@ nsEventStatus PR_CALLBACK nsClipboard::Callback(nsGUIEvent *event) {
   return nsEventStatus_eIgnore;
 }
 
+nsITransferable *nsClipboard::GetTransferable(PRInt32 aWhichClipboard)
+{
+  nsITransferable *transferable = nsnull;
+  switch (aWhichClipboard)
+  {
+  case kGlobalClipboard:
+    transferable = mGlobalTransferable;
+    break;
+  case kSelectionClipboard:
+    transferable = mSelectionTransferable;
+    break;
+  }
+  NS_IF_ADDREF(transferable);
+  return transferable;
+}
+
+// Ripped from GTK. Does the writing to the appropriate transferable.
+// Does *some* flavour stuff, but not all!!!
+// FIXME: Needs to be completed.
+NS_IMETHODIMP nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
+{
+  // bomb out if we cannot get ownership.
+  if (XSetSelectionOwner(sDisplay, XA_PRIMARY, sWindow, CurrentTime))
+    if (XGetSelectionOwner(sDisplay, XA_PRIMARY) != sWindow) {
+      fprintf(stderr, "nsClipboard::SetData: Cannot get ownership\n");
+      return NS_ERROR_FAILURE;
+    }
+  
+  // get flavor list that includes all flavors that can be written (including ones 
+  // obtained through conversion)
+  nsCOMPtr<nsISupportsArray> flavorList;
+  nsCOMPtr<nsITransferable> transferable(getter_AddRefs(GetTransferable(aWhichClipboard)));
+
+  // make sure we have a good transferable
+  if (nsnull == transferable) {
+#ifdef DEBUG_faulkner
+    fprintf(stderr, "nsClipboard::SetNativeClipboardData(): no transferable!\n");
+#endif /* DEBUG_faulkner */
+    return NS_ERROR_FAILURE;
+  }
+
+  nsresult errCode = transferable->FlavorsTransferableCanExport ( getter_AddRefs(flavorList) );
+  if ( NS_FAILED(errCode) )
+    return NS_ERROR_FAILURE;
+
+  PRUint32 cnt;
+  flavorList->Count(&cnt);
+  for ( PRUint32 i=0; i<cnt; ++i )
+  {
+    nsCOMPtr<nsISupports> genericFlavor;
+    flavorList->GetElementAt ( i, getter_AddRefs(genericFlavor) );
+    nsCOMPtr<nsISupportsString> currentFlavor ( do_QueryInterface(genericFlavor) );
+    if ( currentFlavor ) {
+      nsXPIDLCString flavorStr;
+      currentFlavor->ToString(getter_Copies(flavorStr));
+
+      // FIXME Do we need to register this in XLIB? KenF
+      // add these types as selection targets
+      //      RegisterFormat(flavorStr, selectionAtom);
+    }
+  }
+
+  mIgnoreEmptyNotification = PR_FALSE;
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsClipboard::SetData(nsITransferable *aTransferable,
                                    nsIClipboardOwner *anOwner,
                                    PRInt32 aWhichClipboard) 
@@ -167,12 +234,37 @@ NS_IMETHODIMP nsClipboard::SetData(nsITransferable *aTransferable,
       fprintf(stderr, "nsClipboard::SetData: Cannot get ownership\n");
       return NS_ERROR_FAILURE;
     }
-  mTransferable = aTransferable;
-  return NS_OK;
+
+  // Check from GTK. (must double check this!!)
+  if ((aTransferable == mGlobalTransferable.get() &&
+       anOwner == mGlobalOwner.get() &&
+       aWhichClipboard == kGlobalClipboard ) ||
+      (aTransferable == mSelectionTransferable.get() &&
+       anOwner == mSelectionOwner.get() &&
+       aWhichClipboard == kSelectionClipboard)
+      )
+    {
+      return NS_OK;
+    }
+  
+  EmptyClipboard(aWhichClipboard);
+
+  switch(aWhichClipboard) {
+  case kSelectionClipboard:
+    mSelectionOwner = anOwner;
+    mSelectionTransferable = aTransferable;
+    break;
+  case kGlobalClipboard:
+    mGlobalOwner = anOwner;
+    mGlobalTransferable = aTransferable;
+    break;
+  }
+  
+  return SetNativeClipboardData(aWhichClipboard);
 }
 
 NS_IMETHODIMP nsClipboard::GetData(nsITransferable *aTransferable,
-                                   PRInt32 aWhcihClipboard)
+                                   PRInt32 aWhichClipboard)
 {
   unsigned char *data = 0;
   unsigned long bytes = 0;
@@ -185,6 +277,10 @@ NS_IMETHODIMP nsClipboard::GetData(nsITransferable *aTransferable,
     return NS_ERROR_FAILURE;
   }
 
+
+  // Get which transferable we should use.
+  mTransferable = GetTransferable(aWhichClipboard);
+  
   // If we currently own the selection, we will handle the paste 
   // internally, otherwise get the data from the X server
 
@@ -246,6 +342,8 @@ NS_IMETHODIMP nsClipboard::GetData(nsITransferable *aTransferable,
                                                           &testing,
                                                           &length);
 
+    // FIXME Just leave as 2 for now.... but this should change... KenF
+    length = length * 2;
     nsCOMPtr<nsISupports> genDataWrapper;
     nsPrimitiveHelpers::CreatePrimitiveForData("text/unicode",
                                                testing, length,
@@ -253,14 +351,35 @@ NS_IMETHODIMP nsClipboard::GetData(nsITransferable *aTransferable,
 
     aTransferable->SetTransferData("text/unicode",
                                    genDataWrapper,
-                                   bytes);
+                                   length);
     free(data);
     free(testing);
   }
   return NS_OK;
 }
 
-NS_IMETHODIMP nsClipboard::EmptyClipboard(PRInt32 aWhichClipboard) {
+NS_IMETHODIMP nsClipboard::EmptyClipboard(PRInt32 aWhichClipboard) 
+{
+  if (mIgnoreEmptyNotification) {
+    return NS_OK;
+  }
+
+  switch(aWhichClipboard) {
+  case kSelectionClipboard:
+    if (mSelectionOwner) {
+      mSelectionOwner->LosingOwnership(mSelectionTransferable);
+      mSelectionOwner = nsnull;
+    }
+    mSelectionTransferable = nsnull;
+    break;
+  case kGlobalClipboard:
+    if (mGlobalOwner) {
+      mGlobalOwner->LosingOwnership(mGlobalTransferable);
+      mGlobalOwner = nsnull;
+    }
+    mGlobalTransferable = nsnull;
+    break;
+  }
   return NS_OK;
 }
 

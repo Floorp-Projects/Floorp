@@ -20,6 +20,7 @@
  * Contributor(s): 
  *   Peter Hartshorn <peter@igelaus.com.au>
  *   Ken Faulkner <faulkner@igelaus.com.au>
+ *   B.J. Rossiter <bj@igelaus.com.au>
  */
 
 #ifndef nsWindow_h__
@@ -68,6 +69,9 @@ class nsWindow : public nsWidget
   nsWindow();
   ~nsWindow();
   static void      UpdateIdle (void *data);
+  NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener,
+																PRBool aDoCapture,
+																PRBool aConsumeRollupEvent);
   NS_IMETHOD Invalidate(PRBool aIsSynchronous);
   NS_IMETHOD Invalidate(const nsRect & aRect, PRBool aIsSynchronous);
   NS_IMETHOD           InvalidateRegion(const nsIRegion* aRegion, PRBool aIsSynchronous);
@@ -90,6 +94,7 @@ class nsWindow : public nsWidget
 
   NS_IMETHOD SetFocus(void);
   virtual  PRBool OnExpose(nsPaintEvent &event);
+  NS_IMETHOD GetAttention(void);
   
 protected:
   virtual void DestroyNative(void);

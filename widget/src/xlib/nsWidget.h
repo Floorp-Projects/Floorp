@@ -20,6 +20,7 @@
  * Contributor(s): 
  *   Ken Faulkner <faulkner@igelaus.com.au>
  *   Quy Tonthat <quy@igelaus.com.au>
+ *   B.J. Rossiter <bj@igelaus.com.au>
  */
 
 #ifndef nsWidget_h__
@@ -34,6 +35,7 @@
 #include "prlog.h"
 #include "nsIRegion.h"
 #include "nsIXlibWindowService.h"
+#include "nsIRollupListener.h"
 
 #ifdef DEBUG_blizzard
 #define XLIB_WIDGET_NOISY
@@ -153,6 +155,10 @@ public:
   // thing. KenF
   void *CheckParent(long ThisWindow);
 
+	// Deal with rollup for popups
+	PRBool IsMouseInWindow(nsIWidget* inWidget, PRInt32 inMouseX, PRInt32 inMouseY);
+	PRBool HandlePopup( PRInt32 inMouseX, PRInt32 inMouseY);
+
 protected:
 
   nsCOMPtr<nsIRegion> mUpdateArea;
@@ -195,6 +201,7 @@ protected:
   PRUint32       mPreferredHeight;
 
   nsIWidget   *  mParentWidget;
+  Window         mParentWindow;
 
   // All widgets have at least these items.
   Display *      mDisplay;
@@ -221,6 +228,13 @@ protected:
   static       nsXlibWindowCallback   gsWindowCreateCallback;
   static       nsXlibWindowCallback   gsWindowDestroyCallback;
   static       nsXlibEventDispatcher  gsEventDispatcher;
+
+  // Variables for infomation about the current popup window and its listener
+  static nsCOMPtr<nsIRollupListener> gRollupListener;
+  static nsCOMPtr<nsIWidget> gRollupWidget;
+	//static nsWeakPtr                   gRollupWidget;
+	static PRBool	gRollupConsumeRollupEvent;
+	
 };
 
 extern PRLogModuleInfo *XlibWidgetsLM;

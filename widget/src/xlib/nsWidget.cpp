@@ -21,6 +21,7 @@
  *   Peter Hartshorn <peter@igelaus.com.au>
  *   Ken Faulkner <faulkner@igelaus.com.au>
  *   Quy Tonthat <quy@igelaus.com.au>
+ *   B.J. Rossiter <bj@igelaus.com.au>
  */
 
 #include "nsWidget.h"
@@ -35,6 +36,7 @@
 #include "nsIMenuListener.h"
 #include "nsIMouseListener.h"
 #include "nsGfxCIID.h"
+#include "nsIMenuRollup.h"
 
 #include "xlibrgb.h"
 
@@ -66,6 +68,12 @@ Atom   nsWidget::WMSaveYourself = 0;
 
 // this is the window that has the focus
 Window nsWidget::mFocusWindow = 0;
+
+// For popup handling
+nsCOMPtr<nsIRollupListener> nsWidget::gRollupListener;
+//nsWeakPtr          nsWidget::gRollupWidget;
+nsCOMPtr<nsIWidget> nsWidget::gRollupWidget;
+PRBool             nsWidget::gRollupConsumeRollupEvent = PR_FALSE;
 
 class nsWindowKey : public nsHashKey {
 protected:
@@ -196,7 +204,6 @@ NS_IMETHODIMP nsWidget::Create(nsNativeWidget aParent,
 static NS_DEFINE_IID(kWindowServiceCID,NS_XLIB_WINDOW_SERVICE_CID);
 static NS_DEFINE_IID(kWindowServiceIID,NS_XLIB_WINDOW_SERVICE_IID);
 
-/* FIXME: This is a VERY messy function. Must rewrite this!!!! */
 nsresult
 nsWidget::StandardWidgetCreate(nsIWidget *aParent,
                                const nsRect &aRect,
@@ -209,6 +216,8 @@ nsWidget::StandardWidgetCreate(nsIWidget *aParent,
 {
   unsigned long ValueMask;  
   XSetWindowAttributes SetWinAttr;  
+  unsigned long attr_mask;
+  XSetWindowAttributes attr;
   Window parent=nsnull;
 
   mDisplay = xlib_rgb_get_display();
@@ -216,80 +225,94 @@ nsWidget::StandardWidgetCreate(nsIWidget *aParent,
   mVisual = xlib_rgb_get_visual();
   mDepth = xlib_rgb_get_depth();
 
-  // Pinched from GTK. Does checking here for window type. KenF
-  nsIWidget *baseParent = (aInitData &&
-                           (aInitData->mWindowType == eWindowType_dialog ||
-                            aInitData->mWindowType == eWindowType_toplevel)) ?
-    nsnull : aParent;
-  
-  // set up the BaseWidget parts.
-  BaseCreate(baseParent, aRect, aHandleEventFunction, aContext, 
-             aAppShell, aToolkit, aInitData);
-  
-  // Keep copy of parent. Do a add here???? 
-  // Can never follow the rules properly!!!!!
-  // FIXME KenF
   mParentWidget = aParent;
+
   NS_IF_ADDREF(mParentWidget);
+
+  mBounds = aRect;
+
+  if (mBounds.width <= 0)
+    mBounds.width = 1;
+  if (mBounds.height <= 0)
+    mBounds.height = 1;
+
+  BaseCreate(mParentWidget, mBounds, aHandleEventFunction, aContext,
+             aAppShell, aToolkit, aInitData);
 
   if (aNativeParent) {
     parent = (Window)aNativeParent;
-	mListenForResizes = PR_TRUE;
+    mListenForResizes = PR_TRUE;
   } else if (aParent) {
     parent = (Window)aParent->GetNativeData(NS_NATIVE_WINDOW);
-  }
-
-  // if there's no parent, make the parent the root window.
-  //  if (parent == nsnull) {
-  if (((aInitData) && (aInitData->mWindowType == eWindowType_dialog)) || 
-      (parent == nsnull)) {
+  } else {
     parent = RootWindowOfScreen(mScreen);
+  }
+
+  if (nsnull != aInitData) {
+    mWindowType = aInitData->mWindowType;
+  }
+
+  mParentWindow = parent;
+
+  attr.bit_gravity = NorthWestGravity;
+  attr.event_mask = GetEventMask();
+  attr.background_pixel = mBackgroundPixel;
+  attr.border_pixel = mBorderPixel;
+  attr.colormap = xlib_rgb_get_cmap();
+
+  attr_mask = CWBitGravity | CWEventMask | CWBackPixel | CWBorderPixel;
+
+  if (attr.colormap)
+    attr_mask |= CWColormap;
+
+  switch (mWindowType) {
+  case eWindowType_dialog:
     mIsToplevel = PR_TRUE;
-  }
-
-  // set the bounds
-  mBounds = aRect;
-  mRequestedSize = aRect;
-
-#ifndef MOZ_MONOLITHIC_TOOLKIT
-  nsIXlibWindowService * xlibWindowService = nsnull;
-
-   nsresult rv = nsServiceManager::GetService(kWindowServiceCID,
-                                             kWindowServiceIID,
-                                             (nsISupports **)&xlibWindowService);
-
-  NS_ASSERTION(NS_SUCCEEDED(rv),"Couldn't obtain window service.");
-
-  if (NS_OK == rv && nsnull != xlibWindowService)
-  {
-    xlibWindowService->GetWindowCreateCallback(&gsWindowCreateCallback);
-    xlibWindowService->GetWindowDestroyCallback(&gsWindowDestroyCallback);
-    xlibWindowService->SetEventDispatcher((nsXlibEventDispatcher) 
-                                          nsAppShell::DispatchXEvent);
-    NS_RELEASE(xlibWindowService);
-  }
-#endif /* !MOZ_MONOLITHIC_TOOLKIT */
-
-  // call the native create function
-  CreateNative(parent, mBounds);
-
-  // Make sure a popup has the proper attributes for a popup.
-  // ie, not changed by WM, and not changed in anyway.
-  // (use of override redirect)
-  if (((aInitData) && (aInitData->mWindowType == eWindowType_popup)) || 
-      (parent == nsnull)) {
-    ValueMask = CWOverrideRedirect;
-    SetWinAttr.override_redirect = True;
-    XChangeWindowAttributes(mDisplay, mBaseWindow, ValueMask, &SetWinAttr);
     parent = RootWindowOfScreen(mScreen);
-    mIsToplevel = PR_TRUE;
-  }
-
-  // set up our wm hints if it's appropriate
-  if (mIsToplevel == PR_TRUE) {
+    mBaseWindow = XCreateWindow(mDisplay, parent, mBounds.x, mBounds.y,
+                                mBounds.width, mBounds.height, 0,
+                                mDepth, InputOutput, mVisual,
+                                attr_mask, &attr);
+    AddWindowCallback(mBaseWindow, this);
     SetUpWMHints();
+    break;
+
+  case eWindowType_popup:
+    mIsToplevel = PR_TRUE;
+    attr_mask |= CWOverrideRedirect | CWSaveUnder;
+    attr.save_under = True;
+    attr.override_redirect = True;
+    parent = RootWindowOfScreen(mScreen);
+    mBaseWindow = XCreateWindow(mDisplay, parent,
+                                mBounds.x, mBounds.y,
+                                mBounds.width, mBounds.height, 0,
+                                mDepth, InputOutput, mVisual,
+                                attr_mask, &attr);
+    AddWindowCallback(mBaseWindow, this);
+    SetUpWMHints();
+    break;
+
+  case eWindowType_toplevel:
+    mIsToplevel = PR_TRUE;
+    parent = RootWindowOfScreen(mScreen);
+    mBaseWindow = XCreateWindow(mDisplay, parent, mBounds.x, mBounds.y,
+                                mBounds.width, mBounds.height, 0,
+                                mDepth, InputOutput, mVisual,
+                                attr_mask, &attr);
+    AddWindowCallback(mBaseWindow, this);
+    SetUpWMHints();
+    break;
+
+  case eWindowType_child:
+    mIsToplevel = PR_FALSE;
+    // for some reason I need to do this, as opposed to the other cases. FIXME
+    CreateNative(parent, mBounds);
+    break;
+
+  default:
+    break;
   }
-  //  XSync(mDisplay, False);
+
   return NS_OK;
 }
 
@@ -331,6 +354,36 @@ NS_IMETHODIMP nsWidget::Move(PRInt32 aX, PRInt32 aY)
 
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsWidget::Move(x, y)\n"));
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Moving window 0x%lx to %d, %d\n", mBaseWindow, aX, aY));
+
+  mBounds.x = aX;
+  mBounds.y = aY;
+
+  if (mWindowType == eWindowType_popup) {
+    nsRect aRect, transRect;
+    PRInt32 screenWidth = WidthOfScreen(mScreen);
+    PRInt32 screenHeight = HeightOfScreen(mScreen);
+
+    if (aX >= screenWidth)
+      aX = screenWidth - mBounds.width;
+    if (aY >= screenHeight)
+      aY = screenHeight - mBounds.height;
+
+    aRect.x = aX;
+    aRect.y = aY;
+
+    if (mParentWidget) {
+      mParentWidget->WidgetToScreen(aRect, transRect);
+    } else if (mParentWindow) {
+      Window child;
+      XTranslateCoordinates(mDisplay, mParentWindow,
+                            RootWindowOfScreen(mScreen),
+                            aX, aY, &transRect.x, &transRect.y,
+                            &child);
+    }
+    aX = transRect.x;
+    aY = transRect.y;
+  }
+
   mRequestedSize.x = aX;
   mRequestedSize.y = aY;
   if (mParentWidget) {
@@ -359,10 +412,25 @@ NS_IMETHODIMP nsWidget::Resize(PRInt32 aWidth,
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Resizing window 0x%lx to %d, %d\n", mBaseWindow, aWidth, aHeight));
   mRequestedSize.width = mBounds.width = aWidth;
   mRequestedSize.height = mBounds.height = aHeight;
+
   if (mParentWidget) {
     ((nsWidget *)mParentWidget)->WidgetResize(this);
   } else {
     XResizeWindow(mDisplay, mBaseWindow, aWidth, aHeight);
+  }
+
+  // Check to see if our popup is under the mouse, if so, move it.
+  // Fixes tooltip problem
+  if (mWindowType == eWindowType_popup) {
+    Window r, c;
+    int rx, ry, cx, cy;
+    unsigned int m;
+
+    XQueryPointer(mDisplay, mBaseWindow, &r, &c, &rx, &ry, &cx, &cy, &m);
+
+    if ((0 <= cy) && (cy <= mBounds.height)) {
+      Move(mBounds.x, mBounds.y - (mBounds.height - cy));
+    }
   }
 
   return NS_OK;
@@ -600,18 +668,13 @@ NS_IMETHODIMP nsWidget::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 NS_IMETHODIMP nsWidget::WidgetToScreen(const nsRect& aOldRect,
                                        nsRect& aNewRect)
 {
-  int x = 0;
-  int y = 0;
   Window child;
-  if (XTranslateCoordinates(mDisplay,
-                            mBaseWindow,
-                            RootWindowOfScreen(mScreen),
-                            0, 0,
-                            &x, &y,
-                            &child) == True) {
-    aNewRect.x = x + aOldRect.x;
-    aNewRect.y = y + aOldRect.y;
-  }
+  XTranslateCoordinates(mDisplay,
+                        mBaseWindow,
+                        RootWindowOfScreen(mScreen),
+                        aOldRect.x, aOldRect.y,
+                        &aNewRect.x, &aNewRect.y,
+                        &child);
   return NS_OK;
 }
 
@@ -713,33 +776,18 @@ void nsWidget::CreateNative(Window aParent, nsRect aRect)
   XSetWindowAttributes attr;
   unsigned long attr_mask;
 
-  // on a window resize, we don't want to window contents to
-  // be discarded...
   attr.bit_gravity = NorthWestGravity;
-  // make sure that we listen for events
   attr.event_mask = GetEventMask();
-
-  // set the default background color and border to that awful gray
   attr.background_pixel = mBackgroundPixel;
   attr.border_pixel = mBorderPixel;
-  // set the colormap
   attr.colormap = xlib_rgb_get_cmap();
 
-  // FIXME: KenF
-//  attr.backing_store = Always;
-//  attr.save_under = True;
-//  attr.backing_planes = 0xFFFFFFFF;	// 32 bit?
-//  attr.backing_pixel = 0xFFFFFFFF;			// 32 bit.
-  // here's what's in the struct
- // attr_mask = CWBitGravity | CWEventMask | CWBackPixel | CWBorderPixel | CWBackingStore | CWSaveUnder | CWBackingPlanes | CWBackingPixel;
   attr_mask = CWBitGravity | CWEventMask | CWBackPixel | CWBorderPixel ;
-  // check to see if there was actually a colormap.
+
   if (attr.colormap)
     attr_mask |= CWColormap;
 
   CreateNativeWindow(aParent, mBounds, attr, attr_mask);
-  //CreateNativeWindow(aParent, aRect, attr, attr_mask);
-  CreateGC();
 }
 
 /* virtual */ long
@@ -768,42 +816,10 @@ nsWidget::GetEventMask()
 void nsWidget::CreateNativeWindow(Window aParent, nsRect aRect,
                                   XSetWindowAttributes aAttr, unsigned long aMask)
 {
-  int width;
-  int height;
-
-  nsCAutoString nameStr; nameStr.AssignWithConversion(mName);
-  PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, 
-         ("*** Warning: nsWidget::CreateNative falling back to sane default for widget type \"%s\"\n", 
-          (const char *) nameStr));
-
-  if (nameStr.Equals("unnamed")) {
-    PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG,
-           ("What freaking widget is this, anyway?\n"));
-  }
-  PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Creating XWindow: x %d y %d w %d h %d\n",
-                                       aRect.x, aRect.y, aRect.width, aRect.height));
-
-  if (aRect.width <= 0) {
-    PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("*** Fixing width...\n"));
-    width = 1;
-  }
-  else {
-    width = aRect.width;
-  }
-  if (aRect.height <= 0) {
-    PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("*** Fixing height...\n"));
-    height = 1;
-  }
-  else {
-    height = aRect.height;
-  }
-  
-  // make sure that we listen for events
-
   mBaseWindow = XCreateWindow(mDisplay,
                               aParent,
                               aRect.x, aRect.y,
-                              width, height,
+                              aRect.width, aRect.height,
                               0,                // border width
                               mDepth,           // depth
                               InputOutput,      // class
@@ -811,14 +827,8 @@ void nsWidget::CreateNativeWindow(Window aParent, nsRect aRect,
                               aMask,
                               &aAttr);
 
-  PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, 
-         ("nsWidget: Created window 0x%lx with parent 0x%lx %s\n",
-          mBaseWindow, aParent, (mIsToplevel ? "TopLevel" : "")));
-  // XXX when we stop getting lame values for this remove it.
-  // sometimes the dimensions have been corrected by the code above.
-  mRequestedSize.height = mBounds.height = height;
-  mRequestedSize.width = mBounds.width = width;
-  // add the callback for this
+  mRequestedSize.height = mBounds.height = aRect.height;
+  mRequestedSize.width = mBounds.width = aRect.width;
   AddWindowCallback(mBaseWindow, this);
 }
 
@@ -935,6 +945,102 @@ nsWidget::OnPaint(nsPaintEvent &event)
   return result;
 }
 
+PRBool nsWidget::IsMouseInWindow(nsIWidget* inWidget, PRInt32 inMouseX, PRInt32 inMouseY){
+
+	XWindowAttributes inWindowAttributes;
+
+	// Get the origin (top left corner) coordinate and size
+	Window currentPopupWindow = (Window)inWidget->GetNativeData(NS_NATIVE_WINDOW);
+	if (XGetWindowAttributes(mDisplay, currentPopupWindow, &inWindowAttributes) == 0){
+		fprintf(stderr, "Failed calling XGetWindowAttributes in nsWidget::IsMouseInWindow");
+		return PR_FALSE;
+	}
+	
+	// Note: These coordinates are now relative to the root window as popups are now created
+	// with the root window as parent
+	
+	// Must get mouse click coordinates relative to root window
+	int root_inMouse_x;
+	int root_inMouse_y;
+	Window returnedChild;
+	Window rootWindow;
+	rootWindow = RootWindow(mDisplay, DefaultScreen(mDisplay));
+	if (!XTranslateCoordinates(mDisplay, mBaseWindow, rootWindow,
+		inMouseX, inMouseY,
+		&root_inMouse_x, &root_inMouse_y, &returnedChild)){
+		fprintf(stderr, "Could not get coordinates for origin coordinates for mouseclick\n");
+		// should we return true or false??????
+		return PR_FALSE;
+	}
+	//fprintf(stderr, "Here are the mouse click coordinates x:%i y%i\n", root_inMouse_x, root_inMouse_y);
+	
+	// Test using coordinates relative to root window if click was inside passed popup window
+	if (root_inMouse_x > inWindowAttributes.x &&
+			root_inMouse_x < (inWindowAttributes.x + inWindowAttributes.width) &&
+      root_inMouse_y > inWindowAttributes.y &&
+			root_inMouse_y < (inWindowAttributes.y + inWindowAttributes.height)){
+    //fprintf(stderr, "Mouse click INSIDE passed popup\n");
+		return PR_TRUE;
+	}
+	//fprintf(stderr, "Mouse click OUTSIDE of passed popup\n");
+	return PR_FALSE;
+}
+
+
+//
+// HandlePopup
+//
+// Deal with rollup of popups (xpmenus, etc)
+// 
+PRBool nsWidget::HandlePopup ( PRInt32 inMouseX, PRInt32 inMouseY ){
+	PRBool retVal = PR_FALSE;
+	PRBool rollup = PR_FALSE;
+	
+	// The gRollupListener and gRollupWidget are both set to nsnull when a popup is no
+	// longer visible
+	
+	// Use non weak reference until implemented
+	//nsCOMPtr<nsIWidget> rollupWidget = do_QueryReferent(gRollupWidget);
+	//nsCOMPtr<nsIWidget> rollupWidget = gRollupWidget;
+	
+	
+	if (gRollupWidget && gRollupListener){
+
+		if (!IsMouseInWindow(gRollupWidget, inMouseX, inMouseY)){
+			rollup = PR_TRUE;
+			nsCOMPtr<nsIMenuRollup> menuRollup ( do_QueryInterface(gRollupListener) );
+      if ( menuRollup ) {
+        nsCOMPtr<nsISupportsArray> widgetChain;
+        menuRollup->GetSubmenuWidgetChain ( getter_AddRefs(widgetChain) );
+        if ( widgetChain ) {
+          PRUint32 count = 0;
+          widgetChain->Count ( &count );
+          for ( PRUint32 i = 0; i < count; ++i ) {
+            nsCOMPtr<nsISupports> genericWidget;
+            widgetChain->GetElementAt ( i, getter_AddRefs(genericWidget) );
+            nsCOMPtr<nsIWidget> widget ( do_QueryInterface(genericWidget) );
+            if ( widget ) {
+              if ( IsMouseInWindow(widget, inMouseX, inMouseY) ) {
+                rollup = PR_FALSE;
+                break;
+              }
+            }
+          } // foreach parent menu widget
+        }
+			}	
+		}				
+		
+	}
+	
+	if (rollup){
+		//fprintf(stderr, "Calling gRollupListener->Rollup()\n");
+		gRollupListener->Rollup();
+		retVal = PR_TRUE;
+	}
+	return retVal;
+}
+
+
 // Added KenF FIXME
 void nsWidget::OnDestroy()
 {
@@ -980,6 +1086,18 @@ PRBool nsWidget::DispatchMouseEvent(nsMouseEvent& aEvent)
     return result;
   }
 
+	// If there was a mouse down event, check if any popups need to be informed
+	switch (aEvent.message) {
+		case NS_MOUSE_LEFT_BUTTON_DOWN:
+    case NS_MOUSE_MIDDLE_BUTTON_DOWN:
+    case NS_MOUSE_RIGHT_BUTTON_DOWN:			
+			if (HandlePopup(aEvent.point.x, aEvent.point.y)){
+				// Should we return here as GTK does?
+				return PR_TRUE;
+			}
+			break;
+	}
+		
   if (nsnull != mEventCallback) {
     result = DispatchWindowEvent(aEvent);
     return result;

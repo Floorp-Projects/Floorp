@@ -249,6 +249,7 @@ nsAppShell::nsAppShell()
 
   mScreen = nsnull;
   mEventQueue = nsnull;
+  xlib_fd = -1;
 }
 
 nsresult nsAppShell::QueryInterface(const nsIID& aIID, void** aInstancePtr)
@@ -342,13 +343,12 @@ NS_METHOD nsAppShell::Spinup()
       NS_ASSERTION("Could not obtain the thread event queue", PR_FALSE);
       return rv;
   }   
- return NS_OK;
+  return NS_OK;
 }
 
 nsresult nsAppShell::Run()
 {
   nsresult rv = NS_OK;
-  int xlib_fd = -1;
   int queue_fd = -1;
   fd_set select_set;
   int select_retval;
@@ -476,7 +476,35 @@ NS_METHOD nsAppShell::Spindown()
 NS_METHOD
 nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
 {
+  fd_set select_set;
+  int select_retval;
+  int max_fd;
+  struct timeval DelayTime;
   XEvent *event;
+
+  int queue_fd = mEventQueue->GetEventQueueSelectFD();
+
+  if (xlib_fd == -1)
+    xlib_fd = ConnectionNumber(mDisplay);
+
+  if (xlib_fd >= queue_fd) {
+    max_fd = xlib_fd + 1;
+  } else {
+    max_fd = queue_fd + 1;
+  }
+
+  FD_ZERO(&select_set);
+  FD_SET(queue_fd, &select_set);
+  FD_SET(xlib_fd, &select_set);
+
+  DelayTime.tv_sec = 0;
+  DelayTime.tv_usec = 100;
+
+  select_retval = select(max_fd, &select_set, NULL, NULL, &DelayTime);
+
+  if (select_retval == -1)
+    return NS_ERROR_FAILURE;
+
   if (XPending(mDisplay)) {
     event = (XEvent *)malloc(sizeof(XEvent));
     XNextEvent(mDisplay, event);
