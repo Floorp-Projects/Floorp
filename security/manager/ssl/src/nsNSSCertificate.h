@@ -86,13 +86,12 @@ private:
 #define CRL_AUTOUPDATE_TIMIINGTYPE_PREF "security.crl.autoupdate.timingType"
 #define CRL_AUTOUPDATE_TIME_PREF "security.crl.autoupdate.nextInstant"
 #define CRL_AUTOUPDATE_URL_PREF "security.crl.autoupdate.url"
-#define CRL_AUTOUPDATE_URLTYPE_PREF "security.crl.autoupdate.urlType"
 #define CRL_AUTOUPDATE_DAYCNT_PREF "security.crl.autoupdate.dayCnt"
 #define CRL_AUTOUPDATE_FREQCNT_PREF "security.crl.autoupdate.freqCnt"
 #define CRL_AUTOUPDATE_ERRCNT_PREF "security.crl.autoupdate.errCount"
 #define CRL_AUTOUPDATE_ERRDETAIL_PREF "security.crl.autoupdate.errDetail"
 #define CRL_AUTOUPDATE_ENABLED_PREF "security.crl.autoupdate.enable."
-#define CRL_AUTOUPDATE_DEFAULT_DELAY 120000UL
+#define CRL_AUTOUPDATE_DEFAULT_DELAY 30000UL
 	  
 class nsCrlEntry : public nsICrlEntry
 {
@@ -102,7 +101,7 @@ public:
 
   nsCrlEntry();
   nsCrlEntry(CERTSignedCrl *);
-  nsCrlEntry(const PRUnichar*, const PRUnichar*, const PRUnichar*, const PRUnichar*, PRTime, PRTime, const PRUnichar*, const PRUnichar*, const PRUnichar*);
+  nsCrlEntry(const PRUnichar*, const PRUnichar*, const PRUnichar*, const PRUnichar*, PRTime, PRTime, const PRUnichar*, const PRUnichar*);
   virtual ~nsCrlEntry();
   /* additional members */
 private:
@@ -114,7 +113,6 @@ private:
   PRTime mNextUpdate;
   nsString mNameInDb;
   nsString mLastFetchURL;
-  nsString mAdvertisedURL;
   nsString mNextAutoUpdateDate;
 };
 

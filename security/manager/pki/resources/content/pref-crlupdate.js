@@ -30,7 +30,6 @@ const nsIPref             = Components.interfaces.nsIPref;
 var crl;
 var bundle;
 var prefs;
-var menuList; 
 var updateTypeRadio;
 var enabledCheckBox;
 var timeBasedRadio;
@@ -40,7 +39,6 @@ var certdb;
 var autoupdateEnabledString   = "security.crl.autoupdate.enable.";
 var autoupdateTimeTypeString  = "security.crl.autoupdate.timingType.";
 var autoupdateTimeString      = "security.crl.autoupdate.nextInstant.";
-var autoupdateURLTypeString   = "security.crl.autoupdate.urlType.";
 var autoupdateURLString       = "security.crl.autoupdate.url.";
 var autoupdateErrCntString    = "security.crl.autoupdate.errCount.";
 var autoupdateErrDetailString = "security.crl.autoupdate.errDetail.";
@@ -57,7 +55,6 @@ function onLoad()
   autoupdateEnabledString    = autoupdateEnabledString + crl.nameInDb;
   autoupdateTimeTypeString  = autoupdateTimeTypeString + crl.nameInDb;
   autoupdateTimeString      = autoupdateTimeString + crl.nameInDb;
-  autoupdateURLTypeString   = autoupdateURLTypeString + crl.nameInDb;
   autoupdateDayCntString    = autoupdateDayCntString + crl.nameInDb;
   autoupdateFreqCntString   = autoupdateFreqCntString + crl.nameInDb;
   autoupdateURLString       = autoupdateURLString + crl.nameInDb;
@@ -67,7 +64,6 @@ function onLoad()
   bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
   prefs = Components.classes["@mozilla.org/preferences;1"].getService(nsIPref);
 
-  menuList = document.getElementById("urlTypes");
   updateTypeRadio = document.getElementById("autoUpdateType");
   enabledCheckBox = document.getElementById("enableCheckBox");
   timeBasedRadio = document.getElementById("timeBasedRadio");
@@ -93,24 +89,6 @@ function updateSelectedTimingControls()
   }
 }
 
-function updateSelectedURLControls()
-{
-  var selectedID = menuList.selectedItem.id;
-  var SelectedImportURL;
-
-  if( selectedID == "lastFetchURL") {
-    SelectedImportURL = crl.lastFetchURL ;
-  } else {
-    SelectedImportURL = crl.advertisedURL;
-  }
-
-  var URLDisplayed = document.getElementById("urlName"); 
-  if(SelectedImportURL==null || SelectedImportURL.length==0 ){
-    SelectedImportURL = bundle.GetStringFromName("undefinedValStr");
-  }
-  URLDisplayed.value = SelectedImportURL;
-}
-
 function initializeSelection()
 {
   var menuItemNode;
@@ -127,25 +105,10 @@ function initializeSelection()
     enabledCheckBox.checked = false;
   }
 
-  //Now, populate the contents of the url menu list
-  //Note: fetch URL is always available, unless we have a db problem
-  lastFetchMenuNode = document.createElement("menuitem");
-  lastFetchMenuNode.setAttribute("label", bundle.GetStringFromName("lastFetchUrlLabel"));
-  lastFetchMenuNode.id = "lastFetchURL";
-  menuList.firstChild.appendChild(lastFetchMenuNode);
+  //Always the last fetch url, for now.
+  var URLDisplayed = document.getElementById("urlName"); 
+  URLDisplayed.value = crl.lastFetchURL;
   
-/*
-  //This goes one once it is implemented in psm/nss
-  advertisedMenuNode = document.createElement("menuitem");
-  advertisedMenuNode.setAttribute("label",bundle.GetStringFromName("advertisedUrlLabel"));
-  advertisedMenuNode.id = "advertisedURL";
-  menuList.firstChild.appendChild(advertisedMenuNode);
-*/
-
-  if( (crl.advertisedURL != null) && (crl.advertisedURL !="") ) {
-     hasAdvertisedURL = true;
-  }
-
   //Decide how many update timing types to be shown
   //If no next update specified, hide the first choice. Default shows both
   if(crl.nextUpdateLocale == null || crl.nextUpdateLocale.length == 0) {
@@ -155,18 +118,6 @@ function initializeSelection()
   
   //Set up the initial selections based on defaults and prefs, if any
   try{
-    var urlPref = prefs.GetIntPref(autoupdateURLTypeString);
-    if(urlPref != null){
-      if(urlPref == crl.AUTOUPDATE_USE_ADVERTISED_URL){
-        menuList.selectedItem = advertisedMenuNode;
-      }else {
-        menuList.selectedItem = lastFetchMenuNode;  
-      }
-    }else {
-      //Default
-      menuList.selectedItem = lastFetchMenuNode;  
-    }
-
     var timingPref = prefs.GetIntPref(autoupdateTimeTypeString);
     if(timingPref != null) {
       if(timingPref == crl.TYPE_AUTOUPDATE_TIME_BASED) {
@@ -185,7 +136,6 @@ function initializeSelection()
     }
     
   }catch(exception){
-    menuList.selectedItem = lastFetchMenuNode;
     if(!hasNextUpdate) {
       updateTypeRadio.selectedItem = freqBasedRadio;
     } else {
@@ -260,15 +210,8 @@ function onAccept()
    //set enable pref
    prefs.SetBoolPref(autoupdateEnabledString, enabledCheckBox.checked );
    
-   //set URL TYPE and value prefs
-   var urlTypeId = menuList.selectedItem.id;
-   if(urlTypeId == "lastFetchURL"){
-     prefs.SetIntPref(autoupdateURLTypeString,crl.AUTOUPDATE_USE_LASTFETCH_URL);
-     prefs.SetCharPref(autoupdateURLString,crl.lastFetchURL);
-   } else{
-     prefs.SetIntPref(autoupdateURLTypeString,crl.AUTOUPDATE_USE_ADVERTISED_URL);
-     prefs.SetCharPref(autoupdateURLString,crl.advertisedURL);
-   }
+   //set URL TYPE and value prefs - always to last fetch url - till we have anything else available
+   prefs.SetCharPref(autoupdateURLString,crl.lastFetchURL);
    
    var timingTypeId = updateTypeRadio.selectedItem.id;
    var updateTime;
@@ -298,11 +241,6 @@ function onAccept()
 
 function validatePrefs()
 {
-   var URLDisplayed = document.getElementById("urlName"); 
-   if(URLDisplayed.value == bundle.GetStringFromName("undefinedValStr")) {
-     alert(bundle.GetStringFromName("undefinedURL"));
-     return false;
-   }
    var dayCnt = (document.getElementById("nextUpdateDay")).value;
    var freqCnt = (document.getElementById("nextUpdateFreq")).value;
 

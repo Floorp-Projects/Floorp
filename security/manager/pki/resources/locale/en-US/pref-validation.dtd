@@ -41,7 +41,7 @@
 <!ENTITY  validation.crl.autoupdate.time.label2      "Day(s) before Next Update date">
 <!ENTITY  validation.crl.autoupdate.freq.label1      "Update every">
 <!ENTITY  validation.crl.autoupdate.freq.label2      "Day(s)">
-<!ENTITY  validation.crl.autoupdate.url.label        "Import CRL From">
+<!ENTITY  validation.crl.autoupdate.url.label        "CRL would be imported From:">
 <!ENTITY  crl.import.status.title         "CRL Import Status">
 <!ENTITY  crl.import.success.message      "The Certificate Revocation List (CRL) was successfully imported.">
 <!ENTITY  crl.issuer.label                "CRL Issued By:">

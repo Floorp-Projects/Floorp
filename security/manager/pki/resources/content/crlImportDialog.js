@@ -67,22 +67,10 @@ function onLoad()
     try {
       updateEnabled = prefs.GetBoolPref(autoupdateEnabledString);
       if(updateEnabled) {
-        var autoupdateURLTypeString   = "security.crl.autoupdate.urlType." + crl.nameInDb;
         var autoupdateURLString       = "security.crl.autoupdate.url." + crl.nameInDb;
-  
-        //If this crl already has a download url preference defined, update it
-        var type = prefs.GetIntPref(autoupdateURLTypeString);
-        if(type == crl.AUTOUPDATE_USE_ADVERTISED_URL) {
-          if(crl.advertisedURL==null || crl.advertisedURL.length==0) {
-            prefs.SetCharPref(autoupdateURLString,bundle.GetStringFromName("undefinedValStr"));
-          } else {
-            prefs.SetCharPref(autoupdateURLString,crl.advertisedURL);
-          }
-        } else {
-          prefs.SetCharPref(autoupdateURLString,crl.lastFetchURL);
-        }
+        prefs.SetCharPref(autoupdateURLString,crl.lastFetchURL);
         prefs.savePrefFile(null);
-    }
+      }
     }catch(exception){}
 
     var statement = document.getElementById("status");

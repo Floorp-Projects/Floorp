@@ -66,10 +66,6 @@
 
     <vbox>
       <text value="&validation.crl.autoupdate.url.label;" />
-      <menulist id="urlTypes" oncommand="updateSelectedURLControls();">
-        <menupopup/>
-      </menulist>
-
       <textbox readonly="true" id="urlName" />
     </vbox>
     <separator/>

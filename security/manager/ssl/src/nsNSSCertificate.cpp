@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsNSSCertificate.cpp,v 1.55 2001/12/06 22:36:43 rangansen%netscape.com Exp $
+ * $Id: nsNSSCertificate.cpp,v 1.56 2001/12/11 05:59:49 rangansen%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -3775,24 +3775,20 @@ done:
       PRUnichar *updateURL;
       nsCAutoString updateURLStr;
       PRInt32 timingTypePref;
-      PRInt32 urlTypePref;
       double dayCnt;
       char *dayCntStr;
       nsCAutoString updateTypePrefStr(CRL_AUTOUPDATE_TIMIINGTYPE_PREF);
       nsCAutoString updateTimePrefStr(CRL_AUTOUPDATE_TIME_PREF);
       nsCAutoString updateUrlPrefStr(CRL_AUTOUPDATE_URL_PREF);
-      nsCAutoString updateUrlTypePrefStr(CRL_AUTOUPDATE_URLTYPE_PREF);
       nsCAutoString updateDayCntPrefStr(CRL_AUTOUPDATE_DAYCNT_PREF);
       nsCAutoString updateFreqCntPrefStr(CRL_AUTOUPDATE_FREQCNT_PREF);
       updateTypePrefStr.AppendWithConversion(crlKey);
       updateTimePrefStr.AppendWithConversion(crlKey);
       updateUrlPrefStr.AppendWithConversion(crlKey);
-      updateUrlTypePrefStr.AppendWithConversion(crlKey);
       updateDayCntPrefStr.AppendWithConversion(crlKey);
       updateFreqCntPrefStr.AppendWithConversion(crlKey);
 
       pref->GetIntPref(updateTypePrefStr.get(),&timingTypePref);
-      pref->GetIntPref(updateUrlTypePrefStr.get(),&urlTypePref);
       
       //Compute and update the next download instant
       if(timingTypePref == nsCrlEntry::TYPE_AUTOUPDATE_TIME_BASED){
@@ -3821,11 +3817,7 @@ done:
       }
       
       //Update the url to download from, next time
-      if(urlTypePref == nsCrlEntry::AUTOUPDATE_USE_LASTFETCH_URL){
-        crlEntry->GetLastFetchURL(&updateURL);
-      }else{
-        crlEntry->GetAdvertisedURL(&updateURL);
-      }
+      crlEntry->GetLastFetchURL(&updateURL);
       updateURLStr.AssignWithConversion(updateURL);
       nsMemory::Free(updateURL);
       pref->SetCharPref(updateUrlPrefStr.get(),updateURLStr.get());
@@ -3871,7 +3863,7 @@ nsCrlEntry::nsCrlEntry()
 nsCrlEntry::nsCrlEntry(const PRUnichar * aOrg, const PRUnichar * aOrgUnit, 
                const PRUnichar * aLastUpdateLocale, const PRUnichar * aNextUpdateLocale, 
                PRTime aLastUpdate, PRTime aNextUpdate, const PRUnichar *aNameInDb,
-               const PRUnichar *aLastFetchURL, const PRUnichar *aAdvertisedURL)
+               const PRUnichar *aLastFetchURL)
 {
   NS_INIT_ISUPPORTS();
   mOrg.Assign(aOrg);
@@ -3882,8 +3874,6 @@ nsCrlEntry::nsCrlEntry(const PRUnichar * aOrg, const PRUnichar * aOrgUnit,
   mNextUpdate = aNextUpdate;
   mNameInDb.Assign(aNameInDb);
   mLastFetchURL.Assign(aLastFetchURL);
-  mAdvertisedURL.Assign(aAdvertisedURL);
-
 }
 
 
@@ -4004,14 +3994,6 @@ NS_IMETHODIMP nsCrlEntry::GetLastFetchURL(PRUnichar** aLastFetchURL)
   *aLastFetchURL = ToNewUnicode(mLastFetchURL);
   return NS_OK;
 }
-
-NS_IMETHODIMP nsCrlEntry::GetAdvertisedURL(PRUnichar** aAdvertisedURL)
-{
-  NS_ENSURE_ARG(aAdvertisedURL);
-  *aAdvertisedURL = ToNewUnicode(mAdvertisedURL);
-  return NS_OK;
-}
-
 
 NS_IMETHODIMP nsCrlEntry::ComputeNextAutoUpdateTime(PRUint32 autoUpdateType, double dayCnt, PRUnichar **nextAutoUpdate)
 {
