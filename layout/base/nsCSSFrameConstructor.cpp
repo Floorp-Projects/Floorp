@@ -2746,11 +2746,11 @@ nsCSSFrameConstructor::ConstructButtonLabelFrame(nsIPresContext *aPresContext,
     //      content:"Reset";
     //   }
    nsresult rv = NS_OK;
-   nsIStyleContext*  styleContext = nsnull;
+   nsCOMPtr<nsIStyleContext>  styleContext;
    nsIFrame* generatedFrame = nsnull;
 
      // Probe for generated content before
-   aFrame->GetStyleContext(&styleContext);
+   aFrame->GetStyleContext(getter_AddRefs(styleContext));
    if (CreateGeneratedContentFrame(aPresContext, aState, aFrame, aContent,
                                 styleContext, nsCSSAtoms::buttonLabelPseudo,
                                 PR_FALSE, PR_FALSE, &generatedFrame)) {
