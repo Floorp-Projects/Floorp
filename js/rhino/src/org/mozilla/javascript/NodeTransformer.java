@@ -463,7 +463,7 @@ public class NodeTransformer {
                     break;
                 String name = node.getString();
                 if (name.equals("arguments")) {
-                    // Use of "arguments" requires a an activation object.
+                    // Use of "arguments" requires an activation object.
                     ((FunctionNode) tree).setRequiresActivation(true);
                 }
                 VariableTable vars = getVariableTable(tree);
@@ -541,7 +541,7 @@ public class NodeTransformer {
         if (left.getType() == TokenStream.NAME) {
             VariableTable vars = getVariableTable(tree);
             String name = left.getString();
-            if (inFunction && vars.get(name) != null) {
+            if (inFunction && vars.get(name) != null && !inWithStatement()) {
                 // call to a var. Transform to Call(GetVar("a"), b, c)
                 left.setType(TokenStream.GETVAR);
                 // fall through to code to add GetParent
