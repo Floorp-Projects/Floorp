@@ -41,6 +41,14 @@
 #include <arpa/inet.h>   
 #include <arpa/nameser.h>
 #include <resolv.h>
+#elif defined(__linux)
+#define RESOLVE_RES_NINIT 1
+// try to dynamically resolve "__res_ninit" (we may want to enable this
+// for other XP_UNIX platforms as well)
+#include <dlfcn.h>
+#ifndef RTLD_DEFAULT
+#define RTLD_DEFAULT ((void*)0)
+#endif
 #endif
 
 #include "nsDnsService.h"
@@ -1172,7 +1180,7 @@ nsDNSService::Unlock()
 PRBool
 nsDNSService::Reset()
 {
-#ifdef HAVE_RES_NINIT
+#if defined(HAVE_RES_NINIT) || defined(RESOLVE_RES_NINIT)
     // On platforms where res_ninit() is available and supported
     // by Mozilla, we shall attempt to reinitialize the dns
     // resolver.  Since this method may be called many times in
@@ -1185,7 +1193,24 @@ nsDNSService::Reset()
     if (gService &&
         PR_IntervalNow() - gService->mLastReset >= gService->mResetMaxInterval) {
 
+#ifdef HAVE_RES_NINIT
         (void) res_ninit(&_res);
+#else
+        // manually resolve library symbols.  this code is designed
+        // to be compiled under rh6x (where res_ninit does not exist)
+        // and be run under rh7x (where res_ninit does exist)
+        static int   (*res_ninit)(void *) = NULL;
+        static void *(*res_state)(void  ) = NULL;
+        static PRBool tried = PR_FALSE;
+        if (!tried) {
+            res_ninit = (int   (*)(void *)) dlsym(RTLD_DEFAULT, "__res_ninit");
+            res_state = (void *(*)(void  )) dlsym(RTLD_DEFAULT, "__res_state");
+            tried = PR_TRUE;
+        }
+        if (!res_ninit || !res_state)
+            return PR_FALSE;
+        res_ninit(res_state());
+#endif
 
         gService->mLastReset = PR_IntervalNow();
         return PR_TRUE;
