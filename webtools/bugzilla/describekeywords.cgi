@@ -19,74 +19,41 @@
 # Rights Reserved.
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
+# Contributor(s): Gervase Markham <gerv@gerv.net>
 
 use diagnostics;
 use strict;
-
-use lib qw(.);
+use lib ".";
 
 require "CGI.pl";
 
+# Use the global template variables. 
+use vars qw($vars $template);
+
 ConnectToDatabase();
 
-print "Content-type: text/html\n\n";
-
-PutHeader("Bugzilla keyword description");
-
-my $tableheader = qq{
-<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0>
-<TR BGCOLOR="#6666FF">
-<TH ALIGN="left">Name</TH>
-<TH ALIGN="left">Description</TH>
-<TH ALIGN="left">Bugs</TH>
-</TR>
-};
-
-print $tableheader;
-my $line_count = 0;
-my $max_table_size = 50;
+quietly_check_login();
 
 SendSQL("SELECT keyworddefs.name, keyworddefs.description, 
-                COUNT(keywords.bug_id), keywords.bug_id
+                COUNT(keywords.bug_id)
          FROM keyworddefs LEFT JOIN keywords ON keyworddefs.id=keywords.keywordid
          GROUP BY keyworddefs.id
          ORDER BY keyworddefs.name");
 
+my @keywords;
+
 while (MoreSQLData()) {
-    my ($name, $description, $bugs, $onebug) = FetchSQLData();
-    if ($bugs && $onebug) {
-        # This 'onebug' stuff is silly hackery for old versions of
-        # MySQL that seem to return a count() of 1 even if there are
-        # no matching.  So, we ask for an actual bug number.  If it
-        # can't find any bugs that match the keyword, then we set the
-        # count to be zero, ignoring what it had responded.
-        my $q = url_quote($name);
-        $bugs = qq{<A HREF="buglist.cgi?keywords=$q">$bugs</A>};
-    } else {
-        $bugs = "none";
-    }
-    if ($line_count == $max_table_size) {
-        print "</table>\n$tableheader";
-        $line_count = 0;
-    }
-    $line_count++;
-    print qq{
-<TR>
-<TH><a name="}
-.value_quote($name).
-qq{">$name</A></TH>
-<TD>$description</TD>
-<TD ALIGN="right">$bugs</TD>
-</TR>
-};
+    my ($name, $description, $bugs) = FetchSQLData();
+   
+    push (@keywords, { name => $name, 
+                       description => $description,
+                       bugcount => $bugs });
 }
+   
+$vars->{'keywords'} = \@keywords;
+$vars->{'caneditkeywords'} = UserInGroup("editkeywords");
 
-print "</TABLE><P>\n";
-
-quietly_check_login();
-
-if (UserInGroup("editkeywords")) {
-    print "<p><a href=editkeywords.cgi>Edit keywords</a><p>\n";
-}
-
-PutFooter();
+print "Content-type: text/html\n\n";
+$template->process("info/describe-keywords.html.tmpl", $vars)
+  || DisplayError("Template process failed: " . $template->error())
+  && exit;
