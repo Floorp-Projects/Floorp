@@ -1490,6 +1490,14 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext*          aPresContext,
   // Return our desired rect
   aDesiredSize.ascent  = aDesiredSize.height;
   aDesiredSize.descent = 0;
+  // See if we are supposed to compute our maximum width
+  if (aDesiredSize.mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
+    // XXX this needs to consider the possibility of a caption being wider 
+    // than the inner table, but this is the safest way to fix bug 55545
+    if (mInnerTableFrame) {
+      aDesiredSize.mMaximumWidth = ((nsTableFrame*)mInnerTableFrame)->GetPreferredWidth();
+    }
+  }
 
   if (nsDebugTable::gRflTableOuter) nsTableFrame::DebugReflow("TO::Rfl ex", this, nsnull, &aDesiredSize, aStatus);
   return rv;

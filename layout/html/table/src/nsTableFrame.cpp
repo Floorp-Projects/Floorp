@@ -1739,6 +1739,11 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext* aPresContext,
     aDesiredSize.maxElementSize = pass1MaxElementSize;
   }
 
+  // if we are reflowed unconstrained, update our preferred width
+  if (!mPrevInFlow && (NS_UNCONSTRAINEDSIZE == aReflowState.availableWidth)) {
+    SetPreferredWidth(aDesiredSize.width);
+  }
+
   // See if we are supposed to compute our maximum width
   if (aDesiredSize.mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
     PRBool  isAutoOrPctWidth = IsAutoLayout() &&
