@@ -79,6 +79,7 @@ public class NodeListImpl_item_int_2 extends BWBaseTest implements Execution
       Document d = (Document)tobj;
       if (d != null)
       {
+        try {
              NodeList nl = d.getElementsByTagName("*");
              if (nl == null)
              {
@@ -92,6 +93,11 @@ public class NodeListImpl_item_int_2 extends BWBaseTest implements Execution
                    return BWBaseTest.FAILED;
                 }
              }
+        } catch (RuntimeException r) {
+             String msg = "Caught RuntimeException " + r ; 
+             TestLoader.logErrPrint(msg);
+             return BWBaseTest.FAILED;
+        }
       } else {
              System.out.println("Document is  NULL..");
              return BWBaseTest.FAILED;

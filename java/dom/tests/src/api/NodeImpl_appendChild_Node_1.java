@@ -78,6 +78,7 @@ public class NodeImpl_appendChild_Node_1 extends BWBaseTest implements Execution
       Document d = (Document)tobj;
       if (d != null)
       {
+       try {
          String elname = "SCRIPT";
          Element e = d.createElement(elname);
          if (e == null)
@@ -106,6 +107,11 @@ public class NodeImpl_appendChild_Node_1 extends BWBaseTest implements Execution
             TestLoader.logErrPrint("Could not find Node " + nodename);
             return BWBaseTest.FAILED;
          }
+        } catch (RuntimeException r) {
+             String msg = "Caught RuntimeException " + r ; 
+             TestLoader.logErrPrint(msg);
+             return BWBaseTest.FAILED;
+        }
       } else {
              System.out.println("Document is  NULL..");
              return BWBaseTest.FAILED;

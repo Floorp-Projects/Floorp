@@ -97,6 +97,10 @@ public class NodeImpl_setNodeValue_String_1 extends BWBaseTest implements Execut
        } catch (DOMException e) {
             TestLoader.logErrPrint("Caught DOMException");
             return BWBaseTest.FAILED;
+        } catch (RuntimeException r) {
+             String msg = "Caught RuntimeException " + r ; 
+             TestLoader.logErrPrint(msg);
+             return BWBaseTest.FAILED;
        }
 
       } else {

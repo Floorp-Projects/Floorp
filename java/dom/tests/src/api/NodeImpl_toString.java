@@ -78,6 +78,7 @@ public class NodeImpl_toString extends BWBaseTest implements Execution
       Document d = (Document)tobj;
       if (d != null)
       {
+        try {
          String nodename = "HTML";
          NodeList nl = d.getElementsByTagName(nodename);
          if (nl != null) 
@@ -98,6 +99,11 @@ public class NodeImpl_toString extends BWBaseTest implements Execution
             TestLoader.logErrPrint("Could not find Node " + nodename);
             return BWBaseTest.FAILED;
          }
+        } catch (RuntimeException r) {
+             String msg = "Caught RuntimeException " + r ; 
+             TestLoader.logErrPrint(msg);
+             return BWBaseTest.FAILED;
+        }
       } else {
              System.out.println("Document is  NULL..");
              return BWBaseTest.FAILED;

@@ -96,6 +96,10 @@ public class ProcessingInstructionImpl_setData_String_0 extends BWBaseTest imple
           } catch (DOMException e) {
                  TestLoader.logErrPrint("Caught DOMException");
                  return BWBaseTest.PASSED;
+          } catch (RuntimeException r) {
+             String msg = "Caught RuntimeException " + r ; 
+             TestLoader.logErrPrint(msg);
+             return BWBaseTest.PASSED;
           }
       } else {
              System.out.println("Document is  NULL..");

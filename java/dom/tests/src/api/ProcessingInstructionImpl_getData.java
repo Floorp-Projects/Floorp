@@ -78,6 +78,7 @@ public class ProcessingInstructionImpl_getData extends BWBaseTest implements Exe
       Document d = (Document)tobj;
       if (d != null)
       {
+        try {
              String target="xml";
              String data="version=\"1.0\"";
              ProcessingInstruction pi = d.createProcessingInstruction(target, data);
@@ -98,6 +99,11 @@ System.out.println("getData is " + str);
 	        }
 
              }
+        } catch (RuntimeException r) {
+             String msg = "Caught RuntimeException " + r ; 
+             TestLoader.logErrPrint(msg);
+             return BWBaseTest.FAILED;
+        }
       } else {
              System.out.println("Document is  NULL..");
              return BWBaseTest.FAILED;

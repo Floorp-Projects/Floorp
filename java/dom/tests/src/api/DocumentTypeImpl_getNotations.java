@@ -78,6 +78,7 @@ public class DocumentTypeImpl_getNotations extends BWBaseTest implements Executi
       Document d = (Document)tobj;
       if (d != null)
       {
+        try {
              DocumentType dt = d.getDoctype();
 	     if (dt == null) {
                 TestLoader.logErrPrint("Document Type is  NULL..");
@@ -89,6 +90,11 @@ public class DocumentTypeImpl_getNotations extends BWBaseTest implements Executi
                 else
                   TestLoader.logErrPrint("DocumentType 'getNotations' is  Not NULL...");
              }
+        } catch (RuntimeException r) {
+             String msg = "Caught RuntimeException " + r ; 
+             TestLoader.logErrPrint(msg);
+             return BWBaseTest.FAILED;
+        }
       } else {
              System.out.println("Document is  NULL..");
              return BWBaseTest.FAILED;

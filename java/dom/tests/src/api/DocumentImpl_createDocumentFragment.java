@@ -78,6 +78,7 @@ public class DocumentImpl_createDocumentFragment extends BWBaseTest implements E
       Document d = (Document)tobj;
       if (d != null)
       {
+         try {
              DocumentFragment df = d.createDocumentFragment();
 	     if (df == null) {
                 TestLoader.logErrPrint("Document 'createDocumentFragment()' is  NULL..");
@@ -85,6 +86,11 @@ public class DocumentImpl_createDocumentFragment extends BWBaseTest implements E
              } else {
                 TestLoader.logErrPrint("Document 'createComment(dummy)' is  not NULL..");
              }
+        } catch (RuntimeException r) {
+             String msg = "Caught RuntimeException " + r ; 
+             TestLoader.logErrPrint(msg);
+             return BWBaseTest.FAILED;
+        }
       } else {
              System.out.println("Document is  NULL..");
              return BWBaseTest.FAILED;

@@ -93,16 +93,14 @@ public class CharacterDataImpl_substringData_int_int_7 extends BWBaseTest implem
                   TestLoader.logErrPrint("CharacterData should not be null....");
                   return BWBaseTest.FAILED;
                 }
-
-System.out.println("offset is " + offset + "  count is " + count);
-int x = offset + count;
-System.out.println("x is " + x);
-System.out.println("getstr is " + getstr);
-
              }
         } catch (DOMException e) {
              TestLoader.logErrPrint("Caught DOMException " );
-             return BWBaseTest.PASSED;
+             return BWBaseTest.FAILED;
+        } catch (RuntimeException r) {
+             String msg = "Caught RuntimeException " + r ; 
+             TestLoader.logErrPrint(msg);
+             return BWBaseTest.FAILED;
         }
       } else {
              System.out.println("Document is  NULL..");

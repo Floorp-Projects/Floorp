@@ -104,6 +104,10 @@ public class CharacterDataImpl_deleteData_int_int_5 extends BWBaseTest implement
         } catch (DOMException e) {
              TestLoader.logErrPrint("Caught DOMException " );
              return BWBaseTest.PASSED;
+        } catch (RuntimeException r) {
+             String msg = "Caught RuntimeException " + r ; 
+             TestLoader.logErrPrint(msg);
+             return BWBaseTest.FAILED;
         }
       } else {
              System.out.println("Document is  NULL..");

@@ -79,6 +79,7 @@ public class ElementImpl_getTagName extends BWBaseTest implements Execution
       Document d = (Document)tobj;
       if (d != null)
       {
+         try {
              Element e = d.getDocumentElement();
 	     if (e == null) {
                 TestLoader.logErrPrint("Document Element is  NULL..");
@@ -91,6 +92,11 @@ public class ElementImpl_getTagName extends BWBaseTest implements Execution
                 } else 
                   TestLoader.logErrPrint("Element 'getTagName() is " + str);
              }
+        } catch (RuntimeException r) {
+             String msg = "Caught RuntimeException " + r ; 
+             TestLoader.logErrPrint(msg);
+             return BWBaseTest.FAILED;
+        }
       } else {
              System.out.println("Document is  NULL..");
              return BWBaseTest.FAILED;

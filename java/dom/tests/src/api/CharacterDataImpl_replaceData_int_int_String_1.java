@@ -109,6 +109,10 @@ public class CharacterDataImpl_replaceData_int_int_String_1 extends BWBaseTest i
         } catch (DOMException e) {
              TestLoader.logErrPrint("Caught DOMException " );
              return BWBaseTest.PASSED;
+        } catch (RuntimeException r) {
+             String msg = "Caught RuntimeException " + r ; 
+             TestLoader.logErrPrint(msg);
+             return BWBaseTest.FAILED;
         }
       } else {
              System.out.println("Document is  NULL..");

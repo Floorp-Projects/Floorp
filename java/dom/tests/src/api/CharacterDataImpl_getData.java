@@ -100,6 +100,10 @@ public class CharacterDataImpl_getData extends BWBaseTest implements Execution
         } catch (DOMException e) {
              TestLoader.logErrPrint("Caught DOMException " );
              return BWBaseTest.FAILED;
+        } catch (RuntimeException r) {
+             String msg = "Caught RuntimeException " + r ; 
+             TestLoader.logErrPrint(msg);
+             return BWBaseTest.FAILED;
         }
       } else {
              System.out.println("Document is  NULL..");

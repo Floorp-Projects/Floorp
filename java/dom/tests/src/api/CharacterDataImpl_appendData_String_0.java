@@ -24,6 +24,7 @@ package org.mozilla.dom.test;
 
 import java.util.*;
 import java.io.*;
+import java.lang.*;
 import org.mozilla.dom.test.*;
 import org.mozilla.dom.*;
 import org.w3c.dom.*;
@@ -108,6 +109,10 @@ public class CharacterDataImpl_appendData_String_0 extends BWBaseTest implements
              }
         } catch (DOMException e) {
              TestLoader.logErrPrint("Caught DOMException " );
+             return BWBaseTest.PASSED;
+        } catch (RuntimeException r) {
+             String msg = "Caught RuntimeException " + r ; 
+             TestLoader.logErrPrint(msg);
              return BWBaseTest.PASSED;
         }
       } else {

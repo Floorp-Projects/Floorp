@@ -89,6 +89,10 @@ public class DocumentImpl_createProcessingInstruction_String_String_3 extends BW
         } catch (DOMException e) {
                 TestLoader.logErrPrint("Caught DOMException");
                 return BWBaseTest.FAILED;
+        } catch (RuntimeException r) {
+             String msg = "Caught RuntimeException " + r ; 
+             TestLoader.logErrPrint(msg);
+             return BWBaseTest.FAILED;
         }
       } else {
              System.out.println("Document is  NULL..");

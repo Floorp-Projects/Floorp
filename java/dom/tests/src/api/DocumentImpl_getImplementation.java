@@ -78,6 +78,7 @@ public class DocumentImpl_getImplementation extends BWBaseTest implements Execut
       Document d = (Document)tobj;
       if (d != null)
       {
+         try {
              DOMImplementation dt = d.getImplementation();
 	     if (dt == null) {
                 TestLoader.logErrPrint("Document Implementation is  NULL..");
@@ -85,6 +86,11 @@ public class DocumentImpl_getImplementation extends BWBaseTest implements Execut
              } else {
                 TestLoader.logErrPrint("Document Implementation is NOT NULL...");
              }
+        } catch (RuntimeException r) {
+             String msg = "Caught RuntimeException " + r ; 
+             TestLoader.logErrPrint(msg);
+             return BWBaseTest.FAILED;
+        }
       } else {
              System.out.println("Document is  NULL..");
              return BWBaseTest.FAILED;

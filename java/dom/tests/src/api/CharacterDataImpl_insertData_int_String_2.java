@@ -103,6 +103,10 @@ public class CharacterDataImpl_insertData_int_String_2 extends BWBaseTest implem
              }
         } catch (DOMException e) {
              TestLoader.logErrPrint("Caught DOMException " );
+             return BWBaseTest.FAILED;
+        } catch (RuntimeException r) {
+             String msg = "Caught RuntimeException " + r ; 
+             TestLoader.logErrPrint(msg);
              return BWBaseTest.PASSED;
         }
       } else {

@@ -79,6 +79,7 @@ public class DocumentImpl_getElementsByTagName_String_1 extends BWBaseTest imple
       Document d = (Document)tobj;
       if (d != null)
       {
+        try {
              NodeList dt = d.getElementsByTagName("*");
 	     if (dt == null) {
                 TestLoader.logErrPrint("Document 'getElementsByTagName(*)' is  NULL..");
@@ -86,6 +87,11 @@ public class DocumentImpl_getElementsByTagName_String_1 extends BWBaseTest imple
              } else {
                 TestLoader.logErrPrint("Document 'getElementsByTagName(*)' is  NOT NULL..");
              }
+        } catch (RuntimeException r) {
+             String msg = "Caught RuntimeException " + r ; 
+             TestLoader.logErrPrint(msg);
+             return BWBaseTest.FAILED;
+        }
       } else {
              System.out.println("Document is  NULL..");
              return BWBaseTest.FAILED;

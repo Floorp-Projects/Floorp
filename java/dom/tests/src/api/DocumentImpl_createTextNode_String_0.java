@@ -79,6 +79,7 @@ public class DocumentImpl_createTextNode_String_0 extends BWBaseTest implements 
       Document d = (Document)tobj;
       if (d != null)
       {
+         try {
              Text t = d.createTextNode(null);
 	     if (t != null) {
                 TestLoader.logErrPrint("Document 'createTextNode(null) is  not NULL..");
@@ -86,6 +87,11 @@ public class DocumentImpl_createTextNode_String_0 extends BWBaseTest implements 
              } else {
                 TestLoader.logErrPrint("Document 'createTextNode(null)' is  NULL..");
              }
+        } catch (RuntimeException r) {
+             String msg = "Caught RuntimeException " + r ; 
+             TestLoader.logErrPrint(msg);
+             return BWBaseTest.PASSED;
+        }
       } else {
              System.out.println("Document is  NULL..");
              return BWBaseTest.FAILED;

@@ -22,6 +22,7 @@
 package org.mozilla.dom.test;
 
 import java.util.*;
+import java.lang.*;
 import java.io.*;
 import org.mozilla.dom.test.*;
 import org.mozilla.dom.*;
@@ -104,6 +105,11 @@ public class CharacterDataImpl_deleteData_int_int_4 extends BWBaseTest implement
         } catch (DOMException e) {
              TestLoader.logErrPrint("Caught DOMException " );
              return BWBaseTest.PASSED;
+        } catch (RuntimeException r) {
+             String msg = "Caught RuntimeException " + r ; 
+             r.printStackTrace();
+             TestLoader.logErrPrint(msg);
+             return BWBaseTest.FAILED;
         }
       } else {
              System.out.println("Document is  NULL..");

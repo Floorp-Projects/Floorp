@@ -115,6 +115,10 @@ public class NamedNodeMapImpl_removeNamedItem_String_1 extends BWBaseTest implem
        } catch (DOMException e) {
              TestLoader.logErrPrint("Caught DOMException"); 
              return BWBaseTest.FAILED;
+        } catch (RuntimeException r) {
+             String msg = "Caught RuntimeException " + r ; 
+             TestLoader.logErrPrint(msg);
+             return BWBaseTest.FAILED;
        }
      } else {
          TestLoader.logErrPrint("Document is  NULL..");

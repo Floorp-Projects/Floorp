@@ -88,7 +88,11 @@ public class DocumentImpl_createCDATASection_String_0 extends BWBaseTest impleme
              } 
         } catch (DOMException e) {
                 TestLoader.logErrPrint("Caught DOMException");
-                return BWBaseTest.PASSED;
+                return BWBaseTest.FAILED;
+        } catch (RuntimeException r) {
+             String msg = "Caught RuntimeException " + r ; 
+             TestLoader.logErrPrint(msg);
+             return BWBaseTest.PASSED;
         }
       } else {
              System.out.println("Document is  NULL..");

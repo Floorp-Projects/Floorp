@@ -123,6 +123,10 @@ public class NamedNodeMapImpl_setNamedItem_Node_1 extends BWBaseTest implements 
        } catch (DOMException e) {
              TestLoader.logErrPrint("Caught DOMException"); 
              return BWBaseTest.FAILED;
+        } catch (RuntimeException r) {
+             String msg = "Caught RuntimeException " + r ; 
+             TestLoader.logErrPrint(msg);
+             return BWBaseTest.FAILED;
        }
      } else {
          TestLoader.logErrPrint("Document is  NULL..");

@@ -79,6 +79,7 @@ public class NamedNodeMapImpl_item_int_2 extends BWBaseTest implements Execution
       Document d = (Document)tobj;
       if (d != null)
       {
+       try {
          String attrName = "TARGET";
          Attr a = d.createAttribute(attrName);
          if (a == null) {
@@ -111,6 +112,11 @@ public class NamedNodeMapImpl_item_int_2 extends BWBaseTest implements Execution
              TestLoader.logErrPrint(" Could not find Attriblist for node  " + aelement);
              return BWBaseTest.FAILED;
          } 
+        } catch (RuntimeException r) {
+             String msg = "Caught RuntimeException " + r ; 
+             TestLoader.logErrPrint(msg);
+             return BWBaseTest.FAILED;
+        } 
      } else {
          TestLoader.logErrPrint("Document is  NULL..");
          return BWBaseTest.FAILED;

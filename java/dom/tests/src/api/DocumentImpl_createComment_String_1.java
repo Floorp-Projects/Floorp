@@ -78,6 +78,7 @@ public class DocumentImpl_createComment_String_1 extends BWBaseTest implements E
       Document d = (Document)tobj;
       if (d != null)
       {
+         try {
              Comment dc = d.createComment("dummy comment string");
 	     if (dc == null) {
                 TestLoader.logErrPrint("Document 'createCommnet(dummy)' is  not NULL..");
@@ -85,6 +86,14 @@ public class DocumentImpl_createComment_String_1 extends BWBaseTest implements E
              } else {
                 TestLoader.logErrPrint("Document 'createComment(dummy)' is  NULL..");
              }
+        } catch (DOMException e) {
+                TestLoader.logErrPrint("Caught DOMException");
+                return BWBaseTest.FAILED;
+        } catch (RuntimeException r) {
+             String msg = "Caught RuntimeException " + r ; 
+             TestLoader.logErrPrint(msg);
+             return BWBaseTest.FAILED;
+        }
       } else {
              System.out.println("Document is  NULL..");
              return BWBaseTest.FAILED;
