@@ -29,7 +29,6 @@
 #include "nsIButton.h"
 #include "nsIEventListener.h"
 #include "nsILabel.h"
-#include "nsIListWidget.h"
 #include "nsILookAndFeel.h"
 #include "nsIMouseListener.h"
 #include "nsIToolkit.h"
