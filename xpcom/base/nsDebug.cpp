@@ -19,6 +19,11 @@
 #include "nsDebug.h"
 #include "prlog.h"
 
+#if defined(HPUX)
+/* for abort() */
+#include <stdlib.h>
+#endif
+
 #if defined(_WIN32)
 #include <windows.h>
 #elif defined(XP_MAC)
