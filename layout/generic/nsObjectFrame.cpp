@@ -1486,24 +1486,31 @@ nsresult nsObjectFrame::GetWindowOriginInPixels(nsIPresContext * aPresContext, P
 
   nsresult rv = NS_OK;
   nsIView * parentWithView;
-  nsPoint origin;
-  nsPoint offset(0,0);
+  nsPoint origin(0,0);
 
   GetOffsetFromView(aPresContext, origin, &parentWithView);
 
-  // if it's windowless we want to get the offset from the parent frame
-  if (aWindowless) {
-    nsIWidget* aWidget;
-    parentWithView->GetOffsetFromWidget(&offset.x, &offset.y, aWidget);
-    origin += offset;
+  // if it's windowless, let's make correction for some more things
+  if (aWindowless && parentWithView) {
+    nsPoint correction(0,0);
 
+    // parent view may be scrolled
+    parentWithView->GetPosition(&correction.x, &correction.y);
+    origin += correction;
+
+    // offset from widget
+    nsIWidget* aWidget;
+    correction = nsPoint(0, 0);
+    parentWithView->GetOffsetFromWidget(&correction.x, &correction.y, aWidget);
+    origin += correction;
+
+    // offset from parent frame
     nsIFrame* parentFrame;
     GetParentWithView(aPresContext, &parentFrame);
-
-    if(parentFrame) {
-      nsPoint originFrame;
-      parentFrame->GetOffsetFromView(aPresContext, originFrame, &parentWithView);
-      origin += originFrame;
+    if (parentFrame) {
+      correction = nsPoint(0, 0);
+      parentFrame->GetOffsetFromView(aPresContext, correction, &parentWithView);
+      origin += correction;
     }
   }
 
