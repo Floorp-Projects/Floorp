@@ -60,8 +60,9 @@ nsMsgStatusFeedback::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aUR
 
 	if (mWindow)
 	{
+		nsIDOMWindow *aWindow = mWindow;
 		nsCOMPtr<nsIScriptGlobalObject>
-			globalScript(do_QueryInterface(mWindow));
+			globalScript(do_QueryInterface(aWindow));
 		nsCOMPtr<nsIWebShell> webshell, rootWebshell;
 		if (globalScript)
 			globalScript->GetWebShell(getter_AddRefs(webshell));
