@@ -382,6 +382,27 @@ nsSupportsArray::Enumerate(nsIEnumerator* *result)
   return NS_OK;
 }
 
+static PRBool
+CopyElement(nsISupports* aElement, void *aData)
+{
+  nsresult rv;
+  nsISupportsArray* newArray = (nsISupportsArray*)aData;
+  rv = newArray->AppendElement(aElement);
+  return NS_SUCCEEDED(rv);
+}
+
+NS_IMETHODIMP
+nsSupportsArray::Clone(nsISupportsArray* *result)
+{
+  nsresult rv;
+  nsISupportsArray* newArray;
+  rv = NS_NewISupportsArray(&newArray);
+  PRBool ok = EnumerateForwards(CopyElement, newArray);
+  if (!ok) return NS_ERROR_OUT_OF_MEMORY;
+  *result = newArray;
+  return NS_OK;
+}
+
 NS_COM nsresult
 NS_NewISupportsArray(nsISupportsArray** aInstancePtrResult)
 {

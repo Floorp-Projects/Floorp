@@ -23,7 +23,7 @@
 #include "nsIProtocolHandler.idl"
 
 interface nsISimpleEnumerator;
-native nsCStringArrayPtr(nsCStringArray*);
+interface nsISupportsArray;
 
 %{C++
 #include "nsVoidArray.h"
@@ -65,10 +65,10 @@ interface nsIResProtocolHandler : nsIProtocolHandler
     void removeSubstitution(in string root, in string url);
 
     /**
-     * Returns a string array containing all substitutions currently
-     * registered for the root. This array is a snapshot of the 
+     * Returns an nsISupportsArray of nsIURIs containing all substitutions
+     * currently registered for the root. This array is a snapshot of the 
      * registered entries so it can be iterated over without fear of
      * thread-safety concerns.
      */
-    [noscript] nsCStringArrayPtr getSubstitutions(in string root);
+    nsISupportsArray getSubstitutions(in string root);
 };

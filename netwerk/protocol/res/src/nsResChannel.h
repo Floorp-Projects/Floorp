@@ -30,6 +30,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsILoadGroup.h"
 #include "nsIInputStream.h"
+#include "nsISupportsArray.h"
 #include "nsCOMPtr.h"
 #include "nsAutoLock.h"
 #ifdef DEBUG
@@ -59,19 +60,15 @@ public:
 protected:
     class Substitutions {
     public:
-        Substitutions() : mSubstitutions(nsnull) {}
-        ~Substitutions(){
-            if (mSubstitutions) {
-                delete mSubstitutions;
-                mSubstitutions = nsnull;
-            }
-        }
+        Substitutions() : mCurrentIndex(0) {}
+        ~Substitutions() {}
 
         nsresult Init();
-        nsresult Next(nsIURI* *result);
+        nsresult Next(char* *result);
     protected:
         nsCOMPtr<nsIURI>                mResourceURI;
-        nsCStringArray*                 mSubstitutions;
+        nsCOMPtr<nsISupportsArray>      mSubstitutions;
+        PRUint32                        mCurrentIndex;
     };
     friend class Substitutions;
 
@@ -100,7 +97,6 @@ protected:
 protected:
     nsCOMPtr<nsIURI>                    mOriginalURI;
     nsCOMPtr<nsIURI>                    mResourceURI;
-    nsCOMPtr<nsIURI>                    mResolvedURI;
     nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
     PRUint32                            mLoadAttributes;
     nsCOMPtr<nsILoadGroup>              mLoadGroup;

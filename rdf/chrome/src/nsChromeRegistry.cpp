@@ -1315,6 +1315,9 @@ NS_IMETHODIMP nsChromeRegistry::GetSelectedLocale(const PRUnichar *aPackageName,
     return rv;
   }  
 
+  if (mChromeDataSource == nsnull)
+    return NS_ERROR_NULL_POINTER;
+
   // Follow the "selectedLocale" arc.
   nsCOMPtr<nsIRDFNode> selectedProvider;
   if (NS_FAILED(rv = mChromeDataSource->GetTarget(resource, mSelectedLocale, PR_TRUE, getter_AddRefs(selectedProvider)))) {

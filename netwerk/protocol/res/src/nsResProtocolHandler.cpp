@@ -37,14 +37,17 @@
 #include "nsResProtocolHandler.h"
 #include "nsAutoLock.h"
 #include "nsIURL.h"
-#include "nsIComponentManager.h"
+#include "nsIIOService.h"
+#include "nsIServiceManager.h"
 #include "nsResChannel.h"
 #include "prenv.h"
 #include "prmem.h"
 #include "prprf.h"
 #include "nsXPIDLString.h"
+#include "nsIFile.h"
 
 static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -55,12 +58,27 @@ nsResProtocolHandler::nsResProtocolHandler()
 }
 
 nsresult
-nsResProtocolHandler::SetSpecialDir(const char* name, nsSpecialSystemDirectory::SystemDirectories sysDir)
+nsResProtocolHandler::SetSpecialDir(const char* rootName, const char* sysDir)
 {
-    nsSpecialSystemDirectory dir(sysDir);
-    nsFileURL fileURL(dir);
+    nsresult rv;
+    nsCOMPtr<nsIFile> file;
+    rv = NS_GetSpecialDirectory(sysDir, getter_AddRefs(file));
+    if (NS_FAILED(rv)) return rv;
 
-    return AppendSubstitution(name, fileURL.GetURLString());
+    nsCOMPtr<nsIFileURL> fileURL;
+    rv = nsComponentManager::CreateInstance(kStandardURLCID, nsnull,
+                                            NS_GET_IID(nsIFileURL),
+                                            getter_AddRefs(fileURL));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = fileURL->SetFile(file);
+    if (NS_FAILED(rv)) return rv;
+
+    nsXPIDLCString spec;
+    rv = fileURL->GetSpec(getter_Copies(spec));
+    if (NS_FAILED(rv)) return rv;
+
+    return AppendSubstitution(rootName, spec);
 }
 
 nsresult
@@ -73,36 +91,36 @@ nsResProtocolHandler::Init()
         return NS_ERROR_OUT_OF_MEMORY;
 
     // set up initial mappings
-    rv = SetSpecialDir("ProgramDir", nsSpecialSystemDirectory::Moz_BinDirectory);
+    rv = SetSpecialDir("ProgramDir", "system.OS_CurrentProcessDirectory");
     if (NS_FAILED(rv)) return rv;
 
     // make "res:///" == "resource:/"
-    rv = SetSpecialDir("", nsSpecialSystemDirectory::Moz_BinDirectory);
+    rv = SetSpecialDir("", "system.OS_CurrentProcessDirectory");
     if (NS_FAILED(rv)) return rv;
 
-    rv = SetSpecialDir("CurrentDir", nsSpecialSystemDirectory::OS_CurrentWorkingDirectory);
+    rv = SetSpecialDir("CurrentDir", "system.OS_CurrentWorkingDirectory");
     if (NS_FAILED(rv)) return rv;
 
-    rv = SetSpecialDir("CurrentDrive", nsSpecialSystemDirectory::OS_DriveDirectory);
+    rv = SetSpecialDir("CurrentDrive", "system.OS_DriveDirectory");
     if (NS_FAILED(rv)) return rv;
 
-    rv = SetSpecialDir("TempDir", nsSpecialSystemDirectory::OS_TemporaryDirectory);
+    rv = SetSpecialDir("TempDir", "system.OS_TemporaryDirectory");
     if (NS_FAILED(rv)) return rv;
 
-    rv = SetSpecialDir("ComponentsDir", nsSpecialSystemDirectory::XPCOM_CurrentProcessComponentDirectory);
+    rv = SetSpecialDir("ComponentsDir", "xpcom.currentProcess.componentDirectory");
     if (NS_FAILED(rv)) return rv;
 
     rv = SetSpecialDir("SystemDir",
 #ifdef XP_MAC
-                       nsSpecialSystemDirectory::Mac_SystemDirectory
+                       "system.SystemDirectory"
 #elif XP_OS2
-                       nsSpecialSystemDirectory::OS2_SystemDirectory
+                       "system.SystemDirectory"
 #elif XP_PC
-                       nsSpecialSystemDirectory::Win_SystemDirectory
+                       "system.SystemDirectory"
 #elif XP_BEOS
-                       nsSpecialSystemDirectory::BeOS_SystemDirectory
+                       "system.SystemDirectory"
 #else
-                       nsSpecialSystemDirectory::Unix_LibDirectory  // XXX ???
+                       "system.LibDirectory"  // XXX ???
 #endif
                        );
     if (NS_FAILED(rv)) return rv;
@@ -110,78 +128,16 @@ nsResProtocolHandler::Init()
     // Set up the "Resource" root to point to the old resource location 
     // such that:
     //     resource://<path>  ==  res://Resource/<path>
-#ifdef XP_PC
-
-    // XXX why is this one inconsistent -- Mac Unix and BeOS seem to look inthe current process dir
-    rv = SetSpecialDir("Resource", nsSpecialSystemDirectory::XPCOM_CurrentProcessComponentRegistry);
+    rv = SetSpecialDir("Resource", "system.OS_CurrentProcessDirectory");
     if (NS_FAILED(rv)) return rv;
-
-#elif defined (XP_MAC)
-
-    rv = SetSpecialDir("Resource", nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-    if (NS_FAILED(rv)) return rv;
-
-#elif defined(XP_UNIX)
-    
-#ifndef MAXPATHLEN
-#define MAXPATHLEN 1024 // A good guess, i suppose
-#endif
-
-    // first add $MOZILLA_FIVE_HOME if it exists
-    char* path = PR_GetEnv("MOZILLA_FIVE_HOME");
-    if (path) {
-        char* fileURL = PR_smprintf("file:///%s", path);
-        rv = AppendSubstitution("Resource", fileURL);
-        PR_Free(fileURL);
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    // then add pwd
-    char homepath[MAXPATHLEN];
-    FILE* pp;
-    if (!(pp = popen("pwd", "r"))) {
-        NS_WARNING("res protocol: can't open pwd");
-        return NS_ERROR_FAILURE;
-    }
-    if (fgets(homepath, MAXPATHLEN, pp)) {
-        homepath[PL_strlen(homepath)-1] = 0;
-    }
-    else {
-        NS_WARNING("res protocol: can't get homepath");
-
-        pclose(pp);
-        return NS_ERROR_FAILURE;
-    }
-    pclose(pp);
-    char* fileURL = PR_smprintf("file:///%s", homepath);
-    rv = AppendSubstitution("Resource", fileURL);
-    PR_Free(fileURL);
-    if (NS_FAILED(rv)) return rv;
-
-#elif defined(XP_BEOS)
-
-    rv = SetSpecialDir("Resource", nsSpecialSystemDirectory::XPCOM_CurrentProcessComponentRegistry);
-    if (NS_FAILED(rv)) return rv;
-
-#endif
 
     return rv;
-}
-
-static PRBool PR_CALLBACK
-DeleteCStringArray(nsHashKey *aKey, void *aData, void* closure)
-{
-    nsCStringArray* array = NS_STATIC_CAST(nsCStringArray*, aData);
-    if (array)
-        delete array;
-    return PR_TRUE;
 }
 
 nsResProtocolHandler::~nsResProtocolHandler()
 {
     if (mLock)
         PR_DestroyLock(mLock);
-    mSubstitutions.Enumerate(DeleteCStringArray, nsnull);
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsResProtocolHandler, nsIResProtocolHandler, nsIProtocolHandler)
@@ -277,96 +233,149 @@ nsResProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-nsresult
-nsResProtocolHandler::RawGetSubstitutions(const char *root, nsCStringArray* *result)
+NS_IMETHODIMP
+nsResProtocolHandler::PrependSubstitution(const char *root, const char *urlStr)
 {
+    nsresult rv;
+    nsAutoLock lock(mLock);
+
+    nsCOMPtr<nsIIOService> ioServ = do_GetService(kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIURI> url;
+    rv = ioServ->NewURI(urlStr, nsnull, getter_AddRefs(url));
+    if (NS_FAILED(rv)) return rv;
+
     nsStringKey key(root);
-    nsCStringArray* strings = (nsCStringArray*)mSubstitutions.Get(&key);
+    nsCOMPtr<nsISupportsArray> strings;
+    nsCOMPtr<nsISupportsArray> newStrings;
+
+    strings = getter_AddRefs((nsISupportsArray*)mSubstitutions.Get(&key));
+    if (strings) {
+        // we have to snapshot the array when inserting a new element because
+        // someone could be iterating over the existing array
+        rv = strings->Clone(getter_AddRefs(newStrings));
+        if (NS_FAILED(rv)) return rv;
+    }
+    else {
+        rv = NS_NewISupportsArray(getter_AddRefs(newStrings));
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    rv = newStrings->InsertElementAt(url, 0) ? NS_OK : NS_ERROR_FAILURE;
+    if (NS_SUCCEEDED(rv)) {
+        // replace existing array
+        (void)mSubstitutions.Put(&key, newStrings);
+    }
+    return rv;
+}
+
+NS_IMETHODIMP
+nsResProtocolHandler::AppendSubstitution(const char *root, const char *urlStr)
+{
+    nsresult rv;
+    nsAutoLock lock(mLock);
+
+    nsCOMPtr<nsIIOService> ioServ = do_GetService(kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIURI> url;
+    rv = ioServ->NewURI(urlStr, nsnull, getter_AddRefs(url));
+    if (NS_FAILED(rv)) return rv;
+
+    nsStringKey key(root);
+    nsCOMPtr<nsISupportsArray> strings;
+    nsCOMPtr<nsISupportsArray> newStrings;
+
+    strings = getter_AddRefs((nsISupportsArray*)mSubstitutions.Get(&key));
+    if (strings) {
+        // we have to snapshot the array when inserting a new element because
+        // someone could be iterating over the existing array
+        rv = strings->Clone(getter_AddRefs(newStrings));
+        if (NS_FAILED(rv)) return rv;
+    }
+    else {
+        rv = NS_NewISupportsArray(getter_AddRefs(newStrings));
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    rv = newStrings->AppendElement(url) ? NS_OK : NS_ERROR_FAILURE;
+    if (NS_SUCCEEDED(rv)) {
+        // replace existing array
+        (void)mSubstitutions.Put(&key, newStrings);
+    }
+    return rv;
+}
+
+struct CopyMostArgs {
+    nsISupportsArray* mNewArray;
+    nsIURI* mRemoveURL;
+};
+
+static PRBool
+CopyMost(nsISupports* aElement, void *aData)
+{
+    nsresult rv = NS_OK;
+    CopyMostArgs* args = (CopyMostArgs*)aData;
+    nsIURI* thisURL = (nsIURI*)aElement;
+    PRBool eq;
+    rv = thisURL->Equals(args->mRemoveURL, &eq);
+    if (NS_FAILED(rv)) return PR_FALSE;
+    if (!eq) {
+        rv = args->mNewArray->AppendElement(thisURL) ? NS_OK : NS_ERROR_FAILURE;
+    }
+    return NS_SUCCEEDED(rv);
+}
+
+NS_IMETHODIMP
+nsResProtocolHandler::RemoveSubstitution(const char *root, const char *urlStr)
+{
+    nsresult rv;
+    nsAutoLock lock(mLock);
+
+    nsCOMPtr<nsIIOService> ioServ = do_GetService(kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIURI> url;
+    rv = ioServ->NewURI(urlStr, nsnull, getter_AddRefs(url));
+    if (NS_FAILED(rv)) return rv;
+
+    nsStringKey key(root);
+    nsCOMPtr<nsISupportsArray> strings;
+    nsCOMPtr<nsISupportsArray> newStrings;
+
+    strings = getter_AddRefs((nsISupportsArray*)mSubstitutions.Get(&key));
     if (strings == nsnull) {
-        strings = new nsCStringArray();
-        if (strings == nsnull)
-            return NS_ERROR_OUT_OF_MEMORY;
+        // can't remove element if it doesn't exist
+        return NS_ERROR_FAILURE;
+    }
+
+    rv = NS_NewISupportsArray(getter_AddRefs(newStrings));
+    if (NS_FAILED(rv)) return rv;
+
+    CopyMostArgs args;
+    args.mNewArray = newStrings;
+    args.mRemoveURL = url;
+    PRBool ok = strings->EnumerateForwards(CopyMost, &args);
+    rv = ok ? NS_OK : NS_ERROR_FAILURE;
+    if (NS_SUCCEEDED(rv)) {
+        // replace existing array
+        (void)mSubstitutions.Put(&key, newStrings);
+    }
+    return rv;
+}
+
+NS_IMETHODIMP
+nsResProtocolHandler::GetSubstitutions(const char *root, nsISupportsArray* *result)
+{
+    nsresult rv;
+    nsAutoLock lock(mLock);
+
+    nsStringKey key(root);
+    nsISupportsArray* strings = (nsISupportsArray*)mSubstitutions.Get(&key);
+    if (strings == nsnull) {
+        rv = NS_NewISupportsArray(&strings);
+        if (NS_FAILED(rv)) return rv;
         (void)mSubstitutions.Put(&key, strings);
     }
     *result = strings;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsResProtocolHandler::PrependSubstitution(const char *root, const char *url)
-{
-    nsresult rv;
-    nsAutoLock lock(mLock);
-
-    nsCStringArray* strings;
-    rv = RawGetSubstitutions(root, &strings);
-    if (NS_FAILED(rv)) return rv;
-
-    nsCString urlStr(url);
-    PRBool ok = strings->InsertCStringAt(urlStr, 0);
-    if (!ok) return NS_ERROR_FAILURE;
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsResProtocolHandler::AppendSubstitution(const char *root, const char *url)
-{
-    nsresult rv;
-    nsAutoLock lock(mLock);
-
-    nsCStringArray* strings;
-    rv = RawGetSubstitutions(root, &strings);
-    if (NS_FAILED(rv)) return rv;
-
-    nsCString urlStr(url);
-    PRBool ok = strings->AppendCString(urlStr);
-    if (!ok) return NS_ERROR_FAILURE;
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsResProtocolHandler::RemoveSubstitution(const char *root, const char *url)
-{
-    nsresult rv;
-    nsAutoLock lock(mLock);
-
-    nsCStringArray* strings;
-    rv = RawGetSubstitutions(root, &strings);
-    if (NS_FAILED(rv)) return rv;
-
-    nsCString urlStr(url);
-    PRBool ok = strings->RemoveCString(urlStr);
-    if (!ok) return NS_ERROR_FAILURE;
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsResProtocolHandler::GetSubstitutions(const char *root, nsCStringArray* *result)
-{
-    nsresult rv;
-    nsAutoLock lock(mLock);
-
-    nsCStringArray* strings;
-    rv = RawGetSubstitutions(root, &strings);
-    if (NS_FAILED(rv)) return rv;
-
-    // XXX should put this in nsCStringArray::Clone
-    nsCStringArray* subst = new nsCStringArray();
-    if (subst == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    PRInt32 len = strings->Count();
-    for (PRInt32 i = 0; i < len; i++) {
-        PRBool ok = subst->AppendCString(*(*strings)[i]);
-        if (!ok) {
-            delete subst;
-            return NS_ERROR_FAILURE;
-        }
-    }
-
-    *result = subst;
     return NS_OK;
 }
 

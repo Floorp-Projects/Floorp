@@ -25,7 +25,7 @@
 
 #include "nsIResProtocolHandler.h"
 #include "nsHashtable.h"
-#include "nsSpecialSystemDirectory.h"
+#include "nsISupportsArray.h"
 
 class nsResProtocolHandler : public nsIResProtocolHandler
 {
@@ -42,12 +42,11 @@ public:
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
     nsresult Init();
-    nsresult SetSpecialDir(const char* name, nsSpecialSystemDirectory::SystemDirectories sysDir);
-    nsresult RawGetSubstitutions(const char *root, nsCStringArray* *result);
+    nsresult SetSpecialDir(const char* rootName, const char* specialDir);
 
 protected:
     PRLock*             mLock;
-    nsHashtable         mSubstitutions;
+    nsSupportsHashtable mSubstitutions;
 };
 
 #endif /* nsResProtocolHandler_h___ */
