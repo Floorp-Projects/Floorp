@@ -58,11 +58,16 @@
 
 #include "nsILineIterator.h"
 
+//tripple click includes
+#include "nsIPref.h"
+#include "nsIServiceManager.h"
+
 #ifndef PR_ABS
 #define PR_ABS(x) (x < 0 ? -x : x)
 #endif
 
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
+static NS_DEFINE_CID(kPrefCID,     NS_PREF_CID);//for tripple click pref
 
 #ifdef NS_DEBUG
 #undef NOISY_BLINK
@@ -352,7 +357,8 @@ public:
                          const nsPoint&  aPoint,
                          nsIContent **   aNewContent,
                          PRInt32&        aContentOffset,
-                         PRInt32&        aContentOffsetEnd);
+                         PRInt32&        aContentOffsetEnd,
+                         PRBool&         aBeginFrameContent);
 
   NS_IMETHOD GetPositionSlowly(nsIPresContext& aCX,
                          nsIRenderingContext * aRendContext,
@@ -1848,9 +1854,15 @@ nsTextFrame::GetContentAndOffsetsFromPoint(nsIPresContext& aCX,
                                            const nsPoint&  aPoint,
                                            nsIContent **   aNewContent,
                                            PRInt32&        aContentOffset,
-                                           PRInt32&        aContentOffsetEnd)
+                                           PRInt32&        aContentOffsetEnd,
+                                           PRBool&         aBeginFrameContent)
 {
-  return GetPosition(aCX, (aPoint.x < 0) ? 0 : aPoint.x, aNewContent, aContentOffset, aContentOffsetEnd);
+  nsresult rv = GetPosition(aCX, (aPoint.x < 0) ? 0 : aPoint.x, aNewContent, aContentOffset, aContentOffsetEnd);
+  if (aContentOffset == mContentOffset)
+    aBeginFrameContent = PR_TRUE;
+  else
+    aBeginFrameContent = PR_FALSE;
+  return rv;
 }
 
 
@@ -2130,7 +2142,7 @@ nsTextFrame::PeekOffset(nsPeekOffsetStruct *aPos)
       else
       {
         aPos->mAmount = eSelectDir;//go to "next" or previous frame based on direction not THIS frame
-        result = nsFrame::PeekOffset(aPos);
+        return nsFrame::PeekOffset(aPos);//no matter what this is not a valid frame to end up on
       }
     }
     break;
@@ -2166,6 +2178,7 @@ nsTextFrame::PeekOffset(nsPeekOffsetStruct *aPos)
           found = PR_FALSE;
           frameUsed = GetPrevInFlow();
           start = mContentOffset;
+          aPos->mContentOffset = start;//in case next call fails we stop at this offset
         }
       }
       else if (aPos->mDirection == eDirNext){
@@ -2184,8 +2197,10 @@ nsTextFrame::PeekOffset(nsPeekOffsetStruct *aPos)
           found = PR_FALSE;
           frameUsed = GetNextInFlow();
           start = mContentOffset + mContentLength;
+          aPos->mContentOffset = start;//in case next call fails we stop at this offset
         }
       }
+
       if (!found)
         result = nsFrame::PeekOffset(aPos);
       else 
@@ -2299,6 +2314,7 @@ nsTextFrame::PeekOffset(nsPeekOffsetStruct *aPos)
       {
         aPos->mContentOffset = PR_MIN(aPos->mContentOffset, mContentOffset + mContentLength);
         aPos->mContentOffset = PR_MAX(aPos->mContentOffset, mContentOffset);
+
         result = nsFrame::PeekOffset(aPos);
       }
       else 
@@ -2308,6 +2324,8 @@ nsTextFrame::PeekOffset(nsPeekOffsetStruct *aPos)
     default:
       result = NS_ERROR_FAILURE; break;
   }
+
+  aPos->mContentOffsetEnd = aPos->mContentOffset;
 
   if (NS_FAILED(result)){
     aPos->mResultContent = mContent;
@@ -2327,29 +2345,103 @@ nsTextFrame::HandleMultiplePress(nsIPresContext& aPresContext,
   if (!DisplaySelection(aPresContext)) {
     return NS_OK;
   }
+  
   nsMouseEvent *me = (nsMouseEvent *)aEvent;
-  if (me->clickCount > 2)
-    return nsFrame::HandleMultiplePress(aPresContext,aEvent,aEventStatus);
   nsCOMPtr<nsIPresShell> shell;
+
   nsresult rv = aPresContext.GetShell(getter_AddRefs(shell));
-  if (NS_SUCCEEDED(rv) && shell) {
+
+  if (me->clickCount > 2)//triple clicking
+  {
+    nsCOMPtr<nsIPref>     mPrefs;
+    PRInt32 prefInt = 0;
+    rv = nsServiceManager::GetService(kPrefCID, 
+                                               nsIPref::GetIID(), 
+                                               (nsISupports**)&mPrefs); 
+
+    if (NS_SUCCEEDED(rv) && mPrefs) 
+    { 
+      if (NS_SUCCEEDED(mPrefs->GetIntPref("browser.triple_click_style", &prefInt)) && prefInt)
+        return nsFrame::HandleMultiplePress(aPresContext, aEvent, aEventStatus);
+    }
+    nsCOMPtr<nsIDOMNode> startNode;
+    nsCOMPtr<nsIDOMNode> endNode;
+
+    nsTextFrame *currentFrame = this;
+    nsTextFrame *prevFrame = (nsTextFrame *)GetPrevInFlow();
+
+    while(prevFrame){
+      currentFrame = prevFrame;
+      prevFrame = (nsTextFrame *)currentFrame->GetPrevInFlow();
+      if (NS_FAILED(rv))
+        break;
+    }
+    prevFrame = currentFrame;
+    currentFrame = this;
+    nsTextFrame *nextFrame = (nsTextFrame *)GetNextInFlow();
+
+    while (nextFrame){
+      currentFrame = nextFrame;
+      nextFrame = (nsTextFrame *)currentFrame->GetNextInFlow();
+      if (NS_FAILED(rv))
+        break;
+    }
+    nextFrame = currentFrame;
+    nsCOMPtr<nsIContent> content;
+    if (prevFrame)
+      prevFrame->GetContent(getter_AddRefs(content));
+
+    startNode = do_QueryInterface(content,&rv);
+    if (NS_FAILED(rv) || !startNode)
+      return rv?rv:NS_ERROR_FAILURE;
+
+    nextFrame->GetContent(getter_AddRefs(content));
+
+    endNode = do_QueryInterface(content,&rv);
+    if (NS_FAILED(rv) || !endNode)
+      return rv?rv:NS_ERROR_FAILURE;
+    
+    PRInt32 startOffset;
+    PRInt32 endOffset;
+    PRInt32 unusedOffset;
+
+    rv = prevFrame->GetOffsets(startOffset,unusedOffset);
+    if (NS_FAILED(rv))
+      return rv;
+
+    rv = nextFrame->GetOffsets(unusedOffset,endOffset);
+    if (NS_FAILED(rv))
+      return rv;
+
+    nsCOMPtr<nsIDOMSelection> selection;
+    if (NS_SUCCEEDED(shell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection)))){
+      rv = selection->Collapse(startNode, startOffset);
+      if (NS_FAILED(rv))
+        return rv;
+      rv = selection->Extend(endNode, endOffset);
+      if (NS_FAILED(rv))
+        return rv;
+    }
+  }
+  else if (NS_SUCCEEDED(rv) && shell) {
     nsCOMPtr<nsIRenderingContext> acx;      
     nsCOMPtr<nsIFocusTracker> tracker;
     tracker = do_QueryInterface(shell, &rv);
     if (NS_FAILED(rv) || !tracker)
-      return rv;
+      return rv?rv:NS_ERROR_FAILURE;
+
     rv = shell->CreateRenderingContext(this, getter_AddRefs(acx));
     if (NS_SUCCEEDED(rv)){
       PRInt32 startPos = 0;
       PRInt32 contentOffsetEnd = 0;
       nsCOMPtr<nsIContent> newContent;
+      //find which word needs to be selected! use peek offset one way then the other
+      nsCOMPtr<nsIContent> startContent;
+      nsCOMPtr<nsIDOMNode> startNode;
+      nsCOMPtr<nsIContent> endContent;
+      nsCOMPtr<nsIDOMNode> endNode;
       if (NS_SUCCEEDED(GetPosition(aPresContext, aEvent->point.x,
                        getter_AddRefs(newContent), startPos, contentOffsetEnd))){
-        //find which word needs to be selected! use peek offset one way then the other
-        nsCOMPtr<nsIContent> startContent;
-        nsCOMPtr<nsIDOMNode> startNode;
-        nsCOMPtr<nsIContent> endContent;
-        nsCOMPtr<nsIDOMNode> endNode;
         //peeks{}
         nsPeekOffsetStruct startpos;
         startpos.SetData(tracker, 
@@ -2380,7 +2472,6 @@ nsTextFrame::HandleMultiplePress(nsIPresContext& aPresContext,
         startNode = do_QueryInterface(startpos.mResultContent,&rv);
         if (NS_FAILED(rv))
           return rv;
-
         nsCOMPtr<nsIDOMSelection> selection;
         if (NS_SUCCEEDED(shell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection)))){
           rv = selection->Collapse(startNode,startpos.mContentOffset);

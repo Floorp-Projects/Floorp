@@ -40,16 +40,12 @@ public:
                     nsHTMLReflowMetrics& aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
-  NS_IMETHOD GetPosition(nsIPresContext& aCX,
-                         nscoord aXCoord,
-                         nsIContent** aNewContent,
-                         PRInt32& aContentOffset,
-                         PRInt32& aContentOffsetEnd);
   NS_IMETHOD GetContentAndOffsetsFromPoint(nsIPresContext& aCX,
                          const nsPoint& aPoint,
                          nsIContent** aNewContent,
                          PRInt32& aContentOffset,
-                         PRInt32& aContentOffsetEnd);
+                         PRInt32& aContentOffsetEnd,
+                         PRBool&  aBeginFrameContent);
 
 protected:
   virtual ~BRFrame();
@@ -163,26 +159,14 @@ BRFrame::Reflow(nsIPresContext& aPresContext,
 }
 
 
-
-NS_IMETHODIMP BRFrame::GetPosition(nsIPresContext& aCX,
-                         nscoord         aCoord,
-                         nsIContent **   aContent,
-                         PRInt32&        aOffsetBegin,
-                         PRInt32&        aOffsetEnd)
-{
-  nsresult returnval = nsFrame::GetPosition(aCX,aCoord,aContent,aOffsetBegin,aOffsetEnd);
-  if (NS_SUCCEEDED(returnval))
-    aOffsetEnd = aOffsetBegin;//BRFrames should return a collapsed selection before itself
-  return returnval;
-}
-
 NS_IMETHODIMP BRFrame::GetContentAndOffsetsFromPoint(nsIPresContext& aCX,
                                                      const nsPoint&  aPoint,
                                                      nsIContent **   aContent,
                                                      PRInt32&        aOffsetBegin,
-                                                     PRInt32&        aOffsetEnd)
+                                                     PRInt32&        aOffsetEnd,
+                                                     PRBool&         aBeginFrameContent)
 {
-  nsresult result = nsFrame::GetContentAndOffsetsFromPoint(aCX,aPoint,aContent,aOffsetBegin,aOffsetEnd);
+  nsresult result = nsFrame::GetContentAndOffsetsFromPoint(aCX,aPoint,aContent,aOffsetBegin,aOffsetEnd,aBeginFrameContent);
 
   if (NS_SUCCEEDED(result))
   {
