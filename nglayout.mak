@@ -156,8 +156,8 @@ pull_lizard:
 
 pull_xpcom:
 	@cd $(MOZ_SRC)\.
-	$(CVSCO_XPCOM) $(MOZ_TOP)/modules/libreg 
-	$(CVSCO_XPCOM) $(MOZ_TOP)/xpcom
+	$(CVSCO_LIZARD) $(MOZ_TOP)/modules/libreg 
+	$(CVSCO_LIZARD) $(MOZ_TOP)/xpcom
 
 pull_imglib:
 	@cd $(MOZ_SRC)\.
