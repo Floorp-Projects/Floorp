@@ -166,8 +166,8 @@ printf "%-40s %10s %10.2f%% %10s %10.2f%%\n",
 my $leakstr  = PrintSize($newMap{"TOTAL"}{leaked}) . "B\n";
 my $bloatstr = PrintSize($newMap{"TOTAL"}{bloat}) . "B\n";
 
-print "TinderboxPrint:Lk:$leakstr\n";
-print "TinderboxPrint:Bl:$bloatstr\n";
+print "TinderboxPrint:<a title=\"nsTraceRefcnt leaks\">Lk:$leakstr</a>\n";
+print "TinderboxPrint:<a title=\"nsTraceRefcnt bloat\">Bl:$bloatstr</a>\n";
 
 ################################################################################
 
