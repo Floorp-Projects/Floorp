@@ -1497,8 +1497,6 @@ date_format(JSContext *cx, jsdouble date, jsval *rval)
     char buf[100];
     JSString *str;
     char tzbuf[100];
-    JSBool usetz;
-    uintN i, tzlen;
     PRMJTime split;
 
     if (!JSDOUBLE_IS_FINITE(date)) {
@@ -1528,29 +1526,6 @@ date_format(JSContext *cx, jsdouble date, jsval *rval)
 	new_explode(date, &split, JS_TRUE);
 	PRMJ_FormatTime(tzbuf, sizeof tzbuf, "(%Z) ", &split);
 
-        /* Decide whether to use the resulting timezone string.
-         *
-         * Reject it if it contains any non-ASCII, non-alphanumeric characters.
-         * It's then likely in some other character encoding, and we probably
-         * won't display it correctly.
-         */
-        usetz = JS_TRUE;
-        tzlen = strlen(tzbuf);
-        if (tzlen > 100) {
-            usetz = JS_FALSE;
-        } else {
-            for (i = 0; i < tzlen; i++) {
-                jschar c = tzbuf[i];
-                if (c > 127 || !(isalpha(c) || isdigit(c) ||
-                      c == ' ' || c == '(' || c == ')'))
-                    usetz = JS_FALSE;
-            }
-        }
-        
-        /* Also reject it if it's not parenthesized or if it's '()'. */
-        if (tzbuf[0] != '(' || tzbuf[1] == ')')
-            usetz = JS_FALSE;
-
 	/* Avoid dependence on PRMJ_FormatTimeUSEnglish, because it
 	 * requires a PRMJTime... which only has 16-bit years.  Sub-ECMA.
 	 */
@@ -1562,7 +1537,12 @@ date_format(JSContext *cx, jsdouble date, jsval *rval)
 		    MinFromTime(local),
 		    SecFromTime(local),
 		    offset,
-                    usetz ? tzbuf : "",
+
+		    /* don't print anything for the TZA comment if we got '()'
+		     * or something non-parenthesized from the OS.
+		     */
+		    ((tzbuf[0] == '(' && tzbuf[1] != ')') ? tzbuf : ""),
+
 		    YearFromTime(local));
     }
 
