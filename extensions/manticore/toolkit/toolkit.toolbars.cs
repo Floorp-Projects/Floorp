@@ -114,7 +114,7 @@ namespace Silverstone.Manticore.Toolkit
               currToolbar.Appearance = ToolBarAppearance.Flat;
               currToolbar.ButtonClick += new ToolBarButtonClickEventHandler(this.OnCommand);
               mForm.Controls.Add(currToolbar);
-              
+
               //mCoolBar.Bands.Add(-1, key, label, new Object(), true, currToolbar, true);
 
               shouldBuildNewRow = false;

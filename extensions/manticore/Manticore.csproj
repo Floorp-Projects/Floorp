@@ -251,6 +251,11 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "core\MIMEService.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "core\preferences.cs"
                     SubType = "Code"
                     BuildAction = "Compile"
@@ -305,6 +310,10 @@
                 <File
                     RelPath = "resources\manticore.psd"
                     BuildAction = "None"
+                />
+                <File
+                    RelPath = "resources\manticore.resx"
+                    BuildAction = "EmbeddedResource"
                 />
                 <File
                     RelPath = "toolkit\CommandUpdater.cs"

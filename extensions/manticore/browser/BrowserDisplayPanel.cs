@@ -237,6 +237,7 @@ namespace Silverstone.Manticore.Browser
       this.button2.Name = "button2";
       this.button2.TabIndex = 4;
       this.button2.Text = "Use Current";
+      this.button2.FlatStyle = FlatStyle.System;
       // 
       // label2
       // 
@@ -253,6 +254,7 @@ namespace Silverstone.Manticore.Browser
       this.button1.Size = new System.Drawing.Size(75, 24);
       this.button1.TabIndex = 2;
       this.button1.Text = "Browse...";
+      this.button2.FlatStyle = FlatStyle.System;
       // 
       // textBox1
       // 
@@ -290,6 +292,7 @@ namespace Silverstone.Manticore.Browser
       this.restoreSessionSettingsButton.Name = "restoreSessionSettingsButton";
       this.restoreSessionSettingsButton.TabIndex = 3;
       this.restoreSessionSettingsButton.Text = "Settings...";
+      this.restoreSessionSettingsButton.FlatStyle = FlatStyle.System;
       // 
       // radioButton3
       // 
@@ -298,6 +301,7 @@ namespace Silverstone.Manticore.Browser
       this.radioButton3.Size = new System.Drawing.Size(152, 16);
       this.radioButton3.TabIndex = 2;
       this.radioButton3.Text = "Restore previous session";
+      this.radioButton3.FlatStyle = FlatStyle.System;
       // 
       // radioButton2
       // 
@@ -306,6 +310,7 @@ namespace Silverstone.Manticore.Browser
       this.radioButton2.Size = new System.Drawing.Size(112, 16);
       this.radioButton2.TabIndex = 1;
       this.radioButton2.Text = "Show blank page";
+      this.radioButton2.FlatStyle = FlatStyle.System;
       // 
       // radioButton1
       // 
@@ -314,6 +319,7 @@ namespace Silverstone.Manticore.Browser
       this.radioButton1.Size = new System.Drawing.Size(120, 16);
       this.radioButton1.TabIndex = 0;
       this.radioButton1.Text = "Show home page";
+      this.radioButton1.FlatStyle = FlatStyle.System;
       // 
       // BrowserDisplayPanel
       // 

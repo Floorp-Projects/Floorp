@@ -48,16 +48,16 @@ namespace Silverstone.Manticore.Bookmarks
 	/// </summary>
 	public class FileBookmark : System.Windows.Forms.Form
 	{
-    private System.Windows.Forms.Label label1;
-    private System.Windows.Forms.Label label2;
-    private System.Windows.Forms.Label label3;
+    private Label label1;
+    private Label label2;
+    private Label label3;
     private BookmarksTreeView mFolderTree;
-    private System.Windows.Forms.Button mOKButton;
-    private System.Windows.Forms.Button mCancelButton;
-    private System.Windows.Forms.Button mUseDefaultButton;
-    private System.Windows.Forms.TextBox mLocationField;
-    private System.Windows.Forms.Button mNewFolderButton;
-    private System.Windows.Forms.TextBox mNameField;
+    private Button mOKButton;
+    private Button mCancelButton;
+    private Button mUseDefaultButton;
+    private Button mNewFolderButton;
+    private TextBox mLocationField;
+    private TextBox mNameField;
 		/// <summary>
 		/// Required designer variable.
 		/// </summary>
@@ -72,6 +72,14 @@ namespace Silverstone.Manticore.Bookmarks
 
       mNameField.Text = aTitle;
       mLocationField.Text = aURL;
+
+      //
+      // Button XP Theme support. 
+      //
+      mOKButton.FlatStyle = FlatStyle.System;
+      mCancelButton.FlatStyle = FlatStyle.System;
+      mUseDefaultButton.FlatStyle = FlatStyle.System;
+      mNewFolderButton.FlatStyle = FlatStyle.System;
 
       // 
       // folderTree

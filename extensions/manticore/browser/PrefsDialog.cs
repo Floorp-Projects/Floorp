@@ -240,6 +240,7 @@ namespace Silverstone.Manticore.Browser
       this.cancelButton.Name = "cancelButton";
       this.cancelButton.TabIndex = 2;
       this.cancelButton.Text = "Cancel";
+      this.cancelButton.FlatStyle = FlatStyle.System;
       // 
       // treeView1
       // 
@@ -257,6 +258,7 @@ namespace Silverstone.Manticore.Browser
       this.okButton.Name = "okButton";
       this.okButton.TabIndex = 3;
       this.okButton.Text = "OK";
+      this.okButton.FlatStyle = FlatStyle.System;
       // 
       // PrefsDialog
       // 

@@ -121,6 +121,7 @@ namespace Silverstone.Manticore.Browser
       this.checkBox3.Size = new System.Drawing.Size(136, 24);
       this.checkBox3.TabIndex = 3;
       this.checkBox3.Text = "Recent pages history";
+      this.checkBox3.FlatStyle = FlatStyle.System;
       // 
       // cancelButton
       // 
@@ -129,6 +130,7 @@ namespace Silverstone.Manticore.Browser
       this.cancelButton.Name = "cancelButton";
       this.cancelButton.TabIndex = 5;
       this.cancelButton.Text = "Cancel";
+      this.cancelButton.FlatStyle = FlatStyle.System;
       // 
       // label1
       // 
@@ -146,6 +148,7 @@ namespace Silverstone.Manticore.Browser
       this.okButton.Name = "okButton";
       this.okButton.TabIndex = 4;
       this.okButton.Text = "OK";
+      this.okButton.FlatStyle = FlatStyle.System;
       // 
       // radioButton1
       // 
@@ -154,6 +157,7 @@ namespace Silverstone.Manticore.Browser
       this.radioButton1.Size = new System.Drawing.Size(144, 16);
       this.radioButton1.TabIndex = 6;
       this.radioButton1.Text = "Last page visited";
+      this.radioButton1.FlatStyle = FlatStyle.System;
       // 
       // radioButton2
       // 
@@ -162,6 +166,7 @@ namespace Silverstone.Manticore.Browser
       this.radioButton2.Size = new System.Drawing.Size(104, 16);
       this.radioButton2.TabIndex = 7;
       this.radioButton2.Text = "Open windows";
+      this.radioButton2.FlatStyle = FlatStyle.System;
       // 
       // RestoreSessionSettings
       // 

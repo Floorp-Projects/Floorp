@@ -40,8 +40,6 @@ namespace Silverstone.Manticore.Browser
   using System.Windows.Forms;
   using System.Net;
 
-  using Microsoft.Win32;
-
   using Silverstone.Manticore.Core;
   using Silverstone.Manticore.App;
   using Silverstone.Manticore.Toolkit;
@@ -193,9 +191,21 @@ namespace Silverstone.Manticore.Browser
     {
       SaveFileDialog dlg = new SaveFileDialog();
       dlg.AddExtension = true;
-      dlg.DefaultExt = "html";
-      dlg.FileName = "untitled";
       dlg.InitialDirectory = FileLocator.GetFolderPath(FileLocator.SpecialFolders.ssfPERSONAL); // XXX persist this. 
+
+      // XXX I want to point out that this is a really lame hack. We need
+      //     a URL parser (not a URI parser, a URL parser). 
+      string name = mTitle.Replace("\"", "'");
+      name = name.Replace("*", " ");
+      name = name.Replace(":", " ");
+      name = name.Replace("?", " ");
+      name = name.Replace("<", "(");
+      name = name.Replace(">", ")");
+      name = name.Replace("\\", "-");
+      name = name.Replace("/", "-");
+      name = name.Replace("|", "-");
+      dlg.FileName = name;
+
       dlg.Title = "Save Page As...";
       dlg.ValidateNames = true;
       dlg.OverwritePrompt = true;
@@ -208,21 +218,14 @@ namespace Silverstone.Manticore.Browser
         case "text/html":
         case "text/xhtml":
           dlg.Filter = "Web Page, complete (*.htm;*.html)|*.htm*|Web Page, HTML only (*.htm;*.html)|*.htm*|Text only (*.txt)|*.txt";
+          dlg.DefaultExt = "html";
           break;
         default:
-          // XXX factor this into a separate MIME service.
-          RegistryKey clsRoot = Registry.ClassesRoot;
-          string extFromMIMEDBKey = "MIME\\Database\\Content Type\\" + contentType;
-          RegistryKey extensionKey = clsRoot.OpenSubKey(extFromMIMEDBKey);
-          string extension = extensionKey.GetValue("Extension") as String;
-          RegistryKey handlerKey = clsRoot.OpenSubKey(extension);
-          string handler = handlerKey.GetValue("") as String;
-          RegistryKey descriptionKey = clsRoot.OpenSubKey(handler);
-          string description = descriptionKey.GetValue("") as String;
-          if (description == "")
-            description = extension.ToUpper() + "file";
+          string extension = MIMEService.GetExtensionForMIMEType(contentType);
+          string description = MIMEService.GetDescriptionForMIMEType(contentType);
           description += " (*" + extension + ")";
           dlg.Filter = description + "|*" + extension + "|All Files (*.*)|*.*";
+          dlg.DefaultExt = extension.Substring(1, extension.Length-1);
           break;
       }
 

@@ -53,7 +53,7 @@ namespace Silverstone.Manticore.Browser
 		/// Required designer variable.
 		/// </summary>
 		private System.ComponentModel.Container components = null;
-
+ 
 		public OpenDialog()
 		{
 			//
@@ -115,6 +115,7 @@ namespace Silverstone.Manticore.Browser
 			this.cancelButton.Size = new System.Drawing.Size(72, 24);
 			this.cancelButton.TabIndex = 2;
 			this.cancelButton.Text = "Cancel";
+      this.cancelButton.FlatStyle = FlatStyle.System;
 			// 
 			// label1
 			// 
@@ -131,6 +132,7 @@ namespace Silverstone.Manticore.Browser
 			this.openButton.Size = new System.Drawing.Size(72, 24);
 			this.openButton.TabIndex = 2;
 			this.openButton.Text = "Open";
+      this.openButton.FlatStyle = FlatStyle.System;
 			// 
 			// OpenDialog
 			// 
