@@ -3043,14 +3043,86 @@ GlobalWindowImpl::CheckForAbusePoint ()
   return PR_FALSE;
 }
 
+/* Allow or deny a window open based on whether popups are suppressed.
+   This method assumes we're in a popup situation; otherwise why call it?
+   Returns PR_TRUE if the window should be opened. */
+PRBool GlobalWindowImpl::CheckOpenAllow(const nsAString &aName)
+{
+  PRBool allowWindow = PR_TRUE;
+  
+  if (IsPopupBlocked(mDocument)) {
+    allowWindow = PR_FALSE;
+    // However it might still not be blocked.
+    // Special case items that don't actually open new windows.
+    nsAutoString name(aName);
+    if (!name.IsEmpty() &&
+        !name.EqualsIgnoreCase("_top") &&
+        !name.EqualsIgnoreCase("_self") &&
+        !name.EqualsIgnoreCase("_content")) {
+
+      nsCOMPtr<nsIWindowWatcher> wwatch =
+          do_GetService(NS_WINDOWWATCHER_CONTRACTID);
+      if (wwatch) {
+        nsCOMPtr<nsIDOMWindow> namedWindow;
+        wwatch->GetWindowByName(PromiseFlatString(aName).get(), this,
+                                getter_AddRefs(namedWindow));
+        if (namedWindow)
+          allowWindow = PR_TRUE;
+      }
+    }
+  }
+
+  return allowWindow;
+}
+
+/* If a window open is blocked, fire the appropriate DOM events.
+   aBlocked signifies we just blocked a popup.
+   aWindow signifies we just opened what is probably a popup.
+*/
+void
+GlobalWindowImpl::FireAbuseEvents(PRBool aBlocked, PRBool aWindow,
+                                  const nsAString &aPopupURL)
+{
+  nsCOMPtr<nsIDOMWindow> topWindow;
+  GetTop(getter_AddRefs(topWindow));
+  nsCOMPtr<nsIDOMDocument> topDoc;
+  topWindow->GetDocument(getter_AddRefs(topDoc));
+
+  nsCOMPtr<nsIURI> requestingURI;
+  nsCOMPtr<nsIURI> popupURI;
+  nsCOMPtr<nsIWebNavigation> webNav(do_GetInterface(topWindow));
+  nsCOMPtr<nsIIOService> ios(do_GetService(NS_IOSERVICE_CONTRACTID));
+  if (webNav)
+    webNav->GetCurrentURI(getter_AddRefs(requestingURI));
+  if (ios)
+    ios->NewURI(NS_ConvertUCS2toUTF8(aPopupURL), 0, 0,
+                getter_AddRefs(popupURI));
+
+  if (aBlocked)
+    FirePopupBlockedEvent(topDoc, requestingURI, popupURI);
+  if (aWindow)
+    FirePopupWindowEvent(topDoc);
+}
+
 NS_IMETHODIMP
 GlobalWindowImpl::Open(const nsAString& aUrl,
                        const nsAString& aName,
                        const nsAString& aOptions,
                        nsIDOMWindow **_retval)
 {
-  return OpenInternal(aUrl, aName, aOptions, PR_FALSE, nsnull, 0, nsnull,
+  PRBool   abusedWindow = CheckForAbusePoint();
+  nsresult rv;
+
+  if (abusedWindow && !CheckOpenAllow(aName)) {
+    FireAbuseEvents(PR_TRUE, PR_FALSE, aUrl);
+    return NS_ERROR_FAILURE; // unlike the public Open method, return an error
+  }
+
+  rv = OpenInternal(aUrl, aName, aOptions, PR_FALSE, nsnull, 0, nsnull,
                       _retval);
+  if (NS_SUCCEEDED(rv) && abusedWindow)
+    FireAbuseEvents(PR_FALSE, PR_TRUE, aUrl);
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -3094,54 +3166,10 @@ GlobalWindowImpl::Open(nsIDOMWindow **_retval)
     }
   }
 
-  /*
-   * If we're in a commonly abused state (top level script, running a timeout,
-   * or onload/onunload), and the preference is enabled, prevent window.open().
-   */
   PRBool abusedWindow = CheckForAbusePoint();
-  
-  nsCOMPtr<nsIDOMWindow> topWindow;
-  GetTop(getter_AddRefs(topWindow));
-  nsCOMPtr<nsIDOMDocument> topDoc;
-  topWindow->GetDocument(getter_AddRefs(topDoc));
-
-  if (abusedWindow) {
-    if (IsPopupBlocked(mDocument)) {
-      nsCOMPtr<nsIURI> requestingURI;
-      nsCOMPtr<nsIURI> popupURI;
-      nsCOMPtr<nsIWebNavigation> webNav(do_GetInterface(topWindow));
-      nsCOMPtr<nsIIOService> ios(do_GetService(NS_IOSERVICE_CONTRACTID));
-      if (webNav)
-        webNav->GetCurrentURI(getter_AddRefs(requestingURI));
-      if (ios)
-        ios->NewURI(NS_ConvertUCS2toUTF8(url), 0, 0,
-                    getter_AddRefs(popupURI));
-      if (name.IsEmpty()) {
-        FirePopupBlockedEvent(topDoc, requestingURI, popupURI);
-        return NS_OK;
-      }
-
-      // Special case items that don't actually open new windows.
-      if (!name.EqualsIgnoreCase("_top") &&
-          !name.EqualsIgnoreCase("_self") &&
-          !name.EqualsIgnoreCase("_content")) {
-
-        nsCOMPtr<nsIWindowWatcher> wwatch =
-            do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
-        // If getting a window watcher fails, we'd fail downstream anyway
-        // when trying to open a new window so just bail here.
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        nsCOMPtr<nsIDOMWindow> namedWindow;
-        wwatch->GetWindowByName(name.get(), this,
-                                getter_AddRefs(namedWindow));
-
-        if (!namedWindow) {
-          FirePopupBlockedEvent(topDoc, requestingURI, popupURI);
-          return NS_OK;
-        }
-      }
-    }
+  if (abusedWindow && !CheckOpenAllow(name)) {
+    FireAbuseEvents(PR_TRUE, PR_FALSE, url);
+    return NS_OK; // don't open the window, but also don't throw a JS exception
   }
 
   rv = OpenInternal(url, name, options, PR_FALSE, nsnull, 0, nsnull, _retval);
@@ -3172,7 +3200,7 @@ GlobalWindowImpl::Open(nsIDOMWindow **_retval)
     }
     
     if (abusedWindow)
-      FirePopupWindowEvent(topDoc);
+      FireAbuseEvents(PR_FALSE, PR_TRUE, url);
   }
 
   return rv;

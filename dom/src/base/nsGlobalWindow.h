@@ -244,6 +244,9 @@ protected:
                          float* aT2P);
   nsresult SecurityCheckURL(const char *aURL);
   PRBool   CheckForAbusePoint();
+  PRBool   CheckOpenAllow(const nsAString &aName);
+  void     FireAbuseEvents(PRBool aBlocked, PRBool aWindow,
+                           const nsAString &aPopupURL);
 
   void FlushPendingNotifications(PRBool aFlushReflows);
   void EnsureReflowFlushAndPaint();
