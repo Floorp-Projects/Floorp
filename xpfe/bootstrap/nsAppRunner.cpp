@@ -237,13 +237,6 @@ int main(int argc, char* argv[])
   // XXX: This call will be replaced by a registry initialization...
   NS_SetupRegistry_1();
 
-  nsIFileLocator* locator = nsnull;
-  rv = nsServiceManager::GetService(kFileLocatorCID, nsIFileLocator::GetIID(), (nsISupports**)&locator);
-  if (NS_FAILED(rv))
-      return rv;
-  if (!locator)
-      return NS_ERROR_FAILURE;
-
   // get and start the ProfileManager service
 #if defined(NS_USING_PROFILES)
   rv = nsServiceManager::GetService(kProfileCID, 
@@ -345,8 +338,10 @@ int main(int argc, char* argv[])
 				// No directory name provided. Get File Locator
 				nsIFileLocator* locator = nsnull;
 				rv = nsServiceManager::GetService(kFileLocatorCID, nsIFileLocator::GetIID(), (nsISupports**)&locator);
-				if (NS_FAILED(rv) || !locator)
-					return NS_ERROR_FAILURE;
+        if (NS_FAILED(rv))
+          return rv;
+        if (!locator)
+          return NS_ERROR_FAILURE;
 				
 				// Get current profile, make the new one a sibling...
 				nsIFileSpec* spec;
@@ -739,8 +734,6 @@ done:
     nsServiceManager::ReleaseService(kProfileCID, profileService);
   }
 #endif // defined(NS_USING_PROFILES)
-
-    nsServiceManager::ReleaseService(kFileLocatorCID, locator);
 
 #ifdef XP_MAC
 	(void)CloseTSMAwareApplication();
