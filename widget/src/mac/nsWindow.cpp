@@ -42,14 +42,7 @@ NS_IMPL_RELEASE(nsWindow)
 // nsWindow constructor
 //
 //-------------------------------------------------------------------------
-nsWindow::nsWindow() : nsIWidget(),
-  mEventListener(nsnull),
-  mMouseListener(nsnull),
-  mToolkit(nsnull),
-  mFontMetrics(nsnull),
-  mContext(nsnull),
-  mEventCallback(nsnull),
-  mIgnoreResize(PR_FALSE),
+nsWindow::nsWindow() : nsBaseWidget(),
   mParent(nsnull)
 {
   strcpy(gInstanceClassName, "nsWindow");
@@ -69,7 +62,6 @@ nsWindow::nsWindow() : nsIWidget(),
   mVisible = PR_FALSE;
   mDisplayed = PR_FALSE;
   mLowerLeft = PR_FALSE;
-  mCursor = eCursor_standard;
   mClientData = nsnull;
   mWindowRegion = nsnull;
   mChildren      = NULL;
@@ -304,11 +296,6 @@ void nsWindow::CreateChildWindow(nsNativeWidget  aNativeParent,
 	mWindowRegion = NewRgn();
 	SetRectRgn(mWindowRegion,aRect.x,aRect.y,aRect.x+aRect.width,aRect.y+aRect.height);		 
   InitDeviceContext(aContext,(nsNativeWidget)mWindowPtr);
-
-  // Force cursor to default setting
-  mCursor = eCursor_select;
-  SetCursor(eCursor_standard);
-
 }
 
 //-------------------------------------------------------------------------
@@ -365,25 +352,10 @@ nsRefData		*theRefData;
 		DisposeRgn(mWindowRegion);
 		mWindowRegion = nsnull;	
 		}
+
+	nsBaseWidget::Destroy();
+
 	return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// Accessor functions to get/set the client data
-//
-//-------------------------------------------------------------------------
-
-NS_IMETHODIMP nsWindow::GetClientData(void*& aClientData)
-{
-  aClientData = mClientData;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsWindow::SetClientData(void* aClientData)
-{
-  mClientData = aClientData;
-  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -395,59 +367,6 @@ nsIWidget* nsWindow::GetParent(void)
 {
   NS_IF_ADDREF(mParent);
   return  mParent;
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Get this nsWindow's list of children
-//
-//-------------------------------------------------------------------------
-nsIEnumerator* nsWindow::GetChildren()
-{
-  if (mChildren) {
-    // Reset the current position to 0
-    mChildren->Reset();
-
-    // XXX Does this copy of our enumerator work? It looks like only
-    // the first widget in the list is added...
-    Enumerator * children = new Enumerator;
-    nsISupports   * next = mChildren->Next();
-    if (next) {
-      nsIWidget *widget;
-      if (NS_OK == next->QueryInterface(kIWidgetIID, (void**)&widget)) {
-        children->Append(widget);
-      }
-    }
-
-    return (nsIEnumerator*)children;
-  }
-	return NULL;
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Add a child to the list of children
-//
-//-------------------------------------------------------------------------
-void nsWindow::AddChild(nsIWidget* aChild)
-{
-	if (!mChildren)
-		mChildren = new Enumerator();
-
-	mChildren->Append(aChild);
-}
-
-//-------------------------------------------------------------------------
-//
-// Remove a child from the list of children
-//
-//-------------------------------------------------------------------------
-void nsWindow::RemoveChild(nsIWidget* aChild)
-{
-	if (mChildren)
-    mChildren->Remove(aChild);
 }
 
 //-------------------------------------------------------------------------
@@ -621,52 +540,6 @@ NS_IMETHODIMP nsWindow::GetBounds(nsRect &aRect)
     
 //-------------------------------------------------------------------------
 //
-// Get the foreground color
-//
-//-------------------------------------------------------------------------
-nscolor nsWindow::GetForegroundColor(void)
-{
-  return (mForeground);
-}
-
-    
-//-------------------------------------------------------------------------
-//
-// Set the foreground color
-//
-//-------------------------------------------------------------------------
-NS_IMETHODIMP nsWindow::SetForegroundColor(const nscolor &aColor)
-{
-  mForeground = aColor;
-  return NS_OK ;
-}
-
-    
-//-------------------------------------------------------------------------
-//
-// Get the background color
-//
-//-------------------------------------------------------------------------
-nscolor nsWindow::GetBackgroundColor(void)
-{
-  return (mBackground);
-}
-
-    
-//-------------------------------------------------------------------------
-//
-// Set the background color
-//
-//-------------------------------------------------------------------------
-NS_IMETHODIMP nsWindow::SetBackgroundColor(const nscolor &aColor)
-{
-  mBackground = aColor ;
-  return NS_OK;
-}
-
-    
-//-------------------------------------------------------------------------
-//
 // Get this component font
 //
 //-------------------------------------------------------------------------
@@ -697,29 +570,6 @@ NS_IMETHODIMP nsWindow::SetFont(const nsFont &aFont)
   }
  
  	return NS_OK;
-}
-
-    
-//-------------------------------------------------------------------------
-//
-// Get this component cursor
-//
-//-------------------------------------------------------------------------
-nsCursor nsWindow::GetCursor()
-{
-  return eCursor_standard;
-}
-
-    
-//-------------------------------------------------------------------------
-//
-// Set this component cursor
-//
-//-------------------------------------------------------------------------
-
-NS_IMETHODIMP nsWindow::SetCursor(nsCursor aCursor)
-{
-	return NS_OK;
 }
  
 //-------------------------------------------------------------------------
@@ -816,50 +666,6 @@ nsRefData	*theRefData;
 
 //-------------------------------------------------------------------------
 //
-// Create a rendering context from this nsWindow
-//
-//-------------------------------------------------------------------------
-nsIRenderingContext* nsWindow::GetRenderingContext()
-{
-  nsIRenderingContext * ctx = nsnull;
-
-  if (GetNativeData(NS_NATIVE_WIDGET)) 
-  	{
-    nsresult  res = NS_OK;
-    
-    static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
-    static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
-    
-    res = nsRepository::CreateInstance(kRenderingContextCID, nsnull, kRenderingContextIID, (void **)&ctx);
-    
-    if (NS_OK == res)
-    	{
-      ctx->Init(mContext, this);
-      
-      //ctx->SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine)
-      }
-    
-    NS_ASSERTION(NULL != ctx, "Null rendering context");
-  	}
-  
-  return ctx;
-
-}
-
-//-------------------------------------------------------------------------
-//
-// Return the toolkit this widget was created on
-//
-//-------------------------------------------------------------------------
-nsIToolkit* nsWindow::GetToolkit()
-{
-  NS_IF_ADDREF(mToolkit);
-  return mToolkit;
-}
-
-
-//-------------------------------------------------------------------------
-//
 // Set the colormap of the window
 //
 //-------------------------------------------------------------------------
@@ -870,78 +676,12 @@ NS_IMETHODIMP nsWindow::SetColorMap(nsColorMap *aColorMap)
 
 //-------------------------------------------------------------------------
 //
-// Return the used device context
-//
-//-------------------------------------------------------------------------
-nsIDeviceContext* nsWindow::GetDeviceContext() 
-{
-  NS_IF_ADDREF(mContext); 
-  return mContext;
-}
-
-//-------------------------------------------------------------------------
-//
-// Return the used app shell
-//
-//-------------------------------------------------------------------------
-nsIAppShell* nsWindow::GetAppShell()
-{ 
-  NS_IF_ADDREF(mAppShell); 
-  return mAppShell;
-}
-
-//-------------------------------------------------------------------------
-//
 // Scroll the bits of a window
 //
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
 	return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// Scroll the bits of a window
-//
-//-------------------------------------------------------------------------
-NS_IMETHODIMP nsWindow::SetBorderStyle(nsBorderStyle aBorderStyle) 
-{
-	return NS_OK;
-} 
-
-//-------------------------------------------------------------------------
-//
-// Scroll the bits of a window
-//
-//-------------------------------------------------------------------------
-NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle) 
-{
-	return NS_OK;
-} 
-
-//-------------------------------------------------------------------------
-//
-// Processes a mouse pressed event
-//
-//-------------------------------------------------------------------------
-NS_IMETHODIMP nsWindow::AddMouseListener(nsIMouseListener * aListener)
-{
-  NS_PRECONDITION(mMouseListener == nsnull, "Null mouse listener");
-  mMouseListener = aListener;
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// Processes a mouse pressed event
-//
-//-------------------------------------------------------------------------
-NS_IMETHODIMP nsWindow::AddEventListener(nsIEventListener * aListener)
-{
-  NS_PRECONDITION(mEventListener == nsnull, "Null event listener");
-  mEventListener = aListener;
-  return NS_OK;
 }
 
 PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
@@ -1139,20 +879,10 @@ NS_IMETHODIMP nsWindow::EndResizingChildren(void)
 // 
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsWindow::OnDestroy()
-{
-	return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// 
-//
-//-------------------------------------------------------------------------
 PRBool nsWindow::OnResize(nsSizeEvent &aEvent)
 {
   nsRect* size = aEvent.windowSize;
-  if (mEventCallback && !mIgnoreResize) {
+  if (mEventCallback) {
     return(DispatchWindowEvent(&aEvent));
   }
 
@@ -1195,28 +925,6 @@ PRBool nsWindow::DispatchFocus(nsGUIEvent &aEvent)
 PRBool nsWindow::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
 {
  return FALSE;
-}
-
-//-------------------------------------------------------------------------
-//
-// 
-//
-//-------------------------------------------------------------------------
-NS_IMETHODIMP nsWindow::SetIgnoreResize(PRBool aIgnore)
-{
-  mIgnoreResize = aIgnore;
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// 
-//
-//-------------------------------------------------------------------------
-
-PRBool nsWindow::IgnoreResize()
-{
-  return mIgnoreResize;
 }
 
 //-------------------------------------------------------------------------
@@ -1677,35 +1385,6 @@ NS_IMETHODIMP nsWindow::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
 	return NS_OK;
 } 
 
-//-------------------------------------------------------------------------
-//
-// Setup initial tooltip rectangles
-//
-//-------------------------------------------------------------------------
-NS_IMETHODIMP nsWindow::SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[])
-{
-	return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// Update all tooltip rectangles
-//
-//-------------------------------------------------------------------------
-NS_IMETHODIMP nsWindow::UpdateTooltips(nsRect* aNewTips[])
-{
-	return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// Remove all tooltip rectangles
-//
-//-------------------------------------------------------------------------
-NS_IMETHODIMP nsWindow::RemoveTooltips()
-{
-	return NS_OK;
-}
 
 //=================================================================
 /*  Convert the coordinates to some device coordinates so GFX can draw.
@@ -1723,142 +1402,6 @@ PRInt32	offX,offY;
 	aX -=offX;
 	aY -=offY;
 	
-}
-
-//-------------------------------------------------------------------------
-//
-// Constructor
-//
-//-------------------------------------------------------------------------
-#define INITIAL_SIZE        2
-
-nsWindow::Enumerator::Enumerator()
-{
-    mArraySize = INITIAL_SIZE;
-    mNumChildren = 0;
-    mChildrens = (nsIWidget**)new PRInt32[mArraySize];
-    memset(mChildrens, 0, sizeof(PRInt32) * mArraySize);
-    mCurrentPosition = 0;
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Destructor
-//
-//-------------------------------------------------------------------------
-nsWindow::Enumerator::~Enumerator()
-{   
-	if (mChildrens) 
-		{
-		delete[] mChildrens;
-		mChildrens = nsnull;
-		}
-}
-
-//-------------------------------------------------------------------------
-//
-// Get enumeration next element. Return null at the end
-//
-//-------------------------------------------------------------------------
-nsIWidget* nsWindow::Enumerator::Next()
-{
-	NS_ASSERTION(mChildrens != nsnull,"it is not valid to call this method on an empty list");
-	if (mChildrens != nsnull)
-		{
-		if (mCurrentPosition < mArraySize && mChildrens[mCurrentPosition]) 
-			return mChildrens[mCurrentPosition++];
-		}
-  return nsnull;
-}
-
-//-------------------------------------------------------------------------
-//
-// Get enumeration previous element. Return null at the beginning
-//
-//-------------------------------------------------------------------------
-nsIWidget* nsWindow::Enumerator::Previous()
-{
-	NS_ASSERTION(mChildrens != nsnull,"it is not valid to call this method on an empty list");
-	if (mChildrens != nsnull)
-		{
-		if ((mCurrentPosition >=0) && (mCurrentPosition < mArraySize) && (mChildrens[mCurrentPosition])) 
-			return mChildrens[mCurrentPosition--];
-		}
-  return NULL;
-}
-
-//-------------------------------------------------------------------------
-//
-// Reset enumerator internal pointer to the beginning
-//
-//-------------------------------------------------------------------------
-void nsWindow::Enumerator::Reset()
-{
-    mCurrentPosition = 0;
-}
-
-//-------------------------------------------------------------------------
-//
-// Reset enumerator internal pointer to the end
-//
-//-------------------------------------------------------------------------
-void nsWindow::Enumerator::ResetToLast()
-{
-    mCurrentPosition = mNumChildren-1;
-}
-
-//-------------------------------------------------------------------------
-//
-// Append an element 
-//
-//-------------------------------------------------------------------------
-void nsWindow::Enumerator::Append(nsIWidget* aWinWidget)
-{
-
-  if (aWinWidget) 
-  	{
-    if (mNumChildren == mArraySize) 
-        GrowArray();
-    mChildrens[mNumChildren] = aWinWidget;
-    mNumChildren++;
-    NS_ADDREF(aWinWidget);
-  	}
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Remove an element 
-//
-//-------------------------------------------------------------------------
-void nsWindow::Enumerator::Remove(nsIWidget* aWinWidget)
-{
-int	pos;
-
-		if(mNumChildren)
-			{
-	    for(pos = 0; mChildrens[pos] && (mChildrens[pos] != aWinWidget); pos++){};
-	    if (mChildrens[pos] == aWinWidget) 
-	    	{
-	      memcpy(mChildrens + pos, mChildrens + pos + 1, mArraySize - pos - 1);
-	    	}
-			mNumChildren--;
-			}
-}
-
-//-------------------------------------------------------------------------
-//
-// Grow the size of the children array
-//
-//-------------------------------------------------------------------------
-void nsWindow::Enumerator::GrowArray()
-{
-    mArraySize <<= 1;
-    nsIWidget **newArray = (nsIWidget**)new PRInt32[mArraySize];
-    memset(newArray, 0, sizeof(PRInt32) * mArraySize);
-    memcpy(newArray, mChildrens, (mArraySize>>1) * sizeof(PRInt32));
-    mChildrens = newArray;
 }
 
 /*

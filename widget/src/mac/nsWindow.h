@@ -19,6 +19,7 @@
 #define Window_h__
 
 #include "nsISupports.h"
+#include "nsBaseWidget.h"
 
 #include "nsToolkit.h"
 
@@ -41,7 +42,7 @@
  * Native Macintosh window wrapper. 
  */
 
-class nsWindow : public nsIWidget
+class nsWindow : public nsBaseWidget
 {
 
 public:
@@ -66,13 +67,8 @@ public:
                                    nsIToolkit *aToolkit = nsnull,
                                    nsWidgetInitData *aInitData = nsnull);
 
-    NS_IMETHOD            	GetClientData(void*& aClientData);
-    NS_IMETHOD            	SetClientData(void* aClientData);
     NS_IMETHOD            	Destroy();
     virtual nsIWidget*    	GetParent(void);
-    virtual nsIEnumerator*  GetChildren();
-    virtual void            AddChild(nsIWidget* aChild);
-    virtual void            RemoveChild(nsIWidget* aChild);
     NS_IMETHOD              Show(PRBool aState);
     NS_IMETHOD 							IsVisible(PRBool & aState);
     NS_IMETHOD            	Move(PRUint32 aX, PRUint32 aY);
@@ -82,33 +78,15 @@ public:
     NS_IMETHOD            	SetFocus(void);
     NS_IMETHOD            	GetBounds(nsRect &aRect);
     NS_IMETHOD            	SetBounds(const nsRect &aRect);
-    virtual nscolor         GetForegroundColor(void);
-    NS_IMETHOD            	SetForegroundColor(const nscolor &aColor);
-    virtual nscolor         GetBackgroundColor(void);
-    NS_IMETHOD            	SetBackgroundColor(const nscolor &aColor);
     virtual nsIFontMetrics* GetFont(void);
     NS_IMETHOD            	SetFont(const nsFont &aFont);
-    virtual nsCursor        GetCursor();
-    NS_IMETHOD            	SetCursor(nsCursor aCursor);
     NS_IMETHOD            	Invalidate(PRBool aIsSynchronous);
     NS_IMETHOD							Invalidate(const nsRect &aRect,PRBool aIsSynchronous);
     virtual void*           GetNativeData(PRUint32 aDataType);
-    virtual nsIRenderingContext* GetRenderingContext();
     NS_IMETHOD            	SetColorMap(nsColorMap *aColorMap);
-    virtual nsIDeviceContext* GetDeviceContext();
-    virtual nsIAppShell*    GetAppShell();
     NS_IMETHOD            	Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
-    virtual nsIToolkit*     GetToolkit();  
-    NS_IMETHOD            	SetBorderStyle(nsBorderStyle aBorderStyle); 
-    NS_IMETHOD            	SetTitle(const nsString& aTitle); 
-    NS_IMETHOD            	SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[]);
-
-    NS_IMETHOD            	RemoveTooltips();
-    NS_IMETHOD            	UpdateTooltips(nsRect* aNewTips[]);
     NS_IMETHOD            	WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect);
     NS_IMETHOD            	ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect);
-    NS_IMETHOD            	AddMouseListener(nsIMouseListener * aListener);
-    NS_IMETHOD            	AddEventListener(nsIEventListener * aListener);
     NS_IMETHOD            	BeginResizingChildren(void);
     NS_IMETHOD            	EndResizingChildren(void);
 
@@ -116,16 +94,12 @@ public:
     NS_IMETHOD          	DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
     virtual PRBool          DispatchMouseEvent(nsMouseEvent &aEvent);
 
-    NS_IMETHOD            	OnDestroy();
     virtual PRBool          OnPaint(nsPaintEvent &event);
     virtual PRBool          OnResize(nsSizeEvent &aEvent);
     virtual PRBool          OnKey(PRUint32 aEventType, PRUint32 aKeyCode, nsKeyEvent* aEvent);
 
     virtual PRBool          DispatchFocus(nsGUIEvent &aEvent);
     virtual PRBool          OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos);
-
-    NS_IMETHOD            	SetIgnoreResize(PRBool aIgnore);
-    virtual PRBool          IgnoreResize();
 
     virtual PRUint32        GetYCoord(PRUint32 aNewY);
     
@@ -195,26 +169,12 @@ protected:
 
 
 protected:
-  EVENT_CALLBACK 		mEventCallback;
-  nsIDeviceContext 	*mContext;
-  nsIFontMetrics 		*mFontMetrics;
-  nsToolkit					*mToolkit;
-  nsIAppShell 			*mAppShell;
-  nsIMouseListener 	*mMouseListener;
-  nsIEventListener 	*mEventListener;
-
-  nscolor     			mBackground;
-  nscolor     			mForeground;
-  nsCursor    			mCursor;
-  nsBorderStyle 		mBorderStyle;
   nsRect      			mBounds;
 
-  PRBool      			mIgnoreResize;
   PRBool      			mShown;
   PRBool     	 			mVisible;
   PRBool      			mDisplayed;
 
-  void*       			mClientData;
   nsIWidget*				mParent;
 
   // Resize event management
@@ -225,30 +185,6 @@ protected:
   PRInt32						mPreferredHeight;
 
 
-	// keep the list of children
-	class Enumerator
-	{
-	    nsIWidget  	**mChildrens;
-	    PRInt32     mCurrentPosition;
-	    PRInt32     mArraySize;
-	    PRInt32			mNumChildren;
-
-	public:
-	    Enumerator();
-	    ~Enumerator();
-
-			nsIWidget* Previous();
-	    nsIWidget* Next();
-	    void Reset();
-	    void ResetToLast();
-
-	    void Append(nsIWidget* aWidget);
-	    void Remove(nsIWidget* aWidget);
-
-	private:
-	    void GrowArray();
-
-	} *mChildren;
 
 // MAC SPECIFIC MEMBERS
 protected:
