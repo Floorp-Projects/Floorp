@@ -1914,10 +1914,7 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
     mScriptGlobalObject->GetDocShell(getter_AddRefs(docshell));
 
     if (docshell) {
-      nsCOMPtr<nsIWebNavigation> wn(do_QueryInterface(docshell));
-      if(wn) {
-        wn->Stop();
-      }
+      docshell->StopLoad();
     }
   }
 

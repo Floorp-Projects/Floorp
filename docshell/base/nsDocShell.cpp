@@ -318,6 +318,9 @@ NS_IMETHODIMP nsDocShell::CreateLoadInfo(nsIDocShellLoadInfo** aLoadInfo)
 
 NS_IMETHODIMP nsDocShell::StopLoad()
 {
+   // Cancel any timers that were set for this loader.
+   CancelRefreshURITimers();
+
    if(mLoadCookie)
       {
       nsCOMPtr<nsIURILoader> uriLoader = do_GetService(NS_URI_LOADER_PROGID);
