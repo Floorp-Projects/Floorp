@@ -256,7 +256,8 @@ protected:
                             const nsSize&           aAvailSize,
                             PRBool                  aBorderCollapse,
                             float                   aPixelsToTwips,
-                            nsTableCellReflowState& aReflowState);
+                            nsTableCellReflowState& aReflowState,
+                            PRBool                  aResetComputedWidth = PR_FALSE);
   
   /** implement abstract method on nsHTMLContainerFrame */
   virtual PRIntn GetSkipSides() const;

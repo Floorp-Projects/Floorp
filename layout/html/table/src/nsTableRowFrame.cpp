@@ -67,7 +67,8 @@ struct nsTableCellReflowState : public nsHTMLReflowState
                          const nsSize&            aAvailableSpace,
                          nsReflowReason           aReason);
 
-  void FixUp(const nsSize& aAvailSpace);
+  void FixUp(const nsSize& aAvailSpace,
+             PRBool        aResetComputedWidth);
 };
 
 nsTableCellReflowState::nsTableCellReflowState(nsIPresContext*          aPresContext,
@@ -79,11 +80,15 @@ nsTableCellReflowState::nsTableCellReflowState(nsIPresContext*          aPresCon
 {
 }
 
-void nsTableCellReflowState::FixUp(const nsSize& aAvailSpace)
+void nsTableCellReflowState::FixUp(const nsSize& aAvailSpace,
+                                   PRBool        aResetComputedWidth)
 {
   // fix the mComputed values during a pass 2 reflow since the cell can be a percentage base
   if (NS_UNCONSTRAINEDSIZE != aAvailSpace.width) {
-    if (NS_UNCONSTRAINEDSIZE != mComputedWidth) {
+    if (aResetComputedWidth) {
+      mComputedWidth = NS_UNCONSTRAINEDSIZE;
+    }
+    else if (NS_UNCONSTRAINEDSIZE != mComputedWidth) {
       mComputedWidth = aAvailSpace.width - mComputedBorderPadding.left - mComputedBorderPadding.right;
       mComputedWidth = PR_MAX(0, mComputedWidth);
     }
@@ -101,7 +106,8 @@ nsTableRowFrame::InitChildReflowState(nsIPresContext&         aPresContext,
                                       const nsSize&           aAvailSize,
                                       PRBool                  aBorderCollapse,
                                       float                   aPixelsToTwips,
-                                      nsTableCellReflowState& aReflowState)                                    
+                                      nsTableCellReflowState& aReflowState,
+                                      PRBool                  aResetComputedWidth)
 {
   nsMargin collapseBorder;
   nsMargin* pCollapseBorder = nsnull;
@@ -113,7 +119,7 @@ nsTableRowFrame::InitChildReflowState(nsIPresContext&         aPresContext,
     }
   }
   aReflowState.Init(&aPresContext, -1, -1, pCollapseBorder);
-  aReflowState.FixUp(aAvailSize);
+  aReflowState.FixUp(aAvailSize, aResetComputedWidth);
 }
 
 void 
@@ -771,31 +777,24 @@ CalcAvailWidth(nsTableFrame&     aTableFrame,
                nscoord&          aCellAvailWidth)
 {
   aColAvailWidth = aCellAvailWidth = 0;
-  // If the table will intialize the strategy, leave the avail width at 
-  // 0 (at this point) in case the cell contains a % width frame. A constrained avail 
-  // width forces a computed width, and % width frames inside the cell base their sizes on it. 
-  // This can happen during an incremental reflow when multiple commands get coalesced
-  // at the row.
-  if (!aTableFrame.NeedStrategyInit()) {
-    PRInt32 colIndex;
-    aCellFrame.GetColIndex(colIndex);
-    PRInt32 colspan = aTableFrame.GetEffectiveColSpan(aCellFrame);
-    nscoord cellSpacing = 0;
+  PRInt32 colIndex;
+  aCellFrame.GetColIndex(colIndex);
+  PRInt32 colspan = aTableFrame.GetEffectiveColSpan(aCellFrame);
+  nscoord cellSpacing = 0;
 
-    for (PRInt32 spanX = 0; spanX < colspan; spanX++) {
-      nscoord colWidth = aTableFrame.GetColumnWidth(colIndex + spanX);
-      if (colWidth > 0) {
-        aColAvailWidth += colWidth;
-      }
-      if ((spanX > 0) && (aTableFrame.GetNumCellsOriginatingInCol(colIndex + spanX) > 0)) {
-        cellSpacing += aCellSpacingX;
-      }
+  for (PRInt32 spanX = 0; spanX < colspan; spanX++) {
+    nscoord colWidth = aTableFrame.GetColumnWidth(colIndex + spanX);
+    if (colWidth > 0) {
+      aColAvailWidth += colWidth;
     }
-    if (aColAvailWidth > 0) {
-      aColAvailWidth += cellSpacing;
-    } 
-    aCellAvailWidth = aColAvailWidth;
+    if ((spanX > 0) && (aTableFrame.GetNumCellsOriginatingInCol(colIndex + spanX) > 0)) {
+      cellSpacing += aCellSpacingX;
+    }
   }
+  if (aColAvailWidth > 0) {
+    aColAvailWidth += cellSpacing;
+  } 
+  aCellAvailWidth = aColAvailWidth;
 
   nsFrameState  frameState;
   aCellFrame.GetFrameState(&frameState);
@@ -1290,7 +1289,13 @@ nsTableRowFrame::IR_TargetIsChild(nsIPresContext*          aPresContext,
     GET_PIXELS_TO_TWIPS(aPresContext, p2t);
     nsTableCellReflowState kidRS(aPresContext, aReflowState, aNextFrame, cellAvailSize, 
                                  aReflowState.reason);
-    InitChildReflowState(*aPresContext, cellAvailSize, aTableFrame.IsBorderCollapse(), p2t, kidRS); 
+    // If the table will intialize the strategy (and balance) or balance, make the computed 
+    // width unconstrained. This avoids having the cell block compute a bogus max width 
+    // which will bias the balancing. Leave the avail width alone, since it is a best guess.
+    // After the table balances, the cell will get reflowed with the correct computed width.
+    PRBool resetComputedWidth = aTableFrame.NeedStrategyInit() || aTableFrame.NeedStrategyBalance();
+    InitChildReflowState(*aPresContext, cellAvailSize, aTableFrame.IsBorderCollapse(), 
+                         p2t, kidRS, resetComputedWidth); 
 
     // Remember the current desired size, we'll need it later
     nscoord oldCellMinWidth     = cellFrame->GetPass1MaxElementWidth();
