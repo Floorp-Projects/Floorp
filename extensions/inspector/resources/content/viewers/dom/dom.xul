@@ -3,6 +3,7 @@
 <!DOCTYPE overlay [
   <!ENTITY % dtd1 SYSTEM "chrome://inspector/locale/inspector.dtd"> %dtd1;
   <!ENTITY % dtd2 SYSTEM "chrome://inspector/content/util.dtd"> %dtd2;
+  <!ENTITY % dtd3 SYSTEM "chrome://inspector/locale/viewers/dom.dtd"> %dtd3;
 ]>
 
 <?xml-stylesheet href="chrome://inspector/skin/viewers/dom/dom.css"?>
@@ -21,12 +22,33 @@
   <script language="javascript" src="chrome://inspector/content/jsutil/xul/inTreeTableBuilder.js"/>
   <script language="javascript" src="chrome://inspector/content/jsutil/xul/DNDUtils.js"/>
 
+  <!--============================= COMMANDS ============================== -->
+
+  <broadcasterset>
+    <broadcaster id="cmdDeleteNode"
+      oncommand="viewer.cmdDeleteSelectedNode()"/>
+
+    <broadcaster id="cmdInspectBrowser" 
+      isvalid="return viewer.cmdInspectBrowserIsValid()"
+      oncommand="viewer.cmdInspectBrowser()"/>
+  </broadcasterset>
+  
+  <!--============================= POPUPS ============================== -->
+
+  <popupset id="psPopups">
+    <popup id="ppDOMContext" oncreate="viewer.onContextCreate(this)">
+      <menuitem value="&cmdDeleteNode.label;" observes="cmdDeleteNode"/>
+      <menuitem value="&cmdInspectBrowser.label;" observes="cmdInspectBrowser"/>
+    </popup>
+  </popupset>
+
   <!-- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     The template for this tree will be filled in by inTreeTableBuilder
     ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: -->
   
   <tree id="trDOMTree" 
     flex="1" onselect="viewer.onTreeItemSelected()"
+    context="ppDOMContext"
     datasources="rdf:null" ref="inspector:DOMRoot"
     containment="&INS-rdf;HasChildren" flags="dont-test-empty">
     <template/>
