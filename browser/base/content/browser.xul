@@ -175,6 +175,10 @@
     <broadcaster id="viewHistorySidebar" autoCheck="false" label="&historyButton.label;"
                  type="checkbox" group="sidebar" sidebarurl="chrome://browser/content/history/history-panel.xul"
                  oncommand="toggleSidebar('viewHistorySidebar');"/>
+                 
+    <broadcaster id="viewWebPanelsSidebar" autoCheck="false" label="&webPanelsButton.label;"
+                 type="checkbox" group="sidebar" sidebarurl="chrome://browser/content/web-panels.xul"
+                 oncommand="toggleSidebar('viewWebPanelsSidebar');"/>
 
   </broadcasterset>
 
@@ -244,6 +248,8 @@
     <key id="viewBookmarksSidebarKb" key="&manBookmarksCmd.commandkey;" command="viewBookmarksSidebar" modifiers="accel"/>
     <key id="key_stop" keycode="VK_ESCAPE" command="Browser:Stop"/>
     <key id="key_gotoHistory"  key="&history.commandKey;"  command="viewHistorySidebar" modifiers="accel"/>
+    <key id="key_webPanelsSidebar"  key="&webPanels.commandKey;"  command="viewWebPanelsSidebar" modifiers="accel"/>
+    
     <key id="key_textZoomReduce"  key="&textZoomReduceCmd.commandkey;"   command="cmd_textZoomReduce"  modifiers="accel"/>
     <key id="key_textZoomEnlarge" key="&textZoomEnlargeCmd.commandkey;"  command="cmd_textZoomEnlarge" modifiers="accel"/>
     <key                          key="&textZoomEnlargeCmd.commandkey2;" command="cmd_textZoomEnlarge" modifiers="accel"/>
@@ -649,6 +655,7 @@
                     <menuitem key="key_openDownloadsSidebar" observes="viewDownloadsSidebar"/>
                     <menuitem key="viewBookmarksSidebarKb" observes="viewBookmarksSidebar"/>
                     <menuitem key="key_gotoHistory" observes="viewHistorySidebar"/>
+                    <menuitem key="key_webPanelsSidebar" observes="viewWebPanelsSidebar"/>
                   </menupopup>
                 </menu>            
                 <menuseparator/>
@@ -984,11 +991,15 @@
         <toolbarbutton id="history-button" class="toolbarbutton-1"
                        observes="viewHistorySidebar"
                        tooltiptext="&historyButton.tooltip;"/>
-
+                       
         <toolbarbutton id="bookmarks-button" class="toolbarbutton-1"
                        observes="viewBookmarksSidebar"
                        tooltiptext="&bookmarksButton.tooltip;"/>
     
+        <toolbarbutton id="webpanels-button" class="toolbarbutton-1"
+                       observes="viewWebPanelsSidebar"
+                       tooltiptext="&webPanelsButton.tooltip;"/>
+                       
         <toolbarbutton id="new-tab-button" class="toolbarbutton-1"
                        label="&tabCmd.label;"
                        command="cmd_newNavigatorTab"
