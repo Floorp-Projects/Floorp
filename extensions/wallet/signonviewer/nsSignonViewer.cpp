@@ -172,22 +172,6 @@ static void DOMWindowToWebShellWindow(
 NS_IMETHODIMP
 SignonViewerImpl::SetValue(const char* aValue, nsIDOMWindow* win)
 {
-  /* close the window */
-  if (!win) {
-    return NS_ERROR_FAILURE;
-  }
-  nsIDOMWindow* top;
-  win->GetTop(&top);
-  if (!top) {
-    return NS_ERROR_FAILURE;
-  }
-  nsCOMPtr<nsIWebShellWindow> parent;
-  DOMWindowToWebShellWindow(top, &parent);
-  if (parent) {
-    parent->Close();
-  }
-  NS_IF_RELEASE(win);
-
   /* process the value */
   NS_PRECONDITION(aValue != nsnull, "null ptr");
   if (! aValue) {

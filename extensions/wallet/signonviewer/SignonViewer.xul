@@ -1,49 +1,128 @@
 <?xml version="1.0"?>
-<!DOCTYPE window>
-<xul:window xmlns="http://www.w3.org/TR/REC-html40"
-      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<!-- 
+  The contents of this file are subject to the Netscape Public
+  License Version 1.1 (the "License"); you may not use this file
+  except in compliance with the License. You may obtain a copy of
+  the License at http://www.mozilla.org/NPL/
+  
+  Software distributed under the License is distributed on an "AS
+  IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  implied. See the License for the specific language governing
+  rights and limitations under the License.
+  
+  The Original Code is Mozilla Communicator client code, released
+  March 31, 1998.
+  
+  The Initial Developer of the Original Code is Netscape
+  Communications Corporation. Portions created by Netscape are
+  Copyright (C) 1998-1999 Netscape Communications Corporation. All
+  Rights Reserved.
+  
+  Contributor(s):
+    Ben Goodger
+-->
 
-  <script src="chrome://global/content/strres.js"/>
-  <script src="SignonViewer.js"/>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<!-- CHANGE THIS WHEN MOVING FILES -->
+<?xml-stylesheet href="chrome://wallet/skin/SignonViewer.css" type="text/css"?> 
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-  <frameset rows = "15,10,125,50" border="0" framespacing="0" onload="loadFrames();">
-    <frame src="about:blank"
-           id="index_frame" 
-           scrolling="no" 
-           marginwidth="1" 
-           marginheight="1"
-           noresize="noresize"/>
-    <frame src="about:blank"
-           id="title_frame"
-           scrolling="no"
-           marginwidth="1"
-           marginheight="1"
-           noresize="noresize"/>
-    <frameset cols="5,*,5" border="0" framespacing="0">
-      <frame src="about:blank"
-             id="spacer1_frame"
-             scrolling="AUTO"
-             marginwidth="0"
-             marginheight="0"
-             noresize="noresize"/>
-      <frame src="about:blank"
-             id="list_frame"
-             scrolling="auto"
-             marginwidth="0"
-             marginheight="0"
-             noresize="noresize"/>
-      <frame src="about:blank"
-             id="spacer2_frame"
-             scrolling="auto"
-             marginwidth="0"
-             marginheight="0"
-             noresize="noresize"/>
-    </frameset>
-    <frame src="about:blank"
-           id="button_frame"
-           scrolling="no"
-           marginwidth="1"
-           marginheight="1"
-           noresize="noresize"/>
-  </frameset>
-</xul:window>
+<!-- CHANGE THIS WHEN MOVING FILES -->
+<!DOCTYPE window SYSTEM "chrome://wallet/locale/SignonViewer.dtd" >
+
+<window id="signonviewer"
+        width="400" height="420"
+        title="&windowtitle.label;"
+        xmlns:html="http://www.w3.org/TR/REC-html40"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        align="vertical"
+        onload="Startup()">
+
+  <html:script src="SignonViewer.js"/>
+	<html:script language="javascript" src="chrome://global/content/strres.js" />
+  <html:script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
+
+  <tabcontrol flex="100%" align="vertical">
+    <tabbox>
+      <tab>&tab.signonsstored.label;</tab>
+      <tab>&tab.signonsnotstored.label;</tab>
+      <tab>&tab.nopreview.label;</tab>
+    </tabbox>
+    <tabpanel align="horizontal" style="width: 400px;">
+      <!-- saved signons -->
+      <box class="tabpanel" id="savedsignons" flex="100%" align="vertical">
+        <box><html:div>&spiel.signonsstored.label;</html:div></box>
+        <spring style="height: 10px;"/>
+        <html:div style="width: 380px;">
+          <tree id="signonstree" style="height: 280px; width: 380px;" align="vertical">
+            <treecol width="45%"/>
+            <treecol width="55%"/>
+            <treehead>
+              <treerow>
+                <treecell>&treehead.signonsite.label;</treecell>
+                <treecell>&treehead.signonusername.label;</treecell>
+              </treerow>          
+            </treehead>
+            <treechildren id="savesignonlist"/>
+          </tree>
+        </html:div>
+        <spring style="height: 5px;"/>
+        <box align="horizontal">
+          <titledbutton value="&remove.label;" onclick="goneSS += DeleteItemSelected('signonstree','signon_','savesignonlist');"/>
+        </box>
+        <spring style="height: 5px;"/>
+      </box>
+      <!-- ignored signon sites -->
+      <box class="tabpanel" id="ignoredsites" flex="100%" align="vertical">
+        <html:div>&spiel.signonsnotstored.label;</html:div>
+        <spring style="height: 10px;"/>
+        <html:div flex="100%">
+          <tree id="ignoretree" style="height: 280px; width: 380px;" align="vertical">
+            <treecol width="45%"/>
+            <treecol width="55%"/>
+            <treehead>
+              <treerow>
+                <treecell>&treehead.signonsite.label;</treecell>
+                <treecell>&treehead.signonusername.label;</treecell>
+              </treerow>          
+            </treehead>
+            <treechildren id="ignoredlist"/>
+          </tree>
+        </html:div>
+        <spring style="height: 5px;"/>
+        <box align="horizontal">
+          <titledbutton value="&remove.label;" onclick="goneIS += DeleteItemSelected('ignoretree','reject_','ignoredlist');"/>
+        </box>
+        <spring style="height: 5px;"/>
+      </box>
+      <!-- do not preview panel -->
+      <box class="tabpanel" id="nopreviewforms" flex="100%" align="vertical">
+        <html:div>&spiel.nopreview.label;</html:div>
+        <spring style="height: 10px;"/>
+        <html:div flex="100%">
+          <tree id="nopreviewtree" style="height: 280px; width: 380px;" align="vertical">
+            <treehead>
+              <treerow>
+                <treecell>&treehead.nopreviewforms.label;</treecell>
+              </treerow>          
+            </treehead>
+            <treechildren id="nopreviewlist"/>
+          </tree>
+        </html:div>
+        <spring style="height: 5px;"/>
+        <box align="horizontal">
+          <titledbutton value="&remove.label;" onclick="goneFR += DeleteItemSelected('nopreviewtree','nopreview_','nopreviewlist');"/>
+        </box>
+        <spring style="height: 5px;"/>
+      </box>
+    </tabpanel>
+  </tabcontrol>
+  
+  <!-- from dialogOverlay.xul -->
+  <box align="horizontal">
+    <spring flex="100%"/>
+    <box id="okCancelButtons"/>
+  </box>
+ 
+</window>
+
