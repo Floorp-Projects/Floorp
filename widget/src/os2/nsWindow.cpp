@@ -3844,7 +3844,9 @@ PRUint32 WMChar2KeyCode( MPARAM mp1, MPARAM mp2)
           ( ((flags & KC_ALT) && ( sc != PMSCAN_PADPERIOD)) || 
             ((flags & (KC_CHAR | KC_SHIFT)) == KC_CHAR)  ||
             ((flags & KC_KEYUP) && rc2 != 0) )  )
-      { // If this is the Numpad must not return VK for ALT+Numpad or ALT+NumLock+NumPad
+      {
+#if 0
+        // If this is the Numpad must not return VK for ALT+Numpad or ALT+NumLock+NumPad
         // NumLock+NumPad is OK
          if( gNumPadMap[sc - PMSCAN_PAD7] != 0)
          {
@@ -3858,6 +3860,7 @@ PRUint32 WMChar2KeyCode( MPARAM mp1, MPARAM mp2)
             }
          }  
          else
+#endif         
          {
             // No virtual key for Alt+NumPad or NumLock+NumPad
             rc = 0;
