@@ -64,7 +64,6 @@ viewer:Essential Files:widget.shlb
 viewer:Components:docshell.shlb 
 viewer:Components:AppShell.shlb 
 viewer:Components:appshell.xpt 
-viewer:Components:bookmarks.shlb 
 viewer:Components:bookmarks.xpt 
 viewer:Components:Caps.shlb 
 viewer:Components:caps.xpt 
@@ -72,7 +71,7 @@ viewer:Components:chardet.shlb
 viewer:Components:ChomeRegistry.shlb 
 viewer:Components:chrome.xpt
 viewer:Components:Cookie.shlb 
-viewer:Components:Directory.shlb 
+viewer:Components:appcomps.shlb 
 viewer:Components:Directory.xpt 
 viewer:Components:docshell.xpt
 viewer:Components:dom.xpt 
@@ -83,7 +82,6 @@ viewer:Components:EditorCore.shlb
 viewer:Components:EditorTxmgr.shlb 
 viewer:Components:FindComponent.shlb 
 viewer:Components:gifdecoder.shlb 
-viewer:Components:history.shlb 
 viewer:Components:history.xpt 
 viewer:Components:htmlparser.shlb 
 viewer:Components:jpgdecoder.shlb 
@@ -122,9 +120,7 @@ viewer:Components:rdf.xpt
 viewer:Components:RDFLibrary.shlb 
 viewer:Components:RegViewer.shlb 
 viewer:Components:RegViewer.xpt 
-viewer:Components:Related.shlb 
 viewer:Components:related.xpt 
-viewer:Components:Search.shlb 
 viewer:Components:search.xpt 
 viewer:Components:shistory.shlb 
 viewer:Components:shistory.xpt 
@@ -147,7 +143,6 @@ viewer:Components:unicharutil.xpt
 viewer:Components:uriloader.shlb 
 viewer:Components:uriloader.xpt 
 viewer:Components:exthandler.xpt 
-viewer:Components:urlbarhistory.shlb
 viewer:Components:urlbarhistory.xpt
 viewer:Components:view.shlb 
 viewer:Components:Wallet.shlb 
@@ -161,7 +156,6 @@ viewer:Components:xpcom_xpti.xpt
 viewer:Components:XPConnect.shlb 
 viewer:Components:xpconnect.xpt 
 viewer:Components:xpinstall.xpt 
-viewer:Components:autocomplete.shlb 
 viewer:Components:autocomplete.xpt 
 viewer:Components:xml-rpc.xpt
 viewer:Components:nsDictionary.js
