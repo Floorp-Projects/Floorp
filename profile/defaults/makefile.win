@@ -22,6 +22,10 @@
 DEPTH=..\..
 MODULE=profile
 
+DIRS= \
+    chrome \
+    $(NULL)
+
 include <$(DEPTH)\config\rules.mak>
 
 FILES=\
