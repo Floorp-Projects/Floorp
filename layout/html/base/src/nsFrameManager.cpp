@@ -1180,7 +1180,7 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
     // do primary context
     nsIStyleContext* newContext = nsnull;
     if (pseudoTag) {
-      aPresContext->ResolvePseudoStyleContextFor(content, pseudoTag, aParentContext, PR_FALSE,
+      aPresContext->ResolvePseudoStyleContextFor(aParentContent, pseudoTag, aParentContext, PR_FALSE,
                                                 &newContext);
       NS_RELEASE(pseudoTag);
     }
