@@ -22,7 +22,7 @@ include <$(DEPTH)\config\config.mak>
 
 LIBRARY_NAME=msgcoreutil
 MODULE= mailnews
-REQUIRES=xpcom js nspr dom
+REQUIRES=xpcom nspr dom
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
@@ -73,15 +73,8 @@ LINCS=                       \
 LLIBS=										\
 			$(MSGLIBS)						\
 			$(DIST)\lib\xpcom32.lib			\
-			$(DIST)\lib\raptorbase.lib			\
-			$(DIST)\lib\xplib.lib       	\
-			$(DIST)\lib\plc3.lib		\
-			$(DIST)\lib\js32$(VERSION_NUMBER).lib	\
-			$(DIST)\lib\appcores.lib	\
-			$(DIST)\lib\nntp.lib		\
-			$(DIST)\lib\netlib.lib		\
-			$(DIST)\lib\nntpTest.lib	\
-			$(DIST)\lib\rdfutil_s.lib \
+			$(DIST)\lib\raptorbase.lib		\
+			$(DIST)\lib\plc3.lib			\
 			$(LIBNSPR)						\
 			$(NULL)
 
