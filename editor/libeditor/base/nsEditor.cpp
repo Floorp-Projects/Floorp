@@ -56,7 +56,6 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMRange.h"
 #include "nsIDocument.h"
-#include "nsTransactionManagerCID.h"
 #include "nsITransactionManager.h"
 #include "nsIAbsorbingTransaction.h"
 #include "nsIPresShell.h"
@@ -82,7 +81,6 @@
 #include "nsITextContent.h"
 
 #include "nsIContent.h"
-#include "nsLayoutCID.h"
 #include "nsIServiceManagerUtils.h"
 
 // transactions the editor knows how to build
@@ -108,11 +106,6 @@
 #include "nsEditor.h"
 #include "nsEditorUtils.h"
 #include "nsISelectionDisplay.h"
-
-static NS_DEFINE_CID(kCDOMRangeCID,         NS_RANGE_CID);
-
-// transaction manager
-static NS_DEFINE_CID(kCTransactionManagerCID, NS_TRANSACTIONMANAGER_CID);
 
 #define NS_ERROR_EDITOR_NO_SELECTION NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_EDITOR,1)
 #define NS_ERROR_EDITOR_NO_TEXTNODE  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_EDITOR,2)
@@ -562,9 +555,7 @@ nsEditor::EnableUndo(PRBool aEnable)
   {
     if (!mTxnMgr)
     {
-      result = nsComponentManager::CreateInstance(kCTransactionManagerCID,
-                                        nsnull,
-                                        NS_GET_IID(nsITransactionManager), getter_AddRefs(mTxnMgr));
+      mTxnMgr = do_CreateInstance(NS_TRANSACTIONMANAGER_CONTRACTID, &result);
       if (NS_FAILED(result) || !mTxnMgr) {
         return NS_ERROR_NOT_AVAILABLE;
       }
@@ -580,7 +571,7 @@ nsEditor::EnableUndo(PRBool aEnable)
     }
   }
 
-  return result;
+  return NS_OK;
 }
 
 
@@ -1749,7 +1740,7 @@ NS_IMETHODIMP nsEditor::OutputToString(const nsAString& aFormatType,
 NS_IMETHODIMP
 nsEditor::OutputToStream(nsIOutputStream* aOutputStream,
                          const nsAString& aFormatType,
-                         const nsAString& aCharsetOverride,
+                         const nsACString& aCharsetOverride,
                          PRUint32 aFlags)
 {
   // these should be implemented by derived classes.
@@ -5059,10 +5050,10 @@ nsEditor::CreateRange(nsIDOMNode *aStartParent, PRInt32 aStartOffset,
                       nsIDOMRange **aRange)
 {
   nsresult result;
-  result = nsComponentManager::CreateInstance(kCDOMRangeCID, nsnull,
+  result = nsComponentManager::CreateInstance("@mozilla.org/content/range;1",
+                                              nsnull,
                                               NS_GET_IID(nsIDOMRange), 
                                               (void **)aRange);
-
   if (NS_FAILED(result))
     return result;
 
