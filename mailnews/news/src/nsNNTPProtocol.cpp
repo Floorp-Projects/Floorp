@@ -694,10 +694,11 @@ public:
   nsNntpCacheStreamListener ();
   virtual ~nsNntpCacheStreamListener();
 
-  nsresult Init(nsIStreamListener * aStreamListener, nsIChannel * aChannelToUse);
+  nsresult Init(nsIStreamListener * aStreamListener, nsIChannel * aChannelToUse, nsIMsgMailNewsUrl *aRunningUrl);
 protected:
   nsCOMPtr<nsIChannel> mChannelToUse;
   nsCOMPtr<nsIStreamListener> mListener;
+  nsCOMPtr<nsIMsgMailNewsUrl> mRunningUrl;
 };
 
 NS_IMPL_ADDREF(nsNntpCacheStreamListener);
@@ -717,14 +718,15 @@ nsNntpCacheStreamListener::nsNntpCacheStreamListener()
 nsNntpCacheStreamListener::~nsNntpCacheStreamListener()
 {}
 
-nsresult nsNntpCacheStreamListener::Init(nsIStreamListener * aStreamListener, nsIChannel * aChannelToUse)
+nsresult nsNntpCacheStreamListener::Init(nsIStreamListener * aStreamListener, nsIChannel * aChannelToUse,
+                                         nsIMsgMailNewsUrl *aRunningUrl)
 {
   NS_ENSURE_ARG(aStreamListener);
   NS_ENSURE_ARG(aChannelToUse);
 
   mChannelToUse = aChannelToUse;
   mListener = aStreamListener;
-
+  mRunningUrl = aRunningUrl;
   return NS_OK;
 }
 
@@ -746,6 +748,10 @@ nsNntpCacheStreamListener::OnStopRequest(nsIChannel * aChannel, nsISupports * aC
   mChannelToUse->GetLoadGroup(getter_AddRefs(loadGroup));
   if (loadGroup)
 			loadGroup->RemoveChannel(mChannelToUse, nsnull, aStatus, nsnull);
+
+  // clear out mem cache entry so we're not holding onto it.
+  if (mRunningUrl)
+    mRunningUrl->SetMemCacheEntry(nsnull);
 
   mListener = nsnull;
   mChannelToUse = nsnull;
@@ -797,9 +803,10 @@ NS_IMETHODIMP nsNNTPProtocol::AsyncRead(nsIStreamListener *listener, nsISupports
           m_typeWanted = ARTICLE_WANTED;
           nsNntpCacheStreamListener * cacheListener = new nsNntpCacheStreamListener();
           NS_ADDREF(cacheListener);
-          cacheListener->Init(m_channelListener, NS_STATIC_CAST(nsIChannel *, this));
+          cacheListener->Init(m_channelListener, NS_STATIC_CAST(nsIChannel *, this), mailnewsUrl);
           rv = fileChannel->AsyncRead(cacheListener, m_channelContext);
           NS_RELEASE(cacheListener);
+          MarkCurrentMsgRead();
 
           if (NS_SUCCEEDED(rv)) // ONLY if we succeeded in actually starting the read should we return
             return NS_OK;
@@ -814,6 +821,7 @@ NS_IMETHODIMP nsNNTPProtocol::AsyncRead(nsIStreamListener *listener, nsISupports
     if (NS_SUCCEEDED(rv) && cacheEntry)
     {
       PRBool updateInProgress;
+      m_typeWanted = ARTICLE_WANTED;
       cacheEntry->GetPartialFlag(&partialFlag);
       cacheEntry->GetUpdateInProgress(&updateInProgress);        
       cacheEntry->GetStoredContentLength(&contentLength);
@@ -830,9 +838,35 @@ NS_IMETHODIMP nsNNTPProtocol::AsyncRead(nsIStreamListener *listener, nsISupports
           // do we have a listener here?
           nsIStreamListener *listener = m_channelListener;
           rv = cacheEntry->InterceptAsyncRead(listener, 0, getter_AddRefs(m_channelListener));
+          if (NS_SUCCEEDED(rv))
+            return nsMsgProtocol::AsyncRead(m_channelListener, ctxt);
         }
       }
     }
+    // now, determine if we should be loading from the cache or if we have
+    // to really load the msg with a protocol connection...
+    if (cacheEntry && contentLength > 0 && !partialFlag)
+    {
+      nsCOMPtr<nsIChannel> cacheChannel;
+      rv = cacheEntry->NewChannel(m_loadGroup, getter_AddRefs(cacheChannel));
+      if (NS_SUCCEEDED(rv))
+      {
+        nsNntpCacheStreamListener * cacheListener = new nsNntpCacheStreamListener();
+        NS_ADDREF(cacheListener);
+        SetLoadGroup(m_loadGroup);
+        m_typeWanted = ARTICLE_WANTED;
+        cacheListener->Init(m_channelListener, NS_STATIC_CAST(nsIChannel *, this), mailnewsUrl);
+        rv = cacheChannel->AsyncRead(cacheListener, m_channelContext);
+        NS_RELEASE(cacheListener);
+
+        MarkCurrentMsgRead();
+        if (NS_SUCCEEDED(rv)) // ONLY if we succeeded in actually starting the read should we return
+        {
+          return rv;
+        }
+      }
+    }
+
   }
   return nsMsgProtocol::AsyncRead(listener, ctxt);
 }
@@ -2402,14 +2436,7 @@ PRInt32 nsNNTPProtocol::DisplayArticle(nsIInputStream * inputStream, PRUint32 le
 		if (line[0] == '.' && line[1] == 0)
 		{
 			m_nextState = NEWS_DONE;
-			nsCOMPtr<nsIMsgDBHdr> msgHdr;
-			nsresult rv = NS_OK;
-
-			rv = m_runningURL->GetMessageHeader(getter_AddRefs(msgHdr));
-
-			if (NS_SUCCEEDED(rv) && msgHdr) {
-				msgHdr->MarkRead(PR_TRUE);
-            }
+      MarkCurrentMsgRead();
 
 			ClearFlag(NNTP_PAUSE_FOR_READ);
 
@@ -2433,6 +2460,20 @@ PRInt32 nsNNTPProtocol::DisplayArticle(nsIInputStream * inputStream, PRUint32 le
 	return 0;	
 }
 
+nsresult nsNNTPProtocol::MarkCurrentMsgRead()
+{
+  nsCOMPtr<nsIMsgDBHdr> msgHdr;
+	nsresult rv = NS_OK;
+
+  if (m_runningURL)
+  {
+	  rv = m_runningURL->GetMessageHeader(getter_AddRefs(msgHdr));
+
+	  if (NS_SUCCEEDED(rv) && msgHdr)
+		  msgHdr->MarkRead(PR_TRUE);
+  }
+  return rv;
+}
 
 PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 length)
 {
@@ -2495,15 +2536,7 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 #ifdef DEBUG_sspitzer
 		printf("should we be marking later, after the message has finished loading?\n");
 #endif
-		nsCOMPtr<nsIMsgDBHdr> msgHdr;
-		nsresult rv = NS_OK;
-
-		rv = m_runningURL->GetMessageHeader(getter_AddRefs(msgHdr));
-
-		if (NS_SUCCEEDED(rv) && msgHdr) {
-			msgHdr->MarkRead(PR_TRUE);
-		}
-
+    MarkCurrentMsgRead();
 		ClearFlag(NNTP_PAUSE_FOR_READ);
 	}
 	else
@@ -5376,6 +5409,15 @@ nsresult nsNNTPProtocol::CleanupAfterRunningUrl()
          we be releasing it here? */
       /* NS_RELEASE(m_newsgroup->GetNewsgroupList()); */
 	}
+
+  // clear out mem cache entry so we're not holding onto it.
+  if (m_runningURL)
+  {
+  	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+    if (mailnewsurl)
+      mailnewsurl->SetMemCacheEntry(nsnull);
+  }
+
 
   PR_FREEIF(m_path);
   PR_FREEIF(m_responseText);
