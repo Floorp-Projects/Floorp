@@ -29,11 +29,11 @@ class WindowCreator :
       public nsIWindowCreator
 {
 public:
-  WindowCreator();
-  virtual ~WindowCreator();
+    WindowCreator();
+    virtual ~WindowCreator();
 
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIWINDOWCREATOR
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIWINDOWCREATOR
 };
 
 #endif
