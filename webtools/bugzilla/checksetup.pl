@@ -312,6 +312,8 @@ LocalVar('create_htaccess', <<'END');
 # installation is in must be within the jurisdiction of a <Directory> block
 # in the httpd.conf file that has 'AllowOverride Limit' in it.  If it has
 # 'AllowOverride All' or other options with Limit, that's fine.
+# (Older Apache installations may use an access.conf file to store these
+# <Directory> blocks.)
 # If this is set to 1, Bugzilla will create these files if they don't exist.
 # If this is set to 0, Bugzilla will not create these files.
 $create_htaccess = 1;
