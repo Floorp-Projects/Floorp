@@ -659,7 +659,7 @@ PRInt32 CompressChars1(char* aString,PRUint32 aLength,const char* aSet){
     while (from <= end) {
       chartype theChar = *from++;
       if(kNotFound!=FindChar1(aSet,aSetLen,0,theChar,PR_FALSE)){
-        to++;
+        *to++=theChar;
         while (from <= end) {
           theChar = *from++;
           if(kNotFound==FindChar1(aSet,aSetLen,0,theChar,PR_FALSE)){
@@ -702,7 +702,7 @@ PRInt32 CompressChars2(char* aString,PRUint32 aLength,const char* aSet){
     while (from <= end) {
       chartype theChar = *from++;
       if(kNotFound!=FindChar1(aSet,aSetLen,0,theChar,PR_FALSE)){
-        to++;
+        *to++=theChar;
         while (from <= end) {
           theChar = *from++;
           if(kNotFound==FindChar1(aSet,aSetLen,0,theChar,PR_FALSE)){
