@@ -42,7 +42,7 @@
 <?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/charsetOverlay.xul"?>
 
-<!DOCTYPE window 
+<!DOCTYPE overlay 
 [
 	<!ENTITY % navigatorDTD SYSTEM "chrome://navigator/locale/navigator.dtd" > %navigatorDTD;
    <!ENTITY % calendarDTD SYSTEM "chrome://calendar/locale/calendar.dtd" > %calendarDTD;

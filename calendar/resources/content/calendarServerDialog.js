@@ -115,9 +115,6 @@ function loadCalendarServerDialog()
       titleDataItem = document.getElementById( "data-event-title-edit" );
    }
    
-   // set up OK, Cancel
-   doSetOKCancel( onOKCommand, 0 );
-   
    // start focus on title
    
    var firstFocus = document.getElementById( "server-name-textbox" );

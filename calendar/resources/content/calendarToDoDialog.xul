@@ -48,16 +48,19 @@
 <?xml-stylesheet href="chrome://calendar/skin/dialogOverlay.css" type="text/css"?>
 
 <!-- DTD File with all strings specific to the calendar -->
-<!DOCTYPE window 
+<!DOCTYPE dialog 
 [
     <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/global.dtd" > %dtd1;
     <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd2;
 ]>
 
 
-<window
+<dialog
    id="calendar-new-eventwindow"
    title="Calendar Event"
+   buttons="accept,cancel"
+   ondialogaccept="return onOKCommand();"
+   ondialogcancel="return true;"
    onload="loadCalendarToDoDialog()"
    persist="screenX screenY"
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -256,11 +259,6 @@
             </grid>
             
          </vbox> <!-- standard-dialog-content -->
-    
-        
-         <!-- Bottom Box -->    
-        <box id="okCancelButtonsRight"/>        
-        
     </vbox> <!-- dialog-box -->
 
-</window>
+</dialog>

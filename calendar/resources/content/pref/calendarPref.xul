@@ -40,7 +40,7 @@
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 
 <!-- DTD File with all strings specific to the file -->
-<!DOCTYPE window 
+<!DOCTYPE page 
 [
     <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/calendarPrefs.dtd" > %dtd1;
 ]>

@@ -208,9 +208,6 @@ function loadCalendarToDoDialog()
    updateAlarmItemEnabled();
    updateCompletedItemEnabled();
    
-   // set up OK, Cancel
-   doSetOKCancel( onOKCommand, 0 );
-   
    // start focus on title
    
    var firstFocus = document.getElementById( "title-field" );

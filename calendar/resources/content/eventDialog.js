@@ -297,11 +297,7 @@ function loadCalendarEventDialog()
    setFieldValue( "advanced-repeat-dayofweek", ( gEvent.recurWeekNumber > 0 && gEvent.recurWeekNumber != 5 ), "selected" );
    setFieldValue( "advanced-repeat-dayofweek-last", ( gEvent.recurWeekNumber == 5 ), "selected" );
    
-   // set up OK, Cancel
-   doSetOKCancel( onOKCommand, 0 );
-   
    // start focus on title
-   
    var firstFocus = document.getElementById( "title-field" );
    firstFocus.focus();
 }

@@ -37,7 +37,7 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <!-- DTD File with all strings specific to the calendar -->
-<!DOCTYPE window 
+<!DOCTYPE overlay 
 [
     <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd1;
 ]>
