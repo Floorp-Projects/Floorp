@@ -926,6 +926,11 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
     iter->CurrentNode(getter_AddRefs(content));
     while (NS_ENUMERATOR_FALSE == iter->IsDone())
     {
+      nsCOMPtr<nsIDOMNode> node = do_QueryInterface(content);
+
+      if (node && nsTextEditUtils::IsBody(node))
+        break;
+
       //if (gNoisy) { printf("  checking node %p\n", content.get()); }
       nsCOMPtr<nsIDOMCharacterData>text;
       text = do_QueryInterface(content);
@@ -968,8 +973,6 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
       }
       if (!skipNode)
       {
-        nsCOMPtr<nsIDOMNode>node;
-        node = do_QueryInterface(content);
         if (node)
         {
           PRBool isSet;
