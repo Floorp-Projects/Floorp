@@ -443,7 +443,8 @@ nsresult nsRenderingContextWin :: SetupDC(HDC aOldDC, HDC aNewDC)
   nsPaletteInfo palInfo;
   mContext->GetPaletteInfo(palInfo);
   if (palInfo.isPaletteDevice && palInfo.palette) {
-    mOrigPalette = ::SelectPalette(aNewDC, (HPALETTE)palInfo.palette, FALSE);
+    // Select the palette in the background
+    mOrigPalette = ::SelectPalette(aNewDC, (HPALETTE)palInfo.palette, TRUE);
     // Don't do the realization for an off-screen memory DC
     if (nsnull == aOldDC) {
       ::RealizePalette(aNewDC);
