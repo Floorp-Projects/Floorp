@@ -21,7 +21,8 @@
 #endif // _AFX_NO_AFXCMN_SUPPORT
 #include <atlbase.h>
 
-
+#define MOZ_CONTROL_REG_KEY                  _T("Software\\Mozilla\\")
+#define MOZ_CONTROL_REG_VALUE_BIN_DIR_PATH   _T("BinDirectoryPath")
 
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.
