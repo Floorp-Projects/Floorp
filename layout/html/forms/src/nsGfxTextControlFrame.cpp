@@ -43,6 +43,12 @@
 #include "nsIFrameManager.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
+// begin includes for controllers 
+#include "nsIDOMNSHTMLInputElement.h"
+#include "nsIDOMNSHTMLTextAreaElement.h"
+#include "nsIDOMXULCommandDispatcher.h"
+#include "nsIControllers.h"
+// end includes for controllers
 #include "nsIScrollbar.h"
 
 #include "nsCSSRendering.h"
@@ -120,6 +126,48 @@ static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
 //#define NOISY
 const nscoord kSuggestedNotSet = -1;
 
+/*================== global functions =========================*/
+nsIWidget * GetDeepestWidget(nsIView * aView)
+{
+
+  PRInt32 count;
+  aView->GetChildCount(count);
+  if (0 != count) {
+    for (PRInt32 i=0;i<count;i++) {
+      nsIView * child;
+      aView->GetChild(i, child);
+      nsIWidget * widget = GetDeepestWidget(child);
+      if (widget) {
+        return widget;
+      } else {
+        aView->GetWidget(widget);
+        if (widget) {
+          nsCOMPtr<nsIScrollbar> scrollbar(do_QueryInterface(widget));
+          if (scrollbar) {
+            NS_RELEASE(widget);
+          } else {
+            return widget;
+          }
+        }
+      }
+    }
+  }
+
+  return nsnull;
+}
+
+void GetWidgetForView(nsIView *aView, nsIWidget *&aWidget)
+{
+  aWidget = nsnull;
+  nsIView *view = aView;
+  while (!aWidget && view)
+  {
+    view->GetWidget(aWidget);
+    if (!aWidget)
+      view->GetParent(view);
+  }
+}
+
 nsresult
 NS_NewGfxTextControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
@@ -160,6 +208,15 @@ nsGfxTextControlFrame::Init(nsIPresContext*  aPresContext,
   return (nsTextControlFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow));
 }
 
+NS_IMETHODIMP
+nsGfxTextControlFrame::GetFrameType(nsIAtom** aType) const
+{
+  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
+  *aType = NS_NewAtom("textControlFrame");
+  NS_IF_ADDREF(*aType);
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsGfxTextControlFrame::GetEditor(nsIEditor **aEditor)
@@ -191,18 +248,42 @@ nsGfxTextControlFrame::CreateEditor()
   mDocObserver->SetFrame(this);
   NS_ADDREF(mDocObserver);
 
-    // create the focus listener for HTML Input content
+  // create the drag listener for the content node
+  if (mContent)
+  {
+    mListenerForContent = new nsEnderListenerForContent();
+    if (!mListenerForContent) { return NS_ERROR_OUT_OF_MEMORY; }
+    mListenerForContent->SetFrame(this);
+    NS_ADDREF(mListenerForContent);
+
+    // get the DOM event receiver
+    nsCOMPtr<nsIDOMEventReceiver> contentER;
+    result = mContent->QueryInterface(nsIDOMEventReceiver::GetIID(), getter_AddRefs(contentER));
+    if NS_FAILED(result) { return result; }
+    if (contentER) 
+    {
+      nsCOMPtr<nsIDOMDragListener> dragListenerForContent;
+      mListenerForContent->QueryInterface(nsIDOMDragListener::GetIID(), getter_AddRefs(dragListenerForContent));
+      if (dragListenerForContent)
+      {
+        result = contentER->AddEventListenerByIID(dragListenerForContent, nsIDOMDragListener::GetIID());
+        if NS_FAILED(result) { return result; }
+      }
+    }
+  }
+
+  // create the focus listener for HTML Input display content
   if (mDisplayContent)
   {
-    mFocusListenerForContent = new nsEnderFocusListenerForContent();
-    if (!mFocusListenerForContent) { return NS_ERROR_OUT_OF_MEMORY; }
-    mFocusListenerForContent->SetFrame(this);
-    NS_ADDREF(mFocusListenerForContent);
+    mFocusListenerForDisplayContent = new nsEnderFocusListenerForDisplayContent();
+    if (!mFocusListenerForDisplayContent) { return NS_ERROR_OUT_OF_MEMORY; }
+    mFocusListenerForDisplayContent->SetFrame(this);
+    NS_ADDREF(mFocusListenerForDisplayContent);
     // get the DOM event receiver
     nsCOMPtr<nsIDOMEventReceiver> er;
     result = mDisplayContent->QueryInterface(nsIDOMEventReceiver::GetIID(), getter_AddRefs(er));
     if (NS_SUCCEEDED(result) && er) 
-      result = er->AddEventListenerByIID(mFocusListenerForContent, nsIDOMFocusListener::GetIID());
+      result = er->AddEventListenerByIID(mFocusListenerForDisplayContent, nsIDOMFocusListener::GetIID());
     // should check to see if mDisplayContent or mContent has focus and call CreateSubDoc instead if it does
     // do something with result
   }
@@ -229,8 +310,8 @@ nsGfxTextControlFrame::nsGfxTextControlFrame()
   mWeakReferent(this),
   mFrameConstructor(nsnull),
   mDisplayFrame(nsnull),
-  mDidSetFocus(PR_FALSE)
-
+  mDidSetFocus(PR_FALSE),
+  mPassThroughMouseEvents(eUninitialized)
 {
 }
 
@@ -255,22 +336,44 @@ nsGfxTextControlFrame::~nsGfxTextControlFrame()
     NS_RELEASE(mTempObserver);
   }
 
-  if (mDisplayContent && mFocusListenerForContent)
+  // remove the focus listener from the display content, if any
+  if (mDisplayContent && mFocusListenerForDisplayContent)
   {
     nsCOMPtr<nsIDOMEventReceiver> er;
-    result = mContent->QueryInterface(nsIDOMEventReceiver::GetIID(), getter_AddRefs(er));
+    result = mDisplayContent->QueryInterface(nsIDOMEventReceiver::GetIID(), getter_AddRefs(er));
     if (NS_SUCCEEDED(result) && er) 
     {
-      er->RemoveEventListenerByIID(mFocusListenerForContent, nsIDOMFocusListener::GetIID());
+      er->RemoveEventListenerByIID(mFocusListenerForDisplayContent, nsIDOMFocusListener::GetIID());
     }
-    mFocusListenerForContent->SetFrame(nsnull);
-    NS_RELEASE(mFocusListenerForContent);
+    mFocusListenerForDisplayContent->SetFrame(nsnull);
+    NS_RELEASE(mFocusListenerForDisplayContent);
+  }
+
+  // remove the drag listener from the frame's content node, if any
+  if (mContent && mListenerForContent)
+  {
+    // checking errors below does not good, I'm in a void method
+    // I only check the minimum required to be sure it all works right
+    nsCOMPtr<nsIDOMEventReceiver> contentER;
+    result = mContent->QueryInterface(nsIDOMEventReceiver::GetIID(), getter_AddRefs(contentER));
+    if (NS_SUCCEEDED(result) && contentER) 
+    {
+      nsCOMPtr<nsIDOMDragListener> dragListenerForContent;
+      mListenerForContent->QueryInterface(nsIDOMDragListener::GetIID(), getter_AddRefs(dragListenerForContent));
+      if (dragListenerForContent)
+      {
+        contentER->RemoveEventListenerByIID(dragListenerForContent, nsIDOMDragListener::GetIID());
+      }
+    }
+    mListenerForContent->SetFrame(nsnull);
+    NS_RELEASE(mListenerForContent);
   }  
 
   if (mEventListener)
   {
     if (mEditor)
     {
+      // remove selection listener
       nsCOMPtr<nsIDOMSelection>selection;
       result = mEditor->GetSelection(getter_AddRefs(selection));
       if (NS_SUCCEEDED(result) && selection) 
@@ -281,6 +384,7 @@ nsGfxTextControlFrame::~nsGfxTextControlFrame()
           selection->RemoveSelectionListener(selListener); 
         }
       }
+      // remove all other listeners from embedded document
       nsCOMPtr<nsIDOMDocument>domDoc;
       result = mEditor->GetDocument(getter_AddRefs(domDoc));
       if (NS_SUCCEEDED(result) && domDoc)
@@ -289,14 +393,17 @@ nsGfxTextControlFrame::~nsGfxTextControlFrame()
         result = domDoc->QueryInterface(nsIDOMEventReceiver::GetIID(), getter_AddRefs(er));
         if (NS_SUCCEEDED(result) && er) 
         {
+          // remove key listener
           nsCOMPtr<nsIDOMKeyListener>keyListener;
           keyListener = do_QueryInterface(mEventListener);
           if (keyListener)
             er->RemoveEventListenerByIID(keyListener, nsIDOMKeyListener::GetIID());
+          // remove mouse listener
           nsCOMPtr<nsIDOMMouseListener>mouseListener;
           mouseListener = do_QueryInterface(mEventListener);
           if (mouseListener)
             er->RemoveEventListenerByIID(mouseListener, nsIDOMMouseListener::GetIID());
+          // remove focus listener
           nsCOMPtr<nsIDOMFocusListener>focusListener;
           focusListener = do_QueryInterface(mEventListener);
           if (focusListener)
@@ -333,36 +440,206 @@ NS_METHOD nsGfxTextControlFrame::HandleEvent(nsIPresContext* aPresContext,
                                              nsGUIEvent* aEvent,
                                              nsEventStatus* aEventStatus)
 {
+  NS_ENSURE_ARG_POINTER(aPresContext);
+  NS_ENSURE_ARG_POINTER(aEvent);
   NS_ENSURE_ARG_POINTER(aEventStatus);
+
   if (nsEventStatus_eConsumeNoDefault == *aEventStatus) {
     return NS_OK;
   }
 
   *aEventStatus = nsEventStatus_eConsumeDoDefault;   // this is the default
-  
-  switch (aEvent->message) {
-     case NS_MOUSE_LEFT_CLICK:
-        MouseClicked(aPresContext);
-     break;
 
-	   case NS_KEY_PRESS:
-	    if (NS_KEY_EVENT == aEvent->eventStructType) {
-	      nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
-	      if (NS_VK_RETURN == keyEvent->keyCode) 
-        {
-	        EnterPressed(aPresContext);
-          *aEventStatus = nsEventStatus_eConsumeNoDefault;
-	      }
-	      else if (NS_VK_SPACE == keyEvent->keyCode) 
-        {
-	        MouseClicked(aPresContext);
-	      }
+  /* the handling of mouse messages here has two purposes:
+   * 1) to create a subdoc if one doesn't exist on click, and to pass
+   *    mouse messages along to the content of the subdoc in the case
+   *    where we created it in response to a click.
+   * 2) to call MouseClicked
+   */
+  switch (aEvent->message) {
+    case NS_MOUSE_LEFT_BUTTON_DOWN:
+    case NS_MOUSE_MIDDLE_BUTTON_DOWN:
+    case NS_MOUSE_RIGHT_BUTTON_DOWN:
+      // don't pass through a click if we're already handling a click
+      if (eGotDown != mPassThroughMouseEvents)
+      {
+        mPassThroughMouseEvents = eGotDown;
+        if (!mWebShell) {
+          NS_ENSURE_SUCCESS(CreateSubDoc(nsnull), NS_ERROR_FAILURE);
+        }
+        NS_ENSURE_TRUE(mWebShell, NS_ERROR_FAILURE);
+        return RedispatchMouseEventToSubDoc(aPresContext, aEvent, aEventStatus, PR_TRUE);
+      }
+      break;
+    
+    case NS_MOUSE_LEFT_BUTTON_UP:
+    case NS_MOUSE_MIDDLE_BUTTON_UP:
+    case NS_MOUSE_RIGHT_BUTTON_UP:
+      // only pass through the mouseUp if we're the one who handled the mouseDown
+      if (eGotDown==mPassThroughMouseEvents)
+      {
+        mPassThroughMouseEvents = eGotUp;
+        NS_ENSURE_TRUE(mWebShell, NS_ERROR_FAILURE);
+        return RedispatchMouseEventToSubDoc(aPresContext, aEvent, aEventStatus, PR_FALSE);
+      }
+      break;
+
+    case NS_MOUSE_LEFT_CLICK:
+    case NS_MOUSE_MIDDLE_CLICK:
+    case NS_MOUSE_RIGHT_CLICK:
+      MouseClicked(aPresContext);
+      // only pass through the mouseClick if we're the one who handled the mouseUp
+      if (eGotUp==mPassThroughMouseEvents)
+      {
+        mPassThroughMouseEvents = eGotClick;
+        NS_ENSURE_TRUE(mWebShell, NS_ERROR_FAILURE);
+        return RedispatchMouseEventToSubDoc(aPresContext, aEvent, aEventStatus, PR_FALSE);
+      }
+      break;
+
+    case NS_MOUSE_LEFT_DOUBLECLICK:
+    case NS_MOUSE_MIDDLE_DOUBLECLICK:
+    case NS_MOUSE_RIGHT_DOUBLECLICK:
+      mPassThroughMouseEvents = eGotClick;
+      NS_ENSURE_TRUE(mWebShell, NS_ERROR_FAILURE);
+      return RedispatchMouseEventToSubDoc(aPresContext, aEvent, aEventStatus, PR_FALSE);
+      break;
+
+    case NS_MOUSE_MOVE:
+      // only pass through the mouseMove if we're the one who handled the mouseDown
+      if (eGotDown==mPassThroughMouseEvents)
+      {
+        if (mWebShell) {
+          return RedispatchMouseEventToSubDoc(aPresContext, aEvent, aEventStatus, PR_FALSE);
+        }
+      }
+      break;
+
+    case NS_DRAGDROP_ENTER:
+    case NS_DRAGDROP_OVER:
+    case NS_DRAGDROP_DROP:
+    case NS_DRAGDROP_EXIT:
+      // currently unused
+      break;
+      
+    case NS_DRAGDROP_GESTURE:
+      // this currently seems to have no effect
+      NS_ENSURE_TRUE(mWebShell, NS_ERROR_FAILURE);
+      return RedispatchMouseEventToSubDoc(aPresContext, aEvent, aEventStatus, PR_FALSE);
+      break;
+
+    case NS_KEY_PRESS:
+    if (NS_KEY_EVENT == aEvent->eventStructType) {
+	    nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
+	    if (NS_VK_RETURN == keyEvent->keyCode) 
+      {
+	      EnterPressed(aPresContext);
+        *aEventStatus = nsEventStatus_eConsumeNoDefault;
 	    }
-	    break;
+	    else if (NS_VK_SPACE == keyEvent->keyCode) 
+      {
+	      MouseClicked(aPresContext);
+	    }
+    }
+    break;
   }
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsGfxTextControlFrame::RedispatchMouseEventToSubDoc(nsIPresContext* aPresContext, 
+                                                    nsGUIEvent* aEvent,
+                                                    nsEventStatus* aEventStatus,
+                                                    PRBool aAdjustForView)
+{
+  NS_ENSURE_ARG_POINTER(aPresContext);
+  NS_ENSURE_ARG_POINTER(aEvent);
+  NS_ENSURE_ARG_POINTER(aEventStatus);
+
+  nsCOMPtr<nsIContentViewer> viewer;
+  NS_ENSURE_SUCCESS(mWebShell->GetContentViewer(getter_AddRefs(viewer)), NS_ERROR_FAILURE);
+  if (viewer) 
+  {
+    nsCOMPtr<nsIDocumentViewer> docv;
+    viewer->QueryInterface(kIDocumentViewerIID, getter_AddRefs(docv));
+    if (docv) 
+    {
+      nsCOMPtr<nsIPresContext> cx;
+      NS_ENSURE_SUCCESS(docv->GetPresContext(*(getter_AddRefs(cx))), NS_ERROR_FAILURE);
+      if (cx) 
+      {
+        nsCOMPtr<nsIPresShell> shell;
+        NS_ENSURE_SUCCESS(cx->GetShell(getter_AddRefs(shell)), NS_ERROR_FAILURE);
+        if (shell) 
+        {
+          nsIFrame * rootFrame;
+          NS_ENSURE_SUCCESS(shell->GetRootFrame(&rootFrame), NS_ERROR_FAILURE);
+
+          nsCOMPtr<nsIViewManager> vm;
+          NS_ENSURE_SUCCESS(shell->GetViewManager(getter_AddRefs(vm)), NS_ERROR_FAILURE);
+          if (vm) 
+          {
+            // create a new mouse event
+            nsMouseEvent event;
+            event = *((nsMouseEvent*)aEvent);
+            // if we're told to, translate the event point based on the view of this text control
+            if (PR_TRUE==aAdjustForView)
+            {
+              nsIView * view = nsnull;
+              GetView(aPresContext, &view);
+              NS_ASSERTION(view, "text control frame has no view");
+              if (!view) { return NS_ERROR_NULL_POINTER;}
+              nsRect viewBounds;
+              view->GetBounds(viewBounds);
+              event.point.x -= viewBounds.x;
+              event.point.y -= viewBounds.y;
+            }
+            // translate the event point based on this frame's border and padding
+            nsSize  size;
+            GetSize(size);
+            nsRect subBounds;
+            nsMargin border;
+            nsMargin padding;
+            border.SizeTo(0, 0, 0, 0);
+            padding.SizeTo(0, 0, 0, 0);
+            const nsStyleSpacing* spacing;
+            GetStyleData(eStyleStruct_Spacing,  (const nsStyleStruct *&)spacing);
+            spacing->CalcBorderFor(this, border);
+            spacing->CalcPaddingFor(this, padding);
+            CalcSizeOfSubDocInTwips(border, padding, size, subBounds);
+            event.point.x -= (border.left + padding.left);
+            if (0>event.point.x) {
+              event.point.x = 0;
+            }
+            else if (event.point.x > subBounds.width) {
+              event.point.x = subBounds.width-1;
+            }
+            event.point.y -= (border.top + padding.top);
+            if (0>event.point.y) {
+              event.point.y = 0;
+            }
+            else if (event.point.y > subBounds.height) {
+              event.point.x = subBounds.height-1;
+            }
+
+            // translate the event point to pixels for consumption by the embedded view manager
+            nsCOMPtr<nsIDeviceContext> dc;
+            aPresContext->GetDeviceContext(getter_AddRefs(dc));
+            NS_ASSERTION(dc, "text control frame has no dc");
+            if (!dc) { return NS_ERROR_NULL_POINTER;}
+            float t2p;
+            dc->GetAppUnitsToDevUnits(t2p);
+
+            event.point.x = NSTwipsToIntPixels(event.point.x, t2p);
+            event.point.y = NSTwipsToIntPixels(event.point.y, t2p);
+            NS_ENSURE_SUCCESS(vm->DispatchEvent(&event, aEventStatus), NS_ERROR_FAILURE);
+          }
+        }
+      }
+    }
+  }
+  return NS_OK;
+}
 
 void
 nsGfxTextControlFrame::EnterPressed(nsIPresContext* aPresContext) 
@@ -1035,36 +1312,6 @@ NS_IMETHODIMP nsGfxTextControlFrame::GetProperty(nsIAtom* aName, nsString& aValu
   return NS_OK;
 }  
 
-nsIWidget * GetDeepestWidget(nsIView * aView)
-{
-
-  PRInt32 count;
-  aView->GetChildCount(count);
-  if (0 != count) {
-    for (PRInt32 i=0;i<count;i++) {
-      nsIView * child;
-      aView->GetChild(i, child);
-      nsIWidget * widget = GetDeepestWidget(child);
-      if (widget) {
-        return widget;
-      } else {
-        aView->GetWidget(widget);
-        if (widget) {
-          nsCOMPtr<nsIScrollbar> scrollbar(do_QueryInterface(widget));
-          if (scrollbar) {
-            NS_RELEASE(widget);
-          } else {
-            return widget;
-          }
-        }
-      }
-    }
-  }
-
-  return nsnull;
-}
-
-
 void nsGfxTextControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 {
   // !! IF REMOVING THIS ANY CODE HERE 
@@ -1169,16 +1416,14 @@ nsGfxTextControlFrame::CreateWebShell(nsIPresContext* aPresContext,
   float t2p;
   aPresContext->GetTwipsToPixels(&t2p);
   nsCOMPtr<nsIPresShell> presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));     
+  rv = aPresContext->GetShell(getter_AddRefs(presShell));     
+  if (NS_FAILED(rv)) { return rv; }
 
   // create, init, set the parent of the view
   nsIView* view;
   rv = nsComponentManager::CreateInstance(kCViewCID, nsnull, kIViewIID,
                                          (void **)&view);
-  if (NS_OK != rv) {
-    NS_ASSERTION(0, "Could not create view for nsHTMLFrame");
-    return rv;
-  }
+  if (NS_FAILED(rv)) { return rv; }
 
   nsIView* parView;
   nsPoint origin;
@@ -1192,8 +1437,10 @@ nsGfxTextControlFrame::CreateWebShell(nsIPresContext* aPresContext,
   nsCOMPtr<nsIViewManager> viewMan;
   presShell->GetViewManager(getter_AddRefs(viewMan));  
   rv = view->Init(viewMan, viewBounds, parView);
+  if (NS_FAILED(rv)) { return rv; }
   viewMan->InsertChild(parView, view, 0);
   rv = view->CreateWidget(kCChildCID);
+  if (NS_FAILED(rv)) { return rv; }
   SetView(aPresContext, view);
 
   // if the visibility is hidden, reflect that in the view
@@ -1215,12 +1462,13 @@ nsGfxTextControlFrame::CreateWebShell(nsIPresContext* aPresContext,
                    NSToCoordRound((aSize.width  - border.right) * t2p), 
                    NSToCoordRound((aSize.height - border.bottom) * t2p));
 
-  mWebShell->Init(widget->GetNativeData(NS_NATIVE_WIDGET), 
-                  webBounds.x, webBounds.y,
-                  webBounds.width, webBounds.height,
-                  nsScrollPreference_kAuto, // auto scrolling
-                  PR_FALSE                  // turn off plugin hosting
-                  );
+  rv = mWebShell->Init(widget->GetNativeData(NS_NATIVE_WIDGET), 
+                       webBounds.x, webBounds.y,
+                       webBounds.width, webBounds.height,
+                       nsScrollPreference_kAuto, // auto scrolling
+                       PR_FALSE                  // turn off plugin hosting
+                       );
+  if (NS_FAILED(rv)) { return rv; }
   NS_RELEASE(widget);
 
 #ifdef NEW_WEBSHELL_INTERFACES
@@ -1745,7 +1993,6 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
     subBoundsInPixels.y = NSToCoordRound(subBounds.y * t2p);
     subBoundsInPixels.width = NSToCoordRound(subBounds.width * t2p);
     subBoundsInPixels.height = NSToCoordRound(subBounds.height * t2p);
-
     if (eReflowReason_Initial == aReflowState.reason)
     {
       if (!mWebShell)
@@ -1870,13 +2117,6 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
 #endif
       webShellWin->SetPositionAndSize(subBoundsInPixels.x, subBoundsInPixels.y,
          subBoundsInPixels.width, subBoundsInPixels.height, PR_FALSE);
-
-#ifdef NOISY
-      printf("webshell set to (%d, %d, %d %d)\n", 
-             borderPadding.left, borderPadding.top, 
-             (aDesiredSize.width - (borderPadding.left + borderPadding.right)), 
-             (aDesiredSize.height - (borderPadding.top + borderPadding.bottom)));
-#endif
     }
     else
     {
@@ -2048,32 +2288,6 @@ nsGfxTextControlFrame::GetFirstFrameForType(const nsString& aTag, nsIPresShell *
     if (content)
     {
       result = aPresShell->GetPrimaryFrameFor(content, aResult);
-    }
-  }
-  return result;
-}
-
-// XXX: this really should use a content iterator over the whole document
-//      looking for the first and last editable text nodes
-nsresult
-nsGfxTextControlFrame::SelectAllTextContent(nsIDOMNode *aBodyNode, nsIDOMSelection *aSelection)
-{
-  if (!aBodyNode || !aSelection) { return NS_ERROR_NULL_POINTER; }
-  nsCOMPtr<nsIDOMNode>firstChild, lastChild;
-  nsresult result = aBodyNode->GetFirstChild(getter_AddRefs(firstChild));
-  if ((NS_SUCCEEDED(result)) && firstChild)
-  {
-    result = aBodyNode->GetLastChild(getter_AddRefs(lastChild));
-    if ((NS_SUCCEEDED(result)) && lastChild)
-    {
-      aSelection->Collapse(firstChild, 0);
-      nsCOMPtr<nsIDOMCharacterData>text = do_QueryInterface(lastChild);
-      if (text)
-      {
-        PRUint32 length;
-        text->GetLength(&length);
-        aSelection->Extend(lastChild, length);
-      }
     }
   }
   return result;
@@ -2517,6 +2731,33 @@ nsGfxTextControlFrame::InternalContentChanged()
 
   // Have the content handle the event, propogating it according to normal DOM rules.
   nsresult result = mContent->HandleDOMEvent(mFramePresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
+
+  // update commands via controllers interface, if present
+  nsCOMPtr<nsIControllers> controllers;
+  nsCOMPtr<nsIDOMNSHTMLInputElement> textInputDOMElement = do_QueryInterface(mContent);
+  if (textInputDOMElement) {
+    result = textInputDOMElement->GetControllers(getter_AddRefs(controllers));
+  }
+  else 
+  {
+    nsCOMPtr<nsIDOMNSHTMLTextAreaElement> textAreaDOMElement = do_QueryInterface(mContent);
+    if (textAreaDOMElement) {
+      result = textAreaDOMElement->GetControllers(getter_AddRefs(controllers));
+    }
+  }
+  if (NS_FAILED(result)) { return result; }
+  if (controllers)
+  {
+    nsCOMPtr<nsIDOMXULCommandDispatcher> commandDispatcher;
+    result = controllers->GetCommandDispatcher(getter_AddRefs(commandDispatcher));
+    if (NS_FAILED(result)) { return result; }
+    if (commandDispatcher)
+    {
+      nsAutoString commandString("furby");
+      result = commandDispatcher->UpdateCommands(commandString);
+    }
+  }
+
   return result;
 }
 
@@ -2945,6 +3186,8 @@ nsEnderEventListener::HandleEvent(nsIDOMEvent* aEvent)
   return NS_OK;
 }
 
+/*================== nsIKeyListener =========================*/
+
 nsresult
 nsEnderEventListener::KeyDown(nsIDOMEvent* aKeyEvent)
 {
@@ -3111,17 +3354,7 @@ nsEnderEventListener::KeyPress(nsIDOMEvent* aKeyEvent)
   return result;
 }
 
-void GetWidgetForView(nsIView *aView, nsIWidget *&aWidget)
-{
-  aWidget = nsnull;
-  nsIView *view = aView;
-  while (!aWidget && view)
-  {
-    view->GetWidget(aWidget);
-    if (!aWidget)
-      view->GetParent(view);
-  }
-}
+/*=============== nsIMouseListener ======================*/
 
 nsresult
 nsEnderEventListener::DispatchMouseEvent(nsIDOMMouseEvent *aEvent, PRInt32 aEventType)
@@ -3348,6 +3581,7 @@ nsEnderEventListener::MouseDblClick(nsIDOMEvent* aEvent)
 nsresult
 nsEnderEventListener::MouseOver(nsIDOMEvent* aEvent)
 {
+  /*
   nsCOMPtr<nsIDOMMouseEvent>mouseEvent;
   mouseEvent = do_QueryInterface(aEvent);
   if (!mouseEvent) { //non-key event passed in.  bad things.
@@ -3363,6 +3597,8 @@ nsEnderEventListener::MouseOver(nsIDOMEvent* aEvent)
   }
   
   return result;
+  */
+  return NS_OK;
 }
 
 nsresult
@@ -3384,6 +3620,7 @@ nsEnderEventListener::MouseOut(nsIDOMEvent* aEvent)
   return result;
 }
 
+/*=============== nsIFocusListener ======================*/
 
 nsresult
 nsEnderEventListener::Focus(nsIDOMEvent* aEvent)
@@ -3530,14 +3767,14 @@ nsEnderEventListener::NotifySelectionChanged()
 
 
 /*******************************************************************************
- * nsEnderFocusListenerForContent
+ * nsEnderFocusListenerForDisplayContent
  ******************************************************************************/
 
-NS_IMPL_ADDREF(nsEnderFocusListenerForContent);
-NS_IMPL_RELEASE(nsEnderFocusListenerForContent);
+NS_IMPL_ADDREF(nsEnderFocusListenerForDisplayContent);
+NS_IMPL_RELEASE(nsEnderFocusListenerForDisplayContent);
 
 nsresult
-nsEnderFocusListenerForContent::QueryInterface(const nsIID& aIID,
+nsEnderFocusListenerForDisplayContent::QueryInterface(const nsIID& aIID,
                                                void** aInstancePtr)
 {
   NS_PRECONDITION(nsnull != aInstancePtr, "null pointer");
@@ -3557,25 +3794,25 @@ nsEnderFocusListenerForContent::QueryInterface(const nsIID& aIID,
   return NS_NOINTERFACE;
 }
 
-nsEnderFocusListenerForContent::nsEnderFocusListenerForContent() :
+nsEnderFocusListenerForDisplayContent::nsEnderFocusListenerForDisplayContent() :
   mFrame(nsnull)
 {
   NS_INIT_REFCNT();
 }
 
-nsEnderFocusListenerForContent::~nsEnderFocusListenerForContent()
+nsEnderFocusListenerForDisplayContent::~nsEnderFocusListenerForDisplayContent()
 {
 }
 
 nsresult 
-nsEnderFocusListenerForContent::HandleEvent(nsIDOMEvent* aEvent)
+nsEnderFocusListenerForDisplayContent::HandleEvent(nsIDOMEvent* aEvent)
 {
   return NS_OK;
 }
 
 
 nsresult
-nsEnderFocusListenerForContent::Focus(nsIDOMEvent* aEvent)
+nsEnderFocusListenerForDisplayContent::Focus(nsIDOMEvent* aEvent)
 {
   if (mFrame)
   {
@@ -3585,16 +3822,16 @@ nsEnderFocusListenerForContent::Focus(nsIDOMEvent* aEvent)
 }
 
 nsresult
-nsEnderFocusListenerForContent::Blur (nsIDOMEvent* aEvent)
+nsEnderFocusListenerForDisplayContent::Blur (nsIDOMEvent* aEvent)
 {
   return NS_OK;
 }
 
 
 NS_IMETHODIMP
-nsEnderFocusListenerForContent::SetFrame(nsGfxTextControlFrame *aFrame)
+nsEnderFocusListenerForDisplayContent::SetFrame(nsGfxTextControlFrame *aFrame)
 {
-  mFrame = aFrame;
+  mFrame = aFrame;  // frames are not ref counted
   return NS_OK;
 }
 
@@ -3711,6 +3948,121 @@ NS_IMETHODIMP
 EnderTempObserver::SetFrame(nsGfxTextControlFrame *aFrame)
 {
   mFrame = aFrame;
+  return NS_OK;
+}
+
+
+
+
+
+/*******************************************************************************
+ * nsEnderListenerForContent
+ ******************************************************************************/
+
+NS_IMPL_ADDREF(nsEnderListenerForContent);
+NS_IMPL_RELEASE(nsEnderListenerForContent);
+
+nsresult
+nsEnderListenerForContent::QueryInterface(const nsIID& aIID,
+                                              void** aInstancePtr)
+{
+  NS_PRECONDITION(nsnull != aInstancePtr, "null pointer");
+  if (nsnull == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aIID.Equals(NS_GET_IID(nsIDOMMouseListener))) {
+    *aInstancePtr = (void*) ((nsIDOMMouseListener*)this);
+    AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(NS_GET_IID(nsIDOMDragListener))) {
+    *aInstancePtr = (void*) ((nsIDOMDragListener*)this);
+    AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(kISupportsIID)) {
+    *aInstancePtr = (void*) ((nsISupports*)((nsIDOMFocusListener*)this));
+    AddRef();
+    return NS_OK;
+  }
+  return NS_NOINTERFACE;
+}
+
+nsEnderListenerForContent::nsEnderListenerForContent() :
+  mFrame(nsnull)
+{
+  NS_INIT_REFCNT();
+}
+
+nsEnderListenerForContent::~nsEnderListenerForContent()
+{
+}
+
+nsresult 
+nsEnderListenerForContent::HandleEvent(nsIDOMEvent* aEvent)
+{
+  printf("frame forContent generic HandleEvent\n");
+  return NS_OK;
+}
+
+/* XXX:
+   drag events should be forwarded to the editor's own drag event listener?
+*/
+
+nsresult
+nsEnderListenerForContent::DragGesture(nsIDOMEvent* aDragEvent)
+{
+  printf("frame forContent DragGesture\n");
+  // ...figure out if a drag should be started...
+  
+  // ...until we have this implemented, just eat the drag event so it
+  // ...doesn't leak out into the rest of the app/handlers.
+  aDragEvent->PreventBubble();
+  
+  return NS_OK;
+}
+
+
+nsresult
+nsEnderListenerForContent::DragEnter(nsIDOMEvent* aDragEvent)
+{
+  printf("frame forContent DragEnter\n");
+  // see nsTextEditorDragListener
+  return NS_OK;
+}
+
+
+nsresult
+nsEnderListenerForContent::DragOver(nsIDOMEvent* aDragEvent)
+{
+  printf("frame forContent DragOver\n");
+  // see nsTextEditorDragListener
+  return NS_OK;
+}
+
+
+nsresult
+nsEnderListenerForContent::DragExit(nsIDOMEvent* aDragEvent)
+{
+  printf("frame forContent DragExit\n");
+  // see nsTextEditorDragListener
+  return NS_OK;
+}
+
+
+
+nsresult
+nsEnderListenerForContent::DragDrop(nsIDOMEvent* aMouseEvent)
+{
+  printf("frame forContent DragDrop\n");
+  // see nsTextEditorDragListener
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEnderListenerForContent::SetFrame(nsGfxTextControlFrame *aFrame)
+{
+  mFrame = aFrame;  // frames are not ref counted
   return NS_OK;
 }
 

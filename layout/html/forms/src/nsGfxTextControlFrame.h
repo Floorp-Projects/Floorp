@@ -33,6 +33,7 @@
 #include "nsIDocumentObserver.h"
 #include "nsIDOMKeyListener.h"
 #include "nsIDOMMouseListener.h"
+#include "nsIDOMDragListener.h"
 #include "nsIDOMFocusListener.h"
 #include "nsIDOMSelectionListener.h"
 #include "nsIDOMDocument.h"
@@ -43,6 +44,7 @@
 #include "nsITextContent.h"
 #include "nsHTMLValue.h"
 #include "nsIWebShell.h"
+#include "nsIViewManager.h"
 
 #include "nsCSSFrameConstructor.h"
 
@@ -299,16 +301,16 @@ protected:
 
 
 /******************************************************************************
- * nsEnderFocusListenerForContent
- * used to watch for focus notifications on the text control frame's content
+ * nsEnderFocusListenerForDisplayContent
+ * used to watch for focus notifications on the text control frame's display content
  ******************************************************************************/
 
-class nsEnderFocusListenerForContent : public nsIDOMFocusListener
+class nsEnderFocusListenerForDisplayContent : public nsIDOMFocusListener
 {
 public:
 
   /** the default destructor */
-  virtual ~nsEnderFocusListenerForContent();
+  virtual ~nsEnderFocusListenerForDisplayContent();
 
   /*interfaces for addref and release and queryinterface*/
   NS_DECL_ISUPPORTS
@@ -321,11 +323,49 @@ public:
 
   NS_IMETHOD SetFrame(nsGfxTextControlFrame *aFrame);
 
-  nsEnderFocusListenerForContent();
+  nsEnderFocusListenerForDisplayContent();
 
 protected:
   nsGfxTextControlFrame    *mFrame;   // not ref counted
 };
+
+
+/******************************************************************************
+ * nsEnderListenerForContent
+ * used to watch for drag notifications on the text control frame's content
+ ******************************************************************************/
+
+class nsEnderListenerForContent : 
+  public nsIDOMDragListener
+{
+public:
+
+  /** the default destructor */
+  virtual ~nsEnderListenerForContent();
+
+  /*interfaces for addref and release and queryinterface*/
+  NS_DECL_ISUPPORTS
+
+  /** nsIDOMDragListener interfaces 
+    * @see nsIDOMDragListener
+    */
+  virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
+  virtual nsresult DragEnter(nsIDOMEvent* aDragEvent);
+  virtual nsresult DragOver(nsIDOMEvent* aDragEvent);
+  virtual nsresult DragExit(nsIDOMEvent* aDragEvent);
+  virtual nsresult DragDrop(nsIDOMEvent* aDragEvent);
+  virtual nsresult DragGesture(nsIDOMEvent* aDragEvent);
+  /* END interfaces from nsIDOMDragListener*/
+
+  NS_IMETHOD SetFrame(nsGfxTextControlFrame *aFrame);
+
+  nsEnderListenerForContent();
+
+protected:
+  nsGfxTextControlFrame    *mFrame;   // not ref counted
+  nsCOMPtr<nsIViewManager>  mViewManager;
+};
+
 
 /******************************************************************************
  * nsGfxTextControlFrame
@@ -343,6 +383,7 @@ private:
 	typedef nsFormControlFrame Inherited;
 
 public:
+
   /** constructor */
   nsGfxTextControlFrame();
 
@@ -360,6 +401,8 @@ public:
                    nsIFrame*        aParent,
                    nsIStyleContext* aContext,
                    nsIFrame*        aPrevInFlow);
+
+  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
 
 #ifdef NS_DEBUG
   /** debug method to dump frames 
@@ -518,7 +561,13 @@ protected:
 
   NS_IMETHOD GetFirstFrameForType(const nsString& aTag, nsIPresShell *aPresShell, nsIDOMDocument *aDOMDoc, nsIFrame **aResult);
 
-  NS_IMETHOD SelectAllTextContent(nsIDOMNode *aBodyNode, nsIDOMSelection *aSelection);
+  /** create an event based on aEvent and pass it to the sub document mWebShell
+    * via the sub document's view manager.
+    */
+  NS_IMETHOD RedispatchMouseEventToSubDoc(nsIPresContext* aPresContext, 
+                                          nsGUIEvent* aEvent,
+                                          nsEventStatus* aEventStatus,
+                                          PRBool aAdjustForView);
 
   virtual PRBool IsSingleLineTextControl() const;
 
@@ -574,8 +623,9 @@ protected:
   nsCWeakReferent mWeakReferent; // so this obj can be used as a weak ptr
 
   // listeners
-  nsCOMPtr<nsIEnderEventListener> mEventListener;  // ref counted
-  nsEnderFocusListenerForContent *mFocusListenerForContent; // ref counted
+  nsCOMPtr<nsIEnderEventListener> mEventListener;           // ref counted
+  nsEnderFocusListenerForDisplayContent *mFocusListenerForDisplayContent; // ref counted
+  nsEnderListenerForContent *mListenerForContent;  // ref counted
 
   nsCSSFrameConstructor *mFrameConstructor;
   nsIFrame *mDisplayFrame;
@@ -586,6 +636,17 @@ protected:
   nsCOMPtr<nsIDOMDocument>  mDoc;     // ref counted
 
   PRBool mDidSetFocus;  // init false, 
+
+  // the PassThroughState is used to manage a tiny state machine so 
+  // only the proper messages get passed through
+  enum PassThroughState
+  {
+    eUninitialized,
+    eGotDown, // with my bad self
+    eGotUp,
+    eGotClick
+  };
+  PassThroughState mPassThroughMouseEvents;
 
 private:  // frames are not refcounted
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
