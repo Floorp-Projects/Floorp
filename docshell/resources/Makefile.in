@@ -43,6 +43,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS=locale content
+DIRS=content
 
 include $(topsrcdir)/config/rules.mk
