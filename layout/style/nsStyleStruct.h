@@ -318,6 +318,19 @@ struct nsBorderColors {
   ~nsBorderColors() {
     delete mNext;
   }
+
+  PRBool Equals(nsBorderColors* aOther) {
+    nsBorderColors* c1 = this;
+    nsBorderColors* c2 = aOther;
+    while (c1 && c2) {
+      if (c1->mColor != c2->mColor ||
+          c1->mTransparent != c2->mTransparent)
+        return PR_FALSE;
+      c1 = c1->mNext;
+      c2 = c2->mNext;
+    }
+    return !c1 && !c2;
+  }
 };
 
 struct nsStyleBorder: public nsStyleStruct {
