@@ -450,9 +450,10 @@ nsresult nsMapiHook::PopulateCompFields(lpnsMapiMessage aMessage,
     {
         for (int i=0 ; i < (int) aMessage->nRecipCount ; i++)
         {
-            if (aMessage->lpRecips[i].lpszAddress)
+            if (aMessage->lpRecips[i].lpszAddress || aMessage->lpRecips[i].lpszName)
             {
-                const char *addressWithoutType = aMessage->lpRecips[i].lpszAddress;
+                const char *addressWithoutType = (aMessage->lpRecips[i].lpszAddress)
+                  ? aMessage->lpRecips[i].lpszAddress : aMessage->lpRecips[i].lpszName;
                 if (!PL_strncasecmp(addressWithoutType, "SMTP:", 5))
                   addressWithoutType += 5;
                 switch (aMessage->lpRecips[i].ulRecipClass)
@@ -624,9 +625,10 @@ nsresult nsMapiHook::PopulateCompFieldsWithConversion(lpnsMapiMessage aMessage,
     {
         for (int i=0 ; i < (int) aMessage->nRecipCount ; i++)
         {
-            if (aMessage->lpRecips[i].lpszAddress)
+            if (aMessage->lpRecips[i].lpszAddress || aMessage->lpRecips[i].lpszName)
             {
-                const char *addressWithoutType = aMessage->lpRecips[i].lpszAddress;
+                const char *addressWithoutType = (aMessage->lpRecips[i].lpszAddress)
+                  ? aMessage->lpRecips[i].lpszAddress : aMessage->lpRecips[i].lpszName;
                 if (!PL_strncasecmp(addressWithoutType, "SMTP:", 5))
                   addressWithoutType += 5;
 
