@@ -83,7 +83,7 @@ interface nsISupportsArray : nsICollection {
                                  in voidStar aData);
 %{C++
 private:
-  NS_IMETHOD_(nsISupportsArray&) operator=(const nsISupportsArray& other) = 0;
+//  NS_IMETHOD_(nsISupportsArray&) operator=(const nsISupportsArray& other) = 0;
   NS_IMETHOD_(PRBool) operator==(const nsISupportsArray& other) = 0;
   NS_IMETHOD_(nsISupports*)  operator[](PRUint32 aIndex) = 0;
 %}

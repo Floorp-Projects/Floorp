@@ -62,12 +62,14 @@ void nsSupportsArray::DeleteArray(void)
   }
 }
 
+#if 0
 NS_IMETHODIMP_(nsISupportsArray&) 
 nsISupportsArray::operator=(const nsISupportsArray& other)
 {
   NS_ASSERTION(0, "should be an abstract method");
   return *this; // bogus
 }
+#endif
 
 NS_IMETHODIMP_(nsISupportsArray&) 
 nsSupportsArray::operator=(nsISupportsArray const& aOther)
