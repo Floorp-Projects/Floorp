@@ -63,7 +63,7 @@ import org.mozilla.javascript.debug.*;
  * and associated with the thread that will be executing the script.
  * The Context will be used to store information about the executing
  * of the script such as the call stack. Contexts are associated with
- * the current thread  using the {@link #call(ContextAction)} 
+ * the current thread  using the {@link #call(ContextAction)}
  * or {@link #enter()} methods.<p>
  *
  * The behavior of the execution engine may be altered through methods
@@ -419,8 +419,8 @@ public class Context
      * <tt>new Context()</tt> will be called to construct
      * new Context instance. The instance will be temporary associated
      * with the thread during call to {@link ContextAction#run(Context)}.
-	 *
-	 * @return The result of {@link ContextAction#run(Context)}.
+     *
+     * @return The result of {@link ContextAction#run(Context)}.
      */
     public static Object call(ContextAction action)
     {
@@ -1350,8 +1350,8 @@ public class Context
 
     /**
      * @deprecated Use
-     * {@link #compileReader(Reader in, String sourceName, int lineno, 
-	 *                       Object securityDomain)}.
+     * {@link #compileReader(Reader in, String sourceName, int lineno,
+     *                       Object securityDomain)}.
      */
     public final Script compileReader(Scriptable scope, Reader in,
                                       String sourceName, int lineno,
@@ -1935,53 +1935,25 @@ public class Context
     /**
      * Set the security controller for this context.
      * <p> SecurityController may only be set if it is currently null
-     * and {@link #hasGlobalSecurityController()} is <tt>false</tt>.
+     * and {@link SecurityController#hasGlobal()} is <tt>false</tt>.
      * Otherwise a SecurityException is thrown.
      * @param controller a SecurityController object
      * @throws SecurityException if there is already a SecurityController
-     *         object for this Context
-     * @see #setGlobalSecurityController(SecurityController controller)
-     * @see #hasGlobalSecurityController()
+     *         object for this Context or globally installed.
+     * @see SecurityController#initGlobal(SecurityController controller)
+     * @see SecurityController#hasGlobal()
      */
     public final void setSecurityController(SecurityController controller)
     {
         if (sealed) onSealedMutation();
         if (controller == null) throw new IllegalArgumentException();
         if (securityController != null) {
-            throw new SecurityException("Can not overwrite existing " +
-                                        "SecurityController object");
+            throw new SecurityException("Can not overwrite existing SecurityController object");
         }
-        if (globalSecurityController != null) {
-            throw new SecurityException("Can not overwrite existing " +
-                                        "global SecurityController object");
+        if (SecurityController.hasGlobal()) {
+            throw new SecurityException("Can not overwrite existing global SecurityController object");
         }
         securityController = controller;
-    }
-
-    /**
-     * Check if global {@link SecurityController} was already installed.
-     * @see #setGlobalSecurityController(SecurityController controller)
-     */
-    public static boolean hasGlobalSecurityController()
-    {
-        return globalSecurityController != null;
-    }
-
-    /**
-     * Set global {@link SecurityController} that will be used for all
-     * security-related operations overriding any per Context security
-     * settings. The method can only be called once.
-     * @see #hasGlobalSecurityController()
-     */
-    public static void setGlobalSecurityController(SecurityController
-controller)
-    {
-        if (controller == null) throw new IllegalArgumentException();
-        if (globalSecurityController != null) {
-            throw new SecurityException("Cannot overwrite existing " +
-                                        "SecurityController object");
-        }
-        globalSecurityController = controller;
     }
 
     /**
@@ -2619,11 +2591,12 @@ controller)
         return version == VERSION_DEFAULT || version >= VERSION_1_3;
     }
 
-// Should not be public
+// The method must NOT be public or protected
     SecurityController getSecurityController()
     {
-        if (globalSecurityController != null) {
-            return globalSecurityController;
+        SecurityController global = SecurityController.global();
+        if (global != null) {
+            return global;
         }
         return securityController;
     }
@@ -2732,7 +2705,6 @@ controller)
 
     int version;
 
-    private static SecurityController globalSecurityController;
     private SecurityController securityController;
     private ClassShutter classShutter;
     private ErrorReporter errorReporter;
