@@ -2764,11 +2764,27 @@ nsHTMLEditRules::JoinNodesSmart( nsIDOMNode *aNodeLeft,
     // for para's, merge deep & add a <br> after merging
     res = mEditor->JoinNodeDeep(aNodeLeft, aNodeRight, aOutMergeParent, aOutMergeOffset);
     if (NS_FAILED(res)) return res;
+    // now we need to insert a br.  unfortunately, we may have to split a text node to do it.
+    nsCOMPtr<nsIDOMCharacterData> nodeAsText = do_QueryInterface(*aOutMergeParent);
     nsAutoString brType("br");
     nsCOMPtr<nsIDOMNode> brNode;
-    res = mEditor->CreateNode(brType, *aOutMergeParent, *aOutMergeOffset, getter_AddRefs(brNode));
-    // out offset _after_ <br>
-    *aOutMergeOffset++;
+    if (nodeAsText)  
+    {
+      // split the text node
+      nsCOMPtr<nsIDOMNode> tmp;
+      PRInt32 offset;
+      res = mEditor->SplitNode(*aOutMergeParent, *aOutMergeOffset, getter_AddRefs(tmp));
+      if (NS_FAILED(res)) return res;
+      res = nsEditor::GetNodeLocation(*aOutMergeParent, &tmp, &offset);
+      if (NS_FAILED(res)) return res;
+      res = mEditor->CreateNode(brType, tmp, offset, getter_AddRefs(brNode));
+      *aOutMergeOffset = 0; // selection at front of righthand text node
+    }
+    else
+    {
+      res = mEditor->CreateNode(brType, *aOutMergeParent, *aOutMergeOffset, getter_AddRefs(brNode));
+      *aOutMergeOffset++;   // out offset _after_ <br>
+    }
     return res;
   }
   else if (IsList(aNodeLeft) || mEditor->IsTextNode(aNodeLeft))
