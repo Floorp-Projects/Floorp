@@ -66,15 +66,15 @@ void MySpaceManager::GetBandsInfo(BandsInfo& aBandsInfo)
     while (nsnull != band) {
       BandInfo& info = aBandsInfo.bands[aBandsInfo.numBands];
 
-      info.yOffset = band->top;
-      info.height = band->bottom - band->top;
+      info.yOffset = band->mTop;
+      info.height = band->mBottom - band->mTop;
       info.firstRect = band;
 
       aBandsInfo.numBands++;
 
       // Get the next band, and count the number of rects in this band
       info.numRects = 0;
-      while (info.yOffset == band->top) {
+      while (info.yOffset == band->mTop) {
         info.numRects++;
 
         band = band->Next();
@@ -343,12 +343,12 @@ PRBool MySpaceManager::TestAddRectToBand()
     return PR_FALSE;
   }
   bandRect = bandsInfo.bands[0].firstRect;
-  if ((bandRect->left != 10) || (bandRect->right != 60)) {
+  if ((bandRect->mLeft != 10) || (bandRect->mRight != 60)) {
     printf("TestAddRectToBand: wrong first rect (#1)\n");
     return PR_FALSE;
   }
   bandRect = bandRect->Next();
-  if ((bandRect->left != 100) || (bandRect->right != 200)) {
+  if ((bandRect->mLeft != 100) || (bandRect->mRight != 200)) {
     printf("TestAddRectToBand: wrong second rect (#1)\n");
     return PR_FALSE;
   }
@@ -364,17 +364,17 @@ PRBool MySpaceManager::TestAddRectToBand()
     return PR_FALSE;
   }
   bandRect = bandsInfo.bands[0].firstRect;
-  if ((bandRect->left != 10) || (bandRect->right != 60)) {
+  if ((bandRect->mLeft != 10) || (bandRect->mRight != 60)) {
     printf("TestAddRectToBand: wrong first rect (#2)\n");
     return PR_FALSE;
   }
   bandRect = bandRect->Next();
-  if ((bandRect->left != 100) || (bandRect->right != 200)) {
+  if ((bandRect->mLeft != 100) || (bandRect->mRight != 200)) {
     printf("TestAddRectToBand: wrong second rect (#2)\n");
     return PR_FALSE;
   }
   bandRect = bandRect->Next();
-  if ((bandRect->left != 250) || (bandRect->right != 350)) {
+  if ((bandRect->mLeft != 250) || (bandRect->mRight != 350)) {
     printf("TestAddRectToBand: wrong third rect (#2)\n");
     return PR_FALSE;
   }
@@ -391,30 +391,30 @@ PRBool MySpaceManager::TestAddRectToBand()
     return PR_FALSE;
   }
   bandRect = bandsInfo.bands[0].firstRect;
-  if ((bandRect->left != 10) || (bandRect->right != 60)) {
+  if ((bandRect->mLeft != 10) || (bandRect->mRight != 60)) {
     printf("TestAddRectToBand: wrong first rect (#3)\n");
     return PR_FALSE;
   }
   bandRect = bandRect->Next();
-  NS_ASSERTION(1 == bandRect->numFrames, "unexpected shared rect");
-  if ((bandRect->left != 80) || (bandRect->right != 100)) {
+  NS_ASSERTION(1 == bandRect->mNumFrames, "unexpected shared rect");
+  if ((bandRect->mLeft != 80) || (bandRect->mRight != 100)) {
     printf("TestAddRectToBand: wrong second rect (#3)\n");
     return PR_FALSE;
   }
   bandRect = bandRect->Next();
-  if ((bandRect->left != 100) || (bandRect->right != 120) ||
-      (bandRect->numFrames != 2) || !bandRect->IsOccupiedBy((nsIFrame*)0x04)) {
+  if ((bandRect->mLeft != 100) || (bandRect->mRight != 120) ||
+      (bandRect->mNumFrames != 2) || !bandRect->IsOccupiedBy((nsIFrame*)0x04)) {
     printf("TestAddRectToBand: wrong third rect (#3)\n");
     return PR_FALSE;
   }
   bandRect = bandRect->Next();
-  NS_ASSERTION(1 == bandRect->numFrames, "unexpected shared rect");
-  if ((bandRect->left != 120) || (bandRect->right != 200)) {
+  NS_ASSERTION(1 == bandRect->mNumFrames, "unexpected shared rect");
+  if ((bandRect->mLeft != 120) || (bandRect->mRight != 200)) {
     printf("TestAddRectToBand: wrong fourth rect (#3)\n");
     return PR_FALSE;
   }
   bandRect = bandRect->Next();
-  if ((bandRect->left != 250) || (bandRect->right != 350)) {
+  if ((bandRect->mLeft != 250) || (bandRect->mRight != 350)) {
     printf("TestAddRectToBand: wrong fifth rect (#3)\n");
     return PR_FALSE;
   }
@@ -431,26 +431,26 @@ PRBool MySpaceManager::TestAddRectToBand()
     return PR_FALSE;
   }
   bandRect = bandsInfo.bands[0].firstRect;
-  NS_ASSERTION(1 == bandRect->numFrames, "unexpected shared rect");
-  if ((bandRect->left != 10) || (bandRect->right != 50)) {
+  NS_ASSERTION(1 == bandRect->mNumFrames, "unexpected shared rect");
+  if ((bandRect->mLeft != 10) || (bandRect->mRight != 50)) {
     printf("TestAddRectToBand: wrong first rect (#4)\n");
     return PR_FALSE;
   }
   bandRect = bandRect->Next();
-  if ((bandRect->left != 50) || (bandRect->right != 60) ||
-      (bandRect->numFrames != 2) || !bandRect->IsOccupiedBy((nsIFrame*)0x05)) {
+  if ((bandRect->mLeft != 50) || (bandRect->mRight != 60) ||
+      (bandRect->mNumFrames != 2) || !bandRect->IsOccupiedBy((nsIFrame*)0x05)) {
     printf("TestAddRectToBand: wrong second rect (#4)\n");
     return PR_FALSE;
   }
   bandRect = bandRect->Next();
-  NS_ASSERTION(1 == bandRect->numFrames, "unexpected shared rect");
-  if ((bandRect->left != 60) || (bandRect->right != 70)) {
+  NS_ASSERTION(1 == bandRect->mNumFrames, "unexpected shared rect");
+  if ((bandRect->mLeft != 60) || (bandRect->mRight != 70)) {
     printf("TestAddRectToBand: wrong third rect (#4)\n");
     return PR_FALSE;
   }
   bandRect = bandRect->Next();
-  NS_ASSERTION(1 == bandRect->numFrames, "unexpected shared rect");
-  if ((bandRect->left != 80) || (bandRect->right != 100)) {
+  NS_ASSERTION(1 == bandRect->mNumFrames, "unexpected shared rect");
+  if ((bandRect->mLeft != 80) || (bandRect->mRight != 100)) {
     printf("TestAddRectToBand: wrong fourth rect (#4)\n");
     return PR_FALSE;
   }
@@ -467,25 +467,25 @@ PRBool MySpaceManager::TestAddRectToBand()
     return PR_FALSE;
   }
   bandRect = bandsInfo.bands[0].firstRect;
-  NS_ASSERTION(1 == bandRect->numFrames, "unexpected shared rect");
-  if ((bandRect->left != 10) || (bandRect->right != 20)) {
+  NS_ASSERTION(1 == bandRect->mNumFrames, "unexpected shared rect");
+  if ((bandRect->mLeft != 10) || (bandRect->mRight != 20)) {
     printf("TestAddRectToBand: wrong first rect (#5)\n");
     return PR_FALSE;
   }
   bandRect = bandRect->Next();
-  if ((bandRect->left != 20) || (bandRect->right != 40) ||
-      (bandRect->numFrames != 2) || !bandRect->IsOccupiedBy((nsIFrame*)0x06)) {
+  if ((bandRect->mLeft != 20) || (bandRect->mRight != 40) ||
+      (bandRect->mNumFrames != 2) || !bandRect->IsOccupiedBy((nsIFrame*)0x06)) {
     printf("TestAddRectToBand: wrong second rect (#5)\n");
     return PR_FALSE;
   }
   bandRect = bandRect->Next();
-  NS_ASSERTION(1 == bandRect->numFrames, "unexpected shared rect");
-  if ((bandRect->left != 40) || (bandRect->right != 50)) {
+  NS_ASSERTION(1 == bandRect->mNumFrames, "unexpected shared rect");
+  if ((bandRect->mLeft != 40) || (bandRect->mRight != 50)) {
     printf("TestAddRectToBand: wrong third rect (#5)\n");
     return PR_FALSE;
   }
   bandRect = bandRect->Next();
-  if ((bandRect->left != 50) || (bandRect->right != 60) || (bandRect->numFrames != 2)) {
+  if ((bandRect->mLeft != 50) || (bandRect->mRight != 60) || (bandRect->mNumFrames != 2)) {
     printf("TestAddRectToBand: wrong fourth rect (#5)\n");
     return PR_FALSE;
   }
@@ -501,31 +501,31 @@ PRBool MySpaceManager::TestAddRectToBand()
     return PR_FALSE;
   }
   bandRect = bandsInfo.bands[0].firstRect;
-  NS_ASSERTION(1 == bandRect->numFrames, "unexpected shared rect");
-  if ((bandRect->left != 0) || (bandRect->right != 10)) {
+  NS_ASSERTION(1 == bandRect->mNumFrames, "unexpected shared rect");
+  if ((bandRect->mLeft != 0) || (bandRect->mRight != 10)) {
     printf("TestAddRectToBand: wrong first rect (#6)\n");
     return PR_FALSE;
   }
   bandRect = bandRect->Next();
-  if ((bandRect->left != 10) || (bandRect->right != 20) ||
-      (bandRect->numFrames != 2) || !bandRect->IsOccupiedBy((nsIFrame*)0x07)) {
+  if ((bandRect->mLeft != 10) || (bandRect->mRight != 20) ||
+      (bandRect->mNumFrames != 2) || !bandRect->IsOccupiedBy((nsIFrame*)0x07)) {
     printf("TestAddRectToBand: wrong second rect (#6)\n");
     return PR_FALSE;
   }
   bandRect = bandRect->Next();
-  if ((bandRect->left != 20) || (bandRect->right != 30) ||
-      (bandRect->numFrames != 3) || !bandRect->IsOccupiedBy((nsIFrame*)0x07)) {
+  if ((bandRect->mLeft != 20) || (bandRect->mRight != 30) ||
+      (bandRect->mNumFrames != 3) || !bandRect->IsOccupiedBy((nsIFrame*)0x07)) {
     printf("TestAddRectToBand: wrong third rect (#6)\n");
     return PR_FALSE;
   }
   bandRect = bandRect->Next();
-  if ((bandRect->left != 30) || (bandRect->right != 40) || (bandRect->numFrames != 2)) {
+  if ((bandRect->mLeft != 30) || (bandRect->mRight != 40) || (bandRect->mNumFrames != 2)) {
     printf("TestAddRectToBand: wrong fourth rect (#6)\n");
     return PR_FALSE;
   }
   bandRect = bandRect->Next();
-  NS_ASSERTION(1 == bandRect->numFrames, "unexpected shared rect");
-  if ((bandRect->left != 40) || (bandRect->right != 50)) {
+  NS_ASSERTION(1 == bandRect->mNumFrames, "unexpected shared rect");
+  if ((bandRect->mLeft != 40) || (bandRect->mRight != 50)) {
     printf("TestAddRectToBand: wrong fifth rect (#6)\n");
     return PR_FALSE;
   }
@@ -586,7 +586,7 @@ PRBool MySpaceManager::TestRemoveRegion()
     return PR_FALSE;
   }
   bandRect = bandsInfo.bands[0].firstRect;
-  if ((bandRect->left != 10) || (bandRect->right != 110)) {
+  if ((bandRect->mLeft != 10) || (bandRect->mRight != 110)) {
     printf("TestRemoveRegion: wrong size rect (#2)\n");
     return PR_FALSE;
   }
@@ -624,7 +624,7 @@ PRBool MySpaceManager::TestRemoveRegion()
     return PR_FALSE;
   }
   bandRect = bandsInfo.bands[0].firstRect;
-  if ((bandRect->left != 10) || (bandRect->right != 110)) {
+  if ((bandRect->mLeft != 10) || (bandRect->mRight != 110)) {
     printf("TestRemoveRegion: wrong size rect (#3)\n");
     return PR_FALSE;
   }
@@ -666,7 +666,7 @@ PRBool MySpaceManager::TestOffsetRegion()
 
   // Verify the position
   bandRect = bandsInfo.bands[0].firstRect;
-  if ((bandRect->left != 60) || (bandRect->top != 150)) {
+  if ((bandRect->mLeft != 60) || (bandRect->mTop != 150)) {
     printf("TestOffsetRegion: wrong rect origin (#1)\n");
     return PR_FALSE;
   }
@@ -708,8 +708,8 @@ PRBool MySpaceManager::TestResizeRectRegion()
 
   // Verify the position and size of the rect
   bandRect = bandsInfo.bands[0].firstRect;
-  if ((bandRect->left != 10) || (bandRect->top != 100) ||
-      (bandRect->right != 160) || (bandRect->bottom != 250)) {
+  if ((bandRect->mLeft != 10) || (bandRect->mTop != 100) ||
+      (bandRect->mRight != 160) || (bandRect->mBottom != 250)) {
     printf("TestResizeRectRegion: wrong rect shape (#1)\n");
     return PR_FALSE;
   }

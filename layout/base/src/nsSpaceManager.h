@@ -59,8 +59,8 @@ protected:
   // Structure that maintains information about the region associated
   // with a particular frame
   struct FrameInfo {
-    nsIFrame* const frame;
-    nsRect          rect;       // rectangular region
+    nsIFrame* const mFrame;
+    nsRect          mRect;       // rectangular region
 
     FrameInfo(nsIFrame* aFrame, const nsRect& aRect);
   };
@@ -68,12 +68,12 @@ protected:
 public:
   // Doubly linked list of band rects
   struct BandRect : PRCListStr {
-    nscoord   left, top;
-    nscoord   right, bottom;
-    PRIntn    numFrames;    // number of frames occupying this rect
+    nscoord   mLeft, mTop;
+    nscoord   mRight, mBottom;
+    PRIntn    mNumFrames;    // number of frames occupying this rect
     union {
-      nsIFrame*    frame;   // single frame occupying the space
-      nsVoidArray* frames;  // list of frames occupying the space
+      nsIFrame*    mFrame;   // single frame occupying the space
+      nsVoidArray* mFrames;  // list of frames occupying the space
     };
 
     BandRect(nscoord aLeft, nscoord aTop,
@@ -157,7 +157,7 @@ protected:
                                    nsBandData&     aAvailableSpace) const;
 
 private:
-	nsSpaceManager(const nsSpaceManager&);    // no implementation
+	nsSpaceManager(const nsSpaceManager&);  // no implementation
 	void operator=(const nsSpaceManager&);  // no implementation
   friend PR_CALLBACK PRIntn NS_RemoveFrameInfoEntries(PLHashEntry*, PRIntn, void*);
 };
