@@ -2296,9 +2296,9 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
     // know about the StyleRule change.
     if (mDocument && (aNameSpaceID == kNameSpaceID_None) && aName == kStyleAtom) {
 
-        nsIURI* docURL = nsnull;
+        nsCOMPtr <nsIURI> docURL;
         if (nsnull != mDocument) {
-            mDocument->GetBaseURL(docURL);
+            mDocument->GetBaseURL(*getter_AddRefs(docURL));
         }
 
         mAttributes->UpdateStyleRule(docURL, aValue);
@@ -2574,9 +2574,9 @@ RDFElementImpl::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNot
     
     if (mDocument && (aNameSpaceID == kNameSpaceID_None) && aName == kStyleAtom) {
 
-        nsIURI* docURL = nsnull;
+        nsCOMPtr <nsIURI> docURL;
         if (nsnull != mDocument) {
-            mDocument->GetBaseURL(docURL);
+            mDocument->GetBaseURL(*getter_AddRefs(docURL));
         }
 
         mAttributes->UpdateStyleRule(docURL, "");
