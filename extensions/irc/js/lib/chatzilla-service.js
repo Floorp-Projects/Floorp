@@ -52,7 +52,7 @@ function (compMgr, fileSpec, location, type)
                                       true, true, type);
 
 	catman = Components.classes["mozilla.categorymanager.1"].getService(nsICategoryManager);
-	catman.addCategoryEntry("command-line-argument-handlers",CHATZILLASERVICE_PROGID, "chatzilla command line handler", true, true);
+	catman.addCategoryEntry("command-line-argument-handlers","chatzilla command line handler",CHATZILLASERVICE_PROGID, true, true);
 }
 
 chatzillaModule.unregisterSelf =
