@@ -354,7 +354,6 @@ pref("wallet.captureForms",                 true);
 pref("wallet.notified",                     false);
 pref("wallet.fetchPatches",                 false);
 pref("wallet.TutorialFromMenu",             "chrome://navigator/locale/navigator.properties");
-pref("wallet.TutorialFromPrefs",            "chrome://navigator/locale/navigator.properties");
 pref("wallet.Server",                       "chrome://navigator/locale/navigator.properties");
 pref("wallet.Samples",                      "chrome://navigator/locale/navigator.properties");
 pref("wallet.version",                      "1");
