@@ -114,7 +114,7 @@ void nsFrameWindow::RealDoCreate( HWND hwndP, nsWindow *aParent,
    // is an extra bonus feature :-)
    mFrameWnd = WinCreateWindow( HWND_DESKTOP,
                                 WC_FRAME,
-                                0, 0,                  // text, style
+                                " ", 0,                  // text, style
                                 0, 0, 0, 0,            // position
                                 hwndP,
                                 HWND_TOP,
