@@ -224,6 +224,7 @@ protected:
 
   nsCOMPtr<nsIRDFCompositeDataSource> mChromeDataSource;
   nsCOMPtr<nsIRDFDataSource> mInstallDirChromeDataSource;
+  nsCOMPtr<nsIRDFDataSource> mUIDataSource;
 
   nsSupportsHashtable* mDataSourceTable;
   nsIRDFService* mRDFService;
