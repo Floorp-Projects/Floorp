@@ -135,7 +135,7 @@ struct JSAtomState {
     JSRuntime           *runtime;       /* runtime that owns us */
     JSHashTable         *table;         /* hash table containing all atoms */
     jsatomid            number;         /* one beyond greatest atom number */
-    jsatomid            interns;        /* number of interned strings */
+    jsatomid            liveAtoms;      /* number of live atoms after last GC */
 
     /* Type names and value literals. */
     JSAtom              *typeAtoms[JSTYPE_LIMIT];

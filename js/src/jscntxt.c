@@ -66,7 +66,7 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
 
     cx = (JSContext *) malloc(sizeof *cx);
     if (!cx)
-	return NULL;
+        return NULL;
     memset(cx, 0, sizeof *cx);
 
     cx->runtime = rt;
@@ -76,17 +76,17 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
 
     JS_LOCK_RUNTIME(rt);
     for (;;) {
-	first = (rt->contextList.next == &rt->contextList);
-	if (rt->state == JSRTS_UP) {
-	    JS_ASSERT(!first);
-	    break;
-	}
-	if (rt->state == JSRTS_DOWN) {
-	    JS_ASSERT(first);
-	    rt->state = JSRTS_LAUNCHING;
-	    break;
-	}
-	JS_WAIT_CONDVAR(rt->stateChange, JS_NO_TIMEOUT);
+        first = (rt->contextList.next == &rt->contextList);
+        if (rt->state == JSRTS_UP) {
+            JS_ASSERT(!first);
+            break;
+        }
+        if (rt->state == JSRTS_DOWN) {
+            JS_ASSERT(first);
+            rt->state = JSRTS_LAUNCHING;
+            break;
+        }
+        JS_WAIT_CONDVAR(rt->stateChange, JS_NO_TIMEOUT);
     }
     JS_APPEND_LINK(&cx->links, &rt->contextList);
     JS_UNLOCK_RUNTIME(rt);
@@ -108,8 +108,8 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
 
 #if JS_HAS_REGEXPS
     if (!js_InitRegExpStatics(cx, &cx->regExpStatics)) {
-	js_DestroyContext(cx, JS_NO_GC);
-	return NULL;
+        js_DestroyContext(cx, JS_NO_GC);
+        return NULL;
     }
 #endif
 #if JS_HAS_EXCEPTIONS
@@ -125,22 +125,24 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
      * as well as "first".
      */
     if (first) {
-	ok = js_InitAtomState(cx, &rt->atomState);
-	if (ok)
-	    ok = js_InitScanner(cx);
+        ok = (rt->atomState.liveAtoms == 0)
+             ? js_InitAtomState(cx, &rt->atomState)
+             : JS_TRUE;
+        if (ok)
+            ok = js_InitScanner(cx);
         if (ok)
             ok = js_InitRuntimeNumberState(cx);
         if (ok)
             ok = js_InitRuntimeStringState(cx);
-	if (!ok) {
+        if (!ok) {
             js_DestroyContext(cx, JS_NO_GC);
-	    return NULL;
-	}
+            return NULL;
+        }
 
-	JS_LOCK_RUNTIME(rt);
-	rt->state = JSRTS_UP;
-	JS_NOTIFY_ALL_CONDVAR(rt->stateChange);
-	JS_UNLOCK_RUNTIME(rt);
+        JS_LOCK_RUNTIME(rt);
+        rt->state = JSRTS_UP;
+        JS_NOTIFY_ALL_CONDVAR(rt->stateChange);
+        JS_UNLOCK_RUNTIME(rt);
     }
 
     return cx;
@@ -161,20 +163,20 @@ js_DestroyContext(JSContext *cx, JSGCMode gcmode)
     JS_REMOVE_LINK(&cx->links);
     last = (rt->contextList.next == &rt->contextList);
     if (last)
-    	rt->state = JSRTS_LANDING;
+        rt->state = JSRTS_LANDING;
     JS_UNLOCK_RUNTIME(rt);
 
     if (last) {
-	/* Unpin all pinned atoms before final GC. */
-	js_UnpinPinnedAtoms(&rt->atomState);
+        /* Unpin all pinned atoms before final GC. */
+        js_UnpinPinnedAtoms(&rt->atomState);
 
-	/* Unlock and clear GC things held by runtime pointers. */
+        /* Unlock and clear GC things held by runtime pointers. */
         js_FinishRuntimeNumberState(cx);
         js_FinishRuntimeStringState(cx);
 
-	/* Clear debugging state to remove GC roots. */
-	JS_ClearAllTraps(cx);
-	JS_ClearAllWatchPoints(cx);
+        /* Clear debugging state to remove GC roots. */
+        JS_ClearAllTraps(cx);
+        JS_ClearAllWatchPoints(cx);
     }
 
 #if JS_HAS_REGEXPS
@@ -211,8 +213,9 @@ js_DestroyContext(JSContext *cx, JSGCMode gcmode)
         while (rt->gcPoke)
             js_GC(cx, GC_LAST_CONTEXT);
 
-        /* Free atom state last, now that no scripts survive. */
-        js_FreeAtomState(cx, &rt->atomState);
+        /* Try to free atom state, now that no unrooted scripts survive. */
+        if (rt->atomState.liveAtoms == 0)
+            js_FreeAtomState(cx, &rt->atomState);
 
         /* Take the runtime down, now that it has no contexts or atoms. */
         JS_LOCK_RUNTIME(rt);
@@ -232,7 +235,7 @@ js_DestroyContext(JSContext *cx, JSGCMode gcmode)
     JS_FinishArenaPool(&cx->notePool);
     JS_FinishArenaPool(&cx->tempPool);
     if (cx->lastMessage)
-	free(cx->lastMessage);
+        free(cx->lastMessage);
 
     /* Remove any argument formatters. */
     map = cx->argumentFormatMap;
@@ -378,11 +381,11 @@ js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap)
     if (fp) {
         report.filename = fp->script->filename;
         report.lineno = js_PCToLineNumber(fp->script, fp->pc);
-	/* XXX should fetch line somehow */
+        /* XXX should fetch line somehow */
     }
     last = JS_vsmprintf(format, ap);
     if (!last)
-	return JS_FALSE;
+        return JS_FALSE;
 
     ReportError(cx, last, reportp);
     free(last);
@@ -408,8 +411,8 @@ js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap)
  */
 JSBool
 js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
-			void *userRef, const uintN errorNumber,
-			char **messagep, JSErrorReport *reportp,
+                        void *userRef, const uintN errorNumber,
+                        char **messagep, JSErrorReport *reportp,
                         JSBool *warningp, JSBool charArgs, va_list ap)
 {
     const JSErrorFormatString *fmtData;
@@ -424,19 +427,19 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
 
     *messagep = NULL;
     if (callback) {
-	fmtData = (*callback)(userRef, "Mountain View", errorNumber);
-	if (fmtData != NULL) {
+        fmtData = (*callback)(userRef, "Mountain View", errorNumber);
+        if (fmtData != NULL) {
             size_t totalArgsLength = 0;
             size_t argLengths[10]; /* only {0} thru {9} supported */
-	    argCount = fmtData->argCount;
+            argCount = fmtData->argCount;
             JS_ASSERT(argCount <= 10);
-	    if (argCount > 0) {
-		/*
+            if (argCount > 0) {
+                /*
                  * Gather the arguments into an array, and accumulate
                  * their sizes. We allocate 1 more than necessary and
                  * null it out to act as the caboose when we free the
                  * pointers later.
-		 */
+                 */
                 reportp->messageArgs = (const jschar **)
                     JS_malloc(cx, sizeof(jschar *) * (argCount + 1));
                 if (!reportp->messageArgs)
@@ -458,10 +461,10 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
                 /* NULL-terminate for easy copying. */
                 reportp->messageArgs[i] = NULL;
             }
-	    /*
-	     * Parse the error format, substituting the argument X
-	     * for {X} in the format.
-	     */
+            /*
+             * Parse the error format, substituting the argument X
+             * for {X} in the format.
+             */
             if (argCount > 0) {
                 if (fmtData->format) {
                     const char *fmt;
@@ -472,17 +475,17 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
                         = strlen(fmtData->format)
                             - (3 * argCount) /* exclude the {n} */
                             + totalArgsLength;
-		    /*
-		     * Note - the above calculation assumes that each argument
-		     * is used once and only once in the expansion !!!
-		     */
+                    /*
+                     * Note - the above calculation assumes that each argument
+                     * is used once and only once in the expansion !!!
+                     */
                     reportp->ucmessage = out = (jschar *)
                         JS_malloc(cx, (expandedLength + 1) * sizeof(jschar));
                     if (!out)
                         goto error;
                     fmt = fmtData->format;
                     while (*fmt) {
-                        if (*fmt == '{') {	/* balance} */
+                        if (*fmt == '{') {      /* balance} */
                             if (isdigit(fmt[1])) {
                                 int d = JS7_UNDEC(fmt[1]);
                                 JS_ASSERT(expandedArgs < argCount);
@@ -503,10 +506,10 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
                     *out = 0;
                     *messagep =
                         js_DeflateString(cx, reportp->ucmessage,
-		                         (size_t)(out - reportp->ucmessage));
+                                         (size_t)(out - reportp->ucmessage));
                     if (!*messagep)
                         goto error;
-		}
+                }
             } else {
                 /*
                  * Zero arguments: the format string (if it exists) is the
@@ -522,7 +525,7 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
                         goto error;
                 }
             }
-	}
+        }
     }
     if (*messagep == NULL) {
         /* where's the right place for this ??? */
@@ -571,19 +574,19 @@ js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
 
     fp = cx->fp;
     if (fp && fp->script && fp->pc) {
-	report.filename = fp->script->filename;
-	report.lineno = js_PCToLineNumber(fp->script, fp->pc);
+        report.filename = fp->script->filename;
+        report.lineno = js_PCToLineNumber(fp->script, fp->pc);
     } else {
         /*  We can't find out where the error was from the current
             frame so see if the next frame has a script/pc combo we
             could use */
         if (fp && fp->down && fp->down->script && fp->down->pc) {
-	    report.filename = fp->down->script->filename;
-	    report.lineno = js_PCToLineNumber(fp->down->script, fp->down->pc);
+            report.filename = fp->down->script->filename;
+            report.lineno = js_PCToLineNumber(fp->down->script, fp->down->pc);
         }
         else {
-	    report.filename = NULL;
-	    report.lineno = 0;
+            report.filename = NULL;
+            report.lineno = 0;
         }
     }
 
@@ -603,14 +606,14 @@ js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
     report.messageArgs = NULL;
 
     if (!js_ExpandErrorArguments(cx, callback, userRef, errorNumber,
-				 &message, &report, &warning, charArgs, ap)) {
-	return JS_FALSE;
+                                 &message, &report, &warning, charArgs, ap)) {
+        return JS_FALSE;
     }
 
     ReportError(cx, message, &report);
 
     if (message)
-	JS_free(cx, message);
+        JS_free(cx, message);
     if (report.messageArgs) {
         int i = 0;
         while (report.messageArgs[i])
