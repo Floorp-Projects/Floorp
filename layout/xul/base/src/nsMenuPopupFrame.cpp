@@ -69,6 +69,7 @@
 #include "nsIFrameManager.h"
 #include "nsGUIEvent.h"
 #include "nsIRootBox.h"
+#include "nsIDocShellTreeItem.h"
 #ifdef XP_WIN
 #include "nsISound.h"
 #endif
@@ -218,6 +219,7 @@ nsMenuPopupFrame::Init(nsIPresContext*  aPresContext,
   // Create a widget for ourselves.
   nsWidgetInitData widgetData;
   widgetData.mWindowType = eWindowType_popup;
+  widgetData.mContentType = nsIDocShellTreeItem::typeChrome;
   widgetData.mBorderStyle = eBorderStyle_default;
   widgetData.clipSiblings = PR_TRUE;
 

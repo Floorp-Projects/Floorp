@@ -105,7 +105,7 @@ typedef void* nsNativeWidget;
  * Border styles
  */
 
-enum nsWindowType {
+enum nsWindowType {     // Don't alter previously encoded enum values - 3rd party apps may look at these
   // default top level window
   eWindowType_toplevel,
   // top level window but usually handled differently by the OS
@@ -119,9 +119,8 @@ enum nsWindowType {
   // plugin window
   eWindowType_plugin,
   // java plugin window
-  eWindowType_java
+  eWindowType_java,
 };
-
 
 enum nsBorderStyle
 {
@@ -218,7 +217,8 @@ struct nsWidgetInitData {
       mDropShadow(PR_FALSE),
       mListenForResizes(PR_FALSE),
       mWindowType(eWindowType_child),
-      mBorderStyle(eBorderStyle_default)
+      mBorderStyle(eBorderStyle_default),
+      mContentType(1)  // nsIDocShellTreeItem::typeContent
   {
   }
 
@@ -227,6 +227,7 @@ struct nsWidgetInitData {
   PRPackedBool  mListenForResizes;
   nsWindowType mWindowType;
   nsBorderStyle mBorderStyle;
+  PRUint32 mContentType; // from nsIDocShellTreeItem.idl content types - typeChrome, typeContent, etc.
 };
 
 /**

@@ -1506,6 +1506,16 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
      }
    }*/
 
+    // Show nsIDocShellTreeItem::contentType in GWL_ID
+    // This way 3rd part apps can check if a window is chrome (0) or content (1)
+    LONG contentType = aInitData? aInitData->mContentType: (parent? ::GetWindowLong(parent, GWL_ID): -1);
+    LONG isContent = (contentType == 1 || contentType == 2);
+#ifdef MOZ_UNICODE
+    ::SetWindowLongW(mWnd, GWL_ID, contentType);
+#else
+    ::SetWindowLong(mWnd, GWL_ID, contentType);
+#endif
+
     // call the event callback to notify about creation
 
     DispatchStandardEvent(NS_CREATE);
@@ -2921,31 +2931,41 @@ BOOL nsWindow::OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
   else if (mIsControlDown && aVirtualKeyCode == VK_BACK) {
     DispatchKeyEvent(NS_KEY_PRESS, 0, VK_BACK, aKeyData);
   }
-  else if (mIsControlDown && !mIsShiftDown && aVirtualKeyCode == NS_VK_SUBTRACT) {
-    DispatchKeyEvent(NS_KEY_PRESS, '-', 0, aKeyData);
-  }
-  else if (mIsControlDown && !mIsShiftDown && aVirtualKeyCode == NS_VK_ADD) {
-    DispatchKeyEvent(NS_KEY_PRESS, '+', 0, aKeyData);
-  }
   else if ((mIsControlDown && !mIsShiftDown) &&
            ((( NS_VK_0 <= aVirtualKeyCode) && (aVirtualKeyCode <= NS_VK_9)) ||
+            (aVirtualKeyCode == NS_VK_ADD) ||
+            (aVirtualKeyCode == NS_VK_SUBTRACT) ||
             (aVirtualKeyCode == NS_VK_SEMICOLON) ||
             (aVirtualKeyCode == NS_VK_EQUALS)    ||
             (aVirtualKeyCode == NS_VK_COMMA)     ||
             (aVirtualKeyCode == NS_VK_PERIOD)    ||
+            (aVirtualKeyCode == NS_VK_QUOTE)     ||
+            (aVirtualKeyCode == NS_VK_BACK_QUOTE)     ||
             (aVirtualKeyCode == NS_VK_SLASH)     
            )
           )
   {
-    // put the 0 - 9 in charcode instead of keycode.
-    DispatchKeyEvent(NS_KEY_PRESS, aVirtualKeyCode, 0, aKeyData);
+    switch (aVirtualKeyCode) {
+      case NS_VK_ADD       : asciiKey = '+';  break;
+      case NS_VK_SUBTRACT  : asciiKey = '-';  break;
+      case NS_VK_SEMICOLON : asciiKey = ';';  break;
+      case NS_VK_EQUALS    : asciiKey = '=';  break;
+      case NS_VK_COMMA     : asciiKey = ',';  break;
+      case NS_VK_PERIOD    : asciiKey = '.';  break;
+      case NS_VK_QUOTE     : asciiKey = '\''; break;
+      case NS_VK_BACK_QUOTE: asciiKey = '`';  break;
+      case NS_VK_SLASH     : asciiKey = '/';  break;
+      // NS_VK_0 - NS_VK9 line up exactly with ascii '0' - '9'
+      default              : asciiKey = aVirtualKeyCode;  break;
+    }
+    // put the ascii character in charcode instead of using keycode.
+    DispatchKeyEvent(NS_KEY_PRESS, asciiKey, 0, aKeyData);
   }
-  else if (NO_WM_CHAR_LATER(aVirtualKeyCode) &&  
+  else if (NO_WM_CHAR_LATER(aVirtualKeyCode)      &&  
             (aVirtualKeyCode != NS_VK_SEMICOLON)  &&
-            (aVirtualKeyCode != NS_VK_EQUALS)  &&
-            (aVirtualKeyCode != NS_VK_COMMA)  &&
-            (aVirtualKeyCode != NS_VK_PERIOD)  &&
-            (aVirtualKeyCode != NS_VK_SLASH))
+            (aVirtualKeyCode != NS_VK_EQUALS)     &&
+            (aVirtualKeyCode != NS_VK_COMMA)      &&
+            (aVirtualKeyCode != NS_VK_PERIOD))
   {
     DispatchKeyEvent(NS_KEY_PRESS, 0, aVirtualKeyCode, aKeyData);
   } 
