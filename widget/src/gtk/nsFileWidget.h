@@ -54,6 +54,7 @@ public:
 
   // nsIFileWidget part
   virtual PRBool	Show();
+  virtual PRBool	AskReplace();
   NS_IMETHOD GetFile(nsFileSpec& aFile);
   NS_IMETHOD SetDefaultString(const nsString& aFile);
   NS_IMETHOD SetFilterList(PRUint32 aNumberOfFilters,
@@ -88,7 +89,6 @@ protected:
   nsString		mTitle;
   GtkWidget   *mOptionMenu;
   GtkWidget   *mFilterMenu;
-
 
   nsFileDlgMode   mMode;
   PRUint32		    mNumberOfFilters;  
