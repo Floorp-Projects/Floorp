@@ -22,7 +22,7 @@
 #include "nsImapProtocol.h"
 
 #include "nsHashtable.h"
-#include "net.h" /* should be defined into msgCore.h? - need MESSAGE_RFC822 */
+#include "nsMimeTypes.h"
 
 // need to talk to Rich about this...
 #define	IMAP_EXTERNAL_CONTENT_HEADER "X-Mozilla-IMAP-Part"
