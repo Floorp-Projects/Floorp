@@ -451,6 +451,7 @@ RDFContentSinkImpl::~RDFContentSinkImpl()
     NS_IF_RELEASE(mNameSpaceManager);
     if (mNameSpaceStack) {
         NS_PRECONDITION(0 == mNameSpaceStack->Count(), "namespace stack not empty");
+
         // There shouldn't be any here except in an error condition
         PRInt32 index = mNameSpaceStack->Count();
 
@@ -590,6 +591,7 @@ RDFContentSinkImpl::OpenContainer(const nsIParserNode& aNode)
         break;
     }
 
+	NS_ASSERTION(NS_SUCCEEDED(rv), "unexpected content");
     return rv;
 }
 
