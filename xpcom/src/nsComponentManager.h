@@ -110,8 +110,8 @@ public:
                                  nsIFactory *aFactory);
 
     // Manually unregister a dynamically loaded factory for a class
-    NS_IMETHOD UnregisterFactory(const nsCID &aClass,
-                                 const char *aLibrary);
+    nsresult UnregisterFactory(const nsCID &aClass,
+                                      const char *aLibrary);
 
     // Manually unregister a dynamically loaded component
     NS_IMETHOD UnregisterComponent(const nsCID &aClass,
@@ -122,21 +122,22 @@ public:
 
     //////////////////////////////////////////////////////////////////////////////
     // DLL registration support
-    /* Autoregistration will try only files with these extensions.
-     * All extensions are case insensitive.
-     * ".dll",    // Windows
-     * ".dso",    // Unix
-     * ".so",     // Unix
-     * ".sl",     // Unix: HP
-     * "_dll",    // Mac
-     * ".dlm",    // new for all platforms
-     */
-    NS_IMETHOD AutoRegister(RegistrationTime when, const char* pathlist);
-    // Pathlist is a semicolon separated list of pathnames
-    NS_IMETHOD AddToDefaultPathList(const char *pathlist);
-    NS_IMETHOD SyncComponentsInPathList(const char *pathlist);
-    NS_IMETHOD SyncComponentsInDir(const char *path);
-    NS_IMETHOD SyncComponentsInFile(const char *fullname);
+    // Autoregistration will try only files with these extensions.
+    // All extensions are case insensitive.
+    // ".dll",    // Windows
+    // ".dso",    // Unix
+    // ".so",     // Unix
+    // ".sl",     // Unix: HP
+    // "_dll",    // Mac
+    // ".dlm",    // new for all platforms
+    //
+    // Directory and fullname are what NSPR will accept. For eg.
+    // 	WIN	y:/home/dp/mozilla/dist/bin
+    //	UNIX	/home/dp/mozilla/dist/bin
+    //	MAC	/Hard drive/mozilla/dist/apprunner
+    //
+    NS_IMETHOD AutoRegister(RegistrationTime when, const char* directory);
+    NS_IMETHOD AutoRegisterComponent(RegistrationTime when, const char *fullname);
 
     // nsComponentManagerImpl methods:
     nsComponentManagerImpl();
@@ -147,6 +148,8 @@ public:
 
 protected:
     nsresult LoadFactory(nsFactoryEntry *aEntry, nsIFactory **aFactory);
+
+    nsresult SyncComponentsInDir(RegistrationTime when, const char *directory);
     nsresult SelfRegisterDll(nsDll *dll);
     nsresult SelfUnregisterDll(nsDll *dll);
 
@@ -163,14 +166,14 @@ protected:
     nsresult PlatformFind(const nsCID &aCID, nsFactoryEntry* *result);
     nsresult PlatformProgIDToCLSID(const char *aProgID, nsCID *aClass);
     nsresult PlatformCLSIDToProgID(nsCID *aClass, char* *aClassName, char* *aProgID);
-	void     PlatformGetFileInfo(nsIRegistry::Key Key,PRTime *lastModifiedTime,PRUint32 *fileSize);
+    void     PlatformGetFileInfo(nsIRegistry::Key Key,PRTime *lastModifiedTime,PRUint32 *fileSize);
 
 protected:
     nsHashtable*  mFactories;
     nsHashtable*  mProgIDs;
     PRMonitor*    mMon;
     nsHashtable*  mDllStore;
-	nsIRegistry*  mRegistry;
+    nsIRegistry*  mRegistry;
 };
 
 #define NS_MAX_FILENAME_LEN	1024

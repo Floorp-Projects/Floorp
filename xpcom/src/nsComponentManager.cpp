@@ -1513,12 +1513,15 @@ nsComponentManagerImpl::FreeLibraries(void)
 ////////////////////////////////////////////////////////////////////////////////
 
 /**
- * AutoRegister(RegistrationInstant, const char *pathlist)
+ * AutoRegister(RegistrationInstant, const char *directory)
  *
- * Given a ; separated list of paths, this will ensure proper registration
- * of all components. A default pathlist is maintained in the registry at
- *		\\HKEYROOT_COMMON\\Classes\\PathList
- * In addition to looking at the pathlist, the default pathlist is looked at.
+ * Given a directory in the following format, this will ensure proper registration
+ * of all components. No default director is looked at.
+ *
+ *    Directory and fullname are what NSPR will accept. For eg.
+ *     	WIN	y:/home/dp/mozilla/dist/bin
+ *  	UNIX	/home/dp/mozilla/dist/bin
+ *  	MAC	/Hard drive/mozilla/dist/apprunner
  *
  * This will take care not loading already registered dlls, finding and
  * registering new dlls, re-registration of modified dlls
@@ -1526,17 +1529,16 @@ nsComponentManagerImpl::FreeLibraries(void)
  */
 
 nsresult
-nsComponentManagerImpl::AutoRegister(RegistrationTime when,
-                                     const char* pathlist)
+nsComponentManagerImpl::AutoRegister(RegistrationTime when, const char* dir)
 {
 
-    if (pathlist != NULL)
+    if (dir != NULL)
     {
         PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
-               ("nsComponentManager: Autoregistration begins. dir = %s", pathlist));
-        SyncComponentsInPathList(pathlist);
+               ("nsComponentManager: Autoregistration begins. dir = %s", dir));
+        SyncComponentsInDir(when, dir);
         PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
-               ("nsComponentManager: Autoregistration ends.", pathlist));
+               ("nsComponentManager: Autoregistration ends.", dir));
     }
 
 #ifdef XP_MAC
@@ -1593,7 +1595,7 @@ nsComponentManagerImpl::AutoRegister(RegistrationTime when,
                 {
                     Munger(pathH, GetHandleSize(pathH)-1, NULL, 0L, "/components", 11);	// append "/components"
                     HLock(pathH);
-                    SyncComponentsInPathList((const char *)(*pathH));
+                    SyncComponentsInDir(when, (const char *)(*pathH));
                     HUnlock(pathH);
                 }
                 DisposeHandle(pathH);
@@ -1604,35 +1606,9 @@ nsComponentManagerImpl::AutoRegister(RegistrationTime when,
     return NS_OK;
 }
 
-nsresult
-nsComponentManagerImpl::AddToDefaultPathList(const char *pathlist)
-{
-    //XXX add pathlist to the defaultpathlist in the registry
-    return NS_ERROR_FAILURE;
-}
 
 nsresult
-nsComponentManagerImpl::SyncComponentsInPathList(const char *pathlist)
-{
-    char *paths = PL_strdup(pathlist);
-    	
-    if (paths == NULL || *paths == '\0')
-        return(NS_ERROR_FAILURE);
-    	
-    char *pathsMem = paths;
-    while (paths != NULL)
-    {
-        char *nextpath = PL_strchr(paths, PR_PATH_SEPARATOR);
-        if (nextpath != NULL) *nextpath = '\0';
-        SyncComponentsInDir(paths);
-        paths = nextpath;
-    }
-    PL_strfree(pathsMem);
-    return NS_OK;
-}
-
-nsresult
-nsComponentManagerImpl::SyncComponentsInDir(const char *dir)
+nsComponentManagerImpl::SyncComponentsInDir(RegistrationTime when, const char *dir)
 {
     PRDir *prdir = PR_OpenDir(dir);
     if (prdir == NULL)
@@ -1654,9 +1630,9 @@ nsComponentManagerImpl::SyncComponentsInDir(const char *dir)
     while ((dirent = PR_ReadDir(prdir, PR_SKIP_BOTH)) != NULL)
     {
         PL_strncpyz(filepart, dirent->name, sizeof(fullname)-n);
-        nsresult ret = SyncComponentsInFile(fullname);
+        nsresult ret = AutoRegisterComponent(when, fullname);
         if (NS_FAILED(ret) && ret == NS_ERROR_IS_DIR) {
-            SyncComponentsInDir(fullname);
+            SyncComponentsInDir(when, fullname);
         }
     } // foreach file
     PR_CloseDir(prdir);
@@ -1664,7 +1640,7 @@ nsComponentManagerImpl::SyncComponentsInDir(const char *dir)
 }
 
 nsresult
-nsComponentManagerImpl::SyncComponentsInFile(const char *fullname)
+nsComponentManagerImpl::AutoRegisterComponent(RegistrationTime when, const char *fullname)
 {
     const char *ValidDllExtensions[] = {
         ".dll",	/* Windows */
