@@ -141,7 +141,6 @@ treechildren::-moz-tree-image(flaggedCol, flagged) {
 
 treecol.junkStatusHeader {
   list-style-image: url("chrome://messenger/skin/icons/folder-junk.gif");
-  padding: 0px 4px 0px 0px;
 }
 
 /* "unknown" now looks like "not junk".  see bug #182386 */
