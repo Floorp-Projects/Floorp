@@ -3056,7 +3056,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
     PRUint32 lineFlags;
     result = it->GetLine(searchingLine, &firstFrame, &lineFrameCount,
                          rect, &lineFlags);
-    if (!lineFrameCount || !rect.height) //if no height not a valid line either.
+    if (!lineFrameCount) 
       continue;
     if (NS_SUCCEEDED(result)){
       lastFrame = firstFrame;
