@@ -242,7 +242,7 @@ nsSoftwareUpdate::Shutdown()
 {
     nsresult rv;
 
-    rv = nsServiceManager::ReleaseService( NS_IXPINSTALLCOMPONENT_PROGID, ( (nsISupports*) (nsISoftwareUpdate*) this ) );
+    rv = nsServiceManager::UnregisterService( NS_IXPINSTALLCOMPONENT_PROGID );
 
     return rv;
 }
