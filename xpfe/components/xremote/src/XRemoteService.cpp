@@ -570,7 +570,10 @@ XRemoteService::GetMailLocation(char **_retval)
     return NS_ERROR_FAILURE;
   
   PRInt32 retval = 0;
-  prefs->GetIntPref("mail.pane_config", &retval);
+  nsresult rv;
+  rv = prefs->GetIntPref("mail.pane_config", &retval);
+  if (NS_FAILED(rv))
+    return NS_ERROR_FAILURE;
 
   if (!retval)
     *_retval = nsCRT::strdup("chrome://messenger/content/messenger.xul");
@@ -586,6 +589,9 @@ XRemoteService::OpenURL(nsCString &aArgument,
 			nsIDOMWindowInternal *aParent,
 			PRBool aOpenBrowser)
 {
+  // the eventual toplevel target of the load
+  nsCOMPtr<nsIDOMWindowInternal> finalWindow = aParent;
+
   // see if there's a new window argument on the end
   nsCString lastArgument;
   PRBool    newWindow = PR_FALSE;
@@ -603,10 +609,19 @@ XRemoteService::OpenURL(nsCString &aArgument,
       aArgument.Truncate(index);
   }
 
-  // if someone told us to open a new browser when we could and
-  // there's no parent then open a new window.
-  if (aOpenBrowser && !aParent)
-    newWindow = PR_TRUE;
+  // If it's OK to open a new browser window and a new window flag
+  // wasn't passed in then try to find a current window.  If that's
+  // not found then go ahead and open a new window/
+  if (aOpenBrowser && !newWindow) {
+    nsCOMPtr<nsIDOMWindowInternal> lastUsedWindow;
+    FindWindow(NS_LITERAL_STRING("navigator:browser").get(),
+	       getter_AddRefs(lastUsedWindow));
+
+    if (lastUsedWindow)
+      finalWindow = lastUsedWindow;
+    else
+      newWindow = PR_TRUE;
+  }
 
   // try to fixup the argument passed in
 
@@ -630,13 +645,13 @@ XRemoteService::OpenURL(nsCString &aArgument,
     arg->SetData(url.get());
     
     nsCOMPtr<nsIDOMWindow> window;
-    rv = OpenChromeWindow(aParent, urlString, "chrome,all,dialog=no",
+    rv = OpenChromeWindow(finalWindow, urlString, "chrome,all,dialog=no",
 			  arg, getter_AddRefs(window));
   }
 
   // if no new window flag was set but there's no parent then we have
   // to pass everything off to the uri loader
-  else if (!aParent) {
+  else if (!finalWindow) {
     nsCOMPtr<nsIURILoader> loader;
     loader = do_GetService(NS_URI_LOADER_CONTRACTID);
     if (!loader)
@@ -676,7 +691,7 @@ XRemoteService::OpenURL(nsCString &aArgument,
     // find the primary content shell for the window that we've been
     // asked to load into.
     nsCOMPtr<nsIScriptGlobalObject> scriptObject;
-    scriptObject = do_QueryInterface(aParent);
+    scriptObject = do_QueryInterface(finalWindow);
     if (!scriptObject) {
       NS_WARNING("Failed to get script object for browser instance");
       return NS_ERROR_FAILURE;
