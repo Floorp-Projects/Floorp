@@ -34,6 +34,8 @@ function RestoreSelectionWithoutContentLoad(outliner)
     var outlinerBoxObj = outliner.outlinerBoxObject;
     var outlinerSelection = outlinerBoxObj.selection;
 
+    // make sure that currentIndex is valid so that we don't try to restore
+    // a selection of an invalid row.
     if((!outlinerSelection.isSelected(outlinerSelection.currentIndex)) &&
        (outlinerSelection.currentIndex >= 0))
     {

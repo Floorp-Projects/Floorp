@@ -305,6 +305,9 @@ function GetThreadPaneFolder()
 
 function EnsureRowInThreadOutlinerIsVisible(index)
 {
+  if (index < 0)
+    return;
+
   var outliner = GetThreadOutliner();
   outliner.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject).ensureRowIsVisible(index); 
 }

@@ -900,6 +900,8 @@ function ChangeSelectionWithoutContentLoad(event, outliner)
     var outlinerSelection = outlinerBoxObj.selection;
 
     outlinerBoxObj.getCellAt(event.clientX, event.clientY, row, col, elt);
+    // make sure that row.value is valid so that it doesn't mess up
+    // the call to ensureRowIsVisible().
     if((row.value >= 0) && !outlinerSelection.isSelected(row.value))
     {
         var saveCurrentIndex = outlinerSelection.currentIndex;
