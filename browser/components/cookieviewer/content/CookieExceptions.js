@@ -30,7 +30,8 @@ function onOK() {
 
 function manageSite(perm)
 {
-  var url = document.getElementById("url").value.replace(/ /g, "");
+  var textbox = document.getElementById("url");
+  var url = textbox.value.replace(/ /g, "");
   var uri = Components.classes["@mozilla.org/network/standard-url;1"]
                       .createInstance(Components.interfaces.nsIURI);
   uri.spec = url;
@@ -52,6 +53,8 @@ function manageSite(perm)
     permissionsTree.treeBoxObject.ensureRowIsVisible(permissions.length-1)
 
   }
+  textbox.value = "";
+  textbox.focus();
 }
 
 function buttonEnabling(textfield)
