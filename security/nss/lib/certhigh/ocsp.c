@@ -35,7 +35,7 @@
  * Implementation of OCSP services, for both client and server.
  * (XXX, really, mostly just for client right now, but intended to do both.)
  *
- * $Id: ocsp.c,v 1.13 2002/08/31 00:37:33 jpierre%netscape.com Exp $
+ * $Id: ocsp.c,v 1.14 2002/09/23 23:47:49 wtc%netscape.com Exp $
  */
 
 #include "prerror.h"
@@ -1021,7 +1021,8 @@ void SetRequestExts(void *object, CERTCertExtension **exts)
 }
 
 SECStatus
-CERT_AddOCSPAcceptableResponses(CERTOCSPRequest *request, ...)
+CERT_AddOCSPAcceptableResponses(CERTOCSPRequest *request,
+				SECOidTag responseType0, ...)
 {
     void *extHandle;
     va_list ap;
@@ -1039,25 +1040,32 @@ CERT_AddOCSPAcceptableResponses(CERTOCSPRequest *request, ...)
     }
 
     /* Count number of OIDS going into the extension value. */
-    count = 0;
-    va_start(ap, request);
-    do {
-	count++;
-	responseType = va_arg(ap, SECOidTag);
-    } while (responseType != SEC_OID_PKIX_OCSP_BASIC_RESPONSE);
-    va_end(ap);
+    count = 1;
+    if (responseType0 != SEC_OID_PKIX_OCSP_BASIC_RESPONSE) {
+	va_start(ap, responseType0);
+	do {
+	    count++;
+	    responseType = va_arg(ap, SECOidTag);
+	} while (responseType != SEC_OID_PKIX_OCSP_BASIC_RESPONSE);
+	va_end(ap);
+    }
 
     acceptableResponses = PORT_NewArray(SECItem *, count + 1);
     if (acceptableResponses == NULL)
 	goto loser;
 
-    va_start(ap, request);
-    for (i = 0; i < count; i++) {
-	responseType = va_arg(ap, SECOidTag);
-	responseOid = SECOID_FindOIDByTag(responseType);
-	acceptableResponses[i] = &(responseOid->oid);
+    i = 0;
+    responseOid = SECOID_FindOIDByTag(responseType0);
+    acceptableResponses[i++] = &(responseOid->oid);
+    if (count > 1) {
+	va_start(ap, responseType0);
+	for ( ; i < count; i++) {
+	    responseType = va_arg(ap, SECOidTag);
+	    responseOid = SECOID_FindOIDByTag(responseType);
+	    acceptableResponses[i] = &(responseOid->oid);
+	}
+	va_end(ap);
     }
-    va_end(ap);
     acceptableResponses[i] = NULL;
 
     rv = CERT_EncodeAndAddExtension(extHandle, SEC_OID_PKIX_OCSP_RESPONSE,
