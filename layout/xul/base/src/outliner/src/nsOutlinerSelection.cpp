@@ -504,6 +504,16 @@ NS_IMETHODIMP nsOutlinerSelection::GetRangeAt(PRInt32 aIndex, PRInt32* aMin, PRI
   return NS_OK;
 }
 
+NS_IMETHODIMP nsOutlinerSelection::GetCount(PRInt32 *count)
+{
+  if (mFirstRange)
+    *count = mFirstRange->Count();
+  else // No range available, so there's no selected row.
+    *count = 0;
+  
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsOutlinerSelection::GetSelectEventsSuppressed(PRBool *aSelectEventsSuppressed)
 {
   *aSelectEventsSuppressed = mSuppressed;
