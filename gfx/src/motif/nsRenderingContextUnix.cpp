@@ -654,6 +654,10 @@ void nsRenderingContextUnix :: DrawString(const char *aString, PRUint32 aLength,
   PRInt32 y = aY;
   mTMatrix->TransformCoord(&x,&y);
 
+  // Substract xFontStruct ascent since drawing specifies baseline
+  if (mFontMetrics)
+      y += mFontMetrics->GetMaxAscent();
+
   ::XDrawString(mRenderingSurface->display, 
 		mRenderingSurface->drawable,
 		mRenderingSurface->gc,
