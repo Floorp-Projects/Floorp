@@ -27,10 +27,12 @@ LIBRARY_NAME=strres
 
 CPPSRCS =				\
 	nsStringBundle.cpp		\
+	nsAcceptLang.cpp \
 	$(NULL)
 
 CPP_OBJS =					\
 	.\$(OBJDIR)\nsStringBundle.obj		\
+	.\$(OBJDIR)\nsAcceptLang.obj		\
 	$(NULL)
 
 MODULE=intl
