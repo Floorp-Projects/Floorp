@@ -163,7 +163,7 @@ nsresult
 nsMimeEmitter::WriteXMLHeader(const char *msgID)
 {
   if ( (!msgID) || (!*msgID) )
-    return  NS_ERROR_FAILURE;
+    msgID = "none";
     
   char  *newValue = nsEscapeHTML(msgID);
   if (!newValue)
