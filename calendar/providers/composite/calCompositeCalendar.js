@@ -155,8 +155,8 @@ calCompositeCalendar.prototype = {
     mCompositeObservers: Array(),
     addObserver: function (aObserver, aItemFilter) {
         const calICompositeObserver = Components.interfaces.calICompositeObserver;
-        var compobs = aObserver.QueryInterface (calICompositeObserver);
-        if (compobs) {
+        if (aObserver instanceof calICompositeObserver) {
+            var compobs = aObserver.QueryInterface (calICompositeObserver);
             for (var i = 0; i < this.mCompositeObservers.length; i++) {
                 if (this.mCompositeObservers[i] == aObserver)
                     return;
@@ -165,7 +165,7 @@ calCompositeCalendar.prototype = {
         }
 
         for (cal in this.mCalendars) {
-            cal.addObserver(aObserver, aItemFilter);
+            this.mCalendars[cal].addObserver(aObserver, aItemFilter);
         }
     },
 
@@ -183,7 +183,7 @@ calCompositeCalendar.prototype = {
         }
 
         for (cal in this.mCalendars) {
-            cal.removeObserver(aObserver);
+            this.mCalendars[cal].removeObserver(aObserver);
         }
     },
 
