@@ -35,6 +35,7 @@ class nsIDOMEvent;
 class nsIContent;
 class nsIDOMUIEvent;
 class nsIDOMKeyEvent;
+class nsIDOMMouseEvent;
 class nsIAtom;
 class nsIController;
 
@@ -74,7 +75,7 @@ public:
 
 protected:
   inline PRBool KeyEventMatched(nsIDOMKeyEvent* aKeyEvent);
-  inline PRBool MouseEventMatched(nsIDOMUIEvent* aMouseEvent);
+  inline PRBool MouseEventMatched(nsIDOMMouseEvent* aMouseEvent);
   
   inline PRBool IsMatchingKeyCode(const PRUint32 aChar, const nsString& aKeyName);
   inline PRBool IsMatchingCharCode(const PRUint32 aChar, const nsString& aKeyName);
@@ -94,7 +95,9 @@ protected:
   static nsIAtom* kMetaAtom;
   static nsIAtom* kValueAtom;
   static nsIAtom* kCommandAtom;
-
+  static nsIAtom* kClickCountAtom;
+  static nsIAtom* kButtonAtom;
+  
   static nsresult GetTextData(nsIContent *aParent, nsString& aResult);
 
 protected:

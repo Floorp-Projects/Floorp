@@ -27,6 +27,7 @@
 #include "nsIContent.h"
 #include "nsIAtom.h"
 #include "nsIDOMKeyEvent.h"
+#include "nsIDOMMouseEvent.h"
 #include "nsINameSpaceManager.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptObjectOwner.h"
@@ -52,6 +53,8 @@ nsIAtom* nsXBLEventHandler::kMetaAtom = nsnull;
 nsIAtom* nsXBLEventHandler::kAltAtom = nsnull;
 nsIAtom* nsXBLEventHandler::kValueAtom = nsnull;
 nsIAtom* nsXBLEventHandler::kCommandAtom = nsnull;
+nsIAtom* nsXBLEventHandler::kClickCountAtom = nsnull;
+nsIAtom* nsXBLEventHandler::kButtonAtom = nsnull;
 
 nsXBLEventHandler::nsXBLEventHandler(nsIContent* aBoundElement, nsIContent* aHandlerElement,
                                      const nsString& aEventName)
@@ -72,6 +75,8 @@ nsXBLEventHandler::nsXBLEventHandler(nsIContent* aBoundElement, nsIContent* aHan
     kMetaAtom = NS_NewAtom("meta");
     kValueAtom = NS_NewAtom("value");
     kCommandAtom = NS_NewAtom("command");
+    kClickCountAtom = NS_NewAtom("clickcount");
+    kButtonAtom = NS_NewAtom("button");
   }
 }
 
@@ -89,6 +94,8 @@ nsXBLEventHandler::~nsXBLEventHandler()
     NS_RELEASE(kMetaAtom);
     NS_RELEASE(kValueAtom);
     NS_RELEASE(kCommandAtom);
+    NS_RELEASE(kButtonAtom);
+    NS_RELEASE(kClickCountAtom);
   }
 }
 
@@ -138,7 +145,7 @@ nsresult nsXBLEventHandler::MouseDown(nsIDOMEvent* aMouseEvent)
   if (!mEventName.EqualsWithConversion("mousedown"))
     return NS_OK;
 
-  nsCOMPtr<nsIDOMUIEvent> mouseEvent = do_QueryInterface(aMouseEvent);
+  nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aMouseEvent);
   if (MouseEventMatched(mouseEvent))
     ExecuteHandler(NS_ConvertASCIItoUCS2("mousedown"), aMouseEvent);
   return NS_OK;
@@ -149,7 +156,7 @@ nsresult nsXBLEventHandler::MouseUp(nsIDOMEvent* aMouseEvent)
   if (!mEventName.EqualsWithConversion("mouseup"))
     return NS_OK;
 
-  nsCOMPtr<nsIDOMUIEvent> mouseEvent = do_QueryInterface(aMouseEvent);
+  nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aMouseEvent);
   if (MouseEventMatched(mouseEvent))
     ExecuteHandler(NS_ConvertASCIItoUCS2("mouseup"), aMouseEvent);
   return NS_OK;
@@ -160,7 +167,7 @@ nsresult nsXBLEventHandler::MouseClick(nsIDOMEvent* aMouseEvent)
   if (!mEventName.EqualsWithConversion("click"))
     return NS_OK;
 
-  nsCOMPtr<nsIDOMUIEvent> mouseEvent = do_QueryInterface(aMouseEvent);
+  nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aMouseEvent);
   if (MouseEventMatched(mouseEvent))
     ExecuteHandler(NS_ConvertASCIItoUCS2("click"), aMouseEvent);
   return NS_OK;
@@ -171,7 +178,7 @@ nsresult nsXBLEventHandler::MouseDblClick(nsIDOMEvent* aMouseEvent)
   if (!mEventName.EqualsWithConversion("dblclick"))
     return NS_OK;
 
-  nsCOMPtr<nsIDOMUIEvent> mouseEvent = do_QueryInterface(aMouseEvent);
+  nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aMouseEvent);
   if (MouseEventMatched(mouseEvent))
     ExecuteHandler(NS_ConvertASCIItoUCS2("dblclick"), aMouseEvent);
   return NS_OK;
@@ -182,7 +189,7 @@ nsresult nsXBLEventHandler::MouseOver(nsIDOMEvent* aMouseEvent)
   if (!mEventName.EqualsWithConversion("mouseover"))
     return NS_OK;
 
-  nsCOMPtr<nsIDOMUIEvent> mouseEvent = do_QueryInterface(aMouseEvent);
+  nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aMouseEvent);
   if (MouseEventMatched(mouseEvent))
     ExecuteHandler(NS_ConvertASCIItoUCS2("mouseover"), aMouseEvent);
   return NS_OK;
@@ -193,7 +200,7 @@ nsresult nsXBLEventHandler::MouseOut(nsIDOMEvent* aMouseEvent)
   if (!mEventName.EqualsWithConversion("mouseout"))
     return NS_OK;
 
-  nsCOMPtr<nsIDOMUIEvent> mouseEvent = do_QueryInterface(aMouseEvent);
+  nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aMouseEvent);
   if (MouseEventMatched(mouseEvent))
     ExecuteHandler(NS_ConvertASCIItoUCS2("mouseout"), aMouseEvent);
   return NS_OK;
@@ -393,13 +400,115 @@ nsXBLEventHandler::KeyEventMatched(nsIDOMKeyEvent* aKeyEvent)
 }
 
 PRBool 
-nsXBLEventHandler::MouseEventMatched(nsIDOMUIEvent* aMouseEvent)
+nsXBLEventHandler::MouseEventMatched(nsIDOMMouseEvent* aMouseEvent)
 {
   nsAutoString trueString; trueString.AssignWithConversion("true");
   nsAutoString falseString; falseString.AssignWithConversion("false");
 
   // XXX Check for button and modifier keys.
+// Now check modifier keys
+  nsAutoString modifier;
+  PRBool isModifierPresent;
+  mHandlerElement->GetAttribute(kNameSpaceID_None, kPrimaryAtom, modifier);
+  if (modifier == trueString) {
+    // The XUL key must be set.  Hard code for now.
+    // XXX Eventually pick up using CSS3 key-equivalent property or somesuch
+#ifdef XP_MAC
+    aMouseEvent->GetMetaKey(&isModifierPresent);
+#elif XP_UNIX
+    aMouseEvent->GetAltKey(&isModifierPresent);
+#else
+    aMouseEvent->GetCtrlKey(&isModifierPresent);
+#endif
 
+    if (!isModifierPresent)
+      return PR_FALSE;
+  }
+  else if (modifier == falseString) {
+#ifdef XP_MAC
+    aMouseEvent->GetMetaKey(&isModifierPresent);
+#elif XP_UNIX
+    aMouseEvent->GetAltKey(&isModifierPresent);
+#else
+    aMouseEvent->GetCtrlKey(&isModifierPresent);
+#endif
+
+    if (isModifierPresent)
+      return PR_FALSE;
+  }
+
+  // Check for shift.
+  mHandlerElement->GetAttribute(kNameSpaceID_None, kShiftAtom, modifier);
+  if (modifier == trueString) {
+    aMouseEvent->GetShiftKey(&isModifierPresent);
+    if (!isModifierPresent)
+      return PR_FALSE;
+  }
+  else if (modifier == falseString) {
+    aMouseEvent->GetShiftKey(&isModifierPresent);
+    if (isModifierPresent)
+      return PR_FALSE;
+  }
+
+  // Check for ctrl.
+  mHandlerElement->GetAttribute(kNameSpaceID_None, kControlAtom, modifier);
+  if (modifier == trueString) {
+    aMouseEvent->GetCtrlKey(&isModifierPresent);
+    if (!isModifierPresent)
+      return PR_FALSE;
+  }
+  else if (modifier == falseString) {
+    aMouseEvent->GetCtrlKey(&isModifierPresent);
+    if (isModifierPresent)
+      return PR_FALSE;
+  }
+
+  // Check for meta.
+  mHandlerElement->GetAttribute(kNameSpaceID_None, kMetaAtom, modifier);
+  if (modifier == trueString) {
+    aMouseEvent->GetMetaKey(&isModifierPresent);
+    if (!isModifierPresent)
+      return PR_FALSE;
+  }
+  else if (modifier == falseString) {
+    aMouseEvent->GetMetaKey(&isModifierPresent);
+    if (isModifierPresent)
+      return PR_FALSE;
+  }
+
+  // Check for alt.
+  mHandlerElement->GetAttribute(kNameSpaceID_None, kAltAtom, modifier);
+  if (modifier == trueString) {
+    aMouseEvent->GetAltKey(&isModifierPresent);
+    if (!isModifierPresent)
+      return PR_FALSE;
+  }
+  else if (modifier == falseString) {
+    aMouseEvent->GetAltKey(&isModifierPresent);
+    if (isModifierPresent)
+      return PR_FALSE;
+  }
+
+  // Check button and clickcounts
+  mHandlerElement->GetAttribute(kNameSpaceID_None, kClickCountAtom, modifier);
+  if (!modifier.IsEmpty()) {
+    PRInt32 val, error, clickcount;
+    val = modifier.ToInteger(&error);
+    aMouseEvent->GetDetail(&clickcount);
+    if (val != clickcount)
+      return PR_FALSE;
+  }
+
+  mHandlerElement->GetAttribute(kNameSpaceID_None, kButtonAtom, modifier);
+  if (!modifier.IsEmpty()) {
+    PRInt32 val, error;
+    unsigned short button;
+    val = modifier.ToInteger(&error);
+    aMouseEvent->GetButton(&button);
+    if (val != button)
+      return PR_FALSE;
+  }
+  
   return PR_TRUE;
 }
 
