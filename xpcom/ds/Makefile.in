@@ -32,6 +32,10 @@ LIBRARY_NAME	= xpcomds_s
 
 REQUIRES	= xpcom uconv unicharutil
 
+CSRCS = \
+		plvector.c \
+		$(NULL)
+
 CPPSRCS		= \
 		nsArena.cpp \
 		nsAtomTable.cpp \
@@ -60,7 +64,6 @@ CPPSRCS		= \
 		nsUnicharBuffer.cpp \
 		nsVoidArray.cpp \
 		nsXPIDLString.cpp \
-		plvector.cpp \
 		nsTextFormater.cpp \
 		$(NULL)
 
