@@ -795,12 +795,12 @@ class Optimizer
                 }
                 else if (lt == Token.NUMBER && lChild.getDouble() == 0) {
                     // first 0: 0-x -> -x
-                    replace = new Node(Token.UNARYOP, rChild, Token.NEG);
+                    replace = new Node(Token.NEG, rChild);
                 }
                 else if (rt == Token.NUMBER && rChild.getDouble() == 0) {
                     //second 0: x - 0 -> +x
                     // can not make simply x because x - 0 must be number
-                    replace = new Node(Token.UNARYOP, lChild, Token.POS);
+                    replace = new Node(Token.POS, lChild);
                 }
                 break;
 
@@ -814,12 +814,12 @@ class Optimizer
                 else if (lt == Token.NUMBER && lChild.getDouble() == 1) {
                     // first 1: 1*x -> +x
                     // not simply x to force number convertion
-                    replace = new Node(Token.UNARYOP, rChild, Token.POS);
+                    replace = new Node(Token.POS, rChild);
                 }
                 else if (rt == Token.NUMBER && rChild.getDouble() == 1) {
                     // second 1: x*1 -> +x
                     // not simply x to force number convertion
-                    replace = new Node(Token.UNARYOP, lChild, Token.POS);
+                    replace = new Node(Token.POS, lChild);
                 }
                 // can't do x*0: Infinity * 0 gives NaN, not 0
                 break;
@@ -834,7 +834,7 @@ class Optimizer
                 else if (rt == Token.NUMBER && rChild.getDouble() == 1) {
                     // second 1: x/1 -> +x
                     // not simply x to force number convertion
-                    replace = new Node(Token.UNARYOP, lChild, Token.POS);
+                    replace = new Node(Token.POS, lChild);
                 }
                 break;
 

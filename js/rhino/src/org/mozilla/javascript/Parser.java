@@ -1118,12 +1118,12 @@ class Parser {
         case Token.ADD:
             // Convert to special POS token in decompiler and parse tree
             decompiler.addToken(Token.POS);
-            return nf.createUnary(Token.UNARYOP, Token.POS, unaryExpr(ts));
+            return nf.createUnary(Token.POS, unaryExpr(ts));
 
         case Token.SUB:
             // Convert to special NEG token in decompiler and parse tree
             decompiler.addToken(Token.NEG);
-            return nf.createUnary(Token.UNARYOP, Token.NEG, unaryExpr(ts));
+            return nf.createUnary(Token.NEG, unaryExpr(ts));
 
         case Token.INC:
         case Token.DEC:

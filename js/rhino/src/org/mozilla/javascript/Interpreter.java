@@ -601,8 +601,9 @@ public class Interpreter
                 break;
 
             case Token.POS:
+            case Token.NEG :
                 iCodeTop = generateICode(child, iCodeTop);
-                iCodeTop = addToken(Token.POS, iCodeTop);
+                iCodeTop = addToken(type, iCodeTop);
                 break;
 
             case Token.UNARYOP :
@@ -620,12 +621,6 @@ public class Interpreter
                         break;
                     case Token.TYPEOF :
                         iCodeTop = addToken(Token.TYPEOF, iCodeTop);
-                        break;
-                    case Token.NEG :
-                        iCodeTop = addToken(Token.NEG, iCodeTop);
-                        break;
-                    case Token.POS :
-                        iCodeTop = addToken(Token.POS, iCodeTop);
                         break;
                     default:
                         badTree(node);

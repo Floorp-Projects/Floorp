@@ -1281,10 +1281,14 @@ public class Codegen extends Interpreter {
                 break;
 
               case Token.POS:
+              case Token.NEG:
                 addByteCode(ByteCode.NEW, "java/lang/Double");
                 addByteCode(ByteCode.DUP);
                 generateCodeFromNode(child, node);
                 addScriptRuntimeInvoke("toNumber", "(Ljava/lang/Object;)D");
+                if (type == Token.NEG) {
+                    addByteCode(ByteCode.DNEG);
+                }
                 addDoubleConstructor();
                 break;
 
@@ -2321,18 +2325,6 @@ public class Codegen extends Interpreter {
             push(-1);         // implement ~a as (a ^ -1)
             addByteCode(ByteCode.IXOR);
             addByteCode(ByteCode.I2D);
-            addDoubleConstructor();
-            break;
-
-          case Token.POS:
-          case Token.NEG:
-            addByteCode(ByteCode.NEW, "java/lang/Double");
-            addByteCode(ByteCode.DUP);
-            generateCodeFromNode(child, node);
-            addScriptRuntimeInvoke("toNumber", "(Ljava/lang/Object;)D");
-            if (op == Token.NEG) {
-                addByteCode(ByteCode.DNEG);
-            }
             addDoubleConstructor();
             break;
 
