@@ -47,6 +47,7 @@ function EditorOnLoad() {
     }
     // Continue with normal startup.
     EditorStartup( 'html', document.getElementById("content-frame"));
+    window.tryToClose = EditorClose;
     return;
 }
   
@@ -251,7 +252,7 @@ function EditorPrint()
 function EditorClose()
 {
   dump("In EditorClose...\n");
-  editorShell.CloseWindow();
+  return editorShell.CloseWindow();
   // This doesn't work, but we can close
   //   the window in the EditorAppShell, so we don't need it
   //window.close();
@@ -1251,7 +1252,8 @@ function EditorUnitTests()
 function EditorExit()
 {
 	dump("Exiting\n");
-  editorShell.Exit();
+ // editorShell.Exit();
+ goQuitApplication();
 }
 
 function EditorTestDocument()
