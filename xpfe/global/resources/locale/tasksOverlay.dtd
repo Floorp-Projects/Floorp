@@ -17,6 +17,19 @@
 <!ENTITY importUtilCmd.label					".Import Utility">  
 <!ENTITY javaConsoleCmd.label					"Java Console">
 
+<!-- LOCALIZATION NOTE (walletMenu.label): DONT_TRANSLATE -->
+<!ENTITY walletMenu.label "My Wallet">
+<!ENTITY walletSafeFillCmd.label "Safe Form Fill">
+<!ENTITY walletQuickFillCmd.label "Quick Form Fill">
+<!ENTITY walletRequestToCaptureCmd.label "Capture Form">
+<!-- LOCALIZATION NOTE (walletContentsCmd.label): Do NOT translate "Wallet"-->
+<!ENTITY walletContentsCmd.label "Wallet Contents...">
+<!ENTITY walletDisplaySignonsCmd.label "Display Signons...">
+<!ENTITY walletDisplayCookiesCmd.label "Display Cookies...">
+<!ENTITY walletSamplesCmd.label "Samples">
+<!ENTITY walletChangePasswordCmd.label "Change Password...">
+
+
 <!-- taskbar -->
 <!-- LOCALIZATION NOTE  (mozillaButton.label): DONT_TRANSLATE -->
 <!ENTITY  mozillaButton.label "Mozilla">

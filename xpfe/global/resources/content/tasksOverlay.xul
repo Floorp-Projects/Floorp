@@ -29,6 +29,21 @@
 		<menuitem value="&newsgroupsCmd.label;" oncommand="toNewsgroups()"/>
 		<menuitem value="&ircCmd.label;" oncommand="toIRC()"/>
 		<menuseparator/>
+    <menu value="&walletMenu.label;" id="walletMenu">
+      <menupopup> 
+        <menuitem value="&walletSafeFillCmd.label;" oncommand="WalletAction('safefill');"/> 
+        <menuitem value="&walletQuickFillCmd.label;" oncommand="WalletAction('quickfill');"/> 
+        <menuitem value="&walletRequestToCaptureCmd.label;" oncommand="WalletAction('capture');"/> 
+        <menuseparator /> 
+        <menuitem id="walleteditor" value="&walletContentsCmd.label;" oncommand="WalletDialog('wallet');"/> 
+        <menuitem id="signonviewer" value="&walletDisplaySignonsCmd.label;" oncommand="WalletDialog('signon');"/> 
+        <menuitem id="cookieviewer" value="&walletDisplayCookiesCmd.label;" oncommand="WalletDialog('cookie');"/> 
+        <menuseparator /> 
+        <menuitem value="&walletSamplesCmd.label;" oncommand="WalletDialog('samples');"/> 
+        <menuitem value="&walletChangePasswordCmd.label;" oncommand="WalletAction('password');"/>
+      </menupopup> 
+    </menu> 
+    <menuseparator/>
 		<menu value="&toolsMenu.label;">
 		  <menupopup>
 			<menuitem value="&historyCmd.label;" oncommand="toHistory()"/>
