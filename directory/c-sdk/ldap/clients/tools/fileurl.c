@@ -219,72 +219,76 @@ ldaptool_berval_from_ldif_value( const char *value, int vlen,
 	struct berval *bvp, int recognize_url_syntax, int always_try_file,
 	int reporterrs )
 {
-    int	rc = LDAPTOOL_FILEURL_SUCCESS;	/* optimistic */
+    int		rc = LDAPTOOL_FILEURL_SUCCESS;	/* optimistic */
+    const char	*url = NULL;
     struct stat	fstats;
 
     /* recognize "attr :< url" syntax if LDIF version is >= 1 */
 
     if ( recognize_url_syntax && *value == '<' ) {
-        const char	*url;
-        char		*path;
 
 	for ( url = value + 1; isspace( *url ); ++url ) {
 	    ;	/* NULL */
 	}
 
-	if (strlen(url) > 7 && strncasecmp(url, "file://", 7) == 0) {
+	if (strlen(url) < 6 || strncasecmp(url, "file:/", 6) != 0) {
 	  /*
-	   * We only support file:// URLs for now.
+	   * We only support file:/ URLs for now.
 	   */
-	  rc = ldaptool_fileurl2path( url, &path );
-	  switch( rc ) {
-	  case LDAPTOOL_FILEURL_NOTAFILEURL:
-	      if ( reporterrs ) fprintf( stderr, "%s: unsupported URL \"%s\";"
-		  " use a file:// URL instead.\n", ldaptool_progname, url );
-	      break;
-
-	  case LDAPTOOL_FILEURL_MISSINGPATH:
-	      if ( reporterrs ) fprintf( stderr,
-		    "%s: unable to process URL \"%s\" --"
-		    " missing path.\n", ldaptool_progname, url );
-	      break;
-
-	  case LDAPTOOL_FILEURL_NONLOCAL:
-	      if ( reporterrs ) fprintf( stderr,
-		    "%s: unable to process URL \"%s\" -- only"
-		    " local file:// URLs are supported.\n",
-		    ldaptool_progname, url );
-	      break;
-
-	  case LDAPTOOL_FILEURL_NOMEMORY:
-	      if ( reporterrs ) perror( "ldaptool_fileurl2path" );
-	      break;
-
-	  case LDAPTOOL_FILEURL_SUCCESS:
-	      if ( stat( path, &fstats ) != 0 ) {
-		  if ( reporterrs ) perror( path );
-	      } else if ( fstats.st_mode & S_IFDIR ) {	
-		  if ( reporterrs ) fprintf( stderr,
-			"%s: %s is a directory, not a file\n",
-			ldaptool_progname, path );
-		  rc = LDAPTOOL_FILEURL_FILEIOERROR;
-	      } else {
-		  rc = berval_from_file( path, bvp, reporterrs );
-	      }
-	      free( path );
-	      break;
-
-	  default:
-	      if ( reporterrs ) fprintf( stderr,
-		    "%s: unable to process URL \"%s\""
-		    " -- unknown error\n", ldaptool_progname, url );
-	  }
+	  url = NULL;
 	}
     }
-    if ( always_try_file && (stat( value, &fstats ) == 0) &&
-	     !(fstats.st_mode & S_IFDIR)) {	/* get value from file */
+
+    if ( NULL != url ) {
+	char	*path;
+
+	rc = ldaptool_fileurl2path( url, &path );
+	switch( rc ) {
+	case LDAPTOOL_FILEURL_NOTAFILEURL:
+	    if ( reporterrs ) fprintf( stderr, "%s: unsupported URL \"%s\";"
+		    " use a file:/ URL instead.\n", ldaptool_progname, url );
+	    break;
+
+	case LDAPTOOL_FILEURL_MISSINGPATH:
+	    if ( reporterrs ) fprintf( stderr,
+		    "%s: unable to process URL \"%s\" --"
+		    " missing path.\n", ldaptool_progname, url );
+	    break;
+
+	    case LDAPTOOL_FILEURL_NONLOCAL:
+		if ( reporterrs ) fprintf( stderr,
+			"%s: unable to process URL \"%s\" -- only"
+			" local file:/ URLs are supported.\n",
+			ldaptool_progname, url );
+		break;
+
+	    case LDAPTOOL_FILEURL_NOMEMORY:
+		if ( reporterrs ) perror( "ldaptool_fileurl2path" );
+		break;
+
+	    case LDAPTOOL_FILEURL_SUCCESS:
+		if ( stat( path, &fstats ) != 0 ) {
+		    if ( reporterrs ) perror( path );
+		} else if ( fstats.st_mode & S_IFDIR ) {	
+		    if ( reporterrs ) fprintf( stderr,
+			    "%s: %s is a directory, not a file\n",
+			    ldaptool_progname, path );
+		    rc = LDAPTOOL_FILEURL_FILEIOERROR;
+		} else {
+		    rc = berval_from_file( path, bvp, reporterrs );
+		}
+		free( path );
+		break;
+
+	default:
+	    if ( reporterrs ) fprintf( stderr,
+		    "%s: unable to process URL \"%s\""
+		    " -- unknown error\n", ldaptool_progname, url );
+	}
+    } else if ( always_try_file && (stat( value, &fstats ) == 0) &&
+	    !(fstats.st_mode & S_IFDIR)) {	/* get value from file */
 	rc = berval_from_file( value, bvp, reporterrs );
-    } else {
+    } else {					/* use value as-is */
 	bvp->bv_len = vlen;
 	if (( bvp->bv_val = (char *)malloc( vlen + 1 )) == NULL ) {
 	    if ( reporterrs ) perror( "malloc" );
@@ -338,7 +342,6 @@ berval_from_file( const char *path, struct berval *bvp, int reporterrs )
 {
     FILE	*fp;
     long	rlen;
-    int		eof;
 #if defined( XP_WIN32 )
     char	mode[20] = "r+b";
 #else
@@ -371,7 +374,6 @@ berval_from_file( const char *path, struct berval *bvp, int reporterrs )
     }
 
     rlen = fread( bvp->bv_val, 1, bvp->bv_len, fp );
-    eof = feof( fp );
     fclose( fp );
 
     if ( rlen != (long)bvp->bv_len ) {
