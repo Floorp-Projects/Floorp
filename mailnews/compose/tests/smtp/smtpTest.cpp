@@ -171,6 +171,7 @@ protected:
 	nsISmtpUrl * m_url; 
 	nsSmtpProtocol * m_SmtpProtocol; // running protocol instance
 	nsITransport * m_transport; // a handle on the current transport object being used with the protocol binding...
+	nsINetService * m_netService;
 
 	PRBool		m_runningURL;	// are we currently running a url? this flag is set to false on exit...
 
@@ -188,11 +189,12 @@ nsSmtpTestDriver::nsSmtpTestDriver(nsINetService * pNetService,
 	m_protocolInitialized = PR_FALSE;
 	m_runningURL = PR_TRUE;
     m_eventQueue = queue;
+	m_netService = pNetService;
+	NS_IF_ADDREF(m_netService); 
 	
 	InitializeTestDriver(); // prompts user for initialization information...
-	
-	// create a transport socket...
-	pNetService->CreateSocketTransport(&m_transport, m_port, m_host);
+
+	m_transport = nsnull;
 	m_SmtpProtocol = nsnull; // we can't create it until we have a url...
 }
 
@@ -203,6 +205,11 @@ void nsSmtpTestDriver::InitializeProtocol(const char * urlString)
 		m_url->Release(); // get rid of our old ref count...
 
 	NS_NewSmtpUrl(&m_url, urlString);
+	
+	NS_IF_RELEASE(m_transport);
+	
+	// create a transport socket...
+	m_netService->CreateSocketTransport(&m_transport, m_port, m_host);
 
 	// now create a protocl instance...
 	if (m_SmtpProtocol)
@@ -210,6 +217,7 @@ void nsSmtpTestDriver::InitializeProtocol(const char * urlString)
 	
 	// now create a new protocol instance...
 	m_SmtpProtocol = new nsSmtpProtocol(m_url, m_transport);
+	NS_IF_ADDREF(m_SmtpProtocol); 
 	m_protocolInitialized = PR_TRUE;
 }
 
@@ -217,6 +225,7 @@ nsSmtpTestDriver::~nsSmtpTestDriver()
 {
 	NS_IF_RELEASE(m_url);
 	NS_IF_RELEASE(m_transport);
+	NS_IF_RELEASE(m_netService); 
 	if (m_SmtpProtocol) delete m_SmtpProtocol;
 }
 
@@ -232,6 +241,15 @@ nsresult nsSmtpTestDriver::RunDriver()
 		// and process it...
 		if ((!m_SmtpProtocol) || m_SmtpProtocol->IsRunningUrl() == PR_FALSE) // if we aren't running the url anymore, ask ueser for another command....
 		{
+			//  SMTP is a connectionless protocol...so kill off our transport and current protocol
+			//  each command must create its own transport and protocol instance to run the url...
+			NS_IF_RELEASE(m_transport);
+			if (m_SmtpProtocol)
+			{
+				NS_RELEASE(m_SmtpProtocol);
+				m_SmtpProtocol = nsnull;
+			}
+
 			status = ReadAndDispatchCommand();	
 		}  // if running url
 #ifdef XP_UNIX
@@ -402,7 +420,7 @@ nsresult nsSmtpTestDriver::OnSendMessageInFile()
 	// SMTP is a connectionless protocol...so we always start with a new
 	// SMTP protocol instance every time we launch a mailto url...
 
-	InitializeProtocol(m_urlString);
+	InitializeProtocol(m_urlString);  // this creates a transport
 	m_url->SetSpec(m_urlString); // reset spec
 	m_url->SetHost(DEFAULT_HOST);
 	
