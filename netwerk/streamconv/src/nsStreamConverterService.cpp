@@ -131,7 +131,7 @@ nsStreamConverterService::BuildGraph() {
         rv = node->GetName(&name);
         if (NS_FAILED(rv)) return rv;
 
-        nsString2 actualProgID(NS_ISTREAMCONVERTER_KEY, eOneByte);
+        nsCString actualProgID(NS_ISTREAMCONVERTER_KEY);
         actualProgID.Append(name);
 
         // now we've got the PROGID, let's parse it up.
