@@ -187,6 +187,13 @@ NS_IMETHODIMP nsFontMetricsUnix :: Init(const nsFont& aFont, nsIDeviceContext* a
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFontMetricsUnix :: Destroy()
+{
+//  NS_IF_RELEASE(mDeviceContext);
+  return NS_OK;
+}
+
 char * nsFontMetricsUnix::PickAppropriateSize(char **names, XFontStruct *fonts, int cnt, nscoord desired)
 {
   int         idx;
@@ -267,22 +274,16 @@ void nsFontMetricsUnix::RealizeFont()
 
 NS_IMETHODIMP nsFontMetricsUnix :: GetWidth(char ch, nscoord &aWidth)
 {
-  if (ch < 256)
-    aWidth = mCharWidths[ch];
-  else
-    aWidth = 0; //XXX
-
-  return NS_OK;
+  char buf[1];
+  buf[0] = ch;
+  return GetWidth(buf, 1, aWidth);
 }
 
 NS_IMETHODIMP nsFontMetricsUnix :: GetWidth(PRUnichar ch, nscoord &aWidth)
 {
-  if (ch < 256)
-    aWidth = mCharWidths[PRUint8(ch)];
-  else
-    aWidth = 0;/* XXX */
-
-  return NS_OK;
+  PRUnichar buf[1];
+  buf[0] = ch;
+  return GetWidth(buf, 1, aWidth);
 }
 
 NS_IMETHODIMP nsFontMetricsUnix :: GetWidth(const nsString& aString, nscoord &aWidth)
@@ -292,9 +293,15 @@ NS_IMETHODIMP nsFontMetricsUnix :: GetWidth(const nsString& aString, nscoord &aW
 
 NS_IMETHODIMP nsFontMetricsUnix :: GetWidth(const char *aString, nscoord &aWidth)
 {
+  return GetWidth(aString, strlen(aString), aWidth);
+}
+
+NS_IMETHODIMP nsFontMetricsUnix :: GetWidth(const char *aString,
+                                            PRUint32 aLength, nscoord &aWidth)
+{
   PRInt32 rc = 0 ;
   
-  rc = (PRInt32) ::XTextWidth(mFontInfo, aString, nsCRT::strlen(aString));
+  rc = (PRInt32) ::XTextWidth(mFontInfo, aString, aLength);
 
   float dev2app;
   mContext->GetDevUnitsToAppUnits(dev2app);
@@ -339,9 +346,7 @@ NS_IMETHODIMP nsFontMetricsUnix :: GetWidth(const PRUnichar *aString,
   return NS_OK;
 }
 
-// XXX this needs to be implemented
-NS_IMETHODIMP nsFontMetricsUnix :: GetWidth(nsIDeviceContext *aContext,
-                                            const nsString& aString,
+NS_IMETHODIMP nsFontMetricsUnix :: GetWidth(const nsString& aString,
                                             nscoord &aWidth)
 {
   return GetWidth(aString.GetUnicode(), aString.Length(), aWidth);
@@ -374,12 +379,6 @@ NS_IMETHODIMP nsFontMetricsUnix :: GetMaxDescent(nscoord &aDescent)
 NS_IMETHODIMP nsFontMetricsUnix :: GetMaxAdvance(nscoord &aAdvance)
 {
   aAdvance = mMaxAdvance;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsFontMetricsUnix :: GetWidths(const nscoord *&aWidths)
-{
-  aWidths = mCharWidths;
   return NS_OK;
 }
 

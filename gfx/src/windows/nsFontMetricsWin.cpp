@@ -38,16 +38,20 @@ nsFontMetricsWin :: ~nsFontMetricsWin()
     ::DeleteObject(mFontHandle);
     mFontHandle = NULL;
   }
+
+  NS_IF_RELEASE(mDeviceContext);
 }
 
 #ifdef LEAK_DEBUG
-nsrefcnt nsFontMetricsWin :: AddRef()
+nsrefcnt
+nsFontMetricsWin :: AddRef()
 {
   NS_PRECONDITION(mRefCnt != 0, "resurrecting a dead object");
   return ++mRefCnt;
 }
 
-nsrefcnt nsFontMetricsWin :: Release()
+nsrefcnt
+nsFontMetricsWin :: Release()
 {
   NS_PRECONDITION(mRefCnt != 0, "too many release's");
   if (--mRefCnt == 0) {
@@ -56,7 +60,8 @@ nsrefcnt nsFontMetricsWin :: Release()
   return mRefCnt;
 }
 
-nsresult nsFontMetricsWin :: QueryInterface(REFNSIID aIID, void** aInstancePtr)
+nsresult
+nsFontMetricsWin :: QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
@@ -82,21 +87,27 @@ nsresult nsFontMetricsWin :: QueryInterface(REFNSIID aIID, void** aInstancePtr)
 NS_IMPL_ISUPPORTS(nsFontMetricsWin, kIFontMetricsIID)
 #endif
 
-
-// Note: The presentation context has a reference to this font
-// metrics, therefore avoid circular references by not AddRef'ing the
-// presentation context.
-NS_IMETHODIMP nsFontMetricsWin :: Init(const nsFont& aFont, nsIDeviceContext *aContext)
+NS_IMETHODIMP
+nsFontMetricsWin :: Init(const nsFont& aFont, nsIDeviceContext *aContext)
 {
   mFont = new nsFont(aFont);
-
-  RealizeFont(aContext);
-
+  mDeviceContext = aContext;
+  NS_ADDREF(aContext);
+  RealizeFont();
   return NS_OK;
 }
 
-static void MapGenericFamilyToFont(const nsString& aGenericFamily, nsIDeviceContext* aDC,
-                                   nsString& aFontFace)
+NS_IMETHODIMP
+nsFontMetricsWin :: Destroy()
+{
+  NS_IF_RELEASE(mDeviceContext);
+  return NS_OK;
+}
+
+static void
+MapGenericFamilyToFont(const nsString& aGenericFamily,
+                       nsIDeviceContext* aDC,
+                       nsString& aFontFace)
 {
   // the CSS generic names (conversions from Nav for now)
   // XXX this  need to check availability with the dc
@@ -131,7 +142,8 @@ struct FontEnumData {
   TCHAR* mFaceName;
 };
 
-static PRBool FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
+static PRBool
+FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
 {
   FontEnumData* data = (FontEnumData*)aData;
   if (aGeneric) {
@@ -152,7 +164,8 @@ static PRBool FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *a
   return PR_TRUE;
 }
 
-void nsFontMetricsWin::RealizeFont(nsIDeviceContext *aContext)
+void
+nsFontMetricsWin::RealizeFont()
 {
   // Fill in logFont structure; stolen from awt
   LOGFONT logFont;
@@ -174,14 +187,14 @@ void nsFontMetricsWin::RealizeFont(nsIDeviceContext *aContext)
     ? FW_BOLD : FW_NORMAL;
   logFont.lfItalic = (mFont->style & NS_FONT_STYLE_ITALIC)
     ? TRUE : FALSE;
-  float app2dev;
-  aContext->GetAppUnitsToDevUnits(app2dev);
-  float app2twip;
-  aContext->GetDevUnitsToTwips(app2twip);
+  float app2dev, app2twip;
+  mDeviceContext->GetAppUnitsToDevUnits(app2dev);
+  mDeviceContext->GetDevUnitsToTwips(app2twip);
   app2twip *= app2dev;
 
   float rounded = ((float)NSIntPointsToTwips(NSTwipsToFloorIntPoints(nscoord(mFont->size * app2twip)))) / app2twip;
-    // round font size off to floor point size to be windows compatible
+
+  // round font size off to floor point size to be windows compatible
 //  logFont.lfHeight = - NSToIntRound(rounded * app2dev);  // this is proper (windows) rounding
   logFont.lfHeight = - LONG(rounded * app2dev);  // this floor rounding is to make ours compatible with Nav 4.0
 
@@ -191,23 +204,22 @@ void nsFontMetricsWin::RealizeFont(nsIDeviceContext *aContext)
 #endif
   logFont.lfFaceName[0] = '\0';
 
-  FontEnumData  data(aContext, logFont.lfFaceName);
+  FontEnumData  data(mDeviceContext, logFont.lfFaceName);
   mFont->EnumerateFamilies(FontEnumCallback, &data); 
 
   // Create font handle from font spec
   mFontHandle = ::CreateFontIndirect(&logFont);
-//fprintf(stderr, "fFontHandle=%x\n", fFontHandle);
 
   // Find font metrics and character widths
   nsNativeWidget  widget;
-  aContext->GetNativeWidget(widget);
+  mDeviceContext->GetNativeWidget(widget);
   HWND win = (HWND)widget;
   HDC dc = ::GetDC(win);
   HFONT oldfont = (HFONT)::SelectObject(dc, (HGDIOBJ) mFontHandle);
 
   // Get font metrics
   float dev2app;
-  aContext->GetDevUnitsToAppUnits(dev2app);
+  mDeviceContext->GetDevUnitsToAppUnits(dev2app);
   TEXTMETRIC metrics;
   ::GetTextMetrics(dc, &metrics);
   mHeight = nscoord(metrics.tmHeight * dev2app);
@@ -217,155 +229,138 @@ void nsFontMetricsWin::RealizeFont(nsIDeviceContext *aContext)
   mMaxAscent = nscoord(metrics.tmAscent * dev2app);
   mMaxDescent = nscoord(metrics.tmDescent * dev2app);
   mMaxAdvance = nscoord(metrics.tmMaxCharWidth * dev2app);
-#if 0
-  fprintf(stderr, "fontmetrics: height=%d ascent=%d descent=%d leading=%d\n",
-          fHeight, fAscent, fDescent, fLeading);
-#endif
-
-  // Get character widths in twips
-  int widths[256];
-  ::GetCharWidth(dc, 0, 255, widths);
-  nscoord* tp = mCharWidths;
-  int* fp = widths;
-  int* end = fp + 256;
-  while (fp < end) {
-    *tp++ = nscoord( *fp++ * dev2app);
-  }
 
   ::ReleaseDC(win, dc);
 }
 
-NS_IMETHODIMP nsFontMetricsWin :: GetWidth(char ch, nscoord &aWidth)
+NS_IMETHODIMP
+nsFontMetricsWin :: GetWidth(char ch, nscoord& aWidth)
 {
-  aWidth = mCharWidths[PRUint8(ch)];
-  return NS_OK;
+  char buf[1];
+  buf[0] = ch;
+  return GetWidth(buf, 1, aWidth);
 }
 
-NS_IMETHODIMP nsFontMetricsWin :: GetWidth(PRUnichar ch, nscoord &aWidth)
+NS_IMETHODIMP
+nsFontMetricsWin :: GetWidth(PRUnichar ch, nscoord &aWidth)
 {
-  if (ch < 256) {
-    aWidth = mCharWidths[ch];
-    return NS_OK;
+  PRUnichar buf[1];
+  buf[0] = ch;
+  return GetWidth(buf, 1, aWidth);
+}
+
+NS_IMETHODIMP
+nsFontMetricsWin :: GetWidth(const char* aString, nscoord& aWidth)
+{
+  return GetWidth(aString, strlen(aString), aWidth);
+}
+
+NS_IMETHODIMP
+nsFontMetricsWin :: GetWidth(const char* aString,
+                             PRUint32 aLength,
+                             nscoord& aWidth)
+{
+  if (nsnull == mDeviceContext) {
+    aWidth = 0;
+    return NS_ERROR_NULL_POINTER;
   }
-  aWidth = 0;/* XXX */
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
 
-NS_IMETHODIMP nsFontMetricsWin :: GetWidth(const nsString& aString, nscoord &aWidth)
-{
-  return GetWidth(aString.GetUnicode(), aString.Length(), aWidth);
-}
-
-NS_IMETHODIMP nsFontMetricsWin :: GetWidth(const char *aString, nscoord &aWidth)
-{
-  // XXX use native text measurement routine
-  aWidth = 0;
-  PRUint8 ch;
-  while ((ch = PRUint8(*aString++)) != 0) {
-    aWidth += mCharWidths[ch];
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsFontMetricsWin :: GetWidth(nsIDeviceContext *aContext,
-                                           const nsString& aString,
-                                           nscoord &aWidth)
-{
-  char * str = aString.ToNewCString();
-  //if (str) {
-  //  nscoord width = GetWidth(str);
-  //  delete[] str;
-  //  return width;
-  //}
-  // Find font metrics and character widths
-  nsNativeWidget  widget;
-  aContext->GetNativeWidget(widget);
+  nsNativeWidget widget;
+  mDeviceContext->GetNativeWidget(widget);
   HWND win = (HWND)widget;
   HDC  hdc = ::GetDC(win);
   HFONT oldfont = (HFONT)::SelectObject(hdc, (HGDIOBJ) mFontHandle);
-
   SIZE size;
-
-  BOOL status = GetTextExtentPoint32(hdc, str, strlen(str), &size);
-
+  BOOL status = GetTextExtentPoint32(hdc, aString, aLength, &size);
   ::ReleaseDC(win, hdc);
 
+  float app2dev, dev2twip;
+  mDeviceContext->GetAppUnitsToDevUnits(app2dev);
+  mDeviceContext->GetDevUnitsToTwips(dev2twip);
 
-  float app2dev;
-  aContext->GetAppUnitsToDevUnits(app2dev);
-  float dev2twip;
-  aContext->GetDevUnitsToTwips(dev2twip);
   float app2twip = dev2twip * app2dev;
-  //printf("[%s] %d  %d = %d\n", str, size.cx, nscoord(((float)size.cx)*aContext->GetDevUnitsToTwips()), GetWidth(str));
-
-  delete[] str;
   aWidth = nscoord(float(size.cx) * dev2twip);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFontMetricsWin :: GetWidth(const PRUnichar *aString,
-                                           PRUint32 aLength,
-                                           nscoord &aWidth)
+NS_IMETHODIMP
+nsFontMetricsWin :: GetWidth(const nsString& aString, nscoord& aWidth)
 {
+  return GetWidth(aString.GetUnicode(), aString.Length(), aWidth);
+}
 
-  // XXX use native text measurement routine
-  aWidth = 0;
-  while (aLength != 0) {
-    PRUnichar ch = *aString++;
-    if (ch < 256) {
-      aWidth += mCharWidths[ch];
-    } else {
-      // XXX not yet
-    }
-    --aLength;
+NS_IMETHODIMP
+nsFontMetricsWin :: GetWidth(const PRUnichar *aString,
+                             PRUint32 aLength,
+                             nscoord &aWidth)
+{
+  if (nsnull == mDeviceContext) {
+    aWidth = 0;
+    return NS_ERROR_NULL_POINTER;
   }
+
+  nsNativeWidget widget;
+  mDeviceContext->GetNativeWidget(widget);
+  HWND win = (HWND)widget;
+  HDC  hdc = ::GetDC(win);
+  HFONT oldfont = (HFONT)::SelectObject(hdc, (HGDIOBJ) mFontHandle);
+  SIZE size;
+  BOOL status = GetTextExtentPoint32W(hdc, aString, aLength, &size);
+  ::ReleaseDC(win, hdc);
+
+  float app2dev, dev2twip;
+  mDeviceContext->GetAppUnitsToDevUnits(app2dev);
+  mDeviceContext->GetDevUnitsToTwips(dev2twip);
+
+  float app2twip = dev2twip * app2dev;
+  aWidth = nscoord(float(size.cx) * dev2twip);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFontMetricsWin :: GetHeight(nscoord &aHeight)
+NS_IMETHODIMP
+nsFontMetricsWin :: GetHeight(nscoord &aHeight)
 {
   aHeight = mHeight;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFontMetricsWin :: GetLeading(nscoord &aLeading)
+NS_IMETHODIMP
+nsFontMetricsWin :: GetLeading(nscoord &aLeading)
 {
   aLeading = mLeading;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFontMetricsWin :: GetMaxAscent(nscoord &aAscent)
+NS_IMETHODIMP
+nsFontMetricsWin :: GetMaxAscent(nscoord &aAscent)
 {
   aAscent = mMaxAscent;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFontMetricsWin :: GetMaxDescent(nscoord &aDescent)
+NS_IMETHODIMP
+nsFontMetricsWin :: GetMaxDescent(nscoord &aDescent)
 {
   aDescent = mMaxDescent;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFontMetricsWin :: GetMaxAdvance(nscoord &aAdvance)
+NS_IMETHODIMP
+nsFontMetricsWin :: GetMaxAdvance(nscoord &aAdvance)
 {
   aAdvance = mMaxAdvance;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFontMetricsWin :: GetWidths(const nscoord *&aWidths)
-{
-  aWidths = mCharWidths;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsFontMetricsWin :: GetFont(const nsFont *&aFont)
+NS_IMETHODIMP
+nsFontMetricsWin :: GetFont(const nsFont *&aFont)
 {
   aFont = mFont;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFontMetricsWin::GetFontHandle(nsFontHandle &aHandle)
+NS_IMETHODIMP
+nsFontMetricsWin::GetFontHandle(nsFontHandle &aHandle)
 {
   aHandle = mFontHandle;
   return NS_OK;
