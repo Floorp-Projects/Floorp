@@ -53,16 +53,25 @@ nsStyleCoord::nsStyleCoord(PRInt32 aValue, nsStyleUnit aUnit)
   }
 }
 
-nsStyleCoord::nsStyleCoord(float aValue)
-  : mUnit(eStyleUnit_Percent)
+nsStyleCoord::nsStyleCoord(float aValue, nsStyleUnit aUnit)
+  : mUnit(aUnit)
 {
-  mValue.mFloat = aValue;
+  NS_ASSERTION((aUnit == eStyleUnit_Percent) ||
+               (aUnit == eStyleUnit_Factor), "not a float value");
+  if ((aUnit == eStyleUnit_Percent) ||
+      (aUnit == eStyleUnit_Factor)) {
+    mValue.mFloat = aValue;
+  }
+  else {
+    mUnit = eStyleUnit_Null;
+    mValue.mInt = 0;
+  }
 }
 
 nsStyleCoord::nsStyleCoord(const nsStyleCoord& aCopy)
   : mUnit(aCopy.mUnit)
 {
-  if (eStyleUnit_Percent == mUnit) {
+  if ((eStyleUnit_Percent <= mUnit) && (mUnit < eStyleUnit_Coord)) {
     mValue.mFloat = aCopy.mValue.mFloat;
   }
   else {
@@ -73,7 +82,7 @@ nsStyleCoord::nsStyleCoord(const nsStyleCoord& aCopy)
 nsStyleCoord& nsStyleCoord::operator=(const nsStyleCoord& aCopy)
 {
   mUnit = aCopy.mUnit;
-  if (eStyleUnit_Percent == mUnit) {
+  if ((eStyleUnit_Percent <= mUnit) && (mUnit < eStyleUnit_Coord)) {
     mValue.mFloat = aCopy.mValue.mFloat;
   }
   else {
@@ -85,7 +94,7 @@ nsStyleCoord& nsStyleCoord::operator=(const nsStyleCoord& aCopy)
 PRBool nsStyleCoord::operator==(const nsStyleCoord& aOther) const
 {
   if (mUnit == aOther.mUnit) {
-    if (eStyleUnit_Percent == mUnit) {
+    if ((eStyleUnit_Percent <= mUnit) && (mUnit < eStyleUnit_Coord)) {
       return PRBool(mValue.mFloat == aOther.mValue.mFloat);
     }
     else {
@@ -129,6 +138,12 @@ void nsStyleCoord::SetPercentValue(float aValue)
   mValue.mFloat = aValue;
 }
 
+void nsStyleCoord::SetFactorValue(float aValue)
+{
+  mUnit = eStyleUnit_Factor;
+  mValue.mFloat = aValue;
+}
+
 void nsStyleCoord::SetNormalValue(void)
 {
   mUnit = eStyleUnit_Normal;
@@ -147,9 +162,15 @@ void nsStyleCoord::SetInheritValue(void)
   mValue.mInt = 0;
 }
 
+void nsStyleCoord::SetUnionValue(const nsStyleUnion& aValue, nsStyleUnit aUnit)
+{
+  mUnit = aUnit;
+  nsCRT::memcpy(&mValue, &aValue, sizeof(nsStyleUnion));
+}
+
 void nsStyleCoord::AppendToString(nsString& aBuffer) const
 {
-  if (eStyleUnit_Percent == mUnit) {
+  if ((eStyleUnit_Percent <= mUnit) && (mUnit < eStyleUnit_Coord)) {
     aBuffer.Append(mValue.mFloat);
   }
   else if ((eStyleUnit_Coord == mUnit) || 
@@ -166,6 +187,7 @@ void nsStyleCoord::AppendToString(nsString& aBuffer) const
     case eStyleUnit_Null:         aBuffer.Append("Null");     break;
     case eStyleUnit_Coord:        aBuffer.Append("tw");       break;
     case eStyleUnit_Percent:      aBuffer.Append("%");        break;
+    case eStyleUnit_Factor:       aBuffer.Append("f");        break;
     case eStyleUnit_Normal:       aBuffer.Append("Normal");   break;
     case eStyleUnit_Auto:         aBuffer.Append("Auto");     break;
     case eStyleUnit_Inherit:      aBuffer.Append("Inherit");  break;
@@ -177,6 +199,46 @@ void nsStyleCoord::AppendToString(nsString& aBuffer) const
 }
 
 void nsStyleCoord::ToString(nsString& aBuffer) const
+{
+  aBuffer.Truncate();
+  AppendToString(aBuffer);
+}
+
+
+
+
+nsStyleSides::nsStyleSides(void)
+{
+  nsCRT::memset(this, 0x00, sizeof(nsStyleSides));
+}
+
+void nsStyleSides::Reset(void)
+{
+  nsCRT::memset(this, 0x00, sizeof(nsStyleSides));
+}
+
+void nsStyleSides::AppendToString(nsString& aBuffer) const
+{
+  nsStyleCoord  temp;
+
+  GetLeft(temp);
+  aBuffer.Append("left: ");
+  temp.AppendToString(aBuffer);
+
+  GetTop(temp);
+  aBuffer.Append("top: ");
+  temp.AppendToString(aBuffer);
+
+  GetRight(temp);
+  aBuffer.Append("right: ");
+  temp.AppendToString(aBuffer);
+
+  GetBottom(temp);
+  aBuffer.Append("bottom: ");
+  temp.AppendToString(aBuffer);
+}
+
+void nsStyleSides::ToString(nsString& aBuffer) const
 {
   aBuffer.Truncate();
   AppendToString(aBuffer);
