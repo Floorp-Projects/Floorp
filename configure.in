@@ -1907,6 +1907,10 @@ MOZ_ARG_WITH_STRING(wrap-malloc,
 [  --with-wrap-malloc-=\$dir Location of malloc wrapper library],
   WRAP_MALLOC_LIB=$withval)
 
+MOZ_ARG_ENABLE_BOOL(efence,
+[  --enable-efence         Link with Electric Fence if available (default=no) ],
+  AC_CHECK_LIB(efence,malloc))
+
 dnl ========================================================
 dnl =
 dnl = Misc. Options
