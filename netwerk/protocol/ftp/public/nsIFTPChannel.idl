@@ -28,6 +28,7 @@ interface nsIEventQueue;
 interface nsIFTPChannel : nsIChannel
 {
     void SetConnectionQueue(in nsIEventQueue aEventQ);
+	void SetContentLength(in long aLength);
 };
 
 
