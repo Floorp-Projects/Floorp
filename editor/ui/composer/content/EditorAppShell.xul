@@ -408,10 +408,10 @@
 
 <popup id="FontSizeMenu">
   <menu>
-    <menuitem name="-4" onclick="EditorSetFontSize('-4')"/>
-    <menuitem name="-3" onclick="EditorSetFontSize('-3')"/>
-    <menuitem name="-2" onclick="EditorSetFontSize('-2')"/>
-    <menuitem name="-1 (smaller)" onclick="EditorSetFontSize('-1')"/>
+    <menuitem name=" -4" onclick="EditorSetFontSize('-4')"/>
+    <menuitem name=" -3" onclick="EditorSetFontSize('-3')"/>
+    <menuitem name=" -2" onclick="EditorSetFontSize('-2')"/>
+    <menuitem name=" -1 (smaller)" onclick="EditorSetFontSize('-1')"/>
     <menuitem name="Normal" onclick="EditorSetFontSize('0')"/>
     <menuitem name="+1 (bigger)" onclick="EditorSetFontSize('+1')"/>
     <menuitem name="+2" onclick="EditorSetFontSize('+2')"/>
