@@ -33,6 +33,7 @@ install::
 	$(MAKE_INSTALL) pref-colors.dtd  $(DIST)\bin\chrome\communicator\locale\pref
 	$(MAKE_INSTALL) pref-themes.dtd  $(DIST)\bin\chrome\communicator\locale\pref
 	$(MAKE_INSTALL) pref-composer.dtd  $(DIST)\bin\chrome\communicator\locale\pref
+	$(MAKE_INSTALL) pref-cookies.dtd  $(DIST)\bin\chrome\communicator\locale\pref
 	$(MAKE_INSTALL) pref-download.dtd  $(DIST)\bin\chrome\communicator\locale\pref
 	$(MAKE_INSTALL) pref-debug.dtd  $(DIST)\bin\chrome\communicator\locale\pref
 	$(MAKE_INSTALL) pref-editing.dtd  $(DIST)\bin\chrome\communicator\locale\pref

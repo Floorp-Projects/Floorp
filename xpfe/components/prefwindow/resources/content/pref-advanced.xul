@@ -32,47 +32,18 @@
 
   <script language="JavaScript">
   <![CDATA[
-    _elementIDs = ["advancedAlwaysLoadImages", "advancedJavaAllow", "javascriptAllowMailNews", "javascriptEnabled", "CSSAllow", "advancedMailFTP", "networkImageBehaviour", "networkImageWarnAboutImages", "networkCookieBehaviour", "networkWarnAboutCookies"];
+    _elementIDs = ["advancedAlwaysLoadImages", "advancedJavaAllow", "javascriptAllowMailNews", "javascriptEnabled", "CSSAllow", "advancedMailFTP"];
   ]]>
   </script>
-          
-  <script>
-  <![CDATA[
-  
-  function displayImageDialog()
-  {
-    window.openDialog("chrome://communicator/content/pref/pref-imageblocking.xul", "", "chrome,resizable=no");
-  }
-
-  function updateImageFields( aInteger, aBoolean )
-  {
-    var imageBehaviourField = document.getElementById("networkImageBehaviour");
-    var imageBehaviourCheckbox = document.getElementById("networkImageWarnAboutImages");
-    
-    imageBehaviourField.value = aInteger;
-    imageBehaviourCheckbox.checked = aBoolean;
-  }
-
-  function viewCookies() 
-  {
-    window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","","modal=yes,chrome,resizable=no", 0);
-  }  
-
-  ]]>
-  </script>        
+     
         
   <box class="box-smallheader" title="&lHeader;"/>
 
-  <titledbox orient="vertical" id="advancedSettings">
+  <titledbox orient="vertical" id="advancedSettings" autostretch="never"f>
 	  <title><text value="&advancedTitle.label;"/></title>
-    <box autostretch="never">
-      <checkbox id="advancedAlwaysLoadImages" value="&autoLoadImgCheck.label;" accesskey="&autoLoadImgCheck.accesskey;"
-                pref="true" preftype="bool" prefstring="advanced.always_load_images"
-                prefattribute="checked"/>
-      <spring flex="1"/>                
-      <button class="dialog" value="&imageBlocking.label;" accesskey="&imageBlocking.accesskey;"
-              oncommand="displayImageDialog();"/>             
-    </box>            
+    <checkbox id="advancedAlwaysLoadImages" value="&autoLoadImgCheck.label;" accesskey="&autoLoadImgCheck.accesskey;"
+              pref="true" preftype="bool" prefstring="advanced.always_load_images"
+              prefattribute="checked"/>
     <checkbox id="advancedJavaAllow" value="&enbJavaCheck.label;" accesskey="&enbJavaCheck.accesskey;"
               pref="true" preftype="bool" prefstring="security.enable_java"
               prefattribute="checked"/>
@@ -98,10 +69,6 @@
     
     <html>&description.label;</html>
 	</titledbox>
-
-  <!-- hidden elements to contain image blocking prefs -->
-  <broadcaster id="networkImageBehaviour" pref="true" preftype="int" prefstring="network.image.imageBehavior" prefattribute="value" wsm_attributes="value"/>
-  <broadcaster id="networkImageWarnAboutImages" pref="true" preftype="bool" prefstring="network.image.warnAboutImages" prefattribute="checked" wsm_attributes="checked"/>
 
  	<titledbox orient="vertical">
   	<title><text value="&cookies;"/></title>  
