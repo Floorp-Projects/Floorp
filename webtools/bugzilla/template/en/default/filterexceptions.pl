@@ -414,6 +414,7 @@
 'bug/process/results.html.tmpl' => [
   'title.$type', 
   'id', 
+  'linktext.$type',
 ],
 
 'bug/create/comment.txt.tmpl' => [
