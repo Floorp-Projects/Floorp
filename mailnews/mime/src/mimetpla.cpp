@@ -121,7 +121,7 @@ MimeInlineTextPlain_parse_begin (MimeObject *obj)
 
   if (nsMimeOutput::nsMimeMessageBodyDisplay == obj->options->format_out ||
       nsMimeOutput::nsMimeMessagePrintOutput == obj->options->format_out)
-    status = BeginMailNewsFont(obj, "mailnews.font.name.mono", "mailnews.size.fixed");  
+    status = BeginMailNewsFont(obj);  
 
   if (obj->options &&
 	  obj->options->write_html_p &&

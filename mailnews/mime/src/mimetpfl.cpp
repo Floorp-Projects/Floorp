@@ -75,7 +75,7 @@ MimeInlineTextPlainFlowed_parse_begin (MimeObject *obj)
 
   if (nsMimeOutput::nsMimeMessageBodyDisplay == obj->options->format_out ||
       nsMimeOutput::nsMimeMessagePrintOutput == obj->options->format_out)
-    status = BeginMailNewsFont(obj, "mailnews.font.name.mono", "mailnews.size.fixed");  
+    status = BeginMailNewsFont(obj);  
 
   // Setup the data structure that is connected to the actual document
   // Saved in a linked list in case this is called with several documents

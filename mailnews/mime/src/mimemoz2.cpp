@@ -61,6 +61,8 @@
 #include "nsIMIMEService.h"
 #include "nsIImapUrl.h"
 #include "nsMsgI18N.h"
+#include "nsICharsetConverterManager.h"
+#include "nsICharsetAlias.h"
 
 #include "nsIIOService.h"
 #include "nsIURI.h"
@@ -1762,52 +1764,157 @@ ResetChannelCharset(MimeObject *obj)
   // Functions to set up mail/news font
   ////////////////////////////////////////////////////////////
 
-int BeginMailNewsFont(MimeObject *obj, const char *prefFontName, const char *prefFontSize)
+// input: part of pref key for font name and size, e.g. "font.name.serif.", "font.size.fixed." ,
+// output: HTML tag to the caller allocated buffer
+static int DoLanguageSensitiveFont(MimeObject *obj, const char *prefixName, const char *prefixSize)
+{
+  nsCOMPtr<nsICharsetConverterManager> aCharSets;
+  nsCOMPtr<nsIAtom> aLangGroup;
+  MimeInlineText  *text = (MimeInlineText *) obj;
+  nsAutoString aCharset;
+  const PRUnichar* langGroup = nsnull;
+  nsCAutoString aPrefStr(prefixName);
+  nsresult rv;
+  int status = -1;
+
+
+  if (!text->charset || !(*text->charset))
+    goto done;
+
+  // no alias resolution for performance
+  // if we get alias then no font tag to be generated (i think that's acceptable).
+  aCharset.Assign(text->charset);
+  aCharset.ToLowerCase();
+
+
+  aCharSets = do_GetService(NS_CHARSETCONVERTERMANAGER_PROGID);
+  if (aCharSets) {
+    // get a language, e.g. x-western, ja
+    rv = aCharSets->GetCharsetLangGroup(&aCharset, getter_AddRefs(aLangGroup));
+    if (NS_FAILED(rv))
+      goto done;
+    rv = aLangGroup->GetUnicode(&langGroup);
+    if (NS_FAILED(rv))
+      goto done;
+  
+    // append the language to the pref string
+    aPrefStr.Append(langGroup);
+
+    nsIPref *aPrefs = GetPrefServiceManager(obj->options);
+  
+    if (aPrefs) {
+      nsCAutoString fontName;
+      PRUnichar *unicode = nsnull;
+      PRInt32 fontSize;
+      PRInt32 screenRes;
+     
+      // get a font name from pref, could be non ascii (need charset conversion)
+      // this is not necessary if we insert this tag after the message is converted to UTF-8
+      rv = aPrefs->CopyUnicharPref(aPrefStr, &unicode);
+      if (NS_FAILED(rv))
+        goto done;
+
+      nsAutoString tempStr(unicode);
+      PR_FREEIF(unicode);
+
+      rv = nsMsgI18NConvertFromUnicode(aCharset, tempStr, fontName);
+      if (NS_FAILED(rv))
+        goto done;
+
+      // get a font size from pref
+      aPrefStr.Assign(prefixSize);
+      aPrefStr.Append(langGroup);
+      rv = aPrefs->GetIntPref(aPrefStr, &fontSize);
+      if (NS_FAILED(rv))
+        goto done;
+
+      // get a screen resolution
+      rv = aPrefs->GetIntPref("browser.screen_resolution", &screenRes);
+      if (NS_FAILED(rv))
+        goto done;
+
+      fontSize = fontSize * 72 / screenRes;
+
+      char buf[256];
+      PR_snprintf(buf, 256, "<div style=\"font-family: %s; font-size: %dpt;\">\n", (const char *) fontName, fontSize);
+    
+      status = MimeObject_write(obj, buf, nsCRT::strlen(buf), PR_FALSE);
+    }
+  }
+
+done:
+  // if nothing has been written then write out just "<div>" to match with "</div>"
+  if (status == -1)
+    status = MimeObject_write(obj, "<div>\n", 6, PR_FALSE);
+
+  return status;
+}
+
+int BeginMailNewsFont(MimeObject *obj)
 {
   nsIPref *aPrefs = GetPrefServiceManager(obj->options);
   int status = -1;
+  nsresult rv;
 
   if (aPrefs) {
+    // check Content-Type:
+    PRBool bTEXT_HTML = PR_FALSE;
+    if (!nsCRT::strcasecmp(obj->content_type, TEXT_HTML))
+      bTEXT_HTML = PR_TRUE;
+    else if (nsCRT::strcasecmp(obj->content_type, TEXT_PLAIN))
+      goto done;  // not supported type
+
+    // if indicated by the pref, do language sensitive font selection (slower)
+    PRBool  languageSensitiveFont = PR_FALSE;
+    rv = aPrefs->GetBoolPref("mailnews.language_sensitive_font", &languageSensitiveFont);
+    if (NS_SUCCEEDED(rv) && languageSensitiveFont)
+      return bTEXT_HTML ?
+                DoLanguageSensitiveFont(obj, "font.name.serif.", "font.size.variable.") :
+                DoLanguageSensitiveFont(obj, "font.name.monospace.", "font.size.fixed.");
+
+    // otherwise, use the mailnews font setting from pref
     MimeInlineText  *text = (MimeInlineText *) obj;
-	// todo: use folder charset instead of hard coded ISO-8859-1
-    nsAutoString aCharset(text->charset ? text->charset : "ISO-8859-1");
+    nsString aCharset;
     PRUnichar *unicode = nsnull;
-    char *fontName = nsnull;
+    nsCAutoString fontName;
     PRInt32 fontSize;
     PRInt32 screenRes;
-    nsresult rv;
+
+    if (!text->charset || !(*text->charset))
+      goto done;
+    aCharset.Assign(text->charset);
 
     // get a font name from pref, could be non ascii (need charset conversion)
     // this is not necessary if we insert this tag after the message is converted to UTF-8
-    rv = aPrefs->CopyUnicharPref(prefFontName, &unicode);
+    rv = aPrefs->CopyUnicharPref(bTEXT_HTML ? "mailnews.font.name.html" : "mailnews.font.name.plain", &unicode);
     if (NS_FAILED(rv))
       goto done;
-    rv = ConvertFromUnicode(aCharset, nsAutoString(unicode), &fontName);
+    nsAutoString tempStr(unicode);
+    PR_FREEIF(unicode);
+    rv = nsMsgI18NConvertFromUnicode(aCharset, tempStr, fontName);
     if (NS_FAILED(rv))
       goto done;
 
     // get a font size from pref
-    rv = aPrefs->GetIntPref(prefFontSize, &fontSize);
+    rv = aPrefs->GetIntPref(bTEXT_HTML ? "mailnews.font.size.html" : "mailnews.font.size.plain", &fontSize);
     if (NS_FAILED(rv))
       goto done;
 
     // get a screen resolution
     rv = aPrefs->GetIntPref("browser.screen_resolution", &screenRes);
-     if (NS_FAILED(rv))
-       goto done;
+    if (NS_FAILED(rv))
+      goto done;
 
     fontSize = fontSize * 72 / screenRes;
   
     char buf[256];
 
-    PR_snprintf(buf, 256, "<div style=\"font-family: %s; font-size: %dpt;\">\n", fontName, fontSize);
+    PR_snprintf(buf, 256, "<div style=\"font-family: %s; font-size: %dpt;\">\n", (const char *) fontName, fontSize);
 
     status = MimeObject_write(obj, buf, nsCRT::strlen(buf), PR_FALSE);
 
-done:
-    PR_FREEIF(unicode);
-    PR_FREEIF(fontName);
   }
+done:
   // if nothing has been written then write out just "<div>" to match with "</div>"
   if (status == -1)
     status = MimeObject_write(obj, "<div>\n", 6, PR_FALSE);

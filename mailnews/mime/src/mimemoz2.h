@@ -161,9 +161,7 @@ extern "C" char             *MimeGetStringByID(PRInt32 stringID);
 // Utility to create a nsIURI object...
 extern "C" nsresult         nsMimeNewURI(nsIURI** aInstancePtrResult, const char *aSpec, nsIURI *aBase);
 
-// input pref keys for font name and size, e.g. "mailnews.font.name.mono", "mailnews.size.fixed",
-// generate and write out HTML tag
-extern "C" int BeginMailNewsFont(MimeObject *obj, const char *prefFontName, const char *prefFontSize);
+extern "C" int BeginMailNewsFont(MimeObject *obj);
 extern "C" int EndMailNewsFont(MimeObject *obj);
 
 #ifdef __cplusplus

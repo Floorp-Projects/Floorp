@@ -58,7 +58,7 @@ MimeInlineTextHTML_parse_begin (MimeObject *obj)
   
   if (nsMimeOutput::nsMimeMessageBodyDisplay == obj->options->format_out ||
       nsMimeOutput::nsMimeMessagePrintOutput == obj->options->format_out)
-    status = BeginMailNewsFont(obj, "mailnews.font.name.serif", "mailnews.size.variable");  
+    status = BeginMailNewsFont(obj);  
 
   MimeInlineTextHTML  *textHTML = (MimeInlineTextHTML *) obj;
   
