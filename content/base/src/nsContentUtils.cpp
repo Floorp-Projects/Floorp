@@ -1692,11 +1692,8 @@ nsContentUtils::CanLoadImage(nsIURI* aURI, nsISupports* aContext,
   NS_PRECONDITION(aURI, "Must have a URI");
   NS_PRECONDITION(aLoadingDocument, "Must have a document");
 
-  nsIURI *docURI = aLoadingDocument->GetDocumentURI();
-
   nsresult rv;
 
-#if 0 // Disabled to see if this is what cost us 2% perf
   PRUint32 appType = nsIDocShell::APP_TYPE_UNKNOWN;
 
   {
@@ -1720,18 +1717,18 @@ nsContentUtils::CanLoadImage(nsIURI* aURI, nsISupports* aContext,
     // Editor apps get special treatment here, editors can load images
     // from anywhere.
     rv = sSecurityManager->
-      CheckLoadURI(docURI, aURI, nsIScriptSecurityManager::ALLOW_CHROME);
+      CheckLoadURIWithPrincipal(aLoadingDocument->GetPrincipal(), aURI,
+                                nsIScriptSecurityManager::ALLOW_CHROME);
     if (NS_FAILED(rv)) {
       return PR_FALSE;
     }
   }
-#endif
 
   PRInt16 decision = nsIContentPolicy::ACCEPT;
 
   rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_IMAGE,
                                  aURI,
-                                 docURI,
+                                 aLoadingDocument->GetDocumentURI(),
                                  aContext,
                                  EmptyCString(), //mime guess
                                  nsnull,         //extra

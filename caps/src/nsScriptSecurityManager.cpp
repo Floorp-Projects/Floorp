@@ -1112,8 +1112,10 @@ nsScriptSecurityManager::CheckLoadURIFromScript(JSContext *cx, nsIURI *aURI)
     return NS_ERROR_DOM_BAD_URI;
 }
 
+// static
 nsresult
-nsScriptSecurityManager::GetBaseURIScheme(nsIURI* aURI, char** aScheme)
+nsScriptSecurityManager::GetBaseURIScheme(nsIURI* aURI,
+                                          nsCString& aScheme)
 {
     if (!aURI)
        return NS_ERROR_FAILURE;
@@ -1122,26 +1124,25 @@ nsScriptSecurityManager::GetBaseURIScheme(nsIURI* aURI, char** aScheme)
     nsCOMPtr<nsIURI> uri(aURI);
 
     //-- get the source scheme
-    nsCAutoString scheme;
-    rv = uri->GetScheme(scheme);
+    rv = uri->GetScheme(aScheme);
     if (NS_FAILED(rv)) return rv;
 
     //-- If uri is a view-source URI, drill down to the base URI
     nsCAutoString path;
-    while(PL_strcmp(scheme.get(), "view-source") == 0)
+    while (aScheme.EqualsLiteral("view-source"))
     {
         rv = uri->GetPath(path);
         if (NS_FAILED(rv)) return rv;
         rv = NS_NewURI(getter_AddRefs(uri), path, nsnull, nsnull, sIOService);
         if (NS_FAILED(rv)) return rv;
-        rv = uri->GetScheme(scheme);
+        rv = uri->GetScheme(aScheme);
         if (NS_FAILED(rv)) return rv;
     }
 
     //-- If uri is a jar URI, drill down again
     nsCOMPtr<nsIJARURI> jarURI;
     PRBool isJAR = PR_FALSE;
-    while((jarURI = do_QueryInterface(uri)))
+    while ((jarURI = do_QueryInterface(uri)))
     {
         jarURI->GetJARFile(getter_AddRefs(uri));
         isJAR = PR_TRUE;
@@ -1149,31 +1150,28 @@ nsScriptSecurityManager::GetBaseURIScheme(nsIURI* aURI, char** aScheme)
     if (!uri) return NS_ERROR_FAILURE;
     if (isJAR)
     {
-        rv = uri->GetScheme(scheme);
+        rv = uri->GetScheme(aScheme);
         if (NS_FAILED(rv)) return rv;
     }
 
     //-- if uri is an about uri, distinguish 'safe' and 'unsafe' about URIs
-    static const char aboutScheme[] = "about";
-    if(nsCRT::strcasecmp(scheme.get(), aboutScheme) == 0)
+    if(aScheme.EqualsLiteral("about"))
     {
-        nsCAutoString spec;
-        if(NS_FAILED(uri->GetAsciiSpec(spec)))
+        nsCAutoString path;
+        if(NS_FAILED(uri->GetPath(path)))
             return NS_ERROR_FAILURE;
-        const char* page = spec.get() + sizeof(aboutScheme);
-        if ((strcmp(page, "blank") == 0)   ||
-            (strcmp(page, "") == 0)        ||
-            (strcmp(page, "mozilla") == 0) ||
-            (strcmp(page, "logo") == 0)    ||
-            (strcmp(page, "credits") == 0))
+        if (path.EqualsLiteral("blank")   ||
+            path.IsEmpty()                ||
+            path.EqualsLiteral("mozilla") ||
+            path.EqualsLiteral("logo")    ||
+            path.EqualsLiteral("credits"))
         {
-            *aScheme = nsCRT::strdup("about safe");
-            return *aScheme ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+            aScheme = NS_LITERAL_CSTRING("about safe");
+            return NS_OK;
         }
     }
 
-    *aScheme = nsCRT::strdup(scheme.get());
-    return *aScheme ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1209,25 +1207,25 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
     NS_ASSERTION(sourceURI, "Non-system principals passed to CheckLoadURIWithPrincipal must have a URI!");
     
     //-- get the source scheme
-    nsXPIDLCString sourceScheme;
-    nsresult rv = GetBaseURIScheme(sourceURI, getter_Copies(sourceScheme));
+    nsCAutoString sourceScheme;
+    nsresult rv = GetBaseURIScheme(sourceURI, sourceScheme);
     if (NS_FAILED(rv)) return rv;
 
     // Some loads are not allowed from mail/news messages
     if ((aFlags & nsIScriptSecurityManager::DISALLOW_FROM_MAIL) &&
-        (nsCRT::strcasecmp(sourceScheme, "mailbox")  == 0 ||
-         nsCRT::strcasecmp(sourceScheme, "imap")     == 0 ||
-         nsCRT::strcasecmp(sourceScheme, "news")     == 0))
+        (sourceScheme.LowerCaseEqualsLiteral("mailbox") ||
+         sourceScheme.LowerCaseEqualsLiteral("imap")    ||
+         sourceScheme.LowerCaseEqualsLiteral("news")))
     {
         return NS_ERROR_DOM_BAD_URI;
     }
 
     //-- get the target scheme
-    nsXPIDLCString targetScheme;
-    rv = GetBaseURIScheme(aTargetURI, getter_Copies(targetScheme));
+    nsCAutoString targetScheme;
+    rv = GetBaseURIScheme(aTargetURI, targetScheme);
     if (NS_FAILED(rv)) return rv;
 
-    if (nsCRT::strcasecmp(targetScheme, sourceScheme) == 0)
+    if (nsCRT::strcasecmp(targetScheme.get(), sourceScheme.get()) == 0)
     {
         // every scheme can access another URI from the same scheme
         return NS_OK;
@@ -1278,7 +1276,7 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
     NS_NAMED_LITERAL_STRING(errorTag, "CheckLoadURIError");
     for (unsigned i=0; i < sizeof(protocolList)/sizeof(protocolList[0]); i++)
     {
-        if (nsCRT::strcasecmp(targetScheme, protocolList[i].name) == 0)
+        if (targetScheme.LowerCaseEqualsASCII(protocolList[i].name))
         {
             PRBool doCheck = PR_FALSE;
             switch (protocolList[i].action)
@@ -1289,12 +1287,13 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
             case PrefControlled:
                 // Allow access if pref is false
                 {
-                    mSecurityPref->SecurityGetBoolPref("security.checkloaduri", &doCheck);
+                    mSecurityPref->SecurityGetBoolPref("security.checkloaduri",
+                                                       &doCheck);
                     if (doCheck)
                     {
                         // resource: and chrome: are equivalent, securitywise
-                        if ((PL_strcmp(sourceScheme, "chrome") == 0) ||
-                            (PL_strcmp(sourceScheme, "resource") == 0))
+                        if (sourceScheme.EqualsLiteral("chrome") ||
+                            sourceScheme.EqualsLiteral("resource"))
                             return NS_OK;
 
                         ReportError(nsnull, errorTag, sourceURI, aTargetURI);
@@ -1306,8 +1305,8 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
                 if (aFlags & nsIScriptSecurityManager::ALLOW_CHROME)
                     return NS_OK;
                 // resource: and chrome: are equivalent, securitywise
-                if ((PL_strcmp(sourceScheme, "chrome") == 0) ||
-                    (PL_strcmp(sourceScheme, "resource") == 0))
+                if (sourceScheme.EqualsLiteral("chrome") ||
+                    sourceScheme.EqualsLiteral("resource"))
                     return NS_OK;
                 ReportError(nsnull, errorTag, sourceURI, aTargetURI);
                 return NS_ERROR_DOM_BAD_URI;
