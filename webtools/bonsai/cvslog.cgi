@@ -283,7 +283,7 @@ foreach $revision (@revisions)
     $output .= "<TR$bgcolor VALIGN=TOP><TD>"
         ."<A NAME=$revision>";
 
-    my $anchor = "<A HREF=cvsview2.cgi";
+    my $anchor = "cvsview2.cgi";
 
     if (defined($::prev_revision{$revision})) {
         $anchor .= "?diff_mode=context&whitespace_mode=show&file=$file_tail"
@@ -297,9 +297,9 @@ foreach $revision (@revisions)
 
     $anchor = &url_encode3($anchor);
 
-    $output .= $anchor;
+    $output .= "<A HREF=\"$anchor";
 
-    $output .= ">$revision</A>"
+    $output .= "\">$revision</A>"
         .'&nbsp' x ($max_rev_length - length($revision)).'</TD>';
 
     $output .= "<TD>".$author

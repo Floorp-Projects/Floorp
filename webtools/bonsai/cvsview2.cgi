@@ -566,9 +566,9 @@ sub do_diff_links {
 
         print '&nbsp' x (4 - length($line));
         print "<A TARGET='diff+$opt_file+$opt_rev1+$opt_rev2'",
-              "       HREF=$magic_url&command=DIFF";
+              "       HREF=\"$magic_url&command=DIFF";
         print "&root=$opt_root" if defined($opt_root);
-        print "&file=$opt_file&rev1=$opt_rev1&rev2=$opt_rev2#$anchor_num",
+        print "&file=$opt_file&rev1=$opt_rev1&rev2=$opt_rev2#$anchor_num\"",
               "       ONCLICK='anchor = $anchor_num'>$line</A> ";
         $anchor_num++;
     }
@@ -731,18 +731,18 @@ sub do_directory {
             if (!$revs_remaining--) {
                 #print '<TD ROWSPAN=2 VALIGN=TOP>';
                 print '<TD VALIGN=TOP>';
-                print "<A HREF=$magic_url&command=DIRECTORY";
+                print "<A HREF=\"$magic_url&command=DIRECTORY";
                 print "&root=$opt_root" if defined($opt_root);
-                print "&files=$opt_files&branch=$opt_branch&skip=", $opt_skip + $MAX_REVS, "><i>Prior revisions</i></A>", "</TD>\n";
+                print "&files=$opt_files&branch=$opt_branch&skip=", $opt_skip + $MAX_REVS, "\"><i>Prior revisions</i></A>", "</TD>\n";
                 last;
             }
 
             my $href_open = "";
             my $href_close = "";
             if ( $prev && $rev ) {
-                $href_open = "<A HREF=$magic_url&command=DIFF_FRAMESET";
+                $href_open = "<A HREF=\"$magic_url&command=DIFF_FRAMESET";
                 $href_open .= "&root=$opt_root" if defined($opt_root);
-                $href_open .= "&file=$file&rev1=$prev&rev2=$rev>";
+                $href_open .= "&file=$file&rev1=$prev&rev2=$rev\">";
                 $href_close = "</A>";
             }
             print "<TD>$href_open$rev$href_close<BR>";
@@ -758,9 +758,9 @@ sub do_directory {
         for (my $rev = $first_rev; $rev; $rev = $::prev_revision{$rev}) {
             next if $skip-- > 0;
             last if !$revs_remaining--;
-            print "<TD><A HREF=$magic_url&command=LOG";
+            print "<TD><A HREF=\"$magic_url&command=LOG";
             print "root=$opt_root" if defined($opt_root);
-            print "&file=$file&rev=$rev>$::revision_author{$rev}</A>",
+            print "&file=$file&rev=$rev\">$::revision_author{$rev}</A>",
             "</TD>\n";
         }
         print "</TR>\n";}
