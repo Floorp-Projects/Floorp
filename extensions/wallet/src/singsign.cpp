@@ -1790,12 +1790,6 @@ SI_LoadSignonData(PRBool fullLoad) {
     if (NS_FAILED(si_ReadLine(strmu, strmp, buffer, fullLoad, 0, 0, PR_TRUE))) {
       return -1;
     }
-    temp = (nsKeyType)(buffer.ToInteger(&error));
-    if (error) {
-      return -1;
-    }
-    saveCount = temp<<32;
-
     if (NS_FAILED(si_ReadLine(strmu, strmp, buffer, fullLoad, 0, 0, PR_TRUE))) {
       return -1;
     }
@@ -1803,19 +1797,13 @@ SI_LoadSignonData(PRBool fullLoad) {
     if (error) {
       return -1;
     }
-    saveCount += temp;
+    saveCount = temp;
 
     /* readCount */
 
     if (NS_FAILED(si_ReadLine(strmu, strmp, buffer, fullLoad, 0, 0, PR_TRUE))) {
       return -1;
     }
-    temp = (nsKeyType)(buffer.ToInteger(&error));
-    if (error) {
-      return -1;
-    }
-    readCount = temp<<32;
-
     if (NS_FAILED(si_ReadLine(strmu, strmp, buffer, fullLoad, 0, 0, PR_TRUE))) {
       return -1;
     }
@@ -1823,7 +1811,7 @@ SI_LoadSignonData(PRBool fullLoad) {
     if (error) {
       return -1;
     }
-    readCount += temp;
+    readCount = temp;
   }
 
   /* read the reject list */
@@ -2048,7 +2036,9 @@ si_SaveSignonDataLocked(PRBool fullSave) {
 
   /* format for head of file shall be:
    * format revision number
+   * unused at present
    * saveCount
+   * unused at present
    * writeCount
    */
 
@@ -2062,19 +2052,15 @@ si_SaveSignonDataLocked(PRBool fullSave) {
 
   nsAutoString buffer;
   buffer = "";
-  buffer.Append(PRInt32(saveCount>>32),10);
+  buffer.Append(PRInt32(saveCount),10);
   si_WriteLine(strmu, strmp, buffer, PR_FALSE, fullSave2, 0, 0, PR_TRUE);
-  buffer = "";
-  buffer.Append(PRInt32((saveCount<<32)>>32),10);
   si_WriteLine(strmu, strmp, buffer, PR_FALSE, fullSave2, 0, 0, PR_TRUE);
 
   /* writeCount */
 
   buffer = "";
-  buffer.Append(PRInt32(writeCount>>32),10);
+  buffer.Append(PRInt32(writeCount),10);
   si_WriteLine(strmu, strmp, buffer, PR_FALSE, fullSave2, 0, 0, PR_TRUE);
-  buffer = "";
-  buffer.Append(PRInt32((writeCount<<32)>>32),10);
   si_WriteLine(strmu, strmp, buffer, PR_FALSE, fullSave2, 0, 0, PR_TRUE);
 
   /* format for next part of file shall be:
@@ -2665,7 +2651,7 @@ SINGSIGN_Prompt
 
   /* no data found, get new data from user */
   *resultText = data.ToNewUnicode();
-  PRBool checked = PR_TRUE;
+  PRBool checked = PR_FALSE;
   res = si_CheckGetData(resultText, text, &checked);
   if (NS_FAILED(res)) {
     /* user pressed Cancel */

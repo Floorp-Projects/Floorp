@@ -1728,12 +1728,6 @@ wallet_GetHeader(nsInputFileStream strm, nsKeyType& saveCount, nsKeyType& readCo
   if (NS_FAILED(wallet_GetLine(strm, buffer, PR_FALSE, 0, 0, PR_TRUE))) {
     return;
   }
-  temp = (nsKeyType)(buffer.ToInteger(&error));
-  if (error) {
-    return;
-  }
-  saveCount = temp<<32;
-
   if (NS_FAILED(wallet_GetLine(strm, buffer, PR_FALSE, 0, 0, PR_TRUE))) {
     return;
   }
@@ -1741,18 +1735,12 @@ wallet_GetHeader(nsInputFileStream strm, nsKeyType& saveCount, nsKeyType& readCo
   if (error) {
     return;
   }
-  saveCount += (nsKeyType)(buffer.ToInteger(&error));
+  saveCount = (nsKeyType)(buffer.ToInteger(&error));
 
   /* readCount */
   if (NS_FAILED(wallet_GetLine(strm, buffer, PR_FALSE, 0, 0, PR_TRUE))) {
     return;
   }
-  temp = (nsKeyType)(buffer.ToInteger(&error));
-  if (error) {
-    return;
-  }
-  readCount = temp<<32;
-
   if (NS_FAILED(wallet_GetLine(strm, buffer, PR_FALSE, 0, 0, PR_TRUE))) {
     return;
   }
@@ -1760,7 +1748,7 @@ wallet_GetHeader(nsInputFileStream strm, nsKeyType& saveCount, nsKeyType& readCo
   if (error) {
     return;
   }
-  readCount += (nsKeyType)(buffer.ToInteger(&error));
+  readCount = (nsKeyType)(buffer.ToInteger(&error));
 }
 
 /*
@@ -1789,18 +1777,14 @@ wallet_PutHeader(nsOutputFileStream strm, nsKeyType saveCount, nsKeyType writeCo
   /* saveCount */
   nsAutoString buffer;
   buffer = "";
-  buffer.Append(PRInt32(saveCount>>32),10);
+  buffer.Append(PRInt32(saveCount),10);
   wallet_PutLine(strm, buffer, PR_FALSE, 0, 0, PR_TRUE);
-  buffer = "";
-  buffer.Append(PRInt32((saveCount<<32)>>32),10);
   wallet_PutLine(strm, buffer, PR_FALSE, 0, 0, PR_TRUE);
 
   /* writeCount */
   buffer = "";
-  buffer.Append(PRInt32(writeCount>>32),10);
+  buffer.Append(PRInt32(writeCount),10);
   wallet_PutLine(strm, buffer, PR_FALSE, 0, 0, PR_TRUE);
-  buffer = "";
-  buffer.Append(PRInt32((writeCount<<32)>>32),10);
   wallet_PutLine(strm, buffer, PR_FALSE, 0, 0, PR_TRUE);
 }
 
