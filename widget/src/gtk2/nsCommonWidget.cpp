@@ -36,6 +36,10 @@
 #include "nsCommonWidget.h"
 #include "nsGtkKeyUtils.h"
 
+#ifdef PR_LOGGING
+PRLogModuleInfo *gWidgetLog = nsnull;
+#endif
+
 nsCommonWidget::nsCommonWidget()
 {
   mIsTopLevel       = PR_FALSE;
@@ -47,6 +51,12 @@ nsCommonWidget::nsCommonWidget()
 
   mPreferredWidth   = 0;
   mPreferredHeight  = 0;
+
+#ifdef PR_LOGGING
+  if (!gWidgetLog)
+    gWidgetLog = PR_NewLogModule("Widget");
+#endif
+
 }
 
 nsCommonWidget::~nsCommonWidget()
@@ -288,13 +298,13 @@ nsCommonWidget::Show(PRBool aState)
 {
   mIsShown = aState;
 
-  printf("nsCommonWidget::Show [%p] state %d\n", (void *)this, aState);
+  LOG(("nsCommonWidget::Show [%p] state %d\n", (void *)this, aState));
 
   // Ok, someone called show on a window that isn't sized to a sane
   // value.  Mark this window as needing to have Show() called on it
   // and return.
   if (aState && !AreBoundsSane()) {
-    printf("\tbounds are insane\n");
+    LOG(("\tbounds are insane\n"));
     mNeedsShow = PR_TRUE;
     return NS_OK;
   }
@@ -306,7 +316,7 @@ nsCommonWidget::Show(PRBool aState)
   // If someone is showing this window and it needs a resize then
   // resize the widget.
   if (aState && mNeedsResize) {
-    printf("\tresizing\n");
+    LOG(("\tresizing\n"));
     NativeResize(mBounds.x, mBounds.y, mBounds.width, mBounds.height,
 		 PR_FALSE);
   }

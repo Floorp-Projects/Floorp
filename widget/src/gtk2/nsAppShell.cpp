@@ -39,6 +39,9 @@
 #include "plhash.h"
 #include "prenv.h"
 
+// to get the logging stuff
+#include "nsCommonWidget.h"
+
 #include <gtk/gtkmain.h>
 
 static PRBool sInitialized = PR_FALSE;
@@ -154,12 +157,20 @@ nsAppShell::Spinup(void)
 NS_IMETHODIMP
 nsAppShell::Spindown(void)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // stop listening to the event queue
+  if (mEventQueue) {
+    ListenToEventQueue(mEventQueue, PR_FALSE);
+    mEventQueue->ProcessPendingEvents();
+    mEventQueue = nsnull;
+  }
+  return NS_OK;
+
 }
 
 NS_IMETHODIMP
 nsAppShell::ListenToEventQueue(nsIEventQueue *aQueue, PRBool aListen)
 {
+  LOG(("ListenToEventQueue %p %d\n", (void *)aQueue, aListen));
   // initialize our hash tables if we have to
   if (!sQueueHashTable)
     sQueueHashTable = PL_NewHashTable(3, (PLHashFunction)IntHashKey,
@@ -168,47 +179,48 @@ nsAppShell::ListenToEventQueue(nsIEventQueue *aQueue, PRBool aListen)
     sCountHashTable = PL_NewHashTable(3, (PLHashFunction)IntHashKey,
 				      PL_CompareValues, PL_CompareValues, 0, 0);
 
-  if (aListen) {
-    /* add a listener */
-    PRInt32 key = aQueue->GetEventQueueSelectFD();
+  PRInt32 key = aQueue->GetEventQueueSelectFD();
 
+  /* add a listener */
+  if (aListen) {
     /* only add if we arn't already in the table */
     if (!PL_HashTableLookup(sQueueHashTable, GINT_TO_POINTER(key))) {
       GIOChannel *ioc;
+      guint       tag;
       ioc = g_io_channel_unix_new(key);
-      g_io_add_watch_full (ioc, G_PRIORITY_HIGH_IDLE,
-			   G_IO_IN,
-			   event_processor_callback, aQueue, NULL);
-      
-      if (ioc) {
-        PL_HashTableAdd(sQueueHashTable, GINT_TO_POINTER(key),
-			ioc);
-      }
+      tag = g_io_add_watch_full (ioc, G_PRIORITY_HIGH_IDLE,
+				 G_IO_IN,
+				 event_processor_callback, aQueue, NULL);
+      // it's owned by the mainloop now
+      g_io_channel_unref(ioc);
+      PL_HashTableAdd(sQueueHashTable, GINT_TO_POINTER(key),
+		      GUINT_TO_POINTER(tag));
+      LOG(("created tag %d from key %d\n", tag, key));
     }
     /* bump up the count */
     gint count = GPOINTER_TO_INT(PL_HashTableLookup(sCountHashTable, 
 						    GINT_TO_POINTER(key)));
     PL_HashTableAdd(sCountHashTable, GINT_TO_POINTER(key), 
 		    GINT_TO_POINTER(count+1));
+    LOG(("key %d now has count %d\n", key, count+1));
   } else {
     /* remove listener */
-    PRInt32 key = aQueue->GetEventQueueSelectFD();
-    
     gint count = GPOINTER_TO_INT(PL_HashTableLookup(sCountHashTable,
 						    GINT_TO_POINTER(key)));
+    LOG(("key %d will have count %d\n", key, count-1));
     if (count - 1 == 0) {
-      GIOChannel *ioc = (GIOChannel *)PL_HashTableLookup(sQueueHashTable,
-							 GINT_TO_POINTER(key));
-      if (ioc) {
-	g_io_channel_shutdown (ioc, TRUE, NULL);
-	g_io_channel_unref(ioc);
-        PL_HashTableRemove(sQueueHashTable, GINT_TO_POINTER(key));
-      }
+      guint tag = GPOINTER_TO_UINT(PL_HashTableLookup(sQueueHashTable,
+						      GINT_TO_POINTER(key)));
+      LOG(("shutting down tag %d\n", tag));
+      g_source_remove(tag);
+      PL_HashTableRemove(sQueueHashTable, GINT_TO_POINTER(key));
+      PL_HashTableRemove(sCountHashTable, GINT_TO_POINTER(key));
     }
-
-    // update the count for this key
-    PL_HashTableAdd(sCountHashTable, GINT_TO_POINTER(key),
-		    GINT_TO_POINTER(count-1));
+    else {
+      // update the count for this key
+      PL_HashTableAdd(sCountHashTable, GINT_TO_POINTER(key),
+		      GINT_TO_POINTER(count-1));
+    }
   }
 
   return NS_OK;

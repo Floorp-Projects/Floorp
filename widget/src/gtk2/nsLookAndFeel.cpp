@@ -256,8 +256,6 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor& aColor)
     break;
   }
 
-  //  printf("%i, %i, %i\n", NS_GET_R(aColor), NS_GET_B(aColor), NS_GET_G(aColor));
-
   return res;
 }
 
