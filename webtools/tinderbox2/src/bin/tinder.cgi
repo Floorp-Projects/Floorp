@@ -2,8 +2,8 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# $Revision: 1.36 $ 
-# $Date: 2003/08/17 16:23:59 $ 
+# $Revision: 1.37 $ 
+# $Date: 2004/07/18 16:43:27 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/tinder.cgi,v $ 
 # $Name:  $ 
@@ -350,6 +350,11 @@ sub HTML_status_page {
                            "\?".
                            "tree=$tree"),
                   ).
+  "<br>\n".
+    HTMLPopUp::Link(
+                    "linktxt"=>"Tinderbox Index", 
+                    "href"=>("$FileStructure::URLS{'indexpage'}"),
+                    ).
   "<br>\n";
   my ($links) = 
     HTMLPopUp::Link(
