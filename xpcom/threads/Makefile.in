@@ -48,7 +48,7 @@ EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
 LOCAL_INCLUDES = -I$(srcdir)/../components
 
-DEFINES += -D_IMPL_NS_WIDGET
+DEFINES +=  -D_IMPL_NS_COM -D_IMPL_NS_BASE
 
 REQUIRES = xpcom
 
