@@ -1124,8 +1124,7 @@ struct nsStyleUserInterface: public nsStyleStruct {
   PRUint8   mUserModify;      // [inherited] (modify-content)
   PRUint8   mUserFocus;       // [inherited] (auto-select)
   
-  PRUint8 mCursor;                // [inherited] See nsStyleConsts.h NS_STYLE_CURSOR_*
-  nsCOMPtr<nsIURI> mCursorImage; // [inherited] url string
+  PRUint8   mCursor;          // [inherited] See nsStyleConsts.h
 };
 
 struct nsStyleXUL : public nsStyleStruct {

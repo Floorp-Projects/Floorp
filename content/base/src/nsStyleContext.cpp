@@ -782,12 +782,11 @@ void nsStyleContext::DumpRegressionData(nsIPresContext* aPresContext, FILE* out,
   // UI
   IndentBy(out,aIndent);
   const nsStyleUserInterface* ui = GetStyleUserInterface();
-  fprintf(out, "<ui data=\"%d %d %d %d %s\" />\n",
+  fprintf(out, "<ui data=\"%d %d %d %d\" />\n",
     (int)ui->mUserInput,
     (int)ui->mUserModify,
     (int)ui->mUserFocus, 
-    (int)ui->mCursor,
-    URICString(ui->mCursorImage).get());
+    (int)ui->mCursor);
 
   // UIReset
   IndentBy(out,aIndent);

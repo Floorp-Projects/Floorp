@@ -1812,17 +1812,13 @@ nsComputedDOMStyle::GetCursor(nsIFrame *aFrame,
   GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)ui, aFrame);
 
   if (ui) {
-    if (ui->mCursorImage) {
-      val->SetURI(ui->mCursorImage);
+    if (ui->mCursor == NS_STYLE_CURSOR_AUTO) {
+      val->SetIdent(NS_LITERAL_STRING("auto"));
     } else {
-      if (ui->mCursor == NS_STYLE_CURSOR_AUTO) {
-        val->SetIdent(NS_LITERAL_STRING("auto"));
-      } else {
-        const nsAFlatCString& cursor =
-          nsCSSProps::SearchKeywordTable(ui->mCursor,
-                                         nsCSSProps::kCursorKTable);
-        val->SetIdent(cursor);
-      }
+      const nsAFlatCString& cursor =
+        nsCSSProps::SearchKeywordTable(ui->mCursor,
+                                       nsCSSProps::kCursorKTable);
+      val->SetIdent(cursor);
     }
   } else {
     val->SetIdent(NS_LITERAL_STRING("auto"));
