@@ -330,7 +330,7 @@ nsTraceRefcnt::WalkTheStack(char* aBuffer, int aBufLen)
       PRInt32 addrStrLen = nsIToA16(off, cp);
       cp += addrStrLen;
 
-      *cp++ = ' ';
+      *cp++ = '\t';
 
       aBufLen -= addrStrLen + 4;
     }
@@ -477,7 +477,7 @@ nsTraceRefcnt::LogAddRef(void* aPtr,
     char sb[16384];
     WalkTheStack(sb, sizeof(sb));
     // Can't use PR_LOG(), b/c it truncates the line
-    printf("%s(%d) %p AddRef %d %s\n", aFile, aLine, aPtr, aRefCnt, sb);
+    printf("%s(%d)\t%p\tAddRef\t%d\t%s\n", aFile, aLine, aPtr, aRefCnt, sb);
   }
 }
 
@@ -493,7 +493,7 @@ nsTraceRefcnt::LogRelease(void* aPtr,
     char sb[16384];
     WalkTheStack(sb, sizeof(sb));
     // Can't use PR_LOG(), b/c it truncates the line
-    printf("%s(%d) %p Release %d %s\n", aFile, aLine, aPtr, aRefCnt, sb);
+    printf("%s(%d)\t%p\tRelease\t%d\t%s\n", aFile, aLine, aPtr, aRefCnt, sb);
   }
 }
 
