@@ -77,8 +77,7 @@ NS_METHOD
 nsIOService::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
     nsresult rv;
-    if (aOuter)
-        return NS_ERROR_NO_AGGREGATION;
+    NS_ENSURE_NO_AGGREGATION(aOuter);
 
     nsIOService* _ios = new nsIOService();
     if (_ios == nsnull)
@@ -111,6 +110,7 @@ nsIOService::GetProtocolHandler(const char* scheme, nsIProtocolHandler* *result)
                  == nsCRT::strlen(NS_NETWORK_PROTOCOL_PROGID_PREFIX),
                  "need to fix NS_NETWORK_PROTOCOL_PROGID_PREFIX_LENGTH");
 
+    NS_ENSURE_ARG_POINTER(scheme);
     // XXX we may want to speed this up by introducing our own protocol 
     // scheme -> protocol handler mapping, avoiding the string manipulation
     // and service manager stuff
@@ -133,8 +133,7 @@ nsIOService::ExtractScheme(const char* inURI, PRUint32 *startPos, PRUint32 *endP
                            char* *scheme)
 {
     // search for something up to a colon, and call it the scheme
-    NS_ASSERTION(inURI, "null pointer");
-    if (!inURI) return NS_ERROR_NULL_POINTER;
+    NS_ENSURE_ARG_POINTER(inURI);
 
     const char* uri = inURI;
 
@@ -180,6 +179,7 @@ nsIOService::NewURI(const char* aSpec, nsIURI* aBaseURI,
 {
     nsresult rv;
     nsIURI* base;
+    NS_ENSURE_ARG_POINTER(aSpec);
     char* scheme;
     rv = ExtractScheme(aSpec, nsnull, nsnull, &scheme);
     if (NS_SUCCEEDED(rv)) {
@@ -219,6 +219,7 @@ NS_IMETHODIMP
 nsIOService::NewChannelFromURI(nsIURI *aURI, nsIChannel **result)
 {
     nsresult rv;
+    NS_ENSURE_ARG_POINTER(aURI);
 
     nsXPIDLCString scheme;
     rv = aURI->GetScheme(getter_Copies(scheme));
