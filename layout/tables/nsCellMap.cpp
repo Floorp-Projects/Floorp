@@ -601,8 +601,7 @@ void nsCellMap::GrowRow(nsVoidArray& aRow,
                         PRInt32      aNumCols)
                      
 {
-  const PRInt32 colsInRow = aRow.Count();
-  for (PRInt32 colX = colsInRow; colX < aNumCols; colX++) {
+  for (PRInt32 colX = 0; colX < aNumCols; colX++) {
     aRow.AppendElement(nsnull);
   }
 }
