@@ -433,6 +433,10 @@ nsImageBoxFrame::PaintImage(nsIPresContext* aPresContext,
 
 #ifdef USE_IMG2
   nsCOMPtr<imgIContainer> imgCon;
+#ifdef DEBUG_pavlov
+  NS_ASSERTION(mImageRequest, "pav, fix me!");
+#endif
+  if (!mImageRequest) return NS_ERROR_UNEXPECTED;
   mImageRequest->GetImage(getter_AddRefs(imgCon));
 
   if (imgCon) {
