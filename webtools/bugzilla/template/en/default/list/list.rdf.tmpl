@@ -38,7 +38,7 @@
           <bz:id nc:parseType="Integer">[% bug.bug_id %]</bz:id>
         
         [% FOREACH column = displaycolumns %]
-          <bz:[% column %]>[% bug.$column FILTER html %]</bz:[% column %]>
+          <bz:[% column %][% ' nc:parseType="Integer"' IF column == "votes" %]>[% bug.$column FILTER html %]</bz:[% column %]>
         [% END %]
         
         </bz:bug>
