@@ -378,6 +378,29 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSServices</key>
+	<array>
+		<dict>
+			<key>NSKeyEquivalent</key>
+			<dict>
+				<key>default</key>
+				<string>U</string>
+			</dict>
+			<key>NSMenuItem</key>
+			<dict>
+				<key>default</key>
+				<string>Open URL in Navigator</string>
+			</dict>
+			<key>NSMessage</key>
+			<string>openURL</string>
+			<key>NSPortName</key>
+			<string>Navigator</string>
+			<key>NSSendTypes</key>
+			<array>
+				<string>NSStringPboardType</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>
 ";
@@ -4197,6 +4220,29 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSServices</key>
+	<array>
+		<dict>
+			<key>NSKeyEquivalent</key>
+			<dict>
+				<key>default</key>
+				<string>U</string>
+			</dict>
+			<key>NSMenuItem</key>
+			<dict>
+				<key>default</key>
+				<string>Open URL in Navigator</string>
+			</dict>
+			<key>NSMessage</key>
+			<string>openURL</string>
+			<key>NSPortName</key>
+			<string>Navigator</string>
+			<key>NSSendTypes</key>
+			<array>
+				<string>NSStringPboardType</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>
 ";
