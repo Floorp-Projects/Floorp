@@ -734,7 +734,7 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
     NSModule h = NULL;
     if (NSCreateObjectFileImageFromFile(name, &ofi)
             == NSObjectFileImageSuccess) {
-        h = NSLinkModule(ofi, name, TRUE);
+        h = NSLinkModule(ofi, name, NSLINKMODULE_OPTION_PRIVATE);
     }
 #else
 #error Configuration error
@@ -1083,7 +1083,14 @@ pr_FindSymbolInLib(PRLibrary *lm, const char *name)
         f = NULL;
     }
 #elif defined(USE_MACH_DYLD)
-    f = NSAddressOfSymbol(NSLookupAndBindSymbol(name));
+    {
+        NSSymbol symbol;
+        symbol = NSLookupSymbolInModule(lm->dlh, name);
+        if (symbol != NULL)
+            f = NSAddressOfSymbol(symbol);
+        else
+            f = NULL;
+    }
 #endif
 #endif /* HAVE_DLL */
 #endif /* XP_UNIX */
