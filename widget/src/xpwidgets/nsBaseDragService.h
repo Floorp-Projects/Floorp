@@ -42,6 +42,9 @@ public:
   NS_IMETHOD SetCanDrop (PRBool aCanDrop); 
   NS_IMETHOD GetCanDrop (PRBool * aCanDrop); 
 
+  NS_IMETHOD SetDragAction (PRUint32 anAction); 
+  NS_IMETHOD GetDragAction (PRUint32 * anAction); 
+
   NS_IMETHOD SetTargetSize (nsSize aDragTargetSize); 
   NS_IMETHOD GetTargetSize (nsSize * aDragTargetSize); 
 
@@ -53,7 +56,7 @@ protected:
   nsCOMPtr<nsITransferable> mTransferable;
   PRBool            mCanDrop;
   nsSize            mTargetSize;
-
+  PRUint32          mDragAction;
 };
 
 #endif // nsBaseDragService_h__
