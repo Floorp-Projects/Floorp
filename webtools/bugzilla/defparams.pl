@@ -247,7 +247,7 @@ DefParam("bodyhtml",
          'BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000"');
 
 DefParam("footerhtml",
-         "HTML to add to the bottom of every page. By default it displays the blurbhtml, and %commandmenu%, a menu of useful commands.  You probably really want either headerhtml or footerhtml to include %commandmenu%.",
+         "HTML to add to the bottom of every page. By default it displays the blurbhtml, and %commandmenu%, a menu of useful commands.  You probably really want either bannerhtml or footerhtml to include %commandmenu%.",
          "l",
          '<TABLE BORDER="0"><TR><TD BGCOLOR="#000000" VALIGN="TOP">
 <TABLE BORDER="0" CELLPADDING="10" CELLSPACING="0" WIDTH="100%" BGCOLOR="lightyellow">
