@@ -64,7 +64,8 @@ namespace JavaScript
             compileExpressionError,
             propertyAccessError,
             uninitializedError,
-            argumentMismatchError
+            argumentMismatchError,
+            attributeError
         };
         
         Kind kind;              // The exception's kind
@@ -97,6 +98,12 @@ namespace JavaScript
         bool hasKind(Kind k) const {return kind == k;}
         const char *kindString() const;
         String fullMessage() const;
+    };
+
+    struct JS2UserException : public Exception {
+
+        JS2UserException(js2val x) : Exception(userException, "User Exception"), userValue(x) { }
+        js2val userValue;
     };
 
 

@@ -134,6 +134,7 @@ namespace MetaData {
                                 // interpreter loop was re-invoked (probably a 'load' or 'eval' is
                                 // in process). In this case we simply re-throw the exception and let
                                 // the prior invocation deal with it.
+
                                 throw jsx;
                             }
                             // we need to clean up each activation as we pop it off
@@ -665,7 +666,7 @@ namespace MetaData {
         case TYPE_PTR:
             {
                 JS2Class *c = BytecodeContainer::getType(pc);
-                stdOut << " " << *c->getName();
+                stdOut << " " << *c->name;
                 pc += sizeof(JS2Class *);
             }
             break;

@@ -286,7 +286,7 @@ public:
 class Attribute : public JS2Object {
 public:
     enum AttributeKind { TrueAttr, FalseAttr, NamespaceAttr, CompoundAttr };
-    enum MemberModifier { NoModifier, Static, Constructor, Abstract, Virtual, Final};
+    enum MemberModifier { NoModifier, Static, Virtual, Final};
     enum OverrideModifier { NoOverride, DoOverride, DontOverride, OverrideUndefined };
 
 
@@ -733,14 +733,15 @@ class JS2Class : public NonWithFrame {
 public:
     JS2Class(JS2Class *super, js2val proto, Namespace *privateNamespace, bool dynamic, bool final, const String *name);
 
-    const String *getName()                     { return typeofString; }
+    const String *getTypeofString()             { return typeofString; }
         
     JS2Class    *super;                         // This class's immediate superclass or null if none
     InstanceBindingMap instanceBindings;        // Map of qualified names to instance members defined in this class    
     InstanceVariable **instanceInitOrder;       // List of instance variables defined in this class in the order in which they are initialised
     bool complete;                              // true after all members of this class have been added to this CLASS record
+    const String *name;                         // This class's name
     js2val prototype;                           // The default value of the super field of newly created simple instances of this class; <none> for most classes
-    const String *typeofString;
+    const String *typeofString;                 // A strign to return if typeof is invoked on this class's instances
     Namespace *privateNamespace;                // This class's private namespace
     bool dynamic;                               // true if this class or any of its ancestors was defined with the dynamic attribute
     bool final;                                 // true if this class cannot be subclassed
@@ -1342,6 +1343,10 @@ public:
     void ValidateExpression(Context *cxt, Environment *env, ExprNode *p);
     void ValidateAttributeExpression(Context *cxt, Environment *env, ExprNode *p);
     FunctionInstance *validateStaticFunction(FunctionDefinition *fnDef, js2val compileThis, bool prototype, bool unchecked, Context *cxt, Environment *env);
+
+    void validateStatic(FunctionDefinition *fnDef, CompoundAttribute *a, bool unchecked, bool hoisted);
+    void validateConstructor(FunctionDefinition *fnDef, JS2Class *c, CompoundAttribute *a);
+    void validateInstance(FunctionDefinition *fnDef, JS2Class *c, CompoundAttribute *a, bool final);
 
     js2val ExecuteStmtList(Phase phase, StmtNode *p);
     js2val EvalExpression(Environment *env, Phase phase, ExprNode *p);

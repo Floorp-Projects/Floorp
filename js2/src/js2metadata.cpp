@@ -85,6 +85,18 @@ namespace MetaData {
         }
     }
 
+    void JS2Metadata::validateStatic(FunctionDefinition *fnDef, CompoundAttribute *a, bool unchecked, bool hoisted)
+    {
+    }
+
+    void JS2Metadata::validateConstructor(FunctionDefinition *fnDef, JS2Class *c, CompoundAttribute *a)
+    {
+    }
+
+    void JS2Metadata::validateInstance(FunctionDefinition *fnDef, JS2Class *c, CompoundAttribute *a, bool final)
+    {
+    }
+
     FunctionInstance *JS2Metadata::validateStaticFunction(FunctionDefinition *fnDef, js2val compileThis, bool prototype, bool unchecked, Context *cxt, Environment *env)
     {
         ParameterFrame *compileFrame = new ParameterFrame(compileThis, prototype);
@@ -264,28 +276,6 @@ namespace MetaData {
                             case StmtNode::block:
                                 g->blockCount++;
                                 break;
-/*
-                            case StmtNode::While:
-                            case StmtNode::DoWhile:
-                                {
-                                    UnaryStmtNode *w = checked_cast<UnaryStmtNode *>(*si);
-                                    tgt = w->breakLabelID;
-                                }
-                                break;
-                            case StmtNode::For:
-                            case StmtNode::ForIn:
-                                {
-                                    ForStmtNode *f = checked_cast<ForStmtNode *>(*si);
-                                    tgt = f->breakLabelID;
-                                }
-                                break;
-                            case StmtNode::Switch:
-                                {
-                                    SwitchStmtNode *s = checked_cast<SwitchStmtNode *>(*si);
-                                    tgt = s->breakLabelID;
-                                }
-                                break;
-*/
                             }
                         }
                     }
@@ -324,65 +314,6 @@ namespace MetaData {
                         reportError(Exception::syntaxError, "No break target available", p->pos);
                 }
                 break;
-
-/*                
-                {
-                    GoStmtNode *g = checked_cast<GoStmtNode *>(p);
-                    g->blockCount = 0;
-                    g->tgtID = -1;
-                    for (TargetListReverseIterator si = targetList.rbegin(), end = targetList.rend(); 
-                                ((g->tgtID == -1) && (si != end)); si++) {
-                        if (g->name) {
-                            // Make sure the name is on the targetList as a viable break target...
-                            // (only label statements can introduce names)
-                            if ((*si)->getKind() == StmtNode::label) {
-                                LabelStmtNode *l = checked_cast<LabelStmtNode *>(*si);
-                                if (l->name == *g->name) {
-                                    g->tgtID = l->labelID;
-                                    break;
-                                }
-                            }
-                        }
-                        else {
-                            // anything at all will do
-                            switch ((*si)->getKind()) {
-                            case StmtNode::block:
-                                g->blockCount++;
-                                break;
-                            case StmtNode::label:
-                                {
-                                    LabelStmtNode *l = checked_cast<LabelStmtNode *>(*si);
-                                    g->tgtID = l->labelID;
-                                }
-                                break;
-                            case StmtNode::While:
-                            case StmtNode::DoWhile:
-                                {
-                                    UnaryStmtNode *w = checked_cast<UnaryStmtNode *>(*si);
-                                    g->tgtID = w->breakLabelID;
-                                }
-                                break;
-                            case StmtNode::For:
-                            case StmtNode::ForIn:
-                                {
-                                    ForStmtNode *f = checked_cast<ForStmtNode *>(*si);
-                                    g->tgtID = f->breakLabelID;
-                                }
-                                break;
-                            case StmtNode::Switch:
-                                {
-                                    SwitchStmtNode *s = checked_cast<SwitchStmtNode *>(*si);
-                                    g->tgtID = s->breakLabelID;
-                                }
-                                break;
-                            }
-                        }
-                    }
-                    if (g->tgtID == -1) 
-                        reportError(Exception::syntaxError, "No break target available", p->pos);
-                }
-                break;
-*/
             case StmtNode::Continue:
                 {
                     GoStmtNode *g = checked_cast<GoStmtNode *>(p);
@@ -498,23 +429,56 @@ namespace MetaData {
                     }
                     a = Attribute::toCompoundAttribute(attr);
                     if (a->dynamic)
-                        reportError(Exception::definitionError, "Illegal attribute", p->pos);
-                    VariableBinding *vb = f->function.parameters;
-                    bool untyped = (f->function.resultType == NULL);
-                    if (untyped) {
-                        while (vb) {
-                            if (vb->type) {
-                                untyped = false;
-                                break;
-                            }
-                            vb = vb->next;
+                        reportError(Exception::attributeError, "A function cannot have the dynamic attribute", p->pos);
+                    Frame *topFrame = env->getTopFrame();
+                    if (topFrame->kind == ClassKind) {
+                        switch (a->memberMod) {
+                        case Attribute::Static:
+                            validateStatic(&f->function, a, false, false);
+                            break;
+                        case Attribute::NoModifier:
+                            if (*f->function.name == *(checked_cast<JS2Class *>(topFrame))->name)
+                                validateConstructor(&f->function, checked_cast<JS2Class *>(topFrame), a);
+                            else
+                                validateInstance(&f->function, checked_cast<JS2Class *>(topFrame), a, false);
+                            break;
+                        case Attribute::Virtual:
+                            validateInstance(&f->function, checked_cast<JS2Class *>(topFrame), a, false);
+                            break;
+                        case Attribute::Final:
+                            validateInstance(&f->function, checked_cast<JS2Class *>(topFrame), a, true);
+                            break;
                         }
                     }
-                    bool unchecked = !cxt->strict && (env->getTopFrame()->kind != ClassKind)
-                                        && (f->function.prefix == FunctionName::normal) && untyped;
+                    else {
+                        if (a->memberMod != Attribute::NoModifier)
+                            reportError(Exception::attributeError, "Non-class-member functions cannot have a static, virtual or final attribute", p->pos);
+                        // discover Plain[function] by looking for typed parameters or result
+                        VariableBinding *vb = f->function.parameters;
+                        bool untyped = (f->function.resultType == NULL);
+                        if (untyped) {
+                            while (vb) {
+                                if (vb->type) {
+                                    untyped = false;
+                                    break;
+                                }
+                                vb = vb->next;
+                            }
+                        }
+                        bool unchecked = !cxt->strict && (f->function.prefix == FunctionName::normal) && untyped;
+                        bool hoisted = unchecked 
+                                        && (f->attributes == NULL)
+                                        && ((topFrame->kind == PackageKind)
+                                                        || (topFrame->kind == BlockFrameKind)
+                                                        || (topFrame->kind == ParameterFrameKind));
+                        validateStatic(&f->function, a, unchecked, hoisted);
+                    }
+                    
+                    
+/*                    
                     bool prototype = unchecked || a->prototype;
                     Attribute::MemberModifier memberMod = a->memberMod;
-                    if (env->getTopFrame()->kind == ClassKind) {
+                    if (topFrame->kind == ClassKind) {
                         if (memberMod == Attribute::NoModifier)
                             memberMod = Attribute::Virtual;
                     }
@@ -530,7 +494,6 @@ namespace MetaData {
                                   || (memberMod == Attribute::Virtual) 
                                   || (memberMod == Attribute::Final))
                         compileThis = JS2VAL_INACCESSIBLE;
-                    Frame *topFrame = env->getTopFrame();
 
                     switch (memberMod) {
                     case Attribute::NoModifier:
@@ -576,17 +539,8 @@ namespace MetaData {
                             defineInstanceMember(c, cxt, f->function.name, a->namespaces, a->overrideMod, a->xplicit, m, p->pos);
                         }
                         break;
-                    case Attribute::Constructor:
-                        {
-                    // XXX Here the spec. has ???, so the following is tentative
-                            ASSERT(!prototype); // XXX right?
-                            FunctionInstance *fObj = validateStaticFunction(&f->function, compileThis, prototype, unchecked, cxt, env);
-                            ConstructorMethod *cm = new ConstructorMethod(OBJECT_TO_JS2VAL(fObj));
-                            defineLocalMember(env, f->function.name, &a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, cm, p->pos, true);
-                        }
-                        break;
                     }
-
+*/
                 }
                 break;
             case StmtNode::Var:
@@ -1616,10 +1570,6 @@ namespace MetaData {
                 switch (name.tokenKind) {
                 case Token::Public:
                     return publicNamespace;
-                case Token::Abstract:
-                    ca = new CompoundAttribute();
-                    ca->memberMod = Attribute::Abstract;
-                    return ca;
                 case Token::Final:
                     ca = new CompoundAttribute();
                     ca->memberMod = Attribute::Final;
@@ -1634,12 +1584,6 @@ namespace MetaData {
                     ca->memberMod = Attribute::Static;
                     return ca;
                 case Token::identifier:
-                    if (name == world.identifiers["constructor"]) {
-                        ca = new CompoundAttribute();
-                        ca->memberMod = Attribute::Constructor;
-                        return ca;
-                    }
-                    else
                     if (name == world.identifiers["override"]) {
                         ca = new CompoundAttribute();
                         ca->overrideMod = Attribute::DoOverride;
@@ -3727,7 +3671,7 @@ static const uint8 urlCharType[256] =
         }
         else {
             JS2Class *type = (checked_cast<SimpleInstance *>(obj))->type;
-            String s = "[object " + *type->getName() + "]";
+            String s = "[object " + *type->name + "]";
             return STRING_TO_JS2VAL(meta->engine->allocString(s));
         }
     }

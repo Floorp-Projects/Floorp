@@ -282,7 +282,7 @@ void printLocalBindings(LocalBindingMap *lMap, ValueList *frameSlots)
             case Member::VariableMember:
                 {
                     Variable *v = checked_cast<Variable *>(m);
-                    stdOut << ":" << *v->type->getName();
+                    stdOut << ":" << *v->type->name;
                     accessAccess(ns.second->accesses);
                     stdOut << ((v->immutable) ? "immutable " : "non-immutable ");
                     stdOut << *metadata->toString(v->value) << "\n";
@@ -304,7 +304,7 @@ void printInstanceVariables(JS2Class *c, Slot *slots)
             InstanceBindingEntry::NamespaceBinding ns = *i;
             if (ns.second->content->memberKind == Member::InstanceVariableMember) {
                 InstanceVariable *iv = checked_cast<InstanceVariable *>(ns.second->content);
-                stdOut << "\t" << *(ns.first->name) << "::" << ibe->name << ":" << *iv->type->getName();
+                stdOut << "\t" << *(ns.first->name) << "::" << ibe->name << ":" << *iv->type->name;
                 accessAccess(ns.second->accesses);
                 stdOut << *metadata->toString(slots[iv->slotIndex].value) << "\n";
             }
@@ -333,7 +333,7 @@ js2val dump(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint
                     else
                         stdOut << "super = " << *metadata->toString(s->super) << '\n';
                     stdOut << ((s->sealed) ? "sealed " : "not-sealed ") << '\n';
-                    stdOut << "type = " << *s->type->getName() << '\n';
+                    stdOut << "type = " << *s->type->name << '\n';
                     printLocalBindings(&s->localBindings, NULL);
                     stdOut << " Instance Bindings:\n";   
                     printInstanceVariables(s->type, s->slots);
@@ -350,9 +350,9 @@ js2val dump(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint
             case ClassKind:
                 {
                     JS2Class *c = checked_cast<JS2Class *>(fObj);
-                    stdOut << "class " << *c->getName();
+                    stdOut << "class " << *c->name;
                     if (c->super)
-                        stdOut << " extends " << *c->super->getName();
+                        stdOut << " extends " << *c->super->name;
                     stdOut << "\n";
                     stdOut << ((c->dynamic) ? " dynamic, " : " non-dynamic, ") << ((c->final) ? "final" : "non-final") << "\n";
                     stdOut << " slotCount = " << c->slotCount << "\n";
@@ -366,7 +366,7 @@ js2val dump(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint
                             case Member::InstanceVariableMember:
                                 {
                                     InstanceVariable *iv = checked_cast<InstanceVariable *>(ns.second->content);
-                                    stdOut << "\tVariable " << *(ns.first->name) << "::" << ibe->name << ":" << *iv->type->getName();
+                                    stdOut << "\tVariable " << *(ns.first->name) << "::" << ibe->name << ":" << *iv->type->name;
                                     accessAccess(ns.second->accesses);
                                     stdOut << ((iv->immutable) ? " immutable, " : " non-immutable, ") << ((iv->final) ? "final, " : "non-final, ") << ((iv->enumerable) ? "enumerable, " : "non-enumerable, ") ;
                                     stdOut << "slot:" << iv->slotIndex << ", defaultValue:" << *metadata->toString(iv->defaultValue) << "\n";

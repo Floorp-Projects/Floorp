@@ -126,7 +126,7 @@ static void initErrorClass(JS2Metadata *meta, JS2Class *c, Constructor *construc
 {
     meta->initBuiltinClass(c, NULL, constructor, constructor);
     c->prototype = OBJECT_TO_JS2VAL(new SimpleInstance(meta, meta->errorClass->prototype, meta->errorClass));
-    meta->createDynamicProperty(JS2VAL_TO_OBJECT(c->prototype), &meta->world.identifiers["name"], meta->engine->allocString(c->getName()), ReadAccess, true, true);
+    meta->createDynamicProperty(JS2VAL_TO_OBJECT(c->prototype), &meta->world.identifiers["name"], meta->engine->allocString(c->name), ReadAccess, true, true);
     meta->createDynamicProperty(JS2VAL_TO_OBJECT(c->prototype), &meta->world.identifiers["message"], meta->engine->allocString("Message"), ReadAccess, true, true);
 }
 
