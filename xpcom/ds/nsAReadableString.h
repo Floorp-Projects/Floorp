@@ -1184,11 +1184,11 @@ class nsPromiseSubstring
           // nothing else to do here
         }
 
-      nsPromiseSubstring( const nsReadingIterator<CharT>& aStart, const nsReadingIterator<CharT>& aEnd )
-          : mString(*aStart.mOwningString)
+      nsPromiseSubstring( const basic_nsAReadableString<CharT>& aString, const nsReadingIterator<CharT>& aStart, const nsReadingIterator<CharT>& aEnd )
+          : mString(aString)
         {
           nsReadingIterator<CharT> zeroPoint;
-          mOwningString.BeginReading(zeroPoint);
+          mString.BeginReading(zeroPoint);
           mStartPos = Distance(zeroPoint, aStart);
           mLength = Distance(aStart, aEnd);
         }
@@ -1289,9 +1289,9 @@ Substring( const basic_nsAReadableString<CharT>& aString, PRUint32 aStartPos, PR
 
 template <class CharT>
 nsPromiseSubstring<CharT>
-Substring( const nsReadingIterator<CharT>& aStart, const nsReadingIterator<CharT>& aEnd )
+Substring( const basic_nsAReadableString<CharT>& aString, const nsReadingIterator<CharT>& aStart, const nsReadingIterator<CharT>& aEnd )
   {
-    return nsPromiseSubstring<CharT>(aStart, aEnd);
+    return nsPromiseSubstring<CharT>(aString, aStart, aEnd);
   }
 
 template <class CharT>
