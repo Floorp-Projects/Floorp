@@ -132,8 +132,12 @@ map_os32()
 {
     case `uname -s` in
         SunOS)
-            #first testing the 32 bit 2.6 build, even on 2.8
-            MAPPED_OS=Solaris2.6
+            S_REL=`uname -r | sed -e "s/^[^\.]*\.//g"`
+            if [ "$S_REL" -lt 8 ] ; then
+                MAPPED_OS=Solaris2.6
+            else
+                MAPPED_OS=Solaris8_forte6
+            fi
             ;;
         OSF1)
             MAPPED_OS=OSF1V4.0
@@ -142,7 +146,17 @@ map_os32()
             MAPPED_OS=AIX4.3
             ;;
         Linux)
-            MAPPED_OS=Linux2.2
+            RH_MR=`cat /etc/redhat-release | sed \
+                -e "s/Red Hat Linux release //" -e "s/ .*//g" \
+                -e "s/\..*//g"`
+            
+            if [ "$RH_MR" = "6" ] ; then
+                MAPPED_OS=Linux2.2
+            else
+                MAPPED_OS=Linux2.4
+                LD_ASSUME_KERNEL="2.2.5"
+                export LD_ASSUME_KERNEL
+            fi
             ;;
         HP-UX)
             MAPPED_OS=HPUX11.00
@@ -157,6 +171,7 @@ map_os32()
             ;;
     esac
     set_osdir
+    Debug "Mapped OS to $MAPPED_OS"
 }
 map_os64()
 {
@@ -182,6 +197,7 @@ map_os64()
           IS_64=`getconf KERNEL_BITS | grep 64 >/dev/null && echo 64 bit`
           ;;
   esac
+  Debug "Mapped OS to $MAPPED_OS"
 }
   
 
@@ -200,8 +216,8 @@ nssqa_main()
           # we build on one platform and QA on another
           # create the symbolic links
           #mksymlinks $* ||
-          mksymlinks  $NSSVER $BUILDDATE ||
-              glob_usage "Can't make the neccessary symbolic links"
+          `dirname $0`/mksymlinks  $NSSVER $BUILDDATE ||
+              Warning "Can't make the neccessary symbolic links"
       fi
   fi
 
