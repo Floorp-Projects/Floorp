@@ -2297,7 +2297,9 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
         child->GetBounds(bounds);
         bounds.x += aDx;
         bounds.y += aDy;
-        NS_STATIC_CAST(nsBaseWidget*, (nsIWidget*)child)->SetBounds(bounds);
+        nsWidget* childWidget = NS_STATIC_CAST(nsWidget*, NS_STATIC_CAST(nsIWidget*, child.get()));
+        childWidget->SetBounds(bounds);
+        childWidget->ResetInternalVisibility();
       }
 
       if (NS_FAILED(children->Next()))
@@ -2561,13 +2563,33 @@ NS_IMETHODIMP nsWindow::Show(PRBool bState)
 
   mShown = bState;
 
+  // show
+  ResetInternalVisibility();
 
+  return NS_OK;
+}
+
+void nsWindow::ResetInternalVisibility()
+{
+  if (mShell)
+  { // top level, always set the visibility regardless of parent geometry
+    SetInternalVisibility(mShown);
+  }
+  else
+  {
+    nsWidget::ResetInternalVisibility();
+  }
+}
+
+void nsWindow::SetInternalVisibility(PRBool aVisible)
+{
   // don't show if we are too small
   if (mIsTooSmall)
-    return NS_OK;
+    return;
 
-  // show
-  if (bState)
+  mInternalShown = aVisible;
+
+  if (aVisible)
   {
     // show mSuperWin
     gdk_window_show(mSuperWin->bin_window);
@@ -2601,8 +2623,6 @@ NS_IMETHODIMP nsWindow::Show(PRBool bState)
     } 
 
   }
-
-  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -2688,6 +2708,8 @@ NS_IMETHODIMP nsWindow::Move(PRInt32 aX, PRInt32 aY)
   mBounds.x = aX;
   mBounds.y = aY;
 
+  ResetInternalVisibility();
+
   if (mIsToplevel && mShell)
   {
 #ifdef DEBUG
@@ -2736,6 +2758,17 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
   mBounds.width  = aWidth;
   mBounds.height = aHeight;
 
+  ResetInternalVisibility();
+  PRUint32 childCount, index;
+  if (NS_SUCCEEDED(mChildren->Count(&childCount))) {
+    for (index = 0; index < childCount; index++) {
+      nsCOMPtr<nsIWidget> childWidget;
+      if (NS_SUCCEEDED(mChildren->QueryElementAt(index, NS_GET_IID(nsIWidget), (void**)getter_AddRefs(childWidget)))) {
+        NS_STATIC_CAST(nsWidget*, NS_STATIC_CAST(nsIWidget*, childWidget.get()))->ResetInternalVisibility();
+      }
+    }
+  }
+
   // code to keep the window from showing before it has been moved or resized
 
   // if we are resized to 1x1 or less, we will hide the window.  Show(TRUE) will be ignored until a
@@ -2773,6 +2806,7 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
       gdk_window_hide(mSuperWin->bin_window);
       gdk_window_hide(mSuperWin->shell_window);
     }
+    mInternalShown = PR_FALSE;
   }
   else
   {
@@ -2823,8 +2857,9 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
     //g_print("not sending resize event\n");
   }
 
-  if (nNeedToShow)
+  if (nNeedToShow) {
     Show(PR_TRUE);
+  }
 
   if (aRepaint)
     Invalidate(PR_FALSE);

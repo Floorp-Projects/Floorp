@@ -198,6 +198,8 @@ public:
   static void ClearIconEntry(PLDHashTable* aTable, PLDHashEntryHdr* aHdr);
 
 protected:
+  virtual void ResetInternalVisibility();
+  virtual void SetInternalVisibility(PRBool aVisible);
 
   virtual void OnRealize(GtkWidget *aWidget);
 
