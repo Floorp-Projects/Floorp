@@ -885,7 +885,9 @@ NS_IMETHODIMP nsMsgFolder::SetPrettyName(const PRUnichar *name)
   else if (mFlags & MSG_FOLDER_FLAG_SENTMAIL && unicodeName.Equals(NS_LITERAL_STRING("Sent"), nsCaseInsensitiveStringComparator()))
     rv = SetName(kLocalizedSentName);
 
-  else if (mFlags & MSG_FOLDER_FLAG_DRAFTS && unicodeName.Equals(NS_LITERAL_STRING("Drafts"), nsCaseInsensitiveStringComparator()))
+  //netscape webmail uses "Draft" instead of "Drafts"
+  else if (mFlags & MSG_FOLDER_FLAG_DRAFTS && (unicodeName.Equals(NS_LITERAL_STRING("Drafts"), nsCaseInsensitiveStringComparator()) 
+                                                || unicodeName.Equals(NS_LITERAL_STRING("Draft"), nsCaseInsensitiveStringComparator())))  
     rv = SetName(kLocalizedDraftsName);
 
   else if (mFlags & MSG_FOLDER_FLAG_TEMPLATES && unicodeName.Equals(NS_LITERAL_STRING("Templates"), nsCaseInsensitiveStringComparator()))
