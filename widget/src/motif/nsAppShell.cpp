@@ -176,7 +176,7 @@ done:
                 EQueue->GetEventQueueSelectFD(),
                 (XtPointer) XtInputReadMask, 
                 event_processor_callback, 
-                0);
+                EQueue);
 
   XtRealizeWidget(mTopLevel);
 
