@@ -1042,16 +1042,14 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
         if(!(theCanContainResult && theChildAgrees)) {
           if (!CanPropagate(theParentTag,aChildTag)) { 
             if(nsHTMLElement::IsContainer(aChildTag)){ 
-              if(gHTMLElements[aChildTag].HasSpecialProperty(kDiscardMisplaced)) {
+              if(!gHTMLElements[aChildTag].CanAutoCloseTag(theParentTag)) {
                 // Closing the tags above might cause non-compatible results.
                 // Ex. <TABLE><TR><TD><TBODY>Text</TD></TR></TABLE>. 
                 // In the example above <TBODY> is badly misplaced. To be backwards
                 // compatible we should not attempt to close the tags above it, for
                 // the contents inside the table might get thrown out of the table.
-                // The safest thing to do is to discard this tag.
-                if(!gHTMLElements[aChildTag].CanAutoCloseTag(theParentTag,eToken_start)) {
-                  return result;
-                }
+                // The safest thing to do is to discard this tag.     
+                return result;
               }
               CloseContainersTo(theIndex,theParentTag,PR_TRUE);
             }//if
@@ -1518,7 +1516,7 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
         }
         else {
           if((kNotFound==GetIndexOfChildOrSynonym(mBodyContext->mStack,theChildTag)) ||
-             (!gHTMLElements[theChildTag].CanAutoCloseTag(mBodyContext->Last(),eToken_end))) {
+             (!gHTMLElements[theChildTag].CanAutoCloseTag(mBodyContext->Last()))) {
             UpdateStyleStackForCloseTag(theChildTag,theChildTag);
             if(gHTMLElements[theChildTag].IsMemberOf(kBlockEntity)) {
               // Oh boy!! we found a "stray" block entity. Nav4.x and IE introduce line break in
@@ -1595,6 +1593,7 @@ nsresult CNavDTD::HandleSavedTokensAbove(eHTMLTags aTag)
             for(PRInt32 j=0;j<attrCount; j++){
               CToken* theAttrToken = mBodyContext->RestoreTokenFrom(theBadContentIndex);
               if(theAttrToken) {
+                theAttrToken->mRecycle=PR_TRUE;
                 mTokenizer->PushTokenFront(theAttrToken);
               }
               theBadTokenCount--;
