@@ -86,11 +86,16 @@ nsRDFResource::QueryInterface(REFNSIID iid, void** result)
 // nsIRDFNode methods:
 
 NS_IMETHODIMP
-nsRDFResource::Init(const char* uri)
+nsRDFResource::Init(const char* aURI)
 {
-    mURI = nsCRT::strdup(uri);
-    if (mURI == nsnull)
+    NS_PRECONDITION(aURI != nsnull, "null ptr");
+    if (! aURI)
+        return NS_ERROR_NULL_POINTER;
+
+    if (! (mURI = new char[PL_strlen(aURI) + 1]))
         return NS_ERROR_OUT_OF_MEMORY;
+
+    PL_strcpy(mURI, aURI);
 
     // don't replace an existing resource with the same URI automatically
     return gRDFService->RegisterResource(this, PR_TRUE);
