@@ -697,13 +697,53 @@ nsAppShellService::CreateTopLevelWindow(nsIXULWindow *aParent,
                                  aChromeMask, aInitialWidth, aInitialHeight,
                                  PR_FALSE, aResult);
 
-  if (NS_SUCCEEDED(rv))
+  if (NS_SUCCEEDED(rv)) {
     // the addref resulting from this is the owning addref for this window
     RegisterTopLevelWindow(*aResult);
+    (*aResult)->SetZLevel(CalculateWindowZLevel(aParent, aChromeMask));
+  }
 
   return rv;
 }
 
+PRUint32
+nsAppShellService::CalculateWindowZLevel(nsIXULWindow *aParent,
+                                         PRUint32      aChromeMask)
+{
+  PRUint32 zLevel;
+
+  zLevel = nsIXULWindow::normalZ;
+  if (aChromeMask & nsIWebBrowserChrome::CHROME_WINDOW_RAISED)
+    zLevel = nsIXULWindow::raisedZ;
+  else if (aChromeMask & nsIWebBrowserChrome::CHROME_WINDOW_LOWERED)
+    zLevel = nsIXULWindow::loweredZ;
+
+#if defined(XP_MAC) || defined(XP_MACOSX)
+  /* Platforms on which modal windows are always application-modal, not
+     window-modal (that's just the Mac, right?) want modal windows to
+     be stacked on top of everyone else.
+
+     On Mac OS X, bind modality to parent window instead of app (ala Mac OS 9)
+  */
+  PRUint32 modalDepMask = nsIWebBrowserChrome::CHROME_MODAL |
+                          nsIWebBrowserChrome::CHROME_DEPENDENT;
+  if (aParent && (aChromeMask & modalDepMask)) {
+    if (::OnMacOSX())
+      aParent->GetZLevel(&zLevel);
+    else
+      zLevel = nsIXULWindow::highestZ;
+  }
+#else
+  /* Platforms with native support for dependent windows (that's everyone
+      but pre-Mac OS X, right?) know how to stack dependent windows. On these
+      platforms, give the dependent window the same level as its parent,
+      so we won't try to override the normal platform behaviour. */
+  if ((aChromeMask & nsIWebBrowserChrome::CHROME_DEPENDENT) && aParent)
+    aParent->GetZLevel(&zLevel);
+#endif
+
+  return zLevel;
+}
 
 /*
  * Just do the window-making part of CreateTopLevelWindow
@@ -719,7 +759,6 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
   nsresult rv;
   nsWebShellWindow* window;
   PRBool intrinsicallySized;
-  PRUint32 zlevel;
 
   *aResult = nsnull;
   intrinsicallySized = PR_FALSE;
@@ -781,35 +820,6 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
     }
 #endif
 
-    zlevel = nsIXULWindow::normalZ;
-    if (aChromeMask & nsIWebBrowserChrome::CHROME_WINDOW_RAISED)
-      zlevel = nsIXULWindow::raisedZ;
-    else if (aChromeMask & nsIWebBrowserChrome::CHROME_WINDOW_LOWERED)
-      zlevel = nsIXULWindow::loweredZ;
-
-#if defined(XP_MAC) || defined(XP_MACOSX)
-    /* Platforms on which modal windows are always application-modal, not
-       window-modal (that's just the Mac, right?) want modal windows to
-       be stacked on top of everyone else.
-
-       On Mac OS X, bind modality to parent window instead of app (ala Mac OS 9)
-    */
-    PRUint32 modalDepMask = nsIWebBrowserChrome::CHROME_MODAL |
-                            nsIWebBrowserChrome::CHROME_DEPENDENT;
-    if (aParent && (aChromeMask & modalDepMask))
-    {
-      if (::OnMacOSX()) aParent->GetZlevel(&zlevel);
-      else  zlevel = nsIXULWindow::highestZ;
-    }
-#else
-    /* Platforms with native support for dependent windows (that's everyone
-       but pre-Mac OS X, right?) know how to stack dependent windows. On these
-       platforms, give the dependent window the same level as its parent,
-       so we won't try to override the normal platform behaviour. */
-    if ((aChromeMask & nsIWebBrowserChrome::CHROME_DEPENDENT) && aParent)
-      aParent->GetZlevel(&zlevel);
-#endif
-
     if (aInitialWidth == nsIAppShellService::SIZE_TO_CONTENT ||
         aInitialHeight == nsIAppShellService::SIZE_TO_CONTENT) {
       aInitialWidth = 1;
@@ -819,7 +829,7 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
     }
 
     rv = window->Initialize(aParent, mAppShell, aUrl,
-                            aShowWindow, aLoadDefaultPage, zlevel,
+                            aShowWindow, aLoadDefaultPage,
                             aInitialWidth, aInitialHeight, aIsHiddenWindow, widgetInitData);
       
     if (NS_SUCCEEDED(rv)) {
