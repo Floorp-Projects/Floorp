@@ -1926,7 +1926,7 @@ InternetSearchDataSource::addQueryToBookmarks(nsIRDFResource *src)
 		{
 			nsXPIDLCString  uriUTF8;
 			uriUTF8.Adopt(ToNewUTF8String(nsDependentString(uriUni)));
-			rv = bookmarks->AddBookmark((const char *)uriUTF8, value.get(), nsIBookmarksService::BOOKMARK_SEARCH_TYPE, nsnull);
+			rv = bookmarks->AddBookmarkImmediately((const char *)uriUTF8, value.get(), nsIBookmarksService::BOOKMARK_SEARCH_TYPE, nsnull);
 		}
 	}
 
