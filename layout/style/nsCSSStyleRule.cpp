@@ -1654,9 +1654,10 @@ MapDeclarationFontInto(nsICSSDeclaration* aDeclaration,
 
           // NavQuirks uses sans-serif instead of whatever the native font is
           if (eCompatibility_NavQuirks == mode) {
-            if (sysID == eSystemAttr_Font_Button ||
-                sysID == eSystemAttr_Font_Caption ||
-                sysID == eSystemAttr_Font_Field) {
+            if (sysID == eSystemAttr_Font_Field) {
+              font->mFont.name.AssignWithConversion("monospace");
+            } else if (sysID == eSystemAttr_Font_Button ||
+                       sysID == eSystemAttr_Font_Caption) {
               font->mFont.name.AssignWithConversion("sans-serif");
             }
           }
