@@ -45,15 +45,12 @@
 select[size] {
   -moz-user-focus: normal;
   -moz-user-select: none;
-  min-width: 100px;
-  min-height: 150px;
   display: -moz-box;
   border: 2px inset ThreeDFace;
 }
   
 xul|outlinerbody:-moz-outliner-row {
   border: 1px solid transparent;
-  height: 18px;
 }
 
 xul|outlinercol {
