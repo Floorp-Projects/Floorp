@@ -131,7 +131,7 @@ public:                                                                       \
 #if (__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95))
 #define NS_DEF_PTR2(cls)                                                      \
 private:                                                                      \
-  void* operator new(size_t size) {}		                               \
+  void* operator new(size_t size) throw () { return 0; }	              \
   void operator delete(void* aPtr)  {}                                        \
   cls*  mPtr;                                                                 
 #else
