@@ -2,8 +2,8 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# $Revision: 1.21 $ 
-# $Date: 2002/04/27 04:20:10 $ 
+# $Revision: 1.22 $ 
+# $Date: 2002/04/27 04:23:46 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/tinder.cgi,v $ 
 # $Name:  $ 
@@ -416,9 +416,10 @@ sub HTML_status_page {
   $out .= "<!-- /Table Contents -->\n\n";
   $out .= "</table>\n\n";
   $out .= "<!-- Page Footer --><p>\n";
-  $out .= $previous_links;
   $out .= $links;
+  $out .= $previous_links;
   $out .= "<!-- Table Legend -->\n";
+  $out .= <FONT SIZE=\"+3\"><B><NOBR>Table Legend</NOBR></B></FONT>
   $out .= "<table width=\"100%\" cellpadding=0 cellspacing=0>\n";
   $out .= "	@legend\n\n";
   $out .= "</table>\n\n";
