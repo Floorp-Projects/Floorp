@@ -602,22 +602,23 @@ nsEditorShell::InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
   err = nsComponentManager::CreateInstance(kHTMLEditorCID, nsnull, NS_GET_IID(nsIEditor), getter_AddRefs(editor));
   if(!editor)
     err = NS_ERROR_OUT_OF_MEMORY;
-    
+  nsCOMPtr<nsISelectionController> selCon = do_QueryInterface(aPresShell);
+  
   if (NS_SUCCEEDED(err))
   {
     if (mEditorTypeString.EqualsWithConversion("text"))
     {
-      err = editor->Init(aDoc, aPresShell, nsIHTMLEditor::eEditorPlaintextMask);
+      err = editor->Init(aDoc, aPresShell, selCon, nsIHTMLEditor::eEditorPlaintextMask);
       mEditorType = ePlainTextEditorType;
     }
     else if (mEditorTypeString.EqualsWithConversion("html") || mEditorTypeString.IsEmpty())  // empty string default to HTML editor
     {
-      err = editor->Init(aDoc, aPresShell, 0);
+      err = editor->Init(aDoc, aPresShell, selCon, 0);
       mEditorType = eHTMLTextEditorType;
     }
     else if (mEditorTypeString.EqualsWithConversion("htmlmail"))  //  HTML editor with special mail rules
     {
-      err = editor->Init(aDoc, aPresShell, nsIHTMLEditor::eEditorMailMask);
+      err = editor->Init(aDoc, aPresShell, selCon, nsIHTMLEditor::eEditorMailMask);
       mEditorType = eHTMLTextEditorType;
     }
     else

@@ -22,7 +22,6 @@
  */
 
 #include <stdio.h>
-#include "nsIPresShell.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOMNode.h"

@@ -59,14 +59,14 @@ public:
     * @param aOffset  the location in aElement to do the insertion
 	* @param aReplaceLength the length of text to replace (0= no replacement)
     * @param aString  the new text to insert
-    * @param aPresShell used to get and set the selection
+    * @param aSelCon used to get and set the selection
     */
   NS_IMETHOD Init(nsIDOMCharacterData *aElement,
                   PRUint32 aOffset,
 				  PRUint32 aReplaceLength,
 				  nsIPrivateTextRangeList* aTextRangeList,
                   const nsString& aString,
-                  nsWeakPtr aPresShell);
+                  nsWeakPtr aSelCon);
 
 private:
 	
@@ -120,8 +120,8 @@ protected:
   /** the range list **/
   nsCOMPtr<nsIPrivateTextRangeList>	mRangeList;
 
-  /** the presentation shell, which we'll need to get the selection */
-  nsWeakPtr mPresShellWeak;  // use a weak reference
+  /** the selection controller, which we'll need to get the selection */
+  nsWeakPtr mSelConWeak;  // use a weak reference
 
   PRBool	mFixed;
 

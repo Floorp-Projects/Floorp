@@ -242,7 +242,7 @@ public:
   /* ------------ Overrides of nsEditor interface methods -------------- */
 
   /** prepare the editor for use */
-  NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell, PRUint32 aFlags);
+  NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell, nsISelectionController *aSelCon, PRUint32 aFlags);
   
   NS_IMETHOD SetDocumentCharacterSet(const PRUnichar* characterSet);
 

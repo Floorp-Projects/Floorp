@@ -380,7 +380,7 @@ NS_IMETHODIMP nsHTMLEditor::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 
 NS_IMETHODIMP nsHTMLEditor::Init(nsIDOMDocument *aDoc, 
-                                 nsIPresShell   *aPresShell, PRUint32 aFlags)
+                                 nsIPresShell   *aPresShell, nsISelectionController *aSelCon, PRUint32 aFlags)
 {
   NS_PRECONDITION(aDoc && aPresShell, "bad arg");
   if (!aDoc || !aPresShell)
@@ -388,7 +388,7 @@ NS_IMETHODIMP nsHTMLEditor::Init(nsIDOMDocument *aDoc,
 
   nsresult result = NS_ERROR_NULL_POINTER;
   // Init the base editor
-  result = nsEditor::Init(aDoc, aPresShell, aFlags);
+  result = nsEditor::Init(aDoc, aPresShell, aSelCon, aFlags);
   if (NS_FAILED(result)) { return result; }
 
   nsCOMPtr<nsIDOMElement> bodyElement;
