@@ -153,7 +153,7 @@ struct JSTokenStream {
     uintN               lookahead;      /* count of lookahead tokens */
     uintN               lineno;         /* current line number */
     uintN               ungetpos;       /* next free char slot in ungetbuf */
-    jschar              ungetbuf[5];    /* at most 5, for \uXXXX lookahead */
+    jschar              ungetbuf[6];    /* at most 6, for \uXXXX lookahead */
     uintN               flags;          /* flags -- see below */
     ptrdiff_t           linelen;        /* physical linebuf segment length */
     ptrdiff_t           linepos;        /* linebuf offset in physical line */
