@@ -32,10 +32,11 @@
 // Forward declarations...
 class    nsMsgComposeAndSend;
 
-#ifdef XP_MAC
+#ifdef RICH_XP_MAC
 
 #include "nsFileStream.h"
 
+typedef 	appledouble_encode_object;
 typedef struct _AppledoubleEncodeObject
 {
 	appledouble_encode_object   ap_encode_obj;

@@ -555,7 +555,8 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
 		  char	          *separator;
       nsInputStream   inputFile(nsFileSpec(url_string));
 
-      if (!inputFile.Exists())
+#ifdef RICHIE_APPLE_DOUBLE
+      if (!inputFile.exists())
         return NS_ERROR_OUT_OF_MEMORY;
 
 		  separator = mime_make_separator("ad");
@@ -579,8 +580,6 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
       // location, then patch the new file spec into the array and send this
       // file instead. 
       // 
-#ifdef RICHIE_APPLE_DOUBLE
-
       AppleDoubleEncodeObject     *obj = new (AppleDoubleEncodeObject);
       if (obj == NULL) 
       {
