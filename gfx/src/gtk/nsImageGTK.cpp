@@ -1828,6 +1828,21 @@ nsresult nsImageGTK::Optimize(nsIDeviceContext* aContext)
   if (!mOptimized)
     UpdateCachedImage();
 
+  if (mAlphaBits && mTrueAlphaBits) {
+    // 8-bit alpha image turned out to be 1-bit - blacken transparent
+    // areas so that we can draw it using the fast tile path
+    for (PRInt32 y = 0; y < mHeight; y++)
+      for (PRInt32 x = 0; x < mWidth; x++)
+        if (!mTrueAlphaBits[y * mTrueAlphaRowBytes + x]) {
+          mImageBits[y * mRowBytes + 3 * x]     = 0;
+          mImageBits[y * mRowBytes + 3 * x + 1] = 0;
+          mImageBits[y * mRowBytes + 3 * x + 2] = 0;
+        }
+    nsRect rect(0, 0, mWidth, mHeight);
+    ImageUpdated(nsnull, 0, &rect);
+    UpdateCachedImage();
+  }
+
   if ((gdk_rgb_get_visual()->depth > 8) && (mAlphaDepth != 8)) {
     if(nsnull != mImageBits) {
       delete[] mImageBits;
