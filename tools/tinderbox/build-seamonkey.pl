@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.21 $ ';
+$Version = '$Revision: 1.22 $ ';
 
 
 sub PrintUsage {
@@ -19,13 +19,13 @@ Options:
   --compress             Use '-z3' for cvs.
   --example-config       Print an example 'tinderconfig.pl'.
   --noreport             Do not report status to tinderbox server.
-  --notest               Do not run smoke test.
+  --notest               Do not run smoke tests.
   --timestamp            Pull by date.
    -tag TREETAG          Pull by tag (-r TREETAG).
    -t TREENAME           The name of the tree
   --mozconfig FILENAME   Provide a mozconfig file for client.mk to use.
   --version              Print the version number (same as cvs revision).
-  --testonly             Only run the smoke test (do not pull or build).
+  --testonly             Only run the smoke tests (do not pull or build).
   --help
 More details:
   To get started, run '$0 --example-config'.
@@ -482,7 +482,7 @@ sub BuildIt {
 	  if (&BinaryExists($fe)) {
 		if ($RunTest) {
 		  print LOG "export binary exists, build successful. Testing...\n";
-		  $BuildStatus = &RunSmokeTest($fe);
+		  $BuildStatus = &RunAliveTest($fe);
 		  if ($BuildStatus == 0 and $BloatStats) {
 			$BuildStatusStr = 'success';
 			print LOG "export binary exists, build successful. Gathering bloat stats...\n";
@@ -644,7 +644,7 @@ sub killproc {
   return $status;
 }
 
-sub RunSmokeTest {
+sub RunAliveTest {
   my ($fe) = @_;
   my $Binary;
   my $status = 0;
@@ -686,7 +686,7 @@ sub RunSmokeTest {
 
   if ($status != 0) {
     print LOG "$Binary has crashed or quit on the AliveTest.  Turn the tree orange now.\n";
-    print LOG "----------- failure output from mozilla-bin for smoke tests --------------- \n";
+    print LOG "----------- failure output from mozilla-bin for alive test --------------- \n";
     open READRUNLOG, "$BinaryLog";
     while (<READRUNLOG>) {
       print $_;
@@ -701,7 +701,7 @@ sub RunSmokeTest {
 
   &killproc($pid);
 
-  print LOG "----------- success output from mozilla-bin for smoke tests --------------- \n";
+  print LOG "----------- success output from mozilla-bin for alive test --------------- \n";
   open READRUNLOG, "$BinaryLog";
   while (<READRUNLOG>) {
     print $_;
@@ -811,14 +811,14 @@ $BuildAdministrator = "$ENV{USER}\@$ENV{HOST}";
 
 #- You'll need to change these to suit your machine's needs
 $BaseDir       = '/builds/tinderbox/SeaMonkey';
-$DisplayServer = 'crucible.mcom.com:0.0';
+$DisplayServer = ':0.0';
 
 #- Default values of command-line opts
 #-
 $BuildDepend  = 1;  # Depend or Clobber
 $ReportStatus = 1;  # Send results to server, or not
 $BuildOnce    = 0;  # Build once, don't send results to server
-$RunTest      = 1;  # Run the smoke test on successful build, or not
+$RunTest      = 1;  # Run the smoke tests on successful build, or not
 $UseTimeStamp = 1;  # Use the CVS 'pull-by-timestamp' option, or not
 $TestOnly     = 0;  # Only run tests, don't pull/build
 
