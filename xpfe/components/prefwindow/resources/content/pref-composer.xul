@@ -120,7 +120,7 @@
     				</menupopup>
     			</menu>
     			<html:input type="hidden" id="normalText"
-                      pref="true" preftype="string" prefstring="editor.text_color"/>
+                      pref="true" preftype="color" prefstring="editor.text_color"/>
     		</box>
     
     		<box>
@@ -136,7 +136,7 @@
     				</menupopup>
     			</menu>
     			<html:input type="hidden" id="linkText"
-                      pref="true" preftype="string" prefstring="editor.link_color"/>
+                      pref="true" preftype="color" prefstring="editor.link_color"/>
     		</box>
     
     		<box>
@@ -152,7 +152,7 @@
     				</menupopup>
     			</menu>
     			<html:input type="hidden" id="activeLinkText"
-                      pref="true" preftype="string" prefstring="editor.active_link_color"/>
+                      pref="true" preftype="color" prefstring="editor.active_link_color"/>
     		</box>
     
     		<box>
@@ -168,7 +168,7 @@
     				</menupopup>
     			</menu>
     			<html:input type="hidden" id="followedLinkText"
-                      pref="true" preftype="string" prefstring="editor.followed_link_color"/>
+                      pref="true" preftype="color" prefstring="editor.followed_link_color"/>
     		</box>
     
     		<box>
@@ -184,7 +184,7 @@
     				</menupopup>
     			</menu>
     			<html:input type="hidden" id="backgroundColor"
-                      pref="true" preftype="string" prefstring="editor.background_color"/>
+                      pref="true" preftype="color" prefstring="editor.background_color"/>
     		</box>
     
     	</box>
