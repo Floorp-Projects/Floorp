@@ -468,6 +468,41 @@ nsProgressDialog.prototype = {
     // Invoke the launch method of the target file.
     onLaunch: function() {
          try {
+           const kDontAskAgainPref  = "browser.download.progressDnlgDialog.dontAskForLaunch";
+           try {
+             var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                              .getService(Components.interfaces.nsIPrefBranch);
+             var dontAskAgain = pref.getBoolPref(kDontAskAgainPref);
+           } catch (e) {
+             // we need to ask if we're unsure
+             dontAskAgain = false;
+           }
+           if ( !dontAskAgain && this.target.isExecutable() ) {
+             try {
+               var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                                               .getService( Components.interfaces.nsIPromptService );
+             } catch (ex) {
+               // getService doesn't return null, it throws
+               break;
+             }
+             var title = this.getProperty( "openingAlertTitle",
+					   [ this.fileName() ],
+					   1 );
+             var msg = this.getProperty( "securityAlertMsg",
+					 [ this.fileName() ],
+					 1 );
+             var dontaskmsg = this.getProperty( "dontAskAgain",
+						[ ], 0 );
+             var checkbox = {value:0};
+             var okToProceed = promptService.confirmCheck(window, title, msg, dontaskmsg, checkbox);
+             try {
+               if (checkbox.value != dontAskAgain)
+                 pref.setBoolPref(kDontAskAgainPref, checkbox.value);
+             } catch (ex) {}
+
+             if ( !okToProceed )
+               return;
+             }
              this.target.launch();
              this.dialog.close();
          } catch ( exception ) {

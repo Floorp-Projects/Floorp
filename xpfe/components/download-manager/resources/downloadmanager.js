@@ -167,13 +167,8 @@ var downloadViewController = {
 
     switch (aCommand) {
     case "cmd_openfile":
-      try {
-        if (isDownloading || getFileForItem(selectedItem).isExecutable())
-          return false;
-      } catch(e) {
-        // Exception means file doesn't exist; launch is not allowed.
-        return false;
-      }      
+      if (isDownloading)
+        return false;      
     case "cmd_showinshell":
       // we can't reveal until the download is complete, because we have not given
       // the file its final name until them.
@@ -212,6 +207,35 @@ var downloadViewController = {
       selectedItem = getSelectedItem();
       if (selectedItem) {
         file = getFileForItem(selectedItem);
+        const kDontAskAgainPref  = "browser.download.progressDnlgDialog.dontAskForLaunch";
+        try {
+          var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                              .getService(Components.interfaces.nsIPrefBranch);
+          var dontAskAgain = pref.getBoolPref(kDontAskAgainPref);
+        } catch (e) {
+          // dontAskAgain not set - then we need to ask user
+          dontAskAgain = false;
+        }
+        if (!dontAskAgain && file.isExecutable()) {
+          try {
+            var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                                      .getService(Components.interfaces.nsIPromptService);
+          } catch (ex) {
+            break;
+          }
+          var strBundle = document.getElementById("dlProgressDlgBundle");
+          var title = strBundle.getFormattedString("openingAlertTitle", [file.leafName]);
+          var msg = strBundle.getFormattedString("securityAlertMsg", [file.leafName]);
+          var dontaskmsg = strBundle.getString("dontAskAgain");
+          var checkbox = {value:0};
+          var okToProceed = promptService.confirmCheck(window, title, msg, dontaskmsg, checkbox);
+          try {
+            if (checkbox.value != dontAskAgain)
+              pref.setBoolPref(kDontAskAgainPref, checkbox.value);
+          } catch (ex) {}
+          if (!okToProceed)
+            return;
+        }
         file.launch();
       }
       break;
