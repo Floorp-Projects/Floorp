@@ -186,6 +186,47 @@ int main(int argc, char* argv[])
     }
 
     //----------------------------------------
+    // Iterator
+    {
+        nsVoidArray control;
+        btree.Clear();
+
+        // Fill
+        for (i = 0; i < COUNT; ++i) {
+            PRInt32 slot = i ? rand() % i : 0;
+
+            btree.InsertElementAt(POINTER(i), slot);
+            control.InsertElementAt(POINTER(i), slot);
+
+            if (! Equal(control, btree)) {
+                printf("failed\n");
+                return -1;
+            }
+        }
+
+        for (nsVoidBTree::Iterator m = btree.First(); m != btree.Last(); ++m) {
+            nsVoidBTree::Iterator n;
+            for (n = m, ++n; n != btree.Last(); ++n) {
+                if (*m > *n) {
+                    void* tmp = *m;
+                    *m = *n;
+                    *n = tmp;
+                }
+            }
+        }
+
+        nsVoidBTree::Iterator el;
+        for (el = btree.First(), i = 0; el != btree.Last(); ++el, ++i) {
+            if (*el != POINTER(i)) {
+                printf("bubble sort failed\n");
+                return -1;
+            }
+        }
+
+        printf("iteration succeeded\n");
+    }
+
+    //----------------------------------------
     // Random hammering
 
     printf("random fill/empty: ");
