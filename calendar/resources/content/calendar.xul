@@ -116,7 +116,7 @@
    <command id="export_command" oncommand="saveEventsToFile()"/>
    
    <command id="refresh_remote_calendars" oncommand="gCalendarWindow.calendarManager.refreshAllRemoteCalendars()"/>
-   <command id="publish_calendar" oncommand="gCalendarWindow.calendarManager.publishCalendar()"/>
+   <command id="publish_calendar" oncommand="publishEntireCalendar()"/>
 	<command id="publish_events_command" oncommand="publishCalendarData()"/>
    
    <command id="close_calendar_command" key="key_close" oncommand="closeCalendar()"/>
@@ -317,7 +317,7 @@
          <tabpanels>
          <tabpanel>
             <vbox flex="1">
-               <calendar flex="1" id="lefthandcalendar" onchange="gCalendarWindow.goToDay( this.value );" onmonthchange="gCalendarWindow.goToDay( this.value );"/>
+               <calendar flex="1" id="lefthandcalendar" onchange="gCalendarWindow.goToDay( this.value );"/>
                <button observes="go_today_command" label="Go To Today"/>
             </vbox>
          </tabpanel>

@@ -51,19 +51,6 @@ var gCalendarEventTreeClicked = false; //set this to true when the calendar even
 
 var gEventArray = new Array();
 
-function calendarUnifinderInit( )
-{
-   var unifinderEventSelectionObserver = 
-   {
-      onSelectionChanged : function( EventSelectionArray )
-      {
-         selectSelectedEventsInTree( EventSelectionArray );
-      }
-   }
-      
-   gCalendarWindow.EventSelection.addObserver( unifinderEventSelectionObserver );
-}
-
 function resetAllowSelection()
 {
    /* 
@@ -195,7 +182,6 @@ var unifinderEventDataSourceObserver =
    {
       
    }
-
 };
 
 
@@ -206,9 +192,17 @@ var unifinderEventDataSourceObserver =
 function prepareCalendarUnifinder( )
 {
    // tell the unifinder to get ready
-   calendarUnifinderInit( );
-   // set up our calendar event observer
+   var unifinderEventSelectionObserver = 
+   {
+      onSelectionChanged : function( EventSelectionArray )
+      {
+         selectSelectedEventsInTree( EventSelectionArray );
+      }
+   }
+      
+   gCalendarWindow.EventSelection.addObserver( unifinderEventSelectionObserver );
    
+   // set up our calendar event observer
    gICalLib.addObserver( unifinderEventDataSourceObserver );
 }
 

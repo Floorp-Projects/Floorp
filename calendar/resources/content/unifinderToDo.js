@@ -127,11 +127,7 @@ function toDoUnifinderRefresh()
    gICalLib.resetFilter();
       
    if( Checked === true )
-   {
-      var now = new Date();
-
-      gICalLib.filter.completed.setTime( now );
-   }
+      gICalLib.filter.completed.setTime( new Date() );
    
    var taskTable = gEventSource.getAllToDos();
    
@@ -200,6 +196,7 @@ function modifyToDoCommand( event )
 {
    //open the edit todo dialog box
    var ThisToDo = getToDoFromEvent( event );
+   
    if( ThisToDo )
       editToDo( ThisToDo );
 }

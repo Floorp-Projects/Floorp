@@ -165,7 +165,7 @@ WeekView.prototype.refreshEvents = function( )
       
       var dayEventList = new Array();
       
-      dayEventList = this.calendarWindow.eventSource.getEventsForDay( dayToGet );
+      dayEventList = gEventSource.getEventsForDay( dayToGet );
 	   
 	   //refresh the array and the current spot.
 	   LowestStartHour = getIntPref( this.calendarWindow.calendarPreferences.calendarPref, "event.defaultstarthour", 8 );
@@ -237,7 +237,7 @@ WeekView.prototype.refreshEvents = function( )
       
       var dayEventList = new Array();
       
-      dayEventList = this.calendarWindow.eventSource.getEventsForDay( dayToGet );
+      dayEventList = gEventSource.getEventsForDay( dayToGet );
      
       //refresh the array and the current spot.
       

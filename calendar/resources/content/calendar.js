@@ -48,24 +48,14 @@
 *        <script type="application/x-javascript" src="chrome://calendar/content/calendarEvent.js"/>
 *
 * NOTES
-*   Code for the oe-calendar.
+*   Code for the calendar.
 *
 *   What is in this file:
 *     - Global variables and functions - Called directly from the XUL
 *     - Several classes:
-*           CalendarWindow - Owns the 3 subviews, keeps track of the selection etc.
-*           CalendarView - Super class for three views
-*                  MonthView 
-*                  WeekView 
-*                  DayView 
-*     - Unifinder functions - fill in content of the unifinder.
 *  
 * IMPLEMENTATION NOTES 
 *
-*  WARNING  - We currently use CalendarEvent objects in what will be an unsafe way
-*             when the datasource changes. We assume that there is exactly one instance of CalendarEvent for 
-*             each unique event. We will probably have to switch to using the calendar event id 
-*             property instead of the object. G.S. April 2001.
 **********
 */
 
@@ -96,18 +86,13 @@ var gCalendarWindow;
 //an array of indexes to boxes for the week view
 var gHeaderDateItemArray = null;
 
-var gClockId;
-
-// Show event details on mouseover
+// Show event details on mouseover (sometimes this is false in the code)
 var showTooltip = true;
 
 // DAY VIEW VARIABLES
 var kDayViewHourLeftStart = 105;
 
 var kWeekViewHourHeight = 50;
-var kWeekViewHourWidth = 78;
-var kWeekViewItemWidth = 20;
-var kWeekViewHourLeftStart = 97;
 var kWeekViewHourHeightDifference = 2;
 var kDaysInWeek = 7;
 
@@ -137,7 +122,7 @@ function calendarInit()
    
    // set up the CalendarWindow instance
    
-   gCalendarWindow = new CalendarWindow( gEventSource );
+   gCalendarWindow = new CalendarWindow();
    
    //when you switch to a view, it takes care of refreshing the events, so that call is not needed.
    gCalendarWindow.currentView.switchTo( gCalendarWindow.currentView );
@@ -176,7 +161,7 @@ function update_date()
    
    gCalendarWindow.currentView.hiliteTodaysDate();
 
-   gClockId = setTimeout( "update_date()", milliSecsTillTomorrow ); 
+   setTimeout( "update_date()", milliSecsTillTomorrow ); 
 }
 
 /** 
@@ -419,7 +404,7 @@ function monthEventBoxClickEvent( eventBox, event )
 
       newDate.setDate( eventBox.calendarEventDisplay.event.start.day );
 
-      gCalendarWindow.setSelectedDate( newDate );
+      gCalendarWindow.setSelectedDate( newDate, false );
    }
 
    if ( event ) 
@@ -893,7 +878,7 @@ function selectAllEvents()
 {
    gSelectAll = true;
 
-   gCalendarWindow.EventSelection.setArrayToSelection( gCalendarWindow.eventSource.currentEvents );
+   gCalendarWindow.EventSelection.setArrayToSelection( gEventSource.currentEvents );
 }
 
 function closeCalendar()
@@ -996,7 +981,7 @@ function getNumberOfRepeatTimes( Event, DateToCompare )
 
 function reloadApplication()
 {
-	gCalendarWindow.eventSource.calendarManager.refreshAllRemoteCalendars();
+	gEventSource.calendarManager.refreshAllRemoteCalendars();
 }
 
 
@@ -1047,6 +1032,36 @@ function print()
    printEventArray( gCalendarWindow.EventSelection.selectedEvents, "chrome://calendar/content/converters/sortEvents.xsl" );
 }
 
+
+function publishEntireCalendar()
+{
+   var args = new Object();
+   
+   args.onOk =  self.publishEntireCalendarDialogResponse;
+   
+   openDialog("chrome://calendar/content/publishDialog.xul", "caPublishEvents", "chrome,modal", args );
+}
+
+function publishEntireCalendarDialogResponse( CalendarPublishObject )
+{
+   //update the calendar object with the publish information
+   var name = gCalendarWindow.calendarManager.getSelectedCalendarId();
+   
+   //get the node
+   var node = gCalendarWindow.calendarManager.rdf.getNode( name );
+   
+   node.setAttribute("http://home.netscape.com/NC-rdf#username", CalendarPublishObject.username);
+   
+   node.setAttribute("http://home.netscape.com/NC-rdf#password", CalendarPublishObject.password);
+   
+   node.setAttribute( "http://home.netscape.com/NC-rdf#remotePath", CalendarPublishObject.url+CalendarPublishObject.remotePath );
+   
+   node.setAttribute("http://home.netscape.com/NC-rdf#publishAutomatically", "false");
+
+   gCalendarWindow.calendarManager.rdf.flush();
+      
+   gCalendarWindow.calendarManager.publishCalendar( );
+}
 
 function publishCalendarData()
 {

@@ -76,13 +76,7 @@
    <!-- dialog-box: from dialogOverlay.xul -->
     
    <vbox id="dialog-box" flex="1">  
-   
-      <!-- standard-dialog-content: from dialogOverlay.xul  -->
-        
-      <vbox id="standard-dialog-content"  flex="1">
-        
          <grid>
-            
                 <columns>
                     <column />
                     <column flex="1"/>
@@ -140,9 +134,6 @@
                     </row>
                   </rows>
                </grid> 
-            
-            
-      </vbox> <!-- standard-dialog-content -->
    </vbox> <!-- dialog-box -->
 
 </dialog>

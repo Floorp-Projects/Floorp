@@ -152,7 +152,7 @@ DayView.prototype.refreshEvents = function dayview_refreshEvents( )
       
    // get the events for the day and loop through them
    
-   var dayEventList = this.calendarWindow.eventSource.getEventsForDay( this.calendarWindow.getSelectedDate() );
+   var dayEventList = gEventSource.getEventsForDay( this.calendarWindow.getSelectedDate() );
    
    //refresh the array and the current spot.
    var LowestStartHour = getIntPref( this.calendarWindow.calendarPreferences.calendarPref, "event.defaultstarthour", 8 );
@@ -164,13 +164,12 @@ DayView.prototype.refreshEvents = function dayview_refreshEvents( )
       dayEventList[i].NumberOfSameTimeEvents = 0;
       if( dayEventList[i].event.allDay != true )
       {
-         var ThisLowestStartHour = new Date( dayEventList[0].displayDate.getTime() );
-         if( ThisLowestStartHour.getHours() < LowestStartHour ) 
-            LowestStartHour = ThisLowestStartHour.getHours();
+         var ThisLowestStartHour = dayEventList[0].displayDate.getHours();
+         if( ThisLowestStartHour < LowestStartHour ) 
+            LowestStartHour = ThisLowestStartHour;
          
-         var EndDate = new Date( dayEventList[i].event.end.getTime() );
-         if( EndDate.getHours() > HighestEndHour )
-            HighestEndHour = EndDate;
+         if( dayEventList[i].event.end.hour > HighestEndHour )
+            HighestEndHour = dayEventList[i].event.end.hour;
       }
    }
 
@@ -204,10 +203,10 @@ DayView.prototype.refreshEvents = function dayview_refreshEvents( )
             thisCalendarEventDisplay = dayEventList[j];
    
             //if this event overlaps with another event...
-            if ( ( ( thisCalendarEventDisplay.displayDate >= calendarEventDisplay.displayDate &&
-                 thisCalendarEventDisplay.displayDate.getTime() < calendarEventDisplay.event.end.getTime() ) ||
+            if ( ( ( thisCalendarEventDisplay.event.displayDate >= calendarEventDisplay.event.displayDate &&
+                 thisCalendarEventDisplay.event.displayDate < calendarEventDisplay.event.end.getTime() ) ||
                   ( calendarEventDisplay.displayDate >= thisCalendarEventDisplay.displayDate &&
-                 calendarEventDisplay.displayDate.getTime() < thisCalendarEventDisplay.event.end.getTime() ) ) &&
+                 calendarEventDisplay.event.displayDate < thisCalendarEventDisplay.event.end.getTime() ) ) &&
                  calendarEventDisplay.event.id != thisCalendarEventDisplay.event.id &&
                  thisCalendarEventDisplay.event.allDay != true )
             {
@@ -309,17 +308,10 @@ DayView.prototype.refreshEvents = function dayview_refreshEvents( )
 */
 DayView.prototype.createEventBox = function dayview_createEventBox( calendarEventDisplay )
 {
-   var eventStartDate = calendarEventDisplay.displayDate;
-   var eventEndDate = calendarEventDisplay.displayEndDate;
-   var startHour = eventStartDate.getHours();
-   var startMinutes = eventStartDate.getMinutes();
+   var startHour = calendarEventDisplay.displayDate.getHours();
+   var startMinutes = calendarEventDisplay.displayDate.getMinutes();
 
-   var eventEndDateTime = new Date( 2000, 1, 1, eventEndDate.getHours(), eventEndDate.getMinutes(), 0 );
-   var eventStartDateTime = new Date( 2000, 1, 1, eventStartDate.getHours(), eventStartDate.getMinutes(), 0 );
-
-   var eventDuration = new Date( eventEndDateTime - eventStartDateTime );
-   
-   var hourDuration = eventDuration / (3600000);
+   eventDuration = ( ( calendarEventDisplay.displayEndDate - calendarEventDisplay.displayDate ) / (60 * 60 * 1000) );
    
    var eventBox = document.createElement( "vbox" );
    
@@ -331,7 +323,7 @@ DayView.prototype.createEventBox = function dayview_createEventBox( calendarEven
    topHeight = Math.round( topHeight ) - 2;
    eventBox.setAttribute( "top", topHeight );
    
-   eventBox.setAttribute( "height", Math.round( ( hourDuration*boxHeight ) + 1 ) );
+   eventBox.setAttribute( "height", Math.round( ( eventDuration*boxHeight ) + 1 ) );
    
    var width = Math.round( ( boxWidth-kDayViewHourLeftStart ) / calendarEventDisplay.NumberOfSameTimeEvents );
    eventBox.setAttribute( "width", width );

@@ -386,7 +386,7 @@ function datesAreEqual(icalDate, date) {
 
 function entryExists( date, subject) {
 
-  var events = gCalendarWindow.eventSource.getEventsForDay( date );
+  var events = gEventSource.getEventsForDay( date );
 
   var ret = false;
 

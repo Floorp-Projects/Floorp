@@ -95,7 +95,7 @@
 *   Is a singleton, the first invocation creates an instance, subsequent calls return the same instance.
 */
 
-function CalendarEventDataSource( observer, UserPath, syncPath )
+function CalendarEventDataSource( )
 {
    try {
        var iCalLibComponent = Components.classes["@mozilla.org/ical-container;1"].createInstance();
@@ -122,8 +122,6 @@ function CalendarEventDataSource( observer, UserPath, syncPath )
          
    this.gICalLib = iCalLibComponent.QueryInterface(Components.interfaces.oeIICalContainer);
      
-   this.gICalLib.addObserver( observer );
-   
    this.currentEvents = new Array();
    
    this.prepareAlarms( );
@@ -368,7 +366,6 @@ CalendarEventDataSource.prototype.getEventsDisplayForRange = function calEvent_g
    while( eventList.hasMoreElements() )
    {
       eventDisplays[ eventDisplays.length ] = eventList.getNext().QueryInterface(Components.interfaces.oeIICalEventDisplay);
-      alert ( "in getEventsDisplayForRange "+new Date( eventDisplays[ 0 ].displayDate ) );
    }
 
    eventDisplays.sort( this.orderEventsByDisplayDate );

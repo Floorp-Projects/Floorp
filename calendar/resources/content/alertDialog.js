@@ -37,7 +37,6 @@
 
 var gAllEvents = new Array();
 var CreateAlarmBox = true;
-var gDateFormatter = new DateFormater( opener.gCalendarWindow );  // used to format dates and times
 var kungFooDeathGripOnEventBoxes = new Array();
 var gICalLib;
 

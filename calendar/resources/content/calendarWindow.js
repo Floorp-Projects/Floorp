@@ -73,10 +73,8 @@
 *   There is one instance of CalendarWindow
 */
 
-function CalendarWindow( calendarDataSource )
+function CalendarWindow( )
 {
-   this.eventSource = calendarDataSource;
-   
    //setup the preferences
    this.calendarPreferences = new calendarPreferences( this );
    
@@ -188,10 +186,8 @@ function CalendarWindow( calendarDataSource )
                //calendarWindow.setSelectedDate( getNextOrPreviousRecurrence( calendarEvent ) );
                calendarWindow.setSelectedDate( today );
 
-               //if( calendarWindow.currentView == calendarWindow.monthView )
-               //{
-               //   calendarWindow.currentView.hiliteSelectedDate( );
-               //}
+               if( "hiliteSelectedDate" in calendarWindow.currentView )
+                  calendarWindow.currentView.hiliteSelectedDate( );
             }
          }
       },
@@ -352,7 +348,7 @@ CalendarWindow.prototype.clearSelectedEvent = function calWin_clearSelectedEvent
 *   Set the selected date
 */
 
-CalendarWindow.prototype.setSelectedDate = function calWin_setSelectedDate( date )
+CalendarWindow.prototype.setSelectedDate = function calWin_setSelectedDate( date, noHighlight )
 {
    // Copy the date because we might mess with it in place
    
@@ -366,24 +362,9 @@ CalendarWindow.prototype.setSelectedDate = function calWin_setSelectedDate( date
       //redraw the top tree
       setTimeout( "refreshEventTree( getAndSetEventTable() );", 150 );
    }
-   document.getElementById( "lefthandcalendar" ).value = date;
-
-   //get a list of events for this month.
-   var monthEventList = this.eventSource.getEventsForMonth( this.getSelectedDate() );
-
-   var arrayOfDates = new Array();
-
-   for( var eventIndex = 0; eventIndex < monthEventList.length; ++eventIndex )
-   {
-      var calendarEventDisplay = monthEventList[ eventIndex ];
-      var eventDate = new Date( calendarEventDisplay.displayDate );
-      
-      //add them to an array
-      arrayOfDates[ eventDate.getDate() ] = true;
-
-   }
-   document.getElementById( "lefthandcalendar" ).setBusyDates( arrayOfDates );
    
+   if( "hiliteSelectedDate" in this.currentView && noHighlight != false )
+      this.currentView.hiliteSelectedDate( );
 }
 
 /** PUBLIC

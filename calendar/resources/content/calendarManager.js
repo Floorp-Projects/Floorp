@@ -335,7 +335,7 @@ calendarManager.prototype.addCalendar = function calMan_addCalendar( ThisCalenda
 {
    //dump( "\n CALENDAR MANANGER-> add calendar with path "+ThisCalendarObject.getAttribute( "http://home.netscape.com/NC-rdf#path"+"\n\n" ) );
 
-   this.CalendarWindow.eventSource.gICalLib.addCalendar( ThisCalendarObject.getAttribute( "http://home.netscape.com/NC-rdf#path" ) );
+   gICalLib.addCalendar( ThisCalendarObject.getAttribute( "http://home.netscape.com/NC-rdf#path" ) );
 
    //ThisCalendarObject.setAttribute( "http://home.netscape.com/NC-rdf#active", "true" );
 
@@ -350,7 +350,7 @@ calendarManager.prototype.removeCalendar = function calMan_removeCalendar( ThisC
 {
    dump( "\n calendarManager-> remove calendar "+ThisCalendarObject.getAttribute( "http://home.netscape.com/NC-rdf#path" ) );
 
-   this.CalendarWindow.eventSource.gICalLib.removeCalendar( ThisCalendarObject.getAttribute( "http://home.netscape.com/NC-rdf#path" ) );
+   gICalLib.removeCalendar( ThisCalendarObject.getAttribute( "http://home.netscape.com/NC-rdf#path" ) );
 
    //ThisCalendarObject.setAttribute( "http://home.netscape.com/NC-rdf#active", "false" );
 
@@ -366,7 +366,7 @@ calendarManager.prototype.deleteCalendar = function calMan_deleteCalendar( ThisC
    if( ThisCalendarObject.getAttribute( "http://home.netscape.com/NC-rdf#serverNumber" ) == 0 )
       return;
 
-   this.CalendarWindow.eventSource.gICalLib.removeCalendar( ThisCalendarObject.getAttribute( "http://home.netscape.com/NC-rdf#path" ) );
+   gICalLib.removeCalendar( ThisCalendarObject.getAttribute( "http://home.netscape.com/NC-rdf#path" ) );
 
    if( deleteFile === true )
    {
@@ -562,7 +562,7 @@ calendarManager.prototype.checkCalendarURL = function calMan_checkCalendarURL( C
                /* EDITING AN EXISTING EVENT IS NOT WORKING
                
                //only 1 event
-               var Result = gCalendarWindow.eventSource.gICalLib.fetchEvent( calendarEvent.id );
+               var Result = gICalLib.fetchEvent( calendarEvent.id );
                                     
                if( Result )
                {
@@ -805,7 +805,7 @@ function switchCalendar( event )
    {
       window.setCursor( "wait" );
 
-      gCalendarWindow.eventSource.gICalLib.addCalendar( calendarNode.getAttribute( "http://home.netscape.com/NC-rdf#path" ) );
+      gICalLib.addCalendar( calendarNode.getAttribute( "http://home.netscape.com/NC-rdf#path" ) );
       
       window.setCursor( "default" );
       
@@ -817,7 +817,7 @@ function switchCalendar( event )
    {
       window.setCursor( "wait" );
 
-      gCalendarWindow.eventSource.gICalLib.removeCalendar( calendarNode.getAttribute( "http://home.netscape.com/NC-rdf#path" ) );
+      gICalLib.removeCalendar( calendarNode.getAttribute( "http://home.netscape.com/NC-rdf#path" ) );
       
       window.setCursor( "default" );
       

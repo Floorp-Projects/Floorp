@@ -102,18 +102,18 @@
         if (!this.mInitialized) {
           this.mInitialized = true;
 
-					// Find out which should be the first day of the week
-					var pref =  Components.classes[
-						"@mozilla.org/preferences-service;1"
-					].getService(Components.interfaces.nsIPrefBranch);
-
-					this.weekStart;
-					try {
-						this.weekStart = pref.getIntPref("calendar.week.start");
-					}
-					catch (e) {
-						this.weekStart = 0;
-					}
+            // Find out which should be the first day of the week
+            var pref =  Components.classes[
+                "@mozilla.org/preferences-service;1"
+            ].getService(Components.interfaces.nsIPrefBranch);
+            
+            this.weekStart;
+            try {
+                this.weekStart = pref.getIntPref("calendar.week.start");
+            }
+            catch (e) {
+                this.weekStart = 0;
+            }
 
           // save references for convenience
           var monthbox = document.getAnonymousNodes(this)[0].childNodes[0];
@@ -240,6 +240,26 @@
 		<method name="setBusyDates">
 			<parameter name="arrayOfDates"/>
 			<body><![CDATA[
+            /* CODE FROM monthView.js that will be useful for finding the events for the month. */
+            /*
+            document.getElementById( "lefthandcalendar" ).value = date;
+
+            //get a list of events for this month.
+            var monthEventList = this.eventSource.getEventsForMonth( this.getSelectedDate() );
+            
+            var arrayOfDates = new Array();
+            
+            for( var eventIndex = 0; eventIndex < monthEventList.length; ++eventIndex )
+            {
+              var calendarEventDisplay = monthEventList[ eventIndex ];
+              var eventDate = new Date( calendarEventDisplay.displayDate );
+              
+              //add them to an array
+              arrayOfDates[ eventDate.getDate() ] = true;
+            
+            }
+            document.getElementById( "lefthandcalendar" ).setBusyDates( arrayOfDates );
+            */ 
         var aDate = new Date();
         aDate.setDate( 1 );
         //-------- Update the calendar
