@@ -1383,7 +1383,7 @@ function ComposeStartup(recycled, aParams)
     : 0;
 
   if (gAutoSaveInterval)
-    gAutoSaveTimeout = setTimeout("AutoSave()", gAutoSaveInterval);
+    gAutoSaveTimeout = setTimeout(AutoSave, gAutoSaveInterval);
 }
 
 // The new, nice, simple way of getting notified when a new editor has been created
@@ -3039,6 +3039,6 @@ function AutoSave()
   if (gMsgCompose.editor && (gContentChanged || gMsgCompose.bodyModified))
     GenericSendMessage(nsIMsgCompDeliverMode.AutoSaveAsDraft);
 
-  gAutoSaveTimeout = setTimeout("AutoSave()", gAutoSaveInterval);
+  gAutoSaveTimeout = setTimeout(AutoSave, gAutoSaveInterval);
 }
 
