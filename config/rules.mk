@@ -401,13 +401,13 @@ checkout:
 
 run_viewer: $(DIST)/bin/viewer
 	cd $(DIST)/bin; \
-	MOZILLA_FIVE_HOME= ; \
+	MOZILLA_FIVE_HOME=`pwd` \
 	LD_LIBRARY_PATH=".:$(LIBS_PATH):$$LD_LIBRARY_PATH" \
 	viewer
 
 run_apprunner: $(DIST)/bin/apprunner
 	cd $(DIST)/bin; \
-	MOZILLA_FIVE_HOME= ; \
+	MOZILLA_FIVE_HOME=`pwd` \
 	LD_LIBRARY_PATH=".:$(LIBS_PATH):$$LD_LIBRARY_PATH" \
 	apprunner
 
@@ -958,7 +958,19 @@ endif
 #############################################################################
 ifdef COMPILER_DEPEND
 depend::
-	@echo "$(MAKE): Skipping depend. Using compiler-based depend instead (--enable-md)." 2>&1
+	@echo "$(MAKE): No need to run depend target.\
+			Using compiler-based depend." 1>&2
+ifeq ($(GNU_CC)$(GNU_CXX),)
+# Non-GNU compilers
+	@echo "`echo '$(MAKE):'|sed 's/./ /g'`"\
+	'(Compiler-based depend was turned on by "--enable-depend".)' 1>&2
+else
+# GNU compilers
+	@space="`echo '$(MAKE): '|sed 's/./ /g'`";\
+	echo "$$space"'Since you are using a GNU compiler,\
+		it is on by default.' 1>&2; \
+	echo "$$space"'To turn it off, pass --disable-md to configure.' 1>&2
+endif
 else
 $(MKDEPENDENCIES)::
 	touch $(MKDEPENDENCIES)
