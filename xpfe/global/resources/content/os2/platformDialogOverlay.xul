@@ -64,8 +64,8 @@
   </hbox>
 
   <keyset id="dialogKeys">
-    <key keycode="VK_ENTER" oncommand="if (!document.getElementById('ok').disabled) doOKButton();"/>
-    <key keycode="VK_RETURN" oncommand="if (!document.getElementById('ok').disabled) doOKButton();"/>
+    <key keycode="VK_ENTER" oncommand="if (event.target.localName != 'button' &amp;&amp; !document.getElementById('ok').disabled) doOKButton();"/>
+    <key keycode="VK_RETURN" oncommand="if (event.target.localName != 'button' &amp;&amp; !document.getElementById('ok').disabled) doOKButton();"/>
     <key keycode="VK_ESCAPE" oncommand="doCancelButton();"/>
  </keyset>
 
