@@ -307,6 +307,7 @@ public:
 
 protected:
   void InitFrameData();
+  nsresult CheckForTrailingSlash(nsIURL* aURL);
 
   PLEventQueue* mThreadEventQueue;
   nsIScriptGlobalObject *mScriptGlobal;
@@ -2246,12 +2247,49 @@ nsWebShell::CancelRefreshURLTimers(void) {
   return NS_OK;
 }
 
+
 //----------------------------------------------------------------------
+
+/*
+ * There are cases where netlib does things like add a trailing slash
+ * to the url being retrieved.  We need to watch out for such
+ * changes and update the currently loading url's entry in the history
+ * list. UpdateHistoryEntry() does this.
+ *
+ * Assumptions: 
+ *
+ *   1) aURL is the URL that was inserted into the history list in LoadURL()
+ *   2) The load of aURL is in progress and this function is being called
+ *      from one of the functions in nsIStreamListener implemented by nsWebShell.
+ */
+nsresult nsWebShell::CheckForTrailingSlash(nsIURL* aURL)
+{
+  nsString* historyURL = (nsString*) mHistory.ElementAt(mHistoryIndex);
+  const char* spec;
+  aURL->GetSpec(&spec);
+  nsString* newURL = (nsString*) new nsString(spec);
+
+  if (newURL->Last() == '/' && !historyURL->Equals(*newURL)) {
+    // Replace the top most history entry with the new url
+    if (nsnull != historyURL) {
+      delete historyURL;
+    }
+    mHistory.ReplaceElementAt(newURL, mHistoryIndex);
+  }
+
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsWebShell::OnStartBinding(nsIURL* aURL, const char *aContentType)
 {
   nsresult rv = NS_OK;
+
+  // XXX This is a temporary hack for meeting the M3 Dogfood milestone
+  // for seamonkey.  I think Netlib should send a message to all stream listeners
+  // when it changes the URL like this.  That would mean adding a new method
+  // to nsIStreamListener.  Need to talk to Rick, Kipp, Gagan about this.
+  CheckForTrailingSlash(aURL);
 
   if (nsnull != mObserver) {
     rv = mObserver->OnStartBinding(aURL, aContentType);
