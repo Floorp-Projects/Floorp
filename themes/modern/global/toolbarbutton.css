@@ -62,23 +62,23 @@ toolbarbutton {
 }
 
 toolbarbutton:hover {
-  border-top: 1px solid #EEF0F3;
-  border-right: 1px solid #86929E;
-  border-bottom: 1px solid #86929E;
-  border-left: 1px solid #EEF0F3;
+  border-top-color: #EEF0F3;
+  border-right-color: #86929E;
+  border-bottom-color: #86929E;
+  border-left-color: #EEF0F3;
 }
 
 toolbarbutton:hover:active,
 toolbarbutton[open="true"] {
-  border-top: 1px solid #86929E;
-  border-right: 1px solid #EEF0F3;
-  border-bottom: 1px solid #EEF0F3;
-  border-left: 1px solid #86929E;
+  border-top-color: #86929E;
+  border-right-color: #EEF0F3;
+  border-bottom-color: #EEF0F3;
+  border-left-color: #86929E;
   padding: 2px 1px 0px 3px;
 }
 
 toolbarbutton[disabled="true"] {
-  border: 1px solid transparent !important;
+  border-color: transparent !important;
   padding: 1px 2px !important;
   color: #9399AB !important;
 }
@@ -86,10 +86,10 @@ toolbarbutton[disabled="true"] {
 /* ..... checked state ..... */
   
 toolbarbutton[checked="true"] {
-  border-top: 1px solid #454C55 !important;
-  border-right: 1px solid #7D848D !important;
-  border-bottom: 1px solid #7D848D !important;
-  border-left: 1px solid #454C55 !important;
+  border-top-color: #454C55 !important;
+  border-right-color: #7D848D !important;
+  border-bottom-color: #7D848D !important;
+  border-left-color: #454C55 !important;
   background-color: #8C9AA8 !important;
   color: #EFF1F4;
 }

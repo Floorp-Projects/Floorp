@@ -72,7 +72,7 @@ tab[busy] {
 
 .tabs-closebutton {
   margin: 0px 4px;
-  padding: 4px 2px 4px 2px;
+  padding: 3px 2px;
   border: none;
   list-style-image: url("chrome://global/skin/icons/close.gif");
 }
@@ -84,3 +84,9 @@ tab[busy] {
 .tabs-closebutton:hover:active {
   list-style-image: url("chrome://global/skin/icons/close-act.gif");
 }
+
+.tabs-closebutton[disabled="true"] {
+  padding: 3px 2px !important;
+  list-style-image: url("chrome://global/skin/icons/close-dis.gif") !important;
+}
+
