@@ -448,7 +448,7 @@ PC_ArraySize(PCNameValueArray *array)
 
 /* returns value for a given name
  */
-char *
+PUBLIC char *
 PC_FindInNameValueArray(PCNameValueArray *array, char *name)
 {
 	int i;
