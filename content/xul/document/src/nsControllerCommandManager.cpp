@@ -80,8 +80,6 @@ nsControllerCommandManager::RegisterCommand(const nsAString & aCommandName, nsIC
   return NS_OK;
 }
 
-#error
-
 NS_IMETHODIMP
 nsControllerCommandManager::UnregisterCommand(const nsAString & aCommandName, nsIControllerCommand *aCommand)
 {
