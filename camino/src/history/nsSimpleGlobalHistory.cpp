@@ -1668,7 +1668,18 @@ nsSimpleGlobalHistory::OpenDB()
 #endif
     // we couldn't open the file, so it's either corrupt or doesn't exist.
     // attempt to delete the file, but ignore the error
+#ifdef DEBUG_HISTORY
+    nsCOMPtr<nsIFile> fileCopy;
+    historyFile->Clone(getter_AddRefs(fileCopy));
+    fileCopy->SetLeafName(NS_LITERAL_STRING("history_BAD.dat"));
+    fileCopy->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
+    nsString uniqueFileName;
+    fileCopy->GetLeafName(uniqueFileName);
+    
+    historyFile->MoveTo(nsnull, uniqueFileName);
+#else
     historyFile->Remove(PR_FALSE);
+#endif
     rv = OpenNewFile(gMdbFactory, filePath.get());
   }
 
