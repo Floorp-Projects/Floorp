@@ -206,6 +206,9 @@ nsresult CScanner::FillBuffer(void) {
     if(mFileStream) {
       mFileStream->read(buf,kBufsize);
       numread=mFileStream->gcount();
+      if (0 == numread) {
+        return kEOF;
+      }
     }
     mOffset=mBuffer.Length();
     if((0<numread) && (0==anError))
