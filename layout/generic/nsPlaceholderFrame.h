@@ -45,7 +45,7 @@ public:
                           nsIReflowCommand* aReflowCommand);
   NS_IMETHOD InlineReflow(nsLineLayout&     aLineLayout,
                           nsHTMLReflowMetrics& aDesiredSize,
-                          const nsReflowState& aReflowState);
+                          const nsHTMLReflowState& aReflowState);
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);

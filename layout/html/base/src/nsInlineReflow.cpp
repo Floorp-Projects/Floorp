@@ -20,7 +20,6 @@
 #include "nsLineLayout.h"
 #include "nsIFontMetrics.h"
 #include "nsIPresContext.h"
-#include "nsIRunaround.h"
 #include "nsISpaceManager.h"
 #include "nsIStyleContext.h"
 
@@ -368,7 +367,7 @@ nsInlineReflow::ReflowFrame(nsHTMLReflowMetrics& aMetrics,
   }
 
   // Setup reflow state for reflowing the frame
-  nsReflowState reflowState(mFrame, mOuterReflowState, mFrameAvailSize);
+  nsHTMLReflowState reflowState(mFrame, mOuterReflowState, mFrameAvailSize);
   reflowState.reason = reason;
 
   // Let frame know that are reflowing it
@@ -380,13 +379,11 @@ nsInlineReflow::ReflowFrame(nsHTMLReflowMetrics& aMetrics,
   htmlReflow->WillReflow(mPresContext);
   mFrame->MoveTo(x, y);
 
-  // There are 3 ways to reflow the child frame: using the
-  // nsIRunaround interface, using the nsIInlineReflow interface or
-  // using the default Reflow method in nsIFrame. The order of
-  // precedence is nsIRunaround, nsIInlineReflow, nsIFrame. For all
-  // three API's we map the reflow status into an
+  // There are two ways to reflow the child frame: using the
+  // using the nsIInlineReflow interface or using the default Reflow
+  // method in nsIHTMLReflow. The order of precedence is nsIInlineReflow
+  // then nsIHTMLReflow. We map the reflow status into an
   // nsInlineReflowStatus.
-  nsIRunaround* runAround;
   nsIInlineReflow* inlineReflow;
   aBounds.x = x;
   aBounds.y = y;
@@ -402,20 +399,7 @@ nsInlineReflow::ReflowFrame(nsHTMLReflowMetrics& aMetrics,
   nscoord ty = y - mOuterReflowState.mBorderPadding.top;
   mSpaceManager->Translate(tx, ty);
 
-  if ((nsnull != mSpaceManager) &&
-      (NS_OK == mFrame->QueryInterface(kIRunaroundIID, (void**)&runAround))) {
-    nsRect r;
-    runAround->ReflowAround(mPresContext, mSpaceManager,
-                            aMetrics, reflowState, r, aStatus);
-    aBounds.width = r.width;
-    aBounds.height = r.height;
-    aMetrics.width = r.width;
-    aMetrics.height = r.height;
-    aMetrics.ascent = r.height;
-    aMetrics.descent = 0;
-  }
-  else if (NS_OK == mFrame->QueryInterface(kIInlineReflowIID,
-                                           (void**)&inlineReflow)) {
+  if (NS_OK == mFrame->QueryInterface(kIInlineReflowIID, (void**)&inlineReflow)) {
     aStatus = inlineReflow->InlineReflow(mLineLayout, aMetrics, reflowState);
     mIsInlineAware = PR_TRUE;
     aBounds.width = aMetrics.width;

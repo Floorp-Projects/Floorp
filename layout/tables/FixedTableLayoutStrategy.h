@@ -58,7 +58,7 @@ public:
 	* @param aMaxWidth - the computed max width for columns to fit into
 	*/
   virtual PRBool BalanceColumnWidths(nsIStyleContext *    aTableStyle,
-                                     const nsReflowState& aReflowState,
+                                     const nsHTMLReflowState& aReflowState,
                                      nscoord              aMaxWidth);
 
 protected:

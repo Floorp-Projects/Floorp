@@ -180,10 +180,10 @@ public:
 
   // nsIHTMLReflow
   NS_IMETHOD  WillReflow(nsIPresContext& aPresContext);
-  NS_IMETHOD  Reflow(nsIPresContext&      aPresContext,
-                     nsHTMLReflowMetrics& aDesiredSize,
-                     const nsReflowState& aReflowState,
-                     nsReflowStatus&      aStatus);
+  NS_IMETHOD  Reflow(nsIPresContext&          aPresContext,
+                     nsHTMLReflowMetrics&     aDesiredSize,
+                     const nsHTMLReflowState& aReflowState,
+                     nsReflowStatus&          aStatus);
   NS_IMETHOD  DidReflow(nsIPresContext& aPresContext,
                         nsDidReflowStatus aStatus);
   NS_IMETHOD  GetReflowMetrics(nsIPresContext&      aPresContext,

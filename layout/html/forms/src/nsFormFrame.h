@@ -26,7 +26,7 @@ class  nsString;
 class  nsIContent;
 class  nsIFrame;
 class  nsIPresContext;
-struct nsReflowState;
+struct nsHTMLReflowState;
 class  nsFormControlFrame;
 class  nsRadioControlFrame;
 class  nsIFormControlFrame;
@@ -39,7 +39,7 @@ public:
 
   NS_IMETHOD Reflow(nsIPresContext&      aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,
-                    const nsReflowState& aReflowState,
+                    const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
   virtual ~nsFormFrame();
 
@@ -69,7 +69,7 @@ protected:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
-                              const nsReflowState& aReflowState,
+                              const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredSize);
   void RemoveRadioGroups();
   void ProcessAsURLEncoded(PRBool aIsPost, nsString& aData);

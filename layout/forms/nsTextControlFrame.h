@@ -58,7 +58,7 @@ protected:
   virtual ~nsTextControlFrame();
   
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
-                              const nsReflowState& aReflowState,
+                              const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredLayoutSize,
                               nsSize& aDesiredWidgetSize);
 };

@@ -506,7 +506,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
 
     CreateRenderingContext(mRootFrame, rcx);
 
-    nsReflowState       reflowState(mRootFrame, eReflowReason_Initial, maxSize, rcx);
+    nsHTMLReflowState reflowState(mRootFrame, eReflowReason_Initial, maxSize, rcx);
 
     if (NS_OK == mRootFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
       htmlReflow->Reflow(*mPresContext, desiredSize, reflowState, status);
@@ -557,7 +557,7 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 
     CreateRenderingContext(mRootFrame, rcx);
 
-    nsReflowState       reflowState(mRootFrame, eReflowReason_Resize, maxSize, rcx);
+    nsHTMLReflowState reflowState(mRootFrame, eReflowReason_Resize, maxSize, rcx);
 
     if (NS_OK == mRootFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
       htmlReflow->Reflow(*mPresContext, desiredSize, reflowState, status);

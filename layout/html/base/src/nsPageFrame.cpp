@@ -64,10 +64,10 @@ void nsPageFrame::CreateFirstChild(nsIPresContext* aPresContext)
   }
 }
 
-NS_METHOD nsPageFrame::Reflow(nsIPresContext&      aPresContext,
-                              nsHTMLReflowMetrics& aDesiredSize,
-                              const nsReflowState& aReflowState,
-                              nsReflowStatus&      aStatus)
+NS_METHOD nsPageFrame::Reflow(nsIPresContext&          aPresContext,
+                              nsHTMLReflowMetrics&     aDesiredSize,
+                              const nsHTMLReflowState& aReflowState,
+                              nsReflowStatus&          aStatus)
 {
   aStatus = NS_FRAME_COMPLETE;  // initialize out parameter
 
@@ -89,8 +89,8 @@ NS_METHOD nsPageFrame::Reflow(nsIPresContext&      aPresContext,
 
     // Dispatch the reflow command to our content child. Allow it to be as high
     // as it wants
-    nsSize        maxSize(aReflowState.maxSize.width, NS_UNCONSTRAINEDSIZE);
-    nsReflowState kidReflowState(mFirstChild, aReflowState, maxSize);
+    nsSize            maxSize(aReflowState.maxSize.width, NS_UNCONSTRAINEDSIZE);
+    nsHTMLReflowState kidReflowState(mFirstChild, aReflowState, maxSize);
   
     aStatus = ReflowChild(mFirstChild, &aPresContext, aDesiredSize, kidReflowState);
   
@@ -126,8 +126,8 @@ NS_METHOD nsPageFrame::Reflow(nsIPresContext&      aPresContext,
     // Resize our frame allowing it only to be as big as we are
     // XXX Pay attention to the page's border and padding...
     if (nsnull != mFirstChild) {
-      nsReflowState  kidReflowState(mFirstChild, aReflowState, aReflowState.maxSize);
-      nsIHTMLReflow* htmlReflow;
+      nsHTMLReflowState kidReflowState(mFirstChild, aReflowState, aReflowState.maxSize);
+      nsIHTMLReflow*    htmlReflow;
 
       if (NS_OK == mFirstChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
         // Get the child's desired size

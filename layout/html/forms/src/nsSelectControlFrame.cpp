@@ -94,7 +94,7 @@ protected:
   virtual ~nsSelectControlFrame();
 
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
-                              const nsReflowState& aReflowState,
+                              const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredLayoutSize,
                               nsSize& aDesiredWidgetSize);
   
@@ -193,7 +193,7 @@ nsSelectControlFrame::GetCID()
 
 void 
 nsSelectControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
-                                     const nsReflowState& aReflowState,
+                                     const nsHTMLReflowState& aReflowState,
                                      nsHTMLReflowMetrics& aDesiredLayoutSize,
                                      nsSize& aDesiredWidgetSize)
 {

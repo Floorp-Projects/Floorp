@@ -183,10 +183,10 @@ void SetType(nsIHTMLContent* aElement, nsString& aValue)
   }
 }
 
-NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext&      aPresContext, 
-                                         nsHTMLReflowMetrics& aDesiredSize,
-                                         const nsReflowState& aReflowState, 
-                                         nsReflowStatus&      aStatus)
+NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext&          aPresContext, 
+                                         nsHTMLReflowMetrics&     aDesiredSize,
+                                         const nsHTMLReflowState& aReflowState, 
+                                         nsReflowStatus&          aStatus)
 {
   PRInt32 numChildren = LengthOf(mFirstChild);
   
@@ -225,8 +225,8 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext&      aPresContext,
   childFrame = mFirstChild;
   nsPoint offset(0,0);
   while (nsnull != childFrame) {  // reflow, place, size the children
-    nsReflowState   reflowState(childFrame, aReflowState, maxSize);
-    nsIHTMLReflow*  htmlReflow;
+    nsHTMLReflowState   reflowState(childFrame, aReflowState, maxSize);
+    nsIHTMLReflow*      htmlReflow;
 
     if (NS_OK == childFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
       htmlReflow->WillReflow(aPresContext);

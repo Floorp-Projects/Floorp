@@ -20,7 +20,6 @@
 #include "nsIAbsoluteItems.h"
 #include "nsIAnchoredItems.h"
 #include "nsIFloaterContainer.h"
-#include "nsIRunaround.h"
 #include "nsIInlineReflow.h"
 #include "nsIHTMLReflow.h"
 
@@ -29,5 +28,4 @@ const nsIID kIAnchoredItemsIID = NS_IANCHORED_ITEMS_IID;
 const nsIID kIFloaterContainerIID = NS_IFLOATER_CONTAINER_IID;
 const nsIID kIHTMLContentIID = NS_IHTMLCONTENT_IID;
 const nsIID kIInlineReflowIID = NS_IINLINE_REFLOW_IID;
-const nsIID kIRunaroundIID = NS_IRUNAROUND_IID;
 const nsIID kIHTMLReflowIID = NS_IHTMLREFLOW_IID;

@@ -57,7 +57,7 @@ NS_METHOD nsLeafFrame::Paint(nsIPresContext& aPresContext,
 
 NS_METHOD nsLeafFrame::Reflow(nsIPresContext&      aPresContext,
                               nsHTMLReflowMetrics& aDesiredSize,
-                              const nsReflowState& aReflowState,
+                              const nsHTMLReflowState& aReflowState,
                               nsReflowStatus&      aStatus)
 {
   NS_PRECONDITION(mState & NS_FRAME_IN_REFLOW, "frame is not in reflow");

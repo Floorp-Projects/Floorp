@@ -113,10 +113,10 @@ protected:
    * Reflow a child frame and return the status of the reflow. If the child
    * is complete and it has next-in-flows, then delete the next-in-flows.
    */
-  nsReflowStatus ReflowChild(nsIFrame*            aKidFrame,
-                             nsIPresContext*      aPresContext,
-                             nsHTMLReflowMetrics& aDesiredSize,
-                             const nsReflowState& aReflowState);
+  nsReflowStatus ReflowChild(nsIFrame*                aKidFrame,
+                             nsIPresContext*          aPresContext,
+                             nsHTMLReflowMetrics&     aDesiredSize,
+                             const nsHTMLReflowState& aReflowState);
 
  /**
   * Moves any frames on both the prev-in-flow's overflow list and the receiver's

@@ -83,7 +83,7 @@ nsRadioControlFrame::GetCID()
 
 void 
 nsRadioControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
-                                  const nsReflowState& aReflowState,
+                                  const nsHTMLReflowState& aReflowState,
                                   nsHTMLReflowMetrics& aDesiredLayoutSize,
                                   nsSize& aDesiredWidgetSize)
 {

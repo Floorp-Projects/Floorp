@@ -81,7 +81,7 @@ protected:
   void SizeOfWithoutThis(nsISizeOfHandler* aHandler) const;
 
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
-                              const nsReflowState& aReflowState,
+                              const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredSize);
 
   nsIImageMap* GetImageMap();
@@ -266,7 +266,7 @@ nsHTMLImageLoader::StartLoadImage(nsIPresContext* aPresContext,
 
 void
 nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
-                                  const nsReflowState& aReflowState,
+                                  const nsHTMLReflowState& aReflowState,
                                   nsIFrame* aTargetFrame,
                                   nsFrameImageLoaderCB aCallBack,
                                   nsHTMLReflowMetrics& aDesiredSize)
@@ -418,7 +418,7 @@ UpdateImageFrame(nsIPresContext& aPresContext, nsIFrame* aFrame,
 
 void
 ImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
-                           const nsReflowState& aReflowState,
+                           const nsHTMLReflowState& aReflowState,
                            nsHTMLReflowMetrics& aDesiredSize)
 {
   if (mSizeFrozen) {

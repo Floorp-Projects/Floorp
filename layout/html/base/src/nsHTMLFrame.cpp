@@ -42,10 +42,10 @@ public:
   RootFrame(nsIContent* aContent);
 
   NS_IMETHOD Init(nsIPresContext& aPresContext, nsIFrame* aChildList);
-  NS_IMETHOD Reflow(nsIPresContext&      aPresContext,
-                    nsHTMLReflowMetrics& aDesiredSize,
-                    const nsReflowState& aReflowState,
-                    nsReflowStatus&      aStatus);
+  NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
+                    nsHTMLReflowMetrics&     aDesiredSize,
+                    const nsHTMLReflowState& aReflowState,
+                    nsReflowStatus&          aStatus);
   NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
                          nsGUIEvent*     aEvent,
                          nsEventStatus&  aEventStatus);
@@ -60,10 +60,10 @@ class RootContentFrame : public nsContainerFrame {
 public:
   RootContentFrame(nsIContent* aContent, nsIFrame* aParent);
 
-  NS_IMETHOD Reflow(nsIPresContext&      aPresContext,
-                    nsHTMLReflowMetrics& aDesiredSize,
-                    const nsReflowState& aReflowState,
-                    nsReflowStatus&      aStatus);
+  NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
+                    nsHTMLReflowMetrics&     aDesiredSize,
+                    const nsHTMLReflowState& aReflowState,
+                    nsReflowStatus&          aStatus);
   NS_IMETHOD Paint(nsIPresContext&      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect);
@@ -118,10 +118,10 @@ RootFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
 }
 
 NS_IMETHODIMP
-RootFrame::Reflow(nsIPresContext&      aPresContext,
-                  nsHTMLReflowMetrics& aDesiredSize,
-                  const nsReflowState& aReflowState,
-                  nsReflowStatus&      aStatus)
+RootFrame::Reflow(nsIPresContext&          aPresContext,
+                  nsHTMLReflowMetrics&     aDesiredSize,
+                  const nsHTMLReflowState& aReflowState,
+                  nsReflowStatus&          aStatus)
 {
   NS_FRAME_TRACE_REFLOW_IN("RootFrame::Reflow");
 
@@ -147,7 +147,7 @@ RootFrame::Reflow(nsIPresContext&      aPresContext,
   // wants
   if (nsnull != mFirstChild) {
     nsHTMLReflowMetrics desiredSize(nsnull);
-    nsReflowState       kidReflowState(mFirstChild, aReflowState, aReflowState.maxSize);
+    nsHTMLReflowState   kidReflowState(mFirstChild, aReflowState, aReflowState.maxSize);
     nsIHTMLReflow*      htmlReflow;
 
     if (NS_OK == mFirstChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
@@ -294,10 +294,10 @@ RootContentFrame::ComputeChildMargins(nsMargin& aMargin)
 #define PAGE_SPACING_TWIPS 100
 
 NS_IMETHODIMP
-RootContentFrame::Reflow(nsIPresContext&      aPresContext,
-                         nsHTMLReflowMetrics& aDesiredSize,
-                         const nsReflowState& aReflowState,
-                         nsReflowStatus&      aStatus)
+RootContentFrame::Reflow(nsIPresContext&          aPresContext,
+                         nsHTMLReflowMetrics&     aDesiredSize,
+                         const nsHTMLReflowState& aReflowState,
+                         nsReflowStatus&          aStatus)
 {
   NS_FRAME_TRACE_REFLOW_IN("RootContentFrame::Reflow");
 
@@ -361,9 +361,9 @@ RootContentFrame::Reflow(nsIPresContext&      aPresContext,
     aReflowState.reflowCommand->GetNext(next);
     NS_ASSERTION(next == mFirstChild, "unexpected next reflow command frame");
 
-    nsSize          maxSize(availWidth, NS_UNCONSTRAINEDSIZE);
-    nsReflowState   kidReflowState(next, aReflowState, maxSize);
-    nsIHTMLReflow*  htmlReflow;
+    nsSize            maxSize(availWidth, NS_UNCONSTRAINEDSIZE);
+    nsHTMLReflowState kidReflowState(next, aReflowState, maxSize);
+    nsIHTMLReflow*    htmlReflow;
   
     // Dispatch the reflow command to our child frame. Allow it to be as high
     // as it wants
@@ -413,8 +413,8 @@ RootContentFrame::Reflow(nsIPresContext&      aPresContext,
         // Tile the pages vertically
         for (nsIFrame* kidFrame = mFirstChild; nsnull != kidFrame; ) {
           // Reflow the page
-          nsReflowState   kidReflowState(kidFrame, aReflowState, pageSize,
-                                         reflowReason);
+          nsHTMLReflowState kidReflowState(kidFrame, aReflowState, pageSize,
+                                           reflowReason);
           nsIHTMLReflow*  htmlReflow;
           nsReflowStatus  status;
 
@@ -473,9 +473,9 @@ RootContentFrame::Reflow(nsIPresContext&      aPresContext,
         }
   
       } else {
-        nsSize         maxSize(availWidth, NS_UNCONSTRAINEDSIZE);
-        nsReflowState  kidReflowState(mFirstChild, aReflowState, maxSize,
-                                      reflowReason);
+        nsSize            maxSize(availWidth, NS_UNCONSTRAINEDSIZE);
+        nsHTMLReflowState kidReflowState(mFirstChild, aReflowState, maxSize,
+                                         reflowReason);
         nsIHTMLReflow* htmlReflow;
   
         if (NS_OK == mFirstChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {

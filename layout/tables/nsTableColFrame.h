@@ -47,10 +47,10 @@ public:
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
 
-  NS_IMETHOD Reflow(nsIPresContext*      aPresContext,
-                    nsHTMLReflowMetrics& aDesiredSize,
-                    const nsReflowState& aReflowState,
-                    nsReflowStatus&      aStatus);
+  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
+                    nsHTMLReflowMetrics&     aDesiredSize,
+                    const nsHTMLReflowState& aReflowState,
+                    nsReflowStatus&          aStatus);
 
   /** return the index of the column the col represents.  always >= 0 */
   virtual int GetColumnIndex ();

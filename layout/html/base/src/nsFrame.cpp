@@ -1145,10 +1145,10 @@ nsFrame::DidReflow(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
-NS_METHOD nsFrame::Reflow(nsIPresContext&      aPresContext,
-                          nsHTMLReflowMetrics& aDesiredSize,
-                          const nsReflowState& aReflowState,
-                          nsReflowStatus&      aStatus)
+NS_METHOD nsFrame::Reflow(nsIPresContext&          aPresContext,
+                          nsHTMLReflowMetrics&     aDesiredSize,
+                          const nsHTMLReflowState& aReflowState,
+                          nsReflowStatus&          aStatus)
 {
   aDesiredSize.width = 0;
   aDesiredSize.height = 0;

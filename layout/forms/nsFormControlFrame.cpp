@@ -163,7 +163,7 @@ nsFormControlFrame::Paint(nsIPresContext& aPresContext,
 
 void 
 nsFormControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
-                             const nsReflowState& aReflowState,
+                             const nsHTMLReflowState& aReflowState,
                              nsHTMLReflowMetrics& aDesiredLayoutSize,
                              nsSize& aDesiredWidgetSize)
 {
@@ -182,7 +182,7 @@ nsFormControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
 
 void 
 nsFormControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
-                             const nsReflowState& aReflowState,
+                             const nsHTMLReflowState& aReflowState,
                              nsHTMLReflowMetrics& aDesiredSize)
 {
   nsSize ignore;
@@ -210,7 +210,7 @@ nsFormControlFrame::DidReflow(nsIPresContext& aPresContext,
 NS_METHOD
 nsFormControlFrame::Reflow(nsIPresContext&      aPresContext,
                      nsHTMLReflowMetrics& aDesiredSize,
-                     const nsReflowState& aReflowState,
+                     const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&      aStatus)
 {
   nsIView* view = nsnull;
@@ -552,7 +552,7 @@ NS_METHOD nsFormControlFrame::HandleEvent(nsIPresContext& aPresContext,
 }
 
 void nsFormControlFrame::GetStyleSize(nsIPresContext& aPresContext,
-                                const nsReflowState& aReflowState,
+                                const nsHTMLReflowState& aReflowState,
                                 nsSize& aSize)
 {
   PRIntn ss = nsCSSLayout::GetStyleSize(&aPresContext, aReflowState, aSize);

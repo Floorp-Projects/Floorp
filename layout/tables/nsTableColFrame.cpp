@@ -62,7 +62,7 @@ NS_METHOD nsTableColFrame::Paint(nsIPresContext& aPresContext,
 
 NS_METHOD nsTableColFrame::Reflow(nsIPresContext*      aPresContext,
                                   nsHTMLReflowMetrics& aDesiredSize,
-                                  const nsReflowState& aReflowState,
+                                  const nsHTMLReflowState& aReflowState,
                                   nsReflowStatus&      aStatus)
 {
   NS_ASSERTION(nsnull!=aPresContext, "bad arg");

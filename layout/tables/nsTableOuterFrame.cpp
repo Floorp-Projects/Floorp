@@ -52,7 +52,7 @@ struct OuterTableReflowState {
   nsIPresContext *pc;
 
   // Our reflow state
-  const nsReflowState& reflowState;
+  const nsHTMLReflowState& reflowState;
 
   // The total available size (computed from the parent)
   nsSize availSize;
@@ -70,8 +70,8 @@ struct OuterTableReflowState {
   // Running y-offset
   nscoord y;
 
-  OuterTableReflowState(nsIPresContext*      aPresContext,
-                        const nsReflowState& aReflowState)
+  OuterTableReflowState(nsIPresContext*          aPresContext,
+                        const nsHTMLReflowState& aReflowState)
     : reflowState(aReflowState)
   {
     pc = aPresContext;
@@ -245,7 +245,7 @@ nsresult nsTableOuterFrame::AdjustSiblingsAfterReflow(nsIPresContext*        aPr
 nsresult nsTableOuterFrame::IncrementalReflow(nsIPresContext* aPresContext,
                                               OuterTableReflowState& aState,
                                               nsHTMLReflowMetrics& aDesiredSize,
-                                              const nsReflowState& aReflowState,
+                                              const nsHTMLReflowState& aReflowState,
                                               nsReflowStatus& aStatus)
 {
   nsresult  rv = NS_OK;
@@ -291,7 +291,7 @@ nsresult nsTableOuterFrame::IncrementalReflow(nsIPresContext* aPresContext,
   if (NS_OK == kidFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
     htmlReflow->WillReflow(*aPresContext);
     kidFrame->MoveTo(kidMargin.left, aState.y);
-    nsReflowState kidReflowState(kidFrame, aState.reflowState, aState.availSize);
+    nsHTMLReflowState kidReflowState(kidFrame, aState.reflowState, aState.availSize);
     if (kidFrame != mInnerTableFrame) {
       // Reflow captions to the width of the inner table
       kidReflowState.maxSize.width = aState.innerTableMaxSize.width;
@@ -326,7 +326,7 @@ nsresult nsTableOuterFrame::IncrementalReflow(nsIPresContext* aPresContext,
 /**
  * Called by the Reflow() member function to compute the table width
  */
-nscoord nsTableOuterFrame::GetTableWidth(const nsReflowState& aReflowState)
+nscoord nsTableOuterFrame::GetTableWidth(const nsHTMLReflowState& aReflowState)
 {
   nscoord maxWidth;
 
@@ -395,7 +395,7 @@ nscoord nsTableOuterFrame::GetTableWidth(const nsReflowState& aReflowState)
   */
 NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext& aPresContext,
                                     nsHTMLReflowMetrics& aDesiredSize,
-                                    const nsReflowState& aReflowState,
+                                    const nsHTMLReflowState& aReflowState,
                                     nsReflowStatus& aStatus)
 {
   if (PR_TRUE==gsDebug)
@@ -435,7 +435,7 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext& aPresContext,
       if (nsnull != mCaptionFrame) {
         nsSize              maxElementSize;
         nsHTMLReflowMetrics captionSize(&maxElementSize);
-        nsReflowState       captionReflowState(mCaptionFrame, aReflowState,
+        nsHTMLReflowState   captionReflowState(mCaptionFrame, aReflowState,
                                                nsSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE),
                                                eReflowReason_Initial);
         nsIHTMLReflow*      htmlReflow;
@@ -462,8 +462,8 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext& aPresContext,
     }
 
     // First reflow the inner table
-    nsReflowState   innerReflowState(mInnerTableFrame, aReflowState,
-                                     nsSize(tableWidth, aReflowState.maxSize.height));
+    nsHTMLReflowState   innerReflowState(mInnerTableFrame, aReflowState,
+                                         nsSize(tableWidth, aReflowState.maxSize.height));
     nsHTMLReflowMetrics innerSize(aDesiredSize.maxElementSize); 
     nsIHTMLReflow*      htmlReflow;
 
@@ -502,9 +502,9 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext& aPresContext,
       }
 
       // Reflow the caption. Let it be as high as it wants
-      nsReflowState   captionReflowState(mCaptionFrame, state.reflowState,
-                                         nsSize(innerSize.width, NS_UNCONSTRAINEDSIZE),
-                                         eReflowReason_Resize);
+      nsHTMLReflowState   captionReflowState(mCaptionFrame, state.reflowState,
+                                             nsSize(innerSize.width, NS_UNCONSTRAINEDSIZE),
+                                             eReflowReason_Resize);
       nsHTMLReflowMetrics captionSize(nsnull);
       nsIHTMLReflow*      htmlReflow;
       nsRect captionRect(captionMargin.left, captionY, 0, 0);

@@ -83,7 +83,7 @@ public:
     */
   NS_IMETHOD Reflow(nsIPresContext&      aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,
-                    const nsReflowState& aReflowState,
+                    const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
 
   NS_IMETHOD DidReflow(nsIPresContext& aPresContext,

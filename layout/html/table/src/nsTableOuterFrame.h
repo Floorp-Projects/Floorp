@@ -56,10 +56,10 @@ public:
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
 
-  NS_IMETHOD Reflow(nsIPresContext&      aPresContext,
-                    nsHTMLReflowMetrics& aDesiredSize,
-                    const nsReflowState& aReflowState,
-                    nsReflowStatus&      aStatus);
+  NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
+                    nsHTMLReflowMetrics&     aDesiredSize,
+                    const nsHTMLReflowState& aReflowState,
+                    nsReflowStatus&          aStatus);
 
   /** @see nsContainerFrame */
   NS_IMETHOD CreateContinuingFrame(nsIPresContext&  aPresContext,
@@ -92,7 +92,7 @@ protected:
                   nsSize*                aMaxElementSize,
                   nsSize&                aKidMaxElementSize);
 
-  nscoord GetTableWidth(const nsReflowState& aReflowState);
+  nscoord GetTableWidth(const nsHTMLReflowState& aReflowState);
 
   /** overridden here to handle special caption-table relationship
     * @see nsContainerFrame::VerifyTree
@@ -126,7 +126,7 @@ protected:
   nsresult IncrementalReflow(nsIPresContext* aPresContext,
                              OuterTableReflowState& aState,
                              nsHTMLReflowMetrics& aDesiredSize,
-                             const nsReflowState& aReflowState,
+                             const nsHTMLReflowState& aReflowState,
                              nsReflowStatus& aStatus);
   nsresult AdjustSiblingsAfterReflow(nsIPresContext*        aPresContext,
                                      OuterTableReflowState& aState,

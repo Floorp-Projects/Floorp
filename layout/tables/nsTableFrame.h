@@ -75,18 +75,18 @@ public:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   /** helper method for determining if this is a nested table or not */
-  PRBool IsNested(const nsReflowState& aReflowState, nsStylePosition *& aPosition) const;
+  PRBool IsNested(const nsHTMLReflowState& aReflowState, nsStylePosition *& aPosition) const;
 
   /** helper method to find the table parent of any table frame object */
   static NS_METHOD GetTableFrame(nsIFrame *aSourceFrame, nsTableFrame *& aOutFrame);
 
   /** helper method for getting the width of the table's containing block */
-  static nscoord GetTableContainerWidth(const nsReflowState& aState);
+  static nscoord GetTableContainerWidth(const nsHTMLReflowState& aState);
 
 
   static PRBool TableIsAutoWidth(nsTableFrame *aTableFrame,
                                  nsIStyleContext *aTableStyle,
-                                 const nsReflowState& aReflowState,
+                                 const nsHTMLReflowState& aReflowState,
                                  nscoord& aSpecifiedTableWidth);
 
   NS_IMETHOD Init(nsIPresContext& aPresContext, nsIFrame* aChildList);
@@ -115,7 +115,7 @@ public:
     */
   NS_IMETHOD Reflow(nsIPresContext& aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,
-                    const nsReflowState& aReflowState,
+                    const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
 
   /** @see nsContainerFrame::CreateContinuingFrame */
@@ -259,7 +259,7 @@ protected:
     */
   virtual nsReflowStatus ResizeReflowPass1(nsIPresContext*      aPresContext,
                                            nsHTMLReflowMetrics& aDesiredSize,
-                                           const nsReflowState& aReflowState,
+                                           const nsHTMLReflowState& aReflowState,
                                            nsReflowStatus&      aStatus);
 
   /** second pass of ResizeReflow.
@@ -273,7 +273,7 @@ protected:
     */
   virtual nsReflowStatus ResizeReflowPass2(nsIPresContext*      aPresContext,
                                            nsHTMLReflowMetrics& aDesiredSize,
-                                           const nsReflowState& aReflowState);
+                                           const nsHTMLReflowState& aReflowState);
 
   nsresult AdjustSiblingsAfterReflow(nsIPresContext*        aPresContext,
                                      InnerTableReflowState& aState,
@@ -283,7 +283,7 @@ protected:
   /** return the desired width of this table accounting for the current
     * reflow state, and for the table attributes and parent
     */
-  nscoord ComputeDesiredWidth(const nsReflowState& aReflowState) const;
+  nscoord ComputeDesiredWidth(const nsHTMLReflowState& aReflowState) const;
 
   nscoord GetTopMarginFor(nsIPresContext* aCX,
                           InnerTableReflowState& aState,
@@ -326,10 +326,10 @@ protected:
     * @param aMaxSize         the height and width constraints
     * @param aMaxElementSize  the min size of the largest indivisible object
     */
-  virtual void BalanceColumnWidths(nsIPresContext*      aPresContext, 
-                                   const nsReflowState& aReflowState,
-                                   const nsSize&        aMaxSize, 
-                                   nsSize*              aMaxElementSize);
+  virtual void BalanceColumnWidths(nsIPresContext*          aPresContext, 
+                                   const nsHTMLReflowState& aReflowState,
+                                   const nsSize&            aMaxSize, 
+                                   nsSize*                  aMaxElementSize);
 
   /** sets the width of the table according to the computed widths of each column. */
   virtual void SetTableWidth(nsIPresContext*  aPresContext);
@@ -395,10 +395,10 @@ protected:
   /** Set the min col span for every column in the table.  Scans the whole table. */
   virtual void SetMinColSpanForTable();
 
-  virtual void BuildColumnCache(nsIPresContext*      aPresContext,
-                                nsHTMLReflowMetrics& aDesiredSize,
-                                const nsReflowState& aReflowState,
-                                nsReflowStatus&      aStatus);
+  virtual void BuildColumnCache(nsIPresContext*          aPresContext,
+                                nsHTMLReflowMetrics&     aDesiredSize,
+                                const nsHTMLReflowState& aReflowState,
+                                nsReflowStatus&          aStatus);
 
   /** called every time we discover we have a new cell to add to the table.
     * This could be because we got actual cell content, because of rowspan/colspan attributes, etc.

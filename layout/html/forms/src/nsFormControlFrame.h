@@ -120,7 +120,7 @@ public:
     */
   NS_IMETHOD Reflow(nsIPresContext&      aCX,
                     nsHTMLReflowMetrics& aDesiredSize,
-                    const nsReflowState& aReflowState,
+                    const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
 
   // new behavior
@@ -218,11 +218,11 @@ protected:
     * @param aMaxSize the maximum size available for this frame
     */
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
-                              const nsReflowState& aReflowState,
+                              const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredSize);
 
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
-                              const nsReflowState& aReflowState,
+                              const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredLayoutSize,
                               nsSize& aDesiredWidgetSize);
 
@@ -235,7 +235,7 @@ protected:
     * for aSize.width or aSize.height indicate unset values.
     */
   void GetStyleSize(nsIPresContext& aContext,
-                    const nsReflowState& aReflowState,
+                    const nsHTMLReflowState& aReflowState,
                     nsSize& aSize);
 
   //nscoord GetStyleDim(nsIPresContext& aPresContext, nscoord aMaxDim, 
