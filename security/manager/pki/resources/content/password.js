@@ -16,6 +16,9 @@ function onLoad()
   // Set token name in display
   var t = document.getElementById("tokenName");
   t.setAttribute("value", tokenName);
+
+  // Select first password field
+  document.getElementById('pw1').focus();
 }
 
 function setPassword()

@@ -1,0 +1,19 @@
+<!-- Values for changepassword.xul -->
+<!ENTITY setPassword.title  "Set Master Password">
+<!ENTITY setPassword.tokenName.label "Token Name">
+<!ENTITY setPassword.oldPassword.label "Old password">
+<!ENTITY setPassword.newPassword.label "Enter a new password">
+<!ENTITY setPassword.reenterPassword.label "Enter the password again">
+<!ENTITY setPassword.meter.label "Password quality meter:">
+<!ENTITY setPassword.meter.bad "Bad">
+<!ENTITY setPassword.meter.good "Good">
+<!ENTITY setPassword.stats.total "Total characters:">
+<!ENTITY setPassword.stats.numbers "Numbers:">
+<!ENTITY setPassword.stats.symbols "Symbols:">
+<!ENTITY setPassword.stats.upper "Uppercase:">
+
+<!-- These should be common -->
+<!ENTITY setPassword.ok.label "OK">
+<!ENTITY setPassword.cancel.label "Cancel">
+<!ENTITY setPassword.help.label "Help">
+
