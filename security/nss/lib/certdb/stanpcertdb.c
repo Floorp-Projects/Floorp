@@ -505,7 +505,6 @@ CERT_DestroyCertificate(CERTCertificate *cert)
 	if (tmp) {
 	    /* delete the NSSCertificate */
 	    PK11SlotInfo *slot = cert->slot;
-	    PRBool freeSlot = cert->ownSlot;
 	    NSSTrustDomain *td = STAN_GetDefaultTrustDomain();
 	    refCount = (int)tmp->object.refCount;
 	    /* This is a hack.  For 3.4, there are persistent references
@@ -530,10 +529,6 @@ CERT_DestroyCertificate(CERTCertificate *cert)
 		refCount = (int)tmp->object.refCount;
 	    }
 	    NSSCertificate_Destroy(tmp);
-	    /* another hack...  the destroy *must* decrement the count */
-	    if (--refCount == 0) {
-		if (freeSlot) PK11_FreeSlot(slot);
-	    }
 	} 
 #endif
     }
