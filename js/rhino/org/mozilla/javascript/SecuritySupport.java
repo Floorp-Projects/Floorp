@@ -81,7 +81,6 @@ public interface SecuritySupport {
      *        Embeddings that don't care about security may allow
      *        null here. This value propagated from the values passed
      *        into methods of Context that evaluate scripts.
-     * @see java.lang.ClassLoader#defineClass
      */
     public Class defineClass(String name, byte[] data, 
                              Object securityDomain);
