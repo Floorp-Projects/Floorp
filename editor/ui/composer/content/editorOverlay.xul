@@ -622,7 +622,7 @@
               observes="cmd_print" tooltip="aTooltip" tooltiptext="&printToolbarCmd.tooltip;"
               crop="right">  
  	  <menupopup id="printMenu">
-      <menuitem accesskey="&fileprint.accesskey;" key="printkb" observes="cmd_print" value="&printCmd.label;" default="true"/>
+      <menuitem accesskey="&fileprint.accesskey;" key="printkb" value="&printCmd.label;" default="true"/>
       <menuitem accesskey="&fileprintsetup.accesskey;" observes="cmd_printSetup" />
       <menuitem accesskey="&fileprintpreview.accesskey;" observes="cmd_printPreview"/>
     </menupopup>
