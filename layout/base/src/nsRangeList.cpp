@@ -510,6 +510,7 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
       return NS_ERROR_NULL_POINTER;
   }
   //END HACK
+  Clear(); //change this later 
   nsIFrame *frame;
   nsIFrame *anchor;
   nsCOMPtr<nsIContent> content;
