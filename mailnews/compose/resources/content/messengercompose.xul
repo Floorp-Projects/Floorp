@@ -389,7 +389,7 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 	<toolbar id="MsgHeadersToolbar" persist="collapsed">
 		<box align="horizontal" flex="100%">
 			<spring style="width:0.5em"/>
-			<box align="vertical" flex="60%">
+			<box align="vertical" flex="75%">
 				<spring style="height:0.5em"/>
 				<box align="horizontal">
 					<html:div>&fromAddr.label;</html:div>
@@ -414,14 +414,15 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 			</box>
 			
 			<spring style="width:0.5em"/>
-			<box align="vertical" flex="40%">
+			<box align="vertical" flex="25%">
 				<spring style="height:0.5em"/>
 				<box align="vertical" style="height:1em">
 					<html:div flex="100%">&attachments.label;</html:div>
 				</box>
 				<spring style="height:0.5em"/>
 				<box align="vertical" style="height:8.5em; background-color:white; border-top:solid black 1px">
-					<tree id="attachmentBucket" flex="100%" onkeypress="if (event.which == 8) RemoveSelectedAttachment();">
+					<tree id="attachmentBucket" flex="100%" style="width:0px"
+						onkeypress="if (event.which == 8) RemoveSelectedAttachment();">
 						<treecol style="width:100%"/>
 
 						<treechildren id="bucketBody">
