@@ -1143,9 +1143,9 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIChannel* channel, nsISupports* aCo
     if ((nsnull == mInstance) && (nsnull != mHost) && (nsnull != window))
     {
       // determine if we need to try embedded again. FullPage takes a different code path
-      nsPluginMode * mode;
-      mOwner->GetMode(mode);
-      if (*mode == nsPluginMode_Embedded)
+      nsPluginMode mode;
+      mOwner->GetMode(&mode);
+      if (mode == nsPluginMode_Embedded)
         rv = mHost->InstantiateEmbededPlugin(aContentType, aURL, mOwner);
       else
         rv = mHost->SetUpPluginInstance(aContentType, aURL, mOwner);
