@@ -120,7 +120,7 @@ LINE:
           $filename = "data/checkinlog/$mungedname";
           unless (-d "data/checkinlog") {
                system("mkdir", "-p", "data/checkinlog");
-               system("chmod ", "-R", "777", "data/checkinlog");
+               system("chmod", "-R", "777", "data/checkinlog");
           }
           if (open(TID, ">> $filename")) {
                print TID "${appendjunk}LOGCOMMENT\n$plainlog:ENDLOGCOMMENT\n";
