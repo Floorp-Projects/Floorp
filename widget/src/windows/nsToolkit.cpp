@@ -168,7 +168,7 @@ LRESULT CALLBACK DetectWindowMove(int code, WPARAM wParam, LPARAM lParam)
 
 #define MAX_CLASS_NAME  128
 #define MAX_MENU_NAME   128
-#define MAX_FILTER_NAME 128
+#define MAX_FILTER_NAME 256
 
 int ConvertAtoW(LPCSTR aStrInA, int aBufferSize, LPWSTR aStrOutW)
 {
@@ -203,7 +203,7 @@ BOOL CallOpenSaveFileNameA(LPOPENFILENAMEW aFileNameW, BOOL aOpen)
 {
   BOOL rtn;
   OPENFILENAMEA ofnA;
-  char filterA[MAX_FILTER_NAME+1];
+  char filterA[MAX_FILTER_NAME+2];
   char customFilterA[MAX_FILTER_NAME+1];
   char fileA[MAX_PATH+1];
   char fileTitleA[MAX_PATH+1];
@@ -217,7 +217,21 @@ BOOL CallOpenSaveFileNameA(LPOPENFILENAMEW aFileNameW, BOOL aOpen)
   ofnA.hwndOwner = aFileNameW->hwndOwner; 
   ofnA.hInstance = aFileNameW->hInstance; 
   if (aFileNameW->lpstrFilter)  {
-    ConvertWtoA(aFileNameW->lpstrFilter, MAX_FILTER_NAME, filterA);
+    // find the true filter length
+    int len = 0;
+    while ((aFileNameW->lpstrFilter[len]) ||
+           (aFileNameW->lpstrFilter[len+1]))
+    {
+      ++len;
+    }
+
+    len = WideCharToMultiByte(CP_ACP, 0,
+                              aFileNameW->lpstrFilter,
+                              len,
+                              filterA,
+                              MAX_FILTER_NAME, NULL, NULL);
+    filterA[len] = '\0';
+    filterA[len+1] = '\0';
     ofnA.lpstrFilter = filterA; 
   }
   if (aFileNameW->lpstrCustomFilter)  {
