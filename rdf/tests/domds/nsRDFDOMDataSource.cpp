@@ -24,6 +24,10 @@
 #include "nsIServiceManager.h"
 #include "nsEnumeratorUtils.h"
 
+#include "nsIRDFLiteral.h"
+#include "nsIRDFResource.h"
+#include "nsISupportsArray.h"
+
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNodeList.h"
