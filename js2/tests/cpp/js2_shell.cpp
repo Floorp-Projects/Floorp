@@ -85,55 +85,6 @@ JavaScript::Debugger::Shell jsd(world, stdin, JavaScript::stdOut,
 
 const bool showTokens = false;
 
-static Register genExpr(ICodeGenerator &icg, ExprNode *p)
-{
-    Register ret = NotARegister;
-    switch (p->getKind()) {
-    case ExprNode::call : 
-        {
-            InvokeExprNode *i = static_cast<InvokeExprNode *>(p);
-            Register fn = genExpr(icg, i->op);
-            RegisterList args;
-            ExprPairList *p = i->pairs;
-            while (p) {
-                args.push_back(genExpr(icg, p->value));
-                p = p->next;
-            }
-            ret = icg.call(fn, args);
-        }
-        break;
-    case ExprNode::dot :
-        {
-            BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
-            Register base = genExpr(icg, b->op1);            
-            ret = icg.getProperty(base, static_cast<IdentifierExprNode *>(b->op2)->name);
-        }
-        break;
-    case ExprNode::identifier :
-        {
-//            Register r1 = icg.allocateVariable((static_cast<IdentifierExprNode *>(p))->name);
-//            ASSERT(r1 == icg.findVariable((static_cast<IdentifierExprNode *>(p))->name));
-//            icg.saveName((static_cast<IdentifierExprNode *>(p))->name, icg.loadImmediate(0.0));
-            ret = icg.loadName((static_cast<IdentifierExprNode *>(p))->name);
-        }
-        break;
-    case ExprNode::number :
-        ret = icg.loadImmediate((static_cast<NumberExprNode *>(p))->value);
-        break;
-    case ExprNode::string :
-        ret = icg.loadString(world.identifiers[(static_cast<StringExprNode *>(p))->str]);
-        break;
-    case ExprNode::add:
-        {
-            BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
-            Register r1 = genExpr(icg, b->op1);
-            Register r2 = genExpr(icg, b->op2);
-            ret = icg.op(ADD, r1, r2);
-        }
-        break;
-    }
-    return ret;
-}
 
 static JSValue print(const JSValues &argv)
 {
@@ -148,20 +99,16 @@ static JSValue print(const JSValues &argv)
 }
 
 
-static void genCode(ExprNode *p)
+static void genCode(World &world, Context &cx, ExprNode *p)
 {
-    JSScope glob;
-    Context cx(world, &glob);
-    StringAtom& printName = world.identifiers[widenCString("print")];
-    glob.defineNativeFunction(printName, print);
-
-    ICodeGenerator icg;
+    ICodeGenerator icg(&world);
     
     icg.beginStatement(0);
-    Register ret = genExpr(icg, p);
+    Register ret = icg.genExpr(p);
     icg.endStatement();
 
     icg.returnStatement(ret);
+    stdOut << '\n';
     stdOut << icg;
     JSValue result = cx.interpret(icg.complete(), JSValues());
     stdOut << "result = " << result << "\n";
@@ -169,6 +116,30 @@ static void genCode(ExprNode *p)
 
 static void readEvalPrint(FILE *in, World &world)
 {
+    JSScope glob;
+    Context cx(world, &glob);
+    StringAtom& printName = world.identifiers[widenCString("print")];
+    glob.defineNativeFunction(printName, print);
+/*
+        hack an object a, with property p = 4.0 into the global scope
+*/
+    {
+        ICodeGenerator icg;
+        // var global = new Object();
+        StringAtom& global = world.identifiers[widenCString("a")];
+        icg.beginStatement(0);
+        icg.saveName(global, icg.newObject());
+        
+        // global.counter = 0;
+        StringAtom& prop = world.identifiers[widenCString("p")];
+        icg.beginStatement(0);
+        icg.setProperty(icg.loadName(global), prop, icg.loadImmediate(4.0));
+
+        icg.returnStatement();
+        cx.interpret(icg.complete(), JSValues());
+    }
+
+
     String buffer;
     string line;
     String sourceLocation = widenCString("console");
@@ -202,7 +173,9 @@ static void readEvalPrint(FILE *in, World &world)
                 	}
                 	f.end();
                 }
-                // genCode(parseTree);
+#if 0
+                genCode(world, cx, parseTree);
+#endif
             }
             clear(buffer);
             stdOut << '\n';
@@ -280,10 +253,10 @@ static void testICG(World &world)
     // label1 : while (i) { while (i) { i = i + j; break label1; } }
     icg.beginLabelStatement(pos, world.identifiers[widenCString("label1")]);            
     icg.beginWhileStatement(pos);
-    icg.endWhileExpression(r_i);        
+    icg.endWhileExpression(icg.test(r_i));        
 
         icg.beginWhileStatement(pos);
-        icg.endWhileExpression(r_i);        
+        icg.endWhileExpression(icg.test(r_i));        
         icg.move(r_i, icg.op(ADD, r_i, r_j));
         icg.breakStatement(pos, world.identifiers[widenCString("label1")]);
         icg.endWhileStatement();
@@ -292,8 +265,8 @@ static void testICG(World &world)
     icg.endLabelStatement();
 
     // if (i) if (j) i = 3; else j = 4;
-    icg.beginIfStatement(pos, r_i);
-    icg.beginIfStatement(pos, r_j);
+    icg.beginIfStatement(pos, icg.test(r_i));
+    icg.beginIfStatement(pos, icg.test(r_j));
     icg.move(r_i, icg.loadImmediate(3));
     icg.beginElseStatement(true);
     icg.move(r_j, icg.loadImmediate(4));
@@ -312,8 +285,8 @@ static void testICG(World &world)
     //  i = 5;
     // }
     icg.beginTryStatement(pos, true, true);    // hasCatch, hasFinally
-        icg.beginIfStatement(pos, r_i);
-        icg.beginIfStatement(pos, r_j);
+        icg.beginIfStatement(pos, icg.test(r_i));
+        icg.beginIfStatement(pos, icg.test(r_j));
         icg.move(r_i, icg.loadImmediate(3));
         icg.beginElseStatement(true);
         icg.beginStatement(pos);
@@ -364,7 +337,7 @@ static void testICG(World &world)
     
     // for ( ; i; i = i + 1 ) j = 99;
     icg.beginForStatement(pos);
-    icg.forCondition(r_i);
+    icg.forCondition(icg.test(r_i));
     icg.move(r_i, icg.op(ADD, r_i, icg.loadImmediate(1)));
     icg.forIncrement();
     icg.move(r_j, icg.loadImmediate(99));
