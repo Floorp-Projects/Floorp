@@ -98,9 +98,9 @@ nsLoadSaveContentSink::WillBuildModel(void)
 }
 
 NS_IMETHODIMP
-nsLoadSaveContentSink::DidBuildModel(PRInt32 aQualityLevel)
+nsLoadSaveContentSink::DidBuildModel(void)
 {
-  return mBaseSink->DidBuildModel(aQualityLevel);
+  return mBaseSink->DidBuildModel();
 }
 
 NS_IMETHODIMP

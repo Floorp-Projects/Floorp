@@ -207,21 +207,6 @@ NS_IMETHODIMP nsScrollPortView::GetContainerSize(nscoord *aWidth, nscoord *aHeig
   return NS_OK;
 }
 
-NS_IMETHODIMP nsScrollPortView::ShowQuality(PRBool aShow)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsScrollPortView::GetShowQuality(PRBool &aShow) const
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsScrollPortView::SetQuality(nsContentQuality aQuality)
-{
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsScrollPortView::SetScrollPreference(nsScrollPreference aPref)
 {
   return NS_OK;

@@ -471,7 +471,7 @@ nsresult COtherDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIPar
     } //if aparser  
 
       //No matter what, you need to call did build model.
-    result = aSink->DidBuildModel(0); 
+    result = aSink->DidBuildModel(); 
 
   } //if asink
   return result; 

@@ -784,7 +784,7 @@ NS_IMETHODIMP CViewSourceHTML::DidBuildModel(nsresult anErrorCode,PRBool aNotify
         nsCParserNode htmlNode(&htmlToken, 0/*stack token*/);
         mSink->CloseHTML();
       }
-      result = mSink->DidBuildModel(1);
+      result = mSink->DidBuildModel();
     }
 
     START_TIMER();

@@ -1029,8 +1029,11 @@ nsExpatDriver::DidBuildModel(nsresult anErrorCode,
 {
   // Check for mSink is intentional. This would make sure
   // that DidBuildModel() is called only once on the sink.
-  nsresult result = (mSink)? aSink->DidBuildModel(0) : NS_OK;
-  NS_IF_RELEASE(mSink);
+  nsresult result = NS_OK;
+  if (mSink) {
+    result = aSink->DidBuildModel();
+    NS_RELEASE(mSink); // assigns null
+  }
   return result;
 }
 

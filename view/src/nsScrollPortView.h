@@ -66,10 +66,6 @@ public:
   NS_IMETHOD  SetScrolledView(nsIView *aScrolledView);
   NS_IMETHOD  GetScrolledView(nsIView *&aScrolledView) const;
 
-  NS_IMETHOD  ShowQuality(PRBool aShow);
-  NS_IMETHOD  GetShowQuality(PRBool &aShow) const;
-  NS_IMETHOD  SetQuality(nsContentQuality aQuality);
-
   NS_IMETHOD  SetScrollPreference(nsScrollPreference aPref);
   NS_IMETHOD  GetScrollPreference(nsScrollPreference &aScrollPreference) const;
   NS_IMETHOD  GetScrollPosition(nscoord &aX, nscoord &aY) const;

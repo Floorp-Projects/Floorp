@@ -156,7 +156,7 @@ public:
 
     // nsIContentSink
     NS_IMETHOD WillBuildModel(void);
-    NS_IMETHOD DidBuildModel(PRInt32 aQualityLevel);
+    NS_IMETHOD DidBuildModel(void);
     NS_IMETHOD WillInterrupt(void);
     NS_IMETHOD WillResume(void);
     NS_IMETHOD SetParser(nsIParser* aParser);  
@@ -665,7 +665,7 @@ RDFContentSinkImpl::WillBuildModel(void)
 }
 
 NS_IMETHODIMP 
-RDFContentSinkImpl::DidBuildModel(PRInt32 aQualityLevel)
+RDFContentSinkImpl::DidBuildModel(void)
 {
     if (mDataSource) {
         nsCOMPtr<nsIRDFXMLSink> sink = do_QueryInterface(mDataSource);

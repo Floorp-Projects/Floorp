@@ -393,22 +393,8 @@ nsXMLContentSink::MaybePrettyPrint()
 
 
 NS_IMETHODIMP
-nsXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
+nsXMLContentSink::DidBuildModel()
 {
-  // XXX this is silly; who cares?
-  PRInt32 i, ns = mDocument->GetNumberOfShells();
-  for (i = 0; i < ns; i++) {
-    nsCOMPtr<nsIPresShell> shell;
-    mDocument->GetShellAt(i, getter_AddRefs(shell));
-    if (shell) {
-      nsCOMPtr<nsIViewManager> vm;
-      shell->GetViewManager(getter_AddRefs(vm));
-      if(vm) {
-        vm->SetQuality(nsContentQuality(aQualityLevel));
-      }
-    }
-  }
-
   if (mTitleText.IsEmpty()) {
     nsCOMPtr<nsIDOMNSDocument> dom_doc(do_QueryInterface(mDocument));
     if (dom_doc) {

@@ -3115,30 +3115,6 @@ const nsVoidArray* nsViewManager::GetViewManagerArray()
   return gViewManagers;
 }
 
-NS_IMETHODIMP nsViewManager::ShowQuality(PRBool aShow)
-{
-  if (nsnull != mRootScrollable)
-    mRootScrollable->ShowQuality(aShow);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsViewManager::GetShowQuality(PRBool &aResult)
-{
-  if (nsnull != mRootScrollable)
-    mRootScrollable->GetShowQuality(aResult);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsViewManager::SetQuality(nsContentQuality aQuality)
-{
-  if (nsnull != mRootScrollable)
-    mRootScrollable->SetQuality(aQuality);
-
-  return NS_OK;
-}
-
 nsIRenderingContext * nsViewManager::CreateRenderingContext(nsView &aView)
 {
   nsView              *par = &aView;
