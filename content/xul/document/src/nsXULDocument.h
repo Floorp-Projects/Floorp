@@ -285,6 +285,7 @@ public:
     NS_IMETHOD AddForwardReference(nsForwardReference* aRef);
     NS_IMETHOD ResolveForwardReferences();
     NS_IMETHOD SetMasterPrototype(nsIXULPrototypeDocument* aDocument);
+    NS_IMETHOD GetMasterPrototype(nsIXULPrototypeDocument** aDocument);
     NS_IMETHOD SetCurrentPrototype(nsIXULPrototypeDocument* aDocument);
     NS_IMETHOD SetDocumentURL(nsIURI* anURL);
     NS_IMETHOD PrepareStyleSheets(nsIURI* anURL);

@@ -2109,6 +2109,14 @@ nsXULDocument::SetMasterPrototype(nsIXULPrototypeDocument* aDocument)
 }
 
 NS_IMETHODIMP
+nsXULDocument::GetMasterPrototype(nsIXULPrototypeDocument** aDocument)
+{
+  *aDocument = mMasterPrototype;
+  NS_IF_ADDREF(*aDocument);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXULDocument::SetCurrentPrototype(nsIXULPrototypeDocument* aDocument)
 {
   mCurrentPrototype = aDocument;
@@ -2683,7 +2691,7 @@ nsXULDocument::AddSubtreeToDocument(nsIContent* aElement)
         if (NS_FAILED(rv)) return rv;
     }
 
-    // Finally, recurse to children.
+    // 4. Recurse to children.
     PRInt32 count;
     nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(aElement);
     rv = xulcontent ? xulcontent->PeekChildCount(count) : aElement->ChildCount(count);
@@ -2708,6 +2716,7 @@ nsXULDocument::RemoveSubtreeFromDocument(nsIContent* aElement)
     // document.
     nsresult rv;
 
+    // 1. Remove any children from the document.
     PRInt32 count;
     nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(aElement);
     rv = xulcontent ? xulcontent->PeekChildCount(count) : aElement->ChildCount(count);
@@ -2722,11 +2731,11 @@ nsXULDocument::RemoveSubtreeFromDocument(nsIContent* aElement)
         if (NS_FAILED(rv)) return rv;
     }
 
-    // 1. Remove the element from the resource-to-element map
+    // 2. Remove the element from the resource-to-element map
     rv = RemoveElementFromMap(aElement);
     if (NS_FAILED(rv)) return rv;
 
-    // 2. If the element is a 'command updater', then remove the
+    // 3. If the element is a 'command updater', then remove the
     // element from the document's command dispatcher.
     nsAutoString value;
     rv = aElement->GetAttribute(kNameSpaceID_None, kCommandUpdaterAtom, value);
@@ -3951,10 +3960,9 @@ nsXULDocument::CreateElement(PRInt32 aNameSpaceID,
             return NS_ERROR_UNEXPECTED;
     }
 
-    rv = result->SetDocument(this, PR_FALSE);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set element's document");
-    if (NS_FAILED(rv)) return rv;
-
+#if 1 // XXXwaterson remove this eventually
+    result->SetDocument(this, PR_FALSE);
+#endif
     result->SetContentID(mNextContentID++);
 
     *aResult = result;

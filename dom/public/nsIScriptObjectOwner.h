@@ -90,9 +90,30 @@ class nsIScriptEventHandlerOwner : public nsISupports
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISCRIPTEVENTHANDLEROWNER_IID)
 
-  NS_IMETHOD GetCompiledEventHandler(nsIAtom *aName, void** aHandler) = 0;
+  /**
+   * Compile the specified event handler, and bind it to aTarget using
+   * aContext.
+   *
+   * @param aContext the context to use when creating event handler
+   * @param aTarget the object to which to bind the event handler
+   * @param aName the name of the handler
+   * @param aBody the handler script body
+   * @param aHandler the compiled, bound handler object
+   */
+  NS_IMETHOD CompileEventHandler(nsIScriptContext* aContext,
+                                 void* aTarget,
+                                 nsIAtom *aName,
+                                 const nsString& aBody,
+                                 void** aHandler) = 0;
 
-  NS_IMETHOD SetCompiledEventHandler(nsIAtom *aName, void* aHandler) = 0;
+  /**
+   * Retrieve an already-compiled event handler that can be bound to a
+   * target object using a script context.
+   *
+   * @param aName the name of the event handler to retrieve
+   * @param aHandler the compiled event handler
+   */
+  NS_IMETHOD GetCompiledEventHandler(nsIAtom *aName, void** aHandler) = 0;
 };
 
 #endif // nsIScriptObjectOwner_h__

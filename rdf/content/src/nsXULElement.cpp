@@ -1594,14 +1594,18 @@ nsXULElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
         // tag...
         nsresult (*fn)(nsIScriptContext* aContext, nsISupports* aSupports, nsISupports* aParent, void** aReturn);
 
+        const char* rootname;
         if (Tag() == kTreeAtom) {
             fn = NS_NewScriptXULTreeElement;
+            rootname = "nsXULTreeElement::mScriptObject";
         }
         else if (Tag() == kEditorAtom) {
             fn = NS_NewScriptXULEditorElement;
+            rootname = "nsXULEditorElement::mScriptObject";
         }
         else {
             fn = NS_NewScriptXULElement;
+            rootname = "nsXULElement::mScriptObject";
         }
 
         // Create the script object; N.B. that if |mDocument| is null,
@@ -1611,7 +1615,7 @@ nsXULElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
         rv = fn(aContext, (nsIDOMXULElement*) this, mDocument, (void**) &mScriptObject);
 
         // Ensure that a reference exists to this element
-        aContext->AddNamedReference((void*) &mScriptObject, mScriptObject, "nsXULElement::mScriptObject");
+        aContext->AddNamedReference((void*) &mScriptObject, mScriptObject, rootname);
     }
 
     *aScriptObject = mScriptObject;
@@ -1651,29 +1655,85 @@ nsXULElement::GetCompiledEventHandler(nsIAtom *aName, void** aHandler)
 }
 
 NS_IMETHODIMP
-nsXULElement::SetCompiledEventHandler(nsIAtom *aName, void* aHandler)
+nsXULElement::CompileEventHandler(nsIScriptContext* aContext,
+                                  void* aTarget,
+                                  nsIAtom *aName,
+                                  const nsString& aBody,
+                                  void** aHandler)
 {
+    nsresult rv;
+
     XUL_PROTOTYPE_ATTRIBUTE_METER(gNumCacheSets);
+
+    nsCOMPtr<nsIScriptContext> context;
+    JSObject* scopeObject;
+    PRBool shared;
+
     if (mPrototype) {
+        // It'll be shared amonst the instances of the prototype
+        shared = PR_TRUE;
+
+        // Use the prototype document's special context
+        nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(mDocument);
+        NS_ASSERTION(xuldoc != nsnull, "mDocument is not an nsIXULDocument");
+        if (! xuldoc)
+            return NS_ERROR_UNEXPECTED;
+
+        nsCOMPtr<nsIXULPrototypeDocument> protodoc;
+        rv = xuldoc->GetMasterPrototype(getter_AddRefs(protodoc));
+        if (NS_FAILED(rv)) return rv;
+
+        NS_ASSERTION(protodoc != nsnull, "xul document has no prototype");
+        if (! protodoc)
+            return NS_ERROR_UNEXPECTED;
+
+        nsCOMPtr<nsIScriptGlobalObject> global = do_QueryInterface(protodoc);
+        NS_ASSERTION(global != nsnull, "prototype doc is not a script global");
+        if (! global)
+            return NS_ERROR_UNEXPECTED;
+
+        rv = global->GetContext(getter_AddRefs(context));
+        if (NS_FAILED(rv)) return rv;
+
+        // Use the prototype script's special scope object
+        nsCOMPtr<nsIScriptObjectOwner> owner = do_QueryInterface(protodoc);
+        if (! owner)
+            return NS_ERROR_UNEXPECTED;
+    
+        rv = owner->GetScriptObject(context, (void**) &scopeObject);
+        if (NS_FAILED(rv)) return rv;
+    }
+    else {
+        // We don't have a prototype; do a one-off compile.
+        shared = PR_FALSE;
+        context = aContext;
+        scopeObject = NS_STATIC_CAST(JSObject*, aTarget);
+    }
+
+    NS_ASSERTION(context != nsnull, "no script context");
+    if (! context)
+        return NS_ERROR_UNEXPECTED;
+
+    // Compile the event handler
+    rv = context->CompileEventHandler(scopeObject, aName, aBody, shared, aHandler);
+    if (NS_FAILED(rv)) return rv;
+
+    if (shared) {
+        // If it's a shared handler, we need to bind the shared
+        // function object to the real target.
+        rv = aContext->BindCompiledEventHandler(aTarget, aName, *aHandler);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    if (mPrototype) {
+        // Remember the compiled event handler
         for (PRInt32 i = 0; i < mPrototype->mNumAttributes; ++i) {
             nsXULPrototypeAttribute* attr = &(mPrototype->mAttributes[i]);
 
             if ((attr->mNameSpaceID == kNameSpaceID_None) &&
                 (attr->mName.get() == aName)) {
-                nsresult rv;
-
                 XUL_PROTOTYPE_ATTRIBUTE_METER(gNumCacheFills);
-                attr->mEventHandler = aHandler;
-
-                nsCOMPtr<nsIScriptGlobalObject> global;
-                mDocument->GetScriptGlobalObject(getter_AddRefs(global));
-                NS_ASSERTION(global != nsnull, "no script global object");
-                if (! global)
-                    return NS_ERROR_UNEXPECTED;
-
-                nsCOMPtr<nsIScriptContext> context;
-                rv = global->GetContext(getter_AddRefs(context));
-                if (NS_FAILED(rv)) return rv;
+                attr->mEventHandler = *aHandler;
 
                 JSContext *cx = (JSContext*) context->GetNativeContext();
                 if (!cx)
@@ -1686,6 +1746,7 @@ nsXULElement::SetCompiledEventHandler(nsIAtom *aName, void* aHandler)
             }
         }
     }
+
     return NS_OK;
 }
 
@@ -1926,7 +1987,10 @@ nsXULElement::InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
     if (insertOk) {
         aKid->SetParent(NS_STATIC_CAST(nsIStyledContent*, this));
         //nsRange::OwnerChildInserted(this, aIndex);
+
+        //XXXwaterson this should be shallow
         aKid->SetDocument(mDocument, PR_TRUE);
+
         if (aNotify && ElementIsInDocument()) {
                 mDocument->ContentInserted(NS_STATIC_CAST(nsIStyledContent*, this), aKid, aIndex);
         }
@@ -1965,10 +2029,21 @@ nsXULElement::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
     if (replaceOk) {
         aKid->SetParent(NS_STATIC_CAST(nsIStyledContent*, this));
         //nsRange::OwnerChildReplaced(this, aIndex, oldKid);
+
+        //XXXwaterson this should be shallow
         aKid->SetDocument(mDocument, PR_TRUE);
+
         if (aNotify && ElementIsInDocument()) {
             mDocument->ContentReplaced(NS_STATIC_CAST(nsIStyledContent*, this), oldKid, aKid, aIndex);
         }
+
+#if 0 //XXXwaterson put this in eventually.
+        // This will cause the script object to be unrooted for each
+        // element in the subtree.
+        oldKid->SetDocument(nsnull, PR_TRUE);
+#endif
+
+        // We've got no mo' parent.
         oldKid->SetParent(nsnull);
     }
     return NS_OK;
@@ -1992,7 +2067,10 @@ nsXULElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
     if (appendOk) {
         aKid->SetParent(NS_STATIC_CAST(nsIStyledContent*, this));
         // ranges don't need adjustment since new child is at end of list
+
+        //XXXwaterson this should be shallow
         aKid->SetDocument(mDocument, PR_TRUE);
+
         if (aNotify && ElementIsInDocument()) {
             PRUint32 cnt;
             rv = mChildren->Count(&cnt);
@@ -2097,6 +2175,14 @@ nsXULElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
         if (aNotify && removeOk && ElementIsInDocument()) {
             doc->ContentRemoved(NS_STATIC_CAST(nsIStyledContent*, this), oldKid, aIndex);
         }
+
+#if 0 //XXXwaterson put this in eventually
+        // This will cause the script object to be unrooted for each
+        // element in the subtree.
+        oldKid->SetDocument(nsnull, PR_TRUE);
+#endif
+
+        // We've got no mo' parent.
         oldKid->SetParent(nsnull);
     }
 
@@ -3921,33 +4007,13 @@ nsXULPrototypeScript::~nsXULPrototypeScript()
 }
 
 nsresult
-nsXULPrototypeScript::Compile(const PRUnichar* aText, PRInt32 aTextLength,
-                              nsIURI* aURI, PRInt32 aLineNo,
+nsXULPrototypeScript::Compile(const PRUnichar* aText,
+                              PRInt32 aTextLength,
+                              nsIURI* aURI,
+                              PRInt32 aLineNo,
                               nsIDocument* aDocument,
                               nsIXULPrototypeDocument* aPrototypeDocument)
 {
-    nsresult rv;
-
-    nsCOMPtr<nsIScriptGlobalObject> global;
-    aDocument->GetScriptGlobalObject(getter_AddRefs(global));
-    NS_ASSERTION(global != nsnull, "no script global object");
-    if (! global)
-        return NS_ERROR_UNEXPECTED;
-
-    nsCOMPtr<nsIScriptContext> context;
-    rv = global->GetContext(getter_AddRefs(context));
-    if (NS_FAILED(rv)) return rv;
-
-    JSContext *cx = (JSContext*) context->GetNativeContext();
-    if (!cx)
-        return NS_ERROR_UNEXPECTED;
-
-    nsCOMPtr<nsIPrincipal> principal =
-        dont_AddRef(aDocument->GetDocumentPrincipal());
-
-    nsXPIDLCString urlspec;
-    aURI->GetSpec(getter_Copies(urlspec));
-
     // We'll compile the script using the prototype document's special
     // script object as the parent. This ensures that we won't end up
     // with an uncollectable reference.
@@ -3959,17 +4025,61 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText, PRInt32 aTextLength,
     // and the first document would indirectly reference the prototype
     // document because it keeps the prototype cache
     // alive. Circularity!
-    void * scopeObject;
-    nsCOMPtr<nsIScriptObjectOwner> owner= do_QueryInterface(aPrototypeDocument, &rv);
-    if (NS_FAILED(rv)) return rv;
+    nsresult rv;
+
+    // Use the prototype document's special context
+    nsCOMPtr<nsIScriptContext> context;
+
+    {
+        nsCOMPtr<nsIScriptGlobalObject> global = do_QueryInterface(aPrototypeDocument);
+        NS_ASSERTION(global != nsnull, "prototype doc is not a script global");
+        if (! global)
+            return NS_ERROR_UNEXPECTED;
+
+        rv = global->GetContext(getter_AddRefs(context));
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    NS_ASSERTION(context != nsnull, "no context for script global");
+    if (! context)
+        return NS_ERROR_UNEXPECTED;
+
+    // Use the prototype script's special scope object
+    JSObject* scopeObject;
+
+    {
+        nsCOMPtr<nsIScriptObjectOwner> owner = do_QueryInterface(aPrototypeDocument);
+        if (! owner)
+            return NS_ERROR_UNEXPECTED;
     
-    rv = owner->GetScriptObject(context, &scopeObject);
+        rv = owner->GetScriptObject(context, (void**) &scopeObject);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    // Use the enclosing document's principal
+    // XXX is this right? or should we use the protodoc's?
+    nsCOMPtr<nsIPrincipal> principal =
+        dont_AddRef(aDocument->GetDocumentPrincipal());
+
+    nsXPIDLCString urlspec;
+    aURI->GetSpec(getter_Copies(urlspec));
+
+    // Ok, compile it to create a prototype script object!
+    rv = context->CompileScript(aText,
+                                aTextLength,
+                                scopeObject,
+                                principal,
+                                urlspec,
+                                aLineNo,
+                                mLangVersion,
+                                (void**) &mScriptObject);
+
     if (NS_FAILED(rv)) return rv;
 
-    rv = context->CompileScript(aText, aTextLength, (JSObject *)scopeObject,
-                                principal, urlspec, aLineNo, mLangVersion,
-                                (void**) &mScriptObject);
-    if (NS_FAILED(rv)) return rv;
+    // Root the compiled prototype script object.
+    JSContext* cx = NS_STATIC_CAST(JSContext*, context->GetNativeContext());
+    if (!cx)
+        return NS_ERROR_UNEXPECTED;
 
     rv = AddJSGCRoot(cx, &mScriptObject, "nsXULPrototypeScript::mScriptObject");
     return rv;

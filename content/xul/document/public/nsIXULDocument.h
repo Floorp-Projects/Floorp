@@ -114,6 +114,11 @@ public:
   NS_IMETHOD SetMasterPrototype(nsIXULPrototypeDocument* aDocument) = 0;
 
   /**
+   * Get the master prototype.
+   */
+  NS_IMETHOD GetMasterPrototype(nsIXULPrototypeDocument** aPrototypeDocument) = 0;
+
+  /**
    * Set the current prototype
    */
   NS_IMETHOD SetCurrentPrototype(nsIXULPrototypeDocument* aDocument) = 0;

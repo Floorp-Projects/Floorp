@@ -463,8 +463,12 @@ public:
     NS_IMETHOD SetScriptObject(void *aScriptObject);
 
     // nsIScriptEventHandlerOwner
+    NS_IMETHOD CompileEventHandler(nsIScriptContext* aContext,
+                                   void* aTarget,
+                                   nsIAtom *aName,
+                                   const nsString& aBody,
+                                   void** aHandler);
     NS_IMETHOD GetCompiledEventHandler(nsIAtom *aName, void** aHandler);
-    NS_IMETHOD SetCompiledEventHandler(nsIAtom *aName, void* aHandler);
 
     // nsIJSScriptObject
     virtual PRBool AddProperty(JSContext *aContext, JSObject *aObj, 
