@@ -20,6 +20,7 @@ package netscape.asw;
 
 import netscape.npasw.CPGenerator;
 import netscape.npasw.ServerDownload;
+import netscape.npasw.Trace;
 
 import java.lang.*;
 //import AMDProgressBar;
@@ -54,84 +55,91 @@ public class CPGeneratorProgress extends ProgressApplet
     {
         try
         {
-            int             lastState = CPGenerator.DONE;
-            int             thisState = CPGenerator.DONE;
-            String          lastString = "";
-            String          thisString = "";
-
-            while ( !CPGenerator.done )
-            {
-                thisState = getState();
-                thisString = new String( CPGenerator.currentFile );
-
-                if ( thisState != lastState )
-                {
-                    String buffer = null;
-
-                    switch ( thisState )
-                    {
-                        case ServerDownload.DOWNLOADING:
-                            buffer = DOWNLOAD_STRING;
-                        break;
-
-                        case ServerDownload.UNJARRING:
-                            buffer = UNJAR_STRING;
-                        break;
-
-                        case CPGenerator.CONTACTING_SERVER:
-                            buffer = CONTACTING_SERVER;
-                        break;
-
-                        case CPGenerator.SENDING:
-                            buffer = SENDING;
-                        break;
-
-                        case CPGenerator.WAITING:
-                            buffer = WAITING;
-                        break;
-
-                        case CPGenerator.RECEIVING_RESPONSE:
-                            buffer = RECEIVING_RESPONSE;
-                        break;
-
-                        case CPGenerator.DONE:
-                            buffer = DONE_STRING;
-                        break;
-
-                        case CPGenerator.ABORT:
-                            buffer = ABORT;
-                        break;
-                    }
-
-                    status.setText( buffer );
-                    lastState = thisState;
-                }
-
-                if ( thisString.compareTo( lastString ) != 0 )
-                {
-                    progress.setText( thisString );
-                    lastString = thisString;
-                }
-
-                if ( ServerDownload.getBytesDownloaded() == 0 || CPGenerator.totalBytes == 0 )
-                    progressBar.setPercent( 0.0 );
-                else
-                    progressBar.setPercent( (double)ServerDownload.getBytesDownloaded() / (double)CPGenerator.totalBytes );
-
-                repaint();
-                Thread.sleep( 100 );
-            }
-
-            progressBar.setPercent( 1.0 );
-            progress.setText( "" );
-            status.setText( DONE_STRING );
-
-            repaint();
-            Thread.sleep( 2000 );
-        }
-        catch (Exception e)
-        {
-            ;
-        }
+			while ( true )
+			{
+				Trace.TRACE( "running applet" );
+				
+				int             lastState = CPGenerator.DONE;
+				int             thisState = CPGenerator.DONE;
+				String          lastString = "";
+				String          thisString = "";
+				
+				while ( CPGenerator.done == false )
+				{
+					//Trace.TRACE( "CPGenerator not done" );
+					thisState = getState();
+					thisString = new String( CPGenerator.currentFile );
+					
+					if ( thisState != lastState )
+					{
+						String buffer = null;
+						
+						switch ( thisState )
+						{
+							case ServerDownload.DOWNLOADING:
+								buffer = DOWNLOAD_STRING;
+							break;
+							
+							case ServerDownload.UNJARRING:
+								buffer = UNJAR_STRING;
+							break;
+							
+							case CPGenerator.CONTACTING_SERVER:
+								buffer = CONTACTING_SERVER;
+							break;
+							
+							case CPGenerator.SENDING:
+								buffer = SENDING;
+							break;
+							
+							case CPGenerator.WAITING:
+								buffer = WAITING;
+							break;
+							
+							case CPGenerator.RECEIVING_RESPONSE:
+								buffer = RECEIVING_RESPONSE;
+							break;
+							
+							case CPGenerator.DONE:
+								buffer = DONE_STRING;
+							break;
+							
+							case CPGenerator.ABORT:
+								buffer = ABORT;
+							break;
+	                    }
+						
+						status.setText( buffer );
+						lastState = thisState;
+					}
+					
+					if ( thisString.compareTo( lastString ) != 0 )
+					{
+						progress.setText( thisString );
+						lastString = thisString;
+					}
+					
+					if ( ServerDownload.getBytesDownloaded() == 0 || CPGenerator.totalBytes == 0 )
+						progressBar.setPercent( 0.0 );
+					else
+						progressBar.setPercent( (double)ServerDownload.getBytesDownloaded() / (double)CPGenerator.totalBytes );
+					
+					repaint();
+					Thread.sleep( 50 );
+				}
+				
+				Trace.TRACE( "CPGenerator done" );
+				progressBar.setPercent( 1.0 );
+				progress.setText( "" );
+				status.setText( DONE_STRING );
+				
+				repaint();
+				Thread.sleep( 1000 );
+			}
+		}
+		catch (Exception e)
+		{
+			;
+		}
     }
 }
