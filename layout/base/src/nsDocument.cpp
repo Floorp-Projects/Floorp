@@ -1112,11 +1112,15 @@ nsDocument::Construct(JSContext *cx, JSObject *obj,  uintN argc,
 /**
   * Returns the Selection Object
  */
-nsISelection * nsDocument::GetSelection() {
+NS_IMETHODIMP nsDocument::GetSelection(nsISelection *& aSelection) {
   if (mSelection != nsnull) {
     NS_ADDREF(mSelection);
+    aSelection = mSelection;
+    return NS_OK;
+  } else {
+    aSelection = nsnull;
   }
-  return mSelection;
+  return NS_ERROR_FAILURE;
 }
 
 
@@ -1152,7 +1156,8 @@ static void TraverseBlockContent(nsIContent * aContent, nsString & aStr)
 /**
   * Selects all the Content
  */
-void nsDocument::SelectAll() {
+NS_IMETHODIMP nsDocument::SelectAll() {
+
   nsIContent * start = nsnull;
   nsIContent * end   = nsnull;
   nsIContent * body  = nsnull;
@@ -1178,7 +1183,7 @@ void nsDocument::SelectAll() {
   }
 
   if (body == nsnull) {
-    return;
+    return NS_ERROR_FAILURE;
   }
 
   start = body;
@@ -1215,6 +1220,7 @@ void nsDocument::SelectAll() {
   endPnt->SetPoint(end, -1, PR_FALSE);
   SetDisplaySelection(PR_TRUE);
 
+  return NS_OK;
 }
 
 /**
@@ -1223,82 +1229,9 @@ void nsDocument::SelectAll() {
 NS_IMETHODIMP nsDocument::FindNext(const nsString &aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound)
 {
   aIsFound = PR_FALSE;
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
-void nsDocument::TraverseTree(nsString   & aText,  
-                              nsIContent * aContent, 
-                              nsIContent * aStart, 
-                              nsIContent * aEnd, 
-                              PRBool     & aInRange) {
-  
-  if (aContent == aStart) {
-    aInRange = PR_TRUE;
-  } 
-
-  PRBool addReturn = PR_FALSE;
-  if (aInRange) {
-    nsIDOMText * textContent;
-    nsresult status = aContent->QueryInterface(kIDOMTextIID, (void**) &textContent);
-    if (NS_OK == status) {
-      nsString text;
-      textContent->GetData(text);
-      aText.Append(text);
-      //NS_IF_RELEASE(textContent);
-    } else {
-      nsIAtom * atom;
-      aContent->GetTag(atom);
-      if (atom != nsnull) {
-        nsString str;
-        atom->ToString(str);
-        //char * s = str.ToNewCString();
-        if (str.Equals("P") || 
-            str.Equals("OL") || 
-            str.Equals("LI") || 
-            str.Equals("TD") || 
-            str.Equals("H1") || 
-            str.Equals("H2") || 
-            str.Equals("H3") || 
-            str.Equals("H4") || 
-            str.Equals("H5") || 
-            str.Equals("H6") || 
-            str.Equals("TABLE")) {
-          addReturn = PR_TRUE;
-        }
-        //printf("[%s]\n", s);
-        //delete s;
-      }
-    }
-  }
-
-  PRInt32 n;
-  aContent->ChildCount(n);
-  for (PRInt32 i=0;i<n;i++) {
-    nsIContent* kid;
-    aContent->ChildAt(i, kid);
-    TraverseTree(aText, kid, aStart, aEnd, aInRange);
-  }
-  if (addReturn) {
-    aText.Append("\n");
-  }
-  if (aContent == aEnd) {
-    aInRange = PR_FALSE;
-  } 
-
-}
-
-void nsDocument::GetSelectionText(nsString & aText) {
-  nsSelectionRange * range    = mSelection->GetRange();
-  nsSelectionPoint * startPnt = range->GetStartPoint();
-  nsSelectionPoint * endPnt   = range->GetEndPoint();
-
-  PRBool inRange = PR_FALSE;
-  nsIContent * startContent = startPnt->GetContent();
-  nsIContent * endContent   = endPnt->GetContent();
-  TraverseTree(aText, mRootContent, startContent, endContent, inRange);
-  NS_IF_RELEASE(startContent);
-  NS_IF_RELEASE(endContent);
-}
 
 
 void nsDocument::BeginConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)

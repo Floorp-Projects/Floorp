@@ -498,7 +498,8 @@ nsGenericDOMDataNode::ConvertContentToXIF(nsXIFConverter& aConverter) const
 
   if (aConverter.GetUseSelection() == PR_TRUE && mDocument->IsInSelection(content))
   {
-    nsISelection* sel = mDocument->GetSelection();
+    nsISelection* sel;
+    mDocument->GetSelection(sel);
     if (sel != nsnull)
     {
       nsSelectionRange* range = sel->GetRange();

@@ -574,7 +574,8 @@ NS_METHOD nsFrame::Paint(nsIPresContext&      aPresContext,
   nsIPresShell       * shell     = aPresContext.GetShell();
   nsIDocument        * doc       = shell->GetDocument();
   if (mSelectionRange == nsnull) { // Get Selection Object
-    nsISelection     * selection = doc->GetSelection();
+    nsISelection     * selection;
+    doc->GetSelection(selection);
 
     mSelectionRange = selection->GetRange(); 
 
@@ -670,11 +671,13 @@ NS_METHOD nsFrame::HandlePress(nsIPresContext& aPresContext,
 
   nsFrame          * currentFrame   = this;
   nsIPresShell     * shell          = aPresContext.GetShell();
+  nsMouseEvent     * mouseEvent     = (nsMouseEvent *)aEvent;
   
   gDoc = shell->GetDocument();
 
-  nsISelection     * selection      = gDoc->GetSelection();
-  nsMouseEvent     * mouseEvent     = (nsMouseEvent *)aEvent;
+  nsISelection     * selection;
+  gDoc->GetSelection(selection);
+
 
   mSelectionRange = selection->GetRange();
 

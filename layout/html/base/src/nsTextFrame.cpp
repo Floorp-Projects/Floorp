@@ -512,7 +512,9 @@ TextFrame::ComputeSelectionInfo(nsIRenderingContext& aRenderingContext,
   aResult.mEndOffset = aTextLength;
   aResult.mEmptySelection = PR_FALSE;
 
-  nsISelection     * selection = aDocument->GetSelection();
+  nsISelection     * selection;
+  aDocument->GetSelection(selection);
+
   nsSelectionRange * range     = selection->GetRange();
   nsSelectionPoint * startPnt  = range->GetStartPoint();
   nsSelectionPoint * endPnt    = range->GetEndPoint();

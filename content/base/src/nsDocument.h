@@ -162,28 +162,17 @@ public:
   /**
     * Returns the Selection Object
    */
-  virtual nsISelection * GetSelection();
+  NS_IMETHOD GetSelection(nsISelection *& aSelection);
 
   /**
     * Selects all the Content
    */
-  virtual void SelectAll();
+  NS_IMETHOD SelectAll();
 
   /**
     * Finds text in content
    */
   NS_IMETHOD FindNext(const nsString &aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound);
-
-  /**
-    * Copies all text from the selection
-   */
-  virtual void GetSelectionText(nsString & aText);
-
-  void TraverseTree(nsString   & aText,  
-                    nsIContent * aContent, 
-                    nsIContent * aStart, 
-                    nsIContent * aEnd, 
-                    PRBool     & aInRange);
 
   /**
     * Converts the document or a selection of the 
