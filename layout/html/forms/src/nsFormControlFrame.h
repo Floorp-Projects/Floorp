@@ -117,6 +117,8 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
 
+  NS_IMETHOD Destroy(nsIPresContext *aPresContext);
+
   // new behavior
 
   /**
