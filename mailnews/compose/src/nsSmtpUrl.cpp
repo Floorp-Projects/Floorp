@@ -226,7 +226,7 @@ nsresult nsMailtoUrl::ParseUrl()
     m_toPart.Assign(aPath);
 
   PRInt32 startOfSearchPart = m_toPart.FindChar('?');
-  if (startOfSearchPart > 0)
+  if (startOfSearchPart >= 0)
   {
     // now parse out the search field...
     nsCAutoString searchPart;
