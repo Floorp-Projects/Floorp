@@ -569,7 +569,11 @@ nsLocalFile::ResolvePath(const char* workingPath, PRBool resolveTerminal, char**
 
                 if (0 == statrv && (_S_IFDIR & st.st_mode))
                 {
-                    strcat(temp, "\\");
+                    // For root directory slash is already appended
+                    // XXX not multibyte safe
+                    if (temp[strlen(temp) - 1] != '\\')
+                       strcat(temp, "\\");
+
                     isDir = PR_TRUE;
                 }
 
