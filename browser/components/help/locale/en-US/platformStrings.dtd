@@ -34,3 +34,6 @@
 <!ENTITY enterKey           '<kbd class="noMac">Enter</kbd><kbd
                              class="mac">Return</kbd>' >
 
+<!-- Image Location Base URL -->
+
+<!ENTITY images.baseURL     'http://mozilla.org/projects/firefox/help/1.0'>
