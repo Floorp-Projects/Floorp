@@ -50,7 +50,6 @@
 #include "nsIAppShell.h"
 #include "nsICmdLineService.h"
 #include "nsIAppShellService.h"
-#include "nsIAppShellComponent.h"
 #include "nsIAppStartupNotifier.h"
 #include "nsIObserverService.h"
 #include "nsAppShellCIDs.h"
@@ -1233,11 +1232,6 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   NS_TIMELINE_LEAVE("InitializeProfileService");
   if (NS_FAILED(rv)) return rv;
 
-  // Enumerate AppShellComponenets
-  NS_TIMELINE_ENTER("appShell->EnumerateAndInitializeComponents");
-  appShell->EnumerateAndInitializeComponents();
-  NS_TIMELINE_LEAVE("appShell->EnumerateAndInitializeComponents");
-
   rv = VerifyPsmAbsentOrSane(argc, argv);
   if (NS_FAILED(rv)) return rv;
 
@@ -1297,12 +1291,6 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   if (remoteService)
     remoteService->Shutdown();
 #endif /* MOZ_ENABLE_XREMOTE */
-
-  /*
-   * Shut down the Shell instance...  This is done even if the Run(...)
-   * method returned an error.
-   */
-  (void) appShell->Shutdown();
 
   NS_TIMELINE_LEAVE("main1");
 

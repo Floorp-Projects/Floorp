@@ -807,11 +807,6 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:xpinstall:public:MANIFEST",                      "$distdirectory:xpinstall:");
     InstallFromManifest(":mozilla:xpinstall:cleanup:MANIFEST",                      "$distdirectory:xpinstall:");
 
-
-    # XPFE COMPONENTS
-    InstallFromManifest(":mozilla:xpfe:components:public:MANIFEST",                "$distdirectory:xpfe:components");
-    InstallFromManifest(":mozilla:xpfe:components:public:MANIFEST_IDL",            "$distdirectory:idl:");
-
     my $dir = '';
     for $dir (qw(bookmarks find history related search shistory sidebar urlbarhistory xfer))
     {
