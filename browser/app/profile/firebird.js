@@ -342,6 +342,10 @@ pref("network.http.proxy.version", "1.1");    // default
 // enable caching of http documents
 pref("network.http.use-cache", true);
 
+// this preference can be set to override the socket type used for normal
+// HTTP traffic.  an empty value indicates the normal TCP/IP socket type.
+pref("network.http.default-socket-type", "");
+
 pref("network.http.keep-alive", true); // set it to false in case of problems
 pref("network.http.proxy.keep-alive", true);
 pref("network.http.keep-alive.timeout", 300);
