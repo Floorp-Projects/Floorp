@@ -2520,7 +2520,7 @@ nsParser::DetectMetaTag(const char* aBytes,
             if ((offset = tokenizer.GetNextWord(PR_TRUE)) != kNotFound) {
               const char* contentStart = attrStart+offset;
               CWordTokenizer<char> contentTokenizer(contentStart, 0, 
-                                                    tokenizer.GetLength());
+                                                    attrEnd-contentStart);
 
               // Read the content type
               if (contentTokenizer.GetNextWord() != kNotFound) {
