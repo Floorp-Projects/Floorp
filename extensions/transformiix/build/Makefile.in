@@ -38,6 +38,10 @@ REQUIRES	= xpcom \
 		  content_xsl \
 		  widget \
 		  necko \
+		  js \
+		  appshell \
+		  xpconnect \
+		  caps \
 		  $(NULL)
 IS_COMPONENT	= 1
 MODULE_NAME	= TransformiixModule
