@@ -214,7 +214,9 @@ protected:
 #endif
   nsCOMPtr<nsIMsgSearchValidityTable> m_localNewsTable; // used for local news searching or offline news searching...
   nsCOMPtr<nsIMsgSearchValidityTable> m_ldapTable;
+  nsCOMPtr<nsIMsgSearchValidityTable> m_ldapAndTable;
   nsCOMPtr<nsIMsgSearchValidityTable> m_localABTable;
+  nsCOMPtr<nsIMsgSearchValidityTable> m_localABAndTable;
   nsCOMPtr<nsIMsgSearchValidityTable> m_newsFilterTable;
 
   nsresult NewTable (nsIMsgSearchValidityTable **);
@@ -234,8 +236,10 @@ protected:
   nsresult SetOtherHeadersInTable(nsIMsgSearchValidityTable *table, const char *customHeaders); 
 
   nsresult InitLdapTable();
+  nsresult InitLdapAndTable();
   nsresult InitLocalABTable();
-  nsresult SetUpABTable(nsIMsgSearchValidityTable *aTable, PRBool isLocal);
+  nsresult InitLocalABAndTable();
+  nsresult SetUpABTable(nsIMsgSearchValidityTable *aTable, PRBool isOrTable);
   nsresult EnableDirectoryAttribute(nsIMsgSearchValidityTable *table, nsMsgSearchAttribValue aSearchAttrib);
 };
 

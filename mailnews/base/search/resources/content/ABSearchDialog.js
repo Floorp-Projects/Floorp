@@ -149,11 +149,20 @@ function SelectDirectory(aURI)
 function GetScopeForDirectoryURI(aURI)
 {
   var directory = gRDF.GetResource(aURI).QueryInterface(nsIAbDirectory);
+  var booleanAnd = gSearchBooleanRadiogroup.selectedItem.value == "and";
 
-  if (directory.isRemote)
-    return nsMsgSearchScope.LDAP;
-  else
-    return nsMsgSearchScope.LocalAB;
+  if (directory.isRemote) {
+    if (booleanAnd)
+      return nsMsgSearchScope.LDAPAnd;
+    else 
+      return nsMsgSearchScope.LDAP;
+  }
+  else {
+    if (booleanAnd)
+      return nsMsgSearchScope.LocalABAnd;
+    else 
+      return nsMsgSearchScope.LocalAB;
+  }
 }
 
 function onEnterInSearchTerm()
@@ -188,30 +197,31 @@ function onSearch()
     var count = gSearchSession.searchTerms.Count();
 
     for (var i=0; i<count; i++) {
-     var searchTerm = gSearchSession.searchTerms.GetElementAt(i).QueryInterface(nsIMsgSearchTerm);
+      var searchTerm = gSearchSession.searchTerms.GetElementAt(i).QueryInterface(nsIMsgSearchTerm);
 
-     // get the "and" / "or" value from the first term
-     if (i == 0) {
+      // get the "and" / "or" value from the first term
+      if (i == 0) {
        if (searchTerm.booleanAnd) 
          searchUri += "and";
        else
          searchUri += "or";
-     }
+      }
 
-     var attrs;
+      var attrs;
 
-     switch (searchTerm.attrib) {
+      switch (searchTerm.attrib) {
        case nsMsgSearchAttrib.Name:
-         // when doing an "and" search, we'll use the first one
          if (gSearchPhoneticName == "false")
            attrs = ["DisplayName","FirstName","LastName"];
          else
            attrs = ["DisplayName","FirstName","LastName","PhoneticFirstName","PhoneticLastName"];
          break;
+       case nsMsgSearchAttrib.DisplayName:
+         attrs = ["DisplayName"];
+         break;
        case nsMsgSearchAttrib.Email:
          attrs = ["PrimaryEmail"];
          break;
-         // when doing an "and" search, we'll use the first one
        case nsMsgSearchAttrib.PhoneNumber:
          attrs = ["HomePhone","WorkPhone","FaxNumber","PagerNumber","CellularNumber"]; 
          break;
@@ -258,11 +268,11 @@ function onSearch()
          dump("XXX " + searchTerm.attrib + " not a supported search attr!\n");
          attrs = ["DisplayName"];
          break;
-     }
- 
-     var opStr;
+      }
 
-     switch (searchTerm.op) {
+      var opStr;
+
+      switch (searchTerm.op) {
       case nsMsgSearchOp.Contains:
         opStr = "c";
         break;
@@ -287,30 +297,16 @@ function onSearch()
       default:
         opStr = "c";
         break;
-     }
+      }
 
-     // currently, we can't do "and" and "or" searches at the same time
-     // (it's either all "and"s or all "or"s)
-     //
-     // so, if we are doing an "and" search
-     // on "Any name" or "Any number" we don't want this:
-     // (displayname,c,seth) && (firstname,c,seth) && (lastname,c,seth)
-     // instead, just use the first term (displayname,c,seth)
-     // max_attrs = 1;
-     //
-     // But, if we are doing an "any" search, we do want:
-     // (displayname,c,seth) || (firstname,c,seth) || (lastname,c,seth)
-     // max_attrs = attrs.length
-     var max_attrs;
-     if (searchTerm.booleanAnd)
-       max_attrs = 1;
-     else
-       max_attrs = attrs.length;
+      // currently, we can't do "and" and "or" searches at the same time
+      // (it's either all "and"s or all "or"s)
+      var max_attrs = attrs.length;
 
-     for (var j=0;j<max_attrs;j++) {
+      for (var j=0;j<max_attrs;j++) {
        // append the term(s) to the searchUri
        searchUri += "(" + attrs[j] + "," + opStr + "," + escape(searchTerm.value.str) + ")";
-     }
+      }
     }
 
     searchUri += ")";

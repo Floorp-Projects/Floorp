@@ -625,6 +625,10 @@
       <property name="valueIds" readonly="true">
         <getter>
           <![CDATA[
+            var attrs_length = new Object;
+            var attrs = this.validityTable.getAvailableAttributes(attrs_length);
+            if (!(this.searchAttribute in attrs))
+              this.searchAttribute = Components.interfaces.nsMsgSearchAttrib.Default;    
             var length = new Object;
             return this.validityTable.getAvailableOperators(this.searchAttribute,length);
           ]]>

@@ -244,7 +244,8 @@ function onLess(event)
 }
 
 // set scope on all visible searchattribute tags
-function setSearchScope(scope) {
+function setSearchScope(scope) 
+{
     gSearchScope = scope;
     for (var i=0; i<gSearchTerms.length; i++) {
         gSearchTerms[i].obj.searchattribute.searchScope = scope;
@@ -260,10 +261,12 @@ function updateSearchAttributes()
 }
 
 function booleanChanged(event) {
-    // when boolean changes, we have to update all the attributes on the
-    // search terms
-
+    // when boolean changes, we have to update all the attributes on the search terms
     var newBoolValue = (event.target.getAttribute("value") == "and") ? true : false;
+    if (document.getElementById("abPopup")) {
+      var selectedAB = document.getElementById("abPopup").selectedItem.id;
+      setSearchScope(GetScopeForDirectoryURI(selectedAB));
+    }
     for (var i=0; i<gSearchTerms.length; i++) {
         var searchTerm = gSearchTerms[i].obj;
         searchTerm.booleanAnd = newBoolValue;
@@ -276,7 +279,6 @@ function booleanChanged(event) {
         }
     }
 }
-
 
 function createSearchRow(index, scope, searchTerm)
 {

@@ -1089,10 +1089,20 @@ NS_IMETHODIMP nsMsgSearchValidityManager::GetTable (int whichTable, nsIMsgSearch
       rv = InitLdapTable ();
     *ppOutTable = m_ldapTable;
     break;
+  case nsMsgSearchScope::LDAPAnd:
+    if (!m_ldapAndTable)
+      rv = InitLdapAndTable ();
+    *ppOutTable = m_ldapAndTable;
+    break;
   case nsMsgSearchScope::LocalAB:
     if (!m_localABTable)
       rv = InitLocalABTable ();
     *ppOutTable = m_localABTable;
+    break;
+  case nsMsgSearchScope::LocalABAnd:
+    if (!m_localABAndTable)
+      rv = InitLocalABAndTable ();    
+    *ppOutTable = m_localABAndTable;
     break;
   default:                 
     NS_ASSERTION(PR_FALSE, "invalid table type");
@@ -1164,7 +1174,6 @@ nsMsgSearchValidityManager::SetOtherHeadersInTable (nsIMsgSearchValidityTable *a
   return NS_OK;
 }
 
-
 nsresult nsMsgSearchValidityManager::EnableDirectoryAttribute(nsIMsgSearchValidityTable *table, nsMsgSearchAttribValue aSearchAttrib)
 {
         table->SetAvailable (aSearchAttrib, nsMsgSearchOp::Contains, 1);
@@ -1191,7 +1200,19 @@ nsresult nsMsgSearchValidityManager::InitLdapTable()
   nsresult rv = NewTable(getter_AddRefs(m_ldapTable));
   NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = SetUpABTable(m_ldapTable, PR_FALSE);
+  rv = SetUpABTable(m_ldapTable, PR_TRUE);
+  NS_ENSURE_SUCCESS(rv,rv);
+  return rv;
+}
+
+nsresult nsMsgSearchValidityManager::InitLdapAndTable()
+{
+  NS_ASSERTION(!m_ldapAndTable,"don't call this twice!");
+
+  nsresult rv = NewTable(getter_AddRefs(m_ldapAndTable));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = SetUpABTable(m_ldapAndTable, PR_FALSE);
   NS_ENSURE_SUCCESS(rv,rv);
   return rv;
 }
@@ -1208,14 +1229,33 @@ nsresult nsMsgSearchValidityManager::InitLocalABTable()
   return rv;
 }
 
-
-nsresult 
-nsMsgSearchValidityManager::SetUpABTable(nsIMsgSearchValidityTable *aTable, PRBool isLocal)
+nsresult nsMsgSearchValidityManager::InitLocalABAndTable()
 {
-  nsresult rv = aTable->SetDefaultAttrib(nsMsgSearchAttrib::Name);
+  NS_ASSERTION(!m_localABAndTable,"don't call this twice!");
+
+  nsresult rv = NewTable(getter_AddRefs(m_localABAndTable));
   NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = EnableDirectoryAttribute(aTable, nsMsgSearchAttrib::Name);
+  rv = SetUpABTable(m_localABAndTable, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv,rv);
+  return rv;
+}
+
+nsresult
+nsMsgSearchValidityManager::SetUpABTable(nsIMsgSearchValidityTable *aTable, PRBool isOrTable)
+{
+  nsresult rv = aTable->SetDefaultAttrib(isOrTable ? nsMsgSearchAttrib::Name : nsMsgSearchAttrib::DisplayName);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  if (isOrTable) {
+    rv = EnableDirectoryAttribute(aTable, nsMsgSearchAttrib::Name);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    rv = EnableDirectoryAttribute(aTable, nsMsgSearchAttrib::PhoneNumber);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+
+  rv = EnableDirectoryAttribute(aTable, nsMsgSearchAttrib::DisplayName);
   NS_ENSURE_SUCCESS(rv,rv);
  
   rv = EnableDirectoryAttribute(aTable, nsMsgSearchAttrib::Email);
@@ -1260,9 +1300,5 @@ nsMsgSearchValidityManager::SetUpABTable(nsIMsgSearchValidityTable *aTable, PRBo
   rv = EnableDirectoryAttribute(aTable, nsMsgSearchAttrib::Mobile);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = EnableDirectoryAttribute(aTable, nsMsgSearchAttrib::PhoneNumber);
-  NS_ENSURE_SUCCESS(rv,rv);
   return rv;
 }
-
-

@@ -60,6 +60,8 @@ interface nsMsgSearchScope {
   const nsMsgSearchScopeValue LocalAB = 8;
   const nsMsgSearchScopeValue allSearchableGroups = 9;
   const nsMsgSearchScopeValue newsFilter = 10;
+  const nsMsgSearchScopeValue LocalABAnd = 11;
+  const nsMsgSearchScopeValue LDAPAnd = 12;
 };
 
 typedef long nsMsgSearchAttribValue;
@@ -86,25 +88,26 @@ interface nsMsgSearchAttrib {
     const nsMsgSearchAttribValue AnyText = 14;
     const nsMsgSearchAttribValue Keywords = 15;
 
-	const nsMsgSearchAttribValue Name = 16;
-    const nsMsgSearchAttribValue Email = 17;
-    const nsMsgSearchAttribValue PhoneNumber = 18;
-    const nsMsgSearchAttribValue City = 19;
-	const nsMsgSearchAttribValue Street = 20;
-    const nsMsgSearchAttribValue Nickname = 21;
-    const nsMsgSearchAttribValue WorkPhone = 22;
-    const nsMsgSearchAttribValue HomePhone = 23;
-    const nsMsgSearchAttribValue Fax = 24;
-    const nsMsgSearchAttribValue Pager = 25;
-    const nsMsgSearchAttribValue Mobile = 26;
-    const nsMsgSearchAttribValue ScreenName = 27;
-    const nsMsgSearchAttribValue Title = 28;
-    const nsMsgSearchAttribValue Organization = 29;
-    const nsMsgSearchAttribValue Department = 30;
-    const nsMsgSearchAttribValue AdditionalEmail = 31;
+    const nsMsgSearchAttribValue Name = 16;
+    const nsMsgSearchAttribValue DisplayName = 17;
+    const nsMsgSearchAttribValue Nickname = 18;
+    const nsMsgSearchAttribValue ScreenName = 19;
+    const nsMsgSearchAttribValue Email = 20;
+    const nsMsgSearchAttribValue AdditionalEmail = 21;
+    const nsMsgSearchAttribValue PhoneNumber = 22;
+    const nsMsgSearchAttribValue WorkPhone = 23;
+    const nsMsgSearchAttribValue HomePhone = 24;
+    const nsMsgSearchAttribValue Fax = 25;
+    const nsMsgSearchAttribValue Pager = 26;
+    const nsMsgSearchAttribValue Mobile = 27;
+    const nsMsgSearchAttribValue City = 28;
+    const nsMsgSearchAttribValue Street = 29;    
+    const nsMsgSearchAttribValue Title = 30;
+    const nsMsgSearchAttribValue Organization = 31;
+    const nsMsgSearchAttribValue Department = 32;    	
 
-    // 32 - 45, reserved for ab / LDAP;
-  const nsMsgSearchAttribValue HasAttachmentStatus = 46;
+	// 33 - 45, reserved for ab / LDAP;
+	const nsMsgSearchAttribValue HasAttachmentStatus = 46;
 	const nsMsgSearchAttribValue JunkStatus = 47;
     const nsMsgSearchAttribValue Label = 48; /* mail only...can search by label */
     //49 is for showing customize... in ui headers start from 50 onwards up until 99.
