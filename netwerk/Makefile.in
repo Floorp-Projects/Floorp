@@ -28,20 +28,13 @@ include $(DEPTH)/config/autoconf.mk
 DIRS=            \
 	base     \
 	dns      \
+	socket   \
 	build    \
 	protocol \
 	util     \
 	mime     \
 	streamconv \
 	$(NULL)
-
-include $(DEPTH)/config/config.mk
-
-ifdef NET_SOCKET_PROVIDER_BUILD
-DIRS +=		 \
-	socket   \
-	$(NULL)
-endif
 
 ifdef ENABLE_TESTS
 DIRS += test
