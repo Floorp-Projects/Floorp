@@ -3260,7 +3260,7 @@ nsFontMetricsWin::FindPrefFont(HDC aDC, PRUint32 aChar)
   // figure out which one comes first. As a final fallback, unicode preference is always tried. 
 
   PRUint32 unicodeRange = FindCharUnicodeRange(aChar);
-  if (unicodeRange > kRangeSpecificItemNum) { 
+  if (unicodeRange < kRangeSpecificItemNum) {
     // a single language is identified
     AppendGenericFontFromPref(font.name, LangGroupFromUnicodeRange(unicodeRange), 
                               NS_ConvertUCS2toUTF8(mGeneric).get());
