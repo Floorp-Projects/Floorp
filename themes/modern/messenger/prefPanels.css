@@ -57,6 +57,6 @@
 /* :::::: Emoticon smiley face ::::: */
 
 .smileface {
-  list-style-image: url("chrome://editor/skin/icons/smiley/smile.gif");
+  list-style-image: url("chrome://editor/content/images/smile_n.gif");
 }
 

@@ -30,9 +30,16 @@
 
 /* ::::: communicator product icons ::::: */
 
+.taskbutton {
+  padding: 1px;
+}
+
+.taskbutton:hover:active {
+  padding: 2px 0 0 2px;
+}
+
 #mini-nav {
   list-style-image: url("chrome://communicator/skin/taskbar/navigator.gif");
-  margin-right: 2px;
 }
 
 #mini-nav:hover {
@@ -41,7 +48,6 @@
 
 #mini-mail {
   list-style-image: url("chrome://communicator/skin/taskbar/mail.gif");
-  margin-left: 1px;
 }
 
 #mini-mail:hover {

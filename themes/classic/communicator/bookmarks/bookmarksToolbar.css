@@ -42,7 +42,7 @@ toolbarbutton.bookmark-item:hover {
 }
 
 toolbarbutton.bookmark-item:not([container="true"]):hover:active {
-  color: #FF0000 !important;
+  color: #0000FF !important;
 }
 
 toolbarbutton.bookmark-item[container="true"],

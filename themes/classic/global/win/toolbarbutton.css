@@ -68,7 +68,7 @@ toolbarbutton[open="true"] {
   -moz-border-bottom-colors: ThreeDDarkShadow ThreeDHighlight;
   -moz-border-left-colors: ThreeDDarkShadow ThreeDShadow;
   padding: 3px 1px 1px 3px;
-  color: #FF0000;
+  color: #0000FF;
 }
 
 toolbarbutton[disabled="true"],

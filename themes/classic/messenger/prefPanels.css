@@ -34,15 +34,15 @@
 
 #classic {
   min-height       : 32px;
-  list-style-image : url("chrome://messenger/skin/winclassic.gif");
+  list-style-image : url("chrome://messenger/skin/icons/winclassic.gif");
 }
 
 #wide {
   min-height       : 32px;
-  list-style-image : url("chrome://messenger/skin/winwide.gif");
+  list-style-image : url("chrome://messenger/skin/icons/winwide.gif");
 }
 
 .smileface {
-  list-style-image : url("chrome://messenger/skin/smile.gif");
+  list-style-image: url("chrome://editor/content/images/smile_n.gif");
 }
 

@@ -129,6 +129,10 @@
 #print-button[disabled="true"] {
   -moz-image-region: rect(0px 92px 21px 69px) !important;
 }
+
+#fullscreen-exit-button {
+  list-style-image: none;
+}
   
 /* ::::: nav-bar-inner ::::: */
   

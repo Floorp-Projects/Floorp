@@ -130,6 +130,10 @@
   -moz-image-region: rect(0 199px 33px 150px) !important;
 }
 
+#fullscreen-exit-button {
+  list-style-image: none;
+}
+
 /* Hides text below the above buttons */
 .toolbarbutton-1 > stack > .toolbarbutton-menubutton-button 
   > .toolbarbutton-text,
@@ -198,7 +202,7 @@
   -moz-border-right-colors: #D2DAE1 #000000 #768C9F;
   -moz-border-bottom-colors: #D2DAE1 #000000 #768C9F;
   -moz-border-left-colors: #A5ACB5 #000000 #A7BACA;
-  background: #EDF5F7 url("chrome://navigator/skin/toolbar/urlbar-mid-mid.gif") bottom repeat-x;
+  background: url("chrome://navigator/skin/toolbar/urlbar-mid.gif") #EDF5F7 bottom repeat-x;
 }
 
 /* ::::: page proxy icon ::::: */
