@@ -89,6 +89,8 @@
 
 #include "nsGtkCursors.h" // for custom cursors
 
+#include "nspr.h"
+
 #include <unistd.h>
 
 #ifdef NEED_USLEEP_PROTOTYPE
@@ -188,6 +190,8 @@ struct nsXICLookupEntry {
 PLDHashTable nsWindow::gXICLookupTable;
 GdkFont *nsWindow::gPreeditFontset = nsnull;
 GdkFont *nsWindow::gStatusFontset = nsnull;
+
+#define XIC_FONTSET "-*-*-medium-r-*-*-%d-*-*-*-*-*-*-*,-*-*-*-r-*-*-%d-*-*-*-*-*-*-*,-*-*-*-*-*-*-%d-*-*-*-*-*-*-*"
 #endif // USE_XIM
 
 #ifdef DEBUG_DND_XLATE
@@ -3769,13 +3773,13 @@ nsWindow::SetXICBaseFontSize(nsIMEGtkIC* aXIC, int height)
   if (gPreeditFontset) {
     gdk_font_unref(gPreeditFontset);
   }
-  char xlfdbase[128];
-  sprintf(xlfdbase, "-*-*-medium-r-*-*-%d-*-*-*-*-*-*-*", height);
+  char *xlfdbase = PR_smprintf(XIC_FONTSET, height, height, height);
   gPreeditFontset = gdk_fontset_load(xlfdbase);
   if (gPreeditFontset) {
     aXIC->SetPreeditFont(gPreeditFontset);
   }
   mXICFontSize = height;
+  PR_smprintf_free(xlfdbase);
 }
 
 void
@@ -3885,12 +3889,15 @@ nsWindow::IMEGetInputContext(PRBool aCreate)
 
   // create new XIC
   if (aCreate) {
+    // create XLFD, needs 3 arguments of height, see XIC_FONTSET definition
+    char *xlfdbase = PR_smprintf(XIC_FONTSET, mXICFontSize, mXICFontSize, mXICFontSize);
     if (gPreeditFontset == nsnull) {
-      gPreeditFontset = gdk_fontset_load("-*-*-medium-r-*-*-16-*-*-*-*-*-*-*");
+      gPreeditFontset = gdk_fontset_load(xlfdbase);
     }
     if (gStatusFontset == nsnull) {
-      gStatusFontset = gdk_fontset_load("-*-*-medium-r-*-*-16-*-*-*-*-*-*-*");
+      gStatusFontset = gdk_fontset_load(xlfdbase);
     }
+    PR_smprintf_free(xlfdbase);
     if (!gPreeditFontset || !gStatusFontset) {
       return nsnull;
     }
