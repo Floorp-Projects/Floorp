@@ -42,8 +42,10 @@ EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
 EXTRA_DSO_LDOPTS =\
 		-L$(DIST)/bin \
-		-lxp \
 		$(ZLIB_LIBS) \
+		-lxpcom	\
+		$(NSPR_LIBS)	\
+		$(DIST)/lib/libxp_s.a	\
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
