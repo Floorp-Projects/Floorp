@@ -171,6 +171,7 @@ static JSValue load(Context *cx, const JSValues &argv)
     return result;
 }
 
+#if 0       // need a XP version of this, rip off from Monkey?
 #include <sys/timeb.h>
 static JSValue time(Context *cx, const JSValues &argv)
 {
@@ -179,6 +180,7 @@ static JSValue time(Context *cx, const JSValues &argv)
 
     return JSValue((double)timebuffer.time * 1000 + timebuffer.millitm);
 }
+#endif
 
 static void readEvalPrint(FILE *in, World &world)
 {
@@ -189,7 +191,7 @@ static void readEvalPrint(FILE *in, World &world)
     global.defineNativeFunction(world.identifiers[widenCString("print")], print);
     global.defineNativeFunction(world.identifiers[widenCString("dump")], dump);
     global.defineNativeFunction(world.identifiers[widenCString("load")], load);
-    global.defineNativeFunction(world.identifiers[widenCString("time")], time);
+//   global.defineNativeFunction(world.identifiers[widenCString("time")], time);
 
     String buffer;
     string line;
