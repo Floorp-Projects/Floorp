@@ -41,6 +41,10 @@
 #include "nsIJVMManager.h"
 #endif
 #include "nsIPluginManager.h"
+#include "nsICharsetConverterManager.h"
+#include "nsUCvLatinCID.h"
+#include "nsUCVJACID.h"
+// #include "nsUCVJA2CID.h"
 
 
 #include "nsIEditor.h"
@@ -62,6 +66,10 @@
 #define CAPS_DLL   "caps.dll"
 #define LIVECONNECT_DLL    "jsj3250.dll"
 #define OJI_DLL    "oji.dll"
+#define UCONV_DLL    "uconv.dll"
+#define UCVLATIN_DLL "ucvlatin.dll"
+#define UCVJA_DLL    "ucvja.dll"
+#define UCVJA2_DLL   "ucvja2.dll"
 #else
 #ifdef XP_MAC
 #define XPCOM_DLL   "XPCOM_DLL"
@@ -77,6 +85,10 @@
 #define NETLIB_DLL	"NETLIB_DLL"
 #define EDITOR_DLL	"ENDER_DLL"
 #define RDF_DLL			"RDF_DLL"
+#define UCONV_DLL    "UCONV_DLL"
+#define UCVLATIN_DLL "UCVLATIN_DLL"
+#define UCVJA_DLL    "UCVJA_DLL"
+#define UCVJA2_DLL   "UCVJA2_DLL"
 #else
 #define XPCOM_DLL  "libxpcom.so"
 /** Currently CFLAGS  defines WIDGET_DLL and GFXWIN_DLL. If, for some 
@@ -99,6 +111,10 @@
 #define NETLIB_DLL "libnetlib.so"
 #define EDITOR_DLL "libender.so"
 #define RDF_DLL    "librdf.so"
+#define UCONV_DLL    "libuconv.so"
+#define UCVLATIN_DLL "libucvlatin.so"
+#define UCVJA_DLL    "libucvja.so"
+#define UCVJA2_DLL   "libucvja2.so"
 #endif
 #endif
 
@@ -250,6 +266,14 @@ NS_SetupRegistry()
   nsRepository::RegisterFactory(kRangeCID,		    LAYOUT_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kRangeListCID,		LAYOUT_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kFrameUtilCID,      LAYOUT_DLL, PR_FALSE, PR_FALSE);
+
+  nsRepository::RegisterFactory(kCharsetConverterManagerCID,      UCONV_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kLatin1ToUnicodeCID,      UCVLATIN_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kISO88597ToUnicodeCID,    UCVLATIN_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCP1253ToUnicodeCID,      UCVLATIN_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kSJIS2UnicodeCID,         UCVJA_DLL, PR_FALSE, PR_FALSE);
+  // nsRepository::RegisterFactory(kEUCJPToUnicodeCID,       UCVJA2_DLL, PR_FALSE, PR_FALSE);
+  // nsRepository::RegisterFactory(kISO2022JPToUnicodeCID,   UCVJA2_DLL, PR_FALSE, PR_FALSE);
 
   nsRepository::RegisterFactory(kCPluginManagerCID, PLUGIN_DLL,      PR_FALSE, PR_FALSE);
 #ifdef XP_PC
