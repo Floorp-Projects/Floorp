@@ -3389,6 +3389,7 @@ nsMsgLocalMailFolder::SetCheckForNewMessagesAfterParsing(PRBool aCheckForNewMess
 NS_IMETHODIMP
 nsMsgLocalMailFolder::NotifyCompactCompleted()
 {
+  mExpungedBytes = 0;
   (void) RefreshSizeOnDisk();
   (void) CloseDBIfFolderNotOpen();
   nsCOMPtr <nsIAtom> compactCompletedAtom;

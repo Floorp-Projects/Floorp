@@ -748,6 +748,9 @@ nsOfflineStoreCompactState::FinishCompact()
   m_db->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
   if (dbFolderInfo)
     dbFolderInfo->SetExpungedBytes(0);
+  // this forces the m_folder to update mExpungedBytes from the db folder info.
+  PRUint32 expungedBytes;
+  m_folder->GetExpungedBytes(&expungedBytes);
   m_folder->UpdateSummaryTotals(PR_TRUE);
   m_db->SetSummaryValid(PR_TRUE);
   m_db->Commit(nsMsgDBCommitType::kLargeCommit);
