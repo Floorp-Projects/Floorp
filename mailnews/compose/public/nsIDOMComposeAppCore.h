@@ -34,6 +34,9 @@ class nsIDOMComposeAppCore : public nsIDOMBaseAppCore {
  public: 
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMCOMPOSEAPPCORE_IID)
 
+  /* void Dispose (); */
+  NS_IMETHOD Dispose() = 0;
+
   /* void SetWindow (in nsIDOMWindow ptr); */
   NS_IMETHOD SetWindow(nsIDOMWindow *ptr) = 0;
 
