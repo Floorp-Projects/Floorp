@@ -13,7 +13,7 @@
 <!ENTITY  serif.select  "Serif:">
 <!ENTITY  sans-serif.select  "Sans-Serif:">
 <!ENTITY  monospace.select  "Monospace:">
-<!ENTITY  fantasy.select  "Fantacy:">
+<!ENTITY  fantasy.select  "Fantasy:">
 <!ENTITY  cursive.select  "Cursive:">
 <!ENTITY  size1.option "10">
 <!ENTITY  varFont.select "Variable Width Font:">
