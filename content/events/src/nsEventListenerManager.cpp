@@ -1677,16 +1677,16 @@ nsresult nsEventListenerManager::FlipCaptureBit(PRInt32 aEventTypes, PRBool aIni
       ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
     }
   }
-  /*if (aEventTypes & nsIDOMEvent::DRAGDROP) {
+  if (aEventTypes & nsIDOMEvent::DRAGDROP) {
     iid = NS_GET_IID(nsIDOMDragListener);
     ls = FindJSEventListener(iid);
     if (ls) {
-      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_MOUSE_MOUSEDOWN; 
-      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_MOUSE_MOUSEDOWN;
+      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_DRAG_ENTER; 
+      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_DRAG_ENTER;
       ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
     }
   }
-  if (aEventTypes & nsIDOMEvent::MOUSEDRAG) {
+  /*if (aEventTypes & nsIDOMEvent::MOUSEDRAG) {
     iid = kIDOMMouseListenerIID;
     ls = FindJSEventListener(iid);
     if (ls) {

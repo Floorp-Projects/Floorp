@@ -60,6 +60,7 @@
 #include "nsIDOMCrypto.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentView.h"
+#include "nsIDOMDragListener.h"
 #include "nsIDOMFocusListener.h"
 #include "nsIDOMFormListener.h"
 #include "nsIDOMKeyListener.h"
@@ -3755,6 +3756,20 @@ PRBool GlobalWindowImpl::CheckForEventListener(JSContext* aContext, nsString& aP
          if(!scriptCX ||
             NS_OK != manager->RegisterScriptEventListener(scriptCX, this, atom,
             NS_GET_IID(nsIDOMPaintListener)))
+            {
+            return PR_FALSE;
+            }
+         }
+      }
+   else if(aPropName.EqualsWithConversion("ondragdrop"))
+      {
+      if(NS_OK == GetListenerManager(getter_AddRefs(manager)))
+         {
+         nsCOMPtr<nsIScriptContext> scriptCX;
+         nsJSUtils::nsGetDynamicScriptContext(aContext, getter_AddRefs(scriptCX));
+         if(!scriptCX ||
+            NS_OK != manager->RegisterScriptEventListener(scriptCX, this, atom,
+            NS_GET_IID(nsIDOMDragListener)))
             {
             return PR_FALSE;
             }
