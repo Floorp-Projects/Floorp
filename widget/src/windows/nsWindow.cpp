@@ -1121,6 +1121,23 @@ NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
   mBounds.y = aY;
 
     if (mWnd) {
+		// Make sure this window is actually on the screen before we move it
+		// XXX: Needs multiple monitor support
+		HDC dc = ::GetDC(mWnd);
+		if(dc) {
+          if (::GetDeviceCaps(dc, TECHNOLOGY) == DT_RASDISPLAY)
+		  {
+            RECT workArea;
+            ::SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
+            if(mBounds.x >= workArea.right)
+		      aX = mBounds.x = workArea.left;
+
+            if(mBounds.y >= workArea.bottom)
+              aY = mBounds.y = workArea.top;
+		  }
+          ::ReleaseDC(mWnd, dc);
+		}
+
         nsIWidget *par = GetParent();
         HDWP      deferrer = NULL;
 
