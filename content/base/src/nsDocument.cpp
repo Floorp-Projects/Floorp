@@ -2376,7 +2376,7 @@ nsDocument::ImportNode(nsIDOMNode* aImportedNode,
                        nsIDOMNode** aReturn)
 {
   NS_ENSURE_ARG(aImportedNode);
-  NS_ENSURE_ARG_POINTER(aReturn);
+  NS_PRECONDITION(aReturn, "Null out param!");
 
   nsresult rv = nsContentUtils::CheckSameOrigin(this, aImportedNode);
   if (NS_FAILED(rv)) {
@@ -2389,6 +2389,8 @@ nsDocument::ImportNode(nsIDOMNode* aImportedNode,
 NS_IMETHODIMP
 nsDocument::AddBinding(nsIDOMElement* aContent, const nsAString& aURI)
 {
+  NS_ENSURE_ARG(aContent);
+  
   nsresult rv = nsContentUtils::CheckSameOrigin(this, aContent);
   if (NS_FAILED(rv)) {
     return rv;
@@ -2404,6 +2406,8 @@ nsDocument::AddBinding(nsIDOMElement* aContent, const nsAString& aURI)
 NS_IMETHODIMP
 nsDocument::RemoveBinding(nsIDOMElement* aContent, const nsAString& aURI)
 {
+  NS_ENSURE_ARG(aContent);
+
   nsresult rv = nsContentUtils::CheckSameOrigin(this, aContent);
   if (NS_FAILED(rv)) {
     return rv;
@@ -2662,6 +2666,8 @@ nsDocument::SetTitle(const nsAString& aTitle)
 NS_IMETHODIMP
 nsDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
 {
+  NS_ENSURE_ARG(aElement);
+  
   nsresult rv;
 
   *aResult = nsnull;

@@ -866,6 +866,8 @@ nsXULDocument::AddBroadcastListenerFor(nsIDOMElement* aBroadcaster,
                                        nsIDOMElement* aListener,
                                        const nsAString& aAttr)
 {
+    NS_ENSURE_ARG(aBroadcaster && aListener);
+    
     nsresult rv =
         nsContentUtils::CheckSameOrigin(NS_STATIC_CAST(nsDocument *, this),
                                         aBroadcaster);
