@@ -371,16 +371,10 @@ NS_IMETHODIMP nsAbDirectory::AddChildCards(const char *uriName, nsIAbCard **chil
 	if(NS_FAILED(rv))
 		return rv;
 
-	nsAutoString uri; uri.AssignWithConversion(uriName);
-	char* uriStr = uri.ToNewCString();
-	if (uriStr == nsnull) 
-		return NS_ERROR_OUT_OF_MEMORY;
-
 	nsCOMPtr<nsIRDFResource> res;
-	rv = rdf->GetResource(uriStr, getter_AddRefs(res));
+  rv = rdf->GetResource(uriName, getter_AddRefs(res));
 	if (NS_FAILED(rv))
 	{
-		delete[] uriStr;
 		return rv;
 	}
 	nsCOMPtr<nsIAbCard> personCard(do_QueryInterface(res, &rv));
@@ -389,11 +383,9 @@ NS_IMETHODIMP nsAbDirectory::AddChildCards(const char *uriName, nsIAbCard **chil
 		rv = nsComponentManager::CreateInstance(kAbCardCID, nsnull, NS_GET_IID(nsIAbCard), getter_AddRefs(personCard));
 		if (NS_FAILED(rv) || !personCard)
 		{
-			delete[] uriStr;
 			return rv;
 		}
 	}
-	nsMemory::Free(uriStr);
 
 	*childCard = personCard;
 	NS_ADDREF(*childCard);

@@ -1118,7 +1118,7 @@ nsresult nsAddrDatabase::AddUnicodeToColumn(nsIMdbRow * row, mdb_token colToken,
 {
 	nsresult err = NS_OK;
 	nsAutoString displayString(pUnicodeStr);
-	char* pDisplayUTF8Str = displayString.ToNewCString();
+    char* pDisplayUTF8Str = displayString.ToNewUTF8String();
 	nsAutoString newUnicodeString(pUnicodeStr);
 	newUnicodeString.ToLowerCase();
 	char* pUTF8Str = newUnicodeString.ToNewUTF8String();
@@ -1135,6 +1135,9 @@ nsresult nsAddrDatabase::AddUnicodeToColumn(nsIMdbRow * row, mdb_token colToken,
 			err = AddLowercaseColumn(row, m_LowerListNameColumnToken, pUTF8Str);
 		}
 	}
+    else
+        err = NS_ERROR_OUT_OF_MEMORY;
+
 	if (pDisplayUTF8Str)
 		Recycle(pDisplayUTF8Str);
 	if (pUTF8Str)
@@ -2695,7 +2698,11 @@ nsresult nsAddrDatabase::GetStringColumn(nsIMdbRow *cardRow, mdb_token outToken,
 		{
 			struct mdbYarn yarn;
 			cardCell->AliasYarn(GetEnv(), &yarn);
-			str.AssignWithConversion((const char *) yarn.mYarn_Buf, yarn.mYarn_Fill);
+            NS_ConvertUTF8toUCS2 uniStr((const char*) yarn.mYarn_Buf, yarn.mYarn_Fill);
+            if (uniStr.Length() > 0)
+                str.Assign(uniStr);
+            else
+                err = NS_ERROR_FAILURE;
 			cardCell->CutStrongRef(GetEnv()); // always release ref
 		}
 		else
@@ -2903,7 +2910,7 @@ NS_IMETHODIMP nsAddrDatabase::GetAnonymousStringAttribute(const char *attrname, 
 				err = GetStringColumn(cardRow, anonymousColumnToken, tempString);
 				if (NS_SUCCEEDED(err) && tempString.Length())
 				{
-					tempCString = tempString.ToNewCString();
+                    tempCString = tempString.ToNewUTF8String();
 					*value = PL_strdup(tempCString);
 					Recycle(tempCString);
 					return NS_OK;
@@ -3050,67 +3057,41 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 		return NS_ERROR_NULL_POINTER;
 
     nsAutoString tempString;
-	char *tempCString = nsnull;
-	PRUnichar *unicodeStr = nsnull;
 
 	err = GetStringColumn(cardRow, m_FirstNameColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
-		newCard->SetFirstName(unicodeStr);
-		nsMemory::Free(tempCString);
-		PR_Free(unicodeStr);
+        newCard->SetFirstName(tempString.GetUnicode());
 	}
 
 	err = GetStringColumn(cardRow, m_LastNameColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
-		newCard->SetLastName(unicodeStr);
-		nsMemory::Free(tempCString);
-		PR_Free(unicodeStr);
+        newCard->SetLastName(tempString.GetUnicode());
 	}
 
 	err = GetStringColumn(cardRow, m_DisplayNameColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
-		newCard->SetDisplayName(unicodeStr);
-		nsMemory::Free(tempCString);
-		PR_Free(unicodeStr);
+        newCard->SetDisplayName(tempString.GetUnicode());
 	}
 
 	err = GetStringColumn(cardRow, m_NickNameColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
-		newCard->SetNickName(unicodeStr);
-		nsMemory::Free(tempCString);
-		PR_Free(unicodeStr);
+        newCard->SetNickName(tempString.GetUnicode());
 	}
 
 	err = GetStringColumn(cardRow, m_PriEmailColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
-		newCard->SetPrimaryEmail(unicodeStr);
-		nsMemory::Free(tempCString);
-		PR_Free(unicodeStr);
+        newCard->SetPrimaryEmail(tempString.GetUnicode());
 	}
 
 	err = GetStringColumn(cardRow, m_2ndEmailColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
-		newCard->SetSecondEmail(unicodeStr);
-		nsMemory::Free(tempCString);
-		PR_Free(unicodeStr);
+        newCard->SetSecondEmail(tempString.GetUnicode());
 	}
 
 	PRBool bValue = PR_FALSE;
@@ -3121,301 +3102,181 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 	err = GetStringColumn(cardRow, m_WorkPhoneColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
-		newCard->SetWorkPhone(unicodeStr);
-		nsMemory::Free(tempCString);
-		PR_Free(unicodeStr);
+        newCard->SetWorkPhone(tempString.GetUnicode());
 	}
 
 	err = GetStringColumn(cardRow, m_HomePhoneColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
-		newCard->SetHomePhone(unicodeStr);
-		nsMemory::Free(tempCString);
-		PR_Free(unicodeStr);
+        newCard->SetHomePhone(tempString.GetUnicode());
 	}
 
 	err = GetStringColumn(cardRow, m_FaxColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
-		newCard->SetFaxNumber(unicodeStr);
-		nsMemory::Free(tempCString);
-		PR_Free(unicodeStr);
+        newCard->SetFaxNumber(tempString.GetUnicode());
 	}
 
 	err = GetStringColumn(cardRow, m_PagerColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
-		newCard->SetPagerNumber(unicodeStr);
-		nsMemory::Free(tempCString);
-		PR_Free(unicodeStr);
+        newCard->SetPagerNumber(tempString.GetUnicode());
 	}
 
 	err = GetStringColumn(cardRow, m_CellularColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
-		newCard->SetCellularNumber(unicodeStr);
-		nsMemory::Free(tempCString);
-		PR_Free(unicodeStr);
+        newCard->SetCellularNumber(tempString.GetUnicode());
 	}
 
 	err = GetStringColumn(cardRow, m_HomeAddressColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
-		newCard->SetHomeAddress(unicodeStr);
-		nsMemory::Free(tempCString);
-		PR_Free(unicodeStr);
+        newCard->SetHomeAddress(tempString.GetUnicode());
 	}
 
 	err = GetStringColumn(cardRow, m_HomeAddress2ColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
-		newCard->SetHomeAddress2(unicodeStr);
-		nsMemory::Free(tempCString);
-		PR_Free(unicodeStr);
+        newCard->SetHomeAddress2(tempString.GetUnicode());
 	}
 
 	err = GetStringColumn(cardRow, m_HomeCityColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
-		newCard->SetHomeCity(unicodeStr);
-		nsMemory::Free(tempCString);
-		PR_Free(unicodeStr);
+        newCard->SetHomeCity(tempString.GetUnicode());
 	}
 
 	err = GetStringColumn(cardRow, m_HomeStateColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
-		newCard->SetHomeState(unicodeStr);
-		nsMemory::Free(tempCString);
-		PR_Free(unicodeStr);
+        newCard->SetHomeState(tempString.GetUnicode());
 	}
 
 	err = GetStringColumn(cardRow, m_HomeZipCodeColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
-		newCard->SetHomeZipCode(unicodeStr);
-		nsMemory::Free(tempCString);
-		PR_Free(unicodeStr);
+        newCard->SetHomeZipCode(tempString.GetUnicode());
 	}
 
 	err = GetStringColumn(cardRow, m_HomeCountryColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
-		newCard->SetHomeCountry(unicodeStr);
-		nsMemory::Free(tempCString);
-		PR_Free(unicodeStr);
+        newCard->SetHomeCountry(tempString.GetUnicode());
 	}
 
 	err = GetStringColumn(cardRow, m_WorkAddressColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
-		newCard->SetWorkAddress(unicodeStr);
-		nsMemory::Free(tempCString);
-		PR_Free(unicodeStr);
+        newCard->SetWorkAddress(tempString.GetUnicode());
 	}
 
 	err = GetStringColumn(cardRow, m_WorkAddress2ColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
-		newCard->SetWorkAddress2(unicodeStr);
-		nsMemory::Free(tempCString);
-		PR_Free(unicodeStr);
+        newCard->SetWorkAddress2(tempString.GetUnicode());
 	}
 
 	err = GetStringColumn(cardRow, m_WorkCityColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
-		newCard->SetWorkCity(unicodeStr);
-		nsMemory::Free(tempCString);
-		PR_Free(unicodeStr);
+        newCard->SetWorkCity(tempString.GetUnicode());
 	}
 
 	err = GetStringColumn(cardRow, m_WorkStateColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
-		newCard->SetWorkState(unicodeStr);
-		nsMemory::Free(tempCString);
-		PR_Free(unicodeStr);
+        newCard->SetWorkState(tempString.GetUnicode());
 	}
 
 	err = GetStringColumn(cardRow, m_WorkZipCodeColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
-		newCard->SetWorkZipCode(unicodeStr);
-		nsMemory::Free(tempCString);
-		PR_Free(unicodeStr);
+        newCard->SetWorkZipCode(tempString.GetUnicode());
 	}
 
 	err = GetStringColumn(cardRow, m_WorkCountryColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
-		newCard->SetWorkCountry(unicodeStr);
-		nsMemory::Free(tempCString);
-		PR_Free(unicodeStr);
+        newCard->SetWorkCountry(tempString.GetUnicode());
 	}
 
 	err = GetStringColumn(cardRow, m_JobTitleColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
-		newCard->SetJobTitle(unicodeStr);
-		nsMemory::Free(tempCString);
-		PR_Free(unicodeStr);
+        newCard->SetJobTitle(tempString.GetUnicode());
 	}
 
 	err = GetStringColumn(cardRow, m_DepartmentColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
-		newCard->SetDepartment(unicodeStr);
-		nsMemory::Free(tempCString);
-		PR_Free(unicodeStr);
+        newCard->SetDepartment(tempString.GetUnicode());
 	}
 
 	err = GetStringColumn(cardRow, m_CompanyColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
-		newCard->SetCompany(unicodeStr);
-		nsMemory::Free(tempCString);
-		PR_Free(unicodeStr);
+        newCard->SetCompany(tempString.GetUnicode());
 	}
 
 	err = GetStringColumn(cardRow, m_WebPage1ColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
-		newCard->SetWebPage1(unicodeStr);
-		nsMemory::Free(tempCString);
-		PR_Free(unicodeStr);
+        newCard->SetWebPage1(tempString.GetUnicode());
 	}
 
 	err = GetStringColumn(cardRow, m_WebPage2ColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
-		newCard->SetWebPage2(unicodeStr);
-		nsMemory::Free(tempCString);
-		PR_Free(unicodeStr);
+        newCard->SetWebPage2(tempString.GetUnicode());
 	}
 
 	err = GetStringColumn(cardRow, m_BirthYearColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
-		newCard->SetBirthYear(unicodeStr);
-		nsMemory::Free(tempCString);
-		PR_Free(unicodeStr);
+        newCard->SetBirthYear(tempString.GetUnicode());
 	}
 
 	err = GetStringColumn(cardRow, m_BirthMonthColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
-		newCard->SetBirthMonth(unicodeStr);
-		nsMemory::Free(tempCString);
-		PR_Free(unicodeStr);
+        newCard->SetBirthMonth(tempString.GetUnicode());
 	}
 
 	err = GetStringColumn(cardRow, m_BirthDayColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
-		newCard->SetBirthDay(unicodeStr);
-		nsMemory::Free(tempCString);
-		PR_Free(unicodeStr);
+        newCard->SetBirthDay(tempString.GetUnicode());
 	}
 
 	err = GetStringColumn(cardRow, m_Custom1ColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
-		newCard->SetCustom1(unicodeStr);
-		nsMemory::Free(tempCString);
-		PR_Free(unicodeStr);
+        newCard->SetCustom1(tempString.GetUnicode());
 	}
 
 	err = GetStringColumn(cardRow, m_Custom2ColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
-		newCard->SetCustom2(unicodeStr);
-		nsMemory::Free(tempCString);
-		PR_Free(unicodeStr);
+        newCard->SetCustom2(tempString.GetUnicode());
 	}
 
 	err = GetStringColumn(cardRow, m_Custom3ColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
-		newCard->SetCustom3(unicodeStr);
-		nsMemory::Free(tempCString);
-		PR_Free(unicodeStr);
+        newCard->SetCustom3(tempString.GetUnicode());
 	}
 
 	err = GetStringColumn(cardRow, m_Custom4ColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
-		newCard->SetCustom4(unicodeStr);
-		nsMemory::Free(tempCString);
-		PR_Free(unicodeStr);
+        newCard->SetCustom4(tempString.GetUnicode());
 	}
 
 	err = GetStringColumn(cardRow, m_NotesColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
-		newCard->SetNotes(unicodeStr);
-		nsMemory::Free(tempCString);
-		PR_Free(unicodeStr);
+        newCard->SetNotes(tempString.GetUnicode());
 	}
 	PRUint32 key = 0;
 	err = GetIntColumn(cardRow, m_RecordKeyColumnToken, &key, 0);
@@ -3432,36 +3293,22 @@ nsresult nsAddrDatabase::GetListCardFromDB(nsIAbCard *listCard, nsIMdbRow* listR
 		return NS_ERROR_NULL_POINTER;
 
     nsAutoString tempString;
-	char *tempCString = nsnull;
-	PRUnichar *unicodeStr = nsnull;
 
 	err = GetStringColumn(listRow, m_ListNameColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
-		listCard->SetDisplayName(unicodeStr);
-		listCard->SetLastName(unicodeStr);
-		nsMemory::Free(tempCString);
-		PR_Free(unicodeStr);
+        listCard->SetDisplayName(tempString.GetUnicode());
+        listCard->SetLastName(tempString.GetUnicode());
 	}
 	err = GetStringColumn(listRow, m_ListNickNameColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
-		listCard->SetNickName(unicodeStr);
-		nsMemory::Free(tempCString);
-		PR_Free(unicodeStr);
+        listCard->SetNickName(tempString.GetUnicode());
 	}
 	err = GetStringColumn(listRow, m_ListDescriptionColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
-		listCard->SetNotes(unicodeStr);
-		nsMemory::Free(tempCString);
-		PR_Free(unicodeStr);
+        listCard->SetNotes(tempString.GetUnicode());
 	}
 	PRUint32 key = 0;
 	err = GetIntColumn(listRow, m_RecordKeyColumnToken, &key, 0);
@@ -3477,35 +3324,21 @@ nsresult nsAddrDatabase::GetListFromDB(nsIAbDirectory *newList, nsIMdbRow* listR
 		return NS_ERROR_NULL_POINTER;
 
     nsAutoString tempString;
-	char *tempCString = nsnull;
-	PRUnichar *unicodeStr = nsnull;
 
 	err = GetStringColumn(listRow, m_ListNameColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
-		newList->SetListName(unicodeStr);
-		nsMemory::Free(tempCString);
-		PR_Free(unicodeStr);
+        newList->SetListName(tempString.GetUnicode());
 	}
 	err = GetStringColumn(listRow, m_ListNickNameColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
-		newList->SetListNickName(unicodeStr);
-		nsMemory::Free(tempCString);
-		PR_Free(unicodeStr);
+        newList->SetListNickName(tempString.GetUnicode());
 	}
 	err = GetStringColumn(listRow, m_ListDescriptionColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
-		newList->SetDescription(unicodeStr);
-		nsMemory::Free(tempCString);
-		PR_Free(unicodeStr);
+        newList->SetDescription(tempString.GetUnicode());
 	}
 
 	PRUint32 totalAddress = GetListAddressTotal(listRow);

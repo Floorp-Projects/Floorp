@@ -184,23 +184,23 @@ nsresult nsAbCard::AddSubNode(nsAutoString name, nsIAbCard **childCard)
 	if(NS_FAILED(rv))
 		return rv;
 
-	nsAutoString uri;
-	uri.AppendWithConversion(mURI);
-	uri.AppendWithConversion('/');
+  nsCAutoString uri;
+  uri.Append(mURI);
+  uri.Append('/');
 
-	uri.Append(name);
-	char* uriStr = uri.ToNewCString();
-	if (uriStr == nsnull) 
-		return NS_ERROR_OUT_OF_MEMORY;
+  char *utf8Name = name.ToNewUTF8String();
+  if (!utf8Name)
+    return NS_ERROR_OUT_OF_MEMORY;
+  uri.Append(utf8Name);
+  nsMemory::Free(utf8Name);
 
 	nsCOMPtr<nsIRDFResource> res;
-	rv = rdf->GetResource(uriStr, getter_AddRefs(res));
+  rv = rdf->GetResource(uri.GetBuffer(), getter_AddRefs(res));
 	if (NS_FAILED(rv))
 		return rv;
 	nsCOMPtr<nsIAbCard> card(do_QueryInterface(res, &rv));
 	if (NS_FAILED(rv))
 		return rv;        
-	delete[] uriStr;
 
 	*childCard = card;
 	NS_IF_ADDREF(*childCard);

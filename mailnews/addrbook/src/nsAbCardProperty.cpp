@@ -396,7 +396,7 @@ NS_IMETHODIMP nsAbCardProperty::SetCardValue(const char *attrname, const PRUnich
 	else
 	{
 		nsAutoString cardValue(value);
-		char* valueStr = cardValue.ToNewCString();
+    char* valueStr = cardValue.ToNewUTF8String();
 		rv = SetAnonymousStringAttribute(attrname, valueStr);
 		nsMemory::Free(valueStr);
 	}
@@ -1276,8 +1276,8 @@ static const char *kAbPrintUrlFormat = "addbook:printone?email=%s&folder=%s";
 	}
 	dirNameStr.ReplaceSubstring(NS_ConvertASCIItoUCS2(" "), NS_ConvertASCIItoUCS2("%20"));
 
-	char *emailCharStr = emailStr.ToNewCString();
-	char *dirCharStr = dirNameStr.ToNewCString();
+  char *emailCharStr = emailStr.ToNewUTF8String();
+  char *dirCharStr = dirNameStr.ToNewUTF8String();
 
 	*aPrintCardUrl = PR_smprintf(kAbPrintUrlFormat, emailCharStr, dirCharStr);
 
