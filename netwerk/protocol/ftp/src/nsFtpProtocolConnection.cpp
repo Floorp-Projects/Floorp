@@ -24,11 +24,12 @@
 #include "nsIByteBufferInputStream.h"
 #include "nsFtpConnectionThread.h"
 #include "nsIEventQueueService.h"
+#include "nsXPComCIID.h"
 
 #include "prprf.h" // PR_sscanf
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUE_CID);
+static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 
 // There are actually two transport connections established for an 
 // ftp connection. One is used for the command channel , and
