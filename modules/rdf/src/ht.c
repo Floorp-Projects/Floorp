@@ -1153,10 +1153,10 @@ paneFromResource(RDF db, RDF_Resource resource, HT_Notification notify, PRBool a
 			break;
 		}
 
+        if (db == NULL) db = HTRDF_GetDB(pane);
 		ev->eventType = HT_EVENT_DEFAULT_NOTIFICATION_MASK;
 
-		pane->rns = RDF_AddNotifiable(db, 
-                                              (autoFlushFlag ? bmkNotifFunc : htrdfNotifFunc), ev, pane);
+		pane->rns = RDF_AddNotifiable(db, (autoFlushFlag ? bmkNotifFunc : htrdfNotifFunc), ev, pane);
 		freeMem(ev);
 
 		if ((pane->hash = PL_NewHashTable(500, idenHash, PL_CompareValues,
@@ -1196,7 +1196,7 @@ paneFromResource(RDF db, RDF_Resource resource, HT_Notification notify, PRBool a
 PR_PUBLIC_API(HT_Pane)
 HT_PaneFromResource(RDF_Resource r, HT_Notification n, PRBool autoFlush, PRBool autoOpen, PRBool useColumns)
 {
-  return paneFromResource(newNavCenterDB(), r, n, autoFlush, autoOpen, useColumns);
+  return paneFromResource(NULL, r, n, autoFlush, autoOpen, useColumns);
 }
 
 
@@ -1213,13 +1213,25 @@ HT_PaneFromURL(char *url, HT_Notification n, PRBool autoFlush, int32 param_count
         int32                   pn = 0;
         HT_View                 view;
 	HT_Column		*columnList, column;
+        char*                   topUrl = NULL;
         
+
 	XP_ASSERT(url != NULL);
+        while (pn < param_count) {
+          char* param_name = *(param_names + pn) ;
+          if (!param_name) break;
+          if (strcmp(param_name, "root") == 0) {
+            topUrl = *(param_values + pn);
+            break;
+          }
+          pn++;
+        }
+        if (!topUrl) topUrl = url;
 
 	dbstr[0] = dburl;
 	dbstr[1] = NULL;
 	if ((db = RDF_GetDB(dbstr)) != NULL) {
-          if ((r = RDF_GetResource(db, url, 1)) != NULL)
+          if ((r = RDF_GetResource(db, topUrl, 1)) != NULL)
             {
               setContainerp(r, 1);
               pane = paneFromResource(db, r, n, autoFlush, 1, 0);
@@ -1227,6 +1239,7 @@ HT_PaneFromURL(char *url, HT_Notification n, PRBool autoFlush, int32 param_count
             }
 	}
         columnList = &view->columns;
+        pn = 0;
         while (pn < param_count) {
           char* param_name = *(param_names + pn) ;
           if (!param_name) break;
@@ -1505,7 +1518,7 @@ HTRDF_GetDB(HT_Pane pane)
           }
 
 	ans = RDF_GetDB(gNavCenterDataSources1);
-        pane->htdb =  RDFTNamed(ans, pane->htdburl);
+    pane->htdb =  RDFTNamed(ans, pane->htdburl);
 	freeMem(navCenterURL);
 	return(ans);
 }
@@ -2343,6 +2356,8 @@ htDeletePane(HT_Pane pane, PRBool saveWorkspaceOrderFlag)
 		paneList = &(*paneList)->next;
 	}
 
+	
+    PaneDeleteSBPCleanup (pane);
 	freeMem(pane);
 }
 
@@ -9181,20 +9196,11 @@ RetainOldSitemaps (HT_Pane htPane, char *pUrl)
   }
 }
 
-
-
-PR_PUBLIC_API(void)
-HT_ExitPage(HT_Pane htPane, char *pUrl)
-{
-  HT_URLSiteMapAssoc	*nsmp;
-  RDFT			sp;
-  
-  sp = htPane->htdb;
-  nsmp = htPane->sbp;
-  while (nsmp != NULL) {    
+void cleanupInt (HT_Pane htPane, HT_URLSiteMapAssoc *nsmp, RDF_Resource parent) {
+ while (nsmp != NULL) {    
     HT_URLSiteMapAssoc *next;
-    HTDEL(sp, nsmp->sitemap, gCoreVocab->RDF_parent,
-                  gNavCenter->RDF_Sitemaps, RDF_RESOURCE_TYPE);      
+    HTDEL(htPane->htdb, nsmp->sitemap, gCoreVocab->RDF_parent,
+                  parent, RDF_RESOURCE_TYPE);      
     if (nsmp->db) {
 		RDF_ReleaseDataSource(htPane->db, nsmp->db);
 		nsmp->db = NULL;
@@ -9205,7 +9211,24 @@ HT_ExitPage(HT_Pane htPane, char *pUrl)
     freeMem(nsmp);
     nsmp = next;
   }
+}
 
+void
+PaneDeleteSBPCleanup (HT_Pane htPane) {  
+  cleanupInt(htPane, htPane->sbp, gNavCenter->RDF_Sitemaps);
+  cleanupInt(htPane, htPane->smp, gNavCenter->RDF_Top);  
+  freeMem(htPane->windowURL);
+  htPane->windowURL = NULL;
+  htPane->sbp = NULL;
+  htPane->smp = NULL;
+}
+
+
+
+PR_PUBLIC_API(void)
+HT_ExitPage(HT_Pane htPane, char *pUrl)
+{ 
+  cleanupInt(htPane, htPane->sbp, gNavCenter->RDF_Sitemaps); 
   freeMem(htPane->windowURL);
   htPane->windowURL = NULL;
   htPane->sbp = NULL;
