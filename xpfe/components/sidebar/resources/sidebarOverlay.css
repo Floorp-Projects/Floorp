@@ -50,7 +50,7 @@
 /*
  *    Sidebar and Panel title buttons
  */
-sidebarheader[type="box"] {
+sidebarheader {
     behavior: url(chrome://communicator/content/sidebar/sidebarBindings.xml#sidebar-header-box);
 }
 sidebarheader[type="splitter"] {
