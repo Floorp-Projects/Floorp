@@ -24,6 +24,8 @@
 #include "nsIURL.h"
 #include "nsIStreamListener.h"
 #include "nsIDTDDebug.h"
+#include "nsRepository.h"
+#include "nsParserCIID.h"
 
 static NS_DEFINE_IID(kIRobotSinkObserverIID, NS_IROBOTSINKOBSERVER_IID);
 
@@ -210,7 +212,15 @@ extern "C" NS_EXPORT int DebugRobot(
     delete urlName;
 
     nsIParser* parser;
-    rv = NS_NewParser(&parser);
+
+    static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
+    static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+
+    rv = NSRepository::CreateInstance(kCParserCID, 
+                                      nsnull, 
+                                      kCParserIID, 
+                                      (void **)&parser);
+
     if (NS_OK != rv) {
       printf("can't make parser\n");
       NS_RELEASE(myObserver);

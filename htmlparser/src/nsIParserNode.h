@@ -36,9 +36,18 @@
 #ifndef NS_IPARSERNODE__
 #define NS_IPARSERNODE__
 
+#include "nshtmlpars.h"
+#include "nsISupports.h"
 #include "prtypes.h"
 #include "nsString.h"
 #include "nsDebug.h"
+
+class CToken;
+
+// 6e59f160-2717-11d2-9246-00805f8a7ab6
+#define NS_IPARSER_NODE_IID      \
+  {0x6e59f160, 0x2717,  0x11d1,  \
+  {0x92, 0x46, 0x00,    0x80, 0x5f, 0x8a, 0x7a, 0xb6}}
 
 /**
  *  Parser nodes are the unit of exchange between the 
@@ -48,7 +57,7 @@
  *  
  *  @update  gess 3/25/98
  */
-class nsIParserNode {
+class nsIParserNode : public nsISupports {
             
   public:
 
@@ -129,6 +138,10 @@ class nsIParserNode {
     virtual PRInt32 GetSourceLineNumber(void) const =0;
 
 };
+
+extern NS_HTMLPARS nsresult NS_NewParserNode(nsIParserNode** aInstancePtrResult,
+                                             CToken* aToken,
+                                             PRInt32 aLineNumber);
 
 #endif
 

@@ -20,8 +20,32 @@
 #include "nsParserNode.h" 
 #include "string.h"
 #include "nsHTMLTokens.h"
+#include "nshtmlpars.h"
 
 const nsAutoString nsCParserNode::mEmptyString("");
+
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
+static NS_DEFINE_IID(kClassIID, NS_PARSER_NODE_IID); 
+static NS_DEFINE_IID(kIParserNodeIID, NS_IPARSER_NODE_IID);
+
+/**
+ *  This method is defined in nsIParser. It is used to 
+ *  cause the COM-like construction of an nsParser.
+ *  
+ *  @update  gess 3/25/98
+ *  @param   nsIParser** ptr to newly instantiated parser
+ *  @return  NS_xxx error result
+ */
+NS_HTMLPARS nsresult NS_NewParserNode(nsIParserNode** aInstancePtrResult,CToken* aToken,PRInt32 aLineNumber)
+{
+  nsCParserNode *it = new nsCParserNode(aToken,aLineNumber);
+
+  if (it == 0) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return it->QueryInterface(kIParserNodeIID, (void **) aInstancePtrResult);
+}
 
 /**
  *  Default constructor
@@ -31,7 +55,7 @@ const nsAutoString nsCParserNode::mEmptyString("");
  *  @return  
  */
 nsCParserNode::nsCParserNode(CToken* aToken,PRInt32 aLineNumber): nsIParserNode() {
-  NS_PRECONDITION(0!=aToken, "Null Token");
+  NS_INIT_REFCNT();
   mAttributeCount=0;
   mLineNumber=aLineNumber;
   mToken=aToken;
@@ -47,6 +71,57 @@ nsCParserNode::nsCParserNode(CToken* aToken,PRInt32 aLineNumber): nsIParserNode(
  *  @return  
  */
 nsCParserNode::~nsCParserNode() {
+}
+
+NS_IMPL_ADDREF(nsCParserNode)
+NS_IMPL_RELEASE(nsCParserNode)
+
+/**
+ *  Init
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  
+ */
+
+nsresult nsCParserNode::Init(CToken* aToken,PRInt32 aLineNumber)  
+{
+  mLineNumber=aLineNumber;
+  mToken=aToken;
+  return NS_OK;
+}
+
+/**
+ *  This method gets called as part of our COM-like interfaces.
+ *  Its purpose is to create an interface to parser object
+ *  of some type.
+ *  
+ *  @update   gess 3/25/98
+ *  @param    nsIID  id of object to discover
+ *  @param    aInstancePtr ptr to newly discovered interface
+ *  @return   NS_xxx result code
+ */
+nsresult nsCParserNode::QueryInterface(const nsIID& aIID, void** aInstancePtr)  
+{                                                                        
+  if (NULL == aInstancePtr) {                                            
+    return NS_ERROR_NULL_POINTER;                                        
+  }                                                                      
+
+  if(aIID.Equals(kISupportsIID))    {  //do IUnknown...
+    *aInstancePtr = (nsIParserNode*)(this);                                        
+  }
+  else if(aIID.Equals(kIParserNodeIID)) {  //do IParser base class...
+    *aInstancePtr = (nsIParserNode*)(this);                                        
+  }
+  else if(aIID.Equals(kClassIID)) {  //do this class...
+    *aInstancePtr = (nsCParserNode*)(this);                                        
+  }                 
+  else {
+    *aInstancePtr=0;
+    return NS_NOINTERFACE;
+  }
+  ((nsISupports*) *aInstancePtr)->AddRef();
+  return NS_OK;                                                        
 }
 
 

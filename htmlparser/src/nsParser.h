@@ -61,11 +61,7 @@
 #include "nsParserTypes.h"
 #include "nsIURL.h"
 #include "CParserContext.h"
-
-#define NS_PARSER_IID      \
-  {0x2ce606b0, 0xbee6,  0x11d1,  \
-  {0xaa, 0xd9, 0x00,    0x80, 0x5f, 0x8a, 0x3e, 0x14}}
-
+#include "nsParserCIID.h"
 
 class IContentSink;
 class nsIHTMLContentSink;

@@ -40,6 +40,8 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsContentList.h"
 #include "nsINetService.h"
+#include "nsRepository.h"
+#include "nsParserCIID.h"
 
 //#define rickgdebug 1
 #ifdef rickgdebug
@@ -142,7 +144,14 @@ nsHTMLDocument::StartDocumentLoad(nsIURL *aURL,
   mDocumentURL = aURL;
   NS_ADDREF(aURL);
 
-  rv = NS_NewParser(&mParser);
+  static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
+  static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+
+  rv = NSRepository::CreateInstance(kCParserCID, 
+                                    nsnull, 
+                                    kCParserIID, 
+                                    (void **)&mParser);
+
   if (NS_OK == rv) {
     nsIHTMLContentSink* sink;
 

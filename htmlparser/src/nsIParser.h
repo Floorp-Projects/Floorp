@@ -106,6 +106,4 @@ class nsIParser : public nsISupports {
 
 };
 
-extern NS_HTMLPARS nsresult NS_NewParser(nsIParser** aInstancePtrResult);
-
 #endif 
