@@ -31,6 +31,8 @@
   #               receiving mail for that reason when in that role.
   # Also references the 'supportwatchers' Param.
   #%]
+
+[% useqacontact = Param('useqacontact') %]
  
 <table>
   [% IF Param('supportwatchers') %]
@@ -97,7 +99,7 @@
 
 <table width="100%" border="1">
   <tr>
-    <td colspan="5" align="center" width="50%">
+    <td colspan="[% useqacontact ? '5' : '4' %]" align="center" width="50%">
       <b>When my relationship to this bug is:</b>
     </td>
     <td rowspan="2" width="50%">
@@ -112,9 +114,11 @@
     <td align="center" width="10%">
       <b>Assignee</b>
     </td>
-    <td align="center" width="10%">
-      <b>QA Contact</b>
-    </td>
+    [% IF useqacontact %]
+      <td align="center" width="10%">
+        <b>QA Contact</b>
+      </td>
+    [% END %]
     <td align="center" width="10%">
       <b>CC</b>
     </td>
@@ -146,6 +150,7 @@
     <tr>
       [% FOREACH role = [ "Reporter", "Owner", "QAcontact", "CClist", "Voter" ] 
        %]
+        [% NEXT IF role == "QAcontact" AND NOT useqacontact %]
         <td align="center">
           <input type="checkbox" name="email[% role %][% reason.name %]" value="on"
             [% " checked" IF $role.${reason.name} %]>
