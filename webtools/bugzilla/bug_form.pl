@@ -297,7 +297,7 @@ if (@::legal_keywords) {
     my $value = value_quote(join(', ', @list));
     print qq{
 <TR>
-<TD ALIGN=right><B><A HREF="describekeywords.cgi">Keywords</A>:</B>
+<TD ALIGN=right><B><A HREF="describekeywords.cgi">Keywords:</A></B>
 <TD COLSPAN=7><INPUT NAME="keywords" VALUE="$value" SIZE=60></TD>
 </TR>
 };
