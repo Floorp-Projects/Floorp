@@ -51,6 +51,7 @@ REQUIRES	= \
 		  necko \
 		  history \
 		  browsercomps \
+		  toolkitcomps \
 		  profile \
 		  pref \
 		  rdf \

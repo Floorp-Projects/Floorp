@@ -126,10 +126,10 @@ nsOperaProfileMigrator::GetMigrateData(const PRUnichar* aProfile, PRUint32* aRes
     GetOperaProfile(aProfile, getter_AddRefs(mOperaProfile));
 
   PRBool exists;
-  const nsAString fileNames[] = { OPERA_PREFERENCES_FILE_NAME, 
-                                  OPERA_COOKIES_FILE_NAME, 
-                                  OPERA_HISTORY_FILE_NAME,
-                                  OPERA_BOOKMARKS_FILE_NAME };
+  const PRUnichar* fileNames[] = { OPERA_PREFERENCES_FILE_NAME.get(), 
+                                   OPERA_COOKIES_FILE_NAME.get(), 
+                                   OPERA_HISTORY_FILE_NAME.get(),
+                                   OPERA_BOOKMARKS_FILE_NAME.get() };
   const PRUint32 sourceFlags[] = { nsIBrowserProfileMigrator::SETTINGS, 
                                    nsIBrowserProfileMigrator::COOKIES, 
                                    nsIBrowserProfileMigrator::HISTORY,
@@ -137,7 +137,7 @@ nsOperaProfileMigrator::GetMigrateData(const PRUnichar* aProfile, PRUint32* aRes
   nsCOMPtr<nsIFile> sourceFile; 
   for (PRInt32 i = 0; i < 4; ++i) {
     mOperaProfile->Clone(getter_AddRefs(sourceFile));
-    sourceFile->Append(fileNames[i]);
+    sourceFile->Append(nsDependentString(fileNames[i]));
     sourceFile->Exists(&exists);
     if (exists)
       *aResult |= sourceFlags[i];

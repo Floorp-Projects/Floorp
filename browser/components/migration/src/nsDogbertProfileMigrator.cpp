@@ -146,16 +146,16 @@ nsDogbertProfileMigrator::GetMigrateData(const PRUnichar* aProfile, PRUint32* aR
     GetSourceProfile(aProfile);
 
   PRBool exists;
-  const nsAString fileNames[] = { PREF_FILE_NAME_IN_4x, 
-                                  COOKIES_FILE_NAME_IN_4x, 
-                                  BOOKMARKS_FILE_NAME_IN_4x };
+  const PRUnichar* fileNames[] = { PREF_FILE_NAME_IN_4x.get(), 
+                                   COOKIES_FILE_NAME_IN_4x.get(), 
+                                   BOOKMARKS_FILE_NAME_IN_4x.get() };
   const PRUint32 sourceFlags[] = { nsIBrowserProfileMigrator::SETTINGS, 
                                    nsIBrowserProfileMigrator::COOKIES, 
                                    nsIBrowserProfileMigrator::BOOKMARKS };
   nsCOMPtr<nsIFile> sourceFile; 
   for (PRInt32 i = 0; i < 3; ++i) {
     mSourceProfile->Clone(getter_AddRefs(sourceFile));
-    sourceFile->Append(fileNames[i]);
+    sourceFile->Append(nsDependentString(fileNames[i]));
     sourceFile->Exists(&exists);
     if (exists)
       *aResult |= sourceFlags[i];
