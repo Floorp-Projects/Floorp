@@ -1157,7 +1157,9 @@ PUBLIC nsresult Wallet_ProfileDirectory(nsFileSpec& dirSpec) {
   if (!spec) {
     return NS_ERROR_FAILURE;
   }
-  return spec->GetFileSpec(&dirSpec);
+  nsresult res = spec->GetFileSpec(&dirSpec);
+  delete spec;
+  return res;
 }
 
 PUBLIC nsresult Wallet_ResourceDirectory(nsFileSpec& dirSpec) {
@@ -1166,7 +1168,9 @@ PUBLIC nsresult Wallet_ResourceDirectory(nsFileSpec& dirSpec) {
   if (!spec) {
     return NS_ERROR_FAILURE;
   }
-  return spec->GetFileSpec(&dirSpec);
+  nsresult res = spec->GetFileSpec(&dirSpec);
+  delete spec;
+  return res;
 }
 
 /* returns -1 if key does not exist, 0 if key is of length 0, 1 otherwise */
