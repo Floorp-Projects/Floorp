@@ -61,7 +61,6 @@ nsDeviceContextOS2 :: nsDeviceContextOS2()
   mPaletteInfo.palette = NULL;
 #endif
   mPrintDC = NULL;
-  mPixelScale = 1.0f;
   mWidth = -1;
   mHeight = -1;
   mSpec = nsnull;
@@ -149,7 +148,7 @@ nsresult nsDeviceContextOS2::Init( nsNativeDeviceContext aContext,
 //  aOrigContext->GetTwipsToDevUnits( origscale);
   origscale = 1.0/15.0;
 
-  mPixelScale = newscale / origscale;
+  mCPixelScale = newscale / origscale;
 
   aOrigContext->GetTwipsToDevUnits( t2d);
   aOrigContext->GetAppUnitsToDevUnits( a2d);
@@ -165,7 +164,7 @@ nsresult nsDeviceContextOS2::Init( nsNativeDeviceContext aContext,
   // XXX hsb says there are margin problems, must be from here...
 #ifdef DEBUG
   printf( "Got surface of size %d x %d pixels (%d Kb)\n", mWidth, mHeight, mWidth * mHeight * mDepth / 8 / 1024);
-  printf( "mPixelScale = %f\n", mPixelScale);
+  printf( "mCPixelScale = %f\n", mCPixelScale);
 #endif
 
 #endif
@@ -338,16 +337,9 @@ NS_IMETHODIMP nsDeviceContextOS2 :: SupportsNativeWidgets(PRBool &aSupportsWidge
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextOS2 :: GetCanonicalPixelScale(float &aScale) const
-{
-  aScale = mPixelScale;
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsDeviceContextOS2 :: GetScrollBarDimensions(float &aWidth, float &aHeight) const
 {
-  float scale;
-  GetCanonicalPixelScale(scale);
+  float scale = mCPixelScale;
   aWidth = ::WinQuerySysValue( HWND_DESKTOP, SV_CXVSCROLL) * mDevUnitsToAppUnits * scale;
   aHeight = ::WinQuerySysValue( HWND_DESKTOP, SV_CYHSCROLL) * mDevUnitsToAppUnits * scale;
   return NS_OK;
