@@ -54,8 +54,10 @@ private:
 };
 
 nsString* nsFSStringConversion::mFSCharset = nsnull;
+#ifndef XPCOM_STANDALONE
 nsIUnicodeEncoder* nsFSStringConversion::mEncoder = nsnull;
 nsIUnicodeDecoder* nsFSStringConversion::mDecoder = nsnull;
+#endif /* XPCOM_STANDALONE */
 
 #define GET_UCS( func , arg)                                    \
 {                                                               \
@@ -112,8 +114,10 @@ nsIUnicodeDecoder* nsFSStringConversion::mDecoder = nsnull;
 void
 nsFSStringConversion::CleanUp()
 {
+#ifndef XPCOM_STANDALONE
   NS_IF_RELEASE(mEncoder);
   NS_IF_RELEASE(mDecoder);
+#endif /* XPCOM_STANDALONE */
 }
 
 /* static */ nsresult
