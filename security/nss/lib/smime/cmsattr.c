@@ -34,7 +34,7 @@
 /*
  * CMS attributes.
  *
- * $Id: cmsattr.c,v 1.5 2001/08/22 23:22:12 wtc%netscape.com Exp $
+ * $Id: cmsattr.c,v 1.6 2003/09/19 04:14:50 jpierre%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -259,7 +259,7 @@ cms_attr_choose_attr_value_template(void *src_or_dest, PRBool encoding)
 	    break;
 	case SEC_OID_PKCS9_SIGNING_TIME:
 	    encoded = PR_FALSE;
-	    theTemplate = SEC_ASN1_GET(SEC_UTCTimeTemplate);
+	    theTemplate = SEC_ASN1_GET(CERT_TimeChoiceTemplate);
 	    break;
 	  /* XXX Want other types here, too */
 	}
