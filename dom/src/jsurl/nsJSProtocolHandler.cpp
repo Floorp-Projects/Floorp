@@ -750,49 +750,20 @@ nsJSProtocolHandler::EnsureUTF8Spec(const nsAFlatCString &aSpec, const char *aCh
 {
   aUTF8Spec.Truncate();
 
-  // assume UTF-8 if the spec contains unescaped non ASCII
-  if (!nsCRT::IsAscii(aSpec.get())) 
-    return NS_OK;
-  
-  nsCAutoString unescapedSpec; 
-  NS_UnescapeURL(aSpec.get(), aSpec.Length(), 
-                 esc_OnlyNonASCII, unescapedSpec);
-
-  if (IsASCII(unescapedSpec))
-    return NS_OK;
-  
   nsresult rv;
-  if (!mCharsetConverterManager) {
-    mCharsetConverterManager = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
+  
+  if (!mTextToSubURI) {
+    mTextToSubURI = do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  nsCOMPtr<nsIAtom> charsetAtom;
-  rv = mCharsetConverterManager->GetCharsetAtom2(aCharset, getter_AddRefs(charsetAtom));
+  nsAutoString uStr;
+  rv = mTextToSubURI->UnEscapeNonAsciiURI(nsDependentCString(aCharset), aSpec, uStr);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (mCharsetAtom != charsetAtom) {
-    rv = mCharsetConverterManager->GetUnicodeDecoder(charsetAtom, 
-                                                     getter_AddRefs(mUnicodeDecoder));
-    NS_ENSURE_SUCCESS(rv, rv);
-    mCharsetAtom = charsetAtom;
-  }
+  if (!IsASCII(uStr))
+    NS_EscapeURL(NS_ConvertUCS2toUTF8(uStr), esc_AlwaysCopy | esc_OnlyNonASCII, aUTF8Spec);
 
-  PRInt32 srcLen = unescapedSpec.Length();
-  PRInt32 dstLen;
-  rv = mUnicodeDecoder->GetMaxLength(unescapedSpec.get(), srcLen, &dstLen);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRUnichar *ustr = (PRUnichar *) nsMemory::Alloc(dstLen * sizeof(PRUnichar));
-  NS_ENSURE_TRUE(ustr, NS_ERROR_OUT_OF_MEMORY);
-
-  rv = mUnicodeDecoder->Convert(unescapedSpec.get(), &srcLen, ustr, &dstLen);
-  if (NS_SUCCEEDED(rv)) {
-    NS_ConvertUCS2toUTF8 rawUTF8Spec(ustr, dstLen);
-    NS_EscapeURL(rawUTF8Spec, esc_AlwaysCopy | esc_OnlyNonASCII, aUTF8Spec);
-  }
-  nsMemory::Free(ustr);
-
-  return rv;
+  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
