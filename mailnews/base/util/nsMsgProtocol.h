@@ -26,7 +26,6 @@
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
-#include "nsIEventQueue.h"
 #include "nsIChannel.h"
 #include "nsIURL.h"
 #include "nsILoadGroup.h"
