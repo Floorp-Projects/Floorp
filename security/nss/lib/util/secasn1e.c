@@ -35,7 +35,7 @@
  * Support for ENcoding ASN.1 data based on BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1e.c,v 1.9 2002/09/07 00:35:00 jpierre%netscape.com Exp $
+ * $Id: secasn1e.c,v 1.10 2003/03/11 02:31:16 wtc%netscape.com Exp $
  */
 
 #include "secasn1.h"
@@ -114,7 +114,7 @@ struct sec_EncoderContext_struct {
 static sec_asn1e_state *
 sec_asn1e_push_state (SEC_ASN1EncoderContext *cx,
 		      const SEC_ASN1Template *theTemplate,
-		      void *src, PRBool new_depth)
+		      const void *src, PRBool new_depth)
 {
     sec_asn1e_state *state, *new_state;
 
@@ -1267,7 +1267,7 @@ SEC_ASN1EncoderFinish (SEC_ASN1EncoderContext *cx)
 
 
 SEC_ASN1EncoderContext *
-SEC_ASN1EncoderStart (void *src, const SEC_ASN1Template *theTemplate,
+SEC_ASN1EncoderStart (const void *src, const SEC_ASN1Template *theTemplate,
 		      SEC_ASN1WriteProc output_proc, void *output_arg)
 {
     PRArenaPool *our_pool;
@@ -1375,7 +1375,7 @@ SEC_ASN1EncoderClearTakeFromBuf (SEC_ASN1EncoderContext *cx)
 
 
 SECStatus
-SEC_ASN1Encode (void *src, const SEC_ASN1Template *theTemplate,
+SEC_ASN1Encode (const void *src, const SEC_ASN1Template *theTemplate,
 		SEC_ASN1WriteProc output_proc, void *output_arg)
 {
     SEC_ASN1EncoderContext *ecx;
@@ -1475,7 +1475,7 @@ sec_asn1e_allocate_item (PRArenaPool *poolp, SECItem *dest, unsigned long len)
 
 
 SECItem *
-SEC_ASN1EncodeItem (PRArenaPool *poolp, SECItem *dest, void *src,
+SEC_ASN1EncodeItem (PRArenaPool *poolp, SECItem *dest, const void *src,
 		    const SEC_ASN1Template *theTemplate)
 {
     unsigned long encoding_length;
