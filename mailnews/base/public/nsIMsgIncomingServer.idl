@@ -142,6 +142,9 @@ interface nsIMsgIncomingServer : nsISupports {
   /* current biff state */
   attribute unsigned long biffState;
 
+  /* are we running a url as a result of biff going off? (different from user clicking get msg) */
+  attribute boolean performingBiff; 
+
   /* the on-disk path to message storage for this server */
   attribute nsIFileSpec localPath;
 

@@ -95,7 +95,8 @@ nsMsgIncomingServer::nsMsgIncomingServer():
     m_biffState(nsIMsgFolder::nsMsgBiffState_NoMail),
     m_serverBusy(PR_FALSE),
     m_canHaveFilters(PR_FALSE),
-    m_displayStartupPage(PR_TRUE)
+    m_displayStartupPage(PR_TRUE),
+    mPerformingBiff(PR_FALSE)
 {
   NS_INIT_REFCNT();
 }
@@ -186,6 +187,20 @@ nsMsgIncomingServer::PerformBiff()
 	//This had to be implemented in the derived class, but in case someone doesn't implement it
 	//just return not implemented.
 	return NS_ERROR_NOT_IMPLEMENTED;	
+}
+
+
+NS_IMETHODIMP nsMsgIncomingServer::GetPerformingBiff(PRBool *aPerformingBiff)
+{
+  NS_ENSURE_ARG_POINTER(aPerformingBiff);
+	*aPerformingBiff = mPerformingBiff;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgIncomingServer::SetPerformingBiff(PRBool aPerformingBiff)
+{
+	mPerformingBiff = aPerformingBiff;
+  return NS_OK;
 }
 
 NS_IMPL_GETSET(nsMsgIncomingServer, BiffState, PRUint32, m_biffState);

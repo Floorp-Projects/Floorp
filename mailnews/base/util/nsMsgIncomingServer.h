@@ -108,6 +108,7 @@ protected:
 
   // member variable for to check if we need display startup page
   PRPackedBool m_displayStartupPage;
+  PRPackedBool mPerformingBiff;
 };
 
 #endif // nsMsgIncomingServer_h__
