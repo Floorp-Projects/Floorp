@@ -2,9 +2,9 @@
 <?xml-stylesheet href="sidebar.css" type="text/css"?>
 
 <xul:window
-  xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   xmlns:html="http://www.w3.org/TR/REC-html40"
-  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <html:script>
 
@@ -81,89 +81,76 @@ function OpenURL(event,node)
 
 </html:script>
 
-<xul:tree flex="100%" datasources="rdf:find rdf:files rdf:ftp rdf:relatedlinks rdf:bookmarks rdf:history"  onclick="return OpenURL(event,event.target.parentNode);">
-  <xul:treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
-  <xul:treecol id="URLColumn" rdf:resource="http://home.netscape.com/NC-rdf#URL"/>
-  <xul:treecol id="ShortcutURLColumn" rdf:resource="http://home.netscape.com/NC-rdf#ShortcutURL"/>
-  <xul:treecol id="LastModColumn" rdf:resource="http://home.netscape.com/WEB-rdf#LastModifiedDate"/>
+<tree flex="100%" datasources="rdf:find rdf:files rdf:ftp rdf:relatedlinks rdf:bookmarks rdf:history"  onclick="return OpenURL(event,event.target.parentNode);">
+  <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
+  <treecol id="URLColumn" rdf:resource="http://home.netscape.com/NC-rdf#URL"/>
+  <treecol id="ShortcutURLColumn" rdf:resource="http://home.netscape.com/NC-rdf#ShortcutURL"/>
+  <treecol id="LastModColumn" rdf:resource="http://home.netscape.com/WEB-rdf#LastModifiedDate"/>
 
-  <xul:template xul:containment="treeitem" xul:subcontainment="treechildren">
-  	<xul:treeitem>
-		<xul:treecell>
-			<xul:treeindentation />
-			<xul:titledbutton>
-			</xul:titledbutton>
-			<xul:text rdf:resource="http://home.netscape.com/NC-rdf#Name" />
-		</xul:treecell>
-		<xul:treecell>
-			<xul:text rdf:resource="http://home.netscape.com/NC-rdf#URL" />
-		</xul:treecell>
-		<xul:treecell>
-			<xul:text rdf:resource="http://home.netscape.com/NC-rdf#ShortcutURL" />
-		</xul:treecell>
-		<xul:treecell>
-			<xul:text rdf:resource="http://home.netscape.com/WEB-rdf#LastModifiedDate" />
-		</xul:treecell>
-  	</xul:treeitem>
-  </xul:template>
+  <template>
+  	<rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator" rootcontainment="treebody" subcontainment="treechildren">
+  		<treeitem uri="...">
+  			<treecell>
+  				<html:hr width="75%" align="center" size="1" />
+  			</treecell>
+		</treeitem>  		
+  	</rule>
+  	
+  	<rule rootcontainment="treebody" subcontainment="treechildren">
+	  	<treeitem uri="...">
+			<treecell>
+				<treeindentation />
+				<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="right" />
+			</treecell>
+			<treecell>
+				<titledbutton value="rdf:http://home.netscape.com/NC-rdf#URL" align="right" style="list-style-image: none;" />
+			</treecell>
+	  	</treeitem>
+	</rule>
+  </template>
 
-  <xul:treehead>
-    <xul:treeitem>
-      <xul:treecell resource='http://home.netscape.com/NC-rdf#Name' onclick="return doSort('NameColumn');">
-      	<xul:observes element="NameColumn" attribute="sortActive"/>
-      	<xul:observes element="NameColumn" attribute="sortDirection"/>
-      	Name</xul:treecell>
-      <xul:treecell resource='http://home.netscape.com/NC-rdf#URL' onclick="return doSort('URLColumn');">
-      	<xul:observes element="URLColumn" attribute="sortActive"/>
-      	<xul:observes element="URLColumn" attribute="sortDirection"/>
-      	URL</xul:treecell>
-      <xul:treecell resource='http://home.netscape.com/NC-rdf#ShortcutURL' onclick="return doSort('ShortcutURLColumn');">
-      	<xul:observes element="ShortcutURLColumn" attribute="sortActive"/>
-      	<xul:observes element="ShortcutURLColumn" attribute="sortDirection"/>
-      	Shortcut URL</xul:treecell>
-      <xul:treecell resource='http://home.netscape.com/WEB-rdf#LastModifiedDate' onclick="return doSort('LastModColumn');">
-      	<xul:observes element="LastModColumn" attribute="sortActive"/>
-      	<xul:observes element="LastModColumn" attribute="sortDirection"/>
-      	Last Modified</xul:treecell>
-    </xul:treeitem>
-  </xul:treehead>
+  <treehead>
+    <treeitem>
+      <treecell resource='http://home.netscape.com/NC-rdf#Name' onclick="return doSort('NameColumn');">
+      	<observes element="NameColumn" attribute="sortActive"/>
+      	<observes element="NameColumn" attribute="sortDirection"/>
+      	Name</treecell>
+      <treecell resource='http://home.netscape.com/NC-rdf#URL' onclick="return doSort('URLColumn');">
+      	<observes element="URLColumn" attribute="sortActive"/>
+      	<observes element="URLColumn" attribute="sortDirection"/>
+      	URL</treecell>
+      <treecell resource='http://home.netscape.com/NC-rdf#ShortcutURL' onclick="return doSort('ShortcutURLColumn');">
+      	<observes element="ShortcutURLColumn" attribute="sortActive"/>
+      	<observes element="ShortcutURLColumn" attribute="sortDirection"/>
+      	Shortcut URL</treecell>
+      <treecell resource='http://home.netscape.com/WEB-rdf#LastModifiedDate' onclick="return doSort('LastModColumn');">
+      	<observes element="LastModColumn" attribute="sortActive"/>
+      	<observes element="LastModColumn" attribute="sortDirection"/>
+      	Last Modified</treecell>
+    </treeitem>
+  </treehead>
 
-  <xul:treebody>
-    <xul:treeitem id="NC:BookmarksRoot" open="true">
-      <xul:treecell><xul:treeindentation /><xul:titledbutton />Bookmarks</xul:treecell>
-      <xul:treecell></xul:treecell>
-      <xul:treecell></xul:treecell>
-      <xul:treecell></xul:treecell>
-    </xul:treeitem>
+  <treebody>
+    <treeitem id="NC:BookmarksRoot" open="true">
+      <treecell><treeindentation /><titledbutton />Bookmarks</treecell>
+    </treeitem>
 
-    <xul:treeitem id="NC:FilesRoot">
-      <xul:treecell><xul:treeindentation /><xul:titledbutton />File System</xul:treecell>
-      <xul:treecell></xul:treecell>
-      <xul:treecell></xul:treecell>
-      <xul:treecell></xul:treecell>
-    </xul:treeitem>
+    <treeitem id="NC:FilesRoot">
+      <treecell><treeindentation /><titledbutton />File System</treecell>
+    </treeitem>
 
-    <xul:treeitem id="NC:HistoryBySite">
-      <xul:treecell><xul:treeindentation /><xul:titledbutton />History By Site</xul:treecell>
-      <xul:treecell></xul:treecell>
-      <xul:treecell></xul:treecell>
-      <xul:treecell></xul:treecell>
-    </xul:treeitem>
+    <treeitem id="NC:HistoryBySite">
+      <treecell><treeindentation /><titledbutton />History By Site</treecell>
+    </treeitem>
 
-    <xul:treeitem id="NC:HistoryByDate">
-      <xul:treecell><xul:treeindentation /><xul:titledbutton />History By Date</xul:treecell>
-      <xul:treecell></xul:treecell>
-      <xul:treecell></xul:treecell>
-      <xul:treecell></xul:treecell>
-    </xul:treeitem>
+    <treeitem id="NC:HistoryByDate">
+      <treecell><treeindentation /><titledbutton />History By Date</treecell>
+    </treeitem>
 
-    <xul:treeitem id="NC:RelatedLinks" pulse="5">
-      <xul:treecell><xul:treeindentation /><xul:titledbutton />Related Links</xul:treecell>
-      <xul:treecell></xul:treecell>
-      <xul:treecell></xul:treecell>
-      <xul:treecell></xul:treecell>
-    </xul:treeitem>
+    <treeitem id="NC:RelatedLinks" pulse="5">
+      <treecell><treeindentation /><titledbutton />Related Links</treecell>
+    </treeitem>
 
-  </xul:treebody>
-</xul:tree>
+  </treebody>
+</tree>
 </xul:window>
