@@ -380,7 +380,7 @@ nsMathMLmactionFrame::ShowStatus(nsIPresContext* aPresContext,
   return rv;
 }
 
-nsresult
+NS_IMETHODIMP
 nsMathMLmactionFrame::MouseOver(nsIDOMEvent* aMouseEvent) 
 {
   // see if we should display a status message
@@ -398,7 +398,7 @@ nsMathMLmactionFrame::MouseOver(nsIDOMEvent* aMouseEvent)
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsMathMLmactionFrame::MouseOut(nsIDOMEvent* aMouseEvent) 
 { 
   // see if we should remove the status message
@@ -410,7 +410,7 @@ nsMathMLmactionFrame::MouseOut(nsIDOMEvent* aMouseEvent)
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsMathMLmactionFrame::MouseClick(nsIDOMEvent* aMouseEvent)
 {
   nsAutoString value;
