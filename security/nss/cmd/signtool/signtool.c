@@ -936,12 +936,12 @@ main(int argc, char *argv[])
 	}
 
 	if (enableOCSP) {
-		SECStatus rv = CERT_EnableOCSPChecking(CERT_GetDefaultCertDB());
-		if (rv != SECSuccess) {
+	    SECStatus rv = CERT_EnableOCSPChecking(CERT_GetDefaultCertDB());
+	    if (rv != SECSuccess) {
 	        PR_fprintf(errorFD, "ERROR: Attempt to enable OCSP Checking failed.\n");
 	        errorCount++;
 	        retval = -1;
-		}
+	    }
 	}
 
   if (verify)
