@@ -1870,7 +1870,13 @@ nsSelection::SetMouseDownState(PRBool aState)
 #ifdef DEBUG_TABLE_SELECTION
 printf("SetMouseDownState to FALSE - stopping cell selection\n");
 #endif
-    mSelectingTableCells = PR_FALSE;
+    // Clear the start cell for appending a block
+    //   of cells when last selection action was NOT a cell
+    if (!mSelectingTableCells)
+      mAppendStartSelectedCell = nsnull;
+    else
+      mSelectingTableCells = PR_FALSE;
+
     mStartSelectedCell = nsnull;
     mEndSelectedCell = nsnull;
 
@@ -2421,7 +2427,7 @@ printf("HandleTableSelection: Saving mUnselectCellOnMouseUp\n");
           // Select an unselected cell
           // but first remove existing selection if not in same table
           nsCOMPtr<nsIContent> previousCellContent = do_QueryInterface(previousCellNode);
-          if (!IsInSameTable(previousCellContent, childContent, nsnull))
+          if (previousCellContent && !IsInSameTable(previousCellContent, childContent, nsnull))
           {
             mDomSelections[index]->RemoveAllRanges();
             // Reset selection mode that is cleared in RemoveAllRanges
@@ -2530,6 +2536,7 @@ printf("HandleTableSelection: Unselecting single selected cell\n");
               mSelectingTableCells = PR_FALSE;
               mStartSelectedCell = nsnull;
               mEndSelectedCell = nsnull;
+              mAppendStartSelectedCell = nsnull;
               mSelectingTableCellMode = 0;
               //TODO: We need a "Collapse to just before deepest child" routine
               // Even better, should we collapse to just after the LAST deepest child
