@@ -383,7 +383,6 @@ nsMenuBarFrame::ShortcutNavigation(nsIDOMKeyEvent* aKeyEvent, PRBool& aHandledFl
   if (result) {
     // We got one!
     aHandledFlag = PR_TRUE;
-    printf("\nIs active? %d\n", mIsActive);
     SetActive(PR_TRUE);
     SetCurrentMenuItem(result);
     result->OpenMenu(PR_TRUE);
