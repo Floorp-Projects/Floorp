@@ -24,6 +24,7 @@
 #include "nsTreeOuterFrame.h"
 #include "nsIStyleContext.h"
 #include "nsIContent.h"
+#include "nsIView.h"
 #include "nsCSSRendering.h"
 #include "nsTreeCellFrame.h"
 #include "nsCellMap.h"
@@ -61,6 +62,21 @@ nsTreeOuterFrame::nsTreeOuterFrame()
 // Destructor
 nsTreeOuterFrame::~nsTreeOuterFrame()
 {
+}
+
+NS_IMETHODIMP
+nsTreeOuterFrame::Init(nsIPresContext*  aPresContext,
+              nsIContent*      aContent,
+              nsIFrame*        aParent,
+              nsIStyleContext* aContext,
+              nsIFrame*        aPrevInFlow)
+{
+  nsresult  rv = nsTableOuterFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  CreateViewForFrame(aPresContext,this,aContext,PR_TRUE);
+  nsIView* view;
+  GetView(aPresContext, &view);
+  view->SetContentTransparency(PR_TRUE);
+  return rv;
 }
 
 NS_IMETHODIMP 
