@@ -42,9 +42,9 @@ interface nsIChromeRegistry : nsISupports
 	void setDefaultSkin(in wstring skinName, in wstring packageName);
 	void setDefaultLocale(in wstring localeName, in wstring packageName);
 
-	readonly attribute nsISupportsArray skins;
-	readonly attribute nsISupportsArray packages;
-	readonly attribute nsISupportsArray locales;
+	nsISimpleEnumerator getSkins();
+	nsISimpleEnumerator getPackages();
+	nsISimpleEnumerator getLocales();
 };
 
 
