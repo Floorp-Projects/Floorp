@@ -117,8 +117,7 @@ nsHTMLContainerFrame::PaintDecorationsAndChildren(
     if (decorations & (NS_STYLE_TEXT_DECORATION_UNDERLINE |
                        NS_STYLE_TEXT_DECORATION_OVERLINE |
                        NS_STYLE_TEXT_DECORATION_LINE_THROUGH)) {
-      const nsStyleFont* font;
-      ::GetStyleData(this, &font);
+      const nsStyleFont* font = GetStyleFont();
       NS_ASSERTION(font->mFont.decorations == NS_FONT_DECORATION_NONE,
                    "fonts on style structs shouldn't have decorations");
 
@@ -170,14 +169,10 @@ nsHTMLContainerFrame::GetTextDecorations(nsIPresContext* aPresContext,
                       NS_STYLE_TEXT_DECORATION_OVERLINE |
                       NS_STYLE_TEXT_DECORATION_LINE_THROUGH; 
 
-  const nsStyleTextReset* styleText;
-  ::GetStyleData(mStyleContext, &styleText);
-
   if (!aIsBlock) {
-    aDecorations = styleText->mTextDecoration  & decorMask;
+    aDecorations = GetStyleTextReset()->mTextDecoration  & decorMask;
     if (aDecorations) {
-      const nsStyleColor* styleColor;
-      ::GetStyleData(mStyleContext, &styleColor);
+      const nsStyleColor* styleColor = GetStyleColor();
       aUnderColor = styleColor->mColor;
       aOverColor = styleColor->mColor;
       aStrikeColor = styleColor->mColor;
@@ -189,8 +184,7 @@ nsHTMLContainerFrame::GetTextDecorations(nsIPresContext* aPresContext,
       // find text-decorations.  "Inherit" from parent *block* frames
 
       nsStyleContext* styleContext = frame->GetStyleContext();
-      const nsStyleDisplay* styleDisplay;
-      ::GetStyleData(styleContext, &styleDisplay);
+      const nsStyleDisplay* styleDisplay = styleContext->GetStyleDisplay();
       if (!styleDisplay->IsBlockLevel() &&
           styleDisplay->mDisplay != NS_STYLE_DISPLAY_TABLE_CELL) {
         // If an inline frame is discovered while walking up the tree,
@@ -199,25 +193,24 @@ nsHTMLContainerFrame::GetTextDecorations(nsIPresContext* aPresContext,
         break;
       }
 
-      ::GetStyleData(styleContext, &styleText);
+      const nsStyleTextReset* styleText = styleContext->GetStyleTextReset();
       PRUint8 decors = decorMask & styleText->mTextDecoration;
       if (decors) {
         // A *new* text-decoration is found.
-        const nsStyleColor* styleColor;
-        ::GetStyleData(styleContext, &styleColor);
+        nscolor color = styleContext->GetStyleColor()->mColor;
 
         if (NS_STYLE_TEXT_DECORATION_UNDERLINE & decors) {
-          aUnderColor = styleColor->mColor;
+          aUnderColor = color;
           decorMask &= ~NS_STYLE_TEXT_DECORATION_UNDERLINE;
           aDecorations |= NS_STYLE_TEXT_DECORATION_UNDERLINE;
         }
         if (NS_STYLE_TEXT_DECORATION_OVERLINE & decors) {
-          aOverColor = styleColor->mColor;
+          aOverColor = color;
           decorMask &= ~NS_STYLE_TEXT_DECORATION_OVERLINE;
           aDecorations |= NS_STYLE_TEXT_DECORATION_OVERLINE;
         }
         if (NS_STYLE_TEXT_DECORATION_LINE_THROUGH & decors) {
-          aStrikeColor = styleColor->mColor;
+          aStrikeColor = color;
           decorMask &= ~NS_STYLE_TEXT_DECORATION_LINE_THROUGH;
           aDecorations |= NS_STYLE_TEXT_DECORATION_LINE_THROUGH;
         }
@@ -249,8 +242,7 @@ HasTextFrameDescendant(nsIPresContext* aPresContext, nsIFrame* aParent)
       // See bug 20163.
       nsCompatibility mode;
       aPresContext->GetCompatibilityMode(&mode);
-      const nsStyleText* styleText; 
-      ::GetStyleData(kid, &styleText);
+      const nsStyleText* styleText = kid->GetStyleText();
       // XXXldb This is the wrong way to set |isPre|.
       PRBool isPre = NS_STYLE_WHITESPACE_PRE == styleText->mWhiteSpace ||
             NS_STYLE_WHITESPACE_MOZ_PRE_WRAP == styleText->mWhiteSpace;
@@ -676,8 +668,7 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext* aPresContext,
 
   // XXX If it's fixed positioned, then create a widget so it floats
   // above the scrolling area
-  const nsStyleDisplay* display;
-  ::GetStyleData(aStyleContext, &display);
+  const nsStyleDisplay* display = aStyleContext->GetStyleDisplay();
   if (NS_STYLE_POSITION_FIXED == display->mPosition) {
     view->CreateWidget(kCChildCID);
   }
@@ -716,8 +707,7 @@ nsHTMLContainerFrame::CheckInvalidateSizeChange(nsIPresContext* aPresContext,
   // Currently we actually paint 'outline' inside the element so this code
   // isn't strictly necessary. But we're trying to get ready to switch to
   // CSS2 compliance.
-  const nsStyleOutline* outline;
-  ::GetStyleData(this, &outline);
+  const nsStyleOutline* outline = GetStyleOutline();
   PRUint8 outlineStyle = outline->GetOutlineStyle();
   if (outlineStyle != NS_STYLE_BORDER_STYLE_NONE
       && outlineStyle != NS_STYLE_BORDER_STYLE_HIDDEN) {
@@ -733,8 +723,7 @@ nsHTMLContainerFrame::CheckInvalidateSizeChange(nsIPresContext* aPresContext,
 
   // Invalidate the old frame if the frame has borders. Those borders
   // may be moving.
-  const nsStyleBorder* border;
-  ::GetStyleData(this, &border);
+  const nsStyleBorder* border = GetStyleBorder();
   if (border->IsBorderSideVisible(NS_SIDE_LEFT)
       || border->IsBorderSideVisible(NS_SIDE_RIGHT)
       || border->IsBorderSideVisible(NS_SIDE_TOP)
@@ -745,8 +734,7 @@ nsHTMLContainerFrame::CheckInvalidateSizeChange(nsIPresContext* aPresContext,
 
   // Invalidate the old frame if the frame has a background
   // whose position depends on the size of the frame
-  const nsStyleBackground* background;
-  ::GetStyleData(this, &background);
+  const nsStyleBackground* background = GetStyleBackground();
   if (background->mBackgroundFlags &
       (NS_STYLE_BG_X_POSITION_PERCENT | NS_STYLE_BG_Y_POSITION_PERCENT)) {
     Invalidate(aPresContext, nsRect(0, 0, mRect.width, mRect.height));

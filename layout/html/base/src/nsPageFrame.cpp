@@ -749,12 +749,8 @@ nsPageFrame::DrawBackground(nsIPresContext*      aPresContext,
 
     nsRect rect;
     pageContentFrame->GetRect(rect);
-    const nsStyleBorder* border = 
-      NS_STATIC_CAST(const nsStyleBorder*,
-                     mStyleContext->GetStyleData(eStyleStruct_Border));
-    const nsStylePadding* padding = 
-      NS_STATIC_CAST(const nsStylePadding*,
-                     mStyleContext->GetStyleData(eStyleStruct_Padding));
+    const nsStyleBorder* border = GetStyleBorder();
+    const nsStylePadding* padding = GetStylePadding();
 
     nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
                                     aDirtyRect, rect, *border, *padding,

@@ -88,8 +88,7 @@ nsInspectorCSSUtils::IsRuleNodeRoot(nsRuleNode *aNode, PRBool *aIsRoot)
 NS_IMETHODIMP
 nsInspectorCSSUtils::AdjustRectForMargins(nsIFrame* aFrame, nsRect& aRect)
 {
-  const nsStyleMargin* margins;
-  ::GetStyleData(aFrame, &margins);
+  const nsStyleMargin* margins = aFrame->GetStyleMargin();
   
   // adjust coordinates for margins
   nsStyleCoord coord;

@@ -258,8 +258,7 @@ nsTextTransformer::Init(nsIFrame* aFrame,
     mOffset = aStartingOffset;
 
     // Get the frames text style information
-    const nsStyleText* styleText;
-    aFrame->GetStyleData(eStyleStruct_Text, (const nsStyleStruct*&) styleText);
+    const nsStyleText* styleText = aFrame->GetStyleText();
     if (NS_STYLE_WHITESPACE_PRE == styleText->mWhiteSpace) {
       mMode = ePreformatted;
     }

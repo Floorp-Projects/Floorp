@@ -1546,10 +1546,7 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
   // mStyleContext is a leaf context used only when stretching happens.
   // For the base size, the default font should come from the parent context
   nsAutoString fontName;
-  nsStyleContext* parentContext = mStyleContext->GetParent();
-  const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
-    parentContext->GetStyleData(eStyleStruct_Font));
-  nsFont theFont(font->mFont);
+  nsFont theFont(mStyleContext->GetParent()->GetStyleFont()->mFont);
 
   // Override with specific fonts if applicable for this character
   PRUnichar uchar = mData[0];
@@ -1619,9 +1616,7 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
   nsBoundingMetrics bestbm = mBoundingMetrics;
 
   // use our stretchy style context now that stretching is in progress
-  font = NS_STATIC_CAST(const nsStyleFont*,
-    mStyleContext->GetStyleData(eStyleStruct_Font));
-  theFont = font->mFont;
+  theFont = mStyleContext->GetStyleFont()->mFont;
 
   // initialize the search list for this char
   PRBool alreadyCSS = PR_FALSE;
@@ -1953,9 +1948,7 @@ nsMathMLChar::Paint(nsIPresContext*      aPresContext,
     styleContext = parentContext;
   }
 
-  const nsStyleVisibility *visib = NS_STATIC_CAST(const nsStyleVisibility*,
-    styleContext->GetStyleData(eStyleStruct_Visibility));
-  if (!visib->IsVisible())
+  if (!styleContext->GetStyleVisibility()->IsVisible())
     return NS_OK;
 
   // if the leaf style context that we use for stretchy chars has a background
@@ -1975,12 +1968,9 @@ nsMathMLChar::Paint(nsIPresContext*      aPresContext,
       }
     }
     else if (mRect.width && mRect.height) {
-      const nsStyleBorder *border = NS_STATIC_CAST(const nsStyleBorder*,
-        styleContext->GetStyleData(eStyleStruct_Border));
-      const nsStylePadding *padding = NS_STATIC_CAST(const nsStylePadding*,
-        styleContext->GetStyleData(eStyleStruct_Padding));
-      const nsStyleBackground *backg = NS_STATIC_CAST(const nsStyleBackground*,
-        styleContext->GetStyleData(eStyleStruct_Background));
+      const nsStyleBorder* border = styleContext->GetStyleBorder();
+      const nsStylePadding* padding = styleContext->GetStylePadding();
+      const nsStyleBackground* backg = styleContext->GetStyleBackground();
       nsRect rect(mRect); //0, 0, mRect.width, mRect.height);
       if (styleContext != parentContext &&
           0 == (backg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT))
@@ -1994,8 +1984,7 @@ nsMathMLChar::Paint(nsIPresContext*      aPresContext,
 #if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
       // for visual debug
       PRIntn skipSides = 0; //aForFrame->GetSkipSides();
-      const nsStyleOutline *outline = NS_STATIC_CAST(const nsStyleOutline*,
-        styleContext->GetStyleData(eStyleStruct_Outline));
+      const nsStyleOutline* outline = styleContext->GetStyleOutline();
       nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, aForFrame,
                                   aDirtyRect, rect, *border, styleContext, skipSides);
       nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, aForFrame,
@@ -2006,9 +1995,7 @@ nsMathMLChar::Paint(nsIPresContext*      aPresContext,
 
   if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
     // Set color ...
-    const nsStyleColor *color = NS_STATIC_CAST(const nsStyleColor*,
-      styleContext->GetStyleData(eStyleStruct_Color));
-    nscolor fgColor = color->mColor;
+    nscolor fgColor = styleContext->GetStyleColor()->mColor;
     if (aSelectedRect && !aSelectedRect->IsEmpty()) {
       // get color to use for selection from the look&feel object
       nsCOMPtr<nsILookAndFeel> lf;
@@ -2020,9 +2007,7 @@ nsMathMLChar::Paint(nsIPresContext*      aPresContext,
     aRenderingContext.SetColor(fgColor);
 
     nsAutoString fontName;
-    const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
-      styleContext->GetStyleData(eStyleStruct_Font));
-    nsFont theFont(font->mFont);
+    nsFont theFont(styleContext->GetStyleFont()->mFont);
 
     if (NS_STRETCH_DIRECTION_UNSUPPORTED == mDirection) {
       // normal drawing if there is nothing special about this char ...

@@ -196,10 +196,8 @@ nsFieldSetFrame::Paint(nsIPresContext*      aPresContext,
     if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_TRUE, &isVisible)) && 
                      isVisible && mRect.width && mRect.height) {
       PRIntn skipSides = GetSkipSides();
-      const nsStyleBorder* borderStyle = 
-        (const nsStyleBorder*)mStyleContext->GetStyleData(eStyleStruct_Border);
-      const nsStylePadding* paddingStyle = 
-        (const nsStylePadding*)mStyleContext->GetStyleData(eStyleStruct_Padding);
+      const nsStyleBorder* borderStyle = GetStyleBorder();
+      const nsStylePadding* paddingStyle = GetStylePadding();
        
         nsMargin border;
         if (!borderStyle->GetBorder(border)) {
@@ -390,9 +388,7 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
     nsMargin legendMargin(0,0,0,0);
     // reflow the legend only if needed
     if (mLegendFrame) {
-        const nsStyleMargin* marginStyle;
-        mLegendFrame->GetStyleData(eStyleStruct_Margin,
-                              (const nsStyleStruct*&) marginStyle);
+        const nsStyleMargin* marginStyle = mLegendFrame->GetStyleMargin();
         marginStyle->GetMargin(legendMargin);
 
         if (reflowLegend) {
@@ -528,9 +524,7 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
         } else {
             // if we don't need to reflow just get the old size
             mContentFrame->GetRect(contentRect);
-            const nsStyleMargin* marginStyle;
-            mContentFrame->GetStyleData(eStyleStruct_Margin,
-                                  (const nsStyleStruct*&) marginStyle);
+            const nsStyleMargin* marginStyle = mContentFrame->GetStyleMargin();
 
             nsMargin m(0,0,0,0);
             marginStyle->GetMargin(m);

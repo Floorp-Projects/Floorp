@@ -295,9 +295,7 @@ nsMathMLmunderFrame::Place(nsIPresContext*      aPresContext,
   ////////////////////
   // Place Children
 
-  const nsStyleFont* font =
-    (const nsStyleFont*) mStyleContext->GetStyleData (eStyleStruct_Font);
-  aRenderingContext.SetFont(font->mFont, nsnull);
+  aRenderingContext.SetFont(GetStyleFont()->mFont, nsnull);
   nsCOMPtr<nsIFontMetrics> fm;
   aRenderingContext.GetFontMetrics(*getter_AddRefs(fm));
 

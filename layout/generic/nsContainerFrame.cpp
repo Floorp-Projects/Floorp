@@ -342,9 +342,7 @@ nsContainerFrame::GetFrameForPointUsing(nsIPresContext* aPresContext,
   }
 
   if ( inThisFrame && aConsiderSelf ) {
-    const nsStyleVisibility* vis = 
-      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
-    if (vis->IsVisible()) {
+    if (GetStyleVisibility()->IsVisible()) {
       *aFrame = this;
       return NS_OK;
     }
@@ -517,8 +515,7 @@ NonZeroStyleCoord(const nsStyleCoord& aCoord) {
 
 static PRBool
 HasNonZeroBorderRadius(nsStyleContext* aStyleContext) {
-  const nsStyleBorder* border;
-  ::GetStyleData(aStyleContext, &border);
+  const nsStyleBorder* border = aStyleContext->GetStyleBorder();
 
   nsStyleCoord coord;
   border->mBorderRadius.GetTop(coord);
@@ -598,8 +595,7 @@ SyncFrameViewGeometryDependentProperties(nsIPresContext*  aPresContext,
   }
   // XXX we should also set widget transparency for XUL popups
 
-  const nsStyleDisplay* display;
-  ::GetStyleData(aStyleContext, &display);
+  const nsStyleDisplay* display = aStyleContext->GetStyleDisplay();
   nsFrameState kidState;
   aFrame->GetFrameState(&kidState);
   
@@ -607,8 +603,7 @@ SyncFrameViewGeometryDependentProperties(nsIPresContext*  aPresContext,
     // If we're showing the view but the frame is hidden, then the view is transparent
     nsViewVisibility visibility;
     aView->GetVisibility(visibility);
-    const nsStyleVisibility* vis;
-    ::GetStyleData(aStyleContext, &vis);
+    const nsStyleVisibility* vis = aStyleContext->GetStyleVisibility();
     if ((nsViewVisibility_kShow == visibility
          && NS_STYLE_VISIBILITY_HIDDEN == vis->mVisible)
         || (NS_STYLE_OVERFLOW_VISIBLE == display->mOverflow
@@ -659,10 +654,8 @@ SyncFrameViewGeometryDependentProperties(nsIPresContext*  aPresContext,
     }
 
     if (hasOverflowClip) {
-      const nsStyleBorder* borderStyle;
-      ::GetStyleData(aStyleContext, &borderStyle);
-      const nsStylePadding* paddingStyle;
-      ::GetStyleData(aStyleContext, &paddingStyle);
+      const nsStyleBorder* borderStyle = aStyleContext->GetStyleBorder();
+      const nsStylePadding* paddingStyle = aStyleContext->GetStylePadding();
 
       nsMargin border, padding;
       // XXX We don't support the 'overflow-clip' property yet so just use the
@@ -794,8 +787,7 @@ nsContainerFrame::SyncFrameViewProperties(nsIPresContext*  aPresContext,
     aStyleContext = aFrame->GetStyleContext();
   }
     
-  const nsStyleVisibility* vis;
-  ::GetStyleData(aStyleContext, &vis);
+  const nsStyleVisibility* vis = aStyleContext->GetStyleVisibility();
 
   // Set the view's opacity
   vm->SetViewOpacity(aView, vis->mOpacity);
@@ -832,15 +824,13 @@ nsContainerFrame::SyncFrameViewProperties(nsIPresContext*  aPresContext,
                           nsViewVisibility_kHide);
   }
 
-  const nsStyleDisplay* display;
-  ::GetStyleData(aStyleContext, &display);
+  const nsStyleDisplay* display = aStyleContext->GetStyleDisplay();
   // See if the frame is being relatively positioned or absolutely
   // positioned
   PRBool isTopMostView = display->IsPositioned();
 
   // Make sure z-index is correct
-  const nsStylePosition* position;
-  ::GetStyleData(aStyleContext, &position);
+  const nsStylePosition* position = aStyleContext->GetStylePosition();
 
   PRInt32 zIndex = 0;
   PRBool  autoZIndex = PR_FALSE;
@@ -861,8 +851,7 @@ nsContainerFrame::FrameNeedsView(nsIPresContext* aPresContext,
                                  nsIFrame* aFrame,
                                  nsStyleContext* aStyleContext)
 {
-  const nsStyleVisibility* vis;
-  ::GetStyleData(aStyleContext, &vis);
+  const nsStyleVisibility* vis = aStyleContext->GetStyleVisibility();
     
   if (vis->mOpacity != 1.0f) {
     return PR_TRUE;
@@ -878,8 +867,7 @@ nsContainerFrame::FrameNeedsView(nsIPresContext* aPresContext,
     return PR_TRUE;
   }
     
-  const nsStyleDisplay* display;
-  ::GetStyleData(aStyleContext, &display);
+  const nsStyleDisplay* display = aStyleContext->GetStyleDisplay();
 
   if (NS_STYLE_POSITION_RELATIVE == display->mPosition) {
     return PR_TRUE;

@@ -270,7 +270,7 @@ void nsSVGGraphicFrame::GetCTM(nsIDOMSVGMatrix** ctm)
 
 const nsStyleSVG* nsSVGGraphicFrame::GetStyle()
 {
-  return (const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG);
+  return GetStyleSVG();
 }
 
 

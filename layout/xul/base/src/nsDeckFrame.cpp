@@ -315,10 +315,9 @@ nsDeckFrame::Paint(nsIPresContext*      aPresContext,
                    PRUint32             aFlags)
 {
   // if a tab is hidden all its children are too.
- 	const nsStyleVisibility* vis = 
-      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
-	if (!vis->mVisible)
-		return NS_OK;
+
+  if (!GetStyleVisibility()->mVisible)
+    return NS_OK;
 
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
     PaintSelf(aPresContext, aRenderingContext, aDirtyRect);

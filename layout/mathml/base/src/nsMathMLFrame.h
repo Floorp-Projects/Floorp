@@ -256,8 +256,7 @@ public:
                       nsIFrame*       aChild, 
                       nscoord&        aSubDrop) 
   {
-    const nsStyleFont* font;
-    aChild->GetStyleData(eStyleStruct_Font, (const nsStyleStruct *&)font);
+    const nsStyleFont* font = aChild->GetStyleFont();
     nsCOMPtr<nsIFontMetrics> fm;
     aPresContext->GetMetricsFor(font->mFont, getter_AddRefs(fm));
     GetSubDrop(fm, aSubDrop);
@@ -268,8 +267,7 @@ public:
                       nsIFrame*       aChild, 
                       nscoord&        aSupDrop) 
   {
-    const nsStyleFont* font;
-    aChild->GetStyleData(eStyleStruct_Font, (const nsStyleStruct *&)font);
+    const nsStyleFont* font = aChild->GetStyleFont();
     nsCOMPtr<nsIFontMetrics> fm;
     aPresContext->GetMetricsFor(font->mFont, getter_AddRefs(fm));
     GetSupDrop(fm, aSupDrop);

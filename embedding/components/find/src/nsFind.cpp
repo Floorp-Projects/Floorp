@@ -488,14 +488,7 @@ PRBool nsFind::IsVisibleNode(nsIDOMNode *aDOMNode)
     return PR_FALSE;
   }
 
-  const nsStyleVisibility* vis;
-  ::GetStyleData(frame, &vis);
-  if (!vis || !vis->IsVisible())
-  {
-    return PR_FALSE;
-  }
-
-  return PR_TRUE;
+  return frame->GetStyleVisibility()->IsVisible();
 }
 
 PRBool nsFind::SkipNode(nsIContent* aContent)

@@ -986,11 +986,7 @@ nsPresContext::GetXBLBindingURL(nsIContent* aContent, nsAString& aResult)
   sc = ResolveStyleContextFor(aContent, nsnull);
   NS_ENSURE_TRUE(sc, NS_ERROR_FAILURE);
 
-  const nsStyleDisplay* display;
-  ::GetStyleData(sc.get(), &display);
-  NS_ENSURE_TRUE(display, NS_ERROR_NULL_POINTER);
-
-  aResult = display->mBinding;
+  aResult = sc->GetStyleDisplay()->mBinding;
   return NS_OK;
 }
 

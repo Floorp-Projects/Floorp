@@ -259,8 +259,7 @@ nsTableFrame::Init(nsIPresContext*  aPresContext,
   mState |= NS_FRAME_EXCLUDE_IGNORABLE_WHITESPACE;
 
   // see if border collapse is on, if so set it
-  const nsStyleTableBorder* tableStyle =
-    (const nsStyleTableBorder*)mStyleContext->GetStyleData(eStyleStruct_TableBorder);
+  const nsStyleTableBorder* tableStyle = GetStyleTableBorder();
   PRBool borderCollapse = (NS_STYLE_BORDER_COLLAPSE == tableStyle->mBorderCollapse);
   SetBorderCollapse(borderCollapse);
   // Create the cell map
@@ -376,20 +375,14 @@ PRBool
 nsTableFrame::PageBreakAfter(nsIFrame& aSourceFrame,
                              nsIFrame* aNextFrame)
 {
-  nsStyleContext* sourceContext = aSourceFrame.GetStyleContext();
-  NS_ENSURE_TRUE(sourceContext, PR_FALSE);
-  const nsStyleDisplay* display = (const nsStyleDisplay*)
-    sourceContext->GetStyleData(eStyleStruct_Display);         NS_ENSURE_TRUE(display, PR_FALSE); 
+  const nsStyleDisplay* display = aSourceFrame.GetStyleDisplay();
   // don't allow a page break after a repeated header
   if (display->mBreakAfter && (NS_STYLE_DISPLAY_TABLE_HEADER_GROUP != display->mDisplay)) {
     return PR_TRUE;
   }
 
   if (aNextFrame) {
-    nsStyleContext* nextContext = aNextFrame->GetStyleContext();
-    NS_ENSURE_TRUE(nextContext, PR_FALSE);
-    display = (const nsStyleDisplay*)
-      nextContext->GetStyleData(eStyleStruct_Display);         NS_ENSURE_TRUE(display, PR_FALSE); 
+    display = aNextFrame->GetStyleDisplay();
     // don't allow a page break before a repeated footer
     if (display->mBreakBefore && (NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP != display->mDisplay)) {
       return PR_TRUE;
@@ -425,8 +418,7 @@ nsTableFrame::SetInitialChildList(nsIPresContext* aPresContext,
   nsIFrame *prevColGroupChild = nsnull;
   for ( ; nsnull!=childFrame; )
   {
-    const nsStyleDisplay *childDisplay;
-    childFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)childDisplay);
+    const nsStyleDisplay* childDisplay = childFrame->GetStyleDisplay();
     // XXX this if should go away
     if (PR_TRUE==IsRowGroup(childDisplay->mDisplay))
     {
@@ -652,9 +644,7 @@ PRInt32 nsTableFrame::GetEffectiveCOLSAttribute()
   nsTableCellMap *cellMap = GetCellMap();
   NS_PRECONDITION (nsnull!=cellMap, "null cellMap.");
   PRInt32 result;
-  const nsStyleTable *tableStyle=nsnull;
-  GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
-  result = tableStyle->mCols;
+  result = GetStyleTable()->mCols;
   PRInt32 numCols = GetColCount();
   if (result>numCols)
     result = numCols;
@@ -687,9 +677,7 @@ NS_IMETHODIMP nsTableFrame::AdjustRowIndices(nsIPresContext* aPresContext,
   nsIFrame* rowFrame;
   aRowGroup->FirstChild(aPresContext, nsnull, &rowFrame);
   for ( ; rowFrame; rowFrame->GetNextSibling(&rowFrame)) {
-    const nsStyleDisplay* rowDisplay;
-    rowFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)rowDisplay);
-    if (NS_STYLE_DISPLAY_TABLE_ROW==rowDisplay->mDisplay) {
+    if (NS_STYLE_DISPLAY_TABLE_ROW==rowFrame->GetStyleDisplay()->mDisplay) {
       PRInt32 index = ((nsTableRowFrame*)rowFrame)->GetRowIndex();
       if (index >= aRowIndex)
         ((nsTableRowFrame *)rowFrame)->SetRowIndex(index+anAdjustment);
@@ -1430,8 +1418,7 @@ nsTableFrame::PaintChildren(nsIPresContext*      aPresContext,
                             PRUint32             aFlags)
 
 {
-  const nsStyleDisplay* disp = (const nsStyleDisplay*)
-    mStyleContext->GetStyleData(eStyleStruct_Display);
+  const nsStyleDisplay* disp = GetStyleDisplay();
   // If overflow is hidden then set the clip rect so that children don't
   // leak out of us. Note that because overflow'-clip' only applies to
   // the content area we do this after painting the border and background
@@ -1459,13 +1446,9 @@ nsTableFrame::Paint(nsIPresContext*      aPresContext,
 {
   PRBool visibleBCBorders = PR_FALSE;
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-    const nsStyleVisibility* vis = 
-      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
-    if (vis && vis->IsVisible()) {
-      const nsStyleBorder* border =
-        (const nsStyleBorder*)mStyleContext->GetStyleData(eStyleStruct_Border);
-      const nsStylePadding* padding =
-        (const nsStylePadding*)mStyleContext->GetStyleData(eStyleStruct_Padding);
+    if (GetStyleVisibility()->IsVisible()) {
+      const nsStyleBorder* border = GetStyleBorder();
+      const nsStylePadding* padding = GetStylePadding();
       nsRect  rect(0, 0, mRect.width, mRect.height);
 
       nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
@@ -1680,9 +1663,8 @@ nsTableFrame::SetColumnDimensions(nsIPresContext* aPresContext,
     colGroupFrame->FirstChild(aPresContext, nsnull, &colFrame);
     nsPoint colOrigin(0,0);
     while (nsnull != colFrame) {
-      const nsStyleDisplay* colDisplay;
-      colFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)colDisplay));
-      if (NS_STYLE_DISPLAY_TABLE_COLUMN == colDisplay->mDisplay) {
+      if (NS_STYLE_DISPLAY_TABLE_COLUMN ==
+          colFrame->GetStyleDisplay()->mDisplay) {
         NS_ASSERTION(colX < numCols, "invalid number of columns");
         nscoord colWidth = GetColumnWidth(colX);
         nsRect colRect(colOrigin.x, colOrigin.y, colWidth, colHeight);
@@ -2226,8 +2208,7 @@ nsTableFrame::GetFirstBodyRowGroupFrame()
   nsIFrame* footerFrame = nsnull;
 
   for (nsIFrame* kidFrame = mFrames.FirstChild(); nsnull != kidFrame; ) {
-    const nsStyleDisplay *childDisplay;
-    kidFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
+    const nsStyleDisplay* childDisplay = kidFrame->GetStyleDisplay();
 
     // We expect the header and footer row group frames to be first, and we only
     // allow one header and one footer
@@ -2340,19 +2321,16 @@ nsTableFrame::CollapseRowGroupIfNecessary(nsIPresContext* aPresContext,
                                           const nscoord& aYTotalOffset,
                                           nscoord& aYGroupOffset, PRInt32& aRowX)
 {
-  const nsStyleVisibility* groupVis;
-  aRowGroupFrame->GetStyleData(eStyleStruct_Visibility, ((const nsStyleStruct *&)groupVis));
+  const nsStyleVisibility* groupVis = aRowGroupFrame->GetStyleVisibility();
   
   PRBool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE == groupVis->mVisible);
   nsIFrame* rowFrame;
   aRowGroupFrame->FirstChild(aPresContext, nsnull, &rowFrame);
 
   while (nsnull != rowFrame) {
-    const nsStyleDisplay* rowDisplay;
-    rowFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)rowDisplay));
+    const nsStyleDisplay* rowDisplay = rowFrame->GetStyleDisplay();
     if (NS_STYLE_DISPLAY_TABLE_ROW == rowDisplay->mDisplay) {
-      const nsStyleVisibility* rowVis;
-      rowFrame->GetStyleData(eStyleStruct_Visibility, ((const nsStyleStruct *&)rowVis));
+      const nsStyleVisibility* rowVis = rowFrame->GetStyleVisibility();
       nsRect rowRect;
       rowFrame->GetRect(rowRect);
       if (collapseGroup || (NS_STYLE_VISIBILITY_COLLAPSE == rowVis->mVisible)) {
@@ -2362,8 +2340,7 @@ nsTableFrame::CollapseRowGroupIfNecessary(nsIPresContext* aPresContext,
         nsIFrame* cellFrame;
         rowFrame->FirstChild(aPresContext, nsnull, &cellFrame);
         while (nsnull != cellFrame) {
-          const nsStyleDisplay* cellDisplay;
-          cellFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)cellDisplay));
+          const nsStyleDisplay* cellDisplay = cellFrame->GetStyleDisplay();
           if (NS_STYLE_DISPLAY_TABLE_CELL == cellDisplay->mDisplay) {
             nsTableCellFrame* cFrame = (nsTableCellFrame*)cellFrame;
             nsRect cRect;
@@ -2426,9 +2403,7 @@ NS_METHOD nsTableFrame::AdjustForCollapsingRows(nsIPresContext* aPresContext,
 
   // collapse the rows and/or row groups as necessary
   while (nsnull != groupFrame) {
-    const nsStyleDisplay* groupDisplay;
-    groupFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)groupDisplay));
-    if (IsRowGroup(groupDisplay->mDisplay)) {
+    if (IsRowGroup(groupFrame->GetStyleDisplay()->mDisplay)) {
       CollapseRowGroupIfNecessary(aPresContext, groupFrame, yTotalOffset, yGroupOffset, rowIndex);
     }
     yTotalOffset += yGroupOffset;
@@ -2456,19 +2431,16 @@ NS_METHOD nsTableFrame::AdjustForCollapsingCols(nsIPresContext* aPresContext,
   PRInt32 direction = (groupIter.IsLeftToRight()) ? 1 : -1; 
   // iterate over the col groups
   while (nsnull != groupFrame) {
-    const nsStyleVisibility* groupVis;
-    groupFrame->GetStyleData(eStyleStruct_Visibility, ((const nsStyleStruct *&)groupVis));
+    const nsStyleVisibility* groupVis = groupFrame->GetStyleVisibility();
     
     PRBool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE == groupVis->mVisible);
     nsTableIterator colIter(aPresContext, *groupFrame, eTableDIR);
     nsIFrame* colFrame = colIter.First();
     // iterate over the cols in the col group
     while (nsnull != colFrame) {
-      const nsStyleDisplay* colDisplay;
-      colFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)colDisplay));
+      const nsStyleDisplay* colDisplay = colFrame->GetStyleDisplay();
       if (NS_STYLE_DISPLAY_TABLE_COLUMN == colDisplay->mDisplay) {
-        const nsStyleVisibility* colVis;
-        colFrame->GetStyleData(eStyleStruct_Visibility, ((const nsStyleStruct *&)colVis));
+        const nsStyleVisibility* colVis = colFrame->GetStyleVisibility();
         PRBool collapseCol = (NS_STYLE_VISIBILITY_COLLAPSE == colVis->mVisible);
         PRInt32 colWidth = GetColumnWidth(colX);
         if (collapseGroup || collapseCol) {
@@ -2567,8 +2539,7 @@ nsTableFrame::AppendFrames(nsIPresContext* aPresContext,
     f->SetNextSibling(nsnull);
 
     // See what kind of frame we have
-    const nsStyleDisplay *display;
-    f->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
+    const nsStyleDisplay* display = f->GetStyleDisplay();
 
     if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == display->mDisplay) {
       if (!firstAppendedColGroup) {
@@ -2621,8 +2592,7 @@ nsTableFrame::InsertFrames(nsIPresContext* aPresContext,
   NS_PRECONDITION(!nextSibling, "expected only one child frame");
 
   // See what kind of frame we have
-  const nsStyleDisplay *display=nsnull;
-  aFrameList->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
+  const nsStyleDisplay* display = aFrameList->GetStyleDisplay();
 
   if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == display->mDisplay) {
     // Insert the column group frame
@@ -2667,8 +2637,7 @@ nsTableFrame::RemoveFrame(nsIPresContext* aPresContext,
                           nsIFrame*       aOldFrame)
 {
   // See what kind of frame we have
-  const nsStyleDisplay *display=nsnull;
-  aOldFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
+  const nsStyleDisplay* display = aOldFrame->GetStyleDisplay();
 
   if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == display->mDisplay) {
     nsIFrame* nextColGroupFrame;
@@ -2869,8 +2838,7 @@ void GetSeparateModelBorderPadding(nsIPresContext&          aPresContext,
                                    nsStyleContext&          aStyleContext,
                                    nsMargin&                aBorderPadding)
 {
-  const nsStyleBorder* border =
-    (const nsStyleBorder*)aStyleContext.GetStyleData(eStyleStruct_Border);
+  const nsStyleBorder* border = aStyleContext.GetStyleBorder();
   border->GetBorder(aBorderPadding);
   if (aReflowState) {
     aBorderPadding += aReflowState->mComputedPadding;
@@ -2952,8 +2920,7 @@ nsTableFrame::RecoverState(nsIPresContext&     aPresContext,
     if (!rgFrame) continue; // skip foreign frame types
    
     // If this is a footer row group, remember it
-    const nsStyleDisplay* display;
-    rgFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
+    const nsStyleDisplay* display = rgFrame->GetStyleDisplay();
 
     // We only allow a single footer frame
     if ((NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == display->mDisplay) &&
@@ -3096,8 +3063,7 @@ void nsTableFrame::PlaceChild(nsIPresContext*      aPresContext,
     aReflowState.availSize.height -= aDesiredSize.height;
   }
 
-  const nsStyleDisplay *childDisplay;
-  aKidFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
+  const nsStyleDisplay* childDisplay = aKidFrame->GetStyleDisplay();
 
   // We only allow a single footer frame, and the footer frame must occur before
   // any body section row groups
@@ -3138,8 +3104,7 @@ nsTableFrame::OrderRowGroups(nsVoidArray&           aChildren,
   nsAutoVoidArray nonRowGroups;
   // put the tbodies first, and the non row groups last
   while (kidFrame) {
-    const nsStyleDisplay* kidDisplay;
-    kidFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)kidDisplay));
+    const nsStyleDisplay* kidDisplay = kidFrame->GetStyleDisplay();
     if (IsRowGroup(kidDisplay->mDisplay)) {
       switch(kidDisplay->mDisplay) {
       case NS_STYLE_DISPLAY_TABLE_HEADER_GROUP:
@@ -3263,12 +3228,9 @@ nsTableFrame::ReflowChildren(nsIPresContext*     aPresContext,
       nsIFrame* repeatedFooter = nsnull;
       nscoord repeatedFooterHeight = 0;
       if (isPaginated && (NS_UNCONSTRAINEDSIZE != kidAvailSize.height)) {
-        const nsStyleDisplay* display;
-        kidFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)display);
-        if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == display->mDisplay) { // the child is a tbody
+        if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == kidFrame->GetStyleDisplay()->mDisplay) { // the child is a tbody
           nsIFrame* lastChild = (nsIFrame*)rowGroups.ElementAt(numRowGroups - 1);
-          lastChild->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)display);
-          if (NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == display->mDisplay) { // the last child is a tfoot
+          if (NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == lastChild->GetStyleDisplay()->mDisplay) { // the last child is a tfoot
             if (((nsTableRowGroupFrame*)lastChild)->IsRepeatable()) {
               nsRect rect;
               lastChild->GetRect(rect);
@@ -3778,8 +3740,8 @@ nsTableFrame::IsPctHeight(nsStyleContext* aStyleContext)
 {
   PRBool result = PR_FALSE;
   if (aStyleContext) {
-    nsStylePosition* position = (nsStylePosition*)aStyleContext->GetStyleData(eStyleStruct_Position);
-    result = (eStyleUnit_Percent == position->mHeight.GetUnit());
+    result = (eStyleUnit_Percent ==
+              aStyleContext->GetStylePosition()->mHeight.GetUnit());
   }
   return result;
 }
@@ -3859,8 +3821,7 @@ nsTableFrame::CellChangedWidth(const nsTableCellFrame& aCellFrame,
     if ((colFrame->GetWidth(PCT) <= 0) && (colFrame->GetWidth(FIX) <= 0) &&
         (colFrame->GetWidth(MIN_PRO) <= 0)) {
       // see if the doesn't have a pct width
-      const nsStylePosition* cellPosition;
-      aCellFrame.GetStyleData(eStyleStruct_Position, (const nsStyleStruct *&)cellPosition);
+      const nsStylePosition* cellPosition = aCellFrame.GetStylePosition();
       // see if there isn't a pct width on the cell
       PRBool havePct = PR_FALSE;
       if (eStyleUnit_Percent == cellPosition->mWidth.GetUnit()) {
@@ -4049,8 +4010,7 @@ nsTableFrame::GetBorderPadding(const nsHTMLReflowState& aReflowState,
                                float                    aPixelToTwips,
                                const nsTableCellFrame*  aCellFrame)
 {
-  const nsStylePadding* paddingData;
-  aCellFrame->GetStyleData(eStyleStruct_Padding,(const nsStyleStruct *&)paddingData);
+  const nsStylePadding* paddingData = aCellFrame->GetStylePadding();
   nsMargin padding(0,0,0,0);
   if (!paddingData->GetPadding(padding)) {
     const nsHTMLReflowState* parentRS = aReflowState.parentReflowState;
@@ -4078,8 +4038,7 @@ nsTableFrame::GetBorderPadding(const nsSize&           aBasis,
                                float                   aPixelToTwips,
                                const nsTableCellFrame* aCellFrame)
 {
-  const nsStylePadding* paddingData;
-  aCellFrame->GetStyleData(eStyleStruct_Padding,(const nsStyleStruct *&)paddingData);
+  const nsStylePadding* paddingData = aCellFrame->GetStylePadding();
   nsMargin padding(0,0,0,0);
   if (!paddingData->GetPadding(padding)) {
     GetPaddingFor(aBasis, *paddingData, padding);
@@ -4095,8 +4054,7 @@ nscoord nsTableFrame::GetCellSpacingX()
 {
   nscoord cellSpacing = 0;
   if (!IsBorderCollapse()) {
-    const nsStyleTableBorder* tableStyle;
-    GetStyleData(eStyleStruct_TableBorder, (const nsStyleStruct *&)tableStyle);
+    const nsStyleTableBorder* tableStyle = GetStyleTableBorder();
     if (tableStyle->mBorderSpacingX.GetUnit() == eStyleUnit_Coord) {
       cellSpacing = tableStyle->mBorderSpacingX.GetCoordValue();
     }
@@ -4109,8 +4067,7 @@ nscoord nsTableFrame::GetCellSpacingY()
 {
   nscoord cellSpacing = 0;
   if (!IsBorderCollapse()) {
-    const nsStyleTableBorder* tableStyle;
-    GetStyleData(eStyleStruct_TableBorder, (const nsStyleStruct *&)tableStyle);
+    const nsStyleTableBorder* tableStyle = GetStyleTableBorder();
     if (tableStyle->mBorderSpacingY.GetUnit() == eStyleUnit_Coord) {
       cellSpacing = tableStyle->mBorderSpacingY.GetCoordValue();
     }
@@ -4172,7 +4129,7 @@ nsTableFrame::IsAutoHeight()
 {
   PRBool isAuto = PR_TRUE;  // the default
 
-  nsStylePosition* position = (nsStylePosition*)mStyleContext->GetStyleData(eStyleStruct_Position);
+  const nsStylePosition* position = GetStylePosition();
 
   switch (position->mHeight.GetUnit()) {
     case eStyleUnit_Auto:         // specified auto width
@@ -4251,13 +4208,9 @@ nsTableFrame::GetMinCaptionWidth()
 PRBool 
 nsTableFrame::IsAutoLayout()
 {
-  const nsStyleTable* tableStyle;
-  GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
-  if (NS_STYLE_TABLE_LAYOUT_FIXED == tableStyle->mLayoutStrategy) {
-    const nsStylePosition* position;
-    GetStyleData(eStyleStruct_Position, (const nsStyleStruct *&)position);
+  if (NS_STYLE_TABLE_LAYOUT_FIXED == GetStyleTable()->mLayoutStrategy) {
     // a fixed-layout table must have a width
-    if (eStyleUnit_Auto != position->mWidth.GetUnit()) {
+    if (eStyleUnit_Auto != GetStylePosition()->mWidth.GetUnit()) {
       return PR_FALSE;
     }
   }
@@ -4492,9 +4445,8 @@ void nsTableIterator::Init(nsIFrame*        aFirstChild,
     nsTableFrame* table = nsnull;
     nsresult rv = nsTableFrame::GetTableFrame(mFirstChild, table);
     if (NS_SUCCEEDED(rv) && (table != nsnull)) {
-      const nsStyleVisibility* vis;
-      table->GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&)vis);
-      mLeftToRight = (NS_STYLE_DIRECTION_LTR == vis->mDirection);
+      mLeftToRight = (NS_STYLE_DIRECTION_LTR ==
+                      table->GetStyleVisibility()->mDirection);
     }
     else {
       NS_ASSERTION(PR_FALSE, "source of table iterator is not part of a table");
@@ -5137,8 +5089,7 @@ GetStyleInfo(const nsIFrame&  aFrame,
              nscoord*         aWidth = nsnull,
              float*           aTwipsToPixels = nsnull)
 {
-  const nsStyleBorder* styleData; 
-  aFrame.GetStyleData(eStyleStruct_Border, (const nsStyleStruct *&)styleData); if (!styleData) ABORT0();
+  const nsStyleBorder* styleData = aFrame.GetStyleBorder();
 
   aStyle = styleData->GetBorderStyle(aSide);
 
@@ -5176,10 +5127,7 @@ GetStyleInfo(const nsIFrame&  aFrame,
   PRBool transparent, foreground;
   styleData->GetBorderColor(aSide, aColor, transparent, foreground);
   if (foreground) {
-    nsStyleContext* styleContext = aFrame.GetStyleContext();
-    if(!styleContext) ABORT0();
-    const nsStyleColor* colorStyle = (const nsStyleColor*)styleContext->GetStyleData(eStyleStruct_Color);
-    aColor = colorStyle->mColor;
+    aColor = aFrame.GetStyleColor()->mColor;
   }
   if (aWidth && aTwipsToPixels) {
     *aWidth = 0;
@@ -6401,8 +6349,7 @@ BCMapBorderIterator::SetNewRowGroup()
     }
     if (rg && table->GetPrevInFlow() && !rg->GetPrevInFlow()) {
       // if rg doesn't have a prev in flow, then it may be a repeated header or footer
-      const nsStyleDisplay* display;
-      rg->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)display);
+      const nsStyleDisplay* display = rg->GetStyleDisplay();
       if (y == startY) {
         isRepeatedHeader = (NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == display->mDisplay);
       }

@@ -132,8 +132,7 @@ nsMathMLmrootFrame::Paint(nsIPresContext*      aPresContext,
 
     if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer && !mBarRect.IsEmpty()) {
       // paint the overline bar
-      const nsStyleColor *color = NS_STATIC_CAST(const nsStyleColor*,
-        mStyleContext->GetStyleData(eStyleStruct_Color));
+      const nsStyleColor* color = GetStyleColor();
       aRenderingContext.SetColor(color->mColor);
       aRenderingContext.FillRect(mBarRect);
     }
@@ -222,9 +221,7 @@ nsMathMLmrootFrame::Reflow(nsIPresContext*          aPresContext,
   ////////////
   // Prepare the radical symbol and the overline bar
 
-  const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
-    mStyleContext->GetStyleData(eStyleStruct_Font));
-  renderingContext.SetFont(font->mFont, nsnull);
+  renderingContext.SetFont(GetStyleFont()->mFont, nsnull);
   nsCOMPtr<nsIFontMetrics> fm;
   renderingContext.GetFontMetrics(*getter_AddRefs(fm));
 

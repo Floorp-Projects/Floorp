@@ -374,8 +374,7 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext*          aPresContext,
   // except for when style is used to change its size.
   nsresult rv = nsAreaFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
   if (NS_SUCCEEDED(rv) && mTextFrame != nsnull) {
-    const nsStyleVisibility* vis;
-    GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&)vis);
+    const nsStyleVisibility* vis = GetStyleVisibility();
 
     nsIFrame * child;
     FirstChild(aPresContext, nsnull, &child);
@@ -558,10 +557,7 @@ nsFileControlFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 {
 #ifndef DEBUG_NEWFRAME
   if ( nsFormControlHelper::GetDisabled(mContent) && mRect.Contains(aPoint) ) {
-    const nsStyleVisibility* vis = 
-      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
-      
-    if (vis->IsVisible()) {
+    if (GetStyleVisibility()->IsVisible()) {
       *aFrame = this;
       return NS_OK;
     }

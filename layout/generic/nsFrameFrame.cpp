@@ -402,9 +402,7 @@ nsHTMLFrameOuterFrame::Init(nsIPresContext*  aPresContext,
     GetView(aPresContext, &view);
   }
 
-  const nsStyleDisplay* disp;
-  aParent->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)disp));
-  if (disp->mDisplay == NS_STYLE_DISPLAY_DECK) {
+  if (aParent->GetStyleDisplay()->mDisplay == NS_STYLE_DISPLAY_DECK) {
     nsCOMPtr<nsIWidget> widget;
     view->GetWidget(*getter_AddRefs(widget));
 
@@ -805,6 +803,9 @@ PRInt32 nsHTMLFrameInnerFrame::GetScrolling(nsIContent* aContent)
 
   if (NS_SUCCEEDED(rv) && content) {
     nsHTMLValue value;
+    // XXXldb This code belongs in the attribute mapping code for the
+    // content node -- otherwise it doesn't follow the CSS cascading
+    // rules correctly.
     if (NS_CONTENT_ATTR_HAS_VALUE == content->GetHTMLAttribute(nsHTMLAtoms::scrolling, value)) {
       if (eHTMLUnit_Enumerated == value.GetUnit()) {
         switch (value.GetIntValue()) {
@@ -829,8 +830,7 @@ PRInt32 nsHTMLFrameInnerFrame::GetScrolling(nsIContent* aContent)
     }
 
     // Check style for overflow
-    const nsStyleDisplay* display;
-    GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
+    const nsStyleDisplay* display = GetStyleDisplay();
     if (display->mOverflow)
       returnValue = display->mOverflow;
   }
@@ -946,9 +946,7 @@ nsHTMLFrameInnerFrame::Paint(nsIPresContext*      aPresContext,
     GetDocShell(getter_AddRefs(docShell));
 
     if (!docShell) {
-      const nsStyleBackground* color =
-        (const nsStyleBackground*)mStyleContext->
-        GetStyleData(eStyleStruct_Background);
+      const nsStyleBackground* color = GetStyleBackground();
 
       aRenderingContext.SetColor(color->mBackgroundColor);
       aRenderingContext.FillRect(mRect);
@@ -1032,9 +1030,9 @@ nsHTMLFrameInnerFrame::DidReflow(nsIPresContext*           aPresContext,
     nsIView* view = nsnull;
     GetView(aPresContext, &view);
     if (view) {
-      const nsStyleVisibility* vis;
-      GetStyleData(eStyleStruct_Visibility, ((const nsStyleStruct *&)vis));
-      nsViewVisibility newVis = vis->IsVisible() ? nsViewVisibility_kShow : nsViewVisibility_kHide;
+      nsViewVisibility newVis = GetStyleVisibility()->IsVisible()
+                                  ? nsViewVisibility_kShow
+                                  : nsViewVisibility_kHide;
       nsViewVisibility oldVis;
       // only change if different.
       view->GetVisibility(oldVis);
@@ -1162,9 +1160,7 @@ nsHTMLFrameInnerFrame::CreateViewAndWidget(nsIPresContext* aPresContext,
 
   // XXX the following should be unnecessary, given the above Sync call
   // if the visibility is hidden, reflect that in the view
-  const nsStyleVisibility* vis;
-  GetStyleData(eStyleStruct_Visibility, ((const nsStyleStruct *&)vis));
-  if (!vis->IsVisible()) {
+  if (!GetStyleVisibility()->IsVisible()) {
     viewMan->SetViewVisibility(view, nsViewVisibility_kHide);
   }
   view->GetWidget(*aWidget);

@@ -78,8 +78,7 @@ PRBool CanAllocate(PRInt32          aType,
 PRBool
 HasPctValue(nsIFrame* aFrame) 
 {
-  const nsStylePosition* position;
-  aFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct *&)position);
+  const nsStylePosition* position = aFrame->GetStylePosition();
   if (eStyleUnit_Percent == position->mWidth.GetUnit()) {
     float percent = position->mWidth.GetPercentValue();
     if (percent > 0.0f) {
@@ -611,8 +610,7 @@ BasicTableLayoutStrategy::ComputeNonPctColspanWidths(const nsHTMLReflowState& aR
         }
         else { // FIX width
           // see if the cell has a style width specified
-          const nsStylePosition* cellPosition;
-          cellFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct *&)cellPosition);
+          const nsStylePosition* cellPosition = cellFrame->GetStylePosition();
           if (eStyleUnit_Coord == cellPosition->mWidth.GetUnit()) {
             // need to add borde and padding into fixed width
             nsMargin borderPadding = nsTableFrame::GetBorderPadding(nsSize(aReflowState.mComputedWidth, 0),
@@ -1021,8 +1019,7 @@ BasicTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
         desWidth = cellDesWidth;
       }
       // see if the cell has a style width specified
-      const nsStylePosition* cellPosition;
-      cellFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct *&)cellPosition);
+      const nsStylePosition* cellPosition = cellFrame->GetStylePosition();
       if (eStyleUnit_Coord == cellPosition->mWidth.GetUnit()) {
         nscoord coordValue = cellPosition->mWidth.GetCoordValue();
         if (coordValue > 0) { // ignore if width == 0
@@ -1255,8 +1252,7 @@ BasicTableLayoutStrategy::CalcPctAdjTableWidth(nsIPresContext&          aPresCon
       nsTableCellFrame* cellFrame = mTableFrame->GetCellInfoAt(rowX, colX, &originates, &colSpan);
       if (!originates) continue; // skip  cells that don't originate in the col
       // see if the cell has a style percent width specified
-      const nsStylePosition* cellPosition;
-      cellFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct *&)cellPosition);
+      const nsStylePosition* cellPosition = cellFrame->GetStylePosition();
       if (eStyleUnit_Percent == cellPosition->mWidth.GetUnit()) {
         float percent = cellPosition->mWidth.GetPercentValue();
         if (percent > 0.0f) {
@@ -1397,8 +1393,7 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(nsIPresContext&          aPresCo
         continue;
       }
       // see if the cell has a style percent width specified
-      const nsStylePosition* cellPosition;
-      cellFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct *&)cellPosition);
+      const nsStylePosition* cellPosition = cellFrame->GetStylePosition();
       if (eStyleUnit_Percent == cellPosition->mWidth.GetUnit()) {
         float percent = cellPosition->mWidth.GetPercentValue();
         if (percent > maxColPct) {
@@ -1505,8 +1500,7 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(nsIPresContext&          aPresCo
       colSpan = PR_MIN(colSpan,numEffCols-colX);
       nscoord cellPctWidth = WIDTH_NOT_SET;
       // see if the cell has a style percentage width specified
-      const nsStylePosition* cellPosition;
-      cellFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct *&)cellPosition);
+      const nsStylePosition* cellPosition = cellFrame->GetStylePosition();
       float cellPct = 0.0f;
       if (eStyleUnit_Percent == cellPosition->mWidth.GetUnit()) {
         cellPct = cellPosition->mWidth.GetPercentValue();

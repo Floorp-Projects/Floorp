@@ -1591,7 +1591,7 @@ HasAttributeContent(nsStyleContext* aStyleContext,
 {
   PRBool  result = PR_FALSE;
   if (aStyleContext) {
-    const nsStyleContent* content = (const nsStyleContent*)aStyleContext->GetStyleData(eStyleStruct_Content);
+    const nsStyleContent* content = aStyleContext->GetStyleContent();
     PRUint32 count = content->ContentCount();
     while ((0 < count) && (! result)) {
       nsStyleContentType  contentType;
@@ -1769,11 +1769,11 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
         }
         // if old context had image and new context does not have the same image, 
         // stop the image load for the frame
-        const nsStyleBackground* oldColor = (const nsStyleBackground*)oldContext->GetStyleData(eStyleStruct_Background); 
-        const nsStyleBackground* newColor = (const nsStyleBackground*)newContext->GetStyleData(eStyleStruct_Background);
+        const nsStyleBackground* oldColor = oldContext->GetStyleBackground();
+        const nsStyleBackground* newColor = newContext->GetStyleBackground();
 
-        if(oldColor->mBackgroundImage.Length() > 0 &&
-          oldColor->mBackgroundImage != newColor->mBackgroundImage ){
+        if (oldColor->mBackgroundImage.Length() > 0 &&
+            oldColor->mBackgroundImage != newColor->mBackgroundImage) {
           // stop the image loading for the frame, the image has changed
           aPresContext->StopImagesFor(aFrame);
         }
@@ -1859,8 +1859,7 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
                                                                           newContext);
         }
         if (undisplayedContext) {
-          const nsStyleDisplay* display;
-          ::GetStyleData(undisplayedContext.get(), &display);
+          const nsStyleDisplay* display = undisplayedContext->GetStyleDisplay();
           if (display->mDisplay != NS_STYLE_DISPLAY_NONE) {
             aChangeList.AppendChange(nsnull,
                                      undisplayed->mContent

@@ -273,10 +273,8 @@ void
 nsStyleContext::GetBorderPaddingFor(nsStyleBorderPadding& aBorderPadding)
 {
   nsMargin border, padding;
-  const nsStyleBorder* borderData = (const nsStyleBorder*)GetStyleData(eStyleStruct_Border);
-  const nsStylePadding* paddingData = (const nsStylePadding*)GetStyleData(eStyleStruct_Padding);
-  if (borderData->GetBorder(border)) {
-    if (paddingData->GetPadding(padding)) {
+  if (GetStyleBorder()->GetBorder(border)) {
+    if (GetStylePadding()->GetPadding(padding)) {
       border += padding;
       aBorderPadding.SetBorderPadding(border);
     }
@@ -292,7 +290,7 @@ nsStyleContext::GetUniqueStyleData(nsIPresContext* aPresContext, const nsStyleSt
   nsStyleStruct* result = nsnull;
   switch (aSID) {
   case eStyleStruct_Display: {
-    const nsStyleDisplay* dis = (const nsStyleDisplay*)GetStyleData(aSID);
+    const nsStyleDisplay* dis = GetStyleDisplay();
     nsStyleDisplay* newDis = new (aPresContext) nsStyleDisplay(*dis);
     SetStyle(aSID, newDis);
     result = newDis;
@@ -300,7 +298,7 @@ nsStyleContext::GetUniqueStyleData(nsIPresContext* aPresContext, const nsStyleSt
     break;
   }
   case eStyleStruct_Background: {
-    const nsStyleBackground* bg = (const nsStyleBackground*)GetStyleData(aSID);
+    const nsStyleBackground* bg = GetStyleBackground();
     nsStyleBackground* newBG = new (aPresContext) nsStyleBackground(*bg);
     SetStyle(aSID, newBG);
     result = newBG;
@@ -308,7 +306,7 @@ nsStyleContext::GetUniqueStyleData(nsIPresContext* aPresContext, const nsStyleSt
     break;
   }
   case eStyleStruct_Text: {
-    const nsStyleText* text = (const nsStyleText*)GetStyleData(aSID);
+    const nsStyleText* text = GetStyleText();
     nsStyleText* newText = new (aPresContext) nsStyleText(*text);
     SetStyle(aSID, newText);
     result = newText;
@@ -316,7 +314,7 @@ nsStyleContext::GetUniqueStyleData(nsIPresContext* aPresContext, const nsStyleSt
     break;
   }
   case eStyleStruct_TextReset: {
-    const nsStyleTextReset* reset = (const nsStyleTextReset*)GetStyleData(aSID);
+    const nsStyleTextReset* reset = GetStyleTextReset();
     nsStyleTextReset* newReset = new (aPresContext) nsStyleTextReset(*reset);
     SetStyle(aSID, newReset);
     result = newReset;
@@ -374,19 +372,19 @@ nsStyleContext::ApplyStyleFixups(nsIPresContext* aPresContext)
     mBits |= NS_STYLE_HAS_TEXT_DECORATIONS;
   else {
     // We might have defined a decoration.
-    const nsStyleTextReset* text = (const nsStyleTextReset*)GetStyleData(eStyleStruct_TextReset);
+    const nsStyleTextReset* text = GetStyleTextReset();
     if (text->mTextDecoration != NS_STYLE_TEXT_DECORATION_NONE &&
         text->mTextDecoration != NS_STYLE_TEXT_DECORATION_OVERRIDE_ALL)
       mBits |= NS_STYLE_HAS_TEXT_DECORATIONS;
   }
 
   // Correct tables.
-  const nsStyleDisplay* disp = (const nsStyleDisplay*)GetStyleData(eStyleStruct_Display);
+  const nsStyleDisplay* disp = GetStyleDisplay();
   if (disp->mDisplay == NS_STYLE_DISPLAY_TABLE) {
     // -moz-center and -moz-right are used for HTML's alignment
     // This is covering the <div align="right"><table>...</table></div> case.
     // In this case, we don't want to inherit the text alignment into the table.
-    const nsStyleText* text = (const nsStyleText*)GetStyleData(eStyleStruct_Text);
+    const nsStyleText* text = GetStyleText();
     
     if (text->mTextAlign == NS_STYLE_TEXT_ALIGN_MOZ_CENTER ||
         text->mTextAlign == NS_STYLE_TEXT_ALIGN_MOZ_RIGHT)
@@ -602,7 +600,7 @@ void nsStyleContext::DumpRegressionData(nsIPresContext* aPresContext, FILE* out,
 
   // FONT
   IndentBy(out,aIndent);
-  const nsStyleFont* font = (const nsStyleFont*)GetStyleData(eStyleStruct_Font);
+  const nsStyleFont* font = GetStyleFont();
   fprintf(out, "<font %s %d %d %d />\n", 
           NS_ConvertUCS2toUTF8(font->mFont.name).get(),
           font->mFont.size,
@@ -611,13 +609,13 @@ void nsStyleContext::DumpRegressionData(nsIPresContext* aPresContext, FILE* out,
 
   // COLOR
   IndentBy(out,aIndent);
-  const nsStyleColor* color = (const nsStyleColor*)GetStyleData(eStyleStruct_Color);
+  const nsStyleColor* color = GetStyleColor();
   fprintf(out, "<color data=\"%ld\"/>\n", 
     (long)color->mColor);
 
   // BACKGROUND
   IndentBy(out,aIndent);
-  const nsStyleBackground* bg = (const nsStyleBackground*)GetStyleData(eStyleStruct_Background);
+  const nsStyleBackground* bg = GetStyleBackground();
   fprintf(out, "<background data=\"%d %d %d %ld %ld %ld %s\"/>\n",
     (int)bg->mBackgroundAttachment,
     (int)bg->mBackgroundFlags,
@@ -631,21 +629,21 @@ void nsStyleContext::DumpRegressionData(nsIPresContext* aPresContext, FILE* out,
   IndentBy(out,aIndent);
   fprintf(out, "<spacing data=\"");
 
-  const nsStyleMargin* margin = (const nsStyleMargin*)GetStyleData(eStyleStruct_Margin);
+  const nsStyleMargin* margin = GetStyleMargin();
   margin->mMargin.ToString(str);
   fprintf(out, "%s ", NS_ConvertUCS2toUTF8(str).get());
   
-  const nsStylePadding* padding = (const nsStylePadding*)GetStyleData(eStyleStruct_Padding);
+  const nsStylePadding* padding = GetStylePadding();
   padding->mPadding.ToString(str);
   fprintf(out, "%s ", NS_ConvertUCS2toUTF8(str).get());
   
-  const nsStyleBorder* border = (const nsStyleBorder*)GetStyleData(eStyleStruct_Border);
+  const nsStyleBorder* border = GetStyleBorder();
   border->mBorder.ToString(str);
   fprintf(out, "%s ", NS_ConvertUCS2toUTF8(str).get());
   border->mBorderRadius.ToString(str);
   fprintf(out, "%s ", NS_ConvertUCS2toUTF8(str).get());
   
-  const nsStyleOutline* outline = (const nsStyleOutline*)GetStyleData(eStyleStruct_Outline);
+  const nsStyleOutline* outline = GetStyleOutline();
   outline->mOutlineRadius.ToString(str);
   fprintf(out, "%s ", NS_ConvertUCS2toUTF8(str).get());
   outline->mOutlineWidth.ToString(str);
@@ -655,7 +653,7 @@ void nsStyleContext::DumpRegressionData(nsIPresContext* aPresContext, FILE* out,
 
   // LIST
   IndentBy(out,aIndent);
-  const nsStyleList* list = (const nsStyleList*)GetStyleData(eStyleStruct_List);
+  const nsStyleList* list = GetStyleList();
   fprintf(out, "<list data=\"%d %d %s\" />\n",
     (int)list->mListStyleType,
     (int)list->mListStyleType,
@@ -663,7 +661,7 @@ void nsStyleContext::DumpRegressionData(nsIPresContext* aPresContext, FILE* out,
 
   // POSITION
   IndentBy(out,aIndent);
-  const nsStylePosition* pos = (const nsStylePosition*)GetStyleData(eStyleStruct_Position);
+  const nsStylePosition* pos = GetStylePosition();
   fprintf(out, "<position data=\"");
   pos->mOffset.ToString(str);
   fprintf(out, "%s ", NS_ConvertUCS2toUTF8(str).get());
@@ -686,7 +684,7 @@ void nsStyleContext::DumpRegressionData(nsIPresContext* aPresContext, FILE* out,
 
   // TEXT
   IndentBy(out,aIndent);
-  const nsStyleText* text = (const nsStyleText*)GetStyleData(eStyleStruct_Text);
+  const nsStyleText* text = GetStyleText();
   fprintf(out, "<text data=\"%d %d %d ",
     (int)text->mTextAlign,
     (int)text->mTextTransform,
@@ -703,7 +701,7 @@ void nsStyleContext::DumpRegressionData(nsIPresContext* aPresContext, FILE* out,
   
   // TEXT RESET
   IndentBy(out,aIndent);
-  const nsStyleTextReset* textReset = (const nsStyleTextReset*)GetStyleData(eStyleStruct_TextReset);
+  const nsStyleTextReset* textReset = GetStyleTextReset();
   fprintf(out, "<textreset data=\"%d ",
     (int)textReset->mTextDecoration);
   textReset->mVerticalAlign.ToString(str);
@@ -712,7 +710,7 @@ void nsStyleContext::DumpRegressionData(nsIPresContext* aPresContext, FILE* out,
 
   // DISPLAY
   IndentBy(out,aIndent);
-  const nsStyleDisplay* disp = (const nsStyleDisplay*)GetStyleData(eStyleStruct_Display);
+  const nsStyleDisplay* disp = GetStyleDisplay();
   fprintf(out, "<display data=\"%d %d %d %d %d %d %d %d %ld %ld %ld %ld %s\" />\n",
     (int)disp->mPosition,
     (int)disp->mDisplay,
@@ -731,7 +729,7 @@ void nsStyleContext::DumpRegressionData(nsIPresContext* aPresContext, FILE* out,
   
   // VISIBILITY
   IndentBy(out,aIndent);
-  const nsStyleVisibility* vis = (const nsStyleVisibility*)GetStyleData(eStyleStruct_Visibility);
+  const nsStyleVisibility* vis = GetStyleVisibility();
   fprintf(out, "<visibility data=\"%d %d %f\" />\n",
     (int)vis->mDirection,
     (int)vis->mVisible,
@@ -740,7 +738,7 @@ void nsStyleContext::DumpRegressionData(nsIPresContext* aPresContext, FILE* out,
 
   // TABLE
   IndentBy(out,aIndent);
-  const nsStyleTable* table = (const nsStyleTable*)GetStyleData(eStyleStruct_Table);
+  const nsStyleTable* table = GetStyleTable();
   fprintf(out, "<table data=\"%d %d %d ",
     (int)table->mLayoutStrategy,
     (int)table->mFrame,
@@ -752,7 +750,7 @@ void nsStyleContext::DumpRegressionData(nsIPresContext* aPresContext, FILE* out,
 
   // TABLEBORDER
   IndentBy(out,aIndent);
-  const nsStyleTableBorder* tableBorder = (const nsStyleTableBorder*)GetStyleData(eStyleStruct_TableBorder);
+  const nsStyleTableBorder* tableBorder = GetStyleTableBorder();
   fprintf(out, "<tableborder data=\"%d ",
     (int)tableBorder->mBorderCollapse);
   tableBorder->mBorderSpacingX.ToString(str);
@@ -766,7 +764,7 @@ void nsStyleContext::DumpRegressionData(nsIPresContext* aPresContext, FILE* out,
 
   // CONTENT
   IndentBy(out,aIndent);
-  const nsStyleContent* content = (const nsStyleContent*)GetStyleData(eStyleStruct_Content);
+  const nsStyleContent* content = GetStyleContent();
   fprintf(out, "<content data=\"%ld %ld %ld ",
     (long)content->ContentCount(),
     (long)content->CounterIncrementCount(),
@@ -778,7 +776,7 @@ void nsStyleContext::DumpRegressionData(nsIPresContext* aPresContext, FILE* out,
 
   // QUOTES
   IndentBy(out,aIndent);
-  const nsStyleQuotes* quotes = (const nsStyleQuotes*)GetStyleData(eStyleStruct_Quotes);
+  const nsStyleQuotes* quotes = GetStyleQuotes();
   fprintf(out, "<quotes data=\"%ld ",
     (long)quotes->QuotesCount());
   // XXX: iterate over the quotes...
@@ -786,7 +784,7 @@ void nsStyleContext::DumpRegressionData(nsIPresContext* aPresContext, FILE* out,
 
   // UI
   IndentBy(out,aIndent);
-  const nsStyleUserInterface* ui = (const nsStyleUserInterface*)GetStyleData(eStyleStruct_UserInterface);
+  const nsStyleUserInterface* ui = GetStyleUserInterface();
   fprintf(out, "<ui data=\"%d %d %d %d %s\" />\n",
     (int)ui->mUserInput,
     (int)ui->mUserModify,
@@ -796,7 +794,7 @@ void nsStyleContext::DumpRegressionData(nsIPresContext* aPresContext, FILE* out,
 
   // UIReset
   IndentBy(out,aIndent);
-  const nsStyleUIReset* uiReset = (const nsStyleUIReset*)GetStyleData(eStyleStruct_UIReset);
+  const nsStyleUIReset* uiReset = GetStyleUIReset();
   fprintf(out, "<uireset data=\"%d %d %d\" />\n",
     (int)uiReset->mUserSelect,
     (int)uiReset->mKeyEquivalent,
@@ -804,7 +802,7 @@ void nsStyleContext::DumpRegressionData(nsIPresContext* aPresContext, FILE* out,
 
   // XUL
   IndentBy(out,aIndent);
-  const nsStyleXUL* xul = (const nsStyleXUL*)GetStyleData(eStyleStruct_XUL);
+  const nsStyleXUL* xul = GetStyleXUL();
   fprintf(out, "<xul data=\"%d %d %d %d %d %d",
     (int)xul->mBoxAlign,
     (int)xul->mBoxDirection,
@@ -817,7 +815,7 @@ void nsStyleContext::DumpRegressionData(nsIPresContext* aPresContext, FILE* out,
   // SVG
 #ifdef MOZ_SVG
   IndentBy(out,aIndent);
-  const nsStyleSVG* svg = (const nsStyleSVG*)GetStyleData(eStyleStruct_SVG);
+  const nsStyleSVG* svg = GetStyleSVG();
   fprintf(out, "<svg data=\"%d %f %f %d %f",
           (int)svg->mStroke.mType,
           svg->mStrokeWidth,

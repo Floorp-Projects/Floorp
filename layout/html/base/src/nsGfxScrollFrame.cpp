@@ -274,12 +274,7 @@ nsGfxScrollFrame::ScrollTo(nsIPresContext* aContext, nscoord aX, nscoord aY, PRU
 NS_IMETHODIMP
 nsGfxScrollFrame::GetScrollPreference(nsIPresContext* aPresContext, nsScrollPref* aScrollPreference) const
 {
-  const nsStyleDisplay* styleDisplay = nsnull;
-
-  GetStyleData(eStyleStruct_Display,
-              (const nsStyleStruct*&)styleDisplay);
-
-  switch (styleDisplay->mOverflow)
+  switch (GetStyleDisplay()->mOverflow)
   {
     case NS_STYLE_OVERFLOW_SCROLL:
       *aScrollPreference = AlwaysScroll;
@@ -702,10 +697,7 @@ nsGfxScrollFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
   nsIFrame* frame = nsnull;
   GetFrame(&frame);
 
-  const nsStyleDisplay* styleDisplay = nsnull;
-
-  frame->GetStyleData(eStyleStruct_Display,
-                      (const nsStyleStruct*&)styleDisplay);
+  const nsStyleDisplay* styleDisplay = frame->GetStyleDisplay();
 
   nsSize vSize(0,0);
   if (mInner->mVScrollbarBox &&
@@ -796,10 +788,7 @@ nsGfxScrollFrame::GetMinSize(nsBoxLayoutState& aState, nsSize& aSize)
   nsIFrame* frame = nsnull;
   GetFrame(&frame);
 
-  const nsStyleDisplay* styleDisplay = nsnull;
-
-  frame->GetStyleData(eStyleStruct_Display,
-                      (const nsStyleStruct*&)styleDisplay);
+  const nsStyleDisplay* styleDisplay = frame->GetStyleDisplay();
 
   nsresult rv = mInner->mScrollAreaBox->GetMinSize(aState, aSize);
      
@@ -1114,8 +1103,7 @@ nsGfxScrollFrameInner::AddHorizontalScrollbar(nsBoxLayoutState& aState, nsRect& 
 
 #ifdef IBMBIDI
   PRInt32 dir = GetIntegerAttribute(mHScrollbarBox, nsXULAtoms::dir, -1);
-  const nsStyleVisibility* vis;
-  mOuter->GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&)vis);
+  const nsStyleVisibility* vis = mOuter->GetStyleVisibility();
 
   // when creating the scrollbar for the first time, or whenever 
   // display direction is changed, scroll the view horizontally
@@ -1308,8 +1296,7 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
   PRBool scrollBarBottom = PR_TRUE;
 
 #ifdef IBMBIDI
-  const nsStyleVisibility* vis;
-  mOuter->GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&)vis);
+  const nsStyleVisibility* vis = mOuter->GetStyleVisibility();
 
   //
   // Direction Style from this->GetStyleData()
@@ -1333,11 +1320,7 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
   nsIFrame* frame = nsnull;
   mOuter->GetFrame(&frame);
 
-  const nsStyleDisplay* styleDisplay = nsnull;
-
-  frame->GetStyleData(eStyleStruct_Display,
-                      (const nsStyleStruct*&)styleDisplay);
-
+  const nsStyleDisplay* styleDisplay = frame->GetStyleDisplay();
  
   // get the content rect
   nsRect clientRect(0,0,0,0);
@@ -1455,8 +1438,7 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
            
       }
 #ifdef IBMBIDI
-      const nsStyleVisibility* ourVis;
-      frame->GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&)ourVis);
+      const nsStyleVisibility* ourVis = frame->GetStyleVisibility();
 
       if (NS_STYLE_DIRECTION_RTL == ourVis->mDirection) {
         nsCOMPtr<nsITextControlFrame> textControl(
@@ -1499,8 +1481,7 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
   float p2t;
   presContext->GetScaledPixelsToTwips(&p2t);
   mOnePixel = NSIntPixelsToTwips(1, p2t);
-  const nsStyleFont* font;
-  mOuter->GetStyleData(eStyleStruct_Font, (const nsStyleStruct*&) font);
+  const nsStyleFont* font = mOuter->GetStyleFont();
   const nsFont& f = font->mFont;
   nsCOMPtr<nsIFontMetrics> fm;
   presContext->GetMetricsFor(f, getter_AddRefs(fm));

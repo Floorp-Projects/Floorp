@@ -236,29 +236,23 @@ nsBoxObject::GetOffsetRect(nsRect& aRect)
         }
   
         // For the origin, add in the border for the frame
-        const nsStyleBorder* border;
         nsStyleCoord coord;
-        frame->GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)border);
-        if (border) {
-          if (eStyleUnit_Coord == border->mBorder.GetLeftUnit()) {
-            origin.x += border->mBorder.GetLeft(coord).GetCoordValue();
-          }
-          if (eStyleUnit_Coord == border->mBorder.GetTopUnit()) {
-            origin.y += border->mBorder.GetTop(coord).GetCoordValue();
-          }
+        const nsStyleBorder* border = frame->GetStyleBorder();
+        if (eStyleUnit_Coord == border->mBorder.GetLeftUnit()) {
+          origin.x += border->mBorder.GetLeft(coord).GetCoordValue();
+        }
+        if (eStyleUnit_Coord == border->mBorder.GetTopUnit()) {
+          origin.y += border->mBorder.GetTop(coord).GetCoordValue();
         }
 
         // And subtract out the border for the parent
         if (parent) {
-          const nsStyleBorder* parentBorder;
-          parent->GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)parentBorder);
-          if (parentBorder) {
-            if (eStyleUnit_Coord == parentBorder->mBorder.GetLeftUnit()) {
-              origin.x -= parentBorder->mBorder.GetLeft(coord).GetCoordValue();
-            }
-            if (eStyleUnit_Coord == parentBorder->mBorder.GetTopUnit()) {
-              origin.y -= parentBorder->mBorder.GetTop(coord).GetCoordValue();
-            }
+          const nsStyleBorder* parentBorder = parent->GetStyleBorder();
+          if (eStyleUnit_Coord == parentBorder->mBorder.GetLeftUnit()) {
+            origin.x -= parentBorder->mBorder.GetLeft(coord).GetCoordValue();
+          }
+          if (eStyleUnit_Coord == parentBorder->mBorder.GetTopUnit()) {
+            origin.y -= parentBorder->mBorder.GetTop(coord).GetCoordValue();
           }
         }
 

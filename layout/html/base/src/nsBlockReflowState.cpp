@@ -150,9 +150,7 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
   mPrevChild = nsnull;
   mCurrentLine = aFrame->end_lines();
 
-  const nsStyleText* styleText;
-  mBlock->GetStyleData(eStyleStruct_Text,
-                       (const nsStyleStruct*&) styleText);
+  const nsStyleText* styleText = mBlock->GetStyleText();
   switch (styleText->mWhiteSpace) {
   case NS_STYLE_WHITESPACE_PRE:
   case NS_STYLE_WHITESPACE_NOWRAP:
@@ -251,9 +249,7 @@ nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
     if (mBand.GetFloaterCount()) {
       // Use the float-edge property to determine how the child block
       // will interact with the floater.
-      const nsStyleBorder* borderStyle;
-      aFrame->GetStyleData(eStyleStruct_Border,
-                           (const nsStyleStruct*&) borderStyle);
+      const nsStyleBorder* borderStyle = aFrame->GetStyleBorder();
       switch (borderStyle->mFloatEdge) {
         default:
         case NS_STYLE_FLOAT_EDGE_CONTENT:  // content and only content does runaround of floaters
@@ -270,9 +266,7 @@ nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
             // The child block's border should be placed adjacent to,
             // but not overlap the floater(s).
             nsMargin m(0, 0, 0, 0);
-            const nsStyleMargin* styleMargin;
-            aFrame->GetStyleData(eStyleStruct_Margin,
-                                 (const nsStyleStruct*&) styleMargin);
+            const nsStyleMargin* styleMargin = aFrame->GetStyleMargin();
             styleMargin->GetMargin(m); // XXX percentage margins
             if (NS_STYLE_FLOAT_EDGE_PADDING == borderStyle->mFloatEdge) {
               // Add in border too
@@ -447,8 +441,7 @@ nsBlockReflowState::ReconstructMarginAbove(nsLineList::iterator aLine)
   mPrevBottomMargin.Zero();
   nsBlockFrame *block = mBlock;
 
-  const nsStyleText* styleText;
-  ::GetStyleData(block, &styleText);
+  const nsStyleText* styleText = block->GetStyleText();
   PRBool isPre = NS_STYLE_WHITESPACE_PRE == styleText->mWhiteSpace ||
                  NS_STYLE_WHITESPACE_MOZ_PRE_WRAP == styleText->mWhiteSpace;
 
@@ -855,9 +848,7 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
   nsIFrame*           floater = placeholder->GetOutOfFlowFrame();
 
   // Grab the floater's display information
-  const nsStyleDisplay* floaterDisplay;
-  floater->GetStyleData(eStyleStruct_Display,
-                        (const nsStyleStruct*&)floaterDisplay);
+  const nsStyleDisplay* floaterDisplay = floater->GetStyleDisplay();
 
   // This will hold the floater's geometry when we've found a place
   // for it to live.

@@ -2579,9 +2579,7 @@ nsPrintEngine::ReflowDocList(nsPrintObject* aPO, PRBool aSetPixelScale, PRBool a
     nsIFrame * frame;
     aPO->mParent->mPresShell->GetPrimaryFrameFor(aPO->mContent, &frame);
     if (frame) {
-      const nsStyleVisibility* vis;
-      ::GetStyleData(frame, &vis);
-      if (!vis->IsVisible()) {
+      if (!frame->GetStyleVisibility()->IsVisible()) {
         aPO->mDontPrint = PR_TRUE;
       }
     }

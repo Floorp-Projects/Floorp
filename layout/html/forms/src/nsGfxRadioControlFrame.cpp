@@ -155,8 +155,7 @@ nsGfxRadioControlFrame::HandleEvent(nsIPresContext* aPresContext,
                                           nsEventStatus* aEventStatus)
 {
   // Check for user-input:none style
-  const nsStyleUserInterface* uiStyle;
-  GetStyleData(eStyleStruct_UserInterface,  (const nsStyleStruct *&)uiStyle);
+  const nsStyleUserInterface* uiStyle = GetStyleUserInterface();
   if (uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE || uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED)
     return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 
@@ -170,7 +169,7 @@ nsGfxRadioControlFrame::PaintRadioButton(nsIPresContext* aPresContext,
                                       nsIRenderingContext& aRenderingContext,
                                       const nsRect& aDirtyRect)
 {
-  const nsStyleDisplay* disp = (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
+  const nsStyleDisplay* disp = GetStyleDisplay();
   if (disp->mAppearance) {
     nsCOMPtr<nsITheme> theme;
     aPresContext->GetTheme(getter_AddRefs(theme));
@@ -183,18 +182,11 @@ nsGfxRadioControlFrame::PaintRadioButton(nsIPresContext* aPresContext,
   if (checked) {
    // Paint the button for the radio button using CSS background rendering code
    if (nsnull != mRadioButtonFaceStyle) {
-     const nsStyleBackground* myColor = (const nsStyleBackground*)
-          mRadioButtonFaceStyle->GetStyleData(eStyleStruct_Background);
-
-     const nsStyleColor* color = (const nsStyleColor*)
-          mRadioButtonFaceStyle->GetStyleData(eStyleStruct_Color);
-
-     const nsStyleBorder* myBorder = (const nsStyleBorder*)
-          mRadioButtonFaceStyle->GetStyleData(eStyleStruct_Border);
-     const nsStylePadding* myPadding = (const nsStylePadding*)
-          mRadioButtonFaceStyle->GetStyleData(eStyleStruct_Padding);
-     const nsStylePosition* myPosition = (const nsStylePosition*)
-          mRadioButtonFaceStyle->GetStyleData(eStyleStruct_Position);
+     const nsStyleBackground* myColor = mRadioButtonFaceStyle->GetStyleBackground();
+     const nsStyleColor* color = mRadioButtonFaceStyle->GetStyleColor();
+     const nsStyleBorder* myBorder = mRadioButtonFaceStyle->GetStyleBorder();
+     const nsStylePadding* myPadding = mRadioButtonFaceStyle->GetStylePadding();
+     const nsStylePosition* myPosition = mRadioButtonFaceStyle->GetStylePosition();
 
      nscoord width = myPosition->mWidth.GetCoordValue();
      nscoord height = myPosition->mHeight.GetCoordValue();

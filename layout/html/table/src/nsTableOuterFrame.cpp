@@ -345,8 +345,7 @@ nsTableOuterFrame::Paint(nsIPresContext*      aPresContext,
   // the remaining code was copied from nsContainerFrame::PaintChildren since
   // it only paints the primary child list
 
-  const nsStyleDisplay* disp = (const nsStyleDisplay*)
-    mStyleContext->GetStyleData(eStyleStruct_Display);
+  const nsStyleDisplay* disp = GetStyleDisplay();
 
   // Child elements have the opportunity to override the visibility property
   // of their parent and display even if the parent is hidden
@@ -815,10 +814,8 @@ nsTableOuterFrame::GetMaxWidth(PRUint8         aCaptionSide,
 PRUint8
 nsTableOuterFrame::GetCaptionSide()
 {
-  const nsStyleTableBorder* tableStyle;
   if (mCaptionFrame) {
-    mCaptionFrame->GetStyleData(eStyleStruct_TableBorder, ((const nsStyleStruct *&)tableStyle));
-    return tableStyle->mCaptionSide;
+    return mCaptionFrame->GetStyleTableBorder()->mCaptionSide;
   }
   else {
     return NO_SIDE; // no caption
@@ -828,8 +825,7 @@ nsTableOuterFrame::GetCaptionSide()
 PRUint8
 nsTableOuterFrame::GetCaptionVerticalAlign()
 {
-  const nsStyleTextReset* textStyle;
-  mCaptionFrame->GetStyleData(eStyleStruct_TextReset, ((const nsStyleStruct *&) textStyle));
+  const nsStyleTextReset* textStyle = mCaptionFrame->GetStyleTextReset();
   PRUint8 verticalAlignFlags = NS_STYLE_VERTICAL_ALIGN_TOP;
   if (textStyle->mVerticalAlign.GetUnit() == eStyleUnit_Enumerated) {
     verticalAlignFlags = textStyle->mVerticalAlign.GetIntValue();
@@ -936,18 +932,17 @@ nsTableOuterFrame::BalanceLeftRightCaption(nsIPresContext* aPresContext,
   *     by the weight capPercent/innerPercent
   */
     
-  const nsStylePosition* position;
 
   float capPercent   = -1.0;
   float innerPercent = -1.0;
-  mCaptionFrame->GetStyleData(eStyleStruct_Position, ((const nsStyleStruct *&)position));
+  const nsStylePosition* position = mCaptionFrame->GetStylePosition();
   if (eStyleUnit_Percent == position->mWidth.GetUnit()) {
     capPercent = position->mWidth.GetPercentValue();
     if (capPercent >= 1.0)
       return;
   }
 
-  mInnerTableFrame->GetStyleData(eStyleStruct_Position, ((const nsStyleStruct *&)position));
+  position = mInnerTableFrame->GetStylePosition();
   if (eStyleUnit_Percent == position->mWidth.GetUnit()) {
     innerPercent = position->mWidth.GetPercentValue();
     if (innerPercent >= 1.0)
@@ -1232,9 +1227,7 @@ nsTableOuterFrame::IsAutoWidth(nsIFrame& aTableOrCaption,
     *aIsPctWidth = PR_FALSE;
   }
 
-  nsStyleContext* styleContext = aTableOrCaption.GetStyleContext();
-
-  nsStylePosition* position = (nsStylePosition*)styleContext->GetStyleData(eStyleStruct_Position);
+  const nsStylePosition* position = aTableOrCaption.GetStylePosition();
 
   switch (position->mWidth.GetUnit()) {
     case eStyleUnit_Auto:         // specified auto width
@@ -1475,8 +1468,7 @@ nsTableOuterFrame::IR_TargetIsChild(nsIPresContext*          aPresContext,
     rv = IR_TargetIsCaptionFrame(aPresContext, aDesiredSize, aReflowState, aStatus);
   }
   else {
-    const nsStyleDisplay* nextDisplay;
-    aNextFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)nextDisplay);
+    const nsStyleDisplay* nextDisplay = aNextFrame->GetStyleDisplay();
     if (NS_STYLE_DISPLAY_TABLE_HEADER_GROUP==nextDisplay->mDisplay ||
         NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP==nextDisplay->mDisplay ||
         NS_STYLE_DISPLAY_TABLE_ROW_GROUP   ==nextDisplay->mDisplay ||
@@ -1910,8 +1902,7 @@ static PRBool
 IsPctHeight(nsIFrame* aFrame)
 {
   if (aFrame) {
-    nsStyleContext* styleContext = aFrame->GetStyleContext();
-    nsStylePosition* position = (nsStylePosition*)styleContext->GetStyleData(eStyleStruct_Position);
+    const nsStylePosition* position = aFrame->GetStylePosition();
     if (eStyleUnit_Percent == position->mHeight.GetUnit()) {
       float percent = position->mHeight.GetPercentValue();
       if (percent > 0.0f) {

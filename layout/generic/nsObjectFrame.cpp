@@ -859,8 +859,7 @@ nsObjectFrame::CreateWidget(nsIPresContext* aPresContext,
     // Sometimes, a frame doesn't have a background color or is transparent. In this
     // case, walk up the frame tree until we do find a frame with a background color
     for (nsIFrame* frame = this; frame; frame->GetParent(&frame)) {
-      const nsStyleBackground* background;
-      ::GetStyleData(frame, &background);
+      const nsStyleBackground* background = frame->GetStyleBackground();
       if (!background->IsTransparent()) {  // make sure we got an actual color
         nsCOMPtr<nsIWidget> win;
         view->GetWidget(*getter_AddRefs(win));
@@ -1428,8 +1427,7 @@ PRBool
 nsObjectFrame::IsHidden(PRBool aCheckVisibilityStyle) const
 {
   if (aCheckVisibilityStyle) {
-    const nsStyleVisibility* vis = (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
-    if (vis && !vis->IsVisibleOrCollapsed())
+    if (!GetStyleVisibility()->IsVisibleOrCollapsed())
       return PR_TRUE;    
   }
 
@@ -1596,8 +1594,7 @@ nsObjectFrame::Paint(nsIPresContext*      aPresContext,
                      nsFramePaintLayer    aWhichLayer,
                      PRUint32             aFlags)
 {
-  const nsStyleVisibility* vis = (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
-  if ((vis != nsnull) && !vis->IsVisibleOrCollapsed())
+  if (!GetStyleVisibility()->IsVisibleOrCollapsed())
     return NS_OK;
   
   nsIFrame * child = mFrames.FirstChild();

@@ -178,7 +178,7 @@ nsGfxCheckboxControlFrame::PaintCheckBox(nsIPresContext* aPresContext,
                                          const nsRect& aDirtyRect,
                                          nsFramePaintLayer aWhichLayer)
 {
-  const nsStyleDisplay* disp = (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
+  const nsStyleDisplay* disp = GetStyleDisplay();
   if (disp->mAppearance) {
     nsCOMPtr<nsITheme> theme;
     aPresContext->GetTheme(getter_AddRefs(theme));
@@ -197,8 +197,7 @@ nsGfxCheckboxControlFrame::PaintCheckBox(nsIPresContext* aPresContext,
   nsRect checkRect(0,0, mRect.width, mRect.height);
   checkRect.Deflate(borderPadding);
 
-  const nsStyleColor* color = (const nsStyleColor*)
-                                  mStyleContext->GetStyleData(eStyleStruct_Color);
+  const nsStyleColor* color = GetStyleColor();
   aRenderingContext.SetColor(color->mColor);
 
   // Get current checked state through content model.
@@ -230,16 +229,12 @@ nsGfxCheckboxControlFrame::Paint(nsIPresContext*   aPresContext,
     PRBool doDefaultPainting = PR_TRUE;
     // Paint the checkmark
     if (!mCheckButtonFaceStyle && GetCheckboxState()) {
-      const nsStyleBackground* myColor = (const nsStyleBackground*)
-          mCheckButtonFaceStyle->GetStyleData(eStyleStruct_Background);
+      const nsStyleBackground* myColor = mCheckButtonFaceStyle->GetStyleBackground();
 
       if (myColor->mBackgroundImage.Length() > 0) {
-        const nsStyleBorder* myBorder = (const nsStyleBorder*)
-            mCheckButtonFaceStyle->GetStyleData(eStyleStruct_Border);
-        const nsStylePadding* myPadding = (const nsStylePadding*)
-            mCheckButtonFaceStyle->GetStyleData(eStyleStruct_Padding);
-        const nsStylePosition* myPosition = (const nsStylePosition*)
-            mCheckButtonFaceStyle->GetStyleData(eStyleStruct_Position);
+        const nsStyleBorder* myBorder = mCheckButtonFaceStyle->GetStyleBorder();
+        const nsStylePadding* myPadding = mCheckButtonFaceStyle->GetStylePadding();
+        const nsStylePosition* myPosition = mCheckButtonFaceStyle->GetStylePosition();
 
         nscoord width = myPosition->mWidth.GetCoordValue();
         nscoord height = myPosition->mHeight.GetCoordValue();

@@ -107,20 +107,16 @@ nsTableColFrame::SetIsAnonymous(PRBool aIsAnonymous)
 // XXX what about other style besides width
 nsStyleCoord nsTableColFrame::GetStyleWidth() const
 {
-  nsStylePosition* position = nsnull;
-  position = (nsStylePosition*)mStyleContext->GetStyleData(eStyleStruct_Position);
+  const nsStylePosition* position = GetStylePosition();
   nsStyleCoord styleWidth = position->mWidth;
-  // the following should not be necessary since html.css defines table-col and
-  // :table-col to inherit. However, :table-col is not inheriting properly
+  // the following is necessary because inheritance happens on computed
+  // values, which the style system does not know.
   if (eStyleUnit_Auto == styleWidth.GetUnit() ||
       eStyleUnit_Inherit == styleWidth.GetUnit()) {
     nsIFrame* parent;
     GetParent(&parent);
-    nsStyleContext* styleContext = parent->GetStyleContext();
-    if (styleContext) {
-      position = (nsStylePosition*)styleContext->GetStyleData(eStyleStruct_Position);
-      styleWidth = position->mWidth;
-    }
+    position = parent->GetStylePosition();
+    styleWidth = position->mWidth;
   }
 
   nsStyleCoord returnWidth;
@@ -181,10 +177,8 @@ NS_METHOD nsTableColFrame::Reflow(nsIPresContext*          aPresContext,
 }
 
 PRInt32 nsTableColFrame::GetSpan()
-{  
-  const nsStyleTable* tableStyle;
-  GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
-  return tableStyle->mSpan;
+{
+  return GetStyleTable()->mSpan;
 }
 
 nscoord nsTableColFrame::GetWidth(PRUint32 aWidthType)

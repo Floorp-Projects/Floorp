@@ -839,8 +839,7 @@ nsComboboxControlFrame::ReflowItems(nsIPresContext* aPresContext,
                                     nsHTMLReflowMetrics& aDesiredSize) 
 {
   //printf("*****************\n");
-  const nsStyleFont* dspFont;
-  mDisplayFrame->GetStyleData(eStyleStruct_Font,  (const nsStyleStruct *&)dspFont);
+  const nsStyleFont* dspFont = mDisplayFrame->GetStyleFont();
   nsCOMPtr<nsIDeviceContext> deviceContext;
   aPresContext->GetDeviceContext(getter_AddRefs(deviceContext));
   NS_ASSERTION(deviceContext, "Couldn't get the device context"); 
@@ -1021,8 +1020,7 @@ nsComboboxControlFrame::ReflowCombobox(nsIPresContext *         aPresContext,
   kidReflowState.reason          = reason;
 
 #ifdef IBMBIDI
-  const nsStyleVisibility* vis;
-  GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&)vis);
+  const nsStyleVisibility* vis = GetStyleVisibility();
 
   // M14 didn't calculate the RightEdge in the reflow
   // Unless we set the width to some thing other than unrestricted
@@ -1780,9 +1778,7 @@ nsComboboxControlFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 
   if ( mRect.Contains(aPoint) &&
        (aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND) ) {
-    const nsStyleVisibility* vis = 
-      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
-    if (vis->IsVisible()) {
+    if (GetStyleVisibility()->IsVisible()) {
       *aFrame = this;
       return NS_OK;
     }
@@ -2117,8 +2113,7 @@ nsComboboxControlFrame::HandleEvent(nsIPresContext* aPresContext,
 
   // If we have style that affects how we are selected, feed event down to
   // nsFrame::HandleEvent so that selection takes place when appropriate.
-  const nsStyleUserInterface* uiStyle;
-  GetStyleData(eStyleStruct_UserInterface,  (const nsStyleStruct *&)uiStyle);
+  const nsStyleUserInterface* uiStyle = GetStyleUserInterface();
   if (uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE || uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED)
     return nsAreaFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
     
@@ -2545,10 +2540,8 @@ nsComboboxControlFrame::Paint(nsIPresContext*     aPresContext,
       /////////////////////
       // draw focus
       // XXX This is only temporary
-      const nsStyleVisibility* vis = 
-      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
       // Only paint the focus if we're visible
-      if (vis->IsVisible()) {
+      if (GetStyleVisibility()->IsVisible()) {
         nsCOMPtr<nsIEventStateManager> stateManager;
         nsresult rv = mPresContext->GetEventStateManager(getter_AddRefs(stateManager));
         if (NS_SUCCEEDED(rv)) {
@@ -2556,9 +2549,7 @@ nsComboboxControlFrame::Paint(nsIPresContext*     aPresContext,
             aRenderingContext.SetLineStyle(nsLineStyle_kDotted);
             aRenderingContext.SetColor(0);
           } else {
-            const nsStyleBackground* myColor =
-              (const nsStyleBackground*)mStyleContext->GetStyleData(eStyleStruct_Background);
-            aRenderingContext.SetColor(myColor->mBackgroundColor);
+            aRenderingContext.SetColor(GetStyleBackground()->mBackgroundColor);
             aRenderingContext.SetLineStyle(nsLineStyle_kSolid);
           }
           //aRenderingContext.DrawRect(clipRect);

@@ -129,9 +129,7 @@ nsHTMLButtonControlFrame::Init(nsIPresContext*  aPresContext,
   nsresult  rv = nsHTMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
   mRenderer.SetFrame(this,aPresContext);
    // cache our display type
-  const nsStyleDisplay* styleDisplay;
-  GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) styleDisplay);
-  mInline = (NS_STYLE_DISPLAY_BLOCK != styleDisplay->mDisplay);
+  mInline = (NS_STYLE_DISPLAY_BLOCK != GetStyleDisplay()->mDisplay);
 
   PRUint32 flags = NS_BLOCK_SPACE_MGR;
   if (mInline) {
@@ -309,10 +307,7 @@ nsHTMLButtonControlFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 {
   if (aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND &&
       mRect.Contains(aPoint)) {
-    const nsStyleVisibility* vis = 
-      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
-      
-    if (vis->IsVisible()) {
+    if (GetStyleVisibility()->IsVisible()) {
       *aFrame = this;
       return NS_OK;
     }
@@ -380,8 +375,7 @@ nsHTMLButtonControlFrame::Paint(nsIPresContext*      aPresContext,
   // but the real problem is the FirstChild (the AreaFrame)
   // isn't being constrained properly
   // Bug #17474
-  const nsStyleBorder* borderStyle;
-  GetStyleData(eStyleStruct_Border,  (const nsStyleStruct *&)borderStyle);
+  const nsStyleBorder* borderStyle = GetStyleBorder();
   nsMargin border;
   border.SizeTo(0, 0, 0, 0);
   borderStyle->CalcBorderFor(this, border);
@@ -465,9 +459,8 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext* aPresContext,
       viewMan->InsertChild(parView, view, 0);
       SetView(view);
 
-      const nsStyleColor* color = (const nsStyleColor*) mStyleContext->GetStyleData(eStyleStruct_Color);
       // set the opacity
-      viewMan->SetViewOpacity(view, color->mOpacity);
+      viewMan->SetViewOpacity(view, GetStyleColor()->mOpacity);
 
     }
     mDidInit = PR_TRUE;

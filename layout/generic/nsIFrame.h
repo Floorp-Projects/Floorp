@@ -579,29 +579,39 @@ public:
   NS_IMETHOD DidSetStyleContext(nsIPresContext* aPresContext) = 0;
 
   /**
-   * Get the style data associated with this frame.  This fills in a
+   * Get the style data associated with this frame.  This returns a
    * const style struct pointer that should never be modified.  See
    * |nsIStyleContext::GetStyleData| for more information.
    *
-   * The use of the typesafe global helper function |GetStyleData|,
-   * below, is preferred to direct use of this function.
+   * The use of the typesafe functions below is preferred to direct use
+   * of this function.
    */
-  NS_IMETHOD GetStyleDataExternal(nsStyleStructID aSID,
-                                  const nsStyleStruct*& aStyleStruct) const = 0;
+  virtual const nsStyleStruct* GetStyleDataExternal(nsStyleStructID aSID) const = 0;
 
+  const nsStyleStruct* GetStyleData(nsStyleStructID aSID) const {
 #ifdef _IMPL_NS_LAYOUT
-  nsresult GetStyleData(nsStyleStructID       aSID,
-                        const nsStyleStruct*& aStyleStruct) const {
     NS_ASSERTION(mStyleContext, "No style context found!");
-    aStyleStruct = mStyleContext->GetStyleData(aSID);
-    return NS_OK;
-  }
+    return mStyleContext->GetStyleData(aSID);
 #else
-  nsresult GetStyleData(nsStyleStructID       aSID,
-                        const nsStyleStruct*& aStyleStruct) const {
-    return GetStyleDataExternal(aSID, aStyleStruct);
-  }
+    return GetStyleDataExternal(aSID);
 #endif
+  }
+
+  /**
+   * Define typesafe getter functions for each style struct by
+   * preprocessing the list of style structs.  These functions are the
+   * preferred way to get style data.  The macro creates functions like:
+   *   const nsStyleBorder* GetStyleBorder();
+   *   const nsStyleColor* GetStyleColor();
+   */
+
+  #define STYLE_STRUCT(name_, checkdata_cb_, ctor_args_)                      \
+    const nsStyle##name_ * GetStyle##name_() const {                          \
+      return NS_STATIC_CAST(const nsStyle##name_*,                            \
+                            GetStyleData(eStyleStruct_##name_));              \
+    }
+  #include "nsStyleStructList.h"
+  #undef STYLE_STRUCT
 
   // Utility function: more convenient than 2 calls to GetStyleData to get border and padding
   NS_IMETHOD  CalcBorderPadding(nsMargin& aBorderPadding) const = 0;
@@ -1255,15 +1265,5 @@ private:
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;
   NS_IMETHOD_(nsrefcnt) Release(void) = 0;
 };
-
-// typesafe way to access style data.  See comment in nsStyleStruct.h
-// and also overloaded function in nsStyleContext.h
-template <class T>
-inline void
-GetStyleData(nsIFrame* aFrame, const T** aStyleStruct)
-{
-    aFrame->GetStyleData(NS_GET_STYLESTRUCTID(T),
-                    *NS_REINTERPRET_CAST(const nsStyleStruct**, aStyleStruct));
-}
 
 #endif /* nsIFrame_h___ */

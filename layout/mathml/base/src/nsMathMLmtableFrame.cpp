@@ -151,11 +151,7 @@ GetValueAt(nsIPresContext* aPresContext,
 
 #ifdef NS_DEBUG
 #define DEBUG_VERIFY_THAT_FRAME_IS(_frame, _expected) \
-PR_BEGIN_MACRO \
-  const nsStyleDisplay* display; \
-  _frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)display); \
-  NS_ASSERTION(NS_STYLE_DISPLAY_##_expected == display->mDisplay, "internal error"); \
-PR_END_MACRO
+  NS_ASSERTION(NS_STYLE_DISPLAY_##_expected == _frame->GetStyleDisplay()->mDisplay, "internal error");
 #else
 #define DEBUG_VERIFY_THAT_FRAME_IS(_frame, _expected)
 #endif
@@ -557,9 +553,7 @@ nsMathMLmtableOuterFrame::Reflow(nsIPresContext*          aPresContext,
     case eAlign_axis:
     default: {
       // XXX should instead use style data from the row of reference here ?
-      const nsStyleFont* font;
-      GetStyleData(eStyleStruct_Font, (const nsStyleStruct *&)font);
-      aReflowState.rendContext->SetFont(font->mFont, nsnull);
+      aReflowState.rendContext->SetFont(GetStyleFont()->mFont, nsnull);
       nsCOMPtr<nsIFontMetrics> fm;
       aReflowState.rendContext->GetFontMetrics(*getter_AddRefs(fm));
       nscoord axisHeight;

@@ -368,15 +368,13 @@ nsImageBoxFrame::GetImageSource()
 
     // Only get the list-style-image if we aren't being drawn
     // by a native theme.
-    const nsStyleDisplay* disp =
-      (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
+    const nsStyleDisplay* disp = GetStyleDisplay();
     if (disp->mAppearance && nsBox::gTheme && 
         nsBox::gTheme->ThemeSupportsWidget(nsnull, this, disp->mAppearance))
       return;
 
     // get the list-style-image
-    const nsStyleList* myList =
-      (const nsStyleList*)mStyleContext->GetStyleData(eStyleStruct_List);
+    const nsStyleList* myList = GetStyleList();
   
     if (myList->mListStyleImage.Length() > 0) {
       mSrc = myList->mListStyleImage;
@@ -490,10 +488,8 @@ nsImageBoxFrame::Paint(nsIPresContext*      aPresContext,
                        nsFramePaintLayer    aWhichLayer,
                        PRUint32             aFlags)
 {	
-	const nsStyleVisibility* vis = 
-      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
-	if (!vis->IsVisible())
-		return NS_OK;
+  if (!GetStyleVisibility()->IsVisible())
+    return NS_OK;
 
   nsresult rv = nsLeafBoxFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 
@@ -572,16 +568,14 @@ NS_IMETHODIMP
 nsImageBoxFrame::DidSetStyleContext( nsIPresContext* aPresContext )
 {
   // Fetch our subrect.
-  const nsStyleList* myList =
-    (const nsStyleList*)mStyleContext->GetStyleData(eStyleStruct_List);
+  const nsStyleList* myList = GetStyleList();
   mSubRect = myList->mImageRegion;
 
   if (mUseSrcAttr || mSuppressStyleCheck)
     return NS_OK; // No more work required, since the image isn't specified by style.
 
   // If we're using a native theme implementation, we shouldn't draw anything.
-  const nsStyleDisplay* disp =
-    (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
+  const nsStyleDisplay* disp = GetStyleDisplay();
   if (disp->mAppearance && nsBox::gTheme && 
       nsBox::gTheme->ThemeSupportsWidget(nsnull, this, disp->mAppearance))
     return NS_OK;

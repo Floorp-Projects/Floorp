@@ -4126,11 +4126,7 @@ nsEditor::GetEndNodeAndOffset(nsISelection *aSelection,
 nsresult 
 nsEditor::IsPreformatted(nsIDOMNode *aNode, PRBool *aResult)
 {
-  nsresult result;
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
-  nsIFrame *frame;
-  const nsStyleText* styleText;
-  PRBool bPreformatted;
   
   if (!aResult || !content) return NS_ERROR_NULL_POINTER;
   
@@ -4138,13 +4134,12 @@ nsEditor::IsPreformatted(nsIDOMNode *aNode, PRBool *aResult)
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
   if (!ps) return NS_ERROR_NOT_INITIALIZED;
   
-  result = ps->GetPrimaryFrameFor(content, &frame);
+  nsIFrame *frame;
+  nsresult result = ps->GetPrimaryFrameFor(content, &frame);
   if (NS_FAILED(result)) return result;
 
   NS_ASSERTION(frame, "no frame, see bug #188946");
-  if (frame)
-    ::GetStyleData(frame, &styleText);
-  if (!frame || !styleText)
+  if (!frame)
   {
     // Consider nodes without a style context to be NOT preformatted:
     // For instance, this is true of JS tags inside the body (which show
@@ -4153,10 +4148,10 @@ nsEditor::IsPreformatted(nsIDOMNode *aNode, PRBool *aResult)
     return NS_OK;
   }
 
-  bPreformatted = (NS_STYLE_WHITESPACE_PRE == styleText->mWhiteSpace) ||
-    (NS_STYLE_WHITESPACE_MOZ_PRE_WRAP == styleText->mWhiteSpace);
+  const nsStyleText* styleText = frame->GetStyleText();
 
-  *aResult = bPreformatted;
+  *aResult = NS_STYLE_WHITESPACE_PRE == styleText->mWhiteSpace ||
+             NS_STYLE_WHITESPACE_MOZ_PRE_WRAP == styleText->mWhiteSpace;
   return NS_OK;
 }
 

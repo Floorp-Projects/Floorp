@@ -667,9 +667,7 @@ nsBox::GetBorder(nsMargin& aMargin)
 
   aMargin.SizeTo(0,0,0,0);
     
-  const nsStyleDisplay* disp;
-  frame->GetStyleData(eStyleStruct_Display,
-                      (const nsStyleStruct*&) disp);
+  const nsStyleDisplay* disp = frame->GetStyleDisplay();
   if (disp->mAppearance && gTheme) {
     // Go to the theme for the border.
     nsCOMPtr<nsIContent> content;
@@ -700,16 +698,9 @@ nsBox::GetBorder(nsMargin& aMargin)
     }
   }
 
-  const nsStyleBorder* border;
-  nsresult rv = frame->GetStyleData(eStyleStruct_Border,
-        (const nsStyleStruct*&) border);
+  frame->GetStyleBorder()->GetBorder(aMargin);
 
-  if (NS_FAILED(rv))
-    return rv;
-
-  border->GetBorder(aMargin);
-
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -718,17 +709,10 @@ nsBox::GetPadding(nsMargin& aMargin)
   nsIFrame* frame = nsnull;
   GetFrame(&frame);
 
-  const nsStylePadding* padding;
-  nsresult rv = frame->GetStyleData(eStyleStruct_Padding,
-        (const nsStyleStruct*&) padding);
-
- if (NS_FAILED(rv))
-    return rv;
-
   aMargin.SizeTo(0,0,0,0);
-  padding->GetPadding(aMargin);
+  frame->GetStylePadding()->GetPadding(aMargin);
 
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -737,17 +721,10 @@ nsBox::GetMargin(nsMargin& aMargin)
   nsIFrame* frame = nsnull;
   GetFrame(&frame);
 
-  const nsStyleMargin* margin;
-        nsresult rv = frame->GetStyleData(eStyleStruct_Margin,
-        (const nsStyleStruct*&) margin);
-  
-  if (NS_FAILED(rv))
-     return rv;
-
   aMargin.SizeTo(0,0,0,0);
-  margin->GetMargin(aMargin);
+  frame->GetStyleMargin()->GetMargin(aMargin);
 
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -1198,10 +1175,8 @@ nsBox::Redraw(nsBoxLayoutState& aState,
 
   // Checks to see if the damaged rect should be infalted 
   // to include the outline
-  const nsStyleOutline* outline;
-  frame->GetStyleData(eStyleStruct_Outline, (const nsStyleStruct*&)outline);
   nscoord width;
-  outline->GetOutlineWidth(width);
+  frame->GetStyleOutline()->GetOutlineWidth(width);
   if (width > 0) {
     damageRect.Inflate(width, width);
   }
@@ -1237,9 +1212,7 @@ nsIBox::AddCSSPrefSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
     aBox->GetFrame(&frame);
 
     // add in the css min, max, pref
-    const nsStylePosition* position;
-    frame->GetStyleData(eStyleStruct_Position,
-                  (const nsStyleStruct*&) position);
+    const nsStylePosition* position = frame->GetStylePosition();
 
     // see if the width or height was specifically set
     if (position->mWidth.GetUnit() == eStyleUnit_Coord)  {
@@ -1300,9 +1273,7 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
     aBox->GetFrame(&frame);
 
     // See if a native theme wants to supply a minimum size.
-    const nsStyleDisplay* display;
-    frame->GetStyleData(eStyleStruct_Display,
-                  (const nsStyleStruct*&) display);
+    const nsStyleDisplay* display = frame->GetStyleDisplay();
     if (display->mAppearance) {
       nsCOMPtr<nsITheme> theme;
       aState.GetPresContext()->GetTheme(getter_AddRefs(theme));
@@ -1327,9 +1298,7 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
     }
 
     // add in the css min, max, pref
-    const nsStylePosition* position;
-    frame->GetStyleData(eStyleStruct_Position,
-                  (const nsStyleStruct*&) position);
+    const nsStylePosition* position = frame->GetStylePosition();
 
     // same for min size. Unfortunately min size is always set to 0. So for now
     // we will assume 0 means not set.
@@ -1400,9 +1369,7 @@ nsIBox::AddCSSMaxSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
     aBox->GetFrame(&frame);
 
     // add in the css min, max, pref
-    const nsStylePosition* position;
-    frame->GetStyleData(eStyleStruct_Position,
-                  (const nsStyleStruct*&) position);
+    const nsStylePosition* position = frame->GetStylePosition();
 
     // and max
     if (position->mMaxWidth.GetUnit() == eStyleUnit_Coord) {
@@ -1479,8 +1446,7 @@ nsIBox::AddCSSFlex(nsBoxLayoutState& aState, nsIBox* aBox, nscoord& aFlex)
         }
         else {
           // No attribute value.  Check CSS.
-          const nsStyleXUL* boxInfo;
-          frame->GetStyleData(eStyleStruct_XUL, (const nsStyleStruct*&)boxInfo);
+          const nsStyleXUL* boxInfo = frame->GetStyleXUL();
           if (boxInfo->mBoxFlex > 0.0f) {
             // The flex was defined in CSS.
             aFlex = (nscoord)boxInfo->mBoxFlex;
@@ -1497,9 +1463,8 @@ nsIBox::AddCSSCollapsed(nsBoxLayoutState& aState, nsIBox* aBox, PRBool& aCollaps
 {
   nsIFrame* frame = nsnull;
   aBox->GetFrame(&frame);
-  const nsStyleVisibility* vis;
-  frame->GetStyleData(eStyleStruct_Visibility, ((const nsStyleStruct *&)vis));
-  aCollapsed = vis->mVisible == NS_STYLE_VISIBILITY_COLLAPSE;
+  aCollapsed = frame->GetStyleVisibility()->mVisible ==
+               NS_STYLE_VISIBILITY_COLLAPSE;
   return PR_TRUE;
 }
 
@@ -1525,8 +1490,7 @@ nsIBox::AddCSSOrdinal(nsBoxLayoutState& aState, nsIBox* aBox, PRUint32& aOrdinal
     }
     else {
       // No attribute value.  Check CSS.
-      const nsStyleXUL* boxInfo;
-      frame->GetStyleData(eStyleStruct_XUL, (const nsStyleStruct*&)boxInfo);
+      const nsStyleXUL* boxInfo = frame->GetStyleXUL();
       if (boxInfo->mBoxOrdinal > 1) {
         // The ordinal group was defined in CSS.
         aOrdinal = (nscoord)boxInfo->mBoxOrdinal;

@@ -110,14 +110,30 @@ public:
    * given a valid style struct ID, so the result does not need to be
    * null-checked.
    *
-   * The typesafe global helper function |GetStyleData| (below) is
-   * preferred to the use of this function (and is a simple typesafe
-   * wrapper for this function).
+   * The typesafe functions below are preferred to the use of this
+   * function.
    *
    * See also |nsIFrame::GetStyleData| and the other global
    * |GetStyleData| in nsIFrame.h.
    */
   const nsStyleStruct* GetStyleData(nsStyleStructID aSID);
+
+  /**
+   * Define typesafe getter functions for each style struct by
+   * preprocessing the list of style structs.  These functions are the
+   * preferred way to get style data.  The macro creates functions like:
+   *   const nsStyleBorder* GetStyleBorder();
+   *   const nsStyleColor* GetStyleColor();
+   */
+
+  #define STYLE_STRUCT(name_, checkdata_cb_, ctor_args_)                      \
+    const nsStyle##name_ * GetStyle##name_() {                                \
+      return NS_STATIC_CAST(const nsStyle##name_*,                            \
+                            GetStyleData(eStyleStruct_##name_));              \
+    }
+  #include "nsStyleStructList.h"
+  #undef STYLE_STRUCT
+
 
   const nsStyleStruct* PeekStyleData(nsStyleStructID aSID);
 
@@ -172,16 +188,4 @@ NS_NewStyleContext(nsStyleContext* aParentContext,
                    nsIAtom* aPseudoTag,
                    nsRuleNode* aRuleNode,
                    nsIPresContext* aPresContext);
-
-
-// typesafe way to access style data.  See nsStyleStruct.h and also
-// overloaded function in nsIFrame.h.
-template <class T>
-inline void
-GetStyleData(nsStyleContext* aStyleContext, const T** aStyleStruct)
-{
-    *aStyleStruct = NS_STATIC_CAST(const T*,
-                         aStyleContext->GetStyleData(NS_GET_STYLESTRUCTID(T)));
-}
-
 #endif

@@ -2545,9 +2545,7 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
     return PR_FALSE;
   }
 
-  const nsStyleVisibility* vis = nsnull;
-  ::GetStyleData(frame, &vis);
-  if (!vis || !vis->IsVisible()) {
+  if (!frame->GetStyleVisibility()->IsVisible()) {
     return PR_FALSE;
   }
 

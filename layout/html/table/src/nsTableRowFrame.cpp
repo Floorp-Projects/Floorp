@@ -532,8 +532,7 @@ nsTableRowFrame::CalcHeight(const nsHTMLReflowState& aReflowState)
                             ? 0 : aReflowState.mComputedHeight;
   ResetHeight(computedHeight);
 
-  const nsStylePosition* position;
-  GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position);
+  const nsStylePosition* position = GetStylePosition();
   if (eStyleUnit_Coord == position->mHeight.GetUnit()) {
     SetFixedHeight(position->mHeight.GetCoordValue());
   }
@@ -598,8 +597,7 @@ NS_METHOD nsTableRowFrame::Paint(nsIPresContext*      aPresContext,
 #endif
   // Standards mode background painting removed.  See bug 4510
 
-  const nsStyleDisplay* disp = (const nsStyleDisplay*)
-  mStyleContext->GetStyleData(eStyleStruct_Display);
+  const nsStyleDisplay* disp = GetStyleDisplay();
   if (disp && (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow)) {
     aRenderingContext.PushState();
     SetOverflowClipRect(aRenderingContext);
@@ -727,8 +725,7 @@ nsTableRowFrame::CalculateCellActualSize(nsIFrame* aCellFrame,
   nscoord specifiedHeight = 0;
   
   // Get the height specified in the style information
-  const nsStylePosition* position;
-  aCellFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position);
+  const nsStylePosition* position = aCellFrame->GetStylePosition();
 
   nsTableFrame* tableFrame = nsnull;
   nsTableFrame::GetTableFrame(this, tableFrame);
@@ -802,8 +799,7 @@ CalcAvailWidth(nsTableFrame&     aTableFrame,
   // if this is its initial reflow
   if ((frameState & NS_FRAME_FIRST_REFLOW) && (aTableFrame.GetEffectiveColSpan(aCellFrame) > 1)) {
     // see if the cell has a style width specified
-    const nsStylePosition* cellPosition;
-    aCellFrame.GetStyleData(eStyleStruct_Position, (const nsStyleStruct *&)cellPosition);
+    const nsStylePosition* cellPosition = aCellFrame.GetStylePosition();
     if (eStyleUnit_Coord == cellPosition->mWidth.GetUnit()) {
       // need to add padding into fixed width
       nsMargin borderPadding(0,0,0,0);
@@ -1083,9 +1079,7 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
 
           // if we are in a floated table, our position is not yet established, so we cannot reposition our views
           // the containing glock will do this for us after positioning the table
-          const nsStyleDisplay *display;
-          aTableFrame.GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
-          if (display && !display->IsFloating()) {
+          if (!aTableFrame.GetStyleDisplay()->IsFloating()) {
             // Because we may have moved the frame we need to make sure any views are
             // positioned properly. We have to do this, because any one of our parent
             // frames could have moved and we have no way of knowing...
@@ -1264,8 +1258,7 @@ nsTableRowFrame::IR_TargetIsChild(nsIPresContext*          aPresContext,
 
   GET_PIXELS_TO_TWIPS(aPresContext, p2t);
   PRBool isAutoLayout = aTableFrame.IsAutoLayout();
-  const nsStyleDisplay *childDisplay;
-  aNextFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
+  const nsStyleDisplay* childDisplay = aNextFrame->GetStyleDisplay();
   if (NS_STYLE_DISPLAY_TABLE_CELL == childDisplay->mDisplay) {
     nsTableCellFrame* cellFrame = (nsTableCellFrame*)aNextFrame;
     // Get the x coord of the cell

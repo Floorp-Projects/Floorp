@@ -165,8 +165,7 @@ nsLineLayout::nsLineLayout(nsIPresContext* aPresContext,
   MOZ_COUNT_CTOR(nsLineLayout);
 
   // Stash away some style data that we need
-  aOuterReflowState->frame->GetStyleData(eStyleStruct_Text,
-                                         (const nsStyleStruct*&) mStyleText);
+  mStyleText = aOuterReflowState->frame->GetStyleText();
   mTextAlign = mStyleText->mTextAlign;
   mLineNumber = 0;
   mColumn = 0;
@@ -546,9 +545,7 @@ nsLineLayout::BeginSpan(nsIFrame* aFrame,
     psd->mX = aLeftEdge;
     psd->mRightEdge = aRightEdge;
 
-    const nsStyleText* styleText;
-    aSpanReflowState->frame->GetStyleData(eStyleStruct_Text,
-                                          (const nsStyleStruct*&) styleText);
+    const nsStyleText* styleText = aSpanReflowState->frame->GetStyleText();
     switch (styleText->mWhiteSpace) {
     case NS_STYLE_WHITESPACE_PRE:
     case NS_STYLE_WHITESPACE_NOWRAP:
@@ -1087,10 +1084,8 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     if (nsLayoutAtoms::placeholderFrame == frameType.get()) {
       nsIFrame* outOfFlowFrame = ((nsPlaceholderFrame*)aFrame)->GetOutOfFlowFrame();
       if (outOfFlowFrame) {
-        const nsStyleDisplay*  display;
-
         // Make sure it's floated and not absolutely positioned
-        outOfFlowFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
+        const nsStyleDisplay* display = outOfFlowFrame->GetStyleDisplay();
         if (!display->IsAbsolutelyPositioned()) {
           if (eReflowReason_Incremental == reason) {
             InitFloater((nsPlaceholderFrame*)aFrame, aReflowStatus);
@@ -1705,40 +1700,22 @@ nsLineLayout::IsPercentageAwareReplacedElement(nsIPresContext *aPresContext,
     if (nsLayoutAtoms::brFrame != frameType.get() && 
         nsLayoutAtoms::textFrame != frameType.get())
     {
-      nsresult rv;
-      const nsStyleMargin* margin;
-      rv = aFrame->GetStyleData(eStyleStruct_Margin,(const nsStyleStruct*&) margin);
-      if (NS_FAILED(rv)) {
-        return PR_TRUE; // just to be on the safe side
-      }
+      const nsStyleMargin* margin = aFrame->GetStyleMargin();
       if (IsPercentageUnitSides(&margin->mMargin)) {
         return PR_TRUE;
       }
 
-      const nsStylePadding* padding;
-      rv = aFrame->GetStyleData(eStyleStruct_Padding,(const nsStyleStruct*&) padding);
-      if (NS_FAILED(rv)) {
-        return PR_TRUE; // just to be on the safe side
-      }
+      const nsStylePadding* padding = aFrame->GetStylePadding();
       if (IsPercentageUnitSides(&padding->mPadding)) {
         return PR_TRUE;
       }
 
-      const nsStyleBorder* border;
-      rv = aFrame->GetStyleData(eStyleStruct_Border,(const nsStyleStruct*&) border);
-      if (NS_FAILED(rv)) {
-        return PR_TRUE; // just to be on the safe side
-      }
+      const nsStyleBorder* border = aFrame->GetStyleBorder();
       if (IsPercentageUnitSides(&border->mBorder)) {
         return PR_TRUE;
       }
 
-      const nsStylePosition* pos;
-      rv = aFrame->GetStyleData(eStyleStruct_Position,(const nsStyleStruct*&) pos);
-      if (NS_FAILED(rv)) {
-        return PR_TRUE; // just to be on the safe side
-      }
-
+      const nsStylePosition* pos = aFrame->GetStylePosition();
       if (eStyleUnit_Percent == pos->mWidth.GetUnit()
         || eStyleUnit_Percent == pos->mMaxWidth.GetUnit()
         || eStyleUnit_Percent == pos->mMinWidth.GetUnit()
@@ -2289,8 +2266,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     }
 
     // Get vertical-align property
-    const nsStyleTextReset* textStyle;
-    frame->GetStyleData(eStyleStruct_TextReset, (const nsStyleStruct*&)textStyle);
+    const nsStyleTextReset* textStyle = frame->GetStyleTextReset();
     nsStyleUnit verticalAlignUnit = textStyle->mVerticalAlign.GetUnit();
 #ifdef DEBUG
     if (eStyleUnit_Inherit == verticalAlignUnit) {
@@ -2496,8 +2472,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
       // Only consider non empty text frames when line-height=normal
       PRBool canUpdate = !pfd->GetFlag(PFD_ISTEXTFRAME);
       if (!canUpdate && pfd->GetFlag(PFD_ISNONWHITESPACETEXTFRAME)) {
-        const nsStyleText* textStyle;
-        frame->GetStyleData(eStyleStruct_Text, (const nsStyleStruct*&)textStyle);
+        const nsStyleText* textStyle = frame->GetStyleText();
         canUpdate = textStyle->mLineHeight.GetUnit() == eStyleUnit_Normal ||
                     textStyle->mLineHeight.GetUnit() == eStyleUnit_Null;
       }
@@ -2602,9 +2577,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
         nscoord fontAscent, fontHeight;
         fm->GetMaxAscent(fontAscent);
         if (nsHTMLReflowState::UseComputedHeight()) {
-          const nsStyleFont* parentFont;
-          spanFrame->GetStyleData(eStyleStruct_Font, (const nsStyleStruct*&)parentFont);
-          fontHeight = parentFont->mFont.size;
+          fontHeight = spanFrame->GetStyleFont()->mFont.size;
         }
         else 
         {
@@ -3004,8 +2977,7 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds,
               }
             }
 
-            const nsStyleMargin* margin;
-            ::GetStyleData(hrFrame, &margin);
+            const nsStyleMargin* margin = hrFrame->GetStyleMargin();
             textAlign = NS_STYLE_TEXT_ALIGN_CENTER;
             nsStyleCoord zero(nscoord(0));
             nsStyleCoord temp;
@@ -3326,9 +3298,7 @@ nsLineLayout::FindNextText(nsIPresContext* aPresContext, nsIFrame* aFrame)
     if (! aFrame)
       break;
 
-    const nsStyleDisplay* display;
-    aFrame->GetStyleData(eStyleStruct_Display, NS_REINTERPRET_CAST(const nsStyleStruct*&, display));
-    if (NS_STYLE_DISPLAY_INLINE != display->mDisplay)
+    if (NS_STYLE_DISPLAY_INLINE != aFrame->GetStyleDisplay()->mDisplay)
       break;
   }
 
@@ -3401,8 +3371,7 @@ nsLineLayout::FindNextText(nsIPresContext* aPresContext, nsIFrame* aFrame)
 PRBool
 nsLineLayout::TreatFrameAsBlock(nsIFrame* aFrame)
 {
-  const nsStyleDisplay* display;
-  aFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) display);
+  const nsStyleDisplay* display = aFrame->GetStyleDisplay();
   if (NS_STYLE_POSITION_ABSOLUTE == display->mPosition) {
     return PR_FALSE;
   }

@@ -257,7 +257,7 @@ nsImageLoader::RedrawDirtyFrame(const nsRect* aDamageRect)
   // with the damaged rect.
   nsStyleContext* styleContext;
   mFrame->GetStyleContext(&styleContext);
-  const nsStyleBackground* bg = (const nsStyleBackground*)styleContext->GetStyleData(eStyleStruct_Background);
+  const nsStyleBackground* bg = styleContext->GetStyleBackground();
 
   if ((bg->mBackgroundFlags & NS_STYLE_BG_IMAGE_NONE) ||
       (bg->mBackgroundRepeat == NS_STYLE_BG_REPEAT_OFF)) {

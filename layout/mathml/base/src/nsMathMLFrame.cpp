@@ -176,8 +176,7 @@ nsMathMLFrame::GetPresentationDataFrom(nsIFrame*           aFrame,
       break;
     content->GetTag(*getter_AddRefs(tag));
     if (tag.get() == nsMathMLAtoms::math) {
-      const nsStyleDisplay* display;
-      frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
+      const nsStyleDisplay* display = frame->GetStyleDisplay();
       if (display->mDisplay == NS_STYLE_DISPLAY_BLOCK) {
         aPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
       }
@@ -420,14 +419,12 @@ nsMathMLFrame::CalcLength(nsIPresContext*   aPresContext,
     return NSFloatPixelsToTwips(aCSSValue.GetFloatValue(), p2t);
   }
   else if (eCSSUnit_EM == unit) {
-    const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
-      aStyleContext->GetStyleData(eStyleStruct_Font));
+    const nsStyleFont* font = aStyleContext->GetStyleFont();
     return NSToCoordRound(aCSSValue.GetFloatValue() * (float)font->mFont.size);
   }
   else if (eCSSUnit_XHeight == unit) {
     nscoord xHeight;
-    const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
-      aStyleContext->GetStyleData(eStyleStruct_Font));
+    const nsStyleFont* font = aStyleContext->GetStyleFont();
     nsCOMPtr<nsIFontMetrics> fm;
     aPresContext->GetMetricsFor(font->mFont, getter_AddRefs(fm));
     fm->GetXHeight(xHeight);

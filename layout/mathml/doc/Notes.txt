@@ -74,9 +74,7 @@ Since frames are not refCounted, don't use nsCOMPtr with them
 
 // Text size infos
   nsCOMPtr<nsIFontMetrics> fm;
-  const nsStyleFont* aFont =
-    (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
-  aPresContext->GetMetricsFor(aFont->mFont, getter_AddRefs(fm));
+  aPresContext->GetMetricsFor(GetStyleFont()->mFont, getter_AddRefs(fm));
  
   nsAutoString text;
  

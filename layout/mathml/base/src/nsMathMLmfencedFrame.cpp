@@ -273,10 +273,8 @@ nsMathMLmfencedFrame::doReflow(nsIPresContext*          aPresContext,
     NS_STATIC_CAST(nsMathMLContainerFrame*, aForFrame);
 
   PRInt32 i;
-  const nsStyleFont* font;
-  aForFrame->GetStyleData(eStyleStruct_Font, (const nsStyleStruct *&)font);
   nsCOMPtr<nsIFontMetrics> fm;
-  aReflowState.rendContext->SetFont(font->mFont, nsnull);
+  aReflowState.rendContext->SetFont(aForFrame->GetStyleFont()->mFont, nsnull);
   aReflowState.rendContext->GetFontMetrics(*getter_AddRefs(fm));
   nscoord axisHeight, em;
   GetAxisHeight(*aReflowState.rendContext, fm, axisHeight);

@@ -145,9 +145,7 @@ PRInt32 nsLegendFrame::GetAlign()
 {
   PRInt32 intValue = NS_STYLE_TEXT_ALIGN_LEFT;
 #ifdef IBMBIDI
-  const nsStyleVisibility* vis;
-  GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&)vis);
-  if (NS_STYLE_DIRECTION_RTL == vis->mDirection) {
+  if (NS_STYLE_DIRECTION_RTL == GetStyleVisibility()->mDirection) {
     intValue = NS_STYLE_TEXT_ALIGN_RIGHT;
   }
 #endif // IBMBIDI

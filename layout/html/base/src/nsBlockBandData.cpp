@@ -181,14 +181,12 @@ nsBlockBandData::ComputeAvailSpaceRect()
 #ifdef REALLY_NOISY_COMPUTEAVAILSPACERECT
         printf("band %p checking !Avail trap %p with frame %p\n", this, trapezoid, trapezoid->mFrame);
 #endif
-        const nsStyleDisplay* display;
         if (nsBandTrapezoid::OccupiedMultiple == trapezoid->mState) {
           PRInt32 j, numFrames = trapezoid->mFrames->Count();
           NS_ASSERTION(numFrames > 0, "bad trapezoid frame list");
           for (j = 0; j < numFrames; j++) {
             nsIFrame* f = (nsIFrame*) trapezoid->mFrames->ElementAt(j);
-            f->GetStyleData(eStyleStruct_Display,
-                            (const nsStyleStruct*&)display);
+            const nsStyleDisplay* display = f->GetStyleDisplay();
             if (NS_STYLE_FLOAT_LEFT == display->mFloats) {
               leftFloaters++;
             }
@@ -200,8 +198,7 @@ nsBlockBandData::ComputeAvailSpaceRect()
             }
           }
         } else {
-          trapezoid->mFrame->GetStyleData(eStyleStruct_Display,
-                                    (const nsStyleStruct*&)display);
+          const nsStyleDisplay* display = trapezoid->mFrame->GetStyleDisplay();
           if (NS_STYLE_FLOAT_LEFT == display->mFloats) {
             leftFloaters++;
           }
@@ -233,7 +230,6 @@ nsBlockBandData::ComputeAvailSpaceRect()
   // When there is no available space, we still need a proper X
   // coordinate to place objects that end up here anyway.
   if (nsBandTrapezoid::Available != trapezoid->mState) {
-    const nsStyleDisplay* display;
     if (nsBandTrapezoid::OccupiedMultiple == trapezoid->mState) {
       // It's not clear what coordinate to use when there is no
       // available space and the space is multiply occupied...So: If
@@ -244,8 +240,7 @@ nsBlockBandData::ComputeAvailSpaceRect()
       NS_ASSERTION(numFrames > 0, "bad trapezoid frame list");
       for (j = 0; j < numFrames; j++) {
         nsIFrame* f = (nsIFrame*) trapezoid->mFrames->ElementAt(j);
-        f->GetStyleData(eStyleStruct_Display,
-                        (const nsStyleStruct*&)display);
+        const nsStyleDisplay* display = f->GetStyleDisplay();
         if (NS_STYLE_FLOAT_LEFT == display->mFloats) {
           mAvailSpace.x = mAvailSpace.XMost();
           break;
@@ -253,8 +248,7 @@ nsBlockBandData::ComputeAvailSpaceRect()
       }
     }
     else {
-      trapezoid->mFrame->GetStyleData(eStyleStruct_Display,
-                                     (const nsStyleStruct*&)display);
+      const nsStyleDisplay* display = trapezoid->mFrame->GetStyleDisplay();
       if (NS_STYLE_FLOAT_LEFT == display->mFloats) {
         mAvailSpace.x = mAvailSpace.XMost();
       }
@@ -280,22 +274,18 @@ PRBool
 nsBlockBandData::ShouldClearFrame(nsIFrame* aFrame, PRUint8 aBreakType)
 {
   PRBool result = PR_FALSE;
-  const nsStyleDisplay* display;
-  nsresult rv = aFrame->GetStyleData(eStyleStruct_Display,
-                                     (const nsStyleStruct*&)display);
-  if (NS_SUCCEEDED(rv) && (nsnull != display)) {
-    if (NS_STYLE_CLEAR_LEFT_AND_RIGHT == aBreakType) {
+  const nsStyleDisplay* display = aFrame->GetStyleDisplay();
+  if (NS_STYLE_CLEAR_LEFT_AND_RIGHT == aBreakType) {
+    result = PR_TRUE;
+  }
+  else if (NS_STYLE_FLOAT_LEFT == display->mFloats) {
+    if (NS_STYLE_CLEAR_LEFT == aBreakType) {
       result = PR_TRUE;
     }
-    else if (NS_STYLE_FLOAT_LEFT == display->mFloats) {
-      if (NS_STYLE_CLEAR_LEFT == aBreakType) {
-        result = PR_TRUE;
-      }
-    }
-    else if (NS_STYLE_FLOAT_RIGHT == display->mFloats) {
-      if (NS_STYLE_CLEAR_RIGHT == aBreakType) {
-        result = PR_TRUE;
-      }
+  }
+  else if (NS_STYLE_FLOAT_RIGHT == display->mFloats) {
+    if (NS_STYLE_CLEAR_RIGHT == aBreakType) {
+      result = PR_TRUE;
     }
   }
   return result;

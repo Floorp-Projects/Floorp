@@ -157,12 +157,8 @@ nsBidiPresUtils::Resolve(nsIPresContext* aPresContext,
 
   // handle bidi-override being set on the block itself before calling
   // InitLogicalArray.
-  const nsStyleVisibility* vis;
-  aBlockFrame->GetStyleData(eStyleStruct_Visibility,
-                            NS_REINTERPRET_CAST(const nsStyleStruct*&, vis));
-  const nsStyleTextReset* text;
-  aBlockFrame->GetStyleData(eStyleStruct_TextReset,
-                            NS_REINTERPRET_CAST(const nsStyleStruct*&, text));
+  const nsStyleVisibility* vis = aBlockFrame->GetStyleVisibility();
+  const nsStyleTextReset* text = aBlockFrame->GetStyleTextReset();
 
   if (text->mUnicodeBidi == NS_STYLE_UNICODE_BIDI_OVERRIDE) {
     nsresult rv = NS_OK;
@@ -344,7 +340,6 @@ nsBidiPresUtils::InitLogicalArray(nsIPresContext* aPresContext,
   nsIFrame*             directionalFrame;
   nsIFrame*             kid;
   nsCOMPtr<nsIAtom>     frameType;
-  const nsStyleDisplay* display;
   nsresult              rv;
   nsresult              res = NS_OK;
 
@@ -353,15 +348,11 @@ nsBidiPresUtils::InitLogicalArray(nsIPresContext* aPresContext,
        frame->GetNextSibling(&frame) ) {
 
     rv = NS_ERROR_FAILURE;
-    frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) display);
+    const nsStyleDisplay* display = frame->GetStyleDisplay();
     
     if (aAddMarkers && !display->IsBlockLevel() ) {
-      const nsStyleVisibility* vis;
-      frame->GetStyleData(eStyleStruct_Visibility,
-                          NS_REINTERPRET_CAST(const nsStyleStruct*&, vis));
-      const nsStyleTextReset* text;
-      frame->GetStyleData(eStyleStruct_TextReset,
-                          NS_REINTERPRET_CAST(const nsStyleStruct*&, text));
+      const nsStyleVisibility* vis = frame->GetStyleVisibility();
+      const nsStyleTextReset* text = frame->GetStyleTextReset();
       switch (text->mUnicodeBidi) {
         case NS_STYLE_UNICODE_BIDI_NORMAL:
           break;
@@ -633,8 +624,7 @@ nsBidiPresUtils::RepositionInlineFrames(nsIPresContext*      aPresContext,
     frame->GetBidiProperty(aPresContext, nsLayoutAtoms::baseLevel,
                            (void**) &alignRight,sizeof(alignRight));
     if (0 == (alignRight & 1) ) {
-      const nsStyleText* styleText;
-      frame->GetStyleData(eStyleStruct_Text, (const nsStyleStruct*&) styleText);
+      const nsStyleText* styleText = frame->GetStyleText();
       
       if (NS_STYLE_TEXT_ALIGN_RIGHT == styleText->mTextAlign
           || NS_STYLE_TEXT_ALIGN_MOZ_RIGHT == styleText->mTextAlign) {

@@ -144,8 +144,7 @@ nsButtonFrameRenderer::PaintOutlineAndFocusBorders(nsIPresContext* aPresContext,
 
     GetButtonOuterFocusRect(aRect, rect);
 
-    const nsStyleBorder* border;
-    ::GetStyleData(mOuterFocusStyle.get(), &border);
+    const nsStyleBorder* border = mOuterFocusStyle->GetStyleBorder();
     nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, mFrame,
                                 aDirtyRect, rect, *border, mOuterFocusStyle, 0);
   }
@@ -155,8 +154,7 @@ nsButtonFrameRenderer::PaintOutlineAndFocusBorders(nsIPresContext* aPresContext,
 
     GetButtonInnerFocusRect(aRect, rect);
 
-    const nsStyleBorder* border;
-    ::GetStyleData(mInnerFocusStyle.get(), &border);
+    const nsStyleBorder* border = mInnerFocusStyle->GetStyleBorder();
     nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, mFrame,
                                 aDirtyRect, rect, *border, mInnerFocusStyle, 0);
   }
@@ -176,10 +174,8 @@ nsButtonFrameRenderer::PaintBorderAndBackground(nsIPresContext* aPresContext,
 
   nsStyleContext* context = mFrame->GetStyleContext();
 
-  const nsStyleBorder* border =
-    (const nsStyleBorder*)context->GetStyleData(eStyleStruct_Border);
-  const nsStylePadding* padding =
-    (const nsStylePadding*)context->GetStyleData(eStyleStruct_Padding);
+  const nsStyleBorder* border = context->GetStyleBorder();
+  const nsStylePadding* padding = context->GetStylePadding();
 
   nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, mFrame,
                                   aDirtyRect, buttonRect, *border, *padding,
@@ -267,7 +263,7 @@ nsButtonFrameRenderer::GetButtonInnerFocusMargin()
 
   if (mInnerFocusStyle) {
     // get the outer focus border and padding
-    const nsStyleMargin* margin = (const nsStyleMargin*)mInnerFocusStyle ->GetStyleData(eStyleStruct_Margin);
+    const nsStyleMargin* margin = mInnerFocusStyle->GetStyleMargin();
     margin->GetMargin(innerFocusMargin);
   }
 

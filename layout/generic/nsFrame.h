@@ -394,8 +394,7 @@ public:
                                void*                   aPropertyValue,
                                NSFramePropertyDtorFunc aPropDtorFunc);
 
-  NS_IMETHOD GetStyleDataExternal(nsStyleStructID aSID,
-                                  const nsStyleStruct*& aStyleStruct) const;
+  virtual const nsStyleStruct* GetStyleDataExternal(nsStyleStructID aSID) const;
 
 #ifdef IBMBIDI
   NS_IMETHOD GetBidiProperty(nsIPresContext* aPresContext,

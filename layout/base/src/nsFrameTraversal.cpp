@@ -544,9 +544,7 @@ nsFocusIterator::GetRealFrame(nsIFrame* aFrame)
 PRBool
 nsFocusIterator::IsPopupFrame(nsIFrame* aFrame)
 {
-  nsStyleDisplay* display;
-  aFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) display);
-  return (display->mDisplay == NS_STYLE_DISPLAY_POPUP);
+  return (aFrame->GetStyleDisplay()->mDisplay == NS_STYLE_DISPLAY_POPUP);
 }
 
 nsIFrame*

@@ -269,7 +269,7 @@ nsContextMenuInfo::GetBackgroundImageRequest(nsIDOMNode * aDOMNode, imgIRequest 
   {
     // look for a background image on the element
     do {
-      ::GetStyleData(frame, &bg);
+      bg = frame->GetStyleBackground();
       frame->GetParent(&frame);
     } while (bg && bg->mBackgroundImage.IsEmpty() && frame);
      

@@ -197,9 +197,7 @@ nsGfxButtonControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   }
 
   // Compress whitespace out of label if needed.
-  const nsStyleText* textStyle;
-  GetStyleData(eStyleStruct_Text,  (const nsStyleStruct *&)textStyle);
-  if (!textStyle->WhiteSpaceIsSignificant()) {
+  if (!GetStyleText()->WhiteSpaceIsSignificant()) {
     value.CompressWhitespace();
   } else if (value.Length() > 2 && value[0] == ' ' &&
              value[value.Length() - 1] == ' '){
@@ -422,8 +420,7 @@ nsGfxButtonControlFrame::HandleEvent(nsIPresContext* aPresContext,
   // takes cares of calling MouseClicked for us.
 
   // do we have user-input style?
-  const nsStyleUserInterface* uiStyle;
-  GetStyleData(eStyleStruct_UserInterface,  (const nsStyleStruct *&)uiStyle);
+  const nsStyleUserInterface* uiStyle = GetStyleUserInterface();
   if (uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE || uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED)
     return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
   

@@ -376,9 +376,7 @@ nsMenuFrame::GetFrameForPoint(nsIPresContext* aPresContext,
     if (value.Equals(NS_LITERAL_STRING("true")))
       return result;
   }
-  const nsStyleVisibility* vis = 
-      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
-  if (vis->IsVisible()) {
+  if (GetStyleVisibility()->IsVisible()) {
     *aFrame = this; // Capture all events so that we can perform selection
     return NS_OK;
   }

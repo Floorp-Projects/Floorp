@@ -151,12 +151,9 @@ nsInlineFrame::IsEmpty(nsCompatibility aCompatMode, PRBool aIsPre,
     return NS_OK;
   }
 #endif
-  const nsStyleMargin* margin = NS_STATIC_CAST(const nsStyleMargin*,
-                             mStyleContext->GetStyleData(eStyleStruct_Margin));
-  const nsStyleBorder* border = NS_STATIC_CAST(const nsStyleBorder*,
-                             mStyleContext->GetStyleData(eStyleStruct_Border));
-  const nsStylePadding* padding = NS_STATIC_CAST(const nsStylePadding*,
-                            mStyleContext->GetStyleData(eStyleStruct_Padding));
+  const nsStyleMargin* margin = GetStyleMargin();
+  const nsStyleBorder* border = GetStyleBorder();
+  const nsStylePadding* padding = GetStylePadding();
   nsStyleCoord coord;
   // XXX Top and bottom removed, since they shouldn't affect things, but this
   // doesn't really match with nsLineLayout.cpp's setting of
@@ -660,8 +657,7 @@ nsInlineFrame::ReflowFrames(nsIPresContext* aPresContext,
     // little hack lets us override that behavior to allow for more
     // precise layout in the face of imprecise fonts.
     if (nsHTMLReflowState::UseComputedHeight()) {
-      const nsStyleFont* font;
-      GetStyleData(eStyleStruct_Font, (const nsStyleStruct*&)font);
+      const nsStyleFont* font = GetStyleFont();
       aMetrics.height = font->mFont.size +
         aReflowState.mComputedBorderPadding.top +
         aReflowState.mComputedBorderPadding.bottom;
