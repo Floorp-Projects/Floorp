@@ -32,7 +32,7 @@
 #include "nsIChannel.h"
 #include "nsIStyleSheet.h"
 #include "nsIDocumentEncoder.h"
-#include "nsITransport.h"
+
 #include "nsHashtable.h"
 
 #include "nsIWebBrowserPersist.h"
@@ -95,7 +95,7 @@ private:
     nsCOMPtr<nsIMIMEService>  mMIMEService;
     nsCOMPtr<nsIChannel>      mInputChannel;
     nsCOMPtr<nsIInputStream>  mInputStream;
-    nsCOMPtr<nsITransport>    mOutputTransport;
+    nsCOMPtr<nsIChannel>      mOutputChannel;
     nsCOMPtr<nsIOutputStream> mOutputStream;
     nsCOMPtr<nsIURI>          mBaseURI;
     nsCOMPtr<nsIURI>          mURI;

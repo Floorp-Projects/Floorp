@@ -138,7 +138,7 @@ protected:
   // sub-documents - ie. frames) has been completely loaded.
   //
   virtual nsresult EndPageLoad(nsIWebProgress *aProgress,
-                               nsIChannel* channel,
+                               nsIChannel *aChannel,
                                nsresult aStatus);
 
   nsIEventQueue* mThreadEventQueue;
@@ -156,7 +156,7 @@ protected:
 
   nsresult FireUnloadForChildren();
 
-  nsresult CreateViewer(nsIRequest* request,
+  nsresult CreateViewer(nsIChannel* aChannel,
                         const char* aContentType,
                         const char* aCommand,
                         nsIStreamListener** aResult);

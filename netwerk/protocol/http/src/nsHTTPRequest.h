@@ -37,7 +37,6 @@
 #include "nsHTTPHandler.h"
 #include "nsISupportsArray.h"
 #include "nsXPIDLString.h"
-#include "nsITransport.h"
 
 class nsIInputStream;
 class nsHTTPChannel;
@@ -69,10 +68,11 @@ class nsHTTPPipelinedRequest;
 
 class nsHTTPRequest : public nsIRequest
 {
+
 public:
 
     // Constructor
-    nsHTTPRequest(nsIURI* i_URL, nsHTTPHandler* i_Handler);
+    nsHTTPRequest(nsIURI* i_URL, nsHTTPHandler* i_Handler, PRUint32 bufferSegmentSize, PRUint32 bufferMaxSize);
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIREQUEST
@@ -112,14 +112,17 @@ public:
     nsresult            GetConnection(nsHTTPChannel** o_Connection);
     nsresult            SetConnection(nsHTTPChannel*  i_Connection);
 
-    nsresult            SetTransport (nsITransport * aTransport);
-    nsresult            GetTransport (nsITransport **aTransport);
+    nsresult            SetTransport (nsIChannel * aTransport);
+    nsresult            GetTransport (nsIChannel **aTransport);
 
     nsresult            GetUploadStream(nsIInputStream** o_UploadStream);
     nsresult            SetUploadStream(nsIInputStream* i_UploadStream);
 
     nsresult            SetOverrideRequestSpec(const char* i_Spec);
     nsresult            GetOverrideRequestSpec(char** o_Spec);
+
+    PRUint32            mBufferSegmentSize;
+    PRUint32            mBufferMaxSize;
 
     // for POST or PUT data...
     nsCOMPtr<nsIInputStream>    mInputStream;
@@ -189,8 +192,8 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSISTREAMOBSERVER
 
-    nsresult    SetTransport (nsITransport * aTransport);
-    nsresult    GetTransport (nsITransport **aTransport);
+    nsresult    SetTransport (nsIChannel * aTransport);
+    nsresult    GetTransport (nsIChannel **aTransport);
 
     // Build the actual request string based on the settings. 
     nsresult    WriteRequest(nsIInputStream* iRequestStream);
@@ -217,9 +220,7 @@ protected:
 
     PRUint32                mCapabilities;
     PRUint32                mAttempts;
-    nsCOMPtr<nsITransport>  mTransport;
-    nsCOMPtr<nsIRequest>    mCurrentWriteRequest;
-    nsCOMPtr<nsIRequest>    mCurrentReadRequest;
+    nsCOMPtr<nsIChannel>    mTransport;
 
     PRUint32                mBufferSegmentSize;
     PRUint32                mBufferMaxSize;

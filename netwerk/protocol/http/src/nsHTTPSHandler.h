@@ -74,14 +74,18 @@ public:
                                      PRInt32 port, 
                                      const char* proxyHost, 
                                      PRInt32 proxyPort, 
-                                     nsITransport** o_pTrans);
+                                     PRUint32 bufferSegmentSize, 
+                                     PRUint32 bufferMaxSize,
+                                     nsIChannel** o_pTrans);
     
     virtual nsresult CreateTransportOfType(const char* socketType,
                                            const char* host,
                                            PRInt32 port, 
                                            const char* proxyHost, 
                                            PRInt32 proxyPort, 
-                                           nsITransport** o_pTrans);
+                                           PRUint32 bufferSegmentSize, 
+                                           PRUint32 bufferMaxSize,
+                                           nsIChannel** o_pTrans);
 };
 
 #endif /* _nsHTTPSHandler_h_ */

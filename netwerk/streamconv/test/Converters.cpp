@@ -72,7 +72,7 @@ TestConverter::AsyncConvertData(const PRUnichar *aFromType,
 // nsIStreamListener method
 /* This method handles asyncronous conversion of data. */
 NS_IMETHODIMP
-TestConverter::OnDataAvailable(nsIRequest* request,
+TestConverter::OnDataAvailable(nsIChannel *channel,
                                nsISupports *ctxt, 
                                nsIInputStream *inStr, 
                                PRUint32 sourceOffset, 
@@ -87,20 +87,20 @@ TestConverter::OnDataAvailable(nsIRequest* request,
 
     PRUint32 len;
     convertedStream->Available(&len);
-    return mListener->OnDataAvailable(request, ctxt, convertedStream, sourceOffset, len);
+    return mListener->OnDataAvailable(channel, ctxt, convertedStream, sourceOffset, len);
 };
 
 // nsIStreamObserver methods
 /* These methods just pass through directly to the mListener */
 NS_IMETHODIMP
-TestConverter::OnStartRequest(nsIRequest* request, nsISupports *ctxt) {
-    return mListener->OnStartRequest(request, ctxt);
+TestConverter::OnStartRequest(nsIChannel *channel, nsISupports *ctxt) {
+    return mListener->OnStartRequest(channel, ctxt);
 };
 
 NS_IMETHODIMP
-TestConverter::OnStopRequest(nsIRequest* request, nsISupports *ctxt, 
+TestConverter::OnStopRequest(nsIChannel *channel, nsISupports *ctxt, 
                              nsresult aStatus, const PRUnichar* aStatusArg) {
-    return mListener->OnStopRequest(request, ctxt, aStatus, aStatusArg);
+    return mListener->OnStopRequest(channel, ctxt, aStatus, aStatusArg);
 };
 
 

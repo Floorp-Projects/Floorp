@@ -299,7 +299,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsHTTPIndexParser, nsIStreamListener, nsIStreamObs
 
 
 NS_IMETHODIMP
-nsHTTPIndexParser::OnStartRequest(nsIRequest *request, nsISupports* aContext)
+nsHTTPIndexParser::OnStartRequest(nsIChannel* aChannel, nsISupports* aContext)
 {
   nsresult rv;
 
@@ -356,8 +356,6 @@ nsHTTPIndexParser::OnStartRequest(nsIRequest *request, nsISupports* aContext)
       return NS_ERROR_FAILURE;
   }  
 
-  nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
-
   // Save off some information about the stream we're about to parse.
   nsCOMPtr<nsIURI> mDirectoryURI;
   rv = aChannel->GetURI(getter_AddRefs(mDirectoryURI));
@@ -388,7 +386,7 @@ nsHTTPIndexParser::OnStartRequest(nsIRequest *request, nsISupports* aContext)
 
 
 NS_IMETHODIMP
-nsHTTPIndexParser::OnStopRequest(nsIRequest *request,
+nsHTTPIndexParser::OnStopRequest(nsIChannel* aChannel,
                                  nsISupports* aContext,
                                  nsresult aStatus,
                                  const PRUnichar* aErrorMsg)
@@ -427,7 +425,7 @@ nsHTTPIndexParser::OnStopRequest(nsIRequest *request,
 
 
 NS_IMETHODIMP
-nsHTTPIndexParser::OnDataAvailable(nsIRequest *request,
+nsHTTPIndexParser::OnDataAvailable(nsIChannel* aChannel,
                                    nsISupports* aContext,
                                    nsIInputStream* aStream,
                                    PRUint32 aSourceOffset,
@@ -1327,7 +1325,7 @@ nsHTTPIndex::FireTimer(nsITimer* aTimer, void* aClosure)
         		}
         		if (NS_SUCCEEDED(rv) && (listener))
         		{
-                          rv = channel->AsyncOpen(listener, aSource);
+					rv = channel->AsyncRead(listener, aSource);
         		}
             }
         }
@@ -1696,7 +1694,7 @@ nsDirectoryViewerFactory::CreateInstance(const char *aCommand,
                                aDocViewerResult);
   if (NS_FAILED(rv)) return rv;
 
-  rv = channel->AsyncOpen(listener, nsnull);
+  rv = channel->AsyncRead(listener, nsnull);
   if (NS_FAILED(rv)) return rv;
 
   // Create an HTTPIndex object so that we can stuff it into the script context

@@ -93,7 +93,7 @@ NS_IMETHODIMP nsWBURIContentListener::GetProtocolHandler(nsIURI* aURI,
 
 NS_IMETHODIMP nsWBURIContentListener::DoContent(const char* aContentType, 
    nsURILoadCommand aCommand, const char* aWindowTarget, 
-   nsIRequest* request, nsIStreamListener** aContentHandler,
+   nsIChannel* aOpenedChannel, nsIStreamListener** aContentHandler,
    PRBool* aAbortProcess)
 {     
    NS_ERROR("Hmmmm, why is this getting called on this object?");

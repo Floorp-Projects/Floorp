@@ -25,7 +25,7 @@
 #include "prlog.h"
 #include "nsIPipe.h"
 #include "nsIInputStream.h"
-#include "nsIStreamProvider.h"
+#include "nsNetUtil.h"
 
 #if defined(PR_LOGGING)
 extern PRLogModuleInfo* gFTPLog;
@@ -35,19 +35,19 @@ class nsFtpStreamProvider : public nsIStreamProvider {
 public:
     NS_DECL_ISUPPORTS
 
-    nsFtpStreamProvider() { NS_INIT_ISUPPORTS(); }
+      nsFtpStreamProvider() { NS_INIT_REFCNT();}
     virtual ~nsFtpStreamProvider() {}
 
     //
     // nsIStreamObserver implementation ...
     //
-    NS_IMETHODIMP OnStartRequest(nsIRequest *req, nsISupports *ctxt) { return NS_OK; }
-    NS_IMETHODIMP OnStopRequest(nsIRequest *req, nsISupports *ctxt, nsresult status, const PRUnichar *statusText) { return NS_OK; }
+    NS_IMETHODIMP OnStartRequest(nsIChannel *chan, nsISupports *ctxt) { return NS_OK; }
+    NS_IMETHODIMP OnStopRequest(nsIChannel *chan, nsISupports *ctxt, nsresult status, const PRUnichar *statusText) { return NS_OK; }
 
     //
     // nsIStreamProvider implementation ...
     //
-    NS_IMETHODIMP OnDataWritable(nsIRequest *aRequest, nsISupports *aContext,
+    NS_IMETHODIMP OnDataWritable(nsIChannel *aChannel, nsISupports *aContext,
                                  nsIOutputStream *aOutStream,
                                  PRUint32 aOffset, PRUint32 aCount)
     { 
@@ -83,9 +83,9 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsFtpStreamProvider,
 // nsFtpControlConnection implementation ...
 //
 
-NS_IMPL_THREADSAFE_QUERY_INTERFACE2(nsFtpControlConnection, 
-                                    nsIStreamListener, 
-                                    nsIStreamObserver);
+NS_IMPL_THREADSAFE_QUERY_INTERFACE2(nsFtpControlConnection,
+                                    nsIStreamListener,
+                                    nsIStreamObserver)
 
 NS_IMPL_THREADSAFE_ADDREF(nsFtpControlConnection);
 nsrefcnt nsFtpControlConnection::Release(void)
@@ -110,7 +110,7 @@ nsrefcnt nsFtpControlConnection::Release(void)
     return count;
 }
 
-nsFtpControlConnection::nsFtpControlConnection(nsITransport* socketTransport)
+nsFtpControlConnection::nsFtpControlConnection(nsIChannel* socketTransport)
 :  mCPipe(socketTransport)
 {
     NS_INIT_REFCNT();
@@ -154,17 +154,11 @@ nsFtpControlConnection::Connect()
     NS_STATIC_CAST(nsFtpStreamProvider*, 
         NS_STATIC_CAST(nsIStreamProvider*, provider))->mInStream = inStream;
 
-    rv = mCPipe->AsyncWrite(provider, 
-                            NS_STATIC_CAST(nsISupports*, this),
-                            0, 0, 0, 
-                            getter_AddRefs(mWriteRequest));
+    rv = mCPipe->AsyncWrite(provider, NS_STATIC_CAST(nsISupports*, this));
     if (NS_FAILED(rv)) return rv;
 
     // get the ball rolling by reading on the control socket.
-    rv = mCPipe->AsyncRead(NS_STATIC_CAST(nsIStreamListener*, this), 
-                           nsnull, 0, -1, 0, 
-                           getter_AddRefs(mReadRequest));
-
+    rv = mCPipe->AsyncRead(NS_STATIC_CAST(nsIStreamListener*, this), nsnull);
     if (NS_FAILED(rv)) return rv;
 
     mConnected = PR_TRUE;
@@ -178,8 +172,7 @@ nsFtpControlConnection::Disconnect()
     
     PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("(%x) nsFtpControlConnection disconnecting", this));
     mConnected = PR_FALSE;
-    if (mWriteRequest) mWriteRequest->Cancel(NS_BINDING_ABORTED);
-    if (mReadRequest) mReadRequest->Cancel(NS_BINDING_ABORTED);
+    if (mCPipe) mCPipe->Cancel(NS_BINDING_ABORTED);
     return NS_OK;
 }
 
@@ -188,6 +181,11 @@ nsFtpControlConnection::Write(nsCString& command)
 {
     if (!mConnected)
         return NS_ERROR_FAILURE;
+#if defined(PR_LOGGING)
+    nsCString logString(command);
+    logString.ReplaceChar(CRLF, ' ');
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) Writing \"%s\"\n", this, logString.GetBuffer()));
+#endif
 
     PRUint32 len = command.Length();
     PRUint32 cnt;
@@ -195,7 +193,7 @@ nsFtpControlConnection::Write(nsCString& command)
     if (NS_SUCCEEDED(rv) && len==cnt) {
         if (mSuspendedWrite) {
             mSuspendedWrite = PR_FALSE;
-            mWriteRequest->Resume();
+            mCPipe->Resume();
         }
         return NS_OK;
     }
@@ -205,9 +203,9 @@ nsFtpControlConnection::Write(nsCString& command)
 }
 
 nsresult 
-nsFtpControlConnection::GetTransport(nsITransport** controlTransport)
+nsFtpControlConnection::GetChannel(nsIChannel** controlChannel)
 {
-    NS_IF_ADDREF(*controlTransport = mCPipe);
+    NS_IF_ADDREF(*controlChannel = mCPipe);
     return NS_OK;
 }
 
@@ -220,7 +218,7 @@ nsFtpControlConnection::SetStreamListener(nsIStreamListener *aListener)
 }
 
 NS_IMETHODIMP
-nsFtpControlConnection::OnStartRequest(nsIRequest *request, nsISupports *aContext)
+nsFtpControlConnection::OnStartRequest(nsIChannel *aChannel, nsISupports *aContext)
 {
     if (!mConnected)
         return NS_OK;
@@ -237,11 +235,11 @@ nsFtpControlConnection::OnStartRequest(nsIRequest *request, nsISupports *aContex
     if (!myListener)
         return NS_OK;
     
-    return myListener->OnStartRequest(request, aContext);
+    return myListener->OnStartRequest(aChannel, aContext);
 }
 
 NS_IMETHODIMP
-nsFtpControlConnection::OnStopRequest(nsIRequest *request, nsISupports *aContext,
+nsFtpControlConnection::OnStopRequest(nsIChannel *aChannel, nsISupports *aContext,
                             nsresult aStatus, const PRUnichar* aStatusArg)
 {
     
@@ -260,12 +258,12 @@ nsFtpControlConnection::OnStopRequest(nsIRequest *request, nsISupports *aContext
     if (!myListener)
         return NS_OK;
 
-    return myListener->OnStopRequest(request, aContext, aStatus, aStatusArg);
+    return myListener->OnStopRequest(aChannel, aContext, aStatus, aStatusArg);
 }
 
 
 NS_IMETHODIMP
-nsFtpControlConnection::OnDataAvailable(nsIRequest *request,
+nsFtpControlConnection::OnDataAvailable(nsIChannel *aChannel,
                                        nsISupports *aContext,
                                        nsIInputStream *aInStream,
                                        PRUint32 aOffset, 
@@ -281,6 +279,6 @@ nsFtpControlConnection::OnDataAvailable(nsIRequest *request,
     if (!myListener)
         return NS_OK;
 
-    return myListener->OnDataAvailable(request, aContext, aInStream,
+    return myListener->OnDataAvailable(aChannel, aContext, aInStream,
                                       aOffset,  aCount);
 }

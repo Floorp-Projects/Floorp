@@ -305,15 +305,26 @@ nsDataChannel::SetURI(nsIURI* aURI)
 // This class 
 
 NS_IMETHODIMP
-nsDataChannel::Open(nsIInputStream **_retval)
+nsDataChannel::OpenInputStream(nsIInputStream **_retval)
 {
-    NS_ENSURE_ARG_POINTER(_retval);
-    NS_ADDREF(*_retval = mDataStream);
+    // XXX we should honor the startPosition and count passed in.
+
+    *_retval = mDataStream;
+    NS_ADDREF(*_retval);
+    
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDataChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
+nsDataChannel::OpenOutputStream(nsIOutputStream **_retval)
+{
+    // you can't write to a data url
+    NS_NOTREACHED("nsDataChannel::OpenOutputStream");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDataChannel::AsyncRead(nsIStreamListener *aListener, nsISupports *ctxt)
 {
     nsresult rv;
     nsCOMPtr<nsIEventQueue> eventQ;
@@ -341,7 +352,17 @@ nsDataChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
     if (NS_FAILED(rv)) return rv;
 
     rv = listener->OnStopRequest(this, ctxt, NS_OK, nsnull);
+
     return rv;
+}
+
+NS_IMETHODIMP
+nsDataChannel::AsyncWrite(nsIStreamProvider *provider,
+                          nsISupports *ctxt)
+{
+    // you can't write to a data url
+    NS_NOTREACHED("nsDataChannel::AsyncWrite");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -396,6 +417,83 @@ nsDataChannel::SetContentLength(PRInt32 aContentLength)
 }
 
 NS_IMETHODIMP
+nsDataChannel::GetTransferOffset(PRUint32 *aTransferOffset)
+{
+    NS_NOTREACHED("nsDataChannel::GetTransferOffset");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDataChannel::SetTransferOffset(PRUint32 aTransferOffset)
+{
+    NS_NOTREACHED("nsDataChannel::SetTransferOffset");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDataChannel::GetTransferCount(PRInt32 *aTransferCount)
+{
+    NS_NOTREACHED("nsDataChannel::GetTransferCount");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDataChannel::SetTransferCount(PRInt32 aTransferCount)
+{
+    NS_NOTREACHED("nsDataChannel::SetTransferCount");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDataChannel::GetBufferSegmentSize(PRUint32 *aBufferSegmentSize)
+{
+    *aBufferSegmentSize = mBufferSegmentSize;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDataChannel::SetBufferSegmentSize(PRUint32 aBufferSegmentSize)
+{
+    mBufferSegmentSize = aBufferSegmentSize;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDataChannel::GetBufferMaxSize(PRUint32 *aBufferMaxSize)
+{
+    *aBufferMaxSize = mBufferMaxSize;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDataChannel::SetBufferMaxSize(PRUint32 aBufferMaxSize)
+{
+    mBufferMaxSize = aBufferMaxSize;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDataChannel::GetLocalFile(nsIFile* *file)
+{
+    *file = nsnull;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDataChannel::GetPipeliningAllowed(PRBool *aPipeliningAllowed)
+{
+    *aPipeliningAllowed = PR_FALSE;
+    return NS_OK;
+}
+ 
+NS_IMETHODIMP
+nsDataChannel::SetPipeliningAllowed(PRBool aPipeliningAllowed)
+{
+    NS_NOTREACHED("SetPipeliningAllowed");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsDataChannel::GetLoadGroup(nsILoadGroup* *aLoadGroup)
 {
     *aLoadGroup = mLoadGroup;
@@ -428,7 +526,6 @@ nsDataChannel::SetOwner(nsISupports* aOwner)
 NS_IMETHODIMP
 nsDataChannel::GetNotificationCallbacks(nsIInterfaceRequestor* *aNotificationCallbacks)
 {
-    NS_ENSURE_ARG_POINTER(aNotificationCallbacks);
     *aNotificationCallbacks = mCallbacks.get();
     NS_IF_ADDREF(*aNotificationCallbacks);
     return NS_OK;
@@ -441,10 +538,9 @@ nsDataChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCall
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDataChannel::GetSecurityInfo(nsISupports **sec)
+NS_IMETHODIMP 
+nsDataChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
 {
-    NS_ENSURE_ARG_POINTER(sec);
-    *sec = nsnull;
+    *aSecurityInfo = nsnull;
     return NS_OK;
 }

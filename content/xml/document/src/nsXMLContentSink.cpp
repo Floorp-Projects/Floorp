@@ -1669,11 +1669,7 @@ nsXMLContentSink::OnStreamComplete(nsIStreamLoader* aLoader,
   if (NS_OK == aStatus) {
     { // scope in block so nsCOMPtr released at one point
       nsCOMPtr<nsIChannel> channel;
-      nsCOMPtr<nsIRequest> request;
-      aLoader->GetRequest(getter_AddRefs(request));
-      if (request)
-        channel = do_QueryInterface(request);
-
+      aLoader->GetChannel(getter_AddRefs(channel));
       nsCOMPtr<nsIURI> url;
       if (channel) {
         channel->GetURI(getter_AddRefs(url));

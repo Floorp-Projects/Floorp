@@ -48,7 +48,7 @@ class nsStreamListenerEvent
 {
 public:
     nsStreamListenerEvent(nsAsyncStreamObserver* listener,
-                          nsIRequest* request, nsISupports* context);
+                          nsIChannel* channel, nsISupports* context);
     virtual ~nsStreamListenerEvent();
 
     nsresult Fire(nsIEventQueue* aEventQ);
@@ -60,7 +60,7 @@ protected:
     static void PR_CALLBACK DestroyPLEvent(PLEvent* aEvent);
 
     nsAsyncStreamObserver*      mListener;
-    nsIRequest*                 mRequest;
+    nsIChannel*                 mChannel;
     nsISupports*                mContext;
     PLEvent                     mEvent;
 };
@@ -71,13 +71,13 @@ protected:
 ////////////////////////////////////////////////////////////////////////////////
 
 nsStreamListenerEvent::nsStreamListenerEvent(nsAsyncStreamObserver* listener,
-                                             nsIRequest* request, nsISupports* context)
-    : mListener(listener), mRequest(request), mContext(context)
+                                             nsIChannel* channel, nsISupports* context)
+    : mListener(listener), mChannel(channel), mContext(context)
 {
     MOZ_COUNT_CTOR(nsStreamListenerEvent);
 
     NS_IF_ADDREF(mListener);
-    NS_IF_ADDREF(mRequest);
+    NS_IF_ADDREF(mChannel);
     NS_IF_ADDREF(mContext);
 }
 
@@ -86,7 +86,7 @@ nsStreamListenerEvent::~nsStreamListenerEvent()
     MOZ_COUNT_DTOR(nsStreamListenerEvent);
 
     NS_IF_RELEASE(mListener);
-    NS_IF_RELEASE(mRequest);
+    NS_IF_RELEASE(mChannel);
     NS_IF_RELEASE(mContext);
 }
 
@@ -105,7 +105,7 @@ void PR_CALLBACK nsStreamListenerEvent::HandlePLEvent(PLEvent* aEvent)
     // the pipe to empty...
     //
     if (NS_FAILED(rv)) {
-        nsresult cancelRv = ev->mRequest->Cancel(rv);
+        nsresult cancelRv = ev->mChannel->Cancel(rv);
         NS_ASSERTION(NS_SUCCEEDED(cancelRv), "Cancel failed");
     }
 }
@@ -182,8 +182,8 @@ class nsOnStartRequestEvent : public nsStreamListenerEvent
 {
 public:
     nsOnStartRequestEvent(nsAsyncStreamObserver* listener, 
-                          nsIRequest* request, nsISupports* context)
-        : nsStreamListenerEvent(listener, request, context) {}
+                          nsIChannel* channel, nsISupports* context)
+        : nsStreamListenerEvent(listener, channel, context) {}
     virtual ~nsOnStartRequestEvent() {}
 
     NS_IMETHOD HandleEvent();
@@ -205,19 +205,19 @@ nsOnStartRequestEvent::HandleEvent()
   }
 
   nsresult status;
-  nsresult rv = mRequest->GetStatus(&status);
+  nsresult rv = mChannel->GetStatus(&status);
   NS_ASSERTION(NS_SUCCEEDED(rv), "GetStatus failed");
-  rv = receiver->OnStartRequest(mRequest, mContext);
+  rv = receiver->OnStartRequest(mChannel, mContext);
 
   return rv;
 }
 
 NS_IMETHODIMP 
-nsAsyncStreamObserver::OnStartRequest(nsIRequest *request, nsISupports* context)
+nsAsyncStreamObserver::OnStartRequest(nsIChannel* channel, nsISupports* context)
 {
     nsresult rv;
     nsOnStartRequestEvent* event = 
-        new nsOnStartRequestEvent(this, request, context);
+        new nsOnStartRequestEvent(this, channel, context);
     if (event == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -252,8 +252,8 @@ class nsOnStopRequestEvent : public nsStreamListenerEvent
 {
 public:
     nsOnStopRequestEvent(nsAsyncStreamObserver* listener, 
-                         nsISupports* context, nsIRequest* request)
-        : nsStreamListenerEvent(listener, request, context),
+                         nsISupports* context, nsIChannel* channel)
+        : nsStreamListenerEvent(listener, channel, context),
           mStatus(NS_OK) {}
     virtual ~nsOnStopRequestEvent();
 
@@ -293,7 +293,7 @@ nsOnStopRequestEvent::HandleEvent()
     }
 
     nsresult status = NS_OK;
-    nsresult rv = mRequest->GetStatus(&status);
+    nsresult rv = mChannel->GetStatus(&status);
     NS_ASSERTION(NS_SUCCEEDED(rv), "GetStatus failed");
 
     //
@@ -303,14 +303,14 @@ nsOnStopRequestEvent::HandleEvent()
     if (NS_SUCCEEDED(rv) && NS_FAILED(status)) {
         mStatus = status;
     }
-    rv = receiver->OnStopRequest(mRequest, mContext, mStatus, mStatusArg.GetUnicode());
+    rv = receiver->OnStopRequest(mChannel, mContext, mStatus, mStatusArg.GetUnicode());
     // Call clear on the listener to make sure it's cleanup is done on the correct thread
     mListener->Clear();
     return rv;
 }
 
 NS_IMETHODIMP 
-nsAsyncStreamObserver::OnStopRequest(nsIRequest* request, nsISupports* context,
+nsAsyncStreamObserver::OnStopRequest(nsIChannel* channel, nsISupports* context,
                                      nsresult aStatus, const PRUnichar* aStatusArg)
 {
     nsresult rv;
@@ -320,7 +320,7 @@ nsAsyncStreamObserver::OnStopRequest(nsIRequest* request, nsISupports* context,
     // Status is...
     //
     nsOnStopRequestEvent* event = 
-        new nsOnStopRequestEvent(this, context, request);
+        new nsOnStopRequestEvent(this, context, channel);
     if (event == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -354,8 +354,8 @@ class nsOnDataAvailableEvent : public nsStreamListenerEvent
 {
 public:
     nsOnDataAvailableEvent(nsAsyncStreamObserver* listener, 
-                           nsIRequest* request, nsISupports* context)
-        : nsStreamListenerEvent(listener, request, context),
+                           nsIChannel* channel, nsISupports* context)
+        : nsStreamListenerEvent(listener, channel, context),
           mIStream(nsnull), mLength(0) {}
     virtual ~nsOnDataAvailableEvent();
 
@@ -401,7 +401,7 @@ nsOnDataAvailableEvent::HandleEvent()
   }
 
   nsresult status;
-  nsresult rv = mRequest->GetStatus(&status);
+  nsresult rv = mChannel->GetStatus(&status);
   NS_ASSERTION(NS_SUCCEEDED(rv), "GetStatus failed");
 
   //
@@ -409,7 +409,7 @@ nsOnDataAvailableEvent::HandleEvent()
   // have succeeded...
   //
   if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(status)) {
-    rv = receiver->OnDataAvailable(mRequest, mContext,
+    rv = receiver->OnDataAvailable(mChannel, mContext,
                                    mIStream, mSourceOffset, mLength);
   }
   else {
@@ -419,14 +419,14 @@ nsOnDataAvailableEvent::HandleEvent()
 }
 
 NS_IMETHODIMP 
-nsAsyncStreamListener::OnDataAvailable(nsIRequest* request, nsISupports* context,
+nsAsyncStreamListener::OnDataAvailable(nsIChannel* channel, nsISupports* context,
                                        nsIInputStream *aIStream, 
                                        PRUint32 aSourceOffset,
                                        PRUint32 aLength)
 {
     nsresult rv;
     nsOnDataAvailableEvent* event = 
-        new nsOnDataAvailableEvent(this, request, context);
+        new nsOnDataAvailableEvent(this, channel, context);
     if (event == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 

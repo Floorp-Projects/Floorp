@@ -77,7 +77,7 @@ protected:
     NS_METHOD Delete(nsMemCacheRecord* aRecord);
 
     friend class nsMemCacheRecord;
-    friend class nsMemCacheTransport;
+    friend class nsMemCacheChannel;
 };
 
 #endif // _nsMemCache_h_

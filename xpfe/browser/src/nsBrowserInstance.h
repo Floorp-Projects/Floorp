@@ -97,10 +97,10 @@ class nsBrowserInstance : public nsIBrowserInstance,
 
     // helper methods for dealing with document loading...
     nsresult StartDocumentLoad(nsIDOMWindow *aDOMWindow,
-                               nsIRequest *request);
+                               nsIChannel *aChannel);
 
     nsresult EndDocumentLoad(nsIDOMWindow *aDOMWindow,
-                             nsIRequest *request,
+                             nsIChannel *aChannel,
                              nsresult aResult);
 
     PRBool              mIsClosed;

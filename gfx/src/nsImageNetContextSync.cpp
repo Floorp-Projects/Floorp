@@ -218,9 +218,6 @@ ImageNetContextSyncImpl::GetURL(ilIURL*  aURL,
         if(aContentType){
             nsCRT::free(aContentType);
         }
-    }
-
-    if (!aContentType) {
         aContentType = nsCRT::strdup("unknown");        
     }
     if(nsCRT::strlen(aContentType) > 50){
@@ -229,8 +226,8 @@ ImageNetContextSyncImpl::GetURL(ilIURL*  aURL,
         nsCRT::free(aContentType);
         aContentType = nsCRT::strdup("unknown"); 
     } 
-    
-    rv = channel->Open( &stream);
+
+    rv = channel->OpenInputStream(&stream);
     NS_RELEASE(channel);
     if (NS_SUCCEEDED(rv)) {
 

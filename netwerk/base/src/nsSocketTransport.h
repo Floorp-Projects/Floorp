@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -28,15 +29,17 @@
 #include "prinrval.h"
 #include "nsCOMPtr.h"
 #include "nsISocketTransport.h"
+#include "nsIChannel.h"
+#include "nsIInputStream.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 #include "nsIEventQueueService.h"
 #include "nsIStreamListener.h"
 #include "nsIStreamProvider.h"
 #include "nsIDNSListener.h"
-#include "nsIDNSService.h"
 #include "nsIPipe.h"
 #include "nsIProgressEventSink.h"
+#include "nsIInterfaceRequestor.h"
 
 #define NS_SOCKET_TRANSPORT_SEGMENT_SIZE        (2*1024)
 #define NS_SOCKET_TRANSPORT_BUFFER_SIZE         (8*1024)
@@ -112,23 +115,23 @@ enum nsSocketReadWriteInfo {
 
 // Forward declarations...
 class nsSocketTransportService;
-class nsSocketBS;  // base class for blocking streams
-class nsSocketBIS; // blocking input stream
-class nsSocketBOS; // blocking output stream
-class nsSocketIS;  // input stream
-class nsSocketOS;  // output stream
-class nsSocketRequest;
-class nsSocketReadRequest;
-class nsSocketWriteRequest;
-
+class nsSocketInputStream;
+class nsSocketOutputStream;
+class nsIInterfaceRequestor;
 
 class nsSocketTransport : public nsISocketTransport,
-                          public nsIDNSListener
+                          public nsIChannel, 
+                          public nsIDNSListener,
+                          public nsIInputStreamObserver,
+                          public nsIOutputStreamObserver
 {
 public:
     NS_DECL_ISUPPORTS
-    NS_DECL_NSITRANSPORT
     NS_DECL_NSISOCKETTRANSPORT
+    NS_DECL_NSIREQUEST
+    NS_DECL_NSICHANNEL
+    NS_DECL_NSIINPUTSTREAMOBSERVER
+    NS_DECL_NSIOUTPUTSTREAMOBSERVER
     NS_DECL_NSIDNSLISTENER
     
     // nsSocketTransport methods:
@@ -146,8 +149,6 @@ public:
                   PRUint32 bufferMaxSize);
     
     nsresult Process(PRInt16 aSelectFlags);
-
-    nsresult Cancel(nsresult status);
     
     nsresult CheckForTimeout (PRIntervalTime aCurrentTime);
     
@@ -163,26 +164,21 @@ public:
     
     PRBool CanBeReused(void) { return 
         (mCurrentState != eSocketState_Error) && !mCloseConnectionOnceDone;}
-
-    //
-    // request helpers
-    //
-    nsresult GetName(PRUnichar **);
-    nsresult Dispatch(nsSocketRequest *);
-    nsresult OnProgress(nsSocketRequest *, nsISupports *ctxt, PRUint32 offset);
-    nsresult OnStatus(nsSocketRequest *, nsISupports *ctxt, nsresult message);
-
+    
 protected:
     nsresult doConnection(PRInt16 aSelectFlags);
-    nsresult doBlockingConnection();
-    nsresult doReadWrite(PRInt16 aSelectFlags);
-    nsresult doResolveHost();
+    nsresult doResolveHost(void);
+    nsresult doRead(PRInt16 aSelectFlags);
+    nsresult doReadAsync(PRInt16 aSelectFlags);
+    nsresult doWrite(PRInt16 aSelectFlags);
+    nsresult doWriteAsync(PRInt16 aSelectFlags);
+    
+    nsresult doWriteFromBuffer(PRUint32 *aCount);
+    nsresult doWriteFromStream(PRUint32 *aCount);
+    
+    nsresult fireStatus(PRUint32 aCode);
 
-    nsresult OnStatus(nsresult message); // with either request
-
-    void CompleteAsyncRead();
-    void CompleteAsyncWrite();
-
+private:
     PRIntervalTime mSocketTimeout;
     PRIntervalTime mSocketConnectTimeout;
     
@@ -209,234 +205,71 @@ protected:
     inline void ClearFlag(nsSocketReadWriteInfo aFlag) {
         mReadWriteState &= ~aFlag;
     } 
+
+    PRBool  mOnStartWriteFired;
+    PRBool  mOnStartReadFired;
     
 protected:
     
+    nsresult                        mCancelStatus;
+    PRBool                          mCloseConnectionOnceDone;
     nsSocketState                   mCurrentState;
     nsCOMPtr<nsIRequest>            mDNSRequest;
+    nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
     nsCOMPtr<nsIProgressEventSink>  mEventSink;
     char*                           mHostName;
     PRInt32                         mPort;
     PRIntervalTime                  mLastActiveTime;
     PRCList                         mListLink;
+    PRUint32                        mLoadAttributes;
     PRMonitor*                      mMonitor;
     PRNetAddr                       mNetAddress;
     nsSocketOperation               mOperation;
+    nsCOMPtr<nsISupports>           mOwner;
     nsCOMPtr<nsISupports>           mSecurityInfo;
 
     PRInt32                         mProxyPort;
     char*                           mProxyHost;
-    PRPackedBool                    mProxyTransparent;
-    PRPackedBool                    mSSLProxy;
+    PRBool                          mProxyTransparent;
+    PRBool                          mSSLProxy;
 
     nsSocketTransportService*       mService;
 
     PRUint32                        mReadWriteState;
     PRInt16                         mSelectFlags;
     nsresult                        mStatus;
+    PRInt32                         mSuspendCount;
 
     PRFileDesc*                     mSocketFD;
     PRUint32                        mSocketTypeCount;
     char*                          *mSocketTypes;
 
-    PRInt32		                    mBytesExpected;
+    nsCOMPtr<nsIStreamListener>     mReadListener;
+    nsCOMPtr<nsISupports>           mReadContext;
+    PRUint32                        mReadOffset;
+
+    nsCOMPtr<nsIStreamProvider>     mWriteProvider;
+    nsCOMPtr<nsISupports>           mWriteContext;
+    PRUint32                        mWriteOffset;
+    PRInt32                         mWriteCount;
+
+    PRInt32		            mBytesExpected;
     PRUint32                        mReuseCount;
     PRUint32                        mLastReuseCount;
 
+    nsSocketInputStream            *mSocketInputStream;
+    nsSocketOutputStream           *mSocketOutputStream;
+    
+    nsCOMPtr<nsIInputStream>        mReadPipeIn;
+    nsCOMPtr<nsIOutputStream>       mReadPipeOut;
+    nsCOMPtr<nsIInputStream>        mWritePipeIn;
+    nsCOMPtr<nsIOutputStream>       mWritePipeOut;
     PRUint32                        mBufferSegmentSize;
     PRUint32                        mBufferMaxSize;
     
     PRUint32                        mIdleTimeoutInSeconds;
-
-    nsSocketBIS                    *mBIS;
-    nsSocketBOS                    *mBOS;
-    nsSocketReadRequest            *mReadRequest;
-    nsSocketWriteRequest           *mWriteRequest;
-   
-    PRPackedBool                    mCloseConnectionOnceDone;
-    PRPackedBool                    mWasConnected;
+    PRBool                          mWasConnected;
 };
 
-/**
- * base blocking stream ...
- */
-class nsSocketBS
-{
-public:
-    nsSocketBS();
-    virtual ~nsSocketBS();
-
-    void SetTransport(nsSocketTransport *);
-    void SetSocket(PRFileDesc *aSock) { mSock = aSock; }
-
-    nsresult Poll(PRInt16 event);
-
-protected:
-    nsSocketTransport *mTransport;
-    PRFileDesc        *mSock;
-};
-
-/**
- * blocking input stream, returned by nsITransport::OpenInputStream()
- */
-class nsSocketBIS : public nsSocketBS
-                  , public nsIInputStream
-{
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIINPUTSTREAM
-
-    nsSocketBIS();
-    virtual ~nsSocketBIS();
-};
-
-/**
- * blocking output stream, returned by nsITransport::OpenOutputStream()
- */
-class nsSocketBOS : public nsSocketBS
-                  , public nsIOutputStream
-{
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIOUTPUTSTREAM
-
-    nsSocketBOS();
-    virtual ~nsSocketBOS();
-};
-
-/**
- * input stream, passed to nsIStreamListener::OnDataAvailable()
- */
-class nsSocketIS : public nsIInputStream
-{
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIINPUTSTREAM
-
-    nsSocketIS();
-    virtual ~nsSocketIS() { }
-
-    void        SetSocket(PRFileDesc *aSock) { mSock = aSock; }
-    PRUint32    GetOffset() { return mOffset; }
-    void        SetOffset(PRUint32 o) { mOffset = o; }
-    PRBool      GotWouldBlock() { return mError == PR_WOULD_BLOCK_ERROR; }
-    PRBool      GotError() { return mError != 0; }
-    PRErrorCode GetError() { return mError; }
-
-private:
-    PRUint32    mOffset;
-    PRFileDesc *mSock;
-    PRErrorCode mError;
-};
-
-/**
- * output stream, passed to nsIStreamProvider::OnDataWritable()
- */
-class nsSocketOS : public nsIOutputStream
-{
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIOUTPUTSTREAM
-
-    nsSocketOS();
-    virtual ~nsSocketOS() { }
-
-    void        SetSocket(PRFileDesc *aSock) { mSock = aSock; }
-    PRUint32    GetOffset() { return mOffset; }
-    void        SetOffset(PRUint32 o) { mOffset = o; }
-    PRBool      GotWouldBlock() { return mError == PR_WOULD_BLOCK_ERROR; }
-    PRBool      GotError() { return mError != 0; }
-    PRErrorCode GetError() { return mError; }
-
-private:
-    PRUint32    mOffset;
-    PRFileDesc *mSock;
-    PRErrorCode mError;
-};
-
-/**
- * base request
- */
-class nsSocketRequest : public nsITransportRequest
-{
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIREQUEST
-    NS_DECL_NSITRANSPORTREQUEST
-
-    nsSocketRequest();
-    virtual ~nsSocketRequest();
-
-    PRBool IsSuspended() { return mSuspendCount > 0; }
-    PRBool IsCanceled() { return mCanceled; }
-
-    void SetTransport(nsSocketTransport *);
-    void SetStatus(nsresult status) { mStatus = status; }
-    
-    virtual nsISupports *GetContext() = 0;
-
-    virtual nsresult OnStart() = 0;
-    virtual nsresult OnStop() = 0;
-
-protected:
-    nsresult OnStart(nsIStreamObserver *, nsISupports *);
-    nsresult OnStop(nsIStreamObserver *, nsISupports *);
-
-    nsSocketTransport *mTransport;
-    nsresult           mStatus;
-    PRIntn             mSuspendCount;
-    PRPackedBool       mCanceled;
-    PRPackedBool       mStartFired;
-};
-
-/**
- * read request, returned by nsITransport::AsyncRead()
- */
-class nsSocketReadRequest : public nsSocketRequest
-{
-public:
-    nsSocketReadRequest();
-    virtual ~nsSocketReadRequest();
-
-    void SetSocket(PRFileDesc *);
-    void SetListener(nsIStreamListener *l) { mListener = l; }
-    void SetListenerContext(nsISupports *c) { mListenerContext = c; }
-
-    nsISupports *GetContext() { return mListenerContext; }
-
-    nsresult OnStart() { return nsSocketRequest::OnStart(mListener, mListenerContext); }
-    nsresult OnStop() { return nsSocketRequest::OnStop(mListener, mListenerContext); }
-    nsresult OnRead();
-
-private:
-    nsSocketIS                 *mInputStream;
-    nsCOMPtr<nsIStreamListener> mListener;
-    nsCOMPtr<nsISupports>       mListenerContext;
-};
-
-/**
- * write request, returned by nsITransport::AsyncWrite()
- */
-class nsSocketWriteRequest : public nsSocketRequest
-{
-public:
-    nsSocketWriteRequest();
-    virtual ~nsSocketWriteRequest();
-
-    void SetSocket(PRFileDesc *);
-    void SetProvider(nsIStreamProvider *p) { mProvider = p; }
-    void SetProviderContext(nsISupports *c) { mProviderContext = c; }
-
-    nsISupports *GetContext() { return mProviderContext; }
-
-    nsresult OnStart() { return nsSocketRequest::OnStart(mProvider, mProviderContext); }
-    nsresult OnStop() { return nsSocketRequest::OnStop(mProvider, mProviderContext); }
-    nsresult OnWrite();
-
-private:
-    nsSocketOS                 *mOutputStream;
-    nsCOMPtr<nsIStreamProvider> mProvider;
-    nsCOMPtr<nsISupports>       mProviderContext;
-};
 
 #endif /* nsSocketTransport_h___ */

@@ -903,16 +903,13 @@ nsBrowserInstance::FindNext()
 //*****************************************************************************
 
 nsresult nsBrowserInstance::StartDocumentLoad(nsIDOMWindow *aDOMWindow,
-                                              nsIRequest *request)
+                                              nsIChannel *aChannel)
 {
   nsresult rv;
 
   nsCOMPtr<nsIURI> uri;
   nsXPIDLCString uriCString;
   nsAutoString urlStr;
-
-  nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
-  if (!aChannel) return NS_ERROR_FAILURE;
 
   // Get the URI strign and convert it to unicode...
   rv = aChannel->GetURI(getter_AddRefs(uri));
@@ -961,13 +958,10 @@ nsresult nsBrowserInstance::StartDocumentLoad(nsIDOMWindow *aDOMWindow,
 }
 
 nsresult nsBrowserInstance::EndDocumentLoad(nsIDOMWindow *aDOMWindow,
-                                            nsIRequest *request,
+                                            nsIChannel *aChannel,
                                             nsresult aStatus)
 {
   nsresult rv;
-
-  nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
-  if (!aChannel) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIURI> uri;
   rv = aChannel->GetOriginalURI(getter_AddRefs(uri));
@@ -1096,7 +1090,7 @@ nsBrowserInstance::GetProtocolHandler(nsIURI * /* aURI */, nsIProtocolHandler **
 
 NS_IMETHODIMP 
 nsBrowserInstance::DoContent(const char *aContentType, nsURILoadCommand aCommand, const char *aWindowTarget, 
-                             nsIRequest *request, nsIStreamListener **aContentHandler, PRBool *aAbortProcess)
+                             nsIChannel *aChannel, nsIStreamListener **aContentHandler, PRBool *aAbortProcess)
 {
   nsCOMPtr<nsIDocShell> docShell;
   GetContentAreaDocShell(getter_AddRefs(docShell));
@@ -1104,7 +1098,7 @@ nsBrowserInstance::DoContent(const char *aContentType, nsURILoadCommand aCommand
   // forward the DoContent call to our content area webshell
   nsCOMPtr<nsIURIContentListener> ctnListener (do_GetInterface(docShell));
   if (ctnListener)
-    return ctnListener->DoContent(aContentType, aCommand, aWindowTarget, request, aContentHandler, aAbortProcess);
+    return ctnListener->DoContent(aContentType, aCommand, aWindowTarget, aChannel, aContentHandler, aAbortProcess);
   return NS_OK;
 }
 
@@ -1217,7 +1211,13 @@ nsBrowserInstance::OnProgressChange(nsIWebProgress* aWebProgress,
 {
   EnsureXULBrowserWindow();
   if(mXULBrowserWindow) {
-      mXULBrowserWindow->OnProgress(aRequest, aCurTotalProgress, aMaxTotalProgress);
+    nsresult rv;
+    nsCOMPtr<nsIChannel> channel;
+
+    channel = do_QueryInterface(aRequest, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      mXULBrowserWindow->OnProgress(channel, aCurTotalProgress, aMaxTotalProgress);
+    }
   }
   return NS_OK;
 }
@@ -1229,11 +1229,12 @@ nsBrowserInstance::OnStateChange(nsIWebProgress* aWebProgress,
                                  nsresult aStatus)
 {
   nsresult rv;
+  nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
 
   EnsureXULBrowserWindow();
 
   // Ignore this notification if it did not originate from a channel...
-  if (!aRequest) {
+  if (!channel) {
     return NS_OK;
   }
 
@@ -1243,16 +1244,16 @@ nsBrowserInstance::OnStateChange(nsIWebProgress* aWebProgress,
     rv = aWebProgress->GetDOMWindow(getter_AddRefs(domWindow));
     if (NS_SUCCEEDED(rv)) {
       if (aStateFlags & nsIWebProgressListener::STATE_START) {
-        rv = StartDocumentLoad(domWindow, aRequest);
+        rv = StartDocumentLoad(domWindow, channel);
       }
       else if (aStateFlags & nsIWebProgressListener::STATE_STOP) {
-        rv = EndDocumentLoad(domWindow, aRequest, aStatus);
+        rv = EndDocumentLoad(domWindow, channel, aStatus);
       }
     }
   }
 
   if(mXULBrowserWindow) {
-    mXULBrowserWindow->OnStateChange(aRequest, aStateFlags);
+    mXULBrowserWindow->OnStateChange(channel, aStateFlags);
   }
   return NS_OK;
 }
@@ -1281,7 +1282,13 @@ nsBrowserInstance::OnStatusChange(nsIWebProgress* aWebProgress,
 {
   EnsureXULBrowserWindow();
   if(mXULBrowserWindow) {
-      mXULBrowserWindow->OnStatus(aRequest, aStatus, aMessage);
+    nsresult rv;
+    nsCOMPtr<nsIChannel> channel;
+
+    channel = do_QueryInterface(aRequest, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      mXULBrowserWindow->OnStatus(channel, aStatus, aMessage);
+    }
   }
   return NS_OK;
 }
@@ -1492,11 +1499,11 @@ NS_IMETHODIMP nsBrowserContentHandler::HandleContent(const char * aContentType,
                                                      const char * aCommand,
                                                      const char * aWindowTarget,
                                                      nsISupports * aWindowContext,
-                                                     nsIRequest * aRequest)
+                                                     nsIChannel * aChannel)
 {
   // we need a dom window to create the new browser window...in order
   // to do this, we need to get the window mediator service and ask it for a dom window
-  NS_ENSURE_ARG(aRequest);
+  NS_ENSURE_ARG(aChannel);
   nsCOMPtr<nsIDOMWindowInternal> parentWindow;
   JSContext* jsContext = nsnull;
 
@@ -1525,10 +1532,6 @@ NS_IMETHODIMP nsBrowserContentHandler::HandleContent(const char * aContentType,
     NS_ENSURE_SUCCESS(windowService->GetHiddenWindowAndJSContext(getter_AddRefs(parentWindow), &jsContext),
                       NS_ERROR_FAILURE);
   }
-
-  
-  nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(aRequest);
-  if (!aChannel) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIURI> uri;
   aChannel->GetURI(getter_AddRefs(uri));
@@ -1560,7 +1563,7 @@ NS_IMETHODIMP nsBrowserContentHandler::HandleContent(const char * aContentType,
   JS_PopArguments(jsContext, mark);
 
   // now abort the current channel load...
-  aRequest->Cancel(NS_BINDING_ABORTED);
+  aChannel->Cancel(NS_BINDING_ABORTED);
 
   return NS_OK;
 }

@@ -298,7 +298,7 @@ nsSyncLoader::LoadDocument(nsIURI* documentURI, nsIDOMDocument **_retval)
     }
 
     // Start reading from the channel
-    rv = channel->AsyncOpen(listener, nsnull);
+    rv = channel->AsyncRead(listener, nsnull);
 
     if (NS_FAILED(rv)) {
         if (modalEventQueue) {

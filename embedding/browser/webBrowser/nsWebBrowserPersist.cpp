@@ -86,7 +86,7 @@ void nsWebBrowserPersist::CleanUp()
         mOutputStream->Close();
         mOutputStream = nsnull;
     }
-    mOutputTransport = nsnull;
+    mOutputChannel = nsnull;
 }
 
 NS_IMPL_ADDREF(nsWebBrowserPersist)
@@ -162,6 +162,10 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveURI(nsIURI *aURI, nsIInputStream *aPostDa
         }
     }
 
+    // Query the content type
+    nsXPIDLCString contentType;
+    inputChannel->GetContentType(getter_Copies(contentType));
+    
     NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
     NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
     
@@ -184,7 +188,7 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveURI(nsIURI *aURI, nsIInputStream *aPostDa
     }
     
     // Open a channel on the local file
-    nsCOMPtr<nsITransport> outputChannel;
+    nsCOMPtr<nsIChannel> outputChannel;
     rv = fts->CreateTransport(file, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE,
                               0664, getter_AddRefs(outputChannel));
     if (NS_FAILED(rv))
@@ -193,12 +197,10 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveURI(nsIURI *aURI, nsIInputStream *aPostDa
         return NS_ERROR_FAILURE;
     }
     
-    mOutputTransport = outputChannel;
+    mOutputChannel = outputChannel;
     
-//dougt wtf?!  why both a async and sync read?
-
     // Read from the input channel
-    rv = inputChannel->AsyncOpen(this, nsnull);
+    rv = inputChannel->AsyncRead(this, nsnull);
     if (NS_FAILED(rv))
     {
         OnEndDownload();
@@ -206,7 +208,7 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveURI(nsIURI *aURI, nsIInputStream *aPostDa
     }
     
     nsCOMPtr<nsIInputStream> inStream;
-    rv = inputChannel->Open(getter_AddRefs(inStream));
+    rv = inputChannel->OpenInputStream(getter_AddRefs(inStream));
     if (NS_FAILED(rv))
     {
         OnEndDownload();
@@ -217,10 +219,7 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveURI(nsIURI *aURI, nsIInputStream *aPostDa
     mInputStream = inStream;
 
     // Get the output channel ready for writing
-    nsCOMPtr<nsIRequest> writeRequest;
-    rv = NS_AsyncWriteFromStream(getter_AddRefs(writeRequest),
-            outputChannel, inStream, 0, 0, 0,
-            NS_STATIC_CAST(nsIStreamObserver*, this), nsnull);
+    rv = NS_AsyncWriteFromStream(outputChannel, inStream, NS_STATIC_CAST(nsIStreamObserver *, this), nsnull);
     if (NS_FAILED(rv))
     {
         OnEndDownload();
@@ -395,13 +394,15 @@ NS_IMETHODIMP nsWebBrowserPersist::OnProgress(PRUint32 aStatus, nsIURI *aURI, PR
 //*****************************************************************************
 
 
-NS_IMETHODIMP nsWebBrowserPersist::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
+/* void onStartRequest (in nsIChannel channel, in nsISupports ctxt); */
+NS_IMETHODIMP nsWebBrowserPersist::OnStartRequest(nsIChannel *channel, nsISupports *ctxt)
 {
-    nsresult rv = mOutputTransport->OpenOutputStream(0, -1, 0, getter_AddRefs(mOutputStream));
+    nsresult rv = mOutputChannel->OpenOutputStream(getter_AddRefs(mOutputStream));
     return rv;
 }
  
-NS_IMETHODIMP nsWebBrowserPersist::OnStopRequest(nsIRequest* request, nsISupports *ctxt, nsresult status, const PRUnichar *statusArg)
+/* void onStopRequest (in nsIChannel channel, in nsISupports ctxt, in nsresult status, in wstring statusArg); */
+NS_IMETHODIMP nsWebBrowserPersist::OnStopRequest(nsIChannel *channel, nsISupports *ctxt, nsresult status, const PRUnichar *statusArg)
 {
     OnEndDownload();
     CleanUp();
@@ -414,7 +415,7 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStopRequest(nsIRequest* request, nsISupport
 //*****************************************************************************
 
 
-NS_IMETHODIMP nsWebBrowserPersist::OnDataAvailable(nsIRequest* request, nsISupports *aContext, nsIInputStream *aIStream, PRUint32 aOffset, PRUint32 aLength)
+NS_IMETHODIMP nsWebBrowserPersist::OnDataAvailable(nsIChannel *aChannel, nsISupports *aContext, nsIInputStream *aIStream, PRUint32 aOffset, PRUint32 aLength)
 {
     nsresult rv = NS_OK;
     unsigned long bytesRemaining = aLength;
@@ -452,9 +453,9 @@ NS_IMETHODIMP nsWebBrowserPersist::OnDataAvailable(nsIRequest* request, nsISuppo
     // Cancel reading?
     if (cancel)
     {
-        if (request)
+        if (aChannel)
         {
-            request->Cancel(NS_BINDING_ABORTED);
+            aChannel->Cancel(NS_BINDING_ABORTED);
         }
         CleanUp();
         OnEndDownload();
@@ -543,6 +544,8 @@ nsWebBrowserPersist::CleanupURIMap(nsHashKey *aKey, void *aData, void* closure)
 nsresult
 nsWebBrowserPersist::OnWalkDOMNode(nsIDOMNode *aNode, PRBool *aAbort)
 {
+    nsresult rv = NS_OK;
+
     // Test the node to see if it's an image, frame, iframe, css, js
     nsCOMPtr<nsIDOMHTMLImageElement> nodeAsImage = do_QueryInterface(aNode);
     if (nodeAsImage)
@@ -610,6 +613,8 @@ nsWebBrowserPersist::OnWalkDOMNode(nsIDOMNode *aNode, PRBool *aAbort)
 nsresult
 nsWebBrowserPersist::CloneNodeWithFixedUpURIAttributes(nsIDOMNode *aNodeIn, nsIDOMNode **aNodeOut)
 {
+    nsresult rv = NS_OK;
+
     *aNodeOut = nsnull;
 
     // Test the node to see if it's an image, frame, iframe, css, js
@@ -887,36 +892,30 @@ nsWebBrowserPersist::MakeAndStoreLocalFilenameInURIMap(const char *aURI, nsStrin
         // Create a unique file name for the uri
         MakeFilenameFromURI(uri, inputChannel, filename);
 
-        if (!mMIMEService)
-        {
-            mMIMEService = do_GetService(NS_MIMESERVICE_CONTRACTID);
-            if (!mMIMEService)
-                return NS_ERROR_FAILURE;
-        }
-
-        // Strap on the file extension using the mime lookup service
-        
+        // Query the content type
         nsXPIDLCString contentType;
-        rv = mMIMEService->GetTypeFromURI(uri, getter_Copies(contentType));
-        if (NS_FAILED(rv))
-            return rv;
-        
-        nsCOMPtr<nsIMIMEInfo> mimeInfo;
-        mMIMEService->GetFromMIMEType(contentType, getter_AddRefs(mimeInfo));
-        if (mimeInfo)
+        inputChannel->GetContentType(getter_Copies(contentType));
+    
+        // Strap on the file extension using the mime lookup service
+        if (mMIMEService)
         {
-            // Append the mime file extension
-            nsXPIDLCString fileExtension;
-            if (NS_SUCCEEDED(mimeInfo->FirstExtension(getter_Copies(fileExtension))))
+            nsCOMPtr<nsIMIMEInfo> mimeInfo;
+            mMIMEService->GetFromMIMEType(contentType, getter_AddRefs(mimeInfo));
+            if (mimeInfo)
             {
-                nsString newExt;
-                newExt.AssignWithConversion(".");
-                newExt.AppendWithConversion(fileExtension);
-                // TODO no need to append if an extension for the mime type is already there
-                filename.Append(newExt);
+                // Append the mime file extension
+                nsXPIDLCString fileExtension;
+                if (NS_SUCCEEDED(mimeInfo->FirstExtension(getter_Copies(fileExtension))))
+                {
+                    nsString newExt;
+                    newExt.AssignWithConversion(".");
+                    newExt.AppendWithConversion(fileExtension);
+                    // TODO no need to append if an extension for the mime type is already there
+                    filename.Append(newExt);
+                }
             }
         }
-    
+
         // Store the file name
         URIData *data = new URIData;
         if (!data)

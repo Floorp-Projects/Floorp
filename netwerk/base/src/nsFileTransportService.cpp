@@ -88,7 +88,7 @@ NS_IMETHODIMP
 nsFileTransportService::CreateTransport(nsIFile* file,
                                         PRInt32 ioFlags,
                                         PRInt32 perm,
-                                        nsITransport** result)
+                                        nsIChannel** result)
 {
     nsresult rv;
     nsFileTransport* trans = new nsFileTransport();
@@ -109,7 +109,7 @@ nsFileTransportService::CreateTransportFromStream(const char* name,
                                                   nsIInputStream *fromStream,
                                                   const char* contentType,
                                                   PRInt32 contentLength,
-                                                  nsITransport** result)
+                                                  nsIChannel** result)
 {
     nsresult rv;
     nsFileTransport* trans = new nsFileTransport();
@@ -127,7 +127,7 @@ nsFileTransportService::CreateTransportFromStream(const char* name,
 
 NS_IMETHODIMP
 nsFileTransportService::CreateTransportFromStreamIO(nsIStreamIO *io,
-                                                    nsITransport **result)
+                                                    nsIChannel **result)
 {
     nsresult rv;
     nsFileTransport* trans = new nsFileTransport();

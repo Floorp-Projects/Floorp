@@ -61,7 +61,7 @@ CParserContext::CParserContext(nsScanner* aScanner,
   mContextType=eCTNone; 
   mCopyUnused=aCopyUnused; 
   mParserCommand=aCommand;
-  mRequest=0;
+  mChannel=0;
   mValidator=0;
 } 
 
@@ -92,7 +92,7 @@ CParserContext::CParserContext(const CParserContext &aContext) : mMimeType() {
   mStreamListenerState=aContext.mStreamListenerState;
   mMultipart=aContext.mMultipart;
   mContextType=aContext.mContextType;
-  mRequest=aContext.mRequest;
+  mChannel=aContext.mChannel;
   mParserCommand=aContext.mParserCommand;
   SetMimeType(aContext.mMimeType);
 }

@@ -1059,7 +1059,7 @@ mozXMLTerminal::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL,
 }
 
 NS_IMETHODIMP
-mozXMLTerminal::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIRequest* request,
+mozXMLTerminal::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel* channel,
                               nsresult aStatus)
 {
 
@@ -1068,7 +1068,7 @@ mozXMLTerminal::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIRequest* request
 
 NS_IMETHODIMP
 mozXMLTerminal::OnStartURLLoad(nsIDocumentLoader* loader,
-                                 nsIRequest* request)
+                                 nsIChannel* channel)
 {
 
    return NS_OK;
@@ -1076,7 +1076,7 @@ mozXMLTerminal::OnStartURLLoad(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 mozXMLTerminal::OnProgressURLLoad(nsIDocumentLoader* loader,
-                                    nsIRequest* request, PRUint32 aProgress, 
+                                    nsIChannel* channel, PRUint32 aProgress, 
                                     PRUint32 aProgressMax)
 {
   return NS_OK;
@@ -1084,14 +1084,14 @@ mozXMLTerminal::OnProgressURLLoad(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 mozXMLTerminal::OnStatusURLLoad(nsIDocumentLoader* loader,
-                                  nsIRequest* request, nsString& aMsg)
+                                  nsIChannel* channel, nsString& aMsg)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
 mozXMLTerminal::OnEndURLLoad(nsIDocumentLoader* loader,
-                               nsIRequest* request, nsresult aStatus)
+                               nsIChannel* channel, nsresult aStatus)
 {
   XMLT_LOG(mozXMLTerminal::OnEndURLLoad,20,("\n"));
 

@@ -147,11 +147,11 @@ public:
 
    // nsIDocumentLoaderObserver
   NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aCommand);
-  NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIRequest *request, nsresult aStatus);
-  NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, nsIRequest *request);
-  NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader, nsIRequest *request, PRUint32 aProgress, PRUint32 aProgressMax);
-  NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader, nsIRequest *request, nsString& aMsg);
-  NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIRequest *request, nsresult aStatus);
+  NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus);
+  NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* channel);
+  NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, PRUint32 aProgress, PRUint32 aProgressMax);
+  NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsString& aMsg);
+  NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus);
 //  NS_IMETHOD OnConnectionsComplete();
 
 
@@ -696,7 +696,7 @@ nsPICS::OnStartDocumentLoad(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 nsPICS::OnEndDocumentLoad(nsIDocumentLoader* loader, 
-                          nsIRequest *request, 
+                          nsIChannel* channel, 
                           nsresult aStatus)
 {
   nsresult rv = NS_OK;
@@ -719,13 +719,9 @@ nsPICS::OnEndDocumentLoad(nsIDocumentLoader* loader,
 }
 
 NS_IMETHODIMP
-nsPICS::OnStartURLLoad(nsIDocumentLoader* loader, nsIRequest *request)
+nsPICS::OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* channel)
 {
   nsresult rv = NS_OK;
-  
-  nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-  if (!channel)
-    return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIURI> aURL;
   rv = channel->GetURI(getter_AddRefs(aURL));
@@ -802,7 +798,7 @@ nsPICS::OnStartURLLoad(nsIDocumentLoader* loader, nsIRequest *request)
 
 NS_IMETHODIMP
 nsPICS::OnProgressURLLoad(nsIDocumentLoader* loader, 
-                          nsIRequest *request, 
+                          nsIChannel* channel, 
                           PRUint32 aProgress, 
                           PRUint32 aProgressMax)
 {
@@ -813,7 +809,7 @@ nsPICS::OnProgressURLLoad(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 nsPICS::OnStatusURLLoad(nsIDocumentLoader* loader, 
-                        nsIRequest *request, 
+                        nsIChannel* channel, 
                         nsString& aMsg)
 {
   if(!mPICSRatingsEnabled)
@@ -823,12 +819,10 @@ nsPICS::OnStatusURLLoad(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 nsPICS::OnEndURLLoad(nsIDocumentLoader* loader, 
-                     nsIRequest *request, 
+                     nsIChannel* channel, 
                      nsresult aStatus)
 {
   nsresult rv;
-
-  nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
 
   nsCOMPtr<nsIURI> aURL;
   rv = channel->GetURI(getter_AddRefs(aURL));

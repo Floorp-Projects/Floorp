@@ -27,7 +27,7 @@
 
 #include "nsIStreamListener.h"
 #include "nsIRequest.h"
-#include "nsITransport.h"
+#include "nsIChannel.h"
 #include "nsString.h"
 #include "nsIOutputStream.h"
 #include "nsAutoLock.h"
@@ -39,18 +39,15 @@ public:
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSISTREAMOBSERVER
 
-	nsFtpControlConnection(nsITransport* socketTransport);
+	nsFtpControlConnection(nsIChannel* socketTransport);
 	virtual ~nsFtpControlConnection();
     
     nsresult Connect();
     nsresult Disconnect();
     nsresult Write(nsCString& command);
     PRBool   IsConnected() { return mConnected; }
-    
-    void     GetReadRequest(nsIRequest** request) { NS_ADDREF(*request=mReadRequest); }
-    void     GetWriteRequest(nsIRequest** request) { NS_ADDREF(*request=mWriteRequest); }
-    
-    nsresult GetTransport(nsITransport** controlTransport);
+
+    nsresult GetChannel(nsIChannel** controlChannel);
     nsresult SetStreamListener(nsIStreamListener *aListener);
 
     PRUint32         mServerType;           // what kind of server is it.
@@ -62,14 +59,10 @@ public:
 private:
 	PRLock* mLock;  // protects mListener.
 
-    
-    nsCOMPtr<nsIRequest>        mReadRequest;
-    nsCOMPtr<nsIRequest>        mWriteRequest;
-    nsCOMPtr<nsITransport>      mCPipe;
-    nsCOMPtr<nsIOutputStream>   mOutStream;
+    nsCOMPtr<nsIChannel> mCPipe;
+    nsCOMPtr<nsIOutputStream> mOutStream;
     nsCOMPtr<nsIStreamListener> mListener;
-    PRPackedBool                mConnected;
-    PRPackedBool                mWriteSuspened;
+    PRBool          mConnected;
 };
 
 

@@ -152,7 +152,7 @@ CStreamListener::OnStartDocumentLoad(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 CStreamListener::OnEndDocumentLoad(nsIDocumentLoader* loader,
-                                   nsIRequest *request,
+                                   nsIChannel* channel,
                                    nsresult aStatus)
 {
   fputs("done.\n",stdout);
@@ -162,14 +162,14 @@ CStreamListener::OnEndDocumentLoad(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 CStreamListener::OnStartURLLoad(nsIDocumentLoader* loader,
-                                nsIRequest *request)
+                                nsIChannel* channel)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
 CStreamListener::OnProgressURLLoad(nsIDocumentLoader* loader,
-                                   nsIRequest *request,
+                                   nsIChannel* channel,
                                    PRUint32 aProgress, 
                                    PRUint32 aProgressMax)
 {
@@ -178,7 +178,7 @@ CStreamListener::OnProgressURLLoad(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 CStreamListener::OnStatusURLLoad(nsIDocumentLoader* loader,
-                                 nsIRequest *request,
+                                 nsIChannel* channel,
                                  nsString& aMsg)
 {
   return NS_OK;
@@ -186,7 +186,7 @@ CStreamListener::OnStatusURLLoad(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 CStreamListener::OnEndURLLoad(nsIDocumentLoader* loader,
-                              nsIRequest *request,
+                              nsIChannel* channel,
                               nsresult aStatus)
 {
   return NS_OK;

@@ -348,7 +348,7 @@ int nsAccount::GetNCIValues(nsString MiddleValue)
   ret = NS_OpenURI(&channel, uri, service);
   if (NS_FAILED(ret)) return ret;
 
-  ret = channel->Open(&in);
+  ret = channel->OpenInputStream(&in);
   if (NS_FAILED(ret)) return ret;
 
   nsIPersistentProperties* props = nsnull;
@@ -430,7 +430,7 @@ int nsAccount::GetConfigValues(nsString fileName)
   ret = NS_OpenURI(&channel, uri, service);
   if (NS_FAILED(ret)) return ret;
 
-  ret = channel->Open(&in);
+  ret = channel->OpenInputStream(&in);
   if (NS_FAILED(ret)) return ret;
 
 	nsIPersistentProperties* props = nsnull;

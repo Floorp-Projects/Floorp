@@ -2092,7 +2092,7 @@ nsBrowserWindow::OnStartDocumentLoad(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 nsBrowserWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
-                                   nsIRequest* request,
+                                   nsIChannel* channel,
                                    nsresult aStatus)
 {
   return NS_OK;
@@ -2100,14 +2100,14 @@ nsBrowserWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 nsBrowserWindow::OnStartURLLoad(nsIDocumentLoader* loader,
-                                nsIRequest* request)
+                                nsIChannel* channel)
 {
    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsBrowserWindow::OnProgressURLLoad(nsIDocumentLoader* loader,
-                                   nsIRequest* request,
+                                   nsIChannel* channel,
                                    PRUint32 aProgress, 
                                    PRUint32 aProgressMax)
 {
@@ -2116,7 +2116,7 @@ nsBrowserWindow::OnProgressURLLoad(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 nsBrowserWindow::OnStatusURLLoad(nsIDocumentLoader* loader,
-                                 nsIRequest* request,
+                                 nsIChannel* channel,
                                  nsString& aMsg)
 {
   return NS_OK;
@@ -2124,20 +2124,19 @@ nsBrowserWindow::OnStatusURLLoad(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 nsBrowserWindow::OnEndURLLoad(nsIDocumentLoader* loader,
-                              nsIRequest* request,
+                              nsIChannel* channel,
                               nsresult aStatus)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBrowserWindow::OnProgress(nsIRequest* request, nsISupports *ctxt,
+nsBrowserWindow::OnProgress(nsIChannel* channel, nsISupports *ctxt,
                             PRUint32 aProgress, PRUint32 aProgressMax)
 {
   nsresult rv;
 
   nsCOMPtr<nsIURI> aURL;
-  nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
   rv = channel->GetURI(getter_AddRefs(aURL));
   if (NS_FAILED(rv)) return rv;
   
@@ -2163,7 +2162,7 @@ nsBrowserWindow::OnProgress(nsIRequest* request, nsISupports *ctxt,
 }
 
 NS_IMETHODIMP
-nsBrowserWindow::OnStatus(nsIRequest* request, nsISupports *ctxt,
+nsBrowserWindow::OnStatus(nsIChannel* channel, nsISupports *ctxt,
                           nsresult aStatus, const PRUnichar *aStatusArg)
 {
   if (mStatus) {

@@ -24,7 +24,6 @@
 #include "nsIEventQueue.h"
 #include "nsIEventQueueService.h"
 #include "nsIChannel.h"
-#include "nsITransport.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include <stdio.h>
@@ -204,13 +203,13 @@ public:
         return NS_OK;
     }
 
-    NS_IMETHOD OnStartRequest(nsIRequest *request,
+    NS_IMETHOD OnStartRequest(nsIChannel* channel,
                               nsISupports* context) {
         mStartTime = PR_IntervalNow();
         return NS_OK;
     }
 
-    NS_IMETHOD OnDataAvailable(nsIRequest *request, 
+    NS_IMETHOD OnDataAvailable(nsIChannel* channel, 
                                nsISupports* context,
                                nsIInputStream *aIStream, 
                                PRUint32 aSourceOffset,
@@ -229,7 +228,7 @@ public:
         return NS_OK;
     }
 
-    NS_IMETHOD OnStopRequest(nsIRequest *request, nsISupports* context,
+    NS_IMETHOD OnStopRequest(nsIChannel* channel, nsISupports* context,
                              nsresult aStatus, const PRUnichar* aStatusArg) {
         PRIntervalTime endTime;
         PRIntervalTime duration;
@@ -290,11 +289,11 @@ nsresult
 TestReadStream(nsINetDataCacheRecord *record, nsITestDataStream *testDataStream,
                PRUint32 expectedStreamLength)
 {
-    nsCOMPtr<nsITransport> transport;
+    nsCOMPtr<nsIChannel> channel;
     nsresult rv;
     PRUint32 actualContentLength;
 
-    rv = record->NewTransport(0, getter_AddRefs(transport));
+    rv = record->NewChannel(0, getter_AddRefs(channel));
     NS_ASSERTION(NS_SUCCEEDED(rv), " ");
 
     rv = record->GetStoredContentLength(&actualContentLength);
@@ -306,8 +305,7 @@ TestReadStream(nsINetDataCacheRecord *record, nsITestDataStream *testDataStream,
     rv = reader->Init(testDataStream, expectedStreamLength);
     NS_ASSERTION(NS_SUCCEEDED(rv), " ");
     
-    nsCOMPtr<nsIRequest> request;
-    rv = transport->AsyncRead(0, reader, 0, -1, 0, getter_AddRefs(request));
+    rv = channel->AsyncRead(0, reader);
     NS_ASSERTION(NS_SUCCEEDED(rv), " ");
     reader->Release();
 
@@ -525,7 +523,7 @@ TestOffsetWrites(nsINetDataCache *cache)
 {
     nsresult rv;
     nsCOMPtr<nsINetDataCacheRecord> record;
-    nsCOMPtr<nsITransport> transport;
+    nsCOMPtr<nsIChannel> channel;
     nsCOMPtr<nsIOutputStream> outStream;
     char buf[512];
     char cacheKey[CACHE_KEY_LENGTH];
@@ -545,12 +543,13 @@ TestOffsetWrites(nsINetDataCache *cache)
     CounterStream *counterStream;
     int i;
     for (i = 0; i < 100; i++) {
-        rv = record->NewTransport(0, getter_AddRefs(transport));
+        rv = record->NewChannel(0, getter_AddRefs(channel));
         NS_ASSERTION(NS_SUCCEEDED(rv), " ");
 
         startingOffset = streamLength ? streamLength - (randomStream->Next() % sizeof buf): 0;
-        
-        rv = transport->OpenOutputStream(startingOffset, -1, 0, getter_AddRefs(outStream));
+        rv = channel->SetTransferOffset(startingOffset);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "SetTransferOffset failed");
+        rv = channel->OpenOutputStream(getter_AddRefs(outStream));
         NS_ASSERTION(NS_SUCCEEDED(rv), "OpenOutputStream failed");
         
         counterStream = new CounterStream(startingOffset);
@@ -584,7 +583,7 @@ FillCache(nsINetDataCache *cache)
     nsresult rv;
     PRBool inCache;
     nsCOMPtr<nsINetDataCacheRecord> record;
-    nsCOMPtr<nsITransport> transport;
+    nsCOMPtr<nsIChannel> channel;
     nsCOMPtr<nsIOutputStream> outStream;
     char buf[1000];
     PRUint32 metaDataLength;
@@ -629,10 +628,10 @@ FillCache(nsINetDataCache *cache)
         randomStream->Read(metaData, sizeof metaData);
         record->SetMetaData(sizeof metaData, metaData);
 
-        rv = record->NewTransport(0, getter_AddRefs(transport));
+        rv = record->NewChannel(0, getter_AddRefs(channel));
         NS_ASSERTION(NS_SUCCEEDED(rv), " ");
 
-        rv = transport->OpenOutputStream(0, -1, 0, getter_AddRefs(outStream));
+        rv = channel->OpenOutputStream(getter_AddRefs(outStream));
         NS_ASSERTION(NS_SUCCEEDED(rv), " ");
         
         PRUint32 beforeOccupancy;

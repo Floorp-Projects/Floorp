@@ -56,10 +56,10 @@ protected:
                                    //  that this record inhabits
 
     nsCOMPtr<nsIStorageStream> mStorageStream;
-    PRUint32    mNumTransports;      // Count un-Release'ed nsITransports
+    PRUint32    mNumChannels;      // Count un-Release'ed nsIChannels
 
     friend class nsMemCache;
-    friend class nsMemCacheTransport;
+    friend class nsMemCacheChannel;
 
 private:
     nsCOMPtr<nsISupports>   mSecurityInfo;

@@ -388,8 +388,8 @@ NS_IMETHODIMP CWebBrowserContainer::GetProtocolHandler(nsIURI *aURI, nsIProtocol
 }
 
 
-/* void doContent (in string aContentType, in nsURILoadCommand aCommand, in string aWindowTarget, in nsIRequest request, out nsIStreamListener aContentHandler, out boolean aAbortProcess); */
-NS_IMETHODIMP CWebBrowserContainer::DoContent(const char *aContentType, nsURILoadCommand aCommand, const char *aWindowTarget, nsIRequest *request, nsIStreamListener **aContentHandler, PRBool *aAbortProcess)
+/* void doContent (in string aContentType, in nsURILoadCommand aCommand, in string aWindowTarget, in nsIChannel aOpenedChannel, out nsIStreamListener aContentHandler, out boolean aAbortProcess); */
+NS_IMETHODIMP CWebBrowserContainer::DoContent(const char *aContentType, nsURILoadCommand aCommand, const char *aWindowTarget, nsIChannel *aOpenedChannel, nsIStreamListener **aContentHandler, PRBool *aAbortProcess)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -714,7 +714,7 @@ CWebBrowserContainer::GetPersistence(PRBool* aPersistX, PRBool* aPersistY,
 
 
 NS_IMETHODIMP
-CWebBrowserContainer::OnStartRequest(nsIRequest *request, nsISupports* aContext)
+CWebBrowserContainer::OnStartRequest(nsIChannel* aChannel, nsISupports* aContext)
 {
 	USES_CONVERSION;
 	NG_TRACE(_T("CWebBrowserContainer::OnStartRequest(...)\n"));
@@ -724,7 +724,7 @@ CWebBrowserContainer::OnStartRequest(nsIRequest *request, nsISupports* aContext)
 
 
 NS_IMETHODIMP
-CWebBrowserContainer::OnStopRequest(nsIRequest *request, nsISupports* aContext, nsresult aStatus, const PRUnichar* aMsg)
+CWebBrowserContainer::OnStopRequest(nsIChannel* aChannel, nsISupports* aContext, nsresult aStatus, const PRUnichar* aMsg)
 {
 	USES_CONVERSION;
 	NG_TRACE(_T("CWebBrowserContainer::OnStopRequest(..., %d, \"%s\")\n"), (int) aStatus, W2T((PRUnichar *) aMsg));
@@ -758,7 +758,7 @@ CWebBrowserContainer::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* pUR
 
 // we need this to fire the document complete 
 NS_IMETHODIMP
-CWebBrowserContainer::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIRequest *request, nsresult aStatus)
+CWebBrowserContainer::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel *aChannel, nsresult aStatus)
 {
 	NG_TRACE(_T("CWebBrowserContainer::OnEndDocumentLoad(...,  \"\")\n"));
 
@@ -775,9 +775,6 @@ CWebBrowserContainer::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIRequest *r
 
 	char* aString = nsnull;    
     nsIURI* pURI = nsnull;
-
-    nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
-    if (!aChannel) return NS_ERROR_NULL_POINTER;
 
     aChannel->GetURI(&pURI);
 	if (pURI == nsnull)
@@ -807,7 +804,7 @@ CWebBrowserContainer::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIRequest *r
 
 
 NS_IMETHODIMP
-CWebBrowserContainer::OnStartURLLoad(nsIDocumentLoader* loader, nsIRequest *request)
+CWebBrowserContainer::OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* aChannel)
 { 
 	NG_TRACE(_T("CWebBrowserContainer::OnStartURLLoad(...,  \"\")\n"));
 
@@ -818,7 +815,7 @@ CWebBrowserContainer::OnStartURLLoad(nsIDocumentLoader* loader, nsIRequest *requ
 
 
 NS_IMETHODIMP
-CWebBrowserContainer::OnProgressURLLoad(nsIDocumentLoader* loader, nsIRequest *request, PRUint32 aProgress, PRUint32 aProgressMax)
+CWebBrowserContainer::OnProgressURLLoad(nsIDocumentLoader* loader, nsIChannel* aChannel, PRUint32 aProgress, PRUint32 aProgressMax)
 { 
 	USES_CONVERSION;
 	NG_TRACE(_T("CWebBrowserContainer::OnProgress(..., \"%d\", \"%d\")\n"), (int) aProgress, (int) aProgressMax);
@@ -828,7 +825,7 @@ CWebBrowserContainer::OnProgressURLLoad(nsIDocumentLoader* loader, nsIRequest *r
 
 
 NS_IMETHODIMP
-CWebBrowserContainer::OnStatusURLLoad(nsIDocumentLoader* loader, nsIRequest *request, nsString& aMsg)
+CWebBrowserContainer::OnStatusURLLoad(nsIDocumentLoader* loader, nsIChannel* aChannel, nsString& aMsg)
 { 
 	NG_TRACE(_T("CWebBrowserContainer::OnStatusURLLoad(...,  \"\")\n"));
 	
@@ -843,7 +840,7 @@ CWebBrowserContainer::OnStatusURLLoad(nsIDocumentLoader* loader, nsIRequest *req
 
 
 NS_IMETHODIMP
-CWebBrowserContainer::OnEndURLLoad(nsIDocumentLoader* loader, nsIRequest *request, nsresult aStatus)
+CWebBrowserContainer::OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus)
 {
 	NG_TRACE(_T("CWebBrowserContainer::OnEndURLLoad(...,  \"\")\n"));
 

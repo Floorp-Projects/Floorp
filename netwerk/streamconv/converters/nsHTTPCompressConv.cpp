@@ -95,21 +95,21 @@ nsHTTPCompressConv::AsyncConvertData (
 } 
 
 NS_IMETHODIMP
-nsHTTPCompressConv::OnStartRequest (nsIRequest* request, nsISupports *aContext)
+nsHTTPCompressConv::OnStartRequest (nsIChannel *aChannel, nsISupports *aContext)
 {
-    return mListener->OnStartRequest (request, aContext);
+    return mListener -> OnStartRequest (aChannel, aContext);
 } 
 
 NS_IMETHODIMP
-nsHTTPCompressConv::OnStopRequest(nsIRequest* request, nsISupports *aContext, 
+nsHTTPCompressConv::OnStopRequest(nsIChannel *aChannel, nsISupports *aContext, 
                                   nsresult aStatus, const PRUnichar* aStatusArg)
 {
-    return mListener->OnStopRequest(request, aContext, aStatus, aStatusArg);
+    return mListener->OnStopRequest(aChannel, aContext, aStatus, aStatusArg);
 } 
 
 NS_IMETHODIMP
 nsHTTPCompressConv::OnDataAvailable ( 
-							  nsIRequest* request, 
+							  nsIChannel *aChannel, 
 							  nsISupports *aContext, 
 							  nsIInputStream *iStr, 
 							  PRUint32 aSourceOffset, 
@@ -118,7 +118,7 @@ nsHTTPCompressConv::OnDataAvailable (
     nsresult rv = NS_ERROR_FAILURE;
 	PRUint32 streamLen;
 
-    rv = iStr->Available (&streamLen);
+    rv = iStr -> Available (&streamLen);
     if (NS_FAILED (rv))
 		return rv;
 
@@ -159,7 +159,7 @@ nsHTTPCompressConv::OnDataAvailable (
             if (mInpBuffer == NULL || mOutBuffer == NULL)
                 return NS_ERROR_OUT_OF_MEMORY;
 
-            iStr->Read ((char *)mInpBuffer, streamLen, &rv);
+            iStr -> Read ((char *)mInpBuffer, streamLen, &rv);
 
             if (NS_FAILED (rv))
                 return rv;
@@ -179,7 +179,7 @@ nsHTTPCompressConv::OnDataAvailable (
                 if (code != Z_OK)
                     return NS_ERROR_FAILURE;
 
-                rv = do_OnDataAvailable (request, aContext, aSourceOffset, (char *)mOutBuffer, (PRUint32) uLen);
+                rv = do_OnDataAvailable (aChannel, aContext, aSourceOffset, (char *)mOutBuffer, (PRUint32) uLen);
                 if (NS_FAILED (rv))
                     return rv;
 
@@ -211,7 +211,7 @@ nsHTTPCompressConv::OnDataAvailable (
                     {
                         if (bytesWritten)
                         {
-                            rv = do_OnDataAvailable (request, aContext, aSourceOffset, (char *)mOutBuffer, bytesWritten);
+                            rv = do_OnDataAvailable (aChannel, aContext, aSourceOffset, (char *)mOutBuffer, bytesWritten);
                             if (NS_FAILED (rv))
                                 return rv;
                         }
@@ -225,7 +225,7 @@ nsHTTPCompressConv::OnDataAvailable (
                     {
                         if (bytesWritten)
                         {
-                            rv = do_OnDataAvailable (request, aContext, aSourceOffset, (char *)mOutBuffer, bytesWritten);
+                            rv = do_OnDataAvailable (aChannel, aContext, aSourceOffset, (char *)mOutBuffer, bytesWritten);
                             if (NS_FAILED (rv))
                                 return rv;
                         }
@@ -235,7 +235,7 @@ nsHTTPCompressConv::OnDataAvailable (
                     {
                         if (bytesWritten)
                         {
-                            rv = do_OnDataAvailable (request, aContext, aSourceOffset, (char *)mOutBuffer, bytesWritten);
+                            rv = do_OnDataAvailable (aChannel, aContext, aSourceOffset, (char *)mOutBuffer, bytesWritten);
                             if (NS_FAILED (rv))
                                 return rv;
                         }
@@ -248,7 +248,7 @@ nsHTTPCompressConv::OnDataAvailable (
             break;
 
         default: 
-            rv = mListener->OnDataAvailable (request, aContext, iStr, aSourceOffset, aCount);
+            rv = mListener -> OnDataAvailable (aChannel, aContext, iStr, aSourceOffset, aCount);
 			if (NS_FAILED (rv))
 			    return rv;
     } /* switch */
@@ -271,7 +271,24 @@ nsHTTPCompressConv::Convert (
 } 
 
 nsresult
-nsHTTPCompressConv::do_OnDataAvailable (nsIRequest* request, nsISupports *aContext, PRUint32 aSourceOffset, char *buffer, PRUint32 aCount)
+NS_NewHTTPCompressConv (nsHTTPCompressConv ** aHTTPCompressConv)
+{
+    NS_PRECONDITION(aHTTPCompressConv != nsnull, "null ptr");
+
+    if (! aHTTPCompressConv)
+        return NS_ERROR_NULL_POINTER;
+
+    *aHTTPCompressConv = new nsHTTPCompressConv ();
+
+    if (! *aHTTPCompressConv)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(*aHTTPCompressConv);
+    return NS_OK;
+}
+
+nsresult
+nsHTTPCompressConv::do_OnDataAvailable (nsIChannel *aChannel, nsISupports *aContext, PRUint32 aSourceOffset, char *buffer, PRUint32 aCount)
 {
 	nsresult rv;
 
@@ -291,7 +308,7 @@ nsHTTPCompressConv::do_OnDataAvailable (nsIRequest* request, nsISupports *aConte
 	if (NS_FAILED (rv))
 	    return rv;
 
-	rv = mListener->OnDataAvailable (request, aContext, convertedStream, aSourceOffset, aCount);
+	rv = mListener -> OnDataAvailable (aChannel, aContext, convertedStream, aSourceOffset, aCount);
 
 	return rv;
 }
@@ -322,7 +339,7 @@ nsHTTPCompressConv::check_header (nsIInputStream *iStr, PRUint32 streamLen, nsre
         switch (hMode)
         {
             case GZIP_INIT:
-                iStr->Read (&c, 1, &rv);
+                iStr -> Read (&c, 1, &rv);
                 streamLen--;
                 
                 if (mSkipCount == 0 && ((unsigned)c & 0377) != gz_magic[0])
@@ -358,7 +375,7 @@ nsHTTPCompressConv::check_header (nsIInputStream *iStr, PRUint32 streamLen, nsre
                 break;
 
             case GZIP_OS  :
-                iStr->Read (&c, 1, &rv);
+                iStr -> Read (&c, 1, &rv);
                 streamLen--;
                 mSkipCount++;
 
@@ -369,7 +386,7 @@ nsHTTPCompressConv::check_header (nsIInputStream *iStr, PRUint32 streamLen, nsre
             case GZIP_EXTRA0:
                 if (mFlags & EXTRA_FIELD)
                 {
-                    iStr->Read (&c, 1, &rv);
+                    iStr -> Read (&c, 1, &rv);
                     streamLen--;
                     mLen = (uInt) c & 0377;
                     hMode = GZIP_EXTRA1;
@@ -379,7 +396,7 @@ nsHTTPCompressConv::check_header (nsIInputStream *iStr, PRUint32 streamLen, nsre
                 break;
 
             case GZIP_EXTRA1:
-                iStr->Read (&c, 1, &rv);
+                iStr -> Read (&c, 1, &rv);
                 streamLen--;
                 mLen = ((uInt) c & 0377) << 8;
                 mSkipCount = 0;
@@ -391,7 +408,7 @@ nsHTTPCompressConv::check_header (nsIInputStream *iStr, PRUint32 streamLen, nsre
                     hMode = GZIP_ORIG;
                 else
                 {
-                    iStr->Read (&c, 1, &rv);
+                    iStr -> Read (&c, 1, &rv);
                     streamLen--;
                     mSkipCount++;
                 }
@@ -400,7 +417,7 @@ nsHTTPCompressConv::check_header (nsIInputStream *iStr, PRUint32 streamLen, nsre
             case GZIP_ORIG:
                 if (mFlags & ORIG_NAME)
                 {
-                    iStr->Read (&c, 1, &rv);
+                    iStr -> Read (&c, 1, &rv);
                     streamLen--;
                     if (c == 0)
                         hMode = GZIP_COMMENT;
@@ -412,7 +429,7 @@ nsHTTPCompressConv::check_header (nsIInputStream *iStr, PRUint32 streamLen, nsre
             case GZIP_COMMENT:
                 if (mFlags & GZIP_COMMENT)
                 {
-                    iStr->Read (&c, 1, &rv);
+                    iStr -> Read (&c, 1, &rv);
                     streamLen--;
                     if (c == 0)
                     {
@@ -430,7 +447,7 @@ nsHTTPCompressConv::check_header (nsIInputStream *iStr, PRUint32 streamLen, nsre
            case GZIP_CRC:
                 if (mFlags & HEAD_CRC)
                 {
-                    iStr->Read (&c, 1, &rv);
+                    iStr -> Read (&c, 1, &rv);
                     streamLen--;
                     mSkipCount++;
                     if (mSkipCount == 2)
@@ -449,23 +466,3 @@ nsHTTPCompressConv::check_header (nsIInputStream *iStr, PRUint32 streamLen, nsre
     }
     return streamLen;
 }
-
-
-nsresult
-NS_NewHTTPCompressConv (nsHTTPCompressConv ** aHTTPCompressConv)
-{
-    NS_PRECONDITION(aHTTPCompressConv != nsnull, "null ptr");
-
-    if (! aHTTPCompressConv)
-        return NS_ERROR_NULL_POINTER;
-
-    *aHTTPCompressConv = new nsHTTPCompressConv ();
-
-    if (! *aHTTPCompressConv)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF(*aHTTPCompressConv);
-    return NS_OK;
-}
-
-

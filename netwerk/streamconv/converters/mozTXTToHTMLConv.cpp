@@ -1088,7 +1088,7 @@ mozTXTToHTMLConv::AsyncConvertData(const PRUnichar *aFromType,
 }
 
 NS_IMETHODIMP
-mozTXTToHTMLConv::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
+mozTXTToHTMLConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
                                      nsIInputStream *inStr, PRUint32 sourceOffset,
                                      PRUint32 count)
 {
@@ -1096,13 +1096,13 @@ mozTXTToHTMLConv::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
 }
 
 NS_IMETHODIMP
-mozTXTToHTMLConv::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
+mozTXTToHTMLConv::OnStartRequest(nsIChannel *channel, nsISupports *ctxt)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-mozTXTToHTMLConv::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
+mozTXTToHTMLConv::OnStopRequest(nsIChannel *channel, nsISupports *ctxt,
                                 nsresult aStatus, const PRUnichar* aStatusArg)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -1159,6 +1159,10 @@ mozTXTToHTMLConv::ScanHTML(const PRUnichar *text, PRUint32 whattodo,
   return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
+
+/**************************************************************************
+  Global functions
+***************************************************************************/
 nsresult
 MOZ_NewTXTToHTMLConv(mozTXTToHTMLConv** aConv)
 {

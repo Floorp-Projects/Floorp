@@ -38,7 +38,6 @@
 #include "nsCOMPtr.h"
 #include "nsIFile.h"        /* Solaris/gcc needed this here. */
 #include "nsIProgressEventSink.h"
-#include "nsITransport.h"
 
 class nsFileChannel : public nsIFileChannel,
                       public nsIInterfaceRequestor,
@@ -73,7 +72,7 @@ protected:
     nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
     PRInt32                             mIOFlags;
     PRInt32                             mPerm;
-    nsCOMPtr<nsITransport>              mFileTransport;
+    nsCOMPtr<nsIChannel>                mFileTransport;
     nsCString                           mContentType;
     PRUint32                            mLoadAttributes;
     nsCOMPtr<nsILoadGroup>              mLoadGroup;
@@ -85,7 +84,6 @@ protected:
     PRUint32                            mBufferMaxSize;
     nsresult                            mStatus;
     nsCOMPtr<nsIProgressEventSink>      mProgress;
-    nsCOMPtr<nsIRequest>                mCurrentRequest;
 #ifdef DEBUG
     PRThread*                           mInitiator;
 #endif

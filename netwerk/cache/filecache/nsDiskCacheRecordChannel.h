@@ -24,49 +24,55 @@
 #ifndef _ns_DiskCacheRecordChannel_h_
 #define _ns_DiskCacheRecordChannel_h_
 
-#include "nsITransport.h"
+#include "nsIChannel.h"
 #include "nsCOMPtr.h"
 #include "nsDiskCacheRecord.h"
 #include "nsIStreamListener.h"
 #include "nsIFile.h"
-
 /*
- * This class is plagiarized from nsMemCacheTransport
+ * This class is plagiarized from nsMemCacheChannel
  */
 
-class nsDiskCacheRecordTransport : public nsITransport,
-                                   public nsITransportRequest,
-                                   public nsIStreamListener 
+class nsDiskCacheRecordChannel : public nsIChannel,
+                                 public nsIStreamListener 
 {
-public:
+  public:
 
-  nsDiskCacheRecordTransport(nsDiskCacheRecord *aRecord, nsILoadGroup *aLoadGroup);
-  virtual ~nsDiskCacheRecordTransport();
+  nsDiskCacheRecordChannel(nsDiskCacheRecord *aRecord, nsILoadGroup *aLoadGroup);
+  virtual ~nsDiskCacheRecordChannel() ;
 
+  // Declare nsISupports methods
   NS_DECL_ISUPPORTS
+
+  // Declare nsIRequest methods
   NS_DECL_NSIREQUEST
-  NS_DECL_NSITRANSPORTREQUEST
-  NS_DECL_NSITRANSPORT
+
+  // Declare nsIChannel methods
+  NS_DECL_NSICHANNEL
+
+  // Declare nsIStreamObserver methods
   NS_DECL_NSISTREAMOBSERVER
+
+  // Declare nsIStreamListener methods
   NS_DECL_NSISTREAMLISTENER
 
-  nsresult Init(void);
+  nsresult Init(void) ;
 
-private:
+  private:
 
-  nsresult NotifyStorageInUse(PRInt32 aBytesUsed);
+  nsresult NotifyStorageInUse(PRInt32 aBytesUsed) ;
 
-  nsDiskCacheRecord*                    mRecord;
-  nsCOMPtr<nsILoadGroup>                mLoadGroup;
+  nsDiskCacheRecord*                    mRecord ;
+  nsCOMPtr<nsILoadGroup>                mLoadGroup ;
   nsLoadFlags                           mLoadAttributes;
-  nsCOMPtr<nsITransport>                mFileTransport;
-  nsCOMPtr<nsIRequest>                  mCurrentReadRequest;
-  nsCOMPtr< nsIFile >                   mSpec;
+  nsCOMPtr<nsISupports>                 mOwner ;
+  nsCOMPtr<nsIChannel>                  mFileTransport ;
+  nsCOMPtr< nsIFile >                   mSpec ;
   nsCOMPtr<nsIStreamListener>           mRealListener;
   nsresult                              mStatus;
 
-  friend class WriteStreamWrapper;
-};
+  friend class WriteStreamWrapper ;
+} ;
 
 #endif // _ns_DiskCacheRecordChannel_h_
 

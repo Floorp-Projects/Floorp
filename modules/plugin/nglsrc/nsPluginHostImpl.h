@@ -37,7 +37,6 @@ class ns4xPlugin;
 class nsFileSpec;
 class nsIComponentManager;
 class nsIFile;
-class nsIChannel;
 
 /**
  * A linked-list of plugin information that is used for

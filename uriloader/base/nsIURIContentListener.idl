@@ -31,7 +31,7 @@
 #include "nsIURILoader.idl"
 
 interface nsIProtocolHandler;
-interface nsIRequest;
+interface nsIChannel;
 interface nsIStreamListener;
 interface nsIURI;
 
@@ -79,7 +79,7 @@ interface nsIURIContentListener : nsISupports
    void doContent(in string aContentType, 
 			      in nsURILoadCommand aCommand, 
                   in string aWindowTarget, 
-				  in nsIRequest request,
+				  in nsIChannel aOpenedChannel,
                   out nsIStreamListener aContentHandler,
 				  out boolean aAbortProcess);
 
