@@ -1173,9 +1173,8 @@ NS_IMETHODIMP GlobalWindowImpl::Focus()
 {
    nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
    GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
-   NS_ENSURE_TRUE(treeOwnerAsWin, NS_ERROR_FAILURE);
-
-   treeOwnerAsWin->SetVisibility(PR_TRUE);
+   if(treeOwnerAsWin)
+      treeOwnerAsWin->SetVisibility(PR_TRUE);
 
    nsCOMPtr<nsIPresShell> presShell;
    mDocShell->GetPresShell(getter_AddRefs(presShell));
