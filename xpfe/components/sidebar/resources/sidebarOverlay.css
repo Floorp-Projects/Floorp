@@ -36,8 +36,8 @@
     min-height: 10px;
 }
 
-.iframe-panel {
-    min-width: 1px;  
+.iframe-panel { 
+    min-width: 1px;
     min-height: 1px;
 }
 
@@ -45,6 +45,11 @@
     min-width: 1px;
     min-height: 1px;
     overflow: auto;
+}
+
+.browser-sidebar {
+    min-width: 1px;  
+    min-height: 1px;
 }
 
 /*

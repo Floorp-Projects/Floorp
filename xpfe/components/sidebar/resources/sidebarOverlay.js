@@ -742,7 +742,7 @@ function sidebar_overlay_init() {
 
     if (sidebarObj.never_built) {
       sidebarObj.never_built = false;
-
+      
       debug("sidebar = " + sidebarObj);
       debug("sidebarObj.resource = " + sidebarObj.resource);
       debug("sidebarObj.datasource_uri = " + sidebarObj.datasource_uri);
@@ -767,17 +767,6 @@ function sidebar_overlay_init() {
         sidebar_panels_splitter.removeAttribute('hidden');
       }
 
-      // Add the user's current panel choices to the template builder,
-      // which will aggregate it with the other datasources that describe
-      // the individual panel's title, customize URL, and content URL.
-      var panels = document.getElementById('sidebar-panels');
-      panels.database.AddDataSource(RDF.GetDataSource(sidebarObj.datasource_uri));
-
-      debug("Adding observer to database.");
-      panels.database.AddObserver(panel_observer);
-
-      // XXX This is a hack to force re-display
-      panels.setAttribute('ref', sidebarObj.resource);
     }
     if (sidebar_is_collapsed()) {
       sidebarObj.collapsed = true;
@@ -795,22 +784,52 @@ function sidebar_overlay_destruct() {
     panels.database.RemoveObserver(panel_observer);
 }
 
+var gBusyOpeningDefault = false;
+
 function sidebar_open_default_panel(wait, tries) {
-  var panels = document.getElementById('sidebar-panels');
+  // check for making function reentrant
+  if (gBusyOpeningDefault)
+    return;
+  gBusyOpeningDefault = true;
 
-  debug("sidebar_open_default_panel("+wait+","+tries+")");
+  var ds = RDF.GetDataSource(sidebarObj.datasource_uri);
+  var currentListRes = RDF.GetResource("urn:sidebar:current-panel-list");
+  var panelListRes = RDF.GetResource("http://home.netscape.com/NC-rdf#panel-list");
+  var container = ds.GetTarget(currentListRes, panelListRes, true);
+  if (container) {
+    // Add the user's current panel choices to the template builder,
+    // which will aggregate it with the other datasources that describe
+    // the individual panel's title, customize URL, and content URL.
+    var panels = document.getElementById('sidebar-panels');
+    
+    var ds = RDF.GetDataSource(sidebarObj.datasource_uri);
+    panels.database.AddDataSource(ds);
 
-  // Make sure the sidebar exists before trying to refresh it.
-  if (panels.childNodes.length <= 2) {
+    debug("Adding observer to database.");
+    panels.database.AddObserver(panel_observer);
+
+    // XXX This is a hack to force re-display
+    panels.builder.rebuild();
+  } else {
     if (tries < 3) {
       // No children yet, try again later
-      setTimeout('sidebar_open_default_panel('+(wait*2)+','+(tries+1)+')',wait);
+      setTimeout('sidebar_open_default_panel(' + (wait*2) + ',' + (tries+1) + ')',wait);
+      gBusyOpeningDefault = false;
       return;
     } else {
       sidebar_fixup_datasource();
     }
   }
+
   sidebarObj.panels.refresh();
+  gBusyOpeningDefault = false;
+}
+
+function SidebarRebuild() {
+  sidebarObj.panels.initialized = false; // reset so panels are brought in view
+  var panels = document.getElementById("sidebar-panels");
+  panels.builder.rebuild();
+  sidebar_open_default_panel(100, 0);
 }
 
 //////////////////////////////////////////////////////////////
@@ -1034,13 +1053,6 @@ function SidebarReload() {
   sidebarObj.panels.refresh();
 }
  
-function SidebarRebuild() {
-  sidebarObj.panels.initialized = false; // reset so panels are brought in view
-  var panels = document.getElementById("sidebar-panels");
-  panels.builder.rebuild();
-  sidebar_open_default_panel(100, 0);
-}
-
 // Set up a lame hack to avoid opening two customize
 // windows on a double click.
 var gDisableCustomize = false;
@@ -1081,8 +1093,6 @@ function SidebarCustomize() {
   }
 }
 
-
-
 function BrowseMorePanels()
 {
   var url = '';
@@ -1117,10 +1127,12 @@ function SidebarExpandCollapse() {
     debug("Expanding the sidebar");
     sidebar_splitter.removeAttribute('state');
     sidebar_box.removeAttribute('collapsed');
+    SidebarSetButtonOpen(true);
   } else {
     debug("Collapsing the sidebar");
     sidebar_splitter.setAttribute('state', 'collapsed');
     sidebar_box.setAttribute('collapsed', 'true');
+    SidebarSetButtonOpen(false);
   }
 }
 
@@ -1165,6 +1177,7 @@ function SidebarShowHide() {
     sidebar_overlay_init();
     sidebar_menu_item.setAttribute('checked', 'true');
     tabs_menu.removeAttribute('hidden');
+    SidebarSetButtonOpen(true);
   } else {
     debug("Hiding the sidebar");
     var hide_everything = sidebar_panels_splitter.getAttribute('hidden') == 'true';
@@ -1179,6 +1192,7 @@ function SidebarShowHide() {
     sidebar_panels_splitter_box.setAttribute('collapsed', 'true');
     sidebar_menu_item.setAttribute('checked', 'false');
     tabs_menu.setAttribute('hidden', 'true');
+    SidebarSetButtonOpen(false);
   }
   // Immediately save persistent values
   document.persist('sidebar-title-box', 'hidden');
@@ -1460,6 +1474,10 @@ function persist_width() {
   // XXX Mini hack. Persist isn't working too well. Force the persist,
   // but wait until the width change has commited.
   setTimeout("document.persist('sidebar-box', 'width');",100);
+
+  var is_collapsed = document.getElementById('sidebar-box').
+                       getAttribute('collapsed') == 'true';
+  SidebarSetButtonOpen(!is_collapsed);
 }
 
 function SidebarFinishClick() {
@@ -1470,13 +1488,26 @@ function SidebarFinishClick() {
   // the sidebar-box gets the newly dragged width.
   setTimeout("persist_width()",100);
 
-  var is_collapsed = document.getElementById('sidebar-box').getAttribute('collapsed') == 'true' ? true : false;
+  var is_collapsed = document.getElementById('sidebar-box').getAttribute('collapsed') == 'true';
   debug("collapsed: " + is_collapsed);
   if (is_collapsed != sidebarObj.collapsed) {
     if (gMustInit)
       sidebar_overlay_init();
     sidebarObj.panels.refresh();
   }
+}
+
+function SidebarSetButtonOpen(aSidebarNowOpen)
+{
+  // change state so toolbar icon can be updated
+  var pt = document.getElementById("PersonalToolbar");
+  pt.setAttribute("prefixopen", aSidebarNowOpen);
+  
+  // set tooltip for toolbar icon
+  var header = document.getElementById("sidebar-title-box");
+  var tooltip = header.getAttribute(aSidebarNowOpen ? 
+                "tooltipclose" : "tooltipopen");
+  pt.setAttribute("prefixtooltip", tooltip);
 }
 
 function SidebarInitContextMenu(aMenu, aPopupNode)
