@@ -56,18 +56,14 @@ REQUIRES = \
     helperAppDlg \
     exthandler \
     mimetype \
+    ax_common \
     $(NULL)
 
 CPPSRCS = \
     StdAfx.cpp             \
-    ItemContainer.cpp      \
-    PropertyBag.cpp        \
     MozillaControl.cpp     \
     MozillaBrowser.cpp     \
     WebBrowserContainer.cpp  \
-    IEHtmlNode.cpp         \
-    IEHtmlElementCollection.cpp \
-    IEHtmlElement.cpp      \
     IEHtmlDocument.cpp     \
     DropTarget.cpp         \
     PropertyDlg.cpp        \
@@ -77,9 +73,11 @@ CPPSRCS = \
     guids.cpp              \
     $(NULL)
 
+
 EXTRA_DSO_LDOPTS = \
 	$(DIST)/lib/$(LIB_PREFIX)gkgfx.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)embed_base_s.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)ax_common_s.$(LIB_SUFFIX) \
 	$(MOZ_UNICHARUTIL_LIBS) \
 	$(XPCOM_LIBS) \
 	$(NSPR_LIBS) \
