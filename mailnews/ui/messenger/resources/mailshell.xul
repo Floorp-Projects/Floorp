@@ -104,6 +104,7 @@
         <menuitem name="Descending" onclick="MsgSortDescending();"/>
       </menu>
       <menu name="Messages">
+		<menuitem name="Threads" onclick="MsgViewAllThreadMsgs();"/>
         <menuitem name="All" onclick="MsgViewAllMsgs();"/>
         <menuitem name="Unread" onclick="MsgViewUnreadMsg();"/>
         <menuitem name="Threads with Unread" onclick="MsgViewThreadsUnread();"/>

@@ -320,54 +320,76 @@ nsMsgLocalMailFolder::ReplaceElement(nsISupports* element, nsISupports* newEleme
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+//Makes sure the database is open and exists.  If the database is valid then
+//returns NS_OK.  Otherwise returns a failure error value.
+nsresult nsMsgLocalMailFolder::GetDatabase()
+{
+	if (mMailDatabase == nsnull)
+	{
+		nsNativeFileSpec path;
+		nsresult rv = GetPath(path);
+		if (NS_FAILED(rv)) return rv;
+
+		nsresult folderOpen = NS_OK;
+		nsIMsgDatabase * mailDBFactory = nsnull;
+
+		rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), (void **) &mailDBFactory);
+		if (NS_SUCCEEDED(rv) && mailDBFactory)
+		{
+			folderOpen = mailDBFactory->Open(path, PR_TRUE, (nsIMsgDatabase **) &mMailDatabase, PR_FALSE);
+			if(!NS_SUCCEEDED(folderOpen) &&
+				folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE || folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING )
+			{
+				// if it's out of date then reopen with upgrade.
+				if(!NS_SUCCEEDED(rv = mailDBFactory->Open(path, PR_TRUE, &mMailDatabase, PR_TRUE)))
+				{
+					NS_RELEASE(mailDBFactory);
+					return rv;
+				}
+			}
+	
+			NS_RELEASE(mailDBFactory);
+		}
+
+		if(mMailDatabase)
+		{
+
+			mMailDatabase->AddListener(this);
+
+			// if we have to regenerate the folder, run the parser url.
+			if(folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING || folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE)
+			{
+				if(NS_FAILED(rv = ParseFolder(path)))
+					return rv;
+				else
+					return NS_ERROR_NOT_INITIALIZED;
+			}
+		}
+	}
+
+}
+
 NS_IMETHODIMP
 nsMsgLocalMailFolder::GetMessages(nsIEnumerator* *result)
 {
-  if (mMailDatabase == nsnull)
-  {
-    nsNativeFileSpec path;
-    nsresult rv = GetPath(path);
-    if (NS_FAILED(rv)) return rv;
+	nsresult rv = GetDatabase();
 
-	nsresult folderOpen = NS_OK;
-	nsIMsgDatabase * mailDBFactory = nsnull;
-
-	rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), (void **) &mailDBFactory);
-	if (NS_SUCCEEDED(rv) && mailDBFactory)
-	{
-		folderOpen = mailDBFactory->Open(path, PR_TRUE, (nsIMsgDatabase **) &mMailDatabase, PR_FALSE);
-		if(!NS_SUCCEEDED(folderOpen) &&
-			folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE || folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING )
-		{
-			// if it's out of date then reopen with upgrade.
-			if(!NS_SUCCEEDED(rv = mailDBFactory->Open(path, PR_TRUE, &mMailDatabase, PR_TRUE)))
-			{
-				NS_RELEASE(mailDBFactory);
-				return rv;
-			}
-		}
-	
-		NS_RELEASE(mailDBFactory);
-	}
-
-	if(mMailDatabase)
-	{
-
-		mMailDatabase->AddListener(this);
-
-		// if we have to regenerate the folder, run the parser url.
-		if(folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING || folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE)
-		{
-			if(NS_FAILED(rv = ParseFolder(path)))
-				return rv;
-			else
-				return NS_ERROR_NOT_INITIALIZED;
-		}
-	}
-  }
-  return mMailDatabase->EnumerateMessages(result);
-
+	if(NS_SUCCEEDED(rv))
+		return mMailDatabase->EnumerateMessages(result);
+	else
+		return rv;
 }
+
+NS_IMETHODIMP nsMsgLocalMailFolder::GetThreads(nsIEnumerator** threadEnumerator)
+{
+	nsresult rv = GetDatabase();
+	
+	if(NS_SUCCEEDED(rv))
+		return mMailDatabase->EnumerateThreads(threadEnumerator);
+	else
+		return rv;
+}
+
 
 NS_IMETHODIMP nsMsgLocalMailFolder::BuildFolderURL(char **url)
 {

@@ -172,6 +172,23 @@ function MsgViewUnreadMsg()
 
 }
 
+function MsgViewAllThreadMsgs()
+{
+	dump("MsgViewAllMessagesThreaded");
+
+    var tree = frames[0].frames[1].document.getElementById('threadTree'); 
+
+	var appCore = FindMsgAppCore();
+	if (appCore != null) {
+	    appCore.SetWindow(window);
+		appCore.ViewAllThreadMessages(tree.database);
+	}
+
+	//hack to make it get new view.  
+	var currentFolder = tree.childNodes[5].getAttribute('id');
+	tree.childNodes[5].setAttribute('id', currentFolder);
+}
+
 function MsgSortByDate()
 {
 	SortThreadPane('DateColumn', 'http://home.netscape.com/NC-rdf#Date');

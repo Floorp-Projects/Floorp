@@ -59,24 +59,7 @@ public:
   NS_IMETHOD AddUnique(nsISupports* element);
   NS_IMETHOD ReplaceElement(nsISupports* element, nsISupports* newElement);
   NS_IMETHOD GetMessages(nsIEnumerator* *result);
-
-#ifdef HAVE_DB	
-	virtual nsresult BeginCopyingMessages(MSG_FolderInfo *dstFolder, 
-																				MessageDB *sourceDB,
-																				IDArray *srcArray, 
-																				MSG_UrlQueue *urlQueue,
-																				int32 srcCount,
-																				MessageCopyInfo *copyInfo);
-
-
-	virtual int FinishCopyingMessages (MWContext *context,
-																			MSG_FolderInfo * srcFolder, 
-																			MSG_FolderInfo *dstFolder, 
-																			MessageDB *sourceDB,
-																			IDArray **ppSrcArray, 
-																			int32 srcCount,
-																			msg_move_state *state);
-#endif
+	NS_IMETHOD GetThreads(nsIEnumerator** threadEnumerator);
 
 	NS_IMETHOD CreateSubfolder(char *leafNameFromUser, nsIMsgFolder **outFolder, PRUint32 *outPos);
 
@@ -135,6 +118,7 @@ protected:
 	nsresult ParseFolder(nsFileSpec& path);
 	nsresult CreateSubFolders(nsFileSpec &path);
 	nsresult AddDirectorySeparator(nsFileSpec &path);
+	nsresult nsMsgLocalMailFolder::GetDatabase();
 
 
 protected:
