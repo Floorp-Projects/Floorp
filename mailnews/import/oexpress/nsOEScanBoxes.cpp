@@ -61,11 +61,18 @@ nsOEScanBoxes::nsOEScanBoxes()
 
 nsOEScanBoxes::~nsOEScanBoxes()
 {
-	int max = m_entryArray.Count();
-	for (int i = 0; i < max; i++) {
+	int i, max;
+	for (i = 0, max = m_entryArray.Count(); i < max; i++) {
 		MailboxEntry *pEntry = (MailboxEntry *) m_entryArray.ElementAt( i);
 		delete pEntry;
 	}
+  // Now free the unprocessed child entries (ie, those without parents for some reason).
+  for (i = 0, max = m_pendingChildArray.Count(); i < max; i++)
+  {
+    MailboxEntry *pEntry = (MailboxEntry *) m_pendingChildArray.ElementAt(i);
+    if (!pEntry->processed)
+      delete pEntry;
+  }
 }
 
 
@@ -424,18 +431,24 @@ PRBool nsOEScanBoxes::Find50MailBoxes( nsIFileSpec* descFile)
 			}
 			if (data == localStoreId) {
 				// Create an entry for this bugger
-				pEntry = new MailboxEntry();
-				pEntry->index = id;
-				pEntry->parent = parent;
-				pEntry->child = 0;
-				pEntry->type = 0;
-				pEntry->sibling = -1;
-				ConvertToUnicode((const char *) (pBytes + strOffset), pEntry->mailName);
-				if (pFileName)
-					pEntry->fileName = pFileName;
-				AddChildEntry( pEntry, localStoreId);
+        pEntry = NewMailboxEntry(id, parent, (const char *) (pBytes + strOffset), pFileName);
+        if (pEntry)
+        {
+				  AddChildEntry( pEntry, localStoreId);
+          pEntry->processed =  PR_TRUE;
+          // See if we have any child folders that need to be added/processed.
+          ProcessPendingChildEntries(id, localStoreId, m_pendingChildArray);
+        }
 			}
 		}
+    else if (pFileName)
+    {
+      // Put this folder into child array and process it when its parent shows up.
+      // For some reason, it's likely that child folders come before their parents.
+      pEntry = NewMailboxEntry(id, parent, (const char *) (pBytes + strOffset), pFileName);
+      if (pEntry)
+        m_pendingChildArray.AppendElement(pEntry);
+    }
 
 		delete [] pBytes;
 	}
@@ -449,6 +462,40 @@ PRBool nsOEScanBoxes::Find50MailBoxes( nsIFileSpec* descFile)
 		return( PR_FALSE);
 }
 
+nsOEScanBoxes::MailboxEntry *nsOEScanBoxes::NewMailboxEntry(PRUint32 id, PRUint32 parent, const char *prettyName, char *pFileName)
+{
+  MailboxEntry *pEntry = new MailboxEntry();
+  if (!pEntry)
+    return nsnull;
+
+  pEntry->index = id;
+  pEntry->parent = parent;
+  pEntry->child = 0;
+  pEntry->type = 0;
+  pEntry->sibling = -1;
+  pEntry->processed =  PR_FALSE;
+  ConvertToUnicode(prettyName, pEntry->mailName);
+  if (pFileName)
+	  pEntry->fileName = pFileName;
+  return pEntry;
+}
+
+void nsOEScanBoxes::ProcessPendingChildEntries(PRUint32 parent, PRUint32 rootIndex, nsVoidArray	&childArray)
+{
+  PRInt32 i, max;
+  for (i = 0, max = childArray.Count(); i < max; i++)
+  {
+    MailboxEntry *pEntry = (MailboxEntry *) childArray.ElementAt(i);
+    if ((!pEntry->processed) && (pEntry->parent == parent))
+    {
+      AddChildEntry(pEntry, rootIndex);
+      pEntry->processed =  PR_TRUE; // indicate it's been processed.
+      // See if there are unprocessed child folders for this child in the
+      // array as well (ie, both child and grand-child are on the list).
+      ProcessPendingChildEntries(pEntry->index, rootIndex, childArray);
+    }
+  }
+}
 
 void nsOEScanBoxes::AddChildEntry( MailboxEntry *pEntry, PRUint32 rootIndex)
 {

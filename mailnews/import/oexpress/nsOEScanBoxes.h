@@ -65,6 +65,7 @@ private:
 		PRInt32		type;
 		nsString	mailName;
 		nsCString	fileName;
+    PRBool    processed; // used by entries on m_pendingChildArray list
 	} MailboxEntry;
 
 	static PRBool	Find50Mail( nsIFileSpec *pWhere);
@@ -79,6 +80,8 @@ private:
 
 	MailboxEntry *	GetIndexEntry( PRUint32 index);
 	void			AddChildEntry( MailboxEntry *pEntry, PRUint32 rootIndex);
+  MailboxEntry *  NewMailboxEntry(PRUint32 id, PRUint32 parent, const char *prettyName, char *pFileName);
+  void        ProcessPendingChildEntries(PRUint32 parent, PRUint32 rootIndex, nsVoidArray &childArray);
 
 
 	PRBool			ReadLong( nsIFileSpec * stream, PRInt32& val, PRUint32 offset);
@@ -95,6 +98,7 @@ private:
 private:
 	MailboxEntry *				m_pFirst;
 	nsVoidArray					m_entryArray;
+  nsVoidArray					m_pendingChildArray; // contains child folders whose parent folders have not showed up.
 
 	nsCOMPtr<nsIImportService>	mService;
 };
