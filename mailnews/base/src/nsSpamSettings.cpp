@@ -313,6 +313,10 @@ NS_IMETHODIMP nsSpamSettings::Clone(nsISpamSettings *aSpamSettings)
   NS_ENSURE_SUCCESS(rv,rv);
   mWhiteListAbURI = whiteListAbURI;
   
+  PRBool loggingEnabled;
+  rv = aSpamSettings->GetLoggingEnabled(&loggingEnabled);
+  NS_ENSURE_SUCCESS(rv,rv);
+  mLoggingEnabled = loggingEnabled;
   return rv;
 }
 

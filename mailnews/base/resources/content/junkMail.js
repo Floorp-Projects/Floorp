@@ -17,7 +17,7 @@ function onServerClick(event)
 
   // before we set the UI for the new server,
   // save off the old one
-  storeSettings(gSpamSettings[gCurrentServer.key].settings);
+  storeSettings(gSpamSettings[gCurrentServer.key].settings, gCurrentServer.spamSettings.loggingEnabled);
 
   // set up the UI for the server
   setupForAccountFromFolder(event.target.id);
@@ -102,8 +102,10 @@ function onAccept()
   return true;
 }
 
-function storeSettings(aSettings)
+function storeSettings(aSettings, aLoggingEnabled)
 {
+  dump("XXX aLoggingEnabled " + aLoggingEnabled + "\n");
+
   aSettings.level = document.getElementById("level").selectedItem.getAttribute("value");
 
   aSettings.moveOnSpam = document.getElementById("moveOnSpam").checked;
@@ -116,10 +118,11 @@ function storeSettings(aSettings)
 
   aSettings.useWhiteList = document.getElementById("useWhiteList").checked;
   aSettings.whiteListAbURI = document.getElementById("whiteListAbURI").selectedItem.getAttribute("id");
+  aSettings.loggingEnabled = aLoggingEnabled;
 }
 
 function doHelpButton()
 {
   // until we have help, I use this for testing
-  dump("XXX " + gSpamSettings[gCurrentServer.key].settings.spamFolderURI + "\n");
+  dump("XXX " + gSpamSettings[gCurrentServer.key].settings.loggingEnabled + "\n");
 }

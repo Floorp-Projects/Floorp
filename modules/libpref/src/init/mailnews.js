@@ -341,6 +341,7 @@ pref("mail.server.default.useWhiteList",true);
 pref("mail.server.default.whiteListAbURI","moz-abmdbdirectory://abook.mab");  // the Personal addressbook.
 pref("mail.server.default.purgeSpam",false);
 pref("mail.server.default.purgeSpamInterval",14); // 14 days
+pref("mail.server.default.spamLoggingEnabled",false);
 
 pref("mail.smtpserver.default.auth_method", 1); // auth any
 pref("mail.smtpserver.default.try_ssl", 0);

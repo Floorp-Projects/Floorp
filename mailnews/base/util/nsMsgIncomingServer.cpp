@@ -1865,6 +1865,16 @@ nsMsgIncomingServer::SetSpamSettings(nsISpamSettings *aSpamSettings)
   NS_ENSURE_SUCCESS(rv,rv);
   rv = SetIntValue("purgeSpamInterval", purgeSpamInterval);
   NS_ENSURE_SUCCESS(rv,rv);
+
+  PRInt32 loggingEnabled;
+  rv = mSpamSettings->GetLoggingEnabled(&loggingEnabled);
+  NS_ENSURE_SUCCESS(rv,rv);
+  rv = SetBoolValue("spamLoggingEnabled", loggingEnabled);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  // flush these pref changes to disk
+  rv = m_prefs->SavePrefFile(nsnull);
+  NS_ENSURE_SUCCESS(rv,rv);
   return NS_OK;
 }
 
@@ -1935,6 +1945,12 @@ nsMsgIncomingServer::GetSpamSettings(nsISpamSettings **aSpamSettings)
     rv = GetIntValue("purgeSpamInterval", &purgeSpamInterval);
     NS_ENSURE_SUCCESS(rv,rv);
     rv = mSpamSettings->SetPurgeInterval(purgeSpamInterval);
+    NS_ENSURE_SUCCESS(rv,rv);
+    
+    PRInt32 loggingEnabled;
+    rv = GetBoolValue("spamLoggingEnabled", &loggingEnabled);
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = mSpamSettings->SetLoggingEnabled(loggingEnabled);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
