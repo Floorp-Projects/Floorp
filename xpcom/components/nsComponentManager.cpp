@@ -96,13 +96,23 @@ static NS_DEFINE_CID(kNoCID, NS_NO_CID);
 
 
 nsresult
-nsCreateInstance::operator()( const nsIID& aIID, void** answer ) const
+nsCreateInstanceByCID::operator()( const nsIID& aIID, void** aInstancePtr ) const
+	{
+		nsresult status = nsComponentManager::CreateInstance(mCID, mOuter, aIID, aInstancePtr);
+
+		if ( mErrorPtr )
+			*mErrorPtr = status;
+		return status;
+	}
+
+nsresult
+nsCreateInstanceByProgID::operator()( const nsIID& aIID, void** aInstancePtr ) const
 	{
 		nsresult status;
-		if ( mFactory )
-			status = mFactory->CreateInstance(mOuter, aIID, answer);
+		if ( mProgID )
+		  status = nsComponentManager::CreateInstance(mProgID, mOuter, aIID, aInstancePtr);
 		else
-			status = NS_ERROR_NULL_POINTER;
+		  status = NS_ERROR_NULL_POINTER;
 
 		if ( mErrorPtr )
 			*mErrorPtr = status;

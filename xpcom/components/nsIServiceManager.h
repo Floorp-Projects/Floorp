@@ -26,6 +26,10 @@
 #include "nsIComponentManager.h"
 #include "nsID.h"
 
+#ifndef nsCOMPtr_h___
+#include "nsCOMPtr.h"
+#endif
+
 class nsIShutdownListener;
 class nsFileSpec;
 
@@ -207,6 +211,54 @@ public:
     static nsIServiceManager* mGlobalServiceManager;
 
 };
+
+class NS_EXPORT nsGetServiceByCID : public nsCOMPtr_helper
+  {
+    public:
+      nsGetServiceByCID( const nsCID& aCID, nsresult* aErrorPtr )
+          : mCID(aCID),
+            mErrorPtr(aErrorPtr)
+        {
+          // nothing else to do
+        }
+
+  	  virtual nsresult operator()( const nsIID&, void** ) const;
+
+    private:
+      const nsCID& mCID;
+      nsresult*    mErrorPtr;
+  };
+
+inline
+const nsGetServiceByCID
+do_GetService( const nsCID& aCID, nsresult* error = 0 )
+  {
+    return nsGetServiceByCID(aCID, error);
+  }
+
+class NS_EXPORT nsGetServiceByProgID : public nsCOMPtr_helper
+  {
+    public:
+      nsGetServiceByProgID( const char* aProgID, nsresult* aErrorPtr )
+          : mProgID(aProgID),
+            mErrorPtr(aErrorPtr)
+        {
+          // nothing else to do
+        }
+
+  	  virtual nsresult operator()( const nsIID&, void** ) const;
+
+    private:
+      const char* mProgID;
+      nsresult*   mErrorPtr;
+  };
+
+inline
+const nsGetServiceByProgID
+do_GetService( const char* aProgID, nsresult* error = 0 )
+  {
+    return nsGetServiceByProgID(aProgID, error);
+  }
 
 ////////////////////////////////////////////////////////////////////////////////
 // NS_WITH_SERVICE: macro to make using services easier. 
