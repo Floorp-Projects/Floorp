@@ -540,7 +540,6 @@ xpfe/components/find/src/Makefile
 xpfe/components/find/resources/Makefile
 xpfe/components/filepicker/src/Makefile
 xpfe/components/filepicker/res/content/Makefile
-xpfe/components/filepicker/res/skin/Makefile
 xpfe/components/filepicker/res/locale/Makefile
 xpfe/components/filepicker/res/locale/en-US/Makefile
 xpfe/components/filepicker/res/Makefile
@@ -552,7 +551,6 @@ xpfe/components/history/resources/Makefile
 xpfe/components/prefwindow/Makefile
 xpfe/components/prefwindow/resources/Makefile
 xpfe/components/prefwindow/resources/content/Makefile
-xpfe/components/prefwindow/resources/skin/Makefile
 xpfe/components/prefwindow/resources/locale/Makefile
 xpfe/components/prefwindow/resources/locale/en-US/Makefile
 xpfe/components/related/Makefile
@@ -597,15 +595,14 @@ xpfe/browser/Makefile
 xpfe/browser/src/Makefile
 xpfe/browser/resources/Makefile
 xpfe/browser/resources/content/Makefile
-xpfe/browser/resources/skin/Makefile
 xpfe/browser/resources/locale/Makefile
 xpfe/browser/resources/locale/en-US/Makefile
 xpfe/global/Makefile
 xpfe/global/resources/Makefile
-xpfe/global/resources/skin/Makefile
 xpfe/global/resources/skin/unix/Makefile
 xpfe/global/resources/content/Makefile
 xpfe/global/resources/content/unix/Makefile
+xpfe/global/resources/skin/Makefile
 xpfe/global/resources/locale/Makefile
 xpfe/global/resources/locale/en-US/Makefile
 xpfe/global/resources/locale/en-US/unix/Makefile
@@ -614,7 +611,6 @@ xpfe/communicator/resources/Makefile
 xpfe/communicator/resources/locale/Makefile
 xpfe/communicator/resources/locale/en-US/Makefile
 xpfe/communicator/resources/content/Makefile
-xpfe/communicator/resources/skin/Makefile
 
 #
 # End of XPFE Makefiles
