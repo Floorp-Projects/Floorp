@@ -134,12 +134,12 @@ AC_ARG_WITH(mozilla,
 	    fi])
 
 AC_ARG_ENABLE(optimize,
-    [  --enable-optimize(=val) Enable code optimizations level (val)],
+    [  --enable-optimize(=flag) Enable code optimizations (flag, ie. -O2) ],
     [ if test "$enableval" != "no"; then
         MOZ_OPTIMIZE=1
         if test -n "$enableval" && test "$enableval" != "yes"; then
-            _OPTIMIZE_FLAGS="$enableval"
-            _SAVE_OPTIMIZE_FLAGS="$enableval"
+    	    _OPTIMIZE_FLAGS=`echo $enableval | sed -e 's|\\\ | |g'`
+            _SAVE_OPTIMIZE_FLAGS=$_OPTIMIZE_FLAGS
         fi
     fi ])
 
