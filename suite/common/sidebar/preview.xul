@@ -39,7 +39,7 @@
 
   <html:hr/>
 
-  <box align="horizontal" class="sidebartitle">
+  <box align="horizontal" class="panelbar">
     <html:img src="chrome://sidebar/skin/corner.gif" />
     <titledbutton id="paneltitle" class="borderless paneltitle" />
     <spring flex="100%" />
