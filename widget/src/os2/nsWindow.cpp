@@ -122,6 +122,7 @@ PRBool gIsDestroyingAny = PR_FALSE;
 static POINTL gLastMousePoint;
 static LONG   gLastMsgTime    = 0;
 static LONG   gLastClickCount = 0;
+static LONG   gLastButtonDown = 0;
 ////////////////////////////////////////////////////
 
 #ifdef DEBUG_FOCUS
@@ -2347,19 +2348,18 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
         // Mouseclicks: we don't dispatch CLICK events because they just cause
         // trouble: gecko seems to expect EITHER buttondown/up OR click events
         // and so that's what we give it.
-        //
-        // Plus we make WM_CHORD do a button3down in order to get warp-4 paste
-        // behaviour (see nsEditorEventListeners.cpp)
     
         case WM_BUTTON1DOWN:
           if (!mIsScrollBar)
             WinSetCapture( HWND_DESKTOP, mWnd);
           result = DispatchMouseEvent( NS_MOUSE_LEFT_BUTTON_DOWN, mp1, mp2);
+          gLastButtonDown = 1;
           break;
         case WM_BUTTON1UP:
           if (!mIsScrollBar)
             WinSetCapture( HWND_DESKTOP, 0); // release
           result = DispatchMouseEvent( NS_MOUSE_LEFT_BUTTON_UP, mp1, mp2);
+          gLastButtonDown = 0;
           break;
         case WM_BUTTON1DBLCLK:
           result = DispatchMouseEvent( NS_MOUSE_LEFT_DOUBLECLICK, mp1, mp2);
@@ -2369,11 +2369,13 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
           if (!mIsScrollBar)
             WinSetCapture( HWND_DESKTOP, mWnd);
           result = DispatchMouseEvent( NS_MOUSE_RIGHT_BUTTON_DOWN, mp1, mp2);
+          gLastButtonDown = 2;
           break;
         case WM_BUTTON2UP:
           if (!mIsScrollBar)
             WinSetCapture( HWND_DESKTOP, 0); // release
           result = DispatchMouseEvent( NS_MOUSE_RIGHT_BUTTON_UP, mp1, mp2);
+          gLastButtonDown = 0;
           break;
         case WM_BUTTON2DBLCLK:
           result = DispatchMouseEvent( NS_MOUSE_RIGHT_DOUBLECLICK, mp1, mp2);
@@ -2383,19 +2385,31 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
           break;
     
         case WM_CHORD:
-
           {
-             POINTL ptl;
-             WinQueryMsgPos( 0/*hab*/, &ptl);
-             WinMapWindowPoints( HWND_DESKTOP, mWnd, &ptl, 1);
-             USHORT usFlags = 0;
-             if (WinIsKeyDown( VK_SHIFT))
-                usFlags |= KC_SHIFT;
-             if (WinIsKeyDown( VK_CTRL))
-                usFlags |= KC_CTRL;
-             if (WinIsKeyDown( VK_ALT) || WinIsKeyDown( VK_ALTGRAF))
-                usFlags |= KC_ALT;
-             result = DispatchMouseEvent( NS_MOUSE_MIDDLE_CLICK, MPFROM2SHORT(ptl.x, ptl.y), MPFROM2SHORT(0,usFlags));
+            nsKeyEvent event;
+            nsPoint point(0,0);
+
+            if (gLastButtonDown == 2) {
+              InitEvent( event, NS_KEY_PRESS, &point);
+              event.keyCode   = NS_VK_INSERT;
+              event.isShift   = PR_FALSE;
+              event.isControl = PR_TRUE;
+              event.isAlt     = PR_FALSE;
+              event.isMeta    = PR_FALSE;
+              event.eventStructType = NS_KEY_EVENT;
+              event.charCode = 0;
+              result = DispatchWindowEvent( &event);
+            } else if (gLastButtonDown == 1) {
+              InitEvent( event, NS_KEY_PRESS, &point);
+              event.keyCode   = NS_VK_INSERT;
+              event.isShift   = PR_TRUE;
+              event.isControl = PR_FALSE;
+              event.isAlt     = PR_FALSE;
+              event.isMeta    = PR_FALSE;
+              event.eventStructType = NS_KEY_EVENT;
+              event.charCode = 0;
+              result = DispatchWindowEvent( &event);
+            }
           }
           break;
         case WM_BUTTON3DOWN:
