@@ -5358,17 +5358,6 @@ static void fe_check_use_async_dns(void)
 XP_Bool fe_enable_fullcircle(void)
 {
   XP_Bool fullcircle_enable = TRUE;
-  char * c = getenv ("MOZILLA_NO_FULLCIRCLE");
-  
-  /* Look for MOZILLA_NO_FULLCIRCLE first */
-  if (c && *c)
-    {
-      /* Just in case make sure the var is not [fF0] (for funky logic) */
-      if (*c != 'f' && *c != 'F' && *c != '0')
-        {
-          return False;
-        }
-    }
   
   /* Check the pref next */
   PREF_GetBoolPref("general.fullcircle_enable", &fullcircle_enable);
