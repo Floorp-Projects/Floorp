@@ -56,7 +56,7 @@ class nsHTMLAppletElement : public nsIDOMHTMLAppletElement,
                             public nsIHTMLContent
 {
 public:
-  nsHTMLAppletElement(nsIAtom* aTag);
+  nsHTMLAppletElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLAppletElement();
 
   // nsISupports
@@ -141,13 +141,13 @@ protected:
 };
 
 nsresult
-NS_NewHTMLAppletElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
+NS_NewHTMLAppletElement(nsIHTMLContent** aInstancePtrResult,
+                        nsINodeInfo *aNodeInfo)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIHTMLContent* it = new nsHTMLAppletElement(aTag);
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
+  nsIHTMLContent* it = new nsHTMLAppletElement(aNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -155,10 +155,10 @@ NS_NewHTMLAppletElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
 }
 
 
-nsHTMLAppletElement::nsHTMLAppletElement(nsIAtom* aTag)
+nsHTMLAppletElement::nsHTMLAppletElement(nsINodeInfo *aNodeInfo)
 {
   NS_INIT_REFCNT();
-  mInner.Init(this, aTag);
+  mInner.Init(this, aNodeInfo);
   mReflectedApplet = PR_FALSE;
 }
 
@@ -186,7 +186,7 @@ nsHTMLAppletElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsresult
 nsHTMLAppletElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLAppletElement* it = new nsHTMLAppletElement(mInner.mTag);
+  nsHTMLAppletElement* it = new nsHTMLAppletElement(mInner.mNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

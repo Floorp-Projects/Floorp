@@ -35,6 +35,8 @@
 #include "nsIPresContext.h"
 #include "nsIViewManager.h"
 #include "nsIChannel.h"
+#include "nsINameSpaceManager.h"
+#include "nsINodeInfo.h"
 
 // XXX TODO:
 
@@ -182,10 +184,14 @@ nsImageDocument::StartDocumentLoad(const char* aCommand,
                                    nsIStreamListener **aDocListener,
                                    PRBool aReset)
 {
-  nsresult rv = nsDocument::StartDocumentLoad(aCommand,
-                                              aChannel, aLoadGroup,
-                                              aContainer, 
-                                              aDocListener, aReset);
+  nsresult rv = Init();
+
+  if (NS_FAILED(rv) && rv != NS_ERROR_ALREADY_INITIALIZED) {
+    return rv;
+  }
+
+  rv = nsDocument::StartDocumentLoad(aCommand, aChannel, aLoadGroup,
+                                     aContainer, aDocListener, aReset);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -243,34 +249,51 @@ nsImageDocument::CreateSyntheticDocument()
 {
   // Synthesize an html document that refers to the image
   nsresult rv;
+
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+  rv = mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::html, nsnull,
+                                     kNameSpaceID_None,
+                                     *getter_AddRefs(nodeInfo));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsIHTMLContent* root;
-  rv = NS_NewHTMLHtmlElement(&root, nsHTMLAtoms::html);
+  rv = NS_NewHTMLHtmlElement(&root, nodeInfo);
   if (NS_OK != rv) {
     return rv;
   }
   root->SetDocument(this, PR_FALSE);
   SetRootContent(root);
 
+  rv = mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::body, nsnull,
+                                     kNameSpaceID_None,
+                                     *getter_AddRefs(nodeInfo));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsIHTMLContent* body;
-  rv = NS_NewHTMLBodyElement(&body, nsHTMLAtoms::body);
+  rv = NS_NewHTMLBodyElement(&body, nodeInfo);
   if (NS_OK != rv) {
     return rv;
   }
   body->SetDocument(this, PR_FALSE);
 
+  rv = mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::p, nsnull, kNameSpaceID_None,
+                                     *getter_AddRefs(nodeInfo));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsIHTMLContent* center;
-  nsIAtom* centerAtom = NS_NewAtom("p");
-  rv = NS_NewHTMLParagraphElement(&center, centerAtom);
-  NS_RELEASE(centerAtom);
+  rv = NS_NewHTMLParagraphElement(&center, nodeInfo);
   if (NS_OK != rv) {
     return rv;
   }
   center->SetDocument(this, PR_FALSE);
 
+  rv = mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::img, nsnull,
+                                     kNameSpaceID_None,
+                                     *getter_AddRefs(nodeInfo));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsIHTMLContent* image;
-  nsIAtom* imgAtom = NS_NewAtom("img");
-  rv = NS_NewHTMLImageElement(&image, imgAtom);
-  NS_RELEASE(imgAtom);
+  rv = NS_NewHTMLImageElement(&image, nodeInfo);
   if (NS_OK != rv) {
     return rv;
   }

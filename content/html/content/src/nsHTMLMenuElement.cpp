@@ -43,7 +43,7 @@ class nsHTMLMenuElement : public nsIDOMHTMLMenuElement,
                           public nsIHTMLContent
 {
 public:
-  nsHTMLMenuElement(nsIAtom* aTag);
+  nsHTMLMenuElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLMenuElement();
 
   // nsISupports
@@ -76,13 +76,13 @@ protected:
 };
 
 nsresult
-NS_NewHTMLMenuElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
+NS_NewHTMLMenuElement(nsIHTMLContent** aInstancePtrResult,
+                      nsINodeInfo *aNodeInfo)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIHTMLContent* it = new nsHTMLMenuElement(aTag);
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
+  nsIHTMLContent* it = new nsHTMLMenuElement(aNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -90,10 +90,10 @@ NS_NewHTMLMenuElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
 }
 
 
-nsHTMLMenuElement::nsHTMLMenuElement(nsIAtom* aTag)
+nsHTMLMenuElement::nsHTMLMenuElement(nsINodeInfo *aNodeInfo)
 {
   NS_INIT_REFCNT();
-  mInner.Init(this, aTag);
+  mInner.Init(this, aNodeInfo);
 }
 
 nsHTMLMenuElement::~nsHTMLMenuElement()
@@ -120,7 +120,7 @@ nsHTMLMenuElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsresult
 nsHTMLMenuElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLMenuElement* it = new nsHTMLMenuElement(mInner.mTag);
+  nsHTMLMenuElement* it = new nsHTMLMenuElement(mInner.mNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

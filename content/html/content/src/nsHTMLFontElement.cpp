@@ -42,7 +42,7 @@ class nsHTMLFontElement : public nsIDOMHTMLFontElement,
                           public nsIHTMLContent
 {
 public:
-  nsHTMLFontElement(nsIAtom* aTag);
+  nsHTMLFontElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLFontElement();
 
   // nsISupports
@@ -79,13 +79,13 @@ protected:
 };
 
 nsresult
-NS_NewHTMLFontElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
+NS_NewHTMLFontElement(nsIHTMLContent** aInstancePtrResult,
+                      nsINodeInfo *aNodeInfo)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIHTMLContent* it = new nsHTMLFontElement(aTag);
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
+  nsIHTMLContent* it = new nsHTMLFontElement(aNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -93,10 +93,10 @@ NS_NewHTMLFontElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
 }
 
 
-nsHTMLFontElement::nsHTMLFontElement(nsIAtom* aTag)
+nsHTMLFontElement::nsHTMLFontElement(nsINodeInfo *aNodeInfo)
 {
   NS_INIT_REFCNT();
-  mInner.Init(this, aTag);
+  mInner.Init(this, aNodeInfo);
 }
 
 nsHTMLFontElement::~nsHTMLFontElement()
@@ -123,7 +123,7 @@ nsHTMLFontElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsresult
 nsHTMLFontElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLFontElement* it = new nsHTMLFontElement(mInner.mTag);
+  nsHTMLFontElement* it = new nsHTMLFontElement(mInner.mNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

@@ -38,7 +38,7 @@ class nsHTMLBaseFontElement : public nsIDOMHTMLBaseFontElement,
                               public nsIHTMLContent
 {
 public:
-  nsHTMLBaseFontElement(nsIAtom* aTag);
+  nsHTMLBaseFontElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLBaseFontElement();
 
   // nsISupports
@@ -75,13 +75,13 @@ protected:
 };
 
 nsresult
-NS_NewHTMLBaseFontElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
+NS_NewHTMLBaseFontElement(nsIHTMLContent** aInstancePtrResult,
+                          nsINodeInfo *aNodeInfo)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIHTMLContent* it = new nsHTMLBaseFontElement(aTag);
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
+  nsIHTMLContent* it = new nsHTMLBaseFontElement(aNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -89,10 +89,10 @@ NS_NewHTMLBaseFontElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
 }
 
 
-nsHTMLBaseFontElement::nsHTMLBaseFontElement(nsIAtom* aTag)
+nsHTMLBaseFontElement::nsHTMLBaseFontElement(nsINodeInfo *aNodeInfo)
 {
   NS_INIT_REFCNT();
-  mInner.Init(this, aTag);
+  mInner.Init(this, aNodeInfo);
 }
 
 nsHTMLBaseFontElement::~nsHTMLBaseFontElement()
@@ -119,7 +119,7 @@ nsHTMLBaseFontElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsresult
 nsHTMLBaseFontElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLBaseFontElement* it = new nsHTMLBaseFontElement(mInner.mTag);
+  nsHTMLBaseFontElement* it = new nsHTMLBaseFontElement(mInner.mNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

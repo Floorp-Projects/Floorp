@@ -65,7 +65,7 @@ class nsHTMLFormElement : public nsIDOMHTMLFormElement,
                           public nsIForm
 {
 public:
-  nsHTMLFormElement(nsIAtom* aTag);
+  nsHTMLFormElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLFormElement();
 
   // nsISupports
@@ -162,13 +162,13 @@ protected:
 
 // construction, destruction
 nsresult
-NS_NewHTMLFormElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
+NS_NewHTMLFormElement(nsIHTMLContent** aInstancePtrResult,
+                      nsINodeInfo *aNodeInfo)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIHTMLContent* it = new nsHTMLFormElement(aTag);
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
+  nsIHTMLContent* it = new nsHTMLFormElement(aNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -176,10 +176,10 @@ NS_NewHTMLFormElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
 }
 
 
-nsHTMLFormElement::nsHTMLFormElement(nsIAtom* aTag)
+nsHTMLFormElement::nsHTMLFormElement(nsINodeInfo *aNodeInfo)
 {
   NS_INIT_REFCNT();
-  mInner.Init(this, aTag);
+  mInner.Init(this, aNodeInfo);
   mControls = new nsFormControlList(this);
   NS_ADDREF(mControls);
 //nsTraceRefcnt::Create((nsIForm*)this, "nsHTMLFormElement", __FILE__, __LINE__);
@@ -267,7 +267,7 @@ nsHTMLFormElement::Release()
 nsresult
 nsHTMLFormElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLFormElement* it = new nsHTMLFormElement(mInner.mTag);
+  nsHTMLFormElement* it = new nsHTMLFormElement(mInner.mNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

@@ -41,12 +41,8 @@ public:
                        nsGenericXMLElement* aDest,
                        PRBool aDeep);
 
-  nsresult GetNamespaceURI(nsString& aNamespaceURI);
-  nsresult GetPrefix(nsString& aPrefix);
-  nsresult SetPrefix(const nsString& aPrefix);
+  nsresult GetNodeName(nsString& aNodeName);
   nsresult GetLocalName(nsString& aLocalName);
-  nsresult Supports(const nsString& aFeature, const nsString& aVersion,
-                    PRBool* aReturn);
 
   // Implementation for nsIDOMElement
   nsresult    GetAttribute(const nsString& aName, nsString& aReturn) 
@@ -85,7 +81,6 @@ public:
 
   nsresult SetNameSpacePrefix(nsIAtom* aNameSpace);
   nsresult GetNameSpacePrefix(nsIAtom*& aNameSpace) const;
-  nsresult SetNameSpaceID(PRInt32 aNameSpaceId);
   nsresult GetNameSpaceID(PRInt32& aNameSpaceID) const;
   nsresult MaybeTriggerAutoLink(nsIWebShell *aShell);
 
@@ -94,8 +89,6 @@ public:
                            void** aScriptObject);
 
   nsINameSpace* mNameSpace;
-  nsIAtom* mNameSpacePrefix;
-  PRInt32 mNameSpaceID;
 };
 
 #endif /* nsGenericXMLElement_h__ */

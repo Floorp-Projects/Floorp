@@ -31,6 +31,7 @@
 #include "nsDOMEvent.h"
 #include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
+#include "nsINodeInfo.h"
 #include "nsIURL.h"
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
@@ -44,13 +45,13 @@
 static NS_DEFINE_IID(kIXMLContentIID, NS_IXMLCONTENT_IID);
 
 nsresult
-NS_NewXMLElement(nsIXMLContent** aInstancePtrResult, nsIAtom* aTag)
+NS_NewXMLElement(nsIXMLContent** aInstancePtrResult, nsINodeInfo *aNodeInfo)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsIXMLContent* it = new nsXMLElement(aTag);
+  nsIXMLContent* it = new nsXMLElement(aNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -67,10 +68,11 @@ static nsIAtom* kOnLoadAtom;
 static nsIAtom* kEmbedAtom;
 static PRUint32 kElementCount;
 
-nsXMLElement::nsXMLElement(nsIAtom *aTag)
+nsXMLElement::nsXMLElement(nsINodeInfo *aNodeInfo)
 {
   NS_INIT_REFCNT();
-  mInner.Init((nsIContent *)(nsIXMLContent *)this, aTag);
+
+  mInner.Init(this, aNodeInfo);
   mIsLink = PR_FALSE;
   mContentID = 0;
 
@@ -464,7 +466,7 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsXMLElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsXMLElement* it = new nsXMLElement(mInner.mTag);
+  nsXMLElement* it = new nsXMLElement(mInner.mNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

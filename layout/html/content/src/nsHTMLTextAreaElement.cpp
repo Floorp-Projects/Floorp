@@ -59,7 +59,7 @@ class nsHTMLTextAreaElement : public nsIDOMHTMLTextAreaElement,
                               public nsIFormControl
 {
 public:
-  nsHTMLTextAreaElement(nsIAtom* aTag);
+  nsHTMLTextAreaElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLTextAreaElement();
 
   // nsISupports
@@ -123,13 +123,13 @@ protected:
 };
 
 nsresult
-NS_NewHTMLTextAreaElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
+NS_NewHTMLTextAreaElement(nsIHTMLContent** aInstancePtrResult,
+                          nsINodeInfo *aNodeInfo)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIHTMLContent* it = new nsHTMLTextAreaElement(aTag);
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
+  nsIHTMLContent* it = new nsHTMLTextAreaElement(aNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -137,10 +137,10 @@ NS_NewHTMLTextAreaElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
 }
 
 
-nsHTMLTextAreaElement::nsHTMLTextAreaElement(nsIAtom* aTag)
+nsHTMLTextAreaElement::nsHTMLTextAreaElement(nsINodeInfo *aNodeInfo)
 {
   NS_INIT_REFCNT();
-  mInner.Init(this, aTag);
+  mInner.Init(this, aNodeInfo);
   mForm = nsnull;
 }
 
@@ -199,7 +199,7 @@ nsHTMLTextAreaElement::Release()
 nsresult
 nsHTMLTextAreaElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLTextAreaElement* it = new nsHTMLTextAreaElement(mInner.mTag);
+  nsHTMLTextAreaElement* it = new nsHTMLTextAreaElement(mInner.mNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

@@ -43,7 +43,7 @@ class nsHTMLMapElement : public nsIDOMHTMLMapElement,
                          public nsIHTMLContent
 {
 public:
-  nsHTMLMapElement(nsIAtom* aTag);
+  nsHTMLMapElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLMapElement();
 
   // nsISupports
@@ -195,13 +195,13 @@ protected:
 };
 
 nsresult
-NS_NewHTMLMapElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
+NS_NewHTMLMapElement(nsIHTMLContent** aInstancePtrResult,
+                     nsINodeInfo *aNodeInfo)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIHTMLContent* it = new nsHTMLMapElement(aTag);
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
+  nsIHTMLContent* it = new nsHTMLMapElement(aNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -209,10 +209,10 @@ NS_NewHTMLMapElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
 }
 
 
-nsHTMLMapElement::nsHTMLMapElement(nsIAtom* aTag)
+nsHTMLMapElement::nsHTMLMapElement(nsINodeInfo *aNodeInfo)
 {
   NS_INIT_REFCNT();
-  mInner.Init(this, aTag);
+  mInner.Init(this, aNodeInfo);
   mAreas = nsnull;
 }
 
@@ -274,7 +274,7 @@ nsHTMLMapElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
 NS_IMETHODIMP
 nsHTMLMapElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLMapElement* it = new nsHTMLMapElement(mInner.mTag);
+  nsHTMLMapElement* it = new nsHTMLMapElement(mInner.mNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

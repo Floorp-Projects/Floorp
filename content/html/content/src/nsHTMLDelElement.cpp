@@ -38,7 +38,7 @@ class nsHTMLDelElement : public nsIDOMHTMLModElement,
                   public nsIHTMLContent
 {
 public:
-  nsHTMLDelElement(nsIAtom* aTag);
+  nsHTMLDelElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLDelElement();
 
   // nsISupports
@@ -73,13 +73,13 @@ protected:
 };
 
 nsresult
-NS_NewHTMLDelElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
+NS_NewHTMLDelElement(nsIHTMLContent** aInstancePtrResult,
+                     nsINodeInfo *aNodeInfo)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIHTMLContent* it = new nsHTMLDelElement(aTag);
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
+  nsIHTMLContent* it = new nsHTMLDelElement(aNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -87,10 +87,10 @@ NS_NewHTMLDelElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
 }
 
 
-nsHTMLDelElement::nsHTMLDelElement(nsIAtom* aTag)
+nsHTMLDelElement::nsHTMLDelElement(nsINodeInfo *aNodeInfo)
 {
   NS_INIT_REFCNT();
-  mInner.Init(this, aTag);
+  mInner.Init(this, aNodeInfo);
 }
 
 nsHTMLDelElement::~nsHTMLDelElement()
@@ -117,7 +117,7 @@ nsHTMLDelElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsresult
 nsHTMLDelElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLDelElement* it = new nsHTMLDelElement(mInner.mTag);
+  nsHTMLDelElement* it = new nsHTMLDelElement(mInner.mNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

@@ -175,7 +175,7 @@ class nsHTMLBodyElement : public nsIDOMHTMLBodyElement,
                           public nsIHTMLContent
 {
 public:
-  nsHTMLBodyElement(nsIAtom* aTag);
+  nsHTMLBodyElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLBodyElement();
 
   // nsISupports
@@ -623,13 +623,13 @@ void BodyFixupRule::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
 //----------------------------------------------------------------------
 
 nsresult
-NS_NewHTMLBodyElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
+NS_NewHTMLBodyElement(nsIHTMLContent** aInstancePtrResult,
+                      nsINodeInfo *aNodeInfo)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIHTMLContent* it = new nsHTMLBodyElement(aTag);
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
+  nsIHTMLContent* it = new nsHTMLBodyElement(aNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -637,10 +637,10 @@ NS_NewHTMLBodyElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
 }
 
 
-nsHTMLBodyElement::nsHTMLBodyElement(nsIAtom* aTag)
+nsHTMLBodyElement::nsHTMLBodyElement(nsINodeInfo *aNodeInfo)
 {
   NS_INIT_REFCNT();
-  mInner.Init(this, aTag);
+  mInner.Init(this, aNodeInfo);
 }
 
 nsHTMLBodyElement::~nsHTMLBodyElement()
@@ -667,7 +667,7 @@ nsHTMLBodyElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsresult
 nsHTMLBodyElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLBodyElement* it = new nsHTMLBodyElement(mInner.mTag);
+  nsHTMLBodyElement* it = new nsHTMLBodyElement(mInner.mNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

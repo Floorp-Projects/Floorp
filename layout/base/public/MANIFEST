@@ -25,6 +25,7 @@ nsIFrameManager.h
 nsILayoutDebugger.h
 nsINameSpace.h
 nsINameSpaceManager.h
+nsINodeInfo.h
 nsIPageSequenceFrame.h
 nsIPresContext.h
 nsIPresShell.h

@@ -38,7 +38,7 @@ class nsHTMLBaseElement : public nsIDOMHTMLBaseElement,
                           public nsIHTMLContent
 {
 public:
-  nsHTMLBaseElement(nsIAtom* aTag);
+  nsHTMLBaseElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLBaseElement();
 
   // nsISupports
@@ -73,13 +73,13 @@ protected:
 };
 
 nsresult
-NS_NewHTMLBaseElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
+NS_NewHTMLBaseElement(nsIHTMLContent** aInstancePtrResult,
+                      nsINodeInfo* aNodeInfo)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIHTMLContent* it = new nsHTMLBaseElement(aTag);
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
+  nsIHTMLContent* it = new nsHTMLBaseElement(aNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -87,10 +87,10 @@ NS_NewHTMLBaseElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
 }
 
 
-nsHTMLBaseElement::nsHTMLBaseElement(nsIAtom* aTag)
+nsHTMLBaseElement::nsHTMLBaseElement(nsINodeInfo *aNodeInfo)
 {
   NS_INIT_REFCNT();
-  mInner.Init(this, aTag);
+  mInner.Init(this, aNodeInfo);
 }
 
 nsHTMLBaseElement::~nsHTMLBaseElement()
@@ -117,7 +117,7 @@ nsHTMLBaseElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsresult
 nsHTMLBaseElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLBaseElement* it = new nsHTMLBaseElement(mInner.mTag);
+  nsHTMLBaseElement* it = new nsHTMLBaseElement(mInner.mNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

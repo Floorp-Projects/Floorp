@@ -27,6 +27,7 @@
 #include "nsIReflowCommand.h"
 class nsIArena;
 class nsIAtom;
+class nsINodeInfo;
 class nsIContent;
 class nsIContentIterator;
 class nsIDocument;
@@ -51,196 +52,196 @@ NS_NewGeneratedContentIterator(nsIPresContext*      aPresContext,
 // Factory methods for creating html content objects
 // XXX argument order is wrong (out parameter should be last)
 extern nsresult
-NS_NewHTMLAnchorElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLAnchorElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLAppletElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLAppletElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLAreaElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLAreaElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLBRElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLBRElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLBaseElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLBaseElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLBaseFontElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLBaseFontElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLBodyElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLBodyElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLButtonElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLButtonElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLDListElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLDListElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLDelElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLDelElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLDirectoryElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLDirectoryElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLDivElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLDivElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLEmbedElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLEmbedElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLFieldSetElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLFieldSetElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLFontElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLFontElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLFormElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLFormElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLFrameElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLFrameElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLFrameSetElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLFrameSetElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLHRElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLHRElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLHeadElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLHeadElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLHeadingElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLHeadingElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLHtmlElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLHtmlElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLIFrameElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLIFrameElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLImageElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLImageElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLInputElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLInputElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLInsElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLInsElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLIsIndexElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLIsIndexElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLLIElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLLIElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLLabelElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLLabelElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLLayerElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLLayerElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLLegendElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLLegendElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLLinkElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLLinkElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLMapElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLMapElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLMenuElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLMenuElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLMetaElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLMetaElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLModElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLModElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLOListElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLOListElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLObjectElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLObjectElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLOptGroupElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLOptGroupElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLOptionElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLOptionElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLParagraphElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLParagraphElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLParamElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLParamElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLPreElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLPreElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLQuoteElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLQuoteElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLScriptElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLScriptElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLSelectElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLSelectElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLSpacerElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLSpacerElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLSpanElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLSpanElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLStyleElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLStyleElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLTableCaptionElement(nsIHTMLContent** aResult,nsIAtom* aTag);
+NS_NewHTMLTableCaptionElement(nsIHTMLContent** aResult,nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLTableCellElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLTableCellElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLTableColElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLTableColElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLTableColGroupElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLTableColGroupElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLTableElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLTableElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLTableRowElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLTableRowElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLTableSectionElement(nsIHTMLContent** aResult,nsIAtom* aTag);
+NS_NewHTMLTableSectionElement(nsIHTMLContent** aResult,nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLTbodyElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLTbodyElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLTextAreaElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLTextAreaElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLTfootElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLTfootElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLTheadElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLTheadElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLTitleElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLTitleElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLUListElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLUListElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLWBRElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLWBRElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLUnknownElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+NS_NewHTMLUnknownElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 /**
  * Create a new content object for the given tag.
@@ -250,10 +251,7 @@ NS_NewHTMLUnknownElement(nsIHTMLContent** aResult, nsIAtom* aTag);
  */
 PR_EXTERN(nsresult)
 NS_CreateHTMLElement(nsIHTMLContent** aResult,
-                     const nsString& aTag);
-PR_EXTERN(nsresult)
-NS_CreateHTMLElement(nsIHTMLContent** aResult,
-                     PRInt32 aID);
+                     nsINodeInfo *aNodeInfo);
 
 // Factory methods for creating html layout objects
 

@@ -50,6 +50,7 @@
 //#include "nsBoxFrame.h"
 #include "nsIElementFactory.h"
 #include "nsBoxLayoutState.h"
+#include "nsINodeInfo.h"
 
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 static NS_DEFINE_IID(kScrollingViewCID, NS_SCROLLING_VIEW_CID);
@@ -273,22 +274,33 @@ nsGfxScrollFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
                                          nsISupportsArray& aAnonymousChildren)
 {
   // create horzontal scrollbar
-  nsCAutoString progID = NS_ELEMENT_FACTORY_PROGID_PREFIX;
-  progID += "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
   nsresult rv;
-  NS_WITH_SERVICE(nsIElementFactory, elementFactory, progID, &rv);
+  NS_WITH_SERVICE(nsIElementFactory, elementFactory,
+                  NS_ELEMENT_FACTORY_PROGID_PREFIX
+                  "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                  &rv);
   if (!elementFactory)
     return NS_ERROR_FAILURE;
 
+  nsCOMPtr<nsINodeInfoManager> nodeInfoManager;
+  mInner->mDocument->GetNodeInfoManager(*getter_AddRefs(nodeInfoManager));
+  NS_ENSURE_TRUE(nodeInfoManager, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+  nodeInfoManager->GetNodeInfo(NS_ConvertASCIItoUCS2("scrollbar"), nsString(), NS_ConvertASCIItoUCS2("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"),
+    *getter_AddRefs(nodeInfo));
+
   nsCOMPtr<nsIContent> content;
-  elementFactory->CreateInstanceByTag(NS_ConvertToString("scrollbar"), getter_AddRefs(content));
-  content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, NS_ConvertToString("horizontal"), PR_FALSE);
+  elementFactory->CreateInstanceByTag(nodeInfo, getter_AddRefs(content));
+  content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::align,
+                        NS_ConvertToString("horizontal"), PR_FALSE);
   aAnonymousChildren.AppendElement(content);
 
   // create vertical scrollbar
   content = nsnull;
-  elementFactory->CreateInstanceByTag(NS_ConvertToString("scrollbar"), getter_AddRefs(content));
-  content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, NS_ConvertToString("vertical"), PR_FALSE);
+  elementFactory->CreateInstanceByTag(nodeInfo, getter_AddRefs(content));
+  content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::align,
+                        NS_ConvertToString("vertical"), PR_FALSE);
   aAnonymousChildren.AppendElement(content);
 
       // XXX For GFX never have scrollbars

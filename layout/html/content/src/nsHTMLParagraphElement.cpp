@@ -72,22 +72,22 @@ public:
 protected:
   nsGenericHTMLContainerElement mInner;
 
-  friend nsresult NS_NewHTMLParagraphElement(nsIHTMLContent**, nsIAtom*);
+  friend nsresult NS_NewHTMLParagraphElement(nsIHTMLContent**, nsINodeInfo *);
 };
 
 nsresult
-NS_NewHTMLParagraphElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
+NS_NewHTMLParagraphElement(nsIHTMLContent** aInstancePtrResult,
+                           nsINodeInfo *aNodeInfo)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
   nsHTMLParagraphElement* it;
   NS_NEWXPCOM(it, nsHTMLParagraphElement);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  it->mInner.Init(it, aTag);
+  it->mInner.Init(it, aNodeInfo);
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
@@ -126,7 +126,7 @@ nsHTMLParagraphElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  it->mInner.Init(it, mInner.mTag);
+  it->mInner.Init(it, mInner.mNodeInfo);
   mInner.CopyInnerTo(this, &it->mInner, aDeep);
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }

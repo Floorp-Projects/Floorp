@@ -1112,7 +1112,16 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
     
     // Create an HTML image content object, and set the SRC.
     // XXX Check if it's an image type we can handle...
-    NS_NewHTMLImageElement(&imageContent, nsHTMLAtoms::img);
+
+    nsCOMPtr<nsINodeInfoManager> nimgr;
+    nsresult rv = aDocument->GetNodeInfoManager(*getter_AddRefs(nimgr));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsINodeInfo> nodeInfo;
+    nimgr->GetNodeInfo(nsHTMLAtoms::img, nsnull, kNameSpaceID_None,
+                       *getter_AddRefs(nodeInfo));
+
+    NS_NewHTMLImageElement(&imageContent, nodeInfo);
     imageContent->SetHTMLAttribute(nsHTMLAtoms::src, contentString, PR_FALSE);
 
     // Set aContent as the parent content and set the document object. This

@@ -56,6 +56,7 @@
 #include "nsXULDocument.h"
 
 #include "nsDOMCID.h"
+#include "nsDOMError.h"
 #include "nsIChromeRegistry.h"
 #include "nsIComponentManager.h"
 #include "nsICodebasePrincipal.h"
@@ -121,6 +122,7 @@
 #include "rdf.h"
 #include "rdfutil.h"
 #include "nsIFrame.h"
+#include "nsINodeInfo.h"
 
 //----------------------------------------------------------------------
 //
@@ -1810,6 +1812,17 @@ nsXULDocument::GetBindingManager(nsIBindingManager** aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXULDocument::GetNodeInfoManager(class nsINodeInfoManager *&aNodeInfoManager)
+{
+    NS_ENSURE_TRUE(mNodeInfoManager, NS_ERROR_NOT_INITIALIZED);
+
+    aNodeInfoManager = mNodeInfoManager;
+    NS_ADDREF(aNodeInfoManager);
+
+    return NS_OK;
+}
+
 void
 nsXULDocument::BeginConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
 {
@@ -3167,32 +3180,31 @@ nsXULDocument::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 NS_IMETHODIMP
 nsXULDocument::GetNamespaceURI(nsString& aNamespaceURI)
 { 
-  NS_NOTYETIMPLEMENTED("write me");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  aNamespaceURI.Truncate();
+  return NS_OK;
 }
 
 
 NS_IMETHODIMP
 nsXULDocument::GetPrefix(nsString& aPrefix)
 {
-  NS_NOTYETIMPLEMENTED("write me");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  aPrefix.Truncate();
+  return NS_OK;
 }
 
 
 NS_IMETHODIMP
 nsXULDocument::SetPrefix(const nsString& aPrefix)
 {
-  NS_NOTYETIMPLEMENTED("write me");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
 }
 
 
 NS_IMETHODIMP
 nsXULDocument::GetLocalName(nsString& aLocalName)
 {
-  NS_NOTYETIMPLEMENTED("write me");
-  return GetNodeName(aLocalName);
+  aLocalName.Truncate();
+  return NS_OK;
 }
 
 
@@ -3498,6 +3510,15 @@ nsXULDocument::Init()
                                             NS_GET_IID(nsINameSpaceManager),
                                             getter_AddRefs(mNameSpaceManager));
     if (NS_FAILED(rv)) return rv;
+
+    rv = nsComponentManager::CreateInstance(NS_NODEINFOMANAGER_PROGID,
+                                            nsnull,
+                                            NS_GET_IID(nsINodeInfoManager),
+                                            getter_AddRefs(mNodeInfoManager));
+
+    if (NS_FAILED(rv)) return rv;
+
+    mNodeInfoManager->Init(mNameSpaceManager);
 
     if (!mIsKeyBindingDoc) {
         // Create our focus tracker and hook it up.
@@ -4159,28 +4180,28 @@ nsXULDocument::CreateElement(PRInt32 aNameSpaceID,
     nsresult rv;
     nsCOMPtr<nsIContent> result;
 
+    nsCOMPtr<nsINodeInfo> nodeInfo;
+    mNodeInfoManager->GetNodeInfo(aTag, nsnull, aNameSpaceID,
+                               *getter_AddRefs(nodeInfo));
+
     if (aNameSpaceID == kNameSpaceID_XUL) {
-        rv = nsXULElement::Create(aNameSpaceID, aTag, getter_AddRefs(result));
+        rv = nsXULElement::Create(nodeInfo, getter_AddRefs(result));
         if (NS_FAILED(rv)) return rv;
     }
     else if (aNameSpaceID == kNameSpaceID_HTML) {
-        const PRUnichar *tagName;
-        aTag->GetUnicode(&tagName);
-
-        rv = gHTMLElementFactory->CreateInstanceByTag(tagName, getter_AddRefs(result));
+        rv = gHTMLElementFactory->CreateInstanceByTag(nodeInfo,
+                                                      getter_AddRefs(result));
         if (NS_FAILED(rv)) return rv;
 
         if (! result)
             return NS_ERROR_UNEXPECTED;
     }
     else {
-        const PRUnichar *tagName;
-        aTag->GetUnicode(&tagName);
-
         nsCOMPtr<nsIElementFactory> elementFactory;
         GetElementFactory(aNameSpaceID, getter_AddRefs(elementFactory));
 
-        rv = elementFactory->CreateInstanceByTag(tagName, getter_AddRefs(result));
+        rv = elementFactory->CreateInstanceByTag(nodeInfo,
+                                                 getter_AddRefs(result));
         if (NS_FAILED(rv)) return rv;
 
         if (! result)
@@ -4596,10 +4617,14 @@ nsXULDocument::PrepareToWalk()
 
         SetRootContent(root);
 
+        nsCOMPtr<nsINodeInfo> nodeInfo;
+        mNodeInfoManager->GetNodeInfo(NS_ConvertASCIItoUCS2("form"), nsnull,
+                                      kNameSpaceID_HTML,
+                                      *getter_AddRefs(nodeInfo));
         // Create the document's "hidden form" element which will wrap all
         // HTML form elements that turn up.
         nsCOMPtr<nsIContent> form;
-        rv = gHTMLElementFactory->CreateInstanceByTag(NS_ConvertASCIItoUCS2("form"),
+        rv = gHTMLElementFactory->CreateInstanceByTag(nodeInfo,
                                                       getter_AddRefs(form));
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create form element");
         if (NS_FAILED(rv)) return rv;
@@ -5189,12 +5214,12 @@ nsXULDocument::CreateElement(nsXULPrototypeElement* aPrototype, nsIContent** aRe
     if (! aPrototype)
         return NS_ERROR_NULL_POINTER;
 
-    nsresult rv;
+    nsresult rv = NS_OK;
 
 #ifdef PR_LOGGING
     if (PR_LOG_TEST(gXULLog, PR_LOG_ALWAYS)) {
         nsAutoString tagstr;
-        aPrototype->mTag->ToString(tagstr);
+        aPrototype->mNodeInfo->GetQualifiedName(tagstr);
 
         nsCAutoString tagstrC;
         tagstrC.AssignWithConversion(tagstr);
@@ -5206,15 +5231,13 @@ nsXULDocument::CreateElement(nsXULPrototypeElement* aPrototype, nsIContent** aRe
 
     nsCOMPtr<nsIContent> result;
 
-    if (aPrototype->mNameSpaceID == kNameSpaceID_HTML) {
+    if (aPrototype->mNodeInfo->NamespaceEquals(kNameSpaceID_HTML)) {
         // If it's an HTML element, it's gonna be heavyweight no matter
         // what. So we need to copy everything out of the prototype
         // into the element.
-        nsAutoString tagStr;
-        rv = aPrototype->mTag->ToString(tagStr);
-        if (NS_FAILED(rv)) return rv;
 
-        gHTMLElementFactory->CreateInstanceByTag(tagStr.GetUnicode(), getter_AddRefs(result));
+        gHTMLElementFactory->CreateInstanceByTag(aPrototype->mNodeInfo,
+                                                 getter_AddRefs(result));
         if (NS_FAILED(rv)) return rv;
 
         if (! result)
@@ -5239,17 +5262,19 @@ nsXULDocument::CreateElement(nsXULPrototypeElement* aPrototype, nsIContent** aRe
             htmlformctrl->SetForm(docform);
         }
     }
-    else if (aPrototype->mNameSpaceID != kNameSpaceID_XUL) {
+    else if (!aPrototype->mNodeInfo->NamespaceEquals(kNameSpaceID_XUL)) {
         // If it's not a XUL element, it's gonna be heavyweight no matter
         // what. So we need to copy everything out of the prototype
         // into the element.
-        nsAutoString tagStr;
-        rv = aPrototype->mTag->ToString(tagStr);
-        if (NS_FAILED(rv)) return rv;
+
+        PRInt32 namespaceID;
+        aPrototype->mNodeInfo->GetNamespaceID(namespaceID);
 
         nsCOMPtr<nsIElementFactory> elementFactory;
-        GetElementFactory(aPrototype->mNameSpaceID, getter_AddRefs(elementFactory));
-        elementFactory->CreateInstanceByTag(tagStr.GetUnicode(), getter_AddRefs(result));
+        GetElementFactory(namespaceID,
+                          getter_AddRefs(elementFactory));
+        elementFactory->CreateInstanceByTag(aPrototype->mNodeInfo,
+                                            getter_AddRefs(result));
         if (NS_FAILED(rv)) return rv;
 
         if (! result)
@@ -5268,8 +5293,7 @@ nsXULDocument::CreateElement(nsXULPrototypeElement* aPrototype, nsIContent** aRe
         if (NS_FAILED(rv)) return rv;
 
         // We also need to pay special attention to the keyset tag to set up a listener
-        if ((aPrototype->mNameSpaceID == kNameSpaceID_XUL) &&
-            (aPrototype->mTag.get() == kKeysetAtom) &&
+        if (aPrototype->mNodeInfo->Equals(kKeysetAtom, kNameSpaceID_XUL) &&
             ! mIsKeyBindingDoc) {
             // Create our nsXULKeyListener and hook it up.
             nsCOMPtr<nsIXULKeyListener> keyListener;
@@ -6159,7 +6183,7 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIElementFactory interface
-  NS_IMETHOD CreateInstanceByTag(const nsString& aTag, nsIContent** aResult);
+  NS_IMETHOD CreateInstanceByTag(nsINodeInfo *aNodeInfo, nsIContent** aResult);
 
   static PRUint32 gRefCnt;
   static PRInt32 kNameSpaceID_XUL;
@@ -6218,13 +6242,10 @@ NS_NewXULElementFactory(nsIElementFactory** aResult)
 
 
 NS_IMETHODIMP
-XULElementFactoryImpl::CreateInstanceByTag(const nsString& aTag, nsIContent** aResult)
+XULElementFactoryImpl::CreateInstanceByTag(nsINodeInfo *aNodeInfo,
+                                           nsIContent** aResult)
 {
-  nsCOMPtr<nsIAtom> tag = dont_AddRef(NS_NewAtom(aTag));
-  if (! tag)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  return nsXULElement::Create(kNameSpaceID_XUL, tag, aResult); 
+  return nsXULElement::Create(aNodeInfo, aResult); 
 }
 
 

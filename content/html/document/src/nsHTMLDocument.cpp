@@ -1184,8 +1184,18 @@ NS_IMETHODIMP
 nsHTMLDocument::CreateElement(const nsString& aTagName, 
                               nsIDOMElement** aReturn)
 {
+  NS_ENSURE_ARG_POINTER(aReturn);
+  NS_ENSURE_TRUE(aTagName.Length(), NS_ERROR_DOM_INVALID_CHARACTER_ERR);
+
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+  nsAutoString tmp(aTagName);
+  tmp.ToLowerCase();
+
+  mNodeInfoManager->GetNodeInfo(aTagName, nsnull, kNameSpaceID_None,
+                                *getter_AddRefs(nodeInfo));
+
   nsCOMPtr<nsIHTMLContent> content;
-  nsresult rv = NS_CreateHTMLElement(getter_AddRefs(content), aTagName);
+  nsresult rv = NS_CreateHTMLElement(getter_AddRefs(content), nodeInfo);
   if (NS_SUCCEEDED(rv)) {
     content->SetContentID(mNextContentID++);
     rv = content->QueryInterface(kIDOMElementIID, (void**)aReturn);

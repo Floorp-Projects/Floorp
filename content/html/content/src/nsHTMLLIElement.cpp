@@ -39,7 +39,7 @@ class nsHTMLLIElement : public nsIDOMHTMLLIElement,
                         public nsIHTMLContent
 {
 public:
-  nsHTMLLIElement(nsIAtom* aTag);
+  nsHTMLLIElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLLIElement();
 
   // nsISupports
@@ -74,13 +74,13 @@ protected:
 };
 
 nsresult
-NS_NewHTMLLIElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
+NS_NewHTMLLIElement(nsIHTMLContent** aInstancePtrResult,
+                    nsINodeInfo *aNodeInfo)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIHTMLContent* it = new nsHTMLLIElement(aTag);
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
+  nsIHTMLContent* it = new nsHTMLLIElement(aNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -88,10 +88,10 @@ NS_NewHTMLLIElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
 }
 
 
-nsHTMLLIElement::nsHTMLLIElement(nsIAtom* aTag)
+nsHTMLLIElement::nsHTMLLIElement(nsINodeInfo *aNodeInfo)
 {
   NS_INIT_REFCNT();
-  mInner.Init(this, aTag);
+  mInner.Init(this, aNodeInfo);
 }
 
 nsHTMLLIElement::~nsHTMLLIElement()
@@ -118,7 +118,7 @@ nsHTMLLIElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsresult
 nsHTMLLIElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLLIElement* it = new nsHTMLLIElement(mInner.mTag);
+  nsHTMLLIElement* it = new nsHTMLLIElement(mInner.mNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

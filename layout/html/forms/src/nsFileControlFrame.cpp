@@ -115,8 +115,18 @@ nsFileControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
 {
   
   // create text field
-  nsIAtom* tag = NS_NewAtom("input");
-  if (NS_OK == NS_NewHTMLInputElement(&mTextContent, tag)) {
+
+  nsCOMPtr<nsIDocument> doc;
+  mContent->GetDocument(*getter_AddRefs(doc));
+  nsCOMPtr<nsINodeInfoManager> nimgr;
+  nsresult rv = doc->GetNodeInfoManager(*getter_AddRefs(nimgr));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+  nimgr->GetNodeInfo(nsHTMLAtoms::input, nsnull, kNameSpaceID_None,
+                     *getter_AddRefs(nodeInfo));
+
+  if (NS_OK == NS_NewHTMLInputElement(&mTextContent, nodeInfo)) {
     mTextContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, NS_ConvertASCIItoUCS2("text"), PR_FALSE);
     if (nsFormFrame::GetDisabled(this)) {
       nsCOMPtr<nsIDOMHTMLInputElement> textControl = do_QueryInterface(mTextContent);
@@ -129,8 +139,7 @@ nsFileControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
 
   // create browse button
   nsIHTMLContent* browse = nsnull;
-  tag = NS_NewAtom("input");
-  if (NS_OK == NS_NewHTMLInputElement(&browse, tag)) {
+  if (NS_OK == NS_NewHTMLInputElement(&browse, nodeInfo)) {
     browse->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, NS_ConvertASCIItoUCS2("button"), PR_FALSE);
     //browse->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, nsAutoString("browse..."), PR_FALSE);
 

@@ -24,6 +24,7 @@
 #include "nsDOMAttribute.h"
 #include "nsDOMAttributeMap.h"
 #include "nsIAtom.h"
+#include "nsINodeInfo.h"
 #include "nsIDocument.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMNodeList.h"
@@ -376,21 +377,16 @@ nsGenericElement::GetScriptObjectFactory(nsIDOMScriptObjectFactory **aResult)
   return result;
 }
 
-nsGenericElement::nsGenericElement()
+nsGenericElement::nsGenericElement() : mContent(nsnull), mDocument(nsnull),
+                                       mParent(nsnull), mNodeInfo(nsnull),
+                                       mDOMSlots(nsnull), mContentID(0)
 {
-  mDocument = nsnull;
-  mParent = nsnull;
-  mTag = nsnull;
-  mContent = nsnull;
-  mDOMSlots = nsnull;
-  mContentID = 0;
 }
 
 nsGenericElement::~nsGenericElement()
 {
   // pop any enclosed ranges out
   // nsRange::OwnerGone(mContent); not used for now
-  NS_IF_RELEASE(mTag);
   if (nsnull != mDOMSlots) {
     if (nsnull != mDOMSlots->mChildNodes) {
       mDOMSlots->mChildNodes->DropReference();
@@ -409,6 +405,7 @@ nsGenericElement::~nsGenericElement()
     // XXX Should really be arena managed
     PR_DELETE(mDOMSlots);
   }
+  NS_IF_RELEASE(mNodeInfo);
 }
 
 nsDOMSlots *
@@ -445,26 +442,17 @@ nsGenericElement::MaybeClearDOMSlots()
 
 void
 nsGenericElement::Init(nsIContent* aOuterContentObject,
-                       nsIAtom* aTag)
+                       nsINodeInfo *aNodeInfo)
 {
+  NS_ABORT_IF_FALSE(aOuterContentObject, "We need a outer content object!");
+  NS_ABORT_IF_FALSE(aNodeInfo, "This can't be used without node info!");
+
   NS_ASSERTION((nsnull == mContent) && (nsnull != aOuterContentObject),
                "null ptr");
+
   mContent = aOuterContentObject;
-  mTag = aTag;
-  NS_IF_ADDREF(aTag);
-}
-
-nsresult
-nsGenericElement::GetNodeName(nsString& aNodeName)
-{
-  return GetTagName(aNodeName);
-}
-
-nsresult
-nsGenericElement::GetLocalName(nsString& aNodeName)
-{
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  mNodeInfo = aNodeInfo;
+  NS_IF_ADDREF(mNodeInfo);
 }
 
 nsresult
@@ -596,6 +584,50 @@ nsGenericElement::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 }
 
 nsresult
+nsGenericElement::GetNamespaceURI(nsString& aNamespaceURI)
+{
+  return mNodeInfo->GetNamespaceURI(aNamespaceURI);
+}
+
+nsresult
+nsGenericElement::GetPrefix(nsString& aPrefix)
+{
+  return mNodeInfo->GetPrefix(aPrefix);
+}
+
+nsresult
+nsGenericElement::SetPrefix(const nsString& aPrefix)
+{
+  // XXX: Validate the prefix string!
+
+  nsINodeInfo *newNodeInfo = nsnull;
+  nsCOMPtr<nsIAtom> prefix;
+
+  if (aPrefix.Length()) {
+    prefix = dont_AddRef(NS_NewAtom(aPrefix));
+    NS_ENSURE_TRUE(prefix, NS_ERROR_OUT_OF_MEMORY);
+  }
+
+  nsresult rv = mNodeInfo->PrefixChanged(prefix, newNodeInfo);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NS_RELEASE(mNodeInfo);
+
+  mNodeInfo = newNodeInfo;
+
+  return NS_OK;
+}
+
+nsresult
+nsGenericElement::Supports(const nsString& aFeature, const nsString& aVersion,
+                           PRBool* aReturn)
+{
+  // XXX: TBI
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
 nsGenericElement::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
 {
   NS_PRECONDITION(nsnull != aAttributes, "null pointer argument");
@@ -617,10 +649,8 @@ nsresult
 nsGenericElement::GetTagName(nsString& aTagName)
 {
   aTagName.Truncate();
-  if (nsnull != mTag) {
-    // note that we assume no namespace here, subclasses that support
-    // namespaces must override
-    mTag->ToString(aTagName);
+  if (mNodeInfo) {
+    mNodeInfo->GetName(aTagName);
   }
   return NS_OK;
 }
@@ -998,9 +1028,7 @@ nsGenericElement::GetNameSpaceID(PRInt32& aResult) const
 nsresult
 nsGenericElement::GetTag(nsIAtom*& aResult) const
 {
-  aResult = mTag;
-  NS_IF_ADDREF(aResult);
-  return NS_OK;
+  return mNodeInfo->GetNameAtom(aResult);
 }
 
 
@@ -1238,7 +1266,7 @@ nsGenericElement::GetScriptObject(nsIScriptContext* aContext,
     }
     
     nsAutoString tag;
-    mTag->ToString(tag);
+    mNodeInfo->GetQualifiedName(tag);
     res = factory->NewScriptElement(tag, aContext, mContent,
                                     mParent ? (nsISupports*)mParent : (nsISupports*)mDocument,
                                     (void**)&slots->mScriptObject);
@@ -1983,7 +2011,8 @@ nsGenericElement::AddScriptEventListener(nsIAtom* aAttribute,
     mDocument->GetScriptGlobalObject(getter_AddRefs(global));
     if (global) {
       if (NS_OK == global->GetContext(&context)) {
-        if (nsHTMLAtoms::body == mTag || nsHTMLAtoms::frameset == mTag) {
+        if (mNodeInfo->Equals(nsHTMLAtoms::body) ||
+            mNodeInfo->Equals(nsHTMLAtoms::frameset)) {
           nsIDOMEventReceiver *receiver;
 
           if (nsnull != global && NS_OK == global->QueryInterface(kIDOMEventReceiverIID, (void**)&receiver)) {
@@ -2427,14 +2456,10 @@ nsGenericContainerElement::List(FILE* out, PRInt32 aIndent) const
   PRInt32 index;
   for (index = aIndent; --index >= 0; ) fputs("  ", out);
 
-  nsIAtom* tag;
-  GetTag(tag);
-  if (tag != nsnull) {
-    nsAutoString buf;
-    tag->ToString(buf);
-    fputs(buf, out);
-    NS_RELEASE(tag);
-  }
+  nsAutoString buf;
+  mNodeInfo->GetQualifiedName(buf);
+  fputs(buf, out);
+
   fprintf(out, "@%p", mContent);
 
   ListAttributes(out);

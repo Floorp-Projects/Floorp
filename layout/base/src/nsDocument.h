@@ -41,6 +41,7 @@
 #include "nsGenericDOMNodeList.h"
 #include "nsIPrincipal.h"
 #include "nsIBindingManager.h"
+#include "nsINodeInfo.h"
 
 class nsIEventListenerManager;
 class nsDOMStyleSheetList;
@@ -332,6 +333,7 @@ public:
   NS_IMETHOD FlushPendingNotifications();
   NS_IMETHOD GetAndIncrementContentID(PRInt32* aID);
   NS_IMETHOD GetBindingManager(nsIBindingManager** aResult);
+  NS_IMETHOD GetNodeInfoManager(nsINodeInfoManager*& aNodeInfoManager);
 
 public:
   
@@ -474,6 +476,7 @@ protected:
   PRInt32         mModCount;
 
   nsCOMPtr<nsIBindingManager> mBindingManager;
+  nsCOMPtr<nsINodeInfoManager> mNodeInfoManager; // OWNER
 };
 
 #endif /* nsDocument_h___ */

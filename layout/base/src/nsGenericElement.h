@@ -34,6 +34,7 @@
 #include "nsILinkHandler.h"
 #include "nsGenericDOMNodeList.h"
 #include "nsIEventListenerManager.h"
+#include "nsINodeInfo.h"
 
 extern const nsIID kIDOMNodeIID;
 extern const nsIID kIDOMElementIID;
@@ -53,6 +54,7 @@ class nsDOMCSSDeclaration;
 class nsIDOMCSSStyleDeclaration;
 class nsDOMAttributeMap;
 class nsIURI;
+class nsINodeInfo;
 
 
 // Class that holds the child list of a content element and also
@@ -124,10 +126,9 @@ public:
   nsGenericElement();
   ~nsGenericElement();
 
-  void Init(nsIContent* aOuterContentObject, nsIAtom* aTag);
+  void Init(nsIContent* aOuterContentObject, nsINodeInfo *aNodeInfo);
 
   // Implementation for nsIDOMNode
-  nsresult    GetNodeName(nsString& aNodeName);
   nsresult    GetNodeValue(nsString& aNodeValue);
   nsresult    SetNodeValue(const nsString& aNodeValue);
   nsresult    GetNodeType(PRUint16* aNodeType);
@@ -136,8 +137,12 @@ public:
   nsresult    GetPreviousSibling(nsIDOMNode** aPreviousSibling);
   nsresult    GetNextSibling(nsIDOMNode** aNextSibling);
   nsresult    GetOwnerDocument(nsIDOMDocument** aOwnerDocument);
-  nsresult    GetLocalName(nsString& aLocalName);
+  nsresult    GetNamespaceURI(nsString& aNamespaceURI);
+  nsresult    GetPrefix(nsString& aPrefix);
+  nsresult    SetPrefix(const nsString& aPrefix);
   nsresult    Normalize();
+  nsresult    Supports(const nsString& aFeature,
+                       const nsString& aVersion, PRBool* aReturn);
 
   // Implementation for nsIDOMElement
   nsresult    GetTagName(nsString& aTagName);
@@ -252,12 +257,12 @@ public:
   // supporting. Sometimes there is work that we just can't do
   // ourselves, so this is needed to ask the real object to do the
   // work.
-  nsIContent* mContent;
+  nsIContent* mContent;                     // WEAK
 
   nsIDocument* mDocument;                   // WEAK
   nsIContent* mParent;                      // WEAK
-  nsIAtom* mTag;
-  nsDOMSlots *mDOMSlots;
+  nsINodeInfo* mNodeInfo;                   // OWNER
+  nsDOMSlots *mDOMSlots;                    // OWNER
   PRUint32 mContentID;
 };
 
@@ -346,9 +351,6 @@ public:
  *
  * Note that classes using this macro will need to implement:
  *       NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
- * Note:
- * GetNamespaceURI, GetPrefix, SetPrefix, Normalize and Supports must be
- * implemented in a super class of this one.
  */
 #define NS_IMPL_IDOMNODE_USING_GENERIC(_g)                              \
   NS_IMETHOD GetNodeName(nsString& aNodeName) {                         \

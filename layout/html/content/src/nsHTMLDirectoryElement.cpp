@@ -43,7 +43,7 @@ class nsHTMLDirectoryElement : public nsIDOMHTMLDirectoryElement,
                                public nsIHTMLContent
 {
 public:
-  nsHTMLDirectoryElement(nsIAtom* aTag);
+  nsHTMLDirectoryElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLDirectoryElement();
 
   // nsISupports
@@ -76,13 +76,13 @@ protected:
 };
 
 nsresult
-NS_NewHTMLDirectoryElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
+NS_NewHTMLDirectoryElement(nsIHTMLContent** aInstancePtrResult,
+                           nsINodeInfo *aNodeInfo)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIHTMLContent* it = new nsHTMLDirectoryElement(aTag);
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
+  nsIHTMLContent* it = new nsHTMLDirectoryElement(aNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -90,10 +90,10 @@ NS_NewHTMLDirectoryElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
 }
 
 
-nsHTMLDirectoryElement::nsHTMLDirectoryElement(nsIAtom* aTag)
+nsHTMLDirectoryElement::nsHTMLDirectoryElement(nsINodeInfo *aNodeInfo)
 {
   NS_INIT_REFCNT();
-  mInner.Init(this, aTag);
+  mInner.Init(this, aNodeInfo);
 }
 
 nsHTMLDirectoryElement::~nsHTMLDirectoryElement()
@@ -120,7 +120,7 @@ nsHTMLDirectoryElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsresult
 nsHTMLDirectoryElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLDirectoryElement* it = new nsHTMLDirectoryElement(mInner.mTag);
+  nsHTMLDirectoryElement* it = new nsHTMLDirectoryElement(mInner.mNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

@@ -100,6 +100,8 @@
 #include "nsIDOMNSHTMLInputElement.h"
 #include "nsIDOMXULCommandDispatcher.h"
 
+#include "nsINodeInfo.h"
+
 #include "nsLayoutAtoms.h"
 
 static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
@@ -1376,24 +1378,37 @@ nsGfxTextControlFrame::CreateSubDoc(nsRect *aSizeOfSubdocContainer)
     if (NS_FAILED(rv)) { return rv; }
     if (!doc) { return NS_ERROR_NULL_POINTER; }
 
+    nsCOMPtr<nsINodeInfoManager> nimgr;
+    rv = doc->GetNodeInfoManager(*getter_AddRefs(nimgr));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsINodeInfo> nodeInfo;
+    nimgr->GetNodeInfo(nsHTMLAtoms::html, nsnull, kNameSpaceID_None,
+                       *getter_AddRefs(nodeInfo));
+
     // create document content
     nsCOMPtr<nsIHTMLContent> htmlElement;
     nsCOMPtr<nsIHTMLContent> headElement;
     nsCOMPtr<nsIHTMLContent> bodyElement;
       // create the root
-    rv = NS_NewHTMLHtmlElement(getter_AddRefs(htmlElement), nsHTMLAtoms::html);
+    rv = NS_NewHTMLHtmlElement(getter_AddRefs(htmlElement), nodeInfo);
     if (NS_FAILED(rv)) { return rv; }
     if (!htmlElement) { return NS_ERROR_NULL_POINTER; }
       // create the head
-    nsIAtom* headAtom = NS_NewAtom("head");
-    if (!headAtom) { return NS_ERROR_OUT_OF_MEMORY; }
-    rv = NS_NewHTMLHeadElement(getter_AddRefs(headElement), headAtom);
-    NS_RELEASE(headAtom);
+
+    nimgr->GetNodeInfo(NS_ConvertASCIItoUCS2("head"), nsnull,
+                       kNameSpaceID_None, *getter_AddRefs(nodeInfo));
+
+    rv = NS_NewHTMLHeadElement(getter_AddRefs(headElement), nodeInfo);
     if (NS_FAILED(rv)) { return rv; }
     if (!headElement) { return NS_ERROR_NULL_POINTER; }
     headElement->SetDocument(doc, PR_FALSE);
       // create the body
-    rv = NS_NewHTMLBodyElement(getter_AddRefs(bodyElement), nsHTMLAtoms::body);
+
+    nimgr->GetNodeInfo(nsHTMLAtoms::body, nsnull, kNameSpaceID_None,
+                      *getter_AddRefs(nodeInfo));
+
+    rv = NS_NewHTMLBodyElement(getter_AddRefs(bodyElement), nodeInfo);
     if (NS_FAILED(rv)) { return rv; }
     if (!bodyElement) { return NS_ERROR_NULL_POINTER; }
     bodyElement->SetDocument(doc, PR_FALSE);
@@ -3381,8 +3396,8 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
     if (NS_FAILED(result)) { return result; }
     if (!selection) { return NS_ERROR_NULL_POINTER; }
     nsCOMPtr<nsIDOMNode>bodyNode;
-    nsAutoString bodyTag; bodyTag.AssignWithConversion("body");
-    result = GetFirstNodeOfType(bodyTag, aDoc, getter_AddRefs(bodyNode));
+    result = GetFirstNodeOfType(NS_ConvertASCIItoUCS2("body"), aDoc,
+                                getter_AddRefs(bodyNode));
     if (NS_SUCCEEDED(result) && bodyNode)
     {
       result = mEditor->SelectAll();

@@ -57,6 +57,7 @@ class nsIWordBreaker;
 class nsIDOMSelection;
 class nsIChannel;
 class nsIPrincipal;
+class nsINodeInfoManager;
 class nsIDOMDocument;
 class nsIDOMDocumentType;
 class nsIBindingManager;
@@ -330,6 +331,8 @@ public:
   NS_IMETHOD GetAndIncrementContentID(PRInt32* aID) = 0;
 
   NS_IMETHOD GetBindingManager(nsIBindingManager** aResult) = 0;
+
+  NS_IMETHOD GetNodeInfoManager(nsINodeInfoManager*& aNodeInfoManager) = 0;
 };
 
 

@@ -56,7 +56,7 @@ class nsHTMLTableElement :  public nsIDOMHTMLTableElement,
                             public nsIHTMLContent
 {
 public:
-  nsHTMLTableElement(nsIAtom* aTag);
+  nsHTMLTableElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLTableElement();
 
   // nsISupports
@@ -322,13 +322,13 @@ TableRowsCollection::ParentDestroyed()
 // the class declaration is at the top of this file
 
 nsresult
-NS_NewHTMLTableElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
+NS_NewHTMLTableElement(nsIHTMLContent** aInstancePtrResult,
+                       nsINodeInfo *aNodeInfo)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIHTMLContent* it = new nsHTMLTableElement(aTag);
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
+  nsIHTMLContent* it = new nsHTMLTableElement(aNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -336,10 +336,10 @@ NS_NewHTMLTableElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
 }
 
 
-nsHTMLTableElement::nsHTMLTableElement(nsIAtom* aTag)
+nsHTMLTableElement::nsHTMLTableElement(nsINodeInfo *aNodeInfo)
 {
   NS_INIT_REFCNT();
-  mInner.Init(this, aTag);
+  mInner.Init(this, aNodeInfo);
   mTBodies=nsnull;
   mRows=nsnull;
 }
@@ -378,7 +378,7 @@ nsHTMLTableElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsresult
 nsHTMLTableElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLTableElement* it = new nsHTMLTableElement(mInner.mTag);
+  nsHTMLTableElement* it = new nsHTMLTableElement(mInner.mNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -566,7 +566,12 @@ nsHTMLTableElement::CreateTHead(nsIDOMHTMLElement** aValue)
   else
   { // create a new head rowgroup
     nsCOMPtr<nsIHTMLContent> newHead;
-    rv = NS_NewHTMLTableSectionElement(getter_AddRefs(newHead),nsHTMLAtoms::thead);
+
+    nsCOMPtr<nsINodeInfo> nodeInfo;
+    mInner.mNodeInfo->NameChanged(nsHTMLAtoms::thead,
+                                  *getter_AddRefs(nodeInfo));
+
+    rv = NS_NewHTMLTableSectionElement(getter_AddRefs(newHead),nodeInfo);
     if (NS_SUCCEEDED(rv) && newHead)
     {
       nsCOMPtr<nsIDOMNode> child;
@@ -612,7 +617,12 @@ nsHTMLTableElement::CreateTFoot(nsIDOMHTMLElement** aValue)
   else
   { // create a new foot rowgroup
     nsCOMPtr<nsIHTMLContent> newFoot;
-    rv = NS_NewHTMLTableSectionElement(getter_AddRefs(newFoot),nsHTMLAtoms::tfoot);
+
+    nsCOMPtr<nsINodeInfo> nodeInfo;
+    mInner.mNodeInfo->NameChanged(nsHTMLAtoms::tfoot,
+                                  *getter_AddRefs(nodeInfo));
+
+    rv = NS_NewHTMLTableSectionElement(getter_AddRefs(newFoot),nodeInfo);
     if (NS_SUCCEEDED(rv) && newFoot)
     {
       rv = mInner.AppendChildTo(newFoot, PR_TRUE);
@@ -650,7 +660,12 @@ nsHTMLTableElement::CreateCaption(nsIDOMHTMLElement** aValue)
   else
   { // create a new head rowgroup
     nsCOMPtr<nsIHTMLContent> newCaption;
-    rv = NS_NewHTMLTableCaptionElement(getter_AddRefs(newCaption),nsHTMLAtoms::caption);
+
+    nsCOMPtr<nsINodeInfo> nodeInfo;
+    mInner.mNodeInfo->NameChanged(nsHTMLAtoms::caption,
+                                  *getter_AddRefs(nodeInfo));
+
+    rv = NS_NewHTMLTableCaptionElement(getter_AddRefs(newCaption),nodeInfo);
     if (NS_SUCCEEDED(rv) && newCaption)
     {
       rv = mInner.AppendChildTo(newCaption, PR_TRUE);
@@ -704,7 +719,11 @@ nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
     refRow->GetParentNode(&parent);
     // create the row
     nsIHTMLContent *newRow=nsnull;
-    rv = NS_NewHTMLTableRowElement(&newRow, nsHTMLAtoms::tr);
+
+    nsCOMPtr<nsINodeInfo> nodeInfo;
+    mInner.mNodeInfo->NameChanged(nsHTMLAtoms::tr, *getter_AddRefs(nodeInfo));
+
+    rv = NS_NewHTMLTableRowElement(&newRow, nodeInfo);
     if (NS_SUCCEEDED(rv) && (nsnull!=newRow))
     {
       nsIDOMNode *newRowNode=nsnull;
@@ -753,7 +772,12 @@ nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
     if (nsnull==rowGroup)
     { // need to create a TBODY
       nsIHTMLContent *newRowGroup=nsnull;
-      rv = NS_NewHTMLTableSectionElement(&newRowGroup, nsHTMLAtoms::tbody);
+
+      nsCOMPtr<nsINodeInfo> nodeInfo;
+      mInner.mNodeInfo->NameChanged(nsHTMLAtoms::tbody,
+                                    *getter_AddRefs(nodeInfo));
+
+      rv = NS_NewHTMLTableSectionElement(&newRowGroup, nodeInfo);
       if (NS_SUCCEEDED(rv) && (nsnull!=newRowGroup))
       {
         rv = mInner.AppendChildTo(newRowGroup, PR_TRUE);
@@ -764,7 +788,12 @@ nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
     if (nsnull!=rowGroup)
     {
       nsIHTMLContent *newRow=nsnull;
-      rv = NS_NewHTMLTableRowElement(&newRow, nsHTMLAtoms::tr);
+
+      nsCOMPtr<nsINodeInfo> nodeInfo;
+      mInner.mNodeInfo->NameChanged(nsHTMLAtoms::tr,
+                                    *getter_AddRefs(nodeInfo));
+
+      rv = NS_NewHTMLTableRowElement(&newRow, nodeInfo);
       nsIContent *rowGroupContent=nsnull;
       rowGroup->QueryInterface(kIContentIID, (void **)&rowGroupContent);
       GenericElementCollection rowGroupRows(rowGroupContent, nsHTMLAtoms::tr);

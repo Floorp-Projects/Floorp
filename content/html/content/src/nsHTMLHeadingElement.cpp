@@ -39,7 +39,7 @@ class nsHTMLHeadingElement : public nsIDOMHTMLHeadingElement,
                              public nsIHTMLContent
 {
 public:
-  nsHTMLHeadingElement(nsIAtom* aTag);
+  nsHTMLHeadingElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLHeadingElement();
 
   // nsISupports
@@ -72,13 +72,13 @@ protected:
 };
 
 nsresult
-NS_NewHTMLHeadingElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
+NS_NewHTMLHeadingElement(nsIHTMLContent** aInstancePtrResult,
+                         nsINodeInfo *aNodeInfo)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIHTMLContent* it = new nsHTMLHeadingElement(aTag);
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
+  nsIHTMLContent* it = new nsHTMLHeadingElement(aNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -86,10 +86,10 @@ NS_NewHTMLHeadingElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
 }
 
 
-nsHTMLHeadingElement::nsHTMLHeadingElement(nsIAtom* aTag)
+nsHTMLHeadingElement::nsHTMLHeadingElement(nsINodeInfo *aNodeInfo)
 {
   NS_INIT_REFCNT();
-  mInner.Init(this, aTag);
+  mInner.Init(this, aNodeInfo);
 }
 
 nsHTMLHeadingElement::~nsHTMLHeadingElement()
@@ -116,7 +116,7 @@ nsHTMLHeadingElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsresult
 nsHTMLHeadingElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLHeadingElement* it = new nsHTMLHeadingElement(mInner.mTag);
+  nsHTMLHeadingElement* it = new nsHTMLHeadingElement(mInner.mNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

@@ -287,7 +287,12 @@ int main(int argc, char** argv)
   nsIHTMLContent* container;
   nsIAtom* li = NS_NewAtom("li");
 
-  rv = NS_NewHTMLLIElement(&container,li);
+  nsCOMPtr<nsINodeInfoManager> nimgr;
+  nsCOMPtr<nsINodeInfo> ni;
+  myDoc->GetNodeInfoManager(*getter_AddRefs(nimgr));
+  nimgr->GetNodeInfo(li, nsnull, kNameSpaceID_None, *getter_AddRefs(ni));
+
+  rv = NS_NewHTMLLIElement(&container,ni);
   if (NS_OK != rv) {
     printf("Could not create container.\n");
     return -1;

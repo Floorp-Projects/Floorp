@@ -51,6 +51,7 @@
 #include "nsIFrame.h"
 #include "nsImageFrame.h"
 #include "nsLayoutAtoms.h"
+#include "nsNodeInfoManager.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
@@ -69,7 +70,7 @@ class nsHTMLImageElement : public nsIDOMHTMLImageElement,
                            public nsIJSNativeInitializer
 {
 public:
-  nsHTMLImageElement(nsIAtom* aTag);
+  nsHTMLImageElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLImageElement();
 
   // nsISupports
@@ -154,13 +155,30 @@ protected:
 };
 
 nsresult
-NS_NewHTMLImageElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
+NS_NewHTMLImageElement(nsIHTMLContent** aInstancePtrResult,
+                       nsINodeInfo *aNodeInfo)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+
+  /*
+   * nsHTMLImageElement's will be created without a nsINodeInfo passed in
+   * if someone says "var img = new Image();" in JavaScript, in a case like
+   * that we request the nsINodeInfo from the anonymous nodeinfo list.
+   */
+  nsCOMPtr<nsINodeInfo> nodeInfo(aNodeInfo);
+  if (!nodeInfo) {
+    nsCOMPtr<nsINodeInfoManager> nodeInfoManager;
+    nsresult rv;
+    rv = nsNodeInfoManager::GetAnonymousManager(*getter_AddRefs(nodeInfoManager));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = nodeInfoManager->GetNodeInfo(nsHTMLAtoms::img, nsnull,
+                                      kNameSpaceID_None,
+                                      *getter_AddRefs(nodeInfo));
+    NS_ENSURE_SUCCESS(rv, rv);
   }
-  nsIHTMLContent* it = new nsHTMLImageElement(aTag);
+
+  nsIHTMLContent* it = new nsHTMLImageElement(nodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -168,10 +186,10 @@ NS_NewHTMLImageElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
 }
 
 
-nsHTMLImageElement::nsHTMLImageElement(nsIAtom* aTag)
+nsHTMLImageElement::nsHTMLImageElement(nsINodeInfo *aNodeInfo)
 {
   NS_INIT_REFCNT();
-  mInner.Init(this, aTag);
+  mInner.Init(this, aNodeInfo);
   mOwnerDocument = nsnull;
 }
 
@@ -221,7 +239,7 @@ nsHTMLImageElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsresult
 nsHTMLImageElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLImageElement* it = new nsHTMLImageElement(mInner.mTag);
+  nsHTMLImageElement* it = new nsHTMLImageElement(mInner.mNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

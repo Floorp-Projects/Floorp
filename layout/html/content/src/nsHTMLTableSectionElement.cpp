@@ -44,7 +44,7 @@ class nsHTMLTableSectionElement : public nsIDOMHTMLTableSectionElement,
                                   public nsIHTMLContent
 {
 public:
-  nsHTMLTableSectionElement(nsIAtom* aTag);
+  nsHTMLTableSectionElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLTableSectionElement();
 
   // nsISupports
@@ -87,13 +87,13 @@ protected:
 };
 
 nsresult
-NS_NewHTMLTableSectionElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
+NS_NewHTMLTableSectionElement(nsIHTMLContent** aInstancePtrResult,
+                              nsINodeInfo *aNodeInfo)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIHTMLContent* it = new nsHTMLTableSectionElement(aTag);
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
+  nsIHTMLContent* it = new nsHTMLTableSectionElement(aNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -101,10 +101,10 @@ NS_NewHTMLTableSectionElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag
 }
 
 
-nsHTMLTableSectionElement::nsHTMLTableSectionElement(nsIAtom* aTag)
+nsHTMLTableSectionElement::nsHTMLTableSectionElement(nsINodeInfo *aNodeInfo)
 {
   NS_INIT_REFCNT();
-  mInner.Init(this, aTag);
+  mInner.Init(this, aNodeInfo);
   mRows = nsnull;
 }
 
@@ -136,7 +136,7 @@ nsHTMLTableSectionElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsresult
 nsHTMLTableSectionElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLTableSectionElement* it = new nsHTMLTableSectionElement(mInner.mTag);
+  nsHTMLTableSectionElement* it = new nsHTMLTableSectionElement(mInner.mNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -176,7 +176,10 @@ nsHTMLTableSectionElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
 
   // create the row
   nsIHTMLContent* rowContent = nsnull;
-  nsresult rv = NS_NewHTMLTableRowElement(&rowContent, nsHTMLAtoms::tr);
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+  mInner.mNodeInfo->NameChanged(nsHTMLAtoms::tr, *getter_AddRefs(nodeInfo));
+
+  nsresult rv = NS_NewHTMLTableRowElement(&rowContent, nodeInfo);
   if (NS_SUCCEEDED(rv) && (nsnull != rowContent)) {
     nsIDOMNode* rowNode = nsnull;
     rv = rowContent->QueryInterface(kIDOMNodeIID, (void **)&rowNode); 

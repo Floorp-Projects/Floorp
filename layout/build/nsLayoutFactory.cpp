@@ -58,6 +58,7 @@
 
 #include "nsIAutoCopy.h"
 
+#include "nsINodeInfo.h"
 
 class nsIDocumentLoaderFactory;
 
@@ -97,6 +98,8 @@ static NS_DEFINE_CID(kTextEncoderCID, NS_TEXT_ENCODER_CID);
 static NS_DEFINE_CID(kXBLServiceCID, NS_XBLSERVICE_CID);
 static NS_DEFINE_CID(kBindingManagerCID, NS_BINDINGMANAGER_CID);
 
+static NS_DEFINE_CID(kNodeInfoManagerCID, NS_NODEINFOMANAGER_CID);
+
 static NS_DEFINE_CID(kAutoCopyServiceCID, NS_AUTOCOPYSERVICE_CID);
 
 extern nsresult NS_NewSelection(nsIFrameSelection** aResult);
@@ -118,7 +121,10 @@ extern nsresult NS_NewHTMLEncoder(nsIDocumentEncoder** aResult);
 extern nsresult NS_NewTextEncoder(nsIDocumentEncoder** aResult);
 
 extern nsresult NS_NewXBLService(nsIXBLService** aResult);
+
 extern nsresult NS_NewBindingManager(nsIBindingManager** aResult);
+
+extern nsresult NS_NewNodeInfoManager(nsINodeInfoManager** aResult);
 
 extern nsresult NS_NewAutoCopyService(nsIAutoCopyService** aResult);
 
@@ -198,14 +204,16 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
 #if 1
 // XXX replace these with nsIElementFactory calls
   else if (mClassID.Equals(kHTMLImageElementCID)) {
-    res = NS_NewHTMLImageElement((nsIHTMLContent**)&inst, nsHTMLAtoms::img);
+    // Note! NS_NewHTMLImageElement is special cased to handle a null nodeinfo
+    res = NS_NewHTMLImageElement((nsIHTMLContent**)&inst, nsnull);
     if (NS_FAILED(res)) {
       LOG_NEW_FAILURE("NS_NewHTMLImageElement", res);
       return res;
     }
   }
   else if (mClassID.Equals(kHTMLOptionElementCID)) {
-    res = NS_NewHTMLOptionElement((nsIHTMLContent**)&inst, nsHTMLAtoms::option);
+    // Note! NS_NewHTMLOptionElement is special cased to handle a null nodeinfo
+    res = NS_NewHTMLOptionElement((nsIHTMLContent**)&inst, nsnull);
     if (NS_FAILED(res)) {
       LOG_NEW_FAILURE("NS_NewHTMLOptionElement", res);
       return res;
@@ -373,6 +381,13 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
     res = NS_NewBindingManager((nsIBindingManager**) &inst);
     if (NS_FAILED(res)) {
       LOG_NEW_FAILURE("NS_NewBindingManager", res);
+      return res;
+    }
+  }
+  else if (mClassID.Equals(kNodeInfoManagerCID)) {
+    res = NS_NewNodeInfoManager((nsINodeInfoManager**) &inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewNodeInfoManager", res);
       return res;
     }
   }

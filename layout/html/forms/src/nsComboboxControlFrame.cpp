@@ -57,6 +57,7 @@
 #include "nsTextFragment.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsIDocument.h"
+#include "nsINodeInfo.h"
 #include "nsIScrollableFrame.h"
 
 #include "nsIXULDocument.h" // Temporary fix for Bug 36558
@@ -2152,16 +2153,25 @@ nsComboboxControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
     mDisplayContent = do_QueryInterface(labelContent);
     mDisplayContent->SetText(value.GetUnicode(), value.Length(), PR_TRUE);
 
-    /*nsIDocument* doc;
-    mContent->GetDocument(doc);
+    nsCOMPtr<nsIDocument> doc;
+    mContent->GetDocument(*getter_AddRefs(doc));
+    /*
     labelContent->SetDocument(doc, PR_FALSE);
-    NS_RELEASE(doc);
     mContent->AppendChildTo(labelContent, PR_FALSE);
     */
+
+    nsCOMPtr<nsINodeInfoManager> nimgr;
+    result = doc->GetNodeInfoManager(*getter_AddRefs(nimgr));
+    NS_ENSURE_SUCCESS(result, result);
+
+    nsCOMPtr<nsINodeInfo> nodeInfo;
+    nimgr->GetNodeInfo(nsHTMLAtoms::input, nsnull, kNameSpaceID_None,
+                       *getter_AddRefs(nodeInfo));
+
     aChildList.AppendElement(labelContent);
 
     // create button which drops the list down
-    result = NS_NewHTMLInputElement(&mButtonContent, nsHTMLAtoms::input);
+    result = NS_NewHTMLInputElement(&mButtonContent, nodeInfo);
     //NS_ADDREF(mButtonContent);
     if (NS_SUCCEEDED(result) && mButtonContent) {
       mButtonContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, NS_ConvertASCIItoUCS2("button"), PR_FALSE);

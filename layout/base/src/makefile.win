@@ -28,7 +28,7 @@ DEFINES = $(DEFINES) -DXP_NEW_SELECTION
 !endif
 
 CPPSRCS =				\
-  nsAutoCopy.cpp      \
+	nsAutoCopy.cpp			\
 	nsCommentNode.cpp		\
 	nsGenericElement.cpp		\
 	nsGenericDOMDataNode.cpp	\
@@ -48,11 +48,13 @@ CPPSRCS =				\
 	nsFrameTraversal.cpp            \
 	nsFrameUtil.cpp			\
 	nsGalleyContext.cpp		\
-	nsGeneratedIterator.cpp\
+	nsGeneratedIterator.cpp		\
 	nsNameSpaceManager.cpp		\
+	nsNodeInfo.cpp			\
+	nsNodeInfoManager.cpp		\
 	nsPluginViewer.cpp		\
 	nsPresContext.cpp		\
-	nsPresState.cpp         \
+	nsPresState.cpp			\
 	nsPrintContext.cpp		\
 	nsPrintPreviewContext.cpp	\
 	nsSpaceManager.cpp		\
@@ -78,7 +80,7 @@ REQUIRES=xpcom raptor dom
 # EXPORTS=
 
 CPP_OBJS=					\
-  .\$(OBJDIR)\nsAutoCopy.obj      \
+	.\$(OBJDIR)\nsAutoCopy.obj		\
 	.\$(OBJDIR)\nsCommentNode.obj		\
 	.\$(OBJDIR)\nsGenericDOMDataNode.obj	\
 	.\$(OBJDIR)\nsGenericDOMNodeList.obj	\
@@ -99,9 +101,11 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsGalleyContext.obj		\
 	.\$(OBJDIR)\nsGeneratedIterator.obj 	\
 	.\$(OBJDIR)\nsNameSpaceManager.obj	\
+	.\$(OBJDIR)\nsNodeInfo.obj		\
+	.\$(OBJDIR)\nsNodeInfoManager.obj	\
 	.\$(OBJDIR)\nsPluginViewer.obj		\
 	.\$(OBJDIR)\nsPresContext.obj		\
-	.\$(OBJDIR)\nsPresState.obj         \
+	.\$(OBJDIR)\nsPresState.obj		\
 	.\$(OBJDIR)\nsPrintContext.obj		\
 	.\$(OBJDIR)\nsPrintPreviewContext.obj	\
 	.\$(OBJDIR)\nsSpaceManager.obj		\
@@ -114,7 +118,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsSelection.obj		\
 	.\$(OBJDIR)\nsLayoutAtoms.obj		\
 	.\$(OBJDIR)\nsLayoutDebugger.obj	\
-	.\$(OBJDIR)\nsLayoutUtils.obj	\
+	.\$(OBJDIR)\nsLayoutUtils.obj		\
 	.\$(OBJDIR)\nsCaret.obj			\
 	.\$(OBJDIR)\nsRange.obj			\
 	.\$(OBJDIR)\nsTextContentChangeData.obj	\

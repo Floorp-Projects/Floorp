@@ -52,6 +52,7 @@
 #include "nsIPresShell.h"
 #include "nsIFrame.h"
 #include "nsIDOMHTMLSelectElement.h"
+#include "nsNodeInfoManager.h"
 #include "nsCOMPtr.h"
 
 
@@ -73,7 +74,7 @@ class nsHTMLOptionElement : public nsIDOMHTMLOptionElement,
                             //public nsIFormControl
 {
 public:
-  nsHTMLOptionElement(nsIAtom* aTag);
+  nsHTMLOptionElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLOptionElement();
 
   // nsISupports
@@ -115,13 +116,30 @@ protected:
 };
 
 nsresult
-NS_NewHTMLOptionElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
+NS_NewHTMLOptionElement(nsIHTMLContent** aInstancePtrResult,
+                        nsINodeInfo *aNodeInfo)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+
+  /*
+   * nsHTMLOptionElement's will be created without a nsINodeInfo passed in
+   * if someone creates new option elements in JavaScript, in a case like
+   * that we request the nsINodeInfo from the anonymous nodeinfo list.
+   */
+  nsCOMPtr<nsINodeInfo> nodeInfo(aNodeInfo);
+  if (!nodeInfo) {
+    nsCOMPtr<nsINodeInfoManager> nodeInfoManager;
+    nsresult rv;
+    rv = nsNodeInfoManager::GetAnonymousManager(*getter_AddRefs(nodeInfoManager));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = nodeInfoManager->GetNodeInfo(nsHTMLAtoms::option, nsnull,
+                                      kNameSpaceID_None,
+                                      *getter_AddRefs(nodeInfo));
+    NS_ENSURE_SUCCESS(rv, rv);
   }
-  nsIHTMLContent* it = new nsHTMLOptionElement(aTag);
+
+  nsIHTMLContent* it = new nsHTMLOptionElement(nodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -129,10 +147,10 @@ NS_NewHTMLOptionElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
 }
 
 
-nsHTMLOptionElement::nsHTMLOptionElement(nsIAtom* aTag)
+nsHTMLOptionElement::nsHTMLOptionElement(nsINodeInfo *aNodeInfo)
 {
   NS_INIT_REFCNT();
-  mInner.Init(this, aTag);
+  mInner.Init(this, aNodeInfo);
 }
 
 nsHTMLOptionElement::~nsHTMLOptionElement()
@@ -209,7 +227,7 @@ nsHTMLOptionElement::SetParent(nsIContent* aParent)
 nsresult
 nsHTMLOptionElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLOptionElement* it = new nsHTMLOptionElement(mInner.mTag);
+  nsHTMLOptionElement* it = new nsHTMLOptionElement(mInner.mNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

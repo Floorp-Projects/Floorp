@@ -39,7 +39,7 @@ class nsHTMLTableColGroupElement : public nsIDOMHTMLTableColElement,
                                    public nsIHTMLContent
 {
 public:
-  nsHTMLTableColGroupElement(nsIAtom* aTag);
+  nsHTMLTableColGroupElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLTableColGroupElement();
 
   // nsISupports
@@ -82,13 +82,13 @@ protected:
 };
 
 nsresult
-NS_NewHTMLTableColGroupElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
+NS_NewHTMLTableColGroupElement(nsIHTMLContent** aInstancePtrResult,
+                               nsINodeInfo *aNodeInfo)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIHTMLContent* it = new nsHTMLTableColGroupElement(aTag);
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
+  nsIHTMLContent* it = new nsHTMLTableColGroupElement(aNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -96,10 +96,10 @@ NS_NewHTMLTableColGroupElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTa
 }
 
 
-nsHTMLTableColGroupElement::nsHTMLTableColGroupElement(nsIAtom* aTag)
+nsHTMLTableColGroupElement::nsHTMLTableColGroupElement(nsINodeInfo *aNodeInfo)
 {
   NS_INIT_REFCNT();
-  mInner.Init(this, aTag);
+  mInner.Init(this, aNodeInfo);
 }
 
 nsHTMLTableColGroupElement::~nsHTMLTableColGroupElement()
@@ -127,7 +127,7 @@ nsHTMLTableColGroupElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsresult
 nsHTMLTableColGroupElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLTableColGroupElement* it = new nsHTMLTableColGroupElement(mInner.mTag);
+  nsHTMLTableColGroupElement* it = new nsHTMLTableColGroupElement(mInner.mNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

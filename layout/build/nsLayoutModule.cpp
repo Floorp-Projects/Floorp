@@ -50,6 +50,8 @@
 #include "nsIScriptNameSpaceManager.h"
 #include "nsIScriptExternalNameSet.h"
 
+#include "nsINodeInfo.h"
+
 #include "nsIElementFactory.h"
 
 #include "nsIDocumentEncoder.h"
@@ -352,6 +354,8 @@ static Components gComponents[] = {
   { "XBL Binding Manager", NS_BINDINGMANAGER_CID, "component://netscape/xbl/binding-manager" },
   
   { "AutoCopy Service", NS_AUTOCOPYSERVICE_CID, "component://netscape/autocopy" },
+
+  { "NodeInfoManager", NS_NODEINFOMANAGER_CID, NS_NODEINFOMANAGER_PROGID }
 };
 #define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
 

@@ -45,7 +45,7 @@ class nsHTMLUnknownElement : public nsIDOMHTMLElement,
                              public nsIHTMLContent
 {
 public:
-  nsHTMLUnknownElement(nsIAtom* aTag);
+  nsHTMLUnknownElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLUnknownElement();
 
   // nsISupports
@@ -186,13 +186,13 @@ protected:
 };
 
 nsresult
-NS_NewHTMLUnknownElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
+NS_NewHTMLUnknownElement(nsIHTMLContent** aInstancePtrResult,
+                         nsINodeInfo *aNodeInfo)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIHTMLContent* it = new nsHTMLUnknownElement(aTag);
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
+  nsIHTMLContent* it = new nsHTMLUnknownElement(aNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -200,10 +200,10 @@ NS_NewHTMLUnknownElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
 }
 
 
-nsHTMLUnknownElement::nsHTMLUnknownElement(nsIAtom* aTag)
+nsHTMLUnknownElement::nsHTMLUnknownElement(nsINodeInfo *aNodeInfo)
 {
   NS_INIT_REFCNT();
-  mInner.Init(this, aTag);
+  mInner.Init(this, aNodeInfo);
 }
 
 nsHTMLUnknownElement::~nsHTMLUnknownElement()
@@ -225,7 +225,7 @@ nsHTMLUnknownElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsresult
 nsHTMLUnknownElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLUnknownElement* it = new nsHTMLUnknownElement(mInner.mTag);
+  nsHTMLUnknownElement* it = new nsHTMLUnknownElement(mInner.mNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

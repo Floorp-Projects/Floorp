@@ -22,6 +22,7 @@
 #include "nsGenericXMLElement.h"
 
 #include "nsIAtom.h"
+#include "nsINodeInfo.h"
 #include "nsIDocument.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOMNamedNodeMap.h"
@@ -59,14 +60,11 @@ static NS_DEFINE_IID(kIDOMDocumentFragmentIID, NS_IDOMDOCUMENTFRAGMENT_IID);
 nsGenericXMLElement::nsGenericXMLElement()
 {
   mNameSpace = nsnull;
-  mNameSpacePrefix = nsnull;
-  mNameSpaceID = kNameSpaceID_None;
 }
 
 nsGenericXMLElement::~nsGenericXMLElement()
 {
   NS_IF_RELEASE(mNameSpace);
-  NS_IF_RELEASE(mNameSpacePrefix);
 }
 
 nsresult
@@ -76,51 +74,25 @@ nsGenericXMLElement::CopyInnerTo(nsIContent* aSrcContent,
 {
   nsresult result = nsGenericContainerElement::CopyInnerTo(aSrcContent, aDst, aDeep);
   if (NS_OK == result) {
-    aDst->mNameSpacePrefix = mNameSpacePrefix;
-    NS_IF_ADDREF(mNameSpacePrefix);
-
     aDst->mNameSpace = mNameSpace;
     NS_IF_ADDREF(mNameSpace);
-
-    aDst->mNameSpaceID = mNameSpaceID;
   }
   return NS_OK;
 }
 
-nsresult
-nsGenericXMLElement::GetNamespaceURI(nsString& aNamespaceURI)
-{
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
+  nsresult GetNodeName(nsString& aNodeName);
+  nsresult GetLocalName(nsString& aLocalName);
 
 nsresult
-nsGenericXMLElement::GetPrefix(nsString& aPrefix)
+nsGenericXMLElement::GetNodeName(nsString& aNodeName)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult
-nsGenericXMLElement::SetPrefix(const nsString& aPrefix)
-{
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return mNodeInfo->GetQualifiedName(aNodeName);
 }
 
 nsresult
 nsGenericXMLElement::GetLocalName(nsString& aLocalName)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult
-nsGenericXMLElement::Supports(const nsString& aFeature,
-                              const nsString& aVersion, PRBool* aReturn)
-{
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return mNodeInfo->GetLocalName(aLocalName);
 }
 
 nsresult
@@ -140,7 +112,7 @@ nsGenericXMLElement::GetScriptObject(nsIScriptContext* aContext,
     }
 
     nsAutoString tag;
-    mTag->ToString(tag);
+    mNodeInfo->GetQualifiedName(tag);
 
     res = factory->NewScriptXMLElement(tag, aContext, mContent,
                                        mParent, (void**)&slots->mScriptObject);
@@ -197,11 +169,13 @@ nsGenericXMLElement::GetNameSpacePrefixFromId(PRInt32 aNameSpaceID,
 nsresult
 nsGenericXMLElement::SetNameSpacePrefix(nsIAtom* aNameSpacePrefix)
 {
-  NS_IF_RELEASE(mNameSpacePrefix);
+  nsINodeInfo *newNodeInfo;
 
-  mNameSpacePrefix = aNameSpacePrefix;
+  nsresult rv = mNodeInfo->PrefixChanged(aNameSpacePrefix, newNodeInfo);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_IF_ADDREF(mNameSpacePrefix);
+  NS_RELEASE(mNodeInfo);
+  mNodeInfo = newNodeInfo;
 
   return NS_OK;
 }
@@ -209,26 +183,13 @@ nsGenericXMLElement::SetNameSpacePrefix(nsIAtom* aNameSpacePrefix)
 nsresult
 nsGenericXMLElement::GetNameSpacePrefix(nsIAtom*& aNameSpacePrefix) const
 {
-  aNameSpacePrefix = mNameSpacePrefix;
-  NS_IF_ADDREF(aNameSpacePrefix);
-
-  return NS_OK;
-}
-
-nsresult
-nsGenericXMLElement::SetNameSpaceID(PRInt32 aNameSpaceID)
-{
-  mNameSpaceID = aNameSpaceID;
-
-  return NS_OK;
+  return mNodeInfo->GetPrefixAtom(aNameSpacePrefix);
 }
 
 nsresult
 nsGenericXMLElement::GetNameSpaceID(PRInt32& aNameSpaceID) const
 {
-  aNameSpaceID = mNameSpaceID;
-  
-  return NS_OK;
+  return mNodeInfo->GetNamespaceID(aNameSpaceID);
 }
 
 nsresult

@@ -68,11 +68,7 @@ public:
 
   // Implementation for nsIDOMNode
   nsresult    GetNodeName(nsString& aNodeName);
-  nsresult    GetNamespaceURI(nsString& aNamespaceURI) { return NS_OK; }; //xxxxxx
-  nsresult    GetPrefix(nsString& aPrefix) { return NS_OK; }; //xxxxxx
-  nsresult    SetPrefix(const nsString& aPrefix) { return NS_OK; }; //xxxxxx
-  nsresult    Supports(const nsString& aFeature, const nsString& aVersion,
-                       PRBool* aReturn) { return NS_OK; } // xxxxxx
+  nsresult    GetLocalName(nsString& aLocalName);
 
   // Implementation for nsIDOMElement
   nsresult    GetAttribute(const nsString& aName, nsString& aReturn) 

@@ -39,6 +39,7 @@
 #include "nsForwardReference.h"
 #include "nsHTMLValue.h"
 #include "nsIAtom.h"
+#include "nsINodeInfo.h"
 #include "nsIControllers.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEventReceiver.h"
@@ -218,9 +219,7 @@ public:
     nsXULPrototypeNode**     mChildren;           // [OWNER]
 
     nsCOMPtr<nsINameSpace>   mNameSpace;          // [OWNER]
-    nsCOMPtr<nsIAtom>        mNameSpacePrefix;    // [OWNER]
-    PRInt32                  mNameSpaceID;
-    nsCOMPtr<nsIAtom>        mTag;                // [OWNER]
+    nsCOMPtr<nsINodeInfo>    mNodeInfo;           // [OWNER]
 
     PRInt32                  mNumAttributes;
     nsXULPrototypeAttribute* mAttributes;         // [OWNER]
@@ -372,7 +371,7 @@ public:
     Create(nsXULPrototypeElement* aPrototype, nsIDocument* aDocument, PRBool aIsScriptable, nsIContent** aResult);
 
     static nsresult
-    Create(PRInt32 aNameSpaceID, nsIAtom* aTag, nsIContent** aResult);
+    Create(nsINodeInfo* aNodeInfo, nsIContent** aResult);
 
     // nsISupports
     NS_DECL_ISUPPORTS
@@ -436,7 +435,6 @@ public:
     NS_IMETHOD GetContainingNameSpace(nsINameSpace*& aNameSpace) const;
     NS_IMETHOD SetNameSpacePrefix(nsIAtom* aNameSpace);
     NS_IMETHOD GetNameSpacePrefix(nsIAtom*& aNameSpace) const;
-    NS_IMETHOD SetNameSpaceID(PRInt32 aNameSpaceID);
     NS_IMETHOD MaybeTriggerAutoLink(nsIWebShell *aShell);
 
     // nsIXULContent
@@ -575,10 +573,8 @@ protected:
         ~Slots();
 
         nsXULElement*                       mElement;            // [WEAK]
-        PRInt32                             mNameSpaceID;
         nsCOMPtr<nsINameSpace>              mNameSpace;          // [OWNER]
-        nsCOMPtr<nsIAtom>                   mNameSpacePrefix;    // [OWNER]
-        nsCOMPtr<nsIAtom>                   mTag;                // [OWNER]
+        nsCOMPtr<nsINodeInfo>               mNodeInfo;           // [OWNER]
         nsVoidArray*                        mBroadcastListeners; // [WEAK]
         nsIDOMXULElement*                   mBroadcaster;        // [WEAK]
         nsCOMPtr<nsIControllers>            mControllers;        // [OWNER]
@@ -601,10 +597,8 @@ protected:
     // Internal accessors. These shadow the 'Slots', and return
     // appropriate default values if there are no slots defined in the
     // delegate.
-    PRInt32                    NameSpaceID() const     { return mSlots ? mSlots->mNameSpaceID           : mPrototype->mNameSpaceID; }
     nsINameSpace*              NameSpace() const       { return mSlots ? mSlots->mNameSpace.get()       : mPrototype->mNameSpace.get(); }
-    nsIAtom*                   NameSpacePrefix() const { return mSlots ? mSlots->mNameSpacePrefix.get() : mPrototype->mNameSpacePrefix.get(); }
-    nsIAtom*                   Tag() const             { return mSlots ? mSlots->mTag.get()             : mPrototype->mTag.get(); }
+    nsINodeInfo*               NodeInfo() const        { return mSlots ? mSlots->mNodeInfo              : mPrototype->mNodeInfo; }
     nsVoidArray*               BroadcastListeners() const { return mSlots ? mSlots->mBroadcastListeners       : nsnull; }
     nsIDOMXULElement*          Broadcaster() const        { return mSlots ? mSlots->mBroadcaster              : nsnull; }
     nsIControllers*            Controllers() const        { return mSlots ? mSlots->mControllers.get()        : nsnull; }

@@ -46,7 +46,7 @@ class nsHTMLFieldSetElement : public nsIDOMHTMLFieldSetElement,
                               public nsIFormControl 
 {
 public:
-  nsHTMLFieldSetElement(nsIAtom* aTag);
+  nsHTMLFieldSetElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLFieldSetElement();
 
   // nsISupports
@@ -86,13 +86,13 @@ protected:
 // construction, destruction
 
 nsresult
-NS_NewHTMLFieldSetElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
+NS_NewHTMLFieldSetElement(nsIHTMLContent** aInstancePtrResult,
+                          nsINodeInfo *aNodeInfo)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIHTMLContent* it = new nsHTMLFieldSetElement(aTag);
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
+  nsIHTMLContent* it = new nsHTMLFieldSetElement(aNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -100,10 +100,10 @@ NS_NewHTMLFieldSetElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
 }
 
 
-nsHTMLFieldSetElement::nsHTMLFieldSetElement(nsIAtom* aTag)
+nsHTMLFieldSetElement::nsHTMLFieldSetElement(nsINodeInfo *aNodeInfo)
 {
   NS_INIT_REFCNT();
-  mInner.Init(this, aTag);
+  mInner.Init(this, aNodeInfo);
   mForm = nsnull;
 }
 
@@ -159,7 +159,7 @@ nsHTMLFieldSetElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsresult
 nsHTMLFieldSetElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLFieldSetElement* it = new nsHTMLFieldSetElement(mInner.mTag);
+  nsHTMLFieldSetElement* it = new nsHTMLFieldSetElement(mInner.mNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

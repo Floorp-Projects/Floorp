@@ -62,7 +62,7 @@ class nsHTMLSpacerElement : public nsIDOMHTMLElement,
                             public nsIHTMLContent
 {
 public:
-  nsHTMLSpacerElement(nsIAtom* aTag);
+  nsHTMLSpacerElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLSpacerElement();
 
   // nsISupports
@@ -103,13 +103,13 @@ protected:
 };
 
 nsresult
-NS_NewHTMLSpacerElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
+NS_NewHTMLSpacerElement(nsIHTMLContent** aInstancePtrResult,
+                        nsINodeInfo *aNodeInfo)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIHTMLContent* it = new nsHTMLSpacerElement(aTag);
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
+  nsIHTMLContent* it = new nsHTMLSpacerElement(aNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -117,10 +117,10 @@ NS_NewHTMLSpacerElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
 }
 
 
-nsHTMLSpacerElement::nsHTMLSpacerElement(nsIAtom* aTag)
+nsHTMLSpacerElement::nsHTMLSpacerElement(nsINodeInfo *aNodeInfo)
 {
   NS_INIT_REFCNT();
-  mInner.Init(this, aTag);
+  mInner.Init(this, aNodeInfo);
 }
 
 nsHTMLSpacerElement::~nsHTMLSpacerElement()
@@ -150,7 +150,7 @@ nsHTMLSpacerElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsresult
 nsHTMLSpacerElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLSpacerElement* it = new nsHTMLSpacerElement(mInner.mTag);
+  nsHTMLSpacerElement* it = new nsHTMLSpacerElement(mInner.mNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

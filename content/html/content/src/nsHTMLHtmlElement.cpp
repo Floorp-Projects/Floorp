@@ -70,22 +70,22 @@ public:
 protected:
   nsGenericHTMLContainerElement mInner;
 
-  friend nsresult NS_NewHTMLHtmlElement(nsIHTMLContent**, nsIAtom*);
+  friend nsresult NS_NewHTMLHtmlElement(nsIHTMLContent**, nsINodeInfo *);
 };
 
 nsresult
-NS_NewHTMLHtmlElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
+NS_NewHTMLHtmlElement(nsIHTMLContent** aInstancePtrResult,
+                      nsINodeInfo *aNodeInfo)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
   nsHTMLHtmlElement* it;
   NS_NEWXPCOM(it, nsHTMLHtmlElement);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  it->mInner.Init(it, aTag);
+  it->mInner.Init(it, aNodeInfo);
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
@@ -124,7 +124,7 @@ nsHTMLHtmlElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  it->mInner.Init(it, mInner.mTag);
+  it->mInner.Init(it, mInner.mNodeInfo);
   mInner.CopyInnerTo(this, &it->mInner, aDeep);
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }

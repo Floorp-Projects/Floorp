@@ -38,7 +38,7 @@ class nsHTMLFrameSetElement : public nsIDOMHTMLFrameSetElement,
                               public nsIHTMLContent
 {
 public:
-  nsHTMLFrameSetElement(nsIAtom* aTag);
+  nsHTMLFrameSetElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLFrameSetElement();
 
   // nsISupports
@@ -73,13 +73,13 @@ protected:
 };
 
 nsresult
-NS_NewHTMLFrameSetElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
+NS_NewHTMLFrameSetElement(nsIHTMLContent** aInstancePtrResult,
+                          nsINodeInfo *aNodeInfo)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIHTMLContent* it = new nsHTMLFrameSetElement(aTag);
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
+  nsIHTMLContent* it = new nsHTMLFrameSetElement(aNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -87,10 +87,10 @@ NS_NewHTMLFrameSetElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
 }
 
 
-nsHTMLFrameSetElement::nsHTMLFrameSetElement(nsIAtom* aTag)
+nsHTMLFrameSetElement::nsHTMLFrameSetElement(nsINodeInfo *aNodeInfo)
 {
   NS_INIT_REFCNT();
-  mInner.Init(this, aTag);
+  mInner.Init(this, aNodeInfo);
 }
 
 nsHTMLFrameSetElement::~nsHTMLFrameSetElement()
@@ -117,7 +117,7 @@ nsHTMLFrameSetElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsresult
 nsHTMLFrameSetElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLFrameSetElement* it = new nsHTMLFrameSetElement(mInner.mTag);
+  nsHTMLFrameSetElement* it = new nsHTMLFrameSetElement(mInner.mNodeInfo);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
