@@ -35,6 +35,7 @@
 #include "nsWeakReference.h"
 #include "nsXPComFactory.h"    /* template implementation of a XPCOM factory */
 #include "nsIXPConnect.h"
+#include "nsIJSContextStack.h"
 
 #include "nsIAppShell.h"
 #include "nsIWidget.h"
@@ -92,8 +93,10 @@ nsAppShellService::~nsAppShellService()
 {
   mDeleteCalled = PR_TRUE;
   nsCOMPtr<nsIWebShellWindow> hiddenWin(do_QueryInterface(mHiddenWindow));
-  if(hiddenWin)
+  if(hiddenWin) {
+    ClearXPConnectSafeContext();
     hiddenWin->Close();
+  }
   /* Note we don't unregister with the observer service
      (RegisterObserver(PR_FALSE)) because, being refcounted, we can't have
      reached our own destructor until after the ObserverService has shut down
@@ -177,7 +180,40 @@ done:
   return rv;
 }
 
+nsresult 
+nsAppShellService::SetXPConnectSafeContext()
+{
+  nsresult rv;
+  NS_WITH_SERVICE(nsIXPConnect, xpc, kXPConnectCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIDOMWindowInternal> junk;
+  JSContext *cx;
+  rv = GetHiddenWindowAndJSContext(getter_AddRefs(junk), &cx);
+  if (NS_FAILED(rv)) return rv;
+  rv = xpc->SetSafeJSContextForCurrentThread(cx);
+  return rv;
+}  
 
+nsresult nsAppShellService::ClearXPConnectSafeContext()
+{
+  nsresult rv;
+  NS_WITH_SERVICE(nsIXPConnect, xpc, kXPConnectCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIDOMWindowInternal> junk;
+  JSContext *cx;
+  rv = GetHiddenWindowAndJSContext(getter_AddRefs(junk), &cx);
+  if (NS_FAILED(rv)) return rv;
+
+  NS_WITH_SERVICE(nsIThreadJSContextStack, cxstack, 
+                  "@mozilla.org/js/xpc/ContextStack;1", &rv);
+  if (NS_FAILED(rv)) return rv;
+  JSContext *safe_cx;
+  rv = cxstack->GetSafeJSContext(&safe_cx);
+  if (NS_FAILED(rv)) return rv;
+  if (cx == safe_cx)
+    rv = xpc->SetSafeJSContextForCurrentThread(nsnull);
+  return rv;
+}
 
 NS_IMETHODIMP
 nsAppShellService::CreateHiddenWindow()
@@ -208,14 +244,7 @@ nsAppShellService::CreateHiddenWindow()
       // to the DOM JSContext for this thread, so that DOM-to-XPConnect
       // conversions get the JSContext private magic they need to
       // succeed.
-      NS_WITH_SERVICE(nsIXPConnect, xpc, kXPConnectCID, &rv);
-      if (NS_FAILED(rv)) return rv;
-      nsCOMPtr<nsIDOMWindowInternal> junk;
-      JSContext *cx;
-      rv = GetHiddenWindowAndJSContext(getter_AddRefs(junk), &cx);
-      if (NS_FAILED(rv)) return rv;
-      rv = xpc->SetSafeJSContextForCurrentThread(cx);
-      if (NS_FAILED(rv)) return rv;
+      SetXPConnectSafeContext();
 
       // RegisterTopLevelWindow(newWindow); -- Mac only
     }
@@ -420,8 +449,10 @@ nsAppShellService::Quit()
 
     {
       nsCOMPtr<nsIWebShellWindow> hiddenWin(do_QueryInterface(mHiddenWindow));
-      if (hiddenWin)
+      if (hiddenWin) {
+        ClearXPConnectSafeContext();
         hiddenWin->Close();
+      }
       mHiddenWindow = nsnull;
     }
     

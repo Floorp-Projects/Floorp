@@ -58,6 +58,8 @@ protected:
   void ShutdownComponent( const nsCID &aComponentCID );
   typedef void (nsAppShellService::*EnumeratorMemberFunction)(const nsCID&);
   void EnumerateComponents( void (nsAppShellService::*function)(const nsCID&) );
+  nsresult SetXPConnectSafeContext();
+  nsresult ClearXPConnectSafeContext();
 
   nsCOMPtr<nsIAppShell> mAppShell;
   nsCOMPtr<nsISupportsArray> mWindowList;
