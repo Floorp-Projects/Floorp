@@ -13,5 +13,6 @@
   <html:script language="JavaScript" src="chrome://editordlgs/content/EdCharacterProps.js">
   </html:script>
 
+  <xul:broadcaster id="args" value=""/>
 
 </xul:window>
