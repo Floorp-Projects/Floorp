@@ -38,7 +38,7 @@
  * 
  * NOTE - These are not public interfaces
  *
- * $Id: secport.c,v 1.7 2001/03/23 23:40:09 nelsonb%netscape.com Exp $
+ * $Id: secport.c,v 1.8 2001/04/06 17:47:15 nelsonb%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -49,6 +49,7 @@
 #include "prmon.h"
 #include "nsslocks.h"
 #include "secport.h"
+#include "prvrsion.h"
 
 #ifdef DEBUG
 #define THREADMARK
@@ -74,7 +75,8 @@ typedef struct threadmark_mark_str {
 
 #endif /* THREADMARK */
 
-#define ARENAPOOL_MAGIC 0xB8AC9BDD 
+/* The value of this magic must change each time PORTArenaPool changes. */
+#define ARENAPOOL_MAGIC 0xB8AC9BDF 
 
 typedef struct PORTArenaPool_str {
   PLArenaPool arena;
@@ -187,8 +189,6 @@ PORT_GetError(void)
 
 /********************* Arena code follows *****************************/
 
-PZMonitor * arenaMonitor;
-
 PLArenaPool *
 PORT_NewArena(unsigned long chunksize)
 {
@@ -262,13 +262,29 @@ PORT_FreeArena(PLArenaPool *arena, PRBool zero)
 {
     PORTArenaPool *pool = (PORTArenaPool *)arena;
     PRLock *       lock = (PRLock *)0;
+    size_t         len  = sizeof *arena;
+    extern const PRVersionDescription * libVersionPoint(void);
+    static const PRVersionDescription * pvd;
+    static PRBool  doFreeArenaPool;
 
     if (ARENAPOOL_MAGIC == pool->magic ) {
+	len  = sizeof *pool;
 	lock = pool->lock;
 	PZ_Lock(lock);
     }
+    if (!pvd) {
+	/* no need for thread protection here */
+	pvd = libVersionPoint();
+	if ((pvd->vMajor > 4) || 
+	    (pvd->vMajor == 4 && pvd->vMinor > 1) ||
+	    (pvd->vMajor == 4 && pvd->vMinor == 1 && pvd->vPatch >= 1)) {
+	    doFreeArenaPool = PR_TRUE;
+	}
+    }
+    if (doFreeArenaPool)
+	PL_FreeArenaPool(arena);
     PL_FinishArenaPool(arena);
-    PORT_ZFree(pool, sizeof(*pool));
+    PORT_ZFree(arena, len);
     if (lock) {
 	PZ_Unlock(lock);
 	PZ_DestroyLock(lock);
