@@ -313,7 +313,7 @@ nsPersistentProperties::GetStringProperty(const nsAString& aKey, nsAString& aVal
     NS_STATIC_CAST(propertyTableEntry*,
                    PL_DHashTableOperate(&mTable, flatKey.get(), PL_DHASH_LOOKUP));
 
-  if (!entry)
+  if (PL_DHASH_ENTRY_IS_FREE(entry))
     return NS_ERROR_FAILURE;
 
   aValue = entry->mValue;
