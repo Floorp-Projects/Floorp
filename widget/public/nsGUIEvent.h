@@ -432,6 +432,15 @@ enum nsDragDropEventStatus {
         ((evnt)->message == NS_MOUSE_EXIT_SYNTH) || \
         ((evnt)->message == NS_MOUSE_MOVE))
 
+#define NS_IS_DRAG_EVENT(evnt) \
+       (((evnt)->message == NS_DRAGDROP_ENTER) || \
+        ((evnt)->message == NS_DRAGDROP_OVER) || \
+        ((evnt)->message == NS_DRAGDROP_EXIT) || \
+        ((evnt)->message == NS_DRAGDROP_DROP) || \
+        ((evnt)->message == NS_DRAGDROP_GESTURE) || \
+        ((evnt)->message == NS_DRAGDROP_OVER_SYNTH) || \
+        ((evnt)->message == NS_DRAGDROP_EXIT_SYNTH))
+
 #define NS_IS_KEY_EVENT(evnt) \
        (((evnt)->message == NS_KEY_DOWN) ||  \
         ((evnt)->message == NS_KEY_PRESS) || \
