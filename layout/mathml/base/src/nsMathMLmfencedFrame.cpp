@@ -424,6 +424,7 @@ nsMathMLmfencedFrame::Reflow(nsIPresContext*          aPresContext,
   aDesiredSize.width = mBoundingMetrics.width;
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;
   aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
+  aDesiredSize.mBoundingMetrics = mBoundingMetrics;
 
   mReference.x = 0;
   mReference.y = aDesiredSize.ascent;

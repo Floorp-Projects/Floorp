@@ -120,7 +120,8 @@ nsMathMLmoFrame::Paint(nsIPresContext*      aPresContext,
 {
   nsresult rv = NS_OK;
 
-  if (NS_MATHML_OPERATOR_GET_FORM(mFlags)) {
+  if (NS_MATHML_OPERATOR_GET_FORM(mFlags) ||
+      NS_MATHML_OPERATOR_IS_CENTERED(mFlags)) {
     rv = mMathMLChar.Paint(aPresContext, aRenderingContext,
                            aDirtyRect, aWhichLayer, this);
 #if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
@@ -388,6 +389,7 @@ nsMathMLmoFrame::InitData(nsIPresContext* aPresContext)
   // Lookup the operator dictionary
   nsAutoString aData;
   mMathMLChar.GetData(aData);
+//NS_ASSERTION(aData[0] != '+', "Breaking...");
   mMathMLChar.SetData(aPresContext, aData); // XXX hack to reset, bug 45010
   PRBool found = nsMathMLOperators::LookupOperator(aData, aForm,
                                                    &mFlags, &mLeftSpace, &mRightSpace);
@@ -560,6 +562,16 @@ nsMathMLmoFrame::InitData(nsIPresContext* aPresContext)
   {
     mFlags &= ~NS_MATHML_OPERATOR_MUTABLE;
   }
+
+  // See if this is an operator that should be centered to cater for 
+  // fonts that are not math-aware
+  if (1 == aData.Length()) {
+    PRUnichar ch = aData[0];
+    if ((ch == '+') || (ch == '=') || (ch == '*') ||
+        (ch == 0x00D7)) { // &times;
+      mFlags |= NS_MATHML_OPERATOR_CENTERED;
+    }
+  }  
 }
 
 // NOTE: aDesiredStretchSize is an IN/OUT parameter
@@ -591,9 +603,11 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
   fm->GetMaxAscent(fontAscent);
   fm->GetMaxDescent(fontDescent);
 
-  // Operators that exist in the dictionary are handled by the MathMLChar
+  // Operators that exist in the dictionary, or those that are to be centered
+  // to cater for fonts that are not math-aware, are handled by the MathMLChar
 
-  if (NS_MATHML_OPERATOR_GET_FORM(mFlags)) {
+  if (NS_MATHML_OPERATOR_GET_FORM(mFlags) ||
+      NS_MATHML_OPERATOR_IS_CENTERED(mFlags)) {
     nsBoundingMetrics charSize;
     nsBoundingMetrics initialSize = aDesiredStretchSize.mBoundingMetrics;
     nsBoundingMetrics container = initialSize;
@@ -724,16 +738,17 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
       // update our bounding metrics... it becomes that of our MathML char
       mMathMLChar.GetBoundingMetrics(mBoundingMetrics);
 
-      if (isVertical)
+      if (isVertical || NS_MATHML_OPERATOR_IS_CENTERED(mFlags))
       {
         // the desired size returned by mMathMLChar maybe different
         // from the size of the container.
         // the mMathMLChar.mRect.y calculation is subtle, watch out!!!
 
         height = mBoundingMetrics.ascent + mBoundingMetrics.descent;
-        if (NS_MATHML_OPERATOR_IS_SYMMETRIC(mFlags)) {
-          // For symmetric and vertical operators,
-          // we want to center about the axis of the container
+        if (NS_MATHML_OPERATOR_IS_SYMMETRIC(mFlags) ||
+            NS_MATHML_OPERATOR_IS_CENTERED(mFlags)) {
+          // For symmetric and vertical operators, or for operators that are always
+          // centered ('+', '*', etc) we want to center about the axis of the container
           mBoundingMetrics.descent = height/2 - axisHeight;
         }
         else {
@@ -751,8 +766,8 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
       aDesiredStretchSize.mBoundingMetrics = mBoundingMetrics;
 
       nscoord dy = aDesiredStretchSize.ascent - mBoundingMetrics.ascent;
-      if (mMathMLChar.GetStretchDirection() == NS_STRETCH_DIRECTION_UNSUPPORTED)
-      {
+      if ((mMathMLChar.GetStretchDirection() == NS_STRETCH_DIRECTION_UNSUPPORTED)
+          && !NS_MATHML_OPERATOR_IS_CENTERED(mFlags)) {
         // reset
         dy = aDesiredStretchSize.ascent - charSize.ascent;
         aDesiredStretchSize.mBoundingMetrics = mBoundingMetrics = charSize;
@@ -768,7 +783,8 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
   }
 
 
-  if (!NS_MATHML_OPERATOR_GET_FORM(mFlags)) {
+  if (!NS_MATHML_OPERATOR_GET_FORM(mFlags) &&
+      !NS_MATHML_OPERATOR_IS_CENTERED(mFlags)) {
     // Place our children using the default method
     Place(aPresContext, aRenderingContext, PR_TRUE, aDesiredStretchSize);
   }
@@ -793,6 +809,7 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
     // adjust the offsets
     mBoundingMetrics.leftBearing += dx;
     mBoundingMetrics.rightBearing += dx;
+    aDesiredStretchSize.mBoundingMetrics = mBoundingMetrics;
 
     nsRect rect;
     if (NS_MATHML_OPERATOR_GET_FORM(mFlags)) {

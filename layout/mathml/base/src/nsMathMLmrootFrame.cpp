@@ -365,6 +365,7 @@ nsMathMLmrootFrame::Reflow(nsIPresContext*          aPresContext,
     PR_MAX(bmBase.width, bmBase.rightBearing);
 
   aDesiredSize.width = mBoundingMetrics.width;
+  aDesiredSize.mBoundingMetrics = mBoundingMetrics;
 
   if (nsnull != aDesiredSize.maxElementSize) {
     aDesiredSize.maxElementSize->width = aDesiredSize.width;

@@ -270,6 +270,7 @@ nsMathMLmsupFrame::PlaceSuperScript(nsIPresContext*      aPresContext,
   aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
   aDesiredSize.width = bmBase.width + aScriptSpace
                      + italicCorrection + supScriptSize.width;
+  aDesiredSize.mBoundingMetrics = boundingMetrics;
 
   mathMLFrame->SetReference(nsPoint(0, aDesiredSize.ascent));
 

@@ -336,6 +336,11 @@ nsMathMLmunderFrame::Place(nsIPresContext*      aPresContext,
   nscoord dxBase = (mBoundingMetrics.width - bmBase.width) / 2;
   nscoord dxUnder = (mBoundingMetrics.width - (bmUnder.width + italicCorrection/2)) / 2;
   
+  mBoundingMetrics.leftBearing = 
+    PR_MIN(dxBase + bmBase.leftBearing, dxUnder + bmUnder.leftBearing);
+  mBoundingMetrics.rightBearing = 
+    PR_MAX(dxBase + bmBase.rightBearing, dxUnder + bmUnder.rightBearing);
+
   aDesiredSize.ascent = baseSize.ascent;
   aDesiredSize.descent = 
     PR_MAX(mBoundingMetrics.descent + delta2,
@@ -344,14 +349,10 @@ nsMathMLmunderFrame::Place(nsIPresContext*      aPresContext,
   aDesiredSize.width = 
     PR_MAX(baseSize.width/2,(underSize.width + italicCorrection/2)/2) +
     PR_MAX(baseSize.width/2,(underSize.width - italicCorrection/2)/2);
+  aDesiredSize.mBoundingMetrics = mBoundingMetrics;
 
   mReference.x = 0;
   mReference.y = aDesiredSize.ascent;
-
-  mBoundingMetrics.leftBearing = 
-    PR_MIN(dxBase + bmBase.leftBearing, dxUnder + bmUnder.leftBearing);
-  mBoundingMetrics.rightBearing = 
-    PR_MAX(dxBase + bmBase.rightBearing, dxUnder + bmUnder.rightBearing);
 
   if (aPlaceOrigin) {
     nscoord dy = 0;
