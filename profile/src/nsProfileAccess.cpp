@@ -42,6 +42,7 @@
 #if defined(XP_MAC) || defined(XP_MACOSX)
 #include <Processes.h>
 #include <CFBundle.h>
+#include "nsILocalFileMac.h"
 #endif
 
 #ifdef XP_UNIX
@@ -1052,7 +1053,7 @@ nsProfileAccess::ProfileExists(const PRUnichar *profileName)
 
 // Capture the 4x profile information from the old registry (4x)
 nsresult
-nsProfileAccess::Get4xProfileInfo(const char *registryName, PRBool fromImport)
+nsProfileAccess::Get4xProfileInfo(nsIFile *registryFile, PRBool fromImport)
 {
     nsresult rv = NS_OK;
     if (fromImport && m4xProfilesAdded)
@@ -1063,11 +1064,7 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName, PRBool fromImport)
     if (NS_FAILED(rv)) return rv;
 
 #if defined(XP_WIN) || defined(XP_OS2) || defined(XP_MAC) || defined(XP_MACOSX)
-    NS_ASSERTION(registryName, "Invalid registryName");
-
-    nsCOMPtr<nsILocalFile> registryFile;
-    rv = NS_NewNativeLocalFile(nsDependentCString(registryName), PR_TRUE, getter_AddRefs(registryFile));
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_ARG(registryFile);
 
     nsCOMPtr<nsIRegistry> oldReg(do_CreateInstance(NS_REGISTRY_CONTRACTID, &rv));
     if (NS_FAILED(rv)) return rv;
@@ -1423,7 +1420,29 @@ nsresult ProfileStruct::InternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
 #endif
 
         // Now we have a unicode path - make it into a file
+#if defined(XP_MACOSX)
+        // This is an HFS style path, which can't be used with nsIFile, so convert it.
+        rv = NS_ERROR_FAILURE;
+        CFStringRef pathStrRef = ::CFStringCreateWithCharacters(NULL,
+                                      convertedProfLoc.get(), convertedProfLoc.Length());
+        if (pathStrRef)
+        {
+            CFURLRef pathURLRef = ::CFURLCreateWithFileSystemPath(NULL, pathStrRef, kCFURLHFSPathStyle, true);
+            if (pathURLRef)
+            {
+                rv = NS_NewNativeLocalFile(nsCString(), PR_TRUE, getter_AddRefs(tempLocal));
+                if (NS_SUCCEEDED(rv))
+                {
+                    nsCOMPtr<nsILocalFileMac> tempLocalMac(do_QueryInterface(tempLocal));
+                    rv = tempLocalMac->InitWithCFURL(pathURLRef);
+                }
+                ::CFRelease(pathURLRef);
+            }
+            ::CFRelease(pathStrRef);
+        }
+#else        
         rv = NS_NewLocalFile(convertedProfLoc, PR_TRUE, getter_AddRefs(tempLocal));
+#endif
     }
     else
     {
@@ -1436,17 +1455,12 @@ nsresult ProfileStruct::InternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
         regLocationData = regData;
 
 #if defined(XP_MAC) || defined(XP_MACOSX)
-        // For a brief time, this was a unicode path
-        PRInt32 firstColon = regLocationData.FindChar(PRUnichar(':'));
-        if (firstColon == -1)
-        {
             rv = NS_NewNativeLocalFile(nsCString(), PR_TRUE, getter_AddRefs(tempLocal));
-            if (NS_SUCCEEDED(rv)) // XXX this only works on XP_MAC because regLocationData is ASCII
-                rv = tempLocal->SetPersistentDescriptor(NS_ConvertUCS2toUTF8(regLocationData));
-        }
-        else
-#endif
+        if (NS_SUCCEEDED(rv)) // regLocationData is ASCII so no loss
+            rv = tempLocal->SetPersistentDescriptor(NS_LossyConvertUCS2toASCII(regLocationData));
+#else
         rv = NS_NewLocalFile(regLocationData, PR_TRUE, getter_AddRefs(tempLocal));
+#endif
     }
 
     if (NS_SUCCEEDED(rv) && tempLocal)

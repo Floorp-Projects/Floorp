@@ -80,7 +80,7 @@ private:
     nsresult IsProfileDirSalted(nsIFile *profileDir, PRBool *isSalted);
     nsresult DefineLocaleDefaultsDir();
     nsresult Update4xProfileInfo();
-    char * GetOldRegLocation();
+    nsresult GetOldRegLocation(nsIFile **aOldRegFile);
     nsresult UpdateCurrentProfileModTime(PRBool updateRegistry);
     nsresult MigrateProfileInternal(const PRUnichar *profileName,
                                     nsIFile *oldProfDir, nsIFile *newProfDir);

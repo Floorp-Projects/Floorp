@@ -99,7 +99,7 @@
 
 #define MAX_PREF_LEN 1024
 
-#if defined(XP_UNIX)
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
 #define IMAP_MAIL_FILTER_FILE_NAME_IN_4x "mailrule"
 #define POP_MAIL_FILTER_FILE_NAME_IN_4x "mailrule"
 #define MAIL_SUMMARY_SUFFIX_IN_4x ".summary"
@@ -112,7 +112,8 @@
 #define PSM_CERT7_DB "cert7.db"
 #define PSM_KEY3_DB "key3.db"
 #define PSM_SECMODULE_DB "secmodule.db"
-#elif defined(XP_MAC)
+#elif defined(XP_MAC) || defined(XP_MACOSX)
+#define MAC_RULES_FILE_ENDING_STRING_IN_4X " Rules"
 #define IMAP_MAIL_FILTER_FILE_NAME_IN_4x "<hostname> Rules"
 #define POP_MAIL_FILTER_FILE_NAME_IN_4x "Filter Rules"
 #define MAIL_SUMMARY_SUFFIX_IN_4x ".snm"
@@ -148,7 +149,7 @@
 #define HISTORY_FILE_NAME_IN_5x "history.dat"
 
 // only UNIX had movemail in 4.x
-#ifdef XP_UNIX
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
 #define HAVE_MOVEMAIL 1
 #endif /* XP_UNIX */
 
@@ -189,7 +190,7 @@
 #define NEW_MOVEMAIL_DIR_NAME "movemail"
 #endif /* HAVE_MOVEMAIL */
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
 /* a 4.x profile on UNIX is rooted at something like
  * "/u/sspitzer/.netscape"
  * profile + OLD_MAIL_DIR_NAME = "/u/sspitzer/.netscape/../nsmail" = "/u/sspitzer/nsmail"
@@ -239,7 +240,7 @@ typedef struct
  * + 17 leap years * 86,400 additional sec/leapyear =     1,468,800 seconds
  *                                                  = 2,208,988,800 seconds
  */
-#if defined(XP_MAC)
+#if defined(XP_MAC) || defined(XP_MACOSX)
 #define NEED_TO_FIX_4X_COOKIES 1
 #define SECONDS_BETWEEN_1900_AND_1970 2208988800UL
 #endif /* XP_MAC */
@@ -1132,7 +1133,7 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
   if (NS_FAILED(rv)) return rv;
   rv = DoTheCopy(oldProfilePath, newProfilePath, BOOKMARKS_FILE_NAME_IN_4x);
   if (NS_FAILED(rv)) return rv;
-#if defined(XP_MAC)
+#if defined(XP_MAC) || defined(XP_MACOSX)
   rv = DoTheCopy(oldProfilePath, newProfilePath, SECURITY_PATH, PR_TRUE);
   if (NS_FAILED(rv)) return rv;
 #else
@@ -1145,8 +1146,16 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
 #endif /* XP_MAC */
 
   // Copy the addrbook files.
-  rv = CopyFilesByExtension(oldProfilePath, newProfilePath, ADDRBOOK_FILE_EXTENSION_IN_4X);
+  rv = CopyFilesByPattern(oldProfilePath, newProfilePath, ADDRBOOK_FILE_EXTENSION_IN_4X);
   NS_ENSURE_SUCCESS(rv,rv);
+
+#if defined(XP_MAX) || defined(XP_MACOSX)
+  // Copy the Mac filter rule files which sits at the top level dir of a 4.x profile.
+  if(serverType == IMAP_4X_MAIL_TYPE) {
+    rv = CopyFilesByPattern(oldProfilePath, newProfilePath, MAC_RULES_FILE_ENDING_STRING_IN_4X);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+#endif
 
   rv = DoTheCopy(oldNewsPath, newNewsPath, PR_TRUE);
   if (NS_FAILED(rv)) return rv;
@@ -1724,7 +1733,7 @@ nsPrefMigration::DoTheCopyAndRename(nsIFileSpec * aPathSpec, PRBool aReadSubdirs
 }
 
 nsresult
-nsPrefMigration::CopyFilesByExtension(nsIFileSpec * oldPathSpec, nsIFileSpec * newPathSpec, const char *fileExtension)
+nsPrefMigration::CopyFilesByPattern(nsIFileSpec * oldPathSpec, nsIFileSpec * newPathSpec, const char *pattern)
 {
   nsFileSpec oldPath;
   nsFileSpec newPath;
@@ -1742,7 +1751,7 @@ nsPrefMigration::CopyFilesByExtension(nsIFileSpec * oldPathSpec, nsIFileSpec * n
       continue;
 
     nsCAutoString fileOrDirNameStr(fileOrDirName.GetLeafName());
-    if (!nsCStringEndsWith(fileOrDirNameStr, fileExtension))
+    if (!nsCStringEndsWith(fileOrDirNameStr, pattern))
       continue;
 
     // copy the file
