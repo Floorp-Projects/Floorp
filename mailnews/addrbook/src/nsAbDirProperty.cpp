@@ -62,15 +62,6 @@ nsAbDirProperty::nsAbDirProperty(void)
 nsAbDirProperty::~nsAbDirProperty(void)
 {
 	PR_FREEIF(m_DbPath);
-	if (m_AddressList)
-	{
-		PRUint32 count;
-		nsresult rv = m_AddressList->Count(&count);
-		NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
-		PRInt32 i;
-		for (i = count - 1; i >= 0; i--)
-			m_AddressList->RemoveElementAt(i);
-	}
 }
 
 NS_IMPL_ADDREF(nsAbDirProperty)
@@ -214,6 +205,14 @@ nsAbDirProperty::CreateNewMailingList(const char* uri, nsIAbDirectory *list)
 
 NS_IMETHODIMP
 nsAbDirProperty::GetDirUri(char **uri)
+{ return NS_OK; }
+
+NS_IMETHODIMP 
+nsAbDirProperty::ClearDatabase()
+{ return NS_OK; }
+
+NS_IMETHODIMP 
+nsAbDirProperty::NotifyDirItemAdded(nsISupports *item)
 { return NS_OK; }
 
 nsresult nsAbDirProperty::GetAttributeName(PRUnichar **aName, nsString& value)
@@ -370,7 +369,6 @@ NS_IMETHODIMP nsAbDirProperty::EditMailListToDatabase(const char *uri)
 		listDatabase->Commit(kLargeCommit);
 		listDatabase = null_nsCOMPtr();
 
-		//notify RDF property change
 		return NS_OK;
 
 	}

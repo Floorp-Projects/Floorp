@@ -25,6 +25,16 @@ var inputElementType = "";
 var mailList;
 var parentURI;
 var editList;
+var hitReturnInList = false;
+
+function handleKeyPress(element, event)
+{
+	if (event.which == 13) 
+	{
+		hitReturnInList = true;
+		awReturnHit(element);
+	}
+}
 
 function GetListValue(mailList, doAdd)
 {
@@ -41,12 +51,13 @@ function GetListValue(mailList, doAdd)
 	mailList.listNickName = document.getElementById('ListNickName').value;
 	mailList.description = document.getElementById('ListDescription').value;
 	
+	var oldTotal = mailList.addressLists.Count();
 	var i = 1;
 	var pos = 0;
 	while ((inputField = awGetInputElement(i)))
 	{
 	    fieldValue = inputField.value;
-		if (doAdd)
+		if (doAdd || (doAdd == false && pos >= oldTotal))
 			var cardproperty = Components.classes["component://netscape/addressbook/cardproperty"].createInstance();
 		else
 			var cardproperty = mailList.addressLists.GetElementAt(pos);
@@ -67,7 +78,7 @@ function GetListValue(mailList, doAdd)
 					}
 					else
 						cardproperty.primaryEmail = fieldValue;
-					if (doAdd)
+					if (doAdd || (doAdd == false && pos >= oldTotal))
 						mailList.addressLists.AppendElement(cardproperty);
 					pos++;
 				}
@@ -88,6 +99,11 @@ function GetListValue(mailList, doAdd)
 
 function MailListOKButton()
 {
+	if (hitReturnInList)
+	{
+		hitReturnInList = false;
+		return false;
+	}
 	var popup = document.getElementById('abPopup');
 	if ( popup )
 	{
@@ -151,6 +167,11 @@ function OnLoadMailList()
 
 function EditListOKButton()
 {
+	if (hitReturnInList)
+	{
+		hitReturnInList = false;
+		return false;
+	}
 	//Add mailing list to database
 	if (GetListValue(editList, false))
 	{
@@ -404,8 +425,6 @@ function awRemoveNodeAndChildren(parent, nodeToRemove)
 
 function awSetFocus(row, inputElement)
 {
-	return;
-
 	top.awRow = row;
 	top.awInputElement = inputElement;
 	top.awFocusRetry = 0;

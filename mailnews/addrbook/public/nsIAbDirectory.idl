@@ -64,4 +64,8 @@ interface nsIAbDirectory : nsISupports {
 	void addAddressToList(in nsIAbCard card);
 	void addMailListToDatabase(in string uri);
 	void editMailListToDatabase(in string uri);
+
+	[noscript] void clearDatabase();
+	[noscript] void notifyDirItemAdded(in nsISupports item);
+	
 };

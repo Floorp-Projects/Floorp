@@ -72,10 +72,12 @@ NS_IMETHODIMP nsAbCard::OnCardEntryChange
 	{
 		PRUint32 tableID;
 		PRUint32 rowID;
+		PRBool bMailList;
 
 		card->GetDbTableID(&tableID);
 		card->GetDbRowID(&rowID);
-		if (m_dbTableID == tableID && m_dbRowID == rowID)
+		card->GetIsMailList(&bMailList);
+		if (m_dbTableID == tableID && m_dbRowID == rowID && m_bIsMailList == bMailList)
 		{
 			nsXPIDLString pDisplayName;
 			card->GetDisplayName(getter_Copies(pDisplayName));

@@ -109,7 +109,9 @@ public:
 	NS_IMETHOD EditAnonymousAttributesFromCard(nsIAbCard *card);
 
 	NS_IMETHOD GetNewRow(nsIMdbRow * *newRow); 
+	NS_IMETHOD GetNewListRow(nsIMdbRow * *newRow); 
 	NS_IMETHOD AddCardRowToDB(nsIMdbRow *newRow);
+	NS_IMETHOD AddLdifListMember(nsIMdbRow* row, const char * value);
 
 	NS_IMETHOD AddFirstName(nsIMdbRow * row, const char * value)
 	{ return AddCharStringColumn(row, m_FirstNameColumnToken, value); }
@@ -222,6 +224,17 @@ public:
 	NS_IMETHOD AddNotes(nsIMdbRow * row, const char * value)
 	{ return AddCharStringColumn(row, m_NotesColumnToken, value); }
 
+	NS_IMETHOD AddListName(nsIMdbRow * row, const char * value)
+	{ return AddCharStringColumn(row, m_ListNameColumnToken, value); }
+
+	NS_IMETHOD AddListNickName(nsIMdbRow * row, const char * value)
+	{ return AddCharStringColumn(row, m_ListNickNameColumnToken, value); }
+
+	NS_IMETHOD AddListDescription(nsIMdbRow * row, const char * value)
+	{ return AddCharStringColumn(row, m_ListDescriptionColumnToken, value); }
+
+
+	NS_IMETHOD AddListDirNode(nsIMdbRow * listRow);
 	NS_IMETHOD CreateCollationKey(const PRUnichar *sourceStr, nsString& resultStr);
 	NS_IMETHOD GetDirectoryName(PRUnichar **name);
 
@@ -245,7 +258,7 @@ public:
 
 	nsresult CreateABCard(nsIMdbRow* cardRow, nsIAbCard **result);
 	nsresult CreateABCardInList(nsIMdbRow* cardRow, nsIAbCard **result, mdb_id listRowID);
-	nsresult CreateABListCard(nsIMdbRow* cardRow, nsIAbCard **result);
+	nsresult CreateABListCard(nsIMdbRow* listRow, nsIAbCard **result);
 	nsresult CreateABList(nsIMdbRow* listRow, nsIAbDirectory **result);
 
 	PRBool IsListRowScopeToken(mdb_scope scope) { return (scope == m_ListRowScopeToken) ? PR_TRUE: PR_FALSE; }
@@ -283,8 +296,8 @@ protected:
 							PRUint32* pValue, PRUint32 defaultValue);
 	nsresult GetBoolColumn(nsIMdbRow *cardRow, mdb_token outToken, PRBool* pValue);
 	nsresult GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow);
-	nsresult GetListCardFromDB(nsIAbCard *listCard, nsIMdbRow* cardRow);
-	nsresult GetListFromDB(nsIAbDirectory *newCard, nsIMdbRow* cardRow);
+	nsresult GetListCardFromDB(nsIAbCard *listCard, nsIMdbRow* listRow);
+	nsresult GetListFromDB(nsIAbDirectory *newCard, nsIMdbRow* listRow);
 	nsresult GetAnonymousAttributesFromDB();
 	nsresult AddRecordKeyColumnToRow(nsIMdbRow *pRow);
 	nsresult AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *cardRow);
@@ -304,17 +317,9 @@ protected:
 	nsresult SetListAddressTotal(nsIMdbRow* listRow, PRUint32 total);
 	nsresult DeleteCardFromListRow(nsIMdbRow* pListRow, mdb_id cardRowID);
 	void DeleteCardFromAllMailLists(mdb_id cardRowID);
+	nsresult NotifyListEntryChange(PRUint32 abCode, nsIAbDirectory *dir, nsIAddrDBListener *instigator);
 
 	nsresult GetCollationKeyGenerator();
-
-	nsresult AddListName(nsIMdbRow * row, const char * value)
-	{ return AddCharStringColumn(row, m_ListNameColumnToken, value); }
-
-	nsresult AddListNickName(nsIMdbRow * row, const char * value)
-	{ return AddCharStringColumn(row, m_ListNickNameColumnToken, value); }
-
-	nsresult AddListDescription(nsIMdbRow * row, const char * value)
-	{ return AddCharStringColumn(row, m_ListDescriptionColumnToken, value); }
 
 	static nsVoidArray/*<nsAddrDatabase>*/* GetDBCache();
 	static nsVoidArray/*<nsAddrDatabase>*/* m_dbCache;

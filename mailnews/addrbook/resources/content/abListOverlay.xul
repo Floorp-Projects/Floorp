@@ -71,7 +71,7 @@ Rights Reserved.
 							<treecell allowevents="true">
 								<textfield id="address#1"
 											flex="100%"
-											onkeydown="if (event.which == 9) awReturnHit(this);"
+											onkeypress="handleKeyPress(this, event);"
 											onclick="awNotAnEmptyArea(event);"
 											autocomplete="true"
 											timeout="300"

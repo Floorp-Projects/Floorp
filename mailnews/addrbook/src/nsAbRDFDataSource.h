@@ -60,10 +60,11 @@ protected:
 									const PRUnichar *oldValue, const PRUnichar *newValue);
 
 	nsresult NotifyObservers(nsIRDFResource *subject, nsIRDFResource *property,
-							 nsIRDFNode *object, PRBool assert);
+							 nsIRDFNode *object, PRBool assert, PRBool change);
 
 	static PRBool assertEnumFunc(nsISupports *aElement, void *aData);
 	static PRBool unassertEnumFunc(nsISupports *aElement, void *aData);
+	static PRBool changeEnumFunc(nsISupports *aElement, void *aData);
 
 };
 

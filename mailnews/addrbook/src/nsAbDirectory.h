@@ -66,6 +66,9 @@ public:
 	NS_IMETHOD OnCardEntryChange(PRUint32 abCode, nsIAbCard *card, nsIAddrDBListener *instigator);
 	NS_IMETHOD OnListEntryChange(PRUint32 abCode, nsIAbDirectory *list, nsIAddrDBListener *instigator);
 
+	NS_IMETHOD ClearDatabase();
+	NS_IMETHOD NotifyDirItemAdded(nsISupports *item) { return NotifyItemAdded(item);}
+
 	PRBool IsMailingList(){ return (mIsMailingList == 1); }
 
 protected:

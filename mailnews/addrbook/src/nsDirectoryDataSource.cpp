@@ -425,7 +425,7 @@ NS_IMETHODIMP nsAbDirectoryDataSource::OnItemAdded(nsISupports *parentDirectory,
 			if (NS_SUCCEEDED(rv))
 			{
 				//Notify directories that a message was added.
-				NotifyObservers(parentResource, kNC_CardChild, itemNode, PR_TRUE);
+				NotifyObservers(parentResource, kNC_CardChild, itemNode, PR_TRUE, PR_FALSE);
 			}
 		}
 		//If we are adding a directory
@@ -435,7 +435,7 @@ NS_IMETHODIMP nsAbDirectoryDataSource::OnItemAdded(nsISupports *parentDirectory,
 			if(NS_SUCCEEDED(rv))
 			{
 				//Notify a directory was added.
-				NotifyObservers(parentResource, kNC_Child, itemNode, PR_TRUE);
+				NotifyObservers(parentResource, kNC_Child, itemNode, PR_TRUE, PR_FALSE);
 			}
 		}
 	}
@@ -459,7 +459,7 @@ NS_IMETHODIMP nsAbDirectoryDataSource::OnItemRemoved(nsISupports *parentDirector
 			if(NS_SUCCEEDED(rv))
 			{
 				//Notify directories that a card was deleted.
-				NotifyObservers(parentResource, kNC_CardChild, itemNode, PR_FALSE);
+				NotifyObservers(parentResource, kNC_CardChild, itemNode, PR_FALSE, PR_FALSE);
 			}
 		}
 		//If we are removing a directory
@@ -469,7 +469,7 @@ NS_IMETHODIMP nsAbDirectoryDataSource::OnItemRemoved(nsISupports *parentDirector
 			if(NS_SUCCEEDED(rv))
 			{
 				//Notify a directory was deleted.
-				NotifyObservers(parentResource, kNC_Child, itemNode, PR_FALSE);
+				NotifyObservers(parentResource, kNC_Child, itemNode, PR_FALSE, PR_FALSE);
 			}
 		}
 	}

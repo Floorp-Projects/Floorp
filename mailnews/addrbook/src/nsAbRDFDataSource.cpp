@@ -77,6 +77,18 @@ void nsAbRDFDataSource::createNode(PRUint32 value, nsIRDFNode **node)
 	PR_smprintf_free(valueStr);
 }
 
+
+PRBool nsAbRDFDataSource::changeEnumFunc(nsISupports *aElement, void *aData)
+{
+  nsAbRDFNotification* note = (nsAbRDFNotification *)aData;
+  nsIRDFObserver* observer = (nsIRDFObserver *)aElement;
+
+  observer->OnChange(note->subject,
+                     note->property,
+                     nsnull, note->object);
+  return PR_TRUE;
+}
+
 PRBool nsAbRDFDataSource::assertEnumFunc(nsISupports *aElement, void *aData)
 {
   nsAbRDFNotification *note = (nsAbRDFNotification *)aData;
@@ -100,14 +112,20 @@ PRBool nsAbRDFDataSource::unassertEnumFunc(nsISupports *aElement, void *aData)
 }
 
 nsresult nsAbRDFDataSource::NotifyObservers(nsIRDFResource *subject,
-                                                nsIRDFResource *property,
-                                                nsIRDFNode *object,
-                                                PRBool assert)
+                                            nsIRDFResource *property,
+                                            nsIRDFNode *object,
+                                            PRBool assert,
+											PRBool change)
 {
-	if(mObservers)
+    NS_ASSERTION(!(change && assert),
+                 "Can't change and assert at the same time!\n");
+
+	if (mObservers)
 	{
 		nsAbRDFNotification note = { subject, property, object };
-		if (assert)
+		if (change)
+			mObservers->EnumerateForwards(changeEnumFunc, &note);
+		else if (assert)
 			mObservers->EnumerateForwards(assertEnumFunc, &note);
 		else
 			mObservers->EnumerateForwards(unassertEnumFunc, &note);
@@ -117,20 +135,13 @@ nsresult nsAbRDFDataSource::NotifyObservers(nsIRDFResource *subject,
 
 nsresult nsAbRDFDataSource::NotifyPropertyChanged(nsIRDFResource *resource,
 												nsIRDFResource *propertyResource,
-												const PRUnichar *oldValue, const PRUnichar *newValue)
+												const PRUnichar *oldValue, 
+												const PRUnichar *newValue)
 {
 	nsCOMPtr<nsIRDFNode> newValueNode;
 	nsString newValueStr = newValue;
 	createNode(newValueStr, getter_AddRefs(newValueNode));
-	NotifyObservers(resource, propertyResource, newValueNode, PR_TRUE);
-
-	if (oldValue)
-	{
-		nsCOMPtr<nsIRDFNode> oldValueNode;
-		nsString oldValueStr = oldValue;
-		createNode(oldValueStr, getter_AddRefs(oldValueNode));
-		NotifyObservers(resource, propertyResource, oldValueNode, PR_FALSE);
-	}
+	NotifyObservers(resource, propertyResource, newValueNode, PR_FALSE, PR_TRUE);
 	return NS_OK;
 }
 

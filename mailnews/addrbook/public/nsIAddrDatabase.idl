@@ -83,7 +83,9 @@ interface nsIAddrDatabase : nsIAddrDBAnnouncer {
 	void editAnonymousAttributesFromCard(in nsIAbCard card);
 
 	[noscript] readonly attribute nsIMdbRow newRow;
+	[noscript] readonly attribute nsIMdbRow newListRow;
 	[noscript] void addCardRowToDB(in nsIMdbRow newRow);
+	[noscript] void addLdifListMember(in nsIMdbRow row, in string value);
 	[noscript] void addFirstName(in nsIMdbRow row, in string value);
 	[noscript] void addLastName(in nsIMdbRow row, in string value);
 	[noscript] void addDisplayName(in nsIMdbRow row, in string value);
@@ -122,6 +124,11 @@ interface nsIAddrDatabase : nsIAddrDBAnnouncer {
 	[noscript] void addCustom4(in nsIMdbRow row, in string value);
 	[noscript] void addNotes(in nsIMdbRow row, in string value);
 
+	[noscript] void addListName(in nsIMdbRow row, in string value);
+	[noscript] void addListNickName(in nsIMdbRow row, in string value);
+	[noscript] void addListDescription(in nsIMdbRow row, in string value);
+	[noscript] void AddListDirNode(in nsIMdbRow listRow);
+ 
 	[noscript] void createCollationKey(in wstring sourceStr, in nsStringRef resultStr);
 
 };

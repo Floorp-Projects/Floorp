@@ -49,12 +49,18 @@
 #include "nsIPref.h"
 #include "nsIMdbFactoryFactory.h"
 #include "nsXPIDLString.h"
+#include "nsIRDFService.h"
+#include "nsRDFCID.h"
+#include "nsProxyObjectManager.h"
+#include "nsProxiedService.h"
 
 static NS_DEFINE_CID(kCMorkFactory, NS_MORK_CID);
 static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
 static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID); 
 static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
 static NS_DEFINE_IID(kICollationFactoryIID, NS_ICOLLATIONFACTORY_IID);
+static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
+static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
 /* The definition is nsAddressBook.cpp */
 extern const char *kCardDataSourceRoot;
@@ -338,6 +344,24 @@ NS_IMETHODIMP nsAddrDatabase::NotifyCardEntryChange(PRUint32 abCode, nsIAbCard *
     return NS_OK;
 }
 
+nsresult nsAddrDatabase::NotifyListEntryChange(PRUint32 abCode, nsIAbDirectory *dir, nsIAddrDBListener *instigator)
+{
+    if (m_ChangeListeners == nsnull)
+		return NS_OK;
+	PRInt32 i;
+	PRInt32 count = m_ChangeListeners->Count();
+	for (i = 0; i < count; i++)
+	{
+		nsIAddrDBListener *changeListener = 
+            (nsIAddrDBListener *) m_ChangeListeners->ElementAt(i);
+
+		nsresult rv = changeListener->OnListEntryChange(abCode, dir, instigator); 
+        if (NS_FAILED(rv)) return rv;
+	}
+    return NS_OK;
+}
+
+
 NS_IMETHODIMP nsAddrDatabase::NotifyAnnouncerGoingAway(void)
 {
     if (m_ChangeListeners == nsnull)
@@ -588,12 +612,12 @@ NS_IMETHODIMP nsAddrDatabase::Open
 		pAddressBookDB->SetDbPath(pabName);
 		GetDBCache()->AppendElement(pAddressBookDB);
 		*pAddrDB = pAddressBookDB;
+		NS_IF_ADDREF(*pAddrDB);
 	}
 	else 
 	{
 		*pAddrDB = nsnull;
-		if (pAddressBookDB)  
-			delete pAddressBookDB;
+		NS_IF_RELEASE(pAddressBookDB);
 		pAddressBookDB = nsnull;
 	}
 
@@ -1794,6 +1818,7 @@ nsresult nsAddrDatabase::SetListAddressTotal(nsIMdbRow* listRow, PRUint32 total)
 	return AddIntColumn(listRow, m_ListTotalColumnToken, total);
 }
 
+
 nsresult nsAddrDatabase::GetAddressRowByPos(nsIMdbRow* listRow, PRUint16 pos, nsIMdbRow** cardRow)
 {
 	mdb_token listAddressColumnToken;
@@ -1824,7 +1849,7 @@ NS_IMETHODIMP nsAddrDatabase::CreateMailListAndAddToDB(nsIAbDirectory *newList, 
 	if (!newList || !m_mdbPabTable)
 		return NS_ERROR_NULL_POINTER;
 	
-	err  = GetStore()->NewRow(GetEnv(), m_ListRowScopeToken, &listRow);
+	err  = GetNewListRow(&listRow);
 
 	if (NS_SUCCEEDED(err) && listRow)
 	{
@@ -2356,8 +2381,35 @@ NS_IMETHODIMP nsAddrDatabase::EditMailList(nsIAbDirectory *mailList, PRBool noti
 	mailList->GetDbRowID((PRUint32*)&rowOid.mOid_Id);
 	err = GetStore()->GetRow(GetEnv(), &rowOid, &pListRow);
 	if (pListRow)
+	{
 		err = AddListAttributeColumnsToRow(mailList, pListRow);
+	}
 	if (NS_FAILED(err)) return err;
+
+	if (notify)
+	{
+		NotifyListEntryChange(AB_NotifyPropertyChanged, mailList, nsnull);
+
+		char* listCardURI = nsnull;
+		char* file = nsnull;
+		file = m_dbName.GetLeafName();
+		listCardURI = PR_smprintf("%s%s/ListCard%ld", kCardDataSourceRoot, file, rowOid.mOid_Id);
+		NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &err);
+		if(NS_FAILED(err))
+			return err;
+		nsCOMPtr<nsIRDFResource> listCardResource;
+		err = rdfService->GetResource(listCardURI, getter_AddRefs(listCardResource));
+		nsCOMPtr<nsIAbCard> listCard = do_QueryInterface(listCardResource);
+		if (listCard)
+		{
+			GetListCardFromDB(listCard, pListRow);
+			NotifyCardEntryChange(AB_NotifyPropertyChanged, listCard, nsnull);
+		}
+		if (file)
+			nsCRT::free(file);
+		if (listCardURI)
+			PR_smprintf_free(listCardURI);
+	}
 
 	if (pListRow)
 		pListRow->CutStrongRef(GetEnv());
@@ -2391,6 +2443,15 @@ NS_IMETHODIMP nsAddrDatabase::GetNewRow(nsIMdbRow * *newRow)
 	return err;
 }
 
+NS_IMETHODIMP nsAddrDatabase::GetNewListRow(nsIMdbRow * *newRow)
+{
+	nsresult err = NS_OK;
+	nsIMdbRow *row = nsnull;
+	err  = GetStore()->NewRow(GetEnv(), m_ListRowScopeToken, &row);
+	*newRow = row;
+	return err;
+}
+
 NS_IMETHODIMP nsAddrDatabase::AddCardRowToDB(nsIMdbRow *newRow)
 {
 	if (m_mdbPabTable)
@@ -2399,6 +2460,41 @@ NS_IMETHODIMP nsAddrDatabase::AddCardRowToDB(nsIMdbRow *newRow)
 		return NS_ERROR_FAILURE;
 }
  
+NS_IMETHODIMP nsAddrDatabase::AddLdifListMember(nsIMdbRow* listRow, const char* value)
+{
+	PRUint32 total = GetListAddressTotal(listRow);
+	//add member
+	nsCAutoString valueString(value);
+	nsCAutoString email;
+	PRInt32 emailPos = valueString.Find("mail=");
+	emailPos += nsCRT::strlen("mail=");
+	valueString.Right(email, valueString.Length() - emailPos);
+	char* emailAddress = (char*)email.ToNewCString();
+	nsIMdbRow	*cardRow = nsnull;	
+	mdb_err result = GetRowForEmailAddress(emailAddress, &cardRow);
+	if (cardRow)
+	{
+		mdbOid outOid;
+		mdb_id rowID = 0;
+		if (cardRow->GetOid(GetEnv(), &outOid) == NS_OK)
+			rowID = outOid.mOid_Id;
+		total += 1;
+
+		mdb_token listAddressColumnToken;
+		char columnStr[16];
+		sprintf(columnStr, kMailListAddressFormat, total); //let it starts from 1
+		GetStore()->StringToToken(GetEnv(), columnStr, &listAddressColumnToken);
+		result = AddIntColumn(listRow, listAddressColumnToken, rowID);
+
+		SetListAddressTotal(listRow, total);
+		cardRow->CutStrongRef(GetEnv());
+	}
+	if (emailAddress)
+		delete [] emailAddress;
+	return NS_OK;
+}
+ 
+
 void nsAddrDatabase::GetCharStringYarn(char* str, struct mdbYarn* strYarn)
 {
 	strYarn->mYarn_Grow = NULL;
@@ -3154,10 +3250,10 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 	return err;
 }
 
-nsresult nsAddrDatabase::GetListCardFromDB(nsIAbCard *listCard, nsIMdbRow* cardRow)
+nsresult nsAddrDatabase::GetListCardFromDB(nsIAbCard *listCard, nsIMdbRow* listRow)
 {
 	nsresult	err = NS_OK;
-	if (!listCard || !cardRow)
+	if (!listCard || !listRow)
 		return NS_ERROR_NULL_POINTER;
 
     nsAutoString tempString;
@@ -3165,7 +3261,7 @@ nsresult nsAddrDatabase::GetListCardFromDB(nsIAbCard *listCard, nsIMdbRow* cardR
 	PRUnichar *unicodeStr = nsnull;
 	PRInt32 unicharLength = 0;
 
-	err = GetStringColumn(cardRow, m_ListNameColumnToken, tempString);
+	err = GetStringColumn(listRow, m_ListNameColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
@@ -3175,7 +3271,7 @@ nsresult nsAddrDatabase::GetListCardFromDB(nsIAbCard *listCard, nsIMdbRow* cardR
 		nsMemory::Free(tempCString);
 		PR_Free(unicodeStr);
 	}
-	err = GetStringColumn(cardRow, m_ListNickNameColumnToken, tempString);
+	err = GetStringColumn(listRow, m_ListNickNameColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
@@ -3184,7 +3280,7 @@ nsresult nsAddrDatabase::GetListCardFromDB(nsIAbCard *listCard, nsIMdbRow* cardR
 		nsMemory::Free(tempCString);
 		PR_Free(unicodeStr);
 	}
-	err = GetStringColumn(cardRow, m_ListDescriptionColumnToken, tempString);
+	err = GetStringColumn(listRow, m_ListDescriptionColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
@@ -3194,7 +3290,7 @@ nsresult nsAddrDatabase::GetListCardFromDB(nsIAbCard *listCard, nsIMdbRow* cardR
 		PR_Free(unicodeStr);
 	}
 	PRUint32 key = 0;
-	err = GetIntColumn(cardRow, m_RecordKeyColumnToken, &key, 0);
+	err = GetIntColumn(listRow, m_RecordKeyColumnToken, &key, 0);
 	if (NS_SUCCEEDED(err))
 		listCard->SetRecordKey(key);
 	return err;
@@ -3253,10 +3349,13 @@ nsresult nsAddrDatabase::GetListFromDB(nsIAbDirectory *newList, nsIMdbRow* listR
 		nsIMdbRow* cardRow;
 		err = GetIntColumn(listRow, listAddressColumnToken, (PRUint32*)&rowID, 0);
 		err = GetCardRowByRowID(rowID, &cardRow);
-
-		nsCOMPtr<nsIAbCard> card;
-		err = CreateABCard(cardRow, getter_AddRefs(card));
-		newList->AddAddressToList(card);
+		
+		if (cardRow)
+		{
+			nsCOMPtr<nsIAbCard> card;
+			err = CreateABCard(cardRow, getter_AddRefs(card));
+			newList->AddAddressToList(card);
+		}
 //		NS_IF_ADDREF(card);
 	}
 
@@ -3625,14 +3724,14 @@ nsresult nsAddrDatabase::CreateABCardInList(nsIMdbRow* cardRow, nsIAbCard **resu
 }
 
 /* create a card for mailing list in the address book */
-nsresult nsAddrDatabase::CreateABListCard(nsIMdbRow* cardRow, nsIAbCard **result)
+nsresult nsAddrDatabase::CreateABListCard(nsIMdbRow* listRow, nsIAbCard **result)
 {
     nsresult rv = NS_OK; 
 
 	mdbOid outOid;
 	mdb_id rowID=0;
 
-	if (cardRow->GetOid(GetEnv(), &outOid) == NS_OK)
+	if (listRow->GetOid(GetEnv(), &outOid) == NS_OK)
         rowID = outOid.mOid_Id;
 
 	if(NS_SUCCEEDED(rv))
@@ -3646,7 +3745,7 @@ nsresult nsAddrDatabase::CreateABListCard(nsIMdbRow* cardRow, nsIAbCard **result
 		rv = m_dbDirectory->AddChildCards(cardURI, getter_AddRefs(personCard));
 		if (personCard)
 		{
-			GetListCardFromDB(personCard, cardRow);
+			GetListCardFromDB(personCard, listRow);
 			mdbOid tableOid;
 			m_mdbPabTable->GetOid(GetEnv(), &tableOid);
 			personCard->SetDbTableID(tableOid.mOid_Id);
@@ -3701,10 +3800,10 @@ nsresult nsAddrDatabase::CreateABList(nsIMdbRow* listRow, nsIAbDirectory **resul
 			mailList->SetDbRowID(rowID);
 			mailList->SetIsMailList(PR_TRUE);
 
-/*			nsCOMPtr<nsIAddrDBListener> listener(do_QueryInterface(mailList, &rv));
+			nsCOMPtr<nsIAddrDBListener> listener(do_QueryInterface(mailList, &rv));
 			if (NS_FAILED(rv)) 
 				return NS_ERROR_NULL_POINTER;
-			AddListener(listener);*/
+			AddListener(listener);
 
 			m_dbDirectory->AddMailListToDirectory(mailList);
 
@@ -3824,3 +3923,37 @@ NS_IMETHODIMP nsAddrDatabase::GetDirectoryName(PRUnichar **name)
 		return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP nsAddrDatabase::AddListDirNode(nsIMdbRow * listRow)
+{
+	nsresult rv = NS_OK;
+
+	NS_WITH_SERVICE( nsIProxyObjectManager, proxyMgr, kProxyObjectManagerCID, &rv);
+	if (NS_FAILED(rv)) {
+		return rv;
+	}
+	NS_WITH_PROXIED_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, NS_UI_THREAD_EVENTQ, &rv);
+	if (NS_SUCCEEDED(rv)) 
+	{
+		nsCOMPtr<nsIRDFResource>	parentResource;
+
+		char* file = m_dbName.GetLeafName();
+		char *parentUri = PR_smprintf("%s%s", kDirectoryDataSourceRoot, file);
+		rv = rdfService->GetResource( parentUri, getter_AddRefs(parentResource));
+		nsCOMPtr<nsIAbDirectory> parentDir;
+		rv = proxyMgr->GetProxyObject( NS_UI_THREAD_EVENTQ, NS_GET_IID( nsIAbDirectory),
+									parentResource, PROXY_SYNC | PROXY_ALWAYS, getter_AddRefs( parentDir));
+		if (parentDir)
+		{
+			m_dbDirectory = parentDir;
+			nsCOMPtr<nsIAbDirectory> mailList;
+			rv = CreateABList(listRow, getter_AddRefs(mailList));
+			if (mailList)
+				parentDir->NotifyDirItemAdded(mailList);
+		}
+		if (parentUri)
+			PR_smprintf_free(parentUri);
+		if (file)
+			nsCRT::free(file);
+	}
+	return NS_OK;
+}

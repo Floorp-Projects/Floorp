@@ -135,49 +135,23 @@ NS_IMETHODIMP nsAbDirectory::OnCardEntryChange
 NS_IMETHODIMP nsAbDirectory::OnListEntryChange
 (PRUint32 abCode, nsIAbDirectory *list, nsIAddrDBListener *instigator)
 {
-	return NS_OK;
-
-	nsresult rv = NS_OK;
-	if (abCode == AB_NotifyInserted && list)
-	{ 
-		NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
-
-		if(NS_FAILED(rv))
-			return rv;
-
-		char* listURI = nsnull;
-		rv = list->GetDirUri(&listURI);
-		if (NS_FAILED(rv) || !listURI)
-			return NS_ERROR_NULL_POINTER;
-
-		nsCOMPtr<nsIRDFResource> res;
-		rv = rdf->GetResource(listURI, getter_AddRefs(res));
-		if(listURI)
-			nsMemory::Free(listURI);
-		if (NS_SUCCEEDED(rv))
-		{
-			nsCOMPtr<nsIAbDirectory> listDir = do_QueryInterface(res);
-			if (listDir)
-			{
-				listDir->CopyMailList(list);
-				if (mDatabase)
-				{
-					nsCOMPtr<nsIAddrDBListener> listener(do_QueryInterface(listDir, &rv));
-					if (NS_FAILED(rv)) 
-						return NS_ERROR_NULL_POINTER;
-					mDatabase->AddListener(listener);
-				}
-				nsCOMPtr<nsISupports> listSupports(do_QueryInterface(listDir));
-				if (listSupports)
-					NotifyItemAdded(listSupports);
-			}
-		}
-	}
-	else if (abCode == AB_NotifyDeleted && list)
+	if (abCode == AB_NotifyPropertyChanged && list)
 	{
-		nsCOMPtr<nsISupports> listSupports(do_QueryInterface(list, &rv));
-		if(NS_SUCCEEDED(rv))
-			NotifyItemDeleted(listSupports);
+		PRBool bIsMailList = PR_FALSE;
+		list->GetIsMailList(&bIsMailList);
+		
+		PRUint32 rowID;
+		list->GetDbRowID(&rowID);
+
+		if (bIsMailList && m_dbRowID == rowID)
+		{
+			nsXPIDLString pListName;
+			list->GetListName(getter_Copies(pListName));
+			if (pListName)
+				NotifyPropertyChanged("DirName", nsnull, 
+									  NS_CONST_CAST(PRUnichar*, (const PRUnichar*)pListName));
+		}
+
 	}
 	return NS_OK;
 }
@@ -371,6 +345,17 @@ NS_IMETHODIMP nsAbDirectory::CreateNewMailingList(const char* uri, nsIAbDirector
 	nsresult rv = AddDirectory(uri, getter_AddRefs(newList));
 	if (NS_SUCCEEDED(rv) && newList)
 	{
+		nsCOMPtr<nsIAddrDatabase>  listDatabase;  
+		NS_WITH_SERVICE(nsIAddressBook, addresBook, kAddrBookCID, &rv); 
+		if (NS_SUCCEEDED(rv))
+			rv = addresBook->GetAbDatabaseFromURI(uri, getter_AddRefs(listDatabase));
+		if (listDatabase)
+		{
+			nsCOMPtr<nsIAddrDBListener> listener(do_QueryInterface(newList, &rv));
+			if (NS_FAILED(rv)) 
+				return NS_ERROR_NULL_POINTER;
+			listDatabase->AddListener(listener);
+		}
 		newList->CopyMailList(list);
 		AddMailListToDirectory(newList);
 		NotifyItemAdded(newList);
@@ -566,8 +551,30 @@ NS_IMETHODIMP nsAbDirectory::DeleteDirectory(nsIAbDirectory *directory)
 		if (server)
 		{	//it's an address book
 			DeleteDirectoryCards(directory, server);
-
+			
+			nsISupportsArray* pAddressLists;
+			directory->GetAddressLists(&pAddressLists);
+			if (pAddressLists)
+			{	//remove mailing list node
+				PRUint32 total;
+				rv = pAddressLists->Count(&total);
+				if (total)
+				{
+					PRInt32 i;
+					for (i = total - 1; i >= 0; i--)
+					{
+						nsISupports* pSupport = pAddressLists->ElementAt(i);
+						if (pSupport)
+						{
+							nsCOMPtr<nsIAbDirectory> listDir(do_QueryInterface(pSupport, &rv));
+							if (listDir)
+								directory->DeleteDirectory(listDir);
+						}
+					}
+				}
+			}
 			DIR_DeleteServerFromList(server);
+			directory->ClearDatabase();
 
 			rv = mSubDirectories->RemoveElement(directory);
 			NotifyItemDeleted(directory);
@@ -659,7 +666,17 @@ NS_IMETHODIMP nsAbDirectory::HasDirectory(nsIAbDirectory *dir, PRBool *hasDir)
 
 nsresult nsAbDirectory::NotifyPropertyChanged(char *property, PRUnichar* oldValue, PRUnichar* newValue)
 {
-  return NS_OK;
+	nsCOMPtr<nsISupports> supports;
+	if(NS_SUCCEEDED(QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(supports))))
+	{
+		//Notify listeners who listen to every folder
+		nsresult rv;
+		NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
+		if(NS_SUCCEEDED(rv))
+			abSession->NotifyItemPropertyChanged(supports, property, oldValue, newValue);
+	}
+
+	return NS_OK;
 }
 
 nsresult nsAbDirectory::NotifyItemAdded(nsISupports *item)
@@ -695,4 +712,12 @@ NS_IMETHODIMP nsAbDirectory::GetDirUri(char **uri)
 		return NS_RDF_NO_VALUE;
 }
 
-
+NS_IMETHODIMP nsAbDirectory::ClearDatabase()
+{ 			
+	if (mDatabase)
+	{
+		mDatabase->RemoveListener(this);
+		mDatabase = null_nsCOMPtr(); 
+	}
+	return NS_OK; 
+}

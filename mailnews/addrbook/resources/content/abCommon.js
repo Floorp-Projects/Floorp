@@ -543,7 +543,6 @@ function AbNewList()
 
 function goEditListDialog(abURI, listURI)
 {
-	return;
 	window.openDialog("chrome://messenger/content/addressbook/abEditListDialog.xul",
 					  "",
 					  "chrome,resizeable=no",
