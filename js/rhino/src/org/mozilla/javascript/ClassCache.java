@@ -54,7 +54,7 @@ public class ClassCache
 
     Hashtable classTable = new Hashtable();
 
-    boolean invokerOptimization = true;
+    boolean invokerOptimization = false;
     Invoker invokerMaster;
 
     Hashtable javaAdapterGeneratedClasses = new Hashtable();
@@ -133,8 +133,8 @@ public class ClassCache
      /**
      * Set whether to cache some values.
      * <p>
-     * By default, the engine will cache generated classes and
-     * results of <tt>Class.getMethods()</tt> and similar calls.
+     * By default, the engine will cache the results of
+     * <tt>Class.getMethods()</tt> and similar calls.
      * This can speed execution dramatically, but increases the memory
      * footprint. Also, with caching enabled, references may be held to
      * objects past the lifetime of any real usage.
@@ -158,20 +158,36 @@ public class ClassCache
     }
 
     /**
-     * Control if invocation of Java methods through reflection should be
+     * @see #setInvokerOptimizationEnabled(boolean enabled)
+     */
+    public boolean isInvokerOptimizationEnabled()
+    {
+        return invokerOptimization;
+    }
+
+    /**
+     * Control if invocation of Java methods in subclasses of
+     * {@link ScriptableObject} through reflection should be
      * replaced by direct calls to invoker code generated at runtime.
      * On many JVMs cost of calling Java method through reflection can be
      * reduced significantly if a special invoker classes are generated at
      * runtime to call the Java methods directly. For example, under JDK 1.3.1
-     * on Linux the reflection calls can be speedup by factor of 10-15. On JDK
-     * 1.4.2 the the speedup can rich factor of 2-2.5. The drawback of this
-     * optimization is increased memory consumption and longer runtime
-     * initialization since class generating and loading is slow.
+     * on Linux the reflection calls can be speedup by 10-15 times. On JDK
+     * 1.4.2 the the speedup can reach the factor of 1.5-2.
      * <p>
-     * By default the optimization is enabled.
+     * The drawback of the optimization is increased memory consumption and
+     * longer runtime initialization since class generating and loading is
+     * slow. In addition the current implementation assumes that the
+     * classes under optimization are reachable through
+     * {@link Context#getApplicationClassLoader()} which may not be feasible
+     * to implement.
+     * <p>
+     * By default the optimization is disabled.
      *
      * @param enabled if true enable invoker optimization or if false disable
      *        it and clear all cached generated classes.
+     *
+     * @see #isInvokerOptimizationEnabled()
      */
     public synchronized void setInvokerOptimizationEnabled(boolean enabled)
     {
