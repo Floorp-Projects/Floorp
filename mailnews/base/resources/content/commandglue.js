@@ -26,6 +26,7 @@
 //The eventual goal is for this file to go away and for the functions to either be brought into
 //mailCommands.js or into 3pane specific code.
 
+var gFolderJustSwitched = false;
 var gBeforeFolderLoadTime;
 var gRDFNamespace = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
 function OpenURL(url)
@@ -210,6 +211,10 @@ function ChangeFolderByURI(uri, isThreaded, sortID, sortDirection)
 function RerootFolder(uri, newFolder, isThreaded, sortID, sortDirection)
 {
   dump('In reroot folder\n');
+	
+  // workaround for #39655
+  gFolderJustSwitched = true;
+
   var folder = GetThreadTreeFolder();
   ClearThreadTreeSelection();
 
@@ -261,7 +266,7 @@ function RerootFolder(uri, newFolder, isThreaded, sortID, sortDirection)
     msgNavigationService.EnsureDocumentIsLoaded(document);
 
   UpdateStatusMessageCounts(newFolder);
-
+ 
 }
 
 function SetSentFolderColumns(isSentFolder)

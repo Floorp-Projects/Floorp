@@ -625,13 +625,24 @@ function ShowMessageHeaderPane()
   {
     msgPaneData.ViewAllHeadersToolbar.setAttribute("collapsed", "true");
     msgPaneData.ViewAllHeadersBox.setAttribute("collapsed", "true");
-    
+
+	/* workaround for 39655 */
+    var messagePaneBox = document.getElementById("messagepanebox");
+    if (messagePaneBox && gFolderJustSwitched)
+      messagePaneBox.setAttribute("collapsed", "true");
+          
     var node = document.getElementById("headerPart1");
     if (node)
       node.removeAttribute("collapsed");
     node = document.getElementById("headerPart2");
     if (node)
       node.removeAttribute("collapsed");
+
+	/* more workaround for 39655 */
+    if (messagePaneBox && gFolderJustSwitched) {
+      messagePaneBox.setAttribute("collapsed", "false");
+	  gFolderJustSwitched = false;
+    }
 
 /*
     node = document.getElementById("headerPart3");
