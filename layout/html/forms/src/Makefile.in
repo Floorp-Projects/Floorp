@@ -45,7 +45,7 @@ CPPSRCS =				\
 	nsImageControlFrame.cpp \
 	$(NULL)
 
-MODULE = raptor
+MODULE=layout
 
 INCLUDES += -I$(srcdir)/../../../base/src -I$(srcdir)/../../base/src \
 	-I$(srcdir)/../../style/src -I$(srcdir)/../../content/src
@@ -53,6 +53,9 @@ INCLUDES += -I$(srcdir)/../../../base/src -I$(srcdir)/../../base/src \
 REQUIRES = xpcom raptor dom netlib js
 
 MKSHLIB :=
+
+# we don't want the shared lib
+NO_SHARED_LIB=1
 
 include $(topsrcdir)/config/rules.mk
 

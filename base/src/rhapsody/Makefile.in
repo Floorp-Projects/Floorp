@@ -25,7 +25,7 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME = gmbaseunix
 
-MODULE=raptor
+MODULE=base
 
 REQUIRES=xpcom raptor 
 

@@ -119,6 +119,11 @@ endif
 
 OS_CONFIG	:= $(OS_ARCH)$(OS_RELEASE)
 
+ifneq (, $(filter $(MODULE), $(MOZ_DEBUG_MODULES)))
+  MOZ_DEBUG=1
+  CFLAGS="$CFLAGS -g"
+endif
+
 #
 # Personal makefile customizations go in these optional make include files.
 #

@@ -430,6 +430,8 @@ AC_ARG_ENABLE(debug,
 [  --enable-debug	  enable debug symbols],
 	[if test "$enableval" = yes; then
 	    MOZ_DEBUG=1 CFLAGS="$CFLAGS -g"
+	 else
+	    MOZ_DEBUG_MODULES=`echo $enableval | sed 's|,| |g'`
 	fi] )
 
 AC_ARG_ENABLE(profile,
@@ -484,13 +486,6 @@ AC_ARG_ENABLE(smart-mail,
 	    MOZ_SMART_MAIL=1
 	fi])
 
-AC_ARG_ENABLE(dom,
-[  --enable-dom            enable Level-1 Document Object Model support ],
-	[if test "$enableval" = "yes"; then
-    	    AC_DEFINE(DOM)
-	    MOZ_DOM=1
-	fi] )
-
 AC_ARG_ENABLE(mail-compose,
 [  --enable-mail-compose   enable old Messenger mail composer ],
 	[if test "$enableval" = "yes"; then
@@ -518,6 +513,7 @@ AC_SUBST(MOZ_NETCAST)
 AC_SUBST(MOZ_JAVA)
 AC_SUBST(MOZ_OJI)
 AC_SUBST(MOZ_DEBUG)
+AC_SUBST(MOZ_DEBUG_MODULES)
 AC_SUBST(MOZILLA_GPROF)
 AC_SUBST(MOZ_DARK)
 AC_SUBST(MOZ_EDITOR)

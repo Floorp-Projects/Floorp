@@ -68,7 +68,7 @@ EXPORTS =                       \
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
-MODULE = raptor
+MODULE=base
 
 REQUIRES = xpcom netlib raptor
 

@@ -47,7 +47,7 @@ CPPSRCS =				\
 
 DEFINES += -D_IMPL_NS_DOM
 
-MODULE = raptor
+MODULE=dom
 
 REQUIRES = xpcom raptor dom js netlib
 

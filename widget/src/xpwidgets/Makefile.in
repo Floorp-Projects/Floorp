@@ -54,7 +54,7 @@ CPPSRCS=nsBaseWidget.cpp                \
 	nsTreeView.cpp \
 	$(NULL)
 
-MODULE=raptor 
+MODULE=widget
 
 REQUIRES=util img xpcom raptor netlib dom js
 

@@ -40,7 +40,7 @@ CPPSRCS =				\
 	nsTableRowGroupFrame.cpp	\
 	$(NULL)
 
-MODULE = raptor
+MODULE=layout
 
 REQUIRES = xpcom raptor dom js netlib
 
@@ -50,5 +50,8 @@ INCLUDES += -I$(srcdir)/../../base/src -I$(srcdir)/../../style/src \
 DEFINES += -D_IMPL_NS_HTML
 
 MKSHLIB :=
+
+# we don't want the shared lib
+NO_SHARED_LIB=1
 
 include $(topsrcdir)/config/rules.mk

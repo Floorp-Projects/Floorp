@@ -28,7 +28,7 @@ DEFINES += -D_IMPL_NS_HTML
 
 LIBRARY_NAME = raptorhtml
 
-MODULE=raptor
+MODULE=layout
 
 REQUIRES=xpcom raptor dom js
 
@@ -47,7 +47,8 @@ endif
 BASE_DSO_FLAGS = $(addprefix -lgmbase, $(MOZ_TOOLKIT))
 
 EXTRA_DSO_LDOPTS = \
-	-L$(DIST)/lib	\
+	-L$(DIST)/bin           \
+	-L$(DIST)/lib		\
 	-lraptorhtmldoc_s	\
 	-lnglhtmlcon_s		\
 	-lraptorhtmlstyle_s	\
@@ -59,7 +60,6 @@ EXTRA_DSO_LDOPTS = \
 	-lraptorxmlcontent_s	\
 	-lraptorlayout_s        \
 	-lraptorevents_s	\
-	-L$(DIST)/bin		\
 	-lraptorhtmlpars	\
 	-lraptorgfx	\
 	-lraptorbase	\

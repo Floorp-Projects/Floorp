@@ -46,11 +46,14 @@ EXPORTS = \
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
-MODULE = raptor
+MODULE=layout
 
 REQUIRES = xpcom raptor dom netlib js pref
 
 MKSHLIB :=
+
+# we don't want the shared lib
+NO_SHARED_LIB=1
 
 include $(topsrcdir)/config/rules.mk
 

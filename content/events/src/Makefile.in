@@ -33,7 +33,7 @@ CPPSRCS =				\
 	nsDOMEventsIIDs.cpp			\
 	$(NULL)
 
-MODULE = raptor
+MODULE=layout
 
 EXPORTS = \
 	nsEventListenerManager.h \

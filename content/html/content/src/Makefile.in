@@ -94,7 +94,7 @@ CPPSRCS=				\
 	nsTextNode.cpp			\
 	$(NULL)
 
-MODULE = raptor
+MODULE=layout
 
 REQUIRES = xpcom raptor dom js netlib
 
@@ -106,5 +106,8 @@ INCLUDES += -I$(srcdir)/../../style/src -I$(srcdir)/../../../base/src \
  -I$(srcdir)/../../base/src
 
 MKSLIB :=
+
+# we don't want to build the shared lib
+NO_SHARED_LIB=1
 
 include $(topsrcdir)/config/rules.mk

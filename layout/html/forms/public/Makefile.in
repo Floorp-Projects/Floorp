@@ -28,7 +28,7 @@ EXPORTS =			\
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
-MODULE = raptor
+MODULE=layout
 
 include $(topsrcdir)/config/config.mk
 
