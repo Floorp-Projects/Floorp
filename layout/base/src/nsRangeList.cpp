@@ -606,6 +606,7 @@ nsRangeList::HandleKeyEvent(nsIFocusTracker *aTracker, nsGUIEvent *aGuiEvent)
         if (NS_SUCCEEDED(frameused->PeekOffset(amount, eDirNext, offsetused, &resultFrame, &frameOffset, &contentOffset, PR_FALSE)) && resultFrame){
           result = TakeFocus(aTracker, resultFrame, frameOffset, contentOffset, keyEvent->isShift);
         }
+        break;
       case nsIDOMEvent::VK_UP : 
         printf("debug vk up\n");
         break;
@@ -1035,6 +1036,7 @@ nsRangeList::ResetSelection(nsIFocusTracker *aTracker, nsIFrame *aStartFrame)
       res = ScrollIntoView(aTracker);
     }
   }
+  printf("debug reset selection has been called\n");
   return res;
 }
 
