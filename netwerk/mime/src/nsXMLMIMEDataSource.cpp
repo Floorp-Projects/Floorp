@@ -428,7 +428,7 @@ nsXMLMIMEDataSource::InitFromHack() {
     if (NS_FAILED(rv)) return rv;
 #endif
 
-    rv = AddMapping(TEXT_HTML, "htm", "Hyper Text Markup Language", nsnull);
+    rv = AddMapping(TEXT_HTML, "htm", "HyperText Markup Language", nsnull);
     if (NS_FAILED(rv)) return rv;
     rv = AppendExtension(TEXT_HTML, "html");
     if (NS_FAILED(rv)) return rv;
