@@ -216,7 +216,7 @@
     [% ELSE %]
       <a href="attachment.cgi?id=[% a %]&amp;action=edit">#[% a %]</a>
     [% END %]
-    [% "|" UNLESS loop.last() %]
+    [% " |" UNLESS loop.last() %]
   [% END %]
 
 </form>
