@@ -73,7 +73,7 @@ const PRInt32 kBackward = 1;
 #endif
 
 // XXX Used to control whether we implement document.layers
-//#define NS_IMPLEMENT_DOCUMENT_LAYERS
+#define NS_IMPLEMENT_DOCUMENT_LAYERS
 
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
@@ -1229,67 +1229,97 @@ nsHTMLDocument::GetSourceDocumentURL(JSContext* cx,
   return result;
 }
 
-NS_IMETHODIMP    
-nsHTMLDocument::Open(JSContext *cx, jsval *argv, PRUint32 argc)
+
+// XXX TBI: accepting arguments to the open method.
+nsresult
+nsHTMLDocument::OpenCommon(nsIURL* aSourceURL)
 {
   nsresult result = NS_OK;
   // The open occurred after the document finished loading.
   // So we reset the document and create a new one.
   if (nsnull == mParser) {
-    nsIURL* sourceURL;
-
-    // XXX The URL of the newly created document will match
-    // that of the source document. Is this right?
-    result = GetSourceDocumentURL(cx, &sourceURL);
-    // Recover if we had a problem obtaining the source URL
-    if (nsnull == sourceURL) {
-      result = NS_NewURL(&sourceURL, "about:blank");
-    }
-
-    if (NS_SUCCEEDED(result)) {
-      result = Reset(sourceURL);
-      if (NS_OK == result) {
-        static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
-        static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
-
-        result = nsComponentManager::CreateInstance(kCParserCID, 
-                                              nsnull, 
-                                              kCParserIID, 
-                                              (void **)&mParser);
-        mIsWriting = 1;
-
-        if (NS_OK == result) { 
-          nsIHTMLContentSink* sink;
-          nsIWebShell* webShell = nsnull;
-          
-          // Get the webshell of our primary presentation shell
-          nsIPresShell* shell = (nsIPresShell*) mPresShells.ElementAt(0);
-          if (nsnull != shell) {
-            nsCOMPtr<nsIPresContext> cx;
-            shell->GetPresContext(getter_AddRefs(cx));
-            nsISupports* container;
-            if (NS_OK == cx->GetContainer(&container)) {
-              if (nsnull != container) {
-                container->QueryInterface(kIWebShellIID, (void**) &webShell);
-              }
+    result = Reset(aSourceURL);
+    if (NS_OK == result) {
+      static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
+      static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+      
+      result = nsComponentManager::CreateInstance(kCParserCID, 
+                                                  nsnull, 
+                                                  kCParserIID, 
+                                                  (void **)&mParser);
+      mIsWriting = 1;
+      
+      if (NS_OK == result) { 
+        nsIHTMLContentSink* sink;
+        nsIWebShell* webShell = nsnull;
+        
+        // Get the webshell of our primary presentation shell
+        nsIPresShell* shell = (nsIPresShell*) mPresShells.ElementAt(0);
+        if (nsnull != shell) {
+          nsCOMPtr<nsIPresContext> cx;
+          shell->GetPresContext(getter_AddRefs(cx));
+          nsISupports* container;
+          if (NS_OK == cx->GetContainer(&container)) {
+            if (nsnull != container) {
+              container->QueryInterface(kIWebShellIID, (void**) &webShell);
             }
           }
+        }
 
-          result = NS_NewHTMLContentSink(&sink, this, sourceURL, webShell);
-          NS_IF_RELEASE(webShell);
-
-          if (NS_OK == result) {
-            nsIDTD* theDTD=0;
-            NS_NewNavHTMLDTD(&theDTD);
-            mParser->RegisterDTD(theDTD);
-            mParser->SetContentSink(sink); 
-            NS_RELEASE(sink);
-          }
+        result = NS_NewHTMLContentSink(&sink, this, aSourceURL, webShell);
+        NS_IF_RELEASE(webShell);
+        
+        if (NS_OK == result) {
+          nsIDTD* theDTD=0;
+          NS_NewNavHTMLDTD(&theDTD);
+          mParser->RegisterDTD(theDTD);
+          mParser->SetContentSink(sink); 
+          NS_RELEASE(sink);
         }
       }
-      NS_RELEASE(sourceURL);
     }
   }
+
+  return result;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::Open()
+{
+  nsresult result = NS_OK;
+  nsIURL* sourceURL;
+
+  // XXX For the non-script Open case, we have to make
+  // up a URL.
+  result = NS_NewURL(&sourceURL, "about:blank");
+
+  if (NS_SUCCEEDED(result)) {
+    result = OpenCommon(sourceURL);
+    NS_RELEASE(sourceURL);
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::Open(JSContext *cx, jsval *argv, PRUint32 argc)
+{
+  nsresult result = NS_OK;
+  nsIURL* sourceURL;
+
+  // XXX The URL of the newly created document will match
+  // that of the source document. Is this right?
+  result = GetSourceDocumentURL(cx, &sourceURL);
+  // Recover if we had a problem obtaining the source URL
+  if (nsnull == sourceURL) {
+    result = NS_NewURL(&sourceURL, "about:blank");
+  }
+
+  if (NS_SUCCEEDED(result)) {
+    result = OpenCommon(sourceURL);
+    NS_RELEASE(sourceURL);
+  }
+
   return result;
 }
 
@@ -1313,14 +1343,56 @@ nsHTMLDocument::Close()
 }
 
 nsresult
-nsHTMLDocument::WriteCommon(JSContext *cx, 
-                            jsval *argv, 
-                            PRUint32 argc,
+nsHTMLDocument::WriteCommon(const nsString& aText,
                             PRBool aNewlineTerminate)
 {
   nsresult result = NS_OK;
 
-  // XXX Right now, we only deal with inline document.writes
+  if (nsnull == mParser) {
+    result = Open();
+    if (NS_OK != result) {
+      return result;
+    }
+  }
+  
+  nsAutoString str(aText);
+
+  if (aNewlineTerminate) {
+    str.Append('\n');
+  }
+
+  mWriteLevel++;
+  result = mParser->Parse(str, NS_GENERATE_PARSER_KEY(), 
+                          "text/html", PR_FALSE, 
+                          (!mIsWriting || (mWriteLevel > 1)));
+  mWriteLevel--;
+  if (NS_OK != result) {
+    return result;
+  }
+  
+  return result;
+}
+
+NS_IMETHODIMP
+nsHTMLDocument::Write(const nsString& aText)
+{
+  return WriteCommon(aText, PR_FALSE);
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::Writeln(const nsString& aText)
+{
+  return WriteCommon(aText, PR_TRUE);
+}
+
+nsresult
+nsHTMLDocument::ScriptWriteCommon(JSContext *cx, 
+                                  jsval *argv, 
+                                  PRUint32 argc,
+                                  PRBool aNewlineTerminate)
+{
+  nsresult result = NS_OK;
+
   if (nsnull == mParser) {
     result = Open(cx, argv, argc);
     if (NS_OK != result) {
@@ -1360,13 +1432,13 @@ nsHTMLDocument::WriteCommon(JSContext *cx,
 NS_IMETHODIMP    
 nsHTMLDocument::Write(JSContext *cx, jsval *argv, PRUint32 argc)
 {
-  return WriteCommon(cx, argv, argc, PR_FALSE);
+  return ScriptWriteCommon(cx, argv, argc, PR_FALSE);
 }
 
 NS_IMETHODIMP    
 nsHTMLDocument::Writeln(JSContext *cx, jsval *argv, PRUint32 argc)
 {
-  return WriteCommon(cx, argv, argc, PR_TRUE);
+  return ScriptWriteCommon(cx, argv, argc, PR_TRUE);
 }
 
 nsIContent *

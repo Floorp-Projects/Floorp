@@ -23,6 +23,7 @@
 #include "nsISupports.h"
 #include "nsString.h"
 #include "nsIScriptContext.h"
+#include "jsapi.h"
 
 class nsIDOMElement;
 class nsIDOMHTMLCollection;
@@ -61,6 +62,12 @@ public:
   NS_IMETHOD    GetSelection(nsString& aReturn)=0;
 
   NS_IMETHOD    NamedItem(const nsString& aName, nsIDOMElement** aReturn)=0;
+
+  NS_IMETHOD    Open(JSContext *cx, jsval *argv, PRUint32 argc)=0;
+
+  NS_IMETHOD    Write(JSContext *cx, jsval *argv, PRUint32 argc)=0;
+
+  NS_IMETHOD    Writeln(JSContext *cx, jsval *argv, PRUint32 argc)=0;
 };
 
 
@@ -81,6 +88,9 @@ public:
   NS_IMETHOD    GetPlugins(nsIDOMHTMLCollection** aPlugins);  \
   NS_IMETHOD    GetSelection(nsString& aReturn);  \
   NS_IMETHOD    NamedItem(const nsString& aName, nsIDOMElement** aReturn);  \
+  NS_IMETHOD    Open(JSContext *cx, jsval *argv, PRUint32 argc);  \
+  NS_IMETHOD    Write(JSContext *cx, jsval *argv, PRUint32 argc);  \
+  NS_IMETHOD    Writeln(JSContext *cx, jsval *argv, PRUint32 argc);  \
 
 
 
@@ -101,6 +111,9 @@ public:
   NS_IMETHOD    GetPlugins(nsIDOMHTMLCollection** aPlugins) { return _to GetPlugins(aPlugins); } \
   NS_IMETHOD    GetSelection(nsString& aReturn) { return _to GetSelection(aReturn); }  \
   NS_IMETHOD    NamedItem(const nsString& aName, nsIDOMElement** aReturn) { return _to NamedItem(aName, aReturn); }  \
+  NS_IMETHOD    Open(JSContext *cx, jsval *argv, PRUint32 argc) { return _to Open(cx, argv, argc); }  \
+  NS_IMETHOD    Write(JSContext *cx, jsval *argv, PRUint32 argc) { return _to Write(cx, argv, argc); }  \
+  NS_IMETHOD    Writeln(JSContext *cx, jsval *argv, PRUint32 argc) { return _to Writeln(cx, argv, argc); }  \
 
 
 #endif // nsIDOMNSHTMLDocument_h__

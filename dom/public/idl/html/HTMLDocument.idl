@@ -13,10 +13,11 @@
    readonly attribute  HTMLCollection       forms;
    readonly attribute  HTMLCollection       anchors;
             attribute  DOMString            cookie;
-   void                      open(/* ... */);
+
+   noscript void             open();
    void                      close();
-   void                      write(/* ... */);
-   void                      writeln(/* ... */);
+   noscript void             write(in DOMString text);
+   noscript void             writeln(in DOMString text);
    Element                   getElementById(in DOMString elementId);
    NodeList                  getElementsByName(in DOMString elementName);
  };
@@ -38,4 +39,8 @@
 
      wstring getSelection();
      Element namedItem(in wstring name);
+
+     void                      open(/* ... */);
+     void                      write(/* ... */);
+     void                      writeln(/* ... */);
    };

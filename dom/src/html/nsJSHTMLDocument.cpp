@@ -783,54 +783,6 @@ ResolveHTMLDocument(JSContext *cx, JSObject *obj, jsval id)
 
 
 //
-// Native method Open
-//
-PR_STATIC_CALLBACK(JSBool)
-HTMLDocumentOpen(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMHTMLDocument *nativeThis = (nsIDOMHTMLDocument*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
-
-  *rval = JSVAL_NULL;
-
-  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
-    PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.open", &ok);
-    if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
-    }
-    NS_RELEASE(secMan);
-  }
-  else {
-    return JS_FALSE;
-  }
-
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  if (argc >= 0) {
-
-    if (NS_OK != nativeThis->Open(cx, argv+0, argc-0)) {
-      return JS_FALSE;
-    }
-
-    *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function open requires 0 parameters");
-    return JS_FALSE;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
 // Native method Close
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -845,7 +797,7 @@ HTMLDocumentClose(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   nsIScriptSecurityManager *secMan;
   if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.close", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.open", &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -879,102 +831,6 @@ HTMLDocumentClose(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 
 
 //
-// Native method Write
-//
-PR_STATIC_CALLBACK(JSBool)
-HTMLDocumentWrite(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMHTMLDocument *nativeThis = (nsIDOMHTMLDocument*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
-
-  *rval = JSVAL_NULL;
-
-  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
-    PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.write", &ok);
-    if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
-    }
-    NS_RELEASE(secMan);
-  }
-  else {
-    return JS_FALSE;
-  }
-
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  if (argc >= 0) {
-
-    if (NS_OK != nativeThis->Write(cx, argv+0, argc-0)) {
-      return JS_FALSE;
-    }
-
-    *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function write requires 0 parameters");
-    return JS_FALSE;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
-// Native method Writeln
-//
-PR_STATIC_CALLBACK(JSBool)
-HTMLDocumentWriteln(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMHTMLDocument *nativeThis = (nsIDOMHTMLDocument*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
-
-  *rval = JSVAL_NULL;
-
-  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
-    PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.writeln", &ok);
-    if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
-    }
-    NS_RELEASE(secMan);
-  }
-  else {
-    return JS_FALSE;
-  }
-
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  if (argc >= 0) {
-
-    if (NS_OK != nativeThis->Writeln(cx, argv+0, argc-0)) {
-      return JS_FALSE;
-    }
-
-    *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function writeln requires 0 parameters");
-    return JS_FALSE;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
 // Native method GetElementById
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -991,7 +847,7 @@ HTMLDocumentGetElementById(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
   nsIScriptSecurityManager *secMan;
   if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.getelementbyid", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.close", &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -1043,7 +899,7 @@ HTMLDocumentGetElementsByName(JSContext *cx, JSObject *obj, uintN argc, jsval *a
   nsIScriptSecurityManager *secMan;
   if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.getelementsbyname", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.write", &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -1100,7 +956,7 @@ NSHTMLDocumentGetSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
   nsIScriptSecurityManager *secMan;
   if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.getselection", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.writeln", &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -1156,7 +1012,7 @@ NSHTMLDocumentNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   nsIScriptSecurityManager *secMan;
   if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.nameditem", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.getelementbyid", &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -1184,6 +1040,168 @@ NSHTMLDocumentNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   }
   else {
     JS_ReportError(cx, "Function namedItem requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method Open
+//
+PR_STATIC_CALLBACK(JSBool)
+NSHTMLDocumentOpen(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMHTMLDocument *privateThis = (nsIDOMHTMLDocument*)JS_GetPrivate(cx, obj);
+  nsIDOMNSHTMLDocument *nativeThis = nsnull;
+  if (NS_OK != privateThis->QueryInterface(kINSHTMLDocumentIID, (void **)&nativeThis)) {
+    JS_ReportError(cx, "Object must be of type NSHTMLDocument");
+    return JS_FALSE;
+  }
+
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.getelementsbyname", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->Open(cx, argv+0, argc-0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function open requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method Write
+//
+PR_STATIC_CALLBACK(JSBool)
+NSHTMLDocumentWrite(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMHTMLDocument *privateThis = (nsIDOMHTMLDocument*)JS_GetPrivate(cx, obj);
+  nsIDOMNSHTMLDocument *nativeThis = nsnull;
+  if (NS_OK != privateThis->QueryInterface(kINSHTMLDocumentIID, (void **)&nativeThis)) {
+    JS_ReportError(cx, "Object must be of type NSHTMLDocument");
+    return JS_FALSE;
+  }
+
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.getselection", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->Write(cx, argv+0, argc-0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function write requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method Writeln
+//
+PR_STATIC_CALLBACK(JSBool)
+NSHTMLDocumentWriteln(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMHTMLDocument *privateThis = (nsIDOMHTMLDocument*)JS_GetPrivate(cx, obj);
+  nsIDOMNSHTMLDocument *nativeThis = nsnull;
+  if (NS_OK != privateThis->QueryInterface(kINSHTMLDocumentIID, (void **)&nativeThis)) {
+    JS_ReportError(cx, "Object must be of type NSHTMLDocument");
+    return JS_FALSE;
+  }
+
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.nameditem", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->Writeln(cx, argv+0, argc-0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function writeln requires 0 parameters");
     return JS_FALSE;
   }
 
@@ -1243,14 +1261,14 @@ static JSPropertySpec HTMLDocumentProperties[] =
 //
 static JSFunctionSpec HTMLDocumentMethods[] = 
 {
-  {"open",          HTMLDocumentOpen,     0},
   {"close",          HTMLDocumentClose,     0},
-  {"write",          HTMLDocumentWrite,     0},
-  {"writeln",          HTMLDocumentWriteln,     0},
   {"getElementById",          HTMLDocumentGetElementById,     1},
   {"getElementsByName",          HTMLDocumentGetElementsByName,     1},
   {"getSelection",          NSHTMLDocumentGetSelection,     0},
   {"namedItem",          NSHTMLDocumentNamedItem,     1},
+  {"open",          NSHTMLDocumentOpen,     0},
+  {"write",          NSHTMLDocumentWrite,     0},
+  {"writeln",          NSHTMLDocumentWriteln,     0},
   {0}
 };
 

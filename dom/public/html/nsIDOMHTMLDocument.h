@@ -24,7 +24,6 @@
 #include "nsString.h"
 #include "nsIScriptContext.h"
 #include "nsIDOMDocument.h"
-#include "jsapi.h"
 
 class nsIDOMElement;
 class nsIDOMHTMLElement;
@@ -64,13 +63,13 @@ public:
   NS_IMETHOD    GetCookie(nsString& aCookie)=0;
   NS_IMETHOD    SetCookie(const nsString& aCookie)=0;
 
-  NS_IMETHOD    Open(JSContext *cx, jsval *argv, PRUint32 argc)=0;
+  NS_IMETHOD    Open()=0;
 
   NS_IMETHOD    Close()=0;
 
-  NS_IMETHOD    Write(JSContext *cx, jsval *argv, PRUint32 argc)=0;
+  NS_IMETHOD    Write(const nsString& aText)=0;
 
-  NS_IMETHOD    Writeln(JSContext *cx, jsval *argv, PRUint32 argc)=0;
+  NS_IMETHOD    Writeln(const nsString& aText)=0;
 
   NS_IMETHOD    GetElementById(const nsString& aElementId, nsIDOMElement** aReturn)=0;
 
@@ -93,10 +92,10 @@ public:
   NS_IMETHOD    GetAnchors(nsIDOMHTMLCollection** aAnchors);  \
   NS_IMETHOD    GetCookie(nsString& aCookie);  \
   NS_IMETHOD    SetCookie(const nsString& aCookie);  \
-  NS_IMETHOD    Open(JSContext *cx, jsval *argv, PRUint32 argc);  \
+  NS_IMETHOD    Open();  \
   NS_IMETHOD    Close();  \
-  NS_IMETHOD    Write(JSContext *cx, jsval *argv, PRUint32 argc);  \
-  NS_IMETHOD    Writeln(JSContext *cx, jsval *argv, PRUint32 argc);  \
+  NS_IMETHOD    Write(const nsString& aText);  \
+  NS_IMETHOD    Writeln(const nsString& aText);  \
   NS_IMETHOD    GetElementById(const nsString& aElementId, nsIDOMElement** aReturn);  \
   NS_IMETHOD    GetElementsByName(const nsString& aElementName, nsIDOMNodeList** aReturn);  \
 
@@ -117,10 +116,10 @@ public:
   NS_IMETHOD    GetAnchors(nsIDOMHTMLCollection** aAnchors) { return _to GetAnchors(aAnchors); } \
   NS_IMETHOD    GetCookie(nsString& aCookie) { return _to GetCookie(aCookie); } \
   NS_IMETHOD    SetCookie(const nsString& aCookie) { return _to SetCookie(aCookie); } \
-  NS_IMETHOD    Open(JSContext *cx, jsval *argv, PRUint32 argc) { return _to Open(cx, argv, argc); }  \
+  NS_IMETHOD    Open() { return _to Open(); }  \
   NS_IMETHOD    Close() { return _to Close(); }  \
-  NS_IMETHOD    Write(JSContext *cx, jsval *argv, PRUint32 argc) { return _to Write(cx, argv, argc); }  \
-  NS_IMETHOD    Writeln(JSContext *cx, jsval *argv, PRUint32 argc) { return _to Writeln(cx, argv, argc); }  \
+  NS_IMETHOD    Write(const nsString& aText) { return _to Write(aText); }  \
+  NS_IMETHOD    Writeln(const nsString& aText) { return _to Writeln(aText); }  \
   NS_IMETHOD    GetElementById(const nsString& aElementId, nsIDOMElement** aReturn) { return _to GetElementById(aElementId, aReturn); }  \
   NS_IMETHOD    GetElementsByName(const nsString& aElementName, nsIDOMNodeList** aReturn) { return _to GetElementsByName(aElementName, aReturn); }  \
 
