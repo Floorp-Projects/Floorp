@@ -114,20 +114,24 @@ protected:
     static void*  PR_CALLBACK HandlePACLoadEvent(PLEvent* aEvent);
     static void   PR_CALLBACK DestroyPACLoadEvent(PLEvent* aEvent);
 
+    struct HostInfoIP {
+        PRUint16   family;
+        PRUint16   mask_len;
+        PRIPv6Addr addr; // possibly IPv4-mapped address
+    };
+
+    struct HostInfoName {
+        char    *host;
+        PRUint32 host_len;
+    };
+
     // simplified array of filters defined by this struct
     struct HostInfo {
         PRBool  is_ipaddr;
         PRInt32 port;
         union {
-            struct {
-                PRUint16   family;
-                PRUint16   mask_len;
-                PRIPv6Addr addr; // possibly IPv4-mapped address
-            } ip;
-            struct {
-                char    *host;
-                PRUint32 host_len;
-            } name;
+            HostInfoIP   ip;
+            HostInfoName name;
         };
 
         HostInfo()
