@@ -35,6 +35,11 @@
   list-style-image: url("chrome://messenger/skin/icons/mail-toolbar.png");
 }
 
+.toolbarbutton-1[type="menu-button"]
+{
+  min-width: 57px;
+}
+
 .toolbarbutton-1[type="menu"] > .toolbarbutton-menu-dropmarker {
   display: none;
 }

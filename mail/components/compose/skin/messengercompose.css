@@ -47,6 +47,11 @@
   list-style-image: url("chrome://messenger/skin/messengercompose/compose-toolbar.png");
 }
 
+.toolbarbutton-1[type="menu-button"]
+{
+  min-width: 57px;
+}
+
 toolbar[mode="icons"] .toolbarbutton-text {
   display: none;
 }
