@@ -1050,7 +1050,8 @@ function vmgr_grouttab (viewManager, container)
             
             var view = viewManager.views[viewId];
             
-            var tab = container.tabs.childNodes[container.viewCount];
+            var tab = (container.viewCount >= container.tabs.childNodes.length)
+                      ? null : container.tabs.childNodes[container.viewCount];
             var label;
             
             if (!tab || tab.hasAttribute("needinit"))
