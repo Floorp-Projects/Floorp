@@ -43,7 +43,7 @@ VPATH = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE = ipcd
-LIBRARY_NAME = transmngrcom_s
+LIBRARY_NAME = transmgrcom_s
 FORCE_STATIC_LIB = 1
 MODULE_NAME	= ipcd
 

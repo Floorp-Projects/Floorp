@@ -4,8 +4,8 @@ module.res
 tmIPCModule.obj
 tmQueue.obj
 tmTransactionManager.obj
-transmngr.dll
-transmngr.exp
-transmngr.ilk
-transmngr.lib
-transmngr.pdb
+transmgr.dll
+transmgr.exp
+transmgr.ilk
+transmgr.lib
+transmgr.pdb

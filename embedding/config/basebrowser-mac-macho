@@ -143,7 +143,7 @@ components/mozreg.xpt
 
 ; profile sharing - optional
 ipc/modules/liblockmodule.dylib
-ipc/modules/libtransmngr.dylib
+ipc/modules/libtransmgr.dylib
 mozipcd
 components/libipcdc.dylib
 
