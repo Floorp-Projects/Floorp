@@ -511,27 +511,29 @@ nsEditorShell::PrepareDocumentForEditing(nsIDocumentLoader* aLoader, nsIURI *aUr
     mEditorController->SetCommandRefCon(editorAsISupports);
   }
 
-
-  // get a mouse listener for double click on tags
-  // We can't use nsEditor listener because core editor shouldn't call UI commands
-  rv = NS_NewEditorShellMouseListener(getter_AddRefs(mMouseListenerP), this);
-  if (NS_FAILED(rv))
+  if (mEditorType == eHTMLTextEditorType)
   {
-    mMouseListenerP = nsnull;
-    return rv;
-  }
+    // get a mouse listener for double click on tags
+    // We can't use nsEditor listener because core editor shouldn't call UI commands
+    rv = NS_NewEditorShellMouseListener(getter_AddRefs(mMouseListenerP), this);
+    if (NS_FAILED(rv))
+    {
+      mMouseListenerP = nsnull;
+      return rv;
+    }
 
-  // Add mouse listener to document
-  nsCOMPtr<nsIDOMEventReceiver> erP;
-  rv = GetDocumentEventReceiver(getter_AddRefs(erP));
-  if (NS_FAILED(rv))
-  {
-    mMouseListenerP = nsnull;
-    return rv;
-  }
+    // Add mouse listener to document
+    nsCOMPtr<nsIDOMEventReceiver> erP;
+    rv = GetDocumentEventReceiver(getter_AddRefs(erP));
+    if (NS_FAILED(rv))
+    {
+      mMouseListenerP = nsnull;
+      return rv;
+    }
 
-  rv = erP->AddEventListenerByIID(mMouseListenerP, NS_GET_IID(nsIDOMMouseListener));
-  if (NS_FAILED(rv)) return rv;
+    rv = erP->AddEventListenerByIID(mMouseListenerP, NS_GET_IID(nsIDOMMouseListener));
+    if (NS_FAILED(rv)) return rv;
+  }
 
   // now all the listeners are set up, we can call PostCreate
   rv = editor->PostCreate();
