@@ -60,8 +60,9 @@ my $template = Template->new(
         linebreak => sub 
         {
           my ($var) = @_; 
-          $var =~ s/\n/\&nl;/g;
-          $var =~ s/\r/\&cr;/g;
+          $var =~ s/\\/\\\\/g;
+          $var =~ s/\n/\\n/g;
+          $var =~ s/\r/\\r/g;
           return $var;
         }
     }
@@ -227,11 +228,22 @@ sub ValidateContent
   # The HTML spec tells browsers to remove line breaks (carriage return
   # and newline characters) from form values in some cases.  This happens
   # even if those characters are encoded into entities (&#10; and &#13;).
-  # To prevent corruption of file content in this case, we have to convert
-  # those characters into our own custom entities (&cr; and &nl;), when
-  # using them as form values, so here we convert them back.
-  $content =~ s/\&nl;/\n/g;
-  $content =~ s/\&cr;/\r/g;
+  # To prevent corruption of file content in this case, we have to escape
+  # those characters as \r and \n, so here we convert them back.
+  # 
+  # An escaped line break is the literal string "\r" or "\n" with zero
+  # or an even number of slashes before it, because if there are an odd
+  # number of slashes before it, then the total number of slashes is even,
+  # so the slashes are actually escaped slashes followed by a literal
+  # "r" or "n" character, rather than an escaped line break character.
+  # In other words, "\n" and "\\\n" are a line break and a slash followed
+  # by a line break, respectively, but "\\n" is a slash followed by
+  # a literal "n".
+  #
+  $content =~ s/(^|[^\\])((\\\\)*)\\r/\1\2\r/g;
+  $content =~ s/(^|[^\\])((\\\\)*)\\n/\1\2\n/g;
+  $content =~ s/\\\\/\\/g;
+
   $request->param('content', $content);
 }
 
