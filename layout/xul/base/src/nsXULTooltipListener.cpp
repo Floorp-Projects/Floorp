@@ -615,9 +615,12 @@ nsXULTooltipListener::DestroyTooltip()
 
     // remove the popuphidden listener from tooltip
     nsCOMPtr<nsIDOMEventTarget> evtTarget(do_QueryInterface(mCurrentTooltip));
-    evtTarget->RemoveEventListener(NS_LITERAL_STRING("popuphiding"), (nsIDOMMouseListener*)this, PR_FALSE);
 
+    // release tooltip before removing listener to prevent our destructor from
+    // being called recursively (bug 120863)
     mCurrentTooltip = nsnull;
+
+    evtTarget->RemoveEventListener(NS_LITERAL_STRING("popuphiding"), (nsIDOMMouseListener*)this, PR_FALSE);
   }
   
   // kill any ongoing timers
