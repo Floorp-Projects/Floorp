@@ -1093,7 +1093,9 @@ while (@row = FetchSQLData()) {
             pnl "<input type=checkbox name=id_$bug_id>";
         }
         pnl "<A HREF=\"show_bug.cgi?id=$bug_id\">";
-        pnl "$bug_id</A> ";
+        pnl "$bug_id</A>";
+        if ($g != "0") { pnl "*"; }
+        pnl " ";
         foreach my $c (@collist) {
             if (exists $::needquote{$c}) {
                 my $value = shift @row;
@@ -1166,6 +1168,10 @@ PutHeader("Bug List");
 print "
 <CENTER>
 <B>" .  time2str("%a %b %e %T %Z %Y", time()) . "</B>";
+
+if (Param('usebuggroups')) {
+   print "<BR>* next to a bug number notes a bug not visible to everyone.<BR>";
+}
 
 if (defined $::FORM{'debug'}) {
     print "<P><CODE>" . value_quote($query) . "</CODE><P>\n";
