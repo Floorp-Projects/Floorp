@@ -89,5 +89,5 @@ void art_free(void *ptr)
 
 void * art_realloc(void* ptr, size_t size)
 {
-  realloc(ptr, size);
+  return realloc(ptr, size);
 }
