@@ -117,8 +117,16 @@ function onChooseFile()
   try {
     var fp = Components.classes["component://mozilla/filepicker"].createInstance(nsIFilePicker);
     fp.init(window, bundle.GetStringFromName("chooseFileDialogTitle"), nsIFilePicker.modeOpen);
-    fp.setFilters(nsIFilePicker.filterAll);
+
+    // When loading into Composer, direct user to prefer HTML files and text files:
+    if (dialog.openAppList.data == "2")
+      fp.setFilters(nsIFilePicker.filterHTML | nsIFilePicker.filterText | nsIFilePicker.filterAll);
+    else
+      fp.setFilters(nsIFilePicker.filterAll);
+
     fp.show();
-    dialog.input.value = fp.file.path;
+    if (fp.file.path && fp.file.path.length > 0)
+      dialog.input.value = fp.file.path;
+
   } catch(ex) { }
 }
