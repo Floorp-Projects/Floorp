@@ -2792,3 +2792,35 @@ nsImapIncomingServer::GetCanSearchMessages(PRBool *canSearchMessages)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsImapIncomingServer::GetOfflineSupportLevel(PRInt32 *aSupportLevel)
+{
+    NS_ENSURE_ARG_POINTER(aSupportLevel);
+    nsresult rv = NS_OK;
+    
+    rv = GetIntValue("offline_support_level", aSupportLevel);
+    if (*aSupportLevel != OFFLINE_SUPPORT_LEVEL_UNDEFINED) return rv;
+    
+    nsCAutoString prefName("default_offline_support_level");
+    nsXPIDLCString hostName;
+    GetHostName(getter_Copies(hostName));
+
+    if (hostName.get()) {
+        prefName.Append(".");
+        prefName.Append(hostName);
+
+        NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+        if(NS_SUCCEEDED(rv)) {
+            rv = prefs->GetIntPref(prefName, aSupportLevel);
+        } 
+    }
+
+    // Couldn't get the pref value with the hostname. 
+    // Fall back on IMAP default value
+    if (NS_FAILED(rv)) {
+        // set default value
+        *aSupportLevel = OFFLINE_SUPPORT_LEVEL_REGULAR;
+    }
+    return NS_OK;
+}
+

@@ -138,6 +138,12 @@ Rights Reserved.
         </box> 
       </row>
       <separator id="CreateFilters.separator" class="thin"/>
+      <row id="OfflineSettings" class="acctCentralRow">
+        <box> 
+          <text class="acctCentralText acctCentralLinkText" value="&offlineLink.label;" onclick="ViewSettings();"/> 
+        </box> 
+      </row>
+      <separator id="OfflineSettings.separator" class="thin"/>
 
     </rows>
   </grid>

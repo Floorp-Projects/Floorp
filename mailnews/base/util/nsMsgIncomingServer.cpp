@@ -1267,6 +1267,27 @@ NS_IMETHODIMP nsMsgIncomingServer::SetDownloadSettings(nsIMsgDownloadSettings *s
   return rv;
 }
 
+NS_IMETHODIMP
+nsMsgIncomingServer::GetOfflineSupportLevel(PRInt32 *aSupportLevel)
+{
+    NS_ENSURE_ARG_POINTER(aSupportLevel);
+    nsresult rv;
+    
+    rv = GetIntValue("offline_support_level", aSupportLevel);
+    if (*aSupportLevel != OFFLINE_SUPPORT_LEVEL_UNDEFINED) return rv;
+    
+    // set default value
+    *aSupportLevel = OFFLINE_SUPPORT_LEVEL_NONE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgIncomingServer::SetOfflineSupportLevel(PRInt32 aSupportLevel)
+{
+    SetIntValue("offline_support_level", aSupportLevel);
+    return NS_OK;
+}
+
 #define BASE_MSGS_URL       "chrome://messenger/locale/messenger.properties"
 
 NS_IMETHODIMP nsMsgIncomingServer::DisplayOfflineMsg(nsIMsgWindow *aMsgWindow)

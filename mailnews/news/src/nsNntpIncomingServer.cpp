@@ -1551,3 +1551,17 @@ nsNntpIncomingServer::GetCanSearchMessages(PRBool *canSearchMessages)
     *canSearchMessages = PR_TRUE;
     return NS_OK;
 }
+
+NS_IMETHODIMP
+nsNntpIncomingServer::GetOfflineSupportLevel(PRInt32 *aSupportLevel)
+{
+    NS_ENSURE_ARG_POINTER(aSupportLevel);
+    nsresult rv;
+    
+    rv = GetIntValue("offline_support_level", aSupportLevel);
+    if (*aSupportLevel != OFFLINE_SUPPORT_LEVEL_UNDEFINED) return rv;
+    
+    // set default value
+    *aSupportLevel = OFFLINE_SUPPORT_LEVEL_EXTENDED;
+    return NS_OK;
+}

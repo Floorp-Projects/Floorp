@@ -216,6 +216,22 @@ interface nsIMsgIncomingServer : nsISupports {
   /* display startup page once per account per session */
   attribute boolean displayStartupPage;
   attribute nsIMsgDownloadSettings downloadSettings;
+
+  /*
+   * Offline support level. Support level can vary based on abilities 
+   * and features each server can offer wrt to offline service.
+   * Here is the legend to determine the each support level details
+   *
+   * supportLevel == 0  --> no offline support (default) 
+   * supportLevel == 10 --> regular offline feature support
+   * supportLevel == 20 --> extended offline feature support 
+   *
+   * Each server can initialize itself to the support level if needed
+   * to override the default choice i.e., no offline support.
+   * IMAP and POP3 servers are set with level 10 and NEWS with level 20. 
+   * None and Movemail will default to 0. 
+   */
+  attribute long offlineSupportLevel;
 };
 
 %{C++

@@ -64,6 +64,7 @@ public:
     NS_IMETHOD GetConstructedPrettyName(PRUnichar **retval);
         NS_IMETHOD GetCanBeDefaultServer(PRBool *canBeDefaultServer);
         NS_IMETHOD GetCanSearchMessages(PRBool *canSearchMessages);
+    NS_IMETHOD GetOfflineSupportLevel(PRInt32 *aSupportLevel);
 
 protected:
 	nsresult GetFolder(const char* name, nsIMsgFolder** pFolder);

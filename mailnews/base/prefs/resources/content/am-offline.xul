@@ -42,32 +42,56 @@ Contributors:
 
     <box class="box-smallheader" title="&offlineSettings.label;"/>
 
-    <titledbox orient="vertical" id="offline.titlebox">
+    <titledbox orient="vertical" id="offlinepop.titlebox" hidable="true" hidefor="imap,nntp">
+      <html iscontrolcontainer="true">&offlinePopDesc.label;</html>
+      <box iscontrolcontainer="true" orient="horizontal" autostretch="never">
+        <checkbox  wsm_persist="true" id="offline.notDownload" 
+            label="&offlineNotDownload.label;" accesskey="&offlineNotDownload.accesskey;"/>
+        <textbox wsm_persist="true" id="offline.notDownloadMin" size="5" value="50"/> 
+        <text class="label" value="&kb.label;"/>
+      </box>
 
-    <html iscontrolcontainer="true" hidable="true" hidefor="pop3">&offlineDesc.label;</html>
-    <html iscontrolcontainer="true" hidable="true" hidefor="imap,nntp">&offlinePopDesc.label;</html>
+      <box iscontrolcontainer="true" orient="horizontal" autostretch="never">
+        <checkbox wsm_persist="true" id="offline.compactFolder" 
+            label="&offlineCompact.label;" accesskey="&offlineCompact.accesskey;"/> 
+        <textbox wsm_persist="true" id="offline.compactFolderMin" size="5" value="100"/>
+        <text class="label" value="&kb.label;"/>
+      </box>
+    </titledbox>
+
+    <titledbox orient="vertical" id="offline.titlebox"  hidable="true" hidefor="pop3">
+      <label value="&offlineGroupTitle.label;"/>
+
+    <html iscontrolcontainer="true" hidable="true" hidefor="pop3,nntp">&offlineImapDesc.label;</html>
+    <html iscontrolcontainer="true" hidable="true" hidefor="pop3,imap">&offlineNntpDesc.label;</html>
+
+    <checkbox iscontrolcontainer="true" hidable="true" hidefor="pop3,nntp" 
+              id="offline.downloadBodiesOnGetNewMail" wsm_persist="true" 
+              label="&makeInboxMsgsAvailable.label;" 
+              accesskey="&makeInboxMsgsAvailable.accesskey;"/>
+
+    <checkbox iscontrolcontainer="true" hidable="true" hidefor="pop3,nntp" 
+              id="offline.newFolder" label="&offlineNewFolder.label;" 
+              accesskey="&offlineNewFolder.accesskey;"/>
+
+    <separator class="thin" hidable="true" hidefor="pop3,nntp"/>
+
+    <html iscontrolcontainer="true" hidable="true" hidefor="pop3,nntp">&selectButtonDesc.label;</html>
 
     <box iscontrolcontainer="true" hidable="true" hidefor="pop3" orient="horizontal" align="right">
         <button label="&offlineSelect.label;" oncommand="onClickSelect()"/>
     </box>
 
+    </titledbox>    
+    
     <separator class="thin"/>
+    <titledbox orient="vertical" id="diskspace.titlebox"  hidable="true" hidefor="pop3">
+      <label value="&diskspaceGroupTitle.label;"/>
 
-    <checkbox iscontrolcontainer="true" hidable="true" hidefor="pop3,nntp" id="offline.newFolder" 
-        label="&offlineNewFolder.label;" accesskey="&offlineNewFolder.accesskey;"/>
-
-    <separator class="thin"/>
     <html iscontrolcontainer="true" hidable="true" hidefor="pop3">&offlineMsg.label;</html>
 
-    <box iscontrolcontainer="true" hidable="true" hidefor="pop3,nntp" orient="horizontal">
-        <checkbox  wsm_persist="true" id="offline.removeMsg" 
-            label="&offlineRemove.label;" accesskey="&offlineRemove.accesskey;"/> 
-        <textbox wsm_persist="true" id="offline.removeMsgMin" size="5" value="30"/>
-        <text class="label" value="&days.label;"/>
-    </box>
-
     <box iscontrolcontainer="true" orient="horizontal" autostretch="never">
-        <checkbox  wsm_persist="true" id="offline.notDownload" 
+        <checkbox  wsm_persist="true" id="offline.notDownload"
             label="&offlineNotDownload.label;" accesskey="&offlineNotDownload.accesskey;"/>
         <textbox wsm_persist="true" id="offline.notDownloadMin" size="5" value="50"/> 
         <text class="label" value="&kb.label;"/>
@@ -112,9 +136,7 @@ Contributors:
         <textbox wsm_persist="true" id="nntp.removeBodyMin" size="5" value="30"/>
         <text class="label" value="&days.label;"/>
     </box>
-    <separator/>
     </box>
-
     </titledbox>
    
 </window>

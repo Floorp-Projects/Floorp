@@ -316,3 +316,16 @@ nsPop3IncomingServer::GetCanSearchMessages(PRBool *canSearchMessages)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsPop3IncomingServer::GetOfflineSupportLevel(PRInt32 *aSupportLevel)
+{
+    NS_ENSURE_ARG_POINTER(aSupportLevel);
+    nsresult rv;
+    
+    rv = GetIntValue("offline_support_level", aSupportLevel);
+    if (*aSupportLevel != OFFLINE_SUPPORT_LEVEL_UNDEFINED) return rv;
+    
+    // set default value
+    *aSupportLevel = OFFLINE_SUPPORT_LEVEL_REGULAR;
+    return NS_OK;
+}

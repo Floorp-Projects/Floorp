@@ -138,8 +138,12 @@ function ArrangeAccountCentralItems(server, protocolInfo, msgFolder)
         // Create Filters
         var canHaveFilters = server.canHaveFilters;
         SetItemDisplay("CreateFilters", canHaveFilters);
+
+        // Offline Settings
+        var supportsOffline = (server.offlineSupportLevel != 0);
+        SetItemDisplay("OfflineSettings", supportsOffline);
     
-        var displayAdvFeatures = canSearchMessages || canHaveFilters;
+        var displayAdvFeatures = canSearchMessages || canHaveFilters || supportsOffline;
         // Display Adv Features header, only if any of the items are displayed
         SetItemDisplay("AdvancedFeaturesHeader", displayAdvFeatures);
     

@@ -40,6 +40,7 @@
 #include "nsMsgRDFUtils.h"
 #include "nsIMsgFolder.h"
 #include "nsMsgBaseCID.h"
+#include "nsMsgIncomingServer.h"
 
 // turn this on to see useful output
 #undef DEBUG_amds
@@ -525,7 +526,13 @@ nsMsgAccountManagerDataSource::createSettingsResources(nsIRDFResource *aSource,
             if (hasIdentities) {
                 aNodeArray->AppendElement(kNC_PageTitleServer);
                 aNodeArray->AppendElement(kNC_PageTitleCopies);
-                aNodeArray->AppendElement(kNC_PageTitleOffline);
+
+                // Check the offline capability before adding 
+                // offline item 
+                PRInt32 offlineSupportLevel = 0;
+                server->GetOfflineSupportLevel(&offlineSupportLevel); 
+                if (offlineSupportLevel >= OFFLINE_SUPPORT_LEVEL_REGULAR)
+                    aNodeArray->AppendElement(kNC_PageTitleOffline);
             }
         }
     }

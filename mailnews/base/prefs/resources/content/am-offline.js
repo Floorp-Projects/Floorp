@@ -21,6 +21,7 @@
 
 var gIncomingServer;
 var gServerType;
+var gImapIncomingServer;
 
 function onInit() 
 {
@@ -49,6 +50,11 @@ function initServerSettings()
     else
         document.getElementById("offline.notDownloadMin").setAttribute("value", "50");
 
+    if(gServerType == "imap") {
+        gImapIncomingServer = gIncomingServer.QueryInterface(Components.interfaces.nsIImapIncomingServer);
+        document.getElementById("offline.downloadBodiesOnGetNewMail").checked =  gImapIncomingServer.downloadBodiesOnGetNewMail;
+        document.getElementById("offline.newFolder").checked =  gImapIncomingServer.offlineDownload;
+    }
 }
   
 function initRetentionSettings()
@@ -212,5 +218,9 @@ function onSave()
     gIncomingServer.retentionSettings = retentionSettings;
     gIncomingServer.downloadSettings = downloadSettings;
 
+    if (gImapIncomingServer) {
+        gImapIncomingServer.downloadBodiesOnGetNewMail = document.getElementById("offline.downloadBodiesOnGetNewMail").checked;
+        gImapIncomingServer.offlineDownload = document.getElementById("offline.newFolder").checked;
+    }
 }
 
