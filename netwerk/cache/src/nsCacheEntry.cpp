@@ -371,7 +371,7 @@ nsCacheEntryHashTable::RemoveEntry( nsCacheEntry *cacheEntry)
     NS_ASSERTION(initialized, "nsCacheEntryHashTable not initialized");
     if (!cacheEntry) return NS_ERROR_NULL_POINTER;
 
-    hashEntry = PL_DHashTableOperate(&table, cacheEntry->mKey, PL_DHASH_ADD);
+    hashEntry = PL_DHashTableOperate(&table, cacheEntry->mKey, PL_DHASH_REMOVE);
     if (PL_DHASH_ENTRY_IS_FREE(hashEntry)) {
         // it's not in the table!?!
         return NS_ERROR_UNEXPECTED;
