@@ -1425,6 +1425,7 @@ NS_IMETHODIMP nsMsgDatabase::DeleteHeader(nsIMsgDBHdr *msg, nsIDBChangeListener 
 		msg->GetThreadParent(&threadParent);
 	}
 
+  RemoveHeaderFromThread(msgHdr);
 	if (notify /* && NS_SUCCEEDED(ret)*/)
 	{
 
@@ -1450,6 +1451,20 @@ nsMsgDatabase::UndoDelete(nsIMsgDBHdr *msgHdr)
     return NS_OK;
 }
 
+nsresult nsMsgDatabase::RemoveHeaderFromThread(nsMsgHdr *msgHdr)
+{
+	if (!msgHdr)
+		return NS_ERROR_NULL_POINTER;
+	nsresult ret = NS_OK;
+	nsCOMPtr <nsIMsgThread> thread ;
+	ret = GetThreadContainingMsgHdr(msgHdr, getter_AddRefs(thread));
+	if (NS_SUCCEEDED(ret) && thread)
+	{
+		nsCOMPtr <nsIDBChangeAnnouncer> announcer = do_QueryInterface(this);
+		ret = thread->RemoveChildHdr(msgHdr, announcer);
+	}
+  return ret;
+}
 
 // This is a lower level routine which doesn't send notifcations or
 // update folder info. One use is when a rule fires moving a header
@@ -1460,26 +1475,11 @@ nsresult nsMsgDatabase::RemoveHeaderFromDB(nsMsgHdr *msgHdr)
 	if (!msgHdr)
 		return NS_ERROR_NULL_POINTER;
 	nsresult ret = NS_OK;
-	 // turn this on when Scottip has rdf stuff worked out.
-	nsCOMPtr <nsIMsgThread> thread ;
-	ret = GetThreadContainingMsgHdr(msgHdr, getter_AddRefs(thread));
-	if (NS_SUCCEEDED(ret))
-	{
-		nsCOMPtr <nsIDBChangeAnnouncer> announcer = do_QueryInterface(this);
-		ret = thread->RemoveChildHdr(msgHdr, announcer);
-	}
-	else
-	{
-//		NS_ASSERTION(PR_FALSE, "couldn't find thread containing deleted message");
-	}
-	// even if we couldn't find the thread,we should try to remove the header.
-//	if (NS_SUCCEEDED(ret))
-	{
-		RemoveHdrFromCache(msgHdr, nsMsgKey_None);
-		nsIMdbRow* row = msgHdr->GetMDBRow();
-		ret = m_mdbAllMsgHeadersTable->CutRow(GetEnv(), msgHdr->GetMDBRow());
-		row->CutAllColumns(GetEnv());
-	}
+
+	RemoveHdrFromCache(msgHdr, nsMsgKey_None);
+	nsIMdbRow* row = msgHdr->GetMDBRow();
+	ret = m_mdbAllMsgHeadersTable->CutRow(GetEnv(), msgHdr->GetMDBRow());
+	row->CutAllColumns(GetEnv());
 	return ret;
 }
 

@@ -415,6 +415,10 @@ nsresult nsMsgThread::RemoveChild(nsMsgKey msgKey)
 	rowObjectId.mOid_Id = msgKey;
 	rowObjectId.mOid_Scope = m_mdbDB->m_hdrRowScopeToken;
 	ret = m_mdbTable->CutOid(m_mdbDB->GetEnv(), &rowObjectId);
+#if 0 // this seems to cause problems
+  if (m_numChildren == 0 && m_metaRow && m_mdbDB)
+    m_metaRow->CutAllColumns(m_mdbDB->GetEnv());
+#endif
 	return ret;
 }
 

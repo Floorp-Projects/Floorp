@@ -299,6 +299,7 @@ protected:
                                nsIDBChangeListener *instigator);
 
 	virtual nsresult		RemoveHeaderFromDB(nsMsgHdr *msgHdr);
+  virtual nsresult    RemoveHeaderFromThread(nsMsgHdr *msgHdr);
 
 
 	static nsVoidArray/*<nsMsgDatabase>*/* GetDBCache();
