@@ -152,7 +152,7 @@
             <box orient="vertical">
               <spring flex="1"/>
               <!--////// CONSTRAIN DIMENSIONS //////-->
-              <checkbox id="constrainCheckbox" value="&constrainCheckbox.label;"
+              <checkbox id="constrainCheckbox" label="&constrainCheckbox.label;"
                    oncommand="ToggleConstrain()"
                    tooltip="aTooltip" tooltiptext="&constrainCheckbox.tooltip;"/>
             </box>
