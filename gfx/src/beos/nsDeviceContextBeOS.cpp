@@ -247,8 +247,6 @@ NS_IMETHODIMP nsDeviceContextBeOS::GetSystemFont(nsSystemFontID aID, nsFont *aFo
       break;
     case eSystemFont_List:   
     case eSystemFont_Field:
-      status = GetSystemFontInfo(be_fixed_font, aID, aFont);     
-      break;
     case eSystemFont_Icon : 
     case eSystemFont_MessageBox : 
     case eSystemFont_SmallCaption : 
@@ -460,7 +458,7 @@ nsDeviceContextBeOS::GetSystemFontInfo(const BFont *theFont, nsSystemFontID anID
         break;
       case eSystemFont_List:
       case eSystemFont_Field:
-        theFont = be_fixed_font;
+        theFont = be_plain_font;
         break;
       case eSystemFont_Caption:
         theFont = be_bold_font;
