@@ -75,7 +75,7 @@ nsresult txPatternParser::createUnionPattern(ExprLexer& aLexer,
 
     if (type != Token::UNION_OP) {
         delete locPath;
-        return NS_ERROR_XPATH_PARSE_FAILED;
+        return NS_ERROR_XPATH_PARSE_FAILURE;
     }
 
     txUnionPattern* unionPattern = new txUnionPattern();
@@ -112,7 +112,7 @@ nsresult txPatternParser::createUnionPattern(ExprLexer& aLexer,
 
     if (type != Token::END) {
         delete unionPattern;
-        return NS_ERROR_XPATH_PARSE_FAILED;
+        return NS_ERROR_XPATH_PARSE_FAILURE;
     }
 
     aPattern = unionPattern;
@@ -233,10 +233,10 @@ nsresult txPatternParser::createIdPattern(ExprLexer& aLexer,
     // check for '(' Literal ')'
     if (aLexer.nextToken()->type != Token::L_PAREN && 
         aLexer.peek()->type != Token::LITERAL)
-        return NS_ERROR_XPATH_PARSE_FAILED;
+        return NS_ERROR_XPATH_PARSE_FAILURE;
     const nsString& value = aLexer.nextToken()->value;
     if (aLexer.nextToken()->type != Token::R_PAREN)
-        return NS_ERROR_XPATH_PARSE_FAILED;
+        return NS_ERROR_XPATH_PARSE_FAILURE;
     aPattern  = new txIdPattern(value);
     return aPattern ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
@@ -248,17 +248,17 @@ nsresult txPatternParser::createKeyPattern(ExprLexer& aLexer,
     // check for '(' Literal, Literal ')'
     if (aLexer.nextToken()->type != Token::L_PAREN && 
         aLexer.peek()->type != Token::LITERAL)
-        return NS_ERROR_XPATH_PARSE_FAILED;
+        return NS_ERROR_XPATH_PARSE_FAILURE;
     const nsString& key = aLexer.nextToken()->value;
     if (aLexer.nextToken()->type != Token::COMMA && 
         aLexer.peek()->type != Token::LITERAL)
-        return NS_ERROR_XPATH_PARSE_FAILED;
+        return NS_ERROR_XPATH_PARSE_FAILURE;
     const nsString& value = aLexer.nextToken()->value;
     if (aLexer.nextToken()->type != Token::R_PAREN)
-        return NS_ERROR_XPATH_PARSE_FAILED;
+        return NS_ERROR_XPATH_PARSE_FAILURE;
 
     if (!XMLUtils::isValidQName(key))
-        return NS_ERROR_XPATH_PARSE_FAILED;
+        return NS_ERROR_XPATH_PARSE_FAILURE;
     nsCOMPtr<nsIAtom> prefix, localName;
     PRInt32 namespaceID;
     nsresult rv = resolveQName(key, getter_AddRefs(prefix), aContext,
@@ -285,7 +285,7 @@ nsresult txPatternParser::createStepPattern(ExprLexer& aLexer,
         else if (!TX_StringEqualsAtom(tok->value, txXPathAtoms::child)) {
             // all done already for CHILD_AXIS, for all others
             // XXX report unexpected axis error
-            return NS_ERROR_XPATH_PARSE_FAILED;
+            return NS_ERROR_XPATH_PARSE_FAILURE;
         }
         aLexer.nextToken();
     }
@@ -323,7 +323,7 @@ nsresult txPatternParser::createStepPattern(ExprLexer& aLexer,
         nodeTest = createNodeTypeTest(aLexer);
         if (!nodeTest) {
             // XXX error report NodeTest expected
-            return NS_ERROR_XPATH_PARSE_FAILED;
+            return NS_ERROR_XPATH_PARSE_FAILURE;
         }
     }
 
@@ -335,7 +335,7 @@ nsresult txPatternParser::createStepPattern(ExprLexer& aLexer,
     nodeTest = 0;
     if (!parsePredicates(step, aLexer, aContext)) {
         delete step;
-        return NS_ERROR_XPATH_PARSE_FAILED;
+        return NS_ERROR_XPATH_PARSE_FAILURE;
     }
 
     aPattern = step;
