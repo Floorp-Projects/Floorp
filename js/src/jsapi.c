@@ -1117,8 +1117,11 @@ static JSStdName standard_class_names[] = {
     {js_InitNumberClass,        TAG_CHAR_STRING(js_parseInt_str)},
 
     /* String global functions. */
+#ifndef MOZILLA_CLIENT
+    /* These two are predefined in a backward-compatible way by the DOM. */
     {js_InitStringClass,        TAG_CHAR_STRING(js_escape_str)},
     {js_InitStringClass,        TAG_CHAR_STRING(js_unescape_str)},
+#endif
     {js_InitStringClass,        TAG_CHAR_STRING(js_decodeURI_str)},
     {js_InitStringClass,        TAG_CHAR_STRING(js_encodeURI_str)},
     {js_InitStringClass,        TAG_CHAR_STRING(js_decodeURIComponent_str)},
