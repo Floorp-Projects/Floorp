@@ -19,8 +19,6 @@
 #include "nscore.h"
 #include "nsISupports.h"
 #include "nsIFactory.h"
-#include "nsCollationWin.h"
-#include "nsDateTimeFormatWin.h"
 
 
 class nsLocaleMacFactory : public nsIFactory
