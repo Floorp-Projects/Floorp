@@ -31,8 +31,8 @@ package			Moz;
 require			Exporter;
 
 @ISA				= qw(Exporter);
-@EXPORT			= qw(BuildProject,OpenErrorLog,MakeAlias,StopForErrors,DontStopForErrors);
-@EXPORT_OK	= qw(CloseErrorLog,UseCodeWarriorLib);
+@EXPORT			= qw(BuildProject OpenErrorLog MakeAlias StopForErrors DontStopForErrors);
+@EXPORT_OK	= qw(CloseErrorLog UseCodeWarriorLib);
 
 	use Cwd;
 	use File::Path;
