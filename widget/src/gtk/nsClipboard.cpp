@@ -141,15 +141,26 @@ nsresult nsClipboard::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
 void nsClipboard::SetTopLevelWidget(GtkWidget* w)
 {
-#ifdef DEBUG_CLIPBOARD
-  printf("  nsClipboard::SetTopLevelWidget\n");
-#endif /* DEBUG_CLIPBOARD */
-  
   // Don't set up any more event handlers if we're being called twice
   // for the same toplevel widget
   if (sWidget == w)
     return;
 
+  if (sWidget != 0 && sWidget->window != 0)
+    return;
+
+  if (w == 0 || w->window == 0)
+  {
+#ifdef DEBUG_CLIPBOARD
+    printf("  nsClipboard::SetTopLevelWidget: widget passed in is null or has no window!\n");
+#endif /* DEBUG_CLIPBOARD */
+    return;
+  }
+
+#ifdef DEBUG_CLIPBOARD
+  printf("  nsClipboard::SetTopLevelWidget\n");
+#endif /* DEBUG_CLIPBOARD */
+  
   // If we're changing from one widget to another
   // (shouldn't generally happen), clear the old event handlers:
   if (sWidget &&
