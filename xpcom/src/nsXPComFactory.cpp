@@ -18,9 +18,10 @@
  */
 #include "nsXPComFactory.h"
 #include "nsXPComCIID.h"
+#include "nsAllocator.h"
 
-static NS_DEFINE_IID(kIFactoryIID,          NS_IFACTORY_IID);
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
 
 nsresult NS_NewEventQueueServiceFactory(nsIFactory** aResult);
 
@@ -41,8 +42,15 @@ extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID& aClass, nsISupports* ser
 
   if (aClass.Equals(kEventQueueServiceCID)) {
     rv = NS_NewEventQueueServiceFactory(aFactory);
+  } else
+  if (aClass.Equals(kAllocatorCID)) {
+    nsIFactory* factory = new nsAllocatorFactory;
+    if (factory != NULL) {
+    	factory->AddRef();
+    	*aFactory = factory;
+    } else
+      rv = NS_ERROR_OUT_OF_MEMORY;
   }
 
   return rv;
 }
-
