@@ -1,5 +1,8 @@
 // MozillaBrowser.cpp : Implementation of CMozillaBrowser
 #include "stdafx.h"
+
+#include <string.h>
+
 #include "MozillaControl.h"
 #include "MozillaBrowser.h"
 
@@ -753,121 +756,230 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Busy(VARIANT_BOOL __RPC_FAR *pBoo
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::Quit(void)
 {
-	return E_NOTIMPL;
+	// TODO fire quit event
+	return S_OK;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::ClientToWindow(int __RPC_FAR *pcx, int __RPC_FAR *pcy)
 {
-	return E_NOTIMPL;
+	// TODO convert points to be relative to browser
+	return S_OK;
 }
 
 
-HRESULT STDMETHODCALLTYPE CMozillaBrowser::PutProperty(BSTR Property, VARIANT vtValue)
+HRESULT STDMETHODCALLTYPE CMozillaBrowser::PutProperty(BSTR szProperty, VARIANT vtValue)
 {
-	return E_NOTIMPL;
+	if (szProperty == NULL)
+	{
+		return E_INVALIDARG;
+	}
+
+	PropertyList::iterator i;
+	for (i = m_PropertyList.begin(); i != m_PropertyList.end(); i++)
+	{
+		// Is the property already in the list?
+		if (wcscmp((*i).szName, szProperty) == 0)
+		{
+			// Copy the new value
+			(*i).vValue = CComVariant(vtValue);
+			return S_OK;
+		}
+	}
+
+	Property p;
+	p.szName = CComBSTR(szProperty);
+	p.vValue = vtValue;
+
+	m_PropertyList.push_back(p);
+		
+	return S_OK;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::GetProperty(BSTR Property, VARIANT __RPC_FAR *pvtValue)
 {
-	return E_NOTIMPL;
+	NG_ASSERT(Property);
+	NG_ASSERT_POINTER(pvtValue, VARIANT);
+	
+	if (Property == NULL || pvtValue == NULL)
+	{
+		return E_INVALIDARG;
+	}
+	
+	VariantInit(pvtValue);
+	
+	PropertyList::iterator i;
+	for (i = m_PropertyList.begin(); i != m_PropertyList.end(); i++)
+	{
+		// Is the property already in the list?
+		if (wcscmp((*i).szName, Property) == 0)
+		{
+			// Copy the new value
+			VariantCopy(pvtValue, &(*i).vValue);
+			return S_OK;
+		}
+	}
+
+	return S_OK;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Name(BSTR __RPC_FAR *Name)
 {
-	return E_NOTIMPL;
+	NG_ASSERT_POINTER(Name, BSTR);
+	if (Name == NULL)
+	{
+		return E_INVALIDARG;
+	}
+	*Name = SysAllocString(L""); // TODO get Mozilla's executable name
+	return S_OK;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_HWND(long __RPC_FAR *pHWND)
 {
-	return E_NOTIMPL;
+	NG_ASSERT_POINTER(pHWND, HWND);
+	if (pHWND == NULL)
+	{
+	}
+	pHWND = NULL;
+	return S_OK;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_FullName(BSTR __RPC_FAR *FullName)
 {
-	return E_NOTIMPL;
+	NG_ASSERT_POINTER(FullName, BSTR);
+	if (FullName == NULL)
+	{
+		return E_INVALIDARG;
+	}
+	*FullName = SysAllocString(L""); // TODO get Mozilla's executable name
+	return S_OK;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Path(BSTR __RPC_FAR *Path)
 {
-	return E_NOTIMPL;
+	NG_ASSERT_POINTER(Path, BSTR);
+	if (Path == NULL)
+	{
+		return E_INVALIDARG;
+	}
+	*Path = SysAllocString(L""); // TODO get Mozilla's path
+	return S_OK;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Visible(VARIANT_BOOL __RPC_FAR *pBool)
 {
-	return E_NOTIMPL;
+	NG_ASSERT_POINTER(pBool, int);
+	if (pBool == NULL)
+	{
+		return E_INVALIDARG;
+	}
+	*pBool = VARIANT_FALSE;
+	return S_OK;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_Visible(VARIANT_BOOL Value)
 {
-	return E_NOTIMPL;
+	return S_OK;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_StatusBar(VARIANT_BOOL __RPC_FAR *pBool)
 {
-	return E_NOTIMPL;
+	NG_ASSERT_POINTER(pBool, int);
+	if (pBool == NULL)
+	{
+		return E_INVALIDARG;
+	}
+	*pBool = VARIANT_FALSE;
+	return S_OK;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_StatusBar(VARIANT_BOOL Value)
 {
-	return E_NOTIMPL;
+	return S_OK;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_StatusText(BSTR __RPC_FAR *StatusText)
 {
-	return E_NOTIMPL;
+	NG_ASSERT_POINTER(StatusText, BSTR);
+	if (StatusText == NULL)
+	{
+		return E_INVALIDARG;
+	}
+	*StatusText = SysAllocString(L""); // TODO
+	return S_OK;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_StatusText(BSTR StatusText)
 {
-	return E_NOTIMPL;
+	return S_OK;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_ToolBar(int __RPC_FAR *Value)
 {
-	return E_NOTIMPL;
+	NG_ASSERT_POINTER(Value, int);
+	if (Value == NULL)
+	{
+		return E_INVALIDARG;
+	}
+	*Value = FALSE;
+	return S_OK;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_ToolBar(int Value)
 {
-	return E_NOTIMPL;
+	// No toolbar in control!
+	return S_OK;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_MenuBar(VARIANT_BOOL __RPC_FAR *Value)
 {
-	return E_NOTIMPL;
+	NG_ASSERT_POINTER(Value, int);
+	if (Value == NULL)
+	{
+		return E_INVALIDARG;
+	}
+	*Value = VARIANT_FALSE;
+	return S_OK;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_MenuBar(VARIANT_BOOL Value)
 {
-	return E_NOTIMPL;
+	// No menu in control!
+	return S_OK;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_FullScreen(VARIANT_BOOL __RPC_FAR *pbFullScreen)
 {
-	return E_NOTIMPL;
+	NG_ASSERT_POINTER(pbFullScreen, VARIANT_BOOL);
+	if (pbFullScreen == NULL)
+	{
+		return E_INVALIDARG;
+	}
+	*pbFullScreen = VARIANT_FALSE;
+	return S_OK;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_FullScreen(VARIANT_BOOL bFullScreen)
 {
-	return E_NOTIMPL;
+	// No fullscreen mode in control!
+	return S_OK;
 }
 
 
