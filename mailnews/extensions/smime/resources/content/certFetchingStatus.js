@@ -135,7 +135,8 @@ function kickOffBind()
 
     gLdapOperation.init(gLdapConnection,
                         getProxyOnUIThread(new ldapMessageListener(),
-                            Components.interfaces.nsILDAPMessageListener));
+                            Components.interfaces.nsILDAPMessageListener),
+                        null);
 
     gLdapOperation.simpleBind(null);
   }
