@@ -39,6 +39,8 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
+EXTRA_COMPONENTS = content/calendarService.js
+
 include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/rules.mk
