@@ -306,6 +306,9 @@ static void readEvalPrint(FILE *in, World &world)
 //#define HAVE_GEORGE_TRACE_IT
 
 char * tests[] = {
+#ifdef NEW_PARSER
+    "function f(a,b,|'x' 'y' c=0) { return a+b+c; } print(f(1,2,3), 'should be 6'); return;",
+#endif
     "function fact(n) { if (n > 1) return n * fact(n-1); else return 1; } print(fact(6), \" should be 720\"); return;" ,
     "a = { f1: 1, f2: 2}; print(a.f2++, \" should be 2\"); print(a.f2 <<= 1, \" should be 6\"); return;" ,
     "class A { static var b = 3; static function s() { return b++; }function x() { return \"Ax\"; } function y() { return \"Ay\"; } }  var a:A = new A; print(a.s(), \" should be 3\"); print(A.b, \" should be 4\"); return;",

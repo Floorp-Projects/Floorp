@@ -432,14 +432,16 @@ namespace JavaScript {
 		void print(PrettyPrinter &f) const;
 	};
 	
-	struct VariableBinding: ParseNode {
+    struct IdentifierList;
+    struct VariableBinding: ParseNode {
 		VariableBinding *next;			// Next binding in a linked list of variable or parameter bindings
-		ExprNode *name;					// The variable's name; nil if omitted, which currently can only happen for ... parameters
+        IdentifierList *aliases;
+        ExprNode *name;					// The variable's name; nil if omitted, which currently can only happen for ... parameters
 		ExprNode *type;					// Type expression or nil if not provided
 		ExprNode *initializer;			// Initial value expression or nil if not provided
 		
-		VariableBinding(uint32 pos, ExprNode *name, ExprNode *type, ExprNode *initializer):
-				ParseNode(pos), next(0), name(name), type(type), initializer(initializer) {}
+		VariableBinding(uint32 pos, ExprNode *name, ExprNode *type, ExprNode *initializer=NULL):
+				ParseNode(pos), next(0), aliases(0), name(name), type(type), initializer(initializer) {}
 
 		void print(PrettyPrinter &f) const;
 	};
@@ -1034,10 +1036,10 @@ namespace JavaScript {
 	  public:
 		ExprNode *parseExpression(bool noIn, bool noAssignment = false, bool noComma = false);
 		ExprNode *parseNonAssignmentExpression(bool noIn) {return parseExpression(noIn, true, true);}
-		ExprNode *parseAssignmentExpression(bool noIn) {return parseExpression(noIn, false, true);}
+		ExprNode *parseAssignmentExpression(bool noIn=false) {return parseExpression(noIn, false, true);}
 	  private:
 		ExprNode *parseParenthesizedExpression();
-		ExprNode *parseTypeExpression(bool noIn);
+		ExprNode *parseTypeExpression(bool noIn=false);
 		const StringAtom &parseTypedIdentifier(ExprNode *&type);
 		ExprNode *parseTypeBinding(Token::Kind kind, bool noIn);
 		ExprList *parseTypeListBinding(Token::Kind kind);
@@ -1058,6 +1060,25 @@ namespace JavaScript {
 		StmtNode *parseStatement(bool topLevel, bool inSwitch, SemicolonState &semicolonState);
 		StmtNode *parseStatementAndSemicolon(SemicolonState &semicolonState);
 		StmtNode *parseProgram() {return parseBlock(false, true);}
+      private:        
+        bool lookahead(Token::Kind  kind,bool preferRegExp=true);
+        const Token *match(Token::Kind  kind,bool preferRegExp=true);
+        ExprNode  *parseIdentifier();
+        ExprPairList *parseLiteralField();
+        ExprNode *parseFieldName();
+        ExprPairList *parseArgumentList();
+        ExprPairList *parseArgumentListPrime(NodeQueue<ExprPairList> &$$);
+        ExprPairList *parseNamedArgumentListPrime(NodeQueue<ExprPairList> &$$);
+        VariableBinding *parseAllParameters(FunctionDefinition &fd,NodeQueue<VariableBinding> &params);
+        VariableBinding *parseNamedParameters(FunctionDefinition &fd,NodeQueue<VariableBinding> &params);
+        VariableBinding *parseRestParameter();
+        VariableBinding *parseParameter();
+        VariableBinding *parseOptionalNamedRestParameters(FunctionDefinition &fd,NodeQueue<VariableBinding> &params);
+        VariableBinding *parseNamedRestParameters(FunctionDefinition &fd,NodeQueue<VariableBinding> &params);
+        VariableBinding *parseOptionalParameter();
+        VariableBinding *parseOptionalParameterPrime(VariableBinding* $1);
+        VariableBinding *parseNamedParameter(NodeQueue<IdentifierList> &$1);
+        ExprNode  *parseResultSignature();
 	};
 }
 #endif
