@@ -1444,9 +1444,19 @@ main(int argc, char **argv)
 	listen_sock = PR_GetInheritedFD(inheritableSockName);
 	if (!listen_sock)
 	    errExit("PR_GetInheritedFD");
+#ifndef WINNT
+	/* we can't do this on NT because it breaks NSPR and
+	PR_Accept will fail on the socket in the child process if
+	the socket state is change to non inheritable
+	It is however a security issue to leave it accessible,
+	but it is OK for a test server such as selfserv.
+	NSPR should fix it eventually . see bugzilla 101617
+	and 102077
+	*/
 	prStatus = PR_SetFDInheritable(listen_sock, PR_FALSE);
 	if (prStatus != PR_SUCCESS)
 	    errExit("PR_SetFDInheritable");
+#endif
 #ifdef DEBUG_nelsonb
 	WaitForDebugger();
 #endif
