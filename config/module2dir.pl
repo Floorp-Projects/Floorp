@@ -142,7 +142,6 @@ my %map = (
   'rdf',                'rdf',
   'rdfutil',            'rdf/util',
   'rdfldapds',          'directory/xpcom/tests',
-  'regviewer',          'xpfe/components/regviewer',
   'SanePlugin',         'modules/plugin/samples/SanePlugin',
   'shistory',           'xpfe/components/shistory',
   'sidebar',            'xpfe/components/sidebar',
