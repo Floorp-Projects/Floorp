@@ -64,8 +64,6 @@ nsMsgRDFDataSource::QueryInterface(const nsIID& iid, void **result)
   if (! result)
     return NS_ERROR_NULL_POINTER;
 
-  // we have to use kISupportsIID and do the static cast for nsISupports
-  // because otherwise gcc/egcs complains about an ambiguous nsISupports
   void *res=nsnull;
   
   if (iid.Equals(nsCOMTypeInfo<nsIRDFDataSource>::GetIID()) ||
