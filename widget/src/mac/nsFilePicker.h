@@ -63,10 +63,9 @@ protected:
   NS_IMETHOD            OnCancel();
 
     // actual implementations of get/put dialogs using NavServices
-  PRInt16 PutLocalFile(Str255 & inTitle, Str255 & inDefaultName, FSSpec* outFileSpec) ;
-  PRInt16 GetLocalFile(Str255 & inTitle, FSSpec* outFileSpec);
-  PRInt16 GetLocalFolder(Str255 & inTitle, FSSpec* outFileSpec);
-
+  PRInt16 PutLocalFile(const nsString & inTitle, const nsString & inDefaultName, FSSpec* outFileSpec);
+  PRInt16 GetLocalFile(const nsString & inTitle, FSSpec* outFileSpec);
+  PRInt16 GetLocalFolder(const nsString & inTitle, FSSpec* outFileSpec);
   void MapFilterToFileTypes ( ) ;
   Boolean IsTypeInFilterList ( ResType inType ) ;
   Boolean IsExtensionInFilterList ( StrFileName & inFileName ) ;
@@ -89,6 +88,8 @@ protected:
   nsCStringArray         mFlatFilters;        // all the filters from mFilters, but one per string
   
   NavTypeListPtr         mTypeLists[kMaxTypeListCount];
+
+  static OSType          sCurrentProcessSignature;
 
 };
 
