@@ -15,6 +15,7 @@ A * {text-decoration: inherit}
 .syntax {margin-left: 0.5in}
 .indent {margin-left: 0.5in}
 .issue {color: #FF0000}
+.small-caps {font-variant: small-caps}
 
 BODY {background-color: #FFFFFF; color: #000000}
 DL {margin-left: 18pt}
@@ -66,9 +67,8 @@ A.tag-name:active, A:active .tag-name {color: #CC3333}
 A.field-name:hover, A:hover .field-name {color: #333333}
 A.field-name:active, A:active .field-name {color: #996666}
 .global-variable, A.global-variable:link, A.global-variable:visited {font-family: "Times New Roman", Times, serif; color: #006600}
-.local-variable, A.local-variable:link, A.local-variable:visited {font-family: "Times New Roman", Times, serif; color: #009900}
-A.global-variable:hover, A:hover .global-variable, A.local-variable:hover, A:hover .local-variable {color: #336633}
-A.global-variable:active, A:active .global-variable, A.local-variable:active, A:active .local-variable {color: #00FF00}
+A.global-variable:hover, A:hover .global-variable {color: #336633}
+A.global-variable:active, A:active .global-variable {color: #00FF00}
 .action-name, A.action-name:link, A.action-name:visited {font-family: "Zapf Chancery", "Comic Sans MS", Script, serif; color: #660066}
 A.action-name:hover, A:hover .action-name {color: #663366}
 A.action-name:active, A:active .action-name {color: #FF00FF}
