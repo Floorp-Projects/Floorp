@@ -44,7 +44,7 @@
 #include "nsILocalFile.h"
 
 #include "nsDirectoryService.h"
-
+#include "nsDirectoryServiceDefs.h"
 #include "rsrcids.h"
 
 #include "nsPSMMutex.h"
@@ -483,23 +483,26 @@ nsPSMComponent::GetControlConnection( CMT_CONTROL * *_retval )
             NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_PROGID, &rv);
             if (NS_FAILED(rv)) return rv;
 
-            directoryService->Get("system.OS_CurrentProcessDirectory", 
+            directoryService->Get( NS_XPCOM_CURRENT_PROCESS_DIR,
                                    NS_GET_IID(nsIFile), 
                                    getter_AddRefs(psmAppFile));
 
-        
-            psmAppFile->Append("psm");
-            psmAppFile->Append(PSM_FILE_NAME);
-        
-            PRBool isExecutable, exists;
-            psmAppFile->Exists(&exists);
-            psmAppFile->IsExecutable(&isExecutable);
-            if (exists && isExecutable)
+            if (psmAppFile)
             {
-                nsXPIDLCString path;
-                psmAppFile->GetPath(getter_Copies(path));
-                // FIX THIS.  using a file path is totally wrong here.  
-                mControl = CMT_EstablishControlConnection((char*)(const char*)path, &nsPSMShimTbl, &nsPSMMutexTbl);
+              psmAppFile->Append("psm");
+              psmAppFile->Append(PSM_FILE_NAME);
+        
+              PRBool isExecutable, exists;
+              psmAppFile->Exists(&exists);
+              psmAppFile->IsExecutable(&isExecutable);
+              if (exists && isExecutable)
+              {
+                  nsXPIDLCString path;
+                  psmAppFile->GetPath(getter_Copies(path));
+                  // FIX THIS.  using a file path is totally wrong here.  
+                  mControl = CMT_EstablishControlConnection((char*)(const char*)path, &nsPSMShimTbl, &nsPSMMutexTbl);
+
+              }
             }
         }
 
