@@ -190,9 +190,8 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
     NI_PixmapHeader *img_hdr;
     NI_PixmapHeader *src_hdr;
 
-    png_bytep *trans=NULL;
+    png_bytep trans=NULL;
     int num_trans =0;
-    png_color_16p *trans_values=NULL;
 
     /* always decode to 24-bit RGB or 32-bit RGBA  */
     png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type,
@@ -204,7 +203,7 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
         png_set_expand(png_ptr);
     if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS))
     {
-        png_get_tRNS(png_ptr, info_ptr,trans, &num_trans, trans_values);
+        png_get_tRNS(png_ptr, info_ptr, &trans, &num_trans, NULL);
         png_set_expand(png_ptr);
     }
     if (bit_depth == 16)
@@ -295,9 +294,21 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
         ipng_p->alpharow = NULL;
 
 #if defined(CAN_SUPPORT_8_BIT_MASK)
-        if(png_ptr->color_type || PNG_COLOR_MASK_ALPHA )
+        if (color_type || PNG_COLOR_MASK_ALPHA) {
+            /* check if alpha is coming from a tRNS chunk and is binary */
+            if (num_trans) {
+                ic->image->header.alpha_bits = 1;
+
+                /* if it's not a indexed color image, tRNS means binary */
+                if (color_type == PNG_COLOR_TYPE_PALETTE)
+                    for (int i=0; i<num_trans; i++)
+                        if ((trans[i] != 0) && (trans[i] != 255)) {
+                            ic->image->header.alpha_bits = 8;
+                            break;
+                        }
+             } else
                 ic->image->header.alpha_bits = 8/*png_ptr->pixel_depth*/;   /* 8 */
-        else
+        } else
 #endif
                  ic->image->header.alpha_bits = 1;  
         ic->image->header.alpha_shift = 0;
