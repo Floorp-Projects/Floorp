@@ -1561,11 +1561,10 @@ nsMsgAccountManager::MigrateLocalMailAccount(nsIMsgIdentity *identity)
     mailDir->CreateDir();
   }
 
-  // we want .../Mail/Local Mail, not .../Mail
-  // at this point, dir == the directory that will contain the "Local Mail" folder.
-  // "Local Mail" in 4.x was under Users/sspitzer/Mail
-  // in 5.0, it's under Users50/sspitzer/Mail/Local Mail.
-  rv = mailDir->AppendRelativeUnixPath(LOCAL_MAIL_FAKE_HOST_NAME);
+  nsXPIDLCString key;
+  rv = server->GetKey(getter_Copies(key));
+  if (NS_FAILED(rv)) return rv;  
+  rv = mailDir->AppendRelativeUnixPath(key);
   if (NS_FAILED(rv)) return rv;
   
   // set the local path for this "none" server

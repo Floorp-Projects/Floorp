@@ -517,9 +517,18 @@ NS_IMETHODIMP
 nsMsgIncomingServer::GetLocalPath(nsIFileSpec **aLocalPath)
 {
     nsresult rv;
+
+    // if the local path has already been set, use it
     rv = GetFileValue("directory", aLocalPath);
     if (NS_SUCCEEDED(rv) && *aLocalPath) return rv;
     
+    // otherwise, create the path using.  note we are using the
+    // server key instead of the hostname
+    //
+    // TODO:  handle the case where they migrated a server of hostname "server4"
+    // and we create a server (with the account wizard) with key "server4"
+    // we'd get a collision.
+    // need to modify the code that creates keys to check for disk collision
     nsXPIDLCString type;
     GetType(getter_Copies(type));
 
@@ -535,20 +544,13 @@ nsMsgIncomingServer::GetLocalPath(nsIFileSpec **aLocalPath)
     
     path->CreateDir();
     
-    nsXPIDLCString hostname;
-    rv = GetHostName(getter_Copies(hostname));
+    nsXPIDLCString key;
+    rv = GetKey(getter_Copies(key));
     if (NS_FAILED(rv)) return rv;
-
-#ifdef DO_HASHING_OF_HOSTNAME
-    nsCAutoString hashedHostname = "";
-    hashedHostname += hostname;
-    NS_MsgHashIfNecessary(hashedHostname);
-
-    path->AppendRelativeUnixPath(hashedHostname);
-#else
-    path->AppendRelativeUnixPath(hostname);
-#endif /* DO_HASHING_OF_HOSTNAME */
-    SetLocalPath(path);
+    rv = path->AppendRelativeUnixPath(key);
+    if (NS_FAILED(rv)) return rv;
+    rv = SetLocalPath(path);
+    if (NS_FAILED(rv)) return rv;
 
     *aLocalPath = path;
     NS_ADDREF(*aLocalPath);
