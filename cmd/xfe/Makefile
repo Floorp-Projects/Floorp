@@ -248,7 +248,9 @@ XFE_WIDGETS_TOOL_TIP_LIB	= $(DIST)/lib/libXfeToolTip.a
 
 ifneq ($(OS_ARCH),IRIX) 
 ifneq ($(OS_ARCH),FreeBSD)
+ifneq ($(OS_ARCH),Rhapsody)
 DYNAMIC_SYMBOLS_F	= -rdynamic # default
+endif
 endif
 endif
 ifeq ($(OS_ARCH),SunOS) 
@@ -959,6 +961,12 @@ ifeq ($(OS_ARCH),OSF1)
 # 
 OTHER_LIBS	= -lXm -lXmu -lXt -lX11 -lXext -ldnet_stub -lm -lots $(OS_LIBS)
 
+endif
+
+########################################
+# Apple Rhapsody
+ifeq ($(OS_ARCH),Rhapsody)
+OTHER_LIBS	= -L/usr/X11R6/lib -lXm -lXmu -lXt -lXext -lX11 -lSM -lICE $(OS_LIBS)
 endif
 
 ########################################
