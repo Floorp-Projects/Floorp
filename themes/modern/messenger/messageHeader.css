@@ -156,7 +156,7 @@ label.headerValue {
   width: 12em;
 }
 
-text.collapsedHeaderDisplayName { 
+label.collapsedHeaderDisplayName { 
   font-weight: bold; 
   margin-left: .7em;
   min-height: 16px;
