@@ -336,7 +336,7 @@ txStylesheetCompiler::startElementInternal(PRInt32 aNamespaceID,
 
         rv = (handler->mStartFunction)(aNamespaceID, aLocalName, aPrefix,
                                        aAttributes, aAttrCount, *this);
-    } while (rv == NS_ERROR_XSLT_GET_NEW_HANDLER);
+    } while (rv == NS_XSLT_GET_NEW_HANDLER);
 
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -413,7 +413,8 @@ txStylesheetCompiler::doneLoading()
 }
 
 void
-txStylesheetCompiler::cancel(nsresult aError)
+txStylesheetCompiler::cancel(nsresult aError, const PRUnichar *aErrorText,
+                             const PRUnichar *aParam)
 {
     PR_LOG(txLog::xslt, PR_LOG_ALWAYS,
            ("Compiler::cancel: %s, module: %d, code %d\n",
@@ -424,7 +425,7 @@ txStylesheetCompiler::cancel(nsresult aError)
     }
 
     if (mObserver) {
-        mObserver->onDoneCompiling(this, mStatus);
+        mObserver->onDoneCompiling(this, mStatus, aErrorText, aParam);
         // This will ensure that we don't call onDoneCompiling twice. Also
         // ensures that we don't keep the observer alive longer then necessary.
         mObserver = nsnull;
@@ -449,10 +450,12 @@ txStylesheetCompiler::loadURI(const nsAString& aUri,
 
 void
 txStylesheetCompiler::onDoneCompiling(txStylesheetCompiler* aCompiler,
-                                      nsresult aResult)
+                                      nsresult aResult,
+                                      const PRUnichar *aErrorText,
+                                      const PRUnichar *aParam)
 {
     if (NS_FAILED(aResult)) {
-        cancel(aResult);
+        cancel(aResult, aErrorText, aParam);
         return;
     }
 
@@ -474,7 +477,7 @@ txStylesheetCompiler::flushCharacters()
 
     do {
         rv = (mHandlerTable->mTextHandler)(mCharacters, *this);
-    } while (rv == NS_ERROR_XSLT_GET_NEW_HANDLER);
+    } while (rv == NS_XSLT_GET_NEW_HANDLER);
 
     NS_ENSURE_SUCCESS(rv, rv);
 

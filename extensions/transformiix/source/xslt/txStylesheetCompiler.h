@@ -82,14 +82,18 @@ public:
     virtual nsresult loadURI(const nsAString& aUri,
                              txStylesheetCompiler* aCompiler) = 0;
     virtual void onDoneCompiling(txStylesheetCompiler* aCompiler,
-                                 nsresult aResult) = 0;
+                                 nsresult aResult,
+                                 const PRUnichar *aErrorText = nsnull,
+                                 const PRUnichar *aParam = nsnull) = 0;
 };
 
 #define TX_DECL_ACOMPILEOBSERVER \
   nsrefcnt AddRef(); \
   nsrefcnt Release(); \
   nsresult loadURI(const nsAString& aUri, txStylesheetCompiler* aCompiler); \
-  void onDoneCompiling(txStylesheetCompiler* aCompiler, nsresult aResult)
+  void onDoneCompiling(txStylesheetCompiler* aCompiler, nsresult aResult, \
+                       const PRUnichar *aErrorText = nsnull, \
+                       const PRUnichar *aParam = nsnull)
 
 class txStylesheetCompilerState : public txIParseContext
 {
@@ -212,13 +216,16 @@ public:
     nsresult characters(const nsAString& aStr);
     nsresult doneLoading();
 
-    void cancel(nsresult aError);
+    void cancel(nsresult aError, const PRUnichar *aErrorText = nsnull,
+                const PRUnichar *aParam = nsnull);
 
     txStylesheet* getStylesheet();
 
     // txACompileObserver
     nsresult loadURI(const nsAString& aUri, txStylesheetCompiler* aCompiler);
-    void onDoneCompiling(txStylesheetCompiler* aCompiler, nsresult aResult);
+    void onDoneCompiling(txStylesheetCompiler* aCompiler, nsresult aResult,
+                         const PRUnichar *aErrorText = nsnull,
+                         const PRUnichar *aParam = nsnull);
 
 private:
     nsresult startElementInternal(PRInt32 aNamespaceID, nsIAtom* aLocalName,
