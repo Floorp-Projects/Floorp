@@ -708,7 +708,18 @@ class CHTMLView :
 		virtual	void			GetFullGridSize(
 									Int32&					outWidth,
 									Int32&					outHeight);
-	
+
+//-----------------------
+// SHACK PROTOTYPES
+
+	protected:
+
+		virtual void				FreeBuiltinElement( 
+											LO_BuiltinStruct *		inBuiltinStruct) ;
+		virtual void				DisplayBuiltin( 
+											int						inLocation,
+											LO_BuiltinStruct*		inBuiltinStruct) ;
+
 //-----------------------
 
 	protected:

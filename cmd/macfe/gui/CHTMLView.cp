@@ -7181,6 +7181,31 @@ void CHTMLView::RestructureGridView(
 	mContext->Repaginate();
 }
 
+
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+//	¥	FreeBuiltinElement
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+// Dispose of an embedded SHACK widget
+void
+CHTMLView :: FreeBuiltinElement ( LO_BuiltinStruct* inBuiltinStruct )
+{
+	DebugStr("\pNot implemented; g");
+	
+} // FreeBuiltinElement
+
+
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+//	¥	DisplayBuiltin
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+// Create and display a SHACK tree widget in HTML area
+void
+CHTMLView :: DisplayBuiltin ( int inLocation, LO_BuiltinStruct* inBuiltinStruct )
+{
+	DebugStr("\pNot implemented; g");
+
+} // DisplayBuiltin
+
+
 /*
 // MAY WANT TO ADD HERE AS BSE IMPLEMENTATION
 void CHTMLView::BeginPreSection(void)
