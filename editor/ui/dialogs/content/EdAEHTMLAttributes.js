@@ -72,12 +72,13 @@ function BuildHTMLAttributeNameList()
         // Get information about value filtering
         var forceOneChar = name.indexOf("!") >= 0;
         var forceInteger = name.indexOf("#") >= 0;
+        var forceSignedInteger = name.indexOf("+") >= 0;
         var forceIntOrPercent = name.indexOf("%") >= 0;
         limitFirstChar = name.indexOf("\^") >= 0;
         //var required = name.indexOf("$") >= 0;
 
         // Strip flag characters ("_" is used when attribute name is reserved JS word)
-        name = name.replace(/[!^#%$_]/g, "");
+        name = name.replace(/[!^#%$_+]/g, "");
 
         menuitem = AppendStringToMenulist(dialog.AddHTMLAttributeNameInput, name);
         if (menuitem)
@@ -92,6 +93,7 @@ function BuildHTMLAttributeNameList()
           menuitem.setAttribute("forceOneChar", forceOneChar ? "true" : "");
           menuitem.setAttribute("limitFirstChar", limitFirstChar ? "true" : "");
           menuitem.setAttribute("forceInteger", forceInteger ? "true" : "");
+          menuitem.setAttribute("forceSignedInteger", forceSignedInteger ? "true" : "");
           menuitem.setAttribute("forceIntOrPercent", forceIntOrPercent ? "true" : "");
         }
       }
@@ -299,6 +301,14 @@ function onInputHTMLAttributeValue()
       else if ( selectedItem.getAttribute("forceInteger") == "true" )
       {
         value = value.replace(/\D+/g,"");
+      }
+      else if ( selectedItem.getAttribute("forceSignedInteger") == "true" )
+      {
+        // Allow integer with optional "+" or "-" as first character
+        var sign = value[0];
+        value = value.replace(/\D+/g,"");
+        if (sign == "+" || sign == "-")
+          value = sign + value;
       }
       
       // Special case attributes 
