@@ -488,7 +488,7 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
   // (Mac OS 9.x and earlier has no use for aParent regarding window modality)
   // but for Mac OS X, we need a valid aParent IFF we have a sheet
 #if TARGET_CARBON
-    if ((aInitData->mBorderStyle == eBorderStyle_default) ||
+    if ((!aInitData) || (aInitData->mBorderStyle == eBorderStyle_default) ||
       !(aInitData->mBorderStyle & eBorderStyle_sheet))
 #endif
       aParent = nil;
