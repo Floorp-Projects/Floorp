@@ -37,7 +37,7 @@
  * secitem.h - public data structures and prototypes for handling
  *	       SECItems
  *
- * $Id: secitem.h,v 1.2 2001/11/02 21:50:09 relyea%netscape.com Exp $
+ * $Id: secitem.h,v 1.3 2003/12/06 01:16:49 wchang0222%aol.com Exp $
  */
 
 #include "plarena.h"
@@ -91,6 +91,13 @@ extern SECStatus SECITEM_CopyItem(PRArenaPool *arena, SECItem *to,
 ** Allocate an item and copy "from" into it.
 */
 extern SECItem *SECITEM_DupItem(const SECItem *from);
+
+/*
+** Allocate an item and copy "from" into it.  The item itself and the 
+** data it points to are both allocated from the arena.  If arena is
+** NULL, this function is equivalent to SECITEM_DupItem.
+*/
+extern SECItem *SECITEM_ArenaDupItem(PRArenaPool *arena, const SECItem *from);
 
 /*
 ** Free "zap". If freeit is PR_TRUE then "zap" itself is freed.
