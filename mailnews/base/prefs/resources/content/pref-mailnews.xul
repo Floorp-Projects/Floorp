@@ -53,6 +53,7 @@
   <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = ["mailnewsConfirmMoveFoldersToTrash", 
+                       "mailPreserveThreading",
                        "mailnewsStartPageEnabled", "mailnewsStartPageUrl", 
                        "fileButton", "nextButton",
                        "printButton", "stopButton", 
@@ -77,8 +78,13 @@
                 accesskey="&rememberLastMsg.accesskey;" />
     </hbox>
 
-    <separator class="thin"/>
-    
+    <hbox align="center">
+      <checkbox id="mailPreserveThreading"
+                label="&preserveThreading.label;"
+                accesskey="&preserveThreading.accesskey;"
+                prefstring="mailnews.thread_pane_column_unthreads"
+                reversed="true" />
+    </hbox>    
   </groupbox>
 
   <groupbox>

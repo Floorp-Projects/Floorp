@@ -43,6 +43,8 @@
 <!ENTITY useMessenger.accesskey           "U">
 <!ENTITY autounzip.label                  "Automatically expand zip files when saving attachments">
 <!ENTITY autounzip.accesskey              "A">
+<!ENTITY preserveThreading.label          "Preserve threading when sorting messages">
+<!ENTITY preserveThreading.accesskey      "t">
 <!ENTITY messengerStartPage.label         "Mail Start Page">
 <!ENTITY enableStartPage.label            "When Mail launches, show the Start Page in the message area">
 <!ENTITY enableStartPage.accesskey        "W">
