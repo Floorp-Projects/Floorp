@@ -93,7 +93,6 @@ public class MessagePanel extends GeneralPanel {
   //  URLComponent  fViewer;
   Thread        fMessageLoadThread;
   Message       fMessage;
-  MessageHeader fHeader;
   MessagePanel  fPanel;
   boolean useMagellan;
   boolean makeRealHTML;
@@ -125,9 +124,6 @@ public class MessagePanel extends GeneralPanel {
       fTextArea.setBorder(BorderFactory.createLoweredBevelBorder());
       add(new JScrollPane(fTextArea));
     }
-
-    fHeader = new SimpleMessageHeader();
-    add(BorderLayout.NORTH, fHeader);
   }
 
   /**
@@ -249,8 +245,6 @@ public class MessagePanel extends GeneralPanel {
         fMessage != null ? MessageExtraFactory.Get(fMessage) : null;
       notifyLoading();
       notifyStatus(fLabels.getString("messageLoadingStatus"));
-
-      fHeader.setMessage(fMessage);
 
       try {
         if (!useMagellan) {
