@@ -22,7 +22,9 @@
 
 #include "systemtypes.h"
 #include <memory>
+#include <new>
 #include <string>
+#include <iterator>
 #include <iostream>
 
 #ifndef _WIN32 // Microsoft VC6 bug: standard identifiers should be in std namespace
@@ -237,13 +239,53 @@ namespace JavaScript {
 
 
 //
+// Algorithms
+//
+
+	// Assign zero to every element between first inclusive and last exclusive.
+	// This is equivalent ot fill(first, last, 0) but may be more efficient.
+	template<class For>
+	inline void zero(For first, For last)
+	{
+		while (first != last)
+			*first++ = 0;
+	}
+
+
+	// Assign zero to n elements starting at first.
+	// This is equivalent ot fill_n(first, n, 0) but may be more efficient.
+	template<class For, class Size>
+	inline void zero_n(For first, Size n)
+	{
+		while (n--)
+			*first++ = 0;
+	}
+
+
+//
 // Arenas
 //
+
+	// Pretend that obj points to a value of class T and call obj's destructor.
+	template<class T>
+	void classDestructor(void *obj)
+	{
+		static_cast<T *>(obj)->~T();
+	}
+	
 
 	// An arena is a region of memory from which objects either derived from ArenaObject or allocated
 	// using a ArenaAllocator can be allocated.  Deleting these objects individually runs the destructors,
 	// if any, but does not deallocate the memory.  On the other hand, the entire arena can be deallocated
 	// as a whole.
+	//
+	// One may also allocate other objects in an arena by using the Arena specialization of the global
+	// operator new.  However, be careful not to delete any such objects explicitly!
+	//
+	// Destructors can be registered for objects (or parts of objects) allocated in the arena.  These
+	// destructors are called, in reverse order of being registered, at the time the arena is deallocated
+	// or cleared.  When registering destructors for an object O be careful not to delete O manually because that
+	// would run its destructor twice.
 	class Arena {
 		struct Directory {
 			enum {maxNBlocks = 31};
@@ -256,11 +298,14 @@ namespace JavaScript {
 			void clear();
 		};
 		
+		struct DestructorEntry;
+
 		char *freeBegin;				// Pointer to free bytes left in current block
 		char *freeEnd;					// Pointer to end of free bytes left in current block
 		size_t blockSize;				// Size of individual arena blocks
 		Directory *currentDirectory;	// Directory in which the last block was allocated
 		Directory rootDirectory;		// Initial directory; root of linked list of Directories
+		DestructorEntry *destructorEntries; // Linked list of destructor registrations, ordered from most to least recently registered
 		
 	  public:
 		explicit Arena(size_t blockSize = 1024);
@@ -273,8 +318,14 @@ namespace JavaScript {
 		
 	  private:
 		void *newBlock(size_t size);
+		void newDestructorEntry(void (*destructor)(void *), void *object);
 	  public:
 		void *allocate(size_t size);
+		// Ensure that object's destructor is called at the time the arena is deallocated or cleared.
+		// The destructors will be called in reverse order of being registered.
+		// registerDestructor might itself runs out of memory, in which case it immediately
+		// calls object's destructor before throwing bad_alloc.
+		template<class T> void registerDestructor(T *object) {newDestructorEntry(&classDestructor<T>, object);}
 	};
 
 	
@@ -282,6 +333,7 @@ namespace JavaScript {
 	struct ArenaObject {
 		void *operator new(size_t size, Arena &arena) {return arena.allocate(size);}
 		void *operator new[](size_t size, Arena &arena) {return arena.allocate(size);}
+	  private:
 		void operator delete(void *, size_t) {}
 		void operator delete[](void *) {}
 	};
@@ -318,6 +370,10 @@ namespace JavaScript {
 		
 		template<class U> struct rebind {typedef ArenaAllocator<U> other;};
 	};
+
+
+	String *newArenaString(Arena &arena);
+	String *newArenaString(Arena &arena, const String &str);
 
 
 //
@@ -409,27 +465,47 @@ namespace JavaScript {
 
 
 //
-// Algorithms
+// Linked Lists
 //
 
-	// Assign zero to every element between first inclusive and last exclusive.
-	// This is equivalent ot fill(first, last, 0) but may be more efficient.
-	template<class For>
-	inline void zero(For first, For last)
-	{
-		while (first != last)
-			*first++ = 0;
-	}
+	// In some cases it is desirable to manipulate ordinary C-style linked lists as though
+	// they were STL-like sequences.  These classes define STL forward iterators that walk
+	// through singly-linked lists of objects threaded through fields named 'next'.  The type
+	// parameter E must be a class that has a member named 'next' whose type is E* or const E*.
+	
+	template <class E>
+	class ListIterator: public std::iterator<std::forward_iterator_tag, E, ptrdiff_t, E*, E&> {
+		E *element;
 
+	  public:
+		ListIterator() {}
+		explicit ListIterator(E *e): element(e) {}
 
-	// Assign zero to n elements starting at first.
-	// This is equivalent ot fill_n(first, n, 0) but may be more efficient.
-	template<class For, class Size>
-	inline void zero_n(For first, Size n)
-	{
-		while (n--)
-			*first++ = 0;
-	}
+		E &operator*() const {return *element;}
+		E *operator->() const {return element;}
+		ListIterator &operator++() {element = element->next; return *this;}
+		ListIterator operator++(int) {ListIterator i(*this); element = element->next; return i;}
+		friend bool operator==(const ListIterator &i, const ListIterator &j) {return i.element == j.element;}
+		friend bool operator!=(const ListIterator &i, const ListIterator &j) {return i.element != j.element;}
+	};
+
+	
+	template <class E>
+	class ConstListIterator: public std::iterator<std::forward_iterator_tag, E, ptrdiff_t, const E*, const E&> {
+		const E *element;
+
+	  public:
+		ConstListIterator() {}
+		ConstListIterator(const ListIterator<E> &i): element(&*i) {}
+		explicit ConstListIterator(const E *e): element(e) {}
+
+		const E &operator*() const {return *element;}
+		const E *operator->() const {return element;}
+		ConstListIterator &operator++() {element = element->next; return *this;}
+		ConstListIterator operator++(int) {ConstListIterator i(*this); element = element->next; return i;}
+		friend bool operator==(const ConstListIterator &i, const ConstListIterator &j) {return i.element == j.element;}
+		friend bool operator!=(const ConstListIterator &i, const ConstListIterator &j) {return i.element != j.element;}
+	};
 
 
 //
@@ -507,4 +583,14 @@ namespace JavaScript {
 		String fullMessage() const;
 	};
 }
+
+
+inline void *operator new(size_t size, JavaScript::Arena &arena) {return arena.allocate(size);}
+inline void *operator new[](size_t size, JavaScript::Arena &arena) {return arena.allocate(size);}
+#if 0	// Most compilers don't support this yet
+// Global delete operators.  These are only called in the rare cases that a constructor throws an exception
+// and has to undo an operator new.  An explicit delete statement will never invoke these.
+inline void operator delete(void *, JavaScript::Arena &) {}
+inline void operator delete[](void *, JavaScript::Arena &) {}
+#endif
 #endif
