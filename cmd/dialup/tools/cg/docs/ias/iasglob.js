@@ -353,11 +353,12 @@ function checkIfIASFileExists(inFileName)
 	{	
 		fileList = getFileListFromConfigFolder(".IAS");
 		
+
 		if (fileList != null)	
 		{
 			for (var i=0; i<fileList.length; i++)	
 			{
-				if (fileList[i] == inFileName)
+				if (fileList[i] == inFileName) 
 					outValue = true;
 			}
 		}
@@ -409,6 +410,12 @@ function askIASFileNameAndSave()
 			
 			var fName = prompt("Enter the file name for this configuration (must end with .IAS)", sgName);
 			
+			//IAS files are to be saved only in the config folder. 
+			while ((fName != null) && pathMentioned(fName))			
+			{
+				fName = prompt("Please enter file name only. This file will be saved by default to " + top.globals.getConfigFolder(top.globals), sgName);
+			}
+
 			//if they entered an improper suffix, prompt again, and again
 			while ((fName != null) && ((fName.substring(fName.length-4, fName.length)  != ".IAS") && (fName.substring(fName.length-4, fName.length)  != ".ias")))
 			{
@@ -446,9 +453,9 @@ function askIASFileNameAndSave()
 	{
 		//save the file
 		writeToFile(fName);
-		refreshConfigFrame(fName);
 		top.globals.document.setupPlugin.FlushCache();
-		alert("This file is saved as " + top.globals.getConfigFolder(self) + fName);
+		alert("This file is saved as " + top.globals.getConfigFolder(top.globals) + fName);
+		refreshConfigFrame(fName);
 		return fName;
 	}
 	else
@@ -458,7 +465,21 @@ function askIASFileNameAndSave()
 	}
 }
 
+// Checks if user mentioned path name in the filename field.
+function pathMentioned(fileName)
+{
+	debug("In pathMentioned");
 
+	var isAPath = false;
+
+	if ((fileName != null) && (fileName != ""))
+	{
+		if ((fileName.charAt(1) == ':') && (fileName.charAt(2) == '\\'))
+			isAPath = true;
+	}
+
+	return isAPath;	
+}
 
 //EVENT HANDLERS
 
@@ -556,7 +577,7 @@ function saveNewOrOldFile()
 		//debug("Saving: without asking to: " + fileName);
 		writeToFile(fileName);
 		top.globals.document.setupPlugin.FlushCache();
-		//alert("This file is saved as " + top.globals.getConfigFolder(self) + fileName);
+		//alert("This file is saved as " + top.globals.getConfigFolder(top.globals) + fileName);
 	}
 	return fileName;
 }
