@@ -661,8 +661,8 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
         }
         case nsXPTType::T_DOMSTRING:
         {
-            static NS_NAMED_LITERAL_STRING(sEmptyString, "");
-            static NS_NAMED_LITERAL_STRING(sVoidString, "undefined");
+            static const PRUnichar EMPTY_STRING[] = { '\0' };
+            static const PRUnichar VOID_STRING[] = { 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', '\0' };
 
             const PRUnichar* chars;
             JSString* str = nsnull;
@@ -673,12 +673,12 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
             {
                 if(isDOMString) 
                 {
-                    chars  = sVoidString.get();
-                    length = sVoidString.Length();
+                    chars  = VOID_STRING;
+                    length = NS_ARRAY_LENGTH(VOID_STRING) - 1;
                 }
                 else
                 {
-                    chars = sEmptyString.get();
+                    chars = EMPTY_STRING;
                     length = 0;
                 }
             }
@@ -700,7 +700,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
                 else
                 {
                     str = nsnull;
-                    chars = sEmptyString.get();
+                    chars = EMPTY_STRING;
                 }
             }
 
