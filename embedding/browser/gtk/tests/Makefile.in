@@ -45,10 +45,17 @@ ifdef ENABLE_GNOME
 CPPSRCS	       += TestGtkEmbedMDI.cpp
 endif
 
+ifdef MOZ_ENABLE_GTK
 LIBS		+= \
 		-lgtkembedmoz \
 		-lgtksuperwin \
 		$(NULL)
+endif
+
+ifdef MOZ_ENABLE_GTK2
+LIBS		+= \
+		-lgtkembedmoz
+endif
 
 include $(topsrcdir)/config/config.mk
 
@@ -72,7 +79,7 @@ EXTRA_LIBS	+= $(MOZ_COMPONENT_LIBS)
 
 include $(topsrcdir)/config/rules.mk
 
-CXXFLAGS	+= $(MOZ_GTK_CFLAGS)
+CXXFLAGS	+= $(MOZ_GTK_CFLAGS) $(MOZ_GTK2_CFLAGS)
 
 ifdef ENABLE_GNOME
 CXXFLAGS	+= `gnome-config --cflags gnomeui`

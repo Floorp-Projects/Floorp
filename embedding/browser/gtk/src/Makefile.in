@@ -56,6 +56,11 @@ CPPSRCS		= \
 		EmbedWindowCreator.cpp \
 		EmbedStream.cpp
 
+ifdef MOZ_ENABLE_GTK2
+CSRCS           = \
+		gtkmozembedmarshal.c
+endif
+
 ifdef BUILD_STATIC_LIBS
 # Static build stuff
 DEFINES         += -D_BUILD_STATIC_BIN=1
@@ -88,13 +93,21 @@ EXPORTS		= \
 		gtkmozembed.h \
 		gtkmozembed_internal.h
 
+ifdef MOZ_ENABLE_GTK
 EXTRA_DSO_LDOPTS = \
 		$(MOZ_COMPONENT_LIBS) \
 		$(XPCOM_GLUE_LIBS) \
 		-lgtksuperwin \
 		$(NULL)
+endif
 
-EXTRA_DSO_LDOPTS += $(MOZ_GTK_LDFLAGS)
+ifdef MOZ_ENABLE_GTK2
+EXTRA_DSO_LDOPTS = \
+		$(MOZ_COMPONENT_LIBS) \
+		$(NULL)
+endif
+
+EXTRA_DSO_LDOPTS += $(MOZ_GTK_LDFLAGS) $(MOZ_GTK2_LIBS)
 
 include $(topsrcdir)/config/rules.mk
 
@@ -109,7 +122,8 @@ DEFINES         += -D_TIME_H=1
 endif
 endif
 
-CXXFLAGS        += $(MOZ_GTK_CFLAGS)
+CXXFLAGS        += $(MOZ_GTK_CFLAGS) $(MOZ_GTK2_CFLAGS)
+CFLAGS          += $(MOZ_GTK_CFLAGS) $(MOZ_GTK2_CFLAGS)
 
 ifdef BUILD_STATIC_LIBS
 

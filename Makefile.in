@@ -260,6 +260,10 @@ ifdef MOZ_ENABLE_GTK
 tier_99_dirs	+= embedding/browser/gtk/tests
 endif
 
+ifdef MOZ_ENABLE_GTK2
+tier_99_dirs	+= embedding/browser/gtk/tests
+endif
+
 else
 
 # Standalone build
