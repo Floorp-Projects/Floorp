@@ -109,19 +109,29 @@ sub try(&;$) {
         (not ref($continuation) or not $continuation->isa('PLIF::Exception::Internal::Continuation'))) {
         syntax 'Syntax error in continuation of "try" clause', caller;
     }
-    eval { &$code };
+    my @result;
+    eval {
+        if (wantarray) {
+            @result = &$code;
+        } elsif (defined(wantarray)) {
+            my $result = &$code;
+            push(@result, $result);
+        } else {
+            &$code;
+        }
+    };
     if (defined($continuation)) {
         if ($@ ne '') {
-            if (ref($@) and $@->isa('PLIF::Exception')) {
-                # yay, a standard exception
-            } else {
+            if (not ref($@) or
+                not $@->isa('PLIF::Exception')) {
                 # an unexpected exception
                 $@ = PLIF::Exception->create('message' => $@);
             }
         }
-        return $continuation->handle($@);
+        $continuation->handle($@);
+        return;
     } else {
-        return $@;
+        return @result;
     }
 }
 
