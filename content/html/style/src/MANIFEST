@@ -9,6 +9,7 @@ nsICSSGroupRule.h
 nsICSSImportRule.h
 nsICSSMediaRule.h
 nsICSSNameSpaceRule.h
+nsICSSOMFactory.h
 nsICSSRule.h
 nsICSSStyleRule.h
 nsICSSStyleRuleProcessor.h

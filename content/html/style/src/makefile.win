@@ -56,6 +56,7 @@ EXPORTS =			\
 	nsICSSMediaRule.h \
 	nsICSSNameSpaceRule.h \
 	nsICSSDeclaration.h 	\
+	nsICSSOMFactory.h 	\
 	nsIHTMLCSSStyleSheet.h 	\
 	nsDOMCSSDeclaration.h 	\
 	nsIHTMLAttributes.h 	\
@@ -65,6 +66,7 @@ CPPSRCS=				\
 	nsHTMLStyleSheet.cpp 	\
 	nsCSSDeclaration.cpp 		\
 	nsCSSLoader.cpp   \
+	nsCSSOMFactory.cpp 		\
 	nsCSSParser.cpp 		\
 	nsCSSScanner.cpp 		\
 	nsCSSRule.cpp 		\
@@ -74,6 +76,7 @@ CPPSRCS=				\
 	nsCSSValue.cpp			\
 	nsHTMLAttributes.cpp 		\
 	nsHTMLCSSStyleSheet.cpp		\
+	nsDOMCSSAttrDeclaration.cpp	\
 	nsDOMCSSDeclaration.cpp		\
 	nsComputedDOMStyle.cpp		\
 	nsROCSSPrimitiveValue.cpp	\
@@ -83,6 +86,7 @@ CPP_OBJS =					\
 	.\$(OBJDIR)\nsHTMLStyleSheet.obj 		\
 	.\$(OBJDIR)\nsCSSDeclaration.obj 	\
 	.\$(OBJDIR)\nsCSSLoader.obj  \
+	.\$(OBJDIR)\nsCSSOMFactory.obj 		\
 	.\$(OBJDIR)\nsCSSParser.obj 		\
 	.\$(OBJDIR)\nsCSSScanner.obj 		\
 	.\$(OBJDIR)\nsCSSRule.obj 		\
@@ -92,6 +96,7 @@ CPP_OBJS =					\
 	.\$(OBJDIR)\nsCSSValue.obj 		\
 	.\$(OBJDIR)\nsHTMLAttributes.obj 	\
 	.\$(OBJDIR)\nsHTMLCSSStyleSheet.obj 	\
+	.\$(OBJDIR)\nsDOMCSSAttrDeclaration.obj	\
 	.\$(OBJDIR)\nsDOMCSSDeclaration.obj 	\
 	.\$(OBJDIR)\nsComputedDOMStyle.obj 	\
 	.\$(OBJDIR)\nsROCSSPrimitiveValue.obj 	\
