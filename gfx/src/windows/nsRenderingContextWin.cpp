@@ -275,11 +275,28 @@ nsresult nsRenderingContextWin :: Init(nsIDeviceContext* aContext,
   return CommonInit();
 }
 
-nsresult nsRenderingContextWin :: SetupDC(void)
+nsresult nsRenderingContextWin :: SetupDC(HDC aOldDC, HDC aNewDC)
 {
-  ::SetTextColor(mDC, RGB(0, 0, 0));
-  ::SetBkMode(mDC, TRANSPARENT);
-  ::SetPolyFillMode(mDC, WINDING);
+  ::SetTextColor(aNewDC, RGB(0, 0, 0));
+  ::SetBkMode(aNewDC, TRANSPARENT);
+  ::SetPolyFillMode(aNewDC, WINDING);
+
+  if (nsnull != aOldDC)
+  {
+    if (nsnull != mOrigSolidBrush)
+      ::SelectObject(aOldDC, mOrigSolidBrush);
+
+    if (nsnull != mOrigFont)
+      ::SelectObject(aOldDC, mOrigFont);
+
+    if (nsnull != mOrigSolidPen)
+      ::SelectObject(aOldDC, mOrigSolidPen);
+  }
+
+  mOrigSolidBrush = ::SelectObject(aNewDC, mBlackBrush);
+  mOrigFont = ::SelectObject(aNewDC, mDefFont);
+  mOrigSolidPen = ::SelectObject(aNewDC, mBlackPen);
+
   return NS_OK;
 }
 
@@ -295,26 +312,22 @@ nsresult nsRenderingContextWin :: CommonInit(void)
 #endif
 
   mBlackBrush = ::CreateSolidBrush(RGB(0, 0, 0));
-  // XXX All this stuff should go in SetupDC()...
-  mOrigSolidBrush = ::SelectObject(mDC, mBlackBrush);
-
   mDefFont = ::CreateFont(12, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE,
                           ANSI_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS,
                           DEFAULT_QUALITY, FF_ROMAN | VARIABLE_PITCH, "Times New Roman");
-  mOrigFont = ::SelectObject(mDC, mDefFont);
-
   mBlackPen = ::CreatePen(PS_SOLID, 0, RGB(0, 0, 0));
-  mOrigSolidPen = ::SelectObject(mDC, mBlackPen);
 
   mGammaTable = mContext->GetGammaTable();
-  return SetupDC();
+
+  return SetupDC(nsnull, mDC);
 }
 
 nsresult nsRenderingContextWin :: SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
 {
   mMainDC = mDC;
   mDC = (HDC)aSurface;
-  return SetupDC();
+
+  return SetupDC(mMainDC, mDC);
 }
 
 void nsRenderingContextWin :: Reset()
