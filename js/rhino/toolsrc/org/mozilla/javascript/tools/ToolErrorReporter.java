@@ -31,7 +31,12 @@ import java.util.*;
 public class ToolErrorReporter implements ErrorReporter {
 
     public ToolErrorReporter(boolean reportWarnings) {
-	this.reportWarnings = reportWarnings;
+        this(reportWarnings, System.err);
+    }
+    
+    public ToolErrorReporter(boolean reportWarnings, PrintStream err) {
+        this.reportWarnings = reportWarnings;
+        this.err = err;
     }
 
     /**
@@ -79,10 +84,10 @@ public class ToolErrorReporter implements ErrorReporter {
             return;
         Object[] errArgs = { formatMessage(message, sourceName, line) };
         message = getMessage("msg.warning", errArgs);
-        System.err.println(messagePrefix + message);
+        err.println(messagePrefix + message);
         if (null != lineSource) {
-            System.err.println(messagePrefix + lineSource);
-            System.err.println(messagePrefix + buildIndicator(lineOffset));
+            err.println(messagePrefix + lineSource);
+            err.println(messagePrefix + buildIndicator(lineOffset));
         }
     }
 
@@ -91,10 +96,10 @@ public class ToolErrorReporter implements ErrorReporter {
     {
         hasReportedErrorFlag = true;
         message = formatMessage(message, sourceName, line);
-        System.err.println(messagePrefix + message);
+        err.println(messagePrefix + message);
         if (null != lineSource) {
-            System.err.println(messagePrefix + lineSource);
-            System.err.println(messagePrefix + buildIndicator(lineOffset));
+            err.println(messagePrefix + lineSource);
+            err.println(messagePrefix + buildIndicator(lineOffset));
         }
     }
 
@@ -144,4 +149,5 @@ public class ToolErrorReporter implements ErrorReporter {
     private final String messagePrefix = "js: ";
     private boolean hasReportedErrorFlag;
     private boolean reportWarnings; 
+    private PrintStream err;
 }

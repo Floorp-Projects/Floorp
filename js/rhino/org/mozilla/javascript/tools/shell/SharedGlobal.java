@@ -61,7 +61,7 @@ public class SharedGlobal extends ImporterTopLevel {
      * This method is defined as a JavaScript function.
      */
     public static void help(String s) {
-        System.out.println(ToolErrorReporter.getMessage("msg.help"));
+        Main.out.println(ToolErrorReporter.getMessage("msg.help"));
     }
 
     /**
@@ -78,16 +78,16 @@ public class SharedGlobal extends ImporterTopLevel {
     {
         for (int i=0; i < args.length; i++) {
             if (i > 0)
-                System.out.print(" ");
+                Main.out.print(" ");
 
             // Convert the
             // arbitrary JavaScript value into a string form.
 
             String s = Context.toString(args[i]);
 
-            System.out.print(s);
+            Main.out.print(s);
         }
-        System.out.println();
+        Main.out.println();
         return Context.getUndefinedValue();
     }
 

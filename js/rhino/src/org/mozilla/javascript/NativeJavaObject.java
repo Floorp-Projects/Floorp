@@ -366,6 +366,12 @@ public class NativeJavaObject implements Scriptable, Wrapper {
                 jsObjectClass.isAssignableFrom(to)) {
                 result = 1;
             }
+            else if (fromObj instanceof NativeArray && to.isArray()) {
+                // This is a native array conversion to a java array
+                // Array conversions are all equal, and preferable to object 
+                // and string conversion, per LC3.
+                result = 1;
+            }
             else if (to == ScriptRuntime.ObjectClass) {
                 result = 2;
             }
@@ -465,7 +471,7 @@ public class NativeJavaObject implements Scriptable, Wrapper {
         if (value != null && value.getClass() == type) {
             return value;
         }
-
+        
         switch (NativeJavaObject.getJSTypeCode(value)) {
 
         case JSTYPE_NULL:
@@ -610,6 +616,25 @@ public class NativeJavaObject implements Scriptable, Wrapper {
             }
             else if (type.isInstance(value)) {
                 return value;
+            }
+            else if (type.isArray() && value instanceof NativeArray) {
+                // Make a new java array, and coerce the JS array components 
+                // to the target (component) type.
+                NativeArray array = (NativeArray) value;
+                long length = array.jsGet_length();
+                Class arrayType = type.getComponentType();
+                Object Result = Array.newInstance(arrayType, (int)length);
+                for (int i = 0 ; i < length ; ++i) {
+                    try  {
+                        Array.set(Result, i, coerceType(arrayType, 
+                                                        array.get(i, array)));
+                    }
+                    catch (EvaluatorException ee) {
+                        reportConversionError(value, type);
+                    }
+                }
+
+                return Result;
             }
             else {
                 reportConversionError(value, type);
@@ -812,8 +837,11 @@ public class NativeJavaObject implements Scriptable, Wrapper {
     }
 
     static void reportConversionError(Object value, Class type) {
-        Object[] args = {value, type};
-        throw Context.reportRuntimeError(Context.getMessage("msg.conversion.not.allowed", args));
+        Object[] args = { Context.toString(value), 
+                          NativeJavaMethod.javaSignature(type)
+                        };
+        throw Context.reportRuntimeError(
+            Context.getMessage("msg.conversion.not.allowed", args));
     }
 
     public static void initJSObject() {

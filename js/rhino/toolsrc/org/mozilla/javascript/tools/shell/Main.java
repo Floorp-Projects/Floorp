@@ -53,7 +53,7 @@ public class Main extends ScriptableObject {
     public static void main(String args[]) {
         Context cx = Context.enter();
 
-        errorReporter = new ToolErrorReporter(false);
+        errorReporter = new ToolErrorReporter(false, err);
         cx.setErrorReporter(errorReporter);
 
         // A bit of shorthand: since Main extends ScriptableObject,
@@ -104,7 +104,7 @@ public class Main extends ScriptableObject {
             global.debug_dm.createdContext(cx);
 
             if (global.showDebuggerUI) {
-                System.out.println("Launching JSDebugger...");
+                out.println("Launching JSDebugger...");
 
                 try {
                     Class clazz = Class.forName(
@@ -115,11 +115,11 @@ public class Main extends ScriptableObject {
 
                 } catch (Exception e) {
                     // eat it...
-                    System.out.println(e);
-                    System.out.println("Failed to launch the JSDebugger");
+                    out.println(e);
+                    out.println("Failed to launch the JSDebugger");
                 }
             }
-            System.out.println("Debug level set to "+cx.getDebugLevel());
+            out.println("Debug level set to "+cx.getDebugLevel());
         }
         */
 
@@ -248,7 +248,7 @@ public class Main extends ScriptableObject {
         SourceTextManager stm = cx.getSourceTextManager();
         if (filename == null || filename.equals("-")) {
             BufferedReader in = new BufferedReader
-                (new InputStreamReader(System.in));
+                (new InputStreamReader(Main.in));
             if(null != stm)
                 in = new DebugReader(in, stm, "<stdin>");           
             int lineno = 1;
@@ -256,8 +256,8 @@ public class Main extends ScriptableObject {
             while (!hitEOF && !global.quitting) {
                 int startline = lineno;
                 if (filename == null)
-                    System.err.print("js> ");
-                System.err.flush();
+                    err.print("js> ");
+                err.flush();
                 try {
                     String source = "";
                     
@@ -278,7 +278,7 @@ public class Main extends ScriptableObject {
                                                       "<stdin>", startline,
                                                       null);
                     if (result != cx.getUndefinedValue()) {
-                        System.err.println(cx.toString(result));
+                        err.println(cx.toString(result));
                     }
                     NativeArray h = global.history;
                     h.put((int)h.jsGet_length(), h, source);
@@ -286,7 +286,7 @@ public class Main extends ScriptableObject {
                 catch (WrappedException we) {
                     // Some form of exception was caught by JavaScript and
                     // propagated up.
-                    System.err.println(we.getWrappedException().toString());
+                    err.println(we.getWrappedException().toString());
                     we.printStackTrace();
                 }
                 catch (EvaluatorException ee) {
@@ -303,14 +303,14 @@ public class Main extends ScriptableObject {
                         jse.getMessage()));
                 }
                 catch (IOException ioe) {
-                    System.err.println(ioe.toString());
+                    err.println(ioe.toString());
                 }
                 if (global.quitting) {
                     // The user executed the quit() function.
                     break;
                 }
             }
-            System.err.println();
+            err.println();
         } else {
             Reader in = null;
             try {
@@ -343,7 +343,7 @@ public class Main extends ScriptableObject {
                     filename));
                 return;
             } catch (IOException ioe) {
-                System.err.println(ioe.toString());
+                err.println(ioe.toString());
             }
 
             try {
@@ -353,7 +353,7 @@ public class Main extends ScriptableObject {
                 cx.evaluateReader(global, in, filename, 1, null);
             }
             catch (WrappedException we) {
-                System.err.println(we.getWrappedException().toString());
+                err.println(we.getWrappedException().toString());
                 we.printStackTrace();
             }
             catch (EvaluatorException ee) {
@@ -369,14 +369,14 @@ public class Main extends ScriptableObject {
                     jse.getMessage()));
             }
             catch (IOException ioe) {
-                System.err.println(ioe.toString());
+                err.println(ioe.toString());
             }
             finally {
                 try {
                     in.close();
                 }
                 catch (IOException ioe) {
-                    System.err.println(ioe.toString());
+                    err.println(ioe.toString());
                 }
             }
         }
@@ -384,12 +384,27 @@ public class Main extends ScriptableObject {
     }
 
     private static void p(String s) {
-        System.out.println(s);
+        out.println(s);
     }
 
-    static ToolErrorReporter errorReporter;
-    static Main global;
-    static SharedGlobal sharedGlobal;
+    public static void setIn(InputStream _in) {
+        in = _in;
+    }
+
+    public static void setOut(PrintStream _out) {
+        out = _out;
+    }
+
+    public static void setErr(PrintStream _err) {
+        err = _err;
+    }
+
+    static protected ToolErrorReporter errorReporter;
+    static protected Main global;
+    static protected SharedGlobal sharedGlobal;
+    static public InputStream in = System.in;
+    static public PrintStream out = System.out;
+    static public PrintStream err = System.err;
     
     boolean quitting;
     SourceTextManager debug_stm;
