@@ -103,7 +103,7 @@ static NS_DEFINE_CID(kCClipboardCID,    NS_CLIPBOARD_CID);
 static NS_DEFINE_CID(kCTransferableCID, NS_TRANSFERABLE_CID);
 
 #ifdef NS_DEBUG
-static PRBool gNoisy = PR_FALSE;
+static PRBool gNoisy = PR_TRUE;
 #else
 static const PRBool gNoisy = PR_FALSE;
 #endif
@@ -4245,10 +4245,10 @@ nsHTMLEditor::SetCaretInTableCell(nsIDOMElement* aElement)
 NS_IMETHODIMP
 nsHTMLEditor::IsRootTag(nsString &aTag, PRBool &aIsTag)
 {
-  static nsAutoString bodyTag = "body";
-  static nsAutoString tdTag = "td";
-  static nsAutoString thTag = "th";
-  static nsAutoString captionTag = "caption";
+  static char bodyTag[] = "body";
+  static char tdTag[] = "td";
+  static char thTag[] = "th";
+  static char captionTag[] = "caption";
   if (PR_TRUE==aTag.EqualsIgnoreCase(bodyTag) ||
       PR_TRUE==aTag.EqualsIgnoreCase(tdTag) ||
       PR_TRUE==aTag.EqualsIgnoreCase(thTag) ||
@@ -4265,18 +4265,18 @@ nsHTMLEditor::IsRootTag(nsString &aTag, PRBool &aIsTag)
 NS_IMETHODIMP
 nsHTMLEditor::IsSubordinateBlock(nsString &aTag, PRBool &aIsTag)
 {
-  static nsAutoString p = "p";
-  static nsAutoString h1 = "h1";
-  static nsAutoString h2 = "h2";
-  static nsAutoString h3 = "h3";
-  static nsAutoString h4 = "h4";
-  static nsAutoString h5 = "h5";
-  static nsAutoString h6 = "h6";
-  static nsAutoString address = "address";
-  static nsAutoString pre = "pre";
-  static nsAutoString li = "li";
-  static nsAutoString dt = "dt";
-  static nsAutoString dd = "dd";
+  static char p[] = "p";
+  static char h1[] = "h1";
+  static char h2[] = "h2";
+  static char h3[] = "h3";
+  static char h4[] = "h4";
+  static char h5[] = "h5";
+  static char h6[] = "h6";
+  static char address[] = "address";
+  static char pre[] = "pre";
+  static char li[] = "li";
+  static char dt[] = "dt";
+  static char dd[] = "dd";
   if (PR_TRUE==aTag.EqualsIgnoreCase(p)  ||
       PR_TRUE==aTag.EqualsIgnoreCase(h1) ||
       PR_TRUE==aTag.EqualsIgnoreCase(h2) ||
