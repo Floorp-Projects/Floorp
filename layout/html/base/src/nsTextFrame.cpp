@@ -1844,7 +1844,7 @@ nsTextFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, PRBool aSpread)
   nsCOMPtr<nsIDOMNode> thisNode;
   thisNode = do_QueryInterface(content);
 
-  PRBool found = PR_TRUE;
+  PRBool found = PR_FALSE;
   if (thisNode == startNode){
     if ((mContentOffset + mContentLength) >= startOffset){
       found = PR_TRUE;
