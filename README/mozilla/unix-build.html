@@ -1,163 +1,71 @@
 <HTML>
-<HEAD>
-<TITLE>Building the Mozilla client on unix platforms</TITLE>
-</HEAD>
-<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#0000EE" VLINK="#551A8B"
-ALINK="#FF0000">
-<HR>
-<H1>Building the Mozilla client on Unix platforms</H1>
+  <HEAD>
+    <TITLE>Mozilla Unix Build Instructions</TITLE>
+  </HEAD>
+  
+  <BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#0000EE" VLINK="#551A8B"
+    ALINK="#FF0000">
+    
+    <H1>Unix Build Instructions</H1>
+    
+    See <a href="http://www.mozilla.org/build/unix.html">http://www.mozilla.org/build/unix.html</a> for the lastest version of these instructions.</a><p>
 
-<H2>
-Daniel Nunes, <TT><A HREF="mailto:leaf@mozilla.org">leaf@mozilla.org</A></TT></H2>
-v 1.2, 1998-11-02
+    <b>Daniel Nunes,</b>
+    <TT><A HREF="mailto:leaf@mozilla.org">leaf@mozilla.org</A></TT>
+    <br>
+    <!-- hhmts start -->
+Last modified: Fri Sep  3 17:00:32 PDT 1999
+<!-- hhmts end -->
+    <p>
+      For documentation on developing features or 
+      fixing bugs, look at the 
+      <A HREF="http://www.mozilla.org/hacking/">Mozilla Hacking Guidelines</A>. 
+      For general Unix issues, 
+      look at the <A HREF="../unix/">Mozilla Unix</a>.
+    <P>
+      
+    <H2>Other Unix Build pages</H2>
+    <UL>
+      <li><a href="unix-details.html">Detailed Unix Build
+        Instructions</a></li>
+      <LI><A HREF="http://www.mozilla.org/unix/irix.html">Irix build status</A>.
+	The Irix build is working now!</li>
+    </ul>
+    
+    <H2>Requirements</H2>
+    <ul>
 
-<P>
-<HR><I>How to build Mozilla on a Unix System.</I>
-<HR>
-<H2>1. <A HREF="#s1">Introduction</A></H2>
+     <li>Requirements for building on unix can be found on the
+        <a href="unix-details.html#s3"> Detailed Unix Build
+        Instructions</a>.</li>
+    </ul>
+  </ul>
+    
+    <H2>Build the Lizard</H2>
+    <ol>
+      <li><code>cvs co -f mozilla/client.mk</code>
+      <li><code>cd mozilla</code>
+      <li><code>gmake -f client.mk</code>
+    </ol>
+    To rebuild without pulling the tree,
+      <ul><code>
+	    gmake -f client.mk build
+	  </code></ul>
+      To pull the tree,
+      <ul><code>
+	    gmake -f client.mk checkout
+	  </code></ul>
+      To change build options, use the
+      <a href="http://cvs-mirror.mozilla.org/webtools/build/config.cgi">
+	Unix Build Configurator</a>
 
-<H2>2. <A HREF="#s2">Building Mozilla</A></H2>
-
-<UL>
-<LI>
-<A HREF="#ss2.1">2.1 Get the Code </A></LI>
-
-<LI>
-<A HREF="#ss2.2">2.2 Requirements</A></LI>
-
-<LI>
-<A HREF="#ss2.3">2.3 Build the Lizard</A></LI>
-
-<LI>
-<A HREF="#ss2.4">2.4 After the Build</A></LI>
-</UL>
-
-<H2>3. <A HREF="#s3"> Common Problems </A></H2>
-
-<HR>
-<H2><A NAME="s1">1. Introduction</A></H2>
-
-<P>
-Perhaps you are interested in building classic Mozilla, before the 
-fall of the old layout engine, and the rise of the new. If so, the
-<B><A HREF="classic-unix.html">Classic Mozilla Build document</A></B> 
-is what you're looking for.
-
-<P>
- 
-<P>
-What this document is: A guide to building the Mozilla application.
-<BR>
-This includes:
-<OL>
-<LI> A listing of the development tools you will need to build Mozilla. </LI>
-<LI> A sample set of commands to build Mozilla using the Autoconf 
-build system. </LI>
-</OL>
-<P>
-If you're looking for documentation on developing features or fixing bugs,
-the Mozilla
-<A HREF="../tplist.html">Technical Documents</A> or 
-<A HREF="../../../library.html"> Library </A>
-are probably what you're looking for.
-<P>
-<HR>
-<H2><A NAME="s2">2. Building Mozilla </A></H2>
-<P>
-<UL>Each of the following subsections describes, or gives references to
-descriptions of, the steps necessary to build Mozilla.
-</UL>
-<UL>
-<H2><A NAME="ss2.1">2.1 Get the Code</A></H2>
-<P>
-<UL>
-
-Eventually, there will be two principal ways of getting the code,
-<A HREF="../../../download.html"> ftp</A> and
-<A HREF="../../../cvs.html"> CVS</A>.
-CVS will provide the most current code for building, but is
-slower than ftp. Ftp drops are generally produced once per month,
-and are known to compile on some machine, somewhere.
-
-<B>For now</B>, however, you must do the following to obtain the newest 
-browser source:
-<BR>
-<CODE>
-cvs co mozilla/nglayout.mk<BR>
-cd mozilla<BR>
-gmake -f nglayout.mk pull_all<BR>
-</CODE>
-<BR>
-This should pull all the right source.
-</UL>
-<P>
-<H2><A NAME="ss2.2">2.2 Requirements</A></H2>
-<UL>
-The following should be installed:
-<UL>
-<LI>Motif 1.2
-<LI>The native C/C++ compiler (or GNU C/C++ compiler 2.7.2 in lieu of the 
-    native compiler)
-<LI>GNU make 3.74 or better
-<LI>Perl5
-<LI><A HREF="../../../projects/autoconf/">Autconf</A> requirements, 
-    including NSPR.
-<LI><CODE>LD_LIBRARY_PATH</CODE> must include the path to the NSPR
-    shared objects.<BR>
-    For most people, this means adding <CODE>/usr/local/nspr/lib</CODE> 
-    to <CODE>LD_LIBRARY_PATH</CODE> 
-    (either:
-     <BR> 
-    <CODE>setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:/usr/local/nspr/lib</CODE>
-     <BR>
-      or 
-     <BR>
-    <CODE>export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/nspr/lib</CODE>
-     .<BR>
-     If you get an error like "No such variable" then omit the 
-     <CODE>${LD_LIBRARY_PATH}:</CODE> part
-   )
-</UL>
-<P>
-Your hardware should be equal to, or better than:
-<UL>
-32 MB RAM, 128 MB swap (64 MB RAM recommended)
-</UL>
-</UL>
-<P>
-<H2><A NAME="ss2.3">2.3 Build the Lizard</A></H2>
-<P>
-<UL>
-<CODE>
-autoconf<BR>
-mkdir obj-`./build/autoconf/config.guess`<BR>
-cd obj-`./build/autoconf/config.guess`<BR>
-../configure --with-nspr=/usr/local/nspr --enable-toolkit=motif<BR>
-gmake depend<BR>
-gmake<BR>
-</CODE>
-</UL>
-<H2><A NAME="ss2.4">2.4 After the build </A></H2>
-<UL>
-
-<LI> <CODE>cd dist/bin</CODE> and you should see links to the objects you
-      need to run <CODE>main</CODE>. 
-
-<LI>On most unixen LD_LIBRARY_PATH must be set to wherever the necessary
-libraries are. 
-
-<UL>
-<LI>On HP-UX, the equivalent environment variable is <CODE>SHLIB_PATH</CODE>.
-<LI>On AIX, the equivalent environment variable is <CODE>LIBPATH</CODE>.
-</UL>
-</UL>
-</UL>
-<HR>
-<H2><A NAME="s3">3. Common Sticking Points</A></H2>
-<LI>I'm sure there are bound to be some. Send 
-<A HREF="mailto:leaf@mozilla.org"> me</A> mail. 
-<HR>
-
-
-</BODY>
+    <H2>After the build </H2>
+    <UL>
+      <LI><CODE>cd dist/bin</CODE></LI>
+      <LI><CODE>./mozilla-apprunner.sh</CODE></LI>
+      <LI><CODE>./mozilla-viewer.sh</CODE></LI>
+    </UL>
+    
+  </UL>
+  </BODY>
 </HTML>

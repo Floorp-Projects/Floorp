@@ -1,0 +1,216 @@
+<HTML>
+  <HEAD>
+    <TITLE>Mozilla Detailed Unix Build Instructions</TITLE>
+  </HEAD>
+  
+  <BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#0000EE" VLINK="#551A8B"
+    ALINK="#FF0000">
+
+<H1>Unix Detailed Build Instructions</H1>
+
+    See <a href="http://www.mozilla.org/build/unix-details.html">http://www.mozilla.org/build/unix-details.html</a> for the lastest version of these instructions.</a><p>
+
+<b>Daniel Nunes,</b>
+<TT><A HREF="mailto:leaf@mozilla.org">leaf@mozilla.org</A></TT>
+<br>
+<!-- hhmts start -->
+Last modified: Fri Sep  3 16:59:34 PDT 1999
+<!-- hhmts end -->
+
+<P>
+This is a guide to building Mozilla on Unix including,
+<uL>
+  <LI> A list of the required development tools.</LI>
+  <LI> Commands to build Mozilla using the Autoconf build system. </LI>
+</uL>
+<P>
+For documentation on developing features or fixing bugs,
+look at the
+<A HREF="http://www.mozilla.org/docs/tplist/tplist.html">Mozilla Technical Documents</A> or 
+<A HREF="http://www.mozilla.org/library.html">Mozilla Library</A>.
+For general Unix issues, look at the 
+<A HREF="http://www.mozilla.org/unix/">Mozilla Unix</a>.
+<P>
+
+<H2><A NAME="s2">Other Unix Build pages</A></H2>
+<UL>
+  <LI><A HREF="http://www.mozilla.org/unix.html">Simple Unix Build Instructions</a></li> 
+  <LI><A HREF="http://www.mozilla.org/making-additions.html">How to add files and not break the
+      build</a>.</li>
+  <LI><A HREF="http://www.mozilla.org/configurator-faq.html">Build Configuator FAQ</A>:
+      FAQ for the
+      <a href="http://cvs-mirror.mozilla.org/webtools/build/config.cgi">
+      Unix Build Configurator</a>.</LI>
+  <LI><A HREF="http://www.mozilla.org/unix/irix.html">Irix build status</A>: 
+      The Irix build is working now!</li>
+  <li><a href="http://www.mozilla.org/redhat-on-intel.html">Redhat on Intel build instructions (out of date)</a>: 
+      Makes life easy through RPMs.</li>
+</ul>
+
+<H2><A NAME="s3">Requirements</A></H2>
+Your hardware should be equal to, or better than:
+<UL>
+32 MB RAM, 128 MB swap (64 MB RAM recommended)
+</UL>
+<P>
+
+The following software should be installed. 
+    (You can download gcc, gmake and autoconf from
+    <A HREF="ftp://prep.ai.mit.edu/pub/gnu/">prep.ai.mit.edu</A>.)
+<UL>
+  <LI>If you're using a glibc 2.07 system, you need this 
+  <A HREF=ftp://ftp.mozilla.org/pub/mozilla/libraries/source/glibc-2.0.7-dlopen.patch>patch</A></LI>
+
+  <LI><A HREF="http://egcs.cygnus.com"><B>egcs 1.0.3</b></a> (or higher),
+	or <A HREF="http://www.gnu.org/software/gcc/gcc.html">
+        <B>gcc 2.7.2.x</B></A> <b>(2.8.x still has some bugs)</b>,<br>
+        or your platform's native C/C++ compiler.<br>
+        <b>egcs</b> is recommended, this is the compiler that the Linux tinderboxes and many developers are using.
+
+  <LI><b><a href="http://language.perl.com/info/software.html">Perl 5</a></b>
+
+  <LI><b><A HREF="ftp://prep.ai.mit.edu/pub/gnu/">GNU make 3.74</a></b>
+      (or higher except 3.77).<br>
+	GNU make 3.77 shipped with bug a that breaks the NSPR build.
+	Revert to 3.76.1 until this is fixed.
+
+   <LI><B><A HREF="http://www.mozilla.org/cvs.html">CVS 1.9</a></b> (or higher).
+      To get started:<BR> 
+      <ol>
+      <li><CODE>
+       setenv CVSROOT :pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot</CODE>
+      <li><CODE><b>cvs login</b></CODE>
+       <font color="green">
+       (password: <code><b>anonymous</b></code>)
+       </font>
+       (You only need to do the login once.)
+      </ol>
+
+  <LI><B><A HREF="http://www.gtk.org/">GTK+ / GLib 1.2.0</a></b> (or higher).
+      <ul>
+      <li><b>Debian:</b> 
+          <A HREF="ftp://ftp.gtk.org/pub/gtk/binary/DEBIAN/">ftp://ftp.gtk.org/pub/gtk/binary/DEBIAN/</a>
+      <li><b>Red Hat:</b> <a href="ftp://ftp.gtk.org/pub/gtk/binary/RPMS/">ftp://ftp.gtk.org/pub/gtk/binary/RPMS/</a><br>
+      Remove any old glib-devel and gtk+-devel packages already
+      installed on your machine.
+      There is no need to remove the gtk+/glib RPMs that came with Redhat.
+      <UL>
+        <CODE>rpm -e glib-devel</code><BR>
+        <code>rpm -e gtk+-devel</CODE>
+      </UL>
+      Download new glib, glib-devel, gtk+, and gtk+-devel packages into
+      the same directory and install them with one commmand.
+      <UL>
+        <CODE>rpm -i *.rpm</CODE>
+      </UL></li>
+      <LI><A HREF="http://www.gtk.org/download.html">Source tar
+      balls or CVS</a>
+      </ul>
+
+  <LI><B><A HREF="http://www.rpi.edu/~veliaa/libIDL/">libIDL 6.3</A></B> (or higher).<br>
+      Source snapshots are available from Mozilla via
+      <a href="ftp://ftp.mozilla.org/pub/mozilla/libraries">ftp</a>.
+      If you're running <b>Red Hat</b>, download the libIDL and libIDL-devel RPMs
+      and install them as above.
+
+<H3>OPTIONAL</H3>
+<ul>
+ <LI><b><A HREF="http://www.mozilla.org/projects/autoconf/">Autoconf 2.12</A></b> (which
+      requires <A HREF="http://www.seindal.dk/rene/gnu/">GNU m4</A>), 
+      is necessary if you want to hack on configure.in. If you have
+      no idea what this means, then don't worry about it. It's optional.
+ </LI>
+</ul>
+</ul>
+
+<H2><A NAME="s4">Get the Code</A></H2>
+<P>
+There are two ways to get the code:
+<ul>
+  <li><A HREF="http://www.mozilla.org/download.html"> ftp</A>: Drops are generally produced
+      at least once per month, and are known to compile and even run on a 
+      few platforms.
+  <li><A HREF="http://www.mozilla.org/cvs.html"> CVS</A>:  Provides the most current code,
+       but is slower than ftp.
+  <ul>
+    <code>setenv CVSROOT :pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot
+    </code><br>
+    <code>cvs co SeaMonkeyAll</code>
+  </ul>
+The <code>SeaMonkeyAll</code> module pulls the right source
+for building the viewer and apprunner.
+</ul>
+<P>
+
+<H2><A NAME="s5">Build the Lizard</A></H2>
+<h3>Manually drive the build</h3>
+<CODE>
+<ol>
+  <li><code>cd mozilla</code>
+  <li><code>./configure
+  <ul>
+    <font color=green>
+    Your options may vary.
+    </font></br>
+    For configure options, run "<b>./configure --help</b>",<br> or 
+    use the 
+    <a href="http://cvs-mirror.mozilla.org/webtools/build/config.cgi">
+    Unix Build Configurator</a>.<br>
+  </ul>
+  <li><code>gmake</code>
+</ol>
+<P>
+Once you have configured, you only have to run 
+<b><code>configure</code></b> if you add
+or remove Makefile.in files (cvs update can do this. Beware!). The list
+of makefiles is in <b><code>mozilla/allmakefiles.sh</code></b>
+<P>
+For build system hackers: If you change configure.in, cd to mozilla, and
+run <b><code>autoconf</code></b>.  This generates a new configure
+script. (When you checkin configure.in, cvs will run autoconf and check
+in a new configure script for you).
+
+<h3>Automated build (client.mk)</h3>
+<ol>
+  <li> Save the script from
+    <a href="http://cvs-mirror.mozilla.org/webtools/build/config.cgi">
+    Unix Build Configurator</a> as <code><b>~/.mozconfig</b></code>.
+  <li><code>cvs co -f mozilla/client.mk</code>
+  <li><code>cd mozilla</code>
+  <li><code>gmake -f client.mk</code>
+</ol>
+<dl>If you want to build without pulling the tree (as in, you already have the 
+    source lying around),
+    <ul><code>
+      gmake -f client.mk build
+    </code></ul>
+    If you just want to pull the tree,
+    <ul><code>
+      gmake -f client.mk checkout
+    </code></ul>
+</dl>
+<H2><A NAME="s6">After the build </A></H2>
+<UL>
+  <LI><b><CODE>cd dist/bin</CODE></b> and you should see links to the
+  scripts to run the executables: 
+  <CODE>mozilla-viewer.sh</CODE> and <CODE>mozilla-apprunner.sh</CODE>.
+  <LI>If the scripts do not work, set <CODE><b>LD_LIBRARY_PATH</b></CODE>
+  and run <CODE>viewer</CODE> and <CODE>apprunner</CODE> directly.
+  Set <CODE><b>LD_LIBRARY_PATH</b></CODE> to include dist/bin, and
+  the NSPR and GTK libraries.  (For example, you might set it to
+  <CODE>.:../../nspr/lib</CODE>).
+  <UL>
+    <LI>On HP-UX, the equivalent environment variable is
+    <CODE>SHLIB_PATH</CODE>.  
+    <LI>On AIX, the equivalent environment variable is <CODE>LIBPATH</CODE>.
+  </UL>
+
+  <LI>If you run the executables from anywhere other than dist/bin, you
+  must set the environment variable <CODE><B>MOZILLA_FIVE_HOME</B></CODE> to
+  point to the <I>absolute path</I> of the dist/bin directory.
+
+  <LI>Update your tree by re-checking out the source, e.g. repeating the
+  initial checkout process.
+</UL>
+</BODY>
+</HTML>
