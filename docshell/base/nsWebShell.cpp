@@ -107,6 +107,7 @@ typedef unsigned long HMTX;
 #include "nsISelection.h"
 #include "nsISelectionController.h"
 #include "nsIFileStream.h"
+#include "nsISHistoryInternal.h"
 
 #include "nsIHttpChannel.h" // add this to the ick include list...we need it to QI for post data interface
 #include "nsIUploadChannel.h"
@@ -1130,7 +1131,33 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
            * the post data. 
            */
           if (!repost)
-            return NS_OK;                
+            return NS_OK;
+
+          // The user wants to repost the data to the server. 
+          // If the page was loaded due to a back/forward/go
+          // operation, update the session history index.
+          // This is similar to the updating done in 
+          // nsDocShell::OnNewURI() for regular pages          
+          nsCOMPtr<nsISHistory> rootSH=mSessionHistory;
+          if (!mSessionHistory) {
+            nsCOMPtr<nsIDocShellTreeItem> root;
+            //Get the root docshell
+            GetSameTypeRootTreeItem(getter_AddRefs(root));
+            if (root) {
+              // QI root to nsIWebNavigation
+              nsCOMPtr<nsIWebNavigation> rootAsWebnav(do_QueryInterface(root));
+              if (rootAsWebnav) {
+               // Get the handle to SH from the root docshell          
+               rootAsWebnav->GetSessionHistory(getter_AddRefs(rootSH));             
+              }
+            }
+          }  // mSessionHistory
+
+          if (rootSH && (mLoadType & LOAD_CMD_HISTORY)) {
+            nsCOMPtr<nsISHistoryInternal> shInternal(do_QueryInterface(rootSH));
+            if (shInternal)
+             shInternal->UpdateIndex();
+          }
           /* The user does want to repost the data to the server.
            * Initiate a new load again.
            */
