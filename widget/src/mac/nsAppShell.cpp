@@ -51,7 +51,7 @@
 #include "nsIServiceManager.h"
 #include "nsIWidget.h"
 #include "nsMacMessagePump.h"
-#include "nsToolKit.h"
+#include "nsToolkit.h"
 #include <Quickdraw.h>
 #include <Fonts.h>
 #include <TextEdit.h>

@@ -45,7 +45,7 @@
 #include <Retrace.h>
 #endif
 #include <Quickdraw.h>
-#include "PRTypes.h"
+#include "prtypes.h"
 #include "nscore.h"
 
 
