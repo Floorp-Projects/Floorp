@@ -120,6 +120,15 @@ elsif ($action eq "insert")
   validateDescription();
   validateContentType() unless $::FORM{'ispatch'};
   validateObsolete() if $::FORM{'obsolete'};
+
+  # The order of these function calls is important, as both Flag::validate
+  # and FlagType::validate assume User::match_field has ensured that the values
+  # in the requestee fields are legitimate user email addresses.
+  Bugzilla::User::match_field({ '^requestee(_type)?-(\d+)$' => 
+                                    { 'type' => 'single' } });
+  Bugzilla::Flag::validate(\%::FORM, $bugid);
+  Bugzilla::FlagType::validate(\%::FORM, $bugid, $::FORM{'id'});
+  
   insert($data);
 }
 elsif ($action eq "edit") 
@@ -837,6 +846,16 @@ sub enter
   $vars->{'bugsummary'} = $bugsummary;
   $vars->{'GetBugLink'} = \&GetBugLink;
 
+  SendSQL("SELECT product_id, component_id FROM bugs
+           WHERE bug_id = $::FORM{'bugid'}");
+  my ($product_id, $component_id) = FetchSQLData();
+  my $flag_types = Bugzilla::FlagType::match({'target_type'  => 'attachment',
+                                              'product_id'   => $product_id,
+                                              'component_id' => $component_id});
+  $vars->{'flag_types'} = $flag_types;
+  $vars->{'any_flags_requesteeble'} = grep($_->{'is_requesteeble'},
+                                           @$flag_types);
+
   print Bugzilla->cgi->header();
 
   # Generate and return the UI (HTML page) from the appropriate template.
@@ -939,6 +958,13 @@ sub insert
       }      
   }   
   
+  # Figure out when the changes were made.
+  my ($timestamp) = Bugzilla->dbh->selectrow_array("SELECT NOW()"); 
+
+  # Create flags.
+  my $target = Bugzilla::Flag::GetTarget(undef, $attachid);
+  Bugzilla::Flag::process($target, $timestamp, \%::FORM);
+   
   # Define the variables and functions that will be passed to the UI template.
   $vars->{'mailrecipients'} =  { 'changer' => Bugzilla->user->login,
                                  'owner'   => $owner };

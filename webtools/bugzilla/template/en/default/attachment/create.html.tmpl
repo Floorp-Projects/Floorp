@@ -43,6 +43,12 @@
       vertical-align: baseline;
       padding-bottom: 5px;
     }
+    
+    table#flags th, table#flags td {
+      text-align: left;
+      vertical-align: baseline;
+      font-size: small;
+    }
   "
   onload="setContentTypeDisabledState();"
 %]
@@ -137,6 +143,14 @@
         </td>
       </tr>
     [% END %]
+    <tr>
+      <td> </td>
+      <td>
+        [% IF flag_types.size > 0 %]
+          [% PROCESS "flag/list.html.tmpl" bug_id=bugid attach_id=attachid %]<br>
+        [% END %]
+      </td>
+    </tr>
     <tr>
       <th>Comment:</th>
       <td>
