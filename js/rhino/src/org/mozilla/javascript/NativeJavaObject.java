@@ -171,26 +171,6 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
         return cx.getWrapFactory().wrap(cx, scope, obj, staticType);
     }
 
-    static Object defaultWrap(Context cx, Scriptable scope,
-                              Object obj, Class staticType)
-    {
-        if (obj == null)
-            return obj;
-        if (staticType != null && staticType.isPrimitive()) {
-            if (staticType == Void.TYPE)
-                return Undefined.instance;
-            if (staticType == Character.TYPE)
-                return new Integer((int) ((Character) obj).charValue());
-            return obj;
-        }
-        if (obj instanceof Scriptable)
-            return obj;
-        Class cls = obj.getClass();
-        if (cls.isArray())
-            return NativeJavaArray.wrap(scope, obj);
-        return new NativeJavaObject(scope, obj, staticType);
-    }
-
     public Object unwrap() {
         return javaObject;
     }

@@ -41,7 +41,7 @@ package org.mozilla.javascript;
  * Embeddings that wish to provide their own custom wrappings for Java
  * objects may extend this class and call Context.setWrapFactory.
  * Once an instance of this class or an extension of this class is enabled
- * for a given context (by calling setWrapFactory on that context), Rhino 
+ * for a given context (by calling setWrapFactory on that context), Rhino
  * will call the methods of this class whenever it needs to wrap a value
  * resulting from a call to a Java method or an access to a Java field.
  *
@@ -70,7 +70,31 @@ public class WrapFactory {
     public Object wrap(Context cx, Scriptable scope,
                        Object obj, Class staticType)
     {
-        return NativeJavaObject.defaultWrap(cx, scope, obj, staticType);
+        if (obj == null)
+            return obj;
+        if (staticType != null && staticType.isPrimitive()) {
+            if (staticType == Void.TYPE)
+                return Undefined.instance;
+            if (staticType == Character.TYPE)
+                return new Integer((int) ((Character) obj).charValue());
+            return obj;
+        }
+        if (obj instanceof Scriptable)
+            return obj;
+        if (!isJavaPrimitiveWrap()) {
+            if (obj instanceof String || obj instanceof Number
+                || obj instanceof Boolean)
+            {
+                return obj;
+            } else if (obj instanceof Character) {
+                char[] a = { ((Character)obj).charValue() };
+                return new String(a);
+            }
+        }
+        Class cls = obj.getClass();
+        if (cls.isArray())
+            return NativeJavaArray.wrap(scope, obj);
+        return new NativeJavaObject(scope, obj, staticType);
     }
 
     /**
@@ -82,7 +106,36 @@ public class WrapFactory {
      */
     public Scriptable wrapNewObject(Context cx, Scriptable scope, Object obj)
     {
-        return (Scriptable)NativeJavaObject.defaultWrap(cx, scope, obj, null);
+        if (obj instanceof Scriptable)
+            return (Scriptable)obj;
+        Class cls = obj.getClass();
+        if (cls.isArray())
+            return NativeJavaArray.wrap(scope, obj);
+        return new NativeJavaObject(scope, obj, (Class)null);
     }
+
+    /**
+     * Return <code>false</code> if result of Java method, which is instance of
+     * <code>String<code>, <code>Number<code>, <code>Boolean<code> and
+     * <code>Character<code>, should be used directly as JavaScript primitive
+     * type.
+     * By default the method returns true to indicate that instances of
+     * <code>String<code>, <code>Number<code>, <code>Boolean<code> and
+     * <code>Character<code> should be wrapped as any other Java object and
+     * scripts can access any Java method available in these objects.
+     * Use {@link #setJavaPrimitiveWrap(boolean)} to change this.
+     */
+    public boolean isJavaPrimitiveWrap() {
+        return javaPrimitiveWrap;
+    }
+
+    /**
+     * @see #isJavaPrimitiveWrap()
+     */
+    public void setJavaPrimitiveWrap(boolean value) {
+        javaPrimitiveWrap = value;
+    }
+
+    private boolean javaPrimitiveWrap = true;
 
 }
