@@ -75,6 +75,7 @@ viewer:Components:history.xpt
 viewer:Components:htmlparser.shlb 
 viewer:Components:jpgdecoder.shlb 
 viewer:Components:JSLoader.shlb 
+viewer:Components:jsconsole-clhandler.js
 viewer:Components:jsurl.shlb 
 viewer:Components:jsurl.xpt
 viewer:Components:layout.shlb 
@@ -138,6 +139,7 @@ viewer:Components:WalletViewers.shlb
 viewer:Components:widget.xpt 
 viewer:Components:xfer.shlb 
 viewer:Components:xpcom.xpt 
+viewer:Components:xpcom_xpti.xpt 
 viewer:Components:XPConnect.shlb 
 viewer:Components:xpconnect.xpt 
 viewer:Components:xpinstall.xpt 
