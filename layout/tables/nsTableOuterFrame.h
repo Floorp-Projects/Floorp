@@ -19,7 +19,7 @@
 #define nsTableOuterFrame_h__
 
 #include "nscore.h"
-#include "nsContainerFrame.h"
+#include "nsHTMLContainerFrame.h"
 
 struct OuterTableReflowState;
 struct nsStyleText;
@@ -34,7 +34,7 @@ struct nsStyleText;
  * are always mapped
  *
  */
-class nsTableOuterFrame : public nsContainerFrame
+class nsTableOuterFrame : public nsHTMLContainerFrame
 {
 public:
 
@@ -79,6 +79,9 @@ protected:
     * @see NewFrame
     */
   nsTableOuterFrame(nsIContent* aContent, nsIFrame* aParentFrame);
+
+  /** implement abstract method on nsHTMLContainerFrame */
+  virtual PRIntn GetSkipSides() const;
 
   /** return PR_TRUE if the table needs to be reflowed.  
     * the outer table needs to be reflowed if the table content has changed,
@@ -200,6 +203,8 @@ private:
 inline nscoord nsTableOuterFrame::GetMinCaptionWidth()
 { return mMinCaptionWidth; }
 
+inline PRIntn nsTableOuterFrame::GetSkipSides() const
+{ return 0; }
 
 #endif
 

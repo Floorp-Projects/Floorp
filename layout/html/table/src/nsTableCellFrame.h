@@ -19,7 +19,7 @@
 #define nsTableCellFrame_h__
 
 #include "nscore.h"
-#include "nsContainerFrame.h"
+#include "nsHTMLContainerFrame.h"
 #include "nsTableFrame.h"
 #include "nsTableRowFrame.h"  // need to actually include this here to inline GetRowIndex
 
@@ -37,7 +37,7 @@ extern const nsIID kTableCellFrameCID;
  *
  * @author  sclark
  */
-class nsTableCellFrame : public nsContainerFrame
+class nsTableCellFrame : public nsHTMLContainerFrame
 {
 public:
 
@@ -135,6 +135,10 @@ public:
 
   /** destructor */
   virtual ~nsTableCellFrame();
+
+protected:
+  /** implement abstract method on nsHTMLContainerFrame */
+  virtual PRIntn GetSkipSides() const;
 
 private:  
 

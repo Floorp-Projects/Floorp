@@ -19,7 +19,7 @@
 #define nsTableRowFrame_h__
 
 #include "nscore.h"
-#include "nsContainerFrame.h"
+#include "nsHTMLContainerFrame.h"
 
 class  nsTableFrame;
 class  nsTableCellFrame;
@@ -35,7 +35,7 @@ struct RowReflowState;
  * @see nsTableRowGroupFrame
  * @see nsTableCellFrame
  */
-class nsTableRowFrame : public nsContainerFrame
+class nsTableRowFrame : public nsHTMLContainerFrame
 {
 public:
   /** Initialization of frame as a row */
@@ -131,6 +131,9 @@ protected:
   /** destructor */
   virtual ~nsTableRowFrame();
 
+  /** implement abstract method on nsHTMLContainerFrame */
+  virtual PRIntn GetSkipSides() const;
+
   /** Incremental Reflow attempts to do column balancing with the minimum number of reflow
     * commands to child elements.  This is done by processing the reflow command,
     * rebalancing column widths (if necessary), then comparing the resulting column widths
@@ -174,20 +177,6 @@ protected:
                            RowReflowState&      aReflowState,
                            nsReflowStatus&      aStatus,
                            nsTableCellFrame *   aDeletedFrame);
-  
-  NS_IMETHOD IR_UnknownFrameInserted(nsIPresContext&      aPresContext,
-                                     nsHTMLReflowMetrics& aDesiredSize,
-                                     RowReflowState&      aReflowState,
-                                     nsReflowStatus&      aStatus,
-                                     nsIFrame *           aInsertedFrame,
-                                     PRBool               aReplace);
-
-  NS_IMETHOD IR_UnknownFrameRemoved(nsIPresContext&      aPresContext,
-                                    nsHTMLReflowMetrics& aDesiredSize,
-                                    RowReflowState&      aReflowState,
-                                    nsReflowStatus&      aStatus,
-                                    nsIFrame *           aDeletedFrame);
-
 
   // row-specific methods
 

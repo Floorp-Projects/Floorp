@@ -97,7 +97,7 @@ struct OuterTableReflowState {
 /**
   */
 nsTableOuterFrame::nsTableOuterFrame(nsIContent* aContent, nsIFrame* aParentFrame)
-  : nsContainerFrame(aContent, aParentFrame),
+  : nsHTMLContainerFrame(aContent, aParentFrame),
   mInnerTableFrame(nsnull),
   mCaptionFrame(nsnull),
   mMinCaptionWidth(0),
