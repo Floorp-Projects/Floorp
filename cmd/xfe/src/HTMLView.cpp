@@ -144,10 +144,12 @@ MenuSpec XFE_HTMLView::openFrameNew_spec[] = {
   { xfeCmdOpenFrameInWindow , PUSHBUTTON },
   { NULL },
 };
+#ifdef EDITOR
 MenuSpec XFE_HTMLView::openLinkEdit_spec[] = {
   { xfeCmdOpenLinkEdit, PUSHBUTTON },
   { NULL },
 };
+#endif
 MenuSpec XFE_HTMLView::go_spec[] = {
   { xfeCmdBack, PUSHBUTTON },
   { xfeCmdForward, PUSHBUTTON },
@@ -1274,10 +1276,12 @@ XFE_HTMLView::isCommandEnabled(CommandType cmd, void *calldata, XFE_CommandInfo*
     {
       return True;
     }
+#ifdef EDITOR
   else if (IS_CMD(xfeCmdOpenLinkEdit))
     {
       return True;
     }
+#endif
   else if (IS_CMD(xfeCmdSaveLink))
     {
       return True;
@@ -1386,7 +1390,9 @@ XFE_HTMLView::handlesCommand(CommandType cmd, void *calldata, XFE_CommandInfo*)
       || IS_CMD(xfeCmdOpenLinkNew)
       || IS_CMD(xfeCmdOpenFrameNew)
       || IS_CMD(xfeCmdOpenFrameInWindow)
+#ifdef EDITOR
       || IS_CMD(xfeCmdOpenLinkEdit)
+#endif
       || IS_CMD(xfeCmdSaveLink)
       || IS_CMD(xfeCmdCopyLink)
       || IS_CMD(xfeCmdCopyImage)

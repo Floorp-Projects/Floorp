@@ -1196,7 +1196,10 @@ XFE_CALLBACK_DEFN(XFE_MsgView, showPopup)(XFE_NotificationCenter *,
 }
 
 	if (isBrowserLink)                       ADD_SPEC ( openLinkNew_spec );
+#ifdef EDITOR
 	if (isBrowserLink)						 ADD_SPEC ( openLinkEdit_spec );
+#endif
+
 	ADD_MENU_SEPARATOR;
 	
 	ADD_SPEC ( repl_spec );

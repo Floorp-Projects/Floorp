@@ -84,7 +84,9 @@ fe_icon XFE_BookmarkView::openedFolderMenuDest = { 0 };
 
 MenuSpec XFE_BookmarkView::open_popup_spec[] = {
   { xfeCmdOpenLinkNew, PUSHBUTTON },
+#ifdef EDITOR 
   { xfeCmdOpenLinkEdit, PUSHBUTTON },
+#endif
   MENU_SEPARATOR,
   { NULL },
 };
@@ -414,7 +416,9 @@ XFE_BookmarkView::isCommandEnabled(CommandType cmd, void *calldata,
       return TRUE;
     }
   else if (IS_CMD(xfeCmdOpenLinkNew)
+#ifdef EDITOR
            || IS_CMD(xfeCmdOpenLinkEdit)
+#endif
            || IS_CMD(xfeCmdSaveLink)
            || IS_CMD(xfeCmdCopyLink)
            )
@@ -759,7 +763,9 @@ XFE_BookmarkView::handlesCommand(CommandType cmd, void *calldata,
       // Popup commands
       || IS_CMD(xfeCmdShowPopup)
       || IS_CMD(xfeCmdOpenLinkNew)
+#ifdef EDITOR
       || IS_CMD(xfeCmdOpenLinkEdit)
+#endif
       || IS_CMD(xfeCmdSaveLink)
       || IS_CMD(xfeCmdCopyLink)
 	)
