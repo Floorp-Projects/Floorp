@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsnce.c,v 1.23 2003/01/23 00:15:08 jpierre%netscape.com Exp $
+ * $Id: sslsnce.c,v 1.24 2003/03/26 00:31:13 wtc%netscape.com Exp $
  */
 
 /* Note: ssl_FreeSID() in sslnonce.c gets used for both client and server 
@@ -1156,6 +1156,21 @@ SSL_ConfigServerSessionIDCache(	int      maxCacheEntries,
 {
     return SSL_ConfigServerSessionIDCacheInstance(&globalCache, 
     		maxCacheEntries, ssl2_timeout, ssl3_timeout, directory, PR_FALSE);
+}
+
+SECStatus
+SSL_ShutdownServerSessionIDCacheInstance(cacheDesc *cache)
+{
+    /* if single process, close down, clean up.
+    ** if multi-process, TBD.
+    */
+}
+
+SECStatus
+SSL_ShutdownServerSessionIDCache(void)
+{
+    SSL3_ShutdownServerCache();
+    return SSL_ShutdownServerSessionIDCacheInstance(&globalCache);
 }
 
 /* Use this function, instead of SSL_ConfigServerSessionIDCache,

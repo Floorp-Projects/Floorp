@@ -112,7 +112,11 @@ SECMOD_Shutdown() {
 	PORT_Assert(secmod_PrivateModuleCount == 0);
     }
 #endif
-    return (secmod_PrivateModuleCount == 0) ? SECSuccess : SECFailure;
+    if (secmod_PrivateModuleCount) {
+    	PORT_SetError(SEC_ERROR_BUSY);
+	return SECFailure;
+    }
+    return SECSuccess;
 }
 
 
