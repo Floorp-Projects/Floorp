@@ -72,14 +72,15 @@ static PRBool IsValidNetAddrLen(const PRNetAddr *addr, PRInt32 addr_len)
 
 #endif /* DEBUG */
 
-static PRInt32 PR_CALLBACK SocketWritev(PRFileDesc *fd, PRIOVec *iov, PRInt32 iov_size,
-PRIntervalTime timeout)
+static PRInt32 PR_CALLBACK SocketWritev(PRFileDesc *fd, const PRIOVec *iov,
+PRInt32 iov_size, PRIntervalTime timeout)
 {
 	PRThread *me = _PR_MD_CURRENT_THREAD();
 	int w = 0;
-	PRIOVec *tmp_iov = NULL;
+	const PRIOVec *tmp_iov;
 #define LOCAL_MAXIOV    8
 	PRIOVec local_iov[LOCAL_MAXIOV];
+	PRIOVec *iov_copy = NULL;
 	int tmp_out;
 	int index, iov_cnt;
 	int count=0, sz = 0;    /* 'count' is the return value. */
@@ -131,29 +132,32 @@ PRIntervalTime timeout)
 				 * are few enough iov's.
 				 */
 				if (iov_size - index <= LOCAL_MAXIOV)
-					tmp_iov = local_iov;
-				else if ((tmp_iov = (PRIOVec *) PR_CALLOC((iov_size - index) *
-					sizeof *tmp_iov)) == NULL) {
+					iov_copy = local_iov;
+				else if ((iov_copy = (PRIOVec *) PR_CALLOC((iov_size - index) *
+					sizeof *iov_copy)) == NULL) {
 					PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
 					return -1;
 				}
+				tmp_iov = iov_copy;
 			}
 
+			PR_ASSERT(tmp_iov == iov_copy);
+
 			/* fill in the first partial read */
-			tmp_iov[0].iov_base = &(((char *)iov[index].iov_base)[tmp_out]);
-			tmp_iov[0].iov_len = iov[index].iov_len - tmp_out;
+			iov_copy[0].iov_base = &(((char *)iov[index].iov_base)[tmp_out]);
+			iov_copy[0].iov_len = iov[index].iov_len - tmp_out;
 			index++;
 
 			/* copy the remaining vectors */
 			for (iov_cnt=1; index<iov_size; iov_cnt++, index++) {
-				tmp_iov[iov_cnt].iov_base = iov[index].iov_base;
-				tmp_iov[iov_cnt].iov_len = iov[index].iov_len;
+				iov_copy[iov_cnt].iov_base = iov[index].iov_base;
+				iov_copy[iov_cnt].iov_len = iov[index].iov_len;
 			}
 		}
 	}
 
-	if (tmp_iov != iov && tmp_iov != local_iov)
-		PR_DELETE(tmp_iov);
+	if (iov_copy != local_iov)
+		PR_DELETE(iov_copy);
 	return count;
 }
 

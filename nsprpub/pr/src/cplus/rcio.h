@@ -101,7 +101,7 @@ public:
                             const RCInterval& timeout) = 0;
     virtual PRInt32     Write(const void *buf, PRSize amount) = 0;
     virtual PRInt32     Writev(
-                            PRIOVec *iov, PRSize size,
+                            const PRIOVec *iov, PRSize size,
                             const RCInterval& timeout) = 0;
 
 protected:

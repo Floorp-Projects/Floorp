@@ -149,7 +149,7 @@ PRInt32 RCNetStreamIO::Write(const void *buf, PRSize amount)
     { return (fd->methods->write)(fd, buf, amount); }
 
 PRInt32 RCNetStreamIO::Writev(
-    PRIOVec *iov, PRSize size, const RCInterval& timeout)
+    const PRIOVec *iov, PRSize size, const RCInterval& timeout)
     { return (fd->methods->writev)(fd, iov, size, timeout); }
     
 /*

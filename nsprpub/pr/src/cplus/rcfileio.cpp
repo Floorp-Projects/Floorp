@@ -70,7 +70,8 @@ PRInt64 RCFileIO::Seek(PRInt64 offset, RCIO::Whence how)
 PRInt32 RCFileIO::Write(const void *buf, PRSize amount)
     { return fd->methods->write(fd, buf, amount); }
 
-PRInt32 RCFileIO::Writev(PRIOVec *iov, PRSize size, const RCInterval& timeout)
+PRInt32 RCFileIO::Writev(
+    const PRIOVec *iov, PRSize size, const RCInterval& timeout)
     { return fd->methods->writev(fd, iov, size, timeout); }
 
 RCIO *RCFileIO::GetSpecialFile(RCFileIO::SpecialFile special)

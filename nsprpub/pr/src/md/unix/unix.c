@@ -948,7 +948,7 @@ done:
 }
 
 PRInt32 _MD_writev(
-    PRFileDesc *fd, PRIOVec *iov,
+    PRFileDesc *fd, const PRIOVec *iov,
     PRInt32 iov_size, PRIntervalTime timeout)
 {
     PRInt32 rv, err;

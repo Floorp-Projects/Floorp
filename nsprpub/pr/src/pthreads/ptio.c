@@ -1253,7 +1253,7 @@ static PRInt32 pt_Write(PRFileDesc *fd, const void *buf, PRInt32 amount)
 }  /* pt_Write */
 
 static PRInt32 pt_Writev(
-    PRFileDesc *fd, PRIOVec *iov, PRInt32 iov_len, PRIntervalTime timeout)
+    PRFileDesc *fd, const PRIOVec *iov, PRInt32 iov_len, PRIntervalTime timeout)
 {
     PRIntn iov_index = 0;
     PRBool fNeedContinue = PR_FALSE;
@@ -1266,7 +1266,7 @@ static PRInt32 pt_Writev(
      * Only if we have to continue the operation do we have to
      * make a copy that we can modify.
      */
-    rv = bytes = writev(fd->secret->md.osfd, (struct iovec*)iov, iov_len);
+    rv = bytes = writev(fd->secret->md.osfd, (const struct iovec*)iov, iov_len);
     syserrno = errno;
 
     /*

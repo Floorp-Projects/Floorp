@@ -54,7 +54,8 @@ public:
     virtual PRInt64     Seek(PRInt64 offset, RCIO::Whence how);
     virtual PRInt32     Write(const void *buf, PRSize amount);
     virtual PRInt32     Writev(
-                            PRIOVec *iov, PRSize size, const RCInterval& timeout);
+                            const PRIOVec *iov, PRSize size,
+                            const RCInterval& timeout);
 
 private:
 

@@ -307,7 +307,7 @@ typedef PRInt64 (PR_CALLBACK *PRSeek64FN)(PRFileDesc *fd, PRInt64 offset, PRSeek
 typedef PRStatus (PR_CALLBACK *PRFileInfoFN)(PRFileDesc *fd, PRFileInfo *info);
 typedef PRStatus (PR_CALLBACK *PRFileInfo64FN)(PRFileDesc *fd, PRFileInfo64 *info);
 typedef PRInt32 (PR_CALLBACK *PRWritevFN)(
-    PRFileDesc *fd, PRIOVec *iov, PRInt32 size, PRIntervalTime timeout);
+    PRFileDesc *fd, const PRIOVec *iov, PRInt32 size, PRIntervalTime timeout);
 typedef PRStatus (PR_CALLBACK *PRConnectFN)(
     PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime timeout);
 typedef PRFileDesc* (PR_CALLBACK *PRAcceptFN) (
@@ -666,7 +666,7 @@ PR_EXTERN(PRInt32) PR_Write(PRFileDesc *fd,const void *buf,PRInt32 amount);
  * INPUTS:
  *     PRFileDesc *fd
  *         Pointer that points to a PRFileDesc object for a socket.
- *     PRIOVec *iov
+ *     const PRIOVec *iov
  *         An array of PRIOVec.  PRIOVec is a struct with the following
  *         two fields:
  *             char *iov_base;
@@ -689,7 +689,7 @@ PR_EXTERN(PRInt32) PR_Write(PRFileDesc *fd,const void *buf,PRInt32 amount);
 #define PR_MAX_IOVECTOR_SIZE 16   /* 'size' must be <= */
 
 PR_EXTERN(PRInt32) PR_Writev(
-    PRFileDesc *fd, PRIOVec *iov, PRInt32 size, PRIntervalTime timeout);
+    PRFileDesc *fd, const PRIOVec *iov, PRInt32 size, PRIntervalTime timeout);
 
 /*
  ***************************************************************************
