@@ -108,9 +108,8 @@ END_MESSAGE_MAP()
 
 BOOL CWizardUI::OnSetActive() 
 {
-
+	SetForegroundWindow();
 	(AfxGetMainWnd( ))->SetWindowText(CurrentNode->localVars->title);
-
 	if (!(CurrentNode->isWidgetsSorted)) {
 		SortWidgetsForTabOrder();
 	}
