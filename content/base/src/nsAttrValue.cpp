@@ -899,6 +899,13 @@ nsAttrValue::EnsureEmptyMiscContainer()
         delete cont->mAtomArray;
         break;
       }
+#ifdef MOZ_SVG
+      case eSVGValue:
+      {
+        NS_RELEASE(cont->mSVGValue);
+        break;
+      }
+#endif
       default:
       {
         break;
