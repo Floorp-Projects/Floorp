@@ -28,6 +28,10 @@ body {
   margin: 8px;
 }
 
+body > *:first-child {
+  margin-top: 0;
+}
+
 frameset {
   overflow: hidden;
 }
@@ -323,6 +327,10 @@ ol {
 li {
   display: list-item;
   list-style-position: inside; 
+}
+
+li ul, li ol, li dir, li menu { 
+  list-style-position: outside; 
 }
 
 ul li, dir li, menu li, ol li { 
