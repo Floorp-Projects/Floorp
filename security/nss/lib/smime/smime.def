@@ -247,3 +247,10 @@ SEC_PKCS7EncoderAbort;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.9.3 {   # NSS 3.9.3 release
+;+    global:
+CERT_ConvertAndDecodeCertificate;
+SEC_PKCS7EncodeItem;
+;+    local:
+;+       *;
+;+};
