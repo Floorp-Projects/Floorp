@@ -1646,7 +1646,17 @@ js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
           ? clasp->getObjectOps(cx, clasp)
           : &js_ObjectOps;
 
-    if (proto && (map = proto->map)->ops == ops) {
+    /*
+     * Share proto's map only if it has the same JSObjectOps, and only if
+     * proto's class has the same private and reserved slots, as obj's map
+     * and class have.
+     */
+    if (proto &&
+        (map = proto->map)->ops == ops &&
+        ((clasp->flags ^ OBJ_GET_CLASS(cx, proto)->flags) &
+         (JSCLASS_HAS_PRIVATE |
+          (JSCLASS_RESERVED_SLOTS_MASK << JSCLASS_RESERVED_SLOTS_SHIFT)))
+        == 0) {
         /* Default parent to the parent of the prototype's constructor. */
         if (!parent) {
             if (!OBJ_GET_PROPERTY(cx, proto,
