@@ -1811,8 +1811,14 @@ void nsExternalAppHandler::SendStatusChange(ErrorType type, nsresult rv, nsIRequ
         break;
 
     case NS_ERROR_FILE_ACCESS_DENIED:
-        // Attempt to write without sufficient permissions.
-        msgId.AssignLiteral("accessError");
+        if (type == kWriteError) {
+          // Attempt to write without sufficient permissions.
+          msgId.AssignLiteral("accessError");
+        }
+        else
+        {
+          msgId.AssignLiteral("launchError");
+        }
         break;
 
     case NS_ERROR_FILE_NOT_FOUND:
