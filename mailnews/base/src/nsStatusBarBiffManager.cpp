@@ -56,6 +56,8 @@
 #include "nsXPIDLString.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
+#include "nsIFileURL.h"
+#include "nsIFile.h"
 
 // QueryInterface, AddRef, and Release
 //
@@ -75,6 +77,7 @@ nsStatusBarBiffManager::~nsStatusBarBiffManager()
 }
 
 #define PREF_PLAY_SOUND_ON_NEW_MAIL      "mail.biff.play_sound"
+#define PREF_NEW_MAIL_URL                "mail.biff.play_sound.url"
 
 nsresult nsStatusBarBiffManager::Init()
 {
@@ -115,10 +118,34 @@ nsresult nsStatusBarBiffManager::PerformStatusBarBiff(PRUint32 newBiffFlag)
     PRBool playSoundOnBiff = PR_FALSE;
     rv = pref->GetBoolPref(PREF_PLAY_SOUND_ON_NEW_MAIL, &playSoundOnBiff);
     if (NS_SUCCEEDED(rv) && playSoundOnBiff) {
+      PRBool customSoundPlayed = PR_FALSE;
       if (!mSound)
         mSound = do_CreateInstance("@mozilla.org/sound;1");
       
-      rv = mSound->PlaySystemSound("_moz_mailbeep");
+      nsXPIDLCString soundURLspec;
+      rv = pref->GetCharPref(PREF_NEW_MAIL_URL, getter_Copies(soundURLspec));
+      if (NS_SUCCEEDED(rv) && !soundURLspec.IsEmpty()) {
+        nsCOMPtr<nsIFileURL> soundURL = do_CreateInstance("@mozilla.org/network/standard-url;1");
+        rv = soundURL->SetSpec(soundURLspec);                                       
+        NS_ENSURE_SUCCESS(rv,rv);
+        
+        nsCOMPtr<nsIFile> soundFile;
+        rv = soundURL->GetFile(getter_AddRefs(soundFile));
+        NS_ENSURE_SUCCESS(rv,rv);
+
+        PRBool soundFileExists = PR_FALSE;
+        rv = soundFile->Exists(&soundFileExists);
+        if (NS_SUCCEEDED(rv) && soundFileExists) {
+          rv = mSound->Play(soundURL);
+          if (NS_SUCCEEDED(rv))
+            customSoundPlayed = PR_TRUE;
+        }
+      }
+      
+      if (!customSoundPlayed) {
+        rv = mSound->PlaySystemSound("_moz_mailbeep");
+        NS_ENSURE_SUCCESS(rv,rv);
+      }
     }
   }
   

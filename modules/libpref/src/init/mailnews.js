@@ -390,6 +390,7 @@ pref("mailnews.append_preconfig_accounts.version",1);
 pref("mail.append_preconfig_smtpservers.version",1);
 
 pref("mail.biff.play_sound",true);
+pref("mail.biff.play_sound.url","");
 pref("mail.biff.show_alert", true);
 
 pref("mail.content_disposition_type", 0);
