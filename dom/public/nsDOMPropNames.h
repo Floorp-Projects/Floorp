@@ -904,5 +904,7 @@
     "xultreeelement.selectitemrange", \
     "xultreeelement.togglecellselection", \
     "xultreeelement.toggleitemselection", \
+    "xultreeelement.ensureelementisvisible", \
+    "xultreeelement.getrowindexof", \
 
 #endif // nsDOMPropNames_h__
