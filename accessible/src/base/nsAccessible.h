@@ -29,6 +29,7 @@
 #include "nsIContent.h"
 #include "nsIDOMNode.h"
 #include "nsIPresShell.h"
+#include "nsIPresContext.h"
 #include "nsWeakReference.h"
 
 class nsIFrame;
