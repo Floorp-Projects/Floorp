@@ -2594,6 +2594,13 @@ MOZ_ARG_ENABLE_BOOL(boehm,
   AC_DEFINE(GC_LEAK_DETECTOR)
   GC_LEAK_DETECTOR=1)
 
+dnl This will enable logging of addref, release, ctor, dtor.
+MOZ_ARG_ENABLE_BOOL(logrefcnt,
+[  --enable-logrefcnt         Enable Logging of refcounts (default=no) ],
+  MOZ_LOG_REFCNT=1
+  AC_DEFINE(MOZ_LOG_REFCNT))
+
+
 dnl mozilla/tools/leaky not part of default build.
 MOZ_ARG_ENABLE_BOOL(leaky,
 [  --enable-leaky          Enable leaky memory tool],
@@ -2828,6 +2835,7 @@ AC_SUBST(MOZ_DEBUG_MODULES)
 AC_SUBST(MOZ_EXTENSIONS)
 AC_SUBST(MOZILLA_GPROF)
 AC_SUBST(GC_LEAK_DETECTOR)
+AC_SUBST(MOZ_LOG_REFCNT)
 AC_SUBST(MOZ_LEAKY)
 AC_SUBST(MOZ_INSURE)
 AC_SUBST(MOZ_INSURE_DIRS)
