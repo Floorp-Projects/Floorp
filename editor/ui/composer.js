@@ -69,8 +69,8 @@ pref("editor.url_history.URL_7", "");
 pref("editor.url_history.URL_8", "");
 pref("editor.url_history.URL_9", "");
 
-localDefPref("editor.html_directory",               "C:\\My Documents");
-localDefPref("editor.image_directory",              "C:\\My Documents");
+localDefPref("editor.html_directory",               "");
+localDefPref("editor.image_directory",              "");
 localDefPref("editor.background_image",             "");
 
 pref("editor.last_pref_page",               0);
