@@ -853,7 +853,16 @@ HTMLContentSink::AddAttributes(const nsIParserNode& aNode,
   nsAutoString k;
   nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
 
-  for (PRInt32 i = 0; i < ac; i++) {
+  // The attributes are on the parser node in the order they came in in the
+  // source.  What we want to happen if a single attribute is set multiple
+  // times on an element is that the first time should "win".  That is, <input
+  // value="foo" value="bar"> should show "foo".  So we loop over the
+  // attributes backwards; this ensures that the first attribute in the set
+  // wins.  This does mean that we do some extra work in the case when the same
+  // attribute is set multiple times, but we save a HasAttr call in the much
+  // more common case of reasonable HTML.
+  
+  for (PRInt32 i = ac - 1; i >= 0; i--) {
     // Get lower-cased key
     const nsAString& key = aNode.GetKeyAt(i);
     k.Assign(key);
@@ -861,23 +870,21 @@ HTMLContentSink::AddAttributes(const nsIParserNode& aNode,
 
     nsCOMPtr<nsIAtom> keyAtom = do_GetAtom(k);
 
-    if (!aContent->HasAttr(kNameSpaceID_None, keyAtom)) {
-      // Get value and remove mandatory quotes
-      static const char* kWhitespace = "\n\r\t\b";
-      const nsAString& v =
-        nsContentUtils::TrimCharsInSet(kWhitespace, aNode.GetValueAt(i));
+    // Get value and remove mandatory quotes
+    static const char* kWhitespace = "\n\r\t\b";
+    const nsAString& v =
+      nsContentUtils::TrimCharsInSet(kWhitespace, aNode.GetValueAt(i));
 
-      if (nodeType == eHTMLTag_a && keyAtom == nsHTMLAtoms::name) {
-        NS_ConvertUCS2toUTF8 cname(v);
-        NS_ConvertUTF8toUCS2 uv(nsUnescape(NS_CONST_CAST(char *,
-                                                         cname.get())));
+    if (nodeType == eHTMLTag_a && keyAtom == nsHTMLAtoms::name) {
+      NS_ConvertUCS2toUTF8 cname(v);
+      NS_ConvertUTF8toUCS2 uv(nsUnescape(NS_CONST_CAST(char *,
+                                                       cname.get())));
 
-        // Add attribute to content
-        aContent->SetAttr(kNameSpaceID_None, keyAtom, uv, aNotify);
-      } else {
-        // Add attribute to content
-        aContent->SetAttr(kNameSpaceID_None, keyAtom, v, aNotify);
-      }
+      // Add attribute to content
+      aContent->SetAttr(kNameSpaceID_None, keyAtom, uv, aNotify);
+    } else {
+      // Add attribute to content
+      aContent->SetAttr(kNameSpaceID_None, keyAtom, v, aNotify);
     }
   }
 
