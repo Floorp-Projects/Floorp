@@ -2922,6 +2922,7 @@ nsBrowserStatusHandler.prototype =
         }
 
         // Turn the status meter on.
+        this.statusMeter.value = 0;  // be sure to clear the progress bar
         if (gProgressCollapseTimer) {
           window.cancelTimeout(gProgressCollapseTimer);
           gProgressCollapseTimer = null;
@@ -2986,8 +2987,6 @@ nsBrowserStatusHandler.prototype =
         }
 
         // Turn the progress meter and throbber off.
-        this.statusMeter.value = 0;  // be sure to clear the progress bar
-
         gProgressCollapseTimer = window.setTimeout("gProgressMeterPanel.collapsed = true; gProgressCollapseTimer = null;",
                                                    100);
 
