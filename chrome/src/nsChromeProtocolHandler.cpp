@@ -173,7 +173,7 @@ nsChromeProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
 
     rv = serv->NewChannelFromURI(verb, chromeURI, eventSinkGetter, result);
     NS_RELEASE(chromeURI);
-    return NS_OK;
+    return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
