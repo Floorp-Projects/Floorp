@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.22 $ $Date: 2002/01/08 18:51:18 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.23 $ $Date: 2002/01/08 19:38:56 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -665,7 +665,7 @@ STAN_GetNSSCertificate(CERTCertificate *cc)
 	nssListIterator_Destroy(c->object.instances);
 	c->object.instances = nssList_CreateIterator(c->object.instanceList);
     }
-    c->decoding = create_decoded_pkix_cert_from_nss3cert(arena, cc);
+    c->decoding = create_decoded_pkix_cert_from_nss3cert(NULL, cc);
     cc->nssCertificate = c;
     return c;
 }
