@@ -45,6 +45,7 @@
 #include "prlog.h"
 #include "rdf.h"
 #include "xp_core.h"
+#include "prlong.h"
 
 #include "nsEnumeratorUtils.h"
 #include "nsEscape.h"
@@ -60,6 +61,11 @@ static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFContainerCID,          NS_RDFCONTAINER_CID);
 static NS_DEFINE_CID(kRDFContainerUtilsCID,     NS_RDFCONTAINERUTILS_CID);
 static NS_DEFINE_IID(kISupportsIID,             NS_ISUPPORTS_IID);
+
+static NS_DEFINE_IID(kIRDFResourceIID, NS_IRDFRESOURCE_IID);
+static NS_DEFINE_IID(kIRDFLiteralIID,  NS_IRDFLITERAL_IID);
+static NS_DEFINE_IID(kIRDFIntIID,      NS_IRDFINT_IID);
+static NS_DEFINE_IID(kIRDFDateIID,     NS_IRDFDATE_IID);
 
 static const char kURINC_BookmarksRoot[]         = "NC:BookmarksRoot"; // XXX?
 static const char kURINC_IEFavoritesRoot[]       = "NC:IEFavoritesRoot"; // XXX?
@@ -110,7 +116,6 @@ bm_AddRefGlobals()
 
 		NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
 		if (NS_FAILED(rv)) return rv;
-
 
 		rv = nsServiceManager::GetService(kRDFContainerUtilsCID,
 						  nsIRDFContainerUtils::GetIID(),
@@ -738,6 +743,15 @@ BookmarkParser::ParseBookmarkHeader(const nsString& aLine,
 		addDate = s.ToInteger(&err); // ignored
 	}
 
+	// Find the lastmod date
+	PRInt32 lastmodDate = 0;
+
+	ParseAttribute(aLine, kLastModifiedEquals, sizeof(kLastModifiedEquals) - 1, s);
+	if (s.Length() > 0) {
+		PRInt32 err;
+		lastmodDate = s.ToInteger(&err); // ignored
+	}
+
 	nsAutoString id;
 	ParseAttribute(aLine, kIDEquals, sizeof(kIDEquals) - 1, id);
 
@@ -783,6 +797,10 @@ BookmarkParser::ParseBookmarkHeader(const nsString& aLine,
 
 	if (NS_FAILED(rv = AssertTime(folder, kNC_BookmarkAddDate, addDate))) {
 		NS_ERROR("unable to mark add date");
+		return rv;
+	}
+	if (NS_FAILED(rv = AssertTime(folder, kWEB_LastModifiedDate, lastmodDate))) {
+		NS_ERROR("unable to mark lastmod date");
 		return rv;
 	}
 
@@ -871,23 +889,27 @@ BookmarkParser::AssertTime(nsIRDFResource* aSource,
                            nsIRDFResource* aLabel,
                            PRInt32 aTime)
 {
-	// XXX TO DO: Convert to a date literal
+	nsresult	rv = NS_OK;
 
-	nsAutoString timeStr;
-	timeStr.Append(aTime, 10);
+	if (aTime != 0)
+	{
+		// Convert to a date literal
+		PRInt64		dateVal;
+		LL_MUL32(dateVal, aTime, PR_USEC_PER_SEC);	// convert from seconds to microseconds (PRTime)
 
-	nsresult rv;
-	nsIRDFLiteral* literal;
-	if (NS_FAILED(rv = gRDF->GetLiteral(timeStr.GetUnicode(), &literal))) {
-		NS_ERROR("unable to get literal for time");
-		return rv;
+		nsIRDFDate	*dateLiteral;
+		if (NS_FAILED(rv = gRDF->GetDateLiteral(dateVal, &dateLiteral)))
+		{
+			NS_ERROR("unable to get date literal for time");
+			return(rv);
+		}
+
+		rv = mDataSource->Assert(aSource, aLabel, dateLiteral, PR_TRUE);
+		NS_ASSERTION(rv == NS_RDF_ASSERTION_ACCEPTED, "unable to assert time");
+
+		NS_RELEASE(dateLiteral);
 	}
-
-	rv = mDataSource->Assert(aSource, aLabel, literal, PR_TRUE);
-	NS_ASSERTION(rv == NS_RDF_ASSERTION_ACCEPTED, "unable to assert time");
-
-	NS_RELEASE(literal);
-	return rv;
+	return(rv);
 }
 
 
@@ -908,6 +930,7 @@ protected:
 	nsresult ReadBookmarks();
 	nsresult WriteBookmarks(nsIRDFDataSource *ds, nsIRDFResource *root);
 	nsresult WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileStream strm, nsIRDFResource *container, PRInt32 level);
+	nsresult GetTextForNode(nsIRDFNode* aNode, nsString& aResult);
 	nsresult WriteBookmarkProperties(nsIRDFDataSource *ds, nsOutputFileStream strm, nsIRDFResource *node,
 					 nsIRDFResource *property, const char *htmlAttrib, PRBool isFirst);
 	PRBool CanAccept(nsIRDFResource* aSource, nsIRDFResource* aProperty, nsIRDFNode* aTarget);
@@ -1168,8 +1191,15 @@ nsBookmarksService::AddBookmark(const char *aURI, const PRUnichar *aOptionalTitl
 	rv = container->Init(mInner, kNC_BookmarksRoot);
 	if (NS_FAILED(rv)) return rv;
 
+	// current the current date/time
+	PRTime		now64 = PR_Now(), million;
+	LL_I2L(million, PR_USEC_PER_SEC);
+	LL_DIV(now64, now64, million);			// convert from microseconds (PRTime) to seconds
+	PRInt32		now32;
+	LL_L2I(now32, now64);
+
 	rv = parser.AddBookmark(container, aURI, aOptionalTitle,
-				0L, 0L, 0L, nsnull, kNC_Bookmark, nsnull);
+				now32, 0L, 0L, nsnull, kNC_Bookmark, nsnull);
 
 	if (NS_FAILED(rv)) return rv;
 
@@ -1781,6 +1811,9 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileSt
 					// output ADD_DATE
 					WriteBookmarkProperties(ds, strm, child, kNC_BookmarkAddDate, kAddDateEquals, PR_FALSE);
 
+					// output LAST_MODIFIED
+					WriteBookmarkProperties(ds, strm, child, kWEB_LastModifiedDate, kLastModifiedEquals, PR_FALSE);
+
 					// output ID
 					strm << " " << kIDEquals;
 					nsXPIDLCString id;
@@ -1868,6 +1901,67 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileSt
 
 
 
+/*
+	Note: this routine is similiar, yet distinctly different from, nsRDFContentUtils::GetTextForNode
+*/
+
+nsresult
+nsBookmarksService::GetTextForNode(nsIRDFNode* aNode, nsString& aResult)
+{
+    nsresult		rv;
+    nsIRDFResource	*resource;
+    nsIRDFLiteral	*literal;
+    nsIRDFDate		*dateLiteral;
+    nsIRDFInt		*intLiteral;
+
+    if (! aNode) {
+        aResult.Truncate();
+        rv = NS_OK;
+    }
+    else if (NS_SUCCEEDED(rv = aNode->QueryInterface(kIRDFResourceIID, (void**) &resource))) {
+        nsXPIDLCString p;
+        if (NS_SUCCEEDED(rv = resource->GetValue( getter_Copies(p) ))) {
+            aResult = p;
+        }
+        NS_RELEASE(resource);
+    }
+    else if (NS_SUCCEEDED(rv = aNode->QueryInterface(kIRDFDateIID, (void**) &dateLiteral))) {
+	PRInt64		theDate, million;
+        if (NS_SUCCEEDED(rv = dateLiteral->GetValue( &theDate ))) {
+		LL_I2L(million, PR_USEC_PER_SEC);
+		LL_DIV(theDate, theDate, million);			// convert from microseconds (PRTime) to seconds
+		PRInt32		now32;
+		LL_L2I(now32, theDate);
+		aResult.Truncate();
+        	aResult.Append(now32, 10);
+        }
+        NS_RELEASE(dateLiteral);
+    }
+    else if (NS_SUCCEEDED(rv = aNode->QueryInterface(kIRDFIntIID, (void**) &intLiteral))) {
+	PRInt32		theInt;
+	aResult.Truncate();
+        if (NS_SUCCEEDED(rv = intLiteral->GetValue( &theInt ))) {
+        	aResult.Append(theInt, 10);
+        }
+        NS_RELEASE(intLiteral);
+    }
+    else if (NS_SUCCEEDED(rv = aNode->QueryInterface(kIRDFLiteralIID, (void**) &literal))) {
+        nsXPIDLString p;
+        if (NS_SUCCEEDED(rv = literal->GetValue( getter_Copies(p) ))) {
+            aResult = p;
+        }
+        NS_RELEASE(literal);
+    }
+    else {
+        NS_ERROR("not a resource or a literal");
+        rv = NS_ERROR_UNEXPECTED;
+    }
+
+    return rv;
+}
+
+
+
 nsresult
 nsBookmarksService::WriteBookmarkProperties(nsIRDFDataSource *ds, nsOutputFileStream strm,
 	nsIRDFResource *child, nsIRDFResource *property, const char *htmlAttrib, PRBool isFirst)
@@ -1876,45 +1970,40 @@ nsBookmarksService::WriteBookmarkProperties(nsIRDFDataSource *ds, nsOutputFileSt
 	nsCOMPtr<nsIRDFNode>	node;
 	if (NS_SUCCEEDED(rv = ds->GetTarget(child, property, PR_TRUE, getter_AddRefs(node))))
 	{
-		nsCOMPtr<nsIRDFLiteral>	literal = do_QueryInterface(node);
-		if (literal)
+		nsAutoString	literalString;
+		if (NS_SUCCEEDED(rv = GetTextForNode(node, literalString)))
 		{
-			PRUnichar	*literalUni = nsnull;
-			if (NS_SUCCEEDED(rv = literal->GetValue(&literalUni)))
+			char		*attribute = literalString.ToNewCString();
+			if (nsnull != attribute)
 			{
-				nsAutoString	literalString = literalUni;
-				char		*attribute = literalString.ToNewCString();
-				if (nsnull != attribute)
+				if (isFirst == PR_FALSE)
 				{
-					if (isFirst == PR_FALSE)
+					strm << " ";
+				}
+				if (property == kNC_Description)
+				{
+					if (literalString.Length() > 0)
 					{
-						strm << " ";
-					}
-					if (property == kNC_Description)
-					{
-						if (literalString.Length() > 0)
+						char *escapedAttrib = nsEscapeHTML(attribute);
+						if (escapedAttrib)
 						{
-							char *escapedAttrib = nsEscapeHTML(attribute);
-							if (escapedAttrib)
-							{
-								strm << htmlAttrib;
-								strm << escapedAttrib;
-								strm << "\n";
+							strm << htmlAttrib;
+							strm << escapedAttrib;
+							strm << "\n";
 
-								delete []escapedAttrib;
-								escapedAttrib = nsnull;
-							}
+							delete []escapedAttrib;
+							escapedAttrib = nsnull;
 						}
 					}
-					else
-					{
-						strm << htmlAttrib;
-						strm << attribute;
-						strm << "\"";
-					}
-					delete [] attribute;
-					attribute = nsnull;
 				}
+				else
+				{
+					strm << htmlAttrib;
+					strm << attribute;
+					strm << "\"";
+				}
+				delete [] attribute;
+				attribute = nsnull;
 			}
 		}
 	}
