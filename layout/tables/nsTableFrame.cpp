@@ -2232,7 +2232,8 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
 #endif
       needsRecalc=PR_TRUE;
     }
-    if (PR_FALSE==IsFirstPassValid())
+    if ((NS_UNCONSTRAINEDSIZE == aReflowState.availableWidth) || 
+        (PR_FALSE==IsFirstPassValid()))
     {
       if (PR_TRUE==gsDebug || PR_TRUE==gsDebugIR) printf("TIF Reflow: first pass is invalid, rebuilding...\n");
       nsReflowReason reason = aReflowState.reason;
