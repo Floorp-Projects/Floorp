@@ -57,7 +57,7 @@ public:
   NS_IMETHOD    ForceUpdate();
   
   // nsIDOMSelectionListener interface
-  NS_IMETHOD    NotifySelectionChanged();
+  NS_IMETHOD    NotifySelectionChanged(nsIDOMDocument *aDoc, nsIDOMSelection *aSel);
 
   NS_DECL_NSIDOCUMENTSTATELISTENER
   
