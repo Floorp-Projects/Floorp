@@ -196,13 +196,13 @@ namespace MetaData {
             if (*float64Table[hash] == x)
                 return float64Table[hash];
             else {
-                float64 *p = (float64 *)JS2Object::alloc(sizeof(float64), false);
+                float64 *p = (float64 *)JS2Object::alloc(sizeof(float64), PondScum::GenericFlag);
                 *p = x;
                 return p;
             }
         }
         else {
-            float64 *p = (float64 *)JS2Object::alloc(sizeof(float64), false);
+            float64 *p = (float64 *)JS2Object::alloc(sizeof(float64), PondScum::GenericFlag);
             float64Table[hash] = p;
             *p = x;
             return p;
@@ -211,28 +211,31 @@ namespace MetaData {
 
     String *JS2Engine::allocStringPtr(const char *s)
     { 
-        String *p = (String *)(JS2Object::alloc(sizeof(String), false));
+        String *p = (String *)(JS2Object::alloc(sizeof(String), PondScum::StringFlag));
         size_t len = strlen(s);
         String *result = new (p) String(len, uni::null);
-        std::transform(s, s+len, result->begin(), widen);
+        for (int i = 0; i < len; i++) {
+            (*result)[i] = widen(s[i]);
+        }
+//        std::transform(s, s+len, result->begin(), widen);
         return result; 
     }
 
     String *JS2Engine::allocStringPtr(const String *s)
     {
-        String *p = (String *)(JS2Object::alloc(sizeof(String), false));
+        String *p = (String *)(JS2Object::alloc(sizeof(String), PondScum::StringFlag));
         return new (p) String(*s);
     }
 
     String *JS2Engine::allocStringPtr(const String *s, uint32 index, uint32 length)
     {
-        String *p = (String *)(JS2Object::alloc(sizeof(String), false));
+        String *p = (String *)(JS2Object::alloc(sizeof(String), PondScum::StringFlag));
         return new (p) String(*s, index, length);
     }
 
     String *JS2Engine::concatStrings(const String *s1, const String *s2)
     {
-        String *p = (String *)(JS2Object::alloc(sizeof(String), false));
+        String *p = (String *)(JS2Object::alloc(sizeof(String), PondScum::StringFlag));
         String *result = new (p) String(*s1);
         result->append(*s2);
         return result;
@@ -257,7 +260,7 @@ namespace MetaData {
     // Don't store as an int, even if possible, we need to retain 'longness'
     js2val JS2Engine::allocULong(uint64 x)
     {
-        uint64 *p = (uint64 *)(JS2Object::alloc(sizeof(uint64), false));
+        uint64 *p = (uint64 *)(JS2Object::alloc(sizeof(uint64), PondScum::GenericFlag));
         *p = x;
         return ULONG_TO_JS2VAL(p);
         
@@ -266,7 +269,7 @@ namespace MetaData {
     // Don't store as an int, even if possible, we need to retain 'longness'
     js2val JS2Engine::allocLong(int64 x)
     {
-        int64 *p = (int64 *)(JS2Object::alloc(sizeof(int64), false));
+        int64 *p = (int64 *)(JS2Object::alloc(sizeof(int64), PondScum::GenericFlag));
         *p = x;
         return LONG_TO_JS2VAL(p);
     }
@@ -274,7 +277,7 @@ namespace MetaData {
     // Don't store as an int, even if possible, we need to retain 'floatness'
     js2val JS2Engine::allocFloat(float32 x)
     {
-        float32 *p = (float32 *)(JS2Object::alloc(sizeof(float32), false));
+        float32 *p = (float32 *)(JS2Object::alloc(sizeof(float32), PondScum::GenericFlag));
         *p = x;
         return FLOAT_TO_JS2VAL(p);
     }
@@ -393,7 +396,7 @@ namespace MetaData {
     }
 
 
-    #define INIT_STRINGATOM(n) n##_StringAtom(allocStringPtr(&world.identifiers[#n]))
+    #define INIT_STRINGATOM(n) n##_StringAtom(allocStringPtr(#n))
 
     JS2Engine::JS2Engine(World &world)
                 : meta(NULL),
@@ -428,7 +431,7 @@ namespace MetaData {
         for (int i = 0; i < 256; i++)
             float64Table[i] = NULL;
 
-        float64 *p = (float64 *)JS2Object::alloc(sizeof(float64), false);
+        float64 *p = (float64 *)JS2Object::alloc(sizeof(float64), PondScum::GenericFlag);
         *p = nan;
         nanValue = DOUBLE_TO_JS2VAL(p);
         posInfValue = DOUBLE_TO_JS2VAL(allocNumber(positiveInfinity));

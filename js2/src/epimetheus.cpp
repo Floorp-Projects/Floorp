@@ -72,7 +72,7 @@ static void initConsole(StringPtr consoleName,
 
 #endif
 
-JavaScript::World world;
+JavaScript::World *world = new World();
 JavaScript::Arena a;
 
 namespace JavaScript {
@@ -114,7 +114,7 @@ static int readEvalPrint(FILE *in)
         appendChars(buffer, line.data(), line.size());
         try {
             Pragma::Flags flags = Pragma::es4;
-            Parser p(world, a, flags, buffer, ConsoleName);
+            Parser p(*world, a, flags, buffer, ConsoleName);
             if (showTokens) {
                 Lexer &l = p.lexer;
                 while (true) {
@@ -392,7 +392,7 @@ int main(int argc, char **argv)
 
 	DEFINE_ROOTKEEPER(rk, metadata);
 
-    metadata = new MetaData::JS2Metadata(world);
+    metadata = new MetaData::JS2Metadata(*world);
 
     metadata->addGlobalObjectFunction("print", print, 1);
     metadata->addGlobalObjectFunction("load", load, 1);
@@ -413,6 +413,8 @@ int main(int argc, char **argv)
         if (doInteractive)
             result = readEvalPrint(stdin);
         delete metadata;
+        world->identifiers.clear();
+        delete world;
         return result;
     }
     catch (Exception &e) {

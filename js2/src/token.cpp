@@ -327,8 +327,10 @@ const uchar JS::Token::kindFlags[kindsEnd] = {
 void JS::Token::initKeywords(World &world)
 {
     const char *const*keywordName = kindNames + keywordsBegin;
-    for (Kind kind = keywordsBegin; kind != keywordsEnd; kind = Kind(kind+1))
-        world.identifiers[widenCString(*keywordName++)].tokenKind = kind;
+    for (Kind kind = keywordsBegin; kind != keywordsEnd; kind = Kind(kind+1)) {
+        String s = widenCString(*keywordName++);
+        world.identifiers[s].tokenKind = kind;
+    }
 }
 
 

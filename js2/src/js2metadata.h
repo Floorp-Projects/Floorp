@@ -148,23 +148,31 @@ enum Hint { NoHint, NumberHint, StringHint };
 class PondScum {
 public:    
 
+    typedef enum { JS2ObjectFlag, StringFlag, GenericFlag } ScumFlag;
+
     void resetMark()        { markFlag = 0; }
     void mark()             { markFlag = 1; }
     bool isMarked()         { return (markFlag != 0); }
 
-    void setIsJS2Object()   { js2Flag = 1; }
-    void clearIsJS2Object() { js2Flag = 0; }
-    bool isJS2Object()      { return (js2Flag != 0); }
+    void setFlag(ScumFlag f){ flag = f; }
+
+    void setIsJS2Object()   { flag = JS2ObjectFlag; }
+    bool isJS2Object()      { return (flag == JS2ObjectFlag); }
+
+    void setIsString()      { flag = StringFlag; }
+    bool isString()         { return (flag == StringFlag); }
+
+    void clearFlags()       { flag = GenericFlag; }
 
     uint32 getSize()        { return size; }
-    void setSize(uint32 sz) { ASSERT(sz < JS_BIT(30)); size = sz; }
+    void setSize(uint32 sz) { ASSERT(sz < JS_BIT(29)); size = sz; }
 
     Pond *owner;    // for a piece of scum in use, this points to it's own Pond
                     // otherwise it's a link to the next item on the free list
 private:
     unsigned int markFlag:1;
-    unsigned int js2Flag:1;
-    unsigned int size:30;
+    ScumFlag flag:2;
+    unsigned int size:29;
 };
 
 // A pond is a place to get chunks of PondScum from and to return them to
@@ -174,7 +182,7 @@ class Pond {
 public:
     Pond(size_t sz, Pond *nextPond);
     
-    void *allocFromPond(size_t sz, bool isJS2Object);
+    void *allocFromPond(size_t sz, PondScum::ScumFlag flag);
     uint32 returnToPond(PondScum *p);
 
     void resetMarks();
@@ -223,10 +231,10 @@ public:
     static void clear(JS2Metadata *meta);
     static void removeRoot(RootIterator ri);
 
-    static void *alloc(size_t s, bool isJS2Object);
+    static void *alloc(size_t s, PondScum::ScumFlag flag);
     static void unalloc(void *p);
 
-    void *operator new(size_t s)    { return alloc(s, true); }
+    void *operator new(size_t s)    { return alloc(s, PondScum::JS2ObjectFlag); }
     void operator delete(void *p)   { }
 
     virtual void markChildren()     { } // XXX !!!! XXXX these are supposed to not have vtables !!!!
@@ -516,6 +524,7 @@ public:
 //    Invokable *code;              // This method itself (a callable object); null if this method is abstract
     SimpleInstance *fInst;
 
+    virtual ~InstanceMethod();
     virtual void mark();
 };
 
@@ -756,6 +765,8 @@ public:
     FunctionWrapper(bool unchecked, ParameterFrame *compileFrame, NativeCode *code, Environment *env) 
         : bCon(NULL), code(code), unchecked(unchecked), compileFrame(compileFrame), env(new Environment(env)) { }
 
+    virtual ~FunctionWrapper()  { if (bCon) delete bCon; }
+
     BytecodeContainer   *bCon;
     NativeCode          *code;
     bool                unchecked;      // true if the function is untyped, non-method, normal
@@ -778,8 +789,7 @@ public:
     FunctionWrapper *fWrap;
 
     virtual void markChildren();
-    virtual void finalize();
-    virtual ~SimpleInstance()            { }
+    virtual ~SimpleInstance();
 };
 
 // Date instances are simple instances created by the Date class, they have an extra field 

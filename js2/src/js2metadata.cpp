@@ -2949,11 +2949,18 @@ doUnary:
             break;
         }
         m->multiname = new Multiname(definedMultiname);
-        InstanceBinding *ib = new InstanceBinding(access, m);
-        if (ibeP) {
-            for (NamespaceListIterator nli = definedMultiname.nsList->begin(), nlend = definedMultiname.nsList->end(); (nli != nlend); nli++) {
-                (*ibeP)->bindingList.push_back(InstanceBindingEntry::NamespaceBinding(*nli, ib));
-            }
+        InstanceBindingEntry *ibe;
+        if (ibeP == NULL) {
+            ibe = new InstanceBindingEntry(*id);
+            c->instanceBindings.insert(*id, ibe);
+        }
+        else
+            ibe = *ibeP;
+        for (NamespaceListIterator nli = definedMultiname.nsList->begin(), nlend = definedMultiname.nsList->end(); (nli != nlend); nli++) {
+            // XXX here and in defineLocal... why a new binding for each namespace?
+            // (other than it would mess up the destructor sequence :-)
+            InstanceBinding *ib = new InstanceBinding(access, m);
+            ibe->bindingList.push_back(InstanceBindingEntry::NamespaceBinding(*nli, ib));
         }
         return mOverridden;
     }
@@ -3907,14 +3914,15 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         pf = protoFunctions;
         if (pf) {
             while (pf->name) {
+/*
                 SimpleInstance *callInst = new SimpleInstance(this, functionClass->prototype, functionClass);
                 callInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code, env);
                 Multiname *mn = new Multiname(&world.identifiers[pf->name], publicNamespaceList);
                 InstanceMember *m = new InstanceMethod(mn, callInst, true, false);
                 defineInstanceMember(builtinClass, &cxt, mn->name, *mn->nsList, Attribute::NoOverride, false, m, 0);
-
+*/
                 FunctionInstance *fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
-                fInst->fWrap = callInst->fWrap;
+                fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code, env);
                 createDynamicProperty(JS2VAL_TO_OBJECT(builtinClass->prototype), &world.identifiers[pf->name], OBJECT_TO_JS2VAL(fInst), ReadWriteAccess, false, false);
                 createDynamicProperty(fInst, engine->length_StringAtom, INT_TO_JS2VAL(pf->length), ReadAccess, true, false);
                 pf++;
@@ -4110,7 +4118,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         }            
     }
 
-    void SimpleInstance::finalize()
+    SimpleInstance::~SimpleInstance()
     {
         for (LocalBindingIterator bi = localBindings.begin(), bend = localBindings.end(); (bi != bend); bi++) {
             LocalBindingEntry *lbe = *bi;
@@ -4121,6 +4129,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             delete lbe;
         }
         delete [] slots;
+        if (fWrap)
+            delete fWrap;
     }
 
  /************************************************************************************
@@ -4205,6 +4215,18 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             if (fWrap->bCon)
                 fWrap->bCon->mark();
         }
+    }
+
+
+/************************************************************************************
+ *
+ *  InstanceMethod
+ *
+ ************************************************************************************/
+
+    InstanceMethod::~InstanceMethod()       
+    { 
+        delete fInst; 
     }
 
 
@@ -4500,13 +4522,13 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     }
 
     // Allocate a chunk of size s
-    void *JS2Object::alloc(size_t s, bool isJS2Object)
+    void *JS2Object::alloc(size_t s, PondScum::ScumFlag flag)
     {
         s += sizeof(PondScum);
         // make sure that the thing is a multiple of 16 bytes
         if (s & 0xF) s += 16 - (s & 0xF);
         ASSERT(s <= 0x7FFFFFFF);
-        void *p = pond.allocFromPond(s, isJS2Object);
+        void *p = pond.allocFromPond(s, flag);
         ASSERT(((ptrdiff_t)p & 0xF) == 0);
         return p;
     }
@@ -4568,7 +4590,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     }
     
     // Allocate from this or the next Pond (make a new one if necessary)
-    void *Pond::allocFromPond(size_t sz, bool isJS2Object)
+    void *Pond::allocFromPond(size_t sz, PondScum::ScumFlag flag)
     {
         // See if there's room left...
         if (sz > pondSize) {
@@ -4584,10 +4606,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                         freeHeader = (PondScum *)(p->owner);
                     p->owner = this;
                     p->resetMark();      // might have lingering mark from previous gc
-                    if (isJS2Object) 
-                        p->setIsJS2Object();
-                    else
-                        p->clearIsJS2Object();
+                    p->clearFlags();
+                    p->setFlag(flag);
 #ifdef DEBUG
                     memset((p + 1), 0xB7, p->getSize() - sizeof(PondScum));
 #endif
@@ -4601,10 +4621,10 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 // there isn't one; run the gc
                 uint32 released = JS2Object::gc();
                 if (released > sz)
-                    return JS2Object::alloc(sz - sizeof(PondScum), isJS2Object);
+                    return JS2Object::alloc(sz - sizeof(PondScum), flag);
                 nextPond = new Pond(sz, nextPond);
             }
-            return nextPond->allocFromPond(sz, isJS2Object);
+            return nextPond->allocFromPond(sz, flag);
         }
         // there was room, so acquire it
         PondScum *p = (PondScum *)pondTop;
@@ -4613,10 +4633,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 #endif
         p->owner = this;
         p->setSize(sz);
-        if (isJS2Object) 
-            p->setIsJS2Object();
-        else
-            p->clearIsJS2Object();
+        p->setFlag(flag);
         pondTop += sz;
         pondSize -= sz;
         return (p + 1);
@@ -4660,6 +4677,11 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                     obj->finalize();
                     delete obj;
                 }
+                else
+                    if (p->isString()) {
+                        String *s = (String *)(p + 1);
+                        s->erase();
+                    }
                 released += returnToPond(p);
             }
             t += p->getSize();

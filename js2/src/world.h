@@ -70,6 +70,7 @@ namespace JavaScript {
       public:
         StringAtom &operator[](const String &s);
         StringAtom &operator[](const char *s) {return operator[](widenCString(s));}
+        void clear()    { ht.clear(); }
     };
 
 #ifdef DIKDIK
