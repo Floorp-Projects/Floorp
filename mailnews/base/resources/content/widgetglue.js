@@ -912,8 +912,13 @@ function MsgGetFlaggedMsg() {}
 
 function MsgSelectThread() {}
 function MsgSelectFlaggedMsg() {}
-function MsgFind() {}
-function MsgFindAgain() {}
+
+function MsgFind() {
+    messenger.find();
+}
+function MsgFindAgain() {
+    messenger.findAgain();
+}
 
 function MsgSearchMessages() {
     window.openDialog("chrome://messenger/content/SearchDialog.xul", "SearchMail", "chrome");

@@ -107,6 +107,9 @@
 #include "nsWidgetsCID.h"
 #include "nsINetSupportDialogService.h"
 
+// Find / Find Again 
+#include "nsIFindComponent.h"
+
 static NS_DEFINE_CID(kIStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
 static NS_DEFINE_CID(kRDFServiceCID,	NS_RDFSERVICE_CID);
@@ -239,6 +242,9 @@ nsMessenger::nsMessenger()
 nsMessenger::~nsMessenger()
 {
     NS_IF_RELEASE(mWindow);
+
+    // Release search context.
+    mSearchContext = null_nsCOMPtr();
 }
 
 
@@ -362,6 +368,67 @@ nsMessenger::InitializeDisplayCharset()
       mCharsetInitialized = PR_TRUE;
     }
   }
+}
+
+nsresult
+nsMessenger::InitializeSearch( nsIFindComponent *finder )
+{
+    nsresult rv = NS_OK;
+    if (!finder) return NS_ERROR_NULL_POINTER;
+
+    if (!mSearchContext ) {
+        // Create the search context for this browser window.
+        rv = finder->CreateContext( mWebShell, nsnull, getter_AddRefs(mSearchContext));
+    }
+
+    return rv;
+}
+
+
+NS_IMETHODIMP
+nsMessenger::Find()
+{
+    nsresult rv = NS_OK;
+    PRBool   found = PR_FALSE;
+
+    // Get find component.
+    nsCOMPtr <nsIFindComponent> finder = do_GetService(NS_IFINDCOMPONENT_PROGID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    if (!finder) return NS_ERROR_FAILURE;
+
+    // Make sure we've initialized searching for this document.
+    rv = InitializeSearch( finder );
+    if (NS_FAILED(rv)) return rv;
+
+    // Perform find via find component.
+    if (mSearchContext) {
+            rv = finder->Find( mSearchContext, &found );
+    }
+
+    return rv;
+}
+
+NS_IMETHODIMP
+nsMessenger::FindAgain()
+{
+    nsresult rv = NS_OK;
+    PRBool   found = PR_FALSE;
+
+    // Get find component.
+    nsCOMPtr <nsIFindComponent> finder = do_GetService(NS_IFINDCOMPONENT_PROGID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    if (!finder) return NS_ERROR_FAILURE;
+
+    // Make sure we've initialized searching for this document.
+    rv = InitializeSearch( finder );
+    if (NS_FAILED(rv)) return rv;
+
+    // Perform find via find component.
+    if (mSearchContext) {
+            rv = finder->FindNext( mSearchContext, &found );
+    }
+
+    return rv;
 }
 
 NS_IMETHODIMP

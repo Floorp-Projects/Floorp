@@ -84,7 +84,7 @@ class nsBrowserInstance : public nsIBrowserInstance,
 
   protected:
     NS_IMETHOD ExecuteScript(nsIScriptContext * aContext, const nsString& aScript);
-    void InitializeSearch(nsIFindComponent*);
+    nsresult InitializeSearch(nsIFindComponent*);
     NS_IMETHOD CreateMenuItem(nsIDOMNode * , PRInt32,const PRUnichar * );
 	  NS_IMETHOD UpdateGoMenu();
 	  NS_IMETHOD ClearHistoryPopup(nsIDOMNode * );

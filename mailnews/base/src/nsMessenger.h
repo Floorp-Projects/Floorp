@@ -32,6 +32,7 @@
 #include "nsFileSpec.h"
 #include "nsIWebShell.h"
 #include "nsIStringBundle.h"
+#include "nsIFindComponent.h"
 
 class nsMessenger : public nsIMessenger
 {
@@ -53,6 +54,7 @@ protected:
   PRUnichar *GetString(const PRUnichar *aStringName);
 
 private:
+  nsresult InitializeSearch(nsIFindComponent *finder);
   nsString mId;
   void *mScriptObject;
   nsCOMPtr<nsITransactionManager> mTxnMgr;
@@ -69,6 +71,7 @@ private:
 
   PRBool      mCharsetInitialized;
   void        InitializeDisplayCharset();
+  nsCOMPtr<nsISupports>  mSearchContext;
 };
 
 #define NS_MESSENGER_CID \

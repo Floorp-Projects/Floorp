@@ -186,8 +186,8 @@ Rights Reserved.
 
 <!-- Search Menu -->
 <!ENTITY searchMenu.label "Search">
-<!ENTITY findCmd.label ".Find...">  
-<!ENTITY findAgainCmd.label ".Find Again">
+<!ENTITY findCmd.label "Find...">  
+<!ENTITY findAgainCmd.label "Find Again">
 <!-- LOCALIZATION NOTE (searchCurrentCmd.label) : Do not translate "&lt;" and "&gt;" in below line. -->
 <!ENTITY searchCurrentCmd.label ".Search in &lt;current&gt;">
 <!-- LOCALIZATION NOTE (searchParentCmd.label) : Do not translate "&lt;" and "&gt;" in below line. -->

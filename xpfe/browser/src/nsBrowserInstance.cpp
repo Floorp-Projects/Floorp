@@ -1902,7 +1902,7 @@ nsBrowserAppCore::Close()
   NS_IF_RELEASE(mSHistory);
 
   // Release search context.
-  mSearchContext = 0;
+  mSearchContext = null_nsCOMPtr();;
 
   // unregister ourselves with the uri loader because
   // we can no longer accept new content!
@@ -1915,21 +1915,18 @@ nsBrowserAppCore::Close()
 }
 
 
-void
+nsresult
 nsBrowserAppCore::InitializeSearch( nsIFindComponent *finder )
 {
     nsresult rv = NS_OK;
 
-    if ( finder && !mSearchContext ) {
+    if (!finder) return NS_ERROR_NULL_POINTER;
+
+    if (!mSearchContext ) {
         // Create the search context for this browser window.
         rv = finder->CreateContext( mContentAreaWebShell, nsnull, getter_AddRefs(mSearchContext));
-        if ( NS_FAILED( rv ) ) {
-            #ifdef NS_DEBUG
-            printf( "%s %d CreateContext failed, rv=0x%X\n",
-                    __FILE__, (int)__LINE__, (int)rv );
-            #endif
-        }
     }
+    return rv;
 }
 
 NS_IMETHODIMP    
@@ -1939,26 +1936,17 @@ nsBrowserAppCore::Find()
     PRBool   found = PR_FALSE;
     
     // Get find component.
-    nsIFindComponent *finder;
-    rv = nsServiceManager::GetService( NS_IFINDCOMPONENT_PROGID,
-                                       NS_GET_IID(nsIFindComponent),
-                                       (nsISupports**)&finder );
-    if ( NS_SUCCEEDED( rv ) ) {
-        // Make sure we've initialized searching for this document.
-        InitializeSearch( finder );
+    nsCOMPtr <nsIFindComponent> finder = do_GetService(NS_IFINDCOMPONENT_PROGID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    if (!finder) return NS_ERROR_FAILURE;
 
-        // Perform find via find component.
-        if ( finder && mSearchContext ) {
-            rv = finder->Find( mSearchContext, &found );
-        }
+    // Make sure we've initialized searching for this document.
+    rv = InitializeSearch( finder );
+    if (NS_FAILED(rv)) return rv;
 
-        // Release the service.
-        nsServiceManager::ReleaseService( NS_IFINDCOMPONENT_PROGID, finder );
-    } else {
-        #ifdef NS_DEBUG
-            printf( "%s %d: GetService failed for find component, rv=0x08%X\n",
-                    __FILE__, (int)__LINE__, (int)rv );
-        #endif
+    // Perform find via find component.
+    if (mSearchContext) {
+        rv = finder->Find( mSearchContext, &found );
     }
 
     return rv;
@@ -1971,26 +1959,17 @@ nsBrowserAppCore::FindNext()
     PRBool   found = PR_FALSE;
 
     // Get find component.
-    nsIFindComponent *finder;
-    rv = nsServiceManager::GetService( NS_IFINDCOMPONENT_PROGID,
-                                       NS_GET_IID(nsIFindComponent),
-                                       (nsISupports**)&finder );
-    if ( NS_SUCCEEDED( rv ) ) {
-        // Make sure we've initialized searching for this document.
-        InitializeSearch( finder );
+    nsCOMPtr <nsIFindComponent> finder = do_GetService(NS_IFINDCOMPONENT_PROGID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    if (!finder) return NS_ERROR_FAILURE;
 
-        // Perform find via find component.
-        if ( finder && mSearchContext ) {
+    // Make sure we've initialized searching for this document.
+    rv = InitializeSearch( finder );
+    if (NS_FAILED(rv)) return rv;
+
+    // Perform find via find component.
+    if (mSearchContext) {
             rv = finder->FindNext( mSearchContext, &found );
-        }
-
-        // Release the service.
-        nsServiceManager::ReleaseService( NS_IFINDCOMPONENT_PROGID, finder );
-    } else {
-        #ifdef NS_DEBUG
-            printf( "%s %d: GetService failed for find component, rv=0x08%X\n",
-                    __FILE__, (int)__LINE__, (int)rv );
-        #endif
     }
 
     return rv;
@@ -2248,8 +2227,6 @@ CMDLINEHANDLER2_IMPL(nsBrowserContentHandler,"-chrome","general.startup.browser"
 
 NS_IMETHODIMP nsBrowserContentHandler::GetDefaultArgs(PRUnichar **aDefaultArgs) 
 { 
-    static PRBool timebombChecked = PR_FALSE;
-
     if (!aDefaultArgs) return NS_ERROR_FAILURE; 
 
     nsString args;
@@ -2260,6 +2237,7 @@ NS_IMETHODIMP nsBrowserContentHandler::GetDefaultArgs(PRUnichar **aDefaultArgs)
 #else
     nsresult rv;
     nsXPIDLCString url;
+    static PRBool timebombChecked = PR_FALSE;
 
     if (timebombChecked == PR_FALSE)
     {

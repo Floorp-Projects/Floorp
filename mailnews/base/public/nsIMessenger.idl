@@ -103,5 +103,7 @@ interface nsIMessenger : nsISupports {
 	void SetDocumentCharset(in wstring characterSet);
     void saveAs(in string url, in boolean asFile, in nsIMsgIdentity identity);
     void openAttachment(in string url, in string displayName, in string messageUri);
+    void find();
+    void findAgain();
 };
 

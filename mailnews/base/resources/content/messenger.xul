@@ -569,8 +569,8 @@ Rights Reserved.
     </menu>
     <menu value="&searchMenu.label;">
         <menupopup>
-		<menuitem value="&findCmd.label;" disabled="true" oncommand="MsgFind();"/>
-        <menuitem value="&findAgainCmd.label;" disabled="true" oncommand="MsgFindAgain();"/>
+		<menuitem value="&findCmd.label;" oncommand="MsgFind();"/>
+        <menuitem value="&findAgainCmd.label;" oncommand="MsgFindAgain();"/>
         <menuseparator/>
 <!--
         <menuitem value="&searchCurrentCmd.label;" disabled="true" oncommand="MsgSearchCurrent();"/>
