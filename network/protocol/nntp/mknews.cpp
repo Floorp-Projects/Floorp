@@ -566,7 +566,7 @@ net_display_html_error_state (ActiveEntry *ce)
 {
     NewsConData * cd = (NewsConData *)ce->con_data;
 	XP_Bool inMsgPane = FALSE;
-	int major_opcode = cd->response_code/100;
+	int major_opcode = MK_NNTP_RESPONSE_TYPE(cd->response_code);
 	/* #### maybe make this a dialog box
 	   to do that, just return an error.
 	 */
@@ -660,7 +660,7 @@ net_display_html_error_state (ActiveEntry *ce)
 	/* if the server returned a 400 error then it is an expected
 	 * error.  the NEWS_ERROR state will not sever the connection
 	 */
-	if(major_opcode == 4)
+	if(major_opcode == MK_NNTP_RESPONSE_TYPE_CANNOT)
 	  cd->next_state = NEWS_ERROR;
 	else
 	  cd->next_state = NNTP_ERROR;
@@ -744,12 +744,13 @@ net_news_response (ActiveEntry * ce)
 	 * remain in the msg library. We only modify codes within this file.
 	 * Maybe one day we will try to do it again. Zzzzz -- jht
 	 */
-	if(480 == cd->response_code || 450 == cd->response_code || 
-	   502 == cd->response_code)
+	if(MK_NNTP_RESPONSE_AUTHINFO_REQUIRE == cd->response_code ||
+       MK_NTTP_RESPONSE_AUTHINFO_SIMPLE_REQUIRE == cd->response_code || 
+	   MK_NNTP_RESPONSE_PERMISSION_DENIED == cd->response_code)
 	  {
         cd->next_state = NNTP_BEGIN_AUTHORIZE;
-		if (502 == cd->response_code) {
-			if (2 == cd->previous_response_code/100) {
+		if (MK_NNTP_RESPONSE_PERMISSION_DENIED == cd->response_code) {
+			if (MK_NNTP_RESPONSE_TYPE_OK == MK_NNTP_RESPONSE_TYPE(cd->previous_response_code) {
 				if (net_news_last_username_probably_valid) {
 				  net_news_last_username_probably_valid = FALSE;
 				}
@@ -769,11 +770,12 @@ net_news_response (ActiveEntry * ce)
 		}
 	  }
 #else
-	if (480 == cd->response_code || 450 == cd->response_code) 
+	if (MK_NNTP_RESPONSE_AUTHINFO_REQUIRE == cd->response_code ||
+        MK_NNTP_RESPONSE_AUTHINFO_SIMPLE_REQUIRE == cd->response_code) 
 	{
 		cd->next_state = NNTP_BEGIN_AUTHORIZE;
 	}
-	else if (502 == cd->response_code)
+	else if (MK_NNTP_RESPONSE_PERMISSION_DENIED == cd->response_code)
 	{
 	    net_news_last_username_probably_valid = FALSE;
 		return net_display_html_error_state(ce);
@@ -797,9 +799,9 @@ PRIVATE int
 net_nntp_login_response (ActiveEntry * ce)
 {
     NewsConData * cd = (NewsConData *)ce->con_data;
-	XP_Bool postingAllowed = cd->response_code == 200;
+	XP_Bool postingAllowed = cd->response_code == MK_NNTP_RESPONSE_POSTING_ALLOWED;
 
-    if((cd->response_code/100)!=2)
+    if(MK_NNTP_RESPONSE_TYPE(cd->response_code)!=MK_NNTP_RESPONSE_TYPE_OK)
       {
 		ce->URL_s->error_msg  = NET_ExplainErrorDetails(MK_NNTP_ERROR_MESSAGE, cd->response_txt);
 
@@ -870,7 +872,7 @@ PRIVATE int net_nntp_send_list_extensions_response (ActiveEntry *ce)
 {
 	NewsConData *cd = (NewsConData*) ce->con_data;
 
-	if (cd->response_code > 200 && cd->response_code < 300)
+    if (MK_NNTP_RESPONSE_TYPE(cd->response_code) == MK_NNTP_RESPONSE_TYPE_OK)
 	{
 		char *line = NULL;
 		MSG_NewsHost *host = cd->host;
@@ -1413,10 +1415,12 @@ PRIVATE int
 net_send_first_nntp_command_response (ActiveEntry *ce)
 {
     NewsConData * cd = (NewsConData *)ce->con_data;
-	int major_opcode = cd->response_code/100;
+	int major_opcode = MK_NNTP_RESPONSE_TYPE(cd->response_code);
 
-	if((major_opcode == 3 && cd->type_wanted == NEWS_POST)
-	 	|| (major_opcode == 2 && cd->type_wanted != NEWS_POST) )
+	if((major_opcode == MK_NNTP_RESPONSE_TYPE_CONT &&
+        cd->type_wanted == NEWS_POST)
+	 	|| (major_opcode == MK_NNTP_RESPONSE_TYPE_OK &&
+            cd->type_wanted != NEWS_POST) )
       {
 
         cd->next_state = SETUP_NEWS_STREAM;
@@ -1426,7 +1430,8 @@ net_send_first_nntp_command_response (ActiveEntry *ce)
       }
     else
       {
-		if (cd->response_code == 411 && cd->type_wanted == GROUP_WANTED)
+		if (cd->response_code == MK_NNTP_RESPONSE_GROUP_NO_GROUP &&
+            cd->type_wanted == GROUP_WANTED)
 			MSG_GroupNotFound(cd->pane, cd->host, 
 								cd->control_con->current_group, TRUE /* opening group */);
 		return net_display_html_error_state(ce);
@@ -1743,9 +1748,9 @@ net_news_begin_authorize(ActiveEntry * ce)
 	  username = HG63218 (MSG_GetNewsgroupUsername(cd->pane));
 	  if (username && last_username &&
 		  !PL_strcmp (username, last_username) &&
-		  (cd->previous_response_code == 281 || 
-		   cd->previous_response_code == 250 ||
-		   cd->previous_response_code == 211)) {
+		  (cd->previous_response_code == MK_NNTP_RESPONSE_AUTHINFO_OK || 
+		   cd->previous_response_code == MK_NNTP_RESPONSE_AUTHINFO_SIMPLE_OK ||
+		   cd->previous_response_code == MK_NNTP_RESPONSE_GROUP_SELECTED)) {
 		FREEIF (username);
 		MSG_SetNewsgroupUsername(cd->pane, NULL);
 		MSG_SetNewsgroupPassword(cd->pane, NULL);
@@ -1869,7 +1874,8 @@ net_news_authorize_response(ActiveEntry * ce)
 {
     NewsConData * cd = (NewsConData *)ce->con_data;
 
-    if (281 == cd->response_code || 250 == cd->response_code) 
+    if (MK_NNTP_RESPONSE_AUTHINFO_OK == cd->response_code ||
+        MK_NNTP_RESPONSE_AUTHINFO_SIMPLE_OK == cd->response_code) 
 	  {
 		/* successful login */
 
@@ -1890,7 +1896,7 @@ net_news_authorize_response(ActiveEntry * ce)
 		net_news_last_username_probably_valid = TRUE;
 		return(0); 
 	  }
-	else if (381 == cd->response_code)
+	else if (MK_NNTP_RESPONSE_AUTHINFO_CONT == cd->response_code)
 	  {
 		/* password required
 		 */	
@@ -2014,7 +2020,8 @@ net_news_password_response(ActiveEntry * ce)
 {
     NewsConData * cd = (NewsConData *)ce->con_data;
 
-    if (281 == cd->response_code || 250 == cd->response_code) 
+    if (MK_NNTP_RESPONSE_AUTHINFO_OK == cd->response_code ||
+        MK_NNTP_RESPONSE_AUTHINFO_SIMPLE_OK == cd->response_code) 
 	  {
         /* successful login */
          
@@ -2454,10 +2461,10 @@ net_read_xover_response (ActiveEntry *ce)
     NewsConData * cd = (NewsConData *)ce->con_data;
 
 #ifdef TEST_NO_XOVER_SUPPORT
-	cd->response_code = 500; /* pretend XOVER generated an error */
+	cd->response_code = MK_NNTP_RESPONSE_CHECK_ERROR; /* pretend XOVER generated an error */
 #endif
 
-    if(cd->response_code != 224)
+    if(cd->response_code != MK_NNTP_RESPONSE_XOVER_OK)
       {
         /* If we didn't get back "224 data follows" from the XOVER request,
 		   then that must mean that this server doesn't support XOVER.  Or
@@ -2596,7 +2603,7 @@ PRIVATE int net_profile_add_response (ActiveEntry *ce)
 {
 	NewsConData *cd = (NewsConData*) ce->con_data;
 
-	if (cd->response_code >= 200 && cd->response_code <= 299)
+    if (MK_NNTP_RESPONSE_TYPE(cd->response_code) == MK_NNTP_RESPONSE_TYPE_OK)
 	{
 		MSG_AddProfileGroup (cd->pane, cd->host, cd->response_txt);
 		cd->next_state = NEWS_DONE;
@@ -2645,7 +2652,7 @@ PRIVATE int net_profile_delete_response (ActiveEntry *ce)
 {
 	NewsConData *cd = (NewsConData*) ce->con_data;
 
-	if (cd->response_code >= 200 && cd->response_code <= 299)
+    if (MK_NNTP_RESPONSE_TYPE(cd->response_code) == MK_NNTP_RESPONSE_TYPE_OK)
 		cd->next_state = NEWS_DONE;
 	else
 	{
@@ -2694,7 +2701,7 @@ net_read_news_group_response (ActiveEntry *ce)
 {
   NewsConData * cd = (NewsConData *)ce->con_data;
 
-  if (cd->response_code == 221)
+  if (cd->response_code == MK_NNTP_RESPONSE_ARTICLE_HEAD)
 	{     /* Head follows - parse it:*/
 	  cd->next_state = NNTP_READ_GROUP_BODY;
 
@@ -2826,11 +2833,11 @@ net_send_news_post_data_response(ActiveEntry * ce)
     NewsConData * cd = (NewsConData *) ce->con_data;
 
 
-	if (cd->response_code != 240) {
+	if (cd->response_code != MK_NNTP_RESPONSE_POST_OK) {
 	  ce->URL_s->error_msg =
 		NET_ExplainErrorDetails(MK_NNTP_ERROR_MESSAGE, 
 								cd->response_txt ? cd->response_txt : "");
-	  if (cd->response_code == 441 
+	  if (cd->response_code == MK_NNTP_RESPONSE_POST_FAILED 
 		  && MSG_GetPaneType(cd->pane) == MSG_COMPOSITIONPANE
 		  && MSG_IsDuplicatePost(cd->pane) &&
 		  MSG_GetCompositionMessageID(cd->pane)) {
@@ -2948,12 +2955,12 @@ net_DisplayNewsRC(ActiveEntry * ce)
 			FE_SetProgressBarPercent (ce->window_id, -1);
 			cd->newsrc_list_count = 0;
 		  }
-		else if (cd->response_code == 215)  
+		else if (cd->response_code == MK_NNTP_RESPONSE_LIST_OK)  
 		  {
 			/*
 			 * 5-9-96 jefft 
 			 * If for some reason the news server returns an empty 
-			 * newsgroups list with a nntp response code 215 -- list of
+			 * newsgroups list with a nntp response code MK_NNTP_RESPONSE_LIST_OK -- list of
 			 * newsgroups follows. We set ce->status to MK_EMPTY_NEWS_LIST
 			 * to end the infinite dialog loop.
 			 */
@@ -2977,7 +2984,7 @@ net_DisplayNewsRCResponse(ActiveEntry * ce)
 {
     NewsConData * cd = (NewsConData *) ce->con_data;
 
-    if(cd->response_code == 211)
+    if(cd->response_code == MK_NNTP_RESPONSE_GROUP_SELECTED)
       {
 		char *num_arts = 0, *low = 0, *high = 0, *group = 0;
 		int32 first_art, last_art;
@@ -3020,14 +3027,14 @@ net_DisplayNewsRCResponse(ActiveEntry * ce)
 		if (ce->status < 0)
 		  return ce->status;
 	  }
-	  else if (cd->response_code == 411)
+	  else if (cd->response_code == MK_NNTP_RESPONSE_GROUP_NO_GROUP)
 	  {
 		  MSG_GroupNotFound(cd->pane, cd->host, cd->control_con->current_group, FALSE);
 	  }
 	  /* it turns out subscribe ui depends on getting this displaysubscribedgroup call,
 	     even if there was an error.
 	  */
-	  if(cd->response_code != 211)
+	  if(cd->response_code != MK_NNTP_RESPONSE_GROUP_SELECTED)
 	  {
 		/* only on news server error or when zero articles
 		 */
@@ -3092,11 +3099,11 @@ net_do_cancel (ActiveEntry *ce)
 
 
   /* #### Should we do a more real check than this?  If the POST command
-	 didn't respond with "340 Ok", then it's not ready for us to throw a
+	 didn't respond with "MK_NNTP_RESPONSE_POST_SEND_NOW Ok", then it's not ready for us to throw a
 	 message at it...   But the normal posting code doesn't do this check.
 	 Why?
    */
-  PR_ASSERT (cd->response_code == 340);
+  PR_ASSERT (cd->response_code == MK_NNTP_RESPONSE_POST_SEND_NOW);
 
   /* These shouldn't be set yet, since the headers haven't been "flushed" */
   PR_ASSERT (!cd->cancel_id &&
@@ -3365,7 +3372,7 @@ static int net_list_pretty_names_response(ActiveEntry *ce)
 
 	NewsConData * cd = (NewsConData *)ce->con_data;
 
-	if (cd->response_code != 215)
+	if (cd->response_code != MK_NNTP_RESPONSE_LIST_OK)
 	{
 		cd->next_state = DISPLAY_NEWSGROUPS;
 /*		cd->next_state = NEWS_DONE; */
@@ -3441,8 +3448,8 @@ static int net_list_xactive_response(ActiveEntry *ce)
 
 	NewsConData * cd = (NewsConData *)ce->con_data;
 
-	PR_ASSERT(cd->response_code == 215);
-	if (cd->response_code != 215)
+	PR_ASSERT(cd->response_code == MK_NNTP_RESPONSE_LIST_OK);
+	if (cd->response_code != MK_NNTP_RESPONSE_LIST_OK)
 	{
 		cd->next_state = DISPLAY_NEWSGROUPS;
 /*		cd->next_state = NEWS_DONE; */
@@ -3563,8 +3570,8 @@ static int net_list_group_response(ActiveEntry *ce)
 
 	NewsConData * cd = (NewsConData *)ce->con_data;
 
-	PR_ASSERT(cd->response_code == 211);
-	if (cd->response_code != 211)
+	PR_ASSERT(cd->response_code == MK_NNTP_RESPONSE_GROUP_SELECTED);
+	if (cd->response_code != MK_NNTP_RESPONSE_GROUP_SELECTED)
 	{
 		cd->next_state = NEWS_DONE; 
 		cd->pause_for_read = FALSE;
@@ -3609,7 +3616,7 @@ static int net_xpat_response (ActiveEntry *ce)
 	char *line;
 	NewsConData * cd = (NewsConData *)ce->con_data;
 
-	if (cd->response_code != 221)
+	if (cd->response_code != MK_NNTP_RESPONSE_XPAT_OK)
 	{
 		ce->URL_s->error_msg  = NET_ExplainErrorDetails(MK_NNTP_ERROR_MESSAGE, cd->response_txt);
     	cd->next_state = NNTP_ERROR;
@@ -3667,7 +3674,7 @@ PRIVATE int net_nntp_search_response(ActiveEntry *ce)
 {
 	NewsConData * cd = (NewsConData *)ce->con_data;
 	
-	if (cd->response_code >= 200 && cd->response_code <= 299)
+    if (MK_NNTP_RESPONSE_TYPE(cd->response_code) == MK_NNTP_RESPONSE_TYPE_OK)
 		cd->next_state = NNTP_SEARCH_RESULTS;
 	else
 		cd->next_state = NEWS_DONE;
@@ -4872,7 +4879,7 @@ net_ProcessNews (ActiveEntry *ce)
 				  return(ce->status);  /* no line yet or error */
 
 				if (cd->type_wanted == CANCEL_WANTED &&
-					cd->response_code != 221)
+					cd->response_code != MK_NNTP_RESPONSE_ARTICLE_HEAD)
 				  {
 					/* HEAD command failed. */
 					return MK_NNTP_CANCEL_ERROR;
