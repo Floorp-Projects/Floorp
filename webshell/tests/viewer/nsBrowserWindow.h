@@ -200,7 +200,7 @@ public:
   void DumpStyleContexts(FILE *out = stdout);
   void ToggleFrameBorders();
   void ShowContentSize();
-  void ShowFrameSize();
+  void ShowFrameSize(FILE* out = stdout);
   void ShowStyleSize();
   void DoDebugSave();
   void DoToggleSelection();
