@@ -37,9 +37,8 @@
 		<tabpanel />
 	</tabcontrol> 
 
-	<html:iframe src="about:blank" height="400" width="100%" style="height: 400; width: 100%;" name="content"  id="content" scrolling="auto"/>
+	<html:iframe src="about:blank" flex="100%" name="content"  id="content" scrolling="auto"/>
 
-	<spring flex="100%"/>
 	<box align="horizontal">
 		<titledbutton id="dialog.previous" value="&previous.label;" onclick="onBack()" align="left" style="margin-top: 1em;"/>
 		<titledbutton id="dialog.next" value="&next.label;" onclick="onNext()" align="left" style="margin-top: 1em;"/>
