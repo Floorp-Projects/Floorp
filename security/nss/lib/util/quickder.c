@@ -881,7 +881,6 @@ SECStatus SEC_QuickDERDecodeItem(PRArenaPool* arena, void* dest,
 {
     SECStatus rv = SECSuccess;
     SECItem newsrc;
-    void* savpos = NULL;
 
     if (!arena || !templateEntry || !src)
     {
@@ -891,21 +890,12 @@ SECStatus SEC_QuickDERDecodeItem(PRArenaPool* arena, void* dest,
 
     if (SECSuccess == rv)
     {
-        savpos = PORT_ArenaMark(arena);
         newsrc = *src;
         rv = DecodeItem(dest, templateEntry, &newsrc, arena, PR_TRUE);
         if (SECSuccess == rv && newsrc.len)
         {
             rv = SECFailure;
             PORT_SetError(SEC_ERROR_EXTRA_INPUT);
-        }
-        if (SECSuccess != rv)
-        {
-            PORT_ArenaRelease(arena, savpos);
-        }
-        else
-        {
-            PORT_ArenaUnmark(arena, savpos);
         }
     }
 
