@@ -2890,10 +2890,8 @@ nsPostScriptObj::GetUnixPrinterSetting(const nsCAutoString& aKey, char** aVal)
     return nsnull;
   }
 
-  nsAutoString key;
-  key.AssignWithConversion(aKey.get());
   nsAutoString oValue;
-  nsresult res = mPrinterProps->GetStringProperty(key, oValue);
+  nsresult res = mPrinterProps->GetStringProperty(aKey, oValue);
   if (NS_FAILED(res)) {
     return PR_FALSE;
   }

@@ -36,25 +36,28 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-
-%{C++
-
-#include "nsIEnumerator.h"
-#include "nsISupportsArray.h"
-#include "nsIInputStream.h"
-#include "nsIOutputStream.h"
-#include "nsIProperties.h"
-#include "nsID.h"
-#include "nsString.h"
-
-%}
-
-[ptr] native nsStringPtr(nsString);
+#include "nsIProperties.idl"
+#include "nsIInputStream.idl"
+#include "nsIOutputStream.idl"
+#include "nsISimpleEnumerator.idl"
 
 [scriptable, uuid(283EE646-1AEF-11D4-98B3-00C04fA0CE9A)]
 interface nsIPropertyElement : nsISupports {
-  attribute wstring key;
-  attribute wstring value;
+  attribute AUTF8String key;
+  attribute AString value;
+};
+
+[scriptable, uuid(1A180F60-93B2-11d2-9B8B-00805F8A16D9)]
+interface nsIPersistentProperties : nsIProperties
+{
+  void load(in nsIInputStream input);
+  void save(in nsIOutputStream output, in AUTF8String header);
+  void subclass(in nsIPersistentProperties superclass);
+
+  nsISimpleEnumerator enumerate();
+
+  AString getStringProperty(in AUTF8String key);
+  AString setStringProperty(in AUTF8String key, in AString value);
 };
 
 
@@ -64,42 +67,13 @@ interface nsIPropertyElement : nsISupports {
 #define NS_IPROPERTYELEMENT_CID \
 {	0x283ee645, 0x1aef, 0x11d4, \
   { 0x98, 0xb3, 0x0, 0xc0, 0x4f, 0xa0, 0xce, 0x9a } }
-static NS_DEFINE_CID(kPropertyElementCID, NS_IPROPERTYELEMENT_CID);
-
-// {1A180F60-93B2-11d2-9B8B-00805F8A16D9}
-#define NS_IPERSISTENTPROPERTIES_IID \
-{ 0x1a180f60, 0x93b2, 0x11d2, \
-  { 0x9b, 0x8b, 0x0, 0x80, 0x5f, 0x8a, 0x16, 0xd9 } }
 
 #define NS_IPERSISTENTPROPERTIES_CID \
 { 0x2245e573, 0x9464, 0x11d2, \
   { 0x9b, 0x8b, 0x0, 0x80, 0x5f, 0x8a, 0x16, 0xd9 } }
-static NS_DEFINE_CID(kPersistentPropertiesCID, NS_IPERSISTENTPROPERTIES_CID);
 
 #define NS_PERSISTENTPROPERTIES_CONTRACTID "@mozilla.org/persistent-properties;1"
 #define NS_PERSISTENTPROPERTIES_CLASSNAME "Persistent Properties"
 
-class nsIPersistentProperties : public nsIProperties
-{
-public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPERSISTENTPROPERTIES_IID)
-
-  NS_IMETHOD Load(nsIInputStream* aIn) = 0;
-  NS_IMETHOD Save(nsIOutputStream* aOut, const nsString& aHeader) = 0;
-  NS_IMETHOD Subclass(nsIPersistentProperties* aSubclass) = 0;	
-
-  /**
-   * Enumerates the properties in the supplied enumerator.
-   * @return NS_ERROR_FAILURE if no properties to enumerate
-   */
-  NS_IMETHOD EnumerateProperties(nsIBidirectionalEnumerator** aResult) = 0;
-  NS_IMETHOD SimpleEnumerateProperties(nsISimpleEnumerator** aResult) = 0;
-
-  // XXX these 2 methods will be subsumed by the ones from 
-  // nsIProperties once we figure this all out
-  NS_IMETHOD GetStringProperty(const nsAString& aKey, nsAString& aValue) = 0;
-  NS_IMETHOD SetStringProperty(const nsAString& aKey, nsAString& aNewValue,
-                               nsAString& aOldValue) = 0;
-};
-
 %}
+

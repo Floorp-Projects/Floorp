@@ -504,20 +504,20 @@ InitFontEncodingProperties(void)
 
 // Helper to determine if a font has a private encoding that we know something about
 static nsresult
-GetEncoding(const nsString& aFontName, nsString& aValue)
+GetEncoding(const nsCString& aFontName, nsString& aValue)
 {
   // see if we should init the property
   if (! gFontEncodingProperties) {
     // but bail out for common fonts used at startup...
-    if (aFontName.Equals(NS_LITERAL_STRING("Lucida Grande")) ||
-        aFontName.Equals(NS_LITERAL_STRING("Charcoal")) ||
-        aFontName.Equals(NS_LITERAL_STRING("Chicago")) ||
-        aFontName.Equals(NS_LITERAL_STRING("Capitals")) ||
-        aFontName.Equals(NS_LITERAL_STRING("Gadget")) ||
-        aFontName.Equals(NS_LITERAL_STRING("Sand")) ||
-        aFontName.Equals(NS_LITERAL_STRING("Techno")) ||
-        aFontName.Equals(NS_LITERAL_STRING("Textile")) ||
-        aFontName.Equals(NS_LITERAL_STRING("Geneva")) )
+    if (aFontName.Equals(NS_LITERAL_CSTRING("Lucida Grande")) ||
+        aFontName.Equals(NS_LITERAL_CSTRING("Charcoal")) ||
+        aFontName.Equals(NS_LITERAL_CSTRING("Chicago")) ||
+        aFontName.Equals(NS_LITERAL_CSTRING("Capitals")) ||
+        aFontName.Equals(NS_LITERAL_CSTRING("Gadget")) ||
+        aFontName.Equals(NS_LITERAL_CSTRING("Sand")) ||
+        aFontName.Equals(NS_LITERAL_CSTRING("Techno")) ||
+        aFontName.Equals(NS_LITERAL_CSTRING("Textile")) ||
+        aFontName.Equals(NS_LITERAL_CSTRING("Geneva")) )
       return NS_ERROR_NOT_AVAILABLE; // error mean do not get a special encoding
 
     // init the property now
@@ -526,10 +526,9 @@ GetEncoding(const nsString& aFontName, nsString& aValue)
       return rv;
   }
 
-  nsAutoString name;
-  name.Assign(NS_LITERAL_STRING("encoding."));
-  name.Append(aFontName);
-  name.Append(NS_LITERAL_STRING(".ttf"));
+  nsCAutoString name(NS_LITERAL_CSTRING("encoding.") +
+                     aFontName +
+                     NS_LITERAL_CSTRING(".ttf"));
   name.StripWhitespace();
   ToLowerCase(name);
 
@@ -540,7 +539,7 @@ GetEncoding(const nsString& aFontName, nsString& aValue)
 // the converter for the font whose name is given. The CCM caches the converter.
 // The caller holds a reference and should take care of the release.
 static nsresult
-GetConverter(const nsString& aFontName, nsIUnicodeEncoder** aConverter)
+GetConverter(const nsCString& aFontName, nsIUnicodeEncoder** aConverter)
 {
   *aConverter = nsnull;
 
@@ -591,7 +590,7 @@ nsresult
 nsMacUnicodeFontInfo::GetConverterAndCCMap(const nsString& aFontName, nsIUnicodeEncoder** aConverter,
     PRUint16** aCCMap)
 {
-    if(NS_SUCCEEDED(GetConverter(aFontName, aConverter)) && *aConverter)
+    if(NS_SUCCEEDED(GetConverter(NS_ConvertUCS2toUTF8(aFontName), aConverter)) && *aConverter)
     {
         // make sure we have the hashtable
         if(!gFontMaps)

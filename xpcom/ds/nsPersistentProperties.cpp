@@ -175,7 +175,7 @@ nsPersistentProperties::Load(nsIInputStream *aIn)
     else {
       nsAutoString key;
       while ((c >= 0) && (c != '=') && (c != ':')) {
-        key.Append((PRUnichar) c);
+        key.Append(PRUnichar(c));
         c = Read();
       }
       if (c < 0) {
@@ -253,7 +253,7 @@ nsPersistentProperties::Load(nsIInputStream *aIn)
 
       value.Trim(trimThese, PR_TRUE, PR_TRUE);
       nsAutoString oldValue;
-      mSubclass->SetStringProperty(key, value, oldValue);
+      mSubclass->SetStringProperty(NS_ConvertUCS2toUTF8(key), value, oldValue);
     }
   }
   mIn->Close();
@@ -263,14 +263,16 @@ nsPersistentProperties::Load(nsIInputStream *aIn)
 }
 
 NS_IMETHODIMP
-nsPersistentProperties::SetStringProperty(const nsAString& aKey, nsAString& aNewValue,
-  nsAString& aOldValue)
+nsPersistentProperties::SetStringProperty(const nsACString& aKey,
+                                          const nsAString& aNewValue,
+                                          nsAString& aOldValue)
 {
 #if 0
-  cout << "will add " << NS_LossyConvertUCS2toASCII(aKey).get() << "=" << NS_LossyConvertUCS2ToASCII(aNewValue).get() << endl;
+  cout << "will add " << aKey.get() << "=" <<
+    NS_LossyConvertUCS2ToASCII(aNewValue).get() << endl;
 #endif
 
-  NS_ConvertUCS2toUTF8 flatKey(aKey);
+  const nsAFlatCString&  flatKey = PromiseFlatCString(aKey);
   propertyTableEntry *entry =
       NS_STATIC_CAST(propertyTableEntry*,
                      PL_DHashTableOperate(&mTable, flatKey.get(), PL_DHASH_ADD));
@@ -279,7 +281,7 @@ nsPersistentProperties::SetStringProperty(const nsAString& aKey, nsAString& aNew
       aOldValue = entry->mValue;
       NS_WARNING(nsPrintfCString(aKey.Length() + 30,
                                  "the property %s already exists\n",
-                                 NS_ConvertUCS2toUTF8(aKey).get()).get());
+                                 flatKey.get()).get());
   }
 
   entry->mKey = ArenaStrdup(flatKey, &mArena);
@@ -289,7 +291,7 @@ nsPersistentProperties::SetStringProperty(const nsAString& aKey, nsAString& aNew
 }
 
 NS_IMETHODIMP
-nsPersistentProperties::Save(nsIOutputStream* aOut, const nsString& aHeader)
+nsPersistentProperties::Save(nsIOutputStream* aOut, const nsACString& aHeader)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -305,9 +307,10 @@ nsPersistentProperties::Subclass(nsIPersistentProperties* aSubclass)
 }
 
 NS_IMETHODIMP
-nsPersistentProperties::GetStringProperty(const nsAString& aKey, nsAString& aValue)
+nsPersistentProperties::GetStringProperty(const nsACString& aKey,
+                                          nsAString& aValue)
 {
-  NS_ConvertUCS2toUTF8 flatKey(aKey);
+  const nsAFlatCString&  flatKey = PromiseFlatCString(aKey);
 
   propertyTableEntry *entry =
     NS_STATIC_CAST(propertyTableEntry*,
@@ -329,8 +332,8 @@ AddElemToArray(PLDHashTable* table, PLDHashEntryHdr *hdr,
       NS_STATIC_CAST(propertyTableEntry*, hdr);
   
   nsPropertyElement *element =
-      new nsPropertyElement(NS_ConvertUTF8toUCS2(entry->mKey).get(),
-                            entry->mValue);
+    new nsPropertyElement(nsDependentCString(entry->mKey),
+                          nsDependentString(entry->mValue));
   if (!element)
      return PL_DHASH_STOP;
 
@@ -340,30 +343,9 @@ AddElemToArray(PLDHashTable* table, PLDHashEntryHdr *hdr,
   return PL_DHASH_NEXT;
 }
 
-NS_IMETHODIMP
-nsPersistentProperties::EnumerateProperties(nsIBidirectionalEnumerator** aResult)
-{
-  nsISupportsArray* propArray;
-  nsresult rv = NS_NewISupportsArray(&propArray);
-  if (rv != NS_OK)
-    return rv;
-
-  // Step through hash entries populating a transient array
-  PRUint32 n =
-      PL_DHashTableEnumerate(&mTable, AddElemToArray, (void *)propArray);
-   if ( n < mTable.entryCount )
-      return NS_ERROR_OUT_OF_MEMORY;
-
-  // Convert array into enumerator
-  rv = NS_NewISupportsArrayEnumerator(propArray, aResult);
-  if (rv != NS_OK)
-    return rv;
-
-  return NS_OK;
-}
 
 NS_IMETHODIMP
-nsPersistentProperties::SimpleEnumerateProperties(nsISimpleEnumerator** aResult)
+nsPersistentProperties::Enumerate(nsISimpleEnumerator** aResult)
 {
   nsCOMPtr<nsIBidirectionalEnumerator> iterator;
 
@@ -488,38 +470,28 @@ nsPropertyElement::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 NS_IMPL_ISUPPORTS1(nsPropertyElement, nsIPropertyElement)
 
 NS_IMETHODIMP
-nsPropertyElement::GetKey(PRUnichar **aReturnKey)
+nsPropertyElement::GetKey(nsACString& aReturnKey)
 {
-  if (aReturnKey)
-  {
-    *aReturnKey = ToNewUnicode(mKey);
-    return NS_OK;
-  }
-
-  return NS_ERROR_INVALID_POINTER;
+  aReturnKey = mKey;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPropertyElement::GetValue(PRUnichar **aReturnValue)
+nsPropertyElement::GetValue(nsAString& aReturnValue)
 {
-  if (aReturnValue)
-  {
-    *aReturnValue = ToNewUnicode(mValue);
-    return NS_OK;
-  }
-
-  return NS_ERROR_INVALID_POINTER;
+  aReturnValue = mValue;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPropertyElement::SetKey(const PRUnichar* aKey)
+nsPropertyElement::SetKey(const nsACString& aKey)
 {
   mKey = aKey;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPropertyElement::SetValue(const PRUnichar* aValue)
+nsPropertyElement::SetValue(const nsAString& aValue)
 {
   mValue = aValue;
   return NS_OK;

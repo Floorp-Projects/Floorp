@@ -41,8 +41,12 @@
 #include "nsIPersistentProperties2.h"
 #include "pldhash.h"
 #include "plarena.h"
+#include "nsString.h"
 
 class nsIUnicharInputStream;
+
+static NS_DEFINE_CID(kPropertyElementCID, NS_IPROPERTYELEMENT_CID);
+static NS_DEFINE_CID(kPersistentPropertiesCID, NS_IPERSISTENTPROPERTIES_CID);
 
 class nsPersistentProperties : public nsIPersistentProperties
 {
@@ -52,19 +56,8 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPROPERTIES
+  NS_DECL_NSIPERSISTENTPROPERTIES
 
-  // nsIPersistentProperties methods:
-  NS_IMETHOD Load(nsIInputStream* aIn);
-  NS_IMETHOD Save(nsIOutputStream* aOut, const nsString& aHeader);
-  NS_IMETHOD Subclass(nsIPersistentProperties* aSubclass);
-  NS_IMETHOD EnumerateProperties(nsIBidirectionalEnumerator* *aResult);
-  NS_IMETHOD SimpleEnumerateProperties(nsISimpleEnumerator** aResult);
-
-  // XXX these 2 methods will be subsumed by the ones from 
-  // nsIProperties once we figure this all out
-  NS_IMETHOD GetStringProperty(const nsAString& aKey, nsAString& aValue);
-  NS_IMETHOD SetStringProperty(const nsAString& aKey, nsAString& aNewValue,
-                               nsAString& aOldValue);
 
   // nsPersistentProperties methods:
   PRInt32 Read();
@@ -91,7 +84,7 @@ public:
     NS_INIT_ISUPPORTS();
   }
 
-  nsPropertyElement(const PRUnichar *aKey, const PRUnichar *aValue)
+  nsPropertyElement(const nsACString& aKey, const nsAString& aValue)
     : mKey(aKey), mValue(aValue)
   {
     NS_INIT_ISUPPORTS();
@@ -100,18 +93,13 @@ public:
   virtual ~nsPropertyElement() {}
 
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIPROPERTYELEMENT
 
   static NS_METHOD
   Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
-  // nsIPropertyElement methods:
-  NS_IMETHOD GetKey(PRUnichar **aReturnKey);
-  NS_IMETHOD GetValue(PRUnichar **aReturnValue);
-  NS_IMETHOD SetKey(const PRUnichar* aKey);
-  NS_IMETHOD SetValue(const PRUnichar* aValue);
-
 protected:
-  nsString mKey;
+  nsCString mKey;
   nsString mValue;
 };
 
