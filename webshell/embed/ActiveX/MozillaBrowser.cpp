@@ -269,7 +269,7 @@ LRESULT CMozillaBrowser::OnViewSource(WORD wNotifyCode, WORD wID, HWND hWndCtl, 
 		if (spOther)
 		{
 			// tack in the viewsource command
-			BSTR bstrURL = SysAllocString(strUrl);
+			BSTR bstrURL = SysAllocString(strUrl.GetUnicode());
 			CComVariant vURL(bstrURL);
 			VARIANT vNull;
 			vNull.vt = VT_NULL;
@@ -926,7 +926,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 
 	// Load the URL	
 	char *tmpCommand = sCommand.ToNewCString();
-	m_pIWebShell->LoadURL(sUrl, tmpCommand, pIPostData, bModifyHistory);
+	m_pIWebShell->LoadURL(sUrl.GetUnicode(), tmpCommand, pIPostData, bModifyHistory);
 	
 	return S_OK;
 }

@@ -109,7 +109,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::getAttribute(BSTR strAttributeName, LO
 	{
 		USES_CONVERSION;
 		AttributeValue->vt = VT_BSTR;
-		AttributeValue->bstrVal = SysAllocString(W2COLE((const PRUnichar *) szValue));
+		AttributeValue->bstrVal = SysAllocString(W2COLE(szValue.GetUnicode()));
 		return S_OK;
 	}
 	else
@@ -214,7 +214,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_tagName(BSTR __RPC_FAR *p)
 	pIDOMElement->Release();
 
 	USES_CONVERSION;
-	*p = SysAllocString(W2COLE((const PRUnichar *) szTagName));
+	*p = SysAllocString(W2COLE(szTagName.GetUnicode()));
 	return S_OK;
 }
 
