@@ -4,7 +4,7 @@ var gMIMEField        = null;
 var gAppPath          = null;
 var gOutgoingMIME     = null;
 
-var gBundle           = null;
+var gPrefApplicationsBundle = null;
 
 function Startup()
 {
@@ -16,7 +16,7 @@ function Startup()
   gAppPath          = document.getElementById("appPath");
   gOutgoingMime     = document.getElementById("outgoingDefault");
     
-  gBundle           = srGetStrBundle("chrome://communicator/locale/pref/pref-applications.properties");  
+  gPrefApplicationsBundle = document.getElementById("bundle_prefApplications");
   
   gDescriptionField.focus();
 }
@@ -27,8 +27,8 @@ function chooseApp()
   var filePicker = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
   if (filePicker) {
     const FP = Components.interfaces.nsIFilePicker
-    var windowTitle = gBundle.GetStringFromName("chooseHandler");
-    var programsFilter = gBundle.GetStringFromName("programsFilter");
+    var windowTitle = gPrefApplicationsBundle.getString("chooseHandler");
+    var programsFilter = gPrefApplicationsBundle.getString("programsFilter");
     filePicker.init(window, windowTitle, FP.modeOpen);
     if (navigator.platform == "Win32")
       filePicker.appendFilter(programsFilter, "*.exe; *.com");
@@ -61,8 +61,8 @@ function onOK()
   // figure out if this mime type already exists. 
   var exists = mimeHandlerExists(gMIMEField.value);
   if (exists) {
-    var titleMsg = gBundle.GetStringFromName("handlerExistsTitle");
-    var dialogMsg = gBundle.GetStringFromName("handlerExists");
+    var titleMsg = gPrefApplicationsBundle.getString("handlerExistsTitle");
+    var dialogMsg = gPrefApplicationsBundle.getString("handlerExists");
     dialogMsg = dialogMsg.replace(/%mime%/g, gMIMEField.value);
     var commonDialogService = nsJSComponentManager.getService("@mozilla.org/appshell/commonDialogs;1",
                                                               "nsICommonDialogs");

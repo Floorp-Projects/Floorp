@@ -35,8 +35,9 @@
         title="&editType.label;"
         onload="Startup();">
 
+  <stringbundle id="bundle_prefApplications"
+                src="chrome://communicator/locale/pref/pref-applications.properties"/>
   <script type="application/x-javascript" src="chrome://communicator/content/pref/overrideHandler.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
   <script type="application/x-javascript">
   <![CDATA[
@@ -47,13 +48,10 @@
     var gAskBeforeOpen    = null;
     var gIcon             = null;
     var gContentType      = null;
-    
-    var gBundle           = null;
+    var gPrefApplicationsBundle = null;
 
     var gOldMIME          = null;
-    
     var gOldDesc          = null;
-    
     var gOldExtensions   = null;
     
     function Startup()
@@ -68,7 +66,7 @@
       gAppPath          = document.getElementById("appPath");
       gAskBeforeOpen    = document.getElementById("askBeforeOpen");
         
-      gBundle           = srGetStrBundle("chrome://communicator/locale/pref/pref-applications.properties");  
+      gPrefApplicationsBundle = document.getElementById("bundle_prefApplications");
       
       var handlerInfo = window.arguments[0];
       
@@ -116,8 +114,8 @@
         filePicker = filePicker.QueryInterface(Components.interfaces.nsIFilePicker);
       if (filePicker) {
         const FP = Components.interfaces.nsIFilePicker
-        var windowTitle = gBundle.GetStringFromName("chooseHandler");
-        var programsFilter = gBundle.GetStringFromName("programsFilter");
+        var windowTitle = gPrefApplicationsBundle.getString("chooseHandler");
+        var programsFilter = gPrefApplicationsBundle.getString("programsFilter");
         filePicker.init(window, windowTitle, FP.modeOpen);
         if (navigator.platform == "Win32")
           filePicker.appendFilter(programsFilter, "*.exe; *.com");
@@ -157,8 +155,8 @@
       if (gMIMEField.value != gOldMIME) {
         var exists = mimeHandlerExists(gMIMEField.value);
         if (exists) {
-          var titleMsg = gBundle.GetStringFromName("handlerExistsTitle");
-          var dialogMsg = gBundle.GetStringFromName("handlerExists");
+          var titleMsg = gPrefApplicationsBundle.getString("handlerExistsTitle");
+          var dialogMsg = gPrefApplicationsBundle.getString("handlerExists");
           dialogMsg = dialogMsg.replace(/%mime%/g, gMIMEField.value);
           var commonDialogService = nsJSComponentManager.getService("@mozilla.org/appshell/commonDialogs;1",
                                                                     "nsICommonDialogs");

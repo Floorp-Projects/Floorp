@@ -35,7 +35,8 @@
         title="&newTypeTitle.label;"
         onload="Startup();">
 
-  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+  <stringbundle id="bundle_prefApplications"
+                src="chrome://communicator/locale/pref/pref-applications.properties"/>
   <script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/pref/overrideHandler.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-applications-new.js"/>

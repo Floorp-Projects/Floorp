@@ -16,7 +16,7 @@ var fontTypes   = ["serif","sans-serif", /*"cursive", "fantasy",*/"monospace"];
 var variableSize, fixedSize, languageList;
 var languageData = [];
 var currentLanguage;
-var bundle;
+var gPrefutilitiesBundle;
 
 // manual data retrieval function for PrefWindow
 function GetFields()
@@ -98,13 +98,13 @@ function Startup()
     fixedSize    = document.getElementById( "sizeMono" );
     languageList = document.getElementById( "selectLangs" );
 
-    bundle = srGetStrBundle("chrome://communicator/locale/pref/prefutilities.properties");
+    gPrefutilitiesBundle = document.getElementById("bundle_prefutilities");
   
     // register our ok callback function
     parent.hPrefWindow.registerOKCallbackFunc( saveFontPrefs );
     
     // eventually we should detect the default language and select it by default
-	  selectLanguage();
+    selectLanguage();
   }
   
 function listElement( aListID )
@@ -143,7 +143,8 @@ listElement.prototype =
               if( faces[i] == "" )
                 {
                   this.listElement.setAttribute( "data", faces[i] );
-                  this.listElement.setAttribute( "value", bundle.GetStringFromName("nofontsforlang") );
+                  this.listElement.setAttribute("value",
+                                                gPrefutilitiesBundle.getString("nofontsforlang"));
                   this.listElement.setAttribute( "disabled", "true" );
                   gNoFontsForThisLang = true; // hack, hack hack!
                 }
@@ -255,7 +256,7 @@ function saveState()
   }  
   
 function selectLanguage()
-	{
+  {
     // save current state
     saveState();
     

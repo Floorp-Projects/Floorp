@@ -28,11 +28,12 @@
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-navigator.dtd" >
 
 <window debug="false" xmlns:html="http://www.w3.org/1999/xhtml"
-		    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="color-dialog"
         orient="vertical" title="&title.label;"
-  		  onload="parent.initPanel('chrome://communicator/content/pref/pref-navigator.xul');">
+        onload="parent.initPanel('chrome://communicator/content/pref/pref-navigator.xul');">
 
+  <!-- XXX: Replace strres.js when prefutilities is converted -->
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/pref/prefutilities.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
@@ -49,7 +50,7 @@
 
   <!-- navigator starts with -->  
   <titledbox>
-	  <title value="&navRadio;"/>
+    <title value="&navRadio;"/>
     
     <radiogroup id="startupPage" autostretch="never" orient="vertical"
                 pref="true" preftype="int" prefstring="browser.startup.page"
@@ -60,10 +61,10 @@
     </radiogroup>
 
   </titledbox>
-	
+
   <!-- homepage specification -->
   <titledbox orient="vertical">
-  	<title value="&header2.label;"/>
+    <title value="&header2.label;"/>
     <html>&homePageIntro.label;</html>
     <box autostretch="never">
       <text class="label" value="&location.label;" accesskey="&location.accesskey;" for="browserStartupHomepage"/>
