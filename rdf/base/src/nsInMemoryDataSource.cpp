@@ -840,15 +840,12 @@ InMemoryDataSource::HasAssertion(nsIRDFResource* source,
                                  PRBool tv,
                                  PRBool* hasAssertion)
 {
-    NS_PRECONDITION(source != nsnull, "null ptr");
     if (! source)
         return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(property != nsnull, "null ptr");
     if (! property)
         return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(target != nsnull, "null ptr");
     if (! target)
         return NS_ERROR_NULL_POINTER;
 
@@ -940,27 +937,27 @@ InMemoryDataSource::GetTargets(nsIRDFResource* aSource,
 
 
 nsresult
-InMemoryDataSource::LockedAssert(nsIRDFResource* source,
-                                 nsIRDFResource* property,
-                                 nsIRDFNode* target,
-                                 PRBool tv)
+InMemoryDataSource::LockedAssert(nsIRDFResource* aSource,
+                                 nsIRDFResource* aProperty,
+                                 nsIRDFNode* aTarget,
+                                 PRBool aTruthValue)
 {
 #ifdef PR_LOGGING
-    LogOperation("ASSERT", source, property, target, tv);
+    LogOperation("ASSERT", aSource, aProperty, aTarget, aTruthValue);
 #endif
 
-    Assertion* next = GetForwardArcs(source);
+    Assertion* next = GetForwardArcs(aSource);
     Assertion* prev = next;
     Assertion* as = nsnull;
 
     // Walk to the end of the linked list.
     // XXX shouldn't we just keep a pointer to the end, or insert at the front???
     while (next) {
-        if (property == next->mProperty) {
-            if (target == next->mTarget) {
+        if (aProperty == next->mProperty) {
+            if (aTarget == next->mTarget) {
                 // Wow, we already had the assertion. Make sure that the
                 // truth values are correct and bail.
-                next->mTruthValue = tv;
+                next->mTruthValue = aTruthValue;
                 return NS_OK;
             }
         }
@@ -969,13 +966,13 @@ InMemoryDataSource::LockedAssert(nsIRDFResource* source,
         next = next->mNext;
     }
 
-    as = new Assertion(source, property, target, tv);
+    as = new Assertion(aSource, aProperty, aTarget, aTruthValue);
     if (! as)
         return NS_ERROR_OUT_OF_MEMORY;
 
     // Link it in to the "forward arcs" table
     if (!prev) {
-        SetForwardArcs(source, as);
+        SetForwardArcs(aSource, as);
     } else {
         prev->mNext = as;
     }
@@ -985,14 +982,14 @@ InMemoryDataSource::LockedAssert(nsIRDFResource* source,
     // XXX Shouldn't we keep a pointer to the end of the list to make
     // sure this is O(1)?
     prev = nsnull;
-    next = GetReverseArcs(target);
+    next = GetReverseArcs(aTarget);
     while (next) {
         prev = next;
         next = next->mInvNext;
     }
 
     if (!prev) {
-        SetReverseArcs(target, as);
+        SetReverseArcs(aTarget, as);
     } else {
         prev->mInvNext = as;
     }
@@ -1001,16 +998,28 @@ InMemoryDataSource::LockedAssert(nsIRDFResource* source,
 }
 
 NS_IMETHODIMP
-InMemoryDataSource::Assert(nsIRDFResource* source,
-                           nsIRDFResource* property, 
-                           nsIRDFNode* target,
-                           PRBool tv) 
+InMemoryDataSource::Assert(nsIRDFResource* aSource,
+                           nsIRDFResource* aProperty, 
+                           nsIRDFNode* aTarget,
+                           PRBool aTruthValue) 
 {
+    NS_PRECONDITION(aSource != nsnull, "null ptr");
+    if (! aSource)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(aProperty != nsnull, "null ptr");
+    if (! aProperty)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(aTarget != nsnull, "null ptr");
+    if (! aTarget)
+        return NS_ERROR_NULL_POINTER;
+
     nsresult rv;
 
     {
         NS_AUTOLOCK(mLock);
-        rv = LockedAssert(source, property, target, tv);
+        rv = LockedAssert(aSource, aProperty, aTarget, aTruthValue);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -1022,7 +1031,7 @@ InMemoryDataSource::Assert(nsIRDFResource* source,
 
         for (PRInt32 i = PRInt32(count) - 1; i >= 0; --i) {
             nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
-            obs->OnAssert(source, property, target);
+            obs->OnAssert(aSource, aProperty, aTarget);
             NS_RELEASE(obs);
             // XXX ignore return value?
         }
@@ -1033,23 +1042,23 @@ InMemoryDataSource::Assert(nsIRDFResource* source,
 
 
 nsresult
-InMemoryDataSource::LockedUnassert(nsIRDFResource* source,
-                                 nsIRDFResource* property,
-                                 nsIRDFNode* target)
+InMemoryDataSource::LockedUnassert(nsIRDFResource* aSource,
+                                   nsIRDFResource* aProperty,
+                                   nsIRDFNode* aTarget)
 {
 #ifdef PR_LOGGING
-    LogOperation("UNASSERT", source, property, target);
+    LogOperation("UNASSERT", aSource, aProperty, aTarget);
 #endif
 
-    Assertion* next = GetForwardArcs(source);
+    Assertion* next = GetForwardArcs(aSource);
     Assertion* prev = next;
     Assertion* as = nsnull;
 
     while (next) {
-        if (property == next->mProperty) {
-            if (target == next->mTarget) {
+        if (aProperty == next->mProperty) {
+            if (aTarget == next->mTarget) {
                 if (prev == next) {
-                    SetForwardArcs(source, next->mNext);
+                    SetForwardArcs(aSource, next->mNext);
                 } else {
                     prev->mNext = next->mNext;
                 }
@@ -1070,11 +1079,11 @@ InMemoryDataSource::LockedUnassert(nsIRDFResource* source,
     PRBool foundReverseArc = PR_FALSE;
 #endif
 
-    next = prev = GetReverseArcs(target);
+    next = prev = GetReverseArcs(aTarget);
     while (next) {
         if (next == as) {
             if (prev == next) {
-                SetReverseArcs(target, next->mInvNext);
+                SetReverseArcs(aTarget, next->mInvNext);
             } else {
                 prev->mInvNext = next->mInvNext;
             }
@@ -1098,16 +1107,28 @@ InMemoryDataSource::LockedUnassert(nsIRDFResource* source,
 }
 
 NS_IMETHODIMP
-InMemoryDataSource::Unassert(nsIRDFResource* source,
-                             nsIRDFResource* property,
-                             nsIRDFNode* target)
+InMemoryDataSource::Unassert(nsIRDFResource* aSource,
+                             nsIRDFResource* aProperty,
+                             nsIRDFNode* aTarget)
 {
+    NS_PRECONDITION(aSource != nsnull, "null ptr");
+    if (! aSource)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(aProperty != nsnull, "null ptr");
+    if (! aProperty)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(aTarget != nsnull, "null ptr");
+    if (! aTarget)
+        return NS_ERROR_NULL_POINTER;
+
     nsresult rv;
 
     {
         NS_AUTOLOCK(mLock);
 
-        rv = LockedUnassert(source, property, target);
+        rv = LockedUnassert(aSource, aProperty, aTarget);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -1119,7 +1140,7 @@ InMemoryDataSource::Unassert(nsIRDFResource* source,
 
         for (PRInt32 i = PRInt32(count) - 1; i >= 0; --i) {
             nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
-            obs->OnUnassert(source, property, target);
+            obs->OnUnassert(aSource, aProperty, aTarget);
             NS_RELEASE(obs);
             // XXX ignore return value?
         }
@@ -1135,6 +1156,22 @@ InMemoryDataSource::Change(nsIRDFResource* aSource,
                            nsIRDFNode* aOldTarget,
                            nsIRDFNode* aNewTarget)
 {
+    NS_PRECONDITION(aSource != nsnull, "null ptr");
+    if (! aSource)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(aProperty != nsnull, "null ptr");
+    if (! aProperty)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(aOldTarget != nsnull, "null ptr");
+    if (! aOldTarget)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(aNewTarget != nsnull, "null ptr");
+    if (! aNewTarget)
+        return NS_ERROR_NULL_POINTER;
+
     nsresult rv;
 
     {
@@ -1174,6 +1211,22 @@ InMemoryDataSource::Move(nsIRDFResource* aOldSource,
                          nsIRDFResource* aProperty,
                          nsIRDFNode* aTarget)
 {
+    NS_PRECONDITION(aOldSource != nsnull, "null ptr");
+    if (! aOldSource)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(aNewSource != nsnull, "null ptr");
+    if (! aNewSource)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(aProperty != nsnull, "null ptr");
+    if (! aProperty)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(aTarget != nsnull, "null ptr");
+    if (! aTarget)
+        return NS_ERROR_NULL_POINTER;
+
     nsresult rv;
 
     {
@@ -1208,10 +1261,10 @@ InMemoryDataSource::Move(nsIRDFResource* aOldSource,
 
 
 NS_IMETHODIMP
-InMemoryDataSource::AddObserver(nsIRDFObserver* observer)
+InMemoryDataSource::AddObserver(nsIRDFObserver* aObserver)
 {
-    NS_ASSERTION(observer != nsnull, "null ptr");
-    if (! observer)
+    NS_PRECONDITION(aObserver != nsnull, "null ptr");
+    if (! aObserver)
         return NS_ERROR_NULL_POINTER;
 
     NS_AUTOLOCK(mLock);
@@ -1222,15 +1275,15 @@ InMemoryDataSource::AddObserver(nsIRDFObserver* observer)
         if (NS_FAILED(rv)) return rv;
     }
 
-    mObservers->AppendElement(observer);
+    mObservers->AppendElement(aObserver);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-InMemoryDataSource::RemoveObserver(nsIRDFObserver* observer)
+InMemoryDataSource::RemoveObserver(nsIRDFObserver* aObserver)
 {
-    NS_ASSERTION(observer != nsnull, "null ptr");
-    if (! observer)
+    NS_PRECONDITION(aObserver != nsnull, "null ptr");
+    if (! aObserver)
         return NS_ERROR_NULL_POINTER;
 
     NS_AUTOLOCK(mLock);
@@ -1238,7 +1291,7 @@ InMemoryDataSource::RemoveObserver(nsIRDFObserver* observer)
     if (! mObservers)
         return NS_OK;
 
-    mObservers->RemoveElement(observer);
+    mObservers->RemoveElement(aObserver);
     return NS_OK;
 }
 
@@ -1247,10 +1300,6 @@ InMemoryDataSource::ArcLabelsIn(nsIRDFNode* aTarget, nsISimpleEnumerator** aResu
 {
     NS_PRECONDITION(aTarget != nsnull, "null ptr");
     if (! aTarget)
-        return NS_ERROR_NULL_POINTER;
-
-    NS_PRECONDITION(aResult != nsnull, "null ptr");
-    if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
     InMemoryArcsEnumeratorImpl* result =
@@ -1270,10 +1319,6 @@ InMemoryDataSource::ArcLabelsOut(nsIRDFResource* aSource, nsISimpleEnumerator** 
 {
     NS_PRECONDITION(aSource != nsnull, "null ptr");
     if (! aSource)
-        return NS_ERROR_NULL_POINTER;
-
-    NS_PRECONDITION(aResult != nsnull, "null ptr");
-    if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
     NS_AUTOLOCK(mLock);
@@ -1306,10 +1351,6 @@ rdf_ResourceEnumerator(PLHashEntry* he, PRIntn i, void* closure)
 NS_IMETHODIMP
 InMemoryDataSource::GetAllResources(nsISimpleEnumerator** aResult)
 {
-    NS_PRECONDITION(aResult != nsnull, "null ptr");
-    if (! aResult)
-        return NS_ERROR_NULL_POINTER;
-
     nsresult rv;
 
     nsCOMPtr<nsISupportsArray> values;
@@ -1339,7 +1380,7 @@ InMemoryDataSource::GetAllCommands(nsIRDFResource* source,
 
 NS_IMETHODIMP
 InMemoryDataSource::GetAllCmds(nsIRDFResource* source,
-                                   nsISimpleEnumerator/*<nsIRDFResource>*/** commands)
+                               nsISimpleEnumerator/*<nsIRDFResource>*/** commands)
 {
 	return(NS_NewEmptyEnumerator(commands));
 }
@@ -1350,8 +1391,8 @@ InMemoryDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSour
                                      nsISupportsArray/*<nsIRDFResource>*/* aArguments,
                                      PRBool* aResult)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *aResult = PR_FALSE;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1359,8 +1400,7 @@ InMemoryDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                               nsIRDFResource*   aCommand,
                               nsISupportsArray/*<nsIRDFResource>*/* aArguments)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////
