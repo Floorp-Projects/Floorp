@@ -1279,22 +1279,15 @@ nsresult nsWebBrowserPersist::SaveDocumentInternal(
         }
         else
         {
-            // do a simple comparison to see if they are identical locations
-            nsCOMPtr<nsIURI> pathToFileParent;
-            if (NS_SUCCEEDED(aFile->Clone(getter_AddRefs(pathToFileParent))))
+            // generate a relative path if possible
+            nsCOMPtr<nsIURL> pathToBaseURL(do_QueryInterface(aFile));
+            if (pathToBaseURL)
             {
-                nsCOMPtr<nsIURL> urlToChopOffFile = do_QueryInterface(pathToFileParent);
-                if (urlToChopOffFile)
-                {
-                    urlToChopOffFile->SetFileName(NS_LITERAL_CSTRING(""));
-                }
-                PRBool isEqual = PR_FALSE;
-                if (NS_SUCCEEDED(aDataPath->Equals(pathToFileParent, &isEqual))
-                    && isEqual)
+                nsXPIDLCString relativePath;  // nsACString
+                if (NS_SUCCEEDED(pathToBaseURL->GetRelativeSpec(aDataPath, relativePath)))
                 {
                     mCurrentDataPathIsRelative = PR_TRUE;
-                    nsXPIDLCString spec;  // empty spec; it's at same level
-                    mCurrentRelativePathToData = spec;
+                    mCurrentRelativePathToData = relativePath;
                 }
             }
         }
