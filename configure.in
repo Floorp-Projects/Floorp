@@ -903,6 +903,11 @@ case "$target" in
         MKSHLIB_UNFORCE_ALL=
     else
         CYGWIN_WRAPPER="sh ${srcdir}/build/cygwin-wrapper"
+        if test "`echo ${srcdir} | grep -c ^/ 2>/dev/null`" = 0; then
+            AC_MSG_WARN([\$srcdir is relative. You may not get proper debugging info from MSVC. See mozbug 141834 for details.])
+            _pwd=`pwd`
+            CYGWIN_WRAPPER="sh ${_pwd}/${srcdir}/build/cygwin-wrapper"
+        fi
         CC=cl
         CXX=cl
         HOST_CC=cl
