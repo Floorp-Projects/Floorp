@@ -27,12 +27,22 @@
 # 'list' privileges.
 
 # Tinderbox works on the notion of "tree" which is a set of
-# directories.  Perforce has no easily identifiable analog.  We create
-# this notion using the variables
+# directories (under a particular branch).  Perforce has no easily
+# identifiable analog.  We would like to query Perforce about changes
+# only to the set of files which concerns us.  It is not clear if the
+# filespec can be used with the 'describe -s' command to limit the
+# information reported about about a change set.
+
+# We had similar problems with CVS so we create this notion in
+# Tinderbox using the variables
 # $TreeData::VC_TREE{$tree}{'dir_pattern'} which define regular
 # expressions of file names.  There must be at least one file in the
 # change set which matches the dir pattern for us to assume that this
 # change set applies to this tree.  If not we ignore the change set.
+
+# This is not implemented yet since we have no experiance with what is
+# needed but some ideas are left in the code, commented out, so that
+# we can work with them later.
 
 
 
@@ -133,7 +143,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.5 $ )[1];
+$VERSION = ( qw $Revision: 1.6 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -595,7 +605,12 @@ sub apply_db_updates {
   while (1) {
 
         my $change_num = $METADATA{$tree}{'next_change_num'};
+
         my (@cmd) = ('p4', 'describe', '-s', $change_num);
+
+#        if ($TreeData::VC_TREE{$tree}{'file_spec'}) {
+#            (@cmd) = (@cmd, $TreeData::VC_TREE{$tree}{'file_spec'} );
+#        }
 
         store_cmd_output(@cmd);        
 
