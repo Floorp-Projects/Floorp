@@ -187,4 +187,4 @@ pref("print.print_headerfooter_gap", 0); // twips
 // around the content of the page for Print Preview only
 pref("print.print_extra_margin", 90); // twips (90 twips is an eigth of an inch)
 
-pref("print.whileInPrintPreview", false);
+pref("print.whileInPrintPreview", true);
