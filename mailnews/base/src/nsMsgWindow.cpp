@@ -61,6 +61,7 @@
 #include "nsICharsetConverterManager2.h"
 #include "nsIChannel.h"
 #include "nsIRequestObserver.h"
+#include "netCore.h"
 
 #include "plbase64.h"
 #include "nsMsgI18N.h"

@@ -113,6 +113,7 @@
 #include "nsINntpService.h"
 #include "nntpCore.h"
 #include "nsIStreamConverterService.h"
+#include "nsIStreamListenerTee.h"
 
 #include <time.h>
 

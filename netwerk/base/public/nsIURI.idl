@@ -88,7 +88,7 @@
  * knowledge of the underlying charset or there is no plan to display (or
  * otherwise enforce a charset on) the resulting URI substring.
  * 
- * @status UNDER_REVIEW
+ * @status FROZEN
  */
 [scriptable, uuid(07a22cc0-0ce5-11d3-9331-00104ba0fd40)]
 interface nsIURI : nsISupports

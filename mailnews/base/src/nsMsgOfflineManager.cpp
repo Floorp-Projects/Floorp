@@ -39,6 +39,7 @@
  * The offline manager service - manages going online and offline, and synchronization
  */
 #include "msgCore.h"
+#include "netCore.h"
 #include "nsMsgOfflineManager.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"

@@ -39,6 +39,8 @@
 #include "msgCore.h"    // precompiled header...
 #include "nsMsgImapCID.h"
 
+#include "netCore.h"
+
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 
@@ -76,6 +78,7 @@
 #include "nsIMsgHdr.h"
 #include "nsMsgUtils.h"
 #include "nsICacheService.h"
+#include "nsIStreamListenerTee.h"
 #include "nsNetCID.h"
 #include "nsMsgUtf7Utils.h"
 #include "nsIOutputStream.h"

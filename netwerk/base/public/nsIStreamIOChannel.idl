@@ -43,6 +43,9 @@ interface nsIStreamIO;
 /**
  * nsIStreamIOChannel specializes nsIChannel to allow a simple channel to be
  * constructed from an nsIStreamIO object and a URL.
+ *
+ * XXX a channel can only be read, so it seems strange to use "I/O" in the 
+ * name of this channel.
  */
 [scriptable, uuid(308362ce-0d06-11d4-986e-00c04fa0cf4a)]
 interface nsIStreamIOChannel : nsIChannel

@@ -45,6 +45,7 @@
 
 #include "nsISocketTransport.h"
 #include "nsIStreamConverterService.h"
+#include "nsIStreamListenerTee.h"
 #include "nsReadableUtils.h"
 #include "prprf.h"
 #include "prlog.h"

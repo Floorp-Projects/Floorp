@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsStreamListenerProxy.h"
+#include "netCore.h"
 #include "nsIGenericFactory.h"
 #include "nsIPipe.h"
 #include "nsAutoLock.h"

@@ -42,7 +42,7 @@ interface nsIRequest;
 /**
  * nsIRequestObserver
  *
- * @status UNDER_REVIEW
+ * @status FROZEN
  */
 [scriptable, uuid(fd91e2e0-1481-11d3-9333-00104ba0fd40)]
 interface nsIRequestObserver : nsISupports
@@ -50,40 +50,26 @@ interface nsIRequestObserver : nsISupports
     /**
      * Called to signify the beginning of an asynchronous request.
      *
-     * @param request - request being observed
-     * @param ctxt - user defined context
+     * @param aRequest request being observed
+     * @param aContext user defined context
      *
-     * A failure code returned from onStartRequest has the side-effect of
+     * An exception thrown from onStartRequest has the side-effect of
      * causing the request to be canceled.
      */
-    void onStartRequest(in nsIRequest request,
-                        in nsISupports ctxt);
+    void onStartRequest(in nsIRequest aRequest,
+                        in nsISupports aContext);
 
     /**
      * Called to signify the end of an asynchronous request.  This
      * call is always preceded by a call to onStartRequest.
      *
-     * @param request - request being observed
-     * @param ctxt - user defined context
-     * @param statusCode - reason for stopping (NS_OK if completed successfully)
+     * @param aRequest request being observed
+     * @param aContext user defined context
+     * @param aStatusCode reason for stopping (NS_OK if completed successfully)
      *
-     * A failure code returned from onStopRequest is generally ignored.
+     * An exception thrown from onStopRequest is generally ignored.
      */
-    void onStopRequest(in nsIRequest request,
-                       in nsISupports ctxt,
-                       in nsresult statusCode);
+    void onStopRequest(in nsIRequest aRequest,
+                       in nsISupports aContext,
+                       in nsresult aStatusCode);
 };
-
-%{C++
-// Generic status codes for OnStopRequest:
-#define NS_BINDING_SUCCEEDED NS_OK
-#define NS_BINDING_FAILED    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 1)
-#define NS_BINDING_ABORTED   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 2)
-
-// The binding has been moved to another request in the same load group;
-// the request observer should expect another On{Start/Stop}Request pair:
-#define NS_BINDING_REDIRECTED NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 3)
-
-// The binding has been moved to another request in a different load group:
-#define NS_BINDING_RETARGETED NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 4)
-%}

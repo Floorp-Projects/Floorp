@@ -65,6 +65,7 @@
 #include "plbase64.h"
 #include "nsIImapService.h"
 #include "nsISocketTransportService.h"
+#include "nsIStreamListenerTee.h"
 #include "nsNetUtil.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"

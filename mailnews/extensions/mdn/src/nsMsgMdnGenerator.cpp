@@ -54,6 +54,7 @@
 #include "nsMsgLocalFolderHdrs.h"
 #include "nsNetCID.h"
 #include "nsIHttpProtocolHandler.h"
+#include "nsIRequest.h"
 #include "nsMsgKeyArray.h"
 #include "nsISmtpService.h"  // for actually sending the message...
 #include "nsMsgCompCID.h"

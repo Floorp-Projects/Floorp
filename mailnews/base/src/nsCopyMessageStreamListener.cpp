@@ -47,6 +47,7 @@
 #include "nsXPIDLString.h"
 #include "nsIMsgMessageService.h"
 #include "nsMsgUtils.h"
+#include "netCore.h"
 
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);

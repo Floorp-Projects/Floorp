@@ -50,6 +50,7 @@
 #include "nsCRT.h"
 
 class nsITimer;
+class nsIStreamListener;
 
 // {25029490-F132-11d2-9588-00805F369F95}
 #define NS_FTPPROTOCOLHANDLER_CID \

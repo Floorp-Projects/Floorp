@@ -35,29 +35,23 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsStreamListenerTee_h__
-#define nsStreamListenerTee_h__
+#include "nsIStreamProvider.idl"
 
-#include "nsIStreamListenerTee.h"
-#include "nsIInputStreamTee.h"
-#include "nsIOutputStream.h"
-#include "nsCOMPtr.h"
+interface nsIInputStream;
 
-class nsStreamListenerTee : public nsIStreamListenerTee
+/**
+ * A simple stream provider can be used with AsyncWrite to supply data from 
+ * an existing input stream.
+ */
+[scriptable, uuid(c20bb3b9-0755-4eff-9222-3537f9e89082)]
+interface nsISimpleStreamProvider : nsIStreamProvider
 {
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIREQUESTOBSERVER
-    NS_DECL_NSISTREAMLISTENER
-    NS_DECL_NSISTREAMLISTENERTEE
-
-    nsStreamListenerTee() { NS_INIT_ISUPPORTS(); }
-    virtual ~nsStreamListenerTee() { }
-
-private:
-    nsCOMPtr<nsIInputStreamTee> mInputTee;
-    nsCOMPtr<nsIStreamListener> mListener;
-    nsCOMPtr<nsIOutputStream>   mSink;
+    /**
+     * Initialize the simple stream provider.
+     *
+     * @param aSource data will be read from this input stream to the channel
+     * @param aObserver optional stream observer (can be NULL)
+     */
+    void init(in nsIInputStream aSource,
+              in nsIRequestObserver aObserver);
 };
-
-#endif

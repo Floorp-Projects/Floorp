@@ -38,7 +38,7 @@
 #ifndef nsAsyncStreamListener_h__
 #define nsAsyncStreamListener_h__
 
-#include "nsIStreamListener.h"
+#include "nsIStreamListenerProxy.h"
 #include "nsCOMPtr.h"
 #include "nsIEventQueue.h"
 #include "nsIRequestObserver.h"

@@ -35,29 +35,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsStreamListenerTee_h__
-#define nsStreamListenerTee_h__
+#include "nsIStreamListener.idl"
 
-#include "nsIStreamListenerTee.h"
-#include "nsIInputStreamTee.h"
-#include "nsIOutputStream.h"
-#include "nsCOMPtr.h"
+interface nsIOutputStream;
 
-class nsStreamListenerTee : public nsIStreamListenerTee
+/**
+ * As data "flows" into a stream listener tee, it is copied to the output stream
+ * and then forwarded to the real listener.
+ */
+[scriptable, uuid(fb683e76-d42b-41a4-8ae6-65a6c2b146e5)]
+interface nsIStreamListenerTee : nsIStreamListener
 {
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIREQUESTOBSERVER
-    NS_DECL_NSISTREAMLISTENER
-    NS_DECL_NSISTREAMLISTENERTEE
-
-    nsStreamListenerTee() { NS_INIT_ISUPPORTS(); }
-    virtual ~nsStreamListenerTee() { }
-
-private:
-    nsCOMPtr<nsIInputStreamTee> mInputTee;
-    nsCOMPtr<nsIStreamListener> mListener;
-    nsCOMPtr<nsIOutputStream>   mSink;
+    void init(in nsIStreamListener listener,
+              in nsIOutputStream sink);
 };
-
-#endif

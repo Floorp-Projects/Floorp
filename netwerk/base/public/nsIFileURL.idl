@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Darin Fisher <darin@netscape.com>
+ *   Darin Fisher <darin@netscape.com> (extracted from nsIFileChannel.idl)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -43,6 +43,8 @@ interface nsIFile;
 /**
  * nsIFileURL is used for the file: protocol, and gives access to the
  * underlying nsIFile object.
+ *
+ * @status UNDER_REVIEW
  */
 [scriptable, uuid(d26b2e2e-1dd1-11b2-88f3-8545a7ba7949)]
 interface nsIFileURL : nsIURL

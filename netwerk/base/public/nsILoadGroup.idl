@@ -42,11 +42,11 @@ interface nsIRequestObserver;
 interface nsIInterfaceRequestor;
 
 /**
- * A load group maintains a collection of active URL requests. 
+ * A load group maintains a collection of nsIRequest objects. 
  *
- * @status UNDER_REVIEW
+ * @status FROZEN
  */
-[scriptable, uuid(19845248-29ab-11d3-8cce-0060b0fc14a3)]
+[scriptable, uuid(3de0a31c-feaf-400f-9f1e-4ef71f8b20cc)]
 interface nsILoadGroup : nsIRequest
 {
     /**
@@ -75,16 +75,16 @@ interface nsILoadGroup : nsIRequest
      * request is null, then the load group will inherit its load flags from
      * the request.
      */
-    void addRequest(in nsIRequest request,
-                    in nsISupports ctxt);
+    void addRequest(in nsIRequest aRequest,
+                    in nsISupports aContext);
 
     /**
      * Removes a request from the group.  If this is a foreground request
      * then the groupObserver's onStopRequest will be called.
      */
-    void removeRequest(in nsIRequest request, 
-                       in nsISupports ctxt,
-                       in nsresult status);
+    void removeRequest(in nsIRequest aRequest, 
+                       in nsISupports aContext,
+                       in nsresult aStatus);
 
     /**
      * Returns the requests contained directly in this group.

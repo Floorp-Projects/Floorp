@@ -65,7 +65,12 @@ XPIDLSRCS	= \
 		nsIRequestObserver.idl \
 		nsIRequestObserverProxy.idl \
 		nsIStreamListener.idl \
+		nsIStreamListenerProxy.idl \
+		nsIStreamListenerTee.idl \
 		nsIStreamProvider.idl \
+		nsIStreamProviderProxy.idl \
+		nsISimpleStreamListener.idl \
+		nsISimpleStreamProvider.idl \
 		nsIStreamLoader.idl \
 		nsIUploadChannel.idl \
 		nsIURI.idl \
@@ -90,6 +95,7 @@ EXPORTS		= \
 		nsUnixColorPrintf.h \
 		nsReadLine.h \
 		nsCPasswordManager.h \
+		nsCPasswordManagerInternal.h \
 		$(NULL)
 
 PREF_JS_EXPORTS = $(srcdir)/security-prefs.js

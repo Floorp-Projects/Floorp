@@ -24,12 +24,13 @@ MODULE = necko
 DEPTH = ..\..\..
 include <$(DEPTH)/config/config.mak>
 
-EXPORTS =                           \
-        netCore.h                   \
-        nsNetUtil.h                 \
-        nsUnixColorPrintf.h         \
-        nsReadLine.h		    \
-        nsCPasswordManager.h        \
+EXPORTS =                            \
+        netCore.h                    \
+        nsNetUtil.h                  \
+        nsUnixColorPrintf.h          \
+        nsReadLine.h		         \
+        nsCPasswordManager.h         \
+        nsCPasswordManagerInternal.h \
 	$(NULL)
 
 XPIDLSRCS =                             \
@@ -58,22 +59,26 @@ XPIDLSRCS =                             \
         .\nsIProxyInfo.idl              \
         .\nsIProxy.idl                  \
         .\nsIRequest.idl                \
-        .\nsITransport.idl               \
+        .\nsITransport.idl              \
         .\nsISocketTransport.idl        \
         .\nsISocketTransportService.idl \
         .\nsIStreamIO.idl               \
-        .\nsIStreamIOChannel.idl	\
-        .\nsIResumableChannel.idl        \
-        .\nsIResumableEntityID.idl       \
-        .\nsIRequestObserver.idl         \
-        .\nsIRequestObserverProxy.idl         \
+        .\nsIStreamIOChannel.idl	    \
+        .\nsIResumableChannel.idl       \
+        .\nsIResumableEntityID.idl      \
+        .\nsIRequestObserver.idl        \
+        .\nsIRequestObserverProxy.idl   \
+        .\nsISimpleStreamListener.idl   \
+        .\nsISimpleStreamProvider.idl   \
         .\nsIStreamListener.idl         \
+        .\nsIStreamListenerProxy.idl    \
+        .\nsIStreamListenerTee.idl      \
         .\nsIStreamProvider.idl         \
+        .\nsIStreamProviderProxy.idl    \
         .\nsIStreamLoader.idl           \
-	.\nsIStreamProvider.idl         \
-	.\nsITransport.idl              \
+        .\nsITransport.idl              \
         .\nsIDownloader.idl             \
-	.\nsIUploadChannel.idl          \
+        .\nsIUploadChannel.idl          \
         .\nsIURI.idl                    \
         .\nsIURIChecker.idl             \
         .\nsIURL.idl                    \
@@ -82,13 +87,13 @@ XPIDLSRCS =                             \
         .\nsIStandardURL.idl            \
         .\nsIWebFilters.idl             \
         .\nsISecurityEventSink.idl      \
-	.\nsISecretDecoderRing.idl	\
-	.\nsISecureBrowserUI.idl	\
-	.\nsISecurityManagerComponent.idl	\
-    .\nsICachingChannel.idl             \
-    .\nsIByteRangeRequest.idl           \
-	.\nsIMultiPartChannel.idl		\
-	$(NULL)
+        .\nsISecretDecoderRing.idl    	\
+        .\nsISecureBrowserUI.idl	    \
+        .\nsISecurityManagerComponent.idl	\
+        .\nsICachingChannel.idl         \
+        .\nsIByteRangeRequest.idl       \
+        .\nsIMultiPartChannel.idl		\
+        $(NULL)
 
 include <$(DEPTH)/config/rules.mak>
 

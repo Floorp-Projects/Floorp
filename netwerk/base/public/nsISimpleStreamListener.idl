@@ -35,29 +35,23 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsStreamListenerTee_h__
-#define nsStreamListenerTee_h__
+#include "nsIStreamListener.idl"
 
-#include "nsIStreamListenerTee.h"
-#include "nsIInputStreamTee.h"
-#include "nsIOutputStream.h"
-#include "nsCOMPtr.h"
+interface nsIOutputStream;
 
-class nsStreamListenerTee : public nsIStreamListenerTee
+/**
+ * A simple stream listener can be used with AsyncRead to supply data to
+ * a output stream.
+ */
+[scriptable, uuid(a9b84f6a-0824-4278-bae6-bfca0570a26e)]
+interface nsISimpleStreamListener : nsIStreamListener
 {
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIREQUESTOBSERVER
-    NS_DECL_NSISTREAMLISTENER
-    NS_DECL_NSISTREAMLISTENERTEE
-
-    nsStreamListenerTee() { NS_INIT_ISUPPORTS(); }
-    virtual ~nsStreamListenerTee() { }
-
-private:
-    nsCOMPtr<nsIInputStreamTee> mInputTee;
-    nsCOMPtr<nsIStreamListener> mListener;
-    nsCOMPtr<nsIOutputStream>   mSink;
+    /**
+     * Initialize the simple stream listener.
+     *
+     * @param aSink data will be read from the channel to this output stream
+     * @param aObserver optional stream observer (can be NULL)
+     */
+    void init(in nsIOutputStream aSink,
+              in nsIRequestObserver aObserver);
 };
-
-#endif

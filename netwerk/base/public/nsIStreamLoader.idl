@@ -75,14 +75,4 @@ interface nsIStreamLoader : nsISupports
      * Gets the request that loaded this file
      */
     readonly attribute nsIRequest request;
-
 };
-
-%{C++
-
-#define NS_STREAMLOADER_CID                   \
-{ /* 5BA6D920-D4E9-11d3-A1A5-0050041CAF44 */         \
- 0x5ba6d920, 0xd4e9, 0x11d3, { 0xa1, 0xa5, 0x0, 0x50, 0x4, 0x1c, 0xaf, 0x44 } \
-}
-
-%}

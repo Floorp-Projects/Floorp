@@ -32,6 +32,8 @@
 
 #include "gfxIImageFrame.h"
 
+#include "netCore.h"
+
 #include "nsIChannel.h"
 #include "nsICachingChannel.h"
 #include "nsILoadGroup.h"

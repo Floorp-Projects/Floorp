@@ -30,6 +30,7 @@
 #include "nsDocShell.h"
 #include "nsICommandManager.h"
 
+class nsIEventQueue;
 class nsIController;
 struct PRThread;
 

@@ -44,6 +44,8 @@
 #include "msgCore.h"
 #include "nsMsgImapCID.h"
 
+#include "netCore.h"
+
 #include "nsString.h"
 #include "nsReadableUtils.h"
 

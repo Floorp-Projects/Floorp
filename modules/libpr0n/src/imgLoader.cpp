@@ -37,6 +37,8 @@
 #include "nsIURI.h"
 #include "nsXPIDLString.h"
 
+#include "netCore.h"
+
 #include "imgCache.h"
 #include "imgRequest.h"
 #include "imgRequestProxy.h"

@@ -8,3 +8,4 @@ nsUnixColorPrintf.h
 nsReadLine.h
 nsIPasswordManagerUtils.h
 nsCPasswordManager.h
+nsCPasswordManagerInternal.h
