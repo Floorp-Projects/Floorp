@@ -83,6 +83,7 @@ public:
   NS_IMETHOD GetBoundNode(nsIDOMNode **aBoundNode);
   NS_IMETHOD GetDependencies(nsIArray **aDependencies);
   NS_IMETHOD GetElement(nsIDOMElement **aElement);
+  NS_IMETHOD ResetBoundNode();
   NS_IMETHOD Bind();
   NS_IMETHOD TryFocus(PRBool* aOK);
 

@@ -63,9 +63,11 @@ PACKAGE_VERSION = 0.1
 xpi:
 	@echo Copying files to staging area...
 	rm -rf stage
-	$(NSINSTALL) -D stage
+	$(INSTALL) -D stage
 	$(PERL) $(topsrcdir)/xpinstall/packager/pkgcp.pl -o $(PKGCP_PLATFORM) -s $(DIST)/bin -d stage -f $(srcdir)/$(PACKAGE_FILE) -v
-	$(NSINSTALL) $(srcdir)/install.rdf stage/xforms
+	$(INSTALL) $(srcdir)/install.rdf stage/xforms
+	$(INSTALL) -D stage/xforms/defaults/preferences
+	$(INSTALL) $(srcdir)/../xforms.js stage/xforms/defaults/preferences
 	@echo Creating install.js...
 	rm -f xforms.js
 	$(PERL) $(topsrcdir)/toolkit/mozapps/installer/makejs.pl $(srcdir)/xforms.jst $(PACKAGE_VERSION) stage/xforms

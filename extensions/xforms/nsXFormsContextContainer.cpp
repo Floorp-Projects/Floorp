@@ -89,6 +89,7 @@ public:
   NS_IMETHOD CloneState(nsIDOMElement *aElement);
 
   // nsIXFormsControl
+  NS_IMETHOD Bind();
   NS_IMETHOD Refresh();
 
   // nsIXFormsContextControl
@@ -214,6 +215,13 @@ nsXFormsContextContainer::GetContext(nsAString    &aModelID,
 }
 
 // nsIXFormsControl
+
+NS_IMETHODIMP
+nsXFormsContextContainer::Bind()
+{
+  return NS_OK;
+}
+
 nsresult
 nsXFormsContextContainer::Refresh()
 {

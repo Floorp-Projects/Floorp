@@ -11,6 +11,9 @@ if (verifyDiskSpace(fProgram, srChrome + srComponents))
   logComment("addDirectory components: " + err);
   err = addDirectory("", "0.1", "chrome", fProgram, "chrome", true);
   logComment("addDirectory chrome: " + err);
+  err = addFile("", "0.1", "defaults/preferences/xforms.js", fProgram,
+                "defaults/pref/xforms.js", true);
+  logComment("addFile xforms.js: " + err);
 
   registerChrome(PACKAGE | DELAYED_CHROME, getFolder("Chrome", "xforms.jar"),
                  "content/xforms/");

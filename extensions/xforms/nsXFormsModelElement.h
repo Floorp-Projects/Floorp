@@ -101,6 +101,7 @@ private:
   NS_HIDDEN_(already_AddRefed<nsIDOMDocument>)
     FindInstanceDocument(const nsAString &aID);
 
+  NS_HIDDEN_(nsresult) ProcessBindElements();
   NS_HIDDEN_(nsresult) FinishConstruction();
   NS_HIDDEN_(void)     MaybeNotifyCompletion();
 

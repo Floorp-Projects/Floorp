@@ -122,20 +122,6 @@ nsXFormsTriggerElement::GetInsertionPoint(nsIDOMElement **aElement)
 NS_IMETHODIMP
 nsXFormsTriggerElement::Refresh()
 {
-  nsCOMPtr<nsIDOMXPathResult> result;
-  nsresult rv =
-    ProcessNodeBinding(NS_LITERAL_STRING("ref"),
-                       nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
-                       getter_AddRefs(result));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!result) {
-    return NS_OK;
-  }
-
-  // Get context node, if any  
-  result->GetSingleNodeValue(getter_AddRefs(mBoundNode));
-
   return NS_OK;
 }
 

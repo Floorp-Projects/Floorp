@@ -106,6 +106,7 @@ public:
   NS_IMETHOD OnDestroyed();
 
   // nsIXFormsControl
+  NS_IMETHOD Bind();
   NS_IMETHOD Refresh();
   NS_IMETHOD TryFocus(PRBool* aOK);
 
@@ -182,40 +183,28 @@ nsXFormsGroupElement::OnDestroyed()
 // nsIXFormsControl
 
 NS_IMETHODIMP
+nsXFormsGroupElement::Bind()
+{
+  mModelID.Truncate();
+
+  // Re-evaluate what instance node this element is bound to.
+  ResetBoundNode();
+
+  // Get model ID
+  nsCOMPtr<nsIDOMElement> modelElement = do_QueryInterface(mModel);
+  NS_ENSURE_TRUE(modelElement, NS_ERROR_FAILURE);
+  modelElement->GetAttribute(NS_LITERAL_STRING("id"), mModelID);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXFormsGroupElement::Refresh()
 {
 #ifdef DEBUG_XF_GROUP
   printf("nsXFormsGroupElement::Refresh()\n");
 #endif
 
-  if (!mHTMLElement) 
-    return NS_OK;
-
-  mModelID.Truncate();
-
-  nsCOMPtr<nsIModelElementPrivate> modelNode;
-  nsCOMPtr<nsIDOMXPathResult> result;
-  nsresult rv =
-    ProcessNodeBinding(NS_LITERAL_STRING("ref"),
-                       nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
-                       getter_AddRefs(result),
-                       getter_AddRefs(modelNode));
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  if (!result) {
-    return NS_OK;
-  }
-
-  
-  // Get model ID
-  nsCOMPtr<nsIDOMElement> modelElement = do_QueryInterface(modelNode);
-  NS_ENSURE_TRUE(modelElement, NS_ERROR_FAILURE);
-  modelElement->GetAttribute(NS_LITERAL_STRING("id"), mModelID);
-
-  // Get context node, if any  
-  result->GetSingleNodeValue(getter_AddRefs(mBoundNode));
-  NS_ENSURE_STATE(mBoundNode);
-  
   return NS_OK;
 }
 

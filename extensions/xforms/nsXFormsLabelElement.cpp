@@ -168,22 +168,12 @@ nsXFormsLabelElement::RefreshLabel()
   // or linking attributes are present, we don't want to show the inline text
   // at all.
 
-  nsCOMPtr<nsIDOMXPathResult> result;
-  nsresult rv =
-    ProcessNodeBinding(NS_LITERAL_STRING("ref"),
-                       nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
-                       getter_AddRefs(result));
-
   nsAutoString labelValue;
   PRBool foundValue = PR_FALSE;
 
-  if (NS_SUCCEEDED(rv) && result) {
-    result->GetSingleNodeValue(getter_AddRefs(mBoundNode));
-
-    if (mBoundNode) {
-      nsXFormsUtils::GetNodeValue(mBoundNode, labelValue);
-      foundValue = PR_TRUE;
-    }
+  if (mBoundNode) {
+    nsXFormsUtils::GetNodeValue(mBoundNode, labelValue);
+    foundValue = PR_TRUE;
   }
 
   // if (!foundValue) {

@@ -297,17 +297,11 @@ nsXFormsSelectElement::Refresh()
     mSelect->SetSelectedIndex(-1);
   }
 
-  nsCOMPtr<nsIDOMXPathResult> result;
-  rv = ProcessNodeBinding(NS_LITERAL_STRING("ref"),
-                          nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
-                          getter_AddRefs(result));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (result)
-    result->GetSingleNodeValue(getter_AddRefs(mBoundNode));
-
-  if (!mBoundNode)
+  // since single node binding is optional, we won't send an error code.  But
+  // there is no point continuing below without mBoundNode.
+  if(!mBoundNode) {
     return NS_OK;
+  }
 
   nsCOMPtr<nsIDOMNodeList> children;
   mBoundNode->GetChildNodes(getter_AddRefs(children));

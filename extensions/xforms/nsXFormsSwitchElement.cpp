@@ -88,6 +88,7 @@ public:
   NS_DECL_NSIXFORMSSWITCHELEMENT
 
   // nsIXFormsControl
+  NS_IMETHOD Bind();
   NS_IMETHOD Refresh();
 
   NS_DECL_NSIXFORMSCONTEXTCONTROL
@@ -116,8 +117,6 @@ private:
    * tries to focus first focusable element in aSelected.
    */
   void SetFocus(nsIDOMElement* aDeselected, nsIDOMElement* aSelected);
-
-  nsresult Process();
 
   nsCOMPtr<nsIDOMElement> mVisual;
   nsCOMPtr<nsIDOMElement> mSelected;
@@ -227,46 +226,28 @@ nsXFormsSwitchElement::DoneAddingChildren()
 // nsIXFormsControl
 
 NS_IMETHODIMP
-nsXFormsSwitchElement::Refresh()
-{
-  nsresult rv = NS_OK;
-  if (mDoneAddingChildren) {
-    rv = Process();
-  }
-  return rv;
-}
-
-// nsXFormsSwitchElement
-
-nsresult
-nsXFormsSwitchElement::Process()
+nsXFormsSwitchElement::Bind()
 {
   mModelID.Truncate();
 
-  nsCOMPtr<nsIModelElementPrivate> modelNode;
-  nsCOMPtr<nsIDOMXPathResult> result;
-  nsresult rv =
-    ProcessNodeBinding(NS_LITERAL_STRING("ref"),
-                       nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
-                       getter_AddRefs(result),
-                       getter_AddRefs(modelNode));
-  
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  if (!result) {
-    return NS_OK;
-  }
+  // Re-evaluate what instance node this element is bound to.
+  ResetBoundNode();
 
   // Get model ID
-  nsCOMPtr<nsIDOMElement> modelElement = do_QueryInterface(modelNode);
+  nsCOMPtr<nsIDOMElement> modelElement = do_QueryInterface(mModel);
   NS_ENSURE_TRUE(modelElement, NS_ERROR_FAILURE);
   modelElement->GetAttribute(NS_LITERAL_STRING("id"), mModelID);
 
-  // Get context node, if any  
-  result->GetSingleNodeValue(getter_AddRefs(mBoundNode));
-
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsXFormsSwitchElement::Refresh()
+{
+  return NS_OK;
+}
+
+// nsXFormsSwitchElement
 
 NS_IMETHODIMP
 nsXFormsSwitchElement::SetContextNode(nsIDOMNode *aContextNode)

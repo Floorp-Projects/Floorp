@@ -159,6 +159,7 @@ public:
   NS_IMETHOD DoneAddingChildren();
 
   // nsIXFormsControl
+  NS_IMETHOD Bind();
   NS_IMETHOD Refresh();
   NS_IMETHOD TryFocus(PRBool* aOK);
 
@@ -279,6 +280,12 @@ nsXFormsRepeatElement::DoneAddingChildren()
 
 
 // nsXFormsControl
+
+NS_IMETHODIMP
+nsXFormsRepeatElement::Bind()
+{
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsXFormsRepeatElement::Refresh()

@@ -100,6 +100,30 @@ nsXFormsControlStub::GetElement(nsIDOMElement **aElement)
   return NS_OK;  
 }
 
+NS_IMETHODIMP
+nsXFormsControlStub::ResetBoundNode()
+{
+  mBoundNode = nsnull;
+
+  nsCOMPtr<nsIModelElementPrivate> modelNode;
+  nsCOMPtr<nsIDOMXPathResult> result;
+  nsresult rv =
+    ProcessNodeBinding(NS_LITERAL_STRING("ref"),
+                       nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
+                       getter_AddRefs(result),
+                       getter_AddRefs(modelNode));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  if (!result) {
+    return NS_OK;
+  }
+
+  // Get context node, if any  
+  result->GetSingleNodeValue(getter_AddRefs(mBoundNode));
+
+  return NS_OK;
+}
+
 /**
  * @note Refresh() is always called after a Bind(), so if a control decides to
  * do all the work in Refresh() this function implements a NOP Bind().
@@ -107,7 +131,7 @@ nsXFormsControlStub::GetElement(nsIDOMElement **aElement)
 NS_IMETHODIMP
 nsXFormsControlStub::Bind()
 {
-  return NS_OK;
+  return ResetBoundNode();
 }
 
 NS_IMETHODIMP

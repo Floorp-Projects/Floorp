@@ -423,11 +423,39 @@ nsXFormsModelElement::Rebuild()
   // TODO: Clear graph and re-attach elements
 
   // 1 . Clear graph
-  // mMDG.Clear();
+  mMDG.Clear();
 
   // 2. Re-attach all elements
 
+  // Copy the form control list as it stands right now.
+  nsVoidArray *oldFormList = new nsVoidArray();
+  *oldFormList = mFormControls;
+
+  // Clear out mFormControls so that we can rebuild the list.  We'll go control 
+  // by control over the old list and rebind the controls.
+  mFormControls.Clear();
+
+  PRInt32 controlCount = oldFormList->Count();
+  for (PRInt32 i = 0; i < controlCount; ++i) {
+    nsIXFormsControl* control = NS_STATIC_CAST(nsIXFormsControl*, 
+                                               (*oldFormList)[i]);
+    /// @todo If a control is removed because of previous control has been
+    /// refreshed, we do, obviously, not need to refresh it. So mFormControls
+    /// should have weak bindings to the controls I guess? (XXX)
+    ///
+    /// This could happen for \<repeatitem\>s for example.
+    if (!control) {
+      continue;
+    }
+
+    // run bind to reset mBoundNode for all of these controls and also, in the
+    // process, they will be added to the model that they should be bound to.
+    control->Bind();
+  }
+
   // 3. Rebuild graph
+  ProcessBindElements();
+
   return mMDG.Rebuild();
 }
 
@@ -948,14 +976,13 @@ nsXFormsModelElement::FindInstanceDocument(const nsAString &aID)
 }
 
 nsresult
-nsXFormsModelElement::FinishConstruction()
+nsXFormsModelElement::ProcessBindElements()
 {
-  // 3. if applicable, initialize P3P
-
-  // 4. construct instance data from initial instance data.  apply all
-  // <bind> elements in document order.
-
-  // we get the instance data from our instance child nodes
+  // ProcessBindElements() will go through each xforms:bind element in
+  // document order and apply all of the Model Item Properties to the
+  // instance items in the nodeset. This information will also be entered
+  // in the Master Dependency Graph.  Most of this work is done in the
+  // ProcessBind() method.
 
   nsCOMPtr<nsIDOMDocument> firstInstanceDoc =
     FindInstanceDocument(EmptyString());
@@ -995,6 +1022,21 @@ nsXFormsModelElement::FinishConstruction()
       }
     }
   }
+
+  return NS_OK;
+}
+
+nsresult
+nsXFormsModelElement::FinishConstruction()
+{
+  // 3. if applicable, initialize P3P
+
+  // 4. construct instance data from initial instance data.  apply all
+  // <bind> elements in document order.
+
+  // we get the instance data from our instance child nodes
+
+  ProcessBindElements();
 
   // 5. dispatch xforms-rebuild, xforms-recalculate, xforms-revalidate
 

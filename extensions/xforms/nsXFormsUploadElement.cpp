@@ -248,22 +248,6 @@ nsXFormsUploadElement::Refresh()
   if (!mInput)
     return NS_OK;
 
-  mBoundNode = nsnull;
-
-  nsCOMPtr<nsIDOMXPathResult> result;
-  nsresult rv =
-    ProcessNodeBinding(NS_LITERAL_STRING("ref"),
-                       nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
-                       getter_AddRefs(result));
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  
-    if (result)
-    result->GetSingleNodeValue(getter_AddRefs(mBoundNode));
-  
-  if (!mBoundNode)
-      return NS_OK;
-  
   nsCOMPtr<nsIContent> content = do_QueryInterface(mBoundNode);
   NS_ENSURE_STATE(content);
 

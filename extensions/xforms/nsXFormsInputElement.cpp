@@ -77,7 +77,6 @@ public:
   NS_IMETHOD OnDestroyed();
 
   // nsIXFormsControl
-  NS_IMETHOD Bind();
   NS_IMETHOD Refresh();
   NS_IMETHOD TryFocus(PRBool* aOK);
 
@@ -268,28 +267,6 @@ nsXFormsInputElement::Blur(nsIDOMEvent *aEvent)
 
 // nsIXFormsControl
 
-NS_IMETHODIMP
-nsXFormsInputElement::Bind()
-{
-  if (!mControl)
-    return NS_OK;
-  
-  mBoundNode = nsnull;
-  
-  nsCOMPtr<nsIDOMXPathResult> result;
-  nsresult rv = ProcessNodeBinding(NS_LITERAL_STRING("ref"),
-                                   nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
-                                   getter_AddRefs(result));
-  
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  if (result) {
-    result->GetSingleNodeValue(getter_AddRefs(mBoundNode));
-  }
-  
-  return NS_OK;
-}
-  
 NS_IMETHODIMP
 nsXFormsInputElement::Refresh()
 {
