@@ -42,11 +42,6 @@ struct nsHTMLReflowMetrics : nsReflowMetrics {
   nscoord mCarriedOutTopMargin;
   nscoord mCarriedOutBottomMargin;
 
-  // Carried out margin values. If the top/bottom margin values were
-  // computed auto values then the corresponding bits are set in this
-  // value.
-  PRUintn mCarriedOutMarginFlags;
-
   // For frames that have children that stick outside their rect
   // (NS_FRAME_OUTSIDE_CHILDREN) this rectangle will contain the
   // absolute bounds of the frame. Since the frame doesn't know where
@@ -59,7 +54,6 @@ struct nsHTMLReflowMetrics : nsReflowMetrics {
   {
     mCarriedOutTopMargin = 0;
     mCarriedOutBottomMargin = 0;
-    mCarriedOutMarginFlags = 0;
     mCombinedArea.x = 0;
     mCombinedArea.y = 0;
     mCombinedArea.width = 0;
@@ -328,25 +322,32 @@ protected:
 
 // This bit is set, when a break is requested. This bit is orthogonal
 // to the nsIFrame::nsReflowStatus completion bits.
-#define NS_INLINE_BREAK             0x0100
-
-#define NS_INLINE_IS_BREAK(_status) \
-  (0 != ((_status) & NS_INLINE_BREAK))
+#define NS_INLINE_BREAK              0x0100
 
 // When a break is requested, this bit when set indicates that the
 // break should occur after the frame just reflowed; when the bit is
 // clear the break should occur before the frame just reflowed.
-#define NS_INLINE_BREAK_BEFORE      0x0000
-#define NS_INLINE_BREAK_AFTER       0x0200
+#define NS_INLINE_BREAK_BEFORE       0x0000
+#define NS_INLINE_BREAK_AFTER        0x0200
+
+// The type of break requested can be found in these bits.
+#define NS_INLINE_BREAK_TYPE_MASK    0xF000
+
+// This bit, when set, indicates that the frame has a float inside of
+// it that sticks outside of the frames bounding box.
+#define NS_FRAME_HAS_OUTSIDE_FLOATER 0x0400
+
+//----------------------------------------
+// Macros that use those bits
+
+#define NS_INLINE_IS_BREAK(_status) \
+  (0 != ((_status) & NS_INLINE_BREAK))
 
 #define NS_INLINE_IS_BREAK_AFTER(_status) \
   (0 != ((_status) & NS_INLINE_BREAK_AFTER))
 
 #define NS_INLINE_IS_BREAK_BEFORE(_status) \
   (NS_INLINE_BREAK == ((_status) & (NS_INLINE_BREAK|NS_INLINE_BREAK_AFTER)))
-
-// The type of break requested can be found in these bits.
-#define NS_INLINE_BREAK_TYPE_MASK   0xF000
 
 #define NS_INLINE_GET_BREAK_TYPE(_status) (((_status) >> 12) & 0xF)
 
