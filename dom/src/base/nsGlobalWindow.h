@@ -193,7 +193,7 @@ protected:
 
   // Timeout Functions
   nsresult SetTimeoutOrInterval(PRBool aIsInterval, PRInt32* aReturn);
-  PRBool RunTimeout(nsTimeoutImpl *aTimeout);
+  void RunTimeout(nsTimeoutImpl *aTimeout);
   void DropTimeout(nsTimeoutImpl *aTimeout, nsIScriptContext* aContext=nsnull);
   void HoldTimeout(nsTimeoutImpl *aTimeout);
   nsresult ClearTimeoutOrInterval(PRInt32 aTimerID);
@@ -244,6 +244,7 @@ protected:
   nsTimeoutImpl*                mRunningTimeout;
   PRUint32                      mTimeoutPublicIdCounter;
   PRUint32                      mTimeoutFiringDepth;
+  PRPackedBool                  mTimeoutsWereCleared;
   PRPackedBool                  mFirstDocumentLoad;
   PRPackedBool                  mIsScopeClear;
   nsString                      mStatus;
@@ -267,6 +268,16 @@ protected:
  * timeout.
  */
 struct nsTimeoutImpl {
+  nsTimeoutImpl() {
+    memset(this, 0, sizeof(*this));
+
+    MOZ_COUNT_CTOR(nsTimeoutImpl);
+  }
+
+  ~nsTimeoutImpl() {
+    MOZ_COUNT_DTOR(nsTimeoutImpl);
+  }
+
   PRInt32             ref_count;      /* reference count to shared usage */
   GlobalWindowImpl    *window;        /* window for which this timeout fires */
   JSString            *expr;          /* the JS expression to evaluate */
@@ -278,11 +289,12 @@ struct nsTimeoutImpl {
   PRUint32            public_id;      /* Returned as value of setTimeout() */
   PRInt32             interval;       /* Non-zero if repetitive timeout */
   PRInt64             when;           /* nominal time to run this timeout */
-  nsIPrincipal        *principal;     /* principals with which to execute */
+  nsCOMPtr<nsIPrincipal> principal;   /* principals with which to execute */
   char                *filename;      /* filename of setTimeout call */
   PRUint32            lineno;         /* line number of setTimeout call */
   const char          *version;       /* JS language version string constant */
-  PRUint32            firingDepth;    /* stack depth at which timeout isfiring */
+  PRUint32            firingDepth;    /* stack depth at which timeout is
+                                         firing */
   nsTimeoutImpl       *next;
 };
 
