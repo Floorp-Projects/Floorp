@@ -22,6 +22,7 @@
  * Patrick Beard
  * Norris Boyd
  * Mike McCabe
+ * Matthias Radestock
  * Andrew Wason
  *
  * Alternatively, the contents of this file may be used under the
@@ -50,6 +51,13 @@ public class JavaAdapter extends ScriptableObject {
     
     public String getClassName() {
         return "JavaAdapter";
+    }
+
+    public static Object convertResult(Object result, String classname)
+        throws ClassNotFoundException 
+    {
+        return NativeJavaObject.coerceType(Class.forName(classname),
+                                           result);
     }
     
     public static Object js_JavaAdapter(Context cx, Object[] args, 
@@ -464,43 +472,17 @@ public class JavaAdapter extends ScriptableObject {
                 throw new RuntimeException("Unexpected return type " + 
                                            retType.toString());
             }
-        } else  if (retType.equals(String.class)) {
+        } else {
+            String retTypeStr = retType.getName();
+            cfw.addLoadConstant(retTypeStr);
             cfw.add(ByteCode.INVOKESTATIC, 
-                    "org/mozilla/javascript/Context", 
-                    "toString", "(Ljava/lang/Object;)", 
-                    "Ljava/lang/String;");
-            cfw.add(ByteCode.ARETURN);
-        } else if (retType.equals(Scriptable.class)) {
-            cfw.add(ByteCode.ALOAD_0);  // load 'this' to find scope from
-            cfw.add(ByteCode.INVOKESTATIC, 
-                    "org/mozilla/javascript/Context", 
-                    "toObject", 
+                    "org/mozilla/javascript/JavaAdapter", 
+                    "convertResult",
                     "(Ljava/lang/Object;" +
-                     "Lorg/mozilla/javascript/Scriptable;)",
-                    "Lorg/mozilla/javascript/Scriptable;");
-            cfw.add(ByteCode.ARETURN);
-        } else { 
-            // If it is a wrapped type, cast to Wrapper and call unwrap()
-            cfw.add(ByteCode.DUP);
-            cfw.add(ByteCode.INSTANCEOF, "org/mozilla/javascript/Wrapper");
-            // skip 3 for IFEQ, 3 for CHECKCAST, and 5 for INVOKEINTERFACE
-            cfw.add(ByteCode.IFEQ, 11); 
-            cfw.add(ByteCode.CHECKCAST, "org/mozilla/javascript/Wrapper");
-            cfw.add(ByteCode.INVOKEINTERFACE,
-                    "org/mozilla/javascript/Wrapper", 
-                    "unwrap", "()", "Ljava/lang/Object;");
-
-            // If Undefined, return null	   
-            cfw.add(ByteCode.DUP);
-            cfw.add(ByteCode.INSTANCEOF, "org/mozilla/javascript/Undefined");
-            // skip 3 for IFEQ, 1 for ACONST_NULL, 1 for ARETURN
-            cfw.add(ByteCode.IFEQ, 5);
-            cfw.add(ByteCode.ACONST_NULL);
-            cfw.add(ByteCode.ARETURN);
-
+                    "Ljava/lang/String;)", 
+                    "Ljava/lang/Object;");
             // Now cast to return type
-            String retTypeStr = retType.getName().replace('.', '/');
-            cfw.add(ByteCode.CHECKCAST, retTypeStr);
+            cfw.add(ByteCode.CHECKCAST, retTypeStr.replace('.', '/'));
             cfw.add(ByteCode.ARETURN);
         }
     }
