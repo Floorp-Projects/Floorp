@@ -3,7 +3,7 @@ Microsoft Developer Studio Workspace File, Format Version 6.00
 
 ###############################################################################
 
-Project: "IEPatcher"=.\tests\IEPatcher\IEPatcher.dsp - Package Owner=<4>
+Project: "IEPatcher"=..\..\tests\IEPatcher\IEPatcher.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -27,6 +27,12 @@ Package=<4>
     Project_Dep_Name cbrowse
     End Project Dependency
     Begin Project Dependency
+    Project_Dep_Name MozillaControl
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name IEPatcher
+    End Project Dependency
+    Begin Project Dependency
     Project_Dep_Name RegMozCtl
     End Project Dependency
 }}}
@@ -45,7 +51,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "RegMozCtl"=.\tests\RegMozCtl\RegMozCtl.dsp - Package Owner=<4>
+Project: "RegMozCtl"=..\..\tests\RegMozCtl\RegMozCtl.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -57,7 +63,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "cbrowse"=.\tests\cbrowse\cbrowse.dsp - Package Owner=<4>
+Project: "cbrowse"=..\..\tests\cbrowse\cbrowse.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -65,6 +71,9 @@ Package=<5>
 
 Package=<4>
 {{{
+    Begin Project Dependency
+    Project_Dep_Name MozillaControl
+    End Project Dependency
 }}}
 
 ###############################################################################
