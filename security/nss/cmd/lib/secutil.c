@@ -2726,7 +2726,7 @@ SECU_printCertProblems(FILE *outfile, CERTCertDBHandle *handle,
 		    }
 		}
 	    }
-	    fprintf(outfile,"  ERROR %d: %s\n", node->error,
+	    fprintf(outfile,"  ERROR %ld: %s\n", node->error,
 						SECU_Strerror(node->error));
 	    errstr = NULL;
 	    switch (node->error) {
