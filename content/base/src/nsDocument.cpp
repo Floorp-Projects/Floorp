@@ -1498,7 +1498,6 @@ void nsDocument::AddStyleSheet(nsIStyleSheet* aSheet, PRUint32 aFlags)
 {
   NS_PRECONDITION(nsnull != aSheet, "null arg");
   InternalAddStyleSheet(aSheet, aFlags);
-  NS_ADDREF(aSheet);
   aSheet->SetOwningDocument(this);
 
   PRBool enabled = PR_TRUE;
