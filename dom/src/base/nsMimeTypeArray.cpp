@@ -132,7 +132,8 @@ nsresult MimeTypeArrayImpl::GetMimeTypes()
 		PRUint32 pluginCount = 0;
 		rv = pluginArray->GetLength(&pluginCount);
 		if (rv == NS_OK) {
-			for (PRUint32 i = 0; i < pluginCount; i++) {
+			PRUint32 i;
+			for (i = 0; i < pluginCount; i++) {
 				nsIDOMPlugin* plugin = nsnull;
 				if (pluginArray->Item(i, &plugin) == NS_OK) {
 					PRUint32 mimeTypeCount = 0;
@@ -146,9 +147,10 @@ nsresult MimeTypeArrayImpl::GetMimeTypes()
 			if (mMimeTypeArray == nsnull)
 				return NS_ERROR_OUT_OF_MEMORY;
 			PRUint32 mimeTypeIndex = 0;
-			for (PRUint32 i = 0; i < pluginCount; i++) {
+			PRUint32 k;
+			for (k = 0; k < pluginCount; k++) {
 				nsIDOMPlugin* plugin = nsnull;
-				if (pluginArray->Item(i, &plugin) == NS_OK) {
+				if (pluginArray->Item(k, &plugin) == NS_OK) {
 					PRUint32 mimeTypeCount = 0;
 					if (plugin->GetLength(&mimeTypeCount) == NS_OK) {
 						for (PRUint32 j = 0; j < mimeTypeCount; j++)
