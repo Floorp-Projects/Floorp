@@ -937,9 +937,10 @@ void nsStyleContext::DumpRegressionData(nsIPresContext* aPresContext, FILE* out,
   // FONT
   IndentBy(out,aIndent);
   const nsStyleFont* font = (const nsStyleFont*)GetStyleData(eStyleStruct_Font);
-  fprintf(out, "<font %s %s %d />\n", 
+  fprintf(out, "<font %s %d %d %d />\n", 
           NS_ConvertUCS2toUTF8(font->mFont.name).get(),
-          NS_ConvertUCS2toUTF8(font->mFixedFont.name).get(),
+          font->mFont.size,
+          font->mSize,
           font->mFlags);
 
   // COLOR

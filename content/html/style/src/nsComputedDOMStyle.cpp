@@ -867,9 +867,11 @@ nsComputedDOMStyle::GetFontFamily(nsIFrame *aFrame,
     presShell->GetPresContext(getter_AddRefs(presContext));
     NS_ASSERTION(presContext, "pres context is required");
 
-    if (font->mFlags & NS_STYLE_FONT_USE_FIXED) {
-      const nsString& fontName = font->mFixedFont.name;
-      const nsFont& defaultFont = presContext->GetDefaultFixedFontDeprecated();
+    const nsString& fontName = font->mFont.name;
+    PRUint8 generic = font->mFlags & NS_STYLE_FONT_FACE_MASK;
+    if (generic == kGenericFont_NONE) { 
+      nsFont defaultFont; 
+      presContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID, defaultFont);
       PRInt32 lendiff = fontName.Length() - defaultFont.name.Length();
       if (lendiff > 0) {
         val->SetString(Substring(fontName, 0, lendiff-1)); // -1 removes comma
@@ -877,14 +879,7 @@ nsComputedDOMStyle::GetFontFamily(nsIFrame *aFrame,
         val->SetString(fontName);
       }
     } else {
-      const nsString& fontName = font->mFont.name;
-      const nsFont& defaultFont = presContext->GetDefaultFontDeprecated();
-      PRInt32 lendiff = fontName.Length() - defaultFont.name.Length();
-      if (lendiff > 0) {
-        val->SetString(Substring(fontName, 0, lendiff-1)); // -1 removes comma
-      } else {
-        val->SetString(fontName);
-      }
+      val->SetString(fontName);
     }
   }
   else {
@@ -905,7 +900,8 @@ nsComputedDOMStyle::GetFontSize(nsIFrame *aFrame,
   const nsStyleFont* font=nsnull;
   GetStyleData(eStyleStruct_Font, (const nsStyleStruct*&)font, aFrame);
 
-  val->SetTwips(font? font->mFont.size:0);
+  // Note: font->mSize is the 'computed size'; font->mFont.size is the 'actual size'
+  val->SetTwips(font? font->mSize:0);
 
   return val->QueryInterface(NS_GET_IID(nsIDOMCSSPrimitiveValue),
                              (void **)&aValue);

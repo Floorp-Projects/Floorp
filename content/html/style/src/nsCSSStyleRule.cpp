@@ -76,11 +76,6 @@
 
 #include "nsContentUtils.h"
 
-// MJA: bug 31816
-#include "nsIPresShell.h"
-#include "nsIDocShellTreeItem.h"
-// - END MJA
-
 // #define DEBUG_REFS
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -1682,6 +1677,9 @@ MapFontForDeclaration(nsICSSDeclaration* aDecl, nsCSSFont& aFont)
 
   if (eCSSUnit_Null == aFont.mSize.GetUnit() && eCSSUnit_Null != ourFont->mSize.GetUnit())
     aFont.mSize = ourFont->mSize;
+
+  if (eCSSUnit_Null == aFont.mSizeAdjust.GetUnit() && eCSSUnit_Null != ourFont->mSizeAdjust.GetUnit())
+    aFont.mSizeAdjust = ourFont->mSizeAdjust;
 
   return NS_OK;
 }

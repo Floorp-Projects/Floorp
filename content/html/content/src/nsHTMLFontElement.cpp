@@ -51,11 +51,6 @@
 #include "nsICSSDeclaration.h"
 #include "nsIRuleNode.h"
 
-// MJA: bug 31816
-#include "nsIPresShell.h"
-#include "nsIDocShellTreeItem.h"
-// - END MJA
-
 class nsHTMLFontElement : public nsGenericHTMLContainerElement,
                           public nsIDOMHTMLFontElement
 {
