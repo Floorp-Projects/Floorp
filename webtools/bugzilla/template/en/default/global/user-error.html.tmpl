@@ -446,7 +446,8 @@
 
   [% ELSIF error == "no_dupe_stats_error_whenever" %]
     [% title = "Error Reading Previous Dupes File" %]
-    An error occurred opening $changedsince days ago ($whenever)'s dupes file:
+    An error occurred opening [% changedsince FILTER html %] days ago
+    ([% whenever FILTER html %])'s dupes file:
     [% error_msg FILTER html %].
      
   [% ELSIF error == "no_dupe_stats_error_yesterday" %]

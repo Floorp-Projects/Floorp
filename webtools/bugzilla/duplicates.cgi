@@ -137,6 +137,15 @@ while (my ($key, $value) = each %count) {
     delete $count{$key} if $sortvisible && (lsearch(\@buglist, $key) == -1);
 }
 
+my $origmaxrows = $maxrows;
+detaint_natural($maxrows)
+  || ThrowUserError("invalid_maxrows", { maxrows => $origmaxrows});
+
+my $origchangedsince = $changedsince;
+detaint_natural($changedsince)
+  || ThrowUserError("invalid_changedsince", 
+                    { changedsince => $origchangedsince });
+
 # Try and open the database from "changedsince" days ago
 my $dobefore = 0;
 my %delta;
@@ -158,15 +167,6 @@ if (!tie(%before, 'AnyDBM_File', "data/duplicates/dupes$whenever",
 
     $dobefore = 1;
 }
-
-my $origmaxrows = $maxrows;
-detaint_natural($maxrows)
-  || ThrowUserError("invalid_maxrows", { maxrows => $origmaxrows});
-
-my $origchangedsince = $changedsince;
-detaint_natural($changedsince)
-  || ThrowUserError("invalid_changedsince", 
-                    { changedsince => $origchangedsince });
 
 my @bugs;
 my @bug_ids; 
