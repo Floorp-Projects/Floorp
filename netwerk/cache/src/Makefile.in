@@ -22,11 +22,12 @@
 DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
-VPATH			= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE				= nkcacheservice
+MODULE		= nkcacheservice
+XPIDL_MODULE    = nkcacheservice
 LIBRARY_NAME	= nkcacheservice
 IS_COMPONENT	= 1
 REQUIRES	= xpcom necko pref js
@@ -40,15 +41,23 @@ CPPSRCS		= \
 	nsCacheEntryDescriptor.cpp \
 	nsCacheMetaData.cpp \
 	nsCacheModule.cpp \
-  nsCacheService.cpp \
+	nsCacheService.cpp \
 	nsCacheSession.cpp \
 	nsDiskCacheDevice.cpp \
 	nsMemoryCacheDevice.cpp \
-  $(NULL)
+	$(NULL)
+
+include $(topsrcdir)/config/config.mk
 
 LOCAL_INCLUDES	= -I$(srcdir)/../public -I$(srcdir)/../include
 
-EXTRA_LIBS	= $(NSPR_LIBS)
+LIBS           += \
+		$(XPCOM_LIBS) \
+		$(NSPR_LIBS) \
+		$(NULL)
+
+#EXTRA_LIBS	= $(NSPR_LIBS)
+
 
 # we don't want the shared lib, but we want to force the creation of a
 # static lib.
