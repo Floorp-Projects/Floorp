@@ -37,6 +37,7 @@ protected:
 	//{{AFX_MSG(CScanForFilesDlg)
 	virtual void OnOK();
 	afx_msg void OnSelectFile();
+	afx_msg void OnSelectFolder();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };
