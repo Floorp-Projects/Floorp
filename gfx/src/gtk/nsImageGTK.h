@@ -110,6 +110,7 @@ public:
   NS_IMETHOD   LockImagePixels(PRBool aMaskPixels);
   NS_IMETHOD   UnlockImagePixels(PRBool aMaskPixels);    
 
+
 private:
   /**
    * Calculate the amount of memory needed for the initialization of the image

@@ -33,11 +33,11 @@ REQUIRES	= xpcom string img widget view util dom pref js uconv necko unicharutil
 
 CSRCS		= nsPrintdGTK.c
 
-ifndef HAVE_GDK_PIXBUF
 ifdef HAVE_XIE
 CSRCS		+= XIE.c
 endif
-endif
+
+CSRCS		+= scale.c
 
 CPPSRCS		= \
 		nsDeviceContextGTK.cpp \
@@ -77,11 +77,10 @@ DEFINES		+= -DHAVE_GDK_PIXBUF
 GFX_PIXBUF_LIBS += $(MOZ_GDK_PIXBUF_LIBS)
 CXXFLAGS	+= $(MOZ_GDK_PIXBUF_CFLAGS)
 CFLAGS		+= $(MOZ_GDK_PIXBUF_CFLAGS)
-else
+endif
 ifdef HAVE_XIE
 DEFINES		+= -DHAVE_XIE
 GFX_XIE_LIBS	+= $(MOZ_XIE_LIBS)
-endif
 endif
 
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) \
