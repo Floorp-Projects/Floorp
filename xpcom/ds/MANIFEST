@@ -4,6 +4,7 @@ nsCRT.h
 nsDeque.h
 nsEnumeratorUtils.h
 nsHashtable.h
+nsHashtableEnumerator.h
 nsIArena.h
 nsIAtom.h
 nsIBuffer.h
