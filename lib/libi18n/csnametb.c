@@ -15,7 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*	csnametb.c	*/
+/*	csnametb.c		*/
 
 #include "intlpriv.h"
 

@@ -15,7 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*	fe_ccc.c	*/
+/*	fe_ccc.c		*/
 /* Test harness code to be replaced by FE specific code	*/
 
 #ifdef XP_OS2

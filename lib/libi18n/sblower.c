@@ -15,7 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*	sblower.c	*/
+/*	sblower.c		*/
 /*
 	This function contain the singlebyte to lower table which need to implement function in
 	intlcomp.c.
