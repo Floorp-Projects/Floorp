@@ -1,3 +1,8 @@
+Add support for popup windows which work "on click"
+
+Add support for users who want to see tinderbox's notion of what was
+checked in not just Bonsai's query.	
+
 Add support for historical Tinderbox images
 	(flames, stars)
 
