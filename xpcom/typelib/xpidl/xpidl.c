@@ -23,9 +23,10 @@
 #include "xpidl.h"
 
 static ModeData modes[] = {
-    {"header",  "Generate C++ header",         "h",    NULL },
-    {"typelib", "Generate XPConnect typelib",  "xpt",  NULL },
-    {"doc",     "Generate HTML documentation", "html", NULL },
+    {"header",  "Generate C++ header",         "h",    xpidl_header_dispatch},
+    {"stub",    "Generate C++ JS API stubs",   "cpp",  xpidl_stub_dispatch},
+    {"typelib", "Generate XPConnect typelib",  "xpt",  xpidl_typelib_dispatch},
+    {"doc",     "Generate HTML documentation", "html", xpidl_doc_dispatch},
     {0}
 };
 
@@ -33,18 +34,18 @@ static ModeData *
 FindMode(char *mode)
 {
     int i;
-    for (i = 0; modes[i].mode && strcmp(modes[i].mode, mode); i++)
-        ;
-    if (modes[i].mode)
-        return &modes[i];
+    for (i = 0; modes[i].mode; i++) {
+        if (!strcmp(modes[i].mode, mode))
+	    return &modes[i];
+    }
     return NULL;
-}    
+}
 
 gboolean enable_debug      = FALSE;
 gboolean enable_warnings   = FALSE;
 gboolean verbose_mode      = FALSE;
 
-static char xpidl_usage_str[] = 
+static char xpidl_usage_str[] =
 "Usage: %s [-m mode] [-w] [-v] [-I path] [-n] [-o basename] filename.idl\n"
 "       -w turn on warnings (recommended)\n"
 "       -v verbose mode (NYI)\n"
@@ -52,7 +53,7 @@ static char xpidl_usage_str[] =
 "       -o use basename (e.g. ``/tmp/nsIThing'') for output\n"
 "       -m specify output mode:\n";
 
-static void 
+static void
 xpidl_usage(int argc, char *argv[])
 {
     int i;
@@ -63,25 +64,50 @@ xpidl_usage(int argc, char *argv[])
     }
 }
 
+static char OOM[] = "ERROR: out of memory\n";
+
+void *
+xpidl_malloc(size_t nbytes)
+{
+    void *p = malloc(nbytes);
+    if (!p) {
+	fputs(OOM, stderr);
+	exit(1);
+    }
+    return p;
+}
+
+char *
+xpidl_strdup(const char *s)
+{
+    char *ns = strdup(s);
+    if (!ns) {
+	fputs(OOM, stderr);
+	exit(1);
+    }
+    return ns;
+}
+
 int
 main(int argc, char *argv[])
 {
     int i, idlfiles;
-    IncludePathEntry *inc, *inc_head = NULL;
+    IncludePathEntry *inc, *inc_head, **inc_tail;
     char *basename = NULL;
     ModeData *mode = NULL;
 
-    inc_head = malloc(sizeof *inc);
-    if (!inc_head)
-        return 1;
+    inc_head = xpidl_malloc(sizeof *inc);
     inc_head->directory = ".";
     inc_head->next = NULL;
+    inc_tail = &inc_head->next;
 
+#if 0
     /* initialize mode factories */
     modes[0].factory = headerDispatch;
     modes[1].factory = typelibDispatch;
     modes[2].factory = docDispatch;
-    
+#endif
+
     for (i = 1; i < argc; i++) {
         if (argv[i][0] != '-')
             break;
@@ -103,15 +129,14 @@ main(int argc, char *argv[])
                 xpidl_usage(argc, argv);
                 return 1;
             }
-            inc = malloc(sizeof *inc);
-            if (!inc)
-                return 1;
+            inc = xpidl_malloc(sizeof *inc);
             inc->directory = argv[i + 1];
 #ifdef DEBUG_shaver_includes
             fprintf(stderr, "adding %s to include path\n", inc->directory);
 #endif
-            inc->next = inc_head;
-            inc_head = inc;
+            inc->next = NULL;
+            *inc_tail = inc;
+	    inc_tail = &inc->next;
             i++;
             break;
           case 'o':
@@ -169,7 +194,7 @@ main(int argc, char *argv[])
         if (argv[i][0])
             idlfiles += xpidl_process_idl(argv[i], inc_head, basename, mode);
     }
-    
+
     if (!idlfiles)
         return 1;
 

@@ -28,6 +28,7 @@ CSRCS = \
 	xpidl.c \
 	xpidl_idl.c \
 	xpidl_header.c \
+	xpidl_stub.c \
 	xpidl_typelib.c \
 	xpidl_doc.c \
 	$(NULL)

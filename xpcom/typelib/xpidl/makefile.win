@@ -25,6 +25,7 @@ OBJS =  \
 	.\$(OBJDIR)\xpidl.obj		\
 	.\$(OBJDIR)\xpidl_idl.obj	\
 	.\$(OBJDIR)\xpidl_header.obj	\
+	.\$(OBJDIR)\xpidl_stub.obj	\
 	.\$(OBJDIR)\xpidl_typelib.obj	\
 	.\$(OBJDIR)\xpidl_doc.obj	\
 	$(NULL)

@@ -49,9 +49,10 @@ typedef gboolean (*nodeHandler)(TreeState *);
 /* Function that produces a table of nodeHandlers for a given mode */
 typedef nodeHandler *(*nodeHandlerFactory)();
 
-extern nodeHandler *headerDispatch();
-extern nodeHandler *typelibDispatch();
-extern nodeHandler *docDispatch();
+extern nodeHandler *xpidl_header_dispatch();
+extern nodeHandler *xpidl_stub_dispatch();
+extern nodeHandler *xpidl_typelib_dispatch();
+extern nodeHandler *xpidl_doc_dispatch();
 
 /*
  * nodeHandler that reports an error.
@@ -96,17 +97,18 @@ void
 xpidl_list_foreach(IDL_tree p, IDL_tree_func foreach, gpointer user_data);
 
 /*
- * Add an output file to an internal list.  Used to clean up temporary files
- * in case of fatal error.
+ * Wrapper whines to stderr then exits after null return from malloc or strdup.
  */
+void *
+xpidl_malloc(size_t nbytes);
 
-void
-XPIDL_add_output_file(char *fn);
+char *
+xpidl_strdup(const char *s);
 
-void
-XPIDL_cleanup_on_error();
-
+/*
+ * Process an XPIDL node and its kids, if any.
+ */
 gboolean
-process_node(TreeState *state);
+xpidl_process_node(TreeState *state);
 
 #endif /* __xpidl_h */
