@@ -411,6 +411,23 @@ static nsIHTMLStyleSheet* GetAttrStyleSheet(nsIDocument* aDocument)
   return sheet;
 }
 
+PRBool
+nsGenericHTMLElement::InNavQuirksMode() const
+{
+  PRBool status = PR_FALSE;
+  if (mDocument) {
+    nsCOMPtr<nsIHTMLDocument> hdoc(do_QueryInterface(mDocument));
+    if (hdoc) {
+      nsDTDMode mode;
+      hdoc->GetDTDMode(mode);
+      if (eDTDMode_Nav == mode) {
+        status = PR_TRUE;
+      }
+    }
+  }
+  return status;
+}
+
 nsresult
 nsGenericHTMLElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
 {
@@ -1749,24 +1766,22 @@ nsGenericHTMLElement::TableVAlignValueToString(const nsHTMLValue& aValue,
 
 PRBool
 nsGenericHTMLElement::ParseDivAlignValue(const nsString& aString,
-                                         nsHTMLValue& aResult)
+                                         nsHTMLValue& aResult) const
 {
-#if XXX_no_nav_compat
+  if (InNavQuirksMode()) {
+    return ParseEnumValue(aString, kCompatDivAlignTable, aResult);
+  }
   return ParseEnumValue(aString, kDivAlignTable, aResult);
-#else
-  return ParseEnumValue(aString, kCompatDivAlignTable, aResult);
-#endif
 }
 
 PRBool
 nsGenericHTMLElement::DivAlignValueToString(const nsHTMLValue& aValue,
-                                            nsString& aResult)
+                                            nsString& aResult) const
 {
-#if XXX_no_nav_compat
+  if (InNavQuirksMode()) {
+    return EnumValueToString(aValue, kCompatDivAlignTable, aResult);
+  }
   return EnumValueToString(aValue, kDivAlignTable, aResult);
-#else
-  return EnumValueToString(aValue, kCompatDivAlignTable, aResult);
-#endif
 }
 
 PRBool
