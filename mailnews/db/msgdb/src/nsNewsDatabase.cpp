@@ -35,7 +35,7 @@ nsNewsDatabase::~nsNewsDatabase()
 
 nsresult nsNewsDatabase::MessageDBOpenUsingURL(const char * groupURL)
 {
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsNewsDatabase::Open(nsFileSpec &newsgroupName, PRBool create, nsIMsgDatabase** pMessageDB, PRBool upgrading /*=PR_FALSE*/)
@@ -129,18 +129,19 @@ NS_IMETHODIMP nsNewsDatabase::MarkHdrRead(nsIMsgDBHdr *msgHdr, PRBool bRead,
 	if (NS_FAILED(rv)) {
 		return rv;
 	}
-
-	if (bRead)
-		rv = m_newSet->Add(messageKey);
+#if 0
+	if (!bRead)
+		rv = AddToNewList(messageKey);
 	else
 		rv = m_newSet->Remove(messageKey);
-
+#endif
 	// give parent class chance to update data structures
 	rv = nsMsgDatabase::MarkHdrRead(msgHdr, bRead, instigator);
 
 	return rv;
 }
 
+#if 0
 NS_IMETHODIMP nsNewsDatabase::IsRead(nsMsgKey key, PRBool *pRead)
 {
 	NS_ASSERTION(pRead != NULL, "null out param in IsRead");
@@ -151,29 +152,30 @@ NS_IMETHODIMP nsNewsDatabase::IsRead(nsMsgKey key, PRBool *pRead)
 	*pRead = isRead;
 	return 0;
 }
+#endif
 
 PRBool nsNewsDatabase::IsArticleOffline(nsMsgKey key)
 {
-	return 0;
+	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult		nsNewsDatabase::MarkAllRead(nsMsgKeyArray *thoseMarked)
 {
-	return 0;
+	return NS_ERROR_NOT_IMPLEMENTED;
 }
 nsresult		nsNewsDatabase::AddHdrFromXOver(const char * line,  nsMsgKey *msgId)
 {
-	return 0;
+	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP		nsNewsDatabase::AddHdrToDB(nsMsgHdr *newHdr, PRBool *newThread, PRBool notify)
 {
-	return 0;
+	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP		nsNewsDatabase::ListNextUnread(ListContext **pContext, nsMsgHdr **pResult)
 {
-	return 0;
+	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 // return highest article number we've seen.
@@ -215,11 +217,11 @@ NS_IMETHODIMP nsNewsDatabase::GetLowWaterArticleNum(nsMsgKey *key)
  
 nsresult		nsNewsDatabase::ExpireUpTo(nsMsgKey expireKey)
 {
-	return 0;
+	return NS_ERROR_NOT_IMPLEMENTED;
 }
 nsresult		nsNewsDatabase::ExpireRange(nsMsgKey startRange, nsMsgKey endRange)
 {
-	return 0;
+	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsNewsDatabase	*nsNewsDatabase::GetNewsDB() 
@@ -234,27 +236,27 @@ PRBool	nsNewsDatabase::IsCategory() {
 }
 nsresult nsNewsDatabase::SetOfflineRetrievalInfo(MSG_RetrieveArtInfo *)
 {
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 nsresult nsNewsDatabase::SetPurgeHeaderInfo(MSG_PurgeInfo *purgeInfo)
 {
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 nsresult nsNewsDatabase::SetPurgeArticleInfo(MSG_PurgeInfo *purgeInfo)
 {
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 nsresult nsNewsDatabase::GetOfflineRetrievalInfo(MSG_RetrieveArtInfo *info)
 {
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 nsresult nsNewsDatabase::GetPurgeHeaderInfo(MSG_PurgeInfo *purgeInfo)
 {
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 nsresult nsNewsDatabase::GetPurgeArticleInfo(MSG_PurgeInfo *purgeInfo)
 {
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 // used to handle filters editing on open news groups.
@@ -284,48 +286,3 @@ nsNewsDatabase::ThreadBySubjectWithoutRe()
   return PR_TRUE;
 }
 
-#if 0
-nsresult
-nsNewsDatabase::CreateMsgHdr(nsIMdbRow* hdrRow, nsMsgKey key, nsIMsgDBHdr* *result)
-{
-  nsresult rv;
-#ifdef DEBUG_NEWS
-  printf("nsNewsDatabase::CreateMsgHdr()\n");
-#endif
-
-  NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
-  
-  if (NS_FAILED(rv)) return rv;
-  
-  char* msgURI;
-  
-  //Need to remove ".msf".  (msf = message summary file)
-  nsFileSpec folderPath = path;
-  char* leafName = folderPath.GetLeafName();
-  nsString folderName(leafName);
-  PL_strfree(leafName);
-  if(folderName.Find(".msf") != -1)
-	{
-      nsString realFolderName;
-      folderName.Left(realFolderName, folderName.Length() - 4);
-      folderPath.SetLeafName((const nsString)realFolderName);
-	}
-  
-  rv = nsBuildNewsMessageURI(folderPath, key, &msgURI);
-  if (NS_FAILED(rv)) return rv;
-  
-  nsIRDFResource* res;
-  rv = rdf->GetResource(msgURI, &res);
-  PR_smprintf_free(msgURI);
-  if (NS_FAILED(rv)) return rv;
-  
-  nsMsgHdr* msgHdr = (nsMsgHdr*)res;
-  
-  nsMsgHdr* msgHdr = new nsMsgHdr();
-  msgHdr->Init(this, hdrRow);
-  msgHdr->SetMessageKey(key);
-  *result = msgHdr;
-  
-  return NS_OK;
-}
-#endif /* 0 */

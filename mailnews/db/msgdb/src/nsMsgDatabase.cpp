@@ -1088,8 +1088,10 @@ NS_IMETHODIMP nsMsgDatabase::MarkHdrReadInDB(nsIMsgDBHdr *msgHdr, PRBool bRead,
     (void)msgHdr->GetMessageKey(&key);
 	msgHdr->GetFlags(&oldFlags);
 	SetHdrFlag(msgHdr, bRead, MSG_FLAG_READ);
+
 	if (m_newSet)
 		m_newSet->Remove(key);
+
 	if (m_dbFolderInfo != NULL)
 	{
 		if (bRead)
@@ -1384,7 +1386,7 @@ NS_IMETHODIMP nsMsgDatabase::MarkLater(nsMsgKey key, time_t *until)
 NS_IMETHODIMP nsMsgDatabase::GetMsgKeySet(nsMsgKeySet **pSet)
 {
     // if it doesn't exist, try to create it
-	if (m_newSet == nsnull) {
+	if (!m_newSet) {
         m_newSet = nsMsgKeySet::Create();
         if (m_newSet == nsnull) {
             return NS_ERROR_OUT_OF_MEMORY;
@@ -1397,8 +1399,9 @@ NS_IMETHODIMP nsMsgDatabase::GetMsgKeySet(nsMsgKeySet **pSet)
 
 NS_IMETHODIMP nsMsgDatabase::AddToNewList(nsMsgKey key)
 {
-	if (m_newSet == nsnull)
+	if (!m_newSet)
 		m_newSet = nsMsgKeySet::Create();
+
 	if (m_newSet)
 		m_newSet->Add(key);
 	return (m_newSet) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
