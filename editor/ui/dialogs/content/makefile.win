@@ -36,6 +36,8 @@ CHROME_CONTENT = \
 	.\EdImageOverlay.js \
 	.\EdHLineProps.xul \
 	.\EdHLineProps.js \
+	.\EdReplace.xul \
+	.\EdReplace.js \
 	.\EdSpellCheck.xul \
 	.\EdSpellCheck.js \
 	.\EdDictionary.xul \
