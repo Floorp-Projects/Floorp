@@ -3,8 +3,8 @@
 # General purpose utility functions.  Every project needs a kludge
 # bucket for common access.
 
-# $Revision: 1.5 $ 
-# $Date: 2000/09/22 15:01:32 $ 
+# $Revision: 1.6 $ 
+# $Date: 2000/11/09 19:48:05 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Utils.pm,v $ 
 # $Name:  $ 
@@ -45,6 +45,7 @@ package main;
 
 use Sys::Hostname;
 use File::Basename;
+use Time::Local;
 
 
 # Tinderbox libraries
@@ -170,10 +171,12 @@ sub get_env {
   my (@trees) = TreeData::get_all_trees();
   foreach $tree (@trees) {
 
-    my ($dir) = FileStructure::get_filename($tree, 'TinderDB_Dir');
+    my ($dir);
+
+    $dir = FileStructure::get_filename($tree, 'TinderDB_Dir');
     mkdir_R($dir, 0777);
     
-    my ($dir) = FileStructure::get_filename($tree, 'TinderHeader_Dir');
+    $dir = FileStructure::get_filename($tree, 'TinderHeader_Dir');
     mkdir_R($dir, 0777);
 
   }
@@ -257,6 +260,66 @@ sub mkdir_R {
 }
 
 
+# Run a system command (list format) and return the list of output.
+# If the command has already been run return the value of the previous
+# run.
+
+# Due to abstraction issues, sometimes the same command (and
+# arguments) is issued at several different parts of the program.
+# Since we have just run the command we can use the previous results.
+# The cache is not saved to disk so the cache is 'cleared' during each
+# execution of the program.
+
+sub cache_cmd {
+  my @cmd = @_;
+
+  # good choices for this are '#', ',', '\', '"', '|', ';'
+
+  my ($join_char) = ',';
+
+  ("@cmd" =~ m/$join_char/) &&
+    die("cmd '@cmd' can not containt character '$join_char'\n");
+
+  my ($key) = join ($join_char, @cmd);
+
+  # If we already know the results of this command, do not bother to
+  # run it again.
+
+  $CMD_CACHE{$key} &&
+    return @{ $CMD_CACHE{$key} };
+
+  # We need to run the command
+
+  my ($pid) = open(CMD, "-|");
+  
+  # did we fork a new process?
+
+  defined ($pid) || 
+    die("Could not fork for cmd: '@cmd': $!\n");
+
+  # If we are the child exec. 
+  # Remember the exec function returns only if there is an error.
+
+  ($pid) ||
+    exec(@cmd) || 
+      die("Could not exec: '@cmd': $!\n");
+
+  # If we are the parent read all the childs output. 
+
+  my @cmd_output = <CMD>;
+  
+  close(CMD) || 
+    die("Could not close exec: '@cmd': \$?: $? : \$\!: $!\n");
+
+  ($?) &&
+    die("Could not cmd: '@cmd' exited with error: $?\n");
+
+  # save the results of the command in the cache.
+
+  $CMD_CACHE{$key} = [@cmd_output];
+
+  return @cmd_output;
+}
 
 # fatal errors need to be valid HTML
 
@@ -405,6 +468,33 @@ sub is_time_valid {
   return $valid;
 }
 
+
+# Convert dates in form "MM/DD/YY HH:MM:SS" to unix date, there
+# are better modules in CPAN to do this kind of conversion but we
+# do not wish to create additional dependencies if they are not
+# needed.
+
+sub fix_time_format {
+  my ($date) = @_;
+  my ($new_date)=0;
+
+  chomp $date;
+  
+  if( $date =~ /^([0-9]+)$/ ){
+
+    # if its in date format leave it alone
+    $new_date = $1;
+    
+  } elsif ( $date =~ 
+    /([0-9]+)\/([0-9]+)\/([0-9]+)\s+([0-9]+)\:([0-9]+)\:([0-9]+)/ ){
+    
+    # if its in a known format convert to date format
+    $new_date = timelocal($6,$5,$4,$2,$1-1,$3);
+    
+  } 
+
+  return $new_date;
+}
 
 
 # ---------- 
