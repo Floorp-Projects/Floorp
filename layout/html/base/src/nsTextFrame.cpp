@@ -1710,7 +1710,6 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
                   nsReflowStatus& aStatus)
 {
   //  NS_PRECONDITION(nsnull != aReflowState.lineLayout, "no line layout");
-  mSelected = PR_FALSE;
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
      ("enter TextFrame::Reflow: aMaxSize=%d,%d",
       aReflowState.availableWidth, aReflowState.availableHeight));

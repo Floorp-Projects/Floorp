@@ -25,6 +25,7 @@ static PRInt32 compareFrames(nsIFrame *aBegin, nsIFrame *aEnd);
 static nsIFrame * getNextFrame(nsIFrame *aStart);
 static PRBool getRangeFromFrame(nsIFrame *aFrame, nsIDOMRange *aRange,  PRInt32 aContentOffset, PRInt32 aContentLength);
 static void printRange(nsIDOMRange *aDomRange);
+static nsIFrame *findFrameFromContent(nsIFrame *aParent, nsIContent *aContent, PRBool aTurnOff);
 
 #if 1
 #define DEBUG_OUT_RANGE(x)  printRange(x)
@@ -468,18 +469,18 @@ selectFrames(nsIFrame *aBegin, PRInt32 aBeginOffset, nsIFrame *aEnd, PRInt32 aEn
     if (aBegin == aEnd)
     {
       if (aForward)
-        aBegin->SetSelected(aSelect, aBeginOffset, aEndOffset, PR_TRUE);
+        aBegin->SetSelected(aSelect, aBeginOffset, aEndOffset, PR_FALSE);
       else
-        aBegin->SetSelected(aSelect, aEndOffset, aBeginOffset, PR_TRUE);
+        aBegin->SetSelected(aSelect, aEndOffset, aBeginOffset, PR_FALSE);
       done = PR_TRUE;
     }
     else {
       //else we neeed to select from begin to end 
       if (aForward){
-        aBegin->SetSelected(aSelect, aBeginOffset, -1, PR_TRUE);
+        aBegin->SetSelected(aSelect, aBeginOffset, -1, PR_FALSE);
       }
       else{
-        aBegin->SetSelected(aSelect, 0, aBeginOffset, PR_TRUE);
+        aBegin->SetSelected(aSelect, -1, aBeginOffset, PR_FALSE);
       }
       aBeginOffset = 0;
       if (!(aBegin = getNextFrame(aBegin)))
@@ -513,7 +514,7 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
   nsCOMPtr<nsIDOMNode> domNode;
   PRBool direction(PR_TRUE);//true == left to right
   if (NS_SUCCEEDED(aFrame->GetContent(*getter_AddRefs(content)))){
-    domNode = (nsIContent *)content;
+    domNode = content;
     if (domNode && NS_SUCCEEDED(aTracker->GetFocus(&frame, &anchor))){
       //traverse through document and unselect crap here
       if (!aContinueSelection){
@@ -526,7 +527,7 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
 //          else real bad put in assert here
         }
         else if (frame && frame != aFrame){
-          frame->SetSelected(PR_FALSE, 0, -1, PR_TRUE);//just turn off selection if the previous frame
+          frame->SetSelected(PR_FALSE, 0, -1, PR_FALSE);//just turn off selection if the previous frame
         }
 
 //DEBUG CRAP
@@ -558,7 +559,7 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
 
             //PR_ASSERT(beginoffset == mAnchorOffset);
             aTracker->SetFocus(aFrame,anchor);
-            direction = (PRBool)(mAnchorOffset<=aOffset); //slecting "english" right if true
+            direction = (PRBool)(beginoffset<=aOffset); //slecting "english" right if true
           }
           else return NS_ERROR_FAILURE;
         }
@@ -646,10 +647,8 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
                     //continue selection from 2 to 1
                     selectFrames(aFrame, aOffset, frame,PR_MAX(focusFrameOffsetEnd,focusFrameOffsetBegin), PR_TRUE, PR_FALSE);
                   }
-                  direction = (PRBool) (result1 <= 0);
+                  direction = (PRBool) (result3 <= 0);
                 }
-                mFocusNode = domNode;
-                mFocusOffset = aOffset + aContentOffset;
                 aTracker->SetFocus(aFrame,anchor);
               }
             }
@@ -686,10 +685,10 @@ a  2  1 deselect from 2 to 1
           mFocusOffset = aOffset + aContentOffset;
           if (direction){
             range->SetStart(mAnchorNode,mAnchorOffset);
-            range->SetEnd(domNode,aOffset + aContentOffset);
+            range->SetEnd(mFocusNode,mFocusOffset);
           }
           else {
-            range->SetStart(domNode,aOffset + aContentOffset);
+            range->SetStart(mFocusNode,mFocusOffset);
             range->SetEnd(mAnchorNode,mAnchorOffset);
           }
           DEBUG_OUT_RANGE(range);
@@ -706,9 +705,9 @@ a  2  1 deselect from 2 to 1
 }
 
 
-
+//this will also turn off selected on each frame that it hits if the bool is set
 nsIFrame *
-findFrameFromContent(nsIFrame *aParent, nsIContent *aContent)
+findFrameFromContent(nsIFrame *aParent, nsIContent *aContent, PRBool aTurnOff)
 {
   if (!aParent || !aContent)
     return nsnull;
@@ -717,7 +716,8 @@ findFrameFromContent(nsIFrame *aParent, nsIContent *aContent)
   if (content == aContent){
     return aParent;
   }
-
+  if (aTurnOff)
+    aParent->SetSelected(PR_FALSE,0,0,PR_FALSE);
   //if parent== content
   nsIFrame *child;
   nsIFrame *result;
@@ -725,7 +725,7 @@ findFrameFromContent(nsIFrame *aParent, nsIContent *aContent)
     return nsnull;
   do
   {
-    result = findFrameFromContent(child,aContent);
+    result = findFrameFromContent(child,aContent,aTurnOff);
     if (result)
       return result;
   }
@@ -754,7 +754,7 @@ nsRangeList::ResetSelection(nsIFrame *aStartFrame)
     range->GetEndParent(getter_AddRefs(endNode));
     range->GetEndOffset(&endOffset);
     nsCOMPtr<nsIContent> startContent(startNode);
-    result = findFrameFromContent(aStartFrame, startContent);
+    result = findFrameFromContent(aStartFrame, startContent,PR_TRUE);
     if (result){
       nsCOMPtr<nsIContent> endContent(endNode);
       if (endContent == startContent)
