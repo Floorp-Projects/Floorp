@@ -142,7 +142,7 @@ function vnk_exehook (frame, type, rv)
     if (cx)
     {
         cx.scriptsEnabled = true;
-        if (targetWindow)
+        if (0 && targetWindow)
         {
             targetWindow.enabled = true;
             if (wasModal)
@@ -151,6 +151,7 @@ function vnk_exehook (frame, type, rv)
     }
     
     delete console.frames;
+    delete console.targetWindow;
     if ("__exitAfterContinue__" in console)
         window.close();
 
