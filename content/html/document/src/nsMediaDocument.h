@@ -78,13 +78,14 @@ protected:
   // for a new subclass. aWidth and aHeight are pixels for |nsImageDocument|,
   // but could be in other units for other 'media', in which case you have to 
   // define format names accordingly. 
-  void UpdateTitleAndCharset(const nsACString&  aTypeStr, 
+  void UpdateTitleAndCharset(const nsACString&  aTypeStr,
                              const char* const* aFormatNames = sFormatNames,
-                             PRInt32            aWidth = 0, 
-                             PRInt32            aHeight = 0);
+                             PRInt32            aWidth = 0,
+                             PRInt32            aHeight = 0,
+                             const nsAString&   aStatus = NS_LITERAL_STRING(""));
 
   nsCOMPtr<nsIStringBundle>     mStringBundle;
-  static const char* const      sFormatNames[4];   
+  static const char* const      sFormatNames[4];
 
 private:
   enum                          {eWithNoInfo, eWithFile, eWithDim, eWithDimAndFile};
