@@ -59,6 +59,14 @@ interface nsIDOMWindow : nsISupports
 
   /* [replaceable] */
            attribute DOMString                          name;
+ /**
+  * Set/Get the document scale factor.  When setting this attribute, a
+  * NS_ERROR_NOT_IMPLEMENTED error may be returned by implementations
+  * not supporting zoom.  Implementations not supporting zoom should return
+  * 1.0 all the time for the Get operation.  1.0 is equals normal size, i.e. no zoom.
+  */
+  [noscript] attribute float                            textZoom;
+
   readonly attribute long                               scrollX;
   readonly attribute long                               scrollY;
 
