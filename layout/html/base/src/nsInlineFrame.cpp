@@ -507,10 +507,7 @@ nsInlineFrame::ComputeFinalSize(nsInlineReflowState& aState,
                                 nsInlineReflow& aInlineReflow,
                                 nsHTMLReflowMetrics& aMetrics)
 {
-  // Align our child frames. Note that inline frames "shrink wrap"
-  // around their contents therefore we need to fixup the available
-  // width in nsInlineLayout so that it doesn't do any horizontal
-  // alignment.
+  // Align our child frames
   nsRect bounds;
   nscoord maxAscent, maxDescent;
   aInlineReflow.VerticalAlignFrames(bounds, maxAscent, maxDescent);
