@@ -34,6 +34,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsHTMLValue.h"
 #include "nsIHTMLContent.h"
+#include "nsAbsoluteFrame.h"
 #include "nsIPtr.h"
 
 #ifdef NS_DEBUG
@@ -1294,8 +1295,11 @@ nsBlockFrame::ReflowAppendedChildren(nsIPresContext* aCX,
     nsIStyleContextPtr kidSC = aCX->ResolveStyleContextFor(kid, this);
     nsStyleMolecule* kidMol = (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
 
-    // Is it a floater?
-    if (kidMol->floats != NS_STYLE_FLOAT_NONE) {
+    // Check whether it wants to floated or absolutely positioned
+    if (NS_STYLE_POSITION_ABSOLUTE == kidMol->positionFlags) {
+      AbsoluteFrame::NewFrame(&kidFrame, kid, kidIndex, this);
+      kidFrame->SetStyleContext(kidSC);
+    } else if (kidMol->floats != NS_STYLE_FLOAT_NONE) {
       PlaceholderFrame::NewFrame(&kidFrame, kid, kidIndex, this);
       kidFrame->SetStyleContext(kidSC);
     } else if (nsnull == kidPrevInFlow) {

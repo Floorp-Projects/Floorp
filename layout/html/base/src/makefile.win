@@ -24,6 +24,7 @@ REQUIRES=xpcom raptor
 DEFINES=-D_IMPL_NS_HTML
 
 CPPSRCS=			\
+ nsAbsoluteFrame.cpp \
  nsBRPart.cpp			\
  nsBlockFrame.cpp		\
  nsBodyFrame.cpp		\
@@ -54,6 +55,7 @@ CPPSRCS=			\
  $(NULL)
 
 CPP_OBJS=				\
+ .\$(OBJDIR)\nsAbsoluteFrame.obj \
  .\$(OBJDIR)\nsBRPart.obj		\
  .\$(OBJDIR)\nsBlockFrame.obj		\
  .\$(OBJDIR)\nsBodyFrame.obj		\
