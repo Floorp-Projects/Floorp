@@ -334,64 +334,596 @@
     </nc:subheadings>
   </rdf:Description>
 
-<!-- SECURITY HELP CONTENT -->
+<!-- PRIVACY HELP CONTENT -->
 
 <rdf:Description about="urn:root">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="security-doc" nc:name="Understanding Privacy"  nc:link="chrome://help/locale/security_help.html"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="privacy-doc" nc:name="Understanding Privacy and Security"  nc:link="chrome://help/locale/privacy_help.html"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
 
-<rdf:Description about="#security-doc">
+<rdf:Description about="#privacy-doc">
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> 
-	<rdf:Description ID="security-doc-info" nc:name="How Does a Web Site Gather Information About Me?"  		nc:link="chrome://help/locale/security_help.html#privacy_gatherinfo"/> </rdf:li>
+	<rdf:Description ID="privacy-doc-info" nc:name="How Does a Web Site Gather Information About Me?"  		nc:link="chrome://help/locale/privacy_help.html#privacy_gatherinfo"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
 
-<rdf:Description about="#security-doc">
+<rdf:Description about="#privacy-doc">
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> 
-	<rdf:Description ID="security-doc-visit" nc:name="What Information Does My Browser Give to a Web Site?"  		nc:link="chrome://help/locale/security_help.html#privacy_visit"/> </rdf:li>
+	<rdf:Description ID="privacy-doc-visit" nc:name="What Information Does My Browser Give to a Web Site?"  		nc:link="chrome://help/locale/privacy_help.html#privacy_visit"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
 
-<rdf:Description about="#security-doc">
+<rdf:Description about="#privacy-doc">
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> 
-	<rdf:Description ID="security-doc-cookies" nc:name="What Are Cookies, and How Do They Work?"  		nc:link="chrome://help/locale/security_help.html#privacy_cookies"/> </rdf:li>
+	<rdf:Description ID="privacy-doc-cookies" nc:name="What Are Cookies, and How Do They Work?"  		nc:link="chrome://help/locale/privacy_help.html#privacy_cookies"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
 
-<rdf:Description about="#security-doc">
+<rdf:Description about="#privacy-doc">
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> 
-	<rdf:Description ID="security-doc-unauth" nc:name="How Do I Make Sure Unauthorized People Don't Use Information About Me?"  		nc:link="chrome://help/locale/security_help.html#privacy_unauth"/> </rdf:li>
+	<rdf:Description ID="privacy-doc-unauth" nc:name="How Do I Make Sure Unauthorized People Don't Use Information About Me?"  		nc:link="chrome://help/locale/privacy_help.html#privacy_unauth"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
 
-<rdf:Description about="#security-doc">
+<rdf:Description about="#privacy-doc">
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> 
-	<rdf:Description ID="security-doc-anon" nc:name="Browsing Anonymously"
-  		nc:link="chrome://help/locale/security_help.html#privacy_anon"/> </rdf:li>
+	<rdf:Description ID="privacy-doc-anon" nc:name="Browsing Anonymously"
+  		nc:link="chrome://help/locale/privacy_help.html#privacy_anon"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
+
+
+
+<rdf:Description about="#privacy-doc">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="privacy-doc-certs" nc:name="Understanding Certificates"
+  		nc:link="chrome://help/locale/cert_concepts_help.html"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+
+<rdf:Description about="#privacy-doc-certs">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="privacy-doc-certs-issues" nc:name="Internet Security Issues"
+  		nc:link="chrome://help/locale/cert_concepts_help.html#Internet_Security_Issues"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#privacy-doc-certs">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="privacy-doc-certs-encryption" nc:name="Encryption and Decryption"
+  		nc:link="chrome://help/locale/cert_concepts_help.html#Encryption_and_Decryption"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+<rdf:Description about="#privacy-doc-certs">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="privacy-doc-certs-crypto" nc:name="Public-Key Cryptography"
+  		nc:link="chrome://help/locale/cert_concepts_help.html#Public-Key_Cryptography"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+<rdf:Description about="#privacy-doc-certs">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="privacy-doc-certs-digsig" nc:name="Digital Signatures"
+  		nc:link="chrome://help/locale/cert_concepts_help.html#Digital_Signatures"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+<rdf:Description about="#privacy-doc-certs">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="privacy-doc-certs-certs" nc:name="Certificates"
+  		nc:link="chrome://help/locale/cert_concepts_help.html#Certificates"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+
+
+<!-- USING CONTENT -->
+
+
+<rdf:Description about="urn:root">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="using-help" nc:name="Using Security and Privacy Features"
+  		nc:link="chrome://help/locale/using_priv_help.html"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+
+<rdf:Description about="#using-help">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="using-help-cookies" nc:name="Using the Cookie Manager"
+  		nc:link="chrome://help/locale/using_priv_help.html#using_cookies"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#using-help">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="using-help-password" nc:name="Using the Password Manager"
+  		nc:link="chrome://help/locale/using_priv_help.html#using_password"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+
+
+<rdf:Description about="#using-help">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="using-help-forms" nc:name="Using the Form Manager"
+  		nc:link="chrome://help/locale/using_priv_help.html#using_forms"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+
+<rdf:Description about="#using-help">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="using-help-encrypt" nc:name="Encrypting Stored Sensitive Information"
+  		nc:link="chrome://help/locale/using_priv_help.html#using_encrypt"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#using-help">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="using-help-certs" nc:name="Using Certificates"
+  		nc:link="chrome://help/locale/using_certs_help.html"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#using-help-certs">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="using-help-certs-get" nc:name="Get Your Own Certificate"
+  		nc:link="chrome://help/locale/using_certs_help.html#using_certs_get"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#using-help-certs">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="using-help-certs-get" nc:name="Check Security For a Web Page"
+  		nc:link="chrome://help/locale/using_certs_help.html#using_certs_get"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#using-help-certs">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="using-help-certs-manage" nc:name="Manage Certificates"
+  		nc:link="chrome://help/locale/using_certs_help.html#using_certs_manage"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#using-help-certs">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="using-help-certs-devices" nc:name="Manage Smart Cards and Other Security 		Devices"
+  		nc:link="chrome://help/locale/using_certs_help.html#using_certs_devices"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+
+<rdf:Description about="#using-help-certs">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="using-help-certs-ssl" nc:name="Edit SSL Settings"
+  		nc:link="chrome://help/locale/using_certs_help.html#using_certs_ssl"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#using-help-certs">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="using-help-certs-validation" nc:name="Edit Validation Settings"
+  		nc:link="chrome://help/locale/using_certs_help.html#using_certs_validation"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<!-- SSL PAGE INFO CONTENT -->
+
+
+<rdf:Description about="urn:root">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="ssl-page-info-help" nc:name="SSL Page Info"
+  		nc:link="chrome://help/locale/ssl_page_info_help.html"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+
+
+
+<!-- CERTIFICATE MANAGER CONTENT -->
+
+
+<rdf:Description about="urn:root">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="certs-help" nc:name="Certificate Manager"
+  		nc:link="chrome://help/locale/certs_help.html"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<!-- MY CERTIFICATES CONTENT -->
+
+<rdf:Description about="#certs-help">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="certs-help-my" nc:name="My Certificates"
+  		nc:link="chrome://help/locale/certs_help.html#My_Certificates"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#certs-help-my">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="certs-help-my-backup-pwd" nc:name="Choose a Certificate Backup Password"
+  		nc:link="chrome://help/locale/certs_help.html#Choose_a_Certificate_Backup_Password"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#certs-help-my">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="certs-help-my-delete" nc:name="Delete My Certificate"
+  		nc:link="chrome://help/locale/certs_help.html#Delete_My_Certificate"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+
+<!-- WEB SITE CERTIFICATES CONTENT -->
+
+
+<rdf:Description about="#certs-help">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="certs-help-websites" nc:name="Web Site Certificates"
+  		nc:link="chrome://help/locale/certs_help.html#Web_Site_Certificates"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#certs-help-websites">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="certs-help-websites-edit" nc:name="Edit Web Site Certificate Settings"
+  		nc:link="chrome://help/locale/certs_help.html#Edit_Web_Site_Certificate_Settings"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+
+<rdf:Description about="#certs-help-websites">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="certs-help-websites-delete" nc:name="Delete Web Site Certificate"
+  		nc:link="chrome://help/locale/certs_help.html#Delete_Web_Site_Certificate"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+
+<!-- CA CERTIFICATES CONTENT -->
+
+<rdf:Description about="#certs-help">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="certs-help-ca" nc:name="CA Certificates"
+  		nc:link="chrome://help/locale/certs_help.html#CA_Certificates"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#certs-help-ca">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="certs-help-ca-edit" nc:name="Edit CA Certificate Settings"
+  		nc:link="chrome://help/locale/certs_help.html#Edit_CA_Certificate_Settings"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#certs-help-ca">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="certs-help-ca-delete" nc:name="Delete CA Certificate"
+  		nc:link="chrome://help/locale/certs_help.html#Delete_CA_Certificate"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+
+
+
+<rdf:Description about="#certs-help">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="certs-help-devices" nc:name="Security Devices"
+  		nc:link="chrome://help/locale/certs_help.html#Security_Devices"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+
+<!-- CERTIFICATE INFORMATION AND DECISIONS HELP CONTENT -->
+
+
+<rdf:Description about="urn:root">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="cert-dialog-help" nc:name="Certificate Information and Decisions"
+  		nc:link="chrome://help/locale/cert_dialog_help.html"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+
+<rdf:Description about="#cert-dialog-help">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="cert-dialog-help-details" nc:name="Certificate Details"
+  		nc:link="chrome://help/locale/cert_dialog_help.html#Certificate_Details"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#cert-dialog-help">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="cert-dialog-help-choose-device" nc:name="Choose Security Device"
+  		nc:link="chrome://help/locale/cert_dialog_help.html#Choose_Security_Device"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+
+
+<rdf:Description about="#cert-dialog-help">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="cert-dialog-help-enroll" nc:name="Enrollment Information"
+  		nc:link="chrome://help/locale/cert_dialog_help.html#Enrollment_Information"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#cert-dialog-help">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="cert-dialog-help-renewal" nc:name="Certificate Renewal"
+  		nc:link="chrome://help/locale/cert_dialog_help.html#Certificate_Renewal"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#cert-dialog-help">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="cert-dialog-help-userID" nc:name="User Identification Request"
+  		nc:link="chrome://help/locale/cert_dialog_help.html#User_Identification_Request"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#cert-dialog-help">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="cert-dialog-help-newCA" nc:name="New Certificate Authority"
+  		nc:link="chrome://help/locale/cert_dialog_help.html#New_Certificate_Authority"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#cert-dialog-help">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="cert-dialog-help-website" nc:name="Web Site Certificates"
+  		nc:link="chrome://help/locale/cert_dialog_help.html#Web_Site_Certificates"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+
+<!-- PRIVACY AND SECURITY SETTINGS CONTENT -->
+
+
+<rdf:Description about="urn:root">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="privsec-help" nc:name="Privacy and Security Settings"
+  		nc:link="chrome://help/locale/privsec_help.html"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+
+
+<!-- PASSWORDS CONTENT -->
+
+
+<rdf:Description about="#privsec-help">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="passwords-help" nc:name="Password Settings"
+  		nc:link="chrome://help/locale/passwords_help.html"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+
+<rdf:Description about="#passwords-help">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="passwords-help-mgr" nc:name="Password Manager"
+  		nc:link="chrome://help/locale/passwords_help.html#Password_Manager"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+
+
+
+<rdf:Description about="#passwords-help">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="passwords-help-encrypt" nc:name="Encrypting Versus Obscuring"
+  		nc:link="chrome://help/locale/passwords_help.html#Encrypting_Versus_Obscuring"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#passwords-help">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="passwords-help-timeout" nc:name="Master Password Timeout"
+  		nc:link="chrome://help/locale/passwords_help.html#Master_Password_Timeout"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#passwords-help">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="passwords-help-master" nc:name="Change Master Password"
+  		nc:link="chrome://help/locale/passwords_help.html#Change_Master_Password"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<!-- SSL SETTINGS CONTENT -->
+
+
+<rdf:Description about="#privsec-help">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="ssl-settings" nc:name="SSL Settings"
+  		nc:link="chrome://help/locale/ssl_help.html"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<!-- VALIDATION SETTINGS CONTENT -->
+
+
+<rdf:Description about="#privsec-help">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="validation" nc:name="Validation Settings"
+  		nc:link="chrome://help/locale/validation_help.html"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<!-- GLOSSARY CONTENT -->
+
+
+<rdf:Description about="urn:root">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="glossary" nc:name="Glossary"
+  		nc:link="chrome://help/locale/glossary.html"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+
 
 </rdf:RDF>
-
 
 
 
