@@ -35,4 +35,7 @@ nsIDOMBarProp.h
 nsIDOMDOMException.h
 nsPIDOMWindow.h
 nsIDOMAbstractView.h
+nsIDOMCrypto.h
+nsIDOMCRMFObject.h
+nsIDOMPkcs11.h
 nsIDOMViewCSS.h

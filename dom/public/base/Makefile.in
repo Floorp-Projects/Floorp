@@ -45,6 +45,9 @@ EXPORTS		= \
 		nsPIDOMWindow.h \
 		nsIDOMAbstractView.h \
 		nsIDOMViewCSS.h \
+		nsIDOMCRMFObject.h \
+		nsIDOMCrypto.h \
+		nsIDOMPkcs11.h \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
