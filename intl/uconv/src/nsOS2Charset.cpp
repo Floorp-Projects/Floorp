@@ -134,8 +134,9 @@ nsPlatformCharset::GetCharset(nsPlatformCharsetSel selector,
 }
 
 NS_IMETHODIMP
-nsPlatformCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar** _retValue)
+nsPlatformCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, nsACString &oResult)
 {
+  oResult.Truncate();
   return NS_OK;
 }
 

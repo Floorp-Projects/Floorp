@@ -184,11 +184,10 @@ nsresult nsCollationMac::Initialize(nsILocale* locale)
 
     nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &res);
     if (NS_SUCCEEDED(res)) {
-      PRUnichar* mappedCharset = NULL;
-      res = platformCharset->GetDefaultCharsetForLocale(aLocale.get(), &mappedCharset);
-      if (NS_SUCCEEDED(res) && mappedCharset) {
-        res = mCollation->SetCharset(NS_LossyConvertUCS2toASCII(mappedCharset).get());
-        nsMemory::Free(mappedCharset);
+      nsCAutoString mappedCharset;
+      res = platformCharset->GetDefaultCharsetForLocale(aLocale.get(), mappedCharset);
+      if (NS_SUCCEEDED(res)) {
+        res = mCollation->SetCharset(mappedCharset.get());
       }
     }
   }

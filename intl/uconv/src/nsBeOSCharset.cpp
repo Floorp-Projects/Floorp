@@ -59,9 +59,9 @@ nsPlatformCharset::GetCharset(nsPlatformCharsetSel selector, nsACString& aResult
 }
 
 NS_IMETHODIMP
-nsPlatformCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar** _retValue)
+nsPlatformCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, nsACString& aResult)
 {
-  *_retValue = ToNewUnicode(mCharset);
+  aResult = mCharset;
   return NS_OK;
 }
 

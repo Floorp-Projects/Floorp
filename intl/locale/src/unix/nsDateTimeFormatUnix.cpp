@@ -116,13 +116,10 @@ nsresult nsDateTimeFormatUnix::Initialize(nsILocale* locale)
 
     nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &res);
     if (NS_SUCCEEDED(res)) {
-      PRUnichar* mappedCharset = NULL;
-      res = platformCharset->GetDefaultCharsetForLocale(mLocale.get(), &mappedCharset);
-      if (NS_SUCCEEDED(res) && mappedCharset) {
-        // XXX hacky, nsIPlatformCharset::GetDefaultCharsetForLocale
-        // should return a nsACString&
-        CopyUCS2toASCII(nsDependentString(mappedCharset), mCharset);
-        nsMemory::Free(mappedCharset);
+      nsCAutoString mappedCharset;
+      res = platformCharset->GetDefaultCharsetForLocale(mLocale.get(), mappedCharset);
+      if (NS_SUCCEEDED(res)) {
+        mCharset = mappedCharset;
       }
     }
   }
