@@ -283,9 +283,12 @@ NS_IMETHODIMP nsRenderingContextGTK::PopState(PRBool &aClipEmpty)
     mRegion = state->mClipRegion;
     mFontMetrics = state->mFontMetrics;
 
-    GdkRegion *rgn;
-    mRegion->GetNativeRegion((void*&)rgn);
-    ::gdk_gc_set_clip_region (mSurface->GetGC(), rgn);
+    if (mSurface)
+    {
+      GdkRegion *rgn;
+      mRegion->GetNativeRegion((void*&)rgn);
+      ::gdk_gc_set_clip_region (mSurface->GetGC(), rgn);
+    }
 
     if (state->mColor != mCurrentColor)
       SetColor(state->mColor);
