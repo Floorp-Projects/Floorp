@@ -1,3 +1,4 @@
+#!nmake
 #
 # The contents of this file are subject to the Netscape Public
 # License Version 1.1 (the "License"); you may not use this file
@@ -17,16 +18,15 @@
 # Rights Reserved.
 #
 # Contributor(s): 
-#
 
-DEPTH		= ../../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH=..\..\..\..\..
 
-include $(DEPTH)/config/autoconf.mk
+include <$(DEPTH)\config\rules.mak>
 
-DIRS		= content locale skin
+DISTBROWSER=$(DIST)\bin\chrome\global\skin
 
-include $(topsrcdir)/config/rules.mk
+install::
+	$(MAKE_INSTALL) console.css $(DISTBROWSER)
 
+clobber::
+  rm -f $(DISTBROWSER)\console.css
