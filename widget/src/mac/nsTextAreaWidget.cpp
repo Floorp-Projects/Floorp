@@ -23,11 +23,33 @@
 #include "nsGUIEvent.h"
 #include "nsString.h"
 #include <memory>
+#include <ToolUtils.h>
 
 #define DBG 0
 
 NS_IMPL_ADDREF(nsTextAreaWidget);
 NS_IMPL_RELEASE(nsTextAreaWidget);
+
+
+//-------------------------------------------------------------------------
+//	¥ NOTE ABOUT MENU HANDLING ¥
+//
+//	The definitions below, as well as the NS_MENU_SELECTED code in
+//	DispatchEvent() are temporary hacks only. They require the menu
+//	resources to be created under Contructor with the standard
+//	PowerPlant menu IDs. All that will go away because:
+//	- nsTextWidget will be rewritten as an XP widget by the Editor team.
+//	- menu handling will be rewritten by the XPApp team.
+//-------------------------------------------------------------------------
+
+#include <Scrap.h>
+#include <PP_Messages.h>		// for PP standard menu commands
+enum
+{
+	menu_Apple = 128,
+	menu_File,
+	menu_Edit
+};
 
 
 /**-------------------------------------------------------------------------------
@@ -231,43 +253,138 @@ GrafPtr		theport;
 }
 
 //-------------------------------------------------------------------------
-PRBool nsTextAreaWidget::DispatchWindowEvent(nsGUIEvent &event)
+PRBool nsTextAreaWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 {
-	PRBool keyHandled = nsWindow::DispatchWindowEvent(event);
+	PRBool keyHandled = nsWindow::DispatchWindowEvent(aEvent);
 
 	if (! keyHandled)
 	{
-	  if (event.eventStructType == NS_KEY_EVENT)
-	  {
-	  	if (event.message == NS_KEY_DOWN)
+		switch ( aEvent.message )
 	  	{
-	  		char theChar;
-	  		short theModifiers;
-	  		EventRecord* theOSEvent = (EventRecord*)event.nativeMsg;
-	  		if (theOSEvent)
+	  		case NS_KEY_DOWN:
 	  		{
-	  			theChar = (theOSEvent->message & charCodeMask);
-	  			theModifiers = theOSEvent->modifiers;
-	  		}
-	  		else
-	  		{
-	  			nsKeyEvent* keyEvent = (nsKeyEvent*)&event;
-	  			theChar = keyEvent->keyCode;
-	  			if (keyEvent->isShift)
-	  				theModifiers = shiftKey;
-	  			if (keyEvent->isControl)
-	  				theModifiers |= controlKey;
-	  			if (keyEvent->isAlt)
-	  				theModifiers |= optionKey;
-	  		}
-	  		if (theChar != NS_VK_RETURN)	// don't pass Return: nsTextAreaWidget is a single line editor
-	  		{
-	  			PrimitiveKeyDown(theChar, theModifiers);
-	  			keyHandled = PR_TRUE;
-	  		}
-	  	}
-	  }
-	}
+		  		char theChar;
+		  		short theModifiers;
+		  		EventRecord* theOSEvent = (EventRecord*)aEvent.nativeMsg;
+		  		if (theOSEvent)
+		  		{
+		  			theChar = (theOSEvent->message & charCodeMask);
+		  			theModifiers = theOSEvent->modifiers;
+		  		}
+		  		else
+		  		{
+		  			nsKeyEvent* keyEvent = (nsKeyEvent*)&aEvent;
+		  			theChar = keyEvent->keyCode;
+		  			if (keyEvent->isShift)
+		  				theModifiers = shiftKey;
+		  			if (keyEvent->isControl)
+		  				theModifiers |= controlKey;
+		  			if (keyEvent->isAlt)
+		  				theModifiers |= optionKey;
+		  		}
+		  		if (theChar != NS_VK_RETURN)	// don't pass Return: nsTextAreaWidget is a single line editor
+		  		{
+		  			PrimitiveKeyDown(theChar, theModifiers);
+		  			keyHandled = PR_TRUE;
+		  		}
+		  		break;
+		  	}
+		  	
+		  	case NS_MENU_SELECTED:
+			{
+				nsMenuEvent* menuEvent = (nsMenuEvent*)&aEvent;
+				long menuID = HiWord(menuEvent->mCommand);
+				long menuItem = LoWord(menuEvent->mCommand);
+				switch (menuID)
+				{
+					case menu_Edit:
+					{
+						switch (menuItem)
+						{
+//							case cmd_Undo:
+
+							case cmd_Cut:
+							case cmd_Copy:
+							{
+								PRUint32 startSel = 0, endSel = 0;
+								GetSelection ( &startSel, &endSel );
+								if ( startSel != endSel ) {
+									const Uint32 selectionLen = (endSel - startSel) + 1;
+									
+									// extract out the selection into a different nsString so
+									// we can keep it unicode as long as possible
+									PRUint32 unused = 0;
+									nsString str, selection;
+									GetText ( str, 0, unused );
+									str.Mid ( selection, startSel, (endSel-startSel)+1 );
+									
+									// now |selection| holds the current selection in unicode.
+									// We need to convert it to a c-string for MacOS.
+									auto_ptr<char> cRepOfSelection ( new char[selection.Length() + 1] );
+									selection.ToCString ( cRepOfSelection.get(), selectionLen );
+									
+									// copy it to the scrapMgr
+									::ZeroScrap();
+									::PutScrap ( selectionLen, 'TEXT', cRepOfSelection.get() );
+								
+									// if we're cutting, remove the text from the widget
+									if ( menuItem == cmd_Cut ) {
+										unused = 0;
+										str.Cut ( startSel, selectionLen );
+										SetText ( str, unused );
+									}
+								} // if there is a selection
+								break;
+							}
+								
+							case cmd_Paste:
+							{
+								long scrapOffset;
+								Handle scrapH = ::NewHandle(0);
+								long scrapLen = ::GetScrap(scrapH, 'TEXT', &scrapOffset);
+								if (scrapLen > 0)
+								{
+									::HLock(scrapH);
+
+									// truncate to the first line
+									char* cr = strchr((char*)*scrapH, '\r');
+									if (cr != nil)
+										scrapLen = cr - *scrapH;
+
+									// paste text
+									nsString str;
+									str.SetString((char*)*scrapH, scrapLen);
+									PRUint32 startSel, endSel;
+									GetSelection(&startSel, &endSel);
+									PRUint32 outSize;
+									InsertText(str, startSel, endSel, outSize);
+
+									::HUnlock(scrapH);
+								}
+								::DisposeHandle(scrapH);
+								break;
+							}
+							case cmd_Clear:
+							{
+								nsString str;
+								PRUint32 outSize;
+								SetText(str, outSize);
+								break;
+							}
+							case cmd_SelectAll:
+							{
+								SelectAll();
+								break;
+							}
+						}
+						break;
+					}
+				}
+				break;
+			} // case NS_MENU_SELECTED
+
+	  	} // switch on which event message
+	} // if key event not handled
 
 	return (keyHandled);
 }
