@@ -40,10 +40,6 @@
 #include "nsIDeviceContext.h"
 #include "nsIPresShell.h"
 
-#if THIS_IS_THE_LINK_FIX
-#include "nsHTMLAtoms.h"
-#endif
-
 // Some Misc #defines
 #define SELECTION_DEBUG        0
 #define FORCE_SELECTION_UPDATE 1
@@ -582,28 +578,6 @@ NS_METHOD nsFrame::HandleEvent(nsIPresContext& aPresContext,
 
   if(nsEventStatus_eConsumeNoDefault != aEventStatus) {
     if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
-#if THIS_IS_THE_LINK_FIX
-      nsIContent * content = mContent;
-      nsIAtom    * atom    = content->GetTag();
-      NS_ADDREF(content);
-      while (atom == nsnull) {
-        nsIContent * oldContent = content;
-        content = oldContent->GetParent();
-        NS_RELEASE(oldContent);
-        atom = content->GetTag();
-      }
-      NS_RELEASE(content);
-
-      if (atom == nsHTMLAtoms::a) {
-        nsString href;
-        content->GetAttribute(nsString("href"), href);
-        if (href.Length() > 0) {
-          NS_RELEASE(atom);
-          return NS_OK;
-        }
-      }
-      NS_RELEASE(atom);
-#endif
     } else if (aEvent->message == NS_MOUSE_MOVE && mDoingSelection ||
                aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
       // no-op
