@@ -56,14 +56,19 @@
   function onHistoryOK()
   {
     var data = parent.hPrefWindow.wsm.dataManager.pageData["chrome://communicator/content/pref/pref-history.xul"];
-    if ( "GetFields" in window )
-      data = GetFields();
-    var maxSize = data.shistMax;
+    var panelIsShown = ("GetSHistValue" in window);
+    var maxSize = data['shistMax'].value;
+    if (panelIsShown)
+      maxSize = GetSHistValue();
+
     if (maxSize < 0) {
-      // Don't bother calling in to the component if the value is illegal.
-      // I need a way to enforce proper value and/or stop the pref
-      // UI from saving an illegal value in to prefs
-      return;
+      // set the pref to 0 so the UI reflects the proper value
+      if (panelIsShown)
+        document.getElementById("shistMax").value = "0";
+      else
+        data['shistMax'].value = "0";
+        
+      maxSize = 0;
     }
     try {
       var SHistory = Components.classes["@mozilla.org/browser/shistory;1"]
@@ -74,12 +79,9 @@
     }
   }
   
-  function GetFields() {
-    var data = {};
-    data.shistMax = document.getElementById('shistMax').value;
-    return data;
+  function GetSHistValue() {
+    return document.getElementById('shistMax').value;
   }
-
 
   function prefClearGlobalHistory()
   {
