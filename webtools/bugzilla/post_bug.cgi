@@ -92,13 +92,13 @@ if (!defined $::FORM{'short_desc'} || trim($::FORM{'short_desc'}) eq "") {
     PuntTryAgain("You must enter a summary for this bug.");
 }
 
-my $forceAssignedOK = 0;
 if ($::FORM{'assigned_to'} eq "") {
     SendSQL("select initialowner from components where program=" .
             SqlQuote($::FORM{'product'}) .
             " and value=" . SqlQuote($::FORM{'component'}));
     $::FORM{'assigned_to'} = FetchOneColumn();
-    $forceAssignedOK = 1;
+} else {
+    $::FORM{'assigned_to'} = DBNameToIdAndCheck($::FORM{'assigned_to'});
 }
 
 $::FORM{'reporter'} = DBNameToIdAndCheck($::FORM{'reporter'});
