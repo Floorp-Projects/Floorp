@@ -656,11 +656,9 @@ PRInt32 nsHTMLFramesetFrame::GetBorderWidth(nsIPresContext* aPresContext,
     if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetHTMLAttribute(nsHTMLAtoms::border, htmlVal))) {
       nsHTMLUnit unit = htmlVal.GetUnit();
       PRInt32 intVal = 0;
-      if (eHTMLUnit_Pixel == unit) {
-        intVal = htmlVal.GetPixelValue();
-      } else if (eHTMLUnit_Integer == unit) {
+      if (eHTMLUnit_Integer == unit) {
         intVal = htmlVal.GetIntValue();
-      } 
+      }
       if (intVal < 0) {
         intVal = 0;
       }
@@ -930,44 +928,35 @@ nsFrameborder nsHTMLFramesetFrame::GetFrameBorder(nsIContent* aContent)
 
 nscolor nsHTMLFramesetFrame::GetBorderColor() 
 {
-  nscolor result = NO_COLOR;
-
   nsCOMPtr<nsIHTMLContent> content(do_QueryInterface(mContent));
 
   if (content) {
     nsHTMLValue value;
     if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetHTMLAttribute(nsHTMLAtoms::bordercolor, value))) {
-      if ((eHTMLUnit_Color == value.GetUnit()) ||
-          (eHTMLUnit_ColorName == value.GetUnit())) {
-        result = value.GetColorValue();
+      nscolor color;
+      if (value.GetColorValue(color)) {
+        return color;
       }
     }
   }
-  if (NO_COLOR == result) {
-    return mParentBorderColor;
-  } 
-  return result;
+
+  return mParentBorderColor;
 }
 
 nscolor nsHTMLFramesetFrame::GetBorderColor(nsIContent* aContent) 
 {
-  nscolor result = NO_COLOR;
-
   nsCOMPtr<nsIHTMLContent> content(do_QueryInterface(aContent));
 
   if (content) {
     nsHTMLValue value;
     if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetHTMLAttribute(nsHTMLAtoms::bordercolor, value))) {
-      if ((eHTMLUnit_Color == value.GetUnit()) ||
-          (eHTMLUnit_ColorName == value.GetUnit())) {
-        result = value.GetColorValue();
+      nscolor color;
+      if (value.GetColorValue(color)) {
+        return color;
       }
     }
   }
-  if (NO_COLOR == result) {
-    return GetBorderColor();
-  }
-  return result;
+  return GetBorderColor();
 }
 
 NS_IMETHODIMP

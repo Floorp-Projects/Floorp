@@ -1352,8 +1352,7 @@ nsTextControlFrame::GetCols()
     nsHTMLValue attr;
     nsresult rv = content->GetHTMLAttribute(nsHTMLAtoms::cols, attr);
     if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-      PRInt32 cols = ((attr.GetUnit() == eHTMLUnit_Pixel)
-                     ? attr.GetPixelValue() : attr.GetIntValue());
+      PRInt32 cols = attr.GetIntValue();
       // XXX why a default of 1 char, why hide it
       return (cols <= 0) ? 1 : cols;
     }

@@ -768,10 +768,6 @@ protected:
   PRBool DidResizeReflow() const;
   void   SetResizeReflow(PRBool aValue);
 
-  PRBool    ConvertToPixelValue(nsHTMLValue& aValue, 
-                                PRInt32      aDefault, 
-                                PRInt32&     aResult);
-
 public:
   PRBool NeedStrategyInit() const;
   void SetNeedStrategyInit(PRBool aValue);

@@ -1081,19 +1081,6 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   return NS_OK;
 }
 
-PRBool nsTableCellFrame::ConvertToPixelValue(nsHTMLValue& aValue, PRInt32 aDefault, PRInt32& aResult)
-{
-  if (aValue.GetUnit() == eHTMLUnit_Pixel)
-    aResult = aValue.GetPixelValue();
-  else if (aValue.GetUnit() == eHTMLUnit_Empty)
-    aResult = aDefault;
-  else {
-    NS_ERROR("Unit must be pixel or empty");
-    return PR_FALSE;
-  }
-  return PR_TRUE;
-}
-
 /* ----- global methods ----- */
 
 NS_IMPL_ADDREF_INHERITED(nsTableCellFrame, nsHTMLContainerFrame)
