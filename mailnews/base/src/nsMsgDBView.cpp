@@ -768,7 +768,7 @@ nsresult nsMsgDBView::FetchLabel(nsIMsgHdr *aHdr, PRUnichar ** aLabelString)
 /*if you call SaveAndClearSelection make sure to call RestoreSelection otherwise
 m_saveRestoreSelectionDepth will be incorrect and will lead to selection msg problems*/
 
-nsresult nsMsgDBView::SaveAndClearSelection(nsMsgKeyArray *aMsgKeyArray)
+nsresult nsMsgDBView::SaveAndClearSelection(nsMsgKey *aCurrentMsgKey, nsMsgKeyArray *aMsgKeyArray)
 {
   // we don't do anything on nested Save / Restore calls.
   m_saveRestoreSelectionDepth++;
@@ -781,7 +781,17 @@ nsresult nsMsgDBView::SaveAndClearSelection(nsMsgKeyArray *aMsgKeyArray)
   // first, freeze selection.
   mTreeSelection->SetSelectEventsSuppressed(PR_TRUE);
 
-  // second, get an array of view indices for the selection..
+  // second, save the current index.
+  if (aCurrentMsgKey)
+  {
+    PRInt32 currentIndex;
+    if (NS_SUCCEEDED(mTreeSelection->GetCurrentIndex(&currentIndex)) && currentIndex >= 0 && currentIndex < GetSize())
+      *aCurrentMsgKey = m_keys.GetAt(currentIndex);
+    else
+      *aCurrentMsgKey = nsMsgKey_None;
+  }
+  
+  // third, get an array of view indices for the selection.
   nsUInt32Array selection;
   GetSelectedIndices(&selection);
   PRInt32 numIndices = selection.GetSize();
@@ -801,7 +811,7 @@ nsresult nsMsgDBView::SaveAndClearSelection(nsMsgKeyArray *aMsgKeyArray)
   return NS_OK;
 }
 
-nsresult nsMsgDBView::RestoreSelection(nsMsgKeyArray * aMsgKeyArray)
+nsresult nsMsgDBView::RestoreSelection(nsMsgKey aCurrentMsgKey, nsMsgKeyArray *aMsgKeyArray)
 {
   // we don't do anything on nested Save / Restore calls.
   m_saveRestoreSelectionDepth--;
@@ -827,29 +837,23 @@ nsresult nsMsgDBView::RestoreSelection(nsMsgKeyArray * aMsgKeyArray)
     }
   }
 
-  // make sure the currentView was preserved....
-  if (m_currentlyDisplayedMsgKey != nsMsgKey_None)
-  {
-    currentViewPosition = FindKey(m_currentlyDisplayedMsgKey, PR_FALSE);
-    if (currentViewPosition != nsMsgViewIndex_None)
-    {
-      mTreeSelection->SetCurrentIndex(currentViewPosition);
-      mTreeSelection->RangedSelect(currentViewPosition, currentViewPosition, PR_TRUE /* augment */);
-        
-      // make sure the current message is once again visible in the thread pane
-      // so we don't have to go search for it in the thread pane
-      if (mTree) mTree->EnsureRowIsVisible(currentViewPosition);
-    }
-  }
-
   for (PRInt32 index = 0; index < arraySize; index ++)
   {
     newViewPosition = FindKey(aMsgKeyArray->GetAt(index), PR_FALSE);  
-    // check to make sure newViewPosition is valid.
     // add the index back to the selection.
-    if (newViewPosition != currentViewPosition) // don't re-add the current view
-      mTreeSelection->RangedSelect(newViewPosition, newViewPosition, PR_TRUE /* augment */);
+    mTreeSelection->ToggleSelect(newViewPosition);
   }
+
+  // make sure the currentView was preserved....
+  if (aCurrentMsgKey != nsMsgKey_None)
+    currentViewPosition = FindKey(aCurrentMsgKey, PR_TRUE);
+
+  mTreeSelection->SetCurrentIndex(currentViewPosition);
+      
+  // make sure the current message is once again visible in the thread pane
+  // so we don't have to go search for it in the thread pane
+  if (mTree && currentViewPosition != nsMsgViewIndex_None)
+    mTree->EnsureRowIsVisible(currentViewPosition);
 
   // unfreeze selection.
   mTreeSelection->SetSelectEventsSuppressed(PR_FALSE);
@@ -5663,7 +5667,7 @@ NS_IMETHODIMP nsMsgDBView::SelectMsgByKey(nsMsgKey aKey)
   // select (and load) the desired message
   
   nsMsgKeyArray preservedSelection;
-  nsresult rv = SaveAndClearSelection(&preservedSelection);
+  nsresult rv = SaveAndClearSelection(nsnull, &preservedSelection);
   NS_ENSURE_SUCCESS(rv,rv);
 
   // now, restore our desired selection
@@ -5673,7 +5677,7 @@ NS_IMETHODIMP nsMsgDBView::SelectMsgByKey(nsMsgKey aKey)
   // if the key was not found
   // (this can happen with "remember last selected message")
   // nothing will be selected
-  rv = RestoreSelection(&keyArray);
+  rv = RestoreSelection(aKey, &keyArray);
   NS_ENSURE_SUCCESS(rv,rv);
   return NS_OK;
 }

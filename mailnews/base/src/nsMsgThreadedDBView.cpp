@@ -281,8 +281,9 @@ NS_IMETHODIMP nsMsgThreadedDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgVi
   if (sortType == nsMsgViewSortType::byThread && (m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay) != 0)
     sortType = nsMsgViewSortType::byId;
 
+  nsMsgKey preservedKey;
   nsMsgKeyArray preservedSelection;
-  SaveAndClearSelection(&preservedSelection);
+  SaveAndClearSelection(&preservedKey, &preservedSelection);
   // if the client wants us to forget our cached id arrays, they
   // should build a new view. If this isn't good enough, we
   // need a method to do that.
@@ -310,7 +311,7 @@ NS_IMETHODIMP nsMsgThreadedDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgVi
         // this is safe when there is no selection.
         rv = AdjustRowCount(rowCountBeforeSort, GetSize());
         
-        RestoreSelection(&preservedSelection);
+        RestoreSelection(preservedKey, &preservedSelection);
         if (mTree) mTree->Invalidate();
         return NS_OK;
       }
@@ -327,7 +328,7 @@ NS_IMETHODIMP nsMsgThreadedDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgVi
         // this is safe when there is no selection.
         rv = AdjustRowCount(rowCountBeforeSort, GetSize());
         
-        RestoreSelection(&preservedSelection);
+        RestoreSelection(preservedKey, &preservedSelection);
         if (mTree) mTree->Invalidate();
         return NS_OK;
       }
@@ -374,7 +375,7 @@ NS_IMETHODIMP nsMsgThreadedDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgVi
   // this is safe when there is no selection.
   rv = AdjustRowCount(rowCountBeforeSort, GetSize());
 
-  RestoreSelection(&preservedSelection);
+  RestoreSelection(preservedKey, &preservedSelection);
   if (mTree) mTree->Invalidate();
   NS_ENSURE_SUCCESS(rv,rv);
   return NS_OK;

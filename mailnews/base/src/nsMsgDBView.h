@@ -174,8 +174,8 @@ protected:
   // When you are done changing the view, 
   // call RestoreSelection passing in the same array
   // and we'll restore the selection AND unfreeze selection in the UI.
-  nsresult SaveAndClearSelection(nsMsgKeyArray * aMsgKeyArray);
-  nsresult RestoreSelection(nsMsgKeyArray * aMsgKeyArray);
+  nsresult SaveAndClearSelection(nsMsgKey *aCurrentMsgKey, nsMsgKeyArray *aMsgKeyArray);
+  nsresult RestoreSelection(nsMsgKey aCurrentmsgKey, nsMsgKeyArray *aMsgKeyArray);
 
   // this is not safe to use when you have a selection
   // RowCountChanged() will call AdjustSelection() 

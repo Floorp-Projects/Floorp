@@ -213,10 +213,11 @@ nsMsgQuickSearchDBView::OnNewSearch()
 NS_IMETHODIMP
 nsMsgQuickSearchDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder)
 {
+  nsMsgKey preservedKey;
   nsMsgKeyArray preservedSelection;
-  SaveAndClearSelection(&preservedSelection);
+  SaveAndClearSelection(&preservedKey, &preservedSelection);
   nsMsgDBView::Sort(sortType, sortOrder);
-  RestoreSelection(&preservedSelection);
+  RestoreSelection(preservedKey, &preservedSelection);
   if (mTree) 
     mTree->Invalidate();
   return NS_OK;
