@@ -54,8 +54,17 @@ class nsPresContext;
  *
  * Since the data in |nsIStyleRule|s and |nsRuleNode|s are immutable
  * (with a few exceptions, like system color changes), the data in an
- * nsStyleContext are also immutable.  When style data change,
+ * nsStyleContext are also immutable (with the additional exception of
+ * GetUniqueStyleData).  When style data change,
  * nsFrameManager::ReResolveStyleContext creates a new style context.
+ *
+ * Style contexts are reference counted.  References are generally held
+ * by:
+ *  1. the |nsIFrame|s that are using the style context and
+ *  2. any *child* style contexts (this might be the reverse of
+ *     expectation, but it makes sense in this case)
+ * Style contexts participate in the mark phase of rule node garbage
+ * collection.
  */
 
 class nsStyleContext
@@ -104,7 +113,6 @@ public:
 
   nsRuleNode* GetRuleNode() { return mRuleNode; }
   void AddStyleBit(const PRUint32& aBit) { mBits |= aBit; }
-  void GetStyleBits(PRUint32* aBits) { *aBits = mBits; }
 
   /*
    * Mark this style context's rule node (and its ancestors) to prevent
@@ -171,6 +179,11 @@ protected:
   NS_HIDDEN_(void) ApplyStyleFixups(nsPresContext* aPresContext);
 
   nsStyleContext* mParent;
+
+  // children are maintained in two circular doubly-linked lists,
+  // mEmptyChild for children whose rule node is the root rule node, and
+  // mChild for other children.  The order of children is not
+  // meaningful.
   nsStyleContext* mChild;
   nsStyleContext* mEmptyChild;
   nsStyleContext* mPrevSibling;
@@ -186,8 +199,7 @@ protected:
   // specific rule matched is the one whose rule node is a child of the
   // root of the rule tree, and the most specific rule matched is the
   // |mRule| member of |mRuleNode|.
-  // XXXldb Should be |nsRuleNode *const|.
-  nsRuleNode*             mRuleNode;
+  nsRuleNode* const       mRuleNode;
 
   // |mCachedStyleData| points to both structs that are owned by this
   // style context and structs that are owned by one of this style

@@ -241,11 +241,14 @@ struct nsCachedStyleData
 
 /**
  * nsRuleNode is a node in a lexicographic tree (the "rule tree")
- * indexed by style rules (implementations of nsIStyleRule).  The rule
- * tree is owned by the nsStyleSet, is garbage-collected during the
- * lifetime of the document (when dynamic changes cause the destruction
- * of enough style contexts), and is destroyed when the document goes
- * away.
+ * indexed by style rules (implementations of nsIStyleRule).
+ *
+ * The rule tree is owned by the nsStyleSet and is destroyed when the
+ * presentation of the document goes away.  It is garbage-collected
+ * (using mark-and-sweep garbage collection) during the lifetime of the
+ * document (when dynamic changes cause the destruction of enough style
+ * contexts).  Rule nodes are marked if they are pointed to by a style
+ * context or one of their descendants is.
  *
  * An nsStyleContext, which represents the computed style data for an
  * element, points to an nsRuleNode.  The path from the root of the rule

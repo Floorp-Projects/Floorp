@@ -66,7 +66,7 @@ nsStyleContext::nsStyleContext(nsStyleContext* aParent,
                                nsIAtom* aPseudoTag,
                                nsRuleNode* aRuleNode,
                                nsPresContext* aPresContext)
-  : mParent((nsStyleContext*)aParent),
+  : mParent(aParent),
     mChild(nsnull),
     mEmptyChild(nsnull),
     mPseudoTag(aPseudoTag),
