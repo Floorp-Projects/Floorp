@@ -464,8 +464,8 @@ NS_IMPL_IDPREF_BOOL(AttachSignature, "attach_signature");
 NS_IMPL_IDPREF_INT(SignatureDate,"sig_date");
 
 NS_IMPL_IDPREF_BOOL(DoFcc, "fcc");
-NS_IMPL_FOLDERPREF_STR(FccFolder, "fcc_folder");
 
+NS_IMPL_FOLDERPREF_STR(FccFolder, "fcc_folder");
 NS_IMPL_IDPREF_STR(FccFolderPickerMode, "fcc_folder_picker_mode");
 NS_IMPL_IDPREF_STR(DraftsFolderPickerMode, "drafts_folder_picker_mode");
 NS_IMPL_IDPREF_STR(TmplFolderPickerMode, "tmpl_folder_picker_mode");
@@ -585,74 +585,99 @@ nsMsgIdentity::getFolderPref(const char *prefname, char **retval, PRBool mustHav
       rv = setFolderPref(prefname, (const char *)*retval);
     }
   }
+  // get the corresponding RDF resource
+  // RDF will create the folder resource if it doesn't already exist
+  nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
+  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIRDFResource> resource;
+  rv = rdf->GetResource(nsDependentCString(*retval), getter_AddRefs(resource));
+  if (NS_FAILED(rv)) 
+    return rv;
+
+  nsCOMPtr <nsIMsgFolder> folderResource;
+  folderResource = do_QueryInterface(resource, &rv);
+  if (NS_SUCCEEDED(rv) && folderResource) 
+  {
+    // don't check validity of folder - caller will handle creating it
+    nsCOMPtr<nsIMsgIncomingServer> server; 
+    //make sure that folder hierarchy is built so that legitimate parent-child relationship is established
+    rv = folderResource->GetServer(getter_AddRefs(server));
+    if (server)
+    {
+      nsCOMPtr <nsIMsgFolder> msgFolder;
+      rv = server->GetMsgFolderFromURI(folderResource, *retval, getter_AddRefs(msgFolder));
+      if (NS_SUCCEEDED(rv))
+        return msgFolder->GetURI(retval);
+    }
+  }
   return rv;
 }
 
 nsresult 
 nsMsgIdentity::setFolderPref(const char *prefname, const char *value)
 {
-    nsXPIDLCString oldpref;
-    nsresult rv;
-    nsCOMPtr<nsIRDFResource> res;
-    nsCOMPtr<nsIMsgFolder> folder;
-    PRUint32 folderflag;
-    nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
+  nsXPIDLCString oldpref;
+  nsresult rv;
+  nsCOMPtr<nsIRDFResource> res;
+  nsCOMPtr<nsIMsgFolder> folder;
+  PRUint32 folderflag;
+  nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
+  
+  if (nsCRT::strcmp(prefname, "fcc_folder") == 0)
+  {
+    // Clear the temporary return receipt filter so that the new filter
+    // rule can be recreated (by ConfigureTemporaryReturnReceiptsFilter()).
+    nsCOMPtr<nsIMsgAccountManager> accountManager = 
+      do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
     
-    if (nsCRT::strcmp(prefname, "fcc_folder") == 0)
+    nsCOMPtr<nsISupportsArray> servers; 
+    rv = accountManager->GetServersForIdentity(this, getter_AddRefs(servers));
+    NS_ENSURE_SUCCESS(rv,rv);
+    PRUint32 cnt = 0;
+    servers->Count(&cnt);
+    if (cnt > 0)
     {
-        // Clear the temporary return receipt filter so that the new filter
-        // rule can be recreated (by ConfigureTemporaryReturnReceiptsFilter()).
-        nsCOMPtr<nsIMsgAccountManager> accountManager = 
-          do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
-        NS_ENSURE_SUCCESS(rv,rv);
-
-        nsCOMPtr<nsISupportsArray> servers; 
-        rv = accountManager->GetServersForIdentity(this, getter_AddRefs(servers));
-        NS_ENSURE_SUCCESS(rv,rv);
-        PRUint32 cnt = 0;
-        servers->Count(&cnt);
-        if (cnt > 0)
-        {
-          nsCOMPtr<nsISupports> supports = getter_AddRefs(servers->ElementAt(0));
-          nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(supports,&rv);
-          if (NS_SUCCEEDED(rv))
-            server->ClearTemporaryReturnReceiptsFilter(); // okay to fail; no need to check for return code
-        }
-        folderflag = MSG_FOLDER_FLAG_SENTMAIL;
+      nsCOMPtr<nsISupports> supports = getter_AddRefs(servers->ElementAt(0));
+      nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(supports,&rv);
+      if (NS_SUCCEEDED(rv))
+        server->ClearTemporaryReturnReceiptsFilter(); // okay to fail; no need to check for return code
     }
-    else if (nsCRT::strcmp(prefname, "draft_folder") == 0)
-        folderflag = MSG_FOLDER_FLAG_DRAFTS;
-    else if (nsCRT::strcmp(prefname, "stationery_folder") == 0)
-        folderflag = MSG_FOLDER_FLAG_TEMPLATES;
-    else
-        return NS_ERROR_FAILURE;
-
-    // get the old folder, and clear the special folder flag on it
-    rv = getFolderPref(prefname, getter_Copies(oldpref), PR_FALSE);
-    if (NS_SUCCEEDED(rv) && (const char*)oldpref)
+    folderflag = MSG_FOLDER_FLAG_SENTMAIL;
+  }
+  else if (nsCRT::strcmp(prefname, "draft_folder") == 0)
+    folderflag = MSG_FOLDER_FLAG_DRAFTS;
+  else if (nsCRT::strcmp(prefname, "stationery_folder") == 0)
+    folderflag = MSG_FOLDER_FLAG_TEMPLATES;
+  else
+    return NS_ERROR_FAILURE;
+  
+  // get the old folder, and clear the special folder flag on it
+  rv = getFolderPref(prefname, getter_Copies(oldpref), PR_FALSE);
+  if (NS_SUCCEEDED(rv) && (const char*)oldpref)
+  {
+    rv = rdf->GetResource(oldpref, getter_AddRefs(res));
+    if (NS_SUCCEEDED(rv) && res)
     {
-        rv = rdf->GetResource(oldpref, getter_AddRefs(res));
-        if (NS_SUCCEEDED(rv) && res)
-        {
-            folder = do_QueryInterface(res, &rv);
-            if (NS_SUCCEEDED(rv))
-                rv = folder->ClearFlag(folderflag);
-        }
+      folder = do_QueryInterface(res, &rv);
+      if (NS_SUCCEEDED(rv))
+        rv = folder->ClearFlag(folderflag);
     }
-   
-    // set the new folder, and set the special folder flags on it
-    rv = setCharPref(prefname, value);
-    if (NS_SUCCEEDED(rv))
+  }
+  
+  // set the new folder, and set the special folder flags on it
+  rv = setCharPref(prefname, value);
+  if (NS_SUCCEEDED(rv))
+  {
+    rv = rdf->GetResource(nsDependentCString(value), getter_AddRefs(res));
+    if (NS_SUCCEEDED(rv) && res)
     {
-        rv = rdf->GetResource(nsDependentCString(value), getter_AddRefs(res));
-        if (NS_SUCCEEDED(rv) && res)
-        {
-            folder = do_QueryInterface(res, &rv);
-            if (NS_SUCCEEDED(rv))
-                rv = folder->SetFlag(folderflag);
-        }
+      folder = do_QueryInterface(res, &rv);
+      if (NS_SUCCEEDED(rv))
+        rv = folder->SetFlag(folderflag);
     }
-    return rv;
+  }
+  return rv;
 }
 
 NS_IMETHODIMP nsMsgIdentity::SetUnicharAttribute(const char *aName, const PRUnichar *val)

@@ -56,9 +56,7 @@
 #include "nsMsgComposeStringBundle.h"
 #include "nsMsgCompUtils.h"
 #include "prcmon.h"
-#include "nsImapCore.h"
 #include "nsIMsgImapMailFolder.h"
-#include "nsIImapIncomingServer.h"
 #include "nsIEventQueueService.h"
 #include "nsMsgSimulateError.h"
 
@@ -428,12 +426,12 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
   if (!msgFolder) return NS_ERROR_NULL_POINTER;
   *msgFolder = nsnull;
 
-  if (!aFolderURI || !*aFolderURI) {
+  if (!aFolderURI || !*aFolderURI)
     return NS_ERROR_INVALID_ARG;
-  }
 
   // as long as it doesn't start with anyfolder://
-  if (PL_strncasecmp(ANY_SERVER, aFolderURI, strlen(aFolderURI)) != 0) {
+  if (PL_strncasecmp(ANY_SERVER, aFolderURI, strlen(aFolderURI)) != 0)
+  {
     nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
     if (NS_FAILED(rv)) return rv;
 
@@ -451,68 +449,8 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
       nsCOMPtr<nsIMsgIncomingServer> server; 
       //make sure that folder hierarchy is built so that legitimate parent-child relationship is established
       rv = folderResource->GetServer(getter_AddRefs(server));
-#if 0
-      // XXX TODO
-      // JUNK MAIL RELATED
-      // this should work, but I'm not going to turn it on until I test it more
       NS_ENSURE_SUCCESS(rv,rv);
-      return server->GetMsgFolderFromURI(folderResource, aFolderURI, aMsgFolder);
-#else
-      if (server)
-      { 
-        nsCOMPtr<nsIMsgFolder> rootMsgFolder;
-        server->GetRootMsgFolder(getter_AddRefs(rootMsgFolder));
-        if (rootMsgFolder)
-        {
-          nsCOMPtr<nsIImapIncomingServer> imapServer = do_QueryInterface(server);
-          // Make sure an specific IMAP folder has correct personal namespace
-          // See bugzilla bug 90494 (http://bugzilla.mozilla.org/show_bug.cgi?id=90494)
-          PRBool namespacePrefixAdded = PR_FALSE;
-          nsXPIDLCString folderUriWithNamespace;
-          if (imapServer)
-          {
-            imapServer->GetUriWithNamespacePrefixIfNecessary(kPersonalNamespace, aFolderURI, getter_Copies(folderUriWithNamespace));
-            if (!folderUriWithNamespace.IsEmpty())
-            {
-              rv = rootMsgFolder->GetChildWithURI(folderUriWithNamespace, PR_TRUE, PR_FALSE, msgFolder);
-              namespacePrefixAdded = PR_TRUE;
-            }
-            else
-              rv = rootMsgFolder->GetChildWithURI(aFolderURI, PR_TRUE, PR_FALSE, msgFolder);
-          }
-          else
-            rv = rootMsgFolder->GetChildWithURI(aFolderURI, PR_TRUE, PR_TRUE /*caseInsensitive*/, msgFolder);
-            /* we didn't find the folder so we will have to create new one.
-          CreateIfMissing does that provided we pass in a dummy folder */
-          if (!*msgFolder)
-          {
-            if (namespacePrefixAdded)
-            {
-              nsCOMPtr<nsIRDFResource> resource;
-              rv = rdf->GetResource(folderUriWithNamespace, getter_AddRefs(resource));
-              if (NS_FAILED(rv)) return rv;
-              
-              nsCOMPtr <nsIMsgFolder> folderResource;
-              folderResource = do_QueryInterface(resource, &rv);
-              if (NS_FAILED(rv)) return rv;
-              
-              *msgFolder = folderResource;
-              NS_ADDREF(*msgFolder);
-            }
-            else
-            {
-              *msgFolder = folderResource;
-              NS_ADDREF(*msgFolder);
-            }
-          }
-          return rv;
-        }
-        else
-          return NS_MSG_ERROR_FOLDER_MISSING;
-      }
-      else
-        return NS_MSG_ERROR_FOLDER_MISSING;
-#endif
+      return server->GetMsgFolderFromURI(folderResource, aFolderURI, msgFolder);
     }
     else 
     {
