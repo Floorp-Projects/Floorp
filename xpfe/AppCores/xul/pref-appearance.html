@@ -45,10 +45,10 @@
 	
 	<FORM>
 		<table>
-			<tr><td><input type="checkbox">Navigator</td></tr>
-			<tr><td><input type="checkbox">Messenger</td></tr>
-			<tr><td><input type="checkbox">Composer</td></tr>
-			<tr><td><input type="checkbox">Calendar</td></tr>
+			<tr><td><input type="checkbox" id="pref:0:bool:general.startup.browser">Navigator</td></tr>
+			<tr><td><input type="checkbox" id="pref:0:bool:general.startup.mail">Messenger</td></tr>
+			<tr><td><input type="checkbox" id="pref:0:bool:general.startup.editor">Composer</td></tr>
+			<tr><td><input type="checkbox" id="pref:0:bool:general.startup.calendar">Calendar</td></tr>
 		</table>
 	</FORM>
 
@@ -59,9 +59,9 @@
 
 	<FORM>
 		<table>
-			<tr><td><input name="showtoolbar" type="radio">Pictures and Text</td></tr>
-			<tr><td><input name="showtoolbar" type="radio">Pictures Only</td></tr>
-			<tr><td><input name="showtoolbar" type="radio">Text Only</td></tr>
+			<tr><td><input name="showtoolbar" type="radio" id="pref:2:int:browser.chrome.toolbar_style">Pictures and Text</td></tr>
+			<tr><td><input name="showtoolbar" type="radio" id="pref:0:int:browser.chrome.toolbar_style">Pictures Only</td></tr>
+			<tr><td><input name="showtoolbar" type="radio" id="pref:1:int:browser.chrome.toolbar_style">Text Only</td></tr>
 		</table>
 	</FORM>
 
