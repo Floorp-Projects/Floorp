@@ -32,7 +32,7 @@ REQUIRES	= xpcom \
 
 include <$(DEPTH)/config/config.mak>
 
-LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET
+LCFLAGS = -DWIN32_LEAN_AND_MEAN
 
 EXPORTS = \
 		nsCacheService.h \

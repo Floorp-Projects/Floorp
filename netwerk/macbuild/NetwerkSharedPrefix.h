@@ -20,7 +20,4 @@
  * Contributor(s): 
  */
 
-/* Defining the following causes NS_NET to be defined as NS_EXPORT. */
-#define _IMPL_NS_NET
-
 #include "MacSharedPrefix.h"
