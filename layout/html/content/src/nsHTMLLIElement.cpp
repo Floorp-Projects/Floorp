@@ -129,6 +129,7 @@ NS_IMPL_STRING_ATTR(nsHTMLLIElement, Type, type)
 NS_IMPL_INT_ATTR(nsHTMLLIElement, Value, value)
 
 static nsGenericHTMLElement::EnumTable kListItemTypeTable[] = {
+  { "disc", NS_STYLE_LIST_STYLE_DISC },
   { "circle", NS_STYLE_LIST_STYLE_CIRCLE },
   { "round", NS_STYLE_LIST_STYLE_CIRCLE },
   { "square", NS_STYLE_LIST_STYLE_SQUARE },

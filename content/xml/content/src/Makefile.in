@@ -40,6 +40,8 @@ INCLUDES += \
 CPPSRCS =				\
 	nsXMLElement.cpp		\
 	nsGenericXMLElement.cpp		\
+	nsXMLCDATASection.cpp		\
+	nsXMLProcessingInstruction.cpp	\
 	$(NULL)
 
 EXPORTS = \

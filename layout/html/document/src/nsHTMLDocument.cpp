@@ -87,59 +87,6 @@ static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
 static NS_DEFINE_IID(kIDOMHTMLElementIID, NS_IDOMHTMLELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLBodyElementIID, NS_IDOMHTMLBODYELEMENT_IID);
 
-// ==================================================================
-// =
-// ==================================================================
-class nsHTMLDocumentChildNodes : public nsGenericDOMNodeList
-{
-public:
-  nsHTMLDocumentChildNodes(nsIDOMDocument* aDocument);
-  ~nsHTMLDocumentChildNodes();
-
-  NS_IMETHOD    GetLength(PRUint32* aLength);
-  NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn);
-
-protected:
-  nsIDOMDocument* mDocument;
-};
-
-nsHTMLDocumentChildNodes::nsHTMLDocumentChildNodes(nsIDOMDocument* aDocument)
-{
-  mDocument = aDocument;
-  NS_ADDREF(mDocument);
-}
-
-nsHTMLDocumentChildNodes::~nsHTMLDocumentChildNodes()
-{
-  NS_RELEASE(mDocument);
-}
-
-NS_IMETHODIMP    
-nsHTMLDocumentChildNodes::GetLength(PRUint32* aLength)
-{
-  *aLength = 1;
-  return NS_OK;
-}
-
-NS_IMETHODIMP    
-nsHTMLDocumentChildNodes::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
-{
-  nsresult result = NS_OK;
-  if (0 == aIndex) {
-    nsIDOMElement* root;
-    
-    result = mDocument->GetDocumentElement(&root);
-    if (NS_OK == result) {
-      result = root->QueryInterface(kIDOMNodeIID, (void**)aReturn);
-      NS_RELEASE(root);
-    }
-  }
-  else {
-    *aReturn = nsnull;
-  }
-  
-  return result;
-}
 
 // ==================================================================
 // =
@@ -840,36 +787,19 @@ nsHTMLDocument::GetElementsByTagName(const nsString& aTagname, nsIDOMNodeList** 
 NS_IMETHODIMP    
 nsHTMLDocument::GetChildNodes(nsIDOMNodeList** aChildNodes)
 {
-  nsHTMLDocumentChildNodes* childNodes = new nsHTMLDocumentChildNodes((nsIDOMDocument*)(nsIDOMHTMLDocument*)this);
-  if (nsnull == childNodes) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return childNodes->QueryInterface(kIDOMNodeListIID, (void**)aChildNodes);
+  return nsDocument::GetChildNodes(aChildNodes);
 }
 
 NS_IMETHODIMP    
 nsHTMLDocument::GetFirstChild(nsIDOMNode** aFirstChild)
 {
-  if (nsnull != mRootContent) {
-    return mRootContent->QueryInterface(kIDOMNodeIID, (void**)aFirstChild);
-  }
-  else {
-    *aFirstChild = nsnull;
-    return NS_OK;
-  }
+  return nsDocument::GetFirstChild(aFirstChild);
 }
 
 NS_IMETHODIMP    
 nsHTMLDocument::GetLastChild(nsIDOMNode** aLastChild)
 {
-  if (nsnull != mRootContent) {
-    return mRootContent->QueryInterface(kIDOMNodeIID, (void**)aLastChild);
-  }
-  else {
-    *aLastChild = nsnull;
-    return NS_OK;
-  }
+  return nsDocument::GetLastChild(aLastChild);
 }
 
 NS_IMETHODIMP    
@@ -877,8 +807,7 @@ nsHTMLDocument::InsertBefore(nsIDOMNode* aNewChild,
                              nsIDOMNode* aRefChild, 
                              nsIDOMNode** aReturn)
 {
-  *aReturn = nsnull;
-  return NS_OK;
+  return nsDocument::InsertBefore(aNewChild, aRefChild, aReturn);
 }
 
 NS_IMETHODIMP    
@@ -886,29 +815,25 @@ nsHTMLDocument::ReplaceChild(nsIDOMNode* aNewChild,
                              nsIDOMNode* aOldChild, 
                              nsIDOMNode** aReturn)
 {
-  *aReturn = nsnull;
-  return NS_OK;
+  return nsDocument::ReplaceChild(aNewChild, aOldChild, aReturn);
 }
 
 NS_IMETHODIMP    
 nsHTMLDocument::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
 {
-  *aReturn = nsnull;
-  return NS_OK;
+  return nsDocument::RemoveChild(aOldChild, aReturn);
 }
 
 NS_IMETHODIMP    
 nsHTMLDocument::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
 {
-  *aReturn = nsnull;
-  return NS_OK;
+  return nsDocument::AppendChild(aNewChild, aReturn);
 }
 
 NS_IMETHODIMP    
 nsHTMLDocument::HasChildNodes(PRBool* aReturn)
 {
-  *aReturn = PR_TRUE;
-  return NS_OK;
+  return nsDocument::HasChildNodes(aReturn);
 }
 
 NS_IMETHODIMP    

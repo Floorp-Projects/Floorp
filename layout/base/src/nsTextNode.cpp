@@ -16,12 +16,13 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
+
 #include "nsIDOMText.h"
-#include "nsGenericDOMDataNode.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIContent.h"
 #include "nsITextContent.h"
+#include "nsGenericDOMDataNode.h"
 #include "nsFrame.h"
 #include "nsIDocument.h"
 #include "nsCRT.h"
@@ -29,8 +30,6 @@
 
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);
-
-/* XXX should not be html content; should be nsITextContent */
 
 class nsTextNode : public nsIDOMText,
                    public nsIScriptObjectOwner,
@@ -52,7 +51,7 @@ public:
   NS_IMPL_IDOMCHARACTERDATA_USING_GENERIC_DOM_DATA(mInner)
 
   // nsIDOMText
-  NS_IMETHOD SplitText(PRUint32 aOffset, nsIDOMText** aReturn);
+  NS_IMPL_IDOMTEXT_USING_GENERIC_DOM_DATA(mInner)
 
   // nsIScriptObjectOwner
   NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC_DOM_DATA(mInner)
@@ -64,16 +63,7 @@ public:
   NS_IMPL_ICONTENT_USING_GENERIC_DOM_DATA(mInner)
 
   // nsITextContent
-  NS_IMETHOD GetText(const nsTextFragment*& aFragmentsResult,
-                     PRInt32& aNumFragmentsResult);
-  NS_IMETHOD SetText(const PRUnichar* aBuffer,
-                     PRInt32 aLength,
-                     PRBool aNotify);
-  NS_IMETHOD SetText(const char* aBuffer,
-                     PRInt32 aLength,
-                     PRBool aNotify);
-
-  NS_IMETHOD IsOnlyWhitespace(PRBool* aResult);
+  NS_IMPL_ITEXTCONTENT_USING_GENERIC_DOM_DATA(mInner)
 
 protected:
   nsGenericDOMDataNode mInner;
@@ -196,139 +186,4 @@ nsTextNode::HandleDOMEvent(nsIPresContext& aPresContext,
 {
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);
-}
-
-//----------------------------------------------------------------------
-
-// Implementation of the nsIDOMText interface
-
-NS_IMETHODIMP    
-nsTextNode::SplitText(PRUint32 aOffset, nsIDOMText** aReturn)
-{
-  nsresult result = NS_OK;
-  nsIContent* newNode;
-  nsITextContent* text;
-  nsAutoString cutText;
-  nsIContent* parentNode;
-  PRUint32 length;
-
-  GetLength(&length);
-  // Cut the second part out of the original text node
-  result = SubstringData(aOffset, length-aOffset, cutText);
-  if (NS_OK == result) {
-    result = DeleteData(aOffset, length-aOffset);
-    if (NS_OK == result) {
-      // Create a new text node and set its data to the
-      // string we just cut out
-      result = NS_NewTextNode(&newNode);
-      if (NS_OK == result) {
-        result = newNode->QueryInterface(kITextContentIID, (void**)&text);
-        if (NS_OK == result) {
-          text->SetText(cutText, cutText.Length(), PR_FALSE);
-          // Find the parent of the current node and insert the
-          // new text node as a child after the current node
-          GetParent(parentNode);
-          if (nsnull != parentNode) {
-            PRInt32 index;
-
-            result = parentNode->IndexOf(this, index);
-            if (NS_OK == result) {
-              result = parentNode->InsertChildAt(newNode, index+1, PR_TRUE);
-            }
-            NS_RELEASE(parentNode);
-          }
-          result = text->QueryInterface(kIDOMTextIID, (void**)aReturn);
-          NS_RELEASE(text);
-        }
-        NS_RELEASE(newNode);
-      }
-    }
-  }
-
-  return result;
-}
-
-//----------------------------------------------------------------------
-
-// Implementation of the nsITextContent interface
-
-NS_IMETHODIMP
-nsTextNode::GetText(const nsTextFragment*& aFragmentsResult,
-                    PRInt32& aNumFragmentsResult)
-{
-  aFragmentsResult = &mInner.mText;
-  aNumFragmentsResult = 1;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsTextNode::SetText(const PRUnichar* aBuffer, PRInt32 aLength,
-                    PRBool aNotify)
-{
-  NS_PRECONDITION((aLength >= 0) && (nsnull != aBuffer), "bad args");
-  if (aLength < 0) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
-  if (nsnull == aBuffer) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  mInner.mText.SetTo(aBuffer, aLength);
-
-  // Trigger a reflow
-  if (aNotify && (nsnull != mInner.mDocument)) {
-    mInner.mDocument->ContentChanged(this, nsnull);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsTextNode::SetText(const char* aBuffer, PRInt32 aLength,
-                    PRBool aNotify)
-{
-  NS_PRECONDITION((aLength >= 0) && (nsnull != aBuffer), "bad args");
-  if (aLength < 0) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
-  if (nsnull == aBuffer) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  mInner.mText.SetTo(aBuffer, aLength);
-
-  // Trigger a reflow
-  if (aNotify && (nsnull != mInner.mDocument)) {
-    mInner.mDocument->ContentChanged(this, nsnull);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsTextNode::IsOnlyWhitespace(PRBool* aResult)
-{
-  nsTextFragment& frag = mInner.mText;
-  if (frag.Is2b()) {
-    const PRUnichar* cp = frag.Get2b();
-    const PRUnichar* end = cp + frag.GetLength();
-    while (cp < end) {
-      PRUnichar ch = *cp++;
-      if (!XP_IS_SPACE(ch)) {
-        *aResult = PR_FALSE;
-        return NS_OK;
-      }
-    }
-  }
-  else {
-    const char* cp = frag.Get1b();
-    const char* end = cp + frag.GetLength();
-    while (cp < end) {
-      PRUnichar ch = PRUnichar(*(unsigned char*)cp);
-      cp++;
-      if (!XP_IS_SPACE(ch)) {
-        *aResult = PR_FALSE;
-        return NS_OK;
-      }
-    }
-  }
-
-  *aResult = PR_TRUE;
-  return NS_OK;
 }

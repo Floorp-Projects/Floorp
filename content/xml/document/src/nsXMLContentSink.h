@@ -73,6 +73,7 @@ public:
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
   NS_IMETHOD AddComment(const nsIParserNode& aNode);
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
+  NS_IMETHOD AddCDATASection(const nsIParserNode& aNode);
   NS_IMETHOD NotifyError(const nsParserError* aError);
 
   // nsIXMLContentSink

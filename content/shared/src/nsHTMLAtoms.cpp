@@ -200,6 +200,7 @@ nsIAtom* nsHTMLAtoms::param;
 nsIAtom* nsHTMLAtoms::placeholderPseudo;
 nsIAtom* nsHTMLAtoms::pointSize;
 nsIAtom* nsHTMLAtoms::pre;
+nsIAtom* nsHTMLAtoms::processingInstructionPseudo;
 nsIAtom* nsHTMLAtoms::profile;
 nsIAtom* nsHTMLAtoms::prompt;
 nsIAtom* nsHTMLAtoms::readonly;
@@ -457,6 +458,7 @@ void nsHTMLAtoms::AddrefAtoms()
     placeholderPseudo = NS_NewAtom(":placeholder-frame");
     pointSize = NS_NewAtom("point-size");
     pre = NS_NewAtom("pre");
+    processingInstructionPseudo = NS_NewAtom(":-moz-pi");
     profile = NS_NewAtom("profile");
     prompt = NS_NewAtom("prompt");
     readonly = NS_NewAtom("readonly");
@@ -706,6 +708,7 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(placeholderPseudo);
     NS_RELEASE(pointSize);
     NS_RELEASE(pre);
+    NS_RELEASE(processingInstructionPseudo);
     NS_RELEASE(profile);
     NS_RELEASE(prompt);
     NS_RELEASE(readonly);

@@ -232,6 +232,7 @@ public:
   static nsIAtom* placeholderPseudo;
   static nsIAtom* pointSize;
   static nsIAtom* pre;
+  static nsIAtom* processingInstructionPseudo;
   static nsIAtom* profile;
   static nsIAtom* prompt;
 

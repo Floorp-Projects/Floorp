@@ -29,11 +29,12 @@
 #include "nsXIFConverter.h"
 #include "nsIJSScriptObject.h"
 #include "nsIContent.h"
+#include "nsGenericDOMNodeList.h"
 
 class nsIEventListenerManager;
 class nsDOMStyleSheetCollection;
 class nsIDOMSelection;
-
+class nsDocument;
 
 class nsPostData : public nsIPostData {
 public:
@@ -75,6 +76,23 @@ public:
   nsIAtom*         mField;
   nsAutoString     mData;
   nsDocHeaderData* mNext;
+};
+
+// Represents the children of a document (prolog, epilog and
+// document element)
+class nsDocumentChildNodes : public nsGenericDOMNodeList
+{
+public:
+  nsDocumentChildNodes(nsIDocument* aDocument);
+  ~nsDocumentChildNodes();
+
+  NS_IMETHOD    GetLength(PRUint32* aLength);
+  NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn);
+
+  void DropReference();
+
+protected:
+  nsIDocument* mDocument;
 };
 
 // Base class for our document implementations
@@ -168,6 +186,22 @@ public:
    */
   virtual nsIContent* GetRootContent();
   virtual void SetRootContent(nsIContent* aRoot);
+
+  /**
+   * Methods to append to the prolog and epilog of
+   * a document. The prolog is the content before the document
+   * element, the epilog after.
+   */
+  NS_IMETHOD AppendToProlog(nsIContent* aContent);
+  NS_IMETHOD AppendToEpilog(nsIContent* aContent);
+
+  /** 
+   * Get the direct children of the document - content in
+   * the prolog, the root content and content in the epilog.
+   */
+  NS_IMETHOD ChildAt(PRInt32 aIndex, nsIContent*& aResult) const;
+  NS_IMETHOD IndexOf(nsIContent* aPossibleChild, PRInt32& aIndex) const;
+  NS_IMETHOD GetChildCount(PRInt32& aCount);
 
   /**
    * Get the style sheets owned by this document.
@@ -383,6 +417,9 @@ protected:
   nsINameSpaceManager* mNameSpaceManager;
   nsDocHeaderData* mHeaderData;
   nsILineBreaker* mLineBreaker;
+  nsVoidArray *mProlog;
+  nsVoidArray *mEpilog;
+  nsDocumentChildNodes* mChildNodes;
   nsIWordBreaker* mWordBreaker;
 };
 

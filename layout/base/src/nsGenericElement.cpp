@@ -293,49 +293,73 @@ nsGenericElement::GetParentNode(nsIDOMNode** aParentNode)
 }
 
 nsresult
-nsGenericElement::GetPreviousSibling(nsIDOMNode** aNode)
+nsGenericElement::GetPreviousSibling(nsIDOMNode** aPrevSibling)
 {
+  nsIContent* sibling = nsnull;
+  nsresult result = NS_OK;
+
   if (nsnull != mParent) {
     PRInt32 pos;
     mParent->IndexOf(mContent, pos);
-    if (pos > -1) {
-      nsIContent* prev;
-      mParent->ChildAt(--pos, prev);
-      if (nsnull != prev) {
-        nsresult res = prev->QueryInterface(kIDOMNodeIID, (void**)aNode);
-        NS_ASSERTION(NS_OK == res, "Must be a DOM Node");
-        NS_RELEASE(prev); // balance the AddRef in ChildAt()
-        return res;
-      }
+    if (pos > -1 ) {
+      mParent->ChildAt(--pos, sibling);
     }
   }
-  // XXX Nodes that are just below the document (their parent is the
-  // document) need to go to the document to find their previous sibling.
-  *aNode = nsnull;
-  return NS_OK;
+  else if (nsnull != mDocument) {
+    // Nodes that are just below the document (their parent is the
+    // document) need to go to the document to find their next sibling.
+    PRInt32 pos;
+    mDocument->IndexOf(mContent, pos);
+    if (pos > -1 ) {
+      mDocument->ChildAt(--pos, sibling);
+    }    
+  }
+
+  if (nsnull != sibling) {
+    result = sibling->QueryInterface(kIDOMNodeIID,(void**)aPrevSibling);
+    NS_ASSERTION(NS_OK == result, "Must be a DOM Node");
+    NS_RELEASE(sibling); // balance the AddRef in ChildAt()
+  }
+  else {
+    *aPrevSibling = nsnull;
+  }
+  
+  return result;
 }
 
 nsresult
 nsGenericElement::GetNextSibling(nsIDOMNode** aNextSibling)
 {
+  nsIContent* sibling = nsnull;
+  nsresult result = NS_OK;
+
   if (nsnull != mParent) {
     PRInt32 pos;
     mParent->IndexOf(mContent, pos);
     if (pos > -1 ) {
-      nsIContent* prev;
-      mParent->ChildAt(++pos, prev);
-      if (nsnull != prev) {
-        nsresult res = prev->QueryInterface(kIDOMNodeIID,(void**)aNextSibling);
-        NS_ASSERTION(NS_OK == res, "Must be a DOM Node");
-        NS_RELEASE(prev); // balance the AddRef in ChildAt()
-        return res;
-      }
+      mParent->ChildAt(++pos, sibling);
     }
   }
-  // XXX Nodes that are just below the document (their parent is the
-  // document) need to go to the document to find their next sibling.
-  *aNextSibling = nsnull;
-  return NS_OK;
+  else if (nsnull != mDocument) {
+    // Nodes that are just below the document (their parent is the
+    // document) need to go to the document to find their next sibling.
+    PRInt32 pos;
+    mDocument->IndexOf(mContent, pos);
+    if (pos > -1 ) {
+      mDocument->ChildAt(++pos, sibling);
+    }    
+  }
+
+  if (nsnull != sibling) {
+    result = sibling->QueryInterface(kIDOMNodeIID,(void**)aNextSibling);
+    NS_ASSERTION(NS_OK == result, "Must be a DOM Node");
+    NS_RELEASE(sibling); // balance the AddRef in ChildAt()
+  }
+  else {
+    *aNextSibling = nsnull;
+  }
+  
+  return result;
 }
 
 nsresult
@@ -1436,9 +1460,6 @@ nsGenericContainerElement::GetLastChild(nsIDOMNode** aNode)
   return NS_OK;
 }
 
-// XXX It's possible that newChild has already been inserted in the
-// tree; if this is the case then we need to remove it from where it
-// was before placing it in it's new home
 
 nsresult
 nsGenericContainerElement::InsertBefore(nsIDOMNode* aNewChild,

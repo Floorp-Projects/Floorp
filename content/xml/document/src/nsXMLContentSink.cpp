@@ -34,6 +34,7 @@
 #include "nsIPresShell.h"
 #include "nsIViewManager.h"
 #include "nsIDOMComment.h"
+#include "nsIDOMCDATASection.h"
 #include "nsIHTMLContent.h"
 #include "nsHTMLEntities.h" 
 #include "nsHTMLParts.h" 
@@ -56,7 +57,7 @@
 
 static char kNameSpaceSeparator[] = ":";
 static char kNameSpaceDef[] = "xmlns";
-static char kStyleSheetPI[] = "<?xml-stylesheet";
+static char kStyleSheetPI[] = "xml-stylesheet";
 static char kCSSType[] = "text/css";
 
 #ifdef XSL
@@ -70,6 +71,7 @@ static NS_DEFINE_IID(kIXMLDocumentIID, NS_IXMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMCommentIID, NS_IDOMCOMMENT_IID);
 static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
+static NS_DEFINE_IID(kIDOMCDATASectionIID, NS_IDOMCDATASECTION_IID);
 
 static void SetTextStringOnTextNode(const nsString& aTextString, nsIContent* aTextNode);
 
@@ -704,8 +706,11 @@ nsXMLContentSink::AddLeaf(const nsIParserNode& aNode)
     case eToken_text:
     case eToken_whitespace:
     case eToken_newline:
-    case eToken_cdatasection:
       AddText(aNode.GetText());
+      break;
+
+    case eToken_cdatasection:
+      AddCDATASection(aNode);
       break;
 
     case eToken_entity:
@@ -854,15 +859,13 @@ nsXMLContentSink::AddXMLDecl(const nsIParserNode& aNode)
 nsresult
 nsXMLContentSink::AddContentAsLeaf(nsIContent *aContent)
 {      
-  nsIXMLDocument *xmlDoc;
-  nsresult result = mDocument->QueryInterface(kIXMLDocumentIID, 
-                                              (void **)&xmlDoc);
+  nsresult result = NS_OK;
 
   if (eXMLContentSinkState_InProlog == mState) {
-    result = xmlDoc->AppendToProlog(aContent);
+    result = mDocument->AppendToProlog(aContent);
   }
   else if (eXMLContentSinkState_InEpilog == mState) {   
-    result = xmlDoc->AppendToEpilog(aContent);
+    result = mDocument->AppendToEpilog(aContent);
   }
   else {
     nsIContent *parent = GetCurrentContent();
@@ -872,7 +875,6 @@ nsXMLContentSink::AddContentAsLeaf(nsIContent *aContent)
     }
   }
   
-  NS_RELEASE(xmlDoc);
   return result;
 }
 
@@ -898,6 +900,33 @@ nsXMLContentSink::AddComment(const nsIParserNode& aNode)
       result = AddContentAsLeaf(comment);
     }
     NS_RELEASE(comment);
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP 
+nsXMLContentSink::AddCDATASection(const nsIParserNode& aNode)
+{
+  FlushText();
+
+  nsAutoString text;
+  nsIContent *cdata;
+  nsIDOMCDATASection *domCDATA;
+  nsresult result = NS_OK;
+
+  text = aNode.GetText();
+  result = NS_NewXMLCDATASection(&cdata);
+  if (NS_OK == result) {
+    result = cdata->QueryInterface(kIDOMCDATASectionIID, (void **)&domCDATA);
+    if (NS_OK == result) {
+      domCDATA->AppendData(text);
+      NS_RELEASE(domCDATA);
+
+      cdata->SetDocument(mDocument, PR_FALSE);
+      result = AddContentAsLeaf(cdata);
+    }
+    NS_RELEASE(cdata);
   }
 
   return result;
@@ -1088,87 +1117,111 @@ nsXMLContentSink::LoadXSLStyleSheet(const nsIURL* aUrl)
 }
 #endif
 
+static void
+ParseProcessingInstruction(const nsString& aText,
+                           nsString& aTarget,
+                           nsString& aData)
+{
+  PRInt32 offset;
+
+  aTarget.Truncate();
+  aData.Truncate();
+
+  offset = aText.FindCharInSet(" \n\r\t");
+  if (-1 != offset) {
+    aText.Mid(aTarget, 2, offset-2);
+    aText.Mid(aData, offset+1, aText.Length()-offset-3);
+  }
+}
+
 #ifndef XSL
 NS_IMETHODIMP 
 nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
 {
+  nsresult result = NS_OK;
+  nsAutoString text, target, data;
+  nsIContent* node;
+
   FlushText();
 
-  // XXX For now, we don't add the PI to the content model.
-  // We just check for a style sheet PI
-  nsAutoString text, type, href, title, media;
-  PRInt32 offset;
-  nsresult result = NS_OK;
-
   text = aNode.GetText();
+  ParseProcessingInstruction(text, target, data);
+  result = NS_NewXMLProcessingInstruction(&node, target, data);
+  if (NS_OK == result) {
+    node->SetDocument(mDocument, PR_FALSE);
+    result = AddContentAsLeaf(node);
+  }
 
-  offset = text.Find(kStyleSheetPI);
-  // If it's a stylesheet PI...
-  if (0 == offset) {
-    result = GetQuotedAttributeValue(text, "href", href);
-    // If there was an error or there's no href, we can't do
-    // anything with this PI
-    if ((NS_OK != result) || (0 == href.Length())) {
-      return result;
-    }
+  if (NS_OK == result) {
+    nsAutoString type, href, title, media;
     
-    result = GetQuotedAttributeValue(text, "type", type);
-    if (NS_OK != result) {
-      return result;
-    }
-    result = GetQuotedAttributeValue(text, "title", title);
-    if (NS_OK != result) {
-      return result;
-    }
-    title.CompressWhitespace();
-    result = GetQuotedAttributeValue(text, "media", media);
-    if (NS_OK != result) {
-      return result;
-    }
-
-    if (type.Equals(kCSSType)) {
-      // Use the SRC attribute value to load the URL
-      nsIURL* url = nsnull;
-      nsAutoString absURL;
-      nsIURL* docURL = mDocument->GetDocumentURL();
-      nsIURLGroup* urlGroup; 
+    // If it's a stylesheet PI...
+    if (target.EqualsIgnoreCase(kStyleSheetPI)) {
+      result = GetQuotedAttributeValue(text, "href", href);
+      // If there was an error or there's no href, we can't do
+      // anything with this PI
+      if ((NS_OK != result) || (0 == href.Length())) {
+        return result;
+      }
       
-      result = docURL->GetURLGroup(&urlGroup);
-
-      if ((NS_OK == result) && urlGroup) {
-        result = urlGroup->CreateURL(&url, docURL, href, nsnull);
-        NS_RELEASE(urlGroup);
-      }
-      else {
-        result = NS_NewURL(&url, absURL);
-      }
-      NS_RELEASE(docURL);
+      result = GetQuotedAttributeValue(text, "type", type);
       if (NS_OK != result) {
         return result;
       }
-
-      nsAsyncStyleProcessingDataXML* d = new nsAsyncStyleProcessingDataXML;
-      if (nsnull == d) {
-        return NS_ERROR_OUT_OF_MEMORY;
+      result = GetQuotedAttributeValue(text, "title", title);
+      if (NS_OK != result) {
+        return result;
       }
-      d->mTitle.SetString(title);
-      d->mMedia.SetString(media);
-      d->mIsActive = PR_TRUE;
-      d->mURL = url;
-      NS_ADDREF(url);
-      // XXX Need to create PI node
-      d->mElement = nsnull;
-      d->mSink = this;
-      NS_ADDREF(this);
-
-      nsIUnicharStreamLoader* loader;
-      result = NS_NewUnicharStreamLoader(&loader,
-                                         url, 
-                                         (nsStreamCompleteFunc)nsDoneLoadingStyle, 
-                                         (void *)d);
-      NS_RELEASE(url);
-      if (NS_OK == result) {
-        result = NS_ERROR_HTMLPARSER_BLOCK;
+      title.CompressWhitespace();
+      result = GetQuotedAttributeValue(text, "media", media);
+      if (NS_OK != result) {
+        return result;
+      }
+      
+      if (type.Equals(kCSSType)) {
+        // Use the SRC attribute value to load the URL
+        nsIURL* url = nsnull;
+        nsAutoString absURL;
+        nsIURL* docURL = mDocument->GetDocumentURL();
+        nsIURLGroup* urlGroup; 
+        
+        result = docURL->GetURLGroup(&urlGroup);
+        
+        if ((NS_OK == result) && urlGroup) {
+          result = urlGroup->CreateURL(&url, docURL, href, nsnull);
+          NS_RELEASE(urlGroup);
+        }
+        else {
+          result = NS_NewURL(&url, absURL);
+        }
+        NS_RELEASE(docURL);
+        if (NS_OK != result) {
+          return result;
+        }
+        
+        nsAsyncStyleProcessingDataXML* d = new nsAsyncStyleProcessingDataXML;
+        if (nsnull == d) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+        d->mTitle.SetString(title);
+        d->mMedia.SetString(media);
+        d->mIsActive = PR_TRUE;
+        d->mURL = url;
+        NS_ADDREF(url);
+        // XXX Need to create PI node
+        d->mElement = nsnull;
+        d->mSink = this;
+        NS_ADDREF(this);
+        
+        nsIUnicharStreamLoader* loader;
+        result = NS_NewUnicharStreamLoader(&loader,
+                                           url, 
+                                           (nsStreamCompleteFunc)nsDoneLoadingStyle, 
+                                           (void *)d);
+        NS_RELEASE(url);
+        if (NS_OK == result) {
+          result = NS_ERROR_HTMLPARSER_BLOCK;
+        }
       }
     }
   }

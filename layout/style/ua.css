@@ -874,6 +874,10 @@ sourcetext {
   display: none;
 }
 
+:-moz-pi {
+  display: none;
+}
+
 :dropdown-visible {
   visibility: visible;
 }
