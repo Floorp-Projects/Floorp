@@ -50,8 +50,8 @@
 	  <html:input type="text" size="25" length="25" id="linkTextInput"/>
     <spring class="spacer"/>
 
-    <html:fieldset><html:legend align="left"> &LinkURLFieldset.label; </html:legend>
-      <box align="vertical"  style="width: 100%; height: 100%">
+    <titledbox><title><text value="&LinkURLFieldset.label;"/></title>
+      <box align="vertical">
         <box align="vertical">
           <box align="horizontal">
             <html:div> &LinkURLEditField.label;</html:div>
@@ -81,7 +81,7 @@
           <html:div>&HeadingMsg2.label;</html:div>
         </box>
       </box>
-    </html:fieldset>
+    </titledbox>
   </box>
 
   <!-- from EdDialogOverlay -->

@@ -29,16 +29,16 @@ Contributor(s): ______________________________________. -->
          >
 
   <window id="fontPanel">
-    <html:fieldset style="height: 100%">
-      <html:legend>&fontScaling;</html:legend>
+    <titledbox orient="vertical">
+      <title><text value="&fontScaling;"/></title>
       <html:div>&fontScalingIntro;</html:div>
       <spring style="height: 10px;"/>
-      <box align="horizontal" style="width: 100%" flex="100%">
+      <html:div>
         <html:label for="browserScreenResolution">&resolution;</html:label>
         <html:input type="text" id="browserScreenResolution" pref="true" preftype="string"
                     prefstring="browser.screen_resolution" value="&defaultScaling;" size="3"/>
         <html:label>&fontScalingExample;</html:label>
-      </box>
-    </html:fieldset>
+      </html:div>
+    </titledbox>
   </window>
 </overlay>

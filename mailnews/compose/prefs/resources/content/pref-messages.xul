@@ -15,10 +15,10 @@
 		<html:div class="right-header-text">&pane.description;</html:div>
 	</box>
 
-	<html:fieldset>
-		<html:legend align="left">
-			<html:div>&forwardReply.label;</html:div>
-		</html:legend>
+	<titledbox orient="vertical">
+		<title>
+			<text value="&forwardReply.label;"/>
+		</title>
 		
 		<html:div>
 			<html:label for="mail.forward_message_mode">&forwardMsg.label;</html:label>
@@ -42,21 +42,23 @@
 				<html:option value="3" label="&selectAndBelowQuote.label;"/>
 			</html:select>
 		</html:div>
-	</html:fieldset>
+	</titledbox>
 
-	<html:fieldset>
-		<html:legend align="left">
-                        <html:div>&spellCheckHeader.label;</html:div>
-                </html:legend>
+	<titledbox orient="vertical">
+		<title>
+                        <text value="&spellCheckHeader.label;"/>
+        </title>
 
-		<html:input pref="true" preftype="bool" prefstring="mail.SpellCheckBeforeSend" id="mail.SpellCheckBeforeSend" type="checkbox"/>
-		<html:label for="mail.SpellCheckBeforeSend">&spellCheck.label;</html:label>
-	</html:fieldset>
+        <html:div>
+			<html:input pref="true" preftype="bool" prefstring="mail.SpellCheckBeforeSend" id="mail.SpellCheckBeforeSend" type="checkbox"/>
+			<html:label for="mail.SpellCheckBeforeSend">&spellCheck.label;</html:label>
+         </html:div>
+	</titledbox>
 
-	<html:fieldset>
-		<html:legend align="left">
-			<html:div>&msgWrapping.label;</html:div>
-		</html:legend>
+	<titledbox orient="vertical">
+		<title>
+			<text value="&msgWrapping.label;"/>
+		</title>
 		
 		<html:div>
 			<html:input pref="true" preftype="bool" prefstring="mail.wrap_long_lines" id="mail.wrap_long_lines" type="checkbox"/>
@@ -68,12 +70,12 @@
 			<html:input pref="true" preftype="int" prefstring="mailnews.wraplength" id="mailnews.wraplength" name="wraplength" type="text" size="3"/>
 			<html:label for="mailnews.wraplength">&char.label;</html:label>
 		</html:div>
-	</html:fieldset>
+	</titledbox>
 
-	<html:fieldset>
-		<html:legend align="left">
-			<html:div>&use8Bits.label;</html:div>
-		</html:legend>
+	<titledbox orient="vertical">
+		<title>
+			<text value="&use8Bits.label;"/>
+		</title>
 
 		<html:div>
 			<html:input pref="true" preftype="bool" prefstring="mail.strictly_mime" prefindex="false" id="mail.strictly_mime0" name="strictly_mime" type="radio"/>
@@ -86,11 +88,11 @@
 		</html:div>
 		<html:div class="indent">&useMIMEpart2.label;</html:div>
 
-	</html:fieldset>
-	 <html:fieldset>
-                <html:legend align="left">
-                        <html:div>&emoticonsAndStructs.label;</html:div>
-                </html:legend>
+	</titledbox>
+	 <titledbox orient="vertical">
+                <title>
+                        <text value="&emoticonsAndStructs.label;"/>
+                </title>
 		<html:div>
 			<html:input pref="true" preftype="bool" prefstring="mail.convert_emoticons" id="mail.convert_emoticons" type="checkbox"/>
 			<html:label for="mail.convert_emoticons">&convertEmoticons.label;</html:label><html:label for="mail.convert_emoticons">&example1.label;&example2.label;&to.label;<html:img src="chrome://messenger/skin/smile.gif"/></html:label>
@@ -99,6 +101,6 @@
 			<html:input pref="true" preftype="bool" prefstring="mail.convert_structs" id="mail.convert_structs" type="checkbox"/>
 			<html:label for="mail.convert_structs">&convertStructs.label;</html:label><html:label for="mail.convert_structs">&example1.label;&example3.label;&example4.label;&example3.label; &to.label; <html:b> &example4.label;</html:b></html:label>
 		</html:div>
-	</html:fieldset>
+	</titledbox>
 
 </window>

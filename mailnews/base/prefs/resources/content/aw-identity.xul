@@ -40,21 +40,26 @@ Rights Reserved.
   <spring class="spacer"/>
   <html:div>
     <html:div>&fullnameDesc.label; &fullnameExample.label;</html:div>
-    <spring class="spacer"/>
-    <html:div>
-      <html:label for="fullName">&fullnameLabel.label;</html:label>
-      <html:input type="text" mailtype="identity" name="fullName" id="fullName"/>
-    </html:div>
   </html:div>
 
   <spring class="spacer"/>
+
+  <html:div>
+      <html:label for="fullName">&fullnameLabel.label;</html:label>
+      <html:input type="text" mailtype="identity" name="fullName" id="fullName"/>
+  </html:div>
+  
   <spring class="spacer"/>
+  <spring class="spacer"/>
+
   <html:div>
     <html:div>&emailDesc.label; &emailExample.label;</html:div>
-    <spring class="spacer"/>
-    <html:div>
+  </html:div>
+
+  <spring class="spacer"/>
+
+  <html:div>
       <html:label for="email">&emailLabel.label;</html:label>
       <html:input type="text" mailtype="identity" name="email" id="email"/>
-    </html:div>
   </html:div>
 </window>

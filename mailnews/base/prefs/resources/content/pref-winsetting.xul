@@ -16,10 +16,10 @@
 	</box>
 
 
-	<html:fieldset>
-		<html:legend align="left">
-			<html:div>&chooseLayout.label;</html:div>
-		</html:legend>
+	<titledbox orient="vertical">
+		<title>
+			<text value="&chooseLayout.label;"/>
+		</title>
 
 		<html:div>
 			<html:input pref="true" preftype="int" prefstring="mail.pane_config" prefindex="0" id="mail.pane_arrangement0" name="winlayout" type="radio"/> 
@@ -29,9 +29,9 @@
 		</html:div>
 			
 		&chooseExp.label;
-	</html:fieldset>
+	</titledbox>
 
-	<html:fieldset>
+	<titledbox orient="vertical">
 		<html:div>
 			<html:input pref="true" preftype="bool" prefstring="mailnews.reuse_thread_window2" id="mailnews.reuse_thread_window2" type="checkbox"/>
 			<html:label for="mailnews.reuse_thread_window2">&reuseThread.label;</html:label>
@@ -43,5 +43,5 @@
 		</html:div>
 		
 		&reuseExp.label;
-	</html:fieldset>
+	</titledbox>
 </window>

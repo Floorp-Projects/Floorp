@@ -17,11 +17,11 @@
 		<html:div class="right-header-text">&pane.description;</html:div>
 	</box>
 
-	<html:fieldset>
+	<titledbox orient="vertical">
 
-		<html:legend align="left">
-			<html:div>&textBegin.label;</html:div>
-		</html:legend>
+		<title>
+			<text value="&textBegin.label;"/>
+		</title>
 
 		<box align="horizontal">
 		
@@ -54,12 +54,12 @@
 		
         </box>
 
-	</html:fieldset>
+	</titledbox>
 
-	<html:fieldset>
-		<html:legend align="left">
-			<html:div>&displayWidth.label;</html:div>
-		</html:legend>
+	<titledbox orient="vertical">
+		<title>
+			<text value="&displayWidth.label;"/>
+		</title>
 
 		<html:div>
 			<html:input pref="true" preftype="bool" prefstring="mail.fixed_width_messages" prefindex="true" id="fixed_width" name="fontwidth" type="radio"/>
@@ -71,9 +71,9 @@
 			<html:label for="var_width">&variableWidth.label;</html:label>
 		</html:div>
 
-	</html:fieldset>
+	</titledbox>
 	 
-	<html:fieldset>
+	<titledbox orient="vertical">
 
 		<html:div>
 			<html:input pref="true" preftype="bool" prefstring="mail.play_sound" id="mail.play_sound" type="checkbox"/>
@@ -96,11 +96,11 @@
 			<html:label for="mail.use_mapi_server">&useMessenger.label;</html:label>
 		</html:div>
 
-	</html:fieldset>
-	<html:fieldset>
-		<html:legend align="left">
-			<html:div>&startPageHeader.label;</html:div>
-		</html:legend>
+	</titledbox>
+	<titledbox orient="vertical">
+		<title>
+			<text value="&startPageHeader.label;"/>
+		</title>
 		<html:div>
 			<html:input type="checkbox" pref="true" preftype="bool" prefstring="mailnews.start_page.enabled" id="mailnews.start_page.enabled"/>
 			<html:label for="mailnews.start_page.enabled">
@@ -108,12 +108,12 @@
 			</html:label>
         </html:div>
 
-		<box align="horizontal">
+		<html:div>
 			<html:label>&location;</html:label>
 
-			<html:input name="homepage" type="text" pref="true" preftype="string" 
+			<html:input name="homepage" size="30" type="text" pref="true" preftype="string" 
 			prefstring="mailnews.start_page.url" id="mailnews.start_page.url"/>
-		</box>
+		</html:div>
 		<box align="horizontal">
 			<titledbutton class="dialog push" name="starts" type="button" 
 			value="&useCurrent;" onclick="SetPrefToCurrentPage('mailnews.start_page.url');" />
@@ -122,6 +122,6 @@
 			value="&browseFile;" onclick="PrefNavSelectFile('mailnews.start_page.url')"/>
 		</box>
 
-	</html:fieldset>
+	</titledbox>
 
 </window>

@@ -15,10 +15,10 @@
 		<html:div class="right-header-text">&pane.description;</html:div>
 	</box>
 
-	<html:fieldset>
-		<html:legend align="left">
-			<html:div>&pinpoint.label;</html:div>
-		</html:legend>
+	<titledbox orient="vertical">
+		<title>
+			<text value="&pinpoint.label;"/>
+		</title>
 			
 		<html:div>&lookFor.label;</html:div>
 		
@@ -80,6 +80,6 @@
 			</html:td></html:tr>
 		</html:table-->
 	
-	</html:fieldset>
+	</titledbox>
 
 </window>
