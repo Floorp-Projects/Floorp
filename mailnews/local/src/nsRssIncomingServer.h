@@ -59,6 +59,7 @@ public:
     NS_IMETHOD GetSupportsDiskSpace(PRBool *aSupportsDiskSpace);
     NS_IMETHOD GetAccountManagerChrome(nsAString& aResult);
     NS_IMETHOD PerformBiff(nsIMsgWindow *aMsgWindow);
+    NS_IMETHOD GetServerRequiresPasswordForBiff(PRBool *aServerRequiresPasswordForBiff);
 
     nsRssIncomingServer();
     virtual ~nsRssIncomingServer();

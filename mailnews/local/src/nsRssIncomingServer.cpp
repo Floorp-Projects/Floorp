@@ -252,6 +252,13 @@ NS_IMETHODIMP nsRssIncomingServer::GetSupportsDiskSpace(PRBool *aSupportsDiskSpa
   return NS_OK;
 }
 
+NS_IMETHODIMP nsRssIncomingServer::GetServerRequiresPasswordForBiff(PRBool *aServerRequiresPasswordForBiff)
+{
+  NS_ENSURE_ARG_POINTER(aServerRequiresPasswordForBiff);
+  *aServerRequiresPasswordForBiff = PR_FALSE;  // for rss folders, we don't require a password
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsRssIncomingServer::OnItemAdded(nsIRDFResource *parentItem, nsISupports *item)
 {
   nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(item);
