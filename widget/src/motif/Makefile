@@ -45,6 +45,7 @@ EXTRA_DSO_LDOPTS+= -lX11 -lm
 endif
 
 CPPSRCS= \
+	nsCheckButton.cpp \
 	nsScrollbar.cpp \
 	nsButton.cpp \
 	nsAppShell.cpp \
@@ -54,6 +55,7 @@ CPPSRCS= \
 	nsToolkit.cpp
 
 CPP_OBJS=				\
+ ./$(OBJDIR)/nsCheckButton.o		\
  ./$(OBJDIR)/nsButton.o		\
  ./$(OBJDIR)/nsScrollbar.o		\
  ./$(OBJDIR)/nsAppShell.o		\
