@@ -462,6 +462,11 @@ private:
 //while in the front to back pass
 #define NS_VIEW_FLAG_FRONT_TO_BACK  0x0040
 
+//temporary hack so that michael can work on the new
+//compositor and make checkins without busting the rest
+//of the world.
+#define NS_VIEW_FLAG_JUST_PAINT     0x0080
+
 //Flag to determine whether the view will check if events can be handled
 //by its children or just handle the events itself
 #define NS_VIEW_FLAG_DONT_CHECK_CHILDREN  0x0001

@@ -35,6 +35,7 @@ static const PRBool gsDebug = PR_FALSE;
 #define UPDATE_QUANTUM  1000 / 40
 
 //#define NO_DOUBLE_BUFFER
+//#define NEW_COMPOSITOR
 
 static void vm_timer_callback(nsITimer *aTimer, void *aClosure)
 {
@@ -107,6 +108,22 @@ nsViewManager :: ~nsViewManager()
 
   mObserver = nsnull;
   mContext = nsnull;
+
+  if (nsnull != mFlatViews)
+  {
+    PRInt32 cnt = mFlatViews->Count(), idx;
+
+    for (idx = 1; idx < cnt; idx += 2)
+    {
+      nsRect *rect = (nsRect *)mFlatViews->ElementAt(idx);
+
+      if (nsnull != rect)
+        delete rect;
+    }
+
+    delete mFlatViews;
+    mFlatViews = nsnull;
+  }
 }
 
 NS_IMPL_QUERY_INTERFACE(nsViewManager, knsViewManagerIID)
@@ -320,11 +337,14 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsI
 
   localcx->SetClipRect(trect, nsClipCombine_kIntersect, result);
 
-  // Paint the view. The clipping rect was set above set don't clip again.
-  aView->Paint(*localcx, trect, NS_VIEW_FLAG_CLIP_SET, result);
+  RenderViews(aView, *localcx, trect, result);
 
   if (aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER)
+#ifdef NEW_COMPOSITOR
+    localcx->CopyOffScreenBits(ds, wrect.x, wrect.y, wrect, 0);
+#else
     localcx->CopyOffScreenBits(ds, wrect.x, wrect.y, wrect, NS_COPYBITS_USE_SOURCE_CLIP_REGION);
+#endif
 
   if (localcx != aContext)
     NS_RELEASE(localcx);
@@ -399,11 +419,14 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, con
 
   localcx->SetClipRect(trect, nsClipCombine_kReplace, result);
 
-  // Paint the view. The clipping rect was set above set don't clip again.
-  aView->Paint(*localcx, trect, NS_VIEW_FLAG_CLIP_SET, result);
+  RenderViews(aView, *localcx, trect, result);
 
   if (aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER)
+#ifdef NEW_COMPOSITOR
+    localcx->CopyOffScreenBits(ds, wrect.x, wrect.y, wrect, 0);
+#else
     localcx->CopyOffScreenBits(ds, wrect.x, wrect.y, wrect, NS_COPYBITS_USE_SOURCE_CLIP_REGION);
+#endif
 
   if (localcx != aContext)
     NS_RELEASE(localcx);
@@ -427,6 +450,95 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, con
   mLastRefresh = PR_IntervalNow();
 
   mPainting = PR_FALSE;
+}
+
+void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, const nsRect& aRect, PRBool &aResult)
+{
+#ifdef NEW_COMPOSITOR
+
+  PRInt32 flatlen = 0, cnt;
+
+  if (nsnull != aRootView)
+    FlattenViewTree(aRootView, &flatlen);
+
+#if 0
+printf("flatlen %d\n", flatlen);
+
+for (cnt = 0; cnt < flatlen; cnt += 2)
+{
+  nsRect *rect;
+  printf("view: %x\n", mFlatViews->ElementAt(cnt));
+
+  rect = (nsRect *)mFlatViews->ElementAt(cnt + 1);
+
+  if (nsnull != rect)
+    printf("rect: %d, %d, %d, %d\n", rect->x, rect->y, rect->width, rect->height);
+  else
+    printf("rect: null\n");
+}
+#endif
+
+  for (cnt = 0; cnt < flatlen; cnt += 2)
+  {
+    nsIView *curview = (nsIView *)mFlatViews->ElementAt(cnt);
+    nsRect  *currect = (nsRect *)mFlatViews->ElementAt(cnt + 1);
+    
+    if ((nsnull != curview) && (nsnull != currect))
+    {
+      nsIWidget *widget;
+      PRBool    hasWidget = PR_FALSE;
+
+      curview->GetWidget(widget);
+
+      if (nsnull != widget)
+      {
+        void  *nativewidget;
+
+        nativewidget = widget->GetNativeData(NS_NATIVE_WIDGET);
+
+        NS_RELEASE(widget);
+
+        if (nsnull != nativewidget)
+          hasWidget = PR_TRUE;
+      }
+
+      if ((PR_FALSE == hasWidget) || ((PR_TRUE == hasWidget) && (cnt == (flatlen - 2))))
+      {
+        nsRect  lrect, drect, grect;
+
+        grect = *currect;
+        curview->GetBounds(lrect);
+
+        aRC.PushState();
+
+        aRC.Translate(grect.x, grect.y);
+
+        drect.IntersectRect(aRect, grect);
+
+        drect.x -= grect.x;
+        drect.y -= grect.y;
+
+        curview->Paint(aRC, drect, NS_VIEW_FLAG_JUST_PAINT, aResult);
+
+        aRC.PopState(aResult);
+
+        if (aResult == PR_FALSE)
+          aRC.SetClipRect(grect, nsClipCombine_kSubtract, aResult);
+      }
+      else
+        aRC.SetClipRect(*currect, nsClipCombine_kSubtract, aResult);
+
+      if (aResult == PR_TRUE)
+        break;
+    }
+  }
+
+#else
+
+  // Paint the view. The clipping rect was set above set don't clip again.
+  aRootView->Paint(aRC, aRect, NS_VIEW_FLAG_CLIP_SET, aResult);
+
+#endif
 }
 
 void nsViewManager :: UpdateDirtyViews(nsIView *aView, nsRect *aParentRect) const
@@ -990,7 +1102,9 @@ NS_IMETHODIMP nsViewManager :: InsertChild(nsIView *parent, nsIView *child, PRIn
 
     //and mark this area as dirty if the view is visible...
     nsViewVisibility  visibility;
+
     child->GetVisibility(visibility);
+
     if (nsViewVisibility_kHide != visibility)
       UpdateView(child, nsnull, NS_VMREFRESH_NO_SYNC);
   }
@@ -1008,6 +1122,7 @@ NS_IMETHODIMP nsViewManager :: RemoveChild(nsIView *parent, nsIView *child)
     UpdateView(child, nsnull, NS_VMREFRESH_NO_SYNC);
     parent->RemoveChild(child);
   }
+
   return NS_OK;
 }
 
@@ -1541,4 +1656,93 @@ NS_IMETHODIMP nsViewManager :: Display(nsIView* aView)
   mPainting = PR_FALSE;
 
   return NS_OK;
+}
+
+void nsViewManager :: FlattenViewTree(nsIView *aView, PRInt32 *aIndex, nsIView *aTopView, nsVoidArray *aArray, nscoord aX, nscoord aY)
+{
+  PRInt32 numkids, cnt;
+
+  NS_ASSERTION(!(nsnull == aView), "no view");
+  NS_ASSERTION(!(nsnull == aIndex), "no index");
+
+  if (nsnull == aArray)
+  {
+    if (nsnull == mFlatViews)
+      mFlatViews = new nsVoidArray(8);
+
+    aArray = mFlatViews;
+
+    if (nsnull == aArray)
+      return;
+  }
+
+  if (nsnull == aTopView)
+    aTopView = aView;
+
+  nsRect lrect;
+
+  aView->GetBounds(lrect);
+
+  if (aView == aTopView)
+  {
+    lrect.x = 0;
+    lrect.y = 0;
+  }
+
+  lrect.x += aX;
+  lrect.y += aY;
+
+  aView->GetChildCount(numkids);
+
+  if (numkids > 0)
+  {
+    nsIWidget *widget;
+    PRBool    hasWidget = PR_FALSE;
+
+    aView->GetWidget(widget);
+
+    if (nsnull != widget)
+    {
+      void  *nativewidget;
+
+      nativewidget = widget->GetNativeData(NS_NATIVE_WIDGET);
+
+      NS_RELEASE(widget);
+
+      if (nsnull != nativewidget)
+        hasWidget = PR_TRUE;
+    }
+
+    if ((PR_FALSE == hasWidget) || ((PR_TRUE == hasWidget) && (aView == aTopView)))
+    {
+      for (cnt = 0; cnt < numkids; cnt++)
+      {
+        nsIView *child;
+
+        aView->GetChild(cnt, child);
+        FlattenViewTree(child, aIndex, aTopView, aArray, lrect.x, lrect.y);
+      }
+    }
+  }
+
+  aArray->ReplaceElementAt(aView, (*aIndex)++);
+
+  nsRect *grect = (nsRect *)aArray->ElementAt(*aIndex);
+
+  if (nsnull == grect)
+  {
+    grect = new nsRect(lrect.x, lrect.y, lrect.width, lrect.height);
+
+    if (nsnull == grect)
+    {
+      (*aIndex)--;
+      return;
+    }
+
+    aArray->ReplaceElementAt(grect, *aIndex);
+  }
+  else
+    *grect = lrect;
+
+  (*aIndex)++;
 }

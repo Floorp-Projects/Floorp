@@ -467,6 +467,7 @@ NS_IMETHODIMP nsScrollingView :: SetPosition(nscoord aX, nscoord aY)
   return NS_OK;
 }
 
+#if 0
 NS_IMETHODIMP nsScrollingView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
                                        PRUint32 aPaintFlags, PRBool &aResult)
 {
@@ -494,6 +495,7 @@ NS_IMETHODIMP nsScrollingView :: Paint(nsIRenderingContext& rc, const nsRect& re
   aResult = clipres;
   return NS_OK;
 }
+#endif
 
 void nsScrollingView :: HandleScrollEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags)
 {

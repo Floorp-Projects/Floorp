@@ -25,6 +25,7 @@
 #include "nsIWidget.h"
 #include "nsITimer.h"
 #include "prtime.h"
+#include "nsVoidArray.h"
 
 class nsViewManager : public nsIViewManager
 {
@@ -112,8 +113,10 @@ public:
 
   NS_IMETHOD Display(nsIView *aView);
 
-private:
+protected:
   virtual ~nsViewManager();
+
+private:
   nsIRenderingContext *CreateRenderingContext(nsIView &aView);
   void AddRectToDirtyRegion(nsIView* aView, const nsRect &aRect) const;
   void UpdateDirtyViews(nsIView *aView, nsRect *aParentRect) const;
@@ -123,6 +126,12 @@ private:
                nsIRegion *region, PRUint32 aUpdateFlags);
   void Refresh(nsIView* aView, nsIRenderingContext *aContext,
                const nsRect *rect, PRUint32 aUpdateFlags);
+  void FlattenViewTree(nsIView *aView, PRInt32 *aIndex,
+                       nsIView *aTopView = nsnull, nsVoidArray *aArray = nsnull,
+                       nscoord aX = 0, nscoord aY = 0);
+  void RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, const nsRect& aRect,
+                   PRBool &aResult);
+
 
   nsIDeviceContext  *mContext;
   nsIViewObserver   *mObserver;
@@ -134,6 +143,7 @@ private:
   nsIView           *mMouseGrabber;
   nsIView           *mKeyGrabber;
   PRInt32           mUpdateCnt;
+  nsVoidArray       *mFlatViews;
 
   static PRUint32          mVMCount;        //number of viewmanagers
   static nsDrawingSurface  mDrawingSurface; //single drawing surface
