@@ -402,36 +402,43 @@ public class IRFactory {
                                         Object finallyblock, int lineno)
     {
         Node trynode = (Node)tryblock;
-
-        // short circuit
-        if (trynode.getType() == TokenStream.BLOCK && !trynode.hasChildren())
-            return trynode;
-
-        Node pn = new Node(TokenStream.TRY, trynode, lineno);
-        Node catchNodes = (Node)catchblocks;
-        boolean hasCatch = catchNodes.hasChildren();
         boolean hasFinally = false;
         Node finallyNode = null;
-        Node finallyTarget = null;
         if (finallyblock != null) {
             finallyNode = (Node)finallyblock;
             hasFinally = (finallyNode.getType() != TokenStream.BLOCK
                           || finallyNode.hasChildren());
-            if (hasFinally) {
-                // make a TARGET for the finally that the tcf node knows about
-                finallyTarget = new Node(TokenStream.TARGET);
-                pn.putProp(Node.FINALLY_PROP, finallyTarget);
-
-                // add jsr finally to the try block
-                Node jsrFinally = new Node(TokenStream.JSR);
-                jsrFinally.putProp(Node.TARGET_PROP, finallyTarget);
-                pn.addChildToBack(jsrFinally);
-            }
         }
 
         // short circuit
-        if (!hasFinally && !hasCatch)  // bc finally might be an empty block...
+        if (trynode.getType() == TokenStream.BLOCK && !trynode.hasChildren()
+            && !hasFinally)
+        {
             return trynode;
+        }
+
+        Node catchNodes = (Node)catchblocks;
+        boolean hasCatch = catchNodes.hasChildren();
+
+        // short circuit
+        if (!hasFinally && !hasCatch)  {
+            // bc finally might be an empty block...
+            return trynode;
+        }
+
+        Node pn = new Node(TokenStream.TRY, trynode, lineno);
+
+        Node finallyTarget = null;
+        if (hasFinally) {
+            // make a TARGET for the finally that the tcf node knows about
+            finallyTarget = new Node(TokenStream.TARGET);
+            pn.putProp(Node.FINALLY_PROP, finallyTarget);
+
+            // add jsr finally to the try block
+            Node jsrFinally = new Node(TokenStream.JSR);
+            jsrFinally.putProp(Node.TARGET_PROP, finallyTarget);
+            pn.addChildToBack(jsrFinally);
+        }
 
         Node endTarget = new Node(TokenStream.TARGET);
         Node GOTOToEnd = new Node(TokenStream.GOTO);
