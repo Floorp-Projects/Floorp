@@ -1697,17 +1697,55 @@ function skv_init()
         "cx.scriptWrapper.jsdScript.isValid && " +
         "cx.scriptWrapper.jsdScript.flags & SCRIPT_NOPROFILE";
 
+    this.cmdary =
+        [
+         ["copy-frames",               cmdCopyFrames,                      0]
+        ];
+
     console.menuSpecs["context:stack"] = {
         getContext: this.getContext,
         items:
         [
          ["find-script"],
-         ["where"],
+         ["copy-frames"],
          ["-"],
          ["debug-script", {type: "checkbox", checkedif: debugIf}],
          ["profile-script", {type: "checkbox", checkedif: profileIf}],
         ]
     };
+}
+
+function cmdCopyFrames (e)
+{
+    var stackString = "";
+
+    var numFrames = e.jsdFrameList.length;
+    var startSearch = 0;
+
+    for (var i = 0; i < numFrames; ++i)
+    {
+        var jsdFrame = e.jsdFrameList[i];
+        var frameIdx = arrayIndexOf(console.frames, jsdFrame, startSearch);
+
+        if (!ASSERT(frameIdx != -1,
+                    "e.jsdFrameList[" + i + "] is not in console.frames!"))
+        {
+            return;
+        }
+
+        stackString += getMsg(MSN_FMT_FRAME_LINE,
+                              [frameIdx, formatFrame(jsdFrame)]) + "\n";
+
+        startSearch = frameIdx + 1;
+    }
+
+    const CLIPBOARD_CTRID = "@mozilla.org/widget/clipboardhelper;1";
+    const nsIClipboardHelper = Components.interfaces.nsIClipboardHelper;
+
+    var clipboardHelper =
+        Components.classes[CLIPBOARD_CTRID].getService(nsIClipboardHelper);
+
+    clipboardHelper.copyString(stackString);
 }
 
 console.views.stack.hooks = new Object();
@@ -1801,6 +1839,7 @@ function skv_select (e)
 console.views.stack.getContext =
 function sv_getcx(cx)
 {
+    cx.jsdFrameList = new Array();
     cx.urlList = new Array();
     cx.scriptInstanceList = new Array();
     cx.scriptWrapperList = new Array();
@@ -1811,6 +1850,8 @@ function sv_getcx(cx)
     {
         if (i == 0)
         {
+            cx.jsdFrame = rec.jsdFrame;
+
             if (rec.scriptWrapper)
             {
                 cx.scriptWrapper = rec.scriptWrapper;
@@ -1821,6 +1862,8 @@ function sv_getcx(cx)
         }
         else
         {
+            cx.jsdFrameList.push (rec.jsdFrame);
+
             if (rec.scriptWrapper)
             {
                 cx.scriptWrapperList.push (rec.scriptWrapper);
@@ -1828,7 +1871,6 @@ function sv_getcx(cx)
                 cx.urlList.push (rec.scriptWrapper.scriptInstance.url);
                 cx.lineNumberList.push (rec.scriptWrapper.baseLineNumber);
             }
-            
         }
         return cx;
     };

@@ -725,14 +725,21 @@ function arrayContains (ary, elem)
     return (arrayIndexOf (ary, elem) != -1);
 }
 
-function arrayIndexOf (ary, elem)
+function arrayIndexOf (ary, elem, start)
 {
     if (!ary)
         return -1;
-    
-    for (var i in ary)
+
+    var len = ary.length;
+
+    if (typeof start == "undefined")
+        start = 0;
+
+    for (var i = start; i < len; ++i)
+    {
         if (ary[i] == elem)
             return i;
+    }
 
     return -1;
 }
