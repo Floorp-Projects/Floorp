@@ -163,8 +163,6 @@ class nsHTMLFragmentContentSink2 : public nsHTMLFragmentContentSink
 public:
   nsHTMLFragmentContentSink2() { mHitSentinel = PR_TRUE; mSeenBody = PR_FALSE;}
   virtual ~nsHTMLFragmentContentSink2() {}
-  NS_IMETHODIMP OpenHead(const nsIParserNode& aNode) { return OpenContainer(aNode); }
-  NS_IMETHODIMP CloseHead() { return CloseContainer(eHTMLTag_head); }
 };
 
 nsresult
@@ -389,13 +387,13 @@ nsHTMLFragmentContentSink::CloseHTML()
 NS_IMETHODIMP 
 nsHTMLFragmentContentSink::OpenHead(const nsIParserNode& aNode)
 {
-  return NS_OK;
+  return OpenContainer(aNode);
 }
 
 NS_IMETHODIMP 
 nsHTMLFragmentContentSink::CloseHead()
 {
-  return NS_OK;
+  return CloseContainer(eHTMLTag_head);
 }
 
 NS_IMETHODIMP 
