@@ -8,8 +8,10 @@
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 		xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 		title="&accountManagerTitle.label;"
-        align="vertical"
+        orient="vertical"
         class="dialog"
+        width="620" height="470"
+        persist="screenX screenY width height"
         onload="onLoad(event);">
 
 <script language="JavaScript" src="chrome://global/content/strres.js"/>
@@ -17,12 +19,11 @@
 
 	<keyset id="keyset"/>
 
-	<box align="horizontal" flex="100%" style="padding: 5px">
-		<box align="vertical" >
+	<box orient="horizontal" flex="1" style="padding: 5px">
+		<box orient="vertical" flex="1">
          <tree rdf:datasources="rdf:msgaccountmanager" flex="100%"
           rdf:containment="http://home.netscape.com/NC-rdf#Settings"
           onselect="onAccountClick(event.target)" id="accounttree"
-          style="width:50px"
           class="inset"
           sortResource="http://home.netscape.com/NC-rdf#Name?sort=true"
           sortDirection="ascending"
@@ -43,7 +44,7 @@
          </tree>
          <button class="dialog" value="&newAccountButton.label;" oncommand="onNewAccount(event);" id="newAccountButton"/>
          <button class="dialog" value="&setDefaultButton.label;" oncommand="onSetDefault(event);" disabled="true" id="setDefaultButton"/>
-         <box align="horizontal">
+         <box orient="horizontal">
 <!-- taking out for PR2
            <button class="dialog" disabled="true" value="&duplicateButton.label;" id="duplicateButton" oncommand="onDuplicateAccount();" flex="50%"/>
 -->
@@ -51,7 +52,7 @@
          </box>
 		</box>
         <spring style="width: 5px"/>
-        <iframe name="contentFrame" flex="100%" style="width: 40em; height: 30em"/>
+        <iframe name="contentFrame" flex="6" style="width: 0px"/>
 	</box>
     <separator class="groove"/>
     <box id="okCancelButtons"/>
