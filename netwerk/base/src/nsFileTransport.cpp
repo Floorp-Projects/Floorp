@@ -172,8 +172,20 @@ public:
 
         nsCOMPtr<nsIInputStream> fileIn;
         rv = NS_NewFileInputStream(mFile, getter_AddRefs(fileIn));
-        if (NS_FAILED(rv)) return rv;
-
+        if (NS_FAILED(rv))
+        {
+#if DEBUG
+          char* filePath = nsnull;
+          mFile->GetPath(&filePath);
+          if (filePath)
+          {
+            printf("Opening %s failed\n", filePath);
+            nsAllocator::Free(filePath);
+          }
+#endif        
+          return rv;
+        }
+        
 #ifdef NO_BUFFERING
         *aInputStream = fileIn;
         NS_ADDREF(*aInputStream);
