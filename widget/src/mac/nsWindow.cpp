@@ -1091,7 +1091,7 @@ void nsWindow::SetIgnoreResize(PRBool aIgnore)
 // 
 //
 //-------------------------------------------------------------------------
-\
+
 PRBool nsWindow::IgnoreResize()
 {
   return mIgnoreResize;
@@ -1211,3 +1211,109 @@ PRUint32 nsWindow::GetYCoord(PRUint32 aNewY)
   return(aNewY);
 }
 
+
+//-------------------------------------------------------------------------
+//
+// Constructor
+//
+//-------------------------------------------------------------------------
+#define INITIAL_SIZE        2
+
+nsWindow::Enumerator::Enumerator()
+{
+    mArraySize = INITIAL_SIZE;
+    mChildrens = (nsWindow**)new PRInt32[mArraySize];
+    memset(mChildrens, 0, sizeof(PRInt32) * mArraySize);
+    mCurrentPosition = 0;
+}
+
+
+//-------------------------------------------------------------------------
+//
+// Destructor
+//
+//-------------------------------------------------------------------------
+nsWindow::Enumerator::~Enumerator()
+{   
+	if (mChildrens) 
+		{
+		delete[] mChildrens;
+		}
+}
+
+//-------------------------------------------------------------------------
+//
+// Get enumeration next element. Return null at the end
+//
+//-------------------------------------------------------------------------
+nsIWidget* nsWindow::Enumerator::Next()
+{
+	if (mCurrentPosition < mArraySize && mChildrens[mCurrentPosition]) 
+		{
+		return mChildrens[mCurrentPosition++];
+		}
+
+  return NULL;
+}
+
+
+//-------------------------------------------------------------------------
+//
+// Reset enumerator internal pointer to the beginning
+//
+//-------------------------------------------------------------------------
+void nsWindow::Enumerator::Reset()
+{
+    mCurrentPosition = 0;
+}
+
+
+//-------------------------------------------------------------------------
+//
+// Append an element 
+//
+//-------------------------------------------------------------------------
+void nsWindow::Enumerator::Append(nsWindow* aWinWidget)
+{
+PRInt32	pos;
+
+  if (aWinWidget) 
+  	{
+    for (pos = 0; pos < mArraySize && mChildrens[pos]; pos++);
+    if (pos == mArraySize) 
+        GrowArray();
+    mChildrens[pos] = aWinWidget;
+  }
+}
+
+
+//-------------------------------------------------------------------------
+//
+// Remove an element 
+//
+//-------------------------------------------------------------------------
+void nsWindow::Enumerator::Remove(nsWindow* aWinWidget)
+{
+    int pos;
+    for(pos = 0; mChildrens[pos] && (mChildrens[pos] != aWinWidget); pos++);
+    if (mChildrens[pos] == aWinWidget) 
+    	{
+      memcpy(mChildrens + pos, mChildrens + pos + 1, mArraySize - pos - 1);
+    	}
+
+}
+
+
+//-------------------------------------------------------------------------
+//
+// Grow the size of the children array
+//
+//-------------------------------------------------------------------------
+void nsWindow::Enumerator::GrowArray()
+{
+    mArraySize <<= 1;
+    nsWindow **newArray = (nsWindow**)new PRInt32[mArraySize];
+    memset(newArray, 0, sizeof(PRInt32) * mArraySize);
+    memcpy(newArray, mChildrens, (mArraySize>>1) * sizeof(PRInt32));
+    mChildrens = newArray;
+}
