@@ -25,7 +25,11 @@
 
 #include "nsNativeAppSupportBase.h"
 #include "gdk/gdk.h"
+#ifdef MOZ_PHOENIX
+extern char* splash_xpm[];
+#else
 #include SPLASH_XPM
+#endif
 
 class nsSplashScreenGtk : public nsISplashScreen {
 public:
@@ -61,6 +65,10 @@ nsSplashScreenGtk::~nsSplashScreenGtk()
 
 NS_IMETHODIMP nsSplashScreenGtk::Show()
 {
+#ifdef MOZ_PHOENIX
+  if (!splash_xpm[0])
+    return NS_OK;
+#endif
   /* create a pixmap based on xpm data */
   GdkPixmap* pmap = gdk_pixmap_colormap_create_from_xpm_d(NULL,
                                                     gdk_colormap_get_system(),
