@@ -3258,9 +3258,6 @@ js_Interpret(JSContext *cx, jsval *result)
           }
 
           case JSOP_DEFFUN:
-          {
-            uintN flags;
-
             atom = GET_ATOM(cx, script, pc);
             obj = ATOM_TO_OBJECT(atom);
             fun = (JSFunction *) JS_GetPrivate(cx, obj);
@@ -3304,9 +3301,14 @@ js_Interpret(JSContext *cx, jsval *result)
                 }
             }
 
-            /* Load function flags that are also property attributes. */
-            flags = fun->flags & (JSFUN_GETTER | JSFUN_SETTER);
-            attrs = flags | JSPROP_ENUMERATE;
+            /*
+             * Load function flags that are also property attributes.  Getters
+             * and setters do not need a slot, their value is stored elsewhere
+             * in the property itself, not in obj->slots.
+             */
+            attrs = fun->flags & (JSFUN_GETTER | JSFUN_SETTER);
+            if (attrs)
+                attrs |= JSPROP_SHARED;
 
             /*
              * Check for a const property of the same name -- or any kind
@@ -3320,19 +3322,18 @@ js_Interpret(JSContext *cx, jsval *result)
                 goto out;
 
             ok = OBJ_DEFINE_PROPERTY(cx, parent, id,
-                                     flags ? JSVAL_VOID : OBJECT_TO_JSVAL(obj),
-                                     (flags & JSFUN_GETTER)
+                                     attrs ? JSVAL_VOID : OBJECT_TO_JSVAL(obj),
+                                     (attrs & JSFUN_GETTER)
                                      ? (JSPropertyOp) obj
                                      : NULL,
-                                     (flags & JSFUN_SETTER)
+                                     (attrs & JSFUN_SETTER)
                                      ? (JSPropertyOp) obj
                                      : NULL,
-                                     attrs,
+                                     attrs | JSPROP_ENUMERATE,
                                      NULL);
             if (!ok)
                 goto out;
             break;
-          }
 
 #if JS_HAS_LEXICAL_CLOSURE
           case JSOP_DEFLOCALFUN:
@@ -3419,6 +3420,8 @@ js_Interpret(JSContext *cx, jsval *result)
              */
             fun = (JSFunction *) JS_GetPrivate(cx, obj);
             attrs = fun->flags & (JSFUN_GETTER | JSFUN_SETTER);
+            if (attrs)
+                attrs |= JSPROP_SHARED;
             ok = OBJ_DEFINE_PROPERTY(cx, parent, (jsid)fun->atom,
                                      attrs ? JSVAL_VOID : OBJECT_TO_JSVAL(obj),
                                      (attrs & JSFUN_GETTER)
@@ -3479,6 +3482,8 @@ js_Interpret(JSContext *cx, jsval *result)
              */
             fun = (JSFunction *) JS_GetPrivate(cx, obj);
             attrs = fun->flags & (JSFUN_GETTER | JSFUN_SETTER);
+            if (attrs)
+                attrs |= JSPROP_SHARED;
             ok = OBJ_DEFINE_PROPERTY(cx, fp->varobj, (jsid)fun->atom,
                                      attrs ? JSVAL_VOID : OBJECT_TO_JSVAL(obj),
                                      (attrs & JSFUN_GETTER)
@@ -3573,7 +3578,7 @@ js_Interpret(JSContext *cx, jsval *result)
                 setter = (JSPropertyOp) JSVAL_TO_OBJECT(rval);
                 attrs = JSPROP_SETTER;
             }
-            attrs |= JSPROP_ENUMERATE;
+            attrs |= JSPROP_ENUMERATE | JSPROP_SHARED;
 
             /* Check for a readonly or permanent property of the same name. */
             ok = js_CheckRedeclaration(cx, obj, id, attrs, &cond);
