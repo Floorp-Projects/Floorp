@@ -486,6 +486,16 @@
     }
   }
 
+  function WalletChangePassword()
+  {
+    if (appCore != null) {
+      dump("Wallet Change Password\n");
+      appCore.walletChangePassword();
+    } else {
+      dump("BrowserAppCore has not been created!\n");
+    }
+  }
+
   function WalletQuickFillin()
   {
     if (appCore != null) {
@@ -649,6 +659,7 @@
           <menuitem name="Display Cookies" onclick="CookieViewer();"/> 
           <separator /> 
           <menuitem name="Samples" onclick="WalletSamples();"/> 
+          <menuitem name="Change Password" onclick="WalletChangePassword();"/> 
 	  </menu> 
       <separator /> 
       <menuitem name="Select All" onclick="BrowserReload();"/> 
@@ -1068,7 +1079,7 @@
 		
 		<spring flex="100%"/>
 
-		<titledbutton align="right" value="Build ID: 1999042310" style="font-family:sans-serif;font-size:2.5mm;"/>
+		<titledbutton align="right" value="Build ID: 1999043018" style="font-family:sans-serif;font-size:2.5mm;"/>
 				
 		<titledbutton id="security-button" class="insecure" value="Secure Conn" align="right" onclick="securityOff();"/>
      </box>

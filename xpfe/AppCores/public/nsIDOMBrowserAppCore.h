@@ -47,6 +47,8 @@ public:
 
   NS_IMETHOD    WalletEditor()=0;
 
+  NS_IMETHOD    WalletChangePassword()=0;
+
   NS_IMETHOD    WalletSafeFillin(nsIDOMWindow* aWin)=0;
 
   NS_IMETHOD    WalletQuickFillin(nsIDOMWindow* aWin)=0;
@@ -90,6 +92,7 @@ public:
   NS_IMETHOD    LoadUrl(const nsString& aUrl);  \
   NS_IMETHOD    LoadInitialPage();  \
   NS_IMETHOD    WalletEditor();  \
+  NS_IMETHOD    WalletChangePassword();  \
   NS_IMETHOD    WalletSafeFillin(nsIDOMWindow* aWin);  \
   NS_IMETHOD    WalletQuickFillin(nsIDOMWindow* aWin);  \
   NS_IMETHOD    WalletSamples();  \
@@ -117,6 +120,7 @@ public:
   NS_IMETHOD    LoadUrl(const nsString& aUrl) { return _to LoadUrl(aUrl); }  \
   NS_IMETHOD    LoadInitialPage() { return _to LoadInitialPage(); }  \
   NS_IMETHOD    WalletEditor() { return _to WalletEditor(); }  \
+  NS_IMETHOD    WalletChangePassword() { return _to WalletChangePassword(); }  \
   NS_IMETHOD    WalletSafeFillin(nsIDOMWindow* aWin) { return _to WalletSafeFillin(aWin); }  \
   NS_IMETHOD    WalletQuickFillin(nsIDOMWindow* aWin) { return _to WalletQuickFillin(aWin); }  \
   NS_IMETHOD    WalletSamples() { return _to WalletSamples(); }  \
