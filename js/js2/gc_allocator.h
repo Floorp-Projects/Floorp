@@ -81,7 +81,6 @@ namespace JavaScript {
 	define_atomic_type(unsigned long)
 	define_atomic_type(float)
 	define_atomic_type(double)
-	define_atomic_type(wchar_t)
 	
 	#undef define_atomic_type
 	
@@ -145,10 +144,10 @@ namespace JavaScript {
 		// raw byte allocator used on some platforms (grrr).
 		typedef char _Char[1];
 		static char* _Charalloc(size_type n) { return (char*) rebind<_Char>::other::allocate(n); }
+#endif
 
 		// void* deallocate used on some platforms (grrr).
 		static void deallocate(void*, size_type) {}
-#endif
 
 		static void collect() { GC_gcollect(); }
 	};
