@@ -48,33 +48,7 @@
  * Mac-specific libpref routines
  */
 
-extern "C" JSBool pref_InitInitialObjects();
-pascal OSErr __initialize(const CFragInitBlock *theInitBlock);
-pascal void __terminate(void);
-pascal OSErr __initializePrefs(const CFragInitBlock *theInitBlock);
-pascal void __terminatePrefs(void);
-Boolean pref_FindAutoAdminLib(FSSpec& spec);
-
-short gPrefResources = -1;
-
-//----------------------------------------------------------------------------------------
-pascal OSErr __initializePrefs(const CFragInitBlock *theInitBlock)
-//----------------------------------------------------------------------------------------
-{
-    OSErr err = __initialize(theInitBlock);
-    if (err)
-    	return err;
-	gPrefResources = FSpOpenResFile(theInitBlock->fragLocator.u.onDisk.fileSpec, fsRdPerm);
-	return ::ResError();
-}
-
-//----------------------------------------------------------------------------------------
-pascal void __terminatePrefs(void)
-//----------------------------------------------------------------------------------------
-{
-    __terminate();
-}
-
+#if 0
 //----------------------------------------------------------------------------------------
 static JSBool pref_ReadResource(short id)
 //----------------------------------------------------------------------------------------
@@ -97,16 +71,15 @@ static JSBool pref_ReadResource(short id)
 	ReleaseResource(data);
 	return ok;
 }
+#endif // 0
 
+#if 0
 //----------------------------------------------------------------------------------------
-JSBool pref_InitInitialObjects()
+extern "C" JSBool pref_InitInitialObjects()
 // Initialize default preference JavaScript buffers from
 // appropriate TEXT resources
 //----------------------------------------------------------------------------------------
 {
-#if 0
-    return JS_TRUE; // for now.
-#else
 	if (gPrefResources <= 0)
 	    return JS_FALSE;
 	    
@@ -131,8 +104,8 @@ JSBool pref_InitInitialObjects()
 		::UseResFile(savedResFile);
 	gPrefResources = -1;
 	return ok;
-#endif
 }
+#endif // 0
 
 //----------------------------------------------------------------------------------------
 PR_IMPLEMENT(PrefResult)
@@ -193,22 +166,6 @@ PREF_SetPathPref(const char *pref_name, const char *path, PRBool set_default)
 
 	return result;
 }
-
-#if 0
-//----------------------------------------------------------------------------------------
-Boolean pref_FindAutoAdminLib(FSSpec& spec)
-// Looks for AutoAdminLib in Essential Files and returns FSSpec
-//----------------------------------------------------------------------------------------
-{
-	spec = CPrefs::GetFilePrototype(CPrefs::RequiredGutsFolder);
-	LString::CopyPStr("\pAutoAdminLib", spec.name, 32);
-	
-	if (!CFileMgr::FileExists(spec))
-		LString::CopyPStr("\pAutoAdminPPCLib", spec.name, 32);
-	
-	return CFileMgr::FileExists(spec);
-}
-#endif
 
 //----------------------------------------------------------------------------------------
 PR_IMPLEMENT(PRBool) PREF_IsAutoAdminEnabled()
