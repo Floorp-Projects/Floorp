@@ -61,6 +61,7 @@ class nsScriptableDateFormat : public nsIScriptableDateFormat {
                                                1999, 1, 1, hour, minute, second, timeString);}
 
   nsScriptableDateFormat() {NS_INIT_REFCNT();}
+  virtual ~nsScriptableDateFormat() {}
 private:
   nsString mStringOut;   
 };

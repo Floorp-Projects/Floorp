@@ -512,7 +512,7 @@ nsresult nsMsgCompose::CloseWindow()
 {
 	if (m_webShellWin)
 	{
-    m_editor = nsnull;	      /* m_editor will be destroyed during the Close Window. Set it to null to
+    m_editor = nsnull;	      /* m_editor will be destroyed during the Close Window. Set it to null to */
 							                /* be sure we wont use it anymore. */
 		m_webShellWin->Close();
 		m_webShellWin = nsnull;
