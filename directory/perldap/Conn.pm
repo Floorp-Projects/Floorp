@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: Conn.pm,v 1.17 1998/08/13 21:32:06 leif Exp $
+# $Id: Conn.pm,v 1.18 1998/08/18 22:26:30 leif%netscape.com Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -497,7 +497,10 @@ sub update
 
 
 #############################################################################
-# Set the rebind procedure. This is old and obsolete...
+# Set the rebind procedure. We also provide a neat default rebind procedure,
+# which takes three arguments (DN, password, and the auth method). This is an
+# extension to the LDAP SDK, which I think should be there. It was also
+# needed to get this to work on Win/NT...
 #
 sub setRebindProc
 {
@@ -507,6 +510,16 @@ sub setRebindProc
   die "No LDAP connection" unless defined($self->{"ld"});
 
   ldap_set_rebind_proc($self->{"ld"}, $proc);
+}
+
+sub setDefaultRebindProc
+{
+  my ($self, $dn, $pswd, $auth) = @_;
+
+  die "No LDAP connection"
+    unless defined($self->{ld});
+
+ Ldapc::ldap_set_default_rebind_proc($self->{"ld"}, $dn, $pswd, $auth);
 }
 
 
