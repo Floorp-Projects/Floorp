@@ -59,8 +59,8 @@ interface nsIURIContentListener : nsISupports
   *
   * @param aURI   URI that is being opened.
   *
-  * @return       <code>true</code> if the load can continue;
-  *               <code>false</code> if the open should be aborted.
+  * @return       <code>false</code> if the load can continue;
+  *               <code>true</code> if the open should be aborted.
   */
   boolean onStartURIOpen(in nsIURI aURI);
 
