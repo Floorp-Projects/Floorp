@@ -46,7 +46,7 @@
 #include "nsIViewManager.h"
 #include "nsIScrollableView.h"
 #include "nsIContentViewer.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
 #include "nsVoidArray.h"
 #include "nsIScriptContext.h"
 #include "nsITimer.h"
@@ -402,7 +402,7 @@ protected:
     nsCOMPtr<nsIDeviceContext> mDeviceContext;
     nsCOMPtr<nsIDocumentLoader>mDocLoader;
     nsCOMPtr<nsIWidget>        mParentWidget;
-    nsCOMPtr<nsIPref>          mPrefs;
+    nsCOMPtr<nsIPrefBranch>    mPrefs;
     nsCOMPtr<nsIURI>           mCurrentURI;
     nsCOMPtr<nsIURI>           mReferrerURI;
     nsCOMPtr<nsIScriptGlobalObject> mScriptGlobal;

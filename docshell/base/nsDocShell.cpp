@@ -82,6 +82,7 @@
 #include "nsXPCOMCID.h"
 #include "nsISeekableStream.h"
 #include "nsAutoPtr.h"
+#include "nsIPrefService.h"
 
 // we want to explore making the document own the load group
 // so we can associate the document URI with the load group.
@@ -3092,7 +3093,7 @@ NS_IMETHODIMP
 nsDocShell::Create()
 {
     nsresult rv = NS_ERROR_FAILURE;
-    mPrefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+    mPrefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     PRBool tmpbool;
