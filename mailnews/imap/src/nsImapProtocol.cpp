@@ -8045,7 +8045,7 @@ nsImapMockChannel::OnTransportStatus(nsITransport *transport, nsresult status,
     if (status == nsISocketTransport::STATUS_RECEIVING_FROM ||
         status == nsISocketTransport::STATUS_SENDING_TO)
     {
-      mProgressEventSink->OnProgress(this, nsnull, progress, progressMax);
+      // do nothing....do NOT report socket transport progress bytes either
     }
     else
     {
