@@ -46,7 +46,7 @@ DEPTH      = ../..
 #  fortcrypt
 DIRS =  util freebl softoken \
 	base asn1 dev pki pki1 \
-	certdb certhigh pk11wrap cryptohi crypto nss \
+	certdb certhigh pk11wrap cryptohi nss \
 	ssl \
 	pkcs12 pkcs7 smime \
 	crmf jar \
