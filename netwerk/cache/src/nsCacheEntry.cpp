@@ -183,15 +183,10 @@ nsCacheEntry::Open(nsCacheRequest * request, nsICacheEntryDescriptor ** result)
 
         NS_ADDREF(*result = descriptor);
 
-        rv = descriptor->QueryInterface(NS_GET_IID(nsICacheEntryDescriptor), 
-                                        (void**)result);
-
         if (NS_SUCCEEDED(rv)) {
             // queue the descriptor
             PR_APPEND_LINK((descriptor)->GetListNode(), &mDescriptorQ);
         }
-
-        NS_RELEASE(descriptor);
 
     } else if (rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION) {
         // queue request
