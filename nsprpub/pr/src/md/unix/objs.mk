@@ -97,6 +97,10 @@ SCOOS_CSRCS = \
 	scoos.c \
 	$(NULL)
 
+DGUX_CSRCS = \
+	dgux.c \
+	$(NULL)
+
 
 ifeq ($(PTHREADS_USER),1)
 CSRCS += $(PTH_USER_CSRCS)
@@ -155,6 +159,9 @@ CSRCS += $(NCR_CSRCS)
 endif
 ifeq ($(OS_ARCH),SCOOS)
 CSRCS += $(SCOOS_CSRCS)
+endif
+ifeq ($(OS_ARCH),dgux)
+CSRCS += $(DGUX_CSRCS)
 endif
  
 #

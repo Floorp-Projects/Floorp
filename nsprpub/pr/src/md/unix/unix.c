@@ -48,7 +48,7 @@
     || defined(SUNOS4) || defined(NCR) || defined(RHAPSODY)
 #define _PRSockLen_t int
 #elif (defined(AIX) && !defined(AIX4_1)) || defined(FREEBSD) \
-    || defined(NETBSD) || defined(UNIXWARE)
+    || defined(NETBSD) || defined(UNIXWARE) || defined(DGUX)
 #define _PRSockLen_t size_t
 #else
 #error "Cannot determine architecture"

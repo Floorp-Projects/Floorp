@@ -18,15 +18,7 @@
 
 #include "primpl.h"
 
-#ifdef XP_UNIX
-#include <fcntl.h>
-#endif
 #include <string.h>
-
-#if defined(SVR4) || defined(SUNOS4)
-/* To pick up FIONREAD */
-#include <sys/filio.h>
-#endif
 
 /************************************************************************/
 

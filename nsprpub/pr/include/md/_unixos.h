@@ -50,7 +50,7 @@
         || defined(BSDI) || defined(SONY)
 #include <sys/select.h>
 #elif defined(SUNOS4) || defined(SCO) || defined(FREEBSD) \
-        || defined(NETBSD) || defined(RHAPSODY)
+        || defined(NETBSD) || defined(RHAPSODY) || defined(DGUX)
 #include <sys/types.h>
 #elif defined(LINUX)
 #include <sys/time.h>

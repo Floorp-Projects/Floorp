@@ -212,6 +212,10 @@ ifeq ($(OS_ARCH),BSD_OS)
 EXTRA_LIBS = -ldl
 endif
 
+ifeq ($(OS_ARCH),dgux)
+EXTRA_LIBS = -lsocket -lnsl -ldl
+endif
+
 #####################################################
 #
 # The rules

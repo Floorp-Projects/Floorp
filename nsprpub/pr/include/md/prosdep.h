@@ -104,6 +104,9 @@ PR_BEGIN_EXTERN_C
 #elif defined(NCR)
 #include "md/_ncr.h"
 
+#elif defined(DGUX)
+#include "md/_dgux.h"
+
 #else
 #error unknown Unix flavor
 
