@@ -158,8 +158,8 @@ PRBool nsTextWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 				case NS_KEY_DOWN:
 				{
 		  		char theChar;
-		  		char theKey;
-		  		short theModifiers;
+		  		unsigned short theKey;
+		  		unsigned short theModifiers;
 		  		EventRecord* theOSEvent = (EventRecord*)aEvent.nativeMsg;
 		  		if (theOSEvent)
 		  		{
@@ -178,13 +178,18 @@ PRBool nsTextWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 		  		}
 		  		if (theChar != NS_VK_RETURN)	// don't pass Return: nsTextWidget is a single line editor
 		  		{
-						StartDraw();
+		  			//HACK! this is so theKey and theModifiers don't get optimized out when not used
+		  			OSErr foo = ::HandleControlKey(mControl, theKey, theChar, theModifiers);
+					if ( foo != noErr )
+						DebugStr("\pHandleControlKey returned error");
+						
+					StartDraw();		  			
 #if 0				// for some reason, HandleControlKey() doesn't work...
 		  			::HandleControlKey(mControl, theKey, theChar, theModifiers);
 #else				// ...so let's take a more direct approach
 						::TEKey(theChar, mTE);
 #endif
-						EndDraw();
+					EndDraw();
 		  			eventHandled = PR_TRUE;
 		  		}
 					break;
@@ -283,15 +288,17 @@ NS_METHOD  nsTextWidget::SetText(const nsString& aText, PRUint32& aSize)
 		return NS_ERROR_NOT_INITIALIZED;
 
 	Size textSize = aText.Length();
-	char* str = new char[textSize+1];
-	if (str)
+	if ( aSize < textSize )				// truncate to given size
+		textSize = aSize;
+	const unsigned int bufferSize = textSize + 1;	// add 1 for null
+		
+	auto_ptr<char> str ( new char[bufferSize] );
+	if ( str.get() )
 	{
-		aText.ToCString(str, textSize+1);
-		StartDraw();
-		::SetControlData(mControl, kControlNoPart, kControlEditTextTextTag, textSize, (Ptr)str);
-		EndDraw();
+		aText.ToCString(str.get(), bufferSize);
+		::SetControlData(mControl, kControlNoPart, kControlEditTextTextTag, textSize, (Ptr)str.get());
+		Invalidate(PR_FALSE);
 		aSize = textSize;
-		delete [] str;
 	}
 	else
 		return NS_ERROR_OUT_OF_MEMORY;
