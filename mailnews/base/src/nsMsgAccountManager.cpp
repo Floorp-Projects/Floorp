@@ -948,12 +948,12 @@ nsMsgAccountManager::LoadAccounts()
       }
 
       // force load of accounts (need to find a better way to do this
-      nsCOMPtr<nsIMsgIncomingServer> server;
-      account->GetIncomingServer(getter_AddRefs(server));
-
       nsCOMPtr<nsISupportsArray> identities;
       account->GetIdentities(getter_AddRefs(identities));
       
+      nsCOMPtr<nsIMsgIncomingServer> server;
+      account->GetIncomingServer(getter_AddRefs(server));
+
       token = nsCRT::strtok(newStr, ",", &newStr);
     }
 

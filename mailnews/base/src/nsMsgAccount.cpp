@@ -164,6 +164,7 @@ nsMsgAccount::createIncomingServer()
 #endif
   // store the server in this structure
   m_incomingServer = server;
+  accountManager->NotifyServerLoaded(server);
 
   return NS_OK;
 }
