@@ -46,53 +46,6 @@ function Startup()
   bookmarksView.focus();
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// Class representing the bookmarks panel's tree. This subclasses BookmarksTree, 
-// which contains methods generic to any tree-like bookmarks UI representation. 
-// This class contains data specific to the tree in this panel, e.g. number of 
-// clicks required to load a bookmark, which differs from other bookmarks tree 
-// implementations (such as window). 
-function BookmarksPanelTree (aCompositeDataSource) 
-{ 
-  // 'db' is used by the base class. 
-  this.db = aCompositeDataSource;
-}
-
-BookmarksPanelTree.prototype = {
-  __proto__: BookmarksTree.prototype,
-  
-  /////////////////////////////////////////////////////////////////////////////
-  // Number of clicks to activate a bookmark. 
-  openClickCount: 1,
-  
-  /////////////////////////////////////////////////////////////////////////////
-  // Open Bookmark in most recent window
-  openNewWindow: false,
-  
-  addBookmark: function ()
-  {
-    // This is somewhat of a hack, and we'd like to parameterize this so that
-    // eventually we can bookmark mail messages and editor documents.
-    var contentArea = top.document.getElementById('content');
-    if (contentArea)
-      BookmarksUtils.addBookmarkForBrowser(contentArea.webNavigation, true);
-  },
-  
- 
-  /////////////////////////////////////////////////////////////////////////////
-  // This function only exists because we call onCommandUpdate manually in it,
-  // because for some reason, the commandupdate handler on the commandupdater
-  // is never being called. This is true of the bookmarks sidebar panel and the
-  // personal toolbar.
-  hlClick: function (aEvent)
-  {
-    // Command updater isn't working for us. Force a command update, beyotch. 
-    this.controller.onCommandUpdate();
-    this.treeClicked(aEvent);
-  }
-
-};
-
 function manageBookmarks() {
   openDialog("chrome://communicator/content/bookmarks/bookmarks.xul", "", "chrome,dialog=no,resizable=yes");
 }
