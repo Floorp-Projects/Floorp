@@ -48,6 +48,7 @@ JS_BEGIN_EXTERN_C
 struct JSStackFrame {
     JSObject        *callobj;       /* lazily created Call object */
     JSObject        *argsobj;       /* lazily created arguments object */
+    JSObject        *varobj;        /* variables object, where vars go */
     JSScript        *script;        /* script being interpreted */
     JSFunction      *fun;           /* function being called or null */
     JSObject        *thisp;         /* "this" pointer if in method */

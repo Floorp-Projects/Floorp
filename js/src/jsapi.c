@@ -391,7 +391,7 @@ JS_AddArgumentFormatter(JSContext *cx, const char *format,
 	    goto out;
 	mpp = &map->next;
     }
-    map = (JSArgumentFormatMap*) JS_malloc(cx, sizeof *map);
+    map = (JSArgumentFormatMap *) JS_malloc(cx, sizeof *map);
     if (!map)
 	return JS_FALSE;
     map->format = format;
@@ -615,7 +615,7 @@ JS_NewRuntime(uint32 maxbytes)
 
     if (!js_InitStringGlobals())
 	return NULL;
-    rt = (JSRuntime*) malloc(sizeof(JSRuntime));
+    rt = (JSRuntime *) malloc(sizeof(JSRuntime));
     if (!rt)
 	return NULL;
     memset(rt, 0, sizeof(JSRuntime));
@@ -806,7 +806,7 @@ JS_DestroyContextMaybeGC(JSContext *cx)
     js_DestroyContext(cx, JS_MAYBE_GC);
 }
 
-JS_PUBLIC_API(void*)
+JS_PUBLIC_API(void *)
 JS_GetContextPrivate(JSContext *cx)
 {
     return cx->data;
@@ -946,12 +946,12 @@ JS_SetGlobalObject(JSContext *cx, JSObject *obj)
 JS_PUBLIC_API(JSBool)
 JS_InitStandardClasses(JSContext *cx, JSObject *obj)
 {
-    JSObject *fun_proto, *obj_proto, *array_proto;
+    JSObject *fun_proto, *obj_proto;
 
     CHECK_REQUEST(cx);
     /* If cx has no global object, use obj so prototypes can be found. */
     if (!cx->globalObject)
-	cx->globalObject = obj;
+        cx->globalObject = obj;
 
 #if JS_HAS_UNDEFINED
     /*
@@ -959,47 +959,47 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
      * (proposed ECMA v2, now in ECMA ed3?)
      */
     if (!OBJ_DEFINE_PROPERTY(cx, obj,
-			     (jsid)cx->runtime->atomState.typeAtoms[JSTYPE_VOID],
-			     JSVAL_VOID, NULL, NULL, 0, NULL))
-	return JS_FALSE;
+                             (jsid)cx->runtime->atomState.typeAtoms[JSTYPE_VOID],
+                             JSVAL_VOID, NULL, NULL, 0, NULL)) {
+        return JS_FALSE;
+    }
 #endif
 
     /* Initialize the function class first so constructors can be made. */
     fun_proto = js_InitFunctionClass(cx, obj);
     if (!fun_proto)
-	return JS_FALSE;
+        return JS_FALSE;
 
     /* Initialize the object class next so Object.prototype works. */
     obj_proto = js_InitObjectClass(cx, obj);
     if (!obj_proto)
-	return JS_FALSE;
+        return JS_FALSE;
 
     /* Function.prototype and the global object delegate to Object.prototype. */
     OBJ_SET_PROTO(cx, fun_proto, obj_proto);
     if (!OBJ_GET_PROTO(cx, obj))
-	OBJ_SET_PROTO(cx, obj, obj_proto);
+        OBJ_SET_PROTO(cx, obj, obj_proto);
 
     /* Initialize the rest of the standard objects and functions. */
-    return (array_proto = js_InitArrayClass(cx, obj)) != NULL
-	   && js_InitArgsAndCallClasses(cx, obj, obj_proto)
-	   && js_InitBooleanClass(cx, obj)
-	   && js_InitMathClass(cx, obj)
-	   && js_InitNumberClass(cx, obj)
-	   && js_InitStringClass(cx, obj)
+    return js_InitArgsAndCallClasses(cx, obj) &&
+           js_InitArrayClass(cx, obj) &&
+           js_InitBooleanClass(cx, obj) &&
+           js_InitMathClass(cx, obj) &&
+           js_InitNumberClass(cx, obj) &&
+           js_InitStringClass(cx, obj) &&
 #if JS_HAS_REGEXPS
-	   && js_InitRegExpClass(cx, obj)
+           js_InitRegExpClass(cx, obj) &&
 #endif
 #if JS_HAS_SCRIPT_OBJECT
-	   && js_InitScriptClass(cx, obj)
+           js_InitScriptClass(cx, obj) &&
 #endif
 #if JS_HAS_ERROR_EXCEPTIONS
-	   && js_InitExceptionClasses(cx, obj)
+           js_InitExceptionClasses(cx, obj) &&
 #endif
 #if JS_HAS_FILE_OBJECT
-           && js_InitFileClass(cx, obj, JS_TRUE)
+           js_InitFileClass(cx, obj, JS_TRUE) &&
 #endif
-	   && js_InitDateClass(cx, obj)
-	   ;
+           js_InitDateClass(cx, obj);
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -1045,7 +1045,7 @@ JS_free(JSContext *cx, void *p)
 JS_PUBLIC_API(char *)
 JS_strdup(JSContext *cx, const char *s)
 {
-    char *p = (char*) JS_malloc(cx, strlen(s) + 1);
+    char *p = (char *) JS_malloc(cx, strlen(s) + 1);
     if (!p)
 	return NULL;
     return strcpy(p, s);
@@ -1111,10 +1111,10 @@ typedef struct NamedRootDumpArgs {
 JS_STATIC_DLL_CALLBACK(intN)
 js_named_root_dumper(JSHashEntry *he, intN i, void *arg)
 {
-    NamedRootDumpArgs *args = (NamedRootDumpArgs*) arg;
+    NamedRootDumpArgs *args = (NamedRootDumpArgs *) arg;
 
     if (he->value)
-	args->dump((char*) he->value, (void *)he->key, args->data);
+	args->dump((char *) he->value, (void *)he->key, args->data);
     return HT_ENUMERATE_NEXT;
 }
 
@@ -3183,7 +3183,7 @@ JS_SaveExceptionState(JSContext *cx)
 #if JS_HAS_EXCEPTIONS
     JSExceptionState *state;
     CHECK_REQUEST(cx);
-    state = (JSExceptionState*) JS_malloc(cx, sizeof(JSExceptionState));
+    state = (JSExceptionState *) JS_malloc(cx, sizeof(JSExceptionState));
     if (state) {
         state->throwing = JS_GetPendingException(cx, &state->exception);
         if (state->throwing && JSVAL_IS_GCTHING(state->exception))

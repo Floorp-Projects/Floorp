@@ -32,7 +32,9 @@
  * file under either the NPL or the GPL.
  */
 /*
- * JavaScript operation bytecodes.
+ * JavaScript operation bytecodes.  If you need to allocate a bytecode, look
+ * for a name of the form JSOP_UNUSED* and claim it.  Otherwise, always add at
+ * the end of the table.
  *
  * Includers must define an OPDEF macro of the following form:
  *
@@ -60,7 +62,7 @@
 
 /* legend: op         val name          image       len use def prec  format */
 
-/* Permanently-assigned bytecodes. */
+/* Longstanding JavaScript bytecodes. */
 OPDEF(JSOP_NOP,       0,  "nop",        NULL,         1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_PUSH,      1,  "push",       NULL,         1,  0,  1,  0,  JOF_BYTE)
 OPDEF(JSOP_POPV,      2,  "popv",       NULL,         1,  1,  0,  0,  JOF_BYTE)
@@ -70,9 +72,15 @@ OPDEF(JSOP_RETURN,    5,  "return",     NULL,         1,  1,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_GOTO,      6,  "goto",       NULL,         3,  0,  0,  0,  JOF_JUMP)
 OPDEF(JSOP_IFEQ,      7,  "ifeq",       NULL,         3,  1,  0,  0,  JOF_JUMP)
 OPDEF(JSOP_IFNE,      8,  "ifne",       NULL,         3,  1,  0,  0,  JOF_JUMP)
-OPDEF(JSOP_FORNAME,   9,  "forname",    NULL,         3,  1,  1,  0,  JOF_CONST|JOF_NAME|JOF_SET)
-OPDEF(JSOP_FORPROP,   10, "forprop",    NULL,         3,  2,  1,  0,  JOF_CONST|JOF_PROP|JOF_SET)
-OPDEF(JSOP_FORELEM,   11, "forelem",    NULL,         1,  3,  1,  0,  JOF_BYTE |JOF_ELEM|JOF_SET)
+
+/* Get the arguments object for the current, lightweight function activation. */
+OPDEF(JSOP_ARGUMENTS, 9, js_arguments_str, js_arguments_str, 1, 0, 1, 12, JOF_BYTE)
+
+/* ECMA-compliant for-in loop with argument or local variable loop control. */
+OPDEF(JSOP_FORARG,    10, "forarg",     NULL,         3,  0,  1,  0,  JOF_QARG|JOF_NAME|JOF_SET)
+OPDEF(JSOP_FORVAR,    11, "forvar",     NULL,         3,  0,  1,  0,  JOF_QVAR|JOF_NAME|JOF_SET)
+
+/* More longstanding bytecodes. */
 OPDEF(JSOP_DUP,       12, "dup",        NULL,         1,  1,  2,  0,  JOF_BYTE)
 OPDEF(JSOP_DUP2,      13, "dup2",       NULL,         1,  2,  4,  0,  JOF_BYTE)
 OPDEF(JSOP_SETCONST,  14, "setconst",   NULL,         3,  1,  1,  1,  JOF_CONST|JOF_NAME|JOF_SET)
@@ -191,9 +199,9 @@ OPDEF(JSOP_VARDEC,    102,"vardec",     NULL,         3,  0,  1, 10,  JOF_QVAR |
 
 /* ECMA-compliant for/in ops. */
 OPDEF(JSOP_TOOBJECT,  103,"toobject",   NULL,         1,  1,  1,  0,  JOF_BYTE)
-OPDEF(JSOP_FORNAME2,  104,"forname2",   NULL,         3,  0,  1,  0,  JOF_CONST|JOF_NAME|JOF_SET|JOF_FOR2)
-OPDEF(JSOP_FORPROP2,  105,"forprop2",   NULL,         3,  1,  1,  0,  JOF_CONST|JOF_PROP|JOF_SET|JOF_FOR2)
-OPDEF(JSOP_FORELEM2,  106,"forelem2",   NULL,         1,  2,  4,  0,  JOF_BYTE |JOF_ELEM|JOF_FOR2)
+OPDEF(JSOP_FORNAME,   104,"forname",    NULL,         3,  0,  1,  0,  JOF_CONST|JOF_NAME|JOF_SET)
+OPDEF(JSOP_FORPROP,   105,"forprop",    NULL,         3,  1,  1,  0,  JOF_CONST|JOF_PROP|JOF_SET)
+OPDEF(JSOP_FORELEM,   106,"forelem",    NULL,         1,  2,  4,  0,  JOF_BYTE |JOF_ELEM)
 OPDEF(JSOP_POP2,      107,"pop2",       NULL,         1,  2,  0,  0,  JOF_BYTE)
 
 /* ECMA-complaint assignment ops. */
@@ -214,7 +222,7 @@ OPDEF(JSOP_DEBUGGER,  113,"debugger",   NULL,         1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_GOSUB,     114,"gosub",      NULL,         3,  0,  1,  0,  JOF_JUMP)
 OPDEF(JSOP_RETSUB,    115,"retsub",     NULL,         1,  1,  0,  0,  JOF_BYTE)
 
-/* more exception handling ops */
+/* More exception handling ops. */
 OPDEF(JSOP_EXCEPTION, 116,"exception",  NULL,         1,  0,  1,  0,  JOF_BYTE)
 OPDEF(JSOP_SETSP,     117,"setsp",      NULL,         3,  0,  0,  0,  JOF_UINT16)
 

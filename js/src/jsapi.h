@@ -119,7 +119,7 @@ JS_BEGIN_EXTERN_C
 #define JSFUN_GETTER            JSPROP_GETTER
 #define JSFUN_SETTER            JSPROP_SETTER
 #define JSFUN_BOUND_METHOD      0x40    /* bind this to fun->object's parent */
-#define JSFUN_GLOBAL_PARENT     0x80    /* reparent calls to cx->globalObject */
+#define JSFUN_HEAVYWEIGHT       0x80    /* activation requires a Call object */
 #define JSFUN_FLAGS_MASK        0xf0    /* overlay JSFUN_* attributes */
 
 /*
@@ -372,7 +372,7 @@ JS_DestroyContextNoGC(JSContext *cx);
 extern JS_PUBLIC_API(void)
 JS_DestroyContextMaybeGC(JSContext *cx);
 
-extern JS_PUBLIC_API(void*)
+extern JS_PUBLIC_API(void *)
 JS_GetContextPrivate(JSContext *cx);
 
 extern JS_PUBLIC_API(void)

@@ -62,7 +62,7 @@ js_NewContext(JSRuntime *rt, size_t stacksize)
     JSContext *cx;
     JSBool ok, first;
 
-    cx = (JSContext*) malloc(sizeof *cx);
+    cx = (JSContext *) malloc(sizeof *cx);
     if (!cx)
 	return NULL;
     memset(cx, 0, sizeof *cx);
@@ -359,8 +359,8 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
                  * null it out to act as the caboose when we free the
                  * pointers later.
 		 */
-		reportp->messageArgs
-                        = (const jschar**) JS_malloc(cx, sizeof(jschar *) * (argCount + 1));
+		reportp->messageArgs = (const jschar **)
+                    JS_malloc(cx, sizeof(jschar *) * (argCount + 1));
 		if (!reportp->messageArgs)
 		    return JS_FALSE;
                 reportp->messageArgs[argCount] = NULL;
@@ -396,8 +396,8 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
 		     * Note - the above calculation assumes that each argument
 		     * is used once and only once in the expansion !!!
 		     */
-		    reportp->ucmessage = out
-                        = (jschar*) JS_malloc(cx, (expandedLength + 1) * sizeof(jschar));
+		    reportp->ucmessage = out = (jschar *)
+                        JS_malloc(cx, (expandedLength + 1) * sizeof(jschar));
 		    if (!out) {
 			if (reportp->messageArgs) {
 			    JS_free(cx, (void *)reportp->messageArgs);

@@ -87,12 +87,15 @@ struct JSTreeContext {              /* tree context for semantic checks */
     JSAtomList      decls;          /* function, const, and var declarations */
 };
 
-#define TCF_TOP_LEVEL   0x01        /* at TL of program or function body */
-#define TCF_IN_FUNCTION 0x02        /* parsing inside function body */
-#define TCF_RETURN_EXPR 0x04        /* function has 'return expr;' */
-#define TCF_RETURN_VOID 0x08        /* function has 'return;' */
-#define TCF_IN_FOR_INIT 0x10        /* parsing init expr of for; exclude 'in' */
-#define TCF_FUN_VS_VAR  0x20        /* function and var with same name */
+#define TCF_TOP_LEVEL       0x01    /* at TL of program or function body */
+#define TCF_IN_FUNCTION     0x02    /* parsing inside function body */
+#define TCF_RETURN_EXPR     0x04    /* function has 'return expr;' */
+#define TCF_RETURN_VOID     0x08    /* function has 'return;' */
+#define TCF_IN_FOR_INIT     0x10    /* parsing init expr of for; exclude 'in' */
+#define TCF_FUN_VS_VAR      0x20    /* function and var with same name */
+#define TCF_FUN_SETS_ARGS   0x40    /* function assigns to 'arguments' */
+#define TCF_FUN_HEAVYWEIGHT 0x80    /* function needs Call object per call */
+#define TCF_FUN_FLAGS       0xe0    /* flags to propagate from FunctionBody */
 
 #define TREE_CONTEXT_INIT(tc)                                                 \
     ((tc)->flags = TCF_TOP_LEVEL, (tc)->tryCount = 0, (tc)->topStmt = NULL,   \
@@ -203,6 +206,14 @@ js_EmitN(JSContext *cx, JSCodeGenerator *cg, JSOp op, size_t extra);
 extern JSBool
 js_SetJumpOffset(JSContext *cx, JSCodeGenerator *cg, jsbytecode *pc,
 		 ptrdiff_t off);
+
+/* Test whether we're in a with statement. */
+extern JSBool
+js_InWithStatement(JSTreeContext *tc);
+
+/* Test whether we're in a catch block with exception named by atom. */
+extern JSBool
+js_InCatchBlock(JSTreeContext *tc, JSAtom *atom);
 
 /*
  * Push the C-stack-allocated struct at stmt onto the stmtInfo stack.
