@@ -852,12 +852,8 @@ nsFastLoadFileReader::ReadSharpObjectInfo(nsFastLoadSharpObjectInfo *aInfo)
     if (NS_FAILED(rv))
         return rv;
 
-    //XXXjrgm bug #189832 [temp. hack]; if an offset is zero, we've hit
-    // the bug and most abort fastload now.
     NS_ASSERTION(aInfo->mCIDOffset != 0, 
-                 "fastload reader: Offset into file cannot be zero!");
-    if (aInfo->mCIDOffset == 0) 
-        return NS_ERROR_UNEXPECTED;
+                 "fastload reader: mCIDOffset cannot be zero!");
 
     rv = Read16(&aInfo->mStrongRefCnt);
     if (NS_FAILED(rv))
@@ -1086,14 +1082,16 @@ nsFastLoadFileReader::ReadObject(PRBool aIsStrongRef, nsISupports* *aObject)
         }
 
         if (aIsStrongRef) {
-            NS_ASSERTION(entry->mStrongRefCnt != 0, "mStrongRefCnt underflow!");
-            entry->mStrongRefCnt--;
+            NS_ASSERTION(entry->mStrongRefCnt != 0,
+                         "mStrongRefCnt underflow!");
+            --entry->mStrongRefCnt;
         } else {
-            NS_ASSERTION(entry->mWeakRefCnt != 0, "mWeakRefCnt underflow!");
-            entry->mWeakRefCnt--;
+            NS_ASSERTION(MFL_GET_WEAK_REFCNT(entry) != 0,
+                         "mWeakRefCnt underflow!");
+            MFL_DROP_WEAK_REFCNT(entry);
         }
 
-        if (entry->mStrongRefCnt == 0 && entry->mWeakRefCnt == 0)
+        if (entry->mStrongRefCnt == 0 && MFL_GET_WEAK_REFCNT(entry) == 0)
             entry->mReadObject = nsnull;
     }
 
@@ -1631,10 +1629,8 @@ nsFastLoadFileWriter::WriteSharpObjectInfo(const nsFastLoadSharpObjectInfo& aInf
 {
     nsresult rv;
 
-    //XXXjrgm bug #189832 [temp. hack]; if an offset is zero, we've hit
-    // the bug. However, I'm not sure if we can safely abort at this point.
     NS_ASSERTION(aInfo.mCIDOffset != 0, 
-                 "fastload writer: Offset into file cannot be zero!");
+                 "fastload writer: mCIDOffset cannot be zero!");
 
     rv = Write32(aInfo.mCIDOffset);
     if (NS_FAILED(rv))
@@ -1701,16 +1697,7 @@ nsFastLoadFileWriter::ObjectMapEnumerate(PLDHashTable *aTable,
     NS_ASSERTION(index < aTable->entryCount, "bad nsObjectMap index!");
     vector[index] = entry->mInfo;
 
-#ifdef NS_DEBUG
     NS_ASSERTION(entry->mInfo.mStrongRefCnt, "no strong ref in serialization!");
-
-    if ((NS_PTR_TO_INT32(entry->mObject) & MFL_OBJECT_DEF_TAG) == 0) {
-        nsrefcnt rc = entry->mObject->AddRef();
-        NS_ASSERTION(entry->mInfo.mStrongRefCnt <= rc - 2,
-                     "too many strong refs in serialization");
-        entry->mObject->Release();
-    }
-#endif
 
     // Ignore tagged object ids stored as object pointer keys (the updater
     // code does this).
@@ -1795,10 +1782,10 @@ nsFastLoadFileWriter::WriteFooter()
         new nsFastLoadSharpObjectInfo[footerPrefix.mNumSharpObjects];
     if (!objvec)
         return NS_ERROR_OUT_OF_MEMORY;
-    //XXXjrgm bug #189832 [temp. hack]; memset zero so I can catch bogus
-    // entries later
+#ifdef NS_DEBUG
     memset(objvec, 0, footerPrefix.mNumSharpObjects *
                       sizeof(nsFastLoadSharpObjectInfo));
+#endif
 
     count = PL_DHashTableEnumerate(&mObjectMap, ObjectMapEnumerate, objvec);
     NS_ASSERTION(count == footerPrefix.mNumSharpObjects,
@@ -2038,6 +2025,7 @@ nsFastLoadFileWriter::WriteObjectCommon(nsISupports* aObject,
     NS_ASSERTION(rc != 0, "bad refcnt when writing aObject!");
 
     NSFastLoadOID oid;
+    nsCOMPtr<nsIClassInfo> classInfo;
 
     if (rc == 2 && (aTags & MFL_SINGLE_REF_PSEUDO_TAG)) {
         // Dull object: only one strong ref and no weak refs in serialization.
@@ -2079,17 +2067,30 @@ nsFastLoadFileWriter::WriteObjectCommon(nsISupports* aObject,
             entry->mInfo.mStrongRefCnt = aIsStrongRef ? 1 : 0;
             entry->mInfo.mWeakRefCnt   = aIsStrongRef ? 0 : 1;
 
+            // Record in oid the fact that we're defining this object in the
+            // stream, and get the object's class info here, so we can take
+            // note of singletons in order to avoid reserializing them when
+            // updating after reading.
             oid |= MFL_OBJECT_DEF_TAG;
+            classInfo = do_QueryInterface(aObject);
+            if (!classInfo)
+                return NS_ERROR_FAILURE;
+
+            PRUint32 flags;
+            if (NS_SUCCEEDED(classInfo->GetFlags(&flags)) &&
+                (flags & nsIClassInfo::SINGLETON)) {
+                MFL_SET_SINGLETON_FLAG(&entry->mInfo);
+            }
         } else {
             // Already serialized, recover oid and update the desired refcnt.
             oid = entry->mOID;
             if (aIsStrongRef) {
-                entry->mInfo.mStrongRefCnt++;
+                ++entry->mInfo.mStrongRefCnt;
                 NS_ASSERTION(entry->mInfo.mStrongRefCnt != 0,
                              "mStrongRefCnt overflow");
             } else {
-                entry->mInfo.mWeakRefCnt++;
-                NS_ASSERTION(entry->mInfo.mWeakRefCnt != 0,
+                MFL_BUMP_WEAK_REFCNT(&entry->mInfo);
+                NS_ASSERTION(MFL_GET_WEAK_REFCNT(&entry->mInfo) != 0,
                              "mWeakRefCnt overflow");
             }
 
@@ -2106,9 +2107,8 @@ nsFastLoadFileWriter::WriteObjectCommon(nsISupports* aObject,
         return rv;
 
     if (oid & MFL_OBJECT_DEF_TAG) {
-        nsCOMPtr<nsIClassInfo> classInfo(do_QueryInterface(aObject));
         nsCOMPtr<nsISerializable> serializable(do_QueryInterface(aObject));
-        if (!classInfo || !serializable)
+        if (!serializable)
             return NS_ERROR_FAILURE;
 
         nsCID slowCID;
@@ -2329,17 +2329,68 @@ nsFastLoadFileUpdater::Open(nsFastLoadFileReader* aReader)
     // object offset and refcnt information in updater.
     nsFastLoadFileReader::nsObjectMapEntry* readObjectMap =
         aReader->mFooter.mObjectMap;
+
+    // Prepare to save aReader state in case we need to seek back and read a
+    // singleton object that might otherwise get written by this updater.
+    nsDocumentMapReadEntry* saveDocMapEntry = nsnull;
+    nsCOMPtr<nsISeekableStream> inputSeekable;
+    PRUint32 saveOffset = 0;
+
     for (i = 0, n = aReader->mFooter.mNumSharpObjects; i < n; i++) {
         nsFastLoadFileReader::nsObjectMapEntry* readEntry = &readObjectMap[i];
 
-        //XXXjrgm bug #189832 [temp. hack]; if an offset is zero, we've hit
-        // the bug and most abort fastload now.
         NS_ASSERTION(readEntry->mCIDOffset != 0,
-                     "fastload updater: Offset into file cannot be zero!");
-        if (readEntry->mCIDOffset == 0) 
-            return NS_ERROR_UNEXPECTED;
+                     "fastload updater: mCIDOffset cannot be zero!");
+
+        // If the reader didn't read this object but it's a singleton, we must
+        // "deserialize" it now, to discover its one and only root nsISupports
+        // address.  The object already exists in memory if it was created at
+        // startup without resort to the FastLoad file.  The canonical example
+        // is the system principal object held by all XUL JS scripts.
 
         nsISupports* obj = readEntry->mReadObject;
+        if (!obj && MFL_GET_SINGLETON_FLAG(readEntry)) {
+            if (!saveDocMapEntry) {
+                inputSeekable = do_QueryInterface(aReader->mInputStream);
+                rv = inputSeekable->Tell(&saveOffset);
+                if (NS_FAILED(rv))
+                    return rv;
+
+                saveDocMapEntry = aReader->mCurrentDocumentMapEntry;
+                aReader->mCurrentDocumentMapEntry = nsnull;
+            }
+
+            rv = inputSeekable->Seek(nsISeekableStream::NS_SEEK_SET,
+                                     readEntry->mCIDOffset);
+            if (NS_FAILED(rv))
+                return rv;
+
+            rv = aReader
+                 ->DeserializeObject(getter_AddRefs(readEntry->mReadObject));
+            if (NS_FAILED(rv))
+                return rv;
+            obj = readEntry->mReadObject;
+
+            // Don't forget to set mSkipOffset in case someone calls the reader
+            // to "deserialize" (yet again) the object we just read.
+            //
+            // Say the singleton is the system principal, and the FastLoad file
+            // contains data for navigator.xul including scripts and functions.
+            // If we update the FastLoad file to contain data for messenger.xul
+            // in a separate session started via mozilla -mail, *and during the
+            // same FastLoad episode in this session* race to open a navigator
+            // window, we will attempt to read all objects serialized in the
+            // navigator.xul portion of the FastLoad file.
+            //
+            // mSkipOffset must be set in such a case so the reader can skip
+            // the system principal's serialized data, because the updater for
+            // messenger.xul being opened here has already read it.
+
+            rv = inputSeekable->Tell(&readEntry->mSkipOffset);
+            if (NS_FAILED(rv))
+                return rv;
+        }
+
         NSFastLoadOID oid = MFL_SHARP_INDEX_TO_OID(i);
         void* key = obj
                     ? NS_REINTERPRET_CAST(void*, obj)
@@ -2360,6 +2411,15 @@ nsFastLoadFileUpdater::Open(nsFastLoadFileReader* aReader)
         writeEntry->mInfo.mCIDOffset = readEntry->mCIDOffset;
         writeEntry->mInfo.mStrongRefCnt = readEntry->mSaveStrongRefCnt;
         writeEntry->mInfo.mWeakRefCnt = readEntry->mSaveWeakRefCnt;
+    }
+
+    // If we had to read any singletons, restore aReader's saved state.
+    if (saveDocMapEntry) {
+        rv = inputSeekable->Seek(nsISeekableStream::NS_SEEK_SET, saveOffset);
+        if (NS_FAILED(rv))
+            return rv;
+
+        aReader->mCurrentDocumentMapEntry = saveDocMapEntry;
     }
 
     // Copy URI spec string and initial segment offset in FastLoad file from
