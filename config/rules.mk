@@ -1138,6 +1138,26 @@ endif
 #                  Top-level makefiles (the same one copying the rdf manifests
 #                  and generating the jar file) should define this macro.
 #                  This will notify the chrome registry of a new installation.
+ifneq ($(MOZ_ENABLE_JAR_PACKAGING),)
+
+JAR_MANIFEST := jar.mn
+install::
+	@if test -f $(JAR_MANIFEST); then $(PERL) $(DEPTH)/config/make-jars.pl -d $(DIST)/bin/chrome < $(JAR_MANIFEST); fi
+
+ifneq ($(CHROME_TYPE),)
+install:: $(addprefix bogus/, $(CHROME_TYPE))
+
+$(addprefix bogus/, $(CHROME_TYPE)):
+	@echo $(patsubst bogus/%, %, $@),install,url,jar:resource:/chrome/$(CHROME_DIR).jar!/ >>$(DEPTH)/dist/bin/chrome/installed-chrome.txt
+endif #CHROME_TYPE
+
+# keeping this in so that bad install rules will work.
+ifneq ($(CHROME_DIR),)
+CHROME_DIST := $(DIST)/bin/chrome/$(CHROME_DIR)
+endif
+
+else # MOZ_DISBALE_JAR_PACKAGING
+
 ifneq ($(CHROME_DIR),)
 CHROME_DIST := $(DIST)/bin/chrome/$(CHROME_DIR)
 
@@ -1188,7 +1208,9 @@ $(addprefix bogus/, $(CHROME_TYPE)):
 	@echo $(patsubst bogus/%, %, $@),install,url,resource:/chrome/$(CHROME_DIR)/ >>$(DEPTH)/dist/bin/chrome/installed-chrome.txt
 endif
 
-endif
+endif #chrome
+
+endif # MOZ_DISABLE_JAR_PACKAGING
 # chrome
 ##############################################################################
 
