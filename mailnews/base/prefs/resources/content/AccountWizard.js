@@ -223,7 +223,7 @@ function FinishAccount()
     // transfer all attributes from the accountdata
     finishAccount(gCurrentAccount, accountData);
     
-    setupCopiesAndFoldersServer(gCurrentAccount);
+    setupCopiesAndFoldersServer(gCurrentAccount, getCurrentServerIsDeferred(pageData));
 
     if (!serverIsNntp(pageData))
         EnableCheckMailAtStartUpIfNeeded(gCurrentAccount);
@@ -611,13 +611,14 @@ function verifyLocalFoldersAccount()
 
 }
 
-function setupCopiesAndFoldersServer(account)
+function setupCopiesAndFoldersServer(account, accountIsDeferred)
 {
   try {
     var server = account.incomingServer;
     var identity = account.identities.QueryElementAt(0, Components.interfaces.nsIMsgIdentity);
-    // for this server, do we default the folder prefs to this server, or to the "Local Folders" server
-    var defaultCopiesAndFoldersPrefsToServer = server.defaultCopiesAndFoldersPrefsToServer;
+    // For this server, do we default the folder prefs to this server, or to the "Local Folders" server
+    // If it's deferred, we use the local folders account.
+    var defaultCopiesAndFoldersPrefsToServer = !accountIsDeferred && server.defaultCopiesAndFoldersPrefsToServer;
     dump ("verifying local folders account \n");
 
     var copiesAndFoldersServer = null;
@@ -889,7 +890,7 @@ function getCurrentServerType(pageData) {
 
 function getCurrentServerIsDeferred(pageData) {
     var serverDeferred = false; 
-    if (pageData.server && pageData.server.deferStorage)
+    if (getCurrentServerType(pageData) == "pop3" && pageData.server && pageData.server.deferStorage)
         serverDeferred = pageData.server.deferStorage.value;
 
     return serverDeferred;
