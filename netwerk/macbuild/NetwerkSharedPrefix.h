@@ -24,5 +24,3 @@
 #define _IMPL_NS_NET
 
 #include "MacSharedPrefix.h"
-
-#include <limits.h>
