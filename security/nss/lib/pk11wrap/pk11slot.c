@@ -522,6 +522,38 @@ PK11_ExitSlotMonitor(PK11SlotInfo *slot) {
 /***********************************************************
  * Functions to find specific slots.
  ***********************************************************/
+PRBool
+SECMOD_HasRootCerts(void)
+{
+   SECMODModuleList *mlp;
+   SECMODModuleList *modules = SECMOD_GetDefaultModuleList();
+   SECMODListLock *moduleLock = SECMOD_GetDefaultModuleListLock();
+   int i;
+   PK11SlotInfo *slot = NULL;
+   PRBool found = PR_FALSE;
+
+   /* work through all the slots */
+   SECMOD_GetReadLock(moduleLock);
+   for(mlp = modules; mlp != NULL; mlp = mlp->next) {
+	for (i=0; i < mlp->module->slotCount; i++) {
+	    PK11SlotInfo *tmpSlot = mlp->module->slots[i];
+	    if (PK11_IsPresent(tmpSlot)) {
+		if (tmpSlot->hasRootCerts) {
+		    found = PR_TRUE;
+		    break;
+		}
+	    }
+	}
+	if (found) break;
+    }
+    SECMOD_ReleaseReadLock(moduleLock);
+
+    return found;
+}
+
+/***********************************************************
+ * Functions to find specific slots.
+ ***********************************************************/
 PK11SlotInfo *
 PK11_FindSlotByName(char *name)
 {
