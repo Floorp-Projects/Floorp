@@ -517,8 +517,7 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext* aPresContext,
           // bug 125624.
           if (presShell) {
             nsCOMPtr<nsIContent> form(do_QueryInterface(mForm));
-            presShell->HandleEventWithTarget(&event, nsnull, form,
-                                             NS_EVENT_FLAG_INIT, &status);
+            presShell->HandleDOMEventWithTarget(form, &event, &status);
           }
         }
       }
