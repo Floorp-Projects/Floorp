@@ -370,12 +370,19 @@ NS_METHOD nsWidget::Invalidate(PRBool aIsSynchronous)
     return NS_ERROR_FAILURE;
   }
   
-  ::gtk_widget_queue_draw(mWidget);
+  if (aIsSynchronous)
+    ::gtk_widget_draw(mWidget, NULL);
+  else
+    ::gtk_widget_queue_draw(mWidget);
+    
   return NS_OK;
 }
 
 NS_METHOD nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 {
+  GdkRectangle nRect;
+  GdkRectangle wRect;
+  
   if (mWidget == nsnull) {
     return NS_ERROR_FAILURE;
   }
@@ -387,18 +394,31 @@ NS_METHOD nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
   if (!GTK_WIDGET_REALIZED (GTK_WIDGET(mWidget))) {
     return NS_ERROR_FAILURE;
   }
-  ::gtk_widget_queue_draw_area(mWidget,
-                               aRect.width, aRect.height,
-                               aRect.x, aRect.y);
+
+  nRect.width = aRect.width;
+  nRect.height = aRect.height;
+  nRect.x = aRect.x;
+  nRect.y = aRect.y;
+
+  if (aIsSynchronous)
+    if (gtk_widget_intersect(mWidget, &nRect, &wRect))
+      ::gtk_widget_draw(mWidget, &wRect);
+  else
+    if (gtk_widget_intersect(mWidget, &nRect, &wRect))
+      ::gtk_widget_queue_draw_area(mWidget,
+                                   aRect.width, aRect.height,
+                                   aRect.x, aRect.y);
 
   return NS_OK;
 }
 
 NS_METHOD nsWidget::Update(void)
 {
-  
-    NS_NOTYETIMPLEMENTED("nsWidget::Update");
+  if (!mIsDestroying) {
+    ::gtk_widget_draw(mWidget, NULL);
     return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
 }
 
 //-------------------------------------------------------------------------
