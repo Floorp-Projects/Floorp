@@ -2164,13 +2164,10 @@ si_RestoreOldSignonDataFromBrowser
 PUBLIC nsresult
 SINGSIGN_PromptUsernameAndPassword
     (const PRUnichar *text, PRUnichar **user, PRUnichar **pwd,
-     const char *urlname, PRBool *returnValue) {
+     const char *urlname, nsIPrompt* dialog, PRBool *returnValue) {
 
   nsresult res;
-  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
-  if (NS_FAILED(res)) {
-    return res;
-  }
+
 
   /* do only the dialog if signon preference is not enabled */
   if (!si_GetSignonRememberingPref()){
@@ -2223,14 +2220,10 @@ SINGSIGN_PromptUsernameAndPassword
 
 PUBLIC nsresult
 SINGSIGN_PromptPassword
-    (const PRUnichar *text, PRUnichar **pwd, const char *urlname, PRBool *returnValue) {
+    (const PRUnichar *text, PRUnichar **pwd, const char *urlname, nsIPrompt* dialog, PRBool *returnValue) {
 
   nsresult res;
   char *password=0, *username=0;
-  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
-  if (NS_FAILED(res)) {
-    return res;
-  }
 
   /* do only the dialog if signon preference is not enabled */
   if (!si_GetSignonRememberingPref()){
@@ -2309,7 +2302,7 @@ SINGSIGN_PromptPassword
 PUBLIC nsresult
 SINGSIGN_Prompt
     (const PRUnichar *text, const PRUnichar *defaultText,
-     PRUnichar **resultText, const char *urlname, PRBool *returnValue) {
+     PRUnichar **resultText, const char *urlname,nsIPrompt* dialog, PRBool *returnValue) {
   return NS_OK;
 }
 

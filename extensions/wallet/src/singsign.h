@@ -28,7 +28,7 @@
 
 #include "ntypes.h"
 #include "nsString.h"
-
+class nsIPrompt;
 XP_BEGIN_PROTOS
 
 extern void
@@ -46,16 +46,16 @@ SINGSIGN_RestoreSignonData(char* URLName, char* name, char** value);
 extern nsresult
 SINGSIGN_PromptUsernameAndPassword
     (const PRUnichar *text, PRUnichar **user, PRUnichar **pwd,
-     const char *urlname, PRBool *returnValue);
+     const char *urlname,nsIPrompt* dialog, PRBool *returnValue);
 
 extern nsresult
 SINGSIGN_PromptPassword
-    (const PRUnichar *text, PRUnichar **pwd, const char *urlname, PRBool *returnValue);
+    (const PRUnichar *text, PRUnichar **pwd, const char *urlname,nsIPrompt* dialog, PRBool *returnValue);
 
 extern nsresult
 SINGSIGN_Prompt
     (const PRUnichar *text, const PRUnichar *defaultText, PRUnichar **resultText,
-     const char *urlname, PRBool *returnValue);
+     const char *urlname,nsIPrompt* dialog, PRBool *returnValue);
 
 extern PRBool
 SINGSIGN_RemoveUser(const char *URLName, char *userName);

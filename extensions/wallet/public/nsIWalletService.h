@@ -24,7 +24,7 @@
 #include "nsString.h"
 #include "nsIPresShell.h"
 #include "nsIURL.h"
-
+#include "nsIPrompt.h"
 // {738CFD51-ABCF-11d2-AB4B-0080C787AD96}
 #define NS_IWALLETSERVICE_IID	 \
 { 0x738cfd51, 0xabcf, 0x11d2, { 0xab, 0x4b, 0x0, 0x80, 0xc7, 0x87, 0xad, 0x96 } }
@@ -56,12 +56,12 @@ struct nsIWalletService : public nsISupports
 
   NS_IMETHOD PromptUsernameAndPasswordURL
     (const PRUnichar *text, PRUnichar **user, PRUnichar **pwd,
-     const char *urlname, PRBool *_retval) = 0;
+     const char *urlname, nsIPrompt* dialog, PRBool *_retval) = 0;
   NS_IMETHOD PromptPasswordURL
-    (const PRUnichar *text, PRUnichar **pwd, const char *urlname, PRBool *_retval) = 0;
+    (const PRUnichar *text, PRUnichar **pwd, const char *urlname,nsIPrompt* dialog,  PRBool *_retval) = 0;
   NS_IMETHOD PromptURL
     (const PRUnichar *text, const PRUnichar *defaultText, PRUnichar **result,
-     const char *urlname, PRBool *_retval) = 0;
+     const char *urlname, nsIPrompt* dialog, PRBool *_retval) = 0;
   NS_IMETHOD SI_RemoveUser(const char *URLName, char *userName) = 0;
 
   NS_IMETHOD WALLET_GetNopreviewListForViewer(nsString& aNopreviewList) = 0;
