@@ -84,9 +84,6 @@ public:
                        nsIStyleContext* aContext,
                        nsIFrame*        aPrevInFlow);
 
-  NS_IMETHOD DidReflow(nsIPresContext* aPresContext,
-                       nsDidReflowStatus aStatus);
-
   NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
                          nsGUIEvent*     aEvent,
                          nsEventStatus*  aEventStatus);

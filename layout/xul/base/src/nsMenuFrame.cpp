@@ -674,9 +674,8 @@ nsMenuFrame::Reflow(nsIPresContext*   aPresContext,
         }   
     } 
 
-  if (popupChild)
-  {
-
+  // Handle reflowing our subordinate popup
+  if (popupChild) {         
       // Constrain the child's width and height to aAvailableWidth and aAvailableHeight
       nsSize availSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
       nsHTMLReflowState kidReflowState(aPresContext, aReflowState, popupChild,
@@ -690,16 +689,13 @@ nsMenuFrame::Reflow(nsIPresContext*   aPresContext,
       nsresult rv = ReflowChild(popupChild, aPresContext, kidDesiredSize, kidReflowState,
                        rect.x, rect.y, NS_FRAME_NO_MOVE_VIEW, aStatus);
 
-       // Set the child's width and height to its desired size
-       // Note: don't position or size the view now, we'll do that in the
-       // DidReflow() function
-      popupChild->SizeTo(aPresContext, kidDesiredSize.width, kidDesiredSize.height);
-      popupChild->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
+      // Set the child's width and height to its desired size
+      // Note: don't position or size the view now, we'll do that in the
+      // DidReflow() function
+      FinishReflowChild(popupChild, aPresContext, kidDesiredSize, rect.x, rect.y, NS_FRAME_NO_MOVE_VIEW);
   }
 
   nsresult rv = nsBoxFrame::Reflow(aPresContext, aDesiredSize, boxState, aStatus);
-    
-
 
   return rv;
 }
