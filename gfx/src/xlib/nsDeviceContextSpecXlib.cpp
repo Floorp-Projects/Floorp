@@ -1034,6 +1034,11 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
   mGlobalPrinterList = new nsStringArray();
   if (!mGlobalPrinterList) 
     return NS_ERROR_OUT_OF_MEMORY;
+
+  nsresult rv;
+  nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+  if (NS_FAILED(rv))
+    return rv;
       
 #ifdef USE_XPRINT   
   XPPrinterList plist = XpuGetPrinterList(nsnull, &mGlobalNumPrinters);
@@ -1041,9 +1046,13 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
   if (plist && (mGlobalNumPrinters > 0))
   {  
     int i;
-    for(  i = 0 ; i < mGlobalNumPrinters ; i++ )
+    for( i = 0 ; i < mGlobalNumPrinters ; i++ )
     {
-      mGlobalPrinterList->AppendString(nsString(NS_ConvertASCIItoUCS2(plist[i].name)));
+      /* Add name to our list of printers... */
+      mGlobalPrinterList->AppendString(nsString(NS_ConvertUTF8toUCS2(plist[i].name)));
+
+      /* ... and store the description text for this printer */
+      pPrefs->SetCharPref(nsPrintfCString(256, "print.printer_%s.printer_description", plist[i].name).get(), plist[i].desc);      
     }
     
     XpuFreePrinterList(plist);
@@ -1051,7 +1060,6 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
 #endif /* USE_XPRINT */
 
 #ifdef USE_POSTSCRIPT
-  nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID);
   PRBool psPrintModuleEnabled = PR_TRUE;
 
   const char *val = PR_GetEnv("MOZILLA_POSTSCRIPT_ENABLED");
@@ -1061,10 +1069,8 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
   }
   else
   {
-    if (pPrefs) {
-      if (NS_FAILED(pPrefs->GetBoolPref("print.postscript.enabled", &psPrintModuleEnabled))) {
-        psPrintModuleEnabled = PR_TRUE;
-      }
+    if (NS_FAILED(pPrefs->GetBoolPref("print.postscript.enabled", &psPrintModuleEnabled))) {
+      psPrintModuleEnabled = PR_TRUE;
     }
   }
 
@@ -1077,9 +1083,7 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
     printerList = PR_GetEnv("MOZILLA_POSTSCRIPT_PRINTER_LIST");
 
     if (!printerList) {
-      if (pPrefs) {
-        (void) pPrefs->CopyCharPref("print.printer_list", &printerList);
-      }
+      (void) pPrefs->CopyCharPref("print.printer_list", &printerList);
     }  
 
     if (printerList) {

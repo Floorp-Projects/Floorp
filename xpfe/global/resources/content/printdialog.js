@@ -60,6 +60,7 @@ function initDialog()
   dialog = new Object;
 
   dialog.propertiesButton = document.getElementById("properties");
+  dialog.descText         = document.getElementById("descText");
 
   dialog.destGroup       = document.getElementById("destGroup");
   dialog.fileRadio       = document.getElementById("fileRadio");
@@ -135,6 +136,20 @@ function doEnablePrintToFile(value)
 }
 
 //---------------------------------------------------
+function getPrinterDescription(printerName)
+{
+  var s = "";
+
+  try {
+    /* This may not work with non-ASCII test (see bug 235763 comment #16) */
+    s = gPrefs.getCharPref("print.printer_" + printerName + ".printer_description")
+  } catch(e) {
+  }
+    
+  return s;
+}
+
+//---------------------------------------------------
 function listElement(aListElement)
   {
     this.listElement = aListElement;
@@ -146,13 +161,16 @@ listElement.prototype =
       function ()
         {
           // remove the menupopup node child of the menulist.
-          this.listElement.removeChild(this.listElement.firstChild);
+          var popup = this.listElement.firstChild;
+          if (popup) {
+            this.listElement.removeChild(popup);
+          }
         },
 
     appendPrinterNames: 
       function (aDataObject) 
         { 
-          var popupNode = document.createElement("menupopup"); 
+          var list = document.getElementById("printerList"); 
           var strDefaultPrinterName = "";
           var printerName;
 
@@ -163,10 +181,8 @@ listElement.prototype =
             var printerNameStr = printerName.toString();
             if (strDefaultPrinterName == "")
                strDefaultPrinterName = printerNameStr;
-            var itemNode = document.createElement("menuitem");
-            itemNode.setAttribute("value", printerNameStr);
-            itemNode.setAttribute("label", printerNameStr);
-            popupNode.appendChild(itemNode);
+
+            list.appendItem(printerNameStr, printerNameStr, getPrinterDescription(printerNameStr));
           }
           if (strDefaultPrinterName != "") {
             this.listElement.removeAttribute("disabled");
@@ -186,7 +202,6 @@ listElement.prototype =
             doEnablePrintToFile(false);
           }
 
-          this.listElement.appendChild(popupNode); 
           return strDefaultPrinterName;
         } 
   };
@@ -212,6 +227,8 @@ function getPrinters()
 function setPrinterDefaultsForSelectedPrinter()
 {
   gPrintSettings.printerName = dialog.printerList.value;
+  
+  dialog.descText.value = getPrinterDescription(gPrintSettings.printerName);
   
   // First get any defaults from the printer 
   printService.initPrintSettingsFromPrinter(gPrintSettings.printerName, gPrintSettings);

@@ -26,7 +26,7 @@
    Dan Rosen <dr@netscape.com>
    Jessica Blanco <jblanco@us.ibm.com>
    Asko Tontti <atontti@cc.hut.fi>
-   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
+   Roland Mainz <roland.mainz@nrubsig.org>
 
  Alternatively, the contents of this file may be used under the terms of
  either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -69,20 +69,15 @@
       <rows>
         <row align="center">
           <hbox align="center" pack="end">
-            <label value="&printTo.label;"/>
+            <label id="descTextLabel" control="descText" value="&descText.label;"/>
           </hbox>
-          <radiogroup id="destGroup" orient="horizontal">
-            <radio id="printerRadio" label="&printerRadio.label;" oncommand="if (!this.disabled) doEnablePrintToFile(false);"/>
-            <radio id="fileRadio" label="&fileRadio.label;" oncommand="if (!this.disabled) doEnablePrintToFile(true);"/>
-          </radiogroup>
+          <label id="descText" flex="1" value="-" />
         </row>
         <row align="center">
           <hbox align="center" pack="end">
             <label id="printerLabel" value="&printerInput.label;"/>
           </hbox>
-          <menulist id="printerList" flex="1" oncommand="setPrinterDefaultsForSelectedPrinter();">
-            <menupopup/>
-          </menulist>
+          <menulist id="printerList" flex="1" type="description" oncommand="setPrinterDefaultsForSelectedPrinter();"/>
           <button id="properties" label="&propertiesButton.label;" oncommand="displayPropertiesDialog();"/>
         </row>
         <row align="center">
@@ -91,6 +86,15 @@
           </hbox>
           <textbox id="fileInput" flex="1" onblur="stripTrailingWhitespace(this)"/>
           <button id="chooseFile" label="&chooseButton.label;" oncommand="onChooseFile()"/>
+        </row>
+        <row align="center">
+          <hbox align="center" pack="end">
+            <label value="&printTo.label;"/>
+          </hbox>
+          <radiogroup id="destGroup" orient="horizontal">
+            <radio id="printerRadio" label="&printerRadio.label;" oncommand="if (!this.disabled) doEnablePrintToFile(false);"/>
+            <radio id="fileRadio" label="&fileRadio.label;" oncommand="if (!this.disabled) doEnablePrintToFile(true);"/>
+          </radiogroup>
         </row>
       </rows>
 
