@@ -82,7 +82,7 @@
 <form method="post">
   <input type="hidden" name="tab" value="[% current_tab.name %]">
 
-  [% INCLUDE "prefs/${current_tab.name}.tmpl" %]
+  [% INCLUDE "prefs/${current_tab.name}.tmpl" IF current_tab.name.defined %]
 
   [% IF current_tab.saveable %]
     <input type="hidden" name="dosave" value="1">
