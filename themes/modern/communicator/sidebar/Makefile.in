@@ -42,6 +42,16 @@ EXPORT_RESOURCE_SAMPLES = \
         list-down.gif \
         sidebar-bottomright-cap.gif \
         sidebarSplitterBindings.xml \
+        sbtab-darkondark-left.gif \
+        sbtab-darkondark-right.gif \
+        sbtab-darkonlight-left.gif \
+        sbtab-darkonlight-right.gif \
+        sbtab-lightondark-left.gif \
+        sbtab-lightondark-right.gif \
+        sbtab-dark.gif \
+        sbtab-light.gif \
+        sbsplitter-bg.gif \
+        sbpicker-arrow.gif \
 	sbgrippy-left-hover.gif \
 	sbgrippy-left.gif \
 	sbgrippy-right-hover.gif \
