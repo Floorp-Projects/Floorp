@@ -812,6 +812,12 @@ static PLHashTable* gFamilyNames = nsnull;
 
 static nsFontFamilyName gFamilyNameTable[] =
 {
+#ifdef MOZ_MATHML
+  { "cmex",             "cmex10" },
+  { "cmsy",             "cmsy10" },
+  { "-moz-math-text",   "times" },
+  { "-moz-math-symbol", "symbol" },
+#endif
   { "arial",           "helvetica" },
   { "courier new",     "courier" },
   { "times new roman", "times" },
@@ -859,7 +865,13 @@ static nsFontPropertyName gStretchNames[] =
 };
 
 static PLHashTable* gCharSets = nsnull;
+#ifdef MOZ_MATHML
+static PLHashTable* gSpecialCharSets = nsnull;
+#endif
 
+#ifdef MOZ_MATHML
+static nsFontCharSetInfo Special = { nsnull };
+#endif
 static nsFontCharSetInfo Ignore = { nsnull };
 
 static gint
@@ -1028,6 +1040,14 @@ static nsFontCharSetInfo X11Johab =
 
 static nsFontCharSetInfo ISO106461 =
   { nsnull, ISO10646Convert, 1 };
+#ifdef MOZ_MATHML
+static nsFontCharSetInfo AdobeSymbol =
+   { "Adobe-Symbol-Encoding", SingleByteConvert, 0 };
+static nsFontCharSetInfo CMCMEX =
+   { "x-cm-cmex", SingleByteConvert, 0 };
+static nsFontCharSetInfo CMCMSY =
+   { "x-cm-cmsy", SingleByteConvert, 0 };
+#endif
 
 /*
  * Normally, the charset of an X font can be determined simply by looking at
@@ -1059,7 +1079,9 @@ static nsFontCharSetMap gCharSetMap[] =
 {
   { "-ascii",             &Ignore        },
   { "-ibm pc",            &Ignore        },
-  { "adobe-fontspecific", &Ignore        },
+#ifdef MOZ_MATHML
+  { "adobe-fontspecific", &Special       },
+#endif
   { "cns11643.1986-1",    &CNS116431     },
   { "cns11643.1986-2",    &CNS116432     },
   { "cns11643.1992-1",    &CNS116431     },
@@ -1139,6 +1161,17 @@ static nsFontCharSetMap gCharSetMap[] =
 
   { nsnull,               nsnull         }
 };
+
+#ifdef MOZ_MATHML
+static nsFontCharSetMap gSpecialCharSetMap[] =
+{
+  { "symbol-adobe-fontspecific", &AdobeSymbol  },
+  { "cmex10-adobe-fontspecific", &CMCMEX  },
+  { "cmsy10-adobe-fontspecific", &CMCMSY  },
+
+  { nsnull,                      nsnull        }
+};
+#endif
 
 #undef DEBUG_DUMP_TREE
 #ifdef DEBUG_DUMP_TREE
@@ -1317,8 +1350,8 @@ PickASizeAndLoad(nsFontSearch* aSearch, nsFontStretch* aStretch,
   nsFontCharSet* aCharSet)
 {
   nsFontGTK* s = nsnull;
-  nsFontGTK* begin;
-  nsFontGTK* end;
+  nsFontGTK* begin = nsnull;
+  nsFontGTK* end = nsnull;
   nsFontMetricsGTK* m = aSearch->mMetrics;
   int desiredSize = m->mPixelSize;
   int scalable = 0;
@@ -1465,6 +1498,58 @@ PickASizeAndLoad(nsFontSearch* aSearch, nsFontStretch* aStretch,
     }
   }
 
+#ifdef MOZ_MATHML
+  // CSS font-family bug fix 
+  // CSS font-family order is not respected without the following fix.
+  // The idea is to ensure that even though the character being searched
+  // for may not have a glyph in the current font, we need to load it anyway
+  // if it was one of the fonts requested in the CSS font-family property.
+  // Otherwise, the FindFont ('a') hack in ::Init () can disrupt the order.
+  // The font has been requested if (m->mFontsIndex <= m->mFontsCount) is true.
+
+  // previously we tested for !IS_REPRESENTABLE only for those cases
+  // where aCharSet->mInfo->mCharSet was not set since otherwise
+  // it was caught in SearchCharSet (). 
+  // but now if the font requested is in CSS font-family we have disabled
+  // the test in SearchCharSet () and so need to test it here. 
+  // in effect we have to test for !IS_REPRESENTABLE always now.
+  PRBool fontHasGlyph = IS_REPRESENTABLE(s->mMap, aSearch->mChar);
+    
+  // if fontHasGlyph definitely load.
+  // else if font was requested in css font-family property list,
+  // also definitely load to repect the order in the list.
+  if (fontHasGlyph || (m->mFontsIndex <= m->mFontsCount)) {
+    if (m->mLoadedFontsCount == m->mLoadedFontsAlloc) {
+      int newSize;
+      if (m->mLoadedFontsAlloc) {
+        newSize = (2 * m->mLoadedFontsAlloc);
+      }
+      else {
+        newSize = 1;
+      }
+      nsFontGTK** newPointer = (nsFontGTK**) 
+        PR_Realloc(m->mLoadedFonts, newSize * sizeof(nsFontGTK*));
+      if (newPointer) {
+        m->mLoadedFonts = newPointer;
+        m->mLoadedFontsAlloc = newSize;
+      }
+      else {
+        return;
+      }
+    }
+    m->mLoadedFonts[m->mLoadedFontsCount++] = s;
+  }
+  // need to update mFontsIndex to function correctly next time around
+  if (m->mFontsIndex == m->mFontsCount) {
+    (m->mFontsIndex)++;
+  }
+
+  // finally, indicate that search for the char 
+  // has succeeded if fontHasGlyph
+  if (fontHasGlyph) {
+    aSearch->mFont = s;
+  }
+#else /* MOZ_MATHML */
   if (!aCharSet->mInfo->mCharSet) {
     if (!IS_REPRESENTABLE(s->mMap, aSearch->mChar)) {
       return;
@@ -1491,11 +1576,14 @@ PickASizeAndLoad(nsFontSearch* aSearch, nsFontStretch* aStretch,
   }
   m->mLoadedFonts[m->mLoadedFontsCount++] = s;
   aSearch->mFont = s;
+#endif /* !MOZ_MATHML */
 
 #ifdef REALLY_NOISY_FONTS
   nsFontGTK* result = s;
-  for (s = begin; s < end; s++) {
-    printf("%d/%d ", s->mSize, s->mActualSize);
+  if ((begin != nsnull) && (end != nsnull)) {
+    for (s = begin; s < end; s++) {
+      printf("%d/%d ", s->mSize, s->mActualSize);
+    }
   }
   printf("%s[%s]: desired %d chose %d\n", aSearch->mFont->mName,
          aSearch->mFont->mCharSetInfo->mCharSet,
@@ -1786,6 +1874,7 @@ SearchCharSet(PLHashEntry* he, PRIntn i, void* arg)
   nsFontCharSetInfo* charSetInfo = charSet->mInfo;
   PRUint32* map = charSetInfo->mMap;
   nsFontSearch* search = (nsFontSearch*) arg;
+  nsFontMetricsGTK* m = search->mMetrics;
   PRUnichar c = search->mChar;
 #ifdef REALLY_NOISY_FONTS
   printf("%s: searching for character c=0x%x (%d) '%c' in %s\n",
@@ -1800,12 +1889,25 @@ SearchCharSet(PLHashEntry* he, PRIntn i, void* arg)
       charSetInfo->mMap = map;
       SetUpFontCharSetInfo(charSetInfo);
     }
-    if (!IS_REPRESENTABLE(map, c)) {
+#ifdef MOZ_MATHML
+    // CSS font-family bug fix 
+    // Check if font has been requested from CSS font-family, 
+    // if so ignore IS_REPRESENTABLE. It gets tested again 
+    // in PickASizeAndLoad (), see comments there.
+    // if font has'nt been requested, we do a redundant test here for speed.
+    if (m->mFontsIndex >= m->mFontsCount) {
+       if (!IS_REPRESENTABLE(map, c)) {
 #ifdef REALLY_NOISY_FONTS
-      printf("  ==> character not representable, trying next character set\n");
+         printf("  ==> character not representable, trying next character set\n");
 #endif
-      return HT_ENUMERATE_NEXT;
+         return HT_ENUMERATE_NEXT;
+       }
     }
+#else /* MOZ_MATHML */
+       if (!IS_REPRESENTABLE(map, c)) {
+         return HT_ENUMERATE_NEXT;
+       }
+#endif /* !MOZ_MATHML */
   }
 
   TryCharSet(search, charSet);
@@ -1923,6 +2025,15 @@ GetFontNames(char* aPattern)
     }
     nsFontCharSetInfo* charSetInfo =
       (nsFontCharSetInfo*) PL_HashTableLookup(gCharSets, charSetName);
+#ifdef MOZ_MATHML
+    // indirection for font specific charset encoding 
+    if (charSetInfo == &Special) {
+      char *familyCharSetName = PR_smprintf ("%s-%s", familyName, charSetName);
+      charSetInfo = (nsFontCharSetInfo*) PL_HashTableLookup 
+        (gSpecialCharSets, familyCharSetName);
+      PR_smprintf_free (familyCharSetName);
+    }
+#endif
     if (!charSetInfo) {
 #ifdef NOISY_FONTS
       printf("cannot find charset %s\n", charSetName);
@@ -2136,6 +2247,17 @@ nsFontMetricsGTK::FindFont(PRUnichar aChar)
       PL_HashTableAdd(gCharSets, charSetMap->mName, (void*) charSetMap->mInfo);
       charSetMap++;
     }
+#ifdef MOZ_MATHML
+    gSpecialCharSets = PL_NewHashTable
+      (0, PL_HashString, PL_CompareStrings, NULL, NULL, NULL);
+    nsFontCharSetMap* specialCharSetMap = gSpecialCharSetMap;
+    while (specialCharSetMap->mName) {
+      PL_HashTableAdd (gSpecialCharSets, 
+                       specialCharSetMap->mName, 
+                       (void*) specialCharSetMap->mInfo);
+      specialCharSetMap++;
+    }
+#endif
   }
 
   nsFontSearch search = { this, aChar, nsnull };
@@ -2196,6 +2318,40 @@ nsFontMetricsGTK::FindFont(PRUnichar aChar)
   // Need to draw boxes eventually. Or pop up dialog like plug-in dialog.
   return nsnull;
 }
+
+#ifdef MOZ_MATHML
+// bounding metrics for a string 
+// remember returned values are not in app units
+nsresult
+nsFontMetricsGTK::GetBoundingMetrics (nsFontGTK*         aFont, 
+                                      const PRUnichar*   aString,
+                                      PRUint32           aLength,
+                                      nsBoundingMetrics& aBoundingMetrics)                                 
+{
+  aBoundingMetrics.Clear();               
+
+  if (0 < aLength) {
+    XChar2b buf[512]; // XXX watch buffer length !!!
+    gint len = aFont->mCharSetInfo->Convert(aFont->mCharSetInfo, aString, aLength,
+                                            (char*) buf, sizeof(buf));
+    gdk_text_extents (aFont->mFont, (char*) buf, len, 
+                      &aBoundingMetrics.leftBearing, 
+                      &aBoundingMetrics.rightBearing, 
+                      &aBoundingMetrics.width, 
+                      &aBoundingMetrics.ascent, 
+                      &aBoundingMetrics.descent); 
+    // get italic correction
+    XFontStruct *fontInfo = (XFontStruct *) GDK_FONT_XFONT (aFont->mFont);
+    unsigned long pr = 0;
+    if (::XGetFontProperty(fontInfo, XA_ITALIC_ANGLE, &pr)) {
+      aBoundingMetrics.subItalicCorrection = (gint) pr; 
+      aBoundingMetrics.supItalicCorrection = (gint) pr;
+    }
+  }
+
+  return NS_OK;
+}
+#endif
 
 gint
 nsFontMetricsGTK::GetWidth(nsFontGTK* aFont, const PRUnichar* aString,

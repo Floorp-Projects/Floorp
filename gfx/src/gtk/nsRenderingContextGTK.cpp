@@ -1602,6 +1602,113 @@ NS_IMETHODIMP nsRenderingContextGTK::RetrieveCurrentNativeGraphicData(PRUint32 *
   return NS_OK;
 }
 
+#ifdef MOZ_MATHML
+#ifdef FONT_SWITCHING
+
+NS_IMETHODIMP
+nsRenderingContextGTK::GetBoundingMetrics(const char*        aString, 
+                                          PRUint32           aLength,
+                                          nsBoundingMetrics& aBoundingMetrics)
+{
+  aBoundingMetrics.Clear();
+  if (0 < aLength) {
+    g_return_val_if_fail(aString != NULL, NS_ERROR_FAILURE);
+    gdk_text_extents (mCurrentFont, aString, aLength,
+                      &aBoundingMetrics.leftBearing, 
+                      &aBoundingMetrics.rightBearing, 
+                      &aBoundingMetrics.width, 
+                      &aBoundingMetrics.ascent, 
+                      &aBoundingMetrics.descent);
+    aBoundingMetrics.leftBearing = NSToCoordRound(aBoundingMetrics.leftBearing * mP2T);
+    aBoundingMetrics.rightBearing = NSToCoordRound(aBoundingMetrics.rightBearing * mP2T);
+    aBoundingMetrics.width = NSToCoordRound(aBoundingMetrics.width * mP2T);
+    aBoundingMetrics.ascent = NSToCoordRound(aBoundingMetrics.ascent * mP2T);
+    aBoundingMetrics.descent = NSToCoordRound(aBoundingMetrics.descent * mP2T);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsRenderingContextGTK::GetBoundingMetrics(const PRUnichar*   aString, 
+                                          PRUint32           aLength,
+                                          nsBoundingMetrics& aBoundingMetrics,
+                                          PRInt32*           aFontID)
+{
+  aBoundingMetrics.Clear(); 
+  if (0 < aLength) {
+    g_return_val_if_fail(aString != NULL, NS_ERROR_FAILURE);
+
+    nsFontMetricsGTK* metrics = (nsFontMetricsGTK*) mFontMetrics;
+    nsFontGTK* prevFont = nsnull;
+
+    nsBoundingMetrics rawbm;
+    PRBool firstTime = PR_TRUE;
+    PRUint32 start = 0;
+    PRUint32 i;
+    for (i = 0; i < aLength; i++) {
+      PRUnichar c = aString[i];
+      nsFontGTK* currFont = nsnull;
+      nsFontGTK** font = metrics->mLoadedFonts;
+      nsFontGTK** end = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
+      while (font < end) {
+        if (IS_REPRESENTABLE((*font)->mMap, c)) {
+          currFont = *font;
+          goto FoundFont; // for speed -- avoid "if" statement
+        }
+        font++;
+      }
+      currFont = metrics->FindFont(c);
+    FoundFont:
+      // XXX avoid this test by duplicating code -- erik
+      if (prevFont) {
+        if (currFont != prevFont) {
+          nsFontMetricsGTK::GetBoundingMetrics(prevFont, 
+                                               (const PRUnichar*) &aString[start],
+                                               i - start, rawbm);
+          if (firstTime) {
+            firstTime = PR_FALSE;
+            aBoundingMetrics = rawbm;
+          } 
+          else {
+            aBoundingMetrics += rawbm;
+          }
+          prevFont = currFont;
+          start = i;
+        }
+      }
+      else {
+        prevFont = currFont;
+        start = i;
+      }
+    }
+    
+    if (prevFont) {
+      nsFontMetricsGTK::GetBoundingMetrics(prevFont, 
+                                           (const PRUnichar*) &aString[start],
+                                           i - start, rawbm);
+      if (firstTime) {
+        aBoundingMetrics = rawbm;
+      }
+      else {
+        aBoundingMetrics += rawbm;
+      }
+    }
+    // convert to app units
+    aBoundingMetrics.leftBearing = NSToCoordRound(aBoundingMetrics.leftBearing * mP2T);
+    aBoundingMetrics.rightBearing = NSToCoordRound(aBoundingMetrics.rightBearing * mP2T);
+    aBoundingMetrics.width = NSToCoordRound(aBoundingMetrics.width * mP2T);
+    aBoundingMetrics.ascent = NSToCoordRound(aBoundingMetrics.ascent * mP2T);
+    aBoundingMetrics.descent = NSToCoordRound(aBoundingMetrics.descent * mP2T);
+  }
+  if (nsnull != aFontID)
+    *aFontID = 0;
+
+  return NS_OK;
+}
+#endif /* FONT_SWITCHING */
+#endif /* MOZ_MATHML */
+
 NS_IMETHODIMP nsRenderingContextGTK::ConditionRect( nscoord &x, nscoord &y, nscoord &w, nscoord &h )
 {
   if ( y < -32766 ) {

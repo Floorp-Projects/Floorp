@@ -111,6 +111,16 @@ public:
   nsFontGTK*  FindFont(PRUnichar aChar);
   static gint GetWidth(nsFontGTK* aFont, const PRUnichar* aString,
                        PRUint32 aLength);
+#ifdef MOZ_MATHML
+  // bounding metrics for a string 
+  // remember returned values are not in app units 
+  // - to emulate GetWidth () above
+  static nsresult
+  GetBoundingMetrics(nsFontGTK*         aFont,
+                     const PRUnichar*   aString,
+                     PRUint32           aLength,
+                     nsBoundingMetrics& aBoundingMetrics);
+#endif
   static void DrawString(nsDrawingSurfaceGTK* aSurface, nsFontGTK* aFont,
                          nscoord aX, nscoord aY, const PRUnichar* aString,
 			 PRUint32 aLength);
