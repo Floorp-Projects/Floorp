@@ -34,9 +34,6 @@
 #include "nsNetUtil.h"
 #include "nsMimeTypes.h"
 
-
-static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
-static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 #if defined(PR_LOGGING)
