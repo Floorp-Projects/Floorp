@@ -23,12 +23,14 @@ msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMs
 var msgCompose = null;
 var MAX_RECIPIENTS = 0;
 
+var other_header = "";
 var update_compose_title_as_you_type = true;
 var prefs = Components.classes["component://netscape/preferences"].getService();
 if (prefs) {
 	prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
 	if (prefs) {
 		update_compose_title_as_you_type = prefs.GetBoolPref("mail.update_compose_title_as_you_type");
+		other_header = prefs.CopyCharPref("mail.compose.other.header");
 	}
 }
 
@@ -178,6 +180,17 @@ function ComposeStartup()
 			
 			document.getElementById("msgRecipient#1").focus();
 		}
+	}
+}
+
+function ComposeLoad()
+{
+	dump("\nComposeLoad from XUL\n");
+	var selectNode = document.getElementById('msgRecipientType#1');
+
+	if (other_header != "") {
+		var opt = new Option(other_header + ":", "addr_other");
+		selectNode.add(opt, null); 
 	}
 }
 
@@ -441,6 +454,7 @@ function Recipients2CompFields(msgCompFields)
 		var addrReply = "";
 		var addrNg = "";
 		var addrFollow = "";
+		var addrOther = "";
 		var to_Sep = "";
 		var cc_Sep = "";
 		var bcc_Sep = "";
@@ -461,6 +475,7 @@ function Recipients2CompFields(msgCompFields)
 	    			case "addr_reply"		: addrReply += reply_Sep + fieldValue; reply_Sep = ",";			break;
 	    			case "addr_newsgroups"	: addrNg += ng_Sep + fieldValue; ng_Sep = ",";					break;
 	    			case "addr_followup"	: addrFollow += follow_Sep + fieldValue; follow_Sep = ",";		break;
+                   		case "addr_other"	: addrOther += other_header + ": " + fieldValue + "\n"; 		                break;
 	    		}
 	    	}
 	    	i ++;
@@ -471,6 +486,7 @@ function Recipients2CompFields(msgCompFields)
     	msgCompFields.SetReplyTo(addrReply);
     	msgCompFields.SetNewsgroups(addrNg);
     	msgCompFields.SetFollowupTo(addrFollow);
+        msgCompFields.SetOtherRandomHeaders(addrOther);
 	}
 	else
 		dump("Message Compose Error: msgCompFields is null (ExtractRecipients)");
@@ -510,6 +526,14 @@ function CompFields2Recipients(msgCompFields)
 		{
 			document.getElementById("msgRecipient#" + i).value = fieldValue;
 			document.getElementById("msgRecipientType#" + i).value = "addr_reply";
+			i ++;
+		}		
+
+		fieldValue = msgCompFields.GetOtherRandomHeaders();
+		if (fieldValue != "")
+		{
+			document.getElementById("msgRecipient#" + i).value = fieldValue;
+			document.getElementById("msgRecipientType#" + i).value = "addr_other";
 			i ++;
 		}		
 
