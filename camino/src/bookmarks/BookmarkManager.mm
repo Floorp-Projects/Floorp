@@ -754,16 +754,16 @@ static unsigned gFirstUserCollection = 0;
     [fileScanner scanUpToString:@"<" intoString:&tokenString];
     scanIndex = [fileScanner scanLocation];
     if ((scanIndex+3) < [fileAsString length]) {
-      tokenTag = [[NSString alloc] initWithString:[fileAsString substringWithRange:NSMakeRange(scanIndex,3)]];
+      tokenTag = [[NSString alloc] initWithString:[[fileAsString substringWithRange:NSMakeRange(scanIndex,3)] uppercaseString]];
       // now we pick out if it's something we want to save.
       // check in a "most likely thing first" order
-      if (([tokenTag isEqualToString:@"<DT "]) || ([tokenTag isEqualToString:@"<dt "])) {
+      if ([tokenTag isEqualToString:@"<DT "]) {
         [fileScanner setScanLocation:(scanIndex+1)];
       }
-      else if (([tokenTag isEqualToString:@"<P>"]) || ([tokenTag isEqualToString:@"<p>"])) {
+      else if ([tokenTag isEqualToString:@"<P>"]) {
         [fileScanner setScanLocation:(scanIndex+1)];
       }
-      else if (([tokenTag isEqualToString:@"<A "]) || ([tokenTag isEqualToString:@"<a "])) {
+      else if ([tokenTag isEqualToString:@"<A "]) {
         // adding a new bookmark to end of currentArray.
         [fileScanner scanUpToString:@"</A>" intoString:&tokenString];
         tokenScanner = [[NSScanner alloc] initWithString:tokenString];
@@ -799,7 +799,7 @@ static unsigned gFirstUserCollection = 0;
         [tokenScanner release];
         [fileScanner setScanLocation:([fileScanner scanLocation]+1)];
       }
-      else if (([tokenTag isEqualToString:@"<DD"]) || ([tokenTag isEqualToString:@"<dd"])) {
+      else if ([tokenTag isEqualToString:@"<DD"]) {
         // add a description to current item
         [fileScanner scanUpToString:@">" intoString:NULL];
         [fileScanner setScanLocation:([fileScanner scanLocation]+1)];
@@ -807,7 +807,7 @@ static unsigned gFirstUserCollection = 0;
         [currentItem setDescription:[tokenString stringByRemovingAmpEscapes]];
         justSetTitle = NO;
       }
-      else if (([tokenTag isEqualToString:@"<H3"]) || ([tokenTag isEqualToString:@"<h3"])) {
+      else if ([tokenTag isEqualToString:@"<H3"]) {
         [fileScanner scanUpToString:@"</H3>" intoString:&tokenString];
         currentItem = [currentArray addBookmarkFolder];
         currentArray = (BookmarkFolder *)currentItem;
@@ -828,26 +828,26 @@ static unsigned gFirstUserCollection = 0;
         [tokenScanner release];
         [fileScanner setScanLocation:([fileScanner scanLocation]+1)];
       }
-      else if (([tokenTag isEqualToString:@"<DL"]) || ([tokenTag isEqualToString:@"<dl"])) {
+      else if ([tokenTag isEqualToString:@"<DL"]) {
         [fileScanner setScanLocation:(scanIndex+1)];
       }
-      else if (([tokenTag isEqualToString:@"</D"]) || ([tokenTag isEqualToString:@"</d"])) {
+      else if ([tokenTag isEqualToString:@"</D"]) {
         // note that we only scan for the first two characters of a tag
         // that is why this tag is "</D" and not "</DL"
         currentArray = (BookmarkFolder *)[currentArray parent];
         [fileScanner setScanLocation:(scanIndex+1)];
       }
-      else if (([tokenTag isEqualToString:@"<H1"]) || ([tokenTag isEqualToString:@"<h1"])) {
+      else if ([tokenTag isEqualToString:@"<H1"]) {
         [fileScanner scanUpToString:@">" intoString:NULL];
         [fileScanner scanUpToString:@"</H1>" intoString:NULL];
         [fileScanner setScanLocation:([fileScanner scanLocation]+1)];
       }
-      else if (([tokenTag isEqualToString:@"<BO"]) || ([tokenTag isEqualToString:@"<bo"])) {
+      else if ([tokenTag isEqualToString:@"<BO"]) {
         //omniweb bookmark marker, no doubt
         [fileScanner scanUpToString:@">" intoString:NULL];
         [fileScanner setScanLocation:([fileScanner scanLocation]+1)];
       }
-      else if (([tokenTag isEqualToString:@"</A"]) || ([tokenTag isEqualToString:@"</a"])) {
+      else if ([tokenTag isEqualToString:@"</A"]) {
         // some smartass has a description with </A in its title. Probably uses </H's, too.  Dork.
         // It will be just what was added, so append to string of last key.
         // This this can only happen on older Camino html exports.  
@@ -858,7 +858,7 @@ static unsigned gFirstUserCollection = 0;
           [currentItem setDescription:[[currentItem description] stringByAppendingString:tempItem]];
         [fileScanner setScanLocation:(scanIndex+1)];
       }
-      else if (([tokenTag isEqualToString:@"</H"]) || ([tokenTag isEqualToString:@"</h"])) {
+      else if ([tokenTag isEqualToString:@"</H"]) {
         // if it's not html, we'll include in previous text string
         tempItem = [[NSString alloc] initWithString:[fileAsString substringWithRange:NSMakeRange(scanIndex,1)]];
         if (([tempItem isEqualToString:@"</HT"]) || ([tempItem isEqualToString:@"</ht"]))
@@ -873,6 +873,12 @@ static unsigned gFirstUserCollection = 0;
           [fileScanner setScanLocation:([fileScanner scanLocation]+1)];
         }
         [tempItem release];
+      }
+      // Firefox menu separator
+      else if ([tokenTag isEqualToString:@"<HR"]) {
+          currentItem = [currentArray addBookmark];
+          [(Bookmark *)currentItem setIsSeparator:TRUE];
+          [fileScanner setScanLocation:(scanIndex+1)];          
       }
       else { //beats me.  just close the tag out and continue.
         [fileScanner scanUpToString:@">" intoString:NULL];
