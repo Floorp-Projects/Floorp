@@ -679,28 +679,33 @@ ServiceImpl::RegisterResource(nsIRDFResource* aResource, PRBool replace)
     if (! uri)
         return NS_ERROR_NULL_POINTER;
 
-    nsIRDFResource* prevRes =
-        NS_STATIC_CAST(nsIRDFResource*, PL_HashTableLookup(mResources, uri));
+    PLHashEntry** hep = PL_HashTableRawLookup(mResources, (*mResources->keyHash)(uri), uri);
+    
+    if (*hep) {
+        if (!replace) {
+            NS_WARNING("resource already registered, and replace not specified");
+            return NS_ERROR_FAILURE;    // already registered
+        }
 
-    if (prevRes && !replace) {
-        NS_WARNING("resource already registered, and replace not specified");
-        return NS_ERROR_FAILURE;    // already registered
+        // N.B., we do _not_ release the original resource because we
+        // only ever held a weak reference to it. We simply replace
+        // it.
+
+        (*hep)->value = aResource;
+    }
+    else {
+        const char* key = PL_strdup(uri);
+        if (! key)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        PL_HashTableAdd(mResources, key, aResource);
+
+        // N.B., we only hold a weak reference to the resource: that
+        // way, the resource can be destroyed when the last refcount
+        // goes away. The single addref that the CreateResource() call
+        // made will be owned by the callee.
     }
 
-    if (prevRes) {
-        // XXXwaterson: LEAK! Release the previous key.
-    }
-
-    const char* key = PL_strdup(uri);
-    if (! key)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    PL_HashTableAdd(mResources, key, aResource);
-
-    // *We* don't AddRef() the resource: that way, the resource
-    // can be garbage collected when the last refcount goes
-    // away. The single addref that the CreateResource() call made
-    // will be owned by the callee.
     return NS_OK;
 }
 
@@ -717,13 +722,17 @@ ServiceImpl::UnregisterResource(nsIRDFResource* resource)
     rv = resource->GetValue(getter_Copies(uri));
     if (NS_FAILED(rv)) return rv;
 
-    PL_HashTableRemove(mResources, uri);
+    PLHashEntry** hep = PL_HashTableRawLookup(mResources, (*mResources->keyHash)(uri), uri);
+    NS_ASSERTION(*hep != nsnull, "resource wasn't registered");
+    if (! *hep)
+        return NS_ERROR_FAILURE;
 
-    // XXXwaterson: LEAK! Release the previous key.
+    PL_strfree((char*) (*hep)->key);
 
     // N.B. that we _don't_ release the resource: we only held a weak
     // reference to it in the hashtable.
 
+    PL_HashTableRawRemove(mResources, hep, *hep);
     return NS_OK;
 }
 
@@ -740,21 +749,29 @@ ServiceImpl::RegisterDataSource(nsIRDFDataSource* aDataSource, PRBool replace)
     rv = aDataSource->GetURI(getter_Copies(uri));
     if (NS_FAILED(rv)) return rv;
 
-    nsIRDFDataSource* ds =
-        NS_STATIC_CAST(nsIRDFDataSource*, PL_HashTableLookup(mNamedDataSources, uri));
+    PLHashEntry** hep =
+        PL_HashTableRawLookup(mNamedDataSources, (*mNamedDataSources->keyHash)(uri), uri);
 
-    if (ds) {
-        if (replace)
-            NS_RELEASE(ds);
-        else
-            return NS_ERROR_FAILURE;    // already registered
+    if (*hep) {
+        if (! replace)
+            return NS_ERROR_FAILURE; // already registered
+
+        // N.B., we only hold a weak reference to the datasource, so
+        // just replace the old with the new and don't touch any
+        // refcounts.
+        (*hep)->value = aDataSource;
+    }
+    else {
+        const char* key = PL_strdup(uri);
+        if (! key)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        PL_HashTableAdd(mNamedDataSources, key, aDataSource);
+
+        // N.B., we only hold a weak reference to the datasource, so don't
+        // addref.
     }
 
-    const char* key = PL_strdup(uri);
-    if (! key)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    PL_HashTableAdd(mNamedDataSources, key, aDataSource);
     return NS_OK;
 }
 
@@ -771,16 +788,23 @@ ServiceImpl::UnregisterDataSource(nsIRDFDataSource* aDataSource)
     rv = aDataSource->GetURI(getter_Copies(uri));
     if (NS_FAILED(rv)) return rv;
 
-    if (uri) {
-        nsIRDFDataSource* ds =
-            NS_STATIC_CAST(nsIRDFDataSource*, PL_HashTableLookup(mNamedDataSources, uri));
+    //NS_ASSERTION(uri != nsnull, "datasource has no URI");
+    if (! uri)
+        return NS_ERROR_UNEXPECTED;
 
-        if (! ds)
-            return NS_ERROR_ILLEGAL_VALUE;
+    PLHashEntry** hep =
+        PL_HashTableRawLookup(mNamedDataSources, (*mNamedDataSources->keyHash)(uri), uri);
 
-        // XXXwaterson LEAK! remember to free the key
-        PL_HashTableRemove(mNamedDataSources, uri);
-    }
+    NS_ASSERTION(*hep != nsnull, "datasource was never registered");
+    if (! *hep)
+        return NS_ERROR_ILLEGAL_VALUE;
+
+    PL_strfree((char*) (*hep)->key);
+
+    // N.B., we only held a weak reference to the datasource, so we
+    // don't release here.
+    PL_HashTableRawRemove(mNamedDataSources, hep, *hep);
+
     return NS_OK;
 }
 
