@@ -159,7 +159,14 @@ class _Class:
         raise AttributeError, "%s class has no attribute '%s'" % (self.contractid, attr)
     def createInstance(self, iid = None):
         import xpcom.client
-        return xpcom.client.Component(self.contractid, _get_good_iid(iid))
+        try:
+            return xpcom.client.Component(self.contractid, _get_good_iid(iid))
+        except xpcom.COMException, details:
+            import nsError
+            # Handle "no such component" in a cleaner way for the user.
+            if details.errno == nsError.NS_ERROR_FACTORY_NOT_REGISTERED:
+                raise xpcom.COMException(details.errno, "No such component '%s'" % (self.contractid,))
+            raise # Any other exception reraise.
     def getService(self, iid = None):
         return serviceManager.getServiceByContractID(self.contractid, _get_good_iid(iid))
 
