@@ -1,0 +1,14 @@
+#
+# This is a list of local files which get copied to the mozilla:dist:dom directory
+#
+
+nsIDOMEvent.h
+nsIDOMEventListener.h
+nsIDOMEventCapturer.h
+nsIDOMEventReceiver.h
+nsIDOMFocusListener.h
+nsIDOMKeyListener.h
+nsIDOMLoadListener.h
+nsIDOMMouseListener.h
+nsIDOMMouseMotionListener.h
+nsIDOMDragListener.h

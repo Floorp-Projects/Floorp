@@ -1,0 +1,27 @@
+#
+# This is a list of local files which get copied to the mozilla:dist:widget directory
+#
+
+nsui.h
+nsIWidget.h
+nsIButton.h
+nsICheckButton.h
+nsIListWidget.h
+nsIComboBox.h
+nsITextWidget.h
+nsITextAreaWidget.h
+nsIComboBox.h
+nsIListBox.h
+nsIFileWidget.h
+nsIScrollbar.h
+nsGUIEvent.h
+nsIRadioButton.h
+nsIRadioGroup.h
+nsIMouseListener.h
+nsIEventListener.h
+nsIToolkit.h
+nsWidgetsCID.h
+nsITabWidget.h
+nsITooltipWidget.h
+nsIAppShell.h
+nsStringUtil.h

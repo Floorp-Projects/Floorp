@@ -1,0 +1,8 @@
+#
+# This is a list of local files which get copied to the mozilla:dist:view directory
+#
+
+nsIView.h
+nsIViewManager.h
+nsIScrollableView.h
+nsViewsCID.h
