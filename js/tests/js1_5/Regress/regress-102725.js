@@ -40,7 +40,7 @@ var expectedvalues = [];
  * Successive calls to foo.toString() were producing different answers!
  */
 status = inSection(1);
-foo = new Date().getTime();
+foo = (new Date()).getTime();
 actual = foo.toString();
 expect = foo.toString();
 addThis();
