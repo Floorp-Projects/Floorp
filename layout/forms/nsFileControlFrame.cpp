@@ -20,6 +20,7 @@
 #include "nsFormFrame.h"
 #include "nsButtonControlFrame.h"
 #include "nsTextControlFrame.h"
+#include "nsNativeTextControlFrame.h"   // XXX: remove when frame construction is done properly
 #include "nsIContent.h"
 #include "prtypes.h"
 #include "nsIAtom.h"
@@ -200,7 +201,10 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext&          aPresContext,
     if (disabled) {
       text->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::disabled, nsAutoString("1"), PR_FALSE);  // XXX this should use an "empty" bool value
     }
-    NS_NewTextControlFrame(&childFrame);
+
+    // XXX: hard-wired for the native text control frame
+    // construction of the text control should happen in nsCSSFrameConstruction
+    NS_NewNativeTextControlFrame(&childFrame);
 
      //XXX: This style should be cached, rather than resolved each time.
      // Get pseudo style for the text field
