@@ -18,7 +18,7 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 */
  
-@import url(chrome://global/skin/global.css);
+@import url(chrome://communicator/skin/);
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to HTML */
 @namespace html url("http://www.w3.org/TR/REC-html40"); /* namespace for XUL elements */

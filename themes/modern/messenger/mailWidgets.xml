@@ -73,16 +73,19 @@
       <property name="value" onget="return this.anonymousContent[0].selectedItem.data">
         <setter>
           <![CDATA[
+            dump("(" + this.tagName + "): preselecting " + val + "\n");
             var menulist = this.anonymousContent[0];
             var dataItems = menulist.getElementsByAttribute("data", val);
+            dump("Found " + dataItems.length + " items\n");
             menulist.selectedItem = dataItems[0];
+            dump("done.\n");
           ]]>
         </setter>
       </property>
       <method name="refreshList">
         <body>
           <![CDATA[
-            // dump("Refreshing " + this.tagName + " id=" + this.id + "\n");
+            dump("Refreshing " + this.tagName + " id=" + this.id + "\n");
             var menuItemIds = this.valueIds;
             var menuItemStrings = this.valueStrings;
 
@@ -220,6 +223,8 @@
       <property name="searchAttribute" onget="return this.internalAttribute;">
         <setter>
           <![CDATA[
+            // noop if we're not changing it
+            if (this.internalAttribute == val) return;
             this.internalAttribute = val;
             // we inherit from a deck, so just use it's index attribute
             // to hide/show widgets
@@ -232,11 +237,13 @@
           ]]>
         </setter>
       </property>
-      <property name="value">
+      <property name="value" onget="return this.internalValue;">
         <setter>
           <![CDATA[
+          // val is a nsIMsgSearchValue object
           this.internalValue = val;
-          var type = val.attrib;
+          var attrib = val.attrib;
+          this.searchAttribute = attrib;
           if (type == Components.interfaces.nsMsgSearchAttrib.Priority)
             this.anonymousContent[1].data=val.priority;
           else if (type == Components.interfaces.nsMsgSearchAttrib.MsgStatus)
@@ -245,19 +252,54 @@
             this.anonymousContent[0].value = val.str;
           ]]>
         </setter>
-        <getter>
-          <![CDATA[
-          return this.internalValue;
-          ]]>
-        </getter>
       </property>
     </interface>
   </binding>
-  <binding id="searchterm">
+  <binding id="searchterm" extends="xul:box">
+    <content>
+      <xul:text value="searchterm"/>
+    </content>
     <interface>
       <!-- the three tags that make up a term - to use, set the
            attribute in the XUL to the ID of the term.
         -->
+      <property name="searchTerm" onget="return this.internalSearchTerm">
+        <setter>
+          <![CDATA[
+            this.internalSearchTerm = val;
+
+            var term = val;
+            // val is a nsIMsgSearchTerm
+            var searchAttribute=this.searchattribute;
+            var searchOperator=this.searchoperator;
+            var searchValue=this.searchvalue;
+
+            dump("Setting searchAttribute.value\n");
+            if (searchAttribute) searchAttribute.value = term.attrib;
+            dump("Setting searchOperator.value\n");
+            if (searchOperator) searchOperator.value = val.op;
+            dump("Setting searchValue.value\n");
+            if (searchValue) searchValue.value = term.value;
+          ]]>
+        </setter>
+      </property>
+ 
+      <property name="searchScope">
+        <getter>
+          <![CDATA[
+             var searchAttribute = this.searchAttribute;
+             if (searchAttribute)
+               return this.searchAttribute.searchScope;
+             return undefined;
+           ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+            var searchAttribute = this.searchAttribute;
+            if (searchAttribute) searchAttribute.searchScope=val;
+           ]]>
+        </setter>
+      </property>
       <property name="searchattribute" 
                 onget="return document.getElementById(this.getAttribute('searchattribute'));"
                 onset="this.setAttribute('searchattribute',val.id)"/>
@@ -280,23 +322,6 @@
         <argument name="scope"/>
         <body>
           <![CDATA[
-            var attrib = new Object;
-            var op = new Object;
-            var value = new Object;
-            var booland = new Object;
-            var header = new Object;
-            filter.GetTerm(termIndex, attrib, op, value, booland, header);
-
-            var searchAttribute=this.searchattribute;
-            var searchOperator=this.searchoperator;
-            var searchValue=this.searchvalue;
-
-            if (searchAttribute) {
-              searchAttribute.searchScope = scope;
-              searchAttribute.value = attrib.value;
-            }
-            if (searchOperator) searchOperator.value = op.value;
-            if (searchValue) searchValue.value = value.value;
           ]]>
         </body>
       </method>
