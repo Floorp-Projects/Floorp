@@ -25,6 +25,8 @@
 #include "nsXPComCIID.h"
 #include <stdlib.h>
 
+//#define CMDLINEARGS
+
 #ifdef CMDLINEARGS
 #include "nsICmdLineService.h"
 #endif
@@ -107,7 +109,6 @@ NS_METHOD nsAppShell::Create(int *argc, char **argv)
   rv = nsServiceManager::GetService(kCmdLineServiceCID,
                                     kICmdLineServiceIID,
                                     (nsISupports **)&cmdLineArgs);
- // Get the value of -width option
   rv = cmdLineArgs->GetArgc(argc);
   rv = cmdLineArgs->GetArgv(&argv);
 #endif

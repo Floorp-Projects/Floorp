@@ -80,8 +80,6 @@ nsWindow::nsWindow()
   mDisplayed = PR_FALSE;
   mLowerLeft = PR_FALSE;
   mBorderStyle = GTK_WINDOW_TOPLEVEL;
-  mIsDestroying = PR_FALSE;
-  mOnDestroyCalled = PR_FALSE;
   mFont = nsnull;
 }
 
@@ -93,9 +91,7 @@ nsWindow::nsWindow()
 nsWindow::~nsWindow()
 {
   mIsDestroying = PR_TRUE;
-  if (nsnull != mShell) {
-    Destroy();
-  }
+  Destroy();
 }
 
 PRBool nsWindow::IsChild() const
@@ -106,7 +102,7 @@ PRBool nsWindow::IsChild() const
 //-------------------------------------------------------------------------
 void nsWindow::ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY)
 {
-
+  g_print("nsWindow::ConvertToDeviceCoordinates called\n");
 }
 
 //-------------------------------------------------------------------------
@@ -145,23 +141,19 @@ NS_METHOD nsWindow::Destroy()
 {
   // Call base class first...
   nsWidget::Destroy();
-
-  if (mIsDestroying == PR_TRUE) {
-    if (mShell) {
-    	if (GTK_IS_WIDGET(mShell))
-     		gtk_widget_destroy(mShell);
-    	mShell = nsnull;
-    }
+  if (mShell) {
+    gtk_widget_destroy(mShell);
+    mShell = nsnull;
   }
-
   return NS_OK;
 }
 
 
 gint handle_delete_event(GtkWidget *w, GdkEventAny *e, nsWindow *win)
 {
-  win->SetIsDestroying( PR_TRUE );
+  win->SetIsDestroying(PR_TRUE);
   win->Destroy();
+  
   return TRUE;
 }
 

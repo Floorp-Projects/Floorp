@@ -99,7 +99,6 @@ protected:
   nsIFontMetrics *mFontMetrics;
   PRBool      mVisible;
   PRBool      mDisplayed;
-  PRBool      mIsDestroying;
 
   GtkWindowType mBorderStyle;
 
