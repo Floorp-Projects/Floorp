@@ -24,6 +24,8 @@
 #include "prmem.h"
 #include "nsCRT.h"
 
+#include "nsPhGfxLog.h"
+
 //#define GFX_DEBUG
 
 #ifdef GFX_DEBUG
@@ -96,62 +98,63 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Lock(PRInt32 aX, PRInt32 aY,
                                           PRInt32 *aWidthBytes, PRUint32 aFlags)
 {
 
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Lock - Not Implemented\n"));
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDrawingSurfacePh :: Unlock(void)
 {
-
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Unlock - Not Implemented\n"));
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDrawingSurfacePh :: GetDimensions(PRUint32 *aWidth, PRUint32 *aHeight)
 {
-
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::GetDimensions - Not Implemented\n"));
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDrawingSurfacePh :: IsOffscreen(PRBool *aOffScreen)
 {
-
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::IsOffScreen - Not Implemented\n"));
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDrawingSurfacePh :: IsPixelAddressable(PRBool *aAddressable)
 {
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::IsPixelAddressable - Not Implemented\n"));
 
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDrawingSurfacePh :: GetPixelFormat(nsPixelFormat *aFormat)
 {
-
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::GetPixelFormat - Not Implemented\n"));
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDrawingSurfacePh :: Init( PhGC_t &aGC )
 {
 
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Init with PhGC_t- Not Implemented\n"));
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDrawingSurfacePh :: Init( PhGC_t &aGC, PRUint32 aWidth,
                                           PRUint32 aHeight, PRUint32 aFlags)
 {
-
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Init with PhGC_t + width/height - Not Implemented\n"));
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDrawingSurfacePh :: GetGC( PhGC_t **aGC )
 {
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::GetGC - Not Implemented\n"));
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDrawingSurfacePh :: ReleaseGC( void )
 {
-
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::ReleaseGC - Not Implemented\n"));
   return NS_OK;
 }
-
-
-

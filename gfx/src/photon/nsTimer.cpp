@@ -25,9 +25,12 @@
 #include <signal.h>
 #include <errno.h>
 
+#include <Pt.h>
+
 static NS_DEFINE_IID(kITimerIID, NS_ITIMER_IID);
 
-extern "C" int nsTimerExpired(void *aCallData);
+/* Use the Widget Debug log */
+extern PRLogModuleInfo *PhWidLog;
 
 /*
  * Implementation of timers QNX/Neutrino timers.
@@ -40,222 +43,216 @@ public:
   TimerImpl();
   virtual ~TimerImpl();
 
-  virtual nsresult Init(nsTimerCallbackFunc aFunc,
-                void *aClosure,
-                PRUint32 aDelay);
-
-  virtual nsresult Init(nsITimerCallback *aCallback,
-                PRUint32 aDelay);
-
   NS_DECL_ISUPPORTS
 
-  virtual void Cancel();
-  virtual PRUint32 GetDelay() { return mDelay; }
-  virtual void SetDelay(PRUint32 aDelay) { mDelay=aDelay; };
-  virtual void* GetClosure() { return mClosure; }
+  virtual nsresult  Init( nsTimerCallbackFunc aFunc, void *aClosure, PRUint32 aDelay );
+  virtual nsresult  Init( nsITimerCallback *aCallback, PRUint32 aDelay );
+  virtual void      Cancel();
+  virtual PRUint32  GetDelay() { return mDelay; }
+  virtual void      SetDelay( PRUint32 aDelay ) { mDelay=aDelay; };
+  virtual void*     GetClosure() { return mClosure; }
 
-  void FireTimeout();
+  static int TimerEventHandler( void *aData, pid_t aRcvId, void *aMsg, size_t aMsgLen );
 
 private:
-  nsresult Init(PRUint32 aDelay);
-  nsresult SetupTimer(PRUint32 aDelay);
+
+  nsresult SetupTimer( PRUint32 aDelay );
   
   PRUint32              mDelay;
   nsTimerCallbackFunc   mFunc;
   void                 *mClosure;
   nsITimerCallback     *mCallback;
-  TimerImpl            *mNext;
   timer_t               mTimerId;
+  pid_t                 mPulsePid;
+  PtPulseMsg_t          mPulseMsg;
+  PtPulseMsgId_t       *mPulseMsgId;
+  PtInputId_t          *mInputId;
 };
-
-/*
- * This method is called when the Delay/Duration expires
- */
-void TimerImpl::FireTimeout()
-{
-  printf("TimerImpl::FireTimeout called for %p. mFunc=<%p> and mCallback=<%p>\n", this, mFunc, mCallback);
-  if (mFunc != NULL)
-  {
-    (*mFunc)(this, mClosure);
-  }
-  else if (mCallback != NULL)
-  {
-    mCallback->Notify(this);           // Fire the timer
-  }
-}
 
 
 TimerImpl::TimerImpl()
 {
-  printf("TimerImpl::TimerImpl called for %p\n", this);
   NS_INIT_REFCNT();
   mFunc = NULL;
-  mCallback = NULL;
-  mNext = NULL;
-  mTimerId = 0;
-  mDelay = 0;
   mClosure = NULL;
+  mCallback = NULL;
+  mDelay = 0;
+  mTimerId = -1;
+  mPulsePid = 0;
+  mPulseMsgId = NULL;
+  mInputId = NULL;
 }
+
 
 TimerImpl::~TimerImpl()
 {
-  printf("TimerImpl::~TimerImpl called for %p\n", this);
   Cancel();
   NS_IF_RELEASE(mCallback);
 }
 
-nsresult 
-TimerImpl::SetupTimer(PRUint32 aDelay)
-{
-struct sigevent    event;
-struct itimerspec  tv;
-int err;
-
-  printf("TimerImpl::SetupTimer called with func %p\n", this);
-
-  event.sigev_notify=SIGEV_PULSE;
-  event.sigev_coid=0; /* REVISIT: Get the global Photon channel ID */
-  event.sigev_priority=0;
-  event.sigev_code=0;
-  event.sigev_value.sival_int=0;
-  err = timer_create(CLOCK_SOFTTIME,&event,&mTimerId);
-  if (err!=0)
-  {
-   printf ("Timer::SetupTimer() timer_create error:%d\n",errno);
-   return NS_ERROR_FAILURE;
-  }
-
-  printf ("Timer::Init() timer id: %d\n",mTimerId);
-
-  tv.it_interval.tv_sec=0;
-  tv.it_interval.tv_nsec=0;
-  tv.it_value.tv_sec=aDelay;
-  tv.it_value.tv_nsec=0;
-  err=timer_settime(mTimerId,0,&tv,0);
-  if (err!=0)
-  {
-   printf ("Timer::Init()  timer_settime error:%d\n",errno);
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
-}
-
-
-nsresult 
-TimerImpl::Init(nsTimerCallbackFunc aFunc,
-                void *aClosure,
-                PRUint32 aDelay)
-{
-nsresult err;
-
-  printf("TimerImpl::Init called with func + closure for %p\n", this);
-  mFunc = aFunc;
-  mClosure = aClosure;
-
-  if ((aDelay > 10000) || (aDelay < 0))
-  {
-    printf("Timer::Init() called with bogus value \"%d\"!  Not enabling timer.\n", aDelay);
-    return Init(aDelay);
-  }
-
-#if 0
-    mTimerId = gtk_timeout_add(aDelay, nsTimerExpired, this);
-#else
-	err = SetupTimer(aDelay);
-	if (err != NS_OK)
-	{
-	 printf ("Timer::Init() timer_create error:%d\n",errno);
-	 return NS_ERROR_FAILURE;
-	}
-#endif
-
-  return Init(aDelay);
-}
-
-nsresult 
-TimerImpl::Init(nsITimerCallback *aCallback,
-                PRUint32 aDelay)
-{
-nsresult err;
-
-  printf("TimerImpl::Init called with callback only for %p\n", this);
-
-  mCallback = aCallback;
-  if ((aDelay > 10000) || (aDelay < 0))
-  {
-    printf("Timer::Init() called with bogus value \"%d\"!  Not enabling timer.\n",
-           aDelay);
-    return Init(aDelay);
-  }
-
-#if 0
-    mTimerId = gtk_timeout_add(aDelay, nsTimerExpired, this);
-#else
-	err = SetupTimer(aDelay);
-	if (err != NS_OK)
-	{
-	 printf ("Timer::Init() timer_create error:%d\n",errno);
-	 return NS_ERROR_FAILURE;
-	}
-#endif
-
-    return Init(aDelay);
-}
-
-nsresult
-TimerImpl::Init(PRUint32 aDelay)
-{
-  printf("TimerImpl::Init called with delay %d only for %p\n", aDelay, this);
-
-  mDelay = aDelay;
-  NS_ADDREF(this);
-
-  return NS_OK;
-}
 
 NS_IMPL_ISUPPORTS(TimerImpl, kITimerIID)
 
-
-void
-TimerImpl::Cancel()
+ 
+NS_METHOD TimerImpl::SetupTimer( PRUint32 aDelay )
 {
-int err;
+  struct itimerspec  tv;
+  int err;
 
-  printf("TimerImpl::Cancel called for %p\n", this);
-  TimerImpl *me = this;
-
-  if (mTimerId)
+  if ((aDelay > 10000) || (aDelay < 0))
   {
-#if 0
-    gtk_timeout_remove(mTimerId);
-#else
-	err = timer_delete(mTimerId);
-#endif
+    NS_WARNING("TimerImpl::SetupTimer called with bogus value\n");
+    return NS_ERROR_FAILURE;
+  }
+
+  mDelay = aDelay;
+  if( mPulsePid )
+  {
+    NS_ASSERTION(0,"TimerImpl::SetupTimer - reuse of timer not allowed!");
+    return NS_ERROR_FAILURE;
+  }
+  if(( mPulsePid = PtAppCreatePulse( NULL, -1 )) > -2 )
+  {
+    NS_ASSERTION(0,"TimerImpl::SetupTimer - failed to create pulse");
+    return NS_ERROR_FAILURE;
+  }
+  if(( mPulseMsgId = PtPulseArmPid( NULL, mPulsePid, getpid(), &mPulseMsg )) == NULL )
+  {
+    NS_ASSERTION(0,"TimerImpl::SetupTimer - failed to arm pulse!");
+    return NS_ERROR_FAILURE;
+  }
+  if(( mInputId = PtAppAddInput( NULL, mPulsePid, TimerEventHandler, this )) == NULL )
+  {
+    NS_ASSERTION(0,"TimerImpl::SetupTimer - failed to add input handler!");
+    return NS_ERROR_FAILURE;
+  }
+
+  err = timer_create( CLOCK_SOFTTIME, &mPulseMsg, &mTimerId );
+  if( err != 0 )
+  { 
+    NS_ASSERTION(0,"TimerImpl::SetupTimer - timer_create error");
+    return NS_ERROR_FAILURE;
+  }
+
+  tv.it_interval.tv_sec  = 0;
+  tv.it_interval.tv_nsec = 0;
+  tv.it_value.tv_sec     = ( aDelay / 1000 );
+  tv.it_value.tv_nsec    = ( aDelay % 1000 ) * 1000000L;
+
+  err = timer_settime( mTimerId, 0, &tv, 0 );
+  if( err != 0 )
+  {
+    NS_ASSERTION(0,"TimerImpl::SetupTimer timer_settime");
+    return NS_ERROR_FAILURE;
+  }
+  
+  return NS_OK;
+}
+
+
+NS_METHOD TimerImpl::Init( nsTimerCallbackFunc aFunc, void *aClosure, PRUint32 aDelay )
+{
+  nsresult err;
+
+  mFunc = aFunc;
+  mClosure = aClosure;
+  err = SetupTimer( aDelay );
+  return err;
+}
+
+
+NS_METHOD TimerImpl::Init( nsITimerCallback *aCallback, PRUint32 aDelay )
+{
+  nsresult err;
+
+  mCallback = aCallback;
+  err = SetupTimer(aDelay);
+  NS_ADDREF(mCallback);
+  return err;
+}
+
+
+void TimerImpl::Cancel()
+{
+  int err;
+  
+  if( mTimerId >= 0)
+  {
+    err = timer_delete( mTimerId );
+    if (err < 0)
+    {
+      char buf[256];
+	  sprintf(buf, "TimerImpl::Cancel Failed in timer_delete mTimerId=<%d> err=<%d> errno=<%d>", mTimerId, err, errno);
+      //NS_ASSERTION(0,"TimerImpl::Cancel Failed in timer_delete");
+      NS_ASSERTION(0,buf);
+      return;
+    }
+	
+    mTimerId *= -1;   // HACK for Debug 
+  }
+
+  if( mInputId )
+  {
+    PtAppRemoveInput( NULL, mInputId );
+    mInputId = NULL;
+  }
+
+  if( mPulseMsgId )
+  {
+    PtPulseDisarm( mPulseMsgId );
+    mPulseMsgId = NULL;
+  }
+
+  if( mPulsePid )
+  {
+    PtAppDeletePulse( NULL, mPulsePid );
+    mPulsePid = 0;
   }
 }
 
-NS_GFX nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
-{
-    NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-    if (nsnull == aInstancePtrResult)
-	{
-      return NS_ERROR_NULL_POINTER;
-    }  
 
-    TimerImpl *timer = new TimerImpl();
-    if (nsnull == timer)
-	{
-        return NS_ERROR_OUT_OF_MEMORY;
+// This is the timer handler that gets called by the Photon
+// input proc
+
+int TimerImpl::TimerEventHandler( void *aData, pid_t aRcvId, void *aMsg, size_t aMsgLen )
+{
+  int localTimerId;
+
+  TimerImpl* timer = (TimerImpl *)aData;
+  if( timer )
+  {
+    localTimerId = timer->mTimerId;
+	
+    if( timer->mFunc != NULL )
+    {
+      (*timer->mFunc)( timer, timer->mClosure );
+    }
+    else if ( timer->mCallback != NULL )
+    {
+      timer->mCallback->Notify( timer );
     }
 
-    return timer->QueryInterface(kITimerIID, (void **) aInstancePtrResult);
+/* These stupid people destroy this object inside the callback */
+/* so don't do anything with it from here on */
+  }
+
+  return Pt_CONTINUE;
 }
 
-int nsTimerExpired(void *aCallData)
+
+NS_BASE nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
 {
-  printf("nsTimerExpired for %p\n", aCallData);
-  TimerImpl* timer = (TimerImpl *)aCallData;
-  timer->FireTimeout();
-  return 0;
+  NS_PRECONDITION(nsnull != aInstancePtrResult, "NS_NewTimer - null ptr");
+  if (nsnull == aInstancePtrResult)
+  {
+    return NS_ERROR_NULL_POINTER;
+  }  
+
+  TimerImpl *timer = new TimerImpl();
+  if (nsnull == timer)
+  {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return timer->QueryInterface(kITimerIID, (void **) aInstancePtrResult);
 }

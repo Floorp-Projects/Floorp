@@ -26,6 +26,7 @@ class nsRegionPh : public nsIRegion
 {
 public:
   nsRegionPh();
+  virtual ~nsRegionPh();
 
   NS_DECL_ISUPPORTS
 
@@ -50,13 +51,10 @@ public:
   NS_IMETHOD GetRegionComplexity(nsRegionComplexity &aComplexity) const;
 
 private:
-  ~nsRegionPh();
+  virtual void SetRegionEmpty();
 
-  PRUint32  mDataSize;
-
-public:
-  //public so the rendering context can poke these... shoot me. MMP
-  int       mRegionType;
+  PhTile_t             *mRegion;
+  nsRegionComplexity    mRegionType;
 };
 
 #endif  // nsRegionPh_h___ 

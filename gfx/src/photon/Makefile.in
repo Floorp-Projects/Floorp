@@ -32,6 +32,8 @@ REQUIRES=util img xpcom raptor netlib ps
 
 #DEFINES +=
 
+EXPORTS = nsIRenderingContextPh.h
+
 CXXFLAGS += -I..
 
 CPPSRCS = \
@@ -43,8 +45,8 @@ CPPSRCS = \
 	nsGfxFactoryPh.cpp					\
 	nsImagePh.cpp						\
 	nsRegionPh.cpp						\
-	nsTimer.cpp \
-	nsRenderingContextPh.cpp
+	nsRenderingContextPh.cpp			\
+	nsTimer.cpp
 
 
 include $(topsrcdir)/config/rules.mk

@@ -32,36 +32,36 @@ public:
   /**
   @see nsIImage.h
   */
-  virtual PRInt32     GetBytesPix()       { return mNumBytesPixel; }
-  virtual PRInt32     GetHeight()         {  }
-  virtual PRInt32     GetWidth()          {  }
-  virtual PRUint8*    GetBits()           { return mImageBits; }
-  virtual PRInt32     GetLineStride()     {return mRowBytes; }
+  virtual PRInt32     GetBytesPix();
+  virtual PRInt32     GetHeight();
+  virtual PRInt32     GetWidth();
+  virtual PRUint8*    GetBits();
+  virtual PRInt32     GetLineStride();
   NS_IMETHOD          Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
   NS_IMETHOD          Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                       PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight);
-  virtual nsColorMap* GetColorMap() {return mColorMap;}
+  virtual nsColorMap* GetColorMap();
   virtual void        ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect);
   virtual nsresult    Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirements aMaskRequirements);
-  virtual PRBool      IsOptimized()       { return mIsOptimized; }
+  virtual PRBool      IsOptimized();
   virtual nsresult    Optimize(nsIDeviceContext* aContext);
-  virtual PRUint8*    GetAlphaBits()      { return mAlphaBits; }
-  virtual PRInt32     GetAlphaWidth()   { return mAlphaWidth;}
-  virtual PRInt32     GetAlphaHeight()   {return mAlphaHeight;}
-  virtual PRInt32     GetAlphaLineStride(){ return mARowBytes; }
-
+  virtual PRUint8*    GetAlphaBits();
+  virtual PRInt32     GetAlphaWidth();
+  virtual PRInt32     GetAlphaHeight();
+  virtual PRInt32     GetAlphaLineStride();
+  virtual PRBool      GetIsRowOrderTopToBottom();
   /** 
    * Return the header size of the Device Independent Bitmap(DIB).
    * @return size of header in bytes
    */
-  PRIntn      GetSizeHeader(){return 0;}
+  PRIntn      GetSizeHeader();
 
   /** 
    * Return the image size of the Device Independent Bitmap(DIB).
    * @update dc - 10/29/98
    * @return size of image in bytes
    */
-  PRIntn      GetSizeImage(){ return mSizeImage; }
+  PRIntn      GetSizeImage();
 
   /** 
    * Calculate the number of bytes spaned for this image for a given width
@@ -70,21 +70,21 @@ public:
    */
   PRInt32  CalcBytesSpan(PRUint32  aWidth);
 
-  virtual void  SetAlphaLevel(PRInt32 aAlphaLevel) {mAlphaLevel=aAlphaLevel;}
+  virtual void  SetAlphaLevel(PRInt32 aAlphaLevel);
 
   /** 
    * Get the alpha level assigned.
    * @update dc - 10/29/98
    * @return The alpha level from 0 to 1
    */
-  virtual PRInt32 GetAlphaLevel() {return(mAlphaLevel);}
+  virtual PRInt32 GetAlphaLevel();
 
   /** 
    * Get the DIB specific informations for this bitmap.
    * @update dc - 10/29/98
    * @return VOID
    */
-  void* GetBitInfo() {return nsnull;}
+  void* GetBitInfo();
 
 
 private:
@@ -95,12 +95,6 @@ private:
    */
   void CleanUp(PRBool aCleanUpAll);
 
-  /** 
-   * Create a Device Dependent bitmap from a drawing surface
-   * @update dc - 10/29/98
-   * @param aSurface - The drawingsurface to create the DDB from.
-   */
-  void CreateDDB(nsDrawingSurface aSurface);
 
   /** 
    * Get an index in the palette that matches as closly as possible the passed in RGB colors
@@ -111,6 +105,11 @@ private:
    * @return - The closest palette match
    */
   PRUint8 PaletteMatch(PRUint8 r, PRUint8 g, PRUint8 b);
+
+  PRInt32             mWidth;			 // from GTK
+  PRInt32             mHeight;           // from GTK
+  PRInt32             mDepth;            // from GTK
+  
 
   PRInt8              mNumBytesPixel;     // number of bytes per pixel
   PRInt16             mNumPaletteColors;  // either 8 or 0
@@ -129,7 +128,7 @@ private:
   //nsPoint             mLocation;          // alpha mask location
   PRInt8              mImageCache;        // place to save off the old image for fast animation
   PRInt16             mAlphaLevel;        // an alpha level every pixel uses
-
+  PhImage_t           mImage;
 };
 
 #endif

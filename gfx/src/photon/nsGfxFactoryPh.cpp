@@ -28,6 +28,8 @@
 #include "nsDeviceContextSpecPh.h"
 #include "nsDeviceContextSpecFactoryP.h"
 
+#include "nsPhGfxLog.h"
+
 static NS_DEFINE_IID(kCFontMetrics, NS_FONT_METRICS_CID);
 static NS_DEFINE_IID(kCRenderingContext, NS_RENDERING_CONTEXT_CID);
 static NS_DEFINE_IID(kCImage, NS_IMAGE_CID);
@@ -72,6 +74,8 @@ nsGfxFactoryPh::nsGfxFactoryPh(const nsCID &aClass)
 
 nsGfxFactoryPh::~nsGfxFactoryPh()   
 {   
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsGfxFactoryPh::~nsGfxFactoryPh Destructor\n"));
+
   NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
 }   
 
@@ -101,11 +105,14 @@ nsresult nsGfxFactoryPh::QueryInterface(const nsIID &aIID,
 
 nsrefcnt nsGfxFactoryPh::AddRef()   
 {   
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsGfxFactoryPh::AddRef\n"));
   return ++mRefCnt;   
 }   
 
 nsrefcnt nsGfxFactoryPh::Release()   
 {   
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsGfxFactoryPh::Release\n"));
+
   if (--mRefCnt == 0) {   
     delete this;   
     return 0; // Don't access mRefCnt after deleting!   
@@ -117,6 +124,8 @@ nsresult nsGfxFactoryPh::CreateInstance(nsISupports *aOuter,
                                           const nsIID &aIID,  
                                           void **aResult)  
 {  
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsGfxFactoryPh::CreateInstance\n"));
+
   if (aResult == NULL) {  
     return NS_ERROR_NULL_POINTER;  
   }  
@@ -125,43 +134,53 @@ nsresult nsGfxFactoryPh::CreateInstance(nsISupports *aOuter,
   
   nsISupports *inst = nsnull;
 
-  if (mClassID.Equals(kCFontMetrics)) {
+  if (mClassID.Equals(kCFontMetrics))
+  {
+    PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsGfxFactoryPh::CreateInstance asking for nsFontMetricsPh.\n"));
     nsFontMetricsPh* fm;
     NS_NEWXPCOM(fm, nsFontMetricsPh);
     inst = (nsISupports *)fm;
   }
   else if (mClassID.Equals(kCDeviceContext)) {
+    PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsGfxFactoryPh::CreateInstance asking for nsDeviceContextPh.\n"));
     nsDeviceContextPh* dc;
     NS_NEWXPCOM(dc, nsDeviceContextPh);
     inst = (nsISupports *)dc;
   }
   else if (mClassID.Equals(kCRenderingContext)) {
+    PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsGfxFactoryPh::CreateInstance asking for nsRenderingContextPh.\n"));
     nsRenderingContextPh*  rc;
     NS_NEWXPCOM(rc, nsRenderingContextPh);
     inst = (nsISupports *)((nsIRenderingContext*)rc);
   }
   else if (mClassID.Equals(kCImage)) {
+    PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsGfxFactoryPh::CreateInstance asking for nsImagePh.\n"));
     nsImagePh* image;
     NS_NEWXPCOM(image, nsImagePh);
     inst = (nsISupports *)image;
   }
   else if (mClassID.Equals(kCRegion)) {
+    PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsGfxFactoryPh::CreateInstance asking for nsRegionPh.\n"));
     nsRegionPh*  region;
     NS_NEWXPCOM(region, nsRegionPh);
     inst = (nsISupports *)region;
   }
   else if (mClassID.Equals(kCDeviceContextSpec)) {
+    PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsGfxFactoryPh::CreateInstance asking for nsDeviceContextSpecPh.\n"));
     nsDeviceContextSpecPh* dcs;
     NS_NEWXPCOM(dcs, nsDeviceContextSpecPh);
     inst = (nsISupports *)dcs;
   }
   else if (mClassID.Equals(kCDeviceContextSpecFactory)) {
+    PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsGfxFactoryPh::CreateInstance asking for nsDeviceContextSpecFactoryPh.\n"));
     nsDeviceContextSpecFactoryPh* dcs;
     NS_NEWXPCOM(dcs, nsDeviceContextSpecFactoryPh);
     inst = (nsISupports *)dcs;
   }
 
-  if (inst == NULL) {  
+  if (inst == NULL)
+  {  
+    PR_LOG(PhGfxLog, PR_LOG_ERROR,("nsGfxFactoryPh::CreateInstance Failed.\n"));
     return NS_ERROR_OUT_OF_MEMORY;  
   }  
 
@@ -169,6 +188,7 @@ nsresult nsGfxFactoryPh::CreateInstance(nsISupports *aOuter,
 
   if (res != NS_OK) {  
     // We didn't get the right interface, so clean up  
+    PR_LOG(PhGfxLog, PR_LOG_ERROR,("nsGfxFactoryPh::CreateInstance Did not get the right interface, Failed.\n"));
     delete inst;  
   }  
 //  else {
@@ -180,6 +200,8 @@ nsresult nsGfxFactoryPh::CreateInstance(nsISupports *aOuter,
 
 nsresult nsGfxFactoryPh::LockFactory(PRBool aLock)  
 {  
+ PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsGfxFactoryPh::LockFactory - Not Implmented\n"));
+
   // Not implemented in simplest case.  
   return NS_OK;
 }  
@@ -191,6 +213,8 @@ extern "C" NS_GFXNONXP nsresult NSGetFactory(nsISupports* servMgr,
                                              const char *aProgID,
                                              nsIFactory **aFactory)
 {
+ PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsGfxFactoryPh::NSGetFactory\n"));
+
   if (nsnull == aFactory) {
     return NS_ERROR_NULL_POINTER;
   }

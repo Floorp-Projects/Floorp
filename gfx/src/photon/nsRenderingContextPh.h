@@ -30,16 +30,20 @@
 #include "nsIViewManager.h"
 #include "nsIWidget.h"
 #include "nsRect.h"
-#include "nsImagePh.h"
+//#include "nsImagePh.h"
 #include "nsIDeviceContext.h"
 #include "nsVoidArray.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMRenderingContext.h"
 #include "nsIRenderingContextPh.h"
-#include "nsDrawingSurfacePh.h"
+
+//#include "nsDrawingSurfacePh.h"
+//#include "nsRegionPh.h"
 
 class GraphicsState;
 class nsDrawingSurfacePh;
+class nsImagePh;
+class nsRegionPh;
 
 class nsRenderingContextPh : public nsIRenderingContext,
                               nsIRenderingContextPh,
@@ -160,21 +164,33 @@ public:
   NS_DECL_IDOMRENDERINGCONTEXT
 
   // nsIRenderingContextPh
-  NS_IMETHOD CreateDrawingSurface(PhGC_t &aGC, nsDrawingSurface &aSurface);
+  NS_IMETHOD CreateDrawingSurface(PhGC_t *aGC, nsDrawingSurface &aSurface);
 
 private:
   ~nsRenderingContextPh();
   void PushClipState(void);
+  void holdSetGC();
+  void SetGC();
+  void RestoreGC();
+  void ApplyClipping( PRBool = PR_FALSE );
 
 protected:
-  nscolor					  mCurrentColor;
-  nsTransform2D		  *mTMatrix;		// transform that all the graphics drawn here will obey
-  nsIFontMetrics	  *mFontMetrics;
-  nsDrawingSurfacePh *mSurface;
-  nsDrawingSurfacePh *mMainSurface;
-  nsIWidget         *mDCOwner;
-  nsIDeviceContext  *mContext;
-  float             mP2T;
+  PhGC_t             *mGC;
+  PhGC_t             *mholdGC;
+  PhGC_t             *mOldGC;
+  nscolor            mCurrentColor;
+  nsTransform2D      *mTMatrix;		// transform that all the graphics drawn here will obey
+  nsIFontMetrics     *mFontMetrics;
+  nsDrawingSurface   mSurface;
+  nsDrawingSurface   mMainSurface;
+  nsIWidget          *mDCOwner;
+  nsIDeviceContext   *mContext;
+  float              mP2T;
+  nsRegionPh         *mRegion;
+  PtWidget_t         *mWidget;
+  char               *mPhotonFontName;
+  nsRegionPh         *mGlobalClip;
+
   //default objects
   //state management
   GraphicsState     *mStates;
@@ -185,6 +201,8 @@ protected:
   PRUint8           *mGammaTable;
   nscolor           mCurrTextColor;
   nsLineStyle       mCurrLineStyle;
+
+  static PhGC_t     *mPtGC;
 
 #ifdef NS_DEBUG
   PRBool            mInitialized;
