@@ -3303,7 +3303,7 @@ NavigatorImpl::GetUserAgent(nsString& aUserAgent)
     PRUnichar *ua = nsnull;
     res = service->GetUserAgent(&ua);
     aUserAgent = ua;
-    delete [] ua;
+    Recycle(ua);
   }
 
   return res;
@@ -3318,7 +3318,7 @@ NavigatorImpl::GetAppCodeName(nsString& aAppCodeName)
     PRUnichar *appName = nsnull;
     res = service->GetAppCodeName(&appName);
     aAppCodeName = appName;
-    delete [] appName;
+    Recycle(appName);
   }
 
   return res;
@@ -3333,7 +3333,7 @@ NavigatorImpl::GetAppVersion(nsString& aAppVersion)
     PRUnichar *appVer = nsnull;
     res = service->GetAppVersion(&appVer);
     aAppVersion = appVer;
-    delete [] appVer;
+    Recycle(appVer);
   }
 
   return res;
@@ -3348,7 +3348,7 @@ NavigatorImpl::GetAppName(nsString& aAppName)
     PRUnichar *appName = nsnull;
     res = service->GetAppName(&appName);
     aAppName = appName;
-    delete [] appName;
+    Recycle(appName);
   }
 
   return res;
@@ -3363,7 +3363,7 @@ NavigatorImpl::GetLanguage(nsString& aLanguage)
     PRUnichar *lang = nsnull;
     res = service->GetLanguage(&lang);
     aLanguage = lang;
-    delete [] lang;
+    Recycle(lang);
   }
 
   return res;
@@ -3378,7 +3378,7 @@ NavigatorImpl::GetPlatform(nsString& aPlatform)
     PRUnichar *plat = nsnull;
     res = service->GetPlatform(&plat);
     aPlatform = plat;
-    delete [] plat;
+    Recycle(plat);
   }
 
   return res;
