@@ -114,7 +114,6 @@ Rights Reserved.
     <vbox flex="1">
        <vbox id="searchResultListBox" flex="1" >
             <tree id="threadTree" flex="1" context="threadPaneContext"/>
-
        </vbox>
        <hbox align="start">
             

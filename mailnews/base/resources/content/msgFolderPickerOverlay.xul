@@ -413,6 +413,9 @@ Rights Reserved.
               datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
               ref="msgaccounts:/">
       <template>
+        <rule nc:CanSearchMessages="false">
+          <!-- don't show servers which do not allow message searching -->
+        </rule>
         <rule iscontainer="true" isempty="false" nc:CanSearchMessages="true">
           <menupopup>
             <menu uri="..." 
