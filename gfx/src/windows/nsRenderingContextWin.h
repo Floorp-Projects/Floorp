@@ -130,7 +130,7 @@ private:
   nsresult SetupDC(void);
   HBRUSH SetupSolidBrush(void);
   HPEN SetupSolidPen(void);
-  void SetupFont(void);
+  void SetupFontAndColor(void);
   void PushClipState(void);
 
 protected:
@@ -164,6 +164,7 @@ protected:
   HPEN              mCurrPen;
   HPEN              mNullPen;
   PRUint8           *mGammaTable;
+  COLORREF          mCurrTextColor;
 
 #ifdef NS_DEBUG
   PRBool          mInitialized;
