@@ -915,7 +915,7 @@ nsDocLoaderImpl::RemoveChildGroup(nsIURLGroup* aGroup)
 void nsDocLoaderImpl::LoadURLComplete(nsIURL* aURL, nsISupports* aBindInfo, PRInt32 aStatus)
 {
   PRBool rv;
-  PRBool bIsBusy;
+  PRBool bIsForegroundURL = PR_FALSE;
 
   /*
    * If the entry is not found in the list, then it must have been cancelled
@@ -936,6 +936,7 @@ void nsDocLoaderImpl::LoadURLComplete(nsIURL* aURL, nsISupports* aBindInfo, PRIn
     }
     if (nsURLLoadBackground != loadType) {
       mForegroundURLs -= 1;
+      bIsForegroundURL = PR_TRUE;
     }
     mTotalURLs -= 1;
 
@@ -944,19 +945,25 @@ void nsDocLoaderImpl::LoadURLComplete(nsIURL* aURL, nsISupports* aBindInfo, PRIn
     /* 
      * If this was the last URL for the entire document (including any sub 
      * documents) then fire an OnConnectionsComplete(...) notification.
+     *
+     * If the URL was a background URL, then ignore it...
      */
-    IsBusy(bIsBusy);
+    if (PR_FALSE != bIsForegroundURL) {
+      PRBool bIsBusy;
 
-    if (! bIsBusy) {
-      PRInt32 count = mDocObservers.Count();
-      PRInt32 index;
+      IsBusy(bIsBusy);
 
-      PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
-             ("DocLoader [%p] - OnConnectionsComplete(...) called.\n", this));
+      if (! bIsBusy) {
+        PRInt32 count = mDocObservers.Count();
+        PRInt32 index;
 
-      for (index = 0; index < count; index++) {
-        nsIDocumentLoaderObserver* observer = (nsIDocumentLoaderObserver*)mDocObservers.ElementAt(index);
-        observer->OnConnectionsComplete();
+        PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
+               ("DocLoader [%p] - OnConnectionsComplete(...) called.\n", this));
+
+        for (index = 0; index < count; index++) {
+          nsIDocumentLoaderObserver* observer = (nsIDocumentLoaderObserver*)mDocObservers.ElementAt(index);
+          observer->OnConnectionsComplete();
+        }
       }
     }
   }
