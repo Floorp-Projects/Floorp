@@ -44,30 +44,43 @@
 #include "nsIAccessibleText.h"
 #include "nsISelectionController.h"
 
-/**
+class nsAccessibleText : public nsIAccessibleText
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIACCESSIBLETEXT
+
+  nsAccessibleText();
+  virtual ~nsAccessibleText();
+
+  void SetTextNode(nsIDOMNode *aNode);
+
+private:
+  nsCOMPtr<nsIDOMNode> mTextNode;
+
+  enum EGetTextType { eGetBefore=-1, eGetAt=0, eGetAfter=1 };
+
+  nsresult GetSelections(nsISelectionController **aSelCon, nsISelection **aDomSel);
+  nsresult GetTextHelper(EGetTextType aType, nsAccessibleTextBoundary aBoundaryType, 
+                         PRInt32 aOffset, PRInt32 *aStartOffset, PRInt32 *aEndOffset, nsAString & _retval);
+};
+
+ /**
   * Text nodes have no children, but since double inheritance
   *  no-worky we have to re-impl the LeafAccessiblity blocks 
   *  this way.
   */
 class nsTextAccessible : public nsLinkableAccessible,
-                         public nsIAccessibleText
+                         public nsAccessibleText
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIACCESSIBLETEXT
 
   nsTextAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
   NS_IMETHOD GetAccRole(PRUint32 *_retval); 
   NS_IMETHOD GetAccFirstChild(nsIAccessible **_retval);
   NS_IMETHOD GetAccLastChild(nsIAccessible **_retval);
   NS_IMETHOD GetAccChildCount(PRInt32 *_retval);
-
-private:
-  enum EGetTextType { eGetBefore=-1, eGetAt=0, eGetAfter=1 };
-
-  nsresult GetSelections(nsISelectionController **aSelCon, nsISelection **aDomSel);
-  nsresult GetTextHelper(EGetTextType aType, nsAccessibleTextBoundary aBoundaryType, 
-                         PRInt32 aOffset, PRInt32 *aStartOffset, PRInt32 *aEndOffset, nsAString & _retval);
 };
 
 

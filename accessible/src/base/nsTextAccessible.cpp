@@ -40,6 +40,8 @@
 
 // NOTE: alphabetically ordered
 #include "nsContentCID.h"
+#include "nsIDocument.h"
+#include "nsIDOMDocument.h"
 #include "nsIDOMRange.h"
 #include "nsIFrame.h"
 #include "nsITextContent.h"
@@ -48,65 +50,41 @@
 
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 
-// ------------
-// Text Accessibles
-// ------------
+NS_IMPL_ISUPPORTS1(nsAccessibleText, nsIAccessibleText)
 
-nsTextAccessible::nsTextAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
-nsLinkableAccessible(aDomNode, aShell)
-{ 
+nsAccessibleText::nsAccessibleText()
+{
+  NS_INIT_ISUPPORTS();
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsTextAccessible, nsLinkableAccessible, nsIAccessibleText)
-
-/**
-  * We are text
-  */
-NS_IMETHODIMP nsTextAccessible::GetAccRole(PRUint32 *_retval)
+nsAccessibleText::~nsAccessibleText()
 {
-  *_retval = ROLE_TEXT;
-  return NS_OK;
+}
+
+void nsAccessibleText::SetTextNode(nsIDOMNode *aNode)
+{
+  mTextNode = aNode;
 }
 
 /**
-  * No Children
+  * nsIAccessibleText impl.
   */
-NS_IMETHODIMP nsTextAccessible::GetAccFirstChild(nsIAccessible **_retval)
+nsresult nsAccessibleText::GetSelections(nsISelectionController **aSelCon, nsISelection **aDomSel)
 {
-  *_retval = nsnull;
-  return NS_OK;
-}
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  mTextNode->GetOwnerDocument(getter_AddRefs(domDoc));
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
+  if (!doc)
+    return NS_ERROR_FAILURE;
 
-/**
-  * No Children
-  */
-NS_IMETHODIMP nsTextAccessible::GetAccLastChild(nsIAccessible **_retval)
-{
-  *_retval = nsnull;
-  return NS_OK;
-}
-
-/**
-  * No Children
-  */
-NS_IMETHODIMP nsTextAccessible::GetAccChildCount(PRInt32 *_retval)
-{
-  *_retval = 0;
-  return NS_OK;
-}
-
-/**
-  * nsIAccessibleText support
-  */
-nsresult nsTextAccessible::GetSelections(nsISelectionController **aSelCon, nsISelection **aDomSel)
-{
-  nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
+  nsCOMPtr<nsIPresShell> shell;
+  doc->GetShellAt(0, getter_AddRefs(shell));
   if (!shell)
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIPresContext> context;
   shell->GetPresContext(getter_AddRefs(context));
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mTextNode));
   nsIFrame *frame = nsnull;
   if (content && NS_SUCCEEDED(shell->GetPrimaryFrameFor(content, &frame)) && frame) {
     frame->GetSelectionController(context, aSelCon);
@@ -146,7 +124,7 @@ ATK_TEXT_BOUNDARY_LINE_START
 ATK_TEXT_BOUNDARY_LINE_END 
   The returned string is from the line end before/at/after the offset to the next line start.
 */
-nsresult nsTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTextBoundary aBoundaryType, 
+nsresult nsAccessibleText::GetTextHelper(EGetTextType aType, nsAccessibleTextBoundary aBoundaryType, 
                                          PRInt32 aOffset, PRInt32 *aStartOffset, PRInt32 *aEndOffset, nsAString & _retval)
 {
   nsCOMPtr<nsISelectionController> selCon;
@@ -162,8 +140,8 @@ nsresult nsTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTextBou
   *aStartOffset = *aEndOffset = aOffset;
 
   // Move caret position to offset
-  range->SetStart(mDOMNode, aOffset);
-  range->SetEnd(mDOMNode, aOffset);
+  range->SetStart(mTextNode, aOffset);
+  range->SetEnd(mTextNode, aOffset);
   domSel->RemoveAllRanges();
   domSel->AddRange(range);
 
@@ -243,7 +221,7 @@ nsresult nsTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTextBou
 /*
  * Gets the offset position of the caret (cursor).
  */
-NS_IMETHODIMP nsTextAccessible::GetCaretOffset(PRInt32 *aCaretOffset)
+NS_IMETHODIMP nsAccessibleText::GetCaretOffset(PRInt32 *aCaretOffset)
 {
   nsCOMPtr<nsISelectionController> selCon;
   nsCOMPtr<nsISelection> domSel;
@@ -257,7 +235,7 @@ NS_IMETHODIMP nsTextAccessible::GetCaretOffset(PRInt32 *aCaretOffset)
 /*
  * Sets the caret (cursor) position to the specified offset.
  */
-NS_IMETHODIMP nsTextAccessible::SetCaretOffset(PRInt32 aCaretOffset)
+NS_IMETHODIMP nsAccessibleText::SetCaretOffset(PRInt32 aCaretOffset)
 {
   nsCOMPtr<nsISelectionController> selCon;
   nsCOMPtr<nsISelection> domSel;
@@ -269,17 +247,17 @@ NS_IMETHODIMP nsTextAccessible::SetCaretOffset(PRInt32 aCaretOffset)
   if (! range)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  range->SetStart(mDOMNode, aCaretOffset);
-  range->SetEnd(mDOMNode, aCaretOffset);
+  range->SetStart(mTextNode, aCaretOffset);
+  range->SetEnd(mTextNode, aCaretOffset);
   return domSel->AddRange(range);
 }
 
 /*
  * Gets the character count.
  */
-NS_IMETHODIMP nsTextAccessible::GetCharacterCount(PRInt32 *aCharacterCount)
+NS_IMETHODIMP nsAccessibleText::GetCharacterCount(PRInt32 *aCharacterCount)
 {
-  nsCOMPtr<nsITextContent> textContent(do_QueryInterface(mDOMNode));
+  nsCOMPtr<nsITextContent> textContent(do_QueryInterface(mTextNode));
   if (!textContent)
     return NS_ERROR_FAILURE;
 
@@ -289,7 +267,7 @@ NS_IMETHODIMP nsTextAccessible::GetCharacterCount(PRInt32 *aCharacterCount)
 /*
  * Gets the number of selected regions.
  */
-NS_IMETHODIMP nsTextAccessible::GetSelectionCount(PRInt32 *aSelectionCount)
+NS_IMETHODIMP nsAccessibleText::GetSelectionCount(PRInt32 *aSelectionCount)
 {
   nsCOMPtr<nsISelectionController> selCon;
   nsCOMPtr<nsISelection> domSel;
@@ -303,25 +281,28 @@ NS_IMETHODIMP nsTextAccessible::GetSelectionCount(PRInt32 *aSelectionCount)
 /*
  * Gets the specified text.
  */
-NS_IMETHODIMP nsTextAccessible::GetText(PRInt32 aStartOffset, PRInt32 aEndOffset, nsAString & _retval)
+NS_IMETHODIMP nsAccessibleText::GetText(PRInt32 aStartOffset, PRInt32 aEndOffset, nsAString & _retval)
 {
   nsAutoString text;
-  mDOMNode->GetNodeValue(text);
+  mTextNode->GetNodeValue(text);
   _retval = Substring(text, aStartOffset, aEndOffset - aStartOffset);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsTextAccessible::GetTextBeforeOffset(PRInt32 aOffset, nsAccessibleTextBoundary aBoundaryType, PRInt32 *aStartOffset, PRInt32 *aEndOffset, nsAString & _retval)
+NS_IMETHODIMP nsAccessibleText::GetTextBeforeOffset(PRInt32 aOffset, nsAccessibleTextBoundary aBoundaryType, 
+                                                    PRInt32 *aStartOffset, PRInt32 *aEndOffset, nsAString & _retval)
 {
   return GetTextHelper(eGetBefore, aBoundaryType, aOffset, aStartOffset, aEndOffset, _retval);
 }
 
-NS_IMETHODIMP nsTextAccessible::GetTextAtOffset(PRInt32 aOffset, nsAccessibleTextBoundary aBoundaryType, PRInt32 *aStartOffset, PRInt32 *aEndOffset, nsAString & _retval)
+NS_IMETHODIMP nsAccessibleText::GetTextAtOffset(PRInt32 aOffset, nsAccessibleTextBoundary aBoundaryType, 
+                                                PRInt32 *aStartOffset, PRInt32 *aEndOffset, nsAString & _retval)
 {
   return GetTextHelper(eGetAt, aBoundaryType, aOffset, aStartOffset, aEndOffset, _retval);
 }
 
-NS_IMETHODIMP nsTextAccessible::GetTextAfterOffset(PRInt32 aOffset, nsAccessibleTextBoundary aBoundaryType, PRInt32 *aStartOffset, PRInt32 *aEndOffset, nsAString & _retval)
+NS_IMETHODIMP nsAccessibleText::GetTextAfterOffset(PRInt32 aOffset, nsAccessibleTextBoundary aBoundaryType, 
+                                                   PRInt32 *aStartOffset, PRInt32 *aEndOffset, nsAString & _retval)
 {
   return GetTextHelper(eGetAfter, aBoundaryType, aOffset, aStartOffset, aEndOffset, _retval);
 }
@@ -329,9 +310,9 @@ NS_IMETHODIMP nsTextAccessible::GetTextAfterOffset(PRInt32 aOffset, nsAccessible
 /*
  * Gets the specified text.
  */
-NS_IMETHODIMP nsTextAccessible::GetCharacterAtOffset(PRInt32 aOffset, PRUnichar *_retval)
+NS_IMETHODIMP nsAccessibleText::GetCharacterAtOffset(PRInt32 aOffset, PRUnichar *_retval)
 {
-  nsCOMPtr<nsITextContent> textContent(do_QueryInterface(mDOMNode));
+  nsCOMPtr<nsITextContent> textContent(do_QueryInterface(mTextNode));
   if (!textContent)
     return NS_ERROR_FAILURE;
 
@@ -341,7 +322,7 @@ NS_IMETHODIMP nsTextAccessible::GetCharacterAtOffset(PRInt32 aOffset, PRUnichar 
   return NS_OK;
 }
 
-NS_IMETHODIMP nsTextAccessible::GetAttributeRange(PRInt32 aOffset, PRInt32 *aRangeStartOffset, PRInt32 *aRangeEndOffset, nsISupports **_retval)
+NS_IMETHODIMP nsAccessibleText::GetAttributeRange(PRInt32 aOffset, PRInt32 *aRangeStartOffset, PRInt32 *aRangeEndOffset, nsISupports **_retval)
 {
   // will do better job later
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -350,7 +331,7 @@ NS_IMETHODIMP nsTextAccessible::GetAttributeRange(PRInt32 aOffset, PRInt32 *aRan
 /*
  * Given an offset, the x, y, width, and height values are filled appropriately.
  */
-NS_IMETHODIMP nsTextAccessible::GetCharacterExtents(PRInt32 aOffset, PRInt32 *aX, PRInt32 *aY, PRInt32 *aLength, PRInt32 *aWidth, nsAccessibleCoordType aCoordType)
+NS_IMETHODIMP nsAccessibleText::GetCharacterExtents(PRInt32 aOffset, PRInt32 *aX, PRInt32 *aY, PRInt32 *aLength, PRInt32 *aWidth, nsAccessibleCoordType aCoordType)
 {
   // will do better job later
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -360,7 +341,7 @@ NS_IMETHODIMP nsTextAccessible::GetCharacterExtents(PRInt32 aOffset, PRInt32 *aX
  * Gets the offset of the character located at coordinates x and y. x and y are interpreted as being relative to 
  * the screen or this widget's window depending on coords.
  */
-NS_IMETHODIMP nsTextAccessible::GetOffsetAtPoint(PRInt32 aX, PRInt32 aY, nsAccessibleCoordType aCoordType, PRInt32 *_retval)
+NS_IMETHODIMP nsAccessibleText::GetOffsetAtPoint(PRInt32 aX, PRInt32 aY, nsAccessibleCoordType aCoordType, PRInt32 *_retval)
 {
   // will do better job later
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -369,7 +350,7 @@ NS_IMETHODIMP nsTextAccessible::GetOffsetAtPoint(PRInt32 aX, PRInt32 aY, nsAcces
 /*
  * Gets the start and end offset of the specified selection.
  */
-NS_IMETHODIMP nsTextAccessible::GetSelectionBounds(PRInt32 aSelectionNum, PRInt32 *aStartOffset, PRInt32 *aEndOffset)
+NS_IMETHODIMP nsAccessibleText::GetSelectionBounds(PRInt32 aSelectionNum, PRInt32 *aStartOffset, PRInt32 *aEndOffset)
 {
   nsCOMPtr<nsISelectionController> selCon;
   nsCOMPtr<nsISelection> domSel;
@@ -392,7 +373,7 @@ NS_IMETHODIMP nsTextAccessible::GetSelectionBounds(PRInt32 aSelectionNum, PRInt3
 /*
  * Changes the start and end offset of the specified selection.
  */
-NS_IMETHODIMP nsTextAccessible::SetSelectionBounds(PRInt32 aSelectionNum, PRInt32 aStartOffset, PRInt32 aEndOffset)
+NS_IMETHODIMP nsAccessibleText::SetSelectionBounds(PRInt32 aSelectionNum, PRInt32 aStartOffset, PRInt32 aEndOffset)
 {
   nsCOMPtr<nsISelectionController> selCon;
   nsCOMPtr<nsISelection> domSel;
@@ -420,7 +401,7 @@ NS_IMETHODIMP nsTextAccessible::SetSelectionBounds(PRInt32 aSelectionNum, PRInt3
 /*
  * Adds a selection bounded by the specified offsets.
  */
-NS_IMETHODIMP nsTextAccessible::AddSelection(PRInt32 aStartOffset, PRInt32 aEndOffset)
+NS_IMETHODIMP nsAccessibleText::AddSelection(PRInt32 aStartOffset, PRInt32 aEndOffset)
 {
   nsCOMPtr<nsISelectionController> selCon;
   nsCOMPtr<nsISelection> domSel;
@@ -432,15 +413,15 @@ NS_IMETHODIMP nsTextAccessible::AddSelection(PRInt32 aStartOffset, PRInt32 aEndO
   if (! range)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  range->SetStart(mDOMNode, aStartOffset);
-  range->SetEnd(mDOMNode, aEndOffset);
+  range->SetStart(mTextNode, aStartOffset);
+  range->SetEnd(mTextNode, aEndOffset);
   return domSel->AddRange(range);
 }
 
 /*
  * Removes the specified selection.
  */
-NS_IMETHODIMP nsTextAccessible::RemoveSelection(PRInt32 aSelectionNum)
+NS_IMETHODIMP nsAccessibleText::RemoveSelection(PRInt32 aSelectionNum)
 {
   nsCOMPtr<nsISelectionController> selCon;
   nsCOMPtr<nsISelection> domSel;
@@ -456,4 +437,52 @@ NS_IMETHODIMP nsTextAccessible::RemoveSelection(PRInt32 aSelectionNum)
   nsCOMPtr<nsIDOMRange> range;
   domSel->GetRangeAt(aSelectionNum, getter_AddRefs(range));
   return domSel->RemoveRange(range);
+}
+
+// ------------
+// Text Accessibles
+// ------------
+
+nsTextAccessible::nsTextAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell):
+nsLinkableAccessible(aDOMNode, aShell)
+{ 
+  SetTextNode(aDOMNode);
+}
+
+NS_IMPL_ISUPPORTS_INHERITED1(nsTextAccessible, nsLinkableAccessible, nsAccessibleText)
+
+/**
+  * We are text
+  */
+NS_IMETHODIMP nsTextAccessible::GetAccRole(PRUint32 *_retval)
+{
+  *_retval = ROLE_TEXT;
+  return NS_OK;
+}
+
+/**
+  * No Children
+  */
+NS_IMETHODIMP nsTextAccessible::GetAccFirstChild(nsIAccessible **_retval)
+{
+  *_retval = nsnull;
+  return NS_OK;
+}
+
+/**
+  * No Children
+  */
+NS_IMETHODIMP nsTextAccessible::GetAccLastChild(nsIAccessible **_retval)
+{
+  *_retval = nsnull;
+  return NS_OK;
+}
+
+/**
+  * No Children
+  */
+NS_IMETHODIMP nsTextAccessible::GetAccChildCount(PRInt32 *_retval)
+{
+  *_retval = 0;
+  return NS_OK;
 }
