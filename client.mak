@@ -95,7 +95,7 @@ CVSCO_NETWORK = $(CVSCO)
 !if "$(NSPR_CO_TAG)" != ""
 NSPR_CO_FLAGS=-r $(NSPR_CO_TAG)
 !else
-NSPR_CO_FLAGS=-r NSPRPUB_RELEASE_4_0_20000218
+NSPR_CO_FLAGS=-r NSPRPUB_CLIENT_BRANCH
 !endif
 
 CVSCO_NSPR = cvs -q $(CVS_FLAGS) co $(NSPR_CO_FLAGS) -P
@@ -126,7 +126,7 @@ pull_clobber_and_build_all: pull_all clobber_all build_all
 
 pull_all: pull_nspr pull_psm pull_seamonkey
 
-pull_nspr:
+pull_nspr: pull_clientmak
       cd $(MOZ_SRC)\.
       $(CVSCO_NSPR) mozilla/nsprpub
 
@@ -139,9 +139,13 @@ pull_layout:
 	cd $(MOZ_SRC)\.
 	$(CVSCO) RaptorWin
 
-pull_seamonkey:
+pull_seamonkey: pull_clientmak
 	cd $(MOZ_SRC)\.
 	$(CVSCO) SeaMonkeyAll
+
+pull_clientmak:
+    cd $(MOZ_SRC)\.
+    $(CVSCO) mozilla/client.mak
 
 ############################################################
 
