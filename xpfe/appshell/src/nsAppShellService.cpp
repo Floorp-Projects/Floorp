@@ -604,6 +604,8 @@ nsAppShellService::GetHiddenDOMWindow(nsIDOMWindowInternal **aWindow)
 {
   nsresult rv;
   nsCOMPtr<nsIDocShell> docShell;
+  NS_ENSURE_TRUE(mHiddenWindow, NS_ERROR_FAILURE);
+
   rv = mHiddenWindow->GetDocShell(getter_AddRefs(docShell));
   if (NS_FAILED(rv)) return rv;
   
