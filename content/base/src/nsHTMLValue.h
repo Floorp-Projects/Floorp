@@ -41,7 +41,6 @@
 #include "nscore.h"
 #include "nsColor.h"
 #include "nsString.h"
-#include "nsISupports.h"
 #include "nsCOMPtr.h"
 
 #include "nsReadableUtils.h"
@@ -50,6 +49,7 @@
 #include "nsIAtom.h"
 
 class nsIDocument;
+class nsICSSStyleRule;
 
 class nsCheapStringBufferUtils {
 public:
@@ -148,15 +148,15 @@ public:
 // between different things stored as the same type.  Doing
 // mUnit & HTMLUNIT_CLASS_MASK should give you the class of type.
 //
-#define HTMLUNIT_NOSTORE    0x0000
-#define HTMLUNIT_STRING     0x0100
-#define HTMLUNIT_INTEGER    0x0200
-#define HTMLUNIT_PIXEL      0x0400
-#define HTMLUNIT_COLOR      0x0800
-#define HTMLUNIT_ISUPPORTS  0x1000
-#define HTMLUNIT_PERCENT    0x2000
-#define HTMLUNIT_ATOMARRAY  0x4000
-#define HTMLUNIT_CLASS_MASK 0xff00
+#define HTMLUNIT_NOSTORE      0x0000
+#define HTMLUNIT_STRING       0x0100
+#define HTMLUNIT_INTEGER      0x0200
+#define HTMLUNIT_PIXEL        0x0400
+#define HTMLUNIT_COLOR        0x0800
+#define HTMLUNIT_CSSSTYLERULE 0x1000
+#define HTMLUNIT_PERCENT      0x2000
+#define HTMLUNIT_ATOMARRAY    0x4000
+#define HTMLUNIT_CLASS_MASK   0xff00
 
 enum nsHTMLUnit {
   // null, value is not specified: 0x0000
@@ -182,8 +182,8 @@ enum nsHTMLUnit {
   // an RGBA value
   eHTMLUnit_Color         = HTMLUNIT_COLOR,
 
-  // (nsISupports*) a ref counted interface
-  eHTMLUnit_ISupports     = HTMLUNIT_ISUPPORTS,
+  // a nsICSSStyleRule
+  eHTMLUnit_CSSStyleRule  = HTMLUNIT_CSSSTYLERULE,
 
   // (1.0 == 100%) value is percentage of something
   eHTMLUnit_Percent       = HTMLUNIT_PERCENT,
@@ -204,7 +204,7 @@ public:
   nsHTMLValue(PRInt32 aValue, nsHTMLUnit aUnit);
   nsHTMLValue(float aValue);
   nsHTMLValue(const nsAString& aValue, nsHTMLUnit aUnit = eHTMLUnit_String);
-  nsHTMLValue(nsISupports* aValue);
+  nsHTMLValue(nsICSSStyleRule* aValue);
   nsHTMLValue(nscolor aValue);
   nsHTMLValue(nsCOMArray<nsIAtom>* aArray);
   nsHTMLValue(const nsHTMLValue& aCopy);
@@ -225,7 +225,7 @@ public:
   PRInt32      GetPixelValue(void) const;
   float        GetPercentValue(void) const;
   nsAString&   GetStringValue(nsAString& aBuffer) const;
-  already_AddRefed<nsISupports> GetISupportsValue(void) const;
+  nsICSSStyleRule* GetCSSStyleRuleValue(void) const;
   nscolor      GetColorValue(void) const;
   nsCOMArray<nsIAtom>* AtomArrayValue() const;
 
@@ -237,7 +237,7 @@ public:
   void  SetPixelValue(PRInt32 aValue);
   void  SetPercentValue(float aValue);
   void  SetStringValue(const nsAString& aValue, nsHTMLUnit aUnit = eHTMLUnit_String);
-  void  SetISupportsValue(nsISupports* aValue);
+  void  SetCSSStyleRuleValue(nsICSSStyleRule* aValue);
   void  SetColorValue(nscolor aValue);
   void  SetEmptyValue(void);
 
@@ -363,8 +363,8 @@ protected:
     float         mFloat;
     /** String.  First 4 bytes are the length, non-null-terminated. */
     PRUnichar*    mString;
-    /** ISupports.  Strong reference.  */
-    nsISupports*  mISupports;
+    /** nsICSSStyleRule.  Strong reference.  */
+    nsICSSStyleRule*  mCSSStyleRule;
     /** Color. */
     nscolor       mColor;
     /** Array if atoms */
@@ -462,13 +462,11 @@ inline nsAString& nsHTMLValue::GetStringValue(nsAString& aBuffer) const
   return aBuffer;
 }
 
-inline already_AddRefed<nsISupports> nsHTMLValue::GetISupportsValue(void) const
+inline nsICSSStyleRule* nsHTMLValue::GetCSSStyleRuleValue(void) const
 {
-  NS_ASSERTION(mUnit == eHTMLUnit_ISupports, "not an ISupports value");
-  if (mUnit == eHTMLUnit_ISupports) {
-    nsISupports *result = mValue.mISupports;
-    NS_IF_ADDREF(result);
-    return result;
+  NS_ASSERTION(mUnit == eHTMLUnit_CSSStyleRule, "not an CSSStyleRule value");
+  if (mUnit == eHTMLUnit_CSSStyleRule) {
+    return mValue.mCSSStyleRule;
   }
   return nsnull;
 }

@@ -104,6 +104,8 @@
 #include "nsUnicharUtils.h"
 #include "nsXULAtoms.h"
 #include "nsHTMLAtoms.h"
+#include "nsContentUtils.h"
+#include "nsAttrName.h"
 
 static const char kNameSpaceSeparator = ':';
 
@@ -187,7 +189,7 @@ protected:
     
     
     nsresult NormalizeAttributeString(const nsAFlatString& aText,
-                                      nsINodeInfo** aNodeInfo);
+                                      nsAttrName& aName);
     nsresult CreateElement(nsINodeInfo *aNodeInfo, nsXULPrototypeElement** aResult);
 
     // Style sheets
@@ -689,7 +691,7 @@ XULContentSinkImpl::FlushText(PRBool aCreateTextNode)
 
 nsresult
 XULContentSinkImpl::NormalizeAttributeString(const nsAFlatString& aText,
-                                             nsINodeInfo** aNodeInfo)
+                                             nsAttrName& aName)
 {
     PRInt32 nameSpaceID = kNameSpaceID_None;
 
@@ -702,8 +704,15 @@ XULContentSinkImpl::NormalizeAttributeString(const nsAFlatString& aText,
     nsCOMPtr<nsIAtom> prefix;
 
     if (!FindCharInReadable(kNameSpaceSeparator, colon, end)) {
-        colon = start; // No ':' found, reset colon
-    } else if (start != colon) {
+        nsCOMPtr<nsIAtom> atom = do_GetAtom(aText);
+        NS_ENSURE_TRUE(atom, NS_ERROR_OUT_OF_MEMORY);
+
+        aName.SetTo(atom);
+
+        return NS_OK;
+    }
+
+    if (start != colon) {
         prefix = do_GetAtom(Substring(start, colon));
 
         nsCOMPtr<nsINameSpace> ns;
@@ -724,8 +733,15 @@ XULContentSinkImpl::NormalizeAttributeString(const nsAFlatString& aText,
         ++colon; // Skip over the ':'
     }
 
-    return mNodeInfoManager->GetNodeInfo(Substring(colon, end), prefix,
-                                         nameSpaceID, aNodeInfo);
+    nsCOMPtr<nsINodeInfo> ni;
+    nsresult rv = mNodeInfoManager->GetNodeInfo(Substring(colon, end), prefix,
+                                                nameSpaceID,
+                                                getter_AddRefs(ni));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    aName.SetTo(ni);
+
+    return NS_OK;
 }
 
 nsresult
@@ -1491,25 +1507,15 @@ XULContentSinkImpl::AddAttributes(const PRUnichar** aAttributes,
   aElement->mNumAttributes = aAttrLen;
 
   // Copy the attributes into the prototype
-  for (; *aAttributes; aAttributes += 2) {
-      rv = NormalizeAttributeString(nsDependentString(aAttributes[0]),
-                                    getter_AddRefs(attrs->mNodeInfo));
+  PRUint32 i;
+  for (i = 0; i < aAttrLen; ++i) {
+      rv = NormalizeAttributeString(nsDependentString(aAttributes[i * 2]),
+                                    attrs[i].mName);
+      NS_ENSURE_SUCCESS(rv, rv);
 
-      if (NS_FAILED(rv)) {
-#ifdef PR_LOGGING
-          nsAutoString qnameC;
-          qnameC.Assign(aAttributes[0]);
-          PR_LOG(gLog, PR_LOG_ALWAYS,
-                 ("xul: unable to parse attribute '%s' at line %d",
-                  NS_ConvertUCS2toUTF8(qnameC).get(), -1)); // XXX pass in line number
-#endif
-          // Bring it. We'll just fail to copy an attribute that we
-          // can't parse. And that's one less attribute to worry
-          // about.
-          --(aElement->mNumAttributes);
-          continue;
-      }
-      attrs->mValue.SetValue(nsDependentString(aAttributes[1]));
+      rv = aElement->SetAttrAt(i, nsDependentString(aAttributes[i * 2 + 1]),
+                               mDocumentURL);
+      NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef PR_LOGGING
       if (PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
@@ -1528,40 +1534,6 @@ XULContentSinkImpl::AddAttributes(const PRUnichar** aAttributes,
                   NS_ConvertUCS2toUTF8(valueC).get()));
       }
 #endif
-      ++attrs;
-  }
-
-  // XUL elements may require some additional work to compute
-  // derived information.
-  if (aElement->mNodeInfo->NamespaceEquals(kNameSpaceID_XUL)) {
-      nsAutoString value;
-
-      // Compute the element's class list if the element has a 'class' attribute.
-      rv = aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::clazz, value);
-      if (NS_FAILED(rv)) return rv;
-
-      if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-          rv = nsClassList::ParseClasses(&aElement->mClassList, value);
-          if (NS_FAILED(rv)) return rv;
-      }
-
-      // Parse the element's 'style' attribute
-      rv = aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::style, value);
-      if (NS_FAILED(rv)) return rv;
-
-      if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-          if (!mCSSParser) {
-              mCSSParser = do_CreateInstance(kCSSParserCID, &rv);
-
-              if (NS_FAILED(rv)) return rv;
-          }
-
-          rv = mCSSParser->ParseStyleAttribute(value, mDocumentURL,
-                                 getter_AddRefs(aElement->mInlineStyleRule));
-
-          NS_ASSERTION(NS_SUCCEEDED(rv), "unable to parse style rule");
-          if (NS_FAILED(rv)) return rv;
-      }
   }
 
   return NS_OK;

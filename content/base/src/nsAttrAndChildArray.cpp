@@ -379,18 +379,17 @@ nsAttrAndChildArray::GetSafeAttrNameAt(PRUint32 aPos) const
 }
 
 const nsAttrName*
-nsAttrAndChildArray::GetExistingAttrNameFromQName(const nsAString& aName) const
+nsAttrAndChildArray::GetExistingAttrNameFromQName(const nsACString& aName) const
 {
-  NS_ConvertUTF16toUTF8 name(aName);
   PRUint32 i, slotCount = AttrSlotCount();
   for (i = 0; i < slotCount && mImpl->mBuffer[i * ATTRSIZE]; ++i) {
-    if (ATTRS(mImpl)[i].mName.QualifiedNameEquals(name)) {
+    if (ATTRS(mImpl)[i].mName.QualifiedNameEquals(aName)) {
       return &ATTRS(mImpl)[i].mName;
     }
   }
 
   if (mImpl && mImpl->mMappedAttrs) {
-    return mImpl->mMappedAttrs->GetExistingAttrNameFromQName(name);
+    return mImpl->mMappedAttrs->GetExistingAttrNameFromQName(aName);
   }
 
   return nsnull;

@@ -1281,6 +1281,11 @@ nsGenericElement::RemoveAttribute(const nsAString& aName)
     return NS_OK;
   }
 
+  // Hold a strong reference here so that the atom or nodeinfo doesn't go
+  // away during UnsetAttr. If it did UnsetAttr would be left with a
+  // dangling pointer as argument without knowing it.
+  nsAttrName tmp(*name);
+
   return UnsetAttr(name->NamespaceID(), name->LocalName(), PR_TRUE);
 }
 
@@ -3174,7 +3179,8 @@ nsGenericElement::AddScriptEventListener(nsIAtom* aAttribute,
 const nsAttrName*
 nsGenericContainerElement::InternalGetExistingAttrNameFromQName(const nsAString& aStr) const
 {
-  return mAttrsAndChildren.GetExistingAttrNameFromQName(aStr);
+  return mAttrsAndChildren.GetExistingAttrNameFromQName(
+    NS_ConvertUTF16toUTF8(aStr));
 }
 
 nsresult

@@ -115,6 +115,9 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptGlobalObjectOwner.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsContentUtils.h"
+#include "nsIParser.h"
+#include "nsICSSStyleSheet.h"
 
 //----------------------------------------------------------------------
 //
@@ -3428,11 +3431,11 @@ nsXULDocument::AddAttributes(nsXULPrototypeElement* aPrototype,
     for (PRUint32 i = 0; i < aPrototype->mNumAttributes; ++i) {
         nsXULPrototypeAttribute* protoattr = &(aPrototype->mAttributes[i]);
         nsAutoString  valueStr;
-        protoattr->mValue.GetValue( valueStr );
+        protoattr->mValue.ToString(valueStr);
 
-        rv = aElement->SetAttr(protoattr->mNodeInfo->NamespaceID(),
-                               protoattr->mNodeInfo->NameAtom(),
-                               protoattr->mNodeInfo->GetPrefixAtom(),
+        rv = aElement->SetAttr(protoattr->mName.NamespaceID(),
+                               protoattr->mName.LocalName(),
+                               protoattr->mName.GetPrefix(),
                                valueStr,
                                PR_FALSE);
         if (NS_FAILED(rv)) return rv;

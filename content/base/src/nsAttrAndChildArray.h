@@ -99,7 +99,8 @@ public:
   nsresult SetAndTakeAttr(nsINodeInfo* aName, nsAttrValue& aValue);
   nsresult RemoveAttrAt(PRUint32 aPos);
   const nsAttrName* GetSafeAttrNameAt(PRUint32 aPos) const;
-  const nsAttrName* GetExistingAttrNameFromQName(const nsAString& aName) const;
+  // aName is UTF-8 encoded
+  const nsAttrName* GetExistingAttrNameFromQName(const nsACString& aName) const;
   PRInt32 IndexOfAttr(nsIAtom* aLocalName, PRInt32 aNamespaceID = kNameSpaceID_None) const;
 
   nsresult SetAndTakeMappedAttr(nsIAtom* aLocalName, nsAttrValue& aValue,

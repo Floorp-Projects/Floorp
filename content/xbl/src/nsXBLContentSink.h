@@ -156,8 +156,6 @@ protected:
   nsIXBLDocumentInfo* mDocInfo;
   PRBool mIsChromeOrResource; // For bug #45989
 
-  nsCOMPtr<nsICSSParser> mCSSParser;            // [OWNER]
-
   nsXBLPrototypeBinding* mBinding;
   nsXBLPrototypeHandler* mHandler; // current handler, owned by its PrototypeBinding
   nsXBLProtoImpl* mImplementation;

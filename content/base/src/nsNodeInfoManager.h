@@ -69,7 +69,6 @@ public:
 
   virtual nsresult GetDocumentPrincipal(nsIPrincipal** aPrincipal);
   virtual nsresult SetDocumentPrincipal(nsIPrincipal* aPrincipal);
-  virtual nsresult GetNodeInfos(nsCOMArray<nsINodeInfo> *aArray);
 
   // nsNodeInfoManager
   nsNodeInfoManager();
@@ -81,10 +80,6 @@ private:
   static PRIntn PR_CALLBACK NodeInfoInnerKeyCompare(const void *key1,
                                                     const void *key2);
   static PLHashNumber PR_CALLBACK GetNodeInfoInnerHashValue(const void *key);
-
-  PR_STATIC_CALLBACK(PRIntn) GetNodeInfoArrayEnumerator(PLHashEntry* he,
-                                                        PRIntn i,
-                                                        void* arg);
 
   PLHashTable *mNodeInfoHash;
   nsCOMPtr<nsIPrincipal> mPrincipal;
