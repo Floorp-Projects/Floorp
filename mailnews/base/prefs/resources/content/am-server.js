@@ -186,12 +186,6 @@ function onAdvanced()
       var identity = account.defaultIdentity;
       var accountManager = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
       account = accountManager.getAccount(serverSettings.deferredToAccount);
-      if (!account)
-      {
-        throw "UNEXPECTED: deferredToAccount '" + 
-            serverSettings.deferredToAccount + "' not found!";
-      }
-              
       if (identity.fccFolder == (pop3Server.serverURI + "/Sent"))
         identity.fccFolder = account.incomingServer.serverURI + "/Sent";
 

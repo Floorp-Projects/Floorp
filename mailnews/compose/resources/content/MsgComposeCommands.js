@@ -1673,11 +1673,6 @@ function GenericSendMessage( msgType )
         // check if the user tries to send a message to a newsgroup through a mail account
         var currentAccountKey = getCurrentAccountKey();
         var account = gAccountManager.getAccount(currentAccountKey);
-        if (!account)
-        {
-          throw "UNEXPECTED: currentAccountKey '" + currentAccountKey +
-              "' has no matching account!";
-        }
         var servertype = account.incomingServer.type;
 
         if (servertype != "nntp" && msgCompFields.newsgroups != "")
