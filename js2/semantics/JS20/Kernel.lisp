@@ -159,19 +159,28 @@
 
 
 ; Simple JS2 read-eval-print loop.
-(defun rep ()
+(defun rep (&key print-tokens break-on-error)
   (loop
     (let ((s (read-line *terminal-io* t)))
-      (format *terminal-io* "<~S>~%" s)
+      ;(format *terminal-io* "<~S>~%" s)
       (block success
         (handler-case
-          (let ((exception
-                 (catch :semantic-exception
-                   (dolist (r (multiple-value-list (js-parse s)))
-                     (write r :stream *terminal-io* :pretty t)
-                     (terpri *terminal-io*))
-                   (return-from success))))
-            (format *terminal-io* "Exception: ~S~%" exception))
+          (flet ((eval-and-print ()
+                   (multiple-value-bind (results types tokens) (js-parse s)
+                     (declare (ignore types))
+                     (assert-true (= (length results) 1))
+                     (when print-tokens
+                       (write tokens :stream *terminal-io* :pretty t)
+                       (terpri *terminal-io*))
+                     (write (first results) :stream *terminal-io* :pretty t)
+                     (terpri *terminal-io*))))
+            (if break-on-error
+              (eval-and-print)
+              (let ((exception
+                     (catch :semantic-exception
+                       (eval-and-print)
+                       (return-from success))))
+                (format *terminal-io* "Exception: ~S~%" exception))))
           (syntax-error (condition)
                         (format *terminal-io* "~A~%" condition)))))))
 
