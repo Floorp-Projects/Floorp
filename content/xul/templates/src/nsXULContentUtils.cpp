@@ -88,6 +88,7 @@ protected:
     static nsrefcnt gRefCnt;
     static nsIRDFService* gRDF;
     static nsINameSpaceManager* gNameSpaceManager;
+    static nsIDateTimeFormat* gFormat;
 
 public:
     // nsISupports methods
@@ -146,6 +147,7 @@ public:
 nsrefcnt nsXULContentUtils::gRefCnt;
 nsIRDFService* nsXULContentUtils::gRDF;
 nsINameSpaceManager* nsXULContentUtils::gNameSpaceManager;
+nsIDateTimeFormat* nsXULContentUtils::gFormat;
 
 //------------------------------------------------------------------------
 // Constructors n' stuff
@@ -169,6 +171,13 @@ nsXULContentUtils::Init()
                                                 nsnull,
                                                 nsCOMTypeInfo<nsINameSpaceManager>::GetIID(),
                                                 (void**) &gNameSpaceManager);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = nsComponentManager::CreateInstance(kDateTimeFormatCID,
+                                                nsnull,
+                                                nsCOMTypeInfo<nsIDateTimeFormat>::GetIID(),
+                                                (void**) &gFormat);
+
         if (NS_FAILED(rv)) return rv;
     }
     return NS_OK;
@@ -409,57 +418,64 @@ nsXULContentUtils::GetElementRefResource(nsIContent* aElement, nsIRDFResource** 
 NS_IMETHODIMP
 nsXULContentUtils::GetTextForNode(nsIRDFNode* aNode, nsString& aResult)
 {
-    nsresult		rv;
-    nsCOMPtr <nsIRDFResource>	resource;
-    nsCOMPtr <nsIRDFLiteral>	literal;
-    nsCOMPtr <nsIRDFDate>	dateLiteral;
-    nsCOMPtr <nsIRDFInt>	intLiteral;
-
     if (! aNode) {
         aResult.Truncate();
-        rv = NS_OK;
-    }
-    else if (NS_SUCCEEDED(rv = aNode->QueryInterface(kIRDFResourceIID, getter_AddRefs(resource)))) {
-        nsXPIDLCString p;
-        if (NS_SUCCEEDED(rv = resource->GetValue( getter_Copies(p) ))) {
-            aResult = p;
-        }
-    }
-    else if (NS_SUCCEEDED(rv = aNode->QueryInterface(kIRDFDateIID, getter_AddRefs(dateLiteral)))) {
-	PRInt64		theDate;
-        if (NS_SUCCEEDED(rv = dateLiteral->GetValue( &theDate ))) {
-		// XXX can we cache this somehow instead of creating/destroying it all the time?
-		nsCOMPtr <nsIDateTimeFormat> aDateTimeFormat;
-		rv = nsComponentManager::CreateInstance(kDateTimeFormatCID, NULL,
-			      nsIDateTimeFormat::GetIID(), getter_AddRefs(aDateTimeFormat));
-		if (NS_SUCCEEDED(rv) && aDateTimeFormat)
-		{
-			rv = aDateTimeFormat->FormatPRTime(nsnull /* nsILocale* locale */, kDateFormatShort, kTimeFormatSeconds, (PRTime)theDate, aResult);
-			if (NS_FAILED(rv)) {
-				aResult.Truncate();
-			}
-		}
-        }
-    }
-    else if (NS_SUCCEEDED(rv = aNode->QueryInterface(kIRDFIntIID, getter_AddRefs(intLiteral)))) {
-	PRInt32		theInt;
-	aResult.Truncate();
-        if (NS_SUCCEEDED(rv = intLiteral->GetValue( &theInt ))) {
-        	aResult.Append(theInt, 10);
-        }
-    }
-    else if (NS_SUCCEEDED(rv = aNode->QueryInterface(kIRDFLiteralIID, getter_AddRefs(literal)))) {
-        nsXPIDLString p;
-        if (NS_SUCCEEDED(rv = literal->GetValue( getter_Copies(p) ))) {
-            aResult = p;
-        }
-    }
-    else {
-        NS_ERROR("not a resource or a literal");
-        rv = NS_ERROR_UNEXPECTED;
+        return NS_OK;
     }
 
-    return rv;
+    nsresult rv;
+
+    // Literals are the most common, so try these first.
+    nsCOMPtr<nsIRDFLiteral> literal = do_QueryInterface(aNode);
+    if (literal) {
+        const PRUnichar* p;
+        rv = literal->GetValueConst(&p);
+        if (NS_FAILED(rv)) return rv;
+
+        aResult = p;
+        return NS_OK;
+    }
+
+    nsCOMPtr<nsIRDFDate> dateLiteral = do_QueryInterface(aNode);
+    if (dateLiteral) {
+        PRInt64	tm;
+        rv = dateLiteral->GetValue(&tm);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = gFormat->FormatPRTime(nsnull /* nsILocale* locale */,
+                                  kDateFormatShort,
+                                  kTimeFormatSeconds,
+                                  PRTime(tm),
+                                  aResult);
+
+        if (NS_FAILED(rv)) return rv;
+
+        return NS_OK;
+    }
+
+    nsCOMPtr<nsIRDFInt> intLiteral = do_QueryInterface(aNode);
+    if (intLiteral) {
+        PRInt32	value;
+        rv = intLiteral->GetValue(&value);
+        if (NS_FAILED(rv)) return rv;
+
+        aResult.Truncate();
+        aResult.Append(value, 10);
+        return NS_OK;
+    }
+
+
+    nsCOMPtr<nsIRDFResource> resource = do_QueryInterface(aNode);
+    if (resource) {
+        const char* p;
+        rv = resource->GetValueConst(&p);
+        if (NS_FAILED(rv)) return rv;
+        aResult = p;
+        return NS_OK;
+    }
+
+    NS_ERROR("not a resource or a literal");
+    return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP
@@ -640,7 +656,7 @@ nsXULContentUtils::MakeElementResource(nsIDocument* aDocument, const nsString& a
     nsresult rv;
 
     char buf[256];
-    nsCAutoString uri(CBufDescriptor(buf, PR_TRUE, sizeof(buf)));
+    nsCAutoString uri(CBufDescriptor(buf, PR_TRUE, sizeof(buf), 0));
     rv = MakeElementURI(aDocument, aID, uri);
     if (NS_FAILED(rv)) return rv;
 
@@ -736,19 +752,20 @@ nsXULContentUtils::GetResource(PRInt32 aNameSpaceID, const nsString& aAttribute,
 
     nsresult rv;
 
-    nsAutoString uri;
+    PRUnichar buf[256];
+    nsAutoString uri(CBufDescriptor(buf, PR_TRUE, sizeof(buf) / sizeof(PRUnichar), 0));
     if (aNameSpaceID != kNameSpaceID_Unknown && aNameSpaceID != kNameSpaceID_None) {
         rv = gNameSpaceManager->GetNameSpaceURI(aNameSpaceID, uri);
         // XXX ignore failure; treat as "no namespace"
     }
 
-    // XXX check to see if we need to insert a '/' or a '#'
-    if (0 < uri.Length() && uri.Last() != '#' && uri.Last() != '/' && aAttribute.First() != '#')
+    // XXX check to see if we need to insert a '/' or a '#'. Oy.
+    if (uri.Length() > 0 && uri.Last() != '#' && uri.Last() != '/' && aAttribute.First() != '#')
         uri.Append('#');
 
     uri.Append(aAttribute);
 
-    rv = gRDF->GetResource(nsCAutoString(uri), aResult);
+    rv = gRDF->GetUnicodeResource(uri.GetUnicode(), aResult);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
     if (NS_FAILED(rv)) return rv;
 
