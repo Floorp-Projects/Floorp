@@ -198,7 +198,6 @@ protected:
 #define NS_MOZILLA_DIR_PERMISSION	00700
 #endif /* XP_UNIX */
 
-
 /**
  * When using the registry we put a version number in it.
  * If the version number that is in the registry doesn't match
@@ -209,7 +208,7 @@ protected:
  * alpha0.30 : Changing autoreg to begin registration from ./components on unix
  * alpha0.40 : repository -> component manager
  */
-#define NS_XPCOM_COMPONENT_MANAGER_VERSION_STRING "alpha0.42"
+#define NS_XPCOM_COMPONENT_MANAGER_VERSION_STRING "alpha0.43"
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
