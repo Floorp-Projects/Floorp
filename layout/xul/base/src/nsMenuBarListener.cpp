@@ -133,31 +133,34 @@ nsMenuBarListener::HandleEvent(nsIDOMEvent* aEvent)
 nsresult
 nsMenuBarListener::MouseMove(nsIDOMEvent* aMouseEvent)
 {
-  if (mMenuBarFrame->IsActive()) {
-    // Make sure the active menu gets set properly.
-    // If we're over something then switch to it.
-    nsCOMPtr<nsIDOMNode> target;
-    aMouseEvent->GetTarget(getter_AddRefs(target));
+  // Make sure the active menu gets set properly.
+  // If we're over something then switch to it.
+  nsCOMPtr<nsIDOMNode> target;
+  aMouseEvent->GetTarget(getter_AddRefs(target));
 
-    nsCOMPtr<nsIContent> current = do_QueryInterface(target);
-    nsCOMPtr<nsIContent> menuBar;
-    mMenuBarFrame->GetContent(getter_AddRefs(menuBar));
+  nsCOMPtr<nsIContent> current = do_QueryInterface(target);
+  nsCOMPtr<nsIContent> menuBar;
+  mMenuBarFrame->GetContent(getter_AddRefs(menuBar));
 
-    while (current && (current.get() != menuBar)) {
-      // See if we're a menu item.
-      nsCOMPtr<nsIAtom> tag;
-      current->GetTag(*getter_AddRefs(tag));
-      if (tag && (tag.get() == nsXULAtoms::xpmenu)) {
-        // We found a menu.
-        mMenuBarFrame->SetCurrentMenuItem(current);
-        break;
-      }
-
-      // Get our parent.
-      nsCOMPtr<nsIContent> parent;
-      current->GetParent(*getter_AddRefs(parent));
-      current = parent.get();
+  while (current && (current.get() != menuBar)) {
+    // See if we're a menu item.
+    nsCOMPtr<nsIAtom> tag;
+    current->GetTag(*getter_AddRefs(tag));
+    if (tag && (tag.get() == nsXULAtoms::xpmenu)) {
+      // We found a menu.
+      mMenuBarFrame->SetCurrentMenuItem(current);
+      break;
     }
+
+    // Get our parent.
+    nsCOMPtr<nsIContent> parent;
+    current->GetParent(*getter_AddRefs(parent));
+    current = parent.get();
+  }
+
+  if (!mMenuBarFrame->IsActive()) {
+    // Clear the selected item if there is one.
+    mMenuBarFrame->SetCurrentMenuItem(nsnull);
   }
 
   return NS_OK; // means I am NOT consuming event
