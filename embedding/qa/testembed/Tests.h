@@ -142,6 +142,7 @@ protected:
 	afx_msg void OnInterfacesNsiwebnav();
 	afx_msg void OnInterfacesNsiclipboardcommands();
 	afx_msg void OnInterfacesNsiobserverservice();
+	afx_msg void OnInterfacesNsiwebbrowser();
 
 	//}}AFX_MSG
 
