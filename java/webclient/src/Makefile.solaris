@@ -43,11 +43,11 @@ component.reg:
 components:
 	${LN} ${DIST}/bin/components
 
-libwebclientstub.so: BrowserControlMozillaShimStub.o MotifBrowserControlCanvasStub.o
-	${MKSHLIB} -o ${DLLNAMESTUB} BrowserControlMozillaShimStub.o MotifBrowserControlCanvasStub.o ${STUBLIBS}
+libwebclientstub.so: BrowserControlNativeShimStub.o MotifBrowserControlCanvasStub.o
+	${MKSHLIB} -o ${DLLNAMESTUB} BrowserControlNativeShimStub.o MotifBrowserControlCanvasStub.o ${STUBLIBS}
 
-libwebclient.so: BrowserControlMozillaShim.o MotifBrowserControlCanvas.o gtkmozilla.o nsActions.o nsSetupRegistry.o DocumentObserver.o
-	${MKSHLIB} -o ${DLLNAME} BrowserControlMozillaShim.o MotifBrowserControlCanvas.o gtkmozilla.o nsActions.o nsSetupRegistry.o DocumentObserver.o ${LIBS}
+libwebclient.so: BrowserControlNativeShim.o MotifBrowserControlCanvas.o gtkmozilla.o nsActions.o nsSetupRegistry.o DocumentObserver.o
+	${MKSHLIB} -o ${DLLNAME} BrowserControlNativeShim.o MotifBrowserControlCanvas.o gtkmozilla.o nsActions.o nsSetupRegistry.o DocumentObserver.o ${LIBS}
 
 gtkmozilla.o: motif/gtkmozilla.cpp
 	${CC} ${DEFINES} ${INCLUDE} -c motif/gtkmozilla.cpp
@@ -58,11 +58,11 @@ MotifBrowserControlCanvasStub.o: motif/MotifBrowserControlCanvasStub.cpp
 MotifBrowserControlCanvas.o: motif/MotifBrowserControlCanvas.cpp
 	${CC} ${DEFINES} ${INCLUDE} -c motif/MotifBrowserControlCanvas.cpp
 
-BrowserControlMozillaShimStub.o: motif/BrowserControlMozillaShimStub.cpp
-	${CC} ${STUBDEFINES} ${STUBINCLUDE} -c motif/BrowserControlMozillaShimStub.cpp
+BrowserControlNativeShimStub.o: motif/BrowserControlNativeShimStub.cpp
+	${CC} ${STUBDEFINES} ${STUBINCLUDE} -c motif/BrowserControlNativeShimStub.cpp
 
-BrowserControlMozillaShim.o: BrowserControlMozillaShim.cpp
-	${CC} ${DEFINES} ${INCLUDE} -c BrowserControlMozillaShim.cpp
+BrowserControlNativeShim.o: BrowserControlNativeShim.cpp
+	${CC} ${DEFINES} ${INCLUDE} -c BrowserControlNativeShim.cpp
 
 motif/nsSetupRegistry.cpp:
 	cd motif

@@ -31,7 +31,7 @@
 #include <jni.h>
 #include "MotifBrowserControlCanvas.h"
 
-#include "BrowserControlMozillaShimStub.h"
+#include "BrowserControlNativeShimStub.h"
 
 #include <dlfcn.h>
 
