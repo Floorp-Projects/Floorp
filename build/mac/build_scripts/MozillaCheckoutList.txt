@@ -11,4 +11,5 @@ mozilla/nsprpub,        NSPRPUB_CLIENT_BRANCH
 mozilla/security/nss,   NSS_30_BRANCH
 mozilla/security/psm,   SECURITY_MAC_BRANCH
 DirectorySDKSourceC,    LDAPCSDK_40_BRANCH
+mozilla/lib/mac/Instrumentation
 SeaMonkeyAll
