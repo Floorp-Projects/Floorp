@@ -38,9 +38,9 @@
   <font color="red">
     This is a template used on mozilla.org - it, along with the
     comment-guided.txt.tmpl template, are included as a demo of what it's
-    possible to do with custom templates in general, and custom [% terms.bug %] entry
-    templates in particular. It is recommended that this template be
-    customised if you want to use it on your [% terms.Bugzilla %] installation.
+    possible to do with custom templates in general, and custom [% terms.bug %]
+    entry templates in particular. You will need to alter the text of this
+    template if you want to use it on your [% terms.Bugzilla %] installation.
   </font>
 </p>
 
@@ -73,12 +73,12 @@ function PutDescription() {
                padding: 2px">
     <font color="#990000">
       <b>
-        Note: This is a tool for reporting [% terms.bugs %] in software from mozilla.org.
-        Use Netscape's
-        <a href="http://help.netscape.com/forms/bug-client.html">[% terms.bug %] reporting
-        form</a> to report [% terms.bugs %] with Netscape products like Navigator 4.x.
-        Netscape products have a blue and black N in the top right hand
-        corner.
+        Note: This is a tool for reporting [% terms.bugs %] in software from
+        mozilla.org. Use Netscape's
+        <a href="http://help.netscape.com/forms/bug-client.html">[% terms.bug %]
+        reporting form</a> to report [% terms.bugs %] with Netscape products
+        like Navigator 4.x. Netscape products have a blue and black N in the 
+        top right hand corner.
       </b>
     </font>
   </div>
@@ -97,13 +97,14 @@ function PutDescription() {
          Netscape [% matches.0 %] Feedback Center.</a>
       </b>
     </font>
-    This form is only for reporting [% terms.bugs %] in the Mozilla web browser and other
-    products from mozilla.org. To report [% terms.abug %] you find in
-    Netscape [% matches.0 %] with this form,
-    you must reproduce it first in a
-    <a href="http://ftp.mozilla.org/pub/mozilla/nightly/latest/">
-    recent build</a> of Mozilla to make sure the problem hasn't been
-    fixed already.
+    This form is only for reporting [% terms.bugs %] in the Mozilla web browser
+    and other products from mozilla.org. To report [% terms.abug %] you find 
+    in Netscape [% matches.0 %] with this form, you must reproduce it first in 
+    a recent build of
+    <a href="http://ftp.mozilla.org/pub/mozilla.org/mozilla/nightly/latest/">Mozilla</a>,
+    <a href="http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-trunk/">Firefox</a> or
+    <a href="http://ftp.mozilla.org/pub/mozilla.org/camino/nightly/latest/">Camino</a>
+    to make sure the problem hasn't been fixed already.
   </div>
 [% END %]
 
@@ -115,9 +116,13 @@ function PutDescription() {
   fixing it. Please note that <strong>we do not accept [% terms.bug %] reports by
   email</strong> - please do not email developers or mozilla.org staff
   with [% terms.bug %] reports. <font color="red">Also, please do not
-  file Mozilla [% terms.bugs %] on copies of Mozilla older than two weeks - first,
-  download a
-  <a href="http://ftp.mozilla.org/pub/mozilla/nightly/latest/">newer build</a>
+  file [% terms.bugs %] on browser/email software older than two weeks - first,
+  download a newer build of
+  <a href="http://ftp.mozilla.org/pub/mozilla.org/mozilla/nightly/latest/">Mozilla</a>,
+  <a href="http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-trunk/">Firefox</a>,
+  <a href="http://ftp.mozilla.org/pub/mozilla.org/camino/nightly/latest/">Camino</a>
+  or  
+  <a href="http://ftp.mozilla.org/pub/mozilla.org/thunderbird/nightly/">Thunderbird</a>
   and check that the problem is still present.
   </font>
 </p>
