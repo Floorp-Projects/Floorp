@@ -259,7 +259,7 @@ function StateChanged(name,state)
             gChangeTable[gServerURI][name] = state;
         }
         else {
-		    var oldValue = gChangeTable[gServerURI,name];
+		    var oldValue = gChangeTable[gServerURI][name];
 		    if (oldValue != state) {
 			    gChangeTable[gServerURI][name] = undefined;
 		    }
@@ -305,9 +305,10 @@ function ReverseStateFromNode(node)
 	SetState(name, state);
 }
 
+
 function SubscribeOnClick(event)
 {
-  var t = event.originalTarget;
+    var t = event.originalTarget;
 
 	if (event.detail == 2) {
 		ReverseStateFromNode(t.parentNode.parentNode);
@@ -329,6 +330,12 @@ function SubscribeOnClick(event)
 			}
 		}
 		else {
+            // if the user clicks on the subscribe check box, we handle it here
+            if (t.localName == "image") {
+                ReverseStateFromNode(t.parentNode.parentNode.parentNode);
+                return;
+            }
+
 			var name = t.parentNode.parentNode.getAttribute('name');
 			if (name && (name.length > 0)) {
 				gNameField.setAttribute('value',name);
