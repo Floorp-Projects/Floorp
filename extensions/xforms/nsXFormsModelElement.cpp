@@ -702,7 +702,6 @@ nsXFormsModelElement::FinishConstruction()
       if (namespaceURI.EqualsLiteral(NS_NAMESPACE_XFORMS)) {
         if (!ProcessBind(xpath, firstInstanceRoot, nsnull,
                          nsCOMPtr<nsIDOMElement>(do_QueryInterface(child)))) {
-          nsXFormsUtils::DispatchEvent(mElement, eEvent_BindingException);
           return NS_OK;
         }
       }
@@ -787,8 +786,10 @@ nsXFormsModelElement::ProcessBind(nsIDOMXPathEvaluator *aEvaluator,
     if (!exprStrings[i].IsEmpty()) {
       rv = aEvaluator->CreateExpression(exprStrings[i], resolver,
                                         getter_AddRefs(props[i]));
-      if (NS_FAILED(rv))
+      if (NS_FAILED(rv)) {
+        nsXFormsUtils::DispatchEvent(mElement, eEvent_ComputeException);
         return PR_FALSE;
+      }
 
       ++propCount;
     }
@@ -805,8 +806,11 @@ nsXFormsModelElement::ProcessBind(nsIDOMXPathEvaluator *aEvaluator,
     rv = aEvaluator->Evaluate(expr, aContextNode, resolver,
                               nsIDOMXPathResult::ORDERED_NODE_SNAPSHOT_TYPE,
                               nsnull, getter_AddRefs(result));
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv)) {
+      nsXFormsUtils::DispatchEvent(mElement, eEvent_BindingException);
       return PR_FALSE; // dispatch a binding exception
+    }
+    
   }
   NS_ENSURE_TRUE(result, PR_FALSE);
 
