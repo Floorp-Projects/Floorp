@@ -42,6 +42,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <libgen.h>
 
 #define EXIT_IF_FALSE(x)                                                      \
   do {                                                                        \
@@ -122,7 +123,7 @@ int main(int argc, char** argv)
 
   EXIT_IF_FALSE(fwrite(&header, sizeof(header), 1, output) == 1);
 
-  short entry_count = 3;
+  short entry_count = 4;
   EXIT_IF_FALSE(fwrite(&entry_count, sizeof(entry_count), 1, output) == 1);
 
   struct entry {
@@ -130,6 +131,18 @@ int main(int argc, char** argv)
     unsigned int offset;
     unsigned int length;
   };
+
+  struct dates
+  {
+    int create; /* file creation date/time */
+    int modify; /* last modification date/time */
+    int backup; /* last backup date/time */
+    int access; /* last access date/time */
+  } dates;
+
+  char *name_buf = strdup(input_name);
+  char *orig_name = basename(name_buf);
+  int orig_name_len = strlen(orig_name);
 
   entry entries[entry_count];
 
@@ -140,12 +153,16 @@ int main(int argc, char** argv)
   entries[0].length = input_st.st_size;
 
   entries[1].id = 2; // data fork
-  entries[1].offset = header_end + input_st.st_size;
+  entries[1].offset = entries[0].offset + entries[0].length;
   entries[1].length = rez_st.st_size;
 
   entries[2].id = 3; // file name
-  entries[2].offset = header_end + input_st.st_size + rez_st.st_size;
-  entries[2].length = strlen(input_name);
+  entries[2].offset = entries[1].offset + entries[1].length;
+  entries[2].length = orig_name_len;
+
+  entries[3].id = 8; // file dates
+  entries[3].offset = entries[2].offset + entries[2].length;
+  entries[3].length = sizeof(dates);
 
   EXIT_IF_FALSE(fwrite(entries, sizeof(entry), entry_count, output) ==
                 entry_count);
@@ -153,7 +170,18 @@ int main(int argc, char** argv)
   append_file(output, input_name);
   append_file(output, rez_name);
 
-  fwrite(input_name, 1, entries[2].length, output);
+  EXIT_IF_FALSE(fwrite(orig_name, 1, orig_name_len, output) == orig_name_len);
+
+  // Dates in an AppleSingle encoded file should be the number of
+  // seconds since (or to) 00:00:00, January 1, 2000 UTC
+#define Y2K_SECONDS (946710000U)
+
+  dates.create = input_st.st_ctime - Y2K_SECONDS;
+  dates.modify = input_st.st_mtime - Y2K_SECONDS;
+  dates.backup = 0x80000000; // earliest possible time
+  dates.access = input_st.st_atime - Y2K_SECONDS;
+
+  EXIT_IF_FALSE(fwrite(&dates, 1, sizeof(dates), output) == sizeof(dates));
 
   fclose(output);
 
