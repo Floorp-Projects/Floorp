@@ -21,10 +21,11 @@ LIBRARY_NAME = raptorhtmlline_s
 
 # Note the sophisticated alphabetical ordering :-|
 CPPSRCS =				\
-	nsBlockFrame.cpp		\
-	nsHTMLLineLayout.cpp		\
-	nsInlineFrame.cpp		\
-	nsLineData.cpp			\
+	nsCSSBlockFrame.cpp		\
+	nsCSSContainerFrame.cpp		\
+	nsCSSInlineFrame.cpp		\
+	nsCSSInlineLayout.cpp		\
+	nsCSSLineLayout.cpp		\
 	$(NULL)
 
 MODULE = raptor
