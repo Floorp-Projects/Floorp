@@ -197,7 +197,6 @@ public:
   NS_IMETHOD AddCompositeListener(nsICompositeListener *aListener);
   NS_IMETHOD RemoveCompositeListener(nsICompositeListener *aListener);
 
-  NS_IMETHOD GetWidgetForView(nsIView *aView, nsIWidget **aWidget);
   NS_IMETHOD GetWidget(nsIWidget **aWidget);
   nsIWidget* GetWidget() { return mRootView ? mRootView->GetWidget() : nsnull; }
   NS_IMETHOD ForceUpdate();
@@ -236,7 +235,7 @@ protected:
 private:
   void ReparentChildWidgets(nsIView* aView, nsIWidget *aNewWidget);
   void ReparentWidgets(nsIView* aView, nsIView *aParent);
-  nsIRenderingContext *CreateRenderingContext(nsView &aView);
+  already_AddRefed<nsIRenderingContext> CreateRenderingContext(nsView &aView);
   void AddRectToDirtyRegion(nsView* aView, const nsRect &aRect) const;
 
   PRBool UpdateWidgetArea(nsView *aWidgetView, const nsRect &aDamagedRect, nsView* aIgnoreWidgetView);
@@ -245,6 +244,9 @@ private:
 
   void Refresh(nsView *aView, nsIRenderingContext *aContext,
                nsIRegion *region, PRUint32 aUpdateFlags);
+  /**
+   * Refresh aView (which must be non-null) with our default background color
+   */
   void DefaultRefresh(nsView* aView, const nsRect* aRect);
   PRBool BuildRenderingDisplayList(nsIView* aRootView,
     const nsRegion& aRegion, nsVoidArray* aDisplayList);

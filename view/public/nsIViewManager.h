@@ -411,15 +411,6 @@ public:
   NS_IMETHOD RemoveCompositeListener(nsICompositeListener *aListener) = 0;
 
   /**
-   * Retrieve the widget that a view renders into.
-   * The view must be in the view hierarchy.
-   * @param aView the view to get the widget for 
-   * @param aWidget the widget that aView renders into.
-   * @result error status
-   */
-  NS_IMETHOD GetWidgetForView(nsIView *aView, nsIWidget **aWidget) = 0;
-
-  /**
    * Retrieve the widget at the root of the view manager. This is the
    * widget associated with the root view, if the root view exists and has
    * a widget.

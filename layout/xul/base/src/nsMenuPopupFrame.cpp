@@ -524,22 +524,6 @@ nsMenuPopupFrame::GetRootViewForPopup(nsIPresContext* aPresContext,
 }
 
 
-void GetWidgetForView(nsIView *aView, nsIWidget *&aWidget);
-void GetWidgetForView(nsIView *aView, nsIWidget *&aWidget)
-{
-  aWidget = nsnull;
-  nsIView *view = aView;
-  while (!aWidget && view)
-  {
-    aWidget = view->GetWidget();
-    if (!aWidget)
-      view = view->GetParent();
-    else
-      NS_ADDREF(aWidget);
-  }
-}
-
-
 //
 // AdjustClientXYForNestedDocuments
 // 
@@ -581,7 +565,7 @@ nsMenuPopupFrame::AdjustClientXYForNestedDocuments ( nsIDOMXULDocument* inPopupD
 
   //NS_WARN_IF_FALSE(targetNode, "no popup/tooltip node on document!");
   nsCOMPtr<nsIContent> targetAsContent ( do_QueryInterface(targetNode) );
-  nsCOMPtr<nsIWidget> targetDocumentWidget;
+  nsIWidget* targetDocumentWidget = nsnull;
   if ( targetAsContent ) {
     nsCOMPtr<nsIDocument> targetDocument = targetAsContent->GetDocument();
     if (targetDocument) {
@@ -597,7 +581,9 @@ nsMenuPopupFrame::AdjustClientXYForNestedDocuments ( nsIDOMXULDocument* inPopupD
           shell->GetPresContext(getter_AddRefs(targetContext));
           if (targetContext) {
             GetRootViewForPopup(targetContext, targetFrame, PR_TRUE, &parentView);
-            GetWidgetForView(parentView, *getter_AddRefs(targetDocumentWidget));
+            if (parentView) {
+              targetDocumentWidget = parentView->GetNearestWidget(nsnull);
+            }
           }
         }
         if (!targetDocumentWidget) {
@@ -1028,8 +1014,7 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
   // Use containingView instead of parentView, to account for the scrollarrows
   // that a parent menu might have.
 
-  nsCOMPtr<nsIWidget> parentViewWidget;
-  GetWidgetForView ( containingView, *getter_AddRefs(parentViewWidget) );
+  nsIWidget* parentViewWidget = containingView->GetNearestWidget(nsnull);
   nsRect localParentWidgetRect(0,0,0,0), screenParentWidgetRect;
   parentViewWidget->WidgetToScreen ( localParentWidgetRect, screenParentWidgetRect );
   PRInt32 screenViewLocX = NSIntPixelsToTwips(screenParentWidgetRect.x,p2t) + (xpos - parentPos.x);
