@@ -152,16 +152,14 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
         if (slot == null) {
             return Scriptable.NOT_FOUND;
         }
-        Object value = slot.value;
-        if (value instanceof ComplexValue) {
-            ComplexValue cv = (ComplexValue)value;
-            if (cv.getter == null) {
-                value = cv.value;
-            } else {
-                value = getComplexValue(cv, start);
+        if (slot.complexSlotFlag != 0) {
+            GetterSlot gslot = (GetterSlot)slot;
+            if (gslot.getter != null) {
+                return getByGetter(gslot, start);
             }
         }
-        return value;
+
+        return slot.value;
     }
 
     /**
@@ -216,28 +214,18 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
         if ((slot.attributes & ScriptableObject.READONLY) != 0) {
             return;
         }
-
-        if (slot.value instanceof ComplexValue) {
-            ComplexValue cv = (ComplexValue)slot.value;
-            if (cv.setter == null) {
-                if (this == start) {
-                    cv.value = value;
-                    return;
-                }
-            } else {
-                if (setComplexValue(slot, cv, start, value)) {
-                    return;
-                }
+        if (slot.complexSlotFlag != 0) {
+            GetterSlot gslot = (GetterSlot)slot;
+            if (gslot.setter != null) {
+                setBySetter(gslot, start, value);
             }
-        } else {
-            if (this == start) {
-                slot.value = value;
-                return;
-            }
+            return;
         }
-
-        if (start == this) throw Kit.codeBug();
-        start.put(name, start, value);
+        if (this == start) {
+            slot.value = value;
+        } else {
+            start.put(name, start, value);
+        }
     }
 
     /**
@@ -279,8 +267,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      *
      * @param name the name of the property
      */
-    public void delete(String name)
-    {
+    public void delete(String name) {
         removeSlot(name, name.hashCode());
     }
 
@@ -292,8 +279,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      *
      * @param index the numeric index for the property
      */
-    public void delete(int index)
-    {
+    public void delete(int index) {
         removeSlot(null, index);
     }
 
@@ -1088,20 +1074,18 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
         }
 
         ClassCache cache = ClassCache.get(this);
-        ComplexValue cv = new ComplexValue();
-        cv.delegateTo = delegateTo;
-        cv.getter = new MemberBox(getter, cache);
-        cv.getter.prepareInvokerOptimization();
+        GetterSlot gslot = new GetterSlot();
+        gslot.delegateTo = delegateTo;
+        gslot.getter = new MemberBox(getter, cache);
+        gslot.getter.prepareInvokerOptimization();
         if (setter != null) {
-            cv.setter = new MemberBox(setter, cache);
-            cv.setter.prepareInvokerOptimization();
-            cv.setterReturnsValue = setter.getReturnType() != Void.TYPE;
+            gslot.setter = new MemberBox(setter, cache);
+            gslot.setter.prepareInvokerOptimization();
         }
-        Slot slot = new Slot();
-        slot.value = cv;
-        slot.attributes = (short) attributes;
-        Slot inserted = addSlot(propertyName, propertyName.hashCode(), slot);
-        if (inserted != slot) {
+        gslot.attributes = (short) attributes;
+        gslot.complexSlotFlag = 1;
+        Slot inserted = addSlot(propertyName, propertyName.hashCode(), gslot);
+        if (inserted != gslot) {
             throw new RuntimeException("Property already exists");
         }
 
@@ -1500,7 +1484,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      */
     public final Object getAssociatedValue(Object key)
     {
-        Hashtable h = extraData().associatedValues;
+        Hashtable h = associatedValues;
         if (h == null)
             return null;
         return h.get(key);
@@ -1521,29 +1505,28 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
     public final Object associateValue(Object key, Object value)
     {
         if (value == null) throw new IllegalArgumentException();
-        ExtraData extra = extraData();
-        Hashtable h = extra.associatedValues;
+        Hashtable h = associatedValues;
         if (h == null) {
-            synchronized (extra) {
-                h = extra.associatedValues;
+            synchronized (this) {
+                h = associatedValues;
                 if (h == null) {
                     h = new Hashtable();
-                    extra.associatedValues = h;
+                    associatedValues = h;
                 }
             }
         }
         return Kit.initHash(h, key, value);
     }
 
-    private Object getComplexValue(ComplexValue cv, Scriptable start)
+    private Object getByGetter(GetterSlot slot, Scriptable start)
     {
         Object getterThis;
         Object[] args;
-        if (cv.delegateTo == null) {
+        if (slot.delegateTo == null) {
             if (start != this) {
                 // Walk the prototype chain to find an appropriate
                 // object to invoke the getter on.
-                Class clazz = cv.getter.getDeclaringClass();
+                Class clazz = slot.getter.getDeclaringClass();
                 while (!clazz.isInstance(start)) {
                     start = start.getPrototype();
                     if (start == this) {
@@ -1558,21 +1541,21 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
             getterThis = start;
             args = ScriptRuntime.emptyArgs;
         } else {
-            getterThis = cv.delegateTo;
+            getterThis = slot.delegateTo;
             args = new Object[] { this };
         }
 
-        return cv.getter.invoke(getterThis, args);
+        return slot.getter.invoke(getterThis, args);
     }
 
-    private boolean setComplexValue(Slot slot, ComplexValue cv,
-	                                Scriptable start, Object value)
+    private void setBySetter(GetterSlot slot, Scriptable start, Object value)
     {
         if (start != this) {
-            if (cv.delegateTo != null
-                || !cv.setter.getDeclaringClass().isInstance(start))
+            if (slot.delegateTo != null
+                || !slot.setter.getDeclaringClass().isInstance(start))
             {
-                return false;
+                start.put(slot.stringKey, start, value);
+                return;
             }
         }
 
@@ -1580,17 +1563,17 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
         Object[] args;
         Object setterResult;
         Context cx = Context.getContext();
-        Class pTypes[] = cv.setter.argTypes;
+        Class pTypes[] = slot.setter.argTypes;
         Class desired = pTypes[pTypes.length - 1];
         // ALERT: cache tag since it is already calculated in defineProperty ?
         int tag = FunctionObject.getTypeTag(desired);
         Object actualArg = FunctionObject.convertArg(cx, start, value, tag);
-        if (cv.delegateTo == null) {
+        if (slot.delegateTo == null) {
             setterThis = start;
             args = new Object[] { actualArg };
         } else {
             if (start != this) Kit.codeBug();
-            setterThis = cv.delegateTo;
+            setterThis = slot.delegateTo;
             args = new Object[] { this, actualArg };
         }
         // Check start is sealed: start is always instance of ScriptableObject
@@ -1600,16 +1583,28 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
                                               slot.stringKey);
         }
 
-        setterResult = cv.setter.invoke(setterThis, args);
+        setterResult = slot.setter.invoke(setterThis, args);
 
-        if (cv.setterReturnsValue) {
+        if (slot.setter.method().getReturnType() != Void.TYPE) {
+            // Replace Getter slot by a simple one
+            Slot replacement = new Slot();
+            replacement.intKey = slot.intKey;
+            replacement.stringKey = slot.stringKey;
+            replacement.attributes = slot.attributes;
+            replacement.value = setterResult;
+
             synchronized (this) {
-                // Replace complex value by setter result
-                slot.value = setterResult;
+                int i = getSlotPosition(slots, slot.stringKey, slot.intKey);
+                // Check slot was not deleted/replaced before synchronization
+                if (i >= 0 && slots[i] == slot) {
+                    slots[i] = replacement;
+                    // It is important to make sure that lastAccess != slot
+                    // to prevent accessing the old slot via lastAccess and
+                    // then invoking setter one more time
+                    lastAccess = replacement;
+                }
             }
         }
-
-        return true;
     }
 
     private Slot getNamedSlot(String name)
@@ -1627,8 +1622,8 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
         }
         slot = slots[i];
         // Update cache - here stringKey.equals(name) holds, but it can be
-        // that slot.stringKey != name. To make last name cache work, it is
-        // necessary to change the key.
+        // that slot.stringKey != name. To make last name cache work, need
+        // to change the key
         slot.stringKey = name;
         lastAccess = slot;
         return slot;
@@ -1795,21 +1790,6 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
         return result;
     }
 
-    private ExtraData extraData()
-    {
-        ExtraData extra = extraData;
-        if (extra == null) {
-            synchronized (this) {
-                extra = extraData;
-                if (extra == null) {
-                    extra = new ExtraData();
-                    extraData = extra;
-                }
-            }
-        }
-        return extra;
-    }
-
     private synchronized void writeObject(ObjectOutputStream out)
         throws IOException
     {
@@ -1880,19 +1860,13 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
     // cache; may be removed for smaller memory footprint
     private transient Slot lastAccess = REMOVED;
 
-    private volatile ExtraData extraData;
+    // associated values are not serialized
+    private transient volatile Hashtable associatedValues;
 
-    private static class ExtraData implements Serializable
-    {
-        // associated values are not serialized
-        private transient volatile Hashtable associatedValues;
-		
-		private Object extraSlotTag;
-		private Slot[] extraSlots;
-    }
+    private static class Slot implements Serializable {
+        static final int HAS_GETTER  = 0x01;
+        static final int HAS_SETTER  = 0x02;
 
-    private static final class Slot implements Serializable
-    {
         private void readObject(ObjectInputStream in)
             throws IOException, ClassNotFoundException
         {
@@ -1900,23 +1874,23 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
             if (stringKey != null) {
                 intKey = stringKey.hashCode();
             }
+            complexSlotFlag = (this instanceof GetterSlot) ? (byte)1 : (byte)0;
         }
 
         static final long serialVersionUID = -2158009919774350004L;
 
         int intKey;
         String stringKey;
+        Object value;
         short attributes;
-        volatile transient byte wasDeleted;
-        volatile Object value;
+        transient byte complexSlotFlag;
+        transient byte wasDeleted;
     }
 
-    private static class ComplexValue implements Serializable
+    static class GetterSlot extends Slot
     {
-        volatile Object value;
         Object delegateTo;
         MemberBox getter;
         MemberBox setter;
-        boolean setterReturnsValue;
     }
 }
