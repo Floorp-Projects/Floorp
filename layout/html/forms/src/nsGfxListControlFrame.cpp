@@ -267,7 +267,6 @@ nsGfxListControlFrame::nsGfxListControlFrame()
 nsGfxListControlFrame::~nsGfxListControlFrame()
 {
   REFLOW_COUNTER_DUMP("nsLCF");
-  nsFormControlFrame::RegUnRegAccessKey(mPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
 
   nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(mContent));
 
@@ -299,11 +298,21 @@ nsGfxListControlFrame::~nsGfxListControlFrame()
     delete mSelectionCache;
   }
   
-#ifdef DO_DRAGGING
+#ifdef DO_LISTBOX_DRAGGING
   NS_IF_RELEASE ( mAutoScrollTimer );
 #endif
 
 }
+
+NS_IMETHODIMP
+nsGfxListControlFrame::Destroy(nsIPresContext *aPresContext)
+{
+  if (IsInDropDownMode() == PR_FALSE) {
+    nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
+  }
+  return nsHTMLContainerFrame::Destroy(aPresContext);
+}
+
 
 //---------------------------------------------------------
 //NS_IMPL_ADDREF(nsGfxListControlFrame)
@@ -832,7 +841,7 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
 
   // Check to see if we have no width and height
   // The following code measures the width and height 
-  // of a bogus string so the list actually displays  
+  // of a bogus string so the list actually displays
   nscoord visibleHeight = 0;
   if (isInDropDownMode) {
     // Compute the visible height of the drop-down list
@@ -840,8 +849,9 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
     // of the smallest box that can drawn around it's contents.
     visibleHeight = scrolledAreaHeight;
 
-    if (visibleHeight > (kMaxDropDownRows * heightOfARow)) {
-      visibleHeight = (kMaxDropDownRows * heightOfARow);
+    mNumDisplayRows = kMaxDropDownRows;
+    if (visibleHeight > (mNumDisplayRows * heightOfARow)) {
+      visibleHeight = (mNumDisplayRows * heightOfARow);
       // This is an adaptive algorithm for figuring out how many rows 
       // should be displayed in the drop down. The standard size is 20 rows, 
       // but on 640x480 it is typically too big.
@@ -866,6 +876,7 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
           if (hgt > availDropHgt) {
             visibleHeight = (availDropHgt / heightOfARow) * heightOfARow;
           }
+          mNumDisplayRows = visibleHeight / heightOfARow;
         }
       }
     }
@@ -874,14 +885,14 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
       // Calculate the visible height of the listbox
     if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedHeight) {
       visibleHeight = aReflowState.mComputedHeight;
-      visibleHeight -= (scrollBorderPadding.top + scrollBorderPadding.bottom);
+      visibleHeight -= (border.top + border.bottom + padding.top + padding.bottom);
     } else {
-      PRInt32 numRows = 1;
-      GetSizeAttribute(&numRows);
+      mNumDisplayRows = 1;
+      GetSizeAttribute(&mNumDisplayRows);
       // because we are not a drop down 
       // we will always have 2 or more rows
-      if (numRows >= 1) {
-        visibleHeight = numRows * heightOfARow;
+      if (mNumDisplayRows >= 1) {
+        visibleHeight = mNumDisplayRows * heightOfARow;
       } else {
         PRBool multipleSelections = PR_FALSE;
         GetMultiple(&multipleSelections);
@@ -2546,12 +2557,17 @@ nsGfxListControlFrame::UpdateSelection(PRBool aDoDispatchEvent, PRBool aForceUpd
       }
     }
 
-    if (changed && aDoDispatchEvent) {
+    PRBool isDroppedDown = PR_FALSE;
+    if (mComboboxFrame != nsnull) {
+      mComboboxFrame->IsDroppedDown(&isDroppedDown);
+    }
+    if (changed && aDoDispatchEvent && !isDroppedDown) {
       rv = SelectionChanged(aContent); // Dispatch event
     }
-    if ((changed || aForceUpdate) && mComboboxFrame) {
-      rv = mComboboxFrame->SelectionChanged(); // Update view
-    }
+  }
+
+  if ((changed || aForceUpdate) && mComboboxFrame) {
+    rv = mComboboxFrame->SelectionChanged(); // Update view
   }
   return rv;
 }
@@ -2965,14 +2981,7 @@ nsGfxListControlFrame::IsLeftButton(nsIDOMEvent* aMouseEvent)
   if (mouseEvent) {
     PRUint16 whichButton;
     if (NS_SUCCEEDED(mouseEvent->GetButton(&whichButton))) {
-      if (whichButton != 1) {
-        aMouseEvent->PreventDefault();
-        aMouseEvent->PreventCapture();
-        aMouseEvent->PreventBubble();
-        return PR_FALSE;
-      } else {
-        return PR_TRUE;
-      }
+      return whichButton != 1?PR_FALSE:PR_TRUE;
     }
   }
   return PR_FALSE;
@@ -2993,9 +3002,21 @@ nsGfxListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
   }
 
   // only allow selection with the left button
+  // if a right button click is on the combobox itself
+  // or on the select when in listbox mode, then let the click through
   if (!IsLeftButton(aMouseEvent)) {
-    // IsLeftButton Prevents all propragation of the event
-    return NS_ERROR_FAILURE; // means consume event
+    if (IsInDropDownMode()) {
+      if (!IsClickingInCombobox(aMouseEvent)) {
+        aMouseEvent->PreventDefault();
+        aMouseEvent->PreventCapture();
+        aMouseEvent->PreventBubble();
+      } else {
+        return NS_OK;
+      }
+      return NS_ERROR_FAILURE; // means consume event
+    } else {
+      return NS_OK;
+    }
   }
 
   // Check to see if the disabled option was clicked on
@@ -3005,7 +3026,7 @@ nsGfxListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
     if (optionIsDisabled) {
       if (IsInDropDownMode() == PR_TRUE && mComboboxFrame) {
         ResetSelectedItem();
-        mComboboxFrame->ListWasSelected(mPresContext); 
+        mComboboxFrame->ListWasSelected(mPresContext, PR_FALSE); 
       } 
       return NS_OK;
     }
@@ -3036,7 +3057,7 @@ nsGfxListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
         SetContentSelected(mSelectedIndex, PR_TRUE);  
       }
       if (mComboboxFrame) {
-        mComboboxFrame->ListWasSelected(mPresContext); 
+        mComboboxFrame->ListWasSelected(mPresContext, PR_FALSE); 
       } 
       mouseEvent->clickCount = 1;
     } else {
@@ -3044,12 +3065,17 @@ nsGfxListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
       mouseEvent->clickCount = IsClickingInCombobox(aMouseEvent)?1:0;
     }
   } else if (mButtonDown) {
+    REFLOW_DEBUG_MSG(">>>>>> Didn't find");
     mButtonDown = PR_FALSE;
     CaptureMouseEvents(mPresContext, PR_FALSE);
-    UpdateSelection(PR_TRUE, PR_FALSE, mContent);
+    if (mSelectedIndex != mOldSelectedIndex) {
+      UpdateSelection(PR_TRUE, PR_FALSE, mContent);
+    }
+#if 0 // XXX - this is a partial fix for Bug 29990
     if (mSelectedIndex != mStartExtendedIndex) {
       mEndExtendedIndex = mSelectedIndex;
     }
+#endif
   }
 
   return NS_OK;
@@ -3151,9 +3177,21 @@ nsGfxListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
   }
 
   // only allow selection with the left button
+  // if a right button click is on the combobox itself
+  // or on the select when in listbox mode, then let the click through
   if (!IsLeftButton(aMouseEvent)) {
-    // IsLeftButton Prevents all propragation of the event
-    return NS_ERROR_FAILURE; // means consume event
+    if (IsInDropDownMode()) {
+      if (!IsClickingInCombobox(aMouseEvent)) {
+        aMouseEvent->PreventDefault();
+        aMouseEvent->PreventCapture();
+        aMouseEvent->PreventBubble();
+      } else {
+        return NS_OK;
+      }
+      return NS_ERROR_FAILURE; // means consume event
+    } else {
+      return NS_OK;
+    }
   }
 
   // Check to see if the disabled option was clicked on
@@ -3343,7 +3381,7 @@ nsGfxListControlFrame::DragMove(nsIDOMEvent* aMouseEvent)
       //        absPixelRect.x, absPixelRect.y, absPixelRect.width, absPixelRect.height, isInside, mIsDragScrollingDown);
 
       if (!isInside) {
-#ifdef DO_DRAGGING
+#ifdef DO_LISTBOX_DRAGGING
         StopAutoScrollTimer();
         nsPoint pnt(scrX, scrY);
         StartAutoScrollTimer(mPresContext, this, pnt, 30);
@@ -3395,7 +3433,20 @@ nsGfxListControlFrame::DragMove(nsIDOMEvent* aMouseEvent)
           }
         }
       }
-    }
+    } else { // Fix Bug 44454
+      // get the currently moused over item
+      PRInt32 oldIndex;
+      PRInt32 curIndex = mSelectedIndex;
+      if (NS_SUCCEEDED(GetIndexFromDOMEvent(aMouseEvent, oldIndex, curIndex))) {
+        if (curIndex != oldIndex) { // select down the list
+          SetContentSelected(mSelectedIndex, PR_FALSE);
+          mSelectedIndex = curIndex;
+          SetContentSelected(mSelectedIndex, PR_TRUE);
+          mStartExtendedIndex = mSelectedIndex;
+          mEndExtendedIndex   = kNothingSelected;
+        }
+      }
+    } // Fix Bug 44454
   }
   return NS_OK;
 }
@@ -3477,9 +3528,15 @@ nsGfxListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
   if (nsFormFrame::GetDisabled(this))
     return NS_OK;
 
+  nsresult rv         = NS_ERROR_FAILURE; 
+  PRUint32 code       = 0;
+  PRUint32 numOptions = 0;
+  PRBool isShift      = PR_FALSE;
+  nsCOMPtr<nsIDOMHTMLCollection> options;
+
+  // Start by making sure we can query for a key event
   nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
   if (keyEvent) {
-    PRUint32 code;
     //uiEvent->GetCharCode(&code);
     //REFLOW_DEBUG_MSG3("%c %d   ", code, code);
     keyEvent->GetKeyCode(&code);
@@ -3492,148 +3549,192 @@ nsGfxListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
     }
 #endif
 
-    PRBool isShift;
     keyEvent->GetShiftKey(&isShift);
 
-    nsresult rv = NS_ERROR_FAILURE; 
-    nsCOMPtr<nsIDOMHTMLCollection> options = getter_AddRefs(GetOptions(mContent));
+    // now make sure there are options or we are wasting our time
+    options = getter_AddRefs(GetOptions(mContent));
 
     if (options) {
-      PRUint32 numOptions;
       options->GetLength(&numOptions);
 
       if (numOptions == 0) {
-        rv = NS_OK;
-      } else {
-
-        // We are handling this so don't let it bubble up
-        aKeyEvent->PreventBubble();
-
-        switch (code) {
-
-          case nsIDOMKeyEvent::DOM_VK_UP:
-          case nsIDOMKeyEvent::DOM_VK_LEFT: {
-            REFLOW_DEBUG_MSG2("DOM_VK_UP   mSelectedIndex: %d ", mSelectedIndex);
-            if (mSelectedIndex > 0) {
-              mOldSelectedIndex = mSelectedIndex;
-              mSelectedIndex--;
-              PRBool multipleSelections = PR_FALSE;
-              GetMultiple(&multipleSelections);
-              if (multipleSelections && isShift) {
-                REFLOW_DEBUG_MSG2("mStartExtendedIndex: %d\n", mStartExtendedIndex);
-
-                if (mSelectedIndex < mStartExtendedIndex) {
-                  SetContentSelected(mSelectedIndex, PR_TRUE);
-                } else {
-                  SetContentSelected(mSelectedIndex, PR_TRUE);
-                  SetContentSelected(mOldSelectedIndex, PR_FALSE);
-                }
-              } else {
-                SingleSelection();
-                if (nsnull != mComboboxFrame && mIsAllFramesHere) {
-                  mComboboxFrame->UpdateSelection(PR_TRUE, PR_TRUE, mSelectedIndex); // dispatch event
-                } else {
-                  UpdateSelection(PR_TRUE, PR_FALSE, GetOptionContent(mSelectedIndex)); // dispatch event
-                }
-                mStartExtendedIndex = mSelectedIndex;
-                mEndExtendedIndex   = kNothingSelected;
-              }
-            }
-            REFLOW_DEBUG_MSG2("  After: %d\n", mSelectedIndex);
-            } break;
-          
-          case nsIDOMKeyEvent::DOM_VK_DOWN:
-          case nsIDOMKeyEvent::DOM_VK_RIGHT: {
-            REFLOW_DEBUG_MSG2("DOM_VK_DOWN mSelectedIndex: %d ", mSelectedIndex);
-            if ((mSelectedIndex+1) < (PRInt32)numOptions) {
-              mOldSelectedIndex = mSelectedIndex;
-              mSelectedIndex++;
-              PRBool multipleSelections = PR_FALSE;
-              GetMultiple(&multipleSelections);
-              if (multipleSelections && isShift) {
-                if (mSelectedIndex > mStartExtendedIndex) {
-                  SetContentSelected(mSelectedIndex, PR_TRUE);
-                } else {
-                  SetContentSelected(mSelectedIndex, PR_TRUE);
-                  SetContentSelected(mOldSelectedIndex, PR_FALSE);
-                }
-              } else {
-                SingleSelection();
-                if (nsnull != mComboboxFrame) {
-                  mComboboxFrame->UpdateSelection(PR_TRUE, PR_TRUE, mSelectedIndex); // dispatch event
-                } else {
-                  UpdateSelection(PR_TRUE, PR_FALSE, GetOptionContent(mSelectedIndex)); // dispatch event
-                }
-                mStartExtendedIndex = mSelectedIndex;
-                mEndExtendedIndex   = kNothingSelected;
-              }
-            }
-            REFLOW_DEBUG_MSG2("  After: %d\n", mSelectedIndex);
-            } break;
-
-          case nsIDOMKeyEvent::DOM_VK_RETURN: {
-            if (IsInDropDownMode() == PR_TRUE && mComboboxFrame) {
-              mComboboxFrame->ListWasSelected(mPresContext);
-            } else {
-	            UpdateSelection(PR_TRUE, PR_FALSE, mContent);
-	          }
-            } break;
-
-          case nsIDOMKeyEvent::DOM_VK_ESCAPE: {
-            if (IsInDropDownMode() == PR_TRUE && mComboboxFrame) {
-              ResetSelectedItem();
-              mComboboxFrame->ListWasSelected(mPresContext); 
-            } 
-            } break;
-
-          case nsIDOMKeyEvent::DOM_VK_PAGE_UP:
-          case nsIDOMKeyEvent::DOM_VK_PAGE_DOWN: {
-
-            nsIScrollableView * scrollableView;
-            GetScrollableView(scrollableView);
-            if (scrollableView) {
-              scrollableView->ScrollByPages(code == nsIDOMKeyEvent::DOM_VK_PAGE_UP?-1:1);
-
-            }
-            } break;
-
-          default: { // Select option with this as the first character
-                     // XXX Not I18N compliant
-            PRInt32 selectedIndex = (mSelectedIndex == kNothingSelected ? 0 : mSelectedIndex+1) % numOptions;
-            PRInt32 startedAtIndex    = selectedIndex;
-            PRBool  loopedAround  = PR_FALSE;
-            while ((selectedIndex < startedAtIndex && loopedAround) || !loopedAround) {
-              nsCOMPtr<nsIDOMHTMLOptionElement>optionElement = getter_AddRefs(GetOption(*options, selectedIndex));
-              if (optionElement) {
-                nsAutoString text;
-                if (NS_OK == optionElement->GetText(text)) {
-                  text.ToLowerCase();
-                  PRUnichar firstChar = text.CharAt(0);
-                  if (firstChar == (PRUnichar)code) {
-                    mOldSelectedIndex = mSelectedIndex;
-                    mSelectedIndex    = selectedIndex;
-                    SingleSelection();
-                    if (nsnull != mComboboxFrame && mIsAllFramesHere) {
-                      mComboboxFrame->UpdateSelection(PR_TRUE, PR_TRUE, mSelectedIndex); // don't dispatch event
-                    } else {
-                      UpdateSelection(PR_TRUE, PR_FALSE, GetOptionContent(mSelectedIndex)); // dispatch event
-                    }
-                    break;
-                  }
-                }
-              }
-              selectedIndex++;
-              if (selectedIndex == (PRInt32)numOptions) {
-                selectedIndex = 0;
-                loopedAround = PR_TRUE;
-              }
-
-            } // while
-          } break;//case
-        } // switch
-      } // if
+        return NS_OK;
+      }
+    } else{
+      return rv;
     }
+  } else {
+    return rv;
   }
+      
+  // We are handling this so don't let it bubble up
+  aKeyEvent->PreventBubble();
+
+  // this tells us whether we need to process the new index that was set
+  // DOM_VK_RETURN & DOM_VK_ESCAPE will leave this false
+  PRBool doSetNewIndex = PR_FALSE;
+
+  // set up the old and new selected index and process it
+  // DOM_VK_RETURN selects the item
+  // DOM_VK_ESCAPE cancels the selection
+  // default processing checks to see if the pressed the first 
+  //   letter of an item in the list and advances to it
+
+  switch (code) {
+
+    case nsIDOMKeyEvent::DOM_VK_UP:
+    case nsIDOMKeyEvent::DOM_VK_LEFT: {
+      REFLOW_DEBUG_MSG2("DOM_VK_UP   mSelectedIndex: %d ", mSelectedIndex);
+      if (mSelectedIndex > 0) {
+        mOldSelectedIndex = mSelectedIndex;
+        mSelectedIndex--;
+        doSetNewIndex = PR_TRUE;
+      }
+      REFLOW_DEBUG_MSG2("  After: %d\n", mSelectedIndex);
+      } break;
+    
+    case nsIDOMKeyEvent::DOM_VK_DOWN:
+    case nsIDOMKeyEvent::DOM_VK_RIGHT: {
+      REFLOW_DEBUG_MSG2("DOM_VK_DOWN mSelectedIndex: %d ", mSelectedIndex);
+      if ((mSelectedIndex+1) < (PRInt32)numOptions) {
+        mOldSelectedIndex = mSelectedIndex;
+        mSelectedIndex++;
+        doSetNewIndex = PR_TRUE;
+      }
+      REFLOW_DEBUG_MSG2("  After: %d\n", mSelectedIndex);
+      } break;
+
+    case nsIDOMKeyEvent::DOM_VK_RETURN: {
+      PRBool isDroppedDown;
+      mComboboxFrame->IsDroppedDown(&isDroppedDown);
+      if (IsInDropDownMode() == PR_TRUE && mComboboxFrame) {
+        mComboboxFrame->ListWasSelected(mPresContext, isDroppedDown);
+      } else {
+	      UpdateSelection(PR_TRUE, PR_FALSE, mContent);
+	    }
+      } break;
+
+    case nsIDOMKeyEvent::DOM_VK_ESCAPE: {
+      if (IsInDropDownMode() == PR_TRUE && mComboboxFrame) {
+        ResetSelectedItem();
+        mComboboxFrame->ListWasSelected(mPresContext, PR_FALSE); 
+      } 
+      } break;
+
+    case nsIDOMKeyEvent::DOM_VK_PAGE_UP: {
+      if (mSelectedIndex > 0) {
+        mOldSelectedIndex = mSelectedIndex;
+        mSelectedIndex    -= (mNumDisplayRows-1);
+        if (mSelectedIndex < 0) {
+          mSelectedIndex = 0;
+        }
+        doSetNewIndex = PR_TRUE;
+      }
+      } break;
+
+    case nsIDOMKeyEvent::DOM_VK_PAGE_DOWN: {
+      if (mSelectedIndex < (PRInt32)numOptions) {
+        mOldSelectedIndex = mSelectedIndex;
+        mSelectedIndex    += (mNumDisplayRows-1);
+        if (mSelectedIndex > (PRInt32)numOptions-1) {
+          mSelectedIndex = (PRInt32)numOptions-1;
+        }
+        doSetNewIndex = PR_TRUE;
+      }
+      } break;
+
+    case nsIDOMKeyEvent::DOM_VK_HOME: {
+      if (mSelectedIndex > 0) {
+        mOldSelectedIndex = mSelectedIndex;
+        mSelectedIndex    = 0;
+        doSetNewIndex     = PR_TRUE;
+      }
+      } break;
+
+    case nsIDOMKeyEvent::DOM_VK_END: {
+      if ((mSelectedIndex+1) < (PRInt32)numOptions) {
+        mOldSelectedIndex = mSelectedIndex;
+        mSelectedIndex    = (PRInt32)numOptions-1;
+        if (mSelectedIndex > (PRInt32)numOptions) {
+          mSelectedIndex = (PRInt32)numOptions-1;
+        }
+        doSetNewIndex = PR_TRUE;
+      }
+      } break;
+
+
+    default: { // Select option with this as the first character
+               // XXX Not I18N compliant
+      PRInt32 selectedIndex = (mSelectedIndex == kNothingSelected ? 0 : mSelectedIndex+1) % numOptions;
+      PRInt32 startedAtIndex    = selectedIndex;
+      PRBool  loopedAround  = PR_FALSE;
+      while ((selectedIndex < startedAtIndex && loopedAround) || !loopedAround) {
+        nsCOMPtr<nsIDOMHTMLOptionElement>optionElement = getter_AddRefs(GetOption(*options, selectedIndex));
+        if (optionElement) {
+          nsAutoString text;
+          if (NS_OK == optionElement->GetText(text)) {
+            text.ToLowerCase();
+            PRUnichar firstChar = text.CharAt(0);
+            if (firstChar == (PRUnichar)code) {
+              mOldSelectedIndex = mSelectedIndex;
+              mSelectedIndex    = selectedIndex;
+              SingleSelection();
+              if (nsnull != mComboboxFrame && mIsAllFramesHere) {
+                mComboboxFrame->UpdateSelection(PR_TRUE, PR_TRUE, mSelectedIndex); // dispatch event
+              } else {
+                UpdateSelection(PR_TRUE, PR_FALSE, GetOptionContent(mSelectedIndex)); // dispatch event
+              }
+              break;
+            }
+          }
+        }
+        selectedIndex++;
+        if (selectedIndex == (PRInt32)numOptions) {
+          selectedIndex = 0;
+          loopedAround = PR_TRUE;
+        }
+
+      } // while
+    } break;//case
+  } // switch
+
+  // actually process the new index and let the selection code
+  // the scrolling for us
+  if (doSetNewIndex) {
+    PRBool multipleSelections = PR_FALSE;
+    GetMultiple(&multipleSelections);
+    if (multipleSelections && isShift) {
+      REFLOW_DEBUG_MSG2("mStartExtendedIndex: %d\n", mStartExtendedIndex);
+
+      if (mSelectedIndex < mStartExtendedIndex) {
+        SetContentSelected(mSelectedIndex, PR_TRUE);
+      } else {
+        SetContentSelected(mSelectedIndex, PR_TRUE);
+        SetContentSelected(mOldSelectedIndex, PR_FALSE);
+      }
+    } else {
+      SingleSelection();
+      if (nsnull != mComboboxFrame && mIsAllFramesHere) {
+        mComboboxFrame->UpdateSelection(PR_TRUE, PR_TRUE, mSelectedIndex); // dispatch event
+      } else {
+        UpdateSelection(PR_TRUE, PR_FALSE, GetOptionContent(mSelectedIndex)); // dispatch event
+      }
+      mStartExtendedIndex = mSelectedIndex;
+      mEndExtendedIndex   = kNothingSelected;
+    }
+    // XXX - Are we cover up a problem here???
+    // Why aren't they getting flushed each time?
+    // because this isn't needed for Gfx
+    if (IsInDropDownMode() == PR_TRUE && mComboboxFrame) {
+      nsCOMPtr<nsIPresShell> presShell;
+      mPresContext->GetShell(getter_AddRefs(presShell));
+      presShell->FlushPendingNotifications();
+    }
+    REFLOW_DEBUG_MSG2("  After: %d\n", mSelectedIndex);
+  } else {
+    REFLOW_DEBUG_MSG("  After: SKIPPED it\n");
+  }
+
   return NS_OK;
 }
 
@@ -3944,7 +4045,7 @@ nsGfxListEventListener::DragMove(nsIDOMEvent* aMouseEvent)
   return NS_OK;
 }
 
-#ifdef DO_DRAGGING
+#ifdef DO_LISTBOX_DRAGGING
 //---------------------------------------------------
 //-- DragTimer Stuff
 //---------------------------------------------------

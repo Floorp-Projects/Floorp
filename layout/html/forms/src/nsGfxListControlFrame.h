@@ -31,7 +31,7 @@
 //#define DO_REFLOW_COUNTER
 //#define DO_UNCONSTRAINED_CHECK
 //#define DO_PIXELS
-#define DO_DRAGGING
+//#define DO_DRAGGING
 #endif
 
 #include "nsHTMLContainerFrame.h"
@@ -192,6 +192,7 @@ public:
 
   NS_IMETHOD DidReflow(nsIPresContext* aPresContext, nsDidReflowStatus aStatus);
   NS_IMETHOD MoveTo(nsIPresContext* aPresContext, nscoord aX, nscoord aY);
+  NS_IMETHOD Destroy(nsIPresContext *aPresContext);
 
     // nsIFormControlFrame
   NS_IMETHOD GetType(PRInt32* aType) const;
@@ -358,6 +359,7 @@ protected:
   nscoord      mMaxWidth;
   nscoord      mMaxHeight;
   PRBool       mIsCapturingMouseEvents;
+  PRInt32      mNumDisplayRows;
 
   // Dragging Info
   PRBool       mIsDragScrollingDown;
