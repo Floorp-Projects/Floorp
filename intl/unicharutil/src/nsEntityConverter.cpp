@@ -65,7 +65,7 @@ nsEntityConverter::LoadVersionPropertyFile()
     NS_NAMED_LITERAL_CSTRING(url, "resource://gre/res/entityTables/htmlEntityVersions.properties");
 	nsresult rv;
     nsCOMPtr<nsIStringBundleService> bundleService =
-        do_CreateInstance(NS_STRINGBUNDLE_CONTRACTID, &rv);
+        do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
 
     if (NS_FAILED(rv)) return rv;
     
