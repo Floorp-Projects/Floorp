@@ -168,15 +168,8 @@ static PRUint16 gPair[MAX_CLASSES] = {
 
 
 
-#define IS_HALFWIDTH_IN_JISx4501_CLASS3(u) (\
-  ((0xff70 >= (u)) && ((u) >= 0xff76))|| \
-  ( 0xff79 == (u)) || \
-  ( 0xff82 == (u)) || \
-  ( 0xff94 == (u)) || \
-  ( 0xff95 == (u)) || \
-  ( 0xff96 == (u)) || \
-  ( 0xff9c == (u))    \
-)
+#define IS_HALFWIDTH_IN_JISx4501_CLASS3(u) ((0xff66 <= (u)) && ((u) <= 0xff70))
+
 
 PRInt8 nsJISx4501LineBreaker::GetClass(PRUnichar u)
 {
