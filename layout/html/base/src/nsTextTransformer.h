@@ -38,7 +38,17 @@ class nsIWordBreaker;
 #define CH_ZWNJ	8204	//<!ENTITY zwnj    CDATA "&#8204;" -- zero width non-joiner, U+200C NEW RFC 2070#define CH_SHY  173
 #define CH_SHY  173
 
-#define NS_TEXT_TRANSFORMER_AUTO_WORD_BUF_SIZE 256
+#define NS_TEXT_TRANSFORMER_AUTO_WORD_BUF_SIZE 128 // used to be 256
+
+// Indicates whether the transformed text should be left as ascii
+#define NS_TEXT_TRANSFORMER_LEAVE_AS_ASCII					1
+
+// If at any point during GetNextWord or GetPrevWord we
+// run across a multibyte (> 127) unicode character.
+#define NS_TEXT_TRANSFORMER_HAS_MULTIBYTE					2
+
+// The text in the transform buffer is ascii
+#define NS_TEXT_TRANSFORMER_TRANSFORMED_TEXT_IS_ASCII		4
 
 // A growable text buffer that tries to avoid using malloc by having a
 // builtin buffer. Ideally used as an automatic variable.
@@ -138,20 +148,39 @@ public:
                          PRBool* aIsWhitespaceResult,
                          PRBool aForLineBreak = PR_TRUE);
 
-  /**
-   * Returns PR_TRUE if any of the characters are multibyte (greater
-   * than 127)
-   */
-  PRBool HasMultibyte() const {
-    return mHasMultibyte;
+  
+  // Returns PR_TRUE if the LEAVE_AS_ASCII flag is set
+  PRBool LeaveAsAscii() const {
+      return (mFlags & NS_TEXT_TRANSFORMER_LEAVE_AS_ASCII) ? PR_TRUE : PR_FALSE;
   }
 
-  /**
-   * Returns PR_TRUE if the text in the transform bufer is ascii (i.e., it
-   * doesn't contain any multibyte characters)
-   */
+  // Returns PR_TRUE if any of the characters are multibyte (greater than 127)
+  PRBool HasMultibyte() const {
+      return (mFlags & NS_TEXT_TRANSFORMER_HAS_MULTIBYTE) ? PR_TRUE : PR_FALSE;
+  }
+
+  // Returns PR_TRUE if the text in the transform bufer is ascii (i.e., it
+  // doesn't contain any multibyte characters)
   PRBool TransformedTextIsAscii() const {
-    return mTransformedTextIsAscii;
+      return (mFlags & NS_TEXT_TRANSFORMER_TRANSFORMED_TEXT_IS_ASCII) ? PR_TRUE : PR_FALSE;
+  }
+
+  // Set or clears the LEAVE_AS_ASCII bit
+  void SetLeaveAsAscii(PRBool aValue) {
+      aValue ? mFlags |= NS_TEXT_TRANSFORMER_LEAVE_AS_ASCII : 
+               mFlags &= (~NS_TEXT_TRANSFORMER_LEAVE_AS_ASCII);
+  }
+      
+  // Set or clears the NS_TEXT_TRANSFORMER_HAS_MULTIBYTE bit
+  void SetHasMultibyte(PRBool aValue) {
+      aValue ? mFlags |= NS_TEXT_TRANSFORMER_HAS_MULTIBYTE : 
+               mFlags &= (~NS_TEXT_TRANSFORMER_HAS_MULTIBYTE);
+  }
+
+  // Set or clears the NS_TEXT_TRANSFORMER_TRANSFORMED_TEXT_IS_ASCII bit
+  void SetTransformedTextIsAscii(PRBool aValue) {
+      aValue ? mFlags |= NS_TEXT_TRANSFORMER_TRANSFORMED_TEXT_IS_ASCII : 
+               mFlags &= (~NS_TEXT_TRANSFORMER_TRANSFORMED_TEXT_IS_ASCII);
   }
 
   PRUnichar* GetWordBuffer() {
@@ -162,6 +191,7 @@ public:
     return mTransformBuf.GetBufferLength();
   }
 
+  
   static nsresult Initialize();
   static void Shutdown();
 
@@ -204,7 +234,7 @@ protected:
     ePreformatted,
     ePreWrap
   } mMode;
-
+  
   nsILineBreaker* mLineBreaker;  // [WEAK]
 
   nsIWordBreaker* mWordBreaker;  // [WEAK]
@@ -217,19 +247,11 @@ protected:
   // word, because we may be requested to buffer across multiple words
   PRInt32 mBufferPos;
   
-  // Indicates whether the transformed text should be left as ascii
-  // if possible
-  PRPackedBool mLeaveAsAscii;
-
-  // Set to true if at any point during GetNextWord or GetPrevWord we
-  // run across a multibyte (> 127) unicode character.
-  PRPackedBool mHasMultibyte;
-  
-  // Set to true if the text in the transform buffer is ascii
-  PRPackedBool mTransformedTextIsAscii;
-
   // The frame's text-transform state
   PRUint8 mTextTransform;
+
+  // Flag for controling mLeaveAsAscii, mHasMultibyte, mTransformedTextIsAscii
+  PRUint8 mFlags;
 
 #ifdef DEBUG
   static void SelfTest(nsILineBreaker* aLineBreaker,
