@@ -72,6 +72,10 @@ EMACS			= /usr/bin/true
 JAVA_PROG		= $(JAVA_BIN)java
 RANLIB			= /usr/bin/ranlib
 
+ifdef NETSCAPE_HIERARCHY
+PERL			= perl5
+endif
+
 ######################################################################
 # Other
 ######################################################################
