@@ -2665,12 +2665,12 @@ void WLLT_ChangePassword() {
 
   /* read in user data using old key */
   wallet_Initialize(PR_TRUE);
-#ifdef SingleSignon
-  SI_LoadSignonData(PR_TRUE);
-#endif
   if (!Wallet_KeySet()) {
     return;
   }
+#ifdef SingleSignon
+  SI_LoadSignonData(PR_TRUE);
+#endif
 
   /* establish new key */
   Wallet_SetKey(PR_TRUE);
