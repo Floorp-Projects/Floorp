@@ -195,6 +195,34 @@ PL_HashTableRawLookup(PLHashTable *ht, PLHashNumber keyHash, const void *key)
     return hep;
 }
 
+/*
+** Same as PL_HashTableRawLookup but doesn't reorder the hash entries.
+*/
+PR_IMPLEMENT(PLHashEntry *const *)
+PL_HashTableRawLookupConst(const PLHashTable *ht, PLHashNumber keyHash,
+                           const void *key)
+{
+    PLHashEntry *he, *const *hep;
+    PLHashNumber h;
+
+#ifdef HASHMETER
+    ht->nlookups++;
+#endif
+    h = keyHash * GOLDEN_RATIO;
+    h >>= ht->shift;
+    hep = &ht->buckets[h];
+    while ((he = *hep) != 0) {
+        if (he->keyHash == keyHash && (*ht->keyCompare)(key, he->key)) {
+            break;
+        }
+        hep = &he->next;
+#ifdef HASHMETER
+        ht->nsteps++;
+#endif
+    }
+    return hep;
+}
+
 PR_IMPLEMENT(PLHashEntry *)
 PL_HashTableRawAdd(PLHashTable *ht, PLHashEntry **hep,
                    PLHashNumber keyHash, const void *key, void *value)
@@ -342,6 +370,23 @@ PL_HashTableLookup(PLHashTable *ht, const void *key)
 
     keyHash = (*ht->keyHash)(key);
     hep = PL_HashTableRawLookup(ht, keyHash, key);
+    if ((he = *hep) != 0) {
+        return he->value;
+    }
+    return 0;
+}
+
+/*
+** Same as PL_HashTableLookup but doesn't reorder the hash entries.
+*/
+PR_IMPLEMENT(void *)
+PL_HashTableLookupConst(const PLHashTable *ht, const void *key)
+{
+    PLHashNumber keyHash;
+    PLHashEntry *he, *const *hep;
+
+    keyHash = (*ht->keyHash)(key);
+    hep = PL_HashTableRawLookupConst(ht, keyHash, key);
     if ((he = *hep) != 0) {
         return he->value;
     }
