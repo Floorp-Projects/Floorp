@@ -1955,7 +1955,6 @@ sub BuildMozilla()
 
 sub BuildProjects()
 {
-	MakeResourceAliases();
 	# BuildJarFiles();
 	MakeLibAliases();
 
@@ -1977,4 +1976,8 @@ sub BuildProjects()
 	BuildExtensionsProjects();
 	BuildMailNewsProjects();
 	BuildMozilla();
+
+    # do this last so as not to pollute dist with non-include files
+    # before building projects.
+	MakeResourceAliases();
 }
