@@ -26,6 +26,11 @@
  *     Ben Goodger <ben@mozilla.org>
  */
 
+// needed to build with mingw
+#ifndef _WIN32_IE
+#define _WIN32_IE 0x0400
+#endif
+
 #include "extern.h"
 #include "extra.h"
 #include "dialogs.h"
@@ -37,6 +42,7 @@
 #include <shellapi.h>
 #include <objidl.h>
 #include <logkeys.h>
+#include <prsht.h>
 
 // commdlg.h is needed to build with WIN32_LEAN_AND_MEAN
 #include <commdlg.h>
