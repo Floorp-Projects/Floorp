@@ -111,6 +111,18 @@
     <menuitem id="tableOrCellColor_cm" label="&tableOrCellColor.label;" accesskey="&tableOrCellColor.accesskey;" observes="cmd_TableOrCellColor"/>
  </popup>
 
+ <popup id="editorSourceContext">
+   <menuitem label="&undoCmd.label;"      accesskey="&undo.accesskey;"      command="cmd_undo"/>
+   <menuitem label="&redoCmd.label;"      accesskey="&redo.accesskey;"      command="cmd_redo"/>
+   <menuseparator/>
+   <menuitem label="&cutCmd.label;"       accesskey="&cut.accesskey;"       command="cmd_cut"/>
+   <menuitem label="&copyCmd.label;"      accesskey="&copy.accesskey;"      command="cmd_copy"/>
+   <menuitem label="&pasteCmd.label;"     accesskey="&paste.accesskey;"     command="cmd_paste"/>
+   <menuitem label="&deleteCmd.label;"    accesskey="&delete.accesskey;"    command="cmd_delete"/>
+   <menuseparator/>
+   <menuitem label="&selectAllCmd.label;" accesskey="&selectall.accesskey;" command="cmd_selectAll"/>
+ </popup>
+
  <popup id="structToolbarContext">
    <menuitem id="structSelect"     label="&structSelect.label;"
                                    accesskey="&structSelect.accesskey;"

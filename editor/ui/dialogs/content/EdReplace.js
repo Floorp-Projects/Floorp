@@ -68,19 +68,19 @@ function loadDialog()
 
 function onLoad()
 {
+  // Get the xul <editor> element:
+  var editorElement = window.arguments[0];
+
   // If we don't get the editor, then we won't allow replacing.
-  gEditor = GetCurrentEditor();
+  gEditor = editorElement.getEditor(editorElement.contentWindow);
   if (!gEditor)
   {
     window.close();
     return;
   }
 
-  // Get the xul <editor> element:
-  var editorXUL = window.opener.document.getElementById("content-frame");
-
   // Get the nsIWebBrowserFind service:
-  gFindInst = editorXUL.webBrowserFind;
+  gFindInst = editorElement.webBrowserFind;
 
   try {
   // get the find service, which stores global find state

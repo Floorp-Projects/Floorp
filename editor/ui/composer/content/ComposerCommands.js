@@ -120,8 +120,8 @@ function SetupTextEditorCommands()
   //dump("Registering plain text editor commands\n");
   
   commandTable.registerCommand("cmd_find",       nsFindCommand);
-  commandTable.registerCommand("cmd_findNext",   new nsFindAgainCommand(false));
-  commandTable.registerCommand("cmd_findPrev",   new nsFindAgainCommand(true));
+  commandTable.registerCommand("cmd_findNext",   nsFindAgainCommand);
+  commandTable.registerCommand("cmd_findPrev",   nsFindAgainCommand);
   commandTable.registerCommand("cmd_rewrap",     nsRewrapCommand);
   commandTable.registerCommand("cmd_spelling",   nsSpellingCommand);
   commandTable.registerCommand("cmd_validate",   nsValidateCommand);
@@ -227,6 +227,7 @@ function GetComposerCommandTable()
 
     var editorController = controller.QueryInterface(Components.interfaces.nsIControllerContext);
     editorController.init(null);
+    editorController.setCommandContext(GetCurrentEditorElement());
     window.content.controllers.insertControllerAt(0, controller);
   
     // Store the controller ID so we can be sure to get the right one later
@@ -538,7 +539,7 @@ var nsSaveCommand =
     try {
       var docUrl = GetDocumentUrl();
       return IsDocumentEditable() &&
-        (IsDocumentModified() || window.gHTMLSourceChanged ||
+        (IsDocumentModified() || IsHTMLSourceChanged() ||
          IsUrlAboutBlank(docUrl) || GetScheme(docUrl) != "file");
     } catch (e) {return false;}
   },
@@ -657,7 +658,7 @@ var nsPublishCommand =
       //  when you first open any local file.
       try {
         var docUrl = GetDocumentUrl();
-        return IsDocumentModified() || window.gHTMLSourceChanged
+        return IsDocumentModified() || IsHTMLSourceChanged()
                || IsUrlAboutBlank(docUrl) || GetScheme(docUrl) == "file";
       } catch (e) {return false;}
     }
@@ -2333,53 +2334,48 @@ var nsQuitCommand =
 //-----------------------------------------------------------------------------------
 var nsFindCommand =
 {
-  isCommandEnabled: function(aCommand, dummy)
+  isCommandEnabled: function(aCommand, editorElement)
   {
-    return GetCurrentEditor() != null;
+    return editorElement.getEditor(editorElement.contentWindow) != null;
   },
 
-  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
-  doCommandParams: function(aCommand, aParams, aRefCon) {},
+  getCommandStateParams: function(aCommand, aParams, editorElement) {},
+  doCommandParams: function(aCommand, aParams, editorElement) {},
 
-  doCommand: function(aCommand)
+  doCommand: function(aCommand, editorElement)
   {
     try {
       window.openDialog("chrome://editor/content/EdReplace.xul", "_blank",
-                        "chrome,dependent,titlebar", "");
+                        "chrome,modal,titlebar", editorElement);
     }
     catch(ex) {
       dump("*** Exception: couldn't open Replace Dialog\n");
     }
-    window.content.focus();
+    //window.content.focus();
   }
 };
 
 //-----------------------------------------------------------------------------------
-
-function nsFindAgainCommand(isFindPrev)
+var nsFindAgainCommand =
 {
-  this.isFindPrev = isFindPrev;
-}
-
-nsFindAgainCommand.prototype =
-{
-  isCommandEnabled: function(aCommand, dummy)
+  isCommandEnabled: function(aCommand, editorElement)
   {
     // we can only do this if the search pattern is non-empty. Not sure how
     // to get that from here
-    return (GetCurrentEditor() != null && !IsInHTMLSourceMode());
+    return editorElement.getEditor(editorElement.contentWindow) != null;
   },
 
-  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
-  doCommandParams: function(aCommand, aParams, aRefCon) {},
+  getCommandStateParams: function(aCommand, aParams, editorElement) {},
+  doCommandParams: function(aCommand, aParams, editorElement) {},
 
-  doCommand: function(aCommand)
+  doCommand: function(aCommand, editorElement)
   {
     try {
-      var findInst = GetCurrentEditorElement().webBrowserFind;
+      var findPrev = aCommand == "cmd_findPrev";
+      var findInst = editorElement.webBrowserFind;
       var findService = Components.classes["@mozilla.org/find/find_service;1"]
-                             .getService(Components.interfaces.nsIFindService);    
-      findInst.findBackwards = findService.findBackwards ^ this.isFindPrev;
+                                  .getService(Components.interfaces.nsIFindService);
+      findInst.findBackwards = findService.findBackwards ^ findPrev;
       findInst.findNext();
       // reset to what it was in dialog, otherwise dialog setting can get reversed
       findInst.findBackwards = findService.findBackwards; 
@@ -2447,7 +2443,7 @@ var nsValidateCommand =
   {
     // If the document hasn't been modified,
     // then just validate the current url.
-    if (IsDocumentModified() || gHTMLSourceChanged)
+    if (IsDocumentModified() || IsHTMLSourceChanged())
     {
       if (!CheckAndSaveDocument("cmd_validate", false))
         return;

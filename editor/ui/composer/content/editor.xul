@@ -259,8 +259,7 @@
       </stack>
       <vbox>
         <label id="doctype-text" crop="right"/>
-        <textbox class="source-editor plain" id="content-source" multiline="true" rows="1"
-                   flex="1" style="width:1em; height:1em;"/>
+        <editor type="content" id="content-source" context="editorSourceContext" flex="1"/>
       </vbox>
     </deck>
 
