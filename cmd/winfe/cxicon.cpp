@@ -171,6 +171,13 @@ void Icon_GetUrlExitRoutine(URL_Struct *pUrl, int iStatus, MWContext *pContext)
 			theImage->CompleteCallback();
 		}
 	}
+	// standard free-a-URL-with-Windows-DDE-gunk mechanism:
+	if (NCAPIDATA(pUrl))
+		NCAPIDATA(pUrl)->EndProgress();
+	if (!NCAPIDATA(pUrl) || NCAPIDATA(pUrl)->CanFreeUrl()) {
+		FEU_DeleteUrlData(pUrl, NULL);
+		NET_FreeURLStruct(pUrl);
+	}
 }
 
 static BOOL IsImageMimeType(const CString& theFormat)
