@@ -41,8 +41,6 @@
 #include "nsIXBLPrototypeHandler.h"
 #include "nsXBLContextMenuHandler.h"
 #include "nsIContent.h"
-#include "nsIAtom.h"
-#include "nsIDOMMouseEvent.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
@@ -87,26 +85,9 @@ nsXBLContextMenuHandler::~nsXBLContextMenuHandler()
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsXBLContextMenuHandler, nsXBLEventHandler, nsIDOMContextMenuListener)
 
-static inline nsresult DoContextMenu(nsIAtom* aEventType, nsIXBLPrototypeHandler* aHandler, 
-                                     nsIDOMEvent* aContextMenuEvent,
-                                     nsIDOMEventReceiver* aReceiver)
-{
-  if (!aHandler)
-    return NS_OK;
-
-  PRBool matched = PR_FALSE;
-  nsCOMPtr<nsIDOMMouseEvent> contextMenu(do_QueryInterface(aContextMenuEvent));
-  aHandler->MouseEventMatched(aEventType, contextMenu, &matched);
-
-  if (matched)
-    aHandler->ExecuteHandler(aReceiver, aContextMenuEvent);
-  
-  return NS_OK;
-}
-
 nsresult nsXBLContextMenuHandler::ContextMenu(nsIDOMEvent* aContextMenuEvent)
 {
-  return DoContextMenu(kContextMenuAtom, mProtoHandler, aContextMenuEvent, mEventReceiver);
+  return DoMouse(kContextMenuAtom, aContextMenuEvent);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////

@@ -41,7 +41,6 @@
 #include "nsIXBLPrototypeHandler.h"
 #include "nsXBLMouseHandler.h"
 #include "nsIContent.h"
-#include "nsIAtom.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
@@ -100,50 +99,34 @@ nsXBLMouseHandler::~nsXBLMouseHandler()
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsXBLMouseHandler, nsXBLEventHandler, nsIDOMMouseListener)
 
-static inline nsresult DoMouse(nsIAtom* aEventType, nsIXBLPrototypeHandler* aHandler, nsIDOMEvent* aMouseEvent,
-                               nsIDOMEventReceiver* aReceiver)
-{
-  if (!aHandler)
-    return NS_OK;
-
-  PRBool matched = PR_FALSE;
-  nsCOMPtr<nsIDOMMouseEvent> mouse(do_QueryInterface(aMouseEvent));
-  aHandler->MouseEventMatched(aEventType, mouse, &matched);
-
-  if (matched)
-    aHandler->ExecuteHandler(aReceiver, aMouseEvent);
-  
-  return NS_OK;
-}
-
 nsresult nsXBLMouseHandler::MouseDown(nsIDOMEvent* aMouseEvent)
 {
-  return DoMouse(kMouseDownAtom, mProtoHandler, aMouseEvent, mEventReceiver);
+  return DoMouse(kMouseDownAtom, aMouseEvent);
 }
 
 nsresult nsXBLMouseHandler::MouseUp(nsIDOMEvent* aMouseEvent)
 {
-  return DoMouse(kMouseUpAtom, mProtoHandler, aMouseEvent, mEventReceiver);
+  return DoMouse(kMouseUpAtom, aMouseEvent);
 }
 
 nsresult nsXBLMouseHandler::MouseClick(nsIDOMEvent* aMouseEvent)
 {
-  return DoMouse(kMouseClickAtom, mProtoHandler, aMouseEvent, mEventReceiver);
+  return DoMouse(kMouseClickAtom, aMouseEvent);
 }
 
 nsresult nsXBLMouseHandler::MouseDblClick(nsIDOMEvent* aMouseEvent)
 {
-  return DoMouse(kMouseDblClickAtom, mProtoHandler, aMouseEvent, mEventReceiver);
+  return DoMouse(kMouseDblClickAtom, aMouseEvent);
 }
 
 nsresult nsXBLMouseHandler::MouseOver(nsIDOMEvent* aMouseEvent)
 {
-  return DoMouse(kMouseOverAtom, mProtoHandler, aMouseEvent, mEventReceiver);
+  return DoMouse(kMouseOverAtom, aMouseEvent);
 }
 
 nsresult nsXBLMouseHandler::MouseOut(nsIDOMEvent* aMouseEvent)
 {
-  return DoMouse(kMouseOutAtom, mProtoHandler, aMouseEvent, mEventReceiver);
+  return DoMouse(kMouseOutAtom, aMouseEvent);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////

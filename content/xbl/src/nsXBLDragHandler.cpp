@@ -41,7 +41,6 @@
 #include "nsIXBLPrototypeHandler.h"
 #include "nsXBLDragHandler.h"
 #include "nsIContent.h"
-#include "nsIAtom.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
@@ -97,45 +96,29 @@ nsXBLDragHandler::~nsXBLDragHandler()
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsXBLDragHandler, nsXBLEventHandler, nsIDOMDragListener)
 
-static inline nsresult DoMouse(nsIAtom* aEventType, nsIXBLPrototypeHandler* aHandler, nsIDOMEvent* aMouseEvent,
-                               nsIDOMEventReceiver* aReceiver)
-{
-  if (!aHandler)
-    return NS_OK;
-
-  PRBool matched = PR_FALSE;
-  nsCOMPtr<nsIDOMMouseEvent> mouse(do_QueryInterface(aMouseEvent));
-  aHandler->MouseEventMatched(aEventType, mouse, &matched);
-
-  if (matched)
-    aHandler->ExecuteHandler(aReceiver, aMouseEvent);
-  
-  return NS_OK;
-}
-
 nsresult nsXBLDragHandler::DragEnter(nsIDOMEvent* aMouseEvent)
 {
-  return DoMouse(kDragEnterAtom, mProtoHandler, aMouseEvent, mEventReceiver);
+  return DoMouse(kDragEnterAtom, aMouseEvent);
 }
 
 nsresult nsXBLDragHandler::DragOver(nsIDOMEvent* aMouseEvent)
 {
-  return DoMouse(kDragOverAtom, mProtoHandler, aMouseEvent, mEventReceiver);
+  return DoMouse(kDragOverAtom, aMouseEvent);
 }
 
 nsresult nsXBLDragHandler::DragDrop(nsIDOMEvent* aMouseEvent)
 {
-  return DoMouse(kDragDropAtom, mProtoHandler, aMouseEvent, mEventReceiver);
+  return DoMouse(kDragDropAtom, aMouseEvent);
 }
 
 nsresult nsXBLDragHandler::DragExit(nsIDOMEvent* aMouseEvent)
 {
-  return DoMouse(kDragExitAtom, mProtoHandler, aMouseEvent, mEventReceiver);
+  return DoMouse(kDragExitAtom, aMouseEvent);
 }
 
 nsresult nsXBLDragHandler::DragGesture(nsIDOMEvent* aMouseEvent)
 {
-  return DoMouse(kDragGestureAtom, mProtoHandler, aMouseEvent, mEventReceiver);
+  return DoMouse(kDragGestureAtom, aMouseEvent);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////

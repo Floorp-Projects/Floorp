@@ -41,7 +41,6 @@
 #include "nsIXBLPrototypeHandler.h"
 #include "nsXBLFocusHandler.h"
 #include "nsIContent.h"
-#include "nsIAtom.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDocument.h"
@@ -89,33 +88,13 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsXBLFocusHandler, nsXBLEventHandler, nsIDOMFocusLi
 
 nsresult nsXBLFocusHandler::Focus(nsIDOMEvent* aEvent)
 {
-  if (!mProtoHandler)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIAtom> eventName;
-  mProtoHandler->GetEventName(getter_AddRefs(eventName));
-
-  if (eventName.get() != kFocusAtom)
-    return NS_OK;
-
-  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
-  return NS_OK;
+  return DoGeneric(kFocusAtom, aEvent);
 }
 
 
 nsresult nsXBLFocusHandler::Blur(nsIDOMEvent* aEvent)
 {
-  if (!mProtoHandler)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIAtom> eventName;
-  mProtoHandler->GetEventName(getter_AddRefs(eventName));
-
-  if (eventName.get() != kBlurAtom)
-    return NS_OK;
-
-  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
-  return NS_OK;
+  return DoGeneric(kBlurAtom, aEvent);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
