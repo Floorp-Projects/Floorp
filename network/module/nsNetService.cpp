@@ -821,7 +821,7 @@ nsNetlibService::SetProxyHTTP(nsString& aProxyHTTP) {
         return NS_FALSE;
     csPort = nsSPort.ToNewCString();
     if (!csPort) {
-        delete proxy;
+        delete[] proxy;
         return NS_FALSE;
     }
 
@@ -833,8 +833,8 @@ nsNetlibService::SetProxyHTTP(nsString& aProxyHTTP) {
     if ( PREF_OK != PREF_SetIntPref(pref_proxyHttpPort, port) ) {
         rv = NS_FALSE;
     }
-    delete proxy;
-    delete csPort;
+    delete[] proxy;
+    delete[] csPort;
 
     NET_SelectProxyStyle(PROXY_STYLE_MANUAL);
 

@@ -134,7 +134,7 @@ NS_IMETHODIMP TestConsumer::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
         nsAutoString str(aMsg);
         char* c = str.ToNewCString();
         fputs(c, stdout);
-        free(c);
+        delete[] c;
         fputs("\n", stdout);
     }
 

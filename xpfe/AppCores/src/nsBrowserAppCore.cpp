@@ -467,6 +467,8 @@ nsBrowserAppCore::LoadUrl(const nsString& aUrl)
   /* Ask nsWebShell to load the URl */
   mContentAreaWebShell->LoadURL(nsString(urlstr), nsnull, nsnull);
 
+  delete[] urlstr;
+
   return NS_OK;
 }
 
@@ -538,7 +540,11 @@ nsBrowserAppCore::SetWebShellWindow(nsIDOMWindow* aWin)
     webShell->GetName( &name);
     nsAutoString str(name);
 
-    if (APP_DEBUG) printf("Attaching to WebShellWindow[%s]\n", str.ToNewCString());
+    if (APP_DEBUG) {
+        char* cstr = str.ToNewCString();
+        printf("Attaching to WebShellWindow[%s]\n", cstr);
+        delete[] cstr;
+    }
 
     nsIWebShellContainer * webShellContainer;
     webShell->GetContainer(webShellContainer);
@@ -810,7 +816,11 @@ nsBrowserAppCore::ExecuteScript(nsIScriptContext * aContext, const nsString& aSc
     const char* url = "";
     PRBool isUndefined = PR_FALSE;
     nsString rVal;
-    if (APP_DEBUG) printf("Executing [%s]\n", aScript.ToNewCString());
+    if (APP_DEBUG) {
+        char* script_str = aScript.ToNewCString();
+        printf("Executing [%s]\n", script_str);
+        delete[] script_str;
+    }
     aContext->EvaluateString(aScript, url, 0, rVal, &isUndefined);
   } 
   return NS_OK;

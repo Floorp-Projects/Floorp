@@ -303,7 +303,7 @@ STDAPI DllRegisterServer(void)
 
     // Free up memory...
     if (WebShellCLSID) {
-        delete WebShellCLSID;
+        delete[] WebShellCLSID;
     }
 
     return NOERROR;
@@ -373,7 +373,7 @@ STDAPI DllUnregisterServer(void)
 
     // Free up memory...
     if (WebShellCLSID) {
-        delete WebShellCLSID;
+        delete[] WebShellCLSID;
     }
 
     return NOERROR;

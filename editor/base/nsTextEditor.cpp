@@ -658,7 +658,7 @@ static void WriteFromOstrstream(ostrstream& aIn, nsString& aOutputString)
 
   // in ostrstreams if you call the str() function
   // then you are responsible for deleting the string
-  delete strData;
+  delete[] strData;
 }
 #endif
 
