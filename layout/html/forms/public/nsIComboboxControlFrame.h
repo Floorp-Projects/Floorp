@@ -83,6 +83,11 @@ public:
    */
   NS_IMETHOD UpdateSelection(PRBool aDoDispatchEvent, PRBool aForceUpdate, PRInt32 aNewIndex) = 0;
 
+  /**
+   *
+   */
+  NS_IMETHOD AbsolutelyPositionDropDown() = 0;
+
 
 };
 
