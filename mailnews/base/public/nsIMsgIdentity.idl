@@ -78,7 +78,11 @@ interface nsIMsgIdentity : nsISupports {
 
   attribute boolean doFcc;
   attribute string fccFolder;
-  
+
+  attribute string fccFolderPickerMode;
+  attribute string draftsFolderPickerMode;
+  attribute string tmplFolderPickerMode;  
+
   attribute boolean bccSelf;
   attribute boolean bccOthers;
   attribute string bccList;

@@ -36,6 +36,7 @@ Rights Reserved.
   <!-- XXX: strres.js is included so that WizardManager.js will work -->
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
   <stringbundle id="bundle_prefs" src="chrome://messenger/locale/prefs.properties"/>
+  <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
   <script type="application/x-javascript" src="chrome://global/content/wizardOverlay.js"/>
   <script type="application/x-javascript" src="chrome://global/content/wizardHandlerSet.js"/>
   <script type="application/x-javascript" src="chrome://global/content/wizardManager.js"/>

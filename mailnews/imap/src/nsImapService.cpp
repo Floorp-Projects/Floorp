@@ -3109,12 +3109,27 @@ nsImapService::GetShowComposeMsgLink(PRBool *showComposeMsgLink)
 }        
 
 NS_IMETHODIMP
+nsImapService::GetNeedToBuildSpecialFolderURIs(PRBool *needToBuildSpecialFolderURIs)
+{
+    NS_ENSURE_ARG_POINTER(needToBuildSpecialFolderURIs);
+    *needToBuildSpecialFolderURIs = PR_TRUE;
+    return NS_OK;
+}        
+
+NS_IMETHODIMP
 nsImapService::GetDefaultCopiesAndFoldersPrefsToServer(PRBool *aDefaultCopiesAndFoldersPrefsToServer)
 {
     NS_ENSURE_ARG_POINTER(aDefaultCopiesAndFoldersPrefsToServer);
-    // when an imap server is created, the copies and folder prefs for the associated identity
-    // don't point to folders on the server.  they'll point to the one on "Local Folders"
-   	*aDefaultCopiesAndFoldersPrefsToServer = PR_FALSE;
+    // Need to create required special folders on the server. Return true.
+    *aDefaultCopiesAndFoldersPrefsToServer = PR_TRUE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImapService::GetSpecialFoldersDeletionAllowed(PRBool *specialFoldersDeletionAllowed)
+{
+    NS_ENSURE_ARG_POINTER(specialFoldersDeletionAllowed);
+    *specialFoldersDeletionAllowed = PR_FALSE;
     return NS_OK;
 }
 

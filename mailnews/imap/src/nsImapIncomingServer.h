@@ -65,8 +65,8 @@ public:
         NS_IMETHOD GetCanBeDefaultServer(PRBool *canBeDefaultServer);
         NS_IMETHOD GetCanSearchMessages(PRBool *canSearchMessages);
     NS_IMETHOD GetOfflineSupportLevel(PRInt32 *aSupportLevel);
+    NS_IMETHOD GeneratePrettyNameForMigration(PRUnichar **aPrettyName);
         NS_IMETHOD GetSupportsDiskSpace(PRBool *aSupportsDiskSpace);
-
 protected:
 	nsresult GetFolder(const char* name, nsIMsgFolder** pFolder);
     nsresult ResetFoldersToUnverified(nsIFolder *parentFolder);
@@ -92,6 +92,7 @@ private:
   nsresult CreateHostSpecificPrefName(const char *prefPrefix, nsCAutoString &prefName);
 
   PRBool ConnectionTimeOut(nsIImapProtocol* aImapConnection);
+  nsresult GetFormattedName(const PRUnichar *constructedPrettyName, PRUnichar **formattedPrettyName);  
   nsCOMPtr<nsISupportsArray> m_connectionCache;
   nsCOMPtr<nsISupportsArray> m_urlQueue;
 	nsCOMPtr<nsIStringBundle>	m_stringBundle;

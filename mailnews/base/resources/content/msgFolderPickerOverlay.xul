@@ -139,7 +139,7 @@ Rights Reserved.
   <menupopup />
   </menulist>
 
-  <menulist label="&filemessagesclickhere.label;" uri="" id="msgFccFolderPicker"
+  <menulist label="&choosefolderclickhere.label;" uri="" id="msgFccFolderPicker"
     datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
     ignore="http://home.netscape.com/NC-rdf#MessageChild"
     ref="msgaccounts:/">
@@ -190,7 +190,7 @@ Rights Reserved.
   <menupopup />
   </menulist>
 
-  <menulist label="&filemessagesclickhere.label;" uri=""
+  <menulist label="&choosefolderclickhere.label;" uri=""
     id="msgDraftsFolderPicker"
     datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
     ignore="http://home.netscape.com/NC-rdf#MessageChild"
@@ -242,7 +242,7 @@ Rights Reserved.
   <menupopup />
   </menulist>
 
-  <menulist label="&filemessagesclickhere.label;" uri=""
+  <menulist label="&choosefolderclickhere.label;" uri=""
     id="msgStationeryFolderPicker"
     datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
     ignore="http://home.netscape.com/NC-rdf#MessageChild"
@@ -293,6 +293,73 @@ Rights Reserved.
       </template>
       <menupopup />
     </menulist>
+
+  <menu class="push" label="&chooseaccountclickhere.label;" 
+        uri="" id="msgFccAccountPicker" 
+        datasources="rdf:msgaccountmanager rdf:mailnewsfolders" 
+        ignore="http://home.netscape.com/NC-rdf#MessageChild"
+        ref="msgaccounts:/">
+    <template>
+      <rule nc:IsServer="true" nc:ServerType="nntp">
+        <!-- don't show nntp servers in the picker -->
+      </rule>
+      <rule nc:IsServer="true">
+        <menupopup>
+          <menuitem uri="..." class="folderMenuItem menuitem-iconic" 
+                    label="rdf:http://home.netscape.com/NC-rdf#Name"
+                    oncommand="PickedMsgFolder(event.target,'msgFccAccountPicker')"
+                    IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                    ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
+        </menupopup>
+      </rule>
+    </template>
+    <menupopup />
+  </menu>
+
+  <menu class="push" label="&chooseaccountclickhere.label;" 
+        uri="" id="msgDraftsAccountPicker" 
+        datasources="rdf:msgaccountmanager rdf:mailnewsfolders" 
+        ignore="http://home.netscape.com/NC-rdf#MessageChild"
+        ref="msgaccounts:/">
+    <template>
+      <rule nc:IsServer="true" nc:ServerType="nntp">
+        <!-- don't show nntp servers in the picker -->
+      </rule>
+      <rule nc:IsServer="true">
+        <menupopup>
+          <menuitem uri="..." class="folderMenuItem menuitem-iconic" 
+                    label="rdf:http://home.netscape.com/NC-rdf#Name"
+                    oncommand="PickedMsgFolder(event.target,'msgDraftsAccountPicker')"
+                    IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                    ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
+        </menupopup>
+      </rule>
+    </template>
+    <menupopup />
+  </menu>
+
+  <menu class="push" label="&chooseaccountclickhere.label;" 
+        uri="" id="msgStationeryAccountPicker" 
+        datasources="rdf:msgaccountmanager rdf:mailnewsfolders" 
+        ignore="http://home.netscape.com/NC-rdf#MessageChild"
+        ref="msgaccounts:/">
+    <template>
+      <rule nc:IsServer="true" nc:ServerType="nntp">
+        <!-- don't show nntp servers in the picker -->
+      </rule>
+      <rule nc:IsServer="true">
+         <menupopup>
+          <menuitem uri="..." class="folderMenuItem menuitem-iconic" 
+                    label="rdf:http://home.netscape.com/NC-rdf#Name"
+                    oncommand="PickedMsgFolder(event.target,'msgStationeryAccountPicker')"
+                    IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                    ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
+        </menupopup>
+      </rule>
+    </template>
+    <menupopup />
+  </menu>
+
     <menulist id="searchableFolders"
               datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
               ref="msgaccounts:/">

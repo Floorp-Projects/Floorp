@@ -12,3 +12,13 @@
 <!ENTITY draftMailFolder.label "Keep message drafts in:">
 <!ENTITY templateMailFolder.label "Keep message templates in:">
 <!ENTITY saveMessageDlg.label "Show confirmation dialog when messages are saved">
+<!-- LOCALIZATION NOTE (sentFolderOn.label): do not translate "Sent" in below line. see bug #64199 -->
+<!ENTITY sentFolderOn.label "&quot;Sent&quot; Folder on:">
+<!-- LOCALIZATION NOTE (draftsFolderOn.label): do not translate "Drafts" in below line. see bug #64199 -->
+<!ENTITY draftsFolderOn.label "&quot;Drafts&quot; Folder on:">
+<!-- LOCALIZATION NOTE (templatesFolderOn.label): do not translate "Templates" in below line. see bug #23625 -->
+<!ENTITY templatesFolderOn.label "&quot;Templates&quot; Folder on:">
+<!ENTITY otherFolder.label "Other:">
+<!ENTITY specialFoldersTitle.label "Drafts and Templates">
+<!ENTITY keepDrafts.label "Keep message drafts in:">
+<!ENTITY keepTempltes.label "Keep message templates in:">

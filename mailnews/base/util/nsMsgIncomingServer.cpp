@@ -1323,6 +1323,20 @@ NS_IMETHODIMP nsMsgIncomingServer::DisplayOfflineMsg(nsIMsgWindow *aMsgWindow)
   return rv;
 }
 
+// Called only during the migration process. A unique name is generated for the
+// migrated account.
+NS_IMETHODIMP
+nsMsgIncomingServer::GeneratePrettyNameForMigration(PRUnichar **aPrettyName)
+{
+    /** 
+     * 4.x had provisions for multiple imap servers to be maintained under
+     * single identity. So, when migrated each of those server accounts need
+     * to be represented by unique account name. nsImapIncomingServer will
+     * override the implementation for this to do the right thing.
+     */
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 // use the convenience macros to implement the accessors
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, Username, "userName");
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, PrefPassword, "password");

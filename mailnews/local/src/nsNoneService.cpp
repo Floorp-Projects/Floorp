@@ -208,3 +208,19 @@ nsNoneService::GetShowComposeMsgLink(PRBool *showComposeMsgLink)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsNoneService::GetNeedToBuildSpecialFolderURIs(PRBool *needToBuildSpecialFolderURIs)
+{
+    NS_ENSURE_ARG_POINTER(needToBuildSpecialFolderURIs);
+    *needToBuildSpecialFolderURIs = PR_FALSE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNoneService::GetSpecialFoldersDeletionAllowed(PRBool *specialFoldersDeletionAllowed)
+{
+    NS_ENSURE_ARG_POINTER(specialFoldersDeletionAllowed);
+    *specialFoldersDeletionAllowed = PR_TRUE;
+    return NS_OK;
+}
+

@@ -18,6 +18,9 @@
  * Rights Reserved.
  */
 
+var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+var gMessengerBundle = document.getElementById("bundle_messenger");
+
 // Controller object for folder pane
 var FolderPaneController =
 {
@@ -868,8 +871,21 @@ function MsgDeleteFolder()
         specialFolder = folder.getAttribute('SpecialFolder');
         if (specialFolder != "Inbox" && specialFolder != "Trash")
         {
-            if (isNewsURI(folderuri)) {
-              var msgfolder = GetMsgFolderFromURI(folderuri);
+            var msgfolder = GetMsgFolderFromURI(folderuri);
+            var protocolInfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" + msgfolder.server.type].getService(Components.interfaces.nsIMsgProtocolInfo);
+
+            // do not allow deletion of special folders on imap accounts
+            if ((specialFolder == "Sent" || 
+                specialFolder == "Drafts" || 
+                specialFolder == "Templates") &&
+                !protocolInfo.specialFoldersDeletionAllowed) {
+                var errorMessage = gMessengerBundle.getFormattedString("specialFolderDeletionErr",
+                                                    [specialFolder]);
+                var specialFolderDeletionErrTitle = gMessengerBundle.getString("specialFolderDeletionErrTitle");
+                promptService.alert(window, specialFolderDeletionErrTitle, errorMessage);
+                continue;
+            }   
+            else if (isNewsURI(folderuri)) {
               var unsubscribe = ConfirmUnsubscribe(msgfolder);
               if (unsubscribe) {
                 UnSubscribe(msgfolder);

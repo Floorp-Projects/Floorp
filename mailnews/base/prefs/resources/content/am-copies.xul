@@ -13,11 +13,14 @@
       align="vertical">
 
   <stringbundleset id="stringbundleset">
-    <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
+  <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
   </stringbundleset>
   <script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/AccountManager.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/am-copies.js"/>
   
+  <broadcaster id="broadcaster_doFcc"/>
+
   <text hidden="true" wsm_persist="true" id="identity.fccFolder"
                 pref="true" preftype="string" prefattribute="value"
                 prefstring="mail.identity.%identitykey%.fcc_folder"/>
@@ -29,27 +32,57 @@
                 prefstring="mail.identity.%identitykey%.stationary_folder"/>
   <text hidden="true" wsm_persist="true" id="identity.email"/>
   
+  <text hidden="true" wsm_persist="true" id="identity.fccFolderPickerMode"/>
+  <text hidden="true" wsm_persist="true" id="identity.draftsFolderPickerMode"/>
+  <text hidden="true" wsm_persist="true" id="identity.tmplFolderPickerMode"/>
+
   <box class="box-smallheader" title="&copyAndFolderTitle.label;"/>
   
   <titledbox orient="vertical">
     <label value="&sendingPrefix.label;"/>
-  
+
     <box autostretch="never">
-      <checkbox wsm_persist="true" id="identity.doFcc" label="&fccMailFolder.label;"
+      <checkbox wsm_persist="true" id="identity.doFcc" label="&fccMailFolder.label;" 
                 pref="true" preftype="bool" prefattribute="value"
-                prefstring="mail.identity.%identitykey%.fcc"/>
-      <spring flex="1"/>
-      <menulist id="msgFccFolderPicker" flex="1">
-         <observes element="identity.fccFolder" attribute="disabled"/>
-      </menulist>
+                prefstring="mail.identity.%identitykey%.fcc"
+                oncommand="setupFccItems();"/>
     </box>
-  
+      <radiogroup id="doFcc" orient="vertical">
+      <grid class="specialFolderPickerGrid">
+        <columns>
+          <column flex="1"/>
+          <column flex="2"/>
+        </columns>
+        <rows>
+          <row autostretch="never">
+            <radio group="doFcc" id="fcc_selectAccount" 
+                   value="0" label="&sentFolderOn.label;"
+                   oncommand="setPickersState('msgFccAccountPicker', 'msgFccFolderPicker', event)" 
+                   observes="broadcaster_doFcc"/>
+  	    <menulist id="msgFccAccountPicker"
+	              oncommand="noteSelectionChange('fcc_selectAccount')" 
+	              flex="1" observes="broadcaster_doFcc"/>
+          </row> 
+          <row autostretch="never">
+            <radio group="doFcc" id="fcc_selectFolder" 
+	           value="1" label="&otherFolder.label;"
+                   oncommand="setPickersState('msgFccFolderPicker', 'msgFccAccountPicker', event)" 
+                   observes="broadcaster_doFcc"/>
+  	    <menulist id="msgFccFolderPicker" 
+	              oncommand="noteSelectionChange('fcc_selectFolder')" 
+		      flex="1" observes="broadcaster_doFcc"/>
+          </row>
+        </rows>
+      </grid>
+    </radiogroup>
+    <separator/>  
+
     <box autostretch="never">
       <checkbox wsm_persist="true" id="identity.bccSelf" before="&bccAccount.label; &lt;" after="&gt;"
                 pref="true" preftype="bool" prefattribute="value"
                 prefstring="mail.identity.%identitykey%.bcc_self"/>
     </box>
-      
+    
     <box autostretch="never">
       <checkbox wsm_persist="true" id="identity.bccOthers" label="&bccAddress.label;"
                 pref="true" preftype="bool" prefattribute="value"
@@ -58,32 +91,74 @@
                pref="true" preftype="string" prefattribute="value"
                prefstring="mail.identity.%identitykey%.bcc_other_list"/>
     </box>
+
   </titledbox>
   
   <titledbox orient="vertical">
-    <label value="&specialFolderTitle.label;"/>
-    <grid>
-      <columns>
-        <column flex="1"/>
-        <column flex="2"/>
-      </columns>
-      <rows>
-        <row autostretch="never">
-          <text class="label" value="&draftMailFolder.label;" for="msgDraftsFolderPicker"/>
-          <!-- name="identity.draftFolder" -->
-          <menulist id="msgDraftsFolderPicker">
-            <observes element="identity.draftFolder" attribute="disabled"/>
-          </menulist>
-        </row>
-        <row autostretch="never">
-          <text class="label" value="&templateMailFolder.label;"/>
-          <!-- name="identity.stationeryFolder " -->
-          <menulist id="msgStationeryFolderPicker">
-            <observes element="identity.stationeryFolder" attribute="disabled"/>
-          </menulist>
-        </row>
-      </rows>
-    </grid>
+    <label value="&specialFoldersTitle.label;"/>
+
+    <box autostretch="never">
+      <text class="label" value="&keepDrafts.label;"/>
+    </box>
+    
+    <radiogroup id="messageDrafts" orient="vertical">
+      <grid class="specialFolderPickerGrid">
+        <columns>
+          <column flex="1"/>
+          <column flex="2"/>
+        </columns>
+        <rows>
+          <row autostretch="never">
+            <radio group="messageDrafts" id="draft_selectAccount" 
+                   oncommand="setPickersState('msgDraftsAccountPicker', 'msgDraftsFolderPicker', event)"
+                   value="0" label="&draftsFolderOn.label;"/>
+ 	    <menulist id="msgDraftsAccountPicker" 
+	              oncommand="noteSelectionChange('draft_selectAccount')"
+                      flex="1"/>
+          </row> 
+          <row autostretch="never">
+            <radio group="messageDrafts" id="draft_selectFolder" 
+                   oncommand="setPickersState('msgDraftsFolderPicker', 'msgDraftsAccountPicker', event)"
+                   value="1" label="&otherFolder.label;"/>
+  	    <menulist id="msgDraftsFolderPicker"
+                      oncommand="noteSelectionChange('draft_selectFolder')" 
+                      flex="1"/>
+          </row>
+        </rows>
+      </grid>
+    </radiogroup>
+    <separator/>
+    <box autostretch="never">
+      <text class="label" value="&keepTempltes.label;"/>
+    </box>
+	
+    <radiogroup id="messageTemplates" orient="vertical">
+      <grid class="specialFolderPickerGrid">
+        <columns>
+          <column flex="1"/>
+          <column flex="2"/>
+        </columns>
+        <rows>
+          <row autostretch="never">
+            <radio group="messageTemplates" id="tmpl_selectAccount" 
+                   oncommand="setPickersState('msgStationeryAccountPicker', 'msgStationeryFolderPicker', event)"
+                   value="0" label="&templatesFolderOn.label;"/>
+  	    <menulist id="msgStationeryAccountPicker"
+                      oncommand="noteSelectionChange('tmpl_selectAccount')" 
+                      flex="1"/>
+          </row> 
+          <row autostretch="never">
+            <radio group="messageTemplates" id="tmpl_selectFolder" 
+                   oncommand="setPickersState('msgStationeryFolderPicker', 'msgStationeryAccountPicker', event)"
+                  value="1" label="&otherFolder.label;"/>
+            <menulist id="msgStationeryFolderPicker"
+                      oncommand="noteSelectionChange('tmpl_selectFolder')" 
+                      flex="1"/>
+          </row>
+        </rows>
+      </grid>
+    </radiogroup>
+      <separator class="thin"/>
     <box autostretch="never">
       <checkbox wsm_persist="true" id="identity.showSaveMsgDlg" label="&saveMessageDlg.label;"
                 pref="true" preftype="bool" prefattribute="value"

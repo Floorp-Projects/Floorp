@@ -419,6 +419,10 @@ NS_IMPL_IDPREF_INT(SignatureDate,"sig_date");
 NS_IMPL_IDPREF_BOOL(DoFcc, "fcc");
 NS_IMPL_FOLDERPREF_STR(FccFolder, "fcc_folder");
 
+NS_IMPL_IDPREF_STR(FccFolderPickerMode, "fcc_folder_picker_mode");
+NS_IMPL_IDPREF_STR(DraftsFolderPickerMode, "drafts_folder_picker_mode");
+NS_IMPL_IDPREF_STR(TmplFolderPickerMode, "tmpl_folder_picker_mode");
+
 NS_IMPL_IDPREF_BOOL(BccSelf, "bcc_self");
 NS_IMPL_IDPREF_BOOL(BccOthers, "bcc_other");
 NS_IMPL_IDPREF_STR (BccList, "bcc_other_list");

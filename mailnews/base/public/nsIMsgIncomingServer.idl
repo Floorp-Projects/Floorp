@@ -234,6 +234,9 @@ interface nsIMsgIncomingServer : nsISupports {
    * 
    */
   attribute long offlineSupportLevel;
+
+  /* create pretty name for migrated accounts */
+  wstring generatePrettyNameForMigration(); 
 	
   /* does this server have disk space settings? */
   readonly attribute boolean supportsDiskSpace;
@@ -259,6 +262,9 @@ interface nsIMsgIncomingServer : nsISupports {
 #define OFFLINE_SUPPORT_LEVEL_REGULAR 10
 #define OFFLINE_SUPPORT_LEVEL_EXTENDED 20
 #define OFFLINE_SUPPORT_LEVEL_UNDEFINED -1
+
+// Value when no port setting is found
+#define PORT_NOT_SET -1
 
 /* some useful macros to implement nsIMsgIncomingServer accessors */
 #define NS_IMPL_SERVERPREF_STR(_class, _postfix, _prefname)	\

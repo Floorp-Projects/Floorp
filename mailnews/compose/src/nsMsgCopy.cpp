@@ -384,24 +384,12 @@ nsMsgCopy::CreateIfMissing(nsIMsgFolder **folder, PRBool *waitForUrl)
       // for local folders, path is to the berkeley mailbox. 
       // for imap folders, path needs to have .msf appended to the name
       (*folder)->GetPath(getter_AddRefs(folderPath));
-      if (folderPath)
-      {
         PRBool isImapFolder = !nsCRT::strncasecmp(mSavePref, "imap:", 5);
-        if (isImapFolder)
-        {
-	        nsXPIDLCString leafName;
-        
-          folderPath->GetLeafName(getter_Copies(leafName));
-
-	        nsCString fullLeafName(leafName);
-
-	        // Append .msf (msg summary file) this is what windows will want.
-	        // Mac and Unix can decide for themselves.
-
-	        fullLeafName.Append(".msf");				// message summary file
-	        folderPath->SetLeafName(fullLeafName);
-        }
-        PRBool exists;
+      // if we can't get the path from the folder, then try to create the storage.
+      // for imap, it doesn't matter if the .msf file exists - it still might not
+      // exist on the server, so we should try to create it
+      PRBool exists = PR_FALSE;
+      if (!isImapFolder && folderPath)
         folderPath->Exists(&exists);
         if (!exists)
         {
@@ -413,7 +401,6 @@ nsMsgCopy::CreateIfMissing(nsIMsgFolder **folder, PRBool *waitForUrl)
         }
       }
     }
-  }
   return ret;
 }
 ////////////////////////////////////////////////////////////////////////////////////
@@ -447,16 +434,7 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
     nsCOMPtr <nsIMsgFolder> folderResource;
     folderResource = do_QueryInterface(resource, &rv);
     if (NS_SUCCEEDED(rv) && folderResource) {
-	// check that folder really exists by seeing if it has a server
-	// GetResource() will return NS_OK and create the resource, but it may not 
-	// be a "real" folder
-	// we need to return a failure code, so the user gets the alert that
-	// their pref was bogus
-	nsCOMPtr <nsIMsgIncomingServer> server;
-	rv = folderResource->GetServer(getter_AddRefs(server));
-	if (NS_FAILED(rv)) return rv;
-	if (!server) return NS_ERROR_FAILURE;
-
+        // don't check validity of folder - caller will handle creating it
 	*msgFolder = folderResource;
 	NS_ADDREF(*msgFolder);
 	return NS_OK;

@@ -1371,6 +1371,15 @@ nsNntpService::GetShowComposeMsgLink(PRBool *showComposeMsgLink)
 }  
 
 NS_IMETHODIMP
+nsNntpService::GetNeedToBuildSpecialFolderURIs(PRBool *needToBuildSpecialFolderURIs)
+{
+    NS_ENSURE_ARG_POINTER(needToBuildSpecialFolderURIs);
+    *needToBuildSpecialFolderURIs = PR_FALSE;
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
 nsNntpService::GetDefaultCopiesAndFoldersPrefsToServer(PRBool *aDefaultCopiesAndFoldersPrefsToServer)
 {
 	NS_ENSURE_ARG_POINTER(aDefaultCopiesAndFoldersPrefsToServer);
@@ -1379,6 +1388,14 @@ nsNntpService::GetDefaultCopiesAndFoldersPrefsToServer(PRBool *aDefaultCopiesAnd
 	// this makes sense, since there is no "Drafts" folder on a news server.
 	// they'll point to the ones on "Local Folders"
 	*aDefaultCopiesAndFoldersPrefsToServer = PR_FALSE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNntpService::GetSpecialFoldersDeletionAllowed(PRBool *specialFoldersDeletionAllowed)
+{
+    NS_ENSURE_ARG_POINTER(specialFoldersDeletionAllowed);
+    *specialFoldersDeletionAllowed = PR_FALSE;
     return NS_OK;
 }
 

@@ -1606,24 +1606,38 @@ nsMessengerMigrator::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
   NS_ENSURE_SUCCESS(rv,rv);
 
   if (port > 0) {
-      rv = server->SetPort(port);
-      NS_ENSURE_SUCCESS(rv,rv);
+    rv = server->SetPort(port);
+    NS_ENSURE_SUCCESS(rv,rv);
   }
   else {
-      if (isSecure) {
-          nsCOMPtr <nsIMsgProtocolInfo> protocolInfo = do_GetService("@mozilla.org/messenger/protocol/info;1?type=imap", &rv);
-          NS_ENSURE_SUCCESS(rv,rv);
-  
-          rv = protocolInfo->GetDefaultServerPort(PR_TRUE, &port);
-          NS_ENSURE_SUCCESS(rv,rv);
+    if (isSecure) {
+      nsCOMPtr <nsIMsgProtocolInfo> protocolInfo = do_GetService("@mozilla.org/messenger/protocol/info;1?type=imap", &rv);
+      NS_ENSURE_SUCCESS(rv,rv);
 
-          rv = server->SetPort(port);
-          NS_ENSURE_SUCCESS(rv,rv);
-      }
+      rv = protocolInfo->GetDefaultServerPort(PR_TRUE, &port);
+      NS_ENSURE_SUCCESS(rv,rv);
+
+      rv = server->SetPort(port);
+      NS_ENSURE_SUCCESS(rv,rv);
+    }
   }
 
   rv = server->SetIsSecure(isSecure);
   NS_ENSURE_SUCCESS(rv,rv);
+
+  // Generate unique pretty name for the account. It is important that this function
+  // is called here after all port settings are taken care of.
+  // Port values, if not default, will be used as a part of pretty name.
+  nsXPIDLString prettyName;
+  rv = server->GeneratePrettyNameForMigration(getter_Copies(prettyName));  
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  // Set pretty name for the account with this server
+  if (prettyName.get())
+  {
+    rv = server->SetPrettyName(prettyName);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
 
 #ifdef DEBUG_MIGRATOR
   PRInt32 portValue;

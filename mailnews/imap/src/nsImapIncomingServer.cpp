@@ -69,6 +69,7 @@
 #include "nsICacheEntryDescriptor.h"
 #include "nsImapUrl.h"
 #include "nsFileStream.h"
+#include "nsIMsgProtocolInfo.h"
 
 #include "nsITimer.h"
 static NS_DEFINE_CID(kCImapHostSessionList, NS_IIMAPHOSTSESSIONLIST_CID);
@@ -216,22 +217,8 @@ nsImapIncomingServer::GetConstructedPrettyName(PRUnichar **retval)
 
     }
   }
-  rv = GetStringBundle();
-	if (m_stringBundle)
-  {
-    nsXPIDLString prettyName;
-    const PRUnichar *formatStrings[] =
-    {
-        emailAddress.GetUnicode(),
-    };
-    rv = m_stringBundle->FormatStringFromID(IMAP_DEFAULT_ACCOUNT_NAME,
-                                    formatStrings, 1,
-                                    getter_Copies(prettyName));
-    *retval = nsCRT::strdup(prettyName);
-    return NS_OK;
-  }
-  else
-    return rv;
+  rv = GetFormattedName(emailAddress.GetUnicode(), retval);
+  return rv;
 }
 
 
@@ -2878,5 +2865,100 @@ nsImapIncomingServer::GetOfflineSupportLevel(PRInt32 *aSupportLevel)
       *aSupportLevel = OFFLINE_SUPPORT_LEVEL_REGULAR;
     }
     return NS_OK;
+}
+
+// Called only during the migration process. This routine enables the generation of 
+// unique account name based on the username, hostname and the port. If the port 
+// is valid and not a default one, it will be appended to the account name.
+NS_IMETHODIMP
+nsImapIncomingServer::GeneratePrettyNameForMigration(PRUnichar **aPrettyName)
+{
+    NS_ENSURE_ARG_POINTER(aPrettyName);
+    nsresult rv = NS_OK;
+   
+    nsXPIDLCString userName;
+    nsXPIDLCString hostName;
+
+    /**
+     * Pretty name for migrated account is of format username@hostname:<port>,
+     * provided the port is valid and not the default
+     */
+
+    // Get user name to construct pretty name
+    rv = GetUsername(getter_Copies(userName));
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    // Get host name to construct pretty name
+    rv = GetHostName(getter_Copies(hostName));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRInt32 defaultServerPort;
+    PRInt32 defaultSecureServerPort;
+
+    nsCOMPtr <nsIMsgProtocolInfo> protocolInfo = do_GetService("@mozilla.org/messenger/protocol/info;1?type=imap", &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    // Get the default port
+    rv = protocolInfo->GetDefaultServerPort(PR_FALSE, &defaultServerPort);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    // Get the default secure port
+    rv = protocolInfo->GetDefaultServerPort(PR_TRUE, &defaultSecureServerPort);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    // Get the current server port
+    PRInt32 serverPort = PORT_NOT_SET;
+    rv = GetPort(&serverPort);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    // Is the server secure ?
+    PRBool isSecure = PR_FALSE;
+    rv = GetIsSecure(&isSecure);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    // Is server port a default port ?
+    PRBool isItDefaultPort = PR_FALSE;
+    if (((serverPort == defaultServerPort) && !isSecure)|| 
+        ((serverPort == defaultSecureServerPort) && isSecure)) {
+        isItDefaultPort = PR_TRUE;
+    }
+
+    // Construct pretty name from username and hostname
+    nsAutoString constructedPrettyName;
+    constructedPrettyName.AssignWithConversion(userName);
+    constructedPrettyName.AppendWithConversion("@");
+    constructedPrettyName.AppendWithConversion(hostName);
+
+    // If the port is valid and not default, add port value to the pretty name
+    if ((serverPort > 0) && (!isItDefaultPort)) {
+        constructedPrettyName.AppendWithConversion(":");
+        constructedPrettyName.AppendInt(serverPort);
+    }
+
+    // Format the pretty name
+    rv = GetFormattedName(constructedPrettyName.GetUnicode(), aPrettyName); 
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return rv;
+}
+
+// Take the pretty name and return a formatted account name
+nsresult
+nsImapIncomingServer::GetFormattedName(const PRUnichar *prettyName, PRUnichar **retval)
+{
+    nsresult rv;
+    rv = GetStringBundle();
+    if (m_stringBundle)
+    {
+        const PRUnichar *formatStrings[] =
+        {
+            prettyName,
+        };
+        rv = m_stringBundle->FormatStringFromID(IMAP_DEFAULT_ACCOUNT_NAME,
+                                    formatStrings, 1,
+                                    retval);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+    return rv;
 }
 

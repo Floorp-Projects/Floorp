@@ -83,7 +83,7 @@ var accountCount = accounts.Count();
 
 var nsIMsgIdentity = Components.interfaces.nsIMsgIdentity;
 var nsIMsgIncomingServer = Components.interfaces.nsIMsgIncomingServer;
-var gPrefsBundle;
+var gPrefsBundle, gMessengerBundle;
 var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
 promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
 
@@ -97,9 +97,13 @@ var gDefaultAccount;
 // will eventually be dumped into the account
 var gCurrentAccountData;
 
+// default picker mode for copies and folders
+gDefaultSpecialFolderPickerMode = "0";
+
 // event handlers
 function onLoad() {
     gPrefsBundle = document.getElementById("bundle_prefs");
+    gMessengerBundle = document.getElementById("bundle_messenger");
 
     // wizard stuff
     // instantiate the Wizard Manager
@@ -562,7 +566,30 @@ function setDefaultCopiesAndFoldersPrefs(identity, server)
 	var msgFolder = rootFolder.QueryInterface(Components.interfaces.nsIMsgFolder);
 	var numFolders = new Object();
 
-	// these hex values come from nsMsgFolderFlags.h
+	var protocolInfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" + msgFolder.server.type].getService(Components.interfaces.nsIMsgProtocolInfo);
+
+    /** 
+     * Check if this protocol service needs to create special folder URIs.
+     * In case of IMAP, when a new account is created, folders 'Sent', 'Drafts'
+     * and 'Templates' are not created then, but created on demand at runtime. 
+     * But we do need to present them as possible choices in the Copies and Folders 
+     * UI. To do that, folder URIs have to be created and stored in the prefs file. 
+     * So, if there is a need to build special folders, append the special folder 
+     * names and create right URIs.
+     */
+    if (protocolInfo.needToBuildSpecialFolderURIs)
+    {
+        var folderDelim = "/";
+        var sentFolderName =  gMessengerBundle.getString("sentFolderName");
+        var draftsFolderName =  gMessengerBundle.getString("draftsFolderName");
+        var templatesFolderName =  gMessengerBundle.getString("templatesFolderName");
+
+        identity.draftFolder = msgFolder.server.serverURI+ folderDelim + draftsFolderName;
+        identity.stationeryFolder = msgFolder.server.serverURI+ folderDelim + templatesFolderName;
+        identity.fccFolder = msgFolder.server.serverURI+ folderDelim + sentFolderName;
+    }
+    else {
+        // these hex values come from nsMsgFolderFlags.h
 	var draftFolder = msgFolder.getFoldersWithFlag(0x0400, 1, numFolders);
 	var stationeryFolder = msgFolder.getFoldersWithFlag(0x400000, 1, numFolders);
 	var fccFolder = msgFolder.getFoldersWithFlag(0x0200, 1, numFolders);
@@ -574,7 +601,11 @@ function setDefaultCopiesAndFoldersPrefs(identity, server)
 	dump("fccFolder = " + identity.fccFolder + "\n");
 	dump("draftFolder = " + identity.draftFolder + "\n");
 	dump("stationeryFolder = " + identity.stationeryFolder + "\n");
-
+    }
+	
+    identity.fccFolderPickerMode = gDefaultSpecialFolderPickerMode;
+    identity.draftsFolderPickerMode = gDefaultSpecialFolderPickerMode;
+    identity.tmplFolderPickerMode = gDefaultSpecialFolderPickerMode;
 }
 
 function AccountExists(userName,hostName,serverType)
