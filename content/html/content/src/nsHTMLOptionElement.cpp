@@ -186,42 +186,7 @@ nsHTMLOptionElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 NS_IMETHODIMP 
 nsHTMLOptionElement::SetParent(nsIContent* aParent)
 {
-  nsresult result = NS_OK;
-
-  // Remove us from our old select element
-  if (nsnull != mInner.mParent) {
-    nsIDOMHTMLSelectElement* oldSelectElement = nsnull;
-    GetSelect(oldSelectElement);
-    if (nsnull != oldSelectElement) {
-      nsISelectElement* sel;
-      
-      if (NS_SUCCEEDED(oldSelectElement->QueryInterface(kISelectElementIID, (void**)&sel))) {
-        sel->RemoveOption(this);
-        NS_RELEASE(sel);
-      }
-
-      NS_RELEASE(oldSelectElement);
-    }
-  }
-
-  result = mInner.SetParent(aParent);
-
-  if (nsnull != aParent) {
-    nsIDOMHTMLSelectElement* newSelectElement = nsnull;
-    GetSelect(newSelectElement);
-    if (nsnull != newSelectElement) {
-      nsISelectElement* sel;
-      
-      if (NS_SUCCEEDED(newSelectElement->QueryInterface(kISelectElementIID, (void**)&sel))) {
-        sel->AddOption(this);
-        NS_RELEASE(sel);
-      }
-
-      NS_RELEASE(newSelectElement);
-    }
-  }
-
-  return result;
+  return mInner.SetParent(aParent);
 }
 
 nsresult
