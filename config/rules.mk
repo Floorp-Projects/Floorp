@@ -625,7 +625,7 @@ else
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $<
 endif
 
-%.o: %.c
+%.o: %.c Makefile.in
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 	$(CC) -Fo$@ -c $(CFLAGS) $<
 else
