@@ -1,3 +1,14 @@
+box#sidebarbox
+{
+  height: 200px; 
+  width: 200px;
+  overflow: auto
+}
+
+splitter#sidebarsplitter
+  border: 1px solid outset
+}
+
 box#sidebarbox[hidden="true"] {
   display: none
 }
@@ -6,17 +17,8 @@ splitter#sidebarsplitter[hidden="true"] {
   display: none
 }
 
-box#sidebarbox
+box#sidebarpanels
 {
-  border: 2px inset gray;
-  height: 200px; 
-  width: 200px;
-  overflow: auto
-}
-
-box#appcontent
-{
-  border: 2px inset gray;
 }
 
 iframe.panelframe {
