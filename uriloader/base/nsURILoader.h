@@ -30,6 +30,7 @@
 #define nsURILoader_h__
 
 #include "nsCURILoader.h"
+#include "nsISupportsUtils.h"
 #include "nsCOMPtr.h"
 
 class nsVoidArray;
