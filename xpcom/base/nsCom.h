@@ -23,6 +23,10 @@
 #ifndef nsCom_h__
 #define nsCom_h__
 
+#if defined(_WIN32) && !defined(XP_WIN)
+#error Must define XP_WIN to build on Win32 - add XP_WIN to your project defines.
+#endif
+
 /*
  * API Import/Export macros
  */
