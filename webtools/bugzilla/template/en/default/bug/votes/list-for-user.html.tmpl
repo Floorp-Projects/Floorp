@@ -21,10 +21,8 @@
 
 [% PROCESS global/header.html.tmpl
            title = "Show Votes"
-           h2 = voting_user.name
+           h2 = user.name
  %]
-
-[% canedit = 1 IF voting_user.login == user.login %]
 
 [% IF votes_recorded %]
   <p>
@@ -78,7 +76,7 @@
               </a>
             </td>
             <td align="right">
-              [% IF canedit %]
+              [% IF user.canedit %]
                 [% IF product.onevoteonly %]
                   <input type="checkbox" name="[% bug.id %]" value="1"
                     [% " checked" IF bug.count %]>
@@ -105,7 +103,7 @@
       [% END %]
     </table>
 
-    [% IF canedit %]
+    [% IF user.canedit %]
       <input type="submit" value="Change My Votes">
       <br>
       <br>
@@ -116,7 +114,7 @@
   </form>
 [% ELSE %]
   <p>
-    [% IF canedit %]
+    [% IF user.canedit %]
     You are
     [% ELSE %]
     This user is
