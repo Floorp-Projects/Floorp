@@ -369,7 +369,8 @@ public:
     NS_IMETHOD GetTemplateBuilderFor(nsIContent* aContent, nsIXULTemplateBuilder** aResult);
     NS_IMETHOD OnPrototypeLoadDone();
     NS_IMETHOD OnResumeContentSink();
-    
+    NS_IMETHOD ClearBoxObjectTable();
+
     // nsIDOMEventCapturer interface
     NS_IMETHOD    CaptureEvent(const nsAString& aType);
     NS_IMETHOD    ReleaseEvent(const nsAString& aType);

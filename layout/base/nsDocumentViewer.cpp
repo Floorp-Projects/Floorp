@@ -2061,6 +2061,12 @@ DocumentViewerImpl::Hide(void)
   if (selPrivate && mSelectionListener)
     selPrivate->RemoveSelectionListener(mSelectionListener);
 
+  nsCOMPtr<nsIXULDocument> xul_doc(do_QueryInterface(mDocument));
+
+  if (xul_doc) {
+    xul_doc->ClearBoxObjectTable();
+  }
+
   mPresShell->Destroy();
 
   mPresShell     = nsnull;
@@ -2080,7 +2086,8 @@ DocumentViewerImpl::Hide(void)
 }
 
 nsresult
-DocumentViewerImpl::FindFrameSetWithIID(nsIContent * aParentContent, const nsIID& aIID)
+DocumentViewerImpl::FindFrameSetWithIID(nsIContent * aParentContent,
+                                        const nsIID& aIID)
 {
   PRInt32 numChildren;
   aParentContent->ChildCount(numChildren);
