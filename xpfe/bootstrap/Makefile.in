@@ -361,6 +361,7 @@ libs:: $(PROGRAM)
 	cp -R $(srcdir)/macbuild/Contents $(DIST)/$(APP_NAME).app
 	cp -RL $(DIST)/bin $(DIST)/$(APP_NAME).app/Contents/MacOS
 	cp -RL $(srcdir)/macbuild/mach.icns $(DIST)/$(APP_NAME).app/Contents/Resources/mach.icns
+	echo APPLMOZZ > $(DIST)/$(APP_NAME).app/Contents/PkgInfo
 endif
 
 echo_objs:
