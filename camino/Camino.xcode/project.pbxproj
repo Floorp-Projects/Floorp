@@ -10649,7 +10649,7 @@
 			isa = PBXFileReference;
 			lastKnownFileType = text;
 			name = xslt.properties;
-			path = ../extensions/transformiix/resources/xslt.properties;
+			path = ../dom/locales/en-US/chrome/xslt/xslt.properties;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
