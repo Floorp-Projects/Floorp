@@ -47,7 +47,7 @@
 
 #define NS_FREE_STR_BUF(varName)                              \
  if (! _ns_smallBufUsed)                                      \
-    delete varName;
+    delete[] varName;
 
 // Create temporary char[] macro
 //
