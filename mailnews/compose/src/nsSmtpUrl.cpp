@@ -503,10 +503,10 @@ NS_IMETHODIMP nsMailtoUrl::Resolve(const nsACString &relativePath, nsACString &r
 
 nsSmtpUrl::nsSmtpUrl() : nsMsgMailNewsUrl()
 {
-	// nsISmtpUrl specific state...
+  // nsISmtpUrl specific state...
 
-	m_fileName = nsnull;
-	m_isPostMessage = PR_TRUE;
+  m_fileName = nsnull;
+  m_isPostMessage = PR_TRUE;
 }
  
 nsSmtpUrl::~nsSmtpUrl()
@@ -522,24 +522,24 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsSmtpUrl, nsMsgMailNewsUrl, nsISmtpUrl)
 
 NS_IMETHODIMP nsSmtpUrl::SetSpec(const nsACString &aSpec)
 {
-	nsresult rv = nsMsgMailNewsUrl::SetSpec(aSpec);
-	if (NS_SUCCEEDED(rv))
-		rv = ParseUrl();
-	return rv;
+  nsresult rv = nsMsgMailNewsUrl::SetSpec(aSpec);
+  if (NS_SUCCEEDED(rv))
+    rv = ParseUrl();
+  return rv;
 }
 
 // mscott - i think this function can be obsoleted and its functionality
 // moved into SetSpec or an init method....
 nsresult nsSmtpUrl::ParseUrl()
 {
-	nsresult rv = NS_OK;
-	
-	// set the username
-	nsCAutoString userName;
-	rv = GetUsername(userName);
-	if (NS_FAILED(rv)) return rv; 
-	m_userName = userName;
- 
+  nsresult rv = NS_OK;
+  
+  // set the username
+  nsCAutoString userName;
+  rv = GetUsername(userName);
+  if (NS_FAILED(rv)) return rv; 
+  m_userName = userName;
+  
   return NS_OK;
 }
 
@@ -569,46 +569,46 @@ NS_IMPL_GETSET(nsSmtpUrl, PostMessage, PRBool, m_isPostMessage)
 // the file name to post...
 NS_IMETHODIMP nsSmtpUrl::SetPostMessageFile(nsIFileSpec * aFileSpec)
 {
-	nsresult rv = NS_OK;
-	if (aFileSpec)
-		m_fileName = aFileSpec;
-	else
-		rv = NS_ERROR_NULL_POINTER;
-
-	return rv;
+  nsresult rv = NS_OK;
+  if (aFileSpec)
+    m_fileName = aFileSpec;
+  else
+    rv = NS_ERROR_NULL_POINTER;
+  
+  return rv;
 }
 
 NS_IMETHODIMP nsSmtpUrl::GetPostMessageFile(nsIFileSpec ** aFileSpec)
 {
-	nsresult rv = NS_OK;
-	if (aFileSpec)
-	{
-		*aFileSpec = m_fileName;
-		NS_IF_ADDREF(*aFileSpec);
-	}
-	else
-		rv = NS_ERROR_NULL_POINTER;
-	
-	return rv;
+  nsresult rv = NS_OK;
+  if (aFileSpec)
+  {
+    *aFileSpec = m_fileName;
+    NS_IF_ADDREF(*aFileSpec);
+  }
+  else
+    rv = NS_ERROR_NULL_POINTER;
+  
+  return rv;
 }
 
 NS_IMETHODIMP 
 nsSmtpUrl::GetSenderIdentity(nsIMsgIdentity * *aSenderIdentity)
 {
-	NS_ENSURE_ARG_POINTER(aSenderIdentity); 
-
-	*aSenderIdentity = m_senderIdentity;
-	NS_ADDREF(*aSenderIdentity);
-	return NS_OK;
+  NS_ENSURE_ARG_POINTER(aSenderIdentity); 
+  
+  *aSenderIdentity = m_senderIdentity;
+  NS_ADDREF(*aSenderIdentity);
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsSmtpUrl::SetSenderIdentity(nsIMsgIdentity * aSenderIdentity) 
 {
-	NS_ENSURE_ARG_POINTER(aSenderIdentity);
-
-	m_senderIdentity = aSenderIdentity;
-	return NS_OK;
+  NS_ENSURE_ARG_POINTER(aSenderIdentity);
+  
+  m_senderIdentity = aSenderIdentity;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

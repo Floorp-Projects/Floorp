@@ -123,16 +123,16 @@ nsresult nsSmtpService::SendMailMessage(nsIFileSpec * aFilePath,
                                         nsIURI ** aURL,
                                         nsIRequest ** aRequest)
 {
-	nsIURI * urlToRun = nsnull;
-	nsresult rv = NS_OK;
+  nsIURI * urlToRun = nsnull;
+  nsresult rv = NS_OK;
 
   nsCOMPtr<nsISmtpServer> smtpServer;
   rv = GetSmtpServerByIdentity(aSenderIdentity, getter_AddRefs(smtpServer));
 
   if (NS_SUCCEEDED(rv) && smtpServer)
   {
-      if (aPassword && *aPassword)
-          smtpServer->SetPassword(aPassword);
+    if (aPassword && *aPassword)
+      smtpServer->SetPassword(aPassword);
 
     nsXPIDLCString smtpHostName;
     nsXPIDLCString smtpUserName;
@@ -172,9 +172,9 @@ nsresult nsSmtpService::SendMailMessage(nsIFileSpec * aFilePath,
     }
     else
       rv = NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER;
-	}
+  }
 
-	return rv;
+  return rv;
 }
 
 
@@ -252,7 +252,7 @@ nsresult NS_MsgBuildSmtpUrl(nsIFileSpec * aFilePath,
 
 nsresult NS_MsgLoadSmtpUrl(nsIURI * aUrl, nsISupports * aConsumer, nsIRequest ** aRequest)
 {
-    // for now, assume the url is a news url and load it....
+    // for now, assume the url is an smtp url and load it....
     nsCOMPtr <nsISmtpUrl> smtpUrl;
     nsSmtpProtocol	*smtpProtocol = nsnull;
     nsresult rv = NS_OK;

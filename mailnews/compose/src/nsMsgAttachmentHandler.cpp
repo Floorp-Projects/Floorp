@@ -945,11 +945,7 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
       return rv;
   }
 
-  status = fetcher->FireURLRequest(mURL, localFile, mOutFile, FetcherURLDoneCallback, this);
-  if (NS_FAILED(status)) 
-    return NS_ERROR_UNEXPECTED;
-
-  return status;
+  return fetcher->FireURLRequest(mURL, localFile, mOutFile, FetcherURLDoneCallback, this);
 }
 
 nsresult

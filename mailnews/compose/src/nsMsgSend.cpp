@@ -789,7 +789,7 @@ nsMsgComposeAndSend::GatherMimeAttachments()
     m_plaintext->m_desired_type = PL_strdup(TEXT_PLAIN);
     m_attachment_pending_count ++;
     status = m_plaintext->SnarfAttachment(mCompFields);
-    if (status < 0)
+    if (NS_FAILED(status))
       goto FAIL;
     if (m_attachment_pending_count > 0)
       return NS_OK;
@@ -2461,7 +2461,7 @@ nsMsgComposeAndSend::AddCompFieldRemoteAttachments(PRUint32   aStartLocation,
   return NS_OK;
 }
 
-int 
+nsresult 
 nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
                                      const nsMsgAttachedFile *preloaded_attachments)
 { 
@@ -2747,9 +2747,26 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
       */ 
       needToCallGatherMimeAttachments = PR_FALSE;
 
-      int status = m_attachments[i].SnarfAttachment(mCompFields);
-      if (status < 0)
-        return status;
+      nsresult status = m_attachments[i].SnarfAttachment(mCompFields);
+      if (NS_FAILED(status))
+      {
+        nsXPIDLString errorMsg; 
+        nsAutoString attachmentFileName;
+        nsresult rv = ConvertToUnicode(nsMsgI18NFileSystemCharset(), m_attachments[i].m_real_name, attachmentFileName);
+        if (NS_SUCCEEDED(rv))
+        {
+          nsCOMPtr<nsIStringBundle> bundle;
+          const PRUnichar *params[] = { attachmentFileName.get() };
+          rv = mComposeBundle->GetBundle(getter_AddRefs(bundle));
+          if (NS_SUCCEEDED(rv))
+          {
+            bundle->FormatStringFromID(NS_ERROR_GET_CODE(NS_MSG_ERROR_ATTACHING_FILE), params, 1, getter_Copies(errorMsg));
+            mSendReport->SetMessage(nsIMsgSendReport::process_Current, errorMsg, PR_FALSE);
+          }
+          mSendReport->SetError(nsIMsgSendReport::process_Current, NS_MSG_ERROR_ATTACHING_FILE /* status */, PR_FALSE);
+        }
+        return NS_MSG_ERROR_ATTACHING_FILE;
+      }
       if (m_be_synchronous_p)
         break;
     }
@@ -2759,7 +2776,7 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
   if (needToCallGatherMimeAttachments)
     return GatherMimeAttachments();
 
-  return 0;
+  return NS_OK;
 }
 
 int nsMsgComposeAndSend::SetMimeHeader(nsMsgCompFields::MsgHeaderID header, const char *value)
