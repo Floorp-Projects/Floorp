@@ -21,6 +21,7 @@
 #define nsISessionHistory_h_
 
 #include "nsISupports.h"
+#include "nsIFactory.h"
 
 //Forward declarations
 class nsHistoryEntry;
@@ -50,12 +51,17 @@ public:
   /**
    * Go forward in history 
    */
-  NS_IMETHOD Forward(nsIWebShell * prev) = 0;
+  NS_IMETHOD Forward(nsIWebShell * aPrev) = 0;
 
   /**
    * Go Back in History
    */
-  NS_IMETHOD Back(nsIWebShell * prev) = 0;
+  NS_IMETHOD Back(nsIWebShell * aPrev) = 0;
+
+  /**
+   * Reload the current history entry
+   */
+  NS_IMETHOD Reload(nsURLReloadType aReloadType) = 0;
 
   /**
    * whether you can go forward in History
@@ -112,8 +118,8 @@ public:
 
 };
 
-//extern "C" NS_APPSHELL nsresult
-//NS_NewSessionHistoryFactory(nsIFactory ** aFactory);
+extern "C" NS_APPSHELL nsresult
+NS_NewSessionHistoryFactory(nsIFactory ** aFactory);
 
 
 #endif /* nsISessionHistory_h_ */
