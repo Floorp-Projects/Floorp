@@ -30,10 +30,11 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: rsa.c,v 1.5 2000/09/07 06:44:57 mcgreer%netscape.com Exp $
+ * $Id: rsa.c,v 1.6 2000/09/07 07:33:34 mcgreer%netscape.com Exp $
  */
 
 #include "prerr.h"
+#include "prerror.h"
 #include "secerr.h"
 
 #include "blapi.h"
@@ -46,6 +47,64 @@
 ** RSA encryption/decryption. When encrypting/decrypting the output
 ** buffer must be at least the size of the public key modulus.
 */
+
+static SECStatus
+rsa_keygen_from_primes(mp_int *p, mp_int *q, mp_int *e, RSAPrivateKey *key)
+{
+    mp_int n, d, phi;
+    mp_int psub1, qsub1, tmp;
+    mp_err   err = MP_OKAY;
+    SECStatus rv = SECSuccess;
+    MP_DIGITS(&n)     = 0;
+    MP_DIGITS(&d)     = 0;
+    MP_DIGITS(&phi)   = 0;
+    MP_DIGITS(&psub1) = 0;
+    MP_DIGITS(&qsub1) = 0;
+    MP_DIGITS(&tmp)   = 0;
+    CHECK_MPI_OK( mp_init(&n)     );
+    CHECK_MPI_OK( mp_init(&d)     );
+    CHECK_MPI_OK( mp_init(&phi)   );
+    CHECK_MPI_OK( mp_init(&psub1) );
+    CHECK_MPI_OK( mp_init(&qsub1) );
+    CHECK_MPI_OK( mp_init(&tmp)   );
+    /* 1.  Compute n = p*q */
+    CHECK_MPI_OK( mp_mul(p, q, &n) );
+    MPINT_TO_SECITEM(&n, &key->modulus, key->arena);
+    /* 2.  Compute phi = (p-1)*(q-1) */
+    CHECK_MPI_OK( mp_sub_d(p, 1, &psub1) );
+    CHECK_MPI_OK( mp_sub_d(q, 1, &qsub1) );
+    CHECK_MPI_OK( mp_mul(&psub1, &qsub1, &phi) );
+    /* 3.  Compute d = e**-1 mod(phi) using extended Euclidean algorithm */
+    CHECK_MPI_OK( mp_xgcd(e, &phi, &tmp, &d, NULL) );
+    /*     Verify that phi(n) and e have no common divisors */
+    if (mp_cmp_d(&tmp, 1) != 0) { 
+	PORT_SetError(SEC_ERROR_NEED_RANDOM);
+	rv = SECFailure;
+	goto cleanup;
+    }
+    MPINT_TO_SECITEM(&d, &key->privateExponent, key->arena);
+    /* 4.  Compute exponent1 = d mod (p-1) */
+    CHECK_MPI_OK( mp_mod(&d, &psub1, &tmp) );
+    MPINT_TO_SECITEM(&tmp, &key->exponent1, key->arena);
+    /* 5.  Compute exponent2 = d mod (q-1) */
+    CHECK_MPI_OK( mp_mod(&d, &qsub1, &tmp) );
+    MPINT_TO_SECITEM(&tmp, &key->exponent2, key->arena);
+    /* 6.  Compute coefficient = q**-1 mod p */
+    CHECK_MPI_OK( mp_invmod(q, p, &tmp) );
+    MPINT_TO_SECITEM(&tmp, &key->coefficient, key->arena);
+cleanup:
+    mp_clear(&n);
+    mp_clear(&d);
+    mp_clear(&phi);
+    mp_clear(&psub1);
+    mp_clear(&qsub1);
+    mp_clear(&tmp);
+    if (err) {
+	MP_TO_SEC_ERROR(err);
+	rv = SECFailure;
+    }
+    return rv;
+}
 
 /*
 ** Generate and return a new RSA public and private key.
@@ -63,10 +122,10 @@ RSA_NewKey(int keySizeInBits, SECItem *publicExponent)
     unsigned char *pb = NULL, *qb = NULL;
     unsigned int primeLen;
     unsigned long counter;
-    mp_int p, q, n, e, d, phi;
-    mp_int psub1, qsub1, tmp;
+    mp_int p, q, e;
     mp_err   err = MP_OKAY;
     SECStatus rv = SECSuccess;
+    PRErrorCode prerr = PR_SUCCESS;
     RSAPrivateKey *key = NULL;
     PRArenaPool *arena = NULL;
     if (!publicExponent) {
@@ -75,31 +134,19 @@ RSA_NewKey(int keySizeInBits, SECItem *publicExponent)
     }
     /* length of primes p and q (in bytes) */
     primeLen = keySizeInBits / (2 * BITS_PER_BYTE);
-    MP_DIGITS(&p)     = 0;
-    MP_DIGITS(&q)     = 0;
-    MP_DIGITS(&n)     = 0;
-    MP_DIGITS(&e)     = 0;
-    MP_DIGITS(&d)     = 0;
-    MP_DIGITS(&phi)   = 0;
-    MP_DIGITS(&psub1) = 0;
-    MP_DIGITS(&qsub1) = 0;
-    MP_DIGITS(&tmp)   = 0;
-    CHECK_MPI_OK( mp_init(&p)     );
-    CHECK_MPI_OK( mp_init(&q)     );
-    CHECK_MPI_OK( mp_init(&n)     );
-    CHECK_MPI_OK( mp_init(&e)     );
-    CHECK_MPI_OK( mp_init(&d)     );
-    CHECK_MPI_OK( mp_init(&phi)   );
-    CHECK_MPI_OK( mp_init(&psub1) );
-    CHECK_MPI_OK( mp_init(&qsub1) );
-    CHECK_MPI_OK( mp_init(&tmp)   );
+    MP_DIGITS(&p) = 0;
+    MP_DIGITS(&q) = 0;
+    MP_DIGITS(&e) = 0;
+    CHECK_MPI_OK( mp_init(&p) );
+    CHECK_MPI_OK( mp_init(&q) );
+    CHECK_MPI_OK( mp_init(&e) );
     /* 1. Allocate arena & key */
     arena = PORT_NewArena(NSS_FREEBL_DEFAULT_CHUNKSIZE);
     if (!arena) {
 	PORT_SetError(SEC_ERROR_NO_MEMORY);
 	return NULL;
     }
-    key = (RSAPrivateKey *)PORT_ArenaAlloc(arena, sizeof(RSAPrivateKey));
+    key = (RSAPrivateKey *)PORT_ArenaZAlloc(arena, sizeof(RSAPrivateKey));
     if (!key) {
 	PORT_SetError(SEC_ERROR_NO_MEMORY);
 	PORT_FreeArena(arena, PR_TRUE);
@@ -115,51 +162,28 @@ RSA_NewKey(int keySizeInBits, SECItem *publicExponent)
     /* 4.  Generate primes p and q */
     pb = PORT_Alloc(primeLen);
     qb = PORT_Alloc(primeLen);
-retry:
-    CHECK_SEC_OK( RNG_GenerateGlobalRandomBytes(pb, primeLen) );
-    CHECK_SEC_OK( RNG_GenerateGlobalRandomBytes(qb, primeLen) );
-    pb[0]          |= 0x80; /* set high-order bit */
-    pb[primeLen-1] |= 0x01; /* set low-order bit  */
-    qb[0]          |= 0x80; /* set high-order bit */
-    qb[primeLen-1] |= 0x01; /* set low-order bit  */
-    CHECK_MPI_OK( mp_read_unsigned_octets(&p, pb, primeLen) );
-    CHECK_MPI_OK( mp_read_unsigned_octets(&q, qb, primeLen) );
-    CHECK_MPI_OK( mpp_make_prime(&p, primeLen * 8, PR_FALSE, &counter) );
-    CHECK_MPI_OK( mpp_make_prime(&q, primeLen * 8, PR_FALSE, &counter) );
-    MPINT_TO_SECITEM(&p, &key->prime1, arena);
-    MPINT_TO_SECITEM(&q, &key->prime2, arena);
-    /* 5.  Compute n = p*q */
-    CHECK_MPI_OK( mp_mul(&p, &q, &n) );
-    MPINT_TO_SECITEM(&n, &key->modulus, arena);
-    /* 6.  Compute phi = (p-1)*(q-1) */
-    CHECK_MPI_OK( mp_sub_d(&p, 1, &psub1) );
-    CHECK_MPI_OK( mp_sub_d(&q, 1, &qsub1) );
-    CHECK_MPI_OK( mp_mul(&psub1, &qsub1, &phi) );
-    /* 7.  Compute d = e**-1 mod(phi) using extended Euclidean algorithm */
-    CHECK_MPI_OK( mp_xgcd(&e, &phi, &tmp, &d, NULL) );
-    /*     Verify that phi(n) and e have no common divisors */
-    if (mp_cmp_d(&tmp, 1) != 0)
-	goto retry;
-    MPINT_TO_SECITEM(&d, &key->privateExponent, arena);
-    /* 8.  Compute exponent1 = d mod (p-1) */
-    CHECK_MPI_OK( mp_mod(&d, &psub1, &tmp) );
-    MPINT_TO_SECITEM(&tmp, &key->exponent1, arena);
-    /* 9.  Compute exponent2 = d mod (q-1) */
-    CHECK_MPI_OK( mp_mod(&d, &qsub1, &tmp) );
-    MPINT_TO_SECITEM(&tmp, &key->exponent2, arena);
-    /*10.  Compute coefficient = q**-1 mod p */
-    CHECK_MPI_OK( mp_invmod(&q, &p, &tmp) );
-    MPINT_TO_SECITEM(&tmp, &key->coefficient, arena);
+    do {
+	CHECK_SEC_OK( RNG_GenerateGlobalRandomBytes(pb, primeLen) );
+	CHECK_SEC_OK( RNG_GenerateGlobalRandomBytes(qb, primeLen) );
+	pb[0]          |= 0x80; /* set high-order bit */
+	pb[primeLen-1] |= 0x01; /* set low-order bit  */
+	qb[0]          |= 0x80; /* set high-order bit */
+	qb[primeLen-1] |= 0x01; /* set low-order bit  */
+	CHECK_MPI_OK( mp_read_unsigned_octets(&p, pb, primeLen) );
+	CHECK_MPI_OK( mp_read_unsigned_octets(&q, qb, primeLen) );
+	CHECK_MPI_OK( mpp_make_prime(&p, primeLen * 8, PR_FALSE, &counter) );
+	CHECK_MPI_OK( mpp_make_prime(&q, primeLen * 8, PR_FALSE, &counter) );
+	MPINT_TO_SECITEM(&p, &key->prime1, arena);
+	MPINT_TO_SECITEM(&q, &key->prime2, arena);
+	rv = rsa_keygen_from_primes(&p, &q, &e, key);
+	if (rv == SECSuccess)
+	    break; /* generated two good primes */
+	prerr = PR_GetError();
+    } while (prerr == SEC_ERROR_NEED_RANDOM); /* loop until have primes */
 cleanup:
     mp_clear(&p);
     mp_clear(&q);
-    mp_clear(&n);
     mp_clear(&e);
-    mp_clear(&d);
-    mp_clear(&phi);
-    mp_clear(&psub1);
-    mp_clear(&qsub1);
-    mp_clear(&tmp);
     if (pb)
 	PORT_ZFree(pb, primeLen);
     if (qb)
@@ -172,6 +196,38 @@ cleanup:
 	PORT_FreeArena(arena, PR_TRUE);
     }
     return key;
+}
+
+int compare_key(RSAPrivateKey *key)
+{
+    mp_int e, p, q;
+    RSAPrivateKey *mykey;
+    PRArenaPool *arena;
+    mp_err err;
+    mp_init(&e);
+    mp_init(&p);
+    mp_init(&q);
+    arena = PORT_NewArena(NSS_FREEBL_DEFAULT_CHUNKSIZE);
+    if (!arena) {
+	PORT_SetError(SEC_ERROR_NO_MEMORY);
+	return -1;
+    }
+    mykey = (RSAPrivateKey *)PORT_ArenaZAlloc(arena, sizeof(RSAPrivateKey));
+    if (!mykey) {
+	PORT_SetError(SEC_ERROR_NO_MEMORY);
+	PORT_FreeArena(arena, PR_TRUE);
+	return -1;
+    }
+    mykey->arena = arena;
+    SECITEM_TO_MPINT(key->publicExponent, &e);
+    SECITEM_TO_MPINT(key->prime1, &p);
+    SECITEM_TO_MPINT(key->prime2, &q);
+    SECITEM_CopyItem(arena, &mykey->publicExponent, &key->publicExponent);
+    SECITEM_CopyItem(arena, &mykey->prime1, &key->prime1);
+    SECITEM_CopyItem(arena, &mykey->prime2, &key->prime2);
+    rsa_keygen_from_primes(&p, &q, &e, mykey);
+cleanup:
+    return 1;
 }
 
 static unsigned int
@@ -248,6 +304,5 @@ RSA_PrivateKeyOp(RSAPrivateKey *key,
                  unsigned char *output, 
                  unsigned char *input)
 {
-    PORT_SetError(PR_NOT_IMPLEMENTED_ERROR);
     return SECFailure;
 }
