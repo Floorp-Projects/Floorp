@@ -5240,6 +5240,8 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
     if (NS_STYLE_POSITION_ABSOLUTE == display->mPosition)
       isAbsolutelyPositioned = PR_TRUE;
 
+    PRBool mayBeScrollable = PR_FALSE;
+
     if (isXULNS) {
       // First try creating a frame based on the tag
 #ifdef MOZ_XUL
@@ -5250,21 +5252,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
         rv = NS_NewButtonBoxFrame(aPresShell, &newFrame);
 
         // Boxes can scroll.
-        if (IsScrollable(aPresContext, display)) {
-
-          // set the top to be the newly created scrollframe
-          BuildScrollFrame(aPresShell, aPresContext, aState, aContent,
-                           aStyleContext, newFrame, aParentFrame, nsnull,
-                           topFrame, aStyleContext);
-
-          // we have a scrollframe so the parent becomes the scroll frame.
-          aParentFrame = newFrame->GetParent();
-
-          primaryFrameSet = PR_TRUE;
-
-          frameHasBeenInitialized = PR_TRUE;
-
-        } 
+        mayBeScrollable = PR_TRUE;
       } // End of BUTTON CONSTRUCTION logic
       // AUTOREPEATBUTTON CONSTRUCTION
       else if (aTag == nsXULAtoms::autorepeatbutton) {
@@ -5273,21 +5261,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
         rv = NS_NewAutoRepeatBoxFrame(aPresShell, &newFrame);
 
         // Boxes can scroll.
-        if (IsScrollable(aPresContext, display)) {
-
-          // set the top to be the newly created scrollframe
-          BuildScrollFrame(aPresShell, aPresContext, aState, aContent,
-                           aStyleContext, newFrame, aParentFrame, nsnull,
-                           topFrame, aStyleContext);
-
-          // we have a scrollframe so the parent becomes the scroll frame.
-          aParentFrame = newFrame->GetParent();
-
-          primaryFrameSet = PR_TRUE;
-
-          frameHasBeenInitialized = PR_TRUE;
-
-        } 
+        mayBeScrollable = PR_TRUE;
       } // End of AUTOREPEATBUTTON CONSTRUCTION logic
 
 
@@ -5298,21 +5272,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
         rv = NS_NewTitleBarFrame(aPresShell, &newFrame);
 
         // Boxes can scroll.
-        if (IsScrollable(aPresContext, display)) {
-
-          // set the top to be the newly created scrollframe
-          BuildScrollFrame(aPresShell, aPresContext, aState, aContent,
-                           aStyleContext, newFrame, aParentFrame, nsnull,
-                           topFrame, aStyleContext);
-
-          // we have a scrollframe so the parent becomes the scroll frame.
-          aParentFrame = newFrame->GetParent();
-
-          primaryFrameSet = PR_TRUE;
-
-          frameHasBeenInitialized = PR_TRUE;
-
-        } 
+        mayBeScrollable = PR_TRUE;
       } // End of TITLEBAR CONSTRUCTION logic
 
       // RESIZER CONSTRUCTION
@@ -5322,21 +5282,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
         rv = NS_NewResizerFrame(aPresShell, &newFrame);
 
         // Boxes can scroll.
-        if (IsScrollable(aPresContext, display)) {
-
-          // set the top to be the newly created scrollframe
-          BuildScrollFrame(aPresShell, aPresContext, aState, aContent,
-                           aStyleContext, newFrame, aParentFrame, nsnull,
-                           topFrame, aStyleContext);
-
-          // we have a scrollframe so the parent becomes the scroll frame.
-          aParentFrame = newFrame->GetParent();
-
-          primaryFrameSet = PR_TRUE;
-
-          frameHasBeenInitialized = PR_TRUE;
-
-        } 
+        mayBeScrollable = PR_TRUE;
       } // End of RESIZER CONSTRUCTION logic
 
       else if (aTag == nsXULAtoms::image) {
@@ -5492,21 +5438,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
         rv = NS_NewBoxFrame(aPresShell, &newFrame, PR_FALSE, nsnull);
 
         // Boxes can scroll.
-        if (IsScrollable(aPresContext, display)) {
-
-          // set the top to be the newly created scrollframe
-          BuildScrollFrame(aPresShell, aPresContext, aState, aContent,
-                           aStyleContext, newFrame, aParentFrame, nsnull,
-                           topFrame, aStyleContext);
-
-          // we have a scrollframe so the parent becomes the scroll frame.
-          aParentFrame = newFrame->GetParent();
-
-          primaryFrameSet = PR_TRUE;
-
-          frameHasBeenInitialized = PR_TRUE;
-
-        } 
+        mayBeScrollable = PR_TRUE;
       } // End of BOX CONSTRUCTION logic
 #ifdef MOZ_XUL
       // ------- Begin Grid ---------
@@ -5520,21 +5452,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
         rv = NS_NewBoxFrame(aPresShell, &newFrame, PR_FALSE, layout);
 
         // Boxes can scroll.
-        if (IsScrollable(aPresContext, display)) {
-
-          // set the top to be the newly created scrollframe
-          BuildScrollFrame(aPresShell, aPresContext, aState, aContent,
-                           aStyleContext, newFrame, aParentFrame, nsnull,
-                           topFrame, aStyleContext);
-
-          // we have a scrollframe so the parent becomes the scroll frame.
-          aParentFrame = newFrame->GetParent();
-
-          primaryFrameSet = PR_TRUE;
-
-          frameHasBeenInitialized = PR_TRUE;
-
-        } 
+        mayBeScrollable = PR_TRUE;
       } //------- End Grid ------
 
       // ------- Begin Rows/Columns ---------
@@ -5599,21 +5517,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
           rv = NS_NewGridRowLeafFrame(aPresShell, &newFrame, PR_FALSE, layout);
 
         // Boxes can scroll.
-        if (IsScrollable(aPresContext, display)) {
-
-          // set the top to be the newly created scrollframe
-          BuildScrollFrame(aPresShell, aPresContext, aState, aContent,
-                           aStyleContext, newFrame, aParentFrame, nsnull,
-                           topFrame, aStyleContext);
-
-          // we have a scrollframe so the parent becomes the scroll frame.
-          aParentFrame = newFrame->GetParent();
-
-          primaryFrameSet = PR_TRUE;
-
-          frameHasBeenInitialized = PR_TRUE;
-
-        } 
+        mayBeScrollable = PR_TRUE;
       } //------- End Grid ------
       // End of STACK CONSTRUCTION logic
        // DECK CONSTRUCTION
@@ -5629,20 +5533,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
         isReplaced = PR_TRUE;
 
         // Boxes can scroll.
-        if (IsScrollable(aPresContext, display)) {
-
-          // set the top to be the newly created scrollframe
-          BuildScrollFrame(aPresShell, aPresContext, aState, aContent,
-                           aStyleContext, newFrame, aParentFrame, nsnull,
-                           topFrame, aStyleContext);
-
-          // we have a scrollframe so the parent becomes the scroll frame.
-          aParentFrame = newFrame->GetParent();
-
-          primaryFrameSet = PR_TRUE;
-
-          frameHasBeenInitialized = PR_TRUE;
-        }
+        mayBeScrollable = PR_TRUE;
       } 
       // STACK CONSTRUCTION
       else if (display->mDisplay == NS_STYLE_DISPLAY_STACK ||
@@ -5653,20 +5544,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
 
         rv = NS_NewStackFrame(aPresShell, &newFrame);
 
-         if (IsScrollable(aPresContext, display)) {
-
-          // set the top to be the newly created scrollframe
-          BuildScrollFrame(aPresShell, aPresContext, aState, aContent,
-                           aStyleContext, newFrame, aParentFrame, nsnull,
-                           topFrame, aStyleContext);
-
-          // we have a scrollframe so the parent becomes the scroll frame.
-          aParentFrame = newFrame->GetParent();
-          primaryFrameSet = PR_TRUE;
-
-          frameHasBeenInitialized = PR_TRUE;
-
-        }
+        mayBeScrollable = PR_TRUE;
       }
       else if (display->mDisplay == NS_STYLE_DISPLAY_POPUP) {
         // This is its own frame that derives from
@@ -5700,6 +5578,21 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
           isPopup = PR_TRUE;
       } 
 #endif
+    }
+
+    if (mayBeScrollable && IsScrollable(aPresContext, display)) {
+      // set the top to be the newly created scrollframe
+      BuildScrollFrame(aPresShell, aPresContext, aState, aContent,
+                       aStyleContext, newFrame, aParentFrame, nsnull,
+                       topFrame, aStyleContext);
+
+      // we have a scrollframe so the parent becomes the scroll frame.
+      // XXXldb Do we really want to do this?  The one case where it
+      // matters when |frameHasBeenInitialized| is true is one where
+      // I think we'd be better off the other way around.
+      aParentFrame = newFrame->GetParent();
+      primaryFrameSet = PR_TRUE;
+      frameHasBeenInitialized = PR_TRUE;
     }
   }
 
