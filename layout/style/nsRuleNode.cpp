@@ -487,7 +487,6 @@ nsRuleNode::Transition(nsIStyleRule* aRule, nsRuleNode** aResult)
       ConvertChildrenToHash();
   }
 
-  PRBool createdNode = PR_FALSE;
   if (ChildrenAreHashed()) {
     ChildrenHashEntry *entry = NS_STATIC_CAST(ChildrenHashEntry*,
         PL_DHashTableOperate(ChildrenHash(), aRule, PL_DHASH_ADD));
@@ -501,7 +500,6 @@ nsRuleNode::Transition(nsIStyleRule* aRule, nsRuleNode** aResult)
         *aResult = nsnull;
         return NS_ERROR_OUT_OF_MEMORY;
       }
-      createdNode = PR_TRUE;
     }
   } else if (!next) {
     // Create the new entry in our list.
@@ -511,7 +509,6 @@ nsRuleNode::Transition(nsIStyleRule* aRule, nsRuleNode** aResult)
       return NS_ERROR_OUT_OF_MEMORY;
     }
     SetChildrenList(new (mPresContext) nsRuleList(next, ChildrenList()));
-    createdNode = PR_TRUE;
   }
   
   *aResult = next;
