@@ -58,7 +58,7 @@ NS_IMETHODIMP
 nsLDAPURL::GetSpec(char* *aSpec)
 {
     NS_ENSURE_ARG_POINTER(aSpec);
-    NS_ENSURE_FALSE(mSpec == nsnull, NS_ERROR_NOT_INITIALIZED);
+    NS_ENSURE_FALSE(mSpec.IsEmpty(), NS_ERROR_NOT_INITIALIZED);
 
     // copy it out
     //
