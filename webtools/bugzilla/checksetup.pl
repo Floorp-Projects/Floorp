@@ -1551,7 +1551,7 @@ $table{bugs} =
     bug_severity enum($my_severities) not null,
     bug_status enum("UNCONFIRMED", "NEW", "ASSIGNED", "REOPENED", "RESOLVED", "VERIFIED", "CLOSED") not null,
     creation_ts datetime not null,
-    delta_ts timestamp,
+    delta_ts timestamp not null,
     short_desc mediumtext,
     op_sys enum($my_opsys) not null,
     priority enum($my_priorities) not null,
