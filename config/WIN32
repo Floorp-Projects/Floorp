@@ -164,16 +164,9 @@ DLL_LIBS=
 
 #//------------------------------------------------------------------------
 #// 
-#// rebase detection
+#// rebase setting, msvc systems better have this
 #//
 #//------------------------------------------------------------------------
 
 REBASE=rebase.exe
-!if [for %i in (. %PATH%) do @if exist %i\$(REBASE) echo %i\$(REBASE) > rebase.yes]
-!endif
 
-!if !exist(rebase.yes)
-REBASE=
-!if [del rebase.yes]
-!endif
-!endif
