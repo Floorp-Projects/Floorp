@@ -148,8 +148,6 @@ final class NativeError extends IdScriptable {
                                                        : Undefined.instance);
     }
 
-    protected int maxInstanceId() { return MAX_INSTANCE_ID; }
-
     protected String getIdName(int id) {
         if (id == Id_message) { return "message"; }
         if (id == Id_name) { return "name"; }
