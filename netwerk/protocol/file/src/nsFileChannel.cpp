@@ -14,7 +14,7 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is 
+ * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
@@ -22,7 +22,7 @@
  * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
@@ -100,15 +100,15 @@ nsFileChannel::SetStreamConverter()
 
     nsCOMPtr<nsIStreamConverterService> scs = do_GetService(kStreamConverterServiceCID, &rv);
 
-    if (NS_FAILED(rv)) 
+    if (NS_FAILED(rv))
         return rv;
 
-    rv = scs->AsyncConvertData(NS_LITERAL_STRING(APPLICATION_HTTP_INDEX_FORMAT).get(), 
+    rv = scs->AsyncConvertData(NS_LITERAL_STRING(APPLICATION_HTTP_INDEX_FORMAT).get(),
                                NS_LITERAL_STRING(TEXT_HTML).get(),
-                               converterListener, 
-                               mURI, 
+                               converterListener,
+                               mURI,
                                getter_AddRefs(mRealListener));
-    
+
     return rv;
 }
 
@@ -132,7 +132,7 @@ nsFileChannel::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
 {
     if (aOuter)
         return NS_ERROR_NO_AGGREGATION;
-  
+
     nsFileChannel* fc = new nsFileChannel();
     if (fc == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -253,7 +253,7 @@ nsFileChannel::EnsureFile()
     nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(mFile);
     if (localFile)
         localFile->SetFollowLinks(PR_TRUE);
-    
+
     return NS_OK;
 }
 nsresult
@@ -263,7 +263,7 @@ nsFileChannel::GetFileTransport(nsITransport **trans)
     if (NS_FAILED(rv))
         return rv;
 
-    nsCOMPtr<nsIFileTransportService> fts = 
+    nsCOMPtr<nsIFileTransportService> fts =
              do_GetService(kFileTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
@@ -327,7 +327,7 @@ nsFileChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
 {
     nsresult rv;
     nsCOMPtr<nsIRequest> request;
-    
+
 #ifdef DEBUG
     NS_ASSERTION(mInitiator == nsnull || mInitiator == PR_GetCurrentThread(),
                  "wrong thread calling this routine");
@@ -344,7 +344,7 @@ nsFileChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
         rv = mLoadGroup->AddRequest(this, nsnull);
         if (NS_FAILED(rv)) return rv;
     }
-    
+
     nsCOMPtr<nsITransport> fileTransport;
     rv = GetFileTransport(getter_AddRefs(fileTransport));
 
@@ -356,7 +356,7 @@ nsFileChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
         else
             rv = fileTransport->AsyncRead(this, ctxt, 0, PRUint32(-1), 0,
                                           getter_AddRefs(request));
-    
+
         // remember the transport and request; these will be released when
         // OnStopRequest is called.
         mFileTransport = fileTransport;
@@ -364,20 +364,20 @@ nsFileChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
     }
 
     if (NS_FAILED(rv)) {
-        
+
         mStatus = rv;
 
         nsCOMPtr<nsIRequestObserver> asyncObserver;
-        NS_NewRequestObserverProxy(getter_AddRefs(asyncObserver), 
+        NS_NewRequestObserverProxy(getter_AddRefs(asyncObserver),
                                    NS_STATIC_CAST(nsIRequestObserver*, /* Ambiguous conversion */
-                                   NS_STATIC_CAST(nsIStreamListener*, this)), 
+                                   NS_STATIC_CAST(nsIStreamListener*, this)),
                                    NS_CURRENT_EVENTQ);
         if(asyncObserver) {
             (void) asyncObserver->OnStartRequest(this, ctxt);
             (void) asyncObserver->OnStopRequest(this, ctxt, rv);
         }
     }
-    
+
     return NS_OK;
 }
 
@@ -403,10 +403,10 @@ nsFileChannel::GetContentType(nsACString &aContentType)
     if (!mFile) {
         return NS_ERROR_NOT_AVAILABLE;
     }
-        
+
     if (mContentType.IsEmpty()) {
         PRBool directory;
-		mFile->IsDirectory(&directory);
+        mFile->IsDirectory(&directory);
         if (directory) {
             if (mGenerateHTMLDirs)
                 mContentType = NS_LITERAL_CSTRING(TEXT_HTML);
@@ -530,7 +530,7 @@ nsFileChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCall
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsFileChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
 {
     *aSecurityInfo = nsnull;
@@ -554,16 +554,16 @@ nsFileChannel::OnStartRequest(nsIRequest* request, nsISupports* context)
     nsresult rv = NS_OK;
     if (mRealListener) {
         if (mGenerateHTMLDirs) {
-            // GetFileTransport ensures that mFile is valid before calling 
-            // AsyncRead or AsyncWrite on the underlying transport.  Since 
-            // these transports use |this| as the nsIRequestObserver, there 
+            // GetFileTransport ensures that mFile is valid before calling
+            // AsyncRead or AsyncWrite on the underlying transport.  Since
+            // these transports use |this| as the nsIRequestObserver, there
             // should be no way that mFile is null here.
             NS_ENSURE_TRUE(mFile, NS_ERROR_UNEXPECTED);
             PRBool directory;
             mFile->IsDirectory(&directory);  // this stat should be cached and will not hit disk.
             if (directory) {
                 rv = SetStreamConverter();
-                if (NS_FAILED(rv)) 
+                if (NS_FAILED(rv))
                     return rv;
             }
         }
@@ -591,7 +591,7 @@ nsFileChannel::OnStopRequest(nsIRequest* request, nsISupports* context,
 
     // no point to capturing the return value of OnStopRequest
     mRealListener->OnStopRequest(this, context, mStatus);
-    
+
     if (mLoadGroup)
         mLoadGroup->RemoveRequest(this, context, mStatus);
 
@@ -668,7 +668,7 @@ nsFileChannel::GetInterface(const nsIID &anIID, void **aResult )
         *aResult = NS_STATIC_CAST(nsIProgressEventSink*, this);
         NS_ADDREF(this);
         return NS_OK;
-    } 
+    }
     else if (mCallbacks) {
         return mCallbacks->GetInterface(anIID, aResult);
     }
@@ -680,7 +680,7 @@ nsFileChannel::GetInterface(const nsIID &anIID, void **aResult )
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
-nsFileChannel::OnStatus(nsIRequest *request, nsISupports* ctxt, 
+nsFileChannel::OnStatus(nsIRequest *request, nsISupports* ctxt,
                         nsresult aStatus, const PRUnichar* aStatusArg)
 {
     nsresult rv = NS_OK;
@@ -710,7 +710,7 @@ nsFileChannel::OnProgress(nsIRequest *request,
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
-nsFileChannel::Init(nsIFile* file, 
+nsFileChannel::Init(nsIFile* file,
                     PRInt32 ioFlags,
                     PRInt32 perm)
 {
@@ -733,7 +733,7 @@ nsFileChannel::GetFile(nsIFile* *result)
     nsresult rv = EnsureFile();
     if (NS_FAILED(rv))
         return rv;
-    
+
     *result = mFile;
     NS_ADDREF(*result);
     return NS_OK;
@@ -782,7 +782,7 @@ nsFileChannel::SetUploadStream(nsIInputStream *aStream,
 
     // ignore aContentType argument; query the stream for its length if not
     // specified (allow upload of a partial stream).
-    
+
     if (aContentLength < 0) {
         nsresult rv = aStream->Available(&mUploadStreamLength);
         if (NS_FAILED(rv)) return rv;
