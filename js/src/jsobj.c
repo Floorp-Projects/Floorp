@@ -2368,6 +2368,8 @@ Detecting(JSContext *cx, jsbytecode *pc)
     JSOp op;
     JSAtom *atom;
 
+    if (!cx->fp)
+        return JS_FALSE;
     script = cx->fp->script;
     for (endpc = script->code + script->length; pc < endpc; pc++) {
         /* General case: a branch or equality op follows the access. */
