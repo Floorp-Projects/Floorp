@@ -77,6 +77,11 @@ public:
   {
     return mFrame ? mFrame->HandleEvent(aEvent) : NS_OK;
   }
+  
+  virtual nsresult DragGesture(nsIDOMEvent* aEvent)
+  {
+    return mFrame ? mFrame->DragGesture(aEvent) : NS_OK;
+  }
 
   // nsIDOMDragListener interface
   virtual nsresult DragEnter(nsIDOMEvent* aMouseEvent)
