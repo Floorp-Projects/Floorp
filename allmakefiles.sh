@@ -374,6 +374,8 @@ webshell/embed/Makefile
 webshell/embed/xlib/Makefile
 webshell/embed/xlib/gtk/Makefile
 webshell/embed/xlib/motif/Makefile
+webshell/embed/xlib/qt/Makefile
+webshell/embed/xlib/xt/Makefile
 webshell/embed/gtk/mozilla_config.mk
 widget/Makefile
 widget/public/Makefile

@@ -27,7 +27,11 @@ DIRS += gtk
 endif
 
 ifdef MOZ_ENABLE_MOTIF
-DIRS += motif
+DIRS += motif xt
+endif
+
+ifdef MOZ_ENABLE_QT
+DIRS += qt
 endif
 
 include $(topsrcdir)/config/rules.mk
