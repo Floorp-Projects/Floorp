@@ -549,6 +549,52 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 					if (strcmp(Getval,p2) ==0)
 						return FALSE;
 				}
+				else if (strcmp(pcmd, "Depend") == 0)
+				{
+					int numParam = 0;
+					char *dParamList[5];
+					char *dParam = strtok(parms, ",");
+					while (dParam)
+					{
+						dParamList[numParam] = strdup(dParam);
+						dParam = strtok(NULL, ",");
+						numParam++;
+					}
+					CString var1 = replaceVars(dParamList[0],NULL);
+					CString value1 = replaceVars(dParamList[1],NULL);
+					CString var2 = replaceVars(dParamList[2],NULL);
+					CString value2;
+					if (strcmp(dParamList[3],"NULL") !=0)
+						value2 = replaceVars(dParamList[3],NULL);
+					else 
+						value2.Empty();
+					CString message = replaceVars(dParamList[4],NULL);
+					if (!message)
+					{
+						AfxMessageBox("Error - provide a message to show when depend is false", MB_OK);
+						return FALSE;
+					}
+
+					
+					if (var1.Compare(value1) == 0)
+					{
+						if (value2.IsEmpty())
+						{
+							if (var2.IsEmpty())
+							{
+								AfxMessageBox(message, MB_OK);
+								return FALSE;
+							}
+						}				
+						else
+						{
+							if (var2.Compare(value2) != 0)
+							{
+								AfxMessageBox(message, MB_OK);
+							}
+						}
+					}
+				}
 				else if (strcmp(pcmd, "VerifyDir") == 0)
 				{
 					CFileFind tmpDir;
