@@ -127,7 +127,6 @@ NS_METHOD nsMenu::AddItem(const nsString &aText)
   GtkWidget *widget;
 
   widget = gtk_menu_item_new_with_label (labelStr);
-//  gtk_menu_append (GTK_MENU (mMenu), widget);
   gtk_menu_shell_append (GTK_MENU_SHELL (mMenu), widget);
 
   delete[] labelStr;
@@ -158,13 +157,11 @@ NS_METHOD nsMenu::AddMenu(nsIMenu * aMenu)
   char *labelStr;
   void *voidData=NULL;
   
-  fprintf(stderr, "nsMenu::AddMenu called\n");
-  
   aMenu->GetLabel(Label);
 
   labelStr = Label.ToNewCString();
 
-  aMenu->GetNativeData(voidData);
+  GetNativeData(voidData);
   parentmenu = GTK_WIDGET(voidData);
 
   item = gtk_menu_item_new_with_label (labelStr);
