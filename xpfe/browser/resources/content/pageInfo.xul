@@ -109,8 +109,11 @@
 	      <tree id="images_tree" class="inset" onselect="onImageSelect()" flex="1">
 	        <treecolgroup>
 	          <treecol flex="8"/>
+	          <splitter class="tree-splitter"/>
 	          <treecol flex="2"/>
+	          <splitter class="tree-splitter"/>
 	          <treecol flex="2"/>
+	          <splitter class="tree-splitter"/>
 	          <treecol flex="4"/>
 	        </treecolgroup>
 	        <treehead>
@@ -127,7 +130,9 @@
 	    </box>
 
       <splitter orient="vertical" collapse="after">
+        <spring flex="1"/>
         <grippy/>
+        <spring flex="1"/>
       </splitter>
       
 	    <box id="imagepreviewcontainer">
