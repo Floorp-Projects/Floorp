@@ -105,6 +105,21 @@ GetScriptContext(JSContext *cx)
     return GetScriptContextFromJSContext(cx);
 }
 
+inline void SetPendingException(JSContext *cx, const char *aMsg)
+{
+    JSString *str = JS_NewStringCopyZ(cx, aMsg);
+    if (str)
+        JS_SetPendingException(cx, STRING_TO_JSVAL(str));
+}
+
+inline void SetPendingException(JSContext *cx, const PRUnichar *aMsg)
+{
+    JSString *str = JS_NewUCStringCopyZ(cx,
+                        NS_REINTERPRET_CAST(const jschar*, aMsg));
+    if (str)
+        JS_SetPendingException(cx, STRING_TO_JSVAL(str));
+}
+
 // Helper class to get stuff from the ClassInfo and not waste extra time with
 // virtual method calls for things it has already gotten
 class ClassInfoData
@@ -781,9 +796,7 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
                                                         getter_Copies(errorMsg));
         NS_ENSURE_SUCCESS(rv2, rv2);
 
-        JS_SetPendingException(cx,
-            STRING_TO_JSVAL(JS_NewUCStringCopyZ(cx,
-                NS_REINTERPRET_CAST(const jschar*, errorMsg.get()))));
+        SetPendingException(cx, errorMsg.get());
 
         if (sXPConnect)
         {
@@ -1347,9 +1360,7 @@ nsScriptSecurityManager::ReportError(JSContext* cx, const nsAString& messageTag,
     // and to standard output
     if (cx)
     {
-        JS_SetPendingException(cx,
-            STRING_TO_JSVAL(JS_NewUCStringCopyZ(cx,
-                NS_REINTERPRET_CAST(const jschar*, message.get()))));
+        SetPendingException(cx, message.get());
         // Tell XPConnect that an exception was thrown, if appropriate
         if (sXPConnect)
         {
@@ -2072,6 +2083,51 @@ nsScriptSecurityManager::IsCapabilityEnabled(const char *capability,
     return NS_OK;
 }
 
+void
+nsScriptSecurityManager::FormatCapabilityString(nsAString& aCapability)
+{
+    nsAutoString newcaps;
+    nsAutoString rawcap;
+    NS_NAMED_LITERAL_STRING(capdesc, "capdesc.");
+    PRInt32 pos;
+    PRInt32 index = kNotFound;
+    nsresult rv;
+
+    NS_ASSERTION(kNotFound == -1, "Basic constant changed, algorithm broken!");
+
+    do {
+        pos = index+1;
+        index = aCapability.FindChar(' ', pos);
+        rawcap = Substring(aCapability, pos,
+                           (index == kNotFound) ? index : index - pos);
+
+        nsXPIDLString capstr;
+        rv = sStrBundle->GetStringFromName(
+                            nsPromiseFlatString(capdesc+rawcap).get(),
+                            getter_Copies(capstr));
+        if (NS_SUCCEEDED(rv))
+            newcaps += capstr;
+        else
+        {
+            nsXPIDLString extensionCap;
+            const PRUnichar* formatArgs[] = { rawcap.get() };
+            rv = sStrBundle->FormatStringFromName(
+                                NS_LITERAL_STRING("ExtensionCapability").get(),
+                                formatArgs,
+                                NS_ARRAY_LENGTH(formatArgs),
+                                getter_Copies(extensionCap));
+            if (NS_SUCCEEDED(rv))
+                newcaps += extensionCap;
+            else
+                newcaps += rawcap;
+        }
+
+        newcaps += NS_LITERAL_STRING("\n");
+    } while (index != kNotFound);
+
+    aCapability = newcaps;
+}
+
 PRBool
 nsScriptSecurityManager::CheckConfirmDialog(JSContext* cx, nsIPrincipal* aPrincipal,
                                             const char* aCapability, PRBool *checkValue)
@@ -2116,6 +2172,18 @@ nsScriptSecurityManager::CheckConfirmDialog(JSContext* cx, nsIPrincipal* aPrinci
     if (NS_FAILED(rv))
         return PR_FALSE;
 
+    nsXPIDLString yesStr;
+    rv = sStrBundle->GetStringFromName(NS_LITERAL_STRING("Yes").get(),
+                                       getter_Copies(yesStr));
+    if (NS_FAILED(rv))
+        return PR_FALSE;
+
+    nsXPIDLString noStr;
+    rv = sStrBundle->GetStringFromName(NS_LITERAL_STRING("No").get(),
+                                       getter_Copies(noStr));
+    if (NS_FAILED(rv))
+        return PR_FALSE;
+
     nsXPIDLCString val;
     PRBool hasCert;
     aPrincipal->GetHasCertificate(&hasCert);
@@ -2128,7 +2196,8 @@ nsScriptSecurityManager::CheckConfirmDialog(JSContext* cx, nsIPrincipal* aPrinci
         return PR_FALSE;
 
     NS_ConvertUTF8toUTF16 location(val.get());
-    NS_ConvertUTF8toUTF16 capability(aCapability);
+    NS_ConvertASCIItoUTF16 capability(aCapability);
+    FormatCapabilityString(capability);
     const PRUnichar *formatStrings[] = { location.get(), capability.get() };
 
     nsXPIDLString message;
@@ -2143,9 +2212,9 @@ nsScriptSecurityManager::CheckConfirmDialog(JSContext* cx, nsIPrincipal* aPrinci
     rv = prompter->ConfirmEx(title.get(), message.get(),
                              (nsIPrompt::BUTTON_DELAY_ENABLE) +
                              (nsIPrompt::BUTTON_POS_1_DEFAULT) +
-                             (nsIPrompt::BUTTON_TITLE_YES * nsIPrompt::BUTTON_POS_0) +
-                             (nsIPrompt::BUTTON_TITLE_NO * nsIPrompt::BUTTON_POS_1),
-                             nsnull, nsnull, nsnull, check.get(), checkValue, &buttonPressed);
+                             (nsIPrompt::BUTTON_TITLE_IS_STRING * nsIPrompt::BUTTON_POS_0) +
+                             (nsIPrompt::BUTTON_TITLE_IS_STRING * nsIPrompt::BUTTON_POS_1),
+                             yesStr.get(), noStr.get(), nsnull, check.get(), checkValue, &buttonPressed);
 
     if (NS_FAILED(rv))
         *checkValue = PR_FALSE;
@@ -2189,8 +2258,30 @@ nsScriptSecurityManager::EnableCapability(const char *capability)
     if(PL_strlen(capability)>200)
     {
         static const char msg[] = "Capability name too long";
-        JS_SetPendingException(cx, STRING_TO_JSVAL(JS_NewStringCopyZ(cx, msg)));
+        SetPendingException(cx, msg);
         return NS_ERROR_FAILURE;
+    }
+
+    //-- Check capability string for valid characters
+    //
+    //   Logically we might have wanted this in nsPrincipal, but performance
+    //   worries dictate it can't go in IsCapabilityEnabled() and we may have
+    //   to show the capability on a dialog before we call the principal's
+    //   EnableCapability().
+    //
+    //   We don't need to validate the capability string on the other APIs
+    //   available to web content. Without the ability to enable junk then
+    //   isPrivilegeEnabled, disablePrivilege, and revertPrivilege all do
+    //   the right thing (effectively nothing) when passed unallowed chars.
+    for (const char *ch = capability; *ch; ++ch)
+    {
+        if (!NS_IS_ALPHA(*ch) && *ch != ' ' && !NS_IS_DIGIT(*ch)
+            && *ch != '_' && *ch != '-' && *ch != '.')
+        {
+            static const char msg[] = "Invalid character in capability name";
+            SetPendingException(cx, msg);
+            return NS_ERROR_FAILURE;
+        }
     }
 
     nsCOMPtr<nsIPrincipal> principal;
@@ -2234,9 +2325,7 @@ nsScriptSecurityManager::EnableCapability(const char *capability)
         if (NS_FAILED(rv))
             return rv;
 
-        JS_SetPendingException(cx,
-            STRING_TO_JSVAL(JS_NewUCStringCopyZ(cx,
-                NS_REINTERPRET_CAST(const jschar*, message.get()))));
+        SetPendingException(cx, message.get());
 
         return NS_ERROR_FAILURE; // XXX better error code?
     }
@@ -2329,8 +2418,7 @@ nsScriptSecurityManager::SetCanEnableCapability(const char* certificateID,
         if (!cx) return NS_ERROR_FAILURE;
         static const char msg1[] = "Only code signed by the system certificate may call SetCanEnableCapability or Invalidate";
         static const char msg2[] = "Attempt to call SetCanEnableCapability or Invalidate when no system certificate has been established";
-            JS_SetPendingException(cx, STRING_TO_JSVAL(JS_NewStringCopyZ(cx,
-                                   mSystemCertificate ? msg1 : msg2)));
+        SetPendingException(cx, mSystemCertificate ? msg1 : msg2);
         return NS_ERROR_FAILURE;
     }
 
@@ -2397,9 +2485,7 @@ nsScriptSecurityManager::CanCreateWrapper(JSContext *cx,
                                              getter_Copies(errorMsg));
         NS_ENSURE_SUCCESS(rv2, rv2);
 
-        JS_SetPendingException(cx,
-            STRING_TO_JSVAL(JS_NewUCStringCopyZ(cx,
-                NS_REINTERPRET_CAST(const jschar*, errorMsg.get()))));
+        SetPendingException(cx, errorMsg.get());
 
 #ifdef DEBUG_CAPS_CanCreateWrapper
         printf("DENIED.\n");
@@ -2489,8 +2575,7 @@ nsScriptSecurityManager::CanCreateInstance(JSContext *cx,
         nsXPIDLCString cidStr;
         cidStr += aCID.ToString();
         errorMsg.Append(cidStr);
-        JS_SetPendingException(cx,
-                               STRING_TO_JSVAL(JS_NewStringCopyZ(cx, errorMsg.get())));
+        SetPendingException(cx, errorMsg.get());
 
 #ifdef DEBUG_CAPS_CanCreateInstance
         printf("DENIED\n");
@@ -2521,8 +2606,7 @@ nsScriptSecurityManager::CanGetService(JSContext *cx,
         nsXPIDLCString cidStr;
         cidStr += aCID.ToString();
         errorMsg.Append(cidStr);
-        JS_SetPendingException(cx,
-                               STRING_TO_JSVAL(JS_NewStringCopyZ(cx, errorMsg.get())));
+        SetPendingException(cx, errorMsg.get());
 
 #ifdef DEBUG_CAPS_CanGetService
         printf("DENIED\n");

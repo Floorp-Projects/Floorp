@@ -408,6 +408,9 @@ private:
     CheckConfirmDialog(JSContext* cx, nsIPrincipal* aPrincipal,
                        const char* aCapability, PRBool *checkValue);
 
+    static void
+    FormatCapabilityString(nsAString& aCapability);
+
     nsresult
     SavePrincipal(nsIPrincipal* aToSave);
 
