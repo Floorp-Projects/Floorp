@@ -77,8 +77,9 @@ public:
   NS_IMETHOD ContentChanged(nsIPresContext* aPresContext,
                             nsIContent* aContent,
                             nsISupports* aSubContent);
-  NS_IMETHOD ContentStateChanged(nsIPresContext* aPresContext, 
-                                 nsIContent* aContent);
+  NS_IMETHOD ContentStatesChanged(nsIPresContext* aPresContext, 
+                                  nsIContent* aContent1,
+                                  nsIContent* aContent2);
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
                               nsIContent* aContent,
                               nsIAtom* aAttribute,
@@ -415,6 +416,10 @@ protected:
                                   nsIPresContext* aPresContext,
                                   PRInt32 aParentHint,
                                   nsStyleChangeList& aResults);
+
+  PRInt32 ComputeStateChangeFor(nsIPresContext* aPresContext, nsIFrame* aFrame, 
+                                nsStyleChangeList& aChangeList,
+                                PRInt32 aFrameChange);
 
   nsresult RecreateFramesOnAttributeChange(nsIPresContext* aPresContext,
                                            nsIContent* aContent,
