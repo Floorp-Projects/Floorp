@@ -44,11 +44,6 @@ if [ -f mailnews/makefiles ]; then
   export MOZ_MAIL_NEWS
 fi
 
-if [ -d editor ]; then
-  MOZ_EDITOR=1
-  export MOZ_EDITOR
-fi
-
 . allmakefiles.sh
 
 rm -fr $MAKEFILES \
