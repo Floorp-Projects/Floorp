@@ -78,8 +78,10 @@ nsTreeRowGroupFrame::~nsTreeRowGroupFrame()
 NS_IMETHODIMP
 nsTreeRowGroupFrame::DeleteFrame(nsIPresContext& aPresContext)
 {
-  if (mScrollbar)
+  if (mScrollbar) {
+    mFrameConstructor->RemoveMappingsForFrameSubtree(&aPresContext, mScrollbar);
     mScrollbar->DeleteFrame(aPresContext);
+  }
   return NS_OK;
 }
 
@@ -132,6 +134,7 @@ void nsTreeRowGroupFrame::DestroyRows(nsIPresContext& aPresContext, PRInt32& row
     
     nsIFrame* nextFrame;
     GetNextFrame(childFrame, &nextFrame);
+    mFrameConstructor->RemoveMappingsForFrameSubtree(&aPresContext, childFrame);
     mFrames.DeleteFrame(aPresContext, childFrame);
     mTopFrame = childFrame = nextFrame;
   }
@@ -165,6 +168,7 @@ void nsTreeRowGroupFrame::ReverseDestroyRows(nsIPresContext& aPresContext, PRInt
     
     nsIFrame* prevFrame;
     prevFrame = mFrames.GetPrevSiblingFor(childFrame);
+    mFrameConstructor->RemoveMappingsForFrameSubtree(&aPresContext, childFrame);
     mFrames.DeleteFrame(aPresContext, childFrame);
     mBottomFrame = childFrame = prevFrame;
   }
@@ -454,6 +458,7 @@ nsTreeRowGroupFrame::PositionChanged(nsIPresContext& aPresContext, PRInt32 aOldI
     // Just blow away all our frames, but keep a content chain
     // as a hint to figure out how to build the frames.
     // Remove the scrollbar first.
+    mFrameConstructor->RemoveMappingsForFrameSubtree(&aPresContext, this);
     mFrames.DeleteFrames(aPresContext);
     nsCOMPtr<nsIContent> topRowContent;
     FindRowContentAtIndex(aNewIndex, mContent, getter_AddRefs(topRowContent));
@@ -694,6 +699,7 @@ nsTreeRowGroupFrame::ReflowAfterRowLayout(nsIPresContext&       aPresContext,
     scrollbarContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, value);
     if (value == "0" && !mIsFull) {
       // Nuke the scrollbar.
+      mFrameConstructor->RemoveMappingsForFrameSubtree(&aPresContext, mScrollbar);
       mScrollbarList.DeleteFrames(aPresContext);
       mScrollbar = nsnull;
     }
@@ -925,6 +931,7 @@ PRBool nsTreeRowGroupFrame::ContinueReflow(nsIPresContext& aPresContext, nscoord
       while (currFrame) {
         nsIFrame* nextFrame;
         currFrame->GetNextSibling(&nextFrame);
+        mFrameConstructor->RemoveMappingsForFrameSubtree(&aPresContext, currFrame);
         mFrames.DeleteFrame(aPresContext, currFrame);
         currFrame = nextFrame;
       }
