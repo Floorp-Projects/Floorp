@@ -43,13 +43,16 @@
 #include "nsLocalFile.h"
 #include "nsString.h"
 
-#include <deque>
-using namespace std;
-
 class nsDirEnumerator;
 
 //*****************************************************************************
 //  nsLocalFile
+//
+// The native charset of this implementation is UTF-8. The Unicode used by the
+// Mac OS file system is decomposed, so "Native" versions of these routines will
+// always use decomposed Unicode. Their "non-Native" counterparts are intended
+// to be simple wrappers which call the "Native" version and convert between
+// UTF-8 and UCS-2. All the work is done on the "Native" side.
 //*****************************************************************************
 
 class NS_COM nsLocalFile : public nsILocalFileMac
@@ -75,35 +78,33 @@ public:
     static void         GlobalShutdown();
     
 protected:
-                        nsLocalFile(const FSRef& aFSRef, const nsAString& aRelativePath);
                         nsLocalFile(const nsLocalFile& src);
     
-    nsresult            Resolve();
-    nsresult            GetFSRefInternal(FSRef& aFSSpec);
+    nsresult            SetBaseRef(CFURLRef aCFURLRef); // Does CFRetain on aCFURLRef
+    nsresult            UpdateTargetRef();
+    
+    nsresult            GetFSRefInternal(FSRef& aFSSpec, PRBool bForceUpdateCache = PR_TRUE);
     nsresult            GetPathInternal(nsACString& path);  // Returns path WRT mFollowLinks
-    nsresult            ResolveNonExtantNodes(PRBool aCreateDirs);
 
     nsresult            MoveCopy(nsIFile* newParentDir, const nsAString &newName, PRBool isCopy, PRBool followLinks);
 
     static PRInt64      HFSPlustoNSPRTime(const UTCDateTime& utcTime);
     static void         NSPRtoHFSPlusTime(PRInt64 nsprTime, UTCDateTime& utcTime);
-    
+    static nsresult     CFStringReftoUTF8(CFStringRef aInStrRef, nsACString& aOutStr);
+
 protected:
-    FSRef               mFSRef;
-    deque<nsString>     mNonExtantNodes;
+    CFURLRef            mBaseRef;           // The FS object we represent
+    CFURLRef            mTargetRef;         // If mBaseRef is an alias, its target
+
+    FSRef               mCachedFSRef;
+    PRPackedBool        mCachedFSRefValid;
     
-    FSRef               mTargetFSRef; // If mFSRef is an alias file, its target
-
     PRPackedBool        mFollowLinks;
-
-    PRPackedBool        mIdentityDirty;
     PRPackedBool        mFollowLinksDirty;
 
-    static PRInt64      kJanuaryFirst1970Seconds;    
-    static PRUnichar    kPathSepUnichar;
-    static char         kPathSepChar;
-    static FSRef        kInvalidFSRef;
-    static FSRef        kRootFSRef;
+    static const char         kPathSepChar;
+    static const PRUnichar    kPathSepUnichar;
+    static const PRInt64      kJanuaryFirst1970Seconds;    
 };
 
 #endif // nsLocalFileMac_h__
