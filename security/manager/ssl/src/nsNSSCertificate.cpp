@@ -1273,7 +1273,7 @@ ProcessName(CERTName *name, nsINSSComponent *nssComponent, PRUnichar **value)
       if(!decodeItem) {
          return NS_ERROR_FAILURE;
       }
-      avavalue.AssignWithConversion((char*)decodeItem->data, decodeItem->len);
+      avavalue = NS_ConvertUTF8toUTF16((char*)decodeItem->data, decodeItem->len);
 
       SECITEM_FreeItem(decodeItem, PR_TRUE);
       params[0] = type.get();
@@ -1460,7 +1460,7 @@ nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence **retSequence,
   return NS_OK;
 }
 
-#ifdef DEBUG_javi
+#if defined(DEBUG_javi) || defined(DEBUG_jgmyers)
 void
 DumpASN1Object(nsIASN1Object *object, unsigned int level)
 {
@@ -1479,14 +1479,13 @@ DumpASN1Object(nsIASN1Object *object, unsigned int level)
   nsCOMPtr<nsIASN1Sequence> sequence(do_QueryInterface(object));
   if (sequence) {
     printf ("%s ", NS_ConvertUCS2toUTF8(dispNameU).get());
-    sequence->GetProcessObjects(&processObjects);
+    sequence->GetIsValidContainer(&processObjects);
     if (processObjects) {
       printf("\n");
       sequence->GetASN1Objects(getter_AddRefs(asn1Objects));
-      asn1Objects->Count(&numObjects);
+      asn1Objects->GetLength(&numObjects);
       for (i=0; i<numObjects;i++) {
-        isupports = dont_AddRef(asn1Objects->ElementAt(i));
-        currObject = do_QueryInterface(isupports);
+        asn1Objects->QueryElementAt(i, NS_GET_IID(nsISupports), getter_AddRefs(currObject));
         DumpASN1Object(currObject, level+1);    
       }
     } else { 
@@ -1520,7 +1519,7 @@ nsNSSCertificate::CreateASN1Struct()
   nsXPIDLCString title;
   GetWindowTitle(getter_Copies(title));
   
-  mASN1Structure->SetDisplayName(NS_ConvertASCIItoUCS2(title));
+  mASN1Structure->SetDisplayName(NS_ConvertUTF8toUCS2(title));
   // This sequence will be contain the tbsCertificate, signatureAlgorithm,
   // and signatureValue.
   nsresult rv;
