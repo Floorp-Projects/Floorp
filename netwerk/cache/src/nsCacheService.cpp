@@ -935,9 +935,7 @@ nsCacheService::EnsureEntryHasDevice(nsCacheEntry * entry)
     }
      
     // if we can't use mDiskDevice, try mMemoryDevice
-    if (!device && mEnableMemoryDevice) {
-        NS_ASSERTION(entry->IsAllowedInMemory(), "oops.. bad flags");
-        
+    if (!device && mEnableMemoryDevice && entry->IsAllowedInMemory()) {        
         entry->MarkBinding();  // XXX
         rv = mMemoryDevice->BindEntry(entry);
         entry->ClearBinding(); // XXX
