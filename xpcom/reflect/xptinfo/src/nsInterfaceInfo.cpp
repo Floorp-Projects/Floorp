@@ -159,7 +159,7 @@ nsInterfaceInfo::GetMethodInfoForName(const char* methodName, uint16 *index,
         if (PL_strcmp(methodName, info->name) == 0) {
 #ifdef NS_DEBUG
             // XXX this isn't really the best place for this since it
-            // does not deal with duplicates accross inheritence boundaries
+            // does not deal with duplicates across inheritence boundaries
             //
             // make sure there aren't duplicate names
             for (; i < mMethodCount; i++) {
