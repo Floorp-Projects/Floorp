@@ -1,13 +1,11 @@
-Thu Nov 26 12:09:02 EST 1998
+Wed Dec  2 14:35:41 EST 1998
 
 xpidl depends on Andrew Veliath and Elliot Lee's libIDL, a part of the
-GNOME ORBit C ORB. There are RPMs at http://www.hungry.com/~shaver/libIDL/
-for ORBit, but you'll need glib of recent vintage (1.1.4 or greater), and
-that'll require you to update gtk+ as well.  New glib and gtk+ RPMs can
-be found at http://www.gnome.org/~msw/RPMS/i386/.
+GNOME ORBit C ORB.  We currently require libIDL >= 0.5.6, which in turn
+requires glib >= 1.1.5.
 
-If you're on Win32, grab libIDL-0.5 .dll and .lib from
-http://www.rpi.edu/~veliaa/libIDL/libIDL-0.5.4-win32.zip and get glib 1.1
-and glib 1.1-dev from http://user.sgic.fi/~tml/gimp/win32/, and then you
-should be able to build!  There are no Makefiles for Windows yet, but I'll
-try and sucker someone into writing them for me RSN.
+libIDL builds for Linux and Win32 can be found, along with source tarballs,
+at http://www.rpi.edu/~veliaa/libIDL/, and Win32 users will need glib 1.1 and
+glib 1.1-dev from http://user.sgic.fi/~tml/gimp/win32/.  There are currently
+no Makefiles for Windows, but people _are_ building on this platform, so
+hopefully they'll check their magic in soon.

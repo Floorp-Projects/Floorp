@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+ * Main xpidl program entry point.
+ */
+
 #include "xpidl.h"
 
 gboolean enable_debug      = FALSE;
@@ -27,11 +31,10 @@ gboolean generate_headers  = FALSE;
 gboolean generate_nothing  = FALSE;
 
 static char xpidl_usage_str[] = 
-"Usage: %s -IDHdwvn filename.idl\n"
-"       -I generate Invoke glue       (filename_invoke.c)\n"
-"       -D generate HTML documenation (filename.html)\n"
-"       -H generate C++ headers	      (filename.h)\n"
-"       -d turn on xpidl debugging\n"
+"Usage: %s -idhwvn filename.idl\n"
+"       -i generate Invoke glue       (filename_invoke.c)\n"
+"       -d generate HTML documenation (filename.html)\n"
+"       -h generate C++ headers	      (filename.h)\n"
 "       -w turn on warnings (recommended)\n"
 "       -v verbose mode\n"
 "       -n do not generate output files, just test IDL\n";
@@ -51,17 +54,14 @@ main(int argc, char *argv[])
     for (i = 1; i < argc; i++) {
 	if (argv[i][0] == '-') {
 	    switch (argv[i][1]) {
-	      case 'D':
+	      case 'd':
 		generate_docs = TRUE;
 		break;
-	      case 'I':
+	      case 'i':
 		generate_invoke = TRUE;
 		break;
-	      case 'H':
+	      case 'h':
 		generate_headers = TRUE;
-		break;
-	      case 'd':
-		enable_debug = TRUE;
 		break;
 	      case 'w':
 		enable_warnings = TRUE;
@@ -79,6 +79,11 @@ main(int argc, char *argv[])
 	}
     }
     
+    if (!(generate_docs || generate_invoke || generate_headers)) {
+	xpidl_usage(argc, argv);
+	return 1;
+    }
+
     for (i = 1, idlfiles = 0; i < argc; i++) {
 	if (argv[i][0] && argv[i][0] != '-')
 	    idlfiles += xpidl_process_idl(argv[i]);
