@@ -47,6 +47,8 @@ CPP_OBJS = \
   .\$(OBJDIR)\nsXULColorPickerAccessible.obj \
   .\$(OBJDIR)\nsXULFormControlAccessible.obj \
   .\$(OBJDIR)\nsXULMenuAccessible.obj \
+  .\$(OBJDIR)\nsXULSelectAccessible.obj \
+  .\$(OBJDIR)\nsXULTabAccessible.obj \
   .\$(OBJDIR)\nsXULTextAccessible.obj \
   $(NULL)
 

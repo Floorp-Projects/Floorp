@@ -37,7 +37,7 @@
       </handler>
     </handlers>
 
-    <implementation implements="nsIDOMXULSelectControlElement">
+    <implementation implements="nsIDOMXULSelectControlElement, nsIAccessibleProvider">
       <constructor>
         this.setInitialSelection()
       </constructor>
@@ -218,6 +218,15 @@
         ]]>
         </body>
       </method>
+
+      <property name="accessible">
+        <getter>
+          <![CDATA[
+            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
+            return (accService? accService.createXULComboboxAccessible(this): null);
+          ]]>
+        </getter>
+      </property>
     </implementation>  
   </binding>
 

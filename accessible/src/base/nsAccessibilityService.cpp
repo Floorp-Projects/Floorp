@@ -38,40 +38,43 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIAccessibilityService.h"
+// NOTE: alphabetically ordered
 #include "nsAccessibilityService.h"
 #include "nsAccessible.h"
 #include "nsCOMPtr.h"
-#include "nsIDocument.h"
-#include "nsIPresShell.h"
-#include "nsIPresContext.h"
-#include "nsIContent.h"
-#include "nsIFrame.h"
-#include "nsRootAccessible.h"
-#include "nsINameSpaceManager.h"
-#include "nsLayoutAtoms.h"
-#include "nsIDOMNode.h"
-#include "nsHTMLTextAccessible.h"
-#include "nsITextContent.h"
-#include "nsTextFragment.h"
-#include "nsHTMLTableAccessible.h"
-#include "nsHTMLImageAccessible.h"
 #include "nsHTMLAreaAccessible.h"
+#include "nsHTMLFormControlAccessible.h"
+#include "nsHTMLImageAccessible.h"
 #include "nsHTMLLinkAccessible.h"
 #include "nsHTMLSelectAccessible.h"
-#include "nsIDOMHTMLAreaElement.h"
-#include "nsHTMLFormControlAccessible.h"
+#include "nsHTMLTableAccessible.h"
+#include "nsHTMLTextAccessible.h"
+#include "nsIAccessibilityService.h"
 #include "nsIAccessibleProvider.h"
-#include "nsILink.h"
+#include "nsIContent.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsIDocument.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMHTMLAreaElement.h"
 #include "nsIDOMHTMLOptionElement.h"
+#include "nsIDOMNode.h"
 #include "nsIDOMXULCheckboxElement.h"
-#include "nsXULFormControlAccessible.h"
-#include "nsXULColorPickerAccessible.h"
-#include "nsXULTextAccessible.h"
-#include "nsXULMenuAccessible.h"
+#include "nsIFrame.h"
+#include "nsILink.h"
+#include "nsINameSpaceManager.h"
+#include "nsIPresContext.h"
+#include "nsIPresShell.h"
+#include "nsITextContent.h"
+#include "nsLayoutAtoms.h"
+#include "nsRootAccessible.h"
 #include "nsString.h"
+#include "nsTextFragment.h"
+#include "nsXULColorPickerAccessible.h"
+#include "nsXULFormControlAccessible.h"
+#include "nsXULMenuAccessible.h"
+#include "nsXULSelectAccessible.h"
+#include "nsXULTabAccessible.h"
+#include "nsXULTextAccessible.h"
 
 // IFrame
 #include "nsIDocShell.h"
@@ -688,6 +691,24 @@ nsAccessibilityService::CreateXULColorPickerTileAccessible(nsIDOMNode *aNode, ns
   return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsAccessibilityService::CreateXULComboboxAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
+{
+#ifdef MOZ_XUL
+  nsCOMPtr<nsIWeakReference> weakShell;
+  GetShellFromNode(aNode, getter_AddRefs(weakShell));
+
+  *_retval = new nsXULComboboxAccessible(aNode, weakShell);
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+#else
+  *_retval = nsnull;
+#endif // MOZ_XUL
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsAccessibilityService::CreateXULGroupboxAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
 {
@@ -731,6 +752,24 @@ nsAccessibilityService::CreateXULImageAccessible(nsIDOMNode *aNode, nsIAccessibl
 
   NS_ADDREF(*_retval);
 
+#else
+  *_retval = nsnull;
+#endif // MOZ_XUL
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsAccessibilityService::CreateXULListboxAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
+{
+#ifdef MOZ_XUL
+  nsCOMPtr<nsIWeakReference> weakShell;
+  GetShellFromNode(aNode, getter_AddRefs(weakShell));
+
+  *_retval = new nsXULListboxAccessible(aNode, weakShell);
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
 #else
   *_retval = nsnull;
 #endif // MOZ_XUL
@@ -863,6 +902,42 @@ nsAccessibilityService::CreateXULRadioGroupAccessible(nsIDOMNode *aNode, nsIAcce
   return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsAccessibilityService::CreateXULSelectListAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
+{
+#ifdef MOZ_XUL
+  nsCOMPtr<nsIWeakReference> weakShell;
+  GetShellFromNode(aNode, getter_AddRefs(weakShell));
+
+  *_retval = new nsXULSelectListAccessible(aNode, weakShell);
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+#else
+  *_retval = nsnull;
+#endif // MOZ_XUL
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsAccessibilityService::CreateXULSelectOptionAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
+{
+#ifdef MOZ_XUL
+  nsCOMPtr<nsIWeakReference> weakShell;
+  GetShellFromNode(aNode, getter_AddRefs(weakShell));
+
+  *_retval = new nsXULSelectOptionAccessible(aNode, weakShell);
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+#else
+  *_retval = nsnull;
+#endif // MOZ_XUL
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsAccessibilityService::CreateXULTextAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
 {
@@ -881,6 +956,63 @@ nsAccessibilityService::CreateXULTextAccessible(nsIDOMNode *aNode, nsIAccessible
 #endif // MOZ_XUL
   return NS_OK;
 }
+
+/** The single tab in a dialog or tabbrowser/editor interface */
+NS_IMETHODIMP nsAccessibilityService::CreateXULTabAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
+{
+  nsCOMPtr<nsIWeakReference> weakShell;
+  GetShellFromNode(aNode, getter_AddRefs(weakShell));
+
+  *_retval = new nsXULTabAccessible(aNode, weakShell);
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+  return NS_OK;
+}
+
+/** A combination of a tabs object and a tabpanels object */
+NS_IMETHODIMP nsAccessibilityService::CreateXULTabBoxAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
+{
+  nsCOMPtr<nsIWeakReference> weakShell;
+  GetShellFromNode(aNode, getter_AddRefs(weakShell));
+
+  *_retval = new nsXULTabBoxAccessible(aNode, weakShell);
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+  return NS_OK;
+}
+
+/** The display area for a dialog or tabbrowser interface */
+NS_IMETHODIMP nsAccessibilityService::CreateXULTabPanelsAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
+{
+  nsCOMPtr<nsIWeakReference> weakShell;
+  GetShellFromNode(aNode, getter_AddRefs(weakShell));
+
+  *_retval = new nsXULTabPanelsAccessible(aNode, weakShell);
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+  return NS_OK;
+}
+
+/** The collection of tab objects, useable in the TabBox and independant of as well */
+NS_IMETHODIMP nsAccessibilityService::CreateXULTabsAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
+{
+  nsCOMPtr<nsIWeakReference> weakShell;
+  GetShellFromNode(aNode, getter_AddRefs(weakShell));
+
+  *_retval = new nsXULTabsAccessible(aNode, weakShell);
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+  return NS_OK;
+}
+
 
 /**
   * GetAccessibleFor - get an nsIAccessible from a DOM node
@@ -901,7 +1033,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessibleFor(nsIDOMNode *aNode,
     // Please leave this in for now, it's a convenient debugging method
     nsAutoString name;
     aNode->GetLocalName(name);
-    if (name.Equals(NS_LITERAL_STRING("browser")))
+    if (name.Equals(NS_LITERAL_STRING("menulist"))) 
       printf("## aaronl debugging\n");
 #endif
     nsCOMPtr<nsIAccessibleProvider> accProv(do_QueryInterface(aNode));
@@ -1030,4 +1162,5 @@ NS_NewAccessibilityService(nsIAccessibilityService** aResult)
   *aResult = accService;
   return NS_OK;
 }
+
 

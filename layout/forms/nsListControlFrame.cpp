@@ -3251,7 +3251,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
     PerformSelection(newIndex, isShift, PR_FALSE);
     // Dispatch event
     if (mComboboxFrame && mIsAllFramesHere) {
-      mComboboxFrame->UpdateSelection(PR_TRUE, PR_TRUE, newIndex);
+      mComboboxFrame->UpdateSelection(PR_TRUE, PR_FALSE, newIndex);
     } else {
       UpdateSelection();
     }
