@@ -7302,10 +7302,10 @@ MOZ_NAME_BRAND" is unable to start Netcaster because Java and/or JavaScript are 
 Please verify that your Advanced Preferences are set correctly and try again.")
 
 
-ResDef(XP_EDT_ADD_COLUMNS, XP_MSG_BASE + 1170,
+ResDef(XP_EDT_ADD_COLUMNS_STATUS, XP_MSG_BASE + 1170,
        "Add %d column(s) to the table")
 
-ResDef(XP_EDT_ADD_ROWS, XP_MSG_BASE + 1171,
+ResDef(XP_EDT_ADD_ROWS_STATUS, XP_MSG_BASE + 1171,
        "Add %d rows(s) to the table")
 
 ResDef(XP_EDT_PERCENT_CELL, XP_MSG_BASE + 1172,
@@ -7314,8 +7314,44 @@ ResDef(XP_EDT_PERCENT_CELL, XP_MSG_BASE + 1172,
 ResDef(XP_EDT_PERCENT_TABLE, XP_MSG_BASE + 1173,
        "% of table  ")
 
+ResDef(XP_EDT_SEL_TABLE, XP_MSG_BASE + 1174,
+       "Select table (Press Ctrl to select all cells instead)")
+
+ResDef(XP_EDT_SEL_COL, XP_MSG_BASE + 1175,
+       "Select all cells in column")
+
+ResDef(XP_EDT_SEL_ROW, XP_MSG_BASE + 1176,
+       "Select all cells in row")
+
+ResDef(XP_EDT_SEL_CELL, XP_MSG_BASE + 1177,
+       "Select or deselect cell")
+
+ResDef(XP_EDT_SEL_ALL_CELLS, XP_MSG_BASE + 1178,
+       "Select all cells in table")
+
+ResDef(XP_EDT_SIZE_TABLE_WIDTH, XP_MSG_BASE + 1179,
+       "Drag to change width of table")
+
+ResDef(XP_EDT_SIZE_TABLE_HEIGHT, XP_MSG_BASE + 1180,
+       "Drag to change height of table")
+
+ResDef(XP_EDT_SIZE_COL, XP_MSG_BASE + 1181,
+       "Drag to change width of column to the left")
+
+ResDef(XP_EDT_SIZE_ROW, XP_MSG_BASE + 1182,
+       "Drag to change height of row above")
+
+ResDef(XP_EDT_ADD_ROWS, XP_MSG_BASE + 1183,
+       "Drag down to add more rows to the table")
+
+ResDef(XP_EDT_ADD_COLS, XP_MSG_BASE + 1184,
+       "Drag right to add more columns to the table")
+
+ResDef(XP_EDT_DRAG_TABLE, XP_MSG_BASE + 1185,
+       "Relocate caret or drag selected table or cells")
+
 /* XP_NSCOLOR_BASE and the 70 color strings removed 
- * We would like to reserve this range (1174 - 1250) for Editor
+ * We would like to reserve the range through 1250 for Editor
 */
 
 ResDef(SU_NOT_A_JAR_FILE, XP_MSG_BASE + 1262,
