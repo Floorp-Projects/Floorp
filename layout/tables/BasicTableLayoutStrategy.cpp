@@ -30,7 +30,7 @@ NS_DEF_PTR(nsIStyleContext);
 
 
 #ifdef NS_DEBUG
-static PRBool gsDebug = PR_TRUE;
+static PRBool gsDebug = PR_FALSE;
 static PRBool gsDebugCLD = PR_FALSE;
 #else
 static const PRBool gsDebug = PR_FALSE;
@@ -318,8 +318,9 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
         nscoord widthForThisCell = specifiedFixedColWidth;
         if (0==specifiedFixedColWidth) // set to min
           specifiedFixedColWidth = cellMinWidth;
-        widthForThisCell = PR_MAX(widthForThisCell, minColWidth);
-        widthForThisCell = PR_MAX(widthForThisCell, cellMinWidth);
+        widthForThisCell = PR_MAX(widthForThisCell, effectiveMinColumnWidth);
+        if (1==colSpan)
+          widthForThisCell = PR_MAX(widthForThisCell, cellMinWidth);
         mTableFrame->SetColumnWidth(colIndex, widthForThisCell);
         maxColWidth = widthForThisCell;
         minColWidth = PR_MAX(minColWidth, cellMinWidth);
@@ -401,8 +402,8 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
     } // end rowIndex for loop
 
     // adjust the "fixed" width for content that is too wide
-    if (minColWidth>specifiedFixedColWidth)
-      specifiedFixedColWidth=minColWidth;
+    if (effectiveMinColumnWidth>specifiedFixedColWidth)
+      specifiedFixedColWidth=effectiveMinColumnWidth;
     // do all the global bookkeeping, factoring in margins
     nscoord colInset = mTableFrame->GetCellSpacing();
     // keep a running total of the amount of space taken up by all fixed-width columns
@@ -499,6 +500,15 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
                 mMaxTableWidth += spanCellMinWidth - colMaxWidth;
                 if (gsDebug)
                   printf("   also set max from %d to %d\n", colMaxWidth, spanCellMinWidth);
+              }
+              // if the new min width is greater than the actual col width, bump up the col width too
+              nscoord colWidth = mTableFrame->GetColumnWidth(colIndex);
+              if (colWidth < spanCellMinWidth)
+              {
+                mTableFrame->SetColumnWidth(colIndex, spanCellMinWidth);
+                mMaxTableWidth += spanCellMinWidth - colMaxWidth;
+                if (gsDebug)
+                  printf("   also set computed col width from %d to %d\n", colWidth, spanCellMinWidth);
               }
             }
           }
