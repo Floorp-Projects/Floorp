@@ -66,6 +66,20 @@ static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
 #define SMOOTH_SCROLL_PREF_NAME "general.smoothScroll"
 
+class SmoothScroll {
+public:
+  SmoothScroll() {}
+  ~SmoothScroll() {
+    if (mScrollAnimationTimer) mScrollAnimationTimer->Cancel();
+  }
+
+  nsCOMPtr<nsITimer> mScrollAnimationTimer;
+  PRInt32 mVelocities[SMOOTH_SCROLL_FRAMES*2];
+  PRInt32 mFrameIndex;
+  nscoord mDestinationX;
+  nscoord mDestinationY;
+};
+
 nsScrollPortView::nsScrollPortView()
 {
   mOffsetX = mOffsetY = 0;
@@ -321,20 +335,17 @@ NS_IMETHODIMP nsScrollPortView::ScrollTo(nscoord aDestinationX, nscoord aDestina
       if (!mSmoothScroll->mScrollAnimationTimer) {
         delete mSmoothScroll;
         mSmoothScroll = nsnull;
-      } else {
-        mSmoothScroll->mScrollAnimationTimer->InitWithFuncCallback(
-          SmoothScrollAnimationCallback, this, SMOOTH_SCROLL_MSECS_PER_FRAME,
-          nsITimer::TYPE_REPEATING_PRECISE);
       }
     }
     if (!mSmoothScroll) {
       // some allocation failed. Scroll the normal way.
       return ScrollToImpl(aDestinationX, aDestinationY, aUpdateFlags);
     }
-  
+    mSmoothScroll->mScrollAnimationTimer->InitWithFuncCallback(
+      SmoothScrollAnimationCallback, this, SMOOTH_SCROLL_MSECS_PER_FRAME,
+      nsITimer::TYPE_REPEATING_PRECISE);
     mSmoothScroll->mDestinationX = mOffsetX;
     mSmoothScroll->mDestinationY = mOffsetY;
-    mSmoothScroll->mVelocities = new PRInt32[SMOOTH_SCROLL_FRAMES*2];
   }
 
   // need to store these so we know when to stop scrolling
