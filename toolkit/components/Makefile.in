@@ -51,8 +51,7 @@ DIRS = 	console \
 	viewsource \
 	$(NULL)
 
-ifdef MOZ_PHOENIX
-
+ifneq (,$(MOZ_PHOENIX)$(MOZ_XULRUNNER))
 DIRS +=	\
 	autocomplete \
 	cookie \
