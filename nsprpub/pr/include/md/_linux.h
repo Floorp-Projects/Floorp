@@ -20,6 +20,7 @@
 #define nspr_linux_defs_h___
 
 #include "prthread.h"
+#include <sys/time.h>
 
 /*
  * Internal configuration macros
