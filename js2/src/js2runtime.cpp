@@ -877,7 +877,7 @@ js2val ScopeChain::getCompileTimeValue(Context *cx, const String& name, Namespac
 
 // in the case of duplicate parameter names, pick the last one
 // XXX does the namespace handling make any sense here? Can parameters be in a namespace?
-Reference *ParameterBarrel::genReference(Context *cx, bool /* hasBase */, const String& name, NamespaceList *names, Access acc, uint32 /*depth*/)
+Reference *ParameterBarrel::genReference(Context * /* cx */, bool /* hasBase */, const String& name, NamespaceList *names, Access acc, uint32 /*depth*/)
 {
     Property *selectedProp = NULL;
     for (PropertyIterator i = mProperties.lower_bound(name),
@@ -2426,12 +2426,12 @@ js2val RegExp_Constructor(Context *cx, const js2val thisValue, js2val *argv, uin
             regexpStr = JSValue::string(JSValue::toString(cx, argv[0]));
         if ((argc > 1) && !JSValue::isUndefined(argv[1])) {
             flagStr = JSValue::string(JSValue::toString(cx, argv[1]));
-            if (parseFlags(flagStr->begin(), flagStr->length(), &flags) != RE_NO_ERROR) {
+            if (parseFlags(flagStr->begin(), (int32)flagStr->length(), &flags) != RE_NO_ERROR) {
                 cx->reportError(Exception::syntaxError, "Failed to parse RegExp : '{0}'", *regexpStr + "/" + *flagStr);  // XXX error message?
             }
         }
     }
-    REState *pState = REParse(regexpStr->begin(), regexpStr->length(), flags, RE_VERSION_1);
+    REState *pState = REParse(regexpStr->begin(), (int32)regexpStr->length(), flags, RE_VERSION_1);
     if (pState) {
         thisInst->mRegExp = pState;
 // XXX ECMA spec says these are DONTENUM, but SpiderMonkey and test suite disagree
@@ -2514,10 +2514,10 @@ js2val RegExp_exec(Context *cx, const js2val thisValue, js2val *argv, uint32 arg
             index = (int32)JSValue::f64(JSValue::toInteger(cx, lastIndex));            
         }
 
-        REMatchState *match = REExecute(thisInst->mRegExp, str->begin(), index, str->length(), JSValue::boolean(JSValue::toBoolean(cx, globalMultiline)));
+        REMatchState *match = REExecute(thisInst->mRegExp, str->begin(), index, (int32)str->length(), JSValue::boolean(JSValue::toBoolean(cx, globalMultiline)));
         if (match) {
             result = Array_Type->newInstance(cx);
-            String *matchStr = new String(str->substr(match->startIndex, match->endIndex - match->startIndex));
+            String *matchStr = new String(str->substr((uint32)match->startIndex, (uint32)match->endIndex - match->startIndex));
             JSValue::instance(result)->setProperty(cx, *numberToString(0), NULL, JSValue::newString(matchStr));
             String *parenStr = &cx->Empty_StringAtom;
             for (int32 i = 0; i < match->parenCount; i++) {
@@ -2535,9 +2535,9 @@ js2val RegExp_exec(Context *cx, const js2val thisValue, js2val *argv, uint32 arg
             // XXX Set up the SpiderMonkey 'RegExp statics'
             RegExp_Type->setProperty(cx, cx->LastMatch_StringAtom, CURRENT_ATTR, JSValue::newString(matchStr));
             RegExp_Type->setProperty(cx, cx->LastParen_StringAtom, CURRENT_ATTR, JSValue::newString(parenStr));            
-            String *contextStr = new String(str->substr(0, match->startIndex));
+            String *contextStr = new String(str->substr(0, (uint32)match->startIndex));
             RegExp_Type->setProperty(cx, cx->LeftContext_StringAtom, CURRENT_ATTR, JSValue::newString(contextStr));
-            contextStr = new String(str->substr(match->endIndex, str->length() - match->endIndex));
+            contextStr = new String(str->substr((uint32)match->endIndex, (uint32)str->length() - match->endIndex));
             RegExp_Type->setProperty(cx, cx->RightContext_StringAtom, CURRENT_ATTR, JSValue::newString(contextStr));
 
             if (thisInst->mRegExp->flags & RE_GLOBAL) {
@@ -2562,7 +2562,7 @@ static js2val RegExp_test(Context *cx, const js2val thisValue, js2val *argv, uin
         const String *str = JSValue::string(JSValue::toString(cx, argv[0]));
         RegExp_Type->getProperty(cx, cx->Multiline_StringAtom, CURRENT_ATTR);
         js2val globalMultiline = cx->popValue();
-        REMatchState *match = REExecute(thisInst->mRegExp, str->begin(), 0, str->length(), JSValue::boolean(JSValue::toBoolean(cx, globalMultiline)));
+        REMatchState *match = REExecute(thisInst->mRegExp, str->begin(), 0, (int32)str->length(), JSValue::boolean(JSValue::toBoolean(cx, globalMultiline)));
         if (match)
             return kTrueValue;
     }

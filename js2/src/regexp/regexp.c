@@ -792,7 +792,7 @@ lexHex:
             }
             ++parseState->src;
         }
-        parseState->result->data.chclass.classIndex = parseState->classCount++;
+        parseState->result->data.chclass.classIndex = (int32)parseState->classCount++;
         /* Call calculateBitmapSize now as we want any errors it finds 
           to be reported during the parse phase, not at execution */
         if (!calculateBitmapSize(parseState, parseState->result))
@@ -888,7 +888,7 @@ quantifier:
     parseState->result->child = term;
     parseState->result->parenIndex = parenBaseCount;
     parseState->result->data.quantifier.parenCount 
-                                = parseState->parenCount - parenBaseCount;
+                                = (REint32)(parseState->parenCount - parenBaseCount);
     if ((parseState->src < parseState->srcEnd) && (*parseState->src == '?')) {
         ++parseState->src;
         parseState->result->data.quantifier.greedy = RE_FALSE;
@@ -913,7 +913,7 @@ quantifier:
 */
 static REMatchState *bolMatcher(REGlobalData *gData, REMatchState *x)
 {
-    REuint32 e = x->endIndex;
+    REuint32 e = (REuint32)x->endIndex;
     if (e != 0) {
         if (gData->globalMultiline ||
                     (gData->regexp->flags & RE_MULTILINE)) {
@@ -1453,9 +1453,9 @@ static REMatchState *backrefMatcher(REGlobalData *gData,
     if (s->index == -1)
         return x;
 
-    e = x->endIndex;
-    len = s->length;
-    f = e + len;
+    e = (REuint32)x->endIndex;
+    len = (REuint32)s->length;
+    f = (REint32)(e + len);
     if (f > gData->length)
         return NULL;
     
@@ -1510,12 +1510,12 @@ static void freeRENode(RENode *t)
 
 #define ARG_LEN                     (2)
 #define CHECK_RANGE(branch, target) (ASSERT((((target) - (branch)) >= -32768) && (((target) - (branch)) <= 32767))) 
-#define EMIT_ARG(pc, a)             ((pc)[0] = ((a) >> 8), (pc)[1] = (REuint8)(a), (pc) += ARG_LEN)
+#define EMIT_ARG(pc, a)             ((pc)[0] = (REuint8)((a) >> 8), (pc)[1] = (REuint8)(a), (pc) += ARG_LEN)
 #define EMIT_BRANCH(pc)             ((pc) += ARG_LEN)
 #define EMIT_FIXUP(branch, target)  (EMIT_ARG((branch), (target) - (branch)))
 #define GET_ARG(pc)                 ((REuint32)(((pc)[0] << 8) | (pc)[1]))
 
-REuint8 *emitREBytecode(REState *pState, REuint8 *pc, RENode *t)
+static REuint8 *emitREBytecode(REState *pState, REuint8 *pc, RENode *t)
 {
     RENode *nextAlt;
     REuint8 *nextAltFixup, *nextTermFixup;
@@ -1626,7 +1626,7 @@ REuint8 *emitREBytecode(REState *pState, REuint8 *pc, RENode *t)
     return pc;
 }
 
-REBackTrackData *pushBackTrackState(REGlobalData *gData, REOp op, 
+static REBackTrackData *pushBackTrackState(REGlobalData *gData, REOp op, 
                                     REuint8 *target, REMatchState *x)
 {
     REBackTrackData *result;
@@ -1645,7 +1645,7 @@ REBackTrackData *pushBackTrackState(REGlobalData *gData, REOp op,
     result->state = copyState(x);
     result->lastParen = gData->lastParen;
 
-    result->precedingStateTop = stateStackTop;
+    result->precedingStateTop = (REint32)stateStackTop;
     if (stateStackTop) {
         result->precedingState = (REProgState *)malloc(sizeof(REProgState) 
                                                         * stateStackTop);
@@ -1668,7 +1668,8 @@ static REMatchState *executeREBytecode(REuint8 *pc, REGlobalData *gData, REMatch
     REContinuationData currentContinuation;
     REMatchState *result;
     REBackTrackData *backTrackData;
-    REint32 k, length, offset, parenIndex, index;
+    REint32 k, length, offset, index;
+    REuint32 parenIndex;
     REbool anchor = RE_FALSE;
     REchar anchorCh;
     REchar matchCh;
@@ -1686,12 +1687,12 @@ static REMatchState *executeREBytecode(REuint8 *pc, REGlobalData *gData, REMatch
     switch (op) {
     case REOP_FLAT1:
     case REOP_FLAT1i:
-        anchorCh = GET_ARG(pc);
+        anchorCh = (REchar)GET_ARG(pc);
         anchor = RE_TRUE;
         break;
     case REOP_FLATN:        
     case REOP_FLATNi:
-        k = GET_ARG(pc);
+        k = (REint32)GET_ARG(pc);
         anchorCh = gData->regexp->srcStart[k];
         anchor = RE_TRUE;
         break;
@@ -1752,28 +1753,28 @@ static REMatchState *executeREBytecode(REuint8 *pc, REGlobalData *gData, REMatch
             result = letdigMatcher(gData, x, RE_FALSE);
             break;
         case REOP_FLATN:
-            offset = GET_ARG(pc);
+            offset = (REint32)GET_ARG(pc);
             pc += ARG_LEN;
-            length = GET_ARG(pc);
+            length = (REint32)GET_ARG(pc);
             pc += ARG_LEN;
             result = flatNMatcher(gData, x, gData->regexp->srcStart + offset, 
                                                                         length);
             break;
         case REOP_FLATNi:
-            offset = GET_ARG(pc);
+            offset = (REint32)GET_ARG(pc);
             pc += ARG_LEN;
-            length = GET_ARG(pc);
+            length = (REint32)GET_ARG(pc);
             pc += ARG_LEN;
             result = flatNIMatcher(gData, x, gData->regexp->srcStart + offset,
                                                                         length);
             break;
         case REOP_FLAT1:
-            matchCh = GET_ARG(pc);
+            matchCh = (REchar)GET_ARG(pc);
             pc += ARG_LEN;
             result = flatMatcher(gData, x, matchCh);
             break;
         case REOP_FLAT1i:
-            matchCh = GET_ARG(pc);
+            matchCh = (REchar)GET_ARG(pc);
             pc += ARG_LEN;
             result = flatIMatcher(gData, x, matchCh);
             break;
@@ -1791,7 +1792,7 @@ static REMatchState *executeREBytecode(REuint8 *pc, REGlobalData *gData, REMatch
         case REOP_ENDALT:
             --stateStackTop;
             currentContinuation = stateStack[stateStackTop].continuation;
-            offset = GET_ARG(pc);
+            offset = (REint32)GET_ARG(pc);
             pc += offset;
             op = (REOp)(*pc++);
             continue;
@@ -1810,13 +1811,13 @@ static REMatchState *executeREBytecode(REuint8 *pc, REGlobalData *gData, REMatch
             x->parens[parenIndex].length = x->endIndex 
                                                 - x->parens[parenIndex].index;
             if (parenIndex > gData->lastParen)
-                gData->lastParen = parenIndex;
+                gData->lastParen = (REint32)parenIndex;
             op = (REOp)(*pc++);
             continue;
         case REOP_BACKREF:
             parenIndex = GET_ARG(pc);
             pc += ARG_LEN;
-            result = backrefMatcher(gData, x, parenIndex);
+            result = backrefMatcher(gData, x, (uint32)parenIndex);
             break;
 
         case REOP_ASSERT:
@@ -1873,7 +1874,7 @@ static REMatchState *executeREBytecode(REuint8 *pc, REGlobalData *gData, REMatch
             break;
 
         case REOP_CLASS:
-            index = GET_ARG(pc);
+            index = (int32)GET_ARG(pc);
             pc += ARG_LEN;
             result = classMatcher(gData, x, index);
             if (gData->error != RE_NO_ERROR) return NULL;
@@ -1897,14 +1898,14 @@ static REMatchState *executeREBytecode(REuint8 *pc, REGlobalData *gData, REMatch
             stateStack[stateStackTop].max = 1;
             goto quantcommon;
         case REOP_QUANT:
-            stateStack[stateStackTop].min = GET_ARG(pc);
+            stateStack[stateStackTop].min = (int32)GET_ARG(pc);
             pc += ARG_LEN;
-            stateStack[stateStackTop].max = GET_ARG(pc);
+            stateStack[stateStackTop].max = (int32)GET_ARG(pc);
             pc += ARG_LEN;
 quantcommon:
-            stateStack[stateStackTop].parenCount = GET_ARG(pc);
+            stateStack[stateStackTop].parenCount = (int32)GET_ARG(pc);
             pc += ARG_LEN;
-            stateStack[stateStackTop].parenIndex = GET_ARG(pc);
+            stateStack[stateStackTop].parenIndex = (int32)GET_ARG(pc);
             pc += ARG_LEN;
             stateStack[stateStackTop].index = x->endIndex;
             stateStack[stateStackTop].continuation = currentContinuation;
@@ -1959,7 +1960,7 @@ quantcommon:
                 if (!pushBackTrackState(gData, REOP_REPEAT, pc, x)) return NULL;
                 pc += ARG_LEN;
                 op = (REOp)(*pc++);
-                parenIndex = stateStack[stateStackTop - 1].parenIndex;
+                parenIndex = (REuint32)stateStack[stateStackTop - 1].parenIndex;
                 for (k = 0; k <= stateStack[stateStackTop - 1].parenCount; k++)
                     x->parens[parenIndex + k].index = -1;
             }
@@ -1978,14 +1979,14 @@ quantcommon:
             stateStack[stateStackTop].max = 1;
             goto minimalquantcommon;
         case REOP_MINIMALQUANT:
-            stateStack[stateStackTop].min = GET_ARG(pc);
+            stateStack[stateStackTop].min = (int32)GET_ARG(pc);
             pc += ARG_LEN;
-            stateStack[stateStackTop].max = GET_ARG(pc);
+            stateStack[stateStackTop].max = (int32)GET_ARG(pc);
             pc += ARG_LEN;
 minimalquantcommon:
-            stateStack[stateStackTop].parenCount = GET_ARG(pc);
+            stateStack[stateStackTop].parenCount = (int32)GET_ARG(pc);
             pc += ARG_LEN;
-            stateStack[stateStackTop].parenIndex = GET_ARG(pc);
+            stateStack[stateStackTop].parenIndex = (int32)GET_ARG(pc);
             pc += ARG_LEN;
             stateStack[stateStackTop].index = x->endIndex;
             stateStack[stateStackTop].continuation = currentContinuation;
@@ -2015,7 +2016,7 @@ minimalquantcommon:
                  */
                 if ((stateStack[stateStackTop].max == -1)
                         || (stateStack[stateStackTop].max > 0)) {
-                    parenIndex = stateStack[stateStackTop].parenIndex;
+                    parenIndex = (REuint32)stateStack[stateStackTop].parenIndex;
                     for (k = 0; k <= stateStack[stateStackTop].parenCount; k++)
                         x->parens[parenIndex + k].index = -1;
                     stateStack[stateStackTop].index = x->endIndex;
@@ -2045,7 +2046,7 @@ minimalquantcommon:
                 if (stateStack[stateStackTop].max != -1) 
                                                 stateStack[stateStackTop].max--;
                 if (stateStack[stateStackTop].min > 0) {
-                    parenIndex = stateStack[stateStackTop].parenIndex;
+                    parenIndex = (REuint32)stateStack[stateStackTop].parenIndex;
                     for (k = 0; k <= stateStack[stateStackTop].parenCount; k++)
                         x->parens[parenIndex + k].index = -1;
                     stateStack[stateStackTop].index = x->endIndex;
@@ -2088,7 +2089,7 @@ minimalquantcommon:
                 for (k = 0; k < backTrackData->precedingStateTop; k++) {
                     stateStack[k] = backTrackData->precedingState[k];
                 }
-                stateStackTop = backTrackData->precedingStateTop;
+                stateStackTop = (REuint32)backTrackData->precedingStateTop;
                 if (backTrackData->precedingState)
                     free(backTrackData->precedingState);
 
@@ -2240,7 +2241,7 @@ static REMatchState *initMatch(REGlobalData *gData, REState *pState,
         return NULL;
     }
 
-    result->parenCount = pState->parenCount;
+    result->parenCount = (REint32)pState->parenCount;
     for (j = 0; j < result->parenCount; j++)
         result->parens[j].index = -1;
     result->startIndex = 0;
@@ -2253,7 +2254,7 @@ static REMatchState *initMatch(REGlobalData *gData, REState *pState,
     gData->length = length;
     gData->error = RE_NO_ERROR;
     gData->lastParen = 0;
-    gData->globalMultiline = globalMultiline;
+    gData->globalMultiline = (REbool)globalMultiline;
     
     backTrackStackTop = 0;
     stateStackTop = 0;

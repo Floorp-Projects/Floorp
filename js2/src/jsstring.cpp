@@ -126,7 +126,7 @@ static js2val String_search(Context *cx, const js2val thisValue, js2val *argv, u
     REState *pState = (checked_cast<JSRegExpInstance *>(JSValue::instance(regexp)))->mRegExp;
 
     const String *str = JSValue::string(S);
-    REMatchState *match = REExecute(pState, str->begin(), 0, str->length(), false);
+    REMatchState *match = REExecute(pState, str->begin(), 0, (int32)str->length(), false);
     if (match)
         return JSValue::newNumber((float64)(match->startIndex));
     else
@@ -170,14 +170,14 @@ static js2val String_match(Context *cx, const js2val thisValue, js2val *argv, ui
         int32 index = 0;
         int32 lastIndex = 0;
         while (true) {
-            REMatchState *match = REExecute(pState, JSValue::string(S)->begin(), lastIndex, JSValue::string(S)->length(), false);
+            REMatchState *match = REExecute(pState, JSValue::string(S)->begin(), lastIndex, (int32)JSValue::string(S)->length(), false);
             if (match == NULL)
                 break;
             if (lastIndex == match->endIndex)
                 lastIndex++;
             else
                 lastIndex = match->endIndex;
-            String *matchStr = new String(JSValue::string(S)->substr(match->startIndex, match->endIndex - match->startIndex));
+            String *matchStr = new String(JSValue::string(S)->substr((uint32)match->startIndex, (uint32)match->endIndex - match->startIndex));
             A->setProperty(cx, *numberToString(index++), NULL, JSValue::newString(matchStr));
         }
         JSValue::instance(regexp)->setProperty(cx, cx->LastIndex_StringAtom, NULL, JSValue::newNumber((float64)lastIndex));
@@ -193,11 +193,11 @@ static const String interpretDollar(Context *cx, const String *replaceStr, uint3
     case '$':
 	return cx->Dollar_StringAtom;
     case '&':
-	return searchStr->substr(match->startIndex, match->endIndex - match->startIndex);
+	return searchStr->substr((uint32)match->startIndex, (uint32)match->endIndex - match->startIndex);
     case '`':
-	return searchStr->substr(0, match->startIndex);
+	return searchStr->substr(0, (uint32)match->startIndex);
     case '\'':
-	return searchStr->substr(match->endIndex, searchStr->length() - match->endIndex);
+	return searchStr->substr((uint32)match->endIndex, (uint32)searchStr->length() - match->endIndex);
     case '0':
     case '1':
     case '2':
@@ -209,7 +209,7 @@ static const String interpretDollar(Context *cx, const String *replaceStr, uint3
     case '8':
     case '9':
 	{
-	    int32 num = (uint32)(*dollarValue - '0');
+	    int32 num = (int32)(*dollarValue - '0');
 	    if (num <= match->parenCount) {
 		if ((dollarPos < (replaceStr->length() - 2))
 			&& (dollarValue[1] >= '0') && (dollarValue[1] <= '9')) {
@@ -277,7 +277,7 @@ static js2val String_replace(Context *cx, const js2val thisValue, js2val *argv, 
         int32 lastIndex = 0;
 
 	while (true) {
-            match = REExecute(pState, S->begin(), lastIndex, S->length(), false);
+            match = REExecute(pState, S->begin(), lastIndex, (int32)S->length(), false);
 	    if (match) {
 		String insertString;
 		uint32 start = 0;
@@ -297,7 +297,7 @@ static js2val String_replace(Context *cx, const js2val thisValue, js2val *argv, 
 		    }
 		}
                 // grab everything preceding the match
-		newString += S->substr(lastIndex, match->startIndex - lastIndex);
+		newString += S->substr((uint32)lastIndex, (uint32)match->startIndex - lastIndex);
                 // and then add the replacement string
 		newString += insertString;
 	    }
@@ -307,7 +307,7 @@ static js2val String_replace(Context *cx, const js2val thisValue, js2val *argv, 
 	    if ((pState->flags & RE_GLOBAL) == 0)
 		break;
 	}
-        newString += S->substr(lastIndex, S->length() - lastIndex);
+        newString += S->substr((uint32)lastIndex, (uint32)S->length() - lastIndex);
 	if ((pState->flags & RE_GLOBAL) == 0)
             JSValue::instance(searchValue)->setProperty(cx, cx->LastIndex_StringAtom, NULL, JSValue::newNumber((float64)lastIndex));
         return JSValue::newString(new String(newString));
@@ -319,7 +319,7 @@ static js2val String_replace(Context *cx, const js2val thisValue, js2val *argv, 
 	if (pos == String::npos)
             return JSValue::newString(S);
 	match.startIndex = (int32)pos;
-	match.endIndex = match.startIndex + searchStr->length();
+	match.endIndex = match.startIndex + (int32)searchStr->length();
 	match.parenCount = 0;
 	String insertString;
 	String newString;
@@ -337,9 +337,9 @@ static js2val String_replace(Context *cx, const js2val thisValue, js2val *argv, 
 		break;
 	    }
 	}
-	newString += S->substr(0, match.startIndex);
+	newString += S->substr(0, (uint32)match.startIndex);
 	newString += insertString;
-	uint32 index = match.endIndex;
+	uint32 index = (uint32)match.endIndex;
 	newString += S->substr(index, S->length() - index);
         return JSValue::newString(new String(newString));
     }
@@ -375,12 +375,12 @@ static void regexpSplitMatch(const String *S, uint32 q, REState *RE, MatchResult
     result.failure = true;
     result.captures = NULL;
 
-    REMatchState *match = REMatch(RE, S->begin() + q, S->length() - q);
+    REMatchState *match = REMatch(RE, S->begin() + q, (int32)(S->length() - q));
 
     if (match) {
         result.endIndex = match->startIndex + q;
         result.failure = false;
-        result.capturesCount = match->parenCount;
+        result.capturesCount = (uint32)match->parenCount;
         if (match->parenCount) {
             result.captures = new js2val[match->parenCount];
             for (int32 i = 0; i < match->parenCount; i++) {

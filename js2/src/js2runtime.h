@@ -189,7 +189,7 @@ static const double two31 = 2147483648.0;
 
     public:        
 
-        static int32 tag(const js2val v)                    { return JS2VAL_TAG(v); }
+        static uint32 tag(const js2val v)                    { return JS2VAL_TAG(v); }
         static float64 f64(const js2val v)                  { return *JS2VAL_TO_DOUBLE(v); }
         static JSObject *object(const js2val v)             { return JS2VAL_TO_OBJECT(v); }
         static JSInstance *instance(const js2val v)         { return (JSInstance *)JS2VAL_TO_OBJECT(v); }
@@ -686,7 +686,7 @@ XXX ...couldn't get this to work...
         /**
         * Scans through the object, and copies all references.
         */
-        Collector::size_type scan(Collector* collector)
+        Collector::size_type scan(Collector* /* collector */)
         {
             // enumerate property map elements.
             // scan mPrototype.

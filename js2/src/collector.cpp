@@ -124,7 +124,7 @@ Collector::collect()
 
 inline bool isForwardingPointer(void* ptr)
 {
-    return (uint32(ptr) & kIsForwardingPointer);
+    return (bool)(uint32(ptr) & kIsForwardingPointer);
 }
 
 void* Collector::copy(void* object, Collector::size_type size)
@@ -190,7 +190,7 @@ public:
         return gc.allocateObject(n, &owner);
     }
 
-    void operator delete(void* ptr, Collector& gc) {}
+    void operator delete(void* /* ptr */, Collector& /* gc */) {}
  
     void* operator new[] (size_t n, Collector& gc)
     {

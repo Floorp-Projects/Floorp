@@ -249,7 +249,7 @@ static float64 random_nextDouble(Context *cx)
 }
 
 
-static js2val Math_random(Context *cx, const js2val /*thisValue*/, js2val *argv, uint32 /*argc*/)
+static js2val Math_random(Context *cx, const js2val /*thisValue*/, js2val * /* argv */, uint32 /*argc*/)
 {
     random_init(cx);
     return JSValue::newNumber(random_nextDouble(cx));

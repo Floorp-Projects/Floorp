@@ -149,7 +149,10 @@ static js2val dikdik(Context * /*cx*/, const js2val /*thisValue*/, js2val /*argv
 
 static js2val quit(Context * /*cx*/, const js2val /*thisValue*/, js2val /*argv*/[], uint32 /*argc*/)
 {
+// XXX need correct call for other platforms
+#ifdef XP_PC
     exit(0);
+#endif
     return kUndefinedValue;
 }
 
