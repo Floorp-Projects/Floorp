@@ -488,6 +488,7 @@ extern PRFileMap* _md_OpenAnonFileMap(
     PRThread    *tid = PR_GetCurrentThread(); /* for generating filename */
     int         incr; /* for generating filename */
     const int   maxTries = 20; /* maximum # attempts at a unique filename */
+    PRInt64     size64; /* 64-bit version of 'size' */
 
     /*
     ** generate a filename from input and runtime environment
@@ -562,7 +563,8 @@ extern PRFileMap* _md_OpenAnonFileMap(
     PR_LOG( _pr_shma_lm, PR_LOG_DEBUG,
         ("_md_OpenAnonFileMap(): ftruncate(): size: %d", size ));
 
-    fm = PR_CreateFileMap( fd, size, prot );
+    LL_UI2L(size64, size);  /* PRSize (size_t) is unsigned */
+    fm = PR_CreateFileMap( fd, size64, prot );
     if ( NULL == fm )  {
         PR_LOG( _pr_shma_lm, PR_LOG_DEBUG,
             ("PR_OpenAnonFileMap(): failed"));
@@ -608,7 +610,7 @@ extern PRFileMap * _md_ImportFileMapFromString(
     PRIntn      prot; /* really: a PRFileMapProtect */
     PRFileDesc  *fd;
     PRFileMap   *fm;
-    PRFileInfo  info;
+    PRFileInfo64 info;
 
     PR_sscanf( fmstring, "%ld:%d", &osfd, &prot );
 
@@ -620,10 +622,10 @@ extern PRFileMap * _md_ImportFileMapFromString(
         goto Finished;
     }
 
-    rc = PR_GetOpenFileInfo( fd, &info );
+    rc = PR_GetOpenFileInfo64( fd, &info );
     if ( PR_FAILURE == rc )  {
         PR_LOG( _pr_shma_lm, PR_LOG_DEBUG,
-            ("_md_ImportFileMapFromString(): PR_GetOpenFileInfo() failed"));    
+            ("_md_ImportFileMapFromString(): PR_GetOpenFileInfo64() failed"));    
         goto Finished;
     }
 
