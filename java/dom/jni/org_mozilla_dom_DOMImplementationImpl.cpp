@@ -152,13 +152,15 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_DOMImplementationImpl_hasFeature
   if (!feature)
       return JNI_FALSE;
 
-  nsString* version = new nsString();
+  nsString* version;
   if (jversion) {
       version = JavaDOMGlobals::GetUnicode(env, jversion);
       if (!version) {
 	  nsString::Recycle(feature);
 	  return JNI_FALSE;
       }
+  } else {
+      version = new nsString();
   }
 
   PRBool ret = PR_FALSE;
