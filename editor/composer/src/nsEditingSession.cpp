@@ -74,6 +74,7 @@
 #include "nsIPlaintextEditor.h"
 
 #include "nsIDOMNSDocument.h"
+#include "nsIScriptContext.h"
 
 #include "nsEditorParserObserver.h"
 
@@ -148,6 +149,27 @@ nsEditingSession::MakeWindowEditable(nsIDOMWindow *aWindow,
   mEditorType.Truncate();
   mEditorFlags = 0;
 
+  // disable plugins
+  nsCOMPtr<nsIDocShell> docShell;
+  nsresult rv = GetDocShellFromWindow(aWindow, getter_AddRefs(docShell));
+  if (NS_FAILED(rv)) return rv;
+
+  rv = docShell->SetAllowPlugins(PR_FALSE);
+  if (NS_FAILED(rv)) return rv;
+
+  // Disable JavaScript in this document:
+  nsCOMPtr<nsIScriptGlobalObject> sgo (do_QueryInterface(aWindow));
+  if (sgo)
+  {
+    nsCOMPtr<nsIScriptContext> scriptContext;
+    sgo->GetContext(getter_AddRefs(scriptContext));
+    if (scriptContext)
+    {
+      rv = scriptContext->SetScriptsEnabled(PR_FALSE, PR_TRUE);
+      if (NS_FAILED(rv)) return rv;
+    }
+  }
+
   // Always remove existing editor
   TearDownEditorOnWindow(aWindow);
   
@@ -159,7 +181,7 @@ nsEditingSession::MakeWindowEditable(nsIDOMWindow *aWindow,
     aEditorType = DEFAULT_EDITOR_TYPE;
   mEditorType = aEditorType;
 
-  nsresult rv = PrepareForEditing();
+  rv = PrepareForEditing();
   if (NS_FAILED(rv)) return rv;  
   
   nsCOMPtr<nsIEditorDocShell> editorDocShell;
