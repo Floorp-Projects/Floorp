@@ -152,7 +152,7 @@ Contributor(s): ______________________________________. -->
           <box autostretch="never" valign="middle" flex="1" id="urlbar-container">
     	      <image id="page-proxy-button" ondraggesture="nsDragAndDrop.startDrag(event, proxyIconDNDObserver);"/> 
 	          <textfield autocomplete="true" timeout="300" class="plain" 
-	                     searchSessionType="urlbar,addrbook" id="urlbar" tooltip="aTooltip" tooltiptext="&locationBar.tooltip;"
+	                     searchSessionType="urlbar" id="urlbar" tooltip="aTooltip" tooltiptext="&locationBar.tooltip;"
                          onclick="if (event.button==1) URLBarLeftClickHandler(event);"
                          onblur="URLBarBlurHandler(event);"
 						 onkeypress="if( event.keyCode == 13 ) { addToUrlbarHistory(); BrowserLoadURL(); }" flex="1"/>  
