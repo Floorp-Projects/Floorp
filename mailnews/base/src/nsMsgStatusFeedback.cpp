@@ -152,9 +152,9 @@ void nsMsgStatusFeedback::BeginObserving()
     nsAutoString topic1(prefix);
     topic1 += ";status";
     rv = svc->AddObserver( this, topic1.GetUnicode() );
-   }
+  }
 
-    return;
+  return;
 }
 
 void nsMsgStatusFeedback::EndObserving() 
@@ -308,18 +308,27 @@ nsMsgStatusFeedback::StopMeteors()
   return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgStatusFeedback::CloseWindow()
+{
+  EndObserving();
+  mWindow = nsnull;
+  mWebShell = nsnull;
+  mWebShellWindow = nsnull;
+
+  return NS_OK;
+}
 
 NS_IMETHODIMP nsMsgStatusFeedback::SetWebShell(nsIWebShell *shell, nsIDOMWindow *aWindow)
 {
 	if (aWindow)
 	{
 		nsCOMPtr<nsIScriptGlobalObject>
-			globalScript(do_QueryInterface(aWindow));
-      nsCOMPtr<nsIDocShell> docShell;
+	  globalScript(do_QueryInterface(aWindow));
+    nsCOMPtr<nsIDocShell> docShell;
 		if (globalScript)
 			globalScript->GetDocShell(getter_AddRefs(docShell));
 		nsCOMPtr<nsIWebShell> webshell(do_QueryInterface(docShell));
-      nsCOMPtr<nsIWebShell> rootWebshell;
+    nsCOMPtr<nsIWebShell> rootWebshell;
 		if (webshell)
 		{
 			webshell->GetRootWebShell(mWebShell);
@@ -348,7 +357,11 @@ static int debugSetAttr = 0;
 nsresult nsMsgStatusFeedback::setAttribute( nsIWebShell *shell,
                               const char *id,
                               const char *name,
-                              const nsString &value ) {
+                              const nsString &value ) 
+{
+    if (!mWebShell)
+      return NS_OK;
+
     nsresult rv = NS_OK;
 
     nsCOMPtr<nsIContentViewer> cv;
@@ -365,7 +378,7 @@ nsresult nsMsgStatusFeedback::setAttribute( nsIWebShell *shell,
                 // Up-cast.
                 nsCOMPtr<nsIDOMXULDocument> xulDoc( do_QueryInterface(doc) );
                 if ( xulDoc ) 
-				{
+				        {
                     // Find specified element.
                     nsCOMPtr<nsIDOMElement> elem;
                     rv = xulDoc->GetElementById( id, getter_AddRefs(elem) );
@@ -374,7 +387,7 @@ nsresult nsMsgStatusFeedback::setAttribute( nsIWebShell *shell,
                         rv = elem->SetAttribute( name, value );
                         if ( debugSetAttr ) {
                             char *p = value.ToNewCString();
-							printf("setting busy to %s\n", p);
+							              printf("setting busy to %s\n", p);
                             delete [] p;
                         }
                         if ( rv != NS_OK ) {

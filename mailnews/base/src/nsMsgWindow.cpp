@@ -48,10 +48,7 @@ nsMsgWindow::nsMsgWindow()
 
 nsMsgWindow::~nsMsgWindow()
 {
-  nsresult rv = NS_OK;
-  NS_WITH_SERVICE(nsIURILoader, dispatcher, NS_URI_LOADER_PROGID, &rv);
-  if (NS_SUCCEEDED(rv)) 
-    rv = dispatcher->UnRegisterContentListener(this);
+  CloseWindow();
 }
 
 nsresult nsMsgWindow::Init()
@@ -75,6 +72,21 @@ nsresult nsMsgWindow::Init()
   }
   
   return rv;
+}
+
+NS_IMETHODIMP nsMsgWindow::CloseWindow()
+{
+  nsresult rv = NS_OK;
+  NS_WITH_SERVICE(nsIURILoader, dispatcher, NS_URI_LOADER_PROGID, &rv);
+  if (NS_SUCCEEDED(rv)) 
+    rv = dispatcher->UnRegisterContentListener(this);
+
+  // make sure the status feedback object
+  // knows the window is going away...
+  if (mStatusFeedback)
+    mStatusFeedback->CloseWindow(); 
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgWindow::GetStatusFeedback(nsIMsgStatusFeedback * *aStatusFeedback)

@@ -63,7 +63,7 @@ protected:
   PRBool mQueuedMeteorStops;
   nsCOMPtr<nsITimer> mStartTimer;
   nsCOMPtr<nsITimer> mStopTimer;
-  
+
   void BeginObserving();
   void EndObserving();
 
