@@ -1606,7 +1606,8 @@ nsGenericHTMLElement::GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
     case eHTMLUnit_Percent:
       {
         nsAutoString intStr;
-        intStr.AppendInt(PRInt32(value->GetPercentValue() * 100.0f));
+        float percentVal = value->GetPercentValue() * 100.0f;
+        intStr.AppendInt(NSToCoordRoundExclusive(percentVal));
 
         aResult.Assign(intStr);
         aResult.Append(PRUnichar('%'));
@@ -2202,10 +2203,13 @@ nsGenericHTMLElement::ValueOrPercentToString(const nsHTMLValue& aValue,
       aResult.Append(intStr);
       return PR_TRUE;
     case eHTMLUnit_Percent:
-      intStr.AppendInt(PRInt32(aValue.GetPercentValue() * 100.0f));
+      {
+      float percentVal = aValue.GetPercentValue() * 100.0f;
+      intStr.AppendInt(NSToCoordRoundExclusive(percentVal));
       aResult.Append(intStr);
       aResult.Append(PRUnichar('%'));
       return PR_TRUE;
+      }
     default:
       break;
   }
@@ -2228,10 +2232,13 @@ nsGenericHTMLElement::ValueOrPercentOrProportionalToString(const nsHTMLValue& aV
     aResult.Append(intStr);
     return PR_TRUE;
   case eHTMLUnit_Percent:
-    intStr.AppendInt(PRInt32(aValue.GetPercentValue() * 100.0f));
+    {
+    float percentVal = aValue.GetPercentValue() * 100.0f;
+    intStr.AppendInt(NSToCoordRoundExclusive(percentVal));
     aResult.Append(intStr);
     aResult.Append(NS_LITERAL_STRING("%"));
     return PR_TRUE;
+    }
   case eHTMLUnit_Proportional:
     intStr.AppendInt(aValue.GetIntValue());
     aResult.Append(intStr);
