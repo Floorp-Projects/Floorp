@@ -274,10 +274,10 @@ protected:
 	PRBool		mIMEIsComposing;
 	nsCString*	mIMECompString;
 	nsString*	mIMECompUnicode;
-	char*		mIMEAttributeString;
+	PRUint8*	mIMEAttributeString;
 	PRInt32		mIMEAttributeStringLength;
 	PRInt32		mIMEAttributeStringSize;
-	char*		mIMECompClauseString;
+	PRUint32*	mIMECompClauseString;
 	PRInt32		mIMECompClauseStringLength;
 	PRInt32		mIMECompClauseStringSize;
 	long		mIMECursorPosition;
