@@ -35,6 +35,8 @@
 
  ***** END LICENSE BLOCK ***** -->
 
+<!ENTITY window.title "about:config">
+
 <!ENTITY filterPrefs.label "Filter:">
 <!ENTITY filterPrefs.accesskey "I">
 <!ENTITY showAll.label "Show All">

@@ -313,7 +313,6 @@ function onConfigLoad()
 {
   // Load strings
   gConfigBundle = document.getElementById("configBundle");
-  document.title = gConfigBundle.getString("title");
 
   gLockStrs[PREF_IS_DEFAULT_VALUE] = gConfigBundle.getString("default");
   gLockStrs[PREF_IS_USER_SET] = gConfigBundle.getString("user");
