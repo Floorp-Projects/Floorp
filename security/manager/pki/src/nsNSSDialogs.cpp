@@ -118,7 +118,9 @@ nsNSSDialogs::~nsNSSDialogs()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsNSSDialogs, nsINSSDialogs)
+NS_IMPL_ISUPPORTS3(nsNSSDialogs, nsINSSDialogs, 
+                                 nsITokenPasswordDialogs,
+                                 nsIBadCertListener)
 
 nsresult
 nsNSSDialogs::SetPassword(nsIInterfaceRequestor *ctx,
@@ -146,4 +148,31 @@ nsNSSDialogs::SetPassword(nsIInterfaceRequestor *ctx,
   *_canceled = (status == 0)?PR_TRUE:PR_FALSE;
 
   return rv;
+}
+
+/* boolean unknownIssuer (in nsIChannelSecurityInfo socketInfo, 
+                          in nsIX509Cert cert); */
+NS_IMETHODIMP 
+nsNSSDialogs::UnknownIssuer(nsIChannelSecurityInfo *socketInfo, 
+                            nsIX509Cert *cert, PRBool *_retval)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* boolean mismatchDomain (in nsIChannelSecurityInfo socketInfo, 
+                           in nsIX509Cert cert); */
+NS_IMETHODIMP 
+nsNSSDialogs::MismatchDomain(nsIChannelSecurityInfo *socketInfo, 
+                             nsIX509Cert *cert, PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* boolean certExpired (in nsIChannelSecurityInfo socketInfo, 
+                        in nsIX509Cert cert); */
+NS_IMETHODIMP 
+nsNSSDialogs::CertExpired(nsIChannelSecurityInfo *socketInfo, 
+                          nsIX509Cert *cert, PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
 }

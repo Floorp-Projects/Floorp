@@ -42,6 +42,9 @@
 #include "nsIServiceManager.h"
 #include "nsIWebProgressListener.h"
 #include "nsIChannel.h"
+#include "nsIBadCertListener.h"
+
+#include "nsNSSHelper.h"
 
 #include "ssl.h"
 #include "secerr.h"
@@ -424,53 +427,43 @@ nsCertErrorNeedsDialog(int error)
 }
 
 static PRBool
-nsUnknownIssuerDialog(nsNSSSocketInfo *infoObject, 
-                     PRFileDesc      *socket)
-{
-  return PR_FALSE;
-}
-
-static PRBool
-nsBadCertDomainDialog(nsNSSSocketInfo *infoObject, 
-                      PRFileDesc      *socket)
-{
-  return PR_FALSE;
-}
-
-static PRBool
-nsExpiredCertDialog(nsNSSSocketInfo *infoObject, 
-                    PRFileDesc      *socket)
-{
-  return PR_FALSE;
-}
-
-
-static PRBool
 nsContinueDespiteCertError(nsNSSSocketInfo *infoObject,
-                           PRFileDesc      *socket,
+                           PRFileDesc      *sslSocket,
                            int              error)
 {
   PRBool retVal = PR_FALSE;
+  nsIBadCertListener *badCertHandler;
+  nsresult rv;
+
+  rv = getNSSDialogs((void**)&badCertHandler, 
+                     NS_GET_IID(nsIBadCertListener));
+  if (NS_FAILED(rv)) 
+    return PR_FALSE;
+  nsIChannelSecurityInfo *csi =  NS_STATIC_CAST(nsIChannelSecurityInfo*,
+                                                infoObject);
+
   switch (error) {
   case SEC_ERROR_UNKNOWN_ISSUER:
   case SEC_ERROR_CA_CERT_INVALID:
   case SEC_ERROR_UNTRUSTED_ISSUER:
-    retVal = nsUnknownIssuerDialog(infoObject, socket);
+    rv = badCertHandler->UnknownIssuer(csi, nsnull, &retVal);
     break;
   case SSL_ERROR_BAD_CERT_DOMAIN:
-    retVal = nsBadCertDomainDialog(infoObject, socket);
+    rv = badCertHandler->MismatchDomain(csi, nsnull, &retVal);
     break;
   case SEC_ERROR_EXPIRED_CERTIFICATE:
-    retVal = nsExpiredCertDialog(infoObject, socket);
+    rv = badCertHandler->CertExpired(csi, nsnull, & retVal);
     break;
   default:
+    rv = NS_ERROR_FAILURE;
     break;
   }
-  return retVal;
+  NS_RELEASE(badCertHandler);
+  return NS_FAILED(rv) ? PR_FALSE : retVal;
 }
 
 static SECStatus
-nsNSSBadCertHandler(void *arg, PRFileDesc *socket)
+nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
 {
   SECStatus rv = SECFailure;
   int error;
@@ -482,7 +475,7 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *socket)
       // Some weird error we don't really know how to handle.
       break;
     }
-    if (!nsContinueDespiteCertError(infoObject, socket, error)) {
+    if (!nsContinueDespiteCertError(infoObject, sslSocket, error)) {
       break;
     }
     rv = SECSuccess; //This will eventually re-verify the cert to

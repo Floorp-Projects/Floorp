@@ -25,12 +25,12 @@
 interface nsIInterfaceRequestor;
 
 /**
- * nsINSSDialogs - a collection of functions that
- *   implement activities that may require interaction
- *   with the user.
+ * nsITokenPasswordDialogs
+ *  This is the interface for setting and changin password
+ *  on a PKCS11 token.
  */
-[scriptable, uuid(4a8c5584-1dd2-11b2-bfff-f232dbfab27e)]
-interface nsINSSDialogs : nsISupports
+[scriptable, uuid(be26b580-1dd1-11b2-9946-c598d0d07727)]
+interface nsITokenPasswordDialogs : nsISupports
 {
   /**
    * setPassword - sets the password/PIN on the named token.
@@ -39,6 +39,23 @@ interface nsINSSDialogs : nsISupports
    */
   void setPassword(in nsIInterfaceRequestor ctx, in wstring tokenName,
                    out boolean canceled);
+};
+
+
+/**
+ * nsINSSDialogs - a collection of functions that
+ *   implement activities that may require interaction
+ *   with the user.
+ */
+[scriptable, uuid(4a8c5584-1dd2-11b2-bfff-f232dbfab27e)]
+interface nsINSSDialogs : nsISupports
+{
+  /**
+   * This is the base class for NSSDialogs.  It must support all
+   * the interfaces for dialogs that it wants to support.
+   * 
+   * nsITokenPasswordDialogs is one such implementation.
+   */
 };
 
 /**

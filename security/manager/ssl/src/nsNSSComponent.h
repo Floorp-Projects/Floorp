@@ -34,6 +34,8 @@
 #include "nsString.h"
 #include "nsIStringBundle.h"
 
+#include "nsNSSHelper.h"
+
 #define SECURITY_STRING_BUNDLE_URL "chrome://communicator/locale/security.properties"
 
 #define NS_NSSCOMPONENT_CID \
