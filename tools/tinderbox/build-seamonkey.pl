@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.23 $ ';
+$Version = '$Revision: 1.24 $ ';
 
 
 sub PrintUsage {
@@ -694,7 +694,7 @@ sub RunAliveTest {
       print LOG $_;
     }
     close READRUNLOG;
-    print LOG "--------------- End of Output -------------------- \n";
+    print LOG "--------------- End of AliveTest Output -------------------- \n";
     return 333;
   }
   
@@ -709,7 +709,7 @@ sub RunAliveTest {
     print LOG $_;
   }
   close READRUNLOG;
-  print LOG "--------------- End of Output -------------------- \n";
+  print LOG "--------------- End of AliveTest Output -------------------- \n";
   return 0;
 }
 
@@ -719,18 +719,15 @@ sub RunBloatTest {
   my $status = 0;
   $fe = 'x' unless defined $fe;
 
-  print "in runBloatTest\n";
+  print LOG "in runBloatTest\n";
 
   $ENV{LD_LIBRARY_PATH} = "$BuildDir/$TopLevel/$Topsrcdir/dist/bin";
   $ENV{MOZILLA_FIVE_HOME} = $ENV{LD_LIBRARY_PATH};
 
   # Turn on ref counting to track leaks (bloaty tool).
-  $ENV{NSPR_LOG_MODULES} = "xpcomrefcnt:1";
   $ENV{XPCOM_MEM_BLOAT_LOG} = "1";
 
-  $Binary = "$BuildDir/$TopLevel/$Topsrcdir/$RelBinaryName";
-  print LOG "$Binary\n";
-
+  $Binary    = "$BuildDir/$TopLevel/$Topsrcdir/$RelBinaryName";
   $BinaryDir = "$BuildDir/$TopLevel/$Topsrcdir/dist/bin";
   $BinaryLog = $BuildDir . '/bloat-cur.log';
   
@@ -749,8 +746,13 @@ sub RunBloatTest {
     open STDERR,">&STDOUT";
     select STDERR; $| = 1; # make STDERR unbuffered
 
-    $cmd = "$Binary -f bloaturls.txt";
-    exec ($cmd);
+	if (-e "bloaturls.txt") {
+	  $cmd = "$Binary -f bloaturls.txt";
+	  print LOG $cmd;
+	  exec ($cmd);
+	} else {
+	  print LOG "ERROR: bloaturls.txt does not exist.";
+	}
 
     close STDOUT;
     close STDERR;
@@ -772,21 +774,22 @@ sub RunBloatTest {
   print LOG "Client quit Bloat Test with status $status\n";
   if ($status == 0) {
     print LOG "$Binary has crashed or quit on the BloatTest.  Turn the tree orange now.\n";
-    print LOG "----------- failure Output from mozilla-bin for bloat stats --------------- \n";
+    print LOG "----------- failure Output from mozilla-bin for BloatTest --------------- \n";
     open READRUNLOG, "$BinaryLog";
     while (<READRUNLOG>) {
       print $_;
       print LOG $_;
     }
     close READRUNLOG;
-    print LOG "--------------- End of Output -------------------- \n";
+    print LOG "--------------- End of BloatTest Output -------------------- \n";
 	return 333;
   }
 
   print LOG "<a href=#bloat>\n######################## BLOAT STATISTICS\n";
 
   
-  open DIFF, "$BuildDir/../bloatdiff.pl $BuildDir/bloat-prev.log $BinaryLog |" or die "Unable to run bloatdiff.pl";
+  open DIFF, "$BuildDir/../bloatdiff.pl $BuildDir/bloat-prev.log $BinaryLog |" or 
+	die "Unable to run bloatdiff.pl";
 
   while (my $line = <DIFF>) {
     print LOG $line;
@@ -794,14 +797,14 @@ sub RunBloatTest {
   close(DIFF);
   print LOG "######################## END BLOAT STATISTICS\n</a>\n";
   
-  print LOG "----------- success output from mozilla-bin for bloat stats --------------- \n";
+  print LOG "----------- success output from mozilla-bin for BloatTest --------------- \n";
   open READRUNLOG, "$BinaryLog";
   while (<READRUNLOG>) {
     print $_;
     print LOG $_;
   }
   close READRUNLOG;
-  print LOG "--------------- End of Output -------------------- \n";
+  print LOG "--------------- End of BloatTest Output -------------------- \n";
   return 0;
   
 }
