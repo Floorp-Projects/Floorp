@@ -318,13 +318,13 @@ public:
   // nsIDOMNSLocation
   NS_DECL_NSIDOMNSLOCATION
 
-  nsresult SetHrefWithContext(JSContext* cx, const nsAReadableString& aHref);
-
 protected:
   nsresult SetURL(nsIURI* aURL);
-  nsresult SetHrefWithBase(const nsAReadableString& aHref,
-                           nsIURI* aBase,
+  nsresult SetHrefWithBase(const nsAReadableString& aHref, nsIURI* aBase,
                            PRBool aReplace);
+  nsresult SetHrefWithContext(JSContext* cx, const nsAReadableString& aHref,
+                              PRBool aReplace);
+
   nsresult GetSourceURL(JSContext* cx,
                         nsIURI** sourceURL);
   nsresult CheckURL(nsIURI *url, nsIDocShellLoadInfo** aLoadInfo);
