@@ -139,7 +139,7 @@ public:
   virtual PRBool IsEmpty(void);
   virtual void SetEmpty(PRBool aValue);
 
-  virtual const nsAString& GetStringValue();
+  virtual const nsSubstring& GetStringValue();
   virtual void GetSource(nsString& anOutputString);
   virtual void AppendSourceTo(nsAString& anOutputString);
 
@@ -181,7 +181,7 @@ public:
   virtual PRInt32 GetTypeID(void);
   virtual PRInt32 GetTokenType(void);
 
-  virtual const nsAString& GetStringValue();
+  virtual const nsSubstring& GetStringValue();
   virtual void GetSource(nsString& anOutputString);
   virtual void AppendSourceTo(nsAString& anOutputString);
 
@@ -206,7 +206,7 @@ public:
   CCommentToken(const nsAString& aString);
   virtual nsresult Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
   virtual PRInt32 GetTokenType(void);
-  virtual const nsAString& GetStringValue(void);
+  virtual const nsSubstring& GetStringValue(void);
   virtual void AppendSourceTo(nsAString& anOutputString);
 
   nsresult ConsumeStrictComment(nsScanner& aScanner);
@@ -238,7 +238,7 @@ public:
                                 nsScanner& aScanner);
   static PRInt32 TranslateToUnicodeStr(PRInt32 aValue,nsString& aString);
 
-  virtual const nsAString& GetStringValue(void);
+  virtual const nsSubstring& GetStringValue(void);
   virtual void GetSource(nsString& anOutputString);
   virtual void AppendSourceTo(nsAString& anOutputString);
 
@@ -262,7 +262,7 @@ public:
   CWhitespaceToken(const nsAString& aString);
   virtual nsresult Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
   virtual PRInt32 GetTokenType(void);
-  virtual const nsAString& GetStringValue(void);
+  virtual const nsSubstring& GetStringValue(void);
 
 protected:
   nsString mTextValue;
@@ -288,7 +288,7 @@ public:
   virtual PRInt32 GetTokenType(void);
   virtual PRInt32 GetTextLength(void);
   virtual void CopyTo(nsAString& aStr);
-  virtual const nsAString& GetStringValue(void);
+  virtual const nsSubstring& GetStringValue(void);
   virtual void Bind(nsScanner* aScanner, nsScannerIterator& aStart,
                     nsScannerIterator& aEnd);
   virtual void Bind(const nsAString& aStr);
@@ -313,7 +313,7 @@ public:
   CCDATASectionToken(const nsAString& aString);
   virtual nsresult Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
   virtual PRInt32 GetTokenType(void);
-  virtual const nsAString& GetStringValue(void);
+  virtual const nsSubstring& GetStringValue(void);
 
 protected:
   nsString mTextValue;
@@ -334,7 +334,7 @@ public:
   CMarkupDeclToken(const nsAString& aString);
   virtual nsresult Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
   virtual PRInt32 GetTokenType(void);
-  virtual const nsAString& GetStringValue(void);
+  virtual const nsSubstring& GetStringValue(void);
 
 protected:
   nsScannerSubstring  mTextValue;
@@ -359,13 +359,13 @@ public:
   ~CAttributeToken() {}
   virtual nsresult Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
   virtual PRInt32 GetTokenType(void);
-  virtual const nsAString&     GetKey(void); // XXX {return mTextKey;}
+  const nsSubstring&     GetKey(void) { return mTextKey.AsString(); }
   virtual void SetKey(const nsAString& aKey);
   virtual void BindKey(nsScanner* aScanner, nsScannerIterator& aStart,
                        nsScannerIterator& aEnd);
-  virtual const nsAString& GetValue(void) {return mTextValue;}
+  const nsString& GetValue(void) {return mTextValue;}
   virtual void SanitizeKey();
-  virtual const nsAString& GetStringValue(void);
+  virtual const nsSubstring& GetStringValue(void);
   virtual void GetSource(nsString& anOutputString);
   virtual void AppendSourceTo(nsAString& anOutputString);
 
@@ -392,7 +392,7 @@ public:
   CNewlineToken();
   virtual nsresult Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
   virtual PRInt32 GetTokenType(void);
-  virtual const nsAString& GetStringValue(void);
+  virtual const nsSubstring& GetStringValue(void);
 
   static void AllocNewline();
   static void FreeNewline();
@@ -414,7 +414,7 @@ public:
   CInstructionToken(const nsAString& aString);
   virtual nsresult Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
   virtual PRInt32 GetTokenType(void);
-  virtual const nsAString& GetStringValue(void);
+  virtual const nsSubstring& GetStringValue(void);
 
 protected:
   nsString mTextValue;
@@ -435,7 +435,7 @@ public:
   CDoctypeDeclToken(const nsAString& aString,eHTMLTags aTag=eHTMLTag_unknown);
   virtual nsresult Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
   virtual PRInt32 GetTokenType(void);
-  virtual const nsAString& GetStringValue(void);
+  virtual const nsSubstring& GetStringValue(void);
   virtual void SetStringValue(const nsAString& aStr);
 
 protected:
