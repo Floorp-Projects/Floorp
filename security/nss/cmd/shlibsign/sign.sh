@@ -35,13 +35,13 @@ OpenVMS)
     rm $temp $temp2
     ;;
 *)
-    LIBPATH=`(cd ${1}/lib; pwd)`
+    LIBPATH=`(cd ${1}/lib; pwd)`:$LIBPATH
     export LIBPATH
-    SHLIB_PATH=${1}/lib
+    SHLIB_PATH=${1}/lib:$SHLIB_PATH
     export SHLIB_PATH
-    LD_LIBRARY_PATH=${1}/lib
+    LD_LIBRARY_PATH=${1}/lib:$LD_LIBRARY_PATH
     export LD_LIBRARY_PATH
-    DYLD_LIBRARY_PATH=${1}/lib
+    DYLD_LIBRARY_PATH=${1}/lib:$DYLD_LIBRARY_PATH
     export DYLD_LIBRARY_PATH
     LIBRARY_PATH=${1}/lib:$LIBRARY_PATH
     export LIBRARY_PATH
