@@ -7,6 +7,7 @@ file:///s|/mozilla/layout/html/tests/formctls/bugs/bug113245.html
 file:///s|/mozilla/layout/html/tests/formctls/bugs/bug117606.html
 file:///s|/mozilla/layout/html/tests/formctls/bugs/bug17450.html
 file:///s|/mozilla/layout/html/tests/formctls/bugs/bug20322.html
+file:///s|/mozilla/layout/html/tests/formctls/bugs/bug222864.html
 file:///s|/mozilla/layout/html/tests/formctls/bugs/bug22708.html
 file:///s|/mozilla/layout/html/tests/formctls/bugs/bug28598.html
 file:///s|/mozilla/layout/html/tests/formctls/bugs/bug33327.html
