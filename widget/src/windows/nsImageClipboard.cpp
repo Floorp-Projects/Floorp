@@ -185,8 +185,8 @@ nsImageToClipboard::CreateFromImage ( nsIImage* inImage, HANDLE* outBitmap )
 
     // Create the buffer where we'll copy the image bits (and header) into and lock it
     BITMAPINFOHEADER*  header = nsnull;
-    outBitmap = (HANDLE)::GlobalAlloc(GMEM_MOVEABLE | GMEM_DDESHARE | GMEM_ZEROINIT, imageSize);
-    if (outBitmap && (header = (BITMAPINFOHEADER*)::GlobalLock((HGLOBAL) outBitmap)) )
+    *outBitmap = (HANDLE)::GlobalAlloc(GMEM_MOVEABLE | GMEM_DDESHARE | GMEM_ZEROINIT, imageSize);
+    if (*outBitmap && (header = (BITMAPINFOHEADER*)::GlobalLock((HGLOBAL) *outBitmap)) )
     {
       RGBQUAD *pRGBQUAD = (RGBQUAD *)&header[1];
       PBYTE bits = (PBYTE)&pRGBQUAD[imageHeader->biClrUsed];
