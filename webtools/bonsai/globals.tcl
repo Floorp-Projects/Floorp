@@ -73,11 +73,16 @@ if {[info exists tcl_version] && $tcl_version >= 8.0} {
 proc NOTDEF {foo} {
 }
 
+
 proc ConnectToDatabase {} {
     global mysqlhandle mysqluser mysqlpassword
     if {![info exists mysqlhandle]} {
         if { $mysqlpassword == "" } {
-            set mysqlhandle [mysqlconnect -user "$mysqluser"]
+            if { $mysqluser == "" } {
+                set mysqlhandle [mysqlconnect]
+            } else {
+                set mysqlhandle [mysqlconnect -user "$mysqluser"]
+            }
         } else {
             set mysqlhandle [mysqlconnect -user "$mysqluser" -password "$mysqlpassword"]
         }

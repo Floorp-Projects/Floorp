@@ -37,7 +37,8 @@ set userdomain somedomain
 
 # User and password for access to the MySQL bonsai database
 # use empty string ("") for password if you want to access the database
-# without using a password (not recommended)
+# without using a password (not recommended).  If you are using an older
+# version of mysqltcl, you may also need to set the username to be "".
 set mysqluser nobody
 set mysqlpassword ""
 
