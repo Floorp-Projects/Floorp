@@ -101,19 +101,20 @@ box#searchbutton {
 } 
 
 #search-button { 
-	list-style-image:none;
-	margin: 0px;
-	margin-right: 2px;
+	margin: 0px 2px 2px 0px;
 	background-color: #99CCCC;
-	border: 3px solid #99CCCC;
+  padding: 3px;
 	-moz-border-radius: 4px;
 } 
+
+#search-button:active {
+	margin: 1px 1px 1px 1px;
+}
 
 #action-popup { 
 	list-style-image:url("chrome://global/skin/scroll-down.gif"); 
 	background-color: #99CCCC;
 	margin: 0px; 
-	border: 2px solid #99CCCC;
 	-moz-border-radius: 4px;
 }
 /*end urlbar stuff*/
