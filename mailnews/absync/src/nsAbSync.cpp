@@ -1140,7 +1140,7 @@ nsAbSync::AnalyzeAllRecords(nsIAddrDatabase *aDatabase, nsIAbDirectory *director
   do
   {
     nsXPIDLCString pathBuf;
-    rv = lockFile->GetPath(getter_Copies(pathBuf));
+    rv = historyFile->GetPath(getter_Copies(pathBuf));
     if (NS_FAILED(rv)) break;
     rv = NS_NewFileSpec(getter_AddRefs(mHistoryFile));
     if (NS_FAILED(rv)) break;
