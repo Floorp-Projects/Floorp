@@ -407,10 +407,12 @@ sub SetAgentString
 	rename (":mozilla:cmd:macfe:restext:agent.r", ":mozilla:cmd:macfe:restext:custom.r");
 }
 
-sub SetTimeBomb
+sub SetTimeBomb($$)
+		
 {
-
-  system("perl :mozilla:config:mac-set-timebomb.pl");
+  my ($warn_days, $bomb_days) = @_;
+  
+  system("perl :mozilla:config:mac-set-timebomb.pl $warn_days $bomb_days");
 	
 }
 

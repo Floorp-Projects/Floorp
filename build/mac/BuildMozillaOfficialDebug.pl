@@ -42,7 +42,7 @@ SetBuildNumber();
 
 # SetAgentString();
 
-SetTimeBomb();
+SetTimeBomb(0, 30);
 
 # Now build the projects
 BuildMozilla();
