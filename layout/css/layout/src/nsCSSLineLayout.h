@@ -22,6 +22,9 @@
 #include "nsIFrame.h"
 #include "nsVoidArray.h"
 
+struct nsStyleDisplay;
+struct nsStylePosition;
+
 // This structure represents a run of text. In mText are the
 // nsIFrame's that are considered text frames.
 struct nsCSSTextRun {
@@ -90,6 +93,9 @@ public:
   }
 
   void AddFloater(nsIFrame* aFrame);
+
+  static PRBool TreatFrameAsBlock(const nsStyleDisplay* aDisplay,
+                                  const nsStylePosition* aPosition);
 
   nsIPresContext* mPresContext;
   nsISpaceManager* mSpaceManager;
