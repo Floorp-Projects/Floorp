@@ -586,14 +586,14 @@ class nsImapMockChannel : public nsIImapMockChannel, public nsICacheListener
 {
 public:
 
-	NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS
   NS_DECL_NSIIMAPMOCKCHANNEL
   NS_DECL_NSICHANNEL
   NS_DECL_NSIREQUEST
   NS_DECL_NSICACHELISTENER
 	
   nsImapMockChannel();
-	virtual ~nsImapMockChannel();
+  virtual ~nsImapMockChannel();
   static nsresult Create (const nsIID& iid, void **result);
 
 protected:
@@ -619,12 +619,13 @@ protected:
   nsCString m_ContentType;
 
   PRBool mChannelClosed;
-
+  PRBool mReadingFromCache;
   // cache related helper methods
   nsresult OpenCacheEntry(); // makes a request to the cache service for a cache entry for a url
   PRBool ReadFromLocalCache(); // attempts to read the url out of our local (offline) cache....
   nsresult ReadFromImapConnection(); // creates a new imap connection to read the url 
   nsresult ReadFromMemCache(nsICacheEntryDescriptor *entry); // attempts to read the url out of our memory cache
+  nsresult NotifyStartEndReadFromCache(PRBool start);
 
   // we end up daisy chaining multiple nsIStreamListeners into the load process. 
   nsresult SetupPartExtractorListener(nsIImapUrl * aUrl, nsIStreamListener * aConsumer);

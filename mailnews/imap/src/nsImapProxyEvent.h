@@ -123,11 +123,6 @@ public:
                                      nsIImapUrl * aUrl,
                                      PRBool copySucceeded);
 
-    NS_IMETHOD SetUrlState(nsIImapProtocol* aProtocol,
-                           nsIMsgMailNewsUrl* aUrl,
-                           PRBool isRunning,
-                           nsresult statusCode);
-
     nsIImapMiscellaneousSink* m_realImapMiscellaneousSink;
 };
 
@@ -337,18 +332,6 @@ struct CopyNextStreamMessageProxyEvent : public nsImapMiscellaneousSinkProxyEven
     NS_IMETHOD HandleEvent();
     nsCOMPtr<nsIImapUrl> m_Url;
     PRBool m_copySucceeded;
-};
-
-struct SetUrlStateProxyEvent : public nsImapMiscellaneousSinkProxyEvent
-{
-    SetUrlStateProxyEvent(nsImapMiscellaneousSinkProxy* aProxy,
-                          nsIMsgMailNewsUrl* aUrl, PRBool isRunning, 
-                          nsresult statusCode);
-    virtual ~SetUrlStateProxyEvent();
-    NS_IMETHOD HandleEvent();
-    nsCOMPtr<nsIMsgMailNewsUrl> m_url;
-    PRBool m_isRunning;
-    nsresult m_status;
 };
 
 #endif

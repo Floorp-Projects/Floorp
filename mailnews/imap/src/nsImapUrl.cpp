@@ -195,7 +195,8 @@ NS_IMETHODIMP nsImapUrl::GetImapMailFolderSink(nsIImapMailFolderSink **
                                            aImapMailFolderSink)
 {
     NS_ENSURE_ARG_POINTER(aImapMailFolderSink);
-    NS_ENSURE_ARG_POINTER(m_imapMailFolderSink);
+    if (!m_imapMailFolderSink)
+      return NS_ERROR_NULL_POINTER; // no assert, so don't use NS_ENSURE_POINTER.
 
     nsCOMPtr<nsIImapMailFolderSink> folderSink = do_QueryReferent(m_imapMailFolderSink);
     *aImapMailFolderSink = folderSink;

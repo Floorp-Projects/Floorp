@@ -256,11 +256,6 @@ public:
   NS_IMETHOD CopyNextStreamMessage(nsIImapProtocol* aProtocol,
                                    nsIImapUrl * aUrl,
                                    PRBool copySucceeded);
-  NS_IMETHOD SetUrlState(nsIImapProtocol* aProtocol,
-                         nsIMsgMailNewsUrl* aUrl,
-                         PRBool isRunning,
-                         nsresult statusCode);
-
 	NS_IMETHOD MatchName(nsString *name, PRBool *matches);
 	// nsIMsgFilterHitNotification method(s)
 	NS_IMETHOD ApplyFilterHit(nsIMsgFilter *filter, PRBool *applyMore);

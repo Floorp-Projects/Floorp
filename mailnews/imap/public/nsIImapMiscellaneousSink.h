@@ -72,10 +72,6 @@ public:
   NS_IMETHOD CopyNextStreamMessage(nsIImapProtocol* aProtocol,
                                    nsIImapUrl * aUrl,
                                    PRBool copySucceeded) = 0;
-  NS_IMETHOD SetUrlState(nsIImapProtocol* aProtocol,
-                         nsIMsgMailNewsUrl* aUrl,
-                         PRBool isRunning,
-                         nsresult statusCode) = 0;
 };
 
 

@@ -1052,11 +1052,10 @@ PRBool nsImapProtocol::ProcessCurrentURL()
     mailnewsurl->GetSpec(getter_Copies(urlSpec));
     printf("processing url %s\n", (const char *) urlSpec);
 #endif
-  if (NS_SUCCEEDED(rv) && mailnewsurl && m_imapMiscellaneousSink)
+  if (NS_SUCCEEDED(rv) && mailnewsurl && m_imapMailFolderSink)
   {
-    m_imapMiscellaneousSink->SetUrlState(this, mailnewsurl, PR_TRUE,
+    m_imapMailFolderSink->SetUrlState(this, mailnewsurl, PR_TRUE,
                                              NS_OK);
-    WaitForFEEventCompletion();
   }
 
     // if we are set up as a channel, we should notify our channel listener that we are starting...
@@ -1135,14 +1134,13 @@ PRBool nsImapProtocol::ProcessCurrentURL()
     else if (!logonFailed)
         HandleCurrentUrlError(); 
 
-    if (mailnewsurl && m_imapMiscellaneousSink)
+    if (mailnewsurl && m_imapMailFolderSink)
     {
         rv = GetServerStateParser().LastCommandSuccessful() ? NS_OK :
              NS_ERROR_FAILURE;
-        m_imapMiscellaneousSink->SetUrlState(this, mailnewsurl, PR_FALSE,
+        m_imapMailFolderSink->SetUrlState(this, mailnewsurl, PR_FALSE,
                                              rv);  // we are done with this
                                                       // url.
-        WaitForFEEventCompletion();
     }
     else
       NS_ASSERTION(PR_FALSE, "missing url or sink");
@@ -6845,14 +6843,41 @@ nsImapMockChannel::nsImapMockChannel()
   m_cancelStatus = NS_OK;
   mLoadFlags = 0;
   mChannelClosed = PR_FALSE;
+  mReadingFromCache = PR_FALSE;
 }
 
 nsImapMockChannel::~nsImapMockChannel()
 {
+  // if we're offline, we may not get to close the channel correctly.
+  // we need to do this to send the url state change notification in
+  // the case of mem and disk cache reads.
+  if (!mChannelClosed)
+    Close();
+}
+
+nsresult nsImapMockChannel::NotifyStartEndReadFromCache(PRBool start)
+{
+  nsresult rv = NS_OK;
+  mReadingFromCache = start;
+  nsCOMPtr <nsIImapUrl> imapUrl = do_QueryInterface(m_url, &rv);
+  if (imapUrl)
+  {
+    nsCOMPtr <nsIImapMailFolderSink> folderSink;
+    rv = imapUrl->GetImapMailFolderSink(getter_AddRefs(folderSink));
+    if (folderSink)
+    {
+      nsCOMPtr <nsIMsgMailNewsUrl> mailUrl = do_QueryInterface(m_url);
+      rv = folderSink->SetUrlState(nsnull /* we don't know the protocol */, mailUrl, start, NS_OK); 
+    }
+  }
+  return rv;
 }
 
 NS_IMETHODIMP nsImapMockChannel::Close()
 {
+  if (mReadingFromCache)
+    NotifyStartEndReadFromCache(PR_FALSE);
+
   m_channelListener = null_nsCOMPtr();
   mCacheRequest = null_nsCOMPtr();
   m_url = null_nsCOMPtr();
@@ -6997,10 +7022,12 @@ nsImapMockChannel::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry, nsCache
     else
     {
       rv = ReadFromMemCache(entry);
+      NotifyStartEndReadFromCache(PR_TRUE);
       if (access & nsICache::ACCESS_WRITE)
         entry->MarkValid();
       if (NS_SUCCEEDED(rv)) return NS_OK; // kick out if reading from the cache succeeded...
       mailnewsUrl->SetMemCacheEntry(nsnull); // we aren't going to be reading from the cache
+
     }
   } // if we got a valid entry back from the cache...
 
@@ -7187,7 +7214,10 @@ NS_IMETHODIMP nsImapMockChannel::AsyncOpen(nsIStreamListener *listener, nsISuppo
   SetupPartExtractorListener(imapUrl, m_channelListener);
   
   if (ReadFromLocalCache())
+  {
+    (void) NotifyStartEndReadFromCache(PR_TRUE);
     return NS_OK;
+  }
 
   nsImapAction imapAction;
   imapUrl->GetImapAction(&imapAction);

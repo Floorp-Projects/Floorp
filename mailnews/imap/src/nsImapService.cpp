@@ -69,6 +69,8 @@
 #include "nsIMsgParseMailMsgState.h"
 #include "nsMsgLineBuffer.h"
 #include "nsMsgLocalCID.h"
+#include "nsIOutputStream.h"
+#include "xp_core.h"
 
 #define PREF_MAIL_ROOT_IMAP "mail.root.imap"
 
@@ -85,6 +87,176 @@ static const char *uidString = "UID";
 static PRBool gInitialized = PR_FALSE;
 static PRInt32 gMIMEOnDemandThreshold = 15000;
 static PRBool gMIMEOnDemand = PR_FALSE;
+
+#define SAVE_BUF_SIZE 8192
+class nsImapSaveAsListener : public nsIStreamListener
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIREQUESTOBSERVER
+  NS_DECL_NSISTREAMLISTENER
+
+  nsImapSaveAsListener(nsIFileSpec *aFileSpec, PRBool addDummyEnvelope);
+  virtual ~nsImapSaveAsListener();
+  nsresult SetupMsgWriteStream(nsIFileSpec *aFileSpec, PRBool addDummyEnvelope);
+protected:
+  nsCOMPtr<nsIOutputStream> m_outputStream;
+  nsCOMPtr<nsIFileSpec> m_outputFile;
+  PRBool m_addDummyEnvelope;
+  PRBool m_writtenData;
+  PRUint32 m_leftOver;
+  char m_dataBuffer[SAVE_BUF_SIZE+1]; // temporary buffer for this save operation
+
+};
+
+NS_IMPL_ISUPPORTS1(nsImapSaveAsListener, nsIStreamListener)
+
+nsImapSaveAsListener::nsImapSaveAsListener(nsIFileSpec *aFileSpec, PRBool addDummyEnvelope)
+{
+  m_outputFile = aFileSpec;
+  m_writtenData = PR_FALSE;
+  m_addDummyEnvelope = addDummyEnvelope;
+  m_leftOver = 0;
+  NS_INIT_REFCNT();
+}
+
+nsImapSaveAsListener::~nsImapSaveAsListener()
+{
+  if (m_outputStream)
+  {
+    m_outputStream->Flush();
+    m_outputStream->Close();
+  }
+}
+
+NS_IMETHODIMP nsImapSaveAsListener::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImapSaveAsListener::OnStopRequest(nsIRequest *request, nsISupports * aCtxt, nsresult aStatus)
+{
+  return NS_OK;
+} 
+
+NS_IMETHODIMP nsImapSaveAsListener::OnDataAvailable(nsIRequest* request, 
+                                  nsISupports* aSupport,
+                                  nsIInputStream* inStream, 
+                                  PRUint32 srcOffset,
+                                  PRUint32 count)
+{
+  nsresult rv;
+  PRUint32 available;
+  rv = inStream->Available(&available);
+  if (!m_writtenData)
+  {
+    m_writtenData = PR_TRUE;
+    rv = SetupMsgWriteStream(m_outputFile, m_addDummyEnvelope);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+
+  PRUint32 readCount, maxReadCount = SAVE_BUF_SIZE - m_leftOver;
+  PRUint32 writeCount;
+  char *start, *end;
+  PRUint32 linebreak_len = 0;
+
+  while (count > 0)
+  {
+      if (count < (PRInt32) maxReadCount)
+          maxReadCount = count;
+      rv = inStream->Read(m_dataBuffer + m_leftOver,
+                          maxReadCount,
+                          &readCount);
+      if (NS_FAILED(rv)) return rv;
+
+      m_leftOver += readCount;
+      m_dataBuffer[m_leftOver] = '\0';
+
+      start = m_dataBuffer;
+      end = PL_strstr(start, "\r");
+      if (!end)
+          end = PL_strstr(start, "\n");
+      else if (*(end+1) == nsCRT::LF && linebreak_len == 0)
+          linebreak_len = 2;
+
+      if (linebreak_len == 0) // not initialize yet
+          linebreak_len = 1;
+
+      count -= readCount;
+      maxReadCount = SAVE_BUF_SIZE - m_leftOver;
+
+      if (!end && count > (PRInt32) maxReadCount)
+          // must be a very very long line; sorry cannot handle it
+          return NS_ERROR_FAILURE;
+
+      while (start && end)
+      {
+          if (PL_strncasecmp(start, "X-Mozilla-Status:", 17) &&
+              PL_strncasecmp(start, "X-Mozilla-Status2:", 18) &&
+              PL_strncmp(start, "From - ", 7))
+          {
+              rv = m_outputStream->Write(start, end-start, &writeCount);
+              rv = m_outputStream->Write(CRLF, 2, &writeCount);
+          }
+          start = end+linebreak_len;
+          if (start >= m_dataBuffer + m_leftOver)
+          {
+              maxReadCount = SAVE_BUF_SIZE;
+              m_leftOver = 0;
+              break;
+          }
+          end = PL_strstr(start, "\r");
+          if (!end)
+              end = PL_strstr(start, "\n");
+          if (start && !end)
+          {
+              m_leftOver -= (start - m_dataBuffer);
+              nsCRT::memcpy(m_dataBuffer, start,
+                            m_leftOver+1); // including null
+              maxReadCount = SAVE_BUF_SIZE - m_leftOver;
+          }
+      }
+      if (NS_FAILED(rv)) return rv;
+  }
+  return rv;
+  
+  //  rv = m_outputStream->WriteFrom(inStream, PR_MIN(available, count), &bytesWritten);
+}
+
+nsresult nsImapSaveAsListener::SetupMsgWriteStream(nsIFileSpec *aFileSpec, PRBool addDummyEnvelope)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+  rv = aFileSpec->GetOutputStream(getter_AddRefs(m_outputStream));
+  nsFileSpec fileSpec;
+  aFileSpec->GetFileSpec(&fileSpec);
+  fileSpec.Delete(PR_FALSE);
+  if (m_outputStream && addDummyEnvelope)
+  {
+    nsCAutoString result;
+    char *ct;
+    PRUint32 writeCount;
+    time_t now = time ((time_t*) 0);
+    ct = ctime(&now);
+    ct[24] = 0;
+    result = "From - ";
+    result += ct;
+    result += MSG_LINEBREAK;
+    
+    m_outputStream->Write(result.get(), result.Length(),
+                               &writeCount);
+    result = "X-Mozilla-Status: 0001";
+    result += MSG_LINEBREAK;
+    m_outputStream->Write(result.get(), result.Length(),
+                               &writeCount);
+    result =  "X-Mozilla-Status2: 00000000";
+    result += MSG_LINEBREAK;
+    m_outputStream->Write(result.get(), result.Length(),
+                               &writeCount);
+  }
+  return rv;
+}
 
 NS_IMPL_THREADSAFE_ADDREF(nsImapService);
 NS_IMPL_THREADSAFE_RELEASE(nsImapService);
@@ -912,7 +1084,7 @@ NS_IMETHODIMP nsImapService::SaveMessageToDisk(const char *aMessageURI,
       folder->HasMsgOffline(atoi(msgKey), &hasMsgOffline);
 
     nsCAutoString urlSpec;
-  	PRUnichar hierarchySeparator = GetHierarchyDelimiter(folder);
+    PRUnichar hierarchySeparator = GetHierarchyDelimiter(folder);
     rv = CreateStartOfImapUrl(aMessageURI, getter_AddRefs(imapUrl), folder, aUrlListener, urlSpec, hierarchySeparator);
     if (NS_SUCCEEDED(rv)) 
     {
@@ -928,7 +1100,9 @@ NS_IMETHODIMP nsImapService::SaveMessageToDisk(const char *aMessageURI,
         if (mailnewsUrl)
           mailnewsUrl->SetMsgIsInLocalCache(hasMsgOffline);
 
-        return FetchMessage(imapUrl, nsIImapUrl::nsImapSaveMessageToDisk, folder, imapMessageSink, aMsgWindow, aURL, nsnull, msgKey, PR_TRUE);
+        nsImapSaveAsListener *saveAsListener = new nsImapSaveAsListener(aFile, aAddDummyEnvelope);
+        
+        return FetchMessage(imapUrl, nsIImapUrl::nsImapSaveMessageToDisk, folder, imapMessageSink, aMsgWindow, aURL, saveAsListener, msgKey, PR_TRUE);
     }
 
   return rv;
@@ -946,7 +1120,7 @@ nsImapService::FetchMessage(nsIImapUrl * aImapUrl,
                             nsIImapMessageSink * aImapMessage,
                             nsIMsgWindow *aMsgWindow,
                             nsIURI ** aURL,
-							              nsISupports * aDisplayConsumer, 
+                            nsISupports * aDisplayConsumer, 
                             const char *messageIdentifierList,
                             PRBool messageIdsAreUID)
 {
@@ -993,16 +1167,16 @@ nsImapService::FetchMessage(nsIImapUrl * aImapUrl,
 
   PRUnichar hierarchySeparator = GetHierarchyDelimiter(aImapMailFolder); 
 
-	urlSpec.Append("fetch>");
-	urlSpec.Append(messageIdsAreUID ? uidString : sequenceString);
-	urlSpec.Append(">");
-	urlSpec.AppendWithConversion(hierarchySeparator);
+  urlSpec.Append("fetch>");
+  urlSpec.Append(messageIdsAreUID ? uidString : sequenceString);
+  urlSpec.Append(">");
+  urlSpec.AppendWithConversion(hierarchySeparator);
 
-	nsXPIDLCString folderName;
-	GetFolderName(aImapMailFolder, getter_Copies(folderName));
-	urlSpec.Append((const char *) folderName);
-	urlSpec.Append(">");
-	urlSpec.Append(messageIdentifierList);
+  nsXPIDLCString folderName;
+  GetFolderName(aImapMailFolder, getter_Copies(folderName));
+  urlSpec.Append((const char *) folderName);
+  urlSpec.Append(">");
+  urlSpec.Append(messageIdentifierList);
 
   // rhp: If we are displaying this message for the purpose of printing, we
   // need to append the header=print option.
@@ -1010,28 +1184,28 @@ nsImapService::FetchMessage(nsIImapUrl * aImapUrl,
   if (mPrintingOperation)
     urlSpec.Append("?header=print");
 
-	// mscott - this cast to a char * is okay...there's a bug in the XPIDL
-	// compiler that is preventing in string parameters from showing up as
-	// const char *. hopefully they will fix it soon.
-	rv = url->SetSpec(urlSpec.get());
+  // mscott - this cast to a char * is okay...there's a bug in the XPIDL
+  // compiler that is preventing in string parameters from showing up as
+  // const char *. hopefully they will fix it soon.
+  rv = url->SetSpec(urlSpec.get());
 
-	rv = aImapUrl->SetImapAction(aImapAction);
+  rv = aImapUrl->SetImapAction(aImapAction);
   if (aImapMailFolder && aDisplayConsumer)
   {
-		nsCOMPtr<nsIMsgIncomingServer> aMsgIncomingServer;
-		rv = aImapMailFolder->GetServer(getter_AddRefs(aMsgIncomingServer));
-		if (NS_SUCCEEDED(rv) && aMsgIncomingServer)
-		{
-			PRBool interrupted;
-			nsCOMPtr<nsIImapIncomingServer>
-				aImapServer(do_QueryInterface(aMsgIncomingServer, &rv));
-			if (NS_SUCCEEDED(rv) && aImapServer)
-				aImapServer->PseudoInterruptMsgLoad(aImapUrl, &interrupted);
-		}
+    nsCOMPtr<nsIMsgIncomingServer> aMsgIncomingServer;
+    rv = aImapMailFolder->GetServer(getter_AddRefs(aMsgIncomingServer));
+    if (NS_SUCCEEDED(rv) && aMsgIncomingServer)
+    {
+      PRBool interrupted;
+      nsCOMPtr<nsIImapIncomingServer>
+        aImapServer(do_QueryInterface(aMsgIncomingServer, &rv));
+      if (NS_SUCCEEDED(rv) && aImapServer)
+        aImapServer->PseudoInterruptMsgLoad(aImapUrl, &interrupted);
+    }
 	 }
-    // if the display consumer is a docshell, then we should run the url in the docshell.
-    // otherwise, it should be a stream listener....so open a channel using AsyncRead
-    // and the provided stream listener....
+  // if the display consumer is a docshell, then we should run the url in the docshell.
+  // otherwise, it should be a stream listener....so open a channel using AsyncRead
+  // and the provided stream listener....
 
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aDisplayConsumer, &rv));
   if (NS_SUCCEEDED(rv) && docShell)

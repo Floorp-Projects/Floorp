@@ -78,7 +78,9 @@ interface nsIImapMailFolderSink : nsISupports {
 	// these two hokey methods are needed so we can try to make sure the imap url is released
 	// on the UI thread. This in turn ensures that the objects the imap url holds on to
 	// are only released / destroyed from the UI thread.
-	void PrepareToReleaseUrl(in nsIMsgMailNewsUrl aUrl);
-	void ReleaseUrl();
-  void CloseMockChannel(in nsIImapMockChannel aChannel);
+	void prepareToReleaseUrl(in nsIMsgMailNewsUrl aUrl);
+	void releaseUrl();
+  void closeMockChannel(in nsIImapMockChannel aChannel);
+  void setUrlState(in nsIImapProtocol aProtocol, in nsIMsgMailNewsUrl aUrl, in boolean isRunning, in nsresult status);
+
 };
