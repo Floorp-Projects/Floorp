@@ -192,7 +192,7 @@ nsFtpProtocolHandler::RemoveConnection(nsIURI *aKey, nsISupports* *_retval) {
     nsXPIDLCString spec;
     aKey->GetPrePath(getter_Copies(spec));
     
-    nsCStringKey stringKey(spec.get());
+    nsCStringKey stringKey(spec);
     
     // Do not have to addRef since there is only one connection (with this key)
     // in this hash table at any time and that one has been addRef'ed
@@ -217,7 +217,7 @@ nsFtpProtocolHandler::InsertConnection(nsIURI *aKey, nsISupports *aConn) {
 
     nsXPIDLCString spec;
     aKey->GetPrePath(getter_Copies(spec));
-    nsCStringKey stringKey(spec.get());
+    nsCStringKey stringKey(spec);
     
     if (mRootConnectionList)
     {

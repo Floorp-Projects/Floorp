@@ -588,7 +588,7 @@ nsMsgAccountManager::RemoveAccount(nsIMsgAccount *aAccount)
         }
     }
 
-    nsCStringKey hashKey(serverKey.get());
+    nsCStringKey hashKey(serverKey);
     
     nsIMsgIncomingServer* removedServer =
       (nsIMsgIncomingServer*) m_incomingServers.Remove(&hashKey);

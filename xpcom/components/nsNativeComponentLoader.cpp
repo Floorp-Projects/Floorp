@@ -786,7 +786,7 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
     if (NS_FAILED(rv))
         return rv;
 
-    nsCStringKey key(persistentDescriptor.get());
+    nsCStringKey key(persistentDescriptor);
 
     // Get the registry representation of the dll, if any
     nsDll *dll;
