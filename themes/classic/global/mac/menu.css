@@ -43,8 +43,8 @@ menupopup > menu, popup > menu,
 menupopup > menuitem, popup > menuitem
   {
 	font				  : 12px charcoal;
-    max-width             : 250px;
-    min-width             : 0px;
+    max-width             : 42em;
+    min-width             : 14em;
     padding 			  : 0px;
   }
 

@@ -52,8 +52,8 @@ menupopup, popup
 menupopup > menu, popup > menu,
 menupopup > menuitem, popup > menuitem
   {
-    max-width             : 250px;
-    min-width             : 125px;
+    max-width             : 42em;
+    min-width             : 14em;
     margin-left           : 0px;
     margin-right          : 0px;
     margin-top            : 0px;

@@ -49,7 +49,7 @@ menupopup, popup
 menupopup > menu,
 menupopup > menuitem
   {
-    max-width             : 60em; /* should move to content */
+    max-width             : 42em; /* should move to content */
     min-width             : 14em; /* should move to content */
     margin                : 0px;
   }
@@ -57,7 +57,7 @@ menupopup > menuitem
 popup > menu,
 popup > menuitem
   {
-    max-width             : 60em; /* should move to content */
+    max-width             : 42em; /* should move to content */
     min-width             : 8em; /* should move to content */
     margin                : 0px;
   }
