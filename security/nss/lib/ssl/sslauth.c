@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslauth.c,v 1.5 2001/03/16 23:26:02 nelsonb%netscape.com Exp $
+ * $Id: sslauth.c,v 1.6 2001/11/08 02:15:36 nelsonb%netscape.com Exp $
  */
 #include "cert.h"
 #include "secitem.h"
@@ -40,7 +40,8 @@
 #include "pk11func.h"
 
 /* NEED LOCKS IN HERE.  */
-CERTCertificate *SSL_PeerCertificate(PRFileDesc *fd)
+CERTCertificate *
+SSL_PeerCertificate(PRFileDesc *fd)
 {
     sslSocket *ss;
     sslSecurityInfo *sec;
@@ -57,6 +58,28 @@ CERTCertificate *SSL_PeerCertificate(PRFileDesc *fd)
     }
     return 0;
 }
+
+/* NEED LOCKS IN HERE.  */
+CERTCertificate *
+SSL_LocalCertificate(PRFileDesc *fd)
+{
+    sslSocket *ss;
+    sslSecurityInfo *sec;
+
+    ss = ssl_FindSocket(fd);
+    if (!ss) {
+	SSL_DBG(("%d: SSL[%d]: bad socket in PeerCertificate",
+		 SSL_GETPID(), fd));
+	return NULL;
+    }
+    sec = ss->sec;
+    if (ss->useSecurity && sec && sec->localCert) {
+	return CERT_DupCertificate(sec->localCert);
+    }
+    return NULL;
+}
+
+
 
 /* NEED LOCKS IN HERE.  */
 SECStatus

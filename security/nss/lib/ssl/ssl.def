@@ -114,6 +114,7 @@ SSL_GetMaxServerCacheLocks;
 SSL_SetMaxServerCacheLocks;
 SSL_GetChannelInfo;
 SSL_GetCipherSuiteInfo;
+SSL_LocalCertificate;
 ;+    local:
 ;+*;
 ;+};

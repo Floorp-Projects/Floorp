@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslcon.c,v 1.14 2001/11/02 04:24:19 nelsonb%netscape.com Exp $
+ * $Id: sslcon.c,v 1.15 2001/11/08 02:15:37 nelsonb%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -2420,9 +2420,17 @@ ssl2_HandleRequestCertificate(sslSocket *ss)
 	ret = -1;
 	goto loser;
     }
-    
+
     /* Send response message */
     ret = ssl2_SendCertificateResponseMessage(ss, &cert->derCert, &response);
+
+    /* Now, remember the cert we sent. But first, forget any previous one. */
+    if (ss->sec->localCert) {
+	CERT_DestroyCertificate(ss->sec->localCert);
+    }
+    ss->sec->localCert = cert;
+    cert = NULL;
+
     goto done;
 
   no_cert_error:
@@ -3646,9 +3654,16 @@ ssl2_HandleClientHelloMessage(sslSocket *ss)
 	    goto loser;
 	}
     } else {
-	SECItem * derCert = &ss->serverCerts[kt_rsa].serverCert->derCert;
+	sslServerCerts * sc = ss->serverCerts + kt_rsa;
+	CERTCertificate *serverCert = sc->serverCert;
+	SECItem * derCert   = &serverCert->derCert;
+
 	SSL_TRC(7, ("%d: SSL[%d]: server, lookup nonce missed",
 		    SSL_GETPID(), ss->fd));
+	if (!serverCert) {
+	    SET_ERROR_CODE
+	    goto loser;
+	}
 	hit = 0;
 	sid = (sslSessionID*) PORT_ZAlloc(sizeof(sslSessionID));
 	if (!sid) {
@@ -3668,6 +3683,10 @@ ssl2_HandleClientHelloMessage(sslSocket *ss)
 	cert    = derCert->data;
 	certLen = derCert->len;
 
+	if (sec->localCert) {
+	    CERT_DestroyCertificate(sec->localCert);
+	}
+	sec->localCert     = CERT_DupCertificate(serverCert);
 	sec->authAlgorithm = ssl_sign_rsa;
 	sec->keaType       = ssl_kea_rsa;
 	sec->keaKeyBits    = \

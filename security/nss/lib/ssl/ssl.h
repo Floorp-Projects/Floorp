@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl.h,v 1.11 2001/11/02 04:24:18 nelsonb%netscape.com Exp $
+ * $Id: ssl.h,v 1.12 2001/11/08 02:15:35 nelsonb%netscape.com Exp $
  */
 
 #ifndef __ssl_h_
@@ -427,6 +427,12 @@ SSL_IMPORT SECStatus SSL_GetChannelInfo(PRFileDesc *fd, SSLChannelInfo *info,
                                         PRUintn len);
 SSL_IMPORT SECStatus SSL_GetCipherSuiteInfo(PRUint16 cipherSuite, 
                                         SSLCipherSuiteInfo *info, PRUintn len);
+
+/*
+** Return a new reference to the certificate that was most recently sent
+** to the peer on this SSL/TLS connection, or NULL if none has been sent.
+*/
+SSL_IMPORT CERTCertificate * SSL_LocalCertificate(PRFileDesc *fd);
 
 SEC_END_PROTOS
 

@@ -34,7 +34,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslimpl.h,v 1.18 2001/11/02 04:24:20 nelsonb%netscape.com Exp $
+ * $Id: sslimpl.h,v 1.19 2001/11/08 02:15:37 nelsonb%netscape.com Exp $
  */
 
 #ifndef __sslimpl_h_
@@ -581,6 +581,7 @@ struct sslSecurityInfoStr {
     int              cipherType;				/* ssl 2 & 3 */
     int              keyBits;					/* ssl 2 & 3 */
     int              secretKeyBits;				/* ssl 2 & 3 */
+    CERTCertificate *localCert;					/* ssl 2 & 3 */
     CERTCertificate *peerCert;					/* ssl 2 & 3 */
     SECKEYPublicKey *peerKey;					/* ssl3 only */
 
