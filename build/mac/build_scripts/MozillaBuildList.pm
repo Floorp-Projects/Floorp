@@ -1230,6 +1230,7 @@ sub BuildRuntimeProjects()
     if ( $main::options{carbon} )
     {
         BuildProject(":mozilla:lib:mac:InterfaceLib:Interface.mcp",            "Carbon Interfaces");       
+        BuildProject(":mozilla:lib:mac:InterfaceLib:InterfaceOSX.mcp",         "MacOS X Interfaces");       
     }
     else
     {
@@ -1238,6 +1239,7 @@ sub BuildRuntimeProjects()
         } else {
     	    BuildProject(":mozilla:lib:mac:InterfaceLib:Interface.mcp",            "MacOS Interfaces");
 	    }
+        BuildProject(":mozilla:lib:mac:InterfaceLib:InterfaceOSX.mcp",             "MacOS Interfaces");       
     }
     
     #// Build all of the startup libraries, for Application, Component, and Shared Libraries. These are
