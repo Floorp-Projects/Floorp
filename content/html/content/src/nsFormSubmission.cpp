@@ -1074,8 +1074,7 @@ SendJSWarning(nsIHTMLContent* aContent,
   {
     nsIDocument* document = aContent->GetDocument();
     if (document) {
-      nsCOMPtr<nsIURI> documentURL;
-      document->GetDocumentURL(getter_AddRefs(documentURL));
+      nsIURI *documentURL = document->GetDocumentURL();
       NS_ENSURE_TRUE(documentURL, NS_ERROR_UNEXPECTED);
       documentURL->GetPath(documentURLSpec);
     }
@@ -1274,7 +1273,7 @@ nsFormSubmission::GetSubmitCharset(nsIHTMLContent* aForm,
   // Get the charset from document
   nsIDocument* doc = aForm->GetDocument();
   if (doc) {
-    rv = doc->GetDocumentCharacterSet(oCharset);
+    oCharset = doc->GetDocumentCharacterSet();
   }
 
   if (aCtrlsModAtSubmit==IBMBIDI_CONTROLSTEXTMODE_VISUAL

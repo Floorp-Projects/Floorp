@@ -3219,7 +3219,7 @@ NS_IMETHODIMP nsSelection::SelectAll()
       return rv;
     if (!doc)
       return NS_ERROR_FAILURE;
-    doc->GetRootContent(getter_AddRefs(rootContent));
+    rootContent = doc->GetRootContent();
     if (!rootContent)
       return NS_ERROR_FAILURE;
   }

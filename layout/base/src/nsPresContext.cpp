@@ -683,7 +683,7 @@ nsPresContext::SetShell(nsIPresShell* aShell)
     if (NS_SUCCEEDED(mShell->GetDocument(getter_AddRefs(doc)))) {
       NS_ASSERTION(doc, "expect document here");
       if (doc) {
-        doc->GetBaseURL(getter_AddRefs(mBaseURL));
+        mBaseURL = doc->GetBaseURL();
 
         if (mBaseURL) {
             PRBool isChrome = PR_FALSE;
@@ -698,10 +698,8 @@ nsPresContext::SetShell(nsIPresShell* aShell)
         }
 
         if (mLangService) {
-          nsCAutoString charset;
           doc->AddCharSetObserver(this);
-          doc->GetDocumentCharacterSet(charset);
-          UpdateCharSet(charset.get());
+          UpdateCharSet(PromiseFlatCString(doc->GetDocumentCharacterSet()).get());
         }
       }
     }
@@ -863,8 +861,7 @@ nsPresContext::SetImageAnimationMode(PRUint16 aMode)
   if (mShell != nsnull) {
     mShell->GetDocument(getter_AddRefs(doc));
     if (doc) {
-      nsCOMPtr<nsIContent> rootContent;
-      doc->GetRootContent(getter_AddRefs(rootContent));
+      nsIContent *rootContent = doc->GetRootContent();
       if (rootContent) {
         SetImgAnimations(rootContent, aMode);
       }
@@ -1367,8 +1364,7 @@ nsPresContext::GetImageLoadFlags(nsLoadFlags& aLoadFlags)
   (void) mShell->GetDocument(getter_AddRefs(doc));
 
   if (doc) {
-    nsCOMPtr<nsILoadGroup> loadGroup;
-    (void) doc->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
+    nsCOMPtr<nsILoadGroup> loadGroup = doc->GetDocumentLoadGroup();
 
     if (loadGroup) {
       loadGroup->GetLoadFlags(&aLoadFlags);
@@ -1404,12 +1400,8 @@ nsPresContext::LoadImage(nsIURI* aURL,
       // XXXldb This really means the document is being destroyed, so
       // perhaps we're better off skipping the load entirely.
       if (document) {
-        nsCOMPtr<nsIScriptGlobalObject> globalScript;
-        rv = document->GetScriptGlobalObject(getter_AddRefs(globalScript));
-
-        if (globalScript) {
-          nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(globalScript));
-
+        nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(document->GetScriptGlobalObject()));
+        if (domWin) {
           PRBool shouldLoad = PR_TRUE;
           rv = NS_CheckContentLoadPolicy(nsIContentPolicy::IMAGE,
                                          aURL, element, domWin, &shouldLoad);
@@ -1564,7 +1556,7 @@ nsPresContext::GetBidiEnabled(PRBool* aBidiEnabled) const
     mShell->GetDocument(getter_AddRefs(doc) );
     NS_ASSERTION(doc, "PresShell has no document in nsPresContext::GetBidiEnabled");
     if (doc) {
-      doc->GetBidiEnabled(aBidiEnabled);
+      *aBidiEnabled = doc->GetBidiEnabled();
     }
   }
   return NS_OK;

@@ -596,11 +596,9 @@ SyncFrameViewGeometryDependentProperties(nsIPresContext*  aPresContext,
     nsCOMPtr<nsIDocument> doc;
     shell->GetDocument(getter_AddRefs(doc));
     if (doc) {
-      nsCOMPtr<nsIDocument> parentDoc;
-      doc->GetParentDocument(getter_AddRefs(parentDoc));
-      nsCOMPtr<nsIContent> rootElem;
-      doc->GetRootContent(getter_AddRefs(rootElem));
-      if (!parentDoc && rootElem && rootElem->IsContentOfType(nsIContent::eXUL)) {
+      nsIContent *rootElem = doc->GetRootContent();
+      if (!doc->GetParentDocument() &&
+          rootElem && rootElem->IsContentOfType(nsIContent::eXUL)) {
         // we're XUL at the root of the document hierarchy. Try to make our
         // window translucent.
         // don't proceed unless this is the root view

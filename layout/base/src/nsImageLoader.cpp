@@ -90,8 +90,6 @@ nsImageLoader::Load(nsIURI *aURI)
   if (!aURI)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsILoadGroup> loadGroup;
-
   nsCOMPtr<nsIPresShell> shell;
   nsresult rv = mPresContext->GetShell(getter_AddRefs(shell));
   if ((NS_FAILED(rv)) || (!shell)) return NS_ERROR_FAILURE;
@@ -101,11 +99,7 @@ nsImageLoader::Load(nsIURI *aURI)
   if (NS_FAILED(rv)) return rv;
 
   // Get the document's loadgroup
-  doc->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
-
-  // Get the document URI (for the referrer).
-  nsCOMPtr<nsIURI> documentURI;
-  doc->GetDocumentURL(getter_AddRefs(documentURI));
+  nsCOMPtr<nsILoadGroup> loadGroup = doc->GetDocumentLoadGroup();
 
   if (mRequest) {
     nsCOMPtr<nsIURI> oldURI;
@@ -124,7 +118,7 @@ nsImageLoader::Load(nsIURI *aURI)
   if (NS_FAILED(rv)) return rv;
 
   // XXX: initialDocumentURI is NULL!
-  return il->LoadImage(aURI, nsnull, documentURI, loadGroup,
+  return il->LoadImage(aURI, nsnull, doc->GetDocumentURL(), loadGroup,
                        this, 
                        doc, nsIRequest::LOAD_BACKGROUND, nsnull, nsnull,
                        getter_AddRefs(mRequest));

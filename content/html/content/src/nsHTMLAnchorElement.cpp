@@ -313,9 +313,7 @@ nsHTMLAnchorElement::RemoveFocus(nsIPresContext* aPresContext)
     if (!mDocument)
       return NS_ERROR_NULL_POINTER;
 
-    nsCOMPtr<nsIContent> rootContent;
-    mDocument->GetRootContent(getter_AddRefs(rootContent));
-    rv = esm->SetContentState(rootContent, NS_EVENT_STATE_FOCUS);
+    rv = esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
   }
 
   return rv;
@@ -361,8 +359,7 @@ nsHTMLAnchorElement::GetTarget(nsAString& aValue)
   nsresult rv;
   rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::target, aValue);
   if (rv == NS_CONTENT_ATTR_NOT_THERE && mDocument) {
-    rv = mDocument->GetBaseTarget(aValue);
-    NS_ENSURE_SUCCESS(rv, rv);
+    mDocument->GetBaseTarget(aValue);
   }
   return NS_OK;
 }

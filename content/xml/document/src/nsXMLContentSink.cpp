@@ -256,8 +256,7 @@ nsXMLContentSink::DidBuildModel()
   }
   else {
     // Kick off layout for non-XSLT transformed documents.
-    nsCOMPtr<nsIScriptLoader> loader;
-    mDocument->GetScriptLoader(getter_AddRefs(loader));
+    nsIScriptLoader *loader = mDocument->GetScriptLoader();
     if (loader) {
       loader->RemoveObserver(this);
     }
@@ -352,8 +351,7 @@ nsXMLContentSink::OnTransformDone(nsresult aResult,
     mDocument = do_QueryInterface(aResultDocument);
   }
 
-  nsCOMPtr<nsIScriptLoader> loader;
-  originalDocument->GetScriptLoader(getter_AddRefs(loader));
+  nsIScriptLoader *loader = originalDocument->GetScriptLoader();
   if (loader) {
     loader->RemoveObserver(this);
   }
@@ -362,8 +360,7 @@ nsXMLContentSink::OnTransformDone(nsresult aResult,
   // into the document.  
   // XXX do we need to notify for things like PIs?  Or just the
   // documentElement?
-  nsCOMPtr<nsIContent> rootContent;
-  mDocument->GetRootContent(getter_AddRefs(rootContent));
+  nsIContent *rootContent = mDocument->GetRootContent();
   if (rootContent) {
     NS_ASSERTION(mDocument->IndexOf(rootContent) != -1,
                  "rootContent not in doc?");
@@ -619,11 +616,10 @@ nsXMLContentSink::LoadXSLStyleSheet(nsIURI* aUrl)
 
   mXSLTProcessor->SetTransformObserver(this);
 
-  nsCOMPtr<nsILoadGroup> loadGroup;
-  nsresult rv = mDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
-  if (NS_FAILED(rv)) {
+  nsCOMPtr<nsILoadGroup> loadGroup = mDocument->GetDocumentLoadGroup();
+  if (!loadGroup) {
     mXSLTProcessor = nsnull;
-    return rv;
+    return NS_ERROR_FAILURE;
   }
 
   return mXSLTProcessor->LoadStyleSheet(aUrl, loadGroup, mDocumentURL);
@@ -711,7 +707,7 @@ nsXMLContentSink::ProcessBASETag(nsIContent* aContent)
       if (NS_SUCCEEDED(rv)) {
         rv = mDocument->SetBaseURL(baseURI); // The document checks if it is legal to set this base
         if (NS_SUCCEEDED(rv)) {
-          mDocument->GetBaseURL(getter_AddRefs(mDocumentBaseURL));
+          mDocumentBaseURL = mDocument->GetBaseURL();
         }
       }
     }
@@ -747,7 +743,7 @@ NS_IMETHODIMP
 nsXMLContentSink::SetDocumentCharset(nsACString& aCharset)
 {
   if (mDocument) {
-    return mDocument->SetDocumentCharacterSet(aCharset);
+    mDocument->SetDocumentCharacterSet(aCharset);
   }
   
   return NS_OK;
@@ -1070,11 +1066,9 @@ MathMLElementFactoryImpl::CreateInstanceByTag(nsINodeInfo* aNodeInfo,
       htmlContainer->GetCSSLoader(*getter_AddRefs(cssLoader));
       if (cssLoader && NS_SUCCEEDED(cssLoader->GetEnabled(&enabled)) && enabled) {
         PRBool alreadyLoaded = PR_FALSE;
-        PRInt32 i = 0, sheetCount = 0;
-        doc->GetNumberOfStyleSheets(PR_TRUE, &sheetCount);
-        for (; i < sheetCount; i++) {
-          nsCOMPtr<nsIStyleSheet> sheet;
-          doc->GetStyleSheetAt(i, PR_TRUE, getter_AddRefs(sheet));
+        PRInt32 sheetCount = doc->GetNumberOfStyleSheets(PR_TRUE);
+        for (PRInt32 i = 0; i < sheetCount; i++) {
+          nsIStyleSheet* sheet = doc->GetStyleSheetAt(i, PR_TRUE);
           NS_ASSERTION(sheet, "unexpected null stylesheet in the document");
           if (sheet) {
             nsCOMPtr<nsIURI> uri;
@@ -1163,10 +1157,7 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
                          getter_AddRefs(content), &appendContent);
   NS_ENSURE_SUCCESS(result, result);
 
-  PRInt32 id;
-  mDocument->GetAndIncrementContentID(&id);
-  content->SetContentID(id);
-
+  content->SetContentID(mDocument->GetAndIncrementContentID());
   content->SetDocument(mDocument, PR_FALSE, PR_TRUE);
 
   // Set the attributes on the new content element
@@ -1441,7 +1432,8 @@ nsXMLContentSink::HandleXMLDeclaration(const PRUnichar *aData,
   nsParserUtils::GetQuotedAttributeValue(data, NS_LITERAL_STRING("encoding"), encoding);
   nsParserUtils::GetQuotedAttributeValue(data, NS_LITERAL_STRING("standalone"), standalone);
 
-  return mDocument->SetXMLDeclaration(version, encoding, standalone);
+  mDocument->SetXMLDeclaration(version, encoding, standalone);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -90,7 +90,7 @@ public:
     NS_IMETHOD GetHeaderData(nsIAtom* aField, nsAString& aData) const = 0;
     NS_IMETHOD SetHeaderData(nsIAtom* aField, const nsAString& aData) = 0;
 
-    NS_IMETHOD GetDocumentPrincipal(nsIPrincipal** aResult) = 0;
+    virtual nsIPrincipal* GetDocumentPrincipal() = 0;
     NS_IMETHOD SetDocumentPrincipal(nsIPrincipal* aPrincipal) = 0;
 
     NS_IMETHOD GetNodeInfoManager(nsINodeInfoManager** aNodeInfoManager) = 0;

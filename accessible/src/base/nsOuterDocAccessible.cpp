@@ -109,8 +109,7 @@ NS_IMETHODIMP nsOuterDocAccessible::Init()
   nsCOMPtr<nsIDocument> outerDoc = content->GetDocument();
   NS_ENSURE_TRUE(outerDoc, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDocument> innerDoc;
-  outerDoc->GetSubDocumentFor(content, getter_AddRefs(innerDoc));
+  nsIDocument *innerDoc = outerDoc->GetSubDocumentFor(content);
   nsCOMPtr<nsIDOMNode> innerNode(do_QueryInterface(innerDoc));
   NS_ENSURE_TRUE(innerNode, NS_ERROR_FAILURE);
 

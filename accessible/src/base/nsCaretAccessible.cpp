@@ -101,7 +101,7 @@ NS_IMETHODIMP nsCaretAccessible::AttachNewSelectionListener(nsIDOMNode *aCurrent
     doc = do_QueryInterface(aCurrentNode);
   nsCOMPtr<nsIContent> content(do_QueryInterface(aCurrentNode));
   if (!content)
-    doc->GetRootContent(getter_AddRefs(content));  // If node is not content, use root content
+    content = doc->GetRootContent();  // If node is not content, use root content
 
   nsIFrame *frame = nsnull;
   presShell->GetPrimaryFrameFor(content, &frame);

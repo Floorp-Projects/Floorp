@@ -61,7 +61,7 @@ public:
                                PRBool              aReset = PR_TRUE,
                                nsIContentSink*     aSink = nsnull);
 
-  NS_IMETHOD SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject);
+  virtual void SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject);
 
 protected:
   nsresult CreateSyntheticPluginDocument();
@@ -91,13 +91,14 @@ NS_INTERFACE_MAP_BEGIN(nsPluginDocument)
 NS_INTERFACE_MAP_END_INHERITING(nsMediaDocument)
 
 
-NS_IMETHODIMP nsPluginDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject)
+void
+nsPluginDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject)
 {
   if (!aScriptGlobalObject) {
     mStreamListener = nsnull;
   }
 
-  return nsMediaDocument::SetScriptGlobalObject(aScriptGlobalObject);
+  nsMediaDocument::SetScriptGlobalObject(aScriptGlobalObject);
 }
 
 

@@ -561,9 +561,8 @@ nsContentAreaDragDrop::GetHookEnumeratorFromEvent(nsIDOMEvent* inEvent,
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsISupports> isupp;
-  doc->GetContainer(getter_AddRefs(isupp));
-  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(isupp);
+  nsCOMPtr<nsISupports> container = doc->GetContainer();
+  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
   NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIClipboardDragDropHookList> hookList = do_GetInterface(docShell);

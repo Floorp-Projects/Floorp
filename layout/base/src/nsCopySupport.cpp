@@ -289,10 +289,8 @@ nsresult nsCopySupport::DoHooks(nsIDocument *aDoc, nsITransferable *aTrans,
 
   *aDoPutOnClipboard = PR_TRUE;
 
-  nsCOMPtr<nsISupports> isupp;
-  nsresult rv = aDoc->GetContainer(getter_AddRefs(isupp));
-  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(isupp);
-  nsCOMPtr<nsIClipboardDragDropHookList> hookObj = do_GetInterface(docShell);
+  nsCOMPtr<nsISupports> container = aDoc->GetContainer();
+  nsCOMPtr<nsIClipboardDragDropHookList> hookObj = do_GetInterface(container);
   if (!hookObj) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsISimpleEnumerator> enumerator;
@@ -303,7 +301,9 @@ nsresult nsCopySupport::DoHooks(nsIDocument *aDoc, nsITransferable *aTrans,
   // nsIClipboardDragDropHooks.h
 
   nsCOMPtr<nsIClipboardDragDropHooks> override;
+  nsCOMPtr<nsISupports> isupp;
   PRBool hasMoreHooks = PR_FALSE;
+  nsresult rv = NS_OK;
   while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMoreHooks))
          && hasMoreHooks)
   {

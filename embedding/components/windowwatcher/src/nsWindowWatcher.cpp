@@ -701,10 +701,7 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
         newDocShell->GetContentViewer(getter_AddRefs(newContentViewer));
         nsCOMPtr<nsIMarkupDocumentViewer> newMarkupDocViewer(do_QueryInterface(newContentViewer));
         if (doc && newMarkupDocViewer) {
-          nsCAutoString charset;
-          rv = doc->GetDocumentCharacterSet(charset);
-          if (NS_SUCCEEDED(rv))
-            newMarkupDocViewer->SetDefaultCharacterSet(charset);
+          newMarkupDocViewer->SetDefaultCharacterSet(doc->GetDocumentCharacterSet());
         }
       }
     }
@@ -775,11 +772,8 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
 
         nsCOMPtr<nsIDocument> doc(do_QueryInterface(document));
         if (doc) { 
-          nsCOMPtr<nsIURI> uri;
-          doc->GetDocumentURL(getter_AddRefs(uri));
-
           // Set the referrer
-          loadInfo->SetReferrer(uri);
+          loadInfo->SetReferrer(doc->GetDocumentURL());
         }
       }
     }
@@ -1133,7 +1127,7 @@ nsWindowWatcher::URIfromURL(const char *aURL,
 
   // failing that, use the given URL unmodified. It had better not be relative.
 
-  nsCOMPtr<nsIURI> baseURI;
+  nsIURI *baseURI = nsnull;
 
   // get baseWindow's document URI
   if (baseWindow) {
@@ -1143,7 +1137,7 @@ nsWindowWatcher::URIfromURL(const char *aURL,
       nsCOMPtr<nsIDocument> doc;
       doc = do_QueryInterface(domDoc);
       if (doc) {
-        doc->GetBaseURL(getter_AddRefs(baseURI));
+        baseURI = doc->GetBaseURL();
       }
     }
   }

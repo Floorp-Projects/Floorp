@@ -1512,8 +1512,7 @@ nsXULContentBuilder::CreateElement(PRInt32 aNameSpaceID,
     nsresult rv;
     nsCOMPtr<nsIContent> result;
 
-    nsCOMPtr<nsINodeInfoManager> nodeInfoManager;
-    doc->GetNodeInfoManager(getter_AddRefs(nodeInfoManager));
+    nsINodeInfoManager *nodeInfoManager = doc->GetNodeInfoManager();
     NS_ENSURE_TRUE(nodeInfoManager, NS_ERROR_NOT_INITIALIZED);
 
     nsCOMPtr<nsINodeInfo> nodeInfo;
@@ -1861,8 +1860,7 @@ nsXULContentBuilder::OpenContainer(nsIContent* aElement)
         if (! doc)
             return NS_ERROR_UNEXPECTED;
 
-        nsresult rv = doc->ContentAppended(container, newIndex);
-        if (NS_FAILED(rv)) return rv;
+        doc->ContentAppended(container, newIndex);
     }
 
     return NS_OK;

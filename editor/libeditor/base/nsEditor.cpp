@@ -954,8 +954,10 @@ nsEditor::GetDocumentCharacterSet(nsACString &characterSet)
   {
     nsCOMPtr<nsIDocument> doc;
     presShell->GetDocument(getter_AddRefs(doc));
-    if (doc)
-      return doc->GetDocumentCharacterSet(characterSet);
+    if (doc) {
+      characterSet = doc->GetDocumentCharacterSet();
+      return NS_OK;
+    }
     rv = NS_ERROR_NULL_POINTER;
   }
 
@@ -973,7 +975,8 @@ nsEditor::SetDocumentCharacterSet(const nsACString& characterSet)
     nsCOMPtr<nsIDocument> doc;
     presShell->GetDocument(getter_AddRefs(doc));
     if (doc) {
-      return doc->SetDocumentCharacterSet(characterSet);
+      doc->SetDocumentCharacterSet(characterSet);
+      return NS_OK;
     }
     rv = NS_ERROR_NULL_POINTER;
   }
@@ -5072,11 +5075,7 @@ nsEditor::CreateHTMLContent(const nsAString& aTag, nsIContent** aContent)
 
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(tempDoc);
 
-  nsCOMPtr<nsINodeInfoManager> nodeInfoManager;
-  rv = doc->GetNodeInfoManager(getter_AddRefs(nodeInfoManager));
-  if (NS_FAILED(rv))
-    return rv;
-
+  nsINodeInfoManager *nodeInfoManager = doc->GetNodeInfoManager();
   NS_ENSURE_TRUE(nodeInfoManager, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsINodeInfo> nodeInfo;

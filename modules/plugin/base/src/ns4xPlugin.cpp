@@ -1336,9 +1336,7 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
         nsCOMPtr<nsIDocument> doc;
         owner->GetDocument(getter_AddRefs(doc));
         if (doc) {
-          nsCOMPtr<nsIScriptGlobalObject> globalScript;
-          doc->GetScriptGlobalObject(getter_AddRefs(globalScript));
-          nsCOMPtr<nsIDOMWindow> domWindow (do_QueryInterface(globalScript));
+          nsCOMPtr<nsIDOMWindow> domWindow (do_QueryInterface(doc->GetScriptGlobalObject()));
           if (domWindow) {
             NS_ADDREF(*(nsIDOMWindow**)result = domWindow.get());
             return NPERR_NO_ERROR;

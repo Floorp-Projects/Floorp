@@ -860,8 +860,7 @@ nsContentList::PopulateSelf(PRUint32 aNeededLength)
                  "Something is awry in PopulateWith!");
   }
   else if (mDocument) {
-    nsCOMPtr<nsIContent> root;
-    mDocument->GetRootContent(getter_AddRefs(root));
+    nsIContent *root = mDocument->GetRootContent();
     if (root) {
       PopulateWith(root, PR_TRUE, elementsToAppend);
       NS_ASSERTION(elementsToAppend + mElements.Count() == invariant,

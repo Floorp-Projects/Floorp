@@ -105,8 +105,7 @@ nsXBLResourceLoader::LoadResources(PRBool* aResult)
   nsCOMPtr<nsIDocument> doc;
   info->GetDocument(getter_AddRefs(doc));
 
-  nsCOMPtr<nsIURI> docURL;
-  doc->GetDocumentURL(getter_AddRefs(docURL));
+  nsIURI *docURL = doc->GetDocumentURL();
 
   nsCOMPtr<nsIURI> url;
 

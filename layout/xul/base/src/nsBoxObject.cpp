@@ -207,12 +207,11 @@ nsBoxObject::GetOffsetRect(nsRect& aRect)
 
         // Find the frame parent whose content's tagName either matches 
         // the tagName passed in or is the document element.
-        nsCOMPtr<nsIContent> docElement;
-        doc->GetRootContent(getter_AddRefs(docElement));
+        nsIContent *docElement = doc->GetRootContent();
         nsIFrame* parent = frame->GetParent();
         while (parent) {
           // If we've hit the document element, break here
-          if (parent->GetContent() == docElement.get()) {
+          if (parent->GetContent() == docElement) {
             break;
           }
 
@@ -636,17 +635,16 @@ nsBoxObject::GetDocShell(nsIDocShell** aResult)
   // No nsIFrameFrame available for mContent, try if there's a mapping
   // between mContent's document to mContent's subdocument.
 
-  nsCOMPtr<nsIDocument> doc, sub_doc;
+  nsCOMPtr<nsIDocument> doc;
   mPresShell->GetDocument(getter_AddRefs(doc));
 
-  doc->GetSubDocumentFor(mContent, getter_AddRefs(sub_doc));
+  nsIDocument *sub_doc = doc->GetSubDocumentFor(mContent);
 
   if (!sub_doc) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsISupports> container;
-  sub_doc->GetContainer(getter_AddRefs(container));
+  nsCOMPtr<nsISupports> container = sub_doc->GetContainer();
 
   if (!container) {
     return NS_OK;

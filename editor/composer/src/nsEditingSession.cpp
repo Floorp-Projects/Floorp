@@ -760,8 +760,7 @@ nsEditingSession::OnLocationChange(nsIWebProgress *aWebProgress,
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
   if (!doc) return NS_ERROR_FAILURE;
 
-  rv = doc->SetDocumentURL(aURI);
-  if (NS_FAILED(rv)) return rv;
+  doc->SetDocumentURL(aURI);
 
   // Notify the location-changed observer that
   //  the document URL has changed

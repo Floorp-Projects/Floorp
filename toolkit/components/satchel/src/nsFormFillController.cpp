@@ -44,6 +44,7 @@
 #include "nsReadableUtils.h"
 #include "nsIServiceManager.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIChromeEventHandler.h"
 #include "nsPIDOMWindow.h"
@@ -765,14 +766,7 @@ nsFormFillController::GetDocShellForInput(nsIDOMHTMLInputElement *aInput)
   aInput->GetOwnerDocument(getter_AddRefs(domDoc));
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
   
-  nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
-  doc->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
-  nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(ourGlobal);
-
-  nsCOMPtr<nsIInterfaceRequestor> ifreq(do_QueryInterface(domWindow));
-  NS_ENSURE_TRUE(ifreq, NS_OK);
-  nsCOMPtr<nsIWebNavigation> webNav;
-  ifreq->GetInterface(NS_GET_IID(nsIWebNavigation), getter_AddRefs(webNav));
+  nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(doc->GetScriptGlobalObject());
   nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(webNav);
   return docShell;
 }
@@ -789,11 +783,7 @@ nsFormFillController::GetWindowForDocShell(nsIDocShell *aDocShell)
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
   NS_ENSURE_TRUE(doc, nsnull);
 
-  nsCOMPtr<nsIScriptGlobalObject> global;
-  doc->GetScriptGlobalObject(getter_AddRefs(global));
-  NS_ENSURE_TRUE(global, nsnull);
-
-  nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(global);
+  nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(doc->GetScriptGlobalObject());
   return domWindow;
 }
 

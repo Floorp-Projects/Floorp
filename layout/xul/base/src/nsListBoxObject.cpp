@@ -186,11 +186,8 @@ FindBodyContent(nsIContent* aParent, nsIContent** aResult)
     NS_IF_ADDREF(*aResult);
   }
   else {
-    nsIDocument* doc = aParent->GetDocument();
-    nsCOMPtr<nsIBindingManager> bindingManager;
-    doc->GetBindingManager(getter_AddRefs(bindingManager));
     nsCOMPtr<nsIDOMNodeList> kids;
-    bindingManager->GetXBLChildNodesFor(aParent, getter_AddRefs(kids));
+    aParent->GetDocument()->GetBindingManager()->GetXBLChildNodesFor(aParent, getter_AddRefs(kids));
     if (!kids) return;
 
     PRUint32 i;

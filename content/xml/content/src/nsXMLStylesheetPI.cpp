@@ -168,12 +168,15 @@ nsXMLStylesheetPI::GetStyleSheetURL(PRBool* aIsInline,
     return;
   }
 
-  nsCOMPtr<nsIURI> url, baseURL;
+  nsIURI *baseURL;
   nsCAutoString charset;
   if (mDocument) {
-    mDocument->GetBaseURL(getter_AddRefs(baseURL));
-    mDocument->GetDocumentCharacterSet(charset);
+    baseURL = mDocument->GetBaseURL();
+    charset = mDocument->GetDocumentCharacterSet();
+  } else {
+    baseURL = nsnull;
   }
+
   NS_NewURI(aURI, href, charset.get(), baseURL);
 }
 

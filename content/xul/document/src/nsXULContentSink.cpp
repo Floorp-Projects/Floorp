@@ -561,7 +561,7 @@ XULContentSinkImpl::SetDocumentCharset(nsACString& aCharset)
 {
     nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
     if (doc) {
-        return doc->SetDocumentCharacterSet(aCharset);
+        doc->SetDocumentCharacterSet(aCharset);
     }
   
     return NS_OK;
@@ -1438,8 +1438,7 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
           // where it's already there.
           nsCOMPtr<nsIDocument> doc(do_QueryReferent(mDocument));
           if (doc) {
-              nsCOMPtr<nsIScriptGlobalObject> globalObject;
-              doc->GetScriptGlobalObject(getter_AddRefs(globalObject));
+              nsIScriptGlobalObject* globalObject = doc->GetScriptGlobalObject();
               if (globalObject) {
                   nsCOMPtr<nsIScriptContext> scriptContext;
                   globalObject->GetContext(getter_AddRefs(scriptContext));

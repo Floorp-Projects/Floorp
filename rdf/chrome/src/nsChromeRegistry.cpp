@@ -1431,9 +1431,7 @@ static void FlushSkinBindingsForWindow(nsIDOMWindowInternal* aWindow)
     return;
 
   // Annihilate all XBL bindings.
-  nsCOMPtr<nsIBindingManager> bindingManager;
-  document->GetBindingManager(getter_AddRefs(bindingManager));
-  bindingManager->FlushSkinBindings();
+  document->GetBindingManager()->FlushSkinBindings();
 }
 
 NS_IMETHODIMP nsChromeRegistry::RefreshSkins()
@@ -1587,15 +1585,13 @@ nsresult nsChromeRegistry::RefreshWindow(nsIDOMWindowInternal* aWindow)
   nsCOMArray<nsIStyleSheet> oldSheets;
   nsCOMArray<nsIStyleSheet> newSheets;
 
-  PRInt32 count = 0;
-  document->GetNumberOfStyleSheets(PR_FALSE, &count);
+  PRInt32 count = document->GetNumberOfStyleSheets(PR_FALSE);
 
   // Iterate over the style sheets.
   PRInt32 i;
   for (i = 0; i < count; i++) {
     // Get the style sheet
-    nsCOMPtr<nsIStyleSheet> styleSheet;
-    document->GetStyleSheetAt(i, PR_FALSE, getter_AddRefs(styleSheet));
+    nsIStyleSheet *styleSheet = document->GetStyleSheetAt(i, PR_FALSE);
     
     if (!oldSheets.AppendObject(styleSheet)) {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -3110,10 +3106,9 @@ nsChromeRegistry::GetAgentSheets(nsIDocShell* aDocShell, nsISupportsArray **aRes
         while (token) {
           nsCOMPtr<nsIContent> content(do_QueryInterface(elt));
           nsCOMPtr<nsIDocument> doc = content->GetDocument();
-          nsCOMPtr<nsIURI> docURL;
-          doc->GetDocumentURL(getter_AddRefs(docURL));
           nsCOMPtr<nsIURI> url;
-          rv = NS_NewURI(getter_AddRefs(url), nsDependentCString(token), nsnull, docURL);
+          rv = NS_NewURI(getter_AddRefs(url), nsDependentCString(token),
+                         nsnull, doc->GetDocumentURL());
 
           nsCOMPtr<nsICSSStyleSheet> sheet;
           // The CSSLoader handles all the prototype cache stuff for

@@ -565,10 +565,9 @@ nsXULTooltipListener::GetTooltipFor(nsIContent* aTarget, nsIContent** aTooltip)
     NS_ERROR("Unable to retrieve the tooltip node document.");
     return NS_ERROR_FAILURE;
   }
-  nsCOMPtr<nsIScriptContext> context;
-  nsCOMPtr<nsIScriptGlobalObject> global;
-  document->GetScriptGlobalObject(getter_AddRefs(global));
+  nsIScriptGlobalObject *global = document->GetScriptGlobalObject();
   if (global) {
+    nsCOMPtr<nsIScriptContext> context;
     if (NS_SUCCEEDED(global->GetContext(getter_AddRefs(context))) && context) {
       nsCOMPtr<nsIDOMWindowInternal> domWindow = do_QueryInterface(global);
       if (!domWindow)

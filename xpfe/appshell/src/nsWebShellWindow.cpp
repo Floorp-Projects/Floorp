@@ -1416,8 +1416,7 @@ void nsWebShellWindow::LoadContentAreas() {
     if (docViewer) {
       nsCOMPtr<nsIDocument> doc;
       docViewer->GetDocument(getter_AddRefs(doc));
-      nsCOMPtr<nsIURI> mainURL;
-      doc->GetDocumentURL(getter_AddRefs(mainURL));
+      nsIURI *mainURL = doc->GetDocumentURL();
       if (mainURL) {
         nsCAutoString search;
         nsCOMPtr<nsIURL> url = do_QueryInterface(mainURL);

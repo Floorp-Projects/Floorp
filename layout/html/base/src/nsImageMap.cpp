@@ -455,8 +455,7 @@ void RectArea::ParseCoords(const nsAString& aSpec)
     nsIDocument* doc = nodeInfo->GetDocument();
     nsCAutoString urlSpec;
     if (doc) {
-      nsCOMPtr<nsIURI> uri;
-      doc->GetDocumentURL(getter_AddRefs(uri));
+      nsIURI *uri = doc->GetDocumentURL();
       if (uri) {
         uri->GetSpec(urlSpec);
       }

@@ -183,11 +183,11 @@ NS_NewDocumentFragment(nsIDOMDocumentFragment** aInstancePtrResult,
   nsresult rv;
 
   if (aOwnerDocument) {
-    rv = aOwnerDocument->GetNodeInfoManager(getter_AddRefs(nimgr));
+    nimgr = aOwnerDocument->GetNodeInfoManager();
   } else {
     rv = nsNodeInfoManager::GetAnonymousManager(getter_AddRefs(nimgr));
+    NS_ENSURE_SUCCESS(rv, rv);
   }
-  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = nimgr->GetNodeInfo(NS_LITERAL_STRING("#document-fragment"),
                           nsnull, kNameSpaceID_None,

@@ -1949,15 +1949,11 @@ nsTreeBodyFrame::GetImage(PRInt32 aRowIndex, const PRUnichar* aColID, PRBool aUs
     if (NS_FAILED(rv))
       return rv;
 
-    // Get the documment URI for the referrer.
-    nsCOMPtr<nsIURI> documentURI;
-    doc->GetDocumentURL(getter_AddRefs(documentURI));
-
     mImageGuard = PR_TRUE;
     // XXX: initialDocumentURI is NULL!
-    rv = il->LoadImage(srcURI, nsnull, documentURI, nsnull, imgDecoderObserver,
-                       doc, nsIRequest::LOAD_NORMAL, nsnull, nsnull,
-                       getter_AddRefs(imageRequest));
+    rv = il->LoadImage(srcURI, nsnull, doc->GetDocumentURL(), nsnull,
+                       imgDecoderObserver, doc, nsIRequest::LOAD_NORMAL,
+                       nsnull, nsnull, getter_AddRefs(imageRequest));
     mImageGuard = PR_FALSE;
 
     if (!imageRequest)

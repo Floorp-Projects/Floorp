@@ -713,12 +713,12 @@ nsXULTemplateBuilder::LoadDataSources()
         return NS_ERROR_UNEXPECTED;
 
     // Grab the doc's principal...
-    nsCOMPtr<nsIPrincipal> docPrincipal;
-    rv = doc->GetPrincipal(getter_AddRefs(docPrincipal));
-    if (NS_FAILED(rv)) return rv;
+    nsIPrincipal *docPrincipal = doc->GetPrincipal();
+    if (!docPrincipal)
+        return NS_ERROR_FAILURE;
 
     PRBool isTrusted = PR_FALSE;
-    rv = IsSystemPrincipal(docPrincipal.get(), &isTrusted);
+    rv = IsSystemPrincipal(docPrincipal, &isTrusted);
     if (NS_FAILED(rv)) return rv;
 
     if (isTrusted) {
@@ -740,8 +740,7 @@ nsXULTemplateBuilder::LoadDataSources()
     //
     //     rdf:bookmarks rdf:history http://foo.bar.com/blah.cgi?baz=9
     //
-    nsCOMPtr<nsIURI> docurl;
-    doc->GetDocumentURL(getter_AddRefs(docurl));
+    nsIURI *docurl = doc->GetDocumentURL();
 
     nsAutoString datasources;
     mRoot->GetAttr(kNameSpaceID_None, nsXULAtoms::datasources, datasources);
@@ -854,8 +853,7 @@ nsXULTemplateBuilder::InitHTMLTemplateRoot()
     if (! doc)
         return NS_ERROR_UNEXPECTED;
 
-    nsCOMPtr<nsIScriptGlobalObject> global;
-    doc->GetScriptGlobalObject(getter_AddRefs(global));
+    nsIScriptGlobalObject *global = doc->GetScriptGlobalObject();
     if (! global)
         return NS_ERROR_UNEXPECTED;
 
@@ -1478,8 +1476,7 @@ nsXULTemplateBuilder::GetTemplateRoot(nsIContent** aResult)
     if (! doc)
         return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsIBindingManager> bindingManager;
-    doc->GetBindingManager(getter_AddRefs(bindingManager));
+    nsIBindingManager *bindingManager = doc->GetBindingManager();
 
     if (bindingManager) {
         nsCOMPtr<nsIDOMNodeList> kids;

@@ -1505,7 +1505,6 @@ nsImageFrame::TriggerLink(nsIPresContext* aPresContext,
   aPresContext->GetLinkHandler(getter_AddRefs(handler));
   if (nsnull != handler) {
     if (aClick) {
-      nsresult proceed = NS_OK;
       // Check that this page is allowed to load this URI.
       // Almost a copy of the similarly named method in nsGenericElement
       nsresult rv;
@@ -1519,17 +1518,18 @@ nsImageFrame::TriggerLink(nsIPresContext* aPresContext,
       if (NS_SUCCEEDED(rv) && ps) 
         rv = ps->GetDocument(getter_AddRefs(doc));
       
-      nsCOMPtr<nsIURI> baseURI;
-      if (NS_SUCCEEDED(rv) && doc) 
-        doc->GetDocumentURL(getter_AddRefs(baseURI));
-      
-      if (NS_SUCCEEDED(rv)) 
-        proceed = securityManager->CheckLoadURI(baseURI, aURI, nsIScriptSecurityManager::STANDARD);
+      if (NS_SUCCEEDED(rv)) {
+        nsIURI *baseURI = doc ? doc->GetDocumentURL() : nsnull;
 
-      // Only pass off the click event if the script security manager
-      // says it's ok.
-      if (NS_SUCCEEDED(proceed))
-        handler->OnLinkClick(mContent, eLinkVerb_Replace, aURI, aTargetSpec.get());
+        rv = securityManager->CheckLoadURI(baseURI, aURI,
+                                           nsIScriptSecurityManager::STANDARD);
+
+        // Only pass off the click event if the script security manager
+        // says it's ok.
+        if (NS_SUCCEEDED(rv))
+          handler->OnLinkClick(mContent, eLinkVerb_Replace, aURI,
+                               aTargetSpec.get());
+      }
     }
     else {
       handler->OnOverLink(mContent, aURI, aTargetSpec.get());
@@ -1696,7 +1696,7 @@ nsImageFrame::HandleEvent(nsIPresContext* aPresContext,
               nsIDocument* doc = nodeInfo->GetDocument();
               nsCAutoString charset;
               if (doc) {
-                doc->GetDocumentCharacterSet(charset);
+                charset = doc->GetDocumentCharacterSet();
               } 
               nsCOMPtr<nsIURI> uri;
               nsresult rv = NS_NewURI(getter_AddRefs(uri), src, charset.get(),
@@ -1884,7 +1884,7 @@ nsImageFrame::GetDocumentCharacterSet(nsACString& aCharset) const
   if (mContent) {
     NS_ASSERTION(mContent->GetDocument(),
                  "Frame still alive after content removed from document!");
-    mContent->GetDocument()->GetDocumentCharacterSet(aCharset);
+    aCharset = mContent->GetDocument()->GetDocumentCharacterSet();
   }
 }
 
@@ -1922,7 +1922,7 @@ nsImageFrame::GetLoadGroup(nsIPresContext *aPresContext, nsILoadGroup **aLoadGro
   if (!doc)
     return;
 
-  doc->GetDocumentLoadGroup(aLoadGroup);
+  *aLoadGroup = doc->GetDocumentLoadGroup().get();  // already_AddRefed
 }
 
 nsresult nsImageFrame::LoadIcons(nsIPresContext *aPresContext)

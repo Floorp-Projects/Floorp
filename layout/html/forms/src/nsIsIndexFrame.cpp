@@ -228,9 +228,8 @@ nsIsIndexFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
 
   // Get the node info manager (used to create hr's and input's)
   nsCOMPtr<nsIDocument> doc = mContent->GetDocument();
-  nsCOMPtr<nsINodeInfoManager> nimgr;
-  result = doc->GetNodeInfoManager(getter_AddRefs(nimgr));
-  NS_ENSURE_SUCCESS(result, result);
+  nsINodeInfoManager *nimgr = doc->GetNodeInfoManager();
+  NS_ENSURE_TRUE(nimgr, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIElementFactory> ef(do_GetService(kHTMLElementFactoryCID,&result));
   NS_ENSURE_SUCCESS(result, result);
@@ -420,10 +419,11 @@ nsIsIndexFrame::OnSubmit(nsIPresContext* aPresContext)
     if (!document) return NS_OK; // No doc means don't submit, see Bug 28988
 
     // Resolve url to an absolute url
-    nsCOMPtr<nsIURI> docURL;
-    document->GetBaseURL(getter_AddRefs(docURL));
-    NS_ASSERTION(docURL, "No Base URL found in Form Submit!\n");
-    if (!docURL) return NS_OK; // No base URL -> exit early, see Bug 30721
+    nsIURI *docURL = document->GetBaseURL();
+    if (!docURL) {
+      NS_ERROR("No Base URL found in Form Submit!\n");
+      return NS_OK; // No base URL -> exit early, see Bug 30721
+    }
 
       // If an action is not specified and we are inside 
       // a HTML document then reload the URL. This makes us
@@ -463,10 +463,11 @@ nsIsIndexFrame::OnSubmit(nsIPresContext* aPresContext)
     nsCOMPtr<nsIURI> actionURL;
     nsXPIDLCString scheme;
     PRBool isJSURL = PR_FALSE;
-    nsCAutoString docCharset;
-    document->GetDocumentCharacterSet(docCharset);
+    const nsACString &docCharset = document->GetDocumentCharacterSet();
+    const nsPromiseFlatCString& flatDocCharset = PromiseFlatCString(docCharset);
+
     if (NS_SUCCEEDED(result = NS_NewURI(getter_AddRefs(actionURL), href,
-                                        docCharset.get(),
+                                        flatDocCharset.get(),
                                         docURL))) {
       result = actionURL->SchemeIs("javascript", &isJSURL);
     }
@@ -483,7 +484,7 @@ nsIsIndexFrame::OnSubmit(nsIPresContext* aPresContext)
     }
     nsCOMPtr<nsIURI> uri;
     result = NS_NewURI(getter_AddRefs(uri), href,
-                       docCharset.get(), docURL);
+                       flatDocCharset.get(), docURL);
     if (NS_FAILED(result)) return result;
 
     // Now pass on absolute url to the click handler
@@ -506,7 +507,7 @@ void nsIsIndexFrame::GetSubmitCharset(nsCString& oCharset)
   // Get the charset from document
   nsIDocument* doc = mContent->GetDocument();
   if (doc) {
-    doc->GetDocumentCharacterSet(oCharset);
+    oCharset = doc->GetDocumentCharacterSet();
   }
 }
 

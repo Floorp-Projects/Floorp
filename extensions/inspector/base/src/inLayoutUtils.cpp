@@ -236,10 +236,7 @@ inLayoutUtils::GetBindingManagerFor(nsIDOMNode* aNode)
   aNode->GetOwnerDocument(getter_AddRefs(domdoc));
   if (domdoc) {
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
-    nsCOMPtr<nsIBindingManager> bindingManager = do_QueryInterface(domdoc);
-    doc->GetBindingManager(getter_AddRefs(bindingManager));
-    
-    return bindingManager;
+    return doc->GetBindingManager();
   }
   
   return nsnull;
@@ -252,10 +249,7 @@ inLayoutUtils::GetSubDocumentFor(nsIDOMNode* aNode)
   if (content) {
     nsCOMPtr<nsIDocument> doc = content->GetDocument();
     if (doc) {
-      nsCOMPtr<nsIDocument> sub_doc;
-      doc->GetSubDocumentFor(content, getter_AddRefs(sub_doc));
-
-      nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(sub_doc));
+      nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(doc->GetSubDocumentFor(content)));
 
       return domdoc;
     }

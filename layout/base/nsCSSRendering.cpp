@@ -1553,7 +1553,7 @@ PRBool GetBGColorForHTMLElement( nsIPresContext *aPresContext,
     nsIDocument *doc = nsnull;
     if (NS_SUCCEEDED(shell->GetDocument(&doc)) && doc) {
       nsIContent *pContent;
-      if (NS_SUCCEEDED(doc->GetRootContent(&pContent)) && pContent) {
+      if ((pContent = doc->GetRootContent())) {
         // make sure that this is the HTML element
         nsCOMPtr<nsIAtom> tag;
         pContent->GetTag(getter_AddRefs(tag));
@@ -1581,7 +1581,6 @@ PRBool GetBGColorForHTMLElement( nsIPresContext *aPresContext,
           }
 #endif
         }// if tag
-        NS_RELEASE(pContent);
       }// if content
       NS_RELEASE(doc);
     }// if doc

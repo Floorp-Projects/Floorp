@@ -659,7 +659,7 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
       document = content->GetDocument();
     else document = do_QueryInterface(mTarget);
     if (document)
-      document->GetScriptGlobalObject(getter_AddRefs(global));
+      global = document->GetScriptGlobalObject();
     else global = do_QueryInterface(mTarget);
     if (global) {
       nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(global));
@@ -2001,16 +2001,12 @@ nsEventListenerManager::FixContextMenuEvent(nsIPresContext* aPresContext,
     aPresContext->GetShell(getter_AddRefs(shell));
     shell->GetDocument(getter_AddRefs(doc));
     if (doc) {
-      nsCOMPtr<nsIScriptGlobalObject> scriptObj;
-      doc->GetScriptGlobalObject(getter_AddRefs(scriptObj));
-      if (scriptObj) {
-        nsCOMPtr<nsPIDOMWindow> privWindow = do_QueryInterface(scriptObj);
-        if (privWindow) {
-          nsCOMPtr<nsIFocusController> focusController;
-          privWindow->GetRootFocusController(getter_AddRefs(focusController));
-          if (focusController)
-            focusController->GetFocusedElement(getter_AddRefs(currentFocus));
-        }
+      nsCOMPtr<nsPIDOMWindow> privWindow = do_QueryInterface(doc->GetScriptGlobalObject());
+      if (privWindow) {
+        nsCOMPtr<nsIFocusController> focusController;
+        privWindow->GetRootFocusController(getter_AddRefs(focusController));
+        if (focusController)
+          focusController->GetFocusedElement(getter_AddRefs(currentFocus));
       }
     }
   }

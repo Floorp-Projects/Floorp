@@ -726,7 +726,7 @@ NS_IMETHODIMP
 nsHTMLFragmentContentSink::SetTargetDocument(nsIDocument* aTargetDocument)
 {
   if (aTargetDocument) {
-    aTargetDocument->GetNodeInfoManager(getter_AddRefs(mNodeInfoManager));
+    mNodeInfoManager = aTargetDocument->GetNodeInfoManager();
   }
 
   if (mNodeInfoManager) {

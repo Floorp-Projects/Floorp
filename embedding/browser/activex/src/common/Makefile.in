@@ -38,6 +38,7 @@ REQUIRES        = \
                 gfx \
                 layout \
                 content \
+                necko \
                 $(NULL)
 
 CPPSRCS         = \

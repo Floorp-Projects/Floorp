@@ -339,12 +339,9 @@ nsXBLContentSink::OnOpenContainer(const PRUnichar **aAtts,
       if (!mDocInfo)
         return NS_ERROR_FAILURE;
 
-      nsCOMPtr<nsIBindingManager> bindingManager;
-      mDocument->GetBindingManager(getter_AddRefs(bindingManager));
-      bindingManager->PutXBLDocumentInfo(mDocInfo);
+      mDocument->GetBindingManager()->PutXBLDocumentInfo(mDocInfo);
 
-      nsCOMPtr<nsIURI> url;
-      mDocument->GetDocumentURL(getter_AddRefs(url));
+      nsIURI *url = mDocument->GetDocumentURL();
       
       PRBool isChrome = PR_FALSE;
       PRBool isRes = PR_FALSE;

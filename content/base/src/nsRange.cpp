@@ -2585,11 +2585,10 @@ nsRange::CreateContextualFragment(const nsAString& aFragment,
         // (just in case...null subject principal will probably never happen)
         if (NS_SUCCEEDED(result) &&
            (!subjectPrin || sysPrin.get() == subjectPrin.get())) {
-          nsCOMPtr<nsIScriptGlobalObject> globalObj;
-          result = document->GetScriptGlobalObject(getter_AddRefs(globalObj));
+          nsIScriptGlobalObject *globalObj = document->GetScriptGlobalObject();
 
           nsCOMPtr<nsIScriptContext> scriptContext;
-          if (NS_SUCCEEDED(result) && globalObj) {
+          if (globalObj) {
             result = globalObj->GetContext(getter_AddRefs(scriptContext));
           }
 

@@ -1054,14 +1054,12 @@ nsHTMLInputElement::SetFocus(nsIPresContext* aPresContext)
   // window to the front.  We update the focus controller, but do
   // nothing else.
   nsCOMPtr<nsIFocusController> focusController;
-  nsCOMPtr<nsIScriptGlobalObject> globalObj;
-  mDocument->GetScriptGlobalObject(getter_AddRefs(globalObj));
-  nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(globalObj));
+  nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(mDocument->GetScriptGlobalObject()));
   win->GetRootFocusController(getter_AddRefs(focusController));
   PRBool isActive = PR_FALSE;
   focusController->GetActive(&isActive);
   if (!isActive) {
-    nsCOMPtr<nsIDOMWindowInternal> domWin(do_QueryInterface(globalObj));
+    nsCOMPtr<nsIDOMWindowInternal> domWin(do_QueryInterface(win));
     focusController->SetFocusedWindow(domWin);
     focusController->SetFocusedElement(this);
     return NS_OK;
@@ -1108,11 +1106,7 @@ nsHTMLInputElement::RemoveFocus(nsIPresContext* aPresContext)
     if (!mDocument)
       return NS_ERROR_NULL_POINTER;
 
-    nsCOMPtr<nsIContent> rootContent;
-
-    mDocument->GetRootContent(getter_AddRefs(rootContent));
-
-    rv = esm->SetContentState(rootContent, NS_EVENT_STATE_FOCUS);
+    rv = esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
   }
 
   return rv;
@@ -1142,15 +1136,13 @@ nsHTMLInputElement::Select()
     // If the window is not active, do not allow the select to bring the
     // window to the front.  We update the focus controller, but do
     // nothing else.
-    nsCOMPtr<nsIScriptGlobalObject> globalObj;
-    mDocument->GetScriptGlobalObject(getter_AddRefs(globalObj));
-    nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(globalObj));
+    nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(mDocument->GetScriptGlobalObject()));
     nsCOMPtr<nsIFocusController> focusController;
     win->GetRootFocusController(getter_AddRefs(focusController));
     PRBool isActive = PR_FALSE;
     focusController->GetActive(&isActive);
     if (!isActive) {
-      nsCOMPtr<nsIDOMWindowInternal> domWin(do_QueryInterface(globalObj));
+      nsCOMPtr<nsIDOMWindowInternal> domWin(do_QueryInterface(win));
       focusController->SetFocusedWindow(domWin);
       focusController->SetFocusedElement(this);
       SelectAll(presContext);

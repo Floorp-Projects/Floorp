@@ -828,8 +828,7 @@ END_COM_MAP()
         if (!doc)
             return E_UNEXPECTED;
 
-        nsCOMPtr<nsIPrincipal> principal;      
-        doc->GetPrincipal(getter_AddRefs(principal));
+        nsIPrincipal *principal = doc->GetPrincipal();
         if (!principal)
             return E_UNEXPECTED;
 
@@ -1900,8 +1899,7 @@ END_COM_MAP()
         nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDOMDocument));
         if (doc)
         {
-            nsCOMPtr<nsIURI> baseURI;
-            doc->GetBaseURL(getter_AddRefs(baseURI));
+            nsIURI *baseURI = doc->GetBaseURL();
             nsCAutoString spec;
             if (baseURI &&
                 NS_SUCCEEDED(baseURI->GetSpec(spec)))

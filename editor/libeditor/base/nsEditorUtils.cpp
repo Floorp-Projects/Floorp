@@ -249,9 +249,8 @@ nsEditorHookUtils::GetHookEnumeratorFromDocument(nsIDOMDocument *aDoc,
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDoc);
   if (!doc) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsISupports> isupp;
-  doc->GetContainer(getter_AddRefs(isupp));
-  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(isupp);
+  nsCOMPtr<nsISupports> container = doc->GetContainer();
+  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
   nsCOMPtr<nsIClipboardDragDropHookList> hookObj = do_GetInterface(docShell);
   if (!hookObj) return NS_ERROR_FAILURE;
 

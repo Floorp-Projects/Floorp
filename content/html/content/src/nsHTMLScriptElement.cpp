@@ -214,7 +214,7 @@ nsHTMLScriptEventHandler::Invoke(nsISupports *aTargetObject,
 
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(domdoc));
   if (doc) {
-    doc->GetScriptGlobalObject(getter_AddRefs(sgo));
+    sgo = doc->GetScriptGlobalObject();
     if (sgo) {
       sgo->GetContext(getter_AddRefs(scriptContext));
     }
@@ -652,8 +652,7 @@ nsHTMLScriptElement::MaybeProcessScript()
   // We'll always call this to make sure that
   // ScriptAvailable/ScriptEvaluated gets called. See bug 153600
   nsresult rv = NS_OK;
-  nsCOMPtr<nsIScriptLoader> loader;
-  mDocument->GetScriptLoader(getter_AddRefs(loader));
+  nsCOMPtr<nsIScriptLoader> loader = mDocument->GetScriptLoader();
   if (loader) {
     mEvaluating = PR_TRUE;
     rv = loader->ProcessScriptElement(this, this);

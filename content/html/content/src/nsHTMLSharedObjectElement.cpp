@@ -229,8 +229,7 @@ nsHTMLObjectElement::GetContentDocument(nsIDOMDocument** aContentDocument)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDocument> sub_doc;
-  mDocument->GetSubDocumentFor(this, getter_AddRefs(sub_doc));
+  nsIDocument *sub_doc = mDocument->GetSubDocumentFor(this);
 
   if (!sub_doc) {
     return NS_OK;

@@ -385,9 +385,9 @@ nsGfxScrollFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   if (!elementFactory)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsINodeInfoManager> nodeInfoManager;
+  nsINodeInfoManager *nodeInfoManager = nsnull;
   if (document)
-    document->GetNodeInfoManager(getter_AddRefs(nodeInfoManager));
+    nodeInfoManager = document->GetNodeInfoManager();
   NS_ENSURE_TRUE(nodeInfoManager, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsINodeInfo> nodeInfo;

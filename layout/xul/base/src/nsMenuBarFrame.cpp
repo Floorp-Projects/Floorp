@@ -213,8 +213,7 @@ nsMenuBarFrame::SetActive(PRBool aActiveFlag)
     if (!document)
       break;
 
-    nsCOMPtr<nsISupports> container;
-    document->GetContainer(getter_AddRefs(container));
+    nsCOMPtr<nsISupports> container = document->GetContainer();
     nsCOMPtr<nsPIDOMWindow> windowPrivate = do_GetInterface(container);
     if (!windowPrivate)
       break;

@@ -1216,8 +1216,6 @@ public:
 
   nsresult OnFileAvailable(nsIFile* aFile);
 
-  nsILoadGroup* GetLoadGroup();
-
   nsresult ServeStreamAsFile(nsIRequest *request, nsISupports *ctxt);
 
 private:
@@ -2514,21 +2512,6 @@ nsPluginStreamListenerPeer::OnFileAvailable(nsIFile* aFile)
 
 
 ////////////////////////////////////////////////////////////////////////
-nsILoadGroup*
-nsPluginStreamListenerPeer::GetLoadGroup()
-{
-  nsILoadGroup* loadGroup = nsnull;
-  nsIDocument* doc;
-  nsresult rv = mOwner->GetDocument(&doc);
-  if (NS_SUCCEEDED(rv)) {
-    doc->GetDocumentLoadGroup(&loadGroup);
-    NS_RELEASE(doc);
-  }
-  return loadGroup;
-}
-
-
-////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP
 nsPluginStreamListenerPeer::VisitHeader(const nsACString &header, const nsACString &value)
 {
@@ -2829,10 +2812,7 @@ nsresult nsPluginHostImpl:: GetPrompt(nsIPluginInstanceOwner *aOwner, nsIPrompt 
       nsCOMPtr<nsIDocument> document;
       aOwner->GetDocument(getter_AddRefs(document));
       if (document) {
-        nsCOMPtr<nsIScriptGlobalObject> globalScript;
-        document->GetScriptGlobalObject(getter_AddRefs(globalScript));
-        if (globalScript)
-          domWindow = do_QueryInterface(globalScript);
+        domWindow = do_QueryInterface(document->GetScriptGlobalObject());
       }
     }
 
@@ -5651,11 +5631,8 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
       rv = owner->GetDocument(getter_AddRefs(doc));
       if (NS_SUCCEEDED(rv) && doc)
       {
-        nsCOMPtr<nsIURI> docURL;
-        doc->GetBaseURL(getter_AddRefs(docURL));
- 
         // Create an absolute URL
-        rv = NS_MakeAbsoluteURI(absUrl, aURL, docURL);
+        rv = NS_MakeAbsoluteURI(absUrl, aURL, doc->GetBaseURL());
       }
     }
   }
@@ -5681,8 +5658,7 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
       if (doc) 
       {
         // Get the script global object owner and use that as the notification callback
-        nsCOMPtr<nsIScriptGlobalObject> global;
-        doc->GetScriptGlobalObject(getter_AddRefs(global));
+        nsIScriptGlobalObject* global = doc->GetScriptGlobalObject();
 
         if (global) 
         {
@@ -5706,10 +5682,7 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
       if (doc) 
       {
         // Set the owner of channel to the document principal...
-        nsCOMPtr<nsIPrincipal> principal;
-        doc->GetPrincipal(getter_AddRefs(principal));
-
-        channel->SetOwner(principal);
+        channel->SetOwner(doc->GetPrincipal());
       }
 
       // deal with headers and post data
@@ -5765,7 +5738,6 @@ nsPluginHostImpl::DoURLLoadSecurityCheck(nsIPluginInstance *aInstance,
   // get the URL of the document that loaded the plugin
   nsCOMPtr<nsIDocument> doc;
   nsCOMPtr<nsIPluginInstancePeer> peer;
-  nsCOMPtr<nsIURI> sourceURL;
   rv = aInstance->GetPeer(getter_AddRefs(peer));
   if (NS_FAILED(rv) || !peer)
     return NS_ERROR_FAILURE;
@@ -5780,16 +5752,13 @@ nsPluginHostImpl::DoURLLoadSecurityCheck(nsIPluginInstance *aInstance,
   if (!doc)
     return NS_ERROR_FAILURE;
 
-  rv = doc->GetDocumentURL(getter_AddRefs(sourceURL));
+  nsIURI *sourceURL = doc->GetDocumentURL();
   if (!sourceURL)
     return NS_ERROR_FAILURE;
 
   // Create an absolute URL for the target in case the target is relative
-  nsCOMPtr<nsIURI> docBaseURL;
-  doc->GetBaseURL(getter_AddRefs(docBaseURL));
-
   nsCOMPtr<nsIURI> targetURL;
-  rv = NS_NewURI(getter_AddRefs(targetURL), aURL, docBaseURL);
+  rv = NS_NewURI(getter_AddRefs(targetURL), aURL, doc->GetBaseURL());
 
   if (!targetURL)
     return NS_ERROR_FAILURE;
@@ -5945,7 +5914,7 @@ nsresult nsPluginHostImpl::NewEmbededPluginStream(nsIURI* aURL,
     if (aOwner) {
       rv = aOwner->GetDocument(getter_AddRefs(doc));
       if (NS_SUCCEEDED(rv) && doc) {
-        doc->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
+        loadGroup = doc->GetDocumentLoadGroup();
       }
     }
 
@@ -5956,11 +5925,8 @@ nsresult nsPluginHostImpl::NewEmbededPluginStream(nsIURI* aURL,
       // if this is http channel, set referrer, some servers are configured
       // to reject requests without referrer set, see bug 157796
       nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
-      if (httpChannel && doc) {
-        nsCOMPtr<nsIURI> referrerURL;
-        if (NS_SUCCEEDED(doc->GetBaseURL(getter_AddRefs(referrerURL))))
-          httpChannel->SetReferrer(referrerURL);
-      }
+      if (httpChannel && doc)
+        httpChannel->SetReferrer(doc->GetBaseURL());
 
       rv = channel->AsyncOpen(listener, nsnull);
       if (NS_SUCCEEDED(rv))

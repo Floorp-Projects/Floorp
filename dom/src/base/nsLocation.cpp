@@ -98,8 +98,8 @@ static nsresult GetDocumentCharacterSetForURI(const nsAString& aHref, nsACString
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
-  rv = doc->GetDocumentCharacterSet(aCharset);
-  return rv;
+  aCharset = doc->GetDocumentCharacterSet();
+  return NS_OK;
 }
 
 LocationImpl::LocationImpl(nsIDocShell *aDocShell)
@@ -929,7 +929,8 @@ LocationImpl::GetSourceBaseURL(JSContext* cx, nsIURI** sourceURL)
   nsCOMPtr<nsIDocument> doc;
   nsresult rv = GetSourceDocument(cx, getter_AddRefs(doc));
   if (doc) {
-    return doc->GetBaseURL(sourceURL);
+    NS_IF_ADDREF(*sourceURL = doc->GetBaseURL());
+    return NS_OK;
   }
 
   *sourceURL = nsnull;
@@ -942,7 +943,7 @@ LocationImpl::GetSourceURL(JSContext* cx, nsIURI** sourceURL)
   nsCOMPtr<nsIDocument> doc;
   nsresult rv = GetSourceDocument(cx, getter_AddRefs(doc));
   if (doc) {
-    doc->GetDocumentURL(sourceURL);
+    NS_IF_ADDREF(*sourceURL = doc->GetDocumentURL());
   } else {
     *sourceURL = nsnull;
   }

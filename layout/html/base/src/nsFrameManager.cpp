@@ -1196,8 +1196,7 @@ nsresult CantRenderReplacedElementEvent::AddLoadGroupRequest(nsIPresShell* aPres
   if (NS_FAILED(rv)) return rv;
   if (!mDummyLayoutRequest) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsILoadGroup> loadGroup;
-  doc->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
+  nsCOMPtr<nsILoadGroup> loadGroup = doc->GetDocumentLoadGroup();
   if (!loadGroup) return NS_ERROR_FAILURE;
   
   rv = mDummyLayoutRequest->SetLoadGroup(loadGroup);
@@ -1224,8 +1223,7 @@ nsresult CantRenderReplacedElementEvent::RemoveLoadGroupRequest()
     presShell->GetDocument(getter_AddRefs(doc));
     if (!doc) return NS_ERROR_FAILURE;;
 
-    nsCOMPtr<nsILoadGroup> loadGroup;
-    doc->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
+    nsCOMPtr<nsILoadGroup> loadGroup = doc->GetDocumentLoadGroup();
     if (!loadGroup) return NS_ERROR_FAILURE;
 
     rv = loadGroup->RemoveRequest(request, nsnull, NS_OK);

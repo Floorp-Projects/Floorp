@@ -377,11 +377,8 @@ nsXULPrototypeCache::PutXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo)
     nsCOMPtr<nsIDocument> doc;
     aDocumentInfo->GetDocument(getter_AddRefs(doc));
 
-    nsCOMPtr<nsIURI> uri;
-    doc->GetDocumentURL(getter_AddRefs(uri));
-
     nsCAutoString str;
-    uri->GetSpec(str);
+    doc->GetDocumentURL()->GetSpec(str);
 
     nsCOMPtr<nsIXBLDocumentInfo> info;
     mXBLDocTable.Get(str, getter_AddRefs(info));
@@ -404,10 +401,8 @@ FlushSkinXBL(const nsACString& key, nsCOMPtr<nsIXBLDocumentInfo>& aDocInfo, void
 {
   nsCOMPtr<nsIDocument> doc;
   aDocInfo->GetDocument(getter_AddRefs(doc));
-  nsCOMPtr<nsIURI> uri;
-  doc->GetDocumentURL(getter_AddRefs(uri));
   nsCAutoString str;
-  uri->GetPath(str);
+  doc->GetDocumentURL()->GetPath(str);
 
   PLDHashOperator ret = PL_DHASH_NEXT;
 

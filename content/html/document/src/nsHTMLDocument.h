@@ -86,8 +86,8 @@ public:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
 
-  NS_IMETHOD Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
-  NS_IMETHOD ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup);
+  virtual void Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
+  virtual void ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup);
 
   NS_IMETHOD CreateShell(nsIPresContext* aContext,
                          nsIViewManager* aViewManager,
@@ -104,7 +104,7 @@ public:
 
   NS_IMETHOD StopDocumentLoad();
 
-  NS_IMETHOD EndLoad();
+  virtual void EndLoad();
 
   NS_IMETHOD AddImageMap(nsIDOMHTMLMapElement* aMap);
 
@@ -117,8 +117,8 @@ public:
   NS_IMETHOD GetInlineStyleSheet(nsIHTMLCSSStyleSheet** aStyleSheet);
   NS_IMETHOD GetCSSLoader(nsICSSLoader*& aLoader);
 
-  NS_IMETHOD GetBaseTarget(nsAString& aTarget);
-  NS_IMETHOD SetBaseTarget(const nsAString& aTarget);
+  virtual void GetBaseTarget(nsAString& aTarget) const;
+  virtual void SetBaseTarget(const nsAString& aTarget);
 
   NS_IMETHOD SetReferrer(const nsAString& aReferrer);
 
@@ -130,28 +130,28 @@ public:
     return mWriteLevel != PRUint32(0);
   }
 
-  NS_IMETHOD ContentAppended(nsIContent* aContainer,
-                             PRInt32 aNewIndexInContainer);
-  NS_IMETHOD ContentInserted(nsIContent* aContainer,
-                             nsIContent* aChild,
-                             PRInt32 aIndexInContainer);
-  NS_IMETHOD ContentReplaced(nsIContent* aContainer,
-                             nsIContent* aOldChild,
-                             nsIContent* aNewChild,
-                             PRInt32 aIndexInContainer);
-  NS_IMETHOD ContentRemoved(nsIContent* aContainer,
-                            nsIContent* aChild,
-                            PRInt32 aIndexInContainer);
-  NS_IMETHOD AttributeChanged(nsIContent* aChild,
-                              PRInt32 aNameSpaceID,
-                              nsIAtom* aAttribute,
-                              PRInt32 aModType);
-  NS_IMETHOD AttributeWillChange(nsIContent* aChild,
-                                 PRInt32 aNameSpaceID,
-                                 nsIAtom* aAttribute);
+  virtual void ContentAppended(nsIContent* aContainer,
+                               PRInt32 aNewIndexInContainer);
+  virtual void ContentInserted(nsIContent* aContainer,
+                               nsIContent* aChild,
+                               PRInt32 aIndexInContainer);
+  virtual void ContentReplaced(nsIContent* aContainer,
+                               nsIContent* aOldChild,
+                               nsIContent* aNewChild,
+                               PRInt32 aIndexInContainer);
+  virtual void ContentRemoved(nsIContent* aContainer,
+                              nsIContent* aChild,
+                              PRInt32 aIndexInContainer);
+  virtual void AttributeChanged(nsIContent* aChild,
+                                PRInt32 aNameSpaceID,
+                                nsIAtom* aAttribute,
+                                PRInt32 aModType);
+  virtual void AttributeWillChange(nsIContent* aChild,
+                                   PRInt32 aNameSpaceID,
+                                   nsIAtom* aAttribute);
 
-  NS_IMETHOD FlushPendingNotifications(PRBool aFlushReflows = PR_TRUE,
-                                       PRBool aUpdateViews = PR_FALSE);
+  virtual void FlushPendingNotifications(PRBool aFlushReflows = PR_TRUE,
+                                         PRBool aUpdateViews = PR_FALSE);
 
   NS_IMETHOD_(PRBool) IsCaseSensitive();
 
@@ -230,8 +230,8 @@ protected:
                                      PRUint32 aFlags);
   virtual void InternalInsertStyleSheetAt(nsIStyleSheet* aSheet,
                                           PRInt32 aIndex);
-  virtual already_AddRefed<nsIStyleSheet> InternalGetStyleSheetAt(PRInt32 aIndex);
-  virtual PRInt32 InternalGetNumberOfStyleSheets();
+  virtual nsIStyleSheet* InternalGetStyleSheetAt(PRInt32 aIndex) const;
+  virtual PRInt32 InternalGetNumberOfStyleSheets() const;
 
   static PRBool MatchLinks(nsIContent *aContent, nsString* aData);
   static PRBool MatchAnchors(nsIContent *aContent, nsString* aData);
@@ -256,7 +256,7 @@ protected:
   nsresult CreateAndAddWyciwygChannel(void);
   nsresult RemoveWyciwygChannel(void);
 
-  nsresult BaseResetToURI(nsIURI* aURI);
+  void BaseResetToURI(nsIURI* aURI);
 
   virtual void RetrieveRelevantHeaders(nsIChannel *aChannel);
 

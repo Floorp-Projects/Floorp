@@ -171,8 +171,7 @@ NS_NewHTMLImageElement(nsIHTMLContent** aInstancePtrResult,
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(dom_doc));
     NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
 
-    nsCOMPtr<nsINodeInfoManager> nodeInfoManager;
-    doc->GetNodeInfoManager(getter_AddRefs(nodeInfoManager));
+    nsINodeInfoManager *nodeInfoManager = doc->GetNodeInfoManager();
     NS_ENSURE_TRUE(nodeInfoManager, NS_ERROR_UNEXPECTED);
 
     rv = nodeInfoManager->GetNodeInfo(nsHTMLAtoms::img, nsnull,

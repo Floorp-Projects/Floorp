@@ -2410,11 +2410,9 @@ DumpContentRecurse(nsIDocShell* aDocShell, FILE* out)
       nsCOMPtr<nsIDocument> doc;
       shell->GetDocument(getter_AddRefs(doc));
       if (doc) {
-        nsIContent* root = nsnull;
-        doc->GetRootContent(&root);
+        nsIContent *root = doc->GetRootContent();
         if (nsnull != root) {
           root->List(out);
-          NS_RELEASE(root);
         }
       }
       NS_RELEASE(shell);

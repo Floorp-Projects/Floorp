@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -78,9 +79,7 @@ nsXMLPrettyPrinter::PrettyPrint(nsIDocument* aDocument)
     }
 
     // check if we're in an invisible iframe
-    nsCOMPtr<nsIScriptGlobalObject> sgo;
-    aDocument->GetScriptGlobalObject(getter_AddRefs(sgo));
-    nsCOMPtr<nsIDOMWindowInternal> internalWin = do_QueryInterface(sgo);
+    nsCOMPtr<nsIDOMWindowInternal> internalWin = do_QueryInterface(aDocument->GetScriptGlobalObject());
     nsCOMPtr<nsIDOMElement> frameElem;
     if (internalWin) {
         internalWin->GetFrameElement(getter_AddRefs(frameElem));
@@ -178,13 +177,12 @@ nsXMLPrettyPrinter::PrettyPrint(nsIDocument* aDocument)
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Hand the result document to the binding
-    nsCOMPtr<nsIBindingManager> manager;
-    aDocument->GetBindingManager(getter_AddRefs(manager));
     nsCOMPtr<nsIObserver> binding;
     nsCOMPtr<nsIContent> rootCont = do_QueryInterface(rootElem);
     NS_ASSERTION(rootCont, "Element doesn't implement nsIContent");
-    manager->GetBindingImplementation(rootCont, NS_GET_IID(nsIObserver),
-                                      (void**)getter_AddRefs(binding));
+    aDocument->GetBindingManager()->GetBindingImplementation(rootCont,
+                                              NS_GET_IID(nsIObserver),
+                                              (void**)getter_AddRefs(binding));
     NS_ASSERTION(binding, "Prettyprint binding doesn't implement nsIObserver");
     NS_ENSURE_TRUE(binding, NS_ERROR_UNEXPECTED);
     

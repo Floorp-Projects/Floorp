@@ -92,8 +92,8 @@ public:
     NS_DECL_NSISTREAMLOADEROBSERVER
 
     // nsIDocument interface
-    NS_IMETHOD Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
-    NS_IMETHOD ResetToURI(nsIURI *aURI, nsILoadGroup* aLoadGroup);
+    virtual void Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
+    virtual void ResetToURI(nsIURI *aURI, nsILoadGroup* aLoadGroup);
 
     NS_IMETHOD StartDocumentLoad(const char* aCommand,
                                  nsIChannel *channel,
@@ -103,32 +103,32 @@ public:
                                  PRBool aReset = PR_TRUE,
                                  nsIContentSink* aSink = nsnull);
 
-    NS_IMETHOD GetPrincipal(nsIPrincipal **aPrincipal);
+    virtual nsIPrincipal* GetPrincipal();
 
     NS_IMETHOD SetPrincipal(nsIPrincipal *aPrincipal);
 
-    NS_IMETHOD SetContentType(const nsAString& aContentType);
+    virtual void SetContentType(const nsAString& aContentType);
 
-    NS_IMETHOD EndLoad();
+    virtual void EndLoad();
 
-    NS_IMETHOD ContentAppended(nsIContent* aContainer,
-                               PRInt32 aNewIndexInContainer);
+    virtual void ContentAppended(nsIContent* aContainer,
+                                 PRInt32 aNewIndexInContainer);
 
-    NS_IMETHOD ContentInserted(nsIContent* aContainer,
-                               nsIContent* aChild,
-                               PRInt32 aIndexInContainer);
+    virtual void ContentInserted(nsIContent* aContainer,
+                                 nsIContent* aChild,
+                                 PRInt32 aIndexInContainer);
 
-    NS_IMETHOD ContentReplaced(nsIContent* aContainer,
-                               nsIContent* aOldChild,
-                               nsIContent* aNewChild,
-                               PRInt32 aIndexInContainer);
+    virtual void ContentReplaced(nsIContent* aContainer,
+                                 nsIContent* aOldChild,
+                                 nsIContent* aNewChild,
+                                 PRInt32 aIndexInContainer);
 
-    NS_IMETHOD ContentRemoved(nsIContent* aContainer,
-                              nsIContent* aChild,
-                              PRInt32 aIndexInContainer);
+    virtual void ContentRemoved(nsIContent* aContainer,
+                                nsIContent* aChild,
+                                PRInt32 aIndexInContainer);
 
-    NS_IMETHOD AttributeChanged(nsIContent* aElement, PRInt32 aNameSpaceID,
-                                nsIAtom* aAttribute, PRInt32 aModType);
+    virtual void AttributeChanged(nsIContent* aElement, PRInt32 aNameSpaceID,
+                                  nsIAtom* aAttribute, PRInt32 aModType);
 
     NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,
                               nsEvent* aEvent,

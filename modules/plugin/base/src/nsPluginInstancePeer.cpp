@@ -745,8 +745,7 @@ NS_IMETHODIMP nsPluginInstancePeerImpl::GetJSWindow(JSObject* *outJSWindow)
   rv = mOwner->GetDocument(getter_AddRefs(document));
 
   if (NS_SUCCEEDED(rv) && document) {
-    nsCOMPtr<nsIScriptGlobalObject> global;
-    document->GetScriptGlobalObject(getter_AddRefs(global));
+    nsIScriptGlobalObject *global = document->GetScriptGlobalObject();
 
     if(global) {
       *outJSWindow = global->GetGlobalJSObject();
@@ -771,8 +770,7 @@ NS_IMETHODIMP nsPluginInstancePeerImpl::GetJSContext(JSContext* *outContext)
   rv = mOwner->GetDocument(getter_AddRefs(document));
 
   if (NS_SUCCEEDED(rv) && document) {
-    nsCOMPtr<nsIScriptGlobalObject> global;
-    document->GetScriptGlobalObject(getter_AddRefs(global));
+    nsIScriptGlobalObject *global = document->GetScriptGlobalObject();
 
     if (global) {
       nsCOMPtr<nsIScriptContext> context;

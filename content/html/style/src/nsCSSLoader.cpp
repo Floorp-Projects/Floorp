@@ -613,7 +613,7 @@ SheetLoadData::OnDetermineCharset(nsIUnicharStreamLoader* aLoader,
   if (aCharset.IsEmpty() && mLoader->mDocument) {
     // no useful data on charset.  Try the document charset.
     // That needs no resolution, since it's already fully resolved
-    mLoader->mDocument->GetDocumentCharacterSet(aCharset);
+    aCharset = mLoader->mDocument->GetDocumentCharacterSet();
 #ifdef DEBUG_bzbarsky
     fprintf(stderr, "Set from document: %s\n",
             PromiseFlatCString(aCharset).get());
@@ -926,11 +926,10 @@ CSSLoaderImpl::CheckLoadAllowed(nsIURI* aSourceURI,
     return NS_OK;
   }
   
-  nsCOMPtr<nsIScriptGlobalObject> globalObject;
-  rv = mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
-  if (NS_FAILED(rv) || !globalObject) {
+  nsIScriptGlobalObject *globalObject = mDocument->GetScriptGlobalObject();
+  if (!globalObject) {
     LOG(("  No script global object"));
-    return rv;
+    return NS_OK;
   }
   
   nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(globalObject));
@@ -1111,8 +1110,7 @@ CSSLoaderImpl::InsertSheetInDoc(nsICSSStyleSheet* aSheet,
 
   // XXX Need to cancel pending sheet loads for this element, if any
 
-  PRInt32 sheetCount;
-  aDocument->GetNumberOfStyleSheets(PR_FALSE, &sheetCount);
+  PRInt32 sheetCount = aDocument->GetNumberOfStyleSheets(PR_FALSE);
 
   /*
    * Start the walk at the _end_ of the list, since in the typical
@@ -1124,9 +1122,8 @@ CSSLoaderImpl::InsertSheetInDoc(nsICSSStyleSheet* aSheet,
    */
   PRInt32 insertionPoint;
   for (insertionPoint = sheetCount - 1; insertionPoint >= 0; --insertionPoint) {
-    nsCOMPtr<nsIStyleSheet> curSheet;
-    aDocument->GetStyleSheetAt(insertionPoint, PR_FALSE,
-                               getter_AddRefs(curSheet));
+    nsIStyleSheet *curSheet = aDocument->GetStyleSheetAt(insertionPoint,
+                                                         PR_FALSE);
     NS_ASSERTION(curSheet, "There must be a sheet here!");
     nsCOMPtr<nsIDOMStyleSheet> domSheet = do_QueryInterface(curSheet);
     NS_ASSERTION(domSheet, "All the \"normal\" sheets implement nsIDOMStyleSheet");
@@ -1330,7 +1327,7 @@ CSSLoaderImpl::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
 #endif
   nsCOMPtr<nsILoadGroup> loadGroup;
   if (mDocument) {
-    mDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
+    loadGroup = mDocument->GetDocumentLoadGroup();
     NS_ASSERTION(loadGroup,
                  "No loadgroup for stylesheet; onload will fire early");
   }
@@ -1358,8 +1355,7 @@ CSSLoaderImpl::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
                                   NS_LITERAL_CSTRING("text/css,*/*;q=0.1"),
                                   PR_FALSE);
     if (mDocument) {
-      nsCOMPtr<nsIURI> documentURI;
-      mDocument->GetDocumentURL(getter_AddRefs(documentURI));
+      nsIURI *documentURI = mDocument->GetDocumentURL();
       NS_ASSERTION(documentURI, "Null document uri is bad!");
       if (documentURI) {
         httpChannel->SetReferrer(documentURI);
@@ -1645,10 +1641,9 @@ CSSLoaderImpl::LoadStyleLink(nsIContent* aElement,
   NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_INITIALIZED);
 
   // Check whether we should even load
-  nsCOMPtr<nsIURI> docURI;
-  nsresult rv = mDocument->GetDocumentURL(getter_AddRefs(docURI));
-  if (NS_FAILED(rv) || !docURI) return NS_ERROR_FAILURE;
-  rv = CheckLoadAllowed(docURI, aURL, aElement);
+  nsIURI *docURI = mDocument->GetDocumentURL();
+  if (!docURI) return NS_ERROR_FAILURE;
+  nsresult rv = CheckLoadAllowed(docURI, aURL, aElement);
   if (NS_FAILED(rv)) return rv;
 
   LOG(("  Passed load check"));

@@ -173,10 +173,8 @@ nsNodeInfoManager::DropDocumentReference()
     // that we're creating a principal without having a uri.
     // This happens in a few cases where a document is created and then
     // immediately dropped without ever getting a URI.
-    nsCOMPtr<nsIURI> docUri;
-    mDocument->GetDocumentURL(getter_AddRefs(docUri));
-    if (docUri) {
-      mDocument->GetPrincipal(getter_AddRefs(mPrincipal));
+    if (mDocument->GetDocumentURL()) {
+      mPrincipal = mDocument->GetPrincipal();
     }
   }
   mDocument = nsnull;
@@ -338,13 +336,17 @@ nsNodeInfoManager::GetDocumentPrincipal(nsIPrincipal** aPrincipal)
   if (mDocument) {
     // If the document has a uri we'll ask for it's principal. Otherwise we'll
     // consider this document 'anonymous'
-    nsCOMPtr<nsIURI> docUri;
-    mDocument->GetDocumentURL(getter_AddRefs(docUri));
-    if (!docUri) {
+    if (!mDocument->GetDocumentURL()) {
       *aPrincipal = nsnull;
       return NS_OK;
     }
-    return mDocument->GetPrincipal(aPrincipal);
+
+    *aPrincipal = mDocument->GetPrincipal();
+    if (!*aPrincipal)
+      return NS_ERROR_FAILURE;
+
+    NS_ADDREF(*aPrincipal);
+    return NS_OK;
   }
   *aPrincipal = mPrincipal;
   NS_IF_ADDREF(*aPrincipal);

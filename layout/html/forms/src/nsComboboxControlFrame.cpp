@@ -2126,9 +2126,8 @@ nsComboboxControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
     nsCOMPtr<nsIDocument> doc = mContent->GetDocument();
     // mContent->AppendChildTo(labelContent, PR_FALSE, PR_FALSE);
 
-    nsCOMPtr<nsINodeInfoManager> nimgr;
-    result = doc->GetNodeInfoManager(getter_AddRefs(nimgr));
-    NS_ENSURE_SUCCESS(result, result);
+    nsINodeInfoManager *nimgr = doc->GetNodeInfoManager();
+    NS_ENSURE_TRUE(nimgr, NS_ERROR_FAILURE);
 
     nsCOMPtr<nsINodeInfo> nodeInfo;
     nimgr->GetNodeInfo(nsHTMLAtoms::input, nsnull, kNameSpaceID_None,

@@ -235,17 +235,15 @@ nsXMLDocument::Init()
   return rv;
 }
 
-NS_IMETHODIMP 
+void
 nsXMLDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
 {
-  nsresult result = nsDocument::Reset(aChannel, aLoadGroup);
-  if (NS_FAILED(result))
-    return result;
+  nsDocument::Reset(aChannel, aLoadGroup);
   nsCOMPtr<nsIURI> url;
   if (aChannel) {
-    result = aChannel->GetURI(getter_AddRefs(url));
+    nsresult result = aChannel->GetURI(getter_AddRefs(url));
     if (NS_FAILED(result))
-      return result;
+      return;
   }
 
   if (mAttrStyleSheet) {
@@ -255,13 +253,11 @@ nsXMLDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
     mInlineStyleSheet->SetOwningDocument(nsnull);
   }
 
-  result = SetDefaultStylesheets(url);
+  SetDefaultStylesheets(url);
 
   mBaseTarget.Truncate();
 
   mScriptContext = nsnull;
-
-  return result;
 }
 
 /////////////////////////////////////////////////////
@@ -387,7 +383,7 @@ nsXMLDocument::GetLoadGroup(nsILoadGroup **aLoadGroup)
       window->GetDocument(getter_AddRefs(domdoc));
       nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
       if (doc) {
-        doc->GetDocumentLoadGroup(aLoadGroup);
+        *aLoadGroup = doc->GetDocumentLoadGroup().get(); // already_AddRefed
       }
     }
   }
@@ -432,7 +428,7 @@ nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
     }
   }
 
-  nsCOMPtr<nsIURI> baseURI(mDocumentURL);
+  nsIURI *baseURI = mDocumentURL;
   nsCAutoString charset;
 
   if (callingContext) {
@@ -447,8 +443,8 @@ nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
       nsCOMPtr<nsIDocument> doc(do_QueryInterface(dom_doc));
 
       if (doc) {
-        doc->GetBaseURL(getter_AddRefs(baseURI));
-        doc->GetDocumentCharacterSet(charset);
+        baseURI = doc->GetBaseURL();
+        charset = doc->GetDocumentCharacterSet();
       }
     }
   }
@@ -600,17 +596,14 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
     // who puts the document on display to worry about enabling.
 
     // scripts
-    nsCOMPtr<nsIScriptLoader> loader;
-    nsresult rv = GetScriptLoader(getter_AddRefs(loader));
-    if (NS_FAILED(rv))
-      return rv;
+    nsIScriptLoader *loader = GetScriptLoader();
     if (loader) {
       loader->SetEnabled(PR_FALSE); // Do not load/process scripts when loading as data
     }
 
     // styles
     nsCOMPtr<nsICSSLoader> cssLoader;
-    rv = GetCSSLoader(*getter_AddRefs(cssLoader));
+    nsresult rv = GetCSSLoader(*getter_AddRefs(cssLoader));
     if (NS_FAILED(rv))
       return rv;
     if (cssLoader) {
@@ -687,7 +680,7 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+void
 nsXMLDocument::EndLoad()
 {
   mLoopingForSyncLoad = PR_FALSE;
@@ -711,7 +704,7 @@ nsXMLDocument::EndLoad()
 
     HandleDOMEvent(nsnull, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
   }    
-  return nsDocument::EndLoad();  
+  nsDocument::EndLoad();  
 }
 
 NS_IMETHODIMP 
@@ -792,15 +785,13 @@ nsXMLDocument::InternalInsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex)
   mStyleSheets.InsertObjectAt(aSheet, aIndex + mCatalogSheetCount + 1);
 }
 
-already_AddRefed<nsIStyleSheet>
-nsXMLDocument::InternalGetStyleSheetAt(PRInt32 aIndex)
+nsIStyleSheet*
+nsXMLDocument::InternalGetStyleSheetAt(PRInt32 aIndex) const
 {
   PRInt32 count = InternalGetNumberOfStyleSheets();
 
   if (aIndex >= 0 && aIndex < count) {
-    nsIStyleSheet* sheet = mStyleSheets[aIndex + mCatalogSheetCount + 1];
-    NS_ADDREF(sheet);
-    return sheet;
+    return mStyleSheets[aIndex + mCatalogSheetCount + 1];
   } else {
     NS_ERROR("Index out of range");
     return nsnull;
@@ -808,7 +799,7 @@ nsXMLDocument::InternalGetStyleSheetAt(PRInt32 aIndex)
 }
 
 PRInt32
-nsXMLDocument::InternalGetNumberOfStyleSheets()
+nsXMLDocument::InternalGetNumberOfStyleSheets() const
 {
   PRInt32 count = mStyleSheets.Count();
 
@@ -1112,18 +1103,16 @@ nsXMLDocument::SetDefaultStylesheets(nsIURI* aUrl)
   return rv;
 }
 
-NS_IMETHODIMP 
+void
 nsXMLDocument::SetBaseTarget(const nsAString &aBaseTarget)
 {
   mBaseTarget.Assign(aBaseTarget);
-  return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsXMLDocument::GetBaseTarget(nsAString &aBaseTarget)
+void
+nsXMLDocument::GetBaseTarget(nsAString &aBaseTarget) const
 {
   aBaseTarget.Assign(mBaseTarget);
-  return NS_OK;
 }
 
 NS_IMETHODIMP

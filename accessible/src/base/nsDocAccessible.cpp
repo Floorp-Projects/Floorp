@@ -174,8 +174,7 @@ NS_IMETHODIMP nsDocAccessible::GetURL(nsAString& aURL)
   if (!mDocument) {
     return NS_ERROR_FAILURE; // Document has been shut down
   }
-  nsCOMPtr<nsISupports> container;
-  mDocument->GetContainer(getter_AddRefs(container));
+  nsCOMPtr<nsISupports> container = mDocument->GetContainer();
   nsCOMPtr<nsIWebNavigation> webNav(do_GetInterface(container));
   nsCAutoString theURL;
   if (webNav) {
@@ -192,7 +191,12 @@ NS_IMETHODIMP nsDocAccessible::GetURL(nsAString& aURL)
 
 NS_IMETHODIMP nsDocAccessible::GetTitle(nsAString& aTitle)
 {
-  return mDocument? mDocument->GetDocumentTitle(aTitle): NS_ERROR_FAILURE;
+  if (mDocument) {
+    aTitle = mDocument->GetDocumentTitle();
+    return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsDocAccessible::GetMimeType(nsAString& aMimeType)
@@ -253,9 +257,7 @@ NS_IMETHODIMP nsDocAccessible::GetWindow(nsIDOMWindow **aDOMWin)
   if (!mDocument) {
     return NS_ERROR_FAILURE;  // Accessible is Shutdown()
   }
-  nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
-  mDocument->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
-  nsCOMPtr<nsIDOMWindow> domWindow(do_QueryInterface(ourGlobal));
+  nsCOMPtr<nsIDOMWindow> domWindow(do_QueryInterface(mDocument->GetScriptGlobalObject()));
 
   if (!domWindow)
     return NS_ERROR_FAILURE;  // No DOM Window
@@ -283,14 +285,11 @@ void nsDocAccessible::CheckForEditor()
   if (!mDocument) {
     return;  // No document -- we've been shut down
   }
-  nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
-  mDocument->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
-  nsCOMPtr<nsIDOMWindow> domWindow(do_QueryInterface(ourGlobal));
+  nsCOMPtr<nsIDOMWindow> domWindow(do_QueryInterface(mDocument->GetScriptGlobalObject()));
   if (!domWindow)
     return;  // No DOM Window
 
-  nsCOMPtr<nsISupports> container;
-  mDocument->GetContainer(getter_AddRefs(container));
+  nsCOMPtr<nsISupports> container = mDocument->GetContainer();
   nsCOMPtr<nsIEditingSession> editingSession(do_GetInterface(container));
   if (!editingSession)
     return; // No editing session interface
@@ -327,12 +326,9 @@ NS_IMETHODIMP nsDocAccessible::Init()
 {
   // Hook up our new accessible with our parent
   if (!mParent) {
-    nsCOMPtr<nsIDocument> parentDoc;
-    mDocument->GetParentDocument(getter_AddRefs(parentDoc));
+    nsIDocument *parentDoc = mDocument->GetParentDocument();
     if (parentDoc) {
-      nsCOMPtr<nsIContent> ownerContent;
-      parentDoc->FindContentForSubDocument(mDocument, 
-                                           getter_AddRefs(ownerContent));
+      nsIContent *ownerContent = parentDoc->FindContentForSubDocument(mDocument);
       nsCOMPtr<nsIDOMNode> ownerNode(do_QueryInterface(ownerContent));
       if (ownerNode) {
         nsCOMPtr<nsIAccessibilityService> accService = 
@@ -415,8 +411,8 @@ void nsDocAccessible::GetBoundsRect(nsRect& aBounds, nsIFrame** aRelativeFrame)
 {
   *aRelativeFrame = GetFrame();
 
-  nsCOMPtr<nsIDocument> document(mDocument);
-  nsCOMPtr<nsIDocument> parentDoc;
+  nsIDocument *document = mDocument;
+  nsIDocument *parentDoc = nsnull;
 
   while (document) {
     nsIPresShell *presShell = document->GetShellAt(0);
@@ -452,8 +448,7 @@ void nsDocAccessible::GetBoundsRect(nsRect& aBounds, nsIFrame** aRelativeFrame)
       aBounds = viewBounds;
     }
 
-    document->GetParentDocument(getter_AddRefs(parentDoc));
-    document = parentDoc;
+    document = parentDoc = document->GetParentDocument();
   }
 }
 
@@ -471,9 +466,7 @@ nsresult nsDocAccessible::AddEventListeners()
   nsCOMPtr<nsIPresShell> presShell(GetPresShell());
   NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsISupports> container;
-  mDocument->GetContainer(getter_AddRefs(container));
-
+  nsCOMPtr<nsISupports> container = mDocument->GetContainer();
   nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem(do_QueryInterface(container));
   NS_ENSURE_TRUE(docShellTreeItem, NS_ERROR_FAILURE);
 
@@ -491,7 +484,7 @@ nsresult nsDocAccessible::AddEventListeners()
   
     if (!mEditor) {
       // We're not an editor yet, but we might become one
-      nsCOMPtr<nsICommandManager> commandManager = do_GetInterface(container);
+      nsCOMPtr<nsICommandManager> commandManager = do_GetInterface(docShellTreeItem);
       if (commandManager) {
         commandManager->AddCommandObserver(this, "obs_documentCreated");
       }
@@ -595,15 +588,14 @@ nsresult nsDocAccessible::RemoveEventListeners()
     mDocLoadTimer = nsnull;
   }
 
-  nsCOMPtr<nsISupports> container;
-  mDocument->GetContainer(getter_AddRefs(container));
+  nsCOMPtr<nsISupports> container = mDocument->GetContainer();
   nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem(do_QueryInterface(container));
   NS_ENSURE_TRUE(docShellTreeItem, NS_ERROR_FAILURE);
 
   PRInt32 itemType;
   docShellTreeItem->GetItemType(&itemType);
   if (itemType == nsIDocShellTreeItem::typeContent) {
-    nsCOMPtr<nsICommandManager> commandManager = do_GetInterface(container);
+    nsCOMPtr<nsICommandManager> commandManager = do_GetInterface(docShellTreeItem);
     if (commandManager) {
       commandManager->RemoveCommandObserver(this, "obs_documentCreated");
     }

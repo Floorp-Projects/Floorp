@@ -298,8 +298,7 @@ nsAccessibilityService::CreateRootAccessible(nsIPresShell *aShell,
   nsCOMPtr<nsIDOMNode> rootNode(do_QueryInterface(aDocument));
   NS_ENSURE_TRUE(rootNode, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDocument> parentDoc;
-  aDocument->GetParentDocument(getter_AddRefs(parentDoc));
+  nsIDocument *parentDoc = aDocument->GetParentDocument();
 
   nsIPresShell *presShell = aShell;
   if (!presShell) {

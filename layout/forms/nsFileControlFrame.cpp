@@ -140,14 +140,14 @@ nsFileControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
 {
   // Get the NodeInfoManager and tag necessary to create input elements
   nsCOMPtr<nsIDocument> doc = mContent->GetDocument();
-  nsCOMPtr<nsINodeInfoManager> nimgr;
-  nsresult rv = doc->GetNodeInfoManager(getter_AddRefs(nimgr));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsINodeInfoManager *nimgr = doc->GetNodeInfoManager();
+  NS_ENSURE_TRUE(nimgr, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
   nimgr->GetNodeInfo(nsHTMLAtoms::input, nsnull, kNameSpaceID_None,
                      getter_AddRefs(nodeInfo));
 
+  nsresult rv;
   nsCOMPtr<nsIElementFactory> ef(do_GetService(kHTMLElementFactoryCID,&rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -272,12 +272,7 @@ nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
   if (!doc)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject;
-  result = doc->GetScriptGlobalObject(getter_AddRefs(scriptGlobalObject));
-  if (!scriptGlobalObject)
-    return NS_FAILED(result) ? result : NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDOMWindowInternal> parentWindow = do_QueryInterface(scriptGlobalObject);
+  nsCOMPtr<nsIDOMWindowInternal> parentWindow = do_QueryInterface(doc->GetScriptGlobalObject());
   if (!parentWindow)
     return NS_ERROR_FAILURE;
 

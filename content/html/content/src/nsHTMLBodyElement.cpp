@@ -432,8 +432,7 @@ nsHTMLBodyElement::GetBgColor(nsAString& aBgColor)
     // XXX This should just use nsGenericHTMLElement::GetPrimaryFrame()
     if (mDocument) {
       // Make sure the presentation is up-to-date
-      rv = mDocument->FlushPendingNotifications();
-      NS_ENSURE_SUCCESS(rv, rv);
+      mDocument->FlushPendingNotifications();
     }
 
     nsCOMPtr<nsIPresContext> context;

@@ -123,12 +123,11 @@ nsDocElementBoxFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   if (!elementFactory)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsINodeInfoManager> nodeInfoManager;
   nsIDocument* doc = mContent->GetDocument();
   if (!doc)
     // The page is currently being torn down.  Why bother.
     return NS_ERROR_FAILURE;
-  doc->GetNodeInfoManager(getter_AddRefs(nodeInfoManager));
+  nsINodeInfoManager *nodeInfoManager = doc->GetNodeInfoManager();
   NS_ENSURE_TRUE(nodeInfoManager, NS_ERROR_FAILURE);
 
   // create the top-secret popupgroup node. shhhhh!

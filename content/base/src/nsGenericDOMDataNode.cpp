@@ -449,10 +449,10 @@ nsGenericDOMDataNode::AppendData(const nsAString& aData)
     if (NS_SUCCEEDED(rv)) {
       tccd->SetData(nsITextContentChangeData::Append, length,
                     aData.Length());
-      rv = mDocument->ContentChanged(this, tccd);
+      mDocument->ContentChanged(this, tccd);
       NS_RELEASE(tccd);
     } else {
-      rv = mDocument->ContentChanged(this, nsnull);
+      mDocument->ContentChanged(this, nsnull);
     }
   }
 
@@ -1067,10 +1067,11 @@ nsGenericDOMDataNode::GetBaseURL(nsIURI** aURI) const
   }
 
   if (mDocument) {
-    return mDocument->GetBaseURL(aURI);
+    NS_IF_ADDREF(*aURI = mDocument->GetBaseURL());
+  } else {
+    *aURI = nsnull;
   }
 
-  *aURI = nsnull;
   return NS_OK;
 }
 
@@ -1397,16 +1398,9 @@ nsGenericDOMDataNode::LookupRangeList() const
 
 void nsGenericDOMDataNode::SetBidiStatus()
 {
-  if (mDocument) {
-    PRBool isBidiDocument = PR_FALSE;
-
-    mDocument->GetBidiEnabled(&isBidiDocument);
-
-    if (isBidiDocument) {
-      // OK, we already know it's Bidi, so we won't test again
-
-      return;
-    }
+  if (mDocument && mDocument->GetBidiEnabled()) {
+    // OK, we already know it's Bidi, so we won't test again
+    return;
   }
 
   mText.SetBidiFlag();

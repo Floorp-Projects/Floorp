@@ -393,7 +393,7 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
     NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
-    doc->GetPrincipal(getter_AddRefs(mDocumentPrincipal));
+    mDocumentPrincipal = doc->GetPrincipal();
   }
 
   // Always clear watchpoints, to deal with two cases:
@@ -425,9 +425,9 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
       nsCOMPtr<nsIDocument> doc(do_QueryInterface(aDocument));
       NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
-      nsCOMPtr<nsIPrincipal> newPrincipal;
-      nsresult rv = doc->GetPrincipal(getter_AddRefs(newPrincipal));
-      if (NS_SUCCEEDED(rv)) {
+      nsIPrincipal *newPrincipal = doc->GetPrincipal();
+      nsresult rv = NS_ERROR_FAILURE;
+      if (newPrincipal) {
         rv = sSecMan->CheckSameOriginPrincipal(mDocumentPrincipal,
                                                newPrincipal);
       }
@@ -500,7 +500,7 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
 
   if (mDocument) {
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
-    nsCOMPtr<nsIURI> docURL;
+    nsIURI *docURL;
 
     // If we had a document in this window the document most likely
     // made our scope "unclear"
@@ -508,7 +508,9 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
     mIsScopeClear = PR_FALSE;
 
     if (doc) {
-      doc->GetDocumentURL(getter_AddRefs(docURL));
+      docURL = doc->GetDocumentURL();
+    } else {
+      docURL = nsnull;
     }
 
     if (aRemoveEventListeners && mListenerManager) {
@@ -808,8 +810,7 @@ GlobalWindowImpl::HandleDOMEvent(nsIPresContext* aPresContext,
     // down.
     if (aEvent->message == NS_PAGE_UNLOAD && mDocument && !(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT)) {
       nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
-      nsCOMPtr<nsIBindingManager> bindingManager;
-      doc->GetBindingManager(getter_AddRefs(bindingManager));
+      nsIBindingManager *bindingManager = doc->GetBindingManager();
       if (bindingManager)
         bindingManager->ExecuteDetachedHandlers();
     }
@@ -969,7 +970,12 @@ GlobalWindowImpl::GetPrincipal(nsIPrincipal** result)
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
     NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
-    return doc->GetPrincipal(result);
+    *result = doc->GetPrincipal();
+    if (!*result)
+      return NS_ERROR_FAILURE;
+
+    NS_ADDREF(*result);
+    return NS_OK;
   }
 
   if (mDocumentPrincipal) {
@@ -2901,11 +2907,8 @@ PRBool IsPopupBlocked(nsIDOMDocument* aDoc)
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(aDoc));
   nsCOMPtr<nsIPopupWindowManager> pm(do_GetService(NS_POPUPWINDOWMANAGER_CONTRACTID));
   if (pm && doc) {
-    nsCOMPtr<nsIURI> uri;
-    doc->GetDocumentURL(getter_AddRefs(uri));
-
     PRUint32 permission = nsIPopupWindowManager::ALLOW_POPUP;
-    pm->TestPermission(uri, &permission);
+    pm->TestPermission(doc->GetDocumentURL(), &permission);
     blocked = (permission == nsIPopupWindowManager::DENY_POPUP);
   }
   return blocked;
@@ -3544,10 +3547,8 @@ GlobalWindowImpl::ConvertCharset(const nsAString& aStr,
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
 
     if (doc)
-      result = doc->GetDocumentCharacterSet(charset);
+      charset = doc->GetDocumentCharacterSet();
   }
-  if (NS_FAILED(result))
-    return result;
 
   // Get an encoder for the character set
   result = ccm->GetUnicodeEncoderRaw(charset.get(),
@@ -3650,11 +3651,9 @@ GlobalWindowImpl::Unescape(const nsAString& aStr,
   if (mDocument) {
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
 
-    if (doc) {
-      rv = doc->GetDocumentCharacterSet(charset);
-    }
+    if (doc)
+      charset = doc->GetDocumentCharacterSet();
   }
-  NS_ENSURE_SUCCESS(rv, rv);
 
   // Get a decoder for the character set
   nsCOMPtr<nsIUnicodeDecoder> decoder;
@@ -4162,8 +4161,7 @@ GlobalWindowImpl::GetPrivateParent(nsPIDOMWindow ** aParent)
     if (!doc)
       return NS_OK;             // This is ok, just means a null parent.
 
-    nsCOMPtr<nsIScriptGlobalObject> globalObject;
-    doc->GetScriptGlobalObject(getter_AddRefs(globalObject));
+    nsIScriptGlobalObject *globalObject = doc->GetScriptGlobalObject();
     if (!globalObject)
       return NS_OK;             // This is ok, just means a null parent.
 
@@ -4201,10 +4199,7 @@ GlobalWindowImpl::GetPrivateRoot(nsIDOMWindowInternal ** aParent)
   if (chromeElement) {
     nsIDocument* doc = chromeElement->GetDocument();
     if (doc) {
-      nsCOMPtr<nsIScriptGlobalObject> globalObject;
-      doc->GetScriptGlobalObject(getter_AddRefs(globalObject));
-
-      parent = do_QueryInterface(globalObject);
+      parent = do_QueryInterface(doc->GetScriptGlobalObject());
       nsCOMPtr<nsIDOMWindow> tempParent;
       parent->GetTop(getter_AddRefs(tempParent));
       CallQueryInterface(tempParent, aParent);
@@ -4540,9 +4535,7 @@ GlobalWindowImpl::GetInterface(const nsIID & aIID, void **aSink)
   else if (aIID.Equals(NS_GET_IID(nsIScriptEventManager))) {
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
     if (doc) {
-      nsCOMPtr<nsIScriptEventManager> mgr;
-
-      doc->GetScriptEventManager(getter_AddRefs(mgr));
+      nsIScriptEventManager* mgr = doc->GetScriptEventManager();
       if (mgr) {
         *aSink = mgr;
       }
@@ -5479,7 +5472,7 @@ GlobalWindowImpl::SecurityCheckURL(const char *aURL)
   /* resolve the URI, which could be relative to the calling window
      (note the algorithm to get the base URI should match the one
      used to actually kick off the load in nsWindowWatcher.cpp). */
-  nsCOMPtr<nsIURI> baseURI;
+  nsIURI* baseURI = nsnull;
   nsCOMPtr<nsIURI> uriToLoad;
 
   nsCOMPtr<nsIScriptContext> scriptcx;
@@ -5494,7 +5487,7 @@ GlobalWindowImpl::SecurityCheckURL(const char *aURL)
       caller->GetDocument(getter_AddRefs(callerDOMdoc));
       nsCOMPtr<nsIDocument> callerDoc(do_QueryInterface(callerDOMdoc));
       if (callerDoc)
-        callerDoc->GetDocumentURL(getter_AddRefs(baseURI));
+        baseURI = callerDoc->GetDocumentURL();
     }
   }
 

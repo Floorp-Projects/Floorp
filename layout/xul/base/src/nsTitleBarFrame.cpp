@@ -171,9 +171,7 @@ nsTitleBarFrame::HandleEvent(nsIPresContext* aPresContext,
 			   aPresContext->GetShell(getter_AddRefs(presShell));
 			   nsCOMPtr<nsIDocument> document;
 			   presShell->GetDocument(getter_AddRefs(document));
-			   nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject;
-			   document->GetScriptGlobalObject(getter_AddRefs(scriptGlobalObject));
-			   nsCOMPtr<nsIDOMWindowInternal> window(do_QueryInterface(scriptGlobalObject));
+			   nsCOMPtr<nsIDOMWindowInternal> window(do_QueryInterface(document->GetScriptGlobalObject()));
 
 
 

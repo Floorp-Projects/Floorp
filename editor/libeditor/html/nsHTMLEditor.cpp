@@ -1264,11 +1264,8 @@ nsHTMLEditor::UpdateBaseURL()
   {
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
     if (!doc) return NS_ERROR_FAILURE;
-    nsCOMPtr<nsIURI> uri;
-    rv = doc->GetDocumentURL(getter_AddRefs(uri));
-    NS_ENSURE_SUCCESS(rv, rv);
 
-    return doc->SetBaseURL(uri);
+    return doc->SetBaseURL(doc->GetDocumentURL());
   }
   return NS_OK;
 }
@@ -3533,9 +3530,6 @@ nsHTMLEditor::GetLinkedObjects(nsISupportsArray** aNodeList)
   if (!iter) return NS_ERROR_NULL_POINTER;
   if ((NS_SUCCEEDED(res)))
   {
-    // get the root content
-    nsCOMPtr<nsIContent> rootContent;
-
     nsCOMPtr<nsIDOMDocument> domdoc;
     nsEditor::GetDocument(getter_AddRefs(domdoc));
     if (!domdoc)
@@ -3545,9 +3539,7 @@ nsHTMLEditor::GetLinkedObjects(nsISupportsArray** aNodeList)
     if (!doc)
       return NS_ERROR_UNEXPECTED;
 
-    doc->GetRootContent(getter_AddRefs(rootContent));
-
-    iter->Init(rootContent);
+    iter->Init(doc->GetRootContent());
 
     // loop through the content iterator for each content node
     while (NS_ENUMERATOR_FALSE == iter->IsDone())
@@ -3945,9 +3937,6 @@ nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
   if (!iter) return NS_ERROR_NULL_POINTER;
   if ((NS_SUCCEEDED(res)))
   {
-    // get the root content
-    nsCOMPtr<nsIContent> rootContent;
-
     nsCOMPtr<nsIDOMDocument> domdoc;
     nsEditor::GetDocument(getter_AddRefs(domdoc));
     if (!domdoc)
@@ -3957,9 +3946,7 @@ nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
     if (!doc)
       return NS_ERROR_UNEXPECTED;
 
-    doc->GetRootContent(getter_AddRefs(rootContent));
-
-    iter->Init(rootContent);
+    iter->Init(doc->GetRootContent());
 
     // loop through the content iterator for each content node
     while (NS_ENUMERATOR_FALSE == iter->IsDone())
