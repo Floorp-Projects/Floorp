@@ -382,6 +382,8 @@ function delayedStartup(aElt)
 
   gBrowser.addEventListener("load", function(evt) { setTimeout(loadEventHandlers, 0, evt); }, true);
   
+  window.addEventListener("keypress", altNumberTabSelection, true);
+
   if (gMustLoadSidebar) {
     var sidebar = document.getElementById("sidebar");
     sidebar.setAttribute("src", window.opener.document.getElementById("sidebar").getAttribute("src"));
@@ -453,6 +455,33 @@ function Shutdown()
   // Close the app core.
   if (appCore)
     appCore.close();
+}
+
+function altNumberTabSelection(event)
+{
+  if (!event.altKey)
+    return;
+
+  var index = event.charCode - 49;
+  if (index == -1)
+    index = 9;
+  if (index < 0 || index > 9)
+    return false;
+
+  if (index >= gBrowser.mTabContainer.childNodes.length)
+    return false;
+
+  var oldTab = gBrowser.selectedTab;
+  var newTab = gBrowser.mTabContainer.childNodes[index];
+  if (newTab != oldTab) {
+    oldTab.selected = false;
+    gBrowser.selectedTab = newTab;
+  }
+
+  event.preventDefault();
+  event.preventBubble();
+  event.preventCapture();
+  event.stopPropagation();
 }
 
 function gotoHistoryIndex(aEvent)
