@@ -55,6 +55,8 @@ static NS_DEFINE_CID(kHeaderParserCID, NS_MSGHEADERPARSER_CID);
 
 nsMsgCompose::nsMsgCompose()
 {
+	NS_INIT_REFCNT();
+
 	mTempComposeFileSpec = nsnull;
 	mQuotingToFollow = PR_FALSE;
 	mSigFileSpec = nsnull;
@@ -80,21 +82,19 @@ nsMsgCompose::nsMsgCompose()
     	PR_Free(default_mail_charset);
   	}
 
-  m_composeHTML = PR_FALSE;
-  // temporary - m_composeHTML from the "current" identity
-  // eventually we should know this when we open the compose window
-  // -alecf
-  nsresult rv;
-  NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv);
-  if (NS_FAILED(rv)) return;
-  
-  nsCOMPtr<nsIMsgIdentity> identity;
-  rv = mailSession->GetCurrentIdentity(getter_AddRefs(identity));
-  if (NS_FAILED(rv)) return;
-
-	rv = identity->GetComposeHtml(&m_composeHTML);
-  
-	NS_INIT_REFCNT();
+	m_composeHTML = PR_FALSE;
+	// temporary - m_composeHTML from the "current" identity
+	// eventually we should know this when we open the compose window
+	// -alecf
+	nsresult rv;
+	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv);
+	if (NS_SUCCEEDED(rv))
+	{
+		nsCOMPtr<nsIMsgIdentity> identity;
+		rv = mailSession->GetCurrentIdentity(getter_AddRefs(identity));
+		if (NS_SUCCEEDED(rv))
+			rv = identity->GetComposeHtml(&m_composeHTML);
+	} 
 }
 
 
