@@ -99,7 +99,7 @@ public class Interpreter extends LabelTable {
             Node left = regexp.getFirstChild();
             Node right = regexp.getLastChild();
             result[i] = rep.newRegExp(cx, scope, left.getString(), 
-                                (left != right) ? right.getString() : null);
+                                (left != right) ? right.getString() : null, false);
             regexp.putProp(Node.REGEXP_PROP, new Integer(i));
         }
         return result;
