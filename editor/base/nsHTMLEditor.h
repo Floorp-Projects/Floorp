@@ -182,7 +182,7 @@ protected:
   
   NS_IMETHOD RemoveParentFromBlockContent(const nsString &aParentTag, nsIDOMRange *aRange);
 
-  PRBool     CanContainTag(nsIDOMNode* aParent, nsString &aTag);
+  PRBool     CanContainTag(nsIDOMNode* aParent, const nsString &aTag);
   
   NS_IMETHOD IsRootTag(nsString &aTag, PRBool &aIsTag);
 

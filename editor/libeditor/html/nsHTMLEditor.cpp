@@ -1901,7 +1901,7 @@ nsHTMLEditor::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
 
 
 PRBool 
-nsHTMLEditor::CanContainTag(nsIDOMNode* aParent, nsString &aTag)
+nsHTMLEditor::CanContainTag(nsIDOMNode* aParent, const nsString &aTag)
 {
   if (!aParent) return PR_FALSE;
   
