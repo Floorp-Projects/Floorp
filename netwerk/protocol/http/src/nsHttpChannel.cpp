@@ -3014,8 +3014,6 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
         // grab reference to connection in case we need to retry an 
         // authentication request over it.
         nsRefPtr<nsAHttpConnection> conn = mTransaction->Connection();
-        if (conn)
-            mTransaction->SetConnection(nsnull);
 
         // at this point, we're done with the transaction
         NS_RELEASE(mTransaction);
