@@ -311,6 +311,11 @@ NS_IMETHODIMP nsHTMLEditor::InsertBreak()
     // post-process, always called if WillInsertBreak didn't return cancel==PR_TRUE
     res = mRules->DidDoAction(selection, &ruleInfo, res);
   }
+
+  // Insert some formatting whitespace:
+  nsAutoString whitespace(NS_LINEBREAK);
+  (void)nsEditor::InsertText(whitespace);
+
 // XXXX: Horrible hack! We are doing this because
 // of an error in Gecko which is not rendering the
 // document after a change via the DOM - gpk 2/13/99
@@ -478,8 +483,6 @@ NS_IMETHODIMP nsHTMLEditor::Paste()
     mJSEditorLog->Paste();
 #endif // ENABLE_JS_EDITOR_LOG
 
-  nsIImage * image = nsnull;
-
   nsString stuffToPaste;
 
   // Get Clipboard Service
@@ -539,7 +542,7 @@ NS_IMETHODIMP nsHTMLEditor::Paste()
           {
             // Insert Image code here
             printf("Don't know how to insert an image yet!\n");
-            //image = (nsIImage *)data;
+            //nsIImage* image = (nsIImage *)data;
             //NS_RELEASE(image);
             rv = NS_ERROR_FAILURE; // for now give error code
           }
@@ -2350,7 +2353,7 @@ nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)
   
   nsAutoEditBatch beginBatching(this);
   // For most elements, set caret after inserting
-  PRBool setCaretAfterElement = PR_TRUE;
+  //PRBool setCaretAfterElement = PR_TRUE;
 
   nsCOMPtr<nsIDOMSelection>selection;
   res = nsEditor::GetSelection(getter_AddRefs(selection));
