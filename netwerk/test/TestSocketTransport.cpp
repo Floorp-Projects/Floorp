@@ -27,6 +27,9 @@
 #endif
 
 #include "nspr.h"
+#ifdef XP_MAC
+#include "pprio.h"	// PR_Init_Log
+#endif
 
 #define NSPIPE2
 

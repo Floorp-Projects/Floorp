@@ -47,7 +47,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "prmem.h"
 #include "plstr.h"
 #include "prenv.h"
-#include "prlog.h"
+#include "pprio.h"	// PR_Init_Log
 
 // Universal
 #include <AppleEvents.h>
