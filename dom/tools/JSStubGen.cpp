@@ -574,7 +574,11 @@ static const char *kObjectGetCaseStr =
 
 static const char *kXPIDLObjectGetCaseStr =
 "          // get the js object\n"
-"          *vp = OBJECT_TO_JSVAL(%s::GetJSObject(cx, prop));\n";
+"#ifdef XPIDL_JS_STUBS\n"
+"          *vp = OBJECT_TO_JSVAL(%s::GetJSObject(cx, prop));\n"
+"#else\n"
+"          nsJSUtils::nsConvertXPCObjectToJSVal(prop, %s::GetIID(), cx, vp);\n"
+"#endif\n";
 
 static const char *kStringGetCaseStr = 
 "          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);\n";
@@ -623,7 +627,7 @@ JSStubGen::GeneratePropGetter(ofstream *file,
       break;
     case TYPE_XPIDL_OBJECT:
       case_str = buf2;
-      sprintf(buf2, kXPIDLObjectGetCaseStr, aAttribute.GetTypeName());
+      sprintf(buf2, kXPIDLObjectGetCaseStr, aAttribute.GetTypeName(), aAttribute.GetTypeName());
       break;
     default:
       // XXX Fail for other cases
