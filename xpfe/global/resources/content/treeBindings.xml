@@ -231,11 +231,18 @@
       </handler>
       <handler event="keypress" keycode="vk_down">
         <![CDATA[
-         if (event.target != this || this.selectedItems.length < 1)
+         if (event.target != this)
            return;
-         this.isUpSelection=0;
-         this.isDownSelection=0;
-         var n = this.getNextItem(this.selectedItems[this.selectedItems.length-1], 1);
+
+         if (this.selectedItems.length == 0) {
+           var n = this.getItemAtIndex(0);
+         }
+         else {
+           this.isUpSelection=0;
+           this.isDownSelection=0;
+           var n = this.getNextItem(this.selectedItems[this.selectedItems.length-1], 1);
+         }
+
          if (n) {
            this.ensureIndexIsVisible(this.getIndexOfItem(n));
            this.timedSelect(n, 500);
