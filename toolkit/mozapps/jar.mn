@@ -19,6 +19,8 @@ toolkit.jar:
 * content/mozapps/extensions/extensions.css                 (extensions/content/extensions.css)
 * content/mozapps/extensions/about.xul                      (extensions/content/about.xul)
 * content/mozapps/extensions/about.js                       (extensions/content/about.js)
+* content/mozapps/extensions/update.xul                     (extensions/content/update.xul)
+* content/mozapps/extensions/update.js                      (extensions/content/update.js)
 * content/mozapps/shared/richview.xml                       (shared/content/richview.xml)
   content/mozapps/contents.rdf                              (contents-content.rdf)
 
@@ -33,6 +35,7 @@ en-US.jar:
   locale/en-US/mozapps/extensions/extensions.dtd            (extensions/locale/extensions.dtd)
   locale/en-US/mozapps/extensions/extensions.properties     (extensions/locale/extensions.properties)
   locale/en-US/mozapps/extensions/about.dtd                 (extensions/locale/about.dtd)
+  locale/en-US/mozapps/extensions/update.dtd                (extensions/locale/update.dtd)
   locale/en-US/mozapps/contents.rdf                         (contents-locale.rdf)
 
 classic.jar:

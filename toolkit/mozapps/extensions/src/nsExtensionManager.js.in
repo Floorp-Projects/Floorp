@@ -101,9 +101,112 @@ nsExtensionManager.prototype = {
   
   updateExtension: function (aExtensionID)
   {
-    this._ds.getUpdateURLs(aExtensionID);
-  },
+    var os = Components.classes["@mozilla.org/observer-service;1"]
+                       .getService(Components.interfaces.nsIObserverService);
+    var itemCount = 0;
 
+    var proxy = null;
+    function getResults()
+    {
+      if (proxy) {
+        proxy.count();
+        proxy.contents();
+      }
+    }
+    
+    if (!proxy) {    
+      var listener = {
+        onLoad: function (aProxy)
+        { 
+          proxy = aProxy;
+          proxy.setListener(this);
+          getResults();
+        },
+        
+        onError: function (aError)
+        {
+          dump("*** onError ERROR = " + aError + "\n");
+        },
+        
+        countCallback: function (aResult)
+        {
+          this._count = aResult;
+        },
+
+        contentsCallback: function (aResult)
+        {
+          for (var i = 0; i < this._count; ++i)
+            dump("*** quote " + i + " = " + aResult[i] + "\n");
+        },
+      };
+
+      var wspFactory = Components.classes["@mozilla.org/xmlextras/proxy/webserviceproxyfactory;1"]
+                                 .getService(Components.interfaces.nsIWebServiceProxyFactory);
+      wspFactory.createProxyAsync("http://localhost:8080/axis/quote.wsdl", 
+                                  "Quote", "", true, listener);
+    }
+    else
+      getResults();
+          
+    return;
+
+    function RDFSinkObserver()
+    {
+    }
+    RDFSinkObserver.prototype = { 
+      onBeginLoad: function (aSink) 
+      { 
+        os.notifyObservers(aSink, "update-item-network-start", "");
+      },
+      onInterrupt: function (aSink) { },
+      onResume: function (aSink) { },
+      onError: function (aSink, aStatus, aErrorMsg) 
+      {
+        dump("*** error; status = " + aStatus + ", msg = " + aErrorMsg + "\n");
+        if (aStatus == Components.results.NS_ERROR_FILE_NOT_FOUND)
+          dump("*** FILE NOT FOUND BOZO\n");
+        aSink.removeXMLSinkObserver(this);
+        os.notifyObservers(aSink, "update-item-error", aErrorMsg);
+        this._checkLastItem();
+      },
+      onEndLoad: function (aSink) 
+      {
+        dump("*** done!\n");
+        os.notifyObservers(aSink, "update-item-network-end", "");
+        aSink.removeXMLSinkObserver(this);
+        os.notifyObservers(aSink, "update-item-processing-start", "");
+        dump("*** processing...\n");
+        os.notifyObservers(aSink, "update-item-processing-end", "");
+        this._checkLastItem();
+      },
+      
+      _checkLastItem: function ()
+      {
+        if (--itemCount == 0)
+          os.notifyObservers(null, "update-end", "");
+      }
+    };
+  
+    os.notifyObservers(null, "update-start", "");
+
+    var urls = this._ds.getUpdateURLs(aExtensionID);
+    var rdfs = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+                         .getService(Components.interfaces.nsIRDFService);
+    itemCount = urls.length;
+    for (var i = 0; i < urls.length; ++i) {      
+      var observer = new RDFSinkObserver();
+
+      var ds = rdfs.GetDataSource(urls[i]);
+      dump("*** starting " + ds.URI + "\n");
+      var sink = ds.QueryInterface(Components.interfaces.nsIRDFXMLSink);
+      var rds = ds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
+      if (rds.loaded)
+        observer.onEndLoad(sink);
+      else
+        sink.addXMLSinkObserver(observer);
+    }
+  },  
+  
   // Themes
   installTheme: function (aThemeID)
   {
@@ -262,13 +365,11 @@ nsExtensionsDataSource.prototype = {
         var urlCount = urlHash[url].length;
         for (var i = 0; i < urlCount; ++i)
           guidString += escape(urlHash[url][i] + (i < urlCount - 1 ? "," : ""));
-        dump("*** guidString = " + guidString + "\n");
         url = url.replace(/%APP%/g, appID);
         url = url.replace(/%ITEM%/g, guidString);
         urls.push(url);
       }
     }
-    dump("*** urls = " + urls + "\n");
     return urls;
   },
   
