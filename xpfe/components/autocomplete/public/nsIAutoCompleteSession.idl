@@ -36,13 +36,13 @@ interface nsIDOMEvents;
 interface nsIAutoCompleteSession : nsISupports {
 
     /* onStartLookup is called when the user has stop typing for a predifined elapse time */
-    void onStartLookup(in nsIDOMEvents event, in nsIAutoCompleteResults previousSearchResult,
-                       in nsIAutoCompleteListener listener);
+    void onStartLookup(in nsIDOMEvents event, in wstring searchString,
+                       in nsIAutoCompleteResults previousSearchResult, in nsIAutoCompleteListener listener);
 
     /* onStopLookup is called each time the user press a key */
     void onStopLookup(in nsIDOMEvents event);
 
     /* onAutoComplete is called either when the user press enter/return or when the input element loose focus */
-    void onAutoComplete(in nsIDOMEvents event, in nsIAutoCompleteResults previousSearchResult,
-                        in nsIAutoCompleteListener listener);
+    void onAutoComplete(in nsIDOMEvents event, in wstring searchString,
+                        in nsIAutoCompleteResults previousSearchResult, in nsIAutoCompleteListener listener);
 };

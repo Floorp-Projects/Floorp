@@ -1,129 +1,120 @@
 <?xml version="1.0"?>
 
-<bindings id="autocompleteBindings"
-   xmlns="http://www.mozilla.org/xbl"
-   xmlns:html="http://www.w3.org/TR/REC-html40"
-   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  
-   <binding name="autocomplete" extends="xul:box">
-      <content>
+<bindings   id="autocompleteBindings"
+            xmlns="http://www.mozilla.org/xbl"
+            xmlns:html="http://www.w3.org/TR/REC-html40"
+            xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<binding name="autocomplete" extends="xul:box">
+    <content excludes="template,observes,menupopup">
         <xul:box
-            onkeydown="me = this.parentNode;
-                       me.callListener('stopLookup', this); 
-                       if (me.autoCompleteTimer) {
+            onkeydown=" me = this.parentNode;
+                        me.callListener(this, event, 'stopLookup'); 
+                        if (me.autoCompleteTimer) {
                             clearTimeout(me.autoCompleteTimer);
-                            dump('  Clear timer id=' + me.autoCompleteTimer + '\n');
                             me.autoCompleteTimer = 0;
-                       }"
-            onkeyup="me = this.parentNode;
-                     if (me.autoCompleteTimer)
-                        clearTimeout(me.autoCompleteTimer);
-                     if (event.which != 13) {
-                        me.needToAutocomplete = true;
-                        me.autoCompleteTimer = setTimeout(me.callListener, me.timeout, 'startLookup', this);
-                        dump('timer id=' + me.autoCompleteTimer + ', timeout=' + me.timeout + '\n');
-                     }
-                     "
+                        }"
+            onkeyup="   me = this.parentNode;
+                        if (me.autoCompleteTimer)
+                            clearTimeout(me.autoCompleteTimer);
+                        if (event.which != 13) {
+                            me.needToAutocomplete = true;
+                            me.autoCompleteTimer = setTimeout(me.callListener, me.timeout, this, event, 'startLookup');
+                        }"
         >
-            
             <xul:textfield class="addressingWidget" inherits="value,timeout"/>
-            <xul:menupopup/>
+            <xul:menupopup>
+                <xul:menuitem id="0" value="item 1"/>
+                <xul:menuitem id="2" value="item 2"/>
+            </xul:menupopup>
         </xul:box>
-      </content>
+    </content>
 
-	  <interface>
-
-        <property name="value"      onset="dump('SET VALUE ATTRIBUTE\n');return this.anonymousContent[0].firstChild.value = val;"
+    <interface>
+        <property name="value"      onset="return this.anonymousContent[0].firstChild.value = val;"
                                     onget="return this.anonymousContent[0].firstChild.value;"/>
 
         <property name="timeout"    onset="return this.setAttribute('timeout', val);"
                                     onget="return this.getAttribute('timeout');"/>
 
-	   <property name="autoCompleteSession">
+        <property name="autoCompleteSession">
         <![CDATA[
-            searchSession = 'component://' + unescape(this.getAttribute('searchSessionClass'));
-            try {
-                Components.classes[searchSession].getService(Components.interfaces.nsIAbAutoCompleteSession);
-            } catch (e) {}
+            if (this.getAttribute('searchSessionClass') != "") {
+                searchSession = 'component://' + unescape(this.getAttribute('searchSessionClass'));
+                try {
+                    Components.classes[searchSession].getService(Components.interfaces.nsIAutoCompleteSession);
+                } catch (e) {}
+            }
         ]]>
-      </property>
+        </property>
 
-	  <property name="autoCompleteTimer">
+        <property name="autoCompleteTimer">
         <![CDATA[
             0;
-       ]]>
-      </property>
- 
-      <property name="autoCompleteListener">
-        <![CDATA[
-          ({
-	          onAutoCompleteResult: function(aItem, aOriginalString, aMatch) 
-            {
-dump("onAutoCompleteResult, item=" + aItem + ", match=" + aMatch + "\n");
-dump("textfield= " + aItem.anonymousContent[0].firstChild + "\n");
-dump("input=" + aItem.anonymousContent[0].firstChild.anonymousContent[0].firstChild + "\n");
-		          if ( aItem )
-		          {
-                      aItem.value = aMatch;
-		          }
-	          }
-          })
         ]]>
-      </property>
+        </property>
 
-      <method name="autoComplete">
-        <argument name="aSearchString"/>
-        <argument name="resultListener"/>
-        <body>
-          <![CDATA[
-              return this.autoCompleteSession.autoComplete(null, this, aSearchString, this.autoCompleteListener);
-          ]]>
-        </body>
-      </method>
+        <property name="autoCompleteListener">
+        <![CDATA[
+        ({
+            onAutoComplete: function(result, status) {
+                dump("onAutoComplete, result=" + result + ", status=" + status + "\n");
+                item = result.items.QueryElementAt(result.defaultItemIndex, Components.interfaces.nsIAutoCompleteItem);
+                this.param.value = item.value;
+                menu = this.param.anonymousContent[0].childNodes[1];
+                dump("menun=" + menu + "\n");
+                //TODO: show the popup menu now. How do we to that?
+                },
 
-      <method name="callListener">
-        <argument name="action"/>
-        <argument name="me"/>
-        <body>
-          <![CDATA[
-              dump("callListener, action=" + action + ", me=" + me + "\n");
-              switch (action) {
-                case 'startLookup':
-                    dump('>>> startLookup...\n');
-                    break;
-                case 'stopLookup':
-                    dump('>>> stopLookup...\n');
-                    break;
-                case 'autoComplete':
-                    dump('>>> autoComplete...\n');
-                    if (this.autoCompleteTimer) {
-                        clearTimeout(this.autoCompleteTimer);
-                        this.autoCompleteTimer = 0;
-                    }
-                    autoComplete(me.value, me.autoCompleteListener);
-                    this.needToAutocomplete = false;
-                    break;
-              }
-          ]]>
-        </body>
-      </method>
-	  </interface>
+            param: this
+        })
+        ]]>
+        </property>
+
+        <method name="callListener">
+            <argument name="me"/>
+            <argument name="event"/>
+            <argument name="action"/>
+            <body>
+            <![CDATA[
+                dump("callListener, action=" + action + ", me=" + me + "\n");
+                switch (action) {
+                    case 'startLookup':
+                        dump('>>> startLookup...\n');
+//TODO:                        this.autoCompleteSession.onStartLookup(event, me.value, null, me.autoCompleteListener);
+                        break;
+
+                    case 'stopLookup':
+                        dump('>>> stopLookup...\n');
+                        //TODO: hide the popup menu now. How do we to that?
+                        this.autoCompleteSession.onStopLookup(event, me.value, null, me.autoCompleteListener);
+                        break;
+
+                    case 'autoComplete':
+                        dump('>>> autoComplete...\n');
+                        if (this.autoCompleteTimer) {
+                            clearTimeout(this.autoCompleteTimer);
+                            this.autoCompleteTimer = 0;
+                        }
+                        this.autoCompleteSession.onAutoComplete(event, me.value, null, me.autoCompleteListener);
+                        this.needToAutocomplete = false;
+                        break;
+                }
+            ]]>
+            </body>
+        </method>
+    </interface>
 
     <handlers>
-		  <handler type="keypress" keycode="vk_return"
-		    value="dump('value=' + this.value + '\n'); this.callListener('autoComplete', me);"
-		  />
+        <handler type="keypress" keycode="vk_return"
+            value="dump('value=' + this.value + '\n'); this.callListener(this, event, 'autoComplete');"/>
 
-		  <handler type="focus" value="this.needToAutocomplete = false;" />
+        <handler type="focus" value="this.needToAutocomplete = false;"/>
 
-		  <handler type="blur"
-		    value="if (this.needToAutocomplete)
-		                this.callListener('autoComplete', this);
-		          "
-		  />
+        <handler type="blur"
+            value="if (this.needToAutocomplete) this.callListener(me, event, 'autoComplete');"/>
     </handlers>
 
-   </binding> 
+</binding> 
 
-    
 </bindings>
