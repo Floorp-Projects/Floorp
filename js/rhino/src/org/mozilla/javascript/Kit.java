@@ -107,6 +107,10 @@ public class Kit
         return null;
     }
 
+    /**
+     * If initCause methods exists in Throwable, call
+     * <tt>ex.initCause(cause)</tt> or otherwise do nothing.
+     */
     public static void initCauseOrIgnore(Throwable ex, Throwable cause)
     {
         if (Throwable_initCause != null) {
