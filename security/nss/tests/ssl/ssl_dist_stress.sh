@@ -64,7 +64,7 @@ ssl_ds_init()
   if [ -z "$GLOB_MIN_CERT" ] ; then
       GLOB_MIN_CERT=0
   fi
-  if [ -z "$GLOBMAX_CERT" ] ; then
+  if [ -z "$GLOB_MAX_CERT" ] ; then
       GLOB_MAX_CERT=200
   fi
   IP_PARAM=""
