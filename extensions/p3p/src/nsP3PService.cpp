@@ -128,7 +128,6 @@ nsP3PService::CategoryUnregister( nsIComponentManager          *aComponentManage
 
   nsCOMPtr<nsICategoryManager>  pCategoryManager;
 
-  nsXPIDLCString                xcsPrevEntry;
 
 
   pCategoryManager = do_GetService( NS_CATEGORYMANAGER_CONTRACTID,
@@ -137,8 +136,7 @@ nsP3PService::CategoryUnregister( nsIComponentManager          *aComponentManage
   if (NS_SUCCEEDED( rv )) {
     rv = pCategoryManager->DeleteCategoryEntry( NS_HTTP_STARTUP_CATEGORY,
                                                 NS_P3PSERVICE_CONTRACTID,
-                                                PR_TRUE,
-                                                getter_Copies( xcsPrevEntry ) );
+                                                PR_TRUE );
   }
 
   return rv;

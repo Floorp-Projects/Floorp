@@ -135,7 +135,7 @@ nsPreloader::UnregisterProc(nsIComponentManager *aCompMgr,
 
     rv = catman->DeleteCategoryEntry(COMMAND_LINE_ARGUMENT_HANDLERS,
                                      NS_PRELOADER_CONTRACTID,
-                                     PR_TRUE, nsnull);
+                                     PR_TRUE);
 
     // unregister well-known services?
     

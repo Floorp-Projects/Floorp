@@ -56,9 +56,8 @@ interface nsICategoryManager : nsISupports
      * @param aCategory The name of the category ("protocol")
      * @param aEntry The entry to be added ("http")
      * @param aPersist Delete entry from registry, if present?
-     * @return Previous entry, null if none.
      */
-    string deleteCategoryEntry(in string aCategory, in string aEntry,
+    void deleteCategoryEntry(in string aCategory, in string aEntry,
                                in boolean aPersist);
 
     /**

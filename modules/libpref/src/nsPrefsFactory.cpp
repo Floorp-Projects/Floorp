@@ -73,7 +73,7 @@ UnRegisterAutoConfig(nsIComponentManager *aCompMgr,
   if (NS_SUCCEEDED(rv)) {
     rv = categoryManager->DeleteCategoryEntry(APPSTARTUP_CATEGORY,
                                               "AutoConfig Module",
-                                              PR_TRUE,nsnull);
+                                              PR_TRUE);
   }
   return rv;
 }
