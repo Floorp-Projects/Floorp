@@ -57,7 +57,7 @@ NS_IMETHODIMP nsFileWidget::Create(nsIWidget        *aParent,
 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP   nsFileWidget:: Create(nsIWidget  *aParent,
-                             nsString&   aTitle,
+                             const nsString&   aTitle,
                              nsFileDlgMode    aMode,
                              nsIDeviceContext *aContext,
                              nsIAppShell *aAppShell,
@@ -461,13 +461,6 @@ NS_IMETHODIMP nsFileWidget::SetFilterList(PRUint32 aNumberOfFilters,const nsStri
 //
 //-------------------------------------------------------------------------
 
-NS_IMETHODIMP  nsFileWidget::GetFile(nsString& aFile)
-{
-  aFile.SetLength(0);
-  aFile.Append(mFile);
-  return NS_OK;
-}
-
 NS_IMETHODIMP  nsFileWidget::GetFile(nsFileSpec& aFile)
 {
   aFile = mFileSpec;
@@ -480,7 +473,7 @@ NS_IMETHODIMP  nsFileWidget::GetFile(nsFileSpec& aFile)
 //
 //-------------------------------------------------------------------------
 
-NS_IMETHODIMP  nsFileWidget::SetDefaultString(nsString& aString)
+NS_IMETHODIMP  nsFileWidget::SetDefaultString(const nsString& aString)
 {
   mDefault = aString;
   return NS_OK;
@@ -491,7 +484,7 @@ NS_IMETHODIMP  nsFileWidget::SetDefaultString(nsString& aString)
 // Set the display directory
 //
 //-------------------------------------------------------------------------
-NS_METHOD  nsFileWidget::SetDisplayDirectory(nsString& aDirectory)
+NS_METHOD  nsFileWidget::SetDisplayDirectory(const nsFileSpec& aDirectory)
 {
   mDisplayDirectory = aDirectory;
   return NS_OK;
@@ -503,7 +496,7 @@ NS_METHOD  nsFileWidget::SetDisplayDirectory(nsString& aDirectory)
 //
 //-------------------------------------------------------------------------
 
-NS_METHOD  nsFileWidget::GetDisplayDirectory(nsString& aDirectory)
+NS_METHOD  nsFileWidget::GetDisplayDirectory(nsFileSpec& aDirectory)
 {
   aDirectory = mDisplayDirectory;
   return NS_OK;
@@ -512,7 +505,7 @@ NS_METHOD  nsFileWidget::GetDisplayDirectory(nsString& aDirectory)
 
 nsFileDlgResults  nsFileWidget::GetFile(
 	    nsIWidget        * aParent,
-	    nsString         & promptString,
+	    const nsString   & promptString,
 	    nsFileSpec       & theFileSpec)
 {
 	Create(aParent, promptString, eMode_load, nsnull, nsnull);
@@ -527,7 +520,7 @@ nsFileDlgResults  nsFileWidget::GetFile(
 	    
 nsFileDlgResults  nsFileWidget::GetFolder(
 	    nsIWidget        * aParent,
-	    nsString         & promptString,
+	    const nsString   & promptString,
 	    nsFileSpec       & theFileSpec)
 {
 	Create(aParent, promptString, eMode_getfolder, nsnull, nsnull);
@@ -542,7 +535,7 @@ nsFileDlgResults  nsFileWidget::GetFolder(
 	    
 nsFileDlgResults  nsFileWidget::PutFile(
 	    nsIWidget        * aParent,
-	    nsString         & promptString,
+	    const nsString         & promptString,
 	    nsFileSpec       & theFileSpec)
 {
 	Create(aParent, promptString, eMode_save, nsnull, nsnull);

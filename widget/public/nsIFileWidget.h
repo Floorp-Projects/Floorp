@@ -63,6 +63,8 @@ class nsIFileWidget : public nsISupports
 public:
 
   
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFILEWIDGET_IID)
+
  /**
   * Create the file filter. This differs from the standard
   * widget Create method because it passes in the mode
@@ -74,7 +76,7 @@ public:
   *
   */
   NS_IMETHOD Create(nsIWidget *aParent,
-                      nsString& aTitle,
+                      const nsString& aTitle,
                       nsFileDlgMode aMode,
                       nsIDeviceContext *aContext = nsnull,
                       nsIAppShell *aAppShell = nsnull,
@@ -104,14 +106,6 @@ public:
   virtual PRBool Show() = 0;
 
  /**
-  * Get the file or directory including the full path.
-  *
-  * @param aFile on exit it contains the file or directory selected
-  */
-  
-  NS_IMETHOD GetFile(nsString& aFile) = 0;
- 
- /**
   * Get the nsFileSpec for the file or directory.
   *
   * @param aFile on exit it contains the file or directory selected
@@ -127,7 +121,7 @@ public:
   * @return     void
   *
   */
-  NS_IMETHOD SetDefaultString(nsString& aString) = 0;
+  NS_IMETHOD SetDefaultString(const nsString& aString) = 0;
 
  /**
   * Set the directory that the file open/save dialog initially displays
@@ -136,7 +130,7 @@ public:
   * @return     void
   *
   */
-  NS_IMETHOD SetDisplayDirectory(nsString& aDirectory) = 0;
+  NS_IMETHOD SetDisplayDirectory(const nsFileSpec& aDirectory) = 0;
 
  /**
   * Get the directory that the file open/save dialog was last displaying
@@ -145,22 +139,22 @@ public:
   * @return     void
   *
   */
-  NS_IMETHOD GetDisplayDirectory(nsString& aDirectory) = 0;
+  NS_IMETHOD GetDisplayDirectory(nsFileSpec& aDirectory) = 0;
 
 
   virtual nsFileDlgResults GetFile(
     nsIWidget        * aParent,
-    nsString         & promptString,    // Window title for the dialog
+    const nsString   & promptString,    // Window title for the dialog
     nsFileSpec       & theFileSpec) = 0;     // Populate with initial path for file dialog
     
   virtual nsFileDlgResults GetFolder(
     nsIWidget        * aParent,
-    nsString         & promptString,    // Window title for the dialog
+    const nsString   & promptString,    // Window title for the dialog
     nsFileSpec       & theFileSpec) = 0;     // Populate with initial path for file dialog 
     
   virtual nsFileDlgResults PutFile(
     nsIWidget        * aParent,
-    nsString         & promptString,    // Window title for the dialog
+    const nsString   & promptString,    // Window title for the dialog
     nsFileSpec       & theFileSpec) = 0;     // Populate with initial path for file dialog 
 };
 
