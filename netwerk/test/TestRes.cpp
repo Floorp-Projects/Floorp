@@ -236,7 +236,7 @@ main(int argc, char* argv[])
     NS_ASSERTION(NS_SUCCEEDED(rv), "AutoregisterComponents failed");
 
     if (argc < 2) {
-        printf("usage: %s res://foo/<path-to-resolve>\n", argv[0]);
+        printf("usage: %s resource://foo/<path-to-resolve>\n", argv[0]);
         return -1;
     }
 
