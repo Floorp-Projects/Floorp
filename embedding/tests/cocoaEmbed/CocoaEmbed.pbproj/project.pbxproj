@@ -1994,75 +1994,13 @@
 		};
 		F6BD64C801B3172601A962F7 = {
 			children = (
-				F6BD64C901B3172601A962F7,
-				F6BD64CA01B3172601A962F7,
-				F6BD64CB01B3172601A962F7,
-				F6BD64CC01B3172601A962F7,
-				F6BD64CD01B3172601A962F7,
-				F6BD64CE01B3172601A962F7,
-				F6BD64CF01B3172601A962F7,
-				F6BD64D001B3172601A962F7,
-				F6BD64D101B3172601A962F7,
-				F6BD64D201B3172601A962F7,
 				F6BD64D301B3172601A962F7,
-				F6BD64D401B3172601A962F7,
 				F6BD64D501B3172601A962F7,
-				F6BD64D601B3172601A962F7,
 			);
 			isa = PBXGroup;
 			name = builtin;
 			path = ../../../dist/bin/res/builtin;
 			refType = 2;
-		};
-		F6BD64C901B3172601A962F7 = {
-			isa = PBXFileReference;
-			path = "button-disabled-left.gif";
-			refType = 4;
-		};
-		F6BD64CA01B3172601A962F7 = {
-			isa = PBXFileReference;
-			path = "button-disabled-middle.gif";
-			refType = 4;
-		};
-		F6BD64CB01B3172601A962F7 = {
-			isa = PBXFileReference;
-			path = "button-disabled-right.gif";
-			refType = 4;
-		};
-		F6BD64CC01B3172601A962F7 = {
-			isa = PBXFileReference;
-			path = "button-normal-left.gif";
-			refType = 4;
-		};
-		F6BD64CD01B3172601A962F7 = {
-			isa = PBXFileReference;
-			path = "button-normal-middle.gif";
-			refType = 4;
-		};
-		F6BD64CE01B3172601A962F7 = {
-			isa = PBXFileReference;
-			path = "button-normal-right.gif";
-			refType = 4;
-		};
-		F6BD64CF01B3172601A962F7 = {
-			isa = PBXFileReference;
-			path = "button-pressed-left.gif";
-			refType = 4;
-		};
-		F6BD64D001B3172601A962F7 = {
-			isa = PBXFileReference;
-			path = "button-pressed-middle.gif";
-			refType = 4;
-		};
-		F6BD64D101B3172601A962F7 = {
-			isa = PBXFileReference;
-			path = "button-pressed-right.gif";
-			refType = 4;
-		};
-		F6BD64D201B3172601A962F7 = {
-			isa = PBXFileReference;
-			path = buttons.css;
-			refType = 4;
 		};
 		F6BD64D301B3172601A962F7 = {
 			isa = PBXFileReference;
@@ -2072,11 +2010,6 @@
 		F6BD64D501B3172601A962F7 = {
 			isa = PBXFileReference;
 			path = platformHTMLBindings.xml;
-			refType = 4;
-		};
-		F6BD64D601B3172601A962F7 = {
-			isa = PBXFileReference;
-			path = "xbl-forms.css";
 			refType = 4;
 		};
 		F6BD64D701B3172601A962F7 = {
@@ -2232,83 +2165,11 @@
 			dstPath = res/builtin;
 			dstSubfolderSpec = 6;
 			files = (
-				F6BD650B01B3184301A962F7,
-				F6BD650C01B3184301A962F7,
-				F6BD650D01B3184301A962F7,
-				F6BD650E01B3184301A962F7,
-				F6BD650F01B3184301A962F7,
-				F6BD651001B3184301A962F7,
-				F6BD651101B3184301A962F7,
-				F6BD651201B3184301A962F7,
-				F6BD651301B3184301A962F7,
-				F6BD651401B3184301A962F7,
 				F6BD651501B3184301A962F7,
-				F6BD651601B3184301A962F7,
 				F6BD651701B3184301A962F7,
-				F6BD651801B3184301A962F7,
 			);
 			isa = PBXCopyFilesBuildPhase;
 			name = "Copy Files";
-		};
-		F6BD650B01B3184301A962F7 = {
-			fileRef = F6BD64C901B3172601A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F6BD650C01B3184301A962F7 = {
-			fileRef = F6BD64CA01B3172601A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F6BD650D01B3184301A962F7 = {
-			fileRef = F6BD64CB01B3172601A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F6BD650E01B3184301A962F7 = {
-			fileRef = F6BD64CC01B3172601A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F6BD650F01B3184301A962F7 = {
-			fileRef = F6BD64CD01B3172601A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F6BD651001B3184301A962F7 = {
-			fileRef = F6BD64CE01B3172601A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F6BD651101B3184301A962F7 = {
-			fileRef = F6BD64CF01B3172601A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F6BD651201B3184301A962F7 = {
-			fileRef = F6BD64D001B3172601A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F6BD651301B3184301A962F7 = {
-			fileRef = F6BD64D101B3172601A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F6BD651401B3184301A962F7 = {
-			fileRef = F6BD64D201B3172601A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
 		};
 		F6BD651501B3184301A962F7 = {
 			fileRef = F6BD64D301B3172601A962F7;
@@ -2316,20 +2177,8 @@
 			settings = {
 			};
 		};
-		F6BD651601B3184301A962F7 = {
-			fileRef = F6BD64D401B3172601A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F6BD651701B3184301A962F7 = {
 			fileRef = F6BD64D501B3172601A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F6BD651801B3184301A962F7 = {
-			fileRef = F6BD64D601B3172601A962F7;
 			isa = PBXBuildFile;
 			settings = {
 			};
