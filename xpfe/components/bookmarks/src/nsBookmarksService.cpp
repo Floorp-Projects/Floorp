@@ -1803,8 +1803,13 @@ nsBookmarksService::Init()
         }
     }
 
-    if (NS_FAILED(useProfile)) {
-        mBookmarksRootName.Assign(NS_LITERAL_STRING("Bookmarks"));
+    if (NS_FAILED(useProfile))
+    {
+        rv = mBundle->GetStringFromName(NS_LITERAL_STRING("bookmarks_default_root").get(),
+                                        getter_Copies(mBookmarksRootName));
+        if (NS_FAILED(rv) || mBookmarksRootName.IsEmpty()) {
+            mBookmarksRootName.Assign(NS_LITERAL_STRING("Bookmarks"));
+        }
     }
 
     // Register as an observer of profile changes
