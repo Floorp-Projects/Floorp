@@ -160,18 +160,14 @@
                    predicate="http://www.mozilla.org/2004/em-rdf#description"
                    object="?description"/>
           <binding subject="?extension"
-                   predicate="http://www.mozilla.org/2004/em-rdf#blockUninstall"
-                   object="?block-uninstall"/>
-          <binding subject="?extension"
-                   predicate="http://www.mozilla.org/2004/em-rdf#blockDisable"
-                   object="?block-disable"/>
+                   predicate="http://www.mozilla.org/2004/em-rdf#locked"
+                   object="?locked"/>
         </bindings>            
         <action>
           <extension uri="?extension" context="extensionContextMenu"
                      image="?icon" name="?name" version="?version" 
                      description="?description" creator="?creator"
-                     disabled="?disabled" 
-                     blockUninstall="?block-uninstall" blockDisable="?block-disable"
+                     disabled="?disabled" locked="?locked" 
                      optionsURL="?options-url" homepageURL="?homepage-url"
                      aboutURL="?about-url" updateURL="?update-url"/>
         </action>

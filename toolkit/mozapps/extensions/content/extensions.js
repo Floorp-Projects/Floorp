@@ -266,13 +266,13 @@ var gExtensionsViewController = {
     case "cmd_homepage":
       return (selectedItem && selectedItem.getAttribute("homepageURL") != "");
     case "cmd_uninstall":
-      return selectedItem && selectedItem.getAttribute("blockUninstall") != "true";
+      return selectedItem && selectedItem.getAttribute("locked") != "true";
     case "cmd_update":
       return true;
     case "cmd_enable":
       return selectedItem && selectedItem.disabled && !gExtensionManager.inSafeMode;
     case "cmd_disable":
-      return selectedItem && selectedItem.getAttribute("blockDisable") != "true" && !selectedItem.disabled;
+      return selectedItem && selectedItem.getAttribute("locked") != "true" && !selectedItem.disabled;
     case "cmd_movetop":
       return (gExtensionsView.children[0] != selectedItem);
     case "cmd_moveup":
