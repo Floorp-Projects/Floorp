@@ -37,7 +37,10 @@
 #include "prprf.h"
 
 #include "resources.h"
+
+#if defined(WIN32)
 #include <strstrea.h>
+#endif
 
 #if defined(WIN32)
 #include <windows.h>
