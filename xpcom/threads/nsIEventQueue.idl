@@ -63,6 +63,7 @@ interface nsIEventQueue : nsISupports
     [noscript] void postSynchronousEvent(in PLEventPtr aEvent, 
                                          out voidPtr aResult);
 	
+    boolean pendingEvents();
     void processPendingEvents();
     void eventLoop();
     
