@@ -24,10 +24,10 @@
 
 var tHide = false;
 var highCont = false;
-var imageElement;
-var mapName;
-var imageMap;
-var oldMap = false;
+var imageElement = null;
+var mapName = '';
+var imageMap = null;
+var oldMap = null;
 
 function Startup(){
   if (!InitEditorShell())
@@ -40,7 +40,10 @@ function initDialog(){
   //Check to make sure selected element is an image
   imageElement = editorShell.GetSelectedElement("img");
   if (!imageElement) //If not an image close window
+  {
     window.close();
+    return;
+  }
 
   //Set iframe pointer
   frameDoc = window.frames[0].document;
@@ -52,28 +55,33 @@ function initDialog(){
   buttonArray[3] = document.getElementById("polyButton");
 
   //Create marquee
-  marquee = frameDoc.createElement("div");
+  var marquee = frameDoc.createElement("div");
   marquee.setAttribute("id", "marquee");
   frameDoc.body.appendChild(marquee);
 
   //Create background div
-  bgDiv = frameDoc.createElement("div");
-  bgDiv.setAttribute("id", "bgDiv");
-  frameDoc.body.appendChild(bgDiv);
+  var bgDiv = frameDoc.createElement("div");
+  if ( bgDiv ) {
+    bgDiv.setAttribute("id", "bgDiv");
+    frameDoc.body.appendChild(bgDiv);
+  }
 
   //Place Image
-  newImg = frameDoc.createElement("img");
-  newImg.setAttribute("src", imageElement.getAttribute("src"));
-  newImg.setAttribute("width", imageElement.offsetWidth);
-  newImg.setAttribute("height", imageElement.offsetHeight);
-  newImg.setAttribute("id", "mainImg");
-  frameDoc.getElementById("bgDiv").appendChild(newImg);
-  frameDoc.getElementById("bgDiv").style.width = imageElement.offsetWidth;
+  var newImg = frameDoc.createElement("img");
+  if ( newImg ) {
+    newImg.setAttribute("src", imageElement.getAttribute("src"));
+    newImg.setAttribute("width", imageElement.offsetWidth);
+    newImg.setAttribute("height", imageElement.offsetHeight);
+    newImg.setAttribute("id", "mainImg");
+    frameDoc.getElementById("bgDiv").appendChild(newImg);
+    frameDoc.getElementById("bgDiv").style.width = imageElement.offsetWidth;
+  }
 
   //Recreate Image Map if it exists
-  if (imageElement.getAttribute("usemap") != "")
+  if (imageElement.getAttribute("usemap")){
+    //alert('test');
     recreateMap();
-
+  }
 }
 
 function hideToolbar(){
@@ -95,7 +103,7 @@ function hideToolbar(){
 }
 
 function highContrast(){
-  imgEl = frameDoc.getElementById("mainImg");
+  var imgEl = frameDoc.getElementById("mainImg");
   if (highCont){
     imgEl.style.opacity = "100%";
     highCont = false;
@@ -107,10 +115,18 @@ function highContrast(){
 }
 
 function recreateMap(){
-  map = imageElement.getAttribute("usemap");
+  var map = imageElement.getAttribute("usemap");
   map = map.substring(1, map.length);
-  mapCollection = imageElement.ownerDocument.getElementsByName(map);
-  if (mapCollection){
+  mapName = map;
+  var mapCollection = editorShell.editorDocument.getElementsByName(map);
+  oldMap = mapCollection[0];
+  //alert(map);
+  try{
+    alert(oldMap.childNodes.length);
+  }
+  catch (ex){
+    alert(ex);
+  }
     areaCollection = mapCollection[0].childNodes;
     var len = areaCollection.length;
     for(j=0; j<len; j++){
@@ -128,17 +144,15 @@ function recreateMap(){
       else
         Poly(coords, href, target, alt, true);
     }
-    imageElement.ownerDocument.removeChild(mapCollection[0]);
-  }
 }
 
 function finishMap(){
-  spots = frameDoc.getElementsByName("hotspot");
+  var spots = frameDoc.getElementsByName("hotspot");
   var len = spots.length;
   createMap();
   if (len >= 1){
     for(i=0; i<len; i++){
-      curSpot = spots[i];
+      var curSpot = spots[i];
       if (curSpot.getAttribute("class") == "rect")
         createRect(curSpot);
       else if (curSpot.getAttribute("class") == "cir")
@@ -147,24 +161,30 @@ function finishMap(){
         createPoly(curSpot);
     }
     imageElement.setAttribute("usemap", ("#"+mapName));
-//    alert(imageMap);
-    editorShell.InsertElementAtSelection(imageMap, false);
-    dump("image map element inserted\n");
+    editorShell.editorDocument.body.appendChild(imageMap);
+    //editorShell.InsertElementAtSelection(imageMap, false);
   }
   return true;
 }
 
 function createMap(){
-  imageMap = editorShell.CreateElementWithDefaults("map");
+  //imageMap = editorShell.CreateElementWithDefaults("map");
+  imageMap = frameDoc.createElement("map");
+  if (mapName == ''){
   mapName = imageElement.getAttribute("src");
   mapName = mapName.substring(mapName.lastIndexOf("/"), mapName.length);
   mapName = mapName.substring(mapName.lastIndexOf("\\"), mapName.length);
   mapName = mapName.substring(1, mapName.indexOf("."));
+  }
+  else {
+    editorShell.editorDocument.body.removeChild(oldMap);
+  }
   imageMap.setAttribute("name", mapName);
 }
 
 function createRect(which){
-  newRect = document.createElement("area");
+  //newRect = editorShell.CreateElementWithDefaults("area");
+  newRect = frameDoc.createElement("area");
   newRect.setAttribute("shape", "rect");
   coords = parseInt(which.style.left)+","+parseInt(which.style.top)+","+(parseInt(which.style.left)+parseInt(which.style.width))+","+(parseInt(which.style.top)+parseInt(which.style.height));
   newRect.setAttribute("coords", coords);
@@ -174,14 +194,22 @@ function createRect(which){
   else{
     newRect.setAttribute("nohref", "");
   }
+  if (which.getAttribute("target") != ""){
   newRect.setAttribute("target", which.getAttribute("hsTarget"));
+  }
+  if (which.getAttribute("alt") != ""){
   newRect.setAttribute("alt", which.getAttribute("hsAlt"));
-  newRect.removeAttribute("id");
+  }
+  //newRect.removeAttribute("id");
   imageMap.appendChild(newRect);
 }
 
 function createCir(which){
-  newCir = document.createElement("area");
+  //newCir = editorShell.CreateElementWithDefaults("area");
+  var newCir = frameDoc.createElement("area");
+  if ( !newCir )
+    return;
+  
   newCir.setAttribute("shape", "circle");
   radius = Math.floor(parseInt(which.style.width)/2);
   coords = (parseInt(which.style.left)+radius)+","+(parseInt(which.style.top)+radius)+","+radius;
@@ -191,14 +219,21 @@ function createCir(which){
   else{
     newCir.setAttribute("nohref", "");
   }
-  newCir.setAttribute("target", which.getAttribute("hsTarget"));
-  newCir.setAttribute("alt", which.getAttribute("hsAlt"));
-  newCir.removeAttribute("id");
+
+  if ( which.getAttribute("hsTarget") )
+    newCir.setAttribute("target", which.getAttribute("hsTarget"));
+  if ( which.getAttribute("hsAlt") )
+    newCir.setAttribute("alt", which.getAttribute("hsAlt"));
+  //newCir.removeAttribute("id");
   imageMap.appendChild(newCir);
 }
 
 function createPoly(which){
-  newPoly = document.createElement("area");
+  //newPoly = editorShell.CreateElementWithDefaults("area");
+  var newPoly = frameDoc.createElement("area");
+  if ( !newPoly )
+    return;
+  
   newPoly.setAttribute("shape", "poly");
   var coords = '';
   var len = which.childNodes.length;
@@ -212,18 +247,20 @@ function createPoly(which){
   else{
     newPoly.setAttribute("nohref", "");
   }
-  newPoly.setAttribute("target", which.getAttribute("hsTarget"));
-  newPoly.setAttribute("alt", which.getAttribute("hsAlt"));
-  newPoly.removeAttribute("id");
+  if ( which.getAttribute("hsTarget") )
+    newPoly.setAttribute("target", which.getAttribute("hsTarget"));
+  if ( which.getAttribute("hsAlt") )
+    newPoly.setAttribute("alt", which.getAttribute("hsAlt"));
+  //newPoly.removeAttribute("id");
   imageMap.appendChild(newPoly);
 }
 
 function hotSpotProps(which){
-  currentRect = null;
-  currentCir = null;
+  var currentRect = null;
+  var currentCir = null;
   if (which == null)
     return;
-  hotSpotWin = window.openDialog("chrome://editor/content/EdImageMapHotSpot.xul", "_blank", "chrome,close,titlebar,modal", which);
+  var hotSpotWin = window.openDialog("chrome://editor/content/EdImageMapHotSpot.xul", "_blank", "chrome,close,titlebar,modal", which);
 }
 
 function deleteAreas(){
