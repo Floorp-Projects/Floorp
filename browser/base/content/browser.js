@@ -44,17 +44,10 @@
 #
 # ***** END LICENSE BLOCK *****
 
-const XREMOTESERVICE_CONTRACTID = "@mozilla.org/browser/xremoteservice;1";
-const mediatorContractId = "@mozilla.org/appshell/window-mediator;1";
-const nsIWebBrowserChrome = Components.interfaces.nsIWebBrowserChrome;
-
 const NS_ERROR_MODULE_NETWORK = 2152398848;
 const NS_NET_STATUS_READ_FROM = NS_ERROR_MODULE_NETWORK + 8;
 const NS_NET_STATUS_WROTE_TO  = NS_ERROR_MODULE_NETWORK + 9;
 
-const nsIDOMWindowInternal = Components.interfaces.nsIDOMWindowInternal;
-const nsIWindowMediator = Components.interfaces.nsIWindowMediator;
-const nsIWindowDataSource = Components.interfaces.nsIWindowDataSource;
 const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
 
 const MAX_HISTORY_MENU_ITEMS = 15;
@@ -343,7 +336,7 @@ function Startup()
 #ifdef MOZ_ENABLE_XREMOTE
   // hook up remote support
   var remoteService;
-  remoteService = Components.classes[XREMOTESERVICE_CONTRACTID]
+  remoteService = Components.classes["@mozilla.org/browser/xremoteservice;1"]
                             .getService(Components.interfaces.nsIXRemoteService);
   remoteService.addBrowserInstance(window);
 
@@ -440,7 +433,7 @@ function Shutdown()
 #ifdef MOZ_ENABLE_XREMOTE
   // remove remote support
   var remoteService;
-  remoteService = Components.classes[XREMOTESERVICE_CONTRACTID]
+  remoteService = Components.classes["@mozilla.org/browser/xremoteservice;1"]
                             .getService(Components.interfaces.nsIXRemoteService);
   remoteService.removeBrowserInstance(window);
 #endif
@@ -2490,7 +2483,7 @@ function toOpenWindowByType( inType, uri )
 {
   var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
 
-  var windowManagerInterface = windowManager.QueryInterface(nsIWindowMediator);
+  var windowManagerInterface = windowManager.QueryInterface(Components.interfaces.nsIWindowMediator);
 
   var topWindow = windowManagerInterface.getMostRecentWindow( inType );
   
@@ -3021,6 +3014,7 @@ nsBrowserContentListener.prototype =
 {
     init: function(toplevelWindow, contentWindow)
     {
+        const nsIWebBrowserChrome = Components.interfaces.nsIWebBrowserChrome;
         this.toplevelWindow = toplevelWindow;
         this.contentWindow = contentWindow;
 
