@@ -534,6 +534,7 @@ PBE_CreateContext(SECOidTag hashAlgorithm, PBEBitGenID bitGenPurpose,
 	    break;
 	}
 	mechanism = CKM_PBE_SHA1_DES3_EDE_CBC;
+	break;
     case pbeBitGenCipherKey:
 	if (hashAlgorithm != SEC_OID_SHA1) {
 	    break;
