@@ -37,6 +37,16 @@
  * ***** END LICENSE BLOCK ***** */
 
 /**
+ * Communicator Shared Utility Library
+ * for shared application glue for the Communicator suite of applications
+ **/
+
+/*
+  Note: All Editor/Composer-related methods have been moved to editorApplicationOverlay.js,
+  so app windows that require those must include editorNavigatorOverlay.xul
+*/
+
+/**
  * Go into online/offline mode
  **/
 
@@ -100,35 +110,68 @@ function setOfflineUI(offline)
     }
 }
 
+var goPrefWindow = 0;
+
 function getBrowserURL() {
-  return "chrome://browser/content/browser.xul";
+
+  try {
+    var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                         .getService(Components.interfaces.nsIPrefBranch);
+    var url = prefs.getCharPref("browser.chromeURL");
+    if (url)
+      return url;
+  } catch(e) {
+  }
+  return "chrome://navigator/content/navigator.xul";
 }
 
-function goPageSetup(printSettings)
+function goPageSetup(domwin, printSettings)
 {
   try {
+    if (printSettings == null) {
+      alert("PrintSettings arg is null!");
+    }
+
     // This code calls the printoptions service to bring up the printoptions
     // dialog.  This will be an xp dialog if the platform did not override
     // the ShowPrintSetupDialog method.
-    var printOptionsService = Components.classes["@mozilla.org/gfx/printoptions;1"]
-                                             .getService(Components.interfaces.nsIPrintOptions);
-    printOptionsService.ShowPrintSetupDialog(printSettings);
-  } catch(e) { 
+    var printingPromptService = Components.classes["@mozilla.org/embedcomp/printingprompt-service;1"]
+                                             .getService(Components.interfaces.nsIPrintingPromptService);
+    printingPromptService.showPageSetup(domwin, printSettings, null);
+    return true;
+  } catch(e) {
+    return false; 
   }
+  return true;
 }
 
 function goPreferences(containerID, paneURL, itemID)
 {
+  var resizable;
+  var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                       .getService(Components.interfaces.nsIPrefBranch);
+  try {
+    // We are resizable ONLY if in box debugging mode, because in
+    // this special debug mode it is often impossible to see the 
+    // content of the debug panel in order to disable debug mode.
+    resizable = pref.getBoolPref("xul.debug.box");
+  }
+  catch (e) {
+    resizable = false;
+  }
+
   //check for an existing pref window and focus it; it's not application modal
-  const kWindowMediatorContractID = "@mozilla.org/rdf/datasource;1?name=window-mediator";
+  const kWindowMediatorContractID = "@mozilla.org/appshell/window-mediator;1";
   const kWindowMediatorIID = Components.interfaces.nsIWindowMediator;
   const kWindowMediator = Components.classes[kWindowMediatorContractID].getService(kWindowMediatorIID);
   var lastPrefWindow = kWindowMediator.getMostRecentWindow("mozilla:preferences");
   if (lastPrefWindow)
     lastPrefWindow.focus();
   else {
-    openDialog("chrome://browser/content/pref/pref.xul","PrefWindow", 
-               "chrome,titlebar", paneURL, containerID, itemID);
+    var resizability = resizable ? "yes" : "no";
+    var features = "chrome,titlebar,resizable=" + resizability;
+    openDialog("chrome://communicator/content/pref/pref.xul","PrefWindow", 
+               features, paneURL, containerID, itemID);
   }
 }
 
@@ -175,6 +218,27 @@ function goClickThrobber( urlPref )
     openTopWin(url);
 }
 
+
+//No longer needed.  Rip this out since we are using openTopWin
+function goHelpMenu( url )
+{
+  /* note that this chrome url should probably change to not have all of the navigator controls */
+  /* also, do we want to limit the number of help windows that can be spawned? */
+  window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url );
+}
+
+function getTopWin()
+{
+    var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
+    var windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
+    var topWindowOfType = windowManagerInterface.getMostRecentWindow( "navigator:browser" );
+
+    if (topWindowOfType) {
+        return topWindowOfType;
+    }
+    return null;
+}
+
 function openTopWin( url )
 {
     /* note that this chrome url should probably change to not have
@@ -183,7 +247,7 @@ function openTopWin( url )
        use this function with chrome controls */
     /* also, do we want to
        limit the number of help windows that can be spawned? */
-    if ((url == null) || (url == "")) return;
+    if ((url == null) || (url == "")) return null;
 
     // xlate the URL if necessary
     if (url.indexOf("urn:") == 0)
@@ -196,25 +260,14 @@ function openTopWin( url )
         url = "about:blank";
     }
 
-    var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
-    var windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
-
-    var topWindowOfType = windowManagerInterface.getMostRecentWindow( "navigator:browser" );
+    var topWindowOfType = getTopWin();
     if ( topWindowOfType )
     {
         topWindowOfType.focus();
-        topWindowOfType._content.location.href = url;
+        topWindowOfType.loadURI(url);
         return topWindowOfType;
     }
-    else
-    {
-        return window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url );
-    }
-}
-
-function goAboutDialog()
-{
-  window.openDialog("chrome://global/content/about.xul", "About", "modal,chrome,resizable=yes,height=450,width=550");
+    return window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url );
 }
 
 // update menu items that rely on focus
@@ -249,6 +302,26 @@ function goUpdateUndoEditMenuItems()
 function goUpdatePasteMenuItems()
 {
   goUpdateCommand('cmd_paste');
+}
+
+// function that extracts the filename from a url
+function extractFileNameFromUrl(urlstr)
+{
+  if (!urlstr) return null;
+
+  // For "http://foo/bar/cheese.jpg", return "cheese.jpg".
+  // For "imap://user@host.com:143/fetch>UID>/INBOX>951?part=1.2&type=image/gif&filename=foo.jpeg", return "foo.jpeg".
+  // The 2nd url (ie, "imap://...") is generated for inline images by MimeInlineImage_parse_begin() in mimeiimg.cpp.
+  var lastSlash = urlstr.slice(urlstr.lastIndexOf( "/" )+1);
+  if (lastSlash)
+  { 
+    var nameIndex = lastSlash.lastIndexOf( "filename=" );
+    if (nameIndex != -1)
+      return (lastSlash.slice(nameIndex+9));
+    else
+      return lastSlash;
+  }
+  return null; 
 }
 
 // Gather all descendent text under given document node.
@@ -311,7 +384,7 @@ function utilityOnLoad(aEvent)
   if (!broadcaster) return;
 
   var observerService = Components.classes[kObserverServiceProgID]
-		          .getService(Components.interfaces.nsIObserverService);
+              .getService(Components.interfaces.nsIObserverService);
 
   // crude way to prevent registering twice.
   try {
@@ -321,16 +394,19 @@ function utilityOnLoad(aEvent)
   }
   observerService.addObserver(offlineObserver, "network:offline-status-changed", false);
   // make sure we remove this observer later
+  addEventListener("unload",utilityOnUnload,false);
 
   // set the initial state
   var ioService = Components.classes[kIOServiceProgID]
-		      .getService(Components.interfaces.nsIIOService);
+          .getService(Components.interfaces.nsIIOService);
   setOfflineUI(ioService.offline);
 }
 
 function utilityOnUnload(aEvent) 
 {
   var observerService = Components.classes[kObserverServiceProgID]
-			  .getService(Components.interfaces.nsIObserverService);
+        .getService(Components.interfaces.nsIObserverService);
   observerService.removeObserver(offlineObserver, "network:offline-status-changed");
 }
+
+addEventListener("load",utilityOnLoad,true);
