@@ -26,6 +26,10 @@
 #include "nsIStyleContext.h"
 #include "nsCSSRendering.h"
 #include "nsINameSpaceManager.h"
+#include "nsIViewManager.h"
+#include "nsWidgetsCID.h"
+
+const PRInt32 kMaxZ = 0x7fffffff; //XXX: Shouldn't there be a define somewhere for MaxInt for PRInt32
 
 
 //
@@ -71,5 +75,37 @@ nsMenuPopupFrame::Init(nsIPresContext&  aPresContext,
                                                   getter_AddRefs(menuStyle));
   rv = nsBoxFrame::Init(aPresContext, aContent, aParent, menuStyle, aPrevInFlow);
   CreateViewForFrame(aPresContext, this, menuStyle, PR_TRUE);
+
+  // Now that we've made a view, remove it and insert it at the correct
+  // position in the view hierarchy (as the root view).  We do this so that we
+  // can draw the menus outside the confines of the window.
+  nsIView* ourView;
+  GetView(&ourView);
+
+  nsIFrame* parent;
+  aParent->GetParentWithView(&parent);
+  nsIView* parentView;
+  parent->GetView(&parentView);
+
+  nsCOMPtr<nsIViewManager> viewManager;
+  parentView->GetViewManager(*getter_AddRefs(viewManager));
+
+  // Remove the view from its old position.
+  viewManager->RemoveChild(parentView, ourView);
+
+  // Reinsert ourselves as the root view with a maximum z-index.
+  nsIView* rootView;
+  viewManager->GetRootView(rootView);
+  viewManager->InsertChild(rootView, ourView, kMaxZ);
+
+  // Create a widget for ourselves.
+  nsWidgetInitData widgetData;
+  ourView->SetZIndex(kMaxZ);
+  widgetData.mBorderStyle = eBorderStyle_BorderlessTopLevel;
+  static NS_DEFINE_IID(kCChildCID,  NS_CHILD_CID);
+  ourView->CreateWidget(kCChildCID,
+                     &widgetData,
+                     nsnull);
+
   return rv;
 }
