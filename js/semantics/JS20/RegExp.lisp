@@ -56,10 +56,12 @@
        
        
        (%section "Regular Expression Definitions")
-       (deftype r-e-input (tuple (str string) (ignore-case boolean) (multiline boolean)))
+       (deftype r-e-input (tuple (str string) (ignore-case boolean) (multiline boolean) (simple boolean)))
        (%text :semantics
          "Field " (:field str r-e-input) " is the input string. "
-         (:field ignore-case r-e-input) " and " (:field multiline r-e-input) " are the corresponding regular expression flags.")
+         (:field ignore-case r-e-input) ", "
+         (:field multiline r-e-input) ", and "
+         (:field simple r-e-input) " are the corresponding regular expression flags.")
        
        (deftype r-e-result (oneof (success r-e-match) failure))
        (deftype r-e-match (tuple (end-index integer)
@@ -337,7 +339,8 @@
            (count-parens 0))
          (production :atom (#\.) atom-dot
            ((gen-matcher (paren-index integer :unused))
-            (character-set-matcher line-terminators true))
+            (function ((t r-e-input) (x r-e-match) (c continuation))
+              ((character-set-matcher (if (& simple t) (set-of character) line-terminators) true) t x c)))
            (count-parens 0))
          (production :atom (:null-escape) atom-null-escape
            ((gen-matcher (paren-index integer :unused))
@@ -583,17 +586,17 @@
   (defparameter *rg* (lexer-grammar *rl*)))
 
 
-(defun run-regexp (regexp input &optional ignore-case multiline)
+(defun run-regexp (regexp input &key ignore-case multiline simple)
   (let ((exec (first (lexer-parse *rl* regexp))))
     (dotimes (i (length input) '(failure))
-      (let ((result (funcall exec (list input ignore-case multiline) i)))
+      (let ((result (funcall exec (list input ignore-case multiline simple) i)))
         (ecase (first result)
           (success
            (return (list* i (subseq input i (second result)) (cddr result))))
           (failure))))))
 
 #|
-(progn
+(values
   (depict-rtf-to-local-file
    "JS20/RegExpGrammar.rtf"
    "Regular Expression Grammar"
@@ -605,7 +608,7 @@
    #'(lambda (rtf-stream)
        (depict-world-commands rtf-stream *rw*))))
 
-(progn
+(values
   (depict-html-to-local-file
    "JS20/RegExpGrammar.html"
    "Regular Expression Grammar"
@@ -642,6 +645,10 @@
 (run-regexp "(.*?)a(?!(a+)b\\2c)\\2(.*)" "baaabaac")
 (run-regexp "(aa|aabaac|ba|b|c)*" "aabaac")
 (run-regexp "[\\Q^01234]+\\Qaa+" "93-43aabbc")
+(run-regexp "a." "AAab")
+(run-regexp "a." "AAab" :ignore-case t)
+(run-regexp "a.." (concatenate 'string "a" (string #\newline) "bacd"))
+(run-regexp "a.." (concatenate 'string "a" (string #\newline) "bacd") :simple t)
 |#
 
 #+allegro (clean-grammar *rg*) ;Remove this line if you wish to print the grammar's state tables.
