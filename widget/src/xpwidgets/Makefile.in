@@ -44,6 +44,10 @@ CPPSRCS		= \
 		nsXPLookAndFeel.cpp \
 		$(NULL)
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
+CPPSRCS += nsWidgetAtoms.cpp
+endif
+
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../$(MOZ_WIDGET_TOOLKIT) \
 		-I$(srcdir) \
