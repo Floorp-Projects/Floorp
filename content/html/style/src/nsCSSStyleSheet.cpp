@@ -88,7 +88,6 @@
 #include "prlog.h"
 #include "nsCOMPtr.h"
 #include "nsIStyleSet.h"
-#include "nsIStyleRuleSupplier.h"
 #include "nsISizeOfHandler.h"
 #include "nsStyleUtil.h"
 #include "nsQuickSort.h"
@@ -713,23 +712,14 @@ public:
   NS_IMETHOD ClearRuleCascades(void);
 
   // nsIStyleRuleProcessor
-  NS_IMETHOD RulesMatching(nsIPresContext* aPresContext,
-                           nsIAtom* aMedium, 
-                           nsIContent* aContent,
-                           nsIStyleContext* aParentContext,
-                           nsRuleWalker* aRuleWalker);
+  NS_IMETHOD RulesMatching(ElementRuleProcessorData* aData,
+                           nsIAtom* aMedium);
 
-  NS_IMETHOD RulesMatching(nsIPresContext* aPresContext,
-                           nsIAtom* aMedium, 
-                           nsIContent* aParentContent,
-                           nsIAtom* aPseudoTag,
-                           nsIStyleContext* aParentContext,
-                           nsICSSPseudoComparator* aComparator,
-                           nsRuleWalker* aRuleWalker);
+  NS_IMETHOD RulesMatching(PseudoRuleProcessorData* aData,
+                           nsIAtom* aMedium);
 
-  NS_IMETHOD HasStateDependentStyle(nsIPresContext* aPresContext,
-                                    nsIAtom* aMedium, 
-                                    nsIContent* aContent);
+  NS_IMETHOD HasStateDependentStyle(StateRuleProcessorData* aData,
+                                    nsIAtom* aMedium);
 
 #ifdef DEBUG
   virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize);
@@ -3222,66 +3212,16 @@ CSSRuleProcessor::AppendStyleSheet(nsICSSStyleSheet* aStyleSheet)
   return result;
 }
 
-MOZ_DECL_CTOR_COUNTER(SelectorMatchesData)
+MOZ_DECL_CTOR_COUNTER(RuleProcessorData)
 
-struct SelectorMatchesData {
-  SelectorMatchesData(nsIPresContext* aPresContext, nsIContent* aContent, 
-                      nsRuleWalker* aRuleWalker,
-                      nsCompatibility* aCompat = nsnull);
-  
-  virtual ~SelectorMatchesData() 
-  {
-    MOZ_COUNT_DTOR(SelectorMatchesData);
-
-    if (mPreviousSiblingData)
-      mPreviousSiblingData->Destroy(mPresContext);
-    if (mParentData)
-      mParentData->Destroy(mPresContext);
-
-    NS_IF_RELEASE(mParentContent);
-    NS_IF_RELEASE(mContentTag);
-    NS_IF_RELEASE(mContentID);
-    NS_IF_RELEASE(mStyledContent);
-  }
-
-  void* operator new(size_t sz, nsIPresContext* aContext) {
-    void* result = nsnull;
-    aContext->AllocateFromShell(sz, &result);
-    return result;
-  }
-  void Destroy(nsIPresContext* aContext) {
-    this->~SelectorMatchesData();
-    aContext->FreeToShell(sizeof(SelectorMatchesData), this);
-  };
-
-  nsIPresContext*   mPresContext;
-  nsIContent*       mContent;
-  nsIContent*       mParentContent; // if content, content->GetParent()
-  nsRuleWalker*     mRuleWalker; // Used to add rules to our results.
-  nsCOMPtr<nsIStyleRuleSupplier> mStyleRuleSupplier; // used to query for the current scope
-  
-  nsIAtom*          mContentTag;    // if content, then content->GetTag()
-  nsIAtom*          mContentID;     // if styled content, then styledcontent->GetID()
-  nsIStyledContent* mStyledContent; // if content, content->QI(nsIStyledContent)
-  PRBool            mIsHTMLContent; // if content, then does QI on HTMLContent, true or false
-  PRBool            mIsHTMLLink;    // if content, calls nsStyleUtil::IsHTMLLink
-  PRBool            mIsSimpleXLink; // if content, calls nsStyleUtil::IsSimpleXLink
-  nsLinkState       mLinkState;     // if a link, this is the state, otherwise unknown
-  PRBool            mIsQuirkMode;   // Possibly remove use of this in SelectorMatches?
-  PRInt32           mEventState;    // if content, eventStateMgr->GetContentState()
-  PRBool            mHasAttributes; // if content, content->GetAttrCount() > 0
-  PRInt32           mNameSpaceID;   // if content, content->GetNameSapce()
-  SelectorMatchesData* mPreviousSiblingData;
-  SelectorMatchesData* mParentData;
-};
-
-SelectorMatchesData::SelectorMatchesData(nsIPresContext* aPresContext,
-                                         nsIContent* aContent, 
-                                         nsRuleWalker* aRuleWalker,
-                                         nsCompatibility* aCompat /*= nsnull*/)
+RuleProcessorData::RuleProcessorData(nsIPresContext* aPresContext,
+                                     nsIContent* aContent, 
+                                     nsRuleWalker* aRuleWalker,
+                                     nsCompatibility* aCompat /*= nsnull*/)
 {
-  MOZ_COUNT_CTOR(SelectorMatchesData);
+  MOZ_COUNT_CTOR(RuleProcessorData);
 
+  NS_PRECONDITION(aPresContext, "null pointer");
   NS_ASSERTION(!aContent || aContent->IsContentOfType(nsIContent::eELEMENT),
                "non-element leaked into SelectorMatches");
 
@@ -3289,6 +3229,7 @@ SelectorMatchesData::SelectorMatchesData(nsIPresContext* aPresContext,
   mContent = aContent;
   mParentContent = nsnull;
   mRuleWalker = aRuleWalker;
+  mScopedRoot = nsnull;
 
   mContentTag = nsnull;
   mContentID = nsnull;
@@ -3364,6 +3305,21 @@ SelectorMatchesData::SelectorMatchesData(nsIPresContext* aPresContext,
       mIsSimpleXLink = PR_TRUE;
     } 
   }
+}
+
+RuleProcessorData::~RuleProcessorData()
+{
+  MOZ_COUNT_DTOR(RuleProcessorData);
+
+  if (mPreviousSiblingData)
+    mPreviousSiblingData->Destroy(mPresContext);
+  if (mParentData)
+    mParentData->Destroy(mPresContext);
+
+  NS_IF_RELEASE(mParentContent);
+  NS_IF_RELEASE(mContentTag);
+  NS_IF_RELEASE(mContentID);
+  NS_IF_RELEASE(mStyledContent);
 }
 
 static const PRUnichar kNullCh = PRUnichar('\0');
@@ -3476,7 +3432,7 @@ static PRBool IsSignificantChild(nsIContent* aChild, PRBool aAcceptNonWhitespace
 }
 
 
-static PRBool SelectorMatches(SelectorMatchesData &data,
+static PRBool SelectorMatches(RuleProcessorData &data,
                               nsCSSSelector* aSelector,
                               PRBool aTestState,
                               PRInt8 aNegationIndex) 
@@ -3588,18 +3544,8 @@ static PRBool SelectorMatches(SelectorMatchesData &data,
         }
       }
       else if (nsCSSAtoms::xblBoundElementPseudo == pseudoClass->mAtom) {
-        if (!data.mStyleRuleSupplier) {
-          nsCOMPtr<nsIPresShell> shell;
-          data.mPresContext->GetShell(getter_AddRefs(shell));
-          nsCOMPtr<nsIStyleSet> styleSet;
-          shell->GetStyleSet(getter_AddRefs(styleSet));
-          styleSet->GetStyleRuleSupplier(getter_AddRefs(data.mStyleRuleSupplier));
-        }
-
-        if (data.mStyleRuleSupplier)
-          data.mStyleRuleSupplier->MatchesScopedRoot(data.mContent, &result);
-        else 
-          result = localFalse;
+        result = (data.mScopedRoot && data.mScopedRoot == data.mContent)
+                   ? localTrue : localFalse;
       }
       else if (nsCSSAtoms::langPseudo == pseudoClass->mAtom) {
         // XXX not yet implemented
@@ -3796,14 +3742,7 @@ static PRBool SelectorMatches(SelectorMatchesData &data,
   return result;
 }
 
-struct ContentEnumData : public SelectorMatchesData {
-  ContentEnumData(nsIPresContext* aPresContext, nsIContent* aContent, 
-                  nsRuleWalker* aRuleWalker)
-  : SelectorMatchesData(aPresContext,aContent,aRuleWalker)
-  {}
-};
-
-static PRBool SelectorMatchesTree(SelectorMatchesData &data,
+static PRBool SelectorMatchesTree(RuleProcessorData &data,
                                   nsCSSSelector* aSelector) 
 {
   nsCSSSelector* selector = aSelector;
@@ -3812,16 +3751,16 @@ static PRBool SelectorMatchesTree(SelectorMatchesData &data,
     nsIContent* content = nsnull;
     nsIContent* lastContent = data.mContent;
     NS_ADDREF(lastContent);
-    SelectorMatchesData* curdata = &data;
+    RuleProcessorData* curdata = &data;
     while (nsnull != selector) { // check compound selectors
       // Find the appropriate content (whether parent or previous sibling)
-      // to check next, and if we don't already have a SelectorMatchesData
+      // to check next, and if we don't already have a RuleProcessorData
       // for it, create one.
 
       // for adjacent sibling combinators, the content to test against the
       // selector is the previous sibling
       nsCompatibility compat = curdata->mIsQuirkMode ? eCompatibility_NavQuirks : eCompatibility_Standard;
-      SelectorMatchesData* newdata;
+      RuleProcessorData* newdata;
       if (PRUnichar('+') == selector->mOperator) {
         newdata = curdata->mPreviousSiblingData;
         if (!newdata) {
@@ -3838,7 +3777,7 @@ static PRBool SelectorMatchesTree(SelectorMatchesData &data,
                   (tag != nsLayoutAtoms::commentTagName)) {
                 NS_IF_RELEASE(tag);
                 newdata =
-                    new (curdata->mPresContext) SelectorMatchesData(curdata->mPresContext, content,
+                    new (curdata->mPresContext) RuleProcessorData(curdata->mPresContext, content,
                                                                     curdata->mRuleWalker, &compat);
                 curdata->mPreviousSiblingData = newdata;    
                 break;
@@ -3860,7 +3799,7 @@ static PRBool SelectorMatchesTree(SelectorMatchesData &data,
         if (!newdata) {
           lastContent->GetParent(content);
           if (content) {
-            newdata = new (curdata->mPresContext) SelectorMatchesData(curdata->mPresContext, content,
+            newdata = new (curdata->mPresContext) RuleProcessorData(curdata->mPresContext, content,
                                                                       curdata->mRuleWalker, &compat);
             curdata->mParentData = newdata;    
           }
@@ -3914,7 +3853,7 @@ static PRBool SelectorMatchesTree(SelectorMatchesData &data,
 
 static void ContentEnumFunc(nsICSSStyleRule* aRule, void* aData)
 {
-  ContentEnumData* data = (ContentEnumData*)aData;
+  ElementRuleProcessorData* data = (ElementRuleProcessorData*)aData;
 
   nsCSSSelector* selector = aRule->FirstSelector();
   if (SelectorMatches(*data, selector, PR_TRUE, 0)) {
@@ -3944,35 +3883,22 @@ static PRBool ContentEnumWrap(nsISupports* aRule, void* aData)
 #endif
 
 NS_IMETHODIMP
-CSSRuleProcessor::RulesMatching(nsIPresContext* aPresContext,
-                                nsIAtom* aMedium, 
-                                nsIContent* aContent,
-                                nsIStyleContext* aParentContext,
-                                nsRuleWalker* aRuleWalker)
+CSSRuleProcessor::RulesMatching(ElementRuleProcessorData *aData,
+                                nsIAtom* aMedium)
 {
-  NS_PRECONDITION(nsnull != aPresContext, "null arg");
-  NS_PRECONDITION(nsnull != aContent, "null arg");
-  NS_PRECONDITION(nsnull != aRuleWalker, "null arg");
-  NS_PRECONDITION(aContent->IsContentOfType(nsIContent::eELEMENT),
+  NS_PRECONDITION(aData->mContent->IsContentOfType(nsIContent::eELEMENT),
                   "content must be element");
 
-  RuleCascadeData* cascade = GetRuleCascade(aPresContext, aMedium);
+  RuleCascadeData* cascade = GetRuleCascade(aData->mPresContext, aMedium);
 
   if (cascade) {
-    nsIAtom* idAtom = nsnull;
     nsAutoVoidArray classArray;
 
-    // setup the ContentEnumData 
-    ContentEnumData data(aPresContext, aContent, aRuleWalker);
-
-    nsIStyledContent* styledContent;
-    if (NS_SUCCEEDED(aContent->QueryInterface(NS_GET_IID(nsIStyledContent), (void**)&styledContent))) {
-      styledContent->GetID(idAtom);
+    nsIStyledContent* styledContent = aData->mStyledContent;
+    if (styledContent)
       styledContent->GetClasses(classArray);
-      NS_RELEASE(styledContent);
-    }
 
-    cascade->mRuleHash.EnumerateAllRules(data.mNameSpaceID, data.mContentTag, idAtom, classArray, ContentEnumFunc, &data);
+    cascade->mRuleHash.EnumerateAllRules(aData->mNameSpaceID, aData->mContentTag, aData->mContentID, classArray, ContentEnumFunc, aData);
 
 #ifdef DEBUG_RULES
     nsISupportsArray* list1;
@@ -3980,37 +3906,21 @@ CSSRuleProcessor::RulesMatching(nsIPresContext* aPresContext,
     NS_NewISupportsArray(&list1);
     NS_NewISupportsArray(&list2);
 
-    data.mResults = list1;
-    cascade->mRuleHash.EnumerateAllRules(data.mNameSpaceID, data.mContentTag, idAtom, classArray, ContentEnumFunc, &data);
-    data.mResults = list2;
+    aData->mResults = list1;
+    cascade->mRuleHash.EnumerateAllRules(aData->mNameSpaceID, aData->mContentTag, aData->mContentID, classArray, ContentEnumFunc, &data);
+    aData->mResults = list2;
     cascade->mWeightedRules->EnumerateBackwards(ContentEnumWrap, &data);
     NS_ASSERTION(list1->Equals(list2), "lists not equal");
     NS_RELEASE(list1);
     NS_RELEASE(list2);
 #endif
-
-    NS_IF_RELEASE(idAtom);
   }
   return NS_OK;
 }
 
-struct PseudoEnumData : public SelectorMatchesData {
-  PseudoEnumData(nsIPresContext* aPresContext, nsIContent* aParentContent,
-                 nsIAtom* aPseudoTag, nsICSSPseudoComparator* aComparator,
-                 nsRuleWalker* aRuleWalker)
-  : SelectorMatchesData(aPresContext, aParentContent, aRuleWalker)
-  {
-    mPseudoTag = aPseudoTag;
-    mComparator = aComparator;
-  }
-
-  nsIAtom*                 mPseudoTag;
-  nsICSSPseudoComparator*  mComparator;
-};
-
 static void PseudoEnumFunc(nsICSSStyleRule* aRule, void* aData)
 {
-  PseudoEnumData* data = (PseudoEnumData*)aData;
+  PseudoRuleProcessorData* data = (PseudoRuleProcessorData*)aData;
 
   nsCSSSelector* selector = aRule->FirstSelector();
 
@@ -4058,36 +3968,28 @@ static PRBool PseudoEnumWrap(nsISupports* aRule, void* aData)
 #endif
 
 NS_IMETHODIMP
-CSSRuleProcessor::RulesMatching(nsIPresContext* aPresContext,
-                                nsIAtom* aMedium, 
-                                nsIContent* aParentContent,
-                                nsIAtom* aPseudoTag,
-                                nsIStyleContext* aParentContext,
-                                nsICSSPseudoComparator* aComparator,
-                                nsRuleWalker* aRuleWalker)
+CSSRuleProcessor::RulesMatching(PseudoRuleProcessorData* aData,
+                                nsIAtom* aMedium)
 {
-  NS_PRECONDITION(nsnull != aPresContext, "null arg");
-  NS_PRECONDITION(nsnull != aPseudoTag, "null arg");
-  NS_PRECONDITION(nsnull != aRuleWalker, "null arg");
-  NS_PRECONDITION(!aParentContent ||
-                  aParentContent->IsContentOfType(nsIContent::eELEMENT),
+  NS_PRECONDITION(!aData->mContent ||
+                  aData->mContent->IsContentOfType(nsIContent::eELEMENT),
                   "content (if present) must be element");
 
-  RuleCascadeData* cascade = GetRuleCascade(aPresContext, aMedium);
+  RuleCascadeData* cascade = GetRuleCascade(aData->mPresContext, aMedium);
 
   if (cascade) {
-    PseudoEnumData data(aPresContext, aParentContent, aPseudoTag, aComparator, aRuleWalker);
-    cascade->mRuleHash.EnumerateTagRules(aPseudoTag, PseudoEnumFunc, &data);
+    cascade->mRuleHash.EnumerateTagRules(aData->mPseudoTag,
+                                         PseudoEnumFunc, aData);
 
 #ifdef DEBUG_RULES
     nsISupportsArray* list1;
     nsISupportsArray* list2;
     NS_NewISupportsArray(&list1);
     NS_NewISupportsArray(&list2);
-    data.mResults = list1;
-    cascade->mRuleHash.EnumerateTagRules(aPseudoTag, PseudoEnumFunc, &data);
-    data.mResults = list2;
-    cascade->mWeightedRules->EnumerateBackwards(PseudoEnumWrap, &data);
+    aData->mResults = list1;
+    cascade->mRuleHash.EnumerateTagRules(aData->mPseudoTag, PseudoEnumFunc, aData);
+    aData->mResults = list2;
+    cascade->mWeightedRules->EnumerateBackwards(PseudoEnumWrap, aData);
     NS_ASSERTION(list1->Equals(list2), "lists not equal");
     NS_RELEASE(list1);
     NS_RELEASE(list2);
@@ -4096,16 +3998,10 @@ CSSRuleProcessor::RulesMatching(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
-struct StateEnumData : public SelectorMatchesData {
-  StateEnumData(nsIPresContext* aPresContext, nsIContent* aContent)
-    : SelectorMatchesData(aPresContext, aContent, nsnull)
-  { }
-};
-
 static 
 PRBool PR_CALLBACK StateEnumFunc(void* aSelector, void* aData)
 {
-  StateEnumData* data = (StateEnumData*)aData;
+  StateRuleProcessorData* data = (StateRuleProcessorData*)aData;
 
   nsCSSSelector* selector = (nsCSSSelector*)aSelector;
   if (SelectorMatches(*data, selector, PR_FALSE, 0)) {
@@ -4118,21 +4014,19 @@ PRBool PR_CALLBACK StateEnumFunc(void* aSelector, void* aData)
 }
 
 NS_IMETHODIMP
-CSSRuleProcessor::HasStateDependentStyle(nsIPresContext* aPresContext,
-                                         nsIAtom* aMedium, 
-                                         nsIContent* aContent)
+CSSRuleProcessor::HasStateDependentStyle(StateRuleProcessorData* aData,
+                                         nsIAtom* aMedium)
 {
-  NS_PRECONDITION(aContent->IsContentOfType(nsIContent::eELEMENT),
+  NS_PRECONDITION(aData->mContent->IsContentOfType(nsIContent::eELEMENT),
                   "content must be element");
 
   PRBool isStateful = PR_FALSE;
 
-  RuleCascadeData* cascade = GetRuleCascade(aPresContext, aMedium);
+  RuleCascadeData* cascade = GetRuleCascade(aData->mPresContext, aMedium);
 
   if (cascade) {
     // look up content in state rule list
-    StateEnumData data(aPresContext, aContent);
-    isStateful = (! cascade->mStateSelectors.EnumerateForwards(StateEnumFunc, &data)); // if stopped, have state
+    isStateful = ! cascade->mStateSelectors.EnumerateForwards(StateEnumFunc, aData); // if stopped, have state
   }
 
   return ((isStateful) ? NS_OK : NS_COMFALSE);

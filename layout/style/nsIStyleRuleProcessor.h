@@ -41,6 +41,8 @@
 #include <stdio.h>
 
 #include "nsISupports.h"
+#include "nsIPresContext.h" // for nsCompatability
+#include "nsILinkHandler.h"
 
 class nsISizeOfHandler;
 
@@ -48,10 +50,92 @@ class nsIStyleSheet;
 class nsIStyleContext;
 class nsIPresContext;
 class nsIContent;
+class nsIStyledContent;
 class nsISupportsArray;
 class nsIAtom;
 class nsICSSPseudoComparator;
 class nsRuleWalker;
+
+// The implementation of the constructor and destructor are currently in
+// nsCSSStyleSheet.cpp.
+
+struct RuleProcessorData {
+  RuleProcessorData(nsIPresContext* aPresContext,
+                    nsIContent* aContent, 
+                    nsRuleWalker* aRuleWalker,
+                    nsCompatibility* aCompat = nsnull);
+  
+  virtual ~RuleProcessorData();
+
+  void* operator new(size_t sz, nsIPresContext* aContext) {
+    void* result = nsnull;
+    aContext->AllocateFromShell(sz, &result);
+    return result;
+  }
+  void Destroy(nsIPresContext* aContext) {
+    this->~RuleProcessorData();
+    aContext->FreeToShell(sizeof(RuleProcessorData), this);
+  };
+
+  nsIPresContext*   mPresContext;
+  nsIContent*       mContent;
+  nsIContent*       mParentContent; // if content, content->GetParent()
+  nsRuleWalker*     mRuleWalker; // Used to add rules to our results.
+  nsIContent*       mScopedRoot;    // Root of scoped stylesheet (set and unset by the supplier of the scoped stylesheet
+  
+  nsIAtom*          mContentTag;    // if content, then content->GetTag()
+  nsIAtom*          mContentID;     // if styled content, then styledcontent->GetID()
+  nsIStyledContent* mStyledContent; // if content, content->QI(nsIStyledContent)
+  PRBool            mIsHTMLContent; // if content, then does QI on HTMLContent, true or false
+  PRBool            mIsHTMLLink;    // if content, calls nsStyleUtil::IsHTMLLink
+  PRBool            mIsSimpleXLink; // if content, calls nsStyleUtil::IsSimpleXLink
+  nsLinkState       mLinkState;     // if a link, this is the state, otherwise unknown
+  PRBool            mIsQuirkMode;   // Possibly remove use of this in SelectorMatches?
+  PRInt32           mEventState;    // if content, eventStateMgr->GetContentState()
+  PRBool            mHasAttributes; // if content, content->GetAttrCount() > 0
+  PRInt32           mNameSpaceID;   // if content, content->GetNameSapce()
+  RuleProcessorData* mPreviousSiblingData;
+  RuleProcessorData* mParentData;
+};
+
+struct ElementRuleProcessorData : public RuleProcessorData {
+  ElementRuleProcessorData(nsIPresContext* aPresContext,
+                           nsIContent* aContent, 
+                           nsRuleWalker* aRuleWalker)
+  : RuleProcessorData(aPresContext,aContent,aRuleWalker)
+  {
+    NS_PRECONDITION(aContent, "null pointer");
+    NS_PRECONDITION(aRuleWalker, "null pointer");
+  }
+};
+
+struct PseudoRuleProcessorData : public RuleProcessorData {
+  PseudoRuleProcessorData(nsIPresContext* aPresContext,
+                          nsIContent* aParentContent,
+                          nsIAtom* aPseudoTag,
+                          nsICSSPseudoComparator* aComparator,
+                          nsRuleWalker* aRuleWalker)
+  : RuleProcessorData(aPresContext, aParentContent, aRuleWalker)
+  {
+    NS_PRECONDITION(aPseudoTag, "null pointer");
+    NS_PRECONDITION(aRuleWalker, "null pointer");
+    mPseudoTag = aPseudoTag;
+    mComparator = aComparator;
+  }
+
+  nsIAtom*                 mPseudoTag;
+  nsICSSPseudoComparator*  mComparator;
+};
+
+struct StateRuleProcessorData : public RuleProcessorData {
+  StateRuleProcessorData(nsIPresContext* aPresContext,
+                         nsIContent* aContent)
+    : RuleProcessorData(aPresContext, aContent, nsnull)
+  {
+    NS_PRECONDITION(aContent, "null pointer");
+  }
+};
+
 
 // IID for the nsIStyleRuleProcessor interface {015575fe-7b6c-11d3-ba05-001083023c2b}
 #define NS_ISTYLE_RULE_PROCESSOR_IID     \
@@ -69,24 +153,15 @@ public:
 
   // populate rule node tree with nsIStyleRule*
   // rules are ordered, those with higher precedence are farthest from the root of the tree
-  NS_IMETHOD RulesMatching(nsIPresContext* aPresContext,
-                           nsIAtom* aMedium, 
-                           nsIContent* aContent,
-                           nsIStyleContext* aParentContext,
-                           nsRuleWalker* aRuleWalker) = 0;
+  NS_IMETHOD RulesMatching(ElementRuleProcessorData* aData,
+                           nsIAtom* aMedium) = 0;
 
-  NS_IMETHOD RulesMatching(nsIPresContext* aPresContext,
-                           nsIAtom* aMedium, 
-                           nsIContent* aParentContent,
-                           nsIAtom* aPseudoTag,
-                           nsIStyleContext* aParentContext,
-                           nsICSSPseudoComparator* aComparator,
-                           nsRuleWalker* aRuleWalker) = 0;
+  NS_IMETHOD RulesMatching(PseudoRuleProcessorData* aData,
+                           nsIAtom* aMedium) = 0;
 
   // Test if style is dependent on content state
-  NS_IMETHOD  HasStateDependentStyle(nsIPresContext* aPresContext,
-                                     nsIAtom* aMedium, 
-                                     nsIContent*     aContent) = 0;
+  NS_IMETHOD  HasStateDependentStyle(StateRuleProcessorData* aData,
+                                     nsIAtom* aMedium) = 0;
 
 #ifdef DEBUG
   virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize) = 0;

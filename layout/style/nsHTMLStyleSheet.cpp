@@ -559,23 +559,14 @@ public:
                                    nsIStyleRuleProcessor* aPrevProcessor);
 
   // nsIStyleRuleProcessor API
-  NS_IMETHOD RulesMatching(nsIPresContext* aPresContext,
-                           nsIAtom* aMedium,
-                           nsIContent* aContent,
-                           nsIStyleContext* aParentContext,
-                           nsRuleWalker* aRuleWalker);
+  NS_IMETHOD RulesMatching(ElementRuleProcessorData* aData,
+                           nsIAtom* aMedium);
 
-  NS_IMETHOD RulesMatching(nsIPresContext* aPresContext,
-                           nsIAtom* aMedium,
-                           nsIContent* aParentContent,
-                           nsIAtom* aPseudoTag,
-                           nsIStyleContext* aParentContext,
-                           nsICSSPseudoComparator* aComparator,
-                           nsRuleWalker* aRuleWalker);
+  NS_IMETHOD RulesMatching(PseudoRuleProcessorData* aData,
+                           nsIAtom* aMedium);
 
-  NS_IMETHOD HasStateDependentStyle(nsIPresContext* aPresContext,
-                                    nsIAtom*        aMedium,
-                                    nsIContent*     aContent);
+  NS_IMETHOD HasStateDependentStyle(StateRuleProcessorData* aData,
+                                    nsIAtom* aMedium);
 
   // nsIHTMLStyleSheet api
   NS_IMETHOD Init(nsIURI* aURL, nsIDocument* aDocument);
@@ -750,7 +741,7 @@ NS_IMPL_RELEASE(HTMLStyleSheetImpl)
 nsresult HTMLStyleSheetImpl::QueryInterface(const nsIID& aIID,
                                             void** aInstancePtrResult)
 {
-  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+  NS_PRECONDITION(aInstancePtrResult, "null out param");
 
   if (aIID.Equals(NS_GET_IID(nsIHTMLStyleSheet))) {
     *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLStyleSheet*, this);
@@ -798,80 +789,54 @@ HTMLStyleSheetImpl::GetStyleRuleProcessor(nsIStyleRuleProcessor*& aProcessor,
 }
 
 NS_IMETHODIMP
-HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
-                                  nsIAtom* aMedium,
-                                  nsIContent* aContent,
-                                  nsIStyleContext* aParentContext,
-                                  nsRuleWalker* aRuleWalker)
+HTMLStyleSheetImpl::RulesMatching(ElementRuleProcessorData* aData,
+                                  nsIAtom* aMedium)
 {
-  NS_PRECONDITION(nsnull != aPresContext, "null arg");
-  NS_PRECONDITION(nsnull != aContent, "null arg");
-  NS_PRECONDITION(nsnull != aRuleWalker, "null arg");
-
-  nsCOMPtr<nsIStyledContent> styledContent(do_QueryInterface(aContent));
+  nsIStyledContent *styledContent = aData->mStyledContent;
 
   if (styledContent) {
+    nsRuleWalker *ruleWalker = aData->mRuleWalker;
     if (styledContent->IsContentOfType(nsIContent::eHTML)) {
-      nsCOMPtr<nsIAtom> tag;
-
-      styledContent->GetTag(*getter_AddRefs(tag));
+      nsIAtom* tag = aData->mContentTag;
 
       // if we have anchor colors, check if this is an anchor with an href
       if (tag == nsHTMLAtoms::a) {
         if (mLinkRule || mVisitedRule || mActiveRule) {
-          nsLinkState linkState;
-
-          if (nsStyleUtil::IsHTMLLink(aContent, tag, aPresContext,
-                                      &linkState)) {
-            switch (linkState) {
+          if (aData->mIsHTMLLink) {
+            switch (aData->mLinkState) {
               case eLinkState_Unvisited:
                 if (mLinkRule)
-                  aRuleWalker->Forward(mLinkRule);
+                  ruleWalker->Forward(mLinkRule);
                 break;
               case eLinkState_Visited:
                 if (mVisitedRule)
-                  aRuleWalker->Forward(mVisitedRule);
+                  ruleWalker->Forward(mVisitedRule);
                 break;
               default:
                 break;
             }
 
             // No need to add to the active rule if it's not a link
-            if (mActiveRule) {  // test active state of link
-              nsCOMPtr<nsIEventStateManager> eventStateManager;
-
-              aPresContext->GetEventStateManager(getter_AddRefs(eventStateManager));
-
-              if (eventStateManager) {
-                PRInt32 state;
-                if (NS_OK == eventStateManager->GetContentState(aContent,
-                                                                state)) {
-                  if (state & NS_EVENT_STATE_ACTIVE)
-                    aRuleWalker->Forward(mActiveRule);
-                }
-              }
-            } // end active rule
+            if (mActiveRule && (aData->mEventState & NS_EVENT_STATE_ACTIVE))
+              ruleWalker->Forward(mActiveRule);
           }
         } // end link/visited/active rules
       } // end A tag
       // add the rule to handle text-align for a <th>
       else if (tag == nsHTMLAtoms::th) {
-          aRuleWalker->Forward(mTableTHRule);
+        ruleWalker->Forward(mTableTHRule);
       }
       else if (tag == nsHTMLAtoms::table) {
-        nsCompatibility mode;
-        aPresContext->GetCompatibilityMode(&mode);
-        if (eCompatibility_NavQuirks == mode) {
-          aRuleWalker->Forward(mDocumentColorRule);
-        }
+        if (aData->mIsQuirkMode)
+          ruleWalker->Forward(mDocumentColorRule);
       }
       else if (tag == nsHTMLAtoms::html) {
-        aRuleWalker->Forward(mDocumentColorRule);
+        ruleWalker->Forward(mDocumentColorRule);
       }
     } // end html element
 
     // just get the style rules from the content
-    styledContent->WalkContentStyleRules(aRuleWalker);
+    styledContent->WalkContentStyleRules(ruleWalker);
   }
 
   return NS_OK;
@@ -879,31 +844,21 @@ HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
 
 // Test if style is dependent on content state
 NS_IMETHODIMP
-HTMLStyleSheetImpl::HasStateDependentStyle(nsIPresContext* aPresContext,
-                                           nsIAtom*        aMedium,
-                                           nsIContent*     aContent)
+HTMLStyleSheetImpl::HasStateDependentStyle(StateRuleProcessorData* aData,
+                                           nsIAtom* aMedium)
 {
   nsresult result = NS_COMFALSE;
 
-  if (mActiveRule || mLinkRule || mVisitedRule) { // do we have any rules dependent on state?
-    nsCOMPtr<nsIStyledContent> styledContent(do_QueryInterface(aContent));
-
-    if (styledContent) {
-      if (styledContent->IsContentOfType(nsIContent::eHTML)) {
-        nsCOMPtr<nsIAtom> tag;
-        styledContent->GetTag(*getter_AddRefs(tag));
-        // if we have anchor colors, check if this is an anchor with an href
-
-        if (tag == nsHTMLAtoms::a) {
-          nsAutoString href;
-          nsresult attrState = styledContent->GetAttr(kNameSpaceID_None,
-                                                      nsHTMLAtoms::href, href);
-          if (NS_CONTENT_ATTR_HAS_VALUE == attrState) {
-            result = NS_OK; // yes, style will depend on link state
-          }
-        }
-      }
-    }
+  if ((mActiveRule || mLinkRule || mVisitedRule) &&
+      aData->mStyledContent &&
+      aData->mIsHTMLContent &&
+      aData->mContentTag == nsHTMLAtoms::a) {
+    nsAutoString href;
+    nsresult attrState =
+      aData->mStyledContent->GetAttr(kNameSpaceID_None,
+                                     nsHTMLAtoms::href, href);
+    if (NS_CONTENT_ATTR_HAS_VALUE == attrState)
+      result = NS_OK; // yes, style will depend on link state
   }
 
   return result;
@@ -912,13 +867,8 @@ HTMLStyleSheetImpl::HasStateDependentStyle(nsIPresContext* aPresContext,
 
 
 NS_IMETHODIMP
-HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
-                                  nsIAtom* aMedium,
-                                  nsIContent* aParentContent,
-                                  nsIAtom* aPseudoTag,
-                                  nsIStyleContext* aParentContext,
-                                  nsICSSPseudoComparator* aComparator,
-                                  nsRuleWalker* aRuleWalker)
+HTMLStyleSheetImpl::RulesMatching(PseudoRuleProcessorData* aData,
+                                  nsIAtom* aMedium)
 {
   // no pseudo frame style
   return NS_OK;

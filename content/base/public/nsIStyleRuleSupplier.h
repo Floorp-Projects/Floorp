@@ -3,6 +3,7 @@
 
 #include "nsISupports.h"
 #include "nsISupportsArray.h"
+#include "nsIStyleRuleProcessor.h"
 
 // {2D77A45B-4F3A-4203-A7D2-F4B84D0C1EE4}
 #define NS_ISTYLERULESUPPLIER_IID \
@@ -17,11 +18,12 @@ class nsIStyleRuleSupplier : public nsISupports {
 
   NS_IMETHOD UseDocumentRules(nsIContent* aContent, PRBool* aResult)=0;
   NS_IMETHOD WalkRules(nsIStyleSet* aStyleSet, 
-                       nsISupportsArrayEnumFunc aFunc, void* aData,
-                       nsIContent* aContent)=0;
-  NS_IMETHOD MatchesScopedRoot(nsIContent* aContent, PRBool* aResult)=0;
+                       nsISupportsArrayEnumFunc aFunc,
+                       RuleProcessorData* aData)=0;
 
-  NS_IMETHOD AttributeAffectsStyle(nsISupportsArrayEnumFunc aFunc, void* aData, nsIContent* aContent,
+  NS_IMETHOD AttributeAffectsStyle(nsISupportsArrayEnumFunc aFunc,
+                                   void* aData,
+                                   nsIContent* aContent,
                                    PRBool* aAffects)=0;
 };
 
