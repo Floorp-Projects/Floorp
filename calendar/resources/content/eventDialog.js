@@ -496,7 +496,7 @@ function compareIgnoringTimeOfDay(dateA, dateB)
 {
   if (dateA.getFullYear() == dateB.getFullYear() &&
       dateA.getMonth() == dateB.getMonth() &&
-      dateA.getDay() == dateB.getDay() ) {
+      dateA.getDate() == dateB.getDate() ) {
     return 0;
   } else if (dateA < dateB) {
       return -1;
@@ -677,6 +677,9 @@ function commandAllDay()
   } else { 
     gEndDate.setDate( gEndDate.getDate() - 1 );
   }
+  // update the duration
+  gDuration = gEndDate.getTime() - gStartDate.getTime();
+
    updateStartEndItemEnabled();
    updateOKButton();
 }
