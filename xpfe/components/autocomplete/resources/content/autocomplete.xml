@@ -594,7 +594,7 @@
           }
           
           if (this.mFinishAfterSearch)
-            this.finishAutoComplete(false, this.mFireAfterSearch);
+            this.finishAutoComplete(false, this.mFireAfterSearch, null);
         ]]></body>
       </method>
 
@@ -603,6 +603,7 @@
       <method name="finishAutoComplete">
         <parameter name="aForceComplete"/>
         <parameter name="aFireTextCommand"/>
+        <parameter name="aTriggeringEvent"/>
         <body><![CDATA[
           this.mFinishAfterSearch = false;
           this.mFireAfterSearch = false;
@@ -656,7 +657,7 @@
           this.clearTimer();
 
           if (aFireTextCommand)
-            this._fireEvent("textcommand", this.userAction);
+            this._fireEvent("textcommand", this.userAction, aTriggeringEvent);
         ]]></body>
       </method>
 
@@ -789,7 +790,7 @@
               }
 
               killEvent = this.mMenuOpen;
-              this.finishAutoComplete(true, true);
+              this.finishAutoComplete(true, true, aEvent);
               this.closeResultPopup();
               if (errItem) {
                   this._fireEvent("errorcommand", errItem);
@@ -1018,14 +1019,15 @@
       <method name="_fireEvent">
         <parameter name="aEventType"/>
         <parameter name="aEventParam"/>
+        <parameter name="aTriggeringEvent"/>
         <body>
         <![CDATA[
           var noCancel = true;
           // handle any xml attribute event handlers
           var handler = this.getAttribute("on"+aEventType);
           if (handler) {
-            var fn = new Function("eventParam", handler);
-            var returned = fn.apply(this, [aEventParam]);
+            var fn = new Function("eventParam", "domEvent", handler);
+            var returned = fn.apply(this, [aEventParam, aTriggeringEvent]);
             if (returned == false)
               noCancel = false;
           }
@@ -1194,7 +1196,7 @@
                action="this.userAction = 'typing';"/>
 
       <handler event="blur" phase="capturing"
-               action="this.userAction = 'none'; this.finishAutoComplete(false, false);"/>
+               action="this.userAction = 'none'; this.finishAutoComplete(false, false, event);"/>
     </handlers>
   </binding> 
 

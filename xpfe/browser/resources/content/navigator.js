@@ -908,13 +908,16 @@ function loadURI(uri, referrer)
   }
 }
 
-function BrowserLoadURL()
+function BrowserLoadURL(aTriggeringEvent)
 {
   var url = gURLBar.value;
   if (url.match(/^view-source:/)) {
     BrowserViewSourceOfURL(url.replace(/^view-source:/, ""), null);
   } else {
-    if (pref && pref.getBoolPref("browser.tabs.opentabfor.urlbar") && getBrowser().localName == "tabbrowser") {
+    if (pref && pref.getBoolPref("browser.tabs.opentabfor.urlbar") &&
+        getBrowser().localName == "tabbrowser" &&
+        aTriggeringEvent && 'ctrlKey' in aTriggeringEvent &&
+        aTriggeringEvent.ctrlKey) {
       var t = getBrowser().addTab(getShortcutOrURI(url)); // open link in new tab
       getBrowser().selectedTab = t;
     }
@@ -1454,10 +1457,10 @@ function handleURLBarRevert()
   return isScrolling; 
 }
 
-function handleURLBarCommand(aUserAction)
+function handleURLBarCommand(aUserAction, aTriggeringEvent)
 {
   addToUrlbarHistory();
-  BrowserLoadURL(); 
+  BrowserLoadURL(aTriggeringEvent); 
 }
 
 function UpdatePageProxyState()
