@@ -3204,8 +3204,13 @@ InternetSearchDataSource::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt
 			// Move the nsParser.cpp 00 -> space hack to here so it won't break UCS2 file
 
 			// Hack Start
-			for(PRInt32 i=0;i<unicharLength;i++)
-				if(0x0000 == unichars[i])	unichars[i] = 0x0020;
+			for(PRInt32 i=0;i < unicharLength; i++)
+			{
+				if(0x0000 == unichars[i])
+				{
+					unichars[i] = PRUnichar(' ');
+				}
+			}
 			// Hack End
 
 			context->AppendUnicodeBytes(unichars, unicharLength);
@@ -3596,6 +3601,14 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 				}
 			}
 			resultItem.Mid(hrefStr, quoteStartOffset + 1, quoteEndOffset - quoteStartOffset - 1);
+
+			// strip out any bogus CRs or LFs from the HREF URL
+			PRInt32		crlfOffset;
+			while ((crlfOffset = hrefStr.FindCharInSet("\n\r", 0)) >= 0)
+			{
+				hrefStr.Cut(crlfOffset, 1);
+			}
+
 			if (hrefStr.Length() < 1)	continue;
 
 			char		*absURIStr = nsnull;
