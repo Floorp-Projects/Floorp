@@ -288,7 +288,9 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
     }
 
     PRBool matches = PR_FALSE;
-    mimeInfo->ExtensionExists(fileExtension.get(), &matches);
+    if (!fileExtension.IsEmpty()) {
+      mimeInfo->ExtensionExists(fileExtension.get(), &matches);
+    }
     if (matches) {
       mimeInfo->SetPrimaryExtension(fileExtension.get());
     } else {
@@ -1331,6 +1333,15 @@ NS_IMETHODIMP nsExternalAppHandler::LaunchWithApplication(nsIFile * aApplication
 #else
   NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(fileToUse));
 #endif
+
+  if (mSuggestedFileName.IsEmpty())
+  {
+    // Keep using the leafname of the temp file, since we're just starting a helper
+    PRUnichar* filename;
+    mTempFile->GetUnicodeLeafName(&filename);
+    mSuggestedFileName.Adopt(filename);
+  }
+
   fileToUse->AppendUnicode(mSuggestedFileName.get());
   // We'll make sure this results in a unique name later
 

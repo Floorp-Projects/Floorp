@@ -286,7 +286,8 @@ NS_IMETHODIMP nsOSHelperAppService::GetFromExtension(const char *aFileExt, nsIMI
     // table so we don't hit the registry the next time we look up this content type.
     *_retval = mimeInfo;
     NS_ADDREF(*_retval);
-    AddMimeInfoToCache(mimeInfo);
+    // XXX Once cache can be invalidated, add the mime info to it.  See bug 121644
+    // AddMimeInfoToCache(mimeInfo);
   } /* endif */
 
   // we failed to find a mime type.
