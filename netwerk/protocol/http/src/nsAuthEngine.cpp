@@ -78,6 +78,11 @@ nsAuthEngine::GetAuthString(nsIURI* i_URI, char** o_AuthString)
     // mAuthList may have been cleared from logout
     if (!mAuthList) return NS_OK;
 
+    PRUint32 count=0; 
+    (void)mAuthList->Count(&count);
+    if (count<=0)
+        return NS_OK; // not found
+
     nsXPIDLCString host;
     rv = i_URI->GetHost(getter_Copies(host));
     if (NS_FAILED(rv)) return rv;
@@ -98,10 +103,6 @@ nsAuthEngine::GetAuthString(nsIURI* i_URI, char** o_AuthString)
     char *lastSlash = PL_strrchr(dir, '/');
     if (lastSlash) lastSlash[1] = '\0';
 
-    PRUint32 count=0; 
-    (void)mAuthList->Count(&count);
-    if (count<=0)
-        return NS_OK; // not found
     for (PRInt32 i = count-1; i>=0; --i)
     {
         nsAuth* auth = (nsAuth*)mAuthList->ElementAt(i);
@@ -167,6 +168,7 @@ nsAuthEngine::GetAuthString(nsIURI* i_URI, char** o_AuthString)
 nsresult
 nsAuthEngine::SetAuth(nsIURI* i_URI, 
         const char* i_AuthString, 
+        const char* i_Realm,
         PRBool bProxyAuth)
 {
     nsresult rv;
@@ -209,7 +211,7 @@ nsAuthEngine::SetAuth(nsIURI* i_URI,
         CRTFREEIF(unescaped_AuthString);
         return rv;
     }
-    nsAuth* auth = new nsAuth(i_URI, unescaped_AuthString);
+    nsAuth* auth = new nsAuth(i_URI, unescaped_AuthString, nsnull, nsnull, i_Realm);
     CRTFREEIF(unescaped_AuthString);
     if (!auth)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -274,5 +276,52 @@ nsAuthEngine::SetProxyAuthString(const char* host,
     rv = mIOService->NewURI(spec.GetBuffer(), nsnull, getter_AddRefs(uri));
     if (NS_FAILED(rv)) return rv;
 
-    return SetAuth(uri, i_AuthString, PR_TRUE);
+    return SetAuth(uri, i_AuthString, nsnull, PR_TRUE);
+}
+
+nsresult
+nsAuthEngine::GetAuthStringForRealm(nsIURI* i_URI, const char* i_Realm, char** o_AuthString)
+{
+    nsresult rv = NS_OK;
+    if (!o_AuthString)
+        return NS_ERROR_NULL_POINTER;
+    if (!i_Realm)
+        return NS_ERROR_NULL_POINTER;
+    *o_AuthString = nsnull;
+    // list may have been cleared by logout...
+    if (!mAuthList)
+        return NS_OK;
+
+    PRUint32 count = 0;
+    mAuthList->Count(&count);
+    if (count <= 0)
+        return NS_OK; // not found
+
+    nsXPIDLCString host;
+    rv = i_URI->GetHost(getter_Copies(host));
+    if (NS_FAILED(rv)) return rv;
+
+    PRInt32 port;
+    rv = i_URI->GetPort(&port);
+    if (NS_FAILED(rv)) return rv;
+
+    for (PRInt32 i = count-1; i>=0; --i)
+    {
+        nsAuth* auth = (nsAuth*) mAuthList->ElementAt(i);
+        
+        nsXPIDLCString authHost;
+        PRInt32 authPort;
+
+        auth->uri->GetHost(getter_Copies(authHost));
+        auth->uri->GetPort(&authPort);
+
+        if ((0 == nsCRT::strcasecmp(authHost, host)) &&
+            (0 == nsCRT::strcasecmp(auth->realm, i_Realm)) &&
+            (port == authPort))
+        {
+            *o_AuthString = nsCRT::strdup(auth->encodedString);
+            return (!*o_AuthString) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+        }
+    }
+    return NS_OK; // not found
 }
