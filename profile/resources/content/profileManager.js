@@ -42,8 +42,10 @@ function CreateProfile( aProfName, aProfDir )
   var profile = new Profile( aProfName, aProfDir, "yes" );
   var item = AddItem( "profilekids", profile );
   var profileTree = document.getElementById( "profiles" );
-  if( item )
+  if( item ) {
     profileTree.selectItem( item );
+    profileTree.ensureElementIsVisible( item );
+  }
 }
 
 // rename the selected profile
@@ -154,8 +156,10 @@ function DeleteProfile( deleteFiles )
     }
     catch (ex) {
     }
-    if( firstAdjacent )
+    if( firstAdjacent ) {
       profileTree.selectItem( firstAdjacent );
+      profileTree.ensureElementIsVisible( firstAdjacent );
+    }
     // set the button state
     DoEnabling();
   }
