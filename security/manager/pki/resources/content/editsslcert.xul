@@ -30,7 +30,7 @@
         title="&certmgr.editcert.title;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="doLoadForSSLCert();"
-        persist="height width screenX screenY">
+>
 
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
   <script type="application/x-javascript" src="chrome://pippki/content/pippki.js"/>
