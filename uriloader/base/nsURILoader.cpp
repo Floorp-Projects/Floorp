@@ -65,6 +65,7 @@
 #include "nsString.h"
 
 #include "nsIDOMWindowInternal.h"
+#include "nsReadableUtils.h"
 #include "nsDOMError.h"
 
 #include "nsICategoryManager.h"
