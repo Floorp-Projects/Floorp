@@ -1016,7 +1016,7 @@ RDFContentSinkImpl::GetIdAboutAttribute(const nsIParserNode& aNode,
             nsAutoString uri(aNode.GetValueAt(i));
             nsRDFParserUtils::StripAndConvert(uri);
 
-            rdf_MakeAbsoluteURI(NS_ConvertASCIItoUCS2(NS_STATIC_CAST(const char*, docURI)), uri);
+            rdf_MakeAbsoluteURI(NS_ConvertUTF8toUCS2(NS_STATIC_CAST(const char*, docURI)), uri);
 
             return gRDFService->GetUnicodeResource(uri.GetUnicode(), aResource);
         }
@@ -1027,29 +1027,17 @@ RDFContentSinkImpl::GetIdAboutAttribute(const nsIParserNode& aNode,
             nsAutoString name(aNode.GetValueAt(i));
             nsRDFParserUtils::StripAndConvert(name);
 
-            // Enforce that this is a valid "XML Name" (see
-            // http://www.w3.org/TR/REC-xml#NT-Nmtoken), as per 6.21.
-            //
-            // XXX I'm assuming that nsString::IsAlpha() is defined to
-            // mean http://www.w3.org/TR/REC-xml#NT-Letter, which it
-            // probably isn't.
-            PRUnichar first = name.First();
-            if (! nsCRT::IsAsciiAlpha(first) &&
-                first != PRUnichar(':') &&
-                first != PRUnichar('_')) {
-                PR_LOG(gLog, PR_LOG_ALWAYS,
-                       ("rdfxml: expected XML Name at line %d",
-                        aNode.GetSourceLineNumber()));
-
-                return NS_ERROR_FAILURE;
-            }
+            // In the spirit of leniency, we do not bother trying to
+            // enforce that this be a valid "XML Name" (see
+            // http://www.w3.org/TR/REC-xml#NT-Nmtoken), as per
+            // 6.21. If we wanted to, this would be where to do it.
 
             // Construct an in-line resource whose URI is the
             // document's URI plus the XML name specified in the ID
             // attribute.
-            name.Insert(NS_ConvertASCIItoUCS2("#"), 0);
+            name.Insert(PRUnichar('#'), 0);
             
-            rdf_MakeAbsoluteURI(NS_ConvertASCIItoUCS2(NS_STATIC_CAST(const char*, docURI)), name);
+            rdf_MakeAbsoluteURI(NS_ConvertUTF8toUCS2(NS_STATIC_CAST(const char*, docURI)), name);
 
             return gRDFService->GetUnicodeResource(name.GetUnicode(), aResource);
         }
@@ -1105,7 +1093,7 @@ RDFContentSinkImpl::GetResourceAttribute(const nsIParserNode& aNode,
             // appropriate...
             char* documentURL;
             mDocumentURL->GetSpec(&documentURL);
-            rdf_MakeAbsoluteURI(NS_ConvertASCIItoUCS2(documentURL), uri);
+            rdf_MakeAbsoluteURI(NS_ConvertUTF8toUCS2(documentURL), uri);
             nsCRT::free(documentURL);
 
             return gRDFService->GetUnicodeResource(uri.GetUnicode(), aResource);
@@ -1243,7 +1231,7 @@ RDFContentSinkImpl::ReinitContainer(nsIRDFResource* aContainerType, nsIRDFResour
     nsresult rv;
 
     nsCOMPtr<nsIRDFLiteral> one;
-    rv = gRDFService->GetLiteral(NS_ConvertASCIItoUCS2("1").GetUnicode(), getter_AddRefs(one));
+    rv = gRDFService->GetLiteral(NS_LITERAL_STRING("1").get(), getter_AddRefs(one));
     if (NS_FAILED(rv)) return rv;
 
     // Re-initialize the 'nextval' property
