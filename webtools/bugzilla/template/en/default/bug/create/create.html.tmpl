@@ -46,7 +46,7 @@ function set_assign_to() {
     // Based on the selected component, fill the "Assign To:" field
     // with the default component owner.
     var form = document.Create;
-    assigned_to = form.assigned_to.value
+    var assigned_to = form.assigned_to.value;
     var index = -1;
     if (form.component.type == 'select-one') {
         index = form.component.selectedIndex;
