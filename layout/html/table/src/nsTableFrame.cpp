@@ -3000,6 +3000,7 @@ void nsTableFrame::BuildColumnCache( nsIPresContext&          aPresContext,
 {
   NS_ASSERTION(nsnull==mPrevInFlow, "never ever call me on a continuing frame!");
   NS_ASSERTION(nsnull!=mCellMap, "never ever call me until the cell map is built!");
+  PRInt32 colIndex=0;
   nsStyleTable* tableStyle;
   GetStyleData(eStyleStruct_Table, (nsStyleStruct *&)tableStyle);
   EnsureColumns(aPresContext);
@@ -3022,10 +3023,15 @@ void nsTableFrame::BuildColumnCache( nsIPresContext&          aPresContext,
       nsTableColFrame *colFrame=nsnull;
       childFrame->FirstChild((nsIFrame *&)colFrame);
       while (nsnull!=colFrame)
-      { 
-        if (gsDebug) printf("TIF BCB: adding column frame %p\n", colFrame);
-        //mCellMap->AppendColumnFrame(colFrame);
+      {
+        nsTableColFrame *cachedColFrame = mCellMap->GetColumnFrame(colIndex);
+        if (nsnull==cachedColFrame)
+        {
+          if (gsDebug) printf("TIF BCB: adding column frame %p\n", colFrame);
+          mCellMap->AppendColumnFrame(colFrame);
+        }
         colFrame->GetNextSibling((nsIFrame *&)colFrame);
+        colIndex++;
       }
     }
     else if (PR_TRUE==IsRowGroup(childDisplay->mDisplay))
