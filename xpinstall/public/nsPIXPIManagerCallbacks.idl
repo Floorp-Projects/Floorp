@@ -33,7 +33,6 @@
 [scriptable, uuid(d63ed30a-a858-11d3-a446-0060b0eb5963)]
 interface nsPIXPIManagerCallbacks: nsISupports
 {
-        void DialogOpened(in nsISupports aWindow);
-        void DownloadNext();
-        void CancelInstall();
+        void dialogOpened(in nsISupports aWindow);
+        void cancelInstall();
 };

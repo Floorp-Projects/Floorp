@@ -79,14 +79,15 @@ class nsXPInstallManager : public nsIXPINotifier,
 
         // nsIInterfaceRequestor
         NS_DECL_NSIINTERFACEREQUESTOR
-
+    
         //nsPIXPIMANAGERCALLBACKS
         NS_DECL_NSPIXPIMANAGERCALLBACKS
 
 
     private:
-        void     Shutdown();
-        void     LoadDialogWithNames(nsIDialogParamBlock* ioParamBlock);
+        NS_IMETHOD  DownloadNext();
+        void        Shutdown();
+        void        LoadDialogWithNames(nsIDialogParamBlock* ioParamBlock);
         
         nsXPITriggerInfo*   mTriggers;
         nsXPITriggerItem*   mItem;
@@ -96,7 +97,6 @@ class nsXPInstallManager : public nsIXPINotifier,
         PRBool              mCancelled;
         PRInt32             mContentLength;
 
-        nsCOMPtr<nsIXPIProgressDlg>  mDlg;
         nsCOMPtr<nsIXPIProgressDlg>  mProxy;
         nsCOMPtr<nsIStringBundle>    mStringBundle;
 };

@@ -223,20 +223,20 @@ nsXPInstallManager::InitManager(nsXPITriggerInfo* aTriggers)
         if ( dlg )
         {
             rv = dlg->QueryInterface( NS_GET_IID(nsIXPIProgressDlg), 
-                                      getter_AddRefs(mDlg) );
+                                      getter_AddRefs(Idlg) );
             if (NS_SUCCEEDED(rv))
             {
                 NS_WITH_SERVICE( nsIProxyObjectManager, pmgr, kProxyObjectManagerCID, &rv);
                 if (NS_SUCCEEDED(rv))
                 {
                     rv = pmgr->GetProxyObject( NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIXPIProgressDlg),
-                            mDlg, PROXY_SYNC | PROXY_ALWAYS, getter_AddRefs(mProxy) );
+                            Idlg, PROXY_SYNC | PROXY_ALWAYS, getter_AddRefs(mProxy) );
 
                 }
                 
                 if (NS_SUCCEEDED(rv))
                 {        
-                    rv = mDlg->Open(ioParamBlock);
+                    rv = mProxy->Open(ioParamBlock);
                 }
             }
         }
@@ -370,8 +370,6 @@ NS_IMETHODIMP nsXPInstallManager::DownloadNext()
         // can't cancel from here on cause we can't undo installs in a multitrigger
         if (mProxy)
             mProxy->StartInstallPhase();
-        else if (mDlg)
-            mDlg->StartInstallPhase();
 
         NS_WITH_SERVICE(nsISoftwareUpdate, softupdate, nsSoftwareUpdate::GetCID(), &rv);
         if (NS_SUCCEEDED(rv))
@@ -422,12 +420,7 @@ void nsXPInstallManager::Shutdown()
     {
         // proxy exists: we're being called from script thread
         mProxy->Close();
-        mProxy = 0;
     }
-    else if (mDlg)
-        mDlg->Close();
-
-    mDlg = 0;
 
     // Clean up downloaded files
     nsXPITriggerItem* item;

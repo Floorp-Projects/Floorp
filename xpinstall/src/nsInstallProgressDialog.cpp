@@ -51,7 +51,7 @@ static NS_DEFINE_CID(kDialogParamBlockCID, NS_DialogParamBlock_CID);
 nsInstallProgressDialog::nsInstallProgressDialog(nsPIXPIManagerCallbacks *aManager)
   : mManager(aManager)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 nsInstallProgressDialog::~nsInstallProgressDialog()
