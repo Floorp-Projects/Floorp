@@ -62,8 +62,7 @@ CPPSRCS		= \
 		PtMozilla.cpp \
 		EmbedStream.cpp \
 		PromptService.cpp \
-		nsUnknownContentTypeHandler.cpp \
-		nsPrintSettingsImpl.cpp
+		nsUnknownContentTypeHandler.cpp
 
 SHARED_LIBRARY_LIBS= \
 		$(DIST)/lib/libembed_base_s.$(LIB_SUFFIX) \

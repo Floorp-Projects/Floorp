@@ -43,7 +43,6 @@
 #include "nsIDOMKeyListener.h"
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMMouseEvent.h"
-#include "nsIDiskDocument.h"
 #include "nsIDOMWindow.h"
 #include "nsNetUtil.h"
 #include "nsMPFileLocProvider.h"
@@ -305,8 +304,26 @@ mozilla_modify( PtWidget_t *widget, PtArg_t const *argt )
 			{
 				if (argt->value == WWW_DIRECTION_FWD)
 					moz->EmbedRef->Forward();
-				else
+				else if (argt->value == WWW_DIRECTION_BACK)
 					moz->EmbedRef->Back();
+				else 
+				{
+				PhDim_t dim;
+
+				PtWidgetDim(widget, &dim);
+				dim.w = (argt->value * dim.w)/100;
+				dim.h = (argt->value * dim.h)/100;
+				printf("Scroll: V: %d P: (%d, %d) \n", argt->value, dim.w, dim.h);
+
+				if (argt->value == WWW_DIRECTION_UP)
+					moz->EmbedRef->ScrollUp(dim.h);
+				else if (argt->value ==	WWW_DIRECTION_DOWN)
+					moz->EmbedRef->ScrollDown(dim.h);
+				else if (argt->value ==	WWW_DIRECTION_LEFT)
+					moz->EmbedRef->ScrollLeft(dim.w);
+				else if (argt->value == WWW_DIRECTION_RIGHT)
+					moz->EmbedRef->ScrollRight(dim.w);
+				}
 			}
 			break;
 
