@@ -1,6 +1,7 @@
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-  
+var numButtons = 0;
+
 var nsVFD = {
 
   insertButtonElement: function (aButtonElementType) 
@@ -8,8 +9,8 @@ var nsVFD = {
     switch (aButtonElementType) {
     case "button":
       var button = document.createElementNS(XUL_NS, "button");
-      // insert some smarts to autogenerate button labels
-      button.setAttribute("value", "Button1");
+      numButtons++;
+      button.setAttribute("value", "Button"+numButtons);
       button.setAttribute("flex", "1");
       button.setAttribute("crop", "right");
 
