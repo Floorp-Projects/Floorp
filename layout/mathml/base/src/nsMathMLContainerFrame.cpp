@@ -355,7 +355,7 @@ nsMathMLContainerFrame::SetInitialChildList(nsIPresContext& aPresContext,
       if (inlineFrame) {
         // create a new anonymous block frame to wrap this child...
         nsIFrame* anonymous;
-        rv = NS_NewAnonymousBlockFrame(&anonymous);
+        rv = NS_NewBlockFrame(&anonymous);
         if (NS_FAILED(rv))
           return rv;    
         nsCOMPtr<nsIStyleContext> newStyleContext;

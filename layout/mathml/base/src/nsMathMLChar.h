@@ -50,7 +50,7 @@ struct nsCharMetrics {
     descent = aCharMetrics.descent;
   }
 
-  nsCharMetrics(const nsReflowMetrics& aReflowMetrics) {
+  nsCharMetrics(const nsHTMLReflowMetrics& aReflowMetrics) {
     width = aReflowMetrics.width; 
     height = aReflowMetrics.height;
     ascent = aReflowMetrics.ascent; 
