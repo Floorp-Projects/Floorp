@@ -125,7 +125,7 @@ typedef struct JSJCallbacks {
        semantics of JavaScript.  It is acceptable for either function pointer
        to be NULL. */
 #ifdef OJI
-    JSBool	        (*enter_js_from_java)(JNIEnv *jEnv, char **errp,  void **pNSIPrincipaArray, int numPrincipals, void *pNSISecurityContext);
+    JSBool	        (*enter_js_from_java)(JNIEnv *jEnv, char **errp,  void **pNSIPrincipaArray, int numPrincipals, void *pNSISecurityContext,void* applet_obj);
 #else
     JSBool	        (*enter_js_from_java)(JNIEnv *jEnv, char **errp);
 #endif

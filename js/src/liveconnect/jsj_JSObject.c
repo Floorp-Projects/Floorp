@@ -702,7 +702,7 @@ jsj_enter_js(JNIEnv *jEnv, void* applet_obj, jobject java_wrapper_obj,
     /* Invoke callback, presumably used to implement concurrency constraints */
     if (JSJ_callbacks && JSJ_callbacks->enter_js_from_java) {
 #ifdef OJI
-        if (!JSJ_callbacks->enter_js_from_java(jEnv, &err_msg, pNSIPrincipaArray, numPrincipals, pNSISecurityContext))
+        if (!JSJ_callbacks->enter_js_from_java(jEnv, &err_msg, pNSIPrincipaArray, numPrincipals, pNSISecurityContext,applet_obj))
 #else
         if (!JSJ_callbacks->enter_js_from_java(jEnv, &err_msg))
 #endif

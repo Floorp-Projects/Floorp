@@ -52,6 +52,7 @@ struct JVMContext {
 	JSJavaThreadState		*jsj_env;					/* thread local JavaScript execution env. */
 	JSContext				*js_context;				/* thread local JavaScript context. */
 	JSStackFrame			*js_startframe;				/* thread local JavaScript stack frame. */
+    void                    *java_applet_obj;
 };
 
 JVMContext* GetJVMContext();
