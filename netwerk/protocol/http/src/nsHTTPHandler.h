@@ -65,6 +65,7 @@ class nsHTTPChannel;
 #define DEFAULT_HTTP_CONNECT_TIMEOUT    30
 #define DEFAULT_MAX_ALLOWED_KEEPALIVES  20
 #define DEFAULT_MAX_ALLOWED_KEEPALIVES_PER_SERVER   8
+#define DEFAULT_PIPELINE_MAX_REQUESTS   4
 
 typedef struct  BrokenServersTable_s
         {
@@ -160,6 +161,8 @@ protected:
     PRInt32             mMaxConnections;
     PRInt32             mMaxAllowedKeepAlives;
     PRInt32             mMaxAllowedKeepAlivesPerServer;
+    PRBool              mPipelineFirstRequest;
+    PRInt32             mPipelineMaxRequests;
 
     nsCOMPtr<nsIPref>   mPrefs;
     nsCOMPtr<nsIProtocolProxyService>       mProxySvc;
