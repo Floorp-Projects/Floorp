@@ -245,6 +245,46 @@ titledbutton.other28[disabled="true"]:active {
 	text-decoration: none;
 }
 
+menu:hover > .other28 {
+	background-image:url("chrome://global/skin/otherbutton28-bg-hover.gif");
+	background-repeat: no-repeat;
+	background-position: 50% 4px;
+	color: #CCFFFF;
+	border: none;
+	text-decoration: none;
+}
+
+menu:hover:active > .other28 {
+	background-image:url("chrome://global/skin/otherbutton28-bg-active.gif");
+	background-repeat: no-repeat;
+	background-position: 50% 4px;
+	color: #CCFFFF;
+	border: none;
+	text-decoration: none;
+	margin: 4px 6px 0px 2px;
+}
+
+menu > .other28[disabled="true"] { 
+	margin: 3px 7px 1px 1px;
+	color: #669999;
+	border: none;
+	text-decoration: none;
+}
+
+menu:hover > .other28[disabled="true"] {
+	background-image: none;
+	color: #669999;
+	border: none;
+	text-decoration: none;
+}
+
+menu:active > .other28[disabled="true"] {
+	background-image: none;
+	color: #669999;
+	border: none;
+	text-decoration: none;
+}
+
 /**
  * 32px round buttons (used in Navigation Toolbar)
  */
