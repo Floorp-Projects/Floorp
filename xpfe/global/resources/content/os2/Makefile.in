@@ -26,14 +26,5 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-CHROME_DIR = packages/widget-toolkit
-CHROME_CONTENT_DIR = global/content
-
-CHROME_CONTENT = \
-		platformGlobalOverlay.xul \
-		platformDialogOverlay.xul \
-		platformHTMLBindings.xml \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 

@@ -26,19 +26,5 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-CHROME_DIR = packages/messenger
-CHROME_CONTENT_DIR = messenger/content
-
-CHROME_CONTENT = \
-		SearchDialog.xul \
-		SearchDialog.js \
-		FilterListDialog.xul \
-		FilterListDialog.js \
-		FilterEditor.xul \
-		FilterEditor.js \
-		searchTermOverlay.xul \
-		searchTermOverlay.js \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
