@@ -18,30 +18,30 @@
 
 #include <stdio.h>
 
-#include "mozIRegistry.h"
+#include "nsIRegistry.h"
 #include "nsIEnumerator.h"
 #include "nsIFactory.h"
 #include "prmem.h"
 
-// Hack to get to mozRegistry implementation.                                                                                       
+// Hack to get to nsRegistry implementation.                                                                                       
 extern "C" NS_EXPORT nsresult
-mozRegistry_GetFactory(const nsCID &cid, nsISupports* servMgr, nsIFactory** aFactory );
+nsRegistry_GetFactory(const nsCID &cid, nsISupports* servMgr, nsIFactory** aFactory );
 
-static void display( mozIRegistry *reg, mozIRegistry::Key root, const char *name );
-static void displayValues( mozIRegistry *reg, mozIRegistry::Key root );
+static void display( nsIRegistry *reg, nsIRegistry::Key root, const char *name );
+static void displayValues( nsIRegistry *reg, nsIRegistry::Key root );
 static void printString( const char *value, int indent );
 
 int main( int argc, char *argv[] ) {
-    // Get mozRegistry factory.
-    nsCID cid = MOZ_IREGISTRY_IID; // Not really an IID, but this factory stuff is a hack anyway.
+    // Get nsRegistry factory.
+    nsCID cid = NS_IREGISTRY_IID; // Not really an IID, but this factory stuff is a hack anyway.
     nsIFactory *factory;
-    nsresult rv = mozRegistry_GetFactory( cid, 0, &factory );
+    nsresult rv = nsRegistry_GetFactory( cid, 0, &factory );
 
     // Check result.
     if ( rv == NS_OK ) {
         // Create registry implementation object.
-        nsIID regIID = MOZ_IREGISTRY_IID;
-        mozIRegistry *reg;
+        nsIID regIID = NS_IREGISTRY_IID;
+        nsIRegistry *reg;
         rv = factory->CreateInstance( 0, regIID, (void**)&reg );
 
         // Check result.
@@ -56,9 +56,9 @@ int main( int argc, char *argv[] ) {
                 printf( "Registry %s opened OK.\n", argv[1] ? argv[1] : "<default>" );
         
                 // Recurse over all 3 branches.
-                display( reg, mozIRegistry::Common, "mozRegistry::Common" );
-                display( reg, mozIRegistry::Users, "mozRegistry::Users" );
-                display( reg, mozIRegistry::Common, "mozRegistry::CurrentUser" );
+                display( reg, nsIRegistry::Common, "nsRegistry::Common" );
+                display( reg, nsIRegistry::Users, "nsRegistry::Users" );
+                display( reg, nsIRegistry::Common, "nsRegistry::CurrentUser" );
         
             } else {
                 printf( "Error opening registry file %s, rv=0x%08X\n", argv[1] ? argv[1] : "<default>", (int)rv );
@@ -66,18 +66,18 @@ int main( int argc, char *argv[] ) {
             // Release the registry.
             reg->Release();
         } else {
-            printf( "Error creating mozRegistry object, rv=0x%08X\n", (int)rv );
+            printf( "Error creating nsRegistry object, rv=0x%08X\n", (int)rv );
         }
         // Release the factory.
         factory->Release();
     } else {
-        printf( "Error creating mozRegistry factory, rv=0x%08X\n", (int)rv );
+        printf( "Error creating nsRegistry factory, rv=0x%08X\n", (int)rv );
     }
 
     return rv;
 }
 
-void display( mozIRegistry *reg, mozIRegistry::Key root, const char *rootName ) {
+void display( nsIRegistry *reg, nsIRegistry::Key root, const char *rootName ) {
     // Enumerate all subkeys under the given node.
     nsIEnumerator *keys;
     nsresult rv = reg->EnumerateAllSubtrees( root, &keys );
@@ -95,8 +95,8 @@ void display( mozIRegistry *reg, mozIRegistry::Key root, const char *rootName ) 
             // Test result.
             if ( rv == NS_OK ) {
                 // Get specific interface.
-                mozIRegistryNode *node;
-                nsIID nodeIID = MOZ_IREGISTRYNODE_IID;
+                nsIRegistryNode *node;
+                nsIID nodeIID = NS_IREGISTRYNODE_IID;
                 rv = base->QueryInterface( nodeIID, (void**)&node );
                 // Test that result.
                 if ( rv == NS_OK ) {
@@ -108,7 +108,7 @@ void display( mozIRegistry *reg, mozIRegistry::Key root, const char *rootName ) 
                         // Print name:
                         printf( "\t%s\n", name );
                         // Display values under this key.
-                        mozIRegistry::Key key;
+                        nsIRegistry::Key key;
                         rv = reg->GetSubtree( root, name, &key );
                         if ( rv == NS_OK ) {
                             displayValues( reg, key );
@@ -147,7 +147,7 @@ void display( mozIRegistry *reg, mozIRegistry::Key root, const char *rootName ) 
     return;
 }
 
-static void displayValues( mozIRegistry *reg, mozIRegistry::Key root ) {
+static void displayValues( nsIRegistry *reg, nsIRegistry::Key root ) {
     // Emumerate values at this registry location.
     nsIEnumerator *values;
     nsresult rv = reg->EnumerateValues( root, &values );
@@ -164,8 +164,8 @@ static void displayValues( mozIRegistry *reg, mozIRegistry::Key root ) {
             // Test result.
             if ( rv == NS_OK ) {
                 // Get specific interface.
-                mozIRegistryValue *value;
-                nsIID valueIID = MOZ_IREGISTRYVALUE_IID;
+                nsIRegistryValue *value;
+                nsIID valueIID = NS_IREGISTRYVALUE_IID;
                 rv = base->QueryInterface( valueIID, (void**)&value );
                 // Test that result.
                 if ( rv == NS_OK ) {
@@ -182,7 +182,7 @@ static void displayValues( mozIRegistry *reg, mozIRegistry::Key root ) {
                         if ( rv == NS_OK ) {
                             // Print value contents.
                             switch ( type ) {
-                                case mozIRegistry::String: {
+                                case nsIRegistry::String: {
                                         char *value;
                                         rv = reg->GetString( root, name, &value );
                                         if ( rv == NS_OK ) {
@@ -194,15 +194,15 @@ static void displayValues( mozIRegistry *reg, mozIRegistry::Key root ) {
                                     }
                                     break;
 
-                                case mozIRegistry::Int32:
+                                case nsIRegistry::Int32:
                                     printf( "\t= Int32" );
                                     break;
 
-                                case mozIRegistry::Bytes:
+                                case nsIRegistry::Bytes:
                                     printf( "\t= Bytes" );
                                     break;
 
-                                case mozIRegistry::File:
+                                case nsIRegistry::File:
                                     printf( "\t= File (?)" );
                                     break;
 

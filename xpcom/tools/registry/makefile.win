@@ -31,7 +31,6 @@ PROGRAMS = $(PROG1)
 LLIBS = \
         $(LIBNSPR)                       \
         $(DIST)\lib\xpcom$(MOZ_BITS).lib \
-        $(DIST)\lib\libreg32.lib         \
 !if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
         $(GLOWDIR)\glowcode.lib          \
 !endif
