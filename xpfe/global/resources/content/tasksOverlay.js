@@ -272,6 +272,30 @@ function ShowUpdateFromResource( node )
  * WALLET submenu
  */
 
+function CheckForWallet()
+{
+  // remove wallet functions (unless overruled by the "wallet.enabled" pref)
+  try {
+    if (!this.pref.GetBoolPref("wallet.enabled")) {
+      var element;
+      element = document.getElementById("walletSafeFill");
+      element.setAttribute("style","display: none;" );
+      element = document.getElementById("walletQuickFill");
+      element.setAttribute("style","display: none;" );
+      element = document.getElementById("walletCapture");
+      element.setAttribute("style","display: none;" );
+      element = document.getElementById("walletSeparator");
+      element.setAttribute("style","display: none;" );
+      element = document.getElementById("walleteditor");
+      element.setAttribute("style","display: none;" );
+      element = document.getElementById("walletSamples");
+      element.setAttribute("style","display: none;" );
+    }
+  } catch(e) {
+    dump("wallet.enabled pref is missing from all.js");
+  }
+}
+
 // perform a wallet action
 function WalletAction( action ) 
 {
