@@ -102,9 +102,10 @@ identifies this field as <quote>Hardware</quote>.)</para></listitem>
 </varlistentry>
 <varlistentry>
 <term>-o, --os</term>
-<listitem><para>Set the op_sys field, overriding the Operating-System header
-from standard input if necessary. (The stock Bugzilla web presentation
-identifies this field as <quote>OS</quote>.)</para></listitem>
+<listitem><para>Set the op_sys field, overriding the OS (Operating
+System) header from standard input if necessary. (The stock Bugzilla web
+presentation also identifies this field as
+<quote>OS</quote>.)</para></listitem>
 </varlistentry>
 <varlistentry>
 <term>-r, --priority</term>

@@ -32,10 +32,10 @@ field_aliases = (('hardware', 'rep_platform'),
                  ('os', 'op_sys'),
                  ('summary', 'short_desc'),
                  ('description', 'comment'),
-                 ('depends-on', 'dependson'),
+                 ('depends_on', 'dependson'),
                  ('status', 'bug_status'),
                  ('severity', 'bug_severity'),
-                 ('URL', 'bug_file_loc'),)
+                 ('url', 'bug_file_loc'),)
 
 def header_to_field(hdr):
     hdr = hdr.lower().replace("-", "_")
@@ -71,7 +71,7 @@ def setup_parser():
     parser.add_option('-H', '--hardware', dest='rep_platform',
                       help='Set the Hardware field.')
     parser.add_option('-o', '--os', dest='op_sys',
-                      help='Set the Operating-system field.')
+                      help='Set the Operating System field.')
     parser.add_option('-r', '--priority', dest='priority',
                       help='Set the Priority field.')
     parser.add_option('-x', '--severity', dest='bug_severity',
