@@ -1502,15 +1502,14 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
     nsBox::AddMargin(mVScrollbarBox, vMinSize);
   }
 
-  NS_ASSERTION(vMinSize.width == vSize.width, "vertical scrollbar can change width");
-  NS_ASSERTION(hMinSize.height == hSize.height, "horizontal scrollbar can change height");
-
   // Disable scrollbars that are too small
   // Disable horizontal scrollbar first. If we have to disable only one
   // scrollbar, we'd rather keep the vertical scrollbar.
+  // Note that we always give horizontal scrollbars their preferred height,
+  // never their min-height. So check that there's room for the preferred height.
   if (mHasHorizontalScrollbar &&
       (hMinSize.width > clientRect.width - vSize.width
-       || hMinSize.height > clientRect.height)) {
+       || hSize.height > clientRect.height)) {
     RemoveHorizontalScrollbar(aState, scrollAreaRect, scrollBarBottom);
     needsLayout = PR_TRUE;
     SetAttribute(mHScrollbarBox, nsXULAtoms::curpos, 0);
@@ -1521,7 +1520,7 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
   // Now disable vertical scrollbar if necessary
   if (mHasVerticalScrollbar &&
       (vMinSize.height > clientRect.height - hSize.height
-       || vMinSize.width > clientRect.width)) {
+       || vSize.width > clientRect.width)) {
     RemoveVerticalScrollbar(aState, scrollAreaRect, scrollBarRight);
     needsLayout = PR_TRUE;
     SetAttribute(mVScrollbarBox, nsXULAtoms::curpos, 0);
