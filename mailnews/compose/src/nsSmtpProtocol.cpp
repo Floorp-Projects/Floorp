@@ -822,16 +822,18 @@ PRInt32 nsSmtpProtocol::AuthLoginUsername()
   
   rv = smtpServer->GetUsername(getter_Copies(username));
 
-  if (!username || !*username)
+  if (!(const char*) username || nsCRT::strlen((const char*)username) == 0)
 	  return NS_ERROR_SMTP_USERNAME_UNDEFINED;
 
   rv = GetPassword(getter_Copies(password));
-  if (!password || !*password)
+  if (!(const char *)password || nsCRT::strlen((const char*)password) == 0)
       return NS_ERROR_SMTP_PASSWORD_UNDEFINED;
   
   if (TestFlag(SMTP_AUTH_LOGIN_ENABLED))
   {
-	  base64Str = PL_Base64Encode(username, PL_strlen(username), nsnull);
+	  base64Str = 
+          PL_Base64Encode((const char *) username, 
+                          nsCRT::strlen((const char*)username), nsnull);
   }
   else
   {
@@ -879,12 +881,13 @@ PRInt32 nsSmtpProtocol::AuthLoginPassword()
   nsresult rv;
   nsXPIDLCString password;
   rv = GetPassword(getter_Copies(password));
-  if (!password || !*password)
+  if (!(const char *)password || nsCRT::strlen((const char *)password)==0)
       return NS_ERROR_SMTP_PASSWORD_UNDEFINED;
 
   char *base64Str = NULL;
   
-  base64Str = PL_Base64Encode(password, PL_strlen(password), nsnull);
+  base64Str = PL_Base64Encode((const char *)password, 
+                              nsCRT::strlen((const char *)password), nsnull);
 
   if (base64Str) {
       char buffer[512];
