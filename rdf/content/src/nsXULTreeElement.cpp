@@ -279,8 +279,12 @@ nsXULTreeElement::SelectItemRange(nsIDOMXULElement* aStartItem, nsIDOMXULElement
   // so we can determine if this is a forward or backward
   // selection
 
-  GetRowIndexOf(startItem, &startIndex);
-  GetRowIndexOf(aEndItem, &endIndex);
+  nsCOMPtr<nsIBoxObject> boxObject;
+  mOuter->GetBoxObject(getter_AddRefs(boxObject));
+  nsCOMPtr<nsITreeBoxObject> treebox = do_QueryInterface(boxObject);
+
+  treebox->GetIndexOfItem(startItem, &startIndex);
+  treebox->GetIndexOfItem(aEndItem, &endIndex);
 
   PRBool didSwap = (endIndex < startIndex);
   nsCOMPtr<nsIDOMElement> currentItem;
@@ -292,10 +296,6 @@ nsXULTreeElement::SelectItemRange(nsIDOMXULElement* aStartItem, nsIDOMXULElement
       startItem = do_QueryInterface(currentItem);
   } else
       currentItem = do_QueryInterface(startItem);
-
-  nsCOMPtr<nsIBoxObject> boxObject;
-  mOuter->GetBoxObject(getter_AddRefs(boxObject));
-  nsCOMPtr<nsITreeBoxObject> treebox = do_QueryInterface(boxObject);
 
   nsAutoString trueString; trueString.AssignWithConversion("true", 4);
   nsCOMPtr<nsIContent> content;
@@ -404,219 +404,6 @@ nsXULTreeElement::FireOnSelectHandler()
   return NS_OK;
 }
 
-
-// get the rowindex of the given element
-// this has two special optimizations:
-// - if you're looking for the row of a <treeitem>, it will actually
-//   find the index of the NEXT row
-// - if you're looking for a <treeitem>, <treerow>, or a <treechildren>
-//   it won't descend into <treerow>s
-nsresult
-nsXULTreeElement::GetRowIndexOf(nsIDOMXULElement *aElement, PRInt32 *aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aElement);
-  NS_ENSURE_ARG_POINTER(aReturn);
-
-  nsresult rv;
-
-  nsCOMPtr<nsIContent> elementContent = do_QueryInterface(aElement, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsIContent> treeContent =
-    do_QueryInterface((nsIXULTreeContent*)this,&rv);
-  if (NS_FAILED(rv)) return rv;
-  
-  *aReturn = 0;
-
-  nsCOMPtr<nsIAtom> elementTag;
-  elementContent->GetTag(*getter_AddRefs(elementTag));
-
-  // if looking for a treeitem, get the first row instead
-  if (elementTag.get() == kTreeItemAtom) {
-    // search through immediate children for the first row
-    PRInt32 childCount;
-    elementContent->ChildCount(childCount);
-
-    PRInt32 i;
-    for (i=0; i< childCount; i++) {
-      nsCOMPtr<nsIContent> childContent;
-      elementContent->ChildAt(i, *getter_AddRefs(childContent));
-
-      nsCOMPtr<nsIAtom> childTag;
-      childContent->GetTag(*getter_AddRefs(childTag));
-
-      // found it! fix elementContent and update tag
-      if (childTag.get() == kTreeRowAtom) {
-        elementContent = childContent;
-        elementTag = childTag;
-        break;
-      }
-
-    }
-  }
-
-  // if we're looking for a treeitem, treerow, or treechildren
-  // there's no need to descend into cells
-  PRBool descendIntoRows = PR_TRUE;
-  if (elementTag.get() == kTreeRowAtom ||
-      elementTag.get() == kTreeChildrenAtom ||
-      elementTag.get() == kTreeItemAtom)
-    descendIntoRows = PR_FALSE;
-
-  // now begin with the first <treechildren> child of this node
-  PRInt32 i;
-  PRInt32 treeChildCount;
-  nsCOMPtr<nsIContent> treeChildren;
-  treeContent->ChildCount(treeChildCount);
-  for (i=0; i<treeChildCount; i++) {
-    treeChildren = null_nsCOMPtr();
-    treeContent->ChildAt(i, *getter_AddRefs(treeChildren));
-    
-    nsCOMPtr<nsIAtom> tag;
-    treeChildren->GetTag(*getter_AddRefs(tag));
-    if (tag.get() == kTreeChildrenAtom)
-      break;
-  }
-
-  if (treeChildren)
-    return IndexOfContent(treeChildren, elementContent,
-                          descendIntoRows, PR_TRUE /* aParentIsOpen */,
-                          aReturn);
-  
-  NS_WARNING("EnsureContentVisible: tree has no <treechildren>");
-  return NS_ERROR_FAILURE;
-}
-
-
-nsresult
-nsXULTreeElement::EnsureElementIsVisible(nsIDOMXULElement *aElement)
-{
-  if (!aElement) return NS_OK;
-
-  nsresult rv;
-  
-  PRInt32 indexOfContent;
-  rv = GetRowIndexOf(aElement, &indexOfContent);
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsIContent> content = do_QueryInterface(mOuter);
-  nsCOMPtr<nsIDocument> document;
-  content->GetDocument(*getter_AddRefs(document));
-
-  // If there's no document (e.g., a selection is occuring in a
-  // 'orphaned' node), then there ain't a whole lot to do here!
-  if (! document) {
-    NS_WARNING("Trying to EnsureElementIsVisible on orphaned element!");
-    return NS_OK;
-  }
-
-  // now call EnsureElementIsVisible on all the frames
-  PRInt32 count = document->GetNumberOfShells();
-	for (PRInt32 i = 0; i < count; i++) {
-		nsCOMPtr<nsIPresShell> shell = getter_AddRefs(document->GetShellAt(i));
-		if (!shell)
-				continue;
-
-    nsIFrame *outerFrame;
-    shell->GetPrimaryFrameFor(content, &outerFrame);
-
-    if (outerFrame) {
-      nsCOMPtr<nsIPresContext> presContext;
-      shell->GetPresContext(getter_AddRefs(presContext));
-
-      // need to look at the outer frame's children to find the nsTreeFrame
-      nsIFrame *childFrame=nsnull;
-      outerFrame->FirstChild(presContext, nsnull, &childFrame);
-
-      // now iterate through the children
-      while (childFrame) {
-        nsITreeFrame *treeFrame = nsnull;      
-        rv = childFrame->QueryInterface(NS_GET_IID(nsITreeFrame),
-                                        (void **)&treeFrame);
-        if (NS_SUCCEEDED(rv) && treeFrame) {
-          treeFrame->EnsureRowIsVisible(indexOfContent);
-        }
-
-        nsIFrame *nextFrame;
-        childFrame->GetNextSibling(&nextFrame);
-        childFrame=nextFrame;
-      }
-    }
-
-  }
-
-  return NS_OK;
-  
-  
-}
-
-
-// helper routine for GetRowIndexOf()
-// walks the DOM to get the zero-based row index of the current content
-// note that aContent can be any element, this will get the index of the
-// element's parent
-nsresult
-nsXULTreeElement::IndexOfContent(nsIContent* aRoot,
-                                 nsIContent* aContent, // invariant
-                                 PRBool aDescendIntoRows, // invariant
-                                 PRBool aParentIsOpen,
-                                 PRInt32 *aResult)
-{
-  PRInt32 childCount=0;
-  aRoot->ChildCount(childCount);
-
-  nsresult rv;
-  
-  PRInt32 childIndex;
-  for (childIndex=0; childIndex<childCount; childIndex++) {
-    nsCOMPtr<nsIContent> child;
-    aRoot->ChildAt(childIndex, *getter_AddRefs(child));
-    
-    nsCOMPtr<nsIAtom> childTag;
-    child->GetTag(*getter_AddRefs(childTag));
-
-    // is this it?
-    if (child.get() == aContent)
-      return NS_OK;
-
-    // we hit a treerow, count it
-    if (childTag.get() == kTreeRowAtom)
-      (*aResult)++;
-
-    // now recurse. This gets tricky, depending on our tag:
-    // first set up some default state for the recursion
-    PRBool parentIsOpen = aParentIsOpen;
-    PRBool descend = PR_TRUE;
-    
-    // don't descend into closed children
-    if (childTag.get() == kTreeChildrenAtom && !parentIsOpen)
-      descend = PR_FALSE;
-
-    // speed optimization - descend into rows only when told
-    else if (childTag.get() == kTreeRowAtom && !aDescendIntoRows)
-      descend = PR_FALSE;
-
-    // descend as normally, but remember that the parent is closed!
-    else if (childTag.get() == kTreeItemAtom) {
-      nsAutoString isOpen;
-      rv = child->GetAttribute(kNameSpaceID_None, kOpenAtom, isOpen);
-
-      if (!isOpen.EqualsWithConversion("true"))
-        parentIsOpen=PR_FALSE;
-    }
-
-    // now that we've analyzed the tags, recurse
-    if (descend) {
-      rv = IndexOfContent(child, aContent,
-                          aDescendIntoRows, parentIsOpen, aResult);
-      if (NS_SUCCEEDED(rv))
-        return NS_OK;
-    }
-  }
-
-  // not found
-  return NS_ERROR_FAILURE;
-}
 
 NS_IMETHODIMP
 nsXULTreeElement::GetCurrentItem(nsIDOMXULElement** aResult)

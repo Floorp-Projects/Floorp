@@ -6,12 +6,12 @@
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
   <binding id="tree">
-    <!-- <content>
+    <content>
       <children/>
       <xul:treerows>
         <children includes="treehead,treechildren"/>
       </xul:treerows> 
-    </content> -->
+    </content>
     <interface>
       <property name="treeBoxObject"
                 onget="return this.boxObject.QueryInterface(Components.interfaces.nsITreeBoxObject);"
@@ -46,6 +46,12 @@
         <argument name="index"/>
         <body>
           return this.treeBoxObject.ensureIndexIsVisible(index);
+        </body>
+      </method>
+      <method name="ensureElementIsVisible">
+        <argument name="element"/>
+        <body>
+          return this.ensureIndexIsVisible(this.treeBoxObject.getIndexOfItem(element));
         </body>
       </method>
       <method name="scrollToIndex">

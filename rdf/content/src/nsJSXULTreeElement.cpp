@@ -526,101 +526,6 @@ XULTreeElementInvertSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *a
 }
 
 
-//
-// Native method EnsureElementIsVisible
-//
-PR_STATIC_CALLBACK(JSBool)
-XULTreeElementEnsureElementIsVisible(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMXULTreeElement *nativeThis = (nsIDOMXULTreeElement*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
-  nsCOMPtr<nsIDOMXULElement> b0;
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  {
-    *rval = JSVAL_NULL;
-    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
-    if (!secMan)
-        return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULTREEELEMENT_ENSUREELEMENTISVISIBLE, PR_FALSE);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-    if (argc < 1) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
-    }
-
-    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
-                                           kIXULElementIID,
-                                           NS_ConvertASCIItoUCS2("XULElement"),
-                                           cx,
-                                           argv[0])) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
-    }
-
-    result = nativeThis->EnsureElementIsVisible(b0);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-
-    *rval = JSVAL_VOID;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
-// Native method GetRowIndexOf
-//
-PR_STATIC_CALLBACK(JSBool)
-XULTreeElementGetRowIndexOf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMXULTreeElement *nativeThis = (nsIDOMXULTreeElement*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
-  PRInt32 nativeRet;
-  nsCOMPtr<nsIDOMXULElement> b0;
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  {
-    *rval = JSVAL_NULL;
-    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
-    if (!secMan)
-        return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULTREEELEMENT_GETROWINDEXOF, PR_FALSE);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-    if (argc < 1) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
-    }
-
-    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
-                                           kIXULElementIID,
-                                           NS_ConvertASCIItoUCS2("XULElement"),
-                                           cx,
-                                           argv[0])) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
-    }
-
-    result = nativeThis->GetRowIndexOf(b0, &nativeRet);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-
-    *rval = INT_TO_JSVAL(nativeRet);
-  }
-
-  return JS_TRUE;
-}
-
-
 /***********************************************************************/
 //
 // class for XULTreeElement
@@ -665,8 +570,6 @@ static JSFunctionSpec XULTreeElementMethods[] =
   {"selectItemRange",          XULTreeElementSelectItemRange,     2},
   {"selectAll",          XULTreeElementSelectAll,     0},
   {"invertSelection",          XULTreeElementInvertSelection,     0},
-  {"ensureElementIsVisible",          XULTreeElementEnsureElementIsVisible,     1},
-  {"getRowIndexOf",          XULTreeElementGetRowIndexOf,     1},
   {0}
 };
 
