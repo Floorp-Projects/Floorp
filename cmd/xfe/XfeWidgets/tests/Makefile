@@ -21,11 +21,7 @@
 DEPTH			= ../../../..
 
 ifdef XFE_WIDGETS_BUILD_UNUSED
-
-XFE_EXTRA_DEFINES += -DXFE_WIDGETS_BUILD_UNUSED
-
 UNUSED_CSRCS		= \
-				ArrowTest.c \
 				ChromeTest.c \
 				ComboBoxTest.c \
 				FontChooserTest.c \
@@ -37,6 +33,7 @@ endif
 
 CSRCS			= \
 				$(UNUSED_CSRCS) \
+				ArrowTest.c \
 				ButtonTest.c \
 				CascadeTest.c \
 				DashBoardTest.c \
@@ -62,31 +59,20 @@ REQUIRES		= \
 PROGS = $(addprefix $(OBJDIR)/, $(CSRCS:.c=.exe))
 
 include $(DEPTH)/config/rules.mk
-
-DEFINES		+= $(XFE_EXTRA_DEFINES)
+include $(DEPTH)/cmd/xfe/XfeWidgets/XfeWidgets.mk
 
 all:: $(PROGS)
 install:: $(PROGS)
 
 LDFLAGS =
 
-ifeq ($(OS_ARCH),HP-UX)
-
-  SHARED_EXT = sl
-
-else
-
-  SHARED_EXT = so
-
-endif
-
 SHARED_XFE_LIBS = \
-				$(DIST)/bin/libXfeTest.$(SHARED_EXT) \
-				$(DIST)/bin/libXfeWidgets.$(SHARED_EXT)
+				$(DIST)/bin/libXfeTest.$(DLL_SUFFIX) \
+				$(DIST)/bin/libXfeWidgets.$(DLL_SUFFIX)
 
 ifeq (,$(filter Linux IRIX ,$(OS_ARCH)))
 
-SHARED_XFE_LIBS += $(DIST)/bin/libXpm.$(SHARED_EXT)
+SHARED_XFE_LIBS += $(DIST)/bin/libXpm.$(DLL_SUFFIX)
 STATIC_XFE_LIBS += $(DIST)/lib/libXpm.a
 
 else
