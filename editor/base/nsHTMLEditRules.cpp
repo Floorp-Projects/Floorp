@@ -172,7 +172,9 @@ nsHTMLEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)
       res = AdjustSpecialBreaks();
       if (NS_FAILED(res)) return res;
       // adjust whitespace for insert text and delete actions
-      if ((action == nsEditor::kOpInsertText) || (action == nsEditor::kOpDeleteSelection))
+      if ((action == nsEditor::kOpInsertText) || 
+          (action == nsEditor::kOpInsertIMEText) ||
+          (action == nsEditor::kOpDeleteSelection))
       {
         res = AdjustWhitespace(selection);
         if (NS_FAILED(res)) return res;
