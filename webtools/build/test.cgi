@@ -34,17 +34,10 @@ print "Content-type: text/html\n\n\n";
 	   <body BGCOLOR="#FFFFFF" TEXT="#000000"LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
 	  );
 
-  print qq(
-	   <FORM action='config.cgi' method='POST'>
-	   <table bgcolor="$chrome_color" cellspacing=0 cellpadding=0><tr><td>
-	   <table bgcolor="#FFFFFF" cellspacing=0 cellpadding=0><tr><td>
-	   <table cellspacing=0 cellpadding=1>
-	  );
-
 print "PATH=$ENV{PATH}\n";
 
   #open(OPTIONS, "<parsed-configure.txt")
-  open(OPTIONS, "m4 webify-configure.m4 $configure_in|")
+  open(OPTIONS, "/usr/ccs/bin/m4 webify-configure.m4 $configure_in|")
     or die "Error parsing configure.in\n";
 
   foreach (<OPTIONS>) {
