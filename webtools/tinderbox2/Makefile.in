@@ -85,8 +85,8 @@ compile_all_code: build
 	@echo
 	@echo "----- Testing if perl can compile code -----"
 	find $(builddir) -type f | \
-	egrep -v -i "readme|\.gif|/test/|addimage.cgi|images.pm|bustagestats.cgi|initrc|Storable.pm" | \
-	egrep -v -i "initrc|ignore_waitstatus" | \
+	egrep -v -i "readme|\.gif|/test/|addimage.cgi|images.pm|bustagestats.cgi|Storable.pm" | \
+	egrep -v -i "initrc|ignore_waitstatus|data" | \
 	  xargs $(xargs_single) perl -T -w -c 
 
 compile_bin_code: build
