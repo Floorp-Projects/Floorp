@@ -54,7 +54,7 @@ function initMessages()
             "WARNING": MSG_RSP_WARN,
             "INFO": MSG_RSP_INFO,
             "EVAL-IN": MSG_RSP_EVIN,
-            "EVAL_-OUT": MSG_RSP_EVOUT,
+            "EVAL-OUT": MSG_RSP_EVOUT,
             "JOIN": "-->|",
             "PART": "<--|",
             "QUIT": "|<--",
