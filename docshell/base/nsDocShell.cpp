@@ -2632,32 +2632,24 @@ NS_IMETHODIMP nsDocShell::CreateFixupURI(const PRUnichar* aStringURI,
       return NS_OK;
 
    // See if a protocol needs to be added
-   PRInt32 colon = uriString.FindChar(':');
-   PRInt32 fSlash = uriString.FindChar('/');
-   PRUnichar port = nsnull;;
-   // if no scheme (protocol) is found, assume http.
-   if (colon == -1 || fSlash == -1 || (fSlash > -1) && (colon+1 != fSlash)) {
-      if (colon < (((PRInt32)uriString.Length())-1)) {
-         if (colon != -1) port = uriString.CharAt(colon+1);
-         if (colon == -1 || uriString.IsDigit(port) ||
-                 uriString.CharAt(0) == '[') {
-            // find host name
-            PRInt32 hostPos = uriString.FindCharInSet("./:");
-            if (hostPos == -1) 
-               hostPos = uriString.Length();
+   PRInt32 checkprotocol = uriString.Find("://",0);
+   // if no scheme (protocol) is found, assume http or ftp.
+   if (checkprotocol == -1) {
+      // find host name
+      PRInt32 hostPos = uriString.FindCharInSet("./:");
+      if (hostPos == -1) 
+         hostPos = uriString.Length();
 
-            // extract host name
-            nsAutoString hostSpec;
-            uriString.Left(hostSpec, hostPos);
+      // extract host name
+      nsAutoString hostSpec;
+      uriString.Left(hostSpec, hostPos);
 
-            // insert url spec corresponding to host name
-            if (hostSpec.EqualsIgnoreCase("ftp")) 
-               uriString.InsertWithConversion("ftp://", 0, 6);
-            else 
-               uriString.InsertWithConversion("http://", 0, 7);
-         } 
-      }
-   } // end if colon
+      // insert url spec corresponding to host name
+      if (hostSpec.EqualsIgnoreCase("ftp")) 
+         uriString.InsertWithConversion("ftp://", 0, 6);
+      else 
+         uriString.InsertWithConversion("http://", 0, 7);
+   } // end if checkprotocol
    return NS_NewURI(aURI, uriString.GetUnicode(), nsnull);
 }
 
