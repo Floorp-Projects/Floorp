@@ -23,7 +23,6 @@
 #include "nsFtpProtocolHandler.h"
 #include "nsFTPChannel.h"
 #include "nsIURL.h"
-#include "nsAuthURLParser.h"
 #include "nsCRT.h"
 #include "nsIComponentManager.h"
 #include "nsIInterfaceRequestor.h"

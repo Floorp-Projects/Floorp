@@ -28,14 +28,6 @@
 #include "nsAgg.h"
 #include "nsCRT.h"
 
-#define NS_NOAUTHORITYURLPARSER_CID                  \
-{ /* 9eeb1b89-c87e-4404-9de6-dbd41aeaf3d7 */         \
-    0x9eeb1b89,                                      \
-    0xc87e,                                          \
-    0x4404,                                          \
-    {0x9d, 0xe6, 0xdb, 0xd4, 0x1a, 0xea, 0xf3, 0xd7} \
-}
-
 class nsNoAuthURLParser : public nsIURLParser
 {
 public:

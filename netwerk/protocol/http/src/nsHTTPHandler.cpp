@@ -39,7 +39,6 @@
 #include "nsHTTPEncodeStream.h" 
 #include "nsHTTPAtoms.h"
 #include "nsFileSpec.h"
-#include "nsAuthURLParser.h"
 
 #include "nsIPref.h" // preferences stuff
 #ifdef DEBUG_gagan

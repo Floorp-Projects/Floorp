@@ -23,7 +23,6 @@
 #include "nsFileChannel.h"
 #include "nsFileProtocolHandler.h"
 #include "nsIURL.h"
-#include "nsNoAuthURLParser.h"
 #include "nsCRT.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
