@@ -666,8 +666,10 @@ nsMsgLocalMailFolder::UpdateFolder(nsIMsgWindow *aWindow)
       NotifyFolderEvent(mFolderLoadedAtom);
   }
   PRBool filtersRun;
+  PRBool hasNewMessages;
+  GetHasNewMessages(&hasNewMessages);
   // if we have new messages, try the filter plugins.
-  if (NS_SUCCEEDED(rv) && (mFlags & MSG_FOLDER_FLAG_GOT_NEW))
+  if (NS_SUCCEEDED(rv) && hasNewMessages)
     (void) CallFilterPlugins(aWindow, &filtersRun);
   return rv;
 }
