@@ -440,7 +440,7 @@ GetBaseURLFile(const nsACString& aBaseURL, nsIFile** aFile)
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
+nsresult
 nsChromeRegistry::Canonify(nsIURI* aChromeURI)
 {
   // Canonicalize 'chrome:' URLs. We'll take any 'chrome:' URL
@@ -471,12 +471,10 @@ nsChromeRegistry::Canonify(nsIURI* aChromeURI)
 }
 
 NS_IMETHODIMP
-nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL, nsACString& aResult)
+nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL, nsIURI* *aResult)
 {
   nsresult rv = NS_OK;
-  NS_ASSERTION(aChromeURL, "null url!");
-  if (!aChromeURL)
-      return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(aChromeURL);
 
   // No need to canonify as the SplitURL() that we
   // do is the equivalent of canonification without modifying
@@ -541,9 +539,9 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL, nsACString& aResult)
     }
   }
 
-  aResult = finalURL + remaining;
+  finalURL.Append(remaining);
 
-  return NS_OK;
+  return NS_NewURI(aResult, finalURL);
 }
 
 nsresult
@@ -2959,7 +2957,8 @@ nsresult nsChromeRegistry::LoadProfileDataSource()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsChromeRegistry::AllowScriptsForSkin(nsIURI* aChromeURI, PRBool *aResult)
+NS_IMETHODIMP
+nsChromeRegistry::AllowScriptsForPackage(nsIURI* aChromeURI, PRBool *aResult)
 {
   *aResult = PR_TRUE;
 
