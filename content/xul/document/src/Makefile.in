@@ -69,6 +69,7 @@ REQUIRES	= xpcom \
 		  xultmpl \
 		  webshell \
 		  unicharutil \
+		  intl \
 		  $(NULL)
 
 CPPSRCS		= nsXULControllers.cpp

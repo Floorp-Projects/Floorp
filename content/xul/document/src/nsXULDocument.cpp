@@ -115,6 +115,9 @@
 #include "nsContentUtils.h"
 #include "nsIParser.h"
 #include "nsICSSStyleSheet.h"
+#include "nsIConsoleService.h"
+#include "nsIScriptError.h"
+#include "nsIStringBundle.h"
 
 //----------------------------------------------------------------------
 //
@@ -2942,7 +2945,13 @@ nsXULDocument::ResumeWalk()
 
             nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
             rv = NS_OpenURI(listener, nsnull, uri, nsnull, group);
-            if (NS_FAILED(rv)) return rv;
+            if (NS_FAILED(rv)) {
+                // Just move on to the next overlay.  NS_OpenURI could fail
+                // just because a channel could not be opened, which can happen
+                // if a file or chrome package does not exist.
+                ReportMissingOverlay(uri);
+                continue;
+            }
 
             // If it's a 'chrome:' prototype document, then put it into
             // the prototype cache; other XUL documents will be reloaded
@@ -2997,6 +3006,60 @@ nsXULDocument::ResumeWalk()
     }
 
     return rv;
+}
+
+void
+nsXULDocument::ReportMissingOverlay(nsIURI* aURI)
+{
+    NS_PRECONDITION(aURI, "Must have a URI");
+    
+    nsresult rv;
+    nsCOMPtr<nsIConsoleService> consoleService =
+        do_GetService(NS_CONSOLESERVICE_CONTRACTID, &rv);
+    if (NS_FAILED(rv))
+        return;
+    nsCOMPtr<nsIScriptError> errorObject =
+        do_CreateInstance(NS_SCRIPTERROR_CONTRACTID, &rv);
+    if (NS_FAILED(rv))
+        return;
+    nsCOMPtr<nsIStringBundleService> stringBundleService =
+        do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+    if (NS_FAILED(rv))
+        return;
+    nsCOMPtr<nsIStringBundle> bundle;
+    rv = stringBundleService->CreateBundle(
+           "chrome://global/locale/xul.properties", getter_AddRefs(bundle));
+    if (NS_FAILED(rv))
+        return;
+
+    nsCAutoString spec;
+    aURI->GetSpec(spec);
+
+    NS_ConvertUTF8toUTF16 utfSpec(spec);
+    const PRUnichar* params[] = { utfSpec.get() };
+
+    nsXPIDLString errorText;
+    rv = bundle->FormatStringFromName(NS_LITERAL_STRING("MissingOverlay").get(),
+                                      params, NS_ARRAY_LENGTH(params),
+                                      getter_Copies(errorText));
+    if (NS_FAILED(rv))
+        return;
+
+    nsCAutoString documentURI;
+    mDocumentURI->GetSpec(documentURI);
+    
+    rv = errorObject->Init(errorText.get(),
+                           NS_ConvertUTF8toUTF16(documentURI).get(),/* file name */
+                           EmptyString().get(), /* source line */
+                           0, /* line number */
+                           0, /* column number */
+                           nsIScriptError::warningFlag,
+                           "XUL Document");
+    
+    if (NS_FAILED(rv))
+        return;
+    
+    consoleService->LogMessage(errorObject);
 }
 
 nsresult
@@ -4141,20 +4204,14 @@ nsXULDocument::ParserObserver::OnStopRequest(nsIRequest *request,
     if (NS_FAILED(aStatus)) {
         // If an overlay load fails, we need to nudge the prototype
         // walk along.
-#define YELL_IF_MISSING_OVERLAY 1
-#if defined(DEBUG) || defined(YELL_IF_MISSING_OVERLAY)
-
         nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
-        if (!aChannel) return NS_ERROR_FAILURE;
-
-        nsCOMPtr<nsIURI> uri;
-        aChannel->GetOriginalURI(getter_AddRefs(uri));
-
-        nsCAutoString spec;
-        uri->GetSpec(spec);
-
-        printf("*** Failed to load overlay %s\n", spec.get());
-#endif
+        if (aChannel) {
+            nsCOMPtr<nsIURI> uri;
+            aChannel->GetOriginalURI(getter_AddRefs(uri));
+            if (uri) {
+                mDocument->ReportMissingOverlay(uri);
+            }
+        }
 
         rv = mDocument->ResumeWalk();
     }
