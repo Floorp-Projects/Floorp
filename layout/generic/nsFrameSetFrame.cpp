@@ -651,7 +651,7 @@ nsHTMLFramesetFrame::Paint(nsIPresContext*      aPresContext,
                                      aDirtyRect, aWhichLayer);
 }
 
-void nsHTMLFramesetFrame::ParseRowCol(nsIAtom* aAttrType, PRInt32& aNumSpecs, nsFramesetSpec** aSpecs) 
+void nsHTMLFramesetFrame::ParseRowCol(nsIPresContext* aPresContext, nsIAtom* aAttrType, PRInt32& aNumSpecs, nsFramesetSpec** aSpecs) 
 {
   nsHTMLValue value;
   nsAutoString rowsCols;
@@ -662,7 +662,7 @@ void nsHTMLFramesetFrame::ParseRowCol(nsIAtom* aAttrType, PRInt32& aNumSpecs, ns
       if (eHTMLUnit_String == value.GetUnit()) {
         value.GetStringValue(rowsCols);
         nsFramesetSpec* specs = new nsFramesetSpec[gMaxNumRowColSpecs];
-        aNumSpecs = ParseRowColSpec(rowsCols, gMaxNumRowColSpecs, specs);
+        aNumSpecs = ParseRowColSpec(aPresContext, rowsCols, gMaxNumRowColSpecs, specs);
         *aSpecs = new nsFramesetSpec[aNumSpecs];
         for (int i = 0; i < aNumSpecs; i++) {
           (*aSpecs)[i] = specs[i];
@@ -684,7 +684,8 @@ void nsHTMLFramesetFrame::ParseRowCol(nsIAtom* aAttrType, PRInt32& aNumSpecs, ns
   * Translate a "rows" or "cols" spec into an array of nsFramesetSpecs
   */
 PRInt32 
-nsHTMLFramesetFrame::ParseRowColSpec(nsString&       aSpec, 
+nsHTMLFramesetFrame::ParseRowColSpec(nsIPresContext* aPresContext,
+                                     nsString&       aSpec, 
                                      PRInt32         aMaxNumValues, 
                                      nsFramesetSpec* aSpecs) 
 {
@@ -761,6 +762,16 @@ nsHTMLFramesetFrame::ParseRowColSpec(nsString&       aSpec,
         }
       }
 
+      // Treat 0* as 1* in quirks mode (bug 40383)
+      nsCompatibility mode;
+      aPresContext->GetCompatibilityMode(&mode);
+      if (eCompatibility_NavQuirks == mode) {
+        if ((eFramesetUnit_Relative == aSpecs[i].mUnit) &&
+          (0 == aSpecs[i].mValue)) {
+          aSpecs[i].mValue = 1;
+        }
+      }
+        
       // Catch zero and negative frame sizes for Nav compatability
       // Nav resized absolute and relative frames to "1" and
       // percent frames to an even percentage of the width
@@ -933,8 +944,8 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext*          aPresContext,
 
   if (firstTime) { 
     // parse the rows= cols= data
-    ParseRowCol(nsHTMLAtoms::rows, mNumRows, &mRowSpecs);
-    ParseRowCol(nsHTMLAtoms::cols, mNumCols, &mColSpecs);
+    ParseRowCol(aPresContext, nsHTMLAtoms::rows, mNumRows, &mRowSpecs);
+    ParseRowCol(aPresContext, nsHTMLAtoms::cols, mNumCols, &mColSpecs);
     mRowSizes  = new nscoord[mNumRows];
     mColSizes  = new nscoord[mNumCols];
   }
