@@ -618,7 +618,7 @@ NS_IMETHODIMP nsAbCardProperty::AddAnonymousAttributesToDB()
 	return rv;
 }
 
-NS_IMETHODIMP nsAbCardProperty::EditAnonymousAttributesToDB()
+NS_IMETHODIMP nsAbCardProperty::EditAnonymousAttributesInDB()
 {
 	nsresult rv = NS_OK;
 	if (mDatabase)

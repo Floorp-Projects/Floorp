@@ -143,7 +143,7 @@ public:
 	NS_IMETHOD SetAnonymousIntAttribute(const char *attrname, PRUint32 value);
 	NS_IMETHOD SetAnonymousBoolAttribute(const char *attrname, PRBool value);
 	NS_IMETHOD AddAnonymousAttributesToDB();
-	NS_IMETHOD EditAnonymousAttributesToDB();
+	NS_IMETHOD EditAnonymousAttributesInDB();
 
 	NS_IMETHOD GetCardURI(char **uri);
 	NS_IMETHOD AddCardToDatabase(const char *uri);
