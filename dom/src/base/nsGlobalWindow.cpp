@@ -513,11 +513,6 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
       docURL = nsnull;
     }
 
-    if (aRemoveEventListeners && mListenerManager) {
-      mListenerManager->RemoveAllListeners(PR_FALSE);
-      mListenerManager = nsnull;
-    }
-
     if (docURL) {
       nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(mDocShell));
       PRBool isContentWindow = PR_FALSE;
@@ -570,6 +565,16 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
           mIsScopeClear = PR_TRUE;
         }
       }
+
+      // Don't remove event listeners in similar conditions
+      aRemoveEventListeners = aRemoveEventListeners &&
+        (!isAboutBlank || (isContentWindow && !isSameOrigin));
+
+    }
+    
+    if (aRemoveEventListeners && mListenerManager) {
+      mListenerManager->RemoveAllListeners(PR_FALSE);
+      mListenerManager = nsnull;
     }
   }
 
