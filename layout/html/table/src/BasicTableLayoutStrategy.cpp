@@ -184,6 +184,9 @@ PRBool BasicTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext *aTableStyl
 
   nscoord specifiedTableWidth = 0; // not cached as a data member because it can vary depending on aMaxWidth
   PRBool tableIsAutoWidth = nsTableFrame::TableIsAutoWidth(mTableFrame, aTableStyle, aReflowState, specifiedTableWidth);
+  // HACK!  Fix TableIsAutoWidth to return the right width
+  if (specifiedTableWidth>aMaxWidth)
+    specifiedTableWidth = aMaxWidth;
   if (NS_UNCONSTRAINEDSIZE==specifiedTableWidth)
   {
     specifiedTableWidth=0;
@@ -2030,7 +2033,7 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( const nsHTMLReflowSt
   }
   
   // second, fix up tables where column width attributes give us a table that is too wide or too narrow
-  nscoord computedWidth=0;
+  nscoord computedWidth=colInset;
   for (PRInt32 i=0; i<mNumCols; i++) {
     computedWidth += mTableFrame->GetColumnWidth(i) + colInset;
   }
