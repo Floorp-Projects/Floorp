@@ -6,16 +6,19 @@
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <binding id="titledSplitter" extends="xul:splitter">
+  <binding id="titledSplitter" extends="chrome://global/content/bindings/splitter.xml#splitter">
     <content>
       <xul:box class="titledsplitter-container" orient="vertical" flex="1">
         <xul:spring class="titledsplitter-dragbar"/>
         <xul:box class="titledsplitter-titlebox" flex="1" onmousedown="event.stopPropagation()">
           <xul:box autostretch="never">
-            <xul:text class="titledsplitter-text" inherits="value"/>
+            <xul:text class="titledsplitter-text" inherits="value=label"/>
           </xul:box>
           <xul:spring flex="1"/>
-          <xul:box class="titledsplitter-closebutton" onclick="this.parentNode.parentNode.parentNode.close();"/>
+          <xul:button class="titledsplitter-closebutton" autostretch="never"
+                   onclick="this.parentNode.parentNode.parentNode.close();">
+            <xul:image class="titledsplitter-closeimage"/>
+          </xul:button>
         </xul:box>
       </xul:box>
     </content>

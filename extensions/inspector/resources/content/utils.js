@@ -1,3 +1,25 @@
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ *   Joe Hewitt <hewitt@netscape.com> (original author)
+ */
+
 /***************************************************************
 * Inspector Utils ----------------------------------------------
 *  Common functions and constants used across the app.
@@ -11,6 +33,7 @@
 
 const kInspectorNSURI = "http://www.mozilla.org/inspector#";
 const kXULNSURI = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+const kHTMLNSURI = "http://www.w3.org/1999/xhtml";
 
 var InsUtil = {
   /******************************************************************************
@@ -34,19 +57,33 @@ var InsUtil = {
     var propRes = ds.GetTarget(ruleRes, gRDF.GetResource(kInspectorNSURI+aPropName), true);
     propRes = XPCU.QI(propRes, "nsIRDFLiteral");
     return propRes.Value;
+  },
+  
+  /******************************************************************************
+  * Convenience function for persisting an element's persisted attributes.
+  *******************************************************************************/
+  persistAll: function(aId)
+  {
+    var el = document.getElementById(aId);
+    if (el) {
+      var attrs = el.getAttribute("persist").split(" ");
+      for (var i = 0; i < attrs.length; ++i) {
+        document.persist(aId, attrs[i]);
+      }
+    }
   }
-
 };
 
 // ::::::: debugging utilities :::::: 
 
 function debug(aText)
 {
-  // XX comment out to reduce noise
-  //consoleDump(aText);
-  dump(aText);
+  // XX comment out to reduce noise 
+  consoleDump(aText);
+  //dump(aText);
 }
 
+// dump text to the Javascript Console
 function consoleDump(aText)
 {
   var csClass = Components.classes['@mozilla.org/consoleservice;1'];

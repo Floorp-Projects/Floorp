@@ -25,9 +25,26 @@
   </popupset>
 
   <menupopup id="mppFile">
-    <menuitem label="&cmdShowOpenURLDialog.label;..." accesskey="&cmdShowOpenURLDialog.accesskey;" observes="cmdShowOpenURLDialog"/>
+    <menu 
+      id="mnWindowsFile" label="&mnWindows.label;" accesskey="&mnWindows.accesskey;"
+      datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot">
+      <template>
+        <rule>
+          <menupopup>
+            <menuitem uri="rdf:*" label="&NC-rdf;Name" oncommand="inspector.goToWindow(this)"/>
+          </menupopup>
+        </rule>
+      </template>
+      <menupopup/>
+    </menu>
+    <menuitem label="&cmdShowOpenURLDialog.label;" accesskey="&cmdShowOpenURLDialog.accesskey;"
+              observes="cmdShowOpenURLDialog"/>
     <menuseparator/>
-    <menuitem label="&cmdExit.label;" accesskey="&cmdExit.accesskey;" observes="cmdExit"/>
+    <menuitem label="&cmdClose.label;" accesskey="&cmdClose.accesskey;" 
+              observes="cmdClose" key="key_close"/>
+    <menuseparator/>
+    <menuitem label="&cmdExit.label;" accesskey="&cmdExit.accesskey;" 
+              observes="cmd_quit" key="key_quit"/>
   </menupopup>
 
   <menupopup id="mppEdit">
@@ -39,7 +56,7 @@
     <menuitem label="&cmdPaste.label;" accesskey="&cmdPaste.accesskey;" observes="cmdPaste"/>
     <menuitem label="&cmdDelete.label;" accesskey="&cmdDelete.accesskey;" observes="cmdDelete"/>
     <menuseparator/>
-    <menuitem label="&cmdPrefs.label;..." accesskey="&cmdPrefs.accesskey;" observes="cmdShowPrefsDialog"/>
+    <menuitem label="&cmdPrefs.label;" accesskey="&cmdPrefs.accesskey;" observes="cmdShowPrefsDialog"/>
   </menupopup>
 
   <menupopup id="mppSearch" oncreate="inspector.initPopup(this)">
@@ -55,13 +72,8 @@
     <menuitem class="menuitem-iconic" type="checkbox" label="&cmdToggleBrowser.label;" observes="cmdToggleBrowser"/>
     <menuitem class="menuitem-iconic" type="checkbox" label="&cmdToggleSearch.label;" observes="cmdToggleSearch"/>
     <menuseparator/>
-    <menuitem class="menuitem-iconic" type="checkbox" label="&cmdFlashSelected.label;" observes="cmdFlashSelected"/>
   </menupopup>
 
-  <menupopup id="mppHelp">
-    <menuitem label="&cmdNotes.label;" accesskey="&cmdNotes.accesskey;" observes="cmdShowNotes"/>
-    <menuseparator/>
-    <menuitem label="&cmdAbout.label;" accesskey="&cmdAbout.accesskey;" observes="cmdShowAbout"/>
-  </menupopup>
-
+  <popupset id="ppsViewerPopupset"/>
+  
 </overlay>

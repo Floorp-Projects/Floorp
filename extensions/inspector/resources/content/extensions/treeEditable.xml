@@ -6,7 +6,7 @@
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <binding id="treeEditable" extends="chrome://global/content/treeBindings.xml#tree">
+  <binding id="treeEditable" extends="chrome://global/content/bindings/tree.xml#tree">
     <content>
       <children/>
       <xul:treerows class="tree-container-treerows" inherits="dragover,dragdroptree">
@@ -53,6 +53,7 @@
           while (item && item.localName.toLowerCase() != "treeitem")
             item = item.parentNode;
 
+          item.setAttribute("editing", "true");
           var editor = this.getEditorElement(aTreecell);
           editor.setAttribute("value", aTreecell.getAttribute("label"));
           aTreecell.parentNode.replaceChild(editor, aTreecell);
@@ -75,6 +76,7 @@
             var cell = this.mEditingCell;
             var ed = this.mEditingEditor;
             var ev = ed.value;
+            this.mEditingItem.removeAttribute("editing");
             var cancel = this.onAfterEdit({ newValue: ev, editingNode: cell, editingItem: this.mEditingItem });
             if (!aCancel && !cancel) cell.setAttribute("label", ev);
             ed.parentNode.replaceChild(cell, ed);
@@ -101,12 +103,26 @@
 
     <handlers>
       <handler event="mousedown"><![CDATA[
-        if (this.mEditing && event.target != this.mEditingEditor)
+        if (this.mEditing && event.target != this.mEditingEditor 
+            && event.target != this.mEditingCell) 
+        {
           this.stopEdit();
+        }
       ]]></handler>
       
       <handler event="keypress"><![CDATA[
-        // using ifs here because the "keycode" attribute isn't working on handler
+        if (!this.mEditing && event.keyCode == 113) {
+          var sel = this.selectedItems ? this.selectedItems[0] : null;
+          if (sel) {
+            var cells = sel.getElementsByTagName("treecell");
+            for (var i = 0; i < cells.length; ++i) {
+              if (cells[i].getAttribute("editable") == "true") {
+                this.startEdit(cells[i]);
+                break;
+              }
+            }
+          }
+        }
         if (this.mEditing && event.keyCode == 13)
           this.stopEdit();
         if (this.mEditing && event.keyCode == 27)
@@ -122,7 +138,7 @@
   <!-- ==================================================================================== -->
   <!-- ==================================================================================== -->
 
-  <binding id="treecellEditable" extends="chrome://global/content/treeBindings.xml#treecell">
+  <binding id="treecellEditable" extends="chrome://global/content/bindings/tree.xml#treecell">
     <implementation>
       <property name="parentItem" readonly="true"><![CDATA[
         var parent = this.parentNode;

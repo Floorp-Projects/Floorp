@@ -1,0 +1,43 @@
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ *   Joe Hewitt <hewitt@netscape.com> (original author)
+ */
+
+#include "nsISupports.idl"
+
+[ptr] native nativePRUint8(PRUint8);
+
+[scriptable, uuid(BACF8FB9-1FE0-40f0-852C-193442B75C0F)]
+interface inIBitmap : nsISupports 
+{
+  readonly attribute unsigned long width;
+  readonly attribute unsigned long height;
+  
+  void init(in unsigned long aWidth, in unsigned long aHeight, in octet aBytesPerPixel);
+  
+  wstring getPixelHex(in unsigned long aX, in unsigned long aY);
+
+  wstring putPixel(in unsigned long aX, in unsigned long aY, in octet aR, in octet aG, in octet aB);
+                   
+  wstring putPixelHex(in unsigned long aX, in unsigned long aY, in wstring aColor);
+
+  [noscript] void GetBits(out nativePRUint8 aBits);
+};
+

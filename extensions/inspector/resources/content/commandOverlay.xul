@@ -8,7 +8,7 @@
 <overlay id="ovCommandsMain"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <broadcasterset id="brsGlobalCommands" datasources="rdf:null" ref="commands:global">
+  <commandset id="cmdsGlobalCommands" datasources="rdf:null" ref="commands:global">
     <template>
       <rule>
         <conditions>
@@ -22,42 +22,41 @@
         </bindings>
 
         <action>
-          <broadcaster uri="?cmd" onkeypress="?onkeypress" oncommand="?oncommand" disabled="true"/>
+          <command uri="?cmd" onkeypress="?onkeypress" oncommand="?oncommand" disabled="true"/>
         </action>
       </rule>
     </template>
 
-    <broadcaster 
+    <command 
       id="cmdGotoURL" 
-      onkeypress="if(event.keyCode == 13) inspector.gotoTypedURL();"
+      ontextcommand="inspector.gotoTypedURL();"
       oncommand="inspector.gotoTypedURL()"/>
 
-    <broadcaster id="cmdShowOpenURLDialog" oncommand="inspector.showOpenURLDialog()"/>
-    <broadcaster id="cmdExit" oncommand="inspector.exit();"/>
+    <command id="cmdShowOpenURLDialog" oncommand="inspector.showOpenURLDialog()"/>
+    <command id="cmdClose" oncommand="inspector.exit();"/>
   
-    <broadcaster id="cmdUndo" disabled="true" oncommand=""/>
-    <broadcaster id="cmdRedo" disabled="true" oncommand=""/>
-    <broadcaster id="cmdCut" disabled="true" oncommand=""/>
-    <broadcaster id="cmdCopy" disabled="true" oncommand=""/>
-    <broadcaster id="cmdPaste" disabled="true" oncommand=""/>
-    <broadcaster id="cmdDelete" disabled="true" oncommand=""/>
-    <broadcaster id="cmdShowPrefsDialog" oncommand="inspector.showPrefsDialog()"/>
+    <command id="cmdUndo" disabled="true" oncommand=""/>
+    <command id="cmdRedo" disabled="true" oncommand=""/>
+    <command id="cmdCut" disabled="true" oncommand=""/>
+    <command id="cmdCopy" disabled="true" oncommand=""/>
+    <command id="cmdPaste" disabled="true" oncommand=""/>
+    <command id="cmdDelete" disabled="true" oncommand=""/>
+    <command id="cmdShowPrefsDialog" oncommand="inspector.showPrefsDialog()"/>
   
-    <broadcaster id="cmdRunSearch" oncommand="inspector.runSearch()"/>
+    <command id="cmdRunSearch" oncommand="inspector.runSearch()"/>
 
-    <broadcaster id="cmdToggleBrowser" oncommand="inspector.toggleBrowser()"/>
-    <broadcaster id="cmdToggleSearch" oncommand="inspector.toggleSearch()"/>
-    <broadcaster id="cmdFlashSelected" oncommand="inspector.toggleFlashSelected()"/>
+    <command id="cmdToggleBrowser" oncommand="inspector.toggleBrowser()"/>
+    <command id="cmdToggleSearch" oncommand="inspector.toggleSearch()"/>
 
-    <broadcaster id="cmdShowNotes" oncommand="inspector.showNotes()"/>
-    <broadcaster id="cmdShowAbout" oncommand="inspector.showAbout()"/>
+    <command id="cmdShowNotes" oncommand="inspector.showNotes()"/>
+    <command id="cmdShowAbout" oncommand="inspector.showAbout()"/>
 
-    <broadcaster id="cmdViewSearchItem" oncommand="inspector.viewSearchItem()"/>
-    <broadcaster id="cmdEditSearchItem" oncommand="inspector.editSearchItem()"/>
-    <broadcaster id="cmdCopySearchItemLine" oncommand="inspector.copySearchItemLine()"/>
-    <broadcaster id="cmdCopySearchItemAll" oncommand="inspector.copySearchItemAll()"/>
-    <broadcaster id="cmdSaveSearchItemText" oncommand="inspector.saveSearchItemText()"/>
-    <broadcaster id="cmdClearSearch" oncommand="inspector.clearSearchResults()"/>
-  </broadcasterset>
+    <command id="cmdViewSearchItem" oncommand="inspector.viewSearchItem()"/>
+    <command id="cmdEditSearchItem" oncommand="inspector.editSearchItem()"/>
+    <command id="cmdCopySearchItemLine" oncommand="inspector.copySearchItemLine()"/>
+    <command id="cmdCopySearchItemAll" oncommand="inspector.copySearchItemAll()"/>
+    <command id="cmdSaveSearchItemText" oncommand="inspector.saveSearchItemText()"/>
+    <command id="cmdClearSearch" oncommand="inspector.clearSearchResults()"/>
+  </commandset>
 
 </overlay>

@@ -5,7 +5,7 @@
   <!ENTITY % dtd2 SYSTEM "chrome://inspector/content/util.dtd"> %dtd2;
 ]>
 
-<?xml-stylesheet href="chrome://communicator/skin"?>
+<?xml-stylesheet href="chrome://inspector/skin/"?>
 
 <window id="winStylesheets" class="color-dialog" 
         orient="vertical"
@@ -14,6 +14,6 @@
   
   <script type="application/x-javascript" src="chrome://inspector/content/viewers/stylesheets/stylesheets.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/events/ObserverManager.js"/>  
 
-  <text value="Not Yet Implemented"/>
 </window>

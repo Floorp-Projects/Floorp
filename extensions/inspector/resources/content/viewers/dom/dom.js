@@ -1,3 +1,25 @@
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ *   Joe Hewitt <hewitt@netscape.com> (original author)
+ */
+
 /***************************************************************
 * DOMViewer --------------------------------------------
 *  Views all nodes within a document.
@@ -12,9 +34,11 @@
 
 var viewer;
 
+window.onunload = function() { viewer.destroy(); }
+
 var gColumnExtras = {
   "Anonymous": "Anonymous", 
-  "NodeType": "NodeType"
+  "nodeType": "nodeType"
 };
 
 var gColumnAttrs = {
@@ -23,7 +47,9 @@ var gColumnAttrs = {
 
 //////////// global constants ////////////////////
 
-var kDOMDataSourceIID    = "@mozilla.org/rdf/datasource;1?name=Inspector_DOM";
+const kDOMDataSourceIID           = "@mozilla.org/rdf/datasource;1?name=Inspector_DOM";
+const kClipboardHelperCID  = "@mozilla.org/widget/clipboardhelper;1";
+const kGlobalClipboard     = Components.interfaces.nsIClipboard.kGlobalClipboard;
 
 //////////////////////////////////////////////////
 
@@ -40,26 +66,31 @@ function DOMViewer_initialize()
 
 function DOMViewer() // implements inIViewer
 {
-  this.mDialogs = [];
-
-  this.mDOMTree = document.getElementById("trDOMTree");
+  this.mObsMan = new ObserverManager(this);
+    
+  this.mDOMOutliner = document.getElementById("trDOMOutliner");
+  this.mDOMOutlinerBody = document.getElementById("trDOMOutlinerBody");
 
   // prepare and attach the DOM DataSource
-  this.mDOMDS = XPCU.createInstance(kDOMDataSourceIID, "nsIInsDOMDataSource");
+  this.mDOMDS = XPCU.createInstance(kDOMDataSourceIID, "inIDOMDataSource");
+  this.mDOMDS.showSubDocuments = true;
   this.mDOMDS.removeFilterByType(2); // hide attribute nodes
-  this.mDOMTree.database.AddDataSource(this.mDOMDS);
+  this.mDOMOutlinerBody.database.AddDataSource(this.mDOMDS);
+
+  PrefUtils.addObserver("inspector", PrefChangeObserver);
 }
 
 DOMViewer.prototype = 
 {
-  mViewee: null,
+  mSubject: null,
   mDOMDS: null,
   // searching stuff
   mSearchResults: null,
   mSearchCurrentIdx: null,
   mSearchDirection: null,
   mColumns: null,
-  mDialogs: null,
+  mFlashSelected: null,
+  mFlashes: 0,
   
   ////////////////////////////////////////////////////////////////////////////
   //// interface inIViewer
@@ -67,17 +98,24 @@ DOMViewer.prototype =
   //// attributes 
 
   get uid() { return "dom" },
-  get pane() { return this.mPane },
+  get pane() { return this.mPanel },
 
-  get viewee() { return this.mViewee },
-  set viewee(aObject) {
-    this.mViewee = aObject;
+  get selection() { return this.mSelection },
+
+  get subject() { return this.mSubject },
+  set subject(aObject) {
+    this.mSubject = aObject;
     this.mDOMDS.document = aObject;
     try {
-      this.mTreeBuilder.buildContent();
+      this.mOutlinerBuilder.buildContent();
+      if (this.mPanel.params)
+        this.selectElementInOutliner(this.mPanel.params);
+      else
+        this.selectElementInOutliner(aObject.documentElement, true);
     } catch (ex) {
       debug("ERROR: While rebuilding dom tree\n" + ex);    
     }
+    this.mObsMan.dispatchEvent("subjectChange", { subject: aObject });
   },
 
   //// methods
@@ -86,77 +124,77 @@ DOMViewer.prototype =
   {
     this.initColumns();
 
-    this.mPane = aPane;
-    aPane.onViewerConstructed(this);
+    this.mPanel = aPane;
+    aPane.notifyViewerReady(this);
 
-    this.toggleAnonContent(true, false);
+    this.toggleAnonContent(true, PrefUtils.getPref("inspector.dom.showAnon"));
+    this.setFlashSelected(PrefUtils.getPref("inspector.blink.on"));
   },
   
   destroy: function()
   {
-    for (var i = 0; i < this.mDialogs.length; ++i) {
-      this.mDialogs[i].close();
-      this.mDialogs[i] = null;
-    }
+    if (this.mEvilListener && "setListener" in this.mEvilListener)
+      this.mEvilListener.setListener(null);
   },
 
+  ////////////////////////////////////////////////////////////////////////////
+  //// event dispatching
+
+  addObserver: function(aEvent, aObserver) { this.mObsMan.addObserver(aEvent, aObserver); },
+  removeObserver: function(aEvent, aObserver) { this.mObsMan.removeObserver(aEvent, aObserver); },
+  
   ////////////////////////////////////////////////////////////////////////////
   //// UI Commands
   
   showFindDialog: function()
   {
-    var win = openDialog("chrome://inspector/content/viewers/dom/findDialog.xul", "_blank", "chrome", "id", this);
-    this.mDialogs.push(win);
-  },
-
-  findNext: function()
-  {
-    if (this.mSearchResults) {
-      this.mSearchCurrentIdx++;
-      if (this.mSearchCurrentIdx >= this.mSearchResults.length)
-        this.mSearchCurrentIdx = 0;
-
-      this.selectElementInTree(this.mSearchResults[this.mSearchCurrentIdx]);
-    }
+    var win = openDialog("chrome://inspector/content/viewers/dom/findDialog.xul", 
+                         "_blank", "chrome,dependent", this.mFindType, this.mFindDir, this.mFindParams);
   },
 
   toggleAnonContent: function(aExplicit, aValue)
   {
     var val = aExplicit ? aValue : !this.mDOMDS.showAnonymousContent;
     this.mDOMDS.showAnonymousContent = val;
-    this.mPane.setCommandAttribute("cmd:toggleAnon", "checked", val ? "true" : "false");
+    this.mPanel.panelset.setCommandAttribute("cmd:toggleAnon", "checked", val ? "true" : "false");
+    PrefUtils.setPref("inspector.dom.showAnon", val);
+  },
+  
+  toggleSubDocs: function(aExplicit, aValue)
+  {
+    var val = aExplicit ? aValue : !this.mDOMDS.showSubDocuments;
+    this.mDOMDS.showSubDocuments = val;
+    this.mPanel.panelset.setCommandAttribute("cmd:toggleSubDocs", "checked", val ? "true" : "false");
+  },
+  
+  toggleAttributes: function(aExplicit, aValue)
+  {
+    alert("NOT YET IMPLEMENTED");
   },
   
   showColumnsDialog: function()
   {
     var win = openDialog("chrome://inspector/content/viewers/dom/columnsDialog.xul", 
       "_blank", "chrome,dependent", this);
-    this.mDialogs.push(win);
   },
 
-  selectByClick: function()
+  cmdShowPseudoClasses: function()
   {
-    // wait until after user releases the mouse after selecting this command from a UI element
-    window.setTimeout("viewer.startSelectByClick()", 10);
-  },
-  
-  startSelectByClick: function()
-  {
-    var doc = this.mDOMDS.document;
-    doc.addEventListener("mousedown", gClickListener, true);
+    var idx = this.mDOMOutliner.currentIndex;
+    var node = this.getNodeFromRowIndex(idx);
+
+    var win = openDialog("chrome://inspector/content/viewers/dom/pseudoClassDialog.xul", 
+                         "_blank", "chrome", node);
   },
 
-  doSelectByClick: function(aTarget)
+  onItemSelected: function()
   {
-    var doc = this.mDOMDS.document;
-    doc.removeEventListener("mousedown", gClickListener, true);
-    this.selectElementInTree(aTarget);
-  },
+    var idx = this.mDOMOutliner.currentIndex;
+    this.mSelection = this.getNodeFromRowIndex(idx);
+    this.mObsMan.dispatchEvent("selectionChange", { selection: this.mSelection } );
 
-  onTreeItemSelected: function()
-  {
-    var item = this.mDOMTree.selectedItems[0];
-    this.mPane.onVieweeChanged(this.getNodeFromTreeItem(item));
+    if (this.mFlashSelected)
+      this.flashElement(this.mSelection);
   },
   
   onContextCreate: function(aPP)
@@ -182,7 +220,8 @@ DOMViewer.prototype =
   cmdDeleteSelectedNode: function()
   {
     var node = this.getSelectedNode();
-    node.parentNode.removeChild(node);
+    if (node)
+      node.parentNode.removeChild(node);
   },
   
   cmdInspectBrowserIsValid: function()
@@ -190,59 +229,219 @@ DOMViewer.prototype =
     var node = viewer.getSelectedNode();
     if (!node) return false;
     
-    return node.localName == "browser" || node.localName == "iframe";
+    var n = node.localName.toLowerCase();
+    return n == "browser" || n == "iframe" || n == "frame" || n == "editor";
   },
   
   cmdInspectBrowser: function()
   {
     var node = this.getSelectedNode();
-    if (node.localName == "browser" && node.namespaceURI == kXULNSURI) {
+    var n = node.localName.toLowerCase();
+    if (node && n == "browser" && node.namespaceURI == kXULNSURI) {
       // xul browser
-      this.viewee = node.webNavigation.document;
-    } else if (node.localName == "iframe" && node.namespaceURI == kXULNSURI) {
+      this.subject = node.contentDocument;
+    } else if (n == "iframe" && node.namespaceURI == kXULNSURI) {
       // xul iframe
-      this.viewee = node.docShell.contentViewer.DOMDocument;
-    } else if (node.localName == "iframe") {
-      // html iframe
-      this.viewee = node.contentDocument;
+      this.subject = node.contentDocument;
+    } else if (n == "iframe" || n == "frame") {
+      // html iframe or frame
+      this.subject = node.contentDocument;
+    } else if (n == "editor") {
+      // editor shell
+      this.subject = node.editorShell.editorDocument;
     }
   },
  
+  cmdInspectInNewWindow: function()
+  {
+    var node = this.getSelectedNode();
+    inspectObject(node);
+  },
+  
   ////////////////////////////////////////////////////////////////////////////
-  //// Searching Methods
+  //// XML Serialization
 
-  doFindElementById: function(aValue)
+  cmdCopySelectedXML: function()
   {
-    var el = this.mDOMDS.document.getElementById(aValue);
-    if (el) {
-      this.selectElementInTree(el);
-    } else {
-      alert("No elements were found.");
+    var node = this.getSelectedNode();
+    if (node) {
+      var xml = this.toXML(node);
+    
+      var helper = XPCU.getService(kClipboardHelperCID, "nsIClipboardHelper");
+      helper.copyStringToClipboard(xml, kGlobalClipboard);    
     }
   },
 
-  doFindElementsByTagName: function(aValue)
+  toXML: function(aNode)
   {
-    var els = this.mDOMDS.document.getElementsByTagName(aValue);
-    if (els.length == 0) {
-      alert("No elements were found.");
+    return this._toXML(aNode, 0);
+  },
+  
+  // not the most complete serialization ever conceived, but it'll do for now
+  _toXML: function(aNode, aLevel)
+  {
+    if (!aNode) return "";
+    
+    var s = "";
+    var indent = "";
+    for (var i = 0; i < aLevel; ++i)
+      indent += "  ";
+    var line = indent;        
+      
+    if (aNode.nodeType == 1) {
+      line += "<" + aNode.localName;
+
+      var attrIndent = "";
+      for (i = 0; i < line.length; ++i)
+        attrIndent += " ";
+  
+      for (i = 0; i < aNode.attributes.length; ++i) {
+        var a = aNode.attributes[i];
+        var attr = " " + a.localName + "=\"" + a.nodeValue + "\"";
+        if (line.length + attr.length > 80) {
+          s += line + (i < aNode.attributes.length-1 ? "\n"+attrIndent : "");
+          line = "";
+        }
+        
+        line += attr;
+      }
+      s += line;
+      
+      if (aNode.childNodes.length == 0)
+        s += "/>\n";
+      else {
+        s += ">\n";
+        for (i = 0; i < aNode.childNodes.length; ++i)
+          s += this._toXML(aNode.childNodes[i], aLevel+1);
+        s += indent + "</" + aNode.localName + ">\n";
+      }
+    } else if (aNode.nodeType == 3) {
+      s += aNode.nodeValue;
+    } else if (aNode.nodeType == 8) {
+      s += line + "<!--" + aNode.nodeValue + "-->\n";
+    }
+    
+    return s;
+  },
+  
+  ////////////////////////////////////////////////////////////////////////////
+  //// Click Selection
+
+  selectByClick: function()
+  {
+    if (this.mSelecting) {
+      this.stopSelectByClick();
     } else {
-      this.mSearchResults = els;
-      this.mSearchCurrentIdx = 0;
-      this.selectElementInTree(els[0]);
+      // wait until after user releases the mouse after selecting this command from a UI element
+      window.setTimeout("viewer.startSelectByClick()", 10);
+    }
+  },
+  
+  startSelectByClick: function()
+  {
+    this.mSelecting = true;
+    this.mSelectDocs = this.getAllDocuments();
+
+    for (var i = 0; i < this.mSelectDocs.length; ++i)
+      this.mSelectDocs[i].addEventListener("mousedown", MouseDownListener, true);
+
+    this.mPanel.panelset.setCommandAttribute("cmd:selectByClick", "toggled", "true");
+  },
+
+  selectByClickOver: function(aTarget)
+  {
+    if (this.mLastOver)
+      this.flasher.stop();
+
+    this.flasher.element = aTarget;
+    this.flasher.start(-1, 1, true);
+    
+    this.mLastOver = aTarget;
+  },
+  
+  doSelectByClick: function(aTarget)
+  {
+    this.stopSelectByClick();
+    this.selectElementInOutliner(aTarget);
+  },
+
+  stopSelectByClick: function()
+  {
+    this.mSelecting = false;
+
+    for (var i = 0; i < this.mSelectDocs.length; ++i)
+      this.mSelectDocs[i].removeEventListener("mousedown", MouseDownListener, true);
+
+    this.mPanel.panelset.setCommandAttribute("cmd:selectByClick", "toggled", null);
+  },
+
+  ////////////////////////////////////////////////////////////////////////////
+  //// Find Methods
+
+  startFind: function(aType, aDir)
+  {
+    this.mFindType = aType;
+    this.mFindDir = aDir;
+    this.mFindParams = [];
+    for (var i = 2; i < arguments.length; ++i)
+      this.mFindParams[i-2] = arguments[i];
+      
+    var fn = null;
+    switch (aType) {
+      case "id":
+        fn = "doFindElementById";
+        break;
+      case "tag":
+        fn = "doFindElementsByTagName";
+        break;
+      case "attr":
+        fn = "doFindElementsByAttr";
+        break;
+    };
+
+    this.mFindFn = fn;
+    this.mFindWalker = this.createDOMWalker(this.mDOMDS.document.documentElement);
+    this.findNext();
+  },
+  
+  findNext: function()
+  {
+    var walker = this.mFindWalker;
+    var result = null;
+    if (walker) {
+      while (walker.currentNode) {
+        //dump((walker.currentNode ? walker.currentNode.localName : "") + "\n");
+        if (this[this.mFindFn](walker)) {
+          result = walker.currentNode;
+          walker.nextNode();
+          break;
+        }
+        walker.nextNode();
+      }
+      
+      if (result) {
+        this.selectElementInOutliner(result);
+        this.mDOMOutliner.focus();
+      } else {
+        alert("End of document reached."); // XXX localize
+      }
     }
   },
 
-  doFindElementsByAttr: function(aAttr, aValue)
+  doFindElementById: function(aWalker)
   {
-    var els = this.mDOMDS.document.getElementsByAttribute(aAttr, aValue);
-    if (els.length == 0) {
-      alert("No elements were found.");
-    } else {
-      this.mSearchResults = els;
-      this.mSearchCurrentIdx = 0;
-      this.selectElementInTree(els[0]);
-    }
+    return aWalker.currentNode && aWalker.currentNode.id == this.mFindParams[0];
+  },
+
+  doFindElementsByTagName: function(aWalker)
+  {
+    return aWalker.currentNode && aWalker.currentNode.localName.toLowerCase() == this.mFindParams[0].toLowerCase();
+  },
+
+  doFindElementsByAttr: function(aWalker)
+  {
+    return aWalker.currentNode && 
+           aWalker.currentNode.getAttribute(this.mFindParams[0]) == this.mFindParams[1];
   },
   
   ///////////////////////////////////////////////////////////////////////////
@@ -252,35 +451,48 @@ DOMViewer.prototype =
   // @param aEl - element from the document being inspected
   ///////////////////////////////////////////////////////////////////////////
 
-  selectElementInTree: function(aEl)
+  selectElementInOutliner: function(aEl, aExpand)
   {
-    var searching = true;
-    var parent = aEl;
-    var line = [];
-    var res, item;
-
     // Keep searching until a pre-created ancestor is
     // found, and then open each ancestor until
     // the found element is created
-    while (searching && parent) {
-      res = this.mDOMDS.getResourceForObject(parent);
-      item = document.getElementById(res.Value);
+    var walker = this.createDOMWalker(aEl);
+    var line = [];
+    var parent = aEl;
+    while (parent) {
+      var index = this.getRowIndexFromNode(parent);
       line.push(parent);
-      if (!item) {
-        parent = parent.parentNode;
-      } else {
-        // we've got all the ancestors, now open them 
-        // one-by-one from the top on down
-        for (var i = line.length-1; i >= 0; i--) {
-          res = this.mDOMDS.getResourceForObject(line[i]);
-          item = document.getElementById(res.Value);
-          if (!item) return false; // can't find item, so stop trying to descend
-          item.setAttribute("open", "true");
-        }
-        searching = false;
-        this.mDOMTree.selectItem(item);
-      }
+      if (index < 0) { 
+        // row for this node hasn't been created yet
+        parent = walker.parentNode();
+      } else
+        break;
     } 
+  
+    var bx = this.mDOMOutliner.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject);
+    var view = bx.view;
+
+    // we've got all the ancestors, now open them 
+    // one-by-one from the top on down
+    for (var i = line.length-1; i >= 0; i--) {
+      var index = this.getRowIndexFromNode(line[i]);
+      if (index < 0) return false; // can't find row, so stop trying to descend
+      if ((aExpand || i > 0) && !view.isContainerOpen(index))
+        view.toggleOpenState(index);
+      if (i == 0)
+        bx.ensureRowIsVisible(index);    
+    }
+
+    bx.selection.select(index);
+  },
+  
+  createDOMWalker: function(aRoot)
+  {
+    var walker = XPCU.createInstance("@mozilla.org/inspector/deep-tree-walker;1", "inIDeepTreeWalker");
+    walker.showAnonymousContent = this.mDOMDS.showAnonymousContent;
+    walker.showSubDocuments = this.mDOMDS.showSubDocuments;
+    walker.init(aRoot, Components.interfaces.nsIDOMNodeFilter.SHOW_ALL);
+    return walker;
   },
   
   ////////////////////////////////////////////////////////////////////////////
@@ -293,13 +505,13 @@ DOMViewer.prototype =
     this.mColumns = cols;
     this.mColumnHash = {};
       
-    var tb = new inTreeTableBuilder(this.mDOMTree, kInspectorNSURI, "Child");
+    var tb = new inOutlinerBuilder(this.mDOMOutliner, kInspectorNSURI, "Child");
     tb.allowDragColumns = true;
     tb.isRefContainer = false;
     tb.isContainer = true;
-    tb.itemAttributes = gColumnAttrs;
-    tb.itemFields = gColumnExtras;
-    this.mTreeBuilder = tb;
+    tb.rowAttributes = gColumnAttrs;
+    tb.rowFields = gColumnExtras;
+    this.mOutlinerBuilder = tb;
 
     tb.initialize();
     
@@ -330,7 +542,7 @@ DOMViewer.prototype =
   
   doAddColumn: function(aIndex)
   {
-    var name = this.mTreeBuilder.getColumnName(aIndex);
+    var name = this.mOutlinerBuilder.getColumnName(aIndex);
     this.mColumnHash[name] = true;
     this.mColumns.splice(aIndex, 0, name);
     this.saveColumns();
@@ -363,7 +575,7 @@ DOMViewer.prototype =
   onColumnsDialogReady: function (aDialog)
   {
     this.mColumnsDialog = aDialog;
-    this.mTreeBuilder.addColumnDropTarget(aDialog.box);
+    this.mOutlinerBuilder.addColumnDropTarget(aDialog.box);
   },
   
   onColumnsDialogClose: function (aDialog)
@@ -372,18 +584,128 @@ DOMViewer.prototype =
   },
 
   ////////////////////////////////////////////////////////////////////////////
-  //// Uncategorized
+  //// Flashing
 
-  getNodeFromTreeItem: function(aItem)
+  get flasher()
   {
-    var res = gRDF.GetResource(aItem.id);
-    res = res.QueryInterface(Components.interfaces.nsIDOMDSResource);
+    if (!this.mFlasher) {
+      this.mFlasher = new Flasher(PrefUtils.getPref("inspector.blink.border-color"), 
+                                  PrefUtils.getPref("inspector.blink.border-width"), 
+                                  PrefUtils.getPref("inspector.blink.duration"), 
+                                  PrefUtils.getPref("inspector.blink.speed"));
+    }
+    
+    return this.mFlasher;
+  },
+
+  flashElement: function(aElement)
+  {
+    // make sure we only try to flash element nodes
+    if (aElement.nodeType == 1) {
+      var flasher = this.flasher;
+      
+      if (flasher.flashing) 
+        flasher.stop();
+        
+      try {
+        flasher.element = aElement;
+        flasher.start();
+      } catch (ex) {
+      }
+    }
+  },
+
+  toggleFlashSelected: function(aExplicit, aValue)
+  {
+    var val = aExplicit ? aValue : !this.mFlashSelected;
+    this.setFlashSelected(val);
+  },
+
+  setFlashSelected: function(aValue)
+  {
+    this.mFlashSelected = aValue;
+    this.mPanel.panelset.setCommandAttribute("cmd:flashSelected", "checked", aValue);
+    PrefUtils.setPref("inspector.blink.on", aValue);
+  },
+
+  ////////////////////////////////////////////////////////////////////////////
+  //// Prefs
+
+  onPrefChanged: function(aName)
+  {
+    if (aName == "inspector.dom.showAnon")
+      this.setFlashSelected(PrefUtils.getPref("inspector.blink.on"));
+
+    if (aName == "inspector.blink.on")
+      this.setFlashSelected(PrefUtils.getPref("inspector.blink.on"));
+
+    if (this.mFlasher) {
+      if (aName == "inspector.blink.border-color") {
+        this.mFlasher.color = PrefUtils.getPref("inspector.blink.border-color");
+      } else if (aName == "inspector.blink.border-width") {
+        this.mFlasher.thickness = PrefUtils.getPref("inspector.blink.border-width");
+      } else if (aName == "inspector.blink.duration") {
+        this.mFlasher.duration = PrefUtils.getPref("inspector.blink.duration");
+      } else if (aName == "inspector.blink.speed") {
+        this.mFlasher.speed = PrefUtils.getPref("inspector.blink.speed");
+      }
+    }
+  },
+
+  ////////////////////////////////////////////////////////////////////////////
+  //// Uncategorized
+  
+  getAllDocuments: function()
+  {
+    var doc = this.mDOMDS.document;
+    var results = [doc];
+    this.findDocuments(doc, results);
+    return results;
+  },
+  
+  findDocuments: function(aDoc, aArray)
+  {
+    this.addKidsToArray(aDoc.getElementsByTagName("frame"), aArray);
+    this.addKidsToArray(aDoc.getElementsByTagName("iframe"), aArray);
+    this.addKidsToArray(aDoc.getElementsByTagNameNS(kXULNSURI, "browser"), aArray);
+    this.addKidsToArray(aDoc.getElementsByTagNameNS(kXULNSURI, "editor"), aArray);
+  },
+  
+  addKidsToArray: function(aKids, aArray)
+  {
+    for (var i = 0; i < aKids.length; ++i) {
+      try {
+        if (aKids.localName == "editor")
+          aArray.push(aKids[i].editorShell.editorDocument);
+        else
+          aArray.push(aKids[i].contentDocument);
+      } catch (ex) {
+        // if we can't access the content document, skip it
+      }
+    }
+  },
+  
+  getNodeFromRowIndex: function(aIndex)
+  {
+    if (aIndex < 0)
+      return null;
+    var builder = this.mDOMOutlinerBody.builder.QueryInterface(Components.interfaces.nsIXULOutlinerBuilder);
+    var res = builder.getResourceAtIndex(aIndex);
+    res = res.QueryInterface(Components.interfaces.inIDOMRDFResource);
     return res ? res.object : null;
+  },
+  
+  getRowIndexFromNode: function(aNode)
+  {
+    var builder = this.mDOMOutlinerBody.builder.QueryInterface(Components.interfaces.nsIXULOutlinerBuilder);
+    var res = this.mDOMDS.getResourceForObject(aNode);
+    return res ? builder.getIndexOfResource(res) : -1;
   },
   
   getSelectedNode: function()
   {
-    return this.getNodeFromTreeItem(this.mDOMTree.selectedItems[0]);
+    var sel = this.mDOMOutliner.currentIndex;
+    return this.getNodeFromRowIndex(sel);
   }
 
 };
@@ -391,10 +713,22 @@ DOMViewer.prototype =
 ////////////////////////////////////////////////////////////////////////////
 //// Listener Objects
 
-function gClickListener(aEvent)
-{
-  viewer.doSelectByClick(aEvent.target);
+var MouseDownListener = {
+  handleEvent: function(aEvent)
+  {
+    if (aEvent.type == "mousedown")
+      viewer.doSelectByClick(aEvent.target);
+    else if (aEvent.type == "mouseover")
+      viewer.selectByClickOver(aEvent.target);
+  }
 }
+
+var PrefChangeObserver = {
+  Observe: function(aSubject, aTopic, aData)
+  {
+    viewer.onPrefChanged(aData);
+  }
+};
 
 function gColumnAddListener(aIndex)
 {
@@ -406,4 +740,9 @@ function gColumnRemoveListener(aIndex)
   viewer.onColumnRemove(aIndex);
 }
 
+
+function dumpDOM2(aNode)
+{
+  dump(DOMViewer.prototype.toXML(aNode));
+}
 

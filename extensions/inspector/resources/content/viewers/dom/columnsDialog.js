@@ -1,3 +1,25 @@
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ *   Joe Hewitt <hewitt@netscape.com> (original author)
+ */
+
 /***************************************************************
 * ColumnsDialog --------------------------------------------
 *  Dialog box for editing the columns in the DOM Viewer tree.
@@ -11,6 +33,7 @@ var dialog;
 
 var gColumnTitles = [
   "nodeName",
+  "nodeValue",
   "nodeType",
   "prefix",
   "localName",
@@ -56,7 +79,7 @@ ColumnsDialog.prototype =
     // bug 56270 - dragSession.sourceDocument is null --
     // causes me to code this very temporary, very nasty hack
     // to make sure I get notified when a column is dropped
-    opener.viewer.mDOMTree.onClientDrop = ColumnsDialogDragDropOut;
+    opener.viewer.mDOMOutliner.onClientDrop = ColumnsDialogDragDropOut;
     
     this.buildContents();
     
@@ -156,7 +179,7 @@ ColumnsDialog.prototype =
     var column = this.getColumnValue(box);
     if (!column) return false;
     
-    DNDUtils.invokeSession(aEvent.target, ["TreeTableBuilder/column-add"], [column]);
+    DNDUtils.invokeSession(aEvent.target, ["OutlinerBuilder/column-add"], [column]);
     
     return false;
   },
@@ -171,7 +194,7 @@ ColumnsDialog.prototype =
   
   onDragDropIn: function(aEvent)
   {
-    var data = DNDUtils.getData("TreeTableBuilder/column-remove", 0);
+    var data = DNDUtils.getData("OutlinerBuilder/column-remove", 0);
     var string = XPCU.QI(data, "nsISupportsWString");
     this.addItem(string.data);
   },

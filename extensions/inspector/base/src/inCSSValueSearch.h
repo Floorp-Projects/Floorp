@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -14,10 +13,11 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Copyright (C) 2001 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Joe Hewitt <hewitt@netscape.com> (original author)
  */
 
 #ifndef __inCSSValueSearch_h__
@@ -73,13 +73,4 @@ public:
   NS_DECL_INICSSVALUESEARCH
 };
 
-//////////////////////////////////////////////////////////////
-
-// {4D977F60-FBE7-4583-8CB7-F5ED882293EF}
-#define IN_CSSVALUESEARCH_CID \
-{ 0x4d977f60, 0xfbe7, 0x4583, { 0x8c, 0xb7, 0xf5, 0xed, 0x88, 0x22, 0x93, 0xef } }
-
-#define IN_CSSVALUESEARCH_CONTRACTID \
-"@mozilla.org/inspector/search;1?type=cssvalue"
-
-#endif
+#endif // __inCSSValueSearch_h__

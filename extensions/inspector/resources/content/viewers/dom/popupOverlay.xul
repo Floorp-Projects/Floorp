@@ -5,7 +5,7 @@
 <overlay id="ovDOMViewerPopup"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
-  <popupset id="ppsGlobalPopupset">
+  <popupset id="ppsViewerPopupset">
     <menupopup id="ppViewerContext-dom">
       <menuitem id="item:find"
         label="&cmdShowFindDialog.label;"
@@ -19,6 +19,13 @@
         observes="cmd:findNext"/>
 
       <menuseparator/>
+
+      <menuitem id="item:toggleAttributes" hidden="true"
+        class="menuitem-iconic"
+        type="checkbox"
+        label="&cmdToggleAttributes.label;"
+        accesskey="&cmdToggleAttributes.accesskey;"
+        observes="cmd:toggleAttributes"/>
 
       <menuitem id="item:toggleAnon"
         class="menuitem-iconic"
@@ -53,18 +60,24 @@
     <menuseparator position="3"/>
 
     <menuitem id="item:selectByClick" position="4"
-      label="&cmdSelectByClick.label;"
-      accesskey="&cmdSelectByClick.accesskey;"
-      observes="cmd:selectByClick"/>
+              label="&cmdSelectByClick.label;"
+              accesskey="&cmdSelectByClick.accesskey;"
+              observes="cmd:selectByClick"/>
   </menupopup>
 
   <menupopup id="mppView">
+    <menuitem id="item:flashSelected"
+              class="menuitem-iconic" 
+              type="checkbox" 
+              label="&cmdFlashSelected.label;"
+              observes="cmd:flashSelected"/>
+              
     <menuitem id="item:toggleAnon"
-      class="menuitem-iconic"
-      type="checkbox"
-      label="&cmdToggleAnonContent.label;"
-      accesskey="&cmdToggleAnonContent.accesskey;"
-      observes="cmd:toggleAnon"/>
+              class="menuitem-iconic"
+              type="checkbox"
+              label="&cmdToggleAnonContent.label;"
+              accesskey="&cmdToggleAnonContent.accesskey;"
+              observes="cmd:toggleAnon"/>
   </menupopup>
 
 </overlay>

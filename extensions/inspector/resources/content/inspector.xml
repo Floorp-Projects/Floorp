@@ -1,0 +1,596 @@
+<?xml version="1.0"?>
+
+<bindings id="ViewerPaneBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<!-- ***************************************************************
+     * Inspector 
+     *  Interface for a set of viewer panels.
+     * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+     * REQUIRED IMPORTS:
+     *   chrome://inspector/content/ViewerRegistry.js
+     *   chrome://inspector/content/jsutil/events/ObserverManager.js
+     **************************************************************** -->
+
+  <binding id="panelset" extends="chrome://inspector/content/inspector.xml#base">
+    <content>
+      <children/>
+    </content>
+
+    <implementation>
+      <constructor><![CDATA[
+      ]]></constructor>
+      
+      <property name="registry" onget="return this.mRegistry"/>
+      <property name="initialized" onget="return this.mInitialized"/>
+      
+      <method name="initialize">
+        <body><![CDATA[
+          this.mRegistry = new ViewerRegistry();
+          this.mRegistry.load(kViewerRegURL, this);
+        ]]></body>
+      </method>
+
+      <method name="onEvent">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          if (aEvent.type == "viewerChange")
+            this.onViewerChange(aEvent);
+
+          // bubble the event up
+          this.mObsMan.dispatchEvent(aEvent.type, aEvent);
+        ]]></body>
+      </method>
+
+      <method name="onViewerRegistryLoad">
+        <body><![CDATA[
+          var panels = this.panels;
+          for (var i = 0; i < panels.length; ++i) {
+            panels[i].initialize();
+            panels[i].addObserver("viewerChange", this);        
+            panels[i].addObserver("subjectChange", this);        
+          }
+      
+          this.setAllViewerCmdAttributes("disabled", "true");
+
+          this.mInitialized = true;
+          this.mObsMan.dispatchEvent("panelsetready", {});
+        ]]></body>
+      </method>
+
+      <method name="onViewerRegistryLoadError">
+        <body><![CDATA[
+          throw "Unable to load the Viewer Registry";
+        ]]></body>
+      </method>
+
+      <method name="onViewerChange">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          if (aEvent.oldViewer)
+            // disable all commands for for the old viewer
+            this.setViewerCmdAttribute(this.mRegistry.getEntryForViewer(aEvent.oldViewer),
+                                       "disabled", "true");
+
+          if (aEvent.newViewer)
+            // enable all commands for for the new viewer
+            this.setViewerCmdAttribute(this.mRegistry.getEntryForViewer(aEvent.newViewer),
+                                       "disabled", "false");
+        ]]></body>
+      </method>
+
+      <property name="panels">
+        <getter>
+          return this.getElementsByTagNameNS("http://www.mozilla.org/inspector", "panel");
+        </getter>
+      </property>
+      
+      <property name="panelCount">
+        <getter>
+          return this.panels.length;
+        </getter>
+      </property>
+      
+      <method name="getPanel">
+        <parameter name="aIndex"/>
+        <body><![CDATA[
+          return this.panels[aIndex];
+        ]]></body>
+      </method>
+      
+      <method name="getCommandAttribute">
+        <parameter name="aCmdId"/>
+        <parameter name="aAttribute"/>
+        <body><![CDATA[
+          var cmd = document.getElementById(aCmdId);
+          return cmd ? cmd.getAttribute(aAttribute) : null;
+        ]]></body>
+      </method>
+
+      <method name="setCommandAttribute">
+        <parameter name="aCmdId"/>
+        <parameter name="aAttribute"/>
+        <parameter name="aValue"/>
+        <body><![CDATA[
+          var cmd = document.getElementById(aCmdId);
+          if (cmd) 
+            cmd.setAttribute(aAttribute, aValue);
+        ]]></body>
+      </method>
+
+      <method name="setViewerCmdAttribute">
+        <parameter name="aEntry"/>
+        <parameter name="aAttr"/>
+        <parameter name="aValue"/>
+        <body><![CDATA[
+          var uid = this.mRegistry.getEntryProperty(aEntry, "uid");
+          var cmds = document.getElementById(this.getAttribute("viewercommandset"));
+          if (!cmds) return;
+          
+          var els = cmds.getElementsByAttribute("viewer", uid);
+          for (var i = 0; i < els.length; i++) {
+            if (els[i].getAttribute("exclusive") != "false")
+              els[i].setAttribute(aAttr, aValue);
+          }
+        ]]></body>
+      </method>
+
+      <method name="setAllViewerCmdAttributes">
+        <parameter name="aAttr"/>
+        <parameter name="aValue"/>
+        <body><![CDATA[
+          var count = this.mRegistry.getEntryCount();
+          for (var i = 0; i < count; i++) {
+            this.setViewerCmdAttribute(i, aAttr, aValue);
+          }
+        ]]></body>
+      </method>
+
+    </implementation>
+    
+  </binding>
+
+<!-- ***************************************************************
+     * ViewerPane 
+     *  Interface for a panel accepts a node and displays all eligible
+     *  viewers in a list and activates the selected viewer.
+     * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+     * REQUIRED IMPORTS:
+     *   chrome://inspector/content/jsutil/xpcom/XPCU.js
+     *   chrome://inspector/content/jsutil/events/ObserverManager.js
+     **************************************************************** -->
+
+  <binding id="panel" extends="chrome://inspector/content/inspector.xml#base">
+    <content orient="vertical">
+      <xul:toolbox class="viewer-pane-toolbox" inherits="disabled">
+        <xul:toolbar class="viewer-pane-header" tbautostretch="never" inherits="disabled">
+          <xul:menubutton anonid="viewer-list" class="viewer-list button-toolbar" disabled="true"/>
+          <xul:text anonid="viewer-title" class="viewer-title label toolbar" flex="1"/>
+          <xul:menubutton anonid="viewer-menu" class="viewer-menu button-toolbar" disabled="true"/>
+        </xul:toolbar>
+      </xul:toolbox>
+      <xul:box class="viewer-pane-box-1" flex="1">
+        <xul:box class="viewer-pane-box-2" flex="1">
+          <xul:iframe anonid="viewer-iframe" class="viewer-iframe" flex="1"/>
+        </xul:box>
+      </xul:box>
+    </content>
+
+    <resources>
+      <stylesheet src="chrome://inspector/skin/panelset.css"/>
+    </resources>
+    
+    <implementation>
+
+      <constructor><![CDATA[
+        // look for panelset parent
+        var p = this.parentNode;
+        while (p && p.localName != "panel" && p.namespaceURI != "http://www.mozilla.org/inspector")
+          p = p.parentNode;
+          
+        this.mPanelSet = p;
+        
+        this.setAttribute("disabled", "true");
+      ]]></constructor>
+    
+      <destructor><![CDATA[
+        if (this.mCurrentViewer)
+          this.destroyViewer();
+      ]]></destructor>
+      
+      <property name="panelset"
+                onget="return this.mPanelSet;"/>
+
+      <property name="viewer"
+                onget="return this.mCurrentViewer;"/>
+
+      <property name="subject"
+                onget="return this.mSubject;"
+                onset="this.setSubject(val);"/>
+
+      <property name="params"
+                onget="return this.mParams;"
+                onset="return this.mParams = val;"/>
+
+      <property name="title"
+                onget="return this.getAttribute('title');"
+                onset="return this.setAttribute('title', val);"/>
+                            
+      <property name="registry" 
+                onget="return this.panelset.registry;"/>
+
+      <property name="linkedPanel">
+        <getter>return this.mLinkedPanel;</getter>
+        <setter>
+          if (this.mLinkedPanel)
+            this.mLinkedPanel.removeObserver("viewerChange", this);
+            
+          this.mLinkedPanel = val;
+
+          if (val)
+            val.addObserver("viewerChange", this);
+        </setter>
+      </property>
+
+      <property name="mCurrentViewer">null</property>
+      <property name="mCurrentEntry">null</property>
+      
+      <method name="initialize">
+        <body><![CDATA[
+          this.mListEl = this.getAnonElByAttr("anonid", "viewer-list");
+          this.mTitleEl = this.getAnonElByAttr("anonid", "viewer-title");
+          this.mMenuEl = this.getAnonElByAttr("anonid", "viewer-menu");
+          this.mIFrameEl = this.getAnonElByAttr("anonid", "viewer-iframe");
+          
+          if (this.hasAttribute("linkedpanel"))
+            this.linkedPanel = document.getElementById(this.getAttribute("linkedpanel"));
+      
+          this.fillViewerList();
+        ]]></body>
+      </method>
+
+      <method name="notifyViewerReady">
+        <parameter name="aViewer"/>
+        <body><![CDATA[
+          var old = this.mCurrentViewer;
+          this.mCurrentViewer = aViewer;
+          var oldEntry = this.mCurrentEntry;
+          this.mCurrentEntry = this.mPendingEntry;
+
+          if (aViewer) {
+            this.registry.cacheViewer(aViewer, this.mCurrentEntry);
+            var title = this.registry.getEntryProperty(this.mCurrentEntry, "description");
+            this.setTitle(title);
+          }  else {
+            this.setTitle(null);
+          }
+
+          this.rebuildViewerContextMenu();
+          
+          // listen for subjectChange so we can bubble it
+          if (old)
+            old.removeObserver("subjectChange", this);
+          
+          if (aViewer)
+            aViewer.addObserver("subjectChange", this);
+
+          this.mObsMan.dispatchEvent("viewerChange", 
+            { viewerPane: this, oldViewer: old, newViewer: aViewer });
+              
+          if (aViewer)
+            aViewer.subject = this.mSubject;
+        ]]></body>
+      </method>
+
+      <method name="destroyViewer">
+        <body><![CDATA[
+          this.mCurrentViewer.destroy();
+          this.registry.uncacheViewer(this.mCurrentViewer);
+        ]]></body>
+      </method>
+      
+      <!-- ////////////// UI Commands /////////////////-->
+
+  <!-- ////////////////////////////////////////////////////////////////////////////
+      // Sets the new view to the item just selected from the "viewer list"
+      //////////////////////////////////////////////////////////////////////// -->
+
+      <method name="onViewerListCommand">
+        <parameter name="aItem"/>
+        <body><![CDATA[
+          this.switchViewer(parseInt(aItem.getAttribute("viewerListEntry")));
+        ]]></body>
+      </method>
+
+  <!-- ////////////////////////////////////////////////////////////////////////////
+      // Prepares the list of viewers for a node, rebuilds the menulist to display
+      // them, and load the default viewer for the node.
+      //
+      // @param Object aObject - the object to begin viewing
+      //////////////////////////////////////////////////////////////////////// -->
+
+      <method name="setSubject">
+        <parameter name="aObject"/>
+        <body><![CDATA[
+          this.mSubject = aObject;
+          this.mParams = null;
+          
+          // get the list of viewers which match the node
+          var entries = this.registry.findViewersForObject(aObject);
+          this.rebuildViewerList(entries);
+
+          if (entries.length == 0) {
+            this.switchViewer(-1);
+            this.setAttribute("disabled", "true");
+          } else if (!this.entryInList(this.mCurrentEntry, entries)) {
+            this.switchViewer(entries[0]);
+            this.removeAttribute("disabled");
+          } else {
+            this.mCurrentViewer.subject = aObject;
+            this.removeAttribute("disabled");
+          }
+  
+        ]]></body>
+      </method>
+
+  <!-- ////////////////////////////////////////////////////////////////////////////
+      // Clear out and rebuild the menulist full of the available views
+      // for the currently selected node.
+      //
+      // @param Array aEntries - an array of entries from the viewer registry
+      //////////////////////////////////////////////////////////////////////// -->
+
+      <method name="rebuildViewerList">
+        <parameter name="aEntries"/>
+        <body><![CDATA[
+          var mpp = this.mListElPopup;
+          
+          this.mListEl.setAttribute("disabled", aEntries.length <= 0);
+      
+          // empty the list
+          while (mpp.childNodes.length)
+            mpp.removeChild(mpp.childNodes[0]);
+          
+          for (var i = 0; i < aEntries.length; i++) {
+            var entry = aEntries[i];
+            var menuitem = document.createElement("menuitem");
+            menuitem.setAttribute("label", this.registry.getEntryProperty(entry, "description"));
+            menuitem.setAttribute("viewerListEntry", entry);
+            mpp.appendChild(menuitem);
+          }
+        ]]></body>
+      </method>
+  
+  <!-- ////////////////////////////////////////////////////////////////////////////
+      // Loads the viewer described by an entry in the viewer registry.
+      //
+      // @param nsIRDFNode aEntry - entry in the viewer registry
+      //////////////////////////////////////////////////////////////////////// -->
+
+      <method name="switchViewer">
+        <parameter name="aEntry"/>
+        <body><![CDATA[
+          if (aEntry < 0) { // -1 is for null viewer
+            this.mPendingEntry = -1;
+            this.notifyViewerReady(null);
+            return;
+          }
+
+          var url = this.registry.getEntryURL(aEntry);
+
+          var loadNew = true;
+          if (this.mCurrentViewer) {
+            var oldURL = this.registry.getEntryURL(this.mCurrentEntry);
+            if (oldURL == url) {
+              loadNew = false;
+            } 
+          }
+          
+          if (loadNew) {
+            this.mPendingEntry = aEntry;
+            this.loadViewerURL(url);
+          }
+        ]]></body>
+      </method>
+  
+  <!-- ////////////////////////////////////////////////////////////////////////////
+       // Begin loading a new viewer from a given url.
+       //
+       // @param String aURL - the url of the viewer document
+      //////////////////////////////////////////////////////////////////////// -->
+
+      <method name="loadViewerURL">
+        <parameter name="aURL"/>
+        <body><![CDATA[
+          if (this.mCurrentViewer) {
+            // tell the old viewer it's about to go away
+            this.destroyViewer();
+          }
+          
+          // load the new document
+          FrameExchange.loadURL(this.mIFrameEl, aURL, this);
+        ]]></body>
+      </method>
+  
+  <!-- ////////////////////////////////////////////////////////////////////////////
+       // Rebuild the viewer context menu
+      //////////////////////////////////////////////////////////////////////// -->
+
+      <method name="rebuildViewerContextMenu">
+        <body><![CDATA[
+          if (!this.mSubject) {
+            this.mMenuEl.setAttribute("disabled", "true");
+            return;
+          } else {
+            this.mMenuEl.removeAttribute("disabled");
+          }
+          
+          // remove old context menu
+          if (this.mContextMenu) {
+            this.mMenuEl.removeChild(this.mContextMenu);
+            this.mFormerContextParent.appendChild(this.mContextMenu);
+          }
+      
+          var uid = this.registry.getEntryProperty(this.mCurrentEntry, "uid");
+          var ppId = "ppViewerContext-" + uid;
+          var pp = document.getElementById(ppId);
+          if (pp) {
+            this.mMenuEl.setAttribute("disabled", "false");
+            var parent = pp.parentNode;
+            parent.removeChild(pp);
+            this.mMenuEl.appendChild(pp);
+      
+           this.mFormerContextParent = parent;
+           this.mContextMenu = pp;
+          } else {
+            this.mMenuEl.setAttribute("disabled", "true");
+          }
+        ]]></body>
+      </method>
+
+  <!-- ////////////////////////////////////////////////////////////////////////////
+      // Check to see if an entry exists in an arry of entries
+      //
+      // @param nsIRDFResource aEntry - the entry being searched for
+      // @param Array aList - array of entries
+      //////////////////////////////////////////////////////////////////////// -->
+
+      <method name="entryInList">
+        <parameter name="aEntry"/>
+        <parameter name="aList"/>
+        <body><![CDATA[
+          for (var i in aList) {
+            if (aList[i] == aEntry) return true;
+          }
+      
+          return false;
+        ]]></body>
+      </method>
+
+  <!-- ////////////////////////////////////////////////////////////////////////////
+      // Set the text in the viewer title bar
+      //
+      // @param String title - the text to use
+      //////////////////////////////////////////////////////////////////////// -->
+
+      <method name="setTitle">
+        <parameter name="aTitle"/>
+        <body><![CDATA[
+          this.mTitleEl.setAttribute("value", this.title && aTitle ? this.title + " - " + aTitle : "");
+        ]]></body>
+      </method>
+      
+  <!-- ////////////////////////////////////////////////////////////////////////////
+      // Fill out the content of the "viewer list" menu
+      //////////////////////////////////////////////////////////////////////// -->
+
+      <method name="fillViewerList">
+        <body><![CDATA[
+          this.mListEl.pViewer = this;
+          this.mListEl.setAttribute("oncommand", "this.pViewer.onViewerListCommand(event.target)");
+      
+          var mpp = document.createElement("menupopup");
+          this.mListEl.appendChild(mpp);
+          this.mListElPopup = mpp;
+        ]]></body>
+      </method>
+      
+  <!-- ////////////////////////////////////////////////////////////////////////////
+      // Listen for selection changes on the viewer in the linked pane
+      //////////////////////////////////////////////////////////////////////// -->
+
+      <method name="observerLinkedViewer">
+        <body><![CDATA[
+          if (this.mLinkedViewer)
+            this.mLinkedViewer.removeObserver("selectionChange", this);
+            
+          this.mLinkedViewer = this.mLinkedPanel.viewer;
+          this.mLinkedViewer.addObserver("selectionChange", this);
+        ]]></body>
+      </method>
+      
+  <!-- ////////////////////////////////////////////////////////////////////////////
+      // Update this pane's subject to be the selection of it's linked pane
+      //////////////////////////////////////////////////////////////////////// -->
+
+      <method name="updateLinkedSubject">
+        <body><![CDATA[
+          this.subject = this.mLinkedViewer.selection;
+        ]]></body>
+      </method>
+      
+  <!-- ////////////////////////////////////////////////////////////////////////////
+      // global event handler
+      //////////////////////////////////////////////////////////////////////// -->
+
+      <method name="onEvent">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          switch (aEvent.type) {
+            case "viewerChange":
+              this.observerLinkedViewer();
+              break;
+            case "selectionChange":
+              this.updateLinkedSubject();
+              break;
+            case "subjectChange":
+              this.mObsMan.dispatchEvent("subjectChange", aEvent);
+          };
+        ]]></body>
+      </method>
+      
+  <!-- ////////////////////////////////////////////////////////////////////////////
+      // We need this method only because document.getAnonymousElementByAttribute 
+      // is crashing (as of 2/26/2001) 
+      //////////////////////////////////////////////////////////////////////// -->
+
+      <method name="getAnonElByAttr">
+        <parameter name="aAttr"/>
+        <parameter name="aVal"/>
+        <body><![CDATA[
+          var kids = document.getAnonymousNodes(this);
+          for (var i = 0; i < kids.length; ++i) {
+            if (kids[i].getAttribute(aAttr) == aVal)
+              return kids[i];
+            var kids2 = kids[i].getElementsByAttribute(aAttr, aVal);
+            if (kids2.length > 0)
+              return kids2[0];
+          }
+          return null;
+        ]]></body>
+      </method>
+
+    </implementation>
+    
+  </binding>
+
+  <binding id="base">
+    <implementation>
+      <constructor><![CDATA[
+        this.mObsMan = new ObserverManager(this);
+      ]]></constructor>
+      
+      <!-- ////////////// Event Handling /////////////////-->
+
+      <method name="addObserver">
+        <parameter name="aEvent"/>
+        <parameter name="aObserver"/>
+        <body><![CDATA[
+          this.mObsMan.addObserver(aEvent, aObserver);
+        ]]></body>
+      </method>
+      
+      <method name="removeObserver">
+        <parameter name="aEvent"/>
+        <parameter name="aObserver"/>
+        <body><![CDATA[
+          this.mObsMan.removeObserver(aEvent, aObserver);
+        ]]></body>
+      </method>
+      
+    </implementation>
+    
+  </binding>
+
+</bindings>

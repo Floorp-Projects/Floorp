@@ -18,15 +18,19 @@
 # 
 # Contributor(s):
 #   Scott Collins <scc@mozilla.org> (original author)
-# 
+#   Joe Hewitt <hewitt@netscape.com>
 
-nsIDOMDSResource.idl
-nsIInsDOMDataSource.idl
-nsICSSRuleDataSource.idl
-nsICSSDecDataSource.idl
-nsICSSDecIntHolder.idl
+inIDOMDataSource.idl
+inIDOMRDFResource.idl
+inIDeepTreeWalker.idl
 inIFlasher.idl
 inISearchProcess.idl
 inISearchObserver.idl
 inICSSValueSearch.idl
 inIFileSearch.idl
+inIDOMUtils.idl
+inIScreenCapturer.idl
+inIBitmap.idl
+inIBitmapDepot.idl
+inIBitmapURI.idl
+inIPNGEncoder.idl

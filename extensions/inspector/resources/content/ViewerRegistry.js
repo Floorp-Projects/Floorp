@@ -1,6 +1,28 @@
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ *   Joe Hewitt <hewitt@netscape.com> (original author)
+ */
+
 /***************************************************************
 * ViewerRegistry -----------------------------------------------
-*  The centry registry where information about all installed
+*  The central registry where information about all installed
 *  viewers is kept.  
 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 * REQUIRED IMPORTS:
@@ -12,7 +34,8 @@
 
 //////////// global constants ////////////////////
 
-var kViewerURLPrefix = "chrome://inspector/content/viewers/";
+const kViewerURLPrefix = "chrome://inspector/content/viewers/";
+const kViewerRegURL  = "resource:///res/inspector/viewer-registry.rdf";
 
 ////////////////////////////////////////////////////////////////////////////
 //// class ViewerRegistry
@@ -49,7 +72,7 @@ ViewerRegistry.prototype =
     RDFU.loadDataSource(aURL, new ViewerRegistryLoadObserver(this));
   },
 
-  onError: function(aErrorMsg)
+  onError: function(aStatus, aErrorMsg)
   {
     this.mObserver.onViewerRegistryLoadError(aStatus, aErrorMsg);
   },
@@ -71,7 +94,7 @@ ViewerRegistry.prototype =
     for (var i = 0; i < this.mViewerDS.length; ++i) {
       js = this.getEntryProperty(i, "filter");
       try {
-        fn = new Function("object", js);
+        fn = new Function("doesQI", "object", js);
       } catch (ex) {
         fn = new Function("return false");
         debug("### ERROR - Syntax error in filter for viewer \"" + this.getEntryProperty(i, "description") + "\"\n");
@@ -129,7 +152,20 @@ ViewerRegistry.prototype =
   ///////////////////////////////////////////////////////////////////////////
   objectMatchesEntry: function(aObject, aIndex)
   {
-    return this.mFilters[aIndex](aObject);
+    if (!aObject) return false;
+    return this.mFilters[aIndex](this.doesQI, aObject);
+  },
+  
+  doesQI: function(aObject, aInterface)
+  {
+    if (!("QueryInterface" in aObject)) return false;
+    
+    try {
+      var result = aObject.QueryInterface(Components.interfaces[aInterface]);
+      return true;
+    } catch (ex) {
+      return false;
+    }
   },
 
   ///////////////////////////////////////////////////////////////////////////
@@ -144,6 +180,11 @@ ViewerRegistry.prototype =
     this.mViewerHash[uid] = { viewer: aViewer, entry: aIndex };
   },
 
+  uncacheViewer: function(aViewer)
+  {
+     delete this.mViewerHash[aViewer.uid].viewer;
+  },
+  
   // for previously loaded viewers only
   getViewerByUID: function(aUID)
   {
@@ -200,9 +241,9 @@ function ViewerRegistryLoadObserver(aTarget)
 ViewerRegistryLoadObserver.prototype = {
   mTarget: null,
 
-  onError: function(aErrorMsg) 
+  onError: function(aStatus, aErrorMsg) 
   {
-    this.mTarget.onError(aErrorMsg);
+    this.mTarget.onError(aStatus, aErrorMsg);
   },
 
   onDataSourceReady: function(aDS) 

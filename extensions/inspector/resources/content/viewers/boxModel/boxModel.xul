@@ -1,0 +1,113 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE overlay [
+  <!ENTITY % dtd1 SYSTEM "chrome://inspector/locale/inspector.dtd"> %dtd1;
+  <!ENTITY % dtd2 SYSTEM "chrome://inspector/content/util.dtd"> %dtd2;
+]>
+
+<?xml-stylesheet href="chrome://inspector/skin/viewers/boxModel/boxModel.css"?>
+<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
+
+<window id="winBoxModel" class="color-dialog" 
+        orient="vertical"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  
+  <script type="application/x-javascript" src="chrome://inspector/content/viewers/boxModel/boxModel.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/utils.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/events/ObserverManager.js"/>  
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/system/FilePickerUtils.js"/>  
+
+  <commandset id="cmdsBoxModel">
+    <command id="cmdCapture" oncommand="viewer.capture()"/>
+    <command id="cmdSaveImage" oncommand="viewer.saveImage()"/>
+    <command id="cmdOpenColorPicker" oncommand="viewer.openColorPicker()"/>
+    <command id="cmdToggleOutlines" oncommand="viewer.toggleOutlines()"/>
+    <command id="cmdToggleFill" oncommand="viewer.toggleFill()"/>
+    <command id="cmdZoom" oncommand="viewer.zoomMenulist()"/>
+  </commandset>
+  
+  <groupbox>
+    <label>
+      <menulist id="mlStats" value="position" oncommand="viewer.showStatGroup(this.value)">
+        <menupopup>
+          <menuitem value="position" label="Position"/>
+          <menuitem value="dimension" label="Dimensions"/>
+          <menuitem value="margin" label="Margin"/>
+          <menuitem value="border" label="Border"/>
+          <menuitem value="padding" label="Padding"/>
+        </menupopup>
+      </menulist>
+    </label>
+    <grid flex="1">
+      <columns>
+        <column/>
+        <column flex="1" class="value-column"/>
+        <column/>
+        <column flex="1" class="value-column"/>
+        <column/>
+        <column flex="1" class="value-column"/>
+      </columns>
+      <rows>
+        <row>
+          <text id="txR1C1Label" class="label"/>
+          <text id="txR1C1Value" class="label"/>
+          <text id="txR1C2Label" class="label"/>
+          <text id="txR1C2Value" class="label"/>
+          <text id="txR1C3Label" class="label"/>
+          <text id="txR1C3Value" class="label"/>
+        </row>
+        <row>
+          <text id="txR2C1Label" class="label"/>
+          <text id="txR2C1Value" class="label"/>
+          <text id="txR2C2Label" class="label"/>
+          <text id="txR2C2Value" class="label"/>
+          <text id="txR2C3Label" class="label"/>
+          <text id="txR2C3Value" class="label"/>
+        </row>
+      </rows>
+    </grid>
+  </groupbox>
+  
+  <vbox id="bxCaptureStuff" flex="1">
+    <groupbox id="tbxImage">
+      <label value="Image"/>
+      <hbox autostretch="never" flex="1">
+        <button label="Capture" command="cmdCapture"/>
+        <button label="Pick Color..." command="cmdOpenColorPicker"/>
+        <button label="Save As..." command="cmdSaveImage"/>
+        <spring flex="1"/>
+        
+        <checkbox id="cbxShowOutlines" label="Show Boxes" command="cmdToggleOutlines"/>
+        <checkbox id="cbxFillOutlines" label="Fill Boxes" command="cmdToggleFill"/>
+        <menulist id="mlZoom" value="1" command="cmdZoom">
+          <menupopup>
+            <menuitem value="1" label="Zoom 1x"/>
+            <menuitem value="2" label="Zoom 2x"/>
+            <menuitem value="4" label="Zoom 4x"/>
+            <menuitem value="8" label="Zoom 8x"/>
+            <menuitem value="16" label="Zoom 16x"/>
+            <menuitem value="32" label="Zoom 32x"/>
+          </menupopup>
+        </menulist>
+      </hbox>
+    </groupbox>
+      
+    <hbox id="bxZoom" autostretch="never" valign="top" flex="1">
+      <stack id="bxZoomStack">
+        <html:img id="imgZoom"/>
+        <hbox id="bxMargin" flex="1" 
+             onmouseover="viewer.onRegionOver(event)" 
+             onmouseout="viewer.onRegionOut(event)">
+          <hbox id="bxBorder" flex="1">
+            <hbox id="bxPadding" flex="1">
+              <hbox id="bxContent" flex="1"/>
+            </hbox>
+          </hbox>
+        </hbox>
+      </stack>
+    </hbox>
+  </vbox>
+
+</window>

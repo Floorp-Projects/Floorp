@@ -3,9 +3,12 @@
 <overlay id="ovStatusbar"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <hbox id="bxStatus">
-    <progressmeter id="pmStatus" mode="normal" value="0"/>
-    <text id="txStatus" value="Ready"/>
-  </hbox>
+  <statusbar id="status-bar">
+    <statusbarpanel id="txStatusPanel" flex="1">
+      <text id="txStatus" flex="1"/>
+    </statusbarpanel>
+    <progressmeter id="pmStatus" mode="normal" value="0" class="progressmeter-statusbar"/>
+    <resizer class="window-diagonal"/>
+  </statusbar>
 
 </overlay>

@@ -1,7 +1,12 @@
 
+<!ENTITY Inspector.title "DOM Inspector">
+
 <!ENTITY thDOMNodes.label "DOM Nodes">
-<!ENTITY txDocument.label "Document">
 <!ENTITY btnInspect.label "Inspect">
+<!ENTITY bxDocPanel.title "Document">
+<!ENTITY bxObjectPanel.title "Object">
+<!ENTITY btnSelecting.tooltip "Find a node to inspect by clicking on it">
+<!ENTITY btnFind.tooltip "Find a node to inspect by id, tag, or attribute">
 
 <!-- MAIN MENU ITEMS -->
 
@@ -9,8 +14,10 @@
 <!ENTITY mnWindows.label "Inspect a Window">
 <!ENTITY mnWindows.accesskey "w">
 <!ENTITY mnFile.accesskey "f">
-  <!ENTITY cmdShowOpenURLDialog.label "Inspect a URL">
+  <!ENTITY cmdShowOpenURLDialog.label "Inspect a URL...">
   <!ENTITY cmdShowOpenURLDialog.accesskey "u">
+  <!ENTITY cmdClose.label "Close">
+  <!ENTITY cmdClose.accesskey "c">
   <!ENTITY cmdExit.label "Exit">
   <!ENTITY cmdExit.accesskey "x">
 
@@ -28,7 +35,7 @@
   <!ENTITY cmdPaste.accesskey "p">
   <!ENTITY cmdDelete.label "Delete">
   <!ENTITY cmdDelete.accesskey "d">
-  <!ENTITY cmdPrefs.label "Preferences">
+  <!ENTITY cmdPrefs.label "Preferences...">
   <!ENTITY cmdPrefs.accesskey "f">
 
 <!ENTITY mnSearch.label "Search">
@@ -42,14 +49,6 @@
 <!ENTITY mnView.accesskey "v">
   <!ENTITY cmdToggleBrowser.label "Browser">
   <!ENTITY cmdToggleSearch.label "Search Results">
-  <!ENTITY cmdFlashSelected.label "Blink Selected Element">
-
-<!ENTITY mnHelp.label "Help">
-<!ENTITY mnHelp.accesskey "h">
-  <!ENTITY cmdNotes.label "Release Notes...">
-  <!ENTITY cmdNotes.accesskey "n">
-  <!ENTITY cmdAbout.label "About Document Inspector">
-  <!ENTITY cmdAbout.accesskey "a">
 
 <!ENTITY cmdViewSearchItem.label "View...">
 <!ENTITY cmdEditSearchItem.label "Edit...">

@@ -5,8 +5,9 @@
 <overlay id="ovStyleRulesViewerCommands"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <broadcasterset id="brsGlobalCommands">
-  </broadcasterset>
+  <commandset id="cmdsGlobalCommands">
+
+  </commandset>
 
 </overlay>
 

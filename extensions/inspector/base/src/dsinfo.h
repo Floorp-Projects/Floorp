@@ -1,27 +1,32 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/NPL/
- * 
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- * 
- * The Original Code is Mozilla Communicator client code, released
- * March 31, 1998.
- * 
+ *
+ * The Original Code is mozilla.org code.
+ *
  * The Initial Developer of the Original Code is Netscape
- * Communications Corporation. Portions created by Netscape are
- * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 2001 Netscape Communications Corporation. All
  * Rights Reserved.
+ *
+ * Contributor(s): 
+ *   Joe Hewitt <hewitt@netscape.com> (original author)
  */
 
+#ifndef __dsinfo_h__
+#define __dsinfo_h__
+ 
 #include "nsRDFCID.h"
 #include "nsHashtable.h"
 
-#define INS_NAMESPACE_URI "http://www.mozilla.org/inspector#"
+#define IN_NAMESPACE_URI "http://www.mozilla.org/inspector#"
 
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,   NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
@@ -35,4 +40,5 @@ static NS_DEFINE_CID(kISupportsIID,               NS_ISUPPORTS_IID);
 // back and forth.  Need to make sure this is thread-safe in the future, though.
 static nsSupportsHashtable gDOMObjectTable;
 
+#endif // __dsinfo_h__
 

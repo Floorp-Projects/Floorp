@@ -14,7 +14,7 @@
 #
 # The Initial Developer of the Original Code is Netscape
 # Communications Corporation.  Portions created by Netscape are
-# Copyright (C) 1998 Netscape Communications Corporation. All
+# Copyright (C) 2001 Netscape Communications Corporation. All
 # Rights Reserved.
 #
 # Contributor(s): 
@@ -26,37 +26,53 @@ MODULE=inspector
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
-CPPSRCS=					                 \
-	.\nsDOMDataSource.cpp			       \
-	.\nsCSSRuleDataSource.cpp        \
-	.\nsCSSDecDataSource.cpp         \
-	.\nsDOMDSResource.cpp			       \
-	.\nsCSSDecIntHolder.cpp          \
-	.\inFlasher.cpp                  \
-	.\inSearchLoop.cpp               \
-	.\inFileSearch.cpp               \
-	.\inCSSValueSearch.cpp           \
+DIRS=win
+
+CPPSRCS= \
+	.\inDOMDataSource.cpp \
+	.\inDOMRDFResource.cpp \
+  .\inDeepTreeWalker.cpp \
+	.\inFlasher.cpp \
+	.\inSearchLoop.cpp \
+	.\inFileSearch.cpp \
+	.\inCSSValueSearch.cpp \
+	.\inDOMUtils.cpp \
+	.\inLayoutUtils.cpp \
+	.\inBitmap.cpp \
+	.\inBitmapDepot.cpp \
+	.\inBitmapDecoder.cpp \
+	.\inBitmapProtocolHandler.cpp \
+	.\inBitmapChannel.cpp \
+	.\inBitmapURI.cpp \
+	.\inPNGEncoder.cpp \
 	$(NULL)
 
 
-CPP_OBJS=					                      \
-	.\$(OBJDIR)\nsDOMDataSource.obj		    \
-	.\$(OBJDIR)\nsCSSRuleDataSource.obj 	\
-	.\$(OBJDIR)\nsCSSDecDataSource.obj 	  \
-	.\$(OBJDIR)\nsDOMDSResource.obj		    \
-	.\$(OBJDIR)\nsCSSDecIntHolder.obj 	  \
-	.\$(OBJDIR)\inFlasher.obj             \
-	.\$(OBJDIR)\inSearchLoop.obj          \
-	.\$(OBJDIR)\inFileSearch.obj          \
-	.\$(OBJDIR)\inCSSValueSearch.obj           \
+CPP_OBJS= \
+	.\$(OBJDIR)\inDOMDataSource.obj \
+	.\$(OBJDIR)\inDOMRDFResource.obj \
+	.\$(OBJDIR)\inDeepTreeWalker.obj \
+	.\$(OBJDIR)\inFlasher.obj \
+	.\$(OBJDIR)\inSearchLoop.obj \
+	.\$(OBJDIR)\inFileSearch.obj \
+	.\$(OBJDIR)\inCSSValueSearch.obj \
+	.\$(OBJDIR)\inDOMUtils.obj \
+	.\$(OBJDIR)\inLayoutUtils.obj \
+	.\$(OBJDIR)\inBitmap.obj \
+	.\$(OBJDIR)\inBitmapDepot.obj \
+	.\$(OBJDIR)\inBitmapDecoder.obj \
+	.\$(OBJDIR)\inBitmapProtocolHandler.obj \
+	.\$(OBJDIR)\inBitmapChannel.obj \
+	.\$(OBJDIR)\inBitmapURI.obj \
+	.\$(OBJDIR)\inPNGEncoder.obj \
 	$(NULL)
 
-EXPORTS =	$(NULL)
+EXPORTS=$(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js \
 	-I$(PUBLIC)\dom -I$(PUBLIC)\uconv
 
-LCFLAGS = \
+LCFLAGS= \
         $(LCFLAGS) \
         $(DEFINES) \
         $(NULL)

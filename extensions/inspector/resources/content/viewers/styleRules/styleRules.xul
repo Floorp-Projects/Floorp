@@ -3,23 +3,25 @@
 <!DOCTYPE overlay [
   <!ENTITY % dtd1 SYSTEM "chrome://inspector/locale/inspector.dtd"> %dtd1;
   <!ENTITY % dtd2 SYSTEM "chrome://inspector/content/util.dtd"> %dtd2;
+  <!ENTITY % dtd3 SYSTEM "chrome://inspector/locale/viewers/styleRules.dtd"> %dtd3;
 ]>
 
 <?xml-stylesheet href="chrome://inspector/skin/viewers/styleRules/styleRules.css"?>
 
-<window id="winNodeDefault" class="color-dialog" 
+<window id="winStyleRules" class="color-dialog" 
         orient="vertical"
-        xmlns:ins="&INS-rdf;"
-        xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns:domi="http://www.mozilla.org/inspector"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
   <!--============================= SCRIPTS ============================= -->
 
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xul/inBaseOutlinerView.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/viewers/styleRules/styleRules.js"/>
 
   <script type="application/x-javascript" src="chrome://inspector/content/utils.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/rdf/RDFU.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/events/ObserverManager.js"/>
 
   <!--============================= POPUPS ============================== -->
 
@@ -32,7 +34,7 @@
       <menuitem label="Open File in Editor" oncommand="viewer.cmdOpenSelectedFileInEditor()"/>
     </popup>
 
-    <popup id="ppStyleDecContext">
+    <popup id="ppStylePropsContext">
       <menuitem label="New Property" oncommand="viewer.cmdNewProperty()"/>
       <menuitem label="Edit" oncommand="viewer.cmdEditSelectedProperty()"/>
       <menuitem label="Delete" oncommand="viewer.cmdDeleteSelectedProperty()"/>
@@ -43,116 +45,33 @@
 
   <!--============================= CONTENT ============================== -->
 
-  <vbox>
-    <tree id="trStyleRules"
-      flex="1" context="ppStyleRuleContext"
-      onselect="viewer.onRuleSelect()"
-      datasources="rdf:null" ref="inspector:RuleRoot">
-
-      <template>
-        <rule>
-          <conditions>
-            <content uri="?uri"/>
-            <triple subject="?uri" predicate="&INS-rdf;Rule" object="?rule"/>
-          </conditions>
-
-          <bindings>
-            <binding subject="?rule" predicate="&INS-rdf;Selector" object="?selector"/>
-            <binding subject="?rule" predicate="&INS-rdf;FileURL" object="?fileURL"/>
-            <binding subject="?rule" predicate="&INS-rdf;Weight" object="?weight"/>
-            <binding subject="?rule" predicate="&INS-rdf;LineNum" object="?lineNum"/>
-          </bindings>
-
-          <action>
-            <treechildren>
-              <treeitem uri="?rule">
-                <treerow>
-                  <treecell label="?selector"/>
-                  <treecell label="?fileURL"/>
-                  <treecell label="?weight"/>
-                  <treecell label="?lineNum"/>
-                </treerow>
-              </treeitem>
-            </treechildren>
-          </action>
-        </rule>
-      </template>
-
-      <treecolgroup>
-        <treecol id="tcolNodeName" flex="1"/>
-        <splitter class="tree-splitter"/>
-        <treecol id="tcolNodeValue" flex="1"/>
-        <splitter class="tree-splitter"/>
-        <treecol id="tcolNodeValue" flex="1"/>
-        <splitter class="tree-splitter"/>
-        <treecol id="tcolNodeValue" flex="1"/>
-      </treecolgroup>
-      
-      <treehead>
-        <treerow>
-          <treecell class="treecell-header" label="Selector"/>
-          <treecell class="treecell-header" label="File"/>
-          <treecell class="treecell-header" label="Weight"/>
-          <treecell class="treecell-header" label="Line"/>
-        </treerow>
-      </treehead>
-
-      <treechildren flex="1"/>
-    </tree>
-  </vbox>
-
+  <outliner id="olStyleRules" flex="1"
+            onselect="viewer.onRuleSelect()">
+  
+    <outlinercol id="olcSelector" label="Selector" flex="1"/>
+    <splitter class="tree-splitter"/>
+    <outlinercol id="olcFileURL" label="File" flex="1"/>
+    <splitter class="tree-splitter"/>
+    <outlinercol id="olcWeight" label="Weight"/>
+    <splitter class="tree-splitter"/>
+    <outlinercol id="olcLine" label="Line"/>
+    
+    <outlinerbody id="olbStyleRules" flex="1"/>
+  </outliner>
+  
   <splitter orient="horizontal" collapse="after">
     <grippy/>
   </splitter>
 
-  <tree id="trStyleDec" class="tree-editable"
-    onafteredit="viewer.cmdSetSelectedPropertyValue(event.editingItem, event.newValue)"
-    flex="1" context="ppStyleDecContext"
-    datasources="rdf:null" ref="inspector:DecRoot">
-
-    <template>
-      <rule>
-        <conditions>
-          <content uri="?uri"/>
-          <triple subject="?uri" predicate="&INS-rdf;Property" object="?prop"/>
-        </conditions>
-
-        <bindings>
-          <binding subject="?prop" predicate="&INS-rdf;PropertyPriority" object="?priority"/>
-          <binding subject="?prop" predicate="&INS-rdf;PropertyName" object="?name"/>
-          <binding subject="?prop" predicate="&INS-rdf;PropertyValue" object="?value"/>
-        </bindings>
-
-        <action>
-          <treechildren>
-            <treeitem uri="?prop">
-              <treerow>
-                <treecell class="treecell-priority treecell-iconic" ins-type="priority" ins:priority="?priority"/>
-                <treecell label="?name" ins-type="name"/>
-                <treecell class="treecell-editable" label="?value" ins-type="value"/>
-              </treerow>
-            </treeitem>
-          </treechildren>
-        </action>
-      </rule>
-    </template>
-
-    <treecolgroup>
-      <treecol id="tcolPropPriority"/>
-      <treecol id="tcolPropName" flex="1"/>
-      <splitter class="tree-splitter"/>
-      <treecol id="tcolPropValue" flex="1"/>
-    </treecolgroup>
+  <outliner id="olStyleProps" flex="1" context="ppStylePropsContext">
+  
+    <outlinercol id="olcPropPriority" label="Priority" class="outlinercol-image"/>
+    <splitter class="tree-splitter"/>
+    <outlinercol id="olcPropName" label="Style" flex="1"/>
+    <splitter class="tree-splitter"/>
+    <outlinercol id="olcPropValue" label="Value" flex="1"/>
     
-    <treehead>
-      <treerow>
-        <treecell class="treecell-header" label="!"/>
-        <treecell class="treecell-header" label="Name"/>
-        <treecell class="treecell-header" label="Value"/>
-      </treerow>
-    </treehead>
-
-    <treechildren flex="1"/>
-  </tree>    
+    <outlinerbody id="olbStyleProps" flex="1"/>
+  </outliner>
 
 </window>

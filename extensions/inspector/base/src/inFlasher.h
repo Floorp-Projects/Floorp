@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -14,10 +13,11 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Copyright (C) 2001 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Joe Hewitt <hewitt@netscape.com> (original author)
  */
 
 #ifndef __inFlasher_h__
@@ -50,7 +50,6 @@ protected:
                            PRUint32 aThickness, float aP2T, nsIRenderingContext* aRenderContext);
   NS_IMETHOD DrawLine(nscoord aX, nscoord aY, nscoord aLength, PRUint32 aThickness, 
                         PRBool aDir, PRBool aBounds, float aP2T, nsIRenderingContext* aRenderContext);
-  NS_IMETHOD GetClientOrigin(nsIFrame* aFrame, nsPoint& aPoint);
   
 public:
   NS_DECL_ISUPPORTS
@@ -58,13 +57,4 @@ public:
   NS_DECL_INIFLASHER
 };
 
-//////////////////////////////////////////////////////////////
-
-// {9286E71A-621A-4b91-851E-9984C1A2E81A}
-#define IN_FLASHER_CID \
-{ 0x9286e71a, 0x621a, 0x4b91, { 0x85, 0x1e, 0x99, 0x84, 0xc1, 0xa2, 0xe8, 0x1a } }
-
-#define IN_FLASHER_CONTRACTID \
-"@mozilla.org/inspector/flasher;1"
-
-#endif
+#endif // __inFlasher_h__

@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -14,10 +13,11 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Copyright (C) 2001 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Joe Hewitt <hewitt@netscape.com> (original author)
  */
 
 #include "nsISupports.idl"
@@ -29,7 +29,7 @@ interface nsIDOMWindowInternal;
 [scriptable, uuid(7B4A099F-6F6E-4565-977B-FB622ADBFF49)]
 interface inIFlasher : nsISupports 
 {
-  void drawElementOutline(in nsIDOMElement aElement, in nsIDOMWindowInternal aWindow, in wstring aColor, in long aThickness);
-  void repaintElement(in nsIDOMElement aElement, in nsIDOMWindowInternal aWindow);
+  void drawElementOutline(in nsIDOMElement aElement, in wstring aColor, in long aThickness);
+  void repaintElement(in nsIDOMElement aElement);
 };
 

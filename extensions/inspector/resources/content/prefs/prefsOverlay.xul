@@ -6,17 +6,10 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
   <treechildren id="panelChildren">
-    <treeitem id="inspector" container="true" open="true">
+    <treeitem id="inspector">
       <treerow>       
         <treecell class="treecell-indent" url="chrome://inspector/content/prefs/pref-inspector.xul" label="&Inspector.label;"/> 
       </treerow>
-      <treechildren id="inspectorChildren">
-        <treeitem>
-          <treerow>
-            <treecell class="treecell-indent" url="chrome://inspector/content/prefs/pref-sidebar.xul" label="&Sidebar.label;"/> 
-          </treerow>
-        </treeitem>
-      </treechildren>
     </treeitem>
   </treechildren>
 
