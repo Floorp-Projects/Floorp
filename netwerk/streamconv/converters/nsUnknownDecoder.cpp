@@ -341,9 +341,15 @@ void nsUnknownDecoder::DetermineContentType(nsIRequest* request)
             if (offset < 0) {
               offset = str.Find("<BODY", PR_TRUE);
               if (offset < 0) {
-                offset = str.Find("<A HREF", PR_TRUE);
+                offset = str.Find("<TABLE", PR_TRUE);
                 if (offset < 0) {
-                  offset = str.Find("<APPLET", PR_TRUE);
+                  offset = str.Find("<DIV", PR_TRUE);
+                  if (offset < 0) {
+                    offset = str.Find("<A HREF", PR_TRUE);
+                    if (offset < 0) {
+                      offset = str.Find("<APPLET", PR_TRUE);
+                    }
+                  }
                 }
               }
             }
