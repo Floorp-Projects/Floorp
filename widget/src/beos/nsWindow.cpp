@@ -439,194 +439,231 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
                       nsWidgetInitData *aInitData,
                       nsNativeWidget aNativeParent)
 {
-    nsIWidget *baseParent = aInitData &&
-                 (aInitData->mWindowType == eWindowType_dialog ||
-                  aInitData->mWindowType == eWindowType_toplevel) ?
-                  nsnull : aParent;
+  nsIWidget *baseParent = aInitData &&
+                          (aInitData->mWindowType == eWindowType_dialog ||
+                          aInitData->mWindowType == eWindowType_toplevel) ?
+                            nsnull : aParent;
 	
-    mIsTopWidgetWindow = (nsnull == baseParent);
+  mIsTopWidgetWindow = (nsnull == baseParent);
 
-    BaseCreate(baseParent, aRect, aHandleEventFunction, aContext, 
-       aAppShell, aToolkit, aInitData);
+  BaseCreate(baseParent, aRect, aHandleEventFunction, aContext, 
+             aAppShell, aToolkit, aInitData);
 
-    // Switch to the "main gui thread" if necessary... This method must
-    // be executed on the "gui thread"...
-    //
+  // Switch to the "main gui thread" if necessary... This method must
+  // be executed on the "gui thread"...
+  //
   
-    nsToolkit* toolkit = (nsToolkit *)mToolkit;
-    if (toolkit) {
-    if (!toolkit->IsGuiThread()) {
-        uint32 args[7];
-        args[0] = (uint32)aParent;
-        args[1] = (uint32)&aRect;
-        args[2] = (uint32)aHandleEventFunction;
-        args[3] = (uint32)aContext;
-        args[4] = (uint32)aAppShell;
-        args[5] = (uint32)aToolkit;
-        args[6] = (uint32)aInitData;
+  nsToolkit* toolkit = (nsToolkit *)mToolkit;
+  if (toolkit) 
+  {
+    if (!toolkit->IsGuiThread()) 
+    {
+      uint32 args[7];
+      args[0] = (uint32)aParent;
+      args[1] = (uint32)&aRect;
+      args[2] = (uint32)aHandleEventFunction;
+      args[3] = (uint32)aContext;
+      args[4] = (uint32)aAppShell;
+      args[5] = (uint32)aToolkit;
+      args[6] = (uint32)aInitData;
 
-        if (nsnull != aParent) {
-           // nsIWidget parent dispatch
-          MethodInfo info(this, this, nsWindow::CREATE, 7, args);
-          toolkit->CallMethod(&info);
-           return NS_OK;
-        }
-        else {
-            // Native parent dispatch
-          MethodInfo info(this, this, nsWindow::CREATE_NATIVE, 5, args);
-          toolkit->CallMethod(&info);
-          return NS_OK;
-        }
+      if (nsnull != aParent) 
+      {
+        // nsIWidget parent dispatch
+        MethodInfo info(this, this, nsWindow::CREATE, 7, args);
+        toolkit->CallMethod(&info);
+        return NS_OK;
+      }
+      else 
+      {
+        // Native parent dispatch
+        MethodInfo info(this, this, nsWindow::CREATE_NATIVE, 5, args);
+        toolkit->CallMethod(&info);
+        return NS_OK;
+      }
     }
-    }
+  }
  
-    BView *parent;
-    if (nsnull != aParent) { // has a nsIWidget parent
-      parent = ((aParent) ? (BView *)aParent->GetNativeData(NS_NATIVE_WINDOW) : nsnull);
-    } else { // has a nsNative parent
-       parent = (BView *)aNativeParent;
-    }
+  BView *parent;
+  if (nsnull != aParent) // has a nsIWidget parent
+  {
+    parent = ((aParent) ? (BView *)aParent->GetNativeData(NS_NATIVE_WINDOW) : nsnull);
+  } 
+  else // has a nsNative parent 
+  { 
+    parent = (BView *)aNativeParent;
+  }
 
-    if (nsnull != aInitData) {
-      SetWindowType(aInitData->mWindowType);
-      SetBorderStyle(aInitData->mBorderStyle);
-    }
+  if (nsnull != aInitData) 
+  {
+    SetWindowType(aInitData->mWindowType);
+    SetBorderStyle(aInitData->mBorderStyle);
+  }
 
-//		NEED INPLEMENT
-//    DWORD style = WindowStyle();
-//		NEED INPLEMENT
-//    DWORD extendedStyle = WindowExStyle();
+// NEED INPLEMENT
+//  DWORD style = WindowStyle();
+// NEED INPLEMENT
+//  DWORD extendedStyle = WindowExStyle();
 
-	mBorderlessParent = NULL;
-    if (mWindowType == eWindowType_popup) {
-      mBorderlessParent = parent;
-      // Don't set the parent of a popup window. 
-      parent = NULL;
-    } else if (nsnull != aInitData) {
-      // See if the caller wants to explictly set clip children and clip siblings
-      if (aInitData->clipChildren) {
-//		NEED INPLEMENT
-//        style |= WS_CLIPCHILDREN;
-      } else {
+  mBorderlessParent = NULL;
+  if (mWindowType == eWindowType_popup) 
+  {
+    mBorderlessParent = parent;
+    // Don't set the parent of a popup window. 
+    parent = NULL;
+  } 
+  else if (nsnull != aInitData) 
+  {
+    // See if the caller wants to explictly set clip children and clip siblings
+    if (aInitData->clipChildren) 
+    {
+// NEED INPLEMENT
+//  style |= WS_CLIPCHILDREN;
+    } 
+    else 
+    {
 //		NEED INPLEMENT
 //        style &= ~WS_CLIPCHILDREN;
-      }
-      if (aInitData->clipSiblings) {
+    }
+    
+    if (aInitData->clipSiblings) 
+    {
 //		NEED INPLEMENT
 //        style |= WS_CLIPSIBLINGS;
+    }
+  }
+
+  mView = CreateBeOSView();
+  if(mView)
+  {
+    if (mWindowType == eWindowType_dialog) 
+    {
+      // create window (dialog)
+      bool is_subset = (parent)? true : false;
+      window_feel feel = (is_subset) ? B_MODAL_SUBSET_WINDOW_FEEL : B_MODAL_APP_WINDOW_FEEL;
+      BRect winrect = BRect(aRect.x, aRect.y, aRect.x + aRect.width - 1, aRect.y + aRect.height - 1);
+      
+      winrect.OffsetBy( 10, 30 );
+      
+      nsWindowBeOS *w = new nsWindowBeOS(this, winrect,	"", B_TITLED_WINDOW_LOOK, feel,
+                                         B_WILL_ACCEPT_FIRST_CLICK | B_ASYNCHRONOUS_CONTROLS);
+      if(w)
+      {
+        w->AddChild(mView);
+        if (is_subset) 
+        {
+          w->AddToSubset(parent->Window());
+        }
+
+        // FIXME: we have to use the window size because
+        // the window might not like sizes less then 30x30 or something like that
+        mView->MoveTo(0, 0);
+        mView->ResizeTo(w->Bounds().Width(), w->Bounds().Height());
+        mView->SetResizingMode(B_FOLLOW_ALL);
       }
     }
+    else if (mWindowType == eWindowType_child) 
+    {
+      // create view only
+      bool mustunlock=false;
 
-    mView = CreateBeOSView();
+      if(parent->LockLooper())
+      {
+        mustunlock = true;
+      }
+      
+      parent->AddChild(mView);
+      mView->MoveTo(aRect.x, aRect.y);
+      mView->ResizeTo(aRect.width-1, GetHeight(aRect.height)-1);
 
-    if (mWindowType == eWindowType_dialog) {
-		// create window (dialog)
-		bool is_subset = (parent)? true : false;
-		window_feel feel = (is_subset)? 
-		    B_MODAL_SUBSET_WINDOW_FEEL :
-		    B_MODAL_APP_WINDOW_FEEL;
-		BRect winrect = BRect(aRect.x, aRect.y, aRect.x + aRect.width - 1, aRect.y + aRect.height - 1);
-		winrect.OffsetBy( 10, 30 );
-		nsWindowBeOS *w = new nsWindowBeOS(this,
-				winrect,
-				"", B_TITLED_WINDOW_LOOK, feel,
-				B_WILL_ACCEPT_FIRST_CLICK | B_ASYNCHRONOUS_CONTROLS);
-		w->AddChild(mView);
-		if (is_subset) {
-		  w->AddToSubset(parent->Window());
-		}
+      if(mustunlock)
+      {
+        parent->UnlockLooper();
+      }
+    } 
+    else 
+    {
+      // create window (normal or popup)
+      BRect winrect = BRect(aRect.x, aRect.y, 
+                            aRect.x + aRect.width - 1, aRect.y + aRect.height - 1);
+      nsWindowBeOS *w;
 
-		// FIXME: we have to use the window size because
-		// the window might not like sizes less then 30x30 or something like that
-		mView->MoveTo(0, 0);
-		mView->ResizeTo(w->Bounds().Width(), w->Bounds().Height());
-		mView->SetResizingMode(B_FOLLOW_ALL);
-	} else
-	if (mWindowType == eWindowType_child) {
-		// create view only
-		bool mustunlock=false;
+      if (mWindowType == eWindowType_popup) 
+      {
+        bool is_subset = (mBorderlessParent)? true : false;
+        window_feel feel = (is_subset) ? B_FLOATING_SUBSET_WINDOW_FEEL : B_FLOATING_APP_WINDOW_FEEL;
+        
+        w = new nsWindowBeOS(this, winrect, "", B_NO_BORDER_WINDOW_LOOK, feel,
+                             B_WILL_ACCEPT_FIRST_CLICK | B_ASYNCHRONOUS_CONTROLS);
+        if (w)
+        {
+          // popup window : no border
+          if (is_subset) 
+          {
+            w->AddToSubset(mBorderlessParent->Window());
+          }
+        }
+      } 
+      else 
+      {
+        // normal window :normal look & feel
+        winrect.OffsetBy( 10, 30 );
+        w = new nsWindowBeOS(this, winrect, "", B_TITLED_WINDOW_LOOK, B_NORMAL_WINDOW_FEEL,
+                             B_WILL_ACCEPT_FIRST_CLICK | B_ASYNCHRONOUS_CONTROLS);
+      }
 
-		if(parent->LockLooper())
-			mustunlock = true;
+      if(w)
+      {
+        w->AddChild(mView);
 
-		parent->AddChild(mView);
-		mView->MoveTo(aRect.x, aRect.y);
-		mView->ResizeTo(aRect.width-1, GetHeight(aRect.height)-1);
-
-		if(mustunlock)
-			parent->UnlockLooper();
-	} else {
-		// create window (normal or popup)
-		BRect winrect = BRect(aRect.x, aRect.y, 
-		    aRect.x + aRect.width - 1, aRect.y + aRect.height - 1);
-		nsWindowBeOS *w;
-
-		if (mWindowType == eWindowType_popup) {
-			bool is_subset = (mBorderlessParent)? true : false;
-			window_feel feel = (is_subset) ?
-			    B_FLOATING_SUBSET_WINDOW_FEEL :
-			    B_FLOATING_APP_WINDOW_FEEL;
-			w = new nsWindowBeOS(this,
-				winrect,
-				"", B_NO_BORDER_WINDOW_LOOK, feel,
-				B_WILL_ACCEPT_FIRST_CLICK | B_ASYNCHRONOUS_CONTROLS);
-			// popup window : no border
-			if (is_subset) {
-			  w->AddToSubset(mBorderlessParent->Window());
-			}
-		} else {
-			// normal window :normal look & feel
-			winrect.OffsetBy( 10, 30 );
-			w = new nsWindowBeOS(this,
-				winrect,
-				"", B_TITLED_WINDOW_LOOK, B_NORMAL_WINDOW_FEEL,
-				B_WILL_ACCEPT_FIRST_CLICK | B_ASYNCHRONOUS_CONTROLS);
-		}
-		
-		w->AddChild(mView);
-
-		// FIXME: we have to use the window size because
-		// the window might not like sizes less then 30x30 or something like that
-		mView->MoveTo(0, 0);
-		mView->ResizeTo(w->Bounds().Width(), w->Bounds().Height());
-		mView->SetResizingMode(B_FOLLOW_ALL);
-	}
+        // FIXME: we have to use the window size because
+        // the window might not like sizes less then 30x30 or something like that
+        mView->MoveTo(0, 0);
+        mView->ResizeTo(w->Bounds().Width(), w->Bounds().Height());
+        mView->SetResizingMode(B_FOLLOW_ALL);
+      }
+    }
 
 #if 0
     // Initial Drag & Drop Work
 #ifdef DRAG_DROP
-   if (!gOLEInited) {
-     DWORD dwVer = ::OleBuildVersion();
+    if (!gOLEInited) 
+    {
+      DWORD dwVer = ::OleBuildVersion();
 
-     if (FAILED(::OleInitialize(NULL))){
-       printf("***** OLE has been initialized!\n");
-     }
-     gOLEInited = TRUE;
-   }
+      if (FAILED(::OleInitialize(NULL)))
+      {
+        printf("***** OLE has been initialized!\n");
+      }
+      gOLEInited = TRUE;
+    }
 
-   mDragDrop = new CfDragDrop();
-   //mDragDrop->AddRef();
-   mDragDrop->Initialize(this);
+    mDragDrop = new CfDragDrop();
+    //mDragDrop->AddRef();
+    mDragDrop->Initialize(this);
 
-   /*mDropTarget = new CfDropTarget(*mDragDrop);
-   mDropTarget->AddRef();
+    /*mDropTarget = new CfDropTarget(*mDragDrop);
+    mDropTarget->AddRef();
 
-   mDropSource = new CfDropSource(*mDragDrop);
-   mDropSource->AddRef();*/
+    mDropSource = new CfDropSource(*mDragDrop);
+    mDropSource->AddRef();*/
 
-   /*mDropTarget = new nsDropTarget(this);
-   mDropTarget->AddRef();
-   if (S_OK == ::CoLockObjectExternal((LPUNKNOWN)mDropTarget,TRUE,FALSE)) {
-     if (S_OK == ::RegisterDragDrop(mView, (LPDROPTARGET)mDropTarget)) {
-
-     }
-   }*/
+    /*mDropTarget = new nsDropTarget(this);
+    mDropTarget->AddRef();
+    if (S_OK == ::CoLockObjectExternal((LPUNKNOWN)mDropTarget,TRUE,FALSE)) {
+      if (S_OK == ::RegisterDragDrop(mView, (LPDROPTARGET)mDropTarget)) {
+ 
+      }
+    }*/
 #endif
 #endif
 
     // call the event callback to notify about creation
     DispatchStandardEvent(NS_CREATE);
     return(NS_OK);
+  }
+  
+  return NS_ERROR_OUT_OF_MEMORY;
 }
 
 //-------------------------------------------------------------------------

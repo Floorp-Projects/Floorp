@@ -24,6 +24,8 @@
 #include "nsFont.h"
 
 #include "nsXPLookAndFeel.h"
+
+#include <InterfaceDefs.h>
  
 //static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 //NS_IMPL_ISUPPORTS(nsLookAndFeel, NS_ILOOKANDFEEL_IID)
@@ -201,73 +203,96 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     res = NS_OK;
   }
 
-  switch (aID) {
+  switch (aID) 
+  {
     case eMetric_WindowTitleHeight:
-        aMetric = 0;
-        break;
+      aMetric = 0;
+      break;
     case eMetric_WindowBorderWidth:
-        aMetric = 0;
-        break;
+      aMetric = 0;
+      break;
     case eMetric_WindowBorderHeight:
-        aMetric = 0;
-        break;
+      aMetric = 0;
+      break;
     case eMetric_Widget3DBorder:
-        aMetric = 0;
-        break;
+      aMetric = 0;
+      break;
     case eMetric_TextFieldBorder:
-        aMetric = 3;
-        break;
+      aMetric = 3;
+      break;
     case eMetric_TextFieldHeight:
-        aMetric = 24;
-        break;
+      aMetric = 24;
+      break;
     case eMetric_ButtonHorizontalInsidePaddingNavQuirks:
-        aMetric = 10;
-        break;
+      aMetric = 10;
+      break;
     case eMetric_ButtonHorizontalInsidePaddingOffsetNavQuirks:
-        aMetric = 8;
-        break;
+      aMetric = 8;
+      break;
     case eMetric_CheckboxSize:
-        aMetric = 12;
-        break;
+      aMetric = 12;
+      break;
     case eMetric_RadioboxSize:
-        aMetric = 12;
-        break;
+      aMetric = 12;
+      break;
     case eMetric_TextHorizontalInsideMinimumPadding:
-        aMetric = 3;
-        break;
+      aMetric = 3;
+      break;
     case eMetric_TextVerticalInsidePadding:
-        aMetric = 0;
-        break;
+      aMetric = 0;
+      break;
     case eMetric_TextShouldUseVerticalInsidePadding:
-        aMetric = 0;
-        break;
+      aMetric = 0;
+      break;
     case eMetric_TextShouldUseHorizontalInsideMinimumPadding:
-        aMetric = 1;
-        break;
+      aMetric = 1;
+      break;
     case eMetric_ListShouldUseHorizontalInsideMinimumPadding:
-        aMetric = 0;
-        break;
+      aMetric = 0;
+      break;
     case eMetric_ListHorizontalInsideMinimumPadding:
-        aMetric = 3;
-        break;
+      aMetric = 3;
+      break;
     case eMetric_ListShouldUseVerticalInsidePadding:
-        aMetric = 0;
-        break;
+      aMetric = 0;
+      break;
     case eMetric_ListVerticalInsidePadding:
-        aMetric = 0;
-        break;
+      aMetric = 0;
+      break;
     case eMetric_CaretBlinkTime:
-        aMetric = 500;
-        break;
+      aMetric = 500;
+      break;
     case eMetric_SingleLineCaretWidth:
-        aMetric = 1;
-        break;
+      aMetric = 1;
+      break;
     case eMetric_MultiLineCaretWidth:
-        aMetric = 2;
-        break;
+      aMetric = 2;
+      break;
     case eMetric_SubmenuDelay:
-        aMetric = 200;
-        break;
+      aMetric = 200;
+      break;
+    case eMetric_ScrollArrowStyle:
+      {
+        aMetric = eMetric_ScrollArrowStyleBothAtEachEnd; // BeOS default
+
+        scroll_bar_info info;
+        if(B_OK == get_scroll_bar_info(&info) && !info.double_arrows)
+        {
+          aMetric = eMetric_ScrollArrowStyleSingle;
+        }
+      }
+      break;
+    case eMetric_ScrollSliderStyle:
+      {
+        aMetric = eMetric_ScrollThumbStyleProportional; // BeOS default
+
+        scroll_bar_info info;
+        if(B_OK == get_scroll_bar_info(&info) && !info.proportional)
+        {
+          aMetric = eMetric_ScrollThumbStyleNormal;
+        }
+      }
+      break;
     default:
         aMetric = -1;
         res = NS_ERROR_FAILURE;

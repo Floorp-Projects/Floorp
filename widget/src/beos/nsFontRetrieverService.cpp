@@ -47,10 +47,13 @@ nsFontRetrieverService::nsFontRetrieverService()
 //----------------------------------------------------------
 nsFontRetrieverService::~nsFontRetrieverService()
 {
-  if (nsnull != mFontList) {
-    for (PRInt32 i=0;i<mFontList->Count();i++) {
+  if (nsnull != mFontList) 
+  {
+    for (PRInt32 i=0;i<mFontList->Count();i++) 
+    {
       FontInfo * font = (FontInfo *)mFontList->ElementAt(i);
-      if (font->mSizes) {
+      if (font->mSizes) 
+      {
         delete font->mSizes;
       }
       delete font;
@@ -69,19 +72,22 @@ nsFontRetrieverService::~nsFontRetrieverService()
 nsresult nsFontRetrieverService::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
 
-  if (NULL == aInstancePtr) {
+  if (NULL == aInstancePtr) 
+  {
     return NS_ERROR_NULL_POINTER;
   }
 
   nsresult rv = NS_NOINTERFACE;
 
-  if (aIID.Equals(NS_GET_IID(nsIFontRetrieverService))) {
+  if (aIID.Equals(NS_GET_IID(nsIFontRetrieverService))) 
+  {
     *aInstancePtr = (void*) ((nsIFontRetrieverService*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
 
-  if (aIID.Equals(NS_GET_IID(nsIFontNameIterator))) {
+  if (aIID.Equals(NS_GET_IID(nsIFontNameIterator))) 
+  {
     *aInstancePtr = (void*) ((nsIFontNameIterator*)this);
     NS_ADDREF_THIS();
     return NS_OK;
@@ -96,11 +102,13 @@ nsresult nsFontRetrieverService::QueryInterface(const nsIID& aIID, void** aInsta
 //----------------------------------------------------------
 NS_IMETHODIMP nsFontRetrieverService::CreateFontNameIterator( nsIFontNameIterator** aIterator )
 {
-  if (nsnull == aIterator) {
+  if (nsnull == aIterator) 
+  {
     return NS_ERROR_FAILURE;
   }
 
-  if (nsnull == mFontList) {
+  if (nsnull == mFontList) 
+  {
     LoadFontList();
   }
   *aIterator = this;
@@ -117,17 +125,21 @@ NS_IMETHODIMP nsFontRetrieverService::CreateFontSizeIterator( const nsString & a
 
   PRBool found = PR_FALSE;
   Reset();
-  do {
+  do 
+  {
     nsAutoString name;
     Get(&name);
-    if (name.Equals(aFontName)) {
+    if (name.Equals(aFontName)) 
+    {
       found = PR_TRUE;
       break;
     }
   } while (Advance() == NS_OK);
 
-  if (found) {
-    if (nsnull == mSizeIter) {
+  if (found) 
+  {
+    if (nsnull == mSizeIter) 
+    {
       mSizeIter = new nsFontSizeIterator();
     }
     NS_ASSERTION( nsnull != mSizeIter, "nsFontSizeIterator instance pointer is null");
@@ -156,7 +168,8 @@ NS_IMETHODIMP nsFontRetrieverService::Reset()
 //----------------------------------------------------------
 NS_IMETHODIMP nsFontRetrieverService::Get( nsString* aFontName )
 {
-  if (mNameIterInx < mFontList->Count()) {
+  if (mNameIterInx < mFontList->Count()) 
+  {
     FontInfo * fontInfo = (FontInfo *)mFontList->ElementAt(mNameIterInx);
     *aFontName = fontInfo->mName;
     return NS_OK;
@@ -167,7 +180,8 @@ NS_IMETHODIMP nsFontRetrieverService::Get( nsString* aFontName )
 //----------------------------------------------------------
 NS_IMETHODIMP nsFontRetrieverService::Advance()
 {
-  if (mNameIterInx < mFontList->Count()-1) {
+  if (mNameIterInx < mFontList->Count()-1) 
+  {
     mNameIterInx++;
     return NS_OK;
   }
@@ -180,37 +194,51 @@ static FontInfo * GetFontInfo(nsVoidArray * aFontList, char * aName)
   nsAutoString name; name.AssignWithConversion(aName);
   PRInt32 i;
   PRInt32 cnt = aFontList->Count();
-  for (i=0;i<cnt;i++) {
+  for (i=0;i<cnt;i++) 
+  {
     FontInfo * fontInfo = (FontInfo *)aFontList->ElementAt(i);
-    if (fontInfo->mName.Equals(name)) {
-      return fontInfo;
+    if (fontInfo)  // I don't think ElementAt can return null pointer... See Bug 8827
+    {
+      if (fontInfo->mName.Equals(name)) 
+      {
+        return fontInfo;
+      }
     }
   }
 
   FontInfo * fontInfo   = new FontInfo();
-  fontInfo->mName.AssignWithConversion(aName);
-  //printf("Adding [%s]\n", aName);fflush(stdout); 
-  fontInfo->mIsScalable = PR_FALSE; // X fonts aren't scalable right??
-  fontInfo->mSizes      = nsnull;
-  aFontList->AppendElement(fontInfo);
-  return fontInfo;
+  if (fontInfo)
+  {
+    fontInfo->mName.AssignWithConversion(aName);
+    //printf("Adding [%s]\n", aName);fflush(stdout); 
+    fontInfo->mIsScalable = PR_FALSE; // X fonts aren't scalable right??
+    fontInfo->mSizes      = nsnull;
+    aFontList->AppendElement(fontInfo);
+    return fontInfo;
+  }
+  return nsnull;
 }
 
 //------------------------------
 static void AddSizeToFontInfo(FontInfo * aFontInfo, PRInt32 aSize)
 {
   nsVoidArray * sizes;
-  if (nsnull == aFontInfo->mSizes) {
+  if (nsnull == aFontInfo->mSizes) 
+  {
     sizes = new nsVoidArray();
     aFontInfo->mSizes = sizes;
-  } else {
+  }
+  else 
+  {
     sizes = aFontInfo->mSizes;
   }
   PRInt32 i;
   PRInt32 cnt = sizes->Count();
-  for (i=0;i<cnt;i++) {
+  for (i=0;i<cnt;i++) 
+  {
     PRInt32 size = (int)sizes->ElementAt(i);
-    if (size == aSize) {
+    if (size == aSize) 
+    {
       return;
     }
   }
@@ -402,16 +430,19 @@ NS_IMETHODIMP nsFontRetrieverService::IsFontScalable(const nsString & aFontName,
    
   PRBool found = PR_FALSE; 
   Reset(); 
-  do { 
+  do 
+  { 
     nsAutoString name; 
     Get(&name); 
-    if (name.Equals(aFontName)) { 
+    if (name.Equals(aFontName)) 
+    { 
       found = PR_TRUE; 
       break; 
     } 
   } while (Advance() == NS_OK); 
 
-  if (found) { 
+  if (found) 
+  { 
     FontInfo * fontInfo = (FontInfo *)mFontList->ElementAt(mNameIterInx); 
     *aResult = fontInfo->mIsScalable; 
     mNameIterInx = saveIterInx;
