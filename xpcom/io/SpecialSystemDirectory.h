@@ -111,6 +111,7 @@ enum SystemDirectories {
   Unix_LocalDirectory       =   301,   
   Unix_LibDirectory         =   302,   
   Unix_HomeDirectory        =   303,
+  Unix_DesktopDirectory     =   304,
   
   BeOS_SettingsDirectory    =   401,   
   BeOS_HomeDirectory        =   402,   
