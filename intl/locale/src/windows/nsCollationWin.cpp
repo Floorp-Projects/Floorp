@@ -18,6 +18,7 @@
 
 
 #include "nsCollationWin.h"
+#include <windows.h>
 
 
 NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);
@@ -53,37 +54,30 @@ nsresult nsCollationWin::Initialize(const nsString& locale)
 nsresult nsCollationWin::GetSortKeyLen(const nsCollationStrength strength, 
                            const nsString& stringIn, PRUint32* outLen)
 {
-  *outLen = stringIn.Length() * sizeof(PRUnichar);
+  nsString stringNormalized(stringIn);
+  
+  if (mCollation != NULL && strength == kCollationCaseInSensitive) {
+    mCollation->NormalizeString(stringNormalized);
+  }
+  // API returns number of bytes when LCMAP_SORTKEY is specified 
+	*outLen = LCMapStringW(GetUserDefaultLCID(), LCMAP_SORTKEY, 
+                              (LPCWSTR) stringNormalized.GetUnicode(), (int) stringNormalized.Length(), NULL, 0);
+
   return NS_OK;
 }
 
 nsresult nsCollationWin::CreateSortKey(const nsCollationStrength strength, 
                            const nsString& stringIn, PRUint8* key, PRUint32* outLen)
 {
-  // temporary implementation, call FE eventually
-  PRUint32 byteLenIn = stringIn.Length() * sizeof(PRUnichar);
+  int byteLen;
+  nsString stringNormalized(stringIn);
 
-  if (byteLenIn > *outLen) {
-    *outLen = 0;
+  if (mCollation != NULL && strength == kCollationCaseInSensitive) {
+    mCollation->NormalizeString(stringNormalized);
   }
-  else {
-    if (mCollation != NULL) {
-      mCollation->NormalizeString(stringIn);
-    }
-    if (strength != kCollationCaseSensitive) {
-      nsString *stringLower = new nsString(stringIn);
-      if (NULL == stringLower)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-      stringLower->ToLowerCase();
-      memcpy((void *) key, (void *) stringLower->GetUnicode(), byteLenIn);
-      delete stringLower;
-    }
-   else {
-      memcpy((void *) key, (void *) stringIn.GetUnicode(), byteLenIn);
-   }
-   *outLen = byteLenIn;
-  }
+  byteLen = LCMapStringW(GetUserDefaultLCID(), LCMAP_SORTKEY, 
+                            (LPCWSTR) stringNormalized.GetUnicode(), (int) stringNormalized.Length(), (LPWSTR) key, *outLen);
+  *outLen = (PRUint32) byteLen;
 
   return NS_OK;
 }
