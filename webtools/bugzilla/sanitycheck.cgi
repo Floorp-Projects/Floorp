@@ -166,3 +166,21 @@ while (@row = FetchSQLData()) {
         Alert("Bad who $who in " . BugLink($id));
     }
 }
+
+
+Status("Checking dependency table");
+
+SendSQL("select blocked, dependson from dependencies");
+while (@row = FetchSQLData()) {
+    my ($blocked, $dependson) = (@row);
+    if (!defined $bugid{$blocked}) {
+        Alert("Bad blocked " . BugLink($blocked));
+    }
+    if (!defined $bugid{$dependson}) {
+        Alert("Bad dependson " . BugLink($dependson));
+    }
+}
+
+
+
+Status("Sanity check completed.");
