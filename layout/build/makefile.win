@@ -46,6 +46,7 @@ LCFLAGS = \
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\dom \
 	-I$(PUBLIC)\js -I..\..\style\src -I..\html\base\src -I..\base\src \
+	-I..\xul\content\src \
 !ifdef NECKO
 	-I$(PUBLIC)\necko \
 !else
