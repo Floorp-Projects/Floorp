@@ -606,8 +606,11 @@ REGCHROME = @perl $(DEPTH)\config\add-chrome.pl $(DIST)\bin\chrome\installed-chr
 !if exist($(JAR_MANIFEST))
 
 chrome:: $(CHROME_DEPS)
+!if "$(OS_TARGET)"=="WIN95"
+        $(PERL) $(DEPTH)\config\make-jars.pl $(_JAR_FLAT_FILES_ONLY) -l -d $(DIST)\bin\chrome < $(JAR_MANIFEST)
+!else
         $(PERL) $(DEPTH)\config\make-jars.pl $(_JAR_FLAT_FILES_ONLY) -d $(DIST)\bin\chrome < $(JAR_MANIFEST)
-
+!endif
 !endif
 
 regchrome:
