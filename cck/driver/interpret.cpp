@@ -658,6 +658,21 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 						}
 					}
 				}
+				else if (strcmp(pcmd, "IsAutourlempty") == 0)
+				{
+					CString proxyConfigoption = GetGlobal("radioGroup2");
+					if (proxyConfigoption == "3")
+					{
+						WIDGET *wid;
+						wid = findWidget("autoproxyurl");
+						CString autourl = CWizardUI::GetScreenValue(wid);
+						if (autourl == "")
+						{
+							AfxMessageBox("Please enter a URL for automatic proxy configuration", MB_OK);
+							return FALSE;
+						}
+					}
+				}
 				else if (strcmp(pcmd, "IsSamedomain") == 0)
 				{
 					CString ispDomainName = GetGlobal("DomainName");
@@ -700,7 +715,7 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 					}
 					
 				}
-				else if(strcmp(pcmd, "IsPortnumEmpty") ==0)
+ 				else if(strcmp(pcmd, "IsPortnumEmpty") ==0)
 				{
 					WIDGET *wid;
 					wid = curWidget;
