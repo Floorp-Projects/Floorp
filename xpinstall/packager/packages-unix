@@ -235,6 +235,7 @@ bin/components/libtransformiix.so
 bin/chrome/help.jar
 bin/chrome/toolkit.jar
 bin/chrome/comm.jar
+bin/chrome/content-packs.jar
 bin/chrome/modern.jar
 bin/chrome/classic.jar
 bin/chrome/embed.jar
