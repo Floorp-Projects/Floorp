@@ -620,8 +620,9 @@ public class NativeString extends ScriptableObject {
         result.append('<');
         result.append(begin);
         if (value != null) {
-            result.append('=');
+            result.append("=\"");
             result.append(value);
+            result.append('"');
         }
         result.append('>');
         result.append(this.string);
