@@ -59,11 +59,11 @@
 #include "nsIDocument.h"
 #include "nsIScrollableFrame.h"
 
+#include "nsIXULDocument.h" // Temporary fix for Bug 36558
+
 #ifdef DO_NEW_REFLOW
 #include "nsIFontMetrics.h"
 #endif
-
-static const PRBool kGoodToGo = PR_FALSE;
 
 static NS_DEFINE_IID(kIFormControlFrameIID,      NS_IFORMCONTROLFRAME_IID);
 static NS_DEFINE_IID(kIComboboxControlFrameIID,  NS_ICOMBOBOXCONTROLFRAME_IID);
@@ -244,6 +244,8 @@ nsComboboxControlFrame::nsComboboxControlFrame()
   mCachedUncComboSize.width    = kSizeNotSet;
   mCachedUncComboSize.height   = kSizeNotSet;
   mItemDisplayWidth             = 0;
+
+  mGoodToGo = PR_FALSE;
    //Shrink the area around it's contents
   //SetFlags(NS_BLOCK_SHRINK_WRAP);
 
@@ -309,6 +311,25 @@ nsComboboxControlFrame::Init(nsIPresContext*  aPresContext,
    // which don't have it passed in.
   mPresContext = aPresContext;
   NS_ADDREF(mPresContext);
+
+  //-------------------------------
+  // Start - Temporary fix for Bug 36558
+  //-------------------------------
+  mGoodToGo = PR_FALSE;
+  nsIDocument * document;
+  nsresult rv = aContent->GetDocument(document);
+  if (NS_SUCCEEDED(rv) && document) {
+    nsIXULDocument * xulDoc;
+    if (NS_SUCCEEDED(document->QueryInterface(NS_GET_IID(nsIXULDocument), (void**)&xulDoc))) {
+      mGoodToGo = PR_FALSE;
+    } else {
+      mGoodToGo = PR_TRUE;
+    }
+  }
+  //-------------------------------
+  // Done - Temporary fix for Bug 36558
+  //-------------------------------
+  
   return nsAreaFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 }
 
@@ -2048,7 +2069,7 @@ nsComboboxControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
 NS_IMETHODIMP 
 nsComboboxControlFrame::CreateDisplayFrame(nsIPresContext* aPresContext)
 {
-  if (kGoodToGo) {
+  if (mGoodToGo) {
     return NS_OK;
   }
 
@@ -2167,7 +2188,7 @@ nsComboboxControlFrame::CreateFrameFor(nsIPresContext*   aPresContext,
   *aFrame = nsnull;
   NS_ASSERTION(mDisplayContent != nsnull, "mDisplayContent can't be null!");
 
-  if (!kGoodToGo) {
+  if (!mGoodToGo) {
     return NS_ERROR_FAILURE;
   }
 
@@ -2261,7 +2282,7 @@ nsComboboxControlFrame::Destroy(nsIPresContext* aPresContext)
    // Cleanup frames in popup child list
   mPopupFrames.DestroyFrames(aPresContext);
 
-  if (!kGoodToGo) {
+  if (!mGoodToGo) {
     if (mDisplayFrame) {
       mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, mDisplayFrame, nsnull);
       mDisplayFrame->Destroy(aPresContext);
@@ -2419,7 +2440,7 @@ nsComboboxControlFrame::Paint(nsIPresContext* aPresContext,
 #endif
   nsAreaFrame::Paint(aPresContext,aRenderingContext,aDirtyRect,aWhichLayer);
 
-  //if (kGoodToGo) {
+  //if (mGoodToGo) {
   //  return NS_OK;
   //}
 

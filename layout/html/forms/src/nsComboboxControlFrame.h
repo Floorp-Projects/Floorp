@@ -265,6 +265,8 @@ protected:
   //nscoord               mItemDisplayHeight;
   nsCSSFrameConstructor* mFrameConstructor;
 
+  PRBool mGoodToGo;
+
 #ifdef DO_REFLOW_COUNTER
   PRInt32 mReflowId;
 #endif
