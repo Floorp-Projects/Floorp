@@ -213,6 +213,19 @@ XPCWrappedNativeScope::~XPCWrappedNativeScope()
 }
 
 
+JS_STATIC_DLL_CALLBACK(JSDHashOperator)
+WrappedNativeJSGCThingMarker(JSDHashTable *table, JSDHashEntryHdr *hdr,
+                             uint32 number, void *arg)
+{
+    XPCWrappedNative* wrapper = ((Native2WrappedNativeMap::Entry*)hdr)->value;
+    if(wrapper->HasExternalReference())
+    {
+        JS_MarkGCThing((JSContext*)arg, wrapper->GetFlatJSObject(), 
+                       "XPCWrappedNative::mFlatJSObject", nsnull);
+    }
+    return JS_DHASH_NEXT;
+}
+
 // static
 void
 XPCWrappedNativeScope::FinishedMarkPhaseOfGC(JSContext* cx, XPCJSRuntime* rt)
@@ -220,12 +233,21 @@ XPCWrappedNativeScope::FinishedMarkPhaseOfGC(JSContext* cx, XPCJSRuntime* rt)
     // Hold the lock until return...
     XPCAutoLock lock(rt->GetMapLock());
 
+    XPCWrappedNativeScope* cur;
+    
+    // Do JS_MarkGCThing for all wrapperednatives with external references.
+    for(cur = gScopes; cur; cur = cur->mNext)
+    {
+        cur->mWrappedNativeMap->Enumerate(WrappedNativeJSGCThingMarker, cx);
+    }
+
     // Since the JSGC_END call happens outside of a lock,
     // it is possible for us to get called here twice before the FinshedGC
     // call happens. So, we allow for gDyingScopes not being null.
 
-    XPCWrappedNativeScope* cur = gScopes;
     XPCWrappedNativeScope* prev = nsnull;
+    cur = gScopes;
+
     while(cur)
     {
         XPCWrappedNativeScope* next = cur->mNext;

@@ -234,6 +234,13 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
             case JSGC_MARK_END:
             {
                 NS_ASSERTION(!self->mDoingFinalization, "bad state");
+    
+                // mThreadRunningGC indicates that GC is running
+                { // scoped lock
+                    XPCAutoLock lock(self->GetMapLock());
+                    NS_ASSERTION(!self->mThreadRunningGC, "bad state");
+                    self->mThreadRunningGC = PR_GetCurrentThread();
+                }
 
                 // Skip this part if XPConnect is shutting down. We get into
                 // bad locking problems with the thread iteration otherwise.
@@ -470,6 +477,16 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
 
                 self->mDyingWrappedNativeProtoMap->
                     Enumerate(DyingProtoKiller, nsnull);
+
+
+                // mThreadRunningGC indicates that GC is running.
+                // Clear it and notify waiters.
+                { // scoped lock
+                    XPCAutoLock lock(self->GetMapLock());
+                    NS_ASSERTION(self->mThreadRunningGC == PR_GetCurrentThread(), "bad state");
+                    self->mThreadRunningGC = nsnull;
+                    xpc_NotifyAll(self->GetMapLock());
+                }
 
                 break;
             }
@@ -738,6 +755,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect,
    mDyingWrappedNativeProtoMap(XPCWrappedNativeProtoMap::newMap(XPC_DYING_NATIVE_PROTO_MAP_SIZE)),
    mDetachedWrappedNativeProtoMap(XPCWrappedNativeProtoMap::newMap(XPC_DETACHED_NATIVE_PROTO_MAP_SIZE)),
    mMapLock(XPCAutoLock::NewLock("XPCJSRuntime::mMapLock")),
+   mThreadRunningGC(nsnull),
    mWrappedJSToReleaseArray(),
    mNativesToReleaseArray(),
    mMainThreadOnlyGC(JS_FALSE),

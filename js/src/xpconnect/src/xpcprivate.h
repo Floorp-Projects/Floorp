@@ -229,10 +229,30 @@ extern const char XPC_XPCONNECT_CONTRACTID[];
 
 typedef PRMonitor XPCLock;
 
+static inline void xpc_Wait(XPCLock* lock) 
+    {
+        NS_ASSERTION(lock, "xpc_Wait called with null lock!");
+#ifdef DEBUG
+        PRStatus result = 
+#endif    
+        PR_Wait(lock, PR_INTERVAL_NO_TIMEOUT);
+        NS_ASSERTION(PR_SUCCESS == result, "bad result from PR_Wait!");
+    }
+
+static inline void xpc_NotifyAll(XPCLock* lock) 
+    {
+        NS_ASSERTION(lock, "xpc_NotifyAll called with null lock!");
+#ifdef DEBUG
+        PRStatus result = 
+#endif    
+        PR_NotifyAll(lock);
+        NS_ASSERTION(PR_SUCCESS == result, "bad result from PR_NotifyAll!");
+    }
+
 // This is a cloned subset of nsAutoMonitor. We want the use of a monitor -
 // mostly because we need reenterability - but we also want to support passing
 // a null monitor in without things blowing up. This is used for wrappers that
-// are gaurenteeded to be used only on one thread. We avoid lock overhead by
+// are guaranteed to be used only on one thread. We avoid lock overhead by
 // using a null monitor. By changing this class we can avoid having multiplte
 // code paths or (conditional) manual calls to PR_{Enter,Exit}Monitor.
 //
@@ -547,6 +567,8 @@ public:
 
     void SystemIsBeingShutDown(XPCCallContext* ccx);
 
+    PRThread* GetThreadRunningGC() const {return mThreadRunningGC;}
+
     ~XPCJSRuntime();
 
 #ifdef XPC_CHECK_WRAPPERS_AT_SHUTDOWN
@@ -594,6 +616,7 @@ private:
     XPCWrappedNativeProtoMap* mDyingWrappedNativeProtoMap;
     XPCWrappedNativeProtoMap* mDetachedWrappedNativeProtoMap;
     XPCLock* mMapLock;
+    PRThread* mThreadRunningGC;
     nsVoidArray mWrappedJSToReleaseArray;
     nsVoidArray mNativesToReleaseArray;
     JSBool mMainThreadOnlyGC;
@@ -1862,6 +1885,8 @@ public:
     static nsresult GatherProtoScriptableCreateInfo(
                         nsIClassInfo* classInfo,
                         XPCNativeScriptableCreateInfo* sciProto);
+
+    JSBool HasExternalReference() const {return mRefCnt > 1;}
 
     // Make ctor and dtor protected (rather than private) to placate nsCOMPtr.
 protected:
