@@ -35,7 +35,10 @@
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kUrlListenerManagerCID, NS_URLLISTENERMANAGER_CID);
 
-nsSmtpUrl::nsSmtpUrl(nsISupports* aContainer, nsIURLGroup* aGroup) : m_fileName(""), m_userName(""), m_userPassword("")
+nsSmtpUrl::nsSmtpUrl(nsISupports* aContainer, nsIURLGroup* aGroup) :
+    m_userPassword(""),
+    m_userName(""),
+    m_fileName("")
 {
     NS_INIT_REFCNT();
 
