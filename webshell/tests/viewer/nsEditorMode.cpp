@@ -50,7 +50,7 @@ static NS_DEFINE_CID(kEditorCID, NS_EDITOR_CID);
 nsresult NS_InitEditorMode(nsIDOMDocument *aDOMDocument, nsIPresShell* aPresShell)
 {
   nsresult result = NS_OK;
-  static needsInit=PR_TRUE;
+  static PRBool needsInit=PR_TRUE;
   // This is a big leak if called > once, but its only temp test code, correct?
   if (gEditor)
     gEditor=nsnull;
