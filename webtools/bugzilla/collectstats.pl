@@ -441,7 +441,13 @@ sub CollectSeriesData {
 
     CleanupChartTables() if ($days_since_epoch % 7 == 0);
 
+    # We save a copy of the main $dbh and then switch to the shadow and get
+    # that one too. Remember, these may be the same.
+    Bugzilla->switch_to_main_db();
     my $dbh = Bugzilla->dbh;
+    Bugzilla->switch_to_shadow_db();
+    my $shadow_dbh = Bugzilla->dbh;
+    
     my $serieses = $dbh->selectall_hashref("SELECT series_id, query, creator " .
                       "FROM series " .
                       "WHERE frequency != 0 AND " . 
@@ -472,7 +478,7 @@ sub CollectSeriesData {
         
         # We need to count the returned rows. Without subselects, we can't
         # do this directly in the SQL for all queries. So we do it by hand.
-        my $data = $dbh->selectall_arrayref($sql);
+        my $data = $shadow_dbh->selectall_arrayref($sql);
         
         my $count = scalar(@$data) || 0;
 
@@ -482,6 +488,7 @@ sub CollectSeriesData {
 }
 
 sub CleanupChartTables {
+    Bugzilla->switch_to_main_db();
     my $dbh = Bugzilla->dbh;
 
     $dbh->do("LOCK TABLES series WRITE, user_series_map AS usm READ");
@@ -501,4 +508,5 @@ sub CleanupChartTables {
     }
    
     $dbh->do("UNLOCK TABLES");
+    Bugzilla->switch_to_shadow_db();
 }
