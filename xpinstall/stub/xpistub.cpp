@@ -103,23 +103,17 @@ PR_PUBLIC_API(nsresult) XPI_Init(
     // Initialize XPCOM and AutoRegister() its components
     //--------------------------------------------------------------------
 #ifdef XP_MAC
-
-    nsLocalFile *binDir = new nsLocalFile;
-	if (binDir)
-	{
-        binDir->InitWithFSSpec(&aXPIStubDir);
-        rv = NS_InitXPCOM2(&gServiceMgr, binDir, nsnull);
-    }
-    else
-        return NS_ERROR_FAILURE;
-        
+    nsCOMPtr<nsILocalFileMac>	binDir;
+    rv = NS_NewLocalFileWithFSSpec((FSSpec*)&aXPIStubDir, PR_FALSE, getter_AddRefs(binDir));
+    if (NS_FAILED(rv)) return rv;
+    
+    rv = NS_InitXPCOM2(&gServiceMgr, binDir, nsnull);
+    
     // binDir is contaminated now.  Need compDir to pass to AutoRegister.
-    nsLocalFile *compDir = new nsLocalFile;
-    if (compDir)
-        compDir->InitWithFSSpec(&aXPIStubDir);
-    else
-        return NS_ERROR_FAILURE;
-	
+    nsCOMPtr<nsILocalFileMac>	compDir;
+    rv = NS_NewLocalFileWithFSSpec((FSSpec*)&aXPIStubDir, PR_FALSE, getter_AddRefs(compDir));
+    if (NS_FAILED(rv)) return rv;
+
 #elif defined(XP_PC)
 
     char componentPath[MAX_PATH];
