@@ -37,7 +37,7 @@ sub Help {
         $help->{'editquote'} = 'Edit a quote in the database. The format is \'editquote id quote - author (note)\' which will update the quote with that ID, using the new text, author, etc, in the same way as for \'addquote\'.';
     }
     if ($self->isAdmin($event)) {
-        $help->{'setupquotes'} = 'Configure the quotes database connection. Format: \'setupquotes dbhost.example.com:dbport dbname dbuser dbpass\'. You can also just say \'setupquotes\' to check on the configuration. See also \'help quote-defaults\'.';
+        $help->{'setupquotes'} = 'Configure the quotes database connection. Format: \'setupquotes dbhost.example.com:dbport dbname dbuser dbpass\'. Port is optional (default 3306). You can also just say \'setupquotes\' to check on the configuration. See also \'help quote-defaults\'.';
         $help->{'quote-defaults'} = 'To get the default configuration, use \'setupquotes mozbotquotes.damowmow.com:3306 mozbotquotes mozbotquotes mozbotquotes\'.';
     }
     return $help;
@@ -225,10 +225,10 @@ sub Told {
     my ($event, $message) = @_;
     if ($message =~ /^\s*set\s*up\s*quotes?(?:\s+(.*?))?\s*$/osi and $self->isAdmin($event)) {
         my $data = $1;
-        if ($data =~ m/^(\S+):(\S+)\s+(\S+)\s+(\S+)\s+(\S+)$/osi) {
+        if ($data =~ m/^(\S+?)(?::(\S+))?\s+(\S+)\s+(\S+)\s+(\S+)$/osi) {
             $self->dbdisconnect($event);
             $self->{'dbhost'} = $1;
-            $self->{'dbport'} = $2;
+            $self->{'dbport'} = $2 || 3306;
             $self->{'dbname'} = $3;
             $self->{'dbuser'} = $4;
             $self->{'dbpass'} = $5;
@@ -273,7 +273,7 @@ sub Told {
             $self->say($event, "Checking connection...");
             $self->verifyConnection($event);
         } else {
-            $self->say($event, 'The format is: \'setupquotes host.domain.tld:port database username password\' or just \'setupquotes\' to check the configuration.');
+            $self->say($event, 'The format is: \'setupquotes host.domain.tld:port database username password\' (\':port\' is optional, defaults to 3306) or just \'setupquotes\' to check the configuration.');
         }
     } elsif ($message =~ /^\s*quote(?:\s+(.+?))?\s*$/osi) {
         $self->getQuote($event, $1);
