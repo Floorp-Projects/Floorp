@@ -240,8 +240,7 @@ nsJARChannel::OpenJARElement()
 {
     nsresult rv;
     nsAutoCMonitor mon(this);
-    PRInt32 len;
-    rv = Open(&len); // is there a better way....  where is my C++ book?!
+    rv = Open((PRInt32*) nsnull); // is there a better way....  where is my C++ book?!
     if (NS_SUCCEEDED(rv))
         rv = GetInputStream(getter_AddRefs(mSynchronousInputStream));
     mon.Notify();       // wake up nsIChannel::Open
