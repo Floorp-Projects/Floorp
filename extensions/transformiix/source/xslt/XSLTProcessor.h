@@ -332,10 +332,10 @@ private:
                                 ProcessorState* ps,
                                 const String& mode);
 
-    void processTopLevel(Document* aSource,
-                         Document* aStylesheet,
-                         ListIterator* importFrame,
-                         ProcessorState* aPs);
+    void processStylesheet(Document* aSource,
+                           Document* aStylesheet,
+                           ListIterator* aImportFrame,
+                           ProcessorState* aPs);
 
     void processTopLevel(Document* aSource,
                          Element* aStylesheet,
