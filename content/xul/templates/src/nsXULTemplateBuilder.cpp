@@ -1295,8 +1295,10 @@ nsXULTemplateBuilder::CheckContainer(nsIRDFResource* aResource, PRBool* aIsConta
             isContainer = PR_TRUE;
 
             // ...should we check if it's empty?
-            if (!aIsEmpty || (mFlags & eDontTestEmpty))
+            if (!aIsEmpty || (mFlags & eDontTestEmpty)) {
+                isEmpty = PR_FALSE;
                 break;
+            }
 
             // Yes: call GetTarget() and see if there's anything on
             // the other side...
