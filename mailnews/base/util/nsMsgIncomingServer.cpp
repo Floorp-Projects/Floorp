@@ -559,10 +559,12 @@ nsMsgIncomingServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, const
 {
     nsresult rv = NS_OK;
 
-    NS_ENSURE_ARG_POINTER(aMsgWindow);
     NS_ENSURE_ARG_POINTER(aPassword);
 
     if (m_password.IsEmpty()) {
+        // aMsgWindow is required if we need to prompt
+        NS_ENSURE_ARG_POINTER(aMsgWindow);
+        
 		// prompt the user for the password
         nsCOMPtr<nsIWebShell> webShell;
         rv = aMsgWindow->GetRootWebShell(getter_AddRefs(webShell));
@@ -697,17 +699,32 @@ nsMsgIncomingServer::SetLocalPath(nsIFileSpec *spec)
 NS_IMETHODIMP
 nsMsgIncomingServer::SetRememberPassword(PRBool value)
 {
-    if (value)
-        SetPrefPassword(m_password);
-    else
-        SetPrefPassword(nsnull);
-    return SetBoolValue("remember_password", value);
+    // for now, only handle the case where we're un-remembering the password
+    // fix after beta1
+    if (!value)
+        ForgetPassword();
+    
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsMsgIncomingServer::GetRememberPassword(PRBool* value)
 {
-    return GetBoolValue("remember_password", value);
+    NS_ENSURE_ARG_POINTER(value);
+
+    nsresult rv;
+
+    nsXPIDLCString serverURI;
+    rv = GetServerURI(getter_Copies(serverURI));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIWalletService> walletService =
+        do_GetService(kWalletServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = walletService->HaveData(serverURI, PR_FALSE /* no strip */, nsnull, value);
+
+    return rv;
 }
 
 NS_IMETHODIMP
