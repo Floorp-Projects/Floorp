@@ -549,7 +549,6 @@ public class Parser
 
         Node pn = nf.initFunction(fnNode, functionIndex, body, syntheticType);
         if (memberExprNode != null) {
-            pn = nf.initFunction(fnNode, functionIndex, body, syntheticType);
             pn = nf.createAssignment(Token.ASSIGN, memberExprNode, pn);
             if (functionType != FunctionNode.FUNCTION_EXPRESSION) {
                 // XXX check JScript behavior: should it be createExprStatement?
