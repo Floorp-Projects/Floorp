@@ -1863,19 +1863,12 @@ nsPlainTextSerializer::GetIdForContent(nsIContent* aContent,
   mContent->GetTag(getter_AddRefs(tagname));
   if (!tagname) return NS_ERROR_FAILURE;
   
-  nsAutoString namestr;
-  tagname->ToString(namestr);
-  
   nsIParserService* parserService =
     nsContentUtils::GetParserServiceWeakRef();
   if (!parserService)
     return NS_ERROR_FAILURE;
 
-  nsresult rv;
-  rv = parserService->HTMLStringTagToId(namestr, aID);
-  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-
-  return NS_OK;
+  return parserService->HTMLAtomTagToId(tagname, aID);
 }
 
 /**
