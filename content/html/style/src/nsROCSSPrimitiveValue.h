@@ -99,6 +99,20 @@ public:
     mType = CSS_STRING;
   }
 
+  void SetURI(const nsACString& aString)
+  {
+    Reset();
+    mValue.mString = ToNewUnicode(aString);
+    mType = CSS_URI;
+  }
+
+  void SetURI(const nsAString& aString)
+  {
+    Reset();
+    mValue.mString = ToNewUnicode(aString);
+    mType = CSS_URI;
+  }
+
   void SetRect(nsIDOMRect* aRect)
   {
     NS_PRECONDITION(aRect, "Null rect being set!");
@@ -110,7 +124,7 @@ public:
 
   void Reset(void)
   {
-    if (mType == CSS_STRING) {
+    if (mType == CSS_STRING || mType == CSS_URI) {
       NS_ASSERTION(mValue.mString, "Null string should never happen");
       nsMemory::Free(mValue.mString);
       mValue.mString = nsnull;
