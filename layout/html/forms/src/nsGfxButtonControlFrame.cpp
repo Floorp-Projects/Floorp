@@ -326,11 +326,14 @@ nsGfxButtonControlFrame::Reflow(nsIPresContext*          aPresContext,
     nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
   }
 
+#if 0
   nsresult skiprv = nsFormControlFrame::SkipResizeReflow(mCacheSize, mCachedMaxElementSize, aPresContext, 
                                                          aDesiredSize, aReflowState, aStatus);
+
   if (NS_SUCCEEDED(skiprv)) {
     return skiprv;
   }
+#endif
 
   if ((kSuggestedNotSet != mSuggestedWidth) || 
       (kSuggestedNotSet != mSuggestedHeight)) {
@@ -366,7 +369,9 @@ nsGfxButtonControlFrame::Reflow(nsIPresContext*          aPresContext,
 #endif
   aStatus = NS_FRAME_COMPLETE;
 
+#if 0
   nsFormControlFrame::SetupCachedSizes(mCacheSize, mCachedMaxElementSize, aDesiredSize);
+#endif
 
   return rv;
 }
