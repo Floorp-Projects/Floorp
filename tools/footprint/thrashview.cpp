@@ -47,8 +47,13 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <X11/Xlib.h>
+#include <fstream>
+#include <getopt.h>
 
 #define GET_DISPLAY_FD(display_) ConnectionNumber(display_)
+
+static bool opt_working_set = false;
+static bool opt_fixed = false;
 
 static Display *display;
 static Window window;
@@ -58,9 +63,11 @@ const unsigned int cellsize = 4;
 static unsigned int width = 64 * cellsize;
 static unsigned int height = 64 * cellsize;
 
+#define PAGESIZE 4096
+#define MAXPAGES 4096  // should hold 16MB worth of code
 static unsigned int minpage = static_cast<unsigned int>(-1);
 static unsigned int maxpage = 0;
-static unsigned char pages[64*64]; // should hold 16MB worth of code
+static unsigned char pages[MAXPAGES];
 
 
 /**
@@ -117,13 +124,30 @@ init()
 static void
 decay()
 {
+    int ws_immediate = 0, ws_longterm = 0;
+
     unsigned char *page = pages;
     unsigned char *limit = pages + (maxpage - minpage) + 1;
     for (; page < limit; ++page) {
+        if (opt_working_set) {
+            if (*page == 255)
+                ++ws_immediate;
+            if (*page)
+                ++ws_longterm;
+        }
+
         if (*page) {
             *page /= 8;
             *page *= 7;
         }
+    }
+
+    if (opt_working_set) {
+        dec(cout);
+        cout << "immediate: " << ws_immediate << " pages, ";
+        cout << "longterm: " << ws_longterm << " pages, ";
+        cout << "mapped: " << ((maxpage - minpage) + 1) << " pages";
+        cout << endl;
     }
 }
 
@@ -234,7 +258,7 @@ read_addrs()
     ssize_t count;
     while ((count = read(0, buf, sizeof buf)) > 0) {
         if (count % sizeof(unsigned int))
-            fprintf(stderr, "truncating unaligned read\n");
+            cerr << "truncating unaligned read" << endl;
 
         count /= sizeof buf[0];
 
@@ -243,20 +267,30 @@ read_addrs()
 
         for (; addr < limit; ++addr) {
             // map the address to a page
-            unsigned int page = *addr / 4096;
+            unsigned int page = *addr / PAGESIZE;
 
-            if (page < minpage) {
-                if (maxpage) {
-                    // Everything needs to shift.
-                    unsigned int shift = minpage - page;
-                    memmove(pages + shift, pages, maxpage - minpage);
-                    memset(pages, 0, shift);
+            // XXX Don't let stray addresses bring us down. Should
+            // really fix this by knowing what the ranges of addresses
+            // we ought to expect are (e.g., by reading the symtab)
+            if (maxpage && page > maxpage && page - maxpage > MAXPAGES)
+                continue;
+
+            if (! opt_fixed) {
+                // Potentially adjust minpage and maxpage to
+                // accomodate an out-of-bounds address.
+                if (page < minpage) {
+                    if (maxpage) {
+                        // everything needs to shift.
+                        unsigned int shift = minpage - page;
+                        memmove(pages + shift, pages, maxpage - minpage);
+                        memset(pages, 0, shift);
+                    }
+                    minpage = page;
                 }
-                minpage = page;
-            }
 
-            if (page > maxpage)
-                maxpage = page;
+                if (page > maxpage)
+                    maxpage = page;
+            }
 
             page -= minpage;
             pages[page] = 255;
@@ -345,12 +379,74 @@ finish()
         XCloseDisplay(display);
 }
 
+static struct option opts[] = {
+    { "working-set", no_argument,       0, 'w' },
+    { "min",         required_argument, 0, 'm' },
+    { "size",        required_argument, 0, 's' },
+    { "max",         required_argument, 0, 'x' },
+    { 0,             0,                 0, 0   }
+};
+
+static void
+usage()
+{
+    cerr << "thrashview [--working-set] [--min=<min>] [--max=<max>] [--size=<size>]" << endl;
+}
+
 /**
  * Program starts here.
  */
 int
 main(int argc, char *argv[])
 {
+    int size = 0;
+
+    while (1) {
+        int option_index = 0;
+        int c = getopt_long(argc, argv, "wm:x:s:", opts, &option_index);
+
+        if (c < 0)
+            break;
+
+        switch (c) {
+        case 'w':
+            opt_working_set = true;
+            break;
+
+        case 'm':
+            minpage = strtol(optarg, 0, 0) / PAGESIZE;
+            opt_fixed = true;
+            break;
+
+        case 's':
+            size = strtol(optarg, 0, 0) / PAGESIZE;
+            break;
+
+        case 'x':
+            maxpage = strtol(optarg, 0, 0) / PAGESIZE;
+            opt_fixed = true;
+            break;
+
+        default:
+            usage();
+            return 1;
+        }
+    }
+
+    if (minpage && !maxpage) {
+        if (!size) {
+            cerr << argv[0] << ": minpage specified without maxpage or size" << endl;
+            return 1;
+        }
+
+        maxpage = minpage + size;
+    }
+
+    if (opt_fixed && minpage > maxpage) {
+        cerr << argv[0] << ": invalid page range" << endl;
+        return 1;
+    }
+
     if (init())
         run();
 
