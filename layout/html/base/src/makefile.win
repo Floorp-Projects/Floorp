@@ -51,6 +51,7 @@ CPPSRCS=				\
 	nsSpacerFrame.cpp		\
 	nsSplittableFrame.cpp		\
 	nsTextFrame.cpp			\
+	nsTextTransformer.cpp		\
 	nsWBRFrame.cpp			\
 	$(NULL)
 
@@ -83,6 +84,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsSpacerFrame.obj		\
 	.\$(OBJDIR)\nsSplittableFrame.obj	\
 	.\$(OBJDIR)\nsTextFrame.obj		\
+	.\$(OBJDIR)\nsTextTransformer.obj	\
 	.\$(OBJDIR)\nsWBRFrame.obj		\
 	$(NULL)
 
