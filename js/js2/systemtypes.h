@@ -68,7 +68,7 @@ typedef float float32;
 #else
  typedef wchar_t char16;
  #ifndef _WIN32 // Microsoft VC6 bug: wchar_t should be a built-in type, not a typedef
-  typedef unsigned wchar_t uchar16;
+  typedef wchar_t uchar16;
  #else
   typedef wchar_t uchar16;
  #endif
