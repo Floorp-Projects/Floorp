@@ -197,9 +197,8 @@ pull_ldapcsdk:
 	cd $(MOZ_SRC)\.
 	$(CVSCO_LDAPCSDK) mozilla/directory/c-sdk
 
-pull_xpconnect:
+pull_xpconnect: pull_nspr
 	cd $(MOZ_SRC)\.
-	$(CVSCO_NSPR) mozilla/nsprpub
 	$(CVSCO) mozilla/include
 	$(CVSCO) mozilla/config
 	$(CVSCO) -l mozilla/js
@@ -208,6 +207,7 @@ pull_xpconnect:
 	$(CVSCO) mozilla/js/src/xpconnect
 	$(CVSCO) mozilla/modules/libreg
 	$(CVSCO) mozilla/xpcom
+	$(CVSCO) mozilla/string
 
 # pull either layout only or seamonkey the browser
 pull_layout:
@@ -260,6 +260,8 @@ clobber_xpconnect:
 	nmake -f makefile.win clobber_all
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\modules\libreg
 	nmake -f makefile.win clobber_all
+	@cd $(MOZ_SRC)\$(MOZ_TOP)\string
+	nmake -f makefile.win clobber_all
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\xpcom
 	nmake -f makefile.win clobber_all
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\js
@@ -281,11 +283,11 @@ depend:
 	nmake -f makefile.win depend 
 
 depend_xpconnect:
-	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
-	nmake -f makefile.win depend
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\include
 	nmake -f makefile.win depend
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\modules\libreg
+	nmake -f makefile.win depend
+	@cd $(MOZ_SRC)\$(MOZ_TOP)\string
 	nmake -f makefile.win depend
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\xpcom
 	nmake -f makefile.win depend
@@ -300,15 +302,17 @@ build_psm:
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\security
 	nmake -f makefile.win export
 
-build_xpconnect:
-	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
-	nmake -f makefile.win all
+build_xpconnect: build_nspr
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\include
 	nmake -f makefile.win all
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\modules\libreg
 	nmake -f makefile.win all
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\xpcom
+	nmake -f makefile.win export
+	@cd $(MOZ_SRC)\$(MOZ_TOP)\string
 	nmake -f makefile.win all
+	@cd $(MOZ_SRC)\$(MOZ_TOP)\xpcom
+	nmake -f makefile.win install
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\js\src
 	nmake -f makefile.win all
 
