@@ -23,12 +23,8 @@
 
 /*----------------------------------------------------------------------*
  *   Implements a simple AppleSingle decoder, as described in RFC1740 
- *	 http://andrew2.andrew.cmu.edu/rfc/rfc1740.html
+ *   http://andrew2.andrew.cmu.edu/rfc/rfc1740.html
  *----------------------------------------------------------------------*/
-
-#ifndef macintosh
-#error Sorry! This is Mac only functionality!
-#endif
 
 #pragma options align=mac68k
 
@@ -37,48 +33,50 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <Files.h>
-#include <Errors.h>
+#include <Carbon/Carbon.h>
 
 
 /*----------------------------------------------------------------------*
  *   Struct definitions from RFC1740
  *----------------------------------------------------------------------*/
+#define APPLESINGLE_MAGIC   0x00051600L
+#define APPLESINGLE_VERSION 0x00020000L
+
 typedef struct ASHeader /* header portion of AppleSingle */ 
 {
-    /* AppleSingle = 0x00051600; AppleDouble = 0x00051607 */
-       UInt32 magicNum; 	/* internal file type tag */ 
-       UInt32 versionNum; 	/* format version: 2 = 0x00020000 */ 
-       UInt8 filler[16]; 	/* filler, currently all bits 0 */ 
-       UInt16 numEntries; 	/* number of entries which follow */
+  /* AppleSingle = 0x00051600; AppleDouble = 0x00051607 */
+  UInt32 magicNum;      /* internal file type tag */ 
+  UInt32 versionNum;    /* format version: 2 = 0x00020000 */ 
+  UInt8 filler[16];     /* filler, currently all bits 0 */ 
+  UInt16 numEntries;    /* number of entries which follow */
 } ASHeader ; /* ASHeader */ 
 
 typedef struct ASEntry /* one AppleSingle entry descriptor */ 
 {
-	UInt32 entryID; 	/* entry type: see list, 0 invalid */
-	UInt32 entryOffset; /* offset, in octets, from beginning */
-	                    /* of file to this entry's data */
-	UInt32 entryLength; /* length of data in octets */
+  UInt32 entryID;     /* entry type: see list, 0 invalid */
+  UInt32 entryOffset; /* offset, in octets, from beginning */
+                      /* of file to this entry's data */
+  UInt32 entryLength; /* length of data in octets */
 } ASEntry; /* ASEntry */
 
 typedef struct ASFinderInfo
 {
-	FInfo ioFlFndrInfo; 	/* PBGetFileInfo() or PBGetCatInfo() */
-	FXInfo ioFlXFndrInfo; 	/* PBGetCatInfo() (HFS only) */
+  FInfo ioFlFndrInfo;     /* PBGetFileInfo() or PBGetCatInfo() */
+  FXInfo ioFlXFndrInfo;   /* PBGetCatInfo() (HFS only) */
 } ASFinderInfo; /* ASFinderInfo */
 
-typedef struct ASMacInfo        /* entry ID 10, Macintosh file information */
+typedef struct ASMacInfo  /* entry ID 10, Macintosh file information */
 {
-       UInt8 filler[3]; 	/* filler, currently all bits 0 */ 
-       UInt8 ioFlAttrib; 	/* PBGetFileInfo() or PBGetCatInfo() */
+       UInt8 filler[3];   /* filler, currently all bits 0 */ 
+       UInt8 ioFlAttrib;  /* PBGetFileInfo() or PBGetCatInfo() */
 } ASMacInfo;
 
-typedef struct ASFileDates      /* entry ID 8, file dates info */
+typedef struct ASFileDates  /* entry ID 8, file dates info */
 {
-	SInt32 create; /* file creation date/time */
-	SInt32 modify; /* last modification date/time */
-	SInt32 backup; /* last backup date/time */
-	SInt32 access; /* last access date/time */
+  SInt32 create; /* file creation date/time */
+  SInt32 modify; /* last modification date/time */
+  SInt32 backup; /* last backup date/time */
+  SInt32 access; /* last access date/time */
 } ASFileDates; /* ASFileDates */
 
 /* entryID list */
@@ -88,7 +86,7 @@ typedef struct ASFileDates      /* entry ID 8, file dates info */
 #define AS_COMMENT      4 /* standard Mac comment */
 #define AS_ICONBW       5 /* Mac black & white icon */
 #define AS_ICONCOLOR    6 /* Mac color icon */
-   		/*              7       /* not used */
+/*                      7    not used */
 #define AS_FILEDATES    8 /* file dates; create, modify, etc */
 #define AS_FINDERINFO   9 /* Mac Finder info & extended info */
 #define AS_MACINFO      10 /* Mac file info, attributes, etc */
@@ -103,118 +101,115 @@ typedef struct ASFileDates      /* entry ID 8, file dates info */
 /*----------------------------------------------------------------------*
  *   Macros
  *----------------------------------------------------------------------*/
-#define MAC_ERR_CHECK(_funcCall) 	\
-	err = _funcCall; 				\
-	if (err!=noErr) 				\
-			return err;
-	
-	
+#define MAC_ERR_CHECK(_funcCall)   \
+  err = _funcCall;         \
+  if (err!=noErr)         \
+      return err;
+  
+  
 
 class nsAppleSingleDecoder 
 {
 
 public:
-	nsAppleSingleDecoder(FSSpec *inSpec, FSSpec *outSpec);
-	nsAppleSingleDecoder();
-	~nsAppleSingleDecoder();
-		
-	/** 
-	 * Decode
-	 *
-	 * Takes an "in" FSSpec for the source file in AppleSingle
-	 * format to decode and write out to an "out" FSSpec.
-	 * This form is used when the Decode(void) method has already
-	 * been invoked once and this object is reused to decode 
-	 * another AppleSingled file: useful in iteration to avoid
-	 * nsAppleSingleDecoder object instantiation per file.
-	 *
-	 * @param  inSpec 	the AppleSingled file to decode
-	 * @param  outSpec 	the destination file in which the decoded
-	 *					data was written out (empty when passed in
-	 *					and filled on return)
-	 * @return err		a standard MacOS OSErr where noErr means OK
-	 */
-	OSErr Decode(FSSpec *inSpec, FSSpec *outSpec);
-		
-	/**
-	 * Decode
-	 *
-	 * Decodes the AppleSingled file passed in to the constructor
-	 * and writes out the decoded data to the outSpec passed to the 
-	 * constructor.
-	 *
-	 * @return err		a standard MacOS OSErr where noErr = OK
-	 */
-	OSErr Decode();
-	
-    /**
-     * DecodeFolder
-     *
-     * Traverses arbitrarily nested subdirs decoding any files
-     * in AppleSingle format and leaving other files alone.
-     *
-     * @param   aFolder  the folder whose contents to decode
-     * @return  err	     a standard MacOS err (dirNFErr if invalid dir, noErr = OK)
-     */
-    OSErr DecodeFolder(FSSpec *aFolder);
+  nsAppleSingleDecoder(const FSRef *inRef, FSRef *outRef);
+  nsAppleSingleDecoder();
+  ~nsAppleSingleDecoder();
+    
+  /** 
+   * Decode
+   *
+   * Takes an "in" FSSpec for the source file in AppleSingle
+   * format to decode and write out to an "out" FSSpec.
+   * This form is used when the Decode(void) method has already
+   * been invoked once and this object is reused to decode 
+   * another AppleSingled file: useful in iteration to avoid
+   * nsAppleSingleDecoder object instantiation per file.
+   *
+   * @param  inRef    the AppleSingled file to decode
+   * @param  outRef   the destination file in which the decoded
+   *                  data was written out (empty when passed in
+   *                  and filled on return)
+   * @return err      a standard MacOS OSErr where noErr means OK
+   */
+  OSErr Decode(const FSRef *inRef, FSRef *outRef);
+    
+  /**
+   * Decode
+   *
+   * Decodes the AppleSingled file passed in to the constructor
+   * and writes out the decoded data to the outSpec passed to the 
+   * constructor.
+   *
+   * @return err      a standard MacOS OSErr where noErr = OK
+   */
+  OSErr Decode();
+  
+  /**
+   * DecodeFolder
+   *
+   * Traverses arbitrarily nested subdirs decoding any files
+   * in AppleSingle format and leaving other files alone.
+   *
+   * @param  aFolder the folder whose contents to decode
+   * @return err     a standard MacOS err 
+   *                 (dirNFErr if invalid dir, noErr = OK)
+   */
+  OSErr DecodeFolder(const FSRef *aFolder);
      
-	/**
-	 * IsAppleSingleFile
-	 *
-	 * Checks the file header to see whether this is an AppleSingle
-	 * version 2 file by matching the magicNum field in the header.
-	 *
-	 * @param  inSpec			the file to check
-	 * @return bAppleSingle		a Boolean where true indicates this is
-	 *							in fact an AppleSingle file
-	 */
-	static Boolean IsAppleSingleFile(FSSpec *inSpec);
-	
-	/**
-	 * String utilities to ensure building standalone
-	 * since Mozilla doesn't use PLStringFuncs.
-	 */
-	static StringPtr PLstrncpy(StringPtr dst, ConstStr255Param src, short max);
-	static StringPtr PLstrncat(StringPtr dst, ConstStr255Param src, short max);
-	static Boolean   PLstrcmp(StringPtr str1, StringPtr str2);
-	
-	/**
- 	 * ltoa -- long to ascii
- 	 *
- 	 * Converts a long to a C string. We allocate 
- 	 * a string of the appropriate size and the caller
- 	 * should assume ownership of the returned pointer.
- 	 */
-	static char *ltoa(long n);
-	
-private:
-	FSSpec	*mInSpec;
-	FSSpec	*mOutSpec;
-	short	mInRefNum;	// cache since it's used through the life of one Decode cycle
-	Boolean	mRenameReqd;
-	OSType  mCreator;
-	OSType  mType;
-	
-	OSErr	ProcessASEntry(ASEntry inEntry);	
-	OSErr	ProcessDataFork(ASEntry inEntry);
-	OSErr	ProcessResourceFork(ASEntry inEntry);
-	OSErr	ProcessRealName(ASEntry inEntry);
-	OSErr	ProcessFileDates(ASEntry inEntry);
-	OSErr	ProcessFinderInfo(ASEntry inEntry);
-	OSErr	ProcessMacInfo(ASEntry inEntry);
-	OSErr	EntryToMacFile(ASEntry inEntry, UInt16 inTargetSpecRefNum);
-	OSErr	DTSetAPPL(Str255 volName, short vRefNum, OSType creator,
-					  long applParID, Str255 applName);
+  /**
+   * IsAppleSingleFile
+   *
+   * Checks the file header to see whether this is an AppleSingle
+   * version 2 file by matching the magicNum field in the header.
+   *
+   * @param  inRef        the file to check
+   * @return bAppleSingle a Boolean where true indicates this is
+   *                      in fact an AppleSingle file
+   */
+  static Boolean IsAppleSingleFile(const FSRef *inRef);
+  
+  /**
+   * IsDirectory
+   *
+   * Check whether the supplied FSSpec points to a directory.
+   *
+   * @param  inRef  the file/directory spec
+   * @return bDir   true iff this spec is a valid directory
+   */
+  static Boolean IsDirectory(const FSRef *inRef);
 
-	OSErr	FSMakeUnique(FSSpec *ioSpec);
+  /**
+   * String utility wrapper to compare to Unicode filenames.
+   */
+  static Boolean UCstrcmp(const HFSUniStr255 *str1, const HFSUniStr255 *str2);
+  
+private:
+  const FSRef *mInRef;
+  FSRef       *mOutRef;
+  // cache since it's used through the life of one Decode cycle:
+  SInt16      mInRefNum;  
+  Boolean     mRenameReqd;
+  
+  OSErr  ProcessASEntry(ASEntry inEntry);  
+  OSErr  ProcessDataFork(ASEntry inEntry);
+  OSErr  ProcessResourceFork(ASEntry inEntry);
+  OSErr  ProcessRealName(ASEntry inEntry);
+  OSErr  ProcessFileDates(ASEntry inEntry);
+  OSErr  ProcessFinderInfo(ASEntry inEntry);
+  OSErr  EntryToMacFile(ASEntry inEntry, UInt16 inTargetSpecRefNum);
+
+  OSErr  FSMakeUnique(const FSRef *inParentRef, FSRef *outRef);
 };
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-pascal void
-DecodeDirIterateFilter(const CInfoPBRec * const cpbPtr, Boolean *quitFlag, void *yourDataPtr);
+Boolean 
+DecodeDirIterateFilter(Boolean containerChanged, ItemCount currentLevel,
+  const FSCatalogInfo *catalogInfo, const FSRef *ref, 
+  const FSSpec *spec, const HFSUniStr255 *name, void *yourDataPtr);
 
 #ifdef __cplusplus
 }

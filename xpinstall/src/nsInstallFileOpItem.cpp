@@ -42,6 +42,7 @@
 #include "ScheduledTasks.h"
 #include "nsProcess.h"
 #include "nsNativeCharsetUtils.h"
+#include "nsReadableUtils.h"
 #include "nsInstallExecute.h"
 
 #ifdef _WINDOWS
@@ -49,13 +50,12 @@
 #include "nsWinShortcut.h"
 #endif
 
-#ifdef XP_MAC
-#include "Aliases.h"
-#include "Gestalt.h"
-#include "Resources.h"
-#include "TextUtils.h"
-#include "script.h"
-#include "MoreFilesExtras.h"
+#if defined(XP_MAC) || defined(XP_MACOSX)
+#include <Aliases.h>
+#include <Gestalt.h>
+#include <Resources.h>
+#include <TextUtils.h>
+#include "MoreFilesX.h"
 #include "nsILocalFileMac.h"
 #endif
 
@@ -1322,7 +1322,7 @@ PRInt32
 nsInstallFileOpItem::NativeFileOpMacAliasPrepare()
 {
 
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
   nsCOMPtr<nsILocalFileMac> targetFile = do_QueryInterface(mTarget);
   nsCOMPtr<nsILocalFileMac> sourceFile = do_QueryInterface(mSrc);
 
@@ -1346,7 +1346,7 @@ nsInstallFileOpItem::NativeFileOpMacAliasPrepare()
     if (NS_FAILED(rv))
         return nsInstall::FILENAME_ALREADY_USED;
   }    
-#endif /* XP_MAC */
+#endif /* XP_MAC || XP_MACOSX */
 
     return nsInstall::SUCCESS;
 }
@@ -1355,16 +1355,16 @@ PRInt32
 nsInstallFileOpItem::NativeFileOpMacAliasComplete()
 {
 
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
   // XXX gestalt to see if alias manager is around
   
   nsCOMPtr<nsILocalFileMac> localFileMacTarget = do_QueryInterface(mTarget);
   nsCOMPtr<nsILocalFileMac> localFileMacSrc = do_QueryInterface(mSrc);
   
-  FSSpec        fsSource, fsAlias;
+  FSRef         sourceRef, aliasRef, aliasParentRef;
+  HFSUniStr255  aliasName;
   PRBool        exists;
   AliasHandle   aliasH;
-  FInfo         info;
   OSErr         err = noErr;
   nsresult      rv = NS_OK;
   
@@ -1386,23 +1386,43 @@ nsInstallFileOpItem::NativeFileOpMacAliasComplete()
         return nsInstall::FILENAME_ALREADY_USED;
   }    
 
-  rv = localFileMacSrc->GetFSSpec(&fsSource);
-  if (!NS_SUCCEEDED(rv)) return rv;
-  rv = localFileMacTarget->GetFSSpec(&fsAlias); 
-  if (!NS_SUCCEEDED(rv)) return rv;
+  rv = localFileMacSrc->GetFSRef(&sourceRef);
+  if (NS_FAILED(rv)) return rv;
 
-  err = NewAliasMinimal( &fsSource, &aliasH );
+  // get alias parent
+  nsCOMPtr<nsIFile> aliasParentIFile;
+  rv = localFileMacTarget->GetParent(getter_AddRefs(aliasParentIFile)); 
+  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsILocalFileMac> macDaddy(do_QueryInterface(aliasParentIFile));
+  rv = macDaddy->GetFSRef(&aliasParentRef); 
+  if (NS_FAILED(rv)) return rv;
+
+  // get alias leaf name
+  nsAutoString leafName;
+  rv = localFileMacTarget->GetLeafName(leafName);
+  if (NS_FAILED(rv)) return rv;
+  aliasName.length = leafName.Length();
+  CopyUnicodeTo(leafName, 0, aliasName.unicode, aliasName.length);
+
+  err = FSNewAliasMinimal( &sourceRef, &aliasH );
   if (err != noErr)  // bubble up Alias Manager error
   	return err;
   	
   // create the alias file
-  FSpGetFInfo(&fsSource, &info);
-  FSpCreateResFile(&fsAlias, info.fdCreator, info.fdType, smRoman);
-  short refNum = FSpOpenResFile(&fsAlias, fsRdWrPerm);
+  FSCatalogInfo catInfo;
+  FSGetCatalogInfo(&sourceRef, kFSCatInfoFinderInfo, &catInfo, 
+    NULL, NULL, NULL);
+  // mark newly created file as an alias file
+  FInfo *fInfo = (FInfo *) catInfo.finderInfo;
+  fInfo->fdFlags |= kIsAlias;
+  FSCreateResFile(&aliasParentRef, aliasName.length, aliasName.unicode, 
+    kFSCatInfoFinderInfo, &catInfo, &aliasRef, NULL);
+
+  SInt16 refNum = FSOpenResFile(&aliasRef, fsRdWrPerm);
   if (refNum != -1)
   {
     UseResFile(refNum);
-    AddResource((Handle)aliasH, rAliasType, 0, fsAlias.name);
+    AddResource((Handle)aliasH, rAliasType, 0, "\pAlias");
     ReleaseResource((Handle)aliasH);
     UpdateResFile(refNum);
     CloseResFile(refNum);
@@ -1410,11 +1430,7 @@ nsInstallFileOpItem::NativeFileOpMacAliasComplete()
   else
     return nsInstall::SUCCESS;  // non-fatal so prevent internal abort
   
-  // mark newly created file as an alias file
-  FSpGetFInfo(&fsAlias, &info);
-  info.fdFlags |= kIsAlias;
-  FSpSetFInfo(&fsAlias, &info);
-#endif
+#endif /* XP_MAC || XP_MACOSX */
 
   return nsInstall::SUCCESS;
 }
@@ -1422,7 +1438,7 @@ nsInstallFileOpItem::NativeFileOpMacAliasComplete()
 PRInt32
 nsInstallFileOpItem::NativeFileOpMacAliasAbort()
 {  
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
   NativeFileOpFileDeleteComplete(mTarget);
 #endif 
 

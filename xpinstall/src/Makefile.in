@@ -109,6 +109,19 @@ CPPSRCS		+= \
 OS_LIBS		+= $(call EXPAND_LIBNAME,ole32 version uuid)
 endif	
 
+# Support AppleSingle decoding on Mac OS X
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+REQUIRES	+= macmorefiles
+
+CPPSRCS		+= \
+		nsAppleSingleDecoder.cpp \
+		$(NULL)
+
+LIBS			+=	\
+		$(DEPTH)/dist/lib/libmacmorefiles_s.a	\
+		$(NULL)
+endif
+
 LOCAL_INCLUDES	= -I$(srcdir)/../public
 
 EXTRA_DSO_LDOPTS = \

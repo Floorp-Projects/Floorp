@@ -23,6 +23,7 @@
  *     Douglas Turner <dougt@netscape.com>
  *     Pierre Phaneuf <pp@ludusdesign.com>
  *     Sean Su <ssu@netscape.com>
+ *     Samir Gehani <sgehani@netscape.com>
  */
 
 
@@ -75,8 +76,8 @@
 #include "nsInstallFileOpEnums.h"
 #include "nsInstallFileOpItem.h"
 
-#ifdef XP_MAC
-#include "Gestalt.h"
+#if defined(XP_MAC) || defined(XP_MACOSX)
+#include <Gestalt.h>
 #include "nsAppleSingleDecoder.h"
 #include "nsILocalFileMac.h"
 #endif
@@ -328,7 +329,7 @@ nsInstall::GetInstallPlatform(nsCString& aPlatform)
        mInstallPlatform += ' ';
        mInstallPlatform += (char*)name.machine;
     }
-#elif defined (XP_MAC)
+#elif defined (XP_MAC) || defined (XP_MACOSX)
     mInstallPlatform += "PPC";
 #elif defined(XP_OS2)
     ULONG os2ver = 0;
@@ -902,12 +903,12 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
     return NS_OK;
 }
 
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
 #define GESTALT_CHAR_CODE(x)          (((unsigned long) ((x[0]) & 0x000000FF)) << 24) \
                                     | (((unsigned long) ((x[1]) & 0x000000FF)) << 16) \
                                     | (((unsigned long) ((x[2]) & 0x000000FF)) << 8)  \
                                     | (((unsigned long) ((x[3]) & 0x000000FF)))
-#endif /* XP_MAC */
+#endif /* XP_MACOS || XP_MACOSX */
 
 PRInt32
 nsInstall::Gestalt(const nsString& aSelector, PRInt32* aReturn)
@@ -921,7 +922,7 @@ nsInstall::Gestalt(const nsString& aSelector, PRInt32* aReturn)
         *aReturn = SaveError( result );
         return NS_OK;
     }
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
 
     long    response = 0;
     char    selectorChars[4];
@@ -945,7 +946,7 @@ nsInstall::Gestalt(const nsString& aSelector, PRInt32* aReturn)
     else
         *aReturn = response;
 
-#endif
+#endif /* XP_MAC || XP_MACOSX */
     return NS_OK;
 }
 
@@ -2159,7 +2160,8 @@ nsInstall::FileOpFileMacAlias(nsIFile *aSourceFile, nsIFile *aAliasFile, PRInt32
 
   *aReturn = nsInstall::SUCCESS;
 
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
+
   nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_MAC_ALIAS, aSourceFile, aAliasFile, aReturn);
   if (!ifop)
   {
@@ -2186,7 +2188,8 @@ nsInstall::FileOpFileMacAlias(nsIFile *aSourceFile, nsIFile *aAliasFile, PRInt32
   }
 
   SaveError(*aReturn);
-#endif
+
+#endif /* XP_MAC || XP_MACOSX */
 
   return NS_OK;
 }
@@ -2667,16 +2670,17 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsIFile* aSuggestedName,
         }
     }
 
-#ifdef XP_MAC
-    FSSpec finalSpec, extractedSpec;
+#if defined(XP_MAC) || defined(XP_MACOSX)
+    FSRef finalRef, extractedRef;
 
     nsCOMPtr<nsILocalFileMac> tempExtractHereSpec;
     tempExtractHereSpec = do_QueryInterface(extractHereSpec, &rv);
-    tempExtractHereSpec->GetFSSpec(&extractedSpec);
+    tempExtractHereSpec->GetFSRef(&extractedRef);
 
-    if ( nsAppleSingleDecoder::IsAppleSingleFile(&extractedSpec) )
+    if ( nsAppleSingleDecoder::IsAppleSingleFile(&extractedRef) )
     {
-        nsAppleSingleDecoder *asd = new nsAppleSingleDecoder(&extractedSpec, &finalSpec);
+        nsAppleSingleDecoder *asd = 
+          new nsAppleSingleDecoder(&extractedRef, &finalRef);
         OSErr decodeErr = fnfErr;
 
         if (asd)
@@ -2689,22 +2693,20 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsIFile* aSuggestedName,
             return EXTRACTION_FAILED;
         }
 
-        if ( !(extractedSpec.vRefNum == finalSpec.vRefNum) ||
-             !(extractedSpec.parID   == finalSpec.parID)   ||
-             !(nsAppleSingleDecoder::PLstrcmp(extractedSpec.name, finalSpec.name)) )
+        if (noErr != FSCompareFSRefs(&extractedRef, &finalRef))
         {
             // delete the unique extracted file that got renamed in AS decoding
-            FSpDelete(&extractedSpec);
+            FSDeleteObject(&extractedRef);
 
             // "real name" in AppleSingle entry may cause file rename
-            tempExtractHereSpec->InitWithFSSpec(&finalSpec);
+            tempExtractHereSpec->InitWithFSRef(&finalRef);
             extractHereSpec = do_QueryInterface(tempExtractHereSpec, &rv);
         }
     }
-#endif
+#endif /* XP_MAC || XP_MACOSX */
 
     extractHereSpec->Clone(aRealName);
-
+    
     return nsInstall::SUCCESS;
 }
 
