@@ -1536,7 +1536,8 @@ HT_AddToContainer (HT_Resource container, char *url, char *optionalTitle)
 PR_PUBLIC_API(void)
 HT_LayoutComplete(MWContext *context, TagList *metaTags, char *url)
 {
-	INTL_CharSetInfo	csid;
+	INTL_CharSetInfo	intl_csi;
+	int16 wincsid;
 	PA_Block		name, content;
 	PA_Tag			*metaList;
 	RDF_Resource		r;
@@ -1567,7 +1568,8 @@ struct	{
 	XP_ASSERT(url != NULL);
 	if (url == NULL)	return;
 
-	csid = LO_GetDocumentCharacterSetInfo(context);
+	intl_csi = LO_GetDocumentCharacterSetInfo(context);
+	wincsid = INTL_GetCSIWinCSID(intl_csi);
 
 	metaList = metaTags->tagList;
 	while (metaList != NULL)
@@ -1577,8 +1579,8 @@ struct	{
 			/* get any META tags for this document
 			   and save them into the graph */
 
-			name = PA_FetchParamValue(metaList, "name", (uint16)csid);
-			content = PA_FetchParamValue(metaList, "content", (uint16)csid);
+			name = PA_FetchParamValue(metaList, "name", (uint16)wincsid);
+			content = PA_FetchParamValue(metaList, "content", (uint16)wincsid);
 			if ((name != NULL) && (content != NULL))
 			{
 				if ((r = RDF_GetResource(gNCDB, url, PR_TRUE)) != NULL)
@@ -1597,7 +1599,8 @@ struct	{
 							else
 							{
 								RDF_Assert(gNCDB, r, matches[matchNum].r,
-									(char *)content, RDF_STRING_TYPE);
+									(char *)convertString2UTF8(wincsid, (char*)content), RDF_STRING_TYPE);
+								free(content); 
 							}
 						}
 					}
