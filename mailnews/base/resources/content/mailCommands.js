@@ -152,19 +152,13 @@ function ComposeMessage(type, format, folder, messageArray)
 
 			// if they hit new or reply and they are reading a newsgroup
 			// turn this into a new post or a reply to group.
-			if (server.type == "nntp")
+      if (!folder.isServer && server.type == "nntp" && type == msgComposeType.New)
 			{
-		        if (type == msgComposeType.New)
-		        {
-				    type = msgComposeType.NewsPost;
-   					if (folder.isServer) 
-   						newsgroup = "";
-   					else 
-       					newsgroup = server.hostName + "/" + folder.name; 
-			    }
+        type = msgComposeType.NewsPost;
+        newsgroup = server.hostName + "/" + folder.name; 
 			}
-	        identity = getIdentityForServer(server);
-		    // dump("identity = " + identity + "\n");
+      identity = getIdentityForServer(server);
+      // dump("identity = " + identity + "\n");
 		}
 	}
 	catch (ex) 
