@@ -19,7 +19,7 @@
  *
  * Contributor(s): 
  *   Peter Hartshorn <peter@igelaus.com.au>
- *   pocemit <timecop@network.email.ne.jp>
+ *   Tim Copperfield <timecop@network.email.ne.jp>
  *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  */
 
@@ -37,8 +37,13 @@
 #include "nsIViewManager.h"
 #include "nsIWidget.h"
 #include "nsRect.h"
+#ifdef _IMPL_NS_XPRINT
+#include "nsXPrintContext.h"
+#include "nsDeviceContextXP.h"
+#else
 #include "nsImageXlib.h"
-#include "nsIDeviceContext.h"
+#include "nsDeviceContextXlib.h"
+#endif /* _IMPL_NS_XPRINT */
 #include "nsVoidArray.h"
 #include "nsDrawingSurfaceXlib.h"
 #include "nsRegionXlib.h"
@@ -60,6 +65,9 @@ class nsRenderingContextXlib : public nsRenderingContextImpl
 
   NS_DECL_ISUPPORTS
 
+#ifdef _IMPL_NS_XPRINT
+  NS_IMETHOD Init(nsIDeviceContext* aContext);
+#endif /* _IMPL_NS_XPRINT */
   NS_IMETHOD Init(nsIDeviceContext* aContext, nsIWidget *aWindow);
   NS_IMETHOD Init(nsIDeviceContext* aContext, nsDrawingSurface aSurface);
 
@@ -172,6 +180,11 @@ class nsRenderingContextXlib : public nsRenderingContextImpl
                        nscoord aWidth, nscoord aHeight); 
   NS_IMETHOD DrawImage(nsIImage *aImage, const nsRect& aRect);
   NS_IMETHOD DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect);
+#ifdef _IMPL_NS_XPRINT
+  NS_IMETHOD DrawImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsPoint * aDestPoint);
+  NS_IMETHOD DrawScaledImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsRect * aDestRect);
+#endif /* _IMPL_NS_XPRINT */
+
 #if 0
   // in nsRenderingContextImpl
   NS_IMETHOD DrawTile(nsIImage *aImage,nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,
@@ -210,10 +223,15 @@ class nsRenderingContextXlib : public nsRenderingContextImpl
   void SetCurrentFont(XFontStruct *cf){ mCurrentFont = cf; };
   XFontStruct *GetCurrentFont() { return mCurrentFont; };
   
-private:
+private: 
+#ifdef _IMPL_NS_XPRINT
+  nsXPrintContext         *mPrintContext;
+  nsCOMPtr<nsIDeviceContextXp> mContext;
+#else
   nsDrawingSurfaceXlib    *mOffscreenSurface;
   nsDrawingSurfaceXlib    *mRenderingSurface;
-  nsIDeviceContext        *mContext;
+  nsCOMPtr<nsDeviceContextXlib> mContext;
+#endif /* _IMPL_NS_XPRINT */
   nsIFontMetrics          *mFontMetrics;
   nsCOMPtr<nsIRegion>      mClipRegion;
   float                    mP2T;

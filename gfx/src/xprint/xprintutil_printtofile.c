@@ -160,14 +160,14 @@ typedef struct
     char          *displayname;
     Display       *pdpy;
     XPContext      pcontext;
-    char          *file_name;
+    const char    *file_name;
     FILE          *file;
     XPGetDocStatus status;
     Bool           done;
 } MyPrintFileData;
 
 
-void *XpuPrintToFile( Display *pdpy, XPContext pcontext, char *filename )
+void *XpuPrintToFile( Display *pdpy, XPContext pcontext, const char *filename )
 {
     MyPrintFileData *mpfd; /* warning: shared between threads !! */
            
@@ -266,7 +266,7 @@ typedef struct
 } MyPrintFileData;
 
 
-void *XpuPrintToFile( Display *pdpy, XPContext pcontext, char *filename )
+void *XpuPrintToFile( Display *pdpy, XPContext pcontext, const char *filename )
 {
     MyPrintFileData *mpfd;
 

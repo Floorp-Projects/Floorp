@@ -47,7 +47,7 @@
 
 int XpuCheckExtension( Display *pdpy )
 {
-    char *display = DisplayString(pdpy);
+    char *display = XDisplayString(pdpy);
     short major = 0,
           minor = 0;
 
@@ -65,7 +65,7 @@ int XpuCheckExtension( Display *pdpy )
 }
 
 
-char *XpuGetXpServerList( void )
+const char *XpuGetXpServerList( void )
 {
     /* BUG/TODO: XpServerList resource needs to be sourced first, then append 
      * contents of XPSERVERLIST, then remove duplicates...
@@ -96,7 +96,7 @@ int XpuGetPrinter2( char *printer, char *display, Display **pdpyptr, XPContext *
         /* ...and check if printer exists... */
         if( (list != NULL) && (list_count > 0) )
         {
-          if( (pcontext = XpCreateContext(pdpy, printer)) != NULL )
+          if( (pcontext = XpCreateContext(pdpy, printer)) != (XPContext)NULL )
           {
             *pdpyptr     = pdpy;
             *pcontextptr = pcontext;
@@ -123,20 +123,21 @@ int XpuGetPrinter2( char *printer, char *display, Display **pdpyptr, XPContext *
 
 
 /* acceps "printer" or "printer@display" */
-int XpuGetPrinter( char *printername, Display **pdpyptr, XPContext *pcontextptr )
+int XpuGetPrinter( const char *arg_printername, Display **pdpyptr, XPContext *pcontextptr )
 {
     Display       *pdpy;
     XPContext      pcontext;
+    char          *printername;
     char          *s;
     char          *tok_lasts;
     
     *pdpyptr     = NULL;
-    *pcontextptr = NULL;
+    *pcontextptr = (XPContext)NULL;
     
-    XPU_DEBUG_ONLY(printf("XpuGetPrinter: looking for '%s'\n", XPU_NULLXSTR(printername)));
+    XPU_DEBUG_ONLY(printf("XpuGetPrinter: looking for '%s'\n", XPU_NULLXSTR(arg_printername)));
     
     /* strtok_r will modify string - duplicate it first... */
-    printername = (char *)strdup(printername);
+    printername = strdup(arg_printername);
     
     if( (s = (char *)strtok_r(printername, "@", &tok_lasts)) != NULL )
     {
@@ -155,7 +156,7 @@ int XpuGetPrinter( char *printername, Display **pdpyptr, XPContext *pcontextptr 
       /* if we did not get a display, travel througth all displays */
       else
       {
-        char *sl = XpuGetXpServerList();
+        char *sl = strdup(XpuGetXpServerList());
         
         if( sl != NULL )
         {
@@ -165,11 +166,14 @@ int XpuGetPrinter( char *printername, Display **pdpyptr, XPContext *pcontextptr 
           {
             if( XpuGetPrinter2(name, display, pdpyptr, pcontextptr) )
             {
+              free(sl);
               free(printername);
               return(1);
             } 
           }
-        }  
+          
+          free(sl);
+        }
       }
     }
     
@@ -181,7 +185,7 @@ int XpuGetPrinter( char *printername, Display **pdpyptr, XPContext *pcontextptr 
 
 
 void XpuSetOneAttribute( Display *pdpy, XPContext pcontext, 
-                         XPAttributes type, char *attribute_name, char *value, XPAttrReplacement replacement_rule )
+                         XPAttributes type, const char *attribute_name, const char *value, XPAttrReplacement replacement_rule )
 {
     char *buffer = 
 #ifdef XPU_USE_NSPR
@@ -259,13 +263,13 @@ char *XpuEmumerateXpAttributeValue( char *value, void **context )
 
 
 /* check if attribute value is supported or not */
-int XpuCheckSupported( Display *pdpy, XPContext pcontext, XPAttributes type, char *attribute_name, char *query )
+int XpuCheckSupported( Display *pdpy, XPContext pcontext, XPAttributes type, const char *attribute_name, const char *query )
 {
     char *value,
          *s;
     void *tok_lasts;
     
-    value = XpGetOneAttribute(pdpy, pcontext, type, attribute_name);
+    value = XpGetOneAttribute(pdpy, pcontext, type, (char *)attribute_name);
     
     XPU_DEBUG_ONLY(printf("XpuCheckSupported: XpGetOneAttribute(%s) returned '%s'\n", XPU_NULLXSTR(attribute_name), XPU_NULLXSTR(value)));
     
@@ -288,7 +292,7 @@ int XpuCheckSupported( Display *pdpy, XPContext pcontext, XPAttributes type, cha
 }
 
 
-int XpuSetJobTitle( Display *pdpy, XPContext pcontext, char *title )
+int XpuSetJobTitle( Display *pdpy, XPContext pcontext, const char *title )
 {
     if( XpuCheckSupported(pdpy, pcontext, XPPrinterAttr, "job-attributes-supported", "job-name") )
     {
@@ -303,11 +307,13 @@ int XpuSetJobTitle( Display *pdpy, XPContext pcontext, char *title )
 }
     
         
-int XpuSetContentOrientation( Display *pdpy, XPContext pcontext, XPAttributes type, char *orientation )
+int XpuSetContentOrientation( Display *pdpy, XPContext pcontext, XPAttributes type, const char *orientation )
 {
+    /* fixme: check whether the given |orientation| is supported or not... */
     if( XpuCheckSupported(pdpy, pcontext, XPPrinterAttr, "content-orientations-supported", orientation) )
     {
       XpuSetOneAttribute(pdpy, pcontext, type, "*content-orientation", orientation, XPAttrMerge);
+      return(1);
     }
     else
     {
@@ -316,10 +322,17 @@ int XpuSetContentOrientation( Display *pdpy, XPContext pcontext, XPAttributes ty
     }  
 }
 
+/* ToDo: Implement
+const char *XpuGetContentOrientation( Display *pdpy, XPContext pcontext, XPAttributes type );
+*/
 
-int XpuGetOneLongAttribute( Display *pdpy, XPContext pcontext, XPAttributes type, char *attribute_name, long *result )
+/* ToDo:
+.* XpuGetPlex(), XpuSetPlex()
+ */
+
+int XpuGetOneLongAttribute( Display *pdpy, XPContext pcontext, XPAttributes type, const char *attribute_name, long *result )
 {
-    char *s = XpGetOneAttribute(pdpy, pcontext, type, attribute_name);
+    char *s = XpGetOneAttribute(pdpy, pcontext, type, (char *)attribute_name);
     
     if( (s != NULL) && (strlen(s) > 0) ) 
     {
@@ -347,44 +360,6 @@ int XpuGetOneLongAttribute( Display *pdpy, XPContext pcontext, XPAttributes type
 }
 
 
-double XpuGetXDPI( Screen *pscreen )
-{
-    double xres;
-    
-    /* from X11R6.5.1/xc/programs/xdpyinfo/xdpyinfo.c:
-     * there are 2.54 centimeters to an inch; so there are 25.4 millimeters.
-     *
-     *     dpi = N pixels / (M millimeters / (25.4 millimeters / 1 inch))
-     *         = N pixels / (M inch / 25.4)
-     *         = N * 25.4 pixels / M inch
-     */
-
-    xres = ((((double) WidthOfScreen(pscreen)) * 25.4) / 
-            ((double) WidthMMOfScreen(pscreen)));
-           
-    return(xres);        
-}
-
-
-double XpuGetYDPI( Screen *pscreen )
-{
-    double yres;
-    
-    /* from X11R6.5.1/xc/programs/xdpyinfo/xdpyinfo.c:
-     * there are 2.54 centimeters to an inch; so there are 25.4 millimeters.
-     *
-     *     dpi = N pixels / (M millimeters / (25.4 millimeters / 1 inch))
-     *         = N pixels / (M inch / 25.4)
-     *         = N * 25.4 pixels / M inch
-     */
-
-    yres = ((((double) HeightOfScreen(pscreen)) * 25.4) / 
-            ((double) HeightMMOfScreen(pscreen)));
-           
-    return(yres);        
-}
-
-
 #ifdef DEBUG
 /* debug only */
 void dumpXpAttributes( Display *pdpy, XPContext pcontext )
@@ -405,14 +380,16 @@ void dumpXpAttributes( Display *pdpy, XPContext pcontext )
 /* BUG: Is it really neccesary that this function eats-up all other events ? */
 void XpuWaitForPrintNotify( Display *pdpy, int detail )
 {
-    static int    event_base_return = -1, 
-                  error_base_return = -1;
-           XEvent ev;
+    /* Xprt |Display *| for which "event_base_return" and "error_base_return" are valid  */
+    static Display *ext_display = NULL; 
+    static int      event_base_return = -1, 
+                    error_base_return = -1;
+           XEvent   ev;
     
     /* get extension event_base if we did not get it yet (and if Xserver does not 
      * support extension do not wait for events which will never be send... :-) 
      */
-    if( (event_base_return == -1) && (error_base_return == -1) )
+    if( ((event_base_return == -1) && (error_base_return == -1)) || (ext_display != pdpy) )
     {
       int myevent_base_return, myerror_base_return;
       
@@ -423,10 +400,10 @@ void XpuWaitForPrintNotify( Display *pdpy, int detail )
       }
       
       /* be sure we don't get in trouble if two threads try the same thing :-)
-       * Bug/issue: Is it gurantteed that two different Xprt server's return the same values here ??
        */
       event_base_return = myevent_base_return;
       error_base_return = myerror_base_return;
+      ext_display = pdpy;
     }
     
     do 
@@ -441,5 +418,28 @@ void XpuWaitForPrintNotify( Display *pdpy, int detail )
     } while( !((ev.type == (event_base_return+XPPrintNotify)) && (((XPPrintEvent *)(&ev))->detail == detail)) );
 }      
 
+/* set print resolution
+ * Retun error if printer does not support this resolution
+ */
+Bool XpuSetResolution( Display *pdpy, XPContext pcontext, long dpi )
+{
+    /* not implemented yet */
+    return False;
+}
+
+/* get default printer reolution
+ * this function may fail in the following conditions:
+ * - Xprt misconfiguration
+ * - X DPI != Y DPI (not yet implemented in Xprt)
+ */
+Bool XpuGetResolution( Display *pdpy, XPContext pcontext, long *dpi_ptr )
+{
+  if( XpuGetOneLongAttribute(pdpy, pcontext, XPDocAttr, "default-printer-resolution", dpi_ptr) == 1 )
+  {
+    return True;
+  }
+
+  return False;
+}
 
 /* EOF. */

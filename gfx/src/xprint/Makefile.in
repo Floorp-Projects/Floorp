@@ -45,7 +45,7 @@ CSRCS		= \
 CPPSRCS		= \
 		nsDeviceContextXP.cpp \
 		nsFontMetricsXlib.cpp \
-		nsRenderingContextXP.cpp \
+		nsRenderingContextXlib.cpp \
 		nsGfxFactoryXP.cpp \
 		nsXPrintContext.cpp \
 		nsRegionXlib.cpp \

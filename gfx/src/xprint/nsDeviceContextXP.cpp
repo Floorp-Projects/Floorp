@@ -28,7 +28,7 @@
 #include <X11/Xatom.h>
 
 #include "nsDeviceContextXP.h"
-#include "nsRenderingContextXP.h"
+#include "nsRenderingContextXlib.h"
 #include "nsString.h"
 #include "nsFontMetricsXlib.h"
 #include "xlibrgb.h"
@@ -143,9 +143,9 @@ NS_IMETHODIMP nsDeviceContextXp :: CreateRenderingContext(nsIRenderingContext *&
 {
    nsresult  rv = NS_ERROR_OUT_OF_MEMORY;
 
-   nsCOMPtr<nsRenderingContextXp> xpContext;
+   nsCOMPtr<nsRenderingContextXlib> xpContext;
 
-   xpContext = new nsRenderingContextXp();
+   xpContext = new nsRenderingContextXlib();
    if (xpContext){
       rv = xpContext->Init(this);
    }
@@ -309,6 +309,7 @@ NS_IMETHODIMP nsDeviceContextXp::GetDeviceContextFor(nsIDeviceContextSpec *aDevi
  */
 NS_IMETHODIMP nsDeviceContextXp::BeginDocument(PRUnichar * aTitle)
 {  
+  PR_LOG(nsDeviceContextXpLM, PR_LOG_DEBUG, ("nsDeviceContextXp::BeginDocument()\n"));
   nsresult  rv = NS_OK;
   if (mPrintContext != nsnull) {
       rv = mPrintContext->BeginDocument(aTitle);
@@ -321,6 +322,7 @@ NS_IMETHODIMP nsDeviceContextXp::BeginDocument(PRUnichar * aTitle)
  */
 NS_IMETHODIMP nsDeviceContextXp::EndDocument(void)
 {
+  PR_LOG(nsDeviceContextXpLM, PR_LOG_DEBUG, ("nsDeviceContextXp::EndDocument()\n"));
   nsresult  rv = NS_OK;
   if (mPrintContext != nsnull) {
       rv = mPrintContext->EndDocument();
@@ -331,7 +333,7 @@ NS_IMETHODIMP nsDeviceContextXp::EndDocument(void)
       // properties (build-in fonts for example ) than the printer 
       // previously used
       mFontMetrics = nsnull; /* nsCOMPtr will release/free all objects */
-      nsRenderingContextXp::Shutdown();
+      nsRenderingContextXlib::Shutdown();
       nsFontMetricsXlib::FreeGlobals();
       
       delete mPrintContext;
