@@ -396,30 +396,6 @@ void nsWindow::Create(nsNativeWindow aParent,
     nsGUIEvent event;
     InitEvent(event, NS_CREATE);
     DispatchEvent(&event);
-#if 0
-    if (mEventCallback) {
-        nsGUIEvent event;
-        event.widget = this;
-
-        DWORD pos = ::GetMessagePos();
-        POINT cpos;
-
-        cpos.x = LOWORD(pos);
-        cpos.y = HIWORD(pos);
-
-        ::ScreenToClient(mWnd, &cpos);
-
-        event.point.x = cpos.x;
-        event.point.y = cpos.y;
-
-        event.time = ::GetMessageTime();
-
-        // 
-        event.message = NS_CREATE;
-        (*mEventCallback)(&event);
-    }
-#endif
-
     SubclassWindow(TRUE);
 }
 
@@ -1038,7 +1014,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             InitEvent(event, NS_MOVE);
             event.point.x = (int)LOWORD(lParam); // horizontal position in screen coordinates
             event.point.y = (int)HIWORD(lParam); // vertical position in screen coordinates
-            DispatchEvent(&event);
+            result = DispatchEvent(&event);
           }
           break;
 
@@ -1080,11 +1056,11 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
         // say we've dealt with erase background if widget does
         // not need auto-erasing
-        case WM_ERASEBKGND:   
+        case WM_ERASEBKGND: 
               if (! AutoErase()) {
               *aRetValue = 1;
               result = PR_TRUE;
-            }
+            } 
             break;
 
         case WM_MOUSEMOVE:
@@ -1101,6 +1077,8 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
         case WM_LBUTTONDBLCLK:
             result = DispatchMouseEvent(NS_MOUSE_LEFT_BUTTON_DOWN);
+            if (result == PR_FALSE)
+              result = DispatchMouseEvent(NS_MOUSE_LEFT_DOUBLECLICK);
             break;
 
         case WM_MBUTTONDOWN:
@@ -1112,11 +1090,11 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             break;
 
         case WM_MBUTTONDBLCLK:
-            result = DispatchMouseEvent(NS_MOUSE_MIDDLE_BUTTON_DOWN);
+            result = DispatchMouseEvent(NS_MOUSE_MIDDLE_BUTTON_DOWN);           
             break;
 
         case WM_RBUTTONDOWN:
-            result = DispatchMouseEvent(NS_MOUSE_RIGHT_BUTTON_DOWN);
+            result = DispatchMouseEvent(NS_MOUSE_RIGHT_BUTTON_DOWN);            
             break;
 
         case WM_RBUTTONUP:
@@ -1125,6 +1103,8 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
         case WM_RBUTTONDBLCLK:
             result = DispatchMouseEvent(NS_MOUSE_RIGHT_BUTTON_DOWN);
+            if (result == PR_FALSE)
+              result = DispatchMouseEvent(NS_MOUSE_RIGHT_DOUBLECLICK);                      
             break;
 
         case WM_HSCROLL:
