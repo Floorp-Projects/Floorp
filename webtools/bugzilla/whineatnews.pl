@@ -62,7 +62,10 @@ foreach my $email (sort (keys %bugs)) {
     foreach my $i (@{$bugs{$email}}) {
         $msg .= "  ${urlbase}show_bug.cgi?id=$i\n"
     }
-    open(SENDMAIL, "|/usr/lib/sendmail -t") || die "Can't open sendmail";
+
+    my $sendmailparam = Param('sendmailnow') ? '' : "-ODeliveryMode=deferred";
+    open SENDMAIL, "|/usr/lib/sendmail $sendmailparam -t"
+        or die "Can't open sendmail";
     print SENDMAIL $msg;
     close SENDMAIL;
     print "$email      " . join(" ", @{$bugs{$email}}) . "\n";
