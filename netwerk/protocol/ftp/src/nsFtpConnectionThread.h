@@ -221,8 +221,6 @@ private:
 
     // ***** control read gvars
     nsresult                mControlStatus;
-    PRPackedBool            mControlReadContinue;
-    PRPackedBool            mControlReadBrokenLine;
     nsCAutoString           mControlReadCarryOverBuf;
 
     nsCOMPtr<nsICacheEntryDescriptor> mCacheEntry;
