@@ -9582,15 +9582,21 @@ nsCSSFrameConstructor::ConstructInline(nsIPresContext*          aPresContext,
 
 #ifdef DEBUG
   if (gNoisyInlineConstruction) {
+    nsIFrameDebug*  frameDebug;
+
     printf("nsCSSFrameConstructor::ConstructInline:\n");
-    printf("  ==> leading inline frame:\n");
-/*
-    aNewFrame->List(aPresContext, stdout, 2);
-    printf("  ==> block frame:\n");
-    blockFrame->List(aPresContext, stdout, 2);
-    printf("  ==> trailing inline frame:\n");
-    inlineFrame->List(aPresContext, stdout, 2);
-*/
+    if (NS_SUCCEEDED(aNewFrame->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+      printf("  ==> leading inline frame:\n");
+      frameDebug->List(aPresContext, stdout, 2);
+    }
+    if (NS_SUCCEEDED(blockFrame->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+      printf("  ==> block frame:\n");
+      frameDebug->List(aPresContext, stdout, 2);
+    }
+    if (NS_SUCCEEDED(inlineFrame->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+      printf("  ==> trailing inline frame:\n");
+      frameDebug->List(aPresContext, stdout, 2);
+    }
   }
 #endif
 
