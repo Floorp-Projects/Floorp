@@ -894,6 +894,10 @@ NS_IMETHODIMP nsView :: GetPosition(nscoord *x, nscoord *y) const
 
 NS_IMETHODIMP nsView :: SetDimensions(nscoord width, nscoord height, PRBool aPaint)
 {
+  if ((mBounds.width == width) &&
+      (mBounds.height == height))
+    return NS_OK;
+  
   mBounds.SizeTo(width, height);
 
 #if 0
