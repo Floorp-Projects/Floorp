@@ -80,9 +80,64 @@ JS_DHashStringKey(JSDHashTable *table, const void *key)
     return h;
 }
 
+JS_PUBLIC_API(const void *)
+JS_DHashGetKeyStub(JSDHashTable *table, JSDHashEntryHdr *entry)
+{
+    JSDHashEntryStub *stub = (JSDHashEntryStub *)entry;
+    
+    return stub->key;
+}
+
+JS_PUBLIC_API(JSDHashNumber)
+JS_DHashVoidPtrKeyStub(JSDHashTable *table, const void *key)
+{
+    return (JSDHashNumber)key >> 2;
+}
+
+JS_PUBLIC_API(JSBool)
+JS_DHashMatchEntryStub(JSDHashTable *table,
+                       const JSDHashEntryHdr *entry,
+                       const void *key)
+{
+    JSDHashEntryStub *stub = (JSDHashEntryStub *)entry;
+
+    return stub->key == key;
+}
+
+JS_PUBLIC_API(void)
+JS_DHashMoveEntryStub(JSDHashTable *table,
+                      const JSDHashEntryHdr *from,
+                      JSDHashEntryHdr *to)
+{
+    memcpy(to, from, table->entrySize);
+}
+
+JS_PUBLIC_API(void)
+JS_DHashClearEntryStub(JSDHashTable *table, JSDHashEntryHdr *entry)
+{
+    memset(entry, 0, table->entrySize);
+}
+
 JS_PUBLIC_API(void)
 JS_DHashFinalizeStub(JSDHashTable *table)
 {
+}
+
+static JSDHashTableOps stub_ops = {
+    JS_DHashAllocTable,
+    JS_DHashFreeTable,
+    JS_DHashGetKeyStub,
+    JS_DHashVoidPtrKeyStub,
+    JS_DHashMatchEntryStub,
+    JS_DHashMoveEntryStub,
+    JS_DHashClearEntryStub,
+    JS_DHashFinalizeStub
+};
+
+JS_PUBLIC_API(JSDHashTableOps *)
+JS_DHashGetStubOps(void)
+{
+    return &stub_ops;
 }
 
 JS_PUBLIC_API(JSDHashTable *)
@@ -250,10 +305,7 @@ JS_DHashTableOperate(JSDHashTable *table, const void *key, JSDHashOperator op)
         if (JS_DHASH_ENTRY_IS_BUSY(entry)) {
             /* Clear this entry and mark it as "removed". */
             METER(table->stats.removeHits++);
-            table->ops->clearEntry(table, entry);
-            MARK_ENTRY_REMOVED(entry);
-            table->removedCount++;
-            table->entryCount--;
+            JS_DHashTableRawRemove(table, entry);
 
             /* Shrink if alpha is <= .25 and table isn't too small already. */
             size = JS_BIT(table->sizeLog2);
@@ -321,6 +373,15 @@ JS_DHashTableOperate(JSDHashTable *table, const void *key, JSDHashOperator op)
     return entry;
 }
 
+JS_PUBLIC_API(void)
+JS_DHashTableRawRemove(JSDHashTable *table, JSDHashEntryHdr *entry)
+{
+    table->ops->clearEntry(table, entry);
+    MARK_ENTRY_REMOVED(entry);
+    table->removedCount++;
+    table->entryCount--;
+}
+
 JS_PUBLIC_API(uint32)
 JS_DHashTableEnumerate(JSDHashTable *table, JSDHashEnumerator etor, void *arg)
 {
@@ -338,10 +399,7 @@ JS_DHashTableEnumerate(JSDHashTable *table, JSDHashEnumerator etor, void *arg)
             op = etor(table, entry, j++, arg);
             if (op & JS_DHASH_REMOVE) {
                 METER(table->stats.removeEnums++);
-                table->ops->clearEntry(table, entry);
-                MARK_ENTRY_REMOVED(entry);
-                table->removedCount++;
-                table->entryCount--;
+                JS_DHashTableRawRemove(table, entry);
             }
             if (op & JS_DHASH_STOP)
                 break;
