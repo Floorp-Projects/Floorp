@@ -4,7 +4,7 @@
   FILE: icalderivedproperty.c
   CREATOR: eric 15 Feb 2001
   
-  $Id: icalderivedproperty.c,v 1.2 2002/04/23 19:36:20 mostafah%oeone.com Exp $
+  $Id: icalderivedproperty.c,v 1.3 2002/11/06 21:22:38 mostafah%oeone.com Exp $
 
 
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -47,6 +47,8 @@
 
 struct icalproperty_impl*
 icalproperty_new_impl (icalproperty_kind kind);
+
+void icalproperty_add_parameters(struct icalproperty_impl *prop,va_list args);
 
 /* This map associates the property kinds with the string
    representation of the property name and the kind of VALUE that the

@@ -37,7 +37,7 @@
   
   DESCRIPTION:
   
-  $Id: icalssyacc.c,v 1.2 2001/12/21 18:56:39 mikep%oeone.com Exp $
+  $Id: icalssyacc.c,v 1.3 2002/11/06 21:22:44 mostafah%oeone.com Exp $
   $Locker:  $
 
 (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -60,11 +60,15 @@
 
 #include <stdlib.h>
 #include <string.h> /* for strdup() */
+#ifdef XP_MAC
+#include <extras.h> /* for strdup */
+#endif
 #include <limits.h> /* for SHRT_MAX*/
 #include "ical.h"
 #include "pvl.h"
 #include "icalgauge.h"
 #include "icalgaugeimpl.h"
+#include "icalparser.h"
 
 
 extern struct icalgauge_impl *icalss_yy_gauge;
@@ -77,6 +81,10 @@ void set_logic(struct icalgauge_impl* impl,icalgaugelogic l);
 void sserror(char *s); /* Don't know why I need this.... */
 
 extern char* sstext;
+
+void icalparser_clear_flex_input(void);
+
+int yylex();
 
 
 #line 52 "icalssyacc.y"

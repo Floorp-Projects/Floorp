@@ -82,6 +82,10 @@ DFARS 252.227-7013 or 48 CFR 52.227-19, as applicable.
 #define DBG_(x)
 #endif
 
+#ifdef XP_MAC
+#include <extras.h> /* for stricmp */
+#endif
+
 #ifdef WIN32
 #define snprintf   _snprintf
 #define strcasecmp stricmp
@@ -177,6 +181,7 @@ extern "C" {
 #endif
 
 int yyparse();
+int yylex();
 
 enum LexMode {
 	L_NORMAL,

@@ -28,12 +28,14 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef XP_MAC
 #ifndef WIN32
 #include <sys/param.h>
 #include <sys/mman.h>
 #include <unistd.h>
 #endif
 #include <sys/types.h>
+#endif
 #include <signal.h>
 #include <stdio.h>
 #include <string.h>

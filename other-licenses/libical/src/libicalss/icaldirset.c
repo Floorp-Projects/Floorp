@@ -3,7 +3,7 @@
     FILE: icaldirset.c
     CREATOR: eric 28 November 1999
   
-    $Id: icaldirset.c,v 1.5 2002/04/18 18:47:28 mostafah%oeone.com Exp $
+    $Id: icaldirset.c,v 1.6 2002/11/06 21:22:43 mostafah%oeone.com Exp $
     $Locker:  $
     
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -68,15 +68,23 @@
 #include <limits.h> /* For PATH_MAX */
 #ifndef WIN32
 #include <dirent.h> /* for opendir() */
+#ifdef XP_MAC
+#include <utsname.h> /* for uname */
+#else
 #include <unistd.h> /* for stat, getpid */
 #include <sys/utsname.h> /* for uname */
+#endif
 #else
 #include <io.h>
 #include <process.h>
 #endif
 #include <errno.h>
+#ifdef XP_MAC
+#include <extras.h> /* for strdup */
+#else
 #include <sys/types.h> /* for opendir() */
 #include <sys/stat.h> /* for stat */
+#endif
 #include <time.h> /* for clock() */
 #include <stdlib.h> /* for rand(), srand() */
 #include <string.h> /* for strdup */

@@ -4,7 +4,7 @@
  CREATOR: eric 23 December 1999
 
 
- $Id: icalfileset.h,v 1.4 2002/04/18 18:47:31 mostafah%oeone.com Exp $
+ $Id: icalfileset.h,v 1.5 2002/11/06 21:22:43 mostafah%oeone.com Exp $
  $Locker:  $
 
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -32,8 +32,10 @@
 #include "ical.h"
 #include "icalset.h"
 #include "icalgauge.h"
+#ifndef XP_MAC
 #include <sys/types.h> /* For open() flags and mode */
 #include <sys/stat.h> /* For open() flags and mode */
+#endif
 #include <fcntl.h> /* For open() flags and mode */
 
 #ifdef WIN32

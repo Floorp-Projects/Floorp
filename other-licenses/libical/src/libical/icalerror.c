@@ -3,7 +3,7 @@
   FILE: icalerror.c
   CREATOR: eric 16 May 1999
   
-  $Id: icalerror.c,v 1.3 2001/12/21 18:56:19 mikep%oeone.com Exp $
+  $Id: icalerror.c,v 1.4 2002/11/06 21:22:28 mostafah%oeone.com Exp $
   $Locker:  $
     
 
@@ -30,6 +30,9 @@
 #endif
 
 #include "icalerror.h"
+#ifdef XP_MAC
+#include <string.h>
+#endif
 
 icalerrorenum icalerrno;
 

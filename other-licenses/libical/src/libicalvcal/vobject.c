@@ -42,8 +42,12 @@ DFARS 252.227-7013 or 48 CFR 52.227-19, as applicable.
  * vobject, and convert a vobject into its textual representation.
  */
 
-#ifndef	 MWERKS
+#if !defined(MWERKS) && !defined(XP_MAC)
 #include <malloc.h>
+#endif
+
+#ifdef XP_MAC
+#include <extras.h> /* for stricmp */
 #endif
 
 #ifdef WIN32

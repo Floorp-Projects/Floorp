@@ -4,7 +4,7 @@
  CREATOR: Damon Chaplin 15 March 2001
 
 
- $Id: icaltimezone.c,v 1.4 2002/04/18 18:47:26 mostafah%oeone.com Exp $
+ $Id: icaltimezone.c,v 1.5 2002/11/06 21:22:30 mostafah%oeone.com Exp $
  $Locker:  $
 
  (C) COPYRIGHT 2001, Damon Chaplin
@@ -30,6 +30,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef XP_MAC
+#include <extras.h> /* for strdup */
+#endif
 #include "icalproperty.h"
 #include "icalarray.h"
 #include "icalerror.h"
@@ -38,6 +41,9 @@
 
 #ifdef WIN32
 #define snprintf _snprintf
+#define PACKAGE_DATA_DIR "/Projects/libical"
+#endif
+#ifdef XP_MAC
 #define PACKAGE_DATA_DIR "/Projects/libical"
 #endif
 
