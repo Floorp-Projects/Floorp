@@ -117,12 +117,18 @@ if ($build{all})
 
 chdir("::::");
 $MOZ_SRC = cwd();
+
 Moz::StopForErrors();
 #Moz::DontStopForErrors();
-OpenErrorLog("::NGLayoutBuildLog");
+
+#OpenErrorLog("::NGLayoutBuildLog");
+OpenErrorLog("::Mozilla.BuildLog");		# Tinderbox requires that name
 Checkout();
+
 chdir($MOZ_SRC);
 BuildDist();
+
 chdir($MOZ_SRC);
 BuildProjects();
+
 print "Build layout complete\n";
