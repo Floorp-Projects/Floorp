@@ -161,6 +161,11 @@ Free__11nsAllocatorFPv
 Realloc__11nsAllocatorFPvUi
 Alloc__11nsAllocatorFUi
 
+# nsFixedSizeAllocator
+Free__20nsFixedSizeAllocatorFPvUl
+Alloc__20nsFixedSizeAllocatorFUl
+Init__20nsFixedSizeAllocatorFPCcPCUliii
+
 # NS_NewEmptyEnumerator
 NS_NewEmptyEnumerator
 
