@@ -36,7 +36,7 @@ var buttonArray = new Array();
 function Startup(){
   if (!InitEditorShell())
     return;
-  doSetOKCancel(finishMap, null);
+
   initDialog();
 }
 

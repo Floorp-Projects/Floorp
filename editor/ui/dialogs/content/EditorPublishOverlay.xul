@@ -32,7 +32,7 @@
      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <vbox id="PublishSettingsInputs">
-  <groupbox id="ServerSettingsBox" orient="vertical">
+  <groupbox id="ServerSettingsBox">
     <caption label="&serverInfo.label;"/>
     <hbox align="center">
       <label value="&siteName.label;"/>
@@ -45,7 +45,7 @@
     <label value="&browseUrl.label;"/>
     <textbox id="BrowseUrlInput" class="MinWidth20em" oninput="onInputSettings();"/>
   </groupbox>
-  <groupbox id="LoginSettingsBox" orient="vertical">
+  <groupbox id="LoginSettingsBox">
     <caption label="&loginInfo.label;"/>
     <grid>
       <columns><column flex="1"/><column flex="3"/></columns>

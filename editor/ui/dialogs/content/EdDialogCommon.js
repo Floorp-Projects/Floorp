@@ -194,11 +194,11 @@ function ValidateNumberRange(value, minValue, maxValue, mustHaveValue)
   if (numberStr.length > 0)
   {
     // We have a number from user outside of allowed range
-    message = editorShell.GetString( "ValidateRangeMsg");
+    message = GetString( "ValidateRangeMsg");
     message = message.replace(/%n%/, numberStr);
     message += "\n ";
   }
-  message += editorShell.GetString( "ValidateNumberMsg");
+  message += GetString( "ValidateNumberMsg");
 
   // Replace variable placeholders in message with number values
   message = message.replace(/%min%/, minValue).replace(/%max%/, maxValue);
@@ -252,7 +252,7 @@ function GetAppropriatePercentString(elementForAtt, elementInDoc)
 
 function AppendStringToMenulistById(menulist, stringID)
 {
-  return AppendStringToMenulist(menulist, editorShell.GetString(stringID));
+  return AppendStringToMenulist(menulist, GetString(stringID));
 }
 
 function AppendStringToMenulist(menulist, string)
@@ -337,7 +337,7 @@ function ClearMenulist(menulist)
 
 function AppendStringToTreelistById(tree, stringID)
 {
-  return AppendStringToTreelist(tree, editorShell.GetString(stringID));
+  return AppendStringToTreelist(tree, GetString(stringID));
 }
 
 function AppendStringToTreelist(tree, string)

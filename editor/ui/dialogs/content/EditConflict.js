@@ -26,7 +26,6 @@ function Startup()
   if (!InitEditorShell())
     return;
   
-  //doSetOkCancel(null,PreventCancel);
   SetWindowLocation();
 }
 
@@ -36,8 +35,7 @@ dump("KeepCurrentPage\n");
   // Simple close dialog and don't change current page
   //TODO: Should we force saving of the current page?
   SaveWindowLocation();
-  window.close();
-  return;
+  return true;
 }
 
 function UseOtherPage()
@@ -47,7 +45,7 @@ dump("UseOtherPage\n");
   //editorShell.LoadUrl(editorShell.editorDocument.location);
   setTimeout("editorShell.LoadUrl(editorShell.editorDocument.location)", 10);
   SaveWindowLocation();
-  window.close();
+  return true;
 }
 
 function PreventCancel()

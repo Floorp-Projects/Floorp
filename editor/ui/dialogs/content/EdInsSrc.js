@@ -44,8 +44,8 @@ function Startup()
 {
   if (!InitEditorShell())
     return;
-  doSetOKCancel(onOK, onCancel);
-  var okButton = document.getElementById("ok");
+
+  var okButton = document.documentElement.getButton("accept");
   if (okButton)
   {
     okButton.removeAttribute("default");
@@ -65,7 +65,7 @@ function Startup()
   SetWindowLocation();
 }
 
-function onOK()
+function onAccept()
 {
   if (srcInput.value != "")
     editorShell.InsertSource(srcInput.value);

@@ -28,11 +28,11 @@
 <?xul-overlay href="chrome://editor/content/EdDialogOverlay.xul"?> 
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EdColorPicker.dtd">
-<window class="dialog"
+<dialog
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    onload = "Startup()"
-    onunload="onCancel()"
-    >
+    onload="Startup()"
+    ondialogaccept="return onAccept();"
+    ondialogcancel="return onCancelColor();">
 
   <script type="application/x-javascript" src="chrome://editor/content/editorUtilities.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
@@ -43,7 +43,6 @@
   <broadcaster id="args" value=""/>
   <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
 
-  <keyset id="dialogKeys"/>
   <hbox id="TableOrCellGroup" align="center" collapsed="true">
     <label value="&background.label;"/>
     <radiogroup id="CellOrTableGroup" orient="horizontal">
@@ -85,6 +84,4 @@
     </hbox>
   </vbox>
   <separator class="groove"/>
-  <!-- from global dialogOverlay -->
-  <hbox id="okCancelButtonsRight"/> 
-</window>
+</dialog>

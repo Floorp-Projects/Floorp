@@ -32,10 +32,11 @@
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorSaveAsCharset.dtd">
 <!-- dialog containing a control requiring initial setup -->
 <!-- WE SHOULD NOT USE ABSOLUTE WITH AND HEIGHT - USE BOXES INSTEAD? -->
-<window class="dialog" title="&windowTitle.label;"
+<dialog title="&windowTitle.label;"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload = "Startup()"
-    onunload="onCancel()"
+    ondialogaccept="return onAccept();"
+    ondialogcancel="return onCancel();"
     style="width: 32em;">
 
     <!-- Methods common to all editor dialogs -->
@@ -46,7 +47,6 @@
     
     <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
     <broadcaster id="args" value=""/>
-    <keyset id="dialogKeys"/>
 
     <groupbox><caption label="&documentTitleTitle.label;"/>
         <!-- Text labels filled in from editor.properties -->
@@ -64,7 +64,4 @@
 
     <checkbox id="ExportToText" label="&documentExportToText.label;" />
     <separator class="groove"/>
- 
-    <!-- from global dialogOverlay -->
-    <hbox id="okCancelButtonsRight"/> 
-</window>
+</dialog>

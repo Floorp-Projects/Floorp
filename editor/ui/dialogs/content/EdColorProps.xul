@@ -32,10 +32,11 @@
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorColorProperties.dtd">
 
-<window class="dialog" title="&windowTitle.label;"
+<dialog title="&windowTitle.label;"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload="Startup()"
-    onunload="onCancel()">
+    ondialogaccept="return onAccept();"
+    ondialogcancel="return onCancel();">
 
   <script type="application/x-javascript" src="chrome://editor/content/editorUtilities.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
@@ -43,7 +44,6 @@
 
   <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
   <broadcaster id="args" value=""/>
-  <keyset id="dialogKeys"/>
 
   <groupbox align="start">
     <caption label="&pageColors.label;"/>
@@ -122,5 +122,4 @@
     <button id="AdvancedEditButton"/>
   </hbox>
   <separator class="groove"/>
-  <hbox id="okCancelButtonsRight"/> 
-</window>
+</dialog>

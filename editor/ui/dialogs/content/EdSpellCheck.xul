@@ -27,10 +27,10 @@
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorSpellCheck.dtd">
 
 <!-- dialog containing a control requiring initial setup -->
-<window class="dialog" title="&windowTitle.label;"
+<dialog buttons="cancel" title="&windowTitle.label;"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload = "Startup()"
-    onunload = "onClose()">
+    ondialogcancel="return onClose();">
 
   <script type="application/x-javascript" src="chrome://editor/content/editorUtilities.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
@@ -114,9 +114,9 @@
         </menulist>
         <hbox flex="1">
           <button class="spell-check" id="Recheck" label="&recheckButton.label;" oncommand="Recheck()"/>
-          <button class="spell-check" id="Close"   label="&closeButton.label;"   oncommand="onClose()"/>
+          <button dlgtype="cancel" id="Close" label="&closeButton.label;" class="spell-check" oncommand="onClose()"/>
         </hbox>
       </row>
     </rows>
   </grid>
-</window>
+</dialog>

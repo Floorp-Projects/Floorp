@@ -23,7 +23,6 @@
 var insertNew = true;
 var tagName = "anchor";
 var anchorElement = null;
-var nameInput;
 var originalName = "";
 
 // dialog initialization code
@@ -32,9 +31,8 @@ function Startup()
   if (!InitEditorShell())
     return;
 
-  doSetOKCancel(onOK, onCancel);
-
-  nameInput = document.getElementById("nameInput");
+  gDialog.OkButton  = document.documentElement.getButton("accept");
+  gDialog.NameInput = document.getElementById("nameInput");
 
   // Get a single selected element of the desired type
   anchorElement = editorShell.GetSelectedElement(tagName);
@@ -76,31 +74,31 @@ function Startup()
   InitDialog();
   
   DoEnabling();
-  SetTextboxFocus(nameInput);
+  SetTextboxFocus(gDialog.NameInput);
   SetWindowLocation();
 }
 
 function InitDialog()
 {
-  nameInput.value = globalElement.getAttribute("name");
+  gDialog.NameInput.value = globalElement.getAttribute("name");
 }
 
 function ChangeName()
 {
-  if (nameInput.value.length > 0)
+  if (gDialog.NameInput.value.length > 0)
   {
     // Replace spaces with "_" and strip other non-URL characters
     // Note: we could use ConvertAndEscape, but then we'd
     //  have to UnEscapeAndConvert beforehand - too messy!
-    nameInput.value = ConvertToCDATAString(nameInput.value);
+    gDialog.NameInput.value = ConvertToCDATAString(gDialog.NameInput.value);
   }
   DoEnabling();
 }
 
 function DoEnabling()
 {
-  var enable = nameInput.value.length > 0;
-  SetElementEnabledById("ok",  enable);
+  var enable = gDialog.NameInput.value.length > 0;
+  SetElementEnabled(gDialog.OkButton,  enable);
   SetElementEnabledById("AdvancedEditButton1", enable);
 }
 
@@ -120,11 +118,11 @@ function AnchorNameExists(name)
 // Set attributes on globalElement so they can be accessed by AdvancedEdit()
 function ValidateData()
 {
-  var name = TrimString(nameInput.value);
+  var name = TrimString(gDialog.NameInput.value);
   if (!name)
   {
       ShowInputErrorMessage(GetString("MissingAnchorNameError"));
-      SetTextboxFocus(nameInput);
+      SetTextboxFocus(gDialog.NameInput);
       return false;
   } else {
     // Replace spaces with "_" and strip other characters
@@ -135,7 +133,7 @@ function ValidateData()
     if (originalName != name && AnchorNameExists(name))
     {
       ShowInputErrorMessage(GetString("DuplicateAnchorNameError").replace(/%name%/,name));            
-      SetTextboxFocus(nameInput);
+      SetTextboxFocus(gDialog.NameInput);
       return false;
     }
     globalElement.setAttribute("name",name);
@@ -143,7 +141,7 @@ function ValidateData()
   return true;
 }
 
-function onOK()
+function onAccept()
 {
   if (ValidateData())
   {

@@ -37,8 +37,6 @@ function Startup()
   if (!InitEditorShell())
     return;
 
-  doSetOKCancel(onOK, onCancel);
-
   tableElement = editorShell.CreateElementWithDefaults(tagName);
   if(!tableElement)
   {
@@ -133,7 +131,7 @@ function ValidateData()
 }
 
 
-function onOK()
+function onAccept()
 {
   if (ValidateData())
   {

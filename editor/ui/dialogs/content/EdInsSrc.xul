@@ -30,10 +30,11 @@
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorInsertSource.dtd">
 
-<window class="dialog" title="&windowTitle.label;"
+<dialog title="&windowTitle.label;"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload = "Startup()"
-    onunload="onCancel()">
+    ondialogaccept="return onAccept();"
+    ondialogcancel="return onCancel();">
 
   <!-- Methods common to all editor dialogs -->
   <script type="application/x-javascript" src="chrome://editor/content/editorUtilities.js"/>
@@ -43,7 +44,6 @@
 
   <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
   <broadcaster id="args" value=""/>
-  <keyset id="dialogKeys"/>
 
   <label id="srcMessage" value="&sourceEditField.label;"/>
   <vbox flex="1" style="width: 30em; height: 20em;">
@@ -59,6 +59,4 @@
   </hbox>
   <spacer class="spacer"/>
   <separator class="groove"/>
-  <!-- from global dialogOverlay -->
-	<hbox id="okCancelButtonsRight"/> 
-</window>
+</dialog>

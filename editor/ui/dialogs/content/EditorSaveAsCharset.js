@@ -40,8 +40,6 @@ function Startup()
   var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
   observerService.notifyObservers(null, "charsetmenu-selected", "other");
 
-  doSetOKCancel(onOK, onCancel);
-
   gDialog.TitleInput    = document.getElementById("TitleInput");
   gDialog.charsetTree   = document.getElementById('CharsetTree'); 
   gDialog.exportToText  = document.getElementById('ExportToText');
@@ -84,7 +82,7 @@ function InitDialog()
 }
 
 
-function onOK()
+function onAccept()
 {
   editorShell.BeginBatchChanges();
 

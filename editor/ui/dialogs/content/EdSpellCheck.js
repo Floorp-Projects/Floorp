@@ -134,8 +134,8 @@ function InitLanguageMenu(curLang)
       regionBundle = null;
     }
   }
-
-  for (var i = 0; i < dictList.length; i++)
+  var i;
+  for (i = 0; i < dictList.length; i++)
   {
     try {
       langId = dictList[i];
@@ -169,7 +169,7 @@ function InitLanguageMenu(curLang)
   // we really need to add loacel-aware JS collation, see bug XXXXX
   dictList.sort();
 
-  for (var i = 0; i < dictList.length; i++)
+  for (i = 0; i < dictList.length; i++)
   {
     AppendLabelAndValueToMenulist(gDialog.LanguageMenulist, dictList[i][0], dictList[i][1]);
     if (curLang && dictList[i][1] == curLang)
@@ -340,11 +340,11 @@ function IgnoreAll()
 
 function Replace()
 {
-  newWord = gDialog.ReplaceWordInput.value;
+  var newWord = gDialog.ReplaceWordInput.value;
   if (gMisspelledWord && gMisspelledWord != newWord)
   {
     editorShell.BeginBatchChanges();
-    isMisspelled = spellChecker.ReplaceWord(gMisspelledWord, newWord, false);
+    var isMisspelled = spellChecker.ReplaceWord(gMisspelledWord, newWord, false);
     editorShell.EndBatchChanges();
   }
   NextWord();
@@ -352,7 +352,7 @@ function Replace()
 
 function ReplaceAll()
 {
-  newWord = gDialog.ReplaceWordInput.value;
+  var newWord = gDialog.ReplaceWordInput.value;
   if (gMisspelledWord && gMisspelledWord != newWord)
   {
     editorShell.BeginBatchChanges();
@@ -411,6 +411,7 @@ function FillSuggestedList(misspelledWord)
   // Clear the current contents of the list
   allowSelectWord = false;
   ClearTreelist(list);
+  var item;
 
   if (misspelledWord.length > 0)
   {
@@ -432,7 +433,7 @@ function FillSuggestedList(misspelledWord)
     if (count == 0)
     {
       // No suggestions - show a message but don't let user select it
-      var item = AppendStringToTreelistById(list, "NoSuggestedWords");
+      item = AppendStringToTreelistById(list, "NoSuggestedWords");
       if (item) item.setAttribute("disabled", "true");
       allowSelectWord = false;
     } else {
@@ -443,7 +444,7 @@ function FillSuggestedList(misspelledWord)
   } 
   else
   {
-    var item = AppendStringToTreelist(list, "");
+    item = AppendStringToTreelist(list, "");
     if (item)
       item.setAttribute("disabled", "true");
   }
@@ -475,14 +476,16 @@ function doDefault()
   else if (gDialog.IgnoreButton.getAttribute("default") == "true")
     Ignore();
   else if (gDialog.CloseButton.getAttribute("default") == "true")
-    onClose();
+    return onClose();
+
+  // Don't close the dialog
+  return false;
 }
 
 function onClose()
 {
   // Shutdown the spell check and close the dialog
   spellChecker.UninitSpellChecker();
-  SaveWindowLocation();
-  window.close();
+  return onCancel();
 }
 
