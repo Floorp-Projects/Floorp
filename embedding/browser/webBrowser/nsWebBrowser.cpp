@@ -67,10 +67,6 @@
 // PSM2 includes
 #include "nsISecureBrowserUI.h"
 
-#ifdef MOZ_PHOENIX
-#include "nsToolkitCompsCID.h"
-#endif
-
 #if (defined(XP_MAC) || defined(XP_MACOSX)) && !defined(MOZ_WIDGET_COCOA)
 #include <MacWindows.h>
 #include "nsWidgetSupport.h"

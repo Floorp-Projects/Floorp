@@ -50,12 +50,6 @@
 #define NS_FORMHISTORYAUTOCOMPLETE_CONTRACTID \
   "@mozilla.org/autocomplete/search;1?name=form-history"
 
-#define NS_GLOBALHISTORY_CONTRACTID \
-  "@mozilla.org/browser/global-history;1"
-
-#define NS_GLOBALHISTORY_DATASOURCE_CONTRACTID \
-  "@mozilla.org/rdf/datasource;1?name=history"
-
 #define NS_GLOBALHISTORY_AUTOCOMPLETE_CONTRACTID \
     "@mozilla.org/autocomplete/search;1?name=history"
 
@@ -76,7 +70,3 @@
 // {A2059C0E-5A58-4c55-AB7C-26F0557546EF}
 #define NS_FORMHISTORY_CID \
 { 0xa2059c0e, 0x5a58, 0x4c55, { 0xab, 0x7c, 0x26, 0xf0, 0x55, 0x75, 0x46, 0xef } }
-
-// {9491C382-E3C4-11D2-BDBE-0050040A9B44}
-#define NS_GLOBALHISTORY_CID \
-{ 0x9491c382, 0xe3c4, 0x11d2, { 0xbd, 0xbe, 0x0, 0x50, 0x4, 0xa, 0x9b, 0x44} }
