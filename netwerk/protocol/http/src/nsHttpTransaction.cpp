@@ -224,8 +224,6 @@ nsHttpTransaction::OnStopTransaction(nsresult status)
 
     mStatus = status;
 
-    NS_IF_RELEASE(mConnection);
-
 	if (mListener) {
 		if (!mFiredOnStart) {
 			mFiredOnStart = PR_TRUE;

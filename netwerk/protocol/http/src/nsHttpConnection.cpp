@@ -333,10 +333,15 @@ nsHttpConnection::ActivateConnection()
     mReadDone = PR_FALSE;
 
     // because AsyncRead can result in listener callbacks on the socket
-    // transport thread before it even runs, we have to addref this in 
-    // order to ensure that we stay around long enough to complete this
-    // call.
+    // transport thread before it even runs, we have to addref this in order
+    // to ensure that we stay around long enough to complete this call.
     NS_ADDREF_THIS();
+
+    // by the same token, we need to ensure that the transaction stays around.
+    // and we must not access it via mTransaction, since mTransaction is null'd
+    // in our OnStopRequest.
+    nsHttpTransaction *trans = mTransaction;
+    NS_ADDREF(trans);
     
     // fire off the read first so that we'll often detect premature EOF before
     // writing to the socket, though this is not necessary.
@@ -357,18 +362,19 @@ nsHttpConnection::ActivateConnection()
     if (NS_FAILED(rv)) goto end;
 
     // grab pointers to the read/write requests provided they have not
-    // already finished.  check for early cancelation.
+    // already finished.  check for early cancelation (indicated by the
+    // transaction being in the DONE state).
     {
         nsAutoLock lock(mLock);
 
         if (!mWriteDone) {
             mWriteRequest = writeReq;
-            if (mTransaction->IsDone())
+            if (trans->IsDone())
                 mustCancelWrite = PR_TRUE;
         }
         if (!mReadDone) {
             mReadRequest = readReq;
-            if (mTransaction->IsDone())
+            if (trans->IsDone())
                 mustCancelRead = PR_TRUE;
         }
     }
@@ -377,11 +383,12 @@ nsHttpConnection::ActivateConnection()
     // could have been canceled prior to mReadRequest/mWriteRequest being
     // assigned).
     if (mustCancelWrite)
-        writeReq->Cancel(mTransaction->Status());
+        writeReq->Cancel(trans->Status());
     if (mustCancelRead)
-        readReq->Cancel(mTransaction->Status());
+        readReq->Cancel(trans->Status());
 
 end: 
+    NS_RELEASE(trans);
     NS_RELEASE_THIS();
     return rv;
 }
