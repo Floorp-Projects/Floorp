@@ -28,7 +28,7 @@ var gTotalFileCount = 0;
 var gSucceededCount = 0;
 var gFinishedCount = 0;
 var gFinished = false;
-var gFinalMessage = GetString("PublishFailed");
+var gFinalMessage;
 var gTimerID;
 
 function Startup()
@@ -172,7 +172,8 @@ function SetProgressFinished(filename, networkStatus)
     gDialog.Close.setAttribute("label", GetString("Close"));
     gFinalMessage = GetString("PublishCompleted");
   }
-  SetStatusMessage(gFinalMessage);
+  if (gFinalMessage)
+    SetStatusMessage(gFinalMessage);
 }
 
 function SetStatusMessage(message)
