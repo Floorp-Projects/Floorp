@@ -885,6 +885,8 @@ Contributor(s):
     <vbox id="sidebar-box" hidden="true">
       <sidebarheader align="center">
         <label id="sidebar-title"/>
+        <spacer flex="1"/>
+        <toolbarbutton class="tabs-closebutton" oncommand="toggleSidebar();"/>      
       </sidebarheader>        
       <browser id="sidebar" flex="1"
                style="min-width: 150px; width: 200px; max-width: 400px;"/>
