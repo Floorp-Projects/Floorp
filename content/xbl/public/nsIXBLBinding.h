@@ -66,11 +66,12 @@ public:
   NS_IMETHOD SetBoundElement(nsIContent* aElement) = 0;
 
   NS_IMETHOD GenerateAnonymousContent() = 0;
-  NS_IMETHOD InstallEventHandlers(nsIXBLBinding** aBinding) = 0;
+  NS_IMETHOD InstallEventHandlers() = 0;
   NS_IMETHOD InstallProperties() = 0;
-  NS_IMETHOD LoadResources()=0;
-
+  
   NS_IMETHOD HasStyleSheets(PRBool* aResolveStyle) = 0;
+
+  NS_IMETHOD GetFirstBindingWithConstructor(nsIXBLBinding** aResult)=0;
 
   NS_IMETHOD GetBaseTag(PRInt32* aNameSpaceID, nsIAtom** aResult) = 0;
 

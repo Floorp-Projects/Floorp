@@ -60,12 +60,13 @@ class nsXBLBinding: public nsIXBLBinding
   NS_IMETHOD SetBoundElement(nsIContent* aElement);
 
   NS_IMETHOD GenerateAnonymousContent();
-  NS_IMETHOD InstallEventHandlers(nsIXBLBinding** aBinding);
+  NS_IMETHOD InstallEventHandlers();
   NS_IMETHOD InstallProperties();
-  NS_IMETHOD LoadResources();
-
+  
   NS_IMETHOD HasStyleSheets(PRBool* aResolveStyle);
   
+  NS_IMETHOD GetFirstBindingWithConstructor(nsIXBLBinding** aResult);
+
   NS_IMETHOD GetBaseTag(PRInt32* aNameSpaceID, nsIAtom** aResult);
 
   NS_IMETHOD AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID, PRBool aRemoveFlag);

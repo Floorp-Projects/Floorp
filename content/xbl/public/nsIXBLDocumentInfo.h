@@ -51,8 +51,7 @@ public:
   static const nsIID& GetIID() { static nsIID iid = NS_IXBLDOCUMENTINFO_IID; return iid; }
 
   NS_IMETHOD GetDocument(nsIDocument** aResult)=0;
-  NS_IMETHOD GetRuleProcessors(nsISupportsArray** aResult)=0;
-
+  
   NS_IMETHOD GetScriptAccess(PRBool* aResult)=0;
   NS_IMETHOD SetScriptAccess(PRBool aAccess)=0;
 

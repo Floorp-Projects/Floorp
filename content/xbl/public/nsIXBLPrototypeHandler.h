@@ -62,6 +62,7 @@ public:
   NS_IMETHOD ExecuteHandler(nsIDOMEventReceiver* aReceiver, nsIDOMEvent* aEvent) = 0;
 
   NS_IMETHOD GetEventName(nsIAtom** aResult) = 0;
+  NS_IMETHOD SetEventName(nsIAtom* aName) = 0;
 };
 
 extern nsresult

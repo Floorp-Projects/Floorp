@@ -377,12 +377,12 @@ oncommand="goPreferences('pref-themes.xul','chrome://communicator/content/pref/p
 
       <menu value="XBL Demos">
        <menupopup>
-        <menuitem value="#0 Remote XBL"  oncommand="window._content.location.href='http://www.shadowland.org/xbl/test0/test.xul'"/>
-        <menuitem value="#1 Technicolor DIV" oncommand="window._content.location.href='http://www.shadowland.org/xbl/test1/test.html'"/>
-        <menuitem value="#2 Rollover Madness" oncommand="window._content.location.href='http://www.shadowland.org/xbl/test2/test.html'"/>
-        <menuitem value="#3 Popups in HTML" oncommand="window._content.location.href='http://www.shadowland.org/xbl/test3/test.html'"/>
-        <menuitem value="#4 Partition Magic" oncommand="window._content.location.href='http://www.shadowland.org/xbl/test4/test.html'"/>        
-        <menuitem value="#5 Sticky Notes" oncommand="window._content.location.href='http://www.shadowland.org/xbl/test5/test.html'"/>
+        <menuitem value="#0 Remote XBL"  oncommand="window._content.location.href='http://www.mozilla.org/projects/xbl/test0/test.xul'"/>
+        <menuitem value="#1 Technicolor DIV" oncommand="window._content.location.href='http://www.mozilla.org/projects/xbl/test1/test.html'"/>
+        <menuitem value="#2 Rollover Madness" oncommand="window._content.location.href='http://www.mozilla.org/projects/xbl/test2/test.html'"/>
+        <menuitem value="#3 Popups in HTML" oncommand="window._content.location.href='http://www.mozilla.org/projects/xbl/test3/test.html'"/>
+        <menuitem value="#4 Partition Magic" oncommand="window._content.location.href='http://www.mozilla.org/projects/xbl/test4/test.html'"/>        
+        <menuitem value="#5 Sticky Notes" oncommand="window._content.location.href='http://www.mozilla.org/projects/xbl/test5/test.html'"/>
        </menupopup>
       </menu>
 

@@ -145,6 +145,7 @@
         ]]>
         </body>      
       </method>
+	  <constructor action="this._initSelection()"/>
     </implementation>
     <handlers>
       <handler event="mousedown">
@@ -174,7 +175,6 @@
         }
       ]]>
       </handler>
-      <handler event="bindingattached" action="this._initSelection()"/>
       
       <!-- Selection Management -->
       <handler event="keypress" keycode="vk_up">

@@ -86,8 +86,7 @@ nsXBLWindowKeyHandler::EnsureHandlers()
     if (mHandler)
       return NS_OK;
     nsCOMPtr<nsIContent> content(do_QueryInterface(mElement));
-    nsCOMPtr<nsIXBLPrototypeHandler> dummy;
-    rv = nsXBLService::BuildHandlerChain(content, getter_AddRefs(mHandler), getter_AddRefs(dummy));
+    rv = nsXBLService::BuildHandlerChain(content, getter_AddRefs(mHandler));
   }
   else
     nsXBLWindowHandler::EnsureHandlers();

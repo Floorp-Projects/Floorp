@@ -33,6 +33,7 @@ class nsIDOMEventReceiver;
 class nsIXBLDocumentInfo;
 class nsIXBLPrototypeHandler;
 class nsIXBLBinding;
+class nsISupportsArray;
 
 // {34D700F5-C1A2-4408-A0B1-DD8F891DD1FE}
 #define NS_IXBLPROTOTYPEBINDING_IID \
@@ -55,14 +56,12 @@ public:
   NS_IMETHOD BindingAttached(nsIDOMEventReceiver* aReceiver)=0;
   NS_IMETHOD BindingDetached(nsIDOMEventReceiver* aReceiver)=0;
 
-  NS_IMETHOD LoadResources()=0;
+  NS_IMETHOD LoadResources(PRBool* aLoaded)=0;
 
   NS_IMETHOD InheritsStyle(PRBool* aResult)=0;
 
-  NS_IMETHOD GetPrototypeHandlers(nsIXBLPrototypeHandler** aHandler, 
-                                  nsIXBLPrototypeHandler** aSpecialHandler)=0;
-  NS_IMETHOD SetPrototypeHandlers(nsIXBLPrototypeHandler* aHandler,
-                                  nsIXBLPrototypeHandler* aSpecialHandler)=0;
+  NS_IMETHOD GetPrototypeHandlers(nsIXBLPrototypeHandler** aHandler)=0;
+  NS_IMETHOD SetPrototypeHandlers(nsIXBLPrototypeHandler* aHandler)=0;
   
   NS_IMETHOD AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID, PRBool aRemoveFlag, 
                               nsIContent* aChangedElement, nsIContent* aAnonymousContent)=0;
@@ -77,7 +76,10 @@ public:
 
   NS_IMETHOD SetInitialAttributes(nsIContent* aBoundElement, nsIContent* aAnonymousContent)=0;
 
+  NS_IMETHOD GetRuleProcessors(nsISupportsArray** aResult)=0;
+
   NS_IMETHOD HasInsertionPoints(PRBool* aResult)=0;
+  NS_IMETHOD HasStyleSheets(PRBool* aResult)=0; 
 
   NS_IMETHOD InstantiateInsertionPoints(nsIXBLBinding* aBinding)=0;
 
@@ -95,6 +97,10 @@ public:
   NS_IMETHOD ImplementsInterface(REFNSIID aIID, PRBool* aResult)=0;
 
   NS_IMETHOD ShouldBuildChildFrames(PRBool* aResult)=0;
+
+  NS_IMETHOD AddResourceListener(nsIContent* aBoundElement)=0;
+
+  NS_IMETHOD GetConstructor(nsIXBLPrototypeHandler** aResult)=0;
 };
 
 extern nsresult

@@ -28,9 +28,11 @@
           }
         ]]>
       </handler>
-      <handler event="bindingattached" action="this.setInitialSelection()"/>
     </handlers>
     <implementation>
+	  <constructor>
+	    this.setInitialSelection()
+	  </constructor>
       <method name="setInitialSelection">
         <body>
           <![CDATA[

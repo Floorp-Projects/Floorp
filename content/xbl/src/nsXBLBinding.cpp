@@ -435,17 +435,30 @@ nsXBLBinding::SetBoundElement(nsIContent* aElement)
 }
 
 NS_IMETHODIMP
+nsXBLBinding::GetFirstBindingWithConstructor(nsIXBLBinding** aResult)
+{
+  *aResult = nsnull;
+
+  nsCOMPtr<nsIXBLPrototypeHandler> constructor;
+  mPrototypeBinding->GetConstructor(getter_AddRefs(constructor));
+  if (constructor) {
+    *aResult = this;
+    NS_ADDREF(*aResult);
+  }
+  else if (mNextBinding)
+    return mNextBinding->GetFirstBindingWithConstructor(aResult);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXBLBinding::HasStyleSheets(PRBool* aResolveStyle)
 {
   // Find out if we need to re-resolve style.  We'll need to do this
   // if we have additional stylesheets in our binding document.
-  nsCOMPtr<nsIXBLDocumentInfo> info;
-  mPrototypeBinding->GetXBLDocumentInfo(mBoundElement, getter_AddRefs(info));
-  if (!info)
-    return NS_ERROR_FAILURE;
-  nsCOMPtr<nsISupportsArray> rules;
-  info->GetRuleProcessors(getter_AddRefs(rules));
-  if (rules) {
+  PRBool hasSheets;
+  mPrototypeBinding->HasStyleSheets(&hasSheets);
+  if (hasSheets) {
     *aResolveStyle = PR_TRUE;
     return NS_OK;
   }
@@ -850,7 +863,7 @@ nsXBLBinding::GenerateAnonymousContent()
 }
 
 NS_IMETHODIMP
-nsXBLBinding::InstallEventHandlers(nsIXBLBinding** aBinding)
+nsXBLBinding::InstallEventHandlers()
 {
   // Don't install handlers if scripts aren't allowed.
   if (AllowScripts()) {
@@ -861,14 +874,8 @@ nsXBLBinding::InstallEventHandlers(nsIXBLBinding** aBinding)
       return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIXBLPrototypeHandler> handlerChain;
-    nsCOMPtr<nsIXBLPrototypeHandler> specialChain;
-    mPrototypeBinding->GetPrototypeHandlers(getter_AddRefs(handlerChain), getter_AddRefs(specialChain));
+    mPrototypeBinding->GetPrototypeHandlers(getter_AddRefs(handlerChain));
   
-    if (specialChain && !*aBinding) {
-      *aBinding = this;
-      NS_ADDREF(*aBinding);
-    }
-
     nsCOMPtr<nsIXBLPrototypeHandler> curr = handlerChain;
     nsXBLEventHandler* currHandler = nsnull;
 
@@ -1017,14 +1024,8 @@ nsXBLBinding::InstallEventHandlers(nsIXBLBinding** aBinding)
     }
   }
 
-  if (mNextBinding) {
-    nsCOMPtr<nsIXBLBinding> binding;
-    mNextBinding->InstallEventHandlers(getter_AddRefs(binding));
-    if (!*aBinding) {
-      *aBinding = binding;
-      NS_IF_ADDREF(*aBinding);
-    }
-  }
+  if (mNextBinding)
+    mNextBinding->InstallEventHandlers();
 
   return NS_OK;
 }
@@ -1308,15 +1309,6 @@ nsXBLBinding::InstallProperties()
 }
 
 NS_IMETHODIMP
-nsXBLBinding::LoadResources()
-{
-  mPrototypeBinding->LoadResources();
-  if (mNextBinding)
-    mNextBinding->LoadResources();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsXBLBinding::GetBaseTag(PRInt32* aNameSpaceID, nsIAtom** aResult)
 {
   mPrototypeBinding->GetBaseTag(aNameSpaceID, aResult);
@@ -1483,12 +1475,8 @@ nsXBLBinding::WalkRules(nsISupportsArrayEnumFunc aFunc, void* aData)
       return rv;
   }
 
-  nsCOMPtr<nsIXBLDocumentInfo> info;
-  mPrototypeBinding->GetXBLDocumentInfo(mBoundElement, getter_AddRefs(info));
-  if (!info)
-    return NS_ERROR_FAILURE;
   nsCOMPtr<nsISupportsArray> rules;
-  info->GetRuleProcessors(getter_AddRefs(rules));
+  mPrototypeBinding->GetRuleProcessors(getter_AddRefs(rules));
   if (rules)
     rules->EnumerateForwards(aFunc, aData);
   

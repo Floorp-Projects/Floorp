@@ -192,12 +192,10 @@ Contributor(s):
           return val;
         </setter>
       </property>
-    </implementation>
-    <handlers>
-      <handler event="bindingattached">
+	  <constructor>
         this.init(event);
-      </handler>
-    </handlers>
+      </constructor>
+    </implementation>
   </binding>
 
   <binding id="toolbar" extends="xul:box">
