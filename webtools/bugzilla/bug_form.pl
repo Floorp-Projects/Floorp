@@ -21,6 +21,22 @@
 use diagnostics;
 use strict;
 
+# Shut up misguided -w warnings about "used only once".  For some reason,
+# "use vars" chokes on me when I try it here.
+
+sub bug_form_pl_sillyness {
+    my $zz;
+    $zz = %::FORM;
+    $zz = %::components;
+    $zz = %::prodmaxvotes;
+    $zz = %::versions;
+    $zz = @::legal_opsys;
+    $zz = @::legal_platform;
+    $zz = @::legal_product;
+    $zz = @::legal_priority;
+    $zz = @::legal_resolution_no_dup;
+    $zz = @::legal_severity;
+}
 
 my %knownattachments;
 

@@ -22,6 +22,29 @@
 
 use diagnostics;
 use strict;
+
+# Shut up misguided -w warnings about "used only once".  For some reason,
+# "use vars" chokes on me when I try it here.
+
+sub globals_pl_sillyness {
+    my $zz;
+    $zz = @main::chooseone;
+    $zz = @main::db_errstr;
+    $zz = @main::default_column_list;
+    $zz = @main::dontchange;
+    $zz = @main::legal_bug_status;
+    $zz = @main::legal_components;
+    $zz = @main::legal_opsys;
+    $zz = @main::legal_platform;
+    $zz = @main::legal_priority;
+    $zz = @main::legal_product;
+    $zz = @main::legal_severity;
+    $zz = @main::legal_target_milestone;
+    $zz = @main::legal_versions;
+    $zz = @main::milestoneurl;
+    $zz = @main::prodmaxvotes;
+}
+
 use Mysql;
 
 use Date::Format;               # For time2str().

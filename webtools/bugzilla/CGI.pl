@@ -23,6 +23,14 @@
 use diagnostics;
 use strict;
 
+# Shut up misguided -w warnings about "used only once".  For some reason,
+# "use vars" chokes on me when I try it here.
+
+sub sillyness {
+    my $zz;
+    $zz = %::FILENAME;
+}
+
 use CGI::Carp qw(fatalsToBrowser);
 
 require 'globals.pl';

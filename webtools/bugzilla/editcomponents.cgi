@@ -22,6 +22,15 @@ use strict;
 require "CGI.pl";
 require "globals.pl";
 
+# Shut up misguided -w warnings about "used only once".  For some reason,
+# "use vars" chokes on me when I try it here.
+
+sub sillyness {
+    my $zz;
+    $zz = $::buffer;
+}
+
+
 my $dobugcounts = (defined $::FORM{'dobugcounts'});
 
 
