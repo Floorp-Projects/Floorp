@@ -86,7 +86,11 @@
     <key id="key_paste"/>
     <key id="key_delete"/>
     <key id="key_selectAll"/>
-  
+    <key id="key_SwitchTextDirection"
+            key="&bidiSwitchTextDirectionItem.commandkey;"
+            command="cmd_SwitchTextDirection"
+            modifiers="accel,shift" />
+
           <!-- View Menu -->
     <key id="key_reload"  key="&reloadCmd.commandkey;" oncommand="BrowserReload();" modifiers="accel"/>
     <key key="&reloadCmd.commandkey;" oncommand="BrowserReloadSkipCache();" modifiers="accel,shift"/>
@@ -154,6 +158,7 @@
     <command id="cmd_paste"/>
     <command id="cmd_delete"/>
     <command id="cmd_selectAll" observes="isImage"/>
+    <command id="cmd_SwitchTextDirection" oncommand="SwitchFocusedTextEntryDirection();" disabled="true" />
 
     <!-- Content area context menu -->
     <command id="cmd_copyLink"/>
@@ -164,7 +169,8 @@
     <command id="View:PageSource" oncommand="BrowserViewSourceOfDocument(content.document);" observes="isImage"/>
     <command id="View:PageInfo"   oncommand="BrowserPageInfo();"/>
     <command id="View:FullScreen" oncommand="BrowserFullScreen();"/>
-  
+    <command id="cmd_SwitchDocumentDirection" oncommand="SwitchDocumentDirection(window.content);" />
+ 
     <!-- Search Menu -->
     <command id="Browser:Find" oncommand="BrowserFind();" observes="isImage"/>
     <command id="Browser:FindAgain" oncommand="BrowserFindAgain(false);" observes="isImage"/>
@@ -374,6 +380,13 @@
         <menuitem id="menu_findTypeLinks"/>
         <menuitem id="menu_findTypeText"/>
 
+        <menuseparator hidden="true" id="textfieldDirection-separator"/>
+        <menuitem hidden="true" id="textfieldDirection-swap" 
+                label="&bidiSwitchTextDirectionItem.label;"
+                key="key_SwitchTextDirection"
+                accesskey="&bidiSwitchTextDirectionItem.accesskey;"
+                command="cmd_SwitchTextDirection"/>
+
         <menuseparator id="menu_PrefsSeparator"/> 
         <menuitem id="menu_preferences" oncommand="goPreferences('navigator', 'chrome://communicator/content/pref/pref-navigator.xul', 'navigator')"/>
       </menupopup>
@@ -409,6 +422,10 @@
           </menupopup>
         </menu>
         <menu id="charsetMenu" observes="isImage"/>
+        <menuitem hidden="true" id="documentDirection-swap"
+                  label="&bidiSwitchPageDirectionItem.label;"
+                  accesskey="&bidiSwitchPageDirectionItem.accesskey;"
+                  command="cmd_SwitchDocumentDirection"/>
         <menuseparator />
         <menuitem accesskey="&pageSourceCmd.accesskey;" label="&pageSourceCmd.label;" key="key_viewSource" command="View:PageSource"/>
         <menuitem accesskey="&pageInfoCmd.accesskey;"   label="&pageInfoCmd.label;"   key="key_viewInfo"   command="View:PageInfo"/>
