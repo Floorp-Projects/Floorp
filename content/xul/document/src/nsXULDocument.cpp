@@ -3141,7 +3141,7 @@ nsXULDocument::GetElementsByTagNameNS(const nsAReadableString& aNamespaceURI,
     return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsXULDocument::AddSubtreeToDocument(nsIContent* aElement)
 {
     // Do a bunch of work that's necessary when an element gets added
@@ -3194,13 +3194,10 @@ nsXULDocument::AddSubtreeToDocument(nsIContent* aElement)
         if (NS_FAILED(rv)) return rv;
     }
 
-    // 5. See if we need to attach a XUL template to this node
-    CheckTemplateBuilder(aElement);
-
     return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsXULDocument::RemoveSubtreeFromDocument(nsIContent* aElement)
 {
     // Do a bunch of cleanup to remove an element from the XUL
@@ -5048,12 +5045,26 @@ nsXULDocument::ResumeWalk()
             if (NS_FAILED(rv)) return rv;
 
             if (indx >= proto->mNumChildren) {
-                // We've processed all of the prototype's children. If
-                // we're in the master prototype, do document-level
-                // hookup. (An overlay will get its document hookup
-                // done when it's successfully resolved.)
-                if (element && (mState == eState_Master))
-                    AddSubtreeToDocument(element);
+                if (element && ((mState == eState_Master) || (mContextStack.Depth() > 2))) {
+                    // We've processed all of the prototype's children.
+                    // Check the element for a 'datasources' attribute, in
+                    // which case we'll need to create a template builder
+                    // and construct the first 'ply' of elements beneath
+                    // it.
+                    //
+                    // N.B. that we do this -after- all other XUL children
+                    // have been created: this ensures that there'll be a
+                    // <template> tag available when we try to build that
+                    // first ply of generated elements.
+                    //
+                    // N.B. that we do -not- do this if we are dealing
+                    // with an 'overlay element'; that is, an element
+                    // in the first ply of an overlay
+                    // document. OverlayForwardReference::Merge() will
+                    // handle that case.
+                    rv = CheckTemplateBuilder(element);
+                    if (NS_FAILED(rv)) return rv;
+                }
 
                 // Now pop the context stack back up to the parent
                 // element and continue the prototype walk.
@@ -5087,6 +5098,15 @@ nsXULDocument::ResumeWalk()
                     // ...and append it to the content model.
                     rv = element->AppendChildTo(child, PR_FALSE);
                     if (NS_FAILED(rv)) return rv;
+
+                    // ...but only do document-level hookup if we're
+                    // in the master document. For an overlay, this
+                    // will happend when the overlay is successfully
+                    // resolved.
+                    if (mState == eState_Master) {
+                        rv = AddSubtreeToDocument(child);
+                        if (NS_FAILED(rv)) return rv;
+                    }
                 }
                 else {
                     // We're in the "first ply" of an overlay: the
@@ -5586,19 +5606,6 @@ nsXULDocument::CheckTemplateBuilder(nsIContent* aElement)
     // one, create and initialize a template builder.
     nsresult rv;
 
-    // See if the element already has a `database' attribute. If it
-    // does, then the template builder has already been created.
-    //
-    // XXX this approach will crash and burn (well, maybe not _that_
-    // bad) if aElement is not a XUL element.
-    nsCOMPtr<nsIDOMXULElement> xulele = do_QueryInterface(aElement);
-    if (xulele) {
-        nsCOMPtr<nsIRDFCompositeDataSource> ds;
-        xulele->GetDatabase(getter_AddRefs(ds));
-        if (ds)
-            return NS_OK;
-    }
-
     nsAutoString datasources;
     rv = aElement->GetAttribute(kNameSpaceID_None, kDataSourcesAtom, datasources);
     if (NS_FAILED(rv)) return rv;
@@ -5868,11 +5875,6 @@ nsXULDocument::OverlayForwardReference::Resolve()
 
     rv = Merge(target, mOverlay);
     if (NS_FAILED(rv)) return eResolve_Error;
-
-    // Add child and any descendants to the element map
-    rv = mDocument->AddSubtreeToDocument(target);
-    if (NS_FAILED(rv)) return eResolve_Error;
-
     nsCAutoString idC;
     idC.AssignWithConversion(id);
     PR_LOG(gXULLog, PR_LOG_ALWAYS,
@@ -5900,6 +5902,12 @@ nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
     // nodes appropriately. (See XUL overlay reference for details)
 
     nsresult rv;
+
+    // XXX - ??? - waterson says this should be moved elsewhere. 
+    // This'll get set to PR_TRUE if a new 'datasources' attribute is
+    // set on the element. In which case, we need to add a template
+    // builder.
+    PRBool datasources = PR_FALSE;
 
     // Merge attributes from the overlay content node to that of the
     // actual document.
@@ -5951,6 +5959,11 @@ nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
 
         rv = aTargetNode->SetAttribute(ni, value, PR_FALSE);
         if (NS_FAILED(rv)) return rv;
+
+        // XXX - ???
+        if (/* ignore namespace && */ attr.get() == kDataSourcesAtom) {
+            datasources = PR_TRUE;
+        }
     }
     
     
@@ -6028,6 +6041,18 @@ nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
         rv = InsertElement(aTargetNode, currContent);
         if (NS_FAILED(rv)) return rv;
     }        
+
+    // Add child and any descendants to the element map
+    rv = mDocument->AddSubtreeToDocument(aTargetNode);
+    if (NS_FAILED(rv)) return rv;
+
+    if (datasources) {
+        // If a new 'datasources' attribute was added via the
+        // overlay, then initialize the <template> builder on the
+        // element.
+        rv = CheckTemplateBuilder(aTargetNode);
+        if (NS_FAILED(rv)) return rv;
+    }
 
     return NS_OK;
 }
