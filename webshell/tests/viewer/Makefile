@@ -72,8 +72,6 @@ INCLUDES += \
 			-I$(PUBLIC)/network \
 			-I$(PUBLIC)/xp
 
-OBJS    = $(CPPSRCS:.cpp=.o)
-
 ifdef MOZ_OJI
 	JSJ_LIB = -ljsj
 endif
