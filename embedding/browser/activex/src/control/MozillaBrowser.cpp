@@ -1489,9 +1489,12 @@ HRESULT CMozillaBrowser::PrintDocument(BOOL promptUser)
         printSettings->SetPrintSilent(promptUser ? PR_FALSE : PR_TRUE);
     }
 
+    // Disable print progress dialog (XUL)
+    mPrefs->SetBoolPref("print.show_print_progress", PR_FALSE);
+
     PrintListener *listener = new PrintListener;
     nsCOMPtr<nsIWebProgressListener> printListener = do_QueryInterface(listener);
-    browserAsPrint->Print(printSettings, nsnull);
+    browserAsPrint->Print(printSettings, printListener);
     listener->WaitForComplete();
 
     if (printSettings)
@@ -3341,10 +3344,12 @@ void PrintListener::WaitForComplete()
 /* void onStateChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in unsigned long aStateFlags, in nsresult aStatus); */
 NS_IMETHODIMP PrintListener::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRUint32 aStateFlags, nsresult aStatus)
 {
-  if (aStatus == nsIWebProgressListener::STATE_STOP) {
-    mComplete = PR_TRUE;
-  }
-  return NS_OK;
+    if (aStateFlags & nsIWebProgressListener::STATE_STOP &&
+        aStateFlags & nsIWebProgressListener::STATE_IS_DOCUMENT)
+    {
+        mComplete = PR_TRUE;
+    }
+    return NS_OK;
 }
 
 /* void onProgressChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aCurSelfProgress, in long aMaxSelfProgress, in long aCurTotalProgress, in long aMaxTotalProgress); */
