@@ -741,7 +741,7 @@ nsresult nsFontCache :: GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup,
 
     const nsFont* font;
     aMetrics->GetFont(font);
-#ifdef XP_PC
+#if defined( XP_PC ) || defined(XP_MAC)
     nsCOMPtr<nsIAtom> langGroup;
     aMetrics->GetLangGroup(getter_AddRefs(langGroup));
     if (aFont.Equals(*font) && (aLangGroup == langGroup))
@@ -766,7 +766,7 @@ nsresult nsFontCache :: GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup,
     return rv;
   }
 
-#ifdef XP_PC
+#if defined( XP_PC ) || defined(XP_MAC)
   rv = fm->Init(aFont, aLangGroup, mContext);
 #else
   rv = fm->Init(aFont, mContext);

@@ -245,34 +245,24 @@ void nsUnicodeFontMappingMac::InitByLANG(const nsString& aLANG)
   	}
 }
 //--------------------------------------------------------------------------
-void nsUnicodeFontMappingMac::InitByDocumentCharset(const nsString& aDocumentCharset)
+void nsUnicodeFontMappingMac::InitByLangGroup(const nsString& aLangGroup)
 {
 	// do not countinue if there are no difference to look at the document Charset
 	if( ScriptMapInitComplete() )
 		return;
-	if(gUtil->ScriptEnabled(smRoman) && aDocumentCharset.EqualsIgnoreCase("ISO-8859-1"))
+	if(gUtil->ScriptEnabled(smRoman) && aLangGroup.EqualsIgnoreCase("x-western"))
   	{
 		FillVarBlockToScript(smRoman, mPrivBlockToScript);		
-  	} else if(gUtil->ScriptEnabled(smSimpChinese) &&
-	   (aDocumentCharset.EqualsIgnoreCase("GB2312") ||
-  	    aDocumentCharset.EqualsIgnoreCase("ISO-2022-CN") ||
-  	    aDocumentCharset.EqualsIgnoreCase("ZH") ))
+  	} else if(gUtil->ScriptEnabled(smSimpChinese) && aLangGroup.EqualsIgnoreCase("zh-CN"))
   	{
 		FillVarBlockToScript(smSimpChinese, mPrivBlockToScript);
-  	} else if(gUtil->ScriptEnabled(smKorean) &&
-  	          ( aDocumentCharset.EqualsIgnoreCase("EUC-KR") ||
-  	   			aDocumentCharset.EqualsIgnoreCase("ISO-2022-KR") ))
+  	} else if(gUtil->ScriptEnabled(smKorean) && aLangGroup.EqualsIgnoreCase("ko"))
   	{
 		FillVarBlockToScript(smKorean, mPrivBlockToScript);
-  	} else if(gUtil->ScriptEnabled(smTradChinese) &&
-  	          (	aDocumentCharset.EqualsIgnoreCase("Big5") ||
-  	   		   	aDocumentCharset.EqualsIgnoreCase("x-euc-tw") ))
+  	} else if(gUtil->ScriptEnabled(smTradChinese)  && aLangGroup.EqualsIgnoreCase("zh-TW"))
   	{
 		FillVarBlockToScript(smTradChinese, mPrivBlockToScript);
-  	} else if(gUtil->ScriptEnabled(smJapanese) &&
-  	          ( aDocumentCharset.EqualsIgnoreCase("Shift_JIS") ||
-  	    		aDocumentCharset.EqualsIgnoreCase("EUC-JP") ||
-  	     		aDocumentCharset.EqualsIgnoreCase("ISO-2022-JP") ))
+  	} else if(gUtil->ScriptEnabled(smJapanese) && aLangGroup.EqualsIgnoreCase("ja"))
   	{
 		FillVarBlockToScript(smJapanese, mPrivBlockToScript);
   	}
@@ -298,7 +288,7 @@ void nsUnicodeFontMappingMac::InitDefaultScriptFonts()
 
 nsUnicodeFontMappingMac::nsUnicodeFontMappingMac(
 	nsFont* aFont, nsIDeviceContext *aDeviceContext, 
-	const nsString& aDocumentCharset, const nsString& aLANG) 
+	const nsString& aLangGroup, const nsString& aLANG) 
 {
 	PRInt32 i;
 	for(i = kUnicodeBlockFixedScriptMax ; i < kUnicodeBlockSize; i++)
@@ -308,13 +298,13 @@ nsUnicodeFontMappingMac::nsUnicodeFontMappingMac(
 	   
 	InitByFontFamily(aFont, aDeviceContext);
 	InitByLANG(aLANG);
-	InitByDocumentCharset(aDocumentCharset);
+	InitByLangGroup(aLangGroup);
 	InitDefaultScriptFonts();
 }
 //--------------------------------------------------------------------------
 
 nsUnicodeFontMappingMac* nsUnicodeFontMappingMac::GetCachedInstance(
-	nsFont* aFont, nsIDeviceContext *aDeviceContext, const nsString& aDocumentCharset, const nsString& aLANG) 
+	nsFont* aFont, nsIDeviceContext *aDeviceContext, const nsString& aLangGroup, const nsString& aLANG) 
 {
 	if(! gUtil)
 		gUtil = nsUnicodeMappingUtil::GetSingleton();
@@ -324,11 +314,11 @@ nsUnicodeFontMappingMac* nsUnicodeFontMappingMac::GetCachedInstance(
 	nsUnicodeFontMappingMac* obj = nsnull;
 	nsAutoString key = aFont->name;
 	key.Append(":");
-	key.Append(aDocumentCharset);
+	key.Append(aLangGroup);
 	key.Append(":");
 	key.Append(aLANG);
 	if(! gCache->Get ( key, &obj )){
-		obj = new nsUnicodeFontMappingMac(aFont, aDeviceContext, aDocumentCharset, aLANG);
+		obj = new nsUnicodeFontMappingMac(aFont, aDeviceContext, aLangGroup, aLANG);
 		if( obj )
 			gCache->Set ( key, obj);
 	}

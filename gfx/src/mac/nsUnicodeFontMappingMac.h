@@ -33,7 +33,7 @@ class nsUnicodeFontMappingCache;
 class nsUnicodeFontMappingMac {
 public:
    nsUnicodeFontMappingMac(nsFont* aFont, nsIDeviceContext *aDeviceContext, 
-   		const nsString& aDocumentCharset, const nsString& aLANG);
+   		const nsString& aLangGroup, const nsString& aLANG);
    short GetFontID(PRUnichar aChar);
    inline const short *GetScriptFallbackFonts() {
    		return mScriptFallbackFontIDs;
@@ -41,14 +41,14 @@ public:
    PRBool Equals(const nsUnicodeFontMappingMac& anther);
    
    static nsUnicodeFontMappingMac* GetCachedInstance(nsFont* aFont, nsIDeviceContext *aDeviceContext, 
-   			const nsString& aDocumentCharset, const nsString& aLANG);
+   			const nsString& aLangGroup, const nsString& aLANG);
    
    
 protected:
    PRBool ScriptMapInitComplete();
    void InitByFontFamily(nsFont* aFont, nsIDeviceContext *aDeviceContext);
    void InitByLANG(const nsString& aLANG);
-   void InitByDocumentCharset(const nsString& aDocumentCharset);
+   void InitByLangGroup(const nsString& aLangGroup);
    void InitDefaultScriptFonts();
    void processOneLangRegion(const char* aLanguage, const char* aRegion );
    nsUnicodeBlock GetBlock(PRUnichar aChar);
