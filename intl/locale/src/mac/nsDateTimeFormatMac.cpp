@@ -252,14 +252,10 @@ nsresult nsDateTimeFormatMac::Initialize(nsILocale* locale)
 
   // get locale string, use app default if no locale specified
   if (NULL == locale) {
-    nsILocaleService *localeService;
-
-    res = nsComponentManager::CreateInstance(kLocaleServiceCID, NULL, 
-                                             nsILocaleService::GetIID(), (void**)&localeService);
+    NS_WITH_SERVICE(nsILocaleService, localeService, kLocaleServiceCID, &res);
     if (NS_SUCCEEDED(res)) {
       nsILocale *appLocale;
       res = localeService->GetApplicationLocale(&appLocale);
-	    localeService->Release();
       if (NS_SUCCEEDED(res)) {
         res = appLocale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
         if (NS_SUCCEEDED(res) && NULL != aLocaleUnichar) {
