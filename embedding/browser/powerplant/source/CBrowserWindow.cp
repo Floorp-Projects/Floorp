@@ -130,6 +130,10 @@ void CBrowserWindow::FinishCreateSelf()
 	
 	// Tell our CBrowserShell about ourself 
 	mBrowserShell->SetTopLevelWindow(mBrowserChrome);
+	// Tell the chrome about the nsIWebBrowser
+	nsCOMPtr<nsIWebBrowser> webBrowser;
+	mBrowserShell->GetWebBrowser(getter_AddRefs(webBrowser));
+	mBrowserChrome->SetWebBrowser(webBrowser);
 	
 	// Find our subviews - When we have a way of creating this
 	// window with various chrome flags, we may or may not have
@@ -153,11 +157,7 @@ void CBrowserWindow::FinishCreateSelf()
 
 	UReanimator::LinkListenerToControls(this, this, mUserCon);
 	StartListening();
-	StartBroadcasting();
-	
-	// Just for demo sake, load a URL	
-	LStr255     urlString("http://www.mozilla.org");
-	mBrowserShell->LoadURL((Ptr)&urlString[1], urlString.Length());
+	StartBroadcasting();	
 }
 
 
@@ -165,10 +165,11 @@ void CBrowserWindow::ResizeFrameBy(SInt16		inWidthDelta,
                 				   SInt16		inHeightDelta,
                 				   Boolean	    inRefresh)
 {
-	Inherited::ResizeFrameBy(inWidthDelta, inHeightDelta, inRefresh);
-	
+	// Resize the widget BEFORE subviews get resized
 	Rect portRect = GetMacPort()->portRect;	
 	mWindow->Resize(portRect.right - portRect.left, portRect.bottom - portRect.top, inRefresh);
+
+	Inherited::ResizeFrameBy(inWidthDelta, inHeightDelta, inRefresh);	
 }
 
 
