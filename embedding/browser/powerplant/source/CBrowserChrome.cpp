@@ -554,7 +554,7 @@ LWindow* CBrowserChrome::GetLWindowForDOMWindow(nsIDOMWindow* aDOMWindow)
     if (!aDOMWindow)
         return nsnull;
         
-    nsCOMPtr<nsIWindowWatcher> windowWatcher(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+    nsCOMPtr<nsIWindowWatcher> windowWatcher(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
     if (!windowWatcher)
         return nsnull;
     nsCOMPtr<nsIWebBrowserChrome> windowChrome;

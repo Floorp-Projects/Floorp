@@ -69,9 +69,6 @@
 #include "nsIDragDropOverride.h"
 #include "nsIContent.h"
 
-static const char sWindowWatcherContractID[] = "@mozilla.org/embedcomp/window-watcher;1";
-
-
 //
 // GetEventReceiver
 //
@@ -300,7 +297,7 @@ nsresult nsDocShellTreeOwner::FindItemWithNameAcrossWindows(
                 nsIDocShellTreeItem** aFoundItem)
 {
   // search for the item across the list of top-level windows
-  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(sWindowWatcherContractID));
+  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
   if (!wwatch)
     return NS_OK;
 
@@ -343,7 +340,7 @@ void nsDocShellTreeOwner::EnsurePrompter()
   if (mPrompter)
     return;
 
-  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
   if (wwatch && mWebBrowser) {
     nsCOMPtr<nsIDOMWindow> domWindow;
     mWebBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
@@ -357,7 +354,7 @@ void nsDocShellTreeOwner::EnsureAuthPrompter()
   if (mAuthPrompter)
     return;
 
-  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
   if (wwatch && mWebBrowser) {
     nsCOMPtr<nsIDOMWindow> domWindow;
     mWebBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
@@ -372,7 +369,7 @@ void nsDocShellTreeOwner::AddToWatcher() {
     nsCOMPtr<nsIDOMWindow> domWindow;
     mWebBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
     if (domWindow) {
-      nsCOMPtr<nsPIWindowWatcher> wwatch(do_GetService(sWindowWatcherContractID));
+      nsCOMPtr<nsPIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
       if (wwatch)
         wwatch->AddWindow(domWindow, mWebBrowserChrome);
     }
@@ -385,7 +382,7 @@ void nsDocShellTreeOwner::RemoveFromWatcher() {
     nsCOMPtr<nsIDOMWindow> domWindow;
     mWebBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
     if (domWindow) {
-      nsCOMPtr<nsPIWindowWatcher> wwatch(do_GetService(sWindowWatcherContractID));
+      nsCOMPtr<nsPIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
       if (wwatch)
         wwatch->RemoveWindow(domWindow);
     }

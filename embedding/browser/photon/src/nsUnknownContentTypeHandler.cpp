@@ -137,7 +137,7 @@ PtWidget_t *nsUnknownContentTypeHandler::GetWebBrowser(nsIDOMWindow *aWindow)
   nsCOMPtr<nsIWebBrowserChrome> chrome;
   PtWidget_t *val = 0;
 
-  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
   if (!wwatch) return nsnull;
 
   if( wwatch ) {

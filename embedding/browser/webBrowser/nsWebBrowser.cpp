@@ -91,7 +91,7 @@ nsWebBrowser::nsWebBrowser() : mDocShellTreeOwner(nsnull),
 {
     NS_INIT_REFCNT();
     mInitInfo = new nsWebBrowserInitInfo();
-    mWWatch = do_GetService("@mozilla.org/embedcomp/window-watcher;1");
+    mWWatch = do_GetService(NS_WINDOWWATCHER_CONTRACTID);
     NS_ASSERTION(mWWatch, "failed to get WindowWatcher");
 }
 

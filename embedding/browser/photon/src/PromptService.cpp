@@ -83,7 +83,7 @@ private:
 NS_IMPL_ISUPPORTS2(CPromptService, nsIPromptService, nsPIPromptService)
 
 CPromptService::CPromptService() :
-	mWWatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1")) {
+	mWWatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID)) {
 	NS_INIT_REFCNT();
 	}
 
@@ -95,7 +95,7 @@ PtWidget_t *CPromptService::GetWebBrowser(nsIDOMWindow *aWindow)
   nsCOMPtr<nsIWebBrowserChrome> chrome;
   PtWidget_t *val = 0;
 
-	nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+	nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
 	if (!wwatch) return nsnull;
 
   if( wwatch ) {

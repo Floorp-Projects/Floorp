@@ -164,7 +164,6 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID); // For window.find()
 static NS_DEFINE_CID(kCStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
-static const char *sWindowWatcherContractID = "@mozilla.org/embedcomp/window-watcher;1";
 static const char *sJSStackContractID = "@mozilla.org/js/xpc/ContextStack;1";
 
 static const char *kDOMBundleURL = "chrome://global/locale/commonDialogs.properties";
@@ -4219,7 +4218,7 @@ GlobalWindowImpl::OpenInternal(const nsAString& aUrl,
   }
 
   if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(sWindowWatcherContractID, &rv));
+    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv));
     if (wwatch) {
       if (argc) {
         nsCOMPtr<nsPIWindowWatcher> pwwatch(do_QueryInterface(wwatch));
