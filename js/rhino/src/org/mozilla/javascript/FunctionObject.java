@@ -294,7 +294,7 @@ public class FunctionObject extends NativeFunction {
      * @param name the name of the methods to find
      * @return an array of the found methods, or null if no methods
      *         by that name were found.
-     * @see java.lang.Class#getDeclaredMethods
+     * @see java.lang.Class#getMethods
      */
     public static Method[] findMethods(Class clazz, String name) {
         return findMethods(getMethodList(clazz), name);
@@ -335,10 +335,22 @@ public class FunctionObject extends NativeFunction {
         Method[] cached = methodsCache; // get once to avoid synchronization
         if (cached != null && cached[0].getDeclaringClass() == clazz)
             return cached;
-        Method[] methods = clazz.getDeclaredMethods();
+        boolean getMethodsCalled = false;
+        Method[] methods;
+        try {
+            // getDeclaredMethods may be rejected by the security manager
+            methods = clazz.getDeclaredMethods();
+        } catch (SecurityException e) {
+            // but getMethods is more expensive
+            getMethodsCalled = true;
+            methods = clazz.getMethods();
+        }
         int count = 0;
         for (int i=0; i < methods.length; i++) {
-            if (!Modifier.isPublic(methods[i].getModifiers())) {
+            if (getMethodsCalled 
+                    ? !Modifier.isPublic(methods[i].getModifiers())
+                    : methods[i].getDeclaringClass() != clazz) 
+            {
                 methods[i] = null;
             } else {
                 count++;

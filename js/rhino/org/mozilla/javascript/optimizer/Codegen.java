@@ -1470,7 +1470,7 @@ public class Codegen extends Interpreter {
         variableObjectLocal = reserveWordLocal(2);
         thisObjLocal = reserveWordLocal(3);
 
-        if (!cx.hasCompileFunctionsWithDynamicScope()) {
+        if (inFunction && !cx.hasCompileFunctionsWithDynamicScope()) {
             aload(funObjLocal);
             classFile.add(ByteCode.INVOKEINTERFACE,
                           "org/mozilla/javascript/Scriptable",

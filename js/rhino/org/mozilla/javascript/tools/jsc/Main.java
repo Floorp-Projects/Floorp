@@ -76,7 +76,8 @@ public class Main {
      *
      */
     public static String[] processOptions(Context cx, String args[]) {
-        cx.setTargetPackage("");    // default to no package
+        cx.setTargetPackage("");        // default to no package
+        cx.setGeneratingDebug(false);   // default to no symbols
         for (int i=0; i < args.length; i++) {
             String arg = args[i];
             if (!arg.startsWith("-")) {
@@ -98,7 +99,7 @@ public class Main {
                     cx.setOptimizationLevel(optLevel);
                     continue;
                 }
-                if (arg.equals("-debuglevel") && ++i < args.length) {
+                if (false && arg.equals("-debuglevel") && ++i < args.length) {
                     int debugLevel = Integer.parseInt(args[i]);
                     cx.setDebugLevel(debugLevel);
                     continue;
