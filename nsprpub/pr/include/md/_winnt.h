@@ -320,6 +320,8 @@ extern int _PR_NTFiberSafeSelect(int, fd_set *, fd_set *, fd_set *,
 #define _MD_END_SUSPEND_ALL()
 #define _MD_END_RESUME_ALL()
 
+extern void _PR_Unblock_IO_Wait(PRThread *thr);
+
 /* --- Lock stuff --- */
 #define _MD_NEW_LOCK(lock)            (InitializeCriticalSection(&((lock)->mutex)),PR_SUCCESS)
 #define _MD_FREE_LOCK(lock)           DeleteCriticalSection(&((lock)->mutex))
