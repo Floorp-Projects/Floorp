@@ -82,6 +82,7 @@ class EmbedPrivate {
   void        Destroy         (void);
   void        SetURI          (const char *aURI);
   void        LoadCurrentURI  (void);
+  void        Reload          (PRUint32 reloadFlags);
 
   void        SetChromeMask   (PRUint32 chromeMask);
   void        ApplyChromeMask ();
