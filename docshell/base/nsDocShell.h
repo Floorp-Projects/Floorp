@@ -354,6 +354,8 @@ protected:
 
     PRBool                     mIsBeingDestroyed;
 
+    PRPackedBool               mIsExecutingOnLoadHandler;
+
     // Editor stuff
     nsDocShellEditorData*      mEditorData;          // editor data, if any
 

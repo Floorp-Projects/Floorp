@@ -304,5 +304,10 @@ interface nsIDocShell : nsISupports
    * returns true if the docshell is being destroyed, false otherwise
    */
   boolean isBeingDestroyed();
+
+  /*
+   * Returns true if the docshell is currently executing the onLoad Handler
+   */
+  readonly attribute boolean isExecutingOnLoadHandler;
 };
 
