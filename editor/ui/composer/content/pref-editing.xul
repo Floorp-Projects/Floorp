@@ -100,7 +100,8 @@
             <data id="fLinkData" pref="true" preftype="color" prefstring="editor.followed_link_color" prefattribute="value" wsm_attributes="value"/>
           </row>
           <row align="center">
-            <label id="Background" value="&background.label;" />
+            <label id="Background" value="&background.label;"
+                   accesskey="&background.accesskey;" control="BackgroundButton"/>
             <button id="BackgroundButton" class="color-button" oncommand="GetColorAndUpdate('backgroundCW');">
               <spacer id="backgroundCW" class="color-well"/>
             </button>

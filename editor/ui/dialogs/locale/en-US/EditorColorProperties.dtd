@@ -42,5 +42,5 @@
 <!ENTITY background.accessKey "B">
 <!ENTITY colon.character ":">
 <!ENTITY backgroundImage.label "Background Image:">
-<!ENTITY backgroundImage.accessKey "I">
+<!ENTITY backgroundImage.accessKey "m">
 <!ENTITY backgroundImage.tooltip "Use an image file as the background for your page">
