@@ -393,7 +393,7 @@ function CheckAndSaveDocument(reasonToSave, allowDontSave)
   dialogMsg = (dialogMsg.replace(/%title%/,title)).replace(/%reason%/,reasonToSave);
 
   var result = {value:0};
-  commonDialogsService.UniversalDialog(
+  promptService.UniversalDialog(
     window,
     null,
     dialogTitle,

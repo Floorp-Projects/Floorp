@@ -303,15 +303,14 @@ var homeButtonObserver = {
   onDrop: function (aEvent, aXferData, aDragSession)
     {
       var url = retrieveURLFromData(aXferData.data, aXferData.flavour.contentType);
-      var commonDialogService = Components.classes["@mozilla.org/appshell/commonDialogs;1"]
-                                           .getService(Components.interfaces.nsICommonDialogs);
+      var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
       var pressedVal = { };
       var promptTitle = gNavigatorBundle.getString("droponhometitle");
       var promptMsg   = gNavigatorBundle.getString("droponhomemsg");
       var okButton    = gNavigatorBundle.getString("droponhomeokbutton");
       var iconURL     = "chrome://navigator/skin/home.gif"; // evil evil common dialog code! evil!
 
-      commonDialogService.UniversalDialog(window, null, promptTitle, promptMsg, null,
+      promptService.UniversalDialog(window, null, promptTitle, promptMsg, null,
                                           okButton, null, null, null, null, null, { }, { },
                                           iconURL, { }, 2, 0, null, pressedVal);
 

@@ -142,10 +142,11 @@ function (aTitle, aContentURL, aCustomizeURL)
             dialogMessage = aContentURL + " already exists in My Sidebar.";
         }
           
-        var cDlgService = Components.classes["@mozilla.org/appshell/commonDialogs;1"].getService();
-        if (cDlgService) 
-            cDlgService = cDlgService.QueryInterface(Components.interfaces.nsICommonDialogs);
-        cDlgService.Alert(this.window, titleMessage, dialogMessage);
+        var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
+        if (promptService) {
+          promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
+          promptService.Alert(this.window, titleMessage, dialogMessage);
+        }
 
         return;
     }
@@ -166,10 +167,9 @@ function (aTitle, aContentURL, aCustomizeURL)
         dialogMessage = "Add the Tab '" + aTitle + "' to My Sidebar?\n\n" + "Source: " + aContentURL;
     }
           
-    var cDlgService = Components.classes["@mozilla.org/appshell/commonDialogs;1"].getService();
-    if (cDlgService) 
-        cDlgService = cDlgService.QueryInterface(Components.interfaces.nsICommonDialogs);
-    var rv = cDlgService.Confirm(this.window, titleMessage, dialogMessage);
+    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
+    promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
+    var rv = promptService.Confirm(this.window, titleMessage, dialogMessage);
       
     if (!rv)
         return;
@@ -275,10 +275,9 @@ function (engineURL, iconURL, suggestedTitle, suggestedCategory)
         dialogMessage += "\nSource: " + engineURL;
     }
           
-    var cDlgService = Components.classes["@mozilla.org/appshell/commonDialogs;1"].getService();
-    if (cDlgService) 
-        cDlgService = cDlgService.QueryInterface(Components.interfaces.nsICommonDialogs);
-    var rv = cDlgService.Confirm(this.window, titleMessage, dialogMessage);
+    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
+    promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
+    var rv = promptService.Confirm(this.window, titleMessage, dialogMessage);
       
     if (!rv)
         return;
