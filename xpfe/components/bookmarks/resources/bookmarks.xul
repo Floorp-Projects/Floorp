@@ -251,30 +251,31 @@
 
   <treecolgroup id="theColumns">
     <treecol id="Name"
-      sortSeparators="true" persist="hidden width" width="4*"
+      sortSeparators="true" persist="hidden width" width="4*" flex="4"
       rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
+    <splitter/>
     <treecol id="URL"
-      sortSeparators="true" persist="hidden width" width="4*"
+      sortSeparators="true" persist="hidden width" width="4*" flex="4"
       rdf:resource="http://home.netscape.com/NC-rdf#URL"
       rdf:resource2="http://home.netscape.com/NC-rdf#Name"/>
     <treecol id="ShortcutURL"
-      sortSeparators="true" persist="hidden width" width="1*"
+      sortSeparators="true" persist="hidden width" width="1*" flex="1"
       rdf:resource="http://home.netscape.com/NC-rdf#ShortcutURL"
       rdf:resource2="http://home.netscape.com/NC-rdf#Name"/>
     <treecol id="Description"
-      sortSeparators="true" persist="hidden width" width="1*"
+      sortSeparators="true" persist="hidden width" width="1*" flex="1"
       rdf:resource="http://home.netscape.com/NC-rdf#Description"
       rdf:resource2="http://home.netscape.com/NC-rdf#Name"/>
     <treecol id="LastVisitDate"
-      sortSeparators="true" persist="hidden width" width="1*"
+      sortSeparators="true" persist="hidden width" width="1*" flex="1"
       rdf:resource="http://home.netscape.com/WEB-rdf#LastVisitDate"
       rdf:resource2="http://home.netscape.com/NC-rdf#Name"/>
     <treecol id="BookmarkAddDate"
-      sortSeparators="true" persist="hidden width" width="1*"
+      sortSeparators="true" persist="hidden width" width="1*" flex="1"
       rdf:resource="http://home.netscape.com/NC-rdf#BookmarkAddDate"
       rdf:resource2="http://home.netscape.com/NC-rdf#Name"/>
     <treecol id="LastModifiedDate"
-      sortSeparators="true" persist="hidden width" width="1*"
+      sortSeparators="true" persist="hidden width" width="1*" flex="1"
       rdf:resource="http://home.netscape.com/WEB-rdf#LastModifiedDate"
       rdf:resource2="http://home.netscape.com/NC-rdf#Name"/>
     <treecol persist="width" fixed="true" width="14" id="PopupColumn"/>
@@ -322,7 +323,7 @@
       </treecell>
     </treerow>
   </treehead>
-  <treechildren id="treechildren-bookmarks" 
+  <treechildren flex="1" id="treechildren-bookmarks" 
    onclick="return OpenURL(event, event.target.parentNode.parentNode, 
                            'bookmarksTree');"/>
 </tree>

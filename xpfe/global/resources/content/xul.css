@@ -231,8 +231,8 @@ menupopup, popup {
 /******** Tree widget **********/
 
 tree {
- display: table;
- table-layout: fixed;
+ /*display: table;
+ table-layout: fixed;*/
  width: 200px;
  height: 200px;
  min-width: 0px;
@@ -242,15 +242,16 @@ tree {
 
 tree > treechildren {
  behavior: url("chrome://global/content/treeBindings.xml#treerows");
-/* overflow: auto;
- min-height: 0px;*/
+ overflow: auto;
+ min-height: 0px;
 }
 
 treeitem { 
- display: table-row-group; 
+/* display: table-row-group; */
  behavior: url("chrome://global/content/treeBindings.xml#treeitem");
 } 
 
+/*
 treerow {
  display: table-row;
 }
@@ -262,9 +263,10 @@ treehead {
 treechildren { 
  display: table-row-group;
 } 
+*/
 
 treecell { 
- display: table-cell;
+/* display: table-cell;*/
  vertical-align: middle;
  behavior: url("chrome://global/content/treeBindings.xml#treecell");
 } 
@@ -294,9 +296,11 @@ treeitem > treechildren {
 }
 
 treeitem[open="true"] > treechildren {
-  display: table-row-group;
+/*  display: table-row-group;*/
+  display: block;
 }
 
+/*
 treecol {
  display: table-column;
 }
@@ -304,6 +308,7 @@ treecol {
 treecolgroup {
   display: table-column-group;
 }
+*/
 
 /********** Tab widget *********/
 
