@@ -392,25 +392,35 @@ CERT_CreateName(CERTRDN *rdn0, ...)
 	name->arena = arena;
 	
 	/* Count number of RDNs going into the Name */
-	count = 1;
-	va_start(ap, rdn0);
-	while ((rdn = va_arg(ap, CERTRDN*)) != 0) {
-	    count++;
+	if (!rdn0) {
+	    count = 0;
+	} else {
+	    count = 1;
+	    va_start(ap, rdn0);
+	    while ((rdn = va_arg(ap, CERTRDN*)) != 0) {
+		count++;
+	    }
+	    va_end(ap);
 	}
-	va_end(ap);
 
-	/* Now fill in the pointers */
+	/* Allocate space (including space for terminal null ptr) */
 	name->rdns = rdnp =
 	    (CERTRDN**) PORT_ArenaAlloc(arena, (count + 1) * sizeof(CERTRDN*));
 	if (!name->rdns) {
 	    goto loser;
 	}
-	*rdnp++ = rdn0;
-	va_start(ap, rdn0);
-	while ((rdn = va_arg(ap, CERTRDN*)) != 0) {
-	    *rdnp++ = rdn;
+
+	/* Now fill in the pointers */
+	if (count > 0) {
+	    *rdnp++ = rdn0;
+	    va_start(ap, rdn0);
+	    while ((rdn = va_arg(ap, CERTRDN*)) != 0) {
+		*rdnp++ = rdn;
+	    }
+	    va_end(ap);
 	}
-	va_end(ap);
+
+	/* null terminate the list */
 	*rdnp++ = 0;
     }
     return name;
