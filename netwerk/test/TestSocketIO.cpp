@@ -16,7 +16,10 @@
  * Reserved.
  */
 #include <stdio.h>
+
+#ifdef XP_PC
 #include <windows.h>
+#endif
 
 #include "nspr.h"
 #include "nscore.h"
