@@ -1207,8 +1207,8 @@ nsTableFrame::InsertRows(nsIPresContext&       aPresContext,
     }
   }
 
-  printf("insertRowsAfter \n");
-  Dump(&aPresContext, PR_TRUE, PR_FALSE, PR_TRUE);
+  //printf("insertRowsAfter \n");
+  //Dump(&aPresContext, PR_TRUE, PR_FALSE, PR_TRUE);
 
   return numColsToAdd;
 }
