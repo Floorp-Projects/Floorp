@@ -1026,16 +1026,14 @@ function EditorTestSelection()
 {
   dump("Testing selection\n");
   var selection = editorShell.editorSelection;
-  if (selection)
+  if (!selection)
   {
-    dump("Got selection\n");
-    var  firstRange = selection.getRangeAt(0);
-    if (firstRange)
-    {
-      dump("Range contains \"");
-      dump(firstRange.toString() + "\"\n");
-    }
+    dump("No selection!\n");
+    return;
   }
+
+  dump("Selection contains:\n");
+  dump(selection.toString() + "\n");
 
   var output;
 
