@@ -1037,6 +1037,7 @@ PRUint32 nsMacEventHandler::ConvertKeyEventToUnicode(EventRecord& aOSEvent)
 PRBool nsMacEventHandler::HandleKeyEvent(EventRecord& aOSEvent)
 {
 	nsresult result;
+	nsWindow* checkFocusedWidget;
 
 	// get the focused widget
 	nsWindow* focusedWidget = gEventDispatchHandler.GetActive();
@@ -1057,7 +1058,7 @@ PRBool nsMacEventHandler::HandleKeyEvent(EventRecord& aOSEvent)
 			result = focusedWidget->DispatchWindowEvent(keyEvent);
 
 			// get the focused widget again in case something happened to it on the previous event
-			nsWindow* checkFocusedWidget = gEventDispatchHandler.GetActive();
+			checkFocusedWidget = gEventDispatchHandler.GetActive();
 			if (!checkFocusedWidget)
 				checkFocusedWidget = mTopLevelWidget;
 
