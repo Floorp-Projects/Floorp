@@ -704,10 +704,16 @@ HTMLStyleSheetImpl::HTMLStyleSheetImpl(void)
     mInitialContainingBlock(nsnull)
 {
   NS_INIT_REFCNT();
+#ifdef INCLUDE_XUL
+  nsXULAtoms::AddrefAtoms();
+#endif
 }
 
 HTMLStyleSheetImpl::~HTMLStyleSheetImpl()
 {
+#ifdef INCLUDE_XUL
+  nsXULAtoms::ReleaseAtoms();
+#endif
   NS_RELEASE(mURL);
   if (nsnull != mLinkRule) {
     mLinkRule->mSheet = nsnull;
@@ -2680,7 +2686,6 @@ HTMLStyleSheetImpl::ConstructXULFrame(nsIPresContext*  aPresContext,
   if (aTag == nsnull)
     return NS_OK;
 
-  nsXULAtoms::AddrefAtoms();
   PRInt32 nameSpaceID;
   if (NS_SUCCEEDED(aContent->GetNameSpaceID(nameSpaceID)) &&
       nameSpaceID == nsXULAtoms::nameSpaceID) {
@@ -2733,7 +2738,6 @@ HTMLStyleSheetImpl::ConstructXULFrame(nsIPresContext*  aPresContext,
         // Add the table frame to the flow
         aFrameItems.AddChild(aNewFrame);
       }
-      nsXULAtoms::ReleaseAtoms();
       return rv;
   }
   else if (aTag == nsXULAtoms::treeitem)
@@ -2747,7 +2751,6 @@ HTMLStyleSheetImpl::ConstructXULFrame(nsIPresContext*  aPresContext,
                  aFrameItems, aFixedItems);
     
     // No more work to do.
-    nsXULAtoms::ReleaseAtoms();
     return rv;
   }
   else if (aTag == nsXULAtoms::treechildren)
@@ -2782,7 +2785,6 @@ HTMLStyleSheetImpl::ConstructXULFrame(nsIPresContext*  aPresContext,
     }
 
     // No more work to do.
-    nsXULAtoms::ReleaseAtoms();
     return rv;
   }
   else if (aTag == nsXULAtoms::treerow)
@@ -2805,7 +2807,6 @@ HTMLStyleSheetImpl::ConstructXULFrame(nsIPresContext*  aPresContext,
     rv = ConstructTreeCellFrame(aPresContext, aContent, aParentFrame, aStyleContext,
                                 aAbsoluteItems, aNewFrame, aFixedItems, allowEvents);
     aFrameItems.AddChild(aNewFrame);
-    nsXULAtoms::ReleaseAtoms();
     return rv;
   }
   else if (aTag == nsXULAtoms::treeindentation)
@@ -2864,7 +2865,6 @@ HTMLStyleSheetImpl::ConstructXULFrame(nsIPresContext*  aPresContext,
       aFrameItems.AddChild(placeholderFrame);
     }
   }
-  nsXULAtoms::ReleaseAtoms();
   return rv;
 }
 
