@@ -128,6 +128,7 @@
 #include "nsDOMClassInfo.h"
 #include "nsIJSNativeInitializer.h"
 #include "nsIFullScreen.h"
+#include "nsIStringBundle.h"
 
 #include "plbase64.h"
 
@@ -157,8 +158,13 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID,
                      NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID); // For window.find()
+static NS_DEFINE_CID(kCStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
+
 static const char *sWindowWatcherContractID = "@mozilla.org/embedcomp/window-watcher;1";
 static const char *sJSStackContractID = "@mozilla.org/js/xpc/ContextStack;1";
+
+static const char *kDOMBundleURL = "chrome://global/locale/commonDialogs.properties";
+
 
 
 static const char * const kCryptoContractID = NS_CRYPTO_CONTRACTID;
@@ -1910,6 +1916,65 @@ GlobalWindowImpl::SetTextZoom(float aZoom)
   return NS_ERROR_FAILURE;
 }
 
+nsresult
+GlobalWindowImpl::CheckSecurityIsChromeCaller(PRBool *aIsChrome)
+{
+  NS_ENSURE_ARG_POINTER(aIsChrome);
+
+  *aIsChrome = PR_FALSE;
+ 
+  // Check if this is a privileged system script
+  nsCOMPtr<nsIScriptSecurityManager> secMan(
+      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
+  NS_ENSURE_TRUE(secMan, NS_ERROR_FAILURE);
+
+  PRBool isChrome = PR_FALSE;
+  nsresult rv = secMan->SubjectPrincipalIsSystem(&isChrome);
+  if (NS_SUCCEEDED(rv)) {
+    *aIsChrome = isChrome;
+  }
+
+  return NS_OK;
+}
+
+void
+GlobalWindowImpl::MakeScriptDialogTitle(nsAReadableString &aInTitle, nsAWritableString &aOutTitle)
+{
+  aOutTitle.Truncate(0);
+
+  // Load the string to be prepended to titles for script
+  // confirm/alert/prompt boxes.
+
+  nsresult rv;
+  nsCOMPtr<nsIStringBundleService> stringBundleService =
+     do_GetService(kCStringBundleServiceCID, &rv);
+
+  if (NS_SUCCEEDED(rv) && stringBundleService) { 
+    nsCOMPtr<nsIStringBundle> stringBundle;
+    rv = stringBundleService->CreateBundle(kDOMBundleURL,
+       getter_AddRefs(stringBundle));
+    
+    if (stringBundle) {
+      nsAutoString inTitle(aInTitle);
+      nsXPIDLString tempString;
+      const PRUnichar *formatStrings[1];
+      formatStrings[0] = inTitle.get();
+      rv = stringBundle->FormatStringFromName(
+        NS_LITERAL_STRING("ScriptDlgTitle").get(),
+        formatStrings, 1, getter_Copies(tempString));
+      if (tempString)
+        aOutTitle = tempString.get();
+    }
+  }
+  
+  // Just in case
+  if (aOutTitle.IsEmpty()) {
+    NS_WARNING("could not get ScriptDlgTitle string from string bundle");
+    aOutTitle.Assign(NS_LITERAL_STRING("[Script] "));
+    aOutTitle.Append(aInTitle);
+  }
+}
+
 NS_IMETHODIMP
 GlobalWindowImpl::Alert(const nsAReadableString& aString)
 {
@@ -1924,11 +1989,22 @@ GlobalWindowImpl::Alert(const nsAReadableString& aString)
   nsCOMPtr<nsIPrompt> prompter(do_GetInterface(mDocShell));
   NS_ENSURE_TRUE(prompter, NS_ERROR_FAILURE);
 
+  // Test whether title needs to prefixed with [script]
+  PRBool isChrome = PR_FALSE;
+  nsAutoString newTitle;
+  const PRUnichar *title = nsnull;
+  nsresult rv = CheckSecurityIsChromeCaller(&isChrome);
+  if (NS_FAILED(rv) || !isChrome) {
+      MakeScriptDialogTitle(NS_LITERAL_STRING(""), newTitle);
+      title = newTitle.get();
+  }
+  NS_WARN_IF_FALSE(!isChrome, "chrome shouldn't be calling alert(), use the prompt service");
+
   // Before bringing up the window, unsuppress painting and flush
   // pending reflows.
   EnsureReflowFlushAndPaint();
 
-  return prompter->Alert(nsnull, str.get());
+  return prompter->Alert(title, str.get());
 }
 
 NS_IMETHODIMP
@@ -1944,6 +2020,17 @@ GlobalWindowImpl::Confirm(const nsAReadableString& aString, PRBool* aReturn)
 
   // XXX: Concatenation of optional args?
 
+  // Test whether title needs to prefixed with [script]
+  PRBool isChrome = PR_FALSE;
+  nsAutoString newTitle;
+  const PRUnichar *title = nsnull;
+  nsresult rv = CheckSecurityIsChromeCaller(&isChrome);
+  if (NS_FAILED(rv) || !isChrome) {
+      MakeScriptDialogTitle(NS_LITERAL_STRING(""), newTitle);
+      title = newTitle.get();
+  }
+  NS_WARN_IF_FALSE(!isChrome, "chrome shouldn't be calling confirm(), use the prompt service");
+ 
   nsCOMPtr<nsIPrompt> prompter(do_GetInterface(mDocShell));
   NS_ENSURE_TRUE(prompter, NS_ERROR_FAILURE);
 
@@ -1951,7 +2038,7 @@ GlobalWindowImpl::Confirm(const nsAReadableString& aString, PRBool* aReturn)
   // pending reflows.
   EnsureReflowFlushAndPaint();
 
-  return prompter->Confirm(nsnull, str.get(), aReturn);
+  return prompter->Confirm(title, str.get(), aReturn);
 }
 
 NS_IMETHODIMP
@@ -1978,7 +2065,20 @@ GlobalWindowImpl::Prompt(const nsAReadableString& aMessage,
   // pending reflows.
   EnsureReflowFlushAndPaint();
 
-  rv = prompter->Prompt(PromiseFlatString(aTitle).get(),
+  // Test whether title needs to prefixed with [script]
+  nsAutoString title;
+  PRBool isChrome = PR_FALSE;
+  rv = CheckSecurityIsChromeCaller(&isChrome);
+  if (NS_FAILED(rv) || !isChrome) {
+      MakeScriptDialogTitle(aTitle, title);
+  }
+  else
+  {
+      title.Assign(aTitle);
+  }
+  NS_WARN_IF_FALSE(!isChrome, "chrome shouldn't be calling prompt(), use the prompt service");
+
+  rv = prompter->Prompt(title.get(),
                         PromiseFlatString(aMessage).get(), nsnull,
                         aSavePassword,
                         PromiseFlatString(aInitial).get(),
@@ -2674,7 +2774,7 @@ GlobalWindowImpl::Close()
   // security check was causing problems.
 
   nsCOMPtr<nsIJSContextStack> stack =
-    do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+    do_GetService(sJSStackContractID);
 
   JSContext *cx = nsnull;
 
@@ -5223,7 +5323,7 @@ NavigatorImpl::Preference()
     sPrefInternal_id = STRING_TO_JSVAL(::JS_InternString(cx, "preferenceinternal"));
 
   nsCOMPtr<nsIScriptSecurityManager> secMan = 
-      do_GetService("@mozilla.org/scriptsecuritymanager;1", &rv);
+      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   PRUint32 action;
   if (argc == 1)

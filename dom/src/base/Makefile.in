@@ -57,6 +57,7 @@ REQUIRES	= xpcom \
 		  chardet \
 		  find \
 		  appshell \
+		  intl \
 		  $(NULL)
 
 CPPSRCS =			\

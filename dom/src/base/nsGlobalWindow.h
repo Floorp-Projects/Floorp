@@ -242,6 +242,8 @@ protected:
   void EnsureReflowFlushAndPaint();
   nsresult CheckSecurityWidthAndHeight(PRInt32* width, PRInt32* height);
   nsresult CheckSecurityLeftAndTop(PRInt32* left, PRInt32* top);
+  nsresult CheckSecurityIsChromeCaller(PRBool *isChrome);
+  void MakeScriptDialogTitle(nsAReadableString &aInTitle, nsAWritableString &aOutTitle);
 
   // Helper for window.find()
   nsresult FindInternal(nsAReadableString& aStr, PRBool caseSensitive,
