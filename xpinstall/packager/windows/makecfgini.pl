@@ -167,7 +167,7 @@ while($line = <fpInIt>)
     {
       $componentName = $colonSplit[1];
       chop($componentName);
-
+      $componentName      =~ s/\$UninstallFile\$/$fileUninstall/gi;
       $installSizeArchive = OutputInstallSizeArchive("$inXpiPath\\$componentName");
     }
 
