@@ -1412,10 +1412,10 @@ new_explode(jsdouble time, PRTime *split, JSBool findEquivalent)
 #define CYCLE_YEARS 2800L
             cycles = (year >= 0) ? year / CYCLE_YEARS
                                  : -1 - (-1 - year) / CYCLE_YEARS;
-            adjustedYear = year - cycles * CYCLE_YEARS;
+            adjustedYear = (int16)(year - cycles * CYCLE_YEARS);
         } else {
             /* Clamp it to the nearest representable year. */
-            adjustedYear = (year > 0) ? 32767 : - 32768;
+            adjustedYear = (int16)((year > 0) ? 32767 : - 32768);
         }
     } else {
         adjustedYear = (int16)year;
