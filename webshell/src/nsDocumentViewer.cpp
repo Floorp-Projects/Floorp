@@ -58,69 +58,63 @@
 class DocumentViewerImpl : public nsIDocumentViewer
 {
 public:
-  DocumentViewerImpl();
-  DocumentViewerImpl(nsIPresContext* aPresContext);
+    DocumentViewerImpl();
+    DocumentViewerImpl(nsIPresContext* aPresContext);
   
-  void* operator new(size_t sz) {
-      void* rv = new char[sz];
-      nsCRT::zero(rv, sz);
-      return rv;
-  }
+    void* operator new(size_t sz) {
+        void* rv = new char[sz];
+        nsCRT::zero(rv, sz);
+        return rv;
+    }
 
-  // nsISupports interface...
-  NS_DECL_ISUPPORTS
+    // nsISupports interface...
+    NS_DECL_ISUPPORTS
 
-  // nsIContentViewer interface...
-  NS_IMETHOD Init(nsNativeWidget aParent,
-                  nsIDeviceContext* aDeviceContext,
-                  nsIPref* aPrefs,
-                  const nsRect& aBounds,
-                  nsScrollPreference aScrolling = nsScrollPreference_kAuto);
-  
-  NS_IMETHOD BindToDocument(nsISupports* aDoc, const char* aCommand);
-  NS_IMETHOD SetContainer(nsIContentViewerContainer* aContainer);
-  NS_IMETHOD GetContainer(nsIContentViewerContainer*& aContainerResult);
+    // nsIContentViewer interface...
+    NS_IMETHOD Init(nsNativeWidget aParent,
+                    nsIDeviceContext* aDeviceContext,
+                    nsIPref* aPrefs,
+                    const nsRect& aBounds,
+                    nsScrollPreference aScrolling = nsScrollPreference_kAuto);
+    NS_IMETHOD BindToDocument(nsISupports* aDoc, const char* aCommand);
+    NS_IMETHOD SetContainer(nsIContentViewerContainer* aContainer);
+    NS_IMETHOD GetContainer(nsIContentViewerContainer*& aContainerResult);
+    NS_IMETHOD Stop(void);
+    NS_IMETHOD GetBounds(nsRect& aResult);
+    NS_IMETHOD SetBounds(const nsRect& aBounds);
+    NS_IMETHOD Move(PRInt32 aX, PRInt32 aY);
+    NS_IMETHOD Show();
+    NS_IMETHOD Hide();
+    NS_IMETHOD Print(void);
 
-  virtual nsRect GetBounds();
-  virtual void SetBounds(const nsRect& aBounds);
-  virtual void Move(PRInt32 aX, PRInt32 aY);
-  virtual void Show();
-  virtual void Hide();
-  NS_IMETHOD Print(void);
-
-
-  // nsIDocumentViewer interface...
-  NS_IMETHOD SetUAStyleSheet(nsIStyleSheet* aUAStyleSheet);
-
-  NS_IMETHOD GetDocument(nsIDocument*& aResult);
-
-  NS_IMETHOD GetPresShell(nsIPresShell*& aResult);
-
-  NS_IMETHOD GetPresContext(nsIPresContext*& aResult);
-
-  NS_IMETHOD CreateDocumentViewerUsing(nsIPresContext* aPresContext,
-                                       nsIDocumentViewer*& aResult);
+    // nsIDocumentViewer interface...
+    NS_IMETHOD SetUAStyleSheet(nsIStyleSheet* aUAStyleSheet);
+    NS_IMETHOD GetDocument(nsIDocument*& aResult);
+    NS_IMETHOD GetPresShell(nsIPresShell*& aResult);
+    NS_IMETHOD GetPresContext(nsIPresContext*& aResult);
+    NS_IMETHOD CreateDocumentViewerUsing(nsIPresContext* aPresContext,
+                                         nsIDocumentViewer*& aResult);
 
 protected:
-  virtual ~DocumentViewerImpl();
+    virtual ~DocumentViewerImpl();
 
 private:
-  void ForceRefresh(void);
-  nsresult CreateStyleSet(nsIDocument* aDocument, nsIStyleSet** aStyleSet);
-  nsresult MakeWindow(nsNativeWidget aNativeParent,
-                      const nsRect& aBounds,
-                      nsScrollPreference aScrolling);
+    void ForceRefresh(void);
+    nsresult CreateStyleSet(nsIDocument* aDocument, nsIStyleSet** aStyleSet);
+    nsresult MakeWindow(nsNativeWidget aNativeParent,
+                        const nsRect& aBounds,
+                        nsScrollPreference aScrolling);
 
-protected:
-  nsIViewManager* mViewManager;
-  nsIView*        mView;
-  nsIWidget*      mWindow;
-  nsIContentViewerContainer* mContainer;
+    protected:
+    nsIViewManager* mViewManager;
+    nsIView*        mView;
+    nsIWidget*      mWindow;
+    nsIContentViewerContainer* mContainer;
 
-  nsIDocument*    mDocument;
-  nsIPresContext* mPresContext;
-  nsIPresShell*   mPresShell;
-  nsIStyleSheet*  mUAStyleSheet;
+    nsIDocument*    mDocument;
+    nsIPresContext* mPresContext;
+    nsIPresShell*   mPresShell;
+    nsIStyleSheet*  mUAStyleSheet;
 };
 
 //Class IDs
@@ -365,6 +359,15 @@ DocumentViewerImpl::Init(nsNativeWidget aNativeParent,
 }
 
 NS_IMETHODIMP
+DocumentViewerImpl::Stop(void)
+{
+    if (nsnull != mPresContext) {
+        mPresContext->Stop();
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 DocumentViewerImpl::SetUAStyleSheet(nsIStyleSheet* aUAStyleSheet)
 {
     NS_IF_RELEASE(mUAStyleSheet);
@@ -399,18 +402,22 @@ DocumentViewerImpl::GetPresContext(nsIPresContext*& aResult)
 }
 
 
-nsRect DocumentViewerImpl::GetBounds()
+NS_IMETHODIMP
+DocumentViewerImpl::GetBounds(nsRect& aResult)
 {
     NS_PRECONDITION(nsnull != mWindow, "null window");
-    nsRect zr(0, 0, 0, 0);
     if (nsnull != mWindow) {
-        mWindow->GetBounds(zr);
+        mWindow->GetBounds(aResult);
     }
-    return zr;
+    else {
+        aResult.SetRect(0, 0, 0, 0);
+    }
+    return NS_OK;
 }
 
 
-void DocumentViewerImpl::SetBounds(const nsRect& aBounds)
+NS_IMETHODIMP
+DocumentViewerImpl::SetBounds(const nsRect& aBounds)
 {
     NS_PRECONDITION(nsnull != mWindow, "null window");
     if (nsnull != mWindow) {
@@ -418,31 +425,38 @@ void DocumentViewerImpl::SetBounds(const nsRect& aBounds)
         // during reflow
         mWindow->Resize(aBounds.x, aBounds.y, aBounds.width, aBounds.height, PR_FALSE);
     }
+    return NS_OK;
 }
 
 
-void DocumentViewerImpl::Move(PRInt32 aX, PRInt32 aY)
+NS_IMETHODIMP
+DocumentViewerImpl::Move(PRInt32 aX, PRInt32 aY)
 {
     NS_PRECONDITION(nsnull != mWindow, "null window");
     if (nsnull != mWindow) {
         mWindow->Move(aX, aY);
     }
+    return NS_OK;
 }
 
-void DocumentViewerImpl::Show()
+NS_IMETHODIMP
+DocumentViewerImpl::Show(void)
 {
     NS_PRECONDITION(nsnull != mWindow, "null window");
     if (nsnull != mWindow) {
         mWindow->Show(PR_TRUE);
     }
+    return NS_OK;
 }
 
-void DocumentViewerImpl::Hide()
+NS_IMETHODIMP
+DocumentViewerImpl::Hide(void)
 {
     NS_PRECONDITION(nsnull != mWindow, "null window");
     if (nsnull != mWindow) {
         mWindow->Show(PR_FALSE);
     }
+    return NS_OK;
 }
 
 

@@ -124,16 +124,15 @@ public:
                   nsIPref* aPrefs,
                   const nsRect& aBounds,
                   nsScrollPreference aScrolling = nsScrollPreference_kAuto);
-    
   NS_IMETHOD BindToDocument(nsISupports* aDoc, const char* aCommand);
   NS_IMETHOD SetContainer(nsIContentViewerContainer* aContainer);
   NS_IMETHOD GetContainer(nsIContentViewerContainer*& aContainerResult);
-
-  virtual nsRect GetBounds();
-  virtual void SetBounds(const nsRect& aBounds);
-  virtual void Move(PRInt32 aX, PRInt32 aY);
-  virtual void Show();
-  virtual void Hide();
+  NS_IMETHOD Stop(void);
+  NS_IMETHOD GetBounds(nsRect& aResult);
+  NS_IMETHOD SetBounds(const nsRect& aBounds);
+  NS_IMETHOD Move(PRInt32 aX, PRInt32 aY);
+  NS_IMETHOD Show();
+  NS_IMETHOD Hide();
   NS_IMETHOD Print(void);
 
   ~PluginViewerImpl();
@@ -329,6 +328,13 @@ PluginViewerImpl::CreatePlugin(nsIPluginHost* aHost, const nsRect& aBounds,
   return rv;
 }
 
+NS_IMETHODIMP
+PluginViewerImpl::Stop(void)
+{
+  // XXX write this
+  return NS_OK;
+}
+
 static nsEventStatus PR_CALLBACK
 HandlePluginEvent(nsGUIEvent *aEvent)
 {
@@ -350,18 +356,20 @@ PluginViewerImpl::MakeWindow(nsNativeWidget aParent,
   return rv;
 }
 
-nsRect
-PluginViewerImpl::GetBounds()
+NS_IMETHODIMP
+PluginViewerImpl::GetBounds(nsRect& aResult)
 {
   NS_PRECONDITION(nsnull != mWindow, "null window");
-  nsRect zr(0, 0, 0, 0);
   if (nsnull != mWindow) {
-    mWindow->GetBounds(zr);
+    mWindow->GetBounds(aResult);
   }
-  return zr;
+  else {
+    aResult.SetRect(0, 0, 0, 0);
+  }
+  return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 PluginViewerImpl::SetBounds(const nsRect& aBounds)
 {
   NS_PRECONDITION(nsnull != mWindow, "null window");
@@ -387,9 +395,10 @@ PluginViewerImpl::SetBounds(const nsRect& aBounds)
       NS_RELEASE(inst);
     }
   }
+  return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 PluginViewerImpl::Move(PRInt32 aX, PRInt32 aY)
 {
   NS_PRECONDITION(nsnull != mWindow, "null window");
@@ -411,24 +420,27 @@ PluginViewerImpl::Move(PRInt32 aX, PRInt32 aY)
       NS_RELEASE(inst);
     }
   }
+  return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 PluginViewerImpl::Show()
 {
   NS_PRECONDITION(nsnull != mWindow, "null window");
   if (nsnull != mWindow) {
     mWindow->Show(PR_TRUE);
   }
+  return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 PluginViewerImpl::Hide()
 {
   NS_PRECONDITION(nsnull != mWindow, "null window");
   if (nsnull != mWindow) {
     mWindow->Show(PR_FALSE);
   }
+  return NS_OK;
 }
 
 NS_IMETHODIMP PluginViewerImpl :: Print(void)
