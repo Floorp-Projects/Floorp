@@ -39,6 +39,7 @@ Contributor(s): ______________________________________. -->
   title="&mainWindow.title;" 
   titlemodifier="&mainWindow.titlemodifier;" 
   titlemenuseparator="&mainWindow.titlemodifiermenuseparator;"
+  viewsourcetitlepreface="&viewsourcetitle.preface;"
   windowtype="navigator:browser"
   align="vertical"
   width="640" height="480"
@@ -623,7 +624,7 @@ var contextTarget = null; // Content element to which context menu applies.
 <!-- sidebar/toolbar/content/status -->
 <box id="sidebarparent" align="horizontal" flex="100%">
   <!-- toolbar/content/status -->
-  <box id="sidebarbox" />
+  <box id="sidebarbox" chromeclass="extrachrome" />
   <splitter id="sidebarsplitter" collapse="before" persist="state hidden"
     onclick="sidebarSaveState(this)"/>
   <box id="appcontent" align="vertical" flex="100%">
@@ -764,6 +765,6 @@ var contextTarget = null; // Content element to which context menu applies.
     </box><!-- status -->
   </box><!-- toolbar/content/status -->
 </box><!-- sidebar and tools/content/status -->
-<toolbox id="taskbox"/>
+<toolbox id="taskbox" chromeclass="extrachrome"/>
 
 </window>

@@ -204,7 +204,7 @@ function UpdateHistory(event)
     // notified here. This allows us to update the global history and
     // set the document's title information.
 
-    //dump("UpdateHistory: content's location is '" + window.content.location.href + "',\n");
+   //  dump("UpdateHistory: content's location is '" + window.content.location.href + "',\n");
     //dump("                         title is '" + window.content.document.title + "'\n");
 
 	if (window.content.location.href && window.content.location.href != "")
@@ -293,19 +293,19 @@ function UpdateBookmarksLastVisitedDate(event)
 
     // Initialize browser instance..
     appCore.setWebShellWindow(window);
-   
+    
     tryToSetContentWindow();
-
+	
     // Add a capturing event listener to the content window so we'll
     // be notified when onloads complete.
     window.addEventListener("load", UpdateHistory, true);
     window.addEventListener("load", UpdateBookmarksLastVisitedDate, true);
-
-    // Check for window.arguments[0].  If present, go to that url.
+	 // Check for window.arguments[0].  If present, go to that url.
     if ( window.arguments && window.arguments[0] ) {
         // Load it using yet another psuedo-onload handler.
         onLoadViaOpenDialog();
     }
+   
     sidebarOverlayInit();
   }
 
@@ -354,6 +354,17 @@ function UpdateBookmarksLastVisitedDate(event)
         appCore.stop();
     }
     dump( "Loading page specified via openDialog\n" );
+    dump("Check if a view source window \n");
+    if( window.arguments[1]=="view-source" )
+    {
+    	dump(" A view source window \n");
+    	var element = document.getElementById("main-window");
+    	
+    	var preface = element.getAttribute("viewsourcetitlepreface");
+    	element.setAttribute( "titlepreface", preface );
+    	appCore.isViewSource = true;
+    	element.setAttribute("windowtype","Browser:view-source");
+    }
     appCore.loadUrl( window.arguments[0] );
   }
 
@@ -1042,7 +1053,11 @@ function OpenSearch(tabName, searchStr)
   
   function BrowserViewSource()
   {
-    window.openDialog( "chrome://navigator/content/viewSource.xul", "_blank", "chrome,all,dialog=no", window.content.location );
+	dump("BrowserViewSource(); \n ");
+   //  window.openDialog( "chrome://navigator/content/viewSource.xul", "_blank", "chrome,all,dialog=no", window.content.location );
+     // Use a browser window to view source
+    window.openDialog( "chrome://navigator/content/", "_blank", "chrome,menubar,status,dialog=no", window.content.location,"view-source" );
+
   }
 
 
