@@ -55,7 +55,7 @@ EXPORT_LIBRARY = 1
 
 IS_COMPONENT	= 1
 
-MODULE_NAME	= nsMsgMailModule
+MODULE_NAME	= nsMailModule
 
 REQUIRES	= xpcom \
 		  xpcom_obsolete \
