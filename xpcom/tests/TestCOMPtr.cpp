@@ -69,6 +69,7 @@ typedef unsigned long NS_RESULT;
           nsresult  CreateIFoo( void** );
           nsresult  CreateIBar( void** result );
               void  AnIFooPtrPtrContext( IFoo** );
+              void	AnISupportsPtrPtrContext( nsISupports** );
               void  AVoidPtrPtrContext( void** );
               void  set_a_IFoo( nsCOMPtr<IFoo>* result );
 nsCOMPtr<IFoo>  return_a_IFoo();
@@ -290,6 +291,11 @@ void
 AVoidPtrPtrContext( void** )
   {
   }
+
+void
+AnISupportsPtrPtrContext( nsISupports** )
+	{
+	}
 
 
 // Optimism
@@ -610,6 +616,23 @@ main()
 			cout << "### cleanup for Test 24" << endl;
 		}
     cout << "### End Test 24" << endl;
+
+
+		{
+			nsCOMPtr<IFoo> fooP;
+
+			AnIFooPtrPtrContext( getter_AddRefs(fooP) );
+			AVoidPtrPtrContext( getter_AddRefs(fooP) );
+			AnISupportsPtrPtrContext( getter_AddRefs(fooP) );
+		}
+
+
+		{
+			nsCOMPtr<nsISupports> supportsP;
+
+			AVoidPtrPtrContext( getter_AddRefs(supportsP) );
+			AnISupportsPtrPtrContext( getter_AddRefs(supportsP) );
+		}
 
 
     cout << endl << "### Test 25: will a static |nsCOMPtr| |Release| before program termination?" << endl;
