@@ -235,7 +235,7 @@ nsCheckboxControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValue
     if (PR_TRUE != state) {
       result = PR_FALSE;
     } else {
-      if (NS_CONTENT_ATTR_HAS_VALUE == valueResult) {
+      if (NS_CONTENT_ATTR_HAS_VALUE != valueResult) {
         aValues[0] = "on";
       } else {
         aValues[0] = value;
