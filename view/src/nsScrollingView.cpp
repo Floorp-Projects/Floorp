@@ -31,14 +31,9 @@
 #include "nsILookAndFeel.h"
 #include "nsIClipView.h"
 
-static NS_DEFINE_IID(kIScrollbarIID, NS_ISCROLLBAR_IID);
-static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
-static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
-static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 static NS_DEFINE_IID(kIClipViewIID, NS_ICLIPVIEW_IID);
-
 
 class ScrollBarView : public nsView
 {
@@ -162,7 +157,7 @@ NS_IMETHODIMP CornerView::ShowQuality(PRBool aShow)
         mViewManager->SetViewVisibility(this, nsViewVisibility_kShow);
 
       nsIScrollableView *par;
-      if (NS_OK == mParent->QueryInterface(kIScrollableViewIID, (void **)&par)) {
+      if (NS_OK == mParent->QueryInterface(NS_GET_IID(nsIScrollableView), (void **)&par)) {
         par->ComputeScrollOffsets(PR_TRUE);
       }
     }
@@ -198,7 +193,7 @@ void CornerView::Show(PRBool aShow, PRBool aRethink)
     if (PR_TRUE == aRethink)
     {
       nsIScrollableView *par;
-      if (NS_OK == mParent->QueryInterface(kIScrollableViewIID, (void **)&par)) {
+      if (NS_OK == mParent->QueryInterface(NS_GET_IID(nsIScrollableView), (void **)&par)) {
         par->ComputeScrollOffsets(PR_TRUE);
       }
     }
@@ -224,7 +219,7 @@ NS_IMETHODIMP CornerView::Paint(nsIRenderingContext& rc, const nsRect& rect,
     if (nsnull == mLookAndFeel)
     {
       nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull,
-                                         kILookAndFeelIID, (void **)&mLookAndFeel);
+                                         NS_GET_IID(nsILookAndFeel), (void **)&mLookAndFeel);
     }
 
     if (nsnull != mLookAndFeel)
@@ -311,8 +306,6 @@ public:
 
   NS_IMETHOD QueryInterface(REFNSIID aIID,
                             void** aInstancePtr);
-
-private:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
 };
@@ -331,14 +324,13 @@ nsresult ClipView::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     return NS_ERROR_NULL_POINTER;
   }
   
-  if (aIID.Equals(kIClipViewIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIClipView))) {
     *aInstancePtr = (void*)(nsIClipView*)this;
     return NS_OK;
   }
 
   return nsView::QueryInterface(aIID, aInstancePtr);
 }
-
 
 nsrefcnt ClipView::AddRef()
 {
@@ -396,7 +388,7 @@ nsresult nsScrollingView::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     return NS_ERROR_NULL_POINTER;
   }
   *aInstancePtr = nsnull;
-  if (aIID.Equals(kIScrollableViewIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIScrollableView))) {
     *aInstancePtr = (void*)(nsIScrollableView*)this;
     return NS_OK;
   }
@@ -751,6 +743,12 @@ NS_IMETHODIMP nsScrollingView::CreateScrollControls(nsNativeWidget aNative)
   mViewManager->GetDeviceContext(dx);
   nsresult rv = NS_ERROR_FAILURE;
 
+  // XXX Have the all widgets siblings. For the time being this is needed
+  // for 'fixed' elements...
+  nsWidgetInitData  initData;
+  initData.clipChildren = PR_TRUE;
+  initData.clipSiblings = PR_TRUE;
+
   // Create a clip view
   mClipView = new ClipView;
 
@@ -763,12 +761,6 @@ NS_IMETHODIMP nsScrollingView::CreateScrollControls(nsNativeWidget aNative)
     rv = mClipView->Init(mViewManager, mBounds, this);
     mViewManager->InsertChild(this, mClipView, 1);
     mViewManager->SetViewOpacity(mClipView, 0.0f);
-
-    // XXX Have the clip view clip siblings. For the time being this is needed
-    // for 'fixed' elements...
-    nsWidgetInitData  initData;
-    initData.clipChildren = PR_TRUE;
-    initData.clipSiblings = PR_TRUE;
     rv = mClipView->CreateWidget(kWidgetCID, &initData,
                                  mWindow ? nsnull : aNative);
   }
@@ -790,7 +782,7 @@ NS_IMETHODIMP nsScrollingView::CreateScrollControls(nsNativeWidget aNative)
     rv = mCornerView->Init(mViewManager, trect, this,
                            nsnull, nsViewVisibility_kHide);
     mViewManager->InsertChild(this, mCornerView, 3);
-    mCornerView->CreateWidget(kWidgetCID, nsnull,
+    mCornerView->CreateWidget(kWidgetCID, &initData,
                               mWindow ? nsnull : aNative);
   }
 
@@ -811,7 +803,7 @@ NS_IMETHODIMP nsScrollingView::CreateScrollControls(nsNativeWidget aNative)
 
     rv = mVScrollBarView->Init(mViewManager, trect, this);
     mViewManager->InsertChild(this, mVScrollBarView, 3);
-    rv = mVScrollBarView->CreateWidget(kCScrollbarIID, nsnull,
+    rv = mVScrollBarView->CreateWidget(kCScrollbarIID, &initData,
                                        mWindow ? nsnull : aNative);
     nsIView *scrolledView;
     GetScrolledView(scrolledView);
@@ -870,7 +862,7 @@ NS_IMETHODIMP nsScrollingView::CreateScrollControls(nsNativeWidget aNative)
 
     rv = mHScrollBarView->Init(mViewManager, trect, this);
     mViewManager->InsertChild(this, mHScrollBarView, 3);
-    rv = mHScrollBarView->CreateWidget(kCHScrollbarIID, nsnull,
+    rv = mHScrollBarView->CreateWidget(kCHScrollbarIID, &initData,
                                        mWindow ? nsnull : aNative);
   }
 
@@ -918,7 +910,7 @@ NS_IMETHODIMP nsScrollingView::ComputeScrollOffsets(PRBool aAdjustWidgets)
       mHScrollBarView->GetDimensions(&hwidth, &hheight);
       mHScrollBarView->GetWidget(win);
       
-      if (NS_OK == win->QueryInterface(kIScrollbarIID, (void **)&scrollh)) {
+      if (NS_OK == win->QueryInterface(NS_GET_IID(nsIScrollbar), (void **)&scrollh)) {
         if (((mSizeX > controlRect.width) &&
             (mScrollPref != nsScrollPreference_kNeverScroll)) ||
             (mScrollPref == nsScrollPreference_kAlwaysScroll))
@@ -937,7 +929,7 @@ NS_IMETHODIMP nsScrollingView::ComputeScrollOffsets(PRBool aAdjustWidgets)
 
       mVScrollBarView->GetWidget(win);
 
-      if (NS_OK == win->QueryInterface(kIScrollbarIID, (void **)&scrollv)) {
+      if (NS_OK == win->QueryInterface(NS_GET_IID(nsIScrollbar), (void **)&scrollv)) {
         if ((mSizeY > (controlRect.height - (hasHorizontal ? hheight : 0)))) {
           // if we are scrollable
           if (mScrollPref != nsScrollPreference_kNeverScroll) {
@@ -1010,7 +1002,7 @@ NS_IMETHODIMP nsScrollingView::ComputeScrollOffsets(PRBool aAdjustWidgets)
       offx = mOffsetX;
       mHScrollBarView->GetWidget(win);
       
-      if (NS_OK == win->QueryInterface(kIScrollbarIID, (void **)&scrollh)) {
+      if (NS_OK == win->QueryInterface(NS_GET_IID(nsIScrollbar), (void **)&scrollh)) {
         if ((mSizeX > (controlRect.width - (hasVertical ? vwidth : 0)))) {
           if (mScrollPref != nsScrollPreference_kNeverScroll) {
             //we need to be able to scroll
@@ -1116,7 +1108,7 @@ NS_IMETHODIMP nsScrollingView::ComputeScrollOffsets(PRBool aAdjustWidgets)
       ((ScrollBarView *)mHScrollBarView)->SetEnabled(PR_FALSE);
 
       mHScrollBarView->GetWidget(win);
-      if (NS_OK == win->QueryInterface(kIScrollbarIID, (void **)&scrollh)) {
+      if (NS_OK == win->QueryInterface(NS_GET_IID(nsIScrollbar), (void **)&scrollh)) {
         scrollh->SetParameters(0, 0, 0, 0);
         NS_RELEASE(scrollh);
       }
@@ -1128,7 +1120,7 @@ NS_IMETHODIMP nsScrollingView::ComputeScrollOffsets(PRBool aAdjustWidgets)
       ((ScrollBarView *)mVScrollBarView)->SetEnabled(PR_FALSE);
 
       mVScrollBarView->GetWidget(win);
-      if (NS_OK == win->QueryInterface(kIScrollbarIID, (void **)&scrollv))
+      if (NS_OK == win->QueryInterface(NS_GET_IID(nsIScrollbar), (void **)&scrollv))
       {
         scrollv->SetParameters(0, 0, 0, 0);
         NS_RELEASE(scrollv);
@@ -1210,7 +1202,7 @@ NS_IMETHODIMP nsScrollingView::ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdate
 
   if (nsnull != widget) {
     nsIScrollbar* scrollv = nsnull;
-    if (NS_OK == widget->QueryInterface(kIScrollbarIID, (void **)&scrollv)) {
+    if (NS_OK == widget->QueryInterface(NS_GET_IID(nsIScrollbar), (void **)&scrollv)) {
       // Clamp aY
 
       if ((aY + clipSize.height) > mSizeY)
@@ -1238,7 +1230,7 @@ NS_IMETHODIMP nsScrollingView::ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdate
 
   if (nsnull != widget) {
     nsIScrollbar* scrollh = nsnull;
-    if (NS_OK == widget->QueryInterface(kIScrollbarIID, (void **)&scrollh)) {
+    if (NS_OK == widget->QueryInterface(NS_GET_IID(nsIScrollbar), (void **)&scrollh)) {
       // Clamp aX
 
       if ((aX + clipSize.width) > mSizeX)
@@ -1503,7 +1495,7 @@ NS_IMETHODIMP nsScrollingView::ScrollByLines(PRInt32 aNumLines)
 	nsIWidget* widget = nsnull;
 	if (mVScrollBarView->GetWidget(widget) == NS_OK) {
 		nsIScrollbar* scrollv = nsnull;
-		if (widget->QueryInterface(kIScrollbarIID, (void **)&scrollv) == NS_OK) {
+		if (widget->QueryInterface(NS_GET_IID(nsIScrollbar), (void **)&scrollv) == NS_OK) {
 			PRUint32  oldPos  = 0;
 			PRUint32  lineInc;
 			nscoord   newPos = 0;
@@ -1536,7 +1528,7 @@ NS_IMETHODIMP nsScrollingView::ScrollByPages(PRInt32 aNumPages)
 	nsIWidget* widget = nsnull;
 	if (mVScrollBarView->GetWidget(widget) == NS_OK) {
 		nsIScrollbar* scrollv = nsnull;
-		if (widget->QueryInterface(kIScrollbarIID, (void **)&scrollv) == NS_OK) {
+		if (widget->QueryInterface(NS_GET_IID(nsIScrollbar), (void **)&scrollv) == NS_OK) {
 			PRUint32  oldPos = 0;
 			nsSize    clipSize;
 			nscoord   newPos = 0;
