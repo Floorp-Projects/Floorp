@@ -53,6 +53,7 @@ $::TreeID = 'default'
 # get dir, remove leading and trailing slashes
 
 my $dir = $::FORM{"dir"};
+$dir = "" unless defined $dir;
 $dir =~ s/^\/([^:]*)/$1/;
 $dir =~ s/([^:]*)\/$/$1/;
 
@@ -79,7 +80,7 @@ validateRepository($CVS_ROOT);
 
 my $s = "";
 
-if( $rev ne "" ){
+if ($rev) {
     $s = "for branch <i>$rev</i>";
 }
 
