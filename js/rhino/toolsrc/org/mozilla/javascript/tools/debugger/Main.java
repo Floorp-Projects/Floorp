@@ -318,9 +318,10 @@ class JSInternalConsole extends JInternalFrame
 	addInternalFrameListener(new InternalFrameAdapter() {
 		public void internalFrameActivated(InternalFrameEvent e) {
 		    // hack
-		    consoleTextArea.requestFocus();
-		    consoleTextArea.getCaret().setVisible(false);
-		    consoleTextArea.getCaret().setVisible(true);
+		    if(consoleTextArea.hasFocus()) {
+			consoleTextArea.getCaret().setVisible(false);
+			consoleTextArea.getCaret().setVisible(true);
+		    }
 		}
 	    });
     }
@@ -631,10 +632,6 @@ class FindFunction extends JDialog implements ActionListener {
 	    DebuggableScript script = sourceEntry.fnOrScript;
 	    if(script != null) {
 		String sourceName = script.getSourceName();
-		try {
-		    sourceName = new File(sourceName).getCanonicalPath();
-		} catch(IOException exc) {
-		}
 		Enumeration ee = script.getLineNumbers();
 		int lineNumber = -1;
 		while(ee.hasMoreElements()) {
@@ -645,6 +642,7 @@ class FindFunction extends JDialog implements ActionListener {
 			lineNumber = ival.intValue();
 		    }
 		}
+
 		FileWindow w = db.getFileWindow(sourceName);
 		if(w == null) {
 		    (new CreateFileWindow(db, sourceName, sourceEntry.source.toString(), lineNumber)).run();
@@ -2066,9 +2064,15 @@ public class JSDebugger extends JFrame implements Debugger, ContextListener {
 	super.setVisible(b);
 	if(b) {
 	    // this needs to be done after the window is visible
-	    context.split.setDividerLocation(0.5);
-	    console.show();
 	    console.consoleTextArea.requestFocus();
+	    context.split.setDividerLocation(0.5);
+	    try {
+		console.setMaximum(true);
+		console.setSelected(true);
+		console.show();
+		console.consoleTextArea.requestFocus();
+	    } catch(Exception exc) {
+	    }
 	}
     }
 
@@ -2121,12 +2125,7 @@ public class JSDebugger extends JFrame implements Debugger, ContextListener {
     public void handleCompilationDone(Context cx, DebuggableScript fnOrScript, 
                                       StringBuffer source) {
         String sourceName = fnOrScript.getSourceName();
-        if (sourceName != null && !sourceName.equals("<stdin>")) {
-	    try {
-		sourceName = new File(sourceName).getCanonicalPath();
-	    } catch(IOException exc) {
-	    }
-	} else {
+        if (sourceName == null) {
 	    sourceName = "<stdin>";
 	}
 	Vector v = (Vector) sourceNames.get(sourceName);
@@ -2205,6 +2204,7 @@ public class JSDebugger extends JFrame implements Debugger, ContextListener {
 	toolBar = new JToolBar();
 	JButton button;
 	toolBar.add(button = new JButton("Break"));
+	JButton focusButton = button;
 	button.setToolTipText("Break");
 	button.setActionCommand("Break");
 	button.addActionListener(menubar);
@@ -2245,6 +2245,7 @@ public class JSDebugger extends JFrame implements Debugger, ContextListener {
 	context = new ContextWindow(this);
 	context.setPreferredSize(new Dimension(600, 120));
 	context.setMinimumSize(new Dimension(50, 50));
+
 	split1 = new JSplitPane(JSplitPane.VERTICAL_SPLIT, desk,
 					  context);
 	split1.setOneTouchExpandable(true);
@@ -2277,13 +2278,6 @@ public class JSDebugger extends JFrame implements Debugger, ContextListener {
                     }
                 };
         dlg.addChoosableFileFilter(filter);
-	try {
-	    console.setMaximum(true);
-	    console.setSelected(true);
-	    console.consoleTextArea.requestFocus();
-	} catch(Exception exc) {
-	}
-
 	final JSDebugger self = this;
 	addWindowListener(new WindowAdapter() {
 		public void windowClosing(WindowEvent e) {
@@ -2305,19 +2299,15 @@ public class JSDebugger extends JFrame implements Debugger, ContextListener {
 	if(fileName == null || fileName.equals("<stdin>") || fileName.equals("<eval>")) {
 	    return null;
 	}
-	try {
-	    // Can't do  this if we're remote debugging
-	    String file = new File(fileName).getCanonicalPath();
-	    Enumeration e = fileWindows.keys();
-	    for(; e.hasMoreElements(); ) {
-		String name = (String)e.nextElement();
-		if(file.equals(new File(name).getCanonicalPath())) {
-		    FileWindow w = (FileWindow)fileWindows.get(name);
-		    w.setUrl(fileName);
-		    return w;
-		}
+	String file = fileName;
+	Enumeration e = fileWindows.keys();
+	for(; e.hasMoreElements(); ) {
+	    String name = (String)e.nextElement();
+	    if(file.equals(name)) {
+		FileWindow w = (FileWindow)fileWindows.get(name);
+		w.setUrl(fileName);
+		return w;
 	    }
-	} catch(IOException exc) {
 	}
 	return (FileWindow)fileWindows.get(fileName);
     }
@@ -2326,6 +2316,7 @@ public class JSDebugger extends JFrame implements Debugger, ContextListener {
 	FileWindow w = getFileWindow(fileName);
 	if(w != null) {
 	    swingInvoke(new SetFileText(w, text));
+	    w.show();
 	} else if(!fileName.equals("<stdin>")) {
 	    swingInvoke(new CreateFileWindow(this,
 					     fileName,
@@ -2379,10 +2370,6 @@ public class JSDebugger extends JFrame implements Debugger, ContextListener {
 	    if(sourceName == "<eval>") {
 		helper.reset();
 		return;
-	    }
-	    try {
-		sourceName = new File(sourceName).getCanonicalPath();
-	    } catch(IOException exc) {
 	    }
 	    int lineNumber = frame.getLineNumber();
 	    this.frameIndex = frameIndex;
@@ -2481,11 +2468,6 @@ public class JSDebugger extends JFrame implements Debugger, ContextListener {
 		    DebugFrame frame = engine.getFrame(0);  
 		    String sourceName = frame.getSourceName();
 		    if(sourceName != null) {
-			try {
-			    sourceName = 
-				new File(sourceName).getCanonicalPath();
-			} catch(IOException exc) {
-			}
 			if(sourceName.equals(runToCursorFile)) {
 			    int lineNumber = frame.getLineNumber();
 			    if(lineNumber == runToCursorLine) {
@@ -2522,12 +2504,6 @@ public class JSDebugger extends JFrame implements Debugger, ContextListener {
 	    }
 	    DebugFrame frame = engine.getFrame(0);
 	    String fileName = frame.getSourceName();
-	    if(fileName != null && !fileName.equals("<stdin>")) {
-		try {
-		    fileName = new File(fileName).getCanonicalPath();
-		} catch(IOException exc) {
-		}
-	    }
 	    engine.setBreakNextLine(false);
 	    line = frame.getLineNumber();
 	    int enterCount = 0;
@@ -2687,26 +2663,35 @@ public class JSDebugger extends JFrame implements Debugger, ContextListener {
 	}
 	int returnVal = dlg.showOpenDialog(this);
 	if(returnVal == JFileChooser.APPROVE_OPTION) {
-	    String result = dlg.getSelectedFile().getPath();
-	    CWD = dlg.getSelectedFile().getParentFile();
-	    java.lang.System.setProperty("user.dir", CWD.getPath());
-	    return result;
+            try {
+                String result = dlg.getSelectedFile().getCanonicalPath();
+                CWD = dlg.getSelectedFile().getParentFile();
+                java.lang.System.setProperty("user.dir", CWD.getPath());
+                return result;
+            } catch(IOException ignored) {
+            }
 	}
 	return null;
+    }
+
+    JInternalFrame getSelectedFrame() {
+       JInternalFrame[] frames = desk.getAllFrames();
+       for(int i = 0; i < frames.length; i++) {
+           if(frames[i].isShowing()) {
+               return frames[i];
+           }
+       }
+       return frames[frames.length - 1];
     }
 
     void actionPerformed(ActionEvent e) {
 	String cmd = e.getActionCommand();
 	int returnValue = -1;
 	if(cmd.equals("Cut") || cmd.equals("Copy") || cmd.equals("Paste")) {
-            JInternalFrame[] frames = desk.getAllFrames();
-            for( int i = 0 ; i < frames.length ; ++i )
-                if( frames[i].isShowing() && 
-                    frames[i] instanceof ActionListener ) 
-                {
-                    ((ActionListener)frames[i]).actionPerformed(e);
-                    break;
-                }
+            JInternalFrame f = getSelectedFrame();
+            if(f != null && f instanceof ActionListener) {
+                ((ActionListener)f).actionPerformed(e);
+            }
 	} else if(cmd.equals("Step Over")) {
 	    returnValue = STEP_OVER;
 	} else if(cmd.equals("Step Into")) {
@@ -2753,7 +2738,7 @@ public class JSDebugger extends JFrame implements Debugger, ContextListener {
 	    }
 	    console.show();
 	    desk.getDesktopManager().activateFrame(console);
-	    //console.consoleTextArea.requestFocus();
+	    console.consoleTextArea.requestFocus();
 	} else if(cmd.equals("Cut")) {
 	} else if(cmd.equals("Copy")) {
 	} else if(cmd.equals("Paste")) {
