@@ -221,6 +221,10 @@ var toolbarDNDObserver = {
       item.setAttribute("flex", item.firstChild.getAttribute("flex"));
     item.setAttribute("ondraggesture", "gDraggingFromPalette = false; nsDragAndDrop.startDrag(event, dragObserver);");
  
+    var currentRow;
+    if (gDraggingFromPalette)
+      currentRow = item.parentNode;
+
     if (gCurrentDragOverItem.id == "cloneToolbar")
       toolbar.appendChild(item);
     else
@@ -229,6 +233,40 @@ var toolbarDNDObserver = {
     gCurrentDragOverItem = null;
 
     gToolbarChanged = true;
+
+    while (currentRow) {
+      // Pull the first child of the next row up
+      // into this row.
+      var nextRow = currentRow.nextSibling;
+      
+      if (!nextRow) {
+        var last = currentRow.lastChild;
+        var first = currentRow.firstChild;
+        if (firstChild == lastChild) {
+          // Kill the row.
+          currentRow.parentNode.removeChild(currentRow);
+          return;
+        }
+
+        if (last.localName == "spacer") {
+          var flex = last.getAttribute("flex");
+          flex++;
+          last.setAttribute("flex", flex);
+          return;
+        }
+        else {
+          // Make a spacer and give it a flex of 1.
+          var spring = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                            "spacer");
+          spring.setAttribute("flex", "1");
+          currentRow.appendChild(spring);
+        }
+        return;
+      }
+      
+      currentRow.appendChild(nextRow.firstChild);
+      currentRow = currentRow.nextSibling;
+    }
   },
   _flavourSet: null,
   getSupportedFlavours: function ()
