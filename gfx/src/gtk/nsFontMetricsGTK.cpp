@@ -2138,12 +2138,9 @@ nsFontMetricsGTK::FindFont(PRUnichar aChar)
     return search.mFont;
   }
 
-  // XXX Just use any font that contains 'a' for now.
+  // XXX Just return nsnull for now.
   // Need to draw boxes eventually. Or pop up dialog like plug-in dialog.
-  search.mChar = 'a';
-  PL_HashTableEnumerateEntries(gFamilies, SearchFamily, &search);
-
-  return search.mFont;
+  return nsnull;
 }
 
 gint
