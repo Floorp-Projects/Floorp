@@ -34,6 +34,13 @@ extern "C" NS_COM nsresult NS_NewStringInputStream(
     // file stream interfaces in nsIFileStream.h
 
 //----------------------------------------------------------------------------------------
+extern "C" NS_COM nsresult NS_NewCStringInputStream(
+    nsISupports** aStreamResult,
+    const nsCString& aStringToRead);
+    // Factory method to get an nsInputStream from a cstring.  Result will implement all the
+    // file stream interfaces in nsIFileStream.h
+
+//----------------------------------------------------------------------------------------
 extern "C" NS_COM nsresult NS_NewStringOutputStream(
     nsISupports** aStreamResult,
     nsString& aStringToChange);
