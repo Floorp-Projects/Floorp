@@ -14,6 +14,7 @@ mailnews/base/search/src/Makefile
 mailnews/base/resources/Makefile
 mailnews/base/resources/content/Makefile
 mailnews/base/resources/content/unix/Makefile
+mailnews/build/Makefile
 mailnews/db/Makefile
 mailnews/db/msgdb/Makefile
 mailnews/db/msgdb/public/Makefile
@@ -50,6 +51,7 @@ mailnews/compose/src/Makefile
 mailnews/compose/build/Makefile
 mailnews/public/Makefile
 mailnews/import/Makefile
+mailnews/import/build/Makefile
 mailnews/import/public/Makefile
 mailnews/import/src/Makefile
 mailnews/import/text/Makefile

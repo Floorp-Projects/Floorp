@@ -26,7 +26,11 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= public src util search build
+DIRS		= public src util search
+
+ifndef MOZ_STATIC_MAIL_BUILD
+DIRS += build
+endif
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 DIRS		+= resources/content/mac

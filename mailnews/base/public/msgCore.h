@@ -165,15 +165,21 @@ NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_MAILNEWS, value)
 
 #ifdef XP_WIN
 
+#ifdef MOZ_STATIC_MAIL_BUILD
+#define NS_MSG_BASE
+#else
+
 #ifdef _IMPL_NS_MSG_BASE
 #define NS_MSG_BASE NS_EXPORT
 #else
 #define NS_MSG_BASE NS_IMPORT
 #endif
 
+#endif // MOZ_STATIC_MAIL_BUILD
+
 #else
 #define NS_MSG_BASE
-#endif
+#endif  // XP_WIN
 
 ////////////////////////////////////////////////////////////////////////////////
 // Utilities 

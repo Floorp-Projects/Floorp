@@ -400,23 +400,6 @@ nsIImportMimeEncodeImpl::~nsIImportMimeEncodeImpl()
 		delete m_pEncode;
 }
 
-
-NS_METHOD nsIImportMimeEncodeImpl::Create( nsISupports *aOuter, REFNSIID aIID, void **aResult)
-{
-  if (aOuter)
-    return NS_ERROR_NO_AGGREGATION;
-
-  nsIImportMimeEncodeImpl *it = new nsIImportMimeEncodeImpl();
-  if (it == nsnull)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF( it);
-  nsresult rv = it->QueryInterface( aIID, aResult);
-  NS_RELEASE( it);
-  return rv;
-}
-
-
 NS_IMPL_ISUPPORTS1(nsIImportMimeEncodeImpl, nsIImportMimeEncode)
 
 NS_METHOD nsIImportMimeEncodeImpl::EncodeFile(nsIFileSpec *inFile, nsIFileSpec *outFile, const char *fileName, const char *mimeType)

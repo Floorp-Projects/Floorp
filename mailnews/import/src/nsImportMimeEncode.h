@@ -94,8 +94,6 @@ public:
 	nsIImportMimeEncodeImpl();
 	virtual ~nsIImportMimeEncodeImpl();
 
- 	static NS_METHOD Create( nsISupports *aOuter, REFNSIID aIID, void **aResult);
-
 private:
 	ImportOutFile *			m_pOut;
 	nsImportMimeEncode *	m_pEncode;

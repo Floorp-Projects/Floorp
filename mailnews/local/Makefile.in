@@ -26,9 +26,11 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= public src build
+DIRS		= public src
 
-# win32 thinks it needs resources/ but it doesn't
+ifndef MOZ_STATIC_MAIL_BUILD
+DIRS += build
+endif
 
 include $(topsrcdir)/config/rules.mk
 

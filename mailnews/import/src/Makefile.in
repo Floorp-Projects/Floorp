@@ -27,11 +27,20 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE = import
+
+ifndef MOZ_STATIC_MAIL_BUILD
+
 LIBRARY_NAME = import
-META_COMPONENT = mail
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsImportServiceModule
+
+else
+LIBRARY_NAME = import_s
+endif
+
+META_COMPONENT = mail
+
 REQUIRES	= xpcom \
 		  xpcom_obsolete \
 		  string \
@@ -48,14 +57,9 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  $(NULL)
 
-ifeq ($(USE_SHORT_LIBNAME),1)
-EXTRA_DSO_LIBS = msgbsutl
-else
-EXTRA_DSO_LIBS = msgbaseutil
-endif
+
 
 CPPSRCS		= 	\
-			nsImportFactory.cpp 			\
 			nsImportService.cpp				\
 			nsImportMail.cpp				\
 			nsImportMailboxDescriptor.cpp 	\
@@ -72,8 +76,14 @@ CPPSRCS		= 	\
 			nsImportFieldMap.cpp			\
 			$(NULL)
 
+ifndef MOZ_STATIC_MAIL_BUILD
+CPPSRCS += nsImportFactory.cpp
 
-include $(topsrcdir)/config/rules.mk
+ifeq ($(USE_SHORT_LIBNAME),1)
+EXTRA_DSO_LIBS = msgbsutl
+else
+EXTRA_DSO_LIBS = msgbaseutil
+endif
 
 EXTRA_DSO_LDOPTS += \
 	$(LIBS_DIR) \
@@ -83,5 +93,21 @@ EXTRA_DSO_LDOPTS += \
 	$(MOZ_XPCOM_OBSOLETE_LIBS) \
 	$(NULL)
 
+else
 
+EXPORTS     = \
+            nsImportService.h               \
+            nsImportMimeEncode.h            \
+            nsImportScanFile.h              \
+            ImportOutFile.h                 \
+            nsImportEncodeScan.h            \
+            nsImportTranslator.h            \
+            nsImportStringBundle.h          \
+            $(NULL)
 
+# we don't want the shared lib, but we want to force the creation of a static lib.
+FORCE_STATIC_LIB = 1
+
+endif
+
+include $(topsrcdir)/config/rules.mk

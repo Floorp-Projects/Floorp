@@ -42,10 +42,14 @@ REQUIRES	= xpcom \
 		  intl \
 		  $(NULL)
 
+ifndef MOZ_STATIC_MAIL_BUILD
+
 ifeq ($(USE_SHORT_LIBNAME),1)
 EXTRA_DSO_LIBS = msgbsutl
 else
 EXTRA_DSO_LIBS = msgbaseutil
+endif
+
 endif
 
 CPPSRCS		= nsMsgSMIMEFactory.cpp
@@ -53,6 +57,10 @@ CPPSRCS		= nsMsgSMIMEFactory.cpp
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/$(LIB_PREFIX)msgsmime_s.$(LIB_SUFFIX) \
 		$(NULL)
+
+ifndef MOZ_STATIC_MAIL_BUILD
+SHARED_LIBRARY_LIBS + = $(DIST)/lib/$(LIB_PREFIX)msgbsutl_s.$(LIB_SUFFIX)
+endif
 
 EXTRA_DSO_LDOPTS = \
 		$(LIBS_DIR) \

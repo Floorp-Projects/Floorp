@@ -43,6 +43,9 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= impComm4xMail
+
+ifndef MOZ_STATIC_MAIL_BUILD
+
 LIBRARY_NAME	= impComm4xMail
 
 # don't define SHORT_LIBNAME on WINNT
@@ -51,11 +54,18 @@ LIBRARY_NAME	= impComm4xMail
 ifneq ($(OS_ARCH),WINNT)
 SHORT_LIBNAME	= imp4Mail
 endif
+
 EXPORT_LIBRARY  = 1
 IS_COMPONENT	= 1
-META_COMPONENT  = mail
 MODULE_NAME     = nsComm4xMailImportModule
 
+else
+
+LIBRARY_NAME   = imp4mail_s
+
+endif
+
+META_COMPONENT  = mail
 REQUIRES	= xpcom \
 		  xpcom_obsolete \
 		  string \
@@ -69,12 +79,16 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  $(NULL)
 
-CPPSRCS		= 	nsComm4xMailFactory.cpp 	\
+CPPSRCS		= 	\
 			nsComm4xMailImport.cpp			\
 			nsComm4xMail.cpp				\
 			nsComm4xProfile.cpp				\
 			$(NULL)
 
+
+ifndef MOZ_STATIC_MAIL_BUILD
+
+CPPSRCS	 += nsComm4xMailFactory.cpp 
 
 ifeq ($(USE_SHORT_LIBNAME),1)
 EXTRA_DSO_LIBS += msgbsutl
@@ -89,6 +103,19 @@ EXTRA_DSO_LDOPTS = \
 	$(MOZ_XPCOM_OBSOLETE_LIBS) \
 	$(NULL)
 
+else
+
+EXPORTS     = \
+            nsComm4xProfile.h               \
+	    nsComm4xMailStringBundle.h      \
+	    nsComm4xMailImport.h	    \
+	    nsComm4xMail.h		    \
+            $(NULL)
+
+# we don't want the shared lib, but we want to force the creation of a static lib.
+FORCE_STATIC_LIB = 1
+
+endif
 
 include $(topsrcdir)/config/rules.mk
 

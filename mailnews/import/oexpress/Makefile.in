@@ -27,11 +27,19 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= importOE
+
+ifndef MOZ_STATIC_MAIL_BUILD
+
 LIBRARY_NAME	= importOE
 EXPORT_LIBRARY	= 1
 IS_COMPONENT	= 1
-META_COMPONENT	= mail
 MODULE_NAME	= nsOEImport
+
+else
+LIBRARY_NAME   = importOE_s
+endif
+
+META_COMPONENT	= mail
 
 REQUIRES	= xpcom \
 		  xpcom_obsolete \
@@ -62,6 +70,10 @@ CPPSRCS		= \
 		nsOEStringBundle.cpp		\
 		$(NULL)
 
+ifndef MOZ_STATIC_MAIL_BUILD
+
+CPPSRCS += nsOEFactory.cpp
+
 ifdef USE_SHORT_LIBNAME
 EXTRA_DSO_LIBS	= msgbsutl
 else
@@ -74,5 +86,11 @@ EXTRA_DSO_LDOPTS = \
 	$(MOZ_XPCOM_OBSOLETE_LIBS) \
 	$(NULL)
 
-include $(topsrcdir)/config/rules.mk
+else
 
+# we don't want the shared lib, but we want to force the creation of a static lib.
+FORCE_STATIC_LIB = 1
+
+endif
+
+include $(topsrcdir)/config/rules.mk

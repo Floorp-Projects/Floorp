@@ -38,27 +38,21 @@
 #include "nsIModule.h"
 #include "nsIGenericFactory.h"
 #include "nsIImportService.h"
+#include "nsImportService.h"
 #include "nsImportMimeEncode.h"
 #include "nsCRT.h"
 #include "nsImportStringBundle.h"
 #include "ImportDebug.h"
 
 
-extern NS_METHOD NS_NewImportService(nsISupports* aOuter, REFNSIID aIID, void **aResult);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsImportService)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsIImportMimeEncodeImpl)
 
-
-//----------------------------------------------------------------------
-
-//----------------------------------------
 static const nsModuleComponentInfo components[] = {
-	{	
-		"Import Service Component", NS_IMPORTSERVICE_CID,
-		NS_IMPORTSERVICE_CONTRACTID, NS_NewImportService
-	},
-	{
-		"Import Mime Encoder", NS_IMPORTMIMEENCODE_CID,
-		"@mozilla.org/import/import-mimeencode;1", nsIImportMimeEncodeImpl::Create
-	}
+    { "Import Service Component", NS_IMPORTSERVICE_CID, 
+        NS_IMPORTSERVICE_CONTRACTID, nsImportServiceConstructor },
+    { "Import Mime Encoder", NS_IMPORTMIMEENCODE_CID, 
+      "@mozilla.org/import/import-mimeencode;1", nsIImportMimeEncodeImplConstructor}
 };
 
 

@@ -27,13 +27,22 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= impText
+
+ifndef MOZ_STATIC_MAIL_BUILD
+
 LIBRARY_NAME	= impText
-META_COMPONENT = mail
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsTextImportModule
+
+else
+LIBRARY_NAME   = imptext_s
+endif
+
+META_COMPONENT = mail
+
 REQUIRES	= xpcom \
-                  xpcom_obsolete \
+          xpcom_obsolete \
 		  string \
 		  import \
 		  intl \
@@ -44,15 +53,30 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 CPPSRCS		= \
-		nsTextFactory.cpp 				\
 		nsTextStringBundle.cpp			\
 		nsTextImport.cpp				\
 		nsTextAddress.cpp 				\
 		$(NULL)
 
+ifndef MOZ_STATIC_MAIL_BUILD
+
+CPPSRCS += nsTextFactory.cpp 
+
 EXTRA_DSO_LDOPTS = \
 	$(MOZ_COMPONENT_LIBS) \
 	$(MOZ_XPCOM_OBSOLETE_LIBS) \
 	$(NULL)
+
+else
+
+EXPORTS     = \
+           nsTextImport.h     \
+           nsTextStringBundle.h \
+           $(NULL)
+
+# we don't want the shared lib, but we want to force the creation of a static lib.
+FORCE_STATIC_LIB = 1
+
+endif
 
 include $(topsrcdir)/config/rules.mk

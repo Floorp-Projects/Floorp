@@ -27,14 +27,24 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= impEudra
+
+ifndef MOZ_STATIC_MAIL_BUILD
+
 LIBRARY_NAME	= impEudra
 EXPORT_LIBRARY	= 1
 IS_COMPONENT	= 1
-META_COMPONENT	= mail
 MODULE_NAME	= nsEudoraImportModule
 
+else
+
+LIBRARY_NAME   = impEudra_s
+
+endif
+
+META_COMPONENT	= mail
+
 REQUIRES	= xpcom \
-                  xpcom_obsolete \
+          xpcom_obsolete \
 		  string \
 		  import \
 		  intl \
@@ -66,6 +76,10 @@ CPPSRCS		= \
 		nsEudoraAddress.cpp \
 		$(NULL)
 
+ifndef MOZ_STATIC_MAIL_BUILD
+
+CPPSRCS += nsEudoraFactory.cpp
+
 ifeq ($(USE_SHORT_LIBNAME),1)
 EXTRA_DSO_LIBS = msgbsutl
 else
@@ -79,6 +93,11 @@ EXTRA_DSO_LDOPTS = \
 		$(MOZ_UNICHARUTIL_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
+else
+
+# we don't want the shared lib, but we want to force the creation of a static lib.
+FORCE_STATIC_LIB = 1
+
+endif
 
 include $(topsrcdir)/config/rules.mk
-
