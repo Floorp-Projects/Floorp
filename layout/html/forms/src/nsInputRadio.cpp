@@ -218,7 +218,7 @@ nsContentAttr nsInputRadio::GetAttribute(nsIAtom* aAttribute,
 {
   aResult.Reset();
   if (aAttribute == nsHTMLAtoms::checked) {
-    return GetCacheAttribute(mChecked, aResult);
+    return GetCacheAttribute(mChecked, aResult, eHTMLUnit_Empty);
   }
   else {
     return super::GetAttribute(aAttribute, aResult);

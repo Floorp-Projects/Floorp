@@ -194,19 +194,19 @@ PRBool BasicTableLayoutStrategy::AssignFixedColumnWidths(nsIPresContext* aPresCo
     // Get column width if it has one
     PRBool haveColWidth = PR_FALSE;
     nscoord colWidth;
-    switch (colPosition->mWidthFlags) {
+    switch (colPosition->mWidth.GetUnit()) {
     default:
-    case NS_STYLE_POSITION_VALUE_AUTO:
-    case NS_STYLE_POSITION_VALUE_INHERIT:
+    case eStyleUnit_Auto:
+    case eStyleUnit_Inherit:
       break;
 
-    case NS_STYLE_POSITION_VALUE_LENGTH:
+    case eStyleUnit_Coord:
       haveColWidth = PR_TRUE;
-      colWidth = colPosition->mWidth;
+      colWidth = colPosition->mWidth.GetCoordValue;
       break;
 
-    case NS_STYLE_POSITION_VALUE_PCT:
-    case NS_STYLE_POSITION_VALUE_PROPORTIONAL:
+    case eStyleUnit_Percent:
+    case eStyleUnit_Proportional:
       //XXX haveColWidth = PR_TRUE;
       //XXX colWidth = colPosition->mWidthPCT * something;
       break;
@@ -273,39 +273,39 @@ PRBool BasicTableLayoutStrategy::AssignFixedColumnWidths(nsIPresContext* aPresCo
         cellFrame->GetStyleContext(aPresContext, cellSC.AssignRef());
         nsStylePosition* cellPosition = (nsStylePosition*)
           cellSC->GetData(kStylePositionSID);
-        switch (cellPosition->mWidthFlags) {
-        case NS_STYLE_POSITION_VALUE_LENGTH:
+        switch (cellPosition->mWidth.GetUnit()) {
+        case eStyleUnit_Coord:
           haveCellWidth = PR_TRUE;
-          cellWidth = cellPosition->mWidth;
+          cellWidth = cellPosition->mWidth.GetCoordValue();
           break;
 
-        case NS_STYLE_POSITION_VALUE_PERCENT:
-        case NS_STYLE_POSITION_VALUE_PROPORTIONAL:
+        case eStyleUnit_Percent:
+        case eStyleUnit_Proportional:
           // XXX write me when pct/proportional are supported
           // XXX haveCellWidth = PR_TRUE;
           // XXX cellWidth = cellPosition->mWidth;
           break;
 
         default:
-        case NS_STYLE_POSITION_VALUE_INHERIT:
-        case NS_STYLE_POSITION_VALUE_AUTO:
+        case eStyleUnit_Inherit:
+        case eStyleUnit_Auto:
           break;
         }
       }
 
 #if XXX_need_access_to_column_frame_help
-      switch (colPosition->mWidthFlags) {
+      switch (colPosition->mWidth.GetUnit()) {
       default:
-      case NS_STYLE_POSITION_VALUE_AUTO:
-      case NS_STYLE_POSITION_VALUE_INHERIT:
+      case eStyleUnit_Auto:
+      case eStyleUnit_Inherit:
         break;
 
-      case NS_STYLE_POSITION_VALUE_LENGTH:
+      case eStyleUnit_Coord:
         {
           // This col has a fixed width, so set the cell's width to the
           // larger of (specified width, largest max_element_size of the
           // cells in the column)
-          PRInt32 widthForThisCell = max(cellMinSize->width, colPosition->mWidth);
+          PRInt32 widthForThisCell = max(cellMinSize->width, colPosition->mWidth.GetCoordValue());
           if (mTableFrame->GetColumnWidth(colIndex) < widthForThisCell)
           {
             if (gsDebug) printf ("    setting fixed width to %d\n",widthForThisCell);

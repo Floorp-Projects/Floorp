@@ -23,9 +23,11 @@
 #include "nsISupports.h"
 #include "nsIWidget.h"
 #include "nsLeafFrame.h"
+#include "nsCoord.h"
 
 class nsIView;
 class nsIPresContext;
+class nsStyleCoord;
 
 struct nsInputWidgetData {
   PRInt32 arg1;
@@ -49,15 +51,15 @@ struct nsInputDimensionSpec
   nsIAtom* mColSizeAttr;
   PRBool   mColSizeAttrInPixels;
   nsIAtom* mColValueAttr;
-  PRInt32  mColDefaultSize;
+  nscoord  mColDefaultSize;
   PRBool   mColDefaultSizeInPixels;
   nsIAtom* mRowSizeAttr;
-  PRInt32  mRowDefaultSize;
+  nscoord  mRowDefaultSize;
 
   nsInputDimensionSpec(nsIAtom* aColSizeAttr, PRBool aColSizeAttrInPixels, 
-                       nsIAtom* aColValueAttr, PRInt32 aColDefaultSize,
+                       nsIAtom* aColValueAttr, nscoord aColDefaultSize,
                        PRBool aColDefaultSizeInPixels,
-                       nsIAtom* aRowSizeAttr, PRInt32 aRowDefaultSize)
+                       nsIAtom* aRowSizeAttr, nscoord aRowDefaultSize)
                        : mColSizeAttr(aColSizeAttr), mColSizeAttrInPixels(aColSizeAttrInPixels),
                          mColValueAttr(aColValueAttr), mColDefaultSize(aColDefaultSize),
                          mColDefaultSizeInPixels(aColDefaultSizeInPixels),
@@ -85,10 +87,10 @@ public:
                PRInt32 aIndexInParent,
                nsIFrame* aParentFrame);
 
-  static PRInt32 CalculateSize (nsIPresContext* aPresContext, nsInputFrame* aFrame,
+  static nscoord CalculateSize (nsIPresContext* aPresContext, nsInputFrame* aFrame,
                                 const nsSize& aCSSSize, nsInputDimensionSpec& aDimensionSpec, 
                                 nsSize& aBounds, PRBool& aWidthExplicit, 
-                                PRBool& aHeightExplicit, PRInt32& aRowSize);
+                                PRBool& aHeightExplicit, nscoord& aRowSize);
   // nsLeafFrame overrides
 
   /** 
@@ -135,8 +137,8 @@ public:
     */
   virtual const nsIID& GetIID(); 
 
-  PRInt32 GetDefaultPadding() const { return 40; }
-  virtual PRInt32 GetPadding() const;
+  nscoord GetDefaultPadding() const;
+  virtual nscoord GetPadding() const;
   /**
     * Get the widget associated with this frame
     * @param aView the view associated with the frame. It is a convience parm.
@@ -162,9 +164,9 @@ public:
     */
   virtual nsInputWidgetData* GetWidgetInitData();  
 
-  static PRInt32 GetTextSize(nsIPresContext& aContext, nsIFrame* aFrame,
+  static nscoord GetTextSize(nsIPresContext& aContext, nsIFrame* aFrame,
                              const nsString& aString, nsSize& aSize);
-  static PRInt32 GetTextSize(nsIPresContext& aContext, nsIFrame* aFrame,
+  static nscoord GetTextSize(nsIPresContext& aContext, nsIFrame* aFrame,
                              PRInt32 aNumChars, nsSize& aSize);
 
 protected:
@@ -202,8 +204,8 @@ protected:
     */
   void GetStyleSize(nsIPresContext& aContext, const nsSize& aMaxSize, nsSize& aSize);
 
-  PRInt32 GetStyleDim(nsIPresContext& aPresContext, const nsSize& aMaxSize, 
-                      PRInt8 aFlags, PRInt32 aVal);
+  nscoord GetStyleDim(nsIPresContext& aPresContext, nscoord aMaxDim, 
+                      nscoord aMaxWidth, const nsStyleCoord& aCoord);
 
   nsSize       mCacheBounds;
   nsMouseState mLastMouseState;

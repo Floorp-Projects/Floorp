@@ -194,7 +194,7 @@ PRInt32 BulletFrame::GetListItemOrdinal(nsIPresContext* aCX,
   nsHTMLValue value;
   nsIHTMLContent* html = (nsIHTMLContent*) mContent;
   if (eContentAttr_HasValue == html->GetAttribute(nsHTMLAtoms::value, value)) {
-    if (eHTMLUnit_Absolute == value.GetUnit()) {
+    if (eHTMLUnit_Integer == value.GetUnit()) {
       ordinal = value.GetIntValue();
       if (nsnull != state) {
         state->nextListOrdinal = ordinal + 1;

@@ -275,7 +275,7 @@ void nsHTMLContainer::SetAttribute(nsIAtom* aAttribute,
     if (aAttribute == nsHTMLAtoms::suppress) {
       if (aValue.EqualsIgnoreCase("true")) {
         nsHTMLValue val;
-        val.Set(1, eHTMLUnit_Absolute);
+        val.SetEmptyValue();
         nsHTMLTagContent::SetAttribute(aAttribute, val);
         return;
       }
@@ -290,8 +290,8 @@ void nsHTMLContainer::SetAttribute(nsIAtom* aAttribute,
       PRInt32 ec, v = tmp.ToInteger(&ec);
       tmp.CompressWhitespace(PR_TRUE, PR_FALSE);
       PRUnichar ch = tmp.First();
-      val.Set(v, ((ch == '+') || (ch == '-')) ?
-              eHTMLUnit_Absolute : eHTMLUnit_Enumerated);
+      val.SetIntValue(v, ((ch == '+') || (ch == '-')) ?
+                      eHTMLUnit_Integer : eHTMLUnit_Enumerated);
       nsHTMLTagContent::SetAttribute(aAttribute, val);
       return;
     }
@@ -308,19 +308,19 @@ void nsHTMLContainer::SetAttribute(nsIAtom* aAttribute,
       return;
     }
     if (aAttribute == nsHTMLAtoms::cols) {
-      ParseValue(aValue, 0, val);
+      ParseValue(aValue, 0, val, eHTMLUnit_Integer);
       nsHTMLTagContent::SetAttribute(aAttribute, val);
       return;
     }
 
     // Note: These attributes only apply when cols > 1
     if (aAttribute == nsHTMLAtoms::gutter) {
-      ParseValue(aValue, 1, val);
+      ParseValue(aValue, 1, val, eHTMLUnit_Pixel);
       nsHTMLTagContent::SetAttribute(aAttribute, val);
       return;
     }
     if (aAttribute == nsHTMLAtoms::width) {
-      ParseValueOrPercent(aValue, val);
+      ParseValueOrPercent(aValue, val, eHTMLUnit_Pixel);
       nsHTMLTagContent::SetAttribute(aAttribute, val);
       return;
     }
@@ -337,12 +337,12 @@ void nsHTMLContainer::SetAttribute(nsIAtom* aAttribute,
   else if (mTag == nsHTMLAtoms::pre) {
     if ((aAttribute == nsHTMLAtoms::wrap) ||
         (aAttribute == nsHTMLAtoms::variable)) {
-      val.Set(1, eHTMLUnit_Absolute);
+      val.SetEmptyValue();
       nsHTMLTagContent::SetAttribute(aAttribute, val);
       return;
     }
     if (aAttribute == nsHTMLAtoms::cols) {
-      ParseValue(aValue, 0, val);
+      ParseValue(aValue, 0, val, eHTMLUnit_Integer);
       nsHTMLTagContent::SetAttribute(aAttribute, val);
       return;
     }
@@ -351,7 +351,7 @@ void nsHTMLContainer::SetAttribute(nsIAtom* aAttribute,
       if (tabstop <= 0) {
         tabstop = 8;
       }
-      val.Set(tabstop, eHTMLUnit_Absolute);
+      val.SetIntValue(tabstop, eHTMLUnit_Integer);
       nsHTMLTagContent::SetAttribute(aAttribute, val);
       return;
     }
@@ -365,7 +365,7 @@ void nsHTMLContainer::SetAttribute(nsIAtom* aAttribute,
       // Illegal type values are left as is for the dom
     }
     if (aAttribute == nsHTMLAtoms::value) {
-      ParseValue(aValue, 1, val);
+      ParseValue(aValue, 1, val, eHTMLUnit_Integer);
       nsHTMLTagContent::SetAttribute(aAttribute, val);
       return;
     }
@@ -374,25 +374,25 @@ void nsHTMLContainer::SetAttribute(nsIAtom* aAttribute,
            (mTag == nsHTMLAtoms::menu) || (mTag == nsHTMLAtoms::dir)) {
     if (aAttribute == nsHTMLAtoms::type) {
       if (!ParseEnumValue(aValue, kListTypeTable, val)) {
-        val.Set(NS_STYLE_LIST_STYLE_BASIC, eHTMLUnit_Enumerated);
+        val.SetIntValue(NS_STYLE_LIST_STYLE_BASIC, eHTMLUnit_Enumerated);
       }
       nsHTMLTagContent::SetAttribute(aAttribute, val);
       return;
     }
     if (aAttribute == nsHTMLAtoms::start) {
-      ParseValue(aValue, 1, val);
+      ParseValue(aValue, 1, val, eHTMLUnit_Integer);
       nsHTMLTagContent::SetAttribute(aAttribute, val);
       return;
     }
     if (aAttribute == nsHTMLAtoms::compact) {
-      val.Set(1, eHTMLUnit_Absolute);
+      val.SetEmptyValue();
       nsHTMLTagContent::SetAttribute(aAttribute, val);
       return;
     }
   }
   else if (mTag == nsHTMLAtoms::dl) {
     if (aAttribute == nsHTMLAtoms::compact) {
-      val.Set(1, eHTMLUnit_Absolute);
+      val.SetEmptyValue();
       nsHTMLTagContent::SetAttribute(aAttribute, val);
       return;
     }
@@ -468,7 +468,7 @@ void nsHTMLContainer::MapAttributesInto(nsIStyleContext* aContext,
     else if (mTag == nsHTMLAtoms::a) {
       // suppress: bool (absolute)
       GetAttribute(nsHTMLAtoms::suppress, value);
-      if (value.GetUnit() == eHTMLUnit_Absolute) {
+      if (value.GetUnit() == eHTMLUnit_Empty) {
         // XXX set suppress
       }
     }
@@ -502,9 +502,9 @@ void nsHTMLContainer::MapAttributesInto(nsIStyleContext* aContext,
         font->mFont.name = family;
       }
 
-      // pointSize: abs, enum
+      // pointSize: int, enum
       GetAttribute(nsHTMLAtoms::pointSize, value);
-      if (value.GetUnit() == eHTMLUnit_Absolute) {
+      if (value.GetUnit() == eHTMLUnit_Integer) {
         // XXX should probably sanitize value
         font->mFont.size = parentFont->mFont.size + NS_POINTS_TO_TWIPS_INT(value.GetIntValue());
       }
@@ -512,9 +512,9 @@ void nsHTMLContainer::MapAttributesInto(nsIStyleContext* aContext,
         font->mFont.size = NS_POINTS_TO_TWIPS_INT(value.GetIntValue());
       }
       else {
-        // size: abs, enum
+        // size: int, enum
         GetAttribute(nsHTMLAtoms::size, value);
-        if ((value.GetUnit() == eHTMLUnit_Absolute) || (value.GetUnit() == eHTMLUnit_Enumerated)) { 
+        if ((value.GetUnit() == eHTMLUnit_Integer) || (value.GetUnit() == eHTMLUnit_Enumerated)) { 
           static float kFontScale[7] = {
             0.7f,
             0.8f,
@@ -532,7 +532,7 @@ void nsHTMLContainer::MapAttributesInto(nsIStyleContext* aContext,
             size = ((0 < size) ? ((size < 8) ? size : 7) : 0); 
             font->mFont.size = (nscoord)((float)normal.size * kFontScale[size - 1]);
           }
-          else {  // enum (+/-)
+          else {  // int (+/-)
             if ((0 < size) && (size <= 7)) { // +
               PRInt32 index;
               for (index = 0; index < 6; index++)
@@ -558,9 +558,9 @@ void nsHTMLContainer::MapAttributesInto(nsIStyleContext* aContext,
         }
       }
 
-      // fontWeight: abs, enum
+      // fontWeight: int, enum
       GetAttribute(nsHTMLAtoms::fontWeight, value);
-      if (value.GetUnit() == eHTMLUnit_Absolute) { // +/-
+      if (value.GetUnit() == eHTMLUnit_Integer) { // +/-
         PRInt32 weight = parentFont->mFont.weight + value.GetIntValue();
         font->mFont.weight = ((100 < weight) ? ((weight < 700) ? weight : 700) : 100);
       }
@@ -600,7 +600,7 @@ void nsHTMLContainer::MapAttributesInto(nsIStyleContext* aContext,
       PRInt32 numCols = 1;
       // cols: int
       GetAttribute(nsHTMLAtoms::cols, value);
-      if (value.GetUnit() == eHTMLUnit_Absolute) {
+      if (value.GetUnit() == eHTMLUnit_Integer) {
         numCols = value.GetIntValue();
         // XXX
       }
@@ -609,16 +609,16 @@ void nsHTMLContainer::MapAttributesInto(nsIStyleContext* aContext,
       if (1 < numCols) {
         // gutter: int
         GetAttribute(nsHTMLAtoms::gutter, value);
-        if (value.GetUnit() == eHTMLUnit_Absolute) {
+        if (value.GetUnit() == eHTMLUnit_Pixel) {
           // XXX set
         }
 
-        // width: int, %
+        // width: pixel, %
         GetAttribute(nsHTMLAtoms::width, value);
-        if (value.GetUnit() == eHTMLUnit_Absolute) {
+        if (value.GetUnit() == eHTMLUnit_Pixel) {
           // XXX set
         }
-        else if (value.GetUnit() == eHTMLUnit_Enumerated) {
+        else if (value.GetUnit() == eHTMLUnit_Percent) {
           // XXX set
         }
       }
@@ -633,26 +633,26 @@ void nsHTMLContainer::MapAttributesInto(nsIStyleContext* aContext,
       }
     }
     else if (mTag == nsHTMLAtoms::pre) {
-      // wrap: flag (abs==1)
+      // wrap: empty
       GetAttribute(nsHTMLAtoms::wrap, value);
-      if (value.GetUnit() == eHTMLUnit_Absolute) {
+      if (value.GetUnit() == eHTMLUnit_Empty) {
         // XXX set
       }
       
-      // variable: flag (abs==1)
+      // variable: empty
       GetAttribute(nsHTMLAtoms::variable, value);
-      if (value.GetUnit() == eHTMLUnit_Absolute) {
+      if (value.GetUnit() == eHTMLUnit_Empty) {
         // XXX set
       }
 
       // cols: int
       GetAttribute(nsHTMLAtoms::cols, value);
-      if (value.GetUnit() == eHTMLUnit_Absolute) {
+      if (value.GetUnit() == eHTMLUnit_Integer) {
         // XXX set
       }
 
       // tabstop: int
-      if (value.GetUnit() == eHTMLUnit_Absolute) {
+      if (value.GetUnit() == eHTMLUnit_Integer) {
         // XXX set
       }
     }
@@ -675,16 +675,16 @@ void nsHTMLContainer::MapAttributesInto(nsIStyleContext* aContext,
         list->mListStyleType = value.GetIntValue();
       }
 
-      // compact: flag (abs==1)
+      // compact: empty
       GetAttribute(nsHTMLAtoms::compact, value);
-      if (value.GetUnit() == eHTMLUnit_Absolute) {
+      if (value.GetUnit() == eHTMLUnit_Empty) {
         // XXX set
       }
     }
     else if (mTag == nsHTMLAtoms::dl) {
-      // compact: flag (abs==1)
+      // compact: flag
       GetAttribute(nsHTMLAtoms::compact, value);
-      if (value.GetUnit() == eHTMLUnit_Absolute) {
+      if (value.GetUnit() == eHTMLUnit_Empty) {
         // XXX set
       }
     }

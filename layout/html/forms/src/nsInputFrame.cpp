@@ -45,6 +45,7 @@
 #include "nsISupports.h"
 #include "nsHTMLForms.h"
 #include "nsStyleConsts.h"
+#include "nsUnitConversion.h"
 
 static NS_DEFINE_IID(kStyleFontSID, NS_STYLEFONT_SID);
 static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
@@ -270,7 +271,12 @@ nsInputFrame::GetWidgetInitData()
   return nsnull;
 }
 
-PRInt32 nsInputFrame::GetPadding() const
+nscoord nsInputFrame::GetDefaultPadding() const 
+{
+  return NS_POINTS_TO_TWIPS_INT(2); // XXX should be pixels, need pres context
+} 
+
+nscoord nsInputFrame::GetPadding() const
 {
   return 0;
 }
@@ -371,51 +377,45 @@ NS_METHOD nsInputFrame::HandleEvent(nsIPresContext& aPresContext,
 void nsInputFrame::GetStyleSize(nsIPresContext& aPresContext,
                                 const nsSize& aMaxSize, nsSize& aSize)
 {
-#if 0
   nsInput* input;
   GetContent((nsIContent *&) input); // this must be an nsInput
   nsStylePosition* pos = (nsStylePosition*) 
     mStyleContext->GetData(kStylePositionSID);
 
-  aSize.width  = GetStyleDim(aPresContext, aMaxSize, 
-                             pos->mWidthFlags, pos->mWidth);
-  aSize.height = GetStyleDim(aPresContext, aMaxSize, 
-                             pos->mHeightFlags, pos->mHeight);
+  aSize.width  = GetStyleDim(aPresContext, aMaxSize.width, aMaxSize.width, pos->mWidth);
+  aSize.height = GetStyleDim(aPresContext, aMaxSize.height, aMaxSize.width, pos->mHeight);
   NS_RELEASE(input);
-#endif
-  aSize.width = -1;
-  aSize.height = -1;
 }
 
-PRInt32 
-nsInputFrame::GetStyleDim(nsIPresContext& aPresContext, const nsSize& aMaxSize, 
-                          PRInt8 aFlags, PRInt32 aVal)
+nscoord 
+nsInputFrame::GetStyleDim(nsIPresContext& aPresContext, nscoord aMaxDim, 
+                          nscoord aMaxWidth, const nsStyleCoord& aCoord)
 {
-#if 0
-  PRInt32 result = 0;
-  switch (aFlags) {
-    case NS_STYLE_POSITION_VALUE_LENGTH:
-    case NS_STYLE_POSITION_VALUE_AUTO:
-    case NS_STYLE_POSITION_VALUE_INHERIT:
-      result = aVal;
+  nscoord result = 0;
+  switch (aCoord.GetUnit()) {
+    case eStyleUnit_Coord:
+      result = aCoord.GetCoordValue();
       break;
-    case NS_STYLE_POSITION_VALUE_PERCENT:
-    case NS_STYLE_POSITION_VALUE_PROPORTIONAL:
-      result = (aMaxSize.width * aVal) / 100;
+    case eStyleUnit_Inherit:
+      result = aMaxDim;  // XXX correct?? this needs to be the inherited value
       break;
-    //default:
+    case eStyleUnit_Percent:
+      result = (nscoord)((float)aMaxWidth * aCoord.GetPercentValue());
+      break;
+    default:
+    case eStyleUnit_Auto:
+      result = CSS_NOTSET;
+      break;
   }
 
   if (result <= 0) {
-    result = -1;
+    result = CSS_NOTSET;
   }
 
   return result;
-#endif
-  return -1;
 }
 
-PRInt32 
+nscoord 
 nsInputFrame::GetTextSize(nsIPresContext& aPresContext, nsIFrame* aFrame,
                           const nsString& aString, nsSize& aSize)
 {
@@ -431,7 +431,7 @@ nsInputFrame::GetTextSize(nsIPresContext& aPresContext, nsIFrame* aFrame,
   aSize.width  = fontMet->GetWidth(aString);
   aSize.height = fontMet->GetHeight() + fontMet->GetLeading();
 
-  PRInt32 charWidth  = fontMet->GetWidth("W");
+  nscoord charWidth  = fontMet->GetWidth("W");
 
   NS_RELEASE(fontMet);
   NS_RELEASE(fontCache);
@@ -440,7 +440,7 @@ nsInputFrame::GetTextSize(nsIPresContext& aPresContext, nsIFrame* aFrame,
   return charWidth;
 }
   
-PRInt32
+nscoord
 nsInputFrame::GetTextSize(nsIPresContext& aPresContext, nsIFrame* aFrame,
                           PRInt32 aNumChars, nsSize& aSize)
 {
@@ -455,9 +455,9 @@ PRInt32
 nsInputFrame::CalculateSize (nsIPresContext* aPresContext, nsInputFrame* aFrame,
                              const nsSize& aCSSSize, nsInputDimensionSpec& aSpec, 
                              nsSize& aBounds, PRBool& aWidthExplicit, 
-                             PRBool& aHeightExplicit, PRInt32& aRowHeight) 
+                             PRBool& aHeightExplicit, nscoord& aRowHeight) 
 {
-  PRInt32 charWidth   = 0;
+  nscoord charWidth   = 0;
   PRInt32 numRows     = 1;
   aWidthExplicit      = PR_FALSE;
   aHeightExplicit     = PR_FALSE;
@@ -473,7 +473,7 @@ nsInputFrame::CalculateSize (nsIPresContext* aPresContext, nsInputFrame* aFrame,
   if (nsnull != aSpec.mColValueAttr) {
     valStatus = content->GetAttribute(aSpec.mColValueAttr, valAttr);
   }
-  PRInt32 colAttr;
+  nsHTMLValue colAttr;
   nsContentAttr colStatus = eContentAttr_NotThere;
   if (nsnull != aSpec.mColSizeAttr) {
     colStatus = content->GetAttribute(aSpec.mColSizeAttr, colAttr);
@@ -482,10 +482,11 @@ nsInputFrame::CalculateSize (nsIPresContext* aPresContext, nsInputFrame* aFrame,
   if (eContentAttr_HasValue == colStatus) {  // col attr will provide width
     if (aSpec.mColSizeAttrInPixels) {
       float p2t = aPresContext->GetPixelsToTwips();
-      aBounds.width = (int) (((float)colAttr) * p2t);
+      aBounds.width = (int) (((float)colAttr.GetPixelValue()) * p2t);
     }
     else {
-      charWidth = GetTextSize(*aPresContext, aFrame, colAttr, aBounds);
+      PRInt32 col = ((colAttr.GetUnit() == eHTMLUnit_Pixel) ? colAttr.GetPixelValue() : colAttr.GetIntValue());
+      charWidth = GetTextSize(*aPresContext, aFrame, col, aBounds);
       aRowHeight = aBounds.height;
     }
 	  if (aSpec.mColSizeAttrInPixels) {
@@ -512,21 +513,22 @@ nsInputFrame::CalculateSize (nsIPresContext* aPresContext, nsInputFrame* aFrame,
     }
   }
 
-  PRInt32 rowAttr = ATTR_NOTSET;
+  nsHTMLValue rowAttr;
   nsContentAttr rowStatus = eContentAttr_NotThere;
   if (nsnull != aSpec.mRowSizeAttr) {
     rowStatus = content->GetAttribute(aSpec.mRowSizeAttr, rowAttr);
   }
 
   if (eContentAttr_HasValue == rowStatus) { // row attr will provide height
+    PRInt32 rowAttrInt = ((rowAttr.GetUnit() == eHTMLUnit_Pixel) ? rowAttr.GetPixelValue() : rowAttr.GetIntValue());
     if (0 == charWidth) {
       charWidth = GetTextSize(*aPresContext, aFrame, 1, textSize);
-      aBounds.height = textSize.height * rowAttr;
+      aBounds.height = textSize.height * rowAttrInt;
       aRowHeight = textSize.height;
-      numRows = rowAttr;
+      numRows = rowAttrInt;
     }
     else {
-      aBounds.height = aBounds.height * rowAttr;
+      aBounds.height = aBounds.height * rowAttrInt;
     }
   }
   else if (CSS_NOTSET != aCSSSize.height) {  // css provides height

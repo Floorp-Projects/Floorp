@@ -19,6 +19,7 @@
 #define nsHTMLTagContent_h___
 
 #include "nsHTMLContent.h"
+#include "nsHTMLValue.h"
 #include "nsIDOMElement.h"
 
 class nsIHTMLAttributes;
@@ -126,16 +127,16 @@ public:
                                   nsString& aResult);
 
   static void ParseValueOrPercent(const nsString& aString,
-                                  nsHTMLValue& aResult);
+                                  nsHTMLValue& aResult, nsHTMLUnit aValueUnit);
 
   static PRBool ValueOrPercentToString(const nsHTMLValue& aValue,
                                        nsString& aResult);
 
   static void ParseValue(const nsString& aString, PRInt32 aMin,
-                         nsHTMLValue& aResult);
+                         nsHTMLValue& aResult, nsHTMLUnit aValueUnit);
 
   static void ParseValue(const nsString& aString, PRInt32 aMin, PRInt32 aMax,
-                         nsHTMLValue& aResult);
+                         nsHTMLValue& aResult, nsHTMLUnit aValueUnit);
 
   static PRBool ParseColor(const nsString& aString, nsHTMLValue& aResult);
 

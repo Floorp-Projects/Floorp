@@ -22,6 +22,7 @@
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsHTMLAtoms.h"
+#include "nsUnitConversion.h"
 #if 0
 #include "nsStyleConsts.h"
 #include "nsIHTMLAttributes.h"
@@ -128,14 +129,17 @@ SpacerFrame::ResizeReflow(nsIPresContext* aPresContext,
     nsHTMLValue val;
     ca = part->GetAttribute(nsHTMLAtoms::size, val);
     if (eContentAttr_HasValue == ca) {
-      width = val.GetIntValue();
+      // XXX percent???
+      float p2t = aPresContext->GetPixelsToTwips();
+      width = (nscoord)NS_INT_PIXELS_TO_TWIPS(val.GetPixelValue(), p2t);
     }
   } else {
     nsHTMLValue val;
+    float p2t = aPresContext->GetPixelsToTwips();
     ca = part->GetAttribute(nsHTMLAtoms::width, val);
     if (eContentAttr_HasValue == ca) {
-      if (eHTMLUnit_Absolute == val.GetUnit()) {
-        width = val.GetIntValue();
+      if (eHTMLUnit_Pixel == val.GetUnit()) {
+        width = (nscoord)NS_INT_PIXELS_TO_TWIPS(val.GetPixelValue(), p2t);
       }
       else if (eHTMLUnit_Percent == val.GetUnit()) {
         // XXX percent of what?
@@ -143,8 +147,8 @@ SpacerFrame::ResizeReflow(nsIPresContext* aPresContext,
     }
     ca = part->GetAttribute(nsHTMLAtoms::height, val);
     if (eContentAttr_HasValue == ca) {
-      if (eHTMLUnit_Absolute == val.GetUnit()) {
-        height = val.GetIntValue();
+      if (eHTMLUnit_Pixel == val.GetUnit()) {
+        height = (nscoord)NS_INT_PIXELS_TO_TWIPS(val.GetPixelValue(), p2t);
       }
       else if (eHTMLUnit_Percent == val.GetUnit()) {
         // XXX percent of what?
@@ -222,7 +226,7 @@ void SpacerPart::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
   }
   else if (aAttribute == nsHTMLAtoms::size) {
     nsHTMLValue val;
-    ParseValue(aValue, 0, val);
+    ParseValue(aValue, 0, val, eHTMLUnit_Pixel);
     nsHTMLTagContent::SetAttribute(aAttribute, val);
   }
   else if (aAttribute == nsHTMLAtoms::align) {
@@ -233,7 +237,7 @@ void SpacerPart::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
   else if ((aAttribute == nsHTMLAtoms::width) ||
            (aAttribute == nsHTMLAtoms::height)) {
     nsHTMLValue val;
-    ParseValueOrPercent(aValue, val);
+    ParseValueOrPercent(aValue, val, eHTMLUnit_Pixel);
     nsHTMLTagContent::SetAttribute(aAttribute, val);
   }
 }

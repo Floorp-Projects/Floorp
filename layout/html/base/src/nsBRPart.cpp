@@ -193,7 +193,7 @@ nsContentAttr BRPart::GetAttribute(nsIAtom* aAttribute,
   if (aAttribute == nsHTMLAtoms::clear) {
     aResult.Reset();
     if (NS_STYLE_CLEAR_NONE != mClear) {
-      aResult.Set(mClear, eHTMLUnit_Enumerated);
+      aResult.SetIntValue(mClear, eHTMLUnit_Enumerated);
       ca = eContentAttr_HasValue;
     }
   }

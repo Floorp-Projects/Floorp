@@ -1521,17 +1521,17 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext* aPresContext,
   PRInt32 maxWidth;
   nsStylePosition* position =
     (nsStylePosition*)mStyleContext->GetData(kStylePositionSID);
-  switch (position->mWidthFlags) {
-  case NS_STYLE_POSITION_VALUE_LENGTH:
-    maxWidth = position->mWidth;
+  switch (position->mWidth.GetUnit()) {
+  case eStyleUnit_Coord:
+    maxWidth = position->mWidth.GetCoordValue();
     break;
-  case NS_STYLE_POSITION_VALUE_PERCENT:
-  case NS_STYLE_POSITION_VALUE_PROPORTIONAL:
+  case eStyleUnit_Percent:
+  case eStyleUnit_Proportional:
     // XXX for now these fall through
 
   default:
-  case NS_STYLE_POSITION_VALUE_AUTO:
-  case NS_STYLE_POSITION_VALUE_INHERIT:
+  case eStyleUnit_Auto:
+  case eStyleUnit_Inherit:
     maxWidth = aMaxSize.width;
     break;
   }
@@ -1832,15 +1832,15 @@ PRBool nsTableFrame::IsProportionalWidth(nsStylePosition* aStylePosition)
     result = PR_TRUE;
   }
   else {
-    switch (aStylePosition->mWidthFlags) {
-    case NS_STYLE_POSITION_VALUE_LENGTH:
-    case NS_STYLE_POSITION_VALUE_PERCENT:
+    switch (aStylePosition->mWidth.GetUnit()) {
+    case eStyleUnit_Coord:
+    case eStyleUnit_Percent:
       break;
 
     default:
-    case NS_STYLE_POSITION_VALUE_AUTO:
-    case NS_STYLE_POSITION_VALUE_INHERIT:
-    case NS_STYLE_POSITION_VALUE_PROPORTIONAL:
+    case eStyleUnit_Auto:
+    case eStyleUnit_Inherit:
+    case eStyleUnit_Proportional:
       result = PR_TRUE;
       break;
     }

@@ -327,14 +327,14 @@ void HRulePart::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
 {
   if (aAttribute == nsHTMLAtoms::width) {
     nsHTMLValue val;
-    ParseValueOrPercent(aValue, val);
+    ParseValueOrPercent(aValue, val, eHTMLUnit_Pixel);
     nsHTMLTagContent::SetAttribute(aAttribute, val);
     return;
   }
   if (aAttribute == nsHTMLAtoms::size) {
     nsHTMLValue val;
-    ParseValue(aValue, 1, 100, val);
-    mThickness = val.GetIntValue();
+    ParseValue(aValue, 1, 100, val, eHTMLUnit_Pixel);
+    mThickness = val.GetPixelValue();
     return;
   }
   if (aAttribute == nsHTMLAtoms::noshade) {
@@ -362,20 +362,21 @@ nsContentAttr HRulePart::GetAttribute(nsIAtom* aAttribute,
   if (aAttribute == nsHTMLAtoms::size) {
     aResult.Reset();
     if (0 != mThickness) {
-      aResult.Set(mThickness, eHTMLUnit_Absolute);
+      aResult.SetPixelValue(mThickness);
       ca = eContentAttr_HasValue;
     }
   }
   else if (aAttribute == nsHTMLAtoms::noshade) {
     aResult.Reset();
     if (mNoShade) {
+      aResult.SetEmptyValue();
       ca = eContentAttr_HasValue;
     }
   }
   else if (aAttribute == nsHTMLAtoms::align) {
     aResult.Reset();
     if (ALIGN_UNSET != mAlign) {
-      aResult.Set(mAlign, eHTMLUnit_Enumerated);
+      aResult.SetIntValue(mAlign, eHTMLUnit_Enumerated);
       ca = eContentAttr_HasValue;
     }
   }

@@ -1667,7 +1667,7 @@ void nsBlockFrame::SetupState(nsIPresContext* aCX,
     nsHTMLValue value;
     if (eContentAttr_HasValue ==
         ((nsIHTMLContent*)mContent)->GetAttribute(nsHTMLAtoms::start, value)) {
-      if (eHTMLUnit_Absolute == value.GetUnit()) {
+      if (eHTMLUnit_Integer == value.GetUnit()) {
         aState.nextListOrdinal = value.GetIntValue();
       }
     }

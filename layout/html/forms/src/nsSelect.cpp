@@ -328,7 +328,7 @@ nsContentAttr nsSelect::GetAttribute(nsIAtom* aAttribute,
 {
   aResult.Reset();
   if (aAttribute == nsHTMLAtoms::multiple) {
-    return GetCacheAttribute(mMultiple, aResult);
+    return GetCacheAttribute(mMultiple, aResult, eHTMLUnit_Empty);
   }
   else {
     return super::GetAttribute(aAttribute, aResult);
@@ -338,23 +338,23 @@ nsContentAttr nsSelect::GetAttribute(nsIAtom* aAttribute,
 PRBool
 nsSelect::IsComboBox()
 {
-  PRBool  multiple;
-  PRInt32 size;
+//  PRBool  multiple;
+//  PRInt32 size;
 
-  super::GetAttribute(nsHTMLAtoms::size, size);
-  super::GetAttribute(nsHTMLAtoms::multiple, multiple);
+//  GetAttribute(nsHTMLAtoms::size, size);
+//  GetAttribute(nsHTMLAtoms::multiple, multiple);
 
-  PRBool result = (!multiple && (size <= 1)) ? PR_TRUE : PR_FALSE;
+  PRBool result = (!mMultiple && (mSize <= 1)) ? PR_TRUE : PR_FALSE;
   return result;
 }
 
 PRInt32 
 nsSelect::GetMaxNumValues()
 {
-  PRBool isMultiple;
-  super::GetAttribute(nsHTMLAtoms::multiple, isMultiple);
+//  PRBool isMultiple;
+//  GetAttribute(nsHTMLAtoms::multiple, isMultiple);
 
-  if (isMultiple) {
+  if (mMultiple) {
     return ChildCount();
   }
   else {
@@ -416,8 +416,8 @@ nsSelect::GetValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
 void 
 nsSelect::Reset() 
 {
-  PRBool allowMultiple;
-  super::GetAttribute(nsHTMLAtoms::multiple, allowMultiple);
+//  PRBool allowMultiple;
+//  super::GetAttribute(nsHTMLAtoms::multiple, allowMultiple);
   PRBool haveSelection = PR_FALSE;
   PRInt32 numChildren = ChildCount();
 
@@ -433,7 +433,7 @@ nsSelect::Reset()
     ((nsInput *)option)->GetAttribute(nsHTMLAtoms::selected, selAttr);
     if (selAttr) {
       list->SelectItem(i);
-      if (!allowMultiple) {
+      if (!mMultiple) {
         break;  
       }
     }
@@ -488,7 +488,7 @@ nsContentAttr nsOption::GetAttribute(nsIAtom* aAttribute,
 {
   aResult.Reset();
   if (aAttribute == nsHTMLAtoms::selected) {
-    return GetCacheAttribute(mSelected, aResult);
+    return GetCacheAttribute(mSelected, aResult, eHTMLUnit_Empty);
   }
   else {
     return super::GetAttribute(aAttribute, aResult);

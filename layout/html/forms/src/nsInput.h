@@ -163,7 +163,7 @@ protected:
   void          CacheAttribute(const nsString& aValue, nsString*& aLoc);
   void          CacheAttribute(const nsString& aValue, PRInt32 aMinValue, PRInt32& aLoc);
   nsContentAttr GetCacheAttribute(nsString* const& aLoc, nsHTMLValue& aValue) const;
-  nsContentAttr GetCacheAttribute(PRInt32 aLoc, nsHTMLValue& aValue) const;
+  nsContentAttr GetCacheAttribute(PRInt32 aLoc, nsHTMLValue& aValue, nsHTMLUnit aUnit) const;
 #if 0
   nsContentAttr GetCacheAttribute(PRBool aLoc, nsHTMLValue& aValue) const;
 #endif

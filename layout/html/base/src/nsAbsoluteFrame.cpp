@@ -96,19 +96,30 @@ nsIView* AbsoluteFrame::CreateView(nsIView*         aContainingView,
       clip.mTop = aPosition->mClip.top;
       clip.mBottom = aPosition->mClip.bottom;
     }
+
+    PRInt32 zIndex = 0;
+    if (aPosition->mZIndex.GetUnit() == eStyleUnit_Integer) {
+      zIndex = aPosition->mZIndex.GetIntValue();
+    } else if (aPosition->mZIndex.GetUnit() == eStyleUnit_Auto) {
+      // XXX need to handle z-index "auto"
+      NS_NOTYETIMPLEMENTED("zIndex: auto");
+    } else if (aPosition->mZIndex.GetUnit() == eStyleUnit_Inherit) {
+      // XXX need to handle z-index "inherit"
+      NS_NOTYETIMPLEMENTED("zIndex: inherit");
+    }
      
     result = aContainingView->QueryInterface(kIScrollableViewIID, (void**)&scrollView);
     if (NS_OK == result) {
       nsIView* scrolledView = scrollView->GetScrolledView();
 
       view->Init(viewManager, aRect, scrolledView, nsnull, nsnull, nsnull,
-        aPosition->mZIndex, pClip);
+        zIndex, pClip); 
       viewManager->InsertChild(scrolledView, view, 0);
       NS_RELEASE(scrolledView);
       NS_RELEASE(scrollView);
     } else {
       view->Init(viewManager, aRect, aContainingView, nsnull, nsnull, nsnull,
-        aPosition->mZIndex, pClip);
+        zIndex, pClip);
       viewManager->InsertChild(aContainingView, view, 0);
     }
   
@@ -127,59 +138,63 @@ void AbsoluteFrame::ComputeViewBounds(const nsRect&    aContainingInnerRect,
   nsStylePosition*  position = (nsStylePosition*)mStyleContext->GetData(kStylePositionSID);
 
   // x-offset
-  if (NS_STYLE_POSITION_VALUE_AUTO == position->mLeftOffsetFlags) {
+  if (eStyleUnit_Auto == position->mLeftOffset.GetUnit()) {
     // XXX This isn't correct. We should use the current x-offset of our frame
     // translated into the coordinate space of the containing block. But, we
     // don't know it yet...
     aRect.x = 0;
-  } else if (NS_STYLE_POSITION_VALUE_LENGTH == position->mLeftOffsetFlags) {
-    aRect.x = position->mLeftOffset;
+  } else if (eStyleUnit_Coord == position->mLeftOffset.GetUnit()) {
+    aRect.x = position->mLeftOffset.GetCoordValue();
   } else {
-    NS_ASSERTION(NS_STYLE_POSITION_VALUE_PERCENT == position->mLeftOffsetFlags,
+    NS_ASSERTION(eStyleUnit_Percent == position->mLeftOffset.GetUnit(),
                  "unexpected offset type");
     // Percentage values refer to the width of the containing block
-    aRect.x = aContainingInnerRect.x + (aContainingInnerRect.width *
-              position->mLeftOffset / 100);
+    aRect.x = aContainingInnerRect.x + 
+              (nscoord)((float)aContainingInnerRect.width *
+                        position->mLeftOffset.GetPercentValue());
   }
 
   // y-offset
-  if (NS_STYLE_POSITION_VALUE_AUTO == position->mTopOffsetFlags) {
+  if (eStyleUnit_Auto == position->mTopOffset.GetUnit()) {
     // XXX This isn't correct. We should use the current y-offset of our frame
     // translated into the coordinate space of the containing block. But, we
     // don't know it yet...
     aRect.y = 0;
-  } else if (NS_STYLE_POSITION_VALUE_LENGTH == position->mTopOffsetFlags) {
-    aRect.y = position->mTopOffset;
+  } else if (eStyleUnit_Coord == position->mTopOffset.GetUnit()) {
+    aRect.y = position->mTopOffset.GetCoordValue();
   } else {
-    NS_ASSERTION(NS_STYLE_POSITION_VALUE_PERCENT == position->mTopOffsetFlags,
+    NS_ASSERTION(eStyleUnit_Percent == position->mTopOffset.GetUnit(),
                  "unexpected offset type");
     // Percentage values refer to the height of the containing block
-    aRect.y = aContainingInnerRect.y + (aContainingInnerRect.height *
-              position->mTopOffset / 100);
+    aRect.y = aContainingInnerRect.y + 
+              (nscoord)((float)aContainingInnerRect.height *
+                        position->mTopOffset.GetPercentValue());
   }
 
   // width
-  if (NS_STYLE_POSITION_VALUE_AUTO == position->mWidthFlags) {
+  if (eStyleUnit_Auto == position->mWidth.GetUnit()) {
     // Use the right-edge of the containing block
     aRect.width = aContainingInnerRect.width - aRect.x;
-  } else if (NS_STYLE_POSITION_VALUE_LENGTH == position->mWidthFlags) {
-    aRect.width = position->mWidth;
+  } else if (eStyleUnit_Coord == position->mWidth.GetUnit()) {
+    aRect.width = position->mWidth.GetCoordValue();
   } else {
-    NS_ASSERTION(NS_STYLE_POSITION_VALUE_PERCENT == position->mWidthFlags,
+    NS_ASSERTION(eStyleUnit_Percent == position->mWidth.GetUnit(),
                  "unexpected width type");
-    aRect.width = aContainingInnerRect.width * position->mWidth / 100;
+    aRect.width = (nscoord)((float)aContainingInnerRect.width * 
+                            position->mWidth.GetPercentValue());
   }
 
   // height
-  if (NS_STYLE_POSITION_VALUE_AUTO == position->mHeightFlags) {
+  if (eStyleUnit_Auto == position->mHeight.GetUnit()) {
     // Allow it to be as high as it wants
     aRect.height = NS_UNCONSTRAINEDSIZE;
-  } else if (NS_STYLE_POSITION_VALUE_LENGTH == position->mHeightFlags) {
-    aRect.height = position->mHeight;
+  } else if (eStyleUnit_Coord == position->mHeight.GetUnit()) {
+    aRect.height = position->mHeight.GetCoordValue();
   } else {
-    NS_ASSERTION(NS_STYLE_POSITION_VALUE_PERCENT == position->mHeightFlags,
+    NS_ASSERTION(eStyleUnit_Percent == position->mHeight.GetUnit(),
                  "unexpected height type");
-    aRect.height = aContainingInnerRect.height * position->mHeight / 100;
+    aRect.height = (nscoord)((float)aContainingInnerRect.height * 
+                             position->mHeight.GetPercentValue());
   }
 }
 
@@ -283,12 +298,12 @@ NS_METHOD AbsoluteFrame::ResizeReflow(nsIPresContext*  aPresContext,
     // Figure out what size to actually use. If the position style is 'auto' or
     // the container should be enlarged to contain overflowing frames then use
     // the desired size
-    if ((NS_STYLE_POSITION_VALUE_AUTO == position->mWidthFlags) ||
+    if ((eStyleUnit_Auto == position->mWidth.GetUnit()) ||
         ((aDesiredSize.width > availSize.width) &&
-         (NS_STYLE_OVERFLOW_VISIBLE) == position->mOverflow)) {
+         (NS_STYLE_OVERFLOW_VISIBLE == position->mOverflow))) {
       rect.width = aDesiredSize.width;
     }
-    if (NS_STYLE_POSITION_VALUE_AUTO == position->mHeightFlags) {
+    if (eStyleUnit_Auto == position->mHeight.GetUnit()) {
       rect.height = aDesiredSize.height;
     }
     mFrame->SizeTo(rect.width, rect.height);
