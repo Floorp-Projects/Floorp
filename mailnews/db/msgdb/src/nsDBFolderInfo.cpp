@@ -51,7 +51,25 @@ static const char * kVersionColumnName = "version";
 static const char * kCharacterSetColumnName = "charSet";
 static const char * kLocaleColumnName = "locale";
 
+static const char * MAILNEWS_VIEW_DEFAULT_CHARSET = "mailnews.view_default_charset";
 static nsString gDefaultCharacterSet;	// default charset
+
+static int PR_CALLBACK defaultCharacterSetChanged(const char *prefName, void *closure)
+{
+	nsresult rv;
+	nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_PROGID, &rv);
+	if (NS_SUCCEEDED(rv))
+	{
+		PRUnichar *prefCharset = nsnull;
+		rv = prefs->GetLocalizedUnicharPref(prefName, &prefCharset);
+		if (NS_SUCCEEDED(rv))
+		{
+			gDefaultCharacterSet.Assign(prefCharset);
+			PR_Free(prefCharset);
+		}
+	}
+	return 0;  
+} 
 
 NS_IMPL_ADDREF(nsDBFolderInfo)
 NS_IMPL_RELEASE(nsDBFolderInfo)
@@ -106,14 +124,15 @@ nsDBFolderInfo::nsDBFolderInfo(nsMsgDatabase *mdb)
 	m_mdbTokensInitialized = FALSE;
 
 	// Initialize a default charset to a pref default.
-	if (gDefaultCharacterSet.IsEmpty())
+	nsresult rv;
+	nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_PROGID, &rv);
+	if (NS_SUCCEEDED(rv))
 	{
-		nsresult rv;
-		nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_PROGID, &rv);
-		if (NS_SUCCEEDED(rv))
+		rv = prefs->RegisterCallback(MAILNEWS_VIEW_DEFAULT_CHARSET, defaultCharacterSetChanged, NULL);
+		if (gDefaultCharacterSet.IsEmpty())
 		{
 			PRUnichar *prefCharset = nsnull;
-			rv = prefs->GetLocalizedUnicharPref("mailnews.view_default_charset", &prefCharset);
+			rv = prefs->GetLocalizedUnicharPref(MAILNEWS_VIEW_DEFAULT_CHARSET, &prefCharset);
 			if (NS_SUCCEEDED(rv))
 			{
 				gDefaultCharacterSet.Assign(prefCharset);
@@ -144,6 +163,11 @@ nsDBFolderInfo::nsDBFolderInfo(nsMsgDatabase *mdb)
 
 nsDBFolderInfo::~nsDBFolderInfo()
 {
+	nsresult rv;
+	nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_PROGID, &rv);
+	if (NS_SUCCEEDED(rv))
+		rv = prefs->UnregisterCallback(MAILNEWS_VIEW_DEFAULT_CHARSET, defaultCharacterSetChanged, NULL);
+
 	if (m_mdb)
 	{
 		if (m_mdbTable)
@@ -576,6 +600,22 @@ nsDBFolderInfo::GetCharacterSet(nsString *result)
 
 	if (NS_SUCCEEDED(rv) && result->IsEmpty())
 		result->Assign(gDefaultCharacterSet.GetUnicode());
+
+	return rv;
+}
+
+NS_IMETHODIMP
+nsDBFolderInfo::GetCharacterSet2(nsString *result, PRBool *usedDefault) 
+{
+	nsresult rv = GetProperty(kCharacterSetColumnName, result);
+	
+	*usedDefault = FALSE;
+
+	if (NS_SUCCEEDED(rv) && result->IsEmpty())
+	{
+		result->Assign(gDefaultCharacterSet.GetUnicode());
+		*usedDefault = TRUE;
+	}
 
 	return rv;
 }

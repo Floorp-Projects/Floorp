@@ -463,7 +463,10 @@ nsresult nsMsgDBFolder::ReadDBFolderInfo(PRBool force)
 				//folderInfo->GetImapTotalPendingMessages(&mNumPendingTotalMessages);
 				//folderInfo->GetImapUnreadPendingMessages(&mNumPendingUnreadMessages);
 
-				folderInfo->GetCharacterSet(&mCharset);
+				PRBool defaultUsed;
+				folderInfo->GetCharacterSet2(&mCharset, &defaultUsed);
+				if (defaultUsed)
+					mCharset.AssignWithConversion("");
         
 				if (db) {
 					PRBool hasnew;
