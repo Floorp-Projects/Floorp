@@ -980,8 +980,9 @@ nsImageMap::ContentChanged(nsIDocument *aDocument,
 }
 
 NS_IMETHODIMP
-nsImageMap::ContentStateChanged(nsIDocument* aDocument,
-                                nsIContent* aContent)
+nsImageMap::ContentStatesChanged(nsIDocument* aDocument,
+                                 nsIContent* aContent1,
+                                 nsIContent* aContent2)
 {
   return NS_OK;
 }

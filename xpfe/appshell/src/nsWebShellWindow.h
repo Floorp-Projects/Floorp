@@ -137,8 +137,9 @@ public:
   NS_IMETHOD ContentChanged(nsIDocument *aDocument,
                             nsIContent* aContent,
                             nsISupports* aSubContent);
-  NS_IMETHOD ContentStateChanged(nsIDocument *aDocument,
-                                 nsIContent* aContent);
+  NS_IMETHOD ContentStatesChanged(nsIDocument *aDocument,
+                                  nsIContent* aContent1,
+                                  nsIContent* aContent2);
   NS_IMETHOD AttributeChanged(nsIDocument *aDocument,
                               nsIContent*  aContent,
                               nsIAtom*     aAttribute,
