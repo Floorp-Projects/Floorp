@@ -503,7 +503,10 @@
     <toolbox id="headers-box" class="toolbox-top" mode="icons"> 
     <toolbar id="MsgHeadersToolbar" persist="collapsed" flex="1"
              tborient="vertical" tbalign="stretch"
-             customizable="true">
+             customizable="true"
+             ondragover="nsDragAndDrop.dragOver(event, envelopeDragObserver);"
+             ondragdrop="nsDragAndDrop.drop(event, envelopeDragObserver);"
+             ondragexit="nsDragAndDrop.dragExit(event, envelopeDragObserver);">
       <hbox id="msgheaderstoolbar-box" flex="1">
         <vbox flex="1" id="addresses-box">
           <hbox align="center">
@@ -514,9 +517,7 @@
           </hbox> 
           <listbox id="addressingWidget" flex="1" seltype="multiple" rows="4"
                    onkeydown="awKeyDown(event, this)"
-                   onclick="awClickEmptySpace(event.originalTarget, true)"
-                   ondragover="DragOverAddressingWidget(event);"
-                   ondragdrop="return DropOnAddressingWidget(event);">
+                   onclick="awClickEmptySpace(event.originalTarget, true)">
             <listcols>
               <listcol id="typecol-addressingWidget"/>
               <listcol id="textcol-addressingWidget" flex="1"/>
@@ -566,10 +567,7 @@
           <listbox seltype="multiple" id="attachmentBucket" flex="1" rows="4"
                    context="msgComposeAttachmentContext"
                    onkeypress="if (event.keyCode == 8 || event.keyCode == 46) RemoveSelectedAttachment();"
-                   onclick="AttachmentBucketClicked(event);"
-                   ondragover="nsDragAndDrop.dragOver(event, attachmentBucketObserver);"
-                   ondragdrop="nsDragAndDrop.drop(event, attachmentBucketObserver);"
-                   ondragexit="nsDragAndDrop.dragExit(event, attachmentBucketObserver);"/>
+                   onclick="AttachmentBucketClicked(event);"/>
         </vbox>
       </hbox>
     </toolbar>   

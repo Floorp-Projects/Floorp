@@ -2604,7 +2604,8 @@ function AttachmentBucketClicked(event)
     goDoCommand('cmd_attachFile');
 }
 
-var attachmentBucketObserver = {
+// we can drag and drop addresses, files, messages and urls into the compose envelope
+var envelopeDragObserver = {
 
   canHandleMultipleItems: true,
 
@@ -2622,6 +2623,8 @@ var attachmentBucketObserver = {
         var prettyName;
         var rawData = item.data;
         
+        // We could be dropping an attachment OR an address, check and do the right thing..
+
         if (item.flavour.contentType == "text/x-moz-url" ||
             item.flavour.contentType == "text/x-moz-message" ||
             item.flavour.contentType == "application/x-moz-file")
@@ -2676,22 +2679,28 @@ var attachmentBucketObserver = {
               attachment.url = rawData;
               attachment.name = prettyName;
               AddAttachment(attachment);
+  
+              var attachmentBox = document.getElementById("attachments-box");
+              attachmentBox.hidden = false;
+              document.getElementById("attachmentbucket-sizer").hidden=false;
             }
           }
+        }
+        else if (item.flavour.contentType == "text/x-moz-address")
+        {
+          // process the address
+          if (rawData)
+            DropRecipient(aEvent.target, rawData);
         }
       }
     },
 
   onDragOver: function (aEvent, aFlavour, aDragSession)
     {
-      var attachmentBucket = document.getElementById("attachmentBucket");
-      attachmentBucket.setAttribute("dragover", "true");
     },
 
   onDragExit: function (aEvent, aDragSession)
     {
-      var attachmentBucket = document.getElementById("attachmentBucket");
-      attachmentBucket.removeAttribute("dragover");
     },
 
   getSupportedFlavours: function ()
@@ -2700,6 +2709,7 @@ var attachmentBucketObserver = {
       flavourSet.appendFlavour("text/x-moz-url");
       flavourSet.appendFlavour("text/x-moz-message");
       flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
+      flavourSet.appendFlavour("text/x-moz-address");      
       return flavourSet;
     }
 };
