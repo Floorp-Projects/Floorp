@@ -56,7 +56,7 @@ imgContainer::~imgContainer()
 NS_IMETHODIMP imgContainer::Init(nscoord aWidth, nscoord aHeight, imgIContainerObserver *aObserver)
 {
   if (aWidth <= 0 || aHeight <= 0) {
-    printf("error - negative image size\n");
+    NS_WARNING("error - negative image size\n");
     return NS_ERROR_FAILURE;
   }
 
@@ -245,8 +245,6 @@ NS_IMETHODIMP imgContainer::StartAnimation()
   if (mTimer)
     return NS_OK;
 
-  printf("imgContainer::StartAnimation()\n");
-
   PRUint32 numFrames;
   this->GetNumFrames(&numFrames);
 
@@ -289,10 +287,7 @@ NS_IMETHODIMP imgContainer::StopAnimation()
   if (!mTimer)
     return NS_OK;
 
-  printf("gfxImageContainer::StopAnimation()\n");
-
-  if (mTimer)
-    mTimer->Cancel();
+  mTimer->Cancel();
   
   mTimer = nsnull;
 
@@ -319,16 +314,12 @@ NS_IMETHODIMP_(void) imgContainer::Notify(nsITimer *timer)
 {
   NS_ASSERTION(mTimer == timer, "uh");
 
-  printf("timer callback\n");
-  
   if(!mAnimating)
     return;
   
   nsCOMPtr<gfxIImageFrame> nextFrame;
   PRInt32 timeout = 100;
       
-  printf("timer callback\n");
-  
   // If we're done decoding the next frame, go ahead and display it now and reinit
   // the timer with the next frame's delay time.
   PRUint32 previousAnimationFrame = mCurrentAnimationFrame;
@@ -366,7 +357,7 @@ NS_IMETHODIMP_(void) imgContainer::Notify(nsITimer *timer)
     nextFrame->GetTimeout(&timeout);
   }
   
-  printf("timer callback; timeout = %d, mCurrentAnimationFrame = %d\n", timeout, mCurrentAnimationFrame);
+  //  printf("timer callback; timeout = %d, mCurrentAnimationFrame = %d\n", timeout, mCurrentAnimationFrame);
   if(mTimer) mTimer->SetDelay(timeout);
     
   //XXX update the composited frame
@@ -375,8 +366,9 @@ NS_IMETHODIMP_(void) imgContainer::Notify(nsITimer *timer)
     nsCOMPtr<gfxIImageFrame> frameToUse;
     DoComposite(getter_AddRefs(frameToUse), &dirtyRect, previousAnimationFrame, mCurrentAnimationFrame);
     
-      printf("x=%d, y=%d, w=%d, h=%d\n", dirtyRect.x, dirtyRect.y,
-         dirtyRect.width, dirtyRect.height);
+    /*      printf("x=%d, y=%d, w=%d, h=%d\n", dirtyRect.x, dirtyRect.y,
+            dirtyRect.width, dirtyRect.height);
+    */
 
     // do notification to FE to draw this frame, but hand it the compositing frame
     if (mObserver)

@@ -30,17 +30,17 @@ extern PRLogModuleInfo *gImgLog;
 
 class LogScope {
 public:
-  LogScope(PRLogModuleInfo *log, void *from, const nsAReadableCString &fn) :
-    mLog(log), mFrom(from), mFunc(fn)
+  LogScope(PRLogModuleInfo *aLog, void *from, const nsAReadableCString &fn) :
+    mLog(aLog), mFrom(from), mFunc(fn)
   {
     PR_LOG(mLog, PR_LOG_DEBUG, ("[this=%p] %s {ENTER}\n",
                                    mFrom, mFunc.get()));
   }
 
   /* const char * constructor */
-  LogScope(PRLogModuleInfo *log, void *from, const nsAReadableCString &fn,
+  LogScope(PRLogModuleInfo *aLog, void *from, const nsAReadableCString &fn,
            const nsLiteralCString &paramName, const char *paramValue) :
-    mLog(log), mFrom(from), mFunc(fn)
+    mLog(aLog), mFrom(from), mFunc(fn)
   {
     PR_LOG(mLog, PR_LOG_DEBUG, ("[this=%p] %s (%s=\"%s\") {ENTER}\n",
                                    mFrom, mFunc.get(),
@@ -49,9 +49,9 @@ public:
   }
 
   /* void ptr constructor */
-  LogScope(PRLogModuleInfo *log, void *from, const nsAReadableCString &fn,
+  LogScope(PRLogModuleInfo *aLog, void *from, const nsAReadableCString &fn,
            const nsLiteralCString &paramName, const void *paramValue) :
-    mLog(log), mFrom(from), mFunc(fn)
+    mLog(aLog), mFrom(from), mFunc(fn)
   {
     PR_LOG(mLog, PR_LOG_DEBUG, ("[this=%p] %s (%s=%p) {ENTER}\n",
                                    mFrom, mFunc.get(),
@@ -60,9 +60,9 @@ public:
   }
 
   /* PRInt32 constructor */
-  LogScope(PRLogModuleInfo *log, void *from, const nsAReadableCString &fn,
+  LogScope(PRLogModuleInfo *aLog, void *from, const nsAReadableCString &fn,
            const nsLiteralCString &paramName, PRInt32 paramValue) :
-    mLog(log), mFrom(from), mFunc(fn)
+    mLog(aLog), mFrom(from), mFunc(fn)
   {
     PR_LOG(mLog, PR_LOG_DEBUG, ("[this=%p] %s (%s=\"%d\") {ENTER}\n",
                                    mFrom, mFunc.get(),
@@ -71,9 +71,9 @@ public:
   }
 
   /* PRUint32 constructor */
-  LogScope(PRLogModuleInfo *log, void *from, const nsAReadableCString &fn,
+  LogScope(PRLogModuleInfo *aLog, void *from, const nsAReadableCString &fn,
            const nsLiteralCString &paramName, PRUint32 paramValue) :
-    mLog(log), mFrom(from), mFunc(fn)
+    mLog(aLog), mFrom(from), mFunc(fn)
   {
     PR_LOG(mLog, PR_LOG_DEBUG, ("[this=%p] %s (%s=\"%d\") {ENTER}\n",
                                    mFrom, mFunc.get(),
