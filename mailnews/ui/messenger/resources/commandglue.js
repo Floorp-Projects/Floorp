@@ -77,7 +77,7 @@ function MsgAccountManager()
 {
   var appCore = FindMsgAppCore();
   if (appCore != null) {
-    dump('Opening account manager..');
+    dump('Opening account manager..\n');
     appCore.AccountManager(window);
   }
 }
