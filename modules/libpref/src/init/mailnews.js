@@ -134,7 +134,7 @@ pref("mail.addr_book.quicksearchquery.format","?(or(PrimaryEmail,c,@V)(DisplayNa
 //0=displayname, 1=lastname first, 2=firstname first
 pref("mail.addr_book.lastnamefirst", 0); 
 pref("mail.addr_book.displayName.autoGeneration", true);
-pref("mail.addr_book.displayName.lastnamefirst", false); // generate display names in last first order
+pref("mail.addr_book.displayName.lastnamefirst", "chrome://messenger/locale/messenger.properties");
 pref("mail.addr_book.show_phonetic_fields", "chrome://messenger/locale/messenger.properties");
 pref("mail.attach_vcard",                   false);
 pref("mail.html_compose",                   true);
