@@ -54,7 +54,7 @@
   <!-- </radiogroup> -->
   <colorpicker id="ColorPicker" palettename="standard" 
     persist="palettename"
-    onclick="SelectColor()"/>
+    oncommand="SelectColor();"/>
 <!-- Web palette is not implemented???
   <box valign="middle" autostretch="never">
     <text class="label" value="&palette.label;"/>
@@ -67,7 +67,7 @@
     <stack valign="middle" autostretch="never">
       <button id="LastPickedButton" class="dialog" value="&lastPickedColor.label;" 
         style="margin-left:0px; margin-right: 0px;"
-        onclick="SelectLastPickedColor()"/>
+        oncommand="SelectLastPickedColor();"/>
       <box style="margin-left: 5px"  mousethrough="always">
         <box orient="vertical" autostretch="never">
           <spring flex="1"/>
