@@ -2093,10 +2093,11 @@ NS_IMETHODIMP
 //  After considerable work, we may have a schema type and a size.
   
   nsCOMPtr<nsIWritableVariant> result = do_CreateInstance(NS_VARIANT_CONTRACTID, &rc);
+  PRInt32 i;
 
 #define DECODE_ARRAY(XPType, VTYPE, iid, Convert, Free) \
       XPType* a = new XPType[size];\
-      for (PRInt32 i = 0; i < size; i++) a[i] = 0;\
+      for (i = 0; i < size; i++) a[i] = 0;\
       nsCOMPtr<nsIDOMElement> child;\
       nsSOAPUtils::GetFirstChildElement(aSource, getter_AddRefs(child));\
       PRUint32 next = offset;\
@@ -2183,13 +2184,13 @@ NS_IMETHODIMP
         return rc;
       if (typevalue != nsISchemaType::SCHEMA_TYPE_COMPLEX) {//  Simple == string
         DECODE_ARRAY(PRUnichar*,WCHAR_STR,nsnull,rc = v->GetAsWString(a + p);if(NS_FAILED(rc))break;,
-                      for (PRInt32 i = 0; i < size; i++) nsMemory::Free(a[i]););
+                      for (i = 0; i < size; i++) nsMemory::Free(a[i]););
         unhandled = PR_FALSE;
       }
     }
     if (unhandled) {  //  Handle all the other cases as variants.
       DECODE_ARRAY(nsIVariant*,INTERFACE,&NS_GET_IID(nsIVariant),a[p] = v;,
-                      for (PRInt32 i = 0; i < size; i++) a[i]->Release(););
+                      for (i = 0; i < size; i++) a[i]->Release(););
     }
   }
   if (NS_FAILED(rc))\
