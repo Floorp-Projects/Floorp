@@ -75,7 +75,6 @@ calendarView.prototype = {
         this.goToDay(today);
     },
 
-    /*
     goToDay: function(date) {
 
     },
@@ -86,11 +85,20 @@ calendarView.prototype = {
 
     goToPrevious: function() {
     },
-    */
 
     
     /* protected stuff */
-
+    removeElementsByAttribute: function(attributeName, attributeValue) {
+        var liveList = document.getElementsByAttribute(attributeName, attributeValue);
+        // Delete in reverse order.  Moz1.8+ getElementsByAttribute list is
+        // 'live', so when an element is deleted the indexes of later elements
+        // change, but in Moz1.7- list is 'dead'.  Reversed order works with both.
+        for (var i = liveList.length - 1; i >= 0; i--) {
+            var element = liveList.item(i);
+            if (element.parentNode != null) 
+                element.parentNode.removeChild(element);
+        }
+    },
 
 
     /* private stuff */
