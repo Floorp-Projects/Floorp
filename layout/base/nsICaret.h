@@ -67,8 +67,7 @@ class StCaretHider
 {
 public:
                StCaretHider(nsIPresShell* aPresShell)
-               :  mPresShell(nsnull)
-               ,  mWasVisible(PR_FALSE)
+               : mWasVisible(PR_FALSE), mPresShell(nsnull)
                {
                  mPresShell = aPresShell;		// addrefs
                  if (mPresShell)
