@@ -44,7 +44,7 @@ nsDeque::nsDeque(nsDequeFunctor* aDeallocator) {
  */
 nsDeque::~nsDeque() {
 //  char buffer[30];
-  printf("Capacity: %i\n",mCapacity);
+//  printf("Capacity: %i\n",mCapacity);
 
   static int mCaps[15] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
   switch(mCapacity) {
