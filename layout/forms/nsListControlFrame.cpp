@@ -51,6 +51,7 @@
 #include "nsIDOMHTMLCollection.h" 
 #include "nsIDOMNSHTMLOptionCollectn.h"
 #include "nsIDOMHTMLSelectElement.h" 
+#include "nsIDOMNSHTMLSelectElement.h" 
 #include "nsIDOMHTMLOptionElement.h" 
 #include "nsIComboboxControlFrame.h"
 #include "nsIViewManager.h"
@@ -82,6 +83,8 @@
 #endif
 #include "nsISelectElement.h"
 #include "nsIPrivateDOMEvent.h"
+#include "nsCSSRendering.h"
+#include "nsILookAndFeel.h"
 
 // Timer Includes
 #include "nsITimer.h"
@@ -94,7 +97,9 @@ const PRInt32 kNothingSelected          = -1;
 const PRInt32 kMaxZ                     = 0x7fffffff; //XXX: Shouldn't there be a define somewhere for MaxInt for PRInt32
 const PRInt32 kNoSizeSpecified          = -1;
 
-// We now use the :checked pseudoclass for the option selected state
+
+nsListControlFrame * nsListControlFrame::mFocused = nsnull;
+
 
 //---------------------------------------------------------
 nsresult
@@ -519,6 +524,164 @@ nsListControlFrame::Paint(nsIPresContext*      aPresContext,
 
   DO_GLOBAL_REFLOW_COUNT_DSP("nsListControlFrame", &aRenderingContext);
   return NS_OK;
+
+}
+
+void nsListControlFrame::PaintFocus(nsIRenderingContext& aRC, nsFramePaintLayer aWhichLayer)
+{
+  if (NS_FRAME_PAINT_LAYER_FOREGROUND != aWhichLayer) return;
+
+  if (mFocused != this) return;
+
+  PRInt32 focusedIndexed = mEndSelectionIndex;
+  PRInt32 selectedIndex  = mEndSelectionIndex;
+  GetSelectedIndex(&selectedIndex);
+
+  if (focusedIndexed == kNothingSelected) {
+    focusedIndexed = selectedIndex;
+  }
+  nsIScrollableView * scrollableView;
+  GetScrollableView(scrollableView);
+  if (!scrollableView) return;
+
+  nsCOMPtr<nsIPresShell> presShell;
+  mPresContext->GetShell(getter_AddRefs(presShell));
+  if (!presShell) return;
+
+  nsIFrame* containerFrame;
+  GetOptionsContainer(mPresContext, &containerFrame);
+  if (!containerFrame) return;
+
+  nsIFrame * childframe = nsnull;
+  nsresult result = NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIContent> focusedContent;
+
+  // If we have a selected index then get that child frame
+  if (focusedIndexed != kNothingSelected) {
+    focusedContent = getter_AddRefs(GetOptionContent(focusedIndexed));
+    // otherwise we find the focusedContent's frame and scroll to it
+    if (focusedContent) {
+      result = presShell->GetPrimaryFrameFor(focusedContent, &childframe);
+    }
+  } else {
+    // Since there isn't a selected item we need to show a focus ring around the first
+    // non-disabled item and skip all the option group elements (nodes)
+    nsCOMPtr<nsIDOMNode> node;
+
+    nsCOMPtr<nsIDOMNSHTMLSelectElement> selectNSElement(do_QueryInterface(mContent));
+    NS_ASSERTION(selectNSElement, "Can't be null");
+
+    nsCOMPtr<nsISelectElement> selectElement(do_QueryInterface(mContent));
+    NS_ASSERTION(selectElement, "Can't be null");
+
+    nsCOMPtr<nsIDOMHTMLSelectElement> selectHTMLElement(do_QueryInterface(mContent));
+    NS_ASSERTION(selectElement, "Can't be null");
+
+    PRUint32 length;
+    selectHTMLElement->GetLength(&length);
+    if (length) {
+      // find the first non-disabled item
+      PRBool isDisabled = PR_TRUE;
+      for (PRInt32 i=0;i<PRInt32(length) && isDisabled;i++) {
+        if (NS_FAILED(selectNSElement->Item(i, getter_AddRefs(node))) || !node) {
+          break;
+        }
+        if (NS_FAILED(selectElement->IsOptionDisabled(i, &isDisabled))) {
+          break;
+        }
+        if (isDisabled) {
+          node = nsnull;
+        } else {
+          break;
+        }
+      }
+      if (!node) {
+        return;
+      }
+    }
+
+    // if we found a node use, if not get the first child (this is for empty selects)
+    if (node) {
+      focusedContent = do_QueryInterface(node);
+      result = presShell->GetPrimaryFrameFor(focusedContent, &childframe);
+    }
+    if (!childframe) {
+      // The only way we can get right here is that there are no options
+      // and we need to get the dummy frame so it has the focus ring
+      result = containerFrame->FirstChild(mPresContext, nsnull, &childframe);
+    }
+  }
+
+  if (NS_FAILED(result) || !childframe) return;
+
+  const nsIView * clippedView;
+  scrollableView->GetClipView(&clippedView);
+  if (!clippedView) return;
+
+  nscoord x;
+  nscoord y;
+  scrollableView->GetScrollPosition(x,y);
+  // get the clipped rect
+  nsRect rect;
+  clippedView->GetBounds(rect);
+
+  // now move it by the offset of the scroll position
+  rect.x = 0;
+  rect.y = 0;
+  rect.MoveBy(x,y);
+
+  // get the child rect
+  nsRect fRect;
+  childframe->GetRect(fRect);
+
+  nsRect clipRect;
+  containerFrame->GetRect(clipRect);
+  clipRect.x = 0;
+  clipRect.y = 0;
+
+  PRBool clipEmpty;
+  aRC.PushState();
+  aRC.SetClipRect(clipRect, nsClipCombine_kReplace, clipEmpty);
+
+  // adjust position is it is a child of a option group
+  if (focusedContent) {
+    nsRect optRect(0,0,0,0);
+    nsCOMPtr<nsIContent> parentContent;
+    focusedContent->GetParent(*getter_AddRefs(parentContent));
+    nsCOMPtr<nsIDOMHTMLOptGroupElement> optGroup(do_QueryInterface(parentContent));
+    if (optGroup) {
+      nsIFrame * optFrame;
+      result = presShell->GetPrimaryFrameFor(parentContent, &optFrame);
+      if (NS_SUCCEEDED(result) && optFrame) {
+        optFrame->GetRect(optRect);
+      }
+    }
+    fRect.y += optRect.y;
+  }
+
+  // set up back stop colors and then ask L&F service for the real colors
+  nscolor color = focusedIndexed >= 0 ? NS_RGB(245,219,149) : NS_RGB(0,0,0);
+  nsCOMPtr<nsILookAndFeel> lookAndFeel;
+  mPresContext->GetLookAndFeel(getter_AddRefs(lookAndFeel));
+  if (selectedIndex != focusedIndexed) {
+    lookAndFeel->GetColor(nsILookAndFeel::eColor_WidgetSelectBackground, color);
+  } else if (lookAndFeel) {
+    lookAndFeel->GetColor(focusedIndexed >= 0?nsILookAndFeel::eColor_WidgetSelectForeground:nsILookAndFeel::eColor_WidgetSelectBackground, color);
+  }
+
+  float p2t;
+  mPresContext->GetScaledPixelsToTwips(&p2t);
+  nscoord onePixelInTwips = NSToCoordRound(p2t);
+
+  nsRect dirty;
+  nscolor colors[] = {color, color, color, color};
+  PRUint8 borderStyle[] = {NS_STYLE_BORDER_STYLE_DOTTED, NS_STYLE_BORDER_STYLE_DOTTED, NS_STYLE_BORDER_STYLE_DOTTED, NS_STYLE_BORDER_STYLE_DOTTED};
+  nsRect innerRect = fRect;
+  innerRect.Deflate(nsSize(onePixelInTwips, onePixelInTwips));
+  nsCSSRendering::DrawDashedSides(0, aRC, dirty, borderStyle, colors, fRect, innerRect, 0, nsnull);
+
+  aRC.PopState(clipEmpty);
 
 }
 
@@ -1831,7 +1994,18 @@ nsListControlFrame::GetName(nsAString* aResult)
 void 
 nsListControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 {
-  // XXX:TODO Make set focus work
+  if (aOn) {
+    PRInt32 selectedIndex;
+    GetSelectedIndex(&selectedIndex);
+    ScrollToIndex(selectedIndex);
+    mFocused = this;
+  } else {
+    mFocused = nsnull;
+  }
+
+  // Make sure the SelectArea frame gets painted
+  Invalidate(mPresContext, nsRect(0,0,mRect.width,mRect.height), PR_TRUE);
+
 }
 
 //---------------------------------------------------------
@@ -3311,6 +3485,10 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
       presShell->FlushPendingNotifications(PR_FALSE);
     }
     REFLOW_DEBUG_MSG2("  After: %d\n", newIndex);
+
+    // Make sure the SelectArea frame gets painted
+    Invalidate(mPresContext, nsRect(0,0,mRect.width,mRect.height), PR_TRUE);
+
   } else {
     REFLOW_DEBUG_MSG("  After: SKIPPED it\n");
   }

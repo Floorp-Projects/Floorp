@@ -56,6 +56,11 @@ public:
   
   NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext, const nsPoint& aPoint, nsFramePaintLayer aWhichLayer, nsIFrame** aFrame);
 
+  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
+                   nsIRenderingContext& aRenderingContext,
+                   const nsRect&        aDirtyRect,
+                   nsFramePaintLayer    aWhichLayer,
+                   PRUint32             aFlags = 0);
 protected:
   PRBool IsOptionElement(nsIContent* aContent);
   PRBool IsOptionElementFrame(nsIFrame *aFrame);
