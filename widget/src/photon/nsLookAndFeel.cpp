@@ -247,7 +247,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     aMetric = 1;
     break;
   case eMetric_Widget3DBorder:
-    aMetric = 4;
+    aMetric = 2;
     break;
   case eMetric_TextFieldHeight:
   	aMetric = 20;
@@ -296,22 +296,15 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     break;
   case eMetric_SingleLineCaretWidth:
   case eMetric_MultiLineCaretWidth:
-    aMetric = 1;
+    aMetric = 2;
     break;
-  case eMetric_ShowCaretDuringSelection:
-      aMetric = 0;
-      break;
-  case eMetric_SelectTextfieldsOnKeyFocus:
-      // Do not select textfield content when focused by kbd
-      // used by nsEventStateManager::sTextfieldSelectModel
-      aMetric = 0;
-      break;
   case eMetric_SubmenuDelay:
     aMetric = 200;
     break;
-  case eMetric_DragFullWindow:
-	aMetric = 1;
-	break;
+	case eMetric_DragFullWindow:
+		aMetric = 1;
+		break;
+
   default:
     aMetric = -1;
     res     = NS_ERROR_FAILURE;

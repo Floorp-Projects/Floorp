@@ -41,7 +41,6 @@
 #include "nsClipboard.h"
 #include "nsIRegion.h"
 #include "nsVoidArray.h"
-#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsPrimitiveHelpers.h"
 #include "nsCOMPtr.h"
@@ -61,6 +60,7 @@ NS_IMPL_QUERY_INTERFACE2(nsDragService, nsIDragService, nsIDragSession)
 //-------------------------------------------------------------------------
 nsDragService::nsDragService()
 {
+	NS_INIT_ISUPPORTS();
   mDndWidget = nsnull;
   mDndEvent = nsnull;
 	mNativeCtrl = nsnull;

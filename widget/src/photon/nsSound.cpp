@@ -55,6 +55,7 @@ NS_IMPL_ISUPPORTS2(nsSound, nsISound, nsIStreamLoaderObserver);
 ////////////////////////////////////////////////////////////////////////
 nsSound::nsSound()
 {
+	NS_INIT_ISUPPORTS();
   mInited = PR_FALSE;
 }
 
@@ -62,7 +63,7 @@ nsSound::~nsSound()
 {
 }
 
-NS_IMETHODIMP nsSound::Init()
+nsresult nsSound::Init()
 {
   if (mInited) return NS_OK;
 
