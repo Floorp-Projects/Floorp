@@ -28,30 +28,35 @@
 
 //Interfaces Needed
 #include "nsISHistory.h"
+#include "nsISHistoryInternal.h"
 #include "nsISHTransaction.h"
 #include "nsIWebNavigation.h"
 #include "nsIWeakReference.h"
+#include "nsISimpleEnumerator.h"
 
 class nsIDocShell;
-
+class nsSHEnumerator;
 class nsSHistory: public nsISHistory,
+                  public nsISHistoryInternal,
                   public nsIWebNavigation
 {
 public:
 	nsSHistory();
 
-	NS_DECL_ISUPPORTS
-	NS_DECL_NSISHISTORY
-	NS_DECL_NSIWEBNAVIGATION
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSISHISTORY
+  NS_DECL_NSISHISTORYINTERNAL
+  NS_DECL_NSIWEBNAVIGATION
 
   NS_IMETHOD Init();
 
 protected:
-   virtual ~nsSHistory();
-
+  virtual ~nsSHistory();
+  friend class nsSHEnumerator;
 
    // Could become part of nsIWebNavigation
    NS_IMETHOD PrintHistory();
+   NS_IMETHOD GetEntryAtIndex(PRInt32 aIndex, PRBool aModifyIndex, nsISHEntry** aResult);
    NS_IMETHOD GetTransactionAtIndex(PRInt32 aIndex, nsISHTransaction ** aResult);
    PRBool CompareSHEntry(nsISHEntry * prevEntry, nsISHEntry * nextEntry, nsIDocShell * rootDocShell,
 	                     nsIDocShell ** aResultDocShell, nsISHEntry ** aResultSHEntry);
@@ -66,6 +71,26 @@ protected:
   // Weak reference. Do not refcount this.
   nsIDocShell *  mRootDocShell;
 };
+//*****************************************************************************
+//***    nsSHEnumerator: Object Management
+//*****************************************************************************
+class nsSHEnumerator : public nsISimpleEnumerator
+{
+public:
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSISIMPLEENUMERATOR
+
+  nsSHEnumerator(nsSHistory *  aHistory);
+  
+protected:
+  friend class nsSHistory;
+  virtual ~nsSHEnumerator();
+private:
+  PRInt32     mIndex;
+  nsSHistory *  mSHistory;
+};
+
 
 
 #endif   /* nsSHistory */
