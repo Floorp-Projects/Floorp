@@ -1138,7 +1138,7 @@ nsProfile::SetCurrentProfile(const PRUnichar * aCurrentProfile)
     NS_NAMED_LITERAL_STRING(switchString, "switch");
     NS_NAMED_LITERAL_STRING(startupString, "startup");
     const nsAFlatString& context = isSwitch ? switchString : startupString;
-
+    
     if (isSwitch)
     {
         // Phase 1: See if anybody objects to the profile being changed.
@@ -1147,7 +1147,10 @@ nsProfile::SetCurrentProfile(const PRUnichar * aCurrentProfile)
         if (mProfileChangeVetoed)
             return NS_OK;
 
-        // Phase 2: Send the "teardown" notification
+        // Phase 2a: Send the network teardown notification
+        observerService->NotifyObservers(subject, "profile-change-net-teardown", context.get());
+
+        // Phase 2b: Send the "teardown" notification
         observerService->NotifyObservers(subject, "profile-change-teardown", context.get());
         
         // Phase 3: Notify observers of a profile change
@@ -1174,6 +1177,9 @@ nsProfile::SetCurrentProfile(const PRUnichar * aCurrentProfile)
     {
         rv = UndefineFileLocations();
         NS_ASSERTION(NS_SUCCEEDED(rv), "Could not undefine file locations");
+
+        // Bring network back online
+        observerService->NotifyObservers(subject, "profile-change-net-restore", context.get());
     }
 
     // Phase 4: Notify observers that the profile has changed - Here they respond to new profile
