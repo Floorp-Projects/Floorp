@@ -20,7 +20,6 @@
 #include "nsRegionWin.h"
 #include <math.h>
 #include "libimg.h"
-#include "il_util.h"
 
 #define FLAG_CLIP_VALID       0x0001
 #define FLAG_CLIP_CHANGED     0x0002
