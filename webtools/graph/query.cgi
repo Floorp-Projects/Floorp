@@ -1,4 +1,5 @@
 #!/usr/bin/perl
+# -*- Mode: perl; indent-tabs-mode: nil -*-
 use CGI::Carp qw(fatalsToBrowser);
 use CGI::Request;
 use Date::Calc qw(Add_Delta_Days);  # http://www.engelschall.com/u/sb/download/Date-Calc/
