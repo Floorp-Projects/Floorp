@@ -3690,6 +3690,11 @@ HTMLContentSink::ProcessStyleLink(nsIHTMLContent* aElement,
 {
   nsresult result = NS_OK;
 
+  if (aHref.IsEmpty()) {
+    // if href is empty then just bail
+    return result;
+  }
+
   nsStringArray linkTypes;
   ParseLinkTypes(aRel, linkTypes);
   PRBool isAlternate = PR_FALSE;
@@ -3847,7 +3852,9 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
           media.ToLowerCase(); // HTML4.0 spec is inconsistent, make it case INSENSITIVE
         }
       }
-      result = ProcessStyleLink(element, href, rel, title, type, media);
+      if (0 < href.Length()) {
+        result = ProcessStyleLink(element, href, rel, title, type, media);
+      }
     }
     NS_RELEASE(element);
   }
