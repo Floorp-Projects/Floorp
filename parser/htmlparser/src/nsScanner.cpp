@@ -1156,7 +1156,7 @@ nsresult nsScanner::ReadWhile(nsString& aString,
  *  @return  error code
  */
 nsresult nsScanner::ReadUntil(nsAWritableString& aString,
-                              const nsAReadableString& aTerminalSet,
+                              const nsAFlatString& aTerminalSet,
                               PRBool addTerminal)
 {  
   if (!mSlidingBuffer) {
@@ -1165,27 +1165,31 @@ nsresult nsScanner::ReadUntil(nsAWritableString& aString,
 
   PRUnichar         theChar=0;
   nsresult          result=Peek(theChar);
-  nsReadingIterator<PRUnichar> origin, current, end, setstart, setend;
+  nsReadingIterator<PRUnichar> origin, current, end;
+  const PRUnichar* setstart = aTerminalSet.get();
+  const PRUnichar* setcurrent;
 
   origin = mCurrentPosition;
   current = origin;
   end = mEndPosition;
 
   while(current != end) {
- 
+    setcurrent = setstart;
     theChar=*current;
     if(theChar) {
-      aTerminalSet.BeginReading(setstart);
-      aTerminalSet.EndReading(setend);
-      if (FindCharInReadable(theChar, setstart, setend)) {
-        if(addTerminal)
-          current++;
-        AppendUnicodeTo(origin, current, aString);
-        break;
-      }     
+      while (*setcurrent) {
+        if (*setcurrent == theChar) {
+          if(addTerminal)
+            current++;
+          AppendUnicodeTo(origin, current, aString);
+          goto found;
+        }
+        setcurrent++;
+      }
     }
     current++;
   }
+found:
 
   SetPosition(current);
   if (current == end) {
@@ -1210,7 +1214,7 @@ nsresult nsScanner::ReadUntil(nsAWritableString& aString,
  *  @return  error code
  */
 nsresult nsScanner::ReadUntil(nsAWritableString& aString,
-                              const nsAReadableCString& aTerminalSet,
+                              const nsAFlatCString& aTerminalSet,
                               PRBool addTerminal)
 {
   if (!mSlidingBuffer) {
@@ -1220,27 +1224,30 @@ nsresult nsScanner::ReadUntil(nsAWritableString& aString,
   PRUnichar         theChar=0;
   nsresult          result=Peek(theChar);
   nsReadingIterator<PRUnichar> origin, current, end;
-  nsReadingIterator<char> setstart, setend;
+  const char* setstart = aTerminalSet.get();
+  const char* setcurrent;
 
   origin = mCurrentPosition;
   current = origin;
   end = mEndPosition;
 
   while(current != end) {
- 
+    setcurrent = setstart;
     theChar=*current;
     if(theChar) {
-      aTerminalSet.BeginReading(setstart);
-      aTerminalSet.EndReading(setend);
-      if (FindCharInReadable(theChar, setstart, setend)) {
-        if(addTerminal)
-          current++;
-        AppendUnicodeTo(origin, current, aString);
-        break;
+      while (*setcurrent) {
+        if (*setcurrent == theChar) {
+          if(addTerminal)
+            current++;
+          AppendUnicodeTo(origin, current, aString);
+          goto found;
+        }
+        setcurrent++;
       }
     }
     current++;
   }
+found:
 
   SetPosition(current);
   if (current == end) {
@@ -1255,7 +1262,7 @@ nsresult nsScanner::ReadUntil(nsAWritableString& aString,
 
 nsresult nsScanner::ReadUntil(nsReadingIterator<PRUnichar>& aStart, 
                               nsReadingIterator<PRUnichar>& aEnd,
-                              const nsAReadableString& aTerminalSet,
+                              const nsAFlatString& aTerminalSet,
                               PRBool addTerminal)
 {
   if (!mSlidingBuffer) {
@@ -1264,28 +1271,32 @@ nsresult nsScanner::ReadUntil(nsReadingIterator<PRUnichar>& aStart,
 
   PRUnichar         theChar=0;
   nsresult          result=Peek(theChar);
-  nsReadingIterator<PRUnichar> origin, current, end, setstart, setend;
+  nsReadingIterator<PRUnichar> origin, current, end;
+  const PRUnichar* setstart = aTerminalSet.get();
+  const PRUnichar* setcurrent;
 
   origin = mCurrentPosition;
   current = origin;
   end = mEndPosition;
 
   while(current != end) {
- 
+    setcurrent = setstart;
     theChar=*current;
     if(theChar) {
-      aTerminalSet.BeginReading(setstart);
-      aTerminalSet.EndReading(setend);
-      if (FindCharInReadable(theChar, setstart, setend)) {
-        if(addTerminal)
-          current++;
-        aStart = origin;
-        aEnd = current;
-        break;
+      while (*setcurrent) {
+        if (*setcurrent == theChar) {
+          if(addTerminal)
+            current++;
+          aStart = origin;
+          aEnd = current;
+          goto found;
+        }
+        setcurrent++;
       }
     }
     current++;
   }
+found:
 
   SetPosition(current);
   if (current == end) {
