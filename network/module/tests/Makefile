@@ -38,6 +38,7 @@ EX_LIBS = \
 	$(DIST)/bin/libhttpurl.so \
 	$(DIST)/bin/libnetcache.so \
 	$(DIST)/bin/libmimetype.so \
+	$(DIST)/bin/libnetcnvts.so \
 	$(DIST)/bin/libnetwork.so \
 	$(DIST)/bin/libnetlib.so \
 	$(DIST)/bin/libnetutil.so \
@@ -49,6 +50,7 @@ EX_LIBS = \
 	$(DIST)/bin/libpref.so	\
 	$(DIST)/bin/libjs.so	\
 	$(DIST)/bin/libraptorbase.so \
+	$(DIST)/bin/libgmbaseunix.so \
 	$(DIST)/bin/libsecfree.so \
 	$(DIST)/lib/libplc21.so \
 	$(DIST)/lib/libplds21.so	\
