@@ -243,8 +243,12 @@ nsNSSComponent::GetPK11String(const PRUnichar *name, PRUint32 len)
   tmpstr = nsstr.ToNewCString();
   if (!tmpstr) return NULL;
   tmplen = strlen(tmpstr);
-  memcpy(str, tmpstr, tmplen);
-  memset(str + tmplen, ' ', len - tmplen);
+  if (len > tmplen) {
+    memcpy(str, tmpstr, tmplen);
+    memset(str + tmplen, ' ', len - tmplen);
+  } else {
+    memcpy(str, tmpstr, len);
+  }
   str[len] = '\0';
   PR_Free(tmpstr);
   return str;

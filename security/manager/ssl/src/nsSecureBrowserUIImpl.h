@@ -78,6 +78,7 @@ protected:
   
   PRBool mMixContentAlertShown;
   PRInt32 mSecurityState;
+  PRBool mFirstRequest;
 
   nsCOMPtr<nsISSLStatus> mSSLStatus;
 
