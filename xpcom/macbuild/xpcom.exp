@@ -85,6 +85,7 @@ PL_VectorFinalize
 PL_VectorInitialize
 PL_VectorDestroy
 PL_NewVector
+GetGlobalServiceManager__16nsServiceManagerFPP17nsIServiceManager		# nsServiceManager::GetGlobalServiceManager(nsIServiceManager**)
 
 # GetFactory call
 NSGetFactory
