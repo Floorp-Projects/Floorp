@@ -953,6 +953,14 @@ pref_CompareStrings (const void *v1, const void *v2)
 		return strcmp(s1, s2);
 }
 
+
+PR_IMPLEMENT(PRBool)
+pref_useDefaultPrefFile(void)
+{
+  return PREF_Init("prefs.js");
+}
+
+
 /* LI_STUFF  
 this is new.  clients should use the old PREF_SavePrefFile or new PREF_SaveLIPrefFile.  
 This is called by them and does the right thing.  
@@ -1131,7 +1139,7 @@ PrefResult pref_GetCharPref(const char *pref_name, char * return_buffer, int * l
 	
 	PrefNode* pref;
 
-	if (!m_HashTable)
+	if (!m_HashTable && !pref_useDefaultPrefFile())
 		return PREF_NOT_INITIALIZED;
 
 	pref = (PrefNode*) PR_HashTableLookup(m_HashTable, pref_name);
@@ -1164,7 +1172,7 @@ PrefResult pref_CopyCharPref(const char *pref_name, char ** return_buffer, PRBoo
 	char* stringVal;	
 	PrefNode* pref;
 
-	if (!m_HashTable)
+	if (!m_HashTable && !pref_useDefaultPrefFile())
 		return PREF_NOT_INITIALIZED;
 
 	pref = (PrefNode*) PR_HashTableLookup(m_HashTable, pref_name);
@@ -1188,7 +1196,7 @@ PrefResult pref_GetIntPref(const char *pref_name,int32 * return_int, PRBool get_
 	PrefResult result = PREF_ERROR;	
 	PrefNode* pref;
 
-	if (!m_HashTable)
+	if (!m_HashTable && !pref_useDefaultPrefFile())
 		return PREF_NOT_INITIALIZED;
 
 	pref = (PrefNode*) PR_HashTableLookup(m_HashTable, pref_name);
@@ -1207,7 +1215,7 @@ PrefResult pref_GetBoolPref(const char *pref_name, XP_Bool * return_value, PRBoo
 	PrefResult result = PREF_ERROR;
 	PrefNode* pref;
 
-	if (!m_HashTable)
+	if (!m_HashTable && !pref_useDefaultPrefFile())
 		return PREF_NOT_INITIALIZED;
 
 	pref = (PrefNode*) PR_HashTableLookup(m_HashTable, pref_name);	
@@ -1691,7 +1699,7 @@ PrefResult pref_HashPref(const char *key, PrefValue value, PrefType type, PrefAc
 	PrefNode* pref;
 	PrefResult result = PREF_OK;
 
-	if (!m_HashTable)
+	if (!m_HashTable && !pref_useDefaultPrefFile())
 		return PREF_NOT_INITIALIZED;
 
 	pref = (PrefNode*) PR_HashTableLookup(m_HashTable, key);
