@@ -1587,7 +1587,7 @@ NS_IMETHODIMP mozXMLTermSession::ProcessOutput(const nsString& aString,
         if (strLen < 100000) {
           mFragmentBuffer += aString;
           if (newline)
-            mFragmentBuffer += '\n';
+            mFragmentBuffer += PRUnichar('\n');
 
         } else {
           mOutputMarkupType = OVERFLOW_FRAGMENT;
@@ -1892,7 +1892,7 @@ NS_IMETHODIMP mozXMLTermSession::AppendOutput(const nsString& aString,
     if (newline) {
       // Complete line; append to buffer
       if (mPreTextBufferLines > 0) {
-        mPreTextBuffered += '\n';
+        mPreTextBuffered += PRUnichar('\n');
       }
       mPreTextBufferLines++;
       mPreTextBuffered += mPreTextIncomplete;
