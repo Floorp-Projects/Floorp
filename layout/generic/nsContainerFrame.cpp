@@ -642,12 +642,11 @@ SyncFrameViewGeometryDependentProperties(nsPresContext*  aPresContext,
   // - 'clip' which only applies to absolutely positioned elements, and is
   //    relative to the element's border edge. 'clip' applies to the entire
   //    element
-  // - 'overflow-clip' which only applies to block-level elements and replaced
-  //   elements that have 'overflow' set to 'hidden'. 'overflow-clip' is relative
-  //   to the content area and applies to content only (not border or background).
-  //   Note that out-of-flow frames like floated or absolutely positioned frames
-  //   are block-level, but we can't rely on the 'display' value being set correctly
-  //   in the style context...
+  // - 'overflow:-moz-hidden-unscrollable' which only applies to
+  //    block-level elements and replaced elements. Note
+  //    that out-of-flow frames like floated or absolutely positioned
+  //    frames are block-level, but we can't rely on the 'display' value
+  //    being set correctly in the style context...
   PRBool hasClip = display->IsAbsolutelyPositioned() && (display->mClipFlags & NS_STYLE_CLIP_RECT);
   PRBool hasOverflowClip = isBlockLevel && (display->mOverflowX == NS_STYLE_OVERFLOW_CLIP);
   if (hasClip || hasOverflowClip) {
@@ -679,8 +678,6 @@ SyncFrameViewGeometryDependentProperties(nsPresContext*  aPresContext,
       const nsStylePadding* paddingStyle = aStyleContext->GetStylePadding();
 
       nsMargin border, padding;
-      // XXX We don't support the 'overflow-clip' property yet so just use the
-      // content area (which is the default value) as the clip shape
       nsRect overflowClipRect(0, 0, frameSize.width, frameSize.height);
       borderStyle->GetBorder(border);
       overflowClipRect.Deflate(border);
@@ -893,11 +890,11 @@ nsContainerFrame::FrameNeedsView(nsIFrame* aFrame)
     return PR_TRUE;
   }
 
-  // See if the frame is block-level and has 'overflow' set to 'hidden'. If
-  // so, then we need to give it a view so clipping
-  // of any child views works correctly. Note that if it's floated it is also
-  // block-level, but we can't trust that the style context 'display' value is
-  // set correctly
+  // See if the frame is block-level and has 'overflow' set to
+  // '-moz-hidden-unscrollable'. If so, then we need to give it a view
+  // so clipping of any child views works correctly. Note that if it's
+  // floated it is also block-level, but we can't trust that the style
+  // context 'display' value is set correctly.
   if ((display->IsBlockLevel() || display->IsFloating()) &&
       (display->mOverflowX == NS_STYLE_OVERFLOW_CLIP)) {
     // XXX Check for the frame being a block frame and only force a view

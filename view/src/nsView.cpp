@@ -921,8 +921,13 @@ static PRBool ApplyClipRect(const nsView* aView, nsRect* aRect, PRBool aFollowPl
         break;
       }
     }
+    // The child-clipping rect is applied to all *content* children.
+    // So we apply it if we're in the placeholder-following pass, or
+    // if we're in the first pass and we haven't detected any
+    // placeholders yet, in which case this geometric ancestor is also
+    // a content ancestor.
     const nsRect* r = parentView->GetClipChildrenToRect();
-    if (r && !aFollowPlaceholders) {
+    if (r && (!foundPlaceholders || aFollowPlaceholders)) {
       // Get the parent's clip rect into the initial aView's coordinates
       nsRect clipRect = *r;
       clipRect -= offset;
