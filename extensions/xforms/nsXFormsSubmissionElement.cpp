@@ -51,6 +51,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMText.h"
+#include "nsIDOMCDATASection.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMDocumentEvent.h"
 #include "nsIDOMEventTarget.h"
@@ -188,6 +189,33 @@ GetMimeTypeFromFile(nsIFile *file, nsCString &result)
     mime->GetTypeFromFile(file, result);
   if (result.IsEmpty())
     result.Assign("application/octet-stream");
+}
+
+static PRBool
+HasToken(const nsString &aTokenList, const nsString &aToken)
+{
+  PRInt32 i = aTokenList.Find(aToken);
+  if (i == kNotFound)
+    return PR_FALSE;
+  
+  // else, check that leading and trailing characters are either
+  // not present or whitespace (#x20, #x9, #xD or #xA).
+
+  if (i > 0)
+  {
+    PRUnichar c = aTokenList[i - 1];
+    if (!(c == 0x20 || c == 0x9 || c == 0xD || c == 0xA))
+      return PR_FALSE;
+  }
+
+  if (i + aToken.Length() < aTokenList.Length())
+  {
+    PRUnichar c = aTokenList[i + aToken.Length()];
+    if (!(c == 0x20 || c == 0x9 || c == 0xD || c == 0xA))
+      return PR_FALSE;
+  }
+
+  return PR_TRUE;
 }
 
 // structure used to store information needed to generate attachments
@@ -667,6 +695,9 @@ nsXFormsSubmissionElement::CreateSubmissionDoc(nsIDOMDocument *source,
   // XXX cdataElements contains space delimited QNames.  these may have
   //     namespace prefixes relative to our document.  we need to translate
   //     them to the corresponding namespace prefix in the source document.
+  //
+  // XXX we'll just assume that the QNames correspond to node names since
+  //     it's unclear how to resolve the namespace prefixes any other way.
 
   nsCOMPtr<nsIDOMDOMImplementation> impl;
   source->GetImplementation(getter_AddRefs(impl));
@@ -735,8 +766,37 @@ nsXFormsSubmissionElement::CopyChildren(nsIDOMNode *source, nsIDOMNode *dest,
     }
     else if (type == nsIDOMNode::TEXT_NODE)
     {
-      // XXX honor cdata-section-elements (see xslt spec section 16.1)
-      dest->AppendChild(destChild, getter_AddRefs(node));
+      // honor cdata-section-elements (see xslt spec section 16.1)
+      if (cdataElements.IsEmpty())
+      {
+        dest->AppendChild(destChild, getter_AddRefs(node));
+      }
+      else
+      {
+        sourceChild->GetParentNode(getter_AddRefs(node));
+        NS_ENSURE_STATE(node);
+
+        nsAutoString name;
+        node->GetNodeName(name);
+        // check to see if name is mentioned on cdataElements
+        if (HasToken(cdataElements, name))
+        {
+          nsCOMPtr<nsIDOMText> textNode = do_QueryInterface(destChild);
+          NS_ENSURE_STATE(textNode);
+
+          nsAutoString textData;
+          textNode->GetData(textData);
+
+          nsCOMPtr<nsIDOMCDATASection> cdataNode;
+          destDoc->CreateCDATASection(textData, getter_AddRefs(cdataNode));
+
+          dest->AppendChild(cdataNode, getter_AddRefs(node));
+        }
+        else
+        {
+          dest->AppendChild(destChild, getter_AddRefs(node));
+        }
+      }
     }
     else
     {
