@@ -30,7 +30,7 @@
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="color-dialog"
         orient="vertical" title="Security Preferences"
-        onload="parent.initPanel('chrome://pippki/content/SSLPrefs.xul');" >
+        onload="parent.initPanel('chrome://pippki/content/pref-ssl.xul');" >
 
   <!-- List elements to manage for prefs -->
   <script language="JavaScript">
@@ -92,14 +92,14 @@ Set Netscape to show a warning and ask permission before:
               prefattribute="checked"/>
     <checkbox id="warnInsecurePostFromSecure"
       label="Sending form data from a secure page to an insecure page"
-              pref="true" preftype="bool" prefstring="pip.security.warn_insecure_post_from_secure"
+              pref="true" preftype="bool" prefstring="security.warn_insecure_post_from_secure"
               prefattribute="checked" checked="true"  disabled="true"/>
     <checkbox id="warnSecureRedirect" label="Redirection from one secure site to another"
-              pref="true" preftype="bool" prefstring="pip.security.warn_secure_redirect"
+              pref="true" preftype="bool" prefstring="security.warn_secure_redirect"
               prefattribute="checked"/>
     <checkbox id="warnSecureRedirectToInsecure" 
               label="Redirection from a secure site to an insecure site"
-              pref="true" preftype="bool" prefstring="pip.security.warn_secure_redirect_to_insecure"
+              pref="true" preftype="bool" prefstring="security.warn_secure_redirect_to_insecure"
               prefattribute="checked"/>
     <checkbox id="warnViewMixed" label="Viewing a page with an encrypted/unencrypted mix"
               pref="true" preftype="bool" prefstring="security.warn_viewing_mixed"
@@ -114,7 +114,7 @@ Set Netscape to show a warning and ask permission before:
     <radiogroup id="certSelection" pref="true" preftype="string" 
 	prefstring="security.default_personal_cert" prefattribute="value">
     <radio group="certSelection" label="Select Automatically" value="Select Automatically"/>
-    <radio group="certSelection" label="Select Manually" value="Select Manually"/>
+    <radio group="certSelection" label="Ask Every Time" value="Ask Every Time"/>
     </radiogroup>
   </titledbox>
 
