@@ -720,7 +720,7 @@ void nsPrefBranch::freeObserverList(void)
         pCallback = (PrefCallbackData *)mObservers->ElementAt(i);
         if (pCallback) {
           mObserverDomains.CStringAt(i, domain);
-          PREF_UnregisterCallback(domain, NotifyObserver, pCallback);
+          PREF_UnregisterCallback(domain.get(), NotifyObserver, pCallback);
           NS_RELEASE(pCallback->pObserver);
           nsMemory::Free(pCallback);
         }
