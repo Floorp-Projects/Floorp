@@ -57,7 +57,7 @@ print STDERR "$appname\n",
 @default_dirs = (
   "$moz/embedding/tests/winEmbed",
   "$moz/embedding/tests/mfcembed",
-  "$moz/embedding/tests/gtkEmbed",
+  "$moz/embedding/browser/gtk/tests",
   "$moz/embedding/browser/activex/src/control",
   "$moz/embedding/browser/powerplant/source",
   "$moz/embedding/browser/gtk/src"
