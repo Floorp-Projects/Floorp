@@ -51,8 +51,8 @@ PRLogModuleInfo* gLoadGroupLog = nsnull;
 
 nsLoadGroup::nsLoadGroup(nsISupports* outer)
     : mDefaultLoadAttributes(nsIChannel::LOAD_NORMAL),
-      mChannels(nsnull),
-      mForegroundCount(0)
+      mForegroundCount(0),
+      mChannels(nsnull)
 {
     NS_INIT_AGGREGATED(outer);
 
