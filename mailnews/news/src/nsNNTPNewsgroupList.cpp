@@ -27,11 +27,13 @@
 #include "msgCore.h"    // precompiled header...
 #include "MailNewsTypes.h"
 
+//#define HAVE_NEWSDB
+
 #ifdef HAVE_PANES
 class MSG_Master;
 #endif
 #ifdef HAVE_NEWSDB
-class NewsGroupDB;
+class nsNewsDatabase;
 #endif
 #ifdef HAVE_DBVIEW
 class MessageDBView;
@@ -51,7 +53,8 @@ class MessageDBView;
 #include "prprf.h"
 
 #ifdef HAVE_NEWSDB
-#include "newsdb.h"
+#include "nsNewsDatabase.h"
+#include "nsDBFolderInfo.h"
 #endif
 
 #ifdef HAVE_DBVIEW
@@ -136,7 +139,7 @@ private:
   
 protected:
 #ifdef HAVE_NEWSDB
-  NewsGroupDB		*m_newsDB;
+  nsNewsDatabase	*m_newsDB;
 #endif
 #ifdef HAVE_DBVIEW
   MessageDBView	*m_msgDBView;		// open view on current download, if any
@@ -303,19 +306,19 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
 #ifdef HAVE_NEWSDB
 	if (!m_newsDB)
 	{
-		if ((err = NewsGroupDB::Open(m_url, m_master, &m_newsDB)) != NS_OK)
+		nsresult err;
+		if ((err = nsNewsDatabase::Open(m_url, NULL/* m_master */, &m_newsDB)) != NS_OK)
             {
-                if (status) *status = ConvertMsgErrToMKErr(err);
-                return NS_ERROR_NOT_INITIALIZED;
+                return err;
             }
 		else
 		{
 			m_set = m_newsDB->GetNewsArtSet();
 			m_set->SetLastMember(last_possible);	// make sure highwater mark is valid.
-			NewsFolderInfo *newsGroupInfo = m_newsDB->GetNewsFolderInfo();
+			nsDBFolderInfo *newsGroupInfo = m_newsDB->GetDBFolderInfo();
 			if (newsGroupInfo)
 			{
-				ENeoString knownArtsString;
+				nsString knownArtsString;
 				newsGroupInfo->GetKnownArtsSet(knownArtsString);
 				if (last_possible < newsGroupInfo->GetHighWater())
 					newsGroupInfo->SetHighWater(last_possible, TRUE);
@@ -333,8 +336,8 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
 #endif
 			if (m_knownArts.set->IsMember(last_possible))	// will this be progress pane?
 			{
-				char *noNewMsgs = XP_GetString(MK_NO_NEW_DISC_MSGS);
 #ifdef HAVE_PANES
+				char *noNewMsgs = XP_GetString(MK_NO_NEW_DISC_MSGS);
 				MWContext *context = m_pane->GetContext();
 				MSG_Pane* parentpane = m_pane->GetParentPane();
 				// send progress to parent pane, if any, because progress pane is going down.
@@ -486,9 +489,8 @@ nsNNTPNewsgroupList::AddToKnownArticles(PRInt32 first, PRInt32 last)
 #ifdef HAVE_NEWSDB
 	if (m_newsDB)
 	{
-		NeoDBStack dbStack(m_newsDB->GetDB());
 
-		NewsFolderInfo *newsGroupInfo = m_newsDB->GetNewsFolderInfo();
+		nsDBFolderInfo *newsGroupInfo = m_newsDB->GetDBFolderInfo();
 		if (newsGroupInfo)
 		{
 			char *output = m_knownArts.set->Output();

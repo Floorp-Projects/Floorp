@@ -97,6 +97,8 @@ public:
 	void				SetFolderSize(PRUint32 size);
 	void				SetFolderDate(time_t date);
 
+	virtual void		SetKnownArtsSet(nsString &newsArtSet);
+	virtual void		GetKnownArtsSet(nsString &newsArtSet);
 	// get and set arbitrary property, aka row cell value.
 	nsresult	GetProperty(const char *propertyName, nsString &resultProperty);
 	nsresult	SetProperty(const char *propertyName, nsString &propertyStr);

@@ -37,6 +37,7 @@ static const char *	kImapUidValidityColumnName = "UIDValidity";
 static const char *	kTotalPendingMessagesColumnName = "totPendingMsgs";
 static const char *	kUnreadPendingMessagesColumnName = "unreadPendingMsgs";
 static const char * kMailboxNameColumnName = "mailboxName";
+static const char * kKnownArtsSetColumnName = "knownArts";
 
 nsDBFolderInfo::nsDBFolderInfo(nsMsgDatabase *mdb)
   : m_folderDate(0)      // now
@@ -402,6 +403,16 @@ nsMsgKey nsDBFolderInfo::GetLastMessageLoaded()
 void nsDBFolderInfo::SetLastMessageLoaded(nsMsgKey lastLoaded) 
 {
 	m_lastMessageLoaded = lastLoaded;
+}
+
+void nsDBFolderInfo::SetKnownArtsSet(nsString &newsArtSet)
+{
+	SetProperty(kKnownArtsSetColumnName, newsArtSet);
+}
+
+void nsDBFolderInfo::GetKnownArtsSet(nsString &newsArtSet)
+{
+	GetProperty(kKnownArtsSetColumnName, newsArtSet);
 }
 
 	// get arbitrary property, aka row cell value.

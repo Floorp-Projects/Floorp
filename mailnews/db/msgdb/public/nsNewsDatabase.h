@@ -19,6 +19,12 @@
 #define _nsNewsDatabase_H_
 
 #include "nsMsgDatabase.h"
+
+class nsIDBChangeListener;
+class nsMsgKeyArray;
+class nsNewsSet;
+class MSG_RetrieveArtInfo;
+class MSG_PurgeInfo;
 // news group database
 
 class nsNewsDatabase : public nsMsgDatabase
@@ -38,10 +44,10 @@ public:
 
 // methods to get and set docsets for ids.
 	virtual nsresult		MarkHdrRead(nsMsgHdr *msgHdr, PRBool bRead,
-								ChangeListener *instigator = NULL);
+								nsIDBChangeListener *instigator = NULL);
 	virtual nsresult		IsRead(nsMsgKey key, PRBool *pRead);
 	virtual PRBool		IsArticleOffline(nsMsgKey key);
-	virtual nsresult		MarkAllRead(MWContext *context, IDArray *thoseMarked = NULL);
+	virtual nsresult		MarkAllRead(MWContext *context, nsMsgKeyArray *thoseMarked = NULL);
 	virtual nsresult		AddHdrFromXOver(const char * line,  nsMsgKey *msgId);
 	virtual nsresult		AddHdrToDB(nsMsgHdr *newHdr, PRBool *newThread, PRBool notify = PR_FALSE);
 
@@ -53,12 +59,12 @@ public:
 	virtual nsresult		ExpireUpTo(nsMsgKey expireKey);
 	virtual nsresult		ExpireRange(nsMsgKey startRange, nsMsgKey endRange);
 
-	msg_NewsArtSet			*GetNewsArtSet() {return m_set;}
+	nsNewsSet			*GetNewsArtSet() {return m_set;}
 	virtual nsNewsDatabase	*GetNewsDB() ;
 
 	virtual PRBool			PurgeNeeded(MSG_PurgeInfo *hdrPurgeInfo, MSG_PurgeInfo *artPurgeInfo);
 	PRBool					IsCategory();
-	NewsFolderInfo			*GetNewsFolderInfo() {return (NewsFolderInfo *) m_FolderInfo;}
+//	NewsFolderInfo			*GetNewsFolderInfo() {return (NewsFolderInfo *) m_FolderInfo;}
 	nsresult				SetOfflineRetrievalInfo(MSG_RetrieveArtInfo *);
 	nsresult				SetPurgeHeaderInfo(MSG_PurgeInfo *purgeInfo);
 	nsresult				SetPurgeArticleInfo(MSG_PurgeInfo *purgeInfo);
@@ -66,26 +72,26 @@ public:
 	nsresult				GetPurgeHeaderInfo(MSG_PurgeInfo *purgeInfo);
 	nsresult				GetPurgeArticleInfo(MSG_PurgeInfo *purgeInfo);
 
-	MSG_FolderInfoNews		*GetFolderInfoNews() {return m_info;}
+//	MSG_FolderInfoNews		*GetFolderInfoNews() {return m_info;}
 	// used to handle filters editing on open news groups.
-	static void				NotifyOpenDBsOfFilterChange(MSG_FolderInfo *folder);
+//	static void				NotifyOpenDBsOfFilterChange(MSG_FolderInfo *folder);
 	void					ClearFilterList();	// filter was changed by user.
 	void					OpenFilterList();
-	void					OnFolderFilterListChanged(MSG_FolderInfo *folder);
+//	void					OnFolderFilterListChanged(MSG_FolderInfo *folder);
 	// caller needs to free
 	static char				*GetGroupNameFromURL(const char *url);
 protected:
 
 	char*				m_groupURL;
-	MSG_FilterList*		m_filterList;
+//	MSG_FilterList*		m_filterList;
 
 	PRUint32				m_headerIndex;		// index of unthreaded headers
 												// at a specified entry.
 	MSG_Master		*m_master;
 
-	msg_NewsArtSet *m_set;
+	nsNewsSet *m_set;
 
-	MSG_FolderInfoNews* m_info;
+//	MSG_FolderInfoNews* m_info;
 };
 
 #endif
