@@ -27,7 +27,6 @@ var insertNew                           = true;
 var imageElement;
 var doSeeAll                            = true;
 var wasEnableAll                        = false;
-var hasAnyChanged                       = false;
 var oldSourceInt                        = 0;
 
 // dialog initialization code
@@ -54,6 +53,8 @@ function Startup()
   dialog.customsizeRadio                = document.getElementById( "customsizeRadio" );
   dialog.imagewidthInput                = document.getElementById( "imagewidthInput" );
   dialog.imageheightInput               = document.getElementById( "imageheightInput" );
+  dialog.imagewidthSelect               = document.getElementById( "widthunitSelect" );
+  dialog.imageheightSelect              = document.getElementById( "heightunitSelect" );
   
   dialog.imagelrInput                   = document.getElementById( "imageleftrightInput" );
   dialog.imagetbInput                   = document.getElementById( "imagetopbottomInput" );
@@ -93,7 +94,6 @@ function Startup()
     // We don't have an element selected, 
     //  so create one with default attributes
 
-    dump("Element not selected - calling createElementWithDefaults\n");
     imageElement                        = editorShell.CreateElementWithDefaults(tagName);
     if( !imageElement )
     {
@@ -234,13 +234,7 @@ function onMoreFewer()
 
 function doValueChanged()
 {
-
-  if ( !hasAnyChanged )
-  {
-    hasAnyChanged                       = true;
     doOverallEnabling();
-    hasAnyChanged                       = false;
-  }
 }
 
 function SelectWidthUnits()
@@ -265,11 +259,6 @@ function doDimensionEnabling( doEnable )
   SetClassEnabledByID( "customsizeLabel", doEnable );
 
   SetClassEnabledByID( "dimensionsLegend", doEnable );
-  SetClassEnabledByID( "spacingLegend", doEnable );
-
-  SetClassEnabledByID( "AdvancedButton", doEnable );
-  SetClassEnabledByID( "MoreFewerButton", doEnable );
-
 
   customradio                           = document.getElementById( "customsizeRadio" );
 
@@ -309,22 +298,14 @@ function doOverallEnabling()
 {
 
   var imageTypeExtension                = checkForImage();
-  var canEnableAll;
-  canEnableAll                          = imageTypeExtension;
-
+  var canEnableAll                      = imageTypeExtension != 0;
   if ( wasEnableAll == canEnableAll )
     return;
   
   wasEnableAll                          = canEnableAll;
 
-  btn                                   = document.getElementById("ok");
-  if ( btn )
-  {
-    dump("ok button found!\n")
-    btn.disabled                        = (!canEnableAll && hasAnyChanged);
-  }
-  else dump("ok button not found\n");
-  
+  SetElementEnabledByID("ok", canEnableAll );
+
   fieldset                              = document.getElementById("imagedimensionsFieldset");
   if ( fieldset )
   {
@@ -336,8 +317,8 @@ function doOverallEnabling()
 
   SetClassEnabledByID( "image.altTextLabel", canEnableAll );
   SetElementEnabledByID("image.altTextInput", canEnableAll );
-  SetElementEnabledByID("MoreFewerButton", canEnableAll );
-  SetElementEnabledByID("AdvancedButton", canEnableAll );
+  SetClassEnabledByID("MoreFewerButton", canEnableAll );
+  SetElementEnabledByID("AdvancedEdit", canEnableAll );
 
   // alignment
 
@@ -353,6 +334,7 @@ function doOverallEnabling()
 
     // spacing fieldset
 
+  SetClassEnabledByID( "spacingLegend", canEnableAll );
   SetElementEnabledByID("spacing.fieldset", canEnableAll );
   SetElementEnabledByID("imageleftrightInput", canEnableAll );
   SetElementEnabledByID("imagetopbottomInput", canEnableAll );
@@ -387,12 +369,12 @@ function checkForImage() {
   
   /* look for an extension */
   var tailindex                         = image.lastIndexOf("."); 
-  if ( tailindex == 0 )
+  if ( tailindex == 0 || tailindex == -1 ) /* -1 is not found */
   return 0; 
   
   /* move past period, get the substring from the first character after the '.' to the last character (length) */
-  tail = tail + 1;
-  var type                              = image.substring(tail,image.length);
+  tailindex = tailindex + 1;
+  var type                              = image.substring(tailindex,image.length);
   
   /* convert extension to lower case */
   if (type)
