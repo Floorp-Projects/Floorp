@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.53 2002/05/25 06:52:19 wtc%netscape.com Exp $
+ # $Id: nssinit.c,v 1.54 2002/07/18 23:08:55 jpierre%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -527,7 +527,7 @@ NSS_Initialize(const char *configdir, const char *certPrefix,
 SECStatus
 NSS_NoDB_Init(const char * configdir)
 {
-      return nss_Init(configdir?configdir:"","","",SECMOD_DB,
+      return nss_Init("","","","",
 			PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE);
 }
 
