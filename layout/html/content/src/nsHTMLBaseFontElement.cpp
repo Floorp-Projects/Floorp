@@ -182,6 +182,16 @@ nsHTMLBaseFontElement::GetStyleHintForAttributeChange(
     const nsIAtom* aAttribute,
     PRInt32 *aHint) const
 {
-  nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, aAttribute, aHint);
+  if (nsHTMLAtoms::color == aAttribute ||
+    nsHTMLAtoms::face == aAttribute ||
+    nsHTMLAtoms::size == aAttribute) {
+    // XXX This hint should be changed to the one that will instruct the
+    // caller to reconstruct the entire document.  Since that hint 
+    // is not yet implemented, I'm passing a reflow hint for now.
+    *aHint = NS_STYLE_HINT_REFLOW;
+  }
+  else {
+    nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, aAttribute, aHint);
+  }
   return NS_OK;
 }
