@@ -30,7 +30,7 @@
 #include "nsString.h"
 #include "nsIServiceManager.h"
 #include "nsIImportService.h"
-#include "nsComponentManagerUtils.h"
+#include "nsIComponentManager.h"
 #include "nsTextImport.h"
 #include "nsIAllocator.h"
 #include "nsIImportGeneric.h"
