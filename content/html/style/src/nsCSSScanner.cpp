@@ -249,11 +249,9 @@ void nsCSSScanner::OutputError()
   if (mError.IsEmpty()) return;
  
 #ifdef DEBUG
-  printf("CSS Error (%s :%u.%u): %s\n",
-         mFileName.get(),
-         mErrorLineNumber,
-         mErrorColNumber,
-         NS_ConvertUCS2toUTF8(mError).get());
+  fprintf(stderr, "CSS Error (%s :%u.%u): %s\n",
+                  mFileName.get(), mErrorLineNumber, mErrorColNumber,
+                  NS_ConvertUCS2toUTF8(mError).get());
 #endif
 
   // Log it to the JavaScript console

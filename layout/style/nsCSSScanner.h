@@ -44,7 +44,7 @@
 class nsIUnicharInputStream;
 
 // for testing
-#ifdef DEBUG_dbaron
+#ifdef DEBUG
 #define CSS_REPORT_PARSE_ERRORS
 #endif
 
