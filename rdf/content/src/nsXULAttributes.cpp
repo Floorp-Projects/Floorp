@@ -271,7 +271,9 @@ nsXULAttribute::SetValue(const nsString& aValue)
 {
     nsCOMPtr<nsIDOMElement> element( do_QueryInterface(mContent) );
     if (element) {
-        return element->SetAttribute(GetQualifiedName(), aValue);
+        nsAutoString qualifiedName;
+        GetQualifiedName(qualifiedName);
+        return element->SetAttribute(qualifiedName, aValue);
     }
     else {
         return NS_ERROR_FAILURE;
@@ -318,22 +320,20 @@ nsXULAttribute::SetScriptObject(void *aScriptObject)
 
 // Implementation methods
 
-const nsString&
-nsXULAttribute::GetQualifiedName()
+void
+nsXULAttribute::GetQualifiedName(nsString& aQualifiedName)
 {
-    nsAutoString result;
-
+    aQualifiedName.Truncate();
     if ((mNameSpaceID != kNameSpaceID_None) &&
         (mNameSpaceID != kNameSpaceID_Unknown)) {
         nsIAtom* prefix;
         if (NS_SUCCEEDED(mContent->GetNameSpacePrefixFromId(mNameSpaceID, prefix))) {
-            result.Append(prefix->GetUnicode());
-            result.Append(':');
+            aQualifiedName.Append(prefix->GetUnicode());
+            aQualifiedName.Append(':');
             NS_RELEASE(prefix);
         }
     }
-    result.Append(mName->GetUnicode());
-    return result;
+    aQualifiedName.Append(mName->GetUnicode());
 }
 
 

@@ -100,7 +100,7 @@ public:
     NS_IMETHOD SetScriptObject(void *aScriptObject);
 
     // Implementation methods
-    const nsString& GetQualifiedName();
+    void GetQualifiedName(nsString& aAttributeName);
 
     PRInt32 GetNameSpaceID();
     nsIAtom* GetName();
