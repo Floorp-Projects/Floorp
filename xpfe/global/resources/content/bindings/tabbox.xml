@@ -165,7 +165,7 @@
                 onget="return this.getAttribute('index');">
         <setter>
           if (this.index == val)
-            return;
+            return val;
           this.setAttribute("index", val);
           var event = document.createEvent('Events');
           event.initEvent('select', false, true);
