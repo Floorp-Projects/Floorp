@@ -1130,6 +1130,9 @@ void CBrowserView::SetCurrentFrameURL(nsAutoString& strCurrentFrameURL)
 
 void CBrowserView::Activate(UINT nState, CWnd* pWndOther, BOOL bMinimized) 
 {
+    if(bMinimized)  // This isn't an activate event that Gecko cares about
+        return;
+
     nsCOMPtr<nsIWebBrowserFocus> focus(do_GetInterface(mWebBrowser));
     if(!focus)
         return;
