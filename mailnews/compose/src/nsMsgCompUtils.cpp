@@ -813,11 +813,13 @@ mime_generate_attachment_headers (const char *type, const char *encoding,
       prefs->GetBoolPref("mail.send_plaintext_flowed", &sendFlowed);
       if (sendFlowed)
 			  PUSH_STRING ("; format=flowed");
-		  else
-      {
-        // This is the same as no format at all.
-			  PUSH_STRING ("; format=fixed");
-      }
+		  // else
+      // {
+      // Don't add a markup. Could use 
+      //			  PUSH_STRING ("; format=fixed");
+      // but it is equivalent to nothing at all and we do want
+      // to save bandwidth. Don't we?
+      // }
     }
   }    
 
