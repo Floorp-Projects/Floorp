@@ -102,6 +102,19 @@ nsAggregatePrincipal::GetOrigin(char** aOrigin)
     return codebase->GetOrigin(aOrigin);
 }
 
+NS_IMETHODIMP 
+nsAggregatePrincipal::GetSpec(char** aSpec)
+{
+    if (!mCodebase)
+    {
+        *aSpec = nsnull;
+        return NS_ERROR_FAILURE;
+    }
+
+    nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(mCodebase);
+    return codebase->GetSpec(aSpec);
+}
+
 ////////////////////////////////////////////////
 // Methods implementing nsIAggregatePrincipal //
 ////////////////////////////////////////////////

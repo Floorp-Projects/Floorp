@@ -57,7 +57,8 @@ NS_IMETHODIMP
 nsCodebasePrincipal::GetPreferences(char** aPrefName, char** aID, 
                                     char** aGrantedList, char** aDeniedList)
 {
-    if (!mPrefName) {
+    if (!mPrefName)
+	{
         nsCAutoString s;
         s.Assign("capability.principal.codebase.p");
         s.AppendInt(mCapabilitiesOrdinal++);
@@ -71,10 +72,10 @@ nsCodebasePrincipal::GetPreferences(char** aPrefName, char** aID,
 NS_IMETHODIMP
 nsCodebasePrincipal::HashValue(PRUint32 *result)
 {
-    nsXPIDLCString origin;
-    if (NS_FAILED(GetOrigin(getter_Copies(origin))))
+    nsXPIDLCString spec;
+    if (NS_FAILED(GetSpec(getter_Copies(spec))))
         return NS_ERROR_FAILURE;
-    *result = nsCRT::HashCode(origin, nsnull);
+    *result = nsCRT::HashCode(spec, nsnull);
     return NS_OK;
 }
 
@@ -89,7 +90,8 @@ nsCodebasePrincipal::CanEnableCapability(const char *capability,
 	if (NS_FAILED(rv))
 		return NS_ERROR_FAILURE;
 	PRBool enabled;
-    if (NS_FAILED(prefs->GetBoolPref(pref, &enabled)) || !enabled) {
+    if (NS_FAILED(prefs->GetBoolPref(pref, &enabled)) || !enabled) 
+	{
         // Deny unless subject is executing from file: or resource: 
         nsXPIDLCString scheme;
         if (NS_FAILED(mURI->GetScheme(getter_Copies(scheme))) ||
@@ -128,18 +130,27 @@ nsCodebasePrincipal::GetOrigin(char **origin)
     nsCAutoString t;
     t.Assign(s);
     t.Append("://");
-    if (NS_SUCCEEDED(mURI->GetHost(getter_Copies(s)))) {
+    if (NS_SUCCEEDED(mURI->GetHost(getter_Copies(s))))
+	{
         t.Append(s);
-    } else if (NS_SUCCEEDED(mURI->GetSpec(getter_Copies(s)))) {
-        // Some URIs (e.g., nsSimpleURI) don't support host. Just
-        // get the full spec.
-        t.Assign(s);
-    } else {
+	}
+	else if (NS_SUCCEEDED(mURI->GetSpec(getter_Copies(s)))) 
+    // Some URIs (e.g., nsSimpleURI) don't support host. Just
+    // get the full spec.
+		t.Assign(s);
+	else
         return NS_ERROR_FAILURE;
-    }
-    *origin = t.ToNewCString();
+	
+	*origin = t.ToNewCString();
     return *origin ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
+
+NS_IMETHODIMP
+nsCodebasePrincipal::GetSpec(char **spec) 
+{
+	return mURI->GetSpec(spec);
+}
+
 
 NS_IMETHODIMP
 nsCodebasePrincipal::Equals(nsIPrincipal *other, PRBool *result)
@@ -147,72 +158,67 @@ nsCodebasePrincipal::Equals(nsIPrincipal *other, PRBool *result)
 
     //-- Equals is defined as object equality or same origin
     *result = PR_FALSE;
-    if (this == other) {
+    if (this == other) 
+	{
         *result = PR_TRUE;
         return NS_OK;
     }
-    if (other == nsnull) {
-        *result = PR_FALSE;
+    if (other == nsnull) 
+        // return false
         return NS_OK;
-    }
     nsCOMPtr<nsICodebasePrincipal> otherCodebase;
     if (NS_FAILED(other->QueryInterface(
             NS_GET_IID(nsICodebasePrincipal),
             (void **) getter_AddRefs(otherCodebase))))
-    {
         return NS_OK;
-    }
     nsCOMPtr<nsIURI> otherURI;
-    if (NS_FAILED(otherCodebase->GetURI(getter_AddRefs(otherURI)))) {
+    if (NS_FAILED(otherCodebase->GetURI(getter_AddRefs(otherURI))))
         return NS_ERROR_FAILURE;
-    }
-    char *scheme1 = nsnull;
-    nsresult rv = otherURI->GetScheme(&scheme1);
-    char *scheme2 = nsnull;
+    nsXPIDLCString otherScheme;
+    nsresult rv = otherURI->GetScheme(getter_Copies(otherScheme));
+    nsXPIDLCString myScheme;
     if (NS_SUCCEEDED(rv))
-        rv = mURI->GetScheme(&scheme2);
-    if (NS_SUCCEEDED(rv) && PL_strcmp(scheme1, scheme2) == 0) {
+        rv = mURI->GetScheme(getter_Copies(myScheme));
+    if (NS_SUCCEEDED(rv) && PL_strcmp(otherScheme, myScheme) == 0) 
+	{
 
-        if (PL_strcmp(scheme1, "file") == 0) {
-            // All file: urls are considered to have the same origin.
-            *result = PR_TRUE;
-        } else if (PL_strcmp(scheme1, "imap") == 0 ||
-                   PL_strcmp(scheme1, "mailbox") == 0 ||
-                   PL_strcmp(scheme1, "news") == 0) 
+		if (PL_strcmp(otherScheme, "imap")    == 0 ||
+	        PL_strcmp(otherScheme, "mailbox") == 0 ||
+            PL_strcmp(otherScheme, "news")    == 0) 
         {
             // Each message is a distinct trust domain; use the 
             // whole spec for comparison
-            nsXPIDLCString spec1;
-            if (NS_FAILED(otherURI->GetSpec(getter_Copies(spec1))))
+            nsXPIDLCString otherSpec;
+            if (NS_FAILED(otherURI->GetSpec(getter_Copies(otherSpec))))
                 return NS_ERROR_FAILURE;
-            nsXPIDLCString spec2;
-            if (NS_FAILED(mURI->GetSpec(getter_Copies(spec2))))
+            nsXPIDLCString mySpec;
+            if (NS_FAILED(mURI->GetSpec(getter_Copies(mySpec))))
                 return NS_ERROR_FAILURE;
-            *result = PL_strcmp(spec1, spec2) == 0;
-        } else {
+            *result = PL_strcmp(otherSpec, mySpec) == 0;
+        } 
+		else
+		{
             // Need to check the host
-            char *host1 = nsnull;
-            rv = otherURI->GetHost(&host1);
-            char *host2 = nsnull;
+            nsXPIDLCString otherHost;
+            rv = otherURI->GetHost(getter_Copies(otherHost));
+            nsXPIDLCString myHost;
             if (NS_SUCCEEDED(rv))
-                rv = mURI->GetHost(&host2);
-            *result = NS_SUCCEEDED(rv) && PL_strcmp(host1, host2) == 0;
-            if (*result) {
-                int port1;
-                rv = otherURI->GetPort(&port1);
-                int port2;
+                rv = mURI->GetHost(getter_Copies(myHost));
+            *result = NS_SUCCEEDED(rv) && PL_strcmp(otherHost, myHost) == 0;
+            if (*result) 
+			{
+                int otherPort;
+                rv = otherURI->GetPort(&otherPort);
+                int myPort;
                 if (NS_SUCCEEDED(rv))
-                    rv = mURI->GetPort(&port2);
-                *result = NS_SUCCEEDED(rv) && port1 == port2;
+                    rv = mURI->GetPort(&myPort);
+                *result = NS_SUCCEEDED(rv) && otherPort == myPort;
             }
-            if (host1) nsCRT::free(host1);
-            if (host2) nsCRT::free(host2);
         }
     }
-    if (scheme1) nsCRT::free(scheme1);
-    if (scheme2) nsCRT::free(scheme2);
     return NS_OK;
 }
+
 
 /////////////////////////////////////////////
 // Constructor, Destructor, initialization //
@@ -229,7 +235,8 @@ nsCodebasePrincipal::Init(nsIURI *uri)
     char *codebase;
     if (uri == nsnull || NS_FAILED(uri->GetSpec(&codebase))) 
         return NS_ERROR_FAILURE;
-    if (NS_FAILED(mJSPrincipals.Init(codebase))) {
+    if (NS_FAILED(mJSPrincipals.Init(codebase)))
+	{
         nsCRT::free(codebase);
         return NS_ERROR_FAILURE;
     }
