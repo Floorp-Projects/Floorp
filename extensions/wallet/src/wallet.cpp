@@ -1426,8 +1426,6 @@ WLLT_Prefill(nsIPresShell* shell, PRBool quick) {
   if (nsnull != shell) {
     nsIDocument* doc = nsnull;
     if (shell->GetDocument(&doc) == NS_OK) {
-//  doc = shell->GetDocument();
-//  if (nsnull != doc) {
       wallet_InitializeCurrentURL(doc);
       nsIDOMHTMLDocument* htmldoc = nsnull;
       nsresult result = doc->QueryInterface(kIDOMHTMLDocumentIID, (void**)&htmldoc);
