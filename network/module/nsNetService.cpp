@@ -582,6 +582,22 @@ nsNetlibService::SetCookieString(nsIURL *aURL, const nsString& aCookie)
     return NS_OK;
 }
 
+#ifdef SingleSignon
+NS_IMETHODIMP
+nsNetlibService::SI_RememberSignonData
+        (char* URLName, LO_FormSubmitData *submit) {
+    ::SI_RememberSignonData(URLName, submit);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNetlibService::SI_RestoreSignonData
+        (char* URLName, char* name, char** value) {
+    ::SI_RestoreSignonData(URLName, name, value);
+    return NS_OK;
+}
+
+#endif
 
 NS_IMETHODIMP
 nsNetlibService::GetProxyHTTP(nsString& aProxyHTTP) {

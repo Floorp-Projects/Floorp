@@ -56,6 +56,13 @@
 #include "prmem.h"
 #include "prenv.h"
 
+#ifdef SingleSignon
+#include "proto.h"
+#include "nsINetService.h"
+#include "nsIServiceManager.h"
+static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
+static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
+#endif
 //----------------------------------------------------------------------
 
 static NS_DEFINE_IID(kIFormManagerIID, NS_IFORMMANAGER_IID);
@@ -514,12 +521,37 @@ void nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFormCon
 {
   nsString buf;
   PRBool firstTime = PR_TRUE;
-
   PRUint32 numChildren = mFormControls.Count();
+
+#ifdef SingleSignon
+#define MAX_ARRAY_SIZE 50
+  char* name_array[MAX_ARRAY_SIZE];
+  char* value_array[MAX_ARRAY_SIZE];
+  uint8 type_array[MAX_ARRAY_SIZE];
+  LO_FormSubmitData submit;
+
+  submit.value_cnt = 0;
+  submit.type_array = (PA_Block)type_array;
+  submit.name_array = (PA_Block)name_array;
+  submit.value_array = (PA_Block)value_array;
+
+  /* get url name as ascii string */
+  char *URLName;
+  nsIURL* docURL = nsnull;
+  nsIDocument* doc = nsnull;
+  mContent->GetDocument(doc);
+  if (nsnull != doc) {
+	  docURL = doc->GetDocumentURL();
+	  NS_RELEASE(doc);
+	  URLName = (char*)PR_Malloc(PL_strlen(docURL->GetSpec())+1);
+	  PL_strcpy(URLName, docURL->GetSpec());
+  }
+#endif
+
   // collect and encode the data from the children controls
   for (PRUint32 childX = 0; childX < numChildren; childX++) {
- 	  nsIFormControlFrame* child = (nsIFormControlFrame*) mFormControls.ElementAt(childX);
-    if (child && child->IsSuccessful(aFrame)) {
+	  nsIFormControlFrame* child = (nsIFormControlFrame*) mFormControls.ElementAt(childX);
+	  if (child && child->IsSuccessful(aFrame)) {
 		  PRInt32 numValues = 0;
 		  PRInt32 maxNumValues = child->GetMaxNumValues();
 			if (maxNumValues <= 0) {
@@ -528,6 +560,20 @@ void nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFormCon
 		  nsString* names = new nsString[maxNumValues];
 		  nsString* values = new nsString[maxNumValues];
 			if (PR_TRUE == child->GetNamesValues(maxNumValues, numValues, values, names)) {
+#ifdef SingleSignon
+				PRInt32 type;
+				child->GetType(&type);
+				if (type == NS_FORM_INPUT_PASSWORD) {
+					type_array[submit.value_cnt] = FORM_TYPE_PASSWORD;
+				} else {
+					type_array[submit.value_cnt] = FORM_TYPE_TEXT;
+				}
+				value_array[submit.value_cnt] =
+					values[0].ToNewCString();
+				name_array[submit.value_cnt] =
+					names[0].ToNewCString();
+				submit.value_cnt++;
+#endif
 				for (int valueX = 0; valueX < numValues; valueX++) {
 				  if (PR_TRUE == firstTime) {
 					  firstTime = PR_FALSE;
@@ -547,6 +593,22 @@ void nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFormCon
 			delete [] values;
 		}
 	}
+
+#ifdef SingleSignon
+  nsINetService *service;
+  nsresult res = nsServiceManager::GetService(kNetServiceCID,
+                                          kINetServiceIID,
+                                          (nsISupports **)&service);
+  if ((NS_OK == res) && (nsnull != service)) {
+	  res = service->SI_RememberSignonData(URLName, &submit);
+	  NS_RELEASE(service);
+  }
+  PR_FREEIF(URLName);
+  while (submit.value_cnt--) {
+	PR_FREEIF(name_array[submit.value_cnt]);
+	PR_FREEIF(value_array[submit.value_cnt]);
+  }
+#endif
 
   aData.SetLength(0);
   if (isPost) {

@@ -40,6 +40,16 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
 
+#ifdef SingleSignon
+#include "nsIDocument.h"
+#include "prmem.h"
+#include "nsIURL.h"
+#include "nsINetService.h"
+#include "nsIServiceManager.h"
+static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
+static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
+#endif
+
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kTextCID, NS_TEXTFIELD_CID);
 static NS_DEFINE_IID(kTextAreaCID, NS_TEXTAREA_CID);
@@ -331,13 +341,49 @@ nsTextControlFrame::PostCreateWidget(nsIPresContext* aPresContext,
   SetColors(*aPresContext);
 
   PRUint32 ignore;
-  
   nsAutoString value;
-  GetText(&value);
 
   nsITextAreaWidget* textArea = nsnull;
   nsITextWidget* text = nsnull;
   if (NS_OK == mWidget->QueryInterface(kITextWidgetIID,(void**)&text)) {
+
+#ifdef SingleSignon
+    /* get name of text */
+    nsAutoString name;
+    GetName(&name);
+
+    /* get url name */
+    char *URLName;
+    nsIURL* docURL = nsnull;
+    nsIDocument* doc = nsnull;
+    mContent->GetDocument(doc);
+    if (nsnull != doc) {
+      docURL = doc->GetDocumentURL();
+      NS_RELEASE(doc);
+      URLName = (char*)PR_Malloc(PL_strlen(docURL->GetSpec())+1);
+      PL_strcpy(URLName, docURL->GetSpec());
+    }
+
+    /* invoke single-signon to get previously-used value of text */
+    nsINetService *service;
+    nsresult res = nsServiceManager::GetService(kNetServiceCID,
+                                          kINetServiceIID,
+                                          (nsISupports **)&service);
+    if ((NS_OK == res) && (nsnull != service)) {
+      char* valueString = NULL;
+      res = service->SI_RestoreSignonData(URLName, name.ToNewCString(), &valueString);
+      NS_RELEASE(service);
+      if (valueString && *valueString) {
+        value = nsAutoString(valueString);
+      } else {
+        GetText(&value);
+      }
+    }
+
+#else
+  GetText(&value);
+#endif
+
     text->SetText(value, ignore);
     PRInt32 maxLength;
     nsresult result = GetMaxLength(&maxLength);
