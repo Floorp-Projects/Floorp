@@ -17,10 +17,9 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Original Author:
- *   Scott Collins <scc@mozilla.org>
- *
  * Contributor(s):
+ *   Scott Collins <scc@mozilla.org> (original author)
+ *   L. David Baron <dbaron@fas.harvard.edu>
  */
 
 #ifndef nsCOMPtr_h___
@@ -650,6 +649,44 @@ class nsCOMPtr
           return get();
         }
 
+      nsCOMPtr<T>*
+      get_address()
+        {
+          return this;
+        }
+
+      const nsCOMPtr<T>*
+      get_address() const
+        {
+          return this;
+        }
+
+      // This is going to become private soon, once all users of
+      // nsCOMPtr stop using it.  It may even become:
+      // void operator&() const {}
+//  private:
+      const nsCOMPtr<T>*
+      operator&() const
+          // This is private to prevent accidental use of |operator&|
+          // instead of |getter_AddRefs|, which can happen if the result
+          // is cast.
+
+          // To pass an nsCOMPtr as an out parameter to a function, either
+          // (preferably) pass by reference or use |address_of|.
+        {
+          return this;
+        }
+
+      nsCOMPtr<T>*
+      operator&()
+          // This version is also needed so things will compile before
+          // all the uses are removed and we make it private.  After it's
+          // private, we won't need two anymore.
+        {
+          return this;
+        }
+
+//  public:
       nsDerivedSafe<T>&
       operator*() const
         {
@@ -814,6 +851,45 @@ class nsCOMPtr<nsISupports>
           return get();
         }
 
+      nsCOMPtr<nsISupports>*
+      get_address()
+        {
+          return this;
+        }
+
+      const nsCOMPtr<nsISupports>*
+      get_address() const
+        {
+          return this;
+        }
+
+      // This is going to become private soon, once all users of
+      // nsCOMPtr stop using it.  It may even become:
+      // void operator&() const {}
+//  private:
+      const nsCOMPtr<nsISupports>*
+      operator&() const
+          // This is private to prevent accidental use of |operator&|
+          // instead of |getter_AddRefs|, which can happen if the result
+          // is cast.
+
+          // To pass an nsCOMPtr as an out parameter to a function, either
+          // (preferably) pass by reference or use |address_of|.
+        {
+          return this;
+        }
+
+      nsCOMPtr<nsISupports>*
+      operator&()
+          // This version is also needed so things will compile before
+          // all the uses are removed and we make it private.  After it's
+          // private, we won't need two anymore.
+        {
+          return this;
+        }
+
+//  public:
+
       nsDerivedSafe<nsISupports>&
       operator*() const
         {
@@ -867,6 +943,21 @@ nsCOMPtr<T>::begin_assignment()
   }
 #endif
 
+template <class T>
+inline
+nsCOMPtr<T>*
+address_of( nsCOMPtr<T>& aPtr )
+  {
+    return aPtr.get_address();
+  }
+
+template <class T>
+inline
+const nsCOMPtr<T>*
+address_of( const nsCOMPtr<T>& aPtr )
+  {
+    return aPtr.get_address();
+  }
 
 template <class T>
 class nsGetterAddRefs
@@ -900,7 +991,7 @@ class nsGetterAddRefs
      ~nsGetterAddRefs()
         {
 #ifdef NSCAP_LOG_EXTERNAL_ASSIGNMENT
-          NSCAP_LOG_ASSIGNMENT(&mTargetSmartPtr, mTargetSmartPtr.get());
+          NSCAP_LOG_ASSIGNMENT(NS_REINTERPRET_CAST(void *, address_of(mTargetSmartPtr)), mTargetSmartPtr.get());
 #endif
 
 #ifdef NSCAP_FEATURE_TEST_DONTQUERY_CASES
@@ -949,7 +1040,7 @@ class nsGetterAddRefs<nsISupports>
 #ifdef NSCAP_LOG_EXTERNAL_ASSIGNMENT
      ~nsGetterAddRefs()
         {
-          NSCAP_LOG_ASSIGNMENT(&mTargetSmartPtr, mTargetSmartPtr.get());
+          NSCAP_LOG_ASSIGNMENT(NS_REINTERPRET_CAST(void *, address_of(mTargetSmartPtr)), mTargetSmartPtr.get());
         }
 #endif
 
