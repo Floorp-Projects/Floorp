@@ -5450,7 +5450,7 @@ nsBlockFrame::HandleEvent(nsIPresContext& aPresContext,
             break;//done
         }
       }
-      nsIContent *content;
+      nsCOMPtr<nsIContent> content;
       PRInt32 contentOffset;
       //we will now ask where to go. if we cant find what we want"aka another block frame" 
       //we drill down again
@@ -5459,7 +5459,7 @@ nsBlockFrame::HandleEvent(nsIPresContext& aPresContext,
                                           mainframe, 
                                           closestLine-1, 
                                           aEvent->point.x,
-                                          &content, 
+                                          getter_AddRefs(content), 
                                           &contentOffset,
                                           0,
                                           &resultFrame
