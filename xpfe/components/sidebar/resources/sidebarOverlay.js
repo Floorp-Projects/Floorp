@@ -32,16 +32,25 @@
 var RDF = Components.classes['component://netscape/rdf/rdf-service'].getService()
 RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService)
 
-var sidebar = new Object
-sidebar.db       = 'chrome://sidebar/content/sidebar.rdf'
-sidebar.resource = 'NC:SidebarRoot'
+var defaultsidebar = new Object
+defaultsidebar.db       = 'chrome://sidebar/content/sidebar.rdf'
+defaultsidebar.resource = 'NC:SidebarRoot'
 
-function sidebarOverlayInit()
+// the current sidebar:
+var sidebar;
+
+function sidebarOverlayInit(usersidebar)
 {
   var sidebar_element = document.getElementById('sidebarbox');
   if (sidebar_element.getAttribute('hidden')) {
     return
  	}
+
+  // load up user-specified sidebar
+  if (!usersidebar)
+    sidebar = defaultsidebar;
+  else
+    sidebar = usersidebar;
 
   var registry
   try {
@@ -97,6 +106,7 @@ function addSidebarPanel(parent, registry, service, is_last) {
   var iframe   = document.createElement('html:iframe')
 
 	iframe.setAttribute('src', panel_content)
+  if (panel_height) iframe.setAttribute('height', panel_height);
 	dump("panel_content="+panel_content+"\n")
   if (is_last) {
     //iframe.setAttribute('flex', '100%')
