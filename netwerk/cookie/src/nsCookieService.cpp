@@ -917,7 +917,7 @@ nsCookieService::Read()
     return rv;
   }
 
-  static NS_NAMED_LITERAL_CSTRING(kTrue, "TRUE");
+  static const char kTrue[] = "TRUE";
 
   nsCAutoString buffer;
   PRBool isMore = PR_TRUE;
@@ -972,7 +972,8 @@ nsCookieService::Read()
       continue;
     }
 
-    isDomain = Substring(buffer, isDomainIndex, pathIndex - isDomainIndex - 1).Equals(kTrue);
+    isDomain = Substring(buffer, isDomainIndex, pathIndex - isDomainIndex - 1)
+               .EqualsLiteral(kTrue);
     const nsASingleFragmentCString &host = Substring(buffer, hostIndex, isDomainIndex - hostIndex - 1);
     // check for bad legacy cookies (domain not starting with a dot, or containing a port),
     // and discard
@@ -990,7 +991,7 @@ nsCookieService::Read()
                        nsInt64(expires),
                        lastAccessedCounter,
                        PR_FALSE,
-                       Substring(buffer, secureIndex, expiresIndex - secureIndex - 1).Equals(kTrue),
+                       Substring(buffer, secureIndex, expiresIndex - secureIndex - 1).EqualsLiteral(kTrue),
                        nsICookie::STATUS_UNKNOWN,
                        nsICookie::POLICY_UNKNOWN);
     if (!newCookie) {
@@ -1477,11 +1478,11 @@ PRBool
 nsCookieService::ParseAttributes(nsDependentCString &aCookieHeader,
                                  nsCookieAttributes &aCookieAttributes)
 {
-  static NS_NAMED_LITERAL_CSTRING(kPath,    "path"   );
-  static NS_NAMED_LITERAL_CSTRING(kDomain,  "domain" );
-  static NS_NAMED_LITERAL_CSTRING(kExpires, "expires");
-  static NS_NAMED_LITERAL_CSTRING(kMaxage,  "max-age");
-  static NS_NAMED_LITERAL_CSTRING(kSecure,  "secure" );
+  static const char kPath[]    = "path";
+  static const char kDomain[]  = "domain";
+  static const char kExpires[] = "expires";
+  static const char kMaxage[]  = "max-age";
+  static const char kSecure[]  = "secure";
 
   nsASingleFragmentCString::const_char_iterator tempBegin, tempEnd;
   nsASingleFragmentCString::const_char_iterator cookieStart, cookieEnd;
@@ -1518,20 +1519,20 @@ nsCookieService::ParseAttributes(nsDependentCString &aCookieHeader,
     }
 
     // decide which attribute we have, and copy the string
-    if (tokenString.Equals(kPath, nsCaseInsensitiveCStringComparator()))
+    if (tokenString.LowerCaseEqualsLiteral(kPath))
       aCookieAttributes.path = tokenValue;
 
-    else if (tokenString.Equals(kDomain, nsCaseInsensitiveCStringComparator()))
+    else if (tokenString.LowerCaseEqualsLiteral(kDomain))
       aCookieAttributes.host = tokenValue;
 
-    else if (tokenString.Equals(kExpires, nsCaseInsensitiveCStringComparator()))
+    else if (tokenString.LowerCaseEqualsLiteral(kExpires))
       aCookieAttributes.expires = tokenValue;
 
-    else if (tokenString.Equals(kMaxage, nsCaseInsensitiveCStringComparator()))
+    else if (tokenString.LowerCaseEqualsLiteral(kMaxage))
       aCookieAttributes.maxage = tokenValue;
 
     // ignore any tokenValue for isSecure; just set the boolean
-    else if (tokenString.Equals(kSecure, nsCaseInsensitiveCStringComparator()))
+    else if (tokenString.LowerCaseEqualsLiteral(kSecure))
       aCookieAttributes.isSecure = PR_TRUE;
   }
 
