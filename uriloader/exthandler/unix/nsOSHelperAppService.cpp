@@ -92,7 +92,7 @@ nsresult nsExternalApplication::LaunchApplication(nsIFile * aTempFile)
   if (mApplicationToUse)
   {
     const char * strPath = (const char *) path;
-    mApplication->Spawn(&strPath, 1);
+    mApplicationToUse->Spawn(&strPath, 1);
   }
   else if (!mAppRegistryName.IsEmpty() && aTempFile)
   {
@@ -121,7 +121,7 @@ nsresult nsExternalApplication::LaunchApplication(nsIFile * aTempFile)
 
 nsOSHelperAppService::nsOSHelperAppService() : nsExternalHelperAppService()
 {
- 	//nsExternalHelperAppService::Init();
+ 	nsExternalHelperAppService::Init();
 }
 
 nsOSHelperAppService::~nsOSHelperAppService()
