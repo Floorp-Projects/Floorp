@@ -98,25 +98,6 @@ SetDragActionBasedOnModifiers ( nsIDragService* inDragService, short inModifiers
 
 #pragma mark -
 
-NS_IMPL_ADDREF(nsMacWindow);
-NS_IMPL_RELEASE(nsMacWindow);
-nsresult nsMacWindow::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-	if (NULL == aInstancePtr) {
-	    return NS_ERROR_NULL_POINTER;
-	}
-
-	if (aIID.Equals(nsIKBStateControl::GetIID())) {
-	    *aInstancePtr = (void*) ((nsIKBStateControl*)this);
-	    AddRef();
-	    return NS_OK;
-	}
-
-	return nsChildWindow::QueryInterface(aIID,aInstancePtr);
-}
-
-#pragma mark -
-
 
 //еее this should probably go into the drag session as a static
 pascal OSErr

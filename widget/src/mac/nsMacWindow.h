@@ -23,7 +23,6 @@
 #define MacWindow_h__
 
 #include <memory>	// for auto_ptr
-#include "nsIKBStateControl.h"
 
 #include "nsWindow.h"
 #include "nsMacEventHandler.h"
@@ -37,7 +36,7 @@ class nsMacEventHandler;
 //-------------------------------------------------------------------------
 //	MacOS native window
 
-class nsMacWindow : public nsChildWindow, public nsIKBStateControl
+class nsMacWindow : public nsChildWindow
 {
 private:
 	typedef nsChildWindow Inherited;
@@ -45,10 +44,6 @@ private:
 public:
     nsMacWindow();
     virtual ~nsMacWindow();
-	// nsISupports
-	NS_IMETHOD_(nsrefcnt) AddRef();
-	NS_IMETHOD_(nsrefcnt) Release();
-	NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
 /*
     // nsIWidget interface
