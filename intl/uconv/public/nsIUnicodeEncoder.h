@@ -85,8 +85,8 @@ public:
 //
 #define ENCODER_BUFFER_ALLOC_IF_NEEDED(p,e,s,l,sb,sbl,al) \
   PR_BEGIN_MACRO                                          \
-    nsresult rv = (e)->GetMaxLength((s), (l), &(al));     \
-    if (NS_SUCCEEDED(rv)                                  \
+    if (e                                                 \
+        && NS_SUCCEEDED((e)->GetMaxLength((s), (l), &(al)))\
         && ((al) > (PRInt32)(sbl))                        \
         && (nsnull!=((p)=(char*)nsMemory::Alloc((al)+1))) \
         ) {                                               \
