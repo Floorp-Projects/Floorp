@@ -637,7 +637,9 @@ _pl_SetupNativeNotifier(PLEventQueue* self)
         status = LIB$GET_EF(&self->efn);
         if (!$VMS_STATUS_SUCCESS(status))
             return PR_FAILURE;
-	return PR_SUCCESS;
+        PR_LOG(event_lm, PR_LOG_DEBUG,
+           ("$$$ Allocated event flag %d", self->efn));
+        return PR_SUCCESS;
     }
 #elif defined(XP_UNIX)
     int err;
@@ -708,6 +710,8 @@ _pl_CleanupNativeNotifier(PLEventQueue* self)
 #if defined(VMS)
     {
         unsigned int status;
+        PR_LOG(event_lm, PR_LOG_DEBUG,
+           ("$$$ Freeing event flag %d", self->efn));
         status = LIB$FREE_EF(&self->efn);
     }
 #elif defined(XP_UNIX)
@@ -743,8 +747,8 @@ _pl_NativeNotify(PLEventQueue* self)
 {
         unsigned int status;
         PR_LOG(event_lm, PR_LOG_DEBUG,
-               ("_pl_NativeNotify: self=%p notifyCount=%d efn=%d",
-                self, self->notifyCount, self->efn));
+           ("_pl_NativeNotify: self=%p notifyCount=%d efn=%d",
+            self, self->notifyCount, self->efn));
         self->notifyCount++;
         status = SYS$SETEF(self->efn);
         if ($VMS_STATUS_SUCCESS(status))
