@@ -27,7 +27,7 @@
 
 #include "nsError.h"
 
-#include <jni.h>
+#include "jni.h"
 
 class MRJPlugin;
 

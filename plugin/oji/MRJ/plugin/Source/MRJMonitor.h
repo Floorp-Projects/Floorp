@@ -30,7 +30,7 @@
 #include "Monitor.h"
 
 #ifndef JNI_H
-#include <jni.h>
+#include "jni.h"
 #endif
 
 class MRJSession;

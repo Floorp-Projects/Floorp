@@ -31,7 +31,7 @@
 #include "nsIEventHandler.h"
 #include "SupportsMixin.h"
 
-#include <jni.h>
+#include "jni.h"
 #include <JManager.h>
 
 class MRJPlugin;

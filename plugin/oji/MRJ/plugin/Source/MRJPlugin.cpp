@@ -503,13 +503,17 @@ MRJPluginInstance* MRJPlugin::getPluginInstance(JNIEnv* jenv)
 
 Boolean MRJPlugin::inPluginThread()
 {
-        Boolean result = false;
-	nsPluginThread *currentThreadID = -1;
+	Boolean result = false;
+	nsPluginThread *currentThreadID = NULL;
+	
 	if (mThreadManager != NULL)
 		mThreadManager->GetCurrentThread(&currentThreadID);
 	if ((NULL != currentThreadID) && (NULL != mPluginThreadID)) {
-	  result = (*mPluginThreadID == *currentThreadID);
+		if (currentThreadID == mPluginThreadID) {
+			result = true;
+		}
 	}
+	
 	return result;
 }
 
