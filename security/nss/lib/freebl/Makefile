@@ -89,3 +89,26 @@ private_export::
 	$(NSINSTALL) -m 777 $(libbsafe) $(DIST)/lib; \
 
 endif
+
+mp%.c : mpi/mp%.c
+	cd mpi; cp $@ ..
+
+mp%.h : mpi/mp%.h
+	cd mpi; cp $@ ..
+
+logtab.h : mpi/logtab.h
+	cd mpi; cp $@ ..
+
+primes.c : mpi/primes.c
+	cd mpi; cp $@ ..
+
+.PRECIOUS : $(MPI_SRCS) $(MPI_HDRS)
+
+ALL_TRASH += $(MPI_SRCS) $(MPI_HDRS)
+DEFINES += -DMP_API_COMPATIBLE
+
+MPI_OBJS = $(addprefix $(OBJDIR)/$(PROG_PREFIX), $(MPI_SRCS:.c=$(OBJ_SUFFIX)))
+
+$(MPI_OBJS): $(MPI_HDRS) primes.c
+
+
