@@ -155,6 +155,7 @@ SECMODModuleID PK11_GetModuleID(PK11SlotInfo *slot);
 SECStatus PK11_GetSlotInfo(PK11SlotInfo *slot, CK_SLOT_INFO *info);
 SECStatus PK11_GetTokenInfo(PK11SlotInfo *slot, CK_TOKEN_INFO *info);
 PRBool PK11_IsDisabled(PK11SlotInfo *slot);
+PRBool PK11_HasRootCerts(PK11SlotInfo *slot);
 PK11DisableReasons PK11_GetDisabledReason(PK11SlotInfo *slot);
 /* Prevents the slot from being used, and set disable reason to user-disable */
 /* NOTE: Mechanisms that were ON continue to stay ON */

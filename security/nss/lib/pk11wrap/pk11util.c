@@ -139,11 +139,9 @@ void SECMOD_init(char *dbname) {
 	if (thisModule->module->internal) {
 	    found++;
 	    internalModule = SECMOD_ReferenceModule(thisModule->module);
-	    break;
 	}
 	if (secmod_ModuleHasRoots(thisModule->module)) {
 	    rootFound++;
-	    break;
 	}
     }
 
