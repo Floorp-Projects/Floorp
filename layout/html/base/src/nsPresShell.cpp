@@ -2951,8 +2951,9 @@ PresShell::IntraLineMove(PRBool aForward, PRBool aExtend)
 NS_IMETHODIMP 
 PresShell::PageMove(PRBool aForward, PRBool aExtend)
 {
+#if 1
   return ScrollPage(aForward);
-#if 0
+#else
 
   nsCOMPtr<nsIViewManager> viewManager;
   nsresult result = GetViewManager(getter_AddRefs(viewManager));
@@ -3096,6 +3097,8 @@ PresShell::CompleteMove(PRBool aForward, PRBool aExtend)
           bodyContent->ChildCount(offset);
         }
         result = mSelection->HandleClick(bodyContent,offset,offset,aExtend, PR_FALSE,aExtend);
+        // if we got this far, attempt to scroll no matter what the above result is
+        CompleteScroll(aForward);
       }
     }
   }
