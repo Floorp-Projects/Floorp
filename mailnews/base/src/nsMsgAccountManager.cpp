@@ -56,6 +56,9 @@
 
 #define PREF_MAIL_ACCOUNTMANAGER_ACCOUNTS "mail.accountmanager.accounts"
 #define PREF_MAIL_SERVER_PREFIX "mail.server."
+#define ACCOUNT_PREFIX "account"
+#define SERVER_PREFIX "server"
+#define ID_PREFIX "id"
 
 static NS_DEFINE_CID(kMsgAccountCID, NS_MSGACCOUNT_CID);
 static NS_DEFINE_CID(kMsgIdentityCID, NS_MSGIDENTITY_CID);
@@ -247,7 +250,7 @@ nsMsgAccountManager::CreateIdentity(nsIMsgIdentity **_retval)
 {
   if (!_retval) return NS_ERROR_NULL_POINTER;
 
-  char *key = getUniqueKey("id", &m_identities);
+  char *key = getUniqueKey(ID_PREFIX, &m_identities);
 
   return createKeyedIdentity(key, _retval);
 }
@@ -319,7 +322,7 @@ nsMsgAccountManager::CreateIncomingServer(const char* username,
                                           nsIMsgIncomingServer **_retval)
 {
   if (!_retval) return NS_ERROR_NULL_POINTER;
-  const char *key = getUniqueKey("server", &m_incomingServers);
+  const char *key = getUniqueKey(SERVER_PREFIX, &m_incomingServers);
   return createKeyedServer(key, username, hostname, type, _retval);
 }
 
@@ -955,7 +958,7 @@ nsMsgAccountManager::CreateAccount(nsIMsgAccount **_retval)
 {
     if (!_retval) return NS_ERROR_NULL_POINTER;
 
-    const char *key=getUniqueAccountKey("account", m_accounts);
+    const char *key=getUniqueAccountKey(ACCOUNT_PREFIX, m_accounts);
 
     return createKeyedAccount(key, _retval);
 }
