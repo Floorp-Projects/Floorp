@@ -1503,12 +1503,9 @@ NS_IMETHODIMP
   rc = aSource->GetAsDouble(&f);        //  Check that double works.
   if (NS_FAILED(rc))
     return rc;
-  char *ptr = PR_smprintf("%lf", f);
-  if (!ptr)
-    return NS_ERROR_OUT_OF_MEMORY;
   nsAutoString value;
-  CopyASCIItoUCS2(nsDependentCString(ptr), value);
-  PR_smprintf_free(ptr);
+  // Note that AppendFloat actually takes a double, so this is ok.
+  value.AppendFloat(f);
   return EncodeSimpleValue(aEncoding, value,
                            aNamespaceURI, aName, aSchemaType, aDestination,
                            aReturnValue);
@@ -1535,12 +1532,8 @@ NS_IMETHODIMP
   rc = aSource->GetAsFloat(&f);        //  Check that float works.
   if (NS_FAILED(rc))
     return rc;
-  char *ptr = PR_smprintf("%f", f);
-  if (!ptr)
-    return NS_ERROR_OUT_OF_MEMORY;
   nsAutoString value;
-  CopyASCIItoUCS2(nsDependentCString(ptr), value);
-  PR_smprintf_free(ptr);
+  value.AppendFloat(f);
   return EncodeSimpleValue(aEncoding, value,
                            aNamespaceURI, aName, aSchemaType, aDestination,
                            aReturnValue);
