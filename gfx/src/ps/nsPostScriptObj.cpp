@@ -695,7 +695,7 @@ XP_File f;
   XP_FilePrintf(f, "      /Unicode2NativeDict where {\n");
   XP_FilePrintf(f, "        pop\n");
   XP_FilePrintf(f, "        Unicode2NativeDict ccode known {\n");
-  XP_FilePrintf(f, "          Unicode2NativeDict ccode get mbshow\n");
+  XP_FilePrintf(f, "          Unicode2NativeDict ccode get show\n");
   XP_FilePrintf(f, "          true\n");
   XP_FilePrintf(f, "        } {\n");
   XP_FilePrintf(f, "          false\n");
@@ -942,7 +942,7 @@ nsPostScriptObj::preshow(const PRUnichar* txt, int len)
 	      ncode = new PRInt32;
 	      *ncode = code;
 	      gU2Ntable->Put(&key, ncode);
-	      XP_FilePrintf(f, "%d %u u2nadd\n", uch, code);
+	      XP_FilePrintf(f, "%d <%x> u2nadd\n", uch, code);
             }
 	  }
 	}
