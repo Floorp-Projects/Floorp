@@ -155,20 +155,6 @@ nsJSProtocolHandler::GetDefaultPort(PRInt32 *result)
 }
 
 NS_IMETHODIMP
-nsJSProtocolHandler::MakeAbsolute(const char* aSpec,
-                                  nsIURI* aBaseURI,
-                                  char* *result)
-{
-    // presumably, there's no such thing as a relative javascript: URI,
-    // so just copy the input spec
-    char* dup = nsCRT::strdup(aSpec);
-    if (!dup)
-        return NS_ERROR_OUT_OF_MEMORY;
-    *result = dup;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsJSProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
                             nsIURI **result)
 {

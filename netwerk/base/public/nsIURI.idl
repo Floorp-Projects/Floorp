@@ -117,18 +117,26 @@ interface nsIURI : nsISupports
      */
     nsIURI clone();
 
-	/**
-	 * Sets the given string to be a relative path for this URL, and 
-	 * changes this to read relative. Thus for example- if this = 
-	 * http://foo.com/bar/index.html, then calling SetRelativePath("/baz") will 
-	 * change this to http://foo.com/baz and calling it with "baz" will
-	 * change this to http://foo.com/bar/baz. 
-	 */
-	 void setRelativePath(in string i_RelativePath);
+    /**
+     * Sets the given string to be a relative path for this URI, and 
+     * changes this to read relative. Thus for example- if this = 
+     * http://foo.com/bar/index.html, then calling SetRelativePath("/baz") will 
+     * change this to http://foo.com/baz and calling it with "baz" will
+     * change this to http://foo.com/bar/baz. 
+     */
+    void setRelativePath(in string relativePath);
+
+    /**
+     * This method resolves a relative string into an absolute URI string,
+     * using the URI as the base. 
+     *
+     * This method subsumes the deprecated method nsIIOService::MakeAbsolute.
+     */
+    string resolve(in string relativePath);
 };
 
 %{C++
-// Malformed URL Error
+// Malformed URI Error
 #define NS_ERROR_MALFORMED_URI  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 10)
 
 /**

@@ -81,14 +81,6 @@ nsJARProtocolHandler::GetDefaultPort(PRInt32 *result)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsJARProtocolHandler::MakeAbsolute(const char* aSpec,
-                                     nsIURI* aBaseURI,
-                                     char* *result)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 // JAR urls have the following syntax
 //
 // jar:<url>!/(entry)

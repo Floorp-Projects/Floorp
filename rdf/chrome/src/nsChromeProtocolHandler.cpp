@@ -88,23 +88,6 @@ nsChromeProtocolHandler::GetDefaultPort(PRInt32 *result)
 }
 
 NS_IMETHODIMP
-nsChromeProtocolHandler::MakeAbsolute(const char* aSpec,
-                                      nsIURI* aBaseURI,
-                                      char* *result)
-{
-    // XXX optimize this to not needlessly construct the URL
-
-    nsresult rv;
-    nsIURI* url;
-    rv = NewURI(aSpec, aBaseURI, &url);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = url->GetSpec(result);
-    NS_RELEASE(url);
-    return rv;
-}
-
-NS_IMETHODIMP
 nsChromeProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
                                 nsIURI **result)
 {

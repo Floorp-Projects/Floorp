@@ -32,19 +32,13 @@ interface nsIFileChannel;
 interface nsILoadGroup;
 interface nsILoadGroupObserver;
 
-[scriptable, uuid(01f0a170-1881-11d3-9337-00104ba0fd40)]
+[scriptable, uuid(1daf19f0-8ea7-11d3-93ad-00104ba0fd40)]
 interface nsIIOService : nsISupports
 {
     /**
      * Returns a protocol handler for a given URI scheme.
      */
     nsIProtocolHandler getProtocolHandler(in string scheme);
-
-    /**
-     * Returns an absolute URI string from a relative specification and
-     * a base URI.
-     */
-    string makeAbsolute(in string aRelativeSpec, in nsIURI aBaseURI);
 
     /**
      * This method constructs a new URI by first determining the scheme
@@ -146,16 +140,6 @@ interface nsIIOService : nsISupports
      * then uses it to construct a file channel from a native path string.
      */
     nsIFileChannel newChannelFromNativePath(in string nativePath);
-
-    /**
-     * Returns a new load group. Load groups can be used to manage collections
-     * of channels so that they can be reloaded or canceled en mass. Note that
-     * their use is not required by other parts of the system, they are primarily
-     * a convenience for the caller. The outer parameter can be used for aggregation.
-     */
-    nsILoadGroup newLoadGroup(in nsISupports outer,
-                              in nsIStreamObserver observer, 
-                              in nsILoadGroup parent);
 
     /**
      * Returns a simple channel implementation that uses the given input

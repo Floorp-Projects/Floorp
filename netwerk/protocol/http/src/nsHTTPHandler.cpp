@@ -269,22 +269,6 @@ nsHTTPHandler::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 NS_IMPL_RELEASE(nsHTTPHandler);
 
 NS_METHOD
-nsHTTPHandler::MakeAbsolute(const char *aRelativeSpec, nsIURI *aBaseURI,
-                            char **_retval)
-{
-    // XXX optimize this to not needlessly construct the URL
-
-    nsresult rv;
-    nsIURI* url;
-    rv = NewURI(aRelativeSpec, aBaseURI, &url);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = url->GetSpec(_retval);
-    NS_RELEASE(url);
-    return rv;
-}
-
-NS_METHOD
 nsHTTPHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
                       nsIURI **result)
 {

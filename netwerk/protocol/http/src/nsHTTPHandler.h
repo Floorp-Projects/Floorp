@@ -77,10 +77,6 @@ public:
         return NS_OK;
     };
 
-    NS_IMETHOD               MakeAbsolute(const char *aRelativeSpec, 
-                                        nsIURI *aBaseURI,
-                                        char **_retval);
-
     NS_IMETHOD               NewChannel(const char* verb, nsIURI* url,
                                         nsILoadGroup *aGroup,
                                         nsIEventSinkGetter *eventSinkGetter,

@@ -76,18 +76,6 @@ nsKeywordProtocolHandler::GetDefaultPort(PRInt32 *result) {
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsKeywordProtocolHandler::MakeAbsolute(const char* aSpec,
-                                     nsIURI* aBaseURI,
-                                     char* *result) {
-    // presumably, there's no such thing as a relative Keyword: URI,
-    // so just copy the input spec
-    char* dup = nsCRT::strdup(aSpec);
-    if (!dup) return NS_ERROR_OUT_OF_MEMORY;
-    *result = dup;
-    return NS_OK;
-}
-
 // digests a spec _without_ the preceeding "keyword:" scheme.
 static char *
 MangleKeywordIntoHTTPURL(const char *aSpec) {

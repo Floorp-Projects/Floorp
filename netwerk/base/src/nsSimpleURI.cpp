@@ -221,6 +221,13 @@ nsSimpleURI::SetRelativePath(const char *i_RelativePath)
     return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP
+nsSimpleURI::Resolve(const char *relativePath, char **result) 
+{
+    NS_ASSERTION(PR_FALSE, "This is meaningless in hack context!"); 
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_METHOD
