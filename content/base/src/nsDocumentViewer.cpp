@@ -4833,13 +4833,14 @@ DocumentViewerImpl::DoPrint(PrintObject * aPO, PRBool aDoSyncPrinting, PRBool& a
           }
         }
 
+        nsIFrame * seqFrame;
+        if (NS_FAILED(CallQueryInterface(pageSequence, &seqFrame))) {
+          mIsDoingPrinting = PR_FALSE;
+          return NS_ERROR_FAILURE;
+        }
+
         nsCOMPtr<nsIPrintPreviewContext> ppContext = do_QueryInterface(poPresContext);
         if (!ppContext) {
-          nsIFrame * seqFrame;
-          if (NS_FAILED(CallQueryInterface(pageSequence, &seqFrame))) {
-            mIsDoingPrinting = PR_FALSE;
-            return NS_ERROR_FAILURE;
-          }
 
           nsRect srect;
           seqFrame->GetRect(srect);
@@ -4874,6 +4875,8 @@ DocumentViewerImpl::DoPrint(PrintObject * aPO, PRBool aDoSyncPrinting, PRBool& a
             PRBool inRange;
             aDonePrinting = PrintPage(poPresContext, mPrt->mPrintSettings, aPO, inRange);
           }
+        } else {
+          pageSequence->StartPrint(poPresContext, mPrt->mPrintSettings, docTitleStr, docURLStr);
         }
       } else {
         // not sure what to do here!
