@@ -122,30 +122,44 @@ char * ownPasswd( PK11SlotInfo *slot, PRBool retry, void *arg)
 
 void printSecurityInfo(PRFileDesc *fd)
 {
-    char * cp;	/* bulk cipher name */
-    char * ip;	/* cert issuer DN */
-    char * sp;	/* cert subject DN */
-    int    op;	/* High, Low, Off */
-    int    kp0;	/* total key bits */
-    int    kp1;	/* secret key bits */
-    int    result;
+    CERTCertificate * cert;
     SSL3Statistics * ssl3stats = SSL_GetStatistics();
+    SECStatus result;
+    SSLChannelInfo info;
 
-    result = SSL_SecurityStatus(fd, &op, &cp, &kp0, &kp1, &ip, &sp);
+    result = SSL_GetChannelInfo(fd, &info, sizeof info);
     if (result != SECSuccess)
     	return;
-    fprintf(stderr,
-           "bulk cipher %s, %d secret key bits, %d key bits, status: %d\n"
-           "subject DN: %s\n"
-	   "issuer  DN: %s\n", cp, kp1, kp0, op, sp, ip);
-    PR_Free(cp);
-    PR_Free(ip);
-    PR_Free(sp);
-
+    if (info.length >= sizeof info - sizeof info.reserved) {
+	fprintf(stderr, 
+	       "SSL version %d.%d using %d-bit %s with %d-bit %s MAC\n",
+	       info.protocolVersion >> 8, info.protocolVersion & 0xff,
+	       info.effectiveKeyBits, info.symCipherName, 
+	       info.macBits, info.macAlgorithmName);
+	fprintf(stderr, 
+	       "Server Authentication: %d-bit %s, Key Exchange: %d-bit %s\n",
+	       info.authKeyBits, info.authAlgorithmName,
+	       info.keaKeyBits,  info.keaTypeName);
+    }
+    cert = SSL_RevealCert(fd);
+    if (cert) {
+	char * ip = CERT_NameToAscii(&cert->issuer);
+	char * sp = CERT_NameToAscii(&cert->subject);
+        if (sp) {
+	    fprintf(stderr, "subject DN: %s\n", sp);
+	    PR_Free(sp);
+	}
+        if (ip) {
+	    fprintf(stderr, "issuer  DN: %s\n", ip);
+	    PR_Free(ip);
+	}
+	CERT_DestroyCertificate(cert);
+	cert = NULL;
+    }
     fprintf(stderr,
     	"%ld cache hits; %ld cache misses, %ld cache not reusable\n",
-    	ssl3stats->hch_sid_cache_hits, ssl3stats->hch_sid_cache_misses,
-	ssl3stats->hch_sid_cache_not_ok);
+    	ssl3stats->hsh_sid_cache_hits, ssl3stats->hsh_sid_cache_misses,
+	ssl3stats->hsh_sid_cache_not_ok);
 
 }
 

@@ -236,30 +236,52 @@ myBadCertHandler( void *arg, PRFileDesc *fd)
 void 
 printSecurityInfo(PRFileDesc *fd)
 {
-    char * cp;	/* bulk cipher name */
-    char * ip;	/* cert issuer DN */
-    char * sp;	/* cert subject DN */
-    int    op;	/* High, Low, Off */
-    int    kp0;	/* total key bits */
-    int    kp1;	/* secret key bits */
-    int    result;
+    CERTCertificate * cert;
+    SSL3Statistics * ssl3stats = SSL_GetStatistics();
+    SECStatus result;
+    SSLChannelInfo info;
 
+#ifndef DEBUG_nelsonb
     static int only_once;
 
-    if (! only_once++ && fd) {
-	result = SSL_SecurityStatus(fd, &op, &cp, &kp0, &kp1, &ip, &sp);
-	if (result != SECSuccess)
-	    return;
-	PRINTF(
-	"strsclnt: cipher %s, %d secret key bits, %d key bits, status: %d\n",
-	       cp, kp1, kp0, op);
-	PR_Free(cp);
-	PR_Free(ip);
-	PR_Free(sp);
-    }
+    if (only_once)
+    	return;
+    only_once = 1;
+#endif
 
-    PRINTF(
-    "strsclnt: %ld cache hits; %ld cache misses, %ld cache not reusable\n",
+    result = SSL_GetChannelInfo(fd, &info, sizeof info);
+    if (result != SECSuccess)
+    	return;
+    if (info.length >= sizeof info - sizeof info.reserved) {
+	fprintf(stderr, 
+	   "strsclnt: SSL version %d.%d using %d-bit %s with %d-bit %s MAC\n",
+	       info.protocolVersion >> 8, info.protocolVersion & 0xff,
+	       info.effectiveKeyBits, info.symCipherName, 
+	       info.macBits, info.macAlgorithmName);
+	fprintf(stderr, 
+	   "strsclnt: Server Auth: %d-bit %s, Key Exchange: %d-bit %s\n",
+	       info.authKeyBits, info.authAlgorithmName,
+	       info.keaKeyBits,  info.keaTypeName);
+    }
+#if 0
+    cert = SSL_RevealCert(fd);
+    if (cert) {
+	char * ip = CERT_NameToAscii(&cert->issuer);
+	char * sp = CERT_NameToAscii(&cert->subject);
+        if (sp) {
+	    fprintf(stderr, "strsclnt: ubject DN: %s\n", sp);
+	    PR_Free(sp);
+	}
+        if (ip) {
+	    fprintf(stderr, "strsclnt: issuer  DN: %s\n", ip);
+	    PR_Free(ip);
+	}
+	CERT_DestroyCertificate(cert);
+	cert = NULL;
+    }
+#endif
+    fprintf(stderr,
+    	"strsclnt: %ld cache hits; %ld cache misses, %ld cache not reusable\n",
     	ssl3stats->hsh_sid_cache_hits, 
 	ssl3stats->hsh_sid_cache_misses,
 	ssl3stats->hsh_sid_cache_not_ok);
