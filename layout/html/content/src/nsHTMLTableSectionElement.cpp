@@ -168,37 +168,31 @@ nsHTMLTableSectionElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
 {
   *aValue = nsnull;
 
-  PRInt32 refIndex = (0 <= aIndex) ? aIndex : 0;
-    
-  nsIDOMHTMLCollection *rows;
-  GetRows(&rows);
+  nsCOMPtr<nsIDOMHTMLCollection> rows;
+  GetRows(getter_AddRefs(rows));
   PRUint32 rowCount;
   rows->GetLength(&rowCount);
-  if (rowCount <= PRUint32(aIndex)) {
-    refIndex = rowCount - 1; // refIndex will be -1 if there are no rows 
-  }
+  PRBool doInsert = (aIndex < PRInt32(rowCount));
+
   // create the row
-  nsIHTMLContent *rowContent = nsnull;
+  nsIHTMLContent* rowContent = nsnull;
   nsresult rv = NS_NewHTMLTableRowElement(&rowContent, nsHTMLAtoms::tr);
   if (NS_SUCCEEDED(rv) && (nsnull != rowContent)) {
-    nsIDOMNode *rowNode = nsnull;
+    nsIDOMNode* rowNode = nsnull;
     rv = rowContent->QueryInterface(kIDOMNodeIID, (void **)&rowNode); 
     if (NS_SUCCEEDED(rv) && (nsnull != rowNode)) {
-      if (refIndex >= 0) {
-        nsIDOMNode *refRow;
-        rows->Item(refIndex, &refRow);
+      if (doInsert) {
+        PRInt32 refIndex = PR_MAX(aIndex, 0);   
+        nsCOMPtr<nsIDOMNode> refRow;
+        rows->Item(refIndex, getter_AddRefs(refRow));
         rv = InsertBefore(rowNode, refRow, (nsIDOMNode **)aValue);
-		NS_RELEASE(refRow);
       } else {
         rv = AppendChild(rowNode, (nsIDOMNode **)aValue);
       }
-
       NS_RELEASE(rowNode);
     }
     NS_RELEASE(rowContent);
-  }
-  NS_RELEASE(rows);
-
+  } 
   return NS_OK;
 }
 
