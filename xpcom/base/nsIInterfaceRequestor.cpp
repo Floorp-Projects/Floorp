@@ -39,7 +39,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 
-nsresult NS_EXPORT
+nsresult
 nsGetInterface::operator()( const nsIID& aIID, void** aInstancePtr ) const
 {
 	nsresult status;
@@ -62,4 +62,3 @@ nsGetInterface::operator()( const nsIID& aIID, void** aInstancePtr ) const
 		*mErrorPtr = status;
 	return status;
 }
-

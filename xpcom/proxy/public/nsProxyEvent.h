@@ -131,10 +131,10 @@ private:
 };
 
 
-class nsProxyObjectCallInfo
+class NS_EXPORT nsProxyObjectCallInfo
 {
 public:
-    NS_EXPORT 
+    
     nsProxyObjectCallInfo(nsProxyObject* owner,
                           nsXPTMethodInfo *methodInfo,
                           PRUint32 methodIndex, 
@@ -142,23 +142,23 @@ public:
                           PRUint32 parameterCount, 
                           PLEvent *event);
 
-    NS_EXPORT virtual ~nsProxyObjectCallInfo();
+    virtual ~nsProxyObjectCallInfo();
     
-    inline PRUint32            GetMethodIndex() const { return mMethodIndex; }
-    inline nsXPTCVariant*      GetParameterList() const { return mParameterList; }
-    inline PRUint32            GetParameterCount() const { return mParameterCount; }
-    inline PLEvent*            GetPLEvent() const { return mEvent; }
-    inline nsresult            GetResult() const { return mResult; }
-    inline nsProxyObject*      GetProxyObject() const { return mOwner; }
+    PRUint32            GetMethodIndex() const { return mMethodIndex; }
+    nsXPTCVariant*      GetParameterList() const { return mParameterList; }
+    PRUint32            GetParameterCount() const { return mParameterCount; }
+    PLEvent*            GetPLEvent() const { return mEvent; }
+    nsresult            GetResult() const { return mResult; }
+    nsProxyObject*      GetProxyObject() const { return mOwner; }
     
-    NS_EXPORT PRBool              GetCompleted();
-    NS_EXPORT void                SetCompleted();
-    NS_EXPORT void                PostCompleted();
+    PRBool              GetCompleted();
+    void                SetCompleted();
+    void                PostCompleted();
 
-    inline void                   SetResult(nsresult rv) {mResult = rv; }
+    void                SetResult(nsresult rv) {mResult = rv; }
     
-    NS_EXPORT nsIEventQueue*      GetCallersQueue();
-    NS_EXPORT void                SetCallersQueue(nsIEventQueue* queue);
+    nsIEventQueue*      GetCallersQueue();
+    void                SetCallersQueue(nsIEventQueue* queue);
 
 private:
     
