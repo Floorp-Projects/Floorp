@@ -41,7 +41,8 @@ Rights Reserved.
 			  onblur="goOnEvent(this,'blur')"
 			  containment="http://home.netscape.com/NC-rdf#MessageChild"
 			  allownegativeassertions="false"
-			coalesceduplicatearcs="false">
+			coalesceduplicatearcs="false"
+			  multiple="true">
 
   <template>
   	<rule>
