@@ -41,6 +41,12 @@ bin\components\xpinstal.dll
 [offline]
 bin\chrome\offline.jar
 
+; Optional RSS extension
+[newsblog]
+bin\chrome\newsblog.jar
+bin\defaults\isp\rss.rdf
+bin\components\newsblog.js
+
 ; Optional Talkback
 [talkback]
 bin\components\qfaservices.dll

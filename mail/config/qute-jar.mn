@@ -16,6 +16,7 @@ skin/classic/messenger/addressbook/icons,            classic/skin/classic/messen
 skin/classic/messenger/messengercompose,             classic/skin/classic/messenger/messengercompose
 skin/classic/messenger/smime,                        classic/skin/classic/messenger/smime
 skin/classic/messenger/smime/icons,                  classic/skin/classic/messenger/smime/icons
+skin/classic/messenger-newsblog,                     classic/skin/classic/messenger-newsblog
 icon.png,                                            classic/icon.png
 
 #################################################################################################
@@ -90,3 +91,4 @@ skin/classic/editor/icons/img-align-left.gif,         classic/skin/classic/edito
 skin/classic/editor/icons/img-align-middle.gif,       classic/skin/classic/editor/icons/img-align-middle.gif
 skin/classic/editor/icons/img-align-right.gif,        classic/skin/classic/editor/icons/img-align-right.gif
 skin/classic/editor/icons/img-align-top.gif,          classic/skin/classic/editor/icons/img-align-top.gif
+

@@ -235,9 +235,10 @@ C2=Component Uninstaller
 C3=Component US English Profile Defaults
 C4=Component En US lang pack
 C5=Component US region pack
+C6=Component RSS
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
-C6=Component QFA
+C7=Component QFA
 
 [Setup Type1]
 ;*** LOCALIZE ME BABY ***
@@ -255,10 +256,11 @@ C3=Component US English Profile Defaults
 C4=Component En US lang pack
 C5=Component US region pack
 C6=Component Offline
+C7=Component RSS
 ;C7=Component ADT
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
-C7=Component QFA
+C8=Component QFA
 
 [Dialog Select Components]
 Show Dialog=TRUE
@@ -477,7 +479,7 @@ Message Retry0=Some files have failed the CRC check and are being downloaded aga
 Show Dialog=AUTO
 
 [Check Instance0]
-Class Name=MozillaMessageWindow
+Class Name=ThunderbirdMessageWindow
 Window Name=
 Process Name=$MainExeFile$
 Pretty Name=$ProductNameInternal$
@@ -498,36 +500,6 @@ Extra Cmd0 Reg Key Root=HKEY_LOCAL_MACHINE
 Extra Cmd0 Reg Key=Software\Microsoft\Windows\CurrentVersion\App Paths\$MainExeFile$
 Extra Cmd0 Reg Name=
 Extra Cmd0 Parameter=-kill
-
-[Check Instance1]
-Class Name=Netscape6MessageWindow
-Window Name=
-Process Name=Netscp.exe
-Pretty Name=Netscape
-;*** LOCALIZE ME BABY ***
-Message=Download of $ProductName$ was successful. However, Netscape must be closed to proceed with this installation. Click OK to exit Netscape automatically and to begin installation.
-;*** LOCALIZE ME BABY ***
-Message Full Installer=Netscape must be closed to proceed with this installation. Click OK to exit Netscape automatically and to begin installation.
-;*** LOCALIZE ME BABY ***
-Message wait=Shutting down Netscape.  Please wait...
-
-; This key indicates whether or not to close all the windows associated with
-; the process id of this app instance window found.
-Close All Process Windows=TRUE
-
-; These keys are not normally necessary for checking instances.  They are
-; set here because Netscape 6 requires a way to shut down it's turbo mode.
-; This will stop at the first one that succeeds (key and file found).
-Extra Cmd0 Reg Key Root=HKEY_LOCAL_MACHINE
-Extra Cmd0 Reg Key=Software\Microsoft\Windows\CurrentVersion\App Paths\Netscp6.exe
-Extra Cmd0 Reg Name=
-Extra Cmd0 Parameter=-kill
-
-Extra Cmd1 Reg Key Root=HKEY_LOCAL_MACHINE
-Extra Cmd1 Reg Key=Software\Microsoft\Windows\CurrentVersion\App Paths\Netscp.exe
-Extra Cmd1 Reg Name=
-Extra Cmd1 Parameter=-kill
-
 
 ;DependeeX=Component A means
 ;  - if Component A gets checked this component gets checked
@@ -655,6 +627,17 @@ $InstallSize$:offline
 $InstallSizeArchive$:offline.xpi
 Attributes=FORCE_UPGRADE|VISIBLE
 Force Upgrade File0=[SETUP PATH]\chrome\offline.jar
+FileCount=$FileCount$
+
+[Component RSS]
+Description Short=RSS Support
+;*** LOCALIZE ME BABY ***
+Description Long=Adds RSS support to $ProductName$ Mail. 
+Archive=newsblog.xpi
+$InstallSize$:newsblog
+$InstallSizeArchive$:newsblog.xpi
+Attributes=FORCE_UPGRADE|VISIBLE
+Force Upgrade File0=[SETUP PATH]\chrome\newsblog.jar
 FileCount=$FileCount$
 
 ;[Component ADT]

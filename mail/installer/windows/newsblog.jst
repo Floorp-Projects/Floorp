@@ -1,0 +1,33 @@
+var err = initInstall("RSS Support", "RSS", "$Version$"); 
+logComment("initInstall: " + err);
+
+// RSS Extension
+
+var fProgram = getFolder("Program");
+logComment("fProgram: " + fProgram);
+
+err = addDirectory("", "$Version$", "bin", fProgram, "", true);
+logComment("addDirectory: " + err);
+
+var jarFolder = getFolder("Chrome", "newsblog.jar");
+
+fTarget = getFolder("Program", "defaults");
+logComment("fTarget: " + fTarget);
+err = addDirectory("",
+                     "bin/defaults", // dir name in jar to extract 
+                     fTarget,        // Where to put this file (Returned from GetFolder) 
+                     "");            // subdir name to create relative to fProgram 
+
+addFile("RSS Service",
+        "bin/components/newsblog.js",
+        getFolder("Components"),
+        "");
+
+registerChrome(CONTENT | DELAYED_CHROME, jarFolder, "content/messenger-newsblog/");
+registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","qute.jar"), "skin/classic/messenger-newsblog/");
+
+err = getLastError();
+if (err==SUCCESS)
+    performInstall(); 
+else
+    cancelInstall(err);

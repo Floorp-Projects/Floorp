@@ -14,6 +14,8 @@ locale/en-US/messenger/addressbook,                       en-US/locale/en-US/mes
 locale/en-US/messenger/messengercompose,                  en-US/locale/en-US/messenger/messengercompose
 locale/en-US/messenger/migration,                         en-US/locale/en-US/messenger/migration
 locale/en-US/messenger-smime,                             en-US/locale/en-US/messenger-smime
+locale/en-US/messenger-mapi,                              en-US/locale/en-US/messenger-mapi
+locale/en-US/messenger-newsblog,                          en-US/locale/en-US/messenger-newsblog
 
 #################################################################################################
 # xpfe extensions (ldap, wallet, etc)

@@ -14,7 +14,8 @@
         chrome:author="Team Thunderbird"
         chrome:name="messenger-newsblog"
         chrome:description="This extension adds the ability to read news and blog feeds to Mozilla Thunderbird." 
-        chrome:extension="true">
+#expand chrome:localeVersion="__MOZILLA_LOCALE_VERSION__"
+#expand chrome:skinVersion="__MOZILLA_SKIN_VERSION__">
   </RDF:Description>
 
   <!-- overlay information -->

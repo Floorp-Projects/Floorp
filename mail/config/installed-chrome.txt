@@ -39,6 +39,7 @@ locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/en-US/messenger/
 locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/en-US/messenger-mdn/
 locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/en-US/messenger-views/
 locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/en-US/messenger-smime/
+locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/en-US/messenger-mapi/
 locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/US/messenger-region/
 locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/en-US/necko/
 locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/en-US/editor/
@@ -50,18 +51,15 @@ locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/en-US/global/
 locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/US/global-region/
 #ifdef XP_WIN
 locale,install,url,jar:resource:/chrome/en-win.jar!/locale/en-US/global-platform/
-locale,install,url,jar:resource:/chrome/en-win.jar!/locale/en-US/messenger-mapi/
 locale,install,url,jar:resource:/chrome/en-win.jar!/locale/en-US/communicator-platform/
 locale,install,url,jar:resource:/chrome/en-win.jar!/locale/en-US/navigator-platform/
 #else
 #ifdef XP_OS2
 locale,install,url,jar:resource:/chrome/en-win.jar!/locale/en-US/global-platform/
-locale,install,url,jar:resource:/chrome/en-win.jar!/locale/en-US/messenger-mapi/
 locale,install,url,jar:resource:/chrome/en-win.jar!/locale/en-US/communicator-platform/
 locale,install,url,jar:resource:/chrome/en-win.jar!/locale/en-US/navigator-platform/
 #else
 locale,install,url,jar:resource:/chrome/en-unix.jar!/locale/en-US/global-platform/
-locale,install,url,jar:resource:/chrome/en-unix.jar!/locale/en-US/messenger-mapi/
 locale,install,url,jar:resource:/chrome/en-unix.jar!/locale/en-US/communicator-platform/
 locale,install,url,jar:resource:/chrome/en-unix.jar!/locale/en-US/navigator-platform/
 #endif
@@ -79,3 +77,8 @@ content,install,url,jar:resource:/chrome/offline.jar!/content/messenger-offline/
 locale,install,url,jar:resource:/chrome/offline.jar!/content/messenger-offline/
 locale,install,url,jar:resource:/chrome/offline.jar!/locale/en-US/messenger-offline/
 skin,install,url,jar:resource:/chrome/offline.jar!/content/messenger-offline/
+
+# optional registration for RSS support which may or may not be installed
+content,install,url,jar:resource:/chrome/newsblog.jar!/content/messenger-newsblog/
+locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/en-US/messenger-newsblog/
+skin,install,url,jar:resource:/chrome/qute.jar!/skin/classic/messenger-newsblog/

@@ -14,7 +14,7 @@ newsblog.jar:
 *  content/messenger-newsblog/am-newsblog.js                    (content/am-newsblog.js)
 *  content/messenger-newsblog/contents.rdf                      (content/contents.rdf)
 
-newsblog.jar:
+en-US.jar:
    locale/en-US/messenger-newsblog/newsblog.dtd                 (locale/newsblog.dtd)
    locale/en-US/messenger-newsblog/newsblog.properties          (locale/newsblog.properties)
    locale/en-US/messenger-newsblog/feed-properties.dtd          (locale/feed-properties.dtd)
