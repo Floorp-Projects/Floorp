@@ -1833,7 +1833,6 @@ SetFont(nsIPresContext* aPresContext, nsIStyleContext* aContext,
     if (dc) {
       // GetSystemFont sets the font face but not necessarily the size
       aFont->mFont.size = defaultVariableFont.size;
-      
       // If our font type is theme, then check for appearance data and
       // obtain our font based off our widget type.
       if (sysID == eSystemFont_Theme) {
