@@ -49,8 +49,10 @@ REQUIRES	= xpcom \
 		  rdf \
 		  webshell \
 		  helperAppDlg \
+		  progressDlg \
 		  plugin \
 		  pref \
+		  intl \
 		  $(NULL)
 
 OSHELPER	= nsOSHelperAppService.cpp

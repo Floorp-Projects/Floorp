@@ -29,8 +29,10 @@ REQUIRES	= xpcom \
 		  rdf \
 		  webshell \
 		  helperAppDlg \
+		  progressDlg \
 		  plugin \
 		  unicharutil \
+		  intl \
 		  $(NULL)
 
 include <$(DEPTH)\config\config.mak>
