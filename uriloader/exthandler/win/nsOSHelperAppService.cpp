@@ -401,23 +401,16 @@ already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetByExtension(const char *a
 
 already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(const char *aMIMEType, const char *aFileExt) 
 {
-  if (PL_strcasecmp(aMIMEType, APPLICATION_OCTET_STREAM) == 0) {
-    /* XXX Gross hack to wallpaper over the most common Win32
-     * extension issues caused by the fix for bug 116938.  See bug
-     * 120327, comment 271 for why this is needed.  Not even sure we
-     * want to remove this once we have fixed all this stuff to work
-     * right; any info we get from the OS on this type is pretty much
-     * useless....
-     * Just lookup by extension for this filetype.
-     */
-    aMIMEType = nsnull;
-    // If we now have nothing to lookup from, return
-    if (!aFileExt || !*aFileExt)
-      return nsnull;
-  }
-
   nsCAutoString fileExtension;
-  if (aMIMEType && *aMIMEType) {
+  /* XXX The strcasecmp is a gross hack to wallpaper over the most common Win32
+   * extension issues caused by the fix for bug 116938.  See bug
+   * 120327, comment 271 for why this is needed.  Not even sure we
+   * want to remove this once we have fixed all this stuff to work
+   * right; any info we get from the OS on this type is pretty much
+   * useless....
+   * We'll do extension-based lookup for this type later in this function.
+   */
+  if (aMIMEType && *aMIMEType && PL_strcasecmp(aMIMEType, APPLICATION_OCTET_STREAM) != 0) {
     // (1) try to use the windows mime database to see if there is a mapping to a file extension
     // (2) try to see if we have some left over 4.x registry info we can peek at...
     GetExtensionFromWindowsMimeDatabase(aMIMEType, fileExtension);
