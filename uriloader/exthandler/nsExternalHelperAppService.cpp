@@ -137,6 +137,12 @@ static nsDefaultMimeTypeEntry extraMimeEntries [] =
   { "application/x-arj", "arj", "ARJ file", 0,0 },
 };
 
+static const char* const nonDecodableTypes [] = {
+  "application/tar",
+  "application/x-tar",
+  0
+};
+
 NS_IMPL_THREADSAFE_ADDREF(nsExternalHelperAppService)
 NS_IMPL_THREADSAFE_RELEASE(nsExternalHelperAppService)
 
@@ -306,6 +312,19 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
     handler->QueryInterface(NS_GET_IID(nsIStreamListener), (void **) aStreamListener);
   }
   
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsExternalHelperAppService::ApplyDecodingForType(const char *aMimeContentType, PRBool *aApplyDecoding)
+{
+  *aApplyDecoding = PR_TRUE;
+  PRUint32 index;
+  for (index = 0; nonDecodableTypes[index]; ++index) {
+    if (!PL_strcasecmp(aMimeContentType, nonDecodableTypes[index])) {
+      *aApplyDecoding = PR_FALSE;
+      break;
+    }
+  }
   return NS_OK;
 }
 
@@ -1039,8 +1058,15 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface( aChannel );
   if ( httpChannel ) 
   {
-    // Turn off content encoding conversions.
-    httpChannel->SetApplyConversion( PR_FALSE );
+    // Turn off content encoding conversions if needed
+    PRBool applyConversion = PR_TRUE;
+    nsXPIDLCString MIMEType;
+    mMimeInfo->GetMIMEType( getter_Copies( MIMEType ) );
+    nsCOMPtr<nsIExternalHelperAppService> extHandler = do_GetService("@mozilla.org/uriloader/external-helper-app-service;1");
+    if (extHandler)
+      extHandler->ApplyDecodingForType(MIMEType, &applyConversion);
+    
+    httpChannel->SetApplyConversion( applyConversion );
   }
 
   mTimeDownloadStarted = PR_Now();

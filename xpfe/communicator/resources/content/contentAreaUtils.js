@@ -279,6 +279,15 @@ function foundHeaderInfo(aSniffer, aData)
   else 
     persist.persistFlags = flags | nsIWBP.PERSIST_FLAGS_FROM_CACHE;
 
+  try {
+    const helperAppService =
+      Components.classes["@mozilla.org/uriloader/external-helper-app-service;1"].getService(Components.interfaces.nsIExternalHelperAppService);
+    if (helperAppService.applyDecodingForType(persistArgs.contentType)) {
+      persist.persistFlags &= ~nsIWBP.PERSIST_FLAGS_NO_CONVERSION;
+    }
+  } catch (e) {
+  }      
+  
   if (isDocument && fp.filterIndex != 1) {
     // Saving a Document, not a URI:
     var filesFolder = null;

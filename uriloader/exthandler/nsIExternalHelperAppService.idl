@@ -55,6 +55,11 @@ interface nsIExternalHelperAppService : nsISupports
   // returns a nsIStreamListener which the caller should pump the data into.
   nsIStreamListener doContent (in string aMimeContentType, in nsIURI aURI, 
                                in nsISupports aWindowContext, out boolean aAbortProcess); 
+
+  // applyDecodingForType: returns true if this type is to be decoded
+  //                       prior to saving or passing off to helper apps,
+  //                       false otherwise
+  boolean applyDecodingForType (in string aMimeContentType);
 };
 
 // this is a private interface shared between external app handlers and the platform specific
