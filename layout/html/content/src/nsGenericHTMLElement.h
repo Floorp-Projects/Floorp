@@ -110,8 +110,8 @@ public:
   nsresult GetID(nsIAtom*& aResult) const;
   nsresult GetClasses(nsVoidArray& aArray) const;
   nsresult HasClass(nsIAtom* aClass) const;
-  nsresult GetContentStyleRule(nsIStyleRule*& aResult);
-  nsresult GetInlineStyleRule(nsIStyleRule*& aResult);
+  nsresult GetContentStyleRules(nsISupportsArray* aRules);
+  nsresult GetInlineStyleRules(nsISupportsArray* aRules);
   nsresult GetBaseURL(nsIURL*& aBaseURL) const;
   nsresult GetBaseTarget(nsString& aBaseTarget) const;
   nsresult ToHTMLString(nsString& aResult) const;
@@ -434,11 +434,11 @@ public:
   NS_IMETHOD HasClass(nsIAtom* aClass) const {                         \
     return _g.HasClass(aClass);                                        \
   }                                                                    \
-  NS_IMETHOD GetContentStyleRule(nsIStyleRule*& aResult) {             \
-    return _g.GetContentStyleRule(aResult);                            \
+  NS_IMETHOD GetContentStyleRules(nsISupportsArray* aRules) {          \
+    return _g.GetContentStyleRules(aRules);                            \
   }                                                                    \
-  NS_IMETHOD GetInlineStyleRule(nsIStyleRule*& aResult) {              \
-    return _g.GetInlineStyleRule(aResult);                             \
+  NS_IMETHOD GetInlineStyleRules(nsISupportsArray* aRules) {           \
+    return _g.GetInlineStyleRules(aRules);                             \
   }                                                                    \
   NS_IMETHOD GetBaseURL(nsIURL*& aBaseURL) const {                     \
     return _g.GetBaseURL(aBaseURL);                                    \
@@ -484,8 +484,8 @@ public:
   NS_IMETHOD HasClass(nsIAtom* aClass) const {                         \
     return _g.HasClass(aClass);                                        \
   }                                                                    \
-  NS_IMETHOD GetContentStyleRule(nsIStyleRule*& aResult);              \
-  NS_IMETHOD GetInlineStyleRule(nsIStyleRule*& aResult);               \
+  NS_IMETHOD GetContentStyleRules(nsISupportsArray* aRules);           \
+  NS_IMETHOD GetInlineStyleRules(nsISupportsArray* aRules);            \
   NS_IMETHOD GetBaseURL(nsIURL*& aBaseURL) const {                     \
     return _g.GetBaseURL(aBaseURL);                                    \
   }                                                                    \

@@ -215,8 +215,8 @@ public:
     NS_IMETHOD GetClasses(nsVoidArray& aArray) const;
     NS_IMETHOD HasClass(nsIAtom* aClass) const;
 
-    NS_IMETHOD GetContentStyleRule(nsIStyleRule*& aResult);
-    NS_IMETHOD GetInlineStyleRule(nsIStyleRule*& aResult);
+    NS_IMETHOD GetContentStyleRules(nsISupportsArray* aRules);
+    NS_IMETHOD GetInlineStyleRules(nsISupportsArray* aRules);
 
     /** NRA ***
     * Get a hint that tells the style system what to do when 
@@ -2702,20 +2702,23 @@ RDFElementImpl::HasClass(nsIAtom* aClass) const
 }
 
 NS_IMETHODIMP
-RDFElementImpl::GetContentStyleRule(nsIStyleRule*& aResult)
+RDFElementImpl::GetContentStyleRules(nsISupportsArray* aRules)
 {
-  aResult = nsnull;
   return NS_OK;
 }
     
 NS_IMETHODIMP
-RDFElementImpl::GetInlineStyleRule(nsIStyleRule*& aResult)
+RDFElementImpl::GetInlineStyleRules(nsISupportsArray* aRules)
 {
   // Fetch the cached style rule from the attributes.
   nsresult result = NS_ERROR_NULL_POINTER;
-  aResult = nsnull;
-  if (mAttributes != nsnull)
-    result = mAttributes->GetInlineStyleRule(aResult);
+  nsIStyleRule* rule = nsnull;
+  if (aRules && mAttributes)
+    result = mAttributes->GetInlineStyleRule(rule);
+  if (rule) {
+    aRules->AppendElement(rule);
+    NS_RELEASE(rule);
+  }
   return result;
 }
 
