@@ -674,7 +674,7 @@ sub init {
              $term = "$ff != $q";
          },
          ",casesubstring" => sub {
-             $term = "INSTR($ff, $q)";
+             $term = "INSTR(CAST($ff AS BINARY), CAST($q AS BINARY))";
          },
          ",substring" => sub {
              $term = "INSTR(LOWER($ff), " . lc($q) . ")";
