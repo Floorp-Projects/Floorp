@@ -12,7 +12,7 @@
         chrome:displayName="Profile Migrator"
         chrome:author="mozilla.org"
         chrome:name="profile"
- 	chrome:localeVersion="1.4a">
+ 	chrome:localeVersion="1.4b">
   </RDF:Description>
 
   <!-- overlay information -->

@@ -19,5 +19,5 @@
   <!-- Version Information.  State that we work only with major version of this
        package. -->
   <RDF:Description about="urn:mozilla:locale:en-US:messenger-smime"
-	chrome:localeVersion="1.4a"/>
+	chrome:localeVersion="1.4b"/>
 </RDF:RDF>
