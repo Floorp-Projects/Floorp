@@ -93,7 +93,6 @@ public:
    *        aWindowIID. if nsnull, then parent will be derived from
    *        parent view and it's ancestors
    * @param aCilpRect initial clip rect of view
-   * @param aOpacity initial opacity of view
    * @param aVisibilityFlag initial visibility state of view
    * @result The result of the initialization, NS_OK if no errors
    */
@@ -104,7 +103,6 @@ public:
                    nsWidgetInitData *aWidgetInitData = nsnull,
         					 nsNativeWidget aNative = nsnull,
         					 const nsViewClip *aClip = nsnull,
-        					 float aOpacity = 1.0f,
         					 nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow) = 0;
 
   /**
