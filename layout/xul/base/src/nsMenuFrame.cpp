@@ -1108,5 +1108,5 @@ nsMenuFrame::UpdateDismissalListener(nsIMenuParent* aMenuParent)
   
   // Make sure the menu dismissal listener knows what the current
   // innermost menu popup frame is.
-  nsMenuFrame::mDismissalListener->SetCurrentMenuParent(aMenuParent);
+  //nsMenuFrame::mDismissalListener->SetCurrentMenuParent(aMenuParent);
 }
