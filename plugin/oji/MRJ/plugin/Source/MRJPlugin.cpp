@@ -90,7 +90,6 @@ nsresult NSGetFactory(nsISupports* serviceManager, const nsCID &aClass, const ch
 
 	if (aClass.Equals(kPluginCID)) {
 		MRJPlugin* pluginFactory = new MRJPlugin();
-		thePlugin = pluginFactory;
 		pluginFactory->AddRef();
 		*aFactory = pluginFactory;
 		return NS_OK;
@@ -105,6 +104,13 @@ extern "C" {
 pascal OSErr __initialize(const CFragInitBlock *initBlock);
 pascal void __terminate(void);
 
+#if defined(MRJPLUGIN_GC)
+pascal OSErr __NSInitialize(const CFragInitBlock* initBlock);
+pascal void __NSTerminate(void);
+#define __initialize __NSInitialize
+#define __terminate __NSTerminate
+#endif
+
 pascal OSErr MRJPlugin__initialize(const CFragInitBlock *initBlock);
 pascal void MRJPlugin__terminate(void);
 
@@ -112,6 +118,9 @@ pascal void MRJPlugin__terminate(void);
 
 pascal OSErr MRJPlugin__initialize(const CFragInitBlock *initBlock)
 {
+	OSErr err = __initialize(initBlock);
+	if (err != noErr) return err;
+
 	if (initBlock->fragLocator.where == kDataForkCFragLocator) {
 		thePluginSpec = *initBlock->fragLocator.u.onDisk.fileSpec;
 	
@@ -124,18 +133,18 @@ pascal OSErr MRJPlugin__initialize(const CFragInitBlock *initBlock)
 
 pascal void MRJPlugin__terminate()
 {
-	// Is this strictly necessary?
-	if (thePlugin != NULL) {
-		nsrefcnt refs = thePlugin->Release();
-		while (refs > 0 && thePlugin != NULL)
-			refs = thePlugin->Release();
-		thePlugin = NULL;
-	}
-
 #ifdef MRJPLUGIN_4X	
 	// Make sure the event filters are removed.
 	RemoveEventFilters();
 #endif
+
+	__terminate();
+
+    // last ditch release of the memory allocator.
+    if (theMemoryAllocator != NULL) {
+        theMemoryAllocator->Release();
+        theMemoryAllocator = NULL;
+    }
 }
 
 //
@@ -155,6 +164,8 @@ MRJPlugin::MRJPlugin()
 	:	SupportsMixin(this, sInterfaces, kInterfaceCount),
 		mManager(NULL), mThreadManager(NULL), mSession(NULL), mConsole(NULL), mIsEnabled(false), mPluginThreadID(NULL)
 {
+    // make this singleton instance visible.
+    ::thePlugin = this;
 }
 
 MRJPlugin::~MRJPlugin()
@@ -276,6 +287,28 @@ NS_METHOD MRJPlugin::Initialize()
 	return result;
 }
 
+NS_METHOD MRJPlugin::Shutdown()
+{
+    // release our reference to the plugin manager(s).
+    if (thePluginManager2 != NULL) {
+        thePluginManager2->Release();
+        thePluginManager2 = NULL;
+    }
+    
+    if (thePluginManager != NULL) {
+        thePluginManager->Release();
+        thePluginManager = NULL;
+    }
+
+    // release our reference to the service manager.
+    if (theServiceManager != NULL) {
+        theServiceManager->Release();
+        theServiceManager = NULL;
+    }
+    
+    return NS_OK;
+}
+
 NS_METHOD MRJPlugin::GetMIMEDescription(const char* *result)
 {
 	*result = NS_JVM_MIME_TYPE;
@@ -367,6 +400,8 @@ NS_METHOD MRJPlugin::StartupJVM()
 NS_METHOD MRJPlugin::ShutdownJVM(PRBool fullShutdown)
 {
 	if (fullShutdown) {
+        nsresult rv = ShutdownLiveConnectSupport();
+	
 		if (mSession != NULL) {
 			delete mSession;
 			mSession = NULL;
