@@ -32,7 +32,10 @@ CPPSRCS		= \
 		geturl.cpp \
 		nsURLFetcher.cpp \
 		$(NULL)
+
+LIBS = \
 		$(MOZ_TIMER_LIBS) \
+		-lxpcom	\
 		-lmozjs \
 		$(NSPR_LIBS) \
 		$(TK_LIBS) \
