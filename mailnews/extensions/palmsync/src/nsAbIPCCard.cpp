@@ -83,7 +83,7 @@ NS_IMETHODIMP nsAbIPCCard::Copy(nsIAbCard *srcCard)
 {
     NS_ENSURE_ARG_POINTER(srcCard);
 
-    nsresult rv = NS_OK;
+    nsresult rv;
     nsCOMPtr<nsIAbMDBCard> dbCard;
     dbCard = do_QueryInterface(srcCard, &rv);
     if(NS_SUCCEEDED(rv) && dbCard) {
@@ -741,7 +741,7 @@ PRBool nsAbIPCCard::Same(nsIAbCard *card)
     if(!card)
         return PR_FALSE;
 
-    nsresult rv = NS_OK;
+    nsresult rv;
     nsCOMPtr<nsIAbMDBCard> dbCard;
     dbCard = do_QueryInterface(card, &rv);
     if(NS_SUCCEEDED(rv)) {

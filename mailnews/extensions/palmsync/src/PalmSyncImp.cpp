@@ -46,14 +46,16 @@
 #include "nsAbPalmSync.h"
 #include "nsMsgI18N.h"
 #include "nsUnicharUtils.h"
+#include "nsRDFResource.h"
+#include "nsRDFCID.h"
+#include "nsIRDFService.h"
+#include "nsIAbDirectory.h"
 
+#define  kPABDirectory  2  // defined in nsDirPrefs.h
 
 CPalmSyncImp::CPalmSyncImp()
 : m_cRef(1),
-  m_PalmHotSync(nsnull),
-  m_ServerDescList(nsnull),
-  m_FirstTimeSyncList(nsnull),
-  m_CatIDList(nsnull)
+  m_PalmHotSync(nsnull)
 {
 
 }
@@ -110,80 +112,128 @@ STDMETHODIMP CPalmSyncImp::IsValid()
 STDMETHODIMP CPalmSyncImp::nsGetABList(BOOL aIsUnicode, short * aABListCount,
                         lpnsMozABDesc * aABList, long ** aABCatIDList, BOOL ** aFirstTimeSyncList)
 {
-    if (!DIR_GetDirectories())
+  if (!aABListCount || !aABList || !aABCatIDList ||!aFirstTimeSyncList)
         return E_FAIL;
+  *aABListCount = 0;
 
-    PRInt16 count = DIR_GetDirectories()->Count();
-    // freed by MSCOM??
-    m_ServerDescList = (lpnsMozABDesc) CoTaskMemAlloc(sizeof(nsMozABDesc) * count);
-    m_FirstTimeSyncList = (BOOL *) CoTaskMemAlloc(sizeof(BOOL) * count);
-    m_CatIDList = (long *) CoTaskMemAlloc(sizeof(long) * count);
+  nsresult rv;
+  nsCOMPtr<nsIRDFService> rdfService = do_GetService (NS_RDF_CONTRACTID "/rdf-service;1", &rv);
+  if(NS_FAILED(rv)) return E_FAIL;
+
+  // Parent nsIABDirectory is "moz-abdirectory://".
+  nsCOMPtr <nsIRDFResource> resource;
+  rv = rdfService->GetResource(NS_LITERAL_CSTRING("moz-abdirectory://"), getter_AddRefs(resource));
+  if(NS_FAILED(rv)) return E_FAIL;
+
+  nsCOMPtr <nsIAbDirectory> directory = do_QueryInterface(resource, &rv);
+  if(NS_FAILED(rv)) return E_FAIL;
+
+  nsCOMPtr<nsIEnumerator> subDirectories;
+  if (NS_SUCCEEDED(directory->GetChildNodes(getter_AddRefs(subDirectories))) && subDirectories)
+  {
+    // Get the total number of addrbook.
+    PRInt16 count=0;
+    if (NS_SUCCEEDED(subDirectories->First()))
+    do
+    {
+      count++;
+    } while (NS_SUCCEEDED(subDirectories->Next()));
+
+    if (!count)
+      return E_FAIL;  // should not happen but just in case.
+
+    lpnsMozABDesc serverDescList = (lpnsMozABDesc) CoTaskMemAlloc(sizeof(nsMozABDesc) * count);
+    BOOL *firstTimeSyncList = (BOOL *) CoTaskMemAlloc(sizeof(BOOL) * count);
+    long *catIDList = (long *) CoTaskMemAlloc(sizeof(long) * count);
 
     *aABListCount = count;
-    *aABList = m_ServerDescList;
-    *aFirstTimeSyncList = m_FirstTimeSyncList;
-    *aABCatIDList = m_CatIDList;
+    *aABList = serverDescList;
+    *aFirstTimeSyncList = firstTimeSyncList;
+    *aABCatIDList = catIDList;
 
-    nsresult rv=NS_OK;
-    for (PRInt16 i = 0; i < count; i++)
+    // For each valid addrbook collect info.
+    nsCOMPtr<nsISupports> item;
+    if (NS_SUCCEEDED(subDirectories->First()))
     {
-        DIR_Server *server = (DIR_Server *)(DIR_GetDirectories()->ElementAt(i));
+      do
+      {
+        if (NS_SUCCEEDED(subDirectories->CurrentItem(getter_AddRefs(item))))
+        {
+          directory = do_QueryInterface(item, &rv);
+          if (NS_SUCCEEDED(rv))
+          {
+            // We don't have to skip mailing list since there's no mailing lists at the top level.
+            nsCOMPtr <nsIAbDirectoryProperties> properties;
+            rv = directory->GetDirectoryProperties(getter_AddRefs(properties));
+            if(NS_FAILED(rv)) return E_FAIL;
 
-        // if this is a 4.x, local .na2 addressbook (PABDirectory)
-        // we must skip it.
-        PRUint32 fileNameLen = strlen(server->fileName);
-        if (((fileNameLen > kABFileName_PreviousSuffixLen) && 
-                strcmp(server->fileName + fileNameLen - kABFileName_PreviousSuffixLen, kABFileName_PreviousSuffix) == 0) &&
-                (server->dirType == PABDirectory))
-            continue;
+            nsXPIDLCString fileName, uri;
+            nsAutoString description;
+            PRUint32 dirType, palmSyncTimeStamp;
+            PRInt32 palmCategoryId;
 
-        // server->description is represented in UTF8, we need to do some conversion...
-        if(aIsUnicode) {
-            // convert to Unicode
-            nsAutoString abName, abUrl;
-            rv = ConvertToUnicode("UTF-8", server->description, abName);
-            if (NS_FAILED(rv))
+            rv = properties->GetDescription(description);
+            if(NS_FAILED(rv)) return E_FAIL;
+            rv = properties->GetFileName(getter_Copies(fileName));
+            if(NS_FAILED(rv)) return E_FAIL;
+            rv = properties->GetURI(getter_Copies(uri));
+            if(NS_FAILED(rv)) return E_FAIL;
+            rv = properties->GetDirType(&dirType);
+            if(NS_FAILED(rv)) return E_FAIL;
+            rv = properties->GetSyncTimeStamp(&palmSyncTimeStamp);
+            if(NS_FAILED(rv)) return E_FAIL;
+            rv = properties->GetCategoryId(&palmCategoryId);
+            if(NS_FAILED(rv)) return E_FAIL;
+
+            // Skip/Ignore 4.X addrbooks (ie, with ".na2" extension).
+            if (((fileName.Length() > kABFileName_PreviousSuffixLen) && 
+                 strcmp(fileName.get() + fileName.Length() - kABFileName_PreviousSuffixLen, kABFileName_PreviousSuffix) == 0) &&
+                  (dirType == kPABDirectory))
+              continue;
+
+            if(aIsUnicode) {
+              // convert uri to Unicode
+              nsAutoString abUrl;
+              rv = ConvertToUnicode("UTF-8", uri.get(), abUrl);
+              if (NS_FAILED(rv))
                 break;
-            rv = ConvertToUnicode("UTF-8", server->uri, abUrl);
-            if (NS_FAILED(rv))
+              // add to the list
+              CopyUnicodeString(&(serverDescList->lpszABName), description);
+              CopyUnicodeString(&(serverDescList->lpszABUrl), abUrl);
+            }
+            else {
+              // we need to convert uri to Unicode and then to ASCII
+              nsAutoString abUUrl;
+              nsCAutoString abName(NS_ConvertUCS2toUTF8(description).get());
+
+              rv = ConvertToUnicode("UTF-8", uri.get(), abUUrl);
+              if (NS_FAILED(rv))
                 break;
-            // add to the list
-            CopyUnicodeString(&(m_ServerDescList->lpszABName), abName);
-            CopyUnicodeString(&(m_ServerDescList->lpszABUrl), abUrl);
+              nsCAutoString abUrl(NS_ConvertUCS2toUTF8(abUUrl).get());
+
+              CopyCString(&(serverDescList->lpszABName), abName);
+              CopyCString(&(serverDescList->lpszABUrl), abUrl);
+            }
+            serverDescList++;
+
+            *firstTimeSyncList = (palmSyncTimeStamp <= 0);
+            firstTimeSyncList++;
+
+            *catIDList = palmCategoryId;
+            catIDList++;
+          }
         }
-        else {
-            // we need to convert the description from UTF-8 to Unicode and then to ASCII
-            nsAutoString abUName, abUUrl;
-            rv = ConvertToUnicode("UTF-8", server->description, abUName);
-            if (NS_FAILED(rv))
-                break;
-            nsCAutoString abName = NS_LossyConvertUCS2toASCII(abUName);
+      } while (NS_SUCCEEDED(subDirectories->Next()));
 
-            rv = ConvertToUnicode("UTF-8", server->uri, abUUrl);
-            if (NS_FAILED(rv))
-                break;
-            nsCAutoString abUrl = NS_LossyConvertUCS2toASCII(abUUrl);
+      // assign member variables to the beginning of the list
+      serverDescList = *aABList;
+      firstTimeSyncList = *aFirstTimeSyncList;
+      catIDList = *aABCatIDList;
 
-            CopyCString(&(m_ServerDescList->lpszABName), abName);
-            CopyCString(&(m_ServerDescList->lpszABUrl), abUrl);
-        }
-        m_ServerDescList++;
-
-        *m_FirstTimeSyncList = (server->PalmSyncTimeStamp <= 0);
-        m_FirstTimeSyncList++;
-
-        *m_CatIDList = server->PalmCategoryId;
-        m_CatIDList++;
-    }
-
-    // assign member variables to the beginning of the list
-    m_ServerDescList = *aABList;
-    m_FirstTimeSyncList = *aFirstTimeSyncList;
-    m_CatIDList = *aABCatIDList;
-
-    if(NS_FAILED(rv))
+      if(NS_FAILED(rv))
         return E_FAIL;
-    
+    }
+  }
     return S_OK;
 }
 
@@ -216,7 +266,7 @@ STDMETHODIMP CPalmSyncImp::nsAddAllABRecords(BOOL aIsUnicode, unsigned long aCat
 {
     // since we are not returning any data we donot need to keep the nsAbPalmHotSync reference
     // in order to free the returned data in its destructor. Just create a local nsAbPalmHotSync var.
-    nsAbPalmHotSync palmHotSync(aIsUnicode, aABName, (char*)aABName, aCategoryId);
+    nsAbPalmHotSync palmHotSync(aIsUnicode, aABName, (const char*)aABName, aCategoryId);
 
     nsresult rv = palmHotSync.AddAllRecordsInNewAB(aRemoteRecCount, aRemoteRecList);
 
@@ -272,7 +322,7 @@ STDMETHODIMP CPalmSyncImp::nsUpdateABSyncInfo(BOOL aIsUnicode, unsigned long aCa
   else
   {
     // Launch another ABpalmHotSync session.
-    nsAbPalmHotSync palmHotSync(aIsUnicode, aABName, (char*)aABName, aCategoryId);
+    nsAbPalmHotSync palmHotSync(aIsUnicode, aABName, (const char*)aABName, aCategoryId);
     rv = palmHotSync.Initialize();
     if (NS_SUCCEEDED(rv))
       rv = palmHotSync.UpdateSyncInfo(aCategoryId);
@@ -289,9 +339,9 @@ STDMETHODIMP CPalmSyncImp::nsDeleteAB(BOOL aIsUnicode, unsigned long aCategoryId
 {
   // This is an independent operation so use a local nsAbPalmHotSync var
   // (ie the callers don't need to call AckSyncdone after this is done).
-  nsAbPalmHotSync palmHotSync(aIsUnicode, aABName, (char*)aABName, aCategoryId);
+  nsAbPalmHotSync palmHotSync(aIsUnicode, aABName, (const char*)aABName, aCategoryId);
 
-  nsresult rv = palmHotSync.DeleteAB(aCategoryId, aABName, (char*)aABUrl);;
+  nsresult rv = palmHotSync.DeleteAB(aCategoryId, (const char*)aABUrl);
 
   if (NS_FAILED(rv))
       return E_FAIL;
@@ -299,6 +349,20 @@ STDMETHODIMP CPalmSyncImp::nsDeleteAB(BOOL aIsUnicode, unsigned long aCategoryId
   return S_OK;
 }
 
+// Rename an Address Book in Mozilla
+STDMETHODIMP CPalmSyncImp::nsRenameAB(BOOL aIsUnicode, unsigned long aCategoryId, LPTSTR aABName, LPTSTR aABUrl)
+{
+  // This is an independent operation so use a local nsAbPalmHotSync var
+  // (ie the callers don't need to call AckSyncdone after this is done).
+  nsAbPalmHotSync palmHotSync(aIsUnicode, aABName, (const char*)aABName, aCategoryId);
+
+  nsresult rv = palmHotSync.RenameAB(aCategoryId, (const char*)aABUrl);
+
+  if (NS_FAILED(rv))
+    return E_FAIL;
+
+  return S_OK;
+}
 
 void CPalmSyncImp::CopyUnicodeString(LPTSTR *destStr, nsString srcStr)
 {

@@ -340,3 +340,14 @@ long MozABPCManager::DeletePCAB(DWORD categoryId, CPString & categoryName, CPStr
 
     return retval;
 }
+
+long MozABPCManager::RenamePCAB(DWORD categoryId, CPString & categoryName, CPString & categoryUrl)
+{
+    IPalmSync     *pNsPalmSync = NULL;
+    // get the interface 
+    if (!InitMozPalmSyncInstance(&pNsPalmSync))
+        return GEN_ERR_NOT_SUPPORTED;
+
+    HRESULT hres = pNsPalmSync->nsRenameAB(FALSE, categoryId, categoryName, categoryUrl);
+    return (long) hres;
+}

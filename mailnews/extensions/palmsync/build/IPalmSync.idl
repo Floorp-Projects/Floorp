@@ -150,5 +150,8 @@ interface IPalmSync : IUnknown
 
     // Delete an addressbook
     HRESULT nsDeleteAB([in] BOOL aIsUnicode, [in] unsigned long aCategoryId, [in] LPTSTR aABName, [in] LPTSTR aABUrl);
+
+    // Rename an addressbook
+    HRESULT nsRenameAB([in] BOOL aIsUnicode, [in] unsigned long aCategoryId, [in] LPTSTR aABName, [in] LPTSTR aABUrl);
 };
 

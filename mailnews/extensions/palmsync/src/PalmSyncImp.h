@@ -87,13 +87,12 @@ public :
 
     STDMETHODIMP nsDeleteAB(BOOL aIsUnicode, unsigned long aCategoryId, LPTSTR aABName, LPTSTR aABUrl);
  
+    STDMETHODIMP nsRenameAB(BOOL aIsUnicode, unsigned long aCategoryId, LPTSTR aABName, LPTSTR aABUrl);
+ 
 private :
     PRInt32 m_cRef;
 
     void * m_PalmHotSync;
-    lpnsMozABDesc m_ServerDescList;
-    BOOL * m_FirstTimeSyncList;
-    long * m_CatIDList;
     void CopyUnicodeString(LPTSTR *destStr, nsString srcStr);
     void CopyCString(LPTSTR *destStr, nsCString srcStr);
 };

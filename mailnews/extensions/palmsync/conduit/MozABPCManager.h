@@ -73,6 +73,8 @@ public:
   long UpdatePCABSyncInfo(DWORD categoryId, CPString & categoryName);
   // Delete an Moz AB
   long DeletePCAB(DWORD categoryId, CPString & categoryName, CPString & categoryUrl);
+  // Rename an Moz AB
+  long RenamePCAB(DWORD categoryId, CPString & categoryName, CPString & categoryUrl);
 
 private:
   	// this will initiate the communication with Mozilla
