@@ -5,9 +5,9 @@
 # customizable settings.
 
 
-# $Revision: 1.35 $ 
-# $Date: 2002/05/03 02:05:11 $ 
-# $Author: mcafee%netscape.com $ 
+# $Revision: 1.36 $ 
+# $Date: 2002/05/03 02:32:06 $ 
+# $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TinderConfig.pm,v $ 
 # $Name:  $ 
 
@@ -235,7 +235,8 @@ $ADD_TEXT_BROWSER_STRINGS = 0;
 	       # control system.
 	       
 #	       'TinderHeader::TreeState',
-	       'TinderHeader::TreeState_Bonsai',
+#	       'TinderHeader::TreeState_Bonsai',
+	       'TinderHeader::TreeState_Bonsai_Plus',
 
 	      );
 
