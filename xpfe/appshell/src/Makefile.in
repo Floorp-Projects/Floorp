@@ -68,12 +68,14 @@ CPPSRCS= \
 	nsAppShellService.cpp	\
 	nsWebShellWindow.cpp	\
 	nsAppShellFactory.cpp	\
+	nsCommandLineService.cpp \
 	$(NULL)
 
 CPP_OBJS=				\
  ./$(OBJDIR)/nsAppShellService.o	\
  ./$(OBJDIR)/nsWebShellWindow.o		\
- ./$(OBJDIR)/nsAppShellFactory.o		\
+ ./$(OBJDIR)/nsAppShellFactory.o	\
+ ./$(OBJDIR)/nsCommandLineService.o	\
  $(NULL)
 
 
