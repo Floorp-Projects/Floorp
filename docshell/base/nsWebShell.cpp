@@ -252,7 +252,10 @@ nsWebShell::EnsureCommandHandler()
     if (!commandUpdater) return NS_ERROR_FAILURE;
     
     nsCOMPtr<nsIDOMWindow> domWindow = do_GetInterface(NS_STATIC_CAST(nsIInterfaceRequestor *, this));
-    nsresult rv = commandUpdater->Init(domWindow);
+#ifdef DEBUG
+    nsresult rv =
+#endif
+    commandUpdater->Init(domWindow);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Initting command manager failed");
   }
   
@@ -569,7 +572,6 @@ nsWebShell::OnLinkClickSync(nsIContent *aContent,
                             nsIDocShell** aDocShell,
                             nsIRequest** aRequest)
 {
-  nsresult rv;
   nsAutoString target(aTargetSpec);
 
   // Initialize the DocShell / Request
