@@ -814,23 +814,27 @@ nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent)
       return result;
     nsPeekOffsetStruct pos;
     pos.SetData(mTracker, desiredX, amount, eDirPrevious, offsetused, PR_FALSE,PR_TRUE);
-    mHint = HINTRIGHT;//stick to opposite of movement
     switch (keyEvent->keyCode){
       case nsIDOMUIEvent::DOM_VK_RIGHT : 
+          InvalidateDesiredX();
           pos.mDirection = eDirNext;
           mHint = HINTLEFT;//stick to this line
+        break;
       case nsIDOMUIEvent::DOM_VK_LEFT  : //no break
           InvalidateDesiredX();
+          mHint = HINTRIGHT;//stick to opposite of movement
         break;
       case nsIDOMUIEvent::DOM_VK_DOWN : 
+          pos.mAmount = eSelectLine;
           pos.mDirection = eDirNext;//no break here
-          mHint = HINTLEFT;//stick to this line
+        break;
       case nsIDOMUIEvent::DOM_VK_UP : 
           pos.mAmount = eSelectLine;
         break;
       case nsIDOMUIEvent::DOM_VK_HOME :
           pos.mAmount = eSelectBeginLine;
           InvalidateDesiredX();
+          mHint = HINTRIGHT;//stick to opposite of movement
         break;
       case nsIDOMUIEvent::DOM_VK_END :
           pos.mAmount = eSelectEndLine;
@@ -841,7 +845,10 @@ nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent)
     }
     pos.mPreferLeft = mHint;
     if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(&pos)) && pos.mResultContent)
+    {
+      mHint = (HINT)pos.mPreferLeft;
       result = TakeFocus(pos.mResultContent, pos.mContentOffset, pos.mContentOffset, keyEvent->isShift, PR_FALSE);
+    }
     if (NS_SUCCEEDED(result))
       result = mDomSelections[SELECTION_NORMAL]->ScrollIntoView();
 
