@@ -213,8 +213,6 @@ public:
                                        nsICSSDeclaration* aDeclaration,
                                        PRInt32*           aHint);
 
-  NS_IMETHOD ProcessImport(const nsString& aURLSpec);
-
 protected:
   PRBool GetToken(PRInt32& aErrorCode, PRBool aSkipWS);
   PRBool GetURLToken(PRInt32& aErrorCode, PRBool aSkipWS);
@@ -230,6 +228,8 @@ protected:
   PRBool ParseRuleSet(PRInt32& aErrorCode);
   PRBool ParseAtRule(PRInt32& aErrorCode);
   PRBool ParseImportRule(PRInt32& aErrorCode);
+  PRBool GatherMedia(PRInt32& aErrorCode, nsString& aMedia);
+  PRBool ProcessImport(PRInt32& aErrorCode, const nsString& aURLSpec, const nsString& aMedia);
 
   PRBool ParseSelectorGroup(PRInt32& aErrorCode, SelectorList* aListHead);
   PRBool ParseSelectorList(PRInt32& aErrorCode, SelectorList* aListHead);
@@ -630,16 +630,54 @@ PRBool CSSParserImpl::ParseAtRule(PRInt32& aErrorCode)
   return PR_TRUE;
 }
 
-// Parse a CSS1 import rule: "@import STRING | URL"
+PRBool CSSParserImpl::GatherMedia(PRInt32& aErrorCode, nsString& aMedia)
+{
+  PRBool first = PR_TRUE;
+  for (;;) {
+    if (!GetToken(aErrorCode, PR_TRUE)) {
+      break;
+    }
+    if (eCSSToken_Symbol == mToken.mType) {
+      PRUnichar symbol = mToken.mSymbol;
+      if (';' == symbol) {
+        UngetToken();
+        return PR_TRUE;
+      } else if (',' != symbol) {
+        UngetToken();
+        return PR_FALSE;
+      }
+    }
+    else if (eCSSToken_Ident == mToken.mType) {
+      if (! first) {
+        aMedia.Append(',');
+      }
+      aMedia.Append(mToken.mIdent);
+      first = PR_FALSE;
+    }
+    else {
+      break;
+    }
+  }
+  aMedia.Truncate();
+  return PR_FALSE;
+}
+
+// Parse a CSS1 import rule: "@import STRING | URL [medium [, mdeium]]"
 PRBool CSSParserImpl::ParseImportRule(PRInt32& aErrorCode)
 {
   if (!GetToken(aErrorCode, PR_TRUE)) {
     return PR_FALSE;
   }
+  nsAutoString url;
+  nsAutoString media;
+
   if (eCSSToken_String == mToken.mType) {
-    if (ExpectSymbol(aErrorCode, ';', PR_TRUE)) {
-      ProcessImport(mToken.mIdent);
-      return PR_TRUE;
+    url = mToken.mIdent;
+    if (GatherMedia(aErrorCode, media)) {
+      if (ExpectSymbol(aErrorCode, ';', PR_TRUE)) {
+        ProcessImport(aErrorCode, url, media);
+        return PR_TRUE;
+      }
     }
     if ((eCSSToken_Symbol != mToken.mType) || (';' != mToken.mSymbol)) {
       SkipUntil(aErrorCode, ';');
@@ -649,14 +687,20 @@ PRBool CSSParserImpl::ParseImportRule(PRInt32& aErrorCode)
     if (ExpectSymbol(aErrorCode, '(', PR_FALSE)) {
       if (GetURLToken(aErrorCode, PR_TRUE)) {
         if ((eCSSToken_String == mToken.mType) || (eCSSToken_URL == mToken.mType)) {
-          nsAutoString  url(mToken.mIdent);
-          if (ExpectSymbol(aErrorCode, ')', PR_TRUE) && 
-              ExpectSymbol(aErrorCode, ';', PR_TRUE)) {
-            ProcessImport(url);
-            return PR_TRUE;
+          url = mToken.mIdent;
+          if (ExpectSymbol(aErrorCode, ')', PR_TRUE)) {
+            if (GatherMedia(aErrorCode, media)) {
+              if (ExpectSymbol(aErrorCode, ';', PR_TRUE)) {
+                ProcessImport(aErrorCode, url, media);
+                return PR_TRUE;
+              }
+            }
           }
         }
       }
+    }
+    if ((eCSSToken_Symbol != mToken.mType) || (';' != mToken.mSymbol)) {
+      SkipUntil(aErrorCode, ';');
     }
   }
 
@@ -665,18 +709,20 @@ PRBool CSSParserImpl::ParseImportRule(PRInt32& aErrorCode)
 }
 
 
-NS_IMETHODIMP CSSParserImpl::ProcessImport(const nsString& aURLSpec)
+PRBool CSSParserImpl::ProcessImport(PRInt32& aErrorCode, const nsString& aURLSpec, const nsString& aMedia)
 {
+  PRBool result = PR_FALSE;
+
   // XXX probably need a way to encode unicode junk for the part of
   // the url that follows a "?"
   char* cp = aURLSpec.ToNewCString();
   nsIURL* url;
-  nsresult rv = NS_NewURL(&url, mURL, cp);
-  delete cp;
-  if (NS_OK != rv) {
+  aErrorCode = NS_NewURL(&url, mURL, cp);
+  delete [] cp;
+  if (NS_FAILED(aErrorCode)) {
     // import url is bad
     // XXX log this somewhere for easier web page debugging
-    return rv;
+    return PR_FALSE;
   }
 
   if (PR_FALSE == mSheet->ContainsStyleSheet(url)) { // don't allow circular references
@@ -690,8 +736,8 @@ NS_IMETHODIMP CSSParserImpl::ProcessImport(const nsString& aURLSpec)
     else {
 
       nsIUnicharInputStream* uin;
-      rv = NS_NewConverterStream(&uin, nsnull, in);
-      if (NS_OK != rv) {
+      aErrorCode = NS_NewConverterStream(&uin, nsnull, in);
+      if (NS_FAILED(aErrorCode)) {
         // XXX no iso-latin-1 converter? out of memory?
         NS_RELEASE(in);
       }
@@ -701,18 +747,17 @@ NS_IMETHODIMP CSSParserImpl::ProcessImport(const nsString& aURLSpec)
 
         // Create a new parse to parse the import. 
 
-        if (NS_OK == rv) {
-          nsICSSParser* parser;
-          rv = NS_NewCSSParser(&parser);
-          if (NS_OK == rv) {
-            nsICSSStyleSheet* childSheet = nsnull;
-            rv = parser->Parse(uin, url, childSheet);
-            NS_RELEASE(parser);
-            if ((NS_OK == rv) && (nsnull != childSheet)) {
-              mSheet->AppendStyleSheet(childSheet);
-            }
-            NS_IF_RELEASE(childSheet);
+        nsICSSParser* parser;
+        aErrorCode = NS_NewCSSParser(&parser);
+        if (NS_SUCCEEDED(aErrorCode)) {
+          nsICSSStyleSheet* childSheet = nsnull;
+          aErrorCode = parser->Parse(uin, url, childSheet);
+          NS_RELEASE(parser);
+          if (NS_SUCCEEDED(aErrorCode) && (nsnull != childSheet)) {
+            mSheet->AppendStyleSheet(childSheet);
+            result = PR_TRUE;
           }
+          NS_IF_RELEASE(childSheet);
         }
         NS_RELEASE(uin);
       }
@@ -720,7 +765,7 @@ NS_IMETHODIMP CSSParserImpl::ProcessImport(const nsString& aURLSpec)
   }
   NS_RELEASE(url);
   
-  return rv;
+  return result;
 }
 
 void CSSParserImpl::SkipUntil(PRInt32& aErrorCode, PRUnichar aStopSymbol)
