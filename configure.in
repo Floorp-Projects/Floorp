@@ -241,7 +241,8 @@ _SAVE_CC=$CC
 CC=$CXX
 AC_MSG_CHECKING(for ios::binary)
 AC_CACHE_VAL(ac_cv_ios_binary,
- [AC_TRY_COMPILE([#include <fstream>],
+ [AC_TRY_COMPILE([#include <iostream.h>]
+	         [#include <fstream.h>],
                  [char *buffer = "config.log";
 		  fstream *mFileStream=new fstream(buffer, ios::binary);],
                  [ac_ios_binary=true],
