@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pkibase.c,v $ $Revision: 1.3 $ $Date: 2002/04/18 17:30:03 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pkibase.c,v $ $Revision: 1.4 $ $Date: 2002/04/18 19:26:17 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -141,6 +141,14 @@ nssPKIObject_AddInstance
 	                                  nssCryptokiObject *,
 	                                  object->numInstances + 1);
     } else {
+	PRUint32 i;
+	for (i=0; i<object->numInstances; i++) {
+	    if (nssCryptokiObject_Equal(object->instances[i], instance)) {
+		PZ_Unlock(object->lock);
+		nssCryptokiObject_Destroy(instance);
+		return PR_SUCCESS;
+	    }
+	}
 	object->instances = nss_ZREALLOCARRAY(object->instances,
 	                                      nssCryptokiObject *,
 	                                      object->numInstances + 1);
@@ -654,6 +662,7 @@ nssPKIObjectCollection_AddObject
     }
     node->haveObject = PR_TRUE;
     node->object = nssPKIObject_AddRef(object);
+    (*collection->getUIDFromObject)(object, node->uid);
     PR_INIT_CLIST(&node->link);
     PR_INSERT_BEFORE(&node->link, &collection->head);
     collection->size++;
