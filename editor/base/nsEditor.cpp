@@ -133,7 +133,7 @@ static const PRBool gNoisy = PR_FALSE;
 #endif
 
 
-const unsigned char nbsp = 160;
+const PRUnichar nbsp = 160;
 PRInt32 nsEditor::gInstanceCount = 0;
 
 

@@ -656,16 +656,13 @@ NS_IMETHODIMP nsHTMLEditor::EditorKeyPress(nsIDOMKeyEvent* aKeyEvent)
         return TypedText(empty, eTypedBreak);  // uses rules to figure out what to insert
       }
     }
-    else  // normal typing
+    
+    // if we got here we either fell out of the tab case or have a normal character.
+    // Either way, treat as normal character.
+    if (character && !altKey && !ctrlKey && !isShift && !metaKey)
     {
-	  if(0 != character) {
-		  if ((PR_FALSE==altKey) && (PR_FALSE==ctrlKey) 
-		  && (PR_FALSE==isShift) && (PR_FALSE==metaKey))
-		  {
-			nsAutoString key(character);
-			return TypedText(key, eTypedText);
-		  }
-	  }
+      nsAutoString key(character);
+      return TypedText(key, eTypedText);
     }
   }
   return NS_ERROR_FAILURE;
@@ -688,10 +685,10 @@ NS_IMETHODIMP nsHTMLEditor::TypedText(const nsString& aString, PRInt32 aAction)
         return InsertText(aString);
       }
     case eTypedBR:
-	  {
-	    nsCOMPtr<nsIDOMNode> brNode;
-	    return InsertBR(&brNode);  // only inserts a br node
-	  }
+      {
+        nsCOMPtr<nsIDOMNode> brNode;
+        return InsertBR(&brNode);  // only inserts a br node
+      }
     case eTypedBreak:
       {
         return InsertBreak();  // uses rules to figure out what to insert
@@ -1827,22 +1824,10 @@ nsHTMLEditor::SetCaretAfterElement(nsIDOMElement* aElement)
 
 NS_IMETHODIMP nsHTMLEditor::SetParagraphFormat(const nsString& aParagraphFormat)
 {
-  nsresult res = NS_ERROR_NOT_INITIALIZED;
   //Kinda sad to waste memory just to force lower case
   nsAutoString tag = aParagraphFormat;
   tag.ToLowerCase();
-  //XXX: TODO: Do we really want to support setting list types here?
-  // If yes, we need to add "dd", "dt" for <dl> support 
-  if (tag == "li") 
-  {
-    //XXX: Why do we assume "ul" What about "ol"? This will change an OL into a UL list!
-    res = MakeOrChangeList("ul");
-  } 
-  else 
-  {
-    res = InsertBasicBlock(tag);
-  }
-  return res;
+  return InsertBasicBlock(tag);
 }
 
 // XXX: ERROR_HANDLING -- this method needs a little work to ensure all error codes are 
@@ -1858,6 +1843,43 @@ nsHTMLEditor::GetParentBlockTags(nsStringArray *aTagList, PRBool aGetLists)
   if (NS_FAILED(res)) return res;
   if (!selection) return NS_ERROR_NULL_POINTER;
 
+  // Find out if the selection is collapsed:
+  PRBool isCollapsed;
+  res = selection->GetIsCollapsed(&isCollapsed);
+  if (NS_FAILED(res)) return res;
+  if (isCollapsed)
+  {
+    nsCOMPtr<nsIDOMNode> node, blockParent;
+    PRInt32 offset;
+  
+    res = GetStartNodeAndOffset(selection, &node, &offset);
+    if (!node) res = NS_ERROR_FAILURE;
+    if (NS_FAILED(res)) return res;
+  
+    nsCOMPtr<nsIDOMElement> blockParentElem;
+    if (aGetLists)
+    {
+      // Get the "ol", "ul", or "dl" parent element
+      res = GetElementOrParentByTagName("list", node, getter_AddRefs(blockParentElem));
+      if (NS_FAILED(res)) return res;
+    } 
+    else 
+    {
+      if (IsBlockNode(node)) blockParent = node;
+      else blockParent = GetBlockNodeParent(node);
+      blockParentElem = do_QueryInterface(blockParent);
+    }
+    if (blockParentElem)
+    {
+      nsAutoString blockParentTag;
+      blockParentElem->GetTagName(blockParentTag);
+      aTagList->AppendString(blockParentTag);
+    }
+    
+    return res;
+  }
+
+  // else non-collapsed selection
   nsCOMPtr<nsIEnumerator> enumerator;
   res = selection->GetEnumerator(getter_AddRefs(enumerator));
   if (NS_FAILED(res)) return res;
@@ -4163,7 +4185,7 @@ nsHTMLEditor::SetCompositionString(const nsString& aCompositionString, nsIPrivat
 {
   NS_ASSERTION(aTextRangeList, "null ptr");
   if(nsnull == aTextRangeList)
-		return NS_ERROR_NULL_POINTER;
+        return NS_ERROR_NULL_POINTER;
   nsCOMPtr<nsICaret>  caretP;
   
   nsCOMPtr<nsIDOMSelection> selection;
@@ -6120,8 +6142,8 @@ nsHTMLEditor::MoveContiguousContentIntoNewParent(nsIDOMNode  *aStartNode,
       }
     }
   }
-	if (gNoisy) { printf("--- end nsTextEditor::MoveContiguousContentIntoNewParent ---\n"); }
-	if (gNoisy) {DebugDumpContent(); } // DEBUG
+    if (gNoisy) { printf("--- end nsTextEditor::MoveContiguousContentIntoNewParent ---\n"); }
+    if (gNoisy) {DebugDumpContent(); } // DEBUG
   return result;
 }
 

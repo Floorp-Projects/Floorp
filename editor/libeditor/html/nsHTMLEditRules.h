@@ -76,16 +76,12 @@ protected:
   nsresult WillMakeBasicBlock(nsIDOMSelection *aSelection, const nsString *aBlockType, PRBool *aCancel, PRBool *aHandled);
 
   nsresult InsertTab(nsIDOMSelection *aSelection, nsString *outString);
-  nsresult InsertSpace(nsIDOMSelection *aSelection, nsString *outString);
 
   nsresult ReturnInHeader(nsIDOMSelection *aSelection, nsIDOMNode *aHeader, nsIDOMNode *aTextNode, PRInt32 aOffset);
   nsresult ReturnInParagraph(nsIDOMSelection *aSelection, nsIDOMNode *aHeader, nsIDOMNode *aTextNode, PRInt32 aOffset, PRBool *aCancel, PRBool *aHandled);
   nsresult ReturnInListItem(nsIDOMSelection *aSelection, nsIDOMNode *aHeader, nsIDOMNode *aTextNode, PRInt32 aOffset);
 
   // helper methods
-  static nsresult GetTabAsNBSPs(nsString *outString);
-  static nsresult GetTabAsNBSPsAndSpace(nsString *outString);
-    
   static PRBool IsHeader(nsIDOMNode *aNode);
   static PRBool IsParagraph(nsIDOMNode *aNode);
   static PRBool IsListItem(nsIDOMNode *aNode);

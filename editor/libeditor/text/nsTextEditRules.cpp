@@ -557,7 +557,31 @@ nsTextEditRules::WillInsertText(nsIDOMSelection *aSelection,
   
   // do text insertion
   PRBool bCancel;
-  res = DoTextInsertion(aSelection, &bCancel, aOutString, aTypeInState);
+  char newlineChar[] = {'\n',0};
+  nsString theString(*aInString);  // copy instring for now
+
+  while (theString.Length())
+  {
+    nsString partialString;
+    PRInt32 pos = theString.FindCharInSet(newlineChar);
+    // if first char is special, then use just it
+    if (pos == 0) pos = 1;
+    if (pos == -1) pos = theString.Length();
+    theString.Left(partialString, pos);
+    theString.Cut(0, pos);
+
+    // is it a solo return?
+    if (partialString == "\n")
+    {
+      res = mEditor->InsertBreak();
+    }
+    else
+    {
+      res = DoTextInsertion(aSelection, &bCancel, &partialString, aTypeInState);
+    }
+    if (NS_FAILED(res)) return res;
+    pos = theString.FindCharInSet(newlineChar);
+  }
 
   return res;
 }
