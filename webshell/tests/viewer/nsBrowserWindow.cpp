@@ -169,7 +169,6 @@ static NS_DEFINE_IID(kCToolboxCID, NS_TOOLBARMANAGER_CID);
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIWebShellContainerIID, NS_IWEB_SHELL_CONTAINER_IID);
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
-static NS_DEFINE_IID(kIWindowIID, NS_IWINDOW_IID);
 static NS_DEFINE_IID(kIDialogIID, NS_IDIALOG_IID);
 static NS_DEFINE_IID(kICheckButtonIID, NS_ICHECKBUTTON_IID);
 static NS_DEFINE_IID(kIRadioButtonIID, NS_IRADIOBUTTON_IID);
@@ -1131,13 +1130,13 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   mAllowPlugins = aAllowPlugins;
 
   // Create top level window
-  nsresult rv = nsComponentManager::CreateInstance(kWindowCID, nsnull, kIWindowIID,
+  nsresult rv = nsComponentManager::CreateInstance(kWindowCID, nsnull, kIWidgetIID,
 					     (void**)&mWindow);
   if (NS_OK != rv) {
     return rv;
   }
   nsWidgetInitData initData;
-  initData.mBorderStyle = eBorderStyle_dialog;
+  initData.mBorderStyle = eBorderStyle_window;
 
   nsRect r(0, 0, aBounds.width, aBounds.height);
   mWindow->Create((nsIWidget*)NULL, r, HandleBrowserEvent,
