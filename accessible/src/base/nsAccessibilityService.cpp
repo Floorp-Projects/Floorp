@@ -34,8 +34,10 @@
 #include "nsRootAccessible.h"
 #include "nsINameSpaceManager.h"
 #include "nsMutableAccessible.h"
+#include "nsHTMLFormControlAccessible.h"
 #include "nsLayoutAtoms.h"
 #include "nsSelectAccessible.h"
+#include "nsHTMLTextAccessible.h"
 
 //--------------------
 
@@ -60,7 +62,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsAccessibilityService, nsIAccessibilityService);
 NS_IMETHODIMP 
 nsAccessibilityService::CreateRootAccessible(nsISupports* aPresContext, nsISupports* aFrame, nsIAccessible **_retval)
 {
-  nsIFrame* f = (nsIFrame*)aFrame;
+  nsIFrame* f = NS_STATIC_CAST(nsIFrame*, aFrame);
 
   nsCOMPtr<nsIPresContext> c = do_QueryInterface(aPresContext);
   NS_ASSERTION(c,"Error non prescontext passed to accessible factory!!!");
@@ -73,17 +75,22 @@ nsAccessibilityService::CreateRootAccessible(nsISupports* aPresContext, nsISuppo
   nsCOMPtr<nsIWeakReference> wr = getter_AddRefs(NS_GetWeakReference(s));
 
   *_retval = new nsRootAccessible(wr,f);
-  NS_ADDREF(*_retval);
-
-  return NS_OK;
+  if (*_retval) {
+    NS_ADDREF(*_retval);
+    return NS_OK;
+  } else 
+    return NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP 
 nsAccessibilityService::CreateMutableAccessible(nsISupports* aNode, nsIMutableAccessible **_retval)
 {
   *_retval = new nsMutableAccessible(aNode);
-  NS_ADDREF(*_retval);
-  return NS_OK;
+  if (*_retval) {
+    NS_ADDREF(*_retval);
+    return NS_OK;
+  } else 
+    return NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP 
@@ -103,9 +110,11 @@ nsAccessibilityService::CreateHTMLBlockAccessible(nsIAccessible* aAccessible, ns
   nsCOMPtr<nsIWeakReference> wr = getter_AddRefs(NS_GetWeakReference(s));
 
   *_retval = new nsHTMLBlockAccessible(aAccessible, n,wr);
-  NS_ADDREF(*_retval);
-
-  return NS_OK;
+  if (*_retval) {
+    NS_ADDREF(*_retval);
+    return NS_OK;
+  } else 
+    return NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP 
@@ -123,10 +132,106 @@ nsAccessibilityService::CreateHTMLSelectAccessible(nsIAtom* aPopupAtom, nsIDOMNo
   nsCOMPtr<nsIWeakReference> wr = getter_AddRefs(NS_GetWeakReference(s));
 
   *_retval = new nsSelectAccessible(aPopupAtom, nsnull, n, wr);
-  NS_ADDREF(*_retval);
-  return NS_OK;
-
+  if (*_retval) {
+    NS_ADDREF(*_retval);
+    return NS_OK;
+  } else 
+    return NS_ERROR_OUT_OF_MEMORY;
 }
+
+/* nsIAccessible createHTMLCheckboxAccessible (in nsISupports aPresShell, in nsISupports aFrame); */
+NS_IMETHODIMP nsAccessibilityService::CreateHTMLCheckboxAccessible(nsISupports *aFrame, nsIAccessible **_retval)
+{
+  nsIFrame* frame;
+  nsCOMPtr<nsIDOMNode> node;
+  nsCOMPtr<nsIPresShell> shell;
+  nsresult rv = GetInfo(aFrame, &frame, getter_AddRefs(shell), getter_AddRefs(node));
+  if (NS_FAILED(rv))
+    return rv;
+
+  *_retval = new nsHTMLCheckboxAccessible(shell,node);
+  if (*_retval) {
+    NS_ADDREF(*_retval);
+    return NS_OK;
+  } else 
+    return NS_ERROR_OUT_OF_MEMORY;
+}
+
+/* nsIAccessible createHTMLCheckboxAccessible (in nsISupports aPresShell, in nsISupports aFrame); */
+NS_IMETHODIMP nsAccessibilityService::CreateHTMLRadioButtonAccessible(nsISupports *aFrame, nsIAccessible **_retval)
+{
+  nsIFrame* frame;
+  nsCOMPtr<nsIDOMNode> node;
+  nsCOMPtr<nsIPresShell> shell;
+  GetInfo(aFrame, &frame, getter_AddRefs(shell), getter_AddRefs(node));
+
+  *_retval = new nsHTMLRadioButtonAccessible(shell,node);
+  if (*_retval) {
+    NS_ADDREF(*_retval);
+    return NS_OK;
+  } else 
+    return NS_ERROR_OUT_OF_MEMORY;
+}
+
+/* nsIAccessible createHTMLCheckboxAccessible (in nsISupports aPresShell, in nsISupports aFrame); */
+NS_IMETHODIMP nsAccessibilityService::CreateHTMLButtonAccessible(nsISupports *aFrame, nsIAccessible **_retval)
+{
+  nsIFrame* frame;
+  nsCOMPtr<nsIDOMNode> node;
+  nsCOMPtr<nsIPresShell> shell;
+  nsresult rv = GetInfo(aFrame, &frame, getter_AddRefs(shell), getter_AddRefs(node));
+  if (NS_FAILED(rv))
+    return rv;
+
+  *_retval = new nsHTMLButtonAccessible(shell,node);
+  if (*_retval) {
+    NS_ADDREF(*_retval);
+    return NS_OK;
+  } else 
+    return NS_ERROR_OUT_OF_MEMORY;
+}
+
+/* nsIAccessible createHTMLTextAccessible (in nsISupports aPresShell, in nsISupports aFrame); */
+NS_IMETHODIMP nsAccessibilityService::CreateHTMLTextAccessible(nsISupports *aFrame, nsIAccessible **_retval)
+{
+  nsIFrame* frame;
+  nsCOMPtr<nsIDOMNode> node;
+  nsCOMPtr<nsIPresShell> shell;
+  nsresult rv = GetInfo(aFrame, &frame, getter_AddRefs(shell), getter_AddRefs(node));
+  if (NS_FAILED(rv))
+    return rv;
+
+  *_retval = new nsHTMLTextAccessible(shell, node);
+  if (*_retval) {
+    NS_ADDREF(*_retval);
+    return NS_OK;
+  } else 
+    return NS_ERROR_OUT_OF_MEMORY;
+}
+
+NS_IMETHODIMP nsAccessibilityService::GetInfo(nsISupports* aFrame, nsIFrame** aRealFrame, nsIPresShell** aShell, nsIDOMNode** aNode)
+{
+  *aRealFrame = NS_STATIC_CAST(nsIFrame*, aFrame);
+  nsCOMPtr<nsIContent> content;
+  (*aRealFrame)->GetContent(getter_AddRefs(content));
+  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(content);
+  *aNode = node;
+  NS_ADDREF(*aNode);
+
+  nsCOMPtr<nsIDocument> document;
+  content->GetDocument(*getter_AddRefs(document));
+
+#ifdef DEBUG
+  PRInt32 shells = document->GetNumberOfShells();
+  NS_ASSERTION(shells > 0,"Error no shells!");
+#endif
+
+  *aShell = document->GetShellAt(0);
+  NS_IF_ADDREF(*aShell);
+
+  return NS_OK;
+}
+
 
 //////////////////////////////////////////////////////////////////////
 

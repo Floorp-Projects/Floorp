@@ -477,16 +477,13 @@ nsGfxButtonControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     nsresult rv = NS_OK;
     NS_WITH_SERVICE(nsIAccessibilityService, accService, "@mozilla.org/accessibilityService;1", &rv);
     if (accService) {
-     nsCOMPtr<nsIDOMNode> node = do_QueryInterface(mContent);
-     nsIMutableAccessible* acc = nsnull;
-     accService->CreateMutableAccessible(node,&acc);
-     acc->SetName(NS_LITERAL_STRING("Push Button").get());
-     acc->SetRole(NS_LITERAL_STRING("push button").get());
-     acc->SetIsLeaf(PR_TRUE);
+     nsIAccessible* acc = nsnull;
+     accService->CreateHTMLButtonAccessible(NS_STATIC_CAST(nsIFrame*, this), &acc);
      *aInstancePtr = acc;
      return NS_OK;
     }
     return NS_ERROR_FAILURE;
+
   } 
 else {
     return nsHTMLButtonControlFrame::QueryInterface(aIID, aInstancePtr);

@@ -32,7 +32,7 @@ nsMutableAccessible::nsMutableAccessible(nsISupports* aNode)
   mNode = aNode;
   mNameNodeValue = PR_FALSE;
   mNameStringSet = PR_FALSE;
-  mRole.AssignWithConversion("unknown");
+  mRole = NS_LITERAL_STRING("unknown");
   mIsLeaf = PR_FALSE;
 }
 
@@ -129,7 +129,7 @@ NS_IMETHODIMP nsMutableAccessible::GetAccName(PRUnichar **_retval)
     nsCOMPtr<nsIDOMNode> node = do_QueryInterface(mNode);
     if (node) {
       node->GetNodeValue(value);
-      value.StripWhitespace();
+      value.CompressWhitespace();
     } else {
       *_retval = nsnull;
       return NS_ERROR_NOT_IMPLEMENTED;
@@ -139,7 +139,7 @@ NS_IMETHODIMP nsMutableAccessible::GetAccName(PRUnichar **_retval)
   } else if (mNameAttribute) {
     nsCOMPtr<nsIContent> content = do_QueryInterface(mNode);
     content->GetAttribute(kNameSpaceID_None, mNameAttribute, value);
-    value.StripWhitespace();
+    value.CompressWhitespace();
   } else {
      *_retval = nsnull;
      return NS_ERROR_NOT_IMPLEMENTED;

@@ -28,9 +28,10 @@
 
 #include "nsCOMPtr.h"
 #include "nsIAccessible.h"
+#include "nsIAccessibleEventListener.h"
 
 #include "nsString.h"
-//#define IS_ACCESSIBLE
+#define IS_ACCESSIBLE
 
 class Accessible : public IAccessible
 {
@@ -41,7 +42,7 @@ class Accessible : public IAccessible
 
 	public: // construction, destruction
 		Accessible(nsIAccessible*, HWND aWin = 0);
-		~Accessible();
+		virtual ~Accessible();
 
 	public: // IUnknown methods - see iunknown.h for documentation
 		STDMETHODIMP_(ULONG) AddRef        ();
@@ -152,17 +153,61 @@ class Accessible : public IAccessible
    	static ULONG g_cRef;              // the cum reference count of all instances
 		ULONG        m_cRef;              // the reference count
     nsCOMPtr<nsIAccessible> mAccessible;
+    nsCOMPtr<nsIAccessible> mCachedChild;
     HWND mWnd;
+    LONG mCachedIndex;
 
     protected:
 
-    void GetNSAccessibleFor(VARIANT varChild, nsCOMPtr<nsIAccessible>& aAcc);
+    virtual void GetNSAccessibleFor(VARIANT varChild, nsCOMPtr<nsIAccessible>& aAcc);
     PRBool InState(const nsString& aStates, const char* aState);
     STDMETHODIMP GetAttribute(const char* aName, VARIANT varChild, BSTR __RPC_FAR *aString);
 
 #endif
 #endif
 };
+
+class nsAccessibleEventMap
+{
+public:
+  nsCOMPtr<nsIAccessible> mAccessible;
+  PRInt32 mId;
+};
+
+#define MAX_LIST_SIZE 100
+
+class RootAccessible: public Accessible,
+                      public nsIAccessibleEventListener
+{
+#ifdef IS_ACCESSIBLE
+
+// accessibility only on Windows2000 and Windows98
+#ifdef OBJID_WINDOW
+
+public:
+    RootAccessible(nsIAccessible*, HWND aWin = 0);
+    virtual ~RootAccessible();
+
+    NS_DECL_ISUPPORTS
+
+    // nsIAccessibleEventListener
+    NS_DECL_NSIACCESSIBLEEVENTLISTENER
+
+    virtual PRInt32 GetIdFor(nsIAccessible* aAccessible);
+    virtual void GetNSAccessibleFor(VARIANT varChild, nsCOMPtr<nsIAccessible>& aAcc);
+
+private:
+    // list of accessible that may have had
+    // events fire.
+    nsAccessibleEventMap mList[MAX_LIST_SIZE];
+    PRInt32 mListCount;
+    PRInt32 mNextId;
+    PRInt32 mNextPos;
+
+#endif
+#endif
+};
+
 
 
 #endif  

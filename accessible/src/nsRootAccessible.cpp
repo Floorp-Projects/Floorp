@@ -27,6 +27,18 @@
 #include "nsIPresContext.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"
+#include "nsIDOMEventTarget.h"
+#include "nsIDOMElement.h"
+#include "nsIDOMEventReceiver.h"
+#include "nsReadableUtils.h"
+
+NS_INTERFACE_MAP_BEGIN(nsRootAccessible)
+  NS_INTERFACE_MAP_ENTRY(nsIAccessibleEventReceiver)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIAccessibleEventReceiver)
+NS_INTERFACE_MAP_END_INHERITING(nsAccessible)
+
+NS_IMPL_ADDREF_INHERITED(nsRootAccessible, nsAccessible);
+NS_IMPL_RELEASE_INHERITED(nsRootAccessible, nsAccessible);
 
 //-----------------------------------------------------
 // construction 
@@ -34,6 +46,7 @@
 nsRootAccessible::nsRootAccessible(nsIWeakReference* aShell, nsIFrame* aFrame):nsAccessible(nsnull,nsnull,aShell)
 {
  // mFrame = aFrame;
+ mListener = nsnull;
 }
 
 //-----------------------------------------------------
@@ -41,14 +54,13 @@ nsRootAccessible::nsRootAccessible(nsIWeakReference* aShell, nsIFrame* aFrame):n
 //-----------------------------------------------------
 nsRootAccessible::~nsRootAccessible()
 {
+  RemoveAccessibleEventListener(mListener);
 }
 
   /* attribute wstring accName; */
 NS_IMETHODIMP nsRootAccessible::GetAccName(PRUnichar * *aAccName) 
 { 
-  nsAutoString name;
-  name.AssignWithConversion("Mozilla Document");
-  *aAccName = name.ToNewUnicode() ;
+  *aAccName = ToNewUnicode(NS_LITERAL_STRING("Mozilla Document"));
   return NS_OK;  
 }
 
@@ -82,9 +94,106 @@ NS_IMETHODIMP nsRootAccessible::GetAccParent(nsIAccessible * *aAccParent)
   /* readonly attribute wstring accRole; */
 NS_IMETHODIMP nsRootAccessible::GetAccRole(PRUnichar * *aAccRole) 
 { 
-  // failed? Lets do some default behavior
-  nsAutoString a;
-  a.AssignWithConversion("client");
-  *aAccRole = a.ToNewUnicode();
+  *aAccRole = ToNewUnicode(NS_LITERAL_STRING("client"));
   return NS_OK;  
 }
+
+/* void addAccessibleEventListener (in nsIAccessibleEventListener aListener); */
+NS_IMETHODIMP nsRootAccessible::AddAccessibleEventListener(nsIAccessibleEventListener *aListener)
+{
+  if (!mListener)
+  {
+     // add an event listener to the document
+     nsCOMPtr<nsIPresShell> shell = do_QueryReferent(mPresShell);
+     nsCOMPtr<nsIDocument> document;
+     shell->GetDocument(getter_AddRefs(document));
+
+     nsCOMPtr<nsIDOMEventReceiver> receiver;
+     if (NS_SUCCEEDED(document->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(receiver))) && receiver)
+     {
+        nsresult rv = receiver->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMFocusListener *, this), NS_GET_IID(nsIDOMFocusListener));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
+     }
+  }
+
+  // create a weak reference to the listener
+  mListener =  aListener;
+
+  return NS_OK;
+}
+
+/* void removeAccessibleEventListener (in nsIAccessibleEventListener aListener); */
+NS_IMETHODIMP nsRootAccessible::RemoveAccessibleEventListener(nsIAccessibleEventListener *aListener)
+{
+  if (mListener)
+  {
+     nsCOMPtr<nsIPresShell> shell = do_QueryReferent(mPresShell);
+     nsCOMPtr<nsIDocument> document;
+     if (!shell)
+       return NS_OK;
+
+     shell->GetDocument(getter_AddRefs(document));
+
+     nsCOMPtr<nsIDOMEventReceiver> erP;
+     if (NS_SUCCEEDED(document->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(erP))) && erP)
+     {
+        nsresult rv = erP->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMFocusListener *, this), NS_GET_IID(nsIDOMFocusListener));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
+     }
+  }
+
+  mListener = nsnull;
+
+  return NS_OK;
+}
+
+
+nsresult nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
+{
+  if (mListener) {
+     nsCOMPtr<nsIDOMEventTarget> t;
+     aEvent->GetOriginalTarget(getter_AddRefs(t));
+  
+     // create and accessible for the target
+     nsCOMPtr<nsIContent> content = do_QueryInterface(t); 
+
+     if (!content)
+       return NS_OK;
+
+     if (mCurrentFocus == content)
+       return NS_OK;
+
+     mCurrentFocus = content;
+
+     nsIFrame* frame = nsnull;
+     nsCOMPtr<nsIPresShell> shell = do_QueryReferent(mPresShell);
+     shell->GetPrimaryFrameFor(content, &frame);
+
+     if (!frame)
+       return NS_OK;
+
+     nsCOMPtr<nsIAccessible> a = do_QueryInterface(frame);
+
+     if (!a)
+       a = do_QueryInterface(content);
+
+     nsCOMPtr<nsIAccessible> na = CreateNewAccessible(a, content, mPresShell);
+
+     mListener->HandleEvent(nsIAccessibleEventListener::EVENT_FOCUS, na);
+  }
+
+  return NS_OK;
+}
+
+nsresult nsRootAccessible::Focus(nsIDOMEvent* aEvent) 
+{ 
+  return NS_OK; 
+}
+
+nsresult nsRootAccessible::Blur(nsIDOMEvent* aEvent) 
+{ 
+  return NS_OK;
+}
+
+
+

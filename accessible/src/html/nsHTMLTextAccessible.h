@@ -16,38 +16,28 @@
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
- * 
- *
- * Original Author: David W. Hyatt (hyatt@netscape.com)
  *
  * Contributor(s): 
  */
 
-#ifndef __nsAccessibilityService_h__
-#define __nsAccessibilityService_h__
+#ifndef _nsHTMLTextAccessible_H_
+#define _nsHTMLTextAccessible_H_
 
-#include "nsIAccessibilityService.h"
-class nsIFrame;
-class nsIPresShell;
-class nsIDOMNode;
+#include "nsGenericAccessible.h"
 
-class nsAccessibilityService : public nsIAccessibilityService
+class nsIWeakReference;
+class nsITextControlFrame;
+
+class nsHTMLTextAccessible : public nsLeafDOMAccessible
 {
-public:
-  NS_DECL_ISUPPORTS
-
-  // nsIAccessibilityService methods:
-  NS_DECL_NSIACCESSIBILITYSERVICE
-
-  // nsAccessibilityService methods:
-  nsAccessibilityService();
-  virtual ~nsAccessibilityService();
 
 public:
+  nsHTMLTextAccessible(nsIPresShell* aShell, nsIDOMNode* aDomNode);
+  NS_IMETHOD GetAccName(PRUnichar **_retval); 
+  NS_IMETHOD GetAccRole(PRUnichar **_retval); 
 
 private:
-  NS_IMETHOD GetInfo(nsISupports* aFrame, nsIFrame** aRealFrame, nsIPresShell** aShell, nsIDOMNode** aContent);
-
+  nsCOMPtr<nsIDOMNode> mDomNode;
 };
 
-#endif /* __nsIccessibilityService_h__ */
+#endif  

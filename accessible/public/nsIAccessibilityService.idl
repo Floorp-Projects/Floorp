@@ -31,9 +31,13 @@
 interface nsIAccessibilityService : nsISupports
 {
   nsIAccessible createRootAccessible(in nsISupports aPresShell, in nsISupports aFrame);
+  nsIMutableAccessible createMutableAccessible(in nsISupports aNode);
   nsIAccessible createHTMLBlockAccessible(in nsIAccessible aAccessible, in nsIDOMNode aNode, in nsISupports aPresShell);
   nsIAccessible createHTMLSelectAccessible(in nsIAtom aAccessible, in nsIDOMNode aNode, in nsISupports aPresShell);
-  nsIMutableAccessible createMutableAccessible(in nsISupports aNode);
+  nsIAccessible createHTMLCheckboxAccessible(in nsISupports aFrame);
+  nsIAccessible createHTMLRadioButtonAccessible(in nsISupports aFrame);
+  nsIAccessible createHTMLButtonAccessible(in nsISupports aFrame);
+  nsIAccessible createHTMLTextAccessible(in nsISupports aFrame);
 };
 
 

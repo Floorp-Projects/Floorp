@@ -46,6 +46,9 @@ class nsIRollupListener;
 class nsIMenuBar;
 struct IAccessible;
 
+#include "nsIAccessible.h"
+#include "nsIAccessibleEventListener.h"
+
 #define NSRGB_2_COLOREF(color) \
             RGB(NS_GET_R(color),NS_GET_G(color),NS_GET_B(color))
 
@@ -176,6 +179,7 @@ private:
 class nsWindow : public nsSwitchToUIThread,
                  public nsBaseWidget,
                  public nsIKBStateControl
+
 {
 
 public:
@@ -448,6 +452,8 @@ protected:
     static UINT uWM_MSIME_RECONVERT; // reconvert messge for MSIME
     static UINT uWM_MSIME_MOUSE;     // mouse messge for MSIME
     static UINT uWM_ATOK_RECONVERT;  // reconvert messge for ATOK
+
+    IAccessible* mRootAccessible;
 };
 
 //

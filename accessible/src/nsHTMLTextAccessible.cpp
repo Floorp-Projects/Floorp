@@ -16,38 +16,36 @@
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
- * 
  *
- * Original Author: David W. Hyatt (hyatt@netscape.com)
- *
+ * Author: Eric Vaughan (evaughan@netscape.com)
  * Contributor(s): 
  */
 
-#ifndef __nsAccessibilityService_h__
-#define __nsAccessibilityService_h__
+#include "nsHTMLTextAccessible.h"
+#include "nsICheckboxControlFrame.h"
+#include "nsWeakReference.h"
+#include "nsIFrame.h"
 
-#include "nsIAccessibilityService.h"
-class nsIFrame;
-class nsIPresShell;
-class nsIDOMNode;
+nsHTMLTextAccessible::nsHTMLTextAccessible(nsIPresShell* aShell, nsIDOMNode* aDomNode):
+nsLeafDOMAccessible(aShell, aDomNode)
+{ 
+}
 
-class nsAccessibilityService : public nsIAccessibilityService
+/* wstring getAccName (); */
+NS_IMETHODIMP nsHTMLTextAccessible::GetAccName(PRUnichar **_retval)
 {
-public:
-  NS_DECL_ISUPPORTS
+  nsAutoString value;
+  mNode->GetNodeValue(value);
+  value.CompressWhitespace();
+  *_retval = value.ToNewUnicode();
+  return NS_OK;
+}
 
-  // nsIAccessibilityService methods:
-  NS_DECL_NSIACCESSIBILITYSERVICE
+/* wstring getAccRole (); */
+NS_IMETHODIMP nsHTMLTextAccessible::GetAccRole(PRUnichar **_retval)
+{
+    nsAutoString role(NS_LITERAL_STRING("text"));
+    *_retval = role.ToNewUnicode();
 
-  // nsAccessibilityService methods:
-  nsAccessibilityService();
-  virtual ~nsAccessibilityService();
-
-public:
-
-private:
-  NS_IMETHOD GetInfo(nsISupports* aFrame, nsIFrame** aRealFrame, nsIPresShell** aShell, nsIDOMNode** aContent);
-
-};
-
-#endif /* __nsIccessibilityService_h__ */
+    return NS_OK;
+}
