@@ -677,7 +677,7 @@ static OSErr ResolvePathAndSpec(const char * filePath, FSSpec *inSpec, PRBool cr
 			else if ((err == fnfErr) && createDirs)
 			{
 				// If we got "file not found" and we're allowed to create directories 
-				// then we need to create aone
+				// then we need to create one
 				err = ::FSpDirCreate(outSpec, smCurrentScript, &outSpec->parID);
 				// For some reason, this usually returns fnfErr, even though it works.
 				if (err == fnfErr)
@@ -2319,7 +2319,7 @@ nsLocalFile::SetPersistentDescriptor(const char * aPersistentDescriptor)
 {
    NS_ENSURE_ARG(aPersistentDescriptor);
    
-   nsresult rv;
+   nsresult rv = NS_OK;
 
    PRUint32 dataSize = nsCRT::strlen(aPersistentDescriptor);
    char* decodedData = PL_Base64Decode((const char*)aPersistentDescriptor, dataSize, nsnull);
@@ -2336,7 +2336,7 @@ nsLocalFile::SetPersistentDescriptor(const char * aPersistentDescriptor)
    err = ::ResolveAlias(nsnull, aliasH, &resolvedSpec, &changed);
    if (err == fnfErr) // resolvedSpec is valid in this case
       err = noErr;
-      rv = MacErrorMapper(err);
+   rv = MacErrorMapper(err);
    DisposeHandle((Handle) aliasH);
    NS_ENSURE_SUCCESS(rv, rv);
  
