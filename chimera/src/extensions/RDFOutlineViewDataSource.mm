@@ -248,7 +248,7 @@
     NSString* columnPropertyURI = [aTableColumn identifier];
     
     nsCOMPtr<nsIRDFResource> propertyResource;
-    mRDFService->GetResource([columnPropertyURI cString], getter_AddRefs(propertyResource));
+    mRDFService->GetResource([columnPropertyURI UTF8String], getter_AddRefs(propertyResource));
             
     nsCOMPtr<nsIRDFResource> resource = dont_AddRef([aItem resource]);
             
