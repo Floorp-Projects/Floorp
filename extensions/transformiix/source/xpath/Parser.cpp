@@ -21,12 +21,12 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *
- * $Id: Parser.cpp,v 1.4 2000/07/23 07:25:29 kvisco%ziplink.net Exp $
+ * $Id: Parser.cpp,v 1.5 2001/01/22 09:36:19 kvisco%ziplink.net Exp $
  */
 
 /**
  * Test App for Expressions
- * @version $Revision: 1.4 $ $Date: 2000/07/23 07:25:29 $
+ * @version $Revision: 1.5 $ $Date: 2001/01/22 09:36:19 $
 **/
 
 #include <iostream.h>
@@ -52,7 +52,7 @@ void main(int argc, char** argv) {
 	//String pattern("*[1]foo|*[1]/bar|*[1]/baz");
     
     //-- Current Test
-    String pattern("(4+5)-(9+9)");
+    String pattern("*[test()='foo']");
 
     cout <<"Lexically Analyzing: "<<pattern<<endl;
     cout<<endl;
@@ -120,9 +120,6 @@ void main(int argc, char** argv) {
                 case Token::FUNCTION_NAME:
                     cout<<"#FUNCTION_NAME";
                     break;
-                case Token::WILD_CARD:
-                    cout << "#WILDCARD";
-                    break;
                 case Token::NUMBER:
                     cout << "#NUMBER";
                     break;
@@ -157,7 +154,8 @@ void main(int argc, char** argv) {
 
     ExprParser parser;
 
-    Expr* expr = (Expr*)parser.createExpr(pattern);
+    //Expr* expr = (Expr*)parser.createExpr(pattern);
+    Expr* expr = (Expr*)parser.createPatternExpr(pattern);
 
     cout << "Checking result"<<endl;
 
@@ -181,6 +179,7 @@ void main(int argc, char** argv) {
     cout << "StringResult: " << strResult.numberValue() << endl;
 
     //-- AttributeValueTemplate test
+    cout << endl << "----------------------" << endl << endl;
     String avt("this is a {text()} of {{{{attr value templates}}}}");
     expr = parser.createAttributeValueTemplate(avt);
     resultString.clear();

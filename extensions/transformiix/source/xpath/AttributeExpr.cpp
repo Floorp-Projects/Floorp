@@ -21,28 +21,29 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: AttributeExpr.cpp,v 1.2 2001/01/12 20:06:30 axel%pike.org Exp $
+ * $Id: AttributeExpr.cpp,v 1.3 2001/01/22 09:36:12 kvisco%ziplink.net Exp $
  */
 
 #include "Expr.h"
 
-/**
- * This class represents a ElementExpr as defined by the XSL
- * Working Draft
- * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.2 $ $Date: 2001/01/12 20:06:30 $
-**/
+/*
+  This class represents a Attribute Expression as defined by the XPath
+  1.0 Recommendation
+*/
+
+const String AttributeExpr::WILD_CARD = "*";
 
 //- Constructors -/
 
 AttributeExpr::AttributeExpr() {
-    this->isWild = MB_FALSE;
+    this->isNameWild      = MB_FALSE;
+    this->isNamespaceWild = MB_FALSE;
 } //-- AttributeExpr
 
 AttributeExpr::AttributeExpr(String& name) {
-    //-- copy name
-    this->name = name;
-    this->isWild = MB_FALSE;
+    this->isNameWild      = MB_FALSE;
+    this->isNamespaceWild = MB_FALSE;
+    setName(name);
 } //-- AttributeExpr
 
 /**
@@ -68,13 +69,17 @@ ExprResult* AttributeExpr::evaluate(Node* context, ContextState* cs) {
     if ( !context ) return nodeSet;
     NamedNodeMap* atts = context->getAttributes();
     if ( atts ) {
-        for (UInt32 i = 0; i < atts->getLength(); i++ ) {
-            Attr* attr = (Attr*)atts->item(i);
-            if ( isWild ) nodeSet->add(attr);
-            else {
-                String attName = attr->getName();
-                if ( name.isEqual(attName) ){
+        UInt32 i = 0;
+        if ( isNameWild && isNamespaceWild ) {
+            for ( ; i < atts->getLength(); i++ )
+                nodeSet->add(atts->item(i));
+        }
+        else {
+            for ( ; i < atts->getLength(); i++ ) {
+                Node* attr = atts->item(i);
+                if (matches(attr, context, cs)) {
                     nodeSet->add(attr);
+                    if (!isNameWild) break;
                 }
             }
         }
@@ -101,12 +106,30 @@ const String& AttributeExpr::getName() {
 } //-- getName
 
 void AttributeExpr::setName(const String& name) {
-    this->name.clear();
-    this->name.append(name);
+
+    if (name.isEqual(WILD_CARD)) {
+        this->isNameWild      = MB_TRUE;
+        this->isNamespaceWild = MB_TRUE;
+        return;
+    }
+
+    int idx = name.indexOf(':');
+    if ( idx >= 0 )
+       name.subString(0,idx, this->prefix);
+    else
+       idx = -1;
+
+    name.subString(idx+1, this->name);
+
+    //-- set flags
+    this->isNamespaceWild = MB_FALSE;
+    this->isNameWild      = this->name.isEqual(WILD_CARD);
+
 } //-- setName
 
 void AttributeExpr::setWild(MBool isWild) {
-    this->isWild = isWild;
+    this->isNameWild      = isWild;
+    this->isNamespaceWild = isWild;
 } //-- setWild
   //-----------------------------/
  //- Methods from NodeExpr.cpp -/
@@ -125,9 +148,33 @@ short AttributeExpr::getType() {
  * the given context
 **/
 MBool AttributeExpr::matches(Node* node, Node* context, ContextState* cs) {
-    if ( (node) && (node->getNodeType() == Node::ATTRIBUTE_NODE) ) {
-        if ( isWild ) return MB_TRUE;
-        const String nodeName = ((Attr*)node)->getName();
+
+    if ( (!node) || (node->getNodeType() != Node::ATTRIBUTE_NODE) )
+        return  MB_FALSE;
+
+    if ( isNameWild && isNamespaceWild ) return MB_TRUE;
+
+    const String nodeName = ((Attr*)node)->getName();
+    int idx = nodeName.indexOf(':');
+    if (idx >= 0) {
+        String prefixForNode;
+        nodeName.subString(0,idx,prefixForNode);
+        String localName;
+        nodeName.subString(idx+1, localName);
+        if (isNamespaceWild) return localName.isEqual(this->name);
+        String nsForNode;
+        Node* parent = cs->getParentNode(node);
+        if (parent) XMLDOMUtils::getNameSpace(prefixForNode, (Element*)parent, nsForNode);
+        String nsForTest;
+        cs->getNameSpaceURIFromPrefix(this->prefix,nsForTest);
+        if (!nsForTest.isEqual(nsForNode)) return MB_FALSE;
+        return localName.isEqual(this->name);
+    }
+    else {
+        if (isNamespaceWild) return nodeName.isEqual(this->name);
+        String nsForTest;
+        cs->getNameSpaceURIFromPrefix(this->prefix, nsForTest);
+        if (nsForTest.length() > 0) return MB_FALSE;
         return nodeName.isEqual(this->name);
     }
     return MB_FALSE;
@@ -144,7 +191,11 @@ MBool AttributeExpr::matches(Node* node, Node* context, ContextState* cs) {
 **/
 void AttributeExpr::toString(String& dest) {
     dest.append('@');
-    if (isWild) dest.append('*');
-    else dest.append(this->name);
+    if (isNameWild && isNamespaceWild) dest.append('*');
+    else {
+       dest.append(this->prefix);
+       dest.append(':');
+       dest.append(this->name);
+    }
 } //-- toString
 

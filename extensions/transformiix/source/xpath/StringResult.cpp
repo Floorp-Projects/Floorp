@@ -21,14 +21,14 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: StringResult.cpp,v 1.5 2000/06/11 12:29:35 Peter.VanderBeken%pandora.be Exp $
+ * $Id: StringResult.cpp,v 1.6 2001/01/22 09:36:19 kvisco%ziplink.net Exp $
  */
 
 /**
  * StringResult
  * Represents a String as a Result of evaluating an Expr
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.5 $ $Date: 2000/06/11 12:29:35 $
+ * @version $Revision: 1.6 $ $Date: 2001/01/22 09:36:19 $
 **/
 #include "ExprResult.h"
 
@@ -63,15 +63,6 @@ StringResult::StringResult(const String& str) {
 String& StringResult::getValue() {
     return this->value;
 } //-- getValue
-
-/**
- * Sets the value of this StringResult
- * @param str the String to use for this StringResult's value
-**/
-void StringResult::setValue(const String& str){
-    // copy str
-    this->value = str;
-} //-- setValue
 
 /*
  * Virtual Methods from ExprResult

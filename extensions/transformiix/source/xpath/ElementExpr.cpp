@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: ElementExpr.cpp,v 1.3 2001/01/12 20:06:31 axel%pike.org Exp $
+ * $Id: ElementExpr.cpp,v 1.4 2001/01/22 09:36:14 kvisco%ziplink.net Exp $
  */
 
 #include "Expr.h"
@@ -41,21 +41,7 @@ ElementExpr::ElementExpr() {
 } //-- ElementExpr
 
 ElementExpr::ElementExpr(String& name) {
-    //-- copy name
-    int idx = name.indexOf(':');
-    if ( idx >= 0 )
-       name.subString(0,idx, this->prefix);
-    else
-       idx = -1;
-    name.subString(idx+1, this->name);
-
-    //-- set flags
-    this->isNamespaceWild = (this->prefix.length() == 0);
-
-    //-- I know...this should be done is WildCardExpr or someplace
-    //-- else but I need a fix for now.
-    this->isNameWild = this->name.isEqual(WILD_CARD);
-
+    setName(name);
 } //-- ElementExpr
 
 /**
@@ -97,6 +83,7 @@ ExprResult* ElementExpr::evaluate(Node* context, ContextState* cs) {
  * ContextState then Negative Infinity is returned.
 **/
 double ElementExpr::getDefaultPriority(Node* node, Node* context, ContextState* cs) {
+    if (isNameWild) return -0.5;
     return 0.0;
 } //-- getDefaultPriority
 
@@ -109,8 +96,16 @@ const String& ElementExpr::getName() {
 } //-- getName
 
 void ElementExpr::setName(const String& name) {
-    this->name.clear();
-    this->name.append(name);
+    int idx = name.indexOf(':');
+    if ( idx >= 0 )
+       name.subString(0,idx, this->prefix);
+    else
+       idx = -1;
+    name.subString(idx+1, this->name);
+
+    //-- set flags
+    this->isNameWild = this->name.isEqual(WILD_CARD);
+    this->isNamespaceWild = (isNameWild && (this->prefix.length() == 0));
 } //-- setName
 
 
@@ -131,38 +126,39 @@ short ElementExpr::getType() {
  * the given context
 **/
 MBool ElementExpr::matches(Node* node, Node* context, ContextState* cs) {
-    if ( node) {
-        if ( node->getNodeType() == Node::ELEMENT_NODE ) {
 
-            const String nodeName = node->getNodeName();
-            int idx = nodeName.indexOf(':');
+    if ((!node) || (node->getNodeType() != Node::ELEMENT_NODE ))
+        return MB_FALSE;
 
-            if (!isNamespaceWild) {
-               //-- compare namespaces
-               String nsURI;
-               cs->getNameSpaceURIFromPrefix(this->prefix, nsURI);
+    if (isNamespaceWild && isNameWild) return MB_TRUE;
 
-               String nsURI2;
-               String prefix2;
-               if (idx > 0) nodeName.subString(0, idx, prefix2);
-               cs->getNameSpaceURIFromPrefix(prefix2, nsURI2);
+    const String nodeName = node->getNodeName();
 
-               if (!nsURI.isEqual(nsURI2)) return MB_FALSE;
+    int idx = nodeName.indexOf(':');
 
-            }
+    if (!isNamespaceWild) {
+        //-- compare namespaces
+        String nsURI;
+        // use context to get namespace for testing against
+        cs->getNameSpaceURIFromPrefix(this->prefix, nsURI);
 
-            if (this->isNameWild) return MB_TRUE;
+        String nsURI2;
+        String prefix2;
+        if (idx > 0) nodeName.subString(0, idx, prefix2);
+        // use source tree to aquire namespace for node
+        XMLDOMUtils::getNameSpace(prefix2, (Element*) node, nsURI2);
 
-            //-- compare local names
-            if (idx < 0) return nodeName.isEqual(this->name);
-            else {
-               String local;
-               nodeName.subString(idx+1, local);
-               return local.isEqual(this->name);
-            }
-        }
+        if (!nsURI.isEqual(nsURI2)) return MB_FALSE;
     }
-    return MB_FALSE;
+
+    if (this->isNameWild) return MB_TRUE;
+    //-- compare local names
+    if (idx < 0) return nodeName.isEqual(this->name);
+    else {
+        String local;
+        nodeName.subString(idx+1, local);
+        return local.isEqual(this->name);
+    }
 } //-- matches
 
 

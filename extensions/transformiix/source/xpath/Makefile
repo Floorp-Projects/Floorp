@@ -42,7 +42,6 @@ XPATH_OBJS = AdditiveExpr.o \
 	         TextExpr.o \
              UnionExpr.o \
              VariableRefExpr.o \
-	         WildCardExpr.o \
              XPathNames.o
 
 FUNCTION_CALL_OBJS = \

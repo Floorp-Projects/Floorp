@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: NumberExpr.cpp,v 1.1 2000/04/06 07:45:34 kvisco%ziplink.net Exp $
+ * $Id: NumberExpr.cpp,v 1.2 2001/01/22 09:36:18 kvisco%ziplink.net Exp $
  */
 
 #include "Expr.h"
@@ -31,11 +31,11 @@
 //--------------/
 
 NumberExpr::NumberExpr() {
-    numberResult.setValue(0.0);
+    _value = 0.0;
 } //-- NumberExpr
 
 NumberExpr::NumberExpr(double dbl) {
-    numberResult.setValue(dbl);
+    _value = dbl;
 } //-- NumberExpr
 
 NumberExpr::~NumberExpr() {
@@ -49,7 +49,7 @@ NumberExpr::~NumberExpr() {
  * @return the result of the evaluation
 **/
 ExprResult* NumberExpr::evaluate(Node* context, ContextState* cs) {
-   return new NumberResult(numberResult);
+   return new NumberResult(_value);
 } //-- evaluate
 
 /**
@@ -61,6 +61,10 @@ ExprResult* NumberExpr::evaluate(Node* context, ContextState* cs) {
  * @return the String representation of this Expr.
 **/
 void NumberExpr::toString(String& str) {
-    numberResult.stringValue(str);
+    int intVal = (int)_value;
+    if (intVal == _value) { //-- no fraction
+        Integer::toString(intVal, str);
+    }
+    else Double::toString(_value, str);
 } //-- toString
 
