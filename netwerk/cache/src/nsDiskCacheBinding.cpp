@@ -290,6 +290,7 @@ nsDiskCacheBindery::AddBinding(nsDiskCacheBinding * binding)
             PR_INSERT_BEFORE(binding, p);
             if (hashEntry->mBinding == p)
                 hashEntry->mBinding = binding;
+            break;
         }
         
         if (binding->mGeneration == p->mGeneration) {
@@ -309,6 +310,7 @@ nsDiskCacheBindery::AddBinding(nsDiskCacheBinding * binding)
                 return NS_ERROR_UNEXPECTED;
             }
             PR_INSERT_BEFORE(binding, hashEntry->mBinding);
+            break;
         }
     }
     return NS_OK;

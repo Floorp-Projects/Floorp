@@ -114,7 +114,7 @@ public:
 
     // EvictionRank accessors
     PRUint32  EvictionRank() const              { return mEvictionRank; }
-    void      SetEvictionRank( PRUint32 rank)   { mEvictionRank = rank; }
+    void      SetEvictionRank( PRUint32 rank)   { mEvictionRank = rank ? rank : 1; }
 
     // DataLocation accessors
     PRBool    DataLocationInitialized() { return mDataLocation & eLocationInitializedMask; }
@@ -311,7 +311,7 @@ struct nsDiskCacheBucket {
     void      Swap();
     void      Unswap();
     PRUint32  CountRecords();
-    PRUint32  EvictionRank();   // return largest rank in bucket
+    PRUint32  EvictionRank(PRUint32  targetRank);   // return largest rank in bucket < targetRank
     PRInt32   VisitEachRecord( nsDiskCacheRecordVisitor *  visitor,
                                PRUint32                    evictionRank,
                                PRUint32 *                  recordsDeleted);
