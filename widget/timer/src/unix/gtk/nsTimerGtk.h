@@ -41,7 +41,7 @@
 #include "nsITimer.h"
 #include "nsITimerCallback.h"
 
-#include <gtk/gtk.h>
+#include <gtk/gtkmain.h>
 
 #include <time.h>
 #include <sys/time.h>

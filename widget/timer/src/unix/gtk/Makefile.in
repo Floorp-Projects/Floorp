@@ -48,5 +48,5 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-INCLUDES	+= $(MOZ_GTK_CFLAGS) -I$(srcdir)/..
+INCLUDES	+= $(MOZ_GTK_CFLAGS) $(MOZ_GTK2_CFLAGS) -I$(srcdir)/..
 
