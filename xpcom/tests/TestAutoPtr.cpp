@@ -105,14 +105,62 @@ class TestRefObject : public TestRefObjectBaseA, public TestRefObjectBaseB {
 
 };
 
-void CreateTestObject(TestObject **aResult)
+static void CreateTestObject(TestObject **aResult)
 {
     *aResult = new TestObject();
 }
 
-void CreateTestRefObject(TestRefObject **aResult)
+static void CreateTestRefObject(TestRefObject **aResult)
 {
     (*aResult = new TestRefObject())->AddRef();
+}
+
+static void DoSomethingWithTestObject(TestObject *aIn)
+{
+    printf("  Doing something with |TestObject| %p.\n",
+           NS_STATIC_CAST(void*, aIn));
+}
+
+static void DoSomethingWithConstTestObject(const TestObject *aIn)
+{
+    printf("  Doing something with |const TestObject| %p.\n",
+           NS_STATIC_CAST(const void*, aIn));
+}
+
+static void DoSomethingWithTestRefObject(TestRefObject *aIn)
+{
+    printf("  Doing something with |TestRefObject| %p.\n",
+           NS_STATIC_CAST(void*, aIn));
+}
+
+static void DoSomethingWithConstTestRefObject(const TestRefObject *aIn)
+{
+    printf("  Doing something with |const TestRefObject| %p.\n",
+           NS_STATIC_CAST(const void*, aIn));
+}
+
+static void DoSomethingWithTestObjectBaseB(TestObjectBaseB *aIn)
+{
+    printf("  Doing something with |TestObjectBaseB| %p.\n",
+           NS_STATIC_CAST(void*, aIn));
+}
+
+static void DoSomethingWithConstTestObjectBaseB(const TestObjectBaseB *aIn)
+{
+    printf("  Doing something with |const TestObjectBaseB| %p.\n",
+           NS_STATIC_CAST(const void*, aIn));
+}
+
+static void DoSomethingWithTestRefObjectBaseB(TestRefObjectBaseB *aIn)
+{
+    printf("  Doing something with |TestRefObjectBaseB| %p.\n",
+           NS_STATIC_CAST(void*, aIn));
+}
+
+static void DoSomethingWithConstTestRefObjectBaseB(const TestRefObjectBaseB *aIn)
+{
+    printf("  Doing something with |const TestRefObjectBaseB| %p.\n",
+           NS_STATIC_CAST(const void*, aIn));
 }
 
 int main()
@@ -161,7 +209,7 @@ int main()
         printf("Should Release twice and destroy one |TestRefObject|:\n");
     }
 
-    printf("\nTesting equality:\n");
+    printf("\nTesting equality (with all const-ness combinations):\n");
 
     {
         nsRefPtr<TestRefObject> p1( new TestRefObject() );
@@ -389,6 +437,8 @@ int main()
                ((p1 == p2) && !(p1 != p2) && (p2 == p1) && !(p2 != p1)) ? "OK" : "broken");
     }
 
+    printf("\nTesting getter_Transfers and getter_AddRefs.\n");
+
     {
         nsAutoPtr<TestObject> ptr;
         printf("Should create one |TestObject|:\n");
@@ -402,6 +452,8 @@ int main()
         CreateTestRefObject(getter_AddRefs(ptr));
         printf("Should Release and destroy one |TestRefObject|:\n");
     }
+
+    printf("\nTesting casts and equality tests.\n");
 
     if ((void*)(TestObject*)0x1000 ==
         (void*)(TestObjectBaseB*)(TestObject*)0x1000)
@@ -453,7 +505,285 @@ int main()
                ? "OK" : "broken");
     }
 
-    // XXX Need tests of calling functions, with various implicit casts.
+    printf("\nTesting |release()|.\n");
+
+    {
+        printf("Should create one |TestObject|:\n");
+        nsAutoPtr<TestObject> pobj( new TestObject() );
+        printf("Should do nothing:\n");
+        nsAutoPtr<TestObject> pobj2( pobj.release() );
+        printf("Should destroy one |TestObject|:\n");
+    }
+
+    {
+        printf("Should create 3 |TestObject|s:\n");
+        nsAutoArrayPtr<TestObject> pobj( new TestObject[3] );
+        printf("Should do nothing:\n");
+        nsAutoArrayPtr<TestObject> pobj2( pobj.release() );
+        printf("Should destroy 3 |TestObject|s:\n");
+    }
+
+    printf("\nTesting construction with |operator=|.\n");
+
+    {
+        printf("Should create one |TestObject|:\n");
+        nsAutoPtr<TestObject> pobj = new TestObject();
+        printf("Should destroy one |TestObject|:\n");
+    }
+
+    {
+        printf("Should create 3 |TestObject|s:\n");
+        nsAutoArrayPtr<TestObject> pobj = new TestObject[3];
+        printf("Should destroy 3 |TestObject|s:\n");
+    }
+
+    {
+        printf("Should create and AddRef one |TestRefObject|:\n");
+        nsRefPtr<TestRefObject> pobj = new TestRefObject();
+        printf("Should Release and destroy one |TestRefObject|:\n");
+    }
+
+    printf("\nTesting calling of functions (including array access and casts).\n");
+
+    {
+        printf("Should create one |TestObject|:\n");
+        nsAutoPtr<TestObject> pobj = new TestObject();
+        printf("Should do something with one |TestObject|:\n");
+        DoSomethingWithTestObject(pobj);
+        printf("Should do something with one |TestObject|:\n");
+        DoSomethingWithConstTestObject(pobj);
+        printf("Should destroy one |TestObject|:\n");
+    }
+
+    {
+        printf("Should create 3 |TestObject|s:\n");
+        nsAutoArrayPtr<TestObject> pobj = new TestObject[3];
+        printf("Should do something with one |TestObject|:\n");
+        DoSomethingWithTestObject(&pobj[2]);
+        printf("Should do something with one |TestObject|:\n");
+        DoSomethingWithConstTestObject(&pobj[1]);
+        printf("Should do something with one |TestObject|:\n");
+        DoSomethingWithTestObject(pobj + 2);
+        printf("Should do something with one |TestObject|:\n");
+        DoSomethingWithConstTestObject(pobj + 1);
+        printf("Should destroy 3 |TestObject|s:\n");
+    }
+
+    {
+        printf("Should create and AddRef one |TestRefObject|:\n");
+        nsRefPtr<TestRefObject> pobj = new TestRefObject();
+        printf("Should do something with one |TestRefObject|:\n");
+        DoSomethingWithTestRefObject(pobj);
+        printf("Should do something with one |TestRefObject|:\n");
+        DoSomethingWithConstTestRefObject(pobj);
+        printf("Should Release and destroy one |TestRefObject|:\n");
+    }
+
+    {
+        printf("Should create one |TestObject|:\n");
+        nsAutoPtr<TestObject> pobj = new TestObject();
+        printf("Should do something with one |TestObject|:\n");
+        DoSomethingWithTestObjectBaseB(pobj);
+        printf("Should do something with one |TestObject|:\n");
+        DoSomethingWithConstTestObjectBaseB(pobj);
+        printf("Should destroy one |TestObject|:\n");
+    }
+
+    {
+        printf("Should create 3 |TestObject|s:\n");
+        nsAutoArrayPtr<TestObject> pobj = new TestObject[3];
+        printf("Should do something with one |TestObject|:\n");
+        DoSomethingWithTestObjectBaseB(&pobj[2]);
+        printf("Should do something with one |TestObject|:\n");
+        DoSomethingWithConstTestObjectBaseB(&pobj[1]);
+        printf("Should do something with one |TestObject|:\n");
+        DoSomethingWithTestObjectBaseB(pobj + 2);
+        printf("Should do something with one |TestObject|:\n");
+        DoSomethingWithConstTestObjectBaseB(pobj + 1);
+        printf("Should destroy 3 |TestObject|s:\n");
+    }
+
+    {
+        printf("Should create and AddRef one |TestRefObject|:\n");
+        nsRefPtr<TestRefObject> pobj = new TestRefObject();
+        printf("Should do something with one |TestRefObject|:\n");
+        DoSomethingWithTestRefObjectBaseB(pobj);
+        printf("Should do something with one |TestRefObject|:\n");
+        DoSomethingWithConstTestRefObjectBaseB(pobj);
+        printf("Should Release and destroy one |TestRefObject|:\n");
+    }
+
+    {
+        printf("Should create one |TestObject|:\n");
+        nsAutoPtr<const TestObject> pobj = new TestObject();
+        printf("Should do something with one |TestObject|:\n");
+        DoSomethingWithConstTestObject(pobj);
+        printf("Should destroy one |TestObject|:\n");
+    }
+
+    {
+        printf("Should create 3 |TestObject|s:\n");
+        nsAutoArrayPtr<const TestObject> pobj = new TestObject[3];
+        printf("Should do something with one |TestObject|:\n");
+        DoSomethingWithConstTestObject(&pobj[1]);
+        printf("Should do something with one |TestObject|:\n");
+        DoSomethingWithConstTestObject(pobj + 1);
+        printf("Should destroy 3 |TestObject|s:\n");
+    }
+
+    {
+        printf("Should create and AddRef one |TestRefObject|:\n");
+        nsRefPtr<const TestRefObject> pobj = new TestRefObject();
+        printf("Should do something with one |TestRefObject|:\n");
+        DoSomethingWithConstTestRefObject(pobj);
+        printf("Should Release and destroy one |TestRefObject|:\n");
+    }
+
+    {
+        printf("Should create one |TestObject|:\n");
+        nsAutoPtr<const TestObject> pobj = new TestObject();
+        printf("Should do something with one |TestObject|:\n");
+        DoSomethingWithConstTestObjectBaseB(pobj);
+        printf("Should destroy one |TestObject|:\n");
+    }
+
+    {
+        printf("Should create 3 |TestObject|s:\n");
+        nsAutoArrayPtr<const TestObject> pobj = new TestObject[3];
+        printf("Should do something with one |TestObject|:\n");
+        DoSomethingWithConstTestObjectBaseB(&pobj[1]);
+        printf("Should do something with one |TestObject|:\n");
+        DoSomethingWithConstTestObjectBaseB(pobj + 1);
+        printf("Should destroy 3 |TestObject|s:\n");
+    }
+
+    {
+        printf("Should create and AddRef one |TestRefObject|:\n");
+        nsRefPtr<const TestRefObject> pobj = new TestRefObject();
+        printf("Should do something with one |TestRefObject|:\n");
+        DoSomethingWithConstTestRefObjectBaseB(pobj);
+        printf("Should Release and destroy one |TestRefObject|:\n");
+    }
+
+    {
+        printf("Should create one |TestObject|:\n");
+        const nsAutoPtr<TestObject> pobj = new TestObject();
+        printf("Should do something with one |TestObject|:\n");
+        DoSomethingWithTestObject(pobj);
+        printf("Should do something with one |TestObject|:\n");
+        DoSomethingWithConstTestObject(pobj);
+        printf("Should destroy one |TestObject|:\n");
+    }
+
+    {
+        printf("Should create 3 |TestObject|s:\n");
+        const nsAutoArrayPtr<TestObject> pobj = new TestObject[3];
+        printf("Should do something with one |TestObject|:\n");
+        DoSomethingWithTestObject(&pobj[2]);
+        printf("Should do something with one |TestObject|:\n");
+        DoSomethingWithConstTestObject(&pobj[1]);
+        printf("Should do something with one |TestObject|:\n");
+        DoSomethingWithTestObject(pobj + 2);
+        printf("Should do something with one |TestObject|:\n");
+        DoSomethingWithConstTestObject(pobj + 1);
+        printf("Should destroy 3 |TestObject|s:\n");
+    }
+
+    {
+        printf("Should create and AddRef one |TestRefObject|:\n");
+        const nsRefPtr<TestRefObject> pobj = new TestRefObject();
+        printf("Should do something with one |TestRefObject|:\n");
+        DoSomethingWithTestRefObject(pobj);
+        printf("Should do something with one |TestRefObject|:\n");
+        DoSomethingWithConstTestRefObject(pobj);
+        printf("Should Release and destroy one |TestRefObject|:\n");
+    }
+
+    {
+        printf("Should create one |TestObject|:\n");
+        const nsAutoPtr<TestObject> pobj = new TestObject();
+        printf("Should do something with one |TestObject|:\n");
+        DoSomethingWithTestObjectBaseB(pobj);
+        printf("Should do something with one |TestObject|:\n");
+        DoSomethingWithConstTestObjectBaseB(pobj);
+        printf("Should destroy one |TestObject|:\n");
+    }
+
+    {
+        printf("Should create 3 |TestObject|s:\n");
+        const nsAutoArrayPtr<TestObject> pobj = new TestObject[3];
+        printf("Should do something with one |TestObject|:\n");
+        DoSomethingWithTestObjectBaseB(&pobj[2]);
+        printf("Should do something with one |TestObject|:\n");
+        DoSomethingWithConstTestObjectBaseB(&pobj[1]);
+        printf("Should do something with one |TestObject|:\n");
+        DoSomethingWithTestObjectBaseB(pobj + 2);
+        printf("Should do something with one |TestObject|:\n");
+        DoSomethingWithConstTestObjectBaseB(pobj + 1);
+        printf("Should destroy 3 |TestObject|s:\n");
+    }
+
+    {
+        printf("Should create and AddRef one |TestRefObject|:\n");
+        const nsRefPtr<TestRefObject> pobj = new TestRefObject();
+        printf("Should do something with one |TestRefObject|:\n");
+        DoSomethingWithTestRefObjectBaseB(pobj);
+        printf("Should do something with one |TestRefObject|:\n");
+        DoSomethingWithConstTestRefObjectBaseB(pobj);
+        printf("Should Release and destroy one |TestRefObject|:\n");
+    }
+
+    {
+        printf("Should create one |TestObject|:\n");
+        const nsAutoPtr<const TestObject> pobj = new TestObject();
+        printf("Should do something with one |TestObject|:\n");
+        DoSomethingWithConstTestObject(pobj);
+        printf("Should destroy one |TestObject|:\n");
+    }
+
+    {
+        printf("Should create 3 |TestObject|s:\n");
+        const nsAutoArrayPtr<const TestObject> pobj = new TestObject[3];
+        printf("Should do something with one |TestObject|:\n");
+        DoSomethingWithConstTestObject(&pobj[1]);
+        printf("Should do something with one |TestObject|:\n");
+        DoSomethingWithConstTestObject(pobj + 1);
+        printf("Should destroy 3 |TestObject|s:\n");
+    }
+
+    {
+        printf("Should create and AddRef one |TestRefObject|:\n");
+        const nsRefPtr<const TestRefObject> pobj = new TestRefObject();
+        printf("Should do something with one |TestRefObject|:\n");
+        DoSomethingWithConstTestRefObject(pobj);
+        printf("Should Release and destroy one |TestRefObject|:\n");
+    }
+
+    {
+        printf("Should create one |TestObject|:\n");
+        const nsAutoPtr<const TestObject> pobj = new TestObject();
+        printf("Should do something with one |TestObject|:\n");
+        DoSomethingWithConstTestObjectBaseB(pobj);
+        printf("Should destroy one |TestObject|:\n");
+    }
+
+    {
+        printf("Should create 3 |TestObject|s:\n");
+        const nsAutoArrayPtr<const TestObject> pobj = new TestObject[3];
+        printf("Should do something with one |TestObject|:\n");
+        DoSomethingWithConstTestObjectBaseB(&pobj[1]);
+        printf("Should do something with one |TestObject|:\n");
+        DoSomethingWithConstTestObjectBaseB(pobj + 1);
+        printf("Should destroy 3 |TestObject|s:\n");
+    }
+
+    {
+        printf("Should create and AddRef one |TestRefObject|:\n");
+        const nsRefPtr<const TestRefObject> pobj = new TestRefObject();
+        printf("Should do something with one |TestRefObject|:\n");
+        DoSomethingWithConstTestRefObjectBaseB(pobj);
+        printf("Should Release and destroy one |TestRefObject|:\n");
+    }
 
     return 0;
 }
