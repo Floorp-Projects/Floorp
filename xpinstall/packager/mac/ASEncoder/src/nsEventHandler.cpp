@@ -25,6 +25,10 @@
 	#include "nsEventHandler.h"
 #endif
 
+#include <LowMem.h>
+#include <ToolUtils.h>
+
+
 #include "nsASEApp.h"
 #include "nsFileSelector.h"
 #include "nsAppleSingleEncoder.h"

@@ -35,6 +35,9 @@
 #ifndef _NS_APPLESINGLEENCODER_H_
 #define _NS_APPLESINGLEENCODER_H_
 
+#include <MacTypes.h>
+#include <Files.h>
+
 class nsAppleSingleEncoder
 {
 
