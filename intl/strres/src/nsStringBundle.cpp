@@ -18,7 +18,6 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #define NS_IMPL_IDS
@@ -46,17 +45,12 @@
 #include "nsISupportsArray.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
-static NS_DEFINE_IID(kRegistryNodeIID, NS_IREGISTRYNODE_IID);
 
 // XXX investigate need for proper locking in this module
 //static PRInt32 gLockCount = 0;
 
-NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-NS_DEFINE_IID(kIStringBundleIID, NS_ISTRINGBUNDLE_IID);
-NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
 NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
-static NS_DEFINE_IID(kIPersistentPropertiesIID, NS_IPERSISTENTPROPERTIES_IID);
 
 class nsStringBundle : public nsIStringBundle
 {
@@ -99,7 +93,7 @@ nsStringBundle::nsStringBundle(const char* aURLSpec, nsILocale* aLocale, nsresul
   }
 
   *aResult = nsComponentManager::CreateInstance(kPersistentPropertiesCID, NULL,
-                                                kIPersistentPropertiesIID, (void**) &mProps);
+                                                NS_GET_IID(nsIPersistentProperties), (void**) &mProps);
   if (NS_FAILED(*aResult)) {
 #ifdef NS_DEBUG
     printf("create nsIPersistentProperties failed\n");
@@ -146,7 +140,7 @@ nsStringBundle::GetStringFromName(const nsString& aName, nsString& aResult)
   return ret;
 }
 
-NS_IMPL_ISUPPORTS(nsStringBundle, NS_GET_IID(nsIStringBundle))
+NS_IMPL_ISUPPORTS1(nsStringBundle, nsIStringBundle)
 
 /* void GetStringFromID (in long aID, out wstring aResult); */
 NS_IMETHODIMP
@@ -294,6 +288,7 @@ nsStringBundle::GetLangCountry(nsILocale* aLocale, nsString2& lang, nsString2& c
   nsString  	catagory("NSILOCALE_MESSAGES");
   nsresult	  result	 = aLocale->GetCategory(catagory.GetUnicode(), &lc_name_unichar);
   lc_name.SetString(lc_name_unichar);
+  nsAllocator::Free(lc_name_unichar);
 
   NS_ASSERTION(NS_SUCCEEDED(result),"nsStringBundle::GetLangCountry: locale.GetCatagory failed");
   NS_ASSERTION(lc_name.Length()>0,"nsStringBundle::GetLangCountry: locale.GetCatagory failed");
@@ -340,7 +335,7 @@ public:
   NS_IMETHOD GetEnumeration(nsIBidirectionalEnumerator ** aResult); 
 };
 
-NS_IMPL_ISUPPORTS(nsExtensibleStringBundle, nsIStringBundle::GetIID());
+NS_IMPL_ISUPPORTS(nsExtensibleStringBundle, NS_GET_IID(nsIStringBundle));
 
 nsExtensibleStringBundle::nsExtensibleStringBundle(const char * aRegistryKey, 
                                                   nsILocale * aLocale, 
@@ -356,12 +351,12 @@ nsExtensibleStringBundle::nsExtensibleStringBundle(const char * aRegistryKey,
 
   // get the Bundle Service
   res = nsServiceManager::GetService(kStringBundleServiceCID, 
-      kIStringBundleServiceIID, (nsISupports **)&sbServ);
+      NS_GET_IID(nsIStringBundleService), (nsISupports **)&sbServ);
   if (NS_FAILED(res)) goto done;
 
   // get the registry
   res = nsServiceManager::GetService(NS_REGISTRY_PROGID, 
-    nsIRegistry::GetIID(), (nsISupports**)&registry);
+    NS_GET_IID(nsIRegistry), (nsISupports**)&registry);
   if (NS_FAILED(res)) goto done;
 
   // get subtree
@@ -388,7 +383,7 @@ nsExtensibleStringBundle::nsExtensibleStringBundle(const char * aRegistryKey,
     res = components->CurrentItem(&base);
     if (NS_FAILED(res)) goto done1;
 
-    res = base->QueryInterface(kRegistryNodeIID, (void**)&node);
+    res = base->QueryInterface(NS_GET_IID(nsIRegistryNode), (void**)&node);
     if (NS_FAILED(res)) goto done1;
 
     res = node->GetKey(&key);
@@ -447,7 +442,7 @@ nsresult nsExtensibleStringBundle::GetStringFromID(PRInt32 aID, PRUnichar ** aRe
     res = mBundle->GetElementAt(i, &sBundle);
     if (NS_FAILED(res)) goto done;
 
-    res = sBundle->QueryInterface(nsIStringBundle::GetIID(), (void **)(&bundle));
+    res = sBundle->QueryInterface(NS_GET_IID(nsIStringBundle), (void **)(&bundle));
     if (NS_FAILED(res)) goto done;
 
     res = bundle->GetStringFromID(aID, aResult);
@@ -479,7 +474,7 @@ nsresult nsExtensibleStringBundle::GetStringFromName(const PRUnichar *aName,
     res = mBundle->GetElementAt(i, &sBundle);
     if (NS_FAILED(res)) goto done;
 
-    res = sBundle->QueryInterface(nsIStringBundle::GetIID(), (void **)(&bundle));
+    res = sBundle->QueryInterface(NS_GET_IID(nsIStringBundle), (void **)(&bundle));
     if (NS_FAILED(res)) goto done;
 
     res = bundle->GetStringFromName(aName, aResult);
@@ -550,7 +545,7 @@ nsStringBundleService::CreateBundle(const char* aURLSpec, nsILocale* aLocale,
     delete bundle;
     return ret;
   }
-  ret = bundle->QueryInterface(kIStringBundleIID, (void**) aResult);
+  ret = bundle->QueryInterface(NS_GET_IID(nsIStringBundle), (void**) aResult);
   if (NS_FAILED(ret)) {
     delete bundle;
   }
@@ -575,7 +570,7 @@ nsStringBundleService::CreateExtensibleBundle(const char* aRegistryKey,
     return res;
   }
 
-  res = bundle->QueryInterface(kIStringBundleIID, (void**) aResult);
+  res = bundle->QueryInterface(NS_GET_IID(nsIStringBundle), (void**) aResult);
   if (NS_FAILED(res)) delete bundle;
 
   return res;
@@ -604,7 +599,7 @@ nsStringBundleService::CreateXPCBundle(const char *aURLSpec, const PRUnichar *aL
     delete bundle;
     return ret;
   }
-  ret = bundle->QueryInterface(kIStringBundleIID, (void**) aResult);
+  ret = bundle->QueryInterface(NS_GET_IID(nsIStringBundle), (void**) aResult);
   if (NS_FAILED(ret)) {
     delete bundle;
   }
@@ -612,178 +607,10 @@ nsStringBundleService::CreateXPCBundle(const char *aURLSpec, const PRUnichar *aL
   return ret;
 }
 
-NS_IMETHODIMP
-NS_NewStringBundleService(nsISupports* aOuter, const nsIID& aIID,
-                          void** aResult)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsStringBundleService)
+
+static nsModuleComponentInfo components[] =
 {
-  nsresult rv;
-
-  if (!aResult) {                                                  
-    return NS_ERROR_INVALID_POINTER;                             
-  }                                                                
-  if (aOuter) {                                                    
-    *aResult = nsnull;                                           
-    return NS_ERROR_NO_AGGREGATION;                              
-  }                                                                
-  nsStringBundleService * inst = new nsStringBundleService();
-  if (inst == NULL) {                                             
-    *aResult = nsnull;                                           
-    return NS_ERROR_OUT_OF_MEMORY;
-  }                                                                
-  rv = inst->QueryInterface(aIID, aResult);                        
-  if (NS_FAILED(rv)) {
-    delete inst;
-    *aResult = nsnull;                                           
-  }                                                              
-  return rv;                                                     
-}
-
-//----------------------------------------------------------------------------
-
-class nsSBModule : public nsIModule 
-{
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIMODULE
-
-private:
-
-  PRBool mInitialized;
-
-  void Shutdown();
-
-public:
-
-  nsSBModule();
-
-  virtual ~nsSBModule();
-
-  nsresult Initialize();
-
-protected:
-  nsCOMPtr<nsIGenericFactory> mFactory;
+   { "String Bundle", NS_STRINGBUNDLESERVICE_CID, NS_STRINGBUNDLE_PROGID, nsStringBundleServiceConstructor}
 };
-
-static nsSBModule * gModule = NULL;
-
-extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager * compMgr,
-                                          nsIFileSpec* location,
-                                          nsIModule** return_cobj)
-{
-  nsresult rv = NS_OK;
-
-  NS_ENSURE_ARG_POINTER(return_cobj);
-  NS_ENSURE_FALSE(gModule, NS_ERROR_FAILURE);
-
-  // Create an initialize the module instance
-  nsSBModule * m = new nsSBModule();
-  if (!m) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  // Increase refcnt and store away nsIModule interface to m in return_cobj
-  rv = m->QueryInterface(NS_GET_IID(nsIModule), (void**)return_cobj);
-  if (NS_FAILED(rv)) {
-    delete m;
-    m = nsnull;
-  }
-  gModule = m;                  // WARNING: Weak Reference
-  return rv;
-}
-
-NS_IMPL_ISUPPORTS(nsSBModule, NS_GET_IID(nsIModule))
-
-nsSBModule::nsSBModule()
-: mInitialized(PR_FALSE)
-{
-  NS_INIT_ISUPPORTS();
-}
-
-nsSBModule::~nsSBModule()
-{
-  Shutdown();
-}
-
-nsresult nsSBModule::Initialize()
-{
-  return NS_OK;
-}
-
-void nsSBModule::Shutdown()
-{
-  mFactory = nsnull;
-}
-
-NS_IMETHODIMP nsSBModule::GetClassObject(nsIComponentManager *aCompMgr,
-                                         const nsCID& aClass,
-                                         const nsIID& aIID,
-                                         void ** r_classObj)
-{
-  nsresult rv;
-
-  // Defensive programming: Initialize *r_classObj in case of error below
-  if (!r_classObj) {
-    return NS_ERROR_INVALID_POINTER;
-  }
-  *r_classObj = NULL;
-
-  if (!mInitialized) {
-    rv = Initialize();
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    mInitialized = PR_TRUE;
-  }
-
-  nsCOMPtr<nsIGenericFactory> fact;
-  if (aClass.Equals(kStringBundleServiceCID)) {
-    if (!mFactory) {
-      rv = NS_NewGenericFactory(getter_AddRefs(mFactory), 
-          NS_NewStringBundleService);
-    }
-    fact = mFactory;
-  } else {
-    return NS_ERROR_FACTORY_NOT_REGISTERED;
-  }
-
-  if (fact) {
-    rv = fact->QueryInterface(aIID, r_classObj);
-  }
-
-  return rv;
-}
-
-NS_IMETHODIMP nsSBModule::RegisterSelf(nsIComponentManager *aCompMgr,
-                                              nsIFileSpec* aPath,
-                                              const char* registryLocation,
-                                              const char* componentType)
-{
-  nsresult rv;
-  rv = aCompMgr->RegisterComponentSpec(kStringBundleServiceCID, 
-                                  "String Bundle", 
-                                  NS_STRINGBUNDLE_PROGID, 
-                                  aPath,
-                                  PR_TRUE, PR_TRUE);
-  return rv;
-}
-
-NS_IMETHODIMP nsSBModule::UnregisterSelf(nsIComponentManager *aCompMgr,
-                                                nsIFileSpec* aPath,
-                                                const char* registryLocation)
-{
-  nsresult rv;
-
-  rv = aCompMgr->UnregisterComponentSpec(kStringBundleServiceCID, aPath);
-
-  return rv;
-}
-
-NS_IMETHODIMP nsSBModule::CanUnload(nsIComponentManager *aCompMgr, 
-                                           PRBool *okToUnload)
-{
-  if (!okToUnload) {
-    return NS_ERROR_INVALID_POINTER;
-  }
-  *okToUnload = PR_FALSE;
-  return NS_ERROR_FAILURE;
-}
-
+NS_IMPL_NSGETMODULE("nsStringBundleModule", components)
