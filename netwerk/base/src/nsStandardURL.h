@@ -49,6 +49,7 @@
 #include "nsIURLParser.h"
 #include "nsIUnicodeEncoder.h"
 #include "nsIObserver.h"
+#include "nsIIOService.h"
 #include "nsCOMPtr.h"
 
 class nsIBinaryInputStream;
@@ -239,6 +240,7 @@ private:
 
     // global objects.  don't use COMPtr as its destructor will cause a
     // coredump if we leak it.
+    static nsIIOService                *gIOService;
     static nsIURLParser                *gNoAuthParser;
     static nsIURLParser                *gAuthParser;
     static nsIURLParser                *gStdParser;

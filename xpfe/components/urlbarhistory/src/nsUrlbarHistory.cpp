@@ -653,18 +653,27 @@ nsUrlbarHistory::VerifyAndCreateEntry(const PRUnichar * aSearchItem, const PRUni
         searchStrLen = nsCRT::strlen(aSearchItem);
     nsresult rv;
 
+    nsCOMPtr<nsIURI> uri;
+    NS_NewURI(getter_AddRefs(uri), NS_ConvertUCS2toUTF8(aSearchItem));
     nsCAutoString filePath;
-    nsCOMPtr<nsIIOService> ioService = do_GetService(NS_IOSERVICE_CONTRACTID);
-    if (!ioService) return NS_ERROR_FAILURE;
-    ioService->ExtractUrlPart(NS_ConvertUCS2toUTF8(aSearchItem), nsIIOService::url_Path, filePath);
-        
+    if (uri) {
+        nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
+        if (url)
+            url->GetFilePath(filePath);
+    }
+
         // Don't bother checking for hostname if the search string
         // already has a filepath;
         if (filePath.Length() > 1) {
             return NS_OK;
         }
-          
-   ioService->ExtractUrlPart(NS_ConvertUCS2toUTF8(aMatchStr), nsIIOService::url_Path, filePath);
+
+    NS_NewURI(getter_AddRefs(uri), NS_ConvertUCS2toUTF8(aMatchStr));
+    if (uri) {
+        nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
+        if (url)
+            url->GetFilePath(filePath);
+    }
 
         // If the match string doesn't have a filepath
         // we need to do nothing here,  return.

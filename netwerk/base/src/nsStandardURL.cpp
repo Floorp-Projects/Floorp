@@ -57,6 +57,7 @@
 static NS_DEFINE_CID(kThisImplCID, NS_THIS_STANDARDURL_IMPL_CID);
 static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 
+nsIIOService *nsStandardURL::gIOService = nsnull;
 nsIURLParser *nsStandardURL::gNoAuthParser = nsnull;
 nsIURLParser *nsStandardURL::gAuthParser = nsnull;
 nsIURLParser *nsStandardURL::gStdParser = nsnull;
@@ -364,6 +365,13 @@ nsStandardURL::InitGlobalObjects()
         NS_ADDREF(gStdParser);
     }
 
+    nsCOMPtr<nsIIOService> serv(do_GetIOService());
+    NS_ASSERTION(serv, "failed getting IO service");
+    if (serv) {
+        gIOService = serv.get();
+        NS_ADDREF(gIOService);
+    }
+
     nsCOMPtr<nsIPrefService> prefService( do_GetService(NS_PREFSERVICE_CONTRACTID) );
     if (prefService) {
         nsCOMPtr<nsIPrefBranch> prefBranch;
@@ -382,6 +390,7 @@ nsStandardURL::InitGlobalObjects()
 void
 nsStandardURL::ShutdownGlobalObjects()
 {
+    NS_IF_RELEASE(gIOService);
     NS_IF_RELEASE(gNoAuthParser);
     NS_IF_RELEASE(gAuthParser);
     NS_IF_RELEASE(gStdParser);
@@ -2169,23 +2178,20 @@ nsStandardURL::GetFile(nsIFile **result)
         return NS_ERROR_FAILURE;
     }
 
-    nsresult rv;
-    nsCOMPtr<nsILocalFile> localFile(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
-    if (NS_FAILED(rv)) return rv;
-
-    rv = NS_InitFileFromURLSpec(localFile, mSpec);
+    nsresult rv = gIOService->GetFileFromURLSpec(mSpec, getter_AddRefs(mFile));
     if (NS_FAILED(rv)) return rv;
 
 #if defined(PR_LOGGING)
     if (LOG_ENABLED()) {
         nsCAutoString path;
-        localFile->GetNativePath(path);
+        mFile->GetNativePath(path);
         LOG(("nsStandardURL::GetFile [this=%p spec=%s resulting_path=%s]\n",
             this, mSpec.get(), path.get()));
     }
 #endif
 
-    return CallQueryInterface(localFile, result);
+    NS_ADDREF(*result = mFile);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2198,7 +2204,7 @@ nsStandardURL::SetFile(nsIFile *file)
     nsresult rv;
     nsCAutoString url;
 
-    rv = NS_GetURLSpecFromFile(file, url);
+    rv = gIOService->GetURLSpecFromFile(file, url);
     if (NS_FAILED(rv)) return rv;
 
     rv = SetSpec(url);

@@ -62,6 +62,8 @@ private:
 
     nsSupportsHashtable    mSubstitutions;
     nsCOMPtr<nsIIOService> mIOService;
+
+    friend class nsResURL;
 };
 
 #endif /* nsResProtocolHandler_h___ */

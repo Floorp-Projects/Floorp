@@ -763,10 +763,11 @@ nsGlobalHistory::AddNewPageToDatabase(const char *aURL,
   SetRowValue(row, kToken_LastVisitDateColumn, aDate);
   SetRowValue(row, kToken_FirstVisitDateColumn, aDate);
 
+  nsCOMPtr<nsIURI> uri;
+  NS_NewURI(getter_AddRefs(uri), nsDependentCString(aURL), nsnull, nsnull);
   nsCAutoString hostname;
-  nsCOMPtr<nsIIOService> ioService = do_GetService(NS_IOSERVICE_CONTRACTID);
-  if (!ioService) return NS_ERROR_FAILURE;
-  ioService->ExtractUrlPart(nsDependentCString(aURL), nsIIOService::url_Host, hostname);
+  if (uri)
+      uri->GetHost(hostname);
 
   SetRowValue(row, kToken_HostnameColumn, hostname.get());
 

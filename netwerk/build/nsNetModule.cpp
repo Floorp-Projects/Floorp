@@ -598,6 +598,10 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       NS_IOSERVICE_CID,
       NS_IOSERVICE_CONTRACTID,
       nsIOService::Create },
+    { NS_URLPARSINGUTILS_CLASSNAME,
+      NS_URLPARSINGUTILS_CID,
+      NS_URLPARSINGUTILS_CONTRACTID,
+      nsIOService::Create }, // yes, same class implements both services
     { "File Transport Service", 
       NS_FILETRANSPORTSERVICE_CID,
       "@mozilla.org/network/file-transport-service;1",
