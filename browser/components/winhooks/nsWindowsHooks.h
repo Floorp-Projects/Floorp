@@ -42,6 +42,8 @@
 #include "nscore.h"
 #include "nsIWindowsHooks.h"
 
+#include <windows.h>
+
 #ifndef MAX_BUF
 #define MAX_BUF 4096
 #endif
@@ -112,6 +114,8 @@ public:
 protected:
     // Internal flavor of GetPreferences.
     NS_IMETHOD GetSettings( nsWindowsHooksSettings ** );
+
+    PRBool GetMailAccountKey(HKEY* aResult);
 
     // Set registry according to settings.
     NS_IMETHOD SetRegistry();

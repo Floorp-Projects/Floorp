@@ -289,7 +289,31 @@
         <toolbarbutton id="history-button" class="toolbarbutton-1"
                        observes="viewHistorySidebar"
                        tooltiptext="&historyButton.tooltip;"/>
-                       
+
+#ifdef XP_WIN
+        <toolbarbutton id="mail-button" type="menu" class="toolbarbutton-1"
+                       label="&mailButton.label;" orient="horizontal"
+                       onmouseover="MailIntegration.updateUnreadCount();"
+                       tooltiptext="&mailButton.tooltip;">
+          <menupopup tooltiptext="">
+            <menuitem label="&mailButton.readMail.label;" 
+                      id="readMailItem"
+                      accesskey="&mailButton.readMail.accesskey;"
+                      command="Browser:ReadMail"/>
+            <menuitem label="&mailButton.newMessage.label;" 
+                      accesskey="&mailButton.newMessage.accesskey;"
+                      command="Browser:NewMessage"/>
+            <menuitem label="&mailButton.sendLink.label;" 
+                      accesskey="&mailButton.sendLink.accesskey;"
+                      command="Browser:SendLink"/>
+            <menuseparator/>
+            <menuitem label="&mailButton.readNews.label;" 
+                      accesskey="&mailButton.readNews.accesskey;"
+                      command="Browser:ReadNews"/>
+          </menupopup>
+        </toolbarbutton>                       
+#endif
+
         <toolbarbutton id="bookmarks-button" class="toolbarbutton-1"
                        observes="viewBookmarksSidebar"
                        tooltiptext="&bookmarksButton.tooltip;"/>

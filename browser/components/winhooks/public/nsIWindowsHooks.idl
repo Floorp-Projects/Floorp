@@ -148,39 +148,70 @@ interface nsIWindowsHooksSettings : nsISupports {
  * by the nsIWindowsHooksPrefs attributes.
  */
 [scriptable, uuid(19c9fbb0-06a3-11d4-8076-00600811a9c3)]
-interface nsIWindowsHooks : nsISupports {
-
-    // settings
-    // --------
-    // Get/set this to query or modify them.  The Windows
-    // registry is updated when you set this attribute.
+interface nsIWindowsHooks : nsISupports 
+{
+    /** 
+     * See nsIWindowsHooksSettings; The Windows Registry is updated when 
+     * this attribute is set.
+     */
     attribute nsIWindowsHooksSettings settings;
 
-    // checkSettings
-    // -------------
-    // Check that registry matches settings and if not,
-    // prompt user for whether to reset.  This is
-    // controlled by the showDialog setting.  This will
-    // perform the check only the first time the
-    // service is called.
-    //   aParent - parent window for any dialogs that
-    //             will appear
-    //   Returns true if the windows integration dialog was shown
-    boolean checkSettings( in nsIDOMWindowInternal aParent );
+    /** 
+     * Check that registry matches settings and if not, prompt user for whether 
+     * to reset.  This is controlled by the showDialog setting.  This will 
+     * perform the check only the first time the service is called.
+     * 
+     * @param aParent parent window for any dialogs that will appear.
+     * @return true if the windows integration dialog was shown, false if not.
+     */
+    boolean checkSettings(in nsIDOMWindowInternal aParent);
 
     const PRInt32 WALLPAPER_TILE    = 0;
     const PRInt32 WALLPAPER_STRETCH = 1;
     const PRInt32 WALLPAPER_CENTER  = 2;
    
     /**
-     * Accepts an element, either an HTML img element or an element with
-     * a background image, serializes the image to a bitmap file
-     * in the windows directory, and sets it to be the desktop wallpaper.
+     * Sets the desktop background image using either the HTML <IMG> 
+     * element supplied or the background image of the element supplied.
+     *
+     * @param aImageElement Either a HTML <IMG> element or an element with
+     *                      a background image from which to source the
+     *                      background image. 
+     * @param useBackground Determines whether or not to interpret aImageElement
+     *                      as a HTML <IMG> element or as another element whose
+     *                      background image should be used.
+     * @param position      How to place the image on the desktop
      */
     void setImageAsWallpaper(in nsIDOMElement aImageElement, in boolean useBackground, in PRInt32 position);
+
+    /**
+     * Retrieves the current desktop background color.
+     */
     PRUint32 getDesktopColor();
+
+    /** 
+     * Sets the current desktop background color.
+     * 
+     * @param color The color to use, in rgb format.
+     */
     void setDesktopColor(in PRUint32 color);
-    
+
+    /** 
+     * Launches one of the Windows default clients.
+     *
+     * @param aClient The client type to open, as specified in the Windows Registry under:
+     *                HKEY_LOCAL_MACHINE\Software\Clients\
+     *                Typical values include "Mail", "News", "Contacts" etc. 
+     */
+    void openDefaultClient(in string aClient);
+
+    /** 
+     * Retrieve the number of unread mail messages from the system for the current user.
+     * 
+     * @return The number of unread (new) mail messages for the current user.
+     */
+    readonly attribute unsigned long unreadMailCount;
+
 };
 
 /* nsIWindowsRegistry
@@ -193,23 +224,31 @@ interface nsIWindowsHooks : nsISupports {
 [scriptable, uuid(e07e7430-8d11-417c-83ee-c994400c452f)]
 interface nsIWindowsRegistry : nsISupports {
     /**
-     * Returns a Win32 registry entry value.  The returned string will be truncated
-     * at 4096 bytes.  The constants define the set of valid starting keys.  You
-     * pass in the subkey name and a value identifier (an empty string returns
-     * the "default" value for that subkey).
+     * Valid starting keys for the Windows Registry.
      */
     const long HKCR = 0; // HKEY_CLASSES_ROOT
     const long HKCC = 1; // HKEY_CURRENT_CONFIG
     const long HKCU = 2; // HKEY_CURRENT_USER
     const long HKLM = 3; // HKEY_LOCAL_MACHINE
     const long HKU  = 4; // HKEY_USERS
-    string getRegistryEntry( in long aHKeyConstant, in string aSubKeyName, in string aValueName );
+
+    /** 
+     * Retrieves a Windows Registry entry value.
+     * 
+     * @param aHKeyConstant The starting key, using the constants defined above.
+     * @param aSubKeyName   The sub key to locate
+     * @param aValueName    The value to locate in the sub key. The empty string
+     *                      returns the default value of the sub key.
+     * @return The value of the specified sub key/value, truncated to 4096 bytes.
+     */
+    string getRegistryEntry(in long aHKeyConstant, in string aSubKeyName, in string aValueName);
 };
 
 %{C++
-#define NS_IWINDOWSHOOKS_CONTRACTID    "@mozilla.org/winhooks;1"
+#define NS_IWINDOWSHOOKS_CONTRACTID "@mozilla.org/winhooks;1"
 #define NS_IWINDOWSHOOKS_CLASSNAME "Mozilla Windows Integration Hooks"
 
+// XXXben - get rid of this
 // The key that is used to write the quick launch appname in the windows registry
 #define NS_QUICKLAUNCH_RUN_KEY "Mozilla Quick Launch"
 %}

@@ -76,8 +76,14 @@
     <command id="cmd_newNavigatorTab" oncommand="BrowserOpenTab();"/>
     <command id="Browser:OpenFile"  oncommand="BrowserOpenFileWindow();"/>
     <command id="Browser:SavePage" oncommand="saveDocument(window._content.document);"/>
-    <command id="Browser:SendLink" oncommand="sendLink(Components.lookupMethod(window._content, 'location').call(window._content).href,
-                                              Components.lookupMethod(window._content.document, 'title').call(window._content.document));"/>
+
+    <command id="Browser:SendLink" oncommand="MailIntegration.sendLinkForContent();"/>
+    <command id="Browser:NewMessage" oncommand="MailIntegration.sendMessage('', '');"/>
+#ifdef XP_WIN
+    <command id="Browser:ReadMail" oncommand="MailIntegration.readMail();"/>
+    <command id="Browser:ReadNews" oncommand="MailIntegration.readNews();"/>
+#endif
+
     <command id="cmd_print" oncommand="PrintUtils.print();"/>
     <command id="cmd_close" oncommand="BrowserCloseTabOrWindow()"/>
     <command id="cmd_closeWindow" oncommand="BrowserCloseWindow()"/>
@@ -255,6 +261,8 @@
 #endif
 
     <key id="key_openDownloads"   key="&downloads.commandkey;"           command="Tools:Downloads" modifiers="accel"/>
+
+    <key id="key_newMessage" key="&sendMessage.commandkey;" command="Browser:NewMessage" modifiers="accel"/>
 
     <key id="key_textZoomReduce"  key="&textZoomReduceCmd.commandkey;"   command="cmd_textZoomReduce"  modifiers="accel"/>
     <key id="key_textZoomEnlarge" key="&textZoomEnlargeCmd.commandkey;"  command="cmd_textZoomEnlarge" modifiers="accel"/>

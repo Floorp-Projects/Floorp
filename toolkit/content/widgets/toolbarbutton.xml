@@ -30,6 +30,21 @@
     </content>
   </binding>
   
+  <binding id="menu-orient" display="xul:menu"
+           extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton">
+    <content>
+      <children includes="observes|template|menupopup|tooltip"/>
+      <xul:hbox flex="1" align="center">
+        <xul:box xbl:inherits="orient" flex="1">
+          <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,toolbarmode,buttonstyle"/>
+          <xul:label class="toolbarbutton-text" crop="right" flex="1"
+                    xbl:inherits="value=label,accesskey,crop,dragover-top,toolbarmode,buttonstyle"/>
+        </xul:box>
+        <xul:dropmarker type="menu" class="toolbarbutton-menu-dropmarker" xbl:inherits="disabled"/>
+      </xul:hbox>
+    </content>
+  </binding>
+  
   <binding id="menu-button" display="xul:menu" 
            extends="chrome://global/content/bindings/button.xml#menu-button-base">
     <resources>
