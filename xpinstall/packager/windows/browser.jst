@@ -239,6 +239,7 @@ function updateWinReg()
   var valname; //the name of the value you want to look at
   var value;   //the data in the value you want to look at.
   var err;
+  var ikwDefined;
 
   if(winreg != null) 
   {
@@ -248,11 +249,15 @@ function updateWinReg()
      * determine which Desktop, Programs, and Start Menu folders
      * are to used: common or per user
      */
-    winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
-    if(winreg.isKeyWritable("SOFTWARE"))
-      restrictedAccess = false;
-    else
-      restrictedAccess = true;
+    restrictedAccess = false;
+    ikwDefined = typeof(winreg.isKeyWritable);
+    logComment("winreg.isKeyWritable(): " + ikwDefined);
+    if(ikwDefined == "function")
+    {
+      winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
+      if(!winreg.isKeyWritable("SOFTWARE"))
+        restrictedAccess = true;
+    }
 
     logComment("restrictedAccess value: " + restrictedAccess);
     if(!restrictedAccess)
