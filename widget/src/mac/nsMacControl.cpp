@@ -257,8 +257,10 @@ void  nsMacControl::ControlChanged(PRInt32 aNewValue)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsMacControl::Enable(PRBool bState)
 {
+  PRBool priorState = mEnabled;
   Inherited::Enable(bState);
-  Invalidate(PR_FALSE);
+  if ( priorState != bState )
+    Invalidate(PR_FALSE);
   return NS_OK;
 }
 //-------------------------------------------------------------------------
