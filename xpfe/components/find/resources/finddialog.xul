@@ -24,9 +24,10 @@ Contributor(s): Stuart Parmenter <pavlov@netscape.com>
                 Bill Law <law@netscape.com>
                 Ben Goodger <rgoodger@ihug.co.nz>
                 Blake Ross <BlakeR1234@aol.com>
+		Dan Rosen <dr@netscape.com>
 -->
 
-<?xml-stylesheet href="chrome://navigator/skin/navigator.css" type="text/css"?>
+<?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
