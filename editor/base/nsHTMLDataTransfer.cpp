@@ -1589,8 +1589,6 @@ nsresult nsHTMLEditor::CreateListOfNodesToPaste(nsIDOMNode  *aFragmentAsNode,
 
   nsAutoString str;
   docFragRange->ToString(str);
-  nsCOMPtr<nsIContent> root = do_QueryInterface(aFragmentAsNode);
-  if (root)  root->List(stdout);
 
   // now use a subtree iterator over the range to create a list of nodes
   nsTrivialFunctor functor;
