@@ -3,15 +3,15 @@
 $viewer_path = &ParseArgs();
 
 if (defined($OSNAME)) {
-   $ostype = 'unix';
+   $ostype = "unix";
 }
 else {
-   $ostype = 'win32';
+   $ostype = "win32";
 }
 
 #Win32 Autoconfig
 
-if ($ostype == 'win32') {
+if ($ostype eq "win32") {
 
     $viewer = $viewer_path . "\viewer.exe";
     print $viewer_path . "\\viewer.exe" . "\n";
@@ -27,7 +27,7 @@ if ($ostype == 'win32') {
 
 #Linux Autoconfig
 
-if ($ostype == 'unix') {
+if ($ostype eq "unix") {
 
     $viewer = $viewer_path . "/viewer";
     if (-e $viewer_path . "/viewer") {
@@ -41,7 +41,7 @@ if ($ostype == 'unix') {
 }
 #=================================================================
 
-open (ANALYSIS_FILE, '>analysis.html');
+open (ANALYSIS_FILE, '>analysis.html') || die ("can't open file jim");
 ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst)=localtime(time);
 %weekday= (
        "1", "$day",
