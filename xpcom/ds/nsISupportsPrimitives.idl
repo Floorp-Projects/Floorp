@@ -272,4 +272,7 @@ interface nsISupportsVoid : nsISupports
     { 0xba, 0xf8, 0x0, 0x80, 0x5f, 0x8a, 0x5d, 0xd7 } }
 #define NS_SUPPORTS_VOID_PROGID "component://netscape/supports-void"
 #define NS_SUPPORTS_VOID_CLASSNAME "Supports void"
+
+extern	NS_COM nsresult NS_NewISupportsPRBool (nsISupportsPRBool ** aResult);
+
 %}
