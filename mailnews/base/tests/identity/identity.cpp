@@ -192,11 +192,5 @@ printIncomingServer(nsIMsgIncomingServer *server)
   rv = server->GetPassword(PR_FALSE, &value);
   if (NS_SUCCEEDED(rv) && value) printf("\tPassword: %s\n", value);  
 
-  value=nsnull;
-  rv = server->GetLocalPath(&value);
-  if (NS_SUCCEEDED(rv) && value) printf("\t\troot folder path: %s\n",
-                                          value);
-    
-  
   return NS_OK;
 }
