@@ -1206,10 +1206,12 @@ js_CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
 }
 
 #ifndef MAX_INTERP_LEVEL
-#if !defined XP_PC || !defined _MSC_VER || _MSC_VER > 800
-#define MAX_INTERP_LEVEL 1000
-#else
+#if defined(XP_OS2)
+#define MAX_INTERP_LEVEL 250
+#elif defined(XP_PC) && defined(_MSC_VER) && _MSC_VER <= 800
 #define MAX_INTERP_LEVEL 30
+#else
+#define MAX_INTERP_LEVEL 1000
 #endif
 #endif
 
