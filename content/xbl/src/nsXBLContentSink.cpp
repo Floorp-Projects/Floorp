@@ -218,6 +218,8 @@ nsXBLContentSink::OpenContainer(const nsIParserNode& aNode)
 NS_IMETHODIMP
 nsXBLContentSink::CloseContainer(const nsIParserNode& aNode)
 {
+  FlushText();
+
   if (mState != eXBL_InDocument) {
     nsCOMPtr<nsIAtom> nameSpacePrefix, tagAtom;
 
@@ -286,10 +288,67 @@ nsXBLContentSink::CloseContainer(const nsIParserNode& aNode)
   return nsXMLContentSink::CloseContainer(aNode);
 }
 
+NS_IMETHODIMP
+nsXBLContentSink::AddCDATASection(const nsIParserNode& aNode)
+{
+  if (mState == eXBL_InHandlers || mState == eXBL_InImplementation)
+    return AddText(aNode.GetText());
+  return nsXMLContentSink::AddCDATASection(aNode);
+}
+
 nsresult
 nsXBLContentSink::FlushText(PRBool aCreateTextNode,
                             PRBool* aDidFlush)
 {
+  const nsASingleFragmentString& text = Substring(mText, mText+mTextLength);
+  if (mState == eXBL_InHandlers) {
+    // Get the text and add it to the event handler.
+    if (mSecondaryState == eXBL_InHandler)
+      mHandler->AppendHandlerText(text);
+    mTextLength = 0;
+    if (aDidFlush)
+      *aDidFlush = PR_TRUE;
+    return NS_OK;
+  }
+  else if (mState == eXBL_InImplementation) {
+    if (mSecondaryState == eXBL_InConstructor ||
+        mSecondaryState == eXBL_InDestructor) {
+      // Construct a handler for the constructor/destructor.
+      // XXXdwh This is just awful.  These used to be handlers called
+      // BindingAttached and BindingDetached, and they're still implemented
+      // using handlers.  At some point, we need to change these to just
+      // be special functions on the class instead.
+      nsCOMPtr<nsIXBLPrototypeHandler> handler;
+      if (mSecondaryState == eXBL_InConstructor)
+        mBinding->GetConstructor(getter_AddRefs(handler));
+      else
+        mBinding->GetDestructor(getter_AddRefs(handler));
+
+      // Get the text and add it to the constructor/destructor.
+      handler->AppendHandlerText(text);
+    }
+    else if (mSecondaryState == eXBL_InGetter ||
+             mSecondaryState == eXBL_InSetter) {
+      // Get the text and add it to the constructor/destructor.
+      if (mSecondaryState == eXBL_InGetter)
+        mProperty->AppendGetterText(text);
+      else
+        mProperty->AppendSetterText(text);
+    }
+    else if (mSecondaryState == eXBL_InBody) {
+      // Get the text and add it to the method
+      mMethod->AppendBodyText(text);
+    }
+    else if (mSecondaryState == eXBL_InField) {
+      // Get the text and add it to the method
+      mField->AppendFieldText(text);
+    }
+    mTextLength = 0;
+    if (aDidFlush)
+      *aDidFlush = PR_TRUE;
+    return NS_OK;
+  }
+
   PRBool isWS = PR_TRUE;
   if (mTextLength > 0) {
     const PRUnichar* cp = mText;
@@ -311,137 +370,6 @@ nsXBLContentSink::FlushText(PRBool aCreateTextNode,
   }
 
   return nsXMLContentSink::FlushText(aCreateTextNode, aDidFlush);
-}
-
-NS_IMETHODIMP
-nsXBLContentSink::AddLeaf(const nsIParserNode& aNode)
-{
-  if (mState == eXBL_InHandlers) {
-    if (mSecondaryState == eXBL_InHandler) {
-      // Get the text and add it to the event handler.
-      switch (aNode.GetTokenType()) {
-        case eToken_text:
-        case eToken_whitespace:
-        case eToken_newline:
-        case eToken_cdatasection:
-          mHandler->AppendHandlerText(aNode.GetText());
-          break;
-        case eToken_entity:
-        {
-          nsAutoString tmp;
-          PRInt32 unicode = aNode.TranslateToUnicodeStr(tmp);
-          if (unicode < 0)
-            mHandler->AppendHandlerText(aNode.GetText());
-          else
-            mHandler->AppendHandlerText(tmp);
-        }
-      }
-    }
-    return NS_OK;
-  }
-  else if (mState == eXBL_InImplementation) {
-    if (mSecondaryState == eXBL_InConstructor ||
-        mSecondaryState == eXBL_InDestructor) {
-      // Construct a handler for the constructor/destructor.
-      // XXXdwh This is just awful.  These used to be handlers called
-      // BindingAttached and BindingDetached, and they're still implemented
-      // using handlers.  At some point, we need to change these to just
-      // be special functions on the class instead.
-      nsCOMPtr<nsIXBLPrototypeHandler> handler;
-      if (mSecondaryState == eXBL_InConstructor)
-        mBinding->GetConstructor(getter_AddRefs(handler));
-      else
-        mBinding->GetDestructor(getter_AddRefs(handler));
-
-      // Get the text and add it to the constructor/destructor.
-      switch (aNode.GetTokenType()) {
-        case eToken_text:
-        case eToken_whitespace:
-        case eToken_newline:
-        case eToken_cdatasection:
-          handler->AppendHandlerText(aNode.GetText());
-          break;
-        case eToken_entity:
-        {
-          nsAutoString tmp;
-          PRInt32 unicode = aNode.TranslateToUnicodeStr(tmp);
-          if (unicode < 0)
-            handler->AppendHandlerText(aNode.GetText());
-          else
-            handler->AppendHandlerText(tmp);
-        }
-      }
-    }
-    else if (mSecondaryState == eXBL_InGetter ||
-             mSecondaryState == eXBL_InSetter) {
-      // Get the text and add it to the constructor/destructor.
-      PRBool getter = mSecondaryState == eXBL_InGetter;
-      switch (aNode.GetTokenType()) {
-        case eToken_text:
-        case eToken_whitespace:
-        case eToken_newline:
-        case eToken_cdatasection:
-          getter ? mProperty->AppendGetterText(aNode.GetText()) : 
-                   mProperty->AppendSetterText(aNode.GetText());
-          break;
-        case eToken_entity:
-        {
-          nsAutoString tmp;
-          PRInt32 unicode = aNode.TranslateToUnicodeStr(tmp);
-          if (unicode < 0) 
-            getter ? mProperty->AppendGetterText(aNode.GetText()) : 
-                     mProperty->AppendSetterText(aNode.GetText());
-          else
-            getter ? mProperty->AppendGetterText(tmp) : 
-                     mProperty->AppendSetterText(tmp);
-        }
-      }
-    }
-    else if (mSecondaryState == eXBL_InBody) {
-      // Get the text and add it to the method
-      switch (aNode.GetTokenType()) {
-        case eToken_text:
-        case eToken_whitespace:
-        case eToken_newline:
-        case eToken_cdatasection:
-          mMethod->AppendBodyText(aNode.GetText());
-          break;
-        case eToken_entity:
-        {
-          nsAutoString tmp;
-          PRInt32 unicode = aNode.TranslateToUnicodeStr(tmp);
-          if (unicode < 0)
-            mMethod->AppendBodyText(aNode.GetText());
-          else
-            mMethod->AppendBodyText(tmp);
-        }
-      }
-    }
-    else if (mSecondaryState == eXBL_InField) {
-      // Get the text and add it to the method
-      switch (aNode.GetTokenType()) {
-        case eToken_text:
-        case eToken_whitespace:
-        case eToken_newline:
-        case eToken_cdatasection:
-          mField->AppendFieldText(aNode.GetText());
-          break;
-        case eToken_entity:
-        {
-          nsAutoString tmp;
-          PRInt32 unicode = aNode.TranslateToUnicodeStr(tmp);
-          if (unicode < 0)
-            mField->AppendFieldText(aNode.GetText());
-          else
-            mField->AppendFieldText(tmp);
-        }
-      }
-    }
-
-    return NS_OK;
-  }
-
-  return nsXMLContentSink::AddLeaf(aNode);
 }
 
 nsresult
