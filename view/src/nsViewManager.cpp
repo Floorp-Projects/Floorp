@@ -2059,6 +2059,32 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
                       // since we got an NS_PAINT event, we need to
                       // draw something so we don't get blank areas.
                       DefaultRefresh(view, &damrect);
+
+                      // Clients like the editor can trigger multiple
+                      // reflows during what the user perceives as a single
+                      // edit operation, so it disables view manager
+                      // refreshing until the edit operation is complete
+                      // so that users don't see the intermediate steps.
+                      // 
+                      // Unfortunately some of these reflows can trigger
+                      // nsScrollPortView and nsScrollingView Scroll() calls
+                      // which in most cases force an immediate BitBlt and
+                      // synchronous paint to happen even if the view manager's
+                      // refresh is disabled. (Bug 97674)
+                      //
+                      // Calling UpdateView() here, is neccessary to add
+                      // the exposed region specified in the synchronous paint
+                      // event to  the view's damaged region so that it gets
+                      // painted properly when refresh is enabled.
+                      //
+                      // Note that calling UpdateView() here was deemed
+                      // to have the least impact on performance, since the
+                      // other alternative was to make Scroll() post an
+                      // async paint event for the *entire* ScrollPort or
+                      // ScrollingView's viewable area. (See bug 97674 for this
+                      // alternate patch.)
+
+                      UpdateView(view, damrect, NS_VMREFRESH_NO_SYNC);
                     }
                   }
               }
