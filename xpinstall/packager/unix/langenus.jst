@@ -26,35 +26,53 @@ logComment("fProgram: " + fProgram);
 
 if (verifyDiskSpace(fProgram, srDest))
 {
+    var chromeType = LOCALE;
     err = addDirectory("",
-                       "$Version$",
                        "bin",
                        fProgram,
-                       "",
-                       true);
+                       "");
     logComment("addDirectory() returned: " + err);
 
-    // register chrome
-    var cf = getFolder("Chrome");
-    registerChrome(LOCALE, getFolder(cf, chromeName), localeName + "global/");
-    registerChrome(LOCALE, getFolder(cf, chromeName), localeName + "communicator/");
-    registerChrome(LOCALE, getFolder(cf, chromeName), localeName + "messenger/");
-    registerChrome(LOCALE, getFolder(cf, chromeName), localeName + "editor/");
-    registerChrome(LOCALE, getFolder(cf, chromeName), localeName + "navigator/");
-    registerChrome(LOCALE, getFolder(cf, chromeName), localeName + "necko/");
-    registerChrome(LOCALE, getFolder(cf, chromeName), localeName + "cookie/");
-    registerChrome(LOCALE, getFolder(cf, chromeName), localeName + "wallet/");
-    registerChrome(LOCALE, getFolder(cf, chromeName), localeName + "content-packs/");
-    registerChrome(LOCALE, getFolder(cf, chromeName), localeName + "help/");
-    registerChrome(LOCALE, getFolder(cf, chromeName), localeName + "pippki/");
-    registerChrome(LOCALE, getFolder(cf, chromeName), localeName + "pipnss/");
-
-    registerChrome(LOCALE, getFolder(cf, platformName), localeName + "global-platform/");
-    registerChrome(LOCALE, getFolder(cf, platformName), localeName + "communicator-platform/");
-    registerChrome(LOCALE, getFolder(cf, platformName), localeName + "navigator-platform/");
-
+    if (err != SUCCESS)
+    {
+        logComment("addDirectory() to " + fProgram + "failed!");
+        // couldn't install globally, try installing to the profile
+        resetError();
+        chromeType |= PROFILE_CHROME;
+        fProgram = getFolder("Profile");
+        logComment("try installing to the user profile:" + fProgram);
+        err = addDirectory("","bin",fProgram,"");
+    }
+ 
+    setPackageFolder(fProgram);
+ 
+    // check return value
     if (err == SUCCESS)
     {
+        // register chrome
+        var cf = getFolder(fProgram, "chrome/"+chromeName);
+        var pf = getFolder(fProgram, "chrome/"+platformName);
+
+        registerChrome(chromeType, cf, localeName + "global/");
+        registerChrome(chromeType, cf, localeName + "communicator/");
+
+        registerChrome(chromeType, cf, localeName + "messenger/");
+        registerChrome(chromeType, cf, localeName + "editor/");
+        registerChrome(chromeType, cf, localeName + "navigator/");
+        registerChrome(chromeType, cf, localeName + "aim/");
+        registerChrome(chromeType, cf, localeName + "necko/");
+        registerChrome(chromeType, cf, localeName + "cookie/");
+        registerChrome(chromeType, cf, localeName + "wallet/");
+        registerChrome(chromeType, cf, localeName + "content-packs/");
+        registerChrome(chromeType, cf, localeName + "help/");
+        registerChrome(chromeType, cf, localeName + "net2phone/");
+        registerChrome(chromeType, cf, localeName + "pipnss/");
+        registerChrome(chromeType, cf, localeName + "pippki/");
+
+        registerChrome(chromeType, pf, localeName + "global-platform/");
+        registerChrome(chromeType, pf, localeName + "communicator-platform/");
+        registerChrome(chromeType, pf, localeName + "navigator-platform/");
+
         err = performInstall(); 
         logComment("performInstall() returned: " + err);
     }
