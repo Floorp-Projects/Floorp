@@ -72,7 +72,7 @@ function isPToolbarDNDEnabled()
   {
     var prefs = nsJSComponentManager.getService("component://netscape/preferences",
                                                 "nsIPref");
-    dragAndDropEnabled = false;                                                  
+    var dragAndDropEnabled = false;                                                  
     try {
       dragAndDropEnabled = prefs.GetBoolPref("browser.enable.tb_dnd");
     }
