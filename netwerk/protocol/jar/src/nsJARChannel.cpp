@@ -650,6 +650,9 @@ nsJARChannel::Open(char* *contentType, PRInt32 *contentLength)
 	rv = mJAR->Open();
     if (NS_FAILED(rv)) return rv; 
 
+    // If this fails, GetOwner will fail, but otherwise we can continue.
+	rv = mJAR->ParseManifest();
+
     nsCOMPtr<nsIZipEntry> entry;
 	rv = mJAR->GetEntry(mJAREntry, getter_AddRefs(entry));
     if (NS_FAILED(rv)) return rv;
