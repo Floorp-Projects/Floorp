@@ -32,3 +32,10 @@ ifeq ($(OS_ARCH),WINNT)
 	cp $(srcdir)/Header.bmp   $(DIST)/branding/Header.bmp
 	cp $(srcdir)/Watermrk.bmp $(DIST)/branding/Watermrk.bmp
 endif
+ifeq ($(OS_ARCH),OS2)
+	cp $(srcdir)/firefox-os2.ico  $(DIST)/branding/firefox.ico
+	cp $(srcdir)/firefox-os2.ico  $(DIST)/branding/app.ico
+	cp $(srcdir)/document-os2.ico  $(DIST)/branding/document.ico
+	cp $(srcdir)/Header.bmp   $(DIST)/branding/Header.bmp
+	cp $(srcdir)/Watermrk.bmp $(DIST)/branding/Watermrk.bmp
+endif
