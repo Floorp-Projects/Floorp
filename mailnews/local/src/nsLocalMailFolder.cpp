@@ -207,7 +207,8 @@ nsShouldIgnoreFile(nsString& name)
       name.RFind(".toc", PR_TRUE) == len - 4)
     return PR_TRUE;
 #endif
-  if ((len > 4 && name.RFind(".sbd", PR_TRUE) == len - 4))
+  if ((len > 4 && name.RFind(".sbd", PR_TRUE) == len - 4) ||
+		(len > 4 && name.RFind(".msf", PR_TRUE) == len - 4))
 	  return PR_TRUE;
   return PR_FALSE;
 }
