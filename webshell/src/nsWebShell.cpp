@@ -2008,37 +2008,45 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
         rv = docViewer->GetPresShell(*getter_AddRefs(presShell));
 
         if (NS_SUCCEEDED(rv) && presShell) {
-		   /* Pass OnStartDocument notifications to the docloaderobserver
-            * so that urlbar, forward/back buttons will
-		    * behave properly when going to named anchors
-			*/
+		      /* Pass OnStartDocument notifications to the docloaderobserver
+           * so that urlbar, forward/back buttons will
+		       * behave properly when going to named anchors
+			     */
            nsCOMPtr<nsIChannel> dummyChannel;
            rv = NS_OpenURI(getter_AddRefs(dummyChannel), aUri, nsnull);
            if (NS_FAILED(rv)) return rv;
-           rv = OnStartDocumentLoad(mDocLoader, aUri, "load");
-
            if (nsnull != (const char *) ref) {
-            // Go to the anchor in the current document
-            rv = presShell->GoToAnchor(nsAutoString(ref));            
+              rv = OnStartDocumentLoad(mDocLoader, aUri, "load");
+              // Go to the anchor in the current document
+              rv = presShell->GoToAnchor(nsAutoString(ref));            
+		          mProcessedEndDocumentLoad = PR_FALSE;
+		          // Pass on status of scrolling/anchor visit to docloaderobserver
+              rv = OnEndDocumentLoad(mDocLoader, dummyChannel, rv, this);
+		          return rv;		   
            }
            else if (aType == nsISessionHistory::LOAD_HISTORY)
            {
+              rv = OnStartDocumentLoad(mDocLoader, aUri, "load");
               // Go to the top of the current document
               nsCOMPtr<nsIViewManager> viewMgr;
               rv = presShell->GetViewManager(getter_AddRefs(viewMgr));
               if (NS_SUCCEEDED(rv) && viewMgr) {
                 nsIScrollableView* view;
                 rv = viewMgr->GetRootScrollableView(&view);
-			
-				if (NS_SUCCEEDED(rv) && view)
+				        if (NS_SUCCEEDED(rv) && view)
                   rv = view->ScrollTo(0, 0, NS_VMREFRESH_IMMEDIATE);
-				  
-			  } // NS_SUCCEEDED(rv)            
-           }		   
+                mProcessedEndDocumentLoad = PR_FALSE;
+		            // Pass on status of scrolling/anchor visit to docloaderobserver
+                rv = OnEndDocumentLoad(mDocLoader, dummyChannel, rv, this);
+		            return rv;		   
+              }
+           }
+#if 0        		   
 		   mProcessedEndDocumentLoad = PR_FALSE;
 		   // Pass on status of scrolling/anchor visit to docloaderobserver
            rv = OnEndDocumentLoad(mDocLoader, dummyChannel, rv, this);
 		   return rv;		   
+#endif /* 0 */
         }  // NS_SUCCEEDED(rv) && presShell
       } // EqualBaseURLs(docURL, url)
     }
