@@ -43,6 +43,25 @@
 
 
 #ifdef MOZ_NEW_CACHE
+static PRTime SecondsToPRTime(PRUint32 t_sec)
+{
+    PRTime t_usec, usec_per_sec;
+    LL_L2I(t_usec, t_sec);
+    LL_L2I(usec_per_sec, PR_USEC_PER_SEC);
+    LL_MUL(t_usec, t_usec, usec_per_sec);
+    return t_usec;
+}
+static void PrintTimeString(char *buf, PRUint32 bufsize, PRUint32 t_sec)
+{
+    PRExplodedTime et;
+    PRTime t_usec = SecondsToPRTime(t_sec);
+    PR_ExplodeTime(t_usec, PR_LocalTimeParameters, &et);
+    PR_FormatTime(buf, bufsize, "%c", &et);
+}
+#endif
+
+
+#ifdef MOZ_NEW_CACHE
 NS_IMPL_ISUPPORTS2(nsAboutCache, nsIAboutModule, nsICacheVisitor)
 #else
 NS_IMPL_ISUPPORTS1(nsAboutCache, nsIAboutModule)
@@ -307,14 +326,12 @@ nsAboutCache::VisitEntry(const char *deviceID,
 
     // Last modified time
     char buf[255];
-    PRExplodedTime et;
-    PRTime t;
+    PRUint32 t;
 
     mBuffer.Append("<tt>&nbsp;&nbsp;Last Fetched: </tt>");
     entryInfo->GetLastFetched(&t);
-    if (LL_NE(t, LL_ZERO)) {
-        PR_ExplodeTime(t, PR_LocalTimeParameters, &et);
-        PR_FormatTime(buf, sizeof(buf), "%c", &et);
+    if (t) {
+        PrintTimeString(buf, sizeof(buf), t);
         mBuffer.Append(buf);
     } else
         mBuffer.Append("No last fetched time");
@@ -322,9 +339,8 @@ nsAboutCache::VisitEntry(const char *deviceID,
 
     mBuffer.Append("<tt>&nbsp;Last Modified: </tt>");
     entryInfo->GetLastModified(&t);
-    if (LL_NE(t, LL_ZERO)) {
-        PR_ExplodeTime(t, PR_LocalTimeParameters, &et);
-        PR_FormatTime(buf, sizeof(buf), "%c", &et);
+    if (t) {
+        PrintTimeString(buf, sizeof(buf), t);
         mBuffer.Append(buf);
     } else
         mBuffer.Append("No last modified time");
@@ -332,9 +348,8 @@ nsAboutCache::VisitEntry(const char *deviceID,
 
     mBuffer.Append("<tt>Last Validated: </tt>");
     entryInfo->GetLastFetched(&t);
-    if (LL_NE(t, LL_ZERO)) {
-        PR_ExplodeTime(t, PR_LocalTimeParameters, &et);
-        PR_FormatTime(buf, sizeof(buf), "%c", &et);
+    if (t) {
+        PrintTimeString(buf, sizeof(buf), t);
         mBuffer.Append(buf);
     } else
         mBuffer.Append("No last validated time");
@@ -344,9 +359,8 @@ nsAboutCache::VisitEntry(const char *deviceID,
     mBuffer.Append("<tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
                  "Expires: </tt>");
     entryInfo->GetExpirationTime(&t);
-    if (LL_NE(t, LL_ZERO)) {
-        PR_ExplodeTime(t, PR_LocalTimeParameters, &et);
-        PR_FormatTime(buf, sizeof(buf), "%c", &et);
+    if (t) {
+        PrintTimeString(buf, sizeof(buf), t);
         mBuffer.Append(buf);
     } else {
         mBuffer.Append("No expiration time");
