@@ -22,6 +22,8 @@
 
 DEPTH=..\..
 
+REQUIRES	= xpcom
+
 include <$(DEPTH)/config/config.mak>
 
 MAKE_OBJ_TYPE   = DLL

@@ -21,8 +21,9 @@
 
 DEPTH=..\..\..
 
-
+MODULE=editor
 LIBRARY_NAME=composer
+MODULE_NAME=nsComposerModule
 
 CPPSRCS =                                \
           nsEditorShell.cpp              \
@@ -77,11 +78,6 @@ REQUIRES    = xpcom \
 
 include <$(DEPTH)/config/config.mak>
 
-MAKE_OBJ_TYPE = DLL
-DLLNAME = composer
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
-
-
 LCFLAGS = \
         $(LCFLAGS) \
         $(DEFINES) \
@@ -95,10 +91,3 @@ LLIBS =                                \
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-
-clobber::
-	rm -f $(DIST)\bin\components\$(DLLNAME).dll
-	rm -f $(DIST)\lib\$(DLLNAME).lib
