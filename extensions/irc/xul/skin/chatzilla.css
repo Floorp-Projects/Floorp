@@ -66,8 +66,12 @@ window {
     font-weight: bold;
 }
 
+.view-button[state="superfluous"] {
+    color: darkblue;
+}
+
 .view-button[state="activity"] {
-    color: green;
+    color: darkgreen;
 }
 
 .view-button[state="attention"] {
