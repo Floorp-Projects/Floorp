@@ -129,12 +129,14 @@ PRInt32 nsTypeAheadFind::sAccelKey = -1;  // magic value of -1 when unitialized
 
 
 nsTypeAheadFind::nsTypeAheadFind():
+  mIsFindAllowedInWindow(PR_FALSE),
   mLinksOnlyPref(PR_FALSE), mStartLinksOnlyPref(PR_FALSE),
   mLinksOnly(PR_FALSE), mIsTypeAheadOn(PR_FALSE), mCaretBrowsingOn(PR_FALSE),
   mLiteralTextSearchOnly(PR_FALSE), mDontTryExactMatch(PR_FALSE),
   mLinksOnlyManuallySet(PR_FALSE), mIsFindingText(PR_FALSE),
   mIsMenuBarActive(PR_FALSE), mIsMenuPopupActive(PR_FALSE),
-  mIsFindAllowedInWindow(PR_FALSE), mRepeatingMode(eRepeatingNone), mTimeoutLength(0)
+  mBadKeysSinceMatch(0),
+  mRepeatingMode(eRepeatingNone), mTimeoutLength(0)
 {
   NS_INIT_ISUPPORTS();
 
@@ -554,6 +556,16 @@ nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
     UseInWindow(domWin);
   }
 
+  if (mBadKeysSinceMatch >= kMaxBadCharsBeforeCancel) {
+    // If they're just quickly mashing keys onto the keyboard, stop searching
+    // until typeahead find is canceled via timeout or another normal means
+    if (mTimer) {
+      mTimer->Init(this, mTimeoutLength);  // Timeout from last bad key (this one)
+    }
+    DisplayStatus(PR_FALSE, nsnull, PR_TRUE); // Status message to say find stopped
+    return NS_OK;
+  }
+
   // ---------- Check the keystroke --------------------------------
   if (((charCode == 'g' || charCode=='G') && isAlt + isMeta + isCtrl == 1 && (
       (nsTypeAheadFind::sAccelKey == nsIDOMKeyEvent::DOM_VK_CONTROL && isCtrl) ||
@@ -640,6 +652,8 @@ nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
       return NS_OK;
     }
 
+    if (--mBadKeysSinceMatch < 0)
+      mBadKeysSinceMatch = 0;
     mTypeAheadBuffer = Substring(mTypeAheadBuffer, 0,
                                  mTypeAheadBuffer.Length() - 1);
     isBackspace = PR_TRUE;
@@ -736,20 +750,22 @@ nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
   // ----------- Set search options ---------------
   mFind->SetFindBackwards(mRepeatingMode == eRepeatingReverse);
 
-  if (!mDontTryExactMatch) {
-    // Regular find, not repeated char find
+  if (mBadKeysSinceMatch == 0) {   // Don't even try if the last key was already bad
+    if (!mDontTryExactMatch) {
+      // Regular find, not repeated char find
 
-    // Prefer to find exact match
-    rv = FindItNow(PR_FALSE, mLinksOnly, isFirstVisiblePreferred, isBackspace);
-  }
+      // Prefer to find exact match
+      rv = FindItNow(PR_FALSE, mLinksOnly, isFirstVisiblePreferred, isBackspace);
+    }
 
 #ifndef NO_LINK_CYCLE_ON_SAME_CHAR
-  if (NS_FAILED(rv) && !mLiteralTextSearchOnly &&
-      mRepeatingMode == eRepeatingChar) {
-    mDontTryExactMatch = PR_TRUE;  // Repeated character find mode
-    rv = FindItNow(PR_TRUE, PR_TRUE, isFirstVisiblePreferred, isBackspace);
-  }
+    if (NS_FAILED(rv) && !mLiteralTextSearchOnly &&
+        mRepeatingMode == eRepeatingChar) {
+      mDontTryExactMatch = PR_TRUE;  // Repeated character find mode
+      rv = FindItNow(PR_TRUE, PR_TRUE, isFirstVisiblePreferred, isBackspace);
+    }
 #endif
+  }
 
   aEvent->StopPropagation();  // We're using this key, no one else should
 
@@ -771,6 +787,7 @@ nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
     // ------- Success!!! -----------------------------------------------------
     // ------- Store current find string for regular find usage: find-next
     //         or find dialog text field ---------
+    mBadKeysSinceMatch = 0;
     mFindNextBuffer = mTypeAheadBuffer;
     mFindService->SetSearchString(mFindNextBuffer);
     if (mRepeatingMode == eRepeatingForward || 
@@ -791,6 +808,8 @@ nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
     }
   }
   else {
+    if (!isBackspace)
+      ++mBadKeysSinceMatch;
     // ----- Nothing found -----
     DisplayStatus(PR_FALSE, nsnull, PR_FALSE); // Display failure status
 
@@ -969,8 +988,10 @@ nsTypeAheadFind::FindItNow(PRBool aIsRepeatingSameChar, PRBool aIsLinksOnly,
       // ------ Success! -------
       // Make sure new document is selected
       if (presShell != startingPresShell) {
-        // We are in a new document
+        // We are in a new document (because of frames/iframes)
         mFocusedDocSelection->CollapseToStart(); // Hide old doc's selection
+        SetSelectionLook(startingPresShell, PR_FALSE, PR_FALSE); // hide caret
+
         nsCOMPtr<nsIDocument> doc;
         presShell->GetDocument(getter_AddRefs(doc));
 
@@ -984,6 +1005,9 @@ nsTypeAheadFind::FindItNow(PRBool aIsRepeatingSameChar, PRBool aIsLinksOnly,
         if (docContent) {
           docContent->SetFocus(presContext);
         }
+        // Get selection controller and selection for new frame/iframe
+        GetSelection(presShell, getter_AddRefs(mFocusedDocSelCon), 
+                     getter_AddRefs(mFocusedDocSelection));
       }
 
       // Select the found text and focus it
@@ -1489,6 +1513,7 @@ nsTypeAheadFind::CancelFind()
   mLiteralTextSearchOnly = PR_FALSE;
   mDontTryExactMatch = PR_FALSE;
   mStartFindRange = nsnull;
+  mBadKeysSinceMatch = 0;
 
   nsCOMPtr<nsISupports> windowSupports(do_QueryInterface(mFocusedWindow));
   if (mManualFindWindows->IndexOf(windowSupports) >= 0) {
@@ -1510,6 +1535,7 @@ nsTypeAheadFind::SetSelectionLook(nsIPresShell *aPresShell,
 {
   if (!aPresShell || !mFocusedDocSelCon)
     return;
+
   // Show caret when type ahead find is on
   // Also paint selection bright (typeaheadfind on) or normal
   // (typeaheadfind off)

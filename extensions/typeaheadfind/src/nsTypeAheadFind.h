@@ -69,6 +69,8 @@ enum {
   eRepeatingReverse
 }; 
 
+const kMaxBadCharsBeforeCancel = 3;
+
 class nsTypeAheadFind : public nsITypeAheadFind,
                         public nsIDOMKeyListener,
                         public nsIObserver,
@@ -152,6 +154,7 @@ protected:
   // PRBool's are used instead of PRPackedBool's where the address of the
   // boolean variable is getting passed into a method. For example:
   // GetBoolPref("accessibility.typeaheadfind.linksonly", &mLinksOnlyPref);
+  PRBool mIsFindAllowedInWindow;
   PRBool mLinksOnlyPref;
   PRBool mStartLinksOnlyPref;
   PRPackedBool mLinksOnly;
@@ -167,7 +170,7 @@ protected:
   PRPackedBool mIsFindingText; 
   PRPackedBool mIsMenuBarActive;
   PRPackedBool mIsMenuPopupActive;
-  PRBool mIsFindAllowedInWindow;
+  PRInt32 mBadKeysSinceMatch;
   PRInt32 mRepeatingMode;
   PRInt32 mTimeoutLength; // time in ms before find is automatically cancelled
 
