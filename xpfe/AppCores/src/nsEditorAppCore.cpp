@@ -1,4 +1,3 @@
-
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
@@ -77,7 +76,6 @@
 #include "nsIServiceManager.h"
 ///////////////////////////////////////
 
-#ifdef NEW_CLIPBOARD_SUPPORT
 // Drag & Drop, Clipboard
 #include "nsWidgetsCID.h"
 #include "nsIClipboard.h"
@@ -89,7 +87,6 @@
 static NS_DEFINE_IID(kIClipboardIID,    NS_ICLIPBOARD_IID);
 static NS_DEFINE_IID(kIDataFlavorIID,   NS_IDATAFLAVOR_IID);
 static NS_DEFINE_CID(kCClipboardCID,    NS_CLIPBOARD_CID);
-#endif
 
 
 /* Define Class IDs */
@@ -1247,12 +1244,12 @@ static void GenerateBarItem(FILE * fd, char * aFileName, const nsString & aDesc,
 NS_IMETHODIMP    
 nsEditorAppCore::ShowClipboard()
 {  
-
-#ifdef NEW_CLIPBOARD_SUPPORT
   nsIClipboard* clipboard;
+
   nsresult rvv = nsServiceManager::GetService(kCClipboardCID,
                                              kIClipboardIID,
                                              (nsISupports **)&clipboard);
+
   FILE * fd = fopen("res/samples/ClipboardViewer.xul", "w");
   fprintf(fd, "<?xml version=\"1.0\"?> \n");
   fprintf(fd, "<?xml-stylesheet href=\"xul.css\" type=\"text/css\"?> \n"); 
@@ -1359,8 +1356,6 @@ nsEditorAppCore::ShowClipboard()
   fclose(fd);
 
   MakeNewWindow("resource:/res/samples/ClipboardViewer.xul");
-
-#endif
 
   return NS_OK;
 }

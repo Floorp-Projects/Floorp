@@ -212,14 +212,11 @@ static NS_DEFINE_IID(kObserverCID, NS_OBSERVER_CID);
 static NS_DEFINE_IID(kProfileCID, NS_PROFILE_CID);
 #endif
 
-
-#ifdef NEW_CLIPBOARD_SUPPORT
 static NS_DEFINE_IID(kClipboardCID,            NS_CLIPBOARD_CID);
 static NS_DEFINE_CID(kCGenericTransferableCID, NS_GENERICTRANSFERABLE_CID);
 static NS_DEFINE_IID(kDataFlavorCID,           NS_DATAFLAVOR_CID);
 static NS_DEFINE_IID(kCXIFFormatConverterCID,  NS_XIFFORMATCONVERTER_CID);
 static NS_DEFINE_IID(kCDragServiceCID,         NS_DRAGSERVICE_CID);
-#endif
 
 #if 0    // autoregistration now works on all platforms, and RDF self-registers, so commenting out
 #if defined(XP_MAC) || defined (XP_UNIX)
@@ -377,14 +374,12 @@ NS_SetupRegistry()
 #endif
 #endif
 
-#ifdef NEW_CLIPBOARD_SUPPORT
   nsComponentManager::RegisterComponent(kClipboardCID,            NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kCGenericTransferableCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kDataFlavorCID,           NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kCXIFFormatConverterCID,   NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
 
   nsComponentManager::RegisterComponent(kCDragServiceCID,         NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-#endif
 
   nsComponentManager::RegisterComponent(kCSSParserCID,      NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kPresShellCID,      NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
