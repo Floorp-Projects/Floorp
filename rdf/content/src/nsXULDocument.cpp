@@ -34,8 +34,6 @@
 
   1. Implement DOM range constructors.
 
-  2. Implement XIF conversion (this is really low priority).
-
   Notes
   -----
 
@@ -129,7 +127,6 @@
 #include "nsIDOMDocumentType.h"
 #include "nsIXBLService.h"
 #include "nsReadableUtils.h"
-#include "nsIXIFConverter.h"
 
 
 //----------------------------------------------------------------------
@@ -164,7 +161,6 @@ static NS_DEFINE_CID(kXULContentUtilsCID,        NS_XULCONTENTUTILS_CID);
 static NS_DEFINE_CID(kXULPrototypeCacheCID,      NS_XULPROTOTYPECACHE_CID);
 static NS_DEFINE_CID(kXULTemplateBuilderCID,     NS_XULTEMPLATEBUILDER_CID);
 static NS_DEFINE_CID(kDOMImplementationCID,      NS_DOM_IMPLEMENTATION_CID);
-static NS_DEFINE_CID(kXIFConverterCID,           NS_XIFCONVERTER_CID);
 
 static NS_DEFINE_IID(kIParserIID, NS_IPARSER_IID);
 
@@ -1963,113 +1959,6 @@ nsXULDocument::GetNodeInfoManager(class nsINodeInfoManager *&aNodeInfoManager)
     NS_ADDREF(aNodeInfoManager);
 
     return NS_OK;
-}
-
-
-PRBool
-nsXULDocument::IsInRange(const nsIContent *aStartContent, const nsIContent* aEndContent, const nsIContent* aContent) const
-{
-    PRBool  result;
-
-    if (aStartContent == aEndContent) {
-            return PRBool(aContent == aStartContent);
-    }
-    else if (aStartContent == aContent || aEndContent == aContent) {
-        result = PR_TRUE;
-    }
-    else {
-        result = IsBefore(aStartContent,aContent);
-        if (result)
-            result = IsBefore(aContent, aEndContent);
-    }
-    return result;
-}
-
-PRBool
-nsXULDocument::IsBefore(const nsIContent *aNewContent, const nsIContent* aCurrentContent) const
-{
-    PRBool result = PR_FALSE;
-
-    if (nsnull != aNewContent && nsnull != aCurrentContent && aNewContent != aCurrentContent) {
-        nsIContent* test = FindContent(mRootContent, aNewContent, aCurrentContent);
-        if (test == aNewContent)
-            result = PR_TRUE;
-
-        NS_RELEASE(test);
-    }
-    return result;
-}
-
-PRBool
-nsXULDocument::IsInSelection(nsISelection* aSelection, const nsIContent *aContent) const
-{
-  PRBool aYes = PR_FALSE;
-  nsCOMPtr<nsIDOMNode> node (do_QueryInterface((nsIContent *) aContent));
-  aSelection->ContainsNode(node, PR_FALSE, &aYes);
-  return aYes;
-}
-
-nsIContent*
-nsXULDocument::GetPrevContent(const nsIContent *aContent) const
-{
-    nsIContent* result = nsnull;
-
-    // Look at previous sibling
-
-    if (nsnull != aContent) {
-        nsIContent* parent;
-        aContent->GetParent(parent);
-
-        if (parent && parent != mRootContent.get()) {
-            PRInt32 i;
-            parent->IndexOf((nsIContent*)aContent, i);
-            if (i > 0)
-                parent->ChildAt(i - 1, result);
-            else
-                result = GetPrevContent(parent);
-        }
-        NS_IF_RELEASE(parent);
-    }
-    return result;
-}
-
-nsIContent*
-nsXULDocument::GetNextContent(const nsIContent *aContent) const
-{
-    nsIContent* result = nsnull;
-
-    if (nsnull != aContent) {
-        // Look at next sibling
-        nsIContent* parent;
-        aContent->GetParent(parent);
-
-        if (parent != nsnull && parent != mRootContent.get()) {
-            PRInt32 i;
-            parent->IndexOf((nsIContent*)aContent, i);
-
-            PRInt32 count;
-            parent->ChildCount(count);
-            if (i + 1 < count) {
-                parent->ChildAt(i + 1, result);
-                // Get first child down the tree
-                for (;;) {
-                    PRInt32 n;
-                    result->ChildCount(n);
-                    if (n <= 0)
-                        break;
-
-                    nsIContent * old = result;
-                    old->ChildAt(0, result);
-                    NS_RELEASE(old);
-                    result->ChildCount(n);
-                }
-            } else {
-                result = GetNextContent(parent);
-            }
-        }
-        NS_IF_RELEASE(parent);
-    }
-    return result;
 }
 
 void
@@ -6577,167 +6466,6 @@ nsXULDocument::ParserObserver::OnStopRequest(nsIChannel* aChannel,
     NS_RELEASE(mDocument);
 
     return rv;
-}
-
-
-//XIF ADDITIONS CODE REPLICATION FROM NSDOCUMENT
-
-
-void nsXULDocument::BeginConvertToXIF(nsIXIFConverter *aConverter, nsIDOMNode* aNode)
-{
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
-  PRBool      isSynthetic = PR_TRUE;
-
-  // Begin Conversion
-  if (content) 
-  {
-    content->IsSynthetic(isSynthetic);
-    if (PR_FALSE == isSynthetic)
-    {
-      content->BeginConvertToXIF(aConverter);
-      content->ConvertContentToXIF(aConverter);
-    }
-  }
-}
-
-void nsXULDocument::ConvertChildrenToXIF(nsIXIFConverter * aConverter, nsIDOMNode* aNode)
-{
-  // Iterate through the children, convertion child nodes
-  nsresult result = NS_OK;
-  nsCOMPtr<nsIDOMNode> child;
-  result = aNode->GetFirstChild(getter_AddRefs(child));
-    
-  while ((result == NS_OK) && (child != nsnull))
-  { 
-    nsCOMPtr<nsIDOMNode> temp(child);
-    result=ToXIF(aConverter,child);    
-    result = temp->GetNextSibling(getter_AddRefs(child));
-  }
-}
-
-void nsXULDocument::FinishConvertToXIF(nsIXIFConverter* aConverter, nsIDOMNode* aNode)
-{
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
-  PRBool      isSynthetic = PR_TRUE;
-
-  if (content) 
-  {
-    content->IsSynthetic(isSynthetic);
-    if (PR_FALSE == isSynthetic)
-      content->FinishConvertToXIF(aConverter);
-  }
-}
-
-
-NS_IMETHODIMP
-nsXULDocument::ToXIF(nsIXIFConverter* aConverter, nsIDOMNode* aNode)
-{
-  nsresult result=NS_OK;
-  nsCOMPtr<nsISelection> sel;
-  aConverter->GetSelection(getter_AddRefs(sel));
-  if (sel)
-  {
-    nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
-
-    if (NS_SUCCEEDED(result) && content)
-    {
-      PRBool  isInSelection = IsInSelection(sel,content);
-
-      if (isInSelection == PR_TRUE)
-      {
-        BeginConvertToXIF(aConverter,aNode);
-        ConvertChildrenToXIF(aConverter,aNode);
-        FinishConvertToXIF(aConverter,aNode);
-      }
-      else
-      {
-        ConvertChildrenToXIF(aConverter,aNode);
-      }
-    }
-  }
-  else
-  {
-    BeginConvertToXIF(aConverter,aNode);
-    ConvertChildrenToXIF(aConverter,aNode);
-    FinishConvertToXIF(aConverter,aNode);
-  }
-  return result;
-} 
-
-NS_IMETHODIMP
-nsXULDocument::CreateXIF(nsAWritableString & aBuffer, nsISelection* aSelection)
-{
-  nsresult result=NS_OK;
-
-  nsCOMPtr<nsIXIFConverter> converter;
-  nsComponentManager::CreateInstance(kXIFConverterCID,
-                           nsnull,
-                           NS_GET_IID(nsIXIFConverter),
-                           getter_AddRefs(converter));
-  NS_ENSURE_TRUE(converter,NS_ERROR_FAILURE);
-  converter->Init(aBuffer);
-
-  converter->SetSelection(aSelection);
-
-  converter->AddStartTag( NS_LITERAL_STRING("section") , PR_TRUE); 
-  converter->AddStartTag( NS_LITERAL_STRING("section_head") , PR_TRUE);
-
-  converter->BeginStartTag( NS_LITERAL_STRING("document_info") );
-  converter->AddAttribute(NS_LITERAL_STRING("charset"),mCharSetID);
-/*  nsCOMPtr<nsIURI> uri (getter_AddRefs(GetDocumentURL()));
-  if (uri)
-  {
-    char* spec = 0;
-    if (NS_SUCCEEDED(uri->GetSpec(&spec)) && spec)
-    {
-      converter->AddAttribute(NS_LITERAL_STRING("uri"), NS_ConvertToString(spec));
-      Recycle(spec);
-    }
-  }*/
-  converter->FinishStartTag(NS_LITERAL_STRING("document_info"),PR_TRUE,PR_TRUE);
-
-  converter->AddEndTag(NS_LITERAL_STRING("section_head"), PR_TRUE, PR_TRUE);
-  converter->AddStartTag(NS_LITERAL_STRING("section_body"), PR_TRUE);
-//HACKHACKHACK DOCTYPE NOT DONE FOR XULDOCUMENTS>ASSIGN IN HTML
-  nsString hack;
-  hack.Assign(NS_LITERAL_STRING("DOCTYPE html PUBLIC \"-//w3c//dtd html 4.0 transitional//en\""));
-  converter->AddMarkupDeclaration(hack);
-  
-  nsCOMPtr<nsIDOMDocumentType> doctype;
-//if we have a selection to iterate find the root of the selection.
-  nsCOMPtr<nsIDOMElement> rootElement;
-  if (aSelection)
-  {
-    PRInt32 rangeCount;
-    if (NS_SUCCEEDED(aSelection->GetRangeCount(&rangeCount)) && rangeCount == 1) //getter_AddRefs(node));
-    {
-      nsCOMPtr<nsIDOMNode> anchor;
-      nsCOMPtr<nsIDOMNode> focus;
-      if (NS_SUCCEEDED(aSelection->GetAnchorNode(getter_AddRefs(anchor))))
-      {
-        if (NS_SUCCEEDED(aSelection->GetFocusNode(getter_AddRefs(focus))))
-        {
-          if (focus.get() == anchor.get())
-            rootElement = do_QueryInterface(focus);//set root to top of selection
-          if (!rootElement)//maybe its a text node since both are the same. both parents are the same. pick one
-          {
-            nsCOMPtr<nsIDOMNode> parent;
-            anchor->GetParentNode(getter_AddRefs(parent));
-            rootElement = do_QueryInterface(parent);//set root to top of selection
-          }
-        }
-      }
-    }
-  }
-  if (!rootElement)
-    result=GetDocumentElement(getter_AddRefs(rootElement));
-  if (NS_SUCCEEDED(result) && rootElement)
-  {  
-    result=ToXIF(converter,rootElement);
-  }
-  converter->AddEndTag(NS_ConvertToString("section_body"), PR_TRUE, PR_TRUE);
-  converter->AddEndTag(NS_ConvertToString("section"), PR_TRUE, PR_TRUE);
-  return result;
 }
 
 
