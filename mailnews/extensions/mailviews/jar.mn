@@ -1,0 +1,13 @@
+messenger.jar:
+    content/messenger/msgViewPickerOverlay.xul                       (resources/content/msgViewPickerOverlay.xul)
+    content/messenger/msgViewPickerOverlay.js                        (resources/content/msgViewPickerOverlay.js)
+    content/messenger/mailViewSetup.js                               (resources/content/mailViewSetup.js)
+    content/messenger/mailViewSetup.xul                              (resources/content/mailViewSetup.xul)
+    content/messenger/mailViewList.xul                               (resources/content/mailViewList.xul)
+    content/messenger/mailViewList.js                                (resources/content/mailViewList.js)
+    content/messenger-views/contents.rdf                             (resources/content/contents.rdf)
+
+en-US.jar:
+    locale/en-US/messenger/msgViewPickerOverlay.dtd                  (resources/locale/en-US/msgViewPickerOverlay.dtd)
+    locale/en-US/messenger/mailViewSetup.dtd                         (resources/locale/en-US/mailViewSetup.dtd)    
+    locale/en-US/messenger/mailViewList.dtd                         (resources/locale/en-US/mailViewList.dtd) 

@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+
+
+<!--
+The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Mozilla Communicator client code, released
+March 31, 1998.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+ Copyright (C) 2002 Netscape Communications Corporation. All
+Rights Reserved.
+-->
+
+<?xml-stylesheet href="chrome://messenger/skin/dialogs.css" type="text/css"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
+<?xul-overlay href="chrome://messenger/content/searchTermOverlay.xul"?>
+
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/mailViewSetup.dtd" >
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="mailViewOnLoad();"
+        onunload="mailViewOnUnLoad();"
+        windowtype="mailnews:mailview"
+        title="&mailViewSetupTitle.label;"
+        width="640" height="300"
+        persist="screenX screenY width height">
+
+  <stringbundleset id="stringbundleset">
+    <stringbundle id="bundle_search" src="chrome://messenger/locale/search.properties"/>
+  </stringbundleset>
+
+  <!-- XXX: only mailWidgets.xml requires strres.js (<script> isn't valid in XBL yet - see hyatt)-->
+
+  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+  <script src="chrome://global/content/globalOverlay.js"/>
+  <script src="chrome://messenger/content/mailViewSetup.js"/>
+
+  <dummy class="usesMailWidgets"/>
+  <keyset id="dialogKeys"/>
+    
+  <vbox flex="1">
+    <separator class="thin"/>
+    <vbox>
+       <hbox align="center">
+         <label value="&mailViewHeading.label;" accesskey="&mailViewHeading.accesskey;"/>
+         <textbox tabindex="0" id="name" oninput="doEnabling();"/>
+      </hbox>
+    </vbox>
+
+    <separator/>
+    <label value="&searchTermCaption.label;"/>
+    <hbox flex="1">
+      <vbox id="searchTermListBox" flex="1"/>
+    </hbox>
+
+    <separator class="thin"/>
+
+    <hbox id="okCancelHelpButtonsRight"/>
+
+  </vbox>
+
+</window>

@@ -1,0 +1,59 @@
+<?xml version="1.0"?> 
+<!--
+   - The contents of this file are subject to the Netscape Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/NPL/
+   -  
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   -  
+   - The Original Code is Mozilla Communicator client code, released
+   - March 31, 1998.
+   - 
+   - The Initial Developer of the Original Code is Netscape
+   - Communications Corporation. Portions created by Netscape are
+   - Copyright (C) 2002 Netscape Communications Corporation. All
+   - Rights Reserved.
+   - 
+   - Contributor(s):
+   -    Scott MacGregor <mscott@netscape.com>
+  -->
+
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/msgViewPickerOverlay.dtd">
+
+<overlay
+  xmlns:nc="http://home.netscape.com/NC-rdf#"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="chrome://messenger/content/msgViewPickerOverlay.js"/>
+  
+  <script type="application/x-javascript"><![CDATA[
+    window.addEventListener("load", viewPickerOnLoad, true);
+  ]]></script>
+
+  <hbox id="searchBox">
+    <hbox id="viewPickerBox" flex="1" insertbefore="searchCriteria" align="center">
+      <label id="ViewPickerText" value="&ViewPicker.label;" control="viewPicker"  accesskey="&ViewPicker.accesskey;"/>
+      <menulist id="viewPicker" oncreate="FillLabelValues();" oncommand="viewChange(this);">
+       <menupopup id="viewPickerPopup">
+         <menuitem value="0" label="All" />
+         <menuitem value="1" label="Unread"/>
+         <menuseparator/>
+         <menuitem value="2" id="labelMenuItem1"/>
+         <menuitem value="3" id="labelMenuItem2"/>
+         <menuitem value="4" id="labelMenuItem3"/>
+         <menuitem value="5" id="labelMenuItem4"/>
+         <menuitem value="6" id="labelMenuItem5"/>
+         <menuseparator id="lastDefaultView"/>
+         <menuseparator id="createCustomViewSeparator"/>
+         <menuitem id="createCustomView" value="7" label="&ViewPickerCustomView.label;"/>
+       </menupopup>
+      </menulist>
+      <spring flex="1"/>
+    </hbox>
+  </hbox>
+
+</overlay>

@@ -1,0 +1,7 @@
+<!--LOCALIZATION NOTE msgViewPickerOverlay.dtd UI for showing various views on a folder -->
+
+<!ENTITY ViewPicker.label "View:">
+<!ENTITY ViewPicker.accesskey "i">
+<!ENTITY ViewPickerPeople.label "People I Know">
+<!ENTITY ViewPickerCustomView.label "Customize...">
+
