@@ -32,16 +32,19 @@
 
 class nsInstallInfo;
 
-#define NS_ISOFTWAREUPDATE_IID                  \
-{ 0x18c2f992, 0xb09f, 0x11d2,                   \
-{0xbc, 0xde, 0x00, 0x80, 0x5f, 0x0e, 0x13, 0x53}} 
+#define NS_ISOFTWAREUPDATE_IID                   \
+{ 0x18c2f992, 									 \
+  0xb09f, 										 \
+  0x11d2,						                 \
+ {0xbc, 0xde, 0x00, 0x80, 0x5f, 0x0e, 0x13, 0x53}\
+} 
 
 
 class nsISoftwareUpdate : public nsISupports 
 {
     public:
-        static const nsIID& IID() { static nsIID iid = NS_ISOFTWAREUPDATE_IID; return iid; }
-            
+        	NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISOFTWAREUPDATE_IID)
+        	
             NS_IMETHOD InstallJar(nsInstallInfo *installInfo) = 0;
 
             NS_IMETHOD InstallJar(const nsString& fromURL, 
