@@ -112,9 +112,7 @@ net_pop3_remove_messages_marked_delete(PLHashEntry* he,
 			  						   PRIntn msgindex, 
 			   						   void *arg)
 {
-	char valueChar = '\0';
-    if (he->value)
-	  nsCRT::memcpy(&valueChar, he->value, sizeof(char));
+	char valueChar = (char)(long)he->value;
 	if (valueChar == DELETE_CHAR)
 	  return HT_ENUMERATE_REMOVE;
     else
