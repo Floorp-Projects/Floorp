@@ -35,9 +35,11 @@
 #undef NOISY
 #endif
 
-static NS_DEFINE_IID(kIStyleSpacingSID, NS_STYLESPACING_SID);
 static NS_DEFINE_IID(kIRunaroundIID, NS_IRUNAROUND_IID);
+
 static NS_DEFINE_IID(kStyleDisplaySID, NS_STYLEDISPLAY_SID);
+static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
+static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
 
 nsContainerFrame::nsContainerFrame(nsIContent* aContent, nsIFrame* aParent)
   : nsSplittableFrame(aContent, aParent),
@@ -206,6 +208,17 @@ void nsContainerFrame::PaintChildren(nsIPresContext&      aPresContext,
                                      nsIRenderingContext& aRenderingContext,
                                      const nsRect&        aDirtyRect)
 {
+  // Set clip rect so that children don't leak out of us
+  nsStylePosition* pos =
+    (nsStylePosition*)mStyleContext->GetData(kStylePositionSID);
+  PRBool hidden = PR_FALSE;
+  if (NS_STYLE_OVERFLOW_HIDDEN == pos->mOverflow) {
+    aRenderingContext.PushState();
+    aRenderingContext.SetClipRect(nsRect(0, 0, mRect.width, mRect.height),
+                                  PR_TRUE);
+    hidden = PR_TRUE;
+  }
+
   nsIFrame* kid = mFirstChild;
   while (nsnull != kid) {
     nsIView *pView;
@@ -216,9 +229,10 @@ void nsContainerFrame::PaintChildren(nsIPresContext&      aPresContext,
       kid->GetRect(kidRect);
       nsRect damageArea;
       PRBool overlap = damageArea.IntersectRect(aDirtyRect, kidRect);
-      if (overlap) {
+      if (!hidden || overlap) {
         // Translate damage area into kid's coordinate system
-        nsRect kidDamageArea(damageArea.x - kidRect.x, damageArea.y - kidRect.y,
+        nsRect kidDamageArea(damageArea.x - kidRect.x,
+                             damageArea.y - kidRect.y,
                              damageArea.width, damageArea.height);
         aRenderingContext.PushState();
         aRenderingContext.Translate(kidRect.x, kidRect.y);
@@ -234,6 +248,10 @@ void nsContainerFrame::PaintChildren(nsIPresContext&      aPresContext,
       NS_RELEASE(pView);
     }
     kid->GetNextSibling(kid);
+  }
+
+  if (hidden) {
+    aRenderingContext.PopState();
   }
 }
 
@@ -503,7 +521,7 @@ nsContainerFrame::ReflowChild(nsIFrame*        aKidFrame,
   }
 
   nsStyleSpacing* spacing;
-  aKidFrame->GetStyleData(kIStyleSpacingSID, (nsStyleStruct*&)spacing);
+  aKidFrame->GetStyleData(kStyleSpacingSID, (nsStyleStruct*&)spacing);
   if (aMaxSize.width != NS_UNCONSTRAINEDSIZE) {
     // Reduce the available width by the kid's left/right margin
     availSize.width -= spacing->mMargin.left + spacing->mMargin.right;
