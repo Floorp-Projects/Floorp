@@ -228,7 +228,7 @@ void nsHTMLLIAccessible::CacheChildren(PRBool aWalkAnonContent)
     SetFirstChild(mBulletAccessible);
     mAccChildCount = 1;
     nsAccessibleTreeWalker walker(mWeakShell, mDOMNode, aWalkAnonContent);
-    walker.mState.frameHint = GetFrame();
+    walker.mState.frame = GetFrame();
     walker.GetFirstChild();
 
     nsCOMPtr<nsPIAccessible> privatePrevAccessible = do_QueryInterface(mBulletAccessible);
