@@ -52,8 +52,6 @@ nsNativeDragSource::~nsNativeDragSource()
 {
 }
 
-// IUnknown methods - see iunknown.h for documentation
-
 STDMETHODIMP nsNativeDragSource::QueryInterface(REFIID riid, void** ppv)
 {
     *ppv=NULL;
@@ -88,8 +86,6 @@ STDMETHODIMP_(ULONG) nsNativeDragSource::Release(void)
     return 0;
 }
 
-// IDataSource methods - see idropsrc.h for documentation
-
 STDMETHODIMP nsNativeDragSource::QueryContinueDrag(BOOL fEsc, DWORD grfKeyState)
 {
 #ifdef DEBUG
@@ -102,13 +98,13 @@ STDMETHODIMP nsNativeDragSource::QueryContinueDrag(BOOL fEsc, DWORD grfKeyState)
     return ResultFromScode(DRAGDROP_S_CANCEL);
   }
 
-  if (!(grfKeyState & MK_LBUTTON)) {
+  if (!(grfKeyState & MK_LBUTTON) || (grfKeyState & MK_RBUTTON)) {
 #ifdef DEBUG
     //printf("grfKeyState & MK_LBUTTON\n");
 #endif
     return ResultFromScode(DRAGDROP_S_DROP);
   }
-
+  
 #ifdef DEBUG
   //printf("NOERROR\n");
 #endif
