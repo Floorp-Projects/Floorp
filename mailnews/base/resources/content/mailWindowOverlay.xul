@@ -1122,8 +1122,8 @@ Rights Reserved.
       </template>
     </menu>
     <menuseparator/>
-    <menu label="&markMenu.label;" accesskey="&markMenu.accesskey;" oncreate="InitMessageMark()">
-      <menupopup>
+    <menu label="&markMenu.label;" accesskey="&markMenu.accesskey;">
+      <menupopup oncreate="InitMessageMark()">
         <menuitem type="checkbox" key="key_toggleRead" id="markReadMenuItem" label="&markAsReadCmd.label;" accesskey="&markAsReadCmd.accesskey;" observes="cmd_markAsRead"/>
         <menuitem label="&markThreadAsReadCmd.label;"  accesskey="&markThreadAsReadCmd.accesskey;" observes="cmd_markThreadAsRead"/>
         <menuitem label="&markAllReadCmd.label;" key="key_markAllRead" accesskey="&markAllReadCmd.accesskey;" observes="cmd_markAllRead"/>
