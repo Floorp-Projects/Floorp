@@ -46,6 +46,9 @@
 
 menu, 
 menuitem {
+#ifdef MOZ_WIDGET_GTK2
+  -moz-appearance: menuitem !important;
+#endif
   -moz-box-align: center;
   color: MenuText;
   font: menu;
@@ -56,6 +59,21 @@ menuitem {
 menuitem[default="true"] {
   font-weight: bold;
 }  
+
+#ifdef MOZ_WIDGET_GTK2
+menu[_moz-menuactive="true"],
+menuitem[_moz-menuactive="true"] {
+  color: -moz-gtk2-hovertext;
+}
+
+menubar > menu[_moz-menuactive="true"] {
+  color: MenuText;
+}
+
+menubar > menu[open] {
+  color: -moz-gtk2-hovertext;
+}
+#endif
   
 menu[disabled="true"], menuitem[disabled="true"],
 menu[_moz-menuactive="true"][disabled="true"],
@@ -159,6 +177,7 @@ popup > menuitem {
   max-width: 42em;
 }
 
+#ifndef MOZ_WIDGET_GTK2
 menupopup > menu[_moz-menuactive="true"],
 menupopup > menuitem[_moz-menuactive="true"],
 popup > menu[_moz-menuactive="true"],
@@ -166,6 +185,7 @@ popup > menuitem[_moz-menuactive="true"] {
   background-color: Highlight;
   color: HighlightText;
 }
+#endif
 
 /* ::::: menu/menuitems in menulist popups ::::: */
 
