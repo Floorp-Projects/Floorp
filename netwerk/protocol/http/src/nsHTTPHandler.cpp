@@ -71,8 +71,6 @@
 PRLogModuleInfo* gHTTPLog = nsnull;
 #endif /* PR_LOGGING */
 
-#define MAX_NUMBER_OF_OPEN_TRANSPORTS 8
-
 static PRInt32 PR_CALLBACK HTTPPrefsCallback(const char* pref, void* instance);
 static const char NETWORK_PREFS[] = "network.";
 
@@ -625,11 +623,12 @@ nsHTTPHandler::SetMisc(const PRUnichar* aMisc)
 }
 
 nsHTTPHandler::nsHTTPHandler():
-    mAcceptLanguages(nsnull),
-    mAcceptEncodings(nsnull),
-	mHttpVersion(HTTP_ONE_ZERO),
-    mDoKeepAlive(PR_FALSE),
-    mKeepAliveTimeout(2*60),
+    mAcceptLanguages (nsnull),
+    mAcceptEncodings (nsnull),
+	mHttpVersion (HTTP_ONE_ZERO),
+    mDoKeepAlive (PR_FALSE),
+    mKeepAliveTimeout (DEFAULT_KEEP_ALIVE_TIMEOUT),
+    mMaxConnections   (MAX_NUMBER_OF_OPEN_TRANSPORTS),
     mReferrerLevel(0)
 {
     NS_INIT_REFCNT();
@@ -937,7 +936,7 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
         {
             count = 0;
             mTransportList -> Count (&count);
-            if (count >= MAX_NUMBER_OF_OPEN_TRANSPORTS)
+            if (count >= (PRUint32) mMaxConnections)
             {
 
                 // XXX this method incorrectly returns a bool
@@ -1005,17 +1004,6 @@ nsresult nsHTTPHandler::ReleaseTransport(nsIChannel* i_pTrans, PRBool keepAlive)
            ("nsHTTPHandler::ReleaseTransport."
             "\tReleasing socket transport %x.\n",
             i_pTrans));
-    //
-    // Clear the EventSinkGetter for the transport...  This breaks the
-    // circular reference between the HTTPChannel which holds a reference
-    // to the transport and the transport which references the HTTPChannel
-    // through the event sink...
-    //
-    rv = i_pTrans->SetNotificationCallbacks(nsnull);
-
-    rv = mTransportList->RemoveElement(i_pTrans);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Transport not in table...");
-
     if (mDoKeepAlive && keepAlive)
     {
         nsresult rv;
@@ -1037,6 +1025,17 @@ nsresult nsHTTPHandler::ReleaseTransport(nsIChannel* i_pTrans, PRBool keepAlive)
         }
     }
     
+    //
+    // Clear the EventSinkGetter for the transport...  This breaks the
+    // circular reference between the HTTPChannel which holds a reference
+    // to the transport and the transport which references the HTTPChannel
+    // through the event sink...
+    //
+    rv = i_pTrans -> SetNotificationCallbacks (nsnull);
+
+    rv = mTransportList->RemoveElement(i_pTrans);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Transport not in table...");
+
     // Now trigger an additional one from the pending list
     while (1) {
         // There's no guarantee that a channel will re-request a transport once
@@ -1045,7 +1044,7 @@ nsresult nsHTTPHandler::ReleaseTransport(nsIChannel* i_pTrans, PRBool keepAlive)
 
         mPendingChannelList->Count(&count);
         mTransportList->Count(&transportsInUseCount);
-        if (!count || (transportsInUseCount >= MAX_NUMBER_OF_OPEN_TRANSPORTS))
+        if (!count || (transportsInUseCount >= (PRUint32) mMaxConnections))
             return NS_OK;
 
         nsCOMPtr<nsISupports> item;
@@ -1167,11 +1166,12 @@ nsHTTPHandler::PrefsChanged(const char* pref)
 
     nsresult rv = NS_OK;
 
-    PRInt32 keepalive = -1;
-    rv = mPrefs->GetIntPref("network.http.keep-alive", &keepalive);
-    mDoKeepAlive = (keepalive == 1);
+    PRInt32 doKeepAlive = 0;
+    mPrefs -> GetIntPref ("network.http.keep-alive", &doKeepAlive);
+    mDoKeepAlive = (doKeepAlive != 0);
 
-    rv = mPrefs->GetIntPref("network.http.keep-alive.timeout", &mKeepAliveTimeout);
+    mPrefs -> GetIntPref ("network.http.keep-alive.timeout", &mKeepAliveTimeout);
+    mPrefs -> GetIntPref ("network.http.max-connections"   ,   &mMaxConnections);
 
     if (bChangedAll || !PL_strcmp(pref, "network.sendRefererHeader"))
     {
