@@ -72,6 +72,8 @@ function getStatusExplanation(value)
     case gIX509Cert.ISSUER_UNKNOWN:
       return gBundle.getString("StatusUntrusted");
   }
+
+  return "";
 }
 
 function onLoad()
