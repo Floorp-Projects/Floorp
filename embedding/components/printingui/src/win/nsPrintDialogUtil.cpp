@@ -940,8 +940,13 @@ ShowNativePrintDialog(HWND              aHWnd,
     }
   }
 
-  prntdlg.nFromPage           = 0xFFFF;
-  prntdlg.nToPage             = 0xFFFF;
+  PRInt32 pg = 1;
+  aPrintSettings->GetStartPageRange(&pg);
+  prntdlg.nFromPage           = pg;
+  
+  aPrintSettings->GetEndPageRange(&pg);
+  prntdlg.nToPage             = pg;
+
   prntdlg.nMinPage            = 1;
   prntdlg.nMaxPage            = 0xFFFF;
   prntdlg.nCopies             = 1;
