@@ -632,3 +632,40 @@ CalendarView.prototype.refresh = function calView_refresh( ShowEvent )
    this.refreshEvents()
 }
 
+// Returns startHour (the first hour of 'date' that has events) and 
+//         endHour (the last hour of 'date' that has events).
+// Used in weekview and dayview
+
+CalendarView.prototype.getViewLimits = function ( dayDisplayEventList, date )
+{
+  //set defaults from preferences
+  var sHour = getIntPref( gCalendarWindow.calendarPreferences.calendarPref, "event.defaultstarthour", 8 );
+  var eHour = getIntPref( gCalendarWindow.calendarPreferences.calendarPref, "event.defaultendhour", 17 );
+  
+  //get date start and end as millisecs for comparisons
+  var tmpDate =new Date(date);
+  tmpDate.setHours(0,0,0);
+  var dateStart = tmpDate.valueOf();
+  tmpDate.setHours(23,59,59);
+  var dateEnd = tmpDate.valueOf();
+  
+  for ( var i = 0; i < dayDisplayEventList.length; i++ ) {
+    if( dayDisplayEventList[i].event.allDay != true ) {
+      
+      if( dayDisplayEventList[i].displayDate < dateStart ) {
+        sHour=0;
+      } else {
+        if( dayDisplayEventList[i].displayDate <= (dateStart + sHour*kDate_MillisecondsInHour)) 
+          sHour = Math.floor((dayDisplayEventList[i].displayDate - dateStart)/kDate_MillisecondsInHour);
+      }
+      
+      if( dayDisplayEventList[i].displayEndDate > dateEnd ) {
+        eHour=23;
+      } else {
+        if( dayDisplayEventList[i].displayEndDate > (dateStart + (eHour)*kDate_MillisecondsInHour) ) 
+          eHour = Math.ceil((dayDisplayEventList[i].displayEndDate - dateStart)/kDate_MillisecondsInHour);
+      }
+    }
+  }
+  return { startHour: sHour, endHour: eHour };
+}

@@ -103,7 +103,6 @@ function DayView( calendarWindow )
    calendarWindow.EventSelection.addObserver( dayViewEventSelectionObserver );
 }
 
-
 /** PUBLIC
 *
 *   Redraw the events for the current month
@@ -155,25 +154,17 @@ DayView.prototype.refreshEvents = function dayview_refreshEvents( )
    var dayEventList = gEventSource.getEventsForDay( this.calendarWindow.getSelectedDate() );
    
    //refresh the array and the current spot.
-   var LowestStartHour = getIntPref( this.calendarWindow.calendarPreferences.calendarPref, "event.defaultstarthour", 8 );
-   var HighestEndHour = getIntPref( this.calendarWindow.calendarPreferences.calendarPref, "event.defaultendhour", 17 );
    for ( var i = 0; i < dayEventList.length; i++ ) 
    {
       dayEventList[i].OtherSpotArray = new Array('0');
       dayEventList[i].CurrentSpot = 0;
       dayEventList[i].NumberOfSameTimeEvents = 0;
-      if( dayEventList[i].event.allDay != true )
-      {
-         var displayDateObject = new Date( dayEventList[i].displayDate );
-         var ThisLowestStartHour = displayDateObject.getHours();
-         
-         if( ThisLowestStartHour < LowestStartHour ) 
-            LowestStartHour = ThisLowestStartHour;
-         
-         if( dayEventList[i].event.end.hour > HighestEndHour )
-            HighestEndHour = dayEventList[i].event.end.hour;
-      }
    }
+
+   // get view limits
+   var limits = this.getViewLimits(dayEventList,this.calendarWindow.getSelectedDate());
+   var LowestStartHour = limits.startHour;
+   var HighestEndHour = limits.endHour;
 
    for( i = 0; i < 24; i++ )
    {
