@@ -64,7 +64,7 @@
 #include "nsIByteArrayInputStream.h"
 #include "nsReadableUtils.h"
 #include "nsStaticNameTable.h"
-#include "nsProcessWin.h"
+#include "nsProcess.h"
 #include "nsSlidingString.h"
 #ifdef DEBUG
 #include "pure.h"
