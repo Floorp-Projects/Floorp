@@ -35,7 +35,7 @@
 #define PKIT_H
 
 #ifdef DEBUG
-static const char PKIT_CVS_ID[] = "@(#) $RCSfile: pkit.h,v $ $Revision: 1.1 $ $Date: 2001/09/13 22:16:22 $ $Name:  $";
+static const char PKIT_CVS_ID[] = "@(#) $RCSfile: pkit.h,v $ $Revision: 1.2 $ $Date: 2001/09/20 20:40:03 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -47,6 +47,10 @@ static const char PKIT_CVS_ID[] = "@(#) $RCSfile: pkit.h,v $ $Revision: 1.1 $ $D
 #ifndef NSSBASET_H
 #include "nssbaset.h"
 #endif /* NSSBASET_H */
+
+#ifndef BASET_H
+#include "baset.h"
+#endif /* BASET_H */
 
 #ifndef NSSCKT_H
 #include "nssckt.h"
@@ -60,23 +64,26 @@ static const char PKIT_CVS_ID[] = "@(#) $RCSfile: pkit.h,v $ $Revision: 1.1 $ $D
 #include "devt.h"
 #endif /* DEVT_H */
 
+#ifndef DEVT_H
+#include "devt.h"
+#endif /* DEVT_H */
+
 PR_BEGIN_EXTERN_C
 
 #define NSSPTR_ADD_REF(p) ((p)->refCount++)
 
 struct NSSCertificateStr
 {
-    PRInt32           refCount;
-    NSSArena         *arena;
-    /*NSSDecodedCert    certData;*/
-    NSSItem           id;
-    NSSItem           der;
-    NSSItem           label;
-    CK_OBJECT_HANDLE  handle;
-    NSSSlot          *slot;
-    NSSTrustDomain   *trustDomain;
+    PRInt32 refCount;
+    NSSArena *arena;
+    NSSItem id;
+    NSSItem der;
+    NSSItem label;
+    CK_OBJECT_HANDLE handle;
+    NSSSlot *slot;
+    NSSTrustDomain *trustDomain;
     NSSCryptoContext *cryptoContext;
-    NSSTrust         *trust;
+    NSSTrust *trust;
 };
 
 struct NSSPrivateKeyStr;
@@ -86,22 +93,18 @@ struct NSSPublicKeyStr;
 struct NSSSymmetricKeyStr;
 
 struct NSSTrustDomainStr {
-    PRInt32   refCount;
+    PRInt32 refCount;
     NSSArena *arena;
-    NSSModule *module; /* XXX NSSList  *modules; */
-    /* (list not defined yet) */
+    NSSCallback defaultCallback;
+    nssList *moduleList;
+    nssListIterator *modules;
+    nssHash *certCache;
 };
 
 struct NSSCryptoContextStr
 {
-    PRInt32                refCount;
-    NSSArena              *arena;
-    CK_SESSION_HANDLE      session;
-    void                  *epv;
-    NSSTrustDomain        *trustDomain;
-    NSSCallback           *defaultCallback;
-    NSSCertificate       **certificates;
-    PRInt32                numCertificates;
+    PRInt32 refCount;
+    NSSArena *arena;
 };
 
 struct NSSTimeStr;
