@@ -54,9 +54,12 @@ CPPSRCS		= \
 
 EXPORT_RESOURCE	= \
 		$(srcdir)/charsetalias.properties \
-		$(srcdir)/charsetTitles.properties \
 		$(srcdir)/charsetData.properties \
         	$(srcdir)/acceptlanguage.properties \
+		$(NULL)
+
+EXPORT_LOCALE	= \
+		$(srcdir)/charsetTitles.properties \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
@@ -93,4 +96,4 @@ endif
 
 install::
 	$(INSTALL) $(EXPORT_RESOURCE) $(DIST)/bin/res
-
+	$(INSTALL) $(EXPORT_LOCALE) $(DIST)/bin/chrome/global/locale

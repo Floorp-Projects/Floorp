@@ -218,7 +218,7 @@ nsresult nsCharsetConverterManager::RegisterConverterTitles(
   res = aRegistry->AddSubtree(nsIRegistry::Common, p, &key);
   nsAllocator::Free(p);
   if (NS_FAILED(res)) return res;
-  res = aRegistry->SetStringUTF8(key, "name", "resource:/res/charsetTitles.properties");
+  res = aRegistry->SetStringUTF8(key, "name", "chrome://global/locale/charsetTitles.properties");
   if (NS_FAILED(res)) return res;
 
   return NS_OK;

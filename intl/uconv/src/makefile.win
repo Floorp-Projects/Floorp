@@ -96,7 +96,7 @@ install:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
 	$(MAKE_INSTALL) .\charsetalias.properties $(DIST)\bin\res
 	$(MAKE_INSTALL) .\wincharset.properties $(DIST)\bin\res
-	$(MAKE_INSTALL) charsetTitles.properties $(DIST)\bin\res
+	$(MAKE_INSTALL) charsetTitles.properties $(DIST)\bin\chrome\global\locale
 	$(MAKE_INSTALL) charsetData.properties $(DIST)\bin\res
     $(MAKE_INSTALL) .\acceptlanguage.properties $(DIST)\bin\res
 
@@ -105,7 +105,7 @@ clobber::
 	rm -f $(DIST)\lib\$(DLLNAME).lib
 	rm -f $(DIST)\bin\res\charsetalias.properties
 	rm -f $(DIST)\bin\res\wincharset.properties
-	rm -f $(DIST)\bin\res\charsetTitles.properties
+	rm -f $(DIST)\bin\chrome\global\locale\charsetTitles.properties
 	rm -f $(DIST)\bin\res\charsetData.properties
     rm -f $(DIST)\bin\res\acceptlanguage.properties
     
