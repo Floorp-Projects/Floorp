@@ -285,12 +285,10 @@ static void
 gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
 {
   GtkContainerClass  *container_class;
-  GtkBinClass        *bin_class;
   GtkWidgetClass     *widget_class;
   GtkObjectClass     *object_class;
   
   container_class = GTK_CONTAINER_CLASS(klass);
-  bin_class       = GTK_BIN_CLASS(klass);
   widget_class    = GTK_WIDGET_CLASS(klass);
   object_class    = GTK_OBJECT_CLASS(klass);
 
