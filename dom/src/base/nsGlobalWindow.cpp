@@ -2901,8 +2901,10 @@ GlobalWindowImpl::CheckForAbusePoint ()
 
 #ifdef MOZ_PHOENIX
       // see the definition of the function for details.
-      if (!IsPopupWhitelisted(mDocument))
-          FirePopupBlockedEvent(mDocument);
+      PRBool whitelisted = IsPopupWhitelisted(mDocument);
+      if (!whitelisted)
+        FirePopupBlockedEvent(mDocument);
+      return !whitelisted;
 #else
       return PR_TRUE;
 #endif
@@ -2926,9 +2928,10 @@ GlobalWindowImpl::CheckForAbusePoint ()
 #endif
         
 #ifdef MOZ_PHOENIX
-        // see the definition of the function for details.
-        if (!IsPopupWhitelisted(mDocument))
+        PRBool whitelisted = IsPopupWhitelisted(mDocument);
+        if (!whitelisted)
           FirePopupBlockedEvent(mDocument);
+        return !whitelisted;
 #else
         return PR_TRUE;
 #endif
