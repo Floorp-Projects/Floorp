@@ -523,7 +523,7 @@ do_statement[ControlNodeGroup container, String label]
 	{
 	    ConditionalNode condition = new ConditionalNode(e, body.getHead());
 	    body.fixTails(condition);
-	    body.fixContinues(condition);
+	    body.fixContinues(condition, label);
 	    body.shiftBreakTails(label);
         container.add(body);
 	}
@@ -536,7 +536,7 @@ while_statement[boolean non_empty, ControlNodeGroup container, String label]
 	    {
 	        ConditionalNode condition = new ConditionalNode(e, body.getHead());
             body.fixTails(condition);
-            body.fixContinues(condition);
+            body.fixContinues(condition, label);
             body.shiftBreakTails(label);
             body.setHead(condition);
             container.add(body);
@@ -562,7 +562,7 @@ for_statement[boolean non_empty, ControlNodeGroup container, String label]
 		    container.add(new ControlNode(ei));
 
 		    ControlNode increment = new ControlNode(en);
-		    body.fixContinues(increment);
+		    body.fixContinues(increment, label);
 		    body.add(increment);
 
 		    ControlNode condition = new ConditionalNode(ec, body.getHead());
