@@ -1779,7 +1779,7 @@ _PR_MD_OPEN(const char *name, PRIntn osflags, PRIntn mode)
 
         if (osflags & PR_CREATE_FILE)
             flags = (0 != (osflags & PR_TRUNCATE)) ? CREATE_ALWAYS : OPEN_ALWAYS;
-        else if (osflags & PR_TRUNCATE) flags = CREATE_ALWAYS;
+        else if (osflags & PR_TRUNCATE) flags = TRUNCATE_EXISTING;
         else flags = OPEN_EXISTING;
         
         flag6 |= FILE_FLAG_OVERLAPPED;
@@ -1818,12 +1818,17 @@ _PR_MD_OPEN(const char *name, PRIntn osflags, PRIntn mode)
             access |= GENERIC_READ;
         if (osflags & PR_WRONLY || osflags & PR_RDWR)
             access |= GENERIC_WRITE;
-        if (osflags & PR_CREATE_FILE)
-            flags = OPEN_ALWAYS;
-        else if (osflags & PR_TRUNCATE)
-            flags = CREATE_ALWAYS;
-        else
-            flags = OPEN_EXISTING;
+        if (osflags & PR_CREATE_FILE) {
+            if (osflags & PR_TRUNCATE)
+                flags = CREATE_ALWAYS;
+            else
+                flags = OPEN_ALWAYS;
+        } else {
+            if (osflags & PR_TRUNCATE)
+                flags = TRUNCATE_EXISTING;
+            else
+                flags = OPEN_EXISTING;
+        }
 
         file = CreateFile(name,
                           access,
