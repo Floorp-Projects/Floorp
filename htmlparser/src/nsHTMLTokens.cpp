@@ -159,6 +159,9 @@ PRInt32 CStartToken::GetTypeID(){
       case eHTMLTag_menu:
         mTypeID=eHTMLTag_ul;
         break;
+      case eHTMLTag_s:
+        mTypeID=eHTMLTag_strike;
+        break;
       default:
         break;
     }
@@ -341,6 +344,9 @@ PRInt32 CEndToken::GetTypeID(){
       case eHTMLTag_dir:
       case eHTMLTag_menu:
         mTypeID=eHTMLTag_ul;
+        break;
+      case eHTMLTag_s:
+        mTypeID=eHTMLTag_strike;
         break;
       default:
         break;
