@@ -611,14 +611,12 @@ sub MakeResourceAliases()
     _InstallResources(":mozilla:xpfe:components:autocomplete:resources:content:MANIFEST",   "$globalContent", 0);
 
     # security
-    _InstallResources(":mozilla:extensions:psm-glue:res:content:MANIFEST_GLOBAL",       "$globalContent");
-    _InstallResources(":mozilla:extensions:psm-glue:res:content:MANIFEST_NAV",          "$navigatorContent");
-    _InstallResources(":mozilla:extensions:psm-glue:res:locale:en-US:MANIFEST",         "$globalLocale");
-    _InstallResources(":mozilla:extensions:psm-glue:res:locale:en-US:MANIFEST_NAV",     "$navigatorLocale");
+    _InstallResources(":mozilla:extensions:psm-glue:res:content:MANIFEST",       "$communicatorContent");
+    _InstallResources(":mozilla:extensions:psm-glue:res:locale:en-US:MANIFEST",         "$communicatorLocale");
 
+    # widget-toolkit
     _InstallResources(":mozilla:xpfe:global:resources:content:MANIFEST",                "$globalContent");
     _InstallResources(":mozilla:xpfe:global:resources:content:mac:MANIFEST",            "$globalContent");
-
     _InstallResources(":mozilla:xpfe:global:resources:locale:en-US:MANIFEST",           "$globalLocale", 0);
     _InstallResources(":mozilla:xpfe:global:resources:locale:en-US:mac:MANIFEST",       "$globalLocale", 0);
 
