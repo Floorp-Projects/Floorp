@@ -1032,35 +1032,6 @@ nsXMLDocument::SetDefaultStylesheets(nsIURI* aUrl)
 }
 
 NS_IMETHODIMP 
-nsXMLDocument::SetTitle(const PRUnichar *aTitle)
-{
-  // Pass on to any interested containers
-  PRInt32 i, n = mPresShells.Count();
-  for (i = 0; i < n; i++) {
-    nsIPresShell* shell = (nsIPresShell*) mPresShells.ElementAt(i);
-    nsCOMPtr<nsIPresContext> cx;
-    shell->GetPresContext(getter_AddRefs(cx));
-    nsCOMPtr<nsISupports> container;
-    if (NS_OK == cx->GetContainer(getter_AddRefs(container))) {
-      if (container) {
-        nsCOMPtr<nsIBaseWindow> docShell(do_QueryInterface(container));
-        if(docShell) {
-          docShell->SetTitle(aTitle);
-        }
-      }
-    }
-  }
-
-  // Fire a DOM event for the title change.
-  nsCOMPtr<nsIDOMEvent> event;
-  CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
-  event->InitEvent(NS_LITERAL_STRING("DOMTitleChanged"), PR_TRUE, PR_TRUE);
-  DispatchEvent(event);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
 nsXMLDocument::SetBaseTarget(const nsAReadableString &aBaseTarget)
 {
   mBaseTarget.Assign(aBaseTarget);

@@ -33,13 +33,12 @@ class nsIURI;
 /**
  * XML document extensions to nsIDocument
  */
-class nsIXMLDocument : public nsISupports {
+class nsIXMLDocument : public nsISupports
+{
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IXMLDOCUMENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXMLDOCUMENT_IID)
 
   NS_IMETHOD SetDefaultStylesheets(nsIURI* aUrl)=0;
-
-  NS_IMETHOD SetTitle(const PRUnichar *aTitle)=0;
 };
 
 #endif // nsIXMLDocument_h___
