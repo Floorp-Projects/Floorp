@@ -16,6 +16,9 @@
  * Reserved.
  */
 
+#ifndef DefinesMac_h_
+#define DefinesMac_h_
+
 /* 
 	This is a common prefix file, included for both projects like
 	NSStdLib and Mozilla.
@@ -57,3 +60,4 @@
 #define _PR_NO_PREEMPT 1
 ///#define HAVE_BOOLEAN 1			// used by JPEG lib
 
+#endif /* DefinesMac_h_ */
