@@ -318,7 +318,7 @@ NS_METHOD CBrowserWindow::SetLocation(const nsString& aLocation)
    return NS_OK;
 }
 
-NS_METHOD CBrowserWindow::BeginDocumentLoad(nsIDocumentLoader *aLoader, nsIURI *aURL, const char *aCommand)
+NS_METHOD CBrowserWindow::OnStatusNetStart(nsIChannel *aChannel)
 {
 	// Stop the throbber
 	if (mThrobber)
@@ -332,11 +332,11 @@ NS_METHOD CBrowserWindow::BeginDocumentLoad(nsIDocumentLoader *aLoader, nsIURI *
 	// broadcasters and listeners. But for demo's sake this
 	// better shows what's happening.
 	LBroadcaster::BroadcastMessage(msg_OnStartLoadDocument, 0);
-
-	return NS_OK;
+   
+   return NS_OK;
 }
 
-NS_METHOD CBrowserWindow::EndDocumentLoad(nsIDocumentLoader *loader, nsIChannel *aChannel, PRUint32 aStatus)
+NS_METHOD CBrowserWindow::OnStatusNetStop(nsIChannel *aChannel)
 {
 	// Stop the throbber
 	if (mThrobber)
@@ -355,18 +355,7 @@ NS_METHOD CBrowserWindow::EndDocumentLoad(nsIDocumentLoader *loader, nsIChannel 
 	// broadcasters and listeners. But for demo's sake this
 	// better shows what's happening.
 	LBroadcaster::BroadcastMessage(msg_OnEndLoadDocument, 0);
-	
-	return NS_OK;
-}
 
-
-NS_METHOD CBrowserWindow::OnStatusNetStart(nsIChannel *aChannel)
-{
-   return NS_OK;
-}
-
-NS_METHOD CBrowserWindow::OnStatusNetStop(nsIChannel *aChannel)
-{
    return NS_OK;
 }
 
