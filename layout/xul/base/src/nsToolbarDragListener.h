@@ -60,6 +60,9 @@ protected:
     // is a container and the drop would be "on" that item.
   void ItemMouseIsOver(nsIDOMEvent* aDragEvent, nscoord* outXLoc, PRUint32* outIndex, PRBool* outOnChild);
 
+    // Utility to help determine if a node is a child of the toolbar
+  PRBool IsNodeAChild ( nsIDOMNode* inNode ) ;
+
     // Find the frame (or subframe) that contains the buttons that can be dragged.
   nsIFrame* LocateDropAreaFrame ( ) ;
   

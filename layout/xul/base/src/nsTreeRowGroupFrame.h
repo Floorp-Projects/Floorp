@@ -23,15 +23,24 @@
 #include "nsTableRowGroupFrame.h"
 #include "nsVoidArray.h"
 #include "nsIScrollbarListener.h"
+#include "nsIStyleContext.h"
+#include "nsCOMPtr.h"
 
 class nsTreeFrame;
+class nsTreeCellFrame;
 class nsCSSFrameConstructor;
 class nsISupportsArray;
+class nsTreeItemDragCapturer;
+
 
 class nsTreeRowGroupFrame : public nsTableRowGroupFrame, public nsIScrollbarListener
 {
 public:
   friend nsresult NS_NewTreeRowGroupFrame(nsIFrame** aNewFrame);
+
+    // hook in to setup d&d capturers
+  NS_IMETHOD Init ( nsIPresContext&  aPresContext, nsIContent* aContent,
+                      nsIFrame* aParent, nsIStyleContext* aContext, nsIFrame* aPrevInFlow) ;
 
   NS_IMETHOD  GetAdditionalChildListName(PRInt32   aIndex,
                                          nsIAtom** aListName) const;
@@ -68,6 +77,13 @@ public:
   void OnContentInserted(nsIPresContext& aPresContext, nsIFrame* aNextSibling);
   void OnContentRemoved(nsIPresContext& aPresContext, nsIFrame* aChildFrame);
 
+  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext, nsIContent* aChild,
+                                 PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRInt32 aHint) ;
+
+    // nsIHTMLReflow overrides
+  NS_IMETHOD Paint(nsIPresContext& aPresContext, nsIRenderingContext& aRenderingContext,
+                    const nsRect& aDirtyRect, nsFramePaintLayer aWhichLayer);
+                    
   virtual nsIFrame* GetFirstFrame();
   virtual nsIFrame* GetLastFrame();
   virtual void GetNextFrame(nsIFrame* aFrame, nsIFrame** aResult);
@@ -186,5 +202,15 @@ protected: // Data Members
 
   PRInt32 mCurrentIndex; // Our current scrolled index.
   PRInt32 mRowCount; // The current number of visible rows.
+
+    // our event capturer registered with the content model. See the discussion
+    // in Init() for why this is a weak ref.
+  nsTreeItemDragCapturer* mDragCapturer;
+
+    // only used during drag and drop for drop feedback. These are not
+    // guaranteed to be meaningful when no drop is underway.
+  PRInt32 mYDropLoc;
+  PRBool mDropOnContainer;
+  nsCOMPtr<nsIStyleContext> mMarkerStyle;
 
 }; // class nsTreeRowGroupFrame

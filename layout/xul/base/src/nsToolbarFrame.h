@@ -77,9 +77,6 @@ public:
   NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
                               const nsPoint& aPoint, // Overridden to capture events
                               nsIFrame**     aFrame);
-  NS_IMETHOD  HandleEvent(nsIPresContext& aPresContext, 
-                          nsGUIEvent*     aEvent,
-                          nsEventStatus&  aEventStatus);
   NS_IMETHOD  AttributeChanged(nsIPresContext* aPresContext,
                                nsIContent*     aChild,
                                PRInt32         aNameSpaceID,

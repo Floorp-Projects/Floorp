@@ -209,10 +209,10 @@ nsToolbarFrame :: ~nsToolbarFrame ( )
 //
 // Init
 //
-// Setup event listeners for drag and drop. Our frame's lifetime is bounded by the
+// Setup event capturers for drag and drop. Our frame's lifetime is bounded by the
 // lifetime of the content model, so we're guaranteed that the content node won't go away on us. As
-// a result, our drag listener can't go away before the frame is deleted. Since the content
-// node holds owning references to our drag listener, which we tear down in the dtor, there is no 
+// a result, our drag capturer can't go away before the frame is deleted. Since the content
+// node holds owning references to our drag capturer, which we tear down in the dtor, there is no 
 // need to hold an owning ref to it ourselves.
 //
 NS_IMETHODIMP
@@ -227,8 +227,8 @@ nsToolbarFrame::Init ( nsIPresContext&  aPresContext, nsIContent* aContent,
   nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(content));
 
   // register our drag over and exit capturers. These annotate the content object
-  // with enough info to determine where the drop would happen so that JS can
-  // do the right thing.
+  // with enough info to determine where the drop would happen so that JS down the 
+  // line can do the right thing.
   mDragListener = new nsToolbarDragListener(this, &aPresContext);
   receiver->AddEventListener("dragover", mDragListener, PR_TRUE);
   receiver->AddEventListener("dragexit", mDragListener, PR_TRUE);
@@ -264,8 +264,7 @@ nsToolbarFrame::Init ( nsIPresContext&  aPresContext, nsIContent* aContent,
 //
 // Paint
 //
-// Paint our background and border like normal frames, but before we draw the
-// children, draw our grippies for each toolbar.
+// Used to draw the drop feedback based on attributes set by the drag event capturer
 //
 NS_IMETHODIMP
 nsToolbarFrame :: Paint ( nsIPresContext& aPresContext,
@@ -276,15 +275,18 @@ nsToolbarFrame :: Paint ( nsIPresContext& aPresContext,
   nsresult res =  nsBoxFrame::Paint ( aPresContext, aRenderingContext, aDirtyRect, aWhichLayer );
 
   if (mXDropLoc != -1) {
-    // XXX this is temporary
+    // go looking for the psuedo-style that describes the drop feedback marker. If we don't
+    // have it yet, go looking for it.
     if (!mMarkerStyle) {
       nsCOMPtr<nsIAtom> atom ( getter_AddRefs(NS_NewAtom(":-moz-drop-marker")) );
       aPresContext.ProbePseudoStyleContextFor(mContent, atom, mStyleContext,
                                                 PR_FALSE, getter_AddRefs(mMarkerStyle));
     }
+    
     nscolor color;
     if (mMarkerStyle) {
-      const nsStyleColor* styleColor = (const nsStyleColor*)mMarkerStyle->GetStyleData(eStyleStruct_Color);
+      const nsStyleColor* styleColor = 
+                 NS_STATIC_CAST(const nsStyleColor*, mMarkerStyle->GetStyleData(eStyleStruct_Color));
       color = styleColor->mColor;
     } else {
       color = NS_RGB(0,0,0);
@@ -332,38 +334,6 @@ nsToolbarFrame :: GetFrameForPoint ( nsIPresContext* aPresContext,
   
 } // GetFrameForPoint
 
-
-// 
-// HandleEvent 
-// 
-// Process events that come to this frame. If they end up here, they are
-// almost certainly drag and drop events.
-//
-NS_IMETHODIMP 
-nsToolbarFrame :: HandleEvent ( nsIPresContext& aPresContext, 
-                                   nsGUIEvent*     aEvent, 
-                                   nsEventStatus&  aEventStatus) 
-{ 
-  if ( !aEvent ) 
-    return nsEventStatus_eIgnore; 
-
-  switch (aEvent->message) { 
-    case NS_DRAGDROP_ENTER: 
-
-      if (!mMarkerStyle) {
-        nsCOMPtr<nsIAtom> atom ( getter_AddRefs(NS_NewAtom(":-moz-drop-marker")) );
-        aPresContext.ProbePseudoStyleContextFor(mContent, atom, mStyleContext,
-										      PR_FALSE,
-										      getter_AddRefs(mMarkerStyle));
-      }
-      break; 
-
-  } 
-
-  //XXX this needs to change when I am really handling the D&D events 
-  return nsBoxFrame::HandleEvent(aPresContext, aEvent, aEventStatus); 
-  
-} // HandleEvent
 
 
 #if NOT_YET_NEEDED
@@ -435,9 +405,9 @@ nsToolbarFrame :: AttributeChanged ( nsIPresContext* aPresContext, nsIContent* a
 {
   nsresult rv = NS_OK;
   
-  if ( aAttribute == nsXULAtoms::tbTriggerRepaint )
+  if ( aAttribute == nsXULAtoms::ddTriggerRepaint )
     ForceDrawFrame ( aPresContext, this );
-  else if ( aAttribute == nsXULAtoms::tbDropLocationCoord ) {
+  else if ( aAttribute == nsXULAtoms::ddDropLocationCoord ) {
     nsAutoString attribute;
     aChild->GetAttribute ( kNameSpaceID_None, aAttribute, attribute );
     char* iHateNSString = attribute.ToNewCString();
