@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: hash.c,v $ $Revision: 1.1 $ $Date: 2001/09/20 00:28:36 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: hash.c,v $ $Revision: 1.2 $ $Date: 2001/10/03 14:07:29 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -101,10 +101,6 @@ nssHash_Create
   NSSArena *arena;
 
 #ifdef NSSDEBUG
-  if( (PRStatus *)NULL == pError ) {
-    return (nssHash *)NULL;
-  }
-
   if( arenaOpt && PR_SUCCESS != nssArena_verifyPointer(arenaOpt) ) {
     nss_SetError(NSS_ERROR_INVALID_POINTER);
     return (nssHash *)NULL;
