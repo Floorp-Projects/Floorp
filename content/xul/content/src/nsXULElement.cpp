@@ -565,7 +565,8 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype,
 
     if (aPrototype->mNodeInfo &&
         (aPrototype->mNodeInfo->Equals(nsXULAtoms::menubar) ||
-         aPrototype->mNodeInfo->Equals(nsXULAtoms::menupopup)))
+         aPrototype->mNodeInfo->Equals(nsXULAtoms::menupopup) ||
+         aPrototype->mNodeInfo->Equals(nsXULAtoms::popup)))
         element = new nsXULMenuElement();
     else
         element = new nsXULElement();
