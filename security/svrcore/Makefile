@@ -87,3 +87,14 @@ coreconf_hack:
 
 RelEng_bld: coreconf_hack
 	$(MAKE)
+
+ifeq ($(OS_ARCH), WINNT)
+libs install:: ntsvrcore.res
+	$(NSINSTALL) -m 444 $< $(SOURCE_LIB_DIR)
+
+release_md::
+	$(INSTALL) -m 444 ntsvrcore.res $(SOURCE_RELEASE_PREFIX)/$(SOURCE_RELEASE_LIB_DIR)
+endif
+
+ntsvrcore.res: ntgetpin.rc
+	rc -fo $@ -i. $<
