@@ -81,6 +81,7 @@ typedef NSQuickRegisterClassData* NSQuickRegisterData;
  	".dll",	// Windows
 	".dso",	// Unix
 	".so",	// Unix
+	".sl",	// Unix: HP
 	"_dll",	// Mac
 	".dlm",	// new for all platforms
 */
@@ -136,6 +137,7 @@ private:
   static nsresult loadFactory(FactoryEntry *aEntry, nsIFactory **aFactory);
   static nsresult SelfRegisterDll(nsDll *dll);
   static nsresult SelfUnregisterDll(nsDll *dll);
+
 public:
   static nsDllStore *dllStore;
 
@@ -182,6 +184,7 @@ public:
   // DLL registration support
   static nsresult AutoRegister(NSRegistrationInstant when,
 									const char* pathlist);
+  // Pathlist is a semicolon separated list of pathnames
   static nsresult AddToDefaultPathList(const char *pathlist);
   static nsresult SyncComponentsInPathList(const char *pathlist);
   static nsresult SyncComponentsInDir(const char *path);
