@@ -43,7 +43,6 @@
 #include "txStylesheet.h"
 #include <math.h>
 #include "ExprResult.h"
-#include "txXSLTPatterns.h"
 #include "txNamespaceMap.h"
 
 #include "prdtoa.h"
