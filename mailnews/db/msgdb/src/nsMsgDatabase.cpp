@@ -838,7 +838,6 @@ nsresult nsMsgDatabase::InitExistingDB()
 				m_dbFolderInfo->InitFromExistingDB();
 			}
 		}
-		err = GetStore()->GetTable(GetEnv(), &gAllThreadsTableOID, &m_mdbAllThreadsTable);
 	}
 	return err;
 }
