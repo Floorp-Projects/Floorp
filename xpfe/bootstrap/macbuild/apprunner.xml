@@ -812,7 +812,7 @@
                 <SETTING><NAME>MWProject_PPC_filetype</NAME><VALUE>APPL</VALUE></SETTING>
                 <SETTING><NAME>MWProject_PPC_size</NAME><VALUE>28672</VALUE></SETTING>
                 <SETTING><NAME>MWProject_PPC_minsize</NAME><VALUE>20480</VALUE></SETTING>
-                <SETTING><NAME>MWProject_PPC_stacksize</NAME><VALUE>256</VALUE></SETTING>
+                <SETTING><NAME>MWProject_PPC_stacksize</NAME><VALUE>512</VALUE></SETTING>
                 <SETTING><NAME>MWProject_PPC_flags</NAME><VALUE>22752</VALUE></SETTING>
                 <SETTING><NAME>MWProject_PPC_symfilename</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWProject_PPC_rsrcname</NAME><VALUE></VALUE></SETTING>
@@ -2159,7 +2159,7 @@
                 <SETTING><NAME>MWProject_PPC_filetype</NAME><VALUE>APPL</VALUE></SETTING>
                 <SETTING><NAME>MWProject_PPC_size</NAME><VALUE>28672</VALUE></SETTING>
                 <SETTING><NAME>MWProject_PPC_minsize</NAME><VALUE>20480</VALUE></SETTING>
-                <SETTING><NAME>MWProject_PPC_stacksize</NAME><VALUE>256</VALUE></SETTING>
+                <SETTING><NAME>MWProject_PPC_stacksize</NAME><VALUE>512</VALUE></SETTING>
                 <SETTING><NAME>MWProject_PPC_flags</NAME><VALUE>22752</VALUE></SETTING>
                 <SETTING><NAME>MWProject_PPC_symfilename</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWProject_PPC_rsrcname</NAME><VALUE></VALUE></SETTING>
@@ -3506,7 +3506,7 @@
                 <SETTING><NAME>MWProject_PPC_filetype</NAME><VALUE>APPL</VALUE></SETTING>
                 <SETTING><NAME>MWProject_PPC_size</NAME><VALUE>40480</VALUE></SETTING>
                 <SETTING><NAME>MWProject_PPC_minsize</NAME><VALUE>26384</VALUE></SETTING>
-                <SETTING><NAME>MWProject_PPC_stacksize</NAME><VALUE>256</VALUE></SETTING>
+                <SETTING><NAME>MWProject_PPC_stacksize</NAME><VALUE>512</VALUE></SETTING>
                 <SETTING><NAME>MWProject_PPC_flags</NAME><VALUE>22752</VALUE></SETTING>
                 <SETTING><NAME>MWProject_PPC_symfilename</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWProject_PPC_rsrcname</NAME><VALUE></VALUE></SETTING>
@@ -4877,7 +4877,7 @@
                 <SETTING><NAME>MWProject_PPC_filetype</NAME><VALUE>APPL</VALUE></SETTING>
                 <SETTING><NAME>MWProject_PPC_size</NAME><VALUE>40480</VALUE></SETTING>
                 <SETTING><NAME>MWProject_PPC_minsize</NAME><VALUE>26384</VALUE></SETTING>
-                <SETTING><NAME>MWProject_PPC_stacksize</NAME><VALUE>256</VALUE></SETTING>
+                <SETTING><NAME>MWProject_PPC_stacksize</NAME><VALUE>512</VALUE></SETTING>
                 <SETTING><NAME>MWProject_PPC_flags</NAME><VALUE>22752</VALUE></SETTING>
                 <SETTING><NAME>MWProject_PPC_symfilename</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWProject_PPC_rsrcname</NAME><VALUE></VALUE></SETTING>
