@@ -19,8 +19,20 @@
 
 package grendel;
 
+import java.io.File;
+
+import java.util.Properties;
+
+import javax.mail.Folder;
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.Session;
+
 import calypso.util.Preferences;
 import calypso.util.PreferencesFactory;
+
+import grendel.storage.BerkeleyStore;
+import grendel.storage.MessageExtra;
 
 import grendel.ui.MessageDisplayManager;
 import grendel.ui.MultiMessageDisplayManager;
@@ -33,17 +45,44 @@ import grendel.ui.UnifiedMessageDisplayManager;
 public class Main {
   static MessageDisplayManager fManager;
 
-  public static void main(String argv[]) {
+  public static void main(String argv[]) throws MessagingException {
     Preferences prefs = PreferencesFactory.Get();
     String pref = prefs.getString("mail.layout", "multi_pane");
+    Properties props = new Properties();
+    // I'm borrowing pretty heavily from jwz's TestFolderViewer here,
+    // I may change this later, then again, I may not... (talisman)
+    
+    if (prefs.getString("mail.directory", "") == "") {
+      File userHome = new File(System.getProperty("user.home"));
+      File mailDir = new File(userHome, "grndlmail");
 
+      if (!mailDir.exists()) {
+        if (mailDir.mkdir()) {
+          //success; put the mail directory in the prefs (talisman)
+          prefs.putString("mail.directory", mailDir.getPath());
+        }
+      } else {
+        prefs.putString("mail.directory", mailDir.getPath());
+      }
+    }
+    props.put("mail.directory", prefs.getString("mail.directory", ""));
+    System.out.println(props.get("mail.directory"));
+    
+    Session session = Session.getDefaultInstance(props, null);
+    System.out.println(session);
+    BerkeleyStore store = new BerkeleyStore(session);
+    System.out.println(store);
+    // Folder folder = store.getDefaultFolder().getFolder("Inbox");  
+    Folder folder = store.getDefaultFolder();
+    
     if (pref.equals("multi_pane")) {
       fManager = new UnifiedMessageDisplayManager();
     } else {
       fManager = new MultiMessageDisplayManager();
     }
     MessageDisplayManager.SetDefaultManager(fManager);
-    fManager.displayMaster();
+    //  fManager.displayMaster();
+    fManager.displayMaster(folder.getFolder("Inbox"));
   }
 }
 
