@@ -33,10 +33,60 @@
 #define STACK_TREASHOLD 1000
 
 //#define DISABLE_TEC_FALLBACK
-#define DISABLE_ATSUI_FALLBACK
+//#define DISABLE_ATSUI_FALLBACK
 //#define DISABLE_UPLUS_FALLBACK
 
-
+#define QUESTION_FALLBACKSIZE 9
+#define UPLUS_FALLBACKSIZE 9
+#define IN_RANGE(c, l, h) (((l) <= (c)) && ((c) <= (h)))
+#define IN_STANDARD_MAC_ROMAN_FONT(c) ( \
+  (((c) < 0x180) && (! (\
+   (0x0110 == (c)) || \
+   (0x012c == (c)) || \
+   (0x012d == (c)) || \
+   (0x0138 == (c)) || \
+   (0x014a == (c)) || \
+   (0x014b == (c)) || \
+   (0x017f == (c))    \
+   )))) 
+#define IN_SYMBOL_FONT(c) ( \
+  IN_RANGE(c, 0x0391, 0x03a1) || \
+  IN_RANGE(c, 0x03a3, 0x03a9) || \
+  IN_RANGE(c, 0x03b1, 0x03c1) || \
+  IN_RANGE(c, 0x03c3, 0x03c9) || \
+  (0x2111 == (c))   || \
+  (0x2118 == (c))   || \
+  IN_RANGE(c, 0x2190, 0x2193) || \
+  IN_RANGE(c, 0x21d0, 0x21d3) || \
+  IN_RANGE(c, 0x21ed, 0x21ee) || \
+  (0x2200 == (c))   || \
+  (0x2203 == (c))   || \
+  (0x2205 == (c))   || \
+  (0x2208 == (c))   || \
+  (0x2209 == (c))   || \
+  (0x2212 == (c))   || \
+  (0x2217 == (c))   || \
+  (0x221d == (c))   || \
+  (0x2220 == (c))   || \
+  IN_RANGE(c, 0x2227, 0x222b) || \
+  (0x2234 == (c))   || \
+  (0x223c == (c))   || \
+  (0x2261 == (c))   || \
+  (0x2282 == (c))   || \
+  (0x2283 == (c))   || \
+  (0x2286 == (c))   || \
+  (0x2287 == (c))   || \
+  (0x2295 == (c))   || \
+  (0x2297 == (c))   || \
+  (0x22a5 == (c))   || \
+  (0x2320 == (c))   || \
+  (0x2321 == (c))   || \
+  (0x240d == (c))   || \
+  (0x2660 == (c))   || \
+  (0x2663 == (c))   || \
+  (0x2665 == (c))   || \
+  (0x2666 == (c))      \
+  )
 
 #define BAD_TEXT_ENCODING 0xFFFFFFFF
 
@@ -191,9 +241,8 @@ PRBool nsUnicodeRenderingToolkit :: ATSUIFallbackGetWidth(
 	short origFontNum,
 	short aSize, PRBool aBold, PRBool aItalic, nscolor aColor) 
 {
-	if( 0xFFFD == *aCharPt)
-		return PR_FALSE;
-	if (nsATSUIUtils::IsAvailable())
+	if (nsATSUIUtils::IsAvailable()  
+	    &&  (IN_STANDARD_MAC_ROMAN_FONT(*aCharPt) ||IN_SYMBOL_FONT(*aCharPt)))
 	{
 		mATSUIToolkit.PrepareToDraw(mPort, mContext );
 		nsresult res = mATSUIToolkit.GetWidth(aCharPt, oWidth, aSize, 
@@ -213,9 +262,8 @@ PRBool nsUnicodeRenderingToolkit :: ATSUIFallbackDrawChar(
 	short origFontNum,
 	short aSize, PRBool aBold, PRBool aItalic, nscolor aColor) 
 {
-	if( 0xFFFD == *aCharPt)
-		return PR_FALSE;
-	if (nsATSUIUtils::IsAvailable())
+	if (nsATSUIUtils::IsAvailable()
+	   &&  (IN_STANDARD_MAC_ROMAN_FONT(*aCharPt) ||IN_SYMBOL_FONT(*aCharPt)))
 	{
 		mATSUIToolkit.PrepareToDraw(mPort, mContext );
 		nsresult res = mATSUIToolkit.DrawString(aCharPt, x, y, oWidth, aSize, 
@@ -233,7 +281,16 @@ PRBool nsUnicodeRenderingToolkit :: QuestionMarkFallbackGetWidth(
 	const PRUnichar *aCharPt, 
 	short& oWidth)
 {
+	  GrafPtr thePort;
+	  ::GetPort(&thePort);
+#if TARGET_CARBON
+  	short saveSize = GetPortTextSize(thePort);		
+#else
+  	short saveSize = thePort->txSize;
+#endif
+	  ::TextSize(QUESTION_FALLBACKSIZE);
 	  GetScriptTextWidth(question, 3,oWidth);
+	  ::TextSize(saveSize);
 	  return PR_TRUE;
 }
 //------------------------------------------------------------------------
@@ -244,7 +301,16 @@ PRBool nsUnicodeRenderingToolkit :: QuestionMarkFallbackDrawChar(
 	PRInt32 y, 
 	short& oWidth)
 {
+	  GrafPtr thePort;
+	  ::GetPort(&thePort);
+#if TARGET_CARBON
+   	short saveSize = GetPortTextSize(thePort);		
+#else
+  	short saveSize = thePort->txSize;
+#endif
+	  ::TextSize(QUESTION_FALLBACKSIZE);
 	  DrawScriptText(question, 3, x, y, oWidth);
+	  ::TextSize(saveSize);
 	  return PR_TRUE;
 }
 //------------------------------------------------------------------------
@@ -253,10 +319,19 @@ PRBool nsUnicodeRenderingToolkit :: UPlusFallbackGetWidth(
 	const PRUnichar *aCharPt, 
 	short& oWidth)
 {
-	  char buf[16];
+	  GrafPtr thePort;
+	  ::GetPort(&thePort);
+#if TARGET_CARBON
+   	short saveSize = GetPortTextSize(thePort);		
+#else
+  	short saveSize = thePort->txSize;
+#endif	  
+		char buf[16];
 	  PRUint32 len = PR_snprintf(buf, 16 , "<U+%04X>", *aCharPt);
+	  ::TextSize(UPLUS_FALLBACKSIZE);
 	  if(len != -1) 
 		  GetScriptTextWidth(buf, len, oWidth);
+	  ::TextSize(saveSize);
 	  return (-1 != len);
 }
 //------------------------------------------------------------------------
@@ -267,10 +342,19 @@ PRBool nsUnicodeRenderingToolkit :: UPlusFallbackDrawChar(
 	PRInt32 y, 
 	short& oWidth)
 {
-	  char buf[16];
+	  GrafPtr thePort;
+	  ::GetPort(&thePort);
+#if TARGET_CARBON
+   	short saveSize = GetPortTextSize(thePort);		
+#else
+  	short saveSize = thePort->txSize;
+#endif	  
+		char buf[16];
 	  PRUint32 len = PR_snprintf(buf, 16 , "<U+%04X>", *aCharPt);
+	  ::TextSize(UPLUS_FALLBACKSIZE);
 	  if(len != -1) 
 		  DrawScriptText(buf, len, x, y, oWidth);
+	  ::TextSize(saveSize);
 	  return (-1 != len);
 }
 
