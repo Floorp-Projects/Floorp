@@ -1999,34 +1999,34 @@ pk11_HashSign(PK11HashSignInfo *info,unsigned char *sig,unsigned int *sigLen,
 }
 
 static SECStatus
-nsc_DSA_Verify_Stub(void *ctx, CK_BYTE_PTR pSignature, CK_ULONG ulSignatureLen,
-			    CK_BYTE_PTR pData, CK_ULONG ulDataLen)
+nsc_DSA_Verify_Stub(void *ctx, void *pSignature, unsigned int ulSignatureLen,
+                               void *pData, unsigned int ulDataLen)
 {
     SECItem signature, digest;
     SECKEYLowPublicKey *key = (SECKEYLowPublicKey *)ctx;
 
-    signature.data = pSignature;
+    signature.data = (unsigned char *)pSignature;
     signature.len = ulSignatureLen;
-    digest.data = pData;
+    digest.data = (unsigned char *)pData;
     digest.len = ulDataLen;
     return DSA_VerifyDigest(&(key->u.dsa), &signature, &digest);
 }
 
 static SECStatus
-nsc_DSA_Sign_Stub(void *ctx, CK_BYTE_PTR pSignature,
-			    CK_ULONG_PTR ulSignatureLen, CK_ULONG maxulSignatureLen,
-			    CK_BYTE_PTR pData, CK_ULONG ulDataLen)
+nsc_DSA_Sign_Stub(void *ctx, void *pSignature,
+                  unsigned int *ulSignatureLen, unsigned int maxulSignatureLen,
+                  void *pData, unsigned int ulDataLen)
 {
     SECItem signature = { 0 }, digest;
     SECStatus rv;
     SECKEYLowPrivateKey *key = (SECKEYLowPrivateKey *)ctx;
 
     (void)SECITEM_AllocItem(NULL, &signature, maxulSignatureLen);
-    digest.data = pData;
+    digest.data = (unsigned char *)pData;
     digest.len = ulDataLen;
     rv = DSA_SignDigest(&(key->u.dsa), &signature, &digest);
     *ulSignatureLen = signature.len;
-    PORT_Memcpy(pSignature, signature.data, signature.len);
+    PORT_Memcpy((unsigned char *)pSignature, signature.data, signature.len);
     SECITEM_FreeItem(&signature, PR_FALSE);
     return rv;
 }
@@ -2480,8 +2480,8 @@ CK_RV NSC_VerifyInit(CK_SESSION_HANDLE hSession,
 			   CK_MECHANISM_PTR pMechanism,CK_OBJECT_HANDLE hKey) 
 {
     PK11Session *session;
-    PK11Object *key;
-    PK11SessionContext *context;
+    PK11Object *key = NULL;
+    PK11SessionContext *context = NULL;
     CK_KEY_TYPE key_type;
     CK_RV crv = CKR_OK;
     SECKEYLowPublicKey *pubKey;
