@@ -100,6 +100,9 @@ public:
    // @returns the result of calling SetComponentVisibility for each component.
   nsresult UpdateComponentVisibility(nsViewVisibility aScrollingViewVisibility);
 
+  nsresult NotifyScrollPositionWillChange(nscoord aX, nscoord aY);
+  nsresult NotifyScrollPositionDidChange(nscoord aX, nscoord aY);
+
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void);

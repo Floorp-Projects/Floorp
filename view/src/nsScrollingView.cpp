@@ -649,10 +649,13 @@ void nsScrollingView::HandleScrollEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags
   // Get the size of the clip view
   mClipView->GetDimensions(&clipSize.width, &clipSize.height);
 
+  nscoord offsetX = mOffsetX;
+  nscoord offsetY = mOffsetY;
+
   // Is it a vertical scroll event or a horizontal scroll event?
   if ((nsnull != mVScrollBarView) && (scview == mVScrollBarView))
   {
-    nscoord oldOffsetY = mOffsetY;
+    nscoord oldOffsetY = offsetY;
     nscoord newPos;
 
     // The new scrollbar position is in app units
@@ -665,23 +668,23 @@ void nsScrollingView::HandleScrollEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags
     // Snap the new scrollbar position to the nearest pixel. This ensures that
     // as we scroll the view a pixel at a time the scrollbar position
     // is at the same pixel as the top edge of the scrolled view
-    mOffsetY = NSIntPixelsToTwips(NSTwipsToIntPixels(newPos, t2p), p2t);
+    offsetY = NSIntPixelsToTwips(NSTwipsToIntPixels(newPos, t2p), p2t);
 
     // Compute the delta in device units. We need device units when scrolling
     // the window
-    dy = NSTwipsToIntPixels((oldOffsetY - mOffsetY), t2p);
+    dy = NSTwipsToIntPixels((oldOffsetY - offsetY), t2p);
     if (dy != 0)
     {
       // Update the scrollbar position passed in with the scrollbar event.
       // This value will be used to update the scrollbar thumb, and we want
       // to make sure the scrollbar thumb is in sync with the offset we came
       // up with here.
-      ((nsScrollbarEvent *)aEvent)->position = mOffsetY;
+      ((nsScrollbarEvent *)aEvent)->position = offsetY;
     }
   }
   else if ((nsnull != mHScrollBarView) && (scview == mHScrollBarView))
   {
-    nscoord oldOffsetX = mOffsetX;
+    nscoord oldOffsetX = offsetX;
     nscoord newPos;
 
     // The new scrollbar position is in app units
@@ -694,27 +697,34 @@ void nsScrollingView::HandleScrollEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags
     // Snap the new scrollbar position to the nearest pixel. This ensures that
     // as we scroll the view a pixel at a time the scrollbar position
     // is at the same pixel as the left edge of the scrolled view
-    mOffsetX = NSIntPixelsToTwips(NSTwipsToIntPixels(newPos, t2p), p2t);
+    offsetX = NSIntPixelsToTwips(NSTwipsToIntPixels(newPos, t2p), p2t);
 
     // Compute the delta in device units. We need device units when scrolling
     // the window
-    dx = NSTwipsToIntPixels((oldOffsetX - mOffsetX), t2p);
+    dx = NSTwipsToIntPixels((oldOffsetX - offsetX), t2p);
     if (dx != 0)
     {
       // Update the scrollbar position passed in with the scrollbar event.
       // This value will be used to update the scrollbar thumb, and we want
       // to make sure the scrollbar thumb is in sync with the offset we came
       // up with here.
-      ((nsScrollbarEvent *)aEvent)->position = mOffsetX;
+      ((nsScrollbarEvent *)aEvent)->position = offsetX;
     }
   }
+
+  NotifyScrollPositionWillChange(offsetX, offsetY);
+
+  mOffsetX = offsetX;
+  mOffsetY = offsetY;
 
   // Position the scrolled view
   nsIView *scrolledView;
   GetScrolledView(scrolledView);
   scrolledView->SetPosition(-mOffsetX, -mOffsetY);
-  
+
   Scroll(scrolledView, dx, dy, t2p, 0);
+
+  NotifyScrollPositionDidChange(offsetX, offsetY);
 }
 
 void nsScrollingView::Notify(nsITimer * aTimer)
@@ -1298,6 +1308,8 @@ NS_IMETHODIMP nsScrollingView::ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdate
 
 	GetScrolledView(scrolledView);
 
+  NotifyScrollPositionWillChange(aX, aY);
+
 	if (nsnull != scrolledView)
 	{
 		scrolledView->SetPosition(-aX, -aY);
@@ -1308,20 +1320,7 @@ NS_IMETHODIMP nsScrollingView::ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdate
 
 	Scroll(scrolledView, dx, dy, t2p, 0);
 
-	// notify the listeners.
-	if (nsnull != mListeners) {
-		PRUint32 listenerCount;
-		if (NS_SUCCEEDED(mListeners->Count(&listenerCount))) {
-			const nsIID& kScrollPositionListenerIID = NS_GET_IID(nsIScrollPositionListener);
-			nsIScrollPositionListener* listener;
-			for (PRUint32 i = 0; i < listenerCount; i++) {
-				if (NS_SUCCEEDED(mListeners->QueryElementAt(i, kScrollPositionListenerIID, (void**)&listener))) {
-					listener->ScrollPositionChanged(this, aX, aY);
-					NS_RELEASE(listener);
-				}
-			}
-		}
-	}
+  NotifyScrollPositionDidChange(aX, aY);
 
 	return NS_OK;
 }
@@ -1651,3 +1650,68 @@ void nsScrollingView::Scroll(nsIView *aScrolledView, PRInt32 aDx, PRInt32 aDy, f
     NS_IF_RELEASE(clipWidget);
   }
 }
+
+nsresult nsScrollingView::NotifyScrollPositionWillChange(nscoord aX, nscoord aY)
+{
+  nsresult result;
+
+  if (!mListeners)
+    return NS_OK;
+
+  PRUint32 listenerCount;
+
+  result = mListeners->Count(&listenerCount);
+
+  if (NS_FAILED(result) || listenerCount < 1)
+    return result;
+
+  const nsIID& kScrollPositionListenerIID = NS_GET_IID(nsIScrollPositionListener);
+  nsIScrollPositionListener* listener;
+
+  for (PRUint32 i = 0; i < listenerCount; i++) {
+    result = mListeners->QueryElementAt(i, kScrollPositionListenerIID, (void**)&listener);
+    if (NS_FAILED(result))
+      return result;
+
+    if (!listener)
+      return NS_ERROR_NULL_POINTER;
+
+    listener->ScrollPositionWillChange(this, aX, aY);
+    NS_RELEASE(listener);
+  }
+
+  return result;
+}
+
+nsresult nsScrollingView::NotifyScrollPositionDidChange(nscoord aX, nscoord aY)
+{
+  nsresult result;
+
+  if (!mListeners)
+    return NS_OK;
+
+  PRUint32 listenerCount;
+
+  result = mListeners->Count(&listenerCount);
+
+  if (NS_FAILED(result) || listenerCount < 1)
+    return result;
+
+  const nsIID& kScrollPositionListenerIID = NS_GET_IID(nsIScrollPositionListener);
+  nsIScrollPositionListener* listener;
+
+  for (PRUint32 i = 0; i < listenerCount; i++) {
+    result = mListeners->QueryElementAt(i, kScrollPositionListenerIID, (void**)&listener);
+    if (NS_FAILED(result))
+      return result;
+
+    if (!listener)
+      return NS_ERROR_NULL_POINTER;
+
+    listener->ScrollPositionDidChange(this, aX, aY);
+    NS_RELEASE(listener);
+  }
+
+  return result;
+}
+

@@ -25,6 +25,8 @@
 #include "nsView.h"
 #include "nsIScrollbar.h"
 #include "nsIClipView.h"
+#include "nsISupportsArray.h"
+#include "nsICompositeListener.h"
 #include "nsCOMPtr.h"
 
 static NS_DEFINE_IID(kBlenderCID, NS_BLENDER_CID);
@@ -109,6 +111,7 @@ nsViewManager :: nsViewManager()
   NS_INIT_REFCNT();
   mVMCount++;
   mUpdateBatchCnt = 0;
+  mCompositeListeners = nsnull;
 }
 
 nsViewManager :: ~nsViewManager()
@@ -194,6 +197,11 @@ nsViewManager :: ~nsViewManager()
   NS_IF_RELEASE(mOffScreenCX);
   NS_IF_RELEASE(mRedCX);
   NS_IF_RELEASE(mBlueCX);
+
+  if (nsnull != mCompositeListeners) {
+    mCompositeListeners->Clear();
+    NS_RELEASE(mCompositeListeners);
+  }
 }
 
 NS_IMPL_QUERY_INTERFACE(nsViewManager, knsViewManagerIID)
@@ -408,6 +416,20 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsI
   else
     localcx = aContext;
 
+  // notify the listeners.
+  if (nsnull != mCompositeListeners) {
+    PRUint32 listenerCount;
+    if (NS_SUCCEEDED(mCompositeListeners->Count(&listenerCount))) {
+      nsICompositeListener* listener;
+      for (PRUint32 i = 0; i < listenerCount; i++) {
+        if (NS_SUCCEEDED(mCompositeListeners->QueryElementAt(i, NS_GET_IID(nsICompositeListener), (void**)&listener))) {
+          listener->WillRefreshRegion(this, aView, aContext, region, aUpdateFlags);
+          NS_RELEASE(listener);
+        }
+      }
+    }
+  }
+
   if (aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER)
   {
     nsIWidget*  widget;
@@ -459,6 +481,20 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsI
   mLastRefresh = PR_IntervalNow();
 
   mPainting = PR_FALSE;
+
+  // notify the listeners.
+  if (nsnull != mCompositeListeners) {
+    PRUint32 listenerCount;
+    if (NS_SUCCEEDED(mCompositeListeners->Count(&listenerCount))) {
+      nsICompositeListener* listener;
+      for (PRUint32 i = 0; i < listenerCount; i++) {
+        if (NS_SUCCEEDED(mCompositeListeners->QueryElementAt(i, NS_GET_IID(nsICompositeListener), (void**)&listener))) {
+          listener->DidRefreshRegion(this, aView, aContext, region, aUpdateFlags);
+          NS_RELEASE(listener);
+        }
+      }
+    }
+  }
 }
 
 void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, const nsRect *rect, PRUint32 aUpdateFlags)
@@ -496,6 +532,20 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, con
   }
   else
     localcx = aContext;
+
+  // notify the listeners.
+  if (nsnull != mCompositeListeners) {
+    PRUint32 listenerCount;
+    if (NS_SUCCEEDED(mCompositeListeners->Count(&listenerCount))) {
+      nsICompositeListener* listener;
+      for (PRUint32 i = 0; i < listenerCount; i++) {
+        if (NS_SUCCEEDED(mCompositeListeners->QueryElementAt(i, NS_GET_IID(nsICompositeListener), (void**)&listener))) {
+          listener->WillRefreshRect(this, aView, aContext, rect, aUpdateFlags);
+          NS_RELEASE(listener);
+        }
+      }
+    }
+  }
 
   if (aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER)
   {
@@ -563,6 +613,20 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, con
   mLastRefresh = PR_IntervalNow();
 
   mPainting = PR_FALSE;
+
+  // notify the listeners.
+  if (nsnull != mCompositeListeners) {
+    PRUint32 listenerCount;
+    if (NS_SUCCEEDED(mCompositeListeners->Count(&listenerCount))) {
+      nsICompositeListener* listener;
+      for (PRUint32 i = 0; i < listenerCount; i++) {
+        if (NS_SUCCEEDED(mCompositeListeners->QueryElementAt(i, NS_GET_IID(nsICompositeListener), (void**)&listener))) {
+          listener->DidRefreshRect(this, aView, aContext, rect, aUpdateFlags);
+          NS_RELEASE(listener);
+        }
+      }
+    }
+  }
 }
 
 //states
@@ -1375,8 +1439,10 @@ NS_IMETHODIMP nsViewManager :: UpdateView(nsIView *aView, const nsRect &aRect, P
   NS_PRECONDITION(nsnull != aView, "null view");
   if (!mRefreshEnabled) {
     // accumulate this rectangle in the view's dirty region, so we can process it later.
-    AddRectToDirtyRegion(aView, aRect);
-    ++mUpdateCnt;
+    if (aRect.width != 0 && aRect.height != 0) {
+      AddRectToDirtyRegion(aView, aRect);
+      ++mUpdateCnt;
+    }
     return NS_OK;
   }
 
@@ -2464,6 +2530,24 @@ NS_IMETHODIMP nsViewManager :: Display(nsIView* aView)
   mPainting = PR_FALSE;
 
   return NS_OK;
+}
+
+NS_IMETHODIMP nsViewManager :: AddCompositeListener(nsICompositeListener* aListener)
+{
+	if (nsnull == mCompositeListeners) {
+		nsresult rv = NS_NewISupportsArray(&mCompositeListeners);
+		if (NS_FAILED(rv))
+			return rv;
+	}
+	return mCompositeListeners->AppendElement(aListener);
+}
+
+NS_IMETHODIMP nsViewManager :: RemoveCompositeListener(nsICompositeListener* aListener)
+{
+	if (nsnull != mCompositeListeners) {
+		return mCompositeListeners->RemoveElement(aListener);
+	}
+	return NS_ERROR_FAILURE;
 }
 
 PRBool nsViewManager :: CreateDisplayList(nsIView *aView, PRInt32 *aIndex,

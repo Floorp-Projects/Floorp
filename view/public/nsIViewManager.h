@@ -30,6 +30,7 @@ class nsIPresContext;
 class nsIView;
 class nsIScrollableView;
 class nsIWidget;
+class nsICompositeListener;
 struct nsRect;
 
 enum nsContentQuality {
@@ -412,6 +413,20 @@ public:
    * Display the specified view. Used when printing.
    */
   NS_IMETHOD Display(nsIView *aView) = 0;
+
+  /**
+   * Add a listener to the view manager's composite listener list.
+   * @param aListener - new listener
+   * @result error status
+   */
+  NS_IMETHOD AddCompositeListener(nsICompositeListener *aListener) = 0;
+
+  /**
+   * Remove a listener from the view manager's composite listener list.
+   * @param aListener - listener to remove
+   * @result error status
+   */
+  NS_IMETHOD RemoveCompositeListener(nsICompositeListener *aListener) = 0;
 };
 
 //when the refresh happens, should it be double buffered?

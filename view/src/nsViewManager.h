@@ -31,6 +31,8 @@
 #include "nsIRegion.h"
 #include "nsIBlender.h"
 
+class nsISupportsArray;
+
 class nsViewManager : public nsIViewManager
 {
 public:
@@ -122,6 +124,9 @@ public:
 
   NS_IMETHOD Display(nsIView *aView);
 
+  NS_IMETHOD AddCompositeListener(nsICompositeListener *aListener);
+  NS_IMETHOD RemoveCompositeListener(nsICompositeListener *aListener);
+
 protected:
   virtual ~nsViewManager();
 
@@ -195,6 +200,8 @@ private:
   nsIRenderingContext *mOffScreenCX;
   nsIRenderingContext *mRedCX;
   nsIRenderingContext *mBlueCX;
+
+  nsISupportsArray  *mCompositeListeners;
 
 public:
   //these are public so that our timer callback can poke them.

@@ -1283,6 +1283,21 @@ NS_IMETHODIMP nsScrollPortView::ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdat
 	float             t2p;
 	float             p2t;
  
+	// notify the listeners.
+	PRUint32 listenerCount;
+        const nsIID& kScrollPositionListenerIID = NS_GET_IID(nsIScrollPositionListener);
+	nsIScrollPositionListener* listener;
+	if (nsnull != mListeners) {
+		if (NS_SUCCEEDED(mListeners->Count(&listenerCount))) {
+			for (PRUint32 i = 0; i < listenerCount; i++) {
+				if (NS_SUCCEEDED(mListeners->QueryElementAt(i, kScrollPositionListenerIID, (void**)&listener))) {
+					listener->ScrollPositionWillChange(this, aX, aY);
+					NS_RELEASE(listener);
+				}
+			}
+		}
+	}
+
     mViewManager->GetDeviceContext(dev);
 	dev->GetAppUnitsToDevUnits(t2p); 
 	dev->GetDevUnitsToAppUnits(p2t);
@@ -1340,13 +1355,10 @@ NS_IMETHODIMP nsScrollPortView::ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdat
 
 	// notify the listeners.
 	if (nsnull != mListeners) {
-		PRUint32 listenerCount;
 		if (NS_SUCCEEDED(mListeners->Count(&listenerCount))) {
-			const nsIID& kScrollPositionListenerIID = NS_GET_IID(nsIScrollPositionListener);
-			nsIScrollPositionListener* listener;
 			for (PRUint32 i = 0; i < listenerCount; i++) {
 				if (NS_SUCCEEDED(mListeners->QueryElementAt(i, kScrollPositionListenerIID, (void**)&listener))) {
-					listener->ScrollPositionChanged(this, aX, aY);
+					listener->ScrollPositionDidChange(this, aX, aY);
 					NS_RELEASE(listener);
 				}
 			}
