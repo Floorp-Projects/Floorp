@@ -37,6 +37,7 @@ DOLIBALIASES
 :ns:js:macbuild:JavaScriptPPCDebug.mcp
 :ns:nav-java:stubs:macbuild:NavJavaStubs.mcp    "PPC Shared Library (Debug)"
 :ns:modules:rdf:macbuild:RDF.mcp                "PPC Shared Library +D -LDAP"
+:ns:modules:xml:macbuild:XML.mcp                "PPC Shared Library (Debug)"
 :ns:modules:libfont:macbuild:FontBroker.mcp     "PPC Library (Debug)"
 :ns:modules:schedulr:macbuild:Schedulr.mcp      "PPC Shared Library (Debug)"
 :ns:cmd:macfe:projects:client:Navigator.mcp     "Nav PPC App (Debug)"
