@@ -78,6 +78,7 @@ XPC_MSG_DEF(NS_ERROR_XPC_NOT_ENOUGH_CHARS_IN_STRING     , "JavaScript String doe
 XPC_MSG_DEF(NS_ERROR_XPC_SECURITY_MANAGER_VETO          , "Security Manager vetoed action")
 XPC_MSG_DEF(NS_ERROR_XPC_INTERFACE_NOT_SCRIPTABLE       , "Failed to build a wrapper because the interface that was not declared [scriptable]")
 XPC_MSG_DEF(NS_ERROR_XPC_INTERFACE_NOT_FROM_NSISUPPORTS , "Failed to build a wrapper because the interface does not inherit from nsISupports")
+XPC_MSG_DEF(NS_ERROR_XPC_CANT_GET_JSOBJECT_OF_DOM_OBJECT, "Can not get JavaScript object for DOM object")
 
 /* common global codes (from nsError.h) */
 

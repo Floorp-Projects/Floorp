@@ -196,6 +196,9 @@ interface nsIXPCTestArray : nsISupports {
                                      inout PRUint32 count, 
        [array, size_is(count), iid_is(uuid)] inout nsQIResult result);
 
+    void CallEchoMethodOnEachInArray2(inout PRUint32 count, 
+       [array, size_is(count)] inout nsIEcho result);
+
     void DoubleStringArray(inout PRUint32 count, 
                            [array, size_is(count)] inout string valueArray);
     void ReverseStringArray(in PRUint32 count, 

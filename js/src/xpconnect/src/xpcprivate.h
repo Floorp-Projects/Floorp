@@ -122,8 +122,8 @@ public:
 
     // non-interface implementation
 public:
+    // these all return an AddRef'd object (or nsnull on failure)
     static nsXPConnect* GetXPConnect();
-    static void ReleaseXPConnectSingleton();
     static nsIInterfaceInfoManager* GetInterfaceInfoManager(nsXPConnect* xpc = nsnull);
     static nsIJSContextStack* GetContextStack(nsXPConnect* xpc = nsnull);
     static XPCJSThrower* GetJSThrower(nsXPConnect* xpc = nsnull);
@@ -133,6 +133,8 @@ public:
     static JSBool IsISupportsDescendant(nsIInterfaceInfo* info);
     nsIXPCScriptable* GetArbitraryScriptable() {return mArbitraryScriptable;}
 
+    // called by module code on dll shutdown
+    static void ReleaseXPConnectSingleton();
     virtual ~nsXPConnect();
 
 protected:
@@ -155,7 +157,10 @@ private:
 
 /***************************************************************************/
 
-// no virtuals. no refcounting
+// In the current xpconnect systen there can only be one XPCJSRuntime.
+// AND thus, xpconnect can only be used on one JSRuntime within the process.
+
+// no virtuals. no refcounting.
 class XPCJSRuntime
 {
 public:
@@ -177,6 +182,9 @@ public:
     XPCContext* GetXPCContext(JSContext* cx);
     XPCContext* SyncXPCContextList(JSContext* cx = nsnull);
 
+
+    // Mapping of often used strings to jsid atoms that live 'forever'.
+    //
     // To add a new string: add to this list and to XPCJSRuntime::mStrings
     // at the top of xpcjsruntime.cpp
     enum {
@@ -228,6 +236,7 @@ private:
 
 /***************************************************************************/
 
+// internal 'dumb' class to let us quickly build CallContexts (see below)
 struct NativeCallContextData
 {
     // no ctor or dtor so we have random state at creation.
@@ -411,7 +420,7 @@ private:
 };
 
 /***************************************************************************/
-// This class is used to track whether xpconnect was entered from JavaScCript
+// This class is used to track whether xpconnect was entered from JavaScript
 // or native code. This information is used to determine whther or not to call
 // security hooks; i.e. the nsIXPCSecurityManager need not be called to protect
 // xpconnect activities initiated by native code. Instances of this class are

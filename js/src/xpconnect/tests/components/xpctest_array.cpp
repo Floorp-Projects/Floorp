@@ -195,6 +195,35 @@ xpcarraytest::CallEchoMethodOnEachInArray(nsIID * *uuid, PRUint32 *count, void *
     return NS_OK;
 }        
 
+/* void CallEchoMethodOnEachInArray2 (inout PRUint32 count, [array, size_is (count)] inout nsIEcho result); */
+NS_IMETHODIMP
+xpcarraytest::CallEchoMethodOnEachInArray2(PRUint32 *count, nsIEcho ***result)
+{
+    NS_ENSURE_ARG_POINTER(count);
+    NS_ENSURE_ARG_POINTER(result);
+
+    if(mReceiver)
+        return mReceiver->CallEchoMethodOnEachInArray2(count, result);
+
+    // call each and release
+    nsIEcho** ifaceArray =  *result;
+    for(PRUint32 i = 0; i < *count; i++)
+    {
+        ifaceArray[i]->SendOneString("print this from C++");
+        NS_RELEASE(ifaceArray[i]);
+    }
+
+    // cleanup
+    nsAllocator::Free(*result);
+
+    // setup return
+    *count = 0;
+    *result = nsnull;
+    return NS_OK;
+}        
+
+
+
 /* void DoubleStringArray (inout PRUint32 count, [array, size_is (count)] inout string valueArray); */
 NS_IMETHODIMP
 xpcarraytest::DoubleStringArray(PRUint32 *count, char ***valueArray)
