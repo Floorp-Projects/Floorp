@@ -355,7 +355,8 @@ public class Main {
             }
         }
         catch (EvaluatorException ee) {
-            // Already printed message, so just fall through.
+            // Already printed message.
+            global.exitCode = EXITCODE_RUNTIME_ERROR;
         }
         catch (JavaScriptException jse) {
 	    	// Need to propagate ThreadDeath exceptions.
