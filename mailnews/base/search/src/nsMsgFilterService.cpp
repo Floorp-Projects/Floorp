@@ -186,8 +186,8 @@ NS_IMETHODIMP	nsMsgFilterService::SaveFilterList(nsIMsgFilterList *filterList, n
       filterFile->GetLeafName(getter_Copies(finalLeafName));
       if (!finalLeafName.IsEmpty())
         parentDir->Rename(finalLeafName);
-      else // fall back to rules.dat
-        parentDir->Rename("rules.dat");
+      else // fall back to rules1.dat
+        parentDir->Rename("rules1.dat");
 
       tmpFiltersFile->Delete(PR_FALSE);
     }
