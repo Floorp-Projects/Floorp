@@ -38,17 +38,17 @@ public:
     NS_DECL_ISUPPORTS
 
     // This class implements the nsIAppShellComponent interface functions.
-    NS_DECL_IAPPSHELLCOMPONENT
+    NS_DECL_NSIAPPSHELLCOMPONENT
 
     // This class implements the nsIFindComponent interface functions.
-    NS_DECL_IFINDCOMPONENT
+    NS_DECL_NSIFINDCOMPONENT
 
     // "Context" for this implementation.
     class Context : public nsISearchContext
     {
     	public:
         NS_DECL_ISUPPORTS
-        NS_DECL_ISEARCHCONTEXT
+        NS_DECL_NSISEARCHCONTEXT
         
 										Context();
 				virtual 		~Context();

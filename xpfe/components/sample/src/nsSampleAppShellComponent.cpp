@@ -79,10 +79,10 @@ public:
     NS_DECL_ISUPPORTS
 
     // This class implements the nsIAppShellComponent interface functions.
-    NS_DECL_IAPPSHELLCOMPONENT
+    NS_DECL_NSIAPPSHELLCOMPONENT
 
     // This class implements the nsISampleAppShellComponent interface functions.
-    NS_DECL_ISAMPLEAPPSHELLCOMPONENT
+    NS_DECL_NSISAMPLEAPPSHELLCOMPONENT
 
 private:
     // Data members and implemention functions go here.

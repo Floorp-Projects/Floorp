@@ -141,12 +141,7 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIGlobalHistory
-  NS_IMETHOD AddPage(const char *aURL, const char *aReferrerURL, PRInt64 aDate);
-  NS_IMETHOD SetPageTitle(const char *aURL, const PRUnichar *aTitle);
-  NS_IMETHOD RemovePage(const char *aURL);
-  NS_IMETHOD GetLastVisitDate(const char *aURL, PRInt64 *_retval);
-  NS_IMETHOD GetURLCompletion(const char *aURL, char **_retval);
-  NS_IMETHOD GetLastPageVisted(char **_retval);
+  NS_DECL_NSIGLOBALHISTORY
 
   // nsIRDFDataSource
   NS_IMETHOD GetURI(char* *aURI);

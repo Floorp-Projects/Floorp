@@ -983,11 +983,10 @@ public:
 	// nsISupports
 	NS_DECL_ISUPPORTS
 
-	// nsIRDFDataSource
-	NS_IMETHOD AddBookmark(const char *aURI, const PRUnichar *aOptionalTitle);
-	NS_IMETHOD FindShortcut(const PRUnichar *aUserInput, char **aShortcutURL);
-	NS_IMETHOD UpdateBookmarkLastVisitedDate(const char *uri);
+	// nsIBookmarksService
+	NS_DECL_NSIBOOKMARKSSERVICE
 
+	// nsIRDFDataSource
 	NS_IMETHOD GetURI(char* *uri);
 
 	NS_IMETHOD GetSource(nsIRDFResource* property,

@@ -50,7 +50,7 @@ public:
 
     // Declare inherited interfaces.
     NS_DECL_ISUPPORTS
-    NS_DECL_ISTREAMTRANSFEROPERATION
+    NS_DECL_NSISTREAMTRANSFEROPERATION
 
 #ifdef NECKO
     // nsIProgressEventSink methods:

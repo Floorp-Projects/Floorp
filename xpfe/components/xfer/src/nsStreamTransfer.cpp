@@ -50,10 +50,10 @@ public:
     NS_DECL_ISUPPORTS
 
     // This class implements the nsIAppShellComponent interface functions.
-    NS_DECL_IAPPSHELLCOMPONENT
+    NS_DECL_NSIAPPSHELLCOMPONENT
 
     // This class implements the nsIStreamTransfer interface functions.
-    NS_DECL_ISTREAMTRANSFER
+    NS_DECL_NSISTREAMTRANSFER
 
 private:
     // Put up file picker dialog.

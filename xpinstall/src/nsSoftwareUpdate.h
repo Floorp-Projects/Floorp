@@ -37,7 +37,7 @@ class nsSoftwareUpdate: public nsIAppShellComponent,
         static nsIFileSpec* GetProgramDirectory() { return mProgramDir; }
 
         NS_DECL_ISUPPORTS
-        NS_DECL_IAPPSHELLCOMPONENT
+        NS_DECL_NSIAPPSHELLCOMPONENT
         
         NS_IMETHOD InstallJar( nsIFileSpec* localFile,
                                const PRUnichar* URL,
