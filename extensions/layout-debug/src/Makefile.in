@@ -34,24 +34,26 @@ MODULE_NAME	= nsLayoutDebugModule
 
 REQUIRES=	xpcom \
 		string \
-		windowwatcher\
-		docshell\
+		windowwatcher \
+		docshell \
 		string \
-		dom\
-		gfx\
-		content\
-		necko\
-		layout\
+		dom \
+		gfx \
+		content \
+		necko \
+		layout \
 		widget \
 		locale \
 		view \
 		pref \
 		imglib2 \
 		unicharutil \
+		appshell \
 		$(NULL)
 
 XPIDLSRCS	= \
 		nsILayoutRegressionTester.idl \
+		nsILayoutDebuggingTools.idl \
 		$(NULL)
 
 EXPORTS		= \
@@ -60,6 +62,8 @@ EXPORTS		= \
 
 CPPSRCS		= \
 		nsDebugFactory.cpp \
+		nsLayoutDebugCLH.cpp \
+		nsLayoutDebuggingTools.cpp \
 		nsRegressionTester.cpp \
 		$(NULL)
 

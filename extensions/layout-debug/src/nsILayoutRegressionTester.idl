@@ -46,15 +46,6 @@ interface nsILocalFile;
 [scriptable, uuid(1B4CD090-0531-11d6-A876-00105A183419)]
 interface nsILayoutRegressionTester : nsISupports
 {
-
-  /**
-   * Output the given string to a file, optionally truncating the file first.
-   * @param aFile               the file to output to
-   * @param aTruncateFile       whether to trunate the file first
-   * @param aOutputString       the string to write out
-   */
-  void outputTextToFile(in nsILocalFile aFile, in boolean aTruncateFile, in string aOutputString);
-
   /**
    * Dumps the content of a window
    * @param aWindowToDump       the window to dump (may be an iframe etc)
@@ -84,29 +75,5 @@ interface nsILayoutRegressionTester : nsISupports
   const short COMPARE_FLAGS_VERBOSE        = 0;
   const short COMPARE_FLAGS_BRIEF          = 1;
   long compareFrameModels(in nsILocalFile aBaseFile, in nsILocalFile aVerFile, in unsigned long aFlags);
-
-  /**
-   *  Methods to dump various types of data. In all casese, if aDestFile is nil,
-   *  data is written to stdout.
-   */
-  
-  void dumpContent(in nsIDOMWindow aWindow, in nsILocalFile aDestFile);
-  
-  void dumpFrames(in nsIDOMWindow aWindow, in nsILocalFile aDestFile);
-  void dumpViews(in nsIDOMWindow aWindow, in nsILocalFile aDestFile);
-  void dumpWebShells(in nsIDOMWindow aWindow, in nsILocalFile aDestFile);
-  void dumpStyleSheets(in nsIDOMWindow aWindow, in nsILocalFile aDestFile);
-  void dumpStyleContexts(in nsIDOMWindow aWindow, in nsILocalFile aDestFile);
-  void dumpReflowStats(in nsIDOMWindow aWindow, in nsILocalFile aDestFile);
-
-  /**
-   *  Turn reflow stats on or off for the given window. Requires that
-   *  you built with MOZ_REFLOW_PERF=1
-   */
-  void setShowReflowStats(in nsIDOMWindow aWindow, in boolean inShow);
-
-  attribute boolean   showFrameBorders;            // whether to show frame borders
-  attribute boolean   showEventTargetFrameBorder;  // whether to show event target frame borders
-  
 };
 

@@ -320,7 +320,7 @@ function ChooseOutputDirectory(inputElementID)
 
 function CompareFrameDumps(testFileBasename, baselineDir, baselineExt, verifyDir, verifyExt)
 {
-  var debugObject = Components.classes["@mozilla.org/layout_debug/regressiontester;1"].createInstance(nsILayoutRegressionTester);
+  var debugObject = Components.classes["@mozilla.org/layout-debug/regressiontester;1"].createInstance(nsILayoutRegressionTester);
   
   var baseFile = baselineDir.clone();
   baseFile.append(testFileBasename + baselineExt);
@@ -341,7 +341,7 @@ function CompareFrameDumps(testFileBasename, baselineDir, baselineExt, verifyDir
 
 function DumpFrames(testWindow, testFileName, outputDir, outputFileExtension)
 {
-  var debugObject = Components.classes["@mozilla.org/layout_debug/regressiontester;1"].createInstance(nsILayoutRegressionTester);
+  var debugObject = Components.classes["@mozilla.org/layout-debug/regressiontester;1"].createInstance(nsILayoutRegressionTester);
 
   var outputFile = outputDir.clone();
   outputFile.append(testFileName.replace(".html", outputFileExtension));

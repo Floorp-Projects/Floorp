@@ -45,23 +45,7 @@ public:
   virtual ~nsRegressionTester();
 
 protected:
-  
-  nsresult    EnsureLayoutDebugger();
-  nsresult    RefreshAllWindows();
-
   nsresult    GetDocShellFromWindow(nsIDOMWindow* inWindow, nsIDocShell** outShell);
-  nsresult    GetPresShellFromWindow(nsIDOMWindow* inWindow, nsIPresShell** outShell);
-
-  void        DumpAWebShell(nsIDocShellTreeItem* inShellItem, FILE* inDestFile, PRInt32 inIndent = 0);
-  void        DumpMultipleWebShells(nsIDOMWindow* inWindow, FILE* inDestFile);
-  void        DumpContentRecurse(nsIDocShell* inDocShell, FILE* inDestFile);
-  void        DumpFramesRecurse(nsIDocShell* aDocShell, FILE* inDestFile);
-  void        DumpViewsRecurse(nsIDocShell* aDocShell, FILE* inDestFile);
-  
-protected:
-
-  nsCOMPtr<nsILayoutDebugger> mLayoutDebugger;
-  
 };
 
 
