@@ -68,6 +68,34 @@ function FindIncomingServer(uri)
 	}
 }
 
+
+function getIdentityForSelectedServer()
+{
+    var folderTree = GetFolderTree();
+    var identity = null;
+    var selectedFolderList = folderTree.selectedItems;
+    if(selectedFolderList.length > 0) {
+
+        var selectedFolder = selectedFolderList[0]; 
+        var folderUri = selectedFolder.getAttribute('id');
+        // dump("selectedFolder uri = " + uri + "\n");
+        
+        // get the incoming server associated with this folder uri
+        var server = FindIncomingServer(folderUri);
+        // dump("server = " + server + "\n");
+        // get the identity associated with this server
+        var identities = accountManager.GetIdentitiesForServer(server);
+        // dump("identities = " + identities + "\n");
+        // just get the first one
+        if (identities.Count() > 0 ) {
+            identity = identities.GetElementAt(0).QueryInterface(Components.interfaces.nsIMsgIdentity);  
+        }
+    }
+
+    return identity;
+}
+
+
 function ComposeMessage(type, format) //type is a nsIMsgCompType and format is a nsIMsgCompFormat
 {
 		var msgComposeType = Components.interfaces.nsIMsgCompType;
@@ -102,23 +130,18 @@ function ComposeMessage(type, format) //type is a nsIMsgCompType and format is a
       					newsgroup = msgfolder.name; 
 				}
 			}
-			// dump("server = " + server + "\n");
-			// get the identity associated with this server
-			var identities = accountManager.GetIdentitiesForServer(server);
-			// dump("identities = " + identities + "\n");
-			// just get the first one
-			if (identities.Count() > 0 ) {
-				identity = identities.GetElementAt(0).QueryInterface(Components.interfaces.nsIMsgIdentity);  
-			}
 		}
+        
+        identity = getIdentityForSelectedServer();
+
 		// dump("identity = " + identity + "\n");
 	}
 	catch (ex) 
 	{
-		// dump("failed to get an identity to pre-select\n");
+        // dump("failed to get an identity to pre-select: " + ex + "\n");
 	}
 
-	dump("\nComposeMessage from XUL\n");
+	dump("\nComposeMessage from XUL: " + identity + "\n");
 	var uri = null;
 
 	if (! msgComposeService)

@@ -265,8 +265,12 @@ void nsMessenger::InitializeFolderRoot()
                     NS_MSGACCOUNTMANAGER_PROGID, &rv)
     if (NS_FAILED(rv)) return;
 
+    nsCOMPtr<nsIMsgAccount> account;
+    rv = accountManager->GetDefaultAccount(getter_AddRefs(account));
+    if (NS_FAILED(rv)) return;
+
     nsCOMPtr<nsIMsgIncomingServer> server;
-    rv = accountManager->GetCurrentServer(getter_AddRefs(server));
+    rv = account->GetIncomingServer(getter_AddRefs(server));
     if (NS_FAILED(rv)) return;
     
     nsCOMPtr<nsIFileSpec> folderRoot;
@@ -1073,7 +1077,7 @@ SendLaterListener::OnStopSending(nsresult aStatus, const PRUnichar *aMsg, PRUint
 }
 
 NS_IMETHODIMP
-nsMessenger::SendUnsentMessages()
+nsMessenger::SendUnsentMessages(nsIMsgIdentity *aIdentity)
 {
 	nsresult rv;
 	nsCOMPtr<nsIMsgSendLater> pMsgSendLater; 
@@ -1092,16 +1096,7 @@ nsMessenger::SendUnsentMessages()
     NS_ADDREF(sendLaterListener);
     pMsgSendLater->AddListener(sendLaterListener);
 
-    // temporary hack to get the current identity
-    NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
-                    NS_MSGACCOUNTMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIMsgIdentity> identity;
-    rv = accountManager->GetCurrentIdentity(getter_AddRefs(identity));
-    if (NS_FAILED(rv)) return rv;
-      
-    pMsgSendLater->SendUnsentMessages(identity, nsnull); 
+    pMsgSendLater->SendUnsentMessages(aIdentity, nsnull); 
     NS_RELEASE(sendLaterListener);
 	} 
 	return NS_OK;

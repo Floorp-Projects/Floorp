@@ -719,6 +719,7 @@ function MsgSaveAsFile()
   }
 }
 
+
 function MsgSaveAsTemplate() 
 {
   dump("\MsgSaveAsTemplate from XUL\n");
@@ -731,33 +732,15 @@ function MsgSaveAsTemplate()
       // dump (uri);
       if (uri)
       {
-		var folderTree = GetFolderTree();
-        var identity = null;
-		var selectedFolderList = folderTree.selectedItems;
-		if(selectedFolderList.length > 0)
-		{
-			var selectedFolder = selectedFolderList[0]; 
-			var folderUri = selectedFolder.getAttribute('id');
-			// dump("selectedFolder uri = " + uri + "\n");
-
-			// get the incoming server associated with this folder uri
-			var server = FindIncomingServer(folderUri);
-			// dump("server = " + server + "\n");
-			// get the identity associated with this server
-			var identities = accountManager.GetIdentitiesForServer(server);
-			// dump("identities = " + identities + "\n");
-			// just get the first one
-			if (identities.Count() > 0 ) {
-				identity = identities.GetElementAt(0).QueryInterface(Components.interfaces.nsIMsgIdentity);  
-			}
-		}
-        messenger.saveAs(uri, false, identity);
+          var identity = getIdentityForSelectedServer();
+          messenger.saveAs(uri, false, identity);
       }
   }
 }
 function MsgSendUnsentMsg() 
 {
-	messenger.SendUnsentMessages();
+    var identity = getIdentityForSelectedServer();
+	messenger.SendUnsentMessages(identity);
 }
 
 function MsgUpdateMsgCount() {}

@@ -589,7 +589,7 @@ NS_IMETHODIMP
 nsMsgAccountManager::SetDefaultAccount(nsIMsgAccount * aDefaultAccount)
 {
   // make sure it's in the account list
-  
+  NS_ENSURE_ARG_POINTER(aDefaultAccount);
   m_defaultAccount = dont_QueryInterface(aDefaultAccount);
   return NS_OK;
 }
@@ -1414,29 +1414,3 @@ nsMsgAccountManager::findServersForIdentity(nsISupports *element, void *aData)
   return PR_TRUE;
 }
 
-NS_IMETHODIMP
-nsMsgAccountManager::GetCurrentIdentity(nsIMsgIdentity** id)
-{
-  NS_ENSURE_ARG_POINTER(id);
-  nsCOMPtr<nsISupportsArray> identities;
-
-  nsresult rv = GetAllIdentities(getter_AddRefs(identities));
-  if (NS_FAILED(rv)) return rv;
-
-  return identities->QueryElementAt(0, NS_GET_IID(nsIMsgIdentity),
-                                    (void **)id);
-}
-
-NS_IMETHODIMP
-nsMsgAccountManager::GetCurrentServer(nsIMsgIncomingServer ** server)
-{
-  NS_ENSURE_ARG_POINTER(server);
-
-  nsCOMPtr<nsISupportsArray> servers;
-
-  nsresult rv = GetAllServers(getter_AddRefs(servers));
-  if (NS_FAILED(rv)) return rv;
-
-  return servers->QueryElementAt(0, NS_GET_IID(nsIMsgIncomingServer),
-                                    (void **)server);
-}
