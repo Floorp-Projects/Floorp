@@ -36,6 +36,7 @@ EXPORTS		= \
 		nsICSSLoaderObserver.h \
 		nsIComputedDOMStyle.h \
 		nsIMediaList.h \
+		nsStyleUtil.h \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -36,7 +36,6 @@ REQUIRES	= xpcom \
 		  locale \
 		  dom \
 		  webshell \
-		  pref \
 		  necko \
 		  htmlparser \
 		  unicharutil \
@@ -52,7 +51,6 @@ CPPSRCS		= \
 		nsHTMLValue.cpp \
 		nsImageMapUtils.cpp \
 		nsLayoutAtoms.cpp \
-		nsStyleUtil.cpp \
 		nsTextFragment.cpp \
 		nsXULAtoms.cpp \
 		nsXBLAtoms.cpp \
