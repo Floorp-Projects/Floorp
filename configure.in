@@ -1157,13 +1157,13 @@ AM_PATH_NSPR(4.0.0, [MOZ_NATIVE_NSPR=1], [MOZ_NATIVE_NSPR=])
 
 if test -z "$MOZ_NATIVE_NSPR"; then
     AC_MSG_WARN(nspr-config not found. building local copy of NSPR)
-    NSPR_CFLAGS='`$(DIST)/bin/nspr-config --prefix=$(DIST) --cflags`'
+    NSPR_CFLAGS='`$(DEPTH)/nsprpub/config/nspr-config --prefix=$(DIST) --cflags`'
     case "$target" in
     *-*-os2_vacpp)
         NSPR_LIBS='$(DIST)/lib/nspr'$NSPR_VERSION'.lib $(DIST)/lib/plc'$NSPR_VERSION'.lib $(DIST)/lib/plds'$NSPR_VERSION'.lib '$_PTHREAD_LDFLAGS''
         ;;
     *)
-        NSPR_LIBS='`$(DIST)/bin/nspr-config --prefix=$(DIST) --libs`'
+        NSPR_LIBS='`$(DEPTH)/nsprpub/config/nspr-config --prefix=$(DIST) --libs`'
         ;;
     esac
 fi
