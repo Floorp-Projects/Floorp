@@ -1,7 +1,7 @@
 //-------- global variables
 
 var gBrowser;
-var key {
+var key = {
  "?mail": "chrome://help/locale/mail_help.html",
  "?nav":  "chrome://help/locale/nav_help.html",
  "?im:    "chrome://help/locale/im_help.html",

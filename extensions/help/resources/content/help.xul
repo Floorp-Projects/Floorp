@@ -6,7 +6,7 @@
 
 <!DOCTYPE window SYSTEM "chrome://help/locale/help.dtd">
 
-<window id="ns_help"
+<window id="moz__help"
         windowtype="mozilla:help"
         xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -128,7 +128,7 @@
       </box>
 
       <splitter id="helpsidebar-splitter"
-                collapse="before"
+v                collapse="before"
                 persist="state hidden"
                 autostretch="never"
                 orient="vertical"

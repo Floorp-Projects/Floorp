@@ -6,7 +6,7 @@
 
 <!ENTITY backBtn.tooltip    "Back" >
 <!ENTITY fwdBtn.tooltip     "Forward" >
-<!ENTITY homeBtn.tooltio    "Home" >
+<!ENTITY homeBtn.tooltip    "Home" >
 
 <!ENTITY t1.label       "What part of Netscape" >
 <!ENTITY t2.label       "do you need help with?" >
