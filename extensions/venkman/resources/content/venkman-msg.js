@@ -95,6 +95,7 @@ const MSG_TYPE_CLASS      = getMsg("msg.type.class");
 const MSG_TYPE_LINE       = getMsg("msg.type.line");
 const MSG_TYPE_PROPERTIES = getMsg("msg.type.properties");
 
+const MSG_TYPE_BOOLEAN    = getMsg("msg.type.boolean");
 const MSG_TYPE_DOUBLE     = getMsg("msg.type.double");
 const MSG_TYPE_FUNCTION   = getMsg("msg.type.function");
 const MSG_TYPE_INT        = getMsg("msg.type.int");
@@ -120,6 +121,9 @@ const MSG_HELLO2          = getMsg("msg.hello.2");
 
 const MSG_TIP_HELP        = getMsg("msg.tip.help");
 
+const CMD_BREAK           = getMsg("cmd.break");
+const CMD_BREAK_PARAMS    = getMsg("cmd.break.params");
+const CMD_BREAK_HELP      = getMsg("cmd.break.help");
 const CMD_CMDS            = getMsg("cmd.commands");
 const CMD_CMDS_PARAMS     = getMsg("cmd.commands.params");
 const CMD_CMDS_HELP       = getMsg("cmd.commands.help");
@@ -147,6 +151,9 @@ const CMD_PROPSD_HELP     = getMsg("cmd.propsd.help");
 const CMD_SCOPE           = getMsg("cmd.scope");
 const CMD_SCOPE_PARAMS    = getMsg("cmd.scope.params");
 const CMD_SCOPE_HELP      = getMsg("cmd.scope.help");
+const CMD_STEP            = getMsg("cmd.step");
+const CMD_STEP_PARAMS     = getMsg("cmd.step.params");
+const CMD_STEP_HELP       = getMsg("cmd.step.help");
 const CMD_WHERE           = getMsg("cmd.where");
 const CMD_WHERE_PARAMS    = getMsg("cmd.where.params");
 const CMD_WHERE_HELP      = getMsg("cmd.where.help");
@@ -158,6 +165,8 @@ const CMD_QUIT_HELP       = getMsg("cmd.quit.help");
 const MSN_ERR_NO_COMMAND     = "msg.err.nocommand";
 const MSN_ERR_NOTIMPLEMENTED = "msg.err.notimplemented";
 const MSN_ERR_AMBIGCOMMAND   = "msg.err.ambigcommand";
+const MSN_ERR_BP_NOSCRIPT    = "msg.err.bp.noscript";
+const MSN_ERR_BP_NOLINE      = "msg.err.bp.noline";
 const MSN_ERR_REQUIRED_PARAM = "err.required.param"; /* also used as exception */
 const MSN_ERR_INVALID_PARAM  = "err.invalid.param";  /* also used as exception */
 
@@ -167,6 +176,7 @@ const MSN_CMDMATCH           = "msg.commandmatch";
 const MSN_CMDMATCH_ALL       = "msg.commandmatch.all";
 const MSN_PROPS_HEADER       = "msg.props.header";
 const MSN_PROPSD_HEADER      = "msg.propsd.header";
+const MSN_BP_CREATED         = "msg.bp.created";
 
 const MSN_CONT             = "msg.cont";
 const MSN_EVAL_ERROR       = "msg.eval.error";
