@@ -2,8 +2,6 @@
 ; Base Thunderbird Package File for Win32
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-thunderbird/.autoreg
-
 [langenus]
 thunderbird\chrome\en-US-mail.jar
 thunderbird\chrome\en-win.jar

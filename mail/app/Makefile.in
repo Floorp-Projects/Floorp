@@ -197,9 +197,6 @@ install::
 	$(SYSINSTALL) $(IFLAGS1) $(ICON_FILES) $(DESTDIR)$(mozappdir)/icons
 endif
 
-libs::
-	touch $(DIST)/bin/.autoreg
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),photon)
 LIBS += -lphexlib
 endif
