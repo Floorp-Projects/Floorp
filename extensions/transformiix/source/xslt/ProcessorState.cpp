@@ -154,7 +154,7 @@ void ProcessorState::addAttributeSet(Element* aAttributeSet,
             PRInt32 nsID = node->getNamespaceID();
             if (nsID != kNameSpaceID_XSLT)
                 continue;
-            txAtom* nodeName;
+            nsIAtom* nodeName;
             if (!node->getLocalName(&nodeName) || !nodeName)
                 continue;
             if (nodeName == txXSLTAtoms::attribute)
@@ -969,7 +969,7 @@ txDecimalFormat* ProcessorState::getDecimalFormat(const txExpandedName& aName)
  * @return the ExprResult which has been bound to the variable with the given
  * name
 **/
-nsresult ProcessorState::getVariable(PRInt32 aNamespace, txAtom* aLName,
+nsresult ProcessorState::getVariable(PRInt32 aNamespace, nsIAtom* aLName,
                                      ExprResult*& aResult)
 {
     nsresult rv;
@@ -1102,7 +1102,7 @@ void ProcessorState::receiveError(const nsAString& errorMessage, nsresult aRes)
 **/
 #define CHECK_FN(_name) aName == txXSLTAtoms::_name
 
-nsresult ProcessorState::resolveFunctionCall(txAtom* aName, PRInt32 aID,
+nsresult ProcessorState::resolveFunctionCall(nsIAtom* aName, PRInt32 aID,
                                              Element* aElem,
                                              FunctionCall*& aFunction)
 {
@@ -1195,7 +1195,7 @@ ProcessorState::ImportFrame::~ImportFrame()
  * txIParseContext used by ProcessorState internally
  */
 
-nsresult txPSParseContext::resolveNamespacePrefix(txAtom* aPrefix,
+nsresult txPSParseContext::resolveNamespacePrefix(nsIAtom* aPrefix,
                                                   PRInt32& aID)
 {
 #ifdef DEBUG
@@ -1210,7 +1210,7 @@ nsresult txPSParseContext::resolveNamespacePrefix(txAtom* aPrefix,
     return (aID != kNameSpaceID_Unknown) ? NS_OK : NS_ERROR_FAILURE;
 }
 
-nsresult txPSParseContext::resolveFunctionCall(txAtom* aName, PRInt32 aID,
+nsresult txPSParseContext::resolveFunctionCall(nsIAtom* aName, PRInt32 aID,
                                                FunctionCall*& aFunction)
 {
     return mPS->resolveFunctionCall(aName, aID, mStyle, aFunction);

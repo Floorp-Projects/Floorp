@@ -62,8 +62,6 @@
 
 #include "nsIAtom.h"
 
-typedef nsIAtom txAtom;
-
 #define TX_GET_ATOM(str) \
     NS_NewAtom(str)
 

@@ -326,7 +326,7 @@ Expr* ExprParser::createFilterExpr(ExprLexer& lexer, txIParseContext* aContext)
             break;
         case Token::VAR_REFERENCE :
             {
-                txAtom *prefix, *lName;
+                nsIAtom *prefix, *lName;
                 PRInt32 nspace;
                 nsresult rv = resolveQName(tok->value, prefix, aContext,
                                            lName, nspace);
@@ -490,7 +490,7 @@ Expr* ExprParser::createFunctionCall(ExprLexer& lexer,
         fnCall = new NumberFunctionCall(NumberFunctionCall::FLOOR);
     }
     else {
-        txAtom *prefix, *lName;
+        nsIAtom *prefix, *lName;
         PRInt32 namespaceID;
         rv = resolveQName(tok->value, prefix, aContext, lName, namespaceID);
         if (NS_FAILED(rv)) {
@@ -640,7 +640,7 @@ LocationStep* ExprParser::createLocationStep(ExprLexer& lexer,
             case Token::CNAME :
                 {
                     // resolve QName
-                    txAtom *prefix, *lName;
+                    nsIAtom *prefix, *lName;
                     PRInt32 nspace;
                     nsresult rv = resolveQName(tok->value, prefix, aContext,
                                                lName, nspace);
@@ -1013,8 +1013,8 @@ short ExprParser::precedenceLevel(short tokenType) {
 }
 
 nsresult ExprParser::resolveQName(const nsAString& aQName,
-                                  txAtom*& aPrefix, txIParseContext* aContext,
-                                  txAtom*& aLocalName, PRInt32& aNamespace)
+                                  nsIAtom*& aPrefix, txIParseContext* aContext,
+                                  nsIAtom*& aLocalName, PRInt32& aNamespace)
 {
     aNamespace = kNameSpaceID_None;
     PRInt32 idx = aQName.FindChar(':');

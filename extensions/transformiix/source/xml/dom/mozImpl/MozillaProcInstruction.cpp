@@ -58,7 +58,7 @@ ProcessingInstruction::~ProcessingInstruction()
  *
  * @return the node's localname atom
  */
-MBool ProcessingInstruction::getLocalName(txAtom** aLocalName)
+MBool ProcessingInstruction::getLocalName(nsIAtom** aLocalName)
 {
     if (!aLocalName) {
         return MB_FALSE;

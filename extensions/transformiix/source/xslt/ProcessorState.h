@@ -350,7 +350,7 @@ public:
      * Returns a FunctionCall which has the given name.
      * @return the FunctionCall for the function with the given name.
      */
-    nsresult resolveFunctionCall(txAtom* aName, PRInt32 aID,
+    nsresult resolveFunctionCall(nsIAtom* aName, PRInt32 aID,
                                  Element* aElem, FunctionCall*& aFunction);
 
 #ifdef TX_EXE
@@ -482,7 +482,7 @@ private:
  */
 class txNameTestItem {
 public:
-    txNameTestItem(txAtom* aPrefix, txAtom* aLocalName, PRInt32 aNSID,
+    txNameTestItem(nsIAtom* aPrefix, nsIAtom* aLocalName, PRInt32 aNSID,
                    MBool stripSpace)
         : mNameTest(aPrefix, aLocalName, aNSID, Node::ELEMENT_NODE),
           mStrips(stripSpace)
@@ -522,8 +522,8 @@ public:
     {
     }
 
-    nsresult resolveNamespacePrefix(txAtom* aPrefix, PRInt32& aID);
-    nsresult resolveFunctionCall(txAtom* aName, PRInt32 aID,
+    nsresult resolveNamespacePrefix(nsIAtom* aPrefix, PRInt32& aID);
+    nsresult resolveFunctionCall(nsIAtom* aName, PRInt32 aID,
                                  FunctionCall*& aFunction);
     void receiveError(const nsAString& aMsg, nsresult aRes);
 

@@ -125,7 +125,7 @@ public:
 private:
     struct MapItem {
         PRInt32 mNamespaceID;
-        txAtom* mLocalName;
+        nsIAtom* mLocalName;
         TxObject* mValue;
     };
     

@@ -187,9 +187,9 @@ public:
     virtual nsresult getBaseURI(nsAString& aURI);
 
     // txXPathNode functions
-    virtual MBool getLocalName(txAtom** aLocalName);
+    virtual MBool getLocalName(nsIAtom** aLocalName);
     virtual PRInt32 getNamespaceID();
-    virtual PRInt32 lookupNamespaceID(txAtom* aPrefix);
+    virtual PRInt32 lookupNamespaceID(nsIAtom* aPrefix);
     virtual Node* getXPathParent();
     virtual PRInt32 compareDocumentPosition(Node* aOther);
 
@@ -292,9 +292,9 @@ public:
                         const nsAString& aValue);
 
     // txXPathNode functions
-    MBool getLocalName(txAtom** aLocalName);
-    MBool getAttr(txAtom* aLocalName, PRInt32 aNSID, nsAString& aValue);
-    MBool hasAttr(txAtom* aLocalName, PRInt32 aNSID);
+    MBool getLocalName(nsIAtom** aLocalName);
+    MBool getAttr(nsIAtom* aLocalName, PRInt32 aNSID, nsAString& aValue);
+    MBool hasAttr(nsIAtom* aLocalName, PRInt32 aNSID);
 };
 
 class txAttributeNodeKey
@@ -343,7 +343,7 @@ public:
     ~Attr();
 
     // txXPathNode functions override
-    MBool getLocalName(txAtom** aLocalName);
+    MBool getLocalName(nsIAtom** aLocalName);
     Node* getXPathParent();
 
     txAttributeNodeKey* GetKey() {
@@ -362,7 +362,7 @@ public:
     ~ProcessingInstruction();
 
     // txXPathNode functions
-    MBool getLocalName(txAtom** aLocalName);
+    MBool getLocalName(nsIAtom** aLocalName);
 };
 
 #endif

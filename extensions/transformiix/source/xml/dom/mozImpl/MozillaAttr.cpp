@@ -88,7 +88,7 @@ Node* Attr::getXPathParent()
  *
  * @return the node's localname atom
  */
-MBool Attr::getLocalName(txAtom** aLocalName)
+MBool Attr::getLocalName(nsIAtom** aLocalName)
 {
     if (!aLocalName) {
         return MB_FALSE;

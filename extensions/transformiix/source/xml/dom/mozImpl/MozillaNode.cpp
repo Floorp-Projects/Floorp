@@ -254,7 +254,7 @@ nsresult Node::getNamespaceURI(nsAString& aNSURI)
  *
  * @return the node's localname atom
  */
-MBool Node::getLocalName(txAtom** aLocalName)
+MBool Node::getLocalName(nsIAtom** aLocalName)
 {
     if (!aLocalName)
         return MB_FALSE;
@@ -290,7 +290,7 @@ Node* Node::getXPathParent()
  * @param prefix atom for prefix to look up
  * @return namespace ID for prefix
  */
-PRInt32 Node::lookupNamespaceID(txAtom* aPrefix)
+PRInt32 Node::lookupNamespaceID(nsIAtom* aPrefix)
 {
     NSI_FROM_TX(Node);
     nsresult rv;

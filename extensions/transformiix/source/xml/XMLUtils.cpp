@@ -210,7 +210,7 @@ MBool XMLUtils::getXMLSpacePreserve(Node* aNode)
         if (parent->getNodeType() == Node::ELEMENT_NODE) {
             Element* elem = (Element*)parent;
             if (elem->getAttr(txXMLAtoms::space, kNameSpaceID_XML, value)) {
-                txAtom* val = TX_GET_ATOM(value);
+                nsIAtom* val = TX_GET_ATOM(value);
                 if (val == txXMLAtoms::preserve) {
                     TX_IF_RELEASE_ATOM(val);
                     return MB_TRUE;

@@ -55,7 +55,7 @@ PRUint32 txNodeSetContext::position()
     return mPosition;
 }
 
-nsresult txNodeSetContext::getVariable(PRInt32 aNamespace, txAtom* aLName,
+nsresult txNodeSetContext::getVariable(PRInt32 aNamespace, nsIAtom* aLName,
                                        ExprResult*& aResult)
 {
     NS_ASSERTION(mInner, "mInner is null!!!");

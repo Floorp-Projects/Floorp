@@ -333,7 +333,7 @@ txXSLTProcessor::processAction(Node* aAction,
     }
 
     Expr* expr = 0;
-    txAtom* localName;
+    nsIAtom* localName;
     aAction->getLocalName(&localName);
     // xsl:apply-imports
     if (localName == txXSLTAtoms::applyImports) {
@@ -389,7 +389,7 @@ txXSLTProcessor::processAction(Node* aAction,
             while (child) {
                 if (child->getNodeType() == Node::ELEMENT_NODE &&
                     child->getNamespaceID() == kNameSpaceID_XSLT) {
-                    txAtom* childLocalName;
+                    nsIAtom* childLocalName;
                     child->getLocalName(&childLocalName);
                     if (childLocalName == txXSLTAtoms::sort) {
                         sorter.addSortElement((Element*)child);
@@ -461,7 +461,7 @@ txXSLTProcessor::processAction(Node* aAction,
             return;
         }
 
-        txAtom* nameAtom = TX_GET_ATOM(name);
+        nsIAtom* nameAtom = TX_GET_ATOM(name);
         if (nameAtom == txXMLAtoms::xmlns) {
             TX_RELEASE_ATOM(nameAtom);
             aPs->receiveError(NS_LITERAL_STRING("error processing xsl:attribute, name is xmlns."), NS_ERROR_FAILURE);
@@ -546,7 +546,7 @@ txXSLTProcessor::processAction(Node* aAction,
             }
 
             Element* xslTemplate = (Element*)condition;
-            txAtom* conditionLocalName;
+            nsIAtom* conditionLocalName;
             condition->getLocalName(&conditionLocalName);
             if (conditionLocalName == txXSLTAtoms::when) {
                 expr = aPs->getExpr(xslTemplate,
@@ -696,7 +696,7 @@ txXSLTProcessor::processAction(Node* aAction,
             while (child) {
                 unsigned short nodeType = child->getNodeType();
                 if (nodeType == Node::ELEMENT_NODE) {
-                    txAtom* childLocalName;
+                    nsIAtom* childLocalName;
                     child->getLocalName(&childLocalName);
                     if (child->getNamespaceID() != kNameSpaceID_XSLT ||
                         childLocalName != txXSLTAtoms::sort) {
@@ -1125,7 +1125,7 @@ txXSLTProcessor::processParameters(Element* aAction,
     while (tmpNode) {
         if (tmpNode->getNodeType() == Node::ELEMENT_NODE &&
             tmpNode->getNamespaceID() == kNameSpaceID_XSLT) {
-            txAtom* localName;
+            nsIAtom* localName;
             tmpNode->getLocalName(&localName);
             if (localName != txXSLTAtoms::withParam) {
                 TX_IF_RELEASE_ATOM(localName);
@@ -1189,7 +1189,7 @@ txXSLTProcessor::processStylesheet(Document* aStylesheet,
 
     Element* elem = aStylesheet->getDocumentElement();
 
-    txAtom* localName;
+    nsIAtom* localName;
     PRInt32 namespaceID = elem->getNamespaceID();
     elem->getLocalName(&localName);
 
@@ -1228,7 +1228,7 @@ txXSLTProcessor::processTemplate(Node* aTemplate,
     while (tmpNode) {
         int nodeType = tmpNode->getNodeType();
         if (nodeType == Node::ELEMENT_NODE) {
-            txAtom* localName;
+            nsIAtom* localName;
             tmpNode->getLocalName(&localName);
             if (tmpNode->getNamespaceID() != kNameSpaceID_XSLT ||
                 localName != txXSLTAtoms::param) {
@@ -1319,7 +1319,7 @@ txXSLTProcessor::processTopLevel(Element* aStylesheet,
     Node* node = aStylesheet->getFirstChild();
     while (node && !importsDone) {
         if (node->getNodeType() == Node::ELEMENT_NODE) {
-            txAtom* localName;
+            nsIAtom* localName;
             node->getLocalName(&localName);
             if (node->getNamespaceID() == kNameSpaceID_XSLT &&
                 localName == txXSLTAtoms::import) {
@@ -1365,7 +1365,7 @@ txXSLTProcessor::processTopLevel(Element* aStylesheet,
             continue;
         }
 
-        txAtom* localName;
+        nsIAtom* localName;
         node->getLocalName(&localName);
         Element* element = (Element*)node;
         // xsl:attribute-set
