@@ -21,7 +21,7 @@
 #include "nslayout.h"
 #include "nsISupports.h"
 #include "nsCoord.h"
-#include "nsIDomSelection.h"
+#include "nsIDOMSelection.h"
 
 class nsIContent;
 class nsIDocument;
