@@ -31,6 +31,7 @@
 #include "prefapi.h"
 #include "prmem.h"
 #include "nsScriptSecurityManager.h"
+#include "nsIStringBundle.h"
 
 #include "nsIFileSpec.h"  // this should be removed eventually
 #include "prefapi_private_data.h"
@@ -48,6 +49,7 @@ struct PrefCallbackData {
 
 
 static NS_DEFINE_CID(kSecurityManagerCID, NS_SCRIPTSECURITYMANAGER_CID);
+static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 // Prototypes
 extern "C" PrefResult pref_UnlockPref(const char *key);
@@ -293,16 +295,37 @@ NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID &
   }
 
   if (aType.Equals(NS_GET_IID(nsIPrefLocalizedString))) {
+    PRBool  bNeedDefault;
     nsCOMPtr<nsIPrefLocalizedString> theString(do_CreateInstance(NS_PREFLOCALIZEDSTRING_CONTRACTID, &rv));
 
-    if (NS_SUCCEEDED(rv)) {
-      rv = theString->SetData(NS_ConvertASCIItoUCS2(utf8String).get());
-      if (NS_SUCCEEDED(rv)) {
-        nsIPrefLocalizedString *temp = theString;
-
-        NS_ADDREF(temp);
-        *_retval = (void *)temp;
+    if (mIsDefault) {
+      bNeedDefault = PR_TRUE;
+    } else {
+      // if there is no user (or locked) value
+      if (!PREF_HasUserPref(pref) && !PREF_PrefIsLocked(pref)) {
+        bNeedDefault = PR_TRUE;
       }
+    }
+
+    // if we need to fetch the default value, do that instead, otherwise use the
+    // value we pulled in at the top of this function
+    if (bNeedDefault) {
+      nsXPIDLString utf16String;
+      rv = GetDefaultFromPropertiesFile(pref, getter_Copies(utf16String));
+      if (NS_SUCCEEDED(rv)) {
+        rv = theString->SetData(utf16String.get());
+      }
+    } else {
+      if (NS_SUCCEEDED(rv)) {
+        rv = theString->SetData(NS_ConvertASCIItoUCS2(utf8String).get());
+      }
+    }
+
+    if (NS_SUCCEEDED(rv)) {
+      nsIPrefLocalizedString *temp = theString;
+
+      NS_ADDREF(temp);
+      *_retval = (void *)temp;
     }
     return rv;
   }
@@ -584,6 +607,35 @@ static int PR_CALLBACK NotifyObserver(const char *newpref, void *data)
     return 0;
 }
 
+
+nsresult nsPrefBranch::GetDefaultFromPropertiesFile(const char *aPrefName, PRUnichar **return_buf)
+{
+  nsresult rv;
+
+  // the default value contains a URL to a .properties file
+    
+  nsXPIDLCString propertyFileURL;
+  rv = _convertRes(PREF_CopyCharPref(aPrefName, getter_Copies(propertyFileURL), PR_TRUE));
+  if (NS_FAILED(rv))
+    return rv;
+    
+  nsCOMPtr<nsIStringBundleService> bundleService =
+      do_GetService(kStringBundleServiceCID, &rv);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIStringBundle> bundle;
+  rv = bundleService->CreateBundle(propertyFileURL, nsnull,
+                                   getter_AddRefs(bundle));
+  if (NS_FAILED(rv))
+    return rv;
+
+  // string names are in unicdoe
+  nsAutoString stringId;
+  stringId.AssignWithConversion(aPrefName);
+
+  return bundle->GetStringFromName(stringId.GetUnicode(), return_buf);
+}
 
 const char *nsPrefBranch::getPrefName(const char *aPrefName)
 {
