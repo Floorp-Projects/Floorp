@@ -327,19 +327,21 @@ NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsOutputStream *stream, nsIMsgDBHdr *msgHd
 NS_IMETHODIMP nsMsgFilter::MatchHdr(nsIMsgDBHdr	*msgHdr, nsIMsgFolder *folder, nsIMsgDatabase *db, 
 									const char *headers, PRUint32 headersSize, PRBool *pResult)
 {
-
-	nsMsgSearchScopeTerm* scope = new nsMsgSearchScopeTerm(nsnull, nsMsgSearchScope::MailFolder, folder);
-    nsCOMPtr<nsIMsgSearchScopeTerm> scopeInterface = scope;
+    // use offlineMail because
+    nsMsgSearchScopeTerm* scope = new nsMsgSearchScopeTerm(nsnull, nsMsgSearchScope::offlineMail, folder);
+    if (!scope) return NS_ERROR_OUT_OF_MEMORY;
 
     nsXPIDLString folderCharset;
     folder->GetCharset(getter_Copies(folderCharset));
-	return nsMsgSearchOfflineMail::MatchTermsForFilter(msgHdr, m_termList,
+    nsresult rv = nsMsgSearchOfflineMail::MatchTermsForFilter(msgHdr, m_termList,
                                                            NS_ConvertUCS2toUTF8(folderCharset).get(),
                                                            scope,
                                                            db, 
                                                            headers,
                                                            headersSize,
 														   pResult);
+	delete scope;
+	return rv;
 }
 
 void

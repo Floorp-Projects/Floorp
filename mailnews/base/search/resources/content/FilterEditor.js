@@ -33,7 +33,7 @@ var gActionValueDeck;
 var gActionPriority;
 var gFilterBundle;
 
-var nsIMsgSearchValidityManager = Components.interfaces.nsIMsgSearchValidityManager;
+var nsMsgSearchScope = Components.interfaces.nsMsgSearchScope;
 
 var nsMsgFilterAction = Components.interfaces.nsMsgFilterAction;
 
@@ -119,14 +119,16 @@ function isDuplicateFilterNameExists()
 
 function getScopeFromFilterList(filterList)
 {
-    if (!filterList) return false;
-    var type = filterList.folder.server.type;
-    if (type == "nntp") return nsIMsgSearchValidityManager.news;
-    if (type == "pop3") return nsIMsgSearchValidityManager.offlineMail;
-    return nsIMsgSearchValidityManager.onlineMailFilter;
+    if (!filterList) {
+      dump("yikes, null filterList\n");
+      return nsMsgSearchScope.offlineMail;
 }
 
-function getScope(filter) {
+    return filterList.folder.server.filterScope;
+}
+
+function getScope(filter) 
+{
     return getScopeFromFilterList(filter.filterList);
 }
 

@@ -1287,33 +1287,6 @@ nsMsgSearchScopeTerm::GetSearchSession(nsIMsgSearchSession** aResult)
     return NS_OK;
 }
 
-PRBool nsMsgSearchScopeTerm::IsOfflineNews()
-{
-	switch (m_attribute)
-	{
-	case nsMsgSearchScope::Newsgroup:
-	case nsMsgSearchScope::AllSearchableGroups:
-		if (nsMsgSearchAdapter::SearchIsOffline() || !m_searchServer)
-			return PR_TRUE;
-		else
-			return PR_FALSE;
-	case nsMsgSearchScope::OfflineNewsgroup:
-		return PR_TRUE;
-	default:
-		return PR_FALSE;
-	}
-}
-
-PRBool nsMsgSearchScopeTerm::IsOfflineMail ()
-{
-  // Find out whether "this" mail folder is online or offline
-  NS_ASSERTION(m_folder, "scope doesn't have folder");
-  nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(m_folder);
-  if (imapFolder && !nsMsgSearchAdapter::SearchIsOffline() && m_searchServer)    // make sure we are not in offline IMAP (mscott)
-    return PR_FALSE;
-  return PR_TRUE;  // if POP or IMAP in offline mode
-}
-
 nsresult nsMsgSearchScopeTerm::GetMailPath(nsIFileSpec **aFileSpec)
 {
 	return (m_folder) ? m_folder->GetPath(aFileSpec) : NS_ERROR_NULL_POINTER;
@@ -1332,35 +1305,36 @@ nsresult nsMsgSearchScopeTerm::InitializeAdapter (nsISupportsArray *termList)
   
   nsresult err = NS_OK;
   
-  // mscott: i have added m_searchServer into this switch to take into account the user's preference
-  // for searching locally or on the server...
   switch (m_attribute)
   {
-    case nsMsgSearchScope::MailFolder:    
-      // since we don't support offline, we're either doing an online imap search
-      // or an offline mail search.
-      if (!IsOfflineMail())   // Online IMAP && searching the server?
+    case nsMsgSearchScope::onlineMail:    
         m_adapter = new nsMsgSearchOnlineMail (this, termList);
-      else
+      break;
+    case nsMsgSearchScope::offlineMail:
         m_adapter = new nsMsgSearchOfflineMail (this, termList);
       break;
-    case nsMsgSearchScope::Newsgroup:
+    case nsMsgSearchScope::newsEx:
 #ifdef DOING_EXNEWSSEARCH
         if (m_folder->KnowsSearchNntpExtension())
           m_adapter = new nsMsgSearchNewsEx (this, termList);
         else
+          m_adapter = new nsMsgSearchNews(this, termList);
 #endif
+      NS_ASSERTION(PR_FALSE, "not supporting newsEx yet");
+      break;
+    case nsMsgSearchScope::news:
           m_adapter = new nsMsgSearchNews (this, termList);
         break;
+    case nsMsgSearchScope::allSearchableGroups:
 #ifdef DOING_EXNEWSSEARCH
-    case nsMsgSearchScope::AllSearchableGroups:
       m_adapter = new msMsgSearchNewsEx (this, termList);
-      break;
 #endif
-    case nsMsgSearchScope::LdapDirectory:
+      NS_ASSERTION(PR_FALSE, "not supporting allSearchableGroups yet");
+      break;
+    case nsMsgSearchScope::LDAP:
       NS_ASSERTION(PR_FALSE, "not supporting LDAP yet");
       break;
-    case nsMsgSearchScope::OfflineNewsgroup:
+    case nsMsgSearchScope::localNews:
       m_adapter = new nsMsgSearchOfflineNews (this, termList);
       break;
     default:

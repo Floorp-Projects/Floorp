@@ -43,8 +43,6 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMSGSEARCHSCOPETERM
     
-  PRBool IsOfflineNews();
-  PRBool IsOfflineMail ();
   nsresult TimeSlice (PRBool *aDone);
   
   nsresult InitializeAdapter (nsISupportsArray *termList);

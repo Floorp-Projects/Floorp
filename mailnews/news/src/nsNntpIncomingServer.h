@@ -83,6 +83,9 @@ public:
     NS_IMETHOD GetDefaultCopiesAndFoldersPrefsToServer(PRBool *aCopiesAndFoldersOnServer);
     NS_IMETHOD GetCanCreateFoldersOnServer(PRBool *aCanCreateFoldersOnServer);
     NS_IMETHOD GetCanFileMessagesOnServer(PRBool *aCanFileMessagesOnServer);
+    NS_IMETHOD GetFilterScope(nsMsgSearchScopeValue *filterScope);
+    NS_IMETHOD GetSearchScope(nsMsgSearchScopeValue *searchScope);
+
     nsresult AppendIfSearchMatch(const char *newsgroupName);
 
 protected:

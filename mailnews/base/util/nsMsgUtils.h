@@ -62,5 +62,7 @@ NS_MSG_BASE nsresult NS_MsgEscapeEncodeURLPath(const PRUnichar *str, char **resu
 
 NS_MSG_BASE nsresult NS_MsgDecodeUnescapeURLPath(const char *path, PRUnichar **result);
 
+NS_MSG_BASE PRBool WeAreOffline();
+
 #endif
 

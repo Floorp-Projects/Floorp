@@ -69,6 +69,8 @@ public:
         NS_IMETHOD GetSupportsDiskSpace(PRBool *aSupportsDiskSpace);
     NS_IMETHOD GetCanCreateFoldersOnServer(PRBool *aCanCreateFoldersOnServer);
     NS_IMETHOD GetCanFileMessagesOnServer(PRBool *aCanFileMessagesOnServer);
+    NS_IMETHOD GetFilterScope(nsMsgSearchScopeValue *filterScope);
+    NS_IMETHOD GetSearchScope(nsMsgSearchScopeValue *searchScope);
 protected:
 	nsresult GetFolder(const char* name, nsIMsgFolder** pFolder);
     nsresult ResetFoldersToUnverified(nsIFolder *parentFolder);

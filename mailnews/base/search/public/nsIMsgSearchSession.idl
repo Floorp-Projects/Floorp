@@ -68,7 +68,7 @@ interface nsIMsgSearchSession :  nsISupports {
     void getNthSearchScope(in long which,out nsMsgSearchScopeValue scopeId, out nsIMsgFolder folder);
 
 	/* add a scope (e.g. a mail folder) to the search */
-    void addScopeTerm(in nsMsgSearchScopeValue attrib,
+    void addScopeTerm(in nsMsgSearchScopeValue scope,
                       in nsIMsgFolder folder);
 
     void clearScopes();

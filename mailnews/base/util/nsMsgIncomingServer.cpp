@@ -1337,6 +1337,24 @@ nsMsgIncomingServer::GeneratePrettyNameForMigration(PRUnichar **aPrettyName)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+nsMsgIncomingServer::GetFilterScope(nsMsgSearchScopeValue *filterScope)
+{
+   NS_ENSURE_ARG_POINTER(filterScope);
+
+   *filterScope = nsMsgSearchScope::offlineMail;
+   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgIncomingServer::GetSearchScope(nsMsgSearchScopeValue *searchScope)
+{
+   NS_ENSURE_ARG_POINTER(searchScope);
+
+   *searchScope = nsMsgSearchScope::offlineMail;
+   return NS_OK;
+}
+
 // use the convenience macros to implement the accessors
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, Username, "userName");
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, PrefPassword, "password");

@@ -35,10 +35,6 @@
 #include "nsImapCore.h"
 #include "nsMsgUtils.h"
 #include "nsIImapFlagAndUidState.h"
-#include "nsIIOService.h"
-#include "nsNetCID.h"
-
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 nsresult
 nsImapURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
@@ -394,18 +390,5 @@ void AllocateImapUidString(PRUint32 *msgUids, PRUint32 msgCount, nsCString &retu
 //      sprintf(currentidString, "%ld,", msgUids[keyIndex]);
     }
   }
-}
-
-PRBool WeAreOffline()
-{
-	nsresult rv = NS_OK;
-  PRBool offline = PR_FALSE;
-
-  NS_WITH_SERVICE(nsIIOService, netService, kIOServiceCID, &rv);
-  if (NS_SUCCEEDED(rv) && netService)
-  {
-    netService->GetOffline(&offline);
-  }
-  return offline;
 }
 

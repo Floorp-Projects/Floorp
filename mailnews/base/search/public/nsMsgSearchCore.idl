@@ -31,15 +31,17 @@ interface nsIMsgHeaderParser;
 interface nsIMsgDatabase;
 interface nsIMsgDBHdr;
 
-typedef long nsMsgSearchScopeValue;
-
 [scriptable, uuid(5fe70a74-304e-11d3-9be1-00a0c900d445)]
+
 interface nsMsgSearchScope {
-    const long MailFolder = 0;
-    const long Newsgroup = 1;
-    const long LdapDirectory = 2;
-    const long OfflineNewsgroup = 3;
-    const long AllSearchableGroups = 4;
+    const nsMsgSearchScopeValue offlineMail = 0;
+    const nsMsgSearchScopeValue onlineMail = 1;
+    const nsMsgSearchScopeValue onlineMailFilter = 2;
+    const nsMsgSearchScopeValue localNews = 3;
+    const nsMsgSearchScopeValue news = 4;
+    const nsMsgSearchScopeValue newsEx = 5;
+    const nsMsgSearchScopeValue LDAP = 6;
+    const nsMsgSearchScopeValue allSearchableGroups = 7;
 };
 
 typedef long nsMsgSearchAttribValue;

@@ -1861,3 +1861,27 @@ nsNntpIncomingServer::GetCanFileMessagesOnServer(PRBool *aCanFileMessagesOnServe
     *aCanFileMessagesOnServer = PR_FALSE;
     return NS_OK;
 }
+
+NS_IMETHODIMP
+nsNntpIncomingServer::GetFilterScope(nsMsgSearchScopeValue *filterScope)
+{
+   NS_ENSURE_ARG_POINTER(filterScope);
+
+   *filterScope = nsMsgSearchScope::news;
+   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::GetSearchScope(nsMsgSearchScopeValue *searchScope)
+{
+   NS_ENSURE_ARG_POINTER(searchScope);
+
+   if (WeAreOffline()) {
+     *searchScope = nsMsgSearchScope::localNews;
+   }
+   else {
+     *searchScope = nsMsgSearchScope::news;
+   }
+   return NS_OK;
+}
+

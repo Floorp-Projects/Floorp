@@ -209,7 +209,7 @@ nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aDisplayCon
   // articles by doing GROUP and then ARTICLE <n>.
   //
   // using news://host/message-id has an extra benefit.
-  // we'll use that to look up in the cahce, so if 
+  // we'll use that to look up in the cache, so if 
   // you are reading a message that you've already read, you
   // (from a cross post) it would be in your cache.
   // 

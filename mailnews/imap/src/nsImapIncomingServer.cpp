@@ -72,6 +72,8 @@
 #include "nsIMsgProtocolInfo.h"
 
 #include "nsITimer.h"
+#include "nsMsgUtils.h"
+
 static NS_DEFINE_CID(kCImapHostSessionList, NS_IIMAPHOSTSESSIONLIST_CID);
 static NS_DEFINE_CID(kImapProtocolCID, NS_IMAPPROTOCOL_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -3249,6 +3251,29 @@ NS_IMETHODIMP
 nsImapIncomingServer::GetSupportsSubscribeSearch(PRBool *retVal)
 {
    *retVal = PR_FALSE;
+   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImapIncomingServer::GetFilterScope(nsMsgSearchScopeValue *filterScope)
+{
+   NS_ENSURE_ARG_POINTER(filterScope);
+
+   *filterScope = nsMsgSearchScope::onlineMailFilter;
+   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImapIncomingServer::GetSearchScope(nsMsgSearchScopeValue *searchScope)
+{
+   NS_ENSURE_ARG_POINTER(searchScope);
+   
+   if (WeAreOffline()) {
+     *searchScope = nsMsgSearchScope::offlineMail;
+   }
+   else {
+     *searchScope = nsMsgSearchScope::onlineMail;
+   }
    return NS_OK;
 }
 

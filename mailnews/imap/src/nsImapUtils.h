@@ -49,6 +49,4 @@ nsCreateImapBaseMessageURI(const char *baseURI, char **baseMessageURI);
 
 void AllocateImapUidString(PRUint32 *msgUids, PRUint32 msgCount, nsCString &returnString);
 
-PRBool WeAreOffline();
-
 #endif //NS_IMAPUTILS_H

@@ -23,6 +23,7 @@
 typedef unsigned long nsMsgKey;
 typedef unsigned long nsMsgViewIndex;
 
+typedef long nsMsgSearchScopeValue;
 
 typedef long nsMsgPriorityValue;
 

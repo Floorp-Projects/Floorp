@@ -79,7 +79,6 @@ public:
   static PRUnichar *EscapeImapSearchProtocol(const PRUnichar *imapCommand);
   static PRUnichar *EscapeQuoteImapSearchProtocol(const PRUnichar *imapCommand);
   static char *UnEscapeSearchUrl (const char *commandSpecificData);
-  static PRBool SearchIsOffline();
 	// This stuff lives in the base class because the IMAP search syntax 
 	// is used by the Dredd SEARCH command as well as IMAP itself
 	static const char *m_kImapBefore;

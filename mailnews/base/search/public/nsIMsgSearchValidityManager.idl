@@ -28,15 +28,5 @@ typedef long nsMsgSearchValidityScope;
 
 [scriptable, uuid(98651499-6820-42e4-a2d7-e75277e01f7d)]
 interface nsIMsgSearchValidityManager : nsISupports {
-
-    // eventually it would be nice to use atoms or something
-    const long onlineMail = 0;
-    const long onlineMailFilter = 1;
-    const long offlineMail = 2;
-    const long localNews = 3;
-    const long news = 4;
-    const long newsEx = 5;
-
     nsIMsgSearchValidityTable getTable(in nsMsgSearchValidityScope scope);
-    
 };

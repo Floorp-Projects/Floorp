@@ -30,6 +30,7 @@
 #include "nsMsgNewsCID.h"
 #include "nsIMsgSearchSession.h"
 #include "nsIMsgSearchTerm.h"
+#include "nsIMsgSearchValidityManager.h"
 #include "nsRDFCID.h"
 #include "nsIMsgAccountManager.h"
 #include "nsMsgFolderFlags.h"
@@ -490,7 +491,7 @@ nsresult DownloadMatchingNewsArticlesToNewsDB::RunSearch(nsIMsgFolder *folder, n
   NS_ENSURE_ARG(folder);
 
   searchSession->RegisterListener(this);
-  rv = searchSession->AddScopeTerm(nsMsgSearchScope::OfflineNewsgroup, folder);
+  rv = searchSession->AddScopeTerm(nsMsgSearchScope::localNews, folder);
 	return searchSession->Search(m_window);
 }
 

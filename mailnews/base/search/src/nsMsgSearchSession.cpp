@@ -167,12 +167,12 @@ nsMsgSearchSession::GetNthSearchScope(PRInt32 which,
   return NS_OK;
 }
 
-/* void AddScopeTerm (in nsMsgSearchScope attrib, in nsIMsgFolder folder); */
+/* void AddScopeTerm (in nsMsgSearchScopeValue scope, in nsIMsgFolder folder); */
 NS_IMETHODIMP
-nsMsgSearchSession::AddScopeTerm(nsMsgSearchScopeValue attrib,
+nsMsgSearchSession::AddScopeTerm(nsMsgSearchScopeValue scope,
                                  nsIMsgFolder *folder)
 {
-  if (attrib != nsMsgSearchScope::AllSearchableGroups)
+  if (scope != nsMsgSearchScope::allSearchableGroups)
 	{
 		NS_ASSERTION(folder, "need folder if not searching all groups");
 		if (!folder)
@@ -181,84 +181,12 @@ nsMsgSearchSession::AddScopeTerm(nsMsgSearchScopeValue attrib,
 
 	nsresult err = NS_OK;
 
-  if (attrib == nsMsgSearchScope::MailFolder)
-	{
-#if 0
-		// It's legal to have a folderInfo which is only a directory, but has no
-		// mail folder or summary file. However, such a folderInfo isn't a legal 
-		// scopeTerm, so turn it away here
-		if (mailFolder && !XP_Stat(mailFolder->GetPathname(), &fileStat, xpMailFolder) && S_ISDIR(fileStat.st_mode))
-			err = SearchError_InvalidFolder;
-
-		// IMAP folders can have a \NOSELECT flag which means that they can't
-		// ever be opened. Since we have to SELECT a folder in order to search
-		// it, we'll just omit this folder from the list of search scopes
-		MSG_IMAPFolderInfoMail *imapFolder = folder->GetIMAPFolderInfoMail();
-		if (imapFolder && !imapFolder->GetCanIOpenThisFolder())
-			return NS_OK;
-#endif
-	}
-
-  if ((attrib == nsMsgSearchScope::Newsgroup ||
-       attrib == nsMsgSearchScope::OfflineNewsgroup) /* && folder->IsNews() */)
-	{
-#if 0
-		// Even unsubscribed newsgroups have a folderInfo, so filter them
-		// out here, adding only the newsgroups we are subscribed to
-		if (!newsFolder->IsSubscribed())
-			return NS_OK;
-
-#endif
-		// It would be nice if the FEs did this, but I guess no one knows
-		// that offline news searching is supposed to work
-    if (nsMsgSearchAdapter::SearchIsOffline())
-      attrib = nsMsgSearchScope::OfflineNewsgroup;
-  }
-
-  if (attrib == nsMsgSearchScope::AllSearchableGroups)
-	{
-#if 0
-		// Try to be flexible about what we get here. It could be a news group,
-		// news host, or NULL, which uses the default host.
-		if (folder == nsnull)
-		{
-			// I dunno how much of this can be NULL, so I'm not assuming anything
-			MSG_NewsHost *host = NULL;
-			msg_HostTable *table = m_pane->GetMaster()->GetHostTable();
-			if (table)
-			{
-				host = table->GetDefaultHost(FALSE /*###tw*/);
-				if (host)
-					folder = host->GetHostInfo();
-			}
-		}
-		else
-		{
-			switch (folder->GetType())
-			{
-			case FOLDER_CONTAINERONLY:
-				break; // this is what we want -- nothing to do 
-			case FOLDER_NEWSGROUP:
-			case FOLDER_CATEGORYCONTAINER:
-				{
-					MSG_NewsHost *host = ((MSG_FolderInfoNews*) folder)->GetHost();
-					folder = host->GetHostInfo();
-				}
-		    default:
-			  break;
-			}
-		}
-#endif
-	}
-
-	if (NS_SUCCEEDED(err))
-	{
-		nsMsgSearchScopeTerm *pScope = new nsMsgSearchScopeTerm (this, attrib, folder);
-		if (pScope)
-			m_scopeList.AppendElement (pScope);
+	nsMsgSearchScopeTerm *pScopeTerm = new nsMsgSearchScopeTerm(this, scope, folder);
+	if (pScopeTerm)
+		m_scopeList.AppendElement(pScopeTerm);
 		else
 			err = NS_ERROR_OUT_OF_MEMORY;
-	}
+	
 
 	return err;
 }
@@ -483,9 +411,9 @@ nsresult nsMsgSearchSession::BeginSearching()
   if (m_window)
     m_window->SetStopped(PR_FALSE);
   nsMsgSearchScopeTerm *scope = m_scopeList.ElementAt(0);
-  if (scope->m_attribute == nsMsgSearchScope::Newsgroup /* && !scope->m_folder->KnowsSearchNntpExtension() */ && scope->m_searchServer)
+  if (scope->m_attribute == nsMsgSearchScope::news /* && !scope->m_folder->KnowsSearchNntpExtension() */ && scope->m_searchServer)
     err = BuildUrlQueue ();
-  else if (scope->m_attribute == nsMsgSearchScope::MailFolder && !scope->IsOfflineMail())
+  else if (scope->m_attribute == nsMsgSearchScope::onlineMail)
     err = BuildUrlQueue ();
   else
     err = SearchWOUrls();

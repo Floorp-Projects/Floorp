@@ -381,11 +381,10 @@ function AddSubFolders(folder) {
   }
 }
 
-function GetScopeForFolder(folder) {
-    if (folder.server.type == "nntp")
-        return nsMsgSearchScope.Newsgroup;
-    else
-        return nsMsgSearchScope.MailFolder;
+
+function GetScopeForFolder(folder) 
+{
+  return folder.server.searchScope;
 }
 
 var nsMsgViewSortType = Components.interfaces.nsMsgViewSortType;

@@ -979,17 +979,6 @@ nsMsgSearchValidityManager::~nsMsgSearchValidityManager ()
 
 NS_IMPL_ISUPPORTS1(nsMsgSearchValidityManager, nsIMsgSearchValidityManager)
 
-PRBool nsMsgSearchAdapter::SearchIsOffline()
-{
-  PRBool offline = PR_FALSE;
-  nsresult rv;
-  nsCOMPtr <nsIIOService> ioService = do_GetService(kIOServiceCID, &rv);
-  if (NS_SUCCEEDED(rv) && ioService)
-    ioService->GetOffline(&offline);
-  return offline;
-}
-
-
 //-----------------------------------------------------------------------------
 // Bottleneck accesses to the objects so we can allocate and initialize them
 // lazily. This way, there's no heap overhead for the validity tables until the
@@ -1003,61 +992,42 @@ nsresult nsMsgSearchValidityManager::GetTable (int whichTable, nsIMsgSearchValid
 	nsresult err = NS_OK;
     *ppOutTable = nsnull;
 
-	// hack alert...currently FEs are setting scope to News even if it should be set to OfflineNewsgroups...
-	// i'm fixing this by checking if we are in offline mode...
-    if (whichTable == news || whichTable == newsEx || whichTable == onlineMail)
-    {
-      nsresult rv;
-      nsCOMPtr <nsIIOService> ioService = do_GetService(kIOServiceCID, &rv);
-      if (NS_SUCCEEDED(rv) && ioService)
-      {
-        PRBool offline;
-        ioService->GetOffline(&offline);
-        if (offline)
-        {
-          if (whichTable == news || whichTable == newsEx)
-            whichTable = localNews;
-          else
-            whichTable = offlineMail;
-        }
-      }
-    }
 	switch (whichTable)
 	{
-	case offlineMail:
+	case nsMsgSearchScope::offlineMail:
 		if (!m_offlineMailTable)
 			err = InitOfflineMailTable ();
 		*ppOutTable = m_offlineMailTable;
 		break;
-	case onlineMail:
+	case nsMsgSearchScope::onlineMail:
 		if (!m_onlineMailTable)
 			err = InitOnlineMailTable ();
 		*ppOutTable = m_onlineMailTable;
 		break;
-	case onlineMailFilter:
+	case nsMsgSearchScope::onlineMailFilter:
 		if (!m_onlineMailFilterTable)
 			err = InitOnlineMailFilterTable ();
 		*ppOutTable = m_onlineMailFilterTable;
 		break;
-	case news:
+	case nsMsgSearchScope::news:
 		if (!m_newsTable)
 			err = InitNewsTable ();
 		*ppOutTable = m_newsTable;
 		break;
-	case localNews:
+	case nsMsgSearchScope::localNews:
 		if (!m_localNewsTable)
 			err = InitLocalNewsTable();
 		*ppOutTable = m_localNewsTable;
 		break;
 #ifdef DOING_EXNEWSSEARCH
-	case newsEx:
+	case nsMsgSearchScope::newsEx:
 		if (!m_newsExTable)
 			err = InitNewsExTable ();
 		*ppOutTable = m_newsExTable;
 		break;
 #endif
 #ifdef DOING_LDAP
-	case Ldap:
+	case nsMsgSearchScope::LDAP:
 		if (!m_ldapTable)
 			err = InitLdapTable ();
 		*ppOutTable = m_ldapTable;

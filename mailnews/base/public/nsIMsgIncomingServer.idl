@@ -22,6 +22,7 @@
 
 #include "nsISupports.idl"
 #include "nsIFileSpec.idl"
+#include "MailNewsTypes2.idl"
 
 interface nsIFolder;
 interface nsIMsgFolderCache;
@@ -260,6 +261,12 @@ interface nsIMsgIncomingServer : nsISupports {
 
   /* can this server allows message filing ? */
   attribute boolean canFileMessagesOnServer;
+
+  /* used for setting up the filter UI */
+  readonly attribute nsMsgSearchScopeValue filterScope;
+
+  /* used for setting up the search UI */
+  readonly attribute nsMsgSearchScopeValue searchScope;
 };
 
 %{C++

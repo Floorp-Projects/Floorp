@@ -36,6 +36,8 @@
 #include "nsMsgBaseCID.h"
 #include "nsMsgImapCID.h"
 #include "nsMsgI18N.h"
+#include "nsNetCID.h"
+#include "nsIIOService.h"
 
 static NS_DEFINE_CID(kImapUrlCID, NS_IMAPURL_CID);
 static NS_DEFINE_CID(kCMailboxUrl, NS_MAILBOXURL_CID);
@@ -469,4 +471,16 @@ nsresult NS_MsgDecodeUnescapeURLPath(const char *path, PRUnichar **result)
   *result = resultStr.ToNewUnicode();
   if (!*result) return NS_ERROR_OUT_OF_MEMORY;
   return NS_OK;
+}
+
+PRBool WeAreOffline()
+{
+  nsresult rv = NS_OK;
+  PRBool offline = PR_FALSE;
+
+  nsCOMPtr <nsIIOService> ioService = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv) && ioService)
+    ioService->GetOffline(&offline);
+
+  return offline;
 }
