@@ -129,6 +129,9 @@ inline bool isForwardingPointer(void* ptr)
 
 void* Collector::copy(void* object, Collector::size_type size)
 {
+    if (object == NULL)
+        return NULL;
+        
     // forwarding pointer?
     ObjectHeader* oldHeader = ((ObjectHeader*)object) - 1;
     if (isForwardingPointer(oldHeader->mForwardingPointer))
