@@ -60,9 +60,9 @@ function test()
                        "not be visible in the function scope (e ='" +
                        e + "'.)");
 
-    if (x != "foo")
+    if (x != 1)
         reportFailure ("Data modified in 'catchguard expression' should " +
-                       "not be visible in the function scope (x = '" +
+                       "be visible in the function scope (x = '" +
                        x + "'.)");
 
     exitFunc ("test");
