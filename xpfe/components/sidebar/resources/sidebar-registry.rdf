@@ -1,0 +1,28 @@
+<?xml version="1.0"?> 
+
+<!DOCTYPE RDF SYSTEM "chrome://sidebar/locale/sidebar-registry-rdf.dtd" >
+<RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:NC="http://home.netscape.com/NC-rdf#">
+
+  <RDF:Seq about="NC:SidebarRoot">
+    <RDF:li>
+       <RDF:Description ID="&sidebar.headlines.label;">
+         <NC:title>&sidebar.headlines.label;</NC:title>
+         <NC:content>http://my.netscape.com/topstories_subchannel.tmpl</NC:content>
+         <NC:customize>resource:/res/samples/related-panel-cust.xul</NC:customize>
+       </RDF:Description>
+    </RDF:li>
+    <RDF:li>
+       <RDF:Description ID="&sidebar.news.label;">
+         <NC:title>&sidebar.news.label;</NC:title>
+         <NC:content>http://my.netscape.com/localnews_content.tmpl</NC:content>
+       </RDF:Description>
+    </RDF:li>
+    <RDF:li>
+       <RDF:Description ID="&sidebar.weather.label;">
+         <NC:title>&sidebar.weather.label;</NC:title>
+         <NC:content>http://my.netscape.com/weather_content.tmpl</NC:content>
+       </RDF:Description>
+    </RDF:li>
+  </RDF:Seq>
+</RDF:RDF>

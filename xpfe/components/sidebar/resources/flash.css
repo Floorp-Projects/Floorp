@@ -1,0 +1,21 @@
+/* -*- Mode: C; c-basic-offset: 2 -*-
+
+   Style rules specific to the Flash Panel. These are kludged right now.
+
+ */
+
+window { 
+  background-color: white;
+}
+
+treeitem[type="http://www.mozilla.org/RDF#TinderboxFlash"] > treerow > treecell > titledbutton {
+  list-style-image: url("chrome://sidebar/skin/flames.gif");
+}
+
+treeitem[type="http://home.netscape.com/NC-rdf#MsgNewMessages"] > treerow > treecell > titledbutton {
+  list-style-image: url("chrome://messenger/skin/folderHasMail.gif");
+}
+
+treeitem[type="http://www.mozilla.org/rdf#XPInstallNotification"] > treerow > treecell > titledbutton {
+  list-style-image: url("resource:/res/rdf/document.gif");
+}

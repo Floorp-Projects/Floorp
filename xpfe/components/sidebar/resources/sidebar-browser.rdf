@@ -1,0 +1,36 @@
+<?xml version="1.0"?> 
+
+<!DOCTYPE RDF SYSTEM "chrome://sidebar/locale/sidebar-browser-rdf.dtd" >
+<RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:NC="http://home.netscape.com/NC-rdf#">
+
+  <RDF:Seq about="NC:BrowserSidebarRoot">
+    <RDF:li>
+       <RDF:Description ID="whats-related">
+         <NC:title>&sidebar.whats-related.label;</NC:title>
+         <NC:content>resource:/res/samples/related-panel.xul</NC:content>
+         <NC:customize>resource:/res/samples/related-panel-cust.xul</NC:customize>
+       </RDF:Description>
+    </RDF:li>
+    <RDF:li>
+       <RDF:Description ID="flash">
+         <NC:title>&sidebar.flash.label;</NC:title>
+         <NC:content>chrome://sidebar/content/flash.xul</NC:content>
+         <NC:height>5em</NC:height>
+       </RDF:Description>
+    </RDF:li>
+    <RDF:li>
+       <RDF:Description ID="tinderbox">
+         <NC:title>&sidebar.tinderbox.label;</NC:title>
+         <NC:content>http://cvs-mirror.mozilla.org/webtools/tinderbox/SeaMonkey/panel.html</NC:content>
+       </RDF:Description>
+    </RDF:li>
+    <RDF:li>
+       <RDF:Description ID="bookmarks">
+         <NC:title>&sidebar.bookmarks.label;</NC:title>
+         <NC:content>resource:/res/samples/bm-panel.xul</NC:content>
+         <NC:customize>resource:/res/samples/bm-panel-cust.xul</NC:customize>
+       </RDF:Description>
+    </RDF:li>
+  </RDF:Seq>
+</RDF:RDF>
