@@ -78,7 +78,6 @@
 //
 
 static NS_DEFINE_CID(kRDFServiceCID,             NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,  NS_RDFINMEMORYDATASOURCE_CID);
 
 // Note: due to aggregation, the HTTPINDEX namespace should match
 // what's used in the rest of the application
@@ -111,6 +110,7 @@ protected:
   static nsIRDFResource* kHTTPIndex_Filetype;
   static nsIRDFResource* kHTTPIndex_Loading;
   static nsIRDFResource* kHTTPIndex_URL;
+  static nsIRDFResource* kHTTPIndex_IsContainer;
   static nsIRDFResource* kNC_Child;
   static nsIRDFLiteral*  kTrueLiteral;
   static nsIRDFLiteral*  kFalseLiteral;
@@ -186,6 +186,7 @@ nsIRDFResource* nsHTTPIndexParser::kHTTPIndex_Description;
 nsIRDFResource* nsHTTPIndexParser::kHTTPIndex_Filetype;
 nsIRDFResource* nsHTTPIndexParser::kHTTPIndex_Loading;
 nsIRDFResource* nsHTTPIndexParser::kHTTPIndex_URL;
+nsIRDFResource* nsHTTPIndexParser::kHTTPIndex_IsContainer;
 nsIRDFResource* nsHTTPIndexParser::kNC_Child;
 nsIRDFLiteral*  nsHTTPIndexParser::kTrueLiteral;
 nsIRDFLiteral*  nsHTTPIndexParser::kFalseLiteral;
@@ -277,6 +278,10 @@ nsHTTPIndexParser::Init()
                            &kHTTPIndex_URL);
     if (NS_FAILED(rv)) return rv;
 
+    rv = gRDF->GetResource(HTTPINDEX_NAMESPACE_URI "IsContainer",
+                           &kHTTPIndex_IsContainer);
+    if (NS_FAILED(rv)) return rv;
+
     rv = gRDF->GetResource(NC_NAMESPACE_URI "child",
                            &kNC_Child);
     if (NS_FAILED(rv)) return rv;
@@ -308,6 +313,7 @@ nsHTTPIndexParser::~nsHTTPIndexParser()
     NS_IF_RELEASE(kHTTPIndex_Filetype);
     NS_IF_RELEASE(kHTTPIndex_Loading);
     NS_IF_RELEASE(kHTTPIndex_URL);
+    NS_IF_RELEASE(kHTTPIndex_IsContainer);
     NS_IF_RELEASE(kNC_Child);
     NS_IF_RELEASE(kTrueLiteral);
     NS_IF_RELEASE(kFalseLiteral);
@@ -360,7 +366,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS4(nsHTTPIndexParser,
                               nsIRequestObserver,
                               nsIInterfaceRequestor,
                               nsIFTPEventSink);
-
 
 NS_IMETHODIMP
 nsHTTPIndexParser::GetInterface(const nsIID &anIID, void **aResult ) 
@@ -610,9 +615,9 @@ nsHTTPIndexParser::ProcessData(nsISupports *context)
 	}
 
     nsCOMPtr<nsIRDFResource>	parentRes = do_QueryInterface(context);
-    if (!parentRes)
-    {
-        return(NS_ERROR_UNEXPECTED);
+    if (!parentRes) {
+      NS_ERROR("Could not obtain parent resource");
+      return(NS_ERROR_UNEXPECTED);
     }
 
   // First, we'll iterate through the values and remember each (using
@@ -941,6 +946,14 @@ nsHTTPIndexParser::ParseData(nsString* values, const char *encodingStr,
       }
     }
 
+    // Since the definition of a directory depends on the protocol, we would have
+    // to do string comparisons all the time.
+    // But we're told if we're a container right here - so save that fact
+    if (isDirType)
+      mDataSource->Assert(entry, kHTTPIndex_IsContainer, kTrueLiteral, PR_TRUE);
+    else
+      mDataSource->Assert(entry, kHTTPIndex_IsContainer, kFalseLiteral, PR_TRUE);
+    
 //   instead of
 //       rv = mDataSource->Assert(parentRes, kNC_Child, entry, PR_TRUE);
 //       if (NS_FAILED(rv)) return rv;
@@ -1044,7 +1057,6 @@ nsHTTPIndex::nsHTTPIndex()
 }
 
 
-
 nsHTTPIndex::nsHTTPIndex(nsISupports* aContainer)
   : mContainer(aContainer)
 {
@@ -1052,18 +1064,18 @@ nsHTTPIndex::nsHTTPIndex(nsISupports* aContainer)
 }
 
 
-
 nsHTTPIndex::~nsHTTPIndex()
 {
-	// note: these are NOT statics due to the native of nsHTTPIndex
-	// where it may or may not be treated as a singleton
-
-	NS_IF_RELEASE(kNC_Child);
-	NS_IF_RELEASE(kNC_loading);
-        NS_IF_RELEASE(kNC_URL);
-	NS_IF_RELEASE(kTrueLiteral);
-	NS_IF_RELEASE(kFalseLiteral);
-
+  // note: these are NOT statics due to the native of nsHTTPIndex
+  // where it may or may not be treated as a singleton
+  
+  NS_IF_RELEASE(kNC_Child);
+  NS_IF_RELEASE(kNC_loading);
+  NS_IF_RELEASE(kNC_URL);
+  NS_IF_RELEASE(kNC_IsContainer);
+  NS_IF_RELEASE(kTrueLiteral);
+  NS_IF_RELEASE(kFalseLiteral);
+  
     if (mTimer)
     {
         // be sure to cancel the timer, as it holds a
@@ -1074,12 +1086,12 @@ nsHTTPIndex::~nsHTTPIndex()
 
     mConnectionList = nsnull;
     mNodeList = nsnull;
-
-	if (mDirRDF)
-	{
-		// UnregisterDataSource() may fail; just ignore errors
-		mDirRDF->UnregisterDataSource(this);
-    }
+    
+    if (mDirRDF)
+      {
+        // UnregisterDataSource() may fail; just ignore errors
+        mDirRDF->UnregisterDataSource(this);
+      }
 }
 
 
@@ -1087,27 +1099,26 @@ nsHTTPIndex::~nsHTTPIndex()
 nsresult
 nsHTTPIndex::CommonInit()
 {
-	nsresult	rv = NS_OK;
+    nsresult	rv = NS_OK;
 
-	// set initial/default encoding to ISO-8859-1 (not UTF-8)
-	mEncoding = "ISO-8859-1";
+    // set initial/default encoding to ISO-8859-1 (not UTF-8)
+    mEncoding = "ISO-8859-1";
 
     mDirRDF = do_GetService(kRDFServiceCID, &rv);
-	NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
-	if (NS_FAILED(rv))
-	{
-	    return(rv);
-	}
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
+    if (NS_FAILED(rv)) {
+      return(rv);
+    }
 
-	if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
-			nsnull, NS_GET_IID(nsIRDFDataSource), (void**) getter_AddRefs(mInner))))
-	{
-		return(rv);
-	}
+    mInner = do_CreateInstance("@mozilla.org/rdf/datasource;1?name=in-memory-datasource", &rv);
 
-	mDirRDF->GetResource(NC_NAMESPACE_URI "child",   &kNC_Child);
-	mDirRDF->GetResource(NC_NAMESPACE_URI "loading", &kNC_loading);
-	mDirRDF->GetResource(NC_NAMESPACE_URI "URL",     &kNC_URL);
+    if (NS_FAILED(rv))
+      return rv;
+
+    mDirRDF->GetResource(NC_NAMESPACE_URI "child",   &kNC_Child);
+    mDirRDF->GetResource(NC_NAMESPACE_URI "loading", &kNC_loading);
+    mDirRDF->GetResource(NC_NAMESPACE_URI "URL", &kNC_URL);
+    mDirRDF->GetResource(NC_NAMESPACE_URI "IsContainer", &kNC_IsContainer);
 
     rv = mDirRDF->GetLiteral(NS_LITERAL_STRING("true").get(), &kTrueLiteral);
     if (NS_FAILED(rv)) return(rv);
@@ -1117,10 +1128,9 @@ nsHTTPIndex::CommonInit()
     rv = NS_NewISupportsArray(getter_AddRefs(mConnectionList));
     if (NS_FAILED(rv)) return(rv);
 
-	// note: don't register DS here
-	return(rv);
+    // note: don't register DS here
+    return rv;
 }
-
 
 
 nsresult
@@ -1162,6 +1172,12 @@ nsHTTPIndex::Init(nsIURI* aBaseURL)
   if (NS_FAILED(rv)) return rv;
 
   mBaseURL.Assign(url);
+  
+  // Mark the base url as a container
+  nsCOMPtr<nsIRDFResource> baseRes;
+  mDirRDF->GetResource(mBaseURL.get(), getter_AddRefs(baseRes));
+  Assert(baseRes, kNC_IsContainer, kTrueLiteral, PR_TRUE);
+
   return NS_OK;
 }
 
@@ -1189,11 +1205,7 @@ nsHTTPIndex::Create(nsIURI* aBaseURL, nsISupports* aContainer, nsIHTTPIndex** aR
   return rv;
 }
 
-
-
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsHTTPIndex, nsIHTTPIndex, nsIRDFDataSource);
-
-
 
 NS_IMETHODIMP
 nsHTTPIndex::GetBaseURL(char** _result)
@@ -1205,16 +1217,12 @@ nsHTTPIndex::GetBaseURL(char** _result)
   return NS_OK;
 }
 
-
-
 NS_IMETHODIMP
 nsHTTPIndex::GetDataSource(nsIRDFDataSource** _result)
 {
   NS_ADDREF(*_result = this);
   return NS_OK;
 }
-
-
 
 NS_IMETHODIMP
 nsHTTPIndex::CreateListener(nsIStreamListener** _result)
@@ -1225,15 +1233,9 @@ nsHTTPIndex::CreateListener(nsIStreamListener** _result)
 // This function finds the destination when following a given nsIRDFResource
 // If the resource has a URL attribute, we use that. If not, just use
 // the uri.
-// We'd really like to not have to copy all the time. But because sometimes
-// we get a char*, and sometimes a PRUnichar*, we have to copy at some point,
-// and this would leak unless we deleted one of them. scc is working on string
-// changes which would hide the explicit ASCII vs unicode stuff, and I could just
-// return one of them. (see bug 53065). In the meantime, the performance loss in
-// copying should be small, especially compared with bug 69185.
 //
 // Do NOT try to get the destination of a uri in any other way
-char* nsHTTPIndex::GetDestination(nsIRDFResource* r) {
+void nsHTTPIndex::GetDestination(nsIRDFResource* r, nsXPIDLCString& dest) {
   // First try the URL attribute
   nsCOMPtr<nsIRDFNode> node;
   
@@ -1243,19 +1245,13 @@ char* nsHTTPIndex::GetDestination(nsIRDFResource* r) {
   if (node)
     url = do_QueryInterface(node);
 
-  char* cUri;
   if (!url) {
-    // copy always - see comments above
-    r->GetValue(&cUri);
+     r->GetValueConst(getter_Shares(dest));
   } else {
     const PRUnichar* uri;
     url->GetValueConst(&uri);
-    nsCAutoString tmp;
-    tmp.AssignWithConversion(uri);
-    cUri = ToNewCString(tmp);
+    *getter_Copies(dest) = ToNewUTF8String(nsLocalString(uri));
   }
-
-  return cUri;
 }
 
 // rjc: isWellknownContainerURI() decides whether a URI is a container for which,
@@ -1272,42 +1268,52 @@ char* nsHTTPIndex::GetDestination(nsIRDFResource* r) {
 
 // We also handle gopher now
 
-// This could be replaced by an RDF attribute (so we don't have to do string
-// parsing), set by the parser (using the isDirType flag - we have this
-// information already) 
-// But doing that gave me lots of xpcwrappednative assersions sometimes (not
-// always repeatable), plus it doesn't work properly with the personal toolbar
-// uris that end up here at startup (from the bookmarks code).
-// Maybe just use this as a fallback, and use the attribute for everything
-// else? - bbaetz
+
+// We use an rdf attribute to mark if this is a container or not.
+// Note that we still have to do string comparisons as a fallback
+// because stuff like the personal toolbar and bookmarks check whether
+// a URL is a container, and we have no attribute in that case.
 PRBool
 nsHTTPIndex::isWellknownContainerURI(nsIRDFResource *r)
 {
-    PRBool isContainerFlag = PR_FALSE;
-    char *uri = nsnull;
+  nsCOMPtr<nsIRDFNode> node;
+  GetTarget(r, kNC_IsContainer, PR_TRUE, getter_AddRefs(node));
+
+  PRBool isContainerFlag = PR_FALSE;
+
+  if (node && NS_SUCCEEDED(node->EqualsNode(kTrueLiteral, &isContainerFlag))) {
+    return isContainerFlag;
+  } else {
+    nsXPIDLCString uri;
     
     // For gopher, we need to follow the URL attribute to get the
     // real destination
-    uri = GetDestination(r);
+    GetDestination(r,uri);
 
-    if ((uri) && (!strncmp(uri, kFTPProtocol, sizeof(kFTPProtocol) - 1)))
-      {
-        if (uri[strlen(uri)-1] == '/')
-          {
-            isContainerFlag = PR_TRUE;
-          }
+    if ((uri.get()) && (!strncmp(uri, kFTPProtocol, sizeof(kFTPProtocol) - 1))) {
+      if (uri[strlen(uri)-1] == '/') {
+        isContainerFlag = PR_TRUE;
       }
-    if ((uri) && (!strncmp(uri,kGopherProtocol, sizeof(kGopherProtocol)-1))) {
+    }
+
+    // A gopher url is of the form:
+    // gopher://example.com/xFileNameToGet
+    // where x is a single character representing the type of file
+    // 1 is a directory, and 7 is a search.
+    // Searches will cause a dialog to be popped up (asking the user what
+    // to search for), and so even though searches return a directory as a
+    // result, don't treat it as a directory here.
+
+    // The isContainerFlag test above will correctly handle this when a
+    // search url is passed in as the baseuri
+    if ((uri.get()) &&
+        (!strncmp(uri,kGopherProtocol, sizeof(kGopherProtocol)-1))) {
       char* pos = PL_strchr(uri+sizeof(kGopherProtocol)-1, '/');
-      if (pos) {
-        if (pos == nsnull || *(pos+1) == '\0' || *(pos+1) == '1')
-          isContainerFlag = PR_TRUE;
-      }
-    } 
-
-    nsMemory::Free(uri);
-
-    return(isContainerFlag);
+      if (!pos || pos[1] == '\0' || pos[1] == '1')
+        isContainerFlag = PR_TRUE;
+    }  
+  }
+  return isContainerFlag;
 }
 
 
@@ -1499,16 +1505,20 @@ nsHTTPIndex::FireTimer(nsITimer* aTimer, void* aClosure)
           
           nsCOMPtr<nsIRDFResource>    aSource;
           if (isupports)  aSource = do_QueryInterface(isupports);
-          char* uri = nsnull;
-          if (aSource) uri = httpIndex->GetDestination(aSource);
+          
+          nsXPIDLCString uri;
+          if (aSource)
+            httpIndex->GetDestination(aSource, uri);
+          
+          if (!uri) {
+            NS_ERROR("Could not reconstruct uri");
+            return;
+          }
           
           nsresult            rv = NS_OK;
           nsCOMPtr<nsIURI>	url;
           
-          if (uri) {
-            rv = NS_NewURI(getter_AddRefs(url), uri);
-            nsMemory::Free(uri);
-          }
+          rv = NS_NewURI(getter_AddRefs(url), uri.get());
           nsCOMPtr<nsIChannel>	channel;
           if (NS_SUCCEEDED(rv) && (url)) {
             rv = NS_OpenURI(getter_AddRefs(channel), url, nsnull, nsnull);
@@ -1525,7 +1535,6 @@ nsHTTPIndex::FireTimer(nsITimer* aTimer, void* aClosure)
           }
         }
     }
-    
     if (httpIndex->mNodeList)
     {
         httpIndex->mNodeList->Count(&numItems);
@@ -1534,7 +1543,7 @@ nsHTTPIndex::FireTimer(nsITimer* aTimer, void* aClosure)
             // account for order required: src, prop, then target
             numItems /=3;
             if (numItems > 10)  numItems = 10;
-            
+          
             PRInt32 loop;
             for (loop=0; loop<(PRInt32)numItems; loop++)
             {
@@ -1543,17 +1552,16 @@ nsHTTPIndex::FireTimer(nsITimer* aTimer, void* aClosure)
                 httpIndex->mNodeList->RemoveElementAt((PRUint32)0);
                 nsCOMPtr<nsIRDFResource>    src;
                 if (isupports)  src = do_QueryInterface(isupports);
-
                 httpIndex->mNodeList->GetElementAt((PRUint32)0, getter_AddRefs(isupports));
                 httpIndex->mNodeList->RemoveElementAt((PRUint32)0);
                 nsCOMPtr<nsIRDFResource>    prop;
                 if (isupports)  prop = do_QueryInterface(isupports);
-
+                
                 httpIndex->mNodeList->GetElementAt((PRUint32)0, getter_AddRefs(isupports));
                 httpIndex->mNodeList->RemoveElementAt((PRUint32)0);
                 nsCOMPtr<nsIRDFNode>    target;
                 if (isupports)  target = do_QueryInterface(isupports);
-
+                
                 if (src && prop && target)
                 {
                     if (prop.get() == httpIndex->kNC_loading)
@@ -1568,7 +1576,7 @@ nsHTTPIndex::FireTimer(nsITimer* aTimer, void* aClosure)
             }                
         }
     }
-
+    
     // check both lists to see if the timer needs to continue firing
     if (httpIndex->mConnectionList)
     {
