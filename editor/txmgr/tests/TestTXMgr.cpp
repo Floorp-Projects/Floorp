@@ -354,7 +354,7 @@ public:
     ++sDestructorCount;
 
 #ifdef ENABLE_DEBUG_PRINTFS
-    printf("\n~SimpleTransaction: %d - 0x%.8x\n", mVal, this);
+    printf("\n~SimpleTransaction: %d - 0x%.8x\n", mVal, (PRInt32)this);
 #endif // ENABLE_DEBUG_PRINTFS
 
     mVal = -1;
@@ -377,7 +377,7 @@ public:
     ++sDoCount;
 
 #ifdef ENABLE_DEBUG_PRINTFS
-    printf("\nSimpleTransaction.Do: %d - 0x%.8x\n", mVal, this);
+    printf("\nSimpleTransaction.Do: %d - 0x%.8x\n", mVal, (PRInt32)this);
 #endif // ENABLE_DEBUG_PRINTFS
 
     return (mFlags & THROWS_DO_ERROR_FLAG) ? NS_ERROR_FAILURE : NS_OK;
@@ -400,7 +400,7 @@ public:
     ++sUndoCount;
 
 #ifdef ENABLE_DEBUG_PRINTFS
-    printf("\nSimpleTransaction.Undo: %d - 0x%.8x\n", mVal, this);
+    printf("\nSimpleTransaction.Undo: %d - 0x%.8x\n", mVal, (PRInt32)this);
 #endif // ENABLE_DEBUG_PRINTFS
 
     return (mFlags & THROWS_UNDO_ERROR_FLAG) ? NS_ERROR_FAILURE : NS_OK;
@@ -423,7 +423,7 @@ public:
     ++sRedoCount;
 
 #ifdef ENABLE_DEBUG_PRINTFS
-    printf("\nSimpleTransaction.Redo: %d - 0x%.8x\n", mVal, this);
+    printf("\nSimpleTransaction.Redo: %d - 0x%.8x\n", mVal, (PRInt32)this);
 #endif // ENABLE_DEBUG_PRINTFS
 
     return (mFlags & THROWS_REDO_ERROR_FLAG) ? NS_ERROR_FAILURE : NS_OK;
@@ -450,7 +450,7 @@ public:
     char buf[256];
     PRUint32 amt;
 
-    sprintf(buf, "Transaction: %d - 0x%.8x\n", mVal, this);
+    sprintf(buf, "Transaction: %d - 0x%.8x\n", mVal, (PRInt32)this);
     return aOutputStream->Write(buf, 0, strlen(buf), &amt);
   }
 
@@ -2446,6 +2446,13 @@ quick_test(TestTransactionFactory *factory)
     return result;
   }
 
+  result = nsServiceManager::ShutdownService(kCTransactionManagerFactoryCID);
+
+  if (NS_FAILED(result)) {
+    printf("ERROR: nsServiceManager::ShutdownService() failed. (%d)\n", result);
+    return result;
+  }
+
   printf("passed\n");
 
   /*******************************************************************
@@ -2549,7 +2556,6 @@ stress_test(TestTransactionFactory *factory, PRInt32 iterations)
   nsISupports  *isup          = 0;
   nsITransactionManager  *mgr = 0;
   nsITransaction *tx          = 0;
-  SimpleTransaction *tximpl   = 0;
   nsresult result;
 
   result = nsServiceManager::GetService(kCTransactionManagerFactoryCID,
@@ -2656,6 +2662,13 @@ stress_test(TestTransactionFactory *factory, PRInt32 iterations)
 
   if (NS_FAILED(result)) {
     printf("ERROR: nsServiceManager::ReleaseService() failed. (%d)\n", result);
+    return result;
+  }
+
+  result = nsServiceManager::ShutdownService(kCTransactionManagerFactoryCID);
+
+  if (NS_FAILED(result)) {
+    printf("ERROR: nsServiceManager::ShutdownService() failed. (%d)\n", result);
     return result;
   }
 
