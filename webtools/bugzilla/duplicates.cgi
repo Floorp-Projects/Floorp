@@ -69,20 +69,36 @@ $sortby = "count" if $sortby eq "dup_count";
 my $today = days_ago(0);
 my $yesterday = days_ago(1);
 
-if (<data/duplicates/dupes$today*>) {
-    dbmopen(%dbmcount, "data/duplicates/dupes$today", 0644) 
-      || DisplayError("Can't open today ($today)'s dupes file: $!")
-      && exit;
-}
-elsif (<data/duplicates/dupes$yesterday*>) {
-    dbmopen(%dbmcount, "data/duplicates/dupes$yesterday", 0644) 
-      || DisplayError("Can't open yesterday ($yesterday)'s dupes file: $!")
-      && exit;
-}
-else {
-    DisplayError("There are no duplicate statistics for today ($today) or
-                yesterday.");
-    exit;
+# We don't know the exact file name, because the extention depends on the
+# underlying dbm library, which could be anything. We can't glob, because
+# perl < 5.6 considers if (<*>) { ... } to be tainted
+# Instead, just check the return value for today's data and yesterday's,
+# and ignore file not found errors
+
+use Errno;
+use Fcntl;
+
+if (!tie(%dbmcount, 'AnyDBM_File', "data/duplicates/dupes$today",
+         O_RDONLY, 0644)) {
+    if ($!{ENOENT}) {
+        if (!tie(%dbmcount, 'AnyDBM_File', "data/duplicates/dupes$yesterday",
+                 O_RDONLY, 0644)) {
+            if ($!{ENOENT}) {
+                ThrowUserError("There are no duplicate statistics for today " .
+                               "($today) or yesterday.",
+                               "Cannot find duplicate statistics");
+            } else {
+                ThrowUserError("There are no duplicate statistics for today " .
+                               "($today), and an error occurred when " .
+                               "accessing yesterday's dupes file: $!.",
+                               "Error reading yesterday's dupes file");
+            }
+        }
+    } else {
+        ThrowUserError("An error occurred when accessing today ($today)'s " .
+                       "dupes file: $!.",
+                       "Error reading today's dupes file");
+    }
 }
 
 # Copy hash (so we don't mess up the on-disk file when we remove entries)
@@ -101,11 +117,15 @@ my $dobefore = 0;
 my %delta;
 my $whenever = days_ago($changedsince);    
 
-if (<data/duplicates/dupes$whenever*>) {
-    dbmopen(%before, "data/duplicates/dupes$whenever", 0644) 
-      || DisplayError("Can't open $changedsince days ago ($whenever)'s " .
-                      "dupes file: $!");
-
+if (!tie(%before, 'AnyDBM_File', "data/duplicates/dupes$whenever",
+         O_RDONLY, 0644)) {
+    # Ignore file not found errors
+    if (!$!{ENOENT}) {
+        ThrowUserError("Can't open $changedsince days ago ($whenever)'s " .
+                       "dupes file: $!",
+                       "Error reading previous dupes file");
+    }
+} else {
     # Calculate the deltas
     ($delta{$_} = $count{$_} - $before{$_}) foreach (keys(%count));
 
