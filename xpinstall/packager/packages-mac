@@ -183,6 +183,12 @@ viewer:Components:nsXmlRpcClient.js
 viewer:Components:xmlextras.xpt
 viewer:Components:xmlextras.shlb
 
+viewer:Components:gfx2.shlb
+viewer:Components:libimg2.shlb
+viewer:Components:pngdecoder2.shlb
+viewer:Components:gifdecoder2.shlb
+viewer:Components:jpegdecoder2.shlb
+
 viewer:Components:Necko.shlb 
 viewer:Components:Necko2.shlb
 viewer:Components:necko.xpt 
