@@ -99,3 +99,7 @@ include $(topsrcdir)/config/rules.mk
 # install rules.txt along with spacetrace executable
 libs:: rules.txt
 	$(INSTALL) $< $(DIST)/bin
+
+libs:: spacetrace.css
+	$(INSTALL) $< $(DIST)/bin/res
+

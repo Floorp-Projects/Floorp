@@ -707,7 +707,12 @@ extern int displayCategoryReport(STRequest* inRequest, STCategoryNode *root, int
 extern int recalculateAllocationCost(STOptions* inOptions, STContext* inContext, STRun* aRun, STAllocation* aAllocation, PRBool updateParent);
 extern void htmlHeader(STRequest* inRequest, const char* aTitle);
 extern void htmlFooter(STRequest* inRequest);
-extern void htmlAnchor(STRequest* inRequest, const char* aHref, const char* aText, const char* aTarget, STOptions* inOptions);
+extern void htmlAnchor(STRequest* inRequest,
+                       const char* aHref,
+                       const char* aText,
+                       const char* aTarget,
+                       const char* aClass,
+                       STOptions* inOptions);
 extern char *FormatNumber(PRInt32 num);
 
 /*
