@@ -670,9 +670,18 @@ calendarManager.prototype.getRemoteCalendarText = function calMan_getRemoteCalen
          if( typeof( result ) != "string" ) //for 1.7 compatibility
              result = String.fromCharCode.apply(this, result);
 
-         var ch = Channel.QueryInterface(Components.interfaces.nsIHttpChannel);
-         if (!ch.requestSucceeded) {
+         var ch;
+         try {
+           ch = loader.request.QueryInterface(Components.interfaces.nsIHttpChannel);
+         } catch(e) {
+         }
+         if (ch && !ch.requestSucceeded) {
            alert("Getting the calendar file failed.\nStatus code: "+ch.responseStatus+": "+ch.responseStatusText);
+         }
+
+         else if (!Components.isSuccessCode(loader.request.status)) {
+           // XXX this should be made human-readable.
+           alert("Getting the calendar file failed.\nStatus code: 0x"+loader.request.status.toString(16));
          }
 
          //check to make sure its actually a calendar file, if not return.
