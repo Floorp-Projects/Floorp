@@ -143,52 +143,52 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
   
     nsISupports *inst = nsnull;
     if (mClassID.Equals(kCWindow)) {
-      inst = (nsISupports *)new nsWindow();
+      inst = (nsISupports *)(nsBaseWidget*)new nsWindow();
     }
     else if (mClassID.Equals(kCChild)) {
-      inst = (nsISupports *)new ChildWindow();
+      inst = (nsISupports *)(nsBaseWidget*)new ChildWindow();
     }
     else if (mClassID.Equals(kCButton)) {
-      inst = (nsISupports*)(nsWidget *)new nsButton();
+      inst = (nsISupports*)(nsBaseWidget*)(nsWidget *)new nsButton();
     }
     else if (mClassID.Equals(kCCheckButton)) {
-        inst = (nsISupports*)(nsWidget *)new nsCheckButton();
+        inst = (nsISupports*)(nsBaseWidget*)(nsWidget *)new nsCheckButton();
     }
     else if (mClassID.Equals(kCCombobox)) {
-        inst = (nsISupports*)(nsWidget *)new nsComboBox();
+        inst = (nsISupports*)(nsBaseWidget*)(nsWidget *)new nsComboBox();
     }
     else if (mClassID.Equals(kCRadioButton)) {
-        inst = (nsISupports*)(nsWidget *)new nsRadioButton();
+        inst = (nsISupports*)(nsBaseWidget*)(nsWidget *)new nsRadioButton();
     }
     else if (mClassID.Equals(kCFileOpen)) {
         inst = (nsISupports*)new nsFileWidget();
     }
     else if (mClassID.Equals(kCListbox)) {
-        inst = (nsISupports*)(nsWidget *)new nsListBox();
+        inst = (nsISupports*)(nsBaseWidget*)(nsWidget *)new nsListBox();
     }
     else if (mClassID.Equals(kCHorzScrollbar)) {
-        inst = (nsISupports*)(nsWidget *)new nsScrollbar(PR_FALSE);
+        inst = (nsISupports*)(nsBaseWidget*)(nsWidget *)new nsScrollbar(PR_FALSE);
     }
     else if (mClassID.Equals(kCVertScrollbar)) {
-        inst = (nsISupports*)(nsWidget *)new nsScrollbar(PR_TRUE);
+        inst = (nsISupports*)(nsBaseWidget*)(nsWidget *)new nsScrollbar(PR_TRUE);
     }
     else if (mClassID.Equals(kCTextArea)) {
-        inst = (nsISupports*)(nsWidget *)new nsTextAreaWidget();
+        inst = (nsISupports*)(nsBaseWidget*)(nsWidget *)new nsTextAreaWidget();
     }
     else if (mClassID.Equals(kCTextField)) {
-        inst = (nsISupports*)(nsWidget *)new nsTextWidget();
+        inst = (nsISupports*)(nsBaseWidget*)(nsWidget *)new nsTextWidget();
     }
     else if (mClassID.Equals(kCAppShell)) {
         inst = (nsISupports*)new nsAppShell();
     }
     else if (mClassID.Equals(kCToolkit)) {
-        inst = (nsISupports*)(nsWidget *)new nsToolkit();
+        inst = (nsISupports*)(nsBaseWidget*)(nsWidget *)new nsToolkit();
     }
     else if (mClassID.Equals(kCLookAndFeel)) {
-        inst = (nsISupports*)(nsWidget *)new nsLookAndFeel();
+        inst = (nsISupports*)(nsBaseWidget*)(nsWidget *)new nsLookAndFeel();
     }
     else if (mClassID.Equals(kCLabel)) {
-        inst = (nsISupports*)(nsWidget *)new nsLabel();
+        inst = (nsISupports*)(nsBaseWidget*)(nsWidget *)new nsLabel();
     }
 #if 0
     else if (mClassID.Equals(kCMenuBar)) {

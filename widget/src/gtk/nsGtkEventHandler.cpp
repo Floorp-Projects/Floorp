@@ -31,11 +31,8 @@
 #include "nsIMenuListener.h"
 
 #include "nsTextWidget.h"
+#include "nsGtkIMEHelper.h"
 
-#include "nsICharsetConverterManager.h"
-#include "nsIPlatformCharset.h"
-#include "nsIServiceManager.h"
-static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 #include "stdio.h"
 #include "ctype.h"
@@ -605,8 +602,8 @@ static gint composition_start(GdkEventKey *aEvent, nsWindow *aWin,
 }
 
 static gint composition_draw(GdkEventKey *aEvent, nsWindow *aWin,
-                             nsIUnicodeDecoder *aDecoder,
                              nsEventStatus *aStatus) {
+  nsresult res= NS_OK;
   if (!aWin->mIMECompositionUniString) {
     aWin->mIMECompositionUniStringSize = 128;
     aWin->mIMECompositionUniString =
@@ -618,12 +615,17 @@ static gint composition_draw(GdkEventKey *aEvent, nsWindow *aWin,
   for (;;) {
     uniChar = aWin->mIMECompositionUniString;
     uniCharSize = aWin->mIMECompositionUniStringSize - 1;
-    aDecoder->Convert((char*)aEvent->string, &srcLen, uniChar, &uniCharSize);
+    res = nsGtkIMEHelper::GetSingleton()->ConvertToUnicode(
+            (char*)aEvent->string, &srcLen, uniChar, &uniCharSize);
+    if(NS_ERROR_ABORT == res)
+      return FALSE;
     if (srcLen == aEvent->length &&
         uniCharSize < aWin->mIMECompositionUniStringSize - 1) {
       break;
     }
     aWin->mIMECompositionUniStringSize += 32;
+    if(aWin->mIMECompositionUniString)
+	delete [] aWin->mIMECompositionUniString;
     aWin->mIMECompositionUniString =
       new PRUnichar[aWin->mIMECompositionUniStringSize];
   }
@@ -664,31 +666,6 @@ static gint composition_end(GdkEventKey *aEvent, nsWindow *aWin,
   aWin->DispatchEvent(&compEvent, *aStatus);
 
   return PR_TRUE;
-}
-
-static nsIUnicodeDecoder*
-open_unicode_decoder(void) {
-  nsresult result = NS_ERROR_FAILURE;
-  nsIUnicodeDecoder *decoder = nsnull;
-  NS_WITH_SERVICE(nsIPlatformCharset, platform, NS_PLATFORMCHARSET_PROGID,
-                  &result);
-  if (platform && NS_SUCCEEDED(result)) {
-    nsAutoString charset("");
-    result = platform->GetCharset(kPlatformCharsetSel_Menu, charset);
-    if (NS_FAILED(result) || (charset.Length() == 0)) {
-      charset = "ISO-8859-1";   // default
-    }
-    nsICharsetConverterManager* manager = nsnull;
-    nsresult res = nsServiceManager::
-      GetService(kCharsetConverterManagerCID,
-                 nsCOMTypeInfo<nsICharsetConverterManager>::GetIID(),
-                 (nsISupports**)&manager);
-    if (manager && NS_SUCCEEDED(res)) {
-      manager->GetUnicodeDecoder(&charset, &decoder);
-      nsServiceManager::ReleaseService(kCharsetConverterManagerCID, manager);
-    }
-  }
-  return decoder;
 }
 
 // GTK's text widget already does XIM, so we don't want to do this again
@@ -794,21 +771,21 @@ gint handle_key_press_event(GtkObject *w, GdkEventKey* event, gpointer p)
   // gtk returns a character value for them
   //
   if (event->length) {
-    static nsIUnicodeDecoder *decoder = nsnull;
-    if (!decoder) {
-      decoder = open_unicode_decoder();
-    }
-    if (decoder && (!kevent.keyCode)) {
+    if (nsGtkIMEHelper::GetSingleton() && (!kevent.keyCode)) {
       nsEventStatus status;
       composition_start(event, win, &status);
-      composition_draw(event, win, decoder, &status);
+      composition_draw(event, win, &status);
       composition_end(event, win, &status);
     } else {
       InitKeyPressEvent(event,p, kevent);
       win->OnKey(kevent);
+
+#if 0 // this will break editor Undo/Redo Text Txn system
       nsEventStatus status;
       composition_start(event, win, &status);
       composition_end(event, win, &status);
+#endif
+
     }
   } else { // for Home/End/Up/Down/Left/Right/PageUp/PageDown key
     InitKeyPressEvent(event,p, kevent);

@@ -34,11 +34,12 @@
 #include "nsGfxCIID.h"
 #include <gdk/gdkx.h>
 #include "nsIRollupListener.h"
+#include "nsIServiceManager.h"
 
 #include "nsGtkUtils.h" // for nsGtkUtils::gdk_keyboard_get_modifiers()
 
-#include "nsIServiceManager.h"
 #include "nsIPref.h"
+#include "nsGtkIMEHelper.h"
 
 
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
@@ -173,6 +174,29 @@ nsWidget::~nsWidget()
     mIMECompositionUniString = nsnull;
   }
   NS_ASSERTION(!ModalWidgetList::Find(this), "destroying widget without first clearing modality.");
+}
+
+
+//-------------------------------------------------------------------------
+//
+// nsISupport stuff
+//
+//-------------------------------------------------------------------------
+NS_IMPL_ADDREF(nsWidget)
+NS_IMPL_RELEASE(nsWidget)
+NS_IMETHODIMP nsWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+    if (NULL == aInstancePtr) {
+        return NS_ERROR_NULL_POINTER;
+    }
+
+    if (aIID.Equals(nsIKBStateControl::GetIID())) {
+        *aInstancePtr = (void*) ((nsIKBStateControl*)this);
+    	NS_ADDREF((nsBaseWidget*)this);
+        return NS_OK;
+    }
+
+    return nsBaseWidget::QueryInterface(aIID,aInstancePtr);
 }
 
 NS_IMETHODIMP nsWidget::GetAbsoluteBounds(nsRect &aRect)
@@ -1895,6 +1919,7 @@ nsWidget::OnLeaveNotifySignal(GdkEventCrossing * aGdkCrossingEvent)
 /* virtual */ void
 nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
 {
+  ResetInputState();
   nsMouseEvent event;
   nsMouseScrollEvent scrollEvent;
   PRUint32 eventType = 0;
@@ -2678,15 +2703,116 @@ void nsWidget::SetBackgroundColorNative(GdkColor *aColorNor,
 
 
 
+//////////////////////////////////////////////////////////////////////
 
+NS_IMETHODIMP nsWidget::ResetInputState()
+{
+  nsresult res = NS_OK;
+  if(nsnull != mIC)
+  {
+    char* uncommitted_text=nsnull;
+    // force IME to commit
+    uncommitted_text = XmbResetIC(mIC->xic); 
 
+    // if we got any text back, we need to send 
+    // the IME events 
+    if(uncommitted_text && uncommitted_text[0]) 
+    {
+      PRInt32 uncommitted_len = nsCRT::strlen(uncommitted_text);
 
+      if(nsGtkIMEHelper::GetSingleton()) 
+      {
+        // prepare Unicode buffer for conversion
+        if (!mIMECompositionUniString) 
+        {
+           mIMECompositionUniStringSize = 128;
+           mIMECompositionUniString =
+              new PRUnichar[mIMECompositionUniStringSize];
+        } // if (!mIMECompositionUniString)
+        PRInt32 uniCharSize;
+        PRInt32 srcLen;
+        // Convert in a for loop untill we got all the Unicode
+        for(;;) 
+        {
+          PRUnichar* uniChar=mIMECompositionUniString;
+          srcLen= uncommitted_len;
+          uniCharSize= mIMECompositionUniStringSize - 1;
+          res = nsGtkIMEHelper::GetSingleton()->ConvertToUnicode(
+                    (char*)uncommitted_text, &srcLen, 
+                    uniChar, 
+                    &uniCharSize);
+          if(NS_ERROR_ABORT == res)
+            break;
 
+          // if we convert all text, break 
+          if((srcLen == uncommitted_len) &&
+                    (uniCharSize < mIMECompositionUniStringSize -1))
+            break;
 
-
-
-
-
+          // otherwise, re allocate the buffer
+          mIMECompositionUniStringSize += 32;
+          if( mIMECompositionUniString )
+            delete []  mIMECompositionUniString;
+          mIMECompositionUniString = 
+            new PRUnichar[mIMECompositionUniStringSize];
+        } // for(;;)
+        if(NS_SUCCEEDED(res)) 
+        {
+  
+          // null terminate the Unicode string
+          mIMECompositionUniString[uniCharSize] = 0;
+  	
+          //-------------------------------------------------------
+          // send START_COMPOSITION
+          //-------------------------------------------------------
+          nsEventStatus aStatus;
+          nsCompositionEvent compEvent;
+          compEvent.widget= (nsWidget*) this;
+          compEvent.point.x = compEvent.point.y = 0;
+          compEvent.time = 0;
+          compEvent.message = compEvent.eventStructType 
+              = compEvent.compositionMessage = NS_COMPOSITION_START;
+   
+          DispatchEvent(&compEvent, aStatus);
+          //-------------------------------------------------------
+          // send Text Event
+          //-------------------------------------------------------
+          nsTextEvent textEvent;
+          textEvent.message =textEvent.eventStructType =NS_TEXT_EVENT;
+          textEvent.widget= (nsWidget*) this;
+          textEvent.point.x = textEvent.point.y = 0;
+          textEvent.time = 0;
+          textEvent.theText = mIMECompositionUniString;
+          textEvent.rangeCount = 0;
+          textEvent.rangeArray = nsnull;
+          textEvent.isShift = textEvent.isControl = 
+              textEvent.isAlt = textEvent.isMeta = PR_FALSE;
+          DispatchEvent(&textEvent, aStatus);
+   
+          //-------------------------------------------------------
+          // send END_COMPOSITION
+          //-------------------------------------------------------
+          compEvent.widget= (nsWidget*) this;
+          compEvent.message = compEvent.eventStructType 
+              = compEvent.compositionMessage = NS_COMPOSITION_END;
+          DispatchEvent(&compEvent, aStatus);
+   
+          //-------------------------------------------------------
+          // finally, we update the preedit position
+          //-------------------------------------------------------
+          SetXICSpotLocation(compEvent.theReply.mCursorPosition);
+        }
+      }
+      XFree(uncommitted_text);
+    }
+  }
+  return res;
+}
+NS_IMETHODIMP nsWidget::PasswordFieldInit()
+{
+  // to be implemented
+  return NS_OK;
+}
 
 //////////////////////////////////////////////////////////////////////
 
