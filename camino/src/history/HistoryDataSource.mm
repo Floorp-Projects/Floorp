@@ -372,7 +372,8 @@ HistoryDataSourceObserver::OnChange(nsIRDFDataSource*, nsIRDFResource*,
     // and out of sync, until we actually invalidate the table, the rows keep their prior values.
     // If children are selected as well as the parent, we'll just end up trying to remove the
     // host string from history which will silently fail. It's extra work, but harmless.
-    history->StartBatchUpdate();
+    nsCOMPtr<nsIRDFDataSource> ds = do_QueryInterface(history);
+    ds->BeginUpdateBatch();
     NSEnumerator* rowEnum = [mOutlineView selectedRowEnumerator];
     for ( NSNumber* currIndex = [rowEnum nextObject]; currIndex; currIndex = [rowEnum nextObject]) {
       index = [currIndex intValue];
@@ -390,7 +391,7 @@ HistoryDataSourceObserver::OnChange(nsIRDFDataSource*, nsIRDFResource*,
       else
         [self removeItemFromHistory:item withService:history];
     }
-    history->EndBatchUpdate();
+    ds->EndUpdateBatch();
     if ( clearSelectionWhenDone )
       [mOutlineView deselectAll:self];
 
