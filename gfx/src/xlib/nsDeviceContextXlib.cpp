@@ -21,6 +21,7 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Peter Hartshorn <peter@igelaus.com.au>
  *   Ken Faulkner <faulkner@igelaus.com.au>
+ *   Tony Tsui <tony@igelaus.com.au>
  */
 
 #include "nsRenderingContextXlib.h"
@@ -30,6 +31,8 @@
 #include "nsIServiceManager.h"
 #include "nsGfxCIID.h"
 #include "nspr.h"
+
+#include "nsFontMetricsXlib.h"
 
 #include "xlibrgb.h"
 
@@ -323,41 +326,7 @@ NS_IMETHODIMP nsDeviceContextXlib::ConvertPixel(nscolor aColor, PRUint32 & aPixe
 
 NS_IMETHODIMP nsDeviceContextXlib::CheckFontExistence(const nsString& aFontName)
 {
-  PR_LOG(DeviceContextXlibLM, PR_LOG_DEBUG, ("nsDeviceContextXlib::CheckFontExistence()\n"));
-  char        **fnames = nsnull;
-  PRInt32     namelen = aFontName.Length() + 1;
-  char        *wildstring = (char *)PR_Malloc(namelen + 200);
-  float       t2d;
-  GetTwipsToDevUnits(t2d);
-  PRInt32     dpi = NSToIntRound(t2d * 1440);
-  int         numnames = 0;
-  XFontStruct *fonts;
-  nsresult    rv = NS_ERROR_FAILURE;
-  
-  if (nsnull == wildstring)
-    return NS_ERROR_UNEXPECTED;
-  
-  if (abs(dpi - 75) < abs(dpi - 100))
-    dpi = 75;
-  else
-    dpi = 100;
-  
-  char* fontName = aFontName.ToNewCString();
-  PR_snprintf(wildstring, namelen + 200,
-              " -*-%s-*-*-normal-*-*-*-%d-%d-*-*-*-*",
-              fontName, dpi, dpi);
-  delete [] fontName;
-  
-  fnames = ::XListFontsWithInfo(mDisplay, wildstring, 1, &numnames, &fonts);
-  
-  if (numnames > 0)
-  {
-    ::XFreeFontInfo(fnames, fonts, numnames);
-    rv = NS_OK;
-  }
-  
-  PR_Free(wildstring);
-  return NS_OK;
+  return nsFontMetricsXlib::FamilyExists(aFontName);
 }
 
 NS_IMETHODIMP nsDeviceContextXlib::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight)
