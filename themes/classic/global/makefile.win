@@ -110,6 +110,9 @@ install::
 	$(MAKE_INSTALL) seltab-rightedge.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) sortAscending.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) sortDescending.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) stop-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) stop-hover-active.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) stop-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) stop.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) tab-leftedge.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) tab-rightedge.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin

@@ -31,11 +31,40 @@ clobber::
 install:: 
 	$(MAKE_INSTALL) abnewmsg.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
 	$(MAKE_INSTALL) addressbook.css $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) call-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) call-hover-active.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) call-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) call.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
 	$(MAKE_INSTALL) edit.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
 	$(MAKE_INSTALL) list.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
 	$(MAKE_INSTALL) myaddrbk.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) newcard-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) newcard-hover-active.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) newcard-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
 	$(MAKE_INSTALL) newcard.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) newlist-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) newlist-hover-active.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) newlist-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
 	$(MAKE_INSTALL) newlist.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
 	$(MAKE_INSTALL) newmsgab.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) newmsg-hover-active.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) newmsg-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) newmsg-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) newmsg.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) person-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) person-hover-active.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) person-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
 	$(MAKE_INSTALL) person.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
 	$(MAKE_INSTALL) property.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) searchold-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) searchold-hover-active.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) searchold-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) searchold.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) stop-hover-active.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) stop-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) stop-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) stop.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) trash-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) trash-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) trash.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) trash-hover-active.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook

@@ -81,29 +81,148 @@ textfield.addressingWidget[autocomplete="true"] > box
 	list-style-image:url("chrome://messenger/skin/messengercompose/send.gif");
 }
 
+#button-send[disabled="true"],
+#button-send[disabled="true"]:hover,
+#button-send[disabled="true"]:hover:active
+  {
+    list-style-image      : url("chrome://messenger/skin/messengercompose/send-disabled.gif");
+  } 
+
+#button-send:hover
+  {
+    list-style-image      : url("chrome://messenger/skin/messengercompose/send-hover.gif");
+  } 
+
+#button-send:hover:active
+  {
+    list-style-image      : url("chrome://messenger/skin/messengercompose/send-hover-active.gif");
+  } 
+
 #button-address {
 	list-style-image:url("chrome://messenger/skin/messengercompose/address.gif");
 }
+
+#button-address[disabled="true"],
+#button-address[disabled="true"]:hover,
+#button-address[disabled="true"]:hover:active
+  {
+    list-style-image      : url("chrome://messenger/skin/messengercompose/address-disabled.gif");
+  } 
+
+#button-address:hover
+  {
+    list-style-image      : url("chrome://messenger/skin/messengercompose/address-hover.gif");
+  } 
+
+#button-address:hover:active
+  {
+    list-style-image      : url("chrome://messenger/skin/messengercompose/address-hover-active.gif");
+  } 
 
 #button-attach {
 	list-style-image:url("chrome://messenger/skin/messengercompose/attach.gif");
 }
 
+#button-attach[disabled="true"],
+#button-attach[disabled="true"]:hover,
+#button-attach[disabled="true"]:hover:active
+  {
+    list-style-image      : url("chrome://messenger/skin/messengercompose/attach-disabled.gif");
+  } 
+
+#button-attach:hover
+  {
+    list-style-image      : url("chrome://messenger/skin/messengercompose/attach-hover.gif");
+  } 
+
+#button-attach:hover:active
+  {
+    list-style-image      : url("chrome://messenger/skin/messengercompose/attach-hover-active.gif");
+  } 
+
 #button-quote {
 	list-style-image:url("chrome://messenger/skin/messengercompose/quote.gif");
 }
+
+#button-quote[disabled="true"],
+#button-quote[disabled="true"]:hover,
+#button-quote[disabled="true"]:hover:active
+  {
+    list-style-image      : url("chrome://messenger/skin/messengercompose/quote-disabled.gif");
+  } 
+
+#button-quote:hover
+  {
+    list-style-image      : url("chrome://messenger/skin/messengercompose/quote-hover.gif");
+  } 
+
+#button-quote:hover:active
+  {
+    list-style-image      : url("chrome://messenger/skin/messengercompose/quote-hover-active.gif");
+  } 
 
 #button-spelling {
 	list-style-image:url("chrome://messenger/skin/messengercompose/spelling.gif");
 }
 
+#button-spelling[disabled="true"],
+#button-spelling[disabled="true"]:hover,
+#button-spelling[disabled="true"]:hover:active
+  {
+    list-style-image      : url("chrome://messenger/skin/messengercompose/spelling-disabled.gif");
+  } 
+
+#button-spelling:hover
+  {
+    list-style-image      : url("chrome://messenger/skin/messengercompose/spelling-hover.gif");
+  } 
+
+#button-spelling:hover:active
+  {
+    list-style-image      : url("chrome://messenger/skin/messengercompose/spelling-hover-active.gif");
+  }
+
 #button-save {
-	list-style-image:url("chrome://messenger/skin/messengercompose/save.gif");
+	list-style-image:url("chrome://messenger/skin/messengercompose/savemsg.gif");
 }
+
+#button-save[disabled="true"],
+#button-save[disabled="true"]:hover,
+#button-save[disabled="true"]:hover:active
+  {
+    list-style-image      : url("chrome://messenger/skin/messengercompose/savemsg-disabled.gif");
+  } 
+
+#button-save:hover
+  {
+    list-style-image      : url("chrome://messenger/skin/messengercompose/savemsg-hover.gif");
+  } 
+
+#button-save:hover:active
+  {
+    list-style-image      : url("chrome://messenger/skin/messengercompose/savemsg-hover-active.gif");
+  }
 
 #button-stop {
 	list-style-image:url("chrome://global/skin/stop.gif");
 }
+
+#button-stop[disabled="true"],
+#button-stop[disabled="true"]:hover,
+#button-stop[disabled="true"]:hover:active
+  {
+    list-style-image      : url("chrome://global/skin/stop-disabled.gif");
+  } 
+
+#button-stop:hover
+  {
+    list-style-image      : url("chrome://global/skin/stop-hover.gif");
+  } 
+
+#button-stop:hover:active
+  {
+    list-style-image      : url("chrome://global/skin/stop-hover-active.gif");
+  }
 
 toolbar#MsgHeadersToolbar {
   border-bottom: 1px solid #999999;

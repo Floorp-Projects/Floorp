@@ -110,6 +110,9 @@ EXPORT_RESOURCE_SAMPLES = \
 	seltab-rightedge.gif \
 	sortAscending.gif \
 	sortDescending.gif \
+	stop-disabled.gif \
+	stop-hover-active.gif \
+	stop-hover.gif \
 	stop.gif \
 	tab-leftedge.gif \
 	tab-rightedge.gif \

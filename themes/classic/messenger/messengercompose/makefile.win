@@ -29,11 +29,39 @@ clobber::
 	rm -f $(DIST)\chrome\skins\$(THEME)\messenger\skin\messengercompose\*.*
 
 install:: 
+	$(MAKE_INSTALL) address-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) address-hover-active.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) address-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
 	$(MAKE_INSTALL) address.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) attach-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) attach-hover-active.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) attach-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
 	$(MAKE_INSTALL) attach.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) attachment.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) mailoptions-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) mailoptions-hover-active.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) mailoptions-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) mailoptions.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
 	$(MAKE_INSTALL) messengercompose.css $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) quote-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) quote-hover-active.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) quote-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
 	$(MAKE_INSTALL) quote.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
 	$(MAKE_INSTALL) save.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) savemsg-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) savemsg-hover-active.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) savemsg-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) savemsg.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) send-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) send-hover-active.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) send-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
 	$(MAKE_INSTALL) send.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) sendlater-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) sendlater-hover-active.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) sendlater-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) sendlater.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) spelling-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) spelling-hover-active.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) spelling-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
 	$(MAKE_INSTALL) spelling.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
 	$(MAKE_INSTALL) stop.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
