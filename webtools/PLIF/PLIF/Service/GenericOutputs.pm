@@ -46,10 +46,11 @@ sub provides {
 # this is typically used by input devices
 sub outputRequest {
     my $self = shift;
-    my($app, $output, $argument) = @_;
+    my($app, $output, $argument, @defaults) = @_;
     $output->output('request', {
         'command' => $app->command,
         'argument' => $argument,
+        'defaults' => \@defaults,
     });
 }
 
@@ -76,7 +77,7 @@ sub getDefaultString {
     my($app, $protocol, $string) = @_;
     if ($protocol eq 'stdout') {
         if ($string eq 'request') {
-            return ('COSES', '<text xmlns="http://bugzilla.mozilla.org/coses">\'<text value="(data.argument)"/>\'? </text>');
+            return ('COSES', '<text xmlns="http://bugzilla.mozilla.org/coses">\'<text value="(data.argument)"/>\'<if lvalue="(data.defaults.length)" condition=">" rvalue="0"> (default: \'<set variable="default" value="(data.defaults)" source="keys" order="default"><text value="(data.defaults.(default))"/><if lvalue="(default)" condition="!=" rvalue="0">\', \'</if></set>\')</if>? </text>');
         } elsif ($string eq 'error') {
             $self->dump(9, 'Looks like an error occured, because the string \'error\' is being requested');
             return ('COSES', '<text xmlns="http://bugzilla.mozilla.org/coses">Error:<br/><text value="(data.error)"/><br/></text>');
