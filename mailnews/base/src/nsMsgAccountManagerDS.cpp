@@ -463,30 +463,36 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
 
   // handle sorting of servers
   else if ((property == kNC_NameSort) ||
-           (property == kNC_FolderTreeNameSort)) {
-
-    // make sure we're handling a root folder that is a server
-    nsCOMPtr<nsIMsgIncomingServer> server;
-    rv = getServerForFolderNode(source, getter_AddRefs(server));
-
-    // only answer for servers!
-    if (NS_FAILED(rv) || !server)
-        return NS_RDF_NO_VALUE;
-
+           (property == kNC_FolderTreeNameSort)) {    
     // order is:
-    // - default account
-    // - <other servers>
-    // - Local Folders
-    // - news
-    
-    PRInt32 accountNum;
-    nsCOMPtr<nsIMsgAccountManager> am =
-        do_QueryReferent(mAccountManager);
+    // - default mail account
+    // - <other mail accounts>
+    // - "Local Folders" account
+    // - news accounts
+    // - smtp settings (note, this is only in account manager tree)
+    // - fake account
 
-    if (isDefaultServer(server))
-        str = NS_LITERAL_STRING("0000");
+    if (source == kNC_PageTitleSMTP)
+      str = NS_LITERAL_STRING("4000");
+    else if (source == kNC_PageTitleFakeAccount)
+      str = NS_LITERAL_STRING("5000");
     else {
-    
+      // make sure we're handling a root folder that is a server
+      nsCOMPtr<nsIMsgIncomingServer> server;
+      rv = getServerForFolderNode(source, getter_AddRefs(server));
+      
+      // only answer for servers!
+      if (NS_FAILED(rv) || !server)
+        return NS_RDF_NO_VALUE;
+      
+      PRInt32 accountNum;
+      nsCOMPtr<nsIMsgAccountManager> am =
+        do_QueryReferent(mAccountManager);
+      
+      if (isDefaultServer(server))
+        str = NS_LITERAL_STRING("0000");
+      else {
+        
         rv = am->FindServerIndex(server, &accountNum);
         if (NS_FAILED(rv)) return rv;
         
@@ -495,13 +501,14 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
         server->GetType(getter_Copies(serverType));
         
         if (nsCRT::strcasecmp(serverType, "none")==0)
-            accountNum += 2000;
+          accountNum += 2000;
         else if (nsCRT::strcasecmp(serverType, "nntp")==0)
-            accountNum += 3000;
+          accountNum += 3000;
         else
-            accountNum += 1000;     // default is to appear at the top
+          accountNum += 1000;     // default is to appear at the top
         
         str.AppendInt(accountNum);
+      }
     }
   }
 
@@ -636,7 +643,7 @@ nsMsgAccountManagerDataSource::createRootResources(nsIRDFResource *property,
         printf("GetTargets(): added %d servers on %s\n", nodecount,
                (const char*)property_arc);
 #endif
-        // for the "settings" arc, we also want to do an SMTP tag
+        // for the "settings" arc, we also want to add SMTP setting and the fake account (if required)
         if (property == kNC_Settings) {
             aNodeArray->AppendElement(kNC_PageTitleSMTP);
             if (IsFakeAccountRequired())
@@ -1012,7 +1019,7 @@ nsMsgAccountManagerDataSource::isDefaultServer(nsIMsgIncomingServer *aServer)
     NS_ENSURE_SUCCESS(rv, PR_FALSE);
     if (!defaultAccount) return PR_FALSE;
 
-    // in some wierd case that there is no default and they asked
+    // in some weird case that there is no default and they asked
     // for the default
     nsCOMPtr<nsIMsgIncomingServer> defaultServer;
     rv = defaultAccount->GetIncomingServer(getter_AddRefs(defaultServer));

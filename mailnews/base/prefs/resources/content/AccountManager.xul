@@ -27,6 +27,8 @@
             containment="http://home.netscape.com/NC-rdf#Settings"
             onselect="onAccountClick(event.target)" id="accounttree"
             seltype="single"
+            sortResource="http://home.netscape.com/NC-rdf#FolderTreeName"
+            sortDirection="ascending"
             ref="msgaccounts:/" hidecolumnpicker="true">
         <treecols>
           <treecol id="AccountCol" flex="1" primary="true" hideheader="true"/>
@@ -35,7 +37,6 @@
           <rule>
             <treechildren>
               <treeitem uri="..." open="true"
-                        sort="rdf:http://home.netscape.com/NC-rdf#FolderTreeName?sort=true"
                         IsDefaultServer="rdf:http://home.netscape.com/NC-rdf#IsDefaultServer"
                         PageTag="rdf:http://home.netscape.com/NC-rdf#PageTag">
                 <treerow >
@@ -53,11 +54,8 @@
       <button label="&setDefaultButton.label;" oncommand="onSetDefault(event);" disabled="true" id="setDefaultButton"
               prefstring="mail.disable_button.set_default_account"/>
   
-        <!-- taking out for PR2
-          <button disabled="true" label="&duplicateButton.label;" id="duplicateButton" oncommand="onDuplicateAccount();"/>
-        -->
-        <button disabled="true" label="&removeButton.label;" oncommand="onRemoveAccount(event);" id="removeButton"
-                prefstring="mail.disable_button.delete_account"/>
+      <button disabled="true" label="&removeButton.label;" oncommand="onRemoveAccount(event);" id="removeButton"
+              prefstring="mail.disable_button.delete_account"/>
     </vbox>
   
     <iframe id="contentFrame" name="contentFrame" flex="6" style="width: 0px"/>
