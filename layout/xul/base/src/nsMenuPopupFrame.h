@@ -64,6 +64,7 @@ public:
   NS_IMETHOD CaptureMouseEvents(PRBool aGrabMouseEvents);
 
   void KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag);
+  void ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag);
 
 protected:
   nsIFrame* mCurrentMenu; // The current menu that is active.

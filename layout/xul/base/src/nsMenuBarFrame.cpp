@@ -155,6 +155,12 @@ nsMenuBarFrame::ToggleMenuActiveState()
   }
 }
 
+void 
+nsMenuBarFrame::ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag)
+{
+
+}
+
 void
 nsMenuBarFrame::KeyboardNavigation(PRUint32 aDirection)
 {
