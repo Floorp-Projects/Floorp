@@ -451,7 +451,6 @@ var messageHeaderSink = {
     },
     onMsgHasRemoteContent: function(aMsgHdr)
     {
-      dump('entering on msg has remote content\n\n');
       SetUpRemoteContentBar(aMsgHdr);
     },
 
