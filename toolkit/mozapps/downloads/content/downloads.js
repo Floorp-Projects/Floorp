@@ -159,6 +159,9 @@ function downloadCompleted(aDownload)
         break;
       }
     }
+
+    gDownloadViewController.onCommandUpdate();
+
     if (gActiveDownloads.length == 0)
       window.title = document.documentElement.getAttribute("statictitle");    
   }
