@@ -132,6 +132,14 @@ interface nsIControllerCommandManager : nsISupports
 	boolean isCommandEnabled(in wstring aCommandName, in nsISupports aCommandRefCon);
 
   /**
+   * Tell the command to udpate its state (if it is a state updating command)
+   *
+   * @param aCommandName    the name of the command to update
+   * @param aCommandRefCon  the command context data
+   */
+	void  updateCommandState(in wstring aCommandName, in nsISupports aCommandRefCon);
+
+  /**
    * Get whether the named command is supported.
    *
    * @param aCommandName    the name of the command to test
