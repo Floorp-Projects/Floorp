@@ -74,8 +74,8 @@ protected:
 
   bool              mInited;
 
-  CFRunLoopSourceRef   mSleepWakeNotifcationRLS;
-
+  CFRunLoopSourceRef   mSleepWakeNotificationRLS;
+  io_object_t       mPowerNotifier;
 };
 
 extern nsToolkitBase* NS_CreateToolkitInstance();

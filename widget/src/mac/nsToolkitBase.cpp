@@ -72,7 +72,7 @@ static PRUintn gToolkitTLSIndex = 0;
 
 nsToolkitBase::nsToolkitBase()
 : mInited(false)
-, mSleepWakeNotifcationRLS(nsnull)
+, mSleepWakeNotificationRLS(nsnull)
 {
 
 }
@@ -236,20 +236,19 @@ nsresult
 nsToolkitBase::RegisterForSleepWakeNotifcations()
 {
   IONotificationPortRef   notifyPortRef;
-  io_object_t             anIterator;
 
-  NS_ASSERTION(!mSleepWakeNotifcationRLS, "Already registered for sleep/wake");
+  NS_ASSERTION(!mSleepWakeNotificationRLS, "Already registered for sleep/wake");
 
-  gRootPort = ::IORegisterForSystemPower(0, &notifyPortRef, ToolkitSleepWakeCallback, &anIterator);
+  gRootPort = ::IORegisterForSystemPower(0, &notifyPortRef, ToolkitSleepWakeCallback, &mPowerNotifier);
   if (gRootPort == NULL)
   {
     NS_ASSERTION(0, "IORegisterForSystemPower failed");
     return NS_ERROR_FAILURE;
   }
 
-  mSleepWakeNotifcationRLS = ::IONotificationPortGetRunLoopSource(notifyPortRef);
+  mSleepWakeNotificationRLS = ::IONotificationPortGetRunLoopSource(notifyPortRef);
   ::CFRunLoopAddSource(::CFRunLoopGetCurrent(),
-                        mSleepWakeNotifcationRLS,
+                        mSleepWakeNotificationRLS,
                         kCFRunLoopDefaultMode);
 
   return NS_OK;
@@ -259,13 +258,14 @@ nsToolkitBase::RegisterForSleepWakeNotifcations()
 void
 nsToolkitBase::RemoveSleepWakeNotifcations()
 {
-  if (mSleepWakeNotifcationRLS)
+  if (mSleepWakeNotificationRLS)
   {
+    IODeregisterForSystemPower(&mPowerNotifier);
     ::CFRunLoopRemoveSource(::CFRunLoopGetCurrent(),
-                          mSleepWakeNotifcationRLS,
+                          mSleepWakeNotificationRLS,
                           kCFRunLoopDefaultMode);
 
-    mSleepWakeNotifcationRLS = nsnull;
+    mSleepWakeNotificationRLS = nsnull;
   }
 }
 
