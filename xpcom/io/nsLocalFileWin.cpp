@@ -377,91 +377,77 @@ nsLocalFile::ResolvePath(const char* workingPath, PRBool resolveTerminal, char**
         size_t offset = strlen(filePath) - 4;
         if ((offset > 0) && (strncmp( (filePath + offset), ".lnk", 4) == 0))
         {
-            // Ensure that the string is Unicode. 
             MultiByteToWideChar(CP_ACP, 0, filePath, -1, wsz, MAX_PATH); 
+        }        
+        else
+        {
+            char linkStr[MAX_PATH];
+            strcpy(linkStr, filePath);
+            strcat(linkStr, ".lnk");
 
-            HRESULT hres; 
-            
-            // see if we can Load the path.
-            hres = mPersistFile->Load(wsz, STGM_READ); 
+            // Ensure that the string is Unicode. 
+            MultiByteToWideChar(CP_ACP, 0, linkStr, -1, wsz, MAX_PATH); 
+        }        
 
+        HRESULT hres; 
+        
+        // see if we can Load the path.
+        hres = mPersistFile->Load(wsz, STGM_READ); 
+
+        if (SUCCEEDED(hres)) 
+        {
+            // Resolve the link. 
+            hres = mShellLink->Resolve(nsnull, SLR_NO_UI ); 
             if (SUCCEEDED(hres)) 
-            {
-                // Resolve the link. 
-                hres = mShellLink->Resolve(nsnull, SLR_NO_UI ); 
-                if (SUCCEEDED(hres)) 
-                { 
-                    WIN32_FIND_DATA wfd; 
-                    
-                    char *temp = (char*) nsAllocator::Alloc( MAX_PATH );
-                    if (temp == nsnull)
-                        return NS_ERROR_NULL_POINTER;
-                    
-                    // Get the path to the link target. 
-                    hres = mShellLink->GetPath( temp, MAX_PATH, &wfd, SLGP_UNCPRIORITY ); 
-
-                    if (SUCCEEDED(hres))
-                    {
-                        // found a new path.
-                        
-                        // addend a slash on it since it does not come out of GetPath()
-                        // with one only if it is a directory.  If it is not a directory
-                        // and there is more to append, than we have a problem.
-                        
-                        struct stat st;
-                        int statrv = stat(temp, &st);
-                        
-                        if (0 == statrv && (_S_IFDIR & st.st_mode))
-                        {
-                            strcat(temp, "\\");
-                        }
-                        else
-                        {
-                           // check to see the file is a shortcut by the magic .lnk extension.
-                            size_t offset = strlen(temp) - 4;
-                            if ((offset > 0) && (strncmp( (temp + offset), ".lnk", 4) == 0)) 
-                            {
-                                strcat(temp, "\\");
-                            }
-                            else
-                            {
-                                // it is not an shortcut, we have an error!
-                                nsAllocator::Free(temp);
-                                nsAllocator::Free(filePath);
-                                return NS_ERROR_FILE_INVALID_PATH;
-                            }
-                        }
-                        
-                        if (slash)
-                        {
-                            // save where we left off.
-                            char *carot= (temp + strlen(temp) -1 );
-
-                            // append all the stuff that we have not done.
-                            strcat(temp, ++slash);
-                            
-                            slash = carot;
-                        }
-
-                        nsAllocator::Free(filePath);
-                        filePath = temp;
+            { 
+                WIN32_FIND_DATA wfd; 
                 
-                    }
-                    else
+                char *temp = (char*) nsAllocator::Alloc( MAX_PATH );
+                if (temp == nsnull)
+                    return NS_ERROR_NULL_POINTER;
+                
+                // Get the path to the link target. 
+                hres = mShellLink->GetPath( temp, MAX_PATH, &wfd, SLGP_UNCPRIORITY ); 
+
+                if (SUCCEEDED(hres))
+                {
+                    // found a new path.
+                    
+                    // addend a slash on it since it does not come out of GetPath()
+                    // with one only if it is a directory.  If it is not a directory
+                    // and there is more to append, than we have a problem.
+                    
+                    struct stat st;
+                    int statrv = stat(temp, &st);
+                    
+                    if (0 == statrv && (_S_IFDIR & st.st_mode))
                     {
-                        nsAllocator::Free(temp);
+                        strcat(temp, "\\");
                     }
+                                       
+                    if (slash)
+                    {
+                        // save where we left off.
+                        char *carot= (temp + strlen(temp) -1 );
+
+                        // append all the stuff that we have not done.
+                        strcat(temp, ++slash);
+                        
+                        slash = carot;
+                    }
+
+                    nsAllocator::Free(filePath);
+                    filePath = temp;
+            
                 }
                 else
                 {
-                    // could not resolve shortcut.  Return error;
-                    nsAllocator::Free(filePath);
-                    return NS_ERROR_FILE_INVALID_PATH;
+                    nsAllocator::Free(temp);
                 }
             }
             else
             {
-                // could not load shortcut.  Return error;
+                // could not resolve shortcut.  Return error;
                 nsAllocator::Free(filePath);
                 return NS_ERROR_FILE_INVALID_PATH;
             }
@@ -503,11 +489,23 @@ nsLocalFile::ResolveAndStat(PRBool resolveTerminal)
     
 
     const char *filePath = mResolvedPath.GetBuffer();
-
-    if ( 0 == GetFileAttributesEx( filePath, 
-                                   GetFileExInfoStandard,
-                                   &mFileAttrData) )
+    BOOL result;
+    
+    result = GetFileAttributesEx( filePath, GetFileExInfoStandard, &mFileAttrData);
+    if ( 0 ==  result )
     {
+        if (resolveTerminal == false)
+        {
+            char linkStr[MAX_PATH];
+            strcpy(linkStr, filePath);
+            strcat(linkStr, ".lnk");
+            result = GetFileAttributesEx( linkStr, GetFileExInfoStandard, &mFileAttrData);
+
+            if ( 0 == result)
+            {
+                return ConvertWinError(GetLastError());
+            }
+        }
         return ConvertWinError(GetLastError());
     }
 
@@ -818,7 +816,10 @@ nsLocalFile::CopyMove(nsIFile *newParentDir, const char *newName, PRBool followS
 
     PRBool isDir;
     IsDirectory(&isDir);
-    if (!isDir)
+    PRBool isSymlink;
+    IsSymlink(&isSymlink);
+
+    if (!isDir || (isSymlink && !followSymlinks))
     {
         rv = CopySingleFile(this, newParentDir, newName, followSymlinks, move);
         if (NS_FAILED(rv))
@@ -898,7 +899,7 @@ nsLocalFile::CopyMove(nsIFile *newParentDir, const char *newName, PRBool followS
             if (move)
             {
                 if (followSymlinks)
-                    rv = file->MoveToFollowingLinks(target, nsnull);
+                    rv = NS_ERROR_FAILURE;
                 else
                     rv = file->MoveTo(target, nsnull);
             }
@@ -953,12 +954,6 @@ NS_IMETHODIMP
 nsLocalFile::MoveTo(nsIFile *newParentDir, const char *newName)
 {
     return CopyMove(newParentDir, newName, PR_FALSE, PR_TRUE);
-}
-
-NS_IMETHODIMP  
-nsLocalFile::MoveToFollowingLinks(nsIFile *newParentDir, const char *newName)
-{
-    return CopyMove(newParentDir, newName, PR_TRUE, PR_TRUE);
 }
 
 NS_IMETHODIMP  
