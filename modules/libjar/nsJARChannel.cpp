@@ -38,7 +38,6 @@
 #include "prthread.h"
 
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
-static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
 static NS_DEFINE_CID(kScriptSecurityManagerCID, NS_SCRIPTSECURITYMANAGER_CID);
 
 #if defined(PR_LOGGING)
