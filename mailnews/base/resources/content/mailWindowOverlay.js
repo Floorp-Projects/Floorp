@@ -91,11 +91,13 @@ function MsgCopyMessage(destFolder)
 	destMsgFolder = destResource.QueryInterface(Components.interfaces.nsIMsgFolder);
 
 	var srcFolder = GetLoadedMsgFolder();
-	var compositeDataSource = GetCompositeDataSource("Copy");
-	var messages = GetSelectedMessages();
+	if(srcFolder)
+	{
+		var compositeDataSource = GetCompositeDataSource("Copy");
+		var messages = GetSelectedMessages();
 
-	CopyMessages(compositeDataSource, srcFolder, destMsgFolder, messages, false);
-	
+		CopyMessages(compositeDataSource, srcFolder, destMsgFolder, messages, false);
+	}	
 }
 
 function MsgMoveMessage(destFolder)
@@ -106,20 +108,23 @@ function MsgMoveMessage(destFolder)
 	destMsgFolder = destResource.QueryInterface(Components.interfaces.nsIMsgFolder);
 	
 	var srcFolder = GetLoadedMsgFolder();
-	var compositeDataSource = GetCompositeDataSource("Move");
-	var messages = GetSelectedMessages();
-
-	var srcResource = srcFolder.QueryInterface(Components.interfaces.nsIRDFResource);
-	var srcUri = srcResource.Value;
-	if (srcUri.substring(0,6) == "news:/")
+	if(srcFolder)
 	{
-		CopyMessages(compositeDataSource, srcFolder, destMsgFolder, messages, false);
-	}
-	else
-	{
-		SetNextMessageAfterDelete(null, true);
+		var compositeDataSource = GetCompositeDataSource("Move");
+		var messages = GetSelectedMessages();
 
-		CopyMessages(compositeDataSource, srcFolder, destMsgFolder, messages, true);
+		var srcResource = srcFolder.QueryInterface(Components.interfaces.nsIRDFResource);
+		var srcUri = srcResource.Value;
+		if (srcUri.substring(0,6) == "news:/")
+		{
+			CopyMessages(compositeDataSource, srcFolder, destMsgFolder, messages, false);
+		}
+		else
+		{
+			SetNextMessageAfterDelete(null, true);
+
+			CopyMessages(compositeDataSource, srcFolder, destMsgFolder, messages, true);
+		}
 	}	
 }
 
