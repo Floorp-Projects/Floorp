@@ -28,6 +28,8 @@
 #include "nsIPresShell.h"
 #include "EditAggregateTxn.h"
 #include "nsLayoutCID.h"
+
+// #define DEBUG_IMETXN
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 
 static NS_DEFINE_IID(kIDOMSelectionIID, NS_IDOMSELECTION_IID);
@@ -83,7 +85,7 @@ NS_IMETHODIMP IMETextTxn::Init(nsIDOMCharacterData     *aElement,
 NS_IMETHODIMP IMETextTxn::Do(void)
 {
 
-#if defined(DEBUG_tague) || defined(DEBUG_ftang)
+#ifdef DEBUG_IMETXN
   printf("Do IME Text element = %p replace = %d len = %d\n", mElement.get(), mReplaceLength, mStringToInsert.Length());
 #endif
 
@@ -106,7 +108,7 @@ NS_IMETHODIMP IMETextTxn::Do(void)
 
 NS_IMETHODIMP IMETextTxn::Undo(void)
 {
-#if defined(DEBUG_tague) || defined(DEBUG_ftang)
+#ifdef DEBUG_IMETXN
   printf("Undo IME Text element = %p\n", mElement.get());
 #endif
 
@@ -136,7 +138,7 @@ NS_IMETHODIMP IMETextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
   	return NS_ERROR_NULL_POINTER;
     
   nsresult  result;
-#if defined(DEBUG_tague) || defined(DEBUG_ftang)
+#ifdef DEBUG_IMETXN
   printf("Merge IME Text element = %p\n", mElement.get());
 #endif
 
@@ -170,7 +172,7 @@ NS_IMETHODIMP IMETextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
     otherTxn->GetData(mStringToInsert,&newTextRangeList);
     mRangeList = do_QueryInterface(newTextRangeList);
     *aDidMerge = PR_TRUE;
-#if defined(DEBUG_tague) || defined(DEBUG_ftang)
+#ifdef DEBUG_IMETXN
     printf("IMETextTxn assimilated IMETextTxn:%p\n", aTransaction);
 #endif
     NS_RELEASE(otherTxn);
@@ -278,7 +280,7 @@ NS_IMETHODIMP IMETextTxn::CollapseTextSelection(void)
     nsIPrivateTextRange*  textRange;
     
 
-#if defined(DEBUG_tague) || defined(DEBUG_ftang)
+#ifdef DEBUG_IMETXN
     PRUint16 listlen,start,stop,type;
     nsIPrivateTextRange* rangePtr;
     result = mRangeList->GetLength(&listlen);
