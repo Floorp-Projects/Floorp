@@ -1794,6 +1794,7 @@ void * nsWindow::GetNativeData(PRUint32 aDataType)
 
 NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
+  NS_ASSERTION(mIsDestroying != PR_TRUE, "Trying to scroll a destroyed widget\n");
   UnqueueDraw();
   mUpdateArea->Offset(aDx, aDy);
 
@@ -2670,6 +2671,10 @@ nsWindow::HandleXlibMotionNotifyEvent(XMotionEvent * aMotionEvent)
   event.point.x = nscoord(aMotionEvent->x);
   event.point.y = nscoord(aMotionEvent->y);
   
+  event.isShift = aMotionEvent->state & ShiftMask;
+  event.isControl = aMotionEvent->state & ControlMask;
+  event.isAlt = aMotionEvent->state & Mod1Mask;
+
   event.widget = this;
   
   AddRef();
