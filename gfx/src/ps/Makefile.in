@@ -28,7 +28,6 @@ LIBRARY_NAME = gfxps
 
 MODULE=raptor 
 
-REQUIRES=util img xpcom raptor netlib
 
 DEFINES += -D_IMPL_NS_GFXONXP 
 CFLAGS	+= $(TK_CFLAGS)
@@ -45,7 +44,4 @@ CSRCS = \
 	font_metrics.c \
 
 include $(topsrcdir)/config/rules.mk
-
-include $(topsrcdir)/config/rules.mk
-
 
