@@ -737,8 +737,18 @@ void CTests::PurgeHistoryTest(nsISHistory* theSessionHistory, PRInt32 numEntries
 // ***********************************************************************
 // nsIWebNavigation iface
 
+// Url table for web navigation
+NavElement UrlTable[] = {
+	{"http://www.yahoo.com/", nsIWebNavigation::LOAD_FLAGS_NONE},
+	{"http://www.sun.com/", nsIWebNavigation::LOAD_FLAGS_IS_REFRESH},
+	{"http://www.netscape.com/", nsIWebNavigation::LOAD_FLAGS_IS_LINK},
+	{"http://www.aol.com/", nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY}
+};
+
 void CTests::OnInterfacesNsiwebnav()
 {
+   int i = 0;
+
    if (qaWebNav)
 	   CQaUtils::QAOutput("We have the web nav object.", 2);
    else {
@@ -765,17 +775,25 @@ void CTests::OnInterfacesNsiwebnav()
 
    CQaUtils::QAOutput("Run a few LoadURI() tests.", 2);
 
-   LoadUriTest("http://www.yahoo.com/", nsIWebNavigation::LOAD_FLAGS_NONE);
-   ReloadTest(nsIWebNavigation::LOAD_FLAGS_NONE);
-
-   LoadUriTest("http://www.cisco.com/", nsIWebNavigation::LOAD_FLAGS_IS_REFRESH);
-   ReloadTest(nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE);
-
-   LoadUriTest("http://www.netscape.com/", nsIWebNavigation::LOAD_FLAGS_IS_LINK);
-   ReloadTest(nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY);
-
-   LoadUriTest("http://www.aol.com/", nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY);
-   ReloadTest(nsIWebNavigation::LOAD_FLAGS_CHARSET_CHANGE);
+	for (i=0; i < 4; i++)
+	{
+		LoadUriTest(UrlTable[i].theUri, UrlTable[i].theFlag);
+		switch (i)
+		{
+		case 0:
+			ReloadTest(nsIWebNavigation::LOAD_FLAGS_NONE);
+			break;
+		case 1:
+			ReloadTest(nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE);
+			break;
+		case 2:
+			ReloadTest(nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY);
+			break;
+		case 3:
+			ReloadTest(nsIWebNavigation::LOAD_FLAGS_CHARSET_CHANGE);
+			break;
+		}
+	}
 
 	// Stop() test
    StopUriTest("http://www.microsoft.com/");
@@ -985,7 +1003,7 @@ void CTests::GetSHTest()
 //  table columns corrsp to: pending, status, suspend, resume, cancel,
 //  setLoadGroup & getLoadGroup tests respectively.
 
-Element UriTable[] = {
+ReqElement UriTable[] = {
 	{"http://www.netscape.com",		1, 1, 0, 0, 0, 1, 1},
 	{"http://www.yahoo.com",		0, 0, 1, 1, 0, 0, 0},
 	{"http://www.cisco.com",		0, 0, 0, 0, 1, 0, 0},
