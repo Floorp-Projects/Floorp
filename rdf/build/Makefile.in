@@ -52,6 +52,7 @@ SHARED_LIBRARY_LIBS =			 \
 	$(DIST)/lib/librdfbase_s.a	 \
 	$(DIST)/lib/librdfcontent_s.a	 \
 	$(DIST)/lib/librdfdatasource_s.a \
+	$(DIST)/lib/librdfutil_s.a	 \
 	$(NULL)
 
 EXTRA_DSO_LDOPTS =	       \
