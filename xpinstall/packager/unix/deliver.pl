@@ -161,10 +161,6 @@ spew("Completed copying build files");
 system("perl xptlink.pl -o unix -s $topobjdir/dist -d $STAGE -v");
 spew("Completed xptlinking"); 
 
-#// change the permissions in the staging area, stopgap for creating 
-#// group/world writeable files in /usr for standard installs
-system("chmod og-w -R $STAGE");
-
 #// call makeall.pl tunneling args (delivers .xpis to $topobjdir/installer/stage)
 chdir("$topsrcdir/xpinstall/packager/unix");
 system("perl makeall.pl $aVersion $aURLPath $STAGE $XPI");
@@ -176,10 +172,11 @@ spew("Completed making .xpis");
 #-------------------------------------------------------------------------
 #// tar and gzip mozilla-installer, mozilla-installer-bin, README, license, 
 #// config.ini, installer.ini into stub
+my $create_tar = 'tar -cv --owner=0 --group=0 --numeric-owner --mode="go-w" -f';
 spew("Creating stub installer tarball...");
 chdir("$RAW/..");
 system("mv $RAW $ROOT/$SUBDIR");
-system("tar cvf $STUB/$aStubName.tar ./$SUBDIR/mozilla-installer ./$SUBDIR/mozilla-installer-bin ./$SUBDIR/installer.ini ./$SUBDIR/README ./$SUBDIR/config.ini ./$SUBDIR/MPL-1.1.txt"); 
+system($create_tar . "$STUB/$aStubName.tar ./$SUBDIR/mozilla-installer ./$SUBDIR/mozilla-installer-bin ./$SUBDIR/installer.ini ./$SUBDIR/README ./$SUBDIR/config.ini ./$SUBDIR/MPL-1.1.txt"); 
 system("mv $ROOT/$SUBDIR $RAW");
 system("gzip $STUB/$aStubName.tar");
 spew("Completed creating stub installer tarball");
@@ -188,7 +185,7 @@ spew("Completed creating stub installer tarball");
 #// config.ini, installer.ini and .xpis into sea
 spew("Creating blob (aka full or sea) installer tarball...");
 system("mv $RAW $ROOT/$SUBDIR");
-system("tar cvf $BLOB/$aBlobName.tar ./$SUBDIR/"); 
+system($create_tar . "$BLOB/$aBlobName.tar ./$SUBDIR/"); 
 system("mv $ROOT/$SUBDIR $RAW");
 system("gzip $BLOB/$aBlobName.tar");
 spew("Completed creating blob (aka full or sea) installer tarball");

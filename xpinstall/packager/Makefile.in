@@ -87,20 +87,22 @@ ifeq ($(OS_ARCH),BSD_OS)
 TAR_CREATE_FLAGS = -cvLf
 endif
 
+CREATE_FINAL_TAR = tar -c --owner=0 --group=0 --numeric-owner --mode="go-w" -f
+
 ifeq ($(MOZ_PKG_FORMAT),TAR)
 PKG_SUFFIX	= .tar
-MAKE_PACKAGE 	= tar -cf - $(MOZ_PKG_APPNAME) > $(PACKAGE)
-MAKE_SDK	= tar -cf - $(SDK_PKG_APPNAME)-$(SDK_DIR) > $(SDK)
+MAKE_PACKAGE 	= $(CREATE_FINAL_TAR) - $(MOZ_PKG_APPNAME) > $(PACKAGE)
+MAKE_SDK	= $(CREATE_FINAL_TAR) - $(SDK_PKG_APPNAME)-$(SDK_DIR) > $(SDK)
 endif
 ifeq ($(MOZ_PKG_FORMAT),TGZ)
 PKG_SUFFIX	= .tar.gz
-MAKE_PACKAGE 	= tar -cf - $(MOZ_PKG_APPNAME) | gzip -vf9 > $(PACKAGE)
-MAKE_SDK        = tar -cf - $(SDK_PKG_APPNAME)-$(SDK_DIR) | gzip -vf9 > $(SDK)
+MAKE_PACKAGE 	= $(CREATE_FINAL_TAR) - $(MOZ_PKG_APPNAME) | gzip -vf9 > $(PACKAGE)
+MAKE_SDK        = $(CREATE_FINAL_TAR) - $(SDK_PKG_APPNAME)-$(SDK_DIR) | gzip -vf9 > $(SDK)
 endif
 ifeq ($(MOZ_PKG_FORMAT),BZ2)
 PKG_SUFFIX	= .tar.bz2
-MAKE_PACKAGE 	= tar -cf - $(MOZ_PKG_APPNAME) | bzip2 -vf > $(PACKAGE)
-MAKE_SDK        = tar -cf - $(SDK_PKG_APPNAME)-$(SDK_DIR) | bzip2 -vf > $(SDK)
+MAKE_PACKAGE 	= $(CREATE_FINAL_TAR) - $(MOZ_PKG_APPNAME) | bzip2 -vf > $(PACKAGE)
+MAKE_SDK        = $(CREATE_FINAL_TAR) - $(SDK_PKG_APPNAME)-$(SDK_DIR) | bzip2 -vf > $(SDK)
 endif
 ifeq ($(MOZ_PKG_FORMAT),ZIP)
 PKG_SUFFIX	= .zip
