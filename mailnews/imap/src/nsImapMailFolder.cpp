@@ -1103,7 +1103,7 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
 			
 			// Create a new summary file, update the folder message counts, and
 			// Close the summary file db.
-			rv = mailDBFactory->Open(dbName, PR_TRUE, getter_AddRefs(mDatabase), PR_FALSE);
+			rv = mailDBFactory->Open(dbName, PR_TRUE, getter_AddRefs(mDatabase), PR_TRUE);
 
 			// ********** Important *************
 			// David, help me here I don't know this is right or wrong

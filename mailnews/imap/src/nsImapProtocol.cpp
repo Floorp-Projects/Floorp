@@ -494,9 +494,14 @@ void nsImapProtocol::SetupWithUrl(nsIURL * aURL)
 void nsImapProtocol::ReleaseUrlState()
 {
 	m_runningUrl = null_nsCOMPtr();
+	m_imapMailFolderSink = null_nsCOMPtr();
+	m_imapMessageSink = null_nsCOMPtr();
+	m_imapExtensionSink = null_nsCOMPtr();
+	m_imapMiscellaneousSink = null_nsCOMPtr();
 	// mscott - do we need to release all of our sinks here? will we re-use them on the next
 	// url request? I'm guessing we need to release them even though we'll just re-acquire
 	// them on the next request.
+	// YES, we should release them - they may not be valid, because we may switch folders.
 
 }
 
