@@ -206,3 +206,13 @@ void CQaUtils::WebProgDOMWindowTest(nsIWebProgress *progress, const char *inStri
 	else
 		RvTestResult(rv, totalStr2, displayMethod);
 }
+
+void CQaUtils::GetTheUri(nsIURI *theUri, int displayMethod)
+{
+	nsresult rv;
+    char *uriSpec;
+
+	rv = theUri->GetSpec(&uriSpec);
+    RvTestResult(rv, "nsIURI::GetSpec() test", displayMethod);
+    FormatAndPrintOutput("the uri = ", uriSpec, displayMethod);
+}
