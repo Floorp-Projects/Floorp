@@ -330,27 +330,15 @@ function cmgr_hook (commandName, func, id, before)
     
     if (before)
     {
-        if (!("beforeHookNames" in command))
-            command.beforeHookNames = new Array();
         if (!("beforeHooks" in command))
             command.beforeHooks = new Object();
-        if (id in command.beforeHooks)
-        {
-            arrayRemoveAt(command.beforeHookNames,
-                          command.beforeHooks[id][id + "_hookIndex"]);
-        }
         command.beforeHooks[id] = func;
-        command.beforeHookNames.push(id);
     }
     else
     {
-        if (!("afterHookNames" in command))
-            command.afterHookNames = new Array();
         if (!("afterHooks" in command))
             command.afterHooks = new Object();
-        func[id + "_hookIndex"] = command.afterHookNames.length
         command.afterHooks[id] = func;
-        command.afterHookNames.push(id);
     }
 }
 
@@ -363,7 +351,7 @@ function cmgr_hooks (hooks, prefix)
     for (var h in hooks)
     {
         this.addHook(h, hooks[h], prefix + ":" + h, 
-                     ("before" in hooks[h]) ? hooks[h].before : false);
+                     ("_before" in hooks[h]) ? hooks[h]._before : false);
     }
 }
 
@@ -386,30 +374,9 @@ function cmgr_unhook (commandName, id, before)
     var command = this.commands[commandName];
 
     if (before)
-    {
-        arrayRemoveAt(command.beforeHookNames,
-                      command.beforeHooks[id][id + "_hookIndex"]);
-        delete command.beforeHooks[id][id + "_hookIndex"];
         delete command.beforeHooks[id];
-        if (keys(command.beforeHooks).length == 0)
-        {
-            delete command.beforeHookNames;
-            delete command.beforeHooks;
-        }
-    }
     else
-    {
-        arrayRemoveAt(command.afterHookNames,
-                      command.afterHooks[id][id + "_hookIndex"]);
-        delete command.afterHooks[id][id + "_hookIndex"];
         delete command.afterHooks[id];
-        if (command.afterHookNames.length == 0)
-        {
-            delete command.afterHookNames;
-            delete command.afterHooks;
-        }
-    }
-
 }
 
 /**

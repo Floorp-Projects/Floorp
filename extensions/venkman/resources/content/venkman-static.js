@@ -33,7 +33,7 @@
  *
  */
 
-const __vnk_version        = "0.9.24";
+const __vnk_version        = "0.9.28";
 const __vnk_requiredLocale = "0.9.x";
 var   __vnk_versionSuffix  = "";
 
@@ -222,36 +222,27 @@ function dispatchCommand (command, e, flags)
         var names, hooks;
         
         if (isBefore)
-        {
-            names = command.beforeHookNames;
             hooks = command.beforeHooks;
-        }
         else
-        {
-            names = command.afterHookNames;
             hooks = command.afterHooks;
-        }
 
-        var len = names.length;
-        
-        for (var i = 0; i < len; ++i)
+        for (var h in hooks)
         {
-            var name = names[i];
             if ("dbgDispatch" in console && console.dbgDispatch)
             {
                 dd ("calling " + (isBefore ? "before" : "after") + 
-                    " hook " + name);
+                    " hook " + h);
             }
             try
             {
-                hooks[name](e);
+                hooks[h](e);
             }
             catch (ex)
             {
-                display (getMsg(MSN_ERR_INTERNAL_HOOK, name), MT_ERROR);
+                display (getMsg(MSN_ERR_INTERNAL_HOOK, h), MT_ERROR);
                 display (formatException(ex), MT_ERROR);
                 dd (formatException(ex), MT_ERROR);
-                if ("stack" in ex)
+                if (typeof ex == "object" && "stack" in ex)
                     dd (ex.stack);
             }
         }
@@ -534,7 +525,7 @@ function destroy ()
 {
     if (console.prefs["saveLayoutOnExit"])
         dispatch ("save-layout default");
-    
+
     destroyViews();
     destroyHandlers();
     detachDebugger();
@@ -609,7 +600,8 @@ function hookScriptSealed (e)
 {
     for (var fbp in console.fbreaks)
     {
-        if (e.scriptInstance.url.search(console.fbreaks[fbp].url) != -1)
+        if (console.fbreaks[fbp].enabled &&
+            e.scriptInstance.url.search(console.fbreaks[fbp].url) != -1)
         {
             e.scriptInstance.setBreakpoint(console.fbreaks[fbp].lineNumber,
                                            console.fbreaks[fbp]);
@@ -735,6 +727,59 @@ console.display = display;
 console.dispatch = dispatch;
 console.dispatchCommand = dispatchCommand;
 
+console.metaDirectives = new Object();
+
+console.metaDirectives["JSD_LOG"] =
+console.metaDirectives["JSD_BREAK"] =
+console.metaDirectives["JSD_EVAL"] =
+function metaBreak (scriptInstance, line, matchResult)
+{
+    var scriptWrapper = scriptInstance.getScriptWrapperAtLine(line);
+    if (!scriptWrapper)
+    {
+        display (getMsg(MSN_ERR_NO_FUNCTION, [line, scriptInstance.url]),
+                 MT_ERROR);
+        return;
+    }
+                        
+    var pc = scriptWrapper.jsdScript.lineToPc(line, PCMAP_SOURCETEXT);
+    if (scriptWrapper.getBreakpoint(pc))
+        return;
+
+    var breakpoint = scriptWrapper.setBreakpoint (pc);
+    matchResult[2] = stringTrim(matchResult[2]);
+    
+    switch (matchResult[1])
+    {
+        case "JSD_LOG":
+            breakpoint.conditionEnabled = true;
+            breakpoint.condition = "return eval(" + matchResult[2].quote() + ")";
+            breakpoint.resultAction = BREAKPOINT_STOPNEVER;
+            breakpoint.logResult = true;
+            break;
+
+        case "JSD_BREAK":
+            if (matchResult[2])
+            {
+                breakpoint.conditionEnabled = true;
+                breakpoint.condition = "return eval(" + matchResult[2].quote() +
+                    ")";
+                breakpoint.resultAction = BREAKPOINT_STOPTRUE;
+            }
+            else
+            {
+                breakpoint.resultAction = BREAKPOINT_STOPALWAYS;
+            }
+            break;
+            
+        case "JSD_EVAL":
+            breakpoint.conditionEnabled = true;
+            breakpoint.condition = "return eval(" + matchResult[2].quote() + ")";
+            breakpoint.resultAction = BREAKPOINT_STOPNEVER;
+            break;
+    }
+}
+
 console.__defineGetter__ ("status", con_getstatus);
 function con_getstatus ()
 {
@@ -796,391 +841,6 @@ function con_popstatus ()
     console.status = console._statusStack[console._statusStack.length - 1];
 }
 
-function createDOMForSourceText (sourceText, container)
-{
-    if (!ASSERT(sourceText.isLoaded, "sourceText is not loaded"))
-        return;
-    
-    var document = container.ownerDocument;
-    if (!ASSERT(document, "container has no owner document, using default"))
-        document = window.document
-
-    var sourceContainer = document.createElement ("source-listing");
-    
-    const COMMENT = 0;
-    const STRING1 = 1;
-    const STRING2 = 2;
-    const WORD    = 3;
-    const NUMBER  = 4;
-    const OTHER   = 5;
-    
-    var keywords = {
-        "abstract": 1, "boolean": 1, "break": 1, "byte": 1, "case": 1,
-        "catch": 1, "char": 1, "class": 1, "const": 1, "continue": 1,
-        "debugger": 1, "default": 1, "delete": 1, "do": 1, "double": 1,
-        "else": 1, "enum": 1, "export": 1, "export": 1, "extends": 1,
-        "false": 1, "final": 1, "finally": 1, "float": 1, "for": 1,
-        "function": 1, "goto": 1, "if": 1, "implements": 1, "import": 1,
-        "in": 1, "instanceof": 1, "int": 1, "interface": 1, "long": 1,
-        "native": 1, "new": 1, "null": 1, "package": 1, "private": 1,
-        "protected": 1, "public": 1, "return": 1, "short": 1, "static": 1,
-        "switch": 1, "synchronized": 1, "this": 1, "throw": 1, "throws": 1,
-        "transient": 1, "true": 1, "try": 1, "typeof": 1, "var": 1, "void": 1,
-        "while": 1, "with": 1
-    };
-
-    function mungeLine (line, parentNode, previousState, previousNode)
-    {
-        if (!previousState)
-            previousState = OTHER;
-        
-        function closePhrase (phrase)
-        {
-            /* put |phrase| into a DOM node, and append that node to
-             * |sourceContainer|.  If |phrase| is the same type as the
-             * |previousNode|, insert it there instead. */
-            if (!phrase)
-            {
-                previousState = OTHER;
-                return;
-            }
-
-            var textNode = document.createTextNode (phrase);
-            var nodeName;
-            
-            switch (previousState)
-            {
-                case COMMENT:
-                    nodeName = "c";
-                    break;            
-                case STRING1:
-                case STRING2:
-                    nodeName = "s";
-                    break;
-                case WORD:
-                    if (phrase in keywords)
-                        nodeName = "k";
-                    else
-                        nodeName = "w";
-                    break;
-                case NUMBER:
-                case OTHER:
-                    parentNode.appendChild (textNode);
-                    previousState = OTHER;
-                    previousNode = null;
-                    return;
-            }
-
-            if (previousNode && previousNode.localName == nodeName)
-            {
-                previousNode.appendChild (textNode);
-            }
-            else
-            {
-                previousNode = document.createElement (nodeName);
-                previousNode.appendChild (textNode);
-                parentNode.appendChild (previousNode);
-            }
-
-            previousState = OTHER;
-            return;
-        };
-    
-        var pos;
-        var ch, ch2;
-        var expr;
-    
-        while (line.length > 0)
-        {
-            /* scan a line of text.  |pos| always one *past* the end of the
-             * phrase we just scanned. */
-
-            switch (previousState)
-            {
-                case COMMENT:
-                    /* look for the end of a slash-star comment,
-                     * slash-slash comments are handled down below, because
-                     * we know for sure that it's the last phrase on this line.
-                     */
-                    pos = line.search (/\*\//);
-                    if (pos != -1)
-                        pos += 2;
-                    break;
-                    
-                case STRING1:
-                case STRING2:
-                    /* look for the end of a single or double quoted string. */
-                    if (previousState == STRING1)
-                    {
-                        ch = "'";
-                        expr = /\'/;
-                    }
-                    else
-                    {
-                        ch = "\"";
-                        expr = /\"/;
-                    }
-
-                    if (line[0] == ch)
-                    {
-                        pos = 1;
-                    }
-                    else
-                    {
-                        pos = line.search (expr);
-                        if (pos > 0 && line[pos - 1] == "\\")
-                        {
-                            /* arg, the quote we found was escaped, fall back
-                             * to scanning a character at a time. */
-                            var done = false;
-                            for (pos = 0; !done && pos < line.length; ++pos)
-                            {
-                                if (line[pos] == "\\")
-                                    ++pos;
-                                else if (line[pos] == ch)
-                                    done = true;
-                            }
-                        }
-                        else
-                        {
-                            /* no slash before the end quote, it *must* be
-                             * the end of the string. */
-                            if (pos != -1)
-                                ++pos;
-                        }
-                    }
-                    break;
-
-                case WORD:
-                    /* look for the end of something that qualifies as
-                     * an identifier. */
-                    var wordPattern = /[^a-zA-Z0-9_\$]/;
-                    pos = line.search(wordPattern);
-                    while (pos > -1 && line[pos] == "\\")
-                    {
-                        /* if we ended with a \ character, then the slash
-                         * and the character after it are part of this word.
-                         * the characters following may also be part of the
-                         * word. */
-                        pos += 2;
-                        var newPos = line.substr(pos).search(wordPattern);
-                        if (newPos > -1)
-                            pos += newPos;
-                    }
-                    break;
-
-                case NUMBER:
-                    /* look for the end of a number */
-                    pos = line.search (/[^0-9\.]/);
-                    break;
-
-                case OTHER:
-                    /* look for the end of anything else, like whitespace
-                     * or operators. */
-                    pos = line.search (/[0-9a-zA-Z_\$\"\']|\\|\/\/|\/\*/);
-                    break;
-            }
-
-            if (pos == -1)
-            {
-                /* couldn't find an end for the current state, close out the 
-                 * rest of the line.
-                 */
-                if (previousState == COMMENT || previousState == STRING1 ||
-                    previousState == STRING2)
-                {
-                    var savedState = previousState;
-                    closePhrase(line);
-                    previousState = savedState;
-                }
-                else
-                {
-                    closePhrase(line);
-                }
-
-                line = "";
-            }
-            else
-            {
-                /* pos has a non -1 value, close out what we found, and move
-                 * along. */
-                if (previousState == STRING1 || previousState == STRING2)
-                {
-                    /* strings are a special case because they actually are
-                     * considered to start *after* the leading quote,
-                     * and they end *before* the trailing quote. */
-                    if (pos == 1)
-                    {
-                        /* empty string */
-                        previousState = OTHER;
-                    }
-                    else
-                    {
-                        /* non-empty string, close out the contents of the
-                         * string. */
-                        closePhrase(line.substr (0, pos - 1));
-                    }
-                    
-                    /* close the trailing quote. */
-                    closePhrase (line[pos - 1]);
-                }
-                else
-                {
-                    /* non-string phrase, close the whole deal. */
-                    closePhrase(line.substr (0, pos));
-                }
-                
-                if (pos)
-                {
-                    /* continue on with the rest of the line */
-                    line = line.substr (pos);
-                }
-            }
-            
-            if (line)
-            {
-                /* figure out what the next token looks like. */
-                ch = line[0];
-                ch2 = (line.length > 1) ? line[1] : "";
-                
-                if (ch == "/" && ch2 == "/")
-                {
-                    /* slash-slash comment, the last thing on this line. */
-                    previousState = COMMENT;
-                    closePhrase(line);
-                    line = "";
-                }
-                else if (ch == "'")
-                {
-                    closePhrase("'");
-                    line = line.substr(1);
-                    previousState = STRING1;
-                }
-                else if (ch == "\"")
-                {
-                    closePhrase("\"");
-                    line = line.substr(1);
-                    previousState = STRING2;
-                }
-                else if (ch == "/" && ch2 == "*")
-                {
-                    previousState = COMMENT;
-                }
-                else if (ch.search (/[a-zA-Z_\\\$]/) == 0)
-                {
-                    previousState = WORD;
-                }
-                else if (ch.search (/[0-9]/) == 0)
-                {
-                    previousState = NUMBER;
-                }
-            }
-        }
-
-        parentNode.appendChild (document.createTextNode ("\n"));
-
-        return { previousState: previousState, previousNode: previousNode };
-    };
-
-    function processMarginChunk (start, callback, margin)
-    {
-        /* build a chunk of the left margin. */
-        dd ("processMarginChunk " + start + " {");
-        const CHUNK_SIZE = 500;
-        const CHUNK_DELAY = 100;
-        
-        if (!margin)
-        {
-            margin = document.createElement ("left-margin");
-            sourceContainer.appendChild (margin);
-        }
-        
-        var stop = Math.min (sourceText.lines.length, start + CHUNK_SIZE);
-        var element;
-        for (var i = start; i < stop; ++i)
-        {
-            element = document.createElement ("num");
-            if ("lineMap" in sourceText && i in sourceText.lineMap &&
-                (sourceText.lineMap[i] & LINE_BREAKABLE))
-            {
-                element.setAttribute ("x", "t");
-            }
-
-            element.appendChild (document.createTextNode(i));
-            margin.appendChild (element);
-        }
-
-        if (i != sourceText.lines.length)
-        {
-            setTimeout (processMarginChunk, CHUNK_DELAY, i, callback, 
-                        margin);
-        }
-        else
-        {
-            callback();
-        }
-        dd ("}");
-    };
-    
-    function processSourceChunk (start, callback, container)
-    {
-        dd ("processSourceChunk " + start + " {");
-        /* build a chunk of the source text */
-        const CHUNK_SIZE = 250;
-        const CHUNK_DELAY = 100;
-
-        if (!container)
-        {
-            container = document.createElement ("source-lines");
-            sourceContainer.appendChild (container);
-        }
-
-        var stop = Math.min (sourceText.lines.length, start + CHUNK_SIZE);
-        var rv = { previousState: null, previousNode: null };
-        for (var i = start; i < stop; ++i)
-        {
-            rv = mungeLine (sourceText.lines[i], container, rv.previousState,
-                            rv.previousNode);
-        }
-
-        if (i != sourceText.lines.length)
-        {
-            setTimeout (processSourceChunk, CHUNK_DELAY, i, callback, 
-                        container);
-        }
-        else
-        {
-            callback();
-        }
-        dd ("}");
-    };
-    
-    function processSourceText ()
-    {
-        processSourceChunk (0, onComplete);
-    };
-    
-    function onComplete()
-    {
-        container.appendChild (sourceContainer);
-        dd ("}");
-    };
-
-    dd ("createDOMForSourceText " + sourceText.lines.length + " lines {");
-    processMarginChunk (0, processSourceText);
-}
-
-function st_contentGetter ()
-{
-    if (!("_contentNode" in this))
-    {
-        this._contentNode = htmlSpan();
-        createDOMForSourceText (this, this._contentNode);
-    }
-    
-    return this._contentNode;
-}
-
 function SourceText (scriptInstance)
 {
     this.lines = new Array();
@@ -1201,8 +861,6 @@ function SourceText (scriptInstance)
 
     this.shortName = getFileFromPath (this.url);
 }
-
-SourceText.prototype.__defineGetter__ ("contentNode", st_contentGetter);
 
 SourceText.prototype.onMarginClick =
 function st_marginclick (e, line)
@@ -1387,10 +1045,8 @@ function PPSourceText (scriptWrapper)
 
 PPSourceText.prototype.isLoaded = true;
 
-PPSourceText.prototype.__defineGetter__ ("contentNode", st_contentGetter);
-
 PPSourceText.prototype.reloadSource =
-function pp_reload (cb)
+function ppst_reload (cb)
 {
     try
     {
@@ -1431,7 +1087,7 @@ function pp_reload (cb)
 }
 
 PPSourceText.prototype.onMarginClick =
-function st_marginclick (e, line)
+function ppst_marginclick (e, line)
 {
     try
     {
@@ -1458,10 +1114,8 @@ function HelpText ()
 
 HelpText.prototype.isLoaded = true;
 
-HelpText.prototype.__defineGetter__ ("contentNode", st_contentGetter);
-
 HelpText.prototype.reloadSource =
-function (cb)
+function ht_reload (cb)
 {
     var ary = console.commandManager.list();
     var str = "";

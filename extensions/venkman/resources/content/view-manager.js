@@ -39,12 +39,16 @@ const VMGR_SCHEME_LEN  = VMGR_VURL_SCHEME.length;
 const VMGR_HIDDEN      = "hidden";
 const VMGR_NEW         = "new";
 const VMGR_MAINWINDOW  = "mainwindow";
+const VMGR_GUTTER      = "gutter";
 
 const VMGR_VURL_HIDDEN     = VMGR_VURL_SCHEME + "/" + VMGR_HIDDEN;
 const VMGR_VURL_NEW        = VMGR_VURL_SCHEME + "/" + VMGR_NEW;
 const VMGR_VURL_MAINWINDOW = VMGR_VURL_SCHEME + "/" + VMGR_MAINWINDOW;
-
+const VMGR_VURL_GUTTER     = VMGR_VURL_MAINWINDOW + "/gutter";
 const VMGR_DEFAULT_CONTAINER = "initial-container";
+
+var VMGR_GUTTER_CONTAINER = VMGR_VURL_MAINWINDOW + "?target=container&" +
+    "id=" + VMGR_GUTTER + "&type=vertical";
 
 function ViewManager(commandManager, mainWindow)
 {
@@ -519,10 +523,18 @@ function vmgr_getlocation (parsedLocation)
 ViewManager.prototype.ensureLocation =
 function vmgr_ensurelocation (parsedLocation, cb)
 {
+    var viewManager = this;
+    
     function onWindowLoaded (window)
     {
         var container = 
             window.document.getElementById (parsedLocation.containerId);
+        if (!container && parsedLocation.containerId == VMGR_GUTTER)
+        {
+            viewManager.reconstituteVURLs ([VMGR_GUTTER_CONTAINER]);
+            container = 
+                window.document.getElementById (parsedLocation.containerId);
+        }
         cb (window, container);
     };
     
@@ -681,7 +693,7 @@ function vmgr_move (parsedLocation, viewId, height, width)
     var view = this.views[viewId];
     var currentContent = ("currentContent" in view ?
                           view.currentContent : null);
-    if (currentContent)
+    if (currentContent && currentContent.ownerWindow == this.mainWindow)
         view.previousLocation = this.computeLocation(currentContent);
 
     this.ensureLocation (parsedLocation, onLocationFound);

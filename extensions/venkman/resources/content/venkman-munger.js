@@ -89,8 +89,10 @@ function mng_munge (text, containerTag, data)
         text = String(text);
 
     if (!containerTag)
+    {
         containerTag =
             document.createElementNS (NS_XHTML, this.tagName);
+    }
 
     if (this.enabled)
     {

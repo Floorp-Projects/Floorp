@@ -46,6 +46,7 @@ function initCommands()
         [/* "real" commands */
          ["about-mozilla",  cmdAboutMozilla,                                  0],
          ["break",          cmdBreak,                               CMD_CONSOLE],
+         ["break-props",    cmdBreakProps,                          CMD_CONSOLE],
          ["chrome-filter",  cmdChromeFilter,                        CMD_CONSOLE],
          ["clear",          cmdClear,                               CMD_CONSOLE],
          ["clear-all",      cmdClearAll,                            CMD_CONSOLE],
@@ -53,6 +54,7 @@ function initCommands()
          ["clear-fbreak",   cmdClearFBreak,                                   0],
          ["clear-profile",  cmdClearProfile,                        CMD_CONSOLE],
          ["clear-script",   cmdClearScript,                                   0],
+         ["clear-instance", cmdClearInstance,                                 0],
          ["close",          cmdClose,                               CMD_CONSOLE],
          ["commands",       cmdCommands,                            CMD_CONSOLE],
          ["cont",           cmdCont,               CMD_CONSOLE | CMD_NEED_STACK],
@@ -101,8 +103,10 @@ function initCommands()
          ["quit",           cmdQuit,                                CMD_CONSOLE],
          ["restore-layout", cmdRestoreLayout,                       CMD_CONSOLE],
          ["release-notes",  cmdReleaseNotes,                                  0],
+         ["run-to",         cmdRunTo,                            CMD_NEED_STACK],
          ["save-layout",    cmdSaveLayout,                          CMD_CONSOLE],
          ["save-profile",   cmdSaveProfile,                         CMD_CONSOLE],
+         ["scan-source",    cmdScanSource,                                    0],
          ["scope",          cmdScope,              CMD_CONSOLE | CMD_NEED_STACK],
          ["toggle-float",   cmdToggleFloat,                         CMD_CONSOLE],
          ["toggle-save-layout", cmdToggleSaveLayout,                          0],
@@ -267,9 +271,17 @@ function cmdBreak (e)
     }
 }
 
-function cmdBPProps (e)
+function cmdBreakProps (e)
 {
-    dd ("command bp-props");
+    if ("propsWindow" in e.breakWrapper)
+    {
+        e.breakWrapper.propsWindow.focus();
+        return;
+    }
+        
+    e.breakWrapper.propsWindow = 
+        openDialog ("chrome://venkman/content/venkman-bpprops.xul", "",
+                    "chrome,extrachrome,menubar,resizable", e.breakWrapper);
 }
 
 function cmdChromeFilter (e)
@@ -483,6 +495,25 @@ function cmdClearProfile (e)
     feedback (e, MSG_PROFILE_CLEARED);
 }
 
+function cmdClearInstance (e)
+{
+    if ("scriptInstanceList" in e)
+    {
+        for (var i = 0; i < e.scriptInstanceList.length; ++i)
+            cmdClearInstance ({ scriptInstance: e.scriptInstanceList[i] });
+        return true;
+    }
+
+
+    if (e.scriptInstance.topLevel)
+        e.scriptInstance.topLevel.clearBreakpoints();
+    
+    for (var w in e.scriptInstance.functions)
+        e.scriptInstance.functions[w].clearBreakpoints();
+
+    return true;
+}
+    
 function cmdClearScript (e)
 {
     var i;
@@ -565,6 +596,8 @@ function cmdEMode (e)
                          MT_ERROR);
                 return false;
         }
+
+        console.prefs["errorMode"] = console.errorMode;
     }
     
     switch (console.errorMode)
@@ -895,14 +928,16 @@ function cmdFClearAll (e)
     if (!("isInteractive" in e))
         e.isInteractive = false;
 
-    var breakWrapperList = new Array()
-    for (var i in console.breaks)
-        breakWrapperList.push (console.breaks[i]);
+    var breakWrapperList = new Array();
+    
+    for (var i in console.fbreaks)
+        breakWrapperList.push (console.fbreaks[i]);
 
     if (breakWrapperList.length)
     {
         dispatch ("clear-fbreak", { isInteractive: e.isInteractive,
-                                    breakWrapperList: breakWrapperList});
+                                    breakWrapper: breakWrapperList[0],
+                                    breakWrapperList: breakWrapperList });
     }
 }
 
@@ -1117,7 +1152,7 @@ function cmdProps (e)
     var debuggerScope = (e.command.name == "propsd");
 
     if (debuggerScope)
-        v = evalInDebuggerScope (e.scriptText);
+        v = console.jsds.wrapValue(evalInDebuggerScope (e.scriptText));
     else
         v = evalInTargetScope (e.scriptText);
     
@@ -1179,6 +1214,17 @@ function cmdRestoreLayout (e)
 function cmdReleaseNotes (e)
 {
     openTopWin(MSG_RELEASE_URL);
+}
+
+function cmdRunTo (e)
+{
+    if (!e.scriptWrapper.jsdScript.isValid)
+        return;
+    
+    var breakpoint = e.scriptWrapper.setBreakpoint(e.pc);
+    if (breakpoint)
+        breakpoint.oneTime = true;
+    dispatch ("cont");
 }
 
 function cmdSaveLayout (e)
@@ -1293,6 +1339,11 @@ function cmdSaveProfile (e)
     console.profiler.generateReport (profileReport);
 
     return file.localFile;
+}
+
+function cmdScanSource (e)
+{
+    e.scriptInstance.scanForMetaComments();
 }
 
 function cmdScope ()
@@ -1496,6 +1547,8 @@ function cmdTMode (e)
                          MT_ERROR);
                 return false;
         }
+
+        console.prefs["throwMode"] = console.throwMode;
     }
     
     switch (console.throwMode)
@@ -1522,7 +1575,26 @@ function cmdToggleFloat (e)
         return;
     }
 
-    dispatch ("move-view", { viewId: e.viewId, locationUrl: VMGR_VURL_NEW });
+    var locationUrl;
+    var view = console.views[e.viewId];
+    var parsedLocation = 
+        console.viewManager.computeLocation(view.currentContent);
+
+    if (parsedLocation.windowId == VMGR_MAINWINDOW)
+    {
+        /* already in the main window, float the view. */
+        locationUrl = VMGR_VURL_NEW
+    }
+    else
+    {
+        /* already floated, put it back. */
+        if ("previousLocation" in view)
+            locationUrl = view.previousLocation;
+        else
+            locationUrl = VMGR_VURL_GUTTER;
+    }
+
+    dispatch ("move-view", { viewId: e.viewId, locationUrl: locationUrl });
 }
 
 function cmdToggleSaveLayout (e)
@@ -1544,9 +1616,16 @@ function cmdToggleView (e)
     var url;
     
     if ("currentContent" in view)
+    {
         url = VMGR_VURL_HIDDEN;
+    }
     else
-        url = VMGR_VURL_NEW;
+    {
+        if ("previousLocation" in view)
+            url = view.previousLocation;
+        else
+            url = VMGR_VURL_GUTTER;
+    }
     
     console.viewManager.moveViewURL (url, e.viewId);
 }    

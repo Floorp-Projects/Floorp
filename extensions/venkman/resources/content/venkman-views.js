@@ -41,7 +41,7 @@ const DEFAULT_VURLS =
     "x-vloc:/mainwindow/vleft?target=view&id=locals; " +
     "x-vloc:/mainwindow/vleft?target=view&id=stack; ")) +
   ("x-vloc:/mainwindow/outer?target=container&type=vertical&id=vright; " +
-   ("x-vloc:/mainwindow/vright?target=view&id=source; " +
+   ("x-vloc:/mainwindow/vright?target=view&id=source2; " +
     "x-vloc:/mainwindow/vright?target=view&id=session"))
   )
  );
@@ -327,7 +327,9 @@ function bv_init ()
          ["clear-fbreak", { enabledif: "has('hasFBreak')" }],
          ["-"],
          ["clear-all"],
-         ["fclear-all"]
+         ["fclear-all"],
+         ["-"],
+         ["break-props"]
         ]
     };
 
@@ -726,9 +728,12 @@ function scv_init ()
         getContext: this.getContext,
         items:
         [
-         ["find-scriptinstance"],
-         ["find-script"],
-         ["clear-script", {enabledif: "cx.scriptWrapper.breakpointCount"}],
+         ["find-scriptinstance", {visibleif: "!has('scriptWrapper')"}],
+         ["find-script",    {visibleif: "has('scriptWrapper')"}],
+         ["clear-instance", {visibleif: "!has('scriptWrapper')"}],
+         ["clear-script",   {visibleif: "has('scriptWrapper')",
+                             enabledif: "cx.scriptWrapper.breakpointCount"}],
+         ["scan-source"],
          ["-"],
          [">scripts:instance-flags"],
          [">scripts:wrapper-flags", {enabledif: "has('scriptWrapper')"}],
@@ -1757,6 +1762,7 @@ function ss_init ()
     this.cmdary =
         [
          ["close-source-tab",          cmdCloseTab,              CMD_CONSOLE],
+         ["find-string",               cmdFindString,            CMD_CONSOLE],
          ["save-source-tab",           cmdSaveTab,               CMD_CONSOLE],
          ["reload-source-tab",         cmdReloadTab,             CMD_CONSOLE],
          ["source-coloring",           cmdToggleColoring,                  0],
@@ -1770,6 +1776,7 @@ function ss_init ()
          ["close-source-tab"],
          ["reload-source-tab"],
          ["save-source-tab", { enabledif: "console.views.source2.canSave()" }],
+         ["find-string"],
          ["-"],
          ["break", 
                  {enabledif: "cx.lineIsExecutable && !has('hasBreak')"}],
@@ -1780,6 +1787,7 @@ function ss_init ()
          ["fclear",
                  {enabledif: "has('hasFBreak')"}],
          ["-"],
+         ["run-to"],
          ["cont"],
          ["next"],
          ["step"],
@@ -1791,7 +1799,9 @@ function ss_init ()
                              "== 'true'"} ],
          ["toggle-pprint",
                  {type: "checkbox",
-                  checkedif: "console.prefs['prettyprint']"}]
+                  checkedif: "console.prefs['prettyprint']"}],
+         ["-"],
+         ["break-props"]
         ]
     };
 
@@ -1818,6 +1828,20 @@ function cmdCloseTab (e)
     }
     
     source2View.removeSourceTabAtIndex (e.index);
+}
+
+function cmdFindString (e)
+{
+    var source2View = console.views.source2;
+    if (!source2View.tabs)
+        return;
+
+    var index = source2View.tabs.selectedIndex;
+    if (!(index in source2View.sourceTabList))
+        return;
+
+    var browser = source2View.sourceTabList[index].iframe;
+    findInPage (browser, browser.contentWindow, browser.contentWindow);
 }
 
 function cmdReloadTab (e)
@@ -1971,19 +1995,51 @@ function s2v_getcontext (cx)
             var row = cx.lineNumber - 1;
         
             if (sourceText.lineMap[row] & LINE_BREAKABLE)
+            {
                 cx.lineIsExecutable = true;
+                if ("scriptInstance" in sourceText)
+                {
+                    var scriptInstance = sourceText.scriptInstance;
+                    var scriptWrapper = 
+                        scriptInstance.getScriptWrapperAtLine(cx.lineNumber);
+                    if (scriptWrapper)
+                    {
+                        cx.scriptWrapper = scriptWrapper;
+                        cx.pc =
+                            scriptWrapper.jsdScript.lineToPc(cx.lineNumber,
+                                                             PCMAP_SOURCETEXT);
+                    }
+                }
+                else if ("scriptWrapper" in sourceText)
+                {
+                    cx.scriptWrapper = sourceText.scriptWrapper;
+                    cx.pc = 
+                        cx.scriptWrapper.jsdScript.lineToPc(cx.lineNumber,
+                                                            PCMAP_PRETTYPRINT);
+                }
+            }
+            
             if (sourceText.lineMap[row] & LINE_BREAK)
             {
                 cx.hasBreak = true;
-                cx.breakWrapper =
-                    sourceText.scriptInstance.getBreakpoint(cx.lineNumber);
-                if (cx.breakWrapper.parentBP)
+                if ("scriptInstance" in sourceText)
+                {
+                    cx.breakWrapper =
+                        sourceText.scriptInstance.getBreakpoint(cx.lineNumber);
+                }
+                else if ("scriptWrapper" in sourceText && "pc" in cx)
+                {
+                    cx.breakWrapper = 
+                        sourceText.scriptWrapper.getBreakpoint(cx.pc);
+                }
+                
+                if ("breakWrapper" in cx && cx.breakWrapper.parentBP)
                     cx.hasFBreak = true;
             }
             else if (sourceText.lineMap[row] & LINE_FBREAK)
             {
                 cx.hasFBreak = true;
-                cx.breakWrapper = getFutureBreakpoint(cx.lineNumber);
+                cx.breakWrapper = getFutureBreakpoint(cx.url, cx.lineNumber);
             }
         }
     }    
@@ -2043,7 +2099,7 @@ function s2v_updatemargin (sourceTab, line)
     if (!("lineMap" in sourceTab.sourceText))
         return;
     
-    if (!ASSERT(sourceTab.content, "no content for source tab"))
+    if (!sourceTab.content)
         return;
     
     var node = sourceTab.content.childNodes[line * 2 - 1];
@@ -2868,6 +2924,7 @@ function sv_init()
          ["fclear",
                  {enabledif: "has('hasFBreak')"}],
          ["-"],
+         ["run-to"],
          ["cont"],
          ["next"],
          ["step"],
@@ -2875,7 +2932,9 @@ function sv_init()
          ["-"],
          ["toggle-pprint",
                  {type: "checkbox",
-                  checkedif: "console.prefs['prettyprint']"}]
+                  checkedif: "console.prefs['prettyprint']"}],
+         ["-"],
+         ["break-props"]
         ]
     };
     
@@ -3230,7 +3289,31 @@ function sv_getcx(cx)
             cx.lineNumber = row + 1;
             
             if (sourceText.lineMap[row] & LINE_BREAKABLE)
+            {
                 cx.lineIsExecutable = true;
+
+                if ("scriptInstance" in sourceText)
+                {
+                    var scriptInstance = sourceText.scriptInstance;
+                    var scriptWrapper = 
+                        scriptInstance.getScriptWrapperAtLine(cx.lineNumber);
+                    if (scriptWrapper)
+                    {
+                        cx.scriptWrapper = scriptWrapper;
+                        cx.pc =
+                            scriptWrapper.jsdScript.lineToPc(cx.lineNumber,
+                                                             PCMAP_SOURCETEXT);
+                    }
+                }
+                else if ("scriptWrapper" in sourceText)
+                {
+                    cx.scriptWrapper = sourceText.scriptWrapper;
+                    cx.pc = 
+                        cx.scriptWrapper.jsdScript.lineToPc(cx.lineNumber,
+                                                            PCMAP_PRETTYPRINT);
+                }
+            }
+            
             if (sourceText.lineMap[row] & LINE_BREAK)
             {
                 cx.hasBreak = true;
@@ -3242,7 +3325,7 @@ function sv_getcx(cx)
             else if (sourceText.lineMap[row] & LINE_FBREAK)
             {
                 cx.hasFBreak = true;
-                cx.breakWrapper = getFutureBreakpoint(row + 1);
+                cx.breakWrapper = getFutureBreakpoint(cx.url, row + 1);
             }
         }
         else
@@ -3258,7 +3341,7 @@ function sv_getcx(cx)
             else if (sourceText.lineMap[row] & LINE_FBREAK)
             {
                 cx.hasFBreak = true;
-                cx.breakWrapperList.push(getFutureBreakpoint(row + 1));
+                cx.breakWrapperList.push(getFutureBreakpoint(cx.url, row + 1));
             }
         }
         

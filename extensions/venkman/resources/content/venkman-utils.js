@@ -243,7 +243,7 @@ function htmlVA (attribs, href, contents)
     else
         attribs["class"] = "venkman-link";
 
-    if (!contents)
+    if (typeof contents == "undefined")
     {
         contents = htmlSpan();
         insertHyphenatedWord (href, contents);
@@ -273,7 +273,8 @@ function insertLink (matchText, containerTag)
     else
         href = matchText;
     
-    var anchor = htmlVA (null, href, matchText);
+    var anchor = htmlVA (null, href, "");
+    insertHyphenatedWord(matchText, anchor);
     containerTag.appendChild (anchor);    
 }
 
@@ -457,7 +458,7 @@ function getBaseWindowFromWindow (win)
 
 function getPathFromURL (url)
 {
-    var ary = url.match(/^(.*\/)([^\/?]+)(\?|$)/);
+    var ary = url.match(/^(.*\/)([^\/?#]+)(\?|#|$)/);
     if (ary)
         return ary[1];
 
@@ -466,7 +467,7 @@ function getPathFromURL (url)
 
 function getFileFromPath (path)
 {
-    var ary = path.match(/\/([^\/?]+)(\?|$)/);
+    var ary = path.match(/\/([^\/?#]+)(\?|#|$)/);
     if (ary)
         return ary[1];
 

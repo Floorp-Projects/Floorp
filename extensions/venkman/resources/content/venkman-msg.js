@@ -142,6 +142,7 @@ const MT_SOURCE    = "SOURCE";
 const MT_STEP      = "STEP";
 const MT_STOP      = "STOP";
 const MT_ETRACE    = "ETRACE";
+const MT_LOG       = "LOG";
 const MT_USAGE     = "USAGE";
 const MT_EVAL_IN   = "EVAL-IN";
 const MT_EVAL_OUT  = "EVAL-OUT";

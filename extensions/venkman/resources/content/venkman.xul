@@ -65,7 +65,7 @@
   <overlaytarget id="views-overlay-target"/>
 
   <viewcontainer id="root-container" flex="1" type="horizontal">
-    <viewcontainer id="initial-container" type="vertical" flex="1"/>
+    <viewcontainer id="initial-container" type="horizontal" flex="1"/>
   </viewcontainer>
 
   <overlaytarget id="statusbar-overlay-target"/>

@@ -148,8 +148,10 @@
       <statusbarpanel id="component-bar"/>
       <statusbarpanel id="status-text" label="" flex="1"
         crop="right"/>
+<!--
       <statusbarpanel class="statusbarpanel-iconic" id="offline-status"
         hidden="true" offline="true"/>
+-->
     </statusbar>
   </overlaytarget>
 

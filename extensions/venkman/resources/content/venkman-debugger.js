@@ -52,7 +52,6 @@ const TYPE_STRING   = jsdIValue.TYPE_STRING;
 const TYPE_FUNCTION = jsdIValue.TYPE_FUNCTION;
 const TYPE_OBJECT   = jsdIValue.TYPE_OBJECT;
 
-
 const PROP_ENUMERATE = jsdIProperty.FLAG_ENUMERATE;
 const PROP_READONLY  = jsdIProperty.FLAG_READONLY;
 const PROP_PERMANENT = jsdIProperty.FLAG_PERMANENT;
@@ -71,16 +70,27 @@ const COLLECT_PROFILE_DATA  = jsdIDebuggerService.COLLECT_PROFILE_DATA;
 const PCMAP_SOURCETEXT    = jsdIScript.PCMAP_SOURCETEXT;
 const PCMAP_PRETTYPRINT   = jsdIScript.PCMAP_PRETTYPRINT;
 
+const RETURN_CONTINUE   = jsdIExecutionHook.RETURN_CONTINUE;
+const RETURN_CONT_THROW = jsdIExecutionHook.RETURN_CONTINUE_THROW;
+const RETURN_VALUE      = jsdIExecutionHook.RETURN_RET_WITH_VAL;
+const RETURN_THROW      = jsdIExecutionHook.RETURN_THROW_WITH_VAL;
+
 const FTYPE_STD     = 0;
 const FTYPE_SUMMARY = 1;
 const FTYPE_ARRAY   = 2;
+
+const BREAKPOINT_STOPNEVER   = 0;
+const BREAKPOINT_STOPALWAYS  = 1;
+const BREAKPOINT_STOPTRUE    = 2;
+const BREAKPOINT_EARLYRETURN = 3;
 
 var $ = new Array(); /* array to store results from evals in debug frames */
 
 function initDebugger()
 {   
     dd ("initDebugger {");
-    
+
+    console.instanceSequence = 0;
     console._continueCodeStack = new Array(); /* top of stack is the default  */
                                               /* return code for the most     */
                                               /* recent debugTrap().          */
@@ -107,8 +117,8 @@ function initDebugger()
     console.jsds.errorHook      = console.errorHook;
     console.jsds.flags          = jsdIDebuggerService.ENABLE_NATIVE_FRAMES;
 
-    console.throwMode = TMODE_IGNORE;
-    console.errorMode = EMODE_IGNORE;
+    console.throwMode = console.prefs["throwMode"];
+    console.errorMode = console.prefs["errorMode"];
     
     var enumer = { enumerateScript: console.scriptHook.onScriptCreated };
     console.jsds.scriptHook = console.scriptHook;
@@ -121,7 +131,13 @@ function detachDebugger()
 {
     if ("frames" in console)
         console.jsds.exitNestedEventLoop();
-    
+
+    var b;
+    for (b in console.breaks)
+        console.breaks[b].clearBreakpoint();
+    for (b in console.fbreaks)
+        console.fbreaks[b].clearFutureBreakpoint();
+
     console.jsds.topLevelHook = null;
     console.jsds.functionHook = null;
     console.jsds.breakpointHook = null;
@@ -327,7 +343,6 @@ function ScriptManager (url)
     this.instances = new Array();
     this.transients = new Object();
     this.transientCount = 0;
-    this.instanceSequence = 0;
     this.disableTransients = isURLFiltered(url);
 }
 
@@ -346,7 +361,7 @@ function smgr_created (jsdScript)
     {
         //dd ("instance created for " + jsdScript.fileName);
         instance = new ScriptInstance(this);
-        instance.sequence = this.instanceSequence++;
+        instance.sequence = console.instanceSequence++;
         this.instances.push(instance);
         dispatchCommand (console.coInstanceCreated,
                          { scriptInstance: instance });
@@ -531,6 +546,55 @@ function ScriptInstance (manager)
     this.breakpointCount = 0;
     this._lineMap = new Array();
     this._lineMapInited = false;
+}
+
+ScriptInstance.prototype.scanForMetaComments =
+function si_scan (start)
+{
+    const CHUNK_SIZE = 500;
+    const CHUNK_DELAY = 100;
+    
+    var scriptInstance = this;
+    var sourceText = this.sourceText;
+    
+    function onSourceLoaded(result)
+    {
+        if (result == Components.results.NS_OK)
+            scriptInstance.scanForMetaComments();
+    };
+    
+    if (!sourceText.isLoaded)
+    {
+        sourceText.loadSource(onSourceLoaded);
+        return;
+    }
+
+    if (typeof start == "undefined")
+        start = 0;
+    
+    var end = Math.min (sourceText.lines.length, start + CHUNK_SIZE);
+    var obj = new Object();
+    
+    for (var i = start; i < end; ++i)
+    {
+        var ary = sourceText.lines[i].match (/\/\/@(\S+)(.*)/);
+        if (ary && ary[1] in console.metaDirectives && !(ary[1] in obj))
+        {
+            try
+            {
+                console.metaDirectives[ary[1]](scriptInstance, i + 1, ary);
+            }
+            catch (ex)
+            {
+                display (getMsg(MSN_ERR_META_FAILED, [ary[1], this.url, i + 1]),
+                         MT_ERROR);
+                display (formatException (ex), MT_ERROR);
+            }
+        }
+    }
+
+    if (i != sourceText.lines.length)
+        setTimeout (this.scanForMetaComments, CHUNK_DELAY, i);
 }
 
 ScriptInstance.prototype.seal =
@@ -728,6 +792,40 @@ function si_setbp (line)
     return found;
 }
 
+ScriptInstance.prototype.getScriptWrapperAtLine =
+function si_getscript (line)
+{
+    var targetScript = null;
+    var scriptWrapper;
+    
+    if (this.topLevel)
+    {
+        scriptWrapper = this.topLevel;
+        if (line >= scriptWrapper.jsdScript.baseLineNumber &&
+            line <= scriptWrapper.jsdScript.baseLineNumber +
+            scriptWrapper.jsdScript.lineExtent)
+        {
+            targetScript = scriptWrapper;
+        }
+    }    
+
+    for (var f in this.functions)
+    {
+        scriptWrapper = this.functions[f];
+        if ((line >= scriptWrapper.jsdScript.baseLineNumber &&
+             line <= scriptWrapper.jsdScript.baseLineNumber +
+             scriptWrapper.jsdScript.lineExtent) &&
+            (!targetScript ||
+             scriptWrapper.jsdScript.lineExtent <
+             targetScript.jsdScript.lineExtent))
+        {
+            targetScript = scriptWrapper;
+        }
+    }
+
+    return targetScript;
+}
+
 ScriptInstance.prototype.containsScriptTag =
 function si_contains (tag)
 {
@@ -830,6 +928,16 @@ function sw_hasbp (pc)
     return key in console.breaks;
 }
 
+ScriptWrapper.prototype.getBreakpoint =
+function sw_hasbp (pc)
+{
+    var key = this.jsdScript.tag + ":" + pc;
+    if (key in console.breaks)
+        return console.breaks[key];
+    
+    return null;
+}
+
 ScriptWrapper.prototype.setBreakpoint =
 function sw_setbp (pc, parentBP)
 {
@@ -838,7 +946,7 @@ function sw_setbp (pc, parentBP)
     //dd ("setting breakpoint in " + this.functionName + " " + key);
     
     if (key in console.breaks)
-        return false;
+        return null;
 
     var brk = new BreakInstance (parentBP, this, pc);
     console.breaks[key] = brk;
@@ -868,9 +976,7 @@ function sw_setbp (pc, parentBP)
 
     dispatch ("hook-break-set", { breakWrapper: brk });
     
-    this.jsdScript.setBreakpoint (pc);
-
-    return true;
+    return brk;
 }
 
 ScriptWrapper.prototype.clearBreakpoints =
@@ -893,6 +999,9 @@ function sw_clearbp (pc)
 
     var brk = console.breaks[key];
 
+    if ("propsWindow" in brk)
+        brk.propsWindow.close();
+    
     delete console.breaks[key];
     delete this.breaks[key];
 
@@ -969,9 +1078,136 @@ function getScriptWrapper(jsdScript)
 
 function BreakInstance (parentBP, scriptWrapper, pc)
 {
+    this._enabled = true;
     this.parentBP = parentBP;
     this.scriptWrapper = scriptWrapper;
     this.pc = pc;
+    this.url = scriptWrapper.jsdScript.fileName;
+    this.lineNumber = scriptWrapper.jsdScript.pcToLine (pc, PCMAP_SOURCETEXT);
+    this.oneTime = false;
+    this.triggerCount = 0;
+    
+    scriptWrapper.jsdScript.setBreakpoint (pc);
+}
+
+BreakInstance.prototype.clearBreakpoint =
+function bi_clear()
+{
+    this.scriptWrapper.clearBreakpoint(this.pc);
+}
+
+BreakInstance.prototype.__defineGetter__ ("enabled", bi_getEnabled);
+function bi_getEnabled ()
+{
+    return this._enabled;
+}
+
+BreakInstance.prototype.__defineSetter__ ("enabled", bi_setEnabled);
+function bi_setEnabled (state)
+{
+    if (state != this._enabled)
+    {
+        this._enabled = state;
+        if (state)
+            this.jsdScript.setBreakpoint(pc);
+        else
+            this.jsdScript.clearBreakpoint(pc);
+    }
+    
+    return state;
+}
+
+BreakInstance.prototype.__defineGetter__ ("conditionEnabled", bi_getCondEnabled);
+function bi_getCondEnabled ()
+{
+    if ("_conditionEnabled" in this)
+        return this._conditionEnabled;
+    
+    if (this.parentBP)
+        return this.parentBP.conditionEnabled;
+
+    return false;
+}
+
+BreakInstance.prototype.__defineSetter__ ("conditionEnabled", bi_setCondEnabled);
+function bi_setCondEnabled (state)
+{
+    return this._conditionEnabled = state;
+}
+
+BreakInstance.prototype.__defineGetter__ ("condition", bi_getCondition);
+function bi_getCondition ()
+{
+    if ("_condition" in this)
+        return this._condition;
+    
+    if (this.parentBP)
+        return this.parentBP.condition;
+
+    return "";
+}
+
+BreakInstance.prototype.__defineSetter__ ("condition", bi_setCondition);
+function bi_setCondition (value)
+{
+    return this._condition = value;
+}
+
+
+BreakInstance.prototype.__defineGetter__ ("passExceptions", bi_getException);
+function bi_getException ()
+{
+    if ("_passExceptions" in this)
+        return this._passExceptions;
+    
+    if (this.parentBP)
+        return this.parentBP.passExceptions;
+
+    return false;
+}
+
+BreakInstance.prototype.__defineSetter__ ("passExceptions", bi_setException);
+function bi_setException (state)
+{
+    return this._passExceptions = state;
+}
+
+
+BreakInstance.prototype.__defineGetter__ ("logResult", bi_getLogResult);
+function bi_getLogResult ()
+{
+    if ("_logResult" in this)
+        return this._logResult;
+    
+    if (this.parentBP)
+        return this.parentBP.logResult;
+
+    return false;
+}
+
+BreakInstance.prototype.__defineSetter__ ("logResult", bi_setLogResult);
+function bi_setLogResult (state)
+{
+    return this._logResult = state;
+}
+
+
+BreakInstance.prototype.__defineGetter__ ("resultAction", bi_getResultAction);
+function bi_getResultAction ()
+{
+    if ("_resultAction" in this)
+        return this._resultAction;
+    
+    if (this.parentBP)
+        return this.parentBP.resultAction;
+
+    return BREAKPOINT_STOPALWAYS;
+}
+
+BreakInstance.prototype.__defineSetter__ ("resultAction", bi_setResultAction);
+function bi_setResultAction (state)
+{
+    return this._resultAction = state;
 }
 
 function FutureBreakpoint (url, lineNumber)
@@ -979,12 +1215,22 @@ function FutureBreakpoint (url, lineNumber)
     this.url = url;
     this.lineNumber = lineNumber;
     this.enabled = true;
-    this.scriptText = null;
     this.childrenBP = new Object;
+    this.conditionEnabled = false;
+    this.condition = "";
+    this.passExceptions = false;
+    this.logResult = false;
+    this.resultAction = BREAKPOINT_STOPALWAYS;
+}
+
+FutureBreakpoint.prototype.clearFutureBreakpoint =
+function fb_clear ()
+{
+    clearFutureBreakpoint (this.url, this.lineNumber);
 }
 
 FutureBreakpoint.prototype.resetInstances =
-function fb_reset ()
+function fb_reseti ()
 {
     for (var url in console.scriptManagers)
     {
@@ -994,13 +1240,80 @@ function fb_reset ()
 }
 
 FutureBreakpoint.prototype.clearInstances =
-function fb_clear ()
+function fb_cleari ()
 {
     for (var url in console.scriptManagers)
     {
         if (url.search(this.url) != -1)
             console.scriptManagers[url].clearBreakpoint(this.lineNumber);
     }
+}
+
+function testBreakpoint(currentFrame, rv)
+{
+    var tag = currentFrame.script.tag;
+    if (!(tag in console.scriptWrappers))
+        return -1;
+    
+    var scriptWrapper = console.scriptWrappers[tag];
+    var breakpoint = scriptWrapper.getBreakpoint(currentFrame.pc);
+    if (!ASSERT(breakpoint, "can't find breakpoint for " +
+                formatFrame(currentFrame)))
+    {
+        return -1;
+    }
+
+    ++breakpoint.triggerCount;
+    if ("propsWindow" in breakpoint)
+        breakpoint.propsWindow.onBreakpointTriggered();
+    
+    if (breakpoint.oneTime)
+        scriptWrapper.clearBreakpoint(currentFrame.pc);
+
+    if (breakpoint.conditionEnabled && breakpoint.condition)
+    {
+        var result = new Object();
+        var script = "var __trigger__ = function (__count__) {" +
+            breakpoint.condition + "}; __trigger__.apply(this, [" +
+            breakpoint.triggerCount + "]);";
+        if (!currentFrame.eval (script,
+                                JSD_URL_SCHEME + "breakpoint-condition",
+                                1, result))
+        {
+            /* condition raised an exception */
+            if (breakpoint.passExceptions)
+            {
+                rv.value = result.value;
+                return RETURN_THROW;
+            }
+                
+            display (MSG_ERR_CONDITION_FAILED, MT_ERROR);
+            display (formatException(result.value.getWrappedValue()), MT_ERROR);
+        }
+        else
+        {
+            /* condition executed ok */
+            if (breakpoint.logResult)
+            {
+                display (result.value.stringValue, MT_LOG);
+            }
+
+            if (breakpoint.resultAction == BREAKPOINT_EARLYRETURN)
+            {
+                rv.value = result.value;
+                return RETURN_VALUE;
+            }
+
+            if (breakpoint.resultAction == BREAKPOINT_STOPNEVER ||
+                (breakpoint.resultAction == BREAKPOINT_STOPTRUE &&
+                 !result.value.booleanValue))
+            {
+                return RETURN_CONTINUE;
+            }            
+        }
+    }
+
+    return -1;
 }
 
 const EMODE_IGNORE = 0;
@@ -1021,6 +1334,9 @@ function debugTrap (frame, type, rv)
     switch (type)
     {
         case jsdIExecutionHook.TYPE_BREAKPOINT:
+            var bpResult = testBreakpoint(frame, rv);
+            if (bpResult != -1)
+                return bpResult;
             tn = MSG_VAL_BREAKPOINT;
             break;
         case jsdIExecutionHook.TYPE_DEBUG_REQUESTED:
@@ -1463,6 +1779,9 @@ function clearFutureBreakpoint (urlPattern, lineNumber)
 
     var i;
     var fbreak = console.fbreaks[key];
+    if ("propsWindow" in fbreak)
+        fbreak.propsWindow.close();
+    
     delete console.fbreaks[key];
 
     for (i in fbreak.childrenBP)

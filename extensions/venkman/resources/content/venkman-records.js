@@ -156,9 +156,14 @@ function WindowRecord (win, baseURL)
     if (this.url.search(/^\w+:/) == -1)
     {
         if (this.url[0] == "/")
-            this.url = win.location.host + this.url;
+        {
+            this.url = win.location.protocol + "//" + win.location.host + 
+                this.url;
+        }
         else
+        {
             this.url = baseURL + this.url;
+        }
         this.baseURL = baseURL;
     }
     else
@@ -225,6 +230,7 @@ function fcr_getkids ()
     
     this.childData = new Array();
     var doc = this.windowRecord.window.document;
+    var loc = this.windowRecord.window.location;
     var nodeList = doc.getElementsByTagName("script");
     dd (nodeList.length + "nodes");
     for (var i = 0; i < nodeList.length; ++i)
@@ -233,7 +239,17 @@ function fcr_getkids ()
         if (url)
         {
             if (url.search(/^\w+:/) == -1)
-                url = getPathFromURL (this.windowRecord.url) + url;
+            {
+                if (url[0] == "/")
+                    url = loc.protocol + "//" + loc.host + url;
+                else
+                    url = this.windowRecord.baseURL + url;
+            }
+            else
+            {
+                this.baseURL = getPathFromURL(this.url);
+            }
+
             this.appendChild(new FileRecord(url));
         }
     }

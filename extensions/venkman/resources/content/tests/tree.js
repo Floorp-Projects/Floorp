@@ -135,9 +135,11 @@ function dbg2()
     var nope = null;
     var f = false;
     var i = 4;
+    //@JSD_BREAK
     var d = Number.MAX_VALUE;
     var s = "hello world";
     var fun = dbg;
+    //@JSD_BREAK s == "hello world"
     var obj = new Object();
     debugger;
 
@@ -151,8 +153,13 @@ function dbg2()
         dd ("caught " + ex);
     }
     
+    //@JSD_EVAL alert("foo");
     var rv = returnSomething();
+
+    //@JSD_LOG "this is a log message";
+
     dd ("returned " + rv);
+
 }
 
 function throwSomething()

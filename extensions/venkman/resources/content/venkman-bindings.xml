@@ -36,6 +36,8 @@
    -
    -->
 
+<!DOCTYPE window SYSTEM "chrome://venkman/locale/venkman.dtd">
+
 <bindings xmlns="http://www.mozilla.org/xbl"
           xmlns:xbl="http://www.mozilla.org/xbl"
           xmlns:xul=
@@ -51,15 +53,18 @@
           ondraggesture="console.dnd.startDrag(event, console.viewProxyTitle);">
           <xul:hbox id="view-title">
             <xul:image class="view-title-pop"
+              tooltiptext="&ViewFloat.tooltip;"
               xbl:inherits="parentid=id"
               onclick="console.dispatch('toggle-float', { viewId: this.getAttribute('parentid')});"/>
-            <xul:hbox class="view-title-grippy" flex="1">
+            <xul:hbox class="view-title-grippy" flex="1"
+              tooltiptext="&ViewGrippy.tooltip;">
               <xul:hbox flex="1" class="view-title-margin-left"/>
               <xul:label id="view-title-text" xbl:inherits="value=title"/>
               <xul:hbox flex="1" class="view-title-margin-right"/>
             </xul:hbox>
             <xul:image class="view-title-close"
               xbl:inherits="parentid=id"
+              tooltiptext="&ViewClose.tooltip;"
               onclick="console.dispatch('toggle-view', { viewId: this.getAttribute('parentid')});"/>
           </xul:hbox>
         </xul:vbox>

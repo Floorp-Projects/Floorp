@@ -55,6 +55,7 @@
     <script src="chrome://global/content/nsDragAndDrop.js"/>
     <script src="chrome://communicator/content/contentAreaUtils.js"/>
     <script src="chrome://communicator/content/contentAreaDD.js"/>
+    <script src="chrome://communicator/content/findUtils.js"/>
     <script src="chrome://global/content/strres.js"/>
   
     <script src="chrome://venkman/content/command-manager.js"/>

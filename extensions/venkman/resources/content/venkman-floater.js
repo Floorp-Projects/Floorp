@@ -49,14 +49,14 @@ function onLoad()
     
     windowId = ary[1];
     
+    if (console.prefs["menubarInFloaters"])
+        console.createMainMenu (window.document);
+
     if ("arguments" in window && 0 in window.arguments &&
         typeof window.arguments[0] == "function")
     {
         window.arguments[0](window);
     }
-
-    if (console.prefs["menubarInFloaters"])
-        console.createMainMenu (window.document);
 }
 
 function onClose()

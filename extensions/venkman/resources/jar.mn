@@ -25,6 +25,8 @@ venkman.jar:
   content/venkman/venkman-munger.js     (content/venkman-munger.js)
   content/venkman/venkman-views.js      (content/venkman-views.js)
   content/venkman/venkman-records.js    (content/venkman-records.js)
+  content/venkman/venkman-bpprops.xul   (content/venkman-bpprops.xul)
+  content/venkman/venkman-bpprops.js    (content/venkman-bpprops.js)
   content/venkman/tree-utils.js         (content/tree-utils.js)
   content/venkman/file-utils.js         (content/file-utils.js)
   content/venkman/html-consts.js        (content/html-consts.js)

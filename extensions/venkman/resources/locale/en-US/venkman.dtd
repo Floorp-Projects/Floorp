@@ -36,6 +36,11 @@
 
 <!ENTITY MainWindow.title "JavaScript Debugger">
 
+<!-- floating views -->
+<!ENTITY ViewFloat.tooltip      "Click here to float/unfloat this view">
+<!ENTITY ViewGrippy.tooltip     "Drag titlebar to move this view">
+<!ENTITY ViewClose.tooltip      "Click here to close this view">
+
 <!-- help menu -->
 <!ENTITY Help.commands     "Command Reference">
 <!ENTITY Help.about        "About Venkman">
@@ -91,3 +96,23 @@
 <!-- window view -->
 <!ENTITY Windows.label      "Open Windows">
 <!ENTITY WindowsCol0.label  "File">
+
+<!-- breakpoint properties window -->
+<!ENTITY BPProps.URL.label          "URL">
+<!ENTITY BPProps.Line.label         "Line">
+<!ENTITY BPProps.PC.label           "PC">
+<!ENTITY BPProps.FunctionName.label "Function">
+<!ENTITY BPProps.TriggerCount.label "Trigger count">
+<!ENTITY BPProps.OneTime.label      "Clear breakpoint after first trigger">
+<!ENTITY BPProps.Then.label         "Then ...">
+<!ENTITY BPProps.ConditionalCheck.label      "When triggered, execute...">
+<!ENTITY BPProps.NeverStopRadio.label        "Continue regardless of result">
+<!ENTITY BPProps.AlwaysStopRadio.label       "Stop regardless of result">
+<!ENTITY BPProps.ConditionalBreakRadio.label "Stop if result is true">
+<!ENTITY BPProps.EarlyReturnRadio.label  "Early return from caller with result">
+<!ENTITY BPProps.PassExceptionsCheck.label   "Pass exceptions to caller">
+<!ENTITY BPProps.LogResultCheck.label        "Log result">
+<!ENTITY BPProps.Apply.label  "Apply">
+<!ENTITY BPProps.Revert.label "Revert">
+<!ENTITY BPProps.Close.label  "Close">
+
