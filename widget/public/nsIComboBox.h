@@ -32,6 +32,11 @@
  */
 
 struct nsComboBoxInitData : public nsWidgetInitData {
+  nsComboBoxInitData()
+    : mDropDownHeight(0)
+  {
+  }
+
   PRUint32 mDropDownHeight; // in pixels
 };
 

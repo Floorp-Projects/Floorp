@@ -27,6 +27,12 @@
 
 
 struct nsTextWidgetInitData : public nsWidgetInitData {
+  nsTextWidgetInitData()
+    : mIsPassword(PR_FALSE),
+      mIsReadOnly(PR_FALSE)
+  {
+  }
+
   PRBool mIsPassword;
   PRBool mIsReadOnly;
 };
