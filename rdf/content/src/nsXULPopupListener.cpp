@@ -227,7 +227,8 @@ XULPopupListenerImpl::LaunchPopup(nsIDOMEvent* anEvent)
         if (anchorAlignment == "") {
           // We aren't anchored. Create on the point.
           // Retrieve our x and y position.
-          PRInt32 xPos, yPos;
+          PRInt32 xPos = 50;
+		  PRInt32 yPos = 50; // For now, hardcode to (50,50), since screen doesn't work.
           anEvent->GetScreenX(&xPos); 
           anEvent->GetScreenY(&yPos); 
                  
