@@ -66,14 +66,6 @@ static nsIImageRequest  *gImageReq = nsnull;
 #define FILE_URL_PREFIX "file://"
 #endif
 
-#if !defined(WIDGET_DLL)
-#error WIDGET_DLL must be defined
-#endif
-
-#if !defined(GFXWIN_DLL)
-#error GFXWIN_DLL must be defined
-#endif
-
 #if defined(XP_UNIX) || defined(XP_BEOS)
 #define XPCOM_DLL "libxpcom"MOZ_DLL_SUFFIX
 #define TEXT_HEIGHT 30
@@ -86,6 +78,14 @@ static nsIImageRequest  *gImageReq = nsnull;
 #define GFXWIN_DLL "GFXWIN_DLL"
 #define TEXT_HEIGHT 30
 #define FILE_URL_PREFIX "file:///"
+#endif
+
+#if !defined(WIDGET_DLL)
+#error WIDGET_DLL must be defined
+#endif
+
+#if !defined(GFXWIN_DLL)
+#error GFXWIN_DLL must be defined
 #endif
 
 #define COLOR_FIELDS_X		50
