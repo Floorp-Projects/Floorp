@@ -57,9 +57,9 @@ include $(topsrcdir)/config/rules.mk
 GARBAGE	+= viewSource.xul.out
 
 viewSource.xul.out: viewSource.xul $(DEPTH)/config/build_number
-	$(INSTALL) $(srcdir)/viewSource.xul $@
+	cp $(srcdir)/viewSource.xul $@
 	$(PERL) $(topsrcdir)/config/aboutime.pl $@ $(DEPTH)/config/build_number
 
 install:: viewSource.xul.out
-	$(INSTALL) viewSource.xul.out $(CHROME_DIST)/$(CHROME_CONTENT_DIR)/viewSource.xul
+	cp viewSource.xul.out $(CHROME_DIST)/$(CHROME_CONTENT_DIR)/viewSource.xul
 
