@@ -174,8 +174,6 @@ NS_NewMathMLmtdFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-// XXX RBS -  what about mFlags ?
-// it->SetFlags(NS_AREA_WRAP_SIZE); ?
   *aNewFrame = it;
   return NS_OK;
 }
@@ -193,15 +191,11 @@ nsMathMLmtdFrame::Reflow(nsIPresContext*          aPresContext,
                          nsHTMLReflowMetrics&     aDesiredSize,
                          const nsHTMLReflowState& aReflowState,
                          nsReflowStatus&          aStatus)
-
 {
-  nsresult  rv = NS_OK;
-   
   // Let the base class do the reflow
-  rv = nsAreaFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+  nsresult rv = nsBlockFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 
   // more about <maligngroup/> and <malignmark/> later
   // ...
-  
   return rv;
 }
