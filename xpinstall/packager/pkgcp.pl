@@ -41,17 +41,19 @@ use Getopt::Long;
 
 # initialize variables
 $saved_cwd        = cwd();
-$component        = "";
-$altdest          = "";
-$file             = "";
-$srcdir           = "";
-$destdir          = "";
-$package          = "";
-$os               = "";
-$lineno           = 0;
-$batch            = 0;
-$help             = 0;
-$debug            = 0;
+$component        = "";		# current component being copied
+$PD               = "";		# file Path Delimiter ( /, \, or :)
+$altdest          = "";		# alternate file destination
+$file             = "";		# file being copied
+$srcdir           = "";		# directory being copied from
+$destdir          = "";		# destination being copied to
+$package          = "";		# file listing files to copy
+$os               = "";		# os type (unix, mac, dos)
+$verbose          = 0;		# shorthand for --debug 1
+$lineno           = 0;		# line # of package file for error text
+$debug            = 0;		# controls amount of debug output
+$batch            = 0;		# flag: are we in batch copy mode?
+$help             = 0;		# flag: if set, print usage
 
 
 # get command line options
@@ -61,16 +63,19 @@ $return = GetOptions(	"source|src|s=s",       \$srcdir,
 			"os|o=s",               \$os,
 			"help|h",               \$help,
 			"debug=i",              \$debug,
+			"verbose|v",            \$verbose,
 			"<>",                   \&do_badargument
 			);
 
 # set debug level
-$debug = abs ($debug);
-if ($debug) {
-	print "debug level: $debug\n";
+if ($verbose && !($debug)) {
+	$debug = 1;
+} elsif ($debug != 0) {
+	$debug = abs ($debug);
+	($debug >= 2) && print "debug level: $debug\n";
 }
 
-# check Usage
+# check usage
 if (! $return)
 {
 	die "Error: couldn't parse command line options.  See \'$0 --help' for options.\nExiting...\n";
@@ -94,7 +99,6 @@ LINE: while (<MANIFEST>) {
 	s/\;.*//;			# it's a comment, kill it.
 	s/^\s+//;			# nuke leading whitespace
 	s/\s+$//;			# nuke trailing whitespace
-	s/\/$//;			# strip any trailing '/'
 
 
 	# it's a blank line, skip it.
@@ -116,7 +120,7 @@ LINE: while (<MANIFEST>) {
 	# delete the file or directory following the '-'
 	/^-/	&& do {
 			s/^-//;		# strip leading '-'
-			do_delete ("$destdir/$component/$_");
+			do_delete ("$destdir$PD$component$PD$_");
 			next LINE;
 		};
 
@@ -125,26 +129,26 @@ LINE: while (<MANIFEST>) {
 			/.*\,.*\,.*/ &&
 				die "Error: multiple commas not allowed ($package, $lineno): $_.\n";
 			($file, $altdest) = split (/\s*\,\s*/, $_, 2);
-			$file =~ s/\/*$//;	# strip any trailing '/'
-			$altdest =~ s/\/*$//;	# strip any trailing '/'
+			$file =~ s/$PD*$//;	# strip any trailing delimiter
+			$altdest =~ s/$PD*$//;	# strip any trailing delimiter
 		};
 
 	($file eq "") && ($file = $_);	# if $file not set, set it.
 
 	# if it has wildcards, do recursive copy.
 	/(?:\*|\?)/	&& do {
-		do_batchcopy ("$srcdir/$file");
+		do_batchcopy ("$srcdir$PD$file");
 		next LINE;
 	};
 
 	# if it's a directory, do recursive copy.
- 	(-d "$srcdir/$file") && do {
-		do_batchcopy ("$srcdir/$file");
+ 	(-d "$srcdir$PD$file") && do {
+		do_batchcopy ("$srcdir$PD$file");
 		next LINE;
 	};
 
 	# if it's a single file, copy it.
-	( -f "$srcdir/$file" ) && do {
+	( -f "$srcdir$PD$file" ) && do {
 		do_copyfile ();
 		$file = "";
 		next LINE;
@@ -173,11 +177,17 @@ sub do_delete
 	if (-f $target) {
 		!(-w $target) &&
 			die "Error: delete failed: $target not writeable ($package, $component, $lineno).  Exiting...\n";
+		if ($debug >= 1) {
+			print "-$target\n";
+		}
 		unlink ($target) ||
 			die "Error: unlink() failed: $!.  Exiting...\n";
 	} elsif (-d $target) {
 		!(-w $target) &&
 			die "Error: delete failed: $target not writeable ($package, $component, $lineno).  Exiting...\n";
+		if ($debug >= 1) {
+			print "-$target\n";
+		}
 		rmtree ($target, 0, 0) ||
 			die "Error: rmtree() failed: $!.  Exiting...\n";
 	} else {
@@ -202,7 +212,7 @@ sub do_copyfile
 	if ($batch) {
 		$srcfile = $File::Find::name;
 	} else {
-		$srcfile = "$srcdir/$file";
+		$srcfile = "$srcdir$PD$file";
 	}
 	# check that source file is readable
 	(!( -r $srcfile )) &&
@@ -211,25 +221,29 @@ sub do_copyfile
 	# set the destination path, if alternate destination given, use it.
 	if ($altdest ne "") {
 		if ($batch) {
-			$path = "$destdir/$component/$altdest/$File::Find::dir";
-			$path =~ s/$srcdir\/$file\///;	# rm info added by find
+			$path = "$destdir$PD$component$PD$altdest$PD$File::Find::dir";
+			$path =~ s/$srcdir$PD$file$PD//;	# rm info added by find
 			$basefile = basename ($File::Find::name);
-#			print "recursive find w/altdest: $path $basefile\n";
+			($debug >= 5) &&
+				print "recursive find w/altdest: $path $basefile\n";
 		} else {
-			$path = dirname ("$destdir/$component/$altdest");
+			$path = dirname ("$destdir$PD$component$PD$altdest");
 			$basefile = basename ($altdest);
-#			print "recursive find w/altdest: $path $basefile\n";
+			($debug >= 5) &&
+				print "recursive find w/altdest: $path $basefile\n";
 		};
 	} else {
 		if ($batch) {
-			$path = "$destdir/$component/$File::Find::dir";
-			$path =~ s/$srcdir\///;	# rm $srcdir added by find()
+			$path = "$destdir$PD$component$PD$File::Find::dir";
+			$path =~ s/$srcdir$PD//;	# rm $srcdir added by find()
 			$basefile = basename ($File::Find::name);
-#			print "recursive find w/o altdest: $path $basefile\n";
+			($debug >= 5) &&
+				print "recursive find w/o altdest: $path $basefile\n";
 		} else {
-			$path = dirname ("$destdir/$component/$file");
+			$path = dirname ("$destdir$PD$component$PD$file");
 			$basefile = basename ($file);
-#			print "recursive find w/o altdest: $path $basefile\n";
+			($debug >= 5) &&
+				print "recursive find w/o altdest: $path $basefile\n";
 		};
 	};
 
@@ -240,9 +254,18 @@ sub do_copyfile
 	};
 
 	if (-f $srcfile) {	# don't copy if it's a directory
-		($debug >= 5) && print "\tcopy\t$srcfile => $path/$basefile\n";
-		copy ("$srcfile", "$path/$basefile") ||
-			die "Error: copy of file $srcdir/$file failed ($package, $component, $lineno): $!.  Exiting...\n";
+		if ($debug >= 1) {
+			if ($batch) {
+				print "$basefile\n";	# from unglob
+			} else {
+				print "$file\n";	# from single file
+			}
+			if ($debug >= 3) {
+				print "\tcopy\t$srcfile => $path$PD$basefile\n";
+			}
+		}
+		copy ("$srcfile", "$path$PD$basefile") ||
+			die "Error: copy of file $srcdir$PD$file failed ($package, $component, $lineno): $!.  Exiting...\n";
 	};
 }
 
@@ -281,11 +304,14 @@ sub do_component
 		die "Error: malformed component $component.  Exiting...\n";
 	$component =~ s/^\[(.*)\]/$1/;	# strip []
 
+	if ($debug >= 1) {
+		print "[$component]\n";
+	}
 	# create component directory
-	if ( -d "$destdir/$component" ) {
+	if ( -d "$destdir$PD$component" ) {
 		warn "Warning: component directory \"$component\" already exists in \"$destdir\".\n";
 	} else {
-		mkdir ("$destdir/$component", 0755) ||
+		mkdir ("$destdir$PD$component", 0755) ||
 			die "Error: couldn't create component directory \"$component\": $!.  Exiting...\n";
 	};
 }
@@ -340,10 +366,17 @@ sub check_arguments
 		$exitval += 8;
 	} elsif ( $os =~ /mac/i ) {
 		$os = "MacOS";
+		$PD = ":";
+		print "Error: MacOS not yet implemented.\n";
+		$exitval = 1;
 	} elsif ( $os =~ /dos/i ) {
 		$os = "MSDOS";
+		$PD = "\\";
+		print "Error: MSDOS not yet implemented.\n";
+		$exitval = 1;
 	} elsif ( $os =~ /unix/i ) {	# null because Unix is default for
 		$os = "";		# fileparse_set_fstype()
+		$PD = "/";
 	} else {
 		print "Error: OS type \"$os\" unknown.\n";
 		$exitval += 16;
@@ -412,11 +445,20 @@ Options:
 
 	--debug [1-10]
 		Controls verbosity of debugging output, 10 being most verbose.
+			1 : same as --verbose.
+			2 : includes function calls.
+			3 : includes source and destination for each copy.
 		Optional.
+
+	--verbose
+		Print component names and files copied/deleted.  Can also
+		be abbreviated to: --v.
+		Optional. 
+
 
 e.g.
 
-$0 --os unix --source /builds/mozilla/dist --destination /h/lithium/install --file packages-win
+$0 --os unix --source /builds/mozilla/dist --destination /h/lithium/install --file packages-win --os unix --verbose
 
 Note: options can be specified by either a leading '--' or '-'.
 
