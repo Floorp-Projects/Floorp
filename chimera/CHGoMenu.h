@@ -18,19 +18,19 @@
 * Rights Reserved.
 *
 * Contributor(s):
-*   David Hyatt <hyatt@netscape.com> (Original Author)
+*   Joe Hewitt <hewitt@netscape.com> (Original Author)
 */
 
-#import <AppKit/AppKit.h>
-#import "BrowserWindowController.h"
-#import "CHAutoCompleteDataSource.h"
+#import <Appkit/Appkit.h>
 
-@interface CHAutoCompleteTableView : NSTableView {
-  IBOutlet NSTextField* mURLBar;
-  IBOutlet BrowserWindowController* mWindowController;
-  CHAutoCompleteDataSource* mDataSource;
+@interface CHGoMenu : NSMenu {
+
 }
 
-- (BOOL)isShowing;
+- (void) emptyHistoryItems;
+- (void) addHistoryItems;
+
+// NSMenu
+- (void) update;
 
 @end

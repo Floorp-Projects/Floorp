@@ -67,13 +67,14 @@
             }; 
             SUPERCLASS = NSWindowController; 
         }, 
+        {CLASS = CHAutoCompleteDataSource; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
         {
-            CLASS = CHAutoCompleteTableView; 
+            ACTIONS = {onBlur = id; onResize = id; }; 
+            CLASS = CHAutoCompleteTextField; 
             LANGUAGE = ObjC; 
-            OUTLETS = {mURLBar = NSTextField; mWindowController = BrowserWindowController; }; 
-            SUPERCLASS = NSTableView; 
+            OUTLETS = {mProxyIcon = CHPageProxyIcon; }; 
+            SUPERCLASS = NSTextField; 
         }, 
-        {CLASS = CHAutoCompleteTextField; LANGUAGE = ObjC; SUPERCLASS = NSTextField; }, 
         {
             CLASS = CHBookmarksOutlineView; 
             LANGUAGE = ObjC; 

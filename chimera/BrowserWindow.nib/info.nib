@@ -22,10 +22,8 @@
 		<string>22 500 93 162 0 0 1152 746 </string>
 		<key>463</key>
 		<string>7 444 200 252 0 0 1152 746 </string>
-		<key>475</key>
-		<string>493 338 207 230 0 0 1152 746 </string>
 		<key>56</key>
-		<string>340 478 343 68 0 0 1024 746 </string>
+		<string>378 463 343 68 0 0 1152 746 </string>
 	</dict>
 	<key>IBFramework Version</key>
 	<string>248.0</string>
@@ -42,6 +40,10 @@
 	<key>IBLockedObjects</key>
 	<array>
 		<integer>497</integer>
+	</array>
+	<key>IBOpenObjects</key>
+	<array>
+		<integer>56</integer>
 	</array>
 	<key>IBSystem Version</key>
 	<string>5Q125</string>

@@ -21,13 +21,30 @@
 *   David Hyatt <hyatt@netscape.com> (Original Author)
 */
 
-#import <Foundation/Foundation.h>
-#include "nsIAutoCompleteSession.h"
+#import <AppKit/AppKit.h>
+#import "CHAutoCompleteTextField.h"
+#include "nsIAutoCompleteResults.h"
 
-@interface CHAutoCompleteDataSource : NSObject {
-  nsIAutoCompleteSession* mAutoComplete;
+@class CHAutoCompleteTextField;
+
+@interface CHAutoCompleteDataSource : NSObject
+{
+  CHAutoCompleteTextField *mTextField;
+  NSImage *mIconImage;
+  
+  NSString* mErrorMessage;
+  nsIAutoCompleteResults *mResults;
 }
 
--(void)initialize;
+- (id) init;
+
+- (int) rowCount;
+- (id) resultString:(int)aRow column:(NSString *)aColumn;
+
+- (void) setErrorMessage: (NSString*) error;
+- (NSString*) errorMessage;
+
+- (void) setResults: (nsIAutoCompleteResults*) results;
+- (nsIAutoCompleteResults*) results;
 
 @end

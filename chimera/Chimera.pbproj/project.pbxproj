@@ -27,6 +27,7 @@
 				F52D5CD4027A88C601A80166,
 				F52F87CD027D75C301A80165,
 				F52F87CE027D75C301A80165,
+				2E748B73029A448D4B000102,
 			);
 			isa = PBXGroup;
 			name = Classes;
@@ -409,6 +410,7 @@
 				F52F87D0027D75C301A80165,
 				2E293A01027F33604B000102,
 				2EEC3E63028138724B000102,
+				2E748B74029A448D4B000102,
 			);
 			isa = PBXHeadersBuildPhase;
 			name = Headers;
@@ -510,6 +512,7 @@
 				F52F87D2027D75C301A80165,
 				2E293A02027F33604B000102,
 				2EEC3E64028138724B000102,
+				2E748B75029A448D4B000102,
 			);
 			isa = PBXSourcesBuildPhase;
 			name = Sources;
@@ -565,6 +568,28 @@
 		};
 		2E293A02027F33604B000102 = {
 			fileRef = 2E2939FF027F33604B000102;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		2E748B72029A448D4B000102 = {
+			isa = PBXFileReference;
+			path = CHGoMenu.h;
+			refType = 4;
+		};
+		2E748B73029A448D4B000102 = {
+			isa = PBXFileReference;
+			path = CHGoMenu.mm;
+			refType = 4;
+		};
+		2E748B74029A448D4B000102 = {
+			fileRef = 2E748B72029A448D4B000102;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		2E748B75029A448D4B000102 = {
+			fileRef = 2E748B73029A448D4B000102;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -1009,6 +1034,7 @@
 				F52D5CD3027A88C601A80166,
 				F52F87CB027D75C301A80165,
 				F52F87CC027D75C301A80165,
+				2E748B72029A448D4B000102,
 			);
 			isa = PBXGroup;
 			name = Headers;
@@ -1483,12 +1509,12 @@
 		};
 		F52D5CCF027A887001A80166 = {
 			isa = PBXFileReference;
-			path = CHAutoCompleteTableView.h;
+			path = CHAutoCompleteTextField.h;
 			refType = 4;
 		};
 		F52D5CD0027A887001A80166 = {
 			isa = PBXFileReference;
-			path = CHAutoCompleteTableView.mm;
+			path = CHAutoCompleteTextField.mm;
 			refType = 4;
 		};
 		F52D5CD1027A887001A80166 = {

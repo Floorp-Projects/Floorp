@@ -19,41 +19,106 @@
 *
 * Contributor(s):
 *   David Hyatt <hyatt@netscape.com> (Original Author)
+*   
 */
 
 #import <AppKit/AppKit.h>
-#import "CHAutoCompleteDataSource.h"
-#include "nsIServiceManager.h"
+#import "CHAutoCompleteTextField.h"
+#include "nsString.h"
+#include "nsCRT.h"
 
 @implementation CHAutoCompleteDataSource
 
 -(id)init
 {
   if ((self = [super init])) {
-    mAutoComplete = nsnull;
+    mResults = nil;
+    mIconImage = [[NSImage imageNamed:@"globe_ico"] autorelease]; 
   }
   return self;
 }
 
--(void)initialize
+-(void)dealloc
 {
-  if (!mAutoComplete) {
-    nsCOMPtr<nsIAutoCompleteSession> session =
-      do_GetService("@mozilla.org/autocompleteSession;1?type=history");
-    mAutoComplete = session;
-    if (!mAutoComplete)
-      printf("Could not find autocomplete!\n");
-  }
+  NS_IF_RELEASE(mResults);
 }
 
--(int)numberOfRowsInTableView:(NSTableView*)aTableView
+- (void) setErrorMessage: (NSString*) error
 {
-  return 0;
+  [self setResults:nsnull];
+  mErrorMessage = error;
+}
+
+- (NSString*) errorMessage
+{
+    return mErrorMessage;
+}
+
+- (void) setResults:(nsIAutoCompleteResults*)aResults
+{
+  NS_IF_RELEASE(mResults);
+  
+  mErrorMessage = nil;
+  mResults = aResults;
+  NS_IF_ADDREF(mResults);
+}
+
+- (nsIAutoCompleteResults *) results
+{
+  return mResults;
+}
+
+- (int) rowCount
+{
+  if (!mResults)
+    return 0;
+    
+  nsCOMPtr<nsISupportsArray> items;
+  mResults->GetItems(getter_AddRefs(items));
+  PRUint32 count;
+  items->Count(&count);
+
+  return count;
+}
+
+- (id) resultString:(int)aRow column:(NSString *)aColumn
+{
+  NSString *result = @"";
+  
+  if (!mResults)
+    return result;
+
+  nsCOMPtr<nsISupportsArray> items;
+  mResults->GetItems(getter_AddRefs(items));
+  
+  nsCOMPtr<nsISupports> itemSupports = dont_AddRef(items->ElementAt(aRow));
+  nsCOMPtr<nsIAutoCompleteItem> item = do_QueryInterface(itemSupports);
+  if (!item)
+    return result;
+
+  if ([aColumn isEqualToString:@"icon"]) {
+    return mIconImage;
+  } else if ([aColumn isEqualToString:@"col1"]) {
+    nsAutoString value;
+    item->GetValue(value);
+    result = [NSString stringWithCharacters:value.get() length:value.Length()];
+  } else if ([aColumn isEqualToString:@"col2"]) {
+    PRUnichar *comment;
+    item->GetComment(&comment);
+    result = [NSString stringWithCharacters:comment length:nsCRT::strlen(comment)];
+  }
+
+  return result;
+}
+
+-(int) numberOfRowsInTableView:(NSTableView*)aTableView
+{
+  return [self rowCount];
 }
 
 -(id)tableView:(NSTableView*)aTableView objectValueForTableColumn:(NSTableColumn*)aTableColumn row:(int)aRowIndex
 {
-  return @"";
+  return [self resultString:aRowIndex column:[aTableColumn identifier]];
 }
 
 @end

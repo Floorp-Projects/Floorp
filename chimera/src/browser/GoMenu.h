@@ -18,33 +18,19 @@
 * Rights Reserved.
 *
 * Contributor(s):
-*   David Hyatt <hyatt@netscape.com> (Original Author)
+*   Joe Hewitt <hewitt@netscape.com> (Original Author)
 */
 
-#import <AppKit/AppKit.h>
-#import "CHAutoCompleteTextField.h"
-#include "nsIAutoCompleteResults.h"
+#import <Appkit/Appkit.h>
 
-@class CHAutoCompleteTextField;
+@interface CHGoMenu : NSMenu {
 
-@interface CHAutoCompleteDataSource : NSObject
-{
-  CHAutoCompleteTextField *mTextField;
-  NSImage *mIconImage;
-  
-  NSString* mErrorMessage;
-  nsIAutoCompleteResults *mResults;
 }
 
-- (id) init;
+- (void) emptyHistoryItems;
+- (void) addHistoryItems;
 
-- (int) rowCount;
-- (id) resultString:(int)aRow column:(NSString *)aColumn;
-
-- (void) setErrorMessage: (NSString*) error;
-- (NSString*) errorMessage;
-
-- (void) setResults: (nsIAutoCompleteResults*) results;
-- (nsIAutoCompleteResults*) results;
+// NSMenu
+- (void) update;
 
 @end
