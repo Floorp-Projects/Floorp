@@ -5072,28 +5072,26 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
                 rv |= child->Deserialize(aStream, aContext, aDocumentURI,
                                          aNodeInfos);
                 break;
-            case eType_Script:
+            case eType_Script: {
                 // language version obtained during deserialization.
-                child = new nsXULPrototypeScript(0, nsnull);
-                if (! child)
+                nsXULPrototypeScript* script = new nsXULPrototypeScript(0, nsnull);
+                if (! script)
                     return NS_ERROR_OUT_OF_MEMORY;
+                child = script;
                 child->mType = childType;
 
-                nsXULPrototypeScript* script = NS_STATIC_CAST(nsXULPrototypeScript*, child);
-                if (script) {
-                    rv |= aStream->Read8(&script->mOutOfLine);
-                    if (! script->mOutOfLine) {
-                        rv |= script->Deserialize(aStream, aContext,
-                                                  aDocumentURI, aNodeInfos);
-                    }
-                    else {
-                        rv |= aStream->ReadObject(PR_TRUE, getter_AddRefs(script->mSrcURI));
-
-                        rv |= script->DeserializeOutOfLineScript(aStream, aContext);
-                    }
+                rv |= aStream->Read8(&script->mOutOfLine);
+                if (! script->mOutOfLine) {
+                    rv |= script->Deserialize(aStream, aContext,
+                                              aDocumentURI, aNodeInfos);
                 }
+                else {
+                    rv |= aStream->ReadObject(PR_TRUE, getter_AddRefs(script->mSrcURI));
 
+                    rv |= script->DeserializeOutOfLineScript(aStream, aContext);
+                }
                 break;
+            }
             }
 
             mChildren[i] = child;
