@@ -464,6 +464,7 @@ public:
     // nsIContent
     virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
                              PRBool aCompileEventHandlers);
+    virtual PRBool IsNativeAnonymous() const;
     virtual PRUint32 GetChildCount() const;
     virtual nsIContent *GetChildAt(PRUint32 aIndex) const;
     virtual PRInt32 IndexOf(nsIContent* aPossibleChild) const;
