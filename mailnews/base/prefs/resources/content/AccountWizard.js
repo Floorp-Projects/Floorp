@@ -43,6 +43,8 @@
 
 */
 
+var DEBUG_alecf = false;
+
 /* 
    the account wizard path is something like:
    
@@ -83,6 +85,12 @@ var gCurrentAccount;
 // will eventually be dumped into the account
 var gCurrentAccountData;
 
+function _dd(aString)
+{
+  if (DEBUG_alecf) 
+    _dd(aString);
+}
+
 // event handlers
 function onLoad() {
 
@@ -121,7 +129,7 @@ function onFinish() {
         return;
     var pageData = GetPageData();
 
-    dump(parent.wizardManager.WSM);
+    _dd(parent.wizardManager.WSM);
 
     var accountData= gCurrentAccountData;
     
@@ -146,8 +154,8 @@ function onFinish() {
         var prefs = Components.classes["component://netscape/preferences"].getService(Components.interfaces.nsIPref);
         prefs.SavePrefFile();
     } catch (ex) {
-        dump("Error saving prefs!\n");
-		dump("ex = " + ex + "\n");
+        _dd("Error saving prefs!\n");
+		_dd("ex = " + ex + "\n");
     }
     window.close();
 }
@@ -158,7 +166,7 @@ function onFinish() {
 function AccountDataToPageData(accountData, pageData)
 {
     if (!accountData) {
-        dump("null account data! clearing..\n");
+        _dd("null account data! clearing..\n");
         // handle null accountData as if it were an empty object
         // so that we clear-out any old pagedata from a
         // previous accountdata. The trick is that
@@ -202,12 +210,12 @@ function AccountDataToPageData(accountData, pageData)
     var identity;
     
     if (accountData.identity) {
-        dump("This is an accountdata\n");
+        _dd("This is an accountdata\n");
         identity = accountData.identity;
     }
     else if (accountData.identities) {
         identity = accountData.identities.QueryElementAt(0, Components.interfaces.nsIMsgIdentity);
-        dump("this is an account, id= " + identity + "\n");
+        _dd("this is an account, id= " + identity + "\n");
     } 
 
     setPageData(pageData, "identity", "email", identity.email);
@@ -237,7 +245,7 @@ function PageDataToAccountData(pageData, accountData)
     var server = accountData.incomingServer;
     var smtp = accountData.smtp;
 
-    dump("Setting identity for " + pageData.identity.email.value + "\n");
+    _dd("Setting identity for " + pageData.identity.email.value + "\n");
     identity.email = pageData.identity.email.value;
     identity.fullName = pageData.identity.fullName.value;
 
@@ -246,7 +254,7 @@ function PageDataToAccountData(pageData, accountData)
 
     if (serverIsNntp(pageData)) {
         // this stuff probably not relevant
-        dump("not setting username/password/rememberpassword/etc\n");
+        _dd("not setting username/password/rememberpassword/etc\n");
     } else {
         if (pageData.login) {
             if (pageData.login.username)
@@ -257,9 +265,9 @@ function PageDataToAccountData(pageData, accountData)
                 server.rememberPassword = pageData.login.rememberPassword.value;
         }
 
-        dump("pageData.server = " + pageData.server + "\n");
+        _dd("pageData.server = " + pageData.server + "\n");
         if (pageData.server) {
-            dump("pageData.server.smtphostname.value = " + pageData.server.smtphostname + "\n");
+            _dd("pageData.server.smtphostname.value = " + pageData.server.smtphostname + "\n");
             if (pageData.server.smtphostname &&
                 pageData.server.smtphostname.value)
                 smtp.hostname = pageData.server.smtphostname.value;
@@ -279,14 +287,14 @@ function createAccount(accountData)
 {
 
     var server = accountData.incomingServer;
-    dump("am.createIncomingServer(" + server.username + "," +
+    _dd("am.createIncomingServer(" + server.username + "," +
                                       server.hostName + "," +
                                       server.type + ")\n");
     var server = am.createIncomingServer(server.username,
                                          server.hostName,
                                          server.type);
     
-    dump("am.createIdentity()\n");
+    _dd("am.createIdentity()\n");
     var identity = am.createIdentity();
     
     /* new nntp identities should use plain text by default
@@ -295,7 +303,7 @@ function createAccount(accountData)
 			identity.composeHtml = false;
     }
 
-    dump("am.createAccount()\n");
+    _dd("am.createAccount()\n");
     var account = am.createAccount();
     account.addIdentity(identity);
     account.incomingServer = server;
@@ -315,7 +323,7 @@ function finishAccount(account, accountData) {
         // see if there are any protocol-specific attributes
         // if so, we use the type to get the IID, QueryInterface
         // as appropriate, then copy the data over
-        dump("srcServer.ServerType-" + srcServer.type + " = " +
+        _dd("srcServer.ServerType-" + srcServer.type + " = " +
              srcServer["ServerType-" + srcServer.type] + "\n");
         if (srcServer["ServerType-" + srcServer.type]) {
             // handle server-specific stuff
@@ -324,7 +332,7 @@ function finishAccount(account, accountData) {
                 destProtocolServer = destServer.QueryInterface(IID);
                 srcProtocolServer = srcServer["ServerType-" + srcServer.type];
 
-                dump("Copying over " + srcServer.type + "-specific data\n");
+                _dd("Copying over " + srcServer.type + "-specific data\n");
                 copyObjectToInterface(destProtocolServer, srcProtocolServer);
             }
         }
@@ -356,7 +364,7 @@ function finishAccount(account, accountData) {
       if (accountData.smtpCreateNewServer)
           smtpServer = smtpService.createSmtpServer();
 
-      dump("Copying smtpServer (" + smtpServer + ") to accountData\n");
+      _dd("Copying smtpServer (" + smtpServer + ") to accountData\n");
       copyObjectToInterface(smtpServer, accountData.smtp);
 
       // some identities have 'preferred' 
@@ -379,9 +387,9 @@ function copyObjectToInterface(dest, src) {
                 dest[i] = src[i];
         }
         catch (ex) {
-            dump("Error copying the " +
+            _dd("Error copying the " +
                  i + " attribute: " + ex + "\n");
-            dump("(This is ok if this is a ServerType-* attribute)\n");
+            _dd("(This is ok if this is a ServerType-* attribute)\n");
         }
     }
 }
@@ -390,13 +398,13 @@ function copyObjectToInterface(dest, src) {
 // if not, create it.
 function verifyLocalFoldersAccount(account) {
     
-    dump("Looking for Local Folders.....\n");
+    _dd("Looking for Local Folders.....\n");
 	var localMailServer = null;
 	try {
 		localMailServer = am.localFoldersServer;
 	}
 	catch (ex) {
-        // dump("exception in findserver: " + ex + "\n");
+        // _dd("exception in findserver: " + ex + "\n");
 		localMailServer = null;
 	}
 
@@ -410,7 +418,7 @@ function verifyLocalFoldersAccount(account) {
 	defaultCopiesAndFoldersPrefsToServer = protocolinfo.defaultCopiesAndFoldersPrefsToServer;
 
 	if (!localMailServer) {
-        	// dump("Creating local mail account\n");
+        	// _dd("Creating local mail account\n");
 		// creates a copy of the identity you pass in
         	messengerMigrator = Components.classes["component://netscape/messenger/migrator"].getService(Components.interfaces.nsIMessengerMigrator);
 		messengerMigrator.createLocalMailAccount(false /* false, since we are not migrating */);
@@ -418,7 +426,7 @@ function verifyLocalFoldersAccount(account) {
 			localMailServer = am.localFoldersServer;
 		}
 		catch (ex) {
-			dump("error!  we should have found the local mail server after we created it.\n");
+			_dd("error!  we should have found the local mail server after we created it.\n");
 			localMailServer = null;
 		}	
     	}
@@ -429,7 +437,7 @@ function verifyLocalFoldersAccount(account) {
 	}
 	else {
 		if (!localMailServer) {
-			dump("error!  we should have a local mail server at this point\n");
+			_dd("error!  we should have a local mail server at this point\n");
 			return;
 		}
 		copiesAndFoldersServer = localMailServer;
@@ -440,7 +448,7 @@ function verifyLocalFoldersAccount(account) {
     } catch (ex) {
         // return false (meaning we did not create the account)
         // on any error
-        dump("Error creating local mail: " + ex + "\n");
+        _dd("Error creating local mail: " + ex + "\n");
         return false;
     }
     return true;
@@ -448,7 +456,7 @@ function verifyLocalFoldersAccount(account) {
 
 function setDefaultCopiesAndFoldersPrefs(identity, server)
 {
-	dump("finding folders on server = " + server.hostName + "\n");
+	_dd("finding folders on server = " + server.hostName + "\n");
 
 	var rootFolder = server.RootFolder;
 
@@ -482,26 +490,26 @@ function setDefaultCopiesAndFoldersPrefs(identity, server)
 	if (stationeryFolder) identity.stationeryFolder = stationeryFolder.URI;
 	if (fccFolder) identity.fccFolder = fccFolder.URI;
 
-	dump("fccFolder = " + identity.fccFolder + "\n");
-	dump("draftFolder = " + identity.draftFolder + "\n");
-	dump("stationeryFolder = " + identity.stationeryFolder + "\n");
+	_dd("fccFolder = " + identity.fccFolder + "\n");
+	_dd("draftFolder = " + identity.draftFolder + "\n");
+	_dd("stationeryFolder = " + identity.stationeryFolder + "\n");
 
 }
 
 function AccountExists(userName,hostName,serverType)
 {
-  dump("AccountExists("+userName+","+hostName+","+serverType+")\n");
+  _dd("AccountExists("+userName+","+hostName+","+serverType+")\n");
   var accountExists = false;
   var accountManager = Components.classes["component://netscape/messenger/account-manager"].getService(Components.interfaces.nsIMsgAccountManager);
   try {
         var server = accountManager.FindServer(userName,hostName,serverType);
         if (server) {
-		dump("account exists\n");
+		_dd("account exists\n");
                 accountExists = true;
         }
   }
   catch (ex) {
-	dump("AccountExists() failed: "+ex+"\n");
+	_dd("AccountExists() failed: "+ex+"\n");
         accountExists = false;
   }
   return accountExists;
@@ -521,7 +529,7 @@ function checkForInvalidAccounts()
 
     if (firstInvalidAccount) {
         var pageData = GetPageData();
-        dump("We have an invalid account, " + firstInvalidAccount + ", let's use that!\n");
+        _dd("We have an invalid account, " + firstInvalidAccount + ", let's use that!\n");
         gCurrentAccount = firstInvalidAccount;
 
         // there's a possibility that the invalid account has ISP defaults
@@ -532,9 +540,9 @@ function checkForInvalidAccounts()
         var identity =
             firstInvalidAccount.identities.QueryElementAt(0, nsIMsgIdentity);
 
-        dump("Invalid account: trying to get ISP data for " + identity.email + "\n");
+        _dd("Invalid account: trying to get ISP data for " + identity.email + "\n");
         var accountData = getIspDefaultsForEmail(identity.email);
-        dump("Invalid account: Got " + accountData + "\n");
+        _dd("Invalid account: Got " + accountData + "\n");
         
         // account -> accountData -> pageData
         AccountToAccountData(firstInvalidAccount, accountData);
@@ -542,13 +550,13 @@ function checkForInvalidAccounts()
 
         gCurrentAccountData = accountData;
         
-        dump(parent.wizardManager.WSM);
+        _dd(parent.wizardManager.WSM);
     }
 }
 
 function AccountToAccountData(account, defaultAccountData)
 {
-    dump("AccountToAccountData(" + account + ", " +
+    _dd("AccountToAccountData(" + account + ", " +
          defaultAccountData + ")\n");
     var accountData = defaultAccountData;
     if (!accountData)
@@ -630,10 +638,10 @@ function UpdateWizardMap() {
 // conditions handled right now:
 // - 
 function updateMap(pageData, wizardMap) {
-    dump("Updating wizard map..\n");
+    _dd("Updating wizard map..\n");
     if (pageData.accounttype) {
         var ismailaccount = pageData.accounttype.mailaccount
-        dump("Accounttype is mail: " + (ismailaccount && ismailaccount.value) + "\n");
+        _dd("Accounttype is mail: " + (ismailaccount && ismailaccount.value) + "\n");
         // set up default account stuff
         wizardMap.identity.next = "server";
         wizardMap.done.previous = "accname";
@@ -655,7 +663,7 @@ function updateMap(pageData, wizardMap) {
             wizardMap.accname.previous = "newsserver";
         }
         else {
-            dump("Handle other types (" + pageData.accounttype + ") here?\n");
+            _dd("Handle other types (" + pageData.accounttype + ") here?\n");
         }
     }
 
@@ -669,7 +677,7 @@ function GetPageData()
 
 function PrefillAccountForIsp(ispName)
 {
-    dump("AccountWizard.prefillAccountForIsp(" + ispName + ")\n");
+    _dd("AccountWizard.prefillAccountForIsp(" + ispName + ")\n");
 
     var ispData = getIspDefaultsForUri(ispName);
     
@@ -677,7 +685,7 @@ function PrefillAccountForIsp(ispName)
 
 
     // prefill the rest of the wizard
-    dump("PrefillAccountForISP: filling with " + ispData + "\n");
+    _dd("PrefillAccountForISP: filling with " + ispData + "\n");
     SetCurrentAccountData(ispData);
     AccountDataToPageData(ispData, pageData);
 }
@@ -707,7 +715,7 @@ function FixupAccountDataForIsp(accountData)
 
 function SetCurrentAccountData(accountData)
 {
-    //    dump("Setting current account data (" + gCurrentAccountData + ") to " + accountData + "\n");
+    //    _dd("Setting current account data (" + gCurrentAccountData + ") to " + accountData + "\n");
     gCurrentAccountData = accountData;
 }
 
@@ -721,7 +729,7 @@ function getInterfaceForType(type) {
         
         return protoInfo.serverIID;
     } catch (ex) {
-        dump("could not get IID for " + type + ": " + ex + "\n");
+        _dd("could not get IID for " + type + ": " + ex + "\n");
         return undefined;
     }
 }

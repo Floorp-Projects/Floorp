@@ -21,64 +21,74 @@ Rights Reserved.
 -->
 
 <?xml-stylesheet href="chrome://messenger/skin/messenger.css" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/wizardOverlay.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/aw-server.dtd" >
 <window id="serverpage" 
-    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    align="vertical"
-    class="dialog"
-    onload="parent.wizardManager.onPageLoad('server');">
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        orient="vertical"
+        class="color-dialog"
+        onload="parent.wizardManager.onPageLoad('server');">
 
-<script language="JavaScript" src="chrome://global/content/strres.js"/>
-<script language="JavaScript" src="chrome://messenger/content/aw-server.js"/>
-<script language="JavaScript" src="chrome://messenger/content/aw-wizardAdapter.js"/>
+  <script language="JavaScript" src="chrome://global/content/strres.js"/>
+  <script language="JavaScript" src="chrome://messenger/content/aw-server.js"/>
+  <script language="JavaScript" src="chrome://messenger/content/aw-wizardAdapter.js"/>
 
   <box class="box-header" value="&serverTitle.label;"/>
 
-  <box align="vertical">
-    <text class="title" value="&incomingServerTitle.label;"/>
-    <spring class="spacer"/>
-    <html>&incomingServerTypeDesc.label;</html>
-    <spring class="spacer"/>
-    <box>
-      <text class="label" value="&incomingServerTypeLabel.label;"/>
-      <menulist id="servertype" wsm_persist="true">
-        <menupopup>
-          <menuitem data="pop3" value="&popType.label;"/>
-          <menuitem data="imap" value="&imapType.label;"/>
-        </menupopup>
-      </menulist>
-    </box>
-    <spring class="spacer"/>
-    <html>&incomingServerNameDesc.label;</html>
-    <spring class="spacer"/>
-    <box>
-      <text class="label" value="&incomingServerLabel.label;"/>
-      <textfield wsm_persist="true" id="hostname"/>
-    </box>
-  </box>
+  <separator/>
+  
+  <box class="box-wizardcontent" orient="vertical" flex="1">
 
-  <spring class="spacer"/>
-  <spring class="spacer"/>
-  <box align="vertical" id="noSmtp">
-    <text class="title" value="&smtpServerTitle.label;"/>
-    <spring class="spacer"/>
-    <html>&smtpServerDesc.label;</html>
-    <spring class="spacer"/>
-    <box>
-      <text class="label" value="&smtpServerLabel.label;"/>
-      <textfield id="smtphostname" wsm_persist="true"/>
-    </box>
-  </box>
+    <titledbox orient="vertical">
+      <title value="&incomingServerTitle.label;"/>
+      <html>&incomingServerTypeDesc.label;</html>
+      <separator class="thin"/>
+      <box autostretch="never">
+        <text class="label" style="width: 8em;" value="&incomingServerTypeLabel.label;" for="servertype"/>
+        <menulist id="servertype" wsm_persist="true">
+          <menupopup>
+            <menuitem data="pop3" value="&popType.label;"/>
+            <menuitem data="imap" value="&imapType.label;"/>
+          </menupopup>
+        </menulist>
+      </box>
+      <separator/>
+      <html>&incomingServerNameDesc.label;</html>
+      <separator class="thin"/>
+      <box autostretch="never">
+        <text class="label" style="width: 8em;" value="&incomingServerLabel.label;" for="hostname"/>
+        <textfield wsm_persist="true" id="hostname" flex="1"/>
+      </box>
+    </titledbox>
 
-  <box id="haveSmtp" orient="vertical">
-    <box>
-      <text value="&currentSmtpBefore.label;"/>
-      <text id="smtpStaticText"/>
-      <text value="&currentSmtpAfter.label;"/>
-    </box>
-    <html style="width: 500px">&haveSmtp1.label;</html>
-    <html style="width: 500px">&haveSmtp2.label;</html>
+    <titledbox orient="vertical" id="noSmtp">
+      <title value="&smtpServerTitle.label;"/>
+      <html>&smtpServerDesc.label;</html>
+      <separator class="thin"/>
+      <box autostretch="never">
+        <text class="label" value="&smtpServerLabel.label;" for="smtphostname" style="width: 8em;"/>
+        <textfield id="smtphostname" wsm_persist="true" flex="1"/>
+      </box>
+    </titledbox>
+
+    <titledbox id="haveSmtp" orient="vertical">
+      <box autostretch="never">
+        <text class="label" value="&currentSmtpBefore.label;"/>
+        <text class="label" id="smtpStaticText"/>
+        <text class="label" value="&currentSmtpAfter.label;"/>
+      </box>
+      <separator class="thin"/>
+      <!-- XXX this sucks need to find a way to force vertical
+               scrolling only -->
+      <box orient="vertical" style="overflow: scroll; height: 5em !important;" flex="1">
+        <html style="width: 200px;">&haveSmtp1.label;</html>
+        <html style="width: 200px;">&haveSmtp2.label;</html>
+      </box>
+    </titledbox>
   </box>
+  
 </window>
+
+

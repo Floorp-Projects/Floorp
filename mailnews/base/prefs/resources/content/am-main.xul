@@ -7,7 +7,7 @@
 
 <window xmlns:html="http://www.w3.org/1999/xhtml"
      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-     flex="1" class="color-dialog"
+     flex="1" class="color-dialog" 
      onload="parent.onPanelLoaded('am-main.xul');"
      orient="vertical">
 
@@ -17,7 +17,7 @@
 
     <box class="box-smallheader" title="&accountTitle.label;"/>
     
-    <html class="secDesc">&accountSettingsDesc.label;</html>
+    <html>&accountSettingsDesc.label;</html>
     <box autostretch="never">
       <text class="label" value="&accountName.label;" for="server.prettyName"/>
       <textfield wsm_persist="true" type="text" size="30" id="server.prettyName" flex="1"/>
@@ -25,9 +25,9 @@
     
     <separator class="thin"/>
     
-    <titledbox orient="vertical" flex="1">
+    <titledbox orient="vertical" flex="1" style="width: 20em !important;">
       <title value="&identityTitle.label;"/>
-      <html class="secDesc">&identityDesc.label;</html>
+      <html>&identityDesc.label;</html>
       <separator class="thin"/>
       <grid flex="1">
         <columns>
@@ -35,34 +35,36 @@
           <column flex="1"/>
         </columns>
         <rows>
-          <row>
+          <row autostretch="never">
             <text class="label" value="&name.label;" for="identity.fullName"/>
             <textfield wsm_persist="true" id="identity.fullName" size="30"/>
           </row>
-          <row>
+          <row autostretch="never">
             <text class="label" value="&email.label;" for="identity.email"/>
             <textfield wsm_persist="true" id="identity.email" />
           </row>
-          <row>
+          <row autostretch="never">
             <text class="label" value="&replyTo.label;" for="identity.replyTo"/>
             <textfield wsm_persist="true" id="identity.replyTo"/>
           </row>
-          <row>
+          <row autostretch="never">
             <text class="label" value="&organization.label;" for="identity.organization"/>
             <textfield wsm_persist="true" id="identity.organization"/>
           </row>
         </rows>
       </grid>
 
-      <box orient="horizontal" autostretch="never">
+      <box autostretch="never">
         <checkbox wsm_persist="true" id="identity.attachSignature" value="&signature.label;" flex="1"/>
       </box>
-      <box autostretch="never">
+      <box autostretch="never" class="indent">
         <textfield wsm_persist="true" id="identity.signature" datatype="nsIFileSpec" flex="1" name="identity.signature"/>
         <button class="dialog push" name="browse" type="button" value="&choose.label;"  
                 oncommand="prefNavSelectFile('identity.signature', 'choosefile', true)"/>
       </box>
 
+      <separator class="thin"/>
+      
       <box autostretch="never">
         <checkbox wsm_persist="true" id="identity.composeHtml" value="&useHtml.label;"/>
       </box>

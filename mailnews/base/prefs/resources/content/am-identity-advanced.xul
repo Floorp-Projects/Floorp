@@ -37,8 +37,8 @@
   <script language="javascript" src="chrome://global/content/strres.js"/>
   
   <html style="width: 20em; ">&smtpDesc.label;</html>
-  <spring class="spacer"/>
-  <box orient="horizontal" autostretch="never">
+  <separator class="thin"/>
+  <box autostretch="never">
     <text value="&smtpName.label;" class="label" for="smtpServerList"/>
     <menulist rdf:datasources="rdf:smtp"
               rdf:containment="http://home.netscape.com/NC-rdf#child"

@@ -32,3 +32,5 @@
 <!ENTITY haveSmtp1.label "For multiple mail accounts, only one outgoing server needs to be specified. For most Internet Service Providers, you should use the SMTP server associated with the account you use most often to connect to the Internet.">
 <!-- LOCALIZATION NOTE (haveSmtp2.label) : Do not translate "SMTP" in below line -->
 <!ENTITY haveSmtp2.label "If you change the account you use to connect to the Internet or if you know that you can use your SMTP server from any Internet connection, you can go to Mail/News Account Settings | Outgoing (SMTP) Server to configure another SMTP server.">
+
+<!ENTITY moreInfo.label "More Info...">

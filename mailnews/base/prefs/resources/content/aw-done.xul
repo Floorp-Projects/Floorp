@@ -20,39 +20,52 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 -->
 <?xml-stylesheet href="chrome://messenger/skin/messenger.css" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/wizardOverlay.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/aw-done.dtd" >
 <window id="done" 
-    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    align="vertical"
-    class="dialog"
-    onload="parent.wizardManager.onPageLoad('done');">
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        orient="vertical"
+        class="color-dialog"
+        onload="parent.wizardManager.onPageLoad('done');">
+
   <script src="chrome://messenger/content/aw-done.js"/>
+
   <box class="box-header" value="&completionTitle.label;"/>
 
-<html>&completionText.label;</html>
-<spring class="spacer"/>
-<box align="horizontal">
-  <spring class="spacer"/>
-  <text id="server.username.label" value="&userNamePrefix.label;"/>
-  <spring class="spacer"/>
-  <text id="server.username.text"/>
-</box>
-<box align="horizontal">
-  <spring class="spacer"/>
-  <text id="identity.email.label" value="&emailPrefix.label;"/>
-  <spring class="spacer"/>
-  <text id="identity.email.text"/>
-</box>
-<spring class="spacer"/>
-<!-- <html>&setupAnother.label;</html> -->
-<spring class="spacer"/>
-<html>&clickFinish.label;</html>
-<spring class="spacer"/>
-<!--
-<box align="horizontal">
-  <titledbutton class="dialog push" value="&setupAnotherButton.label;" onclick="setupAnother(event);"/>
-</box>
--->
+  <separator/>
+  
+  <box class="box-wizardcontent" orient="vertical" flex="1">
+
+    <html>&completionText.label;</html>
+
+    <separator class="thin"/>
+
+    <grid>
+      <columns>
+        <column style="width: 8em;"/>
+        <column flex="1"/>
+      </columns>
+      <rows>
+        <row autostretch="never">
+          <text class="label" id="server.username.label" value="&userNamePrefix.label;"/>
+          <text class="label" id="server.username.text"/>
+        </row>
+        <row autostretch="never">
+          <text class="label" id="identity.email.label" value="&emailPrefix.label;"/>
+          <text class="label" id="identity.email.text"/>
+        </row>
+      </rows>
+    </grid>
+    <!-- <html>&setupAnother.label;</html> -->
+    <separator/>
+    <html>&clickFinish.label;</html>
+    <!--
+      <box>
+        <button class="dialog push" value="&setupAnotherButton.label;" onclick="setupAnother(event);"/>
+      </box>
+    -->
+  </box>
+  
 </window>

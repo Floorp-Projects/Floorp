@@ -21,6 +21,13 @@
  * Alec Flett <alecf@netscape.com>
  */
 
+var DEBUG_alecf = false; 
+function _dd(aString)
+{
+  if (DEBUG_alecf)
+    dump(aString);
+}
+ 
 function onInit() {
     fixLabels(document.getElementById("ispBox"));
 
@@ -50,7 +57,7 @@ function preselectRadioButtons()
         }
         
     } catch (ex) {
-        dump("Error preselecting a radio button: " + ex + "!\n");
+        _dd("Error preselecting a radio button: " + ex + "!\n");
     }
 }
 
@@ -58,17 +65,17 @@ function preselectRadioButtons()
 // basically: templates can't set the "id" attribute on a node, so we
 // have to set "fakeid" and then transfer it manually
 function fixLabels(box) {
-    dump("Fixing labels on " + box + "\n");
+    _dd("Fixing labels on " + box + "\n");
     if (!box) return;
     var child = box.firstChild;
 
-    dump("starting looking with " + child + "\n");
+    _dd("starting looking with " + child + "\n");
     var haveDynamicInputs = false;
     while (child) {
 
-        dump("found child: " + child + "\n");
+        _dd("found child: " + child + "\n");
         if (child.localName.toLowerCase() == "radio") {
-            dump("Found dynamic inputs!\n");
+            _dd("Found dynamic inputs!\n");
             haveDynamicInputs = true;
         }
 
@@ -77,11 +84,11 @@ function fixLabels(box) {
 
     if (haveDynamicInputs) {
         var subButtons = document.getElementById("ispchoice");
-        dump("** Have dynamic inputs: showing " + subButtons + "\n");
+        _dd("** Have dynamic inputs: showing " + subButtons + "\n");
         subButtons.removeAttribute("hidden");
 
         var otherIspRadio = document.getElementById("otherIspRadio");
-        dump("** Also showing the other ISP button\n");
+        _dd("** Also showing the other ISP button\n");
         otherIspRadio.removeAttribute("hidden");
     }
 }
@@ -107,7 +114,7 @@ function enableControls(container, enabled)
 
 function enableIspButtons(child, enabled)
 {
-    dump("disabling " + child.id + "\n");
+    _dd("disabling " + child.id + "\n");
     if (enabled)
         child.removeAttribute("disabled");
     else
@@ -116,7 +123,7 @@ function enableIspButtons(child, enabled)
 }
 
 function onUnload() {
-    dump("OnUnload!\n");
+    _dd("OnUnload!\n");
     parent.UpdateWizardMap();
 
     initializeIspData();
@@ -140,13 +147,13 @@ function initializeIspData()
         var formElement = controls[i];
         if (formElement.getAttribute("group") == "ispchoice" &&
             formElement.checked) {
-            dump("ispName = " + formElement.id + "\n");
+            _dd("ispName = " + formElement.id + "\n");
             ispName = formElement.id;
             break;
         }
     }
 
-    dump("initializing ISP data for " + ispName + "\n");
+    _dd("initializing ISP data for " + ispName + "\n");
     
     if (!ispName || ispName == "") return;
 
