@@ -28,7 +28,6 @@ XPIDLSRCS=						\
 		.\nsIProgressListener.idl						\
 		.\nsIWebBrowser.idl						\
 		.\nsIWebBrowserApp.idl					\
-		.\nsIWebBrowserListener.idl			\
 		.\nsIWebBrowserNav.idl					\
 		$(NULL)
 

@@ -21,7 +21,7 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIWebBrowserListener.idl"
+#include "nsIInterfaceRequestor.idl"
 #include "nsIDocShell.idl"
 
 /**
@@ -36,7 +36,7 @@
  Currently Used:
  {69E5DF00-7B8B-11d3-AF61-00A024FFC08C} - nsIWebBrowser
  {69E5DF01-7B8B-11d3-AF61-00A024FFC08C} - nsIWebBrowserNav
- {69E5DF02-7B8B-11d3-AF61-00A024FFC08C} - nsIWebBrowserListener
+ {69E5DF02-7B8B-11d3-AF61-00A024FFC08C} - Available
  {69E5DF03-7B8B-11d3-AF61-00A024FFC08C} - nsIWebBrowserApp
  {69E5DF04-7B8B-11d3-AF61-00A024FFC08C} - nsIProgress
  {69E5DF05-7B8B-11d3-AF61-00A024FFC08C} - nsIProgressListener
@@ -63,9 +63,9 @@ interface nsIWebBrowser : nsISupports
 
 	@return	NS_OK - Listener was registered successfully.
 				NS_ERROR_INVALID_ARG - The listener passed in was either nsnull, 
-						or was already registered with this progress interface.
+						or was already registered with this listener interface.
 	 */
-	void addListener(in nsIWebBrowserListener listener, out long cookie);
+	void addListener(in nsIInterfaceRequestor listener, out long cookie);
 
 	/* 
 	Removes a previously registered webBrowserListener.
@@ -81,7 +81,7 @@ interface nsIWebBrowser : nsISupports
 				NS_ERROR_INVALID_ARG - Neither the cookie nor the listener point
 					to a previously registered listener.
 	*/
-	void removeListener(in nsIWebBrowserListener listener, in long cookie);
+	void removeListener(in nsIInterfaceRequestor listener, in long cookie);
 
 	/*
 		The current docShell that is loaded at the root.  This will change as 

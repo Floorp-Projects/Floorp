@@ -23,6 +23,9 @@
 #ifndef nsWebBrowser_h__
 #define nsWebBrowser_h__
 
+#include "nsCOMPtr.h"
+#include "nsISupportsArray.h"
+
 #include "nsCWebBrowser.h"
 
 class nsWebBrowser : public nsIWebBrowser, public nsIWebBrowserNav,
@@ -45,7 +48,11 @@ protected:
    nsWebBrowser();
    virtual ~nsWebBrowser();
 
+   void UpdateListeners();
+
 protected:
+   nsCOMPtr<nsISupportsArray> m_ListenerList;
+   PRBool   m_Created;
 };
 
 #endif /* nsWebBrowser_h__ */
