@@ -127,6 +127,8 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
   aMenu->GetLabel(name);
   char * nameStr = name.ToNewCString();
 
+  mItems.AppendElement(aMenu);
+
   HMENU nativeMenuHandle;
   void * voidData;
   aMenu->GetNativeData(voidData);
@@ -157,12 +159,14 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBar::GetMenuCount(PRUint32 &aCount)
 {
+  aCount = mItems.Count();
   return NS_OK;
 }
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBar::GetMenuAt(const PRUint32 aCount, nsIMenu *& aMenu)
 {
+  aMenu = (nsIMenu *)mItems[aCount];
   return NS_OK;
 }
 
