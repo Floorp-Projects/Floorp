@@ -193,14 +193,21 @@ function Shutdown()
 		var bmks = Components.classes["component://netscape/browser/bookmarks-service"].getService();
 		if (bmks)	bmks = bmks.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
 		if (bmks)	bmks.Flush();
-    // give history a change at flushing to disk also                           
-    var history = getService( "component://netscape/browser/global-history", "nsIRDFRemoteDataSource" );
-    if (history)    
-      history.Flush();   
+    	}
+	catch (ex)
+	{
+	}
+	try
+	{
+		// give history a change at flushing to disk also                           
+    		var history = getService( "component://netscape/browser/global-history", "nsIRDFRemoteDataSource" );
+    		if (history)    
+      		history.Flush();   
 	}
 	catch (ex)
 	{
 	}
+	
   // Close the app core.
   if ( appCore )
     appCore.close();
