@@ -749,7 +749,7 @@ nsFontFaceStateCommand::GetCurrentState(nsIEditor *aEditor,
   if (NS_SUCCEEDED(rv))
   {
     aParams->SetBooleanValue(STATE_MIXED,outMixed);
-    aParams->SetStringValue(STATE_ATTRIBUTE, outStateString);
+    aParams->SetCStringValue(STATE_ATTRIBUTE, NS_ConvertUTF16toUTF8(outStateString).get());
   }
   return rv;
 }
