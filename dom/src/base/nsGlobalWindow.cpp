@@ -102,6 +102,7 @@
 #include "nsIEntropyCollector.h"
 #include "nsDOMCID.h"
 #include "nsDOMError.h"
+#include "nsPIWindowWatcher.h"
 
 #include "nsWindowRoot.h"
 
@@ -125,6 +126,7 @@ static NS_DEFINE_CID(kXULControllersCID, NS_XULCONTROLLERS_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID,
                      NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static char *sWindowWatcherContractID = "@mozilla.org/embedcomp/window-watcher;1";
 
 
 static const char *kCryptoContractID = NS_CRYPTO_CONTRACTID;
@@ -2936,6 +2938,56 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext *cx,
                                              PRBool aDialog,
                                              nsIDOMWindowInternal ** aReturn)
 {
+#if 0
+  /* The other version of this method will soon be replaced by this one,
+     after the new supporting code has had time to settle in.
+     Note to self: also remove AttachArguments, CalculateChromeFlags,
+     SizeOpenedDocShellItem, ReadyOpenedDocShellItem, CheckWindowName,
+     WinHasOption
+  */
+  JSString        *jsName,
+                  *jsUrl,
+                  *jsFeatures;
+  const PRUnichar *name,
+                  *url,
+                  *features;
+  nsresult         rv;
+  PRUint32         extraArgc;
+  nsCOMPtr<nsIDOMWindow> domReturn;
+
+  *aReturn = nsnull;
+  rv = NS_ERROR_FAILURE;
+
+  name = nsnull;
+  url = nsnull;
+  features = nsnull;
+  if (argc > 0) {
+    jsUrl = ::JS_ValueToString(cx, argv[0]);
+    if (jsUrl)
+      url = NS_REINTERPRET_CAST(const PRUnichar *, ::JS_GetStringChars(jsUrl));
+  }
+  if (argc > 1) {
+    jsName = ::JS_ValueToString(cx, argv[1]);
+    if (jsName)
+      name = NS_REINTERPRET_CAST(const PRUnichar *, ::JS_GetStringChars(jsName));
+  }
+  if (argc > 2) {
+    jsFeatures = ::JS_ValueToString(cx, argv[2]);
+    if (jsFeatures)
+      features = NS_REINTERPRET_CAST(const PRUnichar *, ::JS_GetStringChars(jsFeatures));
+  }
+
+  nsCOMPtr<nsPIWindowWatcher> wwatch(do_GetService(sWindowWatcherContractID));
+  if (wwatch) {
+    extraArgc = argc >= 3 ? argc-3 : 0;
+    rv = wwatch->OpenWindowJS(this, url, name, features, aDialog,
+                              extraArgc, argv+3,
+                              getter_AddRefs(domReturn));
+    if (domReturn)
+      CallQueryInterface(domReturn, aReturn);
+  }
+  return rv;
+#else
   PRUint32 chromeFlags;
   nsAutoString name;
   char *options;
@@ -3189,6 +3241,7 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext *cx,
   }
 
   return NS_OK;
+#endif
 }
 
 // attach the given array of JS values to the given window, as a property array
