@@ -857,3 +857,8 @@ $(CHROME_L10N:.\=CLOBBER\.\):
 # Easier than typing it by hand, works from any directory:
 debug::
         start msdev $(DIST)\bin\mozilla.exe
+
+# Easier than typing it by hand, works from any directory:
+run::
+        $(DIST)\bin\mozilla.exe
+
