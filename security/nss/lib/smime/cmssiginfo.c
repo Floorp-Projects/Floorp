@@ -34,13 +34,12 @@
 /*
  * CMS signerInfo methods.
  *
- * $Id: cmssiginfo.c,v 1.15 2002/12/17 01:39:46 wtc%netscape.com Exp $
+ * $Id: cmssiginfo.c,v 1.16 2002/12/17 02:08:51 wtc%netscape.com Exp $
  */
 
 #include "cmslocal.h"
 
 #include "cert.h"
-#include "certdb.h"
 #include "key.h"
 #include "secasn1.h"
 #include "secitem.h"
