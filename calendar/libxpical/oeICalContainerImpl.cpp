@@ -229,7 +229,17 @@ oeICalContainerImpl::AddCalendar( const char *server ) {
 #endif
 
     nsresult rv;
-    nsCOMPtr<oeIICal> calendar = do_CreateInstance(OE_ICAL_CONTRACTID, &rv);
+
+    nsCOMPtr<oeIICal> calendar;
+    GetCalendar( server , getter_AddRefs(calendar) );
+    if( calendar ) {
+        #ifdef ICAL_DEBUG_ALL
+        printf( "oeICalContainerImpl::AddCalendar()-Warning: Calendar already exists\n" );
+        #endif
+        return NS_OK;
+    }
+
+    calendar = do_CreateInstance(OE_ICAL_CONTRACTID, &rv);
     if (NS_FAILED(rv)) {
         return NS_ERROR_FAILURE;
     }
@@ -251,6 +261,8 @@ oeICalContainerImpl::AddCalendar( const char *server ) {
         m_todoobserverArray->GetElementAt( i, (nsISupports **)&tmpobserver );
         calendar->AddTodoObserver( tmpobserver );
     }
+
+    calendar->SetBatchMode( m_batchMode ); //Make sure the current batchmode value is inherited
 
     calendar->SetServer( server );
 

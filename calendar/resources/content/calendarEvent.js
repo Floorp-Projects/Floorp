@@ -101,7 +101,7 @@
 function CalendarEventDataSource( )
 {
    try {
-       var iCalLibComponent = Components.classes["@mozilla.org/ical-container;1"].createInstance();
+        var iCalLibComponent = Components.classes["@mozilla.org/ical-container;1"].getService();
    } catch ( e ) {
        alert( 
            "The calendar cannot run due to the following error:\n"+

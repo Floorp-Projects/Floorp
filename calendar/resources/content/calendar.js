@@ -126,6 +126,9 @@ function calendarInit()
    
    // get the Ical Library
    gICalLib = gEventSource.getICalLib();
+
+   // this suspends feedbacks to observers until all is settled
+   gICalLib.batchMode = true;
    
    // set up the CalendarWindow instance
    
@@ -196,6 +199,9 @@ function calendarInit()
    document.getElementById( 'event-filter-menulist' ).selectedItem = document.getElementById( 'event-filter-'+value );
 
    gEventSource.alarmObserver.firePendingAlarms();
+
+   //All is settled, enable feedbacks to observers
+   gICalLib.batchMode = false;
 }
 
 // Set the date and time on the clock and set up a timeout to refresh the clock when the 

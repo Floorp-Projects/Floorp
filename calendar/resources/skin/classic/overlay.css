@@ -45,6 +45,14 @@
   list-style-image: url("chrome://calendar/skin/taskbar-cal-act.gif");
 }                                                                     
 
+#mini-cal[BiffState="Alarm"] {
+  list-style-image: url("chrome://calendar/skin/taskbar-calalarm.gif");
+}
+
+#mini-cal[BiffState="Alarm"]:hover:active {
+  list-style-image: url("chrome://calendar/skin/taskbar-calalarm-act.gif");
+}
+
 .icon-calendar16 {
   list-style-image: url("chrome://calendar/skin/calendar-16.gif");
 }

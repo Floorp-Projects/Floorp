@@ -53,6 +53,12 @@
 #include "nsISupportsArray.h"
 #include "nsXPCOM.h"
 #include "nsComponentManagerUtils.h"
+#include "nsIWindowMediator.h"
+#include "nsIServiceManager.h"
+#include "nsIDOMWindowInternal.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMElement.h"
+
 
 extern "C" {
     #include "icalss.h"
@@ -1668,6 +1674,57 @@ void AlarmTimerCallback(nsITimer *aTimer, void *aClosure)
     icallib->SetupAlarmManager();
 }
 
+NS_IMETHODIMP UpdateCalendarIcon( PRBool hasAlarm )
+{
+    nsresult rv;
+    nsCOMPtr<nsIWindowMediator> windowMediator =
+    do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+    static PRBool lastTimeHadAlarm = false;
+ 
+    if( lastTimeHadAlarm == hasAlarm )
+        return NS_OK;
+
+    lastTimeHadAlarm = hasAlarm;
+    nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
+ 
+    // why use DOM window enumerator instead of XUL window...????
+    if (NS_SUCCEEDED(windowMediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator))))
+    {
+        PRBool more;
+   
+        windowEnumerator->HasMoreElements(&more);
+   
+        while(more)
+        {
+            nsCOMPtr<nsISupports> nextWindow = nsnull;
+            windowEnumerator->GetNext(getter_AddRefs(nextWindow));
+            nsCOMPtr<nsIDOMWindowInternal> domWindow(do_QueryInterface(nextWindow));
+
+            nsCOMPtr<nsIDOMDocument> domDocument;
+            domWindow->GetDocument(getter_AddRefs(domDocument));
+
+            if(domDocument)
+            {
+                nsCOMPtr<nsIDOMElement> domElement;
+                domDocument->GetElementById(NS_LITERAL_STRING("mini-cal"), getter_AddRefs(domElement));
+
+                if (domElement) {
+                    if ( hasAlarm ) {
+                        domElement->SetAttribute(NS_LITERAL_STRING("BiffState"), NS_LITERAL_STRING("Alarm"));
+                    }
+                    else {
+                        domElement->RemoveAttribute(NS_LITERAL_STRING("BiffState"));
+                    }
+                }
+            }
+
+            windowEnumerator->HasMoreElements(&more);
+        }
+    }
+    return NS_OK;
+}
+
 void oeICalImpl::SetupAlarmManager() {
 #ifdef ICAL_DEBUG
     printf( "oeICalImpl::SetupAlarmManager()\n" );
@@ -1681,6 +1738,8 @@ void oeICalImpl::SetupAlarmManager() {
         
         return;
     }
+
+    UpdateCalendarIcon( false );
 
     PRTime todayinms = PR_Now();
     PRInt64 usecpermsec;
@@ -1706,6 +1765,8 @@ void oeICalImpl::SetupAlarmManager() {
                     printf( "ALARM WENT OFF: %s\n", icaltime_as_ical_string( alarmtime ) );
                     #endif
                     
+                    UpdateCalendarIcon( true );
+
                     nsresult rv;
                     oeIICalEventDisplay* eventDisplay;
                     rv = NS_NewICalEventDisplay( event, &eventDisplay );
