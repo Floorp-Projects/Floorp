@@ -497,6 +497,9 @@ pref("security.policy.default.window.scriptglobals", "sameOrigin");
 pref("middlemouse.paste", false);
 pref("middlemouse.openNewWindow", false);
 
+// Clipboard behavior
+pref("clipboard.autocopy", false);
+
 /* 0=lines, 1=pages, 2=history , 3=text size */
 pref("mousewheel.withnokey.action",0);
 pref("mousewheel.withnokey.numlines",1);	

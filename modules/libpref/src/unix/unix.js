@@ -51,6 +51,9 @@ pref("middlemouse.paste", true);
 pref("middlemouse.openNewWindow", true);
 pref("middlemouse.scrollbarPosition", true);
 
+// Clipboard behavior
+pref("clipboard.autocopy", true);
+
 // Instead of "delay_images"
 pref("browser.autoload_images", true);
 
