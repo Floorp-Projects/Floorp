@@ -125,6 +125,32 @@ nsSegmentedBuffer::DeleteFirstSegment()
     }
 }
 
+PRBool
+nsSegmentedBuffer::DeleteLastSegment()
+{
+    PRInt32 last = ModSegArraySize(mLastSegmentIndex - 1);
+    NS_ASSERTION(mSegmentArray[last] != nsnull, "deleting bad segment");
+    (void)mSegAllocator->Free(mSegmentArray[last]);
+    mSegmentArray[last] = nsnull;
+    mLastSegmentIndex = last;
+    return (PRBool)(mLastSegmentIndex == mFirstSegmentIndex);
+}
+
+PRBool
+nsSegmentedBuffer::ReallocLastSegment(size_t newSize)
+{
+    PRInt32 last = ModSegArraySize(mLastSegmentIndex - 1);
+    NS_ASSERTION(mSegmentArray[last] != nsnull, "realloc'ing bad segment");
+    char *newSegment =
+        (char*)mSegAllocator->Realloc(mSegmentArray[last], newSize);
+    if (newSegment) {
+        mSegmentArray[last] = newSegment;
+        return PR_TRUE;
+    } else {
+        return PR_FALSE;
+    }
+}
+
 void
 nsSegmentedBuffer::Empty()
 {

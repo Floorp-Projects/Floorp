@@ -1,0 +1,86 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *  
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *  
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ */
+
+[ptr] native nsString(nsString); 
+%{ C++
+#include "nsString.h"
+%}
+
+#include "nsIOutputStream.idl"
+#include "nsrootidl.idl"
+
+/**
+ * This interface allows writing of primitive data types (integers,
+ * floating-point values, booleans, etc.) to a stream in a binary, untagged,
+ * fixed-endianness format.  This might be used, for example, to implement
+ * network protocols or to produce architecture-neutral binary disk files,
+ * i.e. ones that can be read and written by both big-endian and little-endian
+ * platforms.  Output is written in big-endian order (high-order byte first),
+ * as this is traditional network order.
+ *
+ * @See nsIBinaryInputStream
+ */
+
+[scriptable, uuid(204ee610-8765-11d3-90cf-0040056a906e)]
+interface nsIBinaryOutputStream : nsIOutputStream {
+    void setOutputStream(in nsIOutputStream aOutputStream);
+    
+    void writeBoolean(in PRBool aBoolean);
+
+    void write8(in PRUint8 aByte);
+    void write16(in PRUint16 a16);
+    void write32(in PRUint32 a32);
+    void write64(in PRUint64 a64);
+
+    void writeFloat(in float aFloat);
+    void writeDouble(in double aDouble);
+
+    /**
+     * Write a NUL-terminated 8-bit char* string to a binary stream.
+     */
+    void writeStringZ(in string aString);
+
+    /**
+     * Write a NUL-terminated 16-bit PRUnichar* string to a binary stream.
+     */
+    void writeWStringZ(in wstring aString);
+
+    /**
+     * Write a NUL-terminated UTF8-encoded string to a binary stream, produced
+     * from a NUL-terminated 16-bit PRUnichar* string argument.
+     */
+    void writeUtf8Z(in wstring aString);
+
+    /**
+     * Write an opaque byte array to a binary stream.
+     */
+    void writeBytes([size_is(aLength)] in string aString, in PRUint32 aLength);
+
+    /**
+     * Write a string (possibly containing embedded NULs) to a binary stream.
+     */
+    [noscript] void writeString(in nsString aString);
+};
+
+%{C++
+NS_COM nsresult
+NS_NewBinaryOutputStream(nsIBinaryOutputStream* *aResult, nsIOutputStream* aDestStream);
+%}
