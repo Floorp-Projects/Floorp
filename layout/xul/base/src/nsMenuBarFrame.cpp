@@ -478,3 +478,4 @@ nsMenuBarFrame::Destroy(nsIPresContext& aPresContext)
 
   return nsToolbarFrame::Destroy(aPresContext);
 }
+
