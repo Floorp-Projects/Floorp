@@ -100,10 +100,48 @@
 <!ENTITY pageSourceCmd.label ".Page Source">  
 <!ENTITY pageInfoCmd.label ".Page Info">  
 <!ENTITY charSetMenu.label "Character Set"> 
-<!ENTITY westernCmd.label "Western (ISO-8859-1)">  
-<!ENTITY japaneseISO_2022_JPCmd.label "Japanese (ISO-2022-JP)">  
-<!ENTITY japaneseShift_JISCmd.label "Japanese (Shift_JIS)">  
-<!ENTITY japaneseEUC_JPCmd.label "Japanese (EUC-JP)">  
+<!ENTITY ISO_Latin_1Cmd.label "ISO Latin 1 (ISO-8859-1)">  
+<!ENTITY ISO_Latin_2Cmd.label "ISO Latin 2 (ISO-8859-2)">  
+<!ENTITY ISO_Latin_3Cmd.label "ISO Latin 3 (ISO-8859-3)">  
+<!ENTITY ISO_Latin_4Cmd.label "ISO Latin 4 (ISO-8859-4)">  
+<!ENTITY ISO_Latin_5Cmd.label "ISO Latin 5 (ISO-8859-9)">  
+<!ENTITY ISO_Latin_8Cmd.label "ISO Latin 8 (ISO-8859-14)">  
+<!ENTITY ISO_Latin_9Cmd.label "ISO Latin 9 (ISO-8859-15)">  
+<!ENTITY Windows_Latin2Cmd.label "Windows Latin 2 (windows-1250)">  
+<!ENTITY Windows_Latin1Cmd.label "Windows Latin 1 (windows-1252)">  
+<!ENTITY Windows_Latin5Cmd.label "Windows Latin 5 (windows-1254)">  
+<!ENTITY Windows_BalticRimCmd.label "Windows Baltic Rim (windows-1257)">  
+<!ENTITY Macintosh_RomanCmd.label "Macintosh Roman">  
+<!ENTITY Macintosh_CentralEuropeanCmd.label "Macintosh Central European">  
+<!ENTITY Macintosh_TurkishCmd.label "Macintosh Turkish">  
+<!ENTITY Macintosh_CroatianCmd.label "Macintosh Croatian">  
+<!ENTITY Macintosh_RomanianCmd.label "Macintosh Romanian">  
+<!ENTITY Macintosh_IcelandicCmd.label "Macintosh Icelandic">  
+<!ENTITY Japanese_JISCmd.label "Japanese JIS (ISO-2022-JP)">  
+<!ENTITY Japanese_Shift_JISCmd.label "Japanese (Shift_JIS)">  
+<!ENTITY Japanese_EUC_JPCmd.label "Japanese (EUC-JP)">  
+<!ENTITY TraditionalChinese_Big5Cmd.label "Traditional Chinese (Big5)">  
+<!ENTITY TraditionalChinese_EUC_TWCmd.label "Traditional Chinese (EUC-TW)">  
+<!ENTITY SimplifiedChinese_GB2312Cmd.label "Simplified Chinese (GB2312)">  
+<!ENTITY Korean_EUC_KRCmd.label "Korean (EUC-KR)">  
+<!ENTITY Korean_ISO_2022_KRCmd.label "Korean (ISO-2022-KR)">  
+<!ENTITY UTF_7Cmd.label "UTF-7">  
+<!ENTITY UTF_8Cmd.label "UTF-8">  
+<!ENTITY ISO_CyrillicCmd.label "ISO Cyrillic (ISO-8859-5)">  
+<!ENTITY Windows_CyrillicCmd.label "Windows Cyrillic (windows-1251)">  
+<!ENTITY Macintosh_CyrillicCmd.label "Macintosh Cyrillic">  
+<!ENTITY Macintosh_UkrainianCmd.label "Macintosh Ukrainian">  
+<!ENTITY Russian_KOI8_RCmd.label "Russian (KOI8-R)">  
+<!ENTITY Ukrainian_KOI8_UCmd.label "Ukrainian (KOI8-U)">  
+<!ENTITY ISO_GreekCmd.label "ISO Greek (ISO-8859-7)">  
+<!ENTITY Windows_GreekCmd.label "Windows Greek (windows-1253)">  
+<!ENTITY Macintosh_GreekCmd.label "Macintosh Greek">  
+<!ENTITY Windows_VietnameseCmd.label "Windows Vietnamese (windows-1258)">  
+<!ENTITY Vietnamese_TCVN5712Cmd.label "Vietnamese (TCVN5712)">  
+<!ENTITY Vietnamese_VISCIICmd.label "Vietnamese (VISCII)">  
+<!ENTITY Vietnamese_VPSCmd.label "Vietnamese (VPS)">  
+<!ENTITY ThaiCmd.label "Thai (TIS-620)">  
+<!ENTITY ArmenianCmd.label "Armenian (ARMSCII-8)">  
 <!ENTITY goMenu.label ".Go"> 
 <!ENTITY firstUnreadMsgCmd.label ".First Unread Message">  
 <!ENTITY firstFlaggedMsgCmd.label ".First Flagged Message">  
@@ -325,10 +363,55 @@
       <menuitem name="&pageInfoCmd.label;" onclick="MsgViewPageInfo();"/>
       <separator/>
       <menu name="&charSetMenu.label;">
-        <menuitem name="&westernCmd.label;" onclick="SetDocumentCharacterSet('ISO-8859-1');"/>
-        <menuitem name="&japaneseISO_2022_JPCmd.label;" onclick="SetDocumentCharacterSet('ISO-2022-JP');"/>
-        <menuitem name="&japaneseShift_JISCmd.label;" onclick="SetDocumentCharacterSet('Shift_JIS');"/>
-        <menuitem name="&japaneseEUC_JPCmd.label;" onclick="SetDocumentCharacterSet('EUC-JP');"/>
+        <menuitem name="&ISO_Latin_1Cmd.label;" onclick="MessengerSetDefaultCharacterSet('ISO-8859-1');"/>
+        <menuitem name="&ISO_Latin_2Cmd.label;" onclick="MessengerSetDefaultCharacterSet('ISO-8859-2');"/>
+        <menuitem name="&ISO_Latin_3Cmd.label;" onclick="MessengerSetDefaultCharacterSet('ISO-8859-3');"/>
+        <menuitem name="&ISO_Latin_4Cmd.label;" onclick="MessengerSetDefaultCharacterSet('ISO-8859-4');"/>
+        <menuitem name="&ISO_Latin_5Cmd.label;" onclick="MessengerSetDefaultCharacterSet('ISO-8859-9');"/>
+        <menuitem name="&ISO_Latin_8Cmd.label;" onclick="MessengerSetDefaultCharacterSet('ISO-8859-14');"/>
+        <menuitem name="&ISO_Latin_9Cmd.label;" onclick="MessengerSetDefaultCharacterSet('ISO-8859-15');"/>
+        <menuitem name="&Windows_Latin2Cmd.label;" onclick="MessengerSetDefaultCharacterSet('windows-1250');"/>
+        <menuitem name="&Windows_Latin1Cmd.label;" onclick="MessengerSetDefaultCharacterSet('windows-1252');"/>
+        <menuitem name="&Windows_Latin5Cmd.label;" onclick="MessengerSetDefaultCharacterSet('windows-1254');"/>
+        <menuitem name="&Windows_BalticRimCmd.label;" onclick="MessengerSetDefaultCharacterSet('windows-1257');"/>
+        <menuitem name="&Macintosh_RomanCmd.label;" onclick="MessengerSetDefaultCharacterSet('x-mac-roman');"/>
+        <menuitem name="&Macintosh_CentralEuropeanCmd.label;" onclick="MessengerSetDefaultCharacterSet('x-mac-ce');"/>
+        <menuitem name="&Macintosh_TurkishCmd.label;" onclick="MessengerSetDefaultCharacterSet('x-mac-turkish');"/>
+        <menuitem name="&Macintosh_CroatianCmd.label;" onclick="MessengerSetDefaultCharacterSet('x-mac-croatian');"/>
+        <menuitem name="&Macintosh_RomanianCmd.label;" onclick="MessengerSetDefaultCharacterSet('x-mac-romanian');"/>
+        <menuitem name="&Macintosh_IcelandicCmd.label;" onclick="MessengerSetDefaultCharacterSet('x-mac-icelandic');"/>
+             <separator />
+        <menuitem name="&Japanese_JISCmd.label;" onclick="MessengerSetDefaultCharacterSet('ISO-2022-JP');"/>
+        <menuitem name="&Japanese_Shift_JISCmd.label;" onclick="MessengerSetDefaultCharacterSet('Shift_JIS');"/>
+        <menuitem name="&Japanese_EUC_JPCmd.label;" onclick="MessengerSetDefaultCharacterSet('EUC-JP');"/>
+             <separator />
+        <menuitem name="&TraditionalChinese_Big5Cmd.label;" onclick="MessengerSetDefaultCharacterSet('Big5');"/>
+        <menuitem name="&TraditionalChinese_EUC_TWCmd.label;" onclick="MessengerSetDefaultCharacterSet('x-euc-tw');"/>
+        <menuitem name="&SimplifiedChinese_GB2312Cmd.label;" onclick="MessengerSetDefaultCharacterSet('GB2312');"/>
+             <separator />
+        <menuitem name="&Korean_EUC_KRCmd.label;" onclick="MessengerSetDefaultCharacterSet('EUC-KR');"/>
+             <separator />
+        <menuitem name="&UTF_8Cmd.label;" onclick="MessengerSetDefaultCharacterSet('UTF-8');"/>
+             <separator />
+        <menuitem name="&ISO_CyrillicCmd.label;" onclick="MessengerSetDefaultCharacterSet('ISO-8859-5');"/>
+        <menuitem name="&Windows_CyrillicCmd.label;" onclick="MessengerSetDefaultCharacterSet('windows-1251');"/>
+        <menuitem name="&Macintosh_CyrillicCmd.label;" onclick="MessengerSetDefaultCharacterSet('x-mac-cyrillic');"/>
+        <menuitem name="&Macintosh_UkrainianCmd.label;" onclick="MessengerSetDefaultCharacterSet('x-mac-ukrainian');"/>
+        <menuitem name="&Russian_KOI8_RCmd.label;" onclick="MessengerSetDefaultCharacterSet('KOI8-R');"/>
+        <menuitem name="&Ukrainian_KOI8_UCmd.label;" onclick="MessengerSetDefaultCharacterSet('KOI8-U');"/>
+             <separator />
+        <menuitem name="&ISO_GreekCmd.label;" onclick="MessengerSetDefaultCharacterSet('ISO-8859-7');"/>
+        <menuitem name="&Windows_GreekCmd.label;" onclick="MessengerSetDefaultCharacterSet('windows-1253');"/>
+        <menuitem name="&Macintosh_GreekCmd.label;" onclick="MessengerSetDefaultCharacterSet('x-mac-greek');"/>
+             <separator />
+        <menuitem name="&Windows_VietnameseCmd.label;" onclick="MessengerSetDefaultCharacterSet('windows-1258');"/>
+        <menuitem name="&Vietnamese_TCVN5712Cmd.label;" onclick="MessengerSetDefaultCharacterSet('x-viet-tcvn5712');"/>
+        <menuitem name="&Vietnamese_VISCIICmd.label;" onclick="MessengerSetDefaultCharacterSet('VISCII');"/>
+        <menuitem name="&Vietnamese_VPSCmd.label;" onclick="MessengerSetDefaultCharacterSet('x-viet-vps');"/>
+             <separator />
+        <menuitem name="&ThaiCmd.label;" onclick="MessengerSetDefaultCharacterSet('TIS-620');"/>
+             <separator />
+        <menuitem name="&ArmenianCmd.label;" onclick="MessengerSetDefaultCharacterSet('ARMSCII-8');"/>
       </menu>
     </menu>
     <menu name="&goMenu.label;">

@@ -18,7 +18,7 @@ function Exit()
 }
 
 function CharacterSet(){}
-function SetDocumentCharacterSet(aCharset)
+function MessengerSetDefaultCharacterSet(aCharset)
 {
   var appCore = FindMsgAppCore(); 
   if (appCore != null) {
