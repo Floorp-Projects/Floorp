@@ -1,6 +1,6 @@
 CustomizationList=
 CD image=1
-Network=1
+Network=0
 Include Internet Setup=0
 FTPLocation=ftp://
 OrganizationName=
