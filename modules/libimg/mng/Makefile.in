@@ -30,27 +30,27 @@ MODULE		= mng
 LIBRARY_NAME	= mng
 
 CSRCS		= \
-		mng_callback_xs.c \
-		mng_chunk_io.c \
-		mng_chunk_prc.c \
-		mng_chunk_xs.c \
-		mng_cms.c \
-		mng_display.c \
-		mng_dither.c \
-		mng_error.c \
-		mng_filter.c \
-		mng_hlapi.c \
-		mng_jpeg.c \
-		mng_object_prc.c \
-		mng_pixels.c \
-		mng_prop_xs.c \
-		mng_read.c \
-		mng_trace.c \
-		mng_write.c \
-		mng_zlib.c \
+		libmng_callback_xs.c \
+		libmng_chunk_io.c \
+		libmng_chunk_prc.c \
+		libmng_chunk_xs.c \
+		libmng_cms.c \
+		libmng_display.c \
+		libmng_dither.c \
+		libmng_error.c \
+		libmng_filter.c \
+		libmng_hlapi.c \
+		libmng_jpeg.c \
+		libmng_object_prc.c \
+		libmng_pixels.c \
+		libmng_prop_xs.c \
+		libmng_read.c \
+		libmng_trace.c \
+		libmng_write.c \
+		libmng_zlib.c \
 		$(NULL)
 
-EXPORTS		= libmng.h mng_conf.h mng_types.h
+EXPORTS		= libmng.h libmng_conf.h libmng_types.h
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
