@@ -346,6 +346,7 @@ public:
     NS_IMETHOD Quit();
     NS_IMETHOD StartServerMode();
     NS_IMETHOD SetIsServerMode( PRBool isServerMode );
+    NS_IMETHOD OnLastWindowClosing( nsIXULWindow *aWindow );
 
     // The "old" Start method (renamed).
     NS_IMETHOD StartDDE();
@@ -1766,41 +1767,33 @@ nsNativeAppSupportOS2::GetCmdLineArgs( LPBYTE request, nsICmdLineService **aResu
     return rv;
 }
 
-// Check the needsProfileUI attribute of the native app and,
-// if so, do it. Once this suceeds, set the attribute to false
-// so we can only do this once.
+// Check to see if we have a profile. We will not have a profile
+// at this point if we were launched invisibly in -turbo mode, and
+// the profile mgr needed to show UI (to pick from multiple profiles).
+// At this point, we can show UI, so call DoProfileStartUp().
+
 nsresult
 nsNativeAppSupportOS2::EnsureProfile(nsICmdLineService* args)
 {
-  nsresult rv = NS_OK;  
-  nsCOMPtr<nsIAppShellService> appShell = do_GetService( "@mozilla.org/appshell/appShellService;1", &rv );
-  if (NS_FAILED(rv)) return rv;
-  nsCOMPtr<nsINativeAppSupport> nativeApp;
-  rv = appShell->GetNativeAppSupport(getter_AddRefs(nativeApp));
-  if (NS_FAILED(rv)) return rv;
-  PRBool needsProfileUI;
-  rv = nativeApp->GetNeedsProfileUI(&needsProfileUI);
-  if (NS_FAILED(rv)) return rv; 
+  nsresult rv;  
 
   nsCOMPtr<nsIProfileInternal> profileMgr(do_GetService(NS_PROFILE_CONTRACTID, &rv));
   if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIAppShellService> appShell(do_GetService("@mozilla.org/appshell/appShellService;1", &rv));
+  if (NS_FAILED(rv)) return rv;
+
+  // If we have a profile, everything is fine.
+  PRBool haveProfile;
+  rv = profileMgr->IsCurrentProfileAvailable(&haveProfile);
+  if (NS_SUCCEEDED(rv) && haveProfile)
+      return NS_OK;
  
-  if (needsProfileUI) {
-    // We need profile UI because we started in
-    // server mode and could not show it then.
-    rv = profileMgr->StartupWithArgs(args, PR_TRUE);
-    if (NS_FAILED(rv)) return rv;
-    nativeApp->SetNeedsProfileUI(PR_FALSE);
-  }
-  else {
-    // Even if not started in server mode, ensure
-    // that we have a profile. We can hit this case
-    // if somebody double-clicks the app twice.
-    PRBool haveProfile = PR_FALSE;
-    (void)profileMgr->IsCurrentProfileAvailable(&haveProfile);
-    if (!haveProfile) return NS_ERROR_FAILURE;
-  }
-  return NS_OK;
+  // If the profile selection is happening, fail.
+  PRBool doingProfileStartup;
+  rv = profileMgr->GetIsStartingUp(&doingProfileStartup);
+  if (NS_FAILED(rv) || doingProfileStartup) return NS_ERROR_FAILURE;
+  rv = appShell->DoProfileStartup(args, PR_TRUE);
+  return rv;
 }
 
 nsresult
@@ -2141,6 +2134,33 @@ nsNativeAppSupportOS2::SetIsServerMode( PRBool isServerMode ) {
     }
     return nsNativeAppSupportBase::SetIsServerMode( isServerMode );
 }
+
+NS_IMETHODIMP
+nsNativeAppSupportOS2::OnLastWindowClosing( nsIXULWindow *aWindow ) {
+ 
+    nsresult rv;
+
+    if (!mServerMode)
+        return NS_OK;
+
+    // If the last window closed is our special "turbo" window made
+    // in StartServerMode(), don't do anything.
+    nsCOMPtr<nsIDocShell> docShell;
+    (void)aWindow->GetDocShell(getter_AddRefs(docShell));
+    nsCOMPtr<nsIDOMWindow> domWindow(do_GetInterface(docShell));
+    if (domWindow == mInitialWindow) {
+        mInitialWindow = nsnull;
+        return NS_OK;
+    }
+
+    nsCOMPtr<nsIProfileInternal> profileMgr(do_GetService(NS_PROFILE_CONTRACTID, &rv));
+    if (NS_FAILED(rv)) return rv;
+    rv = profileMgr->ShutDownCurrentProfile(nsIProfile::SHUTDOWN_PERSIST);
+    if (NS_FAILED(rv)) return rv;
+
+    return NS_OK;
+}
+
 
 
 // go through the command line arguments, and try to load a handler

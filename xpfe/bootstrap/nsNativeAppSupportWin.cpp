@@ -17,7 +17,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *   Bill Law       law@netscape.com
  */
 
@@ -38,8 +38,8 @@
 #include "nsIWindowWatcher.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIDocShell.h"         
-#include "nsIBaseWindow.h"       
+#include "nsIDocShell.h"
+#include "nsIBaseWindow.h"
 #include "nsIWidget.h"
 #include "nsIAppShellService.h"
 #include "nsIProfileInternal.h"
@@ -47,6 +47,11 @@
 #include "nsIXULWindow.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsIPref.h"
+#include "nsIWindowsHooks.h"
+#include "nsIPromptService.h"
+#include "nsNetCID.h"
+#include "nsIHttpProtocolHandler.h"
 
 // These are needed to load a URL in a browser window.
 #include "nsIDOMLocation.h"
@@ -61,9 +66,15 @@
 #include <io.h>
 #include <fcntl.h>
 
-#define TURBO_QUIT 1
+#define TURBO_NAVIGATOR 1
+#define TURBO_MAIL 2
+#define TURBO_EDITOR 3
+#define TURBO_ADDRESSBOOK 4
+#define TURBO_DISABLE 5
+#define TURBO_EXIT 6
 
 static HWND hwndForDOMWindow( nsISupports * );
+static NS_DEFINE_CID(kHttpHandlerCID, NS_HTTPPROTOCOLHANDLER_CID);
 
 static
 nsresult
@@ -255,13 +266,13 @@ private:
  * code consists of initializing DDE and doing a DdeConnect to Mozilla's
  * application/topic.  If that connection succeeds, then a server process
  * must be running already.
- * 
+ *
  * Otherwise, no server has started.  In that case, the current process
  * calls DdeNameService to register that application/topic.  Only at that
  * point does the mutex get released.
  *
  * There are a couple of subtleties that one should be aware of:
- * 
+ *
  * 1. It is imperative that DdeInitialize be called only after the mutex
  *    lock has been obtained.  The reason is that at shutdown, DDE
  *    notifications go out to all initialized DDE processes.  Thus, if
@@ -274,7 +285,7 @@ private:
  *
  * 2. All mutex requests are made with a reasonably long timeout value and
  *    are designed to "fail safe" (i.e., a timeout is treated as failure).
- * 
+ *
  * 3. An attempt has been made to minimize the degree to which the main
  *    Mozilla application logic needs to be aware of the DDE mechanisms
  *    implemented herein.  As a result, this module surfaces a very
@@ -367,7 +378,6 @@ private:
     static DWORD mInstance;
     static char *mAppName;
     static nsIDOMWindow *mInitialWindow;
-    static nsXPIDLString mLastProfileName;
     friend struct MessageWindow;
 }; // nsNativeAppSupportWin
 
@@ -467,10 +477,10 @@ nsSplashScreenWin::DialogProc( HWND dlg, UINT msg, WPARAM wp, LPARAM lp ) {
             splashScreen->LoadBitmap();
         }
 
-        /* Size and center the splash screen correctly. The flags in the 
-         * dialog template do not do the right thing if the user's 
+        /* Size and center the splash screen correctly. The flags in the
+         * dialog template do not do the right thing if the user's
          * machine is using large fonts.
-         */ 
+         */
         HWND bitmapControl = GetDlgItem( dlg, IDB_SPLASH );
         if ( bitmapControl ) {
             HBITMAP hbitmap = (HBITMAP)SendMessage( bitmapControl,
@@ -587,14 +597,15 @@ nsNativeAppSupportWin::CheckConsole() {
                     ||
                     strcmp( "/turbo", __argv[i] ) == 0
                     ||
-                    strcmp( "-server", __argv[i] ) == 0                                              
+                    strcmp( "-server", __argv[i] ) == 0
                     ||
-                    strcmp( "/server", __argv[i] ) == 0 ) {         
-            // Start in server mode (and suppress splash screen).   
+                    strcmp( "/server", __argv[i] ) == 0 ) {
+            // Start in server mode (and suppress splash screen).
             mServerMode = PR_TRUE;
+            mShouldShowUI = PR_FALSE;
             __argv[i] = "-nosplash"; // Bit of a hack, but it works!
-            // Ignore other args.                                   
-            break;                                                  
+            // Ignore other args.
+            break;
         }
     }
     return;
@@ -606,11 +617,11 @@ nsresult
 NS_CreateNativeAppSupport( nsINativeAppSupport **aResult ) {
     if ( aResult ) {
         nsNativeAppSupportWin *pNative = new nsNativeAppSupportWin;
-        if ( pNative ) {                                           
-            *aResult = pNative;                                    
-            NS_ADDREF( *aResult );                                 
-            // Check for dynamic console creation request.         
-            pNative->CheckConsole();                               
+        if ( pNative ) {
+            *aResult = pNative;
+            NS_ADDREF( *aResult );
+            // Check for dynamic console creation request.
+            pNative->CheckConsole();
         } else {
             return NS_ERROR_OUT_OF_MEMORY;
         }
@@ -668,11 +679,10 @@ HSZ   nsNativeAppSupportWin::mApplication   = 0;
 HSZ   nsNativeAppSupportWin::mTopics[nsNativeAppSupportWin::topicCount] = { 0 };
 DWORD nsNativeAppSupportWin::mInstance      = 0;
 nsIDOMWindow* nsNativeAppSupportWin::mInitialWindow = nsnull;
-nsXPIDLString nsNativeAppSupportWin::mLastProfileName;
 
 NOTIFYICONDATA nsNativeAppSupportWin::mIconData = { sizeof(NOTIFYICONDATA),
                                                     0,
-                                                    1, 
+                                                    1,
                                                     NIF_ICON | NIF_MESSAGE | NIF_TIP,
                                                     WM_USER,
                                                     0,
@@ -685,7 +695,7 @@ struct MessageWindow {
     // ctor/dtor are simplistic
     MessageWindow() {
         // Try to find window.
-        mHandle = ::FindWindow( className(), 0 ); 
+        mHandle = ::FindWindow( className(), 0 );
     }
 
     // Act like an HWND.
@@ -697,7 +707,7 @@ struct MessageWindow {
     static const char *className() {
         static char classNameBuffer[128];
         static char *mClassName = 0;
-        if ( !mClassName ) { 
+        if ( !mClassName ) {
             ::_snprintf( classNameBuffer,
                          sizeof classNameBuffer,
                          "%s%s",
@@ -763,7 +773,7 @@ struct MessageWindow {
          // Show menu with Exit disabled/enabled appropriately.
          nsCOMPtr<nsIDOMWindowInternal> win;
          GetMostRecentWindow( 0, getter_AddRefs( win ) );
-         ::EnableMenuItem( nsNativeAppSupportWin::mTrayIconMenu, 1, win ? MF_GRAYED : MF_ENABLED );
+         ::EnableMenuItem( nsNativeAppSupportWin::mTrayIconMenu, TURBO_EXIT, win ? MF_GRAYED : MF_ENABLED );
          POINT pt;
          GetCursorPos( &pt );
 
@@ -778,8 +788,60 @@ struct MessageWindow {
                                               0 );
 
          switch (selectedItem) {
-         case TURBO_QUIT:
+         case TURBO_NAVIGATOR:
+             (void)nsNativeAppSupportWin::HandleRequest( (LPBYTE)"mozilla" );
+             break;
+         case TURBO_MAIL:
+             (void)nsNativeAppSupportWin::HandleRequest( (LPBYTE)"mozilla -mail" );
+              break;
+         case TURBO_EDITOR:
+             (void)nsNativeAppSupportWin::HandleRequest( (LPBYTE)"mozilla -editor" );
+             break;
+         case TURBO_ADDRESSBOOK:
+             (void)nsNativeAppSupportWin::HandleRequest( (LPBYTE)"mozilla -addressbook" );
+             break;
+         case TURBO_EXIT:
              (void)nsNativeAppSupportWin::HandleRequest( (LPBYTE)"mozilla -kill" );
+             break;
+         case TURBO_DISABLE:
+             nsresult rv;
+             nsCOMPtr<nsIWindowsHooks> winHooksService ( do_GetService( NS_IWINDOWSHOOKS_CONTRACTID, &rv ) );
+             if ( NS_SUCCEEDED( rv ) )
+                 winHooksService->StartupTurboDisable();
+             nsCOMPtr<nsIStringBundleService> stringBundleService( do_GetService( NS_STRINGBUNDLE_CONTRACTID ) );
+             nsCOMPtr<nsIStringBundle> turboMenuBundle;
+             nsCOMPtr<nsIStringBundle> brandBundle;
+             if ( stringBundleService ) {
+                 stringBundleService->CreateBundle( "chrome://global/locale/brand.properties", getter_AddRefs( brandBundle ) );
+                 stringBundleService->CreateBundle( "chrome://navigator/locale/turboMenu.properties",
+                                                    getter_AddRefs( turboMenuBundle ) );
+             }
+             nsXPIDLString dialogMsg;
+             nsXPIDLString dialogTitle;
+             nsXPIDLString brandName;
+             if ( brandBundle && turboMenuBundle ) {
+                 brandBundle->GetStringFromName( NS_LITERAL_STRING( "brandShortName" ).get(),
+                                                 getter_Copies( brandName ) );
+                 const PRUnichar *formatStrings[] = { brandName.get() };
+                 turboMenuBundle->GetStringFromName( NS_LITERAL_STRING( "DisableDlgMsg" ).get(),
+                                                     getter_Copies( dialogMsg ) );
+                 turboMenuBundle->FormatStringFromName( NS_LITERAL_STRING( "DisableDlgTitle" ).get(), formatStrings,
+                                                        1, getter_Copies( dialogTitle ) );
+             }
+             if ( dialogMsg.get() && dialogTitle.get() && brandName.get() ) {
+                 nsCOMPtr<nsIPromptService> dialog( do_GetService( "@mozilla.org/embedcomp/prompt-service;1" ) );
+                 if ( dialog )
+                     dialog->Alert( nsnull, dialogTitle.get(), dialogMsg.get() );
+             }
+             nsCOMPtr<nsIAppShellService> appShell = do_GetService( "@mozilla.org/appshell/appShellService;1", &rv );
+             if ( NS_SUCCEEDED( rv ) ) {
+                 nsCOMPtr<nsINativeAppSupport> native;
+                 rv = appShell->GetNativeAppSupport( getter_AddRefs( native ) );
+                 if ( NS_SUCCEEDED( rv ) )
+                     native->SetIsServerMode( PR_FALSE );
+                 if ( !win )
+                     appShell->Quit();
+             }
              break;
          }
          PostMessage(msgWindow, WM_NULL, 0, 0);
@@ -810,7 +872,7 @@ char *nsNativeAppSupportWin::mAppName = nameBuffer;
  *        case, we use the handle to the "message" window and send
  *        a request corresponding to this process's command line
  *        options.
- *        
+ *
  *        If not, then this is the first instance of Mozilla.  In
  *        that case, we create and set up the message window.
  *
@@ -861,6 +923,26 @@ nsNativeAppSupportWin::Start( PRBool *aResult ) {
 
     startupLock.Unlock();
 
+    PRBool serverMode = PR_FALSE;
+    GetIsServerMode( &serverMode );
+    if ( !serverMode ) {  // okay, so it's not -turbo
+        HKEY key;
+        LONG result = ::RegOpenKeyEx( HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Run", 0, KEY_QUERY_VALUE, &key );
+        if ( result == ERROR_SUCCESS ) {
+            nsresult res;
+            nsCOMPtr<nsIHttpProtocolHandler> http ( do_GetService( kHttpHandlerCID, &res ) );
+            if ( NS_FAILED( res ) ) return rv;
+            nsXPIDLCString appName;
+            http->GetAppName( getter_Copies( appName ) );
+            nsCString fullValue; fullValue.Assign( appName );
+            fullValue.Append( " Quick Launch" );
+            result = ::RegQueryValueEx( key, fullValue, NULL, NULL, NULL, NULL );
+            ::RegCloseKey( key );
+            if ( result == ERROR_SUCCESS )
+                SetIsServerMode( PR_TRUE );
+        }
+    }
+
     return rv;
 }
 
@@ -903,8 +985,8 @@ nsNativeAppSupportWin::StartDDE() {
                                                       nsNativeAppSupportWin::HandleDDENotification,
                                                       APPCLASS_STANDARD,
                                                       0 ),
-                    NS_ERROR_FAILURE );     
-    
+                    NS_ERROR_FAILURE );
+
     // Allocate DDE strings.
     NS_ENSURE_TRUE( ( mApplication = DdeCreateStringHandle( mInstance, mAppName, CP_WINANSI ) ) && InitTopicStrings(),
                     NS_ERROR_FAILURE );
@@ -1169,7 +1251,7 @@ nsCString nsNativeAppSupportWin::ParseDDEArg( HSZ args, int index ) {
                 end = temp.Length();
             }
             // Extract result.
-            result.Assign( temp.get() + offset, end - offset ); 
+            result.Assign( temp.get() + offset, end - offset );
         }
 
     }
@@ -1207,7 +1289,7 @@ HDDEDATA nsNativeAppSupportWin::CreateDDEData( DWORD value ) {
 void
 nsNativeAppSupportWin::HandleRequest( LPBYTE request, PRBool newWindow ) {
     // Parse command line.
-    
+
     nsCOMPtr<nsICmdLineService> args;
     nsresult rv;
 
@@ -1255,7 +1337,7 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request, PRBool newWindow ) {
       nsCOMPtr<nsIAppShellService> appShell =
         do_GetService( "@mozilla.org/appshell/appShellService;1", &rv);
       if (NS_FAILED(rv)) return;
-      
+
       nsCOMPtr<nsINativeAppSupport> native;
       rv = appShell->GetNativeAppSupport( getter_AddRefs( native ));
       if (NS_SUCCEEDED(rv)) {
@@ -1276,7 +1358,7 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request, PRBool newWindow ) {
     }
 
 
-    // ok, no idea what the param is. 
+    // ok, no idea what the param is.
 #if MOZ_DEBUG_DDE
     printf( "Unknown request [%s]\n", (char*) request );
 #endif
@@ -1285,14 +1367,14 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request, PRBool newWindow ) {
       "@mozilla.org/commandlinehandler/general-startup;1?type=browser";
     nsCOMPtr<nsICmdLineHandler> handler = do_GetService(contractID, &rv);
     if (NS_FAILED(rv)) return;
-    
+
     rv = EnsureProfile(args);
     if (NS_FAILED(rv)) return;
-      
+
     nsXPIDLString defaultArgs;
     rv = handler->GetDefaultArgs(getter_Copies(defaultArgs));
     if (NS_FAILED(rv) || !defaultArgs) return;
-      
+
     if (defaultArgs) {
       nsCAutoString url;
       url.AssignWithConversion( defaultArgs );
@@ -1355,7 +1437,7 @@ nsNativeAppSupportWin::GetCmdLineArgs( LPBYTE request, nsICmdLineService **aResu
             // We are processing the contents of an argument.
             // Check for whitespace or end.
             if ( *p == 0 || ( !quoted && isspace( *p ) ) ) {
-                // Process pending backslashes (interpret them 
+                // Process pending backslashes (interpret them
                 // literally since they're not followed by a ").
                 while( bSlashCount ) {
                     arg += '\\';
@@ -1364,7 +1446,7 @@ nsNativeAppSupportWin::GetCmdLineArgs( LPBYTE request, nsICmdLineService **aResu
                 // End current arg.
                 if ( !justCounting ) {
                     argv[argc] = new char[ arg.Length() + 1 ];
-                    strcpy( argv[argc], arg.get() ); 
+                    strcpy( argv[argc], arg.get() );
                 }
                 argc++;
                 // We're now between args.
@@ -1426,7 +1508,7 @@ nsNativeAppSupportWin::GetCmdLineArgs( LPBYTE request, nsICmdLineService **aResu
             if ( justCounting ) {
                 // Allocate argv array.
                 argv = new char*[ argc ];
-    
+
                 // Start second pass
                 justCounting = 0;
                 init = 1;
@@ -1458,13 +1540,14 @@ nsNativeAppSupportWin::GetCmdLineArgs( LPBYTE request, nsICmdLineService **aResu
     return rv;
 }
 
-// Check the needsProfileUI attribute of the native app and,
-// if so, do it. Once this suceeds, set the attribute to false
-// so we can only do this once.
+// Check to see if we have a profile. We will not have a profile
+// at this point if we were launched invisibly in -turbo mode, and
+// the profile mgr needed to show UI (to pick from multiple profiles).
+// At this point, we can show UI, so call DoProfileStartUp().
 nsresult
 nsNativeAppSupportWin::EnsureProfile(nsICmdLineService* args)
 {
-  nsresult rv;  
+  nsresult rv;
 
   nsCOMPtr<nsIProfileInternal> profileMgr(do_GetService(NS_PROFILE_CONTRACTID, &rv));
   if (NS_FAILED(rv)) return rv;
@@ -1476,23 +1559,13 @@ nsNativeAppSupportWin::EnsureProfile(nsICmdLineService* args)
   rv = profileMgr->IsCurrentProfileAvailable(&haveProfile);
   if (NS_SUCCEEDED(rv) && haveProfile)
       return NS_OK;
-  
+
   // If the profile selection is happening, fail.
   PRBool doingProfileStartup;
   rv = profileMgr->GetIsStartingUp(&doingProfileStartup);
   if (NS_FAILED(rv) || doingProfileStartup) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsINativeAppSupport> nativeApp;
-  rv = appShell->GetNativeAppSupport(getter_AddRefs(nativeApp));
-  if (NS_FAILED(rv)) return rv;
-  PRBool needsProfileUI;
-  rv = nativeApp->GetNeedsProfileUI(&needsProfileUI);
-  if (NS_FAILED(rv)) return rv; 
-
-  if (needsProfileUI)
-    rv = appShell->DoProfileStartup(args, PR_TRUE);
-  else
-    rv = profileMgr->SetCurrentProfile(mLastProfileName.get());
+  rv = appShell->DoProfileStartup(args, PR_TRUE);
 
   return rv;
 }
@@ -1566,7 +1639,7 @@ nsNativeAppSupportWin::ReParent( nsISupports *window, HWND newParent ) {
         return NS_ERROR_FAILURE;
     }
 
-    // Filter out WM_SETFOCUS messages while reparenting to 
+    // Filter out WM_SETFOCUS messages while reparenting to
     // other than the desktop.
     //
     // For some reason, Windows generates one and it causes
@@ -1638,7 +1711,7 @@ nsresult SafeJSContext::Push() {
         mContext = 0;
     }
   }
-  return mContext ? NS_OK : NS_ERROR_FAILURE; 
+  return mContext ? NS_OK : NS_ERROR_FAILURE;
 }
 
 
@@ -1647,7 +1720,7 @@ nsNativeAppSupportWin::OpenBrowserWindow( const char *args, PRBool newWindow ) {
     nsresult rv = NS_OK;
     // Open the argument URL in the most recently used Navigator window.
     // If there is no Nav window, open a new one.
-    
+
     // Get most recently used Nav window.
     nsCOMPtr<nsIDOMWindowInternal> navWin;
     GetMostRecentWindow( NS_LITERAL_STRING( "navigator:browser" ).get(), getter_AddRefs( navWin ) );
@@ -1698,7 +1771,16 @@ nsNativeAppSupportWin::OpenBrowserWindow( const char *args, PRBool newWindow ) {
     return OpenWindow( "chrome://navigator/content", args );
 }
 
+void AppendMenuItem( HMENU& menu, PRInt32 aIdentifier, const nsString& aText ) {
+  char* ACPText = GetACPString( aText );
+  if ( ACPText ) {
+    ::AppendMenu( menu, MF_STRING, aIdentifier, ACPText );
+    delete [] ACPText;
+  }
+}
+
 // Utility function that sets up system tray icon.
+
 void
 nsNativeAppSupportWin::SetupSysTrayIcon() {
     // Messages go to the hidden window.
@@ -1711,46 +1793,102 @@ nsNativeAppSupportWin::SetupSysTrayIcon() {
     mIconData.szTip[0] = 0;
     nsCOMPtr<nsIStringBundleService> svc( do_GetService( NS_STRINGBUNDLE_CONTRACTID ) );
     if ( svc ) {
-        nsCOMPtr<nsIStringBundle> bundle1;
-        svc->CreateBundle( "chrome://global/locale/brand.properties", getter_AddRefs( bundle1 ) );
-        if ( bundle1 ) {
-            nsXPIDLString tooltip;
-            bundle1->GetStringFromName( NS_LITERAL_STRING( "brandShortName" ).get(),
-                                        getter_Copies( tooltip ) );
+        nsCOMPtr<nsIStringBundle> brandBundle;
+        nsXPIDLString tooltip;
+        svc->CreateBundle( "chrome://global/locale/brand.properties", getter_AddRefs( brandBundle ) );
+        if ( brandBundle ) {
+            brandBundle->GetStringFromName( NS_LITERAL_STRING( "brandShortName" ).get(),
+                                            getter_Copies( tooltip ) );
             // (damned strings...)
             nsAutoString autoTip( tooltip );
-            nsAutoCString tip( autoTip );    
+            nsAutoCString tip( autoTip );
             ::strncpy( mIconData.szTip, (const char*)tip, sizeof mIconData.szTip - 1 );
         }
         // Build menu.
-        nsCOMPtr<nsIStringBundle> bundle2;
-        svc->CreateBundle( "chrome://communicator/locale/profile/profileManager.properties",
-                           getter_AddRefs( bundle2 ) );
+        nsCOMPtr<nsIStringBundle> turboBundle;
+        nsCOMPtr<nsIStringBundle> mailBundle;
+        svc->CreateBundle( "chrome://navigator/locale/turboMenu.properties",
+                           getter_AddRefs( turboBundle ) );
+        nsresult rv = svc->CreateBundle( "chrome://messenger/locale/mailTurboMenu.properties",
+                                         getter_AddRefs( mailBundle ) );
+        PRBool isMail = NS_SUCCEEDED(rv) && mailBundle;
         nsAutoString exitText;
-        if ( bundle2 ) {
-            nsXPIDLString text;
-            bundle2->GetStringFromName( NS_LITERAL_STRING( "exitButton" ).get(),
-                                        getter_Copies( text ) );
-            exitText = (const PRUnichar*)text;
+        nsAutoString disableText;
+        nsAutoString navigatorText;
+        nsAutoString editorText;
+        nsAutoString mailText;
+        nsAutoString addressbookText;
+        nsXPIDLString text;
+        if ( turboBundle ) {
+            if ( brandBundle ) {
+                const PRUnichar* formatStrings[] = { tooltip.get() };
+                turboBundle->FormatStringFromName( NS_LITERAL_STRING( "Exit" ).get(), formatStrings, 1,
+                                                   getter_Copies( text ) );
+                exitText = (const PRUnichar*)text;
+            }
+            turboBundle->GetStringFromName( NS_LITERAL_STRING( "Disable" ).get(),
+                                            getter_Copies( text ) );
+            disableText = (const PRUnichar*)text;
+            turboBundle->GetStringFromName( NS_LITERAL_STRING( "Navigator" ).get(),
+                                            getter_Copies( text ) );
+            navigatorText = (const PRUnichar*)text;
+            turboBundle->GetStringFromName( NS_LITERAL_STRING( "Editor" ).get(),
+                                            getter_Copies( text ) );
+            editorText = (const PRUnichar*)text;
         }
-        if ( exitText.IsEmpty() ) {
-            // Fall back to this.
-            exitText = NS_LITERAL_STRING( "Exit" );
+        if (isMail) {
+            mailBundle->GetStringFromName( NS_LITERAL_STRING( "MailNews" ).get(),
+			                               getter_Copies( text ) );
+            mailText = (const PRUnichar*)text;
+            mailBundle->GetStringFromName( NS_LITERAL_STRING( "Addressbook" ).get(),
+			                               getter_Copies( text ) );
+            addressbookText = (const PRUnichar*)text;
         }
 
+        if ( exitText.IsEmpty() )
+            exitText = NS_LITERAL_STRING( "&Exit Mozilla" );
+
+        if ( disableText.IsEmpty() )
+            disableText = NS_LITERAL_STRING( "&Disable Quick Launch" );
+
+        if ( navigatorText.IsEmpty() )
+            navigatorText = NS_LITERAL_STRING( "&Navigator" );
+
+        if ( editorText.IsEmpty() )
+            editorText = NS_LITERAL_STRING( "&Composer" );
+
+        if ( isMail ) {
+            if ( mailText.IsEmpty() )
+              mailText = NS_LITERAL_STRING( "&Mail && Newsgroups" );
+            if ( addressbookText.IsEmpty() )
+              addressbookText = NS_LITERAL_STRING( "&Address Book" );
+        }
         // Create menu and add item.
         mTrayIconMenu = ::CreatePopupMenu();
-        ::AppendMenuW( mTrayIconMenu, MF_STRING, TURBO_QUIT, exitText.get() );
+        ::AppendMenuW( mTrayIconMenu, MF_STRING, TURBO_NAVIGATOR, navigatorText.get() );
         if ( ::GetLastError() == ERROR_CALL_NOT_IMPLEMENTED ) {
-            char* exitACPText = GetACPString( exitText );
-            if ( exitACPText ) {
-               ::AppendMenu( mTrayIconMenu, MF_STRING, TURBO_QUIT,  exitACPText );
-               delete [] exitACPText ;
-            }     
+            AppendMenuItem( mTrayIconMenu, TURBO_NAVIGATOR, navigatorText );
+            if ( isMail )
+                AppendMenuItem( mTrayIconMenu, TURBO_MAIL, mailText );
+            AppendMenuItem( mTrayIconMenu, TURBO_EDITOR, editorText );
+            if ( isMail )
+                AppendMenuItem( mTrayIconMenu, TURBO_ADDRESSBOOK, addressbookText );
+            ::AppendMenu( mTrayIconMenu, MF_SEPARATOR, NULL, NULL );
+            AppendMenuItem( mTrayIconMenu, TURBO_DISABLE, disableText );
+            AppendMenuItem( mTrayIconMenu, TURBO_EXIT, exitText );
         }
-
+        else {
+            if (isMail)
+                ::AppendMenuW( mTrayIconMenu, MF_STRING, TURBO_MAIL, mailText.get() );
+            ::AppendMenuW( mTrayIconMenu, MF_STRING, TURBO_EDITOR, editorText.get() );
+            if (isMail)
+                ::AppendMenuW( mTrayIconMenu, MF_STRING, TURBO_ADDRESSBOOK, addressbookText.get() );
+            ::AppendMenuW( mTrayIconMenu, MF_SEPARATOR, NULL, NULL );
+            ::AppendMenuW( mTrayIconMenu, MF_STRING, TURBO_DISABLE, disableText.get() );
+            ::AppendMenuW( mTrayIconMenu, MF_STRING, TURBO_EXIT, exitText.get() );
+        }
     }
-    
+
     // Add the tray icon.
     ::Shell_NotifyIcon( NIM_ADD, &mIconData );
 }
@@ -1838,25 +1976,37 @@ nsNativeAppSupportWin::SetIsServerMode( PRBool isServerMode ) {
 
 NS_IMETHODIMP
 nsNativeAppSupportWin::OnLastWindowClosing( nsIXULWindow *aWindow ) {
- 
-    nsresult rv;
 
-    if (!mServerMode)
+    if ( !mServerMode )
         return NS_OK;
 
     // If the last window closed is our special "turbo" window made
     // in StartServerMode(), don't do anything.
     nsCOMPtr<nsIDocShell> docShell;
-    (void)aWindow->GetDocShell(getter_AddRefs(docShell));
-    nsCOMPtr<nsIDOMWindow> domWindow(do_GetInterface(docShell));
-    if (domWindow == mInitialWindow) {
+    ( void )aWindow->GetDocShell( getter_AddRefs( docShell ) );
+    nsCOMPtr<nsIDOMWindow> domWindow( do_GetInterface( docShell ) );
+    if ( domWindow == mInitialWindow ) {
         mInitialWindow = nsnull;
         return NS_OK;
     }
+    nsresult rv;
+    if ( !mShownTurboDialog ) {
+        PRBool showDialog = PR_TRUE;
+        nsCOMPtr<nsIPref> prefService ( do_GetService( NS_PREF_CONTRACTID, &rv ) );
+        if ( NS_SUCCEEDED( rv ) )
+            prefService->GetBoolPref( "browser.turbo.showDialog", &showDialog );
+        nsCOMPtr<nsIDOMWindowInternal> domWindowInt ( do_GetInterface( docShell ) );
+        if ( showDialog && domWindowInt ) {
+            nsCOMPtr<nsIDOMWindow> newWindow;
+            mShownTurboDialog = PR_TRUE;
+            domWindowInt->OpenDialog( NS_LITERAL_STRING( "chrome://navigator/content/turboDialog.xul" ),
+                                      NS_LITERAL_STRING( "_blank" ),
+                                      NS_LITERAL_STRING( "chrome,modal,titlebar,centerscreen,dialog" ),
+                                      nsnull, getter_AddRefs( newWindow ) );
+        }
+    }
 
     nsCOMPtr<nsIProfileInternal> profileMgr(do_GetService(NS_PROFILE_CONTRACTID, &rv));
-    if (NS_FAILED(rv)) return rv;
-    rv = profileMgr->GetCurrentProfile(getter_Copies(mLastProfileName));
     if (NS_FAILED(rv)) return rv;
     rv = profileMgr->ShutDownCurrentProfile(nsIProfile::SHUTDOWN_PERSIST);
     if (NS_FAILED(rv)) return rv;
@@ -1870,13 +2020,13 @@ nsresult
 nsNativeAppSupportWin::GetStartupURL(nsICmdLineService *args, nsCString& taskURL)
 {
     nsresult rv;
-    
+
     nsCOMPtr<nsICmdLineHandler> handler;
 
     // see if there is a handler
     rv = args->GetHandlerForParam(nsnull, getter_AddRefs(handler));
     if (NS_FAILED(rv)) return rv;
-    
+
     // ok, from here on out, failures really are fatal
     nsXPIDLCString url;
     rv = handler->GetChromeUrlForTask(getter_Copies(url));

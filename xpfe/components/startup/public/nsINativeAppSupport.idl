@@ -149,14 +149,8 @@
  *                 Windows startup folder at system initialization.
  *
  *
- *  needsProfileUI - Boolean attribute used when running in "server mode."
- *                   If the "server mode" caused profile dialogs to be
- *                   suppressed, this should be set to true. When the server
- *                   starts a real session, it will call on the profile mgr
- *                   to do what it needed to do when this attribute is true.
  */
 
-interface nsIDOMWindow;
 interface nsIXULWindow;
 
 [scriptable, uuid(5fdf8480-1f98-11d4-8077-00600811a9c3)]
@@ -172,8 +166,8 @@ interface nsINativeAppSupport : nsISupports {
 
     // Server mode.
     attribute boolean isServerMode;
+    attribute boolean shouldShowUI;
     void startServerMode();
-    attribute boolean needsProfileUI;
 
     void onLastWindowClosing(in nsIXULWindow aWindow);
 };
