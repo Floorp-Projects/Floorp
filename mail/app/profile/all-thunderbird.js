@@ -179,6 +179,7 @@ pref("intl.menuitems.alwaysappendaccesskeys","chrome://global/locale/intl.proper
 
 pref("signon.rememberSignons",              true);
 pref("signon.expireMasterPassword",         false);
+pref("signon.SignonFileName",               "signons.txt");
 
 pref("browser.hiddenWindowChromeURL", "chrome://messenger/content/hiddenWindow.xul");
 pref("network.search.url","http://cgi.netscape.com/cgi-bin/url_search.cgi?search=");
