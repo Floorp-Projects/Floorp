@@ -3162,18 +3162,20 @@ nsWindowSH::GlobalResolve(nsISupports *native, JSContext *cx, JSObject *obj,
       return NS_ERROR_UNEXPECTED;
     }
 
+    const nsDOMClassInfoData *ci_data = nsnull;
+
+    if (name_struct->mType == nsGlobalNameStruct::eTypeClassConstructor &&
+        name_struct->mDOMClassInfoID >= 0) {
+      ci_data = &sClassInfoData[name_struct->mDOMClassInfoID];
+    }
+
     const nsIID *primary_iid = &NS_GET_IID(nsISupports);
 
     if (name_struct->mType == nsGlobalNameStruct::eTypeClassProto) {
       primary_iid = &name_struct->mIID;
-    } else if (name_struct->mDOMClassInfoID >= 0) {
-      primary_iid =
-        sClassInfoData[name_struct->mDOMClassInfoID].mProtoChainInterface;
+    } else if (ci_data && ci_data->mProtoChainInterface) {
+      primary_iid = ci_data->mProtoChainInterface;
     }
-
-    NS_ABORT_IF_FALSE(!primary_iid->Equals(NS_GET_IID(nsISupports)),
-                      "Class with nsISupports as primary IID seen in the "
-                      "resolver");
 
     nsXPIDLCString class_parent_name;
 
@@ -3196,13 +3198,6 @@ nsWindowSH::GlobalResolve(nsISupports *native, JSContext *cx, JSObject *obj,
       nsCOMPtr<nsIInterfaceInfo> if_info;
       iim->GetInfoForIID(primary_iid, getter_AddRefs(if_info));
       NS_ENSURE_TRUE(if_info, NS_ERROR_UNEXPECTED);
-
-      const nsDOMClassInfoData *ci_data = nsnull;
-
-      if (name_struct->mType == nsGlobalNameStruct::eTypeClassConstructor &&
-          name_struct->mDOMClassInfoID >= 0) {
-        ci_data = &sClassInfoData[name_struct->mDOMClassInfoID];
-      }
 
       nsCOMPtr<nsIInterfaceInfo> parent;
       nsIID *iid = nsnull;
