@@ -138,7 +138,7 @@ nsresult nsMailboxService::DisplayMessageNumber(const nsFilePath& aMailboxPath, 
 		{
 			nsMsgKey msgKey = msgKeys[aMessageNumber];
 			// okay, we have the msgKey so let's get rid of our db state...
-			mailDb->Release();
+			mailDb->Close();
 			mailDb = nsnull;
 			rv = DisplayMessage(aMailboxPath, msgKey, nsnull, aDisplayConsumer, aUrlListener, aURL);
 		}
@@ -147,7 +147,7 @@ nsresult nsMailboxService::DisplayMessageNumber(const nsFilePath& aMailboxPath, 
 	}
 
 	if (mailDb) // in case we slipped through the cracks without releasing the db...
-		mailDb->Release();
+		mailDb->Close();
 
 	return rv;
 }
