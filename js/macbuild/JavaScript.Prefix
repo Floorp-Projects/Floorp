@@ -30,7 +30,7 @@
 #include "MacPrefix.h"
 #include "JavaScriptConfig.h"
 
-#if __MWERKS__ < 0x2407
+#if __MWERKS__ < 0x2408
 
 // Bump down the optimization level to avoid a bug in some Pro 7 compiler
 // versions with JS_ISIDENT() called with -1 (see bug 114915).
