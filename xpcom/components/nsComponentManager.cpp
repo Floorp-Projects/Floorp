@@ -2783,6 +2783,11 @@ nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when, nsIFile *inDirSpec)
     /* XXX convert when to nsIComponentLoader::(when) properly */
     nsIFile *spec = dir.get();
     for (int i = NS_COMPONENT_TYPE_NATIVE + 1; i < mNLoaderData; i++) {
+        if (!mLoaderData[i].loader) {
+            rv = GetLoaderForType(i, &mLoaderData[i].loader);
+            if (NS_FAILED(rv))
+                continue;
+        }
         rv = mLoaderData[i].loader->AutoRegisterComponents(when, spec);
         if (NS_FAILED(rv))
             break;
@@ -2795,10 +2800,12 @@ nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when, nsIFile *inDirSpec)
             registered = PR_FALSE;
             for (int i = NS_COMPONENT_TYPE_NATIVE; i < mNLoaderData; i++) {
                 PRBool b = PR_FALSE;
-                rv = mLoaderData[i].loader->RegisterDeferredComponents(when, &b);
-                if (NS_FAILED(rv))
-                    break;
-                registered |= b;
+                if (mLoaderData[i].loader) {
+                    rv = mLoaderData[i].loader->RegisterDeferredComponents(when, &b);
+                    if (NS_FAILED(rv))
+                        continue;
+                    registered |= b;
+                }
             }
         } while (NS_SUCCEEDED(rv) && registered);
     }
@@ -2821,6 +2828,11 @@ nsComponentManagerImpl::AutoRegisterComponent(PRInt32 when,
      */
     for (int i = 0; i < mNLoaderData; i++) {
         PRBool didRegister;
+        if (!mLoaderData[i].loader) {
+            rv = GetLoaderForType(i, &mLoaderData[i].loader);
+            if (NS_FAILED(rv))
+                continue;
+        }
         rv = mLoaderData[i].loader->AutoRegisterComponent((int)when, component, &didRegister);
         if (NS_SUCCEEDED(rv) && didRegister)
             break;
@@ -2836,6 +2848,11 @@ nsComponentManagerImpl::AutoUnregisterComponent(PRInt32 when,
     nsresult rv = NS_OK;
     for (int i = 0; i < mNLoaderData; i++) {
         PRBool didUnRegister;
+        if (!mLoaderData[i].loader) {
+            rv = GetLoaderForType(i, &mLoaderData[i].loader);
+            if (NS_FAILED(rv))
+                continue;
+        }
         rv = mLoaderData[i].loader->AutoUnregisterComponent(when, component, &didUnRegister);
         if (NS_SUCCEEDED(rv) && didUnRegister)
             break;
