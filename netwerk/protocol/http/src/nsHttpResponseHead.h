@@ -75,6 +75,7 @@ public:
     // cache validation support methods
     nsresult ComputeFreshnessLifetime(PRUint32 *);
     nsresult ComputeCurrentAge(PRUint32 now, PRUint32 requestTime, PRUint32 *result);
+    PRBool   MustRevalidate();
 
     // update headers...
     nsresult UpdateHeaders(nsHttpHeaderArray &headers); 

@@ -96,7 +96,8 @@ private:
     nsresult CheckCache();
     nsresult ReadFromCache();
     nsresult CloseCacheEntry(nsresult status);
-    nsresult CacheReceivedResponse();
+    nsresult InitCacheEntry();
+    nsresult InstallCacheListener();
 
     // auth specific methods
     nsresult GetCredentials(const char *challenges, PRBool proxyAuth, nsAFlatCString &creds);

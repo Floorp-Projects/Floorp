@@ -270,18 +270,22 @@ nsHttpResponseHead::ComputeCurrentAge(PRUint32 now,
 nsresult
 nsHttpResponseHead::ComputeFreshnessLifetime(PRUint32 *result)
 {
+    PRUint32 date, date2;
+
     *result = 0;
 
     // Try HTTP/1.1 style max-age directive...
     if (NS_SUCCEEDED(GetMaxAgeValue(result)))
         return NS_OK;
 
-    PRUint32 date, date2;
+    *result = 0;
 
     if (NS_SUCCEEDED(GetDateValue(&date))) {
         // Try HTTP/1.0 style expires header...
         if (NS_SUCCEEDED(GetExpiresValue(&date2))) {
-            *result = date2 - date;
+            if (date2 > date)
+                *result = date2 - date;
+            // the Expires header can specify a date in the past.
             return NS_OK;
         }
 
@@ -299,6 +303,74 @@ nsHttpResponseHead::ComputeFreshnessLifetime(PRUint32 *result)
          "lifetime!\n", this));
 
     return NS_OK;
+}
+
+PRBool
+nsHttpResponseHead::MustRevalidate()
+{
+    const char *val;
+
+    LOG(("nsHttpResponseHead::MustRevalidate ??\n"));
+
+    // If the must-revalidate directive is present in the cached response, data
+    // must always be revalidated with the server, even if the user has
+    // configured validation to be turned off (See RFC 2616, section 14.9.4).
+    val = PeekHeader(nsHttp::Cache_Control);
+    if (val && PL_strcasestr(val, "must-revalidate")) {
+        LOG(("Must revalidate based on \"%s\" header\n", val));
+        return PR_TRUE;
+    }
+    // The no-cache directive within the 'Cache-Control:' header indicates
+    // that we must validate this cached response before reusing.
+    if (val && PL_strcasestr(val, "no-cache")) {
+        LOG(("Must revalidate based on \"%s\" header\n", val));
+        return PR_TRUE;
+    }
+    // XXX we are not quite handling no-cache correctly in this case.  We really
+    // should check for field-names and only force validation if they match
+    // existing response headers.  See RFC2616 section 14.9.1 for details.
+
+    // Although 'Pragma:no-cache' is not a standard HTTP response header (it's
+    // a request header), caching is inhibited when this header is present so
+    // as to match existing Navigator behavior.
+    val = PeekHeader(nsHttp::Pragma);
+    if (val && PL_strcasestr(val, "no-cache")) {
+        LOG(("Must revalidate based on \"%s\" header\n", val));
+        return PR_TRUE;
+    }
+
+    // Compare the Expires header to the Date header.  If the server sent an
+    // Expires header with a timestamp in the past, then we must validate this
+    // cached response before reusing.
+    PRUint32 expiresVal, dateVal;
+    if (NS_SUCCEEDED(GetExpiresValue(&expiresVal)) &&
+        NS_SUCCEEDED(GetDateValue(&dateVal)) &&
+        expiresVal < dateVal) {
+        LOG(("Must revalidate since Expires < Date\n"));
+        return PR_TRUE;
+    }
+
+    // Check the Vary header.  Per comments on bug 37609, most of the request
+    // headers that we generate do not vary with the exception of Accept-Charset
+    // and Accept-Language, so we force validation only if these headers or "*"
+    // are listed with the Vary response header.
+    //
+    // XXX this may not be sufficient if embedders start tweaking or adding HTTP
+    // request headers.
+    //
+    // XXX will need to add the Accept header to this list if we start sending
+    // a full Accept header, since the addition of plugins could change this
+    // header (see bug 58040).
+    val = PeekHeader(nsHttp::Vary);
+    if (val && (PL_strstr(val, "*") ||
+                PL_strcasestr(val, "accept-charset") ||
+                PL_strcasestr(val, "accept-language"))) {
+        LOG(("Must revalidate based on \"%s\" header\n", val));
+        return PR_TRUE;
+    }
+
+    LOG(("no mandatory revalidation requirement\n"));
+    return PR_FALSE;
 }
 
 nsresult
