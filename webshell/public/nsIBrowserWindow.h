@@ -24,6 +24,7 @@
 
 class nsIAppShell;
 class nsIFactory;
+class nsIWebShell;
 class nsString;
 struct nsRect;
 
@@ -55,6 +56,8 @@ public:
 
   NS_IMETHOD SizeTo(PRInt32 aWidth, PRInt32 aHeight) = 0;
 
+  NS_IMETHOD GetBounds(nsRect& aResult) = 0;
+
   NS_IMETHOD Show() = 0;
 
   NS_IMETHOD Hide() = 0;
@@ -68,6 +71,8 @@ public:
   NS_IMETHOD SetTitle(const nsString& aTitle) = 0;
 
   NS_IMETHOD GetTitle(nsString& aResult) = 0;
+
+  NS_IMETHOD GetWebShell(nsIWebShell*& aResult) = 0;
 
   // XXX minimize, maximize
   // XXX event control: enable/disable window close box, stick to glass, modal
