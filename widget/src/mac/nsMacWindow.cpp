@@ -478,13 +478,15 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
   if ( mWindowMadeHere ) {
 #if TARGET_CARBON
     if ( mWindowType == eWindowType_popup ) {
-      // OSX enforces window layering so we have to make sure that popups can
-      // appear over modal dialogs (at the top of the layering chain). Create
-      // the popup like normal and change its window class to the modal layer.
-      //
-      // XXX This needs to use ::SetWindowGroup() when we move to headers that
-      // XXX support it.
-      ::SetWindowClass(mWindowPtr, kModalWindowClass);
+      // Here, we put popups in the same layer as native tooltips so that they float above every
+      // type of window including modal dialogs. We also ensure that popups do not receive activate
+      // events and do not steal focus from other windows. Note that SetWindowGroup()
+      // does not exist on OS9 (even in CarbonLib) so we must check for it. It's ok not to
+      // do this on OS9 since it doesn't enforce the window layering that OSX does.
+      if ( (UInt32)SetWindowGroup != (UInt32)kUnresolvedCFragSymbolAddress ) { 
+        ::SetWindowGroup(mWindowPtr, ::GetWindowGroupOfClass(kHelpWindowClass));
+        ::SetWindowActivationScope(mWindowPtr, kWindowActivationScopeNone);
+      }
     }
     else if ( mWindowType == eWindowType_dialog ) {
       // Dialogs on mac don't have a close box, but we probably used a defproc above that
