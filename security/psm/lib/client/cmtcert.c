@@ -674,7 +674,7 @@ CMTStatus CMT_CompareForRedirect(PCMT_CONTROL control, CMTItem *status1,
                                  CMTItem *status2, CMUint32 *res)
 {
     RedirectCompareRequest request;
-    CMTItem message = { 0 };
+    CMTItem message = { 0, NULL, 0 };
     SingleNumMessage reply;
 
     if (status1 == NULL || status2 == NULL || res == NULL) {
@@ -717,7 +717,7 @@ CMT_DecodeAndAddCRL(PCMT_CONTROL control, unsigned char *derCrl,
 {
     DecodeAndAddCRLRequest request;
     SingleNumMessage reply;
-    CMTItem message = { 0 };
+    CMTItem message = { 0, NULL, 0 };
 
     if (*errMess) *errMess = NULL;
     request.derCrl.data = derCrl;
@@ -815,7 +815,7 @@ CMTStatus CMT_SCAddTempCertToPermDB(PCMT_CONTROL control, CMTItem* certKey,
                                     char* trustStr, char* nickname)
 {
     SCAddTempCertToPermDBRequest request;
-    CMTItem message = {0};
+    CMTItem message = {0, NULL, 0};
     SingleNumMessage reply;
 
     if ((certKey == NULL) || (trustStr == NULL)) {
@@ -854,7 +854,7 @@ CMTStatus CMT_SCDeletePermCerts(PCMT_CONTROL control, CMTItem* certKey,
                                 CMBool deleteAll)
 {
     SCDeletePermCertsRequest request;
-    CMTItem message = {0};
+    CMTItem message = {0, NULL, 0};
     SingleNumMessage reply;
 
     if (certKey == NULL) {

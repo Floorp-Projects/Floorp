@@ -1957,9 +1957,9 @@ char* CMT_SCGetCertPropTrust(PCMT_CONTROL control, CMTItem* certKey);
 char* CMT_SCGetCertPropSerialNumber(PCMT_CONTROL control, CMTItem* certKey);
 char* CMT_SCGetCertPropIssuerName(PCMT_CONTROL control, CMTItem* certKey);
 CMTStatus CMT_SCGetCertPropTimeNotBefore(PCMT_CONTROL control, 
-                                         CMTItem* certKey, CMTime* time);
+                                         CMTItem* certKey, CMTime* beforetime);
 CMTStatus CMT_SCGetCertPropTimeNotAfter(PCMT_CONTROL control, 
-                                        CMTItem* certKey, CMTime* time);
+                                        CMTItem* certKey, CMTime* aftertime);
 CMTItem* CMT_SCGetCertPropIssuerKey(PCMT_CONTROL control, CMTItem* certKey);
 CMTItem* CMT_SCGetCertPropSubjectNext(PCMT_CONTROL control, CMTItem* certKey);
 CMTItem* CMT_SCGetCertPropSubjectPrev(PCMT_CONTROL control, CMTItem* certKey);

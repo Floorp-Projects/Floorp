@@ -173,7 +173,7 @@ CMTStatus CMT_HASH_End(PCMT_CONTROL control, CMUint32 connectionID,
                        unsigned char * result, CMUint32 * resultlen, 
                        CMUint32 maxLen)
 {
-    CMTItem hash = { 0 };
+    CMTItem hash = { 0, NULL, 0 };
 
     /* Do some parameter checking */
     if (!control || !result || !resultlen) {

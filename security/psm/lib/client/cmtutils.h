@@ -60,7 +60,7 @@ CMTItem* CMT_ConstructMessage(CMUint32 type, CMUint32 length);
 void CMT_FreeMessage(CMTItem * p);
 CMTStatus CMT_AddDataConnection(PCMT_CONTROL control, CMTSocket sock, CMUint32 connectionID);
 CMTStatus CMT_GetDataConnectionID(PCMT_CONTROL control, CMTSocket sock, CMUint32 * connectionID);
-CMTStatus CMT_GetDataSocket(PCMT_CONTROL control, CMUint32 connectionID, CMTSocket * socket);
+CMTStatus CMT_GetDataSocket(PCMT_CONTROL control, CMUint32 connectionID, CMTSocket * sock);
 CMTStatus CMT_CloseDataConnection(PCMT_CONTROL control, CMUint32 connectionID);
 CMTStatus CMT_SetPrivate(PCMT_CONTROL control, CMUint32 connectionID,
 			 CMTPrivate *cmtpriv);
