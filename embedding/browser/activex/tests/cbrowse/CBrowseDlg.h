@@ -37,6 +37,7 @@ public:
 	TestResult RunTest(Test *pTest);
 	void UpdateTest(HTREEITEM hItem, TestResult nResult);
 	void UpdateTestSet(HTREEITEM hItem);
+	void UpdateURL();
 	void OutputString(const TCHAR *szMessage, ...);
 	void ExecOleCommand(const GUID *pguidGroup, DWORD nCmdId);
 
@@ -97,6 +98,7 @@ protected:
 	afx_msg void OnEditSelectAll();
 	afx_msg void OnViewRefresh();
 	afx_msg void OnViewViewSource();
+	afx_msg void OnStop();
 	//}}AFX_MSG
 	afx_msg void OnEditBold();
 	afx_msg void OnEditItalic();

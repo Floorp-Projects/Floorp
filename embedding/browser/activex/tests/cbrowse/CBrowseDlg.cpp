@@ -95,6 +95,7 @@ BEGIN_MESSAGE_MAP(CBrowseDlg, CDialog)
 	ON_COMMAND(ID_EDIT_SELECTALL, OnEditSelectAll)
 	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
 	ON_COMMAND(ID_VIEW_VIEWSOURCE, OnViewViewSource)
+	ON_BN_CLICKED(IDC_STOP, OnStop)
 	//}}AFX_MSG_MAP
 	ON_COMMAND(IDB_BOLD, OnEditBold)
 	ON_COMMAND(IDB_ITALIC, OnEditItalic)
@@ -128,7 +129,6 @@ BOOL CBrowseDlg::OnInitDialog()
 	CRect rcTabMarker;
 	GetDlgItem(IDC_TAB_MARKER)->GetWindowRect(&rcTabMarker);
 	ScreenToClient(rcTabMarker);
-//	GetDlgItem(IDC_TAB_MARKER)->DestroyWindow();
 
     m_dlgPropSheet.AddPage(&m_TabMessages);
     m_dlgPropSheet.AddPage(&m_TabTests);
@@ -408,6 +408,23 @@ void CBrowseDlg::PopulateTests()
 	}
 }
 
+
+void CBrowseDlg::UpdateURL()
+{
+    CIPtr(IWebBrowser) spBrowser;
+
+    GetWebBrowser(&spBrowser);
+    if (spBrowser)
+    {
+        USES_CONVERSION;
+        BSTR szLocation = NULL;
+        spBrowser->get_LocationURL(&szLocation);
+        m_cmbURLs.SetWindowText(W2T(szLocation));
+        SysFreeString(szLocation);
+    }
+}
+
+
 HRESULT CBrowseDlg::GetWebBrowser(IWebBrowser **pWebBrowser)
 {
 	if (pWebBrowser == NULL)
@@ -424,11 +441,11 @@ HRESULT CBrowseDlg::GetWebBrowser(IWebBrowser **pWebBrowser)
 		if (pIUnkBrowser)
 		{
 			pIUnkBrowser->QueryInterface(IID_IWebBrowser, (void **) pWebBrowser);
+			pIUnkBrowser->Release();
 			if (*pWebBrowser)
 			{
 				return S_OK;
 			}
-			pIUnkBrowser->Release();
 		}
 	}
 
@@ -444,17 +461,29 @@ void CBrowseDlg::OnGo()
 	{
 		CString szURL;
 		m_cmbURLs.GetWindowText(szURL);
-//		int nItem = m_cmbURLs.GetCurSel();
-//		CString szURL = (nItem == 0) ? m_szTestURL : aURLs[nItem - 1];
-
 		CComVariant vFlags(m_bNewWindow ? navOpenInNewWindow : 0);
-
 		BSTR bstrURL = szURL.AllocSysString();
-		pIWebBrowser->Navigate(bstrURL, &vFlags, NULL, NULL, NULL);
+		HRESULT hr = pIWebBrowser->Navigate(bstrURL, &vFlags, NULL, NULL, NULL);
+        if (FAILED(hr))
+        {
+            OutputString("Navigate failed (hr=0x%08x)", hr);
+        }
 		::SysFreeString(bstrURL);
 		pIWebBrowser->Release();
 	}
 }
+
+
+void CBrowseDlg::OnStop() 
+{
+	IWebBrowser *pIWebBrowser = NULL;
+	if (SUCCEEDED(GetWebBrowser(&pIWebBrowser)))
+	{
+		pIWebBrowser->Stop();
+		pIWebBrowser->Release();
+	}
+}
+
 
 void CBrowseDlg::OnBackward() 
 {

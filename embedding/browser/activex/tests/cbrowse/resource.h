@@ -25,6 +25,7 @@
 #define IDC_GO                          1001
 #define IDC_BROWSER_MARKER              1002
 #define IDC_LISTBROWSER                 1003
+#define IDC_STOP                        1003
 #define IDC_RUNTEST                     1004
 #define IDC_LISTMESSAGES                1005
 #define IDC_TESTLIST                    1006
