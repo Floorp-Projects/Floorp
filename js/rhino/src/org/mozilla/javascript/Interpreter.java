@@ -165,9 +165,7 @@ public class Interpreter extends LabelTable {
 
         VariableTable varTable = (VariableTable)tree.getProp(Node.VARS_PROP);
         // The default is not to generate debug information
-        boolean activationNeeded = cx.isGeneratingDebugChanged() &&
-                                   cx.isGeneratingDebug();
-        generateICodeFromTree(tree, varTable, activationNeeded, securityDomain);
+        generateICodeFromTree(tree, varTable, false, securityDomain);
         itsData.itsNestedFunctions = itsNestedFunctions;
         itsData.itsRegExpLiterals = regExpLiterals;
         if (Context.printICode) dumpICode(itsData);
@@ -1498,10 +1496,11 @@ public class Interpreter extends LabelTable {
             }else if (!theData.itsUseDynamicScope) {
                 scope = fnOrScript.getParentScope();
             }
+
             if (theData.itsCheckThis) {
                 thisObj = ScriptRuntime.getThis(thisObj);
             }
-            
+
             if (theData.itsNeedsActivation) {
                 scope = ScriptRuntime.initVarObj(cx, scope, fnOrScript,
                                                  thisObj, args);
@@ -1512,16 +1511,16 @@ public class Interpreter extends LabelTable {
                                              theData.itsFromEvalCode);
         }
 
-        DebugFrame frame = null;
-        if (cx.debugger != null) {
-            frame = cx.debugger.enterFrame(cx, scope, thisObj, args,
-                                           (DebuggableScript)fnOrScript);
-        }
-
         if (theData.itsNestedFunctions != null) {
             for (int i = 0; i < theData.itsNestedFunctions.length; i++)
                 createFunctionObject(theData.itsNestedFunctions[i], scope,
                                      theData.itsFromEvalCode);
+        }
+
+        DebugFrame frame = null;
+        if (cx.debugger != null) {
+            frame = cx.debugger.enterFrame(cx, scope, thisObj, args,
+                                           (DebuggableScript)fnOrScript);
         }
 
         Object result = undefined;
