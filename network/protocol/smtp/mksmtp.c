@@ -38,7 +38,7 @@
 #include "xp_time.h"
 #include "xp_thrmo.h"
 #include "merrors.h"
-#include HG23535
+#include "ssl.h"
 #include "imap.h"
 
 #include "xp_error.h"
