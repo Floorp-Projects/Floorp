@@ -36,6 +36,12 @@
       text-align          : center;
       border              : 1px outset #CCCCCC;
       padding             : 2px;
+      -moz-border-radius  : 3px 2px 2px 3px;
+    }
+    
+  button:hover > .internal-box
+    {
+      -moz-border-radius  : 0px;
     }
 
   button:active > .internal-box 
@@ -49,6 +55,7 @@
   button[disabled="true"]:active > .internal-box 
     {
       border              : 1px solid gray;
+      -moz-border-radius  : 3px 2px 2px 3px;
       color               : gray;
       padding             : 2px;
     }
@@ -94,7 +101,8 @@
  **/
 
 /* internal frame */
-  button.dialog > .internal-box
+  button.dialog > .internal-box,
+  button.dialog:hover > .internal-box
     {
       padding             : 2px 10px 2px 10px;
     }
@@ -182,3 +190,125 @@
     {
       display             : none;
     }
+    
+/** Styles for the standard 'large' toolbar button, these buttons are used for
+ *  toolbar buttons that are the most commonly used elements on a toolbar, e.g.
+ *  'GetMsg' in Mailnews or 'Send' in Mail/Compose.
+ **/
+  button.key-toolbar 
+    {
+      background-repeat   : no-repeat;
+      background-position : 50% 0px;
+      background-color    : transparent;
+      background-image    : url("chrome://global/skin/button28-bg.gif");
+      color               : #CCFFFF;
+      min-width           : 28px;
+      min-height          : 28px;
+      margin              : 4px 7px 1px 1px;
+      padding             : 3px 0px 0px 1px;
+      font-size           : smaller;
+      border              : none;
+    }
+    
+  button.key-toolbar:hover 
+    {
+      background-image    : url("chrome://global/skin/button28-bg-hover.gif");
+      border              : none;
+    } 
+
+  button.key-toolbar:active
+    {
+      margin              : 5px 6px 0px 2px;
+      border              : none;
+    }
+
+  button.key-toolbar[disabled="true"],
+  button.key-toolbar[disabled="true"]:hover,
+  button.key-toolbar[disabled="true"]:active
+    {
+      background-image    : url("chrome://global/skin/button28-bg-disabled.gif");
+      margin              : 3px 7px 1px 1px;
+      border              : none;
+    }
+    
+/* internal frame */
+  button.key-toolbar[disabled="true"] > .internal-box,
+  button.key-toolbar[disabled="true"]:hover > .internal-box,
+  button.key-toolbar[disabled="true"]:active > .internal-box
+    {
+      border              : none;
+    }
+      
+  button.key-toolbar > .internal-box,
+  button.key-toolbar:hover > .internal-box,
+  button.key-toolbar:active > .internal-box
+    {
+      border              : none;
+    }
+  
+/* text wrapper frame */
+  button.key-toolbar > .internal-box > .text-container 
+    {
+      padding-top         : 3px;
+    }
+
+/** Styles for the less important toolbar buttons. These buttons are used for 
+ *  toolbar members of less immediate use than those of the 'key-toolbar' class.
+ **/
+  button.toolbar 
+    {
+      background-repeat   : no-repeat;
+      background-position : 50% 0px;
+      background-color    : transparent;
+      background-image    : none;
+      color               : #CCFFFF;
+      min-width           : 28px;
+      min-height          : 28px;
+      margin              : 4px 7px 1px 1px;
+      padding             : 3px 0px 0px 1px;      
+      font-size           : smaller;
+      border              : none;
+    }
+    
+  button.toolbar:hover 
+    {
+      background-image    : url("chrome://global/skin/otherbutton28-bg-hover.gif");
+      border              : none;
+    } 
+
+  button.toolbar:active
+    {
+      margin              : 5px 6px 0px 2px;
+      border              : none;
+    }
+
+  button.toolbar[disabled="true"],
+  button.toolbar[disabled="true"]:hover,
+  button.toolbar[disabled="true"]:active
+    {
+      margin              : 3px 7px 1px 1px;
+      border              : none;
+      background-image    : none;
+    }
+    
+/* internal frame */
+  button.toolbar[disabled="true"] > .internal-box,
+  button.toolbar[disabled="true"]:hover > .internal-box,
+  button.toolbar[disabled="true"]:active > .internal-box
+    {
+      border              : none;
+    }
+      
+  button.toolbar > .internal-box,
+  button.toolbar:hover > .internal-box,
+  button.toolbar:active > .internal-box
+    {
+      border              : none;
+    }
+
+/* text wrapper frame */
+  button.toolbar > .internal-box > .text-container 
+    {
+      padding-top         : 3px;
+    }
+
