@@ -211,9 +211,9 @@
 #define JS_MIN(x,y)     ((x)<(y)?(x):(y))
 #define JS_MAX(x,y)     ((x)>(y)?(x):(y))
 
-#if defined(XP_MAC) || defined(XP_PC)
+#if (defined(XP_MAC) || defined(XP_PC)) && !defined(CROSS_COMPILE)
 #    include "jscpucfg.h"        /* Use standard Mac or Windows configuration */
-#elif defined(XP_UNIX) || defined(XP_BEOS)
+#elif defined(XP_UNIX) || defined(XP_BEOS) || defined(CROSS_COMPILE)
 #    include "jsautocfg.h"       /* Use auto-detected configuration */
 #    include "jsosdep.h"         /* ...and platform-specific flags */
 #else
