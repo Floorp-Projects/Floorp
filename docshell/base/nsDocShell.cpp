@@ -20,6 +20,7 @@
  *   Travis Bogard <travis@netscape.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Peter Annema <disttsc@bart.nl>
+ *   Dan Rosen <dr@netscape.com>
  */
 
 #include "nsIComponentManager.h"
@@ -101,6 +102,10 @@
 
 #include "nsIFrame.h"
 #include "nsIStyleContext.h"
+
+// for embedding
+#include "nsIEmbeddingSiteWindow.h"
+#include "nsIWebBrowserChromeFocus.h"
 
 static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
 static NS_DEFINE_CID(kSimpleURICID,            NS_SIMPLEURI_CID);
@@ -2025,14 +2030,31 @@ NS_IMETHODIMP nsDocShell::SetFocus()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShell::FocusAvailable(nsIBaseWindow* aCurrentFocus, 
+NS_IMETHODIMP nsDocShell::FocusAvailable(nsIBaseWindow* aCurrentFocus,
+                                         PRBool aForward,
                                          PRBool* aTookFocus)
 {
   NS_ENSURE_ARG_POINTER(aTookFocus);
-  
-  // Next person we should call is first the parent otherwise the 
-  // docshell tree owner.
 
+  nsresult ret;
+
+  // Are we embedded?
+
+  nsCOMPtr<nsIWebBrowserChromeFocus>
+    chromeFocus(do_GetInterface(mTreeOwner, &ret));
+  if (chromeFocus) {
+#ifdef DEBUG_dr
+    printf("dr :: nsDocShell::FocusAvailable, embedded\n");
+#endif
+    if (aForward)
+      ret = chromeFocus->FocusNextElement();
+    else
+      ret = chromeFocus->FocusPrevElement();
+    return ret;
+  }
+
+  // Otherwise, first person we should call is the parent, or the 
+  // docshell tree owner.
   nsCOMPtr<nsIBaseWindow> nextCallWin(do_QueryInterface(mParent));
   if(!nextCallWin)
     nextCallWin = do_QueryInterface(mTreeOwner);
@@ -2040,7 +2062,9 @@ NS_IMETHODIMP nsDocShell::FocusAvailable(nsIBaseWindow* aCurrentFocus,
   //If the current focus is us, offer it to the next owner.
   if(aCurrentFocus == NS_STATIC_CAST(nsIBaseWindow*, this)) {
     if(nextCallWin) {
-      nsresult ret = nextCallWin->FocusAvailable(aCurrentFocus, aTookFocus);
+      ret = nextCallWin->FocusAvailable(aCurrentFocus,
+                                        aForward,
+                                        aTookFocus);
       if (NS_SUCCEEDED(ret) && *aTookFocus)
         return NS_OK;
     }
@@ -2094,7 +2118,7 @@ NS_IMETHODIMP nsDocShell::FocusAvailable(nsIBaseWindow* aCurrentFocus,
 
   // Call again to offer focus upwards and to start at the beginning of our
   // child list if no one above us wants focus.
-  return FocusAvailable(this, aTookFocus);
+  return FocusAvailable(this, aForward, aTookFocus);
 }
 
 NS_IMETHODIMP nsDocShell::GetTitle(PRUnichar** aTitle)

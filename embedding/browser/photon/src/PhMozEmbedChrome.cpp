@@ -782,8 +782,9 @@ NS_IMETHODIMP PhMozEmbedChrome::SetFocus(void)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP PhMozEmbedChrome::FocusAvailable(nsIBaseWindow *aCurrentFocus, 
-						PRBool *aTookFocus)
+NS_IMETHODIMP PhMozEmbedChrome::FocusAvailable(nsIBaseWindow *aCurrentFocus,
+					       PRBool aForward,
+					       PRBool *aTookFocus)
 {
   PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("PhMozEmbedChrome::FocusAvailable\n"));
   return NS_ERROR_NOT_IMPLEMENTED;

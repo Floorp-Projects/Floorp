@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -29,6 +29,7 @@
 
 // Interfaces Needed
 #include "nsIWebBrowserChrome.h"
+#include "nsIWebBrowserChromeFocus.h"
 #include "nsIWebProgressListener.h"
 #include "nsIEmbeddingSiteWindow.h"
 #include "nsIInterfaceRequestor.h"
@@ -44,18 +45,20 @@ class CBrowserWindow;
 class CBrowserShell;
 
 class CWebBrowserChrome : public nsIWebBrowserChrome,
-                           public nsIWebProgressListener,
-                           public nsIEmbeddingSiteWindow,
-                           public nsIInterfaceRequestor,
-                           public nsIContextMenuListener,
-                           public nsITooltipListener,
-                           public nsSupportsWeakReference
+                          public nsIWebBrowserChromeFocus,
+                          public nsIWebProgressListener,
+                          public nsIEmbeddingSiteWindow,
+                          public nsIInterfaceRequestor,
+                          public nsIContextMenuListener,
+                          public nsITooltipListener,
+                          public nsSupportsWeakReference
 {
 friend class CBrowserWindow;
 
 public:
    NS_DECL_ISUPPORTS
    NS_DECL_NSIWEBBROWSERCHROME
+   NS_DECL_NSIWEBBROWSERCHROMEFOCUS
    NS_DECL_NSIWEBPROGRESSLISTENER
    NS_DECL_NSIEMBEDDINGSITEWINDOW
    NS_DECL_NSIINTERFACEREQUESTOR

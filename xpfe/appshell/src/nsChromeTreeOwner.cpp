@@ -310,10 +310,11 @@ NS_IMETHODIMP nsChromeTreeOwner::SetFocus()
    return mXULWindow->SetFocus();
 }
 
-NS_IMETHODIMP nsChromeTreeOwner::FocusAvailable(nsIBaseWindow* aCurrentFocus, 
-   PRBool* aTookFocus)
+NS_IMETHODIMP nsChromeTreeOwner::FocusAvailable(nsIBaseWindow* aCurrentFocus,
+                                                PRBool aForward,
+                                                PRBool* aTookFocus)
 {
-   return mXULWindow->FocusAvailable(aCurrentFocus, aTookFocus);
+   return mXULWindow->FocusAvailable(aCurrentFocus, aForward, aTookFocus);
 }
 
 NS_IMETHODIMP nsChromeTreeOwner::GetTitle(PRUnichar** aTitle)

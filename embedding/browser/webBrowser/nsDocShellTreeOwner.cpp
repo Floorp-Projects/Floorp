@@ -57,6 +57,7 @@
 #include "nsPIWindowWatcher.h"
 #include "nsIPrompt.h"
 #include "nsIWalletService.h"
+#include "nsIWebBrowserChromeFocus.h"
 
 static char *sWindowWatcherContractID = "@mozilla.org/embedcomp/window-watcher;1";
 
@@ -111,6 +112,9 @@ NS_IMETHODIMP nsDocShellTreeOwner::GetInterface(const nsIID& aIID, void** aSink)
 
   if(NS_SUCCEEDED(QueryInterface(aIID, aSink)))
     return NS_OK;
+
+  if (aIID.Equals(NS_GET_IID(nsIWebBrowserChromeFocus)))
+    return mOwnerWin->QueryInterface(aIID, aSink);
 
   if (aIID.Equals(NS_GET_IID(nsIPrompt))) {
     nsIPrompt *prompt;
@@ -617,8 +621,9 @@ NS_IMETHODIMP nsDocShellTreeOwner::SetFocus()
     return NS_ERROR_NULL_POINTER;
 }
 
-NS_IMETHODIMP nsDocShellTreeOwner::FocusAvailable(nsIBaseWindow* aCurrentFocus, 
-   PRBool* aTookFocus)
+NS_IMETHODIMP nsDocShellTreeOwner::FocusAvailable(nsIBaseWindow* aCurrentFocus,
+                                                  PRBool aForward,
+                                                  PRBool* aTookFocus)
 {
     return NS_ERROR_NULL_POINTER;
 }

@@ -1191,7 +1191,8 @@ NS_IMETHODIMP nsWebBrowser::SetFocus()
 }
 
 NS_IMETHODIMP nsWebBrowser::FocusAvailable(nsIBaseWindow* aCurrentFocus,
-   PRBool* aTookFocus)
+                                           PRBool aForward,
+                                           PRBool* aTookFocus)
 {
    NS_ENSURE_ARG_POINTER(aTookFocus);
 
@@ -1205,7 +1206,8 @@ NS_IMETHODIMP nsWebBrowser::FocusAvailable(nsIBaseWindow* aCurrentFocus,
    if(aCurrentFocus == NS_STATIC_CAST(nsIBaseWindow*, this))
       {
       if(nextCallWin)
-         return nextCallWin->FocusAvailable(aCurrentFocus, aTookFocus);
+         return nextCallWin->FocusAvailable(aCurrentFocus,
+                                            aForward, aTookFocus);
       return NS_OK;
       }
 

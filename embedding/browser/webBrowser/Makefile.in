@@ -34,6 +34,7 @@ XPIDLSRCS	= \
 		nsCWebBrowser.idl			\
 		nsIWebBrowser.idl			\
 		nsIWebBrowserChrome.idl			\
+		nsIWebBrowserChromeFocus.idl		\
 		nsIWebBrowserSetup.idl			\
 		nsICommandHandler.idl			\
 		nsIContextMenuListener.idl		\

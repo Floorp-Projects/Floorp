@@ -99,6 +99,7 @@ NS_IMPL_RELEASE(EmbedWindow)
 NS_INTERFACE_MAP_BEGIN(EmbedWindow)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebBrowserChrome)
   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
+  NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChromeFocus)
   NS_INTERFACE_MAP_ENTRY(nsIEmbeddingSiteWindow)
   NS_INTERFACE_MAP_ENTRY(nsITooltipListener)
   NS_INTERFACE_MAP_ENTRY(nsIPrompt)
@@ -228,6 +229,20 @@ EmbedWindow::IsWindowModal(PRBool *_retval)
 
 NS_IMETHODIMP
 EmbedWindow::ExitModalEventLoop(nsresult aStatus)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+// nsIWebBrowserChromeFocus
+
+NS_IMETHODIMP
+EmbedWindow::FocusNextElement()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+EmbedWindow::FocusPrevElement()
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

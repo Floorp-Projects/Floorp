@@ -104,6 +104,7 @@ NS_INTERFACE_MAP_BEGIN(CBrowserImpl)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
+   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChromeFocus)
    NS_INTERFACE_MAP_ENTRY(nsIEmbeddingSiteWindow)
    NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
    NS_INTERFACE_MAP_ENTRY(nsIContextMenuListener)
@@ -238,6 +239,20 @@ NS_IMETHODIMP CBrowserImpl::IsWindowModal(PRBool *retval)
 NS_IMETHODIMP CBrowserImpl::ExitModalEventLoop(nsresult aStatus)
 {
   return NS_OK;
+}
+
+//*****************************************************************************
+// CBrowserImpl::nsIWebBrowserChromeFocus
+//*****************************************************************************
+
+NS_IMETHODIMP CBrowserImpl::FocusNextElement()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP CBrowserImpl::FocusPrevElement()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //*****************************************************************************

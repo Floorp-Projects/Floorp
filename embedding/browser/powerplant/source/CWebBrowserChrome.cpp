@@ -228,6 +228,20 @@ NS_IMETHODIMP CWebBrowserChrome::ExitModalEventLoop(nsresult aStatus)
 }
 
 //*****************************************************************************
+// CWebBrowserChrome::nsIWebBrowserChromeFocus
+//*****************************************************************************
+
+NS_IMETHODIMP CWebBrowserChrome::FocusNextElement()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP CWebBrowserChrome::FocusPrevElement()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+//*****************************************************************************
 // CWebBrowserChrome::nsIWebProgressListener
 //*****************************************************************************   
 
