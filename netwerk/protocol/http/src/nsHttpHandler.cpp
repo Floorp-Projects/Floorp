@@ -23,6 +23,7 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Christopher Blizzard <blizzard@mozilla.org>
  *   Adrian Havill <havill@redhat.com>
+ *   Gervase Markham <gerv@gerv.net>
  */
 
 #include "nsHttp.h"
@@ -233,11 +234,9 @@ nsHttpHandler::AddStandardRequestHeaders(nsHttpHeaderArray *request,
     rv = request->SetHeader(nsHttp::User_Agent, UserAgent());
     if (NS_FAILED(rv)) return rv;
 
+    // MIME based content negotiation lives!
     // Add the Accept header:
-    //
-    // Send */*. We're no longer chopping MIME-types for acceptance.
-    // MIME based content negotiation has died.
-    rv = request->SetHeader(nsHttp::Accept, "*/*");
+    rv = request->SetHeader(nsHttp::Accept, mAccept.get());
     if (NS_FAILED(rv)) return rv;
 
     // Add the Accept-Language header:
@@ -1056,6 +1055,14 @@ nsHttpHandler::PrefsChanged(const char *pref)
         }
     }
 
+    if (bChangedAll || PL_strcmp(pref, "network.http.accept.default") == 0) {
+        nsXPIDLCString accept;
+        rv = mPrefs->CopyCharPref("network.http.accept.default",
+                                  getter_Copies(accept));
+        if (NS_SUCCEEDED(rv))
+            SetAccept(accept);
+    }
+    
     if (bChangedAll || PL_strcmp(pref, "network.http.accept-encoding") == 0) {
         nsXPIDLCString acceptEncodings;
         rv = mPrefs->CopyCharPref("network.http.accept-encoding",
@@ -1345,6 +1352,13 @@ nsHttpHandler::SetAcceptCharsets(const char *aAcceptCharsets)
     if (NS_SUCCEEDED(rv))
         mAcceptCharsets.Assign(buf.get());
     return rv;
+}
+
+nsresult
+nsHttpHandler::SetAccept(const char *aAccept) 
+{
+    mAccept = aAccept;
+    return NS_OK;
 }
 
 nsresult
