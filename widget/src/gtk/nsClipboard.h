@@ -79,7 +79,6 @@ private:
   nsCOMPtr<nsITransferable>   mSelectionTransferable;
   nsCOMPtr<nsITransferable>   mGlobalTransferable;
 
-
   // Used for communicating pasted data
   // from the asynchronous X routines back to a blocking paste:
   GtkSelectionData mSelectionData;
@@ -143,6 +142,10 @@ private:
                                 GtkSelectionData *aSelectionData,
                                 gpointer aData);
   
+
+  /* functions to do blocking when trying to get info from another client */
+  void SendClipPing();
+  PRBool FindSelectionNotifyEvent();
 
 };
 
