@@ -93,3 +93,9 @@ NS_IMETHODIMP nsURLProperties::Get(const nsString& aKey, nsString& oValue)
   else 
      return NS_ERROR_FAILURE;
 }
+
+NS_IMETHODIMP nsURLProperties::DidLoad(PRBool &oDidLoad)
+{
+  oDidLoad = (mDelegate!=nsnull);
+  return NS_OK;
+}
