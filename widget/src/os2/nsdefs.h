@@ -24,7 +24,9 @@
 #define NSDEFS_H
 
 #include <os2.h>
+#ifdef XP_OS2_VACPP
 #include <builtin.h>
+#endif
 
 #ifdef _DEBUG
   #define BREAK_TO_DEBUGGER           _interrupt(3)
