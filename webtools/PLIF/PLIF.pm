@@ -225,6 +225,7 @@ sub error {
     confess(@data); # die with stack trace
 }
 
+# this should not be called with the @data containing a trailing dot
 sub assert { 
     my $self = shift;
     my($condition, $level, @data) = @_;
