@@ -5,6 +5,7 @@ toolkit.jar:
 *+ content/global/printjoboptions.xul               (content/printjoboptions.xul)
 *+ content/global/printPageSetup.js                 (content/printPageSetup.js)
 *+ content/global/printPageSetup.xul                (content/printPageSetup.xul)
+*+ content/global/printPreviewBindings.xml          (content/printPreviewBindings.xml)
 *+ content/global/printPreviewProgress.js           (content/printPreviewProgress.js)
 *+ content/global/printPreviewProgress.xul          (content/printPreviewProgress.xul)
 *+ content/global/printProgress.js                  (content/printProgress.js)
@@ -15,6 +16,7 @@ en-US.jar:
 +  locale/en-US/global/printjoboptions.dtd          (locale/printjoboptions.dtd)
 +  locale/en-US/global/printPageSetup.dtd           (locale/printPageSetup.dtd)
 +  locale/en-US/global/printPageSetup.properties    (locale/printPageSetup.properties)
++  locale/en-US/global/printPreview.dtd             (locale/printPreview.dtd)
 +  locale/en-US/global/printPreviewProgress.dtd     (locale/printPreviewProgress.dtd)
 +  locale/en-US/global/printProgress.dtd            (locale/printProgress.dtd)
 
