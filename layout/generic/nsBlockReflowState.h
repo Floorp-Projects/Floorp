@@ -77,7 +77,7 @@ public:
                 PRBool              aInitialReflow,
                 nsReflowStatus&     aReflowStatus);
 
-  PRBool CanPlaceFloat(const nsRect& aFloatRect, PRUint8 aFloats);
+  PRBool CanPlaceFloat(const nsSize& aFloatSize, PRUint8 aFloats);
 
   void FlowAndPlaceFloat(nsFloatCache* aFloatCache,
                          PRBool*         aIsLeftFloat,

@@ -657,7 +657,7 @@ nsBlockReflowState::UpdateMaximumWidth(nscoord aMaximumWidth)
 }
 
 PRBool
-nsBlockReflowState::CanPlaceFloat(const nsRect& aFloatRect,
+nsBlockReflowState::CanPlaceFloat(const nsSize& aFloatSize,
                                   PRUint8 aFloats)
 {
   // If the current Y coordinate is not impacted by any floats
@@ -665,7 +665,7 @@ nsBlockReflowState::CanPlaceFloat(const nsRect& aFloatRect,
   PRBool result = PR_TRUE;
   if (0 != mBand.GetFloatCount()) {
     // XXX We should allow overflow by up to half a pixel here (bug 21193).
-    if (mAvailSpaceRect.width < aFloatRect.width) {
+    if (mAvailSpaceRect.width < aFloatSize.width) {
       // The available width is too narrow (and its been impacted by a
       // prior float)
       result = PR_FALSE;
@@ -674,7 +674,7 @@ nsBlockReflowState::CanPlaceFloat(const nsRect& aFloatRect,
       // At this point we know that there is enough horizontal space for
       // the float (somewhere). Lets see if there is enough vertical
       // space.
-      if (mAvailSpaceRect.height < aFloatRect.height) {
+      if (mAvailSpaceRect.height < aFloatSize.height) {
         // The available height is too short. However, its possible that
         // there is enough open space below which is not impacted by a
         // float.
@@ -688,7 +688,7 @@ nsBlockReflowState::CanPlaceFloat(const nsRect& aFloatRect,
           xa = mAvailSpaceRect.x;
         }
         else {
-          xa = mAvailSpaceRect.XMost() - aFloatRect.width;
+          xa = mAvailSpaceRect.XMost() - aFloatSize.width;
 
           // In case the float is too big, don't go past the left edge
           // XXXldb This seems wrong, but we might want to fix bug 6976
@@ -697,7 +697,7 @@ nsBlockReflowState::CanPlaceFloat(const nsRect& aFloatRect,
             xa = mAvailSpaceRect.x;
           }
         }
-        nscoord xb = xa + aFloatRect.width;
+        nscoord xb = xa + aFloatSize.width;
 
         // Calculate the top and bottom y coordinates, again assuming
         // that the float is placed on the current line.
@@ -711,7 +711,7 @@ nsBlockReflowState::CanPlaceFloat(const nsRect& aFloatRect,
           // content edge of the block that contains it.)
           ya = 0;
         }
-        nscoord yb = ya + aFloatRect.height;
+        nscoord yb = ya + aFloatSize.height;
 
         nscoord saveY = mY;
         for (;;) {
@@ -771,10 +771,6 @@ nsBlockReflowState::FlowAndPlaceFloat(nsFloatCache*   aFloatCache,
   // Grab the float's display information
   const nsStyleDisplay* floatDisplay = floatFrame->GetStyleDisplay();
 
-  // This will hold the float's geometry when we've found a place
-  // for it to live.
-  nsRect region;
-
   // The float's old region, so we can propagate damage.
   nsRect oldRegion = floatFrame->GetRect();
   oldRegion.Inflate(aFloatCache->mMargins);
@@ -797,11 +793,9 @@ nsBlockReflowState::FlowAndPlaceFloat(nsFloatCache*   aFloatCache,
   // Reflow the float
   mBlock->ReflowFloat(*this, placeholder, aFloatCache, aReflowStatus);
 
-  // Get the floats bounding box and margin information
-  region = floatFrame->GetRect();
-
 #ifdef DEBUG
   if (nsBlockFrame::gNoisyReflow) {
+    nsRect region = floatFrame->GetRect();
     nsFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent);
     printf("flowed float: ");
     nsFrame::ListTag(stdout, floatFrame);
@@ -810,10 +804,11 @@ nsBlockReflowState::FlowAndPlaceFloat(nsFloatCache*   aFloatCache,
   }
 #endif
 
+  nsSize floatSize = floatFrame->GetSize();
   // Adjust the float size by its margin. That's the area that will
   // impact the space manager.
-  region.width += aFloatCache->mMargins.left + aFloatCache->mMargins.right;
-  region.height += aFloatCache->mMargins.top + aFloatCache->mMargins.bottom;
+  floatSize.width += aFloatCache->mMargins.left + aFloatCache->mMargins.right;
+  floatSize.height += aFloatCache->mMargins.top + aFloatCache->mMargins.bottom;
 
   // Find a place to place the float. The CSS2 spec doesn't want
   // floats overlapping each other or sticking out of the containing
@@ -825,7 +820,7 @@ nsBlockReflowState::FlowAndPlaceFloat(nsFloatCache*   aFloatCache,
   // Can the float fit here?
   PRBool keepFloatOnSameLine = PR_FALSE;
 
-  while (! CanPlaceFloat(region, floatDisplay->mFloats)) {
+  while (! CanPlaceFloat(floatSize, floatDisplay->mFloats)) {
     // Nope. try to advance to the next band.
     if (NS_STYLE_DISPLAY_TABLE != floatDisplay->mDisplay ||
           eCompatibility_NavQuirks != mPresContext->CompatibilityMode() ) {
@@ -876,12 +871,11 @@ nsBlockReflowState::FlowAndPlaceFloat(nsFloatCache*   aFloatCache,
       // reflow the float again now since we have more space
       mBlock->ReflowFloat(*this, placeholder, aFloatCache, aReflowStatus);
       // Get the floats bounding box and margin information
-      region = floatFrame->GetRect();
+      floatSize = floatFrame->GetSize();
       // Adjust the float size by its margin. That's the area that will
       // impact the space manager.
-      region.width += aFloatCache->mMargins.left + aFloatCache->mMargins.right;
-      region.height += aFloatCache->mMargins.top + aFloatCache->mMargins.bottom;
-
+      floatSize.width += aFloatCache->mMargins.left + aFloatCache->mMargins.right;
+      floatSize.height += aFloatCache->mMargins.top + aFloatCache->mMargins.bottom;
     }
   }
   // If the float is continued, it will get the same absolute x value as its prev-in-flow
@@ -910,50 +904,53 @@ nsBlockReflowState::FlowAndPlaceFloat(nsFloatCache*   aFloatCache,
   // spacemanager</b> which means that the impacted region will be
   // <b>inside</b> the border/padding area.
   PRBool isLeftFloat;
+  nscoord floatX, floatY;
   if (NS_STYLE_FLOAT_LEFT == floatDisplay->mFloats) {
     isLeftFloat = PR_TRUE;
-    region.x = (prevInFlow) ? prevRect.x : mAvailSpaceRect.x;
+    floatX = (prevInFlow) ? prevRect.x : mAvailSpaceRect.x;
   }
   else {
     isLeftFloat = PR_FALSE;
     if (NS_UNCONSTRAINEDSIZE != mAvailSpaceRect.width) {
       if (prevInFlow) {
-        region.x = prevRect.x;
+        floatX = prevRect.x;
       }
       else if (!keepFloatOnSameLine) {
-        region.x = mAvailSpaceRect.XMost() - region.width;
+        floatX = mAvailSpaceRect.XMost() - floatSize.width;
       } 
       else {
         // this is the IE quirk (see few lines above)
         // the table is keept in the same line: don't let it overlap the previous float 
-        region.x = mAvailSpaceRect.x;
+        floatX = mAvailSpaceRect.x;
       }
     }
     else {
       // For unconstrained reflows, pretend that a right float is
       // instead a left float.  This will make us end up with the
       // correct unconstrained width, and we'll place it later.
-      region.x = mAvailSpaceRect.x;
+      floatX = mAvailSpaceRect.x;
     }
   }
   *aIsLeftFloat = isLeftFloat;
   const nsMargin& borderPadding = BorderPadding();
-  region.y = mY - borderPadding.top;
-  if (region.y < 0) {
+  floatY = mY - borderPadding.top;
+  if (floatY < 0) {
     // CSS2 spec, 9.5.1 rule [4]: "A floating box's outer top may not
     // be higher than the top of its containing block."  (Since the
     // containing block is the content edge of the block box, this
     // means the margin edge of the float can't be higher than the
     // content edge of the block that contains it.)
-    region.y = 0;
+    floatY = 0;
   }
 
   // Place the float in the space manager
   // if the float split, then take up all of the vertical height 
   if (NS_FRAME_IS_NOT_COMPLETE(aReflowStatus) && 
       (NS_UNCONSTRAINEDSIZE != mContentArea.height)) {
-    region.height = PR_MAX(region.height, mContentArea.height);
+    floatSize.height = PR_MAX(floatSize.height, mContentArea.height);
   }
+
+  nsRect region(floatX, floatY, floatSize.width, floatSize.height);
 #ifdef DEBUG
   nsresult rv =
 #endif

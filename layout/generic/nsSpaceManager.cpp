@@ -826,11 +826,8 @@ nsSpaceManager::AddRectRegion(nsIFrame* aFrame, const nsRect& aUnavailableSpace)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  // Is the rect empty?
-  if (aUnavailableSpace.IsEmpty()) {
-    // The rect doesn't consume any space, so don't add any band data
+  if (aUnavailableSpace.height <= 0)
     return NS_OK;
-  }
 
   // Allocate a band rect
   BandRect* bandRect = new BandRect(rect.x, rect.y, rect.XMost(), rect.YMost(), aFrame);
@@ -880,7 +877,7 @@ nsSpaceManager::RemoveRegion(nsIFrame* aFrame)
     return NS_ERROR_INVALID_ARG;
   }
 
-  if (!frameInfo->mRect.IsEmpty()) {
+  if (frameInfo->mRect.height > 0) {
     NS_ASSERTION(!mBandList.IsEmpty(), "no bands");
     BandRect* band = mBandList.Head();
     BandRect* prevBand = nsnull;
