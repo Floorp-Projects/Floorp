@@ -238,6 +238,7 @@ nsPopupSetFrame::Reflow(nsIPresContext*   aPresContext,
         }   
     } 
 
+  // Handle reflowing our subordinate popup
   if (popupChild) {
       // Constrain the child's width and height to aAvailableWidth and aAvailableHeight
       nsSize availSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
@@ -440,8 +441,6 @@ void
 nsPopupSetFrame::OpenPopup(PRBool aActivateFlag)
 {
   if (aActivateFlag) {
-    ActivatePopup(PR_TRUE);
-    
     nsIFrame* activeChild = GetActiveChild();
 
     nsCOMPtr<nsIMenuParent> childPopup = do_QueryInterface(activeChild);

@@ -465,29 +465,16 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
   viewManager->MoveViewTo(view, xpos, ypos); 
   viewManager->ResizeView(view, mRect.width, mRect.height);
   
+  mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, "true", PR_TRUE);
+#if 0
   if ((! viewWasVisible) && viewIsVisible) {
     view->SetVisibility(nsViewVisibility_kShow);
   }
+#endif
 
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsMenuPopupFrame::DidReflow(nsIPresContext* aPresContext,
-                            nsDidReflowStatus aStatus)
-{
-    return nsFrame::DidReflow(aPresContext, aStatus);
-
-    /*
-  // Copied from nsContainerFrame reflow WITHOUT the call
-  // nsFrame::DidReflow().  nsFrame::DidReflow() will move us to the
-  // wrong place.
-  nsresult result = NS_OK; /* = nsFrame::DidReflow(aPresContext, aStatus) 
-
-  NS_FRAME_TRACE_OUT("nsContainerFrame::DidReflow");
-  return result;
-  */
-}
 
 NS_IMETHODIMP
 nsMenuPopupFrame::GetNextMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult)
