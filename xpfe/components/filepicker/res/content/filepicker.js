@@ -84,6 +84,28 @@ function onLoad() {
     var filterMenuList = document.getElementById("filterMenuList");
     filterMenuList.appendChild(filterPopup);
   }
+  
+  try {
+    var buttonLabel;
+    switch (filePickerMode) {
+      case nsIFilePicker.modeOpen:
+        buttonLabel = bundle.GetStringFromName("openButtonLabel");
+        break;
+      case nsIFilePicker.modeSave:
+        buttonLabel = bundle.GetStringFromName("saveButtonLabel");
+        break;
+      case nsIFilePicker.modeGetFolder:
+        buttonLabel = bundle.GetStringFromName("selectFolderButtonLabel");
+        break;
+    }
+
+    if (buttonLabel) {
+      var okButton = document.getElementById("ok");
+      okButton.setAttribute("value", buttonLabel);
+    }
+  } catch (exception) {
+    // keep it set to "OK"
+  }
 
   // setup the dialogOverlay.xul button handlers
   doSetOKCancel(onOK, onCancel);
@@ -249,6 +271,7 @@ function onCancel()
 {
   // Close the window.
   retvals.buttonStatus = nsIFilePicker.returnCancel;
+  retvals.file = null;
   return true;
 }
 
