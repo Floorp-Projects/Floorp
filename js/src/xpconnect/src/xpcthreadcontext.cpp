@@ -129,7 +129,7 @@ nsXPCThreadJSContextStackImpl::FreeSingleton()
     if (tcs) {
         nsrefcnt cnt;
         NS_RELEASE2(tcs, cnt);
-#if defined(DEBUG_kipp) || defined(DEBUG_jband)
+#ifdef XPC_DUMP_AT_SHUTDOWN
         if (0 != cnt) {
             printf("*** dangling reference to nsXPCThreadJSContextStackImpl: refcnt=%d\n", cnt);
         }
