@@ -105,6 +105,11 @@ nsMIMEService::AddMapping(const char* mimeType,
 nsresult
 nsMIMEService::InitFromHack() {
     nsresult rv;
+
+    rv = AddMapping("application/octet-stream", "exe", "Binary Executable");
+    if (NS_FAILED(rv)) return rv;
+    rv = AddMapping("application/octet-stream", "bin", "Binary Executable");
+    if (NS_FAILED(rv)) return rv;
     rv = AddMapping("text/html", "htm", "Hyper Text Markup Language");
     if (NS_FAILED(rv)) return rv;
     rv = AddMapping("text/html", "html", "Hyper Text Markup Language");
