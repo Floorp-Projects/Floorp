@@ -60,7 +60,7 @@ extern nsresult InitInstallTriggerGlobalClass(JSContext *jscontext, JSObject *gl
 // Defined in this file:
 static void     XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report);
 static PRInt32  GetInstallScriptFromJarfile(nsIZipReader* hZip, nsIFile* jarFile, char** scriptBuffer, PRUint32 *scriptLength);
-static nsresult SetupInstallContext(nsIZipReader* hZip, const nsIFile* jarFile, const PRUnichar* url, const PRUnichar* args, JSRuntime *jsRT, JSContext **jsCX, JSObject **jsGlob);
+static nsresult SetupInstallContext(nsIZipReader* hZip, nsIFile* jarFile, const PRUnichar* url, const PRUnichar* args, JSRuntime *jsRT, JSContext **jsCX, JSObject **jsGlob);
 
 extern "C" void RunInstallOnThread(void *data);
 
