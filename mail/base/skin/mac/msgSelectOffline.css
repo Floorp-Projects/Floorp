@@ -1,0 +1,175 @@
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *   Joe Hewitt (hewitt@netscape.com)
+ *   Håkan Waara (hwaara@chello.se)
+ *   Jan Varga (varga@nixcorp.com)
+ */
+
+/* ===== msgSelectOffline.css =================================================
+  == Styles for the Offline Use dialog.
+  ======================================================================= */
+
+@import url("chrome://messenger/skin/");
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* ::::: Mail Folders ::::: */
+
+treechildren::-moz-tree-image(folderNameCol) {
+  margin-right: 2px;
+  list-style-image: url("chrome://messenger/skin/icons/folder-closed.png");
+}
+
+treechildren::-moz-tree-image(folderNameCol, newMessages-true) {
+  list-style-image: url("chrome://messenger/skin/icons/folder-closed.png");
+}
+
+/* ..... Inbox ..... */
+
+treechildren::-moz-tree-image(folderNameCol, specialFolder-Inbox) {
+  list-style-image: url("chrome://messenger/skin/icons/folder-inbox.png");
+}
+
+treechildren::-moz-tree-image(folderNameCol, specialFolder-Inbox, newMessages-true) {
+  list-style-image: url("chrome://messenger/skin/icons/folder-inbox.png");
+}
+
+/* ..... Sent ..... */
+
+treechildren::-moz-tree-image(folderNameCol, specialFolder-Sent) {
+  list-style-image: url("chrome://messenger/skin/icons/folder-sent.png");
+}
+
+/* ..... Unsent ..... */
+
+treechildren::-moz-tree-image(folderNameCol, specialFolder-Unsent Messages) {
+  list-style-image: url("chrome://messenger/skin/icons/folder-outbox.png");
+}
+
+/* ..... Drafts ..... */
+
+treechildren::-moz-tree-image(folderNameCol, specialFolder-Drafts) {
+  list-style-image: url("chrome://messenger/skin/icons/folder-draft.png");
+}
+
+/* ..... Templates ..... */
+
+treechildren::-moz-tree-image(folderNameCol, specialFolder-Templates) {
+  list-style-image: url("chrome://messenger/skin/icons/folder-template.png");
+}
+
+/* ..... Junk ..... */
+
+treechildren::-moz-tree-image(folderNameCol, specialFolder-Junk) {
+  list-style-image: url("chrome://messenger/skin/icons/folder-junk.png");
+}
+
+/* ..... Trash ..... */
+
+treechildren::-moz-tree-image(folderNameCol, specialFolder-Trash) {
+  list-style-image: url("chrome://messenger/skin/icons/folder-trash.png");
+}
+
+/* ..... Servers ..... */
+
+treechildren::-moz-tree-image(folderNameCol, isServer-true) {
+  list-style-image: url("chrome://messenger/skin/icons/server-mail.png");
+}
+
+treechildren::-moz-tree-image(folderNameCol, biffState-NewMail, isServer-true) {
+  list-style-image: url("chrome://messenger/skin/icons/server-mail.png");
+}
+
+treechildren::-moz-tree-cell-text(folderNameCol, newMessages-true),
+treechildren::-moz-tree-cell-text(folderNameCol, specialFolder-Inbox, newMessages-true) {
+  font-weight: bold;
+}
+
+treechildren::-moz-tree-image(folderNameCol, imapShared-true) {
+  list-style-image: url("chrome://messenger/skin/icons/folder-share.png");
+}
+
+
+/* ..... Server Folders ..... */
+
+treechildren::-moz-tree-image(folderNameCol, isServer-true, serverType-pop3, isSecure-true) {
+  list-style-image: url("chrome://messenger/skin/icons/server-remote-lock.png");
+}
+
+treechildren::-moz-tree-image(folderNameCol, isServer-true, serverType-imap, isSecure-true) {
+  list-style-image: url("chrome://messenger/skin/icons/server-remote-lock.png");
+}
+
+treechildren::-moz-tree-image(folderNameCol, isServer-true, serverType-none) {
+  list-style-image: url("chrome://messenger/skin/icons/server-local.png");
+}
+
+/* ..... News Folders ..... */
+
+treechildren::-moz-tree-image(folderNameCol, serverType-nntp) {
+  list-style-image: url("chrome://messenger/skin/icons/folder-newsgroup.png");
+}
+
+treechildren::-moz-tree-image(folderNameCol, isServer-true, serverType-nntp) {
+  list-style-image: url("chrome://messenger/skin/icons/server-news.png");
+}
+
+treechildren::-moz-tree-image(folderNameCol, isServer-true, serverType-nntp, isSecure-true) {
+  list-style-image: url("chrome://messenger/skin/icons/server-news-lock.png");
+}
+
+/* ::::: All Servers ::::: */
+
+treechildren::-moz-tree-cell-text(closed, subfoldersHaveUnreadMessages-true) {
+  font-weight: bold;
+}
+
+treechildren::-moz-tree-cell-text(folderNameCol, isServer-true),
+treechildren::-moz-tree-cell-text(hasUnreadMessages-true) {
+  font-weight: bold;
+}
+
+treechildren::-moz-tree-cell-text(folderNameCol, noSelect-true) {
+  color: gray;
+  font-style: italic;
+}
+
+/* ::::: Download Icons ::::: */
+
+treechildren::-moz-tree-image(syncCol) {
+  list-style-image: url("chrome://messenger/skin/icons/dot.png");
+}
+
+treechildren::-moz-tree-image(syncCol, synchronize-true) {
+  list-style-image: url("chrome://messenger/skin/icons/check.png");
+}
+
+treechildren::-moz-tree-image(syncCol, isServer-true) {
+  list-style-image: none;
+}
+
+#folderNameCol [sortDirection="ascending"] {
+  list-style-image: none;
+}
+
+#folderNameCol [sortDirection="descending"] {
+  list-style-image: none;
+}

@@ -28,6 +28,7 @@ classic.jar:
 +    skin/classic/messenger/messageHeader.css       (messageHeader.css)
 +    skin/classic/messenger/messageWindow.css       (messageWindow.css)
 +    skin/classic/messenger/messageBody.css       (messageBody.css)
++    skin/classic/messenger/msgSelectOffline.css    (msgSelectOffline.css)
 +    skin/classic/messenger/mailWindow1.css     (mailWindow1.css)
 +    skin/classic/messenger/junkMail.css        (junkMail.css)
 +    skin/classic/messenger/folderMenus.css     (folderMenus.css)
