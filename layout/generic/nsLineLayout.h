@@ -103,7 +103,7 @@ public:
   void VerticalAlignFrames(nsRect& aLineBoxResult,
                            nsSize& aMaxElementSizeResult);
 
-  void TrimTrailingWhiteSpace();
+  PRBool TrimTrailingWhiteSpace();
 
   void HorizontalAlignFrames(nsRect& aLineBounds, PRBool aAllowJustify);
 
@@ -232,6 +232,10 @@ protected:
   nscoord mMaxTopBoxHeight;
   nscoord mMaxBottomBoxHeight;
   nscoord mCarriedOutBottomMargin;
+
+  // Final computed line-height value after VerticalAlignFrames for
+  // the block has been called.
+  nscoord mFinalLineHeight;
 
   nsTextRun* mReflowTextRuns;
   nsTextRun* mTextRun;

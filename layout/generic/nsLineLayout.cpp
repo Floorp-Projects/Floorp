@@ -1508,6 +1508,7 @@ nsLineLayout::VerticalAlignFrames(nsRect& aLineBoxResult,
   aLineBoxResult.y = mTopEdge;
   aLineBoxResult.width = psd->mX - psd->mLeftEdge;
   aLineBoxResult.height = lineHeight;
+  mFinalLineHeight = lineHeight;
   aMaxElementSizeResult.width = maxElementWidth;
   aMaxElementSizeResult.height = maxElementHeight;
 
@@ -1963,7 +1964,12 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
         nscoord minimumLineHeight = mMinLineHeight;
         nscoord fontAscent, fontHeight;
         fm->GetMaxAscent(fontAscent);
-        fm->GetHeight(fontHeight);
+        if (nsHTMLReflowState::UseComputedHeight()) {
+          fontHeight = parentFont->mFont.size;
+        }
+        else {
+          fm->GetHeight(fontHeight);
+        }
         nscoord leading = minimumLineHeight - fontHeight;
         nscoord yTop = -fontAscent - leading/2;
         nscoord yBottom = yTop + minimumLineHeight;
@@ -2087,6 +2093,7 @@ nsLineLayout::TrimTrailingWhiteSpaceIn(PerSpanData* psd,
 #endif
         if (deltaWidth) {
           pfd->mBounds.width -= deltaWidth;
+          pfd->mCombinedArea.width -= deltaWidth;
           if (0 == pfd->mBounds.width) {
             pfd->mMaxElementSize.width = 0;
             pfd->mMaxElementSize.height = 0;
@@ -2123,12 +2130,13 @@ nsLineLayout::TrimTrailingWhiteSpaceIn(PerSpanData* psd,
   return PR_FALSE;
 }
 
-void
+PRBool
 nsLineLayout::TrimTrailingWhiteSpace()
 {
   PerSpanData* psd = mRootSpan;
   nscoord deltaWidth;
   TrimTrailingWhiteSpaceIn(psd, &deltaWidth);
+  return 0 != deltaWidth;
 }
 
 void
@@ -2195,6 +2203,7 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds, PRBool aAllowJustify)
         pfd->mFrame->SetRect(pfd->mBounds);
         pfd = pfd->mNext;
       }
+//      aLineBounds.width += dx;
     }
 
     if ((NS_STYLE_DIRECTION_RTL == psd->mDirection) &&
@@ -2240,9 +2249,12 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
   else {
     // The minimum combined area for the frames that are direct
     // children of the block starts at the upper left corner of the
-    // line but has no width or height.
-    x1 = x0 = psd->mLeftEdge;
-    y1 = y0 = mTopEdge;
+    // line and is sized to match the size of the line's bounding box
+    // (the same size as the values returned from VerticalAlignFrames)
+    x0 = psd->mLeftEdge;
+    x1 = psd->mX;
+    y0 = mTopEdge;
+    y1 = mTopEdge + mFinalLineHeight;
   }
 
   pfd = psd->mFirstFrame;
