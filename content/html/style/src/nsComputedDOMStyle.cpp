@@ -75,6 +75,7 @@ private:
   nsresult GetPaddingWidthFor(PRUint8 aSide, nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
   nsresult GetBorderStyleFor(PRUint8 aSide, nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
   nsresult GetBorderWidthFor(PRUint8 aSide, nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
+  nsresult GetBorderColorFor(PRUint8 aSide, nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
   nsresult GetMarginWidthFor(PRUint8 aSide, nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
 
   // Properties
@@ -118,6 +119,10 @@ private:
   nsresult GetBorderBottomWidth(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
   nsresult GetBorderLeftWidth(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
   nsresult GetBorderRightWidth(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
+  nsresult GetBorderTopColor(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
+  nsresult GetBorderBottomColor(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
+  nsresult GetBorderLeftColor(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
+  nsresult GetBorderRightColor(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
   
   // Margin Properties
   nsresult GetMarginWidth(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
@@ -331,88 +336,110 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAReadableString& aPropertyName,
   nsCSSProperty prop = nsCSSProps::LookupProperty(aPropertyName);
 
   switch (prop) {
-  case eCSSProperty_behavior :
-    rv = GetBehavior(frame, *getter_AddRefs(val)); break;
-  case eCSSProperty_display :
-    rv = GetDisplay(frame, *getter_AddRefs(val)); break;
-  case eCSSProperty_width :
-    rv = GetWidth(frame, *getter_AddRefs(val)); break;
-  case eCSSProperty_height :
-    rv = GetHeight(frame, *getter_AddRefs(val)); break;
-  case eCSSProperty_left :
-    rv = GetLeft(frame, *getter_AddRefs(val)); break;
-  case eCSSProperty_top :
-    rv = GetTop(frame, *getter_AddRefs(val)); break;
-  case eCSSProperty_right :
-    rv = GetRight(frame, *getter_AddRefs(val)); break;
-  case eCSSProperty_bottom :
-    rv = GetBottom(frame, *getter_AddRefs(val)); break;
-  case eCSSProperty_color :
-    rv = GetColor(frame, *getter_AddRefs(val)); break;
-  case eCSSProperty_font_family :
-    rv = GetFontFamily(frame, *getter_AddRefs(val)); break;
-  case eCSSProperty_font_size :
-    rv = GetFontSize(frame, *getter_AddRefs(val)); break;
-  case eCSSProperty_font_style :
-    rv = GetFontStyle(frame, *getter_AddRefs(val)); break;
-  case eCSSProperty_font_weight :
-    rv = GetFontWeight(frame, *getter_AddRefs(val)); break;
-  case eCSSProperty_font_variant :
-    rv = GetFontVariant(frame, *getter_AddRefs(val)); break;
-  case eCSSProperty_background_color :
-    rv = GetBackgroundColor(frame, *getter_AddRefs(val)); break;
-  case eCSSProperty_background_image :
-    rv = GetBackgroundImage(frame, *getter_AddRefs(val)); break;
-  case eCSSProperty_padding :
-    rv = GetPadding(frame, *getter_AddRefs(val)); break;
-  case eCSSProperty_padding_top :
-    rv = GetPaddingTop(frame, *getter_AddRefs(val)); break;
-  case eCSSProperty_padding_bottom :
-    rv = GetPaddingBottom(frame, *getter_AddRefs(val)); break;
-  case eCSSProperty_padding_left :
-    rv = GetPaddingLeft(frame, *getter_AddRefs(val)); break;
-  case eCSSProperty_padding_right :
-    rv = GetPaddingRight(frame, *getter_AddRefs(val)); break;
-  case eCSSProperty_border_collapse :
-    rv = GetBorderCollapse(frame, *getter_AddRefs(val)); break;
-  case eCSSProperty_border_top_style :
-    rv = GetBorderTopStyle(frame, *getter_AddRefs(val)); break;
-  case eCSSProperty_border_bottom_style :
-    rv = GetBorderBottomStyle(frame, *getter_AddRefs(val)); break;
-  case eCSSProperty_border_left_style :
-    rv = GetBorderLeftStyle(frame, *getter_AddRefs(val)); break;
-  case eCSSProperty_border_right_style :
-    rv = GetBorderRightStyle(frame, *getter_AddRefs(val)); break;
-  case eCSSProperty_border_top_width :
-    rv = GetBorderTopWidth(frame, *getter_AddRefs(val)); break;
-  case eCSSProperty_border_bottom_width :
-    rv = GetBorderBottomWidth(frame, *getter_AddRefs(val)); break;
-  case eCSSProperty_border_left_width :
-    rv = GetBorderLeftWidth(frame, *getter_AddRefs(val)); break;
-  case eCSSProperty_border_right_width :
-    rv = GetBorderRightWidth(frame, *getter_AddRefs(val)); break;
-  case eCSSProperty_margin_top :
-    rv = GetMarginTopWidth(frame, *getter_AddRefs(val)); break;
-  case eCSSProperty_margin_bottom :
-    rv = GetMarginBottomWidth(frame, *getter_AddRefs(val)); break;
-  case eCSSProperty_margin_left :
-    rv = GetMarginLeftWidth(frame, *getter_AddRefs(val)); break;
-  case eCSSProperty_margin_right :
-    rv = GetMarginRightWidth(frame, *getter_AddRefs(val)); break;
-  case eCSSProperty_marker_offset :
-    rv = GetMarkerOffset(frame, *getter_AddRefs(val)); break;
-  case eCSSProperty_outline_width :
-    rv = GetOutlineWidth(frame, *getter_AddRefs(val)); break;
-  case eCSSProperty_outline_style :
-    rv = GetOutlineStyle(frame, *getter_AddRefs(val)); break;
-  case eCSSProperty_outline_color:
-    rv = GetOutlineColor(frame, *getter_AddRefs(val)); break;
-  case eCSSProperty_z_index:
-    rv = GetZIndex(frame, *getter_AddRefs(val)); break;
-  case eCSSProperty_list_style_image:
-    rv = GetListStyleImage(frame, *getter_AddRefs(val)); break;
-  default :
-    break;
+    case eCSSProperty_behavior :
+      rv = GetBehavior(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_display :
+      rv = GetDisplay(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_width :
+      rv = GetWidth(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_height :
+      rv = GetHeight(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_left :
+      rv = GetLeft(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_top :
+      rv = GetTop(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_right :
+      rv = GetRight(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_bottom :
+      rv = GetBottom(frame, *getter_AddRefs(val)); break;
+  
+      // Font properties
+    case eCSSProperty_color :
+      rv = GetColor(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_font_family :
+      rv = GetFontFamily(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_font_size :
+      rv = GetFontSize(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_font_style :
+      rv = GetFontStyle(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_font_weight :
+      rv = GetFontWeight(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_font_variant :
+      rv = GetFontVariant(frame, *getter_AddRefs(val)); break;
+  
+      // Background properties
+    case eCSSProperty_background_color :
+      rv = GetBackgroundColor(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_background_image :
+      rv = GetBackgroundImage(frame, *getter_AddRefs(val)); break;
+  
+      // Padding properties
+    case eCSSProperty_padding :
+      rv = GetPadding(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_padding_top :
+      rv = GetPaddingTop(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_padding_bottom :
+      rv = GetPaddingBottom(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_padding_left :
+      rv = GetPaddingLeft(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_padding_right :
+      rv = GetPaddingRight(frame, *getter_AddRefs(val)); break;
+
+      // Border properties
+    case eCSSProperty_border_collapse :
+      rv = GetBorderCollapse(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_border_top_style :
+      rv = GetBorderTopStyle(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_border_bottom_style :
+      rv = GetBorderBottomStyle(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_border_left_style :
+      rv = GetBorderLeftStyle(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_border_right_style :
+      rv = GetBorderRightStyle(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_border_top_width :
+      rv = GetBorderTopWidth(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_border_bottom_width :
+      rv = GetBorderBottomWidth(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_border_left_width :
+      rv = GetBorderLeftWidth(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_border_right_width :
+      rv = GetBorderRightWidth(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_border_top_color :
+      rv = GetBorderTopColor(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_border_bottom_color :
+      rv = GetBorderBottomColor(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_border_left_color :
+      rv = GetBorderLeftColor(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_border_right_color :
+      rv = GetBorderRightColor(frame, *getter_AddRefs(val)); break;
+
+      // Margin properties
+    case eCSSProperty_margin_top :
+      rv = GetMarginTopWidth(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_margin_bottom :
+      rv = GetMarginBottomWidth(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_margin_left :
+      rv = GetMarginLeftWidth(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_margin_right :
+      rv = GetMarginRightWidth(frame, *getter_AddRefs(val)); break;
+
+      // Marker property
+    case eCSSProperty_marker_offset :
+      rv = GetMarkerOffset(frame, *getter_AddRefs(val)); break;
+
+      // Outline properties
+    case eCSSProperty_outline_width :
+      rv = GetOutlineWidth(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_outline_style :
+      rv = GetOutlineStyle(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_outline_color:
+      rv = GetOutlineColor(frame, *getter_AddRefs(val)); break;
+
+      // Z-Index property
+    case eCSSProperty_z_index:
+      rv = GetZIndex(frame, *getter_AddRefs(val)); break;
+    default :
+      break;
   }
 
   if (val) {
@@ -1004,6 +1031,34 @@ nsComputedDOMStyle::GetBorderRightWidth(nsIFrame *aFrame,
    return GetBorderWidthFor(NS_SIDE_RIGHT,aFrame,aValue);
 }
 
+nsresult
+nsComputedDOMStyle::GetBorderTopColor(nsIFrame *aFrame, 
+                                      nsIDOMCSSPrimitiveValue*& aValue)
+{
+  return GetBorderColorFor(NS_SIDE_TOP,aFrame,aValue);
+}
+
+nsresult 
+nsComputedDOMStyle::GetBorderBottomColor(nsIFrame *aFrame, 
+                                         nsIDOMCSSPrimitiveValue*& aValue)
+{
+  return GetBorderColorFor(NS_SIDE_BOTTOM,aFrame,aValue);
+}
+
+nsresult 
+nsComputedDOMStyle::GetBorderLeftColor(nsIFrame *aFrame, 
+                                       nsIDOMCSSPrimitiveValue*& aValue)
+{
+   return GetBorderColorFor(NS_SIDE_LEFT,aFrame,aValue);
+}
+
+nsresult 
+nsComputedDOMStyle::GetBorderRightColor(nsIFrame *aFrame, 
+                                        nsIDOMCSSPrimitiveValue*& aValue)
+{
+   return GetBorderColorFor(NS_SIDE_RIGHT,aFrame,aValue);
+}
+
 nsresult 
 nsComputedDOMStyle::GetMarginWidth(nsIFrame *aFrame, 
                               nsIDOMCSSPrimitiveValue*& aValue)
@@ -1111,9 +1166,12 @@ nsComputedDOMStyle::GetOutlineColor(nsIFrame *aFrame,
   GetStyleData(eStyleStruct_Outline,(const nsStyleStruct*&)outline,aFrame);
   
   if(outline) {
-    nscolor color; nsAutoString hex;
+    nscolor color;
     outline->GetOutlineColor(color);
+    
+    nsAutoString hex;
     ColorToHex(color,hex);
+
     val->SetString(hex);
   }
   else {
@@ -1847,10 +1905,6 @@ nsComputedDOMStyle::GetAbsoluteFrameRect(nsIFrame *aFrame, nsRect& aRect)
     document->FlushPendingNotifications();
   }
 
-  // Get it's origin
-  nsPoint origin;
-  aFrame->GetOrigin(origin);
-
   // Get the union of all rectangles in this and continuation frames
   nsIFrame* next = aFrame;
   do {
@@ -1859,18 +1913,22 @@ nsComputedDOMStyle::GetAbsoluteFrameRect(nsIFrame *aFrame, nsRect& aRect)
     aRect.UnionRect(aRect, rect);
     next->GetNextInFlow(&next);
   } while (nsnull != next);
-        
-  nsIFrame* parent;
-  aFrame->GetParent(&parent);
-  while (parent) {
-    // Add the parent's origin to our own to get to the
-    // right coordinate system
-    nsPoint parentOrigin;
-    parent->GetOrigin(parentOrigin);
-    origin += parentOrigin;
 
-    parent->GetParent(&parent);
-  }
+  nsIFrame* frame = aFrame;
+  nsPoint origin(0,0),tmp(0,0);
+  nsFrameState position;
+  do {
+    frame->GetOrigin(tmp);
+    origin += tmp;
+       
+    frame->GetFrameState(&position);
+    if(position & NS_FRAME_OUT_OF_FLOW) {
+      break; // Do not include parent if absolutely positioned - Bug 49942
+    }
+    // Add the parent's origin to our own to 
+    // get to the right coordinate system
+    frame->GetParent(&frame);
+  } while(frame);
 
   // For the origin, add in the border for the frame
   const nsStyleBorder* border;
@@ -1927,7 +1985,7 @@ nsComputedDOMStyle::GetStyleData(nsStyleStructID aID,
     if(pctx) {
       nsCOMPtr<nsIStyleContext> sctx;
       if(!mPseudo) {
-      pctx->ResolveStyleContextFor(mContent, nsnull, PR_FALSE,getter_AddRefs(sctx));
+        pctx->ResolveStyleContextFor(mContent, nsnull, PR_FALSE,getter_AddRefs(sctx));
       }
       else {
         pctx->ResolvePseudoStyleContextFor(mContent, mPseudo, nsnull, PR_FALSE,getter_AddRefs(sctx));
@@ -2034,6 +2092,31 @@ nsComputedDOMStyle::GetBorderWidthFor(PRUint8 aSide,
         NS_WARNING("double check the unit");
         break;          
     }
+  }
+
+  return val->QueryInterface(NS_GET_IID(nsIDOMCSSPrimitiveValue),(void **)&aValue);   
+}
+
+nsresult 
+nsComputedDOMStyle::GetBorderColorFor(PRUint8 aSide,
+                                      nsIFrame *aFrame, 
+                                      nsIDOMCSSPrimitiveValue*& aValue)
+{
+  nsROCSSPrimitiveValue* val=GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleBorder* border = nsnull;
+  GetStyleData(eStyleStruct_Border,(const nsStyleStruct*&)border,aFrame);
+  
+  if(border) {
+    nscolor color; 
+    border->GetBorderColor(aSide,color);
+    nsAutoString hex;
+    ColorToHex(color,hex);
+    val->SetString(hex);
+  }
+  else {
+    val->SetString("");
   }
 
   return val->QueryInterface(NS_GET_IID(nsIDOMCSSPrimitiveValue),(void **)&aValue);   
