@@ -96,25 +96,6 @@ extern "C" char *fe_GetConfigDir(void) {
 }
 #endif /* XP_UNIX */
 
-/////////////////////////////////////////////////////////////////////////////////
-// This function is used to load and prepare an nntp url which can be run by
-// a transport instance. For different protocols, you'll have different url
-// functions like this one in the test harness...
-/////////////////////////////////////////////////////////////////////////////////
-nsresult NS_NewNntpUrl(nsINntpUrl ** aResult, const nsString urlSpec)
-{
-	nsresult rv = NS_OK;
-
-	 nsNntpUrl * nntpUrl = new nsNntpUrl(nsnull, nsnull);
-	 if (nntpUrl)
-	 {
-		nntpUrl->ParseURL(urlSpec);  // load the spec we were given...
-		rv = nntpUrl->QueryInterface(nsINntpUrl::IID(), (void **) aResult);
-	 }
-
-	 return rv;
-}
-
 // temporary hack...we don't have escape search url in the new world yet....
 char *MSG_EscapeSearchUrl (const char *nntpCommand)
 {
@@ -429,13 +410,13 @@ nsresult nsNntpTestDriver::OnListAllGroups()
 	PL_strcpy(m_urlString, m_urlSpec);
 	PL_strcat(m_urlString, "/");
 	PL_strcat(m_urlString, "*");
-	
+
 	if (m_protocolInitialized == PR_FALSE)
 		InitializeProtocol(m_urlString);
 
 	m_url->SetSpec(m_urlString); // reset spec
     printf("Running %s\n", m_urlString);
-	rv = m_nntpProtocol->LoadURL(m_url);
+	rv = m_nntpProtocol->LoadURL(m_url, nsnull /* display stream */);
 	return rv;
 }
 
@@ -457,7 +438,7 @@ nsresult nsNntpTestDriver::OnListIDs()
     if (NS_SUCCEEDED(rv)) {
         SetupUrl(m_userData);
         printf("Running %s\n", m_urlString);
-        rv = m_nntpProtocol->LoadURL(m_url);
+        rv = m_nntpProtocol->LoadURL(m_url, nsnull /* display stream */);
     }
 
 	return rv;
@@ -511,7 +492,7 @@ nsresult nsNntpTestDriver::OnSearch()
 	if (NS_SUCCEEDED(rv)) {
         SetupUrl(m_userData);
         printf("Running %s\n", m_urlString);
-        rv = m_nntpProtocol->LoadURL(m_url);
+        rv = m_nntpProtocol->LoadURL(m_url, nsnull /* display stream */);
     }
     
 	return rv;
@@ -579,7 +560,7 @@ nsNntpTestDriver::OnPostMessage()
     m_url->SetMessageToPost(post);
     
     printf("Running %s\n", m_urlString);
-    rv = m_nntpProtocol->LoadURL(m_url);
+    rv = m_nntpProtocol->LoadURL(m_url, nsnull /* display stream */);
 
 	return rv;
 }
@@ -604,7 +585,7 @@ nsresult nsNntpTestDriver::OnGetGroup()
     if (NS_SUCCEEDED(rv)) {
         SetupUrl(m_userData);
         printf("Running %s\n", m_urlString);
-		rv = m_nntpProtocol->LoadURL(m_url);
+		rv = m_nntpProtocol->LoadURL(m_url, nsnull /* displayStream */);
 	} // if user provided the data...
 
 	return rv;
