@@ -77,7 +77,7 @@ public:
    * Notifies the Combobox the List was selected
    *
    */
-  NS_IMETHOD ListWasSelected(nsIPresContext* aPresContext) = 0;
+  NS_IMETHOD ListWasSelected(nsIPresContext* aPresContext, PRBool aForceUpdate) = 0;
 
   /**
    * Asks the Combobox to update the display frame
