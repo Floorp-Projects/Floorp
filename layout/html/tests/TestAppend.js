@@ -16,6 +16,13 @@
  * Reserved.
  */
 
+var count = 0;
+
+function trace(msg)
+{
+  dump("test " + msg + " (" + count + ")\n");
+}
+
 function findBody(node)
 {
   var children = node.getChildNodes();
@@ -36,34 +43,60 @@ function findBody(node)
   return null;
 }
 
-function AppendABlock(node, tag, text)
+function AppendTest(parent, kidTag, grandKidTag, empty, asWeGo)
 {
-  var block2 = document.createElement("P", null);
-  var block3 = document.createElement(tag, null);
-  var text1 = document.createTextNode(text);
-  block3.insertBefore(text1, null);
-  block2.insertBefore(block3, null);
-  node.insertBefore(block2, null);
+  trace("enter [" + kidTag + "," + (grandKidTag?grandKidTag:"") + "]");
+  var kid = document.createElement(kidTag, null);
+  if (asWeGo) {
+    parent.insertBefore(kid, null);
+  }
+  if (null != grandKidTag) {
+    var grandKid = document.createElement(grandKidTag, null);
+    if (empty) {
+      kid.insertBefore(grandKid, null);
+    }
+    else {
+      if (asWeGo) {
+        kid.insertBefore(grandKid, null);
+      }
+      var text = document.createTextNode("inner text");
+      grandKid.insertBefore(text, null);
+      if (!asWeGo) {
+        kid.insertBefore(grandKid, null);
+      }
+    }
+  }
+  if (!asWeGo) {
+    parent.insertBefore(kid, null);
+  }
+  trace("exit [" + kidTag + "," + (grandKidTag?grandKidTag:"") + "]");
+  count++;
 }
 
-// Append an empty block to the end of the body
-var body = findBody(document.documentElement)
-var block = document.createElement("P", null);
-body.insertBefore(block, null);
+// Append empty block to a X
+function RunTests(parent, asWeGo)
+{
+  // Append empty block to a X
+  AppendTest(parent, "P", null, true, asWeGo);
 
-// Append a block with something in it to the body
-AppendABlock(body, "B", "Old bold text");
+  // Append empty inline to a X
+  AppendTest(parent, "I", null, true, asWeGo);
 
-// Append an inline container with something in it to the body; then
-// append a piece of text after that; do this 10 times.
-for (i = 0; i < 10; i++) {
-  var block4 = document.createElement("I", null);
-  var text2 = document.createTextNode(i + " Italic text");
-  block4.insertBefore(text2, null);
-  body.insertBefore(block4, null);
-  var text3 = document.createTextNode(" (regular text) ");
-  body.insertBefore(text3, null);
+  // Append non-empty block to a X
+  AppendTest(parent, "P", "P", false, asWeGo);
+  AppendTest(parent, "P", "I", false, asWeGo);
+
+  // Append non-empty inline to a X
+  AppendTest(parent, "I", "P", false, asWeGo);
+  AppendTest(parent, "I", "TT", false, asWeGo);
 }
 
-// Append a block with something in it to the body
-AppendABlock(body, "B", "New bold text");
+var body = findBody(document.documentElement);
+
+RunTests(body, false);
+RunTests(body, true);
+
+var inline = document.createElement("SPAN", null);
+body.insertBefore(inline, null);
+RunTests(inline, false);
+RunTests(inline, true);
