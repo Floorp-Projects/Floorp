@@ -39,6 +39,7 @@ var key = {
  "?navigator_pref_languages":  "chrome://help/locale/cs_nav_prefs_navigator.html#Languages",
  "?navigator_pref_helper_applications": "chrome://help/locale/cs_nav_prefs_navigator.html#Helper",
  "?navigator_pref_internet_searching": "chrome://help/locale/cs_nav_prefs_navigator.html#Internet",
+ "?navigator_pref_smart_browsing": "chrome://locale/locale/cs_nav_prefs_navigator.html#Smart",  
 
  "?advanced_pref":  "chrome://help/locale/cs_nav_prefs_advanced.html",
  "?advanced_pref_advanced":  "chrome://help/locale/cs_nav_prefs_advanced.html#Advanced",
