@@ -4264,7 +4264,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
     addedBullet = PR_TRUE;
   }
   nsSize maxElementSize;
-  aLineLayout.VerticalAlignFrames(aLine->mBounds, maxElementSize);
+  aLineLayout.VerticalAlignFrames(aLine, maxElementSize);
   // See if we're shrink wrapping the width
   if (aState.mShrinkWrapWidth) {
     // When determining the line's width we also need to include any

@@ -30,6 +30,7 @@
 #include "nsIStyleContext.h"
 #include "nsIFontMetrics.h"
 #include "nsIRenderingContext.h"
+#include "nsLayoutAtoms.h"
 
 //FOR SELECTION
 #include "nsIContent.h"
@@ -59,6 +60,7 @@ public:
                     nsHTMLReflowMetrics& aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
+  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
 protected:
   virtual ~BRFrame();
 };
@@ -110,7 +112,9 @@ BRFrame::Reflow(nsIPresContext* aPresContext,
     aMetrics.maxElementSize->width = 0;
     aMetrics.maxElementSize->height = 0;
   }
-  aMetrics.height = 0;
+  aMetrics.height = 0; // BR frames with height 0 are ignored in quirks
+                       // mode by nsLineLayout::VerticalAlignFrames .
+                       // However, it's not always 0.  See below.
   aMetrics.width = 0;
   aMetrics.ascent = 0;
   aMetrics.descent = 0;
@@ -119,23 +123,41 @@ BRFrame::Reflow(nsIPresContext* aPresContext,
   // behave like a BR.
   nsLineLayout* ll = aReflowState.mLineLayout;
   if (ll) {
-    if (ll->CanPlaceFloaterNow()) {
+    if ( ll->CanPlaceFloaterNow() || ll->InStrictMode() ) {
       // If we can place a floater on the line now it means that the
       // line is effectively empty (there may be zero sized compressed
       // white-space frames on the line, but they are to be ignored).
       //
-      // Because this frame is going to terminate the line we know
+      // If this frame is going to terminate the line we know
       // that nothing else will go on the line. Therefore, in this
-      // case only, we provide some height for the BR frame so that it
-      // creates some vertical whitespace.
+      // case, we provide some height for the BR frame so that it
+      // creates some vertical whitespace.  It's necessary to use the
+      // line-height rather than the font size because the
+      // quirks-mode fix that doesn't apply the block's min
+      // line-height makes this necessary to make BR cause a line
+      // of the full line-height
+
+      // We also do this in strict mode because BR should act like a
+      // normal inline frame.  That line-height is used is important
+      // here for cases where the line-height is less that 1.
       const nsStyleFont* font = (const nsStyleFont*)
         mStyleContext->GetStyleData(eStyleStruct_Font);
       aReflowState.rendContext->SetFont(font->mFont);
       nsCOMPtr<nsIFontMetrics> fm;
       aReflowState.rendContext->GetFontMetrics(*getter_AddRefs(fm));
       if (fm) {
-        fm->GetHeight(aMetrics.height);
-        aMetrics.ascent = aMetrics.height;
+        nscoord ascent, descent;
+        fm->GetMaxAscent(ascent);
+        fm->GetMaxDescent(descent);
+        nscoord logicalHeight =
+          aReflowState.CalcLineHeight(aPresContext,
+                                       aReflowState.rendContext,
+                                       this);
+        nscoord leading = logicalHeight - ascent - descent;
+        aMetrics.height = logicalHeight;
+        aMetrics.ascent = ascent + (leading/2);
+        aMetrics.descent = logicalHeight - aMetrics.ascent;
+                      // = descent + (leading/2), but without rounding error
       }
       else {
         aMetrics.ascent = aMetrics.height = 0;
@@ -174,6 +196,14 @@ BRFrame::Reflow(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+BRFrame::GetFrameType(nsIAtom** aType) const
+{
+  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
+  *aType = nsLayoutAtoms::brFrame;
+  NS_ADDREF(*aType);
+  return NS_OK;
+}
 
 NS_IMETHODIMP BRFrame::GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
                                                      const nsPoint&  aPoint,
