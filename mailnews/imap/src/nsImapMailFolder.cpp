@@ -5556,10 +5556,13 @@ PRBool nsMsgIMAPFolderACL::SetFolderRightsForUser(const char *userName, const ch
   else
     ourUserName.Assign(userName);
 
+  if(ourUserName.IsEmpty())
+    return ret;
+
   ToLowerCase(ourUserName);
   char *rightsWeOwn = PL_strdup(rights);
   nsCStringKey hashKey(ourUserName);
-  if (rightsWeOwn && !ourUserName.IsEmpty())
+  if (rightsWeOwn)
   {
     char *oldValue = (char *) m_rightsHash->Get(&hashKey);
     if (oldValue)
@@ -5573,8 +5576,7 @@ PRBool nsMsgIMAPFolderACL::SetFolderRightsForUser(const char *userName, const ch
     ret = (m_rightsHash->Put(&hashKey, rightsWeOwn) == 0);
   }
   
-  if (!ourUserName.IsEmpty() && 
-    (myUserName.Equals(ourUserName) || ourUserName.Equals(IMAP_ACL_ANYONE_STRING)))
+  if (myUserName.Equals(ourUserName) || ourUserName.EqualsLiteral(IMAP_ACL_ANYONE_STRING))
   {
     // if this is setting an ACL for me, cache it in the folder pref flags
     UpdateACLCache();
