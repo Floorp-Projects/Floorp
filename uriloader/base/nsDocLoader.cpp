@@ -1777,7 +1777,8 @@ nsDocumentBindInfo::OnStartRequest(nsIURI* aURL, const char *aContentType)
     rv = channel->GetURI(getter_AddRefs(aURL));
     if (NS_FAILED(rv)) return rv;
     char* aContentType = nsnull;
-    channel->GetContentType(&aContentType);
+    rv = channel->GetContentType(&aContentType);
+    if (NS_FAILED(rv)) return rv;
 #endif // NECKO
 
 #if defined(DEBUG)
