@@ -67,6 +67,7 @@ ACCESSIBILITY_ATOM(label, "label")
 ACCESSIBILITY_ATOM(ol, "ol")
 ACCESSIBILITY_ATOM(optgroup, "optgroup")
 ACCESSIBILITY_ATOM(option, "option")
+ACCESSIBILITY_ATOM(select, "select")
 ACCESSIBILITY_ATOM(ul, "ul")
 
   // Alphabetical list of attributes

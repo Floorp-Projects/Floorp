@@ -598,6 +598,37 @@ NS_IMETHODIMP nsHTMLSelectOptionAccessible::GetPreviousSibling(nsIAccessible **_
   return NS_OK;
 } 
 
+nsIFrame* nsHTMLSelectOptionAccessible::GetBoundsFrame()
+{
+  nsCOMPtr<nsIContent> selectContent(do_QueryInterface(mDOMNode));
+
+  while (selectContent && selectContent->Tag() != nsAccessibilityAtoms::select) {
+    selectContent = selectContent->GetParent();
+  }
+
+  nsCOMPtr<nsIDOMNode> selectNode(do_QueryInterface(selectContent));
+  if (selectNode) {
+    nsCOMPtr<nsIAccessibilityService> accService(do_GetService("@mozilla.org/accessibilityService;1"));
+    nsCOMPtr<nsIAccessible> selAcc;
+    if (NS_SUCCEEDED(accService->GetAccessibleFor(selectNode, 
+                                                  getter_AddRefs(selAcc)))) {
+      PRUint32 state;
+      selAcc->GetState(&state);
+      if (state & STATE_COLLAPSED) {
+        nsCOMPtr<nsIPresShell> presShell(GetPresShell());
+        if (!presShell) {
+          return nsnull;
+        }
+        nsIFrame *selectFrame = nsnull;
+        presShell->GetPrimaryFrameFor(selectContent, &selectFrame);
+        return selectFrame;
+      }
+    }
+  }
+
+  return nsAccessible::GetBoundsFrame();
+}
+
 /**
   * As a nsHTMLSelectOptionAccessible we can have the following states:
   *     STATE_SELECTABLE

@@ -38,17 +38,19 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsXULSelectAccessible.h"
+#include "nsArray.h"
+#include "nsIContent.h"
 #include "nsIDOMXULMenuListElement.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIDOMXULSelectCntrlEl.h"
 #include "nsIDOMXULTextboxElement.h"
+#include "nsIPresShell.h"
 #include "nsIServiceManager.h"
-#include "nsArray.h"
 
 /**
   * Selects, Listboxes and Comboboxes, are made up of a number of different
-  *  widgets, some of which are shared between the two. This file contains 
+  *  widgets, some of which are shared between the two. This file contains
   *  all of the widgets for both of the Selects, for XUL only.
   *
   *  Listbox:
@@ -69,7 +71,7 @@
 /** ------------------------------------------------------ */
 
 // Helper methos
-nsXULSelectableAccessible::nsXULSelectableAccessible(nsIDOMNode* aDOMNode, 
+nsXULSelectableAccessible::nsXULSelectableAccessible(nsIDOMNode* aDOMNode,
                                                      nsIWeakReference* aShell):
 nsAccessibleWrap(aDOMNode, aShell)
 {
@@ -152,7 +154,7 @@ NS_IMETHODIMP nsXULSelectableAccessible::GetSelectedChildren(nsIArray **_retval)
   }
 
   PRUint32 uLength = 0;
-  selectedAccessibles->GetLength(&uLength); 
+  selectedAccessibles->GetLength(&uLength);
   if (uLength != 0) { // length of nsIArray containing selected options
     *_retval = selectedAccessibles;
     NS_ADDREF(*_retval);
@@ -263,7 +265,7 @@ NS_IMETHODIMP nsXULSelectableAccessible::SelectAllSelection(PRBool *_retval)
 /** ----- nsXULSelectListAccessible ----- */
 
 /** Default Constructor */
-nsXULSelectListAccessible::nsXULSelectListAccessible(nsIDOMNode* aDOMNode, 
+nsXULSelectListAccessible::nsXULSelectListAccessible(nsIDOMNode* aDOMNode,
                                                      nsIWeakReference* aShell)
 :nsAccessibleWrap(aDOMNode, aShell)
 {
@@ -281,7 +283,7 @@ NS_IMETHODIMP nsXULSelectListAccessible::GetRole(PRUint32 *_retval)
   *     STATE_EXTSELECTABLE
   */
 NS_IMETHODIMP nsXULSelectListAccessible::GetState(PRUint32 *_retval)
-{ 
+{
   *_retval = 0;
   nsAutoString selectionTypeString;
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
@@ -325,6 +327,33 @@ NS_IMETHODIMP nsXULSelectOptionAccessible::GetState(PRUint32 *_retval)
     *_retval |= STATE_SELECTED;
 
   return NS_OK;
+}
+
+nsIFrame* nsXULSelectOptionAccessible::GetBoundsFrame()
+{
+  nsCOMPtr<nsIContent> menuListContent(do_QueryInterface(mDOMNode));
+
+  while (menuListContent) {
+    nsCOMPtr<nsIDOMXULMenuListElement> menuListControl =
+      do_QueryInterface(menuListContent);
+    if (menuListControl) {
+      PRBool isOpen;
+      menuListControl->GetOpen(&isOpen);
+      if (!isOpen) {
+        nsCOMPtr<nsIPresShell> presShell(GetPresShell());
+        if (!presShell) {
+          return nsnull;
+        }
+        nsIFrame *menuListFrame = nsnull;
+        presShell->GetPrimaryFrameFor(menuListContent, &menuListFrame);
+        return menuListFrame;
+      }
+      break;
+    }
+    menuListContent = menuListContent->GetParent();
+  }
+
+  return nsXULMenuitemAccessible::GetBoundsFrame();
 }
 
 /** ------------------------------------------------------ */
@@ -480,12 +509,12 @@ NS_IMETHODIMP nsXULListitemAccessible::GetActionName(PRUint8 index, nsAString& _
     // check or uncheck
     PRUint32 state;
     GetState(&state);
-                                                                                                                                         
+
     if (state & STATE_CHECKED)
       _retval = NS_LITERAL_STRING("uncheck");
     else
       _retval = NS_LITERAL_STRING("check");
-                                                                                                                                         
+
     return NS_OK;
   }
   return NS_ERROR_INVALID_ARG;

@@ -147,9 +147,8 @@ NS_IMETHODIMP nsHTMLAreaAccessible::GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *w
 
   // Put coords in absolute screen coords
   GetScreenOrigin(presContext, frame, &orgRectPixels);
-  GetScrollOffset(&pageRectPixels);
-  *x += orgRectPixels.x - pageRectPixels.x;
-  *y += orgRectPixels.y - pageRectPixels.y;
+  *x += orgRectPixels.x;
+  *y += orgRectPixels.y;
 
   return NS_OK;
 }

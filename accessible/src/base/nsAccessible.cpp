@@ -640,64 +640,33 @@ void nsAccessible::GetScreenOrigin(nsPresContext *aPresContext, nsIFrame *aFrame
 {
   aRect->x = aRect->y = 0;
 
-  if (aPresContext) {
-    PRInt32 offsetX = 0;
-    PRInt32 offsetY = 0;
-    nsIWidget* widget = nsnull;
-    
-    while (aFrame) {
-      // Look for a widget so we can get screen coordinates
-      nsIView* view = aFrame->GetViewExternal();
-      if (view) {
-        widget = view->GetWidget();
-        if (widget)
-          break;
-      }
-      // No widget yet, so count up the coordinates of the frame 
-      nsPoint origin = aFrame->GetPosition();
-      offsetX += origin.x;
-      offsetY += origin.y;
+  if (!aPresContext) {
+    return;
+  }
+
+  nsPoint origin(0,0);
+  nsIView *view = aFrame->GetViewExternal();
+  if (!view) {
+    aFrame->GetOffsetFromView(aPresContext, origin, &view);
+    NS_ASSERTION(view, "Frame has no view");
+  }
+
+  nsPoint viewOrigin(0,0);
+  nsIWidget *widget = view->GetNearestWidget(&viewOrigin);
+  origin += viewOrigin;
+
+  // Get the scale from that Presentation Context
+  float t2p = aPresContext->TwipsToPixels();
+
+  // Convert to pixels using that scale
+  origin.x = NSTwipsToIntPixels(origin.x, t2p);
+  origin.y = NSTwipsToIntPixels(origin.y, t2p);
   
-      aFrame = aFrame->GetParent();
-    }
-    
-    if (widget) {
-      // Get the scale from that Presentation Context
-      float t2p;
-      t2p = aPresContext->TwipsToPixels();
-    
-      // Convert to pixels using that scale
-      offsetX = NSTwipsToIntPixels(offsetX, t2p);
-      offsetY = NSTwipsToIntPixels(offsetY, t2p);
-      
-      // Add the widget's screen coordinates to the offset we've counted
-      nsRect oldBox(0,0,0,0);
-      widget->WidgetToScreen(oldBox, *aRect);
-      aRect->x += offsetX;
-      aRect->y += offsetY;
-    }
-  }
+  // Add the widget's screen coordinates to the offset we've counted
+  //nsIWidget *widget = view->GetWidget();
+  NS_ASSERTION(widget, "No widget for top view");
+  widget->WidgetToScreen(nsRect(origin.x, origin.y, 1, 1), *aRect);
 }
-
-void nsAccessible::GetScrollOffset(nsRect *aRect)
-{
-  nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mWeakShell));
-  if (shell) {
-    nsCOMPtr<nsIDOMDocumentView> docView(do_QueryInterface(shell->GetDocument()));
-    if (!docView) 
-      return;
-
-    nsCOMPtr<nsIDOMAbstractView> abstractView;
-    docView->GetDefaultView(getter_AddRefs(abstractView));
-    if (!abstractView) 
-      return;
-
-    nsCOMPtr<nsIDOMWindowInternal> window(do_QueryInterface(abstractView));
-    window->GetPageXOffset(&aRect->x);
-    window->GetPageYOffset(&aRect->y);
-  }
-}
-
 
 void nsAccessible::GetBoundsRect(nsRect& aTotalBounds, nsIFrame** aBoundingFrame)
 {
@@ -828,12 +797,8 @@ NS_IMETHODIMP nsAccessible::GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PR
 
   nsRect orgRectPixels, pageRectPixels;
   GetScreenOrigin(presContext, aBoundingFrame, &orgRectPixels);
-  PRUint32 role;
-  GetRole(&role);
-  if (role != ROLE_PANE)
-    GetScrollOffset(&pageRectPixels);  // Add scroll offsets if not the document itself
-  *x += orgRectPixels.x - pageRectPixels.x;
-  *y += orgRectPixels.y - pageRectPixels.y;
+  *x += orgRectPixels.x;
+  *y += orgRectPixels.y;
 
   return NS_OK;
 }
