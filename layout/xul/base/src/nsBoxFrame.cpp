@@ -95,6 +95,9 @@
 #include "nsIScrollableView.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsIWidget.h"
+#include "nsIEventStateManager.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMElement.h"
 #include "nsITheme.h"
 
 // Needed for Print Preview
@@ -390,6 +393,9 @@ nsBoxFrame::Init(nsIPresContext*  aPresContext,
   mMouseThrough = unset;
 
   mInner->UpdateMouseThrough();
+
+  // register access key
+  rv = RegUnregAccessKey(aPresContext, PR_TRUE);
 
   return rv;
 }
@@ -1219,6 +1225,9 @@ nsBoxFrame::Destroy(nsIPresContext* aPresContext)
   if (mState & NS_STATE_IS_ROOT)
       mInner->GetDebugPref(aPresContext);
 
+  // unregister access key
+  RegUnregAccessKey(aPresContext, PR_FALSE);
+
   SetLayoutManager(nsnull);
 
   // recycle the Inner via the shell's arena.
@@ -1359,109 +1368,117 @@ nsBoxFrame::AppendFrames(nsIPresContext* aPresContext,
 
 NS_IMETHODIMP
 nsBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
-                               nsIContent* aChild,
-                               PRInt32 aNameSpaceID,
-                               nsIAtom* aAttribute,
-                               PRInt32 aModType, 
-                               PRInt32 aHint)
+                             nsIContent* aChild,
+                             PRInt32 aNameSpaceID,
+                             nsIAtom* aAttribute,
+                             PRInt32 aModType,
+                             PRInt32 aHint)
 {
-    nsresult rv = nsContainerFrame::AttributeChanged(aPresContext, aChild,
-                                              aNameSpaceID, aAttribute, aModType, aHint);
+  nsresult rv = nsContainerFrame::AttributeChanged(aPresContext, aChild,
+                                                   aNameSpaceID, aAttribute,
+                                                   aModType, aHint);
 
-    if (aAttribute == nsXULAtoms::mousethrough) {
-       mInner->UpdateMouseThrough();
-    }
+  if (aAttribute == nsHTMLAtoms::width       ||
+      aAttribute == nsHTMLAtoms::height      ||
+      aAttribute == nsHTMLAtoms::align       ||
+      aAttribute == nsHTMLAtoms::valign      ||
+      aAttribute == nsHTMLAtoms::left        ||
+      aAttribute == nsHTMLAtoms::top         ||
+      aAttribute == nsXULAtoms::flex         ||
+      aAttribute == nsXULAtoms::orient       ||
+      aAttribute == nsXULAtoms::pack         ||
+      aAttribute == nsXULAtoms::dir          ||
+      aAttribute == nsXULAtoms::mousethrough ||
+      aAttribute == nsXULAtoms::equalsize) {
 
-    if (aAttribute == nsXULAtoms::ordinal) {
-      nsCOMPtr<nsIPresShell> shell;
-      aPresContext->GetShell(getter_AddRefs(shell));
-      nsBoxLayoutState state(shell);
-      
-      nsIBox* parent;
-      GetParentBox(&parent);
-      parent->RelayoutChildAtOrdinal(state, this);
-      nsIFrame* parentFrame;
-      parent->GetFrame(&parentFrame);
-      nsBoxFrame* parentBoxFrame = (nsBoxFrame*) parentFrame;
-      if (parentBoxFrame)
-        parentBoxFrame->CheckFrameOrder();
-      parent->MarkDirty(state);
-    } else if (aAttribute == nsHTMLAtoms::width ||
-        aAttribute == nsHTMLAtoms::height ||
-        aAttribute == nsHTMLAtoms::align  ||
+    if (aAttribute == nsHTMLAtoms::align  ||
         aAttribute == nsHTMLAtoms::valign ||
-        aAttribute == nsHTMLAtoms::left ||
-        aAttribute == nsHTMLAtoms::top ||
-        aAttribute == nsXULAtoms::flex ||
-        aAttribute == nsXULAtoms::orient ||
-        aAttribute == nsXULAtoms::pack ||
-        aAttribute == nsXULAtoms::dir ||
-        aAttribute == nsXULAtoms::equalsize) {
+        aAttribute == nsXULAtoms::orient  ||
+        aAttribute == nsXULAtoms::pack    ||
+        aAttribute == nsXULAtoms::dir     ||
+        aAttribute == nsXULAtoms::debug) {
 
-       if (aAttribute == nsXULAtoms::orient || aAttribute == nsXULAtoms::dir || 
-           aAttribute == nsXULAtoms::debug || aAttribute == nsHTMLAtoms::align || 
-           aAttribute == nsHTMLAtoms::valign || aAttribute == nsXULAtoms::pack) {
-          mInner->mValign = nsBoxFrame::vAlign_Top;
-          mInner->mHalign = nsBoxFrame::hAlign_Left;
+      mInner->mValign = nsBoxFrame::vAlign_Top;
+      mInner->mHalign = nsBoxFrame::hAlign_Left;
 
-          PRBool orient = PR_TRUE;
-          GetInitialOrientation(orient); 
-          if (orient)
-            mState |= NS_STATE_IS_HORIZONTAL;
-          else
-            mState &= ~NS_STATE_IS_HORIZONTAL;
+      PRBool orient = PR_TRUE;
+      GetInitialOrientation(orient); 
+      if (orient)
+        mState |= NS_STATE_IS_HORIZONTAL;
+      else
+        mState &= ~NS_STATE_IS_HORIZONTAL;
 
-          PRBool normal = PR_TRUE;
-          GetInitialDirection(normal);
-          if (normal)
-            mState |= NS_STATE_IS_DIRECTION_NORMAL;
-          else
-            mState &= ~NS_STATE_IS_DIRECTION_NORMAL;
+      PRBool normal = PR_TRUE;
+      GetInitialDirection(normal);
+      if (normal)
+        mState |= NS_STATE_IS_DIRECTION_NORMAL;
+      else
+        mState &= ~NS_STATE_IS_DIRECTION_NORMAL;
 
-          GetInitialVAlignment(mInner->mValign);
-          GetInitialHAlignment(mInner->mHalign);
-  
-          PRBool equalSize = PR_FALSE;
-          GetInitialEqualSize(equalSize); 
-          if (equalSize)
-                mState |= NS_STATE_EQUAL_SIZE;
-            else
-                mState &= ~NS_STATE_EQUAL_SIZE;
- 
-          PRBool debug = mState & NS_STATE_SET_TO_DEBUG;
-          PRBool debugSet = mInner->GetInitialDebug(debug); 
-          if (debugSet) {
-                mState |= NS_STATE_DEBUG_WAS_SET;
-                if (debug)
-                    mState |= NS_STATE_SET_TO_DEBUG;
-                else
-                    mState &= ~NS_STATE_SET_TO_DEBUG;
-          } else {
-                mState &= ~NS_STATE_DEBUG_WAS_SET;
-          }
+      GetInitialVAlignment(mInner->mValign);
+      GetInitialHAlignment(mInner->mHalign);
 
+      PRBool equalSize = PR_FALSE;
+      GetInitialEqualSize(equalSize); 
+      if (equalSize)
+        mState |= NS_STATE_EQUAL_SIZE;
+      else
+        mState &= ~NS_STATE_EQUAL_SIZE;
 
-          PRBool autostretch = mState & NS_STATE_AUTO_STRETCH;
-          GetInitialAutoStretch(autostretch);
-          if (autostretch)
-                mState |= NS_STATE_AUTO_STRETCH;
-             else
-                mState &= ~NS_STATE_AUTO_STRETCH;
-       } 
+      PRBool debug = mState & NS_STATE_SET_TO_DEBUG;
+      PRBool debugSet = mInner->GetInitialDebug(debug);
+      if (debugSet) {
+        mState |= NS_STATE_DEBUG_WAS_SET;
 
-       if (aAttribute == nsHTMLAtoms::left || aAttribute == nsHTMLAtoms::top)
-         mState &= ~NS_STATE_STACK_NOT_POSITIONED;
+        if (debug)
+          mState |= NS_STATE_SET_TO_DEBUG;
+        else
+          mState &= ~NS_STATE_SET_TO_DEBUG;
+      } else {
+        mState &= ~NS_STATE_DEBUG_WAS_SET;
+      }
 
+      PRBool autostretch = mState & NS_STATE_AUTO_STRETCH;
+      GetInitialAutoStretch(autostretch);
+      if (autostretch)
+        mState |= NS_STATE_AUTO_STRETCH;
+      else
+        mState &= ~NS_STATE_AUTO_STRETCH;
     }
-          
-          
-  
+    else if (aAttribute == nsHTMLAtoms::left ||
+             aAttribute == nsHTMLAtoms::top) {
+      mState &= ~NS_STATE_STACK_NOT_POSITIONED;
+    }
+    else if (aAttribute == nsXULAtoms::mousethrough) {
+      mInner->UpdateMouseThrough();
+    }
+
     nsCOMPtr<nsIPresShell> shell;
     aPresContext->GetShell(getter_AddRefs(shell));
     nsBoxLayoutState state(aPresContext);
     MarkDirty(state);
+  }
+  else if (aAttribute == nsXULAtoms::ordinal) {
+    nsCOMPtr<nsIPresShell> shell;
+    aPresContext->GetShell(getter_AddRefs(shell));
+    nsBoxLayoutState state(shell);
+    
+    nsIBox* parent;
+    GetParentBox(&parent);
+    parent->RelayoutChildAtOrdinal(state, this);
+    nsIFrame* parentFrame;
+    parent->GetFrame(&parentFrame);
+    nsBoxFrame* parentBoxFrame = (nsBoxFrame*) parentFrame;
+    if (parentBoxFrame)
+      parentBoxFrame->CheckFrameOrder();
+    parent->MarkDirty(state);
+  }
+  // If the accesskey changed, register for the new value
+  // The old value has been unregistered in nsXULElement::SetAttr
+  else if (aAttribute == nsXULAtoms::accesskey) {
+    RegUnregAccessKey(aPresContext, PR_TRUE);
+  }
 
-  
   return rv;
 }
 
@@ -2799,6 +2816,54 @@ nsBoxFrame::CreateViewForFrame(nsIPresContext* aPresContext,
     }
   }
   return NS_OK;
+}
+
+// If you make changes to this function, check its counterparts
+// in nsTextBoxFrame and nsAreaFrame
+nsresult
+nsBoxFrame::RegUnregAccessKey(nsIPresContext* aPresContext,
+                              PRBool aDoReg)
+{
+  // if we have no content, we can't do anything
+  if (!mContent)
+    return NS_ERROR_FAILURE;
+
+  // find out what type of element this is
+  nsCOMPtr<nsIAtom> atom;
+  nsresult rv = mContent->GetTag(*getter_AddRefs(atom));
+  if (NS_FAILED(rv))
+    return rv;
+
+  // only support accesskeys for the following elements
+  if (atom != nsXULAtoms::button &&
+      atom != nsXULAtoms::checkbox &&
+      atom != nsXULAtoms::radio) {
+
+    return NS_OK;
+  }
+
+  nsAutoString accessKey;
+  mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::accesskey, accessKey);
+
+  if (accessKey.IsEmpty())
+    return NS_OK;
+
+  // With a valid PresContext we can get the ESM 
+  // and register the access key
+  nsCOMPtr<nsIEventStateManager> esm;
+  aPresContext->GetEventStateManager(getter_AddRefs(esm));
+
+  rv = NS_OK;
+
+  if (esm) {
+    PRUint32 key = accessKey.First();
+    if (aDoReg)
+      rv = esm->RegisterAccessKey(nsnull, mContent, key);
+    else
+      rv = esm->UnregisterAccessKey(nsnull, mContent, key);
+  }
+
+  return rv;
 }
 
 

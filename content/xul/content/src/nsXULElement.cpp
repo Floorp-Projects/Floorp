@@ -2528,6 +2528,45 @@ nsXULElement::NormalizeAttrString(const nsAReadableString& aStr,
     return nimgr->GetNodeInfo(aStr, nsnull, kNameSpaceID_None, aNodeInfo);
 }
 
+void
+nsXULElement::UnregisterAccessKey(const nsAString& aOldValue)
+{
+    // If someone changes the accesskey, unregister the old one
+    // 
+    if (mDocument && !aOldValue.IsEmpty()) {
+        nsCOMPtr<nsIPresShell> shell;
+        mDocument->GetShellAt(0, getter_AddRefs(shell));
+
+        if (shell) {
+            PRBool validElement = PR_TRUE;
+
+            // find out what type of content node this is
+            nsCOMPtr<nsIAtom> atom;
+            nsresult rv = GetTag(*getter_AddRefs(atom));
+            if (NS_SUCCEEDED(rv) && atom) {
+                if (atom == nsXULAtoms::label) {
+                    // XXXjag a side-effect is that we filter out anonymous <label>s
+                    // in e.g. <menu>, <menuitem>, <button>. These <label>s inherit
+                    // |accesskey| and would otherwise register themselves, overwriting
+                    // the content we really meant to be registered.
+                    if (!HasAttr(kNameSpaceID_None, nsXULAtoms::control))
+                        validElement = PR_FALSE;
+                }
+            }
+
+            if (validElement) {
+                nsCOMPtr<nsIPresContext> presContext;
+                shell->GetPresContext(getter_AddRefs(presContext));
+
+                nsCOMPtr<nsIEventStateManager> esm;
+                presContext->GetEventStateManager(getter_AddRefs(esm));
+
+                nsIContent* content = NS_STATIC_CAST(nsIContent*, this);
+                esm->UnregisterAccessKey(nsnull, content, aOldValue.First());
+            }
+        }
+    }
+}
 
 // XXX attribute code swiped from nsGenericContainerElement
 // this class could probably just use nsGenericContainerElement
@@ -2640,6 +2679,12 @@ nsXULElement::SetAttr(nsINodeInfo* aNodeInfo,
     // Add popup and event listeners
     AddListenerFor(aNodeInfo, PR_TRUE);
 
+    // If the accesskey attribute changes, unregister it here.
+    // It will be registered for the new value in the relevant frames.
+    // Also see nsAreaFrame, nsBoxFrame and nsTextBoxFrame's AttributeChanged
+    if (aNodeInfo->Equals(nsXULAtoms::accesskey, kNameSpaceID_None))
+        UnregisterAccessKey(oldValue);
+
     if (mDocument) {
       nsCOMPtr<nsIBindingManager> bindingManager;
       mDocument->GetBindingManager(getter_AddRefs(bindingManager));
@@ -2664,9 +2709,9 @@ nsXULElement::SetAttr(nsINodeInfo* aNodeInfo,
 
         mutation.mAttrName = attrName;
         if (!oldValue.IsEmpty())
-          mutation.mPrevAttrValue = getter_AddRefs(NS_NewAtom(oldValue));
+          mutation.mPrevAttrValue = dont_AddRef(NS_NewAtom(oldValue));
         if (!aValue.IsEmpty())
-          mutation.mNewAttrValue = getter_AddRefs(NS_NewAtom(aValue));
+          mutation.mNewAttrValue = dont_AddRef(NS_NewAtom(aValue));
         if (modification)
           mutation.mAttrChange = nsIDOMMutationEvent::MODIFICATION;
         else
@@ -2888,6 +2933,12 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID,
 
     nsAutoString oldValue;
     attr->GetValue(oldValue);
+
+    // If the accesskey attribute is removed, unregister it here
+    // Also see nsAreaFrame, nsBoxFrame and nsTextBoxFrame's AttributeChanged
+    if (aNameSpaceID == kNameSpaceID_None &&
+        (aName == nsXULAtoms::accesskey || aName == nsXULAtoms::control))
+        UnregisterAccessKey(oldValue);
 
     // Fire mutation listeners
     if (HasMutationListeners(NS_STATIC_CAST(nsIStyledContent*, this),

@@ -234,6 +234,7 @@ XUL_ATOM(editor, "editor")
 
 // 
 
+XUL_ATOM(control, "control")
 XUL_ATOM(checkbox, "checkbox")
 XUL_ATOM(radio, "radio")
 XUL_ATOM(radiogroup, "radiogroup")

@@ -58,6 +58,23 @@ public:
   
   // nsIFrame
 
+#ifdef INCLUDE_XUL
+  NS_IMETHOD Init(nsIPresContext*  aPresContext,
+                  nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsIStyleContext* aContext,
+                  nsIFrame*        aPrevInFlow);
+
+  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
+
+  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
+                              nsIContent* aChild,
+                              PRInt32 aNameSpaceID,
+                              nsIAtom* aAttribute,
+                              PRInt32 aModType,
+                              PRInt32 aHint);
+#endif
+
   /**
    * Get the "type" of the frame
    *
@@ -73,6 +90,10 @@ public:
 protected:
   nsAreaFrame();
 
+#ifdef INCLUDE_XUL
+  nsresult RegUnregAccessKey(nsIPresContext* aPresContext,
+                             PRBool aDoReg);
+#endif
 };
 
 #endif /* nsAreaFrame_h___ */
