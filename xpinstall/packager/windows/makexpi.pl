@@ -85,7 +85,7 @@ if(-e "install.js")
 # make sure inDestPath exists
 if(!(-e "$inDestPath"))
 {
-  system("mkdir /s $inDestPath");
+  system("mkdir $inDestPath");
 }
 
 print "\n Making $inComponentName.xpi...\n";
