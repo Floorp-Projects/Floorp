@@ -123,7 +123,10 @@ function CompFields2Recipients(msgCompFields, msgType)
 		awSetInputAndPopup(msgCompFields.GetFollowupTo(), "addr_followup", newTreeChildrenNode, templateNode);
 		
         if (top.MAX_RECIPIENTS == 0)
+		{
 		    top.MAX_RECIPIENTS = 1;
+			awDisableAutoComplete(top.MAX_RECIPIENTS);
+		}
 		else
 		{
 		    //If it's a new message, we need to add an extrat empty recipient.
@@ -519,11 +522,15 @@ function DropRecipient(recipient)
 
 function _awDisableAutoComplete(selectElem, inputElem)
 {
-    if (selectElem.data == 'addr_newsgroups' || selectElem.data == 'addr_followup')
-        inputElem.disableAutocomplete = true;
-    else
-        inputElem.disableAutocomplete = false;
+	if (prefs.GetBoolPref("mail.enable_autocomplete"))
+		if (selectElem.data != 'addr_newsgroups' && selectElem.data != 'addr_followup')
+		{
+			inputElem.disableAutocomplete = false;
+			return;
+		}
+	inputElem.disableAutocomplete = true;
 }
+
 function awDisableAutoComplete(rowNumber)
 {
     inputElem = awGetInputElement(rowNumber);
