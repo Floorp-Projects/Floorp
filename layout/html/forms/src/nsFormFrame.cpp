@@ -502,21 +502,25 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
     if (NS_FAILED(result)) return result;
 
     // Now pass on absolute url to the click handler
-    nsIPostData* postData = nsnull;
+    nsIInputStream* postDataStream = nsnull;
     if (isPost) {
       nsresult rv;
       char* postBuffer = data.ToNewCString();
 
-      rv = NS_NewPostData(!isURLEncoded, postBuffer, &postData);
+      rv = NS_NewPostDataStream(!isURLEncoded, postBuffer, 0, &postDataStream);
+
       if (NS_OK != rv) {
         delete [] postBuffer;
       }
 
       /* The postBuffer is now owned by the IPostData instance */
     }    
-    if (handler) 
-      handler->OnLinkClick(mContent, eLinkVerb_Replace, absURLSpec.GetUnicode(), target.GetUnicode(), postData);
-    NS_IF_RELEASE(postData);
+    if (handler) {
+      handler->OnLinkClick(mContent, eLinkVerb_Replace,
+                           absURLSpec.GetUnicode(),
+                           target.GetUnicode(), postDataStream);
+    }
+    NS_IF_RELEASE(postDataStream);
     NS_IF_RELEASE(handler);
 
 DebugPrint("url", absURLSpec);

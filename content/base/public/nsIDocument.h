@@ -65,6 +65,7 @@ class nsIChannel;
 { 0x152ab6e0, 0xff13, 0x11d1, \
   {0xbe, 0xb9, 0x00, 0x80, 0x5f, 0x8a, 0x66, 0xdc} }
 
+#if 0
 class nsIPostData : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IPOSTDATA_IID; return iid; }
@@ -73,6 +74,7 @@ public:
   virtual const char*  GetData() = 0;    // get the file name or raw data
   virtual PRInt32      GetDataLength() = 0;
 };
+#endif
 
 //----------------------------------------------------------------------
 
@@ -321,7 +323,9 @@ extern NS_LAYOUT nsresult
 // Note: The buffer passed into NewPostData(...) becomes owned by the IPostData
 //       instance and is freed when the instance is destroyed...
 //
+#if 0
 extern NS_LAYOUT nsresult
    NS_NewPostData(PRBool aIsFile, char *aData, nsIPostData** aInstancePtrResult);
+#endif
 
 #endif /* nsIDocument_h___ */
