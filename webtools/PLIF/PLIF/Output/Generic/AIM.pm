@@ -48,6 +48,8 @@ sub provides {
             $class->SUPER::provides($service));
 }
 
+__DATA__
+
 sub init {
     my $self = shift;
     my($app) = @_;

@@ -33,15 +33,17 @@ use PLIF::Input::Arguments;
 @ISA = qw(PLIF::Input::Arguments);
 1;
 
+sub applies {
+    return defined($ENV{'GATEWAY_INTERFACE'});
+}
+
+__DATA__
+
 sub init {
     my $self = shift;
     my($app) = @_;
     require MIME::Base64; import MIME::Base64; # DEPENDENCY
     $self->SUPER::init(@_);
-}
-
-sub applies {
-    return defined($ENV{'GATEWAY_INTERFACE'});
 }
 
 sub defaultOutputProtocol {

@@ -33,6 +33,18 @@ use PLIF::Service;
 @ISA = qw(PLIF::Service);
 1;
 
+sub databaseName {
+    my $self = shift;
+    $self->notImplemented();
+}
+
+sub databaseType {
+    my $self = shift;
+    $self->notImplemented();
+}
+
+__DATA__
+
 sub database {
     my $self = shift;
     my($app) = @_;
@@ -75,14 +87,4 @@ sub helper {
         }
     }
     $self->error(1, 'Configuration Error: There is no database helper suitable for the \''.$self->databaseName.'\' database installed.');
-}
-
-sub databaseName {
-    my $self = shift;
-    $self->notImplemented();
-}
-
-sub databaseType {
-    my $self = shift;
-    $self->notImplemented();
 }

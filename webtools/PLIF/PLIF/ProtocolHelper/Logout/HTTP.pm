@@ -33,7 +33,6 @@ use PLIF::Service;
 @ISA = qw(PLIF::Service);
 1;
 
-
 sub provides {
     my $class = shift;
     my($service) = @_;
@@ -43,6 +42,8 @@ sub provides {
             $service eq 'user.fieldRegisterer' or
             $class->SUPER::provides($service));
 }
+
+__DATA__
 
 sub objectProvides {
     my $self = shift;

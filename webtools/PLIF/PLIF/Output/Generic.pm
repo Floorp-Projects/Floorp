@@ -114,6 +114,8 @@ sub protocol {
     return 'generic';
 }
 
+__DATA__
+
 sub serviceInstanceInit {
     my $self = shift;
     $self->SUPER::serviceInstanceInit(@_);

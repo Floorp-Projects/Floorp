@@ -34,6 +34,16 @@ use PLIF::Exception;
 @ISA = qw(PLIF::Database);
 1;
 
+sub class {
+    return 'configuration';
+}
+
+sub type {
+    return 'property';
+}
+
+__DATA__
+
 sub init {
     my $self = shift;
     my($app) = @_;
@@ -43,14 +53,6 @@ sub init {
     # details for all the various databases, including this one, come
     # from the dataSource.configuration data source.
     $self->{'_FILENAME'} = $app->getService('dataSource.configuration')->configurationFilename;
-}
-
-sub class {
-    return 'configuration';
-}
-
-sub type {
-    return 'property';
 }
 
 sub filename {

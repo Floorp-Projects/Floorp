@@ -39,6 +39,8 @@ sub provides {
     return ($service eq 'service.passwords' or $class->SUPER::provides($service));
 }
 
+__DATA__
+
 # sanity checking: |$self->checkPassword($self->newPassword())| should
 # return a true value if everything is behaving itself
 

@@ -48,6 +48,8 @@ sub class {
     return 'default';
 }
 
+__DATA__
+
 sub init {
     my $self = shift;
     $self->SUPER::init(@_);

@@ -46,6 +46,8 @@ sub provides {
     return ($service eq 'string.expander.COSES' or $class->SUPER::provides($service));
 }
 
+__DATA__
+
 sub init {
     my $self = shift;
     my($app) = @_;

@@ -44,6 +44,8 @@ sub protocol {
     $self->notImplemented(); # this must be overriden by descendants
 }
 
+__DATA__
+
 sub serviceInstanceInit {
     my $self = shift;
     my($app) = @_;

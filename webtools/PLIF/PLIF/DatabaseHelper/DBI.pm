@@ -37,6 +37,8 @@ sub databaseType {
     return qw(mysql);
 }
 
+__DATA__
+
 sub tableExists {
     my $self = shift;
     my($app, $database, $table) = @_;

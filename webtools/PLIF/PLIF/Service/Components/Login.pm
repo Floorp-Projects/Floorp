@@ -47,6 +47,8 @@ sub provides {
             $class->SUPER::provides($service));
 }
 
+__DATA__
+
 # this module makes calls to:
 #  input.verify.user.<protocol>
 #  user.login.canLogin.<protocol>

@@ -33,15 +33,17 @@ use PLIF::Input::Default;
 @ISA = qw(PLIF::Input::Default);
 1;
 
+sub applies {
+    return @ARGV > 0;
+}
+
+__DATA__
+
 sub init {
     my $self = shift;
     my($app) = @_;
     $self->SUPER::init(@_);
     require Term::ReadLine; import Term::ReadLine; # DEPENDENCY
-}
-
-sub applies {
-    return @ARGV > 0;
 }
 
 sub splitArguments {

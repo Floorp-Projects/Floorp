@@ -39,6 +39,8 @@ sub applies {
             defined($ENV{'PATH_INFO'}));
 }
 
+__DATA__
+
 sub decodeHTTPArguments {
     my $self = shift;
     $self->SUPER::decodeHTTPArguments(@_);

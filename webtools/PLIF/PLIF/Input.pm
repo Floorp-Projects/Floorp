@@ -45,6 +45,8 @@ sub applies {
     $class->notImplemented(); # this must be overriden by descendants
 }
 
+__DATA__
+
 sub defaultOutputProtocol {
     my $self = shift;
     $self->notImplemented(); # this must be overriden by descendants

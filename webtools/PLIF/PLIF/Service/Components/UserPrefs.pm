@@ -44,6 +44,8 @@ sub provides {
             $class->SUPER::provides($service));
 }
 
+__DATA__
+
 # dispatcher.commands
 sub cmdUserPrefs {
     my $self = shift;

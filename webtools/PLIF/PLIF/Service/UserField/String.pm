@@ -37,4 +37,6 @@ sub type {
     return 'string';
 }
 
+__DATA__
+
 # XXX anything else required here?

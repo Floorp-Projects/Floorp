@@ -37,6 +37,8 @@ sub applies {
     return 1;
 }
 
+__DATA__
+
 sub defaultOutputProtocol {
     return 'stdout';
 }

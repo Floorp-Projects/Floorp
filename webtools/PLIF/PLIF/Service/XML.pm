@@ -39,6 +39,8 @@ sub provides {
     return ($service eq 'service.xml' or $class->SUPER::provides($service));
 }
 
+__DATA__
+
 sub init {
     my $self = shift;
     my($app) = @_;

@@ -33,6 +33,8 @@ use PLIF::Service;
 @ISA = qw(PLIF::Service);
 1;
 
+__DATA__
+
 sub objectProvides {
     my $self = shift;
     my($service) = @_;

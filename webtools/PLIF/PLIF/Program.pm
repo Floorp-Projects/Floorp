@@ -39,6 +39,8 @@ $app->run();
 
 1;
 
+__DATA__
+
 # setup everything (automatically called by the constructor, above)
 sub init {
     my $self = shift;

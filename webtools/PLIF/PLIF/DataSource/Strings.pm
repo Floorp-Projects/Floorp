@@ -48,6 +48,12 @@ sub provides {
             $class->SUPER::provides($service));
 }
 
+sub databaseName {
+    return 'default';
+}
+
+__DATA__
+
 sub init {
     my $self = shift;
     $self->SUPER::init(@_);
@@ -56,10 +62,6 @@ sub init {
     $self->variantsCache({});
     $self->stringsCache({});
     $self->enabled(1);
-}
-
-sub databaseName {
-    return 'default';
 }
 
 # returns ($type, $version, $string)

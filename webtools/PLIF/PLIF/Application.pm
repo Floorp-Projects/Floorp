@@ -33,6 +33,8 @@ use vars qw(@ISA);
 require PLIF::Program; # see note below 
 1;
 
+__DATA__
+
 # Note: this module "require"s PLIF::Program (as opposed to "use"ing
 # it) because that module will try to call 'main'->create, which won't
 # work if the module is parsed during compilation instead of during

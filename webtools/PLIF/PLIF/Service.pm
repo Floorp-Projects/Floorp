@@ -36,6 +36,8 @@ use PLIF;
 # what services the module provides as a service
 sub provides { return 0; } # stub
 
+__DATA__
+
 # what services the module provides as an object
 sub objectProvides {
     my $self = shift;

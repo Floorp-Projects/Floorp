@@ -41,6 +41,8 @@ sub provides {
             $class->SUPER::provides($service));
 }
 
+__DATA__
+
 # Field Factory (Factory for Field Instances)
 #
 # The factory methods below should return service instances (not

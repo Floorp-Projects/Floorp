@@ -38,6 +38,8 @@ sub databaseType {
     return qw(mysql);
 }
 
+__DATA__
+
 sub getUserIDByUsername {
     my $self = shift;
     my($app, $username) = @_;

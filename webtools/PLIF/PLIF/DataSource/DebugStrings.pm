@@ -39,6 +39,8 @@ sub provides {
     return ($service eq 'dataSource.strings.default' or $class->SUPER::provides($service));
 }
 
+__DATA__
+
 sub getDefaultString {
     my $self = shift;
     my($app, $protocol, $string) = @_;

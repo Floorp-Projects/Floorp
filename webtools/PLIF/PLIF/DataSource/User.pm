@@ -43,6 +43,8 @@ sub databaseName {
     return 'default';
 }
 
+__DATA__
+
 sub getUserByUsername {
     my $self = shift;
     my($app, $username) = @_;

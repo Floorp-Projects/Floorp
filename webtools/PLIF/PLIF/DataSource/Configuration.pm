@@ -48,6 +48,7 @@ sub databaseType {
     return 'property';
 }
 
+__DATA__
 
 # Configuration API Implementation Follows
 

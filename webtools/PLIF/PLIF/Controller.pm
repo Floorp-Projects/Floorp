@@ -36,6 +36,8 @@ use PLIF::MagicCollectingArray;
 @ISA = qw(PLIF::Service);
 1;
 
+__DATA__
+
 # setup everything (typically called from the constructor)
 sub init {
     my $self = shift;

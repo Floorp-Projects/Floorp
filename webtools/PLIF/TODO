@@ -1,9 +1,3 @@
-add 
-__DATA__
-to most service files and then make services, during construction,
-call $self->load(), which loads any unloaded __DATA__ blocks in any of
-the module's ISA chain.
-
 
 Move PLIF/Service/Components to PLIF/Component
 Move PLIF/Service/User* to PLIF/Session/*

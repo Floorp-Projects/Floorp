@@ -49,6 +49,8 @@ sub provides {
     return ($service eq 'user.factory' or $class->SUPER::provides($service));
 }
 
+__DATA__
+
 sub getUserByCredentials {
     my $self = shift;
     my($app, $username, $password) = @_;

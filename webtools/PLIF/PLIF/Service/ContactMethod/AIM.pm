@@ -47,6 +47,8 @@ sub provides {
             $class->SUPER::provides($service));
 }
 
+__DATA__
+
 # user.fieldRegisterer
 sub register {
     my $self = shift;

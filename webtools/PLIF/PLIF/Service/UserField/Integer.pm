@@ -37,6 +37,8 @@ sub type {
     return 'integer';
 }
 
+__DATA__
+
 sub validate {
     my $self = shift;
     my($data) = @_;

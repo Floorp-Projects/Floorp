@@ -40,6 +40,8 @@ sub applies {
             $ENV{'REQUEST_METHOD'} eq 'HEAD');
 }
 
+__DATA__
+
 sub decodeHTTPArguments {
     my $self = shift;
     if (defined($ENV{'QUERY_STRING'})) {

@@ -42,6 +42,8 @@ sub applies {
             $ENV{'CONTENT_TYPE'} eq 'text/xml');
 }
 
+__DATA__
+
 sub decodeHTTPArguments {
     my $self = shift;
 

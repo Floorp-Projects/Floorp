@@ -39,17 +39,13 @@ sub provides {
     return ($service eq 'service.www' or $class->SUPER::provides($service));
 }
 
+__DATA__
+
 sub init {
     my $self = shift;
     my($app) = @_;
     $self->SUPER::init(@_);
     require HTML::Entities; import HTML::Entities; # DEPENDENCY
-    require LWP::UserAgent; import LWP::UserAgent; # DEPENDENCY
-    my $ua = LWP::UserAgent->new();
-    $ua->agent($ua->agent . ' (' . $app->name . ')');
-    $ua->timeout(5); # XXX HARDCODED CONSTANT ALERT
-    $ua->env_proxy();
-    $self->ua($ua);
 }
 
 sub get {
@@ -58,6 +54,14 @@ sub get {
     my $request = HTTP::Request->new('GET', $uri);
     if (defined($referrer)) {
         $request->referer($referrer);
+    }
+    if (not exists $self->{'ua'}) {
+        require LWP::UserAgent; import LWP::UserAgent; # DEPENDENCY
+        my $ua = LWP::UserAgent->new();
+        $ua->agent($ua->agent . ' (' . $app->name . ')');
+        $ua->timeout(5); # XXX HARDCODED CONSTANT ALERT
+        $ua->env_proxy();
+        $self->ua($ua);
     }
     my $response = $self->ua->request($request);
     if (wantarray) {

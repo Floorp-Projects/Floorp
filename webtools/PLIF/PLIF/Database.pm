@@ -44,6 +44,8 @@ sub class {
     return 'undefined';
 }
 
+__DATA__
+
 # lastError returns a database-specific error code
 sub lastError {
     my $self = shift;

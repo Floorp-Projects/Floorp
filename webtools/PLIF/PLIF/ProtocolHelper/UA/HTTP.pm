@@ -48,6 +48,8 @@ sub provides {
             $class->SUPER::provides($service));
 }
 
+__DATA__
+
 sub interpretUAString {
     my $self = shift;
     my($userAgent) = @_;

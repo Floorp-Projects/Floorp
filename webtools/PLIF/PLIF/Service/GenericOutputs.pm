@@ -42,6 +42,8 @@ sub provides {
             $class->SUPER::provides($service));
 }
 
+__DATA__
+
 # dispatcher.output.generic
 sub outputAcknowledge {
     my $self = shift;

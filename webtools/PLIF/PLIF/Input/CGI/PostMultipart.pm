@@ -33,13 +33,6 @@ use PLIF::Input::CGI;
 @ISA = qw(PLIF::Input::CGI);
 1;
 
-sub init {
-    my $self = shift;
-    my($app) = @_;
-    require MIME::Parser; import MIME::Parser; # DEPENDENCY
-    $self->SUPER::init(@_);
-}
-
 sub applies {
     my $class = shift;
     return ($class->SUPER::applies(@_) and
@@ -47,6 +40,15 @@ sub applies {
             $ENV{'REQUEST_METHOD'} eq 'POST' and
             defined($ENV{'CONTENT_TYPE'}) and
             $ENV{'CONTENT_TYPE'} =~ m/^multipart\/form-data *;/os);
+}
+
+__DATA__
+
+sub init {
+    my $self = shift;
+    my($app) = @_;
+    require MIME::Parser; import MIME::Parser; # DEPENDENCY
+    $self->SUPER::init(@_);
 }
 
 sub decodeHTTPArguments {

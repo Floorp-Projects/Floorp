@@ -42,6 +42,8 @@ sub applies {
             $ENV{'CONTENT_TYPE'} eq 'application/x-www-form-urlencoded');
 }
 
+__DATA__
+
 sub decodeHTTPArguments {
     my $self = shift;
     local $/ = undef;

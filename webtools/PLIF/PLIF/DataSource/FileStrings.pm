@@ -51,9 +51,13 @@ sub init {
     my $self = shift;
     my($app) = @_;
     $self->SUPER::init(@_);
+    # we have to do the next two lines in before the __DATA__ line,
+    # otherwise __FILE__ is blank of course!
     require File::Basename; import File::Basename; # DEPENDENCY
-    $DIR = dirname(__FILE__);
+    $DIR = dirname(__FILE__) unless defined $DIR;
 }
+
+__DATA__
 
 sub getDefaultString {
     my $self = shift;

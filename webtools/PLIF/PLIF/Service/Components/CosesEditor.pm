@@ -48,6 +48,8 @@ sub provides {
             $class->SUPER::provides($service));
 }
 
+__DATA__
+
 # dispatcher.commands
 sub cmdCosesEditor {
     # warning: this is also called from other methods below

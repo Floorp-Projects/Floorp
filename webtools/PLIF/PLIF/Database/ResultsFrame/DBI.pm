@@ -48,6 +48,8 @@ sub init {
     }
 }
 
+__DATA__
+
 sub lastError {
     my $self = shift;
     return $self->handle->err;

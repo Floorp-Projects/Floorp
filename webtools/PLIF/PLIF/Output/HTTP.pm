@@ -37,6 +37,8 @@ sub protocol {
     return 'http';
 }
 
+__DATA__
+
 sub finaliseHeader {
     my $self = shift;
     print "Content-Type: " . $self->format . "\n";

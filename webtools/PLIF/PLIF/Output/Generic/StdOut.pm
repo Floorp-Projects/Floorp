@@ -41,6 +41,8 @@ sub provides {
             $class->SUPER::provides($service));
 }
 
+__DATA__
+
 sub output {
     my $self = shift;
     my($app, $session, $string) = @_;

@@ -37,6 +37,8 @@ sub databaseType {
     return qw(mysql);
 }
 
+__DATA__
+
 sub getString {
     my $self = shift;
     my($app, $variant, $string) = @_;

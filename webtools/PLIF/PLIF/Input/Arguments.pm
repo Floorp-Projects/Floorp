@@ -33,6 +33,8 @@ use PLIF::Input;
 @ISA = qw(PLIF::Input);
 1;
 
+__DATA__
+
 sub fetchArguments {
     my $self = shift;
     $self->splitArguments();

@@ -42,6 +42,8 @@ sub provides {
             $class->SUPER::provides($service));
 }
 
+__DATA__
+
 sub objectProvides {
     my $self = shift;
     my($service) = @_;

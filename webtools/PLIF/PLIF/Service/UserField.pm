@@ -44,6 +44,13 @@ sub provides {
             $class->SUPER::provides($service));
 }
 
+sub type {
+    my $self = shift;
+    $self->notImplemented();
+}
+
+__DATA__
+
 # the 'data' field of field descriptions means different things
 # depending on the category. For 'contact' category user fields, it
 # represents a string that is prefixed to the data of the user field
@@ -72,11 +79,6 @@ sub init {
     $self->{'_DATAFIELD'} = 'data';
     $self->{'_DELETE'} = 0;
     $self->{'_DIRTY'} = 0;
-}
-
-sub type {
-    my $self = shift;
-    $self->notImplemented();
 }
 
 sub validate {

@@ -32,6 +32,7 @@ use vars qw($AUTOLOAD); # it's a package global
 use POSIX qw(strftime); # timestamps in debug output
 use PLIF::Exception;
 my $DEBUG = 9; # level of warnings and dumps to print to STDERR (none go to user)
+my %MODULES = ('PLIF' => 1);
 1;
 
 # PLIF = Program Logic Insulation Framework
@@ -110,7 +111,25 @@ sub bless {
     my $class = shift;
     my $self = {};
     CORE::bless($self, $class);
+    $self->load($class);
     return $self;
+}
+
+sub load {
+    my $self = shift;
+    my($package) = @_;
+    return if $MODULES{$package};
+    foreach (eval "\@$package\::ISA") {
+        $self->load($_) unless $_ eq __PACKAGE__;
+    }
+    $MODULES{$package} = 1;
+    local $/ = undef;
+    my $data = "package $package;\nuse strict;\n" . eval "<$package\::DATA>";
+    #print STDERR "================================================================================\n$data\n================================================================================\n";
+    eval $data;
+    if ($@) {
+        $self->error(1, "Error while loading '$package': $@");
+    }
 }
 
 # provide method-like access for any scalars in $self

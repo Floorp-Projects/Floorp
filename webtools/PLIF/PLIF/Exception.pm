@@ -312,7 +312,8 @@ sub stringify {
     return $value;
 }
 
-sub arguments($@) {
+sub arguments {
+    return "..."; # disable argument stringification
     my($depth, @values) = @_;
     ++$depth;
     my @arguments;
@@ -358,7 +359,7 @@ sub arguments($@) {
                 $argument = $value;
                 $argument =~ s/([\\\'])/\\$1/gos;
                 $argument =~ s/\n/\\n/gos;
-                $argument =~ s/([\x00-\x1f])/'\\x' . sprintf('%04x', $1)/gose;
+                $argument =~ s/([\x00-\x1f])/'\\x' . sprintf('%04x', ord($1))/gose;
                 if (length($argument) > seMaxLength) {
                     substr($argument, seMaxLength) = seEllipsis;
                 }
