@@ -135,14 +135,18 @@ public class Interpreter
         Icode_REG_STR2                  = BASE_ICODE + 48,
         Icode_REG_STR4                  = BASE_ICODE + 49,
 
+    // Version of getvar/setvar that read var index directly from bytecode
+        Icode_GETVAR1               = BASE_ICODE + 50,
+        Icode_SETVAR1               = BASE_ICODE + 51,
+
     // Last icode
-        MAX_ICODE                       = BASE_ICODE + 49;
+        MAX_ICODE                       = BASE_ICODE + 51;
 
     static {
         if (MAX_ICODE > 127) {
             // This allows to drop (0xFF & ...) in the interpreter loop
-            System.err.println("MAX_ICODE should be <= 128");
-            throw new IllegalStateException("MAX_ICODE should be <= 128");
+            System.err.println("MAX_ICODE should be <= 127");
+            throw new IllegalStateException("MAX_ICODE should be <= 127");
         }
     }
 
@@ -1394,6 +1398,12 @@ public class Interpreter
         switch (op) {
           case Token.GETVAR:
           case Token.SETVAR:
+            if (varIndex < 128) {
+                iCodeTop = addIcode(op == Token.GETVAR
+                                    ? Icode_GETVAR1 : Icode_SETVAR1, iCodeTop);
+                return addByte(varIndex, iCodeTop);
+            }
+            // fallthrough
           case Icode_VARINC:
           case Icode_VARDEC:
             return addIndexOp(op, varIndex, iCodeTop);
@@ -1408,32 +1418,17 @@ public class Interpreter
             index = itsStrings.size();
             itsStrings.put(str, index);
         }
-        int indexSize;
-        int indexOp;
         if (index < 4) {
-            indexOp = Icode_REG_STR_C0 + index;
-            indexSize = 0;
+            iCodeTop = addIcode(Icode_REG_STR_C0 + index, iCodeTop);
         } else if (index <= 0xFF) {
-            indexOp = Icode_REG_STR1;
-            indexSize = 1;
-         } else if (index <= 0xFFFF) {
-            indexOp = Icode_REG_STR2;
-            indexSize = 2;
-         } else {
-            indexOp = Icode_REG_STR4;
-            indexSize = 4;
-        }
-        iCodeTop = addIcode(indexOp, iCodeTop);
-        switch (indexSize) {
-          case 1:
+            iCodeTop = addIcode(Icode_REG_STR1, iCodeTop);
             iCodeTop = addByte(index, iCodeTop);
-            break;
-          case 2:
+         } else if (index <= 0xFFFF) {
+            iCodeTop = addIcode(Icode_REG_STR2, iCodeTop);
             iCodeTop = addShort(index, iCodeTop);
-            break;
-          case 4:
+         } else {
+            iCodeTop = addIcode(Icode_REG_STR4, iCodeTop);
             iCodeTop = addInt(index, iCodeTop);
-            break;
         }
         if (op > BASE_ICODE) {
             iCodeTop = addIcode(op, iCodeTop);
@@ -1446,34 +1441,18 @@ public class Interpreter
     private int addIndexOp(int op, int index, int iCodeTop)
     {
         if (index < 0) Kit.codeBug();
-        int indexSize;
-        int indexOp;
         if (index < 6) {
-            indexOp = Icode_REG_IND_C0 + index;
-            indexSize = 0;
+            iCodeTop = addIcode(Icode_REG_IND_C0 + index, iCodeTop);
         } else if (index <= 0xFF) {
-            indexOp = Icode_REG_IND1;
-            indexSize = 1;
-         } else if (index <= 0xFFFF) {
-            indexOp = Icode_REG_IND2;
-            indexSize = 2;
-         } else {
-            indexOp = Icode_REG_IND4;
-            indexSize = 4;
-        }
-        iCodeTop = addIcode(indexOp, iCodeTop);
-        switch (indexSize) {
-          case 1:
+            iCodeTop = addIcode(Icode_REG_IND1, iCodeTop);
             iCodeTop = addByte(index, iCodeTop);
-            break;
-          case 2:
+         } else if (index <= 0xFFFF) {
+            iCodeTop = addIcode(Icode_REG_IND2, iCodeTop);
             iCodeTop = addShort(index, iCodeTop);
-            break;
-          case 4:
+         } else {
+            iCodeTop = addIcode(Icode_REG_IND4, iCodeTop);
             iCodeTop = addInt(index, iCodeTop);
-            break;
         }
-
         if (op > BASE_ICODE) {
             iCodeTop = addIcode(op, iCodeTop);
         } else {
@@ -1620,6 +1599,8 @@ public class Interpreter
                     case Icode_REG_STR1:         return "LOAD_STR1";
                     case Icode_REG_STR2:         return "LOAD_STR2";
                     case Icode_REG_STR4:         return "LOAD_STR4";
+                    case Icode_GETVAR1:      return "GETVAR1";
+                    case Icode_SETVAR1:      return "SETVAR1";
                 }
             }
             return "<UNKNOWN ICODE: "+icode+">";
@@ -1723,32 +1704,44 @@ public class Interpreter
                         String str = strings[0xFF & iCode[pc]];
                         out.println(tname + " \"" + str + '"');
                         ++pc;
+                        break;
                     }
                     case Icode_REG_STR2: {
                         String str = strings[getIndex(iCode, pc)];
                         out.println(tname + " \"" + str + '"');
                         pc += 2;
+                        break;
                     }
                     case Icode_REG_STR4: {
                         String str = strings[getInt(iCode, pc)];
                         out.println(tname + " \"" + str + '"');
                         pc += 4;
+                        break;
                     }
                     case Icode_REG_IND1: {
                         indexReg = 0xFF & iCode[pc];
                         out.println(tname+" "+indexReg);
                         ++pc;
+                        break;
                     }
                     case Icode_REG_IND2: {
                         indexReg = getIndex(iCode, pc);
                         out.println(tname+" "+indexReg);
                         pc += 2;
+                        break;
                     }
                     case Icode_REG_IND4: {
                         indexReg = getInt(iCode, pc);
                         out.println(tname+" "+indexReg);
                         pc += 4;
+                        break;
                     }
+                    case Icode_GETVAR1:
+                    case Icode_SETVAR1:
+                        indexReg = iCode[pc];
+                        ++pc;
+                        out.println(tname+" "+indexReg);
+                        break;
                 }
                 if (old_pc + icodeLength != pc) Kit.codeBug();
             }
@@ -1830,6 +1823,11 @@ public class Interpreter
             case Icode_REG_STR4:
                 // int string index
                 return 1 + 4;
+
+            case Icode_GETVAR1:
+            case Icode_SETVAR1:
+                // byte var index
+                return 1 + 1;
 
             case Icode_LINE :
                 // line number
@@ -2600,6 +2598,9 @@ switch (op) {
     case Icode_NAMEDEC :
         stack[++stackTop] = ScriptRuntime.postIncrDecr(scope, stringReg, op == Icode_NAMEINC);
         continue Loop;
+    case Icode_SETVAR1:
+        indexReg = iCode[pc++];
+        // fallthrough
     case Token.SETVAR :
         if (!useActivationVars) {
             stack[indexReg] = stack[stackTop];
@@ -2610,6 +2611,9 @@ switch (op) {
             activationPut(fnOrScript, scope, indexReg, val);
         }
         continue Loop;
+    case Icode_GETVAR1:
+        indexReg = iCode[pc++];
+        // fallthrough
     case Token.GETVAR :
         ++stackTop;
         if (!useActivationVars) {
