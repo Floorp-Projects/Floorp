@@ -13,4 +13,4 @@ nsToken.h
 nsIDTDDebug.h
 nsIDTD.h
 CNavDTD.h
-CRTFDTD.h
+CRtfDTD.h
