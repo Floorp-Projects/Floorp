@@ -118,6 +118,9 @@
 #include "plbase64.h"
 #include "nsIUTF8ConverterService.h"
 #include "nsUConvCID.h"
+#ifdef XP_MACOSX
+#include "nsIUnicodeNormalizer.h"
+#endif
 
 // Defines....
 static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
@@ -3583,55 +3586,59 @@ nsresult nsMsgCompose::NotifyStateListeners(TStateListenerNotification aNotifica
   return NS_OK;
 }
 
-nsresult nsMsgCompose::AttachmentPrettyName(const char* scheme, const char* charset, nsACString& _retval)
+nsresult nsMsgCompose::AttachmentPrettyName(const char* url, const char* charset, nsAString& _retval)
 {
   nsresult rv;
+  nsCAutoString unescapedURL;
 
-  nsCOMPtr<nsIUTF8ConverterService> utf8Cvt =
-    do_GetService(NS_UTF8CONVERTERSERVICE_CONTRACTID);
+  nsCOMPtr<nsIUTF8ConverterService> utf8Cvt (do_GetService(NS_UTF8CONVERTERSERVICE_CONTRACTID));
+
   NS_ENSURE_TRUE(utf8Cvt, NS_ERROR_UNEXPECTED);
  
-  nsCAutoString utf8Scheme;
-
-  if (PL_strncasestr(scheme, "file:", 5)) 
+  if (PL_strncasestr(url, "file:", 5)) 
   {
-    // first try, filesystem character encoding
-    rv = utf8Cvt->ConvertURISpecToUTF8(nsDependentCString(scheme), 
-         nsMsgI18NFileSystemCharset(), utf8Scheme);
+    rv = utf8Cvt->ConvertURISpecToUTF8(nsDependentCString(url), 
+         nsMsgI18NFileSystemCharset(), unescapedURL);
     if (NS_FAILED(rv))
     {
-      // try |charset| if it's set. otherwise, UTF-8. 
-      rv = utf8Cvt->ConvertURISpecToUTF8(nsDependentCString(scheme), 
-           (!charset || !*charset) ? "UTF-8" : charset, utf8Scheme);
-      NS_ENSURE_SUCCESS(rv, rv);
+      rv = utf8Cvt->ConvertURISpecToUTF8(nsDependentCString(url), 
+           (!charset || !*charset) ? "UTF-8" : charset, unescapedURL);
+      if (NS_FAILED(rv)) {
+        NS_WARNING("URL unescaping/charset conversion failed.");
+        unescapedURL = url;
+      }
     }
-
-    nsCOMPtr<nsIURI> uri;  
-    rv = NS_NewURI(getter_AddRefs(uri), utf8Scheme);
-    nsCOMPtr<nsIURL> url (do_QueryInterface(uri, &rv));
-    _retval.Truncate();
-    if (NS_SUCCEEDED(rv)) {
-      nsCAutoString leafName;  
-      rv = url->GetFileName(leafName); // leafName is in UTF-8 (escaped).
-      if (NS_SUCCEEDED(rv))
-        NS_UnescapeURL(leafName.get(), leafName.Length(),
-                       esc_SkipControl || esc_AlwaysCopy, _retval);
-    }
-    return rv;
+    nsFileURL fileUrl(unescapedURL.get());
+    nsFileSpec fileSpec(fileUrl);
+    char* leafName = fileSpec.GetLeafName();
+    NS_ENSURE_TRUE(leafName && *leafName, NS_ERROR_UNEXPECTED);
+#ifdef XP_MACOSX
+    nsAutoString decomposedName;
+    CopyUTF8toUTF16(leafName, decomposedName);
+    nsCOMPtr<nsIUnicodeNormalizer> normalizer (do_GetService(NS_UNICODE_NORMALIZER_CONTRACTID));
+    if (normalizer)
+      normalizer->NormalizeUnicodeNFC(decomposedName, _retval);
+    else
+      _retval = decomposedName;
+#else
+    CopyUTF8toUTF16(leafName, _retval);
+#endif
+    nsCRT::free(leafName);
+    return NS_OK;
   }
 
-  // To work around a mysterious bug in VC++ 6.
-  const char* cset = (!charset || !*charset) ? "UTF-8" : charset;
-  rv = utf8Cvt->ConvertURISpecToUTF8(nsDependentCString(scheme), 
-                                     cset, utf8Scheme);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Some ASCII characters still need to be escaped.
-  NS_UnescapeURL(utf8Scheme.get(), utf8Scheme.Length(),
-                 esc_SkipControl || esc_AlwaysCopy, _retval);
-  if (PL_strncasestr(scheme, "http:", 5)) 
-    _retval.Cut(0, 7);
+  rv = utf8Cvt->ConvertURISpecToUTF8(nsDependentCString(url), 
+    (!charset || !*charset) ? "UTF-8" : charset, unescapedURL);
+  if (NS_FAILED(rv))
+  {
+    NS_WARNING("URL unescaping/charset conversion failed.");
+    unescapedURL = url;
+  }
   
+  if (PL_strncasestr(unescapedURL.get(), "http:", 5))
+    unescapedURL.Cut(0, 7);
+
+  CopyUTF8toUTF16(unescapedURL, _retval);
   return NS_OK;
 }
 
