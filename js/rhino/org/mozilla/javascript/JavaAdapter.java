@@ -74,11 +74,18 @@ public class JavaAdapter extends ScriptableObject {
         return res;
     }
 
+    public static Object getAdapterSelf(Class adapterClass, Object adapter)
+        throws NoSuchFieldException, IllegalAccessException
+    {
+        Field self = adapterClass.getDeclaredField("self");
+        return self.get(adapter);
+    }
+
     public static Object js_JavaAdapter(Context cx, Object[] args, 
                                         Function ctorObj, boolean inNewExpr)
         throws InstantiationException, NoSuchMethodException, 
                IllegalAccessException, InvocationTargetException,
-               ClassNotFoundException
+               ClassNotFoundException, NoSuchFieldException
     {
         Class superClass = Object.class;
         Class[] intfs = new Class[args.length-1];
@@ -112,8 +119,8 @@ public class JavaAdapter extends ScriptableObject {
         
         Class[] ctorParms = { Scriptable.class };
         Object[] ctorArgs = { obj };
-        Object v = adapterClass.getConstructor(ctorParms).newInstance(ctorArgs);
-        return setAdapterProto(obj,v);
+        Object adapter = adapterClass.getConstructor(ctorParms).newInstance(ctorArgs);
+        return getAdapterSelf(adapterClass, adapter);
     }
 
     public static Class createAdapterClass(Context cx, Scriptable jsObj,
