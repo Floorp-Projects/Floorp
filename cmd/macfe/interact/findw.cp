@@ -84,9 +84,13 @@ void CFindWindow::FinishCreateSelf()
 void CFindWindow::RegisterViewTypes()
 {
 	RegisterClass_(CFindWindow);
+	
+	#ifdef EDITOR
+	RegisterClass_(CComposeFindWindow);
+	#endif
+	
 	#ifdef MOZ_MAIL_NEWS
 	RegisterClass_(LMailNewsFindWindow);
-	RegisterClass_(CComposeFindWindow);
 	#endif
 }
 
@@ -231,6 +235,9 @@ void LMailNewsFindWindow::GetDialogValues()
 	sFindInHeaders = ( fFindInHeaders->GetValue() != 0 );
 }
 
+
+#endif // MOZ_MAIL_NEWS
+
 # ifdef EDITOR
 # pragma mark -
 
@@ -279,10 +286,9 @@ void CComposeFindWindow::ListenToMessage(MessageT inMessage, void* ioParam)
 		{
 			this->GetDialogValues();
 			sViewBeingSearched->DoFind();
-//			ListenToMessage( cmd_Close, NULL );
 			break;
 		}
-		
+
 		case 'Repl':
 		case 'RepA':
 		case 'RepN':
@@ -301,13 +307,7 @@ void CComposeFindWindow::ListenToMessage(MessageT inMessage, void* ioParam)
 			}
 			break;
 		}
-		
-		case msg_Cancel:
-		{
-			LDialogBox::ListenToMessage( cmd_Close, ioParam );
-			break;
-		}
-		
+
 		default:
 		{
 			LDialogBox::ListenToMessage(inMessage, ioParam);
@@ -318,4 +318,3 @@ void CComposeFindWindow::ListenToMessage(MessageT inMessage, void* ioParam)
 
 
 # endif // EDITOR
-#endif // MOZ_MAIL_NEWS
