@@ -63,8 +63,13 @@
     No requests.
   </p>
 [% ELSE %]
+  [% PROCESS start_new_table %]
   [% FOREACH request = requests %]
-    [% PROCESS start_new_table IF request.$group_field != group_value %]
+    [% IF request.$group_field != group_value %]
+      </table>
+      [% PROCESS start_new_table %]
+      [% group_value = request.$group_field %]
+    [% END %]
     <tr>
       [% FOREACH column = display_columns %]
         [% NEXT IF column == group_field || excluded_columns.contains(column) %]
@@ -146,8 +151,7 @@
 [% PROCESS global/footer.html.tmpl %]
 
 [% BLOCK start_new_table %]
-  [% "</table>" UNLESS group_value == "" %]
-  <h3>[% column_headers.$group_field %]: [% request.$group_field FILTER html %]</h3>
+  <h3>[% column_headers.$group_field %]: [% (request.$group_field || "None") FILTER html %]</h3>
   <table class="requests" cellspacing="0" cellpadding="4" border="1">
     <tr>
       [% FOREACH column = display_columns %]
@@ -155,7 +159,6 @@
         <th>[% column_headers.$column %]</th>
       [% END %]
     </tr>
-  [% group_value = request.$group_field %]
 [% END %]
 
 [% BLOCK display_type %]
