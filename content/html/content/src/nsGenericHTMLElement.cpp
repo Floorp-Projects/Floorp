@@ -2793,26 +2793,6 @@ nsGenericHTMLElement::ValueOrPercentOrProportionalToString(const nsHTMLValue& aV
 
 PRBool
 nsGenericHTMLElement::ParseValue(const nsAString& aString, PRInt32 aMin,
-                                 nsHTMLValue& aResult, nsHTMLUnit aValueUnit)
-{
-  nsAutoString str(aString);
-  PRInt32 ec, val = str.ToInteger(&ec);
-  if (NS_OK == ec) {
-    if (val < aMin) val = aMin;
-    if (eHTMLUnit_Pixel == aValueUnit) {
-      aResult.SetPixelValue(val);
-    }
-    else {
-      aResult.SetIntValue(val, aValueUnit);
-    }
-    return PR_TRUE;
-  }
-
-  return PR_FALSE;
-}
-
-PRBool
-nsGenericHTMLElement::ParseValue(const nsAString& aString, PRInt32 aMin,
                                  PRInt32 aMax,
                                  nsHTMLValue& aResult, nsHTMLUnit aValueUnit)
 {

@@ -202,7 +202,7 @@ nsHTMLOListElement::StringToAttribute(nsIAtom* aAttribute,
     }
   }
   else if (aAttribute == nsHTMLAtoms::start) {
-    if (ParseValue(aValue, 1, aResult, eHTMLUnit_Integer)) {
+    if (ParseValue(aValue, aResult, eHTMLUnit_Integer)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }

@@ -262,17 +262,22 @@ nsBulletFrame::Paint(nsIPresContext*      aPresContext,
       break;
 
     case NS_STYLE_LIST_STYLE_MOZ_ARABIC_INDIC:
-      GetListItemText(aPresContext, *myList, text);
-      charType = eCharType_ArabicNumber;
+      if (GetListItemText(aPresContext, *myList, text))
+        charType = eCharType_ArabicNumber;
+      else
+        charType = eCharType_EuropeanNumber;
       break;
 
     case NS_STYLE_LIST_STYLE_HEBREW:
       aRenderingContext.GetHints(hints);
       isBidiSystem = (hints & NS_RENDERING_HINT_BIDI_REORDERING);
       if (!isBidiSystem) {
-        charType = eCharType_RightToLeft;
-        level = 1;
-        GetListItemText(aPresContext, *myList, text);
+        if (GetListItemText(aPresContext, *myList, text)) {
+          charType = eCharType_RightToLeft;
+          level = 1;
+        } else {
+          charType = eCharType_EuropeanNumber;
+        }
 
         if (NS_STYLE_DIRECTION_RTL == vis->mDirection) {
           text.Cut(0, 1);
@@ -336,7 +341,16 @@ nsBulletFrame::Paint(nsIPresContext*      aPresContext,
     case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ER:
     case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ET:
       aPresContext->GetMetricsFor(myFont->mFont, getter_AddRefs(fm));
+#ifdef IBMBIDI
+      // If we can't render our numeral using the chars in the numbering
+      // system, we'll be using "decimal"...
+      PRBool usedChars =
+#endif // IBMBIDI
       GetListItemText(aPresContext, *myList, text);
+#ifdef IBMBIDI
+      if (!usedChars)
+        charType = eCharType_EuropeanNumber;
+#endif
       aRenderingContext.SetFont(fm);
       nscoord ascent;
       fm->GetMaxAscent(ascent);
@@ -397,9 +411,6 @@ nsBulletFrame::SetListItemOrdinal(PRInt32 aNextOrdinal,
         if (eHTMLUnit_Integer == value.GetUnit()) {
           // Use ordinal specified by the value attribute
           mOrdinal = value.GetIntValue();
-          if (mOrdinal <= 0) {
-            mOrdinal = 1;
-          }
         }
       }
     }
@@ -414,35 +425,51 @@ nsBulletFrame::SetListItemOrdinal(PRInt32 aNextOrdinal,
 // XXX change roman/alpha to use unsigned math so that maxint and
 // maxnegint will work
 
-
-static void DecimalToText(PRInt32 ordinal, nsString& result)
+/**
+ * For all functions below, a return value of PR_TRUE means that we
+ * could represent mOrder in the desired numbering system.  PR_FALSE
+ * means we had to fall back to decimal
+ */
+static PRBool DecimalToText(PRInt32 ordinal, nsString& result)
 {
    char cbuf[40];
    PR_snprintf(cbuf, sizeof(cbuf), "%ld", ordinal);
    result.AppendWithConversion(cbuf);
+   return PR_TRUE;
 }
-static void DecimalLeadingZeroToText(PRInt32 ordinal, nsString& result)
+static PRBool DecimalLeadingZeroToText(PRInt32 ordinal, nsString& result)
 {
    char cbuf[40];
    PR_snprintf(cbuf, sizeof(cbuf), "%02ld", ordinal);
    result.AppendWithConversion(cbuf);
+   return PR_TRUE;
 }
-static void OtherDecimalToText(PRInt32 ordinal, PRUnichar zeroChar, nsString& result)
+static PRBool OtherDecimalToText(PRInt32 ordinal, PRUnichar zeroChar, nsString& result)
 {
    PRUnichar diff = zeroChar - PRUnichar('0');
-   DecimalToText(ordinal, result); 
-   PRUnichar* p = (PRUnichar*)result.get();
+   DecimalToText(ordinal, result);
+   PRUnichar* p = NS_CONST_CAST(PRUnichar*, result.get());
+   if (ordinal < 0) {
+     // skip the leading '-'
+     ++p;
+   }     
    for(; nsnull != *p ; p++) 
       *p += diff;
+   return PR_TRUE;
 }
-static void TamilToText(PRInt32 ordinal,  nsString& result)
+static PRBool TamilToText(PRInt32 ordinal,  nsString& result)
 {
    PRUnichar diff = 0x0BE6 - PRUnichar('0');
    DecimalToText(ordinal, result); 
+   if (ordinal < 1 || ordinal > 9999) {
+     // Can't do those in this system.
+     return PR_FALSE;
+   }
    PRUnichar* p = (PRUnichar*)result.get();
    for(; nsnull != *p ; p++) 
       if(*p != PRUnichar('0'))
          *p += diff;
+   return PR_TRUE;
 }
 
 
@@ -451,10 +478,11 @@ static const char* gUpperRomanCharsA = "IXCM";
 static const char* gLowerRomanCharsB = "vld?";
 static const char* gUpperRomanCharsB = "VLD?";
 
-static void RomanToText(PRInt32 ordinal, nsString& result, const char* achars, const char* bchars)
+static PRBool RomanToText(PRInt32 ordinal, nsString& result, const char* achars, const char* bchars)
 {
-  if (ordinal <= 0) {
-    ordinal = 1;
+  if (ordinal < 1) {
+    DecimalToText(ordinal, result);
+    return PR_FALSE;
   }
   nsAutoString addOn, decStr;
   decStr.AppendInt(ordinal, 10);
@@ -491,6 +519,7 @@ static void RomanToText(PRInt32 ordinal, nsString& result, const char* achars, c
     }
     result.Append(addOn);
   }
+  return PR_TRUE;
 }
 
 #define ALPHA_SIZE 26
@@ -665,17 +694,19 @@ static PRUnichar gEthiopicHalehameTiEtChars[ETHIOPIC_HALEHAME_TI_ET_CHARS_SIZE] 
 
 
 // We know cjk-ideographic need 31 characters to display 99,999,999,999,999,999
-// georgian and armenian need 6 at most
+// georgian needs 6 at most
+// armenian needs 12 at most
 // hebrew may need more...
 
 #define NUM_BUF_SIZE 34 
 
-static void CharListToText(PRInt32 ordinal, nsString& result, const PRUnichar* chars, PRInt32 aBase)
+static PRBool CharListToText(PRInt32 ordinal, nsString& result, const PRUnichar* chars, PRInt32 aBase)
 {
   PRUnichar buf[NUM_BUF_SIZE];
   PRInt32 idx = NUM_BUF_SIZE;
-  if (ordinal <= 0) {
-    ordinal = 1;
+  if (ordinal < 1) {
+    DecimalToText(ordinal, result);
+    return PR_FALSE;
   }
   do {
     ordinal--; // a == 0
@@ -684,6 +715,7 @@ static void CharListToText(PRInt32 ordinal, nsString& result, const PRUnichar* c
     ordinal /= aBase ;
   } while ( ordinal > 0);
   result.Append(buf+idx,NUM_BUF_SIZE-idx);
+  return PR_TRUE;
 }
 
 
@@ -723,10 +755,10 @@ static PRUnichar gCJKIdeographic10KUnit3[4] =
   0x000, 0x4E07, 0x5104, 0x5146
 };
 
-static void CJKIdeographicToText(PRInt32 ordinal, nsString& result, 
-                                 const PRUnichar* digits,
-                                 const PRUnichar *unit, 
-                                 const PRUnichar* unit10k)
+static PRBool CJKIdeographicToText(PRInt32 ordinal, nsString& result, 
+                                   const PRUnichar* digits,
+                                   const PRUnichar *unit, 
+                                   const PRUnichar* unit10k)
 {
 // In theory, we need the following if condiction,
 // However, the limit, 10 ^ 16, is greater than the max of PRUint32
@@ -738,6 +770,10 @@ static void CJKIdeographicToText(PRInt32 ordinal, nsString& result,
 // } 
 // else 
 // {
+  if (ordinal < 0) {
+    DecimalToText(ordinal, result);
+    return PR_FALSE;
+  }
   PRUnichar c10kUnit = 0;
   PRUnichar cUnit = 0;
   PRUnichar cDigit = 0;
@@ -776,12 +812,12 @@ static void CJKIdeographicToText(PRInt32 ordinal, nsString& result,
       c10kUnit =  0;
     }
     ordinal /= 10;
-    ud++;
+    ++ud;
 
   } while( ordinal > 0);
   result.Append(buf+idx,NUM_BUF_SIZE-idx);
 // }
-
+  return PR_TRUE;
 }
 
 #define HEBREW_THROSAND_SEP 0x0020
@@ -797,8 +833,22 @@ static PRUnichar gHebrewDigit[22] =
 0x05E7, 0x05E8, 0x05E9, 0x05EA
 };
 
-static void HebrewToText(PRInt32 ordinal, nsString& result)
+static PRBool HebrewToText(PRInt32 ordinal, nsString& result)
 {
+  if (ordinal < 0) {
+    DecimalToText(ordinal, result);
+    return PR_FALSE;
+  }
+  if (ordinal == 0) {
+    // This one is treated specially
+#ifdef IBMBIDI
+    static const PRUnichar hebrewZero[] = { 0x05D0, 0x05E4, 0x05E1 };
+#else
+    static const PRUnichar hebrewZero[] = { 0x05E1, 0x05E4, 0x05D0 };
+#endif // IBMBIDI
+    result.Append(hebrewZero);
+    return PR_TRUE;
+  }
   PRBool outputSep = PR_FALSE;
   PRUnichar buf[NUM_BUF_SIZE];
 #ifdef IBMBIDI
@@ -836,7 +886,7 @@ static void HebrewToText(PRInt32 ordinal, nsString& result)
 #else
           buf[--idx] = digit;
 #endif // IBMBIDI
-          d++;
+          ++d;
         } else { 
           // if this is the last digit
 #ifdef IBMBIDI
@@ -881,7 +931,7 @@ static void HebrewToText(PRInt32 ordinal, nsString& result)
 #else
         buf[--idx] = digit;
 #endif // IBMBIDI
-        d++;
+        ++d;
       } else {
         // if this is the last digit
 #ifdef IBMBIDI
@@ -924,30 +974,36 @@ static void HebrewToText(PRInt32 ordinal, nsString& result)
 #else
   result.Append(buf+idx,NUM_BUF_SIZE-idx);
 #endif // IBMBIDI
+  return PR_TRUE;
 }
 
 
-static void ArmenianToText(PRInt32 ordinal, nsString& result)
+static PRBool ArmenianToText(PRInt32 ordinal, nsString& result)
 {
-  if((0 == ordinal) || (ordinal > 9999)) { // zero or reach the limit of Armenain numbering system
+  // XXXbz this system goes out to a lot further than 9999... we should fix
+  // that.  This algorithm seems broken in general.  There's this business of
+  // "7000" being special and then there's the combining accent we're supposed
+  // to be using...
+  if (ordinal < 1 || ordinal > 9999) { // zero or reach the limit of Armenian numbering system
     DecimalToText(ordinal, result);
-    return;
-  } else {
-    PRUnichar buf[NUM_BUF_SIZE];
-    PRInt32 idx = NUM_BUF_SIZE;
-    PRInt32 d = 0;
-    do {
-      PRInt32 cur = ordinal % 10;
-      if( cur > 0)
-      {
-        PRUnichar u = 0x0530 + (d * 9) + cur;
-        buf[--idx] = u;
-      }
-      d++;
-      ordinal /= 10;
-    } while ( ordinal > 0);
-    result.Append(buf+idx,NUM_BUF_SIZE-idx);
+    return PR_FALSE;
   }
+
+  PRUnichar buf[NUM_BUF_SIZE];
+  PRInt32 idx = NUM_BUF_SIZE;
+  PRInt32 d = 0;
+  do {
+    PRInt32 cur = ordinal % 10;
+    if (cur > 0)
+    {
+      PRUnichar u = 0x0530 + (d * 9) + cur;
+      buf[--idx] = u;
+    }
+    ++d;
+    ordinal /= 10;
+  } while (ordinal > 0);
+  result.Append(buf + idx, NUM_BUF_SIZE - idx);
+  return PR_TRUE;
 }
 
 
@@ -963,27 +1019,28 @@ static PRUnichar gGeorgianValue [ 37 ] = { // 4 * 9 + 1 = 37
 //  10000
    0x10BF
 };
-static void GeorgianToText(PRInt32 ordinal, nsString& result)
+static PRBool GeorgianToText(PRInt32 ordinal, nsString& result)
 {
-  if((0 == ordinal) || (ordinal > 19999)) { // zero or reach the limit of Georgian numbering system
+  if (ordinal < 1 || ordinal > 19999) { // zero or reach the limit of Georgian numbering system
     DecimalToText(ordinal, result);
-    return;
-  } else {
-    PRUnichar buf[NUM_BUF_SIZE];
-    PRInt32 idx = NUM_BUF_SIZE;
-    PRInt32 d = 0;
-    do {
-      PRInt32 cur = ordinal % 10;
-      if( cur > 0)
-      {
-        PRUnichar u = gGeorgianValue[(d * 9 ) + ( cur - 1)];
-        buf[--idx] = u;
-      }
-      d++;
-      ordinal /= 10;
-    } while ( ordinal > 0);
-    result.Append(buf+idx,NUM_BUF_SIZE-idx);
+    return PR_FALSE;
   }
+
+  PRUnichar buf[NUM_BUF_SIZE];
+  PRInt32 idx = NUM_BUF_SIZE;
+  PRInt32 d = 0;
+  do {
+    PRInt32 cur = ordinal % 10;
+    if (cur > 0)
+    {
+      PRUnichar u = gGeorgianValue[(d * 9 ) + ( cur - 1)];
+      buf[--idx] = u;
+    }
+    ++d;
+    ordinal /= 10;
+  } while (ordinal > 0);
+  result.Append(buf + idx, NUM_BUF_SIZE - idx);
+  return PR_TRUE;
 }
 
 // Convert ordinal to Ethiopic numeric representation.
@@ -992,10 +1049,14 @@ static void GeorgianToText(PRInt32 ordinal, nsString& result)
 // the pseudo-code put up there by Daniel Yacob <yacob@geez.org>.
 // Another reference is Unicode 3.0 standard section 11.1. 
 
-static void EthiopicToText(PRInt32 ordinal, nsString& result)
+static PRBool EthiopicToText(PRInt32 ordinal, nsString& result)
 {  
   nsAutoString asciiNumberString;      // decimal string representation of ordinal
   DecimalToText(ordinal, asciiNumberString);
+  if (ordinal < 1) {
+    result.Append(asciiNumberString);
+    return PR_FALSE;
+  }
   PRInt32 n = asciiNumberString.Length() - 1;
 
   // Iterate from the lowest digit to higher digits
@@ -1040,11 +1101,12 @@ static void EthiopicToText(PRInt32 ordinal, nsString& result)
        ethioNumber += (PRUnichar) 0x137C;   // 0x137C = Ethiopic number ten thousand
 
      result.Insert(ethioNumber, 0);
-  }  
+  }
+  return PR_TRUE;
 }
 
 
-void
+PRBool
 nsBulletFrame::GetListItemText(nsIPresContext* aCX,
                                const nsStyleList& aListStyle,
                                nsString& result)
@@ -1053,200 +1115,233 @@ nsBulletFrame::GetListItemText(nsIPresContext* aCX,
   const nsStyleVisibility* vis;
   GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&)vis);
 
+  // XXX For some of these systems, "." is wrong!  This should really be
+  // pushed down into the individual cases!
   if (NS_STYLE_DIRECTION_RTL == vis->mDirection) {
     result.Append(NS_LITERAL_STRING("."));
   }
 #endif // IBMBIDI
 
+  PRBool success = PR_TRUE;
+  
   switch (aListStyle.mListStyleType) {
     case NS_STYLE_LIST_STYLE_DECIMAL:
     case NS_STYLE_LIST_STYLE_OLD_DECIMAL:
     default: // CSS2 say "A users  agent that does not recognize a numbering system
       // should use 'decimal'
-      DecimalToText(mOrdinal, result);
+      success = DecimalToText(mOrdinal, result);
       break;
 
     case NS_STYLE_LIST_STYLE_DECIMAL_LEADING_ZERO:
-      DecimalLeadingZeroToText(mOrdinal, result);
+      success = DecimalLeadingZeroToText(mOrdinal, result);
       break;
 
     case NS_STYLE_LIST_STYLE_LOWER_ROMAN:
     case NS_STYLE_LIST_STYLE_OLD_LOWER_ROMAN:
-      RomanToText(mOrdinal, result, gLowerRomanCharsA, gLowerRomanCharsB);
+      success = RomanToText(mOrdinal, result,
+                            gLowerRomanCharsA, gLowerRomanCharsB);
       break;
     case NS_STYLE_LIST_STYLE_UPPER_ROMAN:
     case NS_STYLE_LIST_STYLE_OLD_UPPER_ROMAN:
-      RomanToText(mOrdinal, result, gUpperRomanCharsA, gUpperRomanCharsB);
+      success = RomanToText(mOrdinal, result,
+                            gUpperRomanCharsA, gUpperRomanCharsB);
       break;
 
     case NS_STYLE_LIST_STYLE_LOWER_ALPHA:
     case NS_STYLE_LIST_STYLE_OLD_LOWER_ALPHA:
-      CharListToText(mOrdinal, result, gLowerAlphaChars, ALPHA_SIZE);
+      success = CharListToText(mOrdinal, result, gLowerAlphaChars, ALPHA_SIZE);
       break;
 
     case NS_STYLE_LIST_STYLE_UPPER_ALPHA:
     case NS_STYLE_LIST_STYLE_OLD_UPPER_ALPHA:
-      CharListToText(mOrdinal, result, gUpperAlphaChars, ALPHA_SIZE);
+      success = CharListToText(mOrdinal, result, gUpperAlphaChars, ALPHA_SIZE);
       break;
 
     case NS_STYLE_LIST_STYLE_KATAKANA:
-      CharListToText(mOrdinal, result, gKatakanaChars, KATAKANA_CHARS_SIZE);
+      success = CharListToText(mOrdinal, result, gKatakanaChars,
+                               KATAKANA_CHARS_SIZE);
       break;
 
     case NS_STYLE_LIST_STYLE_HIRAGANA:
-      CharListToText(mOrdinal, result, gHiraganaChars, HIRAGANA_CHARS_SIZE);
+      success = CharListToText(mOrdinal, result, gHiraganaChars,
+                               HIRAGANA_CHARS_SIZE);
       break;
     
     case NS_STYLE_LIST_STYLE_KATAKANA_IROHA:
-      CharListToText(mOrdinal, result, gKatakanaIrohaChars, KATAKANA_IROHA_CHARS_SIZE);
+      success = CharListToText(mOrdinal, result, gKatakanaIrohaChars,
+                               KATAKANA_IROHA_CHARS_SIZE);
       break;
  
     case NS_STYLE_LIST_STYLE_HIRAGANA_IROHA:
-      CharListToText(mOrdinal, result, gHiraganaIrohaChars, HIRAGANA_IROHA_CHARS_SIZE);
+      success = CharListToText(mOrdinal, result, gHiraganaIrohaChars,
+                               HIRAGANA_IROHA_CHARS_SIZE);
       break;
 
     case NS_STYLE_LIST_STYLE_LOWER_GREEK:
-      CharListToText(mOrdinal, result, gLowerGreekChars , LOWER_GREEK_CHARS_SIZE);
+      success = CharListToText(mOrdinal, result, gLowerGreekChars ,
+                               LOWER_GREEK_CHARS_SIZE);
       break;
 
     case NS_STYLE_LIST_STYLE_CJK_IDEOGRAPHIC: 
     case NS_STYLE_LIST_STYLE_MOZ_TRAD_CHINESE_INFORMAL: 
-      CJKIdeographicToText(mOrdinal, result, gCJKIdeographicDigit1, gCJKIdeographicUnit1, gCJKIdeographic10KUnit1);
+      success = CJKIdeographicToText(mOrdinal, result, gCJKIdeographicDigit1,
+                                     gCJKIdeographicUnit1,
+                                     gCJKIdeographic10KUnit1);
       break;
 
     case NS_STYLE_LIST_STYLE_MOZ_TRAD_CHINESE_FORMAL: 
-      CJKIdeographicToText(mOrdinal, result, gCJKIdeographicDigit2, gCJKIdeographicUnit2, gCJKIdeographic10KUnit1);
+      success = CJKIdeographicToText(mOrdinal, result, gCJKIdeographicDigit2,
+                                     gCJKIdeographicUnit2,
+                                     gCJKIdeographic10KUnit1);
       break;
 
     case NS_STYLE_LIST_STYLE_MOZ_SIMP_CHINESE_INFORMAL: 
-      CJKIdeographicToText(mOrdinal, result, gCJKIdeographicDigit1, gCJKIdeographicUnit1, gCJKIdeographic10KUnit2);
+      success = CJKIdeographicToText(mOrdinal, result, gCJKIdeographicDigit1,
+                                     gCJKIdeographicUnit1,
+                                     gCJKIdeographic10KUnit2);
       break;
 
     case NS_STYLE_LIST_STYLE_MOZ_SIMP_CHINESE_FORMAL: 
-      CJKIdeographicToText(mOrdinal, result, gCJKIdeographicDigit3, gCJKIdeographicUnit2, gCJKIdeographic10KUnit2);
+      success = CJKIdeographicToText(mOrdinal, result, gCJKIdeographicDigit3,
+                                     gCJKIdeographicUnit2,
+                                     gCJKIdeographic10KUnit2);
       break;
 
     case NS_STYLE_LIST_STYLE_MOZ_JAPANESE_INFORMAL: 
-      CJKIdeographicToText(mOrdinal, result, gCJKIdeographicDigit1, gCJKIdeographicUnit1, gCJKIdeographic10KUnit3);
+      success = CJKIdeographicToText(mOrdinal, result, gCJKIdeographicDigit1,
+                                     gCJKIdeographicUnit1,
+                                     gCJKIdeographic10KUnit3);
       break;
 
     case NS_STYLE_LIST_STYLE_MOZ_JAPANESE_FORMAL: 
-      CJKIdeographicToText(mOrdinal, result, gCJKIdeographicDigit2, gCJKIdeographicUnit2, gCJKIdeographic10KUnit3);
+      success = CJKIdeographicToText(mOrdinal, result, gCJKIdeographicDigit2,
+                                     gCJKIdeographicUnit2,
+                                     gCJKIdeographic10KUnit3);
       break;
 
     case NS_STYLE_LIST_STYLE_HEBREW: 
-      HebrewToText(mOrdinal, result);
+      success = HebrewToText(mOrdinal, result);
       break;
 
     case NS_STYLE_LIST_STYLE_ARMENIAN: 
-      ArmenianToText(mOrdinal, result);
+      success = ArmenianToText(mOrdinal, result);
       break;
 
     case NS_STYLE_LIST_STYLE_GEORGIAN: 
-      GeorgianToText(mOrdinal, result);
+      success = GeorgianToText(mOrdinal, result);
       break;
  
     case NS_STYLE_LIST_STYLE_MOZ_ARABIC_INDIC:
-      OtherDecimalToText(mOrdinal, 0x0660, result);
+      success = OtherDecimalToText(mOrdinal, 0x0660, result);
       break;
  
     case NS_STYLE_LIST_STYLE_MOZ_PERSIAN:
     case NS_STYLE_LIST_STYLE_MOZ_URDU:
-      OtherDecimalToText(mOrdinal, 0x06f0, result);
+      success = OtherDecimalToText(mOrdinal, 0x06f0, result);
       break;
  
     case NS_STYLE_LIST_STYLE_MOZ_DEVANAGARI:
-      OtherDecimalToText(mOrdinal, 0x0966, result);
+      success = OtherDecimalToText(mOrdinal, 0x0966, result);
       break;
  
     case NS_STYLE_LIST_STYLE_MOZ_GURMUKHI:
-      OtherDecimalToText(mOrdinal, 0x0a66, result);
+      success = OtherDecimalToText(mOrdinal, 0x0a66, result);
       break;
  
     case NS_STYLE_LIST_STYLE_MOZ_GUJARATI:
-      OtherDecimalToText(mOrdinal, 0x0AE6, result);
+      success = OtherDecimalToText(mOrdinal, 0x0AE6, result);
       break;
  
     case NS_STYLE_LIST_STYLE_MOZ_ORIYA:
-      OtherDecimalToText(mOrdinal, 0x0B66, result);
+      success = OtherDecimalToText(mOrdinal, 0x0B66, result);
       break;
  
     case NS_STYLE_LIST_STYLE_MOZ_KANNADA:
-      OtherDecimalToText(mOrdinal, 0x0CE6, result);
+      success = OtherDecimalToText(mOrdinal, 0x0CE6, result);
       break;
  
     case NS_STYLE_LIST_STYLE_MOZ_MALAYALAM:
-      OtherDecimalToText(mOrdinal, 0x0D66, result);
+      success = OtherDecimalToText(mOrdinal, 0x0D66, result);
       break;
  
     case NS_STYLE_LIST_STYLE_MOZ_THAI:
-      OtherDecimalToText(mOrdinal, 0x0E50, result);
+      success = OtherDecimalToText(mOrdinal, 0x0E50, result);
       break;
  
     case NS_STYLE_LIST_STYLE_MOZ_LAO:
-      OtherDecimalToText(mOrdinal, 0x0ED0, result);
+      success = OtherDecimalToText(mOrdinal, 0x0ED0, result);
       break;
  
     case NS_STYLE_LIST_STYLE_MOZ_MYANMAR:
-      OtherDecimalToText(mOrdinal, 0x1040, result);
+      success = OtherDecimalToText(mOrdinal, 0x1040, result);
       break;
  
     case NS_STYLE_LIST_STYLE_MOZ_KHMER:
-      OtherDecimalToText(mOrdinal, 0x17E0, result);
+      success = OtherDecimalToText(mOrdinal, 0x17E0, result);
       break;
  
     case NS_STYLE_LIST_STYLE_MOZ_BENGALI:
-      OtherDecimalToText(mOrdinal, 0x09E6, result);
+      success = OtherDecimalToText(mOrdinal, 0x09E6, result);
       break;
  
     case NS_STYLE_LIST_STYLE_MOZ_TELUGU:
-      OtherDecimalToText(mOrdinal, 0x0C66, result);
+      success = OtherDecimalToText(mOrdinal, 0x0C66, result);
       break;
  
     case NS_STYLE_LIST_STYLE_MOZ_TAMIL:
-      TamilToText(mOrdinal, result);
+      success = TamilToText(mOrdinal, result);
       break;
 
     case NS_STYLE_LIST_STYLE_MOZ_CJK_HEAVENLY_STEM:
-      CharListToText(mOrdinal, result, gCJKHeavenlyStemChars, CJK_HEAVENLY_STEM_CHARS_SIZE);
+      success = CharListToText(mOrdinal, result, gCJKHeavenlyStemChars,
+                               CJK_HEAVENLY_STEM_CHARS_SIZE);
       break;
 
     case NS_STYLE_LIST_STYLE_MOZ_CJK_EARTHLY_BRANCH:
-      CharListToText(mOrdinal, result, gCJKEarthlyBranchChars, CJK_EARTHLY_BRANCH_CHARS_SIZE);
+      success = CharListToText(mOrdinal, result, gCJKEarthlyBranchChars,
+                               CJK_EARTHLY_BRANCH_CHARS_SIZE);
       break;
 
     case NS_STYLE_LIST_STYLE_MOZ_HANGUL:
-      CharListToText(mOrdinal, result, gHangulChars, HANGUL_CHARS_SIZE);
+      success = CharListToText(mOrdinal, result, gHangulChars, HANGUL_CHARS_SIZE);
       break;
 
     case NS_STYLE_LIST_STYLE_MOZ_HANGUL_CONSONANT:
-      CharListToText(mOrdinal, result, gHangulConsonantChars, HANGUL_CONSONANT_CHARS_SIZE);
+      success = CharListToText(mOrdinal, result, gHangulConsonantChars,
+                               HANGUL_CONSONANT_CHARS_SIZE);
       break;
 
     case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME:
-      CharListToText(mOrdinal, result, gEthiopicHalehameChars, ETHIOPIC_HALEHAME_CHARS_SIZE);
+      success = CharListToText(mOrdinal, result, gEthiopicHalehameChars,
+                               ETHIOPIC_HALEHAME_CHARS_SIZE);
       break;
 
     case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_NUMERIC:
-      EthiopicToText(mOrdinal, result);
+      success = EthiopicToText(mOrdinal, result);
       break;
 
     case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_AM:
-      CharListToText(mOrdinal, result, gEthiopicHalehameAmChars, ETHIOPIC_HALEHAME_AM_CHARS_SIZE);
+      success = CharListToText(mOrdinal, result, gEthiopicHalehameAmChars,
+                               ETHIOPIC_HALEHAME_AM_CHARS_SIZE);
       break;
 
     case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ER:
-      CharListToText(mOrdinal, result, gEthiopicHalehameTiErChars, ETHIOPIC_HALEHAME_TI_ER_CHARS_SIZE);
+      success = CharListToText(mOrdinal, result, gEthiopicHalehameTiErChars,
+                               ETHIOPIC_HALEHAME_TI_ER_CHARS_SIZE);
       break;
 
     case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ET:
-      CharListToText(mOrdinal, result, gEthiopicHalehameTiEtChars, ETHIOPIC_HALEHAME_TI_ET_CHARS_SIZE);
+      success = CharListToText(mOrdinal, result, gEthiopicHalehameTiEtChars,
+                               ETHIOPIC_HALEHAME_TI_ET_CHARS_SIZE);
       break;
   }
+  // XXX For some of these systems, "." is wrong!  This should really be
+  // pushed up into the cases...
 #ifdef IBMBIDI
   if (NS_STYLE_DIRECTION_RTL != vis->mDirection)
 #endif // IBMBIDI
   result.Append(NS_LITERAL_STRING("."));
+  return success;
 }
 
 #define MIN_BULLET_SIZE 5               // from laytext.c
@@ -1655,6 +1750,7 @@ NS_IMETHODIMP nsBulletFrame::OnStopDecode(imgIRequest *aRequest, nsIPresContext 
 {
   // XXX should the bulletframe do anything if the image failed to load?
   //     it didn't in the old code...
+
 #if 0
   nsCOMPtr<nsIPresShell> presShell;
   aPresContext->GetShell(getter_AddRefs(presShell));
