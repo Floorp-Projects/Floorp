@@ -39,7 +39,7 @@ Rights Reserved.
 
 	<keyset id="dialogKeys"/>
 
-	<hbox id="editlist"/>
+	<vbox id="editlist"/>
 		
 	<spring style="height:1em"/>
 		

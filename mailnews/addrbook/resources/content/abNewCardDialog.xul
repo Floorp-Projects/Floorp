@@ -58,7 +58,7 @@ Rights Reserved.
   
   <spring style="height:1em"/>
     
-  <hbox id="editcard"/>
+  <vbox id="editcard"/>
   
   <hbox id="okCancelButtons"/>
 

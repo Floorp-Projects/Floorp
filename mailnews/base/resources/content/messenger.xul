@@ -159,7 +159,7 @@ Rights Reserved.
                      <iframe name="accountCentralPane" flex="1" src="about:blank"/>
                   </vbox>
 
-      <box orient="vertical" id="messagesBox" flex="1">
+      <vbox id="messagesBox" flex="1">
      
       <outliner id="threadOutliner" flex="2" persist="height" style="height:0px" context="threadPaneContext"/>
 
@@ -175,7 +175,7 @@ Rights Reserved.
     
         <browser id="messagepane" context="messagePaneContext" style="height: 0px" flex="1" name="messagepane" type="content-primary" src="about:blank"/>
       </vbox>  
-      </box>
+      </vbox>
 
    </vbox>             
 

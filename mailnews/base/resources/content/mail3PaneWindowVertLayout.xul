@@ -144,7 +144,7 @@ Rights Reserved.
 
 
   <hbox style="height:100px" flex="1">
-    <hbox id="sidebar-box" persist="collapsed width"/>
+    <vbox id="sidebar-box" persist="collapsed width"/>
     <splitter id="sidebar-splitter" state="collapsed"/>
           
     <vbox flex="1">

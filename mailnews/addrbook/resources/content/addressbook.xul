@@ -271,7 +271,7 @@ Rights Reserved.
       
       <!-- card view -->
       <hbox id="CardViewOuterBox" flex="1">
-        <hbox id="CardViewBox" style="height:170px; min-height:1px; min-width:1px"/>
+        <vbox id="CardViewBox" style="height:170px; min-height:1px; min-width:1px"/>
       </hbox>
     
       
