@@ -172,9 +172,6 @@ class nsRDFDOMDataSource : public nsIRDFDataSource,
 
  private:
 
-    nsresult getNodeByURI(const char* uri, nsIDOMNode** aResult);
-    nsresult getURIForNode(nsIDOMNode *node, char **uri);
-    
     PRBool init;
     nsIRDFService *mRDFService;
     nsVoidArray *mObservers;
@@ -185,6 +182,7 @@ class nsRDFDOMDataSource : public nsIRDFDataSource,
     nsIRDFResource* kNC_Value;
     nsIRDFResource* kNC_Type;
     nsIRDFResource* kNC_Child;
+    nsIRDFResource* kNC_DOMRoot;
 };
 
 nsresult

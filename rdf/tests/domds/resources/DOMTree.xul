@@ -8,21 +8,34 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   style="width: 100%; height: 100%">
 
-<tree style="width:100%" datasources="rdf:domds"
-  id="dataSourceTree"
-  containment="http://home.netscape.com/NC-rdf#child">
-  <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name" style="width: 40%"/>
-  <treecol id="ValueColumn" rdf:resource="http://home.netscape.com/NC-rdf#Value" style="width: 50%"/>
-  <treecol id="TypeColumn" rdf:resource="http://home.netscape.com/NC-rdf#Type" style="width: 10%"/>
-  <treehead>
-    <treeitem>
-      <treecell>Name</treecell>
-      <treecell>Value</treecell>
-      <treecell>Type</treecell>
-    </treeitem>
-  </treehead>
+<html:div flex="100%">
+<tree style="height:100%"
+  rdf:datasources="rdf:domds"
+  id="dataSourceTree">
 
-  <treebody id="" rdf:containment="http://home.netscape.com/NC-rdf#child" name="dataSourceTreeBody">
-  </treebody>
+  <template>
+    <rule>
+      <treechildren>
+        <treeitem uri="...">
+          <treerow>
+            <treecell ident="true" value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+            <treecell value="rdf:http://home.netscape.com/NC-rdf#Value"/>
+            <treecell value="rdf:http://home.netscape.com/NC-rdf#Type"/>
+          </treerow>
+        </treeitem>
+      </treechildren>
+    </rule>
+    <treeitem uri="NC:DOMRoot"/>
+  </template>
+
+  <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
+  <treecol id="ValueColumn" rdf:resource="http://home.netscape.com/NC-rdf#Value"/>
+  <treecol id="TypeColumn" rdf:resource="http://home.netscape.com/NC-rdf#Type"/>
+  <treehead>
+    <treecell value="Name"/>
+    <treecell value="Value"/>
+    <treecell value="Type"/>
+  </treehead>
 </tree>
+
 </window>

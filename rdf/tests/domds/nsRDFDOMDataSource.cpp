@@ -31,6 +31,7 @@
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMAttr.h"
 
+#include "nsIDOMViewerElement.h"
 
 #include "nsIDOMHTMLDocument.h"
 
@@ -42,7 +43,7 @@
 #define NC_RDF_Value NC_NAMESPACE_URI "Value"
 #define NC_RDF_Type  NC_NAMESPACE_URI "Type"
 #define NC_RDF_Child NC_NAMESPACE_URI "child"
-
+#define NC_RDF_DOMRoot "NC:DOMRoot"
 
 static PRInt32 gCurrentId=0;
 
@@ -59,6 +60,7 @@ nsRDFDOMDataSource::nsRDFDOMDataSource():
   getRDFService()->GetResource(NC_RDF_Name, &kNC_Name);
   getRDFService()->GetResource(NC_RDF_Value, &kNC_Value);
   getRDFService()->GetResource(NC_RDF_Type, &kNC_Type);
+  getRDFService()->GetResource(NC_RDF_DOMRoot, &kNC_DOMRoot);
 
 }
 
@@ -154,71 +156,60 @@ nsRDFDOMDataSource::GetSources(nsIRDFResource *aProperty, nsIRDFNode *aTarget, P
 NS_IMETHODIMP
 nsRDFDOMDataSource::GetTarget(nsIRDFResource *aSource, nsIRDFResource *aProperty, PRBool aTruthValue, nsIRDFNode **_retval)
 {
-  nsresult rv;
+  
+#ifdef DEBUG_alecf
   nsXPIDLCString sourceval;
   aSource->GetValue(getter_Copies(sourceval));
   nsXPIDLCString propval;
   aProperty->GetValue(getter_Copies(propval));
-
-  nsString str;
-  
-#ifdef DEBUG_alecf
   printf("GetTarget(%s, %s,..)\n", (const char*)sourceval,
          (const char*)propval);
 #endif
-  // extract the ID if any
 
-  nsCOMPtr<nsIDOMNode> node;
-  rv = getNodeByURI(sourceval, getter_AddRefs(node));
-  if (NS_FAILED(rv)) return rv;
-
-  if (node) {
+  nsresult rv;
+  nsString str;
+  if (aSource == kNC_DOMRoot) {
     if (aProperty == kNC_Name)
-      node->GetNodeName(str);
+      str="DOMRoot";
     else if (aProperty == kNC_Value)
-      node->GetNodeValue(str);
-    else if (aProperty == kNC_Type) {
-      PRUint16 type;
-      node->GetNodeType(&type);
-      str.Append((PRInt32)type, 10);
-    }
-    
-    else {
-#ifdef DEBUG_alecf
-      printf("Unknown arc %s\n", (const char*)propval);
-#endif
-      return NS_ERROR_UNEXPECTED;
-    }
-
-  }
-  else if (!PL_strncmp(sourceval, "text://", 7)) {
-    
-    
-    /* name - use the tag name */
-    if (aProperty == kNC_Name)
-      str = "#text";
-    
-    /* value - ID? */
-    else if (aProperty == kNC_Value)
-      str = ((const char*)sourceval + 7);
+      str="DOMRootValue";
     else if (aProperty == kNC_Type)
-      str.Append(3);
-      
-    else {
-      printf("Unknown arc %s\n", (const char*)propval);
-      return NS_ERROR_UNEXPECTED;
+      str = "DOMRootType";
+
+  } else {
+    nsCOMPtr<nsIDOMViewerElement> nodeContainer =
+      do_QueryInterface(aSource);
+
+    nsCOMPtr<nsIDOMNode> node;
+    nodeContainer->GetNode(getter_AddRefs(node));
+
+    if (node) {
+      if (aProperty == kNC_Name)
+        node->GetNodeName(str);
+      else if (aProperty == kNC_Value)
+        node->GetNodeValue(str);
+      else if (aProperty == kNC_Type) {
+        PRUint16 type;
+        node->GetNodeType(&type);
+        str = type;
+      } else
+        str = "Valid node, unknown arc";
+        
     }
   }
 
   printf("GetTarget() returning %s\n", str.ToNewCString());
   nsCOMPtr<nsIRDFLiteral> literal;
-  rv =getRDFService()->GetLiteral(str.ToNewUnicode(), getter_AddRefs(literal));
-  if (NS_FAILED(rv)) return rv;
 
-  *_retval = literal;
-  NS_ADDREF(*_retval);
+  PRUnichar* uniStr = str.ToNewUnicode();
+  rv = getRDFService()->GetLiteral(uniStr,
+                                   getter_AddRefs(literal));
+  nsAllocator::Free(uniStr);
   
-  return NS_OK;
+  *_retval = literal;
+  NS_IF_ADDREF(*_retval);
+  
+  return rv;
 }
 
 
@@ -229,14 +220,14 @@ nsRDFDOMDataSource::GetTargets(nsIRDFResource *aSource, nsIRDFResource *aPropert
 
   nsXPIDLCString sourceval;
   aSource->GetValue(getter_Copies(sourceval));
+#ifdef DEBUG_alecf
   nsXPIDLCString propval;
   aProperty->GetValue(getter_Copies(propval));
-  
-#ifdef DEBUG_alecf
-  printf("GetTargets(%s, %s,..)\n", (const char*)sourceval,
+  printf("GetTarget(%s, %s,..)\n", (const char*)sourceval,
          (const char*)propval);
 #endif
-  
+
+  // prepare the root
   nsresult rv;
   nsCOMPtr<nsISupportsArray> arcs;
   rv = NS_NewISupportsArray(getter_AddRefs(arcs));
@@ -247,18 +238,24 @@ nsRDFDOMDataSource::GetTargets(nsIRDFResource *aSource, nsIRDFResource *aPropert
     
   *_retval = cursor;
   NS_ADDREF(*_retval);
-      
-  if (!mDocument) {
-    return NS_OK;
-  }
-  // convert the URI (aSource) to a DOM element
-  nsCOMPtr<nsIDOMNode> node;
-  
-  rv = getNodeByURI(sourceval, getter_AddRefs(node));
-  if (NS_FAILED(rv)) return rv;
-  if (!node) return NS_OK;
 
-  /* children - get all child nodes */
+  if (!mDocument) return NS_OK;
+
+  
+  // what node is this?
+  nsCOMPtr<nsIDOMNode> node;
+  if (aSource == kNC_DOMRoot) {
+    node = mDocument;
+  } else {
+    nsCOMPtr<nsIDOMViewerElement> nodeContainer;
+    nodeContainer = do_QueryInterface(aSource, &rv);
+
+    if (NS_SUCCEEDED(rv) && nodeContainer)
+      nodeContainer->GetNode(getter_AddRefs(node));
+  }
+
+  // node is now the node we're interested in.
+
   if (aProperty == kNC_Child) {
     
     PRUint32 i;
@@ -285,6 +282,13 @@ nsRDFDOMDataSource::GetTargets(nsIRDFResource *aSource, nsIRDFResource *aPropert
         nsCOMPtr<nsIRDFResource> resource;
         getRDFService()->GetResource(uri,
                                      getter_AddRefs(resource));
+        {
+          // now fill in the resource stuff
+          nsCOMPtr<nsIDOMViewerElement> nodeContainer =
+            do_QueryInterface(resource);
+          if (nodeContainer)
+            nodeContainer->SetNode(attrNode);
+        }
         arcs->AppendElement(resource);
       }
     }
@@ -301,7 +305,6 @@ nsRDFDOMDataSource::GetTargets(nsIRDFResource *aSource, nsIRDFResource *aPropert
     
     nsCOMPtr<nsIDOMNode> childNode;
     for (i=0; i<length; i++) {
-
       
       rv = childNodes->Item(i, getter_AddRefs(childNode));
       if (NS_FAILED(rv)) return rv;
@@ -312,30 +315,24 @@ nsRDFDOMDataSource::GetTargets(nsIRDFResource *aSource, nsIRDFResource *aPropert
       printf("child node %d has type %d\n", i, (PRUint32)nodeType);
 #endif
 
-      char *uri = nsnull;
-      rv = getURIForNode(childNode, &uri);
-      if (NS_FAILED(rv)) return rv;
+      char *uri =
+        PR_smprintf("dom://%8.8X", gCurrentId++);
 
       if (uri) {
         nsCOMPtr<nsIRDFResource> resource;
         getRDFService()->GetResource(uri,
                                      getter_AddRefs(resource));
+        {
+          // now fill in the resource stuff
+          nsCOMPtr<nsIDOMViewerElement> nodeContainer =
+            do_QueryInterface(resource);
+          if (nodeContainer)
+            nodeContainer->SetNode(childNode);
+        }
         arcs->AppendElement(resource);
       }
     }
 
-  }
-  /* name - use the tag name */
-  else if (aProperty == kNC_Name) {
-
-    
-  }
-  /* value - ID? */
-  else if (aProperty == kNC_Value) {
-
-    
-  } else {
-    printf("Unknown arc %s\n", (const char*)propval);
   }
 
   return NS_OK;
@@ -556,116 +553,6 @@ nsRDFDOMDataSource::SetWindow(nsIDOMWindow *window) {
   return rv;
 }
 
-nsresult
-nsRDFDOMDataSource::getNodeByURI(const char* uri, nsIDOMNode **aResult)
-{
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIDOMNode> node;
-
-  // root node
-  if (!PL_strcmp(uri, "dom:/")) {
-    nsCOMPtr<nsIDOMElement> element;
-    rv = mDocument->GetDocumentElement(getter_AddRefs(element));
-    node = element;
-  }
-  else if (!PL_strncmp(uri, "dom://", 6)) {
-
-    nsAutoString id = (uri + 6);
-    nsAutoString attr ="";
-    PRInt32 attrloc = id.Find('#');
-    if (attrloc >= 0) {
-      id.Right(attr, (id.Length() - attrloc - 1));
-      printf("%s is an attribute: %s\n", uri, attr.ToNewCString());
-
-      id.Truncate(attrloc);
-    }
-      
-
-    printf("Looking for ID %s\n", id.ToNewCString());
-    
-    nsCOMPtr<nsIDOMElement> element;
-    
-    // if this is HTML, we can use GetElementById
-    nsCOMPtr<nsIDOMHTMLDocument> htmlDocument =
-      do_QueryInterface(mDocument, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = htmlDocument->GetElementById(id, getter_AddRefs(element));
-      if (NS_FAILED(rv)) return rv;
-    }
-
-    nsCOMPtr<nsIDOMXULDocument> xulDocument =
-      do_QueryInterface(mDocument, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = xulDocument->GetElementById(id, getter_AddRefs(element));
-      if (NS_FAILED(rv)) return rv;
-    }
-    
-    
-    if (attr != "") {
-      printf("This is an attribute: %s\n", attr.ToNewCString());
-      
-      nsCOMPtr<nsIDOMAttr> attrNode;
-      rv = element->GetAttributeNode(attr, getter_AddRefs(attrNode));
-      if (NS_FAILED(rv)) return rv;
-      
-      node=attrNode;
-    } else
-      node = element;
-  }
-
-  if (node) {
-    *aResult = node;
-    NS_ADDREF(*aResult);
-    return NS_OK;
-  }
-  
-  return rv;
-}
-
-nsresult
-nsRDFDOMDataSource::getURIForNode(nsIDOMNode *node, char **uri)
-{
-
-  nsresult rv;
-  // DOM Elements
-  // extract the ID (create one if necessary)
-  nsCOMPtr<nsIDOMElement> element =
-    do_QueryInterface(node, &rv);
-  if (NS_SUCCEEDED(rv)) {
-    nsString id;
-    rv = element->GetAttribute(nsAutoString("id"), id);
-    if (NS_FAILED(rv)) return rv;
-    if (id == "") {
-      char *idstr = PR_smprintf("%8.8X", gCurrentId++);
-      id = idstr;
-      printf("Element has no ID. Assigning it %s\n", idstr);
-
-      
-    }
-    else {
-      printf("ID of this element is %s\n", id.ToNewCString());
-    }
-
-    // leaks id.ToNewCString()
-    *uri = PR_smprintf("dom://%s", id.ToNewCString());
-  }
-
-  // DOM Texts
-  nsCOMPtr<nsIDOMText> text =
-    do_QueryInterface(node, &rv);
-  if (NS_SUCCEEDED(rv)) {
-    nsString textValue;
-    rv = text->GetData(textValue);
-    if (NS_FAILED(rv)) return rv;
-    
-    // leaks
-    char *textval = textValue.ToNewCString();
-    *uri = PR_smprintf("text://%s", textval);
-    nsCRT::free(textval);
-  }
-  
-  return NS_OK;
-}
 
 
 nsresult
