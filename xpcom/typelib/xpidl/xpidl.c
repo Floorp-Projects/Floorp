@@ -31,13 +31,14 @@ gboolean generate_headers  = FALSE;
 gboolean generate_nothing  = FALSE;
 
 static char xpidl_usage_str[] = 
-"Usage: %s -idhwvn filename.idl\n"
-"       -i generate Invoke glue       (filename_invoke.c)\n"
-"       -d generate HTML documenation (filename.html)\n"
-"       -h generate C++ headers	      (filename.h)\n"
+"Usage: %s [-i] [-d] [-h] [-w] [-v] [-I path] [-n] filename.idl\n"
+"       -i generate InterfaceInfo data (filename.int) (NYI)\n"
+"       -d generate HTML documenation  (filename.html) (NYI)\n"
+"       -h generate C++ headers	       (filename.h)\n"
 "       -w turn on warnings (recommended)\n"
-"       -v verbose mode\n"
-"       -n do not generate output files, just test IDL\n";
+"       -v verbose mode (NYI)\n"
+"       -I add entry to start of include path for ``#include \"nsIThing.idl\"''\n"
+"       -n do not generate output files, just test IDL (NYI)\n";
 
 static void 
 xpidl_usage(int argc, char *argv[])
@@ -50,32 +51,56 @@ int
 main(int argc, char *argv[])
 {
     int i, idlfiles;
+    IncludePathEntry *inc, *inc_head = NULL;
+
+    inc_head = malloc(sizeof *inc);
+    if (!inc_head)
+        return 1;
+    inc_head->directory = ".";
+    inc_head->next = NULL;
 
     for (i = 1; i < argc; i++) {
-        if (argv[i][0] == '-') {
-            switch (argv[i][1]) {
-              case 'd':
-                generate_docs = TRUE;
-                break;
-              case 'i':
-                generate_invoke = TRUE;
-                break;
-              case 'h':
+        if (argv[i][0] != '-')
+            break;
+        switch (argv[i][1]) {
+          case 'd':
+            generate_docs = TRUE;
+            break;
+          case 'i':
+            generate_invoke = TRUE;
+            break;
+          case 'h':
                 generate_headers = TRUE;
                 break;
-              case 'w':
-                enable_warnings = TRUE;
-                break;
-              case 'v':
-                verbose_mode = TRUE;
-                break;
-              case 'n':
-                generate_nothing = TRUE;
-                break;
-              default:
+          case 'w':
+            enable_warnings = TRUE;
+            break;
+          case 'v':
+            verbose_mode = TRUE;
+            break;
+          case 'n':
+            generate_nothing = TRUE;
+            break;
+          case 'I':
+            if (i == argc) {
+                fputs("ERROR: missing path after -I\n", stderr);
                 xpidl_usage(argc, argv);
                 return 1;
             }
+            inc = malloc(sizeof *inc);
+            if (!inc)
+                return 1;
+            inc->directory = argv[i + 1];
+#ifdef DEBUG_shaver
+            fprintf(stderr, "adding %s to include path\n", inc->directory);
+#endif
+            inc->next = inc_head;
+            inc_head = inc;
+            i++;
+            break;
+          default:
+            xpidl_usage(argc, argv);
+            return 1;
         }
     }
     
@@ -84,9 +109,9 @@ main(int argc, char *argv[])
         return 1;
     }
 
-    for (i = 1, idlfiles = 0; i < argc; i++) {
+    for (idlfiles = 0; i < argc; i++) {
         if (argv[i][0] && argv[i][0] != '-')
-            idlfiles += xpidl_process_idl(argv[i]);
+            idlfiles += xpidl_process_idl(argv[i], inc_head);
     }
     
     if (!idlfiles) {

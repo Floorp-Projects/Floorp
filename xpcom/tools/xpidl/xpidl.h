@@ -43,11 +43,19 @@ extern gboolean generate_invoke;
 extern gboolean generate_headers;
 extern gboolean generate_nothing;
 
+typedef struct IncludePathEntry {
+    char *directory;
+    struct IncludePathEntry *next;
+} IncludePathEntry;
+
 typedef struct {
     FILE *file;
+    char *basename;
     IDL_ns ns;
     IDL_tree tree;
     int mode;
+    GHashTable *includes;
+    IncludePathEntry *include_path;
 } TreeState;
 
 #define TREESTATE_HEADER	0
@@ -75,11 +83,11 @@ extern nodeHandler *docDispatch();
 gboolean node_is_error(TreeState *state);
 
 /*
- * Process an IDL file, generating typelib, invoke glue and headers as
+ * Process an IDL file, generating InterfaceInfo, documentation and headers as
  * appropriate.
  */
 int
-xpidl_process_idl(char *filename);
+xpidl_process_idl(char *filename, IncludePathEntry *include_path);
 
 /*
  * Iterate over an IDLN_LIST -- why is this not part of libIDL?
