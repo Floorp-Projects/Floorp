@@ -3256,8 +3256,12 @@ nsDOMSelection::SetPresShell(nsIPresShell *aPresShell)
 NS_IMETHODIMP
 nsDOMSelection::GetAnchorNode(nsIDOMNode** aAnchorNode)
 {
-	if (!aAnchorNode || !mAnchorFocusRange)
-		return NS_ERROR_NULL_POINTER;
+ 	if (!aAnchorNode)
+ 		return NS_ERROR_NULL_POINTER;
+  *aAnchorNode = nsnull;
+  if(!mAnchorFocusRange)
+     return NS_OK;
+   
   nsresult result;
   if (GetDirection() == eDirNext){
     result = mAnchorFocusRange->GetStartContainer(aAnchorNode);
@@ -3271,8 +3275,12 @@ nsDOMSelection::GetAnchorNode(nsIDOMNode** aAnchorNode)
 NS_IMETHODIMP
 nsDOMSelection::GetAnchorOffset(PRInt32* aAnchorOffset)
 {
-	if (!aAnchorOffset || !mAnchorFocusRange)
+	if (!aAnchorOffset)
 		return NS_ERROR_NULL_POINTER;
+  *aAnchorOffset = nsnull;
+  if(!mAnchorFocusRange)
+    return NS_OK;
+
   nsresult result;
   if (GetDirection() == eDirNext){
     result = mAnchorFocusRange->GetStartOffset(aAnchorOffset);
@@ -3287,8 +3295,12 @@ nsDOMSelection::GetAnchorOffset(PRInt32* aAnchorOffset)
 NS_IMETHODIMP
 nsDOMSelection::GetFocusNode(nsIDOMNode** aFocusNode)
 {
-	if (!aFocusNode || !mAnchorFocusRange)
+	if (!aFocusNode)
 		return NS_ERROR_NULL_POINTER;
+  *aFocusNode = nsnull;
+  if(!mAnchorFocusRange)
+    return NS_OK;
+
   nsresult result;
   if (GetDirection() == eDirNext){
     result = mAnchorFocusRange->GetEndContainer(aFocusNode);
@@ -3302,9 +3314,13 @@ nsDOMSelection::GetFocusNode(nsIDOMNode** aFocusNode)
 
 NS_IMETHODIMP nsDOMSelection::GetFocusOffset(PRInt32* aFocusOffset)
 {
-	if (!aFocusOffset || !mAnchorFocusRange)
+	if (!aFocusOffset)
 		return NS_ERROR_NULL_POINTER;
-  nsresult result;
+  *aFocusOffset = nsnull;
+  if(!mAnchorFocusRange)
+    return NS_OK;
+
+   nsresult result;
   if (GetDirection() == eDirNext){
     result = mAnchorFocusRange->GetEndOffset(aFocusOffset);
   }
