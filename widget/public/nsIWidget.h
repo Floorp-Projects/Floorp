@@ -34,7 +34,6 @@ class   nsIToolkit;
 class   nsIRenderingContext;
 class   nsIEnumerator;
 class   nsIDeviceContext;
-class   nsIPresContext;
 struct  nsRect;
 struct  nsFont;
 
