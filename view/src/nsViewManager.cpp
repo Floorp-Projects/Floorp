@@ -391,7 +391,7 @@ nsViewManager::nsViewManager()
   mX = 0;
   mY = 0;
   mCachingWidgetChanges = 0;
-  
+  mAllowDoubleBuffering = PR_TRUE; 
 }
 
 nsViewManager::~nsViewManager()
@@ -702,6 +702,11 @@ void nsViewManager::Refresh(nsIView *aView, nsIRenderingContext *aContext, nsIRe
     aUpdateFlags &= ~NS_VMREFRESH_DOUBLE_BUFFER;
 #endif
 
+  if (PR_FALSE == mAllowDoubleBuffering) {
+    // Turn off double-buffering of the display
+    aUpdateFlags &= ~NS_VMREFRESH_DOUBLE_BUFFER;
+  }
+
 	if (nsnull == aContext)
 		{
 			localcx = getter_AddRefs(CreateRenderingContext(*aView));
@@ -822,6 +827,11 @@ void nsViewManager::Refresh(nsIView *aView, nsIRenderingContext *aContext, const
 #ifdef NO_DOUBLE_BUFFER
     aUpdateFlags &= ~NS_VMREFRESH_DOUBLE_BUFFER;
 #endif
+
+  if (PR_FALSE == mAllowDoubleBuffering) {
+    // Turn off double-buffering of the display
+    aUpdateFlags &= ~NS_VMREFRESH_DOUBLE_BUFFER;
+  }
 
 	if (nsnull == aContext)
 		{
@@ -3616,6 +3626,13 @@ nsViewManager::CacheWidgetChanges(PRBool aCache)
     ProcessWidgetChanges(mRootView);
 #endif
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsViewManager::AllowDoubleBuffering(PRBool aDoubleBuffer)
+{
+  mAllowDoubleBuffering = aDoubleBuffer;
   return NS_OK;
 }
 
