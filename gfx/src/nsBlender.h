@@ -46,50 +46,29 @@ typedef enum{
   nsHighQual
 }nsBlendQuality;
 
-typedef struct
-{
-  PRUint32  mRedZeroMask;     //red color mask in zero position
-  PRUint32  mGreenZeroMask;   //green color mask in zero position
-  PRUint32  mBlueZeroMask;    //blue color mask in zero position
-  PRUint32  mAlphaZeroMask;   //alpha data mask in zero position
-  PRUint32  mRedMask;         //red color mask
-  PRUint32  mGreenMask;       //green color mask
-  PRUint32  mBlueMask;        //blue color mask
-  PRUint32  mAlphaMask;       //alpha data mask
-  PRUint8   mRedCount;        //number of red color bits
-  PRUint8   mGreenCount;      //number of green color bits
-  PRUint8   mBlueCount;       //number of blue color bits
-  PRUint8   mAlphaCount;      //number of alpha data bits
-  PRUint8   mRedShift;        //number to shift value into red position
-  PRUint8   mGreenShift;      //number to shift value into green position
-  PRUint8   mBlueShift;       //number to shift value into blue position
-  PRUint8   mAlphaShift;      //number to shift value into alpha position
-} nsPixelFormat;
-
 //----------------------------------------------------------------------
 
 // Blender interface
 class nsBlender : public nsIBlender
 {
 public:
-
-  NS_DECL_ISUPPORTS
-  
  /** --------------------------------------------------------------------------
   * General constructor for a nsBlender object
   * @update dc - 10/29/98
   */
   nsBlender();
 
+  NS_DECL_ISUPPORTS
+  
+  NS_IMETHOD Init(nsIDeviceContext *aContext);
+
+protected:
+
  /** --------------------------------------------------------------------------
   * Destructor for a nsBlender object
   * @update dwc - 10/29/98
   */
   virtual ~nsBlender();
-
-  NS_IMETHOD Init(nsIDeviceContext *aDeviceContext);
-
- protected:
 
   /** --------------------------------------------------------------------------
    * Calculate how many bytes per span for a given depth
@@ -203,7 +182,7 @@ public:
                 nscolor aSrcBackColor, nscolor aSecondSrcBackColor);
 
 
-  nsIDeviceContext    *mTheDeviceCon;
+  nsIDeviceContext  *mContext;
 };
 
 #endif

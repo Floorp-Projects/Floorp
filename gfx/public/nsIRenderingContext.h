@@ -23,6 +23,7 @@
 #include "nsISupports.h"
 #include "nsColor.h"
 #include "nsCoord.h"
+#include "nsIDrawingSurface.h"
 
 class nsIWidget;
 class nsIFontMetrics;
@@ -585,13 +586,5 @@ public:
 //wish the copy to happen to that buffer rather than
 //the "front" buffer. i'm not proud of this. MMP
 #define NS_COPYBITS_TO_BACK_BUFFER          0x0008
-
-//when creating a drawing surface, you can use this
-//to tell the rendering context that you anticipate
-//the need to get to the actual bits of the drawing
-//surface at some point during it's lifetime. typically
-//used when creating bitmaps to be operated on by the
-//nsIBlender implementations.
-#define NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS  0x0001
 
 #endif /* nsIRenderingContext_h___ */

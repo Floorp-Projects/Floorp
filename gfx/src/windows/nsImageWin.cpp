@@ -280,24 +280,33 @@ struct MONOBITMAPINFO {
   */
 void nsImageWin :: CreateDDB(nsDrawingSurface aSurface)
 {
-HDC TheHDC = ((nsDrawingSurfaceWin *)aSurface)->mDC;
+  HDC TheHDC;
 
+  ((nsDrawingSurfaceWin *)aSurface)->GetDC(&TheHDC);
 
-  if ((TheHDC != NULL) && (mSizeImage > 0)){
-    mHBitmap = ::CreateDIBitmap(TheHDC, mBHead, CBM_INIT, mImageBits, (LPBITMAPINFO)mBHead,
-                                256 == mNumPaletteColors ? DIB_PAL_COLORS : DIB_RGB_COLORS);
+  if (TheHDC != NULL)
+  {
+    if (mSizeImage > 0)
+    {
+      mHBitmap = ::CreateDIBitmap(TheHDC, mBHead, CBM_INIT, mImageBits, (LPBITMAPINFO)mBHead,
+                                  256 == mNumPaletteColors ? DIB_PAL_COLORS : DIB_RGB_COLORS);
 
-    if (nsnull != mAlphaBits){
-      // Create a monochrome bitmap
-      // XXX Handle the case of 8-bit alpha...
-      NS_ASSERTION(1 == mAlphaDepth, "unexpected alpha depth");
-      mAlphaHBitmap = ::CreateBitmap(mAlphaWidth, mAlphaHeight, 1, 1, NULL);
+      if (nsnull != mAlphaBits)
+      {
+        // Create a monochrome bitmap
+        // XXX Handle the case of 8-bit alpha...
+        NS_ASSERTION(1 == mAlphaDepth, "unexpected alpha depth");
+        mAlphaHBitmap = ::CreateBitmap(mAlphaWidth, mAlphaHeight, 1, 1, NULL);
 
-      MONOBITMAPINFO  bmi(mAlphaWidth, mAlphaHeight);
-      ::SetDIBits(TheHDC, mAlphaHBitmap, 0, mAlphaHeight, mAlphaBits,
-                  (LPBITMAPINFO)&bmi, DIB_RGB_COLORS);
+        MONOBITMAPINFO  bmi(mAlphaWidth, mAlphaHeight);
+        ::SetDIBits(TheHDC, mAlphaHBitmap, 0, mAlphaHeight, mAlphaBits,
+                    (LPBITMAPINFO)&bmi, DIB_RGB_COLORS);
+      }
+
+      CleanUp(PR_FALSE);
     }
-    CleanUp(PR_FALSE);
+
+    ((nsDrawingSurfaceWin *)aSurface)->ReleaseDC();
   }
 }
 
@@ -320,74 +329,91 @@ NS_IMETHODIMP nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface
                                  PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                                  PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
-HDC   TheHDC = ((nsDrawingSurfaceWin *)aSurface)->mDC;
+  HDC   TheHDC;
 
   if (mBHead == nsnull) 
     return NS_ERROR_FAILURE;
 
   // If the image can be optimized then make sure we've created the DDB
-  if (mIsOptimized && (nsnull == mHBitmap)) {
+  if (mIsOptimized && (nsnull == mHBitmap))
     CreateDDB(aSurface);
-  }
 
-  if (!IsOptimized()){
-    DWORD rop = SRCCOPY;
+  ((nsDrawingSurfaceWin *)aSurface)->GetDC(&TheHDC);
 
-    if (nsnull != mAlphaBits) {
-      MONOBITMAPINFO  bmi(mAlphaWidth, mAlphaHeight);
+  if (nsnull != TheHDC)
+  {
+    if (!IsOptimized())
+    {
+      DWORD rop = SRCCOPY;
+
+      if (nsnull != mAlphaBits)
+      {
+        MONOBITMAPINFO  bmi(mAlphaWidth, mAlphaHeight);
+
+        ::StretchDIBits(TheHDC, aDX, aDY, aDWidth, aDHeight,
+                        aSX, aSY, aSWidth, aSHeight, mAlphaBits,
+                        (LPBITMAPINFO)&bmi, DIB_RGB_COLORS, SRCAND);
+        rop = SRCPAINT;
+      }
 
       ::StretchDIBits(TheHDC, aDX, aDY, aDWidth, aDHeight,
-                      aSX, aSY, aSWidth, aSHeight, mAlphaBits,
-                      (LPBITMAPINFO)&bmi, DIB_RGB_COLORS, SRCAND);
-      rop = SRCPAINT;
+                      aSX, aSY, aSWidth, aSHeight, mImageBits,
+                      (LPBITMAPINFO)mBHead, 256 == mNumPaletteColors ? DIB_PAL_COLORS :
+                      DIB_RGB_COLORS, rop);
     }
+    else
+    {
+      nsIDeviceContext    *dx;
+      aContext.GetDeviceContext(dx);
+      nsDrawingSurface     ds;
+      dx->GetDrawingSurface(aContext, ds);
+      nsDrawingSurfaceWin *srcDS = (nsDrawingSurfaceWin *)ds;
+      HDC                 srcDC;
 
-    ::StretchDIBits(TheHDC, aDX, aDY, aDWidth, aDHeight,
-                    aSX, aSY, aSWidth, aSHeight, mImageBits,
-                    (LPBITMAPINFO)mBHead, 256 == mNumPaletteColors ? DIB_PAL_COLORS :
-                    DIB_RGB_COLORS, rop);
-  }else{
-    nsIDeviceContext    *dx;
-    aContext.GetDeviceContext(dx);
-    nsDrawingSurface     ds;
-    dx->GetDrawingSurface(aContext, ds);
-    nsDrawingSurfaceWin *srcDS = (nsDrawingSurfaceWin *)ds;
-    HDC                 srcDC;
+      if (nsnull != srcDS)
+      {
+        srcDS->GetDC(&srcDC);
 
-    if (nsnull != srcDS){
-      srcDC = srcDS->mDC;
+        if (NULL != srcDC)
+        {
+          HBITMAP oldbits;
 
-      if (NULL != srcDC){
-        HBITMAP oldbits;
+          if (nsnull == mAlphaHBitmap)
+          {
+            oldbits = (HBITMAP)::SelectObject(srcDC, mHBitmap);
+            ::StretchBlt(TheHDC, aDX, aDY, aDWidth, aDHeight, srcDC, aSX, aSY,
+                         aSWidth, aSHeight, SRCCOPY);
+          }
+          else if (gIsWinNT && (aDWidth == aSWidth) && (aDHeight == aSHeight)){
+            oldbits = (HBITMAP)::SelectObject(srcDC, mHBitmap);
+            ::MaskBlt(TheHDC, aDX, aDY, aDWidth, aDHeight,
+                      srcDC, aSX, aSY, mAlphaHBitmap, aSX, aSY, MASKBLT_ROP);
+          }
+          else
+          {
+            COLORREF oldTextColor = ::SetTextColor(TheHDC, RGB(0, 0, 0));
+            COLORREF oldBkColor = ::SetBkColor(TheHDC, RGB(255, 255, 255));
+            oldbits = (HBITMAP)::SelectObject(srcDC, mAlphaHBitmap);
+            ::StretchBlt(TheHDC, aDX, aDY, aDWidth, aDHeight, srcDC, aSX, aSY,
+                         aSWidth, aSHeight, SRCAND);
+            ::SetTextColor(TheHDC, oldTextColor);
+            ::SetBkColor(TheHDC, oldBkColor);
 
-        if (nsnull == mAlphaHBitmap) {
-          oldbits = (HBITMAP)::SelectObject(srcDC, mHBitmap);
-          ::StretchBlt(TheHDC, aDX, aDY, aDWidth, aDHeight, srcDC, aSX, aSY,
-                       aSWidth, aSHeight, SRCCOPY);
+            ::SelectObject(srcDC, mHBitmap);
+            ::StretchBlt(TheHDC, aDX, aDY, aDWidth, aDHeight, srcDC, aSX, aSY,
+                         aSWidth, aSHeight, SRCPAINT);
+          }
+
+          ::SelectObject(srcDC, oldbits);
+
+          srcDS->ReleaseDC();
         }
-        else if (gIsWinNT && (aDWidth == aSWidth) && (aDHeight == aSHeight)){
-          oldbits = (HBITMAP)::SelectObject(srcDC, mHBitmap);
-          ::MaskBlt(TheHDC, aDX, aDY, aDWidth, aDHeight,
-                    srcDC, aSX, aSY, mAlphaHBitmap, aSX, aSY, MASKBLT_ROP);
-        }else{
-          COLORREF oldTextColor = ::SetTextColor(TheHDC, RGB(0, 0, 0));
-          COLORREF oldBkColor = ::SetBkColor(TheHDC, RGB(255, 255, 255));
-          oldbits = (HBITMAP)::SelectObject(srcDC, mAlphaHBitmap);
-          ::StretchBlt(TheHDC, aDX, aDY, aDWidth, aDHeight, srcDC, aSX, aSY,
-                       aSWidth, aSHeight, SRCAND);
-          ::SetTextColor(TheHDC, oldTextColor);
-          ::SetBkColor(TheHDC, oldBkColor);
-
-          ::SelectObject(srcDC, mHBitmap);
-          ::StretchBlt(TheHDC, aDX, aDY, aDWidth, aDHeight, srcDC, aSX, aSY,
-                       aSWidth, aSHeight, SRCPAINT);
-        }
-
-        ::SelectObject(srcDC, oldbits);
       }
+
+      NS_RELEASE(dx);
     }
 
-    NS_RELEASE(dx);
+    ((nsDrawingSurfaceWin *)aSurface)->ReleaseDC();
   }
 
   return NS_OK;
@@ -408,74 +434,92 @@ HDC   TheHDC = ((nsDrawingSurfaceWin *)aSurface)->mDC;
 NS_IMETHODIMP nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
                                  PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-HDC   TheHDC = ((nsDrawingSurfaceWin *)aSurface)->mDC;
+  HDC   TheHDC;
 
   if (mBHead == nsnull) 
     return NS_ERROR_FAILURE;
 
   // If the image can be optimized then make sure we've created the DDB
-  if (mIsOptimized && (nsnull == mHBitmap)) {
+  if (mIsOptimized && (nsnull == mHBitmap))
     CreateDDB(aSurface);
-  }
 
-  if (!IsOptimized()){
-    DWORD rop = SRCCOPY;
+  ((nsDrawingSurfaceWin *)aSurface)->GetDC(&TheHDC);
 
-    if (nsnull != mAlphaBits) {
-      MONOBITMAPINFO  bmi(mAlphaWidth, mAlphaHeight);
+  if (nsnull != TheHDC)
+  {
+    if (!IsOptimized())
+    {
+      DWORD rop = SRCCOPY;
+
+      if (nsnull != mAlphaBits)
+      {
+        MONOBITMAPINFO  bmi(mAlphaWidth, mAlphaHeight);
+
+        ::StretchDIBits(TheHDC, aX, aY, aWidth, aHeight,
+                        0, 0, mAlphaWidth, mAlphaHeight, mAlphaBits,
+                        (LPBITMAPINFO)&bmi, DIB_RGB_COLORS, SRCAND);
+        rop = SRCPAINT;
+      }
 
       ::StretchDIBits(TheHDC, aX, aY, aWidth, aHeight,
-                      0, 0, mAlphaWidth, mAlphaHeight, mAlphaBits,
-                      (LPBITMAPINFO)&bmi, DIB_RGB_COLORS, SRCAND);
-      rop = SRCPAINT;
+                      0, 0, mBHead->biWidth, mBHead->biHeight, mImageBits,
+                      (LPBITMAPINFO)mBHead, 256 == mNumPaletteColors ? DIB_PAL_COLORS :
+                      DIB_RGB_COLORS, rop);
     }
+    else
+    {
+      nsIDeviceContext    *dx;
+      aContext.GetDeviceContext(dx);
+      nsDrawingSurface     ds;
+      dx->GetDrawingSurface(aContext, ds);
+      nsDrawingSurfaceWin *srcDS = (nsDrawingSurfaceWin *)ds;
+      HDC                 srcDC;
 
-    ::StretchDIBits(TheHDC, aX, aY, aWidth, aHeight,
-                    0, 0, mBHead->biWidth, mBHead->biHeight, mImageBits,
-                    (LPBITMAPINFO)mBHead, 256 == mNumPaletteColors ? DIB_PAL_COLORS :
-                    DIB_RGB_COLORS, rop);
-  }else{
-    nsIDeviceContext    *dx;
-    aContext.GetDeviceContext(dx);
-    nsDrawingSurface     ds;
-    dx->GetDrawingSurface(aContext, ds);
-    nsDrawingSurfaceWin *srcDS = (nsDrawingSurfaceWin *)ds;
-    HDC                 srcDC;
+      if (nsnull != srcDS)
+      {
+        srcDS->GetDC(&srcDC);
 
-    if (nsnull != srcDS){
-      srcDC = srcDS->mDC;
+        if (NULL != srcDC)
+        {
+          HBITMAP oldBits;
 
-      if (NULL != srcDC){
-        HBITMAP oldBits;
+          if (nsnull == mAlphaHBitmap)
+          {
+            oldBits = (HBITMAP)::SelectObject(srcDC, mHBitmap);
+            ::StretchBlt(TheHDC, aX, aY, aWidth, aHeight, srcDC, 0, 0,
+                         mBHead->biWidth, mBHead->biHeight, SRCCOPY);
 
-        if (nsnull == mAlphaHBitmap){
-          oldBits = (HBITMAP)::SelectObject(srcDC, mHBitmap);
-          ::StretchBlt(TheHDC, aX, aY, aWidth, aHeight, srcDC, 0, 0,
-                       mBHead->biWidth, mBHead->biHeight, SRCCOPY);
+          }
+          else if (gIsWinNT && (aWidth == mBHead->biWidth) && (aHeight == mBHead->biHeight)){
+            oldBits = (HBITMAP)::SelectObject(srcDC, mHBitmap);
+            ::MaskBlt(TheHDC, aX, aY, aWidth, aHeight,
+                      srcDC, 0, 0, mAlphaHBitmap, 0, 0, MASKBLT_ROP);
+          }
+          else
+          {
+            COLORREF oldTextColor = ::SetTextColor(TheHDC, RGB(0, 0, 0));
+            COLORREF oldBkColor = ::SetBkColor(TheHDC, RGB(255, 255, 255));
+            oldBits = (HBITMAP)::SelectObject(srcDC, mAlphaHBitmap);
+            ::StretchBlt(TheHDC, aX, aY, aWidth, aHeight, srcDC, 0, 0,
+                         mAlphaWidth, mAlphaHeight, SRCAND);
+            ::SetTextColor(TheHDC, oldTextColor);
+            ::SetBkColor(TheHDC, oldBkColor);
 
-        }else if (gIsWinNT && (aWidth == mBHead->biWidth) && (aHeight == mBHead->biHeight)){
-          oldBits = (HBITMAP)::SelectObject(srcDC, mHBitmap);
-          ::MaskBlt(TheHDC, aX, aY, aWidth, aHeight,
-                    srcDC, 0, 0, mAlphaHBitmap, 0, 0, MASKBLT_ROP);
-        }else{
-          COLORREF oldTextColor = ::SetTextColor(TheHDC, RGB(0, 0, 0));
-          COLORREF oldBkColor = ::SetBkColor(TheHDC, RGB(255, 255, 255));
-          oldBits = (HBITMAP)::SelectObject(srcDC, mAlphaHBitmap);
-          ::StretchBlt(TheHDC, aX, aY, aWidth, aHeight, srcDC, 0, 0,
-                       mAlphaWidth, mAlphaHeight, SRCAND);
-          ::SetTextColor(TheHDC, oldTextColor);
-          ::SetBkColor(TheHDC, oldBkColor);
+            ::SelectObject(srcDC, mHBitmap);
+            ::StretchBlt(TheHDC, aX, aY, aWidth, aHeight, srcDC, 0, 0,
+                         mBHead->biWidth, mBHead->biHeight, SRCPAINT);
+          }
 
-          ::SelectObject(srcDC, mHBitmap);
-          ::StretchBlt(TheHDC, aX, aY, aWidth, aHeight, srcDC, 0, 0,
-                       mBHead->biWidth, mBHead->biHeight, SRCPAINT);
+          ::SelectObject(srcDC, oldBits);
+
+          srcDS->ReleaseDC();
         }
-
-        ::SelectObject(srcDC, oldBits);
       }
+
+      NS_RELEASE(dx);
     }
 
-    NS_RELEASE(dx);
+    ((nsDrawingSurfaceWin *)aSurface)->ReleaseDC();
   }
 
   return NS_OK;

@@ -971,18 +971,36 @@ NS_IMETHODIMP nsRenderingContextMac :: SetClipRegion(const nsIRegion& aRegion, n
 
 NS_IMETHODIMP nsRenderingContextMac :: GetClipRegion(nsIRegion **aRegion)
 {
-  static NS_DEFINE_IID(kCRegionCID, NS_REGION_CID);
-  static NS_DEFINE_IID(kIRegionIID, NS_IREGION_IID);
+  nsresult  rv = NS_OK;
 
-  nsresult rv = nsRepository::CreateInstance(kCRegionCID,nsnull,  kIRegionIID, (void **)aRegion);
+  NS_ASSERTION(!(nsnull == aRegion), "no region ptr");
 
-  if (NS_OK == rv)
- 	{
+  if (nsnull == *aRegion)
+  {
+    nsRegionMac *rgn = new nsRegionMac();
+
+    if (nsnull != rgn)
+    {
+      NS_ADDREF(rgn);
+
+      rv = rgn->Init();
+
+      if (NS_OK != rv)
+        NS_RELEASE(rgn);
+      else
+        *aRegion = rgn;
+    }
+    else
+      rv = NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  if (rv == NS_OK)
+  {
 		nsRegionMac** macRegion = (nsRegionMac**)aRegion;
 		(*macRegion)->SetNativeRegion(mGS->mClipRegion);
- 	}
+  }
 
-  return NS_OK;
+  return rv;
 }
 
 //------------------------------------------------------------------------

@@ -131,7 +131,7 @@ NS_IMETHODIMP nsDeviceContextWin :: CreateRenderingContext(nsIRenderingContext *
 
     if (nsnull != surf)
     {
-      rv = surf->Init(mDC, PR_FALSE);
+      rv = surf->Init(mDC);
 
       if (NS_OK == rv)
         rv = pContext->Init(this, surf);
@@ -325,15 +325,32 @@ NS_IMETHODIMP nsDeviceContextWin :: GetSystemAttribute(nsSystemAttrID anID, Syst
     //---------
     // Fonts
     //---------
-    case eSystemAttr_Font_Caption : 
-    case eSystemAttr_Font_Icon : 
-    case eSystemAttr_Font_Menu : 
-    case eSystemAttr_Font_MessageBox : 
-    case eSystemAttr_Font_SmallCaption : 
-    case eSystemAttr_Font_StatusBar : 
-    case eSystemAttr_Font_Tooltips : 
-      status = GetSysFontInfo(mDC, anID, aInfo->mFont);
+    case eSystemAttr_Font_Caption: 
+    case eSystemAttr_Font_Icon: 
+    case eSystemAttr_Font_Menu: 
+    case eSystemAttr_Font_MessageBox: 
+    case eSystemAttr_Font_SmallCaption: 
+    case eSystemAttr_Font_StatusBar: 
+    case eSystemAttr_Font_Tooltips: 
+    {
+      HWND  hwnd;
+      HDC   tdc;
+
+      if (nsnull == mDC)
+      {
+        hwnd = (HWND)mWidget;
+        tdc = ::GetDC(hwnd);
+      }
+      else
+        tdc = mDC;
+
+      status = GetSysFontInfo(tdc, anID, aInfo->mFont);
+
+      if (nsnull == mDC)
+        ::ReleaseDC(hwnd, tdc);
+
       break;
+    }
     case eSystemAttr_Font_Widget:
 
       aInfo->mFont->name        = "Arial";

@@ -42,6 +42,7 @@ typedef struct
 {
   PRUint32      mNumRects;    //number of actual rects in the mRects array
   PRUint32      mRectsLen;    //length, in rects, of the mRects array
+  PRUint32      mArea;        //area of the covered portion of the region
   nsRegionRect  mRects[1];
 } nsRegionRectSet;
 

@@ -43,6 +43,7 @@ EXPORTS =				\
   nsDeviceContext.h \
   nsIDeviceContextSpec.h \
   nsIDeviceContextSpecFactory.h \
+  nsIDrawingSurface.h \
   nsColorNameIDs.h \
 	$(NULL)
 

@@ -38,10 +38,10 @@ public:
   /**
    * Initialize the Blender
    * @update dc 11/4/98
-   * @param  aDeviceContext is where the blender can get info about the device its blending on
+   * @param  aContext is where the blender can get info about the device its blending on
    * @result The result of the initialization, NS_OK if no errors
    */
-  NS_IMETHOD Init(nsIDeviceContext *aDeviceContext) = 0;
+  NS_IMETHOD Init(nsIDeviceContext *aContext) = 0;
 
   /**
    * NOTE: if we can make this static, that would be great. I don't think we can.

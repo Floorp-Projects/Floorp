@@ -234,6 +234,7 @@ NS_IMETHODIMP nsRegionGTK::GetRects(nsRegionRectSet **aRects)
   }
 
   rects->mNumRects = nbox;
+  rects->mArea = 0;
   rect = &rects->mRects[0];
 
   while (nbox--)
@@ -242,6 +243,8 @@ NS_IMETHODIMP nsRegionGTK::GetRects(nsRegionRectSet **aRects)
     rect->width = (pbox->x2 - pbox->x1);
     rect->y = pbox->y1;
     rect->height = (pbox->y2 - pbox->y1);
+
+    rects->mArea += rect->width * rect->height;
 
     pbox++;
     rect++;

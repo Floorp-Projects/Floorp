@@ -200,10 +200,15 @@ NS_IMETHODIMP nsRegionWin :: GetRects(nsRegionRectSet **aRects)
 	NS_ASSERTION(!(dwCount == 0), "bad region");
 
 	if (dwCount == 0)
-	  return PR_FALSE;
+	  return NS_OK;
 
   if (dwCount > mDataSize)
+  {
+    if (NULL != mData)
+      PR_Free(mData);
+
 	  mData = (LPRGNDATA)PR_Malloc(dwCount);
+  }
 
 	NS_ASSERTION(!(nsnull == mData), "failed allocation");
 
@@ -234,6 +239,7 @@ NS_IMETHODIMP nsRegionWin :: GetRects(nsRegionRectSet **aRects)
   }
 
   rects->mNumRects = mData->rdh.nCount;
+  rects->mArea = 0;
   rect = &rects->mRects[0];
 
   for (pRects = (LPRECT)mData->Buffer, num_rects = 0; 
@@ -244,6 +250,8 @@ NS_IMETHODIMP nsRegionWin :: GetRects(nsRegionRectSet **aRects)
 		rect->y = pRects->top;
 		rect->width = pRects->right - rect->x;
 		rect->height = pRects->bottom - rect->y;
+
+    rects->mArea += rect->width * rect->height;
 	}
 
   *aRects = rects;
