@@ -1384,6 +1384,12 @@ void nsScrollingView :: AdjustChildWidgets(nsScrollingView *aScrolling, nsIView 
 
 NS_IMETHODIMP nsScrollingView :: SetScrolledView(nsIView *aScrolledView)
 {
+  PRBool  isTransparent;
+
+  // If the scrolled view has transparent content areas then the clip view also
+  // needs to be marked as having a transparent content area
+  aScrolledView->HasTransparency(isTransparent);
+  mViewManager->SetViewContentTransparency(mClipView, isTransparent);
   return mViewManager->InsertChild(mClipView, aScrolledView, 0);
 }
 
