@@ -14,7 +14,7 @@
 #
 
 CFLAGS         +=-D_IMPL_NS_XPFC -DNSPR20
-INCLUDES       += -I../inc -I$(GDEPTH)/include
+INCLUDES       += -I../inc 
 
 LIBRARY_NAME      = core_unix
 LIBRARY_VERSION   = 10
