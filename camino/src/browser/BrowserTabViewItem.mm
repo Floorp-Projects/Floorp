@@ -580,7 +580,8 @@ const double kJaguarAppKitVersion = 663;
 -(void)setTabIcon:(NSImage *)newIcon
 {
   [super setTabIcon:newIcon];
-  [[mTabContentsView labelCell] setImage:mTabIcon];  
+  [[mTabContentsView labelCell] setImage:mTabIcon];
+  [mTabContentsView setNeedsDisplay:YES];
 }
 
 - (void)setTabIcon:(NSImage *)newIcon isDraggable:(BOOL)draggable
