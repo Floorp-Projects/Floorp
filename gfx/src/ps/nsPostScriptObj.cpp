@@ -201,6 +201,12 @@ nsPostScriptObj::~nsPostScriptObj()
     if (mPrintSetup->out) {
       fclose(mPrintSetup->out);
       mPrintSetup->out = nsnull;
+#ifdef VMS
+      // if the file was still open and we have a print command, then it was
+      // a print preview operation and so we need to delete the temp file.
+      if (mPrintSetup->print_cmd)
+        remove(mPrintSetup->filename);
+#endif
     }  
   }
   
@@ -2057,20 +2063,28 @@ nsPostScriptObj::end_document()
   fprintf(f, "%%%%Pages: %d\n", (int) mPageNumber - 1);
   fprintf(f, "%%%%EOF\n");
 
+#ifdef VMS
+  if ( mPrintSetup->print_cmd != nsnull ) {
+    char VMSPrintCommand[1024];
+    if (mPrintSetup->out) {
+      fclose(mPrintSetup->out);
+      mPrintSetup->out = nsnull;
+    }  
+    PR_snprintf(VMSPrintCommand, sizeof(VMSPrintCommand), "%s %s.",
+      mPrintSetup->print_cmd, mPrintSetup->filename);
+    PR_LOG(nsPostScriptObjLM, PR_LOG_DEBUG, ("VMS print command '%s'\n", VMSPrintCommand));
+    // FixMe: Check for error and return one of NS_ERROR_GFX_PRINTER_* on demand  
+    system(VMSPrintCommand);
+    free((void *)mPrintSetup->filename);
+  }
+#endif
+
   if (mPrintSetup->filename) {
     PR_LOG(nsPostScriptObjLM, PR_LOG_DEBUG, ("print to file completed.\n"));
   }  
   else {
     PR_LOG(nsPostScriptObjLM, PR_LOG_DEBUG, ("piping job to '%s'\n", mPrintSetup->print_cmd));
 
-#ifdef VMS
-    char VMSPrintCommand[1024];
-    PR_snprintf(VMSPrintCommand, sizeof(VMSPrintCommand), "%s %s.",
-      mPrintSetup->print_cmd, mPrintSetup->filename);
-    // FixMe: Check for error and return one of NS_ERROR_GFX_PRINTER_* on demand  
-    system(VMSPrintCommand);
-    free((void *)mPrintSetup->filename);
-#else
     FILE  *pipe;
     char   buf[256];
     size_t len;
@@ -2095,7 +2109,6 @@ nsPostScriptObj::end_document()
 
     pclose(pipe);
     PR_LOG(nsPostScriptObjLM, PR_LOG_DEBUG, ("piping done, copied %ld bytes.\n", job_size));
-#endif /* VMS */
   }
   
   return NS_OK;

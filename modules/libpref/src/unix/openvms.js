@@ -54,6 +54,7 @@ pref("applications.rlogin_with_user", "create /term /detach \"rlogin %h -l %u\""
 /* PostScript module specific (see unix.js for additional configuration details) */
 pref("print.postscript.print_command", "print /delete");
 /* Print module independant */
+pref("print.print_command", "print /delete");
 pref("print.print_color", false);
 
 pref("browser.cache.disk.capacity", 4000);
