@@ -788,6 +788,8 @@ public: /* ----- Cell Map public methods ----- */
     * returns nsnull if the col frame has not yet been allocated, or if aColIndex is out of range
     */
   nsTableColFrame * GetColFrame(PRInt32 aColIndex);
+  // return the last col index which isn't of type eColAnonymousCell
+  PRInt32 GetIndexOfLastRealCol();
 
   /** return the cell frame at aRowIndex, aColIndex.
     * returns nsnull if the cell frame has not yet been allocated, 

@@ -112,6 +112,7 @@ public:
                                   PRInt32* aColSpan = nsnull);
 
   void AddColsAtEnd(PRUint32 aNumCols);
+  void RemoveColsAtEnd();
 
   PRBool RowIsSpannedInto(PRInt32 aRowIndex);
   PRBool RowHasSpanningCells(PRInt32 aRowIndex);
@@ -132,8 +133,9 @@ protected:
   void InsertGroupCellMap(nsCellMap* aPrevMap,
                           nsCellMap& aNewMap);
 
-  nsVoidArray mCols;
-  nsCellMap*  mFirstMap;
+  nsTableFrame& mTableFrame;
+  nsVoidArray   mCols;
+  nsCellMap*    mFirstMap;
 };
 
 /** nsCellMap is a support class for nsTablePart.  

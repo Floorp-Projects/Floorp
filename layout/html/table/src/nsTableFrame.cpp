@@ -563,6 +563,19 @@ PRInt32 nsTableFrame::GetEffectiveColCount ()
   return colCount;
 }
 
+PRInt32 nsTableFrame::GetIndexOfLastRealCol()
+{
+  PRInt32 numCols = mColFrames.Count();
+  for (PRInt32 colX = numCols; colX >= 0; colX--) { 
+    nsTableColFrame* colFrame = GetColFrame(colX);
+    if (colFrame) {
+      if (eColAnonymousCell != colFrame->GetType()) {
+        return colX;
+      }
+    }
+  }
+  return -1; 
+}
 
 nsTableColFrame* nsTableFrame::GetColFrame(PRInt32 aColIndex)
 {
@@ -1121,11 +1134,14 @@ void nsTableFrame::RemoveCell(nsIPresContext&   aPresContext,
     cellMap->RemoveCell(aCellFrame, aRowIndex);
     PRInt32 numColsInMap = GetColCount(); // cell map's notion of num cols
     PRInt32 numColsInCache = mColFrames.Count();
-    PRInt32 numColsNotRemoved = DestroyAnonymousColFrames(aPresContext, numColsInCache - numColsInMap);
-    // if the cell map has fewer cols than the cache, correct it
-    if (numColsNotRemoved > 0) {
-      cellMap->AddColsAtEnd(numColsNotRemoved);
+    if (numColsInCache > numColsInMap) {
+      PRInt32 numColsNotRemoved = DestroyAnonymousColFrames(aPresContext, numColsInCache - numColsInMap);
+      // if the cell map has fewer cols than the cache, correct it
+      if (numColsNotRemoved > 0) {
+        cellMap->AddColsAtEnd(numColsNotRemoved);
+      }
     }
+    else NS_ASSERTION(numColsInCache == numColsInMap, "cell map has too many cols");
   }
 }
 
@@ -1249,11 +1265,14 @@ void nsTableFrame::RemoveRows(nsIPresContext&  aPresContext,
     // only remove cols that are of type eTypeAnonymous cell (they are at the end)
     PRInt32 numColsInMap = GetColCount(); // cell map's notion of num cols
     PRInt32 numColsInCache = mColFrames.Count();
-    PRInt32 numColsNotRemoved = DestroyAnonymousColFrames(aPresContext, numColsInCache - numColsInMap);
-    // if the cell map has fewer cols than the cache, correct it
-    if (numColsNotRemoved > 0) {
-      cellMap->AddColsAtEnd(numColsNotRemoved);
+    if (numColsInCache > numColsInMap) {
+      PRInt32 numColsNotRemoved = DestroyAnonymousColFrames(aPresContext, numColsInCache - numColsInMap);
+      // if the cell map has fewer cols than the cache, correct it
+      if (numColsNotRemoved > 0) {
+        cellMap->AddColsAtEnd(numColsNotRemoved);
+      }
     }
+    else NS_ASSERTION(numColsInCache == numColsInMap, "cell map has too many cols");
   }
   AdjustRowIndices(&aPresContext, firstRowIndex, -aNumRowsToRemove);
   //printf("removeRowsAfter\n");
@@ -2420,11 +2439,15 @@ nsTableFrame::RemoveFrame(nsIPresContext* aPresContext,
       // only remove cols that are of type eTypeAnonymous cell (they are at the end)
       PRInt32 numColsInMap = GetColCount(); // cell map's notion of num cols
       PRInt32 numColsInCache = mColFrames.Count();
-      PRInt32 numColsNotRemoved = DestroyAnonymousColFrames(*aPresContext, numColsInCache - numColsInMap);
-      // if the cell map has fewer cols than the cache, correct it
-      if (numColsNotRemoved > 0) {
-        cellMap->AddColsAtEnd(numColsNotRemoved);
+      if (numColsInCache > numColsInMap) {
+        PRInt32 numColsNotRemoved = DestroyAnonymousColFrames(*aPresContext, numColsInCache - numColsInMap);
+        // if the cell map has fewer cols than the cache, correct it
+        if (numColsNotRemoved > 0) {
+          cellMap->AddColsAtEnd(numColsNotRemoved);
+        }
       }
+      else NS_ASSERTION(numColsInCache == numColsInMap, "cell map has too many cols");
+
       AdjustRowIndices(aPresContext, startRowIndex, -numRows);
       // remove the row group frame from the sibling chain
       mFrames.DestroyFrame(aPresContext, aOldFrame);
@@ -4341,6 +4364,11 @@ nsTableFrame::GetCellDataAt(PRInt32        aRowIndex,
   aColSpan = cellFrame->GetColSpan();
   aActualRowSpan = GetEffectiveRowSpan(*cellFrame);
   aActualColSpan = GetEffectiveColSpan(*cellFrame);
+
+  // If these aren't at least 1, we have a cellmap error
+  if (aActualRowSpan == 0 || aActualColSpan == 0)
+    return NS_ERROR_FAILURE;
+
   result = cellFrame->GetSelected(&aIsSelected);
   if (NS_FAILED(result)) return result;
 
