@@ -65,11 +65,6 @@ interface nsIEditingSession : nsISupports
    */
   readonly attribute unsigned long editorStatus;
 
-  /*  Init the editing session, passing the window that will be the root of
-   *  the session (usually the content root frame)
-   */
-  void init(in nsIDOMWindow window);
-
   /**
    *  Make this window editable
    *  @param aWindow nsIDOMWindow, the window the embedder needs to make editable

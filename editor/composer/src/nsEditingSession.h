@@ -110,7 +110,7 @@ protected:
                                             nsISupports* aContext,
                                             PRUint32 aID);
 
-  nsresult        PrepareForEditing();
+  nsresult        PrepareForEditing(nsIDOMWindow *aWindow);
 
   static void     TimerCallback(nsITimer *aTimer, void *aClosure);
   nsCOMPtr<nsITimer>  mLoadBlankDocTimer;
@@ -129,14 +129,20 @@ protected:
 
 protected:
 
-  nsWeakPtr       mEditingShell;// weak ptr to the editing (web) shell that owns us
-  PRBool          mDoneSetup;    // have we prepared for editing yet?
+  PRPackedBool    mDoneSetup;    // have we prepared for editing yet?
 
   // Used to prevent double creation of editor because nsIWebProgressListener
   //  receives a STATE_STOP notification before the STATE_START 
   //  for our document, so we wait for the STATE_START, then STATE_STOP 
   //  before creating an editor
-  PRBool          mCanCreateEditor; 
+  PRPackedBool    mCanCreateEditor; 
+
+  // True if scripts were enabled before the editor turned scripts
+  // off, otherwise false.
+  PRPackedBool    mScriptsEnabled;
+
+  // The image animation mode before it was turned off.
+  PRUint16        mImageAnimationMode;
 
   // THE REMAINING MEMBER VARIABLES WILL BECOME A SET WHEN WE EDIT
   // MORE THAN ONE EDITOR PER EDITING SESSION
