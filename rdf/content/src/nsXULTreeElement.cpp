@@ -411,7 +411,9 @@ nsXULTreeElement::InvertSelection()
 nsresult
 nsXULTreeElement::FireOnSelectHandler()
 {
+#ifdef DEBUG_bryner
   printf("FireOnSelectHandler\n");
+#endif
   nsCOMPtr<nsIContent> content = do_QueryInterface(mOuter);
   nsCOMPtr<nsIDocument> document;
   content->GetDocument(*getter_AddRefs(document));
