@@ -171,7 +171,7 @@ nsPlatformCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, nsACS
 
   // fallback 
   oResult.Assign(NS_LITERAL_CSTRING("x-mac-roman"));
-  retrun NS_SUCCESS_USING_FALLBACK_LOCALE;
+  return NS_SUCCESS_USING_FALLBACK_LOCALE;
 }
 
 NS_IMETHODIMP 
