@@ -123,7 +123,12 @@ public class TokenStream
         return "";
     }
 
-    private int stringToKeyword(String name) {
+    static boolean isKeyword(String s)
+    {
+        return Token.EOF != stringToKeyword(s);
+    }
+
+    private static int stringToKeyword(String name) {
 // #string_id_map#
 // The following assumes that Token.EOF == 0
         final int

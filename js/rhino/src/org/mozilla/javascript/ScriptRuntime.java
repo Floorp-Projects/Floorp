@@ -516,7 +516,7 @@ public class ScriptRuntime {
             if (!Character.isJavaIdentifierPart(s.charAt(i)))
                 return false;
         }
-        return true;
+        return !TokenStream.isKeyword(s);
     }
 
     /**
