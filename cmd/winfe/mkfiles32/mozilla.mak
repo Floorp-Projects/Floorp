@@ -385,6 +385,19 @@ LINK_LIBS= \
     $(DIST)\lib\xml.lib \
     $(OUTDIR)\appicon.res \
     $(DIST)\lib\winfont.lib \
+    $(DIST)\lib\abouturl.lib \
+    $(DIST)\lib\dataurl.lib \
+    $(DIST)\lib\fileurl.lib \
+    $(DIST)\lib\ftpurl.lib \
+    $(DIST)\lib\gophurl.lib \
+    $(DIST)\lib\httpurl.lib \
+    $(DIST)\lib\jsurl.lib \
+    $(DIST)\lib\marimurl.lib \
+    $(DIST)\lib\remoturl.lib \
+    $(DIST)\lib\netcache.lib \
+    $(DIST)\lib\netcnvts.lib \
+    $(DIST)\lib\network.lib \
+    $(DIST)\lib\cnetinit.lib \
 !ifdef MOZ_LDAP
 !ifdef MOZ_JAVA
     $(DIST)\lib\nsldap32.lib \
@@ -510,7 +523,6 @@ CINCLUDES= \
     /I$(DEPTH)\lib\layout \
     /I$(DEPTH)\lib\libstyle \
     /I$(DEPTH)\lib\liblayer\include \
-    /I$(DEPTH)\lib\libnet \
     /I$(DEPTH)\lib\libcnv \
     /I$(DEPTH)\lib\libi18n \
     /I$(DEPTH)\lib\libparse \
@@ -550,6 +562,9 @@ CDISTINCLUDES= \
     /I$(XPDIST)\public\htmldlgs \
     /I$(XPDIST)\public\softupdt \
     /I$(XPDIST)\public\zlib \
+    /I$(XPDIST)\public\httpurl \
+    /I$(XPDIST)\public\netcache \
+    /I$(XPDIST)\public\network \
 #!ifdef MOZ_LOC_INDEP
 	/I$(XPDIST)\public\li \
 #!endif MOZ_LOC_INDEP
@@ -995,68 +1010,7 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\lib\libneo\nwselect.cpp
 	$(DEPTH)\lib\libneo\semnspr.cpp
 	$(DEPTH)\lib\libneo\thrnspr.cpp
-	$(DEPTH)\lib\libnet\mkabook.cpp
 !endif
-
-	$(DEPTH)\lib\libnet\cvactive.c
-	$(DEPTH)\lib\libnet\cvcolor.c 
-	$(DEPTH)\lib\libnet\cvdisk.c  
-	$(DEPTH)\lib\libnet\cvproxy.c 
-	$(DEPTH)\lib\libnet\cvunzip.c 
-	$(DEPTH)\lib\libnet\cvchunk.c 
-	$(DEPTH)\lib\libnet\extcache.c
-	$(DEPTH)\lib\libnet\mkaccess.c
-	$(DEPTH)\lib\libnet\mkautocf.c
-	$(DEPTH)\lib\libnet\mkcache.c 
-	$(DEPTH)\lib\libnet\mkconect.c
-	$(DEPTH)\lib\libnet\mkdaturl.c
-	$(DEPTH)\lib\libnet\mkextcac.c
-	$(DEPTH)\lib\libnet\mkfile.c  
-	$(DEPTH)\lib\libnet\mkformat.c
-	$(DEPTH)\lib\libnet\mkfsort.c 
-	$(DEPTH)\lib\libnet\mkftp.c   
-	$(DEPTH)\lib\libnet\mkgeturl.c
-	$(DEPTH)\lib\libnet\mkgopher.c
-	$(DEPTH)\lib\libnet\mkhelp.c  
-	$(DEPTH)\lib\libnet\mkhttp.c  
-	$(DEPTH)\lib\libnet\mkinit.c  
-	$(DEPTH)\lib\libnet\mktrace.c
-	$(DEPTH)\lib\libnet\cvmime.c 
-	$(DEPTH)\lib\libnet\mkpadpac.c
-	$(DEPTH)\lib\libnet\jscookie.c 
-	$(DEPTH)\lib\libnet\prefetch.c 
-	$(DEPTH)\lib\libnet\mkjscfg.c
-	$(DEPTH)\lib\libnet\cvsimple.c
-!ifdef MOZ_MAIL_NEWS
-	$(DEPTH)\lib\libnet\mkcertld.c
-	$(DEPTH)\lib\libnet\imap4url.c
-	$(DEPTH)\lib\libnet\imapearl.cpp
-	$(DEPTH)\lib\libnet\imaphier.cpp
-	$(DEPTH)\lib\libnet\imappars.cpp
-	$(DEPTH)\lib\libnet\imapbody.cpp
-	$(DEPTH)\lib\libnet\mkimap4.cpp 
-	$(DEPTH)\lib\libnet\mkldap.cpp  
-	$(DEPTH)\lib\libnet\mkmailbx.c
-	$(DEPTH)\lib\libnet\mknews.c  
-	$(DEPTH)\lib\libnet\mknewsgr.c
-	$(DEPTH)\lib\libnet\mkpop3.c  
-	$(DEPTH)\lib\libnet\mksmtp.c  
-!endif
-!if defined(MOZ_JAVA)
-	$(DEPTH)\lib\libnet\mkmarimb.cpp
-!endif
-	$(DEPTH)\lib\libnet\mkmessag.c
-	$(DEPTH)\lib\libnet\mkmemcac.c
-	$(DEPTH)\lib\libnet\mkmocha.c 
-	$(DEPTH)\lib\libnet\mkparse.c 
-	$(DEPTH)\lib\libnet\mkremote.c
-	$(DEPTH)\lib\libnet\mkselect.c
-	$(DEPTH)\lib\libnet\mksockrw.c
-	$(DEPTH)\lib\libnet\mksort.c  
-	$(DEPTH)\lib\libnet\mkstream.c
-	$(DEPTH)\lib\libnet\mkutils.c 
-	$(DEPTH)\lib\libnet\jsautocf.c
-	$(DEPTH)\lib\libnet\txview.c 
 
 	$(DEPTH)\lib\libparse\pa_amp.c
 	$(DEPTH)\lib\libparse\pa_hash.c   
@@ -2282,6 +2236,19 @@ BUILD_SOURCE: $(OBJ_FILES)
 	$(DIST)\lib\sched16.lib +
     $(DIST)\lib\rdf16.lib +
     $(DIST)\lib\xpstrdll.lib +
+    $(DIST)\lib\abouturl.lib +
+    $(DIST)\lib\dataurl.lib +
+    $(DIST)\lib\fileurl.lib +
+    $(DIST)\lib\ftpurl.lib +
+    $(DIST)\lib\gophurl.lib +
+    $(DIST)\lib\httpurl.lib +
+    $(DIST)\lib\jsurl.lib +
+    $(DIST)\lib\marimurl.lib +
+    $(DIST)\lib\remoturl.lib +
+    $(DIST)\lib\netcache.lib +
+    $(DIST)\lib\netcnvts.lib +
+    $(DIST)\lib\network.lib +
+    $(DIST)\lib\cnetinit.lib +
 !ifdef MOZ_MAIL_NEWS
 	$(DIST)\lib\mnrc16.lib +
 !endif
@@ -2578,7 +2545,6 @@ exports:
     -xcopy $(DEPTH)\lib\libi18n\*.h $(EXPORTINC) $(XCF)
     -xcopy $(DEPTH)\lib\libjar\*.h $(EXPORTINC) $(XCF)
     -xcopy $(DEPTH)\lib\libparse\*.h $(EXPORTINC) $(XCF)
-    -xcopy $(DEPTH)\lib\libnet\*.h $(EXPORTINC) $(XCF)
 !ifdef MOZ_MAIL_NEWS
     -xcopy $(DEPTH)\lib\libaddr\*.h $(EXPORTINC) $(XCF)
     -xcopy $(DEPTH)\lib\libmsg\*.h $(EXPORTINC) $(XCF)

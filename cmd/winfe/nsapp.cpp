@@ -59,7 +59,7 @@
 
 #include "pw_public.h"
 extern "C"      {
-#include "mkaccess.h"
+#include "cookies.h"
 };
 #ifdef MOZ_LOC_INDEP
 #include "li_public.h"

@@ -30,7 +30,7 @@
 #include "mainfrm.h"
 #include "prefapi.h"    // Added so that prefs can be referenced (Dave Hyatt - 8/13/97)
 #include "net.h"        // Added so cache can be referenced (8/18/97)
-#include "mkcache.h"    // Ditto
+#include "netcache.h"    // Ditto
 #include "cxprint.h"    // The printing context... used for PrintWindow and PrintURL (8/27/97)
 #include "animecho.h"
 
