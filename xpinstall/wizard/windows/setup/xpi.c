@@ -175,7 +175,7 @@ HRESULT SmartUpdateJars()
         lstrcpy(szArchive, sgProduct.szAlternateArchiveSearchPath);
         AppendBackSlash(szArchive, sizeof(szArchive));
         lstrcat(szArchive, siCObject->szArchiveName);
-        if(!FileExists(szArchive))
+        if((*sgProduct.szAlternateArchiveSearchPath == '\0') || (!FileExists(szArchive)))
         {
           lstrcpy(szArchive, szSetupDir);
           AppendBackSlash(szArchive, sizeof(szArchive));
