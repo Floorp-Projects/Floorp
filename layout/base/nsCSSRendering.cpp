@@ -65,6 +65,7 @@ enum ePathTypes{
 static void GetPath(nsPoint aPoints[],nsPoint aPolyPath[],PRInt32 *aCurIndex,ePathTypes  aPathType,PRInt32 &aC1Index,float aFrac=0);
 static void TileImage(nsIRenderingContext& aRC,nsDrawingSurface  aDS,nsRect &aSrcRect,PRInt16 aWidth,PRInt16 aHeight);
 static PRBool GetBGColorForHTMLElement(nsIPresContext *aPresContext,const nsStyleColor *&aBGColor);
+static nsresult GetFrameForBackgroundUpdate(nsIPresContext *aPresContext,nsIFrame *aFrame, nsIFrame **aBGFrame);
 
 // Draw a line, skipping that portion which crosses aGap. aGap defines a rectangle gap
 // This services fieldset legends and only works for coords defining horizontal lines.
@@ -1425,6 +1426,54 @@ PRBool GetBGColorForHTMLElement( nsIPresContext *aPresContext,
   return result;
 }
 
+// nethod GetFrameForBackgroundUpdate
+//
+// If the frame (aFrame) is the HTML or BODY frame then find the canvas frame and set the
+// aBGFrame param to that. This is used when we need a frame to invalidate after an asynch
+// image load for the background.
+// 
+// The check is a bit expensive, however until the canvas frame is somehow cached on the 
+// body frame, or the root element, we need to walk the frames up until we find the canvas
+//
+nsresult GetFrameForBackgroundUpdate(nsIPresContext *aPresContext,nsIFrame *aFrame, nsIFrame **aBGFrame)
+{
+  NS_ASSERTION(aFrame && aBGFrame, "illegal null parameter");
+
+  nsresult rv = NS_OK;
+
+  if (aFrame && aBGFrame) {
+    *aBGFrame = aFrame; // default to the frame passed in
+
+    nsCOMPtr<nsIContent> pContent;
+    aFrame->GetContent(getter_AddRefs(pContent));
+    if (pContent) {
+      // make sure that this is the HTML or BODY element
+      nsCOMPtr<nsIAtom> tag;
+      pContent->GetTag(*(getter_AddRefs(tag)));
+      if (tag) {
+        if (tag.get() == nsHTMLAtoms::html ||
+            tag.get() == nsHTMLAtoms::body) {
+          // the frame is the body frame, so we provide the canvas frame
+          nsIFrame *pCanvasFrame = nsnull;
+          aFrame->GetParent(&pCanvasFrame);
+          while (pCanvasFrame) {
+            nsCOMPtr<nsIAtom>  parentType;
+            pCanvasFrame->GetFrameType(getter_AddRefs(parentType));
+            if (parentType.get() == nsLayoutAtoms::canvasFrame) {
+              *aBGFrame = pCanvasFrame;
+              break;
+            }
+            pCanvasFrame->GetParent(&pCanvasFrame);
+          }
+        }// if tag == html or body
+      }// if tag
+    }
+  } else {
+    rv = NS_ERROR_NULL_POINTER;
+  }
+  return rv;
+}
+
 // helper macro to determine if the borderstyle 'a' is a MOZ-BG-XXX style
 #define MOZ_BG_BORDER(a)\
 ((a==NS_STYLE_BORDER_STYLE_BG_INSET) || (a==NS_STYLE_BORDER_STYLE_BG_OUTSET))
@@ -2047,6 +2096,14 @@ nsStyleCoord  bordStyleRadius[4];
 PRInt16       borderRadii[4],i;
 
   if (0 < aColor.mBackgroundImage.Length()) {
+
+    // get the frame for the background image load to complete in
+    // - this may be different than the frame we are rendering
+    //   (as in the case of the canvas frame) 
+    nsIFrame *pBGFrame = nsnull;
+    GetFrameForBackgroundUpdate(aPresContext, aForFrame, &pBGFrame);
+    NS_ASSERTION(pBGFrame, "Background Frame must be set by GetFrameForBackgroundUpdate");
+
     // Lookup the image
     nsSize imageSize;
     nsIImage* image = nsnull;
@@ -2056,7 +2113,8 @@ PRInt16       borderRadii[4],i;
                                               ? nsnull
                                               : &aColor.mBackgroundColor,
                                               nsnull,
-                                              aForFrame, nsnull, nsnull,
+                                              pBGFrame, 
+                                              nsnull, nsnull,
                                               &loader);
     if ((NS_OK != rv) || (nsnull == loader) ||
         (loader->GetImage(&image), (nsnull == image))) {
