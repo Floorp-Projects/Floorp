@@ -34,8 +34,6 @@ PUBLIC void NET_ToggleTrace(void) {
 #if defined(DEBUG) || defined(NETLIB_TRACE_ON)
 
 PRLogModuleInfo* NETLIB=NULL;
-#define out PR_LOG_ALWAYS
-
 
 /* Used by NET_NTrace() */
 PRIVATE void net_Trace(char *msg) {
