@@ -30,6 +30,8 @@
 #include "nsHTMLReflowState.h"
 
 // Interfaces needed to be included
+#include "nsIDOMDocument.h"
+#include "nsIDOMElement.h"
 #include "nsIPresShell.h"
 
 // CIDs
@@ -88,69 +90,42 @@ NS_IMETHODIMP nsDocShellTreeOwner::FindItemWithName(const PRUnichar* aName,
    nsIDocShellTreeItem* aRequestor, nsIDocShellTreeItem** aFoundItem)
 {
    NS_ENSURE_ARG_POINTER(aFoundItem);
+   *aFoundItem = nsnull;
 
-   return NS_ERROR_FAILURE;
+   nsAutoString name(aName);
 
-//XXXTAB
-/*   *aFoundItem = nsnull;
-
-   nsAutoString   name(aName);
-
-   PRBool fIs_Content = PR_FALSE;
-
-   /* Special Cases */ /*
+   /* Special Cases */
    if(name.Length() == 0)
       return NS_OK;
    if(name.EqualsIgnoreCase("_blank"))
       return NS_OK;
    if(name.EqualsIgnoreCase("_content"))
       {
-      fIs_Content = PR_TRUE;
-      mXULWindow->GetPrimaryContentShell(aFoundItem);
-      if(*aFoundItem)
-         return NS_OK;
+      *aFoundItem = mWebBrowser->mDocShellAsItem;
+      NS_IF_ADDREF(*aFoundItem);
+      return NS_OK;
       }
 
-   nsCOMPtr<nsIWindowMediator> windowMediator(do_GetService(kWindowMediatorCID));
-   NS_ENSURE_TRUE(windowMediator, NS_ERROR_FAILURE);
+   if(mTreeOwner)
+      return mTreeOwner->FindItemWithName(aName, aRequestor, aFoundItem);
 
-   nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
-   NS_ENSURE_SUCCESS(windowMediator->GetXULWindowEnumerator(nsnull, 
-      getter_AddRefs(windowEnumerator)), NS_ERROR_FAILURE);
-   
-   PRBool more;
-   
-   windowEnumerator->HasMoreElements(&more);
-   while(more)
-      {
-      nsCOMPtr<nsISupports> nextWindow = nsnull;
-      windowEnumerator->GetNext(getter_AddRefs(nextWindow));
-      nsCOMPtr<nsIXULWindow> xulWindow(do_QueryInterface(nextWindow));
-      NS_ENSURE_TRUE(xulWindow, NS_ERROR_FAILURE);
+   NS_ENSURE_TRUE(mWebBrowserChrome, NS_ERROR_FAILURE);
 
-      nsCOMPtr<nsIDocShellTreeItem> shellAsTreeItem;
-      xulWindow->GetPrimaryContentShell(getter_AddRefs(shellAsTreeItem));
+   nsCOMPtr<nsIWebBrowser> foundWebBrowser;
+   NS_ENSURE_SUCCESS(mWebBrowserChrome->FindNamedBrowser(aName,
+      getter_AddRefs(foundWebBrowser)), NS_ERROR_FAILURE);
 
-      if(shellAsTreeItem)
-         {
-         if(fIs_Content)
-            *aFoundItem = shellAsTreeItem;
-         else if(aRequestor != shellAsTreeItem.get())
-            {
-            // Do this so we can pass in the tree owner as the requestor so the child knows not
-            // to call back up.
-            nsCOMPtr<nsIDocShellTreeOwner> shellOwner;
-            shellAsTreeItem->GetTreeOwner(getter_AddRefs(shellOwner));
-            nsCOMPtr<nsISupports> shellOwnerSupports(do_QueryInterface(shellOwner));
+   if(!foundWebBrowser)
+      return NS_OK;
 
-            shellAsTreeItem->FindItemWithName(aName, shellOwnerSupports, aFoundItem);
-            }
-         if(*aFoundItem)
-            return NS_OK;   
-         }
-      windowEnumerator->HasMoreElements(&more);
-      }
-   return NS_OK;*/      
+   nsCOMPtr<nsIDocShell> foundDocShell;
+   foundWebBrowser->GetDocShell(getter_AddRefs(foundDocShell));
+
+   nsCOMPtr<nsIDocShellTreeItem> foundDocShellAsItem;
+   *aFoundItem = foundDocShellAsItem;
+   NS_IF_ADDREF(*aFoundItem);
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShellTreeOwner::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
@@ -183,6 +158,18 @@ NS_IMETHODIMP nsDocShellTreeOwner::SizeShellTo(nsIDocShellTreeItem* aShellItem,
    if(aShellItem == mWebBrowser->mDocShellAsItem.get())
       return mWebBrowserChrome->SizeBrowserTo(aCX, aCY);
 
+   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(aShellItem));
+   NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
+
+   nsCOMPtr<nsIDOMDocument> domDocument;
+   webNav->GetDocument(getter_AddRefs(domDocument));
+   NS_ENSURE_TRUE(domDocument, NS_ERROR_FAILURE);
+
+   nsCOMPtr<nsIDOMElement> domElement;
+   domDocument->GetDocumentElement(getter_AddRefs(domElement));
+   NS_ENSURE_TRUE(domElement, NS_ERROR_FAILURE);
+
+   // Set the preferred Size
    //XXX
    NS_ERROR("Implement this");
    /*
