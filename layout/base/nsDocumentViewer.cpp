@@ -6532,6 +6532,14 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings)
   mPrtPreview = mPrt;
   mPrt        = nsnull;
 
+  // Turning off the scaling of twips so any of the UI scrollbars
+  // will not get scaled
+  nsCOMPtr<nsIPrintPreviewContext> printPreviewContext(do_QueryInterface(mPresContext));
+  if (printPreviewContext) {
+    printPreviewContext->SetScalingOfTwips(PR_FALSE);
+    mDeviceContext->SetCanonicalPixelScale(mPrtPreview->mOrigDCScale);
+  }
+
 #endif // NS_PRINT_PREVIEW
 
   return NS_OK;

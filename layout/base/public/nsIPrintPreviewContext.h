@@ -44,6 +44,8 @@ public:
   NS_IMETHOD SetPrintSettings(nsIPrintSettings* aPS) = 0;
   NS_IMETHOD GetPrintSettings(nsIPrintSettings** aPS) = 0;
 
+  // Enables the turning on and off of scaling
+  NS_IMETHOD SetScalingOfTwips(PRBool aOn) = 0;
 };
 
 

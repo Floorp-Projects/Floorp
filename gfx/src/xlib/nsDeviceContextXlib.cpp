@@ -244,9 +244,11 @@ NS_IMETHODIMP nsDeviceContextXlib::SupportsNativeWidgets(PRBool &aSupportsWidget
 NS_IMETHODIMP nsDeviceContextXlib::GetScrollBarDimensions(float &aWidth, float &aHeight) const
 {
   PR_LOG(DeviceContextXlibLM, PR_LOG_DEBUG, ("nsDeviceContextXlib::GetScrollBarDimensions()\n"));
+  float scale;
+  GetCanonicalPixelScale(scale);
   // XXX Oh, yeah.  These are hard coded.
-  aWidth = 15 * mPixelsToTwips;
-  aHeight = 15 * mPixelsToTwips;
+  aWidth = 15 * mPixelsToTwips * scale;
+  aHeight = 15 * mPixelsToTwips * scale;
 
   return NS_OK;
 }

@@ -257,8 +257,10 @@ NS_IMETHODIMP nsDeviceContextPh :: SupportsNativeWidgets( PRBool &aSupportsWidge
 
 NS_IMETHODIMP nsDeviceContextPh :: GetScrollBarDimensions( float &aWidth, float &aHeight ) const {
   /* Revisit: the scroll bar sizes is a gross guess based on Phab */
-  aWidth = mScrollbarWidth * mPixelsToTwips;
-  aHeight = mScrollbarHeight * mPixelsToTwips;
+  float scale;
+  GetCanonicalPixelScale(scale);
+  aWidth = mScrollbarWidth * mPixelsToTwips * scale;
+  aHeight = mScrollbarHeight * mPixelsToTwips * scale;
   return NS_OK;
 	}
 
