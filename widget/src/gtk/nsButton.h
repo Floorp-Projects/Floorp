@@ -19,14 +19,14 @@
 #ifndef nsButton_h__
 #define nsButton_h__
 
-#include "nsWindow.h"
+#include "nsWidget.h"
 #include "nsIButton.h"
 
 /**
  * Native Motif button wrapper
  */
-class nsButton :  public nsWindow,
-                  public nsIButton
+class nsButton : public nsWidget,
+                 public nsIButton
 {
 
 public:
@@ -34,9 +34,7 @@ public:
   virtual ~nsButton();
 
   // nsISupports
-  NS_IMETHOD_(nsrefcnt) AddRef();
-  NS_IMETHOD_(nsrefcnt) Release();
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+  NS_DECL_ISUPPORTS;
 
   NS_IMETHOD Create(nsIWidget *aParent,
               const nsRect &aRect,
