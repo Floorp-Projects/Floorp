@@ -3447,32 +3447,50 @@ nsCSSFrameConstructor::GetAbsoluteContainingBlock(nsIPresContext* aPresContext,
   NS_PRECONDITION(nsnull != mInitialContainingBlock, "no initial containing block");
   
   // Starting with aFrame, look for a frame that is absolutely positioned
-  nsIFrame* containingBlock = aFrame;
-  while (nsnull != containingBlock) {
+  nsIFrame* containingBlock = nsnull;
+  for (nsIFrame* frame = aFrame; frame; frame->GetParent(&frame)) {
     const nsStylePosition* position;
 
     // Is it absolutely positioned?
-    containingBlock->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position);
+    frame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position);
     if (position->mPosition == NS_STYLE_POSITION_ABSOLUTE) {
       const nsStyleDisplay* display;
       
       // If it's a table then ignore it, because for the time being tables
       // are not containers for absolutely positioned child frames
-      containingBlock->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
+      frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
       if (display->mDisplay != NS_STYLE_DISPLAY_TABLE) {
-        // XXX If the frame is scrolled, then don't return the scrolled frame
-        // XXX Verify that the frame type is an area-frame...
-        break;
+        nsIAtom*  frameType;
+        frame->GetFrameType(&frameType);
+
+        if (nsLayoutAtoms::scrollFrame == frameType) {
+          // We want the scrolled frame, not the scroll frame
+          nsIFrame* scrolledFrame;
+          frame->FirstChild(nsnull, &scrolledFrame);
+          NS_RELEASE(frameType);
+          if (scrolledFrame) {
+            scrolledFrame->GetFrameType(&frameType);
+            if (nsLayoutAtoms::areaFrame == frameType) {
+              containingBlock = scrolledFrame;
+            }
+          }
+
+        } else if (nsLayoutAtoms::areaFrame == frameType) {
+          containingBlock = frame;
+        }
+        NS_RELEASE(frameType);
       }
     }
 
-    // Continue walking up the hierarchy
-    containingBlock->GetParent(&containingBlock);
+    // See if we found a containing block
+    if (containingBlock) {
+      break;
+    }
   }
 
   // If we didn't find an absolutely positioned containing block, then use the
   // initial containing block
-  if (nsnull == containingBlock) {
+  if (!containingBlock) {
     containingBlock = mInitialContainingBlock;
   }
   
