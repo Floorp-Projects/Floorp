@@ -28,3 +28,5 @@ nsIMsgSearchAdapter.idl
 nsIMsgSearchSession.idl
 nsMsgFilterCore.idl
 nsMsgSearchCore.idl
+nsIMsgSearchTerm.idl
+
