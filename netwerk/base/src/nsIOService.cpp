@@ -68,6 +68,7 @@
 
 #define PORT_PREF_PREFIX     "network.security.ports."
 #define PORT_PREF(x)         PORT_PREF_PREFIX x
+#define AUTODIAL_PREF        "network.autodial-helper.enabled"
 
 static NS_DEFINE_CID(kFileTransportService, NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
@@ -220,8 +221,10 @@ nsIOService::Init()
     GetPrefBranch(getter_AddRefs(prefBranch));
     if (prefBranch) {
         nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(prefBranch);
-        if (pbi)
+        if (pbi) {
             pbi->AddObserver(PORT_PREF_PREFIX, this, PR_TRUE);
+            pbi->AddObserver(AUTODIAL_PREF, this, PR_TRUE);
+        }
         PrefsChanged(prefBranch);
     }
     
@@ -965,6 +968,16 @@ nsIOService::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     // ...as well as previous blocks to remove.
     if (!pref || PL_strcmp(pref, PORT_PREF("banned.override")) == 0)
         ParsePortList(prefs, PORT_PREF("banned.override"), PR_TRUE);
+
+    if (!pref || PL_strcmp(pref, AUTODIAL_PREF) == 0) {
+        PRBool enableAutodial = PR_FALSE;
+        nsresult rv = prefs->GetBoolPref(AUTODIAL_PREF, &enableAutodial);
+        // If pref not found, default to disabled.
+        if (NS_SUCCEEDED(rv)) {
+            if (mSocketTransportService)
+                mSocketTransportService->SetAutodialEnabled(enableAutodial);
+        }
+    }
 }
 
 void

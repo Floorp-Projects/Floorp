@@ -77,6 +77,8 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 	CPPSRCS += nsIOServiceWin.cpp
+	CPPSRCS += nsNativeConnectionHelper.cpp
+	CPPSRCS += nsAutodialWin.cpp
 else
 	CPPSRCS += nsIOServiceUnix.cpp
 endif
