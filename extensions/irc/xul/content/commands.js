@@ -58,7 +58,7 @@ function addCommands(commandObject)
     add ("join", "onInputJoin");
     add ("kick", "onInputKick");
     add ("leave", "onInputLeave");
-    add ("list", "onInputSimpleCommand");
+    add ("list", "onInputList");
     add ("me", "onInputMe");
     add ("msg", "onInputMsg");
     add ("name", "onInputName");
@@ -73,6 +73,7 @@ function addCommands(commandObject)
     add ("query", "onInputQuery"); 
     add ("quit", "onInputExit");
     add ("quote", "onInputQuote");
+    add ("rlist", "onInputRlist");
     add ("server", "onInputServer");
     add ("squery", "onInputSquery");
     add ("stalk", "onInputStalk");

@@ -1133,7 +1133,7 @@ function cli_iscommand (e)
     else
     {
         client.currentObject.display (getMsg("onInputSimpleCommandMsg",
-                                             e.command),"WARNING");
+                                             e.command), "WARNING");
         return false;
     }
 }
@@ -1162,7 +1162,7 @@ function cli_isquery (e)
     else
     {
         client.currentObject.display (getMsg("onInputSimpleCommandMsg",
-                                             e.command),"WARNING");
+                                             e.command), "WARNING");
         return false;
     }
 }
@@ -1707,6 +1707,51 @@ function cli_ime (e)
                                   client.currentObject);
     client.currentObject.act (fromUnicode(e.inputData));
     
+    return true;
+}
+
+client.onInputList =
+function cli_ilist (e)
+{
+    var o = getObjectDetails(client.currentObject);
+    if ("network" in o)
+    {
+        o.network.list = new Array();
+        o.network.list.regexp = null;
+    }
+    return client.onInputSimpleCommand(e);
+}
+
+client.onInputRlist =
+function cli_irlist (e)
+{
+    var o = getObjectDetails(client.currentObject);
+
+    if (!("server" in o))
+    {
+        client.currentObject.display (getMsg("onInputSimpleCommandMsg",
+                                             "list"), "WARNING");
+        return false;
+    }
+    o.network.list = new Array();
+    var ary = e.inputData.match (/^\s*("([^"]*)"|([^\s]*))/);
+    try
+    {
+        if (ary[2])
+            o.network.list.regexp = new RegExp(ary[2], "i");
+        else if (ary[3])
+            o.network.list.regexp = new RegExp(ary[3], "i");
+        else
+            return false;
+    }
+    catch(error)
+    {
+        client.currentObject.display (getMsg("cli_irlistMsg", e.inputData,
+                                             error),
+                                      "ERROR");
+        return false;
+    }
+    o.server.sendData ("list\n");
     return true;
 }
 
@@ -2688,22 +2733,90 @@ function my_303 (e)
 CIRCNetwork.prototype.on321 = /* LIST reply header */
 function my_321 (e)
 {
+
+    function checkEndList (network)
+    {
+        if (network.list.count == network.list.lastLength)
+        {
+            network.on323();
+        }
+        else
+        {
+            network.list.lastLength = network.list.count;
+            network.list.endTimeout =
+                setTimeout(checkEndList, 1500, network);
+        }
+    }
+
+    function outputList (network)
+    {
+        const CHUNK_SIZE = 5;
+        var list = network.list;
+        if (list.length > list.displayed)
+        {
+            var start = list.displayed;
+            var end = list.length;
+            if (end - start > CHUNK_SIZE)
+                end = start + CHUNK_SIZE;
+            for (var i = start; i < end; ++i)
+                network.displayHere (getMsg("my_322", list[i]), "322");
+            list.displayed = end;
+        }
+        if (list.done && (list.displayed == list.length))
+        {
+            if (list.event323)
+            {
+                network.displayHere (list.event323.params.join(" ") + ": " +
+                                     list.event323.meat, "323");
+            }
+            network.displayHere (getMsg("my_323", [list.displayed, list.count]),
+                                 "INFO");
+            delete network.list;
+        }
+        else
+        {
+            setTimeout(outputList, 250, network);
+        }
+    }
+
+    if (!("list" in this))
+    {
+        this.list = new Array();
+        this.list.regexp = null;
+    }
     this.displayHere (e.params[2] + " " + e.meat, "321");
     if (client.currentObject != this)
-    client.currentObject.display (getMsg("my_321", this.name), "INFO");
+        client.currentObject.display (getMsg("my_321", this.name), "INFO");
+    this.list.lastLength = 0;
+    this.list.done = false;
+    this.list.count = 0;
+    this.list.displayed = 0;
+    setTimeout(outputList, 250, this);
+    this.list.endTimeout = setTimeout(checkEndList, 1500, this);
 }
 
 CIRCNetwork.prototype.on323 = /* end of LIST reply */
 function my_323 (e)
 {
-    this.displayHere (e.params.join(" ") + ": " + e.meat, "323");
+    if (this.list.endTimeout)
+    {
+        clearTimeout(this.list.endTimeout);
+        delete this.list.endTimeout;
+    }
+    this.list.done = true;
+    this.list.event323 = e;
 }
 
 CIRCNetwork.prototype.on322 = /* LIST reply */
 function my_listrply (e)
 {
-    this.displayHere (getMsg("my_322", [toUnicode(e.params[2]), e.params[3], e.meat]),
-                      "322");
+    ++this.list.count;
+    e.params[2] = toUnicode(e.params[2]);
+    if (!(this.list.regexp) || e.params[2].match(this.list.regexp)
+                            || e.meat.match(this.list.regexp))
+    {
+        this.list.push([e.params[2], e.params[3], e.meat]);
+    }
 }
 
 /* end of WHO */

@@ -36,7 +36,7 @@ const MSG_UNKNOWN   = getMsg ("unknown");
 
 client.defaultNick = getMsg( "defaultNick" );
 
-client.version = "0.8.10";
+client.version = "0.8.11";
 
 client.TYPE = "IRCClient";
 client.COMMAND_CHAR = "/";
