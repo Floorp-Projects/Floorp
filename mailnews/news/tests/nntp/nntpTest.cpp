@@ -16,18 +16,6 @@
  * Reserved.
  */
 
-
-/*=============================================================================
- * This test program is designed to test netlib's implementation of nsITransport.
- * In particular, it is currently geared towards testing their socket implemnation.
- * When the test program starts up, you are prompted for a port and domain 
- * (I may have these hard coded right now to be nsmail-2 and port 143).
- * After entering this information, we'll build a connection to the host name.
- * You can then enter raw protocol text (i.e. "1 capability") and watch the data
- * that comes back from the socket. After data is returned, you can enter another
- * line of protocol.
-*===============================================================================*/
-
 #include <stdio.h>
 #include <assert.h>
 
@@ -714,6 +702,7 @@ nsresult nsNntpTestDriver::OnGetGroup()
 		rv = m_nntpProtocol->LoadURL(m_url, nsnull /* displayStream */);
 	} // if user provided the data...
 
+    // release newsgroup?
 	return rv;
 }
 
@@ -759,25 +748,26 @@ nsresult nsNntpTestDriver::SetupUrl(char *groupname)
     nsINNTPNewsgroup * group = nsnull;
     nsINNTPNewsgroupList * list = nsnull;
     rv = m_url->GetNntpHost(&host);
-    if (host)
-        {
-			rv = host->FindGroup(groupname, &group);
-
-			if (group) {
-				group->GetNewsgroupList(&list);
-			}
-#ifdef DEBUG_sspitzer
-			else {
-				printf("group is null\n");
-			}
-#endif
-			rv = m_url->SetNewsgroup(group);
-			rv = m_url->SetNewsgroupList(list);
-			NS_IF_RELEASE(group);
-			NS_IF_RELEASE(list);
-			NS_IF_RELEASE(host);
+    if (host) {
+        rv = host->FindGroup(groupname, &group);
+        
+        if (group) {
+            group->GetNewsgroupList(&list);
         }
-
+#ifdef DEBUG_sspitzer
+        else {
+            printf("group is null\n");
+        }
+#endif
+        rv = m_url->SetNewsgroup(group);
+        rv = m_url->SetNewsgroupList(list);
+        NS_IF_RELEASE(group);
+        NS_IF_RELEASE(list);
+        NS_IF_RELEASE(host);
+    }
+    else {
+        // return error?
+    }
 	return rv;
     
 } // if user provided the data...
