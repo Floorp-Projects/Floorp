@@ -206,7 +206,7 @@ sub build_blame {
       my $line_rev = $revision_map[$line-1];
       my $who = $revision_author{$line_rev};
       my $source_text = join '', @text[$line-3..$line+1];
-      chomp $source_text;
+      $source_text =~ s/\t/    /g;
       
       $who = "$who%netscape.com" unless $who =~ /[%]/;
 
@@ -383,19 +383,17 @@ sub print_source_code {
   print "<table><tr><td>";
   print "<pre><font size='-1'>";
   
-  my $source_text = $warn_rec->{source};
-  my @source_lines = split /\n/, $source_text;
+  my $source_text = trim_common_leading_whitespace($warn_rec->{source});
+  $source_text =~ s/&/&amp;/gm;
+  $source_text =~ s/</&lt;/gm;
+  $source_text =~ s/>/&gt;/gm;
+  $source_text =~ s|\b\Q$keyword\E\b|<b>$keyword</b>|gm unless $keyword eq '';
   my $line_index = $linenum - 2;
-  for $line (@source_lines) {
-    $line =~ s/&/&amp;/g;
-    $line =~ s/</&lt;/g;
-    $line =~ s/>/&gt;/g;
-    $line =~ s|\Q$keyword\E|<b>$keyword</b>|g;
-    print "<font color='red'>" if $line_index == $linenum;
-    print "$line_index $line<BR>";
-    print "</font>" if $line_index == $linenum;
-    $line_index++;
-  }
+  $source_text =~ s/^(.*)$/$line_index++." $1"/gme;
+  $source_text =~ s|^($linenum.*)$|<font color='red'>\1</font>|gm;
+  chomp $source_text;
+  print $source_text;
+
   print "</font>";
   #print "</pre>";
   print "</td></tr></table>\n";
@@ -417,3 +415,18 @@ sub file_url {
         ."?file=mozilla/$file&mark=$linenum#".($linenum-10);
 
 }
+
+sub trim_common_leading_whitespace {
+  # Adapted from dequote() in Perl Cookbook by Christiansen and Torkington
+  local $_ = shift;
+  my $white;  # common whitespace
+  if (/(?:(\s*).*\n)(?:(?:\1.*\n)|(?:\s*\n))+$/) {
+    $white = $1;
+  } else {
+    $white = /^(\s+)/;
+  }
+  s/^(?:$white)?//gm;
+  s/^\s+$//gm;
+  return $_;
+}
+
