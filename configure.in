@@ -1594,13 +1594,9 @@ dnl ========================================================
 AC_PROG_GCC_TRADITIONAL
 AC_FUNC_MEMCMP
 AC_CHECK_FUNCS(random strerror lchown fchmod snprintf localtime_r statvfs memmove rint)
-AC_CHECK_FUNCS(nl_langinfo)
+AC_CHECK_FUNCS(nl_langinfo strtok_r)
 
 AC_LANG_CPLUSPLUS
-
-dnl Do the check for strtok_r since HP 10.20 has it in C but not C++.
-AC_CHECK_FUNCS(strtok_r)
-
 AC_CACHE_CHECK(
     [for gnu_get_libc_version()],
     ac_cv_func_gnu_get_libc_version,
