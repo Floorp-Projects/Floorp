@@ -739,6 +739,25 @@ xpidl_write_comment(TreeState *state, int indent)
     fputs(" */\n", state->file);
 }
 
+/*
+ * Print an iid to into a supplied buffer; the buffer should be at least
+ * UUID_LENGTH bytes.
+ */
+gboolean
+xpidl_sprint_iid(struct nsID *id, char iidbuf[])
+{
+    int printed;
+
+    printed = sprintf(iidbuf,
+                       "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+                       (PRUint32) id->m0, (PRUint32) id->m1,(PRUint32) id->m2,
+                       (PRUint32) id->m3[0], (PRUint32) id->m3[1],
+                       (PRUint32) id->m3[2], (PRUint32) id->m3[3],
+                       (PRUint32) id->m3[4], (PRUint32) id->m3[5],
+                       (PRUint32) id->m3[6], (PRUint32) id->m3[7]);
+    return (printed == 36);
+}
+
 /* We only parse the {}-less format.  (xpidl_header never has, so we're safe.) */
 static const char nsIDFmt2[] =
   "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x";
@@ -748,7 +767,7 @@ static const char nsIDFmt2[] =
  * so we re-implement nsID::Parse here.
  */
 gboolean
-xpidl_parse_iid(struct nsID *id, char *str)
+xpidl_parse_iid(struct nsID *id, const char *str)
 {
     PRInt32 count = 0;
     PRInt32 n1, n2, n3[8];

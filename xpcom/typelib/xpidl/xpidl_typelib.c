@@ -197,20 +197,13 @@ find_interfaces(IDL_tree_func_data *tfd, gpointer user_data)
 
 #ifdef DEBUG_shaver
 /* for calling from gdb */
-/* this should (instead) print to a string... and be the validator for iid
- * handling in header mode.  Don't forget also to check in the code in
- * nsID.cpp.
- */
 static void
 print_IID(struct nsID *iid, FILE *file)
 {
-    fprintf(file, "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
-            (PRUint32) iid->m0, (PRUint32) iid->m1,(PRUint32) iid->m2,
-            (PRUint32) iid->m3[0], (PRUint32) iid->m3[1],
-            (PRUint32) iid->m3[2], (PRUint32) iid->m3[3],
-            (PRUint32) iid->m3[4], (PRUint32) iid->m3[5],
-            (PRUint32) iid->m3[6], (PRUint32) iid->m3[7]);
+    char iid_buf[UUID_LENGTH];
 
+    xpidl_sprint_iid(id, iid_buf);
+    fprintf(file, "%s\n", iid_buf);
 }
 #endif
 
@@ -230,6 +223,11 @@ fill_ide_table(gpointer key, gpointer value, gpointer user_data)
 #endif
 
     if (holder->iid) {
+        if (strlen(holder->iid) != 36) {
+            IDL_tree_error(state->tree, "IID %s is the wrong length\n",
+                           holder->iid);
+            return FALSE;
+        }
         if (!xpidl_parse_iid(&id, holder->iid)) {
             IDL_tree_error(state->tree, "cannot parse IID %s\n", holder->iid);
             return FALSE;

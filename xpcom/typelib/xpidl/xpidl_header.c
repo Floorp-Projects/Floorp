@@ -68,7 +68,7 @@ pass_1(TreeState *state)
     return TRUE;
 }
 
-static gboolean
+static void
 write_classname_iid_define(FILE *file, const char *className)
 {
     const char *iidName;
@@ -82,7 +82,6 @@ write_classname_iid_define(FILE *file, const char *className)
     while (*iidName)
         fputc(toupper(*iidName++), file);
     fputs("_IID", file);
-    return TRUE;
 }
 
 static gboolean
@@ -92,6 +91,8 @@ interface(TreeState *state)
     char *className = IDL_IDENT(IDL_INTERFACE(iface).ident).str;
     const char *iid;
     const char *name_space;
+    struct nsID id;
+    char iid_parsed[UUID_LENGTH];
 
     fprintf(state->file,   "\n/* starting interface:    %s */\n",
             className);
@@ -107,24 +108,43 @@ interface(TreeState *state)
     }
 
     if (iid) {
-        /* XXX use nsID parsing routines to validate? */
+        /* Redundant, but a better error than 'cannot parse.' */
         if (strlen(iid) != 36) {
             IDL_tree_error(state->tree, "IID %s is the wrong length\n", iid);
             return FALSE;
         }
-        fprintf(state->file, "\n/* {%s} */\n#define ", iid);
-        if (!write_classname_iid_define(state->file, className))
+
+        /*
+         * Parse uuid and then output resulting nsID to string, to validate
+         * uuid and normalize resulting .h files.
+         */
+        if (!xpidl_parse_iid(&id, iid)) {
+            IDL_tree_error(state->tree, "cannot parse IID %s\n", iid);
             return FALSE;
-        fprintf(state->file, "_STR \"%s\"\n#define ", iid);
-        if (!write_classname_iid_define(state->file, className))
+        }
+        if (!xpidl_sprint_iid(&id, iid_parsed)) {
+            IDL_tree_error(state->tree, "error formatting IID %s\n", iid);
             return FALSE;
-        /* This is such a gross hack... */
-        fprintf(state->file, " \\\n  {0x%.8s, 0x%.4s, 0x%.4s, \\\n    "
-                "{ 0x%.2s, 0x%.2s, 0x%.2s, 0x%.2s, "
-                "0x%.2s, 0x%.2s, 0x%.2s, 0x%.2s }}\n\n",
-                iid, iid + 9, iid + 14, iid + 19, iid + 21, iid + 24,
-                iid + 26, iid + 28, iid + 30, iid + 32, iid + 34);
+        }
+
+        /* #define NS_ISUPPORTS_IID_STR "00000000-0000-0000-c000-000000000046" */
+        fprintf(state->file, "\n");
+        fprintf(state->file, "#define ");
+        write_classname_iid_define(state->file, className);
+        fprintf(state->file, "_STR \"%s\"\n", iid_parsed);
+
+        /* #define NS_ISUPPORTS_IID { {0x00000000 .... 0x46 }} */
+        fprintf(state->file, "#define ");
+        write_classname_iid_define(state->file, className);
+        fprintf(state->file, " \\\n"
+                "  {0x%.8x, 0x%.4x, 0x%.4x, \\\n"
+                "    { 0x%.2x, 0x%.2x, 0x%.2x, 0x%.2x, "
+                "0x%.2x, 0x%.2x, 0x%.2x, 0x%.2x }}\n\n",
+                id.m0, id.m1, id.m2,
+                id.m3[0], id.m3[1], id.m3[2], id.m3[3],
+                id.m3[4], id.m3[5], id.m3[6], id.m3[7]);
     }
+
     fprintf(state->file, "class %s", className);
     if ((iter = IDL_INTERFACE(iface).inheritance_spec)) {
         fputs(" : ", state->file);
@@ -139,8 +159,7 @@ interface(TreeState *state)
           " public: \n", state->file);
     if (iid) {
         fputs("  NS_DEFINE_STATIC_IID_ACCESSOR(", state->file);
-        if (!write_classname_iid_define(state->file, className))
-            return FALSE;
+        write_classname_iid_define(state->file, className);
         fputs(")\n", state->file);
     }
 
