@@ -1380,6 +1380,7 @@ nsWebShellWindow::ShowModalInternal()
   subshell->Spinup();
 
   nsIWidget *window = GetWidget();
+  window->SetModal();
   NS_ADDREF(window);
   mContinueModalLoop = PR_TRUE;
   while (NS_SUCCEEDED(rv) && mContinueModalLoop == PR_TRUE) {
