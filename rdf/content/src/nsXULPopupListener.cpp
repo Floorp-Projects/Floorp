@@ -115,7 +115,6 @@ private:
 
 ////////////////////////////////////////////////////////////////////////
 
-MOZ_DECL_CTOR_COUNTER(RDF_XULPopupListenerImpl);
 
 XULPopupListenerImpl::XULPopupListenerImpl(void)
   : mElement(nsnull), mPopupContent(nsnull),

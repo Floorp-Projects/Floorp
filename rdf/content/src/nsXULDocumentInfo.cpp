@@ -60,7 +60,6 @@ private:
 
 ////////////////////////////////////////////////////////////////////////
 
-MOZ_DECL_CTOR_COUNTER(RDF_XULDocumentInfoImpl);
 
 XULDocumentInfoImpl::XULDocumentInfoImpl(void)
 :mParentDocument(nsnull), mContentSink(nsnull)

@@ -404,7 +404,6 @@ NS_NewXULTemplateBuilder(nsIRDFContentModelBuilder** aResult)
     return rv;
 }
 
-MOZ_DECL_CTOR_COUNTER(RDF_RDFGenericBuilderImpl);
 
 RDFGenericBuilderImpl::RDFGenericBuilderImpl(void)
     : mDocument(nsnull),

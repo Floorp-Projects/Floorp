@@ -227,7 +227,6 @@ private:
 
 ////////////////////////////////////////////////////////////////////////
 
-MOZ_DECL_CTOR_COUNTER(RDF_nsXULKeyListenerImpl);
 
 nsXULKeyListenerImpl::nsXULKeyListenerImpl(void)
 {

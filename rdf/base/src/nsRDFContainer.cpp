@@ -425,7 +425,6 @@ RDFContainerImpl::IndexOf(nsIRDFNode *aElement, PRInt32 *aIndex)
 
 ////////////////////////////////////////////////////////////////////////
 
-MOZ_DECL_CTOR_COUNTER(RDF_RDFContainerImpl);
 
 RDFContainerImpl::RDFContainerImpl()
     : mDataSource(nsnull), mContainer(nsnull)

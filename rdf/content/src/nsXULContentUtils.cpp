@@ -163,7 +163,6 @@ nsIAtom* nsXULContentUtils::kTargetsAtom;
 //------------------------------------------------------------------------
 // Constructors n' stuff
 
-MOZ_DECL_CTOR_COUNTER(RDF_nsXULContentUtils);
 
 nsXULContentUtils::nsXULContentUtils()
 {

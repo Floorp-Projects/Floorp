@@ -48,7 +48,6 @@ static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,  NS_DOM_SCRIPT_OBJECT_FACTORY_C
 ////////////////////////////////////////////////////////////////////////
 // ctors & dtors
 
-MOZ_DECL_CTOR_COUNTER(RDF_nsRDFDOMNodeList);
 
 nsRDFDOMNodeList::nsRDFDOMNodeList(void)
     : mInner(nsnull),

@@ -410,7 +410,6 @@ NS_NewRDFXMLDataSource(nsIRDFDataSource** aResult)
     return NS_OK;
 }
 
-MOZ_DECL_CTOR_COUNTER(RDF_RDFXMLDataSourceImpl);
 
 RDFXMLDataSourceImpl::RDFXMLDataSourceImpl(void)
     : mInner(nsnull),

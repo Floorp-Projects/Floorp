@@ -231,7 +231,6 @@ FileSystemDataSource::isFileURI(nsIRDFResource *r)
 	return(isFileURIFlag);
 }
 
-MOZ_DECL_CTOR_COUNTER(RDF_FileSystemDataSource);
 
 FileSystemDataSource::FileSystemDataSource(void)
 {

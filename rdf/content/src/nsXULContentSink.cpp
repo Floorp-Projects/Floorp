@@ -459,7 +459,6 @@ XULContentSinkImpl::OverlayForwardReference::Resolve()
 
 ////////////////////////////////////////////////////////////////////////
 
-MOZ_DECL_CTOR_COUNTER(RDF_XULContentSinkImpl);
 
 XULContentSinkImpl::XULContentSinkImpl(nsresult& rv)
     : mText(nsnull),

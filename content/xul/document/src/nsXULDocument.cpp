@@ -649,7 +649,6 @@ nsIXULContentUtils* XULDocumentImpl::gXULUtils;
 ////////////////////////////////////////////////////////////////////////
 // ctors & dtors
 
-MOZ_DECL_CTOR_COUNTER(RDF_XULDocumentImpl);
 
 XULDocumentImpl::XULDocumentImpl(void)
     : mParentDocument(nsnull),

@@ -133,7 +133,6 @@ private:
     nsAutoString mValue;
 };
 
-MOZ_DECL_CTOR_COUNTER(RDF_LiteralImpl);
 
 LiteralImpl::LiteralImpl(const PRUnichar* s)
     : mValue(s)
@@ -244,7 +243,6 @@ private:
     PRTime mValue;
 };
 
-MOZ_DECL_CTOR_COUNTER(RDF_DateImpl);
 
 DateImpl::DateImpl(const PRTime s)
     : mValue(s)
@@ -350,7 +348,6 @@ private:
     PRInt32 mValue;
 };
 
-MOZ_DECL_CTOR_COUNTER(RDF_IntImpl);
 
 IntImpl::IntImpl(PRInt32 s)
     : mValue(s)
@@ -451,7 +448,6 @@ rdf_CompareWideStrings(const void* v1, const void* v2)
     return 0 == nsCRT::strcmp(NS_STATIC_CAST(const PRUnichar*, v1), NS_STATIC_CAST(const PRUnichar*, v2));
 }
 
-MOZ_DECL_CTOR_COUNTER(RDF_RDFServiceImpl);
 
 RDFServiceImpl::RDFServiceImpl()
     :  mNamedDataSources(nsnull), mResources(nsnull), mLiterals(nsnull)
