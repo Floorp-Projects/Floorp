@@ -811,8 +811,39 @@ nsWebShellWindow::DestroyModalDialogEvent(PLEvent *aEvent)
 //----------------------------------------
 // nsIDocumentLoaderObserver implementation
 //----------------------------------------
+NS_IMETHODIMP
+nsWebShellWindow::OnStartDocumentLoad(nsIURL* aURL, const char* aCommand)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShellWindow::OnEndDocumentLoad(nsIURL* aURL, PRInt32 aStatus)
+{
+  return NS_OK;
+}
+
 NS_IMETHODIMP 
 nsWebShellWindow::OnStartURLLoad(nsIURL* aURL, const char* aContentType, nsIContentViewer* aViewer)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShellWindow::OnProgressURLLoad(nsIURL* aURL, PRUint32 aProgress, 
+                                    PRUint32 aProgressMax)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShellWindow::OnStatusURLLoad(nsIURL* aURL, nsString& aMsg)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShellWindow::OnEndURLLoad(nsIURL* aURL, PRInt32 aStatus)
 {
   return NS_OK;
 }
