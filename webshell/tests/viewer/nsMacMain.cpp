@@ -354,8 +354,8 @@ int main(int argc, char **argv)
 
   gTheApp = new nsNativeViewerApp();
   NS_ADDREF(gTheApp);
-  gTheApp->Initialize(argc, argv);
-  gTheApp->Run();
+  if (gTheApp->Initialize(argc, argv) == NS_OK)
+    gTheApp->Run();
 
   return 0;
 }
