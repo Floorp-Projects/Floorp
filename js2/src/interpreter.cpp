@@ -140,6 +140,12 @@ JSValue interpret(ICodeModule *iCode, const JSValues& args)
                 registers[dst(no)].object = new JSObject();
             }
             break;
+        case NEW_ARRAY:
+            {
+                NewArray* na = static_cast<NewArray*>(instruction);
+                registers[dst(na)].array = new JSArray();
+            }
+            break;
         case GET_PROP:
             {
                 GetProp* gp = static_cast<GetProp*>(instruction);
