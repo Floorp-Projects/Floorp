@@ -1847,7 +1847,7 @@ do_BreakGetTextDimensions(const nsFontSwitch* aFontSwitch,
         // and the end of the text
         if ((breakIndex < (data->mNumBreaks - 1)) && (data->mBreaks[breakIndex] < i)) {
           ++breakIndex;
-          numChars = data->mBreaks[breakIndex] - start;
+          numChars = PR_MIN(data->mBreaks[breakIndex] - start, (PRInt32)aSubstringLength);
         }
         else {
           NS_ASSERTION(i != data->mBreaks[breakIndex], "don't expect to be at segment boundary");
