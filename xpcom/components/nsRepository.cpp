@@ -155,9 +155,9 @@ static FactoryEntry *platformFind(const nsCID &aCID)
       delete [] cidString;
       if (err == REGERR_OK) {
         res = new FactoryEntry(aCID, NULL, library);
-        NR_RegClose(hreg);
       }
     }
+    NR_RegClose(hreg);
   }
   return res;
 }
