@@ -20,6 +20,8 @@
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 Myk Melez <myk@mozilla.org>
+#                 Daniel Raichle <draichle@gmx.net>
+#                 Dave Miller <justdave@syndicomm.com>
 
 ################################################################################
 # Script Initialization
@@ -338,13 +340,23 @@ sub view
     # Display an attachment.
 
     # Retrieve the attachment content and its content type from the database.
-    SendSQL("SELECT mimetype, thedata FROM attachments WHERE attach_id = $::FORM{'id'}");
-    my ($contenttype, $thedata) = FetchSQLData();
+    SendSQL("SELECT mimetype, filename, thedata FROM attachments WHERE attach_id = $::FORM{'id'}");
+    my ($contenttype, $filename, $thedata) = FetchSQLData();
+
+    # Determine if the browser supports the Content-Disposition header or not
+    my $usedisposition = 1; # assume yes, unless we discover otherwise
+    if ($::ENV{HTTP_USER_AGENT} =~ /^Mozilla.*MSIE (\d+)/) {
+        if ($1 < 5) { $usedisposition = 0; } # MSIE < 5.0 chokes on it
+    }
     
     # Return the appropriate HTTP response headers.
-    print "Content-Type: $contenttype\n\n";
+    $filename =~ s/^.*[\/\\]//;
+    my $filesize = length($thedata);
+    print qq{Content-Type: $contenttype; name="$filename"\n};
+    print qq{Content-Disposition: attachment; filename=$filename\n} if $usedisposition;
+    print qq{Content-Length: $filesize\n};
+    print qq{\n$thedata};
 
-    print $thedata;
 }
 
 
@@ -529,9 +541,9 @@ sub edit
   # Users cannot edit the content of the attachment itself.
 
   # Retrieve the attachment from the database.
-  SendSQL("SELECT description, mimetype, bug_id, ispatch, isobsolete, isprivate 
+  SendSQL("SELECT description, mimetype, filename, bug_id, ispatch, isobsolete, isprivate 
            FROM attachments WHERE attach_id = $::FORM{'id'}");
-  my ($description, $contenttype, $bugid, $ispatch, $isobsolete, $isprivate) = FetchSQLData();
+  my ($description, $contenttype, $filename, $bugid, $ispatch, $isobsolete, $isprivate) = FetchSQLData();
 
   # Flag attachment as to whether or not it can be viewed (as opposed to
   # being downloaded).  Currently I decide it is viewable if its content
@@ -577,6 +589,7 @@ sub edit
   $vars->{'attachid'} = $::FORM{'id'}; 
   $vars->{'description'} = $description; 
   $vars->{'contenttype'} = $contenttype; 
+  $vars->{'filename'} = $filename;
   $vars->{'bugid'} = $bugid; 
   $vars->{'bugsummary'} = $bugsummary; 
   $vars->{'ispatch'} = $ispatch; 
@@ -614,10 +627,10 @@ sub update
            attachstatusdefs READ , fielddefs READ , bugs_activity WRITE");
   # Get a copy of the attachment record before we make changes
   # so we can record those changes in the activity table.
-  SendSQL("SELECT description, mimetype, ispatch, isobsolete, isprivate 
+  SendSQL("SELECT description, mimetype, filename, ispatch, isobsolete, isprivate
            FROM attachments WHERE attach_id = $::FORM{'id'}");
-  my ($olddescription, $oldcontenttype, $oldispatch, $oldisobsolete, 
-      $oldisprivate ) = FetchSQLData();
+  my ($olddescription, $oldcontenttype, $oldfilename, $oldispatch,
+      $oldisobsolete, $oldisprivate) = FetchSQLData();
 
   # Get the list of old status flags.
   SendSQL("SELECT    attachstatusdefs.name 
@@ -657,12 +670,14 @@ sub update
   # Quote the description and content type for use in the SQL UPDATE statement.
   my $quoteddescription = SqlQuote($::FORM{'description'});
   my $quotedcontenttype = SqlQuote($::FORM{'contenttype'});
+  my $quotedfilename = SqlQuote($::FORM{'filename'});
 
   # Update the attachment record in the database.
   # Sets the creation timestamp to itself to avoid it being updated automatically.
   SendSQL("UPDATE  attachments 
            SET     description = $quoteddescription , 
                    mimetype = $quotedcontenttype , 
+                   filename = $quotedfilename ,
                    ispatch = $::FORM{'ispatch'} , 
                    isobsolete = $::FORM{'isobsolete'} ,
                    isprivate = $::FORM{'isprivate'} 
@@ -681,6 +696,12 @@ sub update
     my $fieldid = GetFieldID('attachments.mimetype');
     SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when, fieldid, removed, added) 
              VALUES ($bugid, $::FORM{'id'}, $::userid, NOW(), $fieldid, $quotedoldcontenttype, $quotedcontenttype)");
+  }
+  if ($oldfilename ne $::FORM{'filename'}) {
+    my $quotedoldfilename = SqlQuote($oldfilename);
+    my $fieldid = GetFieldID('attachments.filename');
+    SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when, fieldid, removed, added) 
+             VALUES ($bugid, $::FORM{'id'}, $::userid, NOW(), $fieldid, $quotedoldfilename, $quotedfilename)");
   }
   if ($oldispatch ne $::FORM{'ispatch'}) {
     my $fieldid = GetFieldID('attachments.ispatch');

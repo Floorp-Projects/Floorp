@@ -1805,6 +1805,7 @@ AddFDef("dependson", "BugsThisDependsOn", 0);
 AddFDef("blocked", "OtherBugsDependingOnThis", 0);
 AddFDef("attachments.description", "Attachment description", 0);
 AddFDef("attachments.thedata", "Attachment data", 0);
+AddFDef("attachments.filename", "Attachment filename", 0);
 AddFDef("attachments.mimetype", "Attachment mime type", 0);
 AddFDef("attachments.ispatch", "Attachment is patch", 0);
 AddFDef("attachments.isobsolete", "Attachment is obsolete", 0);
