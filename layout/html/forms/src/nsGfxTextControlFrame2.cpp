@@ -2261,10 +2261,10 @@ nsGfxTextControlFrame2::AttributeChanged(nsIPresContext* aPresContext,
 
   if (nsHTMLAtoms::value == aAttribute) 
   {
-    if (mEditor)
+    if (mEditor && mContent)
     {
       nsString value;
-      GetText(&value, PR_TRUE);           // get the initial value from the content attribute
+      mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::value, value);
       mEditor->EnableUndo(PR_FALSE);      // wipe out undo info
       SetTextControlFrameState(value);    // set new text value
       mEditor->EnableUndo(PR_TRUE);       // fire up a new txn stack
