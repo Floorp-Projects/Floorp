@@ -1038,6 +1038,83 @@ void nsRenderingContextUnix :: FillArc(nscoord aX, nscoord aY, nscoord aWidth, n
              NSToIntRound(aEndAngle * 64.0f));
 }
 
+NS_IMETHODIMP nsRenderingContextUnix :: GetWidth(char ch, nscoord &aWidth)
+{
+  char buf[1];
+  buf[0] = ch;
+  return GetWidth(buf, 1, aWidth);
+}
+
+NS_IMETHODIMP nsRenderingContextUnix :: GetWidth(PRUnichar ch, nscoord &aWidth)
+{
+  PRUnichar buf[1];
+  buf[0] = ch;
+  return GetWidth(buf, 1, aWidth);
+}
+
+NS_IMETHODIMP nsRenderingContextUnix :: GetWidth(const nsString& aString, nscoord &aWidth)
+{
+  return GetWidth(aString.GetUnicode(), aString.Length(), aWidth);
+}
+
+NS_IMETHODIMP nsRenderingContextUnix :: GetWidth(const char *aString, nscoord &aWidth)
+{
+  return GetWidth(aString, strlen(aString), aWidth);
+}
+
+NS_IMETHODIMP nsRenderingContextUnix :: GetWidth(const char *aString,
+                                            PRUint32 aLength, nscoord &aWidth)
+{
+  PRInt32     rc;
+  XFontStruct *font;
+  
+  font = ::XQueryFont(mRenderingSurface->display, (Font)mCurrFontHandle);
+  rc = (PRInt32) ::XTextWidth(font, aString, aLength);
+  aWidth = nscoord(rc * mP2T);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsRenderingContextUnix :: GetWidth(const PRUnichar *aString,
+                                            PRUint32 aLength,
+                                            nscoord &aWidth)
+{
+  XChar2b * thischar ;
+  PRUint16 aunichar;
+  nscoord width ;
+  PRUint32 i ;
+  PRUint32 desiredSize = sizeof(XChar2b) * aLength;
+  XFontStruct *font;
+
+  // Make the temporary buffer larger if needed.
+  if (nsnull == mDrawStringBuf) {
+    mDrawStringBuf = (XChar2b *) PR_Malloc(aLength);
+    mDrawStringSize = aLength;
+  }
+  else {
+    if (mDrawStringSize < PRInt32(aLength)) {
+      mDrawStringBuf = (XChar2b *) PR_Realloc(mDrawStringBuf, aLength);
+      mDrawStringSize = aLength;
+    }
+  }
+
+  // Translate the unicode data into XChar2b's
+  XChar2b* xc = mDrawStringBuf;
+  XChar2b* end = xc + aLength;
+  while (xc < end) {
+    PRUnichar ch = *aString++;
+    xc->byte2 = (ch & 0xff);
+    xc->byte1 = (ch & 0xff00) >> 8;
+    xc++;
+  }
+  
+  font = ::XQueryFont(mRenderingSurface->display, (Font)mCurrFontHandle);
+  width = ::XTextWidth16(font, mDrawStringBuf, aLength);
+  aWidth = nscoord(width * mP2T);
+
+  return NS_OK;
+}
+
 void nsRenderingContextUnix :: DrawString(const char *aString, PRUint32 aLength,
                                     nscoord aX, nscoord aY,
                                     nscoord aWidth)

@@ -183,6 +183,28 @@ NS_IMETHODIMP DeviceContextImpl :: CreateRenderingContext(nsIView *aView, nsIRen
   return rv;
 }
 
+NS_IMETHODIMP DeviceContextImpl :: CreateRenderingContext(nsIWidget *aWidget, nsIRenderingContext *&aContext)
+{
+  nsIRenderingContext *pContext;
+  nsresult             rv;
+
+  static NS_DEFINE_IID(kRCCID, NS_RENDERING_CONTEXT_CID);
+  static NS_DEFINE_IID(kRCIID, NS_IRENDERING_CONTEXT_IID);
+
+  aContext = nsnull;
+  rv = nsRepository::CreateInstance(kRCCID, nsnull, kRCIID, (void **)&pContext);
+
+  if (NS_OK == rv) {
+    rv = InitRenderingContext(pContext, aWidget);
+    if (NS_OK != rv) {
+      NS_RELEASE(pContext);
+    }
+  }
+
+  aContext = pContext;
+  return rv;
+}
+
 NS_IMETHODIMP DeviceContextImpl :: InitRenderingContext(nsIRenderingContext *aContext, nsIWidget *aWin)
 {
   return (aContext->Init(this, aWin));

@@ -1260,6 +1260,63 @@ void nsRenderingContextWin :: FillArc(nscoord aX, nscoord aY, nscoord aWidth, ns
   ::Pie(mDC, aX, aY, aX + aWidth, aY + aHeight, sx, sy, ex, ey); 
 }
 
+
+NS_IMETHODIMP
+nsRenderingContextWin :: GetWidth(char ch, nscoord& aWidth)
+{
+  char buf[1];
+  buf[0] = ch;
+  return GetWidth(buf, 1, aWidth);
+}
+
+NS_IMETHODIMP
+nsRenderingContextWin :: GetWidth(PRUnichar ch, nscoord &aWidth)
+{
+  PRUnichar buf[1];
+  buf[0] = ch;
+  return GetWidth(buf, 1, aWidth);
+}
+
+NS_IMETHODIMP
+nsRenderingContextWin :: GetWidth(const char* aString, nscoord& aWidth)
+{
+  return GetWidth(aString, strlen(aString), aWidth);
+}
+
+NS_IMETHODIMP
+nsRenderingContextWin :: GetWidth(const char* aString,
+                                  PRUint32 aLength,
+                                  nscoord& aWidth)
+{
+  SIZE  size;
+
+  SetupFontAndColor();
+  ::GetTextExtentPoint32(mDC, aString, aLength, &size);
+  aWidth = NSToCoordRound(float(size.cx) * mP2T);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsRenderingContextWin :: GetWidth(const nsString& aString, nscoord& aWidth)
+{
+  return GetWidth(aString.GetUnicode(), aString.Length(), aWidth);
+}
+
+NS_IMETHODIMP
+nsRenderingContextWin :: GetWidth(const PRUnichar *aString,
+                                  PRUint32 aLength,
+                                  nscoord &aWidth)
+{
+  SIZE  size;
+
+  SetupFontAndColor();
+  ::GetTextExtentPoint32W(mDC, aString, aLength, &size);
+  aWidth = NSToCoordRound(float(size.cx) * mP2T);
+
+  return NS_OK;
+}
+
 void nsRenderingContextWin :: DrawString(const char *aString, PRUint32 aLength,
                                     nscoord aX, nscoord aY,
                                     nscoord aWidth)

@@ -547,15 +547,15 @@ void nsRenderingContextMac :: SetFont(nsIFontMetrics *aFontMetrics)
 
 	if (mFontMetrics)
   {
-    //nsFont font;
+    nsFont *font;
 
     //XXX this is incredibly hokey. nothing should really
     //be done with the fontmetrics passed in (either here or in
     //SetFont() above) until you want to actually *use* the font
     //for somethin. MMP
 
-    //mFontMetrics->GetFont(&font);
-		//nsFontMetricsMac::SetFont(font, mContext);
+    mFontMetrics->GetFont(font);
+		nsFontMetricsMac::SetFont(*font, mContext);
   }
 }
 
@@ -882,6 +882,77 @@ Rect		therect;
   mTMatrix->TransformCoord(&x,&y,&w,&h);
   ::SetRect(&therect,x,y,x+w,x+h);
   ::PaintArc(&therect,aStartAngle,aEndAngle);
+}
+
+//------------------------------------------------------------------------
+
+NS_IMETHODIMP nsRenderingContextMac :: GetWidth(char ch, nscoord &aWidth)
+{
+  char buf[1];
+  buf[0] = ch;
+  return GetWidth(buf, 1, aWidth);
+}
+
+//------------------------------------------------------------------------
+
+NS_IMETHODIMP nsRenderingContextMac :: GetWidth(PRUnichar ch, nscoord &aWidth)
+{
+  PRUnichar buf[1];
+  buf[0] = ch;
+  return GetWidth(buf, 1, aWidth);
+}
+
+//------------------------------------------------------------------------
+
+NS_IMETHODIMP nsRenderingContextMac :: GetWidth(const nsString& aString, nscoord &aWidth)
+{
+  return GetWidth(aString.GetUnicode(), aString.Length(), aWidth);
+}
+
+//------------------------------------------------------------------------
+
+NS_IMETHODIMP nsRenderingContextMac :: GetWidth(const char *aString, nscoord &aWidth)
+{
+  return GetWidth(aString, strlen(aString), aWidth);
+}
+
+//------------------------------------------------------------------------
+
+NS_IMETHODIMP
+nsRenderingContextMac :: GetWidth(const char* aString, PRUint32 aLength, nscoord& aWidth)
+{
+  nsFont *font;
+
+  short textWidth = ::TextWidth(aString, 0, aLength);
+  aWidth = NSToCoordRound(float(textWidth) * mP2T);
+
+  mFontMetrics->GetFont(font);
+
+  if (font != nsnull) {
+	  switch (font->style)
+	  {
+		  case NS_FONT_STYLE_ITALIC:
+		  case NS_FONT_STYLE_OBLIQUE:
+			  nscoord aAdvance;
+			  mFontMetrics->GetMaxAdvance(aAdvance);
+			  aWidth += aAdvance;
+			  break;
+	  }
+  }
+
+  return NS_OK;
+}
+
+//------------------------------------------------------------------------
+
+NS_IMETHODIMP nsRenderingContextMac :: GetWidth(const PRUnichar *aString, PRUint32 aLength, nscoord &aWidth)
+{
+	nsString nsStr;
+	nsStr.SetString(aString, aLength);
+	char* cStr = nsStr.ToNewCString();
+  GetWidth(cStr, aLength, aWidth);
+	delete[] cStr;
+  return NS_OK;
 }
 
 //------------------------------------------------------------------------

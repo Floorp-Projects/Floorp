@@ -378,6 +378,38 @@ public:
                        float aStartAngle, float aEndAngle) = 0;
 
   /**
+   * Returns the width (in app units) of an 8-bit character
+   */
+  NS_IMETHOD  GetWidth(char aC, nscoord &aWidth) = 0;
+
+  /**
+   * Returns the width (in app units) of a unicode character
+   */
+  NS_IMETHOD  GetWidth(PRUnichar aC, nscoord &aWidth) = 0;
+
+  /**
+   * Returns the width (in app units) of an nsString
+   */
+  NS_IMETHOD  GetWidth(const nsString& aString, nscoord &aWidth) = 0;
+
+  /**
+   * Returns the width (in app units) of an 8-bit character string
+   */
+  NS_IMETHOD  GetWidth(const char* aString, nscoord& aWidth) = 0;
+
+  /**
+   * Returns the width (in app units) of an 8-bit character string
+   */
+  NS_IMETHOD  GetWidth(const char* aString, PRUint32 aLength,
+                       nscoord& aWidth) = 0;
+
+  /**
+   * Returns the width (in app units) of a Unicode character string
+   */
+  NS_IMETHOD  GetWidth(const PRUnichar *aString, PRUint32 aLength,
+                       nscoord &aWidth) = 0;
+
+  /**
    * Draw a string in the RenderingContext
    * @param aString The string to draw
    * @param aLength The length of the aString
