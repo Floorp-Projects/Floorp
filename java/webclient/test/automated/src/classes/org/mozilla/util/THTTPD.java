@@ -1,5 +1,5 @@
 /*
- * $Id: THTTPD.java,v 1.3 2004/06/23 19:21:06 edburns%acm.org Exp $
+ * $Id: THTTPD.java,v 1.4 2004/06/24 16:23:42 edburns%acm.org Exp $
  */
 
 /* 
@@ -31,6 +31,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
+import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -51,7 +52,9 @@ public class THTTPD extends Object {
 	protected int count = 0;
 
 	public final static int REQUEST_GET = 2;
-	public final static int REQUEST_POST = 2;
+	public final static int REQUEST_POST = 3;
+
+	protected StringBuffer requestData = null;
 
 	public ServerThread(String name, File root,
 			    int maxRequests) {
@@ -59,6 +62,17 @@ public class THTTPD extends Object {
 	    this.root = root;
 	    this.maxRequests = maxRequests;
 	    keepRunning = true;
+	    requestData = new StringBuffer();
+	}
+
+	public String getRequestData() {
+	    String result = null;
+	    if (null != requestData) {
+		synchronized (requestData) {
+		    result = requestData.toString();
+		}
+	    }
+	    return result;
 	}
 
 	protected int soTimeout = -1;
@@ -81,13 +95,15 @@ public class THTTPD extends Object {
 	    BufferedReader 
 		responseReader = null,
 		requestReader = null;
+	    InputStream socketInputStream = null;
 	    BufferedWriter 
 		responseWriter = null;
 	    String 
 		requestLine = null,
 		curLine = null;
 	    File responseFile = null;
-	    StringBuffer responseString = null;
+	    StringBuffer 
+		responseString = null;
 
 	    V();
 	    
@@ -104,16 +120,30 @@ public class THTTPD extends Object {
 			serverSocket.setSoTimeout(getSoTimeout());
 		    }
 		    socket = serverSocket.accept();
-		    requestReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+		    requestReader = new BufferedReader(new InputStreamReader(socketInputStream = socket.getInputStream()));
 		    requestLine = requestReader.readLine();
 		    
-		    while (null != (curLine = requestReader.readLine())) {
-			if (curLine.trim().length() == 0) {
-			    break;
+		    synchronized (requestData) {
+			requestData.delete(0, requestData.length());
+			requestData.append(requestLine);
+			while (null != (curLine = requestReader.readLine())) {
+			    requestData.append(curLine);
+			    if (curLine.trim().length() == 0) {
+				break;
+			    }
 			}
 		    }
 		   
 		    switch (getRequestMethod(requestLine)) {
+		    case REQUEST_POST:
+			while (null != (curLine = requestReader.readLine())) {
+			    requestData.append(curLine);
+			    if (socketInputStream.available() <= 0 ||
+				curLine.trim().length() == 0) {
+				break;
+			    }
+			}
+			// intentional fall through!
 		    case REQUEST_GET:
 			responseWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
 			if (null != 
@@ -154,6 +184,12 @@ public class THTTPD extends Object {
 
 	protected int getRequestMethod(String requestLine) {
 	    int result = REQUEST_GET;
+	    if (0 == requestLine.indexOf("GET")) {
+		result = REQUEST_GET;
+	    }
+	    else if (0 == requestLine.indexOf("POST")) {
+		result = REQUEST_POST;
+	    }
 	    return result;
 	}
 

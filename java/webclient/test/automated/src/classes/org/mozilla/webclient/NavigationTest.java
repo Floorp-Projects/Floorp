@@ -1,5 +1,5 @@
 /*
- * $Id: NavigationTest.java,v 1.17 2004/06/23 19:21:06 edburns%acm.org Exp $
+ * $Id: NavigationTest.java,v 1.18 2004/06/24 16:23:42 edburns%acm.org Exp $
  */
 
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
@@ -378,6 +378,67 @@ public class NavigationTest extends WebclientTestCase {
 	Thread.currentThread().sleep(3000);
 	
 	nav.loadURL(url);
+	
+	// keep waiting until the previous load completes
+	while (NavigationTest.keepWaiting) {
+	    Thread.currentThread().sleep(1000);
+	}
+	eventRegistration.removeDocumentLoadListener(listener);
+
+	frame.setVisible(false);
+	BrowserControlFactory.deleteBrowserControl(firstBrowserControl);
+    }
+
+    public void testHttpPost() throws Exception {
+	BrowserControl firstBrowserControl = null;
+	DocumentLoadListenerImpl listener = null;
+	Selection selection = null;
+	firstBrowserControl = BrowserControlFactory.newBrowserControl();
+	assertNotNull(firstBrowserControl);
+	BrowserControlCanvas canvas = (BrowserControlCanvas)
+	    firstBrowserControl.queryInterface(BrowserControl.BROWSER_CONTROL_CANVAS_NAME);
+	eventRegistration = (EventRegistration2)
+	    firstBrowserControl.queryInterface(BrowserControl.EVENT_REGISTRATION_NAME);
+
+	assertNotNull(canvas);
+	Frame frame = new Frame();
+	frame.setUndecorated(true);
+	frame.setBounds(0, 0, 640, 480);
+	frame.add(canvas, BorderLayout.CENTER);
+	frame.setVisible(true);
+	canvas.setVisible(true);
+	
+	Navigation2 nav = (Navigation2) 
+	    firstBrowserControl.queryInterface(BrowserControl.NAVIGATION_NAME);
+	assertNotNull(nav);
+	final CurrentPage2 currentPage = (CurrentPage2) 
+          firstBrowserControl.queryInterface(BrowserControl.CURRENT_PAGE_NAME);
+	
+	assertNotNull(currentPage);
+
+	//
+	// try loading a file over HTTP
+	//
+	
+	NavigationTest.keepWaiting = true;
+	
+
+	eventRegistration.addDocumentLoadListener(listener = new DocumentLoadListenerImpl() {
+		public void doEndCheck() {
+		    currentPage.selectAll();
+		    Selection selection = currentPage.getSelection();
+		    NavigationTest.keepWaiting = false;
+		    assertTrue(-1 != selection.toString().indexOf("This file was downloaded over HTTP."));
+		    System.out.println("Selection is: " + 
+				       selection.toString());
+		}
+	    });
+
+	String url = "http://localhost:5243/HttpNavigationTest.txt";
+
+	Thread.currentThread().sleep(3000);
+	
+	nav.post(url, null, "PostData\r\n", "X-WakaWaka: true\r\n\r\n");
 	
 	// keep waiting until the previous load completes
 	while (NavigationTest.keepWaiting) {

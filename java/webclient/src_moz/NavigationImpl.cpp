@@ -39,6 +39,7 @@
 
 #include "NativeBrowserControl.h"
 #include "NavigationActionEvents.h"
+#include "EmbedWindow.h"
 #include "ns_util.h"
 
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_NavigationImpl_nativeLoadURL
@@ -150,10 +151,6 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Navigatio
     // wsLoadFromStreamEvent destructor.
 }
 
-    /**********************
-
-
-
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_NavigationImpl_nativePost
 (JNIEnv *env, jobject obj, jint nativeBCPtr, jstring absoluteURL, jstring target, jint postDataLength,
  jstring postData, jint postHeadersLength, jstring postHeaders)
@@ -166,29 +163,29 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Navigatio
     const char          *postDataChars    = nsnull;
     const char          *postHeadersChars = nsnull;
     char                *headersAndData   = nsnull;
-    wsPostEvent         *actionEvent      = nsnull;
     nsresult rv = NS_OK;
     nsCOMPtr<nsIIOService> ioService = do_GetService(NS_IOSERVICE_CONTRACTID,
                                                      &rv);
     nsCOMPtr<nsIURI> uri;
-    NS_ConvertUCS2toUTF8 uriACString(urlChars);
 
     if (!ioService || NS_FAILED(rv)) {
         return;
     }
 
-    if (nativeBrowserControl == nsnull || !nativeBrowserControl->initComplete) {
+    if (nativeBrowserControl == nsnull) {
         ::util_ThrowExceptionToJava(env, "Exception: null nativeBCPtr passed to nativePost");
         return;
     }
 
     urlChars         = (PRUnichar *) ::util_GetStringChars(env, absoluteURL);
     urlLen           = (PRInt32) ::util_GetStringLength(env, absoluteURL);
+    NS_ConvertUCS2toUTF8 uriACString(urlChars);
 
     if (::util_ExceptionOccurred(env)) {
         ::util_ThrowExceptionToJava(env, "nativePost Exception: unable to extract Java string");
       goto NPFS_CLEANUP;
     }
+
 
     if (target){
       targetChars         = (PRUnichar *) ::util_GetStringChars(env, target);
@@ -242,23 +239,17 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Navigatio
         goto NPFS_CLEANUP;
     }
 
-
-    if (!(actionEvent = new wsPostEvent(nativeBrowserControl,
-                                        uri,
-                                        targetChars,
-                                        targetLen, 
-                                        (PRInt32) postDataLength,
-                               headersAndData ? headersAndData : postDataChars,
-                                        (PRInt32) postHeadersLength,
-                                        postHeadersChars))) {
-
-        ::util_ThrowExceptionToJava(env, "Exception: nativePost: can't create wsPostEvent");
-        goto NPFS_CLEANUP;
-    }
-
-    ::util_PostSynchronousEvent(nativeBrowserControl, (PLEvent *) *actionEvent);
+    
+    rv = nativeBrowserControl->mWindow->Post(uri, 
+                                             targetChars,
+                                             targetLen, 
+                                             (PRInt32) postDataLength,
+                                             headersAndData ? headersAndData : postDataChars,
+                                             (PRInt32) postHeadersLength,
+                                             postHeadersChars);
 
  NPFS_CLEANUP:
+    
     if (urlChars != nsnull)
         ::util_ReleaseStringChars(env, absoluteURL, (const jchar *) urlChars);
     if (targetChars != nsnull)
@@ -271,7 +262,6 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Navigatio
         delete [] headersAndData;
     return;
 }
-*********************/
 
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_NavigationImpl_nativeRefresh
 (JNIEnv *env, jobject obj, jint nativeBCPtr, jlong loadFlags)

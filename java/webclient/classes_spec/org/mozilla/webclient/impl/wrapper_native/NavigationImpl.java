@@ -166,17 +166,21 @@ public void setPrompt(Prompt yourPrompt)
 // Methods from Navigation2
 //
 
-public void post(String  absoluteUrl,
-                 String  target, 
-                 String  postData,
-                 String  postHeaders) 
+public void post(String  argUrl,
+                 String  argTarget, 
+                 String  argPostData,
+                 String  argPostHeaders) 
 {
-    ParameterCheck.nonNull(absoluteUrl);
+    ParameterCheck.nonNull(argUrl);
     getWrapperFactory().verifyInitialized();
     Assert.assert_it(-1 != getNativeBrowserControl());
 
-    int postDataLength = 0;
-    int postHeadersLength = 0;
+    final String url = new String(argUrl);
+    final String target = argTarget;
+    final String postData = argPostData;
+    final String postHeaders = argPostHeaders;
+    final int postDataLength;
+    final int postHeadersLength;
 
     // PENDING(edburns): make it so the url doesn't have to be absolute.
 
@@ -184,22 +188,30 @@ public void post(String  absoluteUrl,
     // "\r\n" as specified in Navigation.java
 
     if (postData != null){
-      postDataLength = postData.length();
+	postDataLength = postData.length();
     }
-
+    else {
+	postDataLength = 0;
+    }
+    
     if (postHeaders != null){
-      postHeadersLength = postHeaders.length();
+	postHeadersLength = postHeaders.length();
+    }
+    else {
+	postHeadersLength = 0;
     }
 
-    synchronized(getBrowserControl()) {
-        nativePost(getNativeBrowserControl(), 
-                   absoluteUrl, 
-                   target,
-                   postDataLength, 
-                   postData, 
-                   postHeadersLength, 
-                   postHeaders);
-    }
+    NativeEventThread.instance.pushRunnable(new Runnable() {
+	    public void run() {
+		nativePost(NavigationImpl.this.getNativeBrowserControl(), 
+			   url, 
+			   target,
+			   postDataLength, 
+			   postData, 
+			   postHeadersLength, 
+			   postHeaders);
+	    }
+	});
 }
 
 // 
@@ -241,7 +253,7 @@ public static void main(String [] args)
 
     Log.setApplicationName("NavigationImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: NavigationImpl.java,v 1.10 2004/06/23 17:08:14 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: NavigationImpl.java,v 1.11 2004/06/24 16:23:42 edburns%acm.org Exp $");
 
     try {
         org.mozilla.webclient.BrowserControlFactory.setAppData(args[0]);

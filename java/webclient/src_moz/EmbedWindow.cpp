@@ -43,7 +43,7 @@
 #include "nsIInputStream.h"
 #include "nsIURI.h"
 #include "nsIDocShellLoadInfo.h"
-
+#include "nsNetUtil.h" // for NS_NewPostDataStream
 
 #include "NativeBrowserControl.h"
 #include "EmbedWindow.h"
@@ -282,6 +282,67 @@ EmbedWindow::LoadStream(nsIInputStream *aStream, nsIURI * aURI,
     }
     return docShell->LoadStream(aStream, aURI, aContentType, aContentCharset,
                                 aLoadInfo);
+}
+
+nsresult 
+EmbedWindow::Post(nsIURI *absoluteURL,
+                  const PRUnichar *target,
+                  PRInt32 targetLength,
+                  PRInt32 postDataLength,
+                  const char *postData,  
+                  PRInt32 postHeadersLength,
+                  const char *postHeaders)
+{
+    nsresult rv = NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIDocShell> docShell = do_GetInterface(mWebBrowser);
+    nsCOMPtr<nsIDocShellLoadInfo> docShellLoadInfo = nsnull;
+    if (!docShell) {
+        return rv;
+    }
+
+    rv = docShell->CreateLoadInfo(getter_AddRefs(docShellLoadInfo));
+
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
+    
+    docShellLoadInfo->SetReferrer(absoluteURL);
+    docShellLoadInfo->SetLoadType(nsIDocShellLoadInfo::loadNormalReplace);
+    docShellLoadInfo->SetInheritOwner(PR_TRUE);
+    docShellLoadInfo->SetTarget(target);
+
+    // create the streams
+    nsCOMPtr<nsIInputStream> postDataStream = nsnull;
+    nsCOMPtr<nsIInputStream> headersDataStream = nsnull;
+    nsCOMPtr<nsIInputStream> inputStream = nsnull;
+    
+    if (postData) {
+        nsCAutoString postDataStr(postData);
+        NS_NewPostDataStream(getter_AddRefs(postDataStream),
+                             PR_FALSE,
+                             postDataStr, 0);
+    }
+    
+    if (postHeaders) {
+        NS_NewByteInputStream(getter_AddRefs(inputStream),
+                              postHeaders, postHeadersLength);
+        if (inputStream) {
+            headersDataStream = do_QueryInterface(inputStream, &rv);
+        }
+        
+        if (NS_FAILED(rv)) {
+            return rv;
+        }
+    }
+
+    docShellLoadInfo->SetPostDataStream(postDataStream);
+    docShellLoadInfo->SetHeadersStream(headersDataStream);
+
+    rv = docShell->LoadURI(absoluteURL, docShellLoadInfo, 
+                           nsIWebNavigation::LOAD_FLAGS_NONE, PR_TRUE);
+    
+    return rv;
 }
 
 nsresult

@@ -73,6 +73,15 @@ public:
                               const nsACString &aContentCharset,
                               nsIDocShellLoadInfo * aLoadInfo);
 
+    nsresult Post            (nsIURI *absoluteURL,
+                              const PRUnichar *target,
+                              PRInt32 targetLength,
+                              PRInt32 postDataLength,
+                              const char *postData,  
+                              PRInt32 postHeadersLength,
+                              const char *postHeaders);
+                              
+
     nsresult AddWebBrowserListener(nsIWeakReference *aListener, 
                                    const nsIID & aIID);
     
