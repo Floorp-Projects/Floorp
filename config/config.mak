@@ -216,10 +216,10 @@ CFLAGS=$(CFLAGS) -DMOZ_FULLCIRCLE
 !endif
 
 !ifdef MODULAR_NETLIB
-CFLAGS=$(CFLAGS) -DMODULAR_NETLIB -DNS_MT_SUPPORTED -DNETLIB_THREAD -DNS_NET_FILE -DCookieManagement -DSingleSignon -DPrivacySiteInfo
+CFLAGS=$(CFLAGS) -DMODULAR_NETLIB -DNS_MT_SUPPORTED -DNETLIB_THREAD -DNS_NET_FILE -DCookieManagement -DSingleSignon -DClientWallet -DPrivacySiteInfo
 !else
 # Defines for new cookie management...
-CFLAGS=$(CFLAGS) -DCookieManagement -DSingleSignon -DPrivacySiteInfo
+CFLAGS=$(CFLAGS) -DCookieManagement -DSingleSignon -DClientWallet -DPrivacySiteInfo
 
 !endif
 
