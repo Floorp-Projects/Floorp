@@ -58,7 +58,7 @@
 #include "nsEUCKRVerifier.h"
 //---- end verifiers
 
-#define DETECTOR_DEBUG
+//#define DETECTOR_DEBUG
 
 #define MAX_VERIFIERS 16
 
