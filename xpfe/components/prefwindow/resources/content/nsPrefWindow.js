@@ -204,6 +204,8 @@ nsPrefWindow.prototype =
             for( var pageTag in this.wsm.dataManager.pageData )
               {
                 var pageData = this.wsm.dataManager.getPageData( pageTag );
+                if (pageData.initialized)
+                  {
                 for( var elementID in pageData )
                   {
                     var element = this.wsm.contentArea.document.getElementById( elementID );
@@ -243,6 +245,7 @@ nsPrefWindow.prototype =
                           }
                       }
                   }
+              }
               }
               this.pref.savePrefFile(null);
           },                        
@@ -319,6 +322,7 @@ nsPrefWindow.prototype =
               {
                 window.frames[ this.contentFrame ].Startup();
               }
+            this.wsm.dataManager.pageData[aPageTag].initialized=true;
           },
 
     closeBranches:
