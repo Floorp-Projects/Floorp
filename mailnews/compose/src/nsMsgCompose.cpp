@@ -4527,6 +4527,9 @@ nsresult nsMsgCompose::SetBodyAttributes(nsString& attributes)
       {
         /* we found the end of an attribute name */
         attributeName.Assign(start, data - start);
+
+		// strip any leading or trailing white space from the attribute name.
+		attributeName.CompressWhitespace();
         start = data + 1;
         if (start < end && *start == '\"')
         {
@@ -4543,13 +4546,8 @@ nsresult nsMsgCompose::SetBodyAttributes(nsString& attributes)
       else
       {
         if (delimiter =='\"')
-        {
-          /* we found the closing double-quote of an attribute value,
-             let's find now the real attribute delimiter */
-          delimiter = ' ';
-        }
-        else
-        {
+          data ++;
+ 
           /* we found the end of an attribute value */
           attributeValue.Assign(start, data - start);
           rv = SetBodyAttribute(m_editor, rootElement, attributeName, attributeValue);
@@ -4560,7 +4558,6 @@ nsresult nsMsgCompose::SetBodyAttributes(nsString& attributes)
           attributeName.Truncate();
           attributeValue.Truncate();
           delimiter = '=';
-        }
       }
     }
 
