@@ -48,13 +48,13 @@
   <box orient="vertical" style="min-width: 20em">
     <titledbox orient="vertical"><title id="linkTextCaption" align="left"/>
       <text class="label" id="linkTextMessage"/> 
-	    <textfield id="linkTextInput" flex="1" onkeyup="ChangeText()"/>
+	    <textfield id="linkTextInput" flex="1" oninput="ChangeText()"/>
     </titledbox>
 
     <titledbox orient="vertical"><title value="&LinkURLBox.label;"/>
       <text class="label" value="&LinkURLEditField.label;"/>
       <box autostretch="never" valign="middle">
-        <textfield id="hrefInput" flex="1" style="min-width: 18em" onkeyup="ChangeLocation()"/>
+        <textfield id="hrefInput" flex="1" style="min-width: 18em" oninput="ChangeLocation()"/>
         <button class="dialog" id="ChooseFile" flex="1"/>
       </box>
       <html class="wrap" flex="1" id="RemoveLinkMsg" style="margin-bottom: 7px">&RemoveLinkMsg.label;</html>

@@ -51,7 +51,7 @@
     <titledbox orient="vertical"><title align="left" value="&documentTitleTitle.label;"/>
       <!-- Text labels filled in from editor.properties -->
       <text id="EnterTitleLabel" class="label"/> 
-	    <textfield id="TitleInput" flex="1" onkeyup="TitleChanged();"/>
+	    <textfield id="TitleInput" flex="1" oninput="TitleChanged();"/>
       <html id="TitleHelp" class="label wrap" style="width:1em" flex="1"/>
     </titledbox>
 

@@ -54,17 +54,17 @@
       <rows>
         <row valign="middle" text-align="right" autostretch="never">
           <text class="label align-right" text-align="right" value="&numRowsEditField.label;" />
-          <textfield class="narrow" id="rowsInput" onkeyup="ChangeRowOrColumn(this.id)" />
+          <textfield class="narrow" id="rowsInput" oninput="ChangeRowOrColumn(this.id)" />
           <spring/>
         </row>
         <row valign="middle" text-align="right" autostretch="never">
           <text class="label align-right" value="&numColumnsEditField.label;" />
-          <textfield class="narrow" id="columnsInput" onkeyup="ChangeRowOrColumn(this.id)" />
+          <textfield class="narrow" id="columnsInput" oninput="ChangeRowOrColumn(this.id)" />
           <spring/>
         </row>
         <row valign="middle" text-align="right" autostretch="never">
           <text class="label align-right" value="&widthEditField.label;" />
-          <textfield class="narrow" id="widthInput" onkeyup="forceInteger(this.id)" />
+          <textfield class="narrow" id="widthInput" oninput="forceInteger(this.id)" />
           <menulist id="widthPixelOrPercentMenulist"><menupopup/></menulist>
             <!-- child elements are appended by JS -->
         </row>
@@ -76,7 +76,7 @@
   <box>
     <text class="label align-right" text-align="right" value="&borderEditField.label;"
         tooltip="aTooltip" tooltiptext="&borderEditField.tooltip;" />
-    <textfield class="narrow" id="borderInput" onkeyup="forceInteger(this.id)" />
+    <textfield class="narrow" id="borderInput" oninput="forceInteger(this.id)" />
     <text class="label" value="&pixels.label;"/>  
   </box>
   <!-- from EdDialogOverlay -->

@@ -58,15 +58,15 @@
       <spring class="spacer"/>
       <row valign="middle">
         <text class="label" value="&titleInput.label;"/>
-        <textfield class="MinWidth20em" id="TitleInput" onkeyup="TextfieldChanged(this.id)"/>
+        <textfield class="MinWidth20em" id="TitleInput" oninput="TextfieldChanged(this.id)"/>
       </row>
       <row valign="middle">
         <text class="label" value="&authorInput.label;"/>
-        <textfield class="MinWidth20em" id="AuthorInput" onkeyup="TextfieldChanged(this.id)"/>
+        <textfield class="MinWidth20em" id="AuthorInput" oninput="TextfieldChanged(this.id)"/>
       </row>
       <row valign="middle">
         <text class="label" value="&descriptionInput.label;"/>
-        <textfield class="MinWidth20em" id="DescriptionInput" onkeyup="TextfieldChanged(this.id)"/>
+        <textfield class="MinWidth20em" id="DescriptionInput" oninput="TextfieldChanged(this.id)"/>
       </row>
     </rows>
   </grid>

@@ -54,13 +54,13 @@
       <rows>
         <row valign="middle" autostretch="never">
           <text class="label" value="&widthEditField.label;" />
-          <textfield class="narrow" id="width" flex="1" onkeyup="forceInteger('width')"/>
+          <textfield class="narrow" id="width" flex="1" oninput="forceInteger('width')"/>
           <menulist id="pixelOrPercentMenulist" />
           <!-- menupopup and menuitems added by JS -->
         </row>
         <row valign="middle" autostretch="never">
           <text class="label" value="&heightEditField.label;" />
-          <textfield class="narrow" id="height" onkeyup="forceInteger('height')"/>
+          <textfield class="narrow" id="height" oninput="forceInteger('height')"/>
           <text class="label" value="&pixelsPopup.value;" />
         </row>
       </rows>
