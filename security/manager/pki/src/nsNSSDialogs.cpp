@@ -572,11 +572,13 @@ nsNSSDialogs::ConfirmDialog(nsIInterfaceRequestor *ctx, const char *prefName,
 
   // Get user's preference for this alert
   // prefName, showAgainName are null if there is no preference for this dialog
-  PRBool prefValue;
+  PRBool prefValue = PR_TRUE;
   
-  rv = mPref->GetBoolPref(prefName, &prefValue);
-  if (NS_FAILED(rv)) prefValue = PR_TRUE;
-
+  if (prefName != nsnull) {
+    rv = mPref->GetBoolPref(prefName, &prefValue);
+    if (NS_FAILED(rv)) prefValue = PR_TRUE;
+  }
+  
   // Stop if confirm is not requested
   if (!prefValue) {
     *_result = PR_TRUE;
@@ -594,8 +596,10 @@ nsNSSDialogs::ConfirmDialog(nsIInterfaceRequestor *ctx, const char *prefName,
                                    getter_Copies(windowTitle));
   mStringBundle->GetStringFromName(messageName,
                                    getter_Copies(message));
-  mStringBundle->GetStringFromName(showAgainName,
-                                   getter_Copies(alertMe));
+  if (showAgainName != nsnull) {
+    mStringBundle->GetStringFromName(showAgainName,
+                                     getter_Copies(alertMe));
+  }
   mStringBundle->GetStringFromName(NS_LITERAL_STRING("Continue").get(),
                                    getter_Copies(cont));
   // alertMe is allowed to be null
@@ -630,7 +634,7 @@ nsNSSDialogs::ConfirmDialog(nsIInterfaceRequestor *ctx, const char *prefName,
     *_result = PR_FALSE;
   }                                
         
-  if (!prefValue) {
+  if (!prefValue && prefName != nsnull) {
     mPref->SetBoolPref(prefName, PR_FALSE);
   }
 
