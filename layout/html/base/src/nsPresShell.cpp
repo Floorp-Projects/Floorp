@@ -6045,10 +6045,8 @@ PresShell::HandleEvent(nsIView         *aView,
       //change 6-01-00 mjudge,ftang adding ime as an event that needs focused element
       if (NS_IS_KEY_EVENT(aEvent) || NS_IS_IME_EVENT(aEvent) || aEvent->message == NS_CONTEXTMENU_KEY) { 
         //Key events go to the focused frame, not point based.
-        manager->GetFocusedContent(&mCurrentEventContent);
-        if (mCurrentEventContent)
-          GetPrimaryFrameFor(mCurrentEventContent, &mCurrentEventFrame);
-        else {
+        manager->GetFocusedFrame(&mCurrentEventFrame);
+        if (!mCurrentEventFrame) {
 #if defined(MOZ_X11)
           if (NS_IS_IME_EVENT(aEvent)) {
             // bug 52416
