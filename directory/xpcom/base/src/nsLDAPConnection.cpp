@@ -1,4 +1,5 @@
-/* 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -16,7 +17,7 @@
  * Copyright (C) 2000 Netscape Communications Corporation.  All
  * Rights Reserved.
  * 
- * Contributor(s): Dan Mosedale <dmose@mozilla.org>
+ * Contributor(s): Dan Mosedale <dmose@mozilla.org> (original author)
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -31,7 +32,7 @@
  * GPL.
  */
 
-#include "nsLDAP.h"
+#include "nsLDAPInternal.h"
 #include "nsIComponentManager.h"
 #include "nsLDAPConnection.h"
 #include "nsLDAPMessage.h"
@@ -60,8 +61,8 @@ nsLDAPConnection::~nsLDAPConnection()
   rc = ldap_unbind_s(this->mConnectionHandle);
   if (rc != LDAP_SUCCESS) {
       PR_LOG(gLDAPLogModule, PR_LOG_WARNING, 
-	     ("nsLDAPConnection::~nsLDAPConnection: %s\n", 
-	      ldap_err2string(rc)));
+             ("nsLDAPConnection::~nsLDAPConnection: %s\n", 
+              ldap_err2string(rc)));
   }
 
   PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, ("unbound\n"));
@@ -77,7 +78,7 @@ nsLDAPConnection::~nsLDAPConnection()
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsLDAPConnection, nsILDAPConnection, 
-			      nsIRunnable);
+                              nsIRunnable);
 
 NS_IMETHODIMP
 nsLDAPConnection::Init(const char *aHost, PRInt16 aPort, const char *aBindName)
@@ -91,10 +92,10 @@ nsLDAPConnection::Init(const char *aHost, PRInt16 aPort, const char *aBindName)
     // initialize logging, if it hasn't been already
     //
     if (!gLDAPLogModule) {
-	gLDAPLogModule = PR_NewLogModule("ldap");
+        gLDAPLogModule = PR_NewLogModule("ldap");
 
-	NS_ABORT_IF_FALSE(gLDAPLogModule, 
-			  "failed to initialize LDAP log module");
+        NS_ABORT_IF_FALSE(gLDAPLogModule, 
+                          "failed to initialize LDAP log module");
     }
 #endif
 
@@ -103,29 +104,29 @@ nsLDAPConnection::Init(const char *aHost, PRInt16 aPort, const char *aBindName)
     // need to go through these contortions.
     //
     if (aBindName) {
-	mBindName = new nsCString(aBindName);
-	if (!mBindName) {
-	    return NS_ERROR_OUT_OF_MEMORY;
-	}
+        mBindName = new nsCString(aBindName);
+        if (!mBindName) {
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
     } else {
-	mBindName = NULL;
+        mBindName = NULL;
     }
 
     this->mConnectionHandle = ldap_init(aHost, aPort);
     if ( this->mConnectionHandle == NULL) {
-	return NS_ERROR_FAILURE;  // the LDAP C SDK API gives no useful error
+        return NS_ERROR_FAILURE;  // the LDAP C SDK API gives no useful error
     }
 
     // initialize the threading functions for this connection
     //
     if (!nsLDAPThreadFuncsInit(this->mConnectionHandle)) {
-	return NS_ERROR_FAILURE;
+        return NS_ERROR_FAILURE;
     }
 
     // initialize the thread-specific data for the calling thread as necessary
     //
     if (!nsLDAPThreadDataInit()) {
-	return NS_ERROR_FAILURE;
+        return NS_ERROR_FAILURE;
     }
 
     // allocate a hashtable to keep track of pending operations.
@@ -134,15 +135,15 @@ nsLDAPConnection::Init(const char *aHost, PRInt16 aPort, const char *aBindName)
     //
     mPendingOperations = new nsSupportsHashtable(10, PR_TRUE);
     if ( !mPendingOperations) {
-	NS_ERROR("failure initializing mPendingOperations hashtable");
-	return NS_ERROR_FAILURE;
+        NS_ERROR("failure initializing mPendingOperations hashtable");
+        return NS_ERROR_FAILURE;
     }
 
 #ifdef DEBUG_dmose
     const int lDebug = 0;
     ldap_set_option(this->mConnectionHandle, LDAP_OPT_DEBUG_LEVEL, &lDebug);
     ldap_set_option(this->mConnectionHandle, LDAP_OPT_ASYNC_CONNECT, 
-		    NS_REINTERPRET_CAST(void *, 0));
+                    NS_REINTERPRET_CAST(void *, 0));
 #endif
 
     // kick off a thread for result listening and marshalling
@@ -150,7 +151,7 @@ nsLDAPConnection::Init(const char *aHost, PRInt16 aPort, const char *aBindName)
     // 
     rv = NS_NewThread(getter_AddRefs(mThread), this, 0, PR_UNJOINABLE_THREAD);
     if (NS_FAILED(rv)) {
-	return NS_ERROR_NOT_AVAILABLE;
+        return NS_ERROR_NOT_AVAILABLE;
     }
 
     return NS_OK;
@@ -167,15 +168,15 @@ nsLDAPConnection::GetBindName(char **_retval)
     // check for NULL (meaning bind anonymously)
     //
     if (!mBindName) {
-	*_retval = nsnull;
+        *_retval = nsnull;
     } else {
 
-	// otherwise, hand out a copy of the bind name
-	//
-	*_retval = mBindName->ToNewCString();
-	if (!(*_retval)) {
-	    return NS_ERROR_OUT_OF_MEMORY;
-	}
+        // otherwise, hand out a copy of the bind name
+        //
+        *_retval = mBindName->ToNewCString();
+        if (!(*_retval)) {
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
     }
 
     return NS_OK;
@@ -186,7 +187,7 @@ nsLDAPConnection::GetBindName(char **_retval)
 //
 NS_IMETHODIMP
 nsLDAPConnection::GetLdErrno(char **matched, char **errString, 
-			     PRInt32 *_retval)
+                             PRInt32 *_retval)
 {
     NS_ENSURE_ARG_POINTER(_retval);
 
@@ -207,7 +208,7 @@ nsLDAPConnection::GetErrorString(char **_retval)
     NS_ENSURE_ARG_POINTER(_retval);
 
     *_retval = ldap_err2string(ldap_get_lderrno(this->mConnectionHandle, 
-						NULL, NULL));
+                                                NULL, NULL));
     return NS_OK;
 }
 
@@ -250,7 +251,7 @@ nsLDAPConnection::AddPendingOperation(nsILDAPOperation *aOperation)
     //
     nsVoidKey *key = new nsVoidKey(NS_REINTERPRET_CAST(void *, msgId));
     if (!key) {
-	return NS_ERROR_OUT_OF_MEMORY;
+        return NS_ERROR_OUT_OF_MEMORY;
     }
 
     // actually add it to the queue.  if Put indicates that an item in 
@@ -258,17 +259,17 @@ nsLDAPConnection::AddPendingOperation(nsILDAPOperation *aOperation)
     //
     if (mPendingOperations->Put(key, aOperation) == PR_TRUE) {
 #ifdef DEBUG
-	PR_fprintf(PR_STDERR, "nsLDAPConnection::AddPendingOperation() "
-		   "mPendingOperations->Put() overwrote an item.  msgId "
-		   "is supposed to be unique\n");
+        PR_fprintf(PR_STDERR, "nsLDAPConnection::AddPendingOperation() "
+                   "mPendingOperations->Put() overwrote an item.  msgId "
+                   "is supposed to be unique\n");
 #endif
-	delete key;
-	return NS_ERROR_UNEXPECTED;
+        delete key;
+        return NS_ERROR_UNEXPECTED;
     }
 
     PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, 
-	   ("pending operation added; total pending operations now = %d\n", 
-	    mPendingOperations->Count()));
+           ("pending operation added; total pending operations now = %d\n", 
+            mPendingOperations->Count()));
 
     delete key;
     return NS_OK;
@@ -278,10 +279,10 @@ nsLDAPConnection::AddPendingOperation(nsILDAPOperation *aOperation)
  * Remove an nsILDAPOperation from the list of operations pending on this
  * connection.  Mainly intended for use by the nsLDAPOperation code.
  *
- * @param aOperation	operation to add
+ * @param aOperation    operation to add
  * @exception NS_ERROR_INVALID_POINTER  aOperation was NULL
  * @exception NS_ERROR_OUT_OF_MEMORY    out of memory
- * @exception NS_ERROR_FAILURE	    could not delete the operation 
+ * @exception NS_ERROR_FAILURE      could not delete the operation 
  *
  * void removePendingOperation(in nsILDAPOperation aOperation);
  */
@@ -305,26 +306,26 @@ nsLDAPConnection::RemovePendingOperation(nsILDAPOperation *aOperation)
     //
     nsVoidKey *key = new nsVoidKey(NS_REINTERPRET_CAST(void *, msgId));
     if (!key) {
-	return NS_ERROR_OUT_OF_MEMORY;
+        return NS_ERROR_OUT_OF_MEMORY;
     }
 
     if (!mPendingOperations->Remove(key)) {
 #ifdef DEBUG
-	PR_fprintf(PR_STDERR, "nsLDAPConnection::RemovePendingOperation was\n"
-		   " unable to remove the requested item from the pending\n"
-		   " operations queue.  This probably means that the item\n"
-		   " in question didn't exist in the queue, which in turn\n"
-		   " probably means that you have found a bug in the code\n"
-		   " that calls this function.\n");
+        PR_fprintf(PR_STDERR, "nsLDAPConnection::RemovePendingOperation was\n"
+                   " unable to remove the requested item from the pending\n"
+                   " operations queue.  This probably means that the item\n"
+                   " in question didn't exist in the queue, which in turn\n"
+                   " probably means that you have found a bug in the code\n"
+                   " that calls this function.\n");
 #endif
 
-	delete key;
-	return NS_ERROR_FAILURE;
+        delete key;
+        return NS_ERROR_FAILURE;
     }
 
     PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, 
-	   ("pending operation removed; total pending operations now = %d\n", 
-	    mPendingOperations->Count()));
+           ("pending operation removed; total pending operations now = %d\n", 
+            mPendingOperations->Count()));
 
     delete key;
     return NS_OK;
@@ -347,84 +348,88 @@ nsLDAPConnection::Run(void)
     // initialize the thread-specific data for the child thread (as necessary)
     //
     if (!nsLDAPThreadDataInit()) {
-	return NS_ERROR_FAILURE;
+        return NS_ERROR_FAILURE;
     }
 
     PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, 
-	   ("nsLDAPConnection::Run() entered\n"));
+           ("nsLDAPConnection::Run() entered\n"));
 
     // wait for results
     //
     while(1) {
 
-	PRBool operationFinished = PR_TRUE;
+        PRBool operationFinished = PR_TRUE;
 
-	// XXX deal with timeouts better
-	//
-	returnCode = ldap_result(mConnectionHandle, LDAP_RES_ANY,
-				 LDAP_MSG_ONE, LDAP_NO_LIMIT, &msgHandle);
+        // XXX deal with timeouts better
+        //
+        returnCode = ldap_result(mConnectionHandle, LDAP_RES_ANY,
+                                 LDAP_MSG_ONE, LDAP_NO_LIMIT, &msgHandle);
 
-	// if we didn't error or timeout, create an nsILDAPMessage
-	//	
-	switch (returnCode) {
+        // if we didn't error or timeout, create an nsILDAPMessage
+        //      
+        switch (returnCode) {
 
-	case 0: // timeout
+        case 0: // timeout
 
-	    // the connection may not exist yet.  sleep for a while
-	    // and try again
-	    PR_LOG(gLDAPLogModule, PR_LOG_WARNING, 
-		   ("ldap_result() timed out.\n"));
-	    PR_Sleep(2000); // XXXdmose - reasonable timeslice?
-	    continue;
+            // the connection may not exist yet.  sleep for a while
+            // and try again
+            PR_LOG(gLDAPLogModule, PR_LOG_WARNING, 
+                   ("ldap_result() timed out.\n"));
+            PR_Sleep(2000); // XXXdmose - reasonable timeslice?
+            continue;
 
-	    break;
+            break;
 
-	case -1: // something went wrong 
-	         // XXXdmose should propagate the error to the listener
+        case -1: // something went wrong 
+                 // XXXdmose should propagate the error to the listener
 #ifdef DEBUG
-	    (void)this->GetErrorString(&errString);
-	    PR_fprintf(PR_STDERR,"nsLDAPConnection::Run(): "
-		       "ldap_result() failed: %s\n", errString);
-	    ldap_memfree(errString); 
+            (void)this->GetErrorString(&errString);
+            PR_fprintf(PR_STDERR,"nsLDAPConnection::Run(): "
+                       "ldap_result() failed: %s\n", errString);
+            ldap_memfree(errString); 
+#if DEBUG_dmose
+            PR_Sleep(2000);     // don't flood my scrollback
 #endif
-	    break;
+#endif
+            break;
 
-	case LDAP_RES_SEARCH_ENTRY:
-	case LDAP_RES_SEARCH_REFERENCE:
-	    // XXX what should we do with LDAP_RES_SEARCH_EXTENDED?
+        case LDAP_RES_SEARCH_ENTRY:
+        case LDAP_RES_SEARCH_REFERENCE:
+            // XXX what should we do with LDAP_RES_SEARCH_EXTENDED?
 
-	    // not done yet, so we shouldn't remove the op from the conn q
-	    operationFinished = PR_FALSE;
+            // not done yet, so we shouldn't remove the op from the conn q
+            operationFinished = PR_FALSE;
 
-	    // fall through to default case
+            // fall through to default case
 
-	default: // initialize the message and call the callback
+        default: // initialize the message and call the callback
 
-	    msg = do_CreateInstance(kLDAPMessageCID, &rv);
-	    NS_ENSURE_SUCCESS(rv, rv); // XXX get rid of return
+            msg = do_CreateInstance(kLDAPMessageCID, &rv);
+            NS_ENSURE_SUCCESS(rv, rv); // XXX get rid of return
 
-	    rv = msg->Init(this, msgHandle);
-	    NS_ENSURE_SUCCESS(rv, rv); // XXX get rid of return
+            rv = msg->Init(this, msgHandle);
+            NS_ENSURE_SUCCESS(rv, rv); // XXX get rid of return
 
-	    // call the callback on the nsILDAPOperation corresponding to this 
-	    //
-	    rv = InvokeMessageCallback(msgHandle, msg, returnCode, 
-				       operationFinished);
-	    NS_ASSERTION(NS_SUCCEEDED(rv), "nsLDAPConnection::Run(): "
-			 "InvokeMessageCallback() failed");
+            // call the callback on the nsILDAPOperation corresponding to this 
+            //
+            rv = InvokeMessageCallback(msgHandle, msg, returnCode, 
+                                       operationFinished);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "nsLDAPConnection::Run(): "
+                         "InvokeMessageCallback() failed");
 
-	    // we're all done with the message here.  make nsCOMPtr release it.
-	    //
-	    msg = 0;
+            // we're all done with the message here.  make nsCOMPtr release it.
+            //
+            msg = 0;
 
 #if 0
-	    // sleep for a while to workaround event queue flooding so that
-	    // it's possible to test pressing the stop button.
-	    //
-	    PR_Sleep(2000);
+            // sleep for a while to workaround event queue flooding 
+            // (bug 50104) so that it's possible to test cancelling, firing
+            // status, etc.
+            //
+            PR_Sleep(1000);
 #endif
-	    break;
-	}	
+            break;
+        }       
 
     }
 
@@ -438,9 +443,9 @@ nsLDAPConnection::Run(void)
 
 nsresult
 nsLDAPConnection::InvokeMessageCallback(LDAPMessage *aMsgHandle, 
-					nsILDAPMessage *aMsg,
-					PRInt32 aReturnCode, 	
-					PRBool aRemoveOpFromConnQ)
+                                        nsILDAPMessage *aMsg,
+                                        PRInt32 aReturnCode,    
+                                        PRBool aRemoveOpFromConnQ)
 {
     PRInt32 msgId;
     nsresult rv;
@@ -454,10 +459,10 @@ nsLDAPConnection::InvokeMessageCallback(LDAPMessage *aMsgHandle,
     msgId = ldap_msgid(aMsgHandle);
     if (msgId == -1) {
 #ifdef DEBUG
-	PR_fprintf(PR_STDERR, "nsLDAPConnection::GetCallbackByMessage():"
-		   "ldap_msgid() failed\n");
+        PR_fprintf(PR_STDERR, "nsLDAPConnection::GetCallbackByMessage():"
+                   "ldap_msgid() failed\n");
 #endif
-	return NS_ERROR_FAILURE;
+        return NS_ERROR_FAILURE;
     }
 
     // get this in key form.  note that using nsVoidKey in this way assumes
@@ -465,22 +470,22 @@ nsLDAPConnection::InvokeMessageCallback(LDAPMessage *aMsgHandle,
     //
     nsVoidKey *key = new nsVoidKey(NS_REINTERPRET_CAST(void *, msgId));
     if (!key)
-	return NS_ERROR_OUT_OF_MEMORY;
+        return NS_ERROR_OUT_OF_MEMORY;
 
     // find the operation in question
     //
     nsISupports *data = mPendingOperations->Get(key);
     if (data == nsnull) {
 
-	PR_LOG(gLDAPLogModule, PR_LOG_WARNING, 
-	       ("Warning: InvokeMessageCallback(): couldn't find "
-		"nsILDAPOperation corresponding to this message id\n"));
-	delete key;
+        PR_LOG(gLDAPLogModule, PR_LOG_WARNING, 
+               ("Warning: InvokeMessageCallback(): couldn't find "
+                "nsILDAPOperation corresponding to this message id\n"));
+        delete key;
 
-	// this may well be ok, since it could just mean that the operation
-	// was aborted while some number of messages were already in transit.
-	//
-	return NS_OK;
+        // this may well be ok, since it could just mean that the operation
+        // was aborted while some number of messages were already in transit.
+        //
+        return NS_OK;
     }
 
     operation = getter_AddRefs(NS_STATIC_CAST(nsILDAPOperation *, data));
@@ -499,17 +504,17 @@ nsLDAPConnection::InvokeMessageCallback(LDAPMessage *aMsgHandle,
     // from the connection queue.
     //
     if (aRemoveOpFromConnQ) {
-	rv = mPendingOperations->Remove(key);
-	if (!NS_SUCCEEDED(rv)) {
-	    NS_ERROR("nsLDAPConnection::InvokeMessageCallback: unable to "
-		     "remove operation from the connection queue\n");
-	    delete key;
-	    return NS_ERROR_UNEXPECTED;
-	}
+        rv = mPendingOperations->Remove(key);
+        if (!NS_SUCCEEDED(rv)) {
+            NS_ERROR("nsLDAPConnection::InvokeMessageCallback: unable to "
+                     "remove operation from the connection queue\n");
+            delete key;
+            return NS_ERROR_UNEXPECTED;
+        }
 
-	PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, 
-	       ("pending operation removed; total pending operations now ="
-		" %d\n", mPendingOperations->Count()));
+        PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, 
+               ("pending operation removed; total pending operations now ="
+                " %d\n", mPendingOperations->Count()));
     }
 
     delete key;
