@@ -59,6 +59,11 @@
 #include <osreldate.h>
 #if __FreeBSD_version >= 400015
 #define CFRONT_STYLE_THIS_ADJUST
+#elif __FreeBSD_version == 340000
+/* "FreeBSD 3.4 ships with gcc version 2.7.2.3" -- 
+ *     Joerg Brunsmann <joerg.brunsmann@FernUni-Hagen.de>
+ */
+#define CFRONT_STYLE_THIS_ADJUST
 #else
 #define THUNK_BASED_THIS_ADJUST
 #endif
@@ -70,7 +75,13 @@
 #define THUNK_BASED_THIS_ADJUST
 
 #elif defined(__bsdi__) 
+#include <sys/param.h>
+#if _BSDI_VERSION >= 199910
+/* BSDI/4.1 ships with egcs, ergo thunk-based */
+#define THUNK_BASED_THIS_ADJUST
+#else
 #define CFRONT_STYLE_THIS_ADJUST
+#endif
 
 #elif defined(NTO) 
 #define CFRONT_STYLE_THIS_ADJUST
