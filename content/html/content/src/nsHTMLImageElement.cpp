@@ -936,13 +936,13 @@ NS_IMETHODIMP nsHTMLImageElement::OnStartContainer(imgIRequest *request, nsISupp
   image->GetHeight(&size.height);
 
   nsAutoString tmpStr;
-  tmpStr.AppendInt(NSTwipsToIntPixels(size.width, t2p));
+  tmpStr.AppendInt(size.width);
   NS_STATIC_CAST(nsIContent *, this)->SetAttribute(kNameSpaceID_None,
                                                    nsHTMLAtoms::width,
                                                    tmpStr, PR_FALSE);
 
   tmpStr.Truncate();
-  tmpStr.AppendInt(NSTwipsToIntPixels(size.height, t2p));
+  tmpStr.AppendInt(size.height);
   NS_STATIC_CAST(nsIContent *, this)->SetAttribute(kNameSpaceID_None,
                                                    nsHTMLAtoms::height,
                                                    tmpStr, PR_FALSE);
