@@ -349,14 +349,24 @@ public:
   NS_IMETHOD IsPaginated(PRBool* aResult) = 0;
 
   /**
-   * Return the page width if this is a paginated context.
+   * Gets the rect for the page Dimimensions, 
+   * this includes X,Y Offsets which are used to determine 
+   * the inclusion of margins
+   * Also, indicates whether the size has been overridden
+   *
+   * @param aActualRect returns the size of the actual device/surface
+   * @param aRect returns the adjusted size 
    */
-  NS_IMETHOD GetPageWidth(nscoord* aResult) = 0;
+  NS_IMETHOD GetPageDim(nsRect* aActualRect, nsRect* aAdjRect) = 0;
 
   /**
-   * Return the page height if this is a paginated context
+   * Sets the "adjusted" rect for the page Dimimensions, 
+   * this includes X,Y Offsets which are used to determine 
+   * the inclusion of margins
+   *
+   * @param aRect returns the adjusted size 
    */
-  NS_IMETHOD GetPageHeight(nscoord* aResult) = 0;
+  NS_IMETHOD SetPageDim(nsRect* aRect) = 0;
 
   NS_IMETHOD GetPixelsToTwips(float* aResult) const = 0;
 

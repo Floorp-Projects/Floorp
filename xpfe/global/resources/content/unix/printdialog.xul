@@ -90,21 +90,21 @@ Contributor(s): Masaki Katakai <katakai@japan.sun.com>
       <row>
         <text class="label" value="&printrangeGroup.label;" flex ="1"/>
         <radiogroup id="printrangeGroup" orient="vertical">
-          <radio group = "printrangeGroup" id = "allpagesRadio" label = "&allpagesRadio.label;" onclick = "doPrintRange(!document.getElementById('rangeRadio').checked);"/>
+          <radio group = "printrangeGroup" id = "allpagesRadio" label = "&allpagesRadio.label;" onclick = "doPrintRange(0);"/>
           <box orient="horizontal" autostretch="never">
-            <radio group = "printrangeGroup" id = "rangeRadio" label = "&rangeRadio.label;" onclick = "doPrintRange(!this.checked);"/>
+            <radio group = "printrangeGroup" id = "rangeRadio" label = "&rangeRadio.label;" onclick = "doPrintRange(1);"/>
             <text class = "label" id = "frompageLabel" for = "frompageInput" value = "&frompageInput.label;" />
             <textbox id = "frompageInput" style = "width:5em;" onkeyup="checkValid(this.id)"/>
             <text class = "label" id = "topageLabel" for = "topageInput" value = "&topageInput.label;" />
             <textbox id = "topageInput" style = "width:5em;" onkeyup="checkValid(this.id)"/>
           </box>
-          <radio group = "printrangeGroup" id = "selectionRadio" label = "&selectionRadio.label;" onclick = "doPrintRange(!document.getElementById('rangeRadio').checked);"/>
+          <radio group = "printrangeGroup" id = "selectionRadio" label = "&selectionRadio.label;" onclick = "doPrintRange(2);"/>
         </radiogroup>
       </row>
       <row>
         <text class="label" value="&printframeGroup.label;" id="printrangeGroupLabel" flex ="1"/>
         <radiogroup id="printrangeGroup" orient="vertical">
-          <radio group = "printrangeGroup" id = "aslayedoutRadio" label = "&aslayedoutRadio.label;" />
+          <radio group = "printrangeGroup" id = "aslaidoutRadio" label = "&aslaidoutRadio.label;" />
           <radio group = "printrangeGroup" id = "selectedframeRadio" label = "&selectedframeRadio.label;" />
           <radio group = "printrangeGroup" id = "eachframesepRadio" label = "&eachframesepRadio.label;" />
         </radiogroup>
@@ -143,6 +143,6 @@ Contributor(s): Masaki Katakai <katakai@japan.sun.com>
 
   <!-- Places to overlay common dialog buttons and keyset -->
   <box id="okCancelButtons"/>
-  <keyset id="dialogKeys"/>
+  <keyset id="keyset"/>
 
 </window>

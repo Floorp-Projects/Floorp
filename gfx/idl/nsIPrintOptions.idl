@@ -71,14 +71,16 @@ interface nsIPrintOptions : nsISupports
   const short kLetterPaperSize    = 0;
   const short kLegalPaperSize     = 1;
   const short kExecutivePaperSize = 2;
-  const short kA4PaperSize        = 3;
+  const short kA3PaperSize        = 3;
+  const short kA4PaperSize        = 4;
 
   /**
    * Print Frame Constants
    */
-  const short kFramesAsIs    = 0;
-  const short kSelectedFrame = 1;
-  const short kEachFrameSep  = 2;
+  const short kNoFrames      = 0;
+  const short kFramesAsIs    = 1;
+  const short kSelectedFrame = 2;
+  const short kEachFrameSep  = 3;
 
   const short kFrameEnableNone        = 0;
   const short kFrameEnableAll         = 1;

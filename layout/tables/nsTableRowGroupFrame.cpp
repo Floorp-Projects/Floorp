@@ -823,8 +823,10 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext*          aPresContext,
     nsRect bounds;
     rowFrame->GetRect(bounds);
     if (bounds.YMost() > availHeight) {
-      nscoord pageHeight;
-      aPresContext->GetPageHeight(&pageHeight);
+      nsRect actualRect;
+      nsRect adjRect;
+      aPresContext->GetPageDim(&actualRect, &adjRect);
+      nscoord pageHeight = actualRect.height;
       // reflow the row in the availabe space and have it split if it is the 1st
       // row or there is at least 20% of the current page available 
       if (!prevRowFrame || (availHeight - heightTaken > pageHeight / 5)) { 

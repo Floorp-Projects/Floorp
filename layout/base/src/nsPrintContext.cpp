@@ -44,11 +44,14 @@ public:
 
   NS_IMETHOD GetMedium(nsIAtom** aMedium);
   NS_IMETHOD IsPaginated(PRBool* aResult);
-  NS_IMETHOD GetPageWidth(nscoord* aResult);
-  NS_IMETHOD GetPageHeight(nscoord* aResult);
+  NS_IMETHOD GetPageDim(nsRect* aActualRect, nsRect* aAdjRect);
+  NS_IMETHOD SetPageDim(nsRect* aRect);
+protected:
+  nsRect       mPageDim;
 };
 
-PrintContext::PrintContext()
+PrintContext::PrintContext() :
+  mPageDim(0,0,0,0)
 {
 }
 
@@ -80,10 +83,7 @@ PrintContext::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 NS_IMETHODIMP
 PrintContext::GetMedium(nsIAtom** aResult)
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_ENSURE_ARG_POINTER(aResult);
   *aResult = nsLayoutAtoms::print;
   NS_ADDREF(*aResult);
   return NS_OK;
@@ -92,47 +92,33 @@ PrintContext::GetMedium(nsIAtom** aResult)
 NS_IMETHODIMP
 PrintContext::IsPaginated(PRBool* aResult)
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_ENSURE_ARG_POINTER(aResult);
   *aResult = PR_TRUE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PrintContext::GetPageWidth(nscoord* aResult)
+PrintContext::GetPageDim(nsRect* aActualRect, nsRect* aAdjRect)
 {
-PRInt32 width,height;
+  NS_ENSURE_ARG_POINTER(aActualRect);
+  NS_ENSURE_ARG_POINTER(aAdjRect);
 
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
+  PRInt32 width,height;
+  if (NS_SUCCEEDED(mDeviceContext->GetDeviceSurfaceDimensions(width, height))) {
+    aActualRect->SetRect(0, 0, width, height);
   }
-
-  mDeviceContext->GetDeviceSurfaceDimensions(width,height);
-  // a xp margin can be added here
-  *aResult = width;
-
+  *aAdjRect = mPageDim;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PrintContext::GetPageHeight(nscoord* aResult)
+PrintContext::SetPageDim(nsRect* aPageDim)
 {
-PRInt32 width,height;
-
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  mDeviceContext->GetDeviceSurfaceDimensions(width,height);
-  // a xp margin or header/footer space can be added here
-  *aResult = height;
-
+  NS_ENSURE_ARG_POINTER(aPageDim);
+  mPageDim = *aPageDim;
   return NS_OK;
 }
+
 
 NS_LAYOUT nsresult
 NS_NewPrintContext(nsIPrintContext** aInstancePtrResult)

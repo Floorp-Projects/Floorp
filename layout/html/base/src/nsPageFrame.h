@@ -50,9 +50,11 @@ public:
    */
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
   
-#ifdef DEBUG
+#ifdef NS_DEBUG
   // Debugging
   NS_IMETHOD  GetFrameName(nsString& aResult) const;
+  void SetDebugFD(FILE* aFD) { mDebugFD = aFD; }
+  FILE * mDebugFD;
 #endif
 
   //////////////////
@@ -64,6 +66,9 @@ public:
 
   // Tell the page which page number it is out of how many
   virtual void  SetPageNumInfo(PRInt32 aPageNumber, PRInt32 aTotalPages);
+
+  virtual void  SuppressHeadersAndFooters(PRBool aDoSup) { mSupressHF = aDoSup; }
+  virtual void  SetClipRect(nsRect* aClipRect)           { mClipRect = *aClipRect; }
 
   // This is class is now responsible for freeing the memory
   static void SetPageNumberFormat(PRUnichar * aFormatStr);
@@ -97,6 +102,9 @@ protected:
   PRInt32     mTotNumPages;
   nsMargin    mMargin;
   nsFont *    mHeadFootFont;
+
+  PRPackedBool mSupressHF;
+  nsRect       mClipRect;
 
   static PRUnichar * mPageNumFormat;
 
