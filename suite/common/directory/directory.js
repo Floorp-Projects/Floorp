@@ -131,7 +131,7 @@ function ReadDirectory(url)
     var uri = ios.NewURI(url, null);
 
     // Create a channel...
-    var channel = ios.NewChannelFromURI('load', uri, null);
+    var channel = ios.NewChannelFromURI('load', uri, null, null);
 
     // ...so that we can pipe it into a new HTTPIndex listener to
     // parse the directory's contents.
