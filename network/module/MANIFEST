@@ -11,4 +11,5 @@ nsIURLGroup.h
 nsINetlibURL.h
 nsIProtocol.h
 nsIProtocolURLFactory.h
+nsIUnicharStreamLoader.h
 
