@@ -67,6 +67,8 @@
 #include "nsContentCID.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsITimer.h"
+#include "nsPIPluginHost.h"
+#include "nsPluginNativeWindow.h"
 
 class nsIPrintSettings;
 class nsIDOMWindow;
@@ -163,7 +165,7 @@ public:
 #endif
                    
 private:
-  nsPluginWindow    mPluginWindow;
+  nsPluginNativeWindow *mPluginWindow;
   nsIPluginInstance *mInstance;
   nsIWidget         *mWindow;       //we do not addref this...
   PluginViewerImpl  *mViewer;       //we do not addref this...
@@ -454,9 +456,14 @@ PluginViewerImpl::Destroy(void)
   // doing this in the destructor is too late.
   if(mOwner != nsnull)
   {
-    nsIPluginInstance *inst;
-    if(NS_OK == mOwner->GetInstance(inst))
+    nsCOMPtr<nsIPluginInstance> inst;
+    if(NS_SUCCEEDED(mOwner->GetInstance(*getter_AddRefs(inst))))
     {
+      nsPluginWindow *win;
+      mOwner->GetWindow(win);
+      nsPluginNativeWindow *window = (nsPluginNativeWindow *)win;
+      nsCOMPtr<nsIPluginInstance> nullinst;
+
       PRBool doCache = PR_TRUE;
       PRBool doCallSetWindowAfterDestroy = PR_FALSE;
 
@@ -465,23 +472,30 @@ PluginViewerImpl::Destroy(void)
                      (void *) &doCache);
       if (!doCache) {
         // then determine if the plugin wants Destroy to be called after
-        // Set Window.  This is for bug 50547.
+        // Set Window. This is for bug 50547.
         inst->GetValue(nsPluginInstanceVariable_CallSetWindowAfterDestroyBool, 
                        (void *) &doCallSetWindowAfterDestroy);
-        !doCallSetWindowAfterDestroy ? inst->SetWindow(nsnull) : 0;
+        if (!doCallSetWindowAfterDestroy) {
+          if (window) 
+            window->CallSetWindow(nullinst);
+          else 
+            inst->SetWindow(nsnull);
+        }
         inst->Stop();
         inst->Destroy();
-        doCallSetWindowAfterDestroy ? inst->SetWindow(nsnull) : 0;      }
-      else {
-        inst->SetWindow(nsnull);
+        if (doCallSetWindowAfterDestroy) {
+          if (window) 
+            window->CallSetWindow(nullinst);
+          else 
+            inst->SetWindow(nsnull);
+        }
+      } else {
+        window ? window->CallSetWindow(nullinst) : inst->SetWindow(nsnull);
         inst->Stop();
       }
-      NS_RELEASE(inst);
     }
   }
-
-	
-	return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -586,9 +600,9 @@ PluginViewerImpl::SetBounds(const nsRect& aBounds)
   if (nsnull != mWindow) {
     // Don't have the widget repaint. Layout will generate repaint requests
     // during reflow
-    nsIPluginInstance *inst;
+    nsCOMPtr<nsIPluginInstance> inst;
     mWindow->Resize(aBounds.x, aBounds.y, aBounds.width, aBounds.height, PR_FALSE);
-    if ((nsnull != mOwner) && (NS_OK == mOwner->GetInstance(inst)) && (nsnull != inst)) {
+    if (mOwner && NS_SUCCEEDED(mOwner->GetInstance(*getter_AddRefs(inst))) && inst) {
       nsPluginWindow  *win;
       if (NS_OK == mOwner->GetWindow(win)) {
         win->x = aBounds.x;
@@ -603,9 +617,8 @@ PluginViewerImpl::SetBounds(const nsRect& aBounds)
 #ifdef XP_MAC   // On Mac we also need to add in the widget offset to the plugin window
         mOwner->FixUpPluginWindow();
 #endif        
-        inst->SetWindow(win);
+        ((nsPluginNativeWindow *)win)->CallSetWindow(inst);
       }
-      NS_RELEASE(inst);
     }
   }
   return NS_OK;
@@ -616,9 +629,9 @@ PluginViewerImpl::Move(PRInt32 aX, PRInt32 aY)
 {
   NS_PRECONDITION(nsnull != mWindow, "null window");
   if (nsnull != mWindow) {
-    nsIPluginInstance *inst;
+    nsCOMPtr<nsIPluginInstance> inst;
     mWindow->Move(aX, aY);
-    if ((nsnull != mOwner) && (NS_OK == mOwner->GetInstance(inst)) && (nsnull != inst)) {
+    if (mOwner && NS_SUCCEEDED(mOwner->GetInstance(*getter_AddRefs(inst))) && inst) {
       nsPluginWindow  *win;
       if (NS_OK == mOwner->GetWindow(win)) {
         win->x = aX;
@@ -631,9 +644,8 @@ PluginViewerImpl::Move(PRInt32 aX, PRInt32 aY)
 #ifdef XP_MAC   // On Mac we also need to add in the widget offset to the plugin window
         mOwner->FixUpPluginWindow();
 #endif
-        inst->SetWindow(win);
+        ((nsPluginNativeWindow *)win)->CallSetWindow(inst);
       }
-      NS_RELEASE(inst);
     }
   }
   return NS_OK;
@@ -1020,7 +1032,15 @@ pluginInstanceOwner :: pluginInstanceOwner()
 {
   NS_INIT_ISUPPORTS();
 
-  memset(&mPluginWindow, 0, sizeof(mPluginWindow));
+  // create nsPluginNativeWindow object, it is derived from nsPluginWindow
+  // struct and allows to manipulate native window procedure
+  nsCOMPtr<nsIPluginHost> ph = do_GetService(kCPluginManagerCID);
+  nsCOMPtr<nsPIPluginHost> pph(do_QueryInterface(ph));
+  if (pph)
+    pph->NewPluginNativeWindow(&mPluginWindow);
+  else
+    mPluginWindow = nsnull;
+
   mInstance = nsnull;
   mWindow = nsnull;
   mViewer = nsnull;
@@ -1038,6 +1058,14 @@ pluginInstanceOwner :: ~pluginInstanceOwner()
 
   mWindow = nsnull;
   mViewer = nsnull;
+
+  // clean up plugin native window object
+  nsCOMPtr<nsIPluginHost> ph = do_GetService(kCPluginManagerCID);
+  nsCOMPtr<nsPIPluginHost> pph(do_QueryInterface(ph));
+  if (pph) {
+    pph->DeletePluginNativeWindow(mPluginWindow);
+    mPluginWindow = nsnull;
+  }
 }
 
 NS_IMPL_ISUPPORTS2(pluginInstanceOwner, nsIPluginInstanceOwner,nsITimerCallback);
@@ -1064,7 +1092,8 @@ NS_IMETHODIMP pluginInstanceOwner :: GetInstance(nsIPluginInstance *&aInstance)
 
 NS_IMETHODIMP pluginInstanceOwner :: GetWindow(nsPluginWindow *&aWindow)
 {
-  aWindow = &mPluginWindow;
+  NS_ASSERTION(mPluginWindow, "the plugin window object being returned is null");
+  aWindow = mPluginWindow;
   return NS_OK;
 }
 
@@ -1076,6 +1105,8 @@ NS_IMETHODIMP pluginInstanceOwner :: GetMode(nsPluginMode *aMode)
 
 NS_IMETHODIMP pluginInstanceOwner :: CreateWidget(void)
 {
+  NS_ENSURE_TRUE(mPluginWindow, NS_ERROR_NULL_POINTER);
+
   PRBool    windowless;
   nsresult  rv = NS_OK;
   
@@ -1093,13 +1124,13 @@ NS_IMETHODIMP pluginInstanceOwner :: CreateWidget(void)
 
     if (PR_TRUE == windowless)
     {
-      mPluginWindow.window = nsnull;    //XXX this needs to be a HDC
-      mPluginWindow.type = nsPluginWindowType_Drawable;
+      mPluginWindow->window = nsnull;    //XXX this needs to be a HDC
+      mPluginWindow->type = nsPluginWindowType_Drawable;
     }
     else if (nsnull != mWindow)
     {
-      mPluginWindow.window = (nsPluginPort *)mWindow->GetNativeData(NS_NATIVE_PLUGIN_PORT);
-      mPluginWindow.type = nsPluginWindowType_Window;
+      mPluginWindow->window = (nsPluginPort *)mWindow->GetNativeData(NS_NATIVE_PLUGIN_PORT);
+      mPluginWindow->type = nsPluginWindowType_Window;
     }
     else
       return NS_ERROR_FAILURE;
@@ -1210,7 +1241,7 @@ NS_IMETHODIMP pluginInstanceOwner::ShowStatus(const PRUnichar *aStatusMsg)
 
 NS_IMETHODIMP pluginInstanceOwner :: GetDocument(nsIDocument* *aDocument)
 {
-	return mViewer->GetDocument(aDocument);
+  return mViewer->GetDocument(aDocument);
 }
 
 NS_IMETHODIMP pluginInstanceOwner :: Init(PluginViewerImpl *aViewer, nsIWidget *aWindow)
@@ -1447,6 +1478,9 @@ static void GetWidgetPosClipAndVis(nsIWidget* aWidget,nscoord& aAbsX, nscoord& a
 
 void pluginInstanceOwner::FixUpPluginWindow()
 {
+  if (!mPluginWindow)
+    return;
+
   if (mWindow) {
     nscoord absWidgetX = 0;
     nscoord absWidgetY = 0;
@@ -1458,14 +1492,14 @@ void pluginInstanceOwner::FixUpPluginWindow()
       mWidgetVisible = isVisible;
 
     // set the port coordinates
-    mPluginWindow.x = absWidgetX;
-    mPluginWindow.y = absWidgetY;
+    mPluginWindow->x = absWidgetX;
+    mPluginWindow->y = absWidgetY;
 
     // fix up the clipping region
-    mPluginWindow.clipRect.top = widgetClip.y;
-    mPluginWindow.clipRect.left = widgetClip.x;
-    mPluginWindow.clipRect.bottom =  mPluginWindow.clipRect.top + widgetClip.height;
-    mPluginWindow.clipRect.right =  mPluginWindow.clipRect.left + widgetClip.width;  
+    mPluginWindow->clipRect.top = widgetClip.y;
+    mPluginWindow->clipRect.left = widgetClip.x;
+    mPluginWindow->clipRect.bottom =  mPluginWindow->clipRect.top + widgetClip.height;
+    mPluginWindow->clipRect.right =  mPluginWindow->clipRect.left + widgetClip.width;  
   }
 }
 

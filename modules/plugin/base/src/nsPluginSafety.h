@@ -38,6 +38,9 @@
 #ifndef nsPluginSafety_h__
 #define nsPluginSafety_h__
 
+#include "npapi.h"
+#include "nsIPluginHost.h"
+
 #if defined(XP_PC) && !defined(XP_OS2)
 #define CALL_SAFETY_ON
 #endif

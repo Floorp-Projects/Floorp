@@ -128,6 +128,8 @@
 
 #include "nsObjectFrame.h"
 #include "nsIObjectFrame.h"
+#include "nsPluginNativeWindow.h"
+#include "nsPIPluginHost.h"
 
 // accessibility support
 #ifdef ACCESSIBILITY
@@ -327,7 +329,7 @@ public:
 #endif
 
 private:
-  nsPluginWindow    mPluginWindow;
+  nsPluginNativeWindow *mPluginWindow;
   nsIPluginInstance *mInstance;
   nsObjectFrame     *mOwner;
   nsCString          mDocumentBase;
@@ -667,9 +669,14 @@ nsObjectFrame::Destroy(nsIPresContext* aPresContext)
   // doing this in the destructor is too late.
   if(mInstanceOwner != nsnull)
   {
-    nsIPluginInstance *inst;
-    if(NS_OK == mInstanceOwner->GetInstance(inst))
+    nsCOMPtr<nsIPluginInstance> inst;
+    if(NS_SUCCEEDED(mInstanceOwner->GetInstance(*getter_AddRefs(inst))))
     {
+      nsPluginWindow *win;
+      mInstanceOwner->GetWindow(win);
+      nsPluginNativeWindow *window = (nsPluginNativeWindow *)win;
+      nsCOMPtr<nsIPluginInstance> nullinst;
+
       PRBool doCache = PR_TRUE;
       PRBool doCallSetWindowAfterDestroy = PR_FALSE;
 
@@ -684,24 +691,34 @@ nsObjectFrame::Destroy(nsIPresContext* aPresContext)
         if (doCallSetWindowAfterDestroy) {
           inst->Stop();
           inst->Destroy();
-          inst->SetWindow(nsnull);
+          
+          if (window) 
+            window->CallSetWindow(nullinst);
+          else 
+            inst->SetWindow(nsnull);
         }
         else {
-          inst->SetWindow(nsnull);
+          if (window) 
+            window->CallSetWindow(nullinst);
+          else 
+            inst->SetWindow(nsnull);
+
           inst->Stop();
           inst->Destroy();
         }
       }
       else {
-        inst->SetWindow(nsnull);
+        if (window) 
+          window->CallSetWindow(nullinst);
+        else 
+          inst->SetWindow(nsnull);
+
         inst->Stop();
       }
 
       nsCOMPtr<nsIPluginHost> pluginHost = do_GetService(kCPluginManagerCID);
       if(pluginHost)
         pluginHost->StopPluginInstance(inst);
-
-      NS_RELEASE(inst);
     }
   }
   return nsObjectFrameSuper::Destroy(aPresContext);
@@ -1243,6 +1260,8 @@ nsObjectFrame::InstantiatePlugin(nsIPresContext* aPresContext,
 
   mInstanceOwner->GetWindow(window);
 
+  NS_ENSURE_TRUE(window, NS_ERROR_NULL_POINTER);
+
   GetOffsetFromView(aPresContext, origin, &parentWithView);
   window->x = NSTwipsToIntPixels(origin.x, t2p);
   window->y = NSTwipsToIntPixels(origin.y, t2p);
@@ -1528,15 +1547,17 @@ nsObjectFrame::DidReflow(nsIPresContext*           aPresContext,
       vm->SetViewVisibility(view, bHidden ? nsViewVisibility_kHide : nsViewVisibility_kShow);
   }
 
-  nsPluginWindow *window;
+  nsPluginWindow *win = nsnull;
  
   nsCOMPtr<nsIPluginInstance> pi; 
   if (!mInstanceOwner ||
-      NS_FAILED(rv = mInstanceOwner->GetWindow(window)) || 
+      NS_FAILED(rv = mInstanceOwner->GetWindow(win)) || 
       NS_FAILED(rv = mInstanceOwner->GetInstance(*getter_AddRefs(pi))) ||
       !pi ||
-      !window)
+      !win)
     return rv;
+
+  nsPluginNativeWindow *window = (nsPluginNativeWindow *)win;
 
 #ifdef XP_MAC
   mInstanceOwner->FixUpPluginWindow();
@@ -1557,7 +1578,11 @@ nsObjectFrame::DidReflow(nsIPresContext*           aPresContext,
 
   // refresh the plugin port as well
   window->window = mInstanceOwner->GetPluginPort();
-  pi->SetWindow(window);
+
+  // this will call pi->SetWindow and take care of window subclassing
+  // if needed, see bug 132759
+  window->CallSetWindow(pi);
+
   mInstanceOwner->ReleasePluginPort((nsPluginPort *)window->window);
 
   if (mWidget) {
@@ -2091,7 +2116,15 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
 {
   NS_INIT_ISUPPORTS();
 
-  memset(&mPluginWindow, 0, sizeof(mPluginWindow));
+  // create nsPluginNativeWindow object, it is derived from nsPluginWindow
+  // struct and allows to manipulate native window procedure
+  nsCOMPtr<nsIPluginHost> ph = do_GetService(kCPluginManagerCID);
+  nsCOMPtr<nsPIPluginHost> pph(do_QueryInterface(ph));
+  if (pph)
+    pph->NewPluginNativeWindow(&mPluginWindow);
+  else
+    mPluginWindow = nsnull;
+
   mInstance = nsnull;
   mOwner = nsnull;
   mWidget = nsnull;
@@ -2152,11 +2185,19 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
 #ifdef XP_UNIX
   // the mem for this struct is allocated
   // by PR_MALLOC in ns4xPluginInstance.cpp:ns4xPluginInstance::SetWindow()
-  if (mPluginWindow.ws_info) {
-    PR_Free(mPluginWindow.ws_info);
-    mPluginWindow.ws_info = nsnull;
+  if (mPluginWindow && mPluginWindow->ws_info) {
+    PR_Free(mPluginWindow->ws_info);
+    mPluginWindow->ws_info = nsnull;
   }
 #endif
+
+  // clean up plugin native window object
+  nsCOMPtr<nsIPluginHost> ph = do_GetService(kCPluginManagerCID);
+  nsCOMPtr<nsPIPluginHost> pph(do_QueryInterface(ph));
+  if (pph) {
+    pph->DeletePluginNativeWindow(mPluginWindow);
+    mPluginWindow = nsnull;
+  }
 }
 
 /*
@@ -2193,7 +2234,8 @@ NS_IMETHODIMP nsPluginInstanceOwner::SetInstance(nsIPluginInstance *aInstance)
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetWindow(nsPluginWindow *&aWindow)
 {
-  aWindow = &mPluginWindow;
+  NS_ASSERTION(mPluginWindow, "the plugin window object being returned is null");
+  aWindow = mPluginWindow;
   return NS_OK;
 }
 
@@ -2746,7 +2788,9 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetWidth(PRUint32 *result)
 {
   NS_ENSURE_ARG_POINTER(result);
 
-  *result = mPluginWindow.width;
+  NS_ENSURE_TRUE(mPluginWindow, NS_ERROR_NULL_POINTER);
+
+  *result = mPluginWindow->width;
 
   return NS_OK;
 }
@@ -2755,7 +2799,9 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetHeight(PRUint32 *result)
 {
   NS_ENSURE_ARG_POINTER(result);
 
-  *result = mPluginWindow.height;
+  NS_ENSURE_TRUE(mPluginWindow, NS_ERROR_NULL_POINTER);
+
+  *result = mPluginWindow->height;
 
   return NS_OK;
 }
@@ -3190,7 +3236,7 @@ nsresult nsPluginInstanceOwner::Blur(nsIDOMEvent * aFocusEvent)
 nsresult nsPluginInstanceOwner::DispatchFocusToPlugin(nsIDOMEvent* aFocusEvent)
 {
 #ifndef XP_MAC
-  if (nsPluginWindowType_Window == mPluginWindow.type)
+  if (!mPluginWindow || nsPluginWindowType_Window == mPluginWindow->type)
     return NS_ERROR_FAILURE; // means consume event
   // continue only for cases without child window
 #endif
@@ -3344,7 +3390,7 @@ nsresult nsPluginInstanceOwner::KeyPress(nsIDOMEvent* aKeyEvent)
 nsresult nsPluginInstanceOwner::DispatchKeyToPlugin(nsIDOMEvent* aKeyEvent)
 {
 #ifndef XP_MAC
-  if (nsPluginWindowType_Window == mPluginWindow.type)
+  if (!mPluginWindow || nsPluginWindowType_Window == mPluginWindow->type)
     return NS_ERROR_FAILURE; // means consume event
   // continue only for cases without child window
 #endif
@@ -3382,7 +3428,7 @@ nsresult
 nsPluginInstanceOwner::MouseMove(nsIDOMEvent* aMouseEvent)
 {
 #ifndef XP_MAC
-  if (nsPluginWindowType_Window == mPluginWindow.type)
+  if (!mPluginWindow || nsPluginWindowType_Window == mPluginWindow->type)
     return NS_ERROR_FAILURE; // means consume event
   // continue only for cases without child window
 #endif
@@ -3414,14 +3460,14 @@ nsresult
 nsPluginInstanceOwner::MouseDown(nsIDOMEvent* aMouseEvent)
 {
 #ifndef XP_MAC
-  if (nsPluginWindowType_Window == mPluginWindow.type)
+  if (!mPluginWindow || nsPluginWindowType_Window == mPluginWindow->type)
     return NS_ERROR_FAILURE; // means consume event
   // continue only for cases without child window
 #endif
 
   // if the plugin is windowless, we need to set focus ourselves
   // otherwise, we might not get key events
-  if (mPluginWindow.type == nsPluginWindowType_Drawable) {
+  if (mPluginWindow && mPluginWindow->type == nsPluginWindowType_Drawable) {
     nsCOMPtr<nsIContent> content;
     mOwner->GetContent(getter_AddRefs(content));
     if (content)
@@ -3478,7 +3524,7 @@ nsPluginInstanceOwner::MouseOut(nsIDOMEvent* aMouseEvent)
 nsresult nsPluginInstanceOwner::DispatchMouseToPlugin(nsIDOMEvent* aMouseEvent)
 {
 #ifndef XP_MAC
-  if (nsPluginWindowType_Window == mPluginWindow.type)
+  if (!mPluginWindow || nsPluginWindowType_Window == mPluginWindow->type)
     return NS_ERROR_FAILURE; // means consume event
   // continue only for cases without child window
 #endif
@@ -3899,7 +3945,7 @@ nsPluginPort* nsPluginInstanceOwner::GetPluginPort()
     if (mWidget != NULL)
   {
 #ifdef XP_WIN
-    if(mPluginWindow.type == nsPluginWindowType_Drawable)
+    if(mPluginWindow && mPluginWindow->type == nsPluginWindowType_Drawable)
       result = (nsPluginPort*) mWidget->GetNativeData(NS_NATIVE_GRAPHIC);
     else
 #endif
@@ -3913,7 +3959,7 @@ void nsPluginInstanceOwner::ReleasePluginPort(nsPluginPort * pluginPort)
 #ifdef XP_WIN
     if (mWidget != NULL)
   {
-    if(mPluginWindow.type == nsPluginWindowType_Drawable)
+    if(mPluginWindow && mPluginWindow->type == nsPluginWindowType_Drawable)
       mWidget->FreeNativeData((HDC)pluginPort, NS_NATIVE_GRAPHIC);
   }
 #endif
@@ -3921,6 +3967,8 @@ void nsPluginInstanceOwner::ReleasePluginPort(nsPluginPort * pluginPort)
 
 NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
 {
+  NS_ENSURE_TRUE(mPluginWindow, NS_ERROR_NULL_POINTER);
+
   nsIView   *view;
   nsresult  rv = NS_ERROR_FAILURE;
   float p2t;
@@ -3940,8 +3988,8 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
       // always create widgets in Twips, not pixels
       mContext->GetScaledPixelsToTwips(&p2t);
       rv = mOwner->CreateWidget(mContext,
-                                NSIntPixelsToTwips(mPluginWindow.width, p2t),
-                                NSIntPixelsToTwips(mPluginWindow.height, p2t),
+                                NSIntPixelsToTwips(mPluginWindow->width, p2t),
+                                NSIntPixelsToTwips(mPluginWindow->height, p2t),
                                 windowless);
       if (NS_OK == rv)
       {
@@ -3961,20 +4009,20 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
 
         if (PR_TRUE == windowless)
         {
-          mPluginWindow.type = nsPluginWindowType_Drawable;
-          mPluginWindow.window = nsnull; // this needs to be a HDC according to the spec,
+          mPluginWindow->type = nsPluginWindowType_Drawable;
+          mPluginWindow->window = nsnull; // this needs to be a HDC according to the spec,
                                          // but I do not see the right way to release it
                                          // so let's postpone passing HDC till paint event
                                          // when it is really needed. Change spec?
         }
         else if (mWidget)
         {
-          mWidget->Resize(mPluginWindow.width, mPluginWindow.height, PR_FALSE);
+          mWidget->Resize(mPluginWindow->width, mPluginWindow->height, PR_FALSE);
 
           
-          // mPluginWindow.type is used in |GetPluginPort| so it must be initilized first
-          mPluginWindow.type = nsPluginWindowType_Window;
-          mPluginWindow.window = GetPluginPort();
+          // mPluginWindow->type is used in |GetPluginPort| so it must be initilized first
+          mPluginWindow->type = nsPluginWindowType_Window;
+          mPluginWindow->window = GetPluginPort();
 
 #if defined(XP_MAC)
           // Is this needed in the windowless case ???
@@ -4131,48 +4179,49 @@ inline PRUint16 COLOR8TOCOLOR16(PRUint8 color8)
 
 void nsPluginInstanceOwner::FixUpPluginWindow()
 {
-  if (mWidget) {
-    nscoord absWidgetX = 0;
-    nscoord absWidgetY = 0;
-    nsRect widgetClip(0,0,0,0);
-    
-    // first, check our view for CSS visibility style
-    nsIView *view;
-    mOwner->GetView(mContext, &view);
-    nsViewVisibility vis;
-    view->GetVisibility(vis);
-    PRBool isVisible = (vis == nsViewVisibility_kShow) ? PR_TRUE : PR_FALSE;
-    
-    GetWidgetPosClipAndVis(mWidget,absWidgetX,absWidgetY,widgetClip,isVisible);
+  if (!mWidget || !mPluginWindow)
+    return;
 
-    if (mWidgetVisible != isVisible)
-      mWidgetVisible = isVisible;
+  nscoord absWidgetX = 0;
+  nscoord absWidgetY = 0;
+  nsRect widgetClip(0,0,0,0);
+  
+  // first, check our view for CSS visibility style
+  nsIView *view;
+  mOwner->GetView(mContext, &view);
+  nsViewVisibility vis;
+  view->GetVisibility(vis);
+  PRBool isVisible = (vis == nsViewVisibility_kShow) ? PR_TRUE : PR_FALSE;
+  
+  GetWidgetPosClipAndVis(mWidget,absWidgetX,absWidgetY,widgetClip,isVisible);
 
-    // set the port coordinates
-    mPluginWindow.x = absWidgetX;
-    mPluginWindow.y = absWidgetY;
+  if (mWidgetVisible != isVisible)
+    mWidgetVisible = isVisible;
 
-    // fix up the clipping region
-    mPluginWindow.clipRect.top = widgetClip.y;
-    mPluginWindow.clipRect.left = widgetClip.x;
-    mPluginWindow.clipRect.bottom =  mPluginWindow.clipRect.top + widgetClip.height;
-    mPluginWindow.clipRect.right =  mPluginWindow.clipRect.left + widgetClip.width; 
+  // set the port coordinates
+  mPluginWindow->x = absWidgetX;
+  mPluginWindow->y = absWidgetY;
 
-    // the Mac widget doesn't set the background color right away!!
-    // the background color needs to be set here on the plugin port
-    GrafPtr savePort;
-    ::GetPort(&savePort);  // save our current port
-    nsPluginPort* pluginPort = GetPluginPort();
-    ::SetPort((GrafPtr)pluginPort->port);
+  // fix up the clipping region
+  mPluginWindow->clipRect.top = widgetClip.y;
+  mPluginWindow->clipRect.left = widgetClip.x;
+  mPluginWindow->clipRect.bottom =  mPluginWindow->clipRect.top + widgetClip.height;
+  mPluginWindow->clipRect.right =  mPluginWindow->clipRect.left + widgetClip.width; 
 
-    nscolor color = mWidget->GetBackgroundColor();
-    RGBColor macColor;
-    macColor.red   = COLOR8TOCOLOR16(NS_GET_R(color));  // convert to Mac color
-    macColor.green = COLOR8TOCOLOR16(NS_GET_G(color));
-    macColor.blue  = COLOR8TOCOLOR16(NS_GET_B(color));
-    ::RGBBackColor(&macColor);
-    ::SetPort(savePort);  // restore port
-  }
+  // the Mac widget doesn't set the background color right away!!
+  // the background color needs to be set here on the plugin port
+  GrafPtr savePort;
+  ::GetPort(&savePort);  // save our current port
+  nsPluginPort* pluginPort = GetPluginPort();
+  ::SetPort((GrafPtr)pluginPort->port);
+
+  nscolor color = mWidget->GetBackgroundColor();
+  RGBColor macColor;
+  macColor.red   = COLOR8TOCOLOR16(NS_GET_R(color));  // convert to Mac color
+  macColor.green = COLOR8TOCOLOR16(NS_GET_G(color));
+  macColor.blue  = COLOR8TOCOLOR16(NS_GET_B(color));
+  ::RGBBackColor(&macColor);
+  ::SetPort(savePort);  // restore port
 }
 
 #endif // XP_MAC

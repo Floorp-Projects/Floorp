@@ -55,3 +55,4 @@ npapi.h
 npupp.h
 nsDefaultPlugin.h
 nsPIPluginInstancePeer.h
+nsPluginNativeWindow.h

@@ -57,6 +57,7 @@ EXPORTS		= \
 		nsPluginError.h \
 		nsDefaultPlugin.h \
 		nsPIPluginInstancePeer.h \
+		nsPluginNativeWindow.h \
     $(NULL)
 
 # 4.x headers moved from mozilla/include
