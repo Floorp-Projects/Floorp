@@ -26,10 +26,26 @@
 
 static PRLogModuleInfo* gTraceRefcntLog;
 
+#if defined(NS_MT_SUPPORTED)
+#include "prlock.h"
+
+static PRLock* gTraceLock;
+
+#define LOCK_TRACELOG()   PR_Lock(gTraceLock)
+#define UNLOCK_TRACELOG() PR_Unlock(gTraceLock)
+#else /* ! NT_MT_SUPPORTED */
+#define LOCK_TRACELOG()
+#define UNLOCK_TRACELOG()
+#endif /* ! NS_MT_SUPPORTED */
+
 static void InitTraceLog(void)
 {
   if (0 == gTraceRefcntLog) {
     gTraceRefcntLog = PR_NewLogModule("xpcomrefcnt");
+
+#if defined(NS_MT_SUPPORTED)
+    gTraceLock = PR_NewLock();
+#endif /* NS_MT_SUPPORTED */
   }
 }
 
@@ -219,6 +235,8 @@ nsTraceRefcnt::AddRef(void* aPtr,
 {
 #ifdef MOZ_TRACE_XPCOM_REFCNT
   InitTraceLog();
+
+  LOCK_TRACELOG();
   if (PR_LOG_TEST(gTraceRefcntLog,PR_LOG_DEBUG)) {
     char sb[1000];
     WalkTheStack(sb, sizeof(sb));
@@ -226,8 +244,10 @@ nsTraceRefcnt::AddRef(void* aPtr,
            ("AddRef: %p: %d=>%d [%s] in %s (line %d)",
             aPtr, aNewRefcnt-1, aNewRefcnt, sb, aFile, aLine));
   }
+  UNLOCK_TRACELOG();
 #endif
   return aNewRefcnt;
+
 }
 
 NS_COM unsigned long
@@ -238,6 +258,8 @@ nsTraceRefcnt::Release(void* aPtr,
 {
 #ifdef MOZ_TRACE_XPCOM_REFCNT
   InitTraceLog();
+
+  LOCK_TRACELOG();
   if (PR_LOG_TEST(gTraceRefcntLog,PR_LOG_DEBUG)) {
     char sb[1000];
     WalkTheStack(sb, sizeof(sb));
@@ -245,6 +267,7 @@ nsTraceRefcnt::Release(void* aPtr,
            ("Release: %p: %d=>%d [%s] in %s (line %d)",
             aPtr, aNewRefcnt+1, aNewRefcnt, sb, aFile, aLine));
   }
+  UNLOCK_TRACELOG();
 #endif
   return aNewRefcnt;
 }
@@ -257,6 +280,8 @@ nsTraceRefcnt::Create(void* aPtr,
 {
 #ifdef MOZ_TRACE_XPCOM_REFCNT
   InitTraceLog();
+
+  LOCK_TRACELOG();
   if (PR_LOG_TEST(gTraceRefcntLog,PR_LOG_DEBUG)) {
     char sb[1000];
     WalkTheStack(sb, sizeof(sb));
@@ -264,6 +289,7 @@ nsTraceRefcnt::Create(void* aPtr,
            ("Create: %p[%s]: [%s] in %s (line %d)",
             aPtr, aType, sb, aFile, aLine));
   }
+  UNLOCK_TRACELOG();
 #endif
 }
 
@@ -274,6 +300,8 @@ nsTraceRefcnt::Destroy(void* aPtr,
 {
 #ifdef MOZ_TRACE_XPCOM_REFCNT
   InitTraceLog();
+
+  LOCK_TRACELOG();
   if (PR_LOG_TEST(gTraceRefcntLog,PR_LOG_DEBUG)) {
     char sb[1000];
     WalkTheStack(sb, sizeof(sb));
@@ -281,5 +309,6 @@ nsTraceRefcnt::Destroy(void* aPtr,
            ("Destroy: %p: [%s] in %s (line %d)",
             aPtr, sb, aFile, aLine));
   }
+  UNLOCK_TRACELOG();
 #endif
 }
