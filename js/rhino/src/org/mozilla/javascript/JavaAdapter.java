@@ -47,7 +47,7 @@ import java.lang.reflect.*;
 import java.io.*;
 import java.util.*;
 
-public final class JavaAdapter
+public final class JavaAdapter implements IdFunctionMaster
 {
     /**
      * Base class for interface with single method to function glue classes
@@ -167,20 +167,25 @@ public final class JavaAdapter
 
     public static void init(Context cx, Scriptable scope, boolean sealed)
     {
-        JIFunction x = new JIFunction("JavaAdapter", 1)
-        {
-            public Scriptable createObject(Context cx, Scriptable scope)
-            {
-                return null;
-            }
+        JavaAdapter obj = new JavaAdapter();
+        IdFunction.defineConstructor(scope, "JavaAdapter", obj, Id_JavaAdapter,
+                                     ScriptableObject.DONTENUM, sealed);
+    }
 
-            public Object call(Context cx, Scriptable scope,
-                               Scriptable thisObj, Object[] args)
-            {
-                return js_createAdpter(cx, scope, args);
-            }
-        };
-        x.defineAsProperty(scope);
+    public Object execMethod(int methodId, IdFunction function, Context cx,
+                             Scriptable scope, Scriptable thisObj,
+                             Object[] args)
+    {
+        if (methodId == Id_JavaAdapter) {
+            return js_createAdpter(cx, scope, args);
+        }
+        throw IdFunction.onBadMethodId(this, methodId);
+    }
+
+    public int methodArity(int methodId)
+    {
+        if (methodId == Id_JavaAdapter) { return 1; }
+        throw IdFunction.onBadMethodId(this, methodId);
     }
 
     public static Object convertResult(Object result, Class c)
@@ -1221,5 +1226,5 @@ public final class JavaAdapter
         return array;
     }
 
-
+    private static final int Id_JavaAdapter = 1;
 }

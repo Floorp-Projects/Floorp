@@ -69,6 +69,17 @@ public class IdFunction extends BaseFunction
         ScriptableObject.defineProperty(scope, name, f, attributes);
     }
 
+    public static void defineConstructor(Scriptable scope, String name,
+                                         IdFunctionMaster master, int id,
+                                         int attributes, boolean sealed)
+    {
+        IdFunction f = new IdFunction(master, name, id);
+        f.setParentScope(scope);
+        f.useCallAsConstructor = true;
+        if (sealed) { f.sealObject(); }
+        ScriptableObject.defineProperty(scope, name, f, attributes);
+    }
+
     public final int getMethodId()
     {
         return methodId;
