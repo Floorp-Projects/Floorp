@@ -59,23 +59,7 @@ nsMsgFilter::~nsMsgFilter()
 {
 }
 
-NS_IMPL_ADDREF(nsMsgFilter)
-NS_IMPL_RELEASE(nsMsgFilter)
-
-NS_IMETHODIMP nsMsgFilter::QueryInterface(REFNSIID aIID, void** aResult)
-{   
-    if (aResult == NULL)  
-        return NS_ERROR_NULL_POINTER;  
-
-    if (aIID.Equals(NS_GET_IID(nsIMsgFilter)) ||
-        aIID.Equals(NS_GET_IID(nsISupports)))
-	{
-        *aResult = NS_STATIC_CAST(nsMsgFilter*, this);   
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    return NS_NOINTERFACE;
-}   
+NS_IMPL_ISUPPORTS1(nsMsgFilter, nsIMsgFilter)
 
 NS_IMETHODIMP nsMsgFilter::GetFilterType(nsMsgFilterTypeType *aResult)
 {
@@ -148,17 +132,16 @@ NS_IMETHODIMP nsMsgFilter::AppendTerm(nsIMsgSearchTerm * aTerm)
     return m_termList->AppendElement(aTerm);
 }
 
-NS_IMETHODIMP nsMsgFilter::GetNumTerms(PRInt32 *aResult)
+NS_IMETHODIMP
+nsMsgFilter::CreateTerm(nsIMsgSearchTerm **aResult)
 {
-	if (aResult == NULL)  
-        return NS_ERROR_NULL_POINTER;  
-
-    PRUint32 count;
-    m_termList->Count(&count);
-    *aResult = count;
-	return NS_OK;
+    nsMsgSearchTerm *term = new nsMsgSearchTerm;
+    NS_ENSURE_TRUE(term, NS_ERROR_OUT_OF_MEMORY);
+    
+    *aResult = NS_STATIC_CAST(nsIMsgSearchTerm*,term);
+    NS_ADDREF(*aResult);
+    return NS_OK;
 }
-
 
 NS_IMETHODIMP nsMsgFilter::GetTerm(PRInt32 termIndex, 
 	nsMsgSearchAttribValue *attrib,    /* attribute for this term          */

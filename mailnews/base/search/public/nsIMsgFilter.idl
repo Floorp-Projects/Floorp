@@ -38,7 +38,6 @@ interface nsIMsgFilter : nsISupports {
 
     readonly attribute nsIMsgFilterList filterList; // owning filter list
     
-    readonly attribute long numTerms;
     void AddTerm(in nsMsgSearchAttribValue attrib,
                  in nsMsgSearchOpValue op,
                  in nsIMsgSearchValue value,
@@ -54,6 +53,7 @@ interface nsIMsgFilter : nsISupports {
 
     void appendTerm(in nsIMsgSearchTerm term);
 
+    nsIMsgSearchTerm createTerm();
 
     // this is the actual array of search terms, and is thus modifyable
     readonly attribute nsISupportsArray searchTerms;
