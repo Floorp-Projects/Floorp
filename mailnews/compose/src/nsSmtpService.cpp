@@ -219,7 +219,7 @@ NS_IMETHODIMP nsSmtpService::GetDefaultPort(PRInt32 *aDefaultPort)
 // But we need to have a channel to return for nsSmtpService::NewChannel
 // that can simulate a real channel such that the uri loader can then get the
 // content type for the channel.
-class nsMailtoChannel : nsIChannel
+class nsMailtoChannel : public nsIChannel
 {
 public:
 

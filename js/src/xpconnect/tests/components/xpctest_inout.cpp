@@ -36,7 +36,7 @@
 #include "xpctest_inout.h"
 #include "xpctest_private.h"
 
-class xpcTestInOut : nsIXPCTestInOut {
+class xpcTestInOut : public nsIXPCTestInOut {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIXPCTESTINOUT

@@ -34,7 +34,7 @@
 
 #include "nsCOMPtr.h"
 
-class nsMsgWindow : public nsIMsgWindow, nsIURIContentListener {
+class nsMsgWindow : public nsIMsgWindow, public nsIURIContentListener {
 
 public:
 

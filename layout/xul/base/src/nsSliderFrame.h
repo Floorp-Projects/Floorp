@@ -48,9 +48,9 @@ nsresult NS_NewSliderFrame(nsIPresShell* aPresShell, nsIFrame** aResult) ;
 
 
 class nsSliderFrame : public nsHTMLContainerFrame, 
-                             nsIDOMMouseListener, 
-                             nsIAnonymousContentCreator,
-                             nsITimerCallback
+                      public nsIDOMMouseListener, 
+                      public nsIAnonymousContentCreator,
+                      public nsITimerCallback
 {
 public:
   nsSliderFrame();

@@ -212,7 +212,7 @@ NS_NewInternetSearchContext(nsIRDFResource *aParent, nsIRDFResource *aEngine,
 
 
 class InternetSearchDataSource : public nsIInternetSearchService,
-				 public nsIRDFDataSource, nsIStreamListener
+				 public nsIRDFDataSource, public nsIStreamListener
 {
 private:
 	static PRInt32			gRefCnt;

@@ -30,8 +30,8 @@
 #include "nsRDFResource.h"
 #include "nsIDOMViewerElement.h"
 
-class nsRDFDOMViewerElement : nsRDFResource,
-                              nsIDOMViewerElement
+class nsRDFDOMViewerElement : public nsRDFResource,
+                              public nsIDOMViewerElement
 {
 public:
   nsRDFDOMViewerElement();

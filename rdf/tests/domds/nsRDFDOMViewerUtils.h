@@ -26,7 +26,7 @@
 #include "nsIRDFDOMViewerObject.h"
 #include "nsHashtable.h"
 
-class nsDOMViewerObject : nsIRDFDOMViewerObject {
+class nsDOMViewerObject : public nsIRDFDOMViewerObject {
  public:
   nsDOMViewerObject();
   virtual ~nsDOMViewerObject();

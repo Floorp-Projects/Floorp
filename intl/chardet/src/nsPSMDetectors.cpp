@@ -318,7 +318,7 @@ static nsVerifier *gCJKVerifierSet[CJK_DETECTOR_NUM_VERIFIERS] = {
 };
 //==========================================================
 class nsXPCOMDetector : 
-      nsPSMDetector,
+      private nsPSMDetector,
       public nsICharsetDetector // Implement the interface 
 {
   NS_DECL_ISUPPORTS
@@ -389,7 +389,7 @@ void nsXPCOMDetector::Report(const char* charset)
 }
 //==========================================================
 class nsXPCOMStringDetector : 
-      nsPSMDetector,
+      private nsPSMDetector,
       public nsIStringCharsetDetector // Implement the interface 
 {
   NS_DECL_ISUPPORTS

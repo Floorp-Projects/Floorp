@@ -475,7 +475,7 @@ NS_IMETHODIMP BarImpl::BarMethod2(PRInt32 i)
 
 /***************************/
 
-class FooBarImpl : FooImpl, BarImpl
+class FooBarImpl : public FooImpl, public BarImpl
 {
 public:
     NS_DECL_ISUPPORTS

@@ -64,7 +64,7 @@ typedef struct {
   char      *value;
 } headerInfoType;
 
-class nsMimeBaseEmitter : public nsIMimeEmitter, nsIPipeObserver {
+class nsMimeBaseEmitter : public nsIMimeEmitter, public nsIPipeObserver {
 public: 
   nsMimeBaseEmitter ();
   virtual             ~nsMimeBaseEmitter (void);

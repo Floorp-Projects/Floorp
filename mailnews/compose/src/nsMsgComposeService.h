@@ -25,7 +25,7 @@
 #include "nsIContentHandler.h"
 #include "nsCOMPtr.h"
 
-class nsMsgComposeService : public nsIMsgComposeService, nsIContentHandler
+class nsMsgComposeService : public nsIMsgComposeService, public nsIContentHandler
 {
 public: 
 	nsMsgComposeService();
