@@ -13,11 +13,11 @@
 <!ENTITY  maintainTableStructure.tooltip        "Prevents cell borders from collapsing when you delete one or more cells">
 <!ENTITY  maintainStructure.accesskey           "m">
 <!-- LOCALIZATION NOTE (pressingTheDeleteKey.label): Don't translate "Delete" -->
-<!ENTITY  pressingTheDeleteKey.label            "Use the Delete key to:">
+<!ENTITY  pressingTheDeleteKey.label            "Delete key:">
 <!ENTITY  pressingTheDeleteKey.tooltip          "Assign an action to the Delete key for table editing purposes">
-<!ENTITY  deleteCell.label                      "Erase the cell's content and border">
+<!ENTITY  deleteCell.label                      "Erases the cell's content and border">
 <!ENTITY  deleteCell.accesskey                  "s">
-<!ENTITY  deleteContent.label                   "Erase the cell's content only">
+<!ENTITY  deleteContent.label                   "Erases the cell's content only">
 <!ENTITY  deleteContent.accesskey               "c">
 
 <!ENTITY  savingFiles.title           "When Saving Files">
@@ -33,5 +33,5 @@
 <!ENTITY  imageeditor               "Images:">
 <!ENTITY  chooseButton.label        "Choose">
 
-<!ENTITY  recentFiles.title         "Recently Edited Files Menu">
-<!ENTITY  documentsInMenu           "documents listed in Recent Files menu">
+<!ENTITY  recentFiles.title         "Recent Pages Menu">
+<!ENTITY  documentsInMenu           "Max number of documents listed:">
