@@ -260,8 +260,9 @@
         </grid> <!-- Five  Minute Grid -->
      
         <hbox>
-            <image id="oe-time-picker-more-control-image" onclick="oeTimePicker.clickMore()" />
-            <image id="oe-time-picker-minutes-bottom-image" />
+            <label id="oe-time-picker-more-control-image" value="&more.label;" onclick="oeTimePicker.clickMore()" />
+            <spacer flex="1"/>
+            <image id="oe-time-picker-minutes-bottom-image"/>
         </hbox>
     
     </vbox> <!-- Five  Minute Grid Box -->
@@ -624,7 +625,8 @@
         </grid>  <!-- One  Minute Grid -->
         
         <hbox>
-            <image id="oe-time-picker-less-control-image" onclick="oeTimePicker.clickLess()" />
+            <label id="oe-time-picker-less-control-image" value="&less.label;" onclick="oeTimePicker.clickLess()"/>
+            <spacer flex="1"/>
             <image id="oe-time-picker-minutes-bottom-image" />
         </hbox>
     

@@ -173,19 +173,6 @@
 #oe-time-picker-minutes-bottom-image
 {
    list-style-image     : url("chrome://penglobal/skin/timepicker/time_picker_minutes_bottom.png");
+   padding-right        : 2px;
 }
 
-
-/* more tab */
-
-#oe-time-picker-more-control-image
-{
-   list-style-image     : url("chrome://penglobal/skin/timepicker/time_picker_more.png");
-}
-    
-/* less tab */
-
-#oe-time-picker-less-control-image
-{
-   list-style-image     : url("chrome://penglobal/skin/timepicker/time_picker_less.png");
-}    

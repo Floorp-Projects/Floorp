@@ -106,4 +106,5 @@
 <!ENTITY time.AM "AM" >
 <!ENTITY time.PM "PM" >
 
-
+<!ENTITY more.label "MORE" >
+<!ENTITY less.label "LESS" >
