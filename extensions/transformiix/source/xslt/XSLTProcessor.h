@@ -268,22 +268,22 @@ private:
      */
     void copyNode(Node* aNode, ProcessorState* aPs);
 
-    void processAction(Node* aXsltAction, ProcessorState* aPs);
+    void processAction(Node* aAction, ProcessorState* aPs);
 
     /**
      * Processes the attribute sets specified in the use-attribute-sets attribute
      * of the element specified in aElement
     **/
-    void processAttributeSets(Element* aElement, ProcessorState* ps,
+    void processAttributeSets(Element* aElement, ProcessorState* aPs,
                               Stack* aRecursionStack = 0);
 
     /**
      * Processes the children of the specified element using the given context node
      * and ProcessorState
-     * @param aXslElement template to be processed. Must be != NULL
+     * @param aElement    template to be processed. Must be != NULL
      * @param aPs         current ProcessorState
     **/
-    void processChildren(Element* aXslElement,
+    void processChildren(Element* aElement,
                          ProcessorState* aPs);
 
     void processChildrenAsValue(Element* aElement,
@@ -293,11 +293,11 @@ private:
 
     /**
      * Invokes the default template for the specified node
-     * @param ps    current ProcessorState
-     * @param mode  template mode
+     * @param aPs    current ProcessorState
+     * @param aMode  template mode
     **/
-    void processDefaultTemplate(ProcessorState* ps,
-                                const txExpandedName& mode);
+    void processDefaultTemplate(ProcessorState* aPs,
+                                const txExpandedName& aMode);
 
     /*
      * Processes an include or import stylesheet
@@ -309,7 +309,7 @@ private:
                         txListIterator* aImportFrame,
                         ProcessorState* aPs);
 
-    void processMatchedTemplate(Node* aXslTemplate,
+    void processMatchedTemplate(Node* aTemplate,
                                 txVariableMap* aParams,
                                 const txExpandedName& aMode,
                                 ProcessorState::ImportFrame* aFrame,
@@ -345,7 +345,7 @@ private:
                          txListIterator* importFrame,
                          ProcessorState* aPs);
 
-    ExprResult* processVariable(Element* xslVariable, ProcessorState* ps);
+    ExprResult* processVariable(Element* aVariable, ProcessorState* aPs);
 
     void startTransform(Node* aNode, ProcessorState* aPs);
 
@@ -361,7 +361,7 @@ private:
      */
     void xslCopyOf(ExprResult* aExprResult, ProcessorState* aPs);
 
-    void startElement(ProcessorState* aPs, const String& aName, const PRInt32 aNsID);
+    void startElement(const String& aName, const PRInt32 aNsID, ProcessorState* aPs);
 
 #ifdef TX_EXE
     txStreamXMLEventHandler* mOutputHandler;

@@ -35,7 +35,7 @@ class nsIDOMDocument;
 class nsIDOMHTMLScriptElement;
 #endif
 
-/*
+/**
  * An interface for handling XML documents, loosely modeled
  * after Dave Megginson's SAX 1.0 API.
  */
@@ -45,7 +45,7 @@ class txXMLEventHandler
 public:
     virtual ~txXMLEventHandler() {};
 
-    /*
+    /**
      * Signals to receive the start of an attribute.
      *
      * @param aName the name of the attribute
@@ -56,27 +56,27 @@ public:
                            const PRInt32 aNsID,
                            const String& aValue) = 0;
 
-    /*
+    /**
      * Signals to receive characters.
      *
      * @param aData the characters to receive
      */
     virtual void characters(const String& aData) = 0;
 
-    /*
+    /**
      * Signals to receive data that should be treated as a comment.
      *
      * @param data the comment data to receive
      */
     virtual void comment(const String& aData) = 0;
 
-    /*
+    /**
      * Signals the end of a document. It is an error to call
      * this method more than once.
      */
     virtual void endDocument() = 0;
 
-    /*
+    /**
      * Signals to receive the end of an element.
      *
      * @param aName the name of the element
@@ -85,7 +85,7 @@ public:
     virtual void endElement(const String& aName,
                             const PRInt32 aNsID) = 0;
 
-    /*
+    /**
      * Signals to receive a processing instruction.
      *
      * @param aTarget the target of the processing instruction
@@ -94,12 +94,12 @@ public:
     virtual void processingInstruction(const String& aTarget, 
                                        const String& aData) = 0;
 
-    /*
+    /**
      * Signals the start of a document.
      */
     virtual void startDocument() = 0;
 
-    /*
+    /**
      * Signals to receive the start of an element.
      *
      * @param aName the name of the element
@@ -112,7 +112,7 @@ public:
 class txOutputXMLEventHandler : public txXMLEventHandler
 {
 public:
-    /*
+    /**
      * Sets the output format.
      *
      * @param aOutputFormat the output format
@@ -131,14 +131,14 @@ public:
      */
     virtual void getOutputStream(ostream** aOutputStream) = 0;
 
-    /*
+    /**
      * Sets the output stream.
      *
      * @param aOutputStream the output stream
      */
     virtual void setOutputStream(ostream* aOutputStream) = 0;
 
-    /*
+    /**
      * Signals to receive characters that don't need output escaping.
      *
      * @param aData the characters to receive
@@ -149,25 +149,25 @@ public:
 class txMozillaXMLEventHandler : public txOutputXMLEventHandler
 {
 public:
-    /*
+    /**
      * Disables loading of stylesheets.
      */
     virtual void disableStylesheetLoad() = 0;
 
-    /*
+    /**
      * Returns the root content of the result.
      *
      * @param aReturn the root content
      */
     virtual nsresult getRootContent(nsIContent** aReturn) = 0;
 
-    /*
+    /**
      * Returns PR_TRUE if the event handler has finished anything
      * extra that had to happen after the transform has finished.
      */
     virtual PRBool isDone() = 0;
 
-    /*
+    /**
      * Removes a script element from the array of elements that are
      * still loading.
      *
@@ -175,7 +175,7 @@ public:
      */
     virtual void removeScriptElement(nsIDOMHTMLScriptElement *aElement) = 0;
 
-    /*
+    /**
      * Sets the Mozilla output document.
      *
      * @param aDocument the Mozilla output document
