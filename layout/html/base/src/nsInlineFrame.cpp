@@ -524,7 +524,7 @@ nsInlineFrame::ReflowFrames(nsIPresContext* aPresContext,
       done = PR_TRUE;
       break;
     }
-    if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
+    if (NS_FRAME_COMPLETE != aStatus) {
       if (!reflowingFirstLetter || NS_INLINE_IS_BREAK(aStatus)) {
         done = PR_TRUE;
         break;
@@ -554,7 +554,7 @@ nsInlineFrame::ReflowFrames(nsIPresContext* aPresContext,
         done = PR_TRUE;
         break;
       }
-      if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
+      if (NS_FRAME_COMPLETE != aStatus) {
         if (!reflowingFirstLetter || NS_INLINE_IS_BREAK(aStatus)) {
           done = PR_TRUE;
           break;
