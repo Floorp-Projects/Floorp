@@ -85,6 +85,7 @@
 #include "nsIImageControlFrame.h"
 #include "nsLinebreakConverter.h" //to strip out carriage returns
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 
 #include "nsIDOMMutationEvent.h"
 #include "nsIDOMEventReceiver.h"
@@ -103,7 +104,7 @@
 #include "nsIFile.h"
 #include "nsILocalFile.h"
 #include "nsIFileStreams.h"
-
+#include "nsNetUtil.h"
 
 // XXX align=left, hspace, vspace, border? other nav4 attrs
 
@@ -2350,15 +2351,26 @@ nsHTMLInputElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
   // Submit file if it's input type=file and this encoding method accepts files
   //
   if (type == NS_FORM_INPUT_FILE) {
-
     //
     // Open the file
     //
-    nsCOMPtr<nsILocalFile> file(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID,
-                                                  &rv));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIFile> file;
+ 
+    if (Substring(value, 0, 5).Equals(NS_LITERAL_STRING("file:"),
+                                      nsCaseInsensitiveStringComparator())) {
+      // Converts the URL string into the corresponding nsIFile if possible.
+      // A local file will be created if the URL string begins with file://.
+      rv = NS_GetFileFromURLSpec(NS_ConvertUCS2toUTF8(value),
+                                 getter_AddRefs(file));
+    }
 
-    rv = file->InitWithPath(value);
+    if (!file) {
+      // this is no "file://", try as local file
+      nsCOMPtr<nsILocalFile> localFile;
+      rv = NS_NewLocalFile(value, PR_FALSE, getter_AddRefs(localFile));
+      file = localFile;
+    }
+
     if (NS_SUCCEEDED(rv)) {
 
       //
