@@ -1782,26 +1782,19 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
     }
 #endif
 
-    PRBool wrapping = !aState.GetFlag(BRS_NOWRAP);
     for (line_iterator line = begin_lines(), line_end = end_lines();
          line != line_end;
          ++line)
     {
       // We let child blocks make their own decisions the same
       // way we are here.
-      //
-      // For inline lines with no-wrap, the only way things
-      // could change is if there is a percentage-sized child.
-      // However, right floats within such lines might need to be
-      // repositioned, so we check for floats as well.
       if (line->IsBlock() ||
           line->HasPercentageChild() || 
           line->HasFloats() ||
-          (wrapping &&
-           ((line != mLines.back() && !line->HasBreak()) ||
-           line->ResizeReflowOptimizationDisabled() ||
-           line->IsImpactedByFloat() ||
-           (line->mBounds.XMost() > newAvailWidth)))) {
+          (line != mLines.back() && !line->HasBreak()) ||
+          line->ResizeReflowOptimizationDisabled() ||
+          line->IsImpactedByFloat() ||
+          (line->mBounds.XMost() > newAvailWidth)) {
         line->MarkDirty();
       }
 
@@ -1812,13 +1805,12 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
       }
 #endif
 #ifdef DEBUG
-      if (gNoisyReflow && !line->IsDirty() && wrapping) {
+      if (gNoisyReflow && !line->IsDirty()) {
         IndentBy(stdout, gNoiseIndent + 1);
-        printf("skipped: line=%p next=%p %s %s %s%s%s breakType=%d xmost=%d\n",
+        printf("skipped: line=%p next=%p %s %s%s%s breakType=%d xmost=%d\n",
            NS_STATIC_CAST(void*, line.get()),
            NS_STATIC_CAST(void*, (line.next() != end_lines() ? line.next().get() : nsnull)),
            line->IsBlock() ? "block" : "inline",
-           "wrapping",
            line->HasBreak() ? "has-break " : "",
            line->HasFloats() ? "has-floats " : "",
            line->IsImpactedByFloat() ? "impacted " : "",
