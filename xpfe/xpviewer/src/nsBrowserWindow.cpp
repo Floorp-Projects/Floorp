@@ -368,7 +368,7 @@ HandleBrowserEvent(nsGUIEvent *aEvent)
       return result;
 
     case NS_MENU_SELECTED:
-      result = bw->DispatchMenuItem(((nsMenuEvent*)aEvent)->menuItem);
+      result = bw->DispatchMenuItem(((nsMenuEvent*)aEvent)->mCommand);
       break;
 
     // XXX This is a hack, but a needed one
