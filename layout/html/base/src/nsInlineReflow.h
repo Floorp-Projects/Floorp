@@ -94,6 +94,10 @@ public:
     return mFrameData->mMarginFlags;
   }
 
+  nscoord GetAvailWidth() const {
+    return mRightEdge - mX;
+  }
+
   static PRUintn CalculateBlockMarginsFor(nsIPresContext& aPresContext,
                                           nsIFrame* aFrame,
                                           const nsStyleSpacing* aSpacing,
