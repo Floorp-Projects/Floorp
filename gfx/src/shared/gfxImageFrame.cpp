@@ -101,6 +101,16 @@ NS_IMETHODIMP gfxImageFrame::Init(nscoord aX, nscoord aY, nscoord aWidth, nscoor
   return NS_OK;
 }
 
+/* void drawTo */
+NS_IMETHODIMP gfxImageFrame::DrawTo(gfxIImageFrame* aDst, nscoord aDX, nscoord aDY, nscoord aDWidth, nscoord aDHeight)
+{
+  if (!mInitalized)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  nsCOMPtr<nsIImage> img(do_GetInterface(aDst));
+  return mImage->DrawToImage(img, aDX, aDY, aDWidth, aDHeight);
+}
+
 /* readonly attribute nscoord x; */
 NS_IMETHODIMP gfxImageFrame::GetX(nscoord *aX)
 {
@@ -160,19 +170,6 @@ NS_IMETHODIMP gfxImageFrame::GetFormat(gfx_format *aFormat)
     return NS_ERROR_NOT_INITIALIZED;
 
   *aFormat = mFormat;
-  return NS_OK;
-}
-
-/* attribute long timeout; */
-NS_IMETHODIMP gfxImageFrame::GetTimeout(PRInt32 *aTimeout)
-{
-  *aTimeout = mTimeout;
-  return NS_OK;
-}
-
-NS_IMETHODIMP gfxImageFrame::SetTimeout(PRInt32 aTimeout)
-{
-  mTimeout = aTimeout;
   return NS_OK;
 }
 
@@ -245,28 +242,22 @@ NS_IMETHODIMP gfxImageFrame::SetImageData(const PRUint8 *aData, PRUint32 aLength
   return NS_OK;
 }
 
-/* attribute long frameDisposalMethod; */
-NS_IMETHODIMP gfxImageFrame::GetFrameDisposalMethod(PRInt32 *aFrameDisposalMethod)
+/* void lockImageData (); */
+NS_IMETHODIMP gfxImageFrame::LockImageData()
 {
-    *aFrameDisposalMethod = mDisposalMethod;
-    return NS_OK;
-}
-NS_IMETHODIMP gfxImageFrame::SetFrameDisposalMethod(PRInt32 aFrameDisposalMethod)
-{
-    mDisposalMethod = aFrameDisposalMethod;
-    return NS_OK;
+  if (!mInitalized)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  return mImage->LockImagePixels(PR_FALSE);
 }
 
-/* attribute gfx_color backgroundColor; */
-NS_IMETHODIMP gfxImageFrame::GetBackgroundColor(gfx_color *aBackgroundColor)
+/* void unlockImageData (); */
+NS_IMETHODIMP gfxImageFrame::UnlockImageData()
 {
-    *aBackgroundColor = mBackgroundColor;
-    return NS_OK;
-}
-NS_IMETHODIMP gfxImageFrame::SetBackgroundColor(gfx_color aBackgroundColor)
-{
-    mBackgroundColor = aBackgroundColor;
-    return NS_OK;
+  if (!mInitalized)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  return mImage->UnlockImagePixels(PR_FALSE);
 }
 
 /* readonly attribute unsigned long alphaBytesPerRow; */
@@ -330,24 +321,80 @@ NS_IMETHODIMP gfxImageFrame::SetAlphaData(const PRUint8 *aData, PRUint32 aLength
   return NS_OK;
 }
 
-/* void lockImagePixels (in boolean mask); */
-NS_IMETHODIMP gfxImageFrame::LockImagePixels(PRBool mask)
+/* void lockAlphaData (); */
+NS_IMETHODIMP gfxImageFrame::LockAlphaData()
 {
-  return mImage->LockImagePixels(mask);
+  if (!mInitalized || !mImage->GetHasAlphaMask())
+    return NS_ERROR_NOT_INITIALIZED;
+
+  return mImage->LockImagePixels(PR_TRUE);
 }
 
-/* void unlockImagePixels (in boolean mask); */
-NS_IMETHODIMP gfxImageFrame::UnlockImagePixels(PRBool mask)
+/* void unlockAlphaData (); */
+NS_IMETHODIMP gfxImageFrame::UnlockAlphaData()
 {
-  return mImage->UnlockImagePixels(mask);
+  if (!mInitalized || !mImage->GetHasAlphaMask())
+    return NS_ERROR_NOT_INITIALIZED;
+
+  return mImage->UnlockImagePixels(PR_TRUE);
 }
 
-/* void drawTo */
-NS_IMETHODIMP gfxImageFrame::DrawTo(gfxIImageFrame* aDst, PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
+/* attribute long timeout; */
+NS_IMETHODIMP gfxImageFrame::GetTimeout(PRInt32 *aTimeout)
 {
-  nsCOMPtr<nsIImage> img(do_GetInterface(aDst));
-  return mImage->DrawToImage(img, aDX, aDY, aDWidth, aDHeight);
+  if (!mInitalized)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  *aTimeout = mTimeout;
+  return NS_OK;
 }
+
+NS_IMETHODIMP gfxImageFrame::SetTimeout(PRInt32 aTimeout)
+{
+  if (!mInitalized)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  mTimeout = aTimeout;
+  return NS_OK;
+}
+
+/* attribute long frameDisposalMethod; */
+NS_IMETHODIMP gfxImageFrame::GetFrameDisposalMethod(PRInt32 *aFrameDisposalMethod)
+{
+  if (!mInitalized)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  *aFrameDisposalMethod = mDisposalMethod;
+  return NS_OK;
+}
+NS_IMETHODIMP gfxImageFrame::SetFrameDisposalMethod(PRInt32 aFrameDisposalMethod)
+{
+  if (!mInitalized)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  mDisposalMethod = aFrameDisposalMethod;
+  return NS_OK;
+}
+
+/* attribute gfx_color backgroundColor; */
+NS_IMETHODIMP gfxImageFrame::GetBackgroundColor(gfx_color *aBackgroundColor)
+{
+  if (!mInitalized)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  *aBackgroundColor = mBackgroundColor;
+  return NS_OK;
+}
+NS_IMETHODIMP gfxImageFrame::SetBackgroundColor(gfx_color aBackgroundColor)
+{
+  if (!mInitalized)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  mBackgroundColor = aBackgroundColor;
+  return NS_OK;
+}
+
+
 
 
 
