@@ -954,7 +954,7 @@ private:
         if (result == NS_OK && outFieldID != NULL) {
             JavaClassMember key(clazz, outFieldID);
             JNIField* field;
-            PRBool bFound = theIDTable && theIDTable->Get(key, (void **)field);
+            PRBool bFound = theIDTable && theIDTable->Get(key, (void **)&field);
             if (!bFound) {
                 field = new JNIField(name, sig, outFieldID);
                 if (theIDTable)
