@@ -19,11 +19,8 @@
  *   Christopher Blizzard <blizzard@mozilla.org>
  */
 
-#include <nsCOMPtr.h>
-#include <nsIDOMMouseEvent.h>
 #include <nsIDOMNamedNodeMap.h>
 
-#include "nsIDOMKeyEvent.h"
 #include "nsString.h"
 
 #include "EmbedEventListener.h"
@@ -39,7 +36,14 @@ EmbedEventListener::EmbedEventListener(void) : mOwner(nsnull), mEventRegistratio
     if (-1 == DOMMouseListener_maskValues[0]) {
         util_InitializeEventMaskValuesFromClass("org/mozilla/webclient/WCMouseEvent",
                                                 DOMMouseListener_maskNames, 
-                                                DOMMouseListener_maskValues);
+                                                DOMMouseListener_maskValues,
+						nsnull);
+    }
+    if (-1 == DOMKeyListener_maskValues[0]) {
+        util_InitializeEventMaskValuesFromClass("java/awt/event/KeyEvent",
+                                                DOMKeyListener_maskNames,
+						nsnull,
+                                                DOMKeyListener_maskValues);
     }
 }
 
@@ -86,67 +90,76 @@ EmbedEventListener::HandleEvent(nsIDOMEvent* aDOMEvent)
 }
 
 NS_IMETHODIMP
-EmbedEventListener::KeyDown(nsIDOMEvent* aDOMEvent)
+EmbedEventListener::KeyDown(nsIDOMEvent* aKeyEvent)
 {
     nsCOMPtr <nsIDOMKeyEvent> keyEvent;
-    keyEvent = do_QueryInterface(aDOMEvent);
+    keyEvent = do_QueryInterface(aKeyEvent);
     if (!keyEvent)
 	return NS_OK;
     // Return FALSE to this function to mark the event as not
     // consumed...
     PRBool return_val = PR_FALSE;
-    /************
-  gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
-		  moz_embed_signals[DOM_KEY_DOWN],
-		  (void *)keyEvent, &return_val);
-    **********/
+
+    PopulatePropertiesFromEvent(aKeyEvent);
+    util_SendEventToJava(nsnull, 
+                         mEventRegistration, 
+                         KEY_LISTENER_CLASSNAME,
+                         DOMKeyListener_maskValues[KEY_PRESSED_EVENT_MASK], 
+                         mProperties);
+
     if (return_val) {
-	aDOMEvent->StopPropagation();
-	aDOMEvent->PreventDefault();
+	aKeyEvent->StopPropagation();
+	aKeyEvent->PreventDefault();
     }
     return NS_OK;
 }
 
 NS_IMETHODIMP
-EmbedEventListener::KeyUp(nsIDOMEvent* aDOMEvent)
+EmbedEventListener::KeyUp(nsIDOMEvent* aKeyEvent)
 {
     nsCOMPtr <nsIDOMKeyEvent> keyEvent;
-    keyEvent = do_QueryInterface(aDOMEvent);
+    keyEvent = do_QueryInterface(aKeyEvent);
     if (!keyEvent)
 	return NS_OK;
     // return FALSE to this function to mark this event as not
     // consumed...
     PRBool return_val = PR_FALSE;
-    /***************
-  gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
-		  moz_embed_signals[DOM_KEY_UP],
-		  (void *)keyEvent, &return_val);
-    ****************/
+
+    PopulatePropertiesFromEvent(aKeyEvent);
+    util_SendEventToJava(nsnull, 
+                         mEventRegistration, 
+                         KEY_LISTENER_CLASSNAME,
+                         DOMKeyListener_maskValues[KEY_RELEASED_EVENT_MASK], 
+                         mProperties);
+
     if (return_val) {
-	aDOMEvent->StopPropagation();
-	aDOMEvent->PreventDefault();
+	aKeyEvent->StopPropagation();
+	aKeyEvent->PreventDefault();
     }
     return NS_OK;
 }
 
 NS_IMETHODIMP
-EmbedEventListener::KeyPress(nsIDOMEvent* aDOMEvent)
+EmbedEventListener::KeyPress(nsIDOMEvent* aKeyEvent)
 {
     nsCOMPtr <nsIDOMKeyEvent> keyEvent;
-    keyEvent = do_QueryInterface(aDOMEvent);
+    keyEvent = do_QueryInterface(aKeyEvent);
     if (!keyEvent)
 	return NS_OK;
     // return FALSE to this function to mark this event as not
     // consumed...
     PRBool return_val = PR_FALSE;
-    /***********
-  gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
-		  moz_embed_signals[DOM_KEY_PRESS],
-		  (void *)keyEvent, &return_val);
-    ************/
+
+    PopulatePropertiesFromEvent(aKeyEvent);
+    util_SendEventToJava(nsnull, 
+                         mEventRegistration, 
+                         KEY_LISTENER_CLASSNAME,
+                         DOMKeyListener_maskValues[KEY_TYPED_EVENT_MASK], 
+                         mProperties);
+
     if (return_val) {
-	aDOMEvent->StopPropagation();
-	aDOMEvent->PreventDefault();
+	aKeyEvent->StopPropagation();
+	aKeyEvent->PreventDefault();
     }
     return NS_OK;
 }
@@ -319,10 +332,10 @@ nsresult EmbedEventListener::PopulatePropertiesFromEvent(nsIDOMEvent *event)
 {
     nsCOMPtr<nsIDOMEventTarget> eventTarget;
     nsCOMPtr<nsIDOMNode> currentNode;
-    nsCOMPtr<nsIDOMEvent> aMouseEvent = event;
+    nsCOMPtr<nsIDOMEvent> domEvent = event;
     nsresult rv = NS_OK;;
     
-    rv = aMouseEvent->GetTarget(getter_AddRefs(eventTarget));
+    rv = domEvent->GetTarget(getter_AddRefs(eventTarget));
     if (NS_FAILED(rv)) {
         return rv;
     }
@@ -346,12 +359,25 @@ nsresult EmbedEventListener::PopulatePropertiesFromEvent(nsIDOMEvent *event)
     }
     dom_iterateToRoot(currentNode, EmbedEventListener::takeActionOnNode, 
                       (void *)this);
-    rv = addMouseEventDataToProperties(aMouseEvent);
+
+    nsAutoString eventType;
+    domEvent->GetType(eventType);
+
+    if (eventType.Length() > 2 && eventType.EqualsIgnoreCase("key", 3)) {
+	nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(domEvent);
+
+	rv = addKeyEventDataToProperties(keyEvent);
+    }
+    else if (eventType.Length() > 4 && eventType.EqualsIgnoreCase("mouse", 5)){
+	nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(domEvent);
+
+	rv = addMouseEventDataToProperties(mouseEvent);
+    }
 
     return rv;
 }
 
-nsresult EmbedEventListener::addMouseEventDataToProperties(nsIDOMEvent *aMouseEvent)
+nsresult EmbedEventListener::addMouseEventDataToProperties(nsCOMPtr<nsIDOMMouseEvent> mouseEvent)
 {
     // if the initialization failed, don't modify the mProperties
     if (!mProperties || !util_StringConstantsAreInitialized()) {
@@ -360,13 +386,6 @@ nsresult EmbedEventListener::addMouseEventDataToProperties(nsIDOMEvent *aMouseEv
     nsresult rv;
 
     // Add modifiers, keys, mouse buttons, etc, to the mProperties table
-    nsCOMPtr<nsIDOMMouseEvent> mouseEvent;
-    
-    rv = aMouseEvent->QueryInterface(nsIDOMMouseEvent::GetIID(),
-                                     getter_AddRefs(mouseEvent));
-    if (NS_FAILED(rv)) {
-        return rv;
-    }
 
     PRInt32 intVal;
     PRUint16 int16Val;
@@ -455,6 +474,84 @@ nsresult EmbedEventListener::addMouseEventDataToProperties(nsIDOMEvent *aMouseEv
     }
     
     rv = mouseEvent->GetMetaKey(&boolVal);
+    if (NS_SUCCEEDED(rv)) {
+        strVal = boolVal ? (jstring) TRUE_VALUE : (jstring) FALSE_VALUE;
+        ::util_StoreIntoPropertiesObject(env, mProperties, META_KEY,
+                                         (jobject) strVal, 
+                                         (jobject) 
+                                         &(mOwner->GetWrapperFactory()->shareContext));
+    }
+    return rv;
+}
+
+nsresult EmbedEventListener::addKeyEventDataToProperties(nsCOMPtr<nsIDOMKeyEvent> keyEvent)
+{
+    // if the initialization failed, don't modify the mProperties
+    if (!mProperties || !util_StringConstantsAreInitialized()) {
+        return NS_ERROR_INVALID_ARG;
+    }
+    nsresult rv;
+
+    // Add modifiers, keys, etc, to the mProperties table
+
+    PRInt32 intVal;
+    PRUint32 int32Val;
+    PRUint16 int16Val;
+    PRBool boolVal;
+    char buf[20];
+    jstring strVal;
+    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
+    
+    // PENDING(edburns): perhaps use a macro to speed this up?
+    rv = keyEvent->GetCharCode(&int32Val);
+    if (NS_SUCCEEDED(rv)) {
+	buf[0] = (char) int32Val;
+	buf[1]= nsnull;
+	strVal = ::util_NewStringUTF(env, buf);
+        ::util_StoreIntoPropertiesObject(env, mProperties, CHAR_CODE,
+                                         (jobject) strVal, 
+                                         (jobject) 
+                                         &(mOwner->GetWrapperFactory()->shareContext));
+    }
+
+    rv = keyEvent->GetKeyCode(&int32Val);
+    if (NS_SUCCEEDED(rv)) {
+        WC_ITOA(int32Val, buf, 10);
+	strVal = ::util_NewStringUTF(env, buf);
+        ::util_StoreIntoPropertiesObject(env, mProperties, KEY_CODE,
+                                         (jobject) strVal, 
+                                         (jobject) 
+                                         &(mOwner->GetWrapperFactory()->shareContext));
+    }
+
+    rv = keyEvent->GetAltKey(&boolVal);
+    if (NS_SUCCEEDED(rv)) {
+        strVal = boolVal ? (jstring) TRUE_VALUE : (jstring) FALSE_VALUE;
+        ::util_StoreIntoPropertiesObject(env, mProperties, ALT_KEY,
+                                         (jobject) strVal, 
+                                         (jobject) 
+                                         &(mOwner->GetWrapperFactory()->shareContext));
+    }
+    
+    rv = keyEvent->GetCtrlKey(&boolVal);
+    if (NS_SUCCEEDED(rv)) {
+        strVal = boolVal ? (jstring) TRUE_VALUE : (jstring) FALSE_VALUE;
+        ::util_StoreIntoPropertiesObject(env, mProperties, CTRL_KEY,
+                                         (jobject) strVal, 
+                                         (jobject) 
+                                         &(mOwner->GetWrapperFactory()->shareContext));
+    }
+    
+    rv = keyEvent->GetShiftKey(&boolVal);
+    if (NS_SUCCEEDED(rv)) {
+        strVal = boolVal ? (jstring) TRUE_VALUE : (jstring) FALSE_VALUE;
+        ::util_StoreIntoPropertiesObject(env, mProperties, SHIFT_KEY,
+                                         (jobject) strVal, 
+                                         (jobject) 
+                                         &(mOwner->GetWrapperFactory()->shareContext));
+    }
+    
+    rv = keyEvent->GetMetaKey(&boolVal);
     if (NS_SUCCEEDED(rv)) {
         strVal = boolVal ? (jstring) TRUE_VALUE : (jstring) FALSE_VALUE;
         ::util_StoreIntoPropertiesObject(env, mProperties, META_KEY,

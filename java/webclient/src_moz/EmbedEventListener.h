@@ -22,8 +22,11 @@
 #ifndef __EmbedEventListener_h
 #define __EmbedEventListener_h
 
+#include <nsCOMPtr.h>
 #include <nsIDOMKeyListener.h>
 #include <nsIDOMMouseListener.h>
+#include <nsIDOMMouseEvent.h>
+#include <nsIDOMKeyEvent.h>
 
 #include "jni_util.h"
 
@@ -66,7 +69,8 @@ class EmbedEventListener : public nsIDOMKeyListener,
  private:
 
     nsresult PopulatePropertiesFromEvent(nsIDOMEvent *aMouseEvent);
-    nsresult addMouseEventDataToProperties(nsIDOMEvent *aMouseEvent);
+    nsresult addMouseEventDataToProperties(nsCOMPtr<nsIDOMMouseEvent> aMouseEvent);
+    nsresult addKeyEventDataToProperties(nsCOMPtr<nsIDOMKeyEvent> aKeyEvent);
     static  nsresult JNICALL takeActionOnNode(nsCOMPtr<nsIDOMNode> curNode,
 					      void *yourObject);
 

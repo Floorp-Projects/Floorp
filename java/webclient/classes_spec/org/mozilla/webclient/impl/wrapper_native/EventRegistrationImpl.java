@@ -38,6 +38,9 @@ import java.util.EventObject;
 
 import java.awt.event.InputEvent;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.Component;
 
 import org.mozilla.webclient.BrowserControl;
@@ -49,7 +52,6 @@ import org.mozilla.webclient.DocumentLoadListener;
 import org.mozilla.webclient.PageInfoListener;
 import org.mozilla.webclient.NewWindowEvent;
 import org.mozilla.webclient.NewWindowListener;
-import java.awt.event.MouseListener;
 import org.mozilla.webclient.WebclientEvent;
 import org.mozilla.webclient.WCMouseEvent;
 import org.mozilla.webclient.WebclientEventListener;
@@ -79,6 +81,8 @@ public class EventRegistrationImpl extends ImplObjectNative implements EventRegi
 
     private List mouseListeners;
 
+    private List keyListeners;
+
     private BrowserToJavaEventPump eventPump = null;
 
     private static int instanceCount = 0;
@@ -100,18 +104,27 @@ public EventRegistrationImpl(WrapperFactory yourFactory,
 	throw new RuntimeException("EventRegistrationImpl: Can't obtain reference to BrowserControlCanvas");
     }
     
-    documentLoadListeners = new ArrayList();
-    mouseListeners = new ArrayList();
+    documentLoadListeners = null;
+    mouseListeners = null;
+    keyListeners = null;
     eventPump = new BrowserToJavaEventPump(instanceCount++);
     eventPump.start();
 }
 
 public void delete()
 {
-    documentLoadListeners.clear();
+    if (null != documentLoadListeners) {
+	documentLoadListeners.clear();
+    }
     documentLoadListeners = null;
-    mouseListeners.clear();
+    if (null != mouseListeners) {
+	mouseListeners.clear();
+    }
     mouseListeners = null;
+    if (null != keyListeners) {
+	keyListeners.clear();
+    }
+    keyListeners = null;
     super.delete();
     eventPump.stopRunning();
 }
@@ -132,6 +145,10 @@ public void addDocumentLoadListener(DocumentLoadListener listener)
 {
     ParameterCheck.nonNull(listener);
     getWrapperFactory().verifyInitialized();
+
+    if (null == documentLoadListeners) {
+	documentLoadListeners = new ArrayList();
+    }
     
     synchronized(documentLoadListeners) {
 	if (listener instanceof PageInfoListener) {
@@ -173,6 +190,10 @@ public void addMouseListener(MouseListener listener)
 {
     ParameterCheck.nonNull(listener);
     getWrapperFactory().verifyInitialized();
+
+    if (null == mouseListeners) {
+	mouseListeners = new ArrayList();
+    }
     
     synchronized(mouseListeners) {
 	mouseListeners.add(listener);
@@ -186,6 +207,30 @@ public void removeMouseListener(MouseListener listener)
     
     synchronized(mouseListeners) {
 	mouseListeners.remove(listener);
+    }
+}
+
+public void addKeyListener(KeyListener listener)
+{
+    ParameterCheck.nonNull(listener);
+    getWrapperFactory().verifyInitialized();
+
+    if (null == keyListeners) {
+	keyListeners = new ArrayList();
+    }
+    
+    synchronized(keyListeners) {
+	keyListeners.add(listener);
+    }
+}
+
+public void removeKeyListener(KeyListener listener)
+{
+    ParameterCheck.nonNull(listener);
+    getWrapperFactory().verifyInitialized();
+    
+    synchronized(keyListeners) {
+	keyListeners.remove(listener);
     }
 }
 
@@ -250,6 +295,9 @@ void nativeEventOccurred(String targetClassName, long eventType,
     }
     else if (MouseListener.class.getName().equals(targetClassName)) {
         event = createMouseEvent(eventType, eventData);
+    }
+    else if (KeyListener.class.getName().equals(targetClassName)) {
+	event = createKeyEvent(eventType, eventData);
     }
     else if (NewWindowListener.class.getName().equals(targetClassName)) {
         event = new NewWindowEvent(this, eventType, eventData);
@@ -351,6 +399,81 @@ private EventObject createMouseEvent(long eventType, Object eventData) {
     return mouseEvent;
 }
 
+private EventObject createKeyEvent(long eventType, Object eventData) {
+    KeyEvent keyEvent = null;
+    Properties props = (Properties) eventData;
+    int modifiers = 0, keyCode = 0;
+    char keyChar = 0;
+    String str;
+    boolean bool;
+    if (null != props) { 
+	if (null != (str = props.getProperty("Button"))) {
+	    int button = Integer.valueOf(str).intValue();
+	    if (1 == button) {
+		modifiers += InputEvent.BUTTON1_MASK;
+	    }
+	    if (2 == button) {
+		modifiers += InputEvent.BUTTON2_MASK;
+	    }
+	    if (3 == button) {
+		modifiers += InputEvent.BUTTON3_MASK;
+	    }
+	}
+	if (null != (str = props.getProperty("Alt"))) {
+	    bool = Boolean.valueOf(str).booleanValue();
+	    if (bool) {
+		modifiers += InputEvent.ALT_MASK;
+	    }
+	}
+	if (null != (str = props.getProperty("Ctrl"))) {
+	    bool = Boolean.valueOf(str).booleanValue();
+	    if (bool) {
+		modifiers += InputEvent.CTRL_MASK;
+	    }
+	}
+	if (null != (str = props.getProperty("Meta"))) {
+	    bool = Boolean.valueOf(str).booleanValue();
+	    if (bool) {
+		modifiers += InputEvent.META_MASK;
+	    }
+	}
+	if (null != (str = props.getProperty("Shift"))) {
+	    bool = Boolean.valueOf(str).booleanValue();
+	    if (bool) {
+		modifiers += InputEvent.SHIFT_MASK;
+	    }
+	}
+	if (null != (str = props.getProperty("KeyCode"))) {
+	    keyCode = Integer.valueOf(str).intValue();
+	}
+	if (null != (str = props.getProperty("KeyChar"))) {
+	    if (0 == str.length()) {
+		keyChar = KeyEvent.CHAR_UNDEFINED;
+	    }
+	    else {
+		keyChar = str.charAt(0);
+	    }
+	}
+    }
+
+    long when = System.currentTimeMillis();
+    if (KeyEvent.KEY_TYPED == eventType) {
+	keyCode = KeyEvent.VK_UNDEFINED;
+	// swalow events where the event is KEY_TYPED, but the keyChar
+	// is undefined, since these would throw an
+	// IllegalArgumentException.
+	if (KeyEvent.CHAR_UNDEFINED == keyChar) {
+	    return null;
+	}
+    }
+    keyEvent = new KeyEvent((Component) browserControlCanvas, (int) eventType,
+			    when, modifiers, keyCode, keyChar);
+
+    WebclientEvent event = new WebclientEvent(browserControlCanvas, eventType,
+					      keyEvent);
+    return event;
+}
+
 private native void nativeSetCapturePageInfo(int webShellPtr, 
 					     boolean newState);
 
@@ -384,6 +507,9 @@ public class BrowserToJavaEventPump extends Thread {
     }
     
     public void queueEvent(EventObject toQueue) {
+	if (null == toQueue) {
+	    return;
+	}
 	synchronized (eventsToJava) {
 	    eventsToJava.add(toQueue);
 	}
@@ -418,6 +544,10 @@ public class BrowserToJavaEventPump extends Thread {
 	    else if (curEvent instanceof MouseEvent) {
 		listeners = EventRegistrationImpl.this.mouseListeners;
 	    }
+	    else if (curEvent instanceof WebclientEvent &&
+		     ((WebclientEvent)curEvent).getEventData() instanceof KeyEvent) {
+		listeners = EventRegistrationImpl.this.keyListeners;
+	    }
 	    // else...
 
 	    if (null != curEvent && null != listeners) {
@@ -433,6 +563,10 @@ public class BrowserToJavaEventPump extends Thread {
 			    else if (cur instanceof MouseListener) {
 				dispatchMouseEvent((MouseListener) cur, 
 						   (WCMouseEvent) curEvent);
+			    }
+			    else if (cur instanceof KeyListener) {
+				dispatchKeyEvent((KeyListener) cur, 
+						 (WebclientEvent) curEvent);
 			    }
 			    // else ...
 			}
@@ -466,6 +600,21 @@ public class BrowserToJavaEventPump extends Thread {
 	    break;
 	case (int) WCMouseEvent.MOUSE_OUT_EVENT_MASK:
 	    listener.mouseExited(event);
+	    break;
+	}
+    }
+    
+    private void dispatchKeyEvent(KeyListener listener, 
+				  WebclientEvent event) {
+	switch ((int) event.getType()) {
+	case (int) KeyEvent.KEY_PRESSED:
+	    listener.keyPressed((KeyEvent) event.getEventData());
+	    break;
+	case (int) KeyEvent.KEY_RELEASED:
+	    listener.keyReleased((KeyEvent) event.getEventData());
+	    break;
+	case (int) KeyEvent.KEY_TYPED:
+	    listener.keyTyped((KeyEvent) event.getEventData());
 	    break;
 	}
     }

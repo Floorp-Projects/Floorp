@@ -70,6 +70,8 @@ extern jobject SCREEN_X_KEY;
 extern jobject SCREEN_Y_KEY;
 extern jobject CLIENT_X_KEY;
 extern jobject CLIENT_Y_KEY;
+extern jobject CHAR_CODE;
+extern jobject KEY_CODE;
 extern jobject ALT_KEY;
 extern jobject CTRL_KEY;
 extern jobject SHIFT_KEY;
@@ -127,6 +129,7 @@ extern jobject BM_IS_FOLDER_VALUE;
  */
 extern jstring DOCUMENT_LOAD_LISTENER_CLASSNAME;
 extern jstring MOUSE_LISTENER_CLASSNAME;
+extern jstring KEY_LISTENER_CLASSNAME;
 extern jstring NEW_WINDOW_LISTENER_CLASSNAME;
 
 
@@ -147,6 +150,7 @@ typedef enum {
 
 #define DOCUMENT_LOAD_LISTENER_CLASSNAME_VALUE "org.mozilla.webclient.DocumentLoadListener"
 #define MOUSE_LISTENER_CLASSNAME_VALUE "java.awt.event.MouseListener"
+#define KEY_LISTENER_CLASSNAME_VALUE "java.awt.event.KeyListener"
 #define NEW_WINDOW_LISTENER_CLASSNAME_VALUE "org.mozilla.webclient.NewWindowListener"
 
 
@@ -165,6 +169,11 @@ typedef enum {
 #define MOUSE_DOUBLE_CLICK_EVENT_MASK_VALUE "MOUSE_DOUBLE_CLICK_EVENT_MASK"
 #define MOUSE_OVER_EVENT_MASK_VALUE "MOUSE_OVER_EVENT_MASK"
 #define MOUSE_OUT_EVENT_MASK_VALUE "MOUSE_OUT_EVENT_MASK"
+
+#define KEY_PRESSED_EVENT_MASK_VALUE "KEY_PRESSED"
+#define KEY_RELEASED_EVENT_MASK_VALUE "KEY_RELEASED"
+#define KEY_TYPED_EVENT_MASK_VALUE "KEY_TYPED"
+
 
 typedef enum {
   START_DOCUMENT_LOAD_EVENT_MASK = 0,
@@ -188,6 +197,13 @@ typedef enum {
   NUMBER_OF_DOM_MOUSE_LISTENER_MASK_NAMES
 } DOM_MOUSE_LISTENER_EVENT_MASK_NAMES;
 
+typedef enum {
+  KEY_PRESSED_EVENT_MASK = 0,
+  KEY_RELEASED_EVENT_MASK,
+  KEY_TYPED_EVENT_MASK,
+  NUMBER_OF_DOM_KEY_LISTENER_MASK_NAMES
+} DOM_KEY_LISTENER_EVENT_MASK_NAMES;
+
 // BookmarkEntry string constants, must coincide with java
 #define BM_ADD_DATE "AddDate"
 #define BM_LAST_MODIFIED_DATE "LastModifiedDate"
@@ -202,6 +218,10 @@ extern char *DocumentLoader_maskNames [NUMBER_OF_DOCUMENT_LOADER_MASK_NAMES + 1]
 
 extern jlong DOMMouseListener_maskValues [NUMBER_OF_DOM_MOUSE_LISTENER_MASK_NAMES];
 extern char *DOMMouseListener_maskNames [NUMBER_OF_DOM_MOUSE_LISTENER_MASK_NAMES + 1];
+
+
+extern jint DOMKeyListener_maskValues [NUMBER_OF_DOM_KEY_LISTENER_MASK_NAMES];
+extern char *DOMKeyListener_maskNames [NUMBER_OF_DOM_KEY_LISTENER_MASK_NAMES + 1];
 
 /**
 
@@ -278,6 +298,8 @@ jfieldID util_GetStaticFieldID(JNIEnv *env, jclass clazz,
                                const char *signature);
 
 jlong util_GetStaticLongField(JNIEnv *env, jclass clazz, jfieldID id);
+
+jint util_GetStaticIntField(JNIEnv *env, jclass clazz, jfieldID id);
 
 jboolean util_IsInstanceOf(JNIEnv *env, jobject obj, jclass clazz);
 

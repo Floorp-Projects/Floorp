@@ -53,7 +53,7 @@ import java.awt.event.*;
 
  * See concrete subclasses for scope info.
 
- * @version $Id: BrowserControlCanvas.java,v 1.8 2004/10/27 01:33:56 edburns%acm.org Exp $
+ * @version $Id: BrowserControlCanvas.java,v 1.9 2004/12/01 03:21:22 edburns%acm.org Exp $
 
  * @see	org.mozilla.webclient.win32.Win32BrowserControlCanvas
 
@@ -294,6 +294,32 @@ public void removeMouseListener(MouseListener listener) {
     }
     catch(Exception ex) {
         System.out.println("Can't removeMouseListener(" + listener + ") " + 
+                           ex.getMessage());
+        
+    }
+}
+
+public void addKeyListener(KeyListener listener) {
+    try {
+        EventRegistration2 er = (EventRegistration2)
+            webShell.queryInterface(BrowserControl.EVENT_REGISTRATION_NAME);
+        er.addKeyListener(listener);
+    }
+    catch(Exception ex) {
+        System.out.println("Can't addKeyListener(" + listener + ") " + 
+                           ex.getMessage());
+        
+    }
+}
+
+public void removeKeyListener(KeyListener listener) {
+    try {
+        EventRegistration2 er = (EventRegistration2)
+            webShell.queryInterface(BrowserControl.EVENT_REGISTRATION_NAME);
+        er.removeKeyListener(listener);
+    }
+    catch(Exception ex) {
+        System.out.println("Can't removeKeyListener(" + listener + ") " + 
                            ex.getMessage());
         
     }

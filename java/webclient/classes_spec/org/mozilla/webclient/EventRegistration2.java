@@ -22,9 +22,14 @@
 
 package org.mozilla.webclient;
 
+import java.awt.event.KeyListener;
+
 public interface EventRegistration2  extends EventRegistration {
 
 public void addNewWindowListener(NewWindowListener listener); 
 public void removeNewWindowListener(NewWindowListener listener); 
+
+public void addKeyListener(KeyListener listener); 
+public void removeKeyListener(KeyListener listener); 
 
 }

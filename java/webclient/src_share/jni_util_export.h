@@ -386,7 +386,8 @@ extern fpGetFromPropertiesObjectType externalGetFromPropertiesObject;
 JNIEXPORT void JNICALL 
 util_InitializeEventMaskValuesFromClass(const char *className,
                                         char *maskNames[], 
-                                        jlong maskValues[]);
+                                        jlong maskValuesLong[],
+                                        jint maskValuesInt[]);
 
 //
 // Functions provided by browser-specific native code

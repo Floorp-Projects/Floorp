@@ -225,7 +225,8 @@ JNIEXPORT void JNICALL util_SetGetFromPropertiesObjectFunction(fpGetFromProperti
 JNIEXPORT void JNICALL 
 util_InitializeEventMaskValuesFromClass(const char *className,
                                         char *maskNames[], 
-                                        jlong maskValues[])
+                                        jlong maskValuesLong[],
+                                        jint maskValuesInt[])
 {
     int i = 0;
     JNIEnv *env = nsnull;
@@ -246,7 +247,7 @@ util_InitializeEventMaskValuesFromClass(const char *className,
 #ifdef BAL_INTERFACE
     if (nsnull != externalInitializeEventMask) {
         externalInitializeEventMask(env, clazz,
-                                    (const char **) maskNames, maskValues);
+                                    (const char **) maskNames, maskValuesLong);
     }
 #else
     if (nsnull == env) {
@@ -256,15 +257,28 @@ util_InitializeEventMaskValuesFromClass(const char *className,
     jfieldID fieldID;
     
     while (nsnull != maskNames[i]) {
-        fieldID = ::util_GetStaticFieldID(env, clazz, 
-                                          maskNames[i], "J");
-        
-        if (nsnull == fieldID) {
-            return;
+        if (nsnull != maskValuesLong) {
+            fieldID = ::util_GetStaticFieldID(env, clazz, 
+                                              maskNames[i], "J");
+            
+            if (nsnull == fieldID) {
+                return;
+            }
+            
+            maskValuesLong[i] = ::util_GetStaticLongField(env, clazz, 
+                                                          fieldID);
         }
-        
-        maskValues[i] = ::util_GetStaticLongField(env, clazz, 
-                                                  fieldID);
+        else if (nsnull != maskValuesInt) {
+            fieldID = ::util_GetStaticFieldID(env, clazz, 
+                                              maskNames[i], "I");
+            
+            if (nsnull == fieldID) {
+                return;
+            }
+            
+            maskValuesInt[i] = ::util_GetStaticIntField(env, clazz, 
+                                                        fieldID);
+        }
         i++;
     }
     

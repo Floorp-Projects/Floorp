@@ -55,6 +55,8 @@ jobject SCREEN_X_KEY;
 jobject SCREEN_Y_KEY;
 jobject CLIENT_X_KEY;
 jobject CLIENT_Y_KEY;
+jobject CHAR_CODE;
+jobject KEY_CODE;
 jobject ALT_KEY;
 jobject CTRL_KEY;
 jobject SHIFT_KEY;
@@ -85,6 +87,7 @@ jobject BM_IS_FOLDER_VALUE;
 
 jstring DOCUMENT_LOAD_LISTENER_CLASSNAME;
 jstring MOUSE_LISTENER_CLASSNAME;
+jstring KEY_LISTENER_CLASSNAME;
 jstring NEW_WINDOW_LISTENER_CLASSNAME;
 
 jlong DocumentLoader_maskValues[] = { -1L };
@@ -108,6 +111,14 @@ char *DOMMouseListener_maskNames[] = {
     MOUSE_DOUBLE_CLICK_EVENT_MASK_VALUE,
     MOUSE_OVER_EVENT_MASK_VALUE,
     MOUSE_OUT_EVENT_MASK_VALUE,
+    nsnull
+};
+
+jint DOMKeyListener_maskValues[] = { -1 };
+char *DOMKeyListener_maskNames[] = {
+    KEY_PRESSED_EVENT_MASK_VALUE,
+    KEY_RELEASED_EVENT_MASK_VALUE,
+    KEY_TYPED_EVENT_MASK_VALUE,
     nsnull
 };
 
@@ -150,6 +161,16 @@ jboolean util_InitStringConstants()
     if (nsnull == (CLIENT_Y_KEY = 
                    ::util_NewGlobalRef(env, (jobject)
                                        ::util_NewStringUTF(env, "ClientY")))) {
+        return JNI_FALSE;
+    }
+    if (nsnull == (CHAR_CODE = 
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, "KeyCode")))) {
+        return JNI_FALSE;
+    }
+    if (nsnull == (KEY_CODE = 
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, "KeyChar")))) {
         return JNI_FALSE;
     }
     if (nsnull == (ALT_KEY = 
@@ -306,6 +327,12 @@ jboolean util_InitStringConstants()
                    ::util_NewGlobalRef(env, (jobject)
                                        ::util_NewStringUTF(env, 
                                                            MOUSE_LISTENER_CLASSNAME_VALUE)))) {
+        return JNI_FALSE;
+    }
+    if (nsnull == (KEY_LISTENER_CLASSNAME = (jstring)
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, 
+                                                           KEY_LISTENER_CLASSNAME_VALUE)))) {
         return JNI_FALSE;
     }
     if (nsnull == (NEW_WINDOW_LISTENER_CLASSNAME = (jstring)
@@ -536,6 +563,17 @@ jlong util_GetStaticLongField(JNIEnv *env, jclass clazz, jfieldID id)
 #endif
     return result;
 }
+
+jint util_GetStaticIntField(JNIEnv *env, jclass clazz, jfieldID id)
+{
+    jint result = -1;
+#ifdef BAL_INTERFACE
+#else
+    result = env->GetStaticIntField(clazz, id);
+#endif
+    return result;
+}
+
 
 jboolean util_IsInstanceOf(JNIEnv *env, jobject obj, jclass clazz)
 {

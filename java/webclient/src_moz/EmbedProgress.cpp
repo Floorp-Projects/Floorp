@@ -65,7 +65,8 @@ EmbedProgress::Init(NativeBrowserControl *aOwner)
   if (-1 == DocumentLoader_maskValues[0]) {
       util_InitializeEventMaskValuesFromClass("org/mozilla/webclient/DocumentLoadEvent",
 					      DocumentLoader_maskNames, 
-					      DocumentLoader_maskValues);
+					      DocumentLoader_maskValues,
+					      nsnull);
   }
 
   return NS_OK;
