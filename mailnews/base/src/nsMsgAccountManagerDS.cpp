@@ -34,7 +34,6 @@
 #include "nsEnumeratorUtils.h"
 #include "nsIServiceManager.h"
 #include "nsIMsgMailSession.h"
-#include "nsIMsgFilterList.h"
 #include "nsXPIDLString.h"
 
 #include "nsMsgRDFUtils.h"
@@ -827,7 +826,8 @@ PRBool
 nsMsgAccountManagerDataSource::supportsFilters(nsIMsgIncomingServer *aServer)
 {
     PRBool supportsFilters;
-    aServer->GetCanHaveFilters(&supportsFilters);
+    nsresult rv = aServer->GetCanHaveFilters(&supportsFilters);
+    NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
     return supportsFilters;
 }
