@@ -97,6 +97,7 @@
 
   <RDF:Seq about="NC:SearchCategory?category=urn:search:category:6">
   	<RDF:li resource="NC:SearchCategory?engine=urn:search:engine:ClassifiedPlus.src" />
+  	<RDF:li resource="NC:SearchCategory?engine=urn:search:engine:ShopNetscape.src" />
   </RDF:Seq>
 
 </RDF:RDF>
