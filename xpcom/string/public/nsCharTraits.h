@@ -180,7 +180,7 @@ struct nsCharTraits<PRUnichar>
         for ( ; n--; ++s1, ++s2 )
           {
             if ( !eq(*s1, *s2) )
-              return to_int_type(*s1 - *s2);
+              return to_int_type(*s1) - to_int_type(*s2);
           }
 
         return 0;
