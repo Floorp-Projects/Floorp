@@ -181,7 +181,7 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
             }
 
             // Found the constructor, so try invoking it.
-            return constructSpecific(cx, scope, this, args, ctors[index]);
+            return constructSpecific(cx, scope, args, ctors[index]);
         } else {
             Scriptable topLevel = ScriptableObject.getTopLevelScope(this);
             String msg = "";
@@ -208,11 +208,10 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
     }
 
     static Scriptable constructSpecific(Context cx, Scriptable scope,
-                                        Scriptable thisObj, Object[] args,
-                                        MemberBox ctor)
+                                        Object[] args, MemberBox ctor)
         throws JavaScriptException
     {
-        Scriptable topLevel = ScriptableObject.getTopLevelScope(thisObj);
+        Scriptable topLevel = ScriptableObject.getTopLevelScope(scope);
         Class classObject = ctor.getDeclaringClass();
         Class[] argTypes = ctor.argTypes;
 

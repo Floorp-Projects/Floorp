@@ -67,7 +67,7 @@ public class NativeJavaConstructor extends BaseFunction
                        Object[] args)
         throws JavaScriptException
     {
-        return NativeJavaClass.constructSpecific(cx, scope, this, args, ctor);
+        return NativeJavaClass.constructSpecific(cx, scope, args, ctor);
     }
 
     public String toString()
