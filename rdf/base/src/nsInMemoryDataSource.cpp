@@ -249,8 +249,10 @@ public:
                  PRBool aTruthValue = PR_TRUE);
 #endif
 
+#ifdef MOZ_THREADSAFE_RDF
     // This datasource's monitor object.
     PRLock* mLock;
+#endif
 };
 
 const PRInt32 InMemoryDataSource::kInitialTableSize = 500;
@@ -579,10 +581,13 @@ NS_NewRDFInMemoryDataSource(nsISupports* aOuter, const nsIID& aIID, void** aResu
 
 InMemoryDataSource::InMemoryDataSource(nsISupports* aOuter)
     : mForwardArcs(nsnull),
-      mReverseArcs(nsnull),
-      mLock(nsnull)
+      mReverseArcs(nsnull)
 {
     NS_INIT_AGGREGATED(aOuter);
+
+#ifdef MOZ_THREADSAFE_RDF
+    mLock = nsnull;
+#endif
 }
 
 
@@ -609,9 +614,11 @@ InMemoryDataSource::Init()
     if (! mReverseArcs)
         return NS_ERROR_OUT_OF_MEMORY;
 
+#ifdef MOZ_THREADSAFE_RDF
     mLock = PR_NewLock();
     if (! mLock)
         return NS_ERROR_OUT_OF_MEMORY;
+#endif
 
 #ifdef PR_LOGGING
     if (! gLog)
@@ -647,7 +654,9 @@ InMemoryDataSource::~InMemoryDataSource()
     PR_LOG(gLog, PR_LOG_ALWAYS,
            ("InMemoryDataSource(%p): destroyed.", this));
 
+#ifdef MOZ_THREADSAFE_RDF
     PR_DestroyLock(mLock);
+#endif
 }
 
 PRIntn
