@@ -244,7 +244,7 @@ nsXIFFormatConverter::Convert(const char *aFromDataFlavor, nsISupports *aFromDat
             }
           }
         } // if plain text
-        else if ( toFlavor.Equals(kHTMLMime) ) {
+        else if ( toFlavor.Equals(kHTMLMime) || toFlavor.Equals(kUnicodeMime) ) {
           if ( NS_SUCCEEDED(ConvertFromXIFToHTML(dataStr, outStr)) ) {  //еее shouldn't copy
             nsCOMPtr<nsISupportsWString> dataWrapper;
             nsComponentManager::CreateInstance(NS_SUPPORTS_WSTRING_PROGID, nsnull, 
