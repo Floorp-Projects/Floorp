@@ -24,20 +24,12 @@
     </content>
 
     <handlers>
-      <handler event="command" phase="capturing">
-        <![CDATA[
-          // XXX see bug #196755
-          // originalTarget is workaround for arrowscrollbox retargeting bug
-          if (event.originalTarget.parentNode.parentNode == this)
-            this.selectedItem = event.originalTarget;
-        ]]>
-      </handler>
+      <handler event="command" phase="capturing"
+        action="if (event.target.parentNode.parentNode == this) this.selectedItem = event.target;"/>
         
       <handler event="popupshowing">
         <![CDATA[
-          // XXX see bug #196755
-          // originalTarget is workaround for arrowscrollbox retargeting bug
-          if (event.originalTarget.parentNode == this && this.selectedItem)
+          if (event.target.parentNode == this && this.selectedItem)
             // Not ready for auto-setting the active child in hierarchies yet.
             // For now, only do this when the outermost menupopup opens.
             this.menuBoxObject.activeChild = this.selectedInternal;
@@ -426,9 +418,7 @@
         <![CDATA[
           // editable menulists elements aren't in the focus order,
           // so when the popup opens we need to force the focus to the inputField
-          // XXX see bug #196755
-          // originalTarget is workaround for arrowscrollbox retargeting bug
-          if (event.originalTarget.parentNode == this) {
+          if (event.target.parentNode == this) {
             if (document.commandDispatcher.focusedElement != this.inputField) 
               this.inputField.focus();
 
