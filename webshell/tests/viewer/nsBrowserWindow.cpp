@@ -34,6 +34,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIURL.h"
 #include "nsIFileWidget.h"
+#include "nsILookAndFeel.h"
 #include "nsRepository.h"
 #include "nsIFactory.h"
 #include "nsCRT.h"
@@ -104,6 +105,7 @@
 #define WEBSHELL_BOTTOM_INSET 0
 #endif
 
+static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kBrowserWindowCID, NS_BROWSER_WINDOW_CID);
 static NS_DEFINE_IID(kButtonCID, NS_BUTTON_CID);
 static NS_DEFINE_IID(kFileWidgetCID, NS_FILEWIDGET_CID);
@@ -116,6 +118,7 @@ static NS_DEFINE_IID(kCheckButtonCID, NS_CHECKBUTTON_CID);
 static NS_DEFINE_IID(kRadioButtonCID, NS_RADIOBUTTON_CID);
 static NS_DEFINE_IID(kLabelCID, NS_LABEL_CID);
 
+static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 static NS_DEFINE_IID(kIBrowserWindowIID, NS_IBROWSER_WINDOW_IID);
 static NS_DEFINE_IID(kIButtonIID, NS_IBUTTON_IID);
 static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
@@ -590,111 +593,118 @@ nsEventStatus nsBrowserWindow::ProcessDialogEvent(nsGUIEvent *aEvent)
 void
 nsBrowserWindow::DoFind()
 {
-  if (mDialog != nsnull) {
-    mDialog->Show(PR_TRUE);
-    mTextField->SetFocus();
-    nsString str;
-    mTextField->GetText(str, 255);
-    mTextField->SelectAll();
-    return;
+  if (mDialog == nsnull) {
+    nscoord txtHeight   = 24;
+    nscolor textBGColor = NS_RGB(0, 0, 0);
+    nscolor textFGColor = NS_RGB(255, 255, 255);
+
+    nsILookAndFeel * lookAndFeel;
+    if (NS_OK == nsRepository::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+       lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextFieldHeight, txtHeight);
+       lookAndFeel->GetColor(nsILookAndFeel::eColor_TextBackground, textBGColor);
+       lookAndFeel->GetColor(nsILookAndFeel::eColor_TextForeground, textFGColor);
+    }
+
+
+    nsIDeviceContext* dc = mWindow->GetDeviceContext();
+    float t2d;
+    dc->GetTwipsToDevUnits(t2d);
+    nsFont font(DIALOG_FONT, NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
+                NS_FONT_WEIGHT_NORMAL, 0,
+                nscoord(t2d * NSIntPointsToTwips(DIALOG_FONT_SIZE)));
+    NS_RELEASE(dc);
+
+    // create a Dialog
+    //
+    nsRect rect;
+    rect.SetRect(0, 0, 380, 110);  
+
+    nsRepository::CreateInstance(kDialogCID, nsnull, kIDialogIID, (void**)&mDialog);
+    mDialog->Create(mWindow, rect, HandleEvent, NULL);
+    mDialog->SetLabel("Find");
+    mDialog->SetClientData(this);
+
+    nscoord xx = 5;
+    // Create Label
+    rect.SetRect(xx, 8, 75, 24);  
+    nsRepository::CreateInstance(kLabelCID, nsnull, kILabelIID, (void**)&mLabel);
+    mLabel->SetAlignment(eAlign_Right);
+    mLabel->Create(mDialog, rect, HandleEvent, NULL);
+    mLabel->SetLabel("Find what:");
+    mLabel->Show(PR_TRUE);
+    mLabel->SetFont(font);
+    mLabel->SetClientData(this);
+    xx += 75 + 5;
+
+    // Create TextField
+    rect.SetRect(xx, 5, 200, txtHeight);  
+    nsRepository::CreateInstance(kTextFieldCID, nsnull, kITextWidgetIID, (void**)&mTextField);
+    mTextField->Create(mDialog, rect, HandleEvent, NULL);
+    mTextField->SetBackgroundColor(textBGColor);
+    mTextField->SetForegroundColor(textFGColor);
+    mTextField->SetFont(font);
+    mTextField->Show(PR_TRUE);
+    mTextField->SetClientData(this);
+    xx += 200 + 5;
+  
+    nscoord w = 65;
+    nscoord x = 205+80-w;
+    nscoord y = txtHeight + 10;
+    nscoord h = 19;
+
+    // Create Up RadioButton
+    rect.SetRect(x, y, w, h);  
+    nsRepository::CreateInstance(kRadioButtonCID, nsnull, kIRadioButtonIID, (void**)&mUpRadioBtn);
+    mUpRadioBtn->Create(mDialog, rect, HandleEvent, NULL);
+    mUpRadioBtn->SetLabel("Up");
+    mUpRadioBtn->SetFont(font);
+    mUpRadioBtn->Show(PR_TRUE);
+    mUpRadioBtn->SetClientData(this);
+    y += h + 2;
+  
+    // Create Up RadioButton
+    rect.SetRect(x, y, w, h);  
+    nsRepository::CreateInstance(kRadioButtonCID, nsnull, kIRadioButtonIID, (void**)&mDwnRadioBtn);
+    mDwnRadioBtn->Create(mDialog, rect, HandleEvent, NULL);
+    mDwnRadioBtn->SetLabel("Down");
+    mDwnRadioBtn->SetFont(font);
+    mDwnRadioBtn->Show(PR_TRUE);
+    mDwnRadioBtn->SetClientData(this);
+  
+    // Create Match CheckButton
+    rect.SetRect(5, y, 125, 24);  
+    nsRepository::CreateInstance(kCheckButtonCID, nsnull, kICheckButtonIID, (void**)&mMatchCheckBtn);
+    mMatchCheckBtn->Create(mDialog, rect, HandleEvent, NULL);
+    mMatchCheckBtn->SetLabel("Match Case");
+    mMatchCheckBtn->SetFont(font);
+    mMatchCheckBtn->Show(PR_TRUE);
+    mMatchCheckBtn->SetClientData(this);
+
+    mUpRadioBtn->SetState(PR_FALSE);
+    mDwnRadioBtn->SetState(PR_TRUE);
+  
+    // Create Find Next Button
+    rect.SetRect(xx, 5, 75, 24);  
+    nsRepository::CreateInstance(kButtonCID, nsnull, kIButtonIID, (void**)&mFindBtn);
+    mFindBtn->Create(mDialog, rect, HandleEvent, NULL);
+    mFindBtn->SetLabel("Find Next");
+    mFindBtn->SetFont(font);
+    mFindBtn->Show(PR_TRUE);
+    mFindBtn->SetClientData(this);
+  
+    // Create Cancel Button
+    rect.SetRect(xx, 35, 75, 24);  
+    nsRepository::CreateInstance(kButtonCID, nsnull, kIButtonIID, (void**)&mCancelBtn);
+    mCancelBtn->Create(mDialog, rect, HandleEvent, NULL);
+    mCancelBtn->SetLabel("Cancel");
+    mCancelBtn->SetFont(font);
+    mCancelBtn->Show(PR_TRUE);
+    mCancelBtn->SetClientData(this);
+  
   }
-
-  nsIDeviceContext* dc = mWindow->GetDeviceContext();
-  float t2d;
-  dc->GetTwipsToDevUnits(t2d);
-  nsFont font(DIALOG_FONT, NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
-              NS_FONT_WEIGHT_NORMAL, 0,
-              nscoord(t2d * NSIntPointsToTwips(DIALOG_FONT_SIZE)));
-  NS_RELEASE(dc);
-
-  // create a Dialog
-  //
-  nsRect rect;
-  rect.SetRect(0, 0, 380, 110);  
-
-  nsRepository::CreateInstance(kDialogCID, nsnull, kIDialogIID, (void**)&mDialog);
-  mDialog->Create(mWindow, rect, HandleEvent, NULL);
-  mDialog->SetLabel("Find");
-  mDialog->SetClientData(this);
-
-  nscoord xx = 5;
-  // Create Label
-  rect.SetRect(xx, 8, 75, 24);  
-  nsRepository::CreateInstance(kLabelCID, nsnull, kILabelIID, (void**)&mLabel);
-  mLabel->SetAlignment(eAlign_Right);
-  mLabel->Create(mDialog, rect, HandleEvent, NULL);
-  mLabel->SetLabel("Find what:");
-  mLabel->Show(PR_TRUE);
-  mLabel->SetFont(font);
-  mLabel->SetClientData(this);
-  xx += 75 + 5;
-
-  // Create TextField
-  rect.SetRect(xx, 5, 200, 24);  
-  nsRepository::CreateInstance(kTextFieldCID, nsnull, kITextWidgetIID, (void**)&mTextField);
-  mTextField->Create(mDialog, rect, HandleEvent, NULL);
-  mTextField->SetBackgroundColor(NS_RGB(255,255,255));
-  mTextField->SetFont(font);
-  mTextField->Show(PR_TRUE);
-  mTextField->SetClientData(this);
-  xx += 200 + 5;
-  
-  nscoord w = 65;
-  nscoord x = 205+80-w;
-  nscoord y = 29 + 5;
-  nscoord h = 19;
-
-  // Create Up RadioButton
-  rect.SetRect(x, y, w, h);  
-  nsRepository::CreateInstance(kRadioButtonCID, nsnull, kIRadioButtonIID, (void**)&mUpRadioBtn);
-  mUpRadioBtn->Create(mDialog, rect, HandleEvent, NULL);
-  mUpRadioBtn->SetLabel("Up");
-  mUpRadioBtn->SetFont(font);
-  mUpRadioBtn->Show(PR_TRUE);
-  mUpRadioBtn->SetClientData(this);
-  y += h + 2;
-  
-  // Create Up RadioButton
-  rect.SetRect(x, y, w, h);  
-  nsRepository::CreateInstance(kRadioButtonCID, nsnull, kIRadioButtonIID, (void**)&mDwnRadioBtn);
-  mDwnRadioBtn->Create(mDialog, rect, HandleEvent, NULL);
-  mDwnRadioBtn->SetLabel("Down");
-  mDwnRadioBtn->SetFont(font);
-  mDwnRadioBtn->Show(PR_TRUE);
-  mDwnRadioBtn->SetClientData(this);
-  
-  // Create Match CheckButton
-  rect.SetRect(5, y, 125, 24);  
-  nsRepository::CreateInstance(kCheckButtonCID, nsnull, kICheckButtonIID, (void**)&mMatchCheckBtn);
-  mMatchCheckBtn->Create(mDialog, rect, HandleEvent, NULL);
-  mMatchCheckBtn->SetLabel("Match Case");
-  mMatchCheckBtn->SetFont(font);
-  mMatchCheckBtn->Show(PR_TRUE);
-  mMatchCheckBtn->SetClientData(this);
-
-  mUpRadioBtn->SetState(PR_FALSE);
-  mDwnRadioBtn->SetState(PR_TRUE);
-  
-  // Create Find Next Button
-  rect.SetRect(xx, 5, 75, 24);  
-  nsRepository::CreateInstance(kButtonCID, nsnull, kIButtonIID, (void**)&mFindBtn);
-  mFindBtn->Create(mDialog, rect, HandleEvent, NULL);
-  mFindBtn->SetLabel("Find Next");
-  mFindBtn->SetFont(font);
-  mFindBtn->Show(PR_TRUE);
-  mFindBtn->SetClientData(this);
-  
-  // Create Cancel Button
-  rect.SetRect(xx, 35, 75, 24);  
-  nsRepository::CreateInstance(kButtonCID, nsnull, kIButtonIID, (void**)&mCancelBtn);
-  mCancelBtn->Create(mDialog, rect, HandleEvent, NULL);
-  mCancelBtn->SetLabel("Cancel");
-  mCancelBtn->SetFont(font);
-  mCancelBtn->Show(PR_TRUE);
-  mCancelBtn->SetClientData(this);
-  
   mDialog->Show(PR_TRUE);
   mTextField->SetFocus();
+  mTextField->SelectAll();
 
 }
 
