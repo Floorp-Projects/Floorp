@@ -45,6 +45,8 @@ public:
                       nsIStyleContext* aContext,
                       nsIFrame*        aPrevInFlow);
 
+  NS_IMETHOD AdjustZeroWidth();
+
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize);

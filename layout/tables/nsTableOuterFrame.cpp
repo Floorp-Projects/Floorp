@@ -137,18 +137,10 @@ nsresult nsTableOuterFrame::QueryInterface(const nsIID& aIID, void** aInstancePt
   }
 }
 
+// tables change 0 width into auto, trees override this and do nothing
 NS_IMETHODIMP
-nsTableOuterFrame::Init(nsIPresContext*  aPresContext,
-                   nsIContent*           aContent,
-                   nsIFrame*             aParent,
-                   nsIStyleContext*      aContext,
-                   nsIFrame*             aPrevInFlow)
+nsTableOuterFrame::AdjustZeroWidth()
 {
-  nsresult rv = nsHTMLContainerFrame::Init(aPresContext, aContent, aParent, 
-                                           aContext, aPrevInFlow);
-  if (NS_FAILED(rv) || !mStyleContext) return rv;
-
-#if 0
   // a 0 width table becomes auto
   PRBool makeAuto = PR_FALSE;
   nsStylePosition* position = (nsStylePosition*)mStyleContext->GetMutableStyleData(eStyleStruct_Position);
@@ -166,7 +158,21 @@ nsTableOuterFrame::Init(nsIPresContext*  aPresContext,
   if (makeAuto) {
     position->mWidth = nsStyleCoord(eStyleUnit_Auto);
   }
-#endif
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTableOuterFrame::Init(nsIPresContext*  aPresContext,
+                   nsIContent*           aContent,
+                   nsIFrame*             aParent,
+                   nsIStyleContext*      aContext,
+                   nsIFrame*             aPrevInFlow)
+{
+  nsresult rv = nsHTMLContainerFrame::Init(aPresContext, aContent, aParent, 
+                                           aContext, aPrevInFlow);
+  if (NS_FAILED(rv) || !mStyleContext) return rv;
+  AdjustZeroWidth();
+
   return rv;
 }
 
