@@ -41,7 +41,6 @@ static NS_DEFINE_IID(kIAppCoresManagerIID, NS_IDOMAPPCORESMANAGER_IID);
 static NS_DEFINE_IID(kAppCoresManagerCID,  NS_APPCORESMANAGER_CID);
 static NS_DEFINE_IID(kToolkitCoreCID,      NS_TOOLKITCORE_CID);
 static NS_DEFINE_IID(kDOMPropsCoreCID,     NS_DOMPROPSCORE_CID);
-static NS_DEFINE_IID(kPrefsCoreCID,        NS_PREFSCORE_CID);
 static NS_DEFINE_IID(kSignonCoreCID,       NS_SIGNONCORE_CID);
 static NS_DEFINE_IID(kCookieCoreCID,       NS_COOKIECORE_CID);
 static NS_DEFINE_IID(kWalletCoreCID,       NS_WALLETCORE_CID);
@@ -152,7 +151,6 @@ NS_SetupRegistry_1()
   nsComponentManager::RegisterComponent(kAppCoresManagerCID,       NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kToolkitCoreCID,    NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kDOMPropsCoreCID,       NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kPrefsCoreCID,       NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kSignonCoreCID,       NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kCookieCoreCID,       NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kWalletCoreCID,       NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
