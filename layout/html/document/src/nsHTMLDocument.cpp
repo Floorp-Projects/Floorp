@@ -66,6 +66,7 @@
 #include "nsContentList.h"
 #include "nsDOMError.h"
 #include "nsICodebasePrincipal.h"
+#include "nsIAggregatePrincipal.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsJSUtils.h"
 #include "nsDOMPropEnums.h"
@@ -1445,6 +1446,7 @@ NS_IMETHODIMP
 nsHTMLDocument::SetDomain(const nsString& aDomain)
 {
   // Check new domain
+  
   nsAutoString current;
   if (NS_FAILED(GetDomain(current)))
     return NS_ERROR_FAILURE;
@@ -1462,7 +1464,7 @@ nsHTMLDocument::SetDomain(const nsString& aDomain)
     // Error: illegal domain
     return NS_ERROR_DOM_BAD_DOCUMENT_DOMAIN;
   }
-
+  
   // Create new URI
   nsCOMPtr<nsIURI> uri;
   if (NS_FAILED(GetDomainURI(getter_AddRefs(uri))))
@@ -1487,7 +1489,15 @@ nsHTMLDocument::SetDomain(const nsString& aDomain)
                  NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
   if (NS_FAILED(rv)) 
     return NS_ERROR_FAILURE;
-  return securityManager->GetCodebasePrincipal(newURI, &mPrincipal);
+  nsCOMPtr<nsIPrincipal> newCodebase;
+  rv = securityManager->GetCodebasePrincipal(newURI, getter_AddRefs(newCodebase));
+    if (NS_FAILED(rv)) 
+    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIAggregatePrincipal> agg = do_QueryInterface(mPrincipal, &rv);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Principal not an aggregate.");
+  if (NS_FAILED(rv)) 
+    return NS_ERROR_FAILURE;
+  return agg->SetCodebase(newCodebase);
 }
 
 NS_IMETHODIMP    

@@ -34,6 +34,7 @@ interface nsIAggregatePrincipal : nsISupports {
 
     attribute nsIPrincipal certificate;
     attribute nsIPrincipal codebase;
+    readonly attribute nsIPrincipal primaryChild;
 
     void intersect(in nsIPrincipal other);
 };

@@ -24,8 +24,9 @@
 
 /*describes principals which combine one or more principals*/
 #include "nsAggregatePrincipal.h"
+#include "nsIURI.h" //////////////////////
 
-static NS_DEFINE_IID(kICertificatePrincipalIID, NS_ICERTIFICATEPRINCIPAL_IID);
+static NS_DEFINE_IID(kIAggregatePrincipalIID, NS_IAGGREGATEPRINCIPAL_IID);
 
 NS_IMPL_QUERY_INTERFACE4(nsAggregatePrincipal, nsIAggregatePrincipal, 
                          nsICertificatePrincipal, nsICodebasePrincipal, nsIPrincipal)
@@ -33,13 +34,95 @@ NS_IMPL_QUERY_INTERFACE4(nsAggregatePrincipal, nsIAggregatePrincipal,
 NSBASEPRINCIPALS_ADDREF(nsAggregatePrincipal);
 NSBASEPRINCIPALS_RELEASE(nsAggregatePrincipal);
 
+//////////////////////////////////////////////////
+// Methods implementing nsICertificatePrincipal //
+//////////////////////////////////////////////////
+NS_IMETHODIMP 
+nsAggregatePrincipal::GetIssuerName(char** aIssuerName)
+{
+    if (!mCertificate)
+    {
+        aIssuerName = nsnull;
+        return NS_ERROR_FAILURE;
+    }
+
+    nsCOMPtr<nsICertificatePrincipal> certificate = do_QueryInterface(mCertificate);
+    return certificate->GetIssuerName(aIssuerName);
+}
+
+NS_IMETHODIMP 
+nsAggregatePrincipal::GetSerialNumber(char** aSerialNumber)
+{
+    if (!mCertificate)
+    {
+        *aSerialNumber = nsnull;
+        return NS_ERROR_FAILURE;
+    }
+
+    nsCOMPtr<nsICertificatePrincipal> certificate = do_QueryInterface(mCertificate);
+    return certificate->GetSerialNumber(aSerialNumber);
+}
+
+NS_IMETHODIMP 
+nsAggregatePrincipal::GetCompanyName(char** aCompanyName)
+{
+    if (!mCertificate)
+    {
+        *aCompanyName = nsnull;
+        return NS_ERROR_FAILURE;
+    }
+
+    nsCOMPtr<nsICertificatePrincipal> certificate = do_QueryInterface(mCertificate);
+    return certificate->GetCompanyName(aCompanyName);
+}
+
+///////////////////////////////////////////////
+// Methods implementing nsICodebasePrincipal //
+///////////////////////////////////////////////
+NS_IMETHODIMP 
+nsAggregatePrincipal::GetURI(nsIURI** aURI)
+{
+    if (!mCodebase)
+    {
+        *aURI = nsnull;
+        return NS_ERROR_FAILURE;
+    }
+
+    nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(mCodebase);
+    return codebase->GetURI(aURI);
+}
+
+NS_IMETHODIMP 
+nsAggregatePrincipal::GetOrigin(char** aOrigin)
+{
+    if (!mCodebase)
+    {
+        *aOrigin = nsnull;
+        return NS_ERROR_FAILURE;
+    }
+
+    nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(mCodebase);
+    return codebase->GetOrigin(aOrigin);
+}
+
+NS_IMETHODIMP 
+nsAggregatePrincipal::SameOrigin(nsIPrincipal* other, PRBool* result)
+{
+    if (!mCodebase)
+        return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(mCodebase);
+    return codebase->SameOrigin(other, result);
+}
+
+
 ////////////////////////////////////////////////
 // Methods implementing nsIAggregatePrincipal //
 ////////////////////////////////////////////////
 NS_IMETHODIMP 
 nsAggregatePrincipal::GetCertificate(nsIPrincipal** result)
 {
-    *result = mCertificatePrincipal;
+    *result = mCertificate;
     NS_IF_ADDREF(*result);
     return NS_OK;
 }
@@ -47,7 +130,7 @@ nsAggregatePrincipal::GetCertificate(nsIPrincipal** result)
 NS_IMETHODIMP 
 nsAggregatePrincipal::GetCodebase(nsIPrincipal** result)
 {
-    *result = mCodebasePrincipal;
+    *result = mCodebase;
     NS_IF_ADDREF(*result);
     return NS_OK;
 }
@@ -55,36 +138,56 @@ nsAggregatePrincipal::GetCodebase(nsIPrincipal** result)
 NS_IMETHODIMP 
 nsAggregatePrincipal::SetCertificate(nsIPrincipal* aCertificate)
 {
-    if(!aCertificate)
+    nsresult rv;
+    //-- Make sure this really is a certificate principal
+    if (aCertificate)
     {
-        mCertificate = nsnull;
-        mCertificatePrincipal = nsnull;
-        mMasterPrincipal = mCodebasePrincipal;
-        return NS_OK;
+        nsCOMPtr<nsICertificatePrincipal> tempCertificate = 
+            do_QueryInterface(aCertificate, &rv);
+        if (NS_FAILED(rv))
+            return NS_ERROR_FAILURE;
     }
-    if (NS_FAILED(aCertificate->QueryInterface(NS_GET_IID(nsICertificatePrincipal),
-                                               (void**)&mCertificate)))
-        return NS_ERROR_FAILURE;
-    mCertificatePrincipal = aCertificate;
-    mMasterPrincipal = aCertificate;
+
+    //-- If aCertificate is an aggregate, get its underlying certificate
+    nsCOMPtr<nsIAggregatePrincipal> agg = 
+        do_QueryInterface(aCertificate, &rv);
+    if (NS_SUCCEEDED(rv))
+    {
+        nsCOMPtr<nsIPrincipal> underlying;
+        rv = agg->GetCertificate(getter_AddRefs(underlying));
+        if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+        mCertificate = underlying.get();
+    }
+    else
+        mCertificate = aCertificate;
     return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsAggregatePrincipal::SetCodebase(nsIPrincipal* aCodebase)
 {
-    if(!aCodebase)
+    nsresult rv;
+    //-- Make sure this really is a codebase principal
+    if (aCodebase)
     {
-        mCodebase = nsnull;
-        mCodebasePrincipal = nsnull;
-        return NS_OK;
+        nsCOMPtr<nsICodebasePrincipal> tempCodebase = 
+            do_QueryInterface(aCodebase, &rv);
+        if (NS_FAILED(rv))
+            return NS_ERROR_FAILURE;
     }
-    if (NS_FAILED(aCodebase->QueryInterface(NS_GET_IID(nsICodebasePrincipal),
-                                               (void**)&mCodebase)))
-        return NS_ERROR_FAILURE;
-    mCodebasePrincipal = aCodebase;
-    if (!mCertificatePrincipal)
-        mMasterPrincipal = aCodebase;
+
+    //-- If aCodebase is an aggregate, get its underlying codebase
+    nsCOMPtr<nsIAggregatePrincipal> agg = 
+        do_QueryInterface(aCodebase, &rv);
+    if (NS_SUCCEEDED(rv))
+    {
+        nsCOMPtr<nsIPrincipal> underlying;
+        rv = agg->GetCodebase(getter_AddRefs(underlying));
+        if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+        mCodebase = underlying.get();
+    }
+    else
+        mCodebase = aCodebase;
     return NS_OK;
 }
 
@@ -94,7 +197,7 @@ nsAggregatePrincipal::Intersect(nsIPrincipal* other)
     NS_ASSERTION(mCodebase, "Principal without codebase");
 
     PRBool sameCert = PR_FALSE;
-    if (NS_FAILED(mCertificatePrincipal->Equals(other, &sameCert)))
+    if (NS_FAILED(mCertificate->Equals(other, &sameCert)))
         return NS_ERROR_FAILURE;
     if (!sameCert)
         SetCertificate(nsnull);
@@ -107,13 +210,19 @@ nsAggregatePrincipal::Intersect(nsIPrincipal* other)
 NS_IMETHODIMP 
 nsAggregatePrincipal::ToString(char **result)
 {
-    return mMasterPrincipal->ToString(result);
+    nsCOMPtr<nsIPrincipal> PrimaryChild;
+    if (NS_FAILED(GetPrimaryChild(getter_AddRefs(PrimaryChild))))
+        return NS_ERROR_FAILURE;
+    return PrimaryChild->ToString(result);
 }
 
 NS_IMETHODIMP 
 nsAggregatePrincipal::ToUserVisibleString(char **result)
 {
-    return mMasterPrincipal->ToUserVisibleString(result);
+    nsCOMPtr<nsIPrincipal> PrimaryChild;
+    if (NS_FAILED(GetPrimaryChild(getter_AddRefs(PrimaryChild))))
+        return NS_ERROR_FAILURE;
+    return PrimaryChild->ToUserVisibleString(result);
 }
 
 NS_IMETHODIMP
@@ -138,9 +247,9 @@ nsAggregatePrincipal::Equals(nsIPrincipal * other, PRBool * result)
     //-- Two aggregates are equal if both codebase and certificate are equal
     *result = PR_FALSE;
     PRBool certEqual, cbEqual;
-    rv = mCertificatePrincipal->Equals(other, &certEqual);
+    rv = mCertificate->Equals(other, &certEqual);
     if(NS_FAILED(rv)) return rv;
-    rv = mCodebasePrincipal->Equals(other, &cbEqual);
+    rv = mCodebase->Equals(other, &cbEqual);
     if(NS_FAILED(rv)) return rv;
     *result = certEqual && cbEqual;
     return NS_OK;
@@ -149,60 +258,102 @@ nsAggregatePrincipal::Equals(nsIPrincipal * other, PRBool * result)
 NS_IMETHODIMP
 nsAggregatePrincipal::HashValue(PRUint32 *result)
 {
-    return mMasterPrincipal->HashValue(result);
+    nsCOMPtr<nsIPrincipal> PrimaryChild;
+    if (NS_FAILED(GetPrimaryChild(getter_AddRefs(PrimaryChild))))
+        return NS_ERROR_FAILURE;
+    return PrimaryChild->HashValue(result);
 }
 
 NS_IMETHODIMP 
 nsAggregatePrincipal::CanEnableCapability(const char *capability,
                                           PRInt16 *result)
 {
-    return mMasterPrincipal->CanEnableCapability(capability, result);
+    nsCOMPtr<nsIPrincipal> PrimaryChild;
+    if (NS_FAILED(GetPrimaryChild(getter_AddRefs(PrimaryChild))))
+        return NS_ERROR_FAILURE;
+    return PrimaryChild->CanEnableCapability(capability, result);
 }
 
 NS_IMETHODIMP
 nsAggregatePrincipal::SetCanEnableCapability(const char *capability, 
                                              PRInt16 canEnable)
 {
-    return mMasterPrincipal->SetCanEnableCapability(capability, canEnable);
+    nsCOMPtr<nsIPrincipal> PrimaryChild;
+    if (NS_FAILED(GetPrimaryChild(getter_AddRefs(PrimaryChild))))
+        return NS_ERROR_FAILURE;
+    return PrimaryChild->SetCanEnableCapability(capability, canEnable);
 }   
 
 NS_IMETHODIMP
 nsAggregatePrincipal::IsCapabilityEnabled(const char *capability, void *annotation, 
                                           PRBool *result)
 {
-    return mMasterPrincipal->IsCapabilityEnabled(capability, annotation, result);
+    nsCOMPtr<nsIPrincipal> PrimaryChild;
+    if (NS_FAILED(GetPrimaryChild(getter_AddRefs(PrimaryChild))))
+        return NS_ERROR_FAILURE;
+    return PrimaryChild->IsCapabilityEnabled(capability, annotation, result);
 }
 
 NS_IMETHODIMP
 nsAggregatePrincipal::EnableCapability(const char *capability, void **annotation)
 {
-    return mMasterPrincipal->EnableCapability(capability, annotation);
+    nsCOMPtr<nsIPrincipal> PrimaryChild;
+    if (NS_FAILED(GetPrimaryChild(getter_AddRefs(PrimaryChild))))
+        return NS_ERROR_FAILURE;
+    return PrimaryChild->EnableCapability(capability, annotation);
 }
 
 NS_IMETHODIMP
 nsAggregatePrincipal::RevertCapability(const char *capability, void **annotation)
 {
-    return mMasterPrincipal->RevertCapability(capability, annotation);
+    nsCOMPtr<nsIPrincipal> PrimaryChild;
+    if (NS_FAILED(GetPrimaryChild(getter_AddRefs(PrimaryChild))))
+        return NS_ERROR_FAILURE;
+    return PrimaryChild->RevertCapability(capability, annotation);
 }
 
 NS_IMETHODIMP
 nsAggregatePrincipal::DisableCapability(const char *capability, void **annotation)
 {
-    return mMasterPrincipal->DisableCapability(capability, annotation);
+    nsCOMPtr<nsIPrincipal> PrimaryChild;
+    if (NS_FAILED(GetPrimaryChild(getter_AddRefs(PrimaryChild))))
+        return NS_ERROR_FAILURE;
+    return PrimaryChild->DisableCapability(capability, annotation);
 }
 
 NS_IMETHODIMP
 nsAggregatePrincipal::Save(nsSupportsHashtable* aPrincipals, nsIPref *prefs)
 {
-    return mMasterPrincipal->Save(aPrincipals, prefs);
+    nsCOMPtr<nsIPrincipal> PrimaryChild;
+    if (NS_FAILED(GetPrimaryChild(getter_AddRefs(PrimaryChild))))
+        return NS_ERROR_FAILURE;
+    return PrimaryChild->Save(aPrincipals, prefs);
+}
+
+NS_IMETHODIMP
+nsAggregatePrincipal::GetPrimaryChild(nsIPrincipal** aPrimaryChild)
+{
+    //-- If a certificate is present, then that's the PrimaryChild principal.
+    //   Otherwise we use the codebase.
+    if (mCertificate)
+        *aPrimaryChild = mCertificate.get();
+    else if (mCodebase)
+        *aPrimaryChild = mCodebase.get();
+    else
+    {
+        *aPrimaryChild = nsnull;
+        return NS_ERROR_FAILURE;
+    }
+
+    NS_IF_ADDREF(*aPrimaryChild);
+    return NS_OK;
 }
 
 /////////////////////////////////////////////
 // Constructor, Destructor, initialization //
 /////////////////////////////////////////////
 
-nsAggregatePrincipal::nsAggregatePrincipal() : mCertificate(nsnull),
-                                               mCodebase(nsnull)
+nsAggregatePrincipal::nsAggregatePrincipal() 
 {
     NS_INIT_ISUPPORTS();
 }

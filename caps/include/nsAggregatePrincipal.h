@@ -47,8 +47,8 @@ public:
     NS_DEFINE_STATIC_CID_ACCESSOR(NS_AGGREGATEPRINCIPAL_CID)
     NS_DECL_ISUPPORTS
     NS_DECL_NSIAGGREGATEPRINCIPAL
-    NS_FORWARD_NSICERTIFICATEPRINCIPAL(mCertificate->)
-    NS_FORWARD_NSICODEBASEPRINCIPAL(mCodebase->)
+    NS_DECL_NSICERTIFICATEPRINCIPAL
+    NS_DECL_NSICODEBASEPRINCIPAL
 
     NS_IMETHOD 
     ToString(char **result);
@@ -89,21 +89,8 @@ public:
 	virtual ~nsAggregatePrincipal(void);
 
 protected:
-    /* mCertificate and mCodebase have the same lifetime
-       as the nsCOMPtrs mCertificatePrincipal and 
-       mCodebasePrincipal, so they are not refcounted. 
-    */
-    nsCOMPtr<nsIPrincipal> mCertificatePrincipal;
-    nsICertificatePrincipal*  mCertificate;
-    nsCOMPtr<nsIPrincipal> mCodebasePrincipal;
-    nsICodebasePrincipal*  mCodebase;
-
-    /* This is the member principal (normally the certificate)
-       which will handle the privilege checking and persistence
-       behavior of the aggregate.
-    */
-    nsCOMPtr<nsIPrincipal> mMasterPrincipal;
-
+    nsCOMPtr<nsIPrincipal> mCertificate;
+    nsCOMPtr<nsIPrincipal> mCodebase;
 };
 
 #endif // _NS_AGGREGATE_PRINCIPAL_H_

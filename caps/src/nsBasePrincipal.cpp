@@ -278,3 +278,5 @@ nsBasePrincipal::Save(nsSupportsHashtable* aPrincipals, nsIPref *aPref)
     Recycle(streamableForm);
     return rv;
 }
+
+
