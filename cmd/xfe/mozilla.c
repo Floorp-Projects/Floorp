@@ -2097,8 +2097,6 @@ main
   MWContext* biffcontext;
 #endif
 
-  XP_Bool netcasterShown=FALSE;
-
   char versionLocale[32];
 
   versionLocale[0] = 0;
@@ -2452,8 +2450,7 @@ main
     fe_ensure_config_dir_exists(toplevel);
 
 {
-	char buf [1024];
-    int32 profile_age;
+    char buf [1024];
     XP_StatStruct statPrefs;
     int status;
     

@@ -300,7 +300,9 @@ fe_server_handle_command (Display *dpy, Window window, XEvent *event,
 	   */
 	if (strstr(name, "URL"))
 		{
+#ifdef MOZ_MAIL_NEWS
 			const char *url = av[0];
+#endif
 			mail_or_news_required = FALSE;
 			required_type = (MWContextType) (~0);
 #ifdef MOZ_MAIL_NEWS
