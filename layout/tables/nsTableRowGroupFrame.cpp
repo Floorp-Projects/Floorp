@@ -1043,24 +1043,10 @@ nsresult nsTableRowGroupFrame::AdjustSiblingsAfterReflow(nsIPresContext*      aP
     LastChild(lastKidFrame);
   }
 
-#if 0
   // Update our running y-offset to reflect the bottommost child
   nsRect  rect;
-
   lastKidFrame->GetRect(rect);
   aState.y = rect.YMost();
-
-  // Get the bottom margin for the last child frame
-  const nsStyleSpacing* kidSpacing;
-  lastKidFrame->GetStyleData(eStyleStruct_Spacing, (nsStyleStruct *&)kidSpacing);
-  nsMargin margin;
-  kidSpacing->CalcMarginFor(lastKidFrame, margin);
-  if (margin.bottom < 0) {
-    aState.prevMaxNegBottomMargin = -margin.bottom;
-  } else {
-    aState.prevMaxPosBottomMargin = margin.bottom;
-  }
-#endif
 
   return NS_OK;
 }
@@ -1102,12 +1088,14 @@ nsTableRowGroupFrame::Reflow(nsIPresContext*      aPresContext,
     nsIFrame* kidFrame;
     aReflowState.reflowCommand->GetNext(kidFrame);
 
-    // Pass along the reflow command
-    nsRect          oldKidRect;
-    nsReflowMetrics desiredSize(nsnull);
+    // Remember the old rect
+    nsRect  oldKidRect;
     kidFrame->GetRect(oldKidRect);
+
+    // Pass along the reflow command
     // XXX Correctly compute the available space...
-    nsReflowState kidReflowState(kidFrame, aReflowState, aReflowState.maxSize);
+    nsReflowState   kidReflowState(kidFrame, aReflowState, aReflowState.maxSize);
+    nsReflowMetrics desiredSize(nsnull);
     kidFrame->WillReflow(*aPresContext);
     aStatus = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState);
 
@@ -1117,10 +1105,12 @@ nsTableRowGroupFrame::Reflow(nsIPresContext*      aPresContext,
     kidFrame->SizeTo(desiredSize.width, desiredSize.height);
 
     // Adjust the frames that follow...
-    AdjustSiblingsAfterReflow(aPresContext, state, kidFrame,
-                              kidRect.YMost() - oldKidRect.YMost());
+    AdjustSiblingsAfterReflow(aPresContext, state, kidFrame, desiredSize.height -
+                              oldKidRect.height);
 
-    // XXX Compute desired size...
+    // Return of desired size
+    aDesiredSize.width = aReflowState.maxSize.width;
+    aDesiredSize.height = state.y;
 
   } else {
     PRBool reflowMappedOK = PR_TRUE;

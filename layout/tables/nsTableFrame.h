@@ -271,6 +271,11 @@ protected:
                                            PRInt32 aMinCaptionWidth,
                                            PRInt32 mMaxCaptionWidth);
 
+  nsresult AdjustSiblingsAfterReflow(nsIPresContext*        aPresContext,
+                                     InnerTableReflowState& aState,
+                                     nsIFrame*              aKidFrame,
+                                     nscoord                aDeltaY);
+
   nscoord GetTopMarginFor(nsIPresContext* aCX,
                           InnerTableReflowState& aState,
                           const nsMargin& aKidMargin);

@@ -83,8 +83,6 @@ CellData::~CellData()
 
 struct InnerTableReflowState {
 
-  // The body's style molecule
-
   // Our reflow state
   const nsReflowState& reflowState;
 
@@ -1051,6 +1049,47 @@ PRBool nsTableFrame::NeedsReflow(const nsSize& aMaxSize)
   return result;
 }
 
+nsresult nsTableFrame::AdjustSiblingsAfterReflow(nsIPresContext*         aPresContext,
+                                                 InnerTableReflowState& aState,
+                                                 nsIFrame*              aKidFrame,
+                                                 nscoord                aDeltaY)
+{
+  nsIFrame* lastKidFrame = aKidFrame;
+
+  if (aDeltaY != 0) {
+    // Move the frames that follow aKidFrame by aDeltaY
+    nsIFrame* kidFrame;
+
+    aKidFrame->GetNextSibling(kidFrame);
+    while (nsnull != kidFrame) {
+      nsPoint origin;
+  
+      // XXX We can't just slide the child if it has a next-in-flow
+      kidFrame->GetOrigin(origin);
+      origin.y += aDeltaY;
+  
+      // XXX We need to send move notifications to the frame...
+      kidFrame->WillReflow(*aPresContext);
+      kidFrame->MoveTo(origin.x, origin.y);
+
+      // Get the next frame
+      lastKidFrame = kidFrame;
+      kidFrame->GetNextSibling(kidFrame);
+    }
+
+  } else {
+    // Get the last frame
+    LastChild(lastKidFrame);
+  }
+
+  // Update our running y-offset to reflect the bottommost child
+  nsRect  rect;
+  lastKidFrame->GetRect(rect);
+  aState.y = rect.YMost();
+
+  return NS_OK;
+}
+
 // SEC: TODO need to worry about continuing frames prev/next in flow for splitting across pages.
 // SEC: TODO need to keep "first pass done" state, update it when ContentChanged notifications come in
 
@@ -1085,9 +1124,22 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext* aPresContext,
   PreReflowCheck();
 #endif
 
+  // Initialize out parameter
+  if (nsnull != aDesiredSize.maxElementSize) {
+    aDesiredSize.maxElementSize->width = 0;
+    aDesiredSize.maxElementSize->height = 0;
+  }
+
   aStatus = NS_FRAME_COMPLETE;
 
   if (eReflowReason_Incremental == aReflowState.reason) {
+    const nsStyleSpacing* mySpacing = (const nsStyleSpacing*)
+      mStyleContext->GetStyleData(eStyleStruct_Spacing);
+    nsMargin myBorderPadding;
+    mySpacing->CalcBorderPaddingFor(this, myBorderPadding);
+  
+    InnerTableReflowState state(aPresContext, aReflowState, myBorderPadding);
+  
     nsIFrame* target;
     aReflowState.reflowCommand->GetTarget(target);
     if (this == target) {
@@ -1098,6 +1150,10 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext* aPresContext,
     nsIFrame* kidFrame;
     aReflowState.reflowCommand->GetNext(kidFrame);
 
+    // Remember the old rect
+    nsRect  oldKidRect;
+    kidFrame->GetRect(oldKidRect);
+
     // Pass along the reflow command
     nsReflowMetrics desiredSize(nsnull);
     // XXX Correctly compute the available space...
@@ -1105,14 +1161,21 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext* aPresContext,
     kidFrame->WillReflow(*aPresContext);
     aStatus = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState);
 
+    // Resize the row group frame
+    nsRect  kidRect;
+    kidFrame->GetRect(kidRect);
+    kidFrame->SizeTo(desiredSize.width, desiredSize.height);
+
+#if 1
     // XXX For the time being just fall through and treat it like a
     // pass 2 reflow...
     mPass = kPASS_SECOND;
-
-#if 0
+#else
     // XXX Hack...
+    AdjustSiblingsAfterReflow(aPresContext, state, kidFrame, desiredSize.height -
+                              oldKidRect.height);
     aDesiredSize.width = mRect.width;
-    aDesiredSize.height = mRect.height;
+    aDesiredSize.height = state.y + myBorderPadding.top + myBorderPadding.bottom;
     return NS_OK;
 #endif
   }
@@ -1144,6 +1207,17 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext* aPresContext,
   else
   {
     // set aDesiredSize and aMaxElementSize
+  }
+
+  if (gsDebugNT==PR_TRUE) 
+  {
+    if (nsnull!=aDesiredSize.maxElementSize)
+      printf("%p: Inner table reflow complete, returning aDesiredSize = %d,%d and aMaxElementSize=%d,%d\n",
+              this, aDesiredSize.width, aDesiredSize.height, 
+              aDesiredSize.maxElementSize->width, aDesiredSize.maxElementSize->height);
+    else
+      printf("%p: Inner table reflow complete, returning aDesiredSize = %d,%d and NSNULL aMaxElementSize\n",
+              this, aDesiredSize.width, aDesiredSize.height);
   }
 
 #ifdef NS_DEBUG
@@ -1339,6 +1413,13 @@ nsReflowStatus nsTableFrame::ResizeReflowPass2(nsIPresContext* aPresContext,
 
   nsReflowStatus result = NS_FRAME_COMPLETE;
 
+  const nsStyleSpacing* mySpacing = (const nsStyleSpacing*)
+    mStyleContext->GetStyleData(eStyleStruct_Spacing);
+  nsMargin myBorderPadding;
+  mySpacing->CalcBorderPaddingFor(this, myBorderPadding);
+
+  InnerTableReflowState state(aPresContext, aReflowState, myBorderPadding);
+
   // now that we've computed the column  width information, reflow all children
   nsIContent* c = mContent;
   NS_ASSERTION(nsnull != c, "null kid");
@@ -1352,24 +1433,11 @@ nsReflowStatus nsTableFrame::ResizeReflowPass2(nsIPresContext* aPresContext,
   //PreReflowCheck();
 #endif
 
-  // Initialize out parameter
-  if (nsnull != aDesiredSize.maxElementSize) {
-    aDesiredSize.maxElementSize->width = 0;
-    aDesiredSize.maxElementSize->height = 0;
-  }
-
   PRBool        reflowMappedOK = PR_TRUE;
   nsReflowStatus  status = NS_FRAME_COMPLETE;
 
   // Check for an overflow list
   MoveOverflowToChildList();
-
-  const nsStyleSpacing* mySpacing = (const nsStyleSpacing*)
-    mStyleContext->GetStyleData(eStyleStruct_Spacing);
-  nsMargin myBorderPadding;
-  mySpacing->CalcBorderPaddingFor(this, myBorderPadding);
-
-  InnerTableReflowState state(aPresContext, aReflowState, myBorderPadding);
 
   // Reflow the existing frames
   if (nsnull != mFirstChild) {
@@ -1403,6 +1471,9 @@ nsReflowStatus nsTableFrame::ResizeReflowPass2(nsIPresContext* aPresContext,
   }
 
   // Return our size and our status
+  aDesiredSize.width = aReflowState.maxSize.width;
+  aDesiredSize.height = state.y + myBorderPadding.top + myBorderPadding.bottom;
+
 
   if (NS_FRAME_IS_NOT_COMPLETE(status)) {
     // Don't forget to add in the bottom margin from our last child.
@@ -1413,23 +1484,6 @@ nsReflowStatus nsTableFrame::ResizeReflowPass2(nsIPresContext* aPresContext,
       state.y += margin;
     }
   }
-
-  // Return our desired rect
-  aDesiredSize.width = aReflowState.maxSize.width;
-  aDesiredSize.height = state.y + myBorderPadding.top + myBorderPadding.bottom;
-
-  if (gsDebugNT==PR_TRUE) 
-  {
-    if (nsnull!=aDesiredSize.maxElementSize)
-      printf("%p: Inner table reflow complete, returning aDesiredSize = %d,%d and aMaxElementSize=%d,%d\n",
-              this, aDesiredSize.width, aDesiredSize.height, 
-              aDesiredSize.maxElementSize->width, aDesiredSize.maxElementSize->height);
-    else
-      printf("%p: Inner table reflow complete, returning aDesiredSize = %d,%d and NSNULL aMaxElementSize\n",
-              this, aDesiredSize.width, aDesiredSize.height);
-  }
-
-  // SEC: assign our real width and height based on this reflow step and return
 
   mPass = kPASS_UNDEFINED;  // we're no longer in-process
 
