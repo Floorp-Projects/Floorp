@@ -43,7 +43,7 @@
 #include "nsIDirectoryService.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsMorkCID.h"
-#include "nsIMDBFactoryFactory.h"
+#include "nsIMdbFactoryFactory.h"
 #include "nsQuickSort.h"
 #include "nsCRT.h"
 #include "nsString.h"
