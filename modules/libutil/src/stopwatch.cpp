@@ -227,7 +227,9 @@ double Stopwatch::GetCPUTime(){
                                      &ftUser.ftFileTime);
     if (ret != PR_TRUE){
       ret = GetLastError ();
+#ifdef DEBUG
       printf("%s 0x%lx\n"," Error on GetProcessTimes", (int)ret);
+#endif
     }
 
     /*
@@ -262,7 +264,7 @@ void Stopwatch::Print(void) {
    int ms     = int(realt);
 #ifdef MOZ_PERF_METRICS
    RAPTOR_STOPWATCH_TRACE(("Real time %d:%d:%d.%d, CP time %.3f\n", hours, min, sec, ms, CpuTime()));
-#else
+#elif defined(DEBUG)
    printf("Real time %d:%d:%d.%d, CP time %.3f\n", hours, min, sec, ms, CpuTime());
 #endif
 }
