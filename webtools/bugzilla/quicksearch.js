@@ -708,6 +708,9 @@ function QuickSearch ()
 {
     var input = document.f.id.value;
 
+    //remove leading and trailing whitespace
+    input = input.replace(/^[\s]+/,"").replace(/[\s]+$/,"");
+
     if (input == "") 
     {
         //once this _is_ on http://bugzilla.mozilla.org, it should just return;
@@ -733,6 +736,10 @@ function QuickSearch ()
 
 function LoadQuery() {
     var input = document.f.id.value;
+
+    //remove leading and trailing whitespace
+    input = input.replace(/^[\s]+/,"").replace(/[\s]+$/,"");
+
     Search(bugzilla+"query.cgi",input,false);
     return;
 }
