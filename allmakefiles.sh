@@ -71,6 +71,9 @@ dom/src/jsurl/Makefile
 dom/tools/Makefile
 editor/Makefile
 editor/public/Makefile
+expat/Makefile
+expat/xmlparse/Makefile
+expat/xmltok/Makefile
 gfx/Makefile
 gfx/public/Makefile
 gfx/src/Makefile
