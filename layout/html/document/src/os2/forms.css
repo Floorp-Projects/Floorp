@@ -63,8 +63,8 @@ fieldset {
   display: block;
   margin-left: 2px;
   margin-right: 2px;
-  padding: 4px 4px 4px 4px;
-  border: 2px solid;
+  padding: 0.75em 0.625em;
+  border: 2px groove ThreeDFace;
 }
 
 label {
