@@ -8,27 +8,32 @@ nsIMdbFactory *NS_NewIMdbFactory()
 	return new nsIMdbFactory;
 }
 
-   mdb_err
-	   nsIMdbFactory::ThumbToOpenStore( // redeem completed thumb from OpenFileStore()
+mdb_err	   nsIMdbFactory::ThumbToOpenStore( // redeem completed thumb from OpenFileStore()
     nsIMdbEnv* ev, // context
     nsIMdbThumb* ioThumb, // thumb from OpenFileStore() with done status
     nsIMdbStore** acqStore)  // acquire new db store object
 {
+	mdb_err ret = 0;
 	nsIMdbStore *resultStore;
 
 	resultStore = new nsIMdbStore;
 	resultStore->m_fileStream = ioThumb->m_fileStream;
 	resultStore->m_backingFile = ioThumb->m_backingFile;
 	*acqStore = resultStore;
-   return 0;
+	// this means its an existing store that we have to load.
+	if (resultStore->m_fileStream)
+	{
+		ret = resultStore->ReadAll(ev);
+	}
+   return ret;
 }
 
-   mdb_err nsIMdbFactory::CreateNewFileStore( // create a new db with minimal content
-    nsIMdbEnv* ev, // context
-    nsIMdbHeap* ioHeap, // can be nil to cause ev's heap attribute to be used
-    const char* inFilePath, // name of file which should not yet exist
-    const mdbOpenPolicy* inOpenPolicy, // runtime policies for using db
-    nsIMdbStore** acqStore)
+mdb_err nsIMdbFactory::CreateNewFileStore( // create a new db with minimal content
+	nsIMdbEnv* ev, // context
+	nsIMdbHeap* ioHeap, // can be nil to cause ev's heap attribute to be used
+	const char* inFilePath, // name of file which should not yet exist
+	const mdbOpenPolicy* inOpenPolicy, // runtime policies for using db
+	nsIMdbStore** acqStore)
 {
 	printf("new file store for %s\n", inFilePath);
 	nsIMdbStore *resultStore;
@@ -40,42 +45,41 @@ nsIMdbFactory *NS_NewIMdbFactory()
 	return 0;
 }
 
-   mdb_err nsIMdbStore::SmallCommit( // save minor changes if convenient and uncostly
-	   nsIMdbEnv* ev)
-   {
-	   return 0;
-   }
-   mdb_err nsIMdbStore::LargeCommit( // save important changes if at all possible
-    nsIMdbEnv* ev, // context
-    nsIMdbThumb** acqThumb) 
-   {
-	   WriteAll(ev, acqThumb);
-	   return 0;
-   }
+mdb_err nsIMdbStore::SmallCommit( // save minor changes if convenient and uncostly
+   nsIMdbEnv* ev)
+{
+   return 0;
+}
+mdb_err nsIMdbStore::LargeCommit( // save important changes if at all possible
+nsIMdbEnv* ev, // context
+nsIMdbThumb** acqThumb) 
+{
+   WriteAll(ev, acqThumb);
+   return 0;
+}
 
-   mdb_err nsIMdbStore::SessionCommit( // save all changes if large commits delayed
-    nsIMdbEnv* ev, // context
-    nsIMdbThumb** acqThumb)
-   {
-	   WriteAll(ev, acqThumb);
-	   return 0;
-   }
+mdb_err nsIMdbStore::SessionCommit( // save all changes if large commits delayed
+nsIMdbEnv* ev, // context
+nsIMdbThumb** acqThumb)
+{
+   WriteAll(ev, acqThumb);
+   return 0;
+}
 
-   mdb_err
-  nsIMdbStore::CompressCommit( // commit and make db physically smaller if possible
-    nsIMdbEnv* ev, // context
-    nsIMdbThumb** acqThumb)
-   {
-	   WriteAll(ev, acqThumb);
-	   return 0;
-   }
+mdb_err
+nsIMdbStore::CompressCommit( // commit and make db physically smaller if possible
+nsIMdbEnv* ev, // context
+nsIMdbThumb** acqThumb)
+{
+   WriteAll(ev, acqThumb);
+   return 0;
+}
 
 mdb_err
    nsIMdbStore::WriteAll(nsIMdbEnv* ev, // context
 nsIMdbThumb** acqThumb)
 {
-//	nsVoidArray		m_tables;
-//	nsStringArray	m_tokenStrings;
+	*acqThumb = new nsIMdbThumb;
 
 	m_fileStream = new nsIOFileStream(nsFileSpec(m_backingFile));
 	WriteTokenList();
@@ -85,85 +89,125 @@ nsIMdbThumb** acqThumb)
 	return 0;
 }
 
-const char *kStartTokenList = "token list"LINEBREAK;
-const char *kEndTokenList = "end token list"LINEBREAK;
+mdb_err
+   nsIMdbStore::ReadAll(nsIMdbEnv* ev)
+{
+	ReadTokenList();
+	ReadTableList();
+	return 0;
+}
 
-   mdb_err nsIMdbStore::WriteTokenList()
+const char *kStartTokenList = "token list";
+const char *kEndTokenList = "end token list";
+
+mdb_err nsIMdbStore::WriteTokenList()
+{
+   *m_fileStream << kStartTokenList;
+   *m_fileStream << LINEBREAK;
+   PRInt32 i;
+
+   for (i = 0; i < m_tokenStrings.Count(); i++)
    {
-	   *m_fileStream << kStartTokenList;
-	   PRInt32 i;
+	   nsString outputNSString;
+	   char *outputString;
+	   m_tokenStrings.StringAt(i, outputNSString);
+	   outputString = outputNSString.ToNewCString();
 
-	   for (i = 0; i < m_tokenStrings.Count(); i++)
-	   {
-		   nsString outputNSString;
-		   char *outputString;
-		   m_tokenStrings.StringAt(i, outputNSString);
-		   outputString = outputNSString.ToNewCString();
-
-		   *m_fileStream << outputString;
-		   delete [] outputString;
-		   *m_fileStream << LINEBREAK;
-	   }
-	   *m_fileStream << kEndTokenList;
-	   return 0;
+	   *m_fileStream << outputString;
+	   delete [] outputString;
+	   *m_fileStream << LINEBREAK;
    }
+   *m_fileStream << kEndTokenList;
+   *m_fileStream << LINEBREAK;
+   return 0;
+}
 
-   mdb_err nsIMdbStore::ReadTokenList()
+// read in the token strings.
+mdb_err nsIMdbStore::ReadTokenList()
+{
+   char readlineBuffer[100];
+
+   m_tokenStrings.Clear();
+
+   m_fileStream->readline(readlineBuffer, sizeof(readlineBuffer));
+   if (strcmp(readlineBuffer, kStartTokenList))
+	   return -1;
+
+   while (TRUE)
    {
-	   char readlineBuffer[100];
+	   if (m_fileStream->eof())
+		   break;
 
-	   m_tokenStrings.Clear();
+		m_fileStream->readline(readlineBuffer, sizeof(readlineBuffer));
 
-	   m_fileStream->readline(readlineBuffer, sizeof(readlineBuffer));
-	   if (strcmp(readlineBuffer, kStartTokenList))
-		   return -1;
+		if (!strcmp(readlineBuffer, kEndTokenList))
+			break;
 
-	   while (TRUE)
-	   {
-		   if (m_fileStream->eof())
-			   break;
-
-			m_fileStream->readline(readlineBuffer, sizeof(readlineBuffer));
-
-			if (!strcmp(readlineBuffer, kEndTokenList))
-				break;
-
-			nsString unicodeStr(readlineBuffer);
-			m_tokenStrings.AppendString(unicodeStr);
-	   }
-	   return 0;
+		nsString unicodeStr(readlineBuffer);
+		m_tokenStrings.AppendString(unicodeStr);
    }
+   return 0;
+}
 
-const char *kStartTableList = "table list"LINEBREAK;
-const char *kEndTableList = "end table list"LINEBREAK;
+const char *kStartTableList = "table list";
+const char *kEndTableList = "end table list";
 
-   mdb_err nsIMdbStore::WriteTableList()
-   {
-	   *m_fileStream << kStartTableList;
-	   PRInt32 i;
+mdb_err nsIMdbStore::WriteTableList()
+{
+	*m_fileStream << kStartTableList;
+	*m_fileStream << LINEBREAK;
 
-	   for (i = 0; i < m_tables.Count(); i++)
-	   {
-		   nsIMdbTable *table = (nsIMdbTable *) m_tables.ElementAt(i);
-		   table->Write();
-	   }
-	   *m_fileStream << kEndTableList;
-	   return 0;
-   }
+	PRInt32 i;
 
+	*m_fileStream << (long) m_tables.Count();
+	*m_fileStream << LINEBREAK;
+	for (i = 0; i < m_tables.Count(); i++)
+	{
+	   nsIMdbTable *table = (nsIMdbTable *) m_tables.ElementAt(i);
+	   table->Write();
+	}
+	*m_fileStream << kEndTableList;
+	*m_fileStream << LINEBREAK;
+	return 0;
+}
 
-  mdb_err nsIMdbStore::NewTable( // make one new table of specific type
+mdb_err nsIMdbStore::ReadTableList()
+{
+	char readlineBuffer[100];
+
+	m_tables.Clear();
+
+	m_fileStream->readline(readlineBuffer, sizeof(readlineBuffer));
+	if (strcmp(readlineBuffer, kStartTableList))
+		return -1;
+
+	m_fileStream->readline(readlineBuffer, sizeof(readlineBuffer));
+	PRInt32 numTables = atoi(readlineBuffer);
+
+	for (PRInt32 i = 0; i < numTables; i++)
+	{
+		nsIMdbTable *table = new nsIMdbTable(this, /* we don't know the kind yet*/ 0);
+		if (table)
+		{
+			m_tables.AppendElement(table);
+			table->Read();
+		}
+	}
+	return 0;
+}
+
+mdb_err nsIMdbStore::NewTable( // make one new table of specific type
     nsIMdbEnv* ev, // context
     mdb_scope inRowScope,    // row scope for row ids
     mdb_kind inTableKind,    // the type of table to access
     mdb_bool inMustBeUnique, // whether store can hold only one of these
     nsIMdbTable** acqTable)      // acquire scoped collection of rows
 
-  {
-	  *acqTable = new nsIMdbTable(this, inTableKind);
-	  m_tables.AppendElement(*acqTable);
-	  return 0;
-  }
+{
+  *acqTable = new nsIMdbTable(this, inTableKind);
+  m_tables.AppendElement(*acqTable);
+  return 0;
+}
 
 nsIMdbPort::nsIMdbPort() : m_backingFile("")
 {
@@ -180,7 +224,8 @@ nsIMdbTable** acqTable)
 	for (PRInt32 i = 0; i < m_tables.Count(); i++)
 	{
 		nsIMdbTable *table = (nsIMdbTable *) m_tables[i];
-		if (table->m_Oid.mOid_Id == inOid->mOid_Id)
+		if (table->m_Oid.mOid_Id == inOid->mOid_Id 
+			&& table->m_Oid.mOid_Scope == inOid->mOid_Scope)
 		{
 			retTable = table;
 			table->AddRef();
@@ -221,17 +266,23 @@ mdb_err nsIMdbPort::GetTableKind (
 {
 	nsIMdbTable *retTable = NULL;
 
+	mdb_count tableCount = 0;
 	for (PRInt32 i = 0; i < m_tables.Count(); i++)
 	{
 		nsIMdbTable *table = (nsIMdbTable *) m_tables[i];
 		if (table->m_kind == inTableKind)
 		{
-			retTable = table;
-			table->AddRef();
-			*acqTable = table;
-			break;
+			tableCount++;
+			if (!*acqTable)
+			{
+				retTable = table;
+				table->AddRef();
+				*acqTable = table;
+			}
 		}
 	}
+	*outTableCount = tableCount;
+
 	if (! retTable )
 		*acqTable = new nsIMdbTable (this, inTableKind);
 	return 0;
@@ -280,6 +331,10 @@ mdb_err nsIMdbTable::Write()
 	nsIOFileStream *stream = m_owningPort->m_fileStream;
 	*stream << m_kind;
 	*stream << ",";
+	*stream << m_Oid.mOid_Id;
+	*stream << ",";
+	*stream << m_Oid.mOid_Scope;
+	*stream << ",";
 	*stream << (long) m_rows.Count();
 	*stream << LINEBREAK;
 
@@ -287,14 +342,9 @@ mdb_err nsIMdbTable::Write()
 
 	for (i = 0; i < m_rows.Count(); i++)
 	{
-		mdb_pos iteratePos;
-
-		for (iteratePos = 0; iteratePos  < m_rows.Count(); iteratePos++)
-		{
-			nsIMdbRow *row = (nsIMdbRow *) m_rows.ElementAt(iteratePos);
-			if (row)
-				row->Write(stream);
-		}
+		nsIMdbRow *row = (nsIMdbRow *) m_rows.ElementAt(i);
+		if (row)
+			row->Write(stream);
 	}
 	return 0;
 }
@@ -313,15 +363,42 @@ mdb_err nsIMdbTable::Read()
 	for (p = lineBuf; *p; p++)
 	{
 		if (*p == ',')
+		{
+			p++;
+			break;
+		}
+	}
+	PRInt32 oid = atoi(p);
+	m_Oid.mOid_Id = oid;
+
+	for (p; *p; p++)
+	{
+		if (*p == ',')
+		{
+			p++;
+			break;
+		}
+	}
+
+	PRInt32 scope = atoi(p);
+	m_Oid.mOid_Scope = scope;
+
+	for (p; *p; p++)
+	{
+		if (*p == ',')
 			break;
 	}
+
 	PRInt32 numRows = atoi(p + 1);
 
 	for (PRInt32 i = 0; i < numRows; i++)
 	{
 		nsIMdbRow *row = new nsIMdbRow(this, m_owningPort);
 		if (row)
+		{
+			m_rows.AppendElement(row);
 			row->Read(stream);
+		}
 	}
 
 	return 0;
@@ -351,6 +428,10 @@ mdb_err nsIMdbTable::CutRow  ( // make sure the row with inOid is not a member
     nsIMdbEnv* ev, // context
     nsIMdbRow* ioRow) 
 {
+	PRBool found = m_rows.RemoveElement(ioRow);
+	if (found)
+		ioRow->Release();	// is this right? Who deletes the row?
+
 	return 0;
 }
 
@@ -440,6 +521,10 @@ mdb_err nsIMdbRow::Write(nsIOFileStream *stream)
 
 	// write out the number of cells.
 	*stream << (long) m_cells.Count();
+	*stream << ",";
+	*stream << (long) m_oid.mOid_Id;
+	*stream << LINEBREAK;
+
 	for (iteratePos = 0; iteratePos  < m_cells.Count(); iteratePos++)
 	{
 		mdbCellImpl *cell = (mdbCellImpl *) m_cells.ElementAt(iteratePos);
@@ -451,16 +536,40 @@ mdb_err nsIMdbRow::Write(nsIOFileStream *stream)
 
 mdb_err nsIMdbRow::Read(nsIOFileStream *stream)
 {
-	char	numCellsBuf[30];
+	char	line[50];
 
-	stream->readline(numCellsBuf, sizeof(numCellsBuf));
+	stream->readline(line, sizeof(line));
 
-	PRInt32 numCells = atoi(numCellsBuf);
+	PRInt32 numCells = atoi(line);
+
+	char *p;
+	for (p = line; *p; p++)
+	{
+		if (*p == ',')
+			break;
+	}
+
+	m_oid.mOid_Id = atoi(p + 1);
+#ifdef DEBUG
+	printf("reading row id = %d\n", m_oid.mOid_Id);
+#endif
 	for (PRInt32 i = 0; i < numCells; i++)
 	{
 		mdbCellImpl *cell = new mdbCellImpl;
 		if (cell)
+		{
 			cell->Read(stream);
+			m_cells.AppendCell(*cell);
+#ifdef DEBUG
+			nsString columnStr;
+
+			m_owningPort->m_tokenStrings.StringAt(cell->m_column, columnStr);
+			char *column = columnStr.ToNewCString();
+			printf("column = %s value = %s\n", (column) ? column : "", cell->m_cellValue);
+			delete [] column;
+#endif
+
+		}
 	}
 
 	return 0;
@@ -534,6 +643,11 @@ mdb_err nsIMdbFactory::OpenFileStore(class nsIMdbEnv *, nsIMdbHeap* , char const
 	return 0;
 }
 
+mdbCellImpl::mdbCellImpl()
+{
+	m_cellValue = NULL;
+	m_column = 0;
+}
 
 mdbCellImpl::mdbCellImpl(const mdbCellImpl &anotherCell)
 {
@@ -560,7 +674,8 @@ mdb_err mdbCellImpl::Write(nsIOFileStream *stream)
 {
 	*stream << m_column;
 	*stream << "=";
-	*stream << m_cellValue;
+	if (m_cellValue)
+		*stream << m_cellValue;
 	*stream << LINEBREAK;
 	return 0;
 }

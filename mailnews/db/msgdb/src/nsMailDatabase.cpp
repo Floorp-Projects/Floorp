@@ -70,9 +70,9 @@ nsMailDatabase::~nsMailDatabase()
 	// stat file before we open the db, because if we've latered
 	// any messages, handling latered will change time stamp on
 	// folder file.
-	statResult = stat ((const char *) dbPath, &st);
+	statResult = stat ((const char *) summarySpec, &st);
 
-	nsresult err = mailDB->OpenMDB(dbPath, create);
+	nsresult err = mailDB->OpenMDB((const char *) summarySpec, create);
 
 	if (NS_SUCCEEDED(err))
 	{

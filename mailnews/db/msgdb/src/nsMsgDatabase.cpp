@@ -319,6 +319,9 @@ nsresult nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
 					if (ret == NS_OK)
 						ret = InitExistingDB();
 				}
+#ifdef DEBUG_bienvenu
+				DumpContents();
+#endif
 			}
 			else if (create)	// ### need error code saying why open file store failed
 			{
@@ -1331,7 +1334,7 @@ nsresult nsMsgDatabase::RowCellColumnTonsString(nsIMdbRow *hdrRow, mdb_token col
 	nsIMdbCell	*hdrCell;
 
 	err = hdrRow->GetCell(GetEnv(), columnToken, &hdrCell);
-	if (err == NS_OK)
+	if (err == NS_OK && hdrCell)
 	{
 		struct mdbYarn yarn;
 		hdrCell->AliasYarn(GetEnv(), &yarn);
@@ -1351,7 +1354,7 @@ nsresult nsMsgDatabase::RowCellColumnToUInt32(nsIMdbRow *hdrRow, mdb_token colum
 	nsIMdbCell	*hdrCell;
 
 	err = hdrRow->GetCell(GetEnv(), columnToken, &hdrCell);
-	if (err == NS_OK)
+	if (err == NS_OK && hdrCell)
 	{
 		struct mdbYarn yarn;
 		hdrCell->AliasYarn(GetEnv(), &yarn);
@@ -1414,3 +1417,33 @@ nsresult nsMsgDatabase::SetSummaryValid(PRBool valid /* = PR_TRUE */)
 	return NS_OK;
 }
 
+#ifdef DEBUG
+void nsMsgDatabase::DumpContents()
+{
+	nsMsgKeyArray	keys;
+	nsString		author;
+	nsString		subject;
+
+	ListAllKeys(keys);
+	for (PRInt32 index = 0; index < keys.GetSize(); index++)
+	{
+		nsMsgHdr *msgHdr = NULL;
+		nsresult ret = GetMsgHdrForKey(keys[index], &msgHdr);
+		if (ret == NS_OK && msgHdr)
+		{
+			nsMsgKey key;
+
+			msgHdr->GetMessageKey(&key);
+			msgHdr->GetAuthor(author);
+			msgHdr->GetSubject(subject);
+			char *authorStr = author.ToNewCString();
+			char *subjectStr = subject.ToNewCString();
+			// leak nsString return values...
+			printf("hdr key = %ld, author = %s subject = %s\n", key, (authorStr) ? authorStr : "", (subjectStr) ? subjectStr : "");
+			delete [] authorStr;
+			delete [] subjectStr;
+			msgHdr->Release();
+		}
+	}
+}
+#endif

@@ -227,6 +227,8 @@ public:
 #ifdef DEBUG
 	static int		GetNumInCache(void) {return(GetDBCache()->Count());}
 	static void		DumpCache();
+	virtual void	DumpContents();
+
 #endif
 protected:
 	nsDBFolderInfo 	*m_dbFolderInfo;

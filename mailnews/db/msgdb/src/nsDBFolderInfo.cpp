@@ -133,6 +133,13 @@ nsresult nsDBFolderInfo::AddToNewMDB()
 		mdb_err err = store->NewTable(m_mdb->GetEnv(), m_rowScopeToken, 
 			m_tableKindToken, PR_TRUE, &m_mdbTable);
 
+		// make sure the oid of the table is 1.
+		struct mdbOid folderInfoTableOID;
+		folderInfoTableOID.mOid_Id = 1;
+		folderInfoTableOID.mOid_Scope = m_rowScopeToken;
+
+		m_mdbTable->BecomeContent(m_mdb->GetEnv(), &folderInfoTableOID);
+
 		// create the singleton row for the dbFolderInfo.
 		err  = store->NewRowWithOid(m_mdb->GetEnv(), m_rowScopeToken,
 			&gDBFolderInfoOID, &m_mdbRow);
@@ -173,7 +180,7 @@ nsresult nsDBFolderInfo::InitFromExistingDB()
 				{
 					ret = rowCursor->NextRow(m_mdb->GetEnv(), &m_mdbRow, &rowPos);
 					rowCursor->Release();
-					if (ret == NS_OK)
+					if (ret == NS_OK && m_mdbRow)
 					{
 						LoadMemberVariables();
 					}
@@ -335,7 +342,7 @@ NS_IMETHODIMP nsDBFolderInfo::ChangeNumMessages(PRInt32 delta)
 	if (m_numMessages < 0)
 	{
 #ifdef DEBUG_bienvenu
-		XP_ASSERT(FALSE);
+		NS_ASSERTION(FALSE, "num messages can't be < 0");
 #endif
 		m_numMessages = 0;
 	}
@@ -348,7 +355,7 @@ NS_IMETHODIMP nsDBFolderInfo::ChangeNumVisibleMessages(PRInt32 delta)
 	if (m_numVisibleMessages < 0)
 	{
 #ifdef DEBUG_bienvenu
-		XP_ASSERT(FALSE);
+		NS_ASSERTION(FALSE, "num visible messages can't be < 0");
 #endif
 		m_numVisibleMessages = 0;
 	}

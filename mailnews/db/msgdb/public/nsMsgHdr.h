@@ -49,6 +49,8 @@ public:
     NS_IMETHOD SetReferences(const char *references);
     NS_IMETHOD SetCCList(const char *ccList);
     NS_IMETHOD SetRecipients(const char *recipients, PRBool recipientsIsNewsgroup);
+	NS_IMETHOD SetRecipientsArray(const char *names, const char *addresses, PRUint32 numAddresses);
+    NS_IMETHOD SetCCListArray(const char *names, const char *addresses, PRUint32 numAddresses);
     NS_IMETHOD SetAuthor(const char *author);
     NS_IMETHOD SetSubject(const char *subject);
     NS_IMETHOD SetStatusOffset(PRUint32 statusOffset);

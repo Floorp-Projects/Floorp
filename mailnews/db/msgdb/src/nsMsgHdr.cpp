@@ -51,15 +51,19 @@ nsMsgHdr::nsMsgHdr(nsMsgDatabase *db, nsIMdbRow *dbRow)
 	m_mdb = db;
 	if(m_mdb)
 		m_mdb->AddRef();
-	m_mdbRow = dbRow;
 	Init();
+	m_mdbRow = dbRow;
 }
 
 void nsMsgHdr::Init()
 {
 	m_statusOffset = -1;
 	m_messageKey = nsMsgKey_None;
+	m_date = 0;
+	m_messageSize = 0;
 	m_csID = 0;
+	m_flags = 0;
+	m_mdbRow = NULL;
 }
 
 nsMsgHdr::~nsMsgHdr()
@@ -225,9 +229,76 @@ NS_IMETHODIMP nsMsgHdr::SetRecipients(const char *recipients, PRBool rfc822 /* =
 	return SetStringColumn(recipients, m_mdb->m_recipientsColumnToken);
 }
 
+NS_IMETHODIMP nsMsgHdr::SetRecipientsArray(const char *names, const char *addresses, PRUint32 numAddresses)
+{
+	nsresult ret;
+	const char *curName = names;
+	const char *curAddress = addresses;
+	nsString	allRecipients;
+
+	for (int i = 0; i < numAddresses; i++)
+	{
+		if (strlen(curName))
+		{
+			allRecipients = curName;
+			allRecipients += ' ';
+		}
+
+		if (strlen(curAddress))
+		{
+			if (strlen(curName))
+				allRecipients += '<';
+			else
+				allRecipients = "<";
+			allRecipients += curAddress;
+			allRecipients += '>';
+		}
+		curName += strlen(curName) + 1;
+		curAddress += strlen(curAddress) + 1;
+	}
+	char *cstringRecipients = allRecipients.ToNewCString();
+	ret = SetRecipients(cstringRecipients, PR_TRUE);
+	delete [] cstringRecipients;
+	return ret;
+}
+
 NS_IMETHODIMP nsMsgHdr::SetCCList(const char *ccList)
 {
 	return SetStringColumn(ccList, m_mdb->m_ccListColumnToken);
+}
+
+// ###should make helper routine that takes column token!
+NS_IMETHODIMP nsMsgHdr::SetCCListArray(const char *names, const char *addresses, PRUint32 numAddresses)
+{
+	nsresult ret;
+	const char *curName = names;
+	const char *curAddress = addresses;
+	nsString	allRecipients;
+
+	for (int i = 0; i < numAddresses; i++)
+	{
+		if (strlen(curName))
+		{
+			allRecipients += curName;
+			allRecipients += ' ';
+		}
+
+		if (strlen(curAddress))
+		{
+			if (strlen(curName))
+				allRecipients += '<';
+			else
+				allRecipients += "<";
+			allRecipients += curAddress;
+			allRecipients += '>';
+		}
+		curName += strlen(curName) + 1;
+		curAddress += strlen(curAddress) + 1;
+	}
+	char *cstringRecipients = allRecipients.ToNewCString();
+	ret = SetCCList(cstringRecipients);
+	delete [] cstringRecipients;
+	return ret;
 }
 
 
