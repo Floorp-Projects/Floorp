@@ -65,6 +65,8 @@
 #include "nsDOMError.h"
 #include "nsICodebasePrincipal.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsJSUtils.h"
+#include "nsDOMPropEnums.h"
 
 #include "nsIIOService.h"
 #include "nsICookieService.h"
@@ -2532,10 +2534,17 @@ nsHTMLDocument::FindNamedItem(nsIContent *aContent,
 }
 
 NS_IMETHODIMP    
-nsHTMLDocument::NamedItem(const nsString& aName, nsIDOMElement** aReturn)
+nsHTMLDocument::NamedItem(JSContext* cx, jsval* argv, PRUint32 argc, 
+                          jsval* aReturn)
 {
   nsresult result = NS_OK;
   nsIContent *content = nsnull;
+
+  if (argc < 1) 
+    return NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR;
+
+  char *str = JS_GetStringBytes(JS_ValueToString(cx, argv[0]));
+  nsAutoString name(str);
 
   // XXX If we have a parser, it means that we're still loading the
   // document. Since there's still content coming in (and not all
@@ -2543,7 +2552,7 @@ nsHTMLDocument::NamedItem(const nsString& aName, nsIDOMElement** aReturn)
   // a depth-first search rather than build up a table.
   // Obviously, this may be inefficient for large documents.
   if (nsnull != mParser) {
-    content = FindNamedItem(mRootContent, aName, PR_FALSE);
+    content = FindNamedItem(mRootContent, name, PR_FALSE);
   }
   else {
     // If the document has completed loading, we build a table and
@@ -2555,18 +2564,39 @@ nsHTMLDocument::NamedItem(const nsString& aName, nsIDOMElement** aReturn)
       RegisterNamedItems(mRootContent, PR_FALSE);
     }
 
-    char *str = aName.ToNewCString();
     content = (nsIContent *)PL_HashTableLookup(mNamedItems, str);
-    Recycle(str);
   }
+
+  nsIScriptContext *context = (nsIScriptContext*)JS_GetContextPrivate(cx);
+  JSObject *scriptObject;
+  result = GetScriptObject(context, (void **)&scriptObject);
+  if (NS_FAILED(result))
+    return result;
 
   if (nsnull != content) {
-    result = content->QueryInterface(kIDOMElementIID, (void **)aReturn);
+    nsIScriptSecurityManager *sm = nsJSUtils::nsGetSecurityManager(cx, scriptObject);
+    result = sm->CheckScriptAccess(cx, scriptObject, 
+                                   NS_DOM_PROP_NSHTMLFORMELEMENT_NAMEDITEM,
+                                   PR_FALSE);
+    if (NS_SUCCEEDED(result)) {
+      nsCOMPtr<nsIScriptObjectOwner> owner = do_QueryInterface(content);
+      JSObject* obj;
+  
+      result = owner->GetScriptObject(context, (void**)&obj);
+      if (NS_FAILED(result)) {
+        return result;
+      }
+      *aReturn = OBJECT_TO_JSVAL(obj);
+    }
+    return result;
   }
-  else {
-    *aReturn = nsnull;
+  nsISupports *supports;
+  result = this->QueryInterface(NS_GET_IID(nsISupports), (void **) &supports);
+  if (NS_SUCCEEDED(result)) {
+    result = nsJSUtils::nsCallJSScriptObjectGetProperty(supports, cx, scriptObject,
+                                                        argv[0], aReturn);
+    NS_RELEASE(supports);
   }
-
   return result;
 }
 
@@ -2621,29 +2651,15 @@ nsHTMLDocument::Resolve(JSContext *aContext, JSObject *aObj, jsval aID)
   }
 
   nsresult result;
-  nsCOMPtr<nsIDOMElement> element;
-  char* str = JS_GetStringBytes(JSVAL_TO_STRING(aID));
-  nsAutoString name(str); 
   PRBool ret = PR_TRUE;
+  jsval val = 0;
 
-  result = NamedItem(name, getter_AddRefs(element));
-  if (NS_SUCCEEDED(result) && element) {
-    nsCOMPtr<nsIScriptObjectOwner> owner = do_QueryInterface(element);
-    
-    if (owner) {
-      nsCOMPtr<nsIScriptContext> scriptContext;
-      nsLayoutUtils::GetStaticScriptContext(aContext, aObj,
-                                            getter_AddRefs(scriptContext));
-      if (scriptContext) {
-        JSObject* obj;
-        result = owner->GetScriptObject(scriptContext, (void**)&obj);
-        if (NS_SUCCEEDED(result) && obj) {
-          ret = ::JS_DefineProperty(aContext, aObj,
-                                    str, OBJECT_TO_JSVAL(obj),
-                                    nsnull, nsnull, 0);
-        }
-      }
-    }
+  result = NamedItem(aContext, &aID, 1, &val);
+  if (NS_SUCCEEDED(result) && val) {
+    char *str = JS_GetStringBytes(JSVAL_TO_STRING(aID));
+    ret = ::JS_DefineProperty(aContext, aObj,
+                              str, val,
+                              nsnull, nsnull, 0);
   }
   if (NS_FAILED(result)) {
     ret = PR_FALSE;

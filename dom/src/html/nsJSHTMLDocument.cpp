@@ -399,33 +399,12 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (checkNamedItem) {
-    nsIDOMElement* prop;
     nsIDOMNSHTMLDocument* b;
-    nsAutoString name;
-
-    JSString *jsstring = JS_ValueToString(cx, id);
-    if (nsnull != jsstring) {
-      name.SetString(JS_GetStringChars(jsstring));
-    }
-    else {
-      name.SetString("");
-    }
-
+    nsresult result = NS_OK;
     if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
-      nsresult result = NS_OK;
-      result = b->NamedItem(name, &prop);
-      if (NS_SUCCEEDED(result)) {
-        NS_RELEASE(b);
-        if (NULL != prop) {
-            // get the js object
-            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-        }
-        else {
-          return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, obj, id, vp);
-        }
-      }
-      else {
-        NS_RELEASE(b);
+      result = b->NamedItem(cx, &id, 1, vp);
+      NS_RELEASE(b);
+      if (NS_FAILED(result)) {
         return nsJSUtils::nsReportError(cx, obj, result);
       }
     }
@@ -833,8 +812,7 @@ NSHTMLDocumentNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
     return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
   }
 
-  nsIDOMElement* nativeRet;
-  nsAutoString b0;
+  jsval nativeRet;
   // If there's no private data, this must be the prototype, so ignore
   if (!nativeThis) {
     return JS_TRUE;
@@ -849,18 +827,13 @@ NSHTMLDocumentNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (argc < 1) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
-    }
 
-    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
-
-    result = nativeThis->NamedItem(b0, &nativeRet);
+    result = nativeThis->NamedItem(cx, argv+0, argc-0, &nativeRet);
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, obj, result);
     }
 
-    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, obj, rval);
+    *rval = nativeRet;
   }
 
   return JS_TRUE;
@@ -1232,7 +1205,7 @@ static JSFunctionSpec HTMLDocumentMethods[] =
   {"getElementById",          HTMLDocumentGetElementById,     1},
   {"getElementsByName",          HTMLDocumentGetElementsByName,     1},
   {"getSelection",          NSHTMLDocumentGetSelection,     0},
-  {"namedItem",          NSHTMLDocumentNamedItem,     1},
+  {"namedItem",          NSHTMLDocumentNamedItem,     0},
   {"open",          NSHTMLDocumentOpen,     0},
   {"write",          NSHTMLDocumentWrite,     0},
   {"writeln",          NSHTMLDocumentWriteln,     0},

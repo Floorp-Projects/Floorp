@@ -998,21 +998,17 @@ nsHTMLFrameInnerFrame::ReloadURL()
           }
         }
 
-        nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mSubShell));
-        NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
+        nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mSubShell));
+        NS_ENSURE_TRUE(webShell, NS_ERROR_FAILURE);
 
-        rv = webNav->LoadURI(absURL.GetUnicode()); // URL string with a default nsnull value for post Data
-/*
-XXX no webshell to call LoadURL on, webNav doesn't have a referrer arg
         // load with an URL string with a default nsnull value for post Data
-        rv = mWebShell->LoadURL(absURL.GetUnicode(),
-                                nsnull, PR_TRUE,
-                                nsIChannel::LOAD_NORMAL,
-                                0,
-                                nsnull,
-                                referrer.Length() > 0 ? referrer.GetUnicode()
-                                                      : nsnull);
-*/
+        rv = webShell->LoadURL(absURL.GetUnicode(),
+                               nsnull, PR_TRUE,
+                               nsIChannel::LOAD_NORMAL,
+                               0,
+                               nsnull,
+                               referrer.Length() > 0 ? referrer.GetUnicode()
+                                                     : nsnull);
       }
     } else {
       mCreatingViewer = PR_TRUE;
