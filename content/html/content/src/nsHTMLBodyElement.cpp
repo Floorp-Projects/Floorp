@@ -261,22 +261,34 @@ BodyRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
       nsStyleCoord  zero(0);
       PRInt32       count = 0;
       PRInt32       attrCount;
+      float         p2t;
       mPart->GetAttributeCount(attrCount);
+      aPresContext->GetScaledPixelsToTwips(p2t);
 
       if (0 < attrCount) {
-        // if marginwidth/marginheigth is set in our attribute zero out left,right/top,bottom padding
-        // nsBodyFrame::DidSetStyleContext will add the appropriate values to padding 
+        // if marginwidth/marginheigth is set reflect them as 'margin'
         mPart->GetHTMLAttribute(nsHTMLAtoms::marginwidth, value);
         if (eHTMLUnit_Pixel == value.GetUnit()) {
-          styleSpacing->mPadding.SetLeft(zero);
-          styleSpacing->mPadding.SetRight(zero);
+          nscoord marginWidth = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
+          if (marginWidth < 0) {
+            marginWidth = 0;
+          }
+          nsStyleCoord  widthCoord(marginWidth);
+          styleSpacing->mMargin.SetLeft(widthCoord);
+          styleSpacing->mMargin.SetRight(widthCoord);
           count++;
         }
 
         mPart->GetHTMLAttribute(nsHTMLAtoms::marginheight, value);
         if (eHTMLUnit_Pixel == value.GetUnit()) {
-          styleSpacing->mPadding.SetTop(zero);
-          styleSpacing->mPadding.SetBottom(zero);
+          nscoord marginHeight = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
+          if (marginHeight < 0) {
+            marginHeight = 0;
+          }
+      
+          nsStyleCoord  heightCoord(marginHeight);
+          styleSpacing->mMargin.SetTop(heightCoord);
+          styleSpacing->mMargin.SetBottom(heightCoord);
           count++;
         }
 
@@ -287,9 +299,10 @@ BodyRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
         }
       }
 
+      // XXX This is all pretty hokey...
       if (count < 2) {
-        // if marginwidth or marginheight is set in the web shell zero out left,right,top,bottom padding
-        // nsBodyFrame::DidSetStyleContext will add the appropriate values to padding 
+        // if marginwidth or marginheight is set in the web shell reflect them
+        // as margin
         nsISupports* container;
         aPresContext->GetContainer(&container);
         if (nsnull != container) {
@@ -297,13 +310,25 @@ BodyRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
           container->QueryInterface(kIWebShellIID, (void**) &webShell);
           if (nsnull != webShell) {
             PRInt32 marginWidth, marginHeight;
-            webShell->GetMarginWidth(marginWidth);
-            webShell->GetMarginHeight(marginHeight);
-            if ((marginWidth >= 0) || (marginHeight >= 0)) { // nav quirk
-              styleSpacing->mPadding.SetLeft(zero);
-              styleSpacing->mPadding.SetRight(zero);
-              styleSpacing->mPadding.SetTop(zero);
-              styleSpacing->mPadding.SetBottom(zero);
+            webShell->GetMarginWidth(marginWidth);    // -1 indicates not set
+            webShell->GetMarginHeight(marginHeight);  // -1 indicates not set
+            if ((marginWidth >= 0) && (marginHeight < 0)) { // nav quirk 
+              marginHeight = 0;
+            }
+            if ((marginHeight >= 0) && (marginWidth < 0)) { // nav quirk
+              marginWidth = 0;
+            }
+
+            if (marginWidth > 0) {
+              nsStyleCoord widthCoord(NSIntPixelsToTwips(marginWidth, p2t));
+              styleSpacing->mMargin.SetLeft(widthCoord);
+              styleSpacing->mMargin.SetRight(widthCoord);
+            }
+
+            if (marginHeight > 0) {
+              nsStyleCoord heightCoord(NSIntPixelsToTwips(marginHeight, p2t));
+              styleSpacing->mMargin.SetTop(heightCoord);
+              styleSpacing->mMargin.SetBottom(heightCoord);
             }
             NS_RELEASE(webShell);
           }
