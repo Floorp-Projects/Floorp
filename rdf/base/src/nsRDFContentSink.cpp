@@ -1222,10 +1222,15 @@ RDFContentSinkImpl::PushNameSpacesFrom(const nsIParserNode& aNode)
             if (0 == offset) {
                 prefix.Truncate();
 
-                PRUnichar next = k.CharAt(sizeof(kNameSpaceDef)-1);
-                // If the next character is a :, there is a namespace prefix
-                if (':' == next) {
-                    k.Right(prefix, k.Length()-sizeof(kNameSpaceDef));
+                if (k.Length() >= sizeof(kNameSpaceDef)) {
+                    // If the next character is a :, there is a namespace prefix
+                    PRUnichar next = k.CharAt(sizeof(kNameSpaceDef)-1);
+                    if (':' == next) {
+                        k.Right(prefix, k.Length()-sizeof(kNameSpaceDef));
+                    }
+                    else {
+                        continue; // it's not "xmlns:"
+                    }
                 }
 
                 // Get the attribute value (the URI for the namespace)
