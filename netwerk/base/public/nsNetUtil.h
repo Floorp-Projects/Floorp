@@ -89,7 +89,7 @@ NS_OpenURI(nsIChannel* *result,
            nsIIOService* ioService = nsnull,    // pass in nsIIOService to optimize callers
            nsILoadGroup* loadGroup = nsnull,
            nsIInterfaceRequestor* notificationCallbacks = nsnull,
-           nsLoadFlags loadAttributes = nsIChannel::LOAD_NORMAL,
+           nsLoadFlags loadAttributes = nsLoadFlags(nsIChannel::LOAD_NORMAL),
            PRUint32 bufferSegmentSize = 0, 
            PRUint32 bufferMaxSize = 0)
 {
@@ -143,7 +143,7 @@ NS_OpenURI(nsIInputStream* *result,
            nsIIOService* ioService = nsnull,     // pass in nsIIOService to optimize callers
            nsILoadGroup* loadGroup = nsnull,
            nsIInterfaceRequestor* notificationCallbacks = nsnull,
-           nsLoadFlags loadAttributes = nsIChannel::LOAD_NORMAL,
+           nsLoadFlags loadAttributes = nsLoadFlags(nsIChannel::LOAD_NORMAL),
            PRUint32 bufferSegmentSize = 0, 
            PRUint32 bufferMaxSize = 0)
 {
@@ -170,7 +170,7 @@ NS_OpenURI(nsIStreamListener* aConsumer,
            nsIIOService* ioService = nsnull,     // pass in nsIIOService to optimize callers
            nsILoadGroup* loadGroup = nsnull,
            nsIInterfaceRequestor* notificationCallbacks = nsnull,
-           nsLoadFlags loadAttributes = nsIChannel::LOAD_NORMAL,
+           nsLoadFlags loadAttributes = nsLoadFlags(nsIChannel::LOAD_NORMAL),
            PRUint32 bufferSegmentSize = 0, 
            PRUint32 bufferMaxSize = 0)
 {
@@ -321,7 +321,7 @@ NS_NewDownloader(nsIDownloader* *result,
                    PRBool synchronous = PR_FALSE,
                    nsILoadGroup* loadGroup = nsnull,
                    nsIInterfaceRequestor* notificationCallbacks = nsnull,
-                   nsLoadFlags loadAttributes = nsIChannel::LOAD_NORMAL,
+                   nsLoadFlags loadAttributes = nsLoadFlags(nsIChannel::LOAD_NORMAL),
                    PRUint32 bufferSegmentSize = 0, 
                    PRUint32 bufferMaxSize = 0)
 {
@@ -348,7 +348,7 @@ NS_NewStreamLoader(nsIStreamLoader* *result,
                    nsISupports* context = nsnull,
                    nsILoadGroup* loadGroup = nsnull,
                    nsIInterfaceRequestor* notificationCallbacks = nsnull,
-                   nsLoadFlags loadAttributes = nsIChannel::LOAD_NORMAL,
+                   nsLoadFlags loadAttributes = nsLoadFlags(nsIChannel::LOAD_NORMAL),
                    PRUint32 bufferSegmentSize = 0, 
                    PRUint32 bufferMaxSize = 0)
 {
