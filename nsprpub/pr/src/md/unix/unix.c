@@ -133,7 +133,7 @@ _PRInterruptTable _pr_interruptTable[] = {
         0     }
 };
 
-PR_IMPLEMENT(void) _MD_unix_init_running_cpu(_PRCPU *cpu)
+void _MD_unix_init_running_cpu(_PRCPU *cpu)
 {
     PR_INIT_CLIST(&(cpu->md.md_unix.ioQ));
     cpu->md.md_unix.ioq_max_osfd = -1;
@@ -3337,7 +3337,7 @@ void PR_XNotifyAll(void)
 
 #if defined(HAVE_FCNTL_FILE_LOCKING)
 
-PR_IMPLEMENT(PRStatus)
+PRStatus
 _MD_LockFile(PRInt32 f)
 {
     PRInt32 rv;
@@ -3354,7 +3354,7 @@ _MD_LockFile(PRInt32 f)
     return PR_FAILURE;
 }
 
-PR_IMPLEMENT(PRStatus)
+PRStatus
 _MD_TLockFile(PRInt32 f)
 {
     PRInt32 rv;
@@ -3371,7 +3371,7 @@ _MD_TLockFile(PRInt32 f)
     return PR_FAILURE;
 }
 
-PR_IMPLEMENT(PRStatus)
+PRStatus
 _MD_UnlockFile(PRInt32 f)
 {
     PRInt32 rv;
@@ -3392,7 +3392,7 @@ _MD_UnlockFile(PRInt32 f)
 
 #include <sys/file.h>
 
-PR_IMPLEMENT(PRStatus)
+PRStatus
 _MD_LockFile(PRInt32 f)
 {
     PRInt32 rv;
@@ -3403,7 +3403,7 @@ _MD_LockFile(PRInt32 f)
     return PR_FAILURE;
 }
 
-PR_IMPLEMENT(PRStatus)
+PRStatus
 _MD_TLockFile(PRInt32 f)
 {
     PRInt32 rv;
@@ -3414,7 +3414,7 @@ _MD_TLockFile(PRInt32 f)
     return PR_FAILURE;
 }
 
-PR_IMPLEMENT(PRStatus)
+PRStatus
 _MD_UnlockFile(PRInt32 f)
 {
     PRInt32 rv;
@@ -3426,7 +3426,7 @@ _MD_UnlockFile(PRInt32 f)
 }
 #else
 
-PR_IMPLEMENT(PRStatus)
+PRStatus
 _MD_LockFile(PRInt32 f)
 {
     PRInt32 rv;
@@ -3437,7 +3437,7 @@ _MD_LockFile(PRInt32 f)
     return PR_FAILURE;
 }
 
-PR_IMPLEMENT(PRStatus)
+PRStatus
 _MD_TLockFile(PRInt32 f)
 {
     PRInt32 rv;
@@ -3448,7 +3448,7 @@ _MD_TLockFile(PRInt32 f)
     return PR_FAILURE;
 }
 
-PR_IMPLEMENT(PRStatus)
+PRStatus
 _MD_UnlockFile(PRInt32 f)
 {
     PRInt32 rv;
@@ -3460,7 +3460,7 @@ _MD_UnlockFile(PRInt32 f)
 }
 #endif
 
-PR_IMPLEMENT(PRStatus) _MD_gethostname(char *name, PRUint32 namelen)
+PRStatus _MD_gethostname(char *name, PRUint32 namelen)
 {
     PRIntn rv;
 
@@ -3472,7 +3472,7 @@ PR_IMPLEMENT(PRStatus) _MD_gethostname(char *name, PRUint32 namelen)
     return PR_FAILURE;
 }
 
-PR_IMPLEMENT(PRStatus) _MD_getsysinfo(PRSysInfo cmd, char *name, PRUint32 namelen)
+PRStatus _MD_getsysinfo(PRSysInfo cmd, char *name, PRUint32 namelen)
 {
 	struct utsname info;
 
