@@ -202,7 +202,7 @@ basic_nsStdStringWrapper<CharT, TraitsT, AllocatorT>::Assign( const basic_nsARea
   {
     typedef basic_nsStdStringWrapper<CharT, TraitsT, AllocatorT> this_t;
 
-    if ( rhs.Implementation() == Implementation() )
+    if ( SameImplementation(*this, rhs) )
       mRawString = NS_STATIC_CAST(this_t, rhs).mRawString;
     else
       {
