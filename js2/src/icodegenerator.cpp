@@ -1977,6 +1977,9 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                                             case FunctionName::normal:
                                                 thisClass->defineMethod(name, NULL);
                                                 break;
+                                            default:
+                                                NOT_REACHED("unexpected prefix");
+                                                break;
                                             }
                                         }
                                 }
@@ -2073,6 +2076,9 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                                             case FunctionName::normal:
                                                 thisClass->defineMethod(name, new JSFunction(icm));
                                                 break;
+                                            default:
+                                                NOT_REACHED("unexpected prefix");
+                                                break;
                                             }
                                         }
                                 }
@@ -2152,6 +2158,9 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                     break;
                 case FunctionName::normal:
                     mContext->getGlobalObject()->defineFunction(name, icm);
+                    break;
+                default:
+                    NOT_REACHED("unexpected prefix");
                     break;
                 }
             }

@@ -1,0 +1,32 @@
+<class name="D">
+<field name="f" type="Integer" />
+
+<constructor name="D" static>
+    RETURN          R0
+</constructor>
+
+<method name="bar" type="Void">
+<parameter name="a" type="Integer"/>    <!-- in R1 -->
+<parameter name="b" type="Integer"/>    <!-- in R2 -->
+    GENERIC_BINARY_OP       R3, Add, R1, R2
+    SET_SLOT                R0, 0, R3
+    RETURN_VOID
+</method>
+</class>
+
+
+<script>
+    NEW_CLASS       R2, "D"
+    GET_STATIC      R3, "D", 1          <!-- 0'th static is __init__ -->
+                                        <!-- 1st static is D::D constructor -->
+    BIND_THIS       R4, R2, R3
+    CALL            R1, R4, ()
+    LOAD_IMMEDIATE  R2, 1
+    LOAD_IMMEDIATE  R3, 2
+    GET_METHOD      R4, R1, 0           <!-- 0'th method is 'bar' above -->
+    CALL            R5, R4, (R2, R3)
+    GET_SLOT        R2, R1, 0
+    RETURN          R2
+    
+
+</script>
