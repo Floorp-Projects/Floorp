@@ -23,18 +23,15 @@
 * "The RegExp MarkupSPE in demo crashes Mozilla"
 *
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=103087
-* SpiderMonkey crashed while executing this RegExp -
+* SpiderMonkey crashed while executing any of these RegExps -
 */
 //-----------------------------------------------------------------------------
 var UBound = 0;
 var bug = 103087;
-var summary = "Testing that we don't crash on this regexp -";
-var status = '';
-var statusitems = [];
-var actual = '';
-var actualvalues = [];
-var expect= '';
-var expectedvalues = [];
+var summary = "Testing that we don't crash on any of these RegExps -";
+var re = '';
+var lc = '';
+var rc = '';
 
 
 // here's a string to test the regexp on -
@@ -111,35 +108,10 @@ REnames = new Array('AttValSE', 'CDATA_CE', 'CDATA_RE', 'CDATA_SPE', 'CGRef_APE'
 
 
 
-// the reported crash happened on RegExp #24 - the 'MarkupSPE' regexp
-status = inSection(1);
-var re = new RegExp(REstrings[24]);
-re.exec(str);
-actual = RegExp.lastMatch;
-expect = '<html xmlns="http://www.w3.org/1999/xhtml"' + '\n' + 
-         '      xmlns:xlink="http://www.w3.org/XML/XLink/0.9">';
-addThis();
-
-
-// These two steps were also part of the report. Just make sure we don't crash.
-var rc = RegExp.rightContext; 
-re.exec(rc);
-
-
-
 //-----------------------------------------------------------------------------
 test();
 //-----------------------------------------------------------------------------
 
-
-
-function addThis()
-{
-  statusitems[UBound] = status;
-  actualvalues[UBound] = actual;
-  expectedvalues[UBound] = expect;
-  UBound++;
-}
 
 
 function test()
@@ -148,9 +120,22 @@ function test()
   printBugNumber (bug);
   printStatus (summary);
 
-  for (var i=0; i<UBound; i++)
+  /*
+   * Testing that we don't crash on any of these.
+   * The reported crash was i=24 (the 'MarkupSPE' RegExp)
+   */
+  for (var i=0; i<REstrings.length; i++)
   {
-    reportCompare(expectedvalues[i], actualvalues[i], statusitems[i]);
+    status = inSection(i);
+
+    re = new RegExp(REstrings[i]);
+    re.exec(str);
+
+    lc = RegExp.leftContext;
+    re.exec(lc);
+
+    rc = RegExp.rightContext;
+    re.exec(rc);
   }
 
   exitFunc ('test');
