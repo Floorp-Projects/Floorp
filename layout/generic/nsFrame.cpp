@@ -1707,26 +1707,34 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
       rect.x = offsetPoint.x;
       rect.y = offsetPoint.y;
 
-      nscoord ya = rect.y;
-      nscoord yb = rect.y + rect.height;
+      nscoord fromTop = aPoint.y - rect.y;
+      nscoord fromBottom = aPoint.y - rect.y - rect.height;
 
-      PRInt32 yDistance = PR_MIN(abs(ya - aPoint.y),abs(yb - aPoint.y));
+      PRInt32 yDistance;
+      if (fromTop > 0 && fromBottom < 0)
+        yDistance = 0;
+      else
+        yDistance = PR_MIN(abs(fromTop), abs(fromBottom));
 
       if (yDistance <= closestYDistance && rect.width > 0 && rect.height > 0)
       {
-//        if (yDistance < closestYDistance)
-//          closestXDistance = HUGE_DISTANCE;
+        if (yDistance < closestYDistance)
+          closestXDistance = HUGE_DISTANCE;
 
-        nscoord xa = rect.x;
-        nscoord xb = rect.x + rect.width;
+        nscoord fromLeft = aPoint.x - rect.x;
+        nscoord fromRight = aPoint.x - rect.x - rect.width;
 
-        if (xa <= aPoint.x && xb >= aPoint.x && ya <= aPoint.y && yb >= aPoint.y)
+        PRInt32 xDistance;
+        if (fromLeft > 0 && fromRight < 0)
+          xDistance = 0;
+        else
+          xDistance = PR_MIN(abs(fromLeft), abs(fromRight));
+
+        if (xDistance == 0 && yDistance == 0)
         {
           closestFrame = kid;
           break;
         }
-
-        PRInt32 xDistance = PR_MIN(abs(xa - aPoint.x),abs(xb - aPoint.x));
 
         if (xDistance < closestXDistance || (xDistance == closestXDistance && rect.x <= aPoint.x))
         {
