@@ -284,7 +284,7 @@ nsIEnumerator* nsBaseWidget::GetChildren()
 {
   nsIEnumerator* children = nsnull;
 
-  unsigned int itemCount = 0;
+  PRUint32 itemCount = 0;
   mChildren->Count(&itemCount);
   if ( itemCount ) {
     children = new Enumerator(*this);
@@ -479,7 +479,7 @@ nsBaseWidget::Enumerator::Next()
 {
   PRUint32 itemCount = 0;
   mParent.mChildren->Count(&itemCount);
-  if (mCurrentPosition < itemCount -1 )
+  if (mCurrentPosition < ((PRInt32)itemCount) -1 )
     mCurrentPosition ++;
   else
     return NS_ERROR_FAILURE;
@@ -508,7 +508,7 @@ nsBaseWidget::Enumerator::CurrentItem(nsISupports **aItem)
 
   PRUint32 itemCount = 0;
   mParent.mChildren->Count(&itemCount);
-  if (mCurrentPosition >= 0 && mCurrentPosition < itemCount ) {
+  if (mCurrentPosition >= 0 && mCurrentPosition < (PRInt32)itemCount ) {
     nsISupports* widget = mParent.mChildren->ElementAt(mCurrentPosition);
 //  NS_IF_ADDREF(widget);		already addref'd in nsSupportsArray::ElementAt()
     *aItem = widget;
@@ -541,10 +541,10 @@ nsBaseWidget::Enumerator::First()
 NS_IMETHODIMP
 nsBaseWidget::Enumerator::Last()
 {
-  unsigned int itemCount = 0;
+  PRUint32 itemCount = 0;
   mParent.mChildren->Count(&itemCount);
   if ( itemCount ) {
-    mCurrentPosition = itemCount - 1;
+    mCurrentPosition = ((PRInt32)itemCount) - 1;
     return NS_OK;
   }
   else
@@ -558,10 +558,10 @@ nsBaseWidget::Enumerator::Last()
 NS_IMETHODIMP
 nsBaseWidget::Enumerator::IsDone()
 {
-  unsigned int itemCount = 0;
+  PRUint32 itemCount = 0;
   mParent.mChildren->Count(&itemCount);
 
-  if ((mCurrentPosition == (itemCount -1)) || itemCount <= 0 ){ //empty lists always return done
+  if ((mCurrentPosition == (((PRInt32)itemCount)-1)) || ((PRInt32)itemCount) <= 0 ){ //empty lists always return done
     return NS_OK;
   }
   else {
