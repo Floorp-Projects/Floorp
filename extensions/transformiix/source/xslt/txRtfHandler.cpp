@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Jonas Sicking <jonas@sicking.cc>
  *   Peter Van der Beken <peterv@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -37,111 +38,77 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "txRtfHandler.h"
-#include "dom.h"
 
-txRtfHandler::txRtfHandler(Document* aDocument,
-                           txResultTreeFragment* aResultTreeFragment) :
-                               mDocument(aDocument),
-                               mResultTreeFragment(aResultTreeFragment)
+txResultTreeFragment::txResultTreeFragment(txResultBuffer* aBuffer)
+    : mBuffer(aBuffer)
 {
-    NS_ASSERTION(mDocument, "We need a valid document");
-    if (!mDocument)
-        return;
+    NS_IF_ADDREF(mBuffer);
+}
 
-    NS_ASSERTION(mResultTreeFragment, "We need a valid result tree fragment");
-    if (!mResultTreeFragment)
-        return;
+txResultTreeFragment::~txResultTreeFragment()
+{
+}
 
-    Node* fragment = mDocument->createDocumentFragment();
-    NS_ASSERTION(fragment, "Out of memory creating a document fragmen");
-    // XXX ErrorReport: Out of memory
-    mResultTreeFragment->append(fragment);
-    mCurrentNode = fragment;
+ExprResult* txResultTreeFragment::clone()
+{
+    return new txResultTreeFragment(mBuffer);
+}
+
+short txResultTreeFragment::getResultType()
+{
+    return RESULT_TREE_FRAGMENT;
+}
+
+void txResultTreeFragment::stringValue(nsAString& aResult)
+{
+    if (!mBuffer) {
+        return;
+    }
+
+    aResult.Append(mBuffer->mStringValue);
+}
+
+MBool txResultTreeFragment::booleanValue()
+{
+    if (!mBuffer) {
+        return MB_FALSE;
+    }
+
+    return (mBuffer->getLastTransaction() != nsnull);
+}
+
+double txResultTreeFragment::numberValue()
+{
+    return Double::toDouble(mBuffer->mStringValue);
+}
+
+nsresult txResultTreeFragment::flushToHandler(txAXMLEventHandler* aHandler)
+{
+    if (!mBuffer) {
+        return NS_ERROR_FAILURE;
+    }
+
+    return mBuffer->flushToHandler(aHandler);
+}
+
+txRtfHandler::txRtfHandler()
+{
 }
 
 txRtfHandler::~txRtfHandler()
 {
 }
 
-void txRtfHandler::attribute(const nsAString& aName,
-                             const PRInt32 aNsID,
-                             const nsAString& aValue)
+txResultTreeFragment* txRtfHandler::getRTF()
 {
-    Element* element = (Element*)mCurrentNode;
-    NS_ASSERTION(element, "We need an element");
-    if (!element)
-        // XXX ErrorReport: Can't add attributes without element
-        return;
-
-    if (element->hasChildNodes())
-        // XXX ErrorReport: Can't add attributes after adding children
-        return;
-
-    nsAutoString nsURI;
-    mDocument->namespaceIDToURI(aNsID, nsURI);
-    element->setAttributeNS(nsURI, aName, aValue);
-}
-
-void txRtfHandler::characters(const nsAString& aData)
-{
-    NS_ASSERTION(mCurrentNode, "We need a node");
-    if (!mCurrentNode)
-        return;
-
-    Node* text = mDocument->createTextNode(aData);
-    mCurrentNode->appendChild(text);
-}
-
-void txRtfHandler::comment(const nsAString& aData)
-{
-    NS_ASSERTION(mCurrentNode, "We need a node");
-    if (!mCurrentNode)
-        return;
-
-    Node* comment = mDocument->createComment(aData);
-    mCurrentNode->appendChild(comment);
+    mRTF = new txResultTreeFragment(mBuffer);
+    return mRTF;
 }
 
 void txRtfHandler::endDocument()
 {
 }
 
-void txRtfHandler::endElement(const nsAString& aName,
-                              const PRInt32 aNsID)
-{
-    NS_ASSERTION(mCurrentNode, "We need a node");
-    if (!mCurrentNode)
-        return;
-
-    mCurrentNode = mCurrentNode->getParentNode();
-}
-
-void txRtfHandler::processingInstruction(const nsAString& aTarget,
-                                         const nsAString& aData)
-{
-    NS_ASSERTION(mCurrentNode, "We need a node");
-    if (!mCurrentNode)
-        return;
-
-    ProcessingInstruction* pi;
-    pi = mDocument->createProcessingInstruction(aTarget, aData);
-    mCurrentNode->appendChild(pi);
-}
-
 void txRtfHandler::startDocument()
 {
-}
-
-void txRtfHandler::startElement(const nsAString& aName,
-                                const PRInt32 aNsID)
-{
-    NS_ASSERTION(mCurrentNode, "We need a node");
-    if (!mCurrentNode)
-        return;
-
-    nsAutoString nsURI;
-    mDocument->namespaceIDToURI(aNsID, nsURI);
-    Element* element = mDocument->createElementNS(nsURI, aName);
-    mCurrentNode->appendChild(element);
-    mCurrentNode = element;
 }

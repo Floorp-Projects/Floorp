@@ -225,7 +225,7 @@ txXSLTProcessor::copyNode(Node* aSourceNode, ProcessorState* aPs)
             nsAutoString nodeValue;
             aSourceNode->getNodeValue(nodeValue);
             NS_ASSERTION(aPs->mResultHandler, "mResultHandler must not be NULL!");
-            aPs->mResultHandler->characters(nodeValue);
+            aPs->mResultHandler->characters(nodeValue, PR_FALSE);
             break;
         }
     }
@@ -283,7 +283,7 @@ txXSLTProcessor::processAction(Node* aAction,
         if (!XMLUtils::isWhitespace(nodeValue) ||
             XMLUtils::getXMLSpacePreserve(aAction)) {
             NS_ASSERTION(aPs->mResultHandler, "mResultHandler must not be NULL!");
-            aPs->mResultHandler->characters(nodeValue);
+            aPs->mResultHandler->characters(nodeValue, PR_FALSE);
         }
         return;
     }
@@ -744,7 +744,7 @@ txXSLTProcessor::processAction(Node* aAction,
         // XXX ErrorReport, propagate result from ::createNumber
         txXSLTNumber::createNumber(actionElement, aPs, result);
         NS_ASSERTION(aPs->mResultHandler, "mResultHandler must not be NULL!");
-        aPs->mResultHandler->characters(result);
+        aPs->mResultHandler->characters(result, PR_FALSE);
     }
     // xsl:param
     else if (localName == txXSLTAtoms::param) {
@@ -789,20 +789,11 @@ txXSLTProcessor::processAction(Node* aAction,
         XMLDOMUtils::getNodeValue(actionElement, data);
 
         NS_ASSERTION(aPs->mResultHandler, "mResultHandler must not be NULL!");
-        MBool doe = MB_FALSE;
-        if ((aPs->mResultHandler == aPs->mOutputHandler) &&
-            aPs->mOutputHandler->hasDisableOutputEscaping()) {
-            nsAutoString attValue;
-            doe = actionElement->getAttr(txXSLTAtoms::disableOutputEscaping,
-                                         kNameSpaceID_None, attValue) &&
-                  TX_StringEqualsAtom(attValue, txXSLTAtoms::yes);
-        }
-        if (doe) {
-            aPs->mOutputHandler->charactersNoOutputEscaping(data);
-        }
-        else {
-            aPs->mResultHandler->characters(data);
-        }
+        nsAutoString attrValue;
+        PRBool doe = actionElement->getAttr(txXSLTAtoms::disableOutputEscaping,
+                                            kNameSpaceID_None, attrValue) &&
+                     TX_StringEqualsAtom(attrValue, txXSLTAtoms::yes);
+        aPs->mResultHandler->characters(data, doe);
     }
     // xsl:value-of
     else if (localName == txXSLTAtoms::valueOf) {
@@ -825,20 +816,11 @@ txXSLTProcessor::processAction(Node* aAction,
         }
 
         NS_ASSERTION(aPs->mResultHandler, "mResultHandler must not be NULL!");
-        MBool doe = MB_FALSE;
-        if ((aPs->mResultHandler == aPs->mOutputHandler) &&
-            aPs->mOutputHandler->hasDisableOutputEscaping()) {
-            nsAutoString attValue;
-            doe = actionElement->getAttr(txXSLTAtoms::disableOutputEscaping,
-                                         kNameSpaceID_None, attValue) &&
-                  TX_StringEqualsAtom(attValue, txXSLTAtoms::yes);
-        }
-        if (doe) {
-            aPs->mOutputHandler->charactersNoOutputEscaping(value);
-        }
-        else {
-            aPs->mResultHandler->characters(value);
-        }
+        nsAutoString attValue;
+        PRBool doe = actionElement->getAttr(txXSLTAtoms::disableOutputEscaping,
+                                            kNameSpaceID_None, attValue) &&
+                     TX_StringEqualsAtom(attValue, txXSLTAtoms::yes);
+        aPs->mResultHandler->characters(value, doe);
         delete exprResult;
     }
     // xsl:variable
@@ -954,7 +936,7 @@ txXSLTProcessor::processChildrenAsValue(Element* aElement,
                                         MBool aOnlyText,
                                         nsAString& aValue)
 {
-    txXMLEventHandler* previousHandler = aPs->mResultHandler;
+    txAXMLEventHandler* previousHandler = aPs->mResultHandler;
     txTextHandler valueHandler(aValue, aOnlyText);
     aPs->mResultHandler = &valueHandler;
     processChildren(aElement, aPs);
@@ -1009,7 +991,7 @@ txXSLTProcessor::processDefaultTemplate(ProcessorState* aPs,
             nsAutoString nodeValue;
             node->getNodeValue(nodeValue);
             NS_ASSERTION(aPs->mResultHandler, "mResultHandler must not be NULL!");
-            aPs->mResultHandler->characters(nodeValue);
+            aPs->mResultHandler->characters(nodeValue, PR_FALSE);
             break;
         }
         default:
@@ -1550,21 +1532,15 @@ txXSLTProcessor::processVariable(Element* aVariable,
         return expr->evaluate(aPs->getEvalContext());
     }
     if (aVariable->hasChildNodes()) {
-        txResultTreeFragment* rtf = new txResultTreeFragment();
-        if (!rtf)
-            // XXX ErrorReport: Out of memory
-            return 0;
-        txXMLEventHandler* previousHandler = aPs->mResultHandler;
-        Document* rtfDocument = aPs->getRTFDocument();
-        if (!rtfDocument) {
-            rtfDocument = createRTFDocument(eXMLOutput);
-            aPs->setRTFDocument(rtfDocument);
+        txAXMLEventHandler* previousHandler = aPs->mResultHandler;
+
+        txRtfHandler rtfHandler;
+        txResultTreeFragment* rtf = rtfHandler.getRTF();
+        if (!rtf) {
+            // ErrorReport: out of memory
+            return nsnull;
         }
-        NS_ASSERTION(rtfDocument, "No document to create result tree fragments");
-        if (!rtfDocument) {
-            return 0;
-        }
-        txRtfHandler rtfHandler(rtfDocument, rtf);
+
         aPs->mResultHandler = &rtfHandler;
         processChildren(aVariable, aPs);
         NS_ASSERTION(previousHandler, "Setting mResultHandler to NULL!");
@@ -1585,7 +1561,7 @@ txXSLTProcessor::transform(ProcessorState* aPs)
         outputFormat->merge(frame->mOutputFormat);
     }
 
-    txIOutputXMLEventHandler* handler = 0;
+    txAXMLEventHandler* handler = 0;
     rv = aPs->mOutputHandlerFactory->createHandlerWith(aPs->getOutputFormat(),
                                                        &handler);
     if (NS_FAILED(rv)) {
@@ -1656,12 +1632,20 @@ txXSLTProcessor::xslCopyOf(ExprResult* aExprResult, ProcessorState* aPs)
             }
             break;
         }
+        case ExprResult::RESULT_TREE_FRAGMENT:
+        {
+            txResultTreeFragment* rtf = NS_STATIC_CAST(txResultTreeFragment*,
+                                                       aExprResult);
+            NS_ASSERTION(aPs->mResultHandler, "mResultHandler must not be NULL!");
+            rtf->flushToHandler(aPs->mResultHandler);
+            break;
+        }
         default:
         {
             nsAutoString value;
             aExprResult->stringValue(value);
             NS_ASSERTION(aPs->mResultHandler, "mResultHandler must not be NULL!");
-            aPs->mResultHandler->characters(value);
+            aPs->mResultHandler->characters(value, PR_FALSE);
         }
     }
 }

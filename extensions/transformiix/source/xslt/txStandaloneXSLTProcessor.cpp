@@ -51,7 +51,7 @@
 /**
  * Output Handler Factory
  */
-class txStandaloneHandlerFactory : public txIOutputHandlerFactory
+class txStandaloneHandlerFactory : public txAOutputHandlerFactory
 {
 public:
     txStandaloneHandlerFactory(ProcessorState* aPs,
@@ -64,7 +64,7 @@ public:
     {
     };
 
-    TX_DECL_TXIOUTPUTHANDLERFACTORY;
+    TX_DECL_TXAOUTPUTHANDLERFACTORY;
 
 private:
     ProcessorState* mPs;
@@ -73,7 +73,7 @@ private:
 
 nsresult
 txStandaloneHandlerFactory::createHandlerWith(txOutputFormat* aFormat,
-                                              txIOutputXMLEventHandler** aHandler)
+                                              txAOutputXMLEventHandler** aHandler)
 {
     *aHandler = 0;
     switch (aFormat->mMethod) {
@@ -101,7 +101,7 @@ nsresult
 txStandaloneHandlerFactory::createHandlerWith(txOutputFormat* aFormat,
                                               const nsAString& aName,
                                               PRInt32 aNsID,
-                                              txIOutputXMLEventHandler** aHandler)
+                                              txAOutputXMLEventHandler** aHandler)
 {
     *aHandler = 0;
     NS_ASSERTION(aFormat->mMethod != eMethodNotSet,

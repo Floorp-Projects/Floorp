@@ -40,7 +40,6 @@
 #define TRANSFRMX_HTML_OUTPUT_H
 
 #include "txXMLOutput.h"
-#include "txStack.h"
 
 class txHTMLOutput : public txXMLOutput
 {
@@ -54,55 +53,15 @@ public:
     static nsresult init();
     static void shutdown();
 
-    /*
-     * Signals to receive the start of an attribute.
-     *
-     * @param aName the name of the attribute
-     * @param aNsID the namespace ID of the attribute
-     * @param aValue the value of the attribute
-     */
-    void attribute(const nsAString& aName,
-                   const PRInt32 aNsID,
+    void attribute(const nsAString& aName, const PRInt32 aNsID,
                    const nsAString& aValue);
-
-    /*
-     * Signals to receive characters.
-     *
-     * @param aData the characters to receive
-     */
-    void characters(const nsAString& aData);
-
-    /*
-     * Signals to receive the end of an element.
-     *
-     * @param aName the name of the element
-     * @param aNsID the namespace ID of the element
-     */
-    void endElement(const nsAString& aName,
-                    const PRInt32 aNsID);
-
-    /*
-     * Signals to receive a processing instruction.
-     *
-     * @param aTarget the target of the processing instruction
-     * @param aData the data of the processing instruction
-     */
+    void characters(const nsAString& aData, PRBool aDOE);
+    void endElement(const nsAString& aName, const PRInt32 aNsID);
     void processingInstruction(const nsAString& aTarget,
                                const nsAString& aData);
-
-    /*
-     * Signals the start of a document.
-     */
     void startDocument();
-
-    /*
-     * Signals to receive the start of an element.
-     *
-     * @param aName the name of the element
-     * @param aNsID the namespace ID of the element
-     */
-    void startElement(const nsAString& aName,
-                      const PRInt32 aNsID);
+    void startElement(const nsAString& aName, const PRInt32 aNsID);
+    TX_DECL_TXAOUTPUTXMLEVENTHANDLER
 
 private:
     void closeStartTag(MBool aUseEmptyElementShorthand);

@@ -12,12 +12,12 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the TransforMiiX XSLT processor.
+ * The Original Code is TransforMiiX XSLT processor.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2001
- * the Initial Developer. All Rights Reserved.
+ * Jonas Sicking.
+ * Portions created by the Initial Developer are Copyright (C) 2003
+ * Jonas Sicking. All Rights Reserved.
  *
  * Contributor(s):
  *   Jonas Sicking <jonas@sicking.cc>
@@ -37,43 +37,58 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef txRtfHandler_h___
-#define txRtfHandler_h___
+#ifndef txBufferingHandler_h__
+#define txBufferingHandler_h__
 
-#include "txBufferingHandler.h"
-#include "ExprResult.h"
+#include "txXMLEventHandler.h"
+#include "nsString.h"
+#include "nsVoidArray.h"
+#include "nsAutoPtr.h"
 
-class txResultTreeFragment : public ExprResult
+class txOutputTransaction;
+class txCharacterTransaction;
+
+class txResultBuffer
 {
 public:
-    txResultTreeFragment(txResultBuffer* aBuffer);
-    ~txResultTreeFragment();
+    ~txResultBuffer();
 
-    virtual ExprResult* clone();
-    virtual short getResultType();
-    virtual void stringValue(nsAString& aResult);
-    virtual MBool booleanValue();
-    virtual double numberValue();
+    nsrefcnt AddRef()
+    {
+        return ++mRefCnt;
+    }
+    nsrefcnt Release()
+    {
+        if (--mRefCnt == 0) {
+            mRefCnt = 1; //stabilize
+            delete this;
+            return 0;
+        }
+        return mRefCnt;
+    }
 
+    nsresult addTransaction(txOutputTransaction* aTransaction);
     nsresult flushToHandler(txAXMLEventHandler* aHandler);
+    txOutputTransaction* getLastTransaction();
+
+    nsString mStringValue;
 
 private:
-    txResultBuffer* mBuffer;
+    nsVoidArray mTransactions;
+    nsAutoRefCnt mRefCnt;
 };
 
-class txRtfHandler : public txBufferingHandler
+class txBufferingHandler : public txAXMLEventHandler
 {
 public:
-    txRtfHandler();
-    virtual ~txRtfHandler();
+    txBufferingHandler();
+    ~txBufferingHandler();
 
-    txResultTreeFragment* getRTF();
+    TX_DECL_TXAXMLEVENTHANDLER
 
-    void endDocument();
-    void startDocument();
-
-private:
-    txResultTreeFragment* mRTF;
+protected:
+    nsRefPtr<txResultBuffer> mBuffer;
+    PRPackedBool mCanAddAttribute;
 };
 
-#endif /* txRtfHandler_h___ */
+#endif /* txBufferingHandler_h__ */

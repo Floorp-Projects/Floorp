@@ -84,6 +84,7 @@ OBJS = ../base/Double.$(OBJ_SUFFIX) \
   ../xml/parser/txXMLParser.$(OBJ_SUFFIX) \
   ../xslt/txOutputFormat.$(OBJ_SUFFIX) \
   ../xslt/ProcessorState.$(OBJ_SUFFIX) \
+  ../xslt/txBufferingHandler.$(OBJ_SUFFIX) \
   ../xslt/txHTMLOutput.$(OBJ_SUFFIX) \
   ../xslt/txRtfHandler.$(OBJ_SUFFIX) \
   ../xslt/txTextHandler.$(OBJ_SUFFIX) \

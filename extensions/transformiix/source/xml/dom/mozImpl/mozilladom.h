@@ -252,16 +252,6 @@ public:
     ProcessingInstruction* createProcessingInstruction(
                 nsIDOMProcessingInstruction* aPi);
 
-    Node* createComment(const nsAString& aData);
-    Node* createDocumentFragment();
-    ProcessingInstruction* createProcessingInstruction(const nsAString& aTarget,
-                                                       const nsAString& aData);
-    Node* createTextNode(const nsAString& aData);
-
-    // Introduced in DOM Level 2
-    Element* createElementNS(const nsAString& aNamespaceURI,
-                             const nsAString& aTagName);
-
     Element* getElementById(const nsAString& aID);
 
     PRInt32 namespaceURIToID(const nsAString& aNamespaceURI);

@@ -55,7 +55,7 @@ void txTextHandler::attribute(const nsAString& aName,
 {
 }
 
-void txTextHandler::characters(const nsAString& aData)
+void txTextHandler::characters(const nsAString& aData, PRBool aDOE)
 {
     if (mLevel == 0)
         mValue.Append(aData);
