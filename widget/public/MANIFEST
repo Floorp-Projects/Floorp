@@ -5,9 +5,7 @@
 nsIFormatConverter.h
 nsIClipboardOwner.h
 nsIClipboard.h
-nsIDataFlavor.h
 nsITransferable.h
-nsIGenericTransferable.h
 nsIDragService.h
 nsIDragSession.h
 nsui.h
