@@ -334,23 +334,26 @@ nsViewerApp::Exit()
 static void
 PrintHelpInfo(char **argv)
 {
-  fprintf(stderr, "Usage: %s [-p][-q][-md #][-f filename][-d #][-np][-v] [starting url]\n", argv[0]);
-  fprintf(stderr, "\t-p[#]   -- run purify, optionally with a # that says which sample to stop at.  For example, -p2 says to run samples 0, 1, and 2.\n");
-  fprintf(stderr, "\t-q   -- run quantify\n");
-  fprintf(stderr, "\t-md # -- set the crt debug flags to #\n");
-  fprintf(stderr, "\t-d # -- set the delay between URL loads to # (in milliseconds)\n");
-  fprintf(stderr, "\t-r # -- set the repeat count, which is the number of times the URLs will be loaded in batch mode.\n");
-  fprintf(stderr, "\t-f filename -- read a list of URLs from <filename>\n");
-  fprintf(stderr, "\t-o dirname -- create an output file for the frame dump of each page and put it in <dirname>\n\t\t<dirname> must include the trailing <slash> character appropriate for your OS\n");
-  fprintf(stderr, "\t-h # -- the initial height of the viewer window.");
-  fprintf(stderr, "\t-w # -- the initial width of the viewer window.");
-  fprintf(stderr, "\t-C -- enable crawler\n");
-  fprintf(stderr, "\t-R filename -- record pages visited in <filename>\n");
-  fprintf(stderr, "\t-S domain -- add a domain/host that is safe to crawl (e.g. www.netscape.com)\n");
-  fprintf(stderr, "\t-A domain -- add a domain/host that should be avoided (e.g. microsoft.com)\n");
-  fprintf(stderr, "\t-N pages -- set the max # of pages to crawl\n");
-  fprintf(stderr, "\t-np -- no plugins\n");
-  fprintf(stderr, "\t-v -- verbose (debug noise)\n");
+  fprintf(stderr, "Usage: %s [options] [starting url]\n", argv[0]);
+  fprintf(stderr, "-p[#]   -- autload tests 0-#\n");
+  fprintf(stderr, "-q -- jiggles window width after page has autoloaded\n");
+  fprintf(stderr, "-f filename -- read a list of URLs to autoload from <filename>\n");
+  fprintf(stderr, "-d # -- set the delay between autoloads to # (in milliseconds)\n");
+  fprintf(stderr, "-np -- no plugins\n");
+  fprintf(stderr, "-v -- verbose (debug noise)\n");
+  fprintf(stderr, "-r # -- how many times a page is loaded when autoloading\n");
+  fprintf(stderr, "-o dirname -- create an output file for the frame dump of each page\n  and put it in <dirname>. <dirname> must include the trailing\n  <slash> character appropriate for your OS\n");
+  fprintf(stderr, "-rd dirname -- specify a regression directory whose contents are from\n  a previous -o run to compare against with this run\n");
+  fprintf(stderr, "-h # -- the initial height of the viewer window\n");
+  fprintf(stderr, "-w # -- the initial width of the viewer window\n");
+  fprintf(stderr, "-C -- enable crawler\n");
+  fprintf(stderr, "-R filename -- record pages crawled to in <filename>\n");
+  fprintf(stderr, "-S domain -- add a domain/host that is safe to crawl (e.g. www.netscape.com)\n");
+  fprintf(stderr, "-A domain -- add a domain/host that should be avoided (e.g. microsoft.com)\n");
+  fprintf(stderr, "-N pages -- set the max # of pages to crawl\n");
+#if defined(NS_DEBUG) && defined(XP_WIN)
+  fprintf(stderr, "-md # -- set the crt debug flags to #\n");
+#endif
 }
 
 static void
@@ -566,6 +569,11 @@ nsViewerApp::ProcessArguments(int argc, char** argv)
   }
   if (i < argc) {
     mStartURL = argv[i];
+#ifdef XP_UNIX
+    if (argv[i][0] == '/') {
+      mStartURL.Insert("file:", 0);
+    }
+#endif
   }
   return NS_OK;
 }
