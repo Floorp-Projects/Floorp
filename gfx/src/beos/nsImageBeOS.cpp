@@ -293,14 +293,16 @@ NS_IMETHODIMP nsImageBeOS::DrawTile(nsIRenderingContext &aContext, nsDrawingSurf
 			//No tiling, no padding. Tile is bigger than update area - keep it simple
 			if (!padding && validWidth > (aX1-aX0) && validHeight > (aY1-aY0))
 			{
-				view->DrawBitmap(mImage, BRect(0,0, aX1 -aX0, aY1 - aY0), 
-								BRect(aX0, aY0, aX1, aY1));
+				view->DrawBitmap(mImage, 
+						BRect(aSXOffset, aSYOffset, aSXOffset + aTileRect.width - 1, aSYOffset + aTileRect.height - 1),
+						BRect(aTileRect.x, aTileRect.y, aX1 - 1, aY1 - 1));
 			}
 			else
 			{
 				//Creating temporary bitmap, compatible with mImage and  with size of area to be filled with tiles
-				tmpbmp = new BBitmap(BRect(0, 0, aX1 - aX0, aY1 - aY0), mImage->ColorSpace());
+				tmpbmp = new BBitmap(BRect(0, 0, aX1 - aX0 - 1, aY1 - aY0 - 1), mImage->ColorSpace());
 				int32 tmpbitlength = tmpbmp->BitsLength();
+
 				if (!tmpbmp || tmpbitlength == 0)
 				{
 					//Failed. Cleaning things a bit.
@@ -310,34 +312,42 @@ NS_IMETHODIMP nsImageBeOS::DrawTile(nsIRenderingContext &aContext, nsDrawingSurf
 					beosdrawing->ReleaseView();
 					return NS_ERROR_FAILURE;
 				}
-				//Filling tmpbmp with transparent color to preserve padding areas on destination
-				for (uint32 i=0, length = tmpbitlength>>2, *tmpbits = (uint32 *)tmpbmp->Bits(); i < length; ++i)
-					*(tmpbits++) = B_TRANSPARENT_MAGIC_RGBA32;
-	
 				uint8 *dst0 = (uint8 *)tmpbmp->Bits();
 				uint8 *src0 = (uint8 *)mImage->Bits();
 				uint8 *src = src0;
 				uint8 *dst = dst0;
-				int32 srcRowLength = mImage->BytesPerRow();
-				int32 dstRowLength = tmpbmp->BytesPerRow();
+				uint32 srcRowLength = mImage->BytesPerRow();
+				uint32 dstRowLength = tmpbmp->BytesPerRow();
 				ldiv_t rowscan = ldiv(dstRowLength, srcRowLength + aPadX*4);
-				int32 srcColHeight = mImage->BitsLength()/srcRowLength;
-				int32 dstColHeight = tmpbitlength/dstRowLength;
+				uint32 srcColHeight = mImage->BitsLength()/srcRowLength;
+				uint32 dstColHeight = tmpbitlength/dstRowLength;
 				ldiv_t colscan = ldiv(dstColHeight, srcColHeight);
-				int32 copyheight = colscan.quot*srcColHeight + colscan.rem  + aPadY;
-				int32 horshift = srcRowLength + aPadX*4;
-				//Rendering mImage tile to temporary bitmap
-				for (int32 y = 0, yy = 0; y < copyheight; ++y) 
+				uint32 copyheight = colscan.quot*srcColHeight + colscan.rem  + aPadY;
+				uint32 horshift = srcRowLength + aPadX*4;
+				//Filling tmpbmp with transparent color to preserve padding areas on destination 
+				if (0 != mAlphaDepth || padding) 
 				{
-					for (int32 x = 0; x < rowscan.quot; ++x) 
+					//Prefilll first scanline
+					for (uint32 i=0, length = dstRowLength>>2, *tmpbits = (uint32 *)dst0; i < length; ++i)
+						*(tmpbits++) = B_TRANSPARENT_MAGIC_RGBA32;
+					//memcopy scanline to all remaining rows
+					dst = dst0 + dstRowLength;
+					for(uint32 y = 1; y < dstColHeight; ++y, dst += dstRowLength)
+						memcpy(dst, dst0, dstRowLength);
+				}
+				//Rendering mImage tile to temporary bitmap
+				for (uint32 y = 0, yy = 0; y < copyheight; y++) 
+				{					
+					src = src0 + yy*srcRowLength;
+					dst = dst0 + y*dstRowLength;
+					for (int32 x = 0; x < rowscan.quot; x++) 
 					{
 						memcpy(dst,src, srcRowLength);
 						dst += horshift;
 					}
 					if (rowscan.rem)
 						memcpy(dst,src, PR_MIN(srcRowLength,rowscan.rem));
-					src = src0 + yy*srcRowLength;
-					dst = dst0 + y*dstRowLength;
+
 					if (++yy == srcColHeight )
 					{
 						//Height of source reached. Adding vertical paddding.
@@ -346,7 +356,9 @@ NS_IMETHODIMP nsImageBeOS::DrawTile(nsIRenderingContext &aContext, nsDrawingSurf
 					}
 				}
 				//Flushing temporary bitmap to proper area in drawable BView	
-				view->DrawBitmap(tmpbmp, BPoint(aX0, aY0));
+				view->DrawBitmap(tmpbmp, 
+						BRect(aSXOffset, aSYOffset, aSXOffset + aTileRect.width - 1, aSYOffset + aTileRect.height - 1),
+						BRect(aTileRect.x, aTileRect.y, aX1 - 1, aY1 - 1));
 				view->SetDrawingMode(B_OP_COPY);
 			}
 			view->UnlockLooper();
@@ -357,7 +369,6 @@ NS_IMETHODIMP nsImageBeOS::DrawTile(nsIRenderingContext &aContext, nsDrawingSurf
 		delete tmpbmp;	
 	return NS_OK;
 }
-
 nsresult nsImageBeOS::BuildImage(nsDrawingSurface aDrawingSurface) 
 {
 	CreateImage(aDrawingSurface);
