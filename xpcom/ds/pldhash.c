@@ -100,7 +100,7 @@ PL_DHashMatchEntryStub(PLDHashTable *table,
                        const PLDHashEntryHdr *entry,
                        const void *key)
 {
-    PLDHashEntryStub *stub = (PLDHashEntryStub *)entry;
+    const PLDHashEntryStub *stub = (const PLDHashEntryStub *)entry;
 
     return stub->key == key;
 }
@@ -459,8 +459,7 @@ ChangeTable(PLDHashTable *table, int deltaLog2)
                                    oldEntry->keyHash, PL_DHASH_ADD);
             PR_ASSERT(PL_DHASH_ENTRY_IS_FREE(newEntry));
             moveEntry(table, oldEntry, newEntry);
-            newEntry->keyHash =
-                oldEntry->keyHash | (newEntry->keyHash & COLLISION_FLAG);
+            newEntry->keyHash = oldEntry->keyHash;
         }
         oldEntryAddr += entrySize;
     }
