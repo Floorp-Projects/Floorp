@@ -564,6 +564,9 @@ interface nsIXPConnect : nsISupports
     getWrappedNativePrototype(in JSContextPtr aJSContext,
                               in JSObjectPtr  aScope,
                               in nsIClassInfo aClassInfo);
+
+    attribute PRBool collectGarbageOnMainThreadOnly;
+    attribute PRBool deferReleasesUntilAfterGarbageCollection;
 };
 
 

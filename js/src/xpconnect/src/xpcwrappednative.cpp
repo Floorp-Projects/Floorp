@@ -492,9 +492,24 @@ XPCWrappedNative::~XPCWrappedNative()
         map->Remove(this);
     }
 
-    NS_IF_RELEASE(mIdentity);
+    if(mIdentity)
+    {
+        XPCJSRuntime* rt = GetRuntime();
+        if(rt && rt->GetDeferReleases() && rt->GetDoingFinalization())
+        {
+            if(!rt->DeferredRelease(mIdentity))
+            {
+                NS_WARNING("Failed to append object for deferred release.");
+                // XXX do we really want to do this???
+                NS_RELEASE(mIdentity);
+            }
+        }
+        else
+        {
+            NS_RELEASE(mIdentity);
+        }
+    }
 }
-
 
 // This is factored out so that it can be called publicly 
 // static
@@ -695,14 +710,8 @@ XPCWrappedNative::Init(XPCCallContext& ccx, JSObject* parent,
 
 #ifdef XPC_CHECK_WRAPPER_THREADSAFETY
     if(!gMainThread)
-    {
-        nsCOMPtr<nsIThread> t;
-        nsresult rv;
-        rv = nsIThread::GetMainThread(getter_AddRefs(t));
-        NS_ASSERTION(NS_SUCCEEDED(rv) && t, "bad");
-        rv = t->GetPRThread(&gMainThread);
-        NS_ASSERTION(NS_SUCCEEDED(rv) && gMainThread, "bad");
-    }
+        gMainThread = nsXPConnect::GetMainThread();
+
     mThread = PR_GetCurrentThread();
 
     if(HasProto() && GetProto()->ClassIsMainThreadOnly() && gMainThread != mThread)
@@ -839,7 +848,25 @@ XPCWrappedNative::FlatJSObjectFinalized(JSContext *cx, JSObject *obj)
             nsISupports* obj = to->GetNative();
             if(obj)
             {
-                obj->Release();
+#ifdef XP_WIN
+                // Try to detect free'd pointer
+                NS_ASSERTION(*(int*)obj != 0xdddddddd, "bad pointer!");
+                NS_ASSERTION(*(int*)obj != 0,          "bad pointer!");
+#endif
+                XPCJSRuntime* rt = GetRuntime();
+                if(rt && rt->GetDeferReleases())
+                {
+                    if(!rt->DeferredRelease(obj))
+                    {
+                        NS_WARNING("Failed to append object for deferred release.");
+                        // XXX do we really want to do this???
+                        obj->Release();
+                    }
+                }
+                else
+                {
+                    obj->Release();
+                }
                 to->SetNative(nsnull);
             }
 
@@ -849,6 +876,14 @@ XPCWrappedNative::FlatJSObjectFinalized(JSContext *cx, JSObject *obj)
 
     //This makes IsValid return false from now on...
     mFlatJSObject = nsnull;
+
+    NS_ASSERTION(mIdentity, "bad pointer!");
+#ifdef XP_WIN
+    // Try to detect free'd pointer
+    NS_ASSERTION(*(int*)mIdentity != 0xdddddddd, "bad pointer!");
+    NS_ASSERTION(*(int*)mIdentity != 0,          "bad pointer!");
+#endif
+
     Release();
 }
 

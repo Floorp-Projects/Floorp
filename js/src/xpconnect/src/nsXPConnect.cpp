@@ -41,7 +41,8 @@
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsXPConnect,nsIXPConnect,nsISupportsWeakReference)
 
 nsXPConnect* nsXPConnect::gSelf = nsnull;
-JSBool nsXPConnect::gOnceAliveNowDead = JS_FALSE;
+JSBool       nsXPConnect::gOnceAliveNowDead = JS_FALSE;
+PRThread*    nsXPConnect::gMainThread = nsnull;
 
 const char XPC_CONTEXT_STACK_CONTRACTID[] = "@mozilla.org/js/xpc/ContextStack;1";
 const char XPC_RUNTIME_CONTRACTID[]       = "@mozilla.org/js/xpc/RuntimeService;1";
@@ -314,6 +315,19 @@ nsXPConnect::CreateRuntime()
     return nsnull != mRuntime;
 }
 
+// static 
+PRThread* 
+nsXPConnect::FindMainThread()
+{
+    nsCOMPtr<nsIThread> t;
+    nsresult rv;
+    rv = nsIThread::GetMainThread(getter_AddRefs(t));
+    NS_ASSERTION(NS_SUCCEEDED(rv) && t, "bad");
+    rv = t->GetPRThread(&gMainThread);
+    NS_ASSERTION(NS_SUCCEEDED(rv) && gMainThread, "bad");
+    return gMainThread;
+}
+
 /***************************************************************************/
 /***************************************************************************/
 // nsIXPConnect interface methods...
@@ -412,7 +426,10 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
     // voodoo to fixup scoping and parenting...
 
     JS_SetParent(aJSContext, globalJSObj, nsnull);
-    JS_SetGlobalObject(aJSContext, globalJSObj);
+
+    JSObject* oldGlobal = JS_GetGlobalObject(aJSContext);
+    if(!oldGlobal || oldGlobal == tempGlobal)
+        JS_SetGlobalObject(aJSContext, globalJSObj);
 
     if(aCallJS_InitStandardClasses &&
        !JS_InitStandardClasses(aJSContext, globalJSObj))
@@ -667,12 +684,10 @@ NS_IMETHODIMP
 nsXPConnect::SetDefaultSecurityManager(nsIXPCSecurityManager *aManager,
                                        PRUint16 flags)
 {
-#if 1
     NS_IF_ADDREF(aManager);
     NS_IF_RELEASE(mDefaultSecurityManager);
     mDefaultSecurityManager = aManager;
     mDefaultSecurityManagerFlags = flags;
-#endif
     return NS_OK;
 }
 
@@ -897,6 +912,52 @@ nsXPConnect::GetWrappedNativePrototype(JSContext * aJSContext,
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
     NS_ADDREF(holder);
+    return NS_OK;
+}
+
+/* attribute PRBool collectGarbageOnMainThreadOnly; */
+NS_IMETHODIMP 
+nsXPConnect::GetCollectGarbageOnMainThreadOnly(PRBool *aCollectGarbageOnMainThreadOnly)
+{
+    XPCJSRuntime* rt = GetRuntime();
+    if(!rt)
+        return UnexpectedFailure(NS_ERROR_FAILURE);
+
+    *aCollectGarbageOnMainThreadOnly = rt->GetMainThreadOnlyGC();
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsXPConnect::SetCollectGarbageOnMainThreadOnly(PRBool aCollectGarbageOnMainThreadOnly)
+{
+    XPCJSRuntime* rt = GetRuntime();
+    if(!rt)
+        return UnexpectedFailure(NS_ERROR_FAILURE);
+
+    rt->SetMainThreadOnlyGC(aCollectGarbageOnMainThreadOnly);
+    return NS_OK;
+}
+
+/* attribute PRBool deferReleasesUntilAfterGarbageCollection; */
+NS_IMETHODIMP 
+nsXPConnect::GetDeferReleasesUntilAfterGarbageCollection(PRBool *aDeferReleasesUntilAfterGarbageCollection)
+{
+    XPCJSRuntime* rt = GetRuntime();
+    if(!rt)
+        return UnexpectedFailure(NS_ERROR_FAILURE);
+
+    *aDeferReleasesUntilAfterGarbageCollection = rt->GetDeferReleases();
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsXPConnect::SetDeferReleasesUntilAfterGarbageCollection(PRBool aDeferReleasesUntilAfterGarbageCollection)
+{
+    XPCJSRuntime* rt = GetRuntime();
+    if(!rt)
+        return UnexpectedFailure(NS_ERROR_FAILURE);
+
+    rt->SetDeferReleases(aDeferReleasesUntilAfterGarbageCollection);
     return NS_OK;
 }
 
