@@ -101,8 +101,6 @@ nsBaseWidget::nsBaseWidget()
 #ifdef DEBUG
     debug_RegisterPrefCallbacks();
 #endif
-
-    NS_NewISupportsArray(getter_AddRefs(mChildren));
 }
 
 
@@ -118,9 +116,9 @@ nsBaseWidget::~nsBaseWidget()
   printf("WIDGETS- = %d\n", gNumWidgets);
 #endif
 
-	NS_IF_RELEASE(mMenuListener);
-	NS_IF_RELEASE(mToolkit);
-	NS_IF_RELEASE(mContext);
+  NS_IF_RELEASE(mMenuListener);
+  NS_IF_RELEASE(mToolkit);
+  NS_IF_RELEASE(mContext);
   if (mOriginalBounds)
     delete mOriginalBounds;
 }
@@ -288,9 +286,7 @@ nsIEnumerator* nsBaseWidget::GetChildren()
 {
   nsIEnumerator* children = nsnull;
 
-  PRUint32 itemCount = 0;
-  mChildren->Count(&itemCount);
-  if ( itemCount ) {
+  if (mChildren.Count()) {
     children = new Enumerator(*this);
     NS_IF_ADDREF(children);
   }
@@ -305,7 +301,7 @@ nsIEnumerator* nsBaseWidget::GetChildren()
 //-------------------------------------------------------------------------
 void nsBaseWidget::AddChild(nsIWidget* aChild)
 {
-  mChildren->AppendElement(aChild);
+  mChildren.AppendObject(aChild);
 }
 
 
@@ -316,7 +312,7 @@ void nsBaseWidget::AddChild(nsIWidget* aChild)
 //-------------------------------------------------------------------------
 void nsBaseWidget::RemoveChild(nsIWidget* aChild)
 {
-  mChildren->RemoveElement(aChild);
+  mChildren.RemoveObject(aChild);
 }
 
 
@@ -327,35 +323,34 @@ void nsBaseWidget::RemoveChild(nsIWidget* aChild)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsBaseWidget::SetZIndex(PRInt32 aZIndex)
 {
-	mZIndex = aZIndex;
+  mZIndex = aZIndex;
 
-	// reorder this child in its parent's list.
-	nsBaseWidget* parent = NS_STATIC_CAST(nsBaseWidget*, GetParent());
-	if (nsnull != parent) {
-		parent->mChildren->RemoveElement(this);
-		PRUint32 childCount, index;
-		if (NS_SUCCEEDED(parent->mChildren->Count(&childCount))) {
-			for (index = 0; index < childCount; index++) {
-				nsCOMPtr<nsIWidget> childWidget;
-				if (NS_SUCCEEDED(parent->mChildren->QueryElementAt(index, NS_GET_IID(nsIWidget), (void**)getter_AddRefs(childWidget)))) {
-					PRInt32 childZIndex;
-					if (NS_SUCCEEDED(childWidget->GetZIndex(&childZIndex))) {
-						if (aZIndex < childZIndex) {
-							parent->mChildren->InsertElementAt(this, index);
-							PlaceBehind(eZPlacementBelow, childWidget, PR_FALSE);
-							break;
-						}
-					}
-				}
-			}
-			// were we added to the list?
-			if (index == childCount) {
-				parent->mChildren->AppendElement(this);
-			}
-		}
-		NS_RELEASE(parent);
-	}
-	return NS_OK;
+  // reorder this child in its parent's list.
+  nsBaseWidget* parent = NS_STATIC_CAST(nsBaseWidget*, GetParent());
+  if (parent) {
+    parent->mChildren.RemoveObject(this);
+    PRInt32 childCount = parent->mChildren.Count();
+    PRInt32 index;
+    // XXXbz would a binary search for the right insertion point be
+    // better?  How long does this list get?
+    for (index = 0; index < childCount; index++) {
+      nsIWidget* childWidget = parent->mChildren[index];
+      PRInt32 childZIndex;
+      if (NS_SUCCEEDED(childWidget->GetZIndex(&childZIndex))) {
+        if (aZIndex < childZIndex) {
+          parent->mChildren.InsertObjectAt(this, index);
+          PlaceBehind(eZPlacementBelow, childWidget, PR_FALSE);
+          break;
+        }
+      }
+    }
+    // were we added to the list?
+    if (index == childCount) {
+      parent->mChildren.AppendObject(this);
+    }
+    NS_RELEASE(parent);
+  }
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -365,8 +360,8 @@ NS_IMETHODIMP nsBaseWidget::SetZIndex(PRInt32 aZIndex)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsBaseWidget::GetZIndex(PRInt32* aZIndex)
 {
-	*aZIndex = mZIndex;
-	return NS_OK;
+  *aZIndex = mZIndex;
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -1007,18 +1002,18 @@ case _value: eventName.AssignWithConversion(_name) ; break
 //////////////////////////////////////////////////////////////
 struct PrefPair
 {
-	char * name;
-	PRBool value;
+  char * name;
+  PRBool value;
 };
 
 static PrefPair debug_PrefValues[] =
 {
-	{ "nglayout.debug.crossing_event_dumping", PR_FALSE },
-	{ "nglayout.debug.event_dumping", PR_FALSE },
-	{ "nglayout.debug.invalidate_dumping", PR_FALSE },
-	{ "nglayout.debug.motion_event_dumping", PR_FALSE },
-	{ "nglayout.debug.paint_dumping", PR_FALSE },
-	{ "nglayout.debug.paint_flashing", PR_FALSE }
+  { "nglayout.debug.crossing_event_dumping", PR_FALSE },
+  { "nglayout.debug.event_dumping", PR_FALSE },
+  { "nglayout.debug.invalidate_dumping", PR_FALSE },
+  { "nglayout.debug.motion_event_dumping", PR_FALSE },
+  { "nglayout.debug.paint_dumping", PR_FALSE },
+  { "nglayout.debug.paint_flashing", PR_FALSE }
 };
 
 static PRUint32 debug_NumPrefValues = 
@@ -1035,7 +1030,7 @@ static PRBool debug_GetBoolPref(nsIPref * aPrefs,const char * aPrefName)
 
   if (aPrefs)
   {
-	  aPrefs->GetBoolPref(aPrefName,&value);
+    aPrefs->GetBoolPref(aPrefName,&value);
   }
 
   return value;
@@ -1048,10 +1043,10 @@ nsBaseWidget::debug_GetCachedBoolPref(const char * aPrefName)
 
   for (PRUint32 i = 0; i < debug_NumPrefValues; i++)
   {
-	  if (NS_ConvertASCIItoUCS2(debug_PrefValues[i].name).EqualsWithConversion(aPrefName))
-	  {
-		  return debug_PrefValues[i].value;
-	  }
+    if (NS_ConvertASCIItoUCS2(debug_PrefValues[i].name).EqualsWithConversion(aPrefName))
+    {
+      return debug_PrefValues[i].value;
+    }
   }
 
   return PR_FALSE;
@@ -1063,12 +1058,12 @@ static void debug_SetCachedBoolPref(const char * aPrefName,PRBool aValue)
 
   for (PRUint32 i = 0; i < debug_NumPrefValues; i++)
   {
-	  if (NS_ConvertASCIItoUCS2(debug_PrefValues[i].name).EqualsWithConversion(aPrefName))
-	  {
-		  debug_PrefValues[i].value = aValue;
+    if (NS_ConvertASCIItoUCS2(debug_PrefValues[i].name).EqualsWithConversion(aPrefName))
+    {
+      debug_PrefValues[i].value = aValue;
 
-		  return;
-	  }
+      return;
+    }
   }
 
   NS_ASSERTION(PR_FALSE, "cmon, this code is not reached dude.");
@@ -1081,64 +1076,64 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 debug_PrefChangedCallback(const char * name,void * closure)
 {
 
-	nsIPref * prefs = nsnull;
-	
-	nsresult rv = nsServiceManager::GetService(kPrefCID, 
-											   NS_GET_IID(nsIPref),
-											   (nsISupports**) &prefs);
-	
-	NS_ASSERTION(NS_SUCCEEDED(rv),"Could not get prefs service.");
-	NS_ASSERTION(nsnull != prefs,"Prefs services is null.");
+  nsIPref * prefs = nsnull;
+  
+  nsresult rv = nsServiceManager::GetService(kPrefCID, 
+                         NS_GET_IID(nsIPref),
+                         (nsISupports**) &prefs);
+  
+  NS_ASSERTION(NS_SUCCEEDED(rv),"Could not get prefs service.");
+  NS_ASSERTION(nsnull != prefs,"Prefs services is null.");
 
-	if (NS_SUCCEEDED(rv))
-	{
-		PRBool value = PR_FALSE;
+  if (NS_SUCCEEDED(rv))
+  {
+    PRBool value = PR_FALSE;
 
-		prefs->GetBoolPref(name,&value);
+    prefs->GetBoolPref(name,&value);
 
-		debug_SetCachedBoolPref(name,value);
+    debug_SetCachedBoolPref(name,value);
 
-		NS_RELEASE(prefs);
-	}
+    NS_RELEASE(prefs);
+  }
 
-   	return 0;
+     return 0;
 }
 //////////////////////////////////////////////////////////////
 /* static */ void
 debug_RegisterPrefCallbacks()
 {
-	static PRBool once = PR_TRUE;
+  static PRBool once = PR_TRUE;
 
-	if (once)
-	{
-		once = PR_FALSE;
+  if (once)
+  {
+    once = PR_FALSE;
 
-		nsIPref * prefs = nsnull;
+    nsIPref * prefs = nsnull;
 
-		nsresult rv = nsServiceManager::GetService(kPrefCID, 
-												   NS_GET_IID(nsIPref),
-												   (nsISupports**) &prefs);
-		
-		NS_ASSERTION(NS_SUCCEEDED(rv),"Could not get prefs service.");
-		NS_ASSERTION(nsnull != prefs,"Prefs services is null.");
+    nsresult rv = nsServiceManager::GetService(kPrefCID, 
+                           NS_GET_IID(nsIPref),
+                           (nsISupports**) &prefs);
+    
+    NS_ASSERTION(NS_SUCCEEDED(rv),"Could not get prefs service.");
+    NS_ASSERTION(nsnull != prefs,"Prefs services is null.");
 
-		if (NS_SUCCEEDED(rv))
-		{
-			for (PRUint32 i = 0; i < debug_NumPrefValues; i++)
-			{
-				// Initialize the pref values
-				debug_PrefValues[i].value = 
-					debug_GetBoolPref(prefs,debug_PrefValues[i].name);
+    if (NS_SUCCEEDED(rv))
+    {
+      for (PRUint32 i = 0; i < debug_NumPrefValues; i++)
+      {
+        // Initialize the pref values
+        debug_PrefValues[i].value = 
+          debug_GetBoolPref(prefs,debug_PrefValues[i].name);
 
-				// Register callbacks for when these change
-				prefs->RegisterCallback(debug_PrefValues[i].name,
-										debug_PrefChangedCallback,
-										NULL);
-			}
-			
-			NS_RELEASE(prefs);
-		}
-	}
+        // Register callbacks for when these change
+        prefs->RegisterCallback(debug_PrefValues[i].name,
+                    debug_PrefChangedCallback,
+                    NULL);
+      }
+      
+      NS_RELEASE(prefs);
+    }
+  }
 }
 //////////////////////////////////////////////////////////////
 static PRInt32
@@ -1327,9 +1322,7 @@ nsBaseWidget::Enumerator::~Enumerator()
 NS_IMETHODIMP
 nsBaseWidget::Enumerator::Next()
 {
-  PRUint32 itemCount = 0;
-  mParent.mChildren->Count(&itemCount);
-  if (mCurrentPosition < itemCount - 1 )
+  if (mCurrentPosition < mParent.mChildren.Count() - 1 )
     mCurrentPosition ++;
   else
     return NS_ERROR_FAILURE;
@@ -1356,13 +1349,8 @@ nsBaseWidget::Enumerator::CurrentItem(nsISupports **aItem)
   if (!aItem)
     return NS_ERROR_NULL_POINTER;
 
-  PRUint32 itemCount = 0;
-  mParent.mChildren->Count(&itemCount);
-  if ( mCurrentPosition < itemCount ) {
-    nsISupports* widget = mParent.mChildren->ElementAt(mCurrentPosition);
-//  NS_IF_ADDREF(widget);		already addref'd in nsSupportsArray::ElementAt()
-    *aItem = widget;
-  }
+  if ( mCurrentPosition < mParent.mChildren.Count() )
+    NS_IF_ADDREF(*aItem = mParent.mChildren[mCurrentPosition]);
   else
     return NS_ERROR_FAILURE;
 
@@ -1374,9 +1362,7 @@ nsBaseWidget::Enumerator::CurrentItem(nsISupports **aItem)
 NS_IMETHODIMP
 nsBaseWidget::Enumerator::First()
 {
-  PRUint32 itemCount = 0;
-  mParent.mChildren->Count(&itemCount);
-  if ( itemCount ) {
+  if ( mParent.mChildren.Count() ) {
     mCurrentPosition = 0;
     return NS_OK;
   }
@@ -1391,8 +1377,7 @@ nsBaseWidget::Enumerator::First()
 NS_IMETHODIMP
 nsBaseWidget::Enumerator::Last()
 {
-  PRUint32 itemCount = 0;
-  mParent.mChildren->Count(&itemCount);
+  PRInt32 itemCount = mParent.mChildren.Count();
   if ( itemCount ) {
     mCurrentPosition = itemCount - 1;
     return NS_OK;
@@ -1408,8 +1393,7 @@ nsBaseWidget::Enumerator::Last()
 NS_IMETHODIMP
 nsBaseWidget::Enumerator::IsDone()
 {
-  PRUint32 itemCount = 0;
-  mParent.mChildren->Count(&itemCount);
+  PRInt32 itemCount = mParent.mChildren.Count();
 
   if ((mCurrentPosition == itemCount-1) || (itemCount == 0) ){ //empty lists always return done
     return NS_OK;

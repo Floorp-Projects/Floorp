@@ -604,14 +604,10 @@ NS_IMETHODIMP nsWidget::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
     gtk_widget_set_usize(mWidget, aWidth, aHeight);
 
   ResetInternalVisibility();
-  PRUint32 childCount, index;
-  if (NS_SUCCEEDED(mChildren->Count(&childCount))) {
-    for (index = 0; index < childCount; index++) {
-      nsCOMPtr<nsIWidget> childWidget;
-      if (NS_SUCCEEDED(mChildren->QueryElementAt(index, NS_GET_IID(nsIWidget), (void**)getter_AddRefs(childWidget)))) {
-        NS_STATIC_CAST(nsWidget*, NS_STATIC_CAST(nsIWidget*, childWidget.get()))->ResetInternalVisibility();
-      }
-    }
+  PRInt32 childCount = mChildren.Count();
+  PRInt32 index;
+  for (index = 0; index < childCount; index++) {
+    NS_STATIC_CAST(nsWidget*, mChildren[index])->ResetInternalVisibility();
   }
 
   return NS_OK;

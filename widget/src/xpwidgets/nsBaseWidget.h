@@ -47,7 +47,7 @@
 #include "nsIAppShell.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
-#include "nsISupportsArray.h"
+#include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsGUIEvent.h"
 
@@ -177,7 +177,7 @@ protected:
   nsSizeMode        mSizeMode;
 
     // keep the list of children
-  nsCOMPtr<nsISupportsArray> mChildren;
+  nsCOMArray<nsIWidget> mChildren;
     
   class Enumerator : public nsIBidirectionalEnumerator {
   public:
@@ -190,7 +190,7 @@ protected:
     NS_DECL_NSIBIDIRECTIONALENUMERATOR
 
   private:
-    PRUint32       mCurrentPosition;
+    PRInt32       mCurrentPosition;
     nsBaseWidget& mParent;
   };
   friend class Enumerator;
