@@ -34,13 +34,14 @@
 const kDebug               = false;
 const kBundleURI         = "chrome://messenger/locale/offlineStartup.properties";
 const kOfflineStartupPref = "offline.startup_state";
-var gShuttingDown = false;
+var gStartingUp = true;
 var gOfflineStartupMode; //0 = remember last state, 1 = ask me, 2 == online, 3 == offline
 const kRememberLastState = 0;
 const kAskForOnlineState = 1;
+const kAlwaysOffline = 3;
 ////////////////////////////////////////////////////////////////////////
 //
-//   nsOfflineStartup : nsIProfileStartupListener, nsIObserver
+//   nsOfflineStartup : nsIObserver
 //
 //   Check if the user has set the pref to be prompted for
 //   online/offline startup mode. If so, prompt the user. Also,
@@ -55,34 +56,29 @@ var nsOfflineStartup =
   {
     debug("onProfileStartup");
 
-      var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-        getService(Components.interfaces.nsIPrefBranch);
-      var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
-
-      gOfflineStartupMode = prefs.getIntPref(kOfflineStartupPref);
-
-    if (gOfflineStartupMode == kRememberLastState)
+    var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                              .getService(Components.interfaces.nsIIOService);
+    if (gStartingUp)
     {
-      var offline = !prefs.getBoolPref("network.online");
-      // if the user checked "work offline" in the profile mgr UI
-      // and forced us offline, remember that in prefs
-      // if checked, the "work offline" checkbox overrides our 
-      // persisted state
-      if (ioService.offline)
-        prefs.setBoolPref("network.online", false);
-       else
-       {
-         // if user did not check "work offline" in the profile manager UI
-         // use the persisted online state pref to restore our offline state
-         ioService.offline = offline;
-       }
+      gStartingUp = false;
+      // if checked, the "work offline" checkbox overrides
+      if (ioService.offline) {
+        debug("already offline!");
+        return;
+      }
+    }
 
-      var observerService = Components.
-        classes["@mozilla.org/observer-service;1"].
-        getService(Components.interfaces.nsIObserverService);
-      observerService.addObserver(this, "network:offline-status-changed", false);
-      observerService.addObserver(this, "quit-application", false);
-      observerService.addObserver(this, "xpcom-shutdown", false);
+    var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                          .getService(Components.interfaces.nsIPrefBranch);
+    gOfflineStartupMode = prefs.getIntPref(kOfflineStartupPref);
+
+    if (gOfflineStartupMode == kAlwaysOffline)
+    {
+      ioService.offline = true;
+    }
+    else if (gOfflineStartupMode == kRememberLastState)
+    {
+      ioService.offline = !prefs.getBoolPref("network.online");
     }
     else if (gOfflineStartupMode == kAskForOnlineState)
     {
@@ -114,29 +110,21 @@ var nsOfflineStartup =
   {
     debug("observe: " + aTopic);
 
-    if (aTopic == "network:offline-status-changed")
+    if (aTopic == "profile-approve-change")
     {
-      debug("network:offline-status-changed: " + aData);
-      // if we're not shutting down, and startup mode is "remember online state"
-      if (!gShuttingDown && gOfflineStartupMode == kRememberLastState)
-      {
-        debug("remembering offline state: ");
-        var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-          getService(Components.interfaces.nsIPrefBranch);
-        prefs.setBoolPref("network.online", aData == "online");
-      }
-
+      debug("remembering offline state");
+      var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                            .getService(Components.interfaces.nsIPrefBranch);
+      var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                                .getService(Components.interfaces.nsIIOService);
+      prefs.setBoolPref("network.online", !ioService.offline);
     }
     else if (aTopic == "app-startup")
     {
-      var observerService = Components.
-        classes["@mozilla.org/observer-service;1"].
-        getService(Components.interfaces.nsIObserverService);
+      var observerService = Components.classes["@mozilla.org/observer-service;1"]
+                                      .getService(Components.interfaces.nsIObserverService);
       observerService.addObserver(this, "profile-after-change", false);
-    }
-    else if (aTopic == "xpcom-shutdown" || aTopic == "quit-application")
-    {
-      gShuttingDown = true;
+      observerService.addObserver(this, "profile-approve-change", false);
     }
     else if (aTopic == "profile-after-change")
     {
