@@ -245,7 +245,7 @@
 <!ENTITY fontvarwidth.accesskey "v">
 <!ENTITY defaultFixedWidthCmd.label "Fixed Width">
 <!ENTITY fontfixedwidth.accesskey "x">
-<!ENTITY arialHelveticaFont.label "Arial,Helvetica">
+<!ENTITY arialHelveticaFont.label "Arial, Helvetica">
 <!ENTITY fonthelvetica.accesskey "l">
 <!ENTITY timesFont.label "Times">
 <!ENTITY fonttimes.accesskey "t">
