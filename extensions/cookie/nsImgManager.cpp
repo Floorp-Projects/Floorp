@@ -132,19 +132,24 @@ NS_IMETHODIMP nsImgManager::ShouldLoad(PRInt32 aContentType,
   if (!aContentLoc || !aContext) return rv;
 
   if (aContentType == nsIContentPolicy::IMAGE) {
-    // We should not waste time with chrome or resource urls
-    // we want to check http, https, ftp, etc.
-    PRBool canSkip;
-    rv = aContentLoc->SchemeIs("chrome", &canSkip);
+    // we only want to check http, https, ftp
+    PRBool isFtp;
+    rv = aContentLoc->SchemeIs("ftp", &isFtp);
     NS_ENSURE_SUCCESS(rv,rv);
 
-    if (canSkip)
-      return NS_OK;
+    PRBool needToCheck = isFtp;
+    if (!needToCheck) {
+      rv = aContentLoc->SchemeIs("http", &needToCheck);
+      NS_ENSURE_SUCCESS(rv,rv);
 
-    rv = aContentLoc->SchemeIs("resource", &canSkip);
-    NS_ENSURE_SUCCESS(rv,rv);
+      if (!needToCheck) {
+        rv = aContentLoc->SchemeIs("https", &needToCheck);
+        NS_ENSURE_SUCCESS(rv,rv);
+      }
+    }
 
-    if (canSkip)
+    // for chrome:// and resources and others, no need to check.
+    if (!needToCheck)
       return NS_OK;
 
     nsCOMPtr<nsIURI> baseURI;
@@ -174,10 +179,6 @@ NS_IMETHODIMP nsImgManager::ShouldLoad(PRInt32 aContentType,
           // never allow ftp for mail messages, 
           // because we don't want to send the users email address
           // as the anonymous password
-          PRBool isFtp;
-          rv = aContentLoc->SchemeIs("ftp", &isFtp);
-          NS_ENSURE_SUCCESS(rv,rv);
-
           if (mBlockInMailNewsPref || isFtp) {
             *aShouldLoad = PR_FALSE;
             return NS_OK;
