@@ -1331,7 +1331,7 @@ nsresult CCommentToken::ConsumeStrictComment(nsScanner& aScanner)
   }
 
   // There was no terminating string, parse this comment as text.
-  aScanner.SetPosition(lt);
+  aScanner.SetPosition(lt, PR_FALSE, PR_TRUE);
   return kNotAComment;
 }
 
@@ -2080,7 +2080,7 @@ nsresult CWhitespaceToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 
 
   nsScannerIterator start;
   aScanner.CurrentPosition(start);
-  aScanner.SetPosition(--start);
+  aScanner.SetPosition(--start, PR_FALSE, PR_TRUE);
 
   PRBool haveCR;
 
