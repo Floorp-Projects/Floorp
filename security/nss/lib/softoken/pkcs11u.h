@@ -32,17 +32,16 @@
  */
 /*
  * Copyright (C) 1994-1999 RSA Security Inc. Licence to copy this document
- * is granted provided that it is identified as "RSA Security In.c Public-Key
+ * is granted provided that it is identified as "RSA Security Inc. Public-Key
  * Cryptography Standards (PKCS)" in all material mentioning or referencing
  * this document.
  */
 /*
  * reset any packing set by pkcs11p.h
  */
-#if defined(XP_WIN)
+
 #if defined (_WIN32)
 #pragma warning(disable:4103)
 #pragma pack(pop, cryptoki)
-#endif
 #endif
 
