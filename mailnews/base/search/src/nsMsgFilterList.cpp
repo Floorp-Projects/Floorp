@@ -155,7 +155,7 @@ nsMsgFilterList::ApplyFiltersToHdr(nsMsgFilterTypeType filterType,
 				matchTermStatus = filter->MatchHdr(msgHdr, folder, db, headers, headersSize, &result);
 				if (NS_SUCCEEDED(matchTermStatus) && result && listener)
 				{
-					PRBool applyMore;
+					PRBool applyMore = PR_TRUE;
 
 					ret  = listener->ApplyFilterHit(filter, msgWindow, &applyMore);
 					if (NS_FAILED(ret) || !applyMore)
