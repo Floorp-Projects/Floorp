@@ -510,7 +510,6 @@ protected:
   static guint32 sLastEventTime;
 
 private:
-  static nsILookAndFeel *sLookAndFeel;
   static PRUint32 sWidgetCount;
 
   // this will keep track of whether or not the gdk handler

@@ -28,7 +28,6 @@
 #include "nsIComponentManager.h"
 #include "nsIDeviceContext.h"
 #include "nsIFontMetrics.h"
-#include "nsILookAndFeel.h"
 #include "nsToolkit.h"
 #include "nsWidgetsCID.h"
 #include "nsGfxCIID.h"
@@ -44,7 +43,6 @@
 #include "nsIPref.h"
 #include "nsGtkIMEHelper.h"
 
-static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_IID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
@@ -70,7 +68,6 @@ private:
 
 static nsWidget *GetShellWidget(GdkWindow *gdkWindow);
 
-nsILookAndFeel *nsWidget::sLookAndFeel = nsnull;
 PRUint32 nsWidget::sWidgetCount = 0;
 
 // this is the nsWindow with the focus
@@ -232,21 +229,6 @@ gint nsWidget::sButtonMotionWidgetY = -1;
 
 nsWidget::nsWidget()
 {
-  // XXX Shouldn't this be done in nsBaseWidget?
-  //  NS_INIT_REFCNT();
-
-  if (!sLookAndFeel) {
-    if (NS_OK != nsComponentManager::CreateInstance(kLookAndFeelCID,
-                                                    nsnull,
-                                                    NS_GET_IID(nsILookAndFeel),
-                                                    (void**)&sLookAndFeel))
-      sLookAndFeel = nsnull;
-  }
-
-  if (sLookAndFeel)
-    sLookAndFeel->GetColor(nsILookAndFeel::eColor_WindowBackground,
-                           mBackground);
-
   mGrabTime = 0;
   mWidget = nsnull;
   mMozBox = 0;
@@ -339,10 +321,6 @@ nsWidget::~nsWidget()
   // it's safe to always call Destroy() because it will only allow itself
   // to be called once
   Destroy();
-
-  if (!--sWidgetCount) {
-    NS_IF_RELEASE(sLookAndFeel);
-  }
 
   if (mIMECompositionUniString) {
     delete[] mIMECompositionUniString;
