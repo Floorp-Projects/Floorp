@@ -914,8 +914,10 @@ CSSLoaderImpl::DidLoadStyle(nsIStreamLoader* aLoader,
       // Dump error message to console.
       char *url;
       aLoadData->mURL->GetSpec(&url);
+#ifdef DEBUG
       cerr << "CSSLoaderImpl::DidLoadStyle: Load of URL '" << url 
            << "' failed.  Error code: " << NS_ERROR_GET_CODE(aStatus) << "\n";
+#endif
       nsCRT::free(url);
     }
 
@@ -1188,8 +1190,10 @@ CSSLoaderImpl::LoadSheet(URLKey& aKey, SheetLoadData* aData)
           // Dump an error message to the console
           char *url;
           aKey.mURL->GetSpec(&url);
+#ifdef DEBUG
           cerr << "CSSLoaderImpl::LoadSheet: Load of URL '" << url 
                << "' failed.  Error code: " << NS_ERROR_GET_CODE(result)  << "\n";
+#endif
           nsCRT::free(url);
         }
       }
@@ -1519,8 +1523,10 @@ CSSLoaderImpl::LoadAgentSheet(nsIURI* aURL,
         // Dump an error message to the console
         char *url;
         aURL->GetSpec(&url);
+#ifdef DEBUG
         cerr << "CSSLoaderImpl::LoadAgentSheet: Load of URL '" << url 
              << "' failed.  Error code: " << NS_ERROR_GET_CODE(result)  << "\n";
+#endif
         nsCRT::free(url);
       }
     }
