@@ -38,6 +38,8 @@
 #include "EmbedWindow.h"
 
 #include "nsIWebBrowser.h"
+#include "nsIWebPageDescriptor.h"
+#include "nsIDocShell.h"
 #include "nsIWebBrowserFind.h"
 #include "nsIWebBrowserPrint.h"
 #include "nsIPrintSettings.h"
@@ -458,44 +460,99 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Curren
  * Signature: ()Ljava/lang/String;
  */
 
-/* PENDING(ashuk): remove this from here and in the motif directory
-JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPageImpl_nativeGetSource
-(JNIEnv * env, jobject jobj)
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPageImpl_nativeGetSource
+  (JNIEnv *env, jobject obj, jint nativeBCPtr, jobject selection) 
 {
-    jstring result = nsnull;
+    NativeBrowserControl* nativeBrowserControl = (NativeBrowserControl *) nativeBCPtr;
+    nsresult rv = NS_OK;
 
-    return result;
+    // get the nsIWebPageDescriptor for the existing window
+    nsCOMPtr<nsIWebBrowser> oldWebBrowser = nsnull;
+    rv = nativeBrowserControl->mWindow->GetWebBrowser(getter_AddRefs(oldWebBrowser));
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: Can't get existing webBrowser for view source window");
+        return;
+    }
+    
+    nsCOMPtr<nsIDocShell> oldDocShell = do_GetInterface(oldWebBrowser);
+    if (!oldDocShell) {
+        ::util_ThrowExceptionToJava(env, "Exception: Can't get existing docShell for view source window");
+        return;
+    }
+
+    nsCOMPtr<nsIWebPageDescriptor> oldPageDesc = do_GetInterface(oldDocShell);
+    if (!oldPageDesc) {
+        ::util_ThrowExceptionToJava(env, "Exception: Can't get existing pageDescriptor for view source window");
+        return;
+    }
+    nsCOMPtr<nsISupports> pageCookie = nsnull;
+    rv = oldPageDesc->GetCurrentDescriptor(getter_AddRefs(pageCookie));
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: GetCurrentDescriptor failed");
+        return;
+    }
+
+    // create a new nsIDocShell
+    EmbedWindow *embedWindow = new EmbedWindow();
+    rv = embedWindow->InitNoChrome(nativeBrowserControl);
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: Can't init new window for view source");
+        return;
+    }
+
+    rv = embedWindow->CreateWindow_(0,0);
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: Can't create new window for view source");
+        return;
+    }
+    
+    // get the new page descriptor
+    nsCOMPtr<nsIWebBrowser> webBrowser = nsnull;
+    rv = embedWindow->GetWebBrowser(getter_AddRefs(webBrowser));
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: Can't get webBrowser for view source window");
+        return;
+    }
+    
+    nsCOMPtr<nsIDocShell> newDocShell = do_GetInterface(webBrowser);
+    if (!newDocShell) {
+        ::util_ThrowExceptionToJava(env, "Exception: Can't get docShell for view source window");
+        return;
+    }
+
+    nsCOMPtr<nsIWebPageDescriptor> newPageDesc = do_GetInterface(newDocShell);
+    if (!newPageDesc) {
+        ::util_ThrowExceptionToJava(env, "Exception: Can't get pageDescriptor for view source window");
+        return;
+    }
+    rv = newPageDesc->LoadPage(pageCookie, 
+                               nsIWebPageDescriptor::DISPLAY_AS_SOURCE);
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: Can't load page for view source window");
+        return;
+    }
+    // allow the page load to complete
+    nativeBrowserControl->GetWrapperFactory()->ProcessEventLoop();
+
+    rv = embedWindow->SelectAll();
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: Can't select all for view source window");
+        return;
+    }
+    
+    rv = embedWindow->GetSelection(env, selection);
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: Can't get seletion for view source window");
+        return;
+    }
+
+    newPageDesc = nsnull;
+    newDocShell = nsnull;
+    webBrowser = nsnull;
+    delete embedWindow;
+
+    return;
 }
-*/
-
-
-/*
- * Class:     org_mozilla_webclient_impl_wrapper_0005fnative_CurrentPageImpl
- * Method:    nativeGetSourceBytes
- * Signature: ()[B
- */
-
-/* PENDING(ashuk): remove this from here and in the motif directory
-JNIEXPORT jbyteArray JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPageImpl_nativeGetSourceBytes
-(JNIEnv * env, jobject jobj, jint nativeBCPtr, jboolean viewMode)
-{
-
-
-  NativeBrowserControl* nativeBrowserControl = (NativeBrowserControl *) nativeBCPtr;
-
-  if (nativeBrowserControl->initComplete) {
-      wsViewSourceEvent * actionEvent =
-          new wsViewSourceEvent(nativeBrowserControl->docShell, ((JNI_TRUE == viewMode)? PR_TRUE : PR_FALSE));
-      PLEvent       * event       = (PLEvent*) *actionEvent;
-
-      ::util_PostEvent(nativeBrowserControl, event);
-  }
-
-    jbyteArray result = nsnull;
-    return result;
-}
-*/
-
 
 /*
  * Class:     org_mozilla_webclient_impl_wrapper_0005fnative_CurrentPageImpl

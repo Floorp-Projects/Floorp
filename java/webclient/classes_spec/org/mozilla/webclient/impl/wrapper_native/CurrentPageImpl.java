@@ -203,6 +203,7 @@ public String getCurrentURL()
 
 public Document getDOM()
 {
+    // PENDING(edburns): run this on the event thread.
     Document result = nativeGetDOM(getNativeBrowserControl());
     return result;
 }
@@ -227,11 +228,17 @@ public String getSource()
     getWrapperFactory().verifyInitialized();
     Document doc = getDOM();
     String HTMLContent = null;
+    final Selection selection = new SelectionImpl();
 
-    if (null != doc) {
-	HTMLContent = domDumper.dump(doc);
-    }
-
+    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+	    public Object run() {
+		nativeGetSource(CurrentPageImpl.this.getNativeBrowserControl(),
+				selection);
+		return null;
+	    }
+	});
+    HTMLContent = selection.toString();
+    
     return HTMLContent;
 }
 
@@ -309,11 +316,7 @@ native public Document nativeGetDOM(int webShellPtr);
 
 // webclient.PageInfo getPageInfo();
 
-/* PENDING(ashuk): remove this from here and in the motif directory
- * native public String nativeGetSource();
-
- * native public byte [] nativeGetSourceBytes(int webShellPtr, boolean viewMode);
- */
+native public void nativeGetSource(int webShellPtr, Selection selection);
 
 native public void nativeResetFind(int webShellPtr);
 

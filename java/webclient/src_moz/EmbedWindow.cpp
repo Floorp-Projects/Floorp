@@ -64,6 +64,9 @@ EmbedWindow::EmbedWindow(void)
 EmbedWindow::~EmbedWindow(void)
 {
     ExitModalEventLoop(PR_FALSE);
+    mBaseWindow = nsnull;
+    mWebBrowser = nsnull;
+    mOwner = nsnull;
 }
 
 nsresult
@@ -78,6 +81,25 @@ EmbedWindow::Init(NativeBrowserControl *aOwner)
     return NS_ERROR_FAILURE;
 
   mWebBrowser->SetContainerWindow(NS_STATIC_CAST(nsIWebBrowserChrome *, this));
+  
+  nsCOMPtr<nsIDocShellTreeItem> item = do_QueryInterface(mWebBrowser);
+  item->SetItemType(nsIDocShellTreeItem::typeContentWrapper);
+
+  return NS_OK;
+}
+
+nsresult
+EmbedWindow::InitNoChrome(NativeBrowserControl *aOwner)
+{
+  // save our owner for later
+  mOwner = aOwner;
+
+  // create our nsIWebBrowser object and set up some basic defaults.
+  mWebBrowser = do_CreateInstance(NS_WEBBROWSER_CONTRACTID);
+  if (!mWebBrowser)
+    return NS_ERROR_FAILURE;
+
+  mWebBrowser->SetContainerWindow(nsnull);
   
   nsCOMPtr<nsIDocShellTreeItem> item = do_QueryInterface(mWebBrowser);
   item->SetItemType(nsIDocShellTreeItem::typeContentWrapper);

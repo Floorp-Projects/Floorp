@@ -62,6 +62,7 @@ public:
     virtual ~EmbedWindow();
     
     nsresult Init            (NativeBrowserControl *aOwner);
+    nsresult InitNoChrome    (NativeBrowserControl *aOwner);
     nsresult CreateWindow_   (PRUint32 width, PRUint32 height);
     void     ReleaseChildren (void);
 
