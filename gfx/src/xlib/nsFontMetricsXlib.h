@@ -49,16 +49,16 @@
 #undef FONT_HAS_GLYPH
 #define FONT_HAS_GLYPH(map, char) IS_REPRESENTABLE(map, char)
 
-typedef struct nsFontCharSetInfo nsFontCharSetInfo;
+typedef struct nsFontCharSetXlibInfo nsFontCharSetXlibInfo;
 
-typedef int (*nsFontCharSetConverter)(nsFontCharSetInfo* aSelf,
+typedef int (*nsFontCharSetXlibConverter)(nsFontCharSetXlibInfo* aSelf,
              XFontStruct* aFont, const PRUnichar* aSrcBuf, PRInt32 aSrcLen, 
              char* aDestBuf, PRInt32 aDestLen);
 
-struct nsFontCharSet;
-struct nsFontFamily;
-struct nsFontNode;
-struct nsFontStretch;
+struct nsFontCharSetXlib;
+struct nsFontFamilyXlib;
+struct nsFontNodeXlib;
+struct nsFontStretchXlib;
 
 class nsFontXlibUserDefined;
 class nsFontMetricsXlib;
@@ -94,7 +94,7 @@ public:
 
   XFontStruct           *mFont;
   PRUint32              *mMap;
-  nsFontCharSetInfo     *mCharSetInfo;
+  nsFontCharSetXlibInfo     *mCharSetInfo;
   char                  *mName;
   nsFontXlibUserDefined *mUserDefinedFont;
   PRUint16               mSize;
@@ -146,15 +146,15 @@ public:
   nsFontXlib* FindAnyFont(PRUnichar aChar);
   nsFontXlib* FindSubstituteFont(PRUnichar aChar);
 
-  nsFontXlib* SearchNode(nsFontNode* aNode, PRUnichar aChar);
+  nsFontXlib* SearchNode(nsFontNodeXlib* aNode, PRUnichar aChar);
   nsFontXlib* TryAliases(nsCString* aName, PRUnichar aChar);
   nsFontXlib* TryFamily(nsCString* aName, PRUnichar aChar);
   nsFontXlib* TryNode(nsCString* aName, PRUnichar aChar);
   nsFontXlib* TryNodes(nsAWritableCString &aFFREName, PRUnichar aChar);
   nsFontXlib* TryLangGroup(nsIAtom* aLangGroup, nsCString* aName, PRUnichar aChar);
 
-  nsFontXlib* PickASizeAndLoad(nsFontStretch* aStretch,
-                               nsFontCharSetInfo* aCharSet,
+  nsFontXlib* PickASizeAndLoad(nsFontStretchXlib* aStretch,
+                               nsFontCharSetXlibInfo* aCharSet,
                                PRUnichar aChar);
 
   static nsresult FamilyExists(const nsString& aFontName);

@@ -38,12 +38,8 @@ else
 DIRS		= ps
 endif
 
-ifdef MOZ_ENABLE_XPRINT
-DIRS		+= xprint
-endif
-
 # Build xlibrgb only for X toolkits
-ifneq (,$(filter motif xlib,$(MOZ_WIDGET_TOOLKIT))$(MOZ_ENABLE_XLIB))
+ifneq (,$(filter motif xlib,$(MOZ_WIDGET_TOOLKIT))$(MOZ_ENABLE_XLIB) $(MOZ_ENABLE_XPRINT))
 DIRS		+= xlibrgb
 endif
 
@@ -67,6 +63,10 @@ endif
 ifdef MOZ_ENABLE_PHOTON
 DIRS		+= photon
 endif
+endif
+
+ifdef MOZ_ENABLE_XPRINT
+DIRS		+= xprint 
 endif
 
 CPPSRCS		= \
