@@ -48,14 +48,10 @@
 #define kBookmarkMenuContainerIndex 0
 #define kToolbarContainerIndex 1
 #define kHistoryContainerIndex 2
-#define kTop10ContainerIndex 3
-#define kBrokenBookmarkContainerIndex 4
-#define kRendezvousContainerIndex 5
-#define kAddressBookContainerIndex 6
 
 // check 1 bookmark every 2 minutes, but only if we haven't been there in a day
-#define kTimeSinceBookmarkLastChecked 86400.0
-#define kTimeToCheckAnotherBookmark 120  
+#define kTimeBeforeRecheckingBookmark 86400.0
+#define kTimeBetweenBookmarkChecks 120  
 
 @interface BookmarkManager : NSObject <BookmarksClient> {
   BookmarkFolder *mRootBookmarks;	// root bookmark object
@@ -64,6 +60,12 @@
   BookmarkImportDlgController *mImportDlgController;
   NSString *mPathToBookmarkFile; //exactly what it looks like
   NSTimer *mUpdateTimer; //we don't actually retain this
+  
+  // smart folders
+  BookmarkFolder *mTop10Container;
+  BookmarkFolder *mBrokenBookmarkContainer;
+  BookmarkFolder *mRendezvousContainer;
+  BookmarkFolder *mAddressBookContainer;
 }
 
 // Class Methods & shutdown stuff

@@ -41,6 +41,8 @@
 * ***** END LICENSE BLOCK ***** */
 
 #import "AddressBookManager.h"
+#import "BookmarkFolder.h"
+#import "Bookmark.h"
 #import <AddressBook/AddressBook.h>
 
 

@@ -49,6 +49,7 @@
 @interface KindaSmartFolderManager (Private) <NetworkServicesClient, BookmarksClient> 
 -(void)addBookmark:(Bookmark *)aBookmark toSmartFolder:(BookmarkFolder *)aFolder;
 -(void)removeBookmark:(Bookmark *)aBookmark fromSmartFolder:(BookmarkFolder *)aFolder;
+-(void)setupBrokenBookmarks;
 -(void)checkForNewTop10:(Bookmark *)aBookmark;
 -(void)setupAddressBook;
 -(void)rebuildTop10List;
@@ -95,12 +96,24 @@
   }
   if (mAddressBookFolder)
     [self setupAddressBook];
+  if (mBrokenBookmarkFolder)
+    [self setupBrokenBookmarks];
   // get top 10 list started
   NSArray *bookmarkArray = [[manager rootBookmarks] allChildBookmarks];
   unsigned i, j = [bookmarkArray count];
   for (i=0; i < j; i++) {
     Bookmark *aBookmark = [bookmarkArray objectAtIndex:i];
     [self checkForNewTop10:aBookmark];
+  }
+}
+
+-(void) setupBrokenBookmarks
+{
+  BookmarkManager *manager = [BookmarkManager sharedBookmarkManager];
+  NSArray *bookmarkArray = [[manager rootBookmarks] allChildBookmarks];
+  unsigned i, j = [bookmarkArray count];
+  for (i=0; i < j; i++) {
+    Bookmark *aBookmark = [bookmarkArray objectAtIndex:i];
     if ([aBookmark isSick])
       [self addBookmark:aBookmark toSmartFolder:mBrokenBookmarkFolder];
   }
@@ -183,6 +196,7 @@
 //
 -(void)addBookmark:(Bookmark *)aBookmark toSmartFolder:(BookmarkFolder *)aFolder
 {
+  if (aFolder == nil) return; //if the smart folder isn't enabled, we're done
   unsigned index = [aFolder indexOfObjectIdenticalTo:aBookmark];
   if (index == NSNotFound)
     [aFolder insertIntoSmartFolderChild:aBookmark];
@@ -192,6 +206,7 @@
 // 
 -(void)removeBookmark:(Bookmark *)anItem fromSmartFolder:(BookmarkFolder *)aFolder
 {
+  if (aFolder == nil) return; //if the smart folder isn't enabled, we're done
   unsigned index = [aFolder indexOfObjectIdenticalTo:anItem];
   if (index != NSNotFound)
     [aFolder deleteFromSmartFolderChildAtIndex:index];

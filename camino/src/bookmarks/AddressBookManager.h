@@ -53,7 +53,7 @@
   id mAddressBookFolder;
 }
 
+-(id)initWithFolder:(id)folder;
 -(void)fillAddressBook:(NSNotification *)note;
-
 
 @end

@@ -113,9 +113,8 @@ static unsigned gFirstUserCollection = 0;
 //
 - (id)init
 {
-  if ((self = [super init]))
-  {
-BookmarkFolder* root = [[BookmarkFolder alloc] init];
+  if ((self = [super init])) {
+    BookmarkFolder* root = [[BookmarkFolder alloc] init];
     [root setParent:self];
     [root setIsRoot:YES];
     [root setTitle:NSLocalizedString(@"BookmarksRootName", @"")];
@@ -169,6 +168,10 @@ BookmarkFolder* root = [[BookmarkFolder alloc] init];
 
 -(void) dealloc
 {
+  [mTop10Container release];
+  [mBrokenBookmarkContainer release];
+  [mRendezvousContainer release];
+  [mAddressBookContainer release];
   [[NSNotificationCenter defaultCenter] removeObserver:self];
   if (mUpdateTimer)
     [mUpdateTimer invalidate]; //we don't retain this, so don't release it.
@@ -192,8 +195,9 @@ BookmarkFolder* root = [[BookmarkFolder alloc] init];
 {
   [[NSApp delegate] setupBookmarkMenus:gBookmarksManager];
   
-  // check update status of 1 bookmark every 2 minutes.
-  mUpdateTimer = [NSTimer scheduledTimerWithTimeInterval:kTimeToCheckAnotherBookmark target:self selector:@selector(checkForUpdates:) userInfo:nil repeats:YES];
+  // check update status of 1 bookmark every 2 minutes if autoupdate is enabled.
+  if ([[PreferenceManager sharedInstance] getBooleanPref:"camino.bookmarks.autoupdate" withSuccess:NULL])
+    mUpdateTimer = [NSTimer scheduledTimerWithTimeInterval:kTimeBetweenBookmarkChecks target:self selector:@selector(checkForUpdates:) userInfo:nil repeats:YES];
   [mSmartFolderManager postStartupInitialization:self];
   [[self toolbarFolder] refreshIcon];
 
@@ -224,32 +228,48 @@ BookmarkFolder* root = [[BookmarkFolder alloc] init];
 // We also have history, but that just points to the real history stuff.
 - (void)setupSmartCollections
 {
-  NSArray *names = nil;
-  if (floor(NSAppKitVersionNumber) <= NSAppKitVersionNumber10_1) //10.1
-    names = [[NSArray alloc] initWithObjects:
-      NSLocalizedString(@"History",@"History"),
-      NSLocalizedString(@"Top 10 List",@"Top 10 List"),
-      NSLocalizedString(@"Broken Bookmarks",@"Broken Bookmarks"),
-      nil];
-  else // 10.2 +
-    names = [[NSArray alloc] initWithObjects:
-      NSLocalizedString(@"History",@"History"),
-      NSLocalizedString(@"Top 10 List",@"Top 10 List"),
-      NSLocalizedString(@"Broken Bookmarks",@"Broken Bookmarks"),
-      NSLocalizedString(@"Rendezvous",@"Rendezvous"),
-      NSLocalizedString(@"Address Book",@"Address Book"),
-      nil];
-  gFirstUserCollection = [names count]+2;
-  unsigned i, j=[names count];
-  for (i=0; i < j; i++) {
-    BookmarkFolder *temp = [[BookmarkFolder alloc] init];
-    [temp setTitle:[names objectAtIndex:i]];
-    [temp setIsSmartFolder:YES];
-    [mRootBookmarks insertChild:temp atIndex:(i+2) isMove:NO];
-    [temp release];
+  int collectionIndex = 2;  //skip 0 and 1, the menu and toolbar folders
+  
+  // add history
+  BookmarkFolder *temp = [[BookmarkFolder alloc] init];
+  [temp setTitle:NSLocalizedString(@"History",@"History")];
+  [temp setIsSmartFolder:YES];
+  [mRootBookmarks insertChild:temp atIndex:(collectionIndex++) isMove:NO];
+  [temp release];
+  
+  // note: don't release the smart folders until dealloc, so they persist even if turned off and on
+  
+  // add top 10 list
+  mTop10Container = [[BookmarkFolder alloc] init];
+  [mTop10Container setTitle:NSLocalizedString(@"Top Ten List",@"Top Ten List")];
+  [mTop10Container setIsSmartFolder:YES];
+  [mRootBookmarks insertChild:mTop10Container atIndex:(collectionIndex++) isMove:NO];
+  
+  // add broken bookmarks if auto-checking is enabled
+  if ([[PreferenceManager sharedInstance] getBooleanPref:"camino.bookmarks.autoupdate" withSuccess:NULL]) {
+    mBrokenBookmarkContainer = [[BookmarkFolder alloc] init];
+    [mBrokenBookmarkContainer setTitle:NSLocalizedString(@"Broken Bookmarks",@"Broken Bookmarks")];
+    [mBrokenBookmarkContainer setIsSmartFolder:YES];
+    [mRootBookmarks insertChild:mBrokenBookmarkContainer atIndex:(collectionIndex++) isMove:NO];
   }
-  [names release];
+  
+  // add rendezvous and address book in 10.2+
+  if (floor(NSAppKitVersionNumber) > NSAppKitVersionNumber10_1) {
+    mRendezvousContainer = [[BookmarkFolder alloc] init];
+    [mRendezvousContainer setTitle:NSLocalizedString(@"Rendezvous",@"Rendezvous")];
+    [mRendezvousContainer setIsSmartFolder:YES];
+    [mRootBookmarks insertChild:mRendezvousContainer atIndex:(collectionIndex++) isMove:NO];
+    
+    mAddressBookContainer = [[BookmarkFolder alloc] init];
+    [mAddressBookContainer setTitle:NSLocalizedString(@"Address Book",@"Address Book")];
+    [mAddressBookContainer setIsSmartFolder:YES];
+    [mRootBookmarks insertChild:mAddressBookContainer atIndex:(collectionIndex++) isMove:NO];
+  }
+      
+  gFirstUserCollection = collectionIndex;
+  
   // set pretty icons
+  
   [[self historyFolder] setIcon:[NSImage imageNamed:@"historyicon"]];
   [[self top10Folder] setIcon:[NSImage imageNamed:@"top10_icon"]];
   [[self bookmarkMenuFolder] setIcon:[NSImage imageNamed:@"bookmarkmenu_icon"]];
@@ -295,12 +315,12 @@ BookmarkFolder* root = [[BookmarkFolder alloc] init];
 
 -(BookmarkFolder *)top10Folder
 {
-  return [[self rootBookmarks] objectAtIndex:kTop10ContainerIndex];
+  return mTop10Container;
 }
 
 -(BookmarkFolder *) brokenLinkFolder
 {
-  return [[self rootBookmarks] objectAtIndex:kBrokenBookmarkContainerIndex];
+  return mBrokenBookmarkContainer;
 }
 
 -(BookmarkFolder *) toolbarFolder
@@ -320,18 +340,12 @@ BookmarkFolder* root = [[BookmarkFolder alloc] init];
 
 -(BookmarkFolder *) rendezvousFolder
 {
-  if (floor(NSAppKitVersionNumber) > NSAppKitVersionNumber10_1)
-    return [[self rootBookmarks] objectAtIndex:kRendezvousContainerIndex];
-  else
-    return nil;  
+  return mRendezvousContainer;
 }
 
 -(BookmarkFolder *) addressBookFolder
 {
-  if (floor(NSAppKitVersionNumber) > NSAppKitVersionNumber10_1)
-    return [[self rootBookmarks] objectAtIndex:kAddressBookContainerIndex];
-  else
-    return nil;
+  return mAddressBookContainer;
 }
 
 -(NSUndoManager *) undoManager
@@ -404,7 +418,7 @@ BookmarkFolder* root = [[BookmarkFolder alloc] init];
   while ((!foundBookmark) && (aKid = [enumerator nextObject])) {
     if ([aKid isKindOfClass:[Bookmark class]]) {
       if (([(Bookmark *)aKid isCheckable]) &&
-          ([[(Bookmark *)aKid lastVisit] timeIntervalSinceNow] < -kTimeSinceBookmarkLastChecked))
+          (-[[(Bookmark *)aKid lastVisit] timeIntervalSinceNow] > kTimeBeforeRecheckingBookmark))
           foundBookmark = aKid;
     } else if ([aKid isKindOfClass:[BookmarkFolder class]])
       foundBookmark = [self findABookmarkToCheckInFolder:aKid];
