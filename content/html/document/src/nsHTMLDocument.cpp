@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Kathleen Brade <brade@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -2686,6 +2687,7 @@ nsHTMLDocument::ScriptWriteCommon(PRBool aNewlineTerminate)
     rv = secMan->GetSubjectPrincipal(getter_AddRefs(subject));
     NS_ENSURE_SUCCESS(rv, rv);
 
+    // why is the above code duplicated below???
     rv = secMan->GetSubjectPrincipal(getter_AddRefs(subject));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -4054,6 +4056,23 @@ nsHTMLDocument::SetDesignMode(const nsAString & aDesignMode)
   if (!docshell)
     return NS_ERROR_FAILURE;
 
+  nsresult rv = NS_OK;
+  nsCAutoString url;
+  mDocumentURL->GetSpec(url);
+  // test if the above works if document.domain is set for Midas document
+  // (www.netscape.com --> netscape.com)
+  if (!url.Equals("about:blank")) {
+    // If we're 'about:blank' then we don't care who can edit us.
+    // If we're not about:blank, then we need to check sameOrigin.
+    nsCOMPtr<nsIScriptSecurityManager> secMan = 
+      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = secMan->CheckSameOrigin(nsnull, mDocumentURL);
+    if (NS_FAILED(rv))
+      return rv;
+  }
+
   nsCOMPtr<nsIEditingSession> editSession = do_GetInterface(docshell);
   if (!editSession) 
     return NS_ERROR_FAILURE;
@@ -4075,7 +4094,7 @@ nsHTMLDocument::SetDesignMode(const nsAString & aDesignMode)
     nsCOMPtr<nsIDOMWindow> domwindow(do_GetInterface(container));
     NS_ENSURE_TRUE(domwindow, NS_ERROR_FAILURE);
 
-    nsresult rv = editSession->Init(domwindow);  // content root frame
+    rv = editSession->Init(domwindow);  // content root frame
     if (NS_FAILED(rv))
       return rv;
 
@@ -4140,7 +4159,6 @@ static struct MidasCommand gMidasCommandTable[] = {
   { "superscript",   "cmd_superscript",     "", PR_TRUE },
   { "cut",           "cmd_cut",             "", PR_TRUE },
   { "copy",          "cmd_copy",            "", PR_TRUE },
-  { "paste",         "cmd_paste",           "", PR_TRUE },
   { "delete",        "cmd_delete",          "", PR_TRUE },
   { "selectall",     "cmd_selectall",       "", PR_TRUE },
   { "undo",          "cmd_undo",            "", PR_TRUE },
@@ -4150,7 +4168,7 @@ static struct MidasCommand gMidasCommandTable[] = {
   { "backcolor",     "cmd_backgroundColor", "", PR_FALSE },
   { "forecolor",     "cmd_fontColor",       "", PR_FALSE },
   { "fontname",      "cmd_fontFace",        "", PR_FALSE },
-  { "horizontalline", "cmd_hline",          "", PR_TRUE },
+  { "inserthorizontalrule", "cmd_hline",    "", PR_TRUE },
   { "hr",            "cmd_hline",           "", PR_TRUE },
   { "createlink",    "cmd_link",            "", PR_TRUE },
   { "justifyleft",   "cmd_align",       "left", PR_TRUE },
@@ -4159,16 +4177,20 @@ static struct MidasCommand gMidasCommandTable[] = {
   { "justifyfull",   "cmd_align",    "justify", PR_TRUE },
   { "removeformat",  "cmd_removeStyles",    "", PR_TRUE },
   { "unlink",        "cmd_removeLinks",     "", PR_TRUE },
-  { "orderlist",     "cmd_ol",              "", PR_TRUE },
-  { "unorderlist",   "cmd_ul",              "", PR_TRUE },
-  { "paragraph",     "cmd_paragraphState", "p", PR_TRUE },
+  { "insertorderedlist",   "cmd_ol",        "", PR_TRUE },
+  { "insertunorderedlist", "cmd_ul",        "", PR_TRUE },
+  { "insertparagraph", "cmd_paragraphState", "p", PR_TRUE },
   { "formatblock",   "cmd_paragraphState",  "", PR_FALSE },
   { "heading",       "cmd_paragraphState",  "", PR_FALSE },
 #if 0
   { "fontsize",      "cmd_fontSize",        "", PR_FALSE },
   { "justifynone",   "cmd_align",           "", PR_TRUE },
+  { "insertimage",   "cmd_xxxxx",           "", PR_FALSE },
+
+// the following will need special review before being turned on
   { "saveas",        "cmd_saveAs",          "", PR_TRUE },
   { "print",         "cmd_print",           "", PR_TRUE },
+  { "paste",         "cmd_paste",           "", PR_TRUE },
 #endif
   { NULL, NULL, NULL, PR_FALSE }
 };
@@ -4237,17 +4259,6 @@ nsHTMLDocument::ExecCommand(const nsAString & commandID,
   if (doShowUI)
     return NS_ERROR_NOT_IMPLEMENTED;
 
-  // TEMPORARY HACK: (this block will go away very soon)
-  // always set focus to this widget so the command can be executed only in
-  // this scope (we wouldn't want to be able to execute commands outside of 
-  // our own editor scope
-  nsCOMPtr<nsIDOMWindowInternal> wintmp = do_QueryInterface(mScriptGlobalObject);
-  if (!wintmp)
-    return NS_ERROR_FAILURE;
-  nsresult rv2 = wintmp->Focus();
-  if (NS_FAILED(rv2))
-    return rv2;
-
   // get command manager and dispatch command to our window if it's acceptable
   nsCOMPtr<nsICommandManager> cmdMgr;
   nsresult rv = GetMidasCommandManager(getter_AddRefs(cmdMgr));
@@ -4265,7 +4276,7 @@ nsHTMLDocument::ExecCommand(const nsAString & commandID,
     return NS_ERROR_NOT_IMPLEMENTED;
 
   if (paramStr.IsEmpty()) {
-    rv = cmdMgr->DoCommand(cmdToDispatch.get(), nsnull);
+    rv = cmdMgr->DoCommand(cmdToDispatch.get(), nsnull, window);
   } else {
     // we have a command that requires a parameter, create params
     nsCOMPtr<nsICommandParams> cmdParams = do_CreateInstance(
@@ -4275,7 +4286,7 @@ nsHTMLDocument::ExecCommand(const nsAString & commandID,
     rv = cmdParams->SetCStringValue("state_attribute", paramStr.get());
     if (NS_FAILED(rv))
       return rv;
-    rv = cmdMgr->DoCommand(cmdToDispatch.get(), cmdParams);
+    rv = cmdMgr->DoCommand(cmdToDispatch.get(), cmdParams, window);
   }
 
   *_retval = NS_SUCCEEDED(rv);
@@ -4340,17 +4351,6 @@ nsHTMLDocument::QueryCommandState(const nsAString & commandID, PRBool *_retval)
   if (!mEditingIsOn)
     return NS_ERROR_FAILURE;
 
-  // TEMPORARY HACK: (this block will go away very soon)
-  // always set focus to this widget so the command can be executed only in
-  // this scope (we wouldn't want to be able to execute commands outside of 
-  // our own editor scope
-  nsCOMPtr<nsIDOMWindowInternal> wintmp = do_QueryInterface(mScriptGlobalObject);
-  if (!wintmp)
-    return NS_ERROR_FAILURE;
-  nsresult rv2 = wintmp->Focus();
-  if (NS_FAILED(rv2))
-    return rv2;
-
   // get command manager and dispatch command to our window if it's acceptable
   nsCOMPtr<nsICommandManager> cmdMgr;
   nsresult rv = GetMidasCommandManager(getter_AddRefs(cmdMgr));
@@ -4373,7 +4373,7 @@ nsHTMLDocument::QueryCommandState(const nsAString & commandID, PRBool *_retval)
   if (!cmdParams)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  rv = cmdMgr->GetCommandState(cmdToDispatch.get(), cmdParams);
+  rv = cmdMgr->GetCommandState(cmdToDispatch.get(), window, cmdParams);
   if (NS_FAILED(rv))
     return rv;
 
@@ -4440,17 +4440,6 @@ nsHTMLDocument::QueryCommandValue(const nsAString & commandID,
   if (!mEditingIsOn)
     return NS_ERROR_FAILURE;
 
-  // TEMPORARY HACK: (this block will go away very soon)
-  // always set focus to this widget so the command can be executed only in
-  // this scope (we wouldn't want to be able to execute commands outside of 
-  // our own editor scope
-  nsCOMPtr<nsIDOMWindowInternal> wintmp = do_QueryInterface(mScriptGlobalObject);
-  if (!wintmp)
-    return NS_ERROR_FAILURE;
-  nsresult rv2 = wintmp->Focus();
-  if (NS_FAILED(rv2))
-    return rv2;
-
   // get command manager and dispatch command to our window if it's acceptable
   nsCOMPtr<nsICommandManager> cmdMgr;
   nsresult rv = GetMidasCommandManager(getter_AddRefs(cmdMgr));
@@ -4477,7 +4466,7 @@ nsHTMLDocument::QueryCommandValue(const nsAString & commandID,
   if (NS_FAILED(rv))
     return rv;
 
-  rv = cmdMgr->GetCommandState(cmdToDispatch.get(), cmdParams);
+  rv = cmdMgr->GetCommandState(cmdToDispatch.get(), window, cmdParams);
   if (NS_FAILED(rv))
     return rv;
 
