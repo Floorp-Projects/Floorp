@@ -25,6 +25,7 @@
 #include "nsIEventQueueService.h"
 #include "prinrval.h"
 #include "prmon.h"
+#include "prcmon.h"
 #include "prio.h"
 #include "nsIFileStream.h"
 #include "nsFileSpec.h"
@@ -34,21 +35,9 @@
 #include "nsITransport.h"
 #include <stdio.h>
 
-#ifdef XP_PC
-#define XPCOM_DLL  "xpcom32.dll"
-#define NETLIB_DLL  "netwerk.dll"
-#else
-#ifdef XP_MAC
-#include "nsMacRepository.h"
-#else
-#define XPCOM_DLL  "libxpcom.so"
-#define NETLIB_DLL  "libnetwerk.so"
-#endif
-#endif
-
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
-static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUE_CID);
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 PRIntervalTime gDuration = 0;
 PRUint32 gVolume = 0;
@@ -62,17 +51,16 @@ public:
         if (!mMonitor)
             return NS_ERROR_OUT_OF_MEMORY;
         PR_EnterMonitor(mMonitor);
-        if (mEventQueue == nsnull)
+        if (mEventQueue == nsnull) 
             PR_CWait(this, PR_INTERVAL_NO_TIMEOUT);
+
         PR_ExitMonitor(mMonitor);
 
         printf("running\n");
 
-        // event loop
         mEventQueue->EventLoop();
 
         while (PR_TRUE) {
-
         }
         printf("quitting\n");
         return NS_OK;
@@ -100,8 +88,13 @@ public:
         PR_EnterMonitor(mMonitor);
         NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
         if (NS_SUCCEEDED(rv)) {
+          rv = eventQService->CreateThreadEventQueue();
+
+          if (NS_FAILED(rv)) return rv;
+  
           rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &mEventQueue);
         }
+
         if (NS_FAILED(rv)) return rv;
 
         // wake up event loop
@@ -295,7 +288,7 @@ SerialReadTest(char* dirName)
     PRUint32 threadCount;
     rv = threads->Count(&threadCount);
     for (PRUint32 i = 0; i < threadCount; i++) {
-        nsIThread* thread = (nsIThread*)(*threads)[i];
+        nsIThread* thread = (nsIThread*)threads->ElementAt(i);
         thread->Join();
         NS_RELEASE(thread);
     }
@@ -328,7 +321,9 @@ ParallelReadTest(char* dirName, nsIFileTransportService* fts)
         NS_ADDREF(reader);
 
         nsIThread* readerThread;
+
         rv = NS_NewThread(&readerThread, reader);
+
         NS_ASSERTION(NS_SUCCEEDED(rv), "new thread failed");
 
         rv = reader->Init(readerThread);
@@ -357,7 +352,7 @@ ParallelReadTest(char* dirName, nsIFileTransportService* fts)
     PRUint32 threadCount;
     rv = threads->Count(&threadCount);
     for (PRUint32 i = 0; i < threadCount; i++) {
-        nsIThread* thread = (nsIThread*)(*threads)[i];
+        nsIThread* thread = (nsIThread*)threads->ElementAt(i);
         thread->Join();
         NS_RELEASE(thread);
     }
@@ -379,15 +374,15 @@ main(int argc, char* argv[])
     char* dirName = argv[1];
 
     // XXX why do I have to do this?!
-    nsComponentManager::RegisterComponent(kFileTransportServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
-    nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
     rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup,
                                           "components");
     if (NS_FAILED(rv)) return rv;
 
     NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
+
     SerialReadTest(dirName);
+
     ParallelReadTest(dirName, fts);
 
     fts->ProcessPendingRequests();
