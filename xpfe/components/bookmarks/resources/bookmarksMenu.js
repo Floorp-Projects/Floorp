@@ -236,14 +236,12 @@ var BookmarksMenu = {
     else
       border = size/2;
     
-    // We are going to invert the drop-location for RTL PersonalBar
-    isLtrPB = (window.getComputedStyle(document.getElementById("PersonalToolbar"),'').direction == 'ltr');
     // in the first region?
     if (clientCoordValue-coordValue < border)
-      return (isLtrPB? BookmarksUtils.DROP_BEFORE : BookmarksUtils.DROP_AFTER);
+      return BookmarksUtils.DROP_BEFORE;
     // in the last region?
     if (clientCoordValue-coordValue >= size-border)
-      return (isLtrPB? BookmarksUtils.DROP_AFTER : BookmarksUtils.DROP_BEFORE);
+      return BookmarksUtils.DROP_AFTER;
     // must be in the middle somewhere
     return BookmarksUtils.DROP_ON;
   },
