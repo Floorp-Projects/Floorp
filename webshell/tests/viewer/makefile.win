@@ -57,7 +57,7 @@ LINCS=  \
   -I$(PUBLIC)\ngprefs \
 !endif
 !ifdef MOZ_FULLCIRCLE
-  -I$(PUBLIC)\fullsoft \
+  -I$(PUBLIC)\fulls32 \
 !endif
   $(NULL)
 
@@ -80,7 +80,7 @@ MYLIBS=                         \
  ole32.lib                      \
 !endif
 !ifdef MOZ_FULLCIRCLE
- $(DIST)\lib\fullsoft.lib \
+ $(DIST)\lib\fulls32.lib \
 !endif
  $(NULL)
 
