@@ -53,6 +53,7 @@
 #include "nsIGenericFactory.h"
 
 #include "nsUniversalDetector.h"
+#include "nsUdetXPCOMWrapper.h"
 
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUniversalXPCOMDetector)
