@@ -30,64 +30,35 @@ CPPSRCS		= \
 		nsSetupRegistry.cpp \
 		$(NULL)
 
-ifndef NECKO
-LIBS		= \
-		-labouturl \
-		-lhttpurl \
-		-lsockstuburl \
-		-lfileurl \
-		-lgophurl \
-		-lftpurl \
-		-lremoturl \
-		-lnetcache \
-		-lnetcnvts \
-		-lmimetype \
-		-lnetwork \
-		-lnetlib \
-		-lpwcac \
-		$(NULL)
-endif
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
 BEOS_PROGRAM_RESOURCE = $(srcdir)/apprunner-beos.rsrc
 endif
 
 ifdef MOZ_MONOLITHIC_TOOLKIT
-	MONOLITHIC_TK_FLAGS=$(TK_LIBS)
+MONOLITHIC_TK_FLAGS = $(TK_LIBS)
 endif
 
 ifdef MOZ_OJI
-OJI_LIBS =\
-		-ljsj \
-		$(NULL)
+OJI_LIBS	= -ljsj
 endif
 
-BASE_LIBS =\
+XP_DIST_LIBS	= \
+		-lraptorgfx \
+		$(MOZ_TIMER_LIBS) \
 		-lmozjs \
 		-lxpcom \
-		$(NULL)
-
-GECKO_LIBS =\
-		-lraptorgfx \
-		$(NULL)
-
-XP_DIST_LIBS = \
-		$(GECKO_LIBS) \
-		$(NETLIB_LIBS) \
-		$(MOZ_TIMER_LIBS) \
-		$(BASE_LIBS) \
 		$(OJI_LIBS) \
 		$(NULL)
 
 # cls/shaver are responsible for this amazingness
-EXTRA_DEPS = $(addprefix $(DIST)/,$(patsubst -l%,bin/lib%.$(DLL_SUFFIX),$(XP_DIST_LIBS:-l%_s=lib/lib%_s.a)))
+EXTRA_DEPS	= $(addprefix $(DIST)/,$(patsubst -l%,bin/lib%.$(DLL_SUFFIX),$(XP_DIST_LIBS:-l%_s=lib/lib%_s.a)))
 
-XP_LIBS = \
+XP_LIBS		= \
 		$(XP_DIST_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 
-LIBS =\
+LIBS		= \
 		$(XP_LIBS) \
 		$(MONOLITHIC_TK_FLAGS) \
 		$(NULL)

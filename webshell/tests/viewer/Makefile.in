@@ -24,10 +24,6 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS			= public
 
-ifeq (,$(filter beos os2 rhapsody photon,$(MOZ_WIDGET_TOOLKIT)))
-DIRS += unix
-endif
-
 PROGRAM			= viewer
 
 RUN_VIEWER_SCRIPT	= $(srcdir)/mozilla-viewer.sh
@@ -76,77 +72,53 @@ EXPORT_RESOURCE_SAMPLES	:= \
 
 EXPORT_RESOURCE_THROBBER := $(wildcard $(srcdir)/throbber/anim*.gif)
 
-TOOLKIT_CPPSRCS_beos	:= nsBeOSMain.cpp
-TOOLKIT_CPPSRCS_photon	:= nsPhMain.cpp nsPhMenu.cpp
-
+ifeq (,$(filter beos os2 rhapsody photon,$(MOZ_WIDGET_TOOLKIT)))
+DIRS			+= unix
+UNIX_VIEWER_TK_LIBS	= $(DIST)/lib/libviewer_$(MOZ_WIDGET_TOOLKIT)_s.a
+else
 ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
 BEOS_PROGRAM_RESOURCE	= $(srcdir)/viewer-beos.rsrc
+TOOLKIT_CPPSRCS		= nsBeOSMain.cpp
 endif
-
-TOOLKIT_CPPSRCS		:= $(TOOLKIT_CPPSRCS_$(MOZ_WIDGET_TOOLKIT))
+ifeq ($(MOZ_WIDGET_TOOLKIT),photon)
+TOOLKIT_CPPSRCS		= nsPhMain.cpp nsPhMenu.cpp
+endif
+endif
 
 ifdef MOZ_OJI
 JSJ_LIB			= -ljsj
 endif
 
-BASE_LIBS		= \
-			-lmozjs \
-			-lxpcom \
-			$(NULL)
-
-GECKO_LIBS		= \
+XP_DIST_LIBS		= \
 			-lwidgetsupport_s \
 			-lraptorgfx \
-			$(NULL)
-
-ifndef NECKO
-NETLIB_LIBS		= \
-			-labouturl \
-			-lfileurl \
-			-lftpurl \
-			-lgophurl \
-			-lhttpurl \
-			-lremoturl \
-			-lsockstuburl \
-			-lmimetype \
-			-lnetcache \
-			-lnetcnvts \
-			-lnetlib \
-			-lnetwork \
-			-lpwcac \
-			$(NULL)
-else
-NETLIB_LIBS = \
 			-lneckoutil_s \
-			$(NULL)
-endif
-
-ifeq (,$(filter beos os2 rhapsody photon,$(MOZ_WIDGET_TOOLKIT)))
-UNIX_VIEWER_TK_LIBS = $(DIST)/lib/libviewer_$(MOZ_WIDGET_TOOLKIT)_s.a
-endif
-
-XP_DIST_LIBS = \
-			$(GECKO_LIBS) \
-			$(NETLIB_LIBS) \
 			$(MOZ_TIMER_LIBS) \
-			$(BASE_LIBS) \
+			-lmozjs \
+			-lxpcom \
 			$(JSJ_LIB) \
 			$(NULL)
 
-# cls/shaver are responsible for this amazingness
-EXTRA_DEPS = $(addprefix $(DIST)/,$(patsubst -l%,bin/lib%.$(DLL_SUFFIX),$(XP_DIST_LIBS:-l%_s=lib/lib%_s.a)))
-
-EXTRA_DEPS += $(UNIX_VIEWER_TK_LIBS)
-
-XP_LIBS = \
+XP_LIBS			= \
 			$(XP_DIST_LIBS) \
 			$(NSPR_LIBS) \
 			$(NULL)
 
-LIBS		= \
+LIBS			= \
 			$(UNIX_VIEWER_TK_LIBS) \
 			$(XP_LIBS) \
 			$(TK_LIBS) \
+			$(NULL)
+
+MOTIF_LIBS		= -lviewer_motif_s $(XP_LIBS) $(MOZ_MOTIF_LDFLAGS)
+QT_LIBS			= -lviewer_qt_s $(XP_LIBS) $(MOZ_QT_LDFLAGS)
+XLIB_LIBS		= -lviewer_xlib_s $(XP_LIBS) $(MOZ_XLIB_LDFLAGS)
+GTK_LIBS		= -lviewer_gtk_s $(XP_LIBS) $(MOZ_GTK_LDFLAGS)
+
+# cls/shaver are responsible for this amazingness
+EXTRA_DEPS		= \
+			$(addprefix $(DIST)/,$(patsubst -l%,bin/lib%.$(DLL_SUFFIX),$(XP_DIST_LIBS:-l%_s=lib/lib%_s.a))) \
+			$(UNIX_VIEWER_TK_LIBS) \
 			$(NULL)
 
 include $(topsrcdir)/config/rules.mk
@@ -159,66 +131,34 @@ install:: $(PROGRAM) $(RUN_VIEWER_SCRIPT)
 	$(INSTALL) $(srcdir)/resources/viewer.properties $(DIST)/bin/res
 	$(INSTALL) $(RUN_VIEWER_SCRIPT) $(DIST)/bin
 
-
-##
-## Dont try this at home
-##
-ifdef MOZ_ENABLE_GTK
-GTK_LIBS	= \
-			-lviewer_gtk_s \
-			$(XP_LIBS) \
-			$(MOZ_GTK_LDFLAGS) \
-			$(NULL)
-
 $(PROGRAM)_gtk: $(PROGOBJS) $(EXTRA_DEPS) Makefile Makefile.in $(DIST)/lib/libviewer_gtk_s.a
 	$(CCC) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(GTK_LIBS) $(OS_LIBS)
-
-install:: $(PROGRAM)_gtk
-	$(INSTALL) -m 555 $(PROGRAM)_gtk $(DIST)/bin
-
-endif
-
-ifdef MOZ_ENABLE_XLIB
-XLIB_LIBS	= \
-			-lviewer_xlib_s \
-			$(XP_LIBS) \
-			$(MOZ_XLIB_LDFLAGS) \
-			$(NULL)
-
-$(PROGRAM)_xlib: $(PROGOBJS) $(EXTRA_DEPS) Makefile Makefile.in $(DIST)/lib/libviewer_xlib_s.a
-	$(CCC) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(XLIB_LIBS) $(OS_LIBS)
-
-install:: $(PROGRAM)_xlib
-	$(INSTALL) -m 555 $(PROGRAM)_xlib $(DIST)/bin
-
-endif
-
-ifdef MOZ_ENABLE_QT
-QT_LIBS	= \
-			-lviewer_qt_s \
-			$(XP_LIBS) \
-			$(MOZ_QT_LDFLAGS) \
-			$(NULL)
-
-$(PROGRAM)_qt: $(PROGOBJS) $(EXTRA_DEPS) Makefile Makefile.in $(DIST)/lib/libviewer_qt_s.a
-	$(CCC) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(QT_LIBS) $(OS_LIBS)
-
-install:: $(PROGRAM)_qt
-	$(INSTALL) -m 555 $(PROGRAM)_qt $(DIST)/bin
-
-endif
-
-ifdef MOZ_ENABLE_MOTIF
-MOTIF_LIBS	= \
-			-lviewer_motif_s \
-			$(XP_LIBS) \
-			$(MOZ_MOTIF_LDFLAGS) \
-			$(NULL)
 
 $(PROGRAM)_motif: $(PROGOBJS) $(EXTRA_DEPS) Makefile Makefile.in $(DIST)/lib/libviewer_motif_s.a
 	$(CCC) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(MOTIF_LIBS) $(OS_LIBS)
 
-install:: $(PROGRAM)_motif
-	$(INSTALL) -m 555 $(PROGRAM)_motif $(DIST)/bin
+$(PROGRAM)_qt: $(PROGOBJS) $(EXTRA_DEPS) Makefile Makefile.in $(DIST)/lib/libviewer_qt_s.a
+	$(CCC) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(QT_LIBS) $(OS_LIBS)
 
+$(PROGRAM)_xlib: $(PROGOBJS) $(EXTRA_DEPS) Makefile Makefile.in $(DIST)/lib/libviewer_xlib_s.a
+	$(CCC) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(XLIB_LIBS) $(OS_LIBS)
+
+ifdef MOZ_ENABLE_GTK
+install:: $(PROGRAM)_gtk
+	$(INSTALL) -m 555 $< $(DIST)/bin
+endif
+
+ifdef MOZ_ENABLE_MOTIF
+install:: $(PROGRAM)_motif
+	$(INSTALL) -m 555 $< $(DIST)/bin
+endif
+
+ifdef MOZ_ENABLE_QT
+install:: $(PROGRAM)_qt
+	$(INSTALL) -m 555 $< $(DIST)/bin
+endif
+
+ifdef MOZ_ENABLE_XLIB
+install:: $(PROGRAM)_xlib
+	$(INSTALL) -m 555 $< $(DIST)/bin
 endif
