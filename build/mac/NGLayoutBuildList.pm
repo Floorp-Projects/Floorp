@@ -391,9 +391,13 @@ sub BuildLayoutProjects()
 
 	BuildProject(":mozilla:layout:macbuild:layout.mcp",	"layout$D.o");
 
+	BuildProject(":mozilla:widget:macbuild:widget.mcp",	"widget$D.o");
+
 	BuildProject(":mozilla:webshell:macbuild:webshell.mcp",	"webshell$D.o");
 
 	BuildProject(":mozilla:webshell:tests:viewer:mac:viewer.mcp",	"viewer$D");
+	
+	
 }
 
 sub BuildProjects()
