@@ -97,13 +97,15 @@ protected:
     void InvalidateCache() { mHaveCachedStat = PR_FALSE; }
 
     nsresult FillStatCache() {
-	if (stat(mPath, &mCachedStat) == -1) {
-	    return NS_ERROR_FAILURE;
-	}
-	mHaveCachedStat = PR_TRUE;
-	return NS_OK;
+        if (stat(mPath.get(), &mCachedStat) == -1) {
+            // try lstat it may be a symlink
+            if (lstat(mPath.get(), &mCachedStat) == -1) {
+                return NSRESULT_FOR_ERRNO();
+            }
+        }
+        mHaveCachedStat = PR_TRUE;
+        return NS_OK;
     }
-
 };
 
 #endif /* _nsLocalFileUNIX_H_ */
