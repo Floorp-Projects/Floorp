@@ -14,7 +14,7 @@
 <html:script language="JavaScript" src="chrome://global/content/tasksOverlay.js"/>
 
 	<!-- Tasks Menu -->
-	<menu id="tasksMenu" value="&tasksMenu.label;" oncommand="ShowWindowFromResource(event.target)" datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot">
+	<menu id="tasksMenu" value="&tasksMenu.label;"  datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot" open="true">
         <template>
           <rule iscontainer="true" isempty="false">
 		    <menupopup>
@@ -28,7 +28,7 @@
           </rule>
           <rule>
 		    <menupopup>
-              <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+              <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="ShowWindowFromResource(event.target)"/>
 			</menupopup>
           </rule>
         </template>
@@ -64,15 +64,7 @@
 			    	<menuitem value="&bugzillaButton.label;" oncommand="OpenTaskURL('http://bugzilla.mozilla.org');"/>
 			    </menu>
 			  </popup>
-			  
-			  <popup id="shoppingPopup">
-			    <menu>
-			    	<menuitem value="&booksButton.label;" oncommand="OpenTaskURL('http://www.fatbrain.com' );"/>
-			    	<menuitem value="&cdButton.label;" oncommand="OpenTaskURL('http://www.cdnow.com');" />
-			    	<menuitem value="&lifeButton.label;" oncommand="OpenTaskURL('http://www.match.com');"/>
-			    </menu>
-			  </popup>
-			  
+			 
 			   <popup id="windowPopup" >
 			    <menu oncommand="ShowWindowFromResource(event.target)" datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot" >
                   <template>
@@ -102,8 +94,7 @@
 	  	 		<titledbutton align="left"  class="popup" popup="mozillaPopup" tooltip="aTooltip" tooltiptext="Mozilla development info"
 				   popupanchor="bottomright" value="&mozillaButton.label;" />
 	  	 		
-	  	 		<titledbutton align="left"  class="popup" popup="shoppingPopup"
-				   popupanchor="topleft" popupalign="bottomleft" value="&shoppingButton.label;" />
+	  	 		
 	  	 
 				   
 				<titledbutton align="left" class="popup" value="&openWinButton.label;" popup="windowPopup"
