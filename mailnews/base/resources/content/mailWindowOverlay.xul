@@ -1385,7 +1385,7 @@ Rights Reserved.
   </toolbar>
 </toolbox>
 
-<hbox id="searchBox" persist="collapsed" tooltip="aTooltip" tooltiptext="&searchBar.tooltip;" align="center">
+<hbox id="searchBox" persist="collapsed" align="center">
   <text id="searchCriteria" class="label" value="&SearchSubjectOrSender.label;"/>
   <textbox id="searchInput" flex ="1" oninput = "onSearchInput(event);" />
   <button id="advancedButton" label="&advancedButton.label;" tooltip="aTooltip" tooltiptext="&advancedButton.tooltip;" oncommand="onAdvancedSearch();"/>

@@ -416,7 +416,6 @@ Rights Reserved.
 <!--Tooltips-->
 <!ENTITY menuBar.tooltip "Menu Bar">
 <!ENTITY mailToolbar.tooltip "Mail Toolbar">
-<!ENTITY searchBar.tooltip "Search Bar">
 <!ENTITY advancedButton.tooltip "Search Messages...">
 <!ENTITY getMsgButton.tooltip "Get new messages">
 <!ENTITY newMsgButton.tooltip "Create a new message">
