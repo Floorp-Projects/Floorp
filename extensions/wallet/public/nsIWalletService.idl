@@ -53,7 +53,7 @@ interface nsIWalletService : nsISupports {
   boolean WALLET_ChangePassword();
   void WALLET_DeleteAll();
   PRUint32 WALLET_RequestToCapture(in nsIPresShell shell, in nsIDOMWindow win);
-  boolean WALLET_Prefill(in nsIPresShell shell, in boolean quick);
+  boolean WALLET_Prefill(in nsIPresShell shell, in boolean quick, in nsIDOMWindow win);
   [noscript]void WALLET_PrefillReturn(in nsAutoString results);
   void WALLET_FetchFromNetCenter();
   boolean WALLET_ExpirePassword();

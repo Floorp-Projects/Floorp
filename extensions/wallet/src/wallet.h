@@ -64,7 +64,7 @@ extern void
 WLLT_RequestToCapture(nsIPresShell* shell, nsIDOMWindow * win, PRUint32* status);
 
 extern nsresult
-WLLT_Prefill(nsIPresShell* shell, PRBool quick, PRBool* doPrefillMessage);
+WLLT_Prefill(nsIPresShell* shell, PRBool quick, nsIDOMWindow* win);
 
 extern void
 WLLT_GetNopreviewListForViewer(nsString& aNopreviewList);

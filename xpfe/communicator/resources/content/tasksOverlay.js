@@ -344,17 +344,13 @@ function WalletAction( action )
   if( appCore ) {
     switch( action ) {
       case "safefill":
-        if (appCore.walletPreview(window, window._content)) {
-          window.alert(strings.getAttribute("noPrefills"));
-        }
+        appCore.walletPreview(window, window._content);
         break;
 //    case "password":
 //      appCore.walletChangePassword();
 //      break;
       case "quickfill": 
-        if (appCore.walletQuickFillin(window._content)) {
-          window.alert(strings.getAttribute("noPrefills"));
-        }
+        appCore.walletQuickFillin(window._content);
         break;
       case "capture":
       default:

@@ -94,8 +94,8 @@ NS_IMETHODIMP nsWalletlibService::WALLET_RequestToCapture(nsIPresShell* shell, n
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWalletlibService::WALLET_Prefill(nsIPresShell* shell, PRBool quick, PRBool* doPrefillMessage) {
-  return ::WLLT_Prefill(shell, quick, doPrefillMessage);
+NS_IMETHODIMP nsWalletlibService::WALLET_Prefill(nsIPresShell* shell, PRBool quick, nsIDOMWindow* win, PRBool* status) {
+  return ::WLLT_Prefill(shell, quick, win);
 }
 
 NS_IMETHODIMP nsWalletlibService::WALLET_PrefillReturn(nsAutoString results){

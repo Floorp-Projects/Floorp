@@ -2664,12 +2664,12 @@ wallet_OKToCapture(char* urlName, nsIDOMWindow* window) {
 /*
  * capture the value of a form element
  */
-PRIVATE void
+PRIVATE PRBool
 wallet_Capture(nsIDocument* doc, const nsString& field, const nsString& value, const nsString& vcard)
 {
   /* do nothing if there is no value */
   if (!value.Length()) {
-    return;
+    return PR_FALSE;
   }
 
   /* read in the mappings if they are not already present */
@@ -2711,7 +2711,7 @@ wallet_Capture(nsIDocument* doc, const nsString& field, const nsString& value, c
           wallet_SchemaToValue_list,
           PR_FALSE); /* note: obscure=false, otherwise we will obscure an obscured value */
         delete mapElement;
-        return;
+        return PR_TRUE;
       }
       lastIndex = index;
     }
@@ -2753,7 +2753,7 @@ wallet_Capture(nsIDocument* doc, const nsString& field, const nsString& value, c
           wallet_SchemaToValue_list,
           PR_FALSE); /* note: obscure=false, otherwise we will obscure an obscured value */
         delete mapElement;
-        return;
+        return PR_TRUE;
       }
       lastIndex = index;
 
@@ -2773,6 +2773,7 @@ wallet_Capture(nsIDocument* doc, const nsString& field, const nsString& value, c
       wallet_WriteToFile(schemaValueFileName, wallet_SchemaToValue_list);
     }
   }
+  return PR_TRUE;
 }
 
 /***************************************************************/
@@ -3147,10 +3148,9 @@ WLLT_PrefillReturn(const nsString& results)
  * get the form elements on the current page and prefill them if possible
  */
 PUBLIC nsresult
-WLLT_Prefill(nsIPresShell* shell, PRBool quick, PRBool* doPrefillMessage)
+WLLT_Prefill(nsIPresShell* shell, PRBool quick, nsIDOMWindow* win)
 {
   nsAutoString urlName;
-  *doPrefillMessage = PR_FALSE;
 
   /* create list of elements that can be prefilled */
   nsVoidArray *wallet_PrefillElement_list=new nsVoidArray();
@@ -3256,7 +3256,11 @@ WLLT_Prefill(nsIPresShell* shell, PRBool quick, PRBool* doPrefillMessage)
 
   /* return if no elements were put into the list */
   if (LIST_COUNT(wallet_PrefillElement_list) == 0) {
-    *doPrefillMessage = !gEncryptionFailure;
+    if (!gEncryptionFailure) {
+      PRUnichar * message = Wallet_Localize("noPrefills");
+      wallet_Alert(message, win);
+      Recycle(message);
+    }
     return NS_ERROR_FAILURE; // indicates to caller not to display preview screen
   }
 
@@ -3376,8 +3380,9 @@ WLLT_RequestToCapture(nsIPresShell* shell, nsIDOMWindow* win, PRUint32* status) 
                                 nsAutoString vcardName; vcardName.AssignWithConversion("VCARD_NAME");
                                 result = element->GetAttribute(vcardName, vcardValue);
                               }
-                              captureCount++;
-                              wallet_Capture(doc, field, value, vcardValue);
+                              if (wallet_Capture(doc, field, value, vcardValue)) {
+                                captureCount++;
+                              }
                             }
                           }
                         }
