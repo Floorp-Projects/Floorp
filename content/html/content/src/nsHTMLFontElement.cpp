@@ -47,6 +47,7 @@
 #include "nsHTMLAttributes.h"
 #include "nsCSSStruct.h"
 #include "nsRuleNode.h"
+#include "nsIDocument.h"
 
 class nsHTMLFontElement : public nsGenericHTMLContainerElement,
                           public nsIDOMHTMLFontElement
@@ -183,7 +184,11 @@ nsHTMLFontElement::StringToAttribute(nsIAtom* aAttribute,
     }
   }
   else if (aAttribute == nsHTMLAtoms::color) {
-    if (aResult.ParseColor(aValue, mDocument)) {
+    nsCOMPtr<nsIDocument> doc(mDocument);
+    if (!doc) {
+      mNodeInfo->GetDocument(getter_AddRefs(doc));
+    }
+    if (aResult.ParseColor(aValue, doc)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }

@@ -234,7 +234,11 @@ nsHTMLFrameElement::StringToAttribute(nsIAtom* aAttribute,
                                       nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::bordercolor) {
-    if (aResult.ParseColor(aValue, mDocument)) {
+    nsCOMPtr<nsIDocument> doc(mDocument);
+    if (!doc) {
+      mNodeInfo->GetDocument(getter_AddRefs(doc));
+    }
+    if (aResult.ParseColor(aValue, doc)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
