@@ -1865,31 +1865,6 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(PRInt32 aChromeFlags,
    return NS_OK;
 }
 
-// XXX can this switch now?
-/// This should rightfully be somebody's CONTRACTID?
-// Will switch when the "app shell browser component" arrives.
-static const char *prefix = "@mozilla.org/appshell/component/browser/window;1";
-
-NS_IMETHODIMP nsXULWindow::NotifyObservers(const PRUnichar* aTopic, 
-   const PRUnichar* aData)
-{
-   nsCOMPtr<nsIObserverService> service(do_GetService("@mozilla.org/observer-service;1"));
-
-   if(!service)
-      return NS_ERROR_FAILURE;
-
-   nsCOMPtr<nsIWebShellWindow> 
-      removeme(do_QueryInterface(NS_STATIC_CAST(nsIXULWindow*, this)));
-
-   nsCAutoString topic; topic.Assign(prefix);
-   topic.Append(";");
-   topic.AppendWithConversion(aTopic);
-
-   NS_ENSURE_SUCCESS(service->NotifyObservers(removeme, topic.get(), aData),
-      NS_ERROR_FAILURE);
-   return NS_OK;
-}
-
 void nsXULWindow::EnableParent(PRBool aEnable)
 {
   nsCOMPtr<nsIBaseWindow> parentWindow;

@@ -121,7 +121,6 @@ protected:
       nsIXULWindow **_retval);
    NS_IMETHOD CreateNewContentWindow(PRInt32 aChromeFlags,
       nsIXULWindow **_retval);
-   NS_IMETHOD NotifyObservers(const PRUnichar* aTopic, const PRUnichar* aData);
 
    void       EnableParent(PRBool aEnable);
    PRBool     ConstrainToZLevel(PRBool aImmediate, nsWindowZ *aPlacement,
