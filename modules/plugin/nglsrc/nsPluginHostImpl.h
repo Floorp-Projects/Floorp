@@ -36,6 +36,7 @@ class nsPluginTag
 {
 public:
   nsPluginTag();
+  nsPluginTag(nsPluginTag* aPluginTag);
   ~nsPluginTag();
 
   nsPluginTag   *mNext;
@@ -131,6 +132,12 @@ public:
 
   NS_IMETHOD
   IsPluginEnabledForExtension(const char* aExtension, const char* &aMimeType);
+
+  NS_IMETHOD
+  GetPluginCount(PRUint32* aPluginCount);
+  
+  NS_IMETHOD
+  GetPlugins(PRUint32 aPluginCount, nsIDOMPlugin* aPluginArray[]);
 
   //nsIPluginManager2 interface - secondary methods that nsIPlugin communicates to
 
