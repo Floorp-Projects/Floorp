@@ -861,6 +861,17 @@ ShowNativePrintDialog(HWND              aHWnd,
   // If there is no name then use the default printer
   if (!printerName || (printerName && !*printerName)) {
     printerName = GetDefaultPrinterNameFromGlobalPrinters();
+  } else {
+    HANDLE hPrinter = NULL;
+    nsCAutoString printerNameNative;
+    NS_CopyUnicodeToNative(nsDependentString(printerName), printerNameNative);
+    LPTSTR tempPrinterName = NS_CONST_CAST(char*, printerNameNative.get());
+    if(!::OpenPrinter(tempPrinterName, &hPrinter, NULL)) {
+      // If the last used printer is not found, we should use default printer.
+      printerName = GetDefaultPrinterNameFromGlobalPrinters();
+    } else {
+      ::ClosePrinter(hPrinter);
+    }
   }
 
   NS_ASSERTION(printerName, "We have to have a printer name");
