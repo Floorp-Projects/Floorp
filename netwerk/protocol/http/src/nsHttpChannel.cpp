@@ -3620,7 +3620,9 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
 
         // grab reference to connection in case we need to retry an 
         // authentication request over it.
-        nsRefPtr<nsAHttpConnection> conn = mTransaction->Connection();
+        nsRefPtr<nsAHttpConnection> conn;
+        if (mCaps & NS_HTTP_STICKY_CONNECTION)
+            conn = mTransaction->Connection();
 
         // at this point, we're done with the transaction
         NS_RELEASE(mTransaction);
@@ -3629,6 +3631,7 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
 
         // handle auth retry...
         if (mAuthRetryPending && NS_SUCCEEDED(status)) {
+            NS_ASSERTION(conn, "we should have a connection");
             mAuthRetryPending = PR_FALSE;
             status = DoAuthRetry(conn);
             if (NS_SUCCEEDED(status))
