@@ -1,7 +1,7 @@
 //GLOBALS
 
 //pref service and pref string
-var prefInt;  
+var prefInt = parent.hPrefWindow.pref;  
 
 //locale bundles
 var regionsBundle;
@@ -20,7 +20,7 @@ var active_languages;
 var active_languages_treeroot;
 
 //XUL window pref window interface object
-var prefwindow_proxy_object;
+var pref_string = new String();
 
 function GetBundles()
 {
@@ -45,8 +45,9 @@ function Init()
 
   if (!window.arguments) {
     
+    //no caller arguments - load base window       
+    
     try {
-      //base window
       active_languages              = document.getElementById('active_languages'); 
       active_languages_treeroot     = document.getElementById('active_languages_root'); 
       prefwindow_proxy_object       = document.getElementById('intlAcceptLanguages');
@@ -62,48 +63,34 @@ function Init()
 
     catch(ex) {
 
-      dump("*** Couldn't initialize pref panel\n");
+      dump("*** Couldn't initialize page switcher and pref loader.\n");
       //pref service backup
 
     } //catch
 
+    try {
+        pref_string = parent.hPrefWindow.getPref( "string", "intl.accept_languages");
+        //fall-back (hard-coded for Beta2, need to move to XUL/DTD)
+        if (!pref_string) pref_string = "en";
+    } //try
 
-      //get pref service as backup
-	    try
-	    {
-        if (!prefInt) {
-		      
-          prefInt = Components.classes["component://netscape/preferences"];
-
-		      if (prefInt) {
-			      prefInt = prefInt.getService();
-			      prefInt = prefInt.QueryInterface(Components.interfaces.nsIPref);
-  		      prefwindow_proxy_object.value = prefInt.CopyCharPref("intl.accept_languages");
-            if (!prefwindow_proxy_object.value) prefwindow_proxy_object.value = "en";
-		      } //if
-        } //if
-      } //try
-
-	    catch(ex)
-	    {
-		    dump("failed to get pref service!\n");
-		    prefInt = null;
-	    }
-
-
+    catch(ex) {
+      dump("*** Couldn't read pref string\n");
+    } //catch
 
     try {
-      dump("*** Language PrefString: " + prefwindow_proxy_object.value + "\n");
+      dump("*** Language PrefString: " + pref_string + "\n");
     } //try
 
     catch(ex) {
       dump("*** Pref object doesn't exist\n");
     } //catch
 
-  	LoadActiveLanguages();
+    LoadActiveLanguages();
 
   } else {
 
+    //load available languages popup
     try {
 
       //add language popup
@@ -111,13 +98,22 @@ function Init()
       available_languages_treeroot  = document.getElementById('available_languages_root');
       active_languages		          = window.opener.document.getElementById('active_languages'); 
       active_languages_treeroot     = window.opener.document.getElementById('active_languages_root'); 
-      prefwindow_proxy_object       = window.opener.document.getElementById('intlAcceptLanguages');
+      pref_string                   = window.opener.document.getElementById('intlAcceptLanguages').value;
 
     } //try
 
     catch(ex) {
       dump("*** Couldn't get XUL element handles\n");
     } //catch
+
+    try {
+      dump("*** AddAvailable Language PrefString: " + pref_string + "\n");
+    } //try
+
+    catch(ex) {
+      dump("*** Pref object doesn't exist\n");
+    } //catch
+
 
 	  LoadAvailableLanguages();
 
@@ -128,8 +124,10 @@ function Init()
 function AddLanguage() 
 {
     dump("********** AddLanguage()\n");    
+    //cludge: make pref string available from the popup
+    document.getElementById('intlAcceptLanguages').value = pref_string;
     window.openDialog("chrome://communicator/content/pref/pref-languages-add.xul","","modal=yes,chrome,resizable=no", "addlangwindow");
-    UpdatePrefString();
+    UpdateSavePrefString();
 
 }
 
@@ -233,10 +231,10 @@ function LoadAvailableLanguages()
 function LoadActiveLanguages()
 {
 
-  //dump("Loading: " + prefwindow_proxy_object.value + "!\n");
-  
+  dump("LoadActiveLanguages, PrefString: " + pref_string + "\n");
+
   try {
-	  arrayOfPrefs = prefwindow_proxy_object.value.split(', ');
+	  arrayOfPrefs = pref_string.split(', ');
   } 
   
   catch (ex) {
@@ -259,8 +257,11 @@ function LoadActiveLanguages()
 
 function LangAlreadyActive(langId)
 {
+
+  dump("*** LangAlreadyActive, PrefString: " + pref_string + "\n");
+
   try {
-    if (prefwindow_proxy_object.value.indexOf(langId) != -1)
+    if (pref_string.indexOf(langId) != -1)
       return true;
     else
       return false;
@@ -318,7 +319,6 @@ function AddAvailableLanguage()
   }
 
   available_languages.clearItemSelection();
-  UpdatePrefString();
   window.close();
 
 } //AddAvailableLanguage
@@ -356,7 +356,7 @@ function RemoveActiveLanguage()
     //active_languages.clearItemSelection();
   }
 
-  UpdatePrefString();
+  UpdateSavePrefString();
 
 } //RemoveActiveLanguage
 
@@ -405,11 +405,12 @@ function AddTreeItem(doc, treeRoot, langID, langTitle)
 }
 
 
-function UpdatePrefString()
+function UpdateSavePrefString()
 {
   var num_languages = 0;
+  pref_string = null;
 
-  dump("*** UpdatePrefString()\n");
+  dump("*** UpdateSavePrefString()\n");
 
   for (var item = active_languages_treeroot.firstChild; item != null; item = item.nextSibling) {
 
@@ -423,34 +424,27 @@ function UpdatePrefString()
 
 		  //separate >1 languages by commas
 		  if (num_languages > 1) {
-			  prefwindow_proxy_object.value = prefwindow_proxy_object.value + "," + " " + languageid;
+			  pref_string = pref_string + "," + " " + languageid;
 		  } else {
-			  prefwindow_proxy_object.value = languageid;
+			  pref_string = languageid;
 		  } //if
 	  } //if
   }//for
 
-  dump("*** Pref string set to: " + prefwindow_proxy_object.value + "\n");
+  dump("*** Pref string set to: " + pref_string + "\n");
+  parent.hPrefWindow.setPref( "string", "intl.accept_languages", pref_string );
+  //Save();
 
 }
 
 function Save()
 {
 
-  // Iterate through the 'active languages  tree to collect the languages
-  // that the user has chosen. 
-
   dump('*** Save()\n');
 
-  var row           = null;
-  var cell          = null;
-  var languageid    = new String();
-
-  UpdatePrefString();
-
-	//Save Prefs
   try
 	{
+    var prefInt = null;
 
     if (!prefInt) {
 		
@@ -464,16 +458,14 @@ function Save()
 
 		if (prefInt)
 		{
-			prefInt.SetCharPref("intl.accept_languages", prefwindow_proxy_object.value);
-			dump('*** saved pref: ' + prefwindow_proxy_object.value + '.\n');
+			prefInt.SetCharPref("intl.accept_languages", pref_string);
+			dump('*** saved pref: ' + pref_string + '.\n');
 		}
- 		window.close();
 	}
 
 	catch(ex)
 	{
 		dump("*** Couldn't save!\n");
-		window.close();
 	}
 
 } //Save
@@ -491,7 +483,7 @@ function MoveUp() {
     }
   }
 
-  UpdatePrefString();
+  UpdateSavePrefString();
 
 } //MoveUp
 
@@ -511,6 +503,6 @@ function MoveDown() {
     }
   }
 
-  UpdatePrefString();
+  UpdateSavePrefString();
 
 } //MoveDown
