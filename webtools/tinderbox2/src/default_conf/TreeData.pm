@@ -29,8 +29,8 @@
 # issue to work out.
 
 
-# $Revision: 1.7 $ 
-# $Date: 2001/07/27 20:42:56 $ 
+# $Revision: 1.8 $ 
+# $Date: 2001/12/03 19:47:24 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TreeData.pm,v $ 
 # $Name:  $ 
@@ -220,10 +220,25 @@ foreach $tree (keys %VC_TREE) {
 # there are or what they mean, it only displays the history of the
 # state.
 
-%TREE_STATE2COLOR = (
-		     'Open' => "white",
-		     'Restricted' => "#e7e7e7", # a light grey
-		     'Closed' => "silver",
+%TREE_STATES = (
+		     'Open' => {
+                         "html_color" => "white",
+                         "hdml_char" => "O",
+                         "order" => 1,
+                     },
+
+		     'Restricted' => {
+                         "html_color" => "#e7e7e7", # a light grey
+                         "hdml_char" => "R",
+                         "order" => 2,
+                     },
+
+		     'Closed' => {
+                         "html_color" => "silver",
+                         "hdml_char" => "C",
+                         "order" => 3,
+                     },
+
 		    );
 
 
@@ -245,14 +260,30 @@ sub sort_tree_buildnames {
 sub TreeState2color {
   my ($state) = @_;
 
-  return $TREE_STATE2COLOR{$state};
+  $color = $TREE_STATES{$state}{'html_color'};
+
+  return $color;
 }
 
 
-sub get_all_tree_states {
+sub TreeState2char {
+  my ($state) = @_;
+
+  $char = $TREE_STATES{$state}{'hdml_char'};
+
+  return $char;
+}
+
+
+sub get_all_sorted_tree_states {
   my @tree_states;
 
-  @tree_states = sort keys %TREE_STATE2COLOR;
+  @tree_states = (
+                  map { $_->[0] }
+                  sort{ $a->[1] <=> $b->[1] }	
+                  map { [ $_, $STATUS{$_}{'order'} ] }
+                  (keys %TREE_STATES)
+                  );
   
   return @tree_states;
 }
