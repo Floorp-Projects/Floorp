@@ -83,11 +83,11 @@ sub load_extra_data {
 
     $extra_url[++$ii] = "../bonsai/cvsquery.cgi?module=$module"
                       . "&branch=$branch&cvsroot=$root&date=explicit"
-                      . "&mindate=$mindate&maxdate=$maxdate&who=$email";
+                      . "&mindate=$mindate&maxdate=$maxdate&who=$rawname";
     $extra_text[$ii] = "Last check-in";
 
     $extra_url[++$ii] = "../bonsai/cvsquery.cgi?module=$module"
-                      . "&branch=$branch&cvsroot=$root&date=day&who=$email";
+                      . "&branch=$branch&cvsroot=$root&date=day&who=$rawname";
     $extra_text[$ii] = "Check-ins within 24 hours";
   }
 }
