@@ -255,4 +255,5 @@ bin\components\pipnss.xpt
 bin\components\pippki.xpt
 bin\chrome\pipnss.jar
 bin\chrome\pippki.jar
+bin\res\nssifail.txt
 
