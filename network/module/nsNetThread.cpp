@@ -56,6 +56,8 @@ NET_NGLayoutConverter(FO_Present_Types format_out,
                       URL_Struct  *URL_s,
                       MWContext   *context);
 
+void net_AddrefContext(MWContext *context);
+void net_ReleaseContext(MWContext *context);
 }; /* end of extern "C" */
 
 #if defined(XP_PC)
@@ -296,7 +298,7 @@ protected:
     virtual ~nsStreamListenerProxy();
 
 private:
-    nsresult           mStatus;
+    nsresult mStatus;
 };
 
 
@@ -304,19 +306,84 @@ private:
 
 struct ProxyEvent : public PLEvent 
 {
-    ProxyEvent(nsStreamListenerProxy* aProxy, nsIURL* aURL);
-    virtual ~ProxyEvent();
-    NS_IMETHOD HandleEvent() = 0;
-    void Fire(void);
+  virtual ~ProxyEvent();
+  virtual void InitEvent();
+  NS_IMETHOD HandleEvent() = 0;
+  void Fire(void);
 
+  static void PR_CALLBACK HandlePLEvent(PLEvent* aEvent);
+  static void PR_CALLBACK DestroyPLEvent(PLEvent* aEvent);
+};
+
+ProxyEvent::~ProxyEvent()
+{
+}
+
+void ProxyEvent::InitEvent()
+{
+  PL_InitEvent(this, nsnull,
+               (PLHandleEventProc)  ProxyEvent::HandlePLEvent,
+               (PLDestroyEventProc) ProxyEvent::DestroyPLEvent);
+}
+
+void PR_CALLBACK ProxyEvent::HandlePLEvent(PLEvent* aEvent)
+{
+  /*
+   * XXX: This is a dangerous cast since it must adjust the pointer 
+   *      to compensate for the vtable...
+   */
+  ProxyEvent *ev = (ProxyEvent*)aEvent;
+
+  ev->HandleEvent();
+}
+
+void PR_CALLBACK ProxyEvent::DestroyPLEvent(PLEvent* aEvent)
+{
+  /*
+   * XXX: This is a dangerous cast since it must adjust the pointer 
+   *      to compensate for the vtable...
+   */
+  ProxyEvent *ev = (ProxyEvent*)aEvent;
+
+  delete ev;
+}
+
+#if defined(XP_UNIX)
+extern PLEventQueue* gWebShell_UnixEventQueue;
+#endif
+
+void ProxyEvent::Fire() 
+{
+  PLEventQueue* eventQueue;
+  InitEvent();
+
+#if defined(XP_PC)
+  eventQueue = PL_GetMainEventQueue();
+#elif defined(XP_UNIX)
+  eventQueue = gWebShell_UnixEventQueue;
+#endif
+
+  PL_PostEvent(eventQueue, this);
+}
+
+
+/*--------- Base Class for the nsIStreamListenerProxy Class ----------------*/
+
+
+struct StreamListenerProxyEvent : public ProxyEvent
+{
+    StreamListenerProxyEvent(nsStreamListenerProxy* aProxy, nsIURL* aURL);
+    virtual ~StreamListenerProxyEvent();
+
+    virtual void InitEvent();
     static void PR_CALLBACK HandlePLEvent(PLEvent* aEvent);
-    static void PR_CALLBACK DestroyPLEvent(PLEvent* aEvent);
 
     nsStreamListenerProxy* mProxy;
     nsIURL* mURL;
 };
 
-ProxyEvent::ProxyEvent(nsStreamListenerProxy* aProxy, nsIURL* aURL)
+
+StreamListenerProxyEvent::StreamListenerProxyEvent(nsStreamListenerProxy* aProxy, nsIURL* aURL)
 {
     mProxy = aProxy;
     mURL   = aURL;
@@ -326,20 +393,27 @@ ProxyEvent::ProxyEvent(nsStreamListenerProxy* aProxy, nsIURL* aURL)
 
 }
 
-ProxyEvent::~ProxyEvent()
+StreamListenerProxyEvent::~StreamListenerProxyEvent()
 {
     NS_RELEASE(mProxy);
     NS_RELEASE(mURL);
 }
 
-void PR_CALLBACK ProxyEvent::HandlePLEvent(PLEvent* aEvent)
+void StreamListenerProxyEvent::InitEvent()
+{
+  PL_InitEvent(this, nsnull,
+               (PLHandleEventProc)  StreamListenerProxyEvent::HandlePLEvent,
+               (PLDestroyEventProc) ProxyEvent::DestroyPLEvent);
+}
+
+void PR_CALLBACK StreamListenerProxyEvent::HandlePLEvent(PLEvent* aEvent)
 {
     /*
      * XXX: This is a dangerous cast since it must adjust the pointer 
      *      to compensate for the vtable...
      */
     nsresult rv;
-    ProxyEvent *ev = (ProxyEvent*)aEvent;
+    StreamListenerProxyEvent *ev = (StreamListenerProxyEvent*)aEvent;
 
     rv = ev->HandleEvent();
     if (NS_FAILED(rv)) {
@@ -347,41 +421,9 @@ void PR_CALLBACK ProxyEvent::HandlePLEvent(PLEvent* aEvent)
     }
 }
 
-void PR_CALLBACK ProxyEvent::DestroyPLEvent(PLEvent* aEvent)
-{
-    /*
-     * XXX: This is a dangerous cast since it must adjust the pointer 
-     *      to compensate for the vtable...
-     */
-    ProxyEvent *ev = (ProxyEvent*)aEvent;
-
-    delete ev;
-}
-
-#if defined(XP_UNIX)
-extern PLEventQueue* gWebShell_UnixEventQueue;
-#endif
-
-void ProxyEvent::Fire() 
-{
-    PLEventQueue* eventQueue;
-
-    PL_InitEvent(this, nsnull,
-                 (PLHandleEventProc)  ProxyEvent::HandlePLEvent,
-                 (PLDestroyEventProc) ProxyEvent::DestroyPLEvent);
-
-#if defined(XP_PC)
-    eventQueue = PL_GetMainEventQueue();
-#elif defined(XP_UNIX)
-    eventQueue = gWebShell_UnixEventQueue;
-#endif
-
-    PL_PostEvent(eventQueue, this);
-}
-
 /*-------------- OnStartBinding Proxy --------------------------------------*/
 
-struct OnStartBindingProxyEvent : public ProxyEvent
+struct OnStartBindingProxyEvent : public StreamListenerProxyEvent
 {
     OnStartBindingProxyEvent(nsStreamListenerProxy* aProxy, nsIURL* aURL, 
                              const char *aContentType);
@@ -394,7 +436,7 @@ struct OnStartBindingProxyEvent : public ProxyEvent
 OnStartBindingProxyEvent::OnStartBindingProxyEvent(nsStreamListenerProxy* aProxy,
                                                    nsIURL* aURL,
                                                    const char *aContentType)
-                        : ProxyEvent(aProxy, aURL)
+                        : StreamListenerProxyEvent(aProxy, aURL)
 {
     mContentType = PL_strdup(aContentType);
 }
@@ -413,7 +455,7 @@ OnStartBindingProxyEvent::HandleEvent()
 
 /*-------------- OnProgress Proxy ------------------------------------------*/
 
-struct OnProgressProxyEvent : public ProxyEvent
+struct OnProgressProxyEvent : public StreamListenerProxyEvent
 {
     OnProgressProxyEvent(nsStreamListenerProxy* aProxy, nsIURL* aURL, 
                          PRInt32 aProgress, PRInt32 aProgressMax);
@@ -427,7 +469,7 @@ OnProgressProxyEvent::OnProgressProxyEvent(nsStreamListenerProxy* aProxy,
                                            nsIURL* aURL,
                                            PRInt32 aProgress,
                                            PRInt32 aProgressMax)
-                     : ProxyEvent(aProxy, aURL)
+                     : StreamListenerProxyEvent(aProxy, aURL)
 {
     mProgress    = aProgress;
     mProgressMax = aProgressMax;
@@ -441,7 +483,7 @@ OnProgressProxyEvent::HandleEvent()
 
 /*-------------- OnStatus Proxy --------------------------------------------*/
 
-struct OnStatusProxyEvent : public ProxyEvent
+struct OnStatusProxyEvent : public StreamListenerProxyEvent
 {
     OnStatusProxyEvent(nsStreamListenerProxy* aProxy, nsIURL* aURL, 
                        const nsString& aMsg);
@@ -453,7 +495,7 @@ struct OnStatusProxyEvent : public ProxyEvent
 OnStatusProxyEvent::OnStatusProxyEvent(nsStreamListenerProxy* aProxy,
                                        nsIURL* aURL,
                                        const nsString& aMsg)
-                   : ProxyEvent(aProxy, aURL)
+                   : StreamListenerProxyEvent(aProxy, aURL)
 {
     mMsg = aMsg;
 }
@@ -467,7 +509,7 @@ OnStatusProxyEvent::HandleEvent()
 
 /*-------------- OnStopBinding Proxy ---------------------------------------*/
 
-struct OnStopBindingProxyEvent : public ProxyEvent
+struct OnStopBindingProxyEvent : public StreamListenerProxyEvent
 {
     OnStopBindingProxyEvent(nsStreamListenerProxy* aProxy, nsIURL* aURL, 
                             PRInt32 aStatus, const nsString& aMsg);
@@ -481,7 +523,7 @@ OnStopBindingProxyEvent::OnStopBindingProxyEvent(nsStreamListenerProxy* aProxy,
                                                  nsIURL* aURL,
                                                  PRInt32 aStatus,
                                                  const nsString& aMsg)
-                       : ProxyEvent(aProxy, aURL)
+                       : StreamListenerProxyEvent(aProxy, aURL)
 {
     mStatus = aStatus;
     mMsg = aMsg;
@@ -496,7 +538,7 @@ OnStopBindingProxyEvent::HandleEvent()
 
 /*-------------- OnDataAvailable Proxy -------------------------------------*/
 
-struct OnDataAvailableProxyEvent : public ProxyEvent
+struct OnDataAvailableProxyEvent : public StreamListenerProxyEvent
 {
     OnDataAvailableProxyEvent(nsStreamListenerProxy* aProxy, nsIURL* aURL, 
                               nsIInputStream* aStream, PRInt32 aLength);
@@ -511,7 +553,7 @@ OnDataAvailableProxyEvent::OnDataAvailableProxyEvent(nsStreamListenerProxy* aPro
                                                      nsIURL* aURL,
                                                      nsIInputStream* aStream,
                                                      PRInt32 aLength)
-                         : ProxyEvent(aProxy, aURL)
+                         : StreamListenerProxyEvent(aProxy, aURL)
 {
     mStream = aStream;
     NS_ADDREF(mStream);
@@ -682,4 +724,79 @@ nsStreamListenerProxy::~nsStreamListenerProxy()
 nsIStreamListener* ns_NewStreamListenerProxy(nsIStreamListener* aListener)
 {
     return new nsStreamListenerProxy(aListener);
+}
+
+
+/*----------- Proxy for net_CallExitRoutine(...) ---------------------------*/
+extern "C" MODULE_PRIVATE void
+net_CallExitRoutine(Net_GetUrlExitFunc* exit_routine,
+                    URL_Struct*         URL_s,
+                    int                 status,
+                    FO_Present_Types    format_out,
+                    MWContext*          window_id);
+
+
+struct CallExitRoutineProxyEvent : public ProxyEvent
+{
+  CallExitRoutineProxyEvent(Net_GetUrlExitFunc* aExitRoutine,
+                            URL_Struct* aURL_s,
+                            int aStatus,
+                            FO_Present_Types aFormatOut,
+                            MWContext* aWindowId);
+  virtual ~CallExitRoutineProxyEvent();
+  NS_IMETHOD HandleEvent();
+
+  Net_GetUrlExitFunc* exit_routine;
+  URL_Struct*         URL_s;
+  int                 status;
+  FO_Present_Types    format_out;
+  MWContext*          window_id;
+};
+
+CallExitRoutineProxyEvent::CallExitRoutineProxyEvent(Net_GetUrlExitFunc* aExitRoutine,
+                                                     URL_Struct* aURL_s,
+                                                     int aStatus,
+                                                     FO_Present_Types aFormatOut,
+                                                     MWContext* aWindowId)
+{
+  exit_routine = aExitRoutine;
+  URL_s        = aURL_s;
+  status       = aStatus;
+  format_out   = aFormatOut;
+  window_id    = aWindowId;
+
+  net_AddrefContext(window_id);
+  NET_HoldURLStruct(URL_s);
+}
+
+
+CallExitRoutineProxyEvent::~CallExitRoutineProxyEvent()
+{
+  NET_DropURLStruct(URL_s);
+  net_ReleaseContext(window_id);
+}
+
+
+NS_IMETHODIMP
+CallExitRoutineProxyEvent::HandleEvent()
+{
+  net_CallExitRoutine(exit_routine, URL_s, status, format_out, window_id);
+  return NS_OK;
+}
+
+
+extern "C" MODULE_PRIVATE void
+net_CallExitRoutineProxy(Net_GetUrlExitFunc* exit_routine,
+                         URL_Struct*         URL_s,
+                         int                 status,
+                         FO_Present_Types    format_out,
+                         MWContext*          window_id)
+{
+  CallExitRoutineProxyEvent* ev;
+
+  ev = new CallExitRoutineProxyEvent(exit_routine, URL_s, status, 
+                                     format_out, window_id);
+  if (nsnull != ev) {
+    ev->Fire();
+  }
 }
