@@ -7,20 +7,23 @@ function process_approval($type, $file, $action) {
 global $connection, $sitehostname, $ftpurl, $repositorypath;
 if ($action=="approve") {
   $action_comment = "Approval+";
+  $action_email = "Approval Granted";
   $approved = "YES";
  } else if ($action=="deny") {
   $action_comment = "Approval-";
+  $action_email = "Approval Denied";
   $approved = "NO";
  }
 
 //Firstly, log the comments and action taken..
 $userid = $_SESSION["uid"];
-$sql = "SELECT TM.ID, `Name`, `vID` from `main` TM INNER JOIN `version` TV ON TM.ID = TV.ID WHERE TV.URI = '$file' ORDER BY `vID` ASC";
+$sql = "SELECT TM.ID, `Name`, `vID`, TV.Version from `main` TM INNER JOIN `version` TV ON TM.ID = TV.ID WHERE TV.URI = '$file' ORDER BY `vID` ASC";
     $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
     while ($row = mysql_fetch_array($sql_result)) {
       $id = $row["ID"];
       $vid = $row["vID"];
       $name = $row["Name"];
+      $version = $row["Version"];
 
 global $installation, $uninstallation, $newchrome, $appworks, $visualerrors, $allelementsthemed, $cleanprofile, $worksasdescribed, $testbuild, $testos, $comments;
         $sql2 = "INSERT INTO `approvallog` (`ID`, `vID`, `UserID`, `action`, `date`, `Installation`, `Uninstallation`, `NewChrome`, `AppWorks`, `VisualErrors`, `AllElementsThemed`, `CleanProfile`, `WorksAsDescribed`, `TestBuild`, `TestOS`, `comments`) VALUES ('$id', '$vid', '$userid', '$action_comment', NOW(NULL), '$installation', '$uninstallation', '$newchrome', '$appworks', '$visualerrors', '$allelementsthemed', '$cleanprofile', '$worksasdescribed', '$testbuild', '$testos', '$comments');";
@@ -40,10 +43,16 @@ if ($action=="approve") {
         if (!file_exists($dirpath)) {
             mkdir($dirpath,0755);
         }
-        if (rename("$filename", "$destination")) {
-            //Rename Successfull
+        if (!file_exists("$destination") {
+        //No File Exists, its safe to rename.
+            if (rename("$filename", "$destination")) {
+                //Rename Successfull
+            } else {
+                //Rename Unsuccessfull
+                $operations_failed=="true";
+            }
         } else {
-            //Rename Unsuccessfull
+            //A File exists, not safe to rename, throw error.
             $operations_failed=="true";
         }
         //$ftpurl defined in config.php
