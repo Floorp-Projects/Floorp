@@ -167,7 +167,17 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
       PRUint32 theChar;
       keyEvent->GetKeyCode(&theChar);
 
-      if (mAccessKeyDown && ((PRInt32)theChar != mAccessKey)) {
+      PRBool doShortcut = PR_FALSE;
+      if (!mAccessKeyFocuses) {
+        if (IsAccessKeyPressed(keyEvent) && (theChar != (PRUint32)mAccessKey))
+          doShortcut = PR_TRUE;
+      }
+      else if (mAccessKeyDown && (theChar != (PRUint32)mAccessKey)) {
+        doShortcut = PR_TRUE;
+      }
+
+      if (doShortcut)
+      {
         mAccessKeyDown = PR_FALSE;
 
         // Do shortcut navigation.
@@ -190,6 +200,26 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
   return NS_OK;
 }
 
+PRBool
+nsMenuBarListener::IsAccessKeyPressed(nsIDOMKeyEvent* aKeyEvent)
+{
+  PRBool access;
+  switch (mAccessKey)
+  {
+    case nsIDOMKeyEvent::DOM_VK_CONTROL:
+      aKeyEvent->GetCtrlKey(&access);
+      return access;
+    case nsIDOMKeyEvent::DOM_VK_ALT:
+      aKeyEvent->GetAltKey(&access);
+      return access;
+    case nsIDOMKeyEvent::DOM_VK_META:
+      aKeyEvent->GetMetaKey(&access);
+      return access;
+    default:
+      return PR_FALSE;
+  }
+}
+
 ////////////////////////////////////////////////////////////////////////
 nsresult
 nsMenuBarListener::KeyDown(nsIDOMEvent* aKeyEvent)
@@ -202,21 +232,7 @@ nsMenuBarListener::KeyDown(nsIDOMEvent* aKeyEvent)
     PRUint32 theChar;
     keyEvent->GetKeyCode(&theChar);
 
-    PRBool access;
-    switch (mAccessKey)
-    {
-      case nsIDOMKeyEvent::DOM_VK_CONTROL:
-        keyEvent->GetCtrlKey(&access);
-        break;
-      case nsIDOMKeyEvent::DOM_VK_ALT:
-        keyEvent->GetAltKey(&access);
-        break;
-      case nsIDOMKeyEvent::DOM_VK_META:
-        keyEvent->GetMetaKey(&access);
-        break;
-      default:
-        access = 0;
-    }
+    PRBool access = IsAccessKeyPressed(keyEvent);
     if (theChar == nsIDOMKeyEvent::DOM_VK_TAB && mAccessKeyDown) {
       mAccessKeyDown = PR_FALSE;
     }
