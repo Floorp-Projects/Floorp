@@ -1095,12 +1095,15 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
   if (!EqualURIs(mBinding, aOther.mBinding)
       || mPosition != aOther.mPosition
       || mDisplay != aOther.mDisplay
-      || mFloats != aOther.mFloats
+      || (mFloats == NS_STYLE_FLOAT_NONE) != (aOther.mFloats == NS_STYLE_FLOAT_NONE)
       || mOverflow != aOther.mOverflow
       // might need to create a view to handle change from 1.0 to partial opacity
       || (mOpacity != aOther.mOpacity
           && ((mOpacity < 1.0) != (aOther.mOpacity < 1.0))))
     NS_UpdateHint(hint, nsChangeHint_ReconstructFrame);
+
+  if (mFloats != aOther.mFloats)
+    NS_UpdateHint(hint, nsChangeHint_ReflowFrame);    
 
   // XXX the following is conservative, for now: changing float breaking shouldn't
   // necessarily require a repaint, reflow should suffice.
