@@ -229,9 +229,16 @@ EXIT_ON_ERROR		= -e
 CLICK_STOPWATCH		= true
 endif
 
+ifdef MOZ_UPDATE_XTERM
+UPDATE_TITLE		= echo "]2;gmake: $@ in $(SRCDIR)/$$d"
+else
+UPDATE_TITLE		= true
+endif
+
 ifdef DIRS
 LOOP_OVER_DIRS		=					\
 	@for d in $(DIRS); do					\
+		$(UPDATE_TITLE);                    \
 		if test -d $$d; then				\
 			set $(EXIT_ON_ERROR);			\
 			echo "cd $$d; $(MAKE) $@";		\
@@ -535,7 +542,7 @@ endif #STRICT_CPLUSPLUS_SUFFIX
 	rm -f $@; cp $< $@; chmod +x $@
 
 %.h: %.idl
-	$(IDL_COMPILE) -h -w -I $(DIST)/idl $<
+	$(IDL_COMPILE) -m header -w -I $(DIST)/idl $<
 
 ifdef DIRS
 $(DIRS)::
