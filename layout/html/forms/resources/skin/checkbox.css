@@ -57,10 +57,10 @@ input[type="checkbox"][disabled="true"] {
 /* ..... checked state ..... */
 
 input[type="checkbox"]:checked {
-  list-style-image: url("chrome://global/skin/checkbox/cbox-check.gif");
+  list-style-image: url("chrome://forms/skin/cbox-check.gif");
 }
 
 input[type="checkbox"][disabled="true"]:checked {
-  list-style-image: url("chrome://global/skin/checkbox/cbox-check-dis.gif") !important
+  list-style-image: url("chrome://forms/skin/cbox-check-dis.gif") !important;
 }
 

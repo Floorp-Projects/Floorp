@@ -68,7 +68,7 @@ xul|*.select-dropmarker {
   -moz-box-pack: center;
   border: 2px solid;
   background-color: -moz-Dialog;
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
+  list-style-image: url("chrome://forms/skin/arrow-dn.gif");
 }
 
 xul|*.select-dropmarker,
@@ -81,7 +81,7 @@ select[disabled="true"]:hover:active > xul|*.select-dropmarker {
 }
 
 select[disable="true"] > xul|*.select-dropmarker {
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn-dis.gif");
+  list-style-image: url("chrome://forms/skin/arrow-dn-dis.gif");
 }
 
 select:hover:active > xul|*.select-dropmarker {
