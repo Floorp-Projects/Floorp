@@ -7,7 +7,6 @@ abdefn.h
 client.h
 csid.h
 ctxtfunc.h
-cvactive.h
 dirprefs.h
 edt.h
 edttypes.h
@@ -16,10 +15,8 @@ glhist.h
 gui.h
 intl_csi.h
 libc_r.h
-libevent.h
 libi18n.h
 libmime.h
-libmocha.h
 lo_ele.h
 merrors.h
 mime.h
@@ -32,9 +29,7 @@ msgtypes.h
 m_cvstrm.h
 ncompat.h
 net.h
-np.h
 npapi.h
-npassoc.h
 npupp.h
 ntypes.h
 platform.h
