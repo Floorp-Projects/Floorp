@@ -768,7 +768,7 @@ sub init {
 # by pressing the OR button at the right end of the chart. Extra
 # charts are created by pressing "Add another boolean chart".
 #
-# Each chart consists of an artibrary number of rows and columns.
+# Each chart consists of an arbitrary number of rows and columns.
 # The terms within a row are ORed together. The expressions represented
 # by each row are ANDed together. The expressions represented by each
 # chart are ANDed together.
@@ -795,7 +795,7 @@ sub init {
 # The terms within a single row of a boolean chart are all constraints
 # on a single piece of data.  If you're looking for a bug that has two
 # different people cc'd on it, then you need to use two boolean charts.
-# This will find bugs with one CC mathing 'foo@blah.org' and and another
+# This will find bugs with one CC matching 'foo@blah.org' and and another
 # CC matching 'bar@blah.org'.
 #
 # --------------------------------------------------------------
@@ -818,7 +818,7 @@ sub init {
 # bar@blah.org
 # --------------------------------------------------------------
 
-# $chartid is the number of the current chart whose SQL we're contructing
+# $chartid is the number of the current chart whose SQL we're constructing
 # $row is the current row of the current chart
 
 # names for table aliases are constructed using $chartid and $row
@@ -871,7 +871,7 @@ sub init {
 
                 # This is either from the internal chart (in which case we
                 # already know about it), or it was in %chartfields, so it is
-                # a valid field name, which means that its ok.
+                # a valid field name, which means that it's ok.
                 trick_taint($f);
                 $q = &::SqlQuote($v);
                 my $func;
@@ -1002,8 +1002,8 @@ sub SqlifyDate {
     return time2str("%Y-%m-%d %H:%M:%S", $date);
 }
 
-# ListIDsForEmail returns an string with a comma-joined list
-# of userids matching an email address
+# ListIDsForEmail returns a string with a comma-joined list
+# of userids matching email addresses
 # according to the type specified.
 # Currently, this only supports anyexact and substring matches.
 # Substring matches will return up to 50 matching userids
