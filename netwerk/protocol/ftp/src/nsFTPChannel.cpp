@@ -428,15 +428,8 @@ nsFTPChannel::OnStatus(nsIRequest *request, nsISupports *aContext,
     if (!mEventSink)
         return NS_OK;
 
-    nsAutoString str;
-    if (mProxyChannel) {
-        if (aStatusArg) {
-            str.Append(aStatusArg); 
-            str.AppendWithConversion("\n");
-        }
-        str.AppendWithConversion(mHost);
-    }
-    return mEventSink->OnStatus(this, aContext, aStatus, str.GetUnicode());
+    return mEventSink->OnStatus(this, aContext, aStatus,
+                                NS_ConvertASCIItoUCS2(mHost).get());
 }
 
 NS_IMETHODIMP
