@@ -165,6 +165,7 @@
 <!ENTITY aboutCmd.accesskey       "A">
 
 <!ENTITY openCmd.commandkey           "l">
+<!ENTITY searchFocus.commandkey       ";">
 
 <!ENTITY openLinkCmd.label            "Open Link in New Window">
 <!ENTITY openLinkCmd.accesskey        "W">

@@ -3309,3 +3309,12 @@ function updateHomeTooltip()
     homeButton.setAttribute("tooltiptext", homePage);
   }
 }
+
+function focusSearchBar()
+{
+  var searchBar = document.getElementById("search-bar");
+  if (searchBar) {
+    searchBar.select();
+    searchBar.focus();
+  }
+}
