@@ -66,12 +66,16 @@ public:
   // override nsIExternalProtocolService methods
   NS_IMETHOD ExternalProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists);
   nsresult LoadUriInternal(nsIURI * aURL);
+  NS_IMETHODIMP GetApplicationDescription(const nsACString& aScheme, nsAString& _retval);
 
 protected:
   already_AddRefed<nsMIMEInfoOS2> GetFromType(const nsCString& aMimeType);
   already_AddRefed<nsMIMEInfoOS2> GetFromExtension(const nsCString& aFileExt);
 
 private:
+  nsresult GetApplicationAndParametersFromINI(const nsACString& aProtocol,
+                                              char * app, ULONG appLength,
+                                              char * param, ULONG paramLength);
   // Helper methods which have to access static members
   static nsresult UnescapeCommand(const nsAString& aEscapedCommand,
                                   const nsAString& aMajorType,
