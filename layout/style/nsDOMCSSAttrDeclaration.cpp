@@ -195,7 +195,7 @@ nsDOMCSSAttributeDeclaration::GetCSSParsingEnvironment(nsIURI** aBaseURI,
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsDOMCSSAttributeDeclaration::GetParentRule(nsIDOMCSSRule **aParent)
 {
   NS_ENSURE_ARG_POINTER(aParent);
