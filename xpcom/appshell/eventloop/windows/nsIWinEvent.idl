@@ -1,0 +1,12 @@
+#include "nsISupports.idl"
+#include "nsIEvent.idl"
+
+/**
+ * The nsIWinEvent defines what a message looks like on the Windows Platform.    
+ */						  
+
+[scriptable, uuid(2EFB5005-4508-11d3-AEDA-00A024FFC08C)]
+interface nsIWinEvent : nsIEvent
+{
+	//XXX Place the contents of a Windows MSG struct here.
+};

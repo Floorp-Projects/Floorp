@@ -1,0 +1,45 @@
+#include "nsISupports.idl"
+#include "nsIEvent.idl"
+
+/**
+ * The nsITranslateListener defines the callback listener interface that
+ * can be passed to the Run routine on and event loop.  This allows 
+ * application overriding or additions to the default event translation
+ * mechanism.    
+ */						  
+
+[scriptable, uuid(2EFB5008-4508-11d3-AEDA-00A024FFC08C)]
+interface nsITranslateListener : nsISupports
+{
+	/* Called just before the nsIEventLoop::TranslateMessage() is called.
+	   This allows a listener first crack at translating Messages.  The 
+		listener can then control if TranslateMessage() is called via the
+		return.
+
+	@param msg This is the native message that has been retrieved from the Queue
+					and awaiting dispatching.
+
+	@return NS_OK - Indicates nsIEventLoop::TranslateMessage() should be called
+						 following the return from this function.
+			NS_FALSE - Translating went successfully, but 
+						 nsIEventLoop::TranlateMessage() should not be called.
+			NS_ERROR_FAILURE - Catastrophic processing failure.  Event loop should
+						 die immediately.
+	*/
+	void PreTranslate(in nsIEvent msg);
+
+	/*
+		Called just after the nsIEventLoop::TranslateMessage() has been called.
+
+	@param msg This is the native message that has been retrieved from the Queue
+					and awaiting dispatching.
+
+	@param fTranslateHandled Indicates if nsIEventLoop::TranslateMessage() handled
+					the message being passed in.
+
+	@return NS_OK - Processing completed fine.
+				NS_ERROR_FAILURE - Catastrophic processing failure.  Event loop 
+				should die immediately.
+	*/
+	void PostTranslate(in nsIEvent msg, in boolean fTranslateHandled);
+};

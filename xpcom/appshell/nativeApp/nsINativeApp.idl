@@ -1,0 +1,59 @@
+#include "nsISupports.idl"
+#include "nsIEventLoop.idl"
+
+/**
+ * The nsINativeAppService provides necessary services to build a native
+ * application.    
+ */
+
+ /*
+ {2EFB5000-4508-11d3-AEDA-00A024FFC08C} -
+ {2EFB5100-4508-11d3-AEDA-00A024FFC08C} have been reserved for Native App 
+													Service Interfaces.
+
+ Currently Used:
+ {2EFB5000-4508-11d3-AEDA-00A024FFC08C} -	nsINativeApp
+ {2EFB5001-4508-11d3-AEDA-00A024FFC08C} -	nsIEventLoop
+ {2EFB5002-4508-11d3-AEDA-00A024FFC08C} -	nsEventLoopTypes
+ {2EFB5003-4508-11d3-AEDA-00A024FFC08C} -	nsIEventFilter
+ {2EFB5004-4508-11d3-AEDA-00A024FFC08C} -	nsIEvent
+ {2EFB5005-4508-11d3-AEDA-00A024FFC08C} -	nsIWinEvent
+ {2EFB5006-4508-11d3-AEDA-00A024FFC08C} -	nsIWinEventFilter
+ {2EFB5007-4508-11d3-AEDA-00A024FFC08C} -	nsIDispatchListener
+ {2EFB5008-4508-11d3-AEDA-00A024FFC08C} -	nsITranslateListener
+
+ */
+
+[scriptable, uuid(2EFB5000-4508-11d3-AEDA-00A024FFC08C)]
+interface nsINativeApp : nsISupports
+{
+	/* Used to Create an Event Loop of a specified Event Loop type.
+		There can only be one event loop per App of the MainAppLoop type.
+		There can only be one event loop per thread of the ThreadLoop type.
+		There can be any number of AppBreathLoop type threads.
+
+	@param EventLoopName This is the name to associate with an event loop. 
+		This allows you to later find the event loop using the FineEventLoop 
+		mechanism.  This may be null, but is usually helpful to associate a 
+		name with the loop.
+		
+	@param type This is the event Loop type.  Look at the various types
+		described in nsEventLoopType const definitions.
+		
+	@param eventLoop This is the return created event loop.  
+	
+	@return NS_OK - Event Loop was created successfully.
+				NS_ERROR_INVALID_ARG - There is already an event loop for the 
+					requested type and there can not be more than one.
+				NS_ERROR_INVALID_POINTER - eventLoop was null.
+				NS_ERROR_FAILURE - Internal error and event loop couldn't be
+					created.	
+	*/
+	void CreateEventLoop(in wstring EventLoopName, in nsEventLoopType type,
+								out nsIEventLoop eventLoop);
+
+	/*	Used to find a previously created event loop. 
+
+	*/
+	void FindEventLoop(in wstring EventLoopName, out nsIEventLoop eventLoop);
+};

@@ -1,0 +1,200 @@
+#include "nsISupports.idl"
+#include "nsIEventFilter.idl"
+#include "nsIEvent.idl"
+#include "nsIDispatchListener.idl"
+#include "nsITranslateListener.idl"
+
+
+typedef long nsEventLoopType;
+
+/*
+	There are three basic types of Event Loops that can exist in a system.
+	1.)  There is the Main Event loop that services the application.  This 
+	is typically what would be found at the bottom of a main().  Event loops
+	of this type are specified with the 'MainAppLoop' type.  There can only
+	be one of these per Application.  It is also important to note that
+	Run() called on a Loop of this type blocks until the loop exits.
+	2.)  User-interface threads are distinct from worker threads in that they
+	provide an event loop that services native system events.  This is the loop
+	that that is found at the bottom of the ThreadMain often looking very
+	similar to the one found in main().  Event loops of this type are specified
+	with the 'ThreadLoop' type.  There can only be one of these per thread.It is
+	also important to note that Run() called on a Loop of this type blocks
+	until the loop exits.
+	3.)  The third type of loop that exists is one that is done to allow the 
+	application and sytem to "breathe".  This loop is often invoked from various
+	places on the stack virtually always with the main thread loop living down 
+	the stack in some fashion.  Great care should be taken in using loops of
+	this kind.  Event loops of this type are specified with the 'AppBreathLoop'
+	type.  There can be as many of these per application as the application
+	wishes to create.  This loop is different than others with respect to the
+	way Run() works on events of this type.  Run() will return once the app
+	has had suffiecient breathe time.  This may be once the event queue is
+	empty or may be after a specified yield time.  As loops of this type aren't
+	tied to the life of a thread or app, the return from Run() does not
+	indicate the desire to end a thread or app either.
+
+
+	******* Talk about life of a loop of these types ******
+
+*/
+
+[scriptable, uuid(2EFB5002-4508-11d3-AEDA-00A024FFC08C)]
+interface nsEventLoopTypes
+{
+	const long MainAppLoop = 1;
+	const long ThreadLoop = 2;
+ 	const long AppBreathLoop = 3;
+};
+
+/**
+ * The nsIEventLoop provides the facilities to interfact with a native 
+ * application event queue.    
+ */
+
+[scriptable, uuid(2EFB5001-4508-11d3-AEDA-00A024FFC08C)]
+interface nsIEventLoop : nsISupports
+{
+	/********  High Level App Usage *******/
+
+	/* Runs the Event Loop.  This is a blocking call, it will return when the
+	 application or OS has indicated the loop should quit.  This is a convience
+	 function that can be recreated by a client of this interface using the 
+	 low-level methods.  Unless the application truly needs to handle events
+	 on it's own, it is suggested that this method be used rather than manually
+	 creating the event loop.  To end an event loop one can call the Exit() 
+	 method on the nsIEventLoop interface.
+	 
+	 In the case of a AppBreathLoop this blocks the app has had suffiecient
+	 "breathe" time.  This may be once the event queue is	empty or may be after
+	 a specified yield time.  As loops of this type aren't tied to the life of
+	 a thread or app, the return from Run() does not indicate the desire to end
+	 a thread or app either. 
+	 
+	@param filter Message Filter for handling of events in this loop.  If the 
+						application wishes to select ranges for message 
+						it can pass in a filter.  This may be null.
+	@param translateListener Callback called for application specific tranlation
+						of events.  This should be null unless the calling
+						application really needs to override the default translation.
+	@param dispatchListener Callback called for application specific dispatching
+						of	events.  This should be null unless the calling application
+						really needs to override the default processing.
+	*/
+	// Bool for nested PL_Events.
+
+	void Run(in nsIEventFilter filter, in nsITranslateListener translateListener,
+				in nsIDispatchListener dispatchListener);
+
+	/* Exits the Event loop referred to by the instantiation of this interface 
+	*/
+	void Exit();
+
+	/*******  Low Level Loop Management *****/
+
+	/*  This retrieves the next message in the queue for this event loop.
+	 If there are no messages in the queue, GetNextMessage will wait for
+	 messages to be placed in the queue offering control up to other applications
+	 while waiting.  When an event to exit the queue is retrieved, GetNextMessage
+	 will return NS_FALSE to indicate the loop should finish.
+	 
+	@param filter Message Filter for handling of events in this loop.  If the 
+						application wishes to select ranges for message 
+						it can pass in a filter.  This may be null.
+	@param msg This is the message returned from the queue.  Each platform can
+					QI on this returned interface to get the platform specific
+					message contents.  This interface is addrefd and must be
+					released when processing is complete.
+	@return NS_OK - msg has been retrieved and ready to be processed.
+				NS_FALSE - An exit event has been signalled.  msg will be null.
+				NS_ERROR_FAILURE - Internal failure, ignore all results and
+								cease use of loop.
+	*/
+	void GetNextMessage(in nsIEventFilter filter, out nsIEvent msg);
+
+	/*  This retrieves the next message in the queue for this event loop.
+	 If there are no messages in the queue, unlike GetNextMessage, 
+	 PeekNextMessage will return immediately with NS_FALSE.
+	 messages to be placed in the queue offering control up to other applications
+	 while waiting.  When an event to exit the queue is retrieved, GetNextMessage
+	 will return NS_FALSE to indicate the loop should finish.
+	 
+	@param filter Message Filter for handling of events in this loop.  If the 
+						application wishes to select ranges for message 
+						it can pass in a filter.  This may be null.
+	@param msg This is the message returned from the queue.  Each platform can
+					QI on this returned interface to get the platform specific
+					message contents.  This interface is addrefd and must be
+					released when processing is complete.
+	@return NS_OK - msg has been retrieved and ready to be processed.
+				NS_FALSE - There are no more messages to retrieve.  msg will be null.
+				NS_ERROR_FAILURE - Internal failure, ignore all results and
+								cease use of loop.
+	*/
+	void PeekNextMessage(in nsIEventFilter filter, out nsIEvent msg);
+
+	/* This does any pre-processing of the message that may be needed.
+	@param msg This is the message returned from the queue.  Each platform can
+					QI on this returned interface to get the platform specific
+					message contents.  This interface is addrefd and must be
+					released when processing is complete.
+	@return NS_OK - Translated Message.
+			  NS_FALSE - Was unable to Translate Message, but this is normal.
+			  NS_ERROR_FAILURE - Catastrophic processing failure.  Event loop 
+						should die immediately. 
+	*/
+	void TranslateMessage(in nsIEvent msg);
+
+	/* This does any pre-processing of the message that may be needed.
+	@param msg This is the message returned from the queue.  Each platform can
+					QI on this returned interface to get the platform specific
+					message contents.  This interface is addrefd and must be
+					released when processing is complete.
+	@return NS_OK - Processed and Dispatched Message.
+			  NS_FALSE - Was unable to Dispatch Message, but this is normal.
+			  NS_ERROR_FAILURE - Catastrophic processing failure.  Event loop 
+						should die immediately.
+	*/
+
+	void DispatchMessage(in nsIEvent msg);
+
+	/*******  Loop Manipulation ******/
+
+	/*	Puts a Message on the event loop referred to by the interface pointer
+		and waits for the message to be processed.
+
+	@param msg This is the message returned from the queue.  Each platform can
+					QI on this returned interface to get the platform specific
+					message contents.  This interface is addrefd and must be
+					released when processing is complete.
+	@return NS_OK - Message Sent and Processed.
+			  NS_FALSE - Message was Sent but was unable to wait for event 
+							processing.
+			  NS_ERROR_INVALID_ARG - Message passed in was mal-formed.
+			  NS_ERROR_FAILURE - Catastrophic processing failure.
+
+	*/
+	void SendLoopMessage(in nsIEvent msg);
+
+	/*	Puts a Message on the event loop referred to by the interface pointer
+		and then returns immediately not waiting for the message to be processed.
+
+	@param msg This is the message returned from the queue.  Each platform can
+					QI on this returned interface to get the platform specific
+					message contents.  This interface is addrefd and must be
+					released when processing is complete.
+	@return NS_OK - Message was placed on the event queue.
+			  NS_ERROR_INVALID_ARG - Message passed in was mal-formed.
+			  NS_ERROR_FAILURE - Catastrophic processing failure.
+
+	*/
+	void PostLoopMessage(in nsIEvent msg);
+
+	/*******  Event Loop Information ******/
+
+	/* Specifies the type of the event loop. This was set upon creation. */
+	readonly attribute nsEventLoopType EventLoopType;
+
+	/* Specifies the name of the event loop.  This was set upon creation. */
+	readonly attribute wstring EventLoopName;
+};
