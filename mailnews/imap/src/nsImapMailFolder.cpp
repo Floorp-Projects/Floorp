@@ -2269,11 +2269,8 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
   ChangeNumPendingUnread(-GetNumPendingUnread());
 
   if (!mDatabase)
-  {
     GetDatabase(nsnull);
-    if (mDatabase && mAddListener)
-        mDatabase->AddListener(this);
-  }
+
   PRBool folderSelected;
   rv = aSpec->GetFolderSelected(&folderSelected);
   if (NS_SUCCEEDED(rv) && folderSelected)
@@ -3648,7 +3645,7 @@ nsImapMailFolder::NormalEndMsgWriteStream(nsMsgKey uidOfMessage,
             {
           nsCOMPtr<nsIMimeHeaders> mimeHeaders;
           res = msgUrl->GetMimeHeaders(getter_AddRefs(mimeHeaders));
-          if (NS_SUCCEEDED(res))
+          if (NS_SUCCEEDED(res) && mimeHeaders)
           {
             nsXPIDLCString mdnDnt;
             mimeHeaders->ExtractHeader("Disposition-Notification-To",
