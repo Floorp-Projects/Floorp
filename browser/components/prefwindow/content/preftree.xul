@@ -42,6 +42,11 @@
     <treecol id="categoryCol" label="&category.label;" flex="1" primary="true"/>
   </treecols>
   <treechildren id="panelChildren">
+    <treeitem id="navigator">
+      <treerow>
+        <treecell url="chrome://browser/content/pref/pref-navigator.xul" label="&navigator.label;"/> 
+      </treerow>
+    </treeitem>
     <treeitem>
       <treerow>
         <treecell url="chrome://browser/content/pref/pref-fonts.xul" label="&fonts.label;"/> 
@@ -53,11 +58,6 @@
       </treerow>
     </treeitem>
     <!-- XXX remove this when overlays.rdf works for navigator -->
-    <treeitem id="navigator">
-      <treerow>
-        <treecell url="chrome://browser/content/pref/pref-navigator.xul" label="&navigator.label;"/> 
-      </treerow>
-    </treeitem>
     <treeitem>
       <treerow>
         <treecell url="chrome://browser/content/pref/pref-privacy.xul" label="&privacy.label;" />
