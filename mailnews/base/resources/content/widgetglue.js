@@ -172,16 +172,7 @@ function MsgLoadNewsMessage(url)
 
 function MsgHome(url)
 {
-  var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
-  if (!toolkitCore) {
-      toolkitCore = new ToolkitCore();
-      if (toolkitCore) {
-        toolkitCore.Init("ToolkitCore");
-      }
-    }
-  if (toolkitCore) {
-    toolkitCore.ShowWindow(url, window);
-  }
+  window.open( url, "_blank", "chrome,dependent=yes,all" );
 }
 
 function MsgNewMessage() 
