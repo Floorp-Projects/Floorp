@@ -27,6 +27,7 @@
 #include "nsIAtom.h"
 #include "nsCOMPtr.h"
 
+#include "nsIPopupSetFrame.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsBoxFrame.h"
 #include "nsFrameList.h"
@@ -37,7 +38,7 @@
 
 nsresult NS_NewPopupSetFrame(nsIFrame** aResult) ;
 
-class nsPopupSetFrame : public nsBoxFrame
+class nsPopupSetFrame : public nsBoxFrame, public nsIPopupSetFrame
 {
 public:
   nsPopupSetFrame();
@@ -88,22 +89,27 @@ public:
                           nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
 
-  /*
-  void KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag);
-  void ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag);
-  void Escape(PRBool& aHandledFlag);
-  void Enter();
+  NS_IMETHOD CreatePopup(nsIFrame* aElementFrame, nsIContent* aPopupContent, 
+                         PRInt32 aXPos, PRInt32 aYPos, 
+                         const nsString& aPopupType, const nsString& anAnchorAlignment,
+                         const nsString& aPopupAlignment);
 
-  PRBool IsOpen() { return mMenuOpen; };
-  
+
+  //void ActivateMenuPopup(PRBool aActivateFlag);
+
 protected:
-  void GetMenuChildrenElement(nsIContent** aResult);
-*/
+  //void MarkAsGenerated();
+  //void SetActiveChild(nsIContent* aPopupContent);
 
 protected:
   nsFrameList mPopupFrames;
   nsIFrame* mActiveChild;
   nsIPresContext* mPresContext; // Our pres context.
+
+  PRInt32 mXPos; // Active child's x position
+  PRInt32 mYPos; // Active child's y position
+
+
 }; // class nsPopupSetFrame
 
 #endif

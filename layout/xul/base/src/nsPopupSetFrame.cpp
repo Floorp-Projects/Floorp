@@ -78,7 +78,16 @@ NS_IMETHODIMP nsPopupSetFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr
 {           
   if (NULL == aInstancePtr) {                                            
     return NS_ERROR_NULL_POINTER;                                        
-  }                                                  
+  }   
+  
+  *aInstancePtr = NULL;                                                  
+                                                                                        
+  if (aIID.Equals(nsIPopupSetFrame::GetIID())) {                                         
+    *aInstancePtr = (void*)(nsIPopupSetFrame*) this;                                        
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  }   
+
   return nsBoxFrame::QueryInterface(aIID, aInstancePtr);                                     
 }
 
@@ -353,4 +362,26 @@ nsPopupSetFrame::AppendFrames(nsIPresContext& aPresContext,
   }
 
   return rv;
+}
+
+NS_IMETHODIMP
+nsPopupSetFrame::CreatePopup(nsIFrame* aElementFrame, nsIContent* aPopupContent, 
+                             PRInt32 aXPos, PRInt32 aYPos, 
+                             const nsString& aPopupType, const nsString& anAnchorAlignment,
+                             const nsString& aPopupAlignment)
+{
+  // Generate the popup.
+  //MarkAsGenerated(aPopupContent);
+
+  // Now we'll have it in our child frame list. Make it our active child.
+  //SetActiveChild(aPopupContent);
+
+  // Show the popup at the specified position.
+  mXPos = aXPos;
+  mYPos = aYPos;
+
+  // Mark the view as active.
+  //ActivateMenuPopup(PR_TRUE);
+
+  return NS_OK;
 }
