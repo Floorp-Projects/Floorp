@@ -60,20 +60,20 @@ Rights Reserved.
                   IsImapDeleted="rdf:http://home.netscape.com/NC-rdf#IsImapDeleted"
                   MessageType="rdf:http://home.netscape.com/NC-rdf#MessageType"/>
             	<treecell value="rdf:http://home.netscape.com/NC-rdf#Sender" id ="SenderColumnTemplate"/>
-				<treecell allowevents="true" class="treecell-image unreadcol" 
-                  onclick="return top.ToggleMessageRead(event.target.parentNode.parentNode.parentNode)"
+				<treecell class="treecell-image unreadcol" 
+                  onclick="return top.ToggleMessageRead(event.target.parentNode.parentNode)"
                   value="rdf:http://home.netscape.com/NC-rdf#IsUnread"/>
 				<treecell value="rdf:http://home.netscape.com/NC-rdf#Date"/>
 				<treecell class="tree-cell-image prioritycol" 
   		            Priority="rdf:http://home.netscape.com/NC-rdf#Priority"
                   value="rdf:http://home.netscape.com/NC-rdf#PriorityString"/>
-				<treecell allowevents="true" class="flagcol treecell-image" 
-                  onclick="return top.ToggleMessageFlagged(event.target.parentNode.parentNode.parentNode)"
+				<treecell class="flagcol treecell-image" 
+                  onclick="return top.ToggleMessageFlagged(event.target.parentNode.parentNode)"
                   value="rdf:http://home.netscape.com/NC-rdf#Flagged" />
 				<treecell value="rdf:http://home.netscape.com/NC-rdf#StatusString"/>
-				<treecell value="rdf:http://home.netscape.com/NC-rdf#Size" class="treecell-align-right"/>
-				<treecell value="rdf:http://home.netscape.com/NC-rdf#TotalUnreadMessages" class="treecell-align-right"/>
-				<treecell value="rdf:http://home.netscape.com/NC-rdf#TotalMessages" class="treecell-align-right"/>
+				<treecell class="treecell-align-right" value="rdf:http://home.netscape.com/NC-rdf#Size"/>
+				<treecell class="treecell-align-right" value="rdf:http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
+				<treecell class="treecell-align-right" value="rdf:http://home.netscape.com/NC-rdf#TotalMessages"/>
 				<treecell value="rdf:http://home.netscape.com/NC-rdf#OrderReceived"/>
 				<treecell/>
 	  		</treerow>
