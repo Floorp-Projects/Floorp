@@ -113,6 +113,7 @@ nsLineLayout::nsLineLayout(nsIPresContext& aPresContext,
   mColumn = 0;
   mEndsInWhiteSpace = PR_TRUE;
   mUnderstandsWhiteSpace = PR_FALSE;
+  mTextStartsWithNBSP = PR_FALSE;
   mFirstLetterStyleOK = PR_FALSE;
   mIsTopOfPage = PR_FALSE;
   mUpdatedBand = PR_FALSE;
@@ -270,6 +271,7 @@ nsLineLayout::BeginLineReflow(nscoord aX, nscoord aY,
   mColumn = 0;
   mEndsInWhiteSpace = PR_TRUE;
   mUnderstandsWhiteSpace = PR_FALSE;
+  mTextStartsWithNBSP = PR_FALSE;
   mFirstLetterStyleOK = PR_FALSE;
   mIsTopOfPage = aIsTopOfPage;
   mUpdatedBand = PR_FALSE;
@@ -411,6 +413,7 @@ nsLineLayout::UpdateBand(nscoord aX, nscoord aY,
   mLastFloaterWasLetterFrame = nsLayoutAtoms::letterFrame == frameType.get();
 
   // Now update all of the open spans...
+  mRootSpan->mContainsFloater = PR_TRUE;              // make sure mRootSpan gets updated too
   psd = mCurrentSpan;
   while (psd != mRootSpan) {
     NS_ASSERTION(nsnull != psd, "null ptr");
@@ -424,6 +427,7 @@ nsLineLayout::UpdateBand(nscoord aX, nscoord aY,
     else {
       psd->mRightEdge += deltaWidth;
     }
+    psd->mContainsFloater = PR_TRUE;
 #ifdef NOISY_REFLOW
     printf("  span %p: oldRightEdge=%d newRightEdge=%d\n",
            psd, psd->mRightEdge - deltaWidth, psd->mRightEdge);
@@ -479,6 +483,8 @@ nsLineLayout::NewPerSpanData(PerSpanData** aResult)
   psd->mFrame = nsnull;
   psd->mFirstFrame = nsnull;
   psd->mLastFrame = nsnull;
+  psd->mContainsFloater = PR_FALSE;
+  psd->mZeroEffectiveSpanBox = PR_FALSE;
 
 #ifdef DEBUG
   mSpansAllocated++;
@@ -514,7 +520,6 @@ nsLineLayout::BeginSpan(nsIFrame* aFrame,
     psd->mLeftEdge = aLeftEdge;
     psd->mX = aLeftEdge;
     psd->mRightEdge = aRightEdge;
-    psd->mZeroEffectiveSpanBox = PR_FALSE;
 
     const nsStyleText* styleText;
     aSpanReflowState->frame->GetStyleData(eStyleStruct_Text,
@@ -879,6 +884,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   reflowState.mLineLayout = this;
   reflowState.isTopOfPage = mIsTopOfPage;
   mUnderstandsWhiteSpace = PR_FALSE;
+  mTextStartsWithNBSP = PR_FALSE;
 
   // Stash copies of some of the computed state away for later
   // (vertical alignment, for example)
@@ -1095,8 +1101,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
 
     // See if we can place the frame. If we can't fit it, then we
     // return now.
-    if (CanPlaceFrame(pfd, reflowState, notSafeToBreak, metrics,
-                      aReflowStatus)) {
+    if (CanPlaceFrame(pfd, reflowState, notSafeToBreak, metrics, aReflowStatus)) {
       // Place the frame, updating aBounds with the final size and
       // location.  Then apply the bottom+right margins (as
       // appropriate) to the frame.
@@ -1116,6 +1121,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   else {
     PushFrame(aFrame);
   }
+  mTextStartsWithNBSP = PR_FALSE;           // reset for next time
 
 #ifdef REALLY_NOISY_REFLOW
   nsFrame::IndentBy(stdout, mSpanDepth);
@@ -1234,7 +1240,7 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
 
   PerSpanData* psd = mCurrentSpan;
   if (psd->mNoWrap) {
-    // When wrapping is off, everything fits
+    // When wrapping is off, everything fits.
     return PR_TRUE;
   }
 
@@ -1343,6 +1349,43 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
         return PR_TRUE;
       }
     }
+  }
+
+  // Special check for span frames
+  if (pfd->mSpan && pfd->mSpan->mContainsFloater) {
+    // If the span either directly or indirectly contains a floater then
+    // it fits. Why? It's kind of complicated, but here goes:
+    //
+    // 1. CanPlaceFrame is used for all frame placements on a line,
+    // and in a span. This includes recursively placement of frames
+    // inside of spans, and the span itself. Because the logic always
+    // checks for room before proceeding (the code above here), the
+    // only things on a line will be those things that "fit".
+    //
+    // 2. Before a floater is placed on a line, the line has to be empty
+    // (otherwise its a "below current line" flaoter and will be placed
+    // after the line).
+    //
+    // Therefore, if the span directly or indirectly has a floater
+    // then it means that at the time of the placement of the floater
+    // the line was empty. Because of #1, only the frames that fit can
+    // be added after that point, therefore we can assume that the
+    // current span being placed has fit.
+    //
+    // So how do we get here and have a span that should already fit
+    // and yet doesn't: Simple: span's that have the no-wrap attribute
+    // set on them and contain a floater and are placed where they
+    // don't naturally fit.
+    return PR_TRUE;
+ }
+
+  // Yet another special check. If the text happens to have started
+  // with a non-breaking space, then we make it sticky on its left
+  // edge...Which means that whatever piece of text we just formatted
+  // will be the piece that fits (the text frame logic knows to stop
+  // when it runs out of room).
+  if (pfd->mIsNonEmptyTextFrame && mTextStartsWithNBSP) {
+    return PR_TRUE;
   }
 
 #ifdef NOISY_CAN_PLACE_FRAME

@@ -128,6 +128,10 @@ public:
     mUnderstandsWhiteSpace = aSetting;
   }
 
+  void SetTextStartsWithNBSP(PRBool aYes) {
+    mTextStartsWithNBSP = aYes;
+  }
+
   void RecordWordFrame(nsIFrame* aWordFrame) {
     mWordFrames.AppendElement(aWordFrame);
   }
@@ -222,6 +226,7 @@ protected:
   PRInt32 mColumn;
   PRBool mEndsInWhiteSpace;
   PRBool mUnderstandsWhiteSpace;
+  PRBool mTextStartsWithNBSP;
   PRBool mFirstLetterStyleOK;
   PRBool mIsTopOfPage;
   PRBool mUpdatedBand;
@@ -317,6 +322,7 @@ public:
     PRUint8 mDirection;
     PRBool mChangedFrameDirection;
     PRBool mZeroEffectiveSpanBox;
+    PRBool mContainsFloater;
 
     nscoord mLeftEdge;
     nscoord mX;
