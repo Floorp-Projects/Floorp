@@ -37,8 +37,6 @@
 #include "nsRDFBaseDataSources.h"
 #include "nsRDFBuiltInDataSources.h"
 #include "nsIRDFFileSystem.h"
-#include "nsIRDFSearch.h"
-#include "nsIRDFFind.h"
 #include "nsRDFCID.h"
 #include "nsIComponentManager.h"
 #include "rdf.h"
