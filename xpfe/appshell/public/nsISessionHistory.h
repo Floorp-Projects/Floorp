@@ -21,7 +21,6 @@
 #define nsISessionHistory_h_
 
 #include "nsISupports.h"
-#include "nsIFactory.h"
 
 //Forward declarations
 class nsHistoryEntry;
@@ -51,12 +50,12 @@ public:
   /**
    * Go forward in history 
    */
-  NS_IMETHOD Forward() = 0;
+  NS_IMETHOD Forward(nsIWebShell * prev) = 0;
 
   /**
    * Go Back in History
    */
-  NS_IMETHOD Back() = 0;
+  NS_IMETHOD Back(nsIWebShell * prev) = 0;
 
   /**
    * whether you can go forward in History
@@ -76,7 +75,7 @@ public:
   /**
    * Goto to a particular point in history 
    */
-  NS_IMETHOD Goto(PRInt32 aHistoryIndex) = 0;
+  NS_IMETHOD Goto(PRInt32 aHistoryIndex, nsIWebShell * prev) = 0;
   /**
    * Get the length of the History list
    */
@@ -101,14 +100,20 @@ public:
   NS_IMETHOD SetLoadingFlag(PRBool aFlag) = 0;
 
   /**
+   * Get the flag whether a history entry is in the middle of loading a
+   * doc. See comments below for details
+   */
+  NS_IMETHOD GetLoadingFlag(PRBool &aFlag) = 0;
+
+  /**
    * Set the historyentry that is in the middle of loading a doc
    */
   NS_IMETHOD SetLoadingHistoryEntry(nsHistoryEntry * aHistoryEntry) = 0;
 
 };
 
-extern "C" NS_APPSHELL nsresult
-NS_NewSessionHistoryFactory(nsIFactory ** aFactory);
+//extern "C" NS_APPSHELL nsresult
+//NS_NewSessionHistoryFactory(nsIFactory ** aFactory);
 
 
 #endif /* nsISessionHistory_h_ */
