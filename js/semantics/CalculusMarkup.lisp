@@ -84,6 +84,16 @@
       (error "Grammar needed")))
 
 
+; Set the mode to the given mode without emitting any headings.
+; Return true if the contents should be visible, nil if not.
+(defun quiet-depict-mode (depict-env mode)
+  (unless (member mode '(nil :syntax :semantics))
+    (error "Bad mode: ~S" mode))
+  (setf (depict-env-mode depict-env) mode)
+  (or (depict-env-visible-semantics depict-env)
+      (not (eq mode :semantics))))
+
+
 ; Set the mode to the given mode, emitting a heading if necessary.
 ; Return true if the contents should be visible, nil if not.
 (defun depict-mode (markup-stream depict-env mode)
@@ -94,10 +104,8 @@
                    (depict markup-stream "Syntax")))
         (:semantics (depict-paragraph (markup-stream ':grammar-header)
                       (depict markup-stream "Semantics")))
-        ((nil))))
-    (setf (depict-env-mode depict-env) mode))
-  (or (depict-env-visible-semantics depict-env)
-      (not (eq mode :semantics))))
+        ((nil)))))
+  (quiet-depict-mode depict-env mode))
 
 
 ; Emit markup paragraphs for a command.
@@ -609,6 +617,25 @@
       (depict-annotated-value-expr markup-stream world vector2-annotated-expr %term%))))
 
 
+; (map <vector-expr> <var> <value-expr> [<condition-expr>])
+(defun depict-map (markup-stream world level vector-annotated-expr var value-annotated-expr &optional condition-annotated-expr)
+  (declare (ignore level))
+  (depict-logical-block (markup-stream 2)
+    (depict markup-stream :vector-begin)
+    (depict-annotated-value-expr markup-stream world value-annotated-expr %expr%)
+    (depict markup-stream " " :vector-construct)
+    (depict-break markup-stream 1)
+    (depict-local-variable markup-stream var)
+    (depict markup-stream " " :member-10 " ")
+    (depict-annotated-value-expr markup-stream world vector-annotated-expr %term%)
+    (when condition-annotated-expr
+      (depict markup-stream " ")
+      (depict-semantic-keyword markup-stream 'and)
+      (depict-break markup-stream 1)
+      (depict-annotated-value-expr markup-stream world condition-annotated-expr %not%))
+    (depict markup-stream :vector-end)))
+
+
 ;;; Sets
 
 ; (set-of-ranges <element-type> <low-expr> <high-expr> ... <low-expr> <high-expr>)
@@ -875,20 +902,37 @@
 
 
 ; (%section "section-name")
-(defun depict-%section (markup-stream world depict-env section-name)
+; (%section <mode> "section-name")
+; <mode> is one of:
+;   :syntax     This is a comment about the syntax
+;   :semantics  This is a comment about the semantics (not displayed when semantics are not displayed)
+;   nil         This is a general comment
+(defun depict-%section (markup-stream world depict-env mode &optional section-name)
   (declare (ignore world))
-  (assert-type section-name string)
-  (when (depict-mode markup-stream depict-env nil)
-    (depict-paragraph (markup-stream ':section-heading)
-      (depict markup-stream section-name))))
+  (depict-section-or-subsection markup-stream depict-env mode section-name ':section-heading))
 
 
 ; (%subsection "subsection-name")
-(defun depict-%subsection (markup-stream world depict-env section-name)
+; (%subsection <mode> "subsection-name")
+; <mode> is one of:
+;   :syntax     This is a comment about the syntax
+;   :semantics  This is a comment about the semantics (not displayed when semantics are not displayed)
+;   nil         This is a general comment
+(defun depict-%subsection (markup-stream world depict-env mode &optional section-name)
   (declare (ignore world))
+  (depict-section-or-subsection markup-stream depict-env mode section-name ':subsection-heading))
+
+
+; Common routine for depict-%section and depict-%subsection.
+(defun depict-section-or-subsection (markup-stream depict-env mode section-name paragraph-style)
+  (when (stringp mode)
+    (when section-name
+      (error "Bad %section or %subsection"))
+    (setq section-name mode)
+    (setq mode nil))
   (assert-type section-name string)
-  (when (depict-mode markup-stream depict-env nil)
-    (depict-paragraph (markup-stream ':subsection-heading)
+  (when (quiet-depict-mode depict-env mode)
+    (depict-paragraph (markup-stream paragraph-style)
       (depict markup-stream section-name))))
 
 
@@ -896,10 +940,11 @@
 ; <mode> is one of:
 ;   :syntax     This is a comment about the syntax
 ;   :semantics  This is a comment about the semantics (not displayed when semantics are not displayed)
+;   :comment    This is a comment about the following piece of semantics (not displayed when semantics are not displayed)
 ;   nil         This is a general comment
 (defun depict-%text (markup-stream world depict-env mode &rest text)
-  (when (depict-mode markup-stream depict-env mode)
-    (depict-paragraph (markup-stream ':body-text)
+  (when (depict-mode markup-stream depict-env (if (eq mode ':comment) ':semantics mode))
+    (depict-paragraph (markup-stream (if (eq mode ':comment) ':semantic-comment ':body-text))
       (let ((grammar-info (depict-env-grammar-info depict-env))
             (*styled-text-world* world))
         (if grammar-info
@@ -1172,7 +1217,10 @@
 
 ; (:global <name>)
 (defun depict-styled-text-global-variable (markup-stream name)
-  (depict-global-variable markup-stream name :reference))
+  (let ((interned-name (world-find-symbol *styled-text-world* name)))
+    (if (and interned-name (symbol-primitive interned-name))
+      (depict-primitive markup-stream (symbol-primitive interned-name))
+      (depict-global-variable markup-stream name :reference))))
 
 (setf (styled-text-depictor :global) #'depict-styled-text-global-variable)
 
