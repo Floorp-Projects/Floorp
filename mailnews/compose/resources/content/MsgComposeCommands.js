@@ -350,10 +350,8 @@ function ComposeUnload(calledFromExit)
 	//...and what's about the editor appcore, how can we release it?
 }
 
-function SetDocumentCharacterSet(event)
+function SetDocumentCharacterSet(aCharset)
 {
-  var aCharset = event.target.getAttribute('id');
-
   dump("SetDocumentCharacterSet Callback!\n");
   dump(aCharset + "\n");
 
