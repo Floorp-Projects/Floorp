@@ -3421,6 +3421,13 @@ nsGfxTextControlFrame2::SaveState(nsIPresContext* aPresContext, nsIPresState** a
     return NS_OK;
   }
 
+  // Never save passwords in session history
+  PRInt32 type;
+  GetType(&type);
+  if (NS_FORM_INPUT_PASSWORD == type) {
+    return NS_OK;
+  }
+
   // Get the value string
   nsString stateString;
   nsresult res = GetProperty(nsHTMLAtoms::value, stateString);
