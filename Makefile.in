@@ -209,8 +209,6 @@ ifdef MOZ_PHOENIX
 ifdef MOZ_USE_OFFICIAL_BRANDING
 tier_9_dirs  += other-licenses/branding/firefox
 endif
-
-tier_9_dirs	+= toolkit/components/profile/public
 endif
 
 tier_9_dirs	+= \
