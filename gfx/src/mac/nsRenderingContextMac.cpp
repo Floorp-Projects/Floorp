@@ -1571,3 +1571,30 @@ nsRenderingContextMac::ReleaseBackbuffer(void)
   SelectOffScreenDrawingSurface(nsnull);
   return NS_OK;
 }
+
+
+// override to not use a back buffer on MacOS X
+NS_IMETHODIMP 
+nsRenderingContextMac::UseBackbuffer(PRBool* aUseBackbuffer)
+{
+  *aUseBackbuffer = !OnMacOSX();
+  return NS_OK;
+}
+
+
+//
+// Return true if we are on Mac OS X, caching the result after the first call
+//
+PRBool
+nsRenderingContextMac::OnMacOSX()
+{
+  static PRBool gInitVer = PR_FALSE;
+  static PRBool gOnMacOSX = PR_FALSE;
+  if(! gInitVer) {
+    long version;
+    OSErr err = ::Gestalt(gestaltSystemVersion, &version);
+    gOnMacOSX = (err == noErr && version >= 0x00001000);
+    gInitVer = PR_TRUE;
+  }
+  return gOnMacOSX;
+}

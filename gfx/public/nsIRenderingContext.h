@@ -789,6 +789,13 @@ public:
    */
   NS_IMETHOD DestroyCachedBackbuffer(void) = 0;
 
+  /**
+   * Some platforms may not want a backbuffer at all. Returning false
+   * here allows them to achieve that
+   *
+   * @param aUseBackbuffer PR_TRUE if we should use a backbuffer, PR_FALSE if not
+   */
+  NS_IMETHOD UseBackbuffer(PRBool* aUseBackbuffer) = 0;
 
 
 #ifdef MOZ_MATHML
