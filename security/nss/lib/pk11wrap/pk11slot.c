@@ -2197,6 +2197,19 @@ PK11_GetTokenInfo(PK11SlotInfo *slot, CK_TOKEN_INFO *info)
 PRBool
 PK11_NeedUserInit(PK11SlotInfo *slot)
 {
+    PRBool needUserInit = (PRBool) ((slot->flags & CKF_USER_PIN_INITIALIZED) 
+					== 0);
+
+    if (needUserInit) {
+	CK_TOKEN_INFO info;
+	SECStatus rv;
+
+	/* see if token has been initialized off line */
+	rv = PK11_GetTokenInfo(slot, &info);
+	if (rv == SECSuccess) {
+	    slot->flags = info.flags;
+	}
+    }
     return (PRBool)((slot->flags & CKF_USER_PIN_INITIALIZED) == 0);
 }
 
