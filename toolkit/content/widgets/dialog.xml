@@ -207,14 +207,12 @@
 
             // don't override custom labels with pre-defined labels on explicit buttons
             if (!button.hasAttribute("label")) {
-              // first look at the dialog attributes
-              if (this.hasAttribute("buttonlabel"+dlgtype))
-                button.setAttribute("label", this.getAttribute("buttonlabel"+dlgtype))
-              if (this.hasAttribute("buttonaccesskey"+dlgtype))
-                button.setAttribute("accesskey", this.getAttribute("buttonaccesskey"+dlgtype))
-
-              if (dlgtype != "extra1" && dlgtype != "extra2") {
-                // then at the localized dialog.properties file
+              // dialog attributes override the default labels in dialog.properties
+              if (this.hasAttribute("buttonlabel"+dlgtype)) {
+                button.setAttribute("label", this.getAttribute("buttonlabel"+dlgtype));
+                if (this.hasAttribute("buttonaccesskey"+dlgtype))
+                  button.setAttribute("accesskey", this.getAttribute("buttonaccesskey"+dlgtype));
+              } else if (dlgtype != "extra1" && dlgtype != "extra2") {
                 button.setAttribute("label", this.mStrBundle.GetStringFromName("button-"+dlgtype));
                 var accessKey = this.mStrBundle.GetStringFromName("accesskey-"+dlgtype);
                 if (accessKey)
