@@ -21,7 +21,7 @@
  */
 
 #include "nsIServiceManager.h"
-#include "nsVector.h"
+#include "nsVoidArray.h"
 #include "nsHashtable.h"
 #include "prcmon.h"
 #include "prthread.h" /* XXX: only used for the NSPR initialization hack (rick) */
@@ -85,7 +85,7 @@ public:
 
     const nsCID& mClassID;
     nsISupports* mService;
-    nsVector* mListeners;        // nsVector<nsIShutdownListener>
+    nsVoidArray* mListeners;
     PRBool mShuttingDown;
 };
 
@@ -97,9 +97,9 @@ nsServiceEntry::nsServiceEntry(const nsCID& cid, nsISupports* service)
 nsServiceEntry::~nsServiceEntry()
 {
     if (mListeners) {
-        NS_ASSERTION(mListeners->GetSize() == 0, "listeners not removed or notified");
+        NS_ASSERTION(mListeners->Count() == 0, "listeners not removed or notified");
 #if 0
-        PRUint32 size = mListeners->GetSize();
+        PRUint32 size = mListeners->Count();
         for (PRUint32 i = 0; i < size; i++) {
             nsIShutdownListener* listener = (nsIShutdownListener*)(*mListeners)[i];
             NS_RELEASE(listener);
@@ -115,11 +115,11 @@ nsServiceEntry::AddListener(nsIShutdownListener* listener)
     if (listener == NULL)
         return NS_OK;
     if (mListeners == NULL) {
-        mListeners = new nsVector();
+        mListeners = new nsVoidArray();
         if (mListeners == NULL)
             return NS_ERROR_OUT_OF_MEMORY;
     }
-    PRInt32 rv = mListeners->Add(listener);
+    PRInt32 rv = mListeners->AppendElement(listener);
     NS_ADDREF(listener);
     return rv == -1 ? NS_ERROR_FAILURE : NS_OK;
 }
@@ -130,14 +130,8 @@ nsServiceEntry::RemoveListener(nsIShutdownListener* listener)
     if (listener == NULL)
         return NS_OK;
     NS_ASSERTION(mListeners, "no listeners added yet");
-    PRUint32 size = mListeners->GetSize();
-    for (PRUint32 i = 0; i < size; i++) {
-        if ((*mListeners)[i] == listener) {
-            mListeners->Remove(i);
-            NS_RELEASE(listener);
-            return NS_OK;
-        }
-    }
+    if ( mListeners->RemoveElement(listener) )
+    	return NS_OK;
     NS_ASSERTION(0, "unregistered shutdown listener");
     return NS_ERROR_FAILURE;
 }
@@ -146,15 +140,15 @@ nsresult
 nsServiceEntry::NotifyListeners(void)
 {
     if (mListeners) {
-        PRUint32 size = mListeners->GetSize();
+        PRUint32 size = mListeners->Count();
         for (PRUint32 i = 0; i < size; i++) {
             nsIShutdownListener* listener = (nsIShutdownListener*)(*mListeners)[0];
             nsresult rv = listener->OnShutdown(mClassID, mService);
             if (NS_FAILED(rv)) return rv;
             NS_RELEASE(listener);
-            mListeners->Remove(0);
+            mListeners->RemoveElementAt(0);
         }
-        NS_ASSERTION(mListeners->GetSize() == 0, "failed to notify all listeners");
+        NS_ASSERTION(mListeners->Count() == 0, "failed to notify all listeners");
         delete mListeners;
         mListeners = NULL;
     }
