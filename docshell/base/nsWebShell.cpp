@@ -1203,7 +1203,7 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
             {
             // only send non-qualified hosts to the keyword server
             nsAutoString keywordSpec; keywordSpec.AssignWithConversion("keyword:");
-            keywordSpec.AppendWithConversion(host);
+            keywordSpec.Append(NS_ConvertUTF8toUCS2(host));
             return LoadURI(keywordSpec.GetUnicode());
             } // end keywordsEnabled
          }
