@@ -1918,10 +1918,6 @@ PRBool nsString::EqualsIgnoreCase(const char* aString,PRInt32 aLength) const {
 }
 
 #ifndef NEW_STRING_APIS
-PRBool nsString::EqualsIgnoreCase(/*FIX: const */nsIAtom *aAtom) const {
-  return Equals(aAtom,PR_TRUE);
-}
-
 PRBool nsString::EqualsIgnoreCase(const PRUnichar* s1, const PRUnichar* s2) const {
   return Equals(s1,s2,PR_TRUE);
 }
@@ -1997,6 +1993,10 @@ PRBool nsString::EqualsAtom(/*FIX: const */nsIAtom* aAtom,PRBool aIgnoreCase) co
   }
 
    return result;
+}
+
+PRBool nsString::EqualsIgnoreCase(/*FIX: const */nsIAtom *aAtom) const {
+  return EqualsAtom(aAtom,PR_TRUE);
 }
 
 #ifndef NEW_STRING_APIS
