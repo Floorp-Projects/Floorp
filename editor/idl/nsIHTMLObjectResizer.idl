@@ -38,8 +38,6 @@
 
 #include "nsISupports.idl"
 #include "domstubs.idl"
-#include "nsIAtom.idl"
-#include "nsISelection.idl"
 
 interface nsIHTMLObjectResizeListener;
 
