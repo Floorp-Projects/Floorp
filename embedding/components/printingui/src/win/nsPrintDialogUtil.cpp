@@ -90,6 +90,9 @@ static NS_DEFINE_IID(kPrinterEnumeratorCID, NS_PRINTER_ENUMERATOR_CID);
 // For Localization
 #include "nsIStringBundle.h"
 
+// For NS_CopyUnicodeToNative
+#include "nsNativeCharsetUtils.h"
+
 // This is for extending the dialog
 #include <dlgs.h>
 
@@ -395,30 +398,12 @@ GetLocalizedString(nsIStringBundle* aStrBundle, const char* aKey, nsString& oVal
 }
 
 //--------------------------------------------------------
-static char* 
-GetACPString(const nsAString& aStr)
-{
-   int acplen = aStr.Length() * 2 + 1;
-   char * acp = new char[acplen];
-   if(acp)
-   {
-      int outlen = ::WideCharToMultiByte( CP_ACP, 0, 
-                      PromiseFlatString(aStr).get(), aStr.Length(),
-                      acp, acplen, NULL, NULL);
-      if ( outlen > 0)
-         acp[outlen] = '\0';  // null terminate
-   }
-   return acp;
-}
-
-//--------------------------------------------------------
 // Set a multi-byte string in the control
 static void SetTextOnWnd(HWND aControl, const nsString& aStr)
 {
-  char* pStr = GetACPString(aStr);
-  if (pStr) {
-    ::SetWindowText(aControl, pStr);
-    delete [] pStr;
+  nsCAutoString text;
+  if (NS_SUCCEEDED(NS_CopyUnicodeToNative(aStr, text))) {
+    ::SetWindowText(aControl, text.get());
   }
 }
 
@@ -530,17 +515,16 @@ static HWND CreateControl(LPCTSTR          aType,
                           const nsAString& aStr, 
                           const nsRect&    aRect)
 {
-  char* pStr = GetACPString(aStr);
-  if (pStr == NULL) return NULL;
+  nsCAutoString str;
+  if (NS_FAILED(NS_CopyUnicodeToNative(aStr, str)))
+    return NULL;
 
-  HWND hWnd = ::CreateWindow (aType, pStr,
+  HWND hWnd = ::CreateWindow (aType, str.get(),
                               WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE | aStyle,
                               aRect.x, aRect.y, aRect.width, aRect.height,
                               (HWND)aHdlg, (HMENU)aId,
                               aHInst, NULL);
   if (hWnd == NULL) return NULL;
-
-  delete [] pStr;
 
   // get the native font for the dialog and 
   // set it into the new control
@@ -766,23 +750,25 @@ static UINT CALLBACK PrintHookProc(HWND hdlg, UINT uiMsg, WPARAM wParam, LPARAM 
 // from the Printer by the name of aPrintName
 //
 // NOTE:
-//   This function assumes that aPrintName has already been converted to 
-//   Double Byte chars typically via the GetACPString helper function
+//   This function assumes that aPrintName has already been converted from 
+//   unicode
 //
-static HGLOBAL CreateGlobalDevModeAndInit(LPTSTR aPrintName, nsIPrintSettings* aPS)
+static HGLOBAL CreateGlobalDevModeAndInit(LPCTSTR aPrintName, nsIPrintSettings* aPS)
 {
   HGLOBAL hGlobalDevMode = NULL;
 
   nsresult rv = NS_ERROR_FAILURE;
   HANDLE hPrinter = NULL;
-  BOOL status = ::OpenPrinter(aPrintName, &hPrinter, NULL);
+  // const cast kludge for silly Win32 api's
+  LPTSTR printName = NS_CONST_CAST(char*, aPrintName);
+  BOOL status = ::OpenPrinter(printName, &hPrinter, NULL);
   if (status) {
 
     LPDEVMODE   pNewDevMode;
     DWORD       dwNeeded, dwRet;
 
     // Get the buffer size
-    dwNeeded = ::DocumentProperties(gParentWnd, hPrinter, aPrintName, NULL, NULL, 0);
+    dwNeeded = ::DocumentProperties(gParentWnd, hPrinter, printName, NULL, NULL, 0);
     if (dwNeeded == 0) {
       return NULL;
     }
@@ -797,7 +783,7 @@ static HGLOBAL CreateGlobalDevModeAndInit(LPTSTR aPrintName, nsIPrintSettings* a
       return NULL;
     }
 
-    dwRet = ::DocumentProperties(gParentWnd, hPrinter, aPrintName, pNewDevMode, NULL, DM_OUT_BUFFER);
+    dwRet = ::DocumentProperties(gParentWnd, hPrinter, printName, pNewDevMode, NULL, DM_OUT_BUFFER);
 
     if (dwRet != IDOK) {
       ::HeapFree(::GetProcessHeap(), 0, pNewDevMode);
@@ -815,7 +801,7 @@ static HGLOBAL CreateGlobalDevModeAndInit(LPTSTR aPrintName, nsIPrintSettings* a
       SetupDevModeFromSettings(devMode, aPS);
 
       // Sets back the changes we made to the DevMode into the Printer Driver
-      dwRet = ::DocumentProperties(gParentWnd, hPrinter, aPrintName, devMode, devMode, DM_IN_BUFFER | DM_OUT_BUFFER);
+      dwRet = ::DocumentProperties(gParentWnd, hPrinter, printName, devMode, devMode, DM_IN_BUFFER | DM_OUT_BUFFER);
       if (dwRet != IDOK) {
         ::GlobalUnlock(hGlobalDevMode);
         ::GlobalFree(hGlobalDevMode);
@@ -883,10 +869,11 @@ ShowNativePrintDialog(HWND              aHWnd,
   if (!printerName) return NS_ERROR_FAILURE;
 
   // Now create a DEVNAMES struct so the the dialog is initialized correctly.
-  char* dbStr = GetACPString(nsString(printerName));
-  NS_ENSURE_TRUE(dbStr, NS_ERROR_FAILURE);
+  nsCAutoString tempPrinterName;
+  rv = NS_CopyUnicodeToNative(nsDependentString(printerName), tempPrinterName);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  PRUint32 len = strlen(dbStr);
+  PRUint32 len = tempPrinterName.Length();
   hDevNames = (HGLOBAL)::GlobalAlloc(GHND, len+sizeof(DEVNAMES)+1);
   DEVNAMES* pDevNames = (DEVNAMES*)::GlobalLock(hDevNames);
   pDevNames->wDriverOffset = sizeof(DEVNAMES);
@@ -895,7 +882,7 @@ ShowNativePrintDialog(HWND              aHWnd,
   pDevNames->wDefault      = 0;
 
   char* device = &(((char*)pDevNames)[pDevNames->wDeviceOffset]);
-  strcpy(device, dbStr);
+  strcpy(device, tempPrinterName.get());
   ::GlobalUnlock(hDevNames);
 
   // Create a Moveable Memory Object that holds a new DevMode
@@ -904,8 +891,7 @@ ShowNativePrintDialog(HWND              aHWnd,
   // NOTE: We only need to free hGlobalDevMode when the dialog is cancelled
   // When the user prints, it comes back in the printdlg struct and 
   // is used and cleaned up later
-  hGlobalDevMode = CreateGlobalDevModeAndInit(dbStr, aPrintSettings);
-  free(dbStr);
+  hGlobalDevMode = CreateGlobalDevModeAndInit(tempPrinterName.get(), aPrintSettings);
 
   // Prepare to Display the Print Dialog
   PRINTDLG  prntdlg;
@@ -1245,10 +1231,10 @@ ShowNativePrintDialogEx(HWND              aHWnd,
   aPrintSettings->GetPrinterName(&printerName);
   HGLOBAL hGlobalDevMode = NULL;
   if (printerName) {
-    char* dbStr = GetACPString(nsString(printerName));
-    NS_ENSURE_TRUE(dbStr, NS_ERROR_FAILURE);
-    hGlobalDevMode = CreateGlobalDevModeAndInit(dbStr, aPrintSettings);
-    free(dbStr);
+    nsCAutoString tempPrinterName;
+    rv = NS_CopyUnicodeToNative(nsDependentString(printerName), tempPrinterName));
+    NS_ENSURE_SUCCESS(rv, rv);
+    hGlobalDevMode = CreateGlobalDevModeAndInit(tempPrinterName.get(), aPrintSettings);
   }
 
   // Prepare to Display the Print Dialog
@@ -1303,17 +1289,18 @@ ShowNativePrintDialogEx(HWND              aHWnd,
 
   if (doExtend) {
     // lLcalize the Property Sheet (Tab) title
-    char* pTitle = NULL;
+    nsCAutoString title;
     nsString optionsStr;
     if (NS_SUCCEEDED(GetLocalizedString(strBundle, "options", optionsStr))) {
-      pTitle = GetACPString(optionsStr);
+      // Failure here just means a blank string
+      NS_CopyUnicodeToNative(optionsStr, title);
     }
 
     // Temporarily borrow this variable for setting up the radiobuttons
     // if we don't use this, we will need to define a new global var
     gFrameSelectedRadioBtn = howToEnableFrameUI;
     HPROPSHEETPAGE psp[1];
-    psp[0] = ExtendPrintDialog(aHWnd, pTitle);
+    psp[0] = ExtendPrintDialog(aHWnd, title.get());
     prntdlg.nPropertyPages      = 1;
     prntdlg.lphPropertyPages    = psp;
   }
