@@ -331,6 +331,7 @@ nsEventQueueServiceImpl::PopThreadEventQueue(nsIEventQueue *aQueue)
     ++gEventQueueLogCount;
 #endif
     aQueue->StopAcceptingEvents();
+    aQueue->ProcessPendingEvents(); // make sure we don't orphan any events
 
     if (aQueue == queue.get()) { // are we reomving the eldest queue?
       mEventQTable.Remove(&key); // remove nsIEventQueue from hash table (releases)
