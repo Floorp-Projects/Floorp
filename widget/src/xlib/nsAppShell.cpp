@@ -150,23 +150,7 @@ NS_METHOD nsAppShell::Create(int* argc, char ** argv)
   }
   // get the depth for this display
   gDepth = gVisualInfo->depth;
-  // set up the color info for this display
-  // set up the masks
-  gRedMask = gVisualInfo->red_mask;
-  gGreenMask = gVisualInfo->green_mask;
-  gBlueMask = gVisualInfo->blue_mask;
-  gAlphaMask = 0;
-  // set up the number of bits in each
-  gRedCount = convertMaskToCount(gVisualInfo->red_mask);
-  gGreenCount = convertMaskToCount(gVisualInfo->green_mask);
-  gBlueCount = convertMaskToCount(gVisualInfo->blue_mask);
-  gAlphaCount = 0;
-  // set up the number of bits that you need to shift to get to
-  // a specific mask
-  gRedShift = getShiftForMask(gVisualInfo->red_mask);
-  gGreenShift = getShiftForMask(gVisualInfo->green_mask);
-  gBlueShift = getShiftForMask(gVisualInfo->blue_mask);
-  gAlphaShift = 0;
+
   return NS_OK;
 }
 
@@ -316,7 +300,7 @@ void
 nsAppShell::DispatchEvent(XEvent *event)
 {
   nsWidget *widget;
-  widget = nsWidget::getWidgetForWindow(event->xany.window);
+  widget = nsWidget::GetWidgetForWindow(event->xany.window);
   // switch on the type of event
   switch (event->type) {
   case Expose:
@@ -447,32 +431,4 @@ nsAppShell::HandleConfigureNotifyEvent(XEvent *event, nsWidget *aWidget)
   aWidget->OnResize(sevent);
   NS_RELEASE(aWidget);
   delete sevent.windowSize;
-}
-
-static PRUint8 convertMaskToCount(unsigned long val)
-{
-  PRUint8 retval = 0;
-  PRUint8 cur_bit = 0;
-  // walk through the number, incrementing the value if
-  // the bit in question is set.
-  while (cur_bit < (sizeof(unsigned long) * 8)) {
-    if ((val >> cur_bit) & 0x1) {
-      retval++;
-    }
-    cur_bit++;
-  }
-  return retval;
-}
-
-static PRUint8 getShiftForMask(unsigned long val)
-{
-  PRUint8 cur_bit = 0;
-  // walk through the number, looking for the first 1
-  while (cur_bit < (sizeof(unsigned long) * 8)) {
-    if ((val >> cur_bit) & 0x1) {
-      return cur_bit;
-    }
-    cur_bit++;
-  }
-  return cur_bit;
 }

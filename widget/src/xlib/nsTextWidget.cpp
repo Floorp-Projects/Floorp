@@ -24,7 +24,7 @@ NS_IMPL_RELEASE(nsTextWidget)
 nsTextWidget::nsTextWidget() : nsTextHelper()
 {
   NS_INIT_REFCNT();
-  name = "nsTextWidget";
+  mName = "nsTextWidget";
 }
 
 nsTextWidget::~nsTextWidget()
