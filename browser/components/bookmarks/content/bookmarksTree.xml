@@ -41,7 +41,7 @@
         initServices();
         initBMService();
 
-        BMSVC.ReadBookmarks();
+        BMSVC.readBookmarks();
         
         // We implement nsIController
         this.tree.controllers.appendController(this.controller);
