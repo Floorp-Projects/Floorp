@@ -535,6 +535,12 @@ nsClipboard::SelectionReceiver (GtkWidget *aWidget,
 
   nsCAutoString type(gdk_atom_name(aSD->type));
 
+#ifdef DEBUG_CLIPBOARD
+  if (type.Equals("ATOM")) {
+    g_print("        Asked for TARGETS\n");
+  }
+#endif
+
   if (type.Equals("COMPOUND_TEXT")) {
 #ifdef DEBUG_CLIPBOARD
     g_print("        Copying mSelectionData pointer -- \n");
@@ -710,8 +716,19 @@ nsClipboard::HasDataMatchingFlavors(nsISupportsArray* aFlavorList,
   // check for plain text. If it's there, say "yes" as we will do the conversion
   // in GetNativeClipboardData(). From this point on, no client will
   // ever ask for text/plain explicitly. If they do, you must ASSERT!
+#ifdef DEBUG_CLIPBOARD
+  g_print("  nsClipboard::HasDataMatchingFlavors()\n  {\n");
+#endif
 
-#if 0
+
+  GetTargets(GetSelectionAtom(aWhichClipboard));
+
+  guchar *data = mSelectionData.data;
+  PRInt32 dataLength = mSelectionData.length;
+  int position = 0;
+  gchar *str;
+
+
   *outResult = PR_FALSE;
   PRUint32 length;
   aFlavorList->Count(&length);
@@ -720,24 +737,42 @@ nsClipboard::HasDataMatchingFlavors(nsISupportsArray* aFlavorList,
     aFlavorList->GetElementAt ( i, getter_AddRefs(genericFlavor) );
     nsCOMPtr<nsISupportsString> flavorWrapper ( do_QueryInterface(genericFlavor) );
     if ( flavorWrapper ) {
-      nsXPIDLCString flavor;
-      flavorWrapper->ToString ( getter_Copies(flavor) );
-      
-      gint format = GetFormat(flavor);
-      if (DoConvert(format, aWhichClipboard)) {
-        *outResult = PR_TRUE;
-        break;
+      nsCAutoString flavorStr;
+      nsXPIDLCString myStr;
+      flavorWrapper->ToString(getter_Copies(myStr));
+      flavorStr = myStr;
+
+      position = 0;
+      while (position < dataLength) {
+        str = gdk_atom_name(*(GdkAtom*)(data+position));
+        position += sizeof(GdkAtom);
+        nsCAutoString atomName(str);
+        
+        if (flavorStr.Equals(kUnicodeMime)) {
+          if (atomName.Equals("COMPOUND_TEXT") ||
+              atomName.Equals("UTF8_STRING") ||
+              atomName.Equals("STRING")) {
+#ifdef DEBUG_CLIPBOARD
+            g_print("    Selection owner has matching type: %s\n", atomName.mBuffer);
+#endif
+            *outResult = PR_TRUE;
+            break;
+          }
+        }
+        if (flavorStr.Equals(atomName)) {
+#ifdef DEBUG_CLIPBOARD
+          g_print("    Selection owner has matching type: %s\n", atomName.mBuffer);
+#endif
+          *outResult = PR_TRUE;
+          break;
+        }
       }
     }
   }
 #ifdef DEBUG_CLIPBOARD
-  g_print("nsClipboard::HasDataMatchingFlavors() called -- returning %i\n", *outResult);
+  g_print("    returning %i\n  }\n", *outResult);
 #endif
 
-#else
-  *outResult = PR_TRUE;
-#endif
-  
   return NS_OK;
 
 }
@@ -1082,4 +1117,47 @@ PRBool nsClipboard::DoConvert(const char *aMimeStr, GdkAtom aSelectionAtom)
   if (r) return r;
 
   return r;
+}
+
+PRBool nsClipboard::GetTargets(GdkAtom aSelectionAtom)
+{
+#ifdef DEBUG_CLIPBOARD
+  g_print("    nsClipboard::GetTargets(%d)\n    {\n", aSelectionAtom);
+#endif
+  int e = 0;
+  // Set a flag saying that we're blocking waiting for the callback:
+  mBlocking = PR_TRUE;
+
+  //
+  // ask X what kind of data we can get
+  //
+  static GdkAtom targetsAtom = gdk_atom_intern("TARGETS", PR_FALSE);
+
+  gtk_selection_convert(sWidget,
+                        aSelectionAtom,
+                        targetsAtom,
+                        GDK_CURRENT_TIME);
+
+  gtk_grab_add(sWidget);
+
+  // Now we need to wait until the callback comes in ...
+  // i is in case we get a runaway (yuck).
+#ifdef DEBUG_CLIPBOARD
+  g_print("      Waiting for the callback... mBlocking = %d\n", mBlocking);
+#endif /* DEBUG_CLIPBOARD */
+  for (e=0; mBlocking == PR_TRUE && e < 1000; ++e)
+  {
+    gtk_main_iteration_do(PR_TRUE);
+  }
+
+  gtk_grab_remove(sWidget);
+
+#ifdef DEBUG_CLIPBOARD
+  g_print("    }\n");
+#endif
+
+  if (mSelectionData.length <= 0)
+    return PR_FALSE;
+
+  return PR_TRUE;
 }
