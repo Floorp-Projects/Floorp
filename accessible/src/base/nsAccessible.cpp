@@ -592,7 +592,7 @@ PRBool nsAccessible::IsPartiallyVisible(PRBool *aIsOffscreen)
   if (rectVisibility == nsRectVisibility_kVisible)
     return PR_TRUE;
 
-  *aIsOffscreen = PR_TRUE;
+  *aIsOffscreen = rectVisibility != nsRectVisibility_kZeroAreaRect;
   return PR_FALSE;
 }
 
@@ -1351,18 +1351,17 @@ nsRoleMapEntry nsAccessible::gWAIRoleMap[] =
   {"button", ROLE_PUSHBUTTON, eAggregateSubtree, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
   {"checkbox", ROLE_CHECKBUTTON, eAggregateSubtree, 0, {"checked", "true", STATE_CHECKED}, {"readonly", 0, STATE_READONLY}, {0, 0, 0}},
   {"checkbox-tristate", ROLE_CHECKBUTTON, eAggregateSubtree, 0, {"checked", "true", STATE_CHECKED}, {"checked", "mixed", STATE_MIXED}, {"readonly", 0, STATE_READONLY}},
-  {"columnheader", ROLE_COLUMNHEADER, eAggregateSubtree, STATE_SELECTABLE, {"selected", 0, STATE_SELECTED}, {0, 0, 0}, {0, 0, 0}},
+  {"columnheader", ROLE_COLUMNHEADER, eAggregateSubtree, STATE_SELECTABLE, {"selected", 0, STATE_SELECTED}, {"readonly", 0, STATE_READONLY}, {0, 0, 0}},
   {"icon", ROLE_ICON, eAggregateSubtree, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
-  {"menugroup", ROLE_MENUPOPUP, eTitleOnly, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
-  {"menupopup", ROLE_MENUPOPUP, eTitleOnly, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
+  {"menu", ROLE_MENUPOPUP, eTitleOnly, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
   {"menubar", ROLE_MENUBAR, eTitleOnly, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
   {"menuitem", ROLE_MENUITEM, eAggregateSubtree, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
   {"menuitem-checkbox", ROLE_MENUITEM, eAggregateSubtree, 0, {"checked", "true", STATE_CHECKED}, {0, 0, 0}, {0, 0, 0}},
   {"grid", ROLE_TABLE, eTitleOnly, STATE_FOCUSABLE, {"readonly", 0, STATE_READONLY}, {"multiselect", 0, STATE_EXTSELECTABLE | STATE_MULTISELECTABLE}, {0, 0, 0}},
-  {"gridcell", ROLE_CELL, eAggregateSubtree, STATE_SELECTABLE, {"selected", 0, STATE_SELECTED}, {0, 0, 0}, {0, 0, 0}},
+  {"gridcell", ROLE_CELL, eAggregateSubtree, STATE_SELECTABLE, {"selected", 0, STATE_SELECTED}, {"readonly", 0, STATE_READONLY}, {0, 0, 0}},
   {"option", ROLE_LISTITEM, eAggregateSubtree, STATE_SELECTABLE, {"selected", 0, STATE_SELECTED}, {0, 0, 0}, {0, 0, 0}},
   {"progress-meter", ROLE_PROGRESSBAR, eTitleOnly, STATE_READONLY, {"valuenow", "unknown", STATE_MIXED}, {0, 0, 0}, {0, 0, 0}},
-  {"rowheader", ROLE_ROWHEADER, eAggregateSubtree, STATE_SELECTABLE, {"selected", 0, STATE_SELECTED}, {0, 0, 0}, {0, 0, 0}},
+  {"rowheader", ROLE_ROWHEADER, eAggregateSubtree, STATE_SELECTABLE, {"selected", 0, STATE_SELECTED}, {"readonly", 0, STATE_READONLY}, {0, 0, 0}},
   {"secret-text", ROLE_PASSWORD_TEXT, eTitleOnly, STATE_PROTECTED, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}}, // XXX Use ext state STATE_SINGLE_LINE
   {"select", ROLE_LIST, eTitleOnly, 0, {"readonly", 0, STATE_READONLY},  {"multiselect", 0, STATE_EXTSELECTABLE | STATE_MULTISELECTABLE}, {0, 0, 0}},
   {"slider", ROLE_SLIDER, eTitleOnly, 0, {"readonly", 0, STATE_READONLY}, {0, 0, 0}, {0, 0, 0}},

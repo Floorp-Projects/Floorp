@@ -105,11 +105,13 @@ class nsDocAccessible : public nsBlockAccessible,
     NS_IMETHOD Shutdown();
     NS_IMETHOD Init();
 
+    // nsPIAccessNode
+    NS_IMETHOD_(nsIFrame *) GetFrame(void);
+
   protected:
     enum EBusyState {eBusyStateUninitialized, eBusyStateLoading, eBusyStateDone};
 
     virtual void GetBoundsRect(nsRect& aRect, nsIFrame** aRelativeFrame);
-    virtual nsIFrame* GetFrame();
     virtual nsresult AddEventListeners();
     virtual nsresult RemoveEventListeners();
     void AddScrollListener();

@@ -88,12 +88,6 @@ public:
         /* [in] */ VARIANT varChild,
         /* [retval][out] */ IDispatch __RPC_FAR *__RPC_FAR *ppdispChild);
 
-    // Override get_accParent so that native accessible for window is 
-    // returned as parent, otherwise WindowFromAccessibleObject() doesn't work.
-    // Also necessary for MSAA SDK's accexplore.exe testing tool to work.
-    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_accParent( 
-        /* [retval][out] */ IDispatch __RPC_FAR *__RPC_FAR *ppdispParent);
-
     NS_IMETHOD FireToolkitEvent(PRUint32 aEvent, nsIAccessible* aAccessible, void* aData);
     NS_IMETHOD OnLocationChange(nsIWebProgress *aWebProgress,
                                 nsIRequest *aRequest, nsIURI *location);

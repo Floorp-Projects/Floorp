@@ -38,9 +38,12 @@
 
 #include "nsISupports.idl"
 
+interface nsIFrame;
+
 [scriptable, uuid(b3507946-4a44-4e40-b66c-f23e320997c5)]
 interface nsPIAccessNode : nsISupports
 {
   [noscript] void init();
   [noscript] void shutdown();
+  [notxpcom] nsIFrame GetFrame();
 };

@@ -43,6 +43,7 @@
 #include "nsIDOMDocumentTraversal.h"
 #include "nsIDOMNodeFilter.h"
 #include "nsIDOMTreeWalker.h"
+#include "nsIFrame.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIPresShell.h"
 #include "nsISelectionController.h"
@@ -161,38 +162,6 @@ STDMETHODIMP nsDocAccessibleWrap::get_accChild(
   return nsAccessibleWrap::get_accChild(varChild, ppdispChild);
 }
 
-STDMETHODIMP nsDocAccessibleWrap::get_accParent( IDispatch __RPC_FAR *__RPC_FAR *ppdispParent)
-{
-  // MSAA expects that client area accessibles return the native accessible for 
-  // their containing window, otherwise WindowFromAccessibleObject() doesn't work.
-
-  void* wnd;
-  GetWindowHandle(&wnd);
-
-  HWND pWnd = ::GetParent(NS_REINTERPRET_CAST(HWND, wnd));
-  if (pWnd) {
-    // get the accessible.
-    void* ptr = nsnull;
-#ifdef DEBUG_aleventhal
-    printf("* Ready to call AccessibleObjectFromWindow()\n");
-#endif
-    HRESULT result = AccessibleObjectFromWindow(pWnd, OBJID_WINDOW, IID_IAccessible, &ptr);
-#ifdef DEBUG_aleventhal
-    printf("* Successfully called AccessibleObjectFromWindow()\n");
-#endif
-    if (SUCCEEDED(result)) {
-      IAccessible* msaaParentAccessible = (IAccessible*)ptr;
-      // got one? return it.
-      if (msaaParentAccessible) {
-        *ppdispParent = msaaParentAccessible;
-        return S_OK;
-      }
-    }
-  }
-
-  return E_FAIL;
-}
-
 NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent, nsIAccessible* aAccessible, void* aData)
 {
   if (!mWeakShell) {   // Means we're not active
@@ -229,10 +198,19 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent, nsIAccessib
     // Clear out the cache in this subtree
   }
 
-  HWND hWnd = NS_REINTERPRET_CAST(HWND, mWnd);
+  nsCOMPtr<nsPIAccessNode> privateAccessNode =
+    do_QueryInterface(aAccessible);
+  nsIFrame *frame = privateAccessNode->GetFrame();
 
-  // notify the window system
-  NotifyWinEvent(aEvent, hWnd, worldID, childID);
+  HWND hWnd = frame ? (HWND)frame->GetWindow()->GetNativeData(NS_NATIVE_WINDOW) :
+                      (HWND)mWnd;
+
+  // Gecko uses two windows for every scrollable area. One window contains
+  // scrollbars and the child window contains only the client area.
+  // Details of the 2 window system:
+  // * Scrollbar window: caret drawing window & return value for WindowFromAccessibleObject()
+  // * Client area window: text drawing window & MSAA event window
+  NotifyWinEvent(aEvent, hWnd, worldID, childID);   // Fire MSAA event for client area window
 
   return NS_OK;
 }
