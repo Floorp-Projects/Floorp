@@ -160,7 +160,7 @@ HRuleFrame::Paint(nsIPresContext*      aPresContext,
     } else {
       aRenderingContext.FillArc(x0, y0, diameter, diameter, 90.0f, 270.0f);
       aRenderingContext.FillArc(x0 + width - diameter, y0,
-                                diameter, diameter, 270.0f, 180.0f);
+                                diameter, diameter, 270.0f, 90.0f);
       aRenderingContext.FillRect(x0 + diameter/2, y0,
                                  width - diameter, height);
      }
