@@ -233,10 +233,30 @@ nsresult nsHTTPRequest::WriteRequest(nsIChannel *aTransport, PRBool aIsProxied)
     mUsingProxy = aIsProxied;
     if (mUsingProxy) {
         // Additional headers for proxy usage
-        //SetHeader(nsHTTPAtoms::Pragma, "no-cache");
         // When Keep-Alive gets ready TODO
         //SetHeader(nsHTTPAtoms::Proxy-Connection, "Keep-Alive");
     }
+
+    PRUint32 loadAttributes;
+    mConnection->GetLoadAttributes(&loadAttributes);
+    if (loadAttributes & (nsIChannel::FORCE_VALIDATION | nsIChannel::FORCE_RELOAD)) {
+
+        // We need to send 'Pragma:no-cache' to inhibit proxy caching even if
+        // no proxy is configured since we might be talking with a transparent
+        // proxy, i.e. one that operates at the network level.  See bug #14772
+        SetHeader(nsHTTPAtoms::Pragma, "no-cache");
+    }
+
+    if (loadAttributes & nsIChannel::FORCE_RELOAD) {
+        // If doing a reload, force end-to-end 
+        SetHeader(nsHTTPAtoms::Cache_Control, "no-cache");
+    } else if (loadAttributes & nsIChannel::FORCE_VALIDATION) {
+        // A "max-age=0" cache-control directive forces each cache along the
+        // path to the origin server to revalidate its own entry, if any, with
+        // the next cache or server.
+        SetHeader(nsHTTPAtoms::Cache_Control, "max-age=0");
+    }
+
 
     //
     // Build up the request into mRequestBuffer...

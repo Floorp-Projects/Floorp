@@ -93,6 +93,8 @@ nsHTTPHandler::nsHTTPHandler():
     nsresult rv;
     NS_INIT_REFCNT();
 
+    mSessionStartTime = PR_Now();
+
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("Creating nsHTTPHandler [this=%x].\n", this));
 
@@ -510,7 +512,7 @@ nsHTTPHandler * nsHTTPHandler::GetInstance(void)
 nsresult nsHTTPHandler::ReleaseTransport(nsIChannel* i_pTrans)
 {
     nsresult rv;
-    PRUint32 count=0;
+    PRUint32 count=0, transportsInUseCount = 0;
 
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("nsHTTPHandler::ReleaseTransport."
@@ -551,8 +553,16 @@ nsresult nsHTTPHandler::ReleaseTransport(nsIChannel* i_pTrans)
     }
     
     // Now trigger an additional one from the pending list
-    mPendingChannelList->Count(&count);
-    if (count) {
+    while (1) {
+        // There's no guarantee that a channel will re-request a transport once
+        // it's taken off the pending list, so we loop until there are no
+        // pending channels or all transports are in use
+
+        mPendingChannelList->Count(&count);
+        mTransportList->Count(&transportsInUseCount);
+        if (!count || (transportsInUseCount >= MAX_NUMBER_OF_OPEN_TRANSPORTS))
+            return NS_OK;
+
         nsCOMPtr<nsISupports> item;
         nsHTTPChannel* channel;
 
@@ -566,7 +576,7 @@ nsresult nsHTTPHandler::ReleaseTransport(nsIChannel* i_pTrans)
                ("nsHTTPHandler::ReleaseTransport."
                 "\tRestarting nsHTTPChannel [%x]\n",
                 channel));
-
+        
         channel->Open();
     }
 

@@ -42,6 +42,7 @@
 
 class nsHTTPRequest;
 class nsHTTPResponse;
+class nsICachedNetData;
 
 /* 
     The nsHTTPChannel class is an example implementation of a
@@ -89,12 +90,25 @@ public:
                                           const PRUnichar* aMsg);
     nsresult            SetResponse(nsHTTPResponse* i_pResp);
     nsresult            GetResponseContext(nsISupports** aContext);
+    nsresult            CacheReceivedResponse(nsIStreamListener *aListener,
+                                              nsIStreamListener* *aResult);
 
     nsresult            OnHeadersAvailable();
 
     // Set if this channel is using proxy to connect
     nsresult            SetUsingProxy(PRBool i_UsingProxy);
 
+    nsresult            FinishedResponseHeaders();
+
+protected:
+    nsresult            CheckCache();
+    nsresult            ReadFromCache(PRUint32 aStartPosition, PRInt32 aReadCount);
+    nsresult            ProcessStatusCode();
+    nsresult            ProcessRedirection(PRInt32 aStatusCode);
+    nsresult            ProcessAuthentication(PRInt32 aStatusCode);
+    nsresult            ProcessNotModifiedResponse(nsIStreamListener *aListener);
+
+public:
     nsHTTPResponse*                     mResponse;
     nsCOMPtr<nsIStreamObserver>         mOpenObserver;
     nsCOMPtr<nsISupports>               mOpenContext;
@@ -102,6 +116,7 @@ public:
     nsHTTPHandler*                      mHandler;
     nsHTTPRequest*                      mRequest;
     nsHTTPResponseListener*             mRawResponseListener;
+    nsCOMPtr<nsISupports>               mResponseContext;
 
 protected:
     nsCOMPtr<nsIURI>                    mOriginalURI;
@@ -118,11 +133,22 @@ protected:
 
     PRUint32                            mLoadAttributes;
 
-    nsCOMPtr<nsISupports>               mResponseContext;
     nsCOMPtr<nsILoadGroup>              mLoadGroup;
 
     nsCOMPtr<nsISupports>               mOwner;
+
+    // Cache-related members
+    nsCOMPtr<nsICachedNetData>          mCacheEntry;
+    nsHTTPResponse*                     mCachedResponse;
+    PRBool                              mCachedContentIsAvailable;
+    PRBool                              mCachedContentIsValid;
     
+    // Called OnHeadersAvailable()
+    PRBool                              mFiredOnHeadersAvailable;
+    
+    // Called mOpenObserver->OnStartRequest
+    PRBool                              mFiredOpenOnStartRequest;
+
     // Auth related stuff-
     /* 
        If this is true then we have already tried 

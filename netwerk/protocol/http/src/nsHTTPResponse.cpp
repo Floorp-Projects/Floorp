@@ -430,31 +430,43 @@ convertPRTimeToSeconds(PRTime aTime64)
 }
 
 // Parse an http header which has a value that is a date string,
-// return the result as a unix-style time_t, i.e. seconds since the epoch
+// return the result as a PRTime
 nsresult nsHTTPResponse::ParseDateHeader(nsIAtom *aAtom,
-                                         PRUint32 *aResultTime,
+                                         PRTime *aResultTime,
                                          PRBool *aHeaderIsPresent)
 {
     *aHeaderIsPresent = PR_FALSE;
 
-    char *header;
-    GetHeader(aAtom, &header);
+    nsXPIDLCString header;
+    GetHeader(aAtom, getter_Copies(header));
 
     if (!header)
         return NS_OK;
     *aHeaderIsPresent = PR_TRUE;
 
     PRStatus status;
-    PRTime time64;
-    status = PR_ParseTimeString(header, PR_TRUE, &time64);
+    status = PR_ParseTimeString((const char*)header, PR_TRUE, aResultTime);
     if (status != PR_SUCCESS)
         return NS_ERROR_FAILURE;
     
+    return NS_OK;
+}
+
+// Parse an http header which has a value that is a date string,
+// return the result as a unix-style time_t, i.e. seconds since the epoch
+nsresult nsHTTPResponse::ParseDateHeader(nsIAtom *aAtom,
+                                         PRUint32 *aResultTime,
+                                         PRBool *aHeaderIsPresent)
+{
+    nsresult rv;
+    PRTime time64;
+
+    rv = ParseDateHeader(aAtom, &time64, aHeaderIsPresent);
+    if (NS_FAILED(rv)) return rv;
     *aResultTime = convertPRTimeToSeconds(time64);
 
     return NS_OK;
 }
-
 
 // Return the value of the (HTTP 1.1) max-age directive, which itself is a
 // component of the Cache-Control response header
@@ -470,7 +482,7 @@ nsresult nsHTTPResponse::GetMaxAge(PRUint32* aMaxAge, PRBool* aMaxAgeIsPresent)
     nsCAutoString header(cacheControlHeader);
     nsAllocator::Free(cacheControlHeader);
     
-    PRUint32 offset;
+    PRInt32 offset;
     offset = header.Find("max-age=", PR_TRUE);
     if (offset == kNotFound)
         return NS_OK;
@@ -632,7 +644,7 @@ nsresult nsHTTPResponse::EmitHeaders(nsCString& aResponseBuffer)
         versionString = "?.?";
 
     char *statusLine;
-    statusLine = PR_smprintf("HTTP/%s %3d %s", versionString, mStatus, mStatusString);
+    statusLine = PR_smprintf("HTTP/%s %3d %s", versionString, mStatus, (char*)mStatusString);
     if (!statusLine)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -699,7 +711,7 @@ nsresult nsHTTPResponse::EmitHeaders(nsCString& aResponseBuffer)
 // including the status line.
 nsresult nsHTTPResponse::ParseHeaders(nsCString& aAllHeaders)
 {
-    PRUint32 beginLineOffset, endLineOffset;
+    PRInt32 beginLineOffset, endLineOffset;
     nsCString lineBuffer;
     nsresult rv;
     
@@ -709,7 +721,7 @@ nsresult nsHTTPResponse::ParseHeaders(nsCString& aAllHeaders)
         endLineOffset = aAllHeaders.Find("\r", PR_FALSE, beginLineOffset);
         if (endLineOffset == kNotFound)
             return NS_OK;
-        aAllHeaders.Mid(lineBuffer, beginLineOffset, endLineOffset-1);
+        aAllHeaders.Mid(lineBuffer, beginLineOffset, endLineOffset - beginLineOffset);
         if (beginLineOffset == 0)
             rv = ParseStatusLine(lineBuffer);
         else
