@@ -61,7 +61,12 @@ nsHTMLContainerFrame::Paint(nsIPresContext* aPresContext,
   if (NS_FRAME_IS_UNFLOWABLE & mState) {
     return NS_OK;
   }
-  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
+  nsCOMPtr<nsIAtom> frameType;
+  GetFrameType(getter_AddRefs(frameType));
+
+  // Paint inline element backgrounds in the foreground layer, but
+  // others in the background (bug 36710).
+  if (((frameType.get() == nsLayoutAtoms::inlineFrame)?NS_FRAME_PAINT_LAYER_FOREGROUND:NS_FRAME_PAINT_LAYER_BACKGROUND) == aWhichLayer) {
     const nsStyleDisplay* disp = (const nsStyleDisplay*)
       mStyleContext->GetStyleData(eStyleStruct_Display);
     if (disp->IsVisible() && mRect.width && mRect.height) {
