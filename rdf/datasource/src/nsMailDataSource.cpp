@@ -453,7 +453,7 @@ MailDataSource::InitAccountList(void)
     PRDirEntry	*de;
     PRDir* dir;
     nsIRDFMailAccount* account;
-    PR_snprintf(fileurl, sizeof(fileurl), "Mail");
+    PR_snprintf(fileurl, sizeof(fileurl), "res\\rdf\\Mail");
     dir =  PR_OpenDir(fileurl);
     if (dir == NULL) {
         //if (CallPRMkDirUsingFileURL(fileurl, 00700) > -1) dir = OpenDir(fileurl);
@@ -704,7 +704,7 @@ MailAccount::InitMailAccount (const char* url)
     PRDirEntry	*de;
     PRDir* dir;
     nsIRDFMailFolder* folder;
-    PR_snprintf(fileurl, sizeof(fileurl), "Mail\\%s",  &url[12]);
+    PR_snprintf(fileurl, sizeof(fileurl), "res\\rdf\\Mail\\%s",  &url[12]);
     dir =  PR_OpenDir(fileurl);
     if (dir == NULL) {
         //if (CallPRMkDirUsingFileURL(fileurl, 00700) > -1) dir = OpenDir(fileurl);
@@ -907,7 +907,7 @@ MailFolder::ReadSummaryFile (char* url)
 
     if (startsWith("mailbox://", url)) {
         char* folderURL = &url[10];	
-        PRInt32 flen = PL_strlen("Mail") + PL_strlen(folderURL) + 4 + 1;
+        PRInt32 flen = PL_strlen("res\\rdf\\Mail") + PL_strlen(folderURL) + 4 + 1;
         char* fileurl = (char*) PR_MALLOC(flen);
         PRInt32 nurllen = PL_strlen(url) + 20 + 1;
         char* nurl = (char*) PR_MALLOC(nurllen);
@@ -919,12 +919,12 @@ MailFolder::ReadSummaryFile (char* url)
         PRBool summaryFileFound = PR_FALSE;
         char* flags = 0;
 
-        PR_snprintf(fileurl, flen, "Mail\\%sssf",  folderURL);
+        PR_snprintf(fileurl, flen, "res\\rdf\\Mail\\%sssf",  folderURL);
         fileurl[PL_strlen(fileurl)-4] = '.'; //XXX how do you spell kludge?
         convertSlashes(fileurl);
         // fileurl = MCDepFileURL(fileurl);
         mSummaryFile = openFileWR(fileurl);
-        PR_snprintf(fileurl, flen, "Mail\\%s",  folderURL);
+        PR_snprintf(fileurl, flen, "res\\rdf\\Mail\\%s",  folderURL);
         //	fileurl = MCDepFileURL(fileurl);
         mf = openFileWR(fileurl);
 
