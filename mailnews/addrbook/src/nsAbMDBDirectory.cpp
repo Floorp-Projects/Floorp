@@ -449,7 +449,7 @@ NS_IMETHODIMP nsAbMDBDirectory::GetChildCards(nsIEnumerator* *result)
 
 NS_IMETHODIMP nsAbMDBDirectory::DeleteCards(nsISupportsArray *cards)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
 
   if (mIsQueryURI) {
     // if this is a query, delete the cards from the directory (without the query)
