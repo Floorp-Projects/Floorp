@@ -30,7 +30,7 @@
 
   <treebody rdf:containment="http://home.netscape.com/NC-rdf#child">
     <treeitem id="mailbox:/" open="true">
-      <treecell><treeindentation/><html:img hspace="2" style="vertical-align: bottom" src=&localMailHost.img;/>&localMailHost.label;</treecell>
+      <treecell><treeindentation/><html:img hspace="2" style="vertical-align: bottom" src="&localMailHost.img;"/>&localMailHost.label;</treecell>
       </treeitem>
   </treebody>
 </tree>
