@@ -103,6 +103,7 @@ protected:
 	afx_msg void OnFilePrint();
 	afx_msg void OnDebugVisible();
 	afx_msg void OnUpdateDebugVisible(CCmdUI* pCmdUI);
+	afx_msg void OnDebugPostDataTest();
 	//}}AFX_MSG
 	afx_msg void OnEditBold();
 	afx_msg void OnEditItalic();

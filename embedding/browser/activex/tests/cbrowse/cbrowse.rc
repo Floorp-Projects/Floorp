@@ -238,6 +238,7 @@ BEGIN
     POPUP "&Debug"
     BEGIN
         MENUITEM "&Visible",                    ID_DEBUG_VISIBLE
+        MENUITEM "Post Data Test",              ID_DEBUG_POSTDATATEST
     END
 END
 
