@@ -55,7 +55,7 @@ public:
   @see nsIImage.h
   */
   virtual nsresult    Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirements aMaskRequirements);
-  virtual PRInt32     GetBytesPix()         { return mBytesPerPixel; }
+  virtual PRInt32     GetBytesPix()         { return mBytesPerPixel; }    // this is unused
   virtual PRBool      GetIsRowOrderTopToBottom() { return PR_TRUE; }
 
   virtual PRInt32     GetWidth()            { return mWidth;  }
@@ -63,10 +63,10 @@ public:
 
   virtual PRUint8*    GetBits();
   virtual PRInt32     GetLineStride()       { return mRowBytes; }
-  virtual PRBool      GetHasAlphaMask()     { return mMaskBitsHandle != nsnull; }
+  virtual PRBool      GetHasAlphaMask()     { return mMaskGWorld != nsnull; }
 
   virtual PRUint8*    GetAlphaBits();
-  virtual PRInt32     GetAlphaLineStride()  { return mARowBytes; }
+  virtual PRInt32     GetAlphaLineStride()  { return mAlphaRowBytes; }
 
   virtual void        ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect);
   virtual nsresult    Optimize(nsIDeviceContext* aContext);
@@ -102,7 +102,7 @@ public:
   NS_IMETHOD          UnlockImagePixels(PRBool aMaskPixels);
 
 
-  NS_IMETHOD          GetPixMap(PixMap** outPixMap);
+  NS_IMETHOD          GetGWorldPtr(GWorldPtr* aGWorld);
 
   // Convert to and from the os-native PICT format. Most likely
   // used for clipboard.
@@ -139,26 +139,24 @@ protected:
                                         PRInt32 aSXOffset, PRInt32 aSYOffset,
                                         const nsRect &aTileRect);
 
-  nsresult          CopyPixMap( Rect& aSrcRegion,
-                                        Rect& aDestRegion,
-                                        const PRInt32 aDestDepth,
-                                        const PRBool aCopyMaskBits,
-                                        Handle *aDestData); 
-
-  nsresult          CopyPixMapInternal( Rect& aSrcRegion,
-                                        Rect& aDestRegion,
+  nsresult          CopyPixMap(         const Rect& aSrcRegion,
+                                        const Rect& aDestRegion,
                                         const PRInt32 aDestDepth,
                                         const PRBool aCopyMaskBits,
                                         Handle *aDestData,
-                                        PRBool aAllow2Bytes);
+                                        PRBool aAllow2Bytes = PR_FALSE);
 
+  static GDHandle   GetCachedGDeviceForDepth(PRInt32 aDepth);
+  
   static OSType     MakeIconType(PRInt32 aHeight, PRInt32 aDepth, PRBool aMask);
 
-  static OSErr      CreatePixMap(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, CTabHandle aColorTable,
-                                        PixMap& ioPixMap, Handle& ioBitsHandle);
-  static OSErr      AllocateBitsHandle(PRInt32 imageSizeBytes, Handle *outHandle);
-  static PRInt32    CalculateRowBytes(PRUint32 aWidth,PRUint32 aDepth);
+  static OSErr      CreateGWorld(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,
+                                        GWorldPtr* outGWorld, char** outBits, PRInt32* outRowBytes);
 
+  static PRInt32    CalculateRowBytes(PRUint32 aWidth, PRUint32 aDepth);
+
+  static PRUint32   GetPixelFormatForDepth(PRInt32 inDepth, PRInt32& outBitsPerPixel, CTabHandle* outDefaultColorTable = nsnull);
+  
   static void       ClearGWorld(GWorldPtr);
   static OSErr      AllocateGWorld(PRInt16 depth, CTabHandle colorTable, const Rect& bounds, GWorldPtr *outGWorld);
 
@@ -177,12 +175,12 @@ protected:
   
   static PRBool     RenderingToPrinter(nsIRenderingContext &aContext);
 
-  static OSErr      CreatePixMapInternal( PRInt32 aWidth, 
+  static OSErr      CreateGWorldInternal( PRInt32 aWidth, 
                                           PRInt32 aHeight, 
                                           PRInt32 aDepth, 
-                                          CTabHandle aColorTable,
-                                          PixMap& ioPixMap, 
-                                          Handle& ioBitsHandle, 
+                                          GWorldPtr* outGWorld, 
+                                          char** outBits,
+                                          PRInt32* outRowBytes, 
                                           PRBool aAllow2Bytes);
 
   static PRInt32    CalculateRowBytesInternal(PRUint32 aWidth, 
@@ -191,9 +189,9 @@ protected:
 
 private:
 
-  PixMap          mImagePixmap;
-  Handle          mImageBitsHandle;   // handle for the image bits
-  
+  GWorldPtr       mImageGWorld;
+  char*           mImageBits;     // malloc'd block
+
   PRInt32         mWidth;
   PRInt32         mHeight;
 
@@ -201,13 +199,13 @@ private:
   PRInt32         mBytesPerPixel;
     
   // alpha layer members
-  PixMap          mMaskPixmap;      // the alpha level pixel map
-  Handle          mMaskBitsHandle;  // handle for the mask bits
+  GWorldPtr       mMaskGWorld;
+  char*           mMaskBits;      // malloc'd block
   
-  PRInt16         mAlphaDepth;    // alpha layer depth
-  PRInt32         mARowBytes;     // alpha row bytes
+  PRInt16         mAlphaDepth;      // alpha layer depth
+  PRInt32         mAlphaRowBytes;   // alpha row bytes
 
-  PRInt32         mDecodedX1;       //Keeps track of what part of image
+  PRInt32         mDecodedX1;       // Keeps track of what part of image
   PRInt32         mDecodedY1;       // has been decoded.
   PRInt32         mDecodedX2; 
   PRInt32         mDecodedY2;    
@@ -215,7 +213,6 @@ private:
   //nsPoint         mLocation;      // alpha mask location
 
   //PRInt8          mImageCache;    // place to save off the old image for fast animation
-
 
 };
 
