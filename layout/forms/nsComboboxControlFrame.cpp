@@ -800,6 +800,26 @@ nsComboboxControlFrame::SetButtonStyleContexts(nsIStyleContext * aOut, nsIStyleC
   return NS_OK;
 }
 
+void
+nsComboboxControlFrame::SelectionChanged()
+{
+  // Generate a NS_ONCHANGE event.
+
+  //XXX: Todo complete the implementation of selection changed
+//  nsIViewManager    *vm;
+//  view->GetViewManager(vm);
+//  nsGUIEvent event;
+//  event.eventStructType = NS_GUI_EVENT;
+//  event.widget = this; //XXX: How do I get a widget
+// NS_ADDREF(event.widget);
+//  NS_CONTROL_CHANGE
+//  InitEvent(event, aMsg);
+//  vm->DispatchEvent(&event, result);
+//  NS_RELEASE(event.widget);
+//  NS_RELEASE(vm);
+
+}
+
 //--------------------------------------------------------------
 NS_IMETHODIMP
 nsComboboxControlFrame::ListWasSelected(nsIPresContext* aPresContext)
@@ -809,7 +829,12 @@ nsComboboxControlFrame::ListWasSelected(nsIPresContext* aPresContext)
 
   nsString str;
   if (nsnull != mListControlFrame) {
-    mListControlFrame->GetSelectedItem(mTextStr);
+    mListControlFrame->GetSelectedItem(str);
+     // Check to see if the selection changed
+    if (PR_FALSE == str.Equals(mTextStr)) {
+      mTextStr = str;
+      SelectionChanged();
+    } 
     nsIFormControlFrame* fcFrame = nsnull;
     nsresult result = mListFrame->QueryInterface(kIFormControlFrameIID, (void**)&fcFrame);
     if ((NS_OK == result) && (nsnull != fcFrame)) {
