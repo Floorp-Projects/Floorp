@@ -133,9 +133,6 @@ foreach c $checkinlist {
 
 proc GetInfoForPeople {peoplelist} {
     global ldaperror fullname curcontact errvar ldapserver ldapport
-    if {$ldaperror} {
-        return
-    }
     set query "(| "
     set isempty 1
     foreach p $peoplelist {
@@ -144,6 +141,9 @@ proc GetInfoForPeople {peoplelist} {
         set curcontact($p) ""
     }
     append query ")"
+    if {$ldaperror} {
+        return
+    }
     if {[catch {set fid [open "|./data/ldapsearch -b \"o=Netscape Communications Corp.,c=US\" -h $ldapserver -p $ldapport -s sub -S mail \"$query\" mail cn nscpcurcontactinfo" r]} errvar]} {
         set ldaperror 1
     } else {
