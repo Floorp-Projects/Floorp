@@ -45,7 +45,8 @@ enum nsLinkState {
 enum nsLinkVerb {
   eLinkVerb_Replace = 0,
   eLinkVerb_New     = 1,
-  eLinkVerb_Embed   = 2
+  eLinkVerb_Embed   = 2,
+  eLinkVerb_Undefined = 3
 };
 
 /**
