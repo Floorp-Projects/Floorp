@@ -1170,14 +1170,8 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
       // If the parent reflow state is also shrink wrap width, then
       // we don't need to do this, because it will reflow us after it
       // calculates the final width
-      PRBool  parentIsShrinkWrapWidth = PR_FALSE;
-      if (aReflowState.parentReflowState) {
-        if (NS_SHRINKWRAPWIDTH == aReflowState.parentReflowState->mComputedWidth) {
-          parentIsShrinkWrapWidth = PR_TRUE;
-        }
-      }
-
-      if (!parentIsShrinkWrapWidth) {
+      const nsHTMLReflowState *prs = aReflowState.parentReflowState;
+      if (!prs || NS_SHRINKWRAPWIDTH != prs->mComputedWidth) {
         // XXX Is this only used on things that are already NS_BLOCK_SPACE_MGR
         // and NS_BLOCK_MARGIN_ROOT?
         nsHTMLReflowState reflowState(aReflowState);
@@ -1190,8 +1184,8 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
 #ifdef DEBUG
         nscoord oldDesiredWidth = aMetrics.width;
 #endif
-        nsBlockReflowState state(reflowState, aState.mPresContext, this, aMetrics,
-                                 NS_BLOCK_MARGIN_ROOT & mState);
+        nsBlockReflowState state(reflowState, aState.mPresContext, this,
+                                 aMetrics, NS_BLOCK_MARGIN_ROOT & mState);
         ReflowDirtyLines(state);
         aState.mY = state.mY;
         NS_ASSERTION(oldDesiredWidth == aMetrics.width, "bad desired width");
