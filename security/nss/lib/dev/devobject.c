@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devobject.c,v $ $Revision: 1.5 $ $Date: 2001/12/11 20:28:33 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devobject.c,v $ $Revision: 1.6 $ $Date: 2001/12/11 23:47:18 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -374,8 +374,11 @@ get_token_cert
 	nssDecodedCert *dc;
 	NSSASCII7 *email;
 	dc = nssCertificate_GetDecoding(rvCert);
-	email = dc->getEmailAddress(dc);
-	if (email) rvCert->email = nssUTF8_Duplicate(email, arena);
+	if (dc) {
+	    email = dc->getEmailAddress(dc);
+	    if (email) 
+	    	rvCert->email = nssUTF8_Duplicate(email, arena);
+	}
     }
 #endif
     return rvCert;
