@@ -685,8 +685,6 @@ nsClipboard::SelectionReceiver (GtkWidget *aWidget,
            aSD->data,
            aSD->length);
     mSelectionData.length = aSD->length;
-    printf("        Can't convert type %s (%ld) to string\n",
-           gdk_atom_name (aSD->type), aSD->type);
     return;
   }
 }
@@ -752,7 +750,18 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
 
   nsString dataFlavor;
 
-  switch(aInfo)
+  // switch aInfo (atom) to our enum
+  int type = TARGET_NONE;
+  for (int i=0; i < TARGET_LAST; i++)
+  {
+    if (sSelTypes[i] == aInfo)
+    {
+      type = i;
+      break;
+    }
+  }
+
+  switch(type)
     {
     case GDK_TARGET_STRING:
     case TARGET_TEXT_PLAIN:
