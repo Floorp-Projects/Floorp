@@ -310,7 +310,7 @@ var homeButtonObserver = {
       var okButton    = gNavigatorBundle.getString("droponhomeokbutton");
       var iconURL     = "chrome://navigator/skin/home.gif"; // evil evil common dialog code! evil!
 
-      promptService.UniversalDialog(window, null, promptTitle, promptMsg, null,
+      promptService.universalDialog(window, null, promptTitle, promptMsg, null,
                                           okButton, null, null, null, null, null, { }, { },
                                           iconURL, { }, 2, 0, null, pressedVal);
 

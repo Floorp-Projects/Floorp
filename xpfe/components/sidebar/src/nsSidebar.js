@@ -145,7 +145,7 @@ function (aTitle, aContentURL, aCustomizeURL)
         var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
         if (promptService) {
           promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
-          promptService.Alert(this.window, titleMessage, dialogMessage);
+          promptService.alert(this.window, titleMessage, dialogMessage);
         }
 
         return;
@@ -169,7 +169,7 @@ function (aTitle, aContentURL, aCustomizeURL)
           
     var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
     promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
-    var rv = promptService.Confirm(this.window, titleMessage, dialogMessage);
+    var rv = promptService.confirm(this.window, titleMessage, dialogMessage);
       
     if (!rv)
         return;
@@ -277,7 +277,7 @@ function (engineURL, iconURL, suggestedTitle, suggestedCategory)
           
     var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
     promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
-    var rv = promptService.Confirm(this.window, titleMessage, dialogMessage);
+    var rv = promptService.confirm(this.window, titleMessage, dialogMessage);
       
     if (!rv)
         return;
