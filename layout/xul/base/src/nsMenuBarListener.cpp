@@ -74,10 +74,15 @@ NS_IMPL_ADDREF(nsMenuBarListener)
 NS_IMPL_RELEASE(nsMenuBarListener)
 NS_IMPL_QUERY_INTERFACE3(nsMenuBarListener, nsIDOMKeyListener, nsIDOMFocusListener, nsIDOMMouseListener)
 
+#define MODIFIER_SHIFT    1
+#define MODIFIER_CONTROL  2
+#define MODIFIER_ALT      4
+#define MODIFIER_META     8
 
 ////////////////////////////////////////////////////////////////////////
 
 PRInt32 nsMenuBarListener::mAccessKey = -1;
+PRUint32 nsMenuBarListener::mAccessKeyMask = 0;
 PRBool nsMenuBarListener::mAccessKeyFocuses = PR_FALSE;
 
 nsMenuBarListener::nsMenuBarListener(nsMenuBarFrame* aMenuBar) 
@@ -110,12 +115,23 @@ void nsMenuBarListener::InitAccessKey()
   // mac doesn't have menu shortcuts, other platforms use alt.
 #if !(defined(XP_MAC) || defined(XP_MACOSX))
   mAccessKey = nsIDOMKeyEvent::DOM_VK_ALT;
+  mAccessKeyMask = MODIFIER_ALT;
 #else
   mAccessKey = 0;
+  mAccessKeyMask = 0;
 #endif
 
   // Get the menu access key value from prefs, overriding the default:
   mAccessKey = nsContentUtils::GetIntPref("ui.key.menuAccessKey", mAccessKey);
+  if (mAccessKey == nsIDOMKeyEvent::DOM_VK_SHIFT)
+    mAccessKeyMask = MODIFIER_SHIFT;
+  else if (mAccessKey == nsIDOMKeyEvent::DOM_VK_CONTROL)
+    mAccessKeyMask = MODIFIER_CONTROL;
+  else if (mAccessKey == nsIDOMKeyEvent::DOM_VK_ALT)
+    mAccessKeyMask = MODIFIER_ALT;
+  else if (mAccessKey == nsIDOMKeyEvent::DOM_VK_META)
+    mAccessKeyMask = MODIFIER_META;
+
   mAccessKeyFocuses =
     nsContentUtils::GetBoolPref("ui.key.menuAccessKeyFocuses");
 }
@@ -220,8 +236,11 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
         mAccessKeyDown = PR_FALSE;
 
       // If charCode == 0, then it is not a printable character.
-      // Don't attempt to handle accesskey for non-printable characters
-      if (IsAccessKeyPressed(keyEvent) && charCode)
+      // Don't attempt to handle accesskey for non-printable characters.
+      // No other modifiers are allowed to be down except for Shift.
+      PRUint32 modifiers = GetModifiers(keyEvent);
+      if (mAccessKeyMask != MODIFIER_SHIFT && (modifiers & mAccessKeyMask) &&
+           (modifiers & ~(mAccessKeyMask | MODIFIER_SHIFT)) == 0 && charCode)
       {
         // Do shortcut navigation.
         // A letter was pressed. We want to see if a shortcut gets matched. If
@@ -243,12 +262,7 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
 #if !defined(XP_MAC) && !defined(XP_MACOSX)
       // Also need to handle F10 specially on Non-Mac platform.
       else if (keyCode == NS_VK_F10) {
-        PRBool alt,ctrl,shift,meta;
-        keyEvent->GetAltKey(&alt);
-        keyEvent->GetCtrlKey(&ctrl);
-        keyEvent->GetShiftKey(&shift);
-        keyEvent->GetMetaKey(&meta);
-        if (!(shift || alt || meta)) {
+        if ((GetModifiers(keyEvent) & ~MODIFIER_CONTROL) == 0) {
           // The F10 key just went down by itself or with ctrl pressed.
           // In Windows, both of these activate the menu bar.
           mMenuBarFrame->ToggleMenuActiveState();
@@ -268,24 +282,29 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
   return retVal;
 }
 
-PRBool
-nsMenuBarListener::IsAccessKeyPressed(nsIDOMKeyEvent* aKeyEvent)
+PRUint32
+nsMenuBarListener::GetModifiers(nsIDOMKeyEvent* aKeyEvent)
 {
-  PRBool access;
-  switch (mAccessKey)
-  {
-    case nsIDOMKeyEvent::DOM_VK_CONTROL:
-      aKeyEvent->GetCtrlKey(&access);
-      return access;
-    case nsIDOMKeyEvent::DOM_VK_ALT:
-      aKeyEvent->GetAltKey(&access);
-      return access;
-    case nsIDOMKeyEvent::DOM_VK_META:
-      aKeyEvent->GetMetaKey(&access);
-      return access;
-    default:
-      return PR_FALSE;
-  }
+  PRUint32 modifiers = 0;
+  PRBool modifier;
+
+  aKeyEvent->GetShiftKey(&modifier);
+  if (modifier)
+    modifiers |= MODIFIER_SHIFT;
+
+  aKeyEvent->GetCtrlKey(&modifier);
+  if (modifier)
+    modifiers |= MODIFIER_CONTROL;
+
+  aKeyEvent->GetAltKey(&modifier);
+  if (modifier)
+    modifiers |= MODIFIER_ALT;
+
+  aKeyEvent->GetMetaKey(&modifier);
+  if (modifier)
+    modifiers |= MODIFIER_META;
+
+  return modifiers;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -311,27 +330,12 @@ nsMenuBarListener::KeyDown(nsIDOMEvent* aKeyEvent)
     PRUint32 theChar;
     keyEvent->GetKeyCode(&theChar);
 
-    if (theChar == (PRUint32)mAccessKey) {
+    if (theChar == (PRUint32)mAccessKey && (GetModifiers(keyEvent) & ~mAccessKeyMask) == 0) {
       // No other modifiers can be down.
       // Especially CTRL.  CTRL+ALT == AltGR, and
       // we'll fuck up on non-US enhanced 102-key
       // keyboards if we don't check this.
-      PRBool ctrl = PR_FALSE;
-      if (mAccessKey != nsIDOMKeyEvent::DOM_VK_CONTROL)
-        keyEvent->GetCtrlKey(&ctrl);
-      PRBool alt=PR_FALSE;
-      if (mAccessKey != nsIDOMKeyEvent::DOM_VK_ALT)
-        keyEvent->GetAltKey(&alt);
-      PRBool shift=PR_FALSE;
-      if (mAccessKey != nsIDOMKeyEvent::DOM_VK_SHIFT)
-        keyEvent->GetShiftKey(&shift);
-      PRBool meta=PR_FALSE;
-      if (mAccessKey != nsIDOMKeyEvent::DOM_VK_META)
-        keyEvent->GetMetaKey(&meta);
-      if (!(ctrl || alt || shift || meta)) {
-        // The access key just went down by itself. Track this.
-        mAccessKeyDown = PR_TRUE;
-      }
+      mAccessKeyDown = PR_TRUE;
     }
     else {
       // Some key other than the access key just went down,
@@ -358,10 +362,10 @@ nsresult
 nsMenuBarListener::Blur(nsIDOMEvent* aEvent)
 {
   if (!mMenuBarFrame->IsOpen() && mMenuBarFrame->IsActive()) {
-	  mMenuBarFrame->ToggleMenuActiveState();
-	  PRBool handled;
+    mMenuBarFrame->ToggleMenuActiveState();
+    PRBool handled;
     mMenuBarFrame->Escape(handled);
-	  mAccessKeyDown = PR_FALSE;
+    mAccessKeyDown = PR_FALSE;
   }
   return NS_OK; // means I am NOT consuming event
 }
@@ -423,5 +427,3 @@ nsMenuBarListener::HandleEvent(nsIDOMEvent* aEvent)
 {
   return NS_OK;
 }
-
-
