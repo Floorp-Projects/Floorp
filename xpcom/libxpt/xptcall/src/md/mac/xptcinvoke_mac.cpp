@@ -20,7 +20,7 @@
 
 #include "xptcprivate.h"
 
-#ifndef MAC
+#ifndef XP_MAC
 #error "This code is for Macintosh only"
 #endif
 
@@ -112,3 +112,18 @@ invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s, double 
         }
     }
 }
+
+#pragma export on
+
+extern "C" nsresult _XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
+                   PRUint32 paramCount, nsXPTCVariant* params);
+
+extern "C"
+XPTC_PUBLIC_API(nsresult)
+XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
+                   PRUint32 paramCount, nsXPTCVariant* params)
+{
+    return _XPTC_InvokeByIndex(that, methodIndex, paramCount, params);
+}    
+
+#pragma export off
