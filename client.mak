@@ -334,12 +334,11 @@ clobber_seamonkey:
 	set CLIENT_DIRS=1
 	nmake -f makefile.win clobber_all 
 
-depend:
+depend: export
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\.
 	set DIST_DIRS=1
 	set LAYOUT_DIRS=1
 	set CLIENT_DIRS=1
-	nmake -f makefile.win export
 	nmake -f makefile.win depend 
 
 depend_xpconnect:
