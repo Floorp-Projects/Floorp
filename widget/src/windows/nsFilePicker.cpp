@@ -80,6 +80,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 {
   NS_ENSURE_ARG_POINTER(retval);
 
+  PRBool result = PR_FALSE;
   char fileBuffer[MAX_PATH+1] = "";
   char *converted = ConvertToFileSystemCharset(mDefault.GetUnicode());
   if (nsnull == converted) {
@@ -90,64 +91,105 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     delete [] converted;
   }
 
-  OPENFILENAME ofn;
-  memset(&ofn, 0, sizeof(ofn));
-
-  ofn.lStructSize = sizeof(ofn);
-
-  char *filterBuffer = mFilterList.ToNewCString();
   char *title = ConvertToFileSystemCharset(mTitle.GetUnicode());
   if (nsnull == title)
     title = mTitle.ToNewCString();
   char *initialDir;
   mDisplayDirectory->GetPath(&initialDir);
-  if (initialDir && *initialDir) {
-    ofn.lpstrInitialDir = initialDir;
-  }
 
-  ofn.lpstrTitle   = title;
-  ofn.lpstrFilter  = filterBuffer;
-  ofn.nFilterIndex = 1;
-  ofn.hwndOwner    = mWnd;
-  ofn.lpstrFile    = fileBuffer;
-  ofn.nMaxFile     = MAX_PATH;
+  mFile.SetLength(0);
 
-  // XXX use OFN_NOCHANGEDIR  for M5
-  ofn.Flags = OFN_SHAREAWARE | OFN_LONGNAMES | OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
-  
-  PRBool result;
+  if (mMode == modeGetFolder) {
 
-  if (mMode == modeOpen) {
-    result = ::GetOpenFileName(&ofn);
-  }
-  else if (mMode == modeSave) {
-    result = ::GetSaveFileName(&ofn);
+    BROWSEINFO browserInfo;
+    browserInfo.hwndOwner      = mWnd;
+    browserInfo.pidlRoot       = nsnull;
+    browserInfo.pszDisplayName = (LPSTR)initialDir;
+    browserInfo.lpszTitle      = title;
+    browserInfo.ulFlags        = BIF_RETURNONLYFSDIRS;//BIF_STATUSTEXT | BIF_RETURNONLYFSDIRS;
+    browserInfo.lpfn           = nsnull;
+    browserInfo.lParam         = nsnull;
+    browserInfo.iImage         = nsnull;
+
+    // XXX UNICODE support is needed here --> DONE
+    LPITEMIDLIST list = ::SHBrowseForFolder(&browserInfo);
+    if (list != NULL) {
+      result = ::SHGetPathFromIDList(list, (LPSTR)fileBuffer);
+      if (result) {
+        nsAutoString pathStr;
+        PRUnichar *unichar = ConvertFromFileSystemCharset(fileBuffer);
+        if (nsnull == unichar)
+          pathStr.Assign(fileBuffer);
+        else {
+          pathStr.Assign(unichar);
+          delete [] unichar;
+        }
+          
+        if (result == PR_TRUE) {
+          // I think it also needs a conversion here (to unicode since appending to nsString) 
+          // but doing that generates garbage file name, weird.
+          mFile.Append(pathStr);
+        }
+      }
+    }
   }
   else {
-    NS_ASSERTION(0, "Only load and save are supported modes"); 
-  }
+
+    OPENFILENAME ofn;
+    memset(&ofn, 0, sizeof(ofn));
+
+    ofn.lStructSize = sizeof(ofn);
+
+    char *filterBuffer = mFilterList.ToNewCString();
+    if (initialDir && *initialDir) {
+      ofn.lpstrInitialDir = initialDir;
+    }
+
+    ofn.lpstrTitle   = title;
+    ofn.lpstrFilter  = filterBuffer;
+    ofn.nFilterIndex = 1;
+    ofn.hwndOwner    = mWnd;
+    ofn.lpstrFile    = fileBuffer;
+    ofn.nMaxFile     = MAX_PATH;
+
+    // XXX use OFN_NOCHANGEDIR  for M5
+    ofn.Flags = OFN_SHAREAWARE | OFN_LONGNAMES | OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
+
+    if (mMode == modeOpen) {
+      result = ::GetOpenFileName(&ofn);
+    }
+    else if (mMode == modeSave) {
+      result = ::GetSaveFileName(&ofn);
+    }
+    else {
+      NS_ASSERTION(0, "Only load, save and getFolder are supported modes"); 
+    }
   
-  // Remember what filter type the user selected
-  mSelectedType = (PRInt16)ofn.nFilterIndex;
+    // Remember what filter type the user selected
+    mSelectedType = (PRInt16)ofn.nFilterIndex;
 
-   // Store the current directory in mDisplayDirectory
-  char* newCurrentDirectory = new char[MAX_PATH+1];
-  VERIFY(::GetCurrentDirectory(MAX_PATH, newCurrentDirectory) > 0);
-  mDisplayDirectory->InitWithPath(newCurrentDirectory);
-  delete[] newCurrentDirectory;
+    // Store the current directory in mDisplayDirectory
+    char* newCurrentDirectory = new char[MAX_PATH+1];
+    VERIFY(::GetCurrentDirectory(MAX_PATH, newCurrentDirectory) > 0);
+    mDisplayDirectory->InitWithPath(newCurrentDirectory);
+    delete[] newCurrentDirectory;
 
-   // Clean up filter buffers
-  if (filterBuffer)
-    delete[] filterBuffer;
+    // Clean up filter buffers
+    if (filterBuffer)
+      delete[] filterBuffer;
+
+    // Set user-selected location of file or directory
+    if (result == PR_TRUE) {
+      // I think it also needs a conversion here (to unicode since appending to nsString) 
+      // but doing that generates garbage file name, weird.
+      mFile.Append(fileBuffer);
+    }
+
+  }
+
   if (title)
     delete[] title;
 
-   // Set user-selected location of file or directory
-  mFile.SetLength(0);
-  if (result == PR_TRUE) {
-    mFile.Append(fileBuffer);
-  }
-  
   if (result)
       *retval = returnOK;
   else
