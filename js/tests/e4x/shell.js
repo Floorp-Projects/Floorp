@@ -125,7 +125,7 @@ function TEST(section, expected, actual)
                      "type '" + expected_t + "'");
 
     if (expected != actual) {
-	output += "Expected value:\n" + toPrinted(expected) + "'\nActual value:\n" + toPrinted(actual) + "'\n";
+	output += "Expected value:\n" + toPrinted(expected) + "\nActual value:\n" + toPrinted(actual) + "\n";
     }
     else if (VERBOSE)
         printStatus ("Expected value '" + toPrinted(actual) + "' matched actual value");
