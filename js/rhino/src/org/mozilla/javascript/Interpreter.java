@@ -2381,7 +2381,8 @@ switch (op) {
         continue Loop;
     }
     case Token.ADD :
-        stackTop = do_add(stack, sDbl, stackTop, cx);
+        --stackTop;
+        do_add(stack, sDbl, stackTop, cx);
         continue Loop;
     case Token.SUB : {
         double rDbl = stack_double(frame, stackTop);
@@ -2607,10 +2608,61 @@ switch (op) {
         // stack change: function thisObj arg0 .. argN -> result
         // indexReg: number of arguments
         stackTop -= 1 + indexReg;
-        CallFrame switchFrame = do_call(cx, frame, stackTop, indexReg, op);
-        if (switchFrame != null) {
-            frame = switchFrame;
-            continue StateLoop;
+
+        // CALL generation ensures that fun and funThisObj
+        // are already Scriptable and Function objects respectively
+        Function fun = (Function)stack[stackTop];
+        Scriptable funThisObj = (Scriptable)stack[stackTop + 1];
+        Scriptable calleeScope = frame.scope;
+        if (frame.useActivation) {
+            calleeScope = ScriptableObject.getTopLevelScope(frame.scope);
+        }
+
+        if (fun instanceof InterpretedFunction && op != Token.REF_CALL) {
+            InterpretedFunction ifun = (InterpretedFunction)fun;
+            if (frame.fnOrScript.securityDomain == ifun.securityDomain) {
+                CallFrame callParentFrame = frame;
+                CallFrame calleeFrame = new CallFrame();
+                if (op == Icode_TAIL_CALL) {
+                    // In principle tail call can re-use the current
+                    // frame and its stack arrays but it is hard to
+                    // do properly. Any exceptions that can legally
+                    // happen during frame re-initialization including
+                    // StackOverflowException during innocent looking
+                    // System.arraycopy may leave the current frame
+                    // data corrupted leading to undefined behaviour
+                    // in the catch code bellow that unwinds JS stack
+                    // on exceptions. Then there is issue about frame release
+                    // end exceptions there.
+                    // To avoid frame allocation a released frame
+                    // can be cached for re-use which would also benefit
+                    // non-tail calls but it is not clear that this caching
+                    // would gain in performance due to potentially
+                    // bad iteraction with GC.
+                    callParentFrame = frame.parentFrame;
+                }
+                initFrame(cx, calleeScope, funThisObj, stack, frame.sDbl,
+                          stackTop + 2, indexReg, ifun, callParentFrame,
+                          calleeFrame);
+                if (op == Icode_TAIL_CALL) {
+                    // Release the parent
+                    exitFrame(cx, frame, null);
+                } else {
+                    frame.savedStackTop = stackTop;
+                    frame.savedCallOp = op;
+                }
+                frame = calleeFrame;
+                continue StateLoop;
+            }
+        }
+        Object[] outArgs = getArgsArray(stack, frame.sDbl, stackTop + 2,
+                                        indexReg);
+        if (op != Token.REF_CALL) {
+            stack[stackTop] = fun.call(cx, calleeScope, funThisObj, outArgs);
+        } else {
+            stack[stackTop] = ScriptRuntime.referenceCall(fun, funThisObj,
+                                                          outArgs, cx,
+                                                          calleeScope);
         }
         continue Loop;
     }
@@ -2621,11 +2673,32 @@ switch (op) {
         // stack change: function arg0 .. argN -> newResult
         // indexReg: number of arguments
         stackTop -= indexReg;
-        CallFrame switchFrame = do_new(cx, frame, stackTop, indexReg, op);
-        if (switchFrame != null) {
-            frame = switchFrame;
-            continue StateLoop;
+
+        Object lhs = stack[stackTop];
+        if (lhs instanceof InterpretedFunction) {
+            InterpretedFunction f = (InterpretedFunction)lhs;
+            if (frame.fnOrScript.securityDomain == f.securityDomain) {
+                Scriptable newInstance = f.createObject(cx, frame.scope);
+                CallFrame calleeFrame = new CallFrame();
+                initFrame(cx, frame.scope, newInstance, stack, frame.sDbl,
+                          stackTop + 1, indexReg, f, frame,
+                          calleeFrame);
+
+                stack[stackTop] = newInstance;
+                frame.savedStackTop = stackTop;
+                frame.savedCallOp = op;
+                frame = calleeFrame;
+                continue StateLoop;
+            }
         }
+        if (!(lhs instanceof Function)) {
+            if (lhs == DBL_MRK) lhs = doubleWrap(frame.sDbl[stackTop]);
+            throw ScriptRuntime.notFunctionError(lhs);
+        }
+        Function f = (Function)lhs;
+        Object[] outArgs = getArgsArray(stack, frame.sDbl, stackTop + 1,
+                                        indexReg);
+        stack[stackTop] = f.construct(cx, frame.scope, outArgs);
         continue Loop;
     }
     case Token.TYPEOF : {
@@ -2675,7 +2748,8 @@ switch (op) {
         } else {
             Object val = stack[stackTop];
             if (val == DBL_MRK) val = doubleWrap(sDbl[stackTop]);
-            activationPut(frame, indexReg, val);
+            stringReg = frame.fnOrScript.argNames[indexReg];
+            frame.scope.put(stringReg, frame.scope, val);
         }
         continue Loop;
     case Icode_GETVAR1:
@@ -2687,7 +2761,8 @@ switch (op) {
             stack[stackTop] = stack[indexReg];
             sDbl[stackTop] = sDbl[indexReg];
         } else {
-            stack[stackTop] = activationGet(frame, indexReg);
+            stringReg = frame.fnOrScript.argNames[indexReg];
+            stack[stackTop] = frame.scope.get(stringReg, frame.scope);
         }
         continue Loop;
     case Icode_VAR_INC_DEC : {
@@ -2754,14 +2829,27 @@ switch (op) {
     case Token.LEAVEWITH :
         frame.scope = ScriptRuntime.leaveWith(frame.scope);
         continue Loop;
-    case Token.CATCH_SCOPE :
+    case Token.CATCH_SCOPE : {
         // stack top: exception object
         // stringReg: name of exception variable
         // indexReg: local for exception scope
         --stackTop;
         indexReg += frame.localShift;
-        do_catchScope(cx, frame, stackTop + 1, indexReg, stringReg);
+
+        boolean afterFirstScope =  (frame.idata.itsICode[frame.pc] != 0);
+        Throwable caughtException = (Throwable)stack[stackTop + 1];
+        Scriptable lastCatchScope;
+        if (!afterFirstScope) {
+            lastCatchScope = null;
+        } else {
+            lastCatchScope = (Scriptable)stack[indexReg];
+        }
+        stack[indexReg] = ScriptRuntime.newCatchScope(caughtException,
+                                                      lastCatchScope, stringReg,
+                                                      cx, frame.scope);
+        ++frame.pc;
         continue Loop;
+    }
     case Token.ENUM_INIT_KEYS : {
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
@@ -3295,107 +3383,6 @@ switch (op) {
         }
     }
 
-    /**
-     * Return null to indicate no frame change or reference to the new frame.
-     */
-    private static CallFrame do_call(Context cx, CallFrame frame, int stackTop,
-                                     int argCount, int op)
-    {
-        Object[] stack = frame.stack;
-
-        // CALL generation ensures that fun and funThisObj
-        // are already Scriptable and Function objects respectively
-        Function fun = (Function)stack[stackTop];
-        Scriptable funThisObj = (Scriptable)stack[stackTop + 1];
-
-        Scriptable calleeScope = frame.scope;
-        if (frame.useActivation) {
-            calleeScope = ScriptableObject.getTopLevelScope(frame.scope);
-        }
-
-        if (fun instanceof InterpretedFunction && op != Token.REF_CALL) {
-            InterpretedFunction ifun = (InterpretedFunction)fun;
-            if (frame.fnOrScript.securityDomain == ifun.securityDomain) {
-                CallFrame callParentFrame = frame;
-                CallFrame calleeFrame = new CallFrame();
-                if (op == Icode_TAIL_CALL) {
-                    // In principle tail call can re-use the current
-                    // frame and its stack arrays but it is hard to
-                    // do properly. Any exceptions that can legally
-                    // happen during frame re-initialization including
-                    // StackOverflowException during innocent looking
-                    // System.arraycopy may leave the current frame
-                    // data corrupted leading to undefined behaviour
-                    // in the catch code bellow that unwinds JS stack
-                    // on exceptions. Then there is issue about frame release
-                    // end exceptions there.
-                    // To avoid frame allocation a released frame
-                    // can be cached for re-use which would also benefit
-                    // non-tail calls but it is not clear that this caching
-                    // would gain in performance due to potentially
-                    // bad iteraction with GC.
-                    callParentFrame = frame.parentFrame;
-                }
-                initFrame(cx, calleeScope, funThisObj, stack, frame.sDbl,
-                          stackTop + 2, argCount, ifun, callParentFrame,
-                          calleeFrame);
-                if (op == Icode_TAIL_CALL) {
-                    // Release the parent
-                    exitFrame(cx, frame, null);
-                } else {
-                    frame.savedStackTop = stackTop;
-                    frame.savedCallOp = op;
-                }
-                return calleeFrame;
-            }
-        }
-        Object[] outArgs = getArgsArray(stack, frame.sDbl, stackTop + 2,
-                                        argCount);
-        if (op != Token.REF_CALL) {
-            stack[stackTop] = fun.call(cx, calleeScope, funThisObj, outArgs);
-        } else {
-            stack[stackTop] = ScriptRuntime.referenceCall(fun, funThisObj,
-                                                          outArgs, cx,
-                                                          calleeScope);
-        }
-        return null;
-    }
-
-    /**
-     * Return null to indicate no frame change or reference to the new frame.
-     */
-    private static CallFrame do_new(Context cx, CallFrame frame, int stackTop,
-                                    int argCount, int op)
-    {
-        Object[] stack = frame.stack;
-        Object lhs = stack[stackTop];
-
-        if (lhs instanceof InterpretedFunction) {
-            InterpretedFunction f = (InterpretedFunction)lhs;
-            if (frame.fnOrScript.securityDomain == f.securityDomain) {
-                Scriptable newInstance = f.createObject(cx, frame.scope);
-                CallFrame calleeFrame = new CallFrame();
-                initFrame(cx, frame.scope, newInstance, stack, frame.sDbl,
-                          stackTop + 1, argCount, f, frame,
-                          calleeFrame);
-
-                stack[stackTop] = newInstance;
-                frame.savedStackTop = stackTop;
-                frame.savedCallOp = op;
-                return calleeFrame;
-            }
-        }
-        if (!(lhs instanceof Function)) {
-            if (lhs == DBL_MRK) lhs = doubleWrap(frame.sDbl[stackTop]);
-            throw ScriptRuntime.notFunctionError(lhs);
-        }
-        Function f = (Function)lhs;
-        Object[] outArgs = getArgsArray(stack, frame.sDbl, stackTop + 1,
-                                        argCount);
-        stack[stackTop] = f.construct(cx, frame.scope, outArgs);
-        return null;
-    }
-
     private static Object doubleWrap(double x)
     {
         return new Double(x);
@@ -3441,27 +3428,30 @@ switch (op) {
         }
     }
 
-    private static int do_add(Object[] stack, double[] sDbl, int stackTop,
+    private static void do_add(Object[] stack, double[] sDbl, int stackTop,
                               Context cx)
     {
-        --stackTop;
         Object rhs = stack[stackTop + 1];
         Object lhs = stack[stackTop];
+        double d;
+        boolean leftRightOrder;
         if (rhs == DBL_MRK) {
-            double rDbl = sDbl[stackTop + 1];
+            d = sDbl[stackTop + 1];
             if (lhs == DBL_MRK) {
-                sDbl[stackTop] += rDbl;
-            } else {
-                do_add(lhs, rDbl, stack, sDbl, stackTop, true, cx);
+                sDbl[stackTop] += d;
+                return;
             }
+            leftRightOrder = true;
+            // fallthrough to object + number code
         } else if (lhs == DBL_MRK) {
-            do_add(rhs, sDbl[stackTop], stack, sDbl, stackTop, false, cx);
+            d = sDbl[stackTop];
+            lhs = rhs;
+            leftRightOrder = false;
+            // fallthrough to object + number code
         } else {
             if (lhs instanceof Scriptable || rhs instanceof Scriptable) {
                 stack[stackTop] = ScriptRuntime.add(lhs, rhs, cx);
-                return stackTop;
-            }
-            if (lhs instanceof String) {
+            } else if (lhs instanceof String) {
                 String lstr = (String)lhs;
                 String rstr = ScriptRuntime.toString(rhs);
                 stack[stackTop] = lstr.concat(rstr);
@@ -3477,30 +3467,22 @@ switch (op) {
                 stack[stackTop] = DBL_MRK;
                 sDbl[stackTop] = lDbl + rDbl;
             }
+            return;
         }
-        return stackTop;
-    }
 
-    // x + y when x is Number
-    private static void do_add
-        (Object lhs, double rDbl,
-         Object[] stack, double[] stackDbl, int stackTop,
-         boolean left_right_order, Context cx)
-    {
+        // handle object(lhs) + number(d) code
         if (lhs instanceof Scriptable) {
-            Object rhs = doubleWrap(rDbl);
-            if (!left_right_order) {
+            rhs = doubleWrap(d);
+            if (!leftRightOrder) {
                 Object tmp = lhs;
                 lhs = rhs;
                 rhs = tmp;
             }
             stack[stackTop] = ScriptRuntime.add(lhs, rhs, cx);
-            return;
-        }
-        if (lhs instanceof String) {
+        } else if (lhs instanceof String) {
             String lstr = (String)lhs;
-            String rstr = ScriptRuntime.toString(rDbl);
-            if (left_right_order) {
+            String rstr = ScriptRuntime.toString(d);
+            if (leftRightOrder) {
                 stack[stackTop] = lstr.concat(rstr);
             } else {
                 stack[stackTop] = rstr.concat(lstr);
@@ -3509,7 +3491,7 @@ switch (op) {
             double lDbl = (lhs instanceof Number)
                 ? ((Number)lhs).doubleValue() : ScriptRuntime.toNumber(lhs);
             stack[stackTop] = DBL_MRK;
-            stackDbl[stackTop] = lDbl + rDbl;
+            sDbl[stackTop] = lDbl + d;
         }
     }
 
@@ -3688,25 +3670,6 @@ switch (op) {
         frame.stack[i] = result;
     }
 
-    private static void do_catchScope(Context cx, CallFrame frame,
-                                      int exceptionOffset,
-                                      int local, String name)
-    {
-        Object[] stack = frame.stack;
-        boolean afterFirstScope =  (frame.idata.itsICode[frame.pc] != 0);
-        Throwable caughtException = (Throwable)stack[exceptionOffset];
-        Scriptable lastCatchScope;
-        if (!afterFirstScope) {
-            lastCatchScope = null;
-        } else {
-            lastCatchScope = (Scriptable)stack[local];
-        }
-        stack[local] = ScriptRuntime.newCatchScope(caughtException,
-                                                   lastCatchScope, name,
-                                                   cx, frame.scope);
-        ++frame.pc;
-    }
-
     private static Object[] getArgsArray(Object[] stack, double[] sDbl,
                                          int shift, int count)
     {
@@ -3720,23 +3683,6 @@ switch (op) {
             args[i] = val;
         }
         return args;
-    }
-
-    private static Object activationGet(CallFrame frame, int slot)
-    {
-        String name = frame.fnOrScript.argNames[slot];
-        Scriptable scope = frame.scope;
-        Object val = scope.get(name, scope);
-    // Activation parameter or var is permanent
-        if (val == Scriptable.NOT_FOUND) Kit.codeBug();
-        return val;
-    }
-
-    private static void activationPut(CallFrame frame, int slot, Object value)
-    {
-        String name = frame.fnOrScript.argNames[slot];
-        Scriptable scope = frame.scope;
-        scope.put(name, scope, value);
     }
 
     private static void addInstructionCount(Context cx, CallFrame frame,
