@@ -143,6 +143,7 @@ endif
 
 NSPR_CFLAGS	= @NSPR_CFLAGS@
 NSPR_LIBS	= @NSPR_LIBS@
+NSPR_INCLUDE_DIR= @NSPR_INCLUDE_DIR@
 
 # MKSHLIB_FORCE_ALL is used to force the linker to include all object
 # files present in an archive. MKSHLIB_UNFORCE_ALL reverts the linker
