@@ -220,43 +220,33 @@ NS_METHOD nsDOMEvent::SetInputRange(nsIDOMTextRangeList* aInputRange)
 
 NS_METHOD nsDOMEvent::GetScreenX(PRInt32* aScreenX)
 {
+  // pinkerton -- i don't understand how we can assume that mEvent
+  // is a nsGUIEvent, but we are.
+  if ( !mEvent || !((nsGUIEvent*)mEvent)->widget )
+    return NS_ERROR_FAILURE;
+    
   nsRect bounds, offset;
-  offset.x = 0;
-
-  nsIWidget* parent = ((nsGUIEvent*)mEvent)->widget;
-  //Add extra since loop will free one.
-  NS_IF_ADDREF(parent);
-  nsIWidget* tmp;
-  while (nsnull != parent) {
-    parent->GetBounds(bounds);
-    offset.x += bounds.x;
-    tmp = parent;
-    parent = tmp->GetParent();
-    NS_RELEASE(tmp);
-  }
-
-  *aScreenX = mEvent->refPoint.x + offset.x;
+  bounds.x = mEvent->refPoint.x;
+  
+  ((nsGUIEvent*)mEvent)->widget->WidgetToScreen ( bounds, offset );
+  *aScreenX = offset.x;
+  
   return NS_OK;
 }
 
 NS_METHOD nsDOMEvent::GetScreenY(PRInt32* aScreenY)
 {
+  // pinkerton -- i don't understand how we can assume that mEvent
+  // is a nsGUIEvent, but we are.
+  if ( !mEvent || !((nsGUIEvent*)mEvent)->widget )
+    return NS_ERROR_FAILURE;
+
   nsRect bounds, offset;
-  offset.y = 0;
-
-  nsIWidget* parent = ((nsGUIEvent*)mEvent)->widget;
-  //Add extra since loop will free one.
-  NS_IF_ADDREF(parent);
-  nsIWidget* tmp;
-  while (nsnull != parent) {
-    parent->GetBounds(bounds);
-    offset.y += bounds.y;
-    tmp = parent;
-    parent = tmp->GetParent();
-    NS_RELEASE(tmp);
-  }
-
-  *aScreenY = mEvent->refPoint.y + offset.y;
+  bounds.y = mEvent->refPoint.y;
+  
+  ((nsGUIEvent*)mEvent)->widget->WidgetToScreen ( bounds, offset );
+  *aScreenY = offset.y;
+  
   return NS_OK;
 }
 
