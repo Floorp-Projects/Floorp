@@ -47,6 +47,10 @@
 #include "nsIPresContext.h"
 #include "nsRuleNode.h"
 
+// use the same protection as ancient code did 
+// http://lxr.mozilla.org/classic/source/lib/layout/laytable.c#46
+#define MAX_COLSPAN 1000
+
 class nsHTMLTableColElement : public nsGenericHTMLContainerElement,
                               public nsIDOMHTMLTableColElement,
                               public nsIHTMLTableColElement
@@ -186,7 +190,8 @@ nsHTMLTableColElement::StringToAttribute(nsIAtom* aAttribute,
     }
   }
   else if (aAttribute == nsHTMLAtoms::span) {
-    if (ParseValue(aValue, 1, aResult, eHTMLUnit_Integer)) {
+    /* protection from unrealistic large colspan values */
+    if (ParseValue(aValue, 1, MAX_COLSPAN, aResult, eHTMLUnit_Integer)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
