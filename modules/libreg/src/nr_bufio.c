@@ -36,9 +36,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-#if defined(XP_MAC)
-  #include <Errors.h>
-#endif
 
 #if defined(SUNOS4)
 #include <unistd.h>  /* for SEEK_SET */
@@ -66,7 +63,7 @@ static num_reads = 0;
 
 struct BufioFileStruct 
 {
-    FILE    *fd;        /* real file descriptor */
+    PRFileDesc *fd;     /* real file descriptor */
     PRInt32 fsize;      /* total size of file */
     PRInt32 fpos;       /* our logical position in the file */
     PRInt32 datastart;  /* the file position at which the buffer starts */
@@ -92,12 +89,12 @@ static int    _bufio_flushBuf( BufioFile* file );
 /** 
  * like fopen() this routine takes *native* filenames, not NSPR names.
  */
-BufioFile*  bufio_Open(const char* name, const char* mode)
+BufioFile*  bufio_Open(const char* name, PRIntn flags, PRIntn mode)
 {
-    FILE        *fd;
+    PRFileDesc  *fd;
     BufioFile   *file = NULL;
 
-    fd = fopen( name, mode );
+    fd = PR_Open( name, flags, mode );
     
     if ( fd )
     {
@@ -113,12 +110,10 @@ BufioFile*  bufio_Open(const char* name, const char* mode)
             if ( file->data )
             {
                 /* get file size to finish initialization of bufio */
-                if ( !fseek( fd, 0, SEEK_END ) )
+                if ( PR_Seek( fd, 0, PR_SEEK_END ) >= 0)
                 {
-                    file->fsize = ftell( fd );
-
-                    file->readOnly = strcmp(mode,XP_FILE_READ) == 0 || 
-                                     strcmp(mode,XP_FILE_READ_BIN) == 0;
+                    file->fsize = PR_Seek(fd, 0, PR_SEEK_CUR);
+                    file->readOnly = (flags & PR_RDONLY);
                 }
                 else
                 {
@@ -133,37 +128,9 @@ BufioFile*  bufio_Open(const char* name, const char* mode)
         /* close file if we couldn't create BufioFile */
         if (!file)
         {
+            PR_Close( fd );
             fclose( fd );
             PR_SetError( PR_OUT_OF_MEMORY_ERROR, 0 );
-        }
-    }
-    else
-    {
-        /* couldn't open file. Figure out why and set NSPR errors */
-        
-        switch (errno)
-        {
-            /* file not found */
-#ifdef XP_MAC
-            case fnfErr:
-#else
-            case ENOENT:
-#endif
-                PR_SetError(PR_FILE_NOT_FOUND_ERROR,0);
-                break;
-
-            /* file in use */
-#ifdef XP_MAC
-            case opWrErr:
-#else
-            case EACCES:
-#endif
-                PR_SetError(PR_NO_ACCESS_RIGHTS_ERROR,0);
-                break;
-
-            default:
-                PR_SetError(PR_UNKNOWN_ERROR,0);
-                break;
         }
     }
 
@@ -184,7 +151,7 @@ int bufio_Close(BufioFile* file)
         if ( file->bufdirty )
             _bufio_flushBuf( file );
 
-        retval = fclose( file->fd );
+        retval = PR_Close( file->fd );
 
         if ( file->data )
             PR_Free( file->data );
@@ -324,12 +291,12 @@ PRUint32 bufio_Read(BufioFile* file, char* dest, PRUint32 count)
                 /* we need more than we could load into a buffer, so */
                 /* skip buffering and just read the data directly    */
 
-                if ( fseek( file->fd, file->fpos, SEEK_SET ) == 0 )
+                if ( PR_Seek( file->fd, file->fpos, PR_SEEK_SET ) >= 0 )
                 {
 #if DEBUG_dougt
                     ++num_reads;
 #endif
-                    bytesRead = fread(dest+bytesCopied, 1, leftover, file->fd);
+                    bytesRead = PR_Read(file->fd, dest+bytesCopied, leftover);
                     file->fpos += bytesRead;
                     retcount += bytesRead;
                 }
@@ -387,9 +354,9 @@ PRUint32 bufio_Read(BufioFile* file, char* dest, PRUint32 count)
         else
         {
             /* leftover data doesn't fit so skip buffering */
-            if ( fseek( file->fd, file->fpos, SEEK_SET ) == 0 )
+            if ( PR_Seek( file->fd, file->fpos, PR_SEEK_SET ) >= 0 )
             {
-                bytesRead = fread(dest, 1, leftover, file->fd);
+                bytesRead = PR_Read(file->fd, dest, leftover);
 #if DEBUG_dougt
                 ++num_reads;
 #endif        
@@ -514,8 +481,8 @@ PRUint32 bufio_Write(BufioFile* file, const char* src, PRUint32 count)
         else
         {
             /* request didn't fit in a buffer, write directly */
-            if ( fseek( file->fd, file->fpos, SEEK_SET ) == 0 )
-                bytesWritten = fwrite( newsrc, 1, leftover, file->fd );
+            if ( PR_Seek( file->fd, file->fpos, PR_SEEK_SET ) >= 0 )
+                bytesWritten = PR_Write(file->fd,  newsrc, leftover);
             else
                 bytesWritten = 0; /* seek failed! */
         }
@@ -546,7 +513,7 @@ int bufio_Flush(BufioFile* file)
     if ( file->bufdirty )
         _bufio_flushBuf( file );
     
-    return fflush(file->fd);
+    return PR_Sync(file->fd);
 }
 
 
@@ -590,14 +557,14 @@ static PRBool _bufio_loadBuf( BufioFile* file, PRUint32 count )
     if ( endPos > endBuf )
         startBuf += (endPos - endBuf);
 
-    if ( fseek( file->fd, startBuf, SEEK_SET ) != 0 )
+    if ( PR_Seek( file->fd, startBuf, PR_SEEK_SET ) < 0 )
         return PR_FALSE;
     else
     {
 #if DEBUG_dougt
         ++num_reads;
 #endif
-        bytesRead = fread( file->data, 1, file->bufsize, file->fd );
+        bytesRead = PR_Read(file->fd, file->data, file->bufsize);
         file->datastart  = startBuf;
         file->datasize   = bytesRead;
         file->bufdirty   = PR_FALSE;
@@ -625,10 +592,10 @@ static int _bufio_flushBuf( BufioFile* file )
         return 0;
 
     startpos = file->datastart + file->dirtystart;
-    if ( !fseek( file->fd, startpos, SEEK_SET ) )
+    if ( PR_Seek( file->fd, startpos, PR_SEEK_SET ) >= 0)
     {
         dirtyamt = file->dirtyend - file->dirtystart;
-        written = fwrite( file->data+file->dirtystart, 1, dirtyamt, file->fd );
+        written = PR_Write( file->fd, file->data+file->dirtystart, dirtyamt );
         if ( written == dirtyamt )
         {
 #ifdef DEBUG_dveditzbuf
