@@ -43,9 +43,6 @@
 # d)
 #	PROGRAM	-- the target program name to create from $OBJS
 #			($OBJDIR automatically prepended to it)
-# d2)
-#	SIMPLE_PROGRAMS	-- Compiles Foo.cpp Bar.cpp into Foo, Bar executables.
-#			($OBJDIR automatically prepended to it)
 # e)
 #	LIBRARY_NAME	-- the target library name to create from $OBJS
 #			($OBJDIR automatically prepended to it)
@@ -82,10 +79,6 @@ endif
 
 ifdef PROGRAM
 PROGRAM			:= $(addprefix $(OBJDIR)/, $(PROGRAM))
-endif
-
-ifdef SIMPLE_PROGRAMS
-SIMPLE_PROGRAMS := $(addprefix $(OBJDIR)/, $(SIMPLE_PROGRAMS))
 endif
 
 #
@@ -148,7 +141,7 @@ DLL_SUFFIX		= a
 endif
 
 ifndef TARGETS
-TARGETS			= $(LIBRARY) $(SHARED_LIBRARY) $(PROGRAM) $(SIMPLE_PROGRAMS)
+TARGETS			= $(LIBRARY) $(SHARED_LIBRARY) $(PROGRAM)
 endif
 
 ifndef OBJS
@@ -306,7 +299,7 @@ export::
 	+$(LOOP_OVER_DIRS)
 
 ifndef LIBS_NEQ_INSTALL
-libs install:: $(LIBRARY) $(SHARED_LIBRARY) $(PROGRAM) $(SIMPLE_PROGRAMS) $(MAPS)
+libs install:: $(LIBRARY) $(SHARED_LIBRARY) $(PROGRAM) $(MAPS)
 ifndef NO_STATIC_LIB
 ifdef LIBRARY
 	$(INSTALL) -m 444 $(LIBRARY) $(DIST)/lib
@@ -320,9 +313,6 @@ ifdef SHARED_LIBRARY
 endif
 ifdef PROGRAM
 	$(INSTALL) -m 444 $(PROGRAM) $(DIST)/bin
-endif
-ifdef SIMPLE_PROGRAMS
-	$(INSTALL) -m 444 $(SIMPLE_PROGRAMS) $(DIST)/bin
 endif
 	+$(LOOP_OVER_DIRS)
 else
@@ -344,9 +334,6 @@ endif
 ifdef PROGRAM
 	$(INSTALL) -m 444 $(PROGRAM) $(DIST)/bin
 endif
-ifdef SIMPLE_PROGRAMS
-	$(INSTALL) -m 444 $(SIMPLE_PROGRAMS) $(DIST)/bin
-endif
 	+$(LOOP_OVER_DIRS)
 endif
 
@@ -362,19 +349,6 @@ alltags:
 	rm -f TAGS
 	find . -name dist -prune -o \( -name '*.[hc]' -o -name '*.cp' -o -name '*.cpp' \) -print | xargs etags -a
 
-#
-# Define LINK_LINE here, since it gets used in two places.
-#
-ifdef CPP_PROG_LINK
-	LINK_LINE = $(CCC) $(CFLAGS) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
-else
-	LINK_LINE = $(CCF) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
-endif
-
-#
-# PROGRAM = Foo
-# creates OBJS, links with LIBS to create Foo
-#
 $(PROGRAM): $(PROGOBJS)
 	@$(MAKE_OBJDIR)
 ifeq ($(OS_ARCH),OS2)
@@ -383,23 +357,13 @@ else
 ifeq ($(OS_ARCH),WINNT)
 	$(CC) $(PROGOBJS) -Fe$@ -link $(LDFLAGS) $(OS_LIBS) $(EXTRA_LIBS)
 else
-	$(LINK_LINE)
+ifdef CPP_PROG_LINK
+	$(CCC) $(CFLAGS) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
+else
+	$(CCF) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
 endif
 endif
-
-#
-# This is an attempt to support generation of multiple binaries
-# in one directory, it assumes everything to compile Foo is in
-# Foo.o (from either Foo.c or Foo.cpp).
-#
-# SIMPLE_PROGRAMS = Foo Bar
-# creates Foo.o Bar.o, links with LIBS to create Foo, Bar.
-#
-#
-$(SIMPLE_PROGRAMS):$(OBJDIR)/%: $(OBJDIR)/%.o 
-	@$(MAKE_OBJDIR)
-	$(LINK_LINE)
-
+endif
 
 ifneq ($(OS_ARCH),OS2)
 $(LIBRARY): $(OBJS) $(LOBJS)
