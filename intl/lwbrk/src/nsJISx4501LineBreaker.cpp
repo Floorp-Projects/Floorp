@@ -277,6 +277,30 @@ nsresult nsJISx4501LineBreaker::NextForwardBreak    (nsIBreakState* state)
 }
   
 
+#define U_PERIOD ((PRUnichar) '.')
+#define U_COMMA ((PRUnichar) ',')
+#define NEED_CONTEXTUAL_ANALYSIS(c) (((c)==U_PERIOD)||((c)==U_COMMA))
+#define NUMERIC_CLASS  6 // JIS x4501 class 15 is now map to simplified class 6
+#define IS_ASCII_DIGIT(u) ((0x0030 <= (u)) && ((u) <= 0x0039))
+
+PRInt8  nsJISx4501LineBreaker::ContextualAnalysis(
+   PRUnichar prev, PRUnichar cur, PRUnichar next
+)
+{
+   if(  U_COMMA == cur)
+   {
+         if( IS_ASCII_DIGIT (prev)  && 
+             IS_ASCII_DIGIT (next) )
+           return NUMERIC_CLASS;
+   }
+   else if( U_PERIOD == cur)
+   {
+         if( (IS_ASCII_DIGIT (prev) || (0x0020 == prev) )&& 
+             IS_ASCII_DIGIT (next) )
+           return NUMERIC_CLASS;
+   }
+   return this->GetClass(cur);
+}
 PRUint32 nsJISx4501LineBreaker::Next(
   const PRUnichar* aText,
   PRUint32 aLen,
@@ -285,10 +309,22 @@ PRUint32 nsJISx4501LineBreaker::Next(
 {
   PRInt8 c1, c2;
   PRUint32 cur = aPos;
-  c1 = this->GetClass(aText[cur]);
+  if(NEED_CONTEXTUAL_ANALYSIS(aText[cur]))
+    c1 = this->ContextualAnalysis((cur>0)?aText[cur-1]:0,
+                                  aText[cur],
+                                  (cur<(aLen-1)) ?aText[cur+1]:0);
+  else 
+    c1 = this->GetClass(aText[cur]);
+
   for(cur++; cur <aLen; cur++)
   {
-     c2 = this->GetClass(aText[cur]);
+     if(NEED_CONTEXTUAL_ANALYSIS(aText[cur]))
+       c2= this->ContextualAnalysis((cur>0)?aText[cur-1]:0,
+                                  aText[cur],
+                                  (cur<(aLen-1)) ?aText[cur+1]:0);
+     else 
+       c2 = this->GetClass(aText[cur]);
+
      if(GetPair(c1, c2))
        break;
      c1 = c2;
@@ -301,12 +337,29 @@ nsresult nsJISx4501LineBreaker::BreakInBetween(
   const PRUnichar* aText2 , PRUint32 aTextLen2,
   PRBool *oCanBreak)
 {
+  PRInt8 c1, c2;
+  if((0 == aTextLen1) || (0==aTextLen2))
+  {
+     *oCanBreak = PR_FALSE;
+     // XXX maybe we shuld return error code instead here
+     return NS_OK;
+  }
 
-  PRUnichar c2,c3;
-  c2 = (aTextLen1 > 0) ? aText1[aTextLen1-1] : 0;
-  c3 = (aTextLen2 > 0) ? aText2[0] : 0;
+  if(NEED_CONTEXTUAL_ANALYSIS(aText1[aTextLen1-1]))
+    c1 = this->ContextualAnalysis((aTextLen1>1)?aText1[aTextLen1-2]:0,
+                                  aText1[aTextLen1-1],
+                                  aText2[0]);
+  else 
+    c1 = this->GetClass(aText1[aTextLen1-1]);
 
-  *oCanBreak = GetPair(this->GetClass(c2), this->GetClass(c3));
+  if(NEED_CONTEXTUAL_ANALYSIS(aText2[0]))
+    c2 = this->ContextualAnalysis(aText1[aTextLen1-1],
+                                  aText2[0],
+                                  (aTextLen2>1)?aText2[1]:0);
+  else 
+    c2 = this->GetClass(aText2[0]);
+
+  *oCanBreak = GetPair(c1,c2);
   return NS_OK;
 }
 
