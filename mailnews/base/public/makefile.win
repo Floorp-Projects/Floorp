@@ -32,7 +32,8 @@ EXPORTS =	 						\
 			nsMsgMessageFlags.h		\
 			nsIMsgHost.h			\
 			nsIMsgGroupRecord.h		\
-			nsIMsgFolder.h				\
+			nsIMsgFolder.h			\
+			nsIMsgRDFFolder.h		\
 			$(NULL)
 
 MODULE=mailnews

@@ -7,7 +7,6 @@
 
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsISupportsArray.h" /* interface nsISupportsArray */
-#include "nsIRDFNode.h" /* interface nsIRDFNode */
 
 enum FolderType {
   FOLDER_MAIL,
@@ -28,7 +27,7 @@ enum FolderType {
   {0x85e39ff0, 0xb248, 0x11d2, \
     { 0xb7, 0xef, 0x00, 0x80, 0x5f, 0x05, 0xff, 0xa5 }}
 
-class nsIMsgFolder : public nsIRDFResource {
+class nsIMsgFolder : public nsISupports {
  public: 
   static const nsIID& IID() {
     static nsIID iid = NS_IMSGFOLDER_IID;
@@ -49,6 +48,9 @@ class nsIMsgFolder : public nsIRDFResource {
 
   /*  <IDL>  */
   NS_IMETHOD GetPrettiestName(char * *aPrettiestName) = 0;
+
+  /*  <IDL>  */
+  NS_IMETHOD BuildFolderURL(char **_retval) = 0;
 
   /*  <IDL>  */
   NS_IMETHOD GetNameFromPathName(const char *pathName, char **_retval) = 0;
@@ -157,6 +159,9 @@ class nsIMsgFolder : public nsIRDFResource {
   NS_IMETHOD GetAllowsPosting(PRBool *aAllowsPosting) = 0;
 
   /*  <IDL>  */
+  NS_IMETHOD DisplayRecipients(PRBool *_retval) = 0;
+
+  /*  <IDL>  */
   NS_IMETHOD GetRelativePathName(char * *aRelativePathName) = 0;
 
   /*  <IDL>  */
@@ -206,6 +211,26 @@ class nsIMsgFolder : public nsIRDFResource {
 
   /*  <IDL>  */
   NS_IMETHOD GetExpansionArray(const nsISupportsArray *expansionArray) = 0;
+};
+
+/* starting interface nsIMsgMailFolder */
+
+/* {27D2DE40-BAF1-11d2-9578-00805F8AC615} */
+#define NS_IMSGMAILFOLDER_IID_STR "27D2DE40-BAF1-11d2-9578-00805F8AC615"
+#define NS_IMSGMAILFOLDER_IID \
+  {0x27D2DE40, 0xBAF1, 0x11d2, \
+    { 0x95, 0x78, 0x00, 0x80, 0x5F, 0x8A, 0xC6, 0x15 }}
+
+class nsIMsgMailFolder : public nsISupports {
+ public: 
+  static const nsIID& IID() {
+    static nsIID iid = NS_IMSGMAILFOLDER_IID;
+    return iid;
+  }
+
+  /*  <IDL>  */
+  NS_IMETHOD GetPathName(char * *aPathName) = 0;
+  NS_IMETHOD SetPathName(char * aPathName) = 0;
 };
 
 #endif /* __gen_nsIMsgFolder_h__ */

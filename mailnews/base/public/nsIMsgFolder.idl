@@ -18,91 +18,94 @@
  
 #include "nsISupports.idl"
 #include "nsISupportsArray.idl"
-#include "nsIRDFNode.idl"
 
 enum FolderType {
-  FOLDER_MAIL,
-  FOLDER_IMAPMAIL,
-  FOLDER_NEWSGROUP,
-  FOLDER_CONTAINERONLY,
-  FOLDER_CATEGORYCONTAINER,
-  FOLDER_IMAPSERVERCONTAINER,
-  FOLDER_UNKNOWN
+	FOLDER_MAIL,
+	FOLDER_IMAPMAIL,
+	FOLDER_NEWSGROUP,
+	FOLDER_CONTAINERONLY,
+	FOLDER_CATEGORYCONTAINER,
+	FOLDER_IMAPSERVERCONTAINER,
+	FOLDER_UNKNOWN
 };  
 
 [uuid(85e39ff0-b248-11d2-b7ef-00805f05ffa5)]
-interface nsIMsgFolder : nsIRDFResource {
+interface nsIMsgFolder : nsISupports {
 
-  readonly attribute FolderType type;
-  readonly attribute string prettyName;
-  readonly attribute string name;  
-  void SetName(in string name);
-  readonly attribute string prettiestName;
+	readonly attribute FolderType type;
+	readonly attribute string prettyName;
+	readonly attribute string name;  
+	void SetName(in string name);
+	readonly attribute string prettiestName;
 
-  string GetNameFromPathName(in string pathName);
-  boolean HasSubFolders();
-  long GetNumSubFolders() ;
-  long GetNumSubFoldersToDisplay();
-  nsIMsgFolder GetSubFolder(in long which) ;
-  nsISupportsArray  GetSubFolders();
-  void AddSubFolder(in nsIMsgFolder folder);
-  void RemoveSubFolder (in nsIMsgFolder folder);
+	string BuildFolderURL();
 
-  readonly attribute boolean deleteIsMoveToTrash;
-  readonly attribute boolean showDeletedMessages;
+	string GetNameFromPathName(in string pathName);
+	boolean HasSubFolders();
+	long GetNumSubFolders() ;
+	long GetNumSubFoldersToDisplay();
+	nsIMsgFolder GetSubFolder(in long which) ;
+	nsISupportsArray  GetSubFolders();
+	void AddSubFolder(in nsIMsgFolder folder);
+	void RemoveSubFolder (in nsIMsgFolder folder);
+
+	readonly attribute boolean deleteIsMoveToTrash;
+	readonly attribute boolean showDeletedMessages;
   
-  void OnCloseFolder ();
-  void Delete ();
+	void OnCloseFolder ();
+	void Delete ();
 
-  void PropagateDelete(inout nsIMsgFolder folder, in boolean deleteStorage);
-  void RecursiveDelete(in boolean deleteStorage);
+	void PropagateDelete(inout nsIMsgFolder folder, in boolean deleteStorage);
+	void RecursiveDelete(in boolean deleteStorage);
 
-  void CreateSubfolder(in string leafNameFromUser, out nsIMsgFolder outFolder, out long outPos);
+	void CreateSubfolder(in string leafNameFromUser, out nsIMsgFolder outFolder, out long outPos);
 
-  void Rename(in string name);
-  void Adopt(in nsIMsgFolder srcFolder, out long outPos);
+	void Rename(in string name);
+	void Adopt(in nsIMsgFolder srcFolder, out long outPos);
 
-  boolean ContainsChildNamed(in string name);
-  nsIMsgFolder FindChildNamed(in string name);
-  nsIMsgFolder FindParentOf(in nsIMsgFolder childFolder);
-  boolean IsParentOf(in nsIMsgFolder folder, in boolean deep);
+	boolean ContainsChildNamed(in string name);
+	nsIMsgFolder FindChildNamed(in string name);
+	nsIMsgFolder FindParentOf(in nsIMsgFolder childFolder);
+	boolean IsParentOf(in nsIMsgFolder folder, in boolean deep);
 
-  string GenerateUniqueSubfolderName(in string prefix, in nsIMsgFolder otherFolder);
+	string GenerateUniqueSubfolderName(in string prefix, in nsIMsgFolder otherFolder);
 
-  attribute long depth;
+	attribute long depth;
 
-  void UpdateSummaryTotals();
-  void SummaryChanged();
-  long GetNumUnread(in boolean deep);
-  long GetTotalMessages(in boolean deep);
+	void UpdateSummaryTotals();
+	void SummaryChanged();
+	long GetNumUnread(in boolean deep);
+	long GetTotalMessages(in boolean deep);
 
-  readonly attribute long expungedBytesCount;
-  readonly attribute boolean deletable;
-  readonly attribute boolean canCreateChildren;
-  readonly attribute boolean canBeRenamed;
-  readonly attribute boolean requiresCleanup;
+	readonly attribute long expungedBytesCount;
+	readonly attribute boolean deletable;
+	readonly attribute boolean canCreateChildren;
+	readonly attribute boolean canBeRenamed;
+	readonly attribute boolean requiresCleanup;
 
-  void ClearRequiresCleanup();
+	void ClearRequiresCleanup();
 
-  readonly attribute boolean knowsSearchNntpExtension;
-  readonly attribute boolean allowsPosting;
+	readonly attribute boolean knowsSearchNntpExtension;
+	readonly attribute boolean allowsPosting;
 
-  readonly attribute string relativePathName;
-  readonly attribute long sizeOnDisk;
+	boolean DisplayRecipients();
 
-  void RememberPassword(in string password);
-  string GetRememberedPassword();
-  boolean UserNeedsToAuthenticateForFolder(in boolean displayOnly);
-  string GetUserName();
-  string GetHostName();
+	readonly attribute string relativePathName;
+	readonly attribute long sizeOnDisk;
 
-  void AddSubfolderIfUnique(in nsIMsgFolder newSubfolder);
-  void ReplaceSubfolder(in nsIMsgFolder oldFolder,
+	void RememberPassword(in string password);
+	string GetRememberedPassword();
+	boolean UserNeedsToAuthenticateForFolder(in boolean displayOnly);
+	string GetUserName();
+	string GetHostName();
+
+	void AddSubfolderIfUnique(in nsIMsgFolder newSubfolder);
+	void ReplaceSubfolder(in nsIMsgFolder oldFolder,
                         in nsIMsgFolder newFolder);
   
-  void SetFlag(in long flag);
-  void ClearFlag(in long flag);
-  boolean GetFlag(in long flag);
+	void SetFlag(in long flag);
+	void ClearFlag(in long flag);
+	boolean GetFlag(in long flag);
 
 	void ToggleFlag (in long flag);
 	void OnFlagChange (in long flag);
@@ -116,3 +119,9 @@ interface nsIMsgFolder : nsIRDFResource {
 };
 
 
+
+[uuid(27D2DE40-BAF1-11d2-9578-00805F8AC615)]
+interface nsIMsgMailFolder : nsISupports {
+
+	attribute string pathName;
+};
