@@ -51,7 +51,7 @@ static NS_DEFINE_IID(kIScriptContextOwnerIID, NS_ISCRIPTCONTEXTOWNER_IID);
 extern "C" BOOL CreateSiteWalkerDialog(HWND hParent, WindowData * aWinData);
 // DebugRobot call
 extern "C" NS_EXPORT int DebugRobot(
-   nsVoidArray * workList, nsIWebWidget * ww, int imax, char * verify_dir, void (*yieldProc)(const char *));
+   nsVoidArray * workList, nsIWebShell * ww, int imax, char * verify_dir, void (*yieldProc)(const char *));
 
 // Temporary Netlib stuff...
 /* XXX: Don't include net.h... */
@@ -276,23 +276,25 @@ void nsWin32Viewer::DoSiteWalker(WindowData* aWinData)
 
 void nsWin32Viewer::DoDebugRobot(WindowData* aWindata)
 {
- if ((nsnull != aWindata) && (nsnull != aWindata->observer)) {
-             if (CreateRobotDialog(aWindata->windowWidget->GetNativeData(NS_NATIVE_WIDGET)))
-             {
-                nsIDocument* doc = aWindata->observer->mWebWidget->GetDocument();
-                if (nsnull!=doc) {
-                   const char * str = doc->GetDocumentURL()->GetSpec();
-                   nsVoidArray * gWorkList = new nsVoidArray();
-                   gWorkList->AppendElement(new nsString(str));
-                   DebugRobot( 
-                      gWorkList, 
-                      gVisualDebug ? aWindata->observer->mWebWidget : nsnull, 
-                      gDebugRobotLoads, 
-                      PL_strdup(gVerifyDir),
-                      yieldProc);
-                }
-             }
-          }
+  if ((nsnull != aWindata) && (nsnull != aWindata->observer)) {
+    if (CreateRobotDialog(aWindata->windowWidget->GetNativeData(NS_NATIVE_WIDGET)))
+    {
+#if XXX_fix_me
+      nsIDocument* doc = aWindata->observer->mWebWidget->GetDocument();
+      if (nsnull!=doc) {
+        const char * str = doc->GetDocumentURL()->GetSpec();
+        nsVoidArray * gWorkList = new nsVoidArray();
+        gWorkList->AppendElement(new nsString(str));
+        DebugRobot( 
+          gWorkList, 
+          gVisualDebug ? aWindata->observer->mWebWidget : nsnull, 
+          gDebugRobotLoads, 
+          PL_strdup(gVerifyDir),
+          yieldProc);
+      }
+#endif
+    }
+  }
 }
 
 
@@ -301,6 +303,7 @@ void nsWin32Viewer::DoDebugSave(WindowData* aWindata)
 {
   if ((nsnull != aWindata) && (nsnull != aWindata->observer)) 
   {
+#ifdef XXX_fix_me
     nsIDocument* doc = aWindata->observer->mWebWidget->GetDocument();
  
     if (doc != nsnull)
@@ -342,6 +345,7 @@ void nsWin32Viewer::DoDebugSave(WindowData* aWindata)
         NS_RELEASE(parser);
       }
     }
+#endif
   }
 }
 
@@ -352,6 +356,7 @@ void nsWin32Viewer::CopyTextContent(WindowData* wd, HWND aHWnd)
   PSTR        pGlobalMemory;
 
   if (wd->observer != nsnull) {
+#ifdef XXX_fix_me
     nsIDocument* doc = wd->observer->mWebWidget->GetDocument();
     if (doc != nsnull) {
       // Get Text from Selection
@@ -379,6 +384,7 @@ void nsWin32Viewer::CopyTextContent(WindowData* wd, HWND aHWnd)
 
       NS_IF_RELEASE(doc);
     }
+#endif
   }
 }
 
