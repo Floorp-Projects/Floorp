@@ -256,7 +256,8 @@ PRStatus _MD_CREATE_THREAD(PRThread *thread,
 
     flags = (state == PR_JOINABLE_THREAD ? THR_SUSPENDED/*|THR_NEW_LWP*/ 
 			   : THR_SUSPENDED|THR_DETACHED/*|THR_NEW_LWP*/);
-	if (thread->flags & _PR_GCABLE_THREAD)
+	if ((thread->flags & _PR_GCABLE_THREAD) ||
+							(scope == PR_GLOBAL_BOUND_THREAD))
 		flags |= THR_BOUND;
 
     if (thr_create(NULL, thread->stack->stackSize,
@@ -276,8 +277,8 @@ PRStatus _MD_CREATE_THREAD(PRThread *thread,
     thr_sigsetmask(SIG_SETMASK, &oldset, NULL); 
     _MD_NEW_SEM(&thread->md.waiter_sem, 0);
 
-    if (scope == PR_GLOBAL_THREAD) {
-	thread->flags |= _PR_GLOBAL_SCOPE;
+	if ((scope == PR_GLOBAL_THREAD) || (scope == PR_GLOBAL_BOUND_THREAD)) {
+		thread->flags |= _PR_GLOBAL_SCOPE;
     }
 
     /* 

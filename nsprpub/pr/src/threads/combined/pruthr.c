@@ -1088,10 +1088,15 @@ PR_IMPLEMENT(PRThread*) _PR_CreateThread(PRThreadType type,
         me = _PR_MD_CURRENT_THREAD();
 
 #if    defined(_PR_GLOBAL_THREADS_ONLY)
-    scope = PR_GLOBAL_THREAD;
+	/*
+	 * can create global threads only
+	 */
+    if (scope == PR_LOCAL_THREAD)
+    	scope = PR_GLOBAL_THREAD;
 #endif
 
-    native = ((scope == PR_GLOBAL_THREAD) && _PR_IS_NATIVE_THREAD_SUPPORTED());
+    native = (((scope == PR_GLOBAL_THREAD)|| (scope == PR_GLOBAL_BOUND_THREAD))
+							&& _PR_IS_NATIVE_THREAD_SUPPORTED());
 
     _PR_ADJUST_STACKSIZE(stackSize);
 
