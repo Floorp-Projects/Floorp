@@ -60,6 +60,90 @@ NS_IMPL_ISUPPORTS1(nsICODecoder, imgIDecoder)
 #define BITMAPINFOSIZE 40
 #define PREFICONSIZE 16
 
+// ----------------------------------------
+// Actual Data Processing
+// ----------------------------------------
+
+inline nsresult nsICODecoder::SetPixel(PRUint8*& aDecoded, PRUint8 idx) {
+  PRUint8 red, green, blue;
+  red = mColors[idx].red;
+  green = mColors[idx].green;
+  blue = mColors[idx].blue;
+  return SetPixel(aDecoded, red, green, blue);
+}
+
+inline nsresult nsICODecoder::SetPixel(PRUint8*& aDecoded, PRUint8 aRed, PRUint8 aGreen, PRUint8 aBlue) {
+#ifdef XP_MAC
+  *aDecoded++ = 0; // Mac needs this padding byte
+#endif
+#ifdef USE_RGBA1
+ *aDecoded++ = aRed;
+ *aDecoded++ = aGreen;
+ *aDecoded++ = aBlue;
+#else
+ *aDecoded++ = aBlue;
+ *aDecoded++ = aGreen;
+ *aDecoded++ = aRed;
+#endif
+  return NS_OK;
+}
+
+inline nsresult nsICODecoder::Set4BitPixel(PRUint8*& aDecoded, PRUint8 aData, PRUint32& aPos)
+{
+  PRUint8 idx = aData >> 4;
+  nsresult rv = SetPixel(aDecoded, idx);
+  if ((++aPos >= mBIH.width) || NS_FAILED(rv))
+      return rv;
+
+  idx = aData & 0xF;
+  rv = SetPixel(aDecoded, idx);
+  ++aPos;
+  return rv;
+}
+
+inline nsresult nsICODecoder::SetData(PRUint8* aData)
+{
+  NS_ENSURE_ARG_POINTER(aData);
+  PRUint32 bpr;
+  nsresult rv;
+
+  rv = mFrame->GetImageBytesPerRow(&bpr);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 offset = (mCurLine - 1) * bpr;
+  // XXX Possibly aData doesn't contain bpr bytes of data;
+  // will SetImageData access that data?
+  rv = mFrame->SetImageData(aData, bpr, offset);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsRect r(0, mCurLine, mBIH.width, 1);
+  rv = mObserver->OnDataAvailable(nsnull, nsnull, mFrame, &r);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+inline nsresult nsICODecoder::SetAlphaData(PRUint8* aData)
+{
+  NS_ENSURE_ARG_POINTER(aData);
+  PRUint32 bpr;
+  nsresult rv;
+
+  mFrame->GetAlphaBytesPerRow(&bpr);
+  
+  PRUint32 offset = (mCurLine - 1) * bpr;
+  // XXX Possibly aData doesn't contain bpr bytes of data;
+  // will SetImageData access that data?
+  rv = mFrame->SetAlphaData(aData, bpr, offset);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsRect r(0, mCurLine, mBIH.width, 1);
+  rv = mObserver->OnDataAvailable(nsnull, nsnull, mFrame, &r);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
 nsICODecoder::nsICODecoder()
 {
   NS_INIT_ISUPPORTS();
@@ -470,86 +554,3 @@ void nsICODecoder::ProcessInfoHeader() {
   mBIH.important_colors = LITTLE_TO_NATIVE32(mBIH.important_colors);
 }
 
-// ----------------------------------------
-// Actual Data Processing
-// ----------------------------------------
-
-inline nsresult nsICODecoder::SetPixel(PRUint8*& aDecoded, PRUint8 idx) {
-  PRUint8 red, green, blue;
-  red = mColors[idx].red;
-  green = mColors[idx].green;
-  blue = mColors[idx].blue;
-  return SetPixel(aDecoded, red, green, blue);
-}
-
-inline nsresult nsICODecoder::SetPixel(PRUint8*& aDecoded, PRUint8 aRed, PRUint8 aGreen, PRUint8 aBlue) {
-#ifdef XP_MAC
-  *aDecoded++ = 0; // Mac needs this padding byte
-#endif
-#ifdef USE_RGBA1
- *aDecoded++ = aRed;
- *aDecoded++ = aGreen;
- *aDecoded++ = aBlue;
-#else
- *aDecoded++ = aBlue;
- *aDecoded++ = aGreen;
- *aDecoded++ = aRed;
-#endif
-  return NS_OK;
-}
-
-inline nsresult nsICODecoder::Set4BitPixel(PRUint8*& aDecoded, PRUint8 aData, PRUint32& aPos)
-{
-  PRUint8 idx = aData >> 4;
-  nsresult rv = SetPixel(aDecoded, idx);
-  if ((++aPos >= mBIH.width) || NS_FAILED(rv))
-      return rv;
-
-  idx = aData & 0xF;
-  rv = SetPixel(aDecoded, idx);
-  ++aPos;
-  return rv;
-}
-
-inline nsresult nsICODecoder::SetData(PRUint8* aData)
-{
-  NS_ENSURE_ARG_POINTER(aData);
-  PRUint32 bpr;
-  nsresult rv;
-
-  rv = mFrame->GetImageBytesPerRow(&bpr);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRUint32 offset = (mCurLine - 1) * bpr;
-  // XXX Possibly aData doesn't contain bpr bytes of data;
-  // will SetImageData access that data?
-  rv = mFrame->SetImageData(aData, bpr, offset);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsRect r(0, mCurLine, mBIH.width, 1);
-  rv = mObserver->OnDataAvailable(nsnull, nsnull, mFrame, &r);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-inline nsresult nsICODecoder::SetAlphaData(PRUint8* aData)
-{
-  NS_ENSURE_ARG_POINTER(aData);
-  PRUint32 bpr;
-  nsresult rv;
-
-  mFrame->GetAlphaBytesPerRow(&bpr);
-  
-  PRUint32 offset = (mCurLine - 1) * bpr;
-  // XXX Possibly aData doesn't contain bpr bytes of data;
-  // will SetImageData access that data?
-  rv = mFrame->SetAlphaData(aData, bpr, offset);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsRect r(0, mCurLine, mBIH.width, 1);
-  rv = mObserver->OnDataAvailable(nsnull, nsnull, mFrame, &r);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
