@@ -220,7 +220,7 @@ NS_IMETHODIMP nsMsgDBFolder::GetCharset(PRUnichar * *aCharset)
 	if(!aCharset)
 		return NS_ERROR_NULL_POINTER;
 
-	if(mCharset == "")
+	if(mCharset.IsEmpty())
 	{
 		NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
 

@@ -167,7 +167,7 @@ nsMsgIncomingServer::GetServerURI(char **aResult)
     rv = GetLocalStoreType(getter_Copies(localStoreType));
     if (NS_FAILED(rv)) return rv;
 
-    uri += localStoreType;
+    uri.Append(localStoreType);
     uri += "://";
 
     nsXPIDLCString username;
@@ -179,7 +179,7 @@ nsMsgIncomingServer::GetServerURI(char **aResult)
             nsEscape(username, url_XAlphas);
 //            nsEscape(username, url_Path);
         // not all servers have a username 
-        uri += escapedUsername;
+        uri.Append(escapedUsername);
         uri += '@';
     }
 
@@ -191,7 +191,7 @@ nsMsgIncomingServer::GetServerURI(char **aResult)
         *((char **)getter_Copies(escapedHostname)) =
             nsEscape(hostname, url_Path);
         // not all servers have a hostname
-        uri += escapedHostname;
+        uri.Append(escapedHostname);
     }
 
     *aResult = uri.ToNewCString();
@@ -495,7 +495,7 @@ nsMsgIncomingServer::GetPrettyName(PRUnichar **retval) {
     if (NS_FAILED(rv)) return rv;
     if ((const char*)username &&
         PL_strcmp((const char*)username, "")!=0) {
-      prettyName = username;
+      prettyName.Assign(username);
       prettyName += " on ";
     }
     
@@ -679,7 +679,7 @@ nsMsgIncomingServer::SetDefaultLocalPath(nsIFileSpec *aDefaultLocalPath)
     GetType(getter_Copies(type));
 
     nsCAutoString progid(NS_MSGPROTOCOLINFO_PROGID_PREFIX);
-    progid += type;
+    progid.Append(type);
 
     NS_WITH_SERVICE(nsIMsgProtocolInfo, protocolInfo, progid, &rv);
     if (NS_FAILED(rv)) return rv;
@@ -708,7 +708,7 @@ nsMsgIncomingServer::GetLocalPath(nsIFileSpec **aLocalPath)
     GetType(getter_Copies(type));
 
     nsCAutoString progid(NS_MSGPROTOCOLINFO_PROGID_PREFIX);
-    progid += type;
+    progid.Append(type);
 
     NS_WITH_SERVICE(nsIMsgProtocolInfo, protocolInfo, progid, &rv);
     if (NS_FAILED(rv)) return rv;

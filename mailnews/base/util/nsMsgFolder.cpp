@@ -1868,7 +1868,7 @@ NS_IMETHODIMP nsMsgFolder::GetNewMessagesNotificationDescription(PRUnichar * *aD
 			nsXPIDLString folderName;
 			rv = GetPrettyName(getter_Copies(folderName));
 			if (NS_SUCCEEDED(rv) && folderName)
-				description = folderName;
+				description.Assign(folderName);
 		}
 
     // append the server name
@@ -1879,7 +1879,7 @@ NS_IMETHODIMP nsMsgFolder::GetNewMessagesNotificationDescription(PRUnichar * *aD
       // in case the above failed
       if (!(mFlags & MSG_FOLDER_FLAG_INBOX))
         description += " on ";
-			description += serverName;
+			description.Append(serverName);
     }
 	}
 	*aDescription = description.ToNewUnicode();
