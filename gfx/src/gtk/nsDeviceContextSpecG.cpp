@@ -106,7 +106,13 @@ NS_IMETHODIMP nsDeviceContextSpecGTK :: Init(PRBool	aQuiet)
   mPrData.fpf = PR_TRUE;
   mPrData.grayscale = PR_FALSE;
   mPrData.size = NS_LETTER_SIZE;
+#ifndef VMS
   sprintf( mPrData.command, "lpr" );
+#else
+  // Note to whoever puts the "lpr" into the prefs file. Please contact me
+  // as I need to make the default be "print" instead of "lpr" for OpenVMS.
+  sprintf( mPrData.command, "print" );
+#endif
 
   // PWD, HOME, or fail 
 

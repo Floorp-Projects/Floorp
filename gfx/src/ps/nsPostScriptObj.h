@@ -160,6 +160,9 @@ struct PrintSetup_ {
   XL_CompletionRoutine completion; // Called when translation finished 
   void* carg;                   // Data saved for completion routine 
   int status;                   // Status of URL on completion 
+#ifdef VMS
+  char *print_cmd;		// print command issued in dtor
+#endif
 
 	// "other" font is for encodings other than iso-8859-1 
   char *otherFontName[N_FONTS];		   
