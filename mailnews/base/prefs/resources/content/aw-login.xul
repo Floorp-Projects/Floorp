@@ -35,7 +35,7 @@ Rights Reserved.
   </box>
 
   <box align="vertical" class="padded">
-    <html:div>&usernameDesc.label;</html:div>
+    <html:div>&usernameDesc.label; &usernameExample.label;</html:div>
     <html:div>
       &usernameLabel.label;
       <html:input type="text" name="server.username" id="server.username"/>

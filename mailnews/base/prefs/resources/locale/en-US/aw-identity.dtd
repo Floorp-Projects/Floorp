@@ -1,12 +1,12 @@
 <!-- extracted from aw-identity.xul -->
 
 <!ENTITY identityTitle.label "Identity">
-<!ENTITY identityDesc.label "Each account can have its own identity, which is the ifnormation that other people see when they read your messages.">
+<!ENTITY identityDesc.label "Each account can have its own identity, which is the information that identitifies you to others when they receive your messages.">
 
-<!ENTITY fullnameDesc.label "Enter the name you would like to appear in the From field of your outgoing messages.">
-<!ENTITY fullnameExample.label "For example, John Smith">
+<!ENTITY fullnameDesc.label "Enter the name you would like to appear in the &quot;From&quot; field of your outgoing messages.">
+<!ENTITY fullnameExample.label "(For example, &quot;John Smith&quot;)">
 <!ENTITY fullnameLabel.label "Your Name:">
 
 <!ENTITY emailDesc.label "Enter your email address. This is the address otherws will use to send email to you.">
-<!ENTITY emailExample.label "For example, test@netscape.net">
+<!ENTITY emailExample.label "(For example, &quot;test@netscape.net&quot;)">
 <!ENTITY emailLabel.label "Email Address:">

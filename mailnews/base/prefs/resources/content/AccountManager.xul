@@ -24,7 +24,7 @@
 	  <template>
 	  	<rule>
             <treechildren>
-			<treeitem uri="..."
+			<treeitem uri="..." open="true"
                 PageTag="rdf:http://home.netscape.com/NC-rdf#PageTag">
 		  		<treerow >
 					<treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Name"/>

@@ -34,6 +34,10 @@ Rights Reserved.
     <titledbutton class="plain" src="chrome://navigator/skin/animthrob_single.gif"/>
   </box>
   <html:div>&accnameDesc.label;</html:div>
-  <html:input type="text" name="server.prettyName" id="server.prettyName"/>
+  <spring style="height: 1em"/>
+  <box align="horizontal">
+    <html:div>&accnameLabel.label;</html:div>
+    <html:input type="text" name="server.prettyName" id="server.prettyName" flex="100%"/>
+  </box>
 
 </window>
