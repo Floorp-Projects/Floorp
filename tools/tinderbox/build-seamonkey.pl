@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.22 $';
+$Version = '$Revision: 1.1 $';
 
 sub InitVars {
     # PLEASE FILL THIS IN WITH YOUR PROPER EMAIL ADDRESS
@@ -16,15 +16,10 @@ sub InitVars {
     $BuildDepend = 1;	# Depend or Clobber
     $ReportStatus = 1;	# Send results to server, or not
     $BuildOnce = 0;	# Build once, don't send results to server
-    $BuildClassic = 0;	# Build classic source
-    $BuildAuto = 1;     # Build with client.mk, or manually
     $RunTest = 1;	# Run the smoke test on successful build, or not
     $UseTimeStamp = 0;	# Use the CVS 'pull-by-timestamp' option, or not
 
     # Relative path to binary
-    $BinaryName{'x'} = 'mozilla-export';
-    $BinaryName{'qt'} = 'qtmozilla-export';
-    $BinaryName{'gnome'} = 'gnuzilla-export';
     $BinaryName{'apprunner'} = '/dist/bin/apprunner';
 
     # Set these to what makes sense for your system
@@ -40,7 +35,6 @@ sub InitVars {
 
     # You'll need to change these to suit your machine's needs
     $BaseDir = '/builds/tinderbox/SeaMonkey';
-    $NSPRDir = '/builds/tinderbox/SeaMonkey/nspr';
     $DisplayServer = 'crucible.mcom.com:0.0';
 
     # These shouldn't really need to be changed
@@ -58,27 +52,17 @@ sub InitVars {
     $Topsrcdir = 'mozilla';
     $ClobberStr = 'realclean';
     $ConfigureEnvArgs = '';
-    $ConfigureArgs = '--with-nspr=' . $NSPRDir . ' --cache-file=/dev/null ';
+    $ConfigureArgs = ' --cache-file=/dev/null ';
     $ConfigGuess = './build/autoconf/config.guess';
     $Logfile = '${BuildDir}.log';
-    $NSPRArgs = 'DIST=' . $NSPRDir . ' MOZILLA_CLIENT=1 NSDISTMODE=copy NO_MDUPDATE=1 ';
     $Compiler = 'gcc';
     $ShellOverride = ''; # Only used if the default shell is too stupid
 }
 
 sub ConditionalArgs {
-    if ( $BuildClassic ) {
-	$FE = 'x';
-	$ConfigureArgs .= "--enable-fe=$FE ";
-	$BuildModule = 'Raptor';
-	$BuildTag = ''
-	    if ( $BuildTag eq '' );
-	$TopLevel = "mozilla-classic";
-    } else {
-	$FE = 'apprunner'; 
-	$BuildModule = 'SeaMonkeyAll';
-    }
-    $CVSCO .= " -r $BuildTag" if ( $BuildTag ne '' );
+  $FE = 'apprunner'; 
+  $BuildModule = 'SeaMonkeyAll';
+  $CVSCO .= " -r $BuildTag" if ( $BuildTag ne '' );
 }
 
 sub SetupEnv {
@@ -86,6 +70,7 @@ sub SetupEnv {
     $ENV{"CVSROOT"} = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot';
     $ENV{"LD_LIBRARY_PATH"} = $NSPRDir . '/lib:' . $BaseDir . '/' . $DirName . '/mozilla/' . $ObjDir . 'dist/bin:/usr/lib/png:/usr/local/lib:' . $BaseDir . '/' . $DirName . '/mozilla/dist/bin';
     $ENV{"DISPLAY"} = $DisplayServer;
+    $ENV{"MOZCONFIG"} = $BaseDir . '/' . $ConfigFileName;
 }
 
 sub SetupPath {
@@ -257,18 +242,69 @@ sub GetSystemInfo {
     }
     $DirName = $OS . '_' . $OSVer . '_' . ($BuildDepend?'depend':'clobber');
 
-    # if we're building with client.mk, let us eschew the objdir altogether
-    if ( $BuildAuto ) {
-      $ObjDir = '';
-    } else {
-      $ObjDir .= $ObjDir . '/';
+    #
+    # Make the build names reflect architecture/OS
+    #
+
+    if ( $OS eq 'AIX' ) {
+      # Assumes 4.2.1 for now.
     }
 
-    if ( $BuildClassic ) {
-        $logfile = "${DirName}-classic.log";
-    } else {
-	$logfile = "${DirName}.log";
+    if ( $OS eq 'BSD_OS' ) {
+      $BuildName = $host . ' BSD/OS ' . $OSVer . ' ' . ($BuildDepend?'Depend':'Clobber');
     }
+
+    if ( $OS eq 'FreeBSD' ) {
+      $BuildName = $host . ' ' . $OS . '/' . $CPU . ' ' . $OSVer . ' ' . ($BuildDepend?'Depend':'Clobber');
+    }
+
+    if ( $OS eq 'HP-UX' ) {
+    }
+
+    if ( $OS eq 'IRIX' ) {
+    }
+    
+    if ( $OS eq 'Linux' ) {
+      if ( $CPU eq 'alpha' || $CPU eq 'sparc' ) {
+	  $BuildName = $host . ' ' . $OS . '/' . $CPU . ' ' . $OSVer . ' ' . ($BuildDepend?'Depend':'Clobber');
+	  } elsif ( $CPU eq 'armv4l' || $CPU eq 'sa110' ) {
+	  $BuildName = $host . ' ' . $OS . '/arm ' . $OSVer . ' ' . ($BuildDepend?'Depend':'Clobber');
+	  } elsif ( $CPU eq 'ppc' ) {
+	  $BuildName = $host . ' ' . $OS . '/' . $CPU . ' ' . $OSVer . ' ' . ($BuildDepend?'Depend':'Clobber');
+	  } else {
+	  $BuildName = $host . ' ' . $OS . '/i386 ' . $OSVer . ' ' . ($BuildDepend?'Depend':'Clobber');
+	    # What's the right way to test for this?
+	    if ( $host eq 'truth' ) {
+	      $ObjDir .= 'libc1';
+	      }
+	  }
+      }
+    
+    if ( $OS eq 'NetBSD' ) {
+      $BuildName = $host . ' ' . $OS . '/' . $CPU . ' ' . $OSVer . ' ' . ($BuildDepend?'Depend':'Clobber');
+      }
+    
+    if ( $OS eq 'OSF1' ) {
+      # Assumes 4.0D for now.
+    }
+
+    if ( $OS eq 'QNX' ) {
+    }
+    
+    if ( $OS eq 'SunOS' ) {
+      if ( $CPU eq 'i86pc' ) {
+	  $BuildName = $host . ' ' . $OS . '/i386 ' . $OSVer . ' ' . ($BuildDepend?'Depend':'Clobber');
+	  } else {
+	  $OSVerMajor = substr($OSVer, 0, 1);
+	    if ( $OSVerMajor eq '4' ) {
+	    } else {
+	      $BuildName = $host . ' ' . $OS . '/sparc ' . $OSVer . ' ' . ($BuildDepend?'Depend':'Clobber');
+	      }
+	  }
+      }
+    
+    $logfile = "${DirName}.log";
+    
 }
 
 sub BuildIt {
@@ -340,170 +376,48 @@ sub BuildIt {
 	mkdir($TopLevel, 0777);
 	chdir($TopLevel) || die "chdir($TopLevel): $!\n";
 
-	if ( $BuildClassic ) {
-	    print"$CVS $CVSCO $BuildModule\n";
-	    print LOG "$CVS $CVSCO $BuildModule\n";
-	    open (PULL, "$CVS $CVSCO $BuildModule 2>&1 |") || die "open: $!\n";
-	} else {
-	    print "$CVS $CVSCO mozilla/client.mk\n";
-	    print LOG "$CVS $CVSCO mozilla/client.mk\n";
-	    open (PULL, "$CVS $CVSCO mozilla/client.mk 2>&1 |") || die "open: $!\n";
-	}
+	print "$CVS $CVSCO mozilla/client.mk\n";
+	print LOG "$CVS $CVSCO mozilla/client.mk\n";
+	open (PULL, "$CVS $CVSCO mozilla/client.mk 2>&1 |") || die "open: $!\n";
 	while (<PULL>) {
-	    print $_;
-	    print LOG $_;
+	  print $_;
+	  print LOG $_;
 	}
 	close(PULL);
 
-	# Do a separate checkout with toplevel makefile
-	if ( $BuildClassic == 0 ) {
-	    print LOG "$Make -f mozilla/client.mk checkout CVSCO=\"$CVS $CVSCO\"|\n";
-	    open (PULLALL, "$Make -f mozilla/client.mk checkout CVSCO=\"$CVS $CVSCO\" |\n");
-	    while (<PULLALL>) {
-		print LOG $_;
-		print $_;
-	    }
-	    close(PULLALL);
-	}
-
 	chdir($Topsrcdir) || die "chdir($Topsrcdir): $!\n";
 
-	# beginning of a long block of manual steps that client.mk
-	# handles (minus objdir creation, which is for loser unix weenies
-	if ( $BuildAuto == 0 ) {
-	  print LOG "Build nspr\n";
-	  open (BUILDNSPR, "gmake -C nsprpub $NSPRArgs export 2>&1 | ") || die "Build nspr: $!\n";
-	  while (<BUILDNSPR>) {
-	    print LOG $_;
-	    print $_;
-	  }
-	  
-	  print LOG "$ConfigGuess\n";
-	  $BuildObjName = "obj-";
-	  open (GETOBJ, "$ConfigGuess 2>&1 |") || die "$ConfigGuess: $!\n";
-	  while (<GETOBJ>) {
-	    print $_;
-	    print LOG $_;
-	    chomp($BuildObjName .= $_); 
-	  }
-	  close (GETOBJ); 
-
-	  mkdir($BuildObjName, 0777);
-	  chdir($BuildObjName) || die "chdir($BuildObjName): $!\n";
-	  
-	  print LOG "$ConfigureEnvArgs ../configure $ConfigureArgs\n";
-	  open (CONFIGURE, "$ConfigureEnvArgs $ShellOverride ../configure $ConfigureArgs 2>&1 |") || die "../configure: $!\n";
-	  while (<CONFIGURE>) {
-	    print $_;
-	    print LOG $_;
-	  }
-	  close(CONFIGURE);
-	  
-	  
-	  print "--- config.cache.\n";
-	  print LOG "--- config.cache.\n";
-	  open (CONFIGURE, "config.cache");
-	  while (<CONFIGURE>) {
-	    print $_;
-	    print LOG $_;
-	  }
-	  close(CONFIGURE);
-	  print "--- config.cache.\n";
-	  print LOG "--- config.cache.\n";
-	} # end long block of manual labor
-
-	# If we are building depend, rebuild dependencies
-	if ( $BuildDepend ) {
-	  if ( $BuildAuto == 0 ) {
-	    print LOG "$Make MAKE='$Make $jflag' depend 2>&1 |\n";
-	    open ( MAKEDEPEND, "$Make MAKE='$Make $jflag' depend 2>&1 |");
-	    while ( <MAKEDEPEND> ) {
-	      print $_;
-	      print LOG $_;
-	    }
-	    close (MAKEDEPEND);
-	  } else {
-	 #   print LOG "$Make -f client.mk depend 2>&1 |\n";
-	 #   open ( MAKEDEPEND, "$Make -f client.mk depend 2>&1 |");
-	 #   while ( <MAKEDEPEND> ) {
-	 #     print $_;
-	 #     print LOG $_;
-	 #   }
-	 #   close (MAKEDEPEND);
-	    # I'm not sure how client.mk should handle depend builds.
-	  }
-	  system("rm -rf dist");
-	} else {
-	    # Building clobber
-	  if ( $BuildAuto == 0 ) {
-	    print LOG "$Make MAKE='$Make $jflag' $ClobberStr 2>&1 |\n";
-	    open( MAKECLOBBER, "$Make MAKE='$Make $jflag' $ClobberStr 2>&1 |");	    
-	    while ( <MAKECLOBBER> ) {
-	      print $_;
-	      print LOG $_;
-	    }
-	    close( MAKECLOBBER );
-	  } else {
-	    print LOG "$Make -f client.mk $ClobberStr 2>&1 |\n";
-	    open( MAKECLOBBER, "$Make -f client.mk $$ClobberStr 2>&1 |");
-	    while ( <MAKECLOBBER> ) {
-	      print $_;
-	      print LOG $_;
-	    }
-	    close( MAKECLOBBER );
-	  }
-        }
-
+	# Let us delete the binaries before rebuilding
 	@felist = split(/,/, $FE);
-
+	
 	foreach $fe ( @felist ) {	    
 	    if ( &BinaryExists($fe) ) {
 		print LOG "deleting existing binary\n";
 		&DeleteBinary($fe);
 	    }
 	}
+	system("rm -rf dist"); # it's the only way to be sure
 
-	if ( $BuildClassic ) {
-	    # Build the BE only	    
-	    print LOG "$Make MAKE='$Make $jflag' MOZ_FE= 2>&1 |\n";
-	    open( BEBUILD, "$Make MAKE='$Make $jflag' MOZ_FE= 2>&1 |");
-
-	    while ( <BEBUILD> ) {
-		print $_;
-		print LOG $_;
-	    }
-	    close( BEBUILD );
-
-	    foreach $fe ( @felist ) {		   
-		# Now build each front end
-		print LOG "$Make MAKE='$Make $jflag' -C cmd/${fe}fe 2>&1 |\n";
-		open(FEBUILD, "$Make MAKE='$Make $jflag' -C cmd/${fe}fe 2>&1 |\n");
-		while (<FEBUILD>) {
-		    print $_;
-		    print LOG $_;
-		}
-		close(FEBUILD);
-	    }
-	} else {
-	  if ( $BuildAuto == 0 ) {
-	    print LOG "$Make MAKE='$Make $jflag' $MakeOverrides 2>&1 |\n";
-	    open(BUILD, "$Make MAKE='$Make $jflag' $MakeOverrides 2>&1 |");
-	    while (<BUILD>) {
-	      print $_;
-	      print LOG $_;
-	    }
-	    close(BUILD);
-	  } else {
-	    print LOG "$Make -f client.mk build 2>&1 |\n";
-	    open(BUILD, "$Make -f client.mk build 2>&1 |");
-	    while (<BUILD>) {
-	      print $_;
-	      print LOG $_;
-	    }
-	    close(BUILD);
+	# If we are building depend, don't clobber.
+	if ( $BuildDepend ) {
+	  print LOG "$Make -f client.mk checkout depend build 2>&1 |\n";
+	  open (MAKEDEPEND, "$Make -f client.mk checkout depend build 2>&1 |");
+	  while ( <MAKEDEPEND> ) {
+	    print $_;
+	    print LOG $_;
 	  }
+	  close (MAKEDEPEND);
+	} else {
+	  # Building clobber
+	  print LOG "$Make -f client.mk checkout clean build 2>&1 |\n";
+	  open(MAKECLOBBER, "$Make -f client.mk checkout clean build 2>&1 |");
+	  while ( <MAKECLOBBER> ) {
+	    print $_;
+	    print LOG $_;
+	  }
+	  close( MAKECLOBBER );
 	}
-
+	
 	foreach $fe (@felist) {
 	    if ( &BinaryExists($fe) ) {
 		if ( $RunTest ) {
@@ -621,38 +535,24 @@ sub BinaryExists {
   my($BinName);
   $fe = 'x' if ( !defined($fe) ); 
   
-  if ( $BuildClassic ) {
-    $BinName = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . '/'. $BuildObjName . "/cmd/${fe}fe/" . $BinaryName{"$fe"};
-  } else {
-    if ( $BuildAuto == 0 ) {
-      $BinName = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . '/' . $BuildObjName . $BinaryName{"$fe"};
-    } else {
-      $BinName = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . $BinaryName{"$fe"};
-    }
-    print LOG $BinName . "\n"; 
-    if ( (-e $BinName) && (-x $BinName) && (-s $BinName) ) {
-      1;
-    }
-    else {
-      0;
-    }
+  $BinName = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . $BinaryName{"$fe"};
+  
+  if ( (-e $BinName) && (-x $BinName) && (-s $BinName) ) {
+    print LOG $BinName . " exists, is nonzero, and executable. \n";  
+    1;
   }
+  else {
+    print LOG $BinName . " doesn't exist, is zero-size, or not executable. \n";
+    0;
+  } 
 }
 
 sub DeleteBinary {
     my($fe) = @_;
     my($BinName);
-    $fe = 'x' if ( !defined($fe) ); 
+    $fe = 'apprunner' if ( !defined($fe) ); 
     
-    if ( $BuildClassic ) {
-      $BinName = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . '/' . $BuildObjName . "/cmd/${fe}fe/" . $BinaryName{"$fe"};
-      } else {
-      if ( $BuildAuto == 0 ) {
-	$BinName = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . '/' . $BuildObjName . $BinaryName{"$fe"};
-      } else {
-	$BinName = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . $BinaryName{"$fe"};
-      }
-    }
+    $BinName = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . $BinaryName{"$fe"};
     print LOG "unlinking $BinName\n";
     unlink ($BinName) || print LOG "unlinking $BinName failed\n";
 }
@@ -666,10 +566,7 @@ sub ParseArgs {
     $i = 0;
     $manArg = 0;
     while( $i < @ARGV ) {
-	if ( $ARGV[$i] eq '--classic' ) {
-	    $BuildClassic = 1;
-	}
-	elsif ( $ARGV[$i] eq '--clobber' ) {
+	if ( $ARGV[$i] eq '--clobber' ) {
 	    $BuildDepend = 0;
 	    $manArg++;
 	}
@@ -680,14 +577,8 @@ sub ParseArgs {
 	    $BuildDepend = 1;
  	    $manArg++;
 	}
-	elsif ( $ARGV[$i] eq '--manual' ) {
-	    $BuildAuto = 1;
-	}
 	elsif ( $ARGV[$i] eq '--help' || $ARGV[$i] eq '-h' ) {
 	    &PrintUsage;
-	}
-	elsif ( $ARGV[$i] eq '--nodeps' ) {
-	    $ConfigureArgs .= '--enable-md=no ';
 	}
 	elsif ( $ARGV[$i] eq '--noreport' ) {
 	    $ReportStatus = 0;
@@ -715,6 +606,13 @@ sub ParseArgs {
 		&PrintUsage;
 	    }
 	}
+	elsif ( $ARGV[$i] eq '--configfile' ) {
+	  $i++;
+	  $ConfigFileName = $ARGV[$i];
+	  if ( $ConfigFileName eq '' ) {
+	    &PrintUsage;
+	  }
+	}
 	elsif ( $ARGV[$i] eq '--version' || $ARGV[$i] eq '-v' ) {
 	    die "$0: version" . substr($Version,9,6) . "\n";
 	} else {
@@ -735,7 +633,7 @@ sub ParseArgs {
 }
 
 sub PrintUsage {
-    die "usage: $0 --depend | --clobber [ --once --manual --classic --compress --noreport --notest --timestamp -tag TREETAG -t TREENAME --version ]\n";
+    die "usage: $0 --depend | --clobber [ --once --manual --classic --compress --noreport --notest --timestamp -tag TREETAG -t TREENAME --configfile CONFIGFILENAME --version ]\n";
 }
 
 sub PrintEnv {
@@ -754,29 +652,28 @@ sub RunSmokeTest {
     my($pid) = fork;
     $fe = 'x' if ( !defined($fe) );
 
-    if ( $BuildAuto == 0 ) {
-      $ENV{"LD_LIBRARY_PATH"} = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . '/' . $BuildObjName . '/dist/bin';
-      $ENV{"MOZILLA_FIVE_HOME"} = $ENV{"LD_LIBRARY_PATH"};
-      $Binary = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . '/' . $BuildObjName . $BinaryName{"$fe"};
-    } else {
-      $ENV{"LD_LIBRARY_PATH"} = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . '/dist/bin';
-      $ENV{"MOZILLA_FIVE_HOME"} = $ENV{"LD_LIBRARY_PATH"};
-      $Binary = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . $BinaryName{"$fe"};
-    }
+    $ENV{"LD_LIBRARY_PATH"} = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . '/dist/bin';
+    $ENV{"MOZILLA_FIVE_HOME"} = $ENV{"LD_LIBRARY_PATH"};
+    $Binary = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . $BinaryName{"$fe"};
+    
     print LOG $Binary . "\n";
+    $BinaryDir = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . '/dist/bin';
+    $Binary = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . '/dist/bin/apprunner';
+    $BinaryLog = $BuildDir . '/runlog';
 
     if ( !$pid ) { # child
-      $BinaryDir = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . '/dist/bin';
-      $Binary = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . '/dist/bin/mozilla-apprunner.sh';
-      open(RUNLOG, ">runlog");
-      print RUNLOG "$Binary 2>&1 |\n";
-      open(BINARY, "$Binary 2>&1 |");
-      while (<BINARY>) {
-	print $_;
-	print RUNLOG $_;
-      }
-      close(BINARY);
-      close(RUNLOG);
+
+      chdir("$BinaryDir");
+      unlink("$BinaryLog");
+      open(STDOUT,">$BinaryLog");
+      select STDOUT; $| = 1; # make STDOUT unbuffered
+      open(STDERR,">&STDOUT");
+      select STDERR; $| = 1; # make STDERR unbuffered
+      exec("$Binary");
+      close(STDOUT);
+      close(STDERR);
+      die "Couldn't exec()";
+
     }
     
     # parent - wait $waittime seconds then check on child
@@ -784,32 +681,34 @@ sub RunSmokeTest {
     $status = waitpid($pid, WNOHANG());
     if ( $status != 0 ) {
 	print LOG "$Binary has crashed or quit.  Turn the tree orange now.\n";
-	print LOG "Output: \n";
-	open(READRUNLOG, "runlog");
+	print LOG "----------- Output from apprunner --------------- \n";
+	open(READRUNLOG, "$BinaryLog");
 	while (<READRUNLOG>) {
 	  print $_;
 	  print LOG $_;
 	}
 	close(READRUNLOG);
+	print LOG "--------------- End of Output -------------------- \n";
 	return 333;
     }
 
-    print LOG "Success! $Binary is still running.  Killing...\n";
+    print LOG "Success! $Binary is still running.  Killing it, and its children,and its dog...\n";
     # try to kill 3 times, then try a kill -9
     for ($i=0 ; $i<3 ; $i++) {
-	kill('TERM',$pid,);
-	# give it 3 seconds to actually die
+	kill('TERM',$pid);
+      	# give it 3 seconds to actually die
 	sleep 3;
 	$status = waitpid($pid, WNOHANG());
 	last if ( $status != 0 );
     }
-    print LOG "Output: \n";
-    open(READRUNLOG, "runlog");
+    print LOG "----------- Output from apprunner --------------- \n";
+    open(READRUNLOG, "$BinaryLog");
     while (<READRUNLOG>) {
       print $_;
       print LOG $_;
     }
     close(READRUNLOG);
+    print LOG "--------------- End of Output -------------------- \n";
     return 0;
 }
 
