@@ -166,8 +166,11 @@ nsresult nsCalFactory::CreateInstance(nsISupports *aOuter,
   nsISupports *inst = nsnull;
 
   if (mClassID.Equals(kCCalTimeContext)) {
+    inst = (nsISupports *)(nsICalTimeContext *)new nsCalTimeContext();
+#if 0
     nsICalTimeContext * cc = (nsICalTimeContext *)new nsCalTimeContext();
     cc->QueryInterface(kISupportsIID,(void **)&inst);
+#endif
   }
   else if (mClassID.Equals(kCCalComponent)) {
     inst = (nsISupports *)new nsCalComponent();
@@ -185,72 +188,55 @@ nsresult nsCalFactory::CreateInstance(nsISupports *aOuter,
     inst = (nsISupports *)new nsCalNewModelCommand();
   }
   else if (mClassID.Equals(kCCalContextController)) {
-    nsXPFCCanvas * canvas = (nsXPFCCanvas *)new nsCalContextController(aOuter);
-    canvas->QueryInterface(kISupportsIID,(void **)&inst);
+    inst = (nsISupports *)(nsIXPFCCanvas *)new nsCalContextController(aOuter);
   }
   else if (mClassID.Equals(kCCalTimebarContextController)) {
-    nsXPFCCanvas * canvas = (nsXPFCCanvas *)new nsCalTimebarContextController(aOuter);
-    canvas->QueryInterface(kISupportsIID,(void **)&inst);
+    inst = (nsISupports *)(nsIXPFCCanvas *)new nsCalTimebarContextController(aOuter);
   }
   else if (mClassID.Equals(kCCalMonthContextController)) {
-    nsXPFCCanvas * canvas = (nsXPFCCanvas *)new nsCalMonthContextController(aOuter);
-    canvas->QueryInterface(kISupportsIID,(void **)&inst);
+    inst = (nsISupports *)(nsIXPFCCanvas *)new nsCalMonthContextController(aOuter);
   }
   else if (mClassID.Equals(kCCalTimebarCanvas)) {
-    nsXPFCCanvas * canvas = (nsXPFCCanvas *)new nsCalTimebarCanvas(aOuter);
-    canvas->QueryInterface(kISupportsIID,(void **)&inst);
+    inst = (nsISupports *)(nsIXPFCCanvas *)new nsCalTimebarCanvas(aOuter);
   }
   else if (mClassID.Equals(kCCalCanvas)) {
-    nsXPFCCanvas * canvas = (nsXPFCCanvas *)new nsCalCanvas(aOuter);
-    canvas->QueryInterface(kISupportsIID,(void **)&inst);
+    inst = (nsISupports *)(nsIXPFCCanvas *)new nsCalCanvas(aOuter);
   }
   else if (mClassID.Equals(kCCalStatusCanvas)) {
-    nsXPFCCanvas * canvas = (nsXPFCCanvas *)new nsCalStatusCanvas(aOuter);
-    canvas->QueryInterface(kISupportsIID,(void **)&inst);
+    inst = (nsISupports *)(nsIXPFCCanvas *)new nsCalStatusCanvas(aOuter);
   }
   else if (mClassID.Equals(kCCalCommandCanvas)) {
-    nsXPFCCanvas * canvas = (nsXPFCCanvas *)new nsCalCommandCanvas(aOuter);
-    canvas->QueryInterface(kISupportsIID,(void **)&inst);
+    inst = (nsISupports *)(nsIXPFCCanvas *)new nsCalCommandCanvas(aOuter);
   }
   else if (mClassID.Equals(kCCalTimebarComponentCanvas)) {
-    nsXPFCCanvas * canvas = (nsXPFCCanvas *)new nsCalTimebarComponentCanvas(aOuter);
-    canvas->QueryInterface(kISupportsIID,(void **)&inst);
+    inst = (nsISupports *)(nsIXPFCCanvas *)new nsCalTimebarComponentCanvas(aOuter);
   }
   else if (mClassID.Equals(kCCalTodoComponentCanvas)) {
-    nsXPFCCanvas * canvas = (nsXPFCCanvas *)new nsCalTodoComponentCanvas(aOuter);
-    canvas->QueryInterface(kISupportsIID,(void **)&inst);
+    inst = (nsISupports *)(nsIXPFCCanvas *)new nsCalTodoComponentCanvas(aOuter);
   }
   else if (mClassID.Equals(kCCalTimebarHeading)) {
-    nsXPFCCanvas * canvas = (nsXPFCCanvas *)new nsCalTimebarHeading(aOuter);
-    canvas->QueryInterface(kISupportsIID,(void **)&inst);
+    inst = (nsISupports *)(nsIXPFCCanvas *)new nsCalTimebarHeading(aOuter);
   }
   else if (mClassID.Equals(kCCalTimebarUserHeading)) {
-    nsXPFCCanvas * canvas = (nsXPFCCanvas *)new nsCalTimebarUserHeading(aOuter);
-    canvas->QueryInterface(kISupportsIID,(void **)&inst);
+    inst = (nsISupports *)(nsIXPFCCanvas *)new nsCalTimebarUserHeading(aOuter);
   }
   else if (mClassID.Equals(kCCalTimebarTimeHeading)) {
-    nsXPFCCanvas * canvas = (nsXPFCCanvas *)new nsCalTimebarTimeHeading(aOuter);
-    canvas->QueryInterface(kISupportsIID,(void **)&inst);
+    inst = (nsISupports *)(nsIXPFCCanvas *)new nsCalTimebarTimeHeading(aOuter);
   }
   else if (mClassID.Equals(kCCalTimebarScale)) {
-    nsXPFCCanvas * canvas = (nsXPFCCanvas *)new nsCalTimebarScale(aOuter);
-    canvas->QueryInterface(kISupportsIID,(void **)&inst);
+    inst = (nsISupports *)(nsIXPFCCanvas *)new nsCalTimebarScale(aOuter);
   }
   else if (mClassID.Equals(kCCalMultiDayViewCanvas)) {
-    nsXPFCCanvas * canvas = (nsXPFCCanvas *)new nsCalMultiDayViewCanvas(aOuter);
-    canvas->QueryInterface(kISupportsIID,(void **)&inst);
+    inst = (nsISupports *)(nsIXPFCCanvas *)new nsCalMultiDayViewCanvas(aOuter);
   }
   else if (mClassID.Equals(kCCalMultiUserViewCanvas)) {
-    nsXPFCCanvas * canvas = (nsXPFCCanvas *)new nsCalMultiUserViewCanvas(aOuter);
-    canvas->QueryInterface(kISupportsIID,(void **)&inst);
+    inst = (nsISupports *)(nsIXPFCCanvas *)new nsCalMultiUserViewCanvas(aOuter);
   }
   else if (mClassID.Equals(kCCalDayViewCanvas)) {
-    nsXPFCCanvas * canvas = (nsXPFCCanvas *)new nsCalDayViewCanvas(aOuter);
-    canvas->QueryInterface(kISupportsIID,(void **)&inst);
+    inst = (nsISupports *)(nsIXPFCCanvas *)new nsCalDayViewCanvas(aOuter);
   }
   else if (mClassID.Equals(kCCalMonthViewCanvas)) {
-    nsXPFCCanvas * canvas = (nsXPFCCanvas *)new nsCalMonthViewCanvas(aOuter);
-    canvas->QueryInterface(kISupportsIID,(void **)&inst);
+    inst = (nsISupports *)(nsIXPFCCanvas *)new nsCalMonthViewCanvas(aOuter);
   }
   else if (mClassID.Equals(kCCalToolkit)) {
     inst = (nsISupports *)(nsICalToolkit *)new nsCalToolkit();

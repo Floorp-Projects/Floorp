@@ -30,8 +30,12 @@
 #include "nsxpfcCIID.h"
 #include "nsIXPFCObserverManager.h"
 #include "nsIServiceManager.h"
+#include "nsIXPFCObserver.h"
+#include "nsIXPFCSubject.h"
 
 
+static NS_DEFINE_IID(kCXPFCSubjectIID,          NS_IXPFC_SUBJECT_IID);
+static NS_DEFINE_IID(kCXPFCObserverIID,         NS_IXPFC_OBSERVER_IID);
 static NS_DEFINE_IID(kXPFCSubjectIID, NS_IXPFC_SUBJECT_IID);
 static NS_DEFINE_IID(kXPFCCommandIID, NS_IXPFC_COMMAND_IID);
 static NS_DEFINE_IID(kXPFCCommandCID, NS_XPFC_COMMAND_CID);
@@ -70,8 +74,11 @@ nsCalTimeContext :: ~nsCalTimeContext()
 
   nsIXPFCObserverManager* om;
   nsServiceManager::GetService(kCXPFCObserverManagerCID, kIXPFCObserverManagerIID, (nsISupports**)&om);
+  nsIXPFCObserver * observer = (nsIXPFCObserver *) this;
+  nsIXPFCSubject * subject = (nsIXPFCSubject *) this;
 
-  om->Unregister((nsISupports*)(nsICalTimeContext*)this);
+  om->UnregisterSubject(subject);
+  om->UnregisterObserver(observer);
 
   nsServiceManager::ReleaseService(kCXPFCObserverManagerCID, om);
 

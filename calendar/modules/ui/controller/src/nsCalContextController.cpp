@@ -26,6 +26,8 @@
 #include "nsxpfcCIID.h"
 #include "nsIXPFCObserverManager.h"
 #include "nsIServiceManager.h"
+#include "nsIXPFCObserver.h"
+#include "nsIXPFCSubject.h"
 
 static NS_DEFINE_IID(kISupportsIID,  NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kCalContextControllerIID, NS_ICAL_CONTEXT_CONTROLLER_IID);
@@ -34,6 +36,8 @@ static NS_DEFINE_IID(kXPFCCommandIID, NS_IXPFC_COMMAND_IID);
 static NS_DEFINE_IID(kXPFCCommandCID, NS_XPFC_COMMAND_CID);
 static NS_DEFINE_IID(kCXPFCObserverManagerCID, NS_XPFC_OBSERVERMANAGER_CID);
 static NS_DEFINE_IID(kIXPFCObserverManagerIID, NS_IXPFC_OBSERVERMANAGER_IID);
+static NS_DEFINE_IID(kCXPFCObserverIID,         NS_IXPFC_OBSERVER_IID);
+static NS_DEFINE_IID(kCXPFCSubjectIID,          NS_IXPFC_SUBJECT_IID);
 
 #define kNotFound -1
 
@@ -48,6 +52,12 @@ nsCalContextController :: nsCalContextController(nsISupports * aOuter) : nsXPFCC
 
 nsCalContextController :: ~nsCalContextController()
 {
+  nsIXPFCObserverManager* om;
+  nsServiceManager::GetService(kCXPFCObserverManagerCID, kIXPFCObserverManagerIID, (nsISupports**)&om);
+  nsIXPFCSubject * subject = (nsIXPFCSubject *)this;
+  om->UnregisterSubject(subject);
+  nsServiceManager::ReleaseService(kCXPFCObserverManagerCID, om);
+
   NS_IF_RELEASE(mDuration);
 }
 

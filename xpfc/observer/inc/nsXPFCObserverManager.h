@@ -43,6 +43,8 @@ public:
   NS_IMETHOD Unregister(nsIXPFCSubject * aSubject, nsIXPFCObserver * aObserver);
   NS_IMETHOD Notify(nsIXPFCSubject * aSubject, nsIXPFCCommand * aCommand);
   NS_IMETHOD RegisterForCommandState(nsIXPFCObserver * aObserver, nsCommandState aCommandState);
+  NS_IMETHOD UnregisterSubject(nsIXPFCSubject * aSubject);
+  NS_IMETHOD UnregisterObserver(nsIXPFCObserver * aObserver);
 
 private:
   NS_METHOD CheckForCommandStateNotification(nsIXPFCObserver * aObserver);

@@ -149,7 +149,29 @@ nsCalXMLContentSink::nsCalXMLContentSink() : nsIHTMLContentSink()
 
 nsCalXMLContentSink::~nsCalXMLContentSink() 
 {
-  NS_RELEASE(mOrphanCanvasList);
+
+  if (mOrphanCanvasList != nsnull) {
+
+	  nsIIterator * iterator;
+
+	  mOrphanCanvasList->CreateIterator(&iterator);
+	  iterator->Init();
+
+    nsIXPFCCanvas * item;
+
+	  while(!(iterator->IsDone()))
+	  {
+		  item = (nsIXPFCCanvas *) iterator->CurrentItem();
+		  NS_RELEASE(item);
+		  iterator->Next();
+	  }
+	  NS_RELEASE(iterator);
+
+    mOrphanCanvasList->RemoveAll();
+    NS_RELEASE(mOrphanCanvasList);
+  }
+
+
   NS_RELEASE(mTimeContextList);
   NS_RELEASE(mCanvasStack);
 
@@ -351,6 +373,7 @@ NS_IMETHODIMP nsCalXMLContentSink::AddToHierarchy(nsIXMLParserObject& aObject, P
   if (parent == nsnull) {
 
     mOrphanCanvasList->Append(canvas);
+    NS_ADDREF(canvas);
 
   } else {
    
@@ -360,6 +383,8 @@ NS_IMETHODIMP nsCalXMLContentSink::AddToHierarchy(nsIXMLParserObject& aObject, P
 
   if (aPush == PR_TRUE)
     mCanvasStack->Push(canvas);
+
+  NS_RELEASE(canvas);
 
   return res;
 }
@@ -481,6 +506,8 @@ NS_IMETHODIMP nsCalXMLContentSink::AddLeaf(const nsIParserNode& aNode)
   object->Init();        
 
   ConsumeAttributes(aNode,*object);
+
+  NS_RELEASE(object);
 
   return NS_OK;
 }
@@ -646,34 +673,32 @@ NS_IMETHODIMP nsCalXMLContentSink::AddControl(const nsIParserNode& aNode)
 
   child->Reparent(parent);
 
-  mOrphanCanvasList->Remove(child);
-
   /*
    * Pass certain attributes to the parent canvas (layout, weightminor, weighmajor, etc...)
    */
   nsresult res = child->QueryInterface(kIXMLParserObjectIID,(void**)&object);
 
-  if (NS_OK != res)
-    return res;
-
-  for (i = 0; i < aNode.GetAttributeCount(); i++) 
+  if (NS_OK == res)
   {
+    for (i = 0; i < aNode.GetAttributeCount(); i++) 
+    {
 
-    key   = aNode.GetKeyAt(i);
-    value = aNode.GetValueAt(i);
+      key   = aNode.GetKeyAt(i);
+      value = aNode.GetValueAt(i);
 
-    key.StripChars("\"");
-    value.StripChars("\"");
+      key.StripChars("\"");
+      value.StripChars("\"");
 
-    if (key.EqualsIgnoreCase(CAL_STRING_LAYOUT) || key.EqualsIgnoreCase(CAL_STRING_WEIGHTMAJOR) || key.EqualsIgnoreCase(CAL_STRING_WEIGHTMINOR))
-      object->SetParameter(key,value);
+      if (key.EqualsIgnoreCase(CAL_STRING_LAYOUT) || key.EqualsIgnoreCase(CAL_STRING_WEIGHTMAJOR) || key.EqualsIgnoreCase(CAL_STRING_WEIGHTMINOR))
+        object->SetParameter(key,value);
+    }
+
+    NS_RELEASE(object);
   }
 
-
-
-  NS_RELEASE(object);
-
-  return NS_OK;
+  mOrphanCanvasList->Remove(child);
+  NS_RELEASE(child);
+  return res;
 }
 
 NS_IMETHODIMP nsCalXMLContentSink::PushMark()

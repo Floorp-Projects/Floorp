@@ -20,9 +20,17 @@
 #include "nsCalUICIID.h"
 #include "nsXPFCModelUpdateCommand.h"
 #include "nsXPFCToolkit.h"
+#include "nsIXPFCObserverManager.h"
+#include "nsIServiceManager.h"
+#include "nsIXPFCObserver.h"
+#include "nsIXPFCSubject.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kCalCanvasCID, NS_CAL_CANVAS_CID);
+static NS_DEFINE_IID(kCXPFCObserverManagerCID, NS_XPFC_OBSERVERMANAGER_CID);
+static NS_DEFINE_IID(kIXPFCObserverManagerIID, NS_IXPFC_OBSERVERMANAGER_IID);
+static NS_DEFINE_IID(kCXPFCObserverIID,         NS_IXPFC_OBSERVER_IID);
+static NS_DEFINE_IID(kCXPFCSubjectIID,          NS_IXPFC_SUBJECT_IID);
 
 nsCalCanvas :: nsCalCanvas(nsISupports* outer) : nsXPFCCanvas(outer)
 {
@@ -32,6 +40,15 @@ nsCalCanvas :: nsCalCanvas(nsISupports* outer) : nsXPFCCanvas(outer)
 
 nsCalCanvas :: ~nsCalCanvas()
 {
+  nsIXPFCObserverManager* om;
+  nsServiceManager::GetService(kCXPFCObserverManagerCID, kIXPFCObserverManagerIID, (nsISupports**)&om);
+
+  nsIXPFCObserver * observer = (nsIXPFCObserver *) this;
+
+  om->UnregisterObserver(observer);
+
+  nsServiceManager::ReleaseService(kCXPFCObserverManagerCID, om);
+
   NS_IF_RELEASE(mUser);
 }
 

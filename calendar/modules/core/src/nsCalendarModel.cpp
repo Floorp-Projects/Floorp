@@ -30,7 +30,10 @@
 #include "nsXPFCNotificationStateCommand.h"
 #include "nsCalFetchEventsCommand.h"
 #include "nsXPFCModelUpdateCommand.h"
+#include "nsIXPFCObserver.h"
+#include "nsIXPFCSubject.h"
 
+static NS_DEFINE_IID(kCXPFCSubjectIID,          NS_IXPFC_SUBJECT_IID);
 static NS_DEFINE_IID(kICalendarModelIID, NS_ICALENDAR_MODEL_IID);
 static NS_DEFINE_IID(kIModelIID,         NS_IMODEL_IID);
 static NS_DEFINE_IID(kISupportsIID,      NS_ISUPPORTS_IID);
@@ -41,6 +44,7 @@ static NS_DEFINE_IID(kCXPFCObserverManagerCID, NS_XPFC_OBSERVERMANAGER_CID);
 static NS_DEFINE_IID(kIXPFCObserverManagerIID, NS_IXPFC_OBSERVERMANAGER_IID);
 static NS_DEFINE_IID(kXPFCObserverIID, NS_IXPFC_OBSERVER_IID);
 static NS_DEFINE_IID(kXPFCCommandReceiverIID, NS_IXPFC_COMMANDRECEIVER_IID);
+static NS_DEFINE_IID(kCXPFCObserverIID,         NS_IXPFC_OBSERVER_IID);
 
 nsCalendarModel::nsCalendarModel(nsISupports* outer)
 {
@@ -97,16 +101,14 @@ NS_IMPL_RELEASE(nsCalendarModel)
 
 nsCalendarModel::~nsCalendarModel()
 {
-// XXX
-#if 0
   nsIXPFCObserverManager* om;
-
   nsServiceManager::GetService(kCXPFCObserverManagerCID, kIXPFCObserverManagerIID, (nsISupports**)&om);
-
-  nsresult res = om->Unregister((nsISupports *)(void*)this);
-
+  nsIXPFCObserver * observer = (nsIXPFCObserver *) this;
+  nsIXPFCSubject * subject = (nsIXPFCSubject *) this;
+  om->UnregisterSubject(subject);
+  om->UnregisterObserver(observer);
   nsServiceManager::ReleaseService(kCXPFCObserverManagerCID, om);
-#endif
+
   mCalendarUser = nsnull; // Do Not Release
 }
 
@@ -313,6 +315,8 @@ nsresult nsCalendarModel :: Notify(nsIXPFCCommand * aCommand)
   res = om->Notify(subject,aCommand);
 
   nsServiceManager::ReleaseService(kCXPFCObserverManagerCID, om);
+
+  NS_RELEASE(subject);
 
   return(res);
 }
