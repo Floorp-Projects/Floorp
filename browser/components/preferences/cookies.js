@@ -82,7 +82,7 @@ var gCookiesWindow = {
   
   observe: function (aCookie, aTopic, aData) 
   {
-    if (aTopic != "cookie-changed" || !aSubject)
+    if (aTopic != "cookie-changed" || !aCookie)
       return;
     
     if (aCookie instanceof Components.interfaces.nsICookie) {
