@@ -467,7 +467,6 @@ input[type=reset][value]:-moz-buttonlabel {
 input {
   vertical-align: bottom;
   border: 2px inset rgb(204, 204, 204);
-  background-color: white;
   color: black;
 }
 input[type=hidden] {
