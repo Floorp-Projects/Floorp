@@ -1019,8 +1019,16 @@ nsHTMLReflowState::InitConstraints(nsIPresContext* aPresContext,
           }
         }
 #else
-        // A specified value of 'auto' becomes a computed width of 0
-        mComputedWidth = 0;
+        // A specified value of 'auto' becomes a computed width of 0. However,
+        // if it's an unconstrained reflow then a percentage value becomes
+        // unconstrained as well
+        if ((NS_UNCONSTRAINEDSIZE == aContainingBlockWidth) &&
+            (eStyleUnit_Percent == mStylePosition->mWidth.GetUnit())) {
+          mComputedWidth = NS_UNCONSTRAINEDSIZE;
+
+        } else {
+          mComputedWidth = 0;
+        }
 #endif
       } else {
         ComputeHorizontalValue(aContainingBlockWidth, widthUnit,
