@@ -78,6 +78,9 @@ public class OptionsPanel extends JPanel implements Serializable  {
 
         c.gridwidth = 1;
 
+
+        addCheck ("Signed", "Signed", 'd', false);
+
         c.gridwidth = GridBagConstraints.REMAINDER; //end row
 
         ident = new LabeledCombo("Identity");
@@ -94,8 +97,6 @@ public class OptionsPanel extends JPanel implements Serializable  {
         addToGridBag(new FixedSizedPanel (BOX_WIDTH, BOX_HEIGHT, ident), gridbag, c);
 
         c.gridwidth = GridBagConstraints.REMAINDER; //end row
-
-        addCheck ("Signed", "Signed", 'd', false);
 
     }
 
