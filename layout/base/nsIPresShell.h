@@ -207,6 +207,13 @@ public:
   NS_IMETHOD EndObservingDocument() = 0;
 
   /**
+   * Determine if InitialReflow() was previously called.
+   * @param aDidInitialReflow PR_TRUE if InitalReflow() was previously called,
+   * PR_FALSE otherwise.
+   */
+  NS_IMETHOD GetDidInitialReflow(PRBool *aDidInitialReflow) = 0;
+
+  /**
    * Perform the initial reflow. Constructs the frame for the root content
    * object and then reflows the frame model into the specified width and
    * height.
