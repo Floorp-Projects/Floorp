@@ -39,50 +39,5 @@ else
 PROG_SUFFIX =
 endif
 
-export::
-	$(INSTALL) $(DIST)/idl/nsISupports.idl ./idl
-	$(INSTALL) $(DIST)/idl/nsrootidl.idl ./idl
-
-	$(INSTALL) $(DIST)/include/plugin/npapi.h ./include
-	$(INSTALL) $(DIST)/include/plugin/npupp.h ./include
-
-	$(INSTALL) $(DIST)/include/java/jni.h ./include
-	$(INSTALL) $(DIST)/include/java/jni_md.h ./include
-	$(INSTALL) $(DIST)/include/java/jri.h ./include
-	$(INSTALL) $(DIST)/include/java/jri_md.h ./include
-	$(INSTALL) $(DIST)/include/java/jritypes.h ./include
-
-	$(INSTALL) $(DIST)/include/xpcom/nsCom.h ./include
-	$(INSTALL) $(DIST)/include/xpcom/nscore.h ./include
-	$(INSTALL) $(DIST)/include/xpcom/nsDebug.h ./include
-	$(INSTALL) $(DIST)/include/xpcom/nsError.h ./include
-	$(INSTALL) $(DIST)/include/xpcom/nsIClassInfo.h ./include
-	$(INSTALL) $(DIST)/include/xpcom/nsID.h ./include
-	$(INSTALL) $(DIST)/include/xpcom/nsIMemory.h ./include
-	$(INSTALL) $(DIST)/include/xpcom/nsIProgrammingLanguage.h ./include
-	$(INSTALL) $(DIST)/include/xpcom/nsIServiceManager.h ./include
-	$(INSTALL) $(DIST)/include/xpcom/nsISupports.h ./include
-	$(INSTALL) $(DIST)/include/xpcom/nsISupportsBase.h ./include
-	$(INSTALL) $(DIST)/include/xpcom/nsISupportsImpl.h ./include
-	$(INSTALL) $(DIST)/include/xpcom/nsISupportsUtils.h ./include
-	$(INSTALL) $(DIST)/include/xpcom/nsrootidl.h ./include
-	$(INSTALL) $(DIST)/include/xpcom/nsTraceRefcnt.h ./include
-
-	$(INSTALL) $(DIST)/include/nspr/pratom.h ./include
-	$(INSTALL) $(DIST)/include/nspr/prcpucfg.h ./include
-	$(INSTALL) $(DIST)/include/nspr/prlock.h ./include
-	$(INSTALL) $(DIST)/include/nspr/prlong.h ./include
-	$(INSTALL) $(DIST)/include/nspr/prtime.h ./include
-	$(INSTALL) $(DIST)/include/nspr/prtypes.h ./include
-ifeq ($(OS_ARCH),Mac OS)
-	$(INSTALL) $(DIST)/include/nspr/protypes.h ./include
-else
-	$(INSTALL) $(DIST)/include/nspr/obsolete/protypes.h ./include/obsolete
-endif
-
-	$(INSTALL) $(DIST)/bin/regxpcom$(PROG_SUFFIX) ./bin
-	$(INSTALL) $(DIST)/bin/xpidl$(PROG_SUFFIX) ./bin
-	$(INSTALL) $(DIST)/bin/xpt_dump$(PROG_SUFFIX) ./bin
-
 clobber::
 	$(RM) -r bin idl include
