@@ -130,7 +130,7 @@ png_voidp
 png_malloc_default(png_structp png_ptr, png_uint_32 size)
 {
    png_voidp ret;
-#endif PNG_USER_MEM_SUPPORTED
+#endif /* PNG_USER_MEM_SUPPORTED */
 
 #ifdef PNG_MAX_MALLOC_64K
    if (size > (png_uint_32)65536L)
