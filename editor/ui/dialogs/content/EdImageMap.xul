@@ -28,7 +28,7 @@
 
 <?xul-overlay href="chrome://editor/content/EdDialogOverlay.xul"?> 
 
-<!DOCTYPE window SYSTEM "chrome://editor/locale/EditorImageMap.dtd">
+<!DOCTYPE dialog SYSTEM "chrome://editor/locale/EditorImageMap.dtd">
 
 <!-- dialog containing a control requiring initial setup -->
 <dialog title="&windowTitle.label;"

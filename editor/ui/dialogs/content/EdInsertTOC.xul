@@ -45,7 +45,7 @@
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 
 
-<!DOCTYPE window SYSTEM "chrome://editor/locale/EditorInsertTOC.dtd">
+<!DOCTYPE dialog SYSTEM "chrome://editor/locale/EditorInsertTOC.dtd">
 
 <dialog title="&Window.title;"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
