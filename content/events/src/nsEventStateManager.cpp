@@ -1810,7 +1810,13 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
           nsCOMPtr<nsIDOMHTMLAnchorElement> nextAnchor(do_QueryInterface(child));
           if (nextAnchor)
             nextAnchor->GetTabIndex(&tabIndex);
-          disabled = PR_FALSE;
+          nsAutoString href;
+          nextAnchor->GetAttribute(NS_ConvertASCIItoUCS2("href"), href);
+          if (!href.Length()) {
+            disabled = PR_TRUE; // Don't tab unless href, bug 17605
+          } else {
+            disabled = PR_FALSE;
+          }
         }
         else if(nsHTMLAtoms::button==tag.get()) {
           nsCOMPtr<nsIDOMHTMLButtonElement> nextButton(do_QueryInterface(child));
