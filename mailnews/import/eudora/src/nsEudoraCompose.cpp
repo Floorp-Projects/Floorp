@@ -47,6 +47,7 @@
 #include "EudoraDebugLog.h"
 
 #include "nsMimeTypes.h"
+#include "nsIPref.h"
 
 static NS_DEFINE_CID( kMsgSendCID, NS_MSGSEND_CID);
 static NS_DEFINE_CID( kMsgCompFieldsCID, NS_MSGCOMPFIELDS_CID); 
@@ -619,9 +620,11 @@ nsresult nsEudoraCompose::SendTheMessage( nsIFileSpec *pMsg)
     { // last resort
       if (!m_defCharset.Length())
       {
-        char *pSet = nsMsgI18NGetDefaultMailCharset();
-        m_defCharset.AssignWithConversion(pSet);
-        nsCRT::free( pSet);
+        nsXPIDLString defaultCharset;
+        nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+        if (NS_SUCCEEDED(rv))
+          rv = prefs->GetLocalizedUnicharPref("mailnews.view_default_charset", getter_Copies(defaultCharset));
+        m_defCharset.Assign(defaultCharset ? defaultCharset.get() : NS_LITERAL_STRING("ISO-8859-1").get());
       }
       headerVal = m_defCharset;
     }

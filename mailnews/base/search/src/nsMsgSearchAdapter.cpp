@@ -78,7 +78,6 @@ const char *nsMsgSearchAdapter::m_kImapNotSeen = " UNSEEN ";
 const char *nsMsgSearchAdapter::m_kImapNotAnswered = " UNANSWERED ";
 const char *nsMsgSearchAdapter::m_kImapCharset = " CHARSET ";
 
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #define PREF_CUSTOM_HEADERS "mailnews.customHeaders"
 
@@ -321,13 +320,20 @@ char *nsMsgSearchAdapter::UnEscapeSearchUrl (const char *commandSpecificData)
 void
 nsMsgSearchAdapter::GetSearchCharsets(nsString &srcCharset, nsString& dstCharset)
 {
-    nsresult rv;
-	nsAutoString defaultCharset; 
-	char *search_charset = nsMsgI18NGetDefaultMailCharset();
-	defaultCharset.AssignWithConversion(search_charset);
-	PR_Free((void *)search_charset);
-	srcCharset = defaultCharset;
-	dstCharset = defaultCharset;
+  nsresult rv;
+  if (m_defaultCharset.IsEmpty())
+  {
+    m_forceAsciiSearch = PR_FALSE;  // set the default value in case of error
+    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+    if (NS_SUCCEEDED(rv))
+    {
+      rv = prefs->GetLocalizedUnicharPref("mailnews.view_default_charset", getter_Copies(m_defaultCharset));
+      rv = prefs->GetBoolPref("mailnews.force_ascii_search", &m_forceAsciiSearch);
+    }
+  }
+  srcCharset.Assign(m_defaultCharset.IsEmpty() ?
+                    NS_LITERAL_STRING("ISO-8859-1") : m_defaultCharset);
+  dstCharset = srcCharset;
 
 	if (m_scope)
 	{
@@ -351,19 +357,10 @@ nsMsgSearchAdapter::GetSearchCharsets(nsString &srcCharset, nsString& dstCharset
 	// the source. (CS_DEFAULT is an indication that the charset
 	// was undefined or unavailable.)
   // ### well, it's not really anymore. Is there an equivalent?
-  if (!nsCRT::strcmp(dstCharset.get(), defaultCharset.get()))
+  if (!nsCRT::strcmp(dstCharset.get(), m_defaultCharset.get()))
 		dstCharset = srcCharset;
 
-	PRBool forceAscii = PR_FALSE;
-
-	nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &rv));
-
-	if (NS_SUCCEEDED(rv))
-	{
-		rv = prefs->GetBoolPref("mailnews.force_ascii_search", &forceAscii);
-	}
-
-	if (forceAscii)
+	if (m_forceAsciiSearch)
 	{
 		// Special cases to use in order to force US-ASCII searching with Latin1
 		// or MacRoman text. Eurgh. This only has to happen because IMAP
