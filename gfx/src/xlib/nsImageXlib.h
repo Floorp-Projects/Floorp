@@ -24,15 +24,6 @@
 #include <X11/Xutil.h>
 #include <X11/Xos.h>
 
-// these are defined in the Xlib widget classes but I need access
-// to them here.  fun without an external library.
-
-extern Display         *gDisplay;
-extern Screen          *gScreen;
-extern int              gScreenNum;
-extern int              gDepth;
-extern Visual          *gVisual;
-
 class nsImageXlib : public nsIImage {
 public:
   nsImageXlib();
@@ -86,6 +77,7 @@ private:
   PRUint32  mSizeImage;
   PRInt8    mNumBytesPixel;
   Pixmap    mImagePixmap;
+  Display * mDisplay;
 
   // for alpha mask
   PRUint8  *mAlphaBits;

@@ -45,6 +45,7 @@ nsImageXlib::nsImageXlib()
   mAlphaHeight = 0;
   mLocation.x = 0;
   mLocation.y = 0;
+  mDisplay = nsnull;
 }
 
 nsImageXlib::~nsImageXlib()
@@ -57,12 +58,28 @@ nsImageXlib::~nsImageXlib()
   if (nsnull != mAlphaBits) {
     delete[] mAlphaBits;
     mAlphaBits = nsnull;
-    if (mAlphaPixmap != 0) {
-      XFreePixmap(gDisplay, mAlphaPixmap);
+
+    if (mAlphaPixmap != 0) 
+    {
+      // The display cant be null.  It gets fetched from the drawing 
+      // surface used to create the pixmap.  It gets assigned once
+      // in Draw()
+      NS_ASSERTION(nsnull != mDisplay,"display is null.");
+
+      printf("XFreePixmap(display = %p)\n",mDisplay);
+
+      XFreePixmap(mDisplay, mAlphaPixmap);
+
     }
   }
-  if (mImagePixmap != 0) {
-    XFreePixmap(gDisplay, mImagePixmap);
+
+  if (mImagePixmap != 0) 
+  {
+    NS_ASSERTION(nsnull != mDisplay,"display is null.");
+
+    printf("XFreePixmap(display = %p)\n",mDisplay);
+
+    XFreePixmap(mDisplay, mImagePixmap);
   }
 }
 
@@ -111,15 +128,24 @@ nsImageXlib::Draw(nsIRenderingContext &aContext,
   }
   nsDrawingSurfaceXlib *drawing = (nsDrawingSurfaceXlib*)aSurface;
 
+  // Assign the display only once, since this is will be the only
+  // time we will have a access to a drawing surface - from which
+  // we can fetch the display.
+  if (nsnull == mDisplay)
+    mDisplay = drawing->GetDisplay();
+
   XImage *x_image = nsnull;
   GC gc;
   XGCValues gcv;
   
   if ((mAlphaBits != nsnull) && (mAlphaPixmap == 0)) {
     // create a pixmap for this.
-    mAlphaPixmap = XCreatePixmap(gDisplay, RootWindow(gDisplay, gScreenNum), aWidth, aHeight, 1);
+    mAlphaPixmap = XCreatePixmap(mDisplay, 
+                                 RootWindow(mDisplay, drawing->GetScreenNumber()), 
+                                 aWidth, aHeight, 1);
     // create an x image for it.
-    x_image = XCreateImage(gDisplay, gVisual,
+    x_image = XCreateImage(mDisplay, 
+                           drawing->GetVisual(),
                            1, /* visual depth - this is a bitmap */
                            XYPixmap,
                            0,
@@ -138,11 +164,11 @@ nsImageXlib::Draw(nsIRenderingContext &aContext,
     x_image->byte_order = MSBFirst;
     memset(&gcv, 0, sizeof(XGCValues));
     gcv.function = GXcopy;
-    gc = XCreateGC(gDisplay, mAlphaPixmap, GCFunction, &gcv);
-    XPutImage(gDisplay, mAlphaPixmap, gc, x_image,
+    gc = XCreateGC(mDisplay, mAlphaPixmap, GCFunction, &gcv);
+    XPutImage(mDisplay, mAlphaPixmap, gc, x_image,
                    0, 0, 0, 0,
                    aWidth, aHeight);
-    XFreeGC(gDisplay, gc);
+    XFreeGC(mDisplay, gc);
 
     // done with the temp image.
     x_image->data = 0;  /* don't free IL_Pixmap's bits */
@@ -150,10 +176,14 @@ nsImageXlib::Draw(nsIRenderingContext &aContext,
   }
   
   if (nsnull == mImagePixmap) {
-    mImagePixmap = XCreatePixmap(gDisplay, RootWindow(gDisplay, gScreenNum),
-                                 aWidth, aHeight, gDepth);
-    XSetClipOrigin(gDisplay, drawing->GetGC(), 0, 0);
-    XSetClipMask(gDisplay, drawing->GetGC(), None);
+    mImagePixmap = XCreatePixmap(mDisplay, 
+                                 RootWindow(mDisplay, drawing->GetScreenNumber()),
+                                 aWidth, 
+                                 aHeight, 
+                                 drawing->GetDepth());
+
+    XSetClipOrigin(mDisplay, drawing->GetGC(), 0, 0);
+    XSetClipMask(mDisplay, drawing->GetGC(), None);
     xlib_draw_rgb_image (mImagePixmap,
                          drawing->GetGC(),
                          0, 0, aWidth, aHeight,
@@ -163,11 +193,11 @@ nsImageXlib::Draw(nsIRenderingContext &aContext,
   
   if (nsnull != mAlphaPixmap) {
     // set up the gc to use the alpha pixmap for clipping
-    XSetClipOrigin(gDisplay, drawing->GetGC(), aX, aY);
-    XSetClipMask(gDisplay, drawing->GetGC(), mAlphaPixmap);
+    XSetClipOrigin(mDisplay, drawing->GetGC(), aX, aY);
+    XSetClipMask(mDisplay, drawing->GetGC(), mAlphaPixmap);
   }
 
-  XCopyArea(gDisplay,                  // display
+  XCopyArea(mDisplay,                  // display
             mImagePixmap,              // source
             drawing->GetDrawable(),    // dest
             drawing->GetGC(),          // GC
@@ -176,8 +206,8 @@ nsImageXlib::Draw(nsIRenderingContext &aContext,
             aX, aY);                     // xdest, ydest
             
   if (mAlphaPixmap != nsnull) {
-    XSetClipOrigin(gDisplay, drawing->GetGC(), 0, 0);
-    XSetClipMask(gDisplay, drawing->GetGC(), None);
+    XSetClipOrigin(mDisplay, drawing->GetGC(), 0, 0);
+    XSetClipMask(mDisplay, drawing->GetGC(), None);
   }
 
   return NS_OK;
@@ -193,6 +223,13 @@ nsImageXlib::Draw(nsIRenderingContext &aContext,
 {
   PR_LOG(ImageXlibLM, PR_LOG_DEBUG, ("nsImageXlib::Draw()\n"));
   nsDrawingSurfaceXlib *drawing = (nsDrawingSurfaceXlib *)aSurface;
+
+  // Assign the display only once, since this is will be the only
+  // time we will have a access to a drawing surface - from which
+  // we can fetch the display.
+  if (nsnull == mDisplay)
+    mDisplay = drawing->GetDisplay();
+
   xlib_draw_rgb_image (drawing->GetDrawable(),
                        drawing->GetGC(),
                        aDX, aDY, aDWidth, aDHeight,
@@ -217,11 +254,11 @@ nsImageXlib::ImageUpdated(nsIDeviceContext *aContext,
   PR_LOG(ImageXlibLM, PR_LOG_DEBUG, ("nsImageXlib::ImageUpdated()\n"));
   if (nsImageUpdateFlags_kBitsChanged & aFlags) {
     if (mAlphaPixmap != 0) {
-      XFreePixmap(gDisplay, mAlphaPixmap);
+      XFreePixmap(mDisplay, mAlphaPixmap);
       mAlphaPixmap = 0;
     }
     if (mImagePixmap != 0) {
-      XFreePixmap(gDisplay, mImagePixmap);
+      XFreePixmap(mDisplay, mImagePixmap);
       mImagePixmap = 0;
     }
   }
@@ -242,12 +279,12 @@ nsImageXlib::Init(PRInt32 aWidth, PRInt32 aHeight,
     delete[] mAlphaBits;
     mAlphaBits = nsnull;
     if (mAlphaPixmap != 0) {
-      XFreePixmap(gDisplay, mAlphaPixmap);
+      XFreePixmap(mDisplay, mAlphaPixmap);
       mAlphaPixmap = 0;
     }
   }
   if (mImagePixmap != 0) {
-    XFreePixmap(gDisplay, mImagePixmap);
+    XFreePixmap(mDisplay, mImagePixmap);
     mImagePixmap = 0;
   }
   

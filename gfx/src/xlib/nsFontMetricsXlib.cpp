@@ -31,8 +31,6 @@
 
 // these are in the widget set
 
-extern Display         *gDisplay;
-
 static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
 
 static PRLogModuleInfo * FontMetricsXlibLM = PR_NewLogModule("FontMetricsXlib");
@@ -40,6 +38,8 @@ static PRLogModuleInfo * FontMetricsXlibLM = PR_NewLogModule("FontMetricsXlib");
 nsFontMetricsXlib::nsFontMetricsXlib()
 {
   NS_INIT_REFCNT();
+
+  mDisplay = nsnull;
   mDeviceContext = nsnull;
   mFont = nsnull;
   mFontHandle = nsnull;
@@ -85,7 +85,7 @@ nsFontMetricsXlib::~nsFontMetricsXlib()
 #else
 
   if (0 != mFontHandle) {
-    XFreeFont(gDisplay, mFontHandle);
+    XFreeFont(mDisplay, mFontHandle);
   }
 
 #endif
@@ -132,6 +132,8 @@ NS_IMETHODIMP nsFontMetricsXlib::Init(const nsFont& aFont, nsIDeviceContext* aCo
   mFont = new nsFont(aFont);
 
   mDeviceContext = aContext;
+
+  mDisplay = ((nsDeviceContextXlib *) mDeviceContext)->GetDisplay();
 
   float app2dev;
   mDeviceContext->GetAppUnitsToDevUnits(app2dev);
@@ -221,7 +223,7 @@ NS_IMETHODIMP nsFontMetricsXlib::Init(const nsFont& aFont, nsIDeviceContext* aCo
                  ? 'r'
                  : ((aFont.style == NS_FONT_STYLE_ITALIC) ? 'i' : 'o')),
                 aFont.size / 2);
-    fnames = ::XListFontsWithInfo(gDisplay, &wildstring[namelen + 1],
+    fnames = ::XListFontsWithInfo(mDisplay, &wildstring[namelen + 1],
                                   200, &numnames, &fonts);
     PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("  trying %s[%d]", &wildstring[namelen+1], numnames));
   }
@@ -235,7 +237,7 @@ NS_IMETHODIMP nsFontMetricsXlib::Init(const nsFont& aFont, nsIDeviceContext* aCo
                 (aFont.weight <= NS_FONT_WEIGHT_NORMAL) ? "medium" : "bold",
                 (aFont.style == NS_FONT_STYLE_NORMAL) ? 'r' :
                 ((aFont.style == NS_FONT_STYLE_ITALIC) ? 'i' : 'o'), dpi, dpi);
-    fnames = ::XListFontsWithInfo(gDisplay, &wildstring[namelen + 1],
+    fnames = ::XListFontsWithInfo(mDisplay, &wildstring[namelen + 1],
                                   200, &numnames, &fonts);
 
     PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("  trying %s[%d]", &wildstring[namelen+1], numnames));
@@ -254,7 +256,7 @@ NS_IMETHODIMP nsFontMetricsXlib::Init(const nsFont& aFont, nsIDeviceContext* aCo
                   (aFont.weight <= NS_FONT_WEIGHT_NORMAL) ? "medium" : "bold",
                   altitalicization, dpi, dpi);
 
-      fnames = ::XListFontsWithInfo(gDisplay, &wildstring[namelen + 1],
+      fnames = ::XListFontsWithInfo(mDisplay, &wildstring[namelen + 1],
                                     200, &numnames, &fonts);
       PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("  trying %s[%d]", &wildstring[namelen+1], numnames));
     }
@@ -273,7 +275,7 @@ NS_IMETHODIMP nsFontMetricsXlib::Init(const nsFont& aFont, nsIDeviceContext* aCo
                   (aFont.style == NS_FONT_STYLE_NORMAL) ? 'r' :
                   ((aFont.style == NS_FONT_STYLE_ITALIC) ? 'i' : 'o'),
                   dpi, dpi);
-      fnames = ::XListFontsWithInfo(gDisplay, &wildstring[namelen + 1],
+      fnames = ::XListFontsWithInfo(mDisplay, &wildstring[namelen + 1],
                                     200, &numnames, &fonts);
       PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("  trying %s[%d]", &wildstring[namelen+1], numnames));
 
@@ -284,7 +286,7 @@ NS_IMETHODIMP nsFontMetricsXlib::Init(const nsFont& aFont, nsIDeviceContext* aCo
                     newname,
                     (aFont.weight <= NS_FONT_WEIGHT_NORMAL) ? "medium" : "bold",
                     altitalicization, dpi, dpi);
-        fnames = ::XListFontsWithInfo(gDisplay, &wildstring[namelen + 1],
+        fnames = ::XListFontsWithInfo(mDisplay, &wildstring[namelen + 1],
                                       200, &numnames, &fonts);
         PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("  trying %s[%d]", &wildstring[namelen+1], numnames));
       }
@@ -297,7 +299,7 @@ NS_IMETHODIMP nsFontMetricsXlib::Init(const nsFont& aFont, nsIDeviceContext* aCo
   {
     char *nametouse = PickAppropriateSize(fnames, fonts, numnames, aFont.size);
 
-    mFontStruct = XLoadQueryFont(gDisplay, nametouse);
+    mFontStruct = XLoadQueryFont(mDisplay, nametouse);
     mFontHandle = mFontStruct->fid;
 
     PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, (" is: %s\n", nametouse));
@@ -310,7 +312,7 @@ NS_IMETHODIMP nsFontMetricsXlib::Init(const nsFont& aFont, nsIDeviceContext* aCo
 
     PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, (" is: %s\n", "fixed (final fallback)"));
 
-    mFontStruct = XLoadQueryFont(gDisplay, "fixed");
+    mFontStruct = XLoadQueryFont(mDisplay, "fixed");
     mFontHandle = mFontStruct->fid;
   }
 
@@ -1127,7 +1129,7 @@ GetUnderlineInfo(XFontStruct* aFont, unsigned long* aPositionX2,
 void
 nsFontXlib::LoadFont(nsFontCharSet* aCharSet, nsFontMetricsXlib* aMetrics)
 {
-  XFontStruct *xlibFont = XLoadQueryFont(gDisplay, mName);
+  XFontStruct *xlibFont = XLoadQueryFont(aMetrics->mDisplay, mName);
   if (xlibFont) {
     mFont = xlibFont;
     mMap = aCharSet->mInfo->mMap;
@@ -1638,13 +1640,13 @@ SearchFamily(PLHashEntry* he, PRIntn i, void* arg)
 }
 
 static nsFontFamily*
-GetFontNames(char* aPattern)
+GetFontNames(Display * aDisplay,char* aPattern)
 {
   nsFontFamily* family = nsnull;
 
   int count;
   //PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("XListFonts %s\n", aPattern));
-  char** list = ::XListFonts(gDisplay, aPattern, INT_MAX, &count);
+  char** list = ::XListFonts(aDisplay, aPattern, INT_MAX, &count);
   if ((!list) || (count < 1)) {
     return nsnull;
   }
@@ -1931,7 +1933,7 @@ nsFontMetricsXlib::FindFont(PRUnichar aChar)
       xName->ToCString(name, sizeof(name));
       char buf[256];
       PR_snprintf(buf, sizeof(buf), "-*-%s-*-*-*-*-*-*-*-*-*-*-*-*", name);
-      family = GetFontNames(buf);
+      family = GetFontNames(mDisplay,buf);
       if (!family) {
         family = new nsFontFamily; // dummy entry to avoid calling X again
         if (family) {
@@ -1960,7 +1962,7 @@ nsFontMetricsXlib::FindFont(PRUnichar aChar)
   static int gGotAllFontNames = 0;
   if (!gGotAllFontNames) {
     gGotAllFontNames = 1;
-    GetFontNames("-*-*-*-*-*-*-*-*-*-*-*-*-*-*");
+    GetFontNames(mDisplay,"-*-*-*-*-*-*-*-*-*-*-*-*-*-*");
   }
 
   PL_HashTableEnumerateEntries(gFamilies, SearchFamily, &search);
@@ -2001,12 +2003,12 @@ nsFontMetricsXlib::DrawString(nsDrawingSurfaceXlib* aSurface, nsFontXlib* aFont,
     (char*) buf, sizeof(buf));
   XFontStruct *font_struct = aFont->mFont;
   if ((font_struct->min_byte1 == 0) && (font_struct->max_byte1 == 0))
-    XDrawString(gDisplay,
+    XDrawString(aSurface->GetDisplay(),
                 aSurface->GetDrawable(),
                 aSurface->GetGC(),
                 aX, aY, (char *)buf, len);
   else
-    XDrawString16(gDisplay,
+    XDrawString16(aSurface->GetDisplay(),
                   aSurface->GetDrawable(),
                   aSurface->GetGC(),
                   aX, aY, buf, len/2);

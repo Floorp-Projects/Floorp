@@ -47,6 +47,10 @@ nsDeviceContextXlib::nsDeviceContextXlib()
   mPaletteInfo.palette = NULL;
   mNumCells = 0;
   mSurface = nsnull;
+  mDisplay = nsnull;
+  mScreen = nsnull;
+  mVisual = nsnull;
+  mDepth = 0;
 }
 
 nsDeviceContextXlib::~nsDeviceContextXlib()
@@ -56,11 +60,23 @@ nsDeviceContextXlib::~nsDeviceContextXlib()
   mSurface = nsnull;
 }
 
+// EVIL
+extern Display *  gDisplay;
+extern Screen *   gScreen;
+extern Visual *   gVisual;
+extern int        gDepth;
+
 NS_IMETHODIMP nsDeviceContextXlib::Init(nsNativeWidget aNativeWidget)
 {
   PR_LOG(DeviceContextXlibLM, PR_LOG_DEBUG, ("nsDeviceContextXlib::Init()\n"));
 
   mWidget = aNativeWidget;
+
+  // This is EVIL and has to be fixed by inventing an interface for it.
+  mDisplay = gDisplay;
+  mScreen = gScreen;
+  mVisual = gVisual;
+  mDepth = gDepth;
 
   CommonInit();
 
@@ -87,8 +103,8 @@ nsDeviceContextXlib::CommonInit(void)
         }
         else {
           // Compute dpi of display
-          float screenWidth = float(WidthOfScreen(gScreen));
-          float screenWidthIn = float(WidthMMOfScreen(gScreen)) / 25.4f;
+          float screenWidth = float(WidthOfScreen(mScreen));
+          float screenWidthIn = float(WidthMMOfScreen(mScreen)) / 25.4f;
           dpi = nscoord(screenWidth / screenWidthIn);
         }
       }
@@ -118,8 +134,19 @@ NS_IMETHODIMP nsDeviceContextXlib::CreateRenderingContext(nsIRenderingContext *&
     NS_ADDREF(context);
     surface = new nsDrawingSurfaceXlib();
     if (nsnull != surface) {
-      GC gc = XCreateGC(gDisplay, (Drawable)mWidget, 0, NULL);
-      rv = surface->Init((Drawable)mWidget, gc);
+
+      GC gc = XCreateGC(mDisplay, 
+                        (Drawable) mWidget, 
+                        0, 
+                        NULL);
+
+      rv = surface->Init(mDisplay, 
+                         mScreen, 
+                         mVisual, 
+                         mDepth,
+                         (Drawable) mWidget, 
+                         gc);
+
       if (NS_OK == rv) {
         rv = context->Init(this, surface);
       }
@@ -293,7 +320,7 @@ NS_IMETHODIMP nsDeviceContextXlib::CheckFontExistence(const nsString& aFontName)
               fontName, dpi, dpi);
   delete [] fontName;
   
-  fnames = ::XListFontsWithInfo(gDisplay, wildstring, 1, &numnames, &fonts);
+  fnames = ::XListFontsWithInfo(mDisplay, wildstring, 1, &numnames, &fonts);
   
   if (numnames > 0)
   {

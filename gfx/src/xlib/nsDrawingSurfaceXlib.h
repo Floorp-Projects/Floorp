@@ -28,7 +28,7 @@ class nsDrawingSurfaceXlib : public nsIDrawingSurface
 {
 public:
   nsDrawingSurfaceXlib();
-  ~nsDrawingSurfaceXlib();
+  virtual ~nsDrawingSurfaceXlib();
 
   NS_DECL_ISUPPORTS
   
@@ -40,30 +40,56 @@ public:
   NS_IMETHOD IsOffscreen(PRBool *aOffScreen);
   NS_IMETHOD IsPixelAddressable(PRBool *aAddressable);
   NS_IMETHOD GetPixelFormat(nsPixelFormat *aFormat);
-  NS_IMETHOD Init (Drawable aDrawable, GC aGC);
-  NS_IMETHOD Init (GC aGC, PRUint32 aWidth, PRUint32 aHeight, PRUint32 aFlags);
+
+  NS_IMETHOD Init (Display * aDisplay,
+                   Screen *  aScreen,
+                   Visual *  aVisual,
+                   int       aDepth,
+                   Drawable  aDrawable, 
+                   GC        aGC);
+
+  NS_IMETHOD Init (Display * aDisplay,
+                   Screen *  aScreen,
+                   Visual *  aVisual,
+                   int       aDepth,
+                   GC        aGC, 
+                   PRUint32  aWidth, 
+                   PRUint32  aHeight, 
+                   PRUint32  aFlags);
+
   GC         GetGC(void) { return mGC; }
   Drawable   GetDrawable(void) { return (mDrawable); }  
+  Display *  GetDisplay() { return mDisplay; }
+  Screen *   GetScreen() { return mScreen; }
+  Visual *   GetVisual() { return mVisual; }
+  int        GetDepth() { return mDepth; }
+  int        GetScreenNumber() { return XScreenNumberOfScreen(mScreen); }
 
 private:
-  GC mGC;
-  Drawable mDrawable;
-  XImage *mImage;
-  nsPixelFormat mPixFormat;
-  PRUint8 mDepth;
+  Display *      mDisplay;
+  Screen *       mScreen;
+  Visual *       mVisual;
+  int            mDepth;
+  GC             mGC;
+  Drawable       mDrawable;
+  XImage *       mImage;
+  nsPixelFormat  mPixFormat;
+
   // for locking
-  PRInt32	mLockX;
-  PRInt32	mLockY;
-  PRUint32	mLockWidth;
-  PRUint32	mLockHeight;
-  PRUint32	mLockFlags;
-  PRBool	mLocked;
+  PRInt32	       mLockX;
+  PRInt32	       mLockY;
+  PRUint32	     mLockWidth;
+  PRUint32	     mLockHeight;
+  PRUint32	     mLockFlags;
+  PRBool	       mLocked;
+
   // dimensions
-  PRUint32 mWidth;
-  PRUint32 mHeight;
+  PRUint32       mWidth;
+  PRUint32       mHeight;
+
   // are we offscreen
-  PRBool mIsOffscreen;
-  PRBool mDestroyDrawable;
+  PRBool         mIsOffscreen;
+  PRBool         mDestroyDrawable;
 };
 
 #endif
