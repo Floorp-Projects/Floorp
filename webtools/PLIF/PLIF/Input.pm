@@ -146,8 +146,13 @@ sub getArgumentsAsString {
 sub getArgumentsFromString {
     my $self = shift;
     my($string) = @_;
-    $self->assert(defined($string), 1, 'Tried to expand an undefined string');
+    if (not defined($string)) {
+        # no string, no arguments
+        return {};
+    }
     if (ref($string) eq 'ARRAY') {
+        # concatenate strings (possibly containing semicolons
+        # themselves) together to form one long string
         $string = join(';', @$string);
     }
     my @rawHash = split(/;/, $string);
