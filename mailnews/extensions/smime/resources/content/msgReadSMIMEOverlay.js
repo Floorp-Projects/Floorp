@@ -39,12 +39,50 @@ var gEncryptionStatus = -1;
 var gSignatureStatus = -1;
 var gSignerCert = null;
 var gEncryptionCert = null;
+var gBundle;
+var gBrandBundle;
 
 const nsPKIParamBlock    = "@mozilla.org/security/pkiparamblock;1";
 const nsIPKIParamBlock    = Components.interfaces.nsIPKIParamBlock;
 
+function setupBundles()
+{
+  if (gBundle && gBrandBundle)
+    return;
+  
+  if (!gBundle) {
+    gBundle = document.getElementById("bundle_read_smime");
+    gBrandBundle = document.getElementById("bundle_brand");
+  }
+}
+
+function showImapSignatureUnknown()
+{
+  var ifps = Components.interfaces.nsIPromptService;
+
+  var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
+  promptService = promptService.QueryInterface(ifps);
+  setupBundles();
+
+  if (promptService && gBundle && gBrandBundle) {
+    if (promptService.confirm(window,
+          gBrandBundle.getString("brandShortName"),
+          gBundle.getString("ImapOnDemand"))) {
+      ReloadWithAllParts();
+    }
+  }
+}
+
 function showMessageReadSecurityInfo()
 {
+  var gSignedUINode = document.getElementById('signedHdrIcon');
+  if (gSignedUINode) {
+    if (gSignedUINode.getAttribute("signed") == "unknown") {
+      showImapSignatureUnknown();
+      return;
+    }
+  }
+  
   var pkiParams = Components.classes[nsPKIParamBlock].createInstance(nsIPKIParamBlock);
 
   // isupport array starts with index 1

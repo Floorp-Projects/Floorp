@@ -19,6 +19,7 @@ en-US.jar:
     locale/en-US/messenger-smime/msgCompSMIMEOverlay.dtd             (resources/locale/en-US/msgCompSMIMEOverlay.dtd)
     locale/en-US/messenger-smime/msgCompSMIMEOverlay.properties      (resources/locale/en-US/msgCompSMIMEOverlay.properties)
     locale/en-US/messenger-smime/msgReadSMIMEOverlay.dtd             (resources/locale/en-US/msgReadSMIMEOverlay.dtd)
+    locale/en-US/messenger-smime/msgReadSMIMEOverlay.properties      (resources/locale/en-US/msgReadSMIMEOverlay.properties)
     locale/en-US/messenger-smime/msgCompSecurityInfo.dtd             (resources/locale/en-US/msgCompSecurityInfo.dtd)
     locale/en-US/messenger-smime/msgCompSecurityInfo.properties      (resources/locale/en-US/msgCompSecurityInfo.properties)
     locale/en-US/messenger-smime/msgReadSecurityInfo.dtd             (resources/locale/en-US/msgReadSecurityInfo.dtd)

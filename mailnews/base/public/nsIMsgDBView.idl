@@ -278,6 +278,7 @@ interface nsIMsgDBView : nsISupports
     readonly attribute nsIMsgDBHdr hdrForFirstSelectedMessage;
     void loadMessageByMsgKey (in nsMsgKey aMsgKey);
     void reloadMessage();
+    void reloadMessageWithAllParts();
 	void reloadFolderAfterQuickSearch();
 
     readonly attribute unsigned long numSelected;
