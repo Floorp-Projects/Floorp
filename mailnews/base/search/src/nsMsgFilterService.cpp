@@ -100,7 +100,7 @@ NS_IMETHODIMP nsMsgFilterService::OpenFilterList(nsIFileSpec *filterFile, nsIMsg
   }
 	else
   {
-		NS_RELEASE(filterList);
+    NS_RELEASE(filterList);
     if (ret == NS_MSG_FILTER_PARSE_ERROR && aMsgWindow)
     {
       ret = BackUpFilterFile(filterFile, aMsgWindow);
@@ -110,7 +110,6 @@ NS_IMETHODIMP nsMsgFilterService::OpenFilterList(nsIFileSpec *filterFile, nsIMsg
       return OpenFilterList(filterFile, rootFolder, aMsgWindow, resultFilterList);
     }
   }
-		
 	return ret;
 }
 
@@ -169,7 +168,7 @@ NS_IMETHODIMP	nsMsgFilterService::SaveFilterList(nsIMsgFilterList *filterList, n
 }
 
 NS_IMETHODIMP nsMsgFilterService::CancelFilterList(nsIMsgFilterList *filterList)
-{
+{ 
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
