@@ -30,6 +30,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsCURILoader.h"
 #include "nsIURIContentListener.h"
+#include "nsIWebProgressListener.h"
 
 //
 // Callback declarations for URL completion
@@ -41,7 +42,8 @@ typedef nsresult (*nsAttachSaveCompletionCallback) (nsIURI* aURL, nsresult aStat
                                                     PRInt32 totalSize, const PRUnichar* aMsg, 
                                                     void *tagData);
 
-class nsURLFetcher : public nsIStreamListener, public nsIURIContentListener, public nsIInterfaceRequestor { 
+class nsURLFetcher : public nsIStreamListener, public nsIURIContentListener, public nsIInterfaceRequestor,
+                     public nsIWebProgressListener { 
 public: 
   nsURLFetcher();
   virtual ~nsURLFetcher();
@@ -66,8 +68,10 @@ public:
   NS_DECL_NSISTREAMLISTENER
   // Methods for nsIStreamObserver
   NS_DECL_NSISTREAMOBSERVER
+  
   NS_DECL_NSIURICONTENTLISTENER
   NS_DECL_NSIINTERFACEREQUESTOR
+  NS_DECL_NSIWEBPROGRESSLISTENER
 
 private:
   nsOutputFileStream              *mOutStream;    // the output file stream
@@ -79,6 +83,7 @@ private:
   void                            *mTagData;      // Tag data for callback...
   nsAttachSaveCompletionCallback  mCallback;      // Callback to call once the file is saved...
   nsCOMPtr<nsISupports>           mLoadCookie;    // load cookie used by the uri loader when we fetch the url
+  PRBool                          mOnStopRequestProcessed; // used to prevent calling OnStopRequest multiple times
 }; 
 
 /* this function will be used by the factory to generate an class access object....*/

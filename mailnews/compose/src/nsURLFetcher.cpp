@@ -39,6 +39,7 @@
 #include "nsNetUtil.h"
 #include "nsMimeTypes.h"
 #include "nsIHTTPChannel.h"
+#include "nsIWebProgress.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
@@ -71,6 +72,7 @@ NS_INTERFACE_MAP_BEGIN(nsURLFetcher)
    NS_INTERFACE_MAP_ENTRY(nsIStreamObserver)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
    NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
+   NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
 NS_INTERFACE_MAP_END
 
 /* 
@@ -88,6 +90,7 @@ nsURLFetcher::nsURLFetcher()
   mCallback = nsnull;
   mContentType = nsnull;
   mCharset = nsnull;
+  mOnStopRequestProcessed = PR_FALSE;
 }
 
 nsURLFetcher::~nsURLFetcher()
@@ -95,6 +98,14 @@ nsURLFetcher::~nsURLFetcher()
   mStillRunning = PR_FALSE;
   PR_FREEIF(mContentType);
   PR_FREEIF(mCharset);
+  // Remove the DocShell as a listener of the old WebProgress...
+  if (mLoadCookie) 
+  {
+    nsCOMPtr<nsIWebProgress> webProgress(do_QueryInterface(mLoadCookie));
+
+    if (webProgress)
+      webProgress->RemoveProgressListener(this);
+  }
 }
 
 NS_IMETHODIMP nsURLFetcher::GetInterface(const nsIID & aIID, void * *aInstancePtr)
@@ -185,8 +196,27 @@ nsURLFetcher::GetLoadCookie(nsISupports ** aLoadCookie)
 NS_IMETHODIMP 
 nsURLFetcher::SetLoadCookie(nsISupports * aLoadCookie)
 {
+  // Remove the DocShell as a listener of the old WebProgress...
+  if (mLoadCookie) 
+  {
+    nsCOMPtr<nsIWebProgress> webProgress(do_QueryInterface(mLoadCookie));
+
+    if (webProgress)
+      webProgress->RemoveProgressListener(this);
+  }
+
   mLoadCookie = aLoadCookie;
+
+  // Add the DocShell as a listener to the new WebProgress...
+  if (mLoadCookie) 
+  {
+    nsCOMPtr<nsIWebProgress> webProgress(do_QueryInterface(mLoadCookie));
+
+    if (webProgress) 
+      webProgress->AddProgressListener(this);
+  }
   return NS_OK;
+
 }
 
 nsresult
@@ -243,6 +273,13 @@ nsURLFetcher::OnStopRequest(nsIChannel *aChannel, nsISupports * /* ctxt */, nsre
 #ifdef NS_DEBUG_rhp
   printf("nsURLFetcher::OnStopRequest()\n");
 #endif
+
+  // it's possible we could get in here from the channel calling us with an OnStopRequest and from our
+  // onStatusChange method (in the case of an error). So we should protect against this to make sure we
+  // don't process the on stop request twice...
+
+  if (mOnStopRequestProcessed) return NS_OK;
+  mOnStopRequestProcessed = PR_TRUE;
 
   //
   // Now complete the stream!
@@ -321,14 +358,19 @@ nsURLFetcher::FireURLRequest(nsIURI *aURL, nsOutputFileStream *fOut,
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIChannel> channel;
-  NS_ENSURE_SUCCESS(NS_OpenURI(getter_AddRefs(channel), aURL, nsnull), NS_ERROR_FAILURE);
+  // we're about to fire a new url request so make sure the on stop request flag is cleared...
+  mOnStopRequestProcessed = PR_FALSE;
 
   // let's try uri dispatching...
   nsCOMPtr<nsIURILoader> pURILoader (do_GetService(NS_URI_LOADER_PROGID));
   NS_ENSURE_TRUE(pURILoader, NS_ERROR_FAILURE);
-  nsCOMPtr<nsISupports> openContext;
+
   nsCOMPtr<nsISupports> cntListener (do_QueryInterface(NS_STATIC_CAST(nsIStreamListener *, this)));
+  nsCOMPtr<nsIChannel> channel;
+  nsCOMPtr<nsILoadGroup> loadGroup;
+  pURILoader->GetLoadGroupForContext(cntListener, getter_AddRefs(loadGroup));
+  NS_ENSURE_SUCCESS(NS_OpenURI(getter_AddRefs(channel), aURL, nsnull, loadGroup), NS_ERROR_FAILURE);
+ 
   rv = pURILoader->OpenURI(channel, nsIURILoader::viewNormal, nsnull /* window target */, 
                            cntListener);
 
@@ -337,5 +379,38 @@ nsURLFetcher::FireURLRequest(nsIURI *aURL, nsOutputFileStream *fOut,
   mCallback = cb;
   mTagData = tagData;
   NS_ADDREF(this);
+  return NS_OK;
+}
+
+
+// web progress listener implementation
+
+NS_IMETHODIMP
+nsURLFetcher::OnProgressChange(nsIWebProgress *aProgress, nsIRequest *aRequest,
+                             PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress,
+                             PRInt32 aCurTotalProgress, PRInt32 aMaxTotalProgress)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsURLFetcher::OnStateChange(nsIWebProgress *aProgress, nsIRequest *aRequest,
+                          PRInt32 aStateFlags, nsresult aStatus)
+{
+  // all we care about is the case where an error occurred (as in we were unable to locate the
+  // the url....
+
+  if (NS_FAILED(aStatus))
+  {
+    nsCOMPtr<nsIChannel> channel (do_QueryInterface(aRequest));
+    OnStopRequest(channel, nsnull, aStatus, nsnull);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsURLFetcher::OnLocationChange(nsIURI *aURI)
+{
   return NS_OK;
 }
