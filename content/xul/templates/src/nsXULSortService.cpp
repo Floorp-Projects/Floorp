@@ -1326,7 +1326,7 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, sortPtr sortInfo)
 		/* smart sorting (sort within separators) on name column */
 		if (sortInfo->inbetweenSeparatorSort == PR_TRUE)
 		{
-			PRUint32	startIndex=currentElement;
+			PRInt32	startIndex=currentElement;
 			nsAutoString	type;
 			for (loop=currentElement; loop< currentElement + numElements; loop++)
 			{
