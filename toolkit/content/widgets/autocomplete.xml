@@ -438,7 +438,7 @@
                
       <handler event="dblclick">
       <![CDATA[
-        if (event.originalTarget.className == "info-icon")
+        if (event.originalTarget.className == "info-icon" && event.button == 0)
           return this.fireEvent("infoclick");
         return true;
       ]]>

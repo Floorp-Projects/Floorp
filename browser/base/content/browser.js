@@ -2843,8 +2843,8 @@ function onViewToolbarCommand(aEvent)
 
 function displaySecurityInfo()
 {
-    window.openDialog("chrome://browser/content/pageInfo.xul", "_blank",
-                      "dialog=no", null, "securityTab");
+  window.openDialog("chrome://browser/content/pageInfo.xul", "_blank",
+                    "dialog=no", null, "securityTab");
 }
 
 function displayPageReportFirstTime()

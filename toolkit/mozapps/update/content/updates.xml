@@ -101,7 +101,8 @@
     <handlers>
       <handler event="dblclick">
       <![CDATA[
-        this.showUpdates();
+        if (event.button == 0)
+          this.showUpdates();
       ]]>
       </handler>
     </handlers>

@@ -136,7 +136,7 @@
           datasources="rdf:null" persist="last-selected"
           ondragover="nsDragAndDrop.dragOver(event, gExtensionsDNDObserver);"
           ondragdrop="nsDragAndDrop.drop(event, gExtensionsDNDObserver);"
-          ondblclick="onViewDoubleClick();">
+          ondblclick="onViewDoubleClick(event);">
       <template>
         <rule>
           <conditions>

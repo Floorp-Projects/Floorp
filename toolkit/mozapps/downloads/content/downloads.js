@@ -318,6 +318,8 @@ function onDownloadShow(aEvent)
 
 function onDownloadOpen(aEvent)
 {
+  if (aEvent.type == "dblclick" && aEvent.button != 0)
+    return;
   var download = aEvent.target;
   if (download.localName == "download") {
     if (download.openable) {

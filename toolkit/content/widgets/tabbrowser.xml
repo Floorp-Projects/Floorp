@@ -86,7 +86,7 @@
                     ondragdrop="nsDragAndDrop.drop(event, this.parentNode.parentNode.parentNode);
                                 event.stopPropagation();"
                     xbl:inherits="onnewtab"
-                    ondblclick="if (event.originalTarget.localName != 'tab') this.parentNode.parentNode.parentNode.selectedTab = this.parentNode.parentNode.parentNode.addTab();"
+                    ondblclick="this.parentNode.parentNode.parentNode.onTabBarDblClick(event);"
                     onclosetab="var node = this.parentNode;
                                 while (node.localName != 'tabbrowser')
                                   node = node.parentNode;
@@ -979,6 +979,16 @@
               aTab = this.mCurrentTab;
 
             this.getBrowserForTab(aTab).reload();
+          ]]>
+        </body>
+      </method>
+
+      <method name="onTabBarDblClick">
+        <parameter name="aEvent"/>
+        <body>
+          <![CDATA[
+            if (aEvent.originalTarget.localName != 'tab' && aEvent.button == 0)
+              this.selectedTab = this.addTab();
           ]]>
         </body>
       </method>

@@ -383,8 +383,11 @@ XPInstallDownloadManager.prototype = {
 //
 // View Event Handlers
 //
-function onViewDoubleClick()
+function onViewDoubleClick(aEvent)
 {
+  if (aEvent.button != 0)
+    return;
+
   switch (gWindowState) {
   case "extensions":
     gExtensionsViewController.doCommand('cmd_options');
