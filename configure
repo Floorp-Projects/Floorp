@@ -17232,30 +17232,30 @@ fi
   else
      PKG_CONFIG_MIN_VERSION=0.9.0
      if $PKG_CONFIG --atleast-pkgconfig-version $PKG_CONFIG_MIN_VERSION; then
-        echo $ac_n "checking for cairo = $CAIRO_VERSION""... $ac_c" 1>&6
-echo "configure:17237: checking for cairo = $CAIRO_VERSION" >&5
+        echo $ac_n "checking for cairo >= $CAIRO_VERSION""... $ac_c" 1>&6
+echo "configure:17237: checking for cairo >= $CAIRO_VERSION" >&5
 
-        if $PKG_CONFIG --exists "cairo = $CAIRO_VERSION" ; then
+        if $PKG_CONFIG --exists "cairo >= $CAIRO_VERSION" ; then
             echo "$ac_t""yes" 1>&6
             succeeded=yes
 
             echo $ac_n "checking CAIRO_CFLAGS""... $ac_c" 1>&6
 echo "configure:17244: checking CAIRO_CFLAGS" >&5
-            CAIRO_CFLAGS=`$PKG_CONFIG --cflags "cairo = $CAIRO_VERSION"`
+            CAIRO_CFLAGS=`$PKG_CONFIG --cflags "cairo >= $CAIRO_VERSION"`
             echo "$ac_t""$CAIRO_CFLAGS" 1>&6
 
             echo $ac_n "checking CAIRO_LIBS""... $ac_c" 1>&6
 echo "configure:17249: checking CAIRO_LIBS" >&5
             ## don't use --libs since that can do evil things like add
             ## -Wl,--export-dynamic
-            CAIRO_LIBS="`$PKG_CONFIG --libs-only-L \"cairo = $CAIRO_VERSION\"` `$PKG_CONFIG --libs-only-l \"cairo = $CAIRO_VERSION\"`"
+            CAIRO_LIBS="`$PKG_CONFIG --libs-only-L \"cairo >= $CAIRO_VERSION\"` `$PKG_CONFIG --libs-only-l \"cairo >= $CAIRO_VERSION\"`"
             echo "$ac_t""$CAIRO_LIBS" 1>&6
         else
             CAIRO_CFLAGS=""
             CAIRO_LIBS=""
             ## If we have a custom action on failure, don't print errors, but 
             ## do set a variable so people can do so.
-            CAIRO_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "cairo = $CAIRO_VERSION"`
+            CAIRO_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "cairo >= $CAIRO_VERSION"`
             echo $CAIRO_PKG_ERRORS
         fi
 
@@ -17270,7 +17270,7 @@ echo "configure:17249: checking CAIRO_LIBS" >&5
   if test $succeeded = yes; then
      :
   else
-     { echo "configure: error: Library requirements (cairo = $CAIRO_VERSION) not met; consider adjusting the PKG_CONFIG_PATH environment variable if your libraries are in a nonstandard prefix so pkg-config can find them." 1>&2; exit 1; }
+     { echo "configure: error: Library requirements (cairo >= $CAIRO_VERSION) not met; consider adjusting the PKG_CONFIG_PATH environment variable if your libraries are in a nonstandard prefix so pkg-config can find them." 1>&2; exit 1; }
   fi
 
    MOZ_CAIRO_CFLAGS=$CAIRO_CFLAGS
