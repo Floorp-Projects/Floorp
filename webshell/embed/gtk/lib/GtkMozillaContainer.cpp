@@ -103,11 +103,6 @@ GtkMozillaContainer::Show()
                     height);
     
     mWebShell->SetContainer(this);
-
-    if(mPrefs)
-    {
-      mWebShell->SetPrefs(mPrefs);
-    }
   }
 
   gdk_window_show(mSuperWin->bin_window);
