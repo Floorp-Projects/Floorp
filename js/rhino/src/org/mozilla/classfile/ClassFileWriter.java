@@ -49,7 +49,7 @@ import java.util.*;
  *
  * @author Roger Lawrence
  */
-public class ClassFileWriter extends LabelTable {
+public class ClassFileWriter {
 
     /**
      * Construct a ClassFileWriter for a class.
@@ -241,7 +241,7 @@ public class ClassFileWriter extends LabelTable {
                 throw new RuntimeException("No method to stop");
         }
 
-        fixLabelGotos(itsCodeBuffer);
+        itsLabels.fixLabelGotos(itsCodeBuffer);
 
         itsMaxLocals = maxLocals;
 
@@ -300,13 +300,13 @@ public class ClassFileWriter extends LabelTable {
             codeAttribute[index++] = (byte)(itsExceptionTableTop >> 8);
             codeAttribute[index++] = (byte)(itsExceptionTableTop);
             for (int i = 0; i < itsExceptionTableTop; i++) {
-                short startPC = itsExceptionTable[i].getStartPC(this);
+                short startPC = itsExceptionTable[i].getStartPC(itsLabels);
                 codeAttribute[index++] = (byte)(startPC >> 8);
                 codeAttribute[index++] = (byte)(startPC);
-                short endPC = itsExceptionTable[i].getEndPC(this);
+                short endPC = itsExceptionTable[i].getEndPC(itsLabels);
                 codeAttribute[index++] = (byte)(endPC >> 8);
                 codeAttribute[index++] = (byte)(endPC);
-                short handlerPC = itsExceptionTable[i].getHandlerPC(this);
+                short handlerPC = itsExceptionTable[i].getHandlerPC(itsLabels);
                 codeAttribute[index++] = (byte)(handlerPC >> 8);
                 codeAttribute[index++] = (byte)(handlerPC);
                 short catchType = itsExceptionTable[i].getCatchType();
@@ -400,7 +400,7 @@ public class ClassFileWriter extends LabelTable {
         itsCurrentMethod = null;
         itsMaxStack = 0;
         itsStackTop = 0;
-        clearLabels();
+        itsLabels.clearLabels();
     }
 
     /**
@@ -481,7 +481,7 @@ public class ClassFileWriter extends LabelTable {
                     }
                     else {  // a label
                         int theLabel = theOperand & 0x7FFFFFFF;
-                        int targetPC = getLabelPC(theLabel);
+                        int targetPC = itsLabels.getLabelPC(theLabel);
                         if (DEBUGLABELS) {
                             System.out.println("Fixing branch to " +
                                                theLabel + " at " + targetPC +
@@ -493,7 +493,7 @@ public class ClassFileWriter extends LabelTable {
                             addToCodeBuffer((byte)offset);
                         }
                         else {
-                            addLabelFixup(theLabel, branchPC + 1);
+                            itsLabels.addLabelFixup(theLabel, branchPC + 1);
                             addToCodeBuffer((byte)0);
                             addToCodeBuffer((byte)0);
                         }
@@ -829,18 +829,28 @@ public class ClassFileWriter extends LabelTable {
         }
     }
 
-    public int markLabel(int theLabel) {
-        return super.markLabel(theLabel, (short)itsCodeBufferTop);
+    public int acquireLabel() {
+        return itsLabels.acquireLabel() | 0x80000000;
     }
 
-    public int markLabel(int theLabel, short stackTop) {
+    public void markLabel(int label) {
+        if ((label & 0x80000000) != 0x80000000)
+            throw new RuntimeException("Bad label, no biscuit");
+
+        itsLabels.markLabel(label & 0x7FFFFFFF, itsCodeBufferTop);
+    }
+
+    public void markLabel(int label, short stackTop) {
+        if ((label & 0x80000000) != 0x80000000)
+            throw new RuntimeException("Bad label, no biscuit");
+
         itsStackTop = stackTop;
-        return super.markLabel(theLabel, (short)itsCodeBufferTop);
+        itsLabels.markLabel(label & 0x7FFFFFFF, itsCodeBufferTop);
     }
 
-    public int markHandler(int theLabel) {
+    public void markHandler(int theLabel) {
         itsStackTop = 1;
-        return markLabel(theLabel);
+        markLabel(theLabel);
     }
 
     /**
@@ -1147,6 +1157,8 @@ public class ClassFileWriter extends LabelTable {
     private short itsSuperClassIndex;
     private short itsSourceFileNameIndex;
 
+    private LabelTable itsLabels = new LabelTable();
+
 }
 
 class ExceptionTableEntry {
@@ -1162,7 +1174,7 @@ class ExceptionTableEntry {
 
     short getStartPC(LabelTable table)
     {
-        short pc = table.getLabelPC(itsStartLabel & 0x7FFFFFFF);
+        short pc = (short)table.getLabelPC(itsStartLabel & 0x7FFFFFFF);
         if (pc == -1)
             throw new RuntimeException("start label not defined");
         return pc;
@@ -1170,7 +1182,7 @@ class ExceptionTableEntry {
 
     short getEndPC(LabelTable table)
     {
-        short pc = table.getLabelPC(itsEndLabel & 0x7FFFFFFF);
+        short pc = (short)table.getLabelPC(itsEndLabel & 0x7FFFFFFF);
         if (pc == -1)
             throw new RuntimeException("end label not defined");
         return pc;
@@ -1178,7 +1190,7 @@ class ExceptionTableEntry {
 
     short getHandlerPC(LabelTable table)
     {
-        short pc = table.getLabelPC(itsHandlerLabel & 0x7FFFFFFF);
+        short pc = (short)table.getLabelPC(itsHandlerLabel & 0x7FFFFFFF);
         if (pc == -1)
             throw new RuntimeException("handler label not defined");
         return pc;

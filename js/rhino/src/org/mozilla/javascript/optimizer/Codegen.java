@@ -247,17 +247,17 @@ public class Codegen extends Interpreter {
                                 "<init>", "(D)", "V");
     }
 
-    public int markLabel(int label)
+    private void markLabel(int label)
     {
-        return classFile.markLabel(label);
+        classFile.markLabel(label);
     }
 
-    public int markLabel(int label, short stackheight)
+    private void markLabel(int label, short stackheight)
     {
-        return classFile.markLabel(label, stackheight);
+        classFile.markLabel(label, stackheight);
     }
 
-    public int acquireLabel()
+    private int acquireLabel()
     {
         return classFile.acquireLabel();
     }
@@ -2148,7 +2148,8 @@ public class Codegen extends Interpreter {
          * and NodeTransformer;  Codegen just adds the java handlers for the
          * javascript catch and finally clauses.  */
         // need to set the stack top to 1 to account for the incoming exception
-        int startLabel = markLabel(acquireLabel(), (short)1);
+        int startLabel = acquireLabel();
+        markLabel(startLabel, (short)1);
 
         visitStatement(node);
         while (child != null) {
@@ -2183,7 +2184,8 @@ public class Codegen extends Interpreter {
                 we also need to catch EcmaErrors and feed the
                 associated error object to the handler
             */
-            int jsHandler = classFile.markHandler(acquireLabel());
+            int jsHandler = acquireLabel();
+            classFile.markHandler(jsHandler);
             short exceptionObject = getNewWordLocal();
             astore(exceptionObject);
             aload(savedVariableObject);
@@ -2205,7 +2207,8 @@ public class Codegen extends Interpreter {
         // finally handler; catch all exceptions, store to a local; JSR to
         // the finally, then re-throw.
         if (finallyTarget != null) {
-            int finallyHandler = classFile.markHandler(acquireLabel());
+            int finallyHandler = acquireLabel();
+            classFile.markHandler(finallyHandler);
 
             // reset the variable object local
             aload(savedVariableObject);
@@ -2239,7 +2242,8 @@ public class Codegen extends Interpreter {
                                     int catchLabel,
                                     int startLabel)
     {
-        int handler = classFile.markHandler(acquireLabel());
+        int handler = acquireLabel();
+        classFile.markHandler(handler);
 
         // MS JVM gets cranky if the exception object is left on the stack
         short exceptionObject = getNewWordLocal();
