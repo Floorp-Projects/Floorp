@@ -29,7 +29,7 @@ MimeDefClass(MimeExternalBody, MimeExternalBodyClass,
 extern int MK_MSG_LINK_TO_DOCUMENT;
 extern int MK_MSG_DOCUMENT_INFO;
 
-#if defined(XP_MAC) && !defined(MOZILLA_30)
+#ifdef XP_MAC
 extern MimeObjectClass mimeMultipartAppleDoubleClass;
 #endif
 
@@ -260,11 +260,11 @@ MimeExternalBody_parse_eof (MimeObject *obj, PRBool abort_p)
   status = ((MimeObjectClass*)&MIME_SUPERCLASS)->parse_eof(obj, abort_p);
   if (status < 0) return status;
 
-#if defined(XP_MAC) && !defined(MOZILLA_30)
+#ifdef XP_MAC
   if (obj->parent && mime_typep(obj->parent, 
 	  (MimeObjectClass*) &mimeMultipartAppleDoubleClass))
 	  goto done;
-#endif /* defined (XP_MAC) && !defined(MOZILLA_30) */
+#endif /* XP_MAC */
 
   if (!abort_p &&
 	  obj->output_p &&
@@ -446,9 +446,9 @@ MimeExternalBody_parse_eof (MimeObject *obj, PRBool abort_p)
 	  PR_FREEIF(subj);
 	}
 
-#if defined(XP_MAC) && !defined(MOZILLA_30)
+#ifdef XP_MAC
 done:
-#endif /* defined (XP_MAC) && !defined(MOZILLA_30) */
+#endif /* XP_MAC */
 
   return status;
 }

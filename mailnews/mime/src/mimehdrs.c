@@ -26,13 +26,9 @@
 
 #include "prmem.h"
 #include "plstr.h"
-
-
-#ifndef MOZILLA_30
-# include "msgcom.h"
+#include "msgcom.h"
 #include "imap.h"
 #include "prefapi.h"
-#endif /* !MOZILLA_30 */
 
 extern int MK_OUT_OF_MEMORY;
 extern int MK_MSG_NO_HEADERS;
@@ -709,18 +705,6 @@ MimeHeaders_default_news_link_generator (const char *dest, void *closure,
   return result;
 }
 
-
-#ifdef MOZILLA_30
-static char *
-MimeHeaders_default_mailto_link_generator (const char *dest, void *closure,
-										   MimeHeaders *headers)
-{
-  /* For now, don't emit mailto links over email addresses. */
-  return 0;
-}
-
-#else  /* !MOZILLA_30 */
-
 static char *mime_escape_quotes (char *src)
 {
 	/* Make sure quotes are escaped with a backslash */
@@ -849,9 +833,6 @@ MimeHeaders_default_addbook_link_generator (const char *dest, void *closure,
   return result;
 }
 
-#endif /* !MOZILLA_30 */
-
-
 #define MimeHeaders_grow_obuffer(hdrs, desired_size) \
   ((((long) (desired_size)) >= ((long) (hdrs)->obuffer_size)) ? \
    msg_GrowBuffer ((desired_size), sizeof(char), 255, \
@@ -929,12 +910,10 @@ MimeHeaders_localize_header_name(const char *name, MimeDisplayOptions *opt)
   if (!display_key)
 	return name;
 
-#ifndef MOZILLA_30
   output_csid = INTL_CharSetNameToID((opt->override_charset
 									  ? opt->override_charset
 									  : opt->default_charset));
   new_name = XP_GetStringForHTML(display_key, output_csid, (char*)name);
-#endif /* !MOZILLA_30 */
 
   if (new_name)
 	return new_name;
@@ -1023,9 +1002,7 @@ MimeHeaders_write_random_header_1 (MimeHeaders *hdrs,
 		 already been done.
 	   */
 	  status = NET_ScanForURLs (
-#ifndef MOZILLA_30
 								NULL,
-#endif /* !MOZILLA_30 */
 								contents, contents_length, out,
 								hdrs->obuffer_size - (out - hdrs->obuffer) -10,
 								PR_TRUE);
@@ -1117,14 +1094,12 @@ static PRBool   shortHdrPrefStatus = 0;  /* 0: First time. */
                                          /* 1: Cache is not valid. */
                                          /* 2: Cache is valid. */
                                          /* rhp: for new header wrap functionality */
-#ifndef MOZILLA_30
 int PR_CALLBACK
 ShortHeaderPrefsChangeCallback(const char* prefname, void* data)
 {
   shortHdrPrefStatus = 1;       /* Invalidates our cached stuff. */
   return PREF_NOERROR;
 }
-#endif /* !MOZILLA_30 */
 
 static int
 MimeHeaders_write_grouped_header_1 (MimeHeaders *hdrs, const char *name,
@@ -1166,17 +1141,11 @@ MimeHeaders_write_grouped_header_1 (MimeHeaders *hdrs, const char *name,
 		}
 	}
 
-#ifndef MOZILLA_30
   /* grow obuffer with potential XSENDER AUTH string */
   status = MimeHeaders_grow_obuffer (hdrs, (name ? PL_strlen (name) : 0)
 									 + 100 + 2 *
 									 PL_strlen(XP_GetString(MK_MSG_XSENDER_INTERNAL)) +
 									 (contents_length * 4));
-#else
-  status = MimeHeaders_grow_obuffer (hdrs, (name ? PL_strlen (name) : 0)
-									 + 100 +
-									 (contents_length * 4));
-#endif
   if (status < 0) goto FAIL;
 
   out = hdrs->obuffer;
@@ -1308,13 +1277,8 @@ MimeHeaders_write_grouped_header_1 (MimeHeaders *hdrs, const char *name,
       {
         if (mail_p)
         {
-#ifdef MOZILLA_30
-          fn = MimeHeaders_default_mailto_link_generator;
-          arg = 0;
-#else  /* !MOZILLA_30 */
           fn = MimeHeaders_default_addbook_link_generator;
           arg = &extraAnchorText; 
-#endif /* !MOZILLA_30 */
         }
         else
         {
@@ -1322,33 +1286,6 @@ MimeHeaders_write_grouped_header_1 (MimeHeaders *hdrs, const char *name,
           arg = 0;
         }
       }
-      
-#ifdef MOZILLA_30
-      /* If this is the "From" header, or if this is a
-			   "Followup-To: poster" entry, let the Reply-To address win.
-         
-           Only do this for Mozilla 3.0 because 3.0 put mailto links
-           in here, and 4.0 and later put addbook links in here.
-      */
-      if (mail_header_p
-        ? (name && !PL_strcasecmp(name, HEADER_FROM))
-        : mail_p)
-      {
-        char *r = 0;
-        r         = MimeHeaders_get (hdrs, HEADER_REPLY_TO,
-          PR_FALSE, PR_TRUE);
-        if (!r) r = MimeHeaders_get (hdrs, HEADER_FROM, PR_FALSE, PR_TRUE);
-        if (!r) r = MimeHeaders_get (hdrs, HEADER_SENDER, PR_FALSE, PR_TRUE);
-        
-        if (r)
-        {
-          PL_strcpy (hdrs->obuffer, r);
-          PR_Free(r);
-        }
-        else
-          *hdrs->obuffer = 0;
-      }
-#endif
       
       if (*hdrs->obuffer && opt->fancy_links_p)
         link = fn (hdrs->obuffer, arg, hdrs);
@@ -1392,7 +1329,7 @@ MimeHeaders_write_grouped_header_1 (MimeHeaders *hdrs, const char *name,
       }
       if (extraAnchorText)
         PR_Free (extraAnchorText);
-#ifndef MOZILLA_30
+
       /* Begin hack of out of envelope XSENDER info */
       if (orig_name && !PL_strcasecmp(orig_name, HEADER_FROM)) { 
         char * statusLine = MimeHeaders_get (hdrs, HEADER_X_MOZILLA_STATUS, PR_FALSE, PR_FALSE);
@@ -1418,7 +1355,6 @@ MimeHeaders_write_grouped_header_1 (MimeHeaders *hdrs, const char *name,
         }
       }
       /* End of XSENDER info */
-#endif  /* MOZILLA_30 */
       status = MimeHeaders_write(opt, hdrs->obuffer,
         PL_strlen (hdrs->obuffer));
       if (status < 0) goto FAIL;
@@ -2042,9 +1978,7 @@ MimeHeaders_write_all_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt)
 }
 
 
-#ifndef MOZILLA_30
-# define EGREGIOUS_HEADERS
-#endif
+#define EGREGIOUS_HEADERS
 
 static int
 MimeHeaders_write_microscopic_headers (MimeHeaders *hdrs,
@@ -2121,9 +2055,7 @@ MimeHeaders_write_microscopic_headers (MimeHeaders *hdrs,
   /* Quotify the subject... */
   if (subj)
 	status = NET_ScanForURLs (
-# ifndef MOZILLA_30
 							  NULL,
-# endif /* !MOZILLA_30 */
 							  subj, PL_strlen(subj), out,
 							  hdrs->obuffer_size - (out - hdrs->obuffer) - 10,
 							  PR_TRUE);
@@ -2136,9 +2068,7 @@ MimeHeaders_write_microscopic_headers (MimeHeaders *hdrs,
   /* Quotify the sender... */
   if (from)
 	status = NET_ScanForURLs (
-# ifndef MOZILLA_30
 							  NULL,
-# endif /* !MOZILLA_30 */
 							  from, PL_strlen(from), out,
 							  hdrs->obuffer_size - (out - hdrs->obuffer) - 10,
 							  PR_TRUE);
@@ -2151,9 +2081,7 @@ MimeHeaders_write_microscopic_headers (MimeHeaders *hdrs,
   /* Quotify the date (just in case...) */
   if (date)
 	status = NET_ScanForURLs (
-# ifndef MOZILLA_30
 							  NULL,
-# endif /* !MOZILLA_30 */
 							  date, PL_strlen(date), out,
 							  hdrs->obuffer_size - (out - hdrs->obuffer) - 10,
 							  PR_TRUE);
@@ -2201,9 +2129,7 @@ MimeHeaders_write_microscopic_headers (MimeHeaders *hdrs,
   out += PL_strlen(out);
   if (subj) {
 	  status = NET_ScanForURLs(
-#ifndef MOZILLA_30
 							   NULL,
-#endif /* !MOZILLA_30 */
 							   subj, PL_strlen(subj), out,
 							   hdrs->obuffer_size - (out - hdrs->obuffer) - 10,
 							   PR_TRUE);
@@ -2307,7 +2233,6 @@ MimeHeaders_write_citation_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt)
 									 (id ? PL_strlen(id) : 0) + 58);
   if (status < 0) return status;
 
-#ifndef MOZILLA_30
   if (opt->nice_html_only_p) {
 	PRInt32 nReplyWithExtraLines = 0, eReplyOnTop = 0;
 	PREF_GetIntPref("mailnews.reply_with_extra_lines", &nReplyWithExtraLines);
@@ -2319,7 +2244,6 @@ MimeHeaders_write_citation_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt)
 	  }
 	}
   }
-#endif
 
   if (id)
 	XP_SPRINTF(hdrs->obuffer, fmt, id, name);
@@ -2342,12 +2266,10 @@ MimeHeaders_write_citation_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt)
 	  if (status < 0) goto FAIL;
 	}
 
-#ifndef MOZILLA_30
   if (opt->nice_html_only_p) {
 	  char ptr[] = MHTML_BLOCKQUOTE_BEGIN;
 	  MimeHeaders_write(opt, ptr, PL_strlen(ptr));
   }
-#endif /* !MOZILLA_30 */
 
  FAIL:
 

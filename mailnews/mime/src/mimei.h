@@ -363,7 +363,6 @@ extern int MimeObject_write_separator(MimeObject *);
 extern int MK_OUT_OF_MEMORY;
 
 
-#ifndef MOZILLA_30
 /* Turn this on if you want to play with the idea of displaying icons in the
    headers to represent attachments, and put icons next to each attachment so
    you can easily save them without having to bring up the "as links" view.
@@ -374,23 +373,6 @@ extern int MK_OUT_OF_MEMORY;
 
 extern PRBool MimeObjectChildIsMessageBody(MimeObject *obj,
 											PRBool *isAlterOrRelated);
-
-#endif /* MOZILLA_30 */
-
-/* #### These ought to be in libxp or nspr, not libmsg...*/
-#if 0
-extern int msg_GrowBuffer (PRInt32 desired_size, PRInt32 element_size,
-						   PRInt32 quantum, char **buffer, PRInt32 *size);
-
-extern int msg_LineBuffer (const char *net_buffer, PRInt32 net_buffer_size,
-						   char **bufferP, PRInt32 *buffer_sizeP,
-						   PRInt32 *buffer_fpP,
-						   PRBool convert_newlines_p,
-						   PRInt32 (*per_line_fn) (char *line,
-											   PRUint32 line_length,
-											   void *closure),
-						   void *closure);
-#endif
 
 /* This is the data tagged to contexts and the declaration needs to be
    in a header file since more than mimemoz.c needs to see it now...
@@ -412,10 +394,7 @@ struct MimeDisplayData {            /* This struct is what we hang off of
   char *previous_locked_url;
 #endif /* LOCK_LAST_CACHED_MESSAGE */
 
-#ifndef MOZILLA_30
   MSG_Pane* last_pane;
-#endif /* MOZILLA_30 */
-
 };
 
 #endif /* _MIMEI_H_ */

@@ -157,7 +157,6 @@ get_plugin_count(void)
 char *
 get_content_type(cthandler_struct *ct)
 {
-  typedef char * (*mime_get_ct_fn_type)(void);
   mime_get_ct_fn_type     getct_fn;
 
   if (!ct)
@@ -173,8 +172,6 @@ get_content_type(cthandler_struct *ct)
 MimeObjectClass * 
 create_content_type_handler_class(cthandler_struct *ct)
 {
-  typedef MimeObjectClass * (*mime_create_class_fn_type)
-                              (const char *, contentTypeHandlerInitStruct *);
   contentTypeHandlerInitStruct    ctHandlerInfo;
   mime_create_class_fn_type       class_fn;
   MimeObjectClass                 *retClass = NULL;

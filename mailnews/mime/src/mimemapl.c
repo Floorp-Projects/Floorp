@@ -68,7 +68,7 @@ MimeMultipartAppleDouble_parse_begin (MimeObject *obj)
 	  PR_ASSERT(obj->options->state->first_data_written_p);
 	}
 
-#if !defined(XP_MAC) && !defined(MOZILLA_30)
+#ifdef XP_MAC
   if (obj->options && obj->options->state) 
   {
 	obj->options->state->separator_suppressed_p = PR_TRUE;
@@ -174,7 +174,7 @@ MimeMultipartAppleDouble_parse_begin (MimeObject *obj)
 	  if (status < 0) return status;
 	}
 
-#if !defined(XP_MAC) && !defined(MOZILLA_30)
+#ifdef XP_MAC
 done:
 #endif
 

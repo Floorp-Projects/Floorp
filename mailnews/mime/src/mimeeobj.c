@@ -28,7 +28,7 @@ MimeDefClass(MimeExternalObject, MimeExternalObjectClass,
 
 extern int MK_MSG_ATTACHMENT;
 
-#if defined(XP_MAC) && !defined(MOZILLA_30)
+#ifdef XP_MAC
 extern MimeObjectClass mimeMultipartAppleDoubleClass;
 #endif
 
@@ -80,11 +80,11 @@ MimeExternalObject_parse_begin (MimeObject *obj)
   status = ((MimeObjectClass*)&MIME_SUPERCLASS)->parse_begin(obj);
   if (status < 0) return status;
 
-#if defined (XP_MAC) && !defined(MOZILLA_30)
+#ifdef XP_MAC
   if (obj->parent && mime_typep(obj->parent,
 	  (MimeObjectClass *) &mimeMultipartAppleDoubleClass))
 	  goto done;
-#endif /* defined (XP_MAC) && !defined(MOZILLA_30) */
+#endif /* XP_MAC */
 
   /* If we're writing this object, and we're doing it in raw form, then
 	 now is the time to inform the backend what the type of this data is.
@@ -202,9 +202,9 @@ MimeExternalObject_parse_begin (MimeObject *obj)
 	  if (status < 0) return status;
 	}
 
-#if defined (XP_MAC) && !defined(MOZILLA_30)
+#ifdef XP_MAC
 done:
-#endif /* defined (XP_MAC) && !defined(MOZILLA_30) */
+#endif /* XP_MAC */
 
   return 0;
 }

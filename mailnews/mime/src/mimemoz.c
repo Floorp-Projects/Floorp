@@ -99,7 +99,6 @@ struct mime_stream_data {           /* This struct is the state we pass around
   /* These are used by FO_QUOTE_HTML_MESSAGE stuff only: */
   PRInt16 lastcsid;                   /* csid corresponding to above. */
   PRInt16 outcsid;                    /* csid passed to EDT_PasteQuoteINTL */
-#ifndef MOZILLA_30
   uint8 rand_buf[6];                /* Random number used in the MATCH
                                        attribute of the ILAYER tag
                                        pair that encapsulates a
@@ -112,14 +111,10 @@ struct mime_stream_data {           /* This struct is the state we pass around
                                        an email message allowing the
                                        message to escape from its
                                        encapsulated environment. */
-#endif /* MOZILLA_30 */
-    
 #ifdef DEBUG_rhp
     PRFileDesc       *logit;        /* Temp file to put generated HTML into. */
 #endif
 };
-
-#ifndef MOZILLA_30
 
 static MimeHeadersState MIME_HeaderType;
 static PRBool MIME_NoInlineAttachments;
@@ -128,8 +123,6 @@ static PRBool MIME_VariableWidthPlaintext;
 static PRBool MIME_PrefDataValid = 0; /* 0: First time. */
                                 /* 1: Cache is not valid. */
                                 /* 2: Cache is valid. */
-
-#endif
 
 static char *
 mime_reformat_date(const char *date, void *stream_closure)
@@ -312,7 +305,6 @@ mime_set_html_state_fn (void *stream_closure,
 #endif /* 0 */
 
   if (start_p) {
-#ifndef MOZILLA_30
     if (layer_encapsulate_p && msd->options && !msd->options->nice_html_only_p){
       uint8 *rand_buf = msd->rand_buf;
 //RICHIECSS      RNG_GenerateGlobalRandomBytes(rand_buf, sizeof msd->rand_buf);
@@ -326,7 +318,6 @@ mime_set_html_state_fn (void *stream_closure,
       status = MimeOptions_write(msd->options, buf, PL_strlen(buf), PR_TRUE);
       PR_Free(buf);
     }
-#endif /* MOZILLA_30 */
   } else {
 /* RICHIE_CSS - this doesn't work anymore...
     status = MimeOptions_write(msd->options, random_close_tags,
@@ -335,7 +326,6 @@ mime_set_html_state_fn (void *stream_closure,
       return status;
 */
 
-#ifndef MOZILLA_30
     if (layer_encapsulate_p && msd->options && !msd->options->nice_html_only_p){
       uint8 *rand_buf = msd->rand_buf;
 //RICHIECSS      buf = PR_smprintf("</ILAYER MATCH=%02x%02x%02x%02x%02x%02x><BR>",
@@ -348,8 +338,6 @@ mime_set_html_state_fn (void *stream_closure,
       if (status < 0)
           return status;
     }
-#endif /* MOZILLA_30 */
-
   }
   return status;
 }
@@ -531,8 +519,6 @@ mime_display_stream_abort (void *stream, int status)
 
 
 
-#ifndef MOZILLA_30
-
 static unsigned int
 mime_insert_html_write_ready(void *stream)
 {	
@@ -627,9 +613,6 @@ mime_insert_html_convert_charset (const char *input_line, PRInt32 input_length,
   return status;
 }
 
-#endif /* !MOZILLA_30 */
-
-
 static NET_StreamClass *
 mime_make_output_stream(const char *content_type,
                         const char *charset,
@@ -653,7 +636,6 @@ mime_make_output_stream(const char *content_type,
   char *old_part = 0;
   char *old_part2 = 0;
 
-#ifndef MOZILLA_30
   if (format_out == FO_QUOTE_HTML_MESSAGE) {
     /* Special case here.  Make a stream that just jams data directly
        into our editor context.  No calling of NET_StreamBuilder for me;
@@ -672,8 +654,6 @@ mime_make_output_stream(const char *content_type,
       return stream;
     }
   }
-#endif /* !MOZILLA_30 */
-
 
   PR_ASSERT(content_type && url);
   if (!content_type || !url)
@@ -997,10 +977,7 @@ mime_output_init_fn (const char *type,
         }
       context->mime_data->last_parsed_object = msd->obj;
       context->mime_data->last_parsed_url = PL_strdup(msd->url->address);
-#ifndef MOZILLA_30
       context->mime_data->last_pane = msd->url->msg_pane;
-#endif /* MOZILLA_30 */
-
       PR_ASSERT(!msd->options ||
                 msd->options == msd->obj->options);
     }
@@ -1016,20 +993,12 @@ static void mime_image_end(void *image_closure, int status);
 static char *mime_image_make_image_html(void *image_data);
 static int mime_image_write_buffer(char *buf, PRInt32 size, void *image_closure);
 
-#ifdef MOZILLA_30
-extern PRBool MSG_VariableWidthPlaintext;
-#endif
-
-
-#ifndef MOZILLA_30
 int PR_CALLBACK
 mime_PrefsChangeCallback(const char* prefname, void* data)
 {
   MIME_PrefDataValid = 1;       /* Invalidates our cached stuff. */
   return PREF_NOERROR;
 }
-#endif /* !MOZILLA_30 */
-
 
 NET_StreamClass * 
 MIME_MessageConverter2 (int format_out, void *closure,
@@ -1077,9 +1046,7 @@ MIME_MessageConverter2 (int format_out, void *closure,
       return 0;
     }
   memset(msd->options, 0, sizeof(*msd->options));
-#ifndef MOZILLA_30
   msd->options->pane = url->msg_pane;
-#endif /* !MOZILLA_30 */
 
   /* handle the case where extracting attachments from nested messages */
 #ifdef RICHIE
@@ -1119,11 +1086,9 @@ MIME_MessageConverter2 (int format_out, void *closure,
       format_out == FO_CACHE_AND_SAVE_AS_POSTSCRIPT)
     msd->options->fancy_headers_p = PR_TRUE;
 
-#ifndef MOZILLA_30
   if (format_out == FO_NGLAYOUT ||
       format_out == FO_CACHE_AND_NGLAYOUT)
     msd->options->output_vcard_buttons_p = PR_TRUE;
-#endif /* !MOZILLA_30 */
  
   if (format_out == FO_NGLAYOUT ||
       format_out == FO_CACHE_AND_NGLAYOUT) {
@@ -1132,7 +1097,6 @@ MIME_MessageConverter2 (int format_out, void *closure,
 
   msd->options->headers = MimeHeadersSome;
 
-#ifndef MOZILLA_30
   if (MIME_PrefDataValid < 2) {
     PRInt32 headertype;
     if (MIME_PrefDataValid == 0) {
@@ -1166,40 +1130,18 @@ MIME_MessageConverter2 (int format_out, void *closure,
   msd->options->no_inline_p = MIME_NoInlineAttachments;
   msd->options->wrap_long_lines_p = MIME_WrapLongLines;
   msd->options->headers = MIME_HeaderType;
-#endif /* !MOZILLA_30 */
 
   if (context->type == MWContextMail ||
       context->type == MWContextNews
-#ifndef MOZILLA_30
       || context->type == MWContextMailMsg
       || context->type == MWContextNewsMsg
-#endif /* !MOZILLA_30 */
       )
     {
-#ifndef MOZILLA_30
       MSG_Pane* pane = MSG_FindPane(context, MSG_MESSAGEPANE);
       msd->options->rot13_p = PR_FALSE;
       if (pane) {
         msd->options->rot13_p = MSG_ShouldRot13Message(pane);
       }
-#else  /* MOZILLA_30 */
-
-      PRBool all_headers_p = PR_FALSE;
-      PRBool micro_headers_p = PR_FALSE;
-      MSG_GetContextPrefs(context,
-                          &all_headers_p,
-                          &micro_headers_p,
-                          &msd->options->no_inline_p,
-                          &msd->options->rot13_p,
-                          &msd->options->wrap_long_lines_p);
-      if (all_headers_p)
-        msd->options->headers = MimeHeadersAll;
-      else if (micro_headers_p)
-        msd->options->headers = MimeHeadersMicro;
-      else
-        msd->options->headers = MimeHeadersSome;
-
-#endif /* MOZILLA_30 */
     }
 
   status = mime_parse_url_options(url->address, msd->options);
@@ -1212,29 +1154,21 @@ MIME_MessageConverter2 (int format_out, void *closure,
     }
 
   if (msd->options->headers == MimeHeadersMicro &&
-#ifndef MOZILLA_30
       (url->address == NULL || (PL_strncmp(url->address, "news:", 5) != 0 &&
                                 PL_strncmp(url->address, "snews:", 6) != 0))
-#else  /* MOZILLA_30 */
-      context->type == MWContextMail
-#endif /* MOZILLA_30 */
         )
     msd->options->headers = MimeHeadersMicroPlus;
 
   if (format_out == FO_QUOTE_MESSAGE ||
            format_out == FO_CACHE_AND_QUOTE_MESSAGE
-#ifndef MOZILLA_30
            || format_out == FO_QUOTE_HTML_MESSAGE
-#endif /* !MOZILLA_30 */
            )
     {
       msd->options->headers = MimeHeadersCitation;
       msd->options->fancy_headers_p = PR_FALSE;
-#ifndef MOZILLA_30
       if (format_out == FO_QUOTE_HTML_MESSAGE) {
         msd->options->nice_html_only_p = PR_TRUE;
       }
-#endif /* !MOZILLA_30 */
     }
 
   else if (msd->options->headers == MimeHeadersSome &&
@@ -1261,7 +1195,7 @@ MIME_MessageConverter2 (int format_out, void *closure,
   msd->options->write_html_p          = PR_TRUE;
   msd->options->output_init_fn        = mime_output_init_fn;
 
-#if !defined(MOZILLA_30) && defined(XP_MAC)
+#ifdef XP_MAC
   /* If it's a thread context, don't output all the mime stuff (hangs on Macintosh for
   ** unexpanded threadpane, because HTML is generated that needs images and layers).
   */
@@ -1272,12 +1206,10 @@ MIME_MessageConverter2 (int format_out, void *closure,
     msd->options->output_fn           = mime_output_fn;
 
   msd->options->set_html_state_fn     = mime_set_html_state_fn;
-#ifndef MOZILLA_30
   if (format_out == FO_QUOTE_HTML_MESSAGE) {
     msd->options->charset_conversion_fn = mime_insert_html_convert_charset;
     msd->options->dont_touch_citations_p = PR_TRUE;
   } else 
-#endif
     msd->options->charset_conversion_fn = mime_convert_charset;
   msd->options->rfc1522_conversion_fn = mime_convert_rfc1522;
   msd->options->reformat_date_fn      = mime_reformat_date;
@@ -1293,11 +1225,7 @@ MIME_MessageConverter2 (int format_out, void *closure,
   msd->options->make_image_html       = mime_image_make_image_html;
   msd->options->image_write_buffer    = mime_image_write_buffer;
 
-#ifndef MOZILLA_30
   msd->options->variable_width_plaintext_p = MIME_VariableWidthPlaintext;
-#else  /* MOZILLA_30 */
-  msd->options->variable_width_plaintext_p = MSG_VariableWidthPlaintext;
-#endif /* MOZILLA_30 */
 
     /* ### mwelch We want FO_EDT_SAVE_IMAGE to behave like *_SAVE_AS here
                   because we're spooling untranslated raw data. */
@@ -1400,13 +1328,11 @@ mime_image_begin(const char *image_url, const char *content_type,
       msd->format_out != FO_SAVE_AS_POSTSCRIPT &&
       msd->format_out != FO_CACHE_AND_SAVE_AS_POSTSCRIPT)
     return mid;
-#ifndef MOZILLA_30
   if (!msd->context->img_cx)
       /* If there is no image context, e.g. if this is a Text context or a
          Mail context on the Mac, then we won't be loading images in the
          image viewer. */
       return mid;
-#endif /* !MOZILLA_30 */
 
   mid->url_struct = NET_CreateURLStruct (image_url, NET_DONT_RELOAD);
   if (!mid->url_struct)
@@ -1988,13 +1914,11 @@ MimeGetAttachmentList(MWContext* context, MSG_AttachmentData** data)
     tmp->description = MimeHeaders_get(child->headers,
                                        HEADER_CONTENT_DESCRIPTION,
                                        PR_FALSE, PR_FALSE);
-#ifndef MOZILLA_30
     if (tmp->real_type && !PL_strcasecmp(tmp->real_type, MESSAGE_RFC822) &&
         (!tmp->real_name || *tmp->real_name == 0))
     {
         StrAllocCopy(tmp->real_name, XP_GetString(XP_FORWARDED_MESSAGE_ATTACHMENT));
     }
-#endif /* !MOZILLA_30 */
   }
   return 0;
 }
@@ -2245,9 +2169,10 @@ MIME_EnrichedTextConverter (int format_out, void *closure,
   return MIME_RichtextConverter_1 (format_out, closure, url, context, PR_TRUE);
 }
 
-
-
-#ifndef MOZILLA_30
+extern int MIME_HasAttachments(MWContext *context)
+{
+	return (context->mime_data && context->mime_data->last_parsed_object->showAttachmentIcon);
+}
 
 int
 MIME_DisplayAttachmentPane(MWContext* context)
@@ -2361,16 +2286,6 @@ mime_vcard_abort (void *stream, int status )
   PR_Free (vcd);
 }
 
-#endif /* RICHIE_VCARD */
-
-extern int MIME_HasAttachments(MWContext *context)
-{
-	return (context->mime_data && context->mime_data->last_parsed_object->showAttachmentIcon);
-}
-
-
-#ifdef RICHIE_VCARD
-
 extern NET_StreamClass *
 MIME_VCardConverter2 ( int format_out,
             void *closure,
@@ -2480,7 +2395,4 @@ MIME_VCardConverter2 ( int format_out,
 
     return stream;
 }
-
 #endif /* RICHIE_VCARD */
-
-#endif /* !MOZILLA_30 */

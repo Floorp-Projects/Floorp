@@ -221,7 +221,6 @@ NET_I_XP_FileWrite(const char *buf, int bufLen, XP_File fp) {
     return (int) wroteBytes;
 }
 
-
 extern "C" int
 NET_I_XP_FileClose(XP_File fp) {
     nsFile *nsFp = XpToNsFp(fp); // nsnull ok.

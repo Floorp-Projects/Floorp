@@ -125,9 +125,7 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
    */
   *obj->obuffer = 0;
   status = NET_ScanForURLs (
-#ifndef MOZILLA_30
 							(obj->options ? obj->options->pane : 0),
-#endif /* !MOZILLA_30 */
 							line, length, obj->obuffer, obj->obuffer_size - 10,
 							(obj->options ?
 							 obj->options->dont_touch_citations_p : PR_FALSE));

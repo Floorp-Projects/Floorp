@@ -21,12 +21,10 @@
 #include "prmem.h"
 #include "plstr.h"
 
-#ifndef MOZILLA_30
 /* Way to destroy any notions of modularity or class hierarchy, Terry! */
 # include "mimetpla.h"
 # include "mimethtm.h"
 # include "mimecont.h"
-#endif /* !MOZILLA_30 */
 
 MimeDefClass (MimeObject, MimeObjectClass, mimeObjectClass, NULL);
 
@@ -186,7 +184,6 @@ MimeObject_parse_begin (MimeObject *obj)
 	  PR_Free(id);
 	}
 
-#ifndef MOZILLA_30
 /* Way to destroy any notions of modularity or class hierarchy, Terry! */
   if (obj->options && obj->options->nice_html_only_p) {
 	  if (!mime_subclass_p(obj->class,
@@ -198,7 +195,6 @@ MimeObject_parse_begin (MimeObject *obj)
 		  obj->output_p = PR_FALSE;
 	  }
   }
-#endif /* !MOZILLA_30 */
 
   return 0;
 }

@@ -91,18 +91,14 @@ static int MSG_CitationFont = MSG_ItalicFont;
 static int MSG_CitationSize = MSG_NormalSize;
 static const char *MSG_CitationColor = 0;
 
-#ifndef MOZILLA_30
 # define MSG_Prefs void
 # define MSG_GetCitationStyle(w,x,y,z) do{}while(0)
 # define MSG_GetPrefs(x) 0
-#endif
 
 /* from libnet/mkutils.c */
 PUBLIC int
 NET_ScanForURLs(
-#ifndef MOZILLA_30
 				MSG_Pane* pane,
-#endif /* !MOZILLA_30 */
 				const char *input, PRInt32 input_size,
 				char *output, int output_size, XP_Bool urls_only)
 {
@@ -114,11 +110,7 @@ NET_ScanForURLs(
   Bool line_is_citation = PR_FALSE;
   const char *cite_open1, *cite_close1;
   const char *cite_open2, *cite_close2;
-#ifndef MOZILLA_30
   const char* color = NULL;
-#else  /* MOZILLA_30 */
-  const char* color = MSG_CitationColor;
-#endif /* MOZILLA_30 */
 
   if (urls_only)
 	{
@@ -128,10 +120,6 @@ NET_ScanForURLs(
   else
 	{
 #ifdef MOZILLA_CLIENT
-# ifdef MOZILLA_30
-	  MSG_FONT font = MSG_CitationFont;
-	  MSG_CITATION_SIZE size = MSG_CitationSize;
-# else  /* !MOZILLA_30 */
 	  MSG_Prefs* prefs;
 	  MSG_FONT font = MSG_ItalicFont;
 	  MSG_CITATION_SIZE size = MSG_NormalSize;
@@ -140,7 +128,6 @@ NET_ScanForURLs(
 		prefs = MSG_GetPrefs(pane);
 		MSG_GetCitationStyle(prefs, &font, &size, &color);
 	  }
-#endif /* !MOZILLA_30 */
 	  switch (font)
 		{
 		case MSG_PlainFont:

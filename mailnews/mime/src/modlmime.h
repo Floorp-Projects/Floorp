@@ -22,9 +22,7 @@
 #include "xp.h"
 #include "prtypes.h"
 
-#ifndef MOZILLA_30
-# define MIME_DRAFTS
-#endif
+#define MIME_DRAFTS
 
 /* Opaque object describing a block of message headers, and a couple of
    routines for extracting data from one.
@@ -64,9 +62,7 @@ typedef struct MimeHeaders
 
 typedef struct MimeDisplayOptions MimeDisplayOptions;
 typedef struct MimeParseStateObject MimeParseStateObject;
-#ifndef MOZILLA_30
 typedef struct MSG_AttachmentData MSG_AttachmentData;
-#endif
 
 #ifdef RICHIE
 XP_BEGIN_PROTOS
@@ -198,20 +194,16 @@ struct MimeDisplayOptions
 							   completes (possibly at the same time as the
 							   MimeDisplayOptions itself.) */
 
-#ifndef MOZILLA_30
   MSG_Pane* pane;				/* The libmsg pane object that corresponds to
 								   what we're showing.  This is used by very
 								   little... */
-#endif /* !MOZILLA_30 */
 
   MimeHeadersState headers;	/* How headers should be displayed. */
   PRBool fancy_headers_p;	/* Whether to do clever formatting of headers
 							   using tables, instead of spaces. */
 
-#ifndef MOZILLA_30
   PRBool output_vcard_buttons_p;	/* Whether to output the buttons */
 									/* on vcards. */
-#endif /* !MOZILLA_30 */
 
   PRBool fancy_links_p;		/* Whether to insert fancy links, so you can
 								   do things like click on an email address to
@@ -241,7 +233,6 @@ struct MimeDisplayOptions
 							   dexlate it before sending it.
 							 */
 
-#ifndef MOZILLA_30
   PRBool nice_html_only_p;		/* If PR_TRUE, then we only should write html if
 								   it's pretty HTML (stuff that we're willing
 								   to get shipped out in mail messages).  If we
@@ -252,7 +243,6 @@ struct MimeDisplayOptions
 									 alone in plaintext parts.  If PR_FALSE, then
 									 go ahead and tweak the fonts according
 									 to preferences. */
-#endif /* !MOZILLA_30 */
 
   char *default_charset;	/* If this is non-NULL, then it is the charset to
 							   assume when no other one is specified via a
