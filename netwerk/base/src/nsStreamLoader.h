@@ -59,11 +59,13 @@ public:
   Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
 protected:
+  static NS_METHOD WriteSegmentFun(nsIInputStream *, void *, const char *,
+                                   PRUint32, PRUint32, PRUint32 *);
+
   nsCOMPtr<nsIStreamLoaderObserver> mObserver;
   nsCOMPtr<nsISupports>             mContext;  // the observer's context
   nsCString                         mData;
   nsCOMPtr<nsIRequest>              mRequest;
-///  nsCOMPtr<nsILoadGroup> mLoadGroup;
 };
 
 #endif // nsStreamLoader_h__

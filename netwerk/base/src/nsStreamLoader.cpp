@@ -117,10 +117,18 @@ nsStreamLoader::GetRequest(nsIRequest **aRequest)
     return NS_OK;
 }
 
-
 NS_IMETHODIMP 
 nsStreamLoader::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
 {
+  nsCOMPtr<nsIChannel> chan( do_QueryInterface(request) );
+  if (chan) {
+      PRInt32 contentLength = -1;
+      chan->GetContentLength(&contentLength);
+      if (contentLength >= 0) {
+          // preallocate buffer
+          mData.SetCapacity(contentLength + 1);
+      }
+  }
   return NS_OK;
 }
 
@@ -141,30 +149,27 @@ nsStreamLoader::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
   return NS_OK;
 }
 
-#define BUF_SIZE 1024
+NS_METHOD
+nsStreamLoader::WriteSegmentFun(nsIInputStream *inStr,
+                                void *closure,
+                                const char *fromSegment,
+                                PRUint32 toOffset,
+                                PRUint32 count,
+                                PRUint32 *writeCount)
+{
+  nsStreamLoader *self = (nsStreamLoader *) closure;
+
+  self->mData.Append(fromSegment, count);
+  *writeCount = count;
+
+  return NS_OK;
+}
 
 NS_IMETHODIMP 
 nsStreamLoader::OnDataAvailable(nsIRequest* request, nsISupports *ctxt, 
                                 nsIInputStream *inStr, 
                                 PRUint32 sourceOffset, PRUint32 count)
 {
-  nsresult rv = NS_OK;
-  char buffer[BUF_SIZE];
-  PRUint32 len, lenRead;
-  
-  rv = inStr->Available(&len);
-  if (NS_FAILED(rv)) return rv;
-
-  while (len > 0) {
-    lenRead = PR_MIN(len, BUF_SIZE);
-    rv = inStr->Read(buffer, lenRead, &lenRead);
-    if (NS_FAILED(rv) || lenRead == 0) {
-      return rv;
-    }
-
-    mData.Append(buffer, lenRead);
-    len -= lenRead;
-  }
-
-  return rv;
+  PRUint32 countRead;
+  return inStr->ReadSegments(WriteSegmentFun, this, count, &countRead);
 }
