@@ -123,7 +123,6 @@ void PR_CALLBACK nsDownloadManager::DownloadCallback(nsITimer *aTimer, void *aCl
   if (NS_FAILED(rv)) return;
 
   download->mDownloadManager->DownloadEnded(path.get(), nsnull);
-  delete aClosure;  
 }
 
 PRInt32 PR_CALLBACK nsDownloadManager::CancelAllDownloads(nsHashKey* aKey, void* aData, void* aClosure)
@@ -440,6 +439,8 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
   if (!aDownload)
     return NS_ERROR_FAILURE;
 
+  NS_ADDREF(*aDownload);
+
   // give our new nsIDownload some info so it's ready to go off into the world
   internalDownload->SetDownloadManager(this);
   internalDownload->SetTarget(aTarget);
@@ -551,7 +552,6 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
   }
 
   mCurrDownloads.Put(&key, *aDownload);
-  NS_ADDREF(*aDownload);
   return rv;
 }
 
