@@ -270,23 +270,23 @@ static const struct mechanismList mechanisms[] = {
      {CKM_DH_PKCS_KEY_PAIR_GEN,	{128, 1024, CKF_GENERATE_KEY_PAIR}, PR_TRUE}, 
      {CKM_DH_PKCS_DERIVE,	{128, 1024, CKF_DERIVE}, 	PR_TRUE}, 
      /* ------------------------- RC2 Operations --------------------------- */
-     {CKM_RC2_KEY_GEN,		{1, 128, CKF_GENERATE},		PR_FALSE},
-     {CKM_RC2_ECB,		{1, 128, CKF_EN_DE_WR_UN},	PR_FALSE},
-     {CKM_RC2_CBC,		{1, 128, CKF_EN_DE_WR_UN},	PR_FALSE},
-     {CKM_RC2_MAC,		{1, 128, CKF_SN_VR},		PR_FALSE},
-     {CKM_RC2_MAC_GENERAL,	{1, 128, CKF_SN_VR},		PR_FALSE},
+     {CKM_RC2_KEY_GEN,		{1, 128, CKF_GENERATE},		PR_TRUE},
+     {CKM_RC2_ECB,		{1, 128, CKF_EN_DE_WR_UN},	PR_TRUE},
+     {CKM_RC2_CBC,		{1, 128, CKF_EN_DE_WR_UN},	PR_TRUE},
+     {CKM_RC2_MAC,		{1, 128, CKF_SN_VR},		PR_TRUE},
+     {CKM_RC2_MAC_GENERAL,	{1, 128, CKF_SN_VR},		PR_TRUE},
      {CKM_RC2_CBC_PAD,		{1, 128, CKF_EN_DE_WR_UN},	PR_TRUE},
      /* ------------------------- RC4 Operations --------------------------- */
      {CKM_RC4_KEY_GEN,		{1, 256, CKF_GENERATE},		PR_FALSE},
      {CKM_RC4,			{1, 256, CKF_EN_DE_WR_UN},	PR_FALSE},
      /* ------------------------- DES Operations --------------------------- */
-     {CKM_DES_KEY_GEN,		{ 8,  8, CKF_GENERATE},		PR_FALSE},
-     {CKM_DES_ECB,		{ 8,  8, CKF_EN_DE_WR_UN},	PR_FALSE},
-     {CKM_DES_CBC,		{ 8,  8, CKF_EN_DE_WR_UN},	PR_FALSE},
-     {CKM_DES_MAC,		{ 8,  8, CKF_SN_VR},		PR_FALSE},
-     {CKM_DES_MAC_GENERAL,	{ 8,  8, CKF_SN_VR},		PR_FALSE},
+     {CKM_DES_KEY_GEN,		{ 8,  8, CKF_GENERATE},		PR_TRUE},
+     {CKM_DES_ECB,		{ 8,  8, CKF_EN_DE_WR_UN},	PR_TRUE},
+     {CKM_DES_CBC,		{ 8,  8, CKF_EN_DE_WR_UN},	PR_TRUE},
+     {CKM_DES_MAC,		{ 8,  8, CKF_SN_VR},		PR_TRUE},
+     {CKM_DES_MAC_GENERAL,	{ 8,  8, CKF_SN_VR},		PR_TRUE},
      {CKM_DES_CBC_PAD,		{ 8,  8, CKF_EN_DE_WR_UN},	PR_TRUE},
-     {CKM_DES2_KEY_GEN,		{24, 24, CKF_GENERATE},		PR_FALSE},
+     {CKM_DES2_KEY_GEN,		{24, 24, CKF_GENERATE},		PR_TRUE},
      {CKM_DES3_KEY_GEN,		{24, 24, CKF_GENERATE},		PR_TRUE },
      {CKM_DES3_ECB,		{24, 24, CKF_EN_DE_WR_UN},	PR_TRUE },
      {CKM_DES3_CBC,		{24, 24, CKF_EN_DE_WR_UN},	PR_TRUE },
@@ -294,72 +294,72 @@ static const struct mechanismList mechanisms[] = {
      {CKM_DES3_MAC_GENERAL,	{24, 24, CKF_SN_VR},		PR_TRUE },
      {CKM_DES3_CBC_PAD,		{24, 24, CKF_EN_DE_WR_UN},	PR_TRUE },
      /* ------------------------- CDMF Operations --------------------------- */
-     {CKM_CDMF_KEY_GEN,		{8,  8, CKF_GENERATE},		PR_FALSE},
-     {CKM_CDMF_ECB,		{8,  8, CKF_EN_DE_WR_UN},	PR_FALSE},
-     {CKM_CDMF_CBC,		{8,  8, CKF_EN_DE_WR_UN},	PR_FALSE},
-     {CKM_CDMF_MAC,		{8,  8, CKF_SN_VR},		PR_FALSE},
-     {CKM_CDMF_MAC_GENERAL,	{8,  8, CKF_SN_VR},		PR_FALSE},
+     {CKM_CDMF_KEY_GEN,		{8,  8, CKF_GENERATE},		PR_TRUE},
+     {CKM_CDMF_ECB,		{8,  8, CKF_EN_DE_WR_UN},	PR_TRUE},
+     {CKM_CDMF_CBC,		{8,  8, CKF_EN_DE_WR_UN},	PR_TRUE},
+     {CKM_CDMF_MAC,		{8,  8, CKF_SN_VR},		PR_TRUE},
+     {CKM_CDMF_MAC_GENERAL,	{8,  8, CKF_SN_VR},		PR_TRUE},
      {CKM_CDMF_CBC_PAD,		{8,  8, CKF_EN_DE_WR_UN},	PR_TRUE},
      /* ------------------------- AES Operations --------------------------- */
-     {CKM_AES_KEY_GEN,		{16, 32, CKF_GENERATE},		PR_FALSE},
-     {CKM_AES_ECB,		{16, 32, CKF_EN_DE_WR_UN},	PR_FALSE},
-     {CKM_AES_CBC,		{16, 32, CKF_EN_DE_WR_UN},	PR_FALSE},
-     {CKM_AES_MAC,		{16, 32, CKF_SN_VR},		PR_FALSE},
-     {CKM_AES_MAC_GENERAL,	{16, 32, CKF_SN_VR},		PR_FALSE},
+     {CKM_AES_KEY_GEN,		{16, 32, CKF_GENERATE},		PR_TRUE},
+     {CKM_AES_ECB,		{16, 32, CKF_EN_DE_WR_UN},	PR_TRUE},
+     {CKM_AES_CBC,		{16, 32, CKF_EN_DE_WR_UN},	PR_TRUE},
+     {CKM_AES_MAC,		{16, 32, CKF_SN_VR},		PR_TRUE},
+     {CKM_AES_MAC_GENERAL,	{16, 32, CKF_SN_VR},		PR_TRUE},
      {CKM_AES_CBC_PAD,		{16, 32, CKF_EN_DE_WR_UN},	PR_TRUE},
      /* ------------------------- Hashing Operations ----------------------- */
      {CKM_MD2,			{0,   0, CKF_DIGEST},		PR_FALSE},
-     {CKM_MD2_HMAC,		{1, 128, CKF_SN_VR},		PR_FALSE},
-     {CKM_MD2_HMAC_GENERAL,	{1, 128, CKF_SN_VR},		PR_FALSE},
+     {CKM_MD2_HMAC,		{1, 128, CKF_SN_VR},		PR_TRUE},
+     {CKM_MD2_HMAC_GENERAL,	{1, 128, CKF_SN_VR},		PR_TRUE},
      {CKM_MD5,			{0,   0, CKF_DIGEST},		PR_FALSE},
-     {CKM_MD5_HMAC,		{1, 128, CKF_SN_VR},		PR_FALSE},
-     {CKM_MD5_HMAC_GENERAL,	{1, 128, CKF_SN_VR},		PR_FALSE},
+     {CKM_MD5_HMAC,		{1, 128, CKF_SN_VR},		PR_TRUE},
+     {CKM_MD5_HMAC_GENERAL,	{1, 128, CKF_SN_VR},		PR_TRUE},
      {CKM_SHA_1,		{0,   0, CKF_DIGEST},		PR_FALSE},
-     {CKM_SHA_1_HMAC,		{1, 128, CKF_SN_VR},		PR_FALSE},
-     {CKM_SHA_1_HMAC_GENERAL,	{1, 128, CKF_SN_VR},		PR_FALSE},
+     {CKM_SHA_1_HMAC,		{1, 128, CKF_SN_VR},		PR_TRUE},
+     {CKM_SHA_1_HMAC_GENERAL,	{1, 128, CKF_SN_VR},		PR_TRUE},
      {CKM_TLS_PRF_GENERAL,	{0, 512, CKF_SN_VR},		PR_FALSE},
      /* ------------------------- CAST Operations --------------------------- */
 #ifdef NSS_SOFTOKEN_DOES_CAST
      /* Cast operations are not supported ( yet? ) */
-     {CKM_CAST_KEY_GEN,		{1,  8, CKF_GENERATE},		PR_FALSE}, 
-     {CKM_CAST_ECB,		{1,  8, CKF_EN_DE_WR_UN},	PR_FALSE}, 
-     {CKM_CAST_CBC,		{1,  8, CKF_EN_DE_WR_UN},	PR_FALSE}, 
-     {CKM_CAST_MAC,		{1,  8, CKF_SN_VR},		PR_FALSE}, 
-     {CKM_CAST_MAC_GENERAL,	{1,  8, CKF_SN_VR},		PR_FALSE}, 
+     {CKM_CAST_KEY_GEN,		{1,  8, CKF_GENERATE},		PR_TRUE}, 
+     {CKM_CAST_ECB,		{1,  8, CKF_EN_DE_WR_UN},	PR_TRUE}, 
+     {CKM_CAST_CBC,		{1,  8, CKF_EN_DE_WR_UN},	PR_TRUE}, 
+     {CKM_CAST_MAC,		{1,  8, CKF_SN_VR},		PR_TRUE}, 
+     {CKM_CAST_MAC_GENERAL,	{1,  8, CKF_SN_VR},		PR_TRUE}, 
      {CKM_CAST_CBC_PAD,		{1,  8, CKF_EN_DE_WR_UN},	PR_TRUE}, 
-     {CKM_CAST3_KEY_GEN,	{1, 16, CKF_GENERATE},		PR_FALSE}, 
-     {CKM_CAST3_ECB,		{1, 16, CKF_EN_DE_WR_UN},	PR_FALSE}, 
-     {CKM_CAST3_CBC,		{1, 16, CKF_EN_DE_WR_UN},	PR_FALSE}, 
-     {CKM_CAST3_MAC,		{1, 16, CKF_SN_VR},		PR_FALSE}, 
-     {CKM_CAST3_MAC_GENERAL,	{1, 16, CKF_SN_VR},		PR_FALSE}, 
+     {CKM_CAST3_KEY_GEN,	{1, 16, CKF_GENERATE},		PR_TRUE}, 
+     {CKM_CAST3_ECB,		{1, 16, CKF_EN_DE_WR_UN},	PR_TRUE}, 
+     {CKM_CAST3_CBC,		{1, 16, CKF_EN_DE_WR_UN},	PR_TRUE}, 
+     {CKM_CAST3_MAC,		{1, 16, CKF_SN_VR},		PR_TRUE}, 
+     {CKM_CAST3_MAC_GENERAL,	{1, 16, CKF_SN_VR},		PR_TRUE}, 
      {CKM_CAST3_CBC_PAD,	{1, 16, CKF_EN_DE_WR_UN},	PR_TRUE}, 
-     {CKM_CAST5_KEY_GEN,	{1, 16, CKF_GENERATE},		PR_FALSE}, 
-     {CKM_CAST5_ECB,		{1, 16, CKF_EN_DE_WR_UN},	PR_FALSE}, 
-     {CKM_CAST5_CBC,		{1, 16, CKF_EN_DE_WR_UN},	PR_FALSE}, 
-     {CKM_CAST5_MAC,		{1, 16, CKF_SN_VR},		PR_FALSE}, 
-     {CKM_CAST5_MAC_GENERAL,	{1, 16, CKF_SN_VR},		PR_FALSE}, 
+     {CKM_CAST5_KEY_GEN,	{1, 16, CKF_GENERATE},		PR_TRUE}, 
+     {CKM_CAST5_ECB,		{1, 16, CKF_EN_DE_WR_UN},	PR_TRUE}, 
+     {CKM_CAST5_CBC,		{1, 16, CKF_EN_DE_WR_UN},	PR_TRUE}, 
+     {CKM_CAST5_MAC,		{1, 16, CKF_SN_VR},		PR_TRUE}, 
+     {CKM_CAST5_MAC_GENERAL,	{1, 16, CKF_SN_VR},		PR_TRUE}, 
      {CKM_CAST5_CBC_PAD,	{1, 16, CKF_EN_DE_WR_UN},	PR_TRUE}, 
 #endif
 #if NSS_SOFTOKEN_DOES_RC5
      /* ------------------------- RC5 Operations --------------------------- */
-     {CKM_RC5_KEY_GEN,		{1, 32, CKF_GENERATE}, 	PR_FALSE},
-     	{CKM_RC5_ECB,		{1, 32, CKF_EN_DE_WR_UN},	PR_FALSE},
-     {CKM_RC5_CBC,		{1, 32, CKF_EN_DE_WR_UN},	PR_FALSE},
-     {CKM_RC5_MAC,		{1, 32, CKF_SN_VR},  		PR_FALSE},
-     {CKM_RC5_MAC_GENERAL,	{1, 32, CKF_SN_VR},  		PR_FALSE},
+     {CKM_RC5_KEY_GEN,		{1, 32, CKF_GENERATE}, 	PR_TRUE},
+     	{CKM_RC5_ECB,		{1, 32, CKF_EN_DE_WR_UN},	PR_TRUE},
+     {CKM_RC5_CBC,		{1, 32, CKF_EN_DE_WR_UN},	PR_TRUE},
+     {CKM_RC5_MAC,		{1, 32, CKF_SN_VR},  		PR_TRUE},
+     {CKM_RC5_MAC_GENERAL,	{1, 32, CKF_SN_VR},  		PR_TRUE},
      {CKM_RC5_CBC_PAD,		{1, 32, CKF_EN_DE_WR_UN}, 	PR_TRUE},
 #endif
 #ifdef NSS_SOFTOKEN_DOES_IDEA
      /* ------------------------- IDEA Operations -------------------------- */
-     {CKM_IDEA_KEY_GEN,		{16, 16, CKF_GENERATE}, 	PR_FALSE}, 
-     {CKM_IDEA_ECB,		{16, 16, CKF_EN_DE_WR_UN},	PR_FALSE}, 
-     {CKM_IDEA_CBC,		{16, 16, CKF_EN_DE_WR_UN},	PR_FALSE}, 
-     {CKM_IDEA_MAC,		{16, 16, CKF_SN_VR},		PR_FALSE}, 
-     {CKM_IDEA_MAC_GENERAL,	{16, 16, CKF_SN_VR},		PR_FALSE}, 
+     {CKM_IDEA_KEY_GEN,		{16, 16, CKF_GENERATE}, 	PR_TRUE}, 
+     {CKM_IDEA_ECB,		{16, 16, CKF_EN_DE_WR_UN},	PR_TRUE}, 
+     {CKM_IDEA_CBC,		{16, 16, CKF_EN_DE_WR_UN},	PR_TRUE}, 
+     {CKM_IDEA_MAC,		{16, 16, CKF_SN_VR},		PR_TRUE}, 
+     {CKM_IDEA_MAC_GENERAL,	{16, 16, CKF_SN_VR},		PR_TRUE}, 
      {CKM_IDEA_CBC_PAD,		{16, 16, CKF_EN_DE_WR_UN}, 	PR_TRUE}, 
 #endif
      /* --------------------- Secret Key Operations ------------------------ */
-     {CKM_GENERIC_SECRET_KEY_GEN,	{1, 32, CKF_GENERATE}, PR_FALSE}, 
+     {CKM_GENERIC_SECRET_KEY_GEN,	{1, 32, CKF_GENERATE}, PR_TRUE}, 
      {CKM_CONCATENATE_BASE_AND_KEY,	{1, 32, CKF_GENERATE}, PR_FALSE}, 
      {CKM_CONCATENATE_BASE_AND_DATA,	{1, 32, CKF_GENERATE}, PR_FALSE}, 
      {CKM_CONCATENATE_DATA_AND_BASE,	{1, 32, CKF_GENERATE}, PR_FALSE}, 
@@ -1327,6 +1327,55 @@ validateSecretKey(PK11Session *session, PK11Object *object,
 
     return crv;
 }
+
+#define PK11_KEY_MAX_RETRIES 10 /* don't hang if we are having problems with the rng */
+#define PK11_KEY_ID_SIZE 18 /* don't use either SHA1 or MD5 sizes */
+/*
+ * Secret keys must have a CKA_ID value to be stored in the database. This code
+ * will generate one if there wasn't one already. 
+ */
+static CK_RV
+pk11_GenerateSecretCKA_ID(NSSLOWKEYDBHandle *handle, SECItem *id, char *label)
+{
+    unsigned int retries;
+    SECStatus rv = SECSuccess;
+    CK_RV crv = CKR_OK;
+
+    id->data = NULL;
+    if (label) {
+	id->data = (unsigned char *)PORT_Strdup(label);
+	if (id->data == NULL) {
+	    return CKR_HOST_MEMORY;
+	}
+	id->len = PORT_Strlen(label)+1;
+	if (!nsslowkey_KeyForIDExists(handle,id)) { 
+	    return CKR_OK;
+	}
+	PORT_Free(id->data);
+	id->data = NULL;
+	id->len = 0;
+    }
+    id->data = (unsigned char *)PORT_Alloc(PK11_KEY_ID_SIZE);
+    if (id->data == NULL) {
+	return CKR_HOST_MEMORY;
+    }
+    id->len = PK11_KEY_ID_SIZE;
+
+    retries = 0;
+    do {
+	rv = RNG_GenerateGlobalRandomBytes(id->data,id->len);
+    } while (rv == SECSuccess && nsslowkey_KeyForIDExists(handle,id) && 
+				(++retries <= PK11_KEY_MAX_RETRIES));
+
+    if ((rv != SECSuccess) || (retries > PK11_KEY_MAX_RETRIES)) {
+	crv = CKR_DEVICE_ERROR; /* random number generator is bad */
+	PORT_Free(id->data);
+	id->data = NULL;
+	id->len = 0;
+    }
+    return crv;
+}
+
 /*
  * check the consistancy and initialize a Secret Key Object 
  */
@@ -1353,14 +1402,31 @@ pk11_handleSecretKeyObject(PK11Session *session,PK11Object *object,
 	if (slot->keyDB == NULL) {
 	    return CKR_TOKEN_WRITE_PROTECTED;
 	}
-	privKey=pk11_mkSecretKeyRep(object);
-	if (privKey == NULL) return CKR_HOST_MEMORY;
 
 	label = pk11_getString(object,CKA_LABEL);
 
 	crv = pk11_Attribute2SecItem(NULL, &pubKey, object, CKA_ID);  
 						/* Should this be ID? */
 	if (crv != CKR_OK) goto loser;
+
+	/* if we don't have an ID, generate one */
+	if (pubKey.len == 0) {
+	    if (pubKey.data) { 
+		PORT_Free(pubKey.data);
+		pubKey.data = NULL;
+	    }
+	    crv = pk11_GenerateSecretCKA_ID(slot->keyDB, &pubKey, label);
+	    if (crv != CKR_OK) goto loser;
+
+	    crv = pk11_forceAttribute(object, CKA_ID, pubKey.data, pubKey.len);
+	    if (crv != CKR_OK) goto loser;
+	}
+
+	privKey=pk11_mkSecretKeyRep(object);
+	if (privKey == NULL) {
+	    crv = CKR_HOST_MEMORY;
+	    goto loser;
+	}
 
 	PORT_Assert(slot->keyDB);
 	rv = nsslowkey_StoreKeyByPublicKey(slot->keyDB,
@@ -2397,6 +2463,12 @@ static void nscFreeAllSlots(int moduleIndex)
 	CK_ULONG tmpSlotCount = nscSlotCount[moduleIndex];
 	CK_SLOT_ID_PTR tmpSlotList = nscSlotList[moduleIndex];
 	PLHashTable *tmpSlotHashTable = nscSlotHashTable[moduleIndex];
+
+	/* first close all the session */
+	for (i=0; i < (int) tmpSlotCount; i++) {
+	    slotID = tmpSlotList[i];
+	    (void) NSC_CloseAllSessions(slotID);
+	}
 
 	/* now clear out the statics */
 	nscSlotList[moduleIndex] = NULL;
@@ -3657,13 +3729,12 @@ pk11_key_collect(DBT *key, DBT *data, void *arg)
     PORT_Assert(slot->keyDB);
     if (!keyData->strict && keyData->id) {
 	SECItem result;
-	PRBool haveMatch;
+	PRBool haveMatch= PR_FALSE;
 	unsigned char hashKey[SHA1_LENGTH];
 	result.data = hashKey;
 	result.len = sizeof(hashKey);
 
 	if (keyData->id->len == 0) {
-	    haveMatch = PR_TRUE; /* taking any key */
 	    /* Make sure this isn't a NSC_KEY */
 	    privKey = nsslowkey_FindKeyByPublicKey(keyData->slot->keyDB, 
 					&tmpDBKey, keyData->slot->password);
@@ -3700,7 +3771,10 @@ pk11_key_collect(DBT *key, DBT *data, void *arg)
 		pk11_addHandle(keyData->searchHandles,
 			pk11_mkHandle(slot,&tmpDBKey,PK11_TOKEN_TYPE_PUB));
 	    }
-	    /* NSC_KEY Already handled */
+	    if (keyData->classFlags & NSC_KEY) {
+		pk11_addHandle(keyData->searchHandles,
+			pk11_mkHandle(slot,&tmpDBKey,PK11_TOKEN_TYPE_KEY));
+	    }
 	}
 	return SECSuccess;
     }
@@ -3748,6 +3822,7 @@ pk11_searchKeys(PK11Slot *slot, SECItem *key_id, PRBool isLoggedIn,
     NSSLOWKEYDBHandle *keyHandle = NULL;
     NSSLOWKEYPrivateKey *privKey;
     pk11KeyData keyData;
+    PRBool found = PR_FALSE;
 
     keyHandle = slot->keyDB;
     if (keyHandle == NULL) {
@@ -3760,14 +3835,17 @@ pk11_searchKeys(PK11Slot *slot, SECItem *key_id, PRBool isLoggedIn,
 	    if ((classFlags & NSC_KEY) && isSecretKey(privKey)) {
     	        pk11_addHandle(search,
 			pk11_mkHandle(slot,key_id,PK11_TOKEN_TYPE_KEY));
+		found = PR_TRUE;
 	    }
 	    if ((classFlags & NSC_PRIVATE) && !isSecretKey(privKey)) {
     	        pk11_addHandle(search,
 			pk11_mkHandle(slot,key_id,PK11_TOKEN_TYPE_PRIV));
+		found = PR_TRUE;
 	    }
 	    if ((classFlags & NSC_PUBLIC) && !isSecretKey(privKey)) {
     	        pk11_addHandle(search,
 			pk11_mkHandle(slot,key_id,PK11_TOKEN_TYPE_PUB));
+		found = PR_TRUE;
 	    }
     	    nsslowkey_DestroyPrivateKey(privKey);
 	}
@@ -3779,6 +3857,10 @@ pk11_searchKeys(PK11Slot *slot, SECItem *key_id, PRBool isLoggedIn,
 	/* all soft token id's are SHA1_HASH_LEN's */
 	if (key_id->len != SHA1_LENGTH) {
 	    return;
+	}
+	if (found) {
+	   /* if we already found some keys, don't do the traversal */
+	   return;
 	}
     }
     keyData.slot = slot;
