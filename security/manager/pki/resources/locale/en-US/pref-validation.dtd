@@ -21,7 +21,6 @@
   -->
 
 <!ENTITY  validation.title          "Validation">
-<!ENTITY  validation.description    "Settings for Validation">
 
 <!ENTITY  validation.crl.label      "CRL">
 <!ENTITY  validation.crl.description "Use the CRL Manager to manage the Certificate Revocation Lists (CRL) that are stored in your certificate database.">
