@@ -23,3 +23,4 @@ nsIMsgThread.idl
 nsIMsgVCard.idl
 nsIUrlListener.idl
 nsIMsgBiffManager.idl
+nsIMsgCopyService.idl
