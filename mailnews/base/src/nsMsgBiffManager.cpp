@@ -222,7 +222,10 @@ nsresult nsMsgBiffManager::PerformBiff()
 		if(current->nextBiffTime < currentTime)
 		{
 			char *password = nsnull;
-			current->server->GetPassword(&password);
+			// we don't want to prompt the user for password UI so pass in false to
+			// the server->GetPassword method. If we don't already know the passsword then 
+			// we just won't biff this server
+			current->server->GetPassword(PR_FALSE, &password);
 			//Make sure we're logged on before doing a biff
 			if(password && (nsCRT::strcmp(password, "") != 0))
 				current->server->PerformBiff();
