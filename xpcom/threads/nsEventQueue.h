@@ -46,7 +46,7 @@ public:
     NS_IMETHOD GetEvent(PLEvent** aResult);
     NS_IMETHOD HandleEvent(PLEvent* aEvent);
     
-    NS_IMETHOD WaitForEvent();
+    NS_IMETHOD WaitForEvent(PLEvent** aResult);
 
     NS_IMETHOD_(PRInt32) GetEventQueueSelectFD();
 
