@@ -208,7 +208,6 @@ PR_STATIC_CALLBACK(JSBool)
 WindowCollectionItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMWindowCollection *nativeThis = (nsIDOMWindowCollection*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsIDOMWindow* nativeRet;
   PRUint32 b0;
 
@@ -263,7 +262,6 @@ PR_STATIC_CALLBACK(JSBool)
 WindowCollectionNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMWindowCollection *nativeThis = (nsIDOMWindowCollection*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsIDOMWindow* nativeRet;
   nsAutoString b0;
 

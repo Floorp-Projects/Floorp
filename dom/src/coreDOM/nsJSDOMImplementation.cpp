@@ -146,7 +146,6 @@ PR_STATIC_CALLBACK(JSBool)
 DOMImplementationHasFeature(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMDOMImplementation *nativeThis = (nsIDOMDOMImplementation*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   PRBool nativeRet;
   nsAutoString b0;
   nsAutoString b1;

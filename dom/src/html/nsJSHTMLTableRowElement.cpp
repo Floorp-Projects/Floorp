@@ -422,7 +422,6 @@ PR_STATIC_CALLBACK(JSBool)
 HTMLTableRowElementInsertCell(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMHTMLTableRowElement *nativeThis = (nsIDOMHTMLTableRowElement*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsIDOMHTMLElement* nativeRet;
   PRInt32 b0;
 
@@ -477,7 +476,6 @@ PR_STATIC_CALLBACK(JSBool)
 HTMLTableRowElementDeleteCell(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMHTMLTableRowElement *nativeThis = (nsIDOMHTMLTableRowElement*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   PRInt32 b0;
 
   *rval = JSVAL_NULL;

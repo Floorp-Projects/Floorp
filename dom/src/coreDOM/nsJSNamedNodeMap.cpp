@@ -178,7 +178,6 @@ PR_STATIC_CALLBACK(JSBool)
 NamedNodeMapGetNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMNamedNodeMap *nativeThis = (nsIDOMNamedNodeMap*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsIDOMNode* nativeRet;
   nsAutoString b0;
 
@@ -230,7 +229,6 @@ PR_STATIC_CALLBACK(JSBool)
 NamedNodeMapSetNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMNamedNodeMap *nativeThis = (nsIDOMNamedNodeMap*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsIDOMNode* nativeRet;
   nsIDOMNodePtr b0;
 
@@ -288,7 +286,6 @@ PR_STATIC_CALLBACK(JSBool)
 NamedNodeMapRemoveNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMNamedNodeMap *nativeThis = (nsIDOMNamedNodeMap*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsIDOMNode* nativeRet;
   nsAutoString b0;
 
@@ -340,7 +337,6 @@ PR_STATIC_CALLBACK(JSBool)
 NamedNodeMapItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMNamedNodeMap *nativeThis = (nsIDOMNamedNodeMap*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsIDOMNode* nativeRet;
   PRUint32 b0;
 

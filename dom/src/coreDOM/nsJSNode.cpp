@@ -373,7 +373,6 @@ PR_STATIC_CALLBACK(JSBool)
 NodeInsertBefore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMNode *nativeThis = (nsIDOMNode*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsIDOMNode* nativeRet;
   nsIDOMNodePtr b0;
   nsIDOMNodePtr b1;
@@ -440,7 +439,6 @@ PR_STATIC_CALLBACK(JSBool)
 NodeReplaceChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMNode *nativeThis = (nsIDOMNode*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsIDOMNode* nativeRet;
   nsIDOMNodePtr b0;
   nsIDOMNodePtr b1;
@@ -507,7 +505,6 @@ PR_STATIC_CALLBACK(JSBool)
 NodeRemoveChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMNode *nativeThis = (nsIDOMNode*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsIDOMNode* nativeRet;
   nsIDOMNodePtr b0;
 
@@ -565,7 +562,6 @@ PR_STATIC_CALLBACK(JSBool)
 NodeAppendChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMNode *nativeThis = (nsIDOMNode*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsIDOMNode* nativeRet;
   nsIDOMNodePtr b0;
 
@@ -623,7 +619,6 @@ PR_STATIC_CALLBACK(JSBool)
 NodeHasChildNodes(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMNode *nativeThis = (nsIDOMNode*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   PRBool nativeRet;
 
   *rval = JSVAL_NULL;
@@ -672,7 +667,6 @@ PR_STATIC_CALLBACK(JSBool)
 NodeCloneNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMNode *nativeThis = (nsIDOMNode*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsIDOMNode* nativeRet;
   PRBool b0;
 
@@ -732,7 +726,6 @@ EventTargetAddEventListener(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
     return JS_FALSE;
   }
 
-  JSBool rBool = JS_FALSE;
   nsAutoString b0;
   nsIDOMEventListener* b1;
   PRBool b2;
@@ -807,7 +800,6 @@ EventTargetRemoveEventListener(JSContext *cx, JSObject *obj, uintN argc, jsval *
     return JS_FALSE;
   }
 
-  JSBool rBool = JS_FALSE;
   nsAutoString b0;
   nsIDOMEventListener* b1;
   PRBool b2;
