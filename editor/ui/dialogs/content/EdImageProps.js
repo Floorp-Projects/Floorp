@@ -66,7 +66,7 @@ function Startup()
   if (doSeeAll) {
     dialog.MoreRow.style.visibility     = "inherit"; // visible
   } else {
-    dialog.MoreRow.style.visibility     = "hidden"; // collapse
+    dialog.MoreRow.style.visibility     = "collapse"; // use "hidden" if still too many problems
   }
 
   if (null == dialog.srcInput || 
@@ -243,13 +243,16 @@ function onMoreFewer()
   {
     void(null);    
     doSeeAll                            = false;
-    dialog.MoreRow.style.visibility     = "hidden"; // collapse is a little funky
+    dialog.MoreRow.style.visibility     = "collapse"; // use "hidden" if still too many problems
   }
   else
   {
     doSeeAll                            = true;
     dialog.MoreRow.style.visibility     = "inherit"; // was visible; show doesn't seem to work
   }
+  // When visibility = "collapse" works,
+  // Use this to resize dialog:
+  window.sizeToContent();
 }
 
 function doValueChanged()

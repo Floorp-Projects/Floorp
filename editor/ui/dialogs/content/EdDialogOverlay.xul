@@ -29,7 +29,7 @@
 		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <box id="advancedEditButton" align="vertical">
-    <box align="horizontal" style="margin-top: 0.2em">
+    <box align="horizontal" id="advancedEditButtonNoHR" style="margin-top: 0.2em">
       <titledbutton class="hspaced" id="AdvancedEdit" onclick="onAdvancedEdit()" value="&AdvancedEditButton.label;"/>
     </box>
     <html:div><html:hr width="100%"/></html:div>
