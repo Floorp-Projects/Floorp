@@ -570,6 +570,7 @@ PL_DHashTableRawRemove(PLDHashTable *table, PLDHashEntryHdr *entry)
 {
     PLDHashNumber keyHash;      /* load first in case clearEntry goofs it */
 
+    PR_ASSERT(PL_DHASH_ENTRY_IS_LIVE(entry));
     keyHash = entry->keyHash;
     table->ops->clearEntry(table, entry);
     if (keyHash & COLLISION_FLAG) {
