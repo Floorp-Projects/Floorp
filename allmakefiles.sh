@@ -1027,9 +1027,10 @@ mail/components/compose/skin/Makefile
 mail/components/addrbook/Makefile
 mail/components/addrbook/skin/mac/Makefile
 mail/components/addrbook/skin/Makefile
-mail/components/prefwindow/Makefile
-mail/components/prefwindow/skin/mac/Makefile
-mail/components/prefwindow/skin/Makefile
+mail/components/preferences/Makefile
+mail/components/preferences/content/Makefile
+mail/components/preferences/skin/mac/Makefile
+mail/components/preferences/skin/Makefile
 mail/components/build/Makefile
 mail/components/gnome/Makefile
 mail/extensions/Makefile
