@@ -7,8 +7,8 @@
 # display these states and can also set the states which are not the
 # Bonsai States.
 
-# $Revision: 1.2 $ 
-# $Date: 2002/05/03 02:37:27 $ 
+# $Revision: 1.3 $ 
+# $Date: 2002/05/03 02:41:09 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderHeader/TreeState_Bonsai_Plus.pm,v $ 
 # $Name:  $ 
@@ -52,7 +52,7 @@ use BonsaiData;
 
 @ISA = qw(TinderHeader::BasicTxtHeader);
 
-$VERSION = ( qw $Revision: 1.2 $ )[1];
+$VERSION = ( qw $Revision: 1.3 $ )[1];
 
 # load the simple name of this module into TinderHeader so we can
 # track the implementations provided.
@@ -92,10 +92,6 @@ sub gettree_header {
 sub savetree_header {
   my ($self, $tree, $value) = @_;
 
-  # Don't save the Bonsai States
-
-  $value = grep { !/^((Open)|(Closed))$/ } $value;
-
   $self->SUPER::savetree_header($tree, $value);
 
   return ;
@@ -103,7 +99,7 @@ sub savetree_header {
 
 sub get_all_sorted_setable_tree_states {
 
-    my @valid_states =( '', (
+    my @valid_states =( 'Current_Bonsai_State', (
                              grep { !/^((Open)|(Closed))$/ } 
                            TreeData::get_all_sorted_tree_states()
                              )
