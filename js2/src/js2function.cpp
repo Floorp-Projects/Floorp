@@ -76,6 +76,8 @@ namespace MetaData {
             FunctionExprNode *fnExpr = parser.parseFunctionExpression(meta->engine->errorPos());
             ASSERT(parser.lexer.peek(true).hasKind(Token::end));
             ASSERT(fnExpr);     // otherwise, an exception would have been thrown out of here
+            fnExpr->obj = NULL;
+            RootKeeper rk(&fnExpr->obj);
             JS2Class *exprType;
             meta->ValidateExpression(&meta->cxt, meta->env, fnExpr);
             meta->SetupExprNode(meta->env, RunPhase, fnExpr, &exprType);

@@ -88,22 +88,23 @@ namespace MetaData {
     JS2Object *JS2Metadata::validateStaticFunction(FunctionDefinition *fnDef, js2val compileThis, bool prototype, bool unchecked, Context *cxt, Environment *env)
     {
         ParameterFrame *compileFrame = new ParameterFrame(compileThis, prototype);
-        JS2Object *result;
+        RootKeeper rk1(&compileFrame);
+        JS2Object *result = NULL;
+        RootKeeper rk2(&result);
         
         if (prototype) {
             FunctionInstance *fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
+            result = fInst;
             fInst->fWrap = new FunctionWrapper(unchecked, compileFrame, env);
             fnDef->fWrap = fInst->fWrap;
-            result = fInst;
         }
         else {
             SimpleInstance *sInst = new SimpleInstance(functionClass);
+            result = sInst;
             sInst->fWrap = new FunctionWrapper(unchecked, compileFrame, env);
             fnDef->fWrap = sInst->fWrap;
-            result = sInst;
         }
 
-        RootKeeper rk(&result);
         Frame *curTopFrame = env->getTopFrame();
         CompilationData *oldData = startCompilationUnit(fnDef->fWrap->bCon, bCon->mSource, bCon->mSourceLocation);
         try {
