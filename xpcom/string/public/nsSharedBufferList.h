@@ -39,8 +39,8 @@
 #include "nsAString.h"
 #endif
 
-#ifndef nsDependentString_h___
-#include "nsDependentString.h"
+#ifndef nsDependentSubstring_h___
+#include "nsDependentSubstring.h"
 #endif
 
 #ifndef nsBufferHandleUtils_h___
@@ -183,7 +183,7 @@ class NS_COM nsSharedBufferList
       NewSingleAllocationBuffer( const PRUnichar* aData, PRUint32 aDataLength, PRUint32 aAdditionalCapacity = 1 )
         {
           typedef Buffer* Buffer_ptr;
-          return NS_AllocateContiguousHandleWithData(Buffer_ptr(0), nsDependentString(aData, aDataLength), aAdditionalCapacity);
+          return NS_AllocateContiguousHandleWithData(Buffer_ptr(0), Substring(aData, aData+aDataLength), aAdditionalCapacity);
         }
 
       static
