@@ -869,21 +869,23 @@ GetFolderList(nsIRDFResource *source, nsVoidArray **array /* out */)
 	{
 		const nsNativeFileSpec	nativeSpec = (const nsNativeFileSpec &)i;
 		if (!isVisible(nativeSpec))	continue;
-		nsFilePath		filePath(nativeSpec);
-		char			*childURL = filePath;
+		nsFileURL		fileURL(nativeSpec);
+		const char		*childURL = fileURL.GetAsString();
 		if (childURL != nsnull)
 		{
-			nsAutoString	pathname("file://");
-			pathname += childURL;
+			nsAutoString	pathname(childURL);
 			if (nativeSpec.IsDirectory())
 			{
 				pathname += "/";
 			}
 			char		*filename = pathname.ToNewCString();
-			nsIRDFResource	*file;
-			gRDFService->GetResource(filename, (nsIRDFResource **)&file);
-			nameArray->AppendElement(file);
-			delete filename;
+			if (filename)
+			{
+				nsIRDFResource	*file;
+				gRDFService->GetResource(filename, (nsIRDFResource **)&file);
+				nameArray->AppendElement(file);
+				delete []filename;
+			}
 		}
 	}
 	return(NS_OK);
