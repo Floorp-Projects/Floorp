@@ -442,6 +442,7 @@ sub CheckCanChangeField {
         SendSQL("SELECT reporter, assigned_to, qa_contact FROM bugs
                  WHERE bug_id = $bugid");
         ($reporterid, $ownerid, $qacontactid) = (FetchSQLData());
+        $lastbugid = $bugid;
     }    
     # END DO_NOT_CHANGE
 
