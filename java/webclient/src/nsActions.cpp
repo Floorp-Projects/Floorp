@@ -145,6 +145,8 @@ wsLoadURLEvent::handleEvent ()
 		nsresult rv = mWebShell->LoadURL(mURL->GetUnicode());
 
 		printf("result = %lx\n", rv);
+
+        PR_Sleep(PR_SecondsToInterval(5));
 	}
 	return NULL;
 } // handleEvent()

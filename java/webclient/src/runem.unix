@@ -7,10 +7,10 @@ export MOZILLA_FIVE_HOME
 
 # Standard JDK 1.2 location
 JDK_LOCATION=${JDKHOME}
-# Native Threads
-LD_LIBRARY_PATH=${JDK_LOCATION}/jre/lib/i386:${JDK_LOCATION}/jre/lib/i386/classic:${JDK_LOCATION}/jre/lib/i386/native_threads:${MOZILLA_DIST}/bin:.:/usr/local/lib:/usr/lib:/lib:.
-# Green Threads
-#LD_LIBRARY_PATH=${JDK_LOCATION}/jre/lib/i386:${JDK_LOCATION}/jre/lib/i386/classic:${JDK_LOCATION}/jre/lib/i386/green_threads:${MOZILLA_DIST}/bin:.:/usr/local/lib:/usr/lib:/lib
+# WARNING: YOU NEED TO RUN 'gtk-config --libs' and stick in whatever library
+# paths it gives you!!!!
+GTKLIBS=/usr/lib
+LD_LIBRARY_PATH=${JDK_LOCATION}/jre/lib/i386:${JDK_LOCATION}/jre/lib/i386/classic:${JDK_LOCATION}/jre/lib/i386/native_threads:${MOZILLA_DIST}/bin:${GTKLIBS}:.:/usr/local/lib:/usr/lib:/lib
 export LD_LIBRARY_PATH
 JAVA=${JDK_LOCATION}/bin/java
 OUTPUT_DIR=${MOZILLA_DIST}/classes
@@ -18,8 +18,6 @@ OUTPUT_DIR=${MOZILLA_DIST}/classes
 CLASSES=${JDK_LOCATION}/lib/tools.jar:${JDK_LOCATION}/lib/rt.jar:${OUTPUT_DIR}
 CLASSNAME=org.mozilla.webclient.test.EmbeddedMozilla
 
-# For debugging...
-#${JAVA} -verbose:jni -Xcheck:jni -classpath ${CLASSES} ${CLASSNAME} $1
 echo
 echo "===================================================================="
 echo JDKHOME=${JDKHOME}
@@ -31,7 +29,9 @@ echo "===================================================================="
 echo LD_LIBRARY_PATH=${LD_LIBRARY_PATH}
 echo "===================================================================="
 echo
-${JAVA} -classpath ${CLASSES} ${CLASSNAME} $1 $2 $3 $4 $5
+# For debugging...
+#${JAVA} -native -verbose:jni -Xcheck:jni -classpath ${CLASSES} ${CLASSNAME} $1
+${JAVA} -native -classpath ${CLASSES} ${CLASSNAME} $1 $2 $3 $4 $5
 
 
 

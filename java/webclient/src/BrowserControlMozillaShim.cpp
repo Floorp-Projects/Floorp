@@ -352,6 +352,11 @@ InitEmbeddedEventHandler (WebShellInitContext* initContext)
 	    return;
         }
     }
+#ifdef XP_UNIX
+    // PENDING(mark): HACK! Sleep for 3 seconds just to make sure everything
+    // starts up correctly. Not sure why this helps yet.
+    ::PR_Sleep(PR_SecondsToInterval(3));
+#endif
 }
 
 
@@ -1496,7 +1501,10 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellCanBack (
 
 		while (actionEvent->isComplete() == PR_FALSE) {
 #ifndef XP_UNIX
-		  Sleep(0);
+            //PENDING(mark): Why not just use PR_Sleep?
+            Sleep(0);
+#else
+            ::PR_Sleep(PR_INTERVAL_NO_WAIT);
 #endif
 		}
 		voidResult = actionEvent->getResult();
@@ -1543,7 +1551,10 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellCanForward (
 
 		while (actionEvent->isComplete() == PR_FALSE) {
 #ifndef XP_UNIX
+            //PENDING(mark): Why not just use PR_Sleep?
 			Sleep(0);
+#else
+          ::PR_Sleep(PR_INTERVAL_NO_WAIT);
 #endif
 		}
 		voidResult = actionEvent->getResult();
@@ -1590,7 +1601,10 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellBack (
 
 		while (actionEvent->isComplete() == PR_FALSE) {
 #ifndef XP_UNIX
+            //PENDING(mark): Why not just use PR_Sleep?
 			Sleep(0);
+#else
+          ::PR_Sleep(PR_INTERVAL_NO_WAIT);
 #endif
 		}
 		voidResult = actionEvent->getResult();
@@ -1637,7 +1651,10 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellForward (
 
 		while (actionEvent->isComplete() == PR_FALSE) {
 #ifndef XP_UNIX
+            //PENDING(mark): Why not just use PR_Sleep?
 			Sleep(0);
+#else
+          ::PR_Sleep(PR_INTERVAL_NO_WAIT);
 #endif
 		}
 		voidResult = actionEvent->getResult();
@@ -1685,7 +1702,10 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellGoTo (
 
 		while (actionEvent->isComplete() == PR_FALSE) {
 #ifndef XP_UNIX
+            //PENDING(mark): Why not just use PR_Sleep?
 			Sleep(0);
+#else
+          ::PR_Sleep(PR_INTERVAL_NO_WAIT);
 #endif
 		}
 		voidResult = actionEvent->getResult();
@@ -1732,7 +1752,10 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellGetHistoryLen
 
 		while (actionEvent->isComplete() == PR_FALSE) {
 #ifndef XP_UNIX
+            //PENDING(mark): Why not just use PR_Sleep?
 			Sleep(0);
+#else
+          ::PR_Sleep(PR_INTERVAL_NO_WAIT);
 #endif
 		}
 		voidResult = actionEvent->getResult();
@@ -1779,7 +1802,10 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellGetHistoryInd
 
 		while (actionEvent->isComplete() == PR_FALSE) {
 #ifndef XP_UNIX
+            //PENDING(mark): Why not just use PR_Sleep?
 			Sleep(0);
+#else
+          ::PR_Sleep(PR_INTERVAL_NO_WAIT);
 #endif
 		}
 		voidResult = actionEvent->getResult();
@@ -1828,7 +1854,10 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellGetURL (
 
 		while (actionEvent->isComplete() == PR_FALSE) {
 #ifndef XP_UNIX
+            //PENDING(mark): Why not just use PR_Sleep?
 			Sleep(0);
+#else
+          ::PR_Sleep(PR_INTERVAL_NO_WAIT);
 #endif
 		}
 		voidResult = actionEvent->getResult();
