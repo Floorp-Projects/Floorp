@@ -426,45 +426,44 @@ pre_define_java_packages(JSContext *cx, JSObject *global_obj,
             quiet_resolve_failure = JS_FALSE;
 
             if (package_exists) {
-                    parent_obj = JSVAL_TO_OBJECT(v);
-                    continue;
-            } else {
-                /* New package objects should only be created at the terminal
-                   sub-package in a fully-qualified package-name */
-                if (strtok(NULL, ".")) {
-                    JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL,
-                                    JSJMSG_BAD_PACKAGE_PREDEF,
-                                   package_def->name);
-                    goto error;
-                }
-                
-                if (package_def->path) {
-                    path = strdup(package_def->path);
-                    if (!path)
-                        goto out_of_memory;
-                } else {
-
-                    /*
-                     * The default path is specified, so create it from the
-                     * fully-qualified package name.
-                     */
-                    path = strdup(package_def->name);
-                    if (!path)
-                        goto out_of_memory;
-                    /* Transform package name, e.g. "java.lang" ==> "java/lang" */
-                    for (cp = path; *cp != '\0'; cp++) {
-                        if (*cp == '.')
-                             *cp = '/';
-                    }
-                }
-                flags = package_def->flags;
-                parent_obj = define_JavaPackage(cx, parent_obj, simple_name, path, flags);
-                if (!parent_obj)
-                    goto error;
-     
-                free(path);
-                break;
+                parent_obj = JSVAL_TO_OBJECT(v);
+                continue;
             }
+
+            /* New package objects should only be created at the terminal
+               sub-package in a fully-qualified package-name */
+            if (strtok(NULL, ".")) {
+                JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL,
+                                JSJMSG_BAD_PACKAGE_PREDEF,
+                               package_def->name);
+                goto error;
+            }
+            
+            if (package_def->path) {
+                path = strdup(package_def->path);
+                if (!path)
+                    goto out_of_memory;
+            } else {
+                /*
+                 * The default path is specified, so create it from the
+                 * fully-qualified package name.
+                 */
+                path = strdup(package_def->name);
+                if (!path)
+                    goto out_of_memory;
+                /* Transform package name, e.g. "java.lang" ==> "java/lang" */
+                for (cp = path; *cp != '\0'; cp++) {
+                    if (*cp == '.')
+                         *cp = '/';
+                }
+            }
+            flags = package_def->flags;
+            parent_obj = define_JavaPackage(cx, parent_obj, simple_name, path, flags);
+            if (!parent_obj)
+                goto error;
+ 
+            free(path);
+            break;
         }
         free(package_name);
     }
