@@ -3430,7 +3430,7 @@ nsresult nsMsgDBView::MarkThreadRead(nsIMsgThread *threadHdr, nsMsgViewIndex thr
 
 // Starting from startIndex, performs the passed in navigation, including
 // any marking read needed, and returns the resultId and resultIndex of the
-// destination of the navigation. If there are no more unread in the view,
+// destination of the navigation.  If no message is found in the view,
 // it returns a resultId of nsMsgKey_None and an resultIndex of nsMsgViewIndex_None.
 NS_IMETHODIMP nsMsgDBView::ViewNavigate(nsMsgNavigationTypeValue motion, nsMsgKey *pResultKey, nsMsgViewIndex *pResultIndex, nsMsgViewIndex *pThreadIndex, PRBool wrap)
 {
@@ -3462,16 +3462,17 @@ nsresult nsMsgDBView::NavigateFromPos(nsMsgNavigationTypeValue motion, nsMsgView
     nsMsgViewIndex lastIndex = (GetSize() > 0) ? (nsMsgViewIndex) GetSize() - 1 : nsMsgViewIndex_None;
     nsMsgViewIndex threadIndex = nsMsgViewIndex_None;
 
+    // if there aren't any messages in the view, bail out.
+    if (GetSize() <= 0) {
+      *pResultIndex = nsMsgViewIndex_None;
+      *pResultKey = nsMsgKey_None;
+      return NS_OK;
+    }
+
     switch (motion) {
         case nsMsgNavigationType::firstMessage:
-            if (GetSize() > 0) {
-                *pResultIndex = 0;
-                *pResultKey = m_keys.GetAt(0);
-            }
-            else {
-                *pResultIndex = nsMsgViewIndex_None;
-                *pResultKey = nsMsgKey_None;
-            }
+            *pResultIndex = 0;
+            *pResultKey = m_keys.GetAt(0);
             break;
         case nsMsgNavigationType::nextMessage:
             // return same index and id on next on last message
