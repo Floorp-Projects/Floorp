@@ -98,6 +98,9 @@ protected:
   nsDeque            mTokenDeque;
   PRPackedBool       mIsFinalChunk;
   nsTokenAllocator*  mTokenAllocator;
+  // This variable saves the position of the last tag we inspected in
+  // ScanDocStructure. We start scanning the general well-formedness of the
+  // document starting at this position each time.
   PRInt32            mTokenScanPos;
   PRUint32           mFlags;
 };
