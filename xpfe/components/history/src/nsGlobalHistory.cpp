@@ -319,6 +319,10 @@ nsGlobalHistory::AddPage(const char *aURL, const char *aReferrerURL, PRInt64 aDa
   if (! mStore)
     return NS_ERROR_NOT_INITIALIZED;
 
+  NS_PRECONDITION(mTable != nsnull, "not initialized");
+  if (! mTable)
+    return NS_ERROR_NOT_INITIALIZED;
+
   nsresult rv;
   mdb_err err;
 
