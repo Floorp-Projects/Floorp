@@ -2259,7 +2259,8 @@ pk11_InDelayPeriod(PRIntervalTime lastTime, PRIntervalTime delayTime,
     PRIntervalTime time;
 
     *retTime = time = PR_IntervalNow();
-    return (PRBool) (time > lastTime) && ((time-lastTime) < delayTime);
+    return (PRBool) (lastTime) && (time > lastTime) && 
+				((time-lastTime) < delayTime);
 }
 
 /*
