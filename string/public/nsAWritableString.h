@@ -185,7 +185,7 @@ class basic_nsAWritableString
 
                 while ( n )
                   {
-                    difference_type one_hop = min(n, size_forward());
+                    difference_type one_hop = NS_MIN(n, size_forward());
                     mPosition += one_hop;
                     normalize_forward();
                     n -= one_hop;
@@ -202,7 +202,7 @@ class basic_nsAWritableString
 
                 while ( n )
                   {
-                    difference_type one_hop = min(n, size_backward());
+                    difference_type one_hop = NS_MIN(n, size_backward());
                     mPosition -= one_hop;
                     normalize_backward();
                     n -= one_hop;
@@ -241,7 +241,7 @@ class basic_nsAWritableString
       EndWriting( PRUint32 aOffset = 0 )
         {
           WritableFragment fragment;
-          CharT* startPos = GetWritableFragment(fragment, kFragmentAt, max(0U, Length()-aOffset));
+          CharT* startPos = GetWritableFragment(fragment, kFragmentAt, NS_MAX(0U, Length()-aOffset));
           return WritingIterator(fragment, startPos, *this);
         }
 
@@ -330,9 +330,9 @@ copy_chunky( typename basic_nsAReadableString<CharT>::ReadingIterator first,
   {
     while ( first != last )
       {
-        PRUint32 lengthToCopy = PRUint32( min(first.size_forward(), result.size_forward()) );
+        PRUint32 lengthToCopy = PRUint32( NS_MIN(first.size_forward(), result.size_forward()) );
         if ( first.fragment().mStart == last.fragment().mStart )
-          lengthToCopy = min(lengthToCopy, PRUint32(last.operator->() - first.operator->()));
+          lengthToCopy = NS_MIN(lengthToCopy, PRUint32(last.operator->() - first.operator->()));
 
         // assert(lengthToCopy > 0);
 
@@ -353,9 +353,9 @@ copy_backward_chunky( typename basic_nsAReadableString<CharT>::ReadingIterator  
   {
     while ( first != last )
       {
-        PRUint32 lengthToCopy = PRUint32( min(first.size_backward(), result.size_backward()) );
+        PRUint32 lengthToCopy = PRUint32( NS_MIN(first.size_backward(), result.size_backward()) );
         if ( first.fragment().mStart == last.fragment().mStart )
-          lengthToCopy = min(lengthToCopy, PRUint32(first.operator->() - last.operator->()));
+          lengthToCopy = NS_MIN(lengthToCopy, PRUint32(first.operator->() - last.operator->()));
 
         nsCharTraits<CharT>::move(result.operator->(), first.operator->(), lengthToCopy);
 
@@ -421,8 +421,8 @@ basic_nsAWritableString<CharT>::Replace( PRUint32 cutStart, PRUint32 cutLength, 
   {
     PRUint32 oldLength = Length();
 
-    cutStart = min(cutStart, oldLength);
-    cutLength = min(cutLength, oldLength-cutStart);
+    cutStart = NS_MIN(cutStart, oldLength);
+    cutLength = NS_MIN(cutLength, oldLength-cutStart);
     PRUint32 cutEnd = cutStart + cutLength;
 
     PRUint32 replacementLength = aReplacement.Length();
