@@ -545,7 +545,7 @@ int lterm_open(int lterm, char *const argv[],
 
     if (strlen(init_command) <= MAXSHELLINITSTR-1) {
       int cmd = lts->shellInitCommands++;
-      assert(cmd < MAXSHELLCMD);
+      assert(cmd < MAXSHELLINITCMD);
 
       (void) strncpy(lts->shellInitStr[cmd], init_command, MAXSHELLINITSTR-1);
       lts->shellInitStr[cmd][MAXSHELLINITSTR-1] = '\0';
@@ -574,7 +574,7 @@ int lterm_open(int lterm, char *const argv[],
     if (strlen(shellInitFormat)-4+strlen(lts->cookie) <= MAXSHELLINITSTR-1) {
 
       int cmd = lts->shellInitCommands++;
-      assert(cmd < MAXSHELLCMD);
+      assert(cmd < MAXSHELLINITCMD);
 
       sprintf(lts->shellInitStr[cmd], shellInitFormat, lts->cookie);
       lts->shellInitStr[cmd][MAXSHELLINITSTR-1] = '\0';
