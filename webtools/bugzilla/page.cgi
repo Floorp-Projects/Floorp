@@ -42,19 +42,14 @@ Bugzilla->login();
 
 my $cgi = Bugzilla->cgi;
 
-my $id = $cgi->param('id');
-if ($id) {
+if ($::FORM{'id'}) {
     # Remove all dodgy chars, and split into name and ctype.
-    $id =~ s/[^\w\-\.]//g;
-    $id =~ /(.*)\.(.*)/;
-    if (!$2) {
-        # if this regexp fails to match completely, something bad came in
-        ThrowCodeError("bad_page_cgi_id", { "page_id" => $id });
-    }
+    $::FORM{'id'} =~ s/[^\w\-\.]//g;
+    $::FORM{'id'} =~ /(.*)\.(.*)/;
 
     my $format = GetFormat("pages/$1", undef, $2);
     
-    $cgi->param('id', $id);
+    $vars->{'form'} = \%::FORM; 
 
     print $cgi->header($format->{'ctype'});
 

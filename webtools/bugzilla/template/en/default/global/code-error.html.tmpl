@@ -56,11 +56,6 @@
   [% ELSIF error == "authres_unhandled" %]
     An authorization handler return value was not handled by the login code.
 
-  [% ELSIF error == "bad_page_cgi_id" %]
-    [% title = "Invalid Page ID" %]
-    The ID <code>[% page_id FILTER html %]</code> is not a
-    valid page identifier.
-
   [% ELSIF error == "bug_error" %]
     Trying to retrieve [% terms.bug %] [%+ bug.bug_id FILTER html %] returned 
     the error [% bug.error FILTER html %].
