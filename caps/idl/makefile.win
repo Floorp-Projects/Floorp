@@ -30,6 +30,7 @@ XPIDLSRCS=                                \
            .\nsICodebasePrincipal.idl     \
            .\nsIAggregatePrincipal.idl    \
            .\nsISignatureVerifier.idl     \
+	   .\nsISecurityCheckedComponent.idl \
             $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

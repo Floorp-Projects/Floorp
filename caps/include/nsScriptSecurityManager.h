@@ -121,6 +121,9 @@ private:
     GetPrefName(nsIPrincipal *principal, nsDOMProp domProp, 
                 nsCString &result);
 
+    nsresult 
+    CheckXPCCapability(JSContext *aJSContext, const char *aCapability);
+ 
     NS_IMETHOD
     CheckXPCPermissions(JSContext *cx, nsISupports* aObj);
 
