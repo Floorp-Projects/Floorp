@@ -28,13 +28,15 @@
 #include "nsIControllerCommand.h"
 #include "nsIAtom.h"
 
-
-class nsBaseCommand : public nsIControllerCommand
+// This is a virtual base class for commands registered with the editor controller.
+// Note that such commands can be shared by more than on editor instance, so
+// MUST be stateless. Any state must be stored via the refCon (an nsIEditor).
+class nsBaseEditorCommand : public nsIControllerCommand
 {
 public:
 
-              nsBaseCommand();
-  virtual     ~nsBaseCommand() {}
+              nsBaseEditorCommand();
+  virtual     ~nsBaseEditorCommand() {}
     
   NS_DECL_ISUPPORTS
     
@@ -45,7 +47,7 @@ public:
 
 
 #define NS_DECL_EDITOR_COMMAND(_cmd)                    \
-class _cmd : public nsBaseCommand                       \
+class _cmd : public nsBaseEditorCommand                 \
 {                                                       \
 public:                                                 \
   NS_DECL_NSICONTROLLERCOMMAND                          \

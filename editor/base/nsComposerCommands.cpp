@@ -40,63 +40,57 @@
 #include "nsComposerCommands.h"
 
 
-
-// utility methods
-
-//---------------------------------------------------------------------------
-static PRBool XULNodeExists(nsIEditorShell* aEditorShell, const char* nodeID)
-//---------------------------------------------------------------------------
+nsBaseComposerCommand::nsBaseComposerCommand()
 {
-  nsCOMPtr<nsIDOMWindow> webshellWindow;
-  aEditorShell->GetWebShellWindow(getter_AddRefs(webshellWindow));  
-
-  nsCOMPtr<nsIDOMDocument> chromeDoc;
-  webshellWindow->GetDocument(getter_AddRefs(chromeDoc));
-  if (!chromeDoc) return PR_FALSE;
-  
-  nsCOMPtr<nsIDOMElement> elem;
-  nsresult rv = chromeDoc->GetElementById( NS_ConvertASCIItoUCS2(nodeID), getter_AddRefs(elem) );
-
-  return NS_SUCCEEDED(rv) && (elem.get() != nsnull);
+  NS_INIT_REFCNT();
 }
 
-//---------------------------------------------------------------------------
-static nsresult SetNodeAttribute(nsIEditorShell* aEditorShell, const PRUnichar* nodeID,
-              const PRUnichar* attributeName, const nsString& newValue)
-//---------------------------------------------------------------------------
-{
-  nsCOMPtr<nsIDOMWindow> webshellWindow;
-  aEditorShell->GetWebShellWindow(getter_AddRefs(webshellWindow));  
+NS_IMPL_ISUPPORTS(nsBaseComposerCommand, NS_GET_IID(nsIControllerCommand));
 
+
+//--------------------------------------------------------------------------------------------------------------------
+nsresult
+nsBaseComposerCommand::GetInterfaceNode(const PRUnichar* nodeID, nsIEditorShell* editorShell, nsIDOMElement **outNode)
+//--------------------------------------------------------------------------------------------------------------------
+{
+  *outNode = nsnull;
+  NS_ASSERTION(editorShell, "Should have an editorShell here");
+
+  nsCOMPtr<nsIDOMWindow> webshellWindow;
+  editorShell->GetWebShellWindow(getter_AddRefs(webshellWindow));  
+  if (!webshellWindow) return NS_ERROR_FAILURE;
+  
   nsCOMPtr<nsIDOMDocument> chromeDoc;
   webshellWindow->GetDocument(getter_AddRefs(chromeDoc));
-  if (!chromeDoc) return PR_FALSE;
-
-  nsCOMPtr<nsIDOMElement> elem;
-  nsresult rv = chromeDoc->GetElementById( nsAutoString(nodeID), getter_AddRefs(elem) );
-  if (NS_FAILED(rv) || !elem) return rv;
+  if (!chromeDoc) return NS_ERROR_FAILURE;
   
-  return elem->SetAttribute(nsAutoString(attributeName), newValue);
+  nsCOMPtr<nsIDOMElement> elem;
+  return chromeDoc->GetElementById(nsAutoString(nodeID), outNode);
+}
+
+//--------------------------------------------------------------------------------------------------------------------
+nsresult
+nsBaseComposerCommand::GetCommandNodeState(const PRUnichar *aCommand, nsIEditorShell* editorShell, nsString& outNodeState)
+//--------------------------------------------------------------------------------------------------------------------
+{
+  nsCOMPtr<nsIDOMElement> uiNode;
+  GetInterfaceNode(aCommand, editorShell, getter_AddRefs(uiNode));
+  if (!uiNode) return NS_ERROR_FAILURE;
+
+  return uiNode->GetAttribute(NS_ConvertASCIItoUCS2("state").GetUnicode(), outNodeState);
 }
 
 
-//---------------------------------------------------------------------------
-static nsresult GetNodeAttribute(nsIEditorShell* aEditorShell, const PRUnichar* nodeID,
-              const PRUnichar* attributeName, nsString& outValue)
-//---------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------------------------
+nsresult
+nsBaseComposerCommand::SetCommandNodeState(const PRUnichar *aCommand, nsIEditorShell* editorShell, const nsString& inNodeState)
+//--------------------------------------------------------------------------------------------------------------------
 {
-  nsCOMPtr<nsIDOMWindow> webshellWindow;
-  aEditorShell->GetWebShellWindow(getter_AddRefs(webshellWindow));  
-
-  nsCOMPtr<nsIDOMDocument> chromeDoc;
-  webshellWindow->GetDocument(getter_AddRefs(chromeDoc));
-  if (!chromeDoc) return PR_FALSE;
-
-  nsCOMPtr<nsIDOMElement> elem;
-  nsresult rv = chromeDoc->GetElementById( nsAutoString(nodeID), getter_AddRefs(elem) );
-  if (NS_FAILED(rv) || !elem) return rv;
+  nsCOMPtr<nsIDOMElement> uiNode;
+  GetInterfaceNode(aCommand, editorShell, getter_AddRefs(uiNode));
+  if (!uiNode) return NS_ERROR_FAILURE;
   
-  return elem->GetAttribute(nsAutoString(attributeName), outValue);
+  return uiNode->SetAttribute(NS_ConvertASCIItoUCS2("state").GetUnicode(), inNodeState);
 }
 
 
@@ -106,7 +100,7 @@ static nsresult GetNodeAttribute(nsIEditorShell* aEditorShell, const PRUnichar* 
 
 
 nsBaseStateUpdatingCommand::nsBaseStateUpdatingCommand(const char* aTagName)
-: nsBaseCommand()
+: nsBaseComposerCommand()
 , mTagName(aTagName)
 {
 }
@@ -115,7 +109,7 @@ nsBaseStateUpdatingCommand::~nsBaseStateUpdatingCommand()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsBaseStateUpdatingCommand, nsBaseCommand, nsIStateUpdatingControllerCommand);
+NS_IMPL_ISUPPORTS_INHERITED1(nsBaseStateUpdatingCommand, nsBaseComposerCommand, nsIStateUpdatingControllerCommand);
 
 NS_IMETHODIMP
 nsBaseStateUpdatingCommand::IsCommandEnabled(const PRUnichar *aCommand, nsISupports * refCon, PRBool *outCmdEnabled)
@@ -158,25 +152,17 @@ nsBaseStateUpdatingCommand::UpdateCommandState(const PRUnichar *aCommandName, ns
     rv = GetCurrentState(editorShell, mTagName, stateIsSet);
     if (NS_FAILED(rv)) return rv;
 
-    PRBool oldState  = !stateIsSet;
-    
-    // what was it last set to?
-    void* stateData;
-    if (NS_SUCCEEDED(editorShell->GetCommandStateData(aCommandName, &stateData)))
-      oldState = (PRBool)stateData;
-    
-    if (stateIsSet != oldState)
+    if (!mGotState || (stateIsSet != mState))
     {
       // poke the UI
-      rv = SetNodeAttribute(editorShell, aCommandName, NS_ConvertASCIItoUCS2("state").GetUnicode(),
-                  NS_ConvertASCIItoUCS2(stateIsSet ? "true" : "false"));
-    
-      editorShell->SetCommandStateData(aCommandName, (void*)stateIsSet);
+      SetCommandNodeState(aCommandName, editorShell, NS_ConvertASCIItoUCS2(stateIsSet ? "true" : "false"));
+
+      mGotState = PR_TRUE;
+      mState = stateIsSet;
     }
   }
   return rv;
 }
-
 
 
 #ifdef XP_MAC
@@ -608,10 +594,9 @@ nsParagraphStateCommand::DoCommand(const PRUnichar *aCommand, nsISupports * refC
   {
     // we have to grab the state attribute on our command node to find out
     // what format to set the paragraph to
-    nsAutoString stateAttribute;
-    rv = GetNodeAttribute(editorShell, aCommand, NS_ConvertASCIItoUCS2("state").GetUnicode(), stateAttribute);
+    nsAutoString stateAttribute;    
+    rv = GetCommandNodeState(aCommand, editorShell, stateAttribute);
     if (NS_FAILED(rv)) return rv;
-    
     rv = editorShell->SetParagraphFormat(stateAttribute.GetUnicode());
   }
   
@@ -652,9 +637,8 @@ nsAlignCommand::DoCommand(const PRUnichar *aCommand, nsISupports * refCon)
     // we have to grab the state attribute on our command node to find out
     // what format to set the paragraph to
     nsAutoString stateAttribute;
-    rv = GetNodeAttribute(editorShell, aCommand, NS_ConvertASCIItoUCS2("state").GetUnicode(), stateAttribute);
+    rv = GetCommandNodeState(aCommand, editorShell, stateAttribute);
     if (NS_FAILED(rv)) return rv;
-    
     rv = editorShell->Align(stateAttribute.GetUnicode());
   }
   
@@ -694,6 +678,13 @@ nsRemoveStylesCommand::DoCommand(const PRUnichar *aCommand, nsISupports * refCon
   if (editorShell)
   {
     rv = editorShell->RemoveTextProperty(NS_ConvertASCIItoUCS2("all").GetUnicode(), NS_ConvertASCIItoUCS2("").GetUnicode());
+    if (NS_FAILED(rv)) return rv;
+    
+    // now get all the style buttons to update
+    nsCOMPtr<nsIDOMWindow> contentWindow;
+    editorShell->GetContentWindow(getter_AddRefs(contentWindow));
+    if (contentWindow)
+      contentWindow->UpdateCommands(NS_ConvertASCIItoUCS2("style"));
   }
   
   return rv;  

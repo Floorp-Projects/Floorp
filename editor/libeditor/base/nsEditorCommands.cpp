@@ -33,12 +33,12 @@
 #include "nsEditorCommands.h"
 
 
-nsBaseCommand::nsBaseCommand()
+nsBaseEditorCommand::nsBaseEditorCommand()
 {
   NS_INIT_REFCNT();
 }
 
-NS_IMPL_ISUPPORTS(nsBaseCommand, NS_GET_IID(nsIControllerCommand));
+NS_IMPL_ISUPPORTS(nsBaseEditorCommand, NS_GET_IID(nsIControllerCommand));
 
 #ifdef XP_MAC
 #pragma mark -

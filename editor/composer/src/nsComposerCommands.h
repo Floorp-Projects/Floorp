@@ -24,11 +24,50 @@
 #ifndef nsComposerCommands_h_
 #define nsComposerCommands_h_
 
+#include "nsIControllerCommand.h"
 
-#include "nsEditorCommands.h"
+// This is a virtual base class for commands registered with the composer controller.
+// Note that such commands are instantiated once per composer, so can store state.
+// Also note that IsCommandEnabled can be called with an editorShell that may not
+// have an editor yet (because the document is loading). Most commands will want
+// to return false in this case.
+// Don't hold on to any references to the editorShell, editor, or document from
+// your command. This will cause leaks. Also, be aware that the document the
+// editor is editing can change under you (if the user Reverts the file, for
+// instance).
+class nsBaseComposerCommand : public nsIControllerCommand
+{
+public:
+
+              nsBaseComposerCommand();
+  virtual     ~nsBaseComposerCommand() {}
+    
+  NS_DECL_ISUPPORTS
+    
+  NS_IMETHOD  IsCommandEnabled(const PRUnichar *aCommand, nsISupports* refCon, PRBool *_retval) = 0;
+  NS_IMETHOD  DoCommand(const PRUnichar *aCommand, nsISupports* refCon) = 0;
+
+protected:
+
+  // utility methods to get/set the "state" attribute on the command node in the XUL
+  nsresult    GetInterfaceNode(const PRUnichar* nodeID, nsIEditorShell* editorShell, nsIDOMElement **outNode);
+  
+  nsresult    GetCommandNodeState(const PRUnichar *aCommand, nsIEditorShell* editorShell, nsString& outNodeState);
+  nsresult    SetCommandNodeState(const PRUnichar *aCommand, nsIEditorShell* editorShell, const nsString& inNodeState);
+
+};
+
+
+
+#define NS_DECL_COMPOSER_COMMAND(_cmd)                  \
+class _cmd : public nsBaseComposerCommand               \
+{                                                       \
+public:                                                 \
+  NS_DECL_NSICONTROLLERCOMMAND                          \
+};
 
 // virtual base class for commands that need to save and update state
-class nsBaseStateUpdatingCommand : public nsBaseCommand,
+class nsBaseStateUpdatingCommand : public nsBaseComposerCommand,
                                    public nsIStateUpdatingControllerCommand
 {
 public:
@@ -54,6 +93,8 @@ protected:
   const char* mTagName;
   const char* mAttributeName;
   
+  PRPackedBool  mGotState;    // do we know the state yet?
+  PRPackedBool  mState;       // is this style "on" ?
 };
 
 
@@ -92,35 +133,35 @@ protected:
 
 
 // composer commands
-NS_DECL_EDITOR_COMMAND(nsAlwaysEnabledCommands)
+NS_DECL_COMPOSER_COMMAND(nsAlwaysEnabledCommands)
 
-NS_DECL_EDITOR_COMMAND(nsCloseCommand)
-NS_DECL_EDITOR_COMMAND(nsPrintingCommands)
+NS_DECL_COMPOSER_COMMAND(nsCloseCommand)
+NS_DECL_COMPOSER_COMMAND(nsPrintingCommands)
 
 // Generic commands
 
 
 // File menu
-NS_DECL_EDITOR_COMMAND(nsNewCommands)   // handles 'new' anything
+NS_DECL_COMPOSER_COMMAND(nsNewCommands)   // handles 'new' anything
 
 
-NS_DECL_EDITOR_COMMAND(nsSaveCommand)
-NS_DECL_EDITOR_COMMAND(nsSaveAsCommand)
+NS_DECL_COMPOSER_COMMAND(nsSaveCommand)
+NS_DECL_COMPOSER_COMMAND(nsSaveAsCommand)
 
 
 
 // Edit menu
-NS_DECL_EDITOR_COMMAND(nsPasteQuotationCommand)
+NS_DECL_COMPOSER_COMMAND(nsPasteQuotationCommand)
 
 // Block transformations
-NS_DECL_EDITOR_COMMAND(nsIndentCommand)
-NS_DECL_EDITOR_COMMAND(nsOutdentCommand)
+NS_DECL_COMPOSER_COMMAND(nsIndentCommand)
+NS_DECL_COMPOSER_COMMAND(nsOutdentCommand)
 
-NS_DECL_EDITOR_COMMAND(nsParagraphStateCommand)
-NS_DECL_EDITOR_COMMAND(nsAlignCommand)
-NS_DECL_EDITOR_COMMAND(nsRemoveStylesCommand)
-NS_DECL_EDITOR_COMMAND(nsIncreaseFontSizeCommand)
-NS_DECL_EDITOR_COMMAND(nsDecreaseFontSizeCommand)
+NS_DECL_COMPOSER_COMMAND(nsParagraphStateCommand)
+NS_DECL_COMPOSER_COMMAND(nsAlignCommand)
+NS_DECL_COMPOSER_COMMAND(nsRemoveStylesCommand)
+NS_DECL_COMPOSER_COMMAND(nsIncreaseFontSizeCommand)
+NS_DECL_COMPOSER_COMMAND(nsDecreaseFontSizeCommand)
 
 
 
