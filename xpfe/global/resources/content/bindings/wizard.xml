@@ -97,7 +97,9 @@
           if (val < 0 || val >= this.pageCount)
             return this._pageIndex;
 
-          this.currentPage = this.wizardPages[val];
+          var page = this.wizardPages[val];
+          this._pageStack[this._pageStack.length-1] = page;
+          this.currentPage = page;
         ]]>
         </setter>
       </property>
