@@ -31,17 +31,10 @@ nsFontMetricsUnix :: nsFontMetricsUnix()
   NS_INIT_REFCNT();
   mFont = nsnull;
   mFontHandle = nsnull;
-//  hackyfontnamething = nsnull;
 }
   
 nsFontMetricsUnix :: ~nsFontMetricsUnix()
 {
-//  if (nsnull != hackyfontnamething)
-//  {
-//    PR_Free(hackyfontnamething);
-//    hackyfontnamething = nsnull;
-//  }
-
   if (nsnull != mFont)
   {
     delete mFont;
@@ -79,7 +72,7 @@ nsresult nsFontMetricsUnix :: Init(const nsFont& aFont, nsIDeviceContext* aCX)
     dpi = 100;
 
 #ifdef NOISY_FONTS
-//  fprintf(stderr, "looking for font %s (%d)", wildstring, aFont.size / 20);
+  fprintf(stderr, "looking for font %s (%d)", wildstring, aFont.size / 20);
 #endif
 
   //font properties we care about:
@@ -90,7 +83,7 @@ nsresult nsFontMetricsUnix :: Init(const nsFont& aFont, nsIDeviceContext* aCX)
 
   PR_snprintf(&wildstring[namelen + 1], namelen + 200,
              "*-%s-%s-%c-normal--*-*-%d-%d-*-*-*",
-	     wildstring,
+             wildstring,
              (aFont.weight <= NS_FONT_WEIGHT_NORMAL) ? "medium" : "bold",
              (aFont.style == NS_FONT_STYLE_NORMAL) ? 'r' :
              ((aFont.style == NS_FONT_STYLE_ITALIC) ? 'i' : 'o'), dpi, dpi);
@@ -132,7 +125,7 @@ nsresult nsFontMetricsUnix :: Init(const nsFont& aFont, nsIDeviceContext* aCX)
     {
       PR_snprintf(&wildstring[namelen + 1], namelen + 200,
                  "*-%s-%s-%c-normal--*-*-%d-%d-*-*-*",
-	         newname,
+                 newname,
                  (aFont.weight <= NS_FONT_WEIGHT_NORMAL) ? "medium" : "bold",
                  altitalicization, dpi, dpi);
 
@@ -146,8 +139,9 @@ nsresult nsFontMetricsUnix :: Init(const nsFont& aFont, nsIDeviceContext* aCX)
     
     mFontHandle = ::XLoadFont(dpy, nametouse);
 
-//    hackyfontnamething = (char *)PR_Malloc(nsCRT::strlen(nametouse) + 1);
-//    strcpy(hackyfontnamething, nametouse);
+#ifdef NOISY_FONTS
+    fprintf(stderr, " is: %s\n", nametouse);
+#endif
     
     XFreeFontInfo(fnames, fonts, numnames);
   }
@@ -155,15 +149,12 @@ nsresult nsFontMetricsUnix :: Init(const nsFont& aFont, nsIDeviceContext* aCX)
   {
     //ack. we're in real trouble, go for fixed...
 
-//    hackyfontnamething = (char *)PR_Malloc(nsCRT::strlen("fixed") + 1);
-//    strcpy(hackyfontnamething, "fixed");
+#ifdef NOISY_FONTS
+    fprintf(stderr, " is: %s\n", "fixed (final fallback)");
+#endif
 
     mFontHandle = ::XLoadFont(dpy, "fixed");
   }
-
-#ifdef NOISY_FONTS
-//  fprintf(stderr, " is: %s\n", hackyfontnamething);
-#endif
 
   RealizeFont();
 
@@ -269,8 +260,6 @@ nscoord nsFontMetricsUnix :: GetWidth(const nsString& aString)
 nscoord nsFontMetricsUnix :: GetWidth(const char *aString)
 {
   PRInt32 rc = 0 ;
-
-//  mFontHandle = ::XLoadFont(XtDisplay((Widget)mContext->GetNativeWidget()), hackyfontnamething);
   
   XFontStruct * fs = ::XQueryFont(XtDisplay((Widget)mContext->GetNativeWidget()), mFontHandle);
   
@@ -281,29 +270,27 @@ nscoord nsFontMetricsUnix :: GetWidth(const char *aString)
 
 nscoord nsFontMetricsUnix :: GetWidth(const PRUnichar *aString, PRUint32 aLength)
 {
-
-  XChar2b * xstring ;
-  XChar2b * thischar ;
-  PRUint16 aunichar;
+//  XChar2b * xstring ;
+//  XChar2b * thischar ;
+//  PRUint16 aunichar;
   nscoord width ;
-  PRUint32 i ;
+//  PRUint32 i ;
 
-  xstring = (XChar2b *) PR_Malloc(sizeof(XChar2b)*aLength);
+//  xstring = (XChar2b *) PR_Malloc(sizeof(XChar2b)*aLength);
 
-  for (i=0; i<aLength; i++) {
-    thischar = (xstring+i);
-    aunichar = (PRUint16)(*(aString+i));
-    thischar->byte2 = (aunichar & 0xff);
-    thischar->byte1 = (aunichar & 0xff00) >> 8;      
-  }
-
-//  mFontHandle = ::XLoadFont(XtDisplay((Widget)mContext->GetNativeWidget()), hackyfontnamething);
+//  for (i=0; i<aLength; i++) {
+//    thischar = (xstring+i);
+//    aunichar = (PRUint16)(*(aString+i));
+//    thischar->byte2 = (aunichar & 0xff);
+//    thischar->byte1 = (aunichar & 0xff00) >> 8;      
+//  }
   
   XFontStruct * fs = ::XQueryFont(XtDisplay((Widget)mContext->GetNativeWidget()), mFontHandle);
   
-  width = ::XTextWidth16(fs, xstring, aLength);
+//  width = ::XTextWidth16(fs, xstring, aLength);
+  width = ::XTextWidth16(fs, aString, aLength);
 
-  PR_Free(xstring);
+//  PR_Free(xstring);
 
   return (nscoord(width * mContext->GetDevUnitsToAppUnits()));
 }
@@ -345,8 +332,7 @@ const nsFont& nsFontMetricsUnix :: GetFont()
 
 nsFontHandle nsFontMetricsUnix :: GetFontHandle()
 {
-//  return ((nsFontHandle)hackyfontnamething);
-  return ((nsFontHandle)mFontHandle);
+  return (nsFontHandle)mFontHandle;
 }
 
 
