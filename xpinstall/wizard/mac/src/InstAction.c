@@ -30,14 +30,14 @@
 pascal void* Install(void* unused)
 {	
 	short			vRefNum, srcVRefNum;
-	long			dirID, srcDirID;
+	long			dirID, srcDirID, modulesDirID;
 	OSErr 			err;
 	FSSpec			idiSpec, coreFileSpec;
 #ifdef MIW_DEBUG
 	FSSpec			tmpSpec;
 #endif
 	SDISTRUCT		sdistruct;
-	Str255			pIDIfname;
+	Str255			pIDIfname, pModulesDir;
 	StringPtr		coreFile;
 	THz				ourHZ;
 	Boolean 		isDir = false, bCoreExists = false;
@@ -77,8 +77,13 @@ pascal void* Install(void* unused)
 		return (void*)nil;
 	}
 	
-	
-	if (!ExistArchives(srcVRefNum, srcDirID))
+	/* get the "Installer Modules" relative subdir */
+	GetIndString(pModulesDir, rStringList, sInstModules);
+	isDir = false;  /* reuse */
+	modulesDirID = 0;
+	GetDirectoryID(srcVRefNum, srcDirID, pModulesDir, &modulesDirID, &isDir);
+	srcDirID = modulesDirID;
+	if (!isDir || !ExistArchives(srcVRefNum, srcDirID))
 	{
 		/* download location is same as extraction location */
 		srcVRefNum = vRefNum;
@@ -135,7 +140,7 @@ pascal void* Install(void* unused)
 	}
 	else
 		bCoreExists = true;
-    /* otherwise core exists in cwd, different from extraction location */
+    /* otherwise core exists in cwd:InstallerModules, different from extraction location */
 
 	
 	/* check if coreFile was downloaded */
@@ -709,14 +714,21 @@ InitProgressBar(void)
 Boolean
 InitSDLib(void)
 {
-	Str255			libName;
+	Str255			libName, pModulesDir;
 	FSSpec			libSpec;
 	short			vRefNum;
-	long			dirID;
+	long			dirID, cwdDirID;
+	Boolean			isDir = false;
 	OSErr 			err;
 	
-	ERR_CHECK_RET(GetCWD(&dirID, &vRefNum), false);
-
+	ERR_CHECK_RET(GetCWD(&cwdDirID, &vRefNum), false);
+	
+	/* get the "Installer Modules" relative subdir */
+	GetIndString(pModulesDir, rStringList, sInstModules);
+	GetDirectoryID(vRefNum, cwdDirID, pModulesDir, &dirID, &isDir);
+	if (!isDir)		/* bail if we can't find the "Installer Modules" dir */
+		return false;
+		
 	/* initialize SDI lib and struct */
 	GetIndString(libName, rStringList, sSDLib);
 	ERR_CHECK_RET(FSMakeFSSpec(vRefNum, dirID, libName, &libSpec), false);

@@ -136,8 +136,8 @@ if (err) 								\
 #define	kSelected		1
 #define kNotInSetupType 0	
 #define kInSetupType	1	
-#define kDependencyOff	0
-#define kDependencyOn	1
+#define kDependeeOff	0
+#define kDependeeOn		1
 #define kInvalidCompIdx -999
 #define kMaxCoreFiles	256		
 #define kMaxProgUnits	100.0	
@@ -216,6 +216,7 @@ if (err) 								\
 #define sSpOfSp			26	
 #define sProcessing		27		
 #define sReadme			28
+#define sInstModules	29
 
 #define rTitleStrList	170
 #define sNSInstTitle	1		/* end i18n strings */
@@ -270,7 +271,7 @@ if (err) 								\
 #define sInstSize		24
 #define sAttributes		25
 #define	sURL			26
-#define sDependency		31
+#define sDependee		31
 #define sRandomInstall	34
 
 #define sRunApp			35
@@ -312,10 +313,11 @@ typedef struct InstComp {
 	Boolean invisible;
 	Boolean launchapp;
 	
-	/* dependencies */
+	/* dependees */
 	Handle	depName[kMaxComponents];
 	short	dep[kMaxComponents];
 	short	numDeps;
+	short	refcnt;
 	
 	/* UI highlighting */
 	Boolean highlighted;
@@ -511,7 +513,7 @@ OSErr		PopulateCompWinKeys(char *);
 OSErr		PopulateTermWinKeys(char *);
 OSErr		PopulateIDIKeys(char *);
 OSErr		PopulateMiscKeys(char *);
-OSErr		MapDependencies(void);
+OSErr		MapDependees(void);
 Boolean		RandomSelect(long);
 short		GetComponentIndex(Handle);
 Boolean 	FillKeyValueForIDIKey(short, Handle, char *);
@@ -605,11 +607,12 @@ void		UpdateCompWin(void);
 void		InComponentsContent(EventRecord*, WindowPtr);
 void		MouseMovedInComponentsWin(EventRecord *);
 short		GetCompRow(int);
-void		SetOptInfo(EventRecord* evt);
+void		SetOptInfo(Boolean);
 void		InitRowHighlight(int);
 void		UpdateRowHighlight(Point);
 void		UpdateLongDesc(int);
-void		UpdateDependencies(int, EventRecord*);
+void		ResolveDependees(int, int);
+void		UpdateRefCount(int, int);
 Boolean		LegacyFileCheck(short, long);
 int			CompareVersion(Handle, Handle);
 void		EnableComponentsWin(void);
